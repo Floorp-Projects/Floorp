@@ -495,7 +495,7 @@ nsresult nsHTTPResponse::ParseDateHeader(nsIAtom *aAtom,
                                          PRBool *aHeaderIsPresent)
 {
     nsresult rv;
-    PRTime time64(0);
+    PRTime time64;
 
     rv = ParseDateHeader(aAtom, &time64, aHeaderIsPresent);
     if (NS_FAILED(rv)) return rv;
