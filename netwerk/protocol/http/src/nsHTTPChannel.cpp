@@ -1238,9 +1238,12 @@ nsresult nsHTTPChannel::Redirect(const char *aNewLocation,
 
 #if defined(PR_LOGGING)
   char *newURLSpec;
+  nsresult log_rv;
 
   newURLSpec = nsnull;
-  newURI->GetSpec(&newURLSpec);
+  log_rv = newURI->GetSpec(&newURLSpec);
+  if (NS_FAILED(log_rv))
+  	newURLSpec = nsCRT::strdup("?");
   PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
          ("ProcessRedirect [this=%x].\tRedirecting to: %s.\n",
           this, newURLSpec));
