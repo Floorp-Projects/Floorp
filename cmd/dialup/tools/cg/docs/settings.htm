@@ -129,9 +129,8 @@
 		<TD VALIGN="TOP">
 			<INPUT TYPE="CHECKBOX" NAME="intmode">
 		</TD>
-		<TD VALIGN=TOP>
+		<TD VALIGN=CENTER>
 			<FONT STYLE="fontFamily='PrimaSans BT,Helvetica,Arial';fontSize='10'">Support International Name, Address, and Phone Number Formats</FONT>
-			<spacer type=vertical size=2>
 			</FONT>
 		</TD>
 	</TR>
@@ -140,18 +139,19 @@
 		<TD VALIGN="TOP">
 			<INPUT TYPE="CHECKBOX" NAME="Show_Intro_Screens" VALUE="Show_Intro_Screens" CHECKED>
 		</TD>
-		<TD><FONT FACE="Helvetica,Arial" POINT-SIZE="10" ALIGN=LEFT VALIGN=TOP>
+		<TD VALIGN=CENTER>
 			<FONT STYLE="fontFamily='PrimaSans BT,Helvetica,Arial';fontSize='10'">Show Account Setup Introduction Screens</FONT>
 			</FONT>
 		</TD>
 	</TR>
 
 	<TR>
-		<TD VALIGN="TOP">
+		<TD VALIGN="CENTER">
 			<INPUT TYPE="CHECKBOX" NAME="OneStepMode" VALUE="OneStepMode">
 		</TD>
-		<TD><FONT FACE="Helvetica,Arial" POINT-SIZE="10" ALIGN=LEFT VALIGN=TOP>
-			<FONT STYLE="fontFamily='PrimaSans BT,Helvetica,Arial';fontSize='10'">Check this box to direct users to your registration server. Otherwise, they default to Netscape's 2step server.</FONT>
+		<TD VALIGN=TOP><FONT FACE="Helvetica,Arial" POINT-SIZE="10" ALIGN=LEFT VALIGN=TOP>
+			<FONT STYLE="fontFamily='PrimaSans BT,Helvetica,Arial';fontSize='10'">
+			<P CLASS="itemtext">Direct users to your Internet account registration server. You must also configure Account Setup in following screens to access your registration server. If you do not check this box, users will be sent to Netscape's Internet account registration server.</P></FONT>
 			</FONT>
 		</TD>
 	</TR>
@@ -159,7 +159,7 @@
 	<TR>
 		<TD VALIGN="TOP">
 		</TD>
-		<TD><spacer type=vertical size=3>
+		<TD VALIGN=TOP><spacer type=vertical size=3>
 			<FONT STYLE="fontFamily='PrimaSans BT,Helvetica,Arial';fontSize='10'">Set Dialer Idle Timeout Interval to:</FONT>
 			<spacer type=horizontal size=4>
 			<INPUT TYPE="TEXT" NAME="Dialer_Disconnect_After" SIZE="2" MAXLENGTH="2" VALUE="15" onBlur="fixIdleTime()" ID="settings101">
