@@ -19,10 +19,10 @@
 <!ENTITY PlainTextTab.accesskey       "p">
 <!ENTITY AddButton.label              "Add...">
 <!ENTITY AddHtmlDomain.accesskey      "a">
-<!ENTITY AddPlainText.accesskey       "a">
+<!ENTITY AddPlainText.accesskey       "d">
 <!ENTITY DeleteButton.label           "Delete">
-<!ENTITY DeleteHtmlDomain.accesskey   "d">
-<!ENTITY DeletePlainText.accesskey    "d">
+<!ENTITY DeleteHtmlDomain.accesskey   "l">
+<!ENTITY DeletePlainText.accesskey    "t">
 
 <!ENTITY add.htmltitle                "Add HTML Domain Name">
 <!ENTITY add.htmldomain               "HTML Domain Name:">
