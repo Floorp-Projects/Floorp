@@ -245,12 +245,7 @@
                          name="menunbofweeks"
                          label="&calendar.menu.numberofweeks.6;"/>
             </menupopup>
-         </menu>
-         <menuseparator/>
-         <menuitem id="calendar-view-menu-customize"
-                   command="cmd_CustomizeToolbars"
-                   label="&calendar.menu.customize.label;"
-                   accesskey="&calendar.menu.customize.accesskey;"/>     
+         </menu>    
       </menupopup>
    </menu>
    
