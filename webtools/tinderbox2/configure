@@ -76,10 +76,9 @@ clean:
 	rm -rf \$(builddir)
 
 set_build_permissions:
+	find \$(builddir) -type f | xargs chmod 744
 	find \$(builddir)/bin -type f | xargs chmod 755
 	find \$(builddir)/clientbin -type f | xargs chmod 755
-	find \$(builddir)/gif -type f | xargs chmod 744
-	find \$(builddir)/lib -type f | xargs chmod 744
 
 
 # automated file list is generated after this line
