@@ -155,7 +155,6 @@ nsPresContext::nsPresContext()
     mNoTheme(PR_FALSE)
 {
   mCompatibilityMode = eCompatibility_FullStandards;
-  mWidgetRenderingMode = eWidgetRendering_Gfx; 
   mImageAnimationMode = imgIContainer::kNormalAnimMode;
   mImageAnimationModePref = imgIContainer::kNormalAnimMode;
 
@@ -449,10 +448,6 @@ nsPresContext::GetUserPreferences()
 
   if (NS_SUCCEEDED(mPrefs->GetIntPref("browser.display.base_font_scaler", &prefInt))) {
     mFontScaler = prefInt;
-  }
-
-  if (NS_SUCCEEDED(mPrefs->GetIntPref("nglayout.widget.mode", &prefInt))) {
-    mWidgetRenderingMode = (enum nsWidgetRendering)prefInt;  // bad cast
   }
 
   // * document colors
@@ -780,23 +775,6 @@ nsPresContext::SetCompatibilityMode(nsCompatibility aMode)
   if (set) {
     set->EnableQuirkStyleSheet(mCompatibilityMode == eCompatibility_NavQuirks);
   }
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsPresContext::GetWidgetRenderingMode(nsWidgetRendering* aResult)
-{
-  NS_PRECONDITION(aResult, "null out param");
-  *aResult = mWidgetRenderingMode;
-  return NS_OK;
-}
-
- 
-NS_IMETHODIMP
-nsPresContext::SetWidgetRenderingMode(nsWidgetRendering aMode)
-{
-  mWidgetRenderingMode = aMode;
   return NS_OK;
 }
 

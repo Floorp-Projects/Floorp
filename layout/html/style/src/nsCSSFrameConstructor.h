@@ -477,9 +477,6 @@ protected:
                                    nsIFrame*        aContentParent,
                                    nsIFrame*&       aFrame);
 
-  nsWidgetRendering GetFormElementRenderingMode(nsIPresContext* aPresContext,
-                                                nsWidgetType    aWidgetType);
-
   nsresult ConstructRadioControlFrame(nsIPresShell*      aPresShell, 
                                       nsIPresContext*    aPresContext,
                                       nsIFrame*&         aNewFrame,
@@ -492,16 +489,6 @@ protected:
                                          nsIContent*      aContent,
                                          nsStyleContext*  aStyleContext);
 
-  nsresult ConstructButtonControlFrame(nsIPresShell*    aPresShell,
-                                       nsIPresContext*  aPresContext,
-                                       nsIFrame*&       aNewFrame);
-
-  nsresult ConstructTextControlFrame(nsIPresShell*    aPresShell,
-                                     nsIPresContext*  aPresContext,
-                                     nsIFrame*&       aNewFrame,
-                                     nsIContent*      aContent);
-
-  
   nsresult ConstructSelectFrame(nsIPresShell*            aPresShell, 
                                 nsIPresContext*          aPresContext,
                                 nsFrameConstructorState& aState,

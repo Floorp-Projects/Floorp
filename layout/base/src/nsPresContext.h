@@ -74,8 +74,6 @@ public:
   NS_IMETHOD GetShell(nsIPresShell** aResult);
   NS_IMETHOD GetCompatibilityMode(nsCompatibility* aModeResult);
   NS_IMETHOD SetCompatibilityMode(nsCompatibility aMode);
-  NS_IMETHOD GetWidgetRenderingMode(nsWidgetRendering* aModeResult);
-  NS_IMETHOD SetWidgetRenderingMode(nsWidgetRendering aMode);
   NS_IMETHOD GetImageAnimationMode(PRUint16* aModeResult);
   NS_IMETHOD SetImageAnimationMode(PRUint16 aMode);
   NS_IMETHOD GetImageLoadFlags(nsLoadFlags& aLoadFlags);
@@ -263,7 +261,6 @@ protected:
   nsCOMPtr<nsIURI>      mBaseURL;
 
   nsCompatibility       mCompatibilityMode;
-  nsWidgetRendering     mWidgetRenderingMode;
   PRPackedBool          mImageAnimationStopped;   // image animation stopped
 
   PRUint16              mImageAnimationMode;

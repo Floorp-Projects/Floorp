@@ -83,12 +83,6 @@ class nsIRenderingContext;
 { 0x0a5d12e0, 0x944e, 0x11d1, \
   {0x93, 0x23, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32} }
 
-enum nsWidgetRendering {
-  eWidgetRendering_Native   = 1,
-  eWidgetRendering_Gfx      = 2,
-  eWidgetRendering_PartialGfx = 3
-};
-
 enum nsWidgetType {
   eWidgetType_Button  	= 1,
   eWidgetType_Checkbox	= 2,
@@ -146,12 +140,6 @@ public:
    */
   NS_IMETHOD GetCompatibilityMode(nsCompatibility* aModeResult) = 0;
   NS_IMETHOD SetCompatibilityMode(nsCompatibility aMode) = 0;
-
-  /**
-   * Access the widget rendering mode for this context
-   */
-  NS_IMETHOD GetWidgetRenderingMode(nsWidgetRendering* aModeResult) = 0;
-  NS_IMETHOD SetWidgetRenderingMode(nsWidgetRendering aMode) = 0;
 
   /**
    * Access the image animation mode for this context
