@@ -133,11 +133,11 @@ sub output {
     # that is then passed to protocol-specific code. 
     # First, see if a full protocol-specific-code handler exists:
     my $output = $self->getServiceInstance("output.$protocol", $session);
-    if (not $output) {
+    if (not defined($output)) {
         # ...and, since we failed to find one, fall back on the
         # generic string expander model:
-        $output = $self->getServiceInstance("output.generic", $session, $protocol);
-        if (not $output) {
+        $output = $self->getServiceInstance('output.generic', $session, $protocol);
+        if (not defined($output)) {
             # oops, no string expander model either :-/
             $self->error(0, 'Could not find an applicable output class');
         }
@@ -200,7 +200,7 @@ sub noInput {
 
 sub unknownCommand {
     my $self = shift;
-    $self->error(0, 'The command given was not recognised.');
+    $self->error(0, 'The command given was not recognised');
 }
 
 sub noCommand {
