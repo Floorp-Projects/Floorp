@@ -88,6 +88,12 @@ class ScriptFile {
 			return;
 		}
 
+        if (request.startsWith("HEAD /") || request.startsWith("head /"))
+        {
+            WriteHeadResponse();
+            return;
+        }
+
         boolean outDirty = false;
 	    if (file != null)
 	    {
@@ -251,6 +257,17 @@ class ScriptFile {
     	}
 
 	}
+
+    protected void WriteHeadResponse() {
+        out.println("HTTP/1.1 200 OK");
+        out.println("Server: HTTP Test Server/1.1");
+        out.println("Content-Type: text/plain");
+        out.println("Content-Length: 1000" ); // bogus 
+        out.println("Date: " + (new Date()).toString());
+        out.println(); // also test without it
+        out.flush();
+    }
+
     String file = null;
     // The string associated with this script occurence
 

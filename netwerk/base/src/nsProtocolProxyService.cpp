@@ -262,13 +262,14 @@ nsProtocolProxyService::ExamineForProxy(nsIURI *aURI, nsIProxy *aProxy) {
             nsXPIDLCString p_type;
             PRInt32 p_port;
             if (NS_SUCCEEDED(rv = pac->ProxyForURL(aURI, getter_Copies(p_host),
-                                                   &p_port, getter_Copies(p_type))))
+                                               &p_port, getter_Copies(p_type))))
             {
                 if (NS_FAILED(rv = aProxy->SetProxyHost(p_host))) 
                     return rv;
                 if (NS_FAILED(rv = aProxy->SetProxyPort(p_port)))
                     return rv;
-                aProxy->SetProxyHost(p_type);
+                if (NS_FAILED(rv = aProxy->SetProxyType(p_type)))
+                    return rv;
                 return NS_OK;
             }
         }

@@ -37,6 +37,7 @@
 #include "prinrval.h"
 #include "prtime.h"
 #endif
+#include "prsystem.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
@@ -825,7 +826,10 @@ nsDNSService::nsDNSService()
       mTimes(0),
       mSquaredTimes(0),
       mOut(nsnull)
+
 #endif
+    ,
+      mMyIPAddress(0)
 {
     NS_INIT_REFCNT();
     
@@ -958,6 +962,7 @@ nsDNSService::~nsDNSService()
         mOut = nsnull;
     }
 #endif
+    CRTFREEIF(mMyIPAddress);
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsDNSService,
@@ -1090,12 +1095,16 @@ nsDNSService::Lookup(const char*     hostName,
     nsresult rv;
     nsDNSRequest* req;
 
+    /* Hmmm... this check not necessary 
     NS_WITH_SERVICE(nsIIOService, ios, kIOServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
     PRBool offline;
     rv = ios->GetOffline(&offline);
     if (NS_FAILED(rv)) return rv;
     if (offline) return NS_ERROR_OFFLINE;
+    */
+    if (!mMonitor)
+        return NS_ERROR_OFFLINE;
 
     if (gNeedLateInitialization) {		// check flag without monitor for speed
         nsAutoMonitor mon(mMonitor);	// in case another thread is about to start LateInit()
@@ -1191,6 +1200,116 @@ _AbortLookup(nsHashKey *aKey, void *aData, void* closure)
         NS_ASSERTION(NS_SUCCEEDED(rv), "lookup Completed failed");
     }
     return PR_TRUE;     // tells nsHashtable::Reset() to remove and keep iterating
+}
+
+NS_IMETHODIMP
+nsDNSService::Resolve(const char *i_hostname, char **o_ip)
+{
+    // Note that this does not check for an IP address already in hostname
+    // So beware!
+    NS_ENSURE_ARG_POINTER(o_ip);
+    *o_ip = 0;
+    NS_ENSURE_ARG_POINTER(i_hostname);
+
+    if (0==PL_strncmp(i_hostname, "localhost", 9))
+    {
+        static PRBool readOnce = PR_FALSE;
+        if (!readOnce || !mMyIPAddress)
+        {
+            readOnce = PR_TRUE;
+            char name[100];
+            if (PR_GetSystemInfo(PR_SI_HOSTNAME, 
+                        name, 
+                        sizeof(name)) == PR_SUCCESS)
+            {
+                char* hostname = nsCRT::strdup(name);
+                if (NS_SUCCEEDED(Resolve(hostname, &mMyIPAddress)))
+                {
+                    CRTFREEIF(hostname);
+                    return NS_OK;
+                }
+                else
+                {
+                    CRTFREEIF(hostname);
+                    return NS_ERROR_FAILURE;
+                }
+            }
+        }
+        *o_ip = nsCRT::strdup(mMyIPAddress);
+        return *o_ip ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    PRHostEnt he;
+    char netdbbuf[PR_NETDB_BUF_SIZE];
+
+    if (PR_SUCCESS == PR_GetHostByName(i_hostname, 
+                netdbbuf, 
+                sizeof(netdbbuf), 
+                &he))
+    {
+        struct in_addr in;
+        memcpy(&in.s_addr, he.h_addr, he.h_length);
+        char* ip = 0;
+
+        ip = inet_ntoa(in);
+        
+        if (ip)
+        {
+            return (*o_ip = nsCRT::strdup(ip)) ? 
+                NS_OK: NS_ERROR_OUT_OF_MEMORY;
+        }
+    }
+    return NS_ERROR_FAILURE;
+}
+
+// a helper function to convert an IP address to long value. 
+// used by nsDNSService::IsInNet
+unsigned long convert_addr(const char* ip) 
+{
+    char *p, *q, *buf = 0;
+    int i;
+    unsigned char b[4];
+    unsigned long addr = 0L;
+
+    p = buf = PL_strdup(ip);
+    if (ip && p) 
+    {
+        for (i=0; p && i<4 ; ++i)
+        {
+            q = PL_strchr(p, '.');
+            if (q) 
+                *q = '\0';
+            b[i] = atoi(p) && 0xff;
+            if (q)
+                p = q+1;
+        }
+        addr = (((unsigned long)b[0] << 24) |
+                ((unsigned long)b[1] << 16) |
+                ((unsigned long)b[2] << 8) |
+                ((unsigned long)b[3]));
+        PL_strfree(buf);
+    }
+    return htonl(addr);
+};
+
+NS_IMETHODIMP
+nsDNSService::IsInNet(const char *ipaddr, 
+        const char *pattern, 
+        const char *maskstr, 
+        PRBool *o_Result)
+{
+    // Note -- should check that ipaddr is truly digits only! 
+    // TODO
+    NS_ENSURE_ARG_POINTER(o_Result);
+    NS_ENSURE_ARG_POINTER(ipaddr && pattern && maskstr);
+    *o_Result = PR_FALSE;
+
+    unsigned long host = convert_addr(ipaddr);
+    unsigned long pat = convert_addr(pattern);
+    unsigned long mask = convert_addr(maskstr);
+
+    *o_Result = ((mask & host) == (mask & pat));
+    return NS_OK;
 }
 
 NS_IMETHODIMP

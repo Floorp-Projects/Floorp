@@ -25,13 +25,17 @@
        - Gagan Saksena 04/24/00 
 */
 
-const kPAC_PROGID = "component://mozilla/network/proxy_autoconfig";
+const kPAC_PROGID = "component://netscape/network/proxy_autoconfig";
+const kIOSERVICE_PROGID = "component://netscape/network/io-service";
+const kDNS_PROGID = "component://netscape/network/dns-service";
 const kPAC_CID = Components.ID("{63ac8c66-1dd2-11b2-b070-84d00d3eaece}");
 const nsIProxyAutoConfig = Components.interfaces.nsIProxyAutoConfig;
+const nsIIOService = Components.interfaces['nsIIOService'];
+const nsIDNSService = Components.interfaces['nsIDNSService'];
 
 function debug(msg)
 {
-    dump(msg + "\n");
+    dump("\nPAC:" + msg + "\n\n");
 }
 
 // implementor of nsIProxyAutoConfig
@@ -44,13 +48,22 @@ nsProxyAutoConfig.prototype = {
         // Call the original function-
         var proxy = FindProxyForURL(uri.spec, uri.host);
         debug("Proxy = " + proxy);
-        // TODO add code here that parses stupid PAC return strings
-        // to host and port pair... 
-        // TODO warn about SOCKS
-        // test dummy for now...
-        host.value = "localhost";
-        port.value = 4444;
-		type.value = "http"; //proxy (http, socks, direct, etc)
+        if (proxy == "DIRECT") {
+            host.value = null;
+            type.value = "direct";
+        }
+        else {
+            // TODO warn about SOCKS
+            
+            // we ignore everything else past the first proxy. 
+            // we could theoretically check isResolvable now and continue 
+            // parsing. but for now...
+            var re = /PROXY (.+):(\d+);.*/; 
+            hostport = proxy.match(re);
+            host.value = hostport[1];
+            port.value = hostport[2];
+            type.value = "http"; //proxy (http, socks, direct, etc)
+        }
     }
 }
 
@@ -104,7 +117,7 @@ function NSGetModule(compMgr, fileSpec) {
 var PacMan = new nsProxyAutoConfig() ;
 
 // dumb hacks for "special" functions that should have long been 
-// taken out and shot, and shot again... most of them.
+// deprecated. 
 
 var date = new Date();
 
@@ -122,6 +135,7 @@ function dateRange(dmy) {
 }
 
 function dateRange(dmy1, dmy2) {
+    dump("nsProxyAutoConfig.js: dateRange function deprecated or not implemented\n");
     return false;
 }
 
@@ -133,20 +147,35 @@ function dateRange(d1, m1, y1, d2, m2, y2) {
 }
 
 function dnsDomainIs(host, domain) {
-    return (host.search("/" + domain + "$/") != -1);
+    //TODO fix this later!
+    return (host.search(domain) != -1);
 }
 
 function dnsDomainLevels(host) {
     return host.split('.').length-1;
 }
 
+var ios = Components.classes[kIOSERVICE_PROGID].getService(nsIIOService);
+var dns = Components.classes[kDNS_PROGID].getService(nsIDNSService);
+
 function dnsResolve(host) {
-    // call back into IOService... TODO
-    return "127.0.0.1";
+    try {
+        var addr =  dns.resolve(host);
+        //debug(addr);
+        return addr;
+    }
+    catch (ex) {
+        debug (ex);
+        // ugh... return error!
+        return null;
+    }
 }
 
-function isInNet(host, pattern, mask) {
-    return false;
+// This function could be done here instead of in nsDNSService...
+function isInNet(ipaddr, pattern, mask) {
+    var result = dns.isInNet(ipaddr, pattern, mask);
+    //debug(result);
+    return result;
 }
 
 function isPlainHostName(host) {
@@ -154,8 +183,8 @@ function isPlainHostName(host) {
 }
 
 function isResolvable(host) {
-    // call back into IOService and get the result... TODO
-    return false;
+    var ip = dnsResolve(host);
+    return (ip != null) ? true: false;
 }
 
 function localHostOrDomainIs(host, hostdom) {
@@ -168,35 +197,50 @@ function localHostOrDomainIs(host, hostdom) {
 }
 
 function myIpAddress() {
-    // call into IOService ... TODO
-    return "127.0.0.1";
+    try {
+        // for now...
+        var ip = dnsResolve("localhost");
+        return ip;
+    }
+    catch (ex) {
+        debug(ex);
+    }
+    return null;
 }
 
 function shExpMatch(str, shexp) {
+    dump("nsProxyAutoConfig.js: shExpMatch function deprecated or not implemented\n");
+    // this may be a tricky one to implement in JS. 
     return false;
 }
 
 function timeRange(hour) {
+    dump("nsProxyAutoConfig.js: timeRange function deprecated or not implemented\n");
     return false;
 }
 
 function timeRange(h1, h2) {
+    dump("nsProxyAutoConfig.js: timeRange function deprecated or not implemented\n");
     return false;
 }
 
 function timeRange(h1, m1, h2, m2) {
+    dump("nsProxyAutoConfig.js: timeRange function deprecated or not implemented\n");
     return false;
 }
 
 function timeRange(h1, m1, s1, h2, m2, s2) {
+    dump("nsProxyAutoConfig.js: timeRange function deprecated or not implemented\n");
     return false;
 }
 
 function timeRange(h1, m1, s1, h2, m2, s2, gmt) {
+    dump("nsProxyAutoConfig.js: timeRange function deprecated or not implemented\n");
     return false;
 }
 
 function weekdayRange(wd1, wd2, gmt) {
+    dump("nsProxyAutoConfig.js: weekdayRange function deprecated or not implemented\n");
     return false;
 }
 
@@ -206,7 +250,7 @@ function weekdayRange(wd1, wd2, gmt) {
 function FindProxyForURL(url, host) 
 {
     if (isPlainHostName(host) || 
-        dnsDomainIs(host, ".mozilla.org") || 
+        dnsDomainIs(host, ".mozilla.org") ||
         isResolvable(host))
         return "DIRECT";
     else

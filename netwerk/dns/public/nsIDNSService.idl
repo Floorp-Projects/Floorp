@@ -44,6 +44,19 @@ interface nsIDNSService : nsISupports
                       in nsIDNSListener listener,
                       in nsISupports ctxt);
 
+    /**
+    * Syncronously resolve the hostname to its IP address. 
+    */
+    string resolve(in string hostname);
+
+    /**
+    * Check if the specified address is in the network of the pattern
+    * using the specified mask. This function would probably go away 
+    * once an implementation for it in JS exists for nsProxyAutoConfig.
+    * See http://www.mozilla.org/docs/netlib/pac.html for more info.
+    */
+    boolean isInNet(in string ipaddr, in string pattern, in string mask);
+
     void init();
     void shutdown();
 };
