@@ -15,14 +15,36 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH = ../..
+
+DEPTH = ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = public src
+LIBRARY_NAME = appcores
+
+MODULE=raptor
+
+CPPSRCS= \
+	nsBaseAppCore.cpp       \
+	nsMailCore.cpp       \
+	nsAppCoresNameSet.cpp       \
+	nsToolbarCore.cpp       \
+	nsBrowserAppCore.cpp       \
+	nsMailCoreFactory.cpp       \
+	nsToolbarCoreFactory.cpp       \
+	nsBrowserAppCoreFactory.cpp       \
+	nsAppCoresManager.cpp       \
+	nsAppCoresManagerFactory.cpp       \
+	nsJSBaseAppCore.cpp       \
+	nsJSAppCores.cpp       \
+	nsJSMailCore.cpp   \
+	nsJSToolbarCore.cpp   \
+	nsJSBrowserAppCore.cpp   \
+	nsAppCores.cpp         \
+	$(NULL)
 
 include $(topsrcdir)/config/config.mk
 
