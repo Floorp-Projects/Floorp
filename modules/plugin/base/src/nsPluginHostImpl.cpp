@@ -41,11 +41,6 @@
 
 #include "nscore.h"
 #include "nsPluginHostImpl.h"
-#ifdef MOZ_WIDGET_QT
-#undef CursorShape /*X.h defines it as 0,
-                     qnamespace.h makes an enum type by that name
-                   */
-#endif
 #include <stdio.h>
 #include "prio.h"
 #include "prmem.h"
@@ -171,8 +166,6 @@
 #ifdef XP_UNIX
 #if defined(MOZ_WIDGET_GTK) || defined (MOZ_WIDGET_GTK2)
 #include <gdk/gdkx.h> // for GDK_DISPLAY()
-#elif defined(MOZ_WIDGET_QT)
-#include <qwindowdefs.h> // for qt_xdisplay()
 #elif defined(MOZ_WIDGET_XLIB)
 #include "xlibrgb.h" // for xlib_rgb_get_display()
 #endif
@@ -2653,8 +2646,6 @@ NS_IMETHODIMP nsPluginHostImpl::GetValue(nsPluginManagerVariable aVariable, void
     Display** value = NS_REINTERPRET_CAST(Display**, aValue);
 #if defined(MOZ_WIDGET_GTK) || defined (MOZ_WIDGET_GTK2)
     *value = GDK_DISPLAY();
-#elif defined(MOZ_WIDGET_QT)
-    *value = qt_xdisplay();
 #elif defined(MOZ_WIDGET_XLIB)
     *value = xxlib_rgb_get_display(xxlib_find_handle(XXLIBRGB_DEFAULT_HANDLE));
 #endif
