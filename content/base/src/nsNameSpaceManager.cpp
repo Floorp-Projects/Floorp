@@ -309,6 +309,7 @@ public:
 class NameSpaceManagerImpl : public nsINameSpaceManager {
 public:
   NameSpaceManagerImpl();
+  virtual ~NameSpaceManagerImpl();
 
   NS_DECL_ISUPPORTS
 
@@ -340,8 +341,6 @@ private:
   nsStringArray mURIArray;
   nsCOMArray<nsIElementFactory> mElementFactoryArray;
   nsCOMPtr<nsIElementFactory> mDefaultElementFactory;
-
-  virtual ~NameSpaceManagerImpl();
 };
 
 NameSpaceManagerImpl::NameSpaceManagerImpl()
