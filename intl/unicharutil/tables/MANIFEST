@@ -1,2 +1,5 @@
+htmlEntityVersions.properties
 html40Latin1.properties
+html40Symbols.properties
+html40Special.properties
 
