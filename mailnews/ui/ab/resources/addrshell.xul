@@ -25,7 +25,6 @@
 <!ENTITY search.label "Show names containing:">  
 <!ENTITY throbber.img "resource:/res/throbber/anims00.gif">
 <!ENTITY throbber.url "http://www.mozilla.org/"> 
-
 ]> 
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
@@ -33,9 +32,10 @@
 	title="&addressbookWindow.title;"
         style="width:100%;height:100%">
 
-<html:script src="resource:/res/mailnews/messenger/widgetglue.js"></html:script>
-<html:script src="resource:/res/mailnews/messenger/commandglue.js"></html:script>
-<html:script src="resource:/res/mailnews/messenger/shareglue.js"></html:script>
+<html:script src="resource:/res/mailnews/messenger/widgetglue.js"/>
+<html:script src="resource:/res/mailnews/messenger/commandglue.js"/>
+<html:script src="resource:/res/mailnews/messenger/shareglue.js"/>
+<html:script src="resource:/res/mailnews/addrbook/addressbook.js"/>
 
   <menubar>
     <menu name="File">
@@ -84,13 +84,13 @@
       <menuitem name=".Address Books" onclick="AbShowAddressBooks();"/>
       </menu>
       <menu name="Sort">
-        <menuitem name="by Type" onclick="AbSortByType();"/>
+        <menuitem name=".by Type" onclick="AbSortByType();"/>
         <menuitem name=".by Name" onclick="AbSortByName();"/>
         <menuitem name=".by Email" onclick="AbSortByEmail();"/>
-        <menuitem name="by Organization" onclick="AbSortByOrganization();"/>
+        <menuitem name=".by Organization" onclick="AbSortByOrganization();"/>
         <menuitem name=".by Nickname" onclick="AbSortByNickname();"/>
-        <menuitem name="by Phone Number" onclick="AbSortByPhoneNumber();"/>
-        <menuitem name="by City" onclick="AbSortByCity();"/>
+        <menuitem name=".by Phone Number" onclick="AbSortByPhoneNumber();"/>
+        <menuitem name=".by City" onclick="AbSortByCity();"/>
         <separator/>
         <menuitem name=".Ascending" onclick="AbSortAscending();"/>
         <menuitem name=".Descending" onclick="AbSortDescending();"/>
