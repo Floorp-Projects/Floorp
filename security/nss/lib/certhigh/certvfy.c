@@ -745,6 +745,7 @@ cert_VerifyCertChain(CERTCertDBHandle *handle, CERTCertificate *cert,
     for ( count = 0; count < CERT_MAX_CERT_CHAIN; count++ ) {
 	int subjectNameListLen;
 	int i;
+	PRBool validCAOverride = PR_FALSE;
 
 	/* Construct a list of names for the current and all previous 
 	 * certifcates to be verified against the name constraints extension 
@@ -832,7 +833,7 @@ cert_VerifyCertChain(CERTCertDBHandle *handle, CERTCertificate *cert,
 	    /* no basic constraints found, if we're fortezza, CA bit is already
 	     * verified (isca = PR_TRUE). otherwise, we aren't (yet) a ca
 	     * isca = PR_FALSE */
-	    isca = isFortezzaV1 || issuerCert->isRoot;
+	    isca = isFortezzaV1;
 	} else  {
 	    if ( basicConstraint.isCA == PR_FALSE ) {
 		PORT_SetError (SEC_ERROR_CA_CERT_INVALID);
@@ -883,6 +884,17 @@ cert_VerifyCertChain(CERTCertDBHandle *handle, CERTCertificate *cert,
         }
 
 	if ( issuerCert->trust ) {
+	    /* we have some trust info, but this does NOT imply that this
+	     * cert is actually trusted for any purpose.  The cert may be
+	     * explicitly UNtrusted.  We won't know until we examine the
+	     * trust bits.
+	     */
+	    if (certUsage == certUsageStatusResponder) {
+		/* XXX NSS has done this for years, but it seems incorrect. */
+		rv = rvFinal;
+		goto done;
+	    }
+
 	    /*
 	     * check the trust parms of the issuer
 	     */
@@ -898,52 +910,42 @@ cert_VerifyCertChain(CERTCertDBHandle *handle, CERTCertificate *cert,
 	    
 	    flags = SEC_GET_TRUST_FLAGS(issuerCert->trust, trustType);
 	    
-	    if ( (flags & CERTDB_VALID_CA) ||
-		 (certUsage == certUsageStatusResponder)) {
-		if ( ( flags & requiredFlags ) == requiredFlags ||
-		     certUsage == certUsageStatusResponder ) {
+	    if (flags & CERTDB_VALID_CA) {
+		if ( ( flags & requiredFlags ) == requiredFlags) {
 		    /* we found a trusted one, so return */
 		    rv = rvFinal; 
 		    goto done;
 		}
+		validCAOverride = PR_TRUE;
 	    }
 	}
 
-	/*
-	 * Make sure that if this is an intermediate CA in the chain that
-	 * it was given permission by its signer to be a CA.
-	 */
-	if ( isca ) {
+	if (!validCAOverride) {
+	    /*
+	     * Make sure that if this is an intermediate CA in the chain that
+	     * it was given permission by its signer to be a CA.
+	     */
 	    /*
 	     * if basicConstraints says it is a ca, then we check the
 	     * nsCertType.  If the nsCertType has any CA bits set, then
 	     * it must have the right one.
 	     */
-	    if ( issuerCert->nsCertType & NS_CERT_TYPE_CA ) {
-		if ( issuerCert->nsCertType & caCertType ) {
-		    isca = PR_TRUE;
-		} else {
-		    isca = PR_FALSE;
-		}
+	    if (!isca || (issuerCert->nsCertType & NS_CERT_TYPE_CA)) {
+		isca = (issuerCert->nsCertType & caCertType) ? PR_TRUE : PR_FALSE;
 	    }
-	} else {
-	    if ( issuerCert->nsCertType & caCertType ) {
-		isca = PR_TRUE;
-	    } else {
-		isca = PR_FALSE;
-	    }
-	}
 	
-	if (  !isca  ) {
-	    PORT_SetError(SEC_ERROR_CA_CERT_INVALID);
-	    LOG_ERROR_OR_EXIT(log,issuerCert,count+1,0);
+	    if (  !isca  ) {
+		PORT_SetError(SEC_ERROR_CA_CERT_INVALID);
+		LOG_ERROR_OR_EXIT(log,issuerCert,count+1,0);
+	    }
+
+	    /* make sure key usage allows cert signing */
+	    if (CERT_CheckKeyUsage(issuerCert, requiredCAKeyUsage) != SECSuccess) {
+		PORT_SetError(SEC_ERROR_INADEQUATE_KEY_USAGE);
+		LOG_ERROR_OR_EXIT(log,issuerCert,count+1,requiredCAKeyUsage);
+	    }
 	}
-	    
-	/* make sure key usage allows cert signing */
-	if (CERT_CheckKeyUsage(issuerCert, requiredCAKeyUsage) != SECSuccess) {
-	    PORT_SetError(SEC_ERROR_INADEQUATE_KEY_USAGE);
-	    LOG_ERROR_OR_EXIT(log,issuerCert,count+1,requiredCAKeyUsage);
-	}
+
 	/* make sure that the entire chain is within the name space of the 
 	** current issuer certificate.
 	*/
@@ -1010,6 +1012,7 @@ CERT_VerifyCACertForUsage(CERTCertDBHandle *handle, CERTCertificate *cert,
     SECTrustType trustType;
     CERTBasicConstraints basicConstraint;
     PRBool isca;
+    PRBool validCAOverride = PR_FALSE;
     SECStatus rv;
     SECComparison rvCompare;
     SECStatus rvFinal = SECSuccess;
@@ -1057,7 +1060,7 @@ CERT_VerifyCACertForUsage(CERTCertDBHandle *handle, CERTCertificate *cert,
 	caCertType = 0;
     }
     
-    /* If the basicConstraint extension is included in an immediate CA
+    /* If the basicConstraint extension is included in an intermmediate CA
      * certificate, make sure that the isCA flag is on.  If the
      * pathLenConstraint component exists, it must be greater than the
      * number of CA certificates we have seen so far.  If the extension
@@ -1092,74 +1095,74 @@ CERT_VerifyCACertForUsage(CERTCertDBHandle *handle, CERTCertificate *cert,
     }
 	
     if ( cert->trust ) {
+	/* we have some trust info, but this does NOT imply that this
+	 * cert is actually trusted for any purpose.  The cert may be
+	 * explicitly UNtrusted.  We won't know until we examine the
+	 * trust bits.
+	 */
+        if (certUsage == certUsageStatusResponder) {
+	    /* Check the special case of certUsageStatusResponder */
+            issuerCert = CERT_FindCertIssuer(cert, t, certUsage);
+            if (issuerCert) {
+                if (SEC_CheckCRL(handle, cert, issuerCert, t, wincx) 
+		    != SECSuccess) {
+                    PORT_SetError(SEC_ERROR_REVOKED_CERTIFICATE);
+                    CERT_DestroyCertificate(issuerCert);
+                    goto loser;
+                }
+                CERT_DestroyCertificate(issuerCert);
+            }
+	    /* XXX We have NOT determined that this cert is trusted.
+	     * For years, NSS has treated this as trusted, 
+	     * but it seems incorrect.
+	     */
+	    rv = rvFinal; 
+	    goto done;
+        }
+
 	/*
 	 * check the trust parms of the issuer
 	 */
 	flags = SEC_GET_TRUST_FLAGS(cert->trust, trustType);
 	    
-	if ( (flags & CERTDB_VALID_CA) ||
-		 (certUsage == certUsageStatusResponder)) {
-	    if ( ( flags & requiredFlags ) == requiredFlags ||
-		     certUsage == certUsageStatusResponder ) {
-		    /* we found a trusted one, so return */
-        /* Check  the special case of certUsageStatusResponder */
-        if(certUsage == certUsageStatusResponder) {
-           issuerCert = CERT_FindCertIssuer(cert, t, certUsage);
-	         if (issuerCert) {
-              if(SEC_CheckCRL(handle, cert, issuerCert, t, wincx) != SECSuccess) {
-                 PORT_SetError(SEC_ERROR_REVOKED_CERTIFICATE);
-                 CERT_DestroyCertificate(issuerCert);
-                 goto loser;
-              }
-              CERT_DestroyCertificate(issuerCert);
-           }
-        }
-		    rv = rvFinal; 
-		    goto done;
+	if (flags & CERTDB_VALID_CA) {
+	    if ( ( flags & requiredFlags ) == requiredFlags) {
+		/* we found a trusted one, so return */
+		rv = rvFinal; 
+		goto done;
 	    }
+	    validCAOverride = PR_TRUE;
 	}
     }
-
-    /*
-     * Make sure that if this is an intermediate CA in the chain that
-     * it was given permission by its signer to be a CA.
-     */
-    if ( isca ) {
+    if (!validCAOverride) {
+	/*
+	 * Make sure that if this is an intermediate CA in the chain that
+	 * it was given permission by its signer to be a CA.
+	 */
 	/*
 	 * if basicConstraints says it is a ca, then we check the
 	 * nsCertType.  If the nsCertType has any CA bits set, then
 	 * it must have the right one.
 	 */
-	if ( cert->nsCertType & NS_CERT_TYPE_CA ) {
-	    if ( cert->nsCertType & caCertType ) {
-		isca = PR_TRUE;
-	    } else {
-		isca = PR_FALSE;
-	    }
+	if (!isca || (cert->nsCertType & NS_CERT_TYPE_CA)) {
+	    isca = (cert->nsCertType & caCertType) ? PR_TRUE : PR_FALSE;
 	}
-    } else {
-	if ( cert->nsCertType & caCertType ) {
-	    isca = PR_TRUE;
-	} else {
-	    isca = PR_FALSE;
-	}
-    }
 	
-    if (  !isca  ) {
-	PORT_SetError(SEC_ERROR_CA_CERT_INVALID);
-	LOG_ERROR_OR_EXIT(log,cert,0,0);
-    }
+	if (!isca) {
+	    PORT_SetError(SEC_ERROR_CA_CERT_INVALID);
+	    LOG_ERROR_OR_EXIT(log,cert,0,0);
+	}
 	    
-    /* make sure key usage allows cert signing */
-    if (CERT_CheckKeyUsage(cert, requiredCAKeyUsage) != SECSuccess) {
+	/* make sure key usage allows cert signing */
+	if (CERT_CheckKeyUsage(cert, requiredCAKeyUsage) != SECSuccess) {
 	    PORT_SetError(SEC_ERROR_INADEQUATE_KEY_USAGE);
 	    LOG_ERROR_OR_EXIT(log,cert,0,requiredCAKeyUsage);
+	}
     }
     /* make sure that the issuer is not self signed.  If it is, then
      * stop here to prevent looping.
      */
-    rvCompare = SECITEM_CompareItem(&cert->derSubject,
-				 &cert->derIssuer);
+    rvCompare = SECITEM_CompareItem(&cert->derSubject, &cert->derIssuer);
     if (rvCompare == SECEqual) {
 	    PORT_SetError(SEC_ERROR_UNTRUSTED_ISSUER);
 	    LOG_ERROR(log, cert, 0, 0);
