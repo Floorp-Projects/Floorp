@@ -44,6 +44,9 @@
     <menuseparator id="menuseparator_launch"/>
     <menuitem id="menuitem_remove" label="&cmd.remove.label;" accesskey="&cmd.remove.accesskey;"
               command="cmd_remove"/>
+    <menuseparator id="menuseparator_properties"/>
+    <menuitem id="menuitem_properties" label="&cmd.properties.label;" accesskey="&cmd.properties.accesskey;"
+              command="cmd_properties"/>
   </popup>
 
   <vbox flex="1">
