@@ -1482,9 +1482,7 @@ void nsCSSRendering::PaintOutline(nsIPresContext& aPresContext,
                                  PRIntn aSkipSides,
                                  nsRect* aGap)
 {
-  nsMargin  border;
   const nsStyleColor* bgColor = nsStyleUtil::FindNonTransparentBackground(aStyleContext); 
-  nsStyleCoord  borderRadius;
 
   nscoord width;
   aBorderStyle.GetOutlineWidth(width);
