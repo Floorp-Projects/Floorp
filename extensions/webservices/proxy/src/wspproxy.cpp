@@ -816,6 +816,11 @@ WSPProxy::VariantToInParameter(nsIInterfaceInfo* aInterfaceInfo,
   if (NS_FAILED(rv)) {
     return rv;
   }
+  
+  // Set the param's type on the XPTCVariant because xptcinvoke's 
+  // invoke_copy_to_stack depends on it. This fixes bug 203434.
+  aXPTCVariant->type = type;
+  
   uint8 type_tag = type.TagPart();
   nsCOMPtr<nsIInterfaceInfo> iinfo;
   if (type.IsArray()) {
