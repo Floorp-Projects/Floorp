@@ -24,23 +24,21 @@
 [scriptable, uuid(a6cf907b-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMNamedNodeMap : nsISupports
 {
-
-   nsIDOMNode                      getNamedItem(in DOMString name);
-   nsIDOMNode                      setNamedItem(in nsIDOMNode arg)
-                                          raises(DOMException);
-   nsIDOMNode                      removeNamedItem(in DOMString name)
-                                             raises(DOMException);
-   nsIDOMNode                      item(in unsigned long index);
-   readonly attribute  unsigned long        length;
-   // Introduced in DOM Level 2:
-   nsIDOMNode                      getNamedItemNS(in DOMString namespaceURI, 
-                                            in DOMString localName);
-   // Introduced in DOM Level 2:
-   nsIDOMNode                      setNamedItemNS(in nsIDOMNode arg)
-                                              raises(DOMException);
-   // Introduced in DOM Level 2:
-   nsIDOMNode                      removeNamedItemNS(in DOMString namespaceURI, 
-                                               in DOMString localName)
-                                                 raises(DOMException);
+  nsIDOMNode                getNamedItem(in DOMString name);
+  nsIDOMNode                setNamedItem(in nsIDOMNode arg)
+                                  raises(DOMException);
+  nsIDOMNode                removeNamedItem(in DOMString name)
+                                  raises(DOMException);
+  nsIDOMNode                item(in unsigned long index);
+  readonly attribute  unsigned long        length;
+  // Introduced in DOM Level 2:
+  nsIDOMNode                getNamedItemNS(in DOMString namespaceURI, 
+                                           in DOMString localName);
+  // Introduced in DOM Level 2:
+  nsIDOMNode                setNamedItemNS(in nsIDOMNode arg)
+                                  raises(DOMException);
+  // Introduced in DOM Level 2:
+  nsIDOMNode                removeNamedItemNS(in DOMString namespaceURI, 
+                                              in DOMString localName)
+                                  raises(DOMException);
 };
-

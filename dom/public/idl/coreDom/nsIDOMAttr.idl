@@ -24,12 +24,11 @@
 [scriptable, uuid(a6cf9070-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMAttr : nsIDOMNode
 {
+  readonly attribute DOMString            name;
+  readonly attribute boolean              specified;
+           attribute DOMString            value;
+                                            // raises(DOMException) on setting
 
-   readonly attribute  DOMString            name;
-   readonly attribute  boolean              specified;
-            attribute  DOMString            value;
-
-   // Introduced in DOM Level 2:
-   readonly attribute  nsIDOMElement              ownerElement;
+  // Introduced in DOM Level 2:
+  readonly attribute  nsIDOMElement       ownerElement;
 };
-

@@ -24,12 +24,10 @@
 [scriptable, uuid(a6cf9077-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMDocumentType : nsIDOMNode
 {
-
-   readonly attribute  DOMString            name;
-   readonly attribute  nsIDOMNamedNodeMap         entities;
-   readonly attribute  nsIDOMNamedNodeMap         notations;
-   readonly attribute  DOMString            publicId;
-   readonly attribute  DOMString            systemId;
-   readonly attribute  DOMString            internalSubset;
+  readonly attribute  DOMString            name;
+  readonly attribute  nsIDOMNamedNodeMap   entities;
+  readonly attribute  nsIDOMNamedNodeMap   notations;
+  readonly attribute  DOMString            publicId;
+  readonly attribute  DOMString            systemId;
+  readonly attribute  DOMString            internalSubset;
 };
-

@@ -24,7 +24,6 @@
 [scriptable, uuid(a6cf9078-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMElement : nsIDOMNode
 {
-
   readonly attribute DOMString        tagName;
   DOMString          getAttribute(in DOMString name);
   void               setAttribute(in DOMString name, 
@@ -32,12 +31,12 @@ interface nsIDOMElement : nsIDOMNode
                                         raises(DOMException);
   void               removeAttribute(in DOMString name)
                                         raises(DOMException);
-  nsIDOMAttr               getAttributeNode(in DOMString name);
-  nsIDOMAttr               setAttributeNode(in nsIDOMAttr newAttr)
+  nsIDOMAttr         getAttributeNode(in DOMString name);
+  nsIDOMAttr         setAttributeNode(in nsIDOMAttr newAttr)
                                         raises(DOMException);
-  nsIDOMAttr               removeAttributeNode(in nsIDOMAttr oldAttr)
+  nsIDOMAttr         removeAttributeNode(in nsIDOMAttr oldAttr)
                                         raises(DOMException);
-  nsIDOMNodeList           getElementsByTagName(in DOMString name);
+  nsIDOMNodeList     getElementsByTagName(in DOMString name);
   // Introduced in DOM Level 2:
   DOMString          getAttributeNS(in DOMString namespaceURI, 
                                     in DOMString localName);
@@ -51,13 +50,13 @@ interface nsIDOMElement : nsIDOMNode
                                        in DOMString localName)
                                         raises(DOMException);
   // Introduced in DOM Level 2:
-  nsIDOMAttr               getAttributeNodeNS(in DOMString namespaceURI, 
+  nsIDOMAttr         getAttributeNodeNS(in DOMString namespaceURI, 
                                         in DOMString localName);
   // Introduced in DOM Level 2:
-  nsIDOMAttr               setAttributeNodeNS(in nsIDOMAttr newAttr)
+  nsIDOMAttr         setAttributeNodeNS(in nsIDOMAttr newAttr)
                                         raises(DOMException);
   // Introduced in DOM Level 2:
-  nsIDOMNodeList           getElementsByTagNameNS(in DOMString namespaceURI, 
+  nsIDOMNodeList     getElementsByTagNameNS(in DOMString namespaceURI, 
                                             in DOMString localName);
   // Introduced in DOM Level 2:
   boolean            hasAttribute(in DOMString name);
@@ -65,4 +64,3 @@ interface nsIDOMElement : nsIDOMNode
   boolean            hasAttributeNS(in DOMString namespaceURI, 
                                     in DOMString localName);
 };
-

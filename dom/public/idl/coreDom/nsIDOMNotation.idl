@@ -22,10 +22,8 @@
 #include "nsIDOMNode.idl"
 
 [scriptable, uuid(a6cf907e-15b3-11d2-932e-00805f8add32)]
-interface Notation : nsIDOMNode
+interface nsIDOMNotation : nsIDOMNode
 {
-
-   readonly attribute  DOMString            publicId;
-   readonly attribute  DOMString            systemId;
+  readonly attribute DOMString            publicId;
+  readonly attribute DOMString            systemId;
 };
-

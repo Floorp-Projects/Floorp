@@ -24,9 +24,7 @@
 [scriptable, uuid(a6cf907f-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMProcessingInstruction : nsIDOMNode
 {
-
   readonly attribute DOMString        target;
            attribute DOMString        data;
                                        // raises(DOMException) on setting
 };
-
