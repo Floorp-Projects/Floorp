@@ -57,6 +57,7 @@
 
 #include "nsISVGGradient.h"
 #include "nsSVGCairoGradient.h"
+#include "nsIDOMSVGRect.h"
 
 /**
  * \addtogroup cairo_renderer cairo Rendering Engine
@@ -479,13 +480,6 @@ nsSVGCairoGlyphGeometry::ContainsPoint(float x, float y, PRBool *_retval)
 {
   *_retval = PR_FALSE;
 
-  // early reject test
-  if (mCoveredRegion) {
-    nsCOMPtr<nsISVGCairoRegion> region = do_QueryInterface(mCoveredRegion);
-    if (!region->Contains(x,y))
-      return NS_OK;
-  }
-
   /* get the metrics */
   nsCOMPtr<nsISVGCairoGlyphMetrics> metrics;
   {
@@ -497,16 +491,21 @@ nsSVGCairoGlyphGeometry::ContainsPoint(float x, float y, PRBool *_retval)
       return NS_ERROR_FAILURE;
   }
 
-  cairo_t *ctx = cairo_create();
-  cairo_set_tolerance(ctx, 1.0);
+  nsCOMPtr<nsIDOMSVGRect> box;
+  metrics->GetBoundingBox(getter_AddRefs(box));
 
+  cairo_t *ctx = cairo_create();
   GetGlobalTransform(ctx);
 
-  metrics->SelectFont(ctx);
+  float sX, sY, eX, eY, eWidth, eHeight;
+  mSource->GetX(&sX);
+  mSource->GetY(&sY);
+  box->GetX(&eX);
+  box->GetY(&eY);
+  box->GetWidth(&eWidth);
+  box->GetHeight(&eHeight);
+  cairo_rectangle(ctx, sX + eX, sY + eY, eWidth, eHeight);
 
-  nsAutoString text;
-  mSource->GetCharacterData(text);
-  cairo_text_path(ctx, (unsigned char*)NS_ConvertUCS2toUTF8(text).get());
   cairo_default_matrix(ctx);
   *_retval = cairo_in_fill(ctx, x, y);
   cairo_destroy(ctx);
