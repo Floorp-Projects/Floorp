@@ -22,8 +22,11 @@
  * described herein are Copyright (c) International Business Machines Corporation, 2000.
  * Modifications to Mozilla code or documentation identified per MPL Section 3.3
  *
+ * Jason Eager <jce2@po.cwru.edu>
+ *
  * Date             Modified by     Description of modification
  * 04/20/2000       IBM Corp.      OS/2 VisualAge build.
+ * 06/07/2000       Jason Eager    Added check for out of disk space
  */
 
 #ifndef FORCE_PR_LOG
@@ -50,6 +53,7 @@
 #include "nsIMsgFolder.h" // TO include biffState enum. Change to bool later...
 
 #define PREF_MAIL_ALLOW_AT_SIGN_IN_USER_NAME "mail.allow_at_sign_in_user_name"
+#define EXTRA_SAFETY_SPACE 3096
 
 static PRLogModuleInfo *POP3LOGMODULE = nsnull;
 
@@ -1799,25 +1803,71 @@ nsPop3Protocol::GetMsg()
         /* get the amount of available space on the drive
          * and make sure there is enough
          */	
-#if 0 // not yet
+        if(m_totalDownloadSize > 0) // skip all this if there aren't any messages
         {
-            const char* dir = MSG_GetFolderDirectory(MSG_GetPrefs(m_pop3ConData->pane));
-            
-            /* When checking for disk space available, take in consideration
-             * possible database 
-             * changes, therefore ask for a little more than what the message
-             * size is. Also, due to disk sector sizes, allocation blocks,
-             * etc. The space "available" may be greater than the actual space
-             * usable. */ 
-            if((m_totalDownloadSize > 0)
-               && ((PRUint32)m_totalDownloadSize + (PRUint32)
-                   3096) > FE_DiskSpaceAvailable(ce->window_id, dir))
+			      nsresult rv;
+            PRInt64 mailboxSpaceLeft = LL_Zero();
+            nsCOMPtr <nsIMsgFolder> folder;
+            nsCOMPtr <nsIFileSpec> path;
+
+            // Get the path to the current mailbox
+            // 	
+            NS_ENSURE_TRUE(m_nsIPop3Sink, NS_ERROR_UNEXPECTED); 
+            rv = m_nsIPop3Sink->GetFolder(getter_AddRefs(folder));
+			      if (NS_FAILED(rv)) return rv;
+            rv = folder->GetPath(getter_AddRefs(path));
+            if (NS_FAILED(rv)) return rv;
+                
+			      // call GetDiskSpaceAvailable
+            rv = path->GetDiskSpaceAvailable(&mailboxSpaceLeft);
+            if (NS_FAILED(rv))
             {
-                return(Error(MK_POP3_OUT_OF_DISK_SPACE));
+            	// The call to GetDiskSpaceAvailable FAILED!
+            	// This will happen on certain platforms where GetDiskSpaceAvailable
+            	// is not implimented. Since people on those platforms still need
+            	// to check mail, we will simply bypass the disk-space check.
+            	// 
+            	// We'll leave a debug message to warn people.
+
+                #ifdef DEBUG
+                printf("Call to GetDiskSpaceAvailable FAILED! \n");
+                #endif
             }
-            
-        }
-#endif 
+            else
+            {
+				#ifdef DEBUG
+				printf("GetDiskSpaceAvailable returned: %d bytes\n", mailboxSpaceLeft);
+				#endif
+
+            	// Original comment from old implimentation follows...
+            	/* When checking for disk space available, take in consideration
+             	* possible database 
+             	* changes, therefore ask for a little more than what the message
+             	* size is. Also, due to disk sector sizes, allocation blocks,
+             	* etc. The space "available" may be greater than the actual space
+             	* usable. */
+
+            	// The big if statement            	
+            	PRInt64 llResult;
+            	PRInt64 llExtraSafetySpace;
+            	PRInt64 llTotalDownloadSize;
+            	LL_I2L(llExtraSafetySpace, EXTRA_SAFETY_SPACE);
+            	LL_I2L(llTotalDownloadSize, m_totalDownloadSize);
+            	
+            	LL_ADD(llResult, llTotalDownloadSize, llExtraSafetySpace);
+            	if (LL_CMP(llResult, >, mailboxSpaceLeft))            	
+            	{
+            		// Not enough disk space!
+					#ifdef DEBUG
+					printf("Not enough disk space! Raising error! \n");
+					#endif
+            		// Should raise an error at this point.
+            		// First, we need to delete our references to the two interfaces..
+            		return MK_POP3_OUT_OF_DISK_SPACE;
+            	}
+            }
+			  // Delete our references to the two interfaces..
+       }
     }
     
     
