@@ -1420,7 +1420,6 @@ sub BuildIDLProjects()
     BuildIDLProject(":mozilla:widget:macbuild:widgetIDL.xml",                       "widget");
     BuildIDLProject(":mozilla:editor:macbuild:EditorIDL.xml",                       "editor");
     BuildIDLProject(":mozilla:editor:txmgr:macbuild:txmgrIDL.xml",                  "txmgr");
-    BuildIDLProject(":mozilla:editor:txtsvc:macbuild:txtsvcIDL.xml",                "txtsvc");
     BuildIDLProject(":mozilla:profile:macbuild:ProfileServicesIDL.xml", "profileservices");
     BuildIDLProject(":mozilla:profile:pref-migrator:macbuild:prefmigratorIDL.xml",  "prefm");
         
