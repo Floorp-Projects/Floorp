@@ -21,6 +21,8 @@
     <implementation>
       <constructor>
         this.addEventListener("DOMMouseScroll", this._handleMouseScroll, true);
+        if (navigator.platform.indexOf("Mac") != -1)
+          this.pageUpOrDownMovesSelection = false;
       </constructor>
 
       <property name="outlinerBoxObject"
@@ -38,6 +40,9 @@
       <property name="currentIndex"
                 onget="return this.outlinerBoxObject.selection.currentIndex;"
                 onset="return this.outlinerBoxObject.selection.currentIndex=val;"/>
+      <field name="pageUpOrDownMovesSelection">
+        true
+      </field>
       <field name="selectionHead">
         -1
       </field>
@@ -328,6 +333,10 @@
       </handler>
       <handler event="keypress" keycode="vk_page_up">
         <![CDATA[
+         if (! this.pageUpOrDownMovesSelection) {
+           this.outlinerBoxObject.scrollByPages(-1);
+           return;
+         }
          var c = this.currentIndex;
          if (c == 0)
            return;
@@ -348,6 +357,10 @@
       </handler>
       <handler event="keypress" keycode="vk_page_down">
         <![CDATA[
+         if (! this.pageUpOrDownMovesSelection) {
+           this.outlinerBoxObject.scrollByPages(1);
+           return;
+         }
          var c = this.currentIndex;
          var l = this.outlinerBoxObject.view.rowCount - 1;
          if (c == l)
