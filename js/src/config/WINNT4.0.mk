@@ -28,7 +28,33 @@ RANLIB = echo
 CPU_ARCH = x86 # XXX fixme
 GFX_ARCH = win32
 
-OS_CFLAGS = -DXP_PC -DWIN32 -D_WINDOWS -D_WIN32
+# MSVC compiler options for both debug/optimize
+# /nologo  - suppress copyright message
+# /W3      - Warning level 3
+# /Gm      - enable minimal rebuild
+# /Zi      - put debug info in a Program Database (.pdb) file
+# /YX      - automatic precompiled headers
+# /GX      - enable C++ exception support
+WIN_CFLAGS = /nologo /W3 /Gm /Zi /Fp$(OBJDIR)/js.pch /Fd$(OBJDIR)/js32.pdb
+
+# MSVC compiler options for debug builds
+# /MDd     - link with MSVCRTD.LIB (Dynamically-linked, multi-threaded, debug C-runtime)
+# /Od      - minimal optimization
+WIN_DEBUG_CFLAGS = /MDd /Od
+
+# MSVC compiler options for release (optimized) builds
+# /MD      - link with MSVCRT.LIB (Dynamically-linked, multi-threaded, debug C-runtime)
+# /O2      - Optimize for speed
+# /G5      - Optimize for Pentium
+WIN_OPT_CFLAGS = /MD /O2
+
+ifdef BUILD_OPT
+OPTIMIZER = $(WIN_OPT_CFLAGS)
+else
+OPTIMIZER = $(WIN_DEBUG_CFLAGS)
+endif
+
+OS_CFLAGS = -DXP_PC -DWIN32 -D_WINDOWS -D_WIN32 $(WIN_CFLAGS)
 JSDLL_CFLAGS = -DEXPORT_JS_API
 OS_LIBS = -lm -lc
 
@@ -44,10 +70,6 @@ EXE_LINK_FLAGS=kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib\
  advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib oldnames.lib /nologo\
  /subsystem:console /incremental:yes /debug\
  /machine:I386
-
-ifdef JS_THREADSAFE
-LIB_LINK_FLAGS += $(DIST)/lib/libnspr21.lib
-endif
 
 CAFEDIR = t:/cafe
 JCLASSPATH = $(CAFEDIR)/Java/Lib/classes.zip

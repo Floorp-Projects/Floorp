@@ -1028,6 +1028,27 @@ JS_SetPendingException(JSContext *cx, jsval v);
 extern JS_PUBLIC_API(void)
 JS_ClearPendingException(JSContext *cx);
 
+/*                                                                              
+* Save the current exception state. This takes a snapshot of the current        
+* exception state without making any change to that state.                      
+*                                                                               
+* The returned object MUST be later passed to either JS_RestoreExceptionState   
+* (to restore that saved state) or JS_DropExceptionState (to cleanup the state  
+* object in case it is not desireable to restore to that state). Both           
+* JS_RestoreExceptionState and JS_DropExceptionState will destroy the          
+* JSExceptionState object -- so that object can not be referenced again 
+* after making either of those calls.                                                        
+*/                                                                              
+
+extern JS_PUBLIC_API(JSExceptionState *)
+JS_SaveExceptionState(JSContext *cx);
+
+extern JS_PUBLIC_API(void)
+JS_RestoreExceptionState(JSContext *cx, JSExceptionState *state);
+
+extern JS_PUBLIC_API(void)
+JS_DropExceptionState(JSContext *cx, JSExceptionState *state);
+
 #ifdef JS_THREADSAFE
 /*
  * Associate the current thread with the given context.  This is done

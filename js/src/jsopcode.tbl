@@ -132,7 +132,7 @@ OPDEF(JSOP_EXPORTALL, 75, "exportall",  NULL,         1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_EXPORTNAME,76, "exportname", NULL,         3,  0,  0,  0,  JOF_CONST|JOF_NAME)
 OPDEF(JSOP_IMPORTALL, 77, "importall",  NULL,         1,  1,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_IMPORTPROP,78, "importprop", NULL,         3,  1,  0,  0,  JOF_CONST|JOF_PROP|JOF_IMPORT)
-OPDEF(JSOP_IMPORTELEM,79, "importelem", NULL,         3,  2,  0,  0,  JOF_BYTE |JOF_ELEM|JOF_IMPORT)
+OPDEF(JSOP_IMPORTELEM,79, "importelem", NULL,         1,  2,  0,  0,  JOF_BYTE |JOF_ELEM|JOF_IMPORT)
 
 /* Push object literal. */
 OPDEF(JSOP_OBJECT,    80, "object",     NULL,         3,  0,  1, 12,  JOF_CONST)

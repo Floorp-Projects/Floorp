@@ -24,7 +24,7 @@ CCC = g++
 CFLAGS +=  -Wall -Wno-format
 
 RANLIB = echo
-MKSHLIB = $(LD) -shared
+MKSHLIB = $(LD) -shared $(XMKSHLIBOPTS)
 
 #.c.o:
 #      $(CC) -c -MD $*.d $(CFLAGS) $<

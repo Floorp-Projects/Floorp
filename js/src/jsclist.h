@@ -21,15 +21,13 @@
 
 #include "jstypes.h"
 
-typedef struct JSCListStr JSCList;
-
 /*
 ** Circular linked list
 */
-struct JSCListStr {
-    JSCList	*next;
-    JSCList	*prev;
-};
+typedef struct JSCListStr {
+    struct JSCListStr *next;
+    struct JSCListStr *prev;
+} JSCList;
 
 /*
 ** Insert element "_e" into the list, before "_l".

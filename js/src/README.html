@@ -1,128 +1,208 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
-<HTML>
-<HEAD>
-   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
-   <META NAME="GENERATOR" CONTENT="Mozilla/4.5b2 [en] (WinNT; I) [Netscape]">
-   <TITLE>JavaScript Reference Implementation (JSRef) README</TITLE>
-</HEAD>
-<BODY>
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="GENERATOR" content="Mozilla/4.5 [en] (WinNT; I) [Netscape]">
+   <title>JavaScript Reference Implementation (JSRef) README</title>
+</head>
+<body>
 
-<H2>
-Introduction</H2>
-This is the README file for the <SPAN CLASS=LXRSHORTDESC>JavaScript Reference (JSRef) implementation.</SPAN>
-It consists of build conventions and instructions, source code conventions,
-a design walk-through, and a brief file-by-file description of the source.
-<P><SPAN CLASS=LXRLONGDESC>JSRef builds a library or DLL containing the JavaScript runtime (compiler,
-interpreter, decompiler, garbage collector, atom manager, standard classes).
-It then compiles a small "shell" program and links that with the library
-to make an interpreter that can be used interactively and with test .js
-files to run scripts.&nbsp; The code has no dependencies on the Navigator.</SPAN>
-<P><I>Quick start tip</I>: skip to "Using the JS API" below, build js,
-and play with the object named "it" (start by setting 'it.noisy = true').
-<H2>
-Build conventions</H2>
+<h2>
+Table of Contents</h2>
 
-<UL>
-<LI>
-On Windows, use MSDEV4.2 or 5.0.&nbsp; Use either the js.mdp project file
-to build with the IDE or '<TT>nmake -f js.mak</TT>' to build from the command-line</LI>
+<ul>
+<li>
+<a href="#Introduction">Introduction</a></li>
 
-<LI>
-On Mac, use CodeWarrior 3.x (<TT>JSRef.mcp</TT> in the <TT>js/src/macbuild</TT>
-subdirectory)</LI>
+<li>
+<a href="#Build">Build conventions (standalone JS engine and shell)</a></li>
 
-<LI>
-On Unix, use vendor cc or <A HREF="ftp://prep.ai.mit.edu/pub/gnu">gcc</A>
-for compiling, and use '<TT>gmake -f Makefile.ref</TT>' for building. To
-compile optimized code, pass
-<TT>BUILD_OPT=1</TT> on the nmake/gmake command
-line or preset it in the environment or makefile. The C preprocessor macro
-<TT>DEBUG</TT>
-will be undefined, and <TT>NDEBUG </TT>(archaic Unix-ism for "No Debugging")
-will be defined. Without <TT>BUILD_OPT</TT>, <TT>DEBUG</TT> is predefined
-and
-<TT>NDEBUG</TT> is undefined. On Unix, your own debug flag, <TT>DEBUG_$USER</TT>,
-will be defined or undefined as <TT>BUILD_OPT</TT> is unset or set.</LI>
+<li>
+<a href="#Debugging">Debugging notes</a></li>
 
-<LI>
-To add C compiler options from the make command line, set <TT>XCFLAGS=-Dfoo</TT>.
-To predefine -D or -U options in the makefile, set <TT>DEFINES</TT>. To
-predefine -I options in the makefile, set INCLUDES.</LI>
+<li>
+<a href="#Conventions">Naming and coding conventions</a></li>
 
-<LI>
-To turn on GC instrumentation, define <TT>JS_GCMETER</TT>.</LI>
+<li>
+<a href="#JSAPI">Using the JS API</a></li>
 
-<LI>
-To enable multi-threaded execution, define <TT>JS_THREADSAFE</TT> and flesh
-out the stubs and required headers in <I>jslock.c</I> and <I>jslock.h</I>.
-See the JS API docs for more.</LI>
+<li>
+<a href="#Design">Design walk-through</a></li>
+</ul>
 
-<LI>
-To turn on the arena package's instrumentation, define <TT>JS_ARENAMETER</TT>.</LI>
+<h2>
+<a NAME="Introduction"></a>Introduction</h2>
+This is the README file for the&nbsp;<span CLASS=LXRSHORTDESC>JavaScript
+Reference (JSRef) implementation.</span> It consists of build conventions
+and instructions, source code conventions, a design walk-through, and a
+brief file-by-file description of the source.
+<p><span CLASS=LXRLONGDESC>JSRef builds a library or DLL containing the
+JavaScript runtime (compiler, interpreter, decompiler, garbage collector,
+atom manager, standard classes). It then compiles a small "shell" program
+and links that with the library to make an interpreter that can be used
+interactively and with test .js files to run scripts.&nbsp; The code has
+no dependencies on the Navigator code.</span>
+<p><i>Quick start tip</i>: skip to "Using the JS API" below, build the
+js shell, and play with the object named "it" (start by setting 'it.noisy
+= true').
+<h2>
+<a NAME="Build"></a>Build conventions (standalone JS engine and shell)</h2>
+These build directions refer only to building the standalone JavaScript
+engine and shell.&nbsp; To build within the browser, refer to the <a href="http://www.mozilla.org/docs/">build
+directions</a> on the mozilla.org website.
+<p>By default, all platforms build a version of the JS engine that is <i>not</i>
+threadsafe.&nbsp; If you require thread-safety, you must also populate
+the <tt>mozilla/dist</tt> directory with <a href="http://www.mozilla.org/docs/tplist/catCode/nsprdesc.htm">NSPR</a>
+headers and libraries.&nbsp; (NSPR implements a portable threading library,
+among other things.&nbsp; The source is downloadable via <a href="http://www.mozilla.org/cvs.html">CVS</a>
+from <tt><a href="http://cvs-mirror.mozilla.org/webtools/lxr/source/nsprpub">mozilla/nsprpub</a></tt>.)&nbsp;
+Next, you must define <tt>JS_THREADSAFE</tt> when building the JS engine,
+either on the command-line (gmake/nmake) or in a universal header file.
+<h3>
+Windows</h3>
 
-<LI>
-To turn on the hash table package's metering, define <TT>JS_HASHMETER</TT>.</LI>
-</UL>
+<ul>
+<li>
+Use MSVC 4.2 or 5.0.</li>
 
-<H2>
-Naming and coding conventions</H2>
+<li>
+For building from the IDE use <tt>js/src/js.mdp</tt>.&nbsp; (<tt>js.mdp</tt>
+is an MSVC4.2 project file, but if you load it into MSVC5, it will be converted
+to the newer project file format.)&nbsp; <font color="#CC0000">NOTE: makefile.win
+is an nmake file used only for building the JS-engine in the Mozilla browser.&nbsp;
+Don't attempt to use it to build the standalone JS-engine.</font></li>
 
-<UL>
-<LI>
-Public function names begin with <TT>JS_</TT> followed by capitalized "intercaps",
-e.g. <TT>JS_NewObject</TT>.</LI>
+<li>
+If you prefer to build from the command-line, use '<tt>nmake -f js.mak</tt>'</li>
 
-<LI>
-Extern but library-private function names use a <TT>js_</TT> prefix and
-mixed case, e.g. <TT>js_LookupSymbol</TT>.</LI>
+<li>
+Executable shell <tt>js.exe</tt> and runtime library <tt>js32.dll</tt>
+are created in either <tt>js/src/Debug</tt> or <tt>js/src/Release</tt>.</li>
+</ul>
 
-<LI>
-Most static function names have unprefixed, mixed-case names: <TT>GetChar</TT>.</LI>
+<h3>
+Macintosh</h3>
 
-<LI>
+<ul>
+<li>
+Use CodeWarrior 3.x</li>
+
+<li>
+Load the project file <tt>js:src:macbuild:JSRef.mcp </tt>and select "Make"
+from the menu.</li>
+</ul>
+
+<h3>
+Unix</h3>
+
+<ul>
+<li>
+Use '<tt>gmake -f Makefile.ref</tt>' to build. To compile optimized code,
+pass <tt>BUILD_OPT=1</tt> on the gmake command line or preset it in the
+environment or <tt>Makefile.ref</tt>.&nbsp; <font color="#CC0000">NOTE:
+Do not attempt to use Makefile to build the standalone JavaScript engine.&nbsp;
+This file is used only for building the JS-engine in the Mozilla browser.</font></li>
+
+<li>
+<font color="#000000">Each platform on which JS is built must have a <tt>*.mk</tt>
+configuration file in the <tt>js/src/config</tt> directory.&nbsp; The configuration
+file specifies the compiler/linker to be used and allows for customization
+of command-line options.&nbsp; To date, the build system has been tested
+on Solaris, AIX, HP/UX, OSF, IRIX, x86 Linux and Windows NT.</font></li>
+
+<li>
+<font color="#000000">Most platforms will work with either the vendor compiler
+</font>or
+<a href="ftp://prep.ai.mit.edu/pub/gnu">gcc</a>.&nbsp;
+(Except that HP builds only work using the native compiler.&nbsp; gcc won't
+link correctly with shared libraries on that platform.&nbsp; If someone
+knows a way to fix this, <a href="mailto:wynholds@netscape.com">let us
+know</a>.)</li>
+
+<li>
+<font color="#000000">If you define <tt>JS_LIVECONNECT</tt>, gmake will
+descend into the liveconnect directory and build <a href="http://cvs-mirror.mozilla.org/webtools/lxr/source/js/src/liveconnect/README.html">LiveConnect</a>
+after building the JS engine.</font></li>
+
+<li>
+To build a binary drop (a zip'ed up file of headers, libraries, binaries),
+check out <tt>mozilla/config</tt> and <tt>mozilla/nsprpub/config</tt>.&nbsp;
+Use '<tt>gmake -f Makefile.ref nsinstall-target all export ship</tt>'</li>
+</ul>
+
+<h2>
+<a NAME="Debugging"></a>Debugging notes</h2>
+
+<ul>
+<li>
+To turn on GC instrumentation, define <tt>JS_GCMETER</tt>.</li>
+
+<li>
+To turn on the arena package's instrumentation, define <tt>JS_ARENAMETER</tt>.</li>
+
+<li>
+To turn on the hash table package's metering, define <tt>JS_HASHMETER</tt>.</li>
+</ul>
+
+<h2>
+<a NAME="Conventions"></a>Naming and coding conventions</h2>
+
+<ul>
+<li>
+Public function names begin with <tt>JS_</tt> followed by capitalized "intercaps",
+e.g. <tt>JS_NewObject</tt>.</li>
+
+<li>
+Extern but library-private function names use a <tt>js_</tt> prefix and
+mixed case, e.g. <tt>js_LookupSymbol</tt>.</li>
+
+<li>
+Most static function names have unprefixed, mixed-case names: <tt>GetChar</tt>.</li>
+
+<li>
 But static native methods of JS objects have lowercase, underscore-separated
-or intercaps names, e.g., <TT>str_indexOf</TT>.</LI>
+or intercaps names, e.g., <tt>str_indexOf</tt>.</li>
 
-<LI>
+<li>
 And library-private and static data use underscores, not intercaps (but
-library-private data do use a <TT>js_</TT> prefix).</LI>
+library-private data do use a <tt>js_</tt> prefix).</li>
 
-<LI>
-Scalar type names are lowercase and js-prefixed: <TT>jsdouble</TT>.</LI>
+<li>
+Scalar type names are lowercase and js-prefixed: <tt>jsdouble</tt>.</li>
 
-<LI>
-Aggregate type names are JS-prefixed and mixed-case: <TT>JSObject.</TT></LI>
+<li>
+Aggregate type names are JS-prefixed and mixed-case: <tt>JSObject.</tt></li>
 
-<LI>
-Macros are generally <TT>ALL_CAPS </TT>and underscored, to call out potential
+<li>
+Macros are generally <tt>ALL_CAPS </tt>and underscored, to call out potential
 side effects, multiple uses of a formal argument, etc. - Four spaces of
-indentation per statement nesting level.</LI>
+indentation per statement nesting level.</li>
 
-<LI>
+<li>
 Tabs are taken to be eight spaces, and an Emacs magic comment at the top
 of each file tries to help. If you're using MSVC or similar, you'll want
-to set tab width to 8, or convert these files to be space-filled.</LI>
+to set tab width to 8, or convert these files to be space-filled.</li>
 
-<LI>
-DLL entry points have their return type expanded within a <TT>JS_PUBLIC_API()</TT>
+<li>
+DLL entry points have their return type expanded within a <tt>JS_PUBLIC_API()</tt>
 macro call, to get the right Windows secret type qualifiers in the right
-places for both 16- and 32-bit builds.</LI>
+places for both 16- and 32-bit builds.</li>
 
-<LI>
+<li>
 Callback functions that might be called from a DLL are similarly macroized
-with <TT>JS_STATIC_DLL_CALLBACK</TT> (if the function otherwise would be
-static to hide its name) or <TT>JS_DLL_CALLBACK</TT> (this macro takes
+with <tt>JS_STATIC_DLL_CALLBACK</tt> (if the function otherwise would be
+static to hide its name) or <tt>JS_DLL_CALLBACK</tt> (this macro takes
 no type argument; it should be used after the return type and before the
-function name).</LI>
-</UL>
+function name).</li>
+</ul>
 
-<H2>
-Using the JS API</H2>
+<h2>
+<a NAME="JSAPI"></a>Using the JS API</h2>
 
-<H4>
-Starting up</H4>
+<h4>
+Starting up</h4>
 
-<PRE><TT>&nbsp;&nbsp;&nbsp; /*
+<pre><tt>&nbsp;&nbsp;&nbsp; /*
 &nbsp;&nbsp;&nbsp;&nbsp; * Tune this to avoid wasting space for shallow stacks, while saving on
 &nbsp;&nbsp;&nbsp;&nbsp; * malloc overhead/fragmentation for deep or highly-variable stacks.
 &nbsp;&nbsp;&nbsp;&nbsp; */
@@ -147,12 +227,12 @@ Starting up</H4>
 &nbsp;&nbsp;&nbsp; JSObject *globalObj;
 
 &nbsp;&nbsp;&nbsp; globalObj = JS_NewObject(cx, &amp;my_global_class, 0, 0);
-&nbsp;&nbsp;&nbsp; JS_InitStandardClasses(cx, globalObj);</TT></PRE>
+&nbsp;&nbsp;&nbsp; JS_InitStandardClasses(cx, globalObj);</tt></pre>
 
-<H4>
-Defining objects and properties</H4>
+<h4>
+Defining objects and properties</h4>
 
-<PRE><TT>&nbsp;&nbsp;&nbsp; /* Statically initialize a class to make "one-off" objects. */
+<pre><tt>&nbsp;&nbsp;&nbsp; /* Statically initialize a class to make "one-off" objects. */
 &nbsp;&nbsp;&nbsp; JSClass my_class = {
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "MyClass",
 
@@ -214,12 +294,12 @@ Defining objects and properties</H4>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return JS_TRUE;
-&nbsp;&nbsp;&nbsp; }</TT></PRE>
+&nbsp;&nbsp;&nbsp; }</tt></pre>
 
-<H4>
-Defining functions</H4>
+<h4>
+Defining functions</h4>
 
-<PRE><TT>&nbsp;&nbsp;&nbsp; /* Define a bunch of native functions first: */
+<pre><tt>&nbsp;&nbsp;&nbsp; /* Define a bunch of native functions first: */
 &nbsp;&nbsp;&nbsp; static JSBool
 &nbsp;&nbsp;&nbsp; my_abs(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 &nbsp;&nbsp;&nbsp; {
@@ -251,12 +331,12 @@ Defining functions</H4>
 &nbsp;&nbsp;&nbsp;&nbsp; * a prototype object, the methods will apply to all instances past and
 &nbsp;&nbsp;&nbsp;&nbsp; * future of the prototype's class (see below for classes).
 &nbsp;&nbsp;&nbsp;&nbsp; */
-&nbsp;&nbsp;&nbsp; JS_DefineFunctions(cx, globalObj, my_functions);</TT></PRE>
+&nbsp;&nbsp;&nbsp; JS_DefineFunctions(cx, globalObj, my_functions);</tt></pre>
 
-<H4>
-Defining classes</H4>
+<h4>
+Defining classes</h4>
 
-<PRE><TT>&nbsp;&nbsp;&nbsp; /*
+<pre><tt>&nbsp;&nbsp;&nbsp; /*
 &nbsp;&nbsp;&nbsp;&nbsp; * This pulls together the above API elements by defining a constructor
 &nbsp;&nbsp;&nbsp;&nbsp; * function, a prototype object, and properties of the prototype and of
 &nbsp;&nbsp;&nbsp;&nbsp; * the constructor, all with one API call.
@@ -287,12 +367,12 @@ Defining classes</H4>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; my_props, my_methods,
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /* class constructor properties and methods */
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; my_static_props, my_static_methods);</TT></PRE>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; my_static_props, my_static_methods);</tt></pre>
 
-<H4>
-Running scripts</H4>
+<h4>
+Running scripts</h4>
 
-<PRE><TT>&nbsp;&nbsp;&nbsp; /* These should indicate source location for diagnostics. */
+<pre><tt>&nbsp;&nbsp;&nbsp; /* These should indicate source location for diagnostics. */
 &nbsp;&nbsp;&nbsp; char *filename;
 &nbsp;&nbsp;&nbsp; uintN lineno;
 
@@ -320,12 +400,12 @@ Running scripts</H4>
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ok = JS_ValueToNumber(cx, rval, &amp;d);
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; . . .
-&nbsp;&nbsp;&nbsp; }</TT></PRE>
+&nbsp;&nbsp;&nbsp; }</tt></pre>
 
-<H4>
-Calling functions</H4>
+<h4>
+Calling functions</h4>
 
-<PRE><TT>&nbsp;&nbsp;&nbsp; /* Call a global function named "foo" that takes no arguments. */
+<pre><tt>&nbsp;&nbsp;&nbsp; /* Call a global function named "foo" that takes no arguments. */
 &nbsp;&nbsp;&nbsp; ok = JS_CallFunctionName(cx, globalObj, "foo", 0, 0, &amp;rval);
 
 &nbsp;&nbsp;&nbsp; jsval argv[2];
@@ -333,43 +413,43 @@ Calling functions</H4>
 &nbsp;&nbsp;&nbsp; /* Call a function in obj's scope named "method", passing two arguments. */
 &nbsp;&nbsp;&nbsp; argv[0] = . . .;
 &nbsp;&nbsp;&nbsp; argv[1] = . . .;
-&nbsp;&nbsp;&nbsp; ok = JS_CallFunctionName(cx, obj, "method", 2, argv, &amp;rval);</TT></PRE>
+&nbsp;&nbsp;&nbsp; ok = JS_CallFunctionName(cx, obj, "method", 2, argv, &amp;rval);</tt></pre>
 
-<H4>
-Shutting down</H4>
+<h4>
+Shutting down</h4>
 
-<PRE><TT>&nbsp;&nbsp;&nbsp; /* For each context you've created: */
+<pre><tt>&nbsp;&nbsp;&nbsp; /* For each context you've created: */
 &nbsp;&nbsp;&nbsp; JS_DestroyContext(cx);
 
 &nbsp;&nbsp;&nbsp; /* And finally: */
-&nbsp;&nbsp;&nbsp; JS_Finish(rt);</TT></PRE>
+&nbsp;&nbsp;&nbsp; JS_Finish(rt);</tt></pre>
 
-<H4>
-Debugging API</H4>
-See the<TT> trap, untrap, watch, unwatch, line2pc</TT>, and <TT>pc2line</TT>
-commands in <TT>js.c</TT>. Also the (scant) comments in <I>jsdbgapi.h</I>.
-<H2>
-Design walk-through</H2>
+<h4>
+Debugging API</h4>
+See the<tt> trap, untrap, watch, unwatch, line2pc</tt>, and <tt>pc2line</tt>
+commands in <tt>js.c</tt>. Also the (scant) comments in <i>jsdbgapi.h</i>.
+<h2>
+<a NAME="Design"></a>Design walk-through</h2>
 This section must be brief for now -- it could easily turn into a book.
-<H4>
-JS "JavaScript Proper"</H4>
+<h4>
+JS "JavaScript Proper"</h4>
 JS modules declare and implement the JavaScript compiler, interpreter,
 decompiler, GC and atom manager, and standard classes.
-<P>JavaScript uses untyped bytecode and runtime type tagging of data values.
-The <TT>jsval</TT> type is a signed machine word that contains either a
+<p>JavaScript uses untyped bytecode and runtime type tagging of data values.
+The <tt>jsval</tt> type is a signed machine word that contains either a
 signed integer value (if the low bit is set), or a type-tagged pointer
 or boolean value (if the low bit is clear). Tagged pointers all refer to
 8-byte-aligned things in the GC heap.
-<P>Objects consist of a possibly shared structural description, called
+<p>Objects consist of a possibly shared structural description, called
 the map or scope; and unshared property values in a vector, called the
 slots. Object properties are associated with nonnegative integers stored
-in <TT>jsval</TT>'s, or with atoms (unique string descriptors) if named
+in <tt>jsval</tt>'s, or with atoms (unique string descriptors) if named
 by an identifier or a non-integral index expression.
-<P>Scripts contain bytecode, source annotations, and a pool of string,
+<p>Scripts contain bytecode, source annotations, and a pool of string,
 number, and identifier literals. Functions are objects that extend scripts
 or native functions with formal parameters, a literal syntax, and a distinct
 primitive type ("function").
-<P>The compiler consists of a recursive-descent parser and a random-logic
+<p>The compiler consists of a recursive-descent parser and a random-logic
 rather than table-driven lexical scanner. Semantic and lexical feedback
 are used to disambiguate hard cases such as missing semicolons, assignable
 expressions ("lvalues" in C parlance), etc. The parser generates bytecode
@@ -381,88 +461,89 @@ All state associated with an interpreter instance is passed through formal
 parameters to the interpreter entry point; most implicit state is collected
 in a type named JSContext. Therefore, all API and almost all other functions
 in JSRef take a JSContext pointer as their first argument.
-<P>The decompiler translates postfix bytecode into infix source by consulting
+<p>The decompiler translates postfix bytecode into infix source by consulting
 a separate byte-sized code, called source notes, to disambiguate bytecodes
 that result from more than one grammatical production.
-<P>The GC is a mark-and-sweep, non-conservative (perfect) collector. It
+<p>The GC is a mark-and-sweep, non-conservative (perfect) collector. It
 can allocate only fixed-sized things -- the current size is two machine
 words. It is used to hold JS object and string descriptors (but not property
 lists or string bytes), and double-precision floating point numbers. It
-runs automatically only when maxbytes (as passed to <TT>JS_Init()</TT>)
+runs automatically only when maxbytes (as passed to <tt>JS_Init()</tt>)
 bytes of GC things have been allocated and another thing-allocation request
-is made. JS API users should call <TT>JS_GC()</TT> or <TT>JS_MaybeGC()</TT>
+is made. JS API users should call <tt>JS_GC()</tt> or <tt>JS_MaybeGC()</tt>
 between script executions or from the branch callback, as often as necessary.
-<P>An important point about the GC's "perfection": you must add roots for
+<p>An important point about the GC's "perfection": you must add roots for
 new objects created by your native methods if you store references to them
 into a non-JS structure in the malloc heap or in static data. Also, if
 you make a new object in a native method, but do not store it through the
-<TT>rval</TT> result parameter (see math_abs in the "Using the JS API"
-section above) so that it is in a known root, the object is guaranteed
-to survive only until another new object is created. Either lock the first
-new object when making two in a row, or store it in a root you've added,
-or store it via rval.
-<P>The atom manager consists of a hash table associating strings uniquely
+<tt>rval</tt>
+result parameter (see math_abs in the "Using the JS API" section above)
+so that it is in a known root, the object is guaranteed to survive only
+until another new object is created. Either lock the first new object when
+making two in a row, or store it in a root you've added, or store it via
+rval.
+<p>The atom manager consists of a hash table associating strings uniquely
 with scanner/parser information such as keyword type, index in script or
 function literal pool, etc. Atoms play three roles in JSRef: as literals
 referred to by unaligned 16-bit immediate bytecode operands, as unique
 string descriptors for efficient property name hashing, and as members
 of the root GC set for perfect GC. This design therefore requires atoms
-to be manually reference counted, from script literal pools (<TT>JSAtomMap</TT>)
-and object symbol (<TT>JSSymbol</TT>) entry keys.
-<P>Native objects and methods for arrays, booleans, dates, functions, numbers,
+to be manually reference counted, from script literal pools (<tt>JSAtomMap</tt>)
+and object symbol (<tt>JSSymbol</tt>) entry keys.
+<p>Native objects and methods for arrays, booleans, dates, functions, numbers,
 and strings are implemented using the JS API and certain internal interfaces
 used as "fast paths".
-<P>In general, errors are signaled by false or unoverloaded-null return
-values, and are reported using <TT>JS_ReportError()</TT> or one of its
+<p>In general, errors are signaled by false or unoverloaded-null return
+values, and are reported using <tt>JS_ReportError()</tt> or one of its
 variants by the lowest level in order to provide the most detail. Client
 code can substitute its own error reporting function and suppress errors,
 or reflect them into Java or some other runtime system as exceptions, GUI
 dialogs, etc..
-<H2>
-File walk-through</H2>
+<h2>
+File walk-through (BADLY OUT OF DATE!)</h2>
 
-<H4>
-jsapi.c, jsapi.h</H4>
+<h4>
+jsapi.c, jsapi.h</h4>
 The public API to be used by almost all client code.&nbsp; If your client
-code can't make do with <TT>jsapi.h</TT>, and must reach into a friend
-or private js* file, please let us know so we can extend <TT>jsapi.h</TT>
+code can't make do with <tt>jsapi.h</tt>, and must reach into a friend
+or private js* file, please let us know so we can extend <tt>jsapi.h</tt>
 to include what you need in a fashion that we can support over the long
 run.
-<H4>
-jspubtd.h, jsprvtd.h</H4>
+<h4>
+jspubtd.h, jsprvtd.h</h4>
 These files exist to group struct and scalar typedefs so they can be used
 everywhere without dragging in struct definitions from N different files.
-The <TT>jspubtd.h</TT> file contains public typedefs, and is included by
-<TT>jsapi.h</TT>. The <TT>jsprvtd.h</TT> file contains private typedefs
-and is included by various .h files that need type names, but not type
-sizes or declarations.
-<H4>
-jsdbgapi.c, jsdbgapi.h</H4>
+The <tt>jspubtd.h</tt> file contains public typedefs, and is included by
+<tt>jsapi.h</tt>.
+The <tt>jsprvtd.h</tt> file contains private typedefs and is included by
+various .h files that need type names, but not type sizes or declarations.
+<h4>
+jsdbgapi.c, jsdbgapi.h</h4>
 The Debugging API, still very much under development. Provided so far:
-<UL>
-<LI>
+<ul>
+<li>
 Traps, with which breakpoints, single-stepping, step over, step out, and
 so on can be implemented. The debugger will have to consult jsopcode.def
 on its own to figure out where to plant trap instructions to implement
 functions like step out, but a future jsdbgapi.h will provide convenience
 interfaces to do these things. At most one trap per bytecode can be set.
-When a script (<TT>JSScript</TT>) is destroyed, all traps set in its bytecode
-are cleared.</LI>
+When a script (<tt>JSScript</tt>) is destroyed, all traps set in its bytecode
+are cleared.</li>
 
-<LI>
+<li>
 Watchpoints, for intercepting set operations on properties and running
 a debugger-supplied function that receives the old value and a pointer
-to the new one, which it can use to modify the new value being set.</LI>
+to the new one, which it can use to modify the new value being set.</li>
 
-<LI>
+<li>
 Line number to PC and back mapping functions. The line-to-PC direction
 "rounds" toward the next bytecode generated from a line greater than or
 equal to the input line, and may return the PC of a for-loop update part,
 if given the line number of the loop body's closing brace. Any line after
 the last one in a script or function maps to a PC one byte beyond the last
-bytecode in the script. An example, from perfect.js:</LI>
+bytecode in the script. An example, from perfect.js:</li>
 
-<PRE><TT>14&nbsp;&nbsp; function perfect(n)
+<pre><tt>14&nbsp;&nbsp; function perfect(n)
 15&nbsp;&nbsp; {
 16&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; print("The perfect numbers up to " +&nbsp; n + " are:");
 17
@@ -482,10 +563,10 @@ bytecode in the script. An example, from perfect.js:</LI>
 31&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }
 32&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; delete sumOfDivisors;
 33&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; print("That's all.");
-34&nbsp;&nbsp; }</TT></PRE>
+34&nbsp;&nbsp; }</tt></pre>
 The line number to PC and back mappings can be tested using the js program
 with the following script:
-<PRE><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; load("perfect.js")
+<pre><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; load("perfect.js")
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; print(perfect)
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; dis(perfect)
 
@@ -494,9 +575,9 @@ with the following script:
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; var pc = line2pc(perfect,ln)
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; var ln2 = pc2line(perfect,pc)
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; print("\tline " + ln + " => pc " + pc + " => line " + ln2)
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }</TT></PRE>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }</tt></pre>
 The result of the for loop over lines 0 to 40 inclusive is:
-<PRE><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; line 0 => pc 0 => line 16
+<pre><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; line 0 => pc 0 => line 16
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; line 1 => pc 0 => line 16
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; line 2 => pc 0 => line 16
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; line 3 => pc 0 => line 16
@@ -536,138 +617,139 @@ The result of the for loop over lines 0 to 40 inclusive is:
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; line 37 => pc 172 => line 33
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; line 38 => pc 172 => line 33
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; line 39 => pc 172 => line 33
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; line 40 => pc 172 => line 33</TT></PRE>
-</UL>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; line 40 => pc 172 => line 33</tt></pre>
+</ul>
 
-<H4>
-jsconfig.h</H4>
-Various configuration macros defined as 0 or 1 depending on how <TT>JS_VERSION</TT>
+<h4>
+jsconfig.h</h4>
+Various configuration macros defined as 0 or 1 depending on how <tt>JS_VERSION</tt>
 is defined (as 10 for JavaScript 1.0, 11 for JavaScript 1.1, etc.). Not
 all macros are tested around related code yet. In particular, JS 1.0 support
 is missing from JSRef. JS 1.2 support will appear in a future JSRef release.
-<BR>&nbsp;
-<H4>
-js.c</H4>
+<br>&nbsp;
+<h4>
+js.c</h4>
 The "JS shell", a simple interpreter program that uses the JS API and more
 than a few internal interfaces (some of these internal interfaces could
-be replaced by <TT>jsapi.h</TT> calls). The js program built from this
+be replaced by <tt>jsapi.h</tt> calls). The js program built from this
 source provides a test vehicle for evaluating scripts and calling functions,
 trying out new debugger primitives, etc.
-<H4>
-jsarray.*, jsbool.*, jdsdate.*, jsfun.*, jsmath.*, jsnum.*, jsstr.*</H4>
+<h4>
+jsarray.*, jsbool.*, jdsdate.*, jsfun.*, jsmath.*, jsnum.*, jsstr.*</h4>
 These file pairs implement the standard classes and (where they exist)
 their underlying primitive types. They have similar structure, generally
 starting with class definitions and continuing with internal constructors,
 finalizers, and helper functions.
-<H4>
-jsobj.*, jsscope.*</H4>
+<h4>
+jsobj.*, jsscope.*</h4>
 These two pairs declare and implement the JS object system. All of the
 following happen here:
-<UL>
-<LI>
-creating objects by class and prototype, and finalizing objects;</LI>
+<ul>
+<li>
+creating objects by class and prototype, and finalizing objects;</li>
 
-<LI>
-defining, looking up, getting, setting, and deleting properties;</LI>
+<li>
+defining, looking up, getting, setting, and deleting properties;</li>
 
-<LI>
-creating and destroying properties and binding names to them.</LI>
-</UL>
-The details of an object map (scope) are mostly hidden in <TT>jsscope.[ch]</TT>,
+<li>
+creating and destroying properties and binding names to them.</li>
+</ul>
+The details of an object map (scope) are mostly hidden in <tt>jsscope.[ch]</tt>,
 where scopes start out as linked lists of symbols, and grow after some
 threshold into PR hash tables.
-<H4>
-jsatom.c, jsatom.h</H4>
+<h4>
+jsatom.c, jsatom.h</h4>
 The atom manager. Contains well-known string constants, their atoms, the
 global atom hash table and related state, the js_Atomize() function that
-turns a counted string of bytes into an atom, and literal pool (<TT>JSAtomMap</TT>)
+turns a counted string of bytes into an atom, and literal pool (<tt>JSAtomMap</tt>)
 methods.
-<H4>
-jsgc.c, jsgc.h</H4>
+<h4>
+jsgc.c, jsgc.h</h4>
 [TBD]
-<H4>
-jsinterp.*, jscntxt.*</H4>
+<h4>
+jsinterp.*, jscntxt.*</h4>
 The bytecode interpreter, and related functions such as Call and AllocStack,
-live in <I>jsinterp.c</I>. The JSContext constructor and destructor are
-factored out into <I>jscntxt.c</I> for minimal linking when the compiler
+live in <i>jsinterp.c</i>. The JSContext constructor and destructor are
+factored out into <i>jscntxt.c</i> for minimal linking when the compiler
 part of JS is split from the interpreter part into a separate program.
-<H4>
-jsemit.*, jsopcode.tbl, jsopcode.*, jsparse.*, jsscan.*, jsscript.*</H4>
-Compiler and decompiler modules. The <I>jsopcode.tbl</I> file is a C preprocessor
+<h4>
+jsemit.*, jsopcode.tbl, jsopcode.*, jsparse.*, jsscan.*, jsscript.*</h4>
+Compiler and decompiler modules. The <i>jsopcode.tbl</i> file is a C preprocessor
 source that defines almost everything there is to know about JS bytecodes.
 See its major comment for how to use it. For now, a debugger will use it
-and its dependents such as <I>jsopcode.h</I> directly, but over time we
-intend to extend <I>jsdbgapi.h</I> to hide uninteresting details and provide
+and its dependents such as <i>jsopcode.h</i> directly, but over time we
+intend to extend <i>jsdbgapi.h</i> to hide uninteresting details and provide
 conveniences. The code generator is split across paragraphs of code in
-<I>jsparse.c</I>, and the utility methods called on <TT>JSCodeGenerator</TT>
-appear in <I>jsemit.c</I>. Source notes generated by <I>jsparse.c</I> and
-<I>jsemit.c</I> are used in <I>jsscript.c</I> to map line number to program
-counter and back.
-<H4>
-jstypes.h, jslog2.c</H4>
+<i>jsparse.c</i>,
+and the utility methods called on <tt>JSCodeGenerator</tt> appear in <i>jsemit.c</i>.
+Source notes generated by <i>jsparse.c</i> and
+<i>jsemit.c</i> are used
+in <i>jsscript.c</i> to map line number to program counter and back.
+<h4>
+jstypes.h, jslog2.c</h4>
 Fundamental representation types and utility macros. This file alone among
 all .h files in JSRef must be included first by .c files. It is not nested
 in .h files, as other prerequisite .h files generally are, since it is
 also a direct dependency of most .c files and would be over-included if
 nested in addition to being directly included. The one "not-quite-a-macro
-macro" is the <TT>JS_CeilingLog2()</TT> function in <I>jslog2.c</I>.
-<H4>
-jsarena.c, jsarena.h</H4>
+macro" is the <tt>JS_CeilingLog2()</tt> function in <i>jslog2.c</i>.
+<h4>
+jsarena.c, jsarena.h</h4>
 Last-In-First-Out allocation macros that amortize malloc costs and allow
 for en-masse freeing. See the paper mentioned in prarena.h's major comment.
-<H4>
-jsutil.c, jsutil.h</H4>
-The <TT>JS_ASSERT</TT> macro is used throughout JSRef source as a proof
+<h4>
+jsutil.c, jsutil.h</h4>
+The <tt>JS_ASSERT</tt> macro is used throughout JSRef source as a proof
 device to make invariants and preconditions clear to the reader, and to
 hold the line during maintenance and evolution against regressions or violations
 of assumptions that it would be too expensive to test unconditionally at
 run-time. Certain assertions are followed by run-time tests that cope with
 assertion failure, but only where I'm too smart or paranoid to believe
 the assertion will never fail...
-<H4>
-jsclist.h</H4>
+<h4>
+jsclist.h</h4>
 Doubly-linked circular list struct and macros.
-<H4>
-jscpucfg.c</H4>
-This standalone program generates <I>jscpucfg.h</I>, a header file containing
+<h4>
+jscpucfg.c</h4>
+This standalone program generates <i>jscpucfg.h</i>, a header file containing
 bytes per word and other constants that depend on CPU architecture and
 C compiler type model. It tries to discover most of these constants by
 running its own experiments on the build host, so if you are cross-compiling,
 beware.
-<H4>
-prdtoa.c, prdtoa.h</H4>
+<h4>
+prdtoa.c, prdtoa.h</h4>
 David Gay's portable double-precision floating point to string conversion
 code, with Permission To Use notice included.
-<H4>
-prhash.c, prhash.h</H4>
+<h4>
+prhash.c, prhash.h</h4>
 Portable, extensible hash tables. These use multiplicative hash for strength
 reduction over division hash, yet with very good key distribution over
 power of two table sizes. Collisions resolve via chaining, so each entry
 burns a malloc and can fragment the heap.
-<H4>
-prlong.c, prlong.h</H4>
+<h4>
+prlong.c, prlong.h</h4>
 64-bit integer emulation, and compatible macros that use C's long long
 type where it exists (my last company mapped long long to a 128-bit type,
 but no real architecture does 128-bit ints yet).
-<H4>
-jsosdep.h</H4>
+<h4>
+jsosdep.h</h4>
 Annoying OS dependencies rationalized into a few "feature-test" macros
-such as <TT>JS_HAVE_LONG_LONG</TT>.
-<H4>
-jsprf.*</H4>
+such as <tt>JS_HAVE_LONG_LONG</tt>.
+<h4>
+jsprf.*</h4>
 Portable, buffer-overrun-resistant sprintf and friends. For no good reason
 save lack of time, the %e, %f, and %g formats cause your system's native
-sprintf, rather than <TT>JS_dtoa()</TT>, to be used. This bug doesn't affect
-JSRef, because it uses its own <TT>JS_dtoa()</TT> call in <I>jsnum.c</I>
+sprintf, rather than <tt>JS_dtoa()</tt>, to be used. This bug doesn't affect
+JSRef, because it uses its own <tt>JS_dtoa()</tt> call in <i>jsnum.c</i>
 to convert from double to string, but it's a bug that we'll fix later,
-and one you should be aware of if you intend to use a <TT>JS_*printf()</TT>&nbsp;
+and one you should be aware of if you intend to use a <tt>JS_*printf()</tt>&nbsp;
 function with your own floating type arguments - various vendor sprintf's
 mishandle NaN, +/-Inf, and some even print normal floating values inaccurately.
-<H4>
-prmjtime.c, prmjtime.h</H4>
+<h4>
+prmjtime.c, prmjtime.h</h4>
 Time functions. These interfaces are named in a way that makes local vs.
 universal time confusion likely. Caveat emptor, and we're working on it.
 To make matters worse, Java (and therefore JavaScript) uses "local" time
 numbers (offsets from the epoch) in its Date class.
-</BODY>
-</HTML>
+</body>
+</html>

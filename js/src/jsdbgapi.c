@@ -837,7 +837,7 @@ JS_SetSourceHandler(JSRuntime *rt, JSSourceHandler handler, void *closure)
     rt->sourceHandler = handler;
     rt->sourceHandlerData = closure;
     return JS_TRUE;
-}        
+}
 
 JS_PUBLIC_API(JSBool)
 JS_SetExecuteHook(JSRuntime *rt, JSInterpreterHook hook, void *closure)
@@ -845,7 +845,7 @@ JS_SetExecuteHook(JSRuntime *rt, JSInterpreterHook hook, void *closure)
     rt->executeHook = hook;
     rt->executeHookData = closure;
     return JS_TRUE;
-}        
+}
 
 JS_PUBLIC_API(JSBool)
 JS_SetCallHook(JSRuntime *rt, JSInterpreterHook hook, void *closure)
@@ -853,7 +853,7 @@ JS_SetCallHook(JSRuntime *rt, JSInterpreterHook hook, void *closure)
     rt->callHook = hook;
     rt->callHookData = closure;
     return JS_TRUE;
-}        
+}
 
 JS_PUBLIC_API(JSBool)
 JS_SetObjectHook(JSRuntime *rt, JSObjectHook hook, void *closure)
@@ -861,4 +861,20 @@ JS_SetObjectHook(JSRuntime *rt, JSObjectHook hook, void *closure)
     rt->objectHook = hook;
     rt->objectHookData = closure;
     return JS_TRUE;
-}        
+}
+
+JS_PUBLIC_API(JSBool)
+JS_SetThrowHook(JSRuntime *rt, JSTrapHandler hook, void *closure)
+{
+    rt->throwHook = hook;
+    rt->throwHookData = closure;
+    return JS_TRUE;
+}
+
+JS_PUBLIC_API(JSBool)
+JS_SetDebugErrorHook(JSRuntime *rt, JSDebugErrorHook hook, void *closure)
+{
+    rt->debugErrorHook = hook;
+    rt->debugErrorHookData = closure;
+    return JS_TRUE;
+}

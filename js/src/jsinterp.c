@@ -444,10 +444,19 @@ js_Invoke(JSContext *cx, uintN argc, JSBool constructing)
 	/* Function is inlined, all other classes use object ops. */
 	ops = funobj->map->ops;
 
-	/* Try converting to function, for closure and API compatibility. */
-	ok = clasp->convert(cx, funobj, JSTYPE_FUNCTION, &v);
-	if (!ok)
-	    goto out2;
+        /* Try converting to function, for closure and API compatibility. */
+        /*
+        *   We attempt the conversion under all circumstances for 1.2, but
+        *   only if there is a call op defined otherwise. 
+        */
+        if ((cx->version == JSVERSION_1_2)
+            || ((ops == &js_ObjectOps) ? 
+                    (clasp->call != 0) : (ops->call != 0)) ) {
+	    ok = clasp->convert(cx, funobj, JSTYPE_FUNCTION, &v);
+            if (!ok)
+	        goto out2;
+        }
+
 	if (!JSVAL_IS_FUNCTION(cx, v)) {
 	    fun = NULL;
 	    script = NULL;
@@ -748,6 +757,7 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script, JSFunction *fun,
     void *hookData;
 
     hook = cx->runtime->executeHook;
+    hookData = NULL;
     oldfp = cx->fp;
     frame.callobj = frame.argsobj = NULL;
     frame.script = script;
@@ -838,9 +848,9 @@ ImportProperty(JSContext *cx, JSObject *obj, jsid id)
 	ida = JS_Enumerate(cx, obj);
 	if (!ida)
 	    return JS_FALSE;
+	ok = JS_TRUE;
 	if (ida->length == 0)
 	    goto out;
-	ok = JS_TRUE;
     } else {
 	ida = NULL;
 	if (!OBJ_LOOKUP_PROPERTY(cx, obj, id, &obj2, &prop))
@@ -1024,6 +1034,10 @@ js_Interpret(JSContext *cx, jsval *result)
     }                                                                         \
 }
 
+    pc = script->code;
+    endpc = pc + script->length;
+    len = -1;
+
     /*
      * Allocate operand and pc stack slots for the script's worst-case depth.
      */
@@ -1031,13 +1045,11 @@ js_Interpret(JSContext *cx, jsval *result)
     newsp = js_AllocStack(cx, (uintN)(2 * depth), &mark);
     if (!newsp) {
 	ok = JS_FALSE;
+	sp = NULL;
 	goto out;
     }
     newsp += depth;
     fp->sp = sp = newsp;
-
-    pc = script->code;
-    endpc = pc + script->length;
 
     while (pc < endpc) {
 	fp->pc = pc;
@@ -1072,7 +1084,7 @@ js_Interpret(JSContext *cx, jsval *result)
 #endif
 
 	if (rt->interruptHandler) {
-	    JSTrapHandler handler = (JSTrapHandler) rt->interruptHandler;
+	    JSTrapHandler handler = rt->interruptHandler;
 	    /* check copy of pointer for safety in multithreaded situation */
 	    if (handler) {
 		switch (handler(cx, script, pc, &rval,
@@ -1462,6 +1474,7 @@ js_Interpret(JSContext *cx, jsval *result)
 	ok = SPROP_SET(cx, sprop, obj, obj, &rval);                           \
 	if (ok) {                                                             \
 	    SET_ENUMERATE_ATTR(sprop);                                        \
+            GC_POKE(cx, NULL);  /* second arg ignored! */                     \
 	    OBJ_SET_SLOT(cx, obj, sprop->slot, rval);                         \
 	}                                                                     \
     } else {                                                                  \
@@ -1919,10 +1932,13 @@ js_Interpret(JSContext *cx, jsval *result)
 		obj2 = fun->object;
 	    }
 
+            clasp = &js_ObjectClass;
 	    if (!obj2) {
 		proto = parent = NULL;
 		fun = NULL;
 	    } else {
+                JSClass *cl;
+
 		/* Get the constructor prototype object for this function. */
 		ok = OBJ_GET_PROPERTY(cx, obj2,
 				      (jsid)rt->atomState.classPrototypeAtom,
@@ -1931,34 +1947,14 @@ js_Interpret(JSContext *cx, jsval *result)
 		    goto out;
 		proto = JSVAL_IS_OBJECT(rval) ? JSVAL_TO_OBJECT(rval) : NULL;
 		parent = OBJ_GET_PARENT(cx, obj2);
-	    }
 
-#if 1
-	    /* If there is no class prototype, use js_ObjectClass. */
-	    if (!proto)
-		obj = js_NewObject(cx, &js_ObjectClass, NULL, parent);
-	    else
-		obj = js_NewObject(cx, OBJ_GET_CLASS(cx, proto), proto, parent);
-#else
-            clasp = &js_ObjectClass;
-            if (!JSVAL_IS_PRIMITIVE(lval)) {
-                /* 
-                 * Use prototype's class iff we are calling the class's
-                 * constuctor.
-                 */
-                JSObject *funobj;
-
-                funobj = JSVAL_TO_OBJECT(lval);
-                clasp = OBJ_GET_CLASS(cx, funobj);
-                if (clasp == &js_FunctionClass &&
-                    ((JSFunction *)JS_GetPrivate(cx, funobj))->call == 
-                        OBJ_GET_CLASS(cx, proto)->construct)
+                if ((OBJ_GET_CLASS(cx, obj2) == &js_FunctionClass) && 
+                    (cl = ((JSFunction *)JS_GetPrivate(cx, obj2))->clasp) != 0)
                 {
-                    clasp = OBJ_GET_CLASS(cx, proto);
+                    clasp = cl;
                 }
-            }
+	    }
 	    obj = js_NewObject(cx, clasp, proto, parent);
-#endif
 	    if (!obj) {
 		ok = JS_FALSE;
 		goto out;
@@ -2732,7 +2728,7 @@ js_Interpret(JSContext *cx, jsval *result)
 #if JS_HAS_DEBUGGER_KEYWORD
 	  case JSOP_DEBUGGER:
 	    if (rt->debuggerHandler) {
-		JSTrapHandler handler = (JSTrapHandler) rt->debuggerHandler;
+		JSTrapHandler handler = rt->debuggerHandler;
 		/* check copy of pointer for safety in multithread situation */
 		if (handler) {
 		    switch (handler(cx, script, pc, &rval,
@@ -2796,10 +2792,40 @@ js_Interpret(JSContext *cx, jsval *result)
 out:
 
 #if JS_HAS_EXCEPTIONS
+    /* 
+     * Has an exception been raised?
+     */
     if (!ok && cx->throwing) {
+        /* 
+         * call hook if set
+         */
+	if (rt->throwHook) {
+	    JSTrapHandler handler = rt->throwHook;
+	    /* check copy of pointer for safety in multithreaded situation */
+	    if (handler) {
+		switch (handler(cx, script, pc, &rval,
+				rt->throwHookData)) {
+		  case JSTRAP_ERROR:
+                    cx->throwing = JS_FALSE;
+		    goto no_catch;
+		  case JSTRAP_CONTINUE:
+                    cx->throwing = JS_FALSE;
+                    ok = JS_TRUE;
+                    goto advance_pc;
+		  case JSTRAP_RETURN:
+                    ok = JS_TRUE;
+                    cx->throwing = JS_FALSE;
+		    fp->rval = rval;
+		    goto no_catch;
+		  case JSTRAP_THROW:
+                    cx->exception = rval;
+		  default:;
+		}
+	    }
+	}
+
         /*
-         * Check if an exception has been raised.  If so, there may be
-         * a try block within this frame that can catch the exception.
+         * Look for a try block within this frame that can catch the exception.
          */ 
         tn = script->trynotes;
         if (tn) {
@@ -2815,6 +2841,7 @@ out:
             }
         }
     }
+no_catch:
 #endif
 
     /*

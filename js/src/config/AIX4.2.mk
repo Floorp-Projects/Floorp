@@ -21,6 +21,8 @@
 
 CC = xlC_r
 CCC = xlC_r
+CFLAGS += -qarch=com -qnoansialias -qinline+$(INLINES) -DXP_UNIX -DAIX -DAIXV3 -DSYSV
+OPTIMIZER = -O
 
 RANLIB = ranlib
 
@@ -31,12 +33,10 @@ CPU_ARCH = rs6000
 GFX_ARCH = x
 INLINES = js_compare_and_swap:js_fast_lock1:js_fast_unlock1:js_lock_get_slot:js_lock_set_slot:js_lock_scope1
 
-OS_CFLAGS = -qarch=com -qinline+$(INLINES) -DXP_UNIX -DAIX -DAIXV3 -DSYSV
-OS_LIBS = -lbsd -lsvld -lm
+XLDFLAGS += -lbsd -lsvld -lm -lc_r
 #-lpthreads -lc_r
 
 MKSHLIB = $(LD) -brtl -bM:SRE -bnoentry -bexpall -berok
-XLDFLAGS += -lc
 
 ifdef JS_THREADSAFE
 XLDFLAGS += -ldl

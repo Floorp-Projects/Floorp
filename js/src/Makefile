@@ -82,7 +82,6 @@ EXPORTS		= js.msg \
 		  jscntxt.h \
 		  jscompat.h \
 		  jsconfig.h \
-		  jscpucfg.h \
 		  jsdate.h \
 		  jsdbgapi.h \
 		  jsemit.h \
@@ -166,12 +165,6 @@ endif # sparc
 
 INCLUDES	+= -I. 
 
-ifdef NSPR20
-INCLUDES	+= -I$(DIST)/include/nspr20/pr
-else
-INCLUDES	+= -I$(XPDIST)/public/nspr
-endif
-
 ifndef NSBUILDROOT
 JSJAVA_STUBHEADERS = -I$(DEPTH)/sun-java/include/_gen \
 		     -I$(DEPTH)/sun-java/netscape/javascript/_jri \
@@ -197,6 +190,30 @@ ifeq ($(OS_ARCH), Linux)
 LDFLAGS += -ldl
 endif
 
+FDLIBM_LIBRARY	= fdlibm/$(OBJDIR)/libfdm.a
+JSMATH_PRELINK	= $(OBJDIR)/jsmathtemp.o
+
+# special rule for jsmath.o since we want to incrementally link
+# against fdlibm to pull in only what is needed
+$(OBJDIR)/jsmath.o: $(FDLIBM_LIBRARY) $(JSMATH_PRELINK)
+	@$(MAKE_OBJDIR)
+ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
+	ld -r -o $@ $(JSMATH_PRELINK) $(FDLIBM_LIBRARY)
+else
+	ld -r -o $@ $(JSMATH_PRELINK) $(FDLIBM_LIBRARY)
+endif
+
+$(JSMATH_PRELINK): jsmath.c jslibmath.h
+	@$(MAKE_OBJDIR)
+ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
+	$(CC) -Fo$@ -c $(CFLAGS) $<
+else
+	$(CC) -o $@ -c $(CFLAGS) $<
+endif
+
+$(FDLIBM_LIBRARY):
+	cd fdlibm; $(MAKE)
+
 # this requires clobbering and recompiling with XCFLAGS=-DJSFILE
 js:
 	$(MAKE) clobber
@@ -218,6 +235,20 @@ endif
 # hardwire dependencies on jsopcode.tbl
 jsopcode.h jsopcode.c: jsopcode.tbl
 
+# Generate jsautocfg.h header
+$(OBJDIR)/jsautocfg.h: $(OBJDIR)/jscpucfg
+	rm -f $@
+	$(OBJDIR)/jscpucfg > $@
+
+$(OBJDIR)/jscpucfg: $(OBJDIR)/jscpucfg.o
+	$(CC) -o $@ $(OBJDIR)/jscpucfg.o
+
+export:: $(OBJDIR)/jsautocfg.h
+	$(INSTALL) -m 444 $(OBJDIR)/jsautocfg.h $(DIST)/include
+
+# Add to TARGETS so clobber rule works
+TARGETS += $(OBJDIR)/jsautocfg.h $(OBJDIR)/jscpucfg $(OBJDIR)/jscpucfg.o
+
 # this section was put in the merged by danda into the
 # JAVA_*_MERGE section and normally would have
 # been removed.  However it looks like it shouldn't have
@@ -231,24 +262,6 @@ $(OBJDIR)/js.o: js.c
 	$(CC) -Fo$@ -c $(CFLAGS) $(JSJAVA_CFLAGS) js.c
 endif
 
+clobber::
+	rm -f $(OBJDIR)/jscpucfg $(OBJDIR)/jscpucfg.h
 
-refdiff:
-	@for f in `cat commfiles`; do                                         \
-	    t=/tmp/refdiff.$$$$;                                              \
-	    trap 'rm -f $$t' 0 1 2 15;                                        \
-	    sed -f prconv.sed ../ref/$$f > $$t;                               \
-	    cmp -s $$t $$f;                                                   \
-	    if test $$? -ne 0; then                                           \
-		echo "=== $$f";                                               \
-		diff $$f $$t;                                                 \
-	    fi;                                                               \
-	    rm -f $$t;                                                        \
-	done
-
-refconv:
-	@for f in `cat commfiles`; do                                         \
-	    echo "=== $$f";                                                   \
-	    sed -f prconv.sed ../ref/$$f > $$f;                               \
-	done
-
-.PHONY: refdiff refconv

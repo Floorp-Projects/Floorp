@@ -1213,6 +1213,7 @@ JS_strtod(CONST char *s00, char **se)
 	if (!initialized) InitDtoa();
 #endif
 
+        bb = bd = bs = delta = NULL;
 	sign = nz0 = nz = 0;
 	rv = 0.;
 	for(s = s00;;s++) switch(*s) {
@@ -1925,6 +1926,10 @@ JS_dtoa(double d, int mode, int ndigits,
 	static int32 result_k;
 	JSBool retval;
         size_t strsize;
+
+        spec_case = 0;   /* Not a power-of-two special case */
+        ilim = ilim1 = 0;
+        mlo = NULL;
 
 #ifdef JS_THREADSAFE
 	if (!initialized) InitDtoa();

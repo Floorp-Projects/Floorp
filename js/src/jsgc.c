@@ -170,7 +170,7 @@ js_AllocGCThing(JSContext *cx, uintN flags)
 {
     JSRuntime *rt;
     JSGCThing *thing;
-    uint8 *flagp;
+    uint8 *flagp = NULL;
 #ifdef TOO_MUCH_GC
     JSBool tried_gc = JS_TRUE;
     js_GC(cx);
@@ -771,8 +771,8 @@ restart:
 	GC_MARK(rt, acx->newborn[GCX_STRING], "newborn string", NULL);
 	GC_MARK(rt, acx->newborn[GCX_DOUBLE], "newborn double", NULL);
 #if JS_HAS_EXCEPTIONS
-	if (acx->throwing)
-	    GC_MARK(rt, acx->exception, "exception", NULL);
+	if (acx->throwing && JSVAL_IS_GCTHING(acx->exception))
+	    GC_MARK(rt, JSVAL_TO_GCTHING(acx->exception), "exception", NULL);
 #endif
     }
 

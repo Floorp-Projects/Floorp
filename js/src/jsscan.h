@@ -161,6 +161,7 @@ struct JSTokenStream {
 #define TSF_INTERACTIVE 0x10            /* interactive parsing mode */
 #define TSF_NLFLAG      0x20            /* last linebuf ended with \n */
 #define TSF_CRFLAG      0x40            /* linebuf would have ended with \r */
+#define TSF_BADCOMPILE  0x80            /* compile failed, stop throwing exns */ 
 
 /*
  * At most one non-EOF token can be pushed back onto a TokenStream between
@@ -220,9 +221,12 @@ js_MapKeywords(void (*mapfun)(const char *));
  * Report an error found while scanning ts to a window or other output device
  * associated with cx.
  */
+#if 0
+/* XXX js_ReportCompileError is unused */
 extern void
 js_ReportCompileError(JSContext *cx, JSTokenStream *ts, uintN flags,
 		      const char *format, ...);
+#endif
 
 void
 js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts, uintN flags,

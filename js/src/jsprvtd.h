@@ -150,5 +150,8 @@ typedef void
 (* CRT_CALL JSObjectHook)(JSContext *cx, JSObject *obj, JSBool isNew, 
                           void *closure);
 
+typedef JSBool
+(* CRT_CALL JSDebugErrorHook)(JSContext *cx, const char *message,
+                              JSErrorReport *report, void *closure);
 
 #endif /* jsprvtd_h___ */

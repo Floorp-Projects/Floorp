@@ -53,6 +53,10 @@
 #include "jsscript.h"
 #include "jsstr.h"
 
+#if JS_HAS_FILE_OBJECT
+#include "jsfile.h"
+#endif
+
 #if defined(JS_PARANOID_REQUEST) && defined(JS_THREADSAFE)
 #define CHECK_REQUEST(cx)	JS_ASSERT(cx->requestDepth)
 #else
@@ -605,6 +609,9 @@ JS_SetVersion(JSContext *cx, JSVersion version)
 
     CHECK_REQUEST(cx);
     oldVersion = cx->version;
+    if (version == oldVersion)
+        return oldVersion;
+
     cx->version = version;
 
 #if !JS_BUG_FALLIBLE_EQOPS
@@ -628,7 +635,7 @@ JS_SetVersion(JSContext *cx, JSVersion version)
 JS_PUBLIC_API(const char *)
 JS_GetImplementationVersion(void)
 {
-    return "JavaScript-C 1.4 1998 09 21";
+    return "JavaScript-C 1.4 release 1 1998 10 31";
 }
 
 
@@ -681,7 +688,7 @@ JS_InitStandardClasses(JSContext *cx, JSObject *obj)
 
     /* Initialize the rest of the standard objects and functions. */
     return (array_proto = js_InitArrayClass(cx, obj)) != NULL &&
-	   js_InitArgsCallClosureClasses(cx, obj, array_proto) &&
+	   js_InitArgsCallClosureClasses(cx, obj, obj_proto) &&
 	   js_InitBooleanClass(cx, obj) &&
 	   js_InitMathClass(cx, obj) &&
 	   js_InitNumberClass(cx, obj) &&
@@ -694,6 +701,9 @@ JS_InitStandardClasses(JSContext *cx, JSObject *obj)
 #endif
 #if JS_HAS_ERROR_EXCEPTIONS
 	   js_InitExceptionClasses(cx, obj) &&
+#endif
+#if JS_HAS_FILE_OBJECT
+           js_InitFileClass(cx, obj) &&
 #endif
 	   js_InitDateClass(cx, obj);
 }
@@ -710,7 +720,7 @@ JS_malloc(JSContext *cx, size_t nbytes)
 {
     void *p;
 
-#if defined(XP_OS2) || defined(XP_MAC) || defined(AIX)
+#if defined(XP_OS2) || defined(XP_MAC) || defined(AIX) || defined(OSF1)
     if (nbytes == 0) /*DSR072897 - Windows allows this, OS/2 & Mac don't*/
 	nbytes = 1;
 #endif
@@ -985,10 +995,12 @@ JS_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
 	if (!fun)
 	    goto bad;
 
-#if 0
-        if (clasp->construct == NULL)
-            clasp->construct = constructor;
-#endif
+        /* 
+         * Remember the class this function is a constructor for so that
+         * we know to create an object of this class when we call the 
+         * constructor.
+         */
+        fun->clasp = clasp;
 
 	/* Connect constructor and prototype by named properties. */
 	ctor = fun->object;
@@ -2235,7 +2247,13 @@ JS_PUBLIC_API(JSBool)
 JS_ExecuteScript(JSContext *cx, JSObject *obj, JSScript *script, jsval *rval)
 {
     CHECK_REQUEST(cx);
-    return js_Execute(cx, obj, script, NULL, NULL, JS_FALSE, rval);
+    if (!js_Execute(cx, obj, script, NULL, NULL, JS_FALSE, rval)) {
+#if JS_HAS_EXCEPTIONS
+        js_ReportUncaughtException(cx);
+#endif
+        return JS_FALSE;
+    }
+    return JS_TRUE;
 }
 
 JS_PUBLIC_API(JSBool)
@@ -2303,6 +2321,10 @@ JS_EvaluateUCScriptForPrincipals(JSContext *cx, JSObject *obj,
     if (!script)
 	return JS_FALSE;
     ok = js_Execute(cx, obj, script, NULL, NULL, JS_FALSE, rval);
+#if JS_HAS_EXCEPTIONS
+    if (!ok)
+        js_ReportUncaughtException(cx);
+#endif
     JS_DestroyScript(cx, script);
     return ok;
 }
@@ -2312,8 +2334,14 @@ JS_CallFunction(JSContext *cx, JSObject *obj, JSFunction *fun, uintN argc,
 		jsval *argv, jsval *rval)
 {
     CHECK_REQUEST(cx);
-    return js_CallFunctionValue(cx, obj, OBJECT_TO_JSVAL(fun->object),
-				argc, argv, rval);
+    if (!js_CallFunctionValue(cx, obj, OBJECT_TO_JSVAL(fun->object),
+                              argc, argv, rval)) {
+#if JS_HAS_EXCEPTIONS
+        js_ReportUncaughtException(cx);
+#endif
+        return JS_FALSE;
+    }
+    return JS_TRUE;
 }
 
 JS_PUBLIC_API(JSBool)
@@ -2325,7 +2353,13 @@ JS_CallFunctionName(JSContext *cx, JSObject *obj, const char *name, uintN argc,
     CHECK_REQUEST(cx);
     if (!JS_GetProperty(cx, obj, name, &fval))
 	return JS_FALSE;
-    return js_CallFunctionValue(cx, obj, fval, argc, argv, rval);
+    if (!js_CallFunctionValue(cx, obj, fval, argc, argv, rval)) {
+#if JS_HAS_EXCEPTIONS
+        js_ReportUncaughtException(cx);
+#endif
+        return JS_FALSE;
+    }
+    return JS_TRUE;
 }
 
 JS_PUBLIC_API(JSBool)
@@ -2333,7 +2367,13 @@ JS_CallFunctionValue(JSContext *cx, JSObject *obj, jsval fval, uintN argc,
 		     jsval *argv, jsval *rval)
 {
     CHECK_REQUEST(cx);
-    return js_CallFunctionValue(cx, obj, fval, argc, argv, rval);
+    if (!js_CallFunctionValue(cx, obj, fval, argc, argv, rval)) {
+#if JS_HAS_EXCEPTIONS
+        js_ReportUncaughtException(cx);
+#endif
+        return JS_FALSE;
+    }
+    return JS_TRUE;
 }
 
 JS_PUBLIC_API(JSBranchCallback)
@@ -2687,6 +2727,60 @@ JS_ClearPendingException(JSContext *cx)
     CHECK_REQUEST(cx);
 #if JS_HAS_EXCEPTIONS
     cx->throwing = JS_FALSE;
+#endif
+}
+
+#if JS_HAS_EXCEPTIONS
+struct JSExceptionState 
+{
+    JSBool throwing; 
+    jsval  exception;
+};
+#endif
+
+JS_PUBLIC_API(JSExceptionState *)
+JS_SaveExceptionState(JSContext *cx)
+{
+#if JS_HAS_EXCEPTIONS
+    JSExceptionState *state;
+    CHECK_REQUEST(cx);
+    state = (JSExceptionState*) JS_malloc(cx, sizeof(JSExceptionState));
+    if (state) {
+        state->throwing = JS_GetPendingException(cx, &state->exception);
+        if (state->throwing && JSVAL_IS_GCTHING(state->exception))
+            JS_AddRoot(cx, &state->exception);
+    }
+    return state;
+#else
+    return NULL;
+#endif
+}
+
+JS_PUBLIC_API(void)
+JS_RestoreExceptionState(JSContext *cx, JSExceptionState *state)
+{
+#if JS_HAS_EXCEPTIONS
+    CHECK_REQUEST(cx);
+    if (state) {
+        if (state->throwing)
+            JS_SetPendingException(cx, state->exception);
+        else
+            JS_ClearPendingException(cx);
+        JS_DropExceptionState(cx, state);
+    }
+#endif
+}
+
+JS_PUBLIC_API(void)
+JS_DropExceptionState(JSContext *cx, JSExceptionState *state)
+{
+#if JS_HAS_EXCEPTIONS
+    CHECK_REQUEST(cx);
+    if (state) {
+        if (state->throwing && JSVAL_IS_GCTHING(state->exception))
+            JS_RemoveRoot(cx, &state->exception);
+        JS_free(cx, state);
+    }
 #endif
 }
 

@@ -63,6 +63,7 @@ script_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     if (!script) {
 	/* Let k count the constructor argument string length. */
 	k = 0;
+        s = NULL;               /* quell GCC overwarning */
     } else {
 	indent = 0;
 	if (argc && !js_ValueToECMAUint32(cx, argv[0], &indent))
@@ -307,7 +308,7 @@ XDRAtomMap(JSXDRState *xdr, JSAtomMap *map)
 JSBool
 js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *magic)
 {
-    JSScript *script;
+    JSScript *script = *scriptp;
     uint32 length, lineno, depth, magicval;
 
     if (xdr->mode == JSXDR_ENCODE)
@@ -320,7 +321,6 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *magic)
     }
     *magic = JS_TRUE;
     if (xdr->mode == JSXDR_ENCODE) {
-	script = *scriptp;
 	length = script->length;
 	lineno = (uint32)script->lineno;
 	depth = (uint32)script->depth;

@@ -20,11 +20,15 @@
 #
 
 AS = as
+ifndef NS_USE_NATIVE
 CC = gcc
 CCC = g++
 CFLAGS +=  -Wall -Wno-format
+else
+CC = cc
+CCC = CC
+endif
 
-#CC = /opt/SUNWspro/SC3.0.1/bin/cc
 RANLIB = echo
 
 #.c.o:
@@ -33,7 +37,7 @@ RANLIB = echo
 CPU_ARCH = sparc
 GFX_ARCH = x
 
-OS_CFLAGS = -DXP_UNIX -DSVR4 -DSYSV -DSOLARIS -D_SVID_GETTOD
+OS_CFLAGS = -DXP_UNIX -DSVR4 -DSYSV -DSOLARIS
 OS_LIBS = -lsocket -lnsl -ldl
 
 ASFLAGS	        += -P -L -K PIC -D_ASM -D__STDC__=0
@@ -42,22 +46,15 @@ HAVE_PURIFY = 1
 
 NOSUCHFILE = /solaris-rm-f-sucks
 
-ifndef JS_NO_ULTRA
-ULTRA_OPTIONS := -xarch=v8plus -DULTRA_SPARC
+ifeq ($(OS_CPUARCH),sun4u)	# ultra sparc?
+ifeq ($(CC),gcc)		# using gcc?
+ifndef JS_NO_ULTRA		# do we want ultra?
+ifdef JS_THREADSAFE		# only in thread-safe mode
+DEFINES 	+= -DULTRA_SPARC
+DEFINES         += -Wa,-xarch=v8plus,-DULTRA_SPARC
 else
-ULTRA_OPTIONS := -xarch=v8
+ASFLAGS         += -xarch=v8plus -DULTRA_SPARC
 endif
-
-ifeq ($(OS_CPUARCH),sun4u)
-ASFLAGS         += $(ULTRA_OPTIONS)
-ifeq ($(CC),gcc)
-DEFINES         += -Wa,$(ULTRA_OPTIONS)
-endif
-else
-ifeq ($(OS_CPUARCH),sun4m)
-ASFLAGS         += -xarch=v8
-ifeq ($(CC),gcc)
-DEFINES         += -Wa,-xarch=v8
 endif
 endif
 endif

@@ -102,6 +102,7 @@ str_escape(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     const char digits[] = {'0', '1', '2', '3', '4', '5', '6', '7',
 			   '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
 
+    mask = URL_XALPHAS | URL_XPALPHAS | URL_PATH;
     if (argc > 1) {
 	if (!js_ValueToNumber(cx, argv[1], &d))
 	    return JS_FALSE;
@@ -115,8 +116,6 @@ str_escape(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 				 JSMSG_BAD_STRING_MASK, numBuf);
 	    return JS_FALSE;
 	}
-    } else {
-	mask = URL_XALPHAS | URL_XPALPHAS | URL_PATH;
     }
 
     str = js_ValueToString(cx, argv[0]);
@@ -1367,9 +1366,22 @@ find_split(JSContext *cx, JSString *str, JSRegExp *re, jsint *ip,
      * Special case: if sep is the empty string, split str into one character
      * substrings.  Let our caller worry about whether to split once at end of
      * string into an empty substring.
+     *
+     * For 1.2 compatibility, at the end of the string, we return the string length
+     * as the result, and set the separator length to 1 - this allows the caller
+     * to include an additional null string at the end of the substring list.
      */
     if (sep->length == 0)
-	return ((size_t)i == str->length) ? -1 : i + 1;
+        if (cx->version == JSVERSION_1_2) {
+            if ((size_t)i == str->length) {
+                sep->length = 1;
+                return i;
+            }
+            else
+                return i + 1;
+        }
+        else
+            return ((size_t)i == str->length) ? -1 : i + 1;
 
     /*
      * Now that we know sep is non-empty, search starting at i in str for an
@@ -1438,6 +1450,7 @@ str_split(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	/* Use the second argument as the split limit, if given. */
 	/* XXX our v2 ecma spec checks against given, undefined. */
 	limited = (argc > 1);
+        limit = 0; /* Avoid warning. */
 	if (limited) {
 	    if (!js_ValueToNumber(cx, argv[1], &d))
 		return JS_FALSE;
@@ -1743,6 +1756,7 @@ tagify(JSContext *cx, JSObject *obj, jsval *argv,
 
     beglen = strlen(begin);
     taglen = 1 + beglen + 1;			/* '<begin' + '>' */
+    parlen = 0; /* Avoid warning. */
     if (param) {
 	parlen = js_strlen(param);
 	taglen += 2 + parlen + 1;		/* '="param"' */

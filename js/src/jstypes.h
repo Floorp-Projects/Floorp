@@ -193,7 +193,13 @@
 #define JS_MIN(x,y)     ((x)<(y)?(x):(y))
 #define JS_MAX(x,y)     ((x)>(y)?(x):(y))
 
-#include "jscpucfg.h"
+#if defined(XP_MAC) || defined(XP_PC)
+#    include "jscpucfg.h"        /* Use standard Mac or Windows configuration */
+#elif XP_UNIX
+#    include "jsautocfg.h"       /* Use auto-detected configuration */
+#else
+#    error "Must define one of XP_PC, XP_MAC or XP_UNIX"
+#endif
 
 JS_BEGIN_EXTERN_C
 
