@@ -236,22 +236,6 @@ PRBool nsCString::SetCharAt(PRUnichar aChar,PRUint32 anIndex){
  *********************************************************************/
 
 /**
- * Converts all chars in internal string to lower
- * @update  gess 01/04/99
- */
-void nsCString::ToLowerCase() {
-  nsStr::ChangeCase(*this,PR_FALSE);
-}
-
-/**
- * Converts all chars in internal string to upper
- * @update  gess 01/04/99
- */
-void nsCString::ToUpperCase() {
-  nsStr::ChangeCase(*this,PR_TRUE);
-}
-
-/**
  *  This method is used to remove all occurances of the
  *  characters found in aSet from this string.
  *  
