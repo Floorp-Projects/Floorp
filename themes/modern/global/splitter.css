@@ -34,9 +34,10 @@ splitter {
   cursor: e-resize;
   border-right: 1px solid #000000;
   border-left: 1px solid #000000;
+  min-width: 1px;
   background-color: #7B969C;
   text-align: center;
-  vrt-align: middle;
+  vertical-align: middle;
 }
 
 splitter > .splitter-internal-box {
@@ -57,7 +58,7 @@ box[orient="vertical"] > splitter {
   border-right: none;
   border-bottom: 1px solid #000000;
   border-left: none;
-  text-align: center;
+  min-width: 1px;
 }
 
 rows > splitter > .splitter-internal-box,
