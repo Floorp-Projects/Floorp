@@ -44,7 +44,7 @@ var expect = 'No Crash, No Error';
 printBugNumber (bug);
 printStatus (summary);
   
-function f(A,B,C) {}
+function f(A,B,C,D) {}
 
 try
 {
@@ -17548,6 +17548,7 @@ try
   f('69989','69990','69991','69992');
   f('69993','69994','69995','69996');
   f('69997','69998','69999','70000');
+  actual = 'No Crash, No Error';
 }
 catch(e)
 {
