@@ -54,8 +54,69 @@
 #include "nsILineIterator.h"
 #include "nsIFontMetrics.h"
 
+//#define DEBUG_REFLOW
+
+#ifdef DEBUG_REFLOW
+PRInt32 gIndent = 0;
+
+void
+nsAdaptorAddIndents()
+{
+    for(PRInt32 i=0; i < gIndent; i++)
+    {
+        printf(" ");
+    }
+}
+
+void
+nsAdaptorPrintReason(nsHTMLReflowState& aReflowState)
+{
+    char* reflowReasonString;
+
+    switch(aReflowState.reason) 
+    {
+        case eReflowReason_Initial:
+          reflowReasonString = "initial";
+          break;
+
+        case eReflowReason_Resize:
+          reflowReasonString = "resize";
+          break;
+        case eReflowReason_Dirty:
+          reflowReasonString = "dirty";
+          break;
+        case eReflowReason_StyleChange:
+          reflowReasonString = "stylechange";
+          break;
+        case eReflowReason_Incremental: 
+        {
+           nsIReflowCommand::ReflowType  type;
+            aReflowState.reflowCommand->GetType(type);
+            switch (type) {
+              case nsIReflowCommand::StyleChanged:
+                 reflowReasonString = "incremental (StyleChanged)";
+              break;
+              case nsIReflowCommand::ReflowDirty:
+                 reflowReasonString = "incremental (ReflowDirty)";
+              break;
+              default:
+                 reflowReasonString = "incremental (Unknown)";
+            }
+        }                             
+        break;
+        default:
+          reflowReasonString = "unknown";
+          break;
+    }
+
+    printf("%s",reflowReasonString);
+}
+
+#endif
+
 nsBoxToBlockAdaptor::nsBoxToBlockAdaptor(nsIPresShell* aPresShell, nsIFrame* aFrame):nsBox(aPresShell)
 {
+  mSizeSet = PR_FALSE;
   mFrame = aFrame;
   mSpaceManager = nsnull;
   mWasCollapsed = PR_FALSE;
@@ -117,15 +178,7 @@ nsBoxToBlockAdaptor::~nsBoxToBlockAdaptor()
 NS_IMETHODIMP
 nsBoxToBlockAdaptor::NeedsRecalc()
 {
-  /*  nsIBox* parent;
-  GetParentBox(&parent);
-  nsIFrame* frame;
-  if (parent) {
-    parent->GetFrame(&frame);
-    nsFrameState frameState = 0;
-    frame->GetFrameState(&frameState);
-  }*/
-
+  mSizeSet = PR_FALSE;
   mMinWidth = -1;
   mPrefNeedsRecalc = PR_TRUE;
   SizeNeedsRecalc(mMinSize);
@@ -162,6 +215,12 @@ nsBoxToBlockAdaptor::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
        PRBool isDirty = PR_FALSE;
        IsDirty(isDirty);
 
+       // if the size has already been set get the
+       // current size so we can set it back.
+       nsRect oldRect(0,0,0,0);
+       if (mSizeSet)
+          GetBounds(oldRect);
+       
        nsSize* currentSize = nsnull;
        aState.GetMaxElementSize(&currentSize);
        nsSize size(0,0);
@@ -192,6 +251,12 @@ nsBoxToBlockAdaptor::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
 
         mCachedMaxElementHeight = size.height;
       }
+
+     // set it back
+     if (mSizeSet) {
+          SetBounds(aState, oldRect);
+          Layout(aState);
+     }
 
        nsFrameState frameState = 0;
        mFrame->GetFrameState(&frameState);
@@ -346,6 +411,8 @@ nsBoxToBlockAdaptor::Layout(nsBoxLayoutState& aState)
 
    SyncLayout(aState);
 
+   mSizeSet = PR_TRUE;
+
    return rv;
 }
 
@@ -363,9 +430,16 @@ nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
 {
   DO_GLOBAL_REFLOW_COUNT("nsBoxToBlockAdaptor", aReflowState.reason);
 
-  //printf("width=%d, height=%d\n", aWidth, aHeight);
+#ifdef DEBUG_REFLOW
+  nsAdaptorAddIndents();
+  printf("Reflowing: ");
+  nsFrame::ListTag(stdout, mFrame);
+  printf("\n");
+  gIndent++;
+#endif
 
-      nsIBox* parent;
+  //printf("width=%d, height=%d\n", aWidth, aHeight);
+  nsIBox* parent;
   GetParentBox(&parent);
   nsIFrame* frame;
   parent->GetFrame(&frame);
@@ -558,41 +632,6 @@ nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
 
     // create a reflow state to tell our child to flow at the given size.
 
-#ifdef DEBUG_REFLOW
-
-    char* reflowReasonString;
-
-    switch(reason) 
-    {
-        case eReflowReason_Initial:
-          reflowReasonString = "initial";
-          break;
-
-        case eReflowReason_Resize:
-          reflowReasonString = "resize";
-          break;
-        case eReflowReason_Dirty:
-          reflowReasonString = "dirty";
-          break;
-        case eReflowReason_StyleChange:
-          reflowReasonString = "stylechange";
-          break;
-        case eReflowReason_Incremental:
-          reflowReasonString = "incremental";
-          break;
-        default:
-          reflowReasonString = "unknown";
-          break;
-    }
-
-    AddIndents();
-    nsFrame::ListTag(stdout, childFrame);
-    char ch[100];
-    aReason.ToCString(ch,100);
-
-    printf(" reason=%s %s",reflowReasonString,ch);
-#endif
-
     if (size.height != NS_INTRINSICSIZE) {
         size.height -= (border.top + border.bottom);
         NS_ASSERTION(size.height >= 0,"Error top bottom border too large");
@@ -611,10 +650,6 @@ nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
     // XXX this needs to subtract out the border and padding of mFrame since it is content size
     reflowState.mComputedWidth = size.width;
     reflowState.mComputedHeight = size.height;
-#ifdef DEBUG_REFLOW
-  printf(" Size=(%d,%d)\n",reflowState.mComputedWidth, reflowState.mComputedHeight);
-#endif
-
 
    // if (aMoveFrame) {
    //       PlaceChild(aPresContext, mFrame, aX + margin.left, aY + margin.top);
@@ -640,6 +675,14 @@ nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
           reflowState.reflowCommand->GetType(type);
 
           if (type != nsIReflowCommand::StyleChanged) {
+             #ifdef DEBUG_REFLOW
+                nsAdaptorAddIndents();
+                printf("Size=(%d,%d)\n",reflowState.mComputedWidth, reflowState.mComputedHeight);
+                nsAdaptorAddIndents();
+                nsAdaptorPrintReason(reflowState);
+                printf("\n");
+             #endif
+
              mFrame->WillReflow(aPresContext);
              mFrame->Reflow(aPresContext, aDesiredSize, reflowState, aStatus);
              mFrame->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
@@ -652,6 +695,15 @@ nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
 
       mStyleChange = PR_FALSE;
     }
+
+    #ifdef DEBUG_REFLOW
+      nsAdaptorAddIndents();
+      printf("Size=(%d,%d)\n",reflowState.mComputedWidth, reflowState.mComputedHeight);
+      nsAdaptorAddIndents();
+      nsAdaptorPrintReason(reflowState);
+      printf("\n");
+    #endif
+
        // place the child and reflow
     mFrame->WillReflow(aPresContext);
 
@@ -710,6 +762,11 @@ nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
                  reflowState.reason = eReflowReason_Resize;
                  reflowState.reflowCommand = nsnull;
                  mFrame->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
+                 #ifdef DEBUG_REFLOW
+                  nsAdaptorAddIndents();
+                  nsAdaptorPrintReason(reflowState);
+                  printf("\n");
+                 #endif
                  mFrame->WillReflow(aPresContext);
                  mFrame->Reflow(aPresContext, aDesiredSize, reflowState, aStatus);
                  mFrame->GetFrameState(&kidState);
@@ -822,18 +879,14 @@ nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
 #ifdef DEBUG_REFLOW
   if (aHeight != NS_INTRINSICSIZE && aDesiredSize.height != aHeight)
   {
-          AddIndents();
-          printf("**** Child ");
-          nsFrame::ListTag(stdout, childFrame);
-          printf(" got taller!******\n");
+          nsAdaptorAddIndents();
+          printf("*****got taller!*****\n");
          
   }
   if (aWidth != NS_INTRINSICSIZE && aDesiredSize.width != aWidth)
   {
-          AddIndents();
-          printf("**** Child ");
-          nsFrame::ListTag(stdout, childFrame);
-          printf(" got wider!******\n");
+          nsAdaptorAddIndents();
+          printf("*****got wider!******\n");
          
   }
 #endif
@@ -851,7 +904,11 @@ nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
     mMinWidth = aDesiredSize.width;
     SizeNeedsRecalc(mMinSize);
   }
-    
+
+#ifdef DEBUG_REFLOW
+  gIndent--;
+#endif
+
   return NS_OK;
 }
 

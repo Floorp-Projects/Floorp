@@ -66,6 +66,8 @@ public:
 
 protected:
 
+  virtual void GetBoxName(nsAutoString& aName);
+
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
                               const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aDesiredSize) {}

@@ -170,6 +170,8 @@ public:
   nsBoxFrame(nsIPresShell* aPresShell, PRBool aIsRoot = nsnull, nsIBoxLayout* aLayoutManager = nsnull, PRBool aDefaultHorizontal = PR_TRUE);
  
 protected:
+    virtual void GetBoxName(nsAutoString& aName);
+
     virtual PRBool HasStyleChange();
     virtual void SetStyleChangeFlag(PRBool aDirty);
 

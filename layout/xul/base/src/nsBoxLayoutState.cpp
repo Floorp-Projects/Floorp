@@ -53,6 +53,8 @@ nsBoxLayoutState::nsBoxLayoutState(const nsBoxLayoutState& aState)
   mType        = aState.mType;
   mReflowState = aState.mReflowState;
   mMaxElementSize = aState.mMaxElementSize;
+  mOverFlowSize = aState.mOverFlowSize;
+  mLayoutFlags = aState.mLayoutFlags;
 }
 
 nsBoxLayoutState::nsBoxLayoutState(nsIPresShell* aShell):mReflowState(nsnull), 

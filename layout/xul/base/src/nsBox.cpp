@@ -44,14 +44,114 @@
 #include "nsHTMLAtoms.h"
 #include "nsXULAtoms.h"
 
-#undef DEBUG_evaughan
+//#define DEBUG_REFLOW
 
-#ifdef DEBUG_evaughan
+#ifdef DEBUG_COELESCED
 static PRInt32 coelesced = 0;
+#endif
 
+#ifdef DEBUG_REFLOW
+
+PRInt32 gIndent = 0;
+PRInt32 gLayout = 0;
+
+void
+nsBoxAddIndents()
+{
+    for(PRInt32 i=0; i < gIndent; i++)
+    {
+        printf(" ");
+    }
+}
+
+void
+nsBoxAppendAttribute(nsIContent* aContent, nsIAtom* aAtom, nsAutoString& aResult)
+{
+   nsAutoString att;
+   aContent->GetAttribute(kNameSpaceID_None, aAtom, att);
+   nsAutoString name;
+   aAtom->ToString(name);
+   aResult.AppendWithConversion("[");
+   aResult.Append(name);
+   aResult.AppendWithConversion("=");
+   aResult.Append(att);
+   aResult.AppendWithConversion("]");
+}
+
+#endif
+
+void
+nsBox::ListBox(nsAutoString& aResult)
+{
+#ifdef DEBUG_REFLOW
+    nsAutoString name;
+    nsIFrame* frame;
+    GetFrame(&frame);
+    GetBoxName(name);
+
+    aResult.Append(name);
+
+    nsCOMPtr<nsIContent> content;
+    frame->GetContent(getter_AddRefs(content));
+
+    if (content) {
+      nsBoxAppendAttribute(content, nsHTMLAtoms::id, aResult);
+      nsBoxAppendAttribute(content, nsHTMLAtoms::kClass, aResult);
+    }
+#endif
+}
+
+void
+nsBox::GetBoxName(nsAutoString& aName)
+{
+  aName.AssignWithConversion("Box");
+}
+
+void
+nsBox::EnterLayout(nsBoxLayoutState& aState)
+{
+  #ifdef DEBUG_REFLOW 
+
+      nsBoxAddIndents();
+
+      nsAutoString reason;
+      switch(aState.GetLayoutReason())
+      {
+        case nsBoxLayoutState::Dirty:
+           reason.AssignWithConversion("Dirty");
+        break;
+        case nsBoxLayoutState::Initial:
+           reason.AssignWithConversion("Initial");
+        break;
+        case nsBoxLayoutState::Resize:
+           reason.AssignWithConversion("Resize");
+        break;
+      }
+
+      char ch[100];
+      reason.ToCString(ch,100);
+      printf("%s Layout: ", ch);
+      nsAutoString s;
+      ListBox(s);
+      s.ToCString(ch,100);
+      printf("%s\n",ch);
+      gIndent++;
+  #endif
+}
+
+void
+nsBox::ExitLayout(nsBoxLayoutState& aState)
+{
+  #ifdef DEBUG_REFLOW
+      --gIndent;
+  #endif
+}
+
+#ifdef REFLOW_COELESCED
 void Coelesced()
 {
    printf("Coelesed=%d\n", ++coelesced);
+
 }
 
 #endif
@@ -108,7 +208,7 @@ nsBox::MarkDirty(nsBoxLayoutState& aState)
 
   // only reflow if we aren't already dirty.
   if (state & NS_FRAME_IS_DIRTY) {      
-#ifdef DEBUG_evaughan
+#ifdef DEBUG_COELESCED
       Coelesced();
 #endif
       return NS_OK;
@@ -123,7 +223,7 @@ nsBox::MarkDirty(nsBoxLayoutState& aState)
     layout->BecameDirty(this, aState);
 
   if (state & NS_FRAME_HAS_DIRTY_CHILDREN) {   
-#ifdef DEBUG_evaughan
+#ifdef DEBUG_COELESCED
       Coelesced();
 #endif
       return NS_OK;
@@ -212,7 +312,7 @@ nsBox::MarkChildrenStyleChange()
 {
   // only reflow if we aren't already dirty.
   if (HasStyleChange()) {   
-#ifdef DEBUG_evaughan
+#ifdef DEBUG_COELESCED
     printf("StyleChange reflows coelesced=%d\n", ++StyleCoelesced);  
 #endif
     return NS_OK;
@@ -269,7 +369,7 @@ nsBox::RelayoutStyleChange(nsBoxLayoutState& aState, nsIBox* aChild)
         return NS_OK;
       }
     } else {
-#ifdef DEBUG_evaughan
+#ifdef DEBUG_COELESCED
       Coelesced();
 #endif
     }
@@ -312,7 +412,7 @@ nsBox::RelayoutDirtyChild(nsBoxLayoutState& aState, nsIBox* aChild)
         return parent->ReflowDirtyChild(shell, frame);
       }
     } else {
-#ifdef DEBUG_evaughan
+#ifdef DEBUG_COELESCED
       Coelesced();
 #endif
     }
@@ -817,7 +917,11 @@ nsBox::IsCollapsed(nsBoxLayoutState& aState, PRBool& aCollapsed)
 NS_IMETHODIMP
 nsBox::Layout(nsBoxLayoutState& aState)
 {
+  EnterLayout(aState);
+
   SyncLayout(aState);
+
+  ExitLayout(aState);
 
   return NS_OK;
 }
@@ -1295,6 +1399,7 @@ nsBox::GetDefaultFlex(PRInt32& aFlex)
   aFlex = 0; 
   return PR_TRUE; 
 }
+
 
 // nsISupports
 NS_IMETHODIMP_(nsrefcnt) 

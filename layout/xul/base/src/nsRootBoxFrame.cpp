@@ -50,13 +50,8 @@
 static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
 static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
 
-/**
- * Root frame class.
- *
- * The root frame is the parent frame for the document element's frame.
- * It only supports having a single child frame which must be an area
- * frame
- */
+//#define DEBUG_REFLOW
+
 class nsRootBoxFrame : public nsBoxFrame {
 public:
 
@@ -196,6 +191,10 @@ nsRootBoxFrame::RemoveFrame(nsIPresContext* aPresContext,
   return rv;
 }
 
+#ifdef DEBUG_REFLOW
+PRInt32 gReflows = 0;
+#endif
+
 NS_IMETHODIMP
 nsRootBoxFrame::Reflow(nsIPresContext*          aPresContext,
                   nsHTMLReflowMetrics&     aDesiredSize,
@@ -203,6 +202,11 @@ nsRootBoxFrame::Reflow(nsIPresContext*          aPresContext,
                   nsReflowStatus&          aStatus)
 {
   DO_GLOBAL_REFLOW_COUNT("nsRootBoxFrame", aReflowState.reason);
+
+#ifdef DEBUG_REFLOW
+  gReflows++;
+  printf("----Reflow %d----\n", gReflows);
+#endif
   return nsBoxFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 }
 

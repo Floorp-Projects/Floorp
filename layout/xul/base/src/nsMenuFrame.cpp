@@ -57,6 +57,8 @@
 #include "nsWidgetsCID.h"
 #include "nsBoxLayoutState.h"
 #include "nsIXBLBinding.h"
+#include "nsIScrollableFrame.h"
+#include "nsIViewManager.h"
 #include "nsIBindingManager.h"
 
 #define NS_MENU_POPUP_LIST_INDEX   (NS_AREA_FRAME_ABSOLUTE_LIST_INDEX + 1)
@@ -119,7 +121,8 @@ nsMenuFrame::nsMenuFrame(nsIPresShell* aShell):nsBoxFrame(aShell),
     mChecked(PR_FALSE),
     mType(eMenuType_Normal),
     mMenuParent(nsnull),
-    mPresContext(nsnull)
+    mPresContext(nsnull),
+    mLastPref(-1,-1)
 {
 
 } // cntr
@@ -222,6 +225,10 @@ nsMenuFrame::GetFrameForPoint(nsIPresContext* aPresContext,
                               nsFramePaintLayer aWhichLayer,    
                               nsIFrame**     aFrame)
 {
+
+  if ((aWhichLayer != NS_FRAME_PAINT_LAYER_FOREGROUND))
+    return NS_ERROR_FAILURE;
+
  // if it is not inside us or not in the layer in which we paint, fail
   if (!mRect.Contains(aPoint)) 
       return NS_ERROR_FAILURE;
@@ -440,24 +447,45 @@ nsMenuFrame::MarkAsGenerated()
 NS_IMETHODIMP
 nsMenuFrame::ActivateMenu(PRBool aActivateFlag)
 {
-  // Activate the menu without opening it.
-  nsCOMPtr<nsIContent> child;
-  GetMenuChildrenElement(getter_AddRefs(child));
+  nsIFrame* frame = mPopupFrames.FirstChild();
+  nsMenuPopupFrame* menuPopup = (nsMenuPopupFrame*)frame;
+  
+  if (!menuPopup) 
+    return NS_OK;
 
-  // We've got some children for real.
-  if (child) {
-    // When we sync the popup view with the frame, we'll show the popup if |menutobedisplayed|
-    // is set by setting the |menuactive| attribute. This trips CSS to make the view visible.
-    // We wait until the last possible moment to show to avoid flashing, but we can just go
-    // ahead and hide it here if we're told to (no additional stages necessary).
-    if (aActivateFlag)
-      child->SetAttribute(kNameSpaceID_None, nsXULAtoms::menutobedisplayed, NS_ConvertASCIItoUCS2("true"), PR_TRUE);
-    else {
-      child->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, PR_TRUE);
-      child->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::menutobedisplayed, PR_TRUE);
-    }
+
+  if (aActivateFlag) {
+      nsRect rect;
+      menuPopup->GetRect(rect);
+      nsIView* view = nsnull;
+      menuPopup->GetView(mPresContext, &view);
+      nsCOMPtr<nsIViewManager> viewManager;
+      view->GetViewManager(*getter_AddRefs(viewManager));
+      viewManager->ResizeView(view, rect.width, rect.height);
+
+      // make sure the scrolled window is at 0,0
+      if (mLastPref.height <= rect.height) {
+        nsIBox* child;
+        menuPopup->GetChildBox(&child);
+
+        nsCOMPtr<nsIScrollableFrame> scrollframe = do_QueryInterface(child);
+        if (scrollframe) {
+          scrollframe->ScrollTo(mPresContext, 0, 0);
+        }
+      }
+
+      viewManager->UpdateView(view, nsRect(0,0, rect.width, rect.height), NS_VMREFRESH_IMMEDIATE);
+      viewManager->SetViewVisibility(view, nsViewVisibility_kShow);
+
+  } else {
+    nsIView* view = nsnull;
+    menuPopup->GetView(mPresContext, &view);
+    nsCOMPtr<nsIViewManager> viewManager;
+    view->GetViewManager(*getter_AddRefs(viewManager));
+    viewManager->SetViewVisibility(view, nsViewVisibility_kHide);
+    viewManager->ResizeView(view, 0, 0);
   }
-
+  
   return NS_OK;
 }  
 
@@ -523,9 +551,9 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
 
     nsIFrame* frame = mPopupFrames.FirstChild();
     nsMenuPopupFrame* menuPopup = (nsMenuPopupFrame*)frame;
-  
-    ActivateMenu(PR_TRUE);
-  
+    
+    mMenuOpen = PR_TRUE;
+
     if (menuPopup) {
       // Install a keyboard navigation listener if we're the root of the menu chain.
       PRBool onMenuBar = PR_TRUE;
@@ -588,13 +616,46 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
           popupAlign.AssignWithConversion("topleft");
       }
 
+      // if height never set we need to do an initial reflow.
+      if (mLastPref.height == -1)
+      {
+         nsBoxLayoutState state(mPresContext);
+         menuPopup->MarkDirty(state);
+
+         nsCOMPtr<nsIPresShell> shell;
+         mPresContext->GetShell(getter_AddRefs(shell));
+         shell->FlushPendingNotifications();
+      }
+
+      nsRect curRect;
+      menuPopup->GetRect(curRect);
+
+      menuPopup->SetRect(mPresContext, nsRect(0,0,mLastPref.width, mLastPref.height));
+
+      nsIView* view = nsnull;
+      menuPopup->GetView(mPresContext, &view);
+      view->SetVisibility(nsViewVisibility_kHide);
       menuPopup->SyncViewWithFrame(mPresContext, popupAnchor, popupAlign, this, -1, -1);
+      nsRect rect;
+      menuPopup->GetRect(rect);
+
+      // if the height is different then reflow. It might need scrollbars force a reflow
+      if (curRect.height != rect.height || mLastPref.height != rect.height)
+      {
+         nsBoxLayoutState state(mPresContext);
+         menuPopup->MarkDirty(state);
+         nsCOMPtr<nsIPresShell> shell;
+         mPresContext->GetShell(getter_AddRefs(shell));
+         shell->FlushPendingNotifications();
+         menuPopup->GetRect(rect);
+      }
+
+      ActivateMenu(PR_TRUE);
+
+      nsCOMPtr<nsIMenuParent> childPopup = do_QueryInterface(frame);
+      UpdateDismissalListener(childPopup);
+
     }
-
-    nsCOMPtr<nsIMenuParent> childPopup = do_QueryInterface(frame);
-    UpdateDismissalListener(childPopup);
-
-    mMenuOpen = PR_TRUE;
 
     // Set the focus back to our view's widget.
     if (nsMenuFrame::mDismissalListener)
@@ -602,6 +663,7 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
     
   }
   else {
+
     // Close the menu. 
     // Execute the ondestroy handler, but only if we're actually open
     if ( !mMenuOpen || !OnDestroy() )
@@ -634,20 +696,12 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
     ActivateMenu(PR_FALSE);
 
     mMenuOpen = PR_FALSE;
-/*
-    nsIView*  view;
-    GetView(&view);
-    if (!view) {
-      nsPoint offset;
-      GetOffsetFromView(offset, &view);
-    }
-    nsCOMPtr<nsIWidget> widget;
-    view->GetWidget(*getter_AddRefs(widget));
-    widget->SetFocus();
-*/
+
     if (nsMenuFrame::mDismissalListener)
       nsMenuFrame::mDismissalListener->EnableListener(PR_TRUE);
+
   }
+
 }
 
 void
@@ -700,18 +754,84 @@ nsMenuFrame::Layout(nsBoxLayoutState& aState)
 
     BoundsCheck(minSize, prefSize, maxSize);
 
-    AddMargin(ibox, prefSize);
-
     if (menulist && prefSize.width < contentRect.width)
         prefSize.width = contentRect.width;
 
-    // lay it out but make sure we don't move the view.
-    LayoutChildAt(aState, ibox, nsRect(0,0,prefSize.width, prefSize.height));
+    // if the pref size changed then set bounds to be the pref size
+    // and sync the view. And set new pref size.
+    if (mLastPref != prefSize) {
+      ibox->SetBounds(aState, nsRect(0,0,prefSize.width, prefSize.height));
+      RePositionPopup(aState);
+      mLastPref = prefSize;
+    }
+
+    // is the new size too small? Make sure we handle scrollbars correctly
+    nsIBox* child;
+    ibox->GetChildBox(&child);
+
+    nsRect bounds(0,0,0,0);
+    ibox->GetBounds(bounds);
+
+    nsCOMPtr<nsIScrollableFrame> scrollframe = do_QueryInterface(child);
+    if (scrollframe) {
+      nsIScrollableFrame::nsScrollPref pref;
+      scrollframe->GetScrollPreference(&pref);
+
+      if (pref == nsIScrollableFrame::Auto)  
+      {
+        // if our pref height
+        if (bounds.height < prefSize.height) {
+           // layout the child
+           ibox->Layout(aState);
+
+           nscoord width;
+           nscoord height;
+           scrollframe->GetScrollbarSizes(aState.GetPresContext(), &width, &height);
+           if (bounds.width < prefSize.width + width)
+           {
+             bounds.width += width;
+             //printf("Width=%d\n",width);
+             ibox->SetBounds(aState, bounds);
+           }
+        }
+      }
+    }
+    
+    // layout the child
+    ibox->Layout(aState);
+
+    // Only size the popups view if open.
+    if (mMenuOpen) {
+      nsIView* view = nsnull;
+      popupChild->GetView(aState.GetPresContext(), &view);
+      nsCOMPtr<nsIViewManager> viewManager;
+      view->GetViewManager(*getter_AddRefs(viewManager));
+      viewManager->ResizeView(view, bounds.width, bounds.height);
+    }
+
   }
 
   SyncLayout(aState);
 
-  LayoutFinished(aState);
+  return rv;
+}
+
+NS_IMETHODIMP
+nsMenuFrame::MarkChildrenStyleChange()
+{
+  nsresult rv = nsBoxFrame::MarkChildrenStyleChange();
+  if (NS_FAILED(rv))
+    return rv;
+   
+  nsIFrame* popupChild = mPopupFrames.FirstChild();
+
+  if (popupChild) {
+    nsIBox* ibox = nsnull;
+    nsresult rv2 = popupChild->QueryInterface(NS_GET_IID(nsIBox), (void**)&ibox);
+    NS_ASSERTION(NS_SUCCEEDED(rv2) && ibox,"popupChild is not box!!");
+
+    return ibox->MarkChildrenStyleChange();
+  }
 
   return rv;
 }
@@ -868,8 +988,10 @@ nsMenuFrame::SetDebug(nsBoxLayoutState& aState, nsIFrame* aList, PRBool aDebug)
 
 
 void
-nsMenuFrame::LayoutFinished(nsBoxLayoutState& aState)
+nsMenuFrame::RePositionPopup(nsBoxLayoutState& aState)
 {  
+  nsIPresContext* presContext = aState.GetPresContext();
+
   // Sync up the view.
   nsIFrame* frame = mPopupFrames.FirstChild();
   nsMenuPopupFrame* menuPopup = (nsMenuPopupFrame*)frame;
@@ -898,10 +1020,8 @@ nsMenuFrame::LayoutFinished(nsBoxLayoutState& aState)
         popupAlign.AssignWithConversion("topleft");
     }
 
-    nsIPresContext* presContext = aState.GetPresContext();
     menuPopup->SyncViewWithFrame(presContext, popupAnchor, popupAlign, this, -1, -1);
   }
-
 }
 
 NS_IMETHODIMP
@@ -1374,7 +1494,11 @@ nsMenuFrame::InsertFrames(nsIPresContext* aPresContext,
 
   frameChild->GetTag(*getter_AddRefs(tag));
   if (tag && tag.get() == nsXULAtoms::menupopup) {
+    nsCOMPtr<nsIBox> menupopup = do_QueryInterface(aFrameList);
+    NS_ASSERTION(menupopup,"Popup is not a box!!!");
+    menupopup->SetParentBox(this);
     mPopupFrames.InsertFrames(nsnull, nsnull, aFrameList);
+
     nsBoxLayoutState state(aPresContext);
     SetDebug(state, aFrameList, mState & NS_STATE_CURRENTLY_IN_DEBUG);
     rv = MarkDirtyChildren(state);
@@ -1402,6 +1526,10 @@ nsMenuFrame::AppendFrames(nsIPresContext* aPresContext,
 
   frameChild->GetTag(*getter_AddRefs(tag));
   if (tag && tag.get() == nsXULAtoms::menupopup) {
+    nsCOMPtr<nsIBox> menupopup = do_QueryInterface(aFrameList);
+    NS_ASSERTION(menupopup,"Popup is not a box!!!");
+    menupopup->SetParentBox(this);
+
     mPopupFrames.AppendFrames(nsnull, aFrameList);
     nsBoxLayoutState state(aPresContext);
     SetDebug(state, aFrameList, mState & NS_STATE_CURRENTLY_IN_DEBUG);

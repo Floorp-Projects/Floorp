@@ -123,6 +123,7 @@ NS_IMETHODIMP_(void) nsScrollbarButtonFrame::Notify(nsITimer *timer)
 void
 nsScrollbarButtonFrame::MouseClicked(nsIPresContext* aPresContext) 
 {
+  nsButtonBoxFrame::MouseClicked(aPresContext);
   //MouseClicked();
 }
 

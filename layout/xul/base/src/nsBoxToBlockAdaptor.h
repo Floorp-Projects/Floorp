@@ -88,6 +88,7 @@ protected:
   PRBool mWasCollapsed;
   nscoord mCachedMaxElementHeight;
   PRBool mStyleChange;
+  PRBool mSizeSet;
 };
 
 #endif

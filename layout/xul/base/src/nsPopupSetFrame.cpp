@@ -51,6 +51,7 @@
 #include "nsISupportsArray.h"
 #include "nsIDOMText.h"
 #include "nsBoxLayoutState.h"
+#include "nsIScrollableFrame.h"
 
 #define NS_MENU_POPUP_LIST_INDEX   (NS_AREA_FRAME_ABSOLUTE_LIST_INDEX + 1)
 
@@ -97,7 +98,10 @@ NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
 // nsPopupSetFrame cntr
 //
 nsPopupSetFrame::nsPopupSetFrame(nsIPresShell* aShell):nsBoxFrame(aShell),
-mPresContext(nsnull), mElementFrame(nsnull), mCreateHandlerSucceeded(PR_FALSE)
+mPresContext(nsnull), 
+mElementFrame(nsnull), 
+mCreateHandlerSucceeded(PR_FALSE),
+mLastPref(-1,-1)
 {
 
 } // cntr
@@ -223,15 +227,60 @@ nsPopupSetFrame::Layout(nsBoxLayoutState& aState)
 
     BoundsCheck(minSize, prefSize, maxSize);
 
-    AddMargin(ibox, prefSize);
+ // if the pref size changed then set bounds to be the pref size
+    // and sync the view. And set new pref size.
+    if (mLastPref != prefSize) {
+      ibox->SetBounds(aState, nsRect(0,0,prefSize.width, prefSize.height));
+      RePositionPopup(aState);
+      mLastPref = prefSize;
+    }
 
-    // lay it out
-    LayoutChildAt(aState, ibox, nsRect(0,0,prefSize.width, prefSize.height));
+    // is the new size too small? Make sure we handle scrollbars correctly
+    nsIBox* child;
+    ibox->GetChildBox(&child);
+
+    nsRect bounds(0,0,0,0);
+    ibox->GetBounds(bounds);
+
+    nsCOMPtr<nsIScrollableFrame> scrollframe = do_QueryInterface(child);
+    if (scrollframe) {
+      nsIScrollableFrame::nsScrollPref pref;
+      scrollframe->GetScrollPreference(&pref);
+
+      if (pref == nsIScrollableFrame::Auto)  
+      {
+        // if our pref height
+        if (bounds.height < prefSize.height) {
+           // layout the child
+           ibox->Layout(aState);
+
+           nscoord width;
+           nscoord height;
+           scrollframe->GetScrollbarSizes(aState.GetPresContext(), &width, &height);
+           if (bounds.width < prefSize.width + width)
+           {
+             bounds.width += width;
+             //printf("Width=%d\n",width);
+             ibox->SetBounds(aState, bounds);
+           }
+        }
+      }
+    }
+    
+    // layout the child
+    ibox->Layout(aState);
+
+    // only size popup if open
+    if (mCreateHandlerSucceeded) {
+      nsIView* view = nsnull;
+      popupChild->GetView(aState.GetPresContext(), &view);
+      nsCOMPtr<nsIViewManager> viewManager;
+      view->GetViewManager(*getter_AddRefs(viewManager));
+      viewManager->ResizeView(view, bounds.width, bounds.height);
+    }
   }
 
   SyncLayout(aState);
-
-  LayoutFinished(aState);
 
   return rv;
 }
@@ -275,7 +324,7 @@ nsPopupSetFrame::SetDebug(nsBoxLayoutState& aState, nsIFrame* aList, PRBool aDeb
 
 
 void
-nsPopupSetFrame::LayoutFinished(nsBoxLayoutState& aState)
+nsPopupSetFrame::RePositionPopup(nsBoxLayoutState& aState)
 {
   // Sync up the view.
   nsIFrame* activeChild = GetActiveChild();
@@ -431,6 +480,8 @@ nsPopupSetFrame::DestroyPopup()
   mCreateHandlerSucceeded = PR_FALSE;
   mElementFrame = nsnull;
   mXPos = mYPos = 0;
+  mLastPref.width = -1;
+  mLastPref.height = -1;
 
   return NS_OK;
 }
@@ -489,6 +540,7 @@ nsPopupSetFrame::OpenPopup(PRBool aActivateFlag)
     content->GetAttribute(kNameSpaceID_None, nsXULAtoms::ignorekeys, property);
     if ( !property.EqualsWithConversion("true") && childPopup )
       childPopup->InstallKeyboardNavigator();
+
   }
   else {
     if (!OnDestroy())
@@ -517,14 +569,22 @@ nsPopupSetFrame::ActivatePopup(PRBool aActivateFlag)
   GetActiveChildElement(getter_AddRefs(content));
   if (content) {
     // When we sync the popup view with the frame, we'll show the popup if |menutobedisplayed|
-    // is set by setting the |menuactive| attribute. This trips CSS to make the view visible.
-    // We wait until the last possible moment to show to avoid flashing, but we can just go
-    // ahead and hide it here if we're told to (no additional stages necessary).
+    // is set by setting the |menuactive| attribute. This used to trip css into showing the menu
+    // but now we do it ourselves. 
     if (aActivateFlag)
       content->SetAttribute(kNameSpaceID_None, nsXULAtoms::menutobedisplayed, NS_ConvertASCIItoUCS2("true"), PR_TRUE);
     else {
       content->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, PR_TRUE);
       content->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::menutobedisplayed, PR_TRUE);
+
+      // make sure we hide the popup.
+      nsIFrame* activeChild = GetActiveChild();
+      nsIView* view = nsnull;
+      activeChild->GetView(mPresContext, &view);
+      nsCOMPtr<nsIViewManager> viewManager;
+      view->GetViewManager(*getter_AddRefs(viewManager));
+      viewManager->SetViewVisibility(view, nsViewVisibility_kHide);
+      viewManager->ResizeView(view, 0, 0);
     }
   }
 }

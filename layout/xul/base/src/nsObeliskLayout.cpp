@@ -221,77 +221,9 @@ nsObeliskLayout::PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxS
      nsBoxSize* last = nsnull;
      temple->BuildBoxSizeList(aTempleBox, aState, first, last);
      aBoxSizes = first;
-  }/* else { */
-    nsSprocketLayout::PopulateBoxSizes(aBox, aState, aBoxSizes, aComputedBoxSizes, aMinSize, aMaxSize, aFlexes);
-   // return;
- // }
-
-  /*
-  aMinSize = 0;
-  aMaxSize = NS_INTRINSICSIZE;
-
-  PRBool isHorizontal = PR_FALSE;
-  aBox->GetOrientation(isHorizontal);
-  aFlexes = 0;
-
-  nsIBox* child = nsnull;
-  aBox->GetChildBox(&child);
-
-  if (child && !aBoxSizes)
-    aBoxSizes = new (aState) nsBoxSize();
-
-  nsBoxSize* childSize = aBoxSizes;
-
-  while(child)
-  {
-    nscoord flex = 0;
-    child->GetFlex(aState, flex);
-    
-    if (flex > 0) 
-       aFlexes++;
-
-    nsSize pref(0,0);
-    nsSize min(0,0);
-    nsSize max(0,0);
-
-    nscoord ascent = 0;
-    child->GetPrefSize(aState, pref);
-    child->GetAscent(aState, ascent);
-    nsMargin margin;
-    child->GetMargin(margin);
-    child->GetMinSize(aState, min);
-    child->GetMaxSize(aState, max);
-    nsBox::BoundsCheck(min, pref, max);
-
-    AddMargin(child, pref);
-    AddMargin(child, min);
-    AddMargin(child, max);
-
-      if (!isHorizontal) {
-        if (min.width > aMinSize)
-          aMinSize = min.width;
-
-        if (max.width < aMaxSize)
-          aMaxSize = max.width;
-
-      } else {
-        if (min.height > aMinSize)
-          aMinSize = min.height;
-
-        if (max.height < aMaxSize)
-          aMaxSize = max.height;
-      }
-
-
-    child->GetNextBox(&child);
-    if (child && !childSize->next)
-    {
-      childSize->next = new (aState) nsBoxSize();
-      childSize = childSize->next;
-    }
   }
-  */
 
+  nsSprocketLayout::PopulateBoxSizes(aBox, aState, aBoxSizes, aComputedBoxSizes, aMinSize, aMaxSize, aFlexes);
 }
 
 void 

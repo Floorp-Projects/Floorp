@@ -444,6 +444,9 @@ NS_IMETHODIMP  nsSplitterFrame::GetFrameForPoint(nsIPresContext* aPresContext,
                                              nsFramePaintLayer aWhichLayer,    
                                              nsIFrame**     aFrame)
 {   
+  if ((aWhichLayer != NS_FRAME_PAINT_LAYER_FOREGROUND))
+    return NS_ERROR_FAILURE;
+
   // if the mouse is captured always return us as the frame.
   if (mInner->IsMouseCaptured(aPresContext))
   {
@@ -819,6 +822,7 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
             mChildInfosBefore[mChildInfosBeforeCount].current = isHorizontal ? r.width : r.height;
             mChildInfosBefore[mChildInfosBeforeCount].flex    = flex;
             mChildInfosBefore[mChildInfosBeforeCount].index   = count;
+            mChildInfosBefore[mChildInfosBeforeCount].changed = mChildInfosBefore[mChildInfosBeforeCount].current;
             mChildInfosBeforeCount++;
         } else if (count > childIndex) {
             mChildInfosAfter[mChildInfosAfterCount].child   = childBox;
@@ -827,6 +831,7 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
             mChildInfosAfter[mChildInfosAfterCount].current = isHorizontal ? r.width : r.height;
             mChildInfosAfter[mChildInfosAfterCount].flex    = flex;
             mChildInfosAfter[mChildInfosAfterCount].index   = count;
+            mChildInfosAfter[mChildInfosAfterCount].changed   = mChildInfosAfter[mChildInfosAfterCount].current;
             mChildInfosAfterCount++;
         } 
     }

@@ -67,6 +67,13 @@ nsLeafBoxFrame::nsLeafBoxFrame(nsIPresShell* aShell):nsBox(aShell)
 {
 }
 
+void
+nsLeafBoxFrame::GetBoxName(nsAutoString& aName)
+{
+   GetFrameName(aName);
+}
+
+
 /**
  * Initialize us. This is a good time to get the alignment of the box
  */
@@ -101,6 +108,9 @@ nsLeafBoxFrame::GetFrameForPoint(nsIPresContext* aPresContext,
                              nsFramePaintLayer aWhichLayer,    
                              nsIFrame**     aFrame)
 {   
+  if ((aWhichLayer != NS_FRAME_PAINT_LAYER_FOREGROUND))
+    return NS_ERROR_FAILURE;
+
   if (!mRect.Contains(aPoint))
     return NS_ERROR_FAILURE;
 

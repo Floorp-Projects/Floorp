@@ -117,6 +117,11 @@ protected:
   virtual PRBool GetDefaultFlex(PRInt32& aFlex);
   virtual void GetLayoutFlags(PRUint32& aFlags);
 
+  void EnterLayout(nsBoxLayoutState& aState);
+  void ExitLayout(nsBoxLayoutState& aState);
+  virtual void GetBoxName(nsAutoString& aName);
+  virtual void ListBox(nsAutoString& aResult);
+
   enum eMouseThrough {
     unset,
     never,

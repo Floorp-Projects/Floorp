@@ -88,6 +88,12 @@ public:
                               nsFramePaintLayer aWhichLayer,
                               nsIFrame**     aFrame);
 
+  NS_IMETHOD  GetScrollPreference(nsScrollPref* aScrollPreference) const;
+
+  NS_IMETHOD GetScrollbarSizes(nsIPresContext* aPresContext, 
+                               nscoord *aVbarWidth, 
+                               nscoord *aHbarHeight) const;
+
   /**
    * Get the "type" of the frame
    *
@@ -109,6 +115,9 @@ public:
   NS_IMETHOD GetClipSize(nsIPresContext* aPresContext, 
                          nscoord *aWidth, 
                          nscoord *aHeight) const;
+
+  NS_IMETHOD GetScrollPosition(nsIPresContext* aContext, nscoord &aX, nscoord& aY) const;
+  NS_IMETHOD ScrollTo(nsIPresContext* aContext, nscoord aX, nscoord aY, PRUint32 aFlags);
 
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr); 
   NS_IMETHOD_(nsrefcnt) AddRef(void) { return NS_OK; }

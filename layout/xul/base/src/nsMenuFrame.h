@@ -139,7 +139,7 @@ public:
   NS_IMETHOD GetMenuChild(nsIFrame** aResult) { *aResult = mPopupFrames.FirstChild(); return NS_OK; }
   NS_IMETHOD GetRadioGroupName(nsString &aName) { aName = mGroupName; return NS_OK; };
   NS_IMETHOD GetMenuType(nsMenuType &aType) { aType = mType; return NS_OK; };
-
+  NS_IMETHOD MarkChildrenStyleChange();
   NS_IMETHOD MarkAsGenerated();
 
   // nsMenuFrame methods 
@@ -161,7 +161,7 @@ public:
 
 protected:
 
-  virtual void LayoutFinished(nsBoxLayoutState& aState);
+  virtual void RePositionPopup(nsBoxLayoutState& aState);
 
   static void UpdateDismissalListener(nsIMenuParent* aMenuParent);
   void UpdateMenuType(nsIPresContext* aPresContext);
@@ -203,7 +203,7 @@ protected:
   nsCOMPtr<nsITimer> mOpenTimer;
   nsIPresContext* mPresContext; // Our pres context.
   nsString mGroupName;
-
+  nsSize mLastPref;
 public:
   static nsMenuDismissalListener* mDismissalListener; // The listener that dismisses menus.
 }; // class nsMenuFrame
