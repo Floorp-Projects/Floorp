@@ -329,9 +329,10 @@ void InitKeyPressEvent(GdkEventKey *aGEK,
     else 
        anEvent.charCode = 0;
 
-    if (anEvent.charCode)
+    if (anEvent.charCode) {
       anEvent.keyCode = 0;
-    else
+      anEvent.isShift = PR_FALSE;
+    } else
       anEvent.keyCode = nsPlatformToDOMKeyCode(aGEK);
 
 #if defined(DEBUG_akkana) || defined(DEBUG_pavlov)
