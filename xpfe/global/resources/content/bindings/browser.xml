@@ -329,6 +329,10 @@
         null
       </field>
 
+      <field name="mDestroyed">
+        false
+      </field>
+
       <constructor>
         <![CDATA[
           try {
@@ -363,12 +367,31 @@
       
       <destructor>
         <![CDATA[
-          if (this.mDragDropHandler)
-            this.mDragDropHandler.detach();
-
-          this.securityUI = null;
+          this.destroy();
         ]]>
       </destructor>
+
+      <!-- This is necessary because the destructor is not called
+           promptly when we are removed from a tabbrowser. This will be
+           explicitly called by tabbrowser -->
+      <method name="destroy">
+        <body>
+        <![CDATA[
+          if (this.mDestroyed)
+            return;
+          this.mDestroyed = true;
+
+          if (this.mDragDropHandler)
+            this.mDragDropHandler.detach();
+          this.mDragDropHandler = null;
+
+          this.securityUI = null;
+          this.focusedWindow = null;
+          this.focusedElement = null;
+          this._webBrowserFind = null;
+        ]]>
+        </body>
+      </method>
     </implementation>
 
     <handlers>
