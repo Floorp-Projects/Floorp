@@ -50,6 +50,7 @@ struct JSStackFrame {
     JSPackedBool    constructing;   /* true if called via new operator */
     uint8           overrides;      /* bit-set of overridden Call properties */
     JSPackedBool    debugging;      /* true if for JS_EvaluateInStackFrame */
+    JSPackedBool    internalCall;   /* true if frame invokes js_InternalCall */
     JSStackFrame    *dormantNext;   /* next dormant frame chain */
 };
 
@@ -198,8 +199,8 @@ extern JS_FRIEND_API(JSBool)
 js_Invoke(JSContext *cx, uintN argc, JSBool constructing);
 
 extern JSBool
-js_CallFunctionValue(JSContext *cx, JSObject *obj, jsval fval,
-		     uintN argc, jsval *argv, jsval *rval);
+js_InternalCall(JSContext *cx, JSObject *obj, jsval fval,
+		uintN argc, jsval *argv, jsval *rval);
 
 extern JSBool
 js_Execute(JSContext *cx, JSObject *chain, JSScript *script, JSFunction *fun,

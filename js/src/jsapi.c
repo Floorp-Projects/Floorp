@@ -1129,9 +1129,9 @@ JS_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
 	if (!fun)
 	    goto bad;
 
-        /* 
+        /*
          * Remember the class this function is a constructor for so that
-         * we know to create an object of this class when we call the 
+         * we know to create an object of this class when we call the
          * constructor.
          */
         fun->clasp = clasp;
@@ -2208,7 +2208,7 @@ JS_BufferIsCompilableUnit(JSContext *cx, JSObject *obj,
     } else {
         result = JS_TRUE;
         js_DestroyScript(cx, script);
-    }        
+    }
 
 out:
     JS_free(cx, chars);
@@ -2532,8 +2532,8 @@ JS_CallFunction(JSContext *cx, JSObject *obj, JSFunction *fun, uintN argc,
 		jsval *argv, jsval *rval)
 {
     CHECK_REQUEST(cx);
-    if (!js_CallFunctionValue(cx, obj, OBJECT_TO_JSVAL(fun->object),
-                              argc, argv, rval)) {
+    if (!js_InternalCall(cx, obj, OBJECT_TO_JSVAL(fun->object), argc, argv,
+			 rval)) {
 #if JS_HAS_EXCEPTIONS
         js_ReportUncaughtException(cx);
 #endif
@@ -2551,7 +2551,7 @@ JS_CallFunctionName(JSContext *cx, JSObject *obj, const char *name, uintN argc,
     CHECK_REQUEST(cx);
     if (!JS_GetProperty(cx, obj, name, &fval))
 	return JS_FALSE;
-    if (!js_CallFunctionValue(cx, obj, fval, argc, argv, rval)) {
+    if (!js_InternalCall(cx, obj, fval, argc, argv, rval)) {
 #if JS_HAS_EXCEPTIONS
         js_ReportUncaughtException(cx);
 #endif
@@ -2565,7 +2565,7 @@ JS_CallFunctionValue(JSContext *cx, JSObject *obj, jsval fval, uintN argc,
 		     jsval *argv, jsval *rval)
 {
     CHECK_REQUEST(cx);
-    if (!js_CallFunctionValue(cx, obj, fval, argc, argv, rval)) {
+    if (!js_InternalCall(cx, obj, fval, argc, argv, rval)) {
 #if JS_HAS_EXCEPTIONS
         js_ReportUncaughtException(cx);
 #endif
@@ -2932,9 +2932,9 @@ JS_ClearPendingException(JSContext *cx)
 }
 
 #if JS_HAS_EXCEPTIONS
-struct JSExceptionState 
+struct JSExceptionState
 {
-    JSBool throwing; 
+    JSBool throwing;
     jsval  exception;
 };
 #endif
