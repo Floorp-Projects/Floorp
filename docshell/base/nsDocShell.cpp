@@ -4222,7 +4222,7 @@ nsDocShell::OnStateChange(nsIWebProgress * aProgress, nsIRequest * aRequest,
                 // Add the original url to global History so that
                 // visited url color changes happen.
                 if (uri)
-                    AddToGlobalHistory(channel, uri, PR_TRUE);
+                    AddToGlobalHistory(uri, PR_TRUE);
             }                   // channel
         }                       // aProgress
     }
@@ -5878,7 +5878,7 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel,
         }
 
         // Update Global history
-        AddToGlobalHistory(aChannel, aURI, IsFrame());
+        AddToGlobalHistory(aURI, IsFrame());
     }
 
     // If this was a history load, update the index in 
@@ -6417,9 +6417,8 @@ NS_IMETHODIMP nsDocShell::MakeEditable(PRBool inWaitForUriLoad)
 }
 
 nsresult
-nsDocShell::AddToGlobalHistory(nsIChannel* aChannel, nsIURI * aURI, PRBool aHidden)
+nsDocShell::AddToGlobalHistory(nsIURI * aURI, PRBool aHidden)
 {
-    nsresult rv;
     // first check if we should be adding it
     PRBool updateHistory;
     ShouldAddToGlobalHistory(aURI, &updateHistory);
@@ -6431,26 +6430,6 @@ nsDocShell::AddToGlobalHistory(nsIChannel* aChannel, nsIURI * aURI, PRBool aHidd
     NS_ENSURE_SUCCESS(aURI->GetSpec(spec), NS_ERROR_FAILURE);
 
     NS_ENSURE_SUCCESS(mGlobalHistory->AddPage(spec.get()), NS_ERROR_FAILURE);
-
-    nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aChannel, &rv));
-    if (NS_SUCCEEDED(rv)) {
-        nsCOMPtr<nsIURI> referrer;
-        rv = httpChannel->GetReferrer(getter_AddRefs(referrer));
-        if (NS_SUCCEEDED(rv) && referrer) {
-            nsCAutoString referrerSpec;
-            rv = referrer->GetSpec(referrerSpec);
-            if (NS_SUCCEEDED(rv)) {
-                nsCOMPtr<nsIBrowserHistory> browserHistory = 
-                  do_QueryInterface(mGlobalHistory);
-                // In embedding environments, the "lite" global history
-                // implementation might not implement nsIBrowserHistory.
-                if (browserHistory) {
-                  browserHistory->OutputReferrerURL(spec.get(), 
-                    referrerSpec.get());
-                }
-            }
-        }
-    }
 
     // this is a redirect, so hide the page from
     // being enumerated in history
