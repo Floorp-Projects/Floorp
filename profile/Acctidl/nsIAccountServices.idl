@@ -28,6 +28,12 @@
 interface nsIAccountServices : nsISupports
 {
 	void SetDialerConfig(in string data);
+	string GetAcctConfig();
+	string GetModemConfig();
+	string GetSiteName();
+	string GetPhone();
+	void LoadValues();
+	string CheckForDun();
 };
 
 
