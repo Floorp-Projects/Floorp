@@ -43,8 +43,8 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 CONFIG_DIR=$(shell cygpath -a $(srcdir))
-OBJ_DIR=$(shell cygpath -a $(topsrcdir))
-SRC_DIR=$(shell cygpath -a $(DEPTH))
+OBJ_DIR=$(shell cygpath -a $(DEPTH))
+SRC_DIR=$(shell cygpath -a $(topsrcdir))
 
 ifeq (,$(INSTALLER_URL))
 INSTALLER_URL = "http://ftp.mozilla.org/pub/mozilla.org/pub/thunderbird/nightly/latest-trunk/windows-xpi"
