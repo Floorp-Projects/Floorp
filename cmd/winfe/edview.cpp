@@ -905,7 +905,7 @@ void CNetscapeEditView::OnSetFocus(CWnd *pOldWin)
     if (GetEmbedded())
     {
         CMainFrame * pFrame = (CMainFrame*)GetParentFrame();
-        CEnderBar *pControler = pFrame->getComposeToolBar();
+        CComboToolBar *pControler = pFrame->getComposeToolBar();
         if (pControler)
         {
             //must calculate position for toolbar
@@ -936,7 +936,7 @@ void CNetscapeEditView::OnKillFocus(CWnd *pOldWin)
     if (GetEmbedded())
     {
         CMainFrame * pFrame = (CMainFrame*)GetParentFrame();
-        CEnderBar *pControler = pFrame->getComposeToolBar();
+        CComboToolBar *pControler = pFrame->getComposeToolBar();
         CWnd *pWnd=NULL;
         CWnd *pCPparent=NULL;
         BOOL keepToolbar=FALSE;
