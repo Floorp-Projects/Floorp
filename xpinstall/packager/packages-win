@@ -86,6 +86,7 @@ bin\components\caps.dll
 bin\components\caps.xpt
 bin\components\chardet.dll
 bin\components\chardetc.dll
+bin\components\universalchardet.dll
 bin\components\chrome.dll
 bin\components\chrome.xpt
 bin\components\cookie.dll
