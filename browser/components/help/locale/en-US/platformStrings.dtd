@@ -1,0 +1,37 @@
+<!-- LOCALIZATION NOTE : This file contains platform-specific strings which
+                         occur in large numbers throughout Help docs.
+                         Generally, for these strings it's less code to store
+                         them here than to hard-code the value of the entity
+                         in every place it's used, or using an entity is less
+                         confusing than typing a string like the jumbled messes
+                         used below for "preference" and derivatives.  Feel free
+                         to add more strings here as long as you run them by the
+                         Help module owner first (to prevent excessive use of
+                         such strings when other methods are preferable). -->
+
+<!-- Options -->
+
+<!ENTITY pref.menuPath     '<span class="noUnix menuPath">Tools &gt;
+                             Options</span><span class="unix menuPath">Edit &gt;
+                             Preferences</span>' >
+<!ENTITY pref.singular     '<span class="noUnix">option</span><span
+                             class="unix">preference</span>' >
+<!ENTITY pref.plural       '<span class="noUnix">options</span><span
+                             class="unix">preferences</span>' >
+<!ENTITY pref.singularCaps '<span class="noUnix">Option</span><span
+                             class="unix">Preference</span>' >
+<!ENTITY pref.pluralCaps   '<span class="noUnix">Options</span><span
+                             class="unix">Preferences</span>' >
+
+<!-- Keys -->
+
+<!ENTITY controlKey         '<kbd class="noMac">Ctrl</kbd><kbd
+                             class="mac">Cmd</kbd>' >
+<!ENTITY accelKey           '<kbd class="noMac">Ctrl</kbd><kbd
+                             class="mac">Cmd</kbd>' >
+<!ENTITY altKey             '<kbd class="noMac">Alt</kbd><kbd
+                             class="mac">Opt</kbd>' >
+<!ENTITY shiftKey           '<kbd>Shift</kbd>' >
+<!ENTITY enterKey           '<kbd class="noMac">Enter</kbd><kbd
+                             class="mac">Return</kbd>' >
+
