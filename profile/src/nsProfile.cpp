@@ -1280,7 +1280,7 @@ NS_IMETHODIMP nsProfile::MigrateProfileInfo()
 
 #ifdef XP_PC
 #ifdef XP_OS2
-    nsSpecialSystemDirectory system(nsSpecialSystemDirectory::OS2_OS2Directory);
+    nsSpecialSystemDirectory systemDir(nsSpecialSystemDirectory::OS2_OS2Directory);
 #else
     // Registry file has been traditionally stored in the windows directory (XP_PC).
     nsSpecialSystemDirectory systemDir(nsSpecialSystemDirectory::Win_WindowsDirectory);
