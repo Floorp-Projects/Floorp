@@ -861,6 +861,9 @@ int flush;
                 }
             }
 
+            /* handle error breaks in while */
+            if (state->mode == BAD) break;
+
             /* build code tables */
             state->next = state->codes;
             state->lencode = (code const FAR *)(state->next);
