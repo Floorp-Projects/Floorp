@@ -185,7 +185,7 @@ nsInputTextFrame::EnterPressed(nsIPresContext& aPresContext)
     // XXX this logic should be in the form manager, but then it needs to be passed
     //     enough to trigger the dom event.
     if ((kInputText_Text == type) && text->GetCanSubmit()) {
-      nsEventStatus mStatus;
+      nsEventStatus mStatus = nsEventStatus_eIgnore;
       nsEvent mEvent;
       mEvent.eventStructType = NS_EVENT;
       mEvent.message = NS_FORM_SUBMIT;
