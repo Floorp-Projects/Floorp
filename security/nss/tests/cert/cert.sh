@@ -158,7 +158,7 @@ hw_acc()
 {
     HW_ACC_RET=0
     HW_ACC_ERR=""
-    if [ -n "$O_HWACC" -a "$O_HWACC" = ON ] ; then
+    if [ -n "$O_HWACC" -a "$O_HWACC" = ON -a -z "$USE_64" ] ; then
         echo "creating $CERTNAME s cert with hwaccelerator..."
         #case $ACCELERATOR in
         #rainbow)
