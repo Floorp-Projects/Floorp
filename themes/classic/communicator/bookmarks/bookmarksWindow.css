@@ -14,7 +14,7 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is 
+ * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
  * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
@@ -24,7 +24,7 @@
  *   Josh Soref  <timeless@mac.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or 
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
  * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
@@ -41,43 +41,27 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-/** 
+/**
  * XXX - disable print plus. This needs to go into ns/!!!
- */    
-  #navprintplus
-    {
-      display             : none !important; 
-    }
-      
-  #status-bar
-    {
-      height              : 1em;
-    }
-    
-  #notification-icon  
-    {
-      list-style-image    : url("chrome://communicator/skin/bookmarks/notification.gif");
-    }    
-    
-  #schedule-icon  
-    {
-      list-style-image    : url("chrome://communicator/skin/bookmarks/schedule.gif");
-    }    
-    
-  #panel-bar,
-  #search-bar
-    {
-      border-top: 1px solid ThreeDHighlight;
-      border-bottom: 1px solid ThreeDShadow;
-    }    
+ */
+#navprintplus {
+  display: none !important;
+}
 
-  bookmarks-tree.inset
-    {
-      margin: 0px;
-      -moz-border-top-colors: ThreeDDarkShadow ThreeDShadow;
-      -moz-border-right-colors: ThreeDFace ThreeDHighlight;
-      -moz-border-bottom-colors: ThreeDFace ThreeDHighlight;
-      -moz-border-left-colors: ThreeDDarkShadow ThreeDShadow;
-    }
-    
-  
+#status-bar {
+  height: 1em;
+}
+
+#panel-bar,
+#search-bar {
+  border-top: 1px solid ThreeDHighlight;
+  border-bottom: 1px solid ThreeDShadow;
+}
+
+bookmarks-tree.inset {
+  margin: 0px;
+  -moz-border-top-colors: ThreeDDarkShadow ThreeDShadow;
+  -moz-border-right-colors: ThreeDFace ThreeDHighlight;
+  -moz-border-bottom-colors: ThreeDFace ThreeDHighlight;
+  -moz-border-left-colors: ThreeDDarkShadow ThreeDShadow;
+}
