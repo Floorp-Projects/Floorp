@@ -66,11 +66,15 @@ typedef PRUcs2 PRUnichar;
 #define NS_EXPORT_(type) type _declspec(dllexport) __stdcall
 #elif defined(XP_MAC)
 
-#define NS_IMPORT __declspec(import)
-#define NS_IMPORT_(type) __declspec(import) type
+#define NS_IMPORT
+#define NS_IMPORT_(type) type
 
-#define NS_EXPORT __declspec(export)
-#define NS_EXPORT_(type) __declspec(export) type
+// XXX NS_EXPORT_ defined in nsCom.h actually does an export. Here it's just sugar.
+#undef NS_EXPORT
+#undef NS_EXPORT_
+
+#define NS_EXPORT
+#define NS_EXPORT_(type) type
 
 #else
 /* XXX do something useful? */
