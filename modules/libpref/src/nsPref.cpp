@@ -92,6 +92,8 @@ public:
   NS_IMETHOD SetColorPrefDWord(const char *pref, PRUint32 colorref);
   NS_IMETHOD SetRectPref(const char *pref, 
 			 PRInt16 left, PRInt16 top, PRInt16 right, PRInt16 bottom);
+  
+  NS_IMETHOD ClearUserPref(const char *pref);
 
   // Get Defaults
   NS_IMETHOD GetDefaultCharPref(const char *pref, 
@@ -498,7 +500,12 @@ NS_IMETHODIMP nsPref::SetDefaultRectPref(const char *pref,
 {
   return _convertRes(PREF_SetDefaultRectPref(pref, left, top, right, bottom));
 }
-  
+
+NS_IMETHODIMP nsPref::ClearUserPref(const char *pref_name)
+{
+  return _convertRes(PREF_ClearUserPref(pref_name));
+}
+
 /*
  * Copy prefs
  */
