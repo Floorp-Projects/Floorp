@@ -23,7 +23,7 @@
 * See http://bugzilla.mozilla.org/show_bug.cgi?id=104584
 *
 * Testing that we don't crash on this code. The idea is to 
-* call f WITHOUT providing an argument. This caused a crash
+* call F,G WITHOUT providing an argument. This caused a crash
 * on the second call to obj.toString() or print(obj) below -
 */
 //-----------------------------------------------------------------------------
