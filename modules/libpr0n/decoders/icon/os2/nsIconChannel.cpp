@@ -469,8 +469,6 @@ NS_IMETHODIMP nsIconChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports
 ///// }
   LONG cbBitMapInfo = sizeof(BITMAPINFO2) + (sizeof(RGB2) * 255); // Max possible
   LONG iScanLineSize =  ((BMHeader.cBitCount * BMHeader.cx + 31) / 32) * 4;
-  printf("iScanLineSize = %d\n", iScanLineSize);
-  printf("BMHeader.cy = %d\n", BMHeader.cy);
   LONG cbBuffer = iScanLineSize * BMHeader.cy;
   // Allocate buffers, fill w/ 0
   PBITMAPINFO2 pBitMapInfo = (PBITMAPINFO2)nsMemory::Alloc(cbBitMapInfo);
