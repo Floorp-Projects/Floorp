@@ -301,7 +301,7 @@ nsProxyObject::AutoProxyParameterList(PRUint32 methodIndex, nsXPTMethodInfo *met
                         
                         printf("**************************************************\n");
                         printf("xpcom-proxy: could not invoke method: %s::%s().\n", interfaceName, methodInfo->GetName());
-                        printf("             could not find an IID for a parameter: %d\n", (paramInfo.type.type.interface - 1) );
+                        printf("             could not find an IID for a parameter: %d\n", (i) );
                         printf("**************************************************\n");
 
                         nsAllocator::Free((void*)interfaceName);
@@ -334,6 +334,7 @@ nsProxyObject::AutoProxyParameterList(PRUint32 methodIndex, nsXPTMethodInfo *met
                                 {
                                     // the caller does not have an eventQ of their own.  bad.
                                     eventQ = GetQueue();
+                                    rv = NS_OK; // todo: remove!
 #ifdef DEBUG
                         printf("**************************************************\n");
                         printf("xpcom-proxy: Caller does not have an EventQ\n");
