@@ -81,7 +81,7 @@ can teach me.";
 # Do remapping of things from BugSplat world to Bugzilla.
 
 if ($prod eq "Communicator") {
-    $prod = "Mozilla";
+    $prod = "Browser";
     $version = "other";
 }
 
@@ -133,7 +133,7 @@ if ($::FORM{'qa_contact'} ne "") {
 my @list = ('reporter', 'assigned_to', 'product', 'version', 'rep_platform',
             'op_sys', 'bug_status', 'bug_severity', 'priority', 'component',
             'short_desc', 'long_desc', 'creation_ts', 'delta_ts',
-            'bug_file_loc', 'qa_contact');
+            'bug_file_loc', 'qa_contact', 'groupset');
 
 my @vallist;
 foreach my $i (@list) {
