@@ -532,7 +532,11 @@ nsImageOS2::BuildTile (HPS hpsTile, PRUint8* pImageBits, PBITMAPINFO2 pBitmapInf
       POINTL pt2 = { mInfo->cx, mInfo->cy };                                   // UR - ex
 
       GFX (::GpiCreateLogColorTable (hpsTile, 0, LCOLF_RGB, 0, 0, 0), FALSE);
+#ifdef DEBUG
       GFX (::GpiSetColor (hpsTile, MK_RGB (255, 255, 0)), FALSE);              // yellow eye-catcher
+#else
+      GFX (::GpiSetColor (hpsTile, MK_RGB (255, 255, 255)), FALSE);
+#endif
       GFX (::GpiMove (hpsTile, &pt1), FALSE);
       GFX (::GpiBox (hpsTile, DRO_FILL, &pt2, 0, 0), GPI_ERROR);
    }
