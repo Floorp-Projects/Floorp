@@ -197,19 +197,38 @@ nsCairoImage::Draw(nsIRenderingContext &aContext, nsIDrawingSurface *aSurface,
 
     cairo_t *dstCairo = cairoContext->GetCairo();
 
+    cairo_pattern_t *prepat = cairo_current_pattern (dstCairo);
+    fprintf (stderr, " IMAGE: pattern: %p ", prepat);
+
     cairo_save(dstCairo);
 
-    cairo_set_rgb_color (dstCairo, 1.0, 0.0, 0.0);
+#if 0
+    {
+        cairo_matrix_t *mat = cairo_matrix_create();
+        cairo_current_matrix (dstCairo, mat);
+
+        double a,b,c,d,tx,ty;
+        cairo_matrix_get_affine (mat, &a, &b, &c, &d, &tx, &ty);
+        fprintf (stderr, " [cur tx ty: %g %g %d %d] ", tx, ty, (int) tx, (int) ty);
+    }
+    
+    if (aSWidth == 16 && aSHeight == 16 && aDWidth == 16 && aDHeight == 16)
+        cairo_set_rgb_color (dstCairo, 0.0, 1.0, 0.0);
+    else
+        cairo_set_rgb_color (dstCairo, 1.0, 0.0, 0.0);
     cairo_rectangle (dstCairo, double(aDX), double(aDY), double(aDWidth), double(aDHeight));
     cairo_fill (dstCairo);
 
-#if 0
+    cairo_pattern_t *postpat = cairo_current_pattern (dstCairo);
+    fprintf (stderr, " ---> %p ", postpat);
+
+#else
     cairo_pattern_t *imgpat = cairo_pattern_create_for_surface (mImageSurface);
     cairo_matrix_t *mat = cairo_matrix_create();
-    cairo_matrix_translate (mat, double(aSX), double(aSY));
+    cairo_matrix_scale (mat, 1.0/15.0, 1.0/15.0);
     cairo_matrix_scale (mat, double(aDWidth)/double(aSWidth), double(aDHeight)/double(aSHeight));
+    cairo_matrix_translate (mat, double(aSX), double(aSY));
     cairo_pattern_set_matrix (imgpat, mat);
-
     cairo_set_pattern (dstCairo, imgpat);
 
     cairo_new_path (dstCairo);
@@ -223,6 +242,8 @@ nsCairoImage::Draw(nsIRenderingContext &aContext, nsIDrawingSurface *aSurface,
 
     cairo_restore(dstCairo);
 
+    cairo_pattern_t *endpat = cairo_current_pattern (dstCairo);
+    fprintf (stderr, " ---> %p\n", endpat);
     return NS_OK;
 }
 
@@ -248,6 +269,7 @@ nsCairoImage::DrawToImage(nsIImage* aDstImage, PRInt32 aDX, PRInt32 aDY, PRInt32
 
     cairo_pattern_t *pat = cairo_pattern_create_for_surface (mImageSurface);
     cairo_matrix_t *mat = cairo_matrix_create ();
+    cairo_matrix_scale (mat, 1.0/15.0, 1.0/15.0);
     cairo_matrix_scale (mat, double(aDWidth)/double(mWidth), double(aDHeight)/double(mHeight));
     cairo_pattern_set_matrix (pat, mat);
 

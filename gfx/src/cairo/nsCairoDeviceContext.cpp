@@ -129,8 +129,6 @@ nsCairoDeviceContext::Init(nsNativeWidget aWidget)
 
     mTwipsToPixels = 96 / (float)NSIntPointsToTwips(72);
     mPixelsToTwips = 1.0f / mTwipsToPixels;
-    //mTwipsToPixels = 1.0f;
-    //mPixelsToTwips = 1.0f;
 
     mWidget = aWidget;
 
