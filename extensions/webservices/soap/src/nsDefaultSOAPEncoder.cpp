@@ -2334,7 +2334,7 @@ NS_IMETHODIMP
       do_CreateInstance(NS_VARIANT_CONTRACTID, &rc);
   if (NS_FAILED(rc))
     return rc;
-  p->SetAsInterface(NS_GET_IID(nsIPropertyBag), bag);
+  rc = p->SetAsInterface(NS_GET_IID(nsIPropertyBag), bag);
   if (NS_FAILED(rc))
     return rc;
   *_retval = p;
@@ -2801,6 +2801,8 @@ NS_IMETHODIMP
 
 #define DECODE_ARRAY(XPType, VTYPE, iid, Convert, Free) \
       XPType* a = new XPType[size];\
+      if (!a)\
+        return NS_ERROR_OUT_OF_MEMORY;\
       for (si = 0; si < size; si++) a[si] = 0;\
       nsCOMPtr<nsIDOMElement> child;\
       nsSOAPUtils::GetFirstChildElement(aSource, getter_AddRefs(child));\

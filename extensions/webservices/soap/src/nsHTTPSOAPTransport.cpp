@@ -224,7 +224,7 @@ static nsresult GetTransportURI(nsISOAPCall * aCall, nsAString & aURI)
       nsSOAPUtils::GetSpecificChildElement(nsnull, element, gSOAPStrings->kVerifySourceNamespaceURI, 
         gSOAPStrings->kVerifySourceHeader, getter_AddRefs(verifySource));
       if (verifySource) {
-        element->RemoveChild(verifySource, getter_AddRefs(ignore));
+        rc = element->RemoveChild(verifySource, getter_AddRefs(ignore));
         if (NS_FAILED(rc))
           return rc;
       }
@@ -300,10 +300,10 @@ static nsresult GetTransportURI(nsISOAPCall * aCall, nsAString & aURI)
       nsCOMPtr<nsIDOMText> text;
       rc = document->CreateTextNode(sourceURI, getter_AddRefs(text));
       if (NS_FAILED(rc)) 
-      return rc;
-      element->AppendChild(text, getter_AddRefs(ignore));
+        return rc;
+      rc = element->AppendChild(text, getter_AddRefs(ignore));
       if (NS_FAILED(rc)) 
-      return rc;
+        return rc;
     }
   }
   return NS_OK;
@@ -437,7 +437,7 @@ NS_IMETHODIMP
 {
   NS_ENSURE_ARG(aResponse);
   *aResponse =
-      mRequest ? (nsCOMPtr<nsISOAPResponse>) nsnull : mResponse;
+      mRequest ? nsnull : mResponse.get();
   NS_IF_ADDREF(*aResponse);
   return NS_OK;
 }
@@ -504,7 +504,7 @@ NS_IMETHODIMP
       mResponse = nsnull;
     }
     nsCOMPtr<nsISOAPCallCompletion> kungFuDeathGrip = this;
-    mRequest = nsnull;                //  Break cycle of references by releas.
+    mRequest = nsnull;                //  Break cycle of references by releasing the request.
     PRBool c;                        //  In other transports, this may signal to stop returning if multiple returns
     mListener->HandleResponse(mResponse, mCall, rv, PR_TRUE, &c);
   }

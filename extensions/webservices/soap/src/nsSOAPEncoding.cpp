@@ -407,7 +407,7 @@ nsSOAPEncoding::MapSchemaURI(const nsAString & aExternalURI,
         do_CreateInstance(NS_VARIANT_CONTRACTID, &rc);
     if (NS_FAILED(rc))
       return rc;
-    p->SetAsAString(aExternalURI);
+    rc = p->SetAsAString(aExternalURI);
     if (NS_FAILED(rc))
       return rc;
     mMappedInternal.Put(&internalKey, p);
@@ -417,7 +417,7 @@ nsSOAPEncoding::MapSchemaURI(const nsAString & aExternalURI,
       do_CreateInstance(NS_VARIANT_CONTRACTID, &rc);
   if (NS_FAILED(rc))
     return rc;
-  p->SetAsAString(aInternalURI);
+  rc = p->SetAsAString(aInternalURI);
   if (NS_FAILED(rc))
     return rc;
   mMappedExternal.Put(&externalKey, p);
