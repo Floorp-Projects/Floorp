@@ -5100,7 +5100,7 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
 
     if (NS_OK == result) { 
       // Get style hint from HTML content object. 
-      styledContent->GetStyleHintForAttributeChange(aAttribute, &aHint);
+      styledContent->GetMappedAttributeImpact(aAttribute, aHint);
       NS_RELEASE(styledContent); 
     } 
   } 
