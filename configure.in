@@ -5650,14 +5650,14 @@ AC_SUBST(MOZ_LIBART_LIBS)
 dnl ========================================================
 dnl Check for cairo
 dnl ========================================================
-MOZ_CAIRO_CFLAGS='-I$(DIST)/include/cairo'
-MOZ_CAIRO_LIBS="-lcairo -lpixman"
-
-if test -z "$MACOSX"; then
-   MOZ_CAIRO_LIBS="$MOZ_CAIRO_LIBS -lfreetype"
-fi;
-
 if test "$MOZ_SVG_RENDERER_CAIRO" -o "$MOZ_ENABLE_CAIRO" ; then
+   MOZ_CAIRO_CFLAGS='-I$(DIST)/include/cairo'
+   MOZ_CAIRO_LIBS="-lcairo -lpixman"
+
+   if test -z "$MACOSX"; then
+      MOZ_CAIRO_LIBS="$MOZ_CAIRO_LIBS -lfreetype"
+   fi
+
    MOZ_TREE_CAIRO=1
    MOZ_ARG_ENABLE_BOOL(system-cairo,
    [ --enable-system-cairo Use system cairo (located with pkgconfig)],
