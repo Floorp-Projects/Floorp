@@ -756,7 +756,7 @@ InternetSearchDataSource::FireTimer(nsITimer* aTimer, void* aClosure)
 			search->busySchedule = PR_TRUE;
 
 #ifdef	DEBUG_SEARCH_UPDATES
-			printf("    InternetSearchDataSource::FireTimer - Pinging '%s'\n", (char *)updateURL);
+			printf("    InternetSearchDataSource::FireTimer - Pinging '%s'\n", (char *)updateURL.get());
 #endif
 		}
 	}
@@ -2648,6 +2648,8 @@ InternetSearchDataSource::GetInternetSearchURL(const char *searchEngineURI,
 		return(rv);
 	if (!engine)	return(NS_ERROR_UNEXPECTED);
 
+	validateEngine(engine);
+	
 	// if its a engine from a search category, then get its "#Name",
 	// and try to map from that back to the real engine reference
 	if (isSearchCategoryEngineURI(engine))
