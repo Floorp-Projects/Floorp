@@ -23,7 +23,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 
 
-$::UtilsVersion = '$Revision: 1.159 $ ';
+$::UtilsVersion = '$Revision: 1.160 $ ';
 
 package TinderUtils;
 
@@ -176,8 +176,6 @@ sub GetSystemInfo {
 
     # Redirecting stderr to stdout works on *nix, winnt, but not on win98.
     $Settings::TieStderr = '2>&1';
-    # Wrap in eval to guard against missing 'Win32' module on non-win32 systems.
-    eval 'use Win32; $Settings::TieStderr = "" if Win32::IsWin95();';
 
     if ($Settings::OS eq 'AIX') {
         my $osAltVer = `uname -v`;
@@ -207,6 +205,7 @@ sub GetSystemInfo {
     }
     if ($Settings::OS =~ /^WIN/) {
         $host =~ tr/A-Z/a-z/;
+        $Settings::TieStderr = "" if $Settings::OS eq 'WIN98';
     }
 
     $Settings::DirName = "${Settings::OS}_${os_ver}_$build_type";
@@ -824,19 +823,18 @@ sub find_pref_file {
     my $profile_dir = "$build_dir/.mozilla";
 
     # win32: works on win98 and win2k (file bugs on jrgm@netscape.com if it 
-    # doesn't work on Me, XP, NT...)
+    # doesn't work on Me, XP, NT4 ...)
     if ($Settings::OS =~ /^WIN/) {
-        my $is9x = eval 'use Win32; return Win32::IsWin95();';
-        my $major = eval 'use Win32; return (Win32::GetOSVersion())[1];';
-        if ($is9x) {            # 95, 98, Me(?)
+        if ($Settings::OS =~ /^WIN9/) { # 98 [but what does uname say on Me?]
             $profile_dir = $ENV{winbootdir} || $ENV{windir} || "C:\\WINDOWS";
             $profile_dir .= "\\Application Data";
-        } elsif ($major == 4) { # NT 4
-            $profile_dir = $ENV{USERPROFILE} || "C:\\WE_ARE_DOOMED";
-            $profile_dir .= "\\Application Data";
-        } else {                # NT 5: 2k, XP(?)
-            $profile_dir = $ENV{APPDATA};
-
+        } elsif ($Settings::OS =~ /^WINNT/) { # NT 4, 2K, XP(?)
+            # afaict, %USERPROFILE% should always be there, NT 4.0 and up
+            if ($ENV{USERPROFILE}) {
+                $profile_dir = $ENV{USERPROFILE} . "\\Application Data";
+            } else { # use %APPDATA% as a fallback (or prepare to fail)
+                $profile_dir = $ENV{APPDATA} || "C:\\_UNKNOWN_";
+            }
         }
         $profile_dir .= "\\Mozilla\\Profiles\\$Settings::MozProfileName";
         $profile_dir =~ s|\\|/|g;
@@ -1487,6 +1485,8 @@ sub kill_process {
         kill $sig => $target_pid;
         my $interval_start = time;
         while (time - $interval_start < 10) {
+            # the following will work with 'cygwin' perl on win32, but not 
+            # with 'MSWin32' (ActiveState) perl
             my $pid = waitpid($target_pid, POSIX::WNOHANG());
             if (($pid == $target_pid and POSIX::WIFEXITED($?)) or $pid == -1) {
                 my $secs = time - $start_time;
@@ -1571,8 +1571,8 @@ sub wait_for_pid {
         $loop_count = 0;
         while (++$loop_count < $timeout_secs) {
             my $wait_pid = waitpid($pid, POSIX::WNOHANG());
-            #XXXjrgm POSIX::WIFEXITED is not implemented on Win32,
-            # so this needs an alternate implementation.
+            # the following will work with 'cygwin' perl on win32, but not 
+            # with 'MSWin32' (ActiveState) perl
             last if ($wait_pid == $pid and POSIX::WIFEXITED($?)) or $wait_pid == -1;
             sleep 1;
         }
