@@ -1,9 +1,10 @@
 ; MozillaControl.def : Declares the module parameters.
 
-LIBRARY      "MozillaControl.DLL"
+LIBRARY      "npmozctl.DLL"
 
 EXPORTS
-	DllCanUnloadNow     @1 PRIVATE
-	DllGetClassObject   @2 PRIVATE
-	DllRegisterServer   @3 PRIVATE
-	DllUnregisterServer	@4 PRIVATE
+	; ActiveX exports
+	DllCanUnloadNow     @100 PRIVATE
+	DllGetClassObject   @101 PRIVATE
+	DllRegisterServer   @102 PRIVATE
+	DllUnregisterServer	@103 PRIVATE
