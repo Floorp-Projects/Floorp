@@ -449,6 +449,9 @@ NS_IMETHODIMP ns4xPluginInstance::Start(void)
 
 NS_IMETHODIMP ns4xPluginInstance::Stop(void)
 {
+  if (fNPP.pdata == nsnull)
+    return NS_ERROR_FAILURE;
+
   NPError error;
 
 #ifdef NS_DEBUG
@@ -460,7 +463,8 @@ NS_IMETHODIMP ns4xPluginInstance::Stop(void)
     gtk_widget_destroy(mXtBin);
 #endif
 
-
+  if(!mStarted)
+    return NS_OK;
 
   if (fCallbacks->destroy == NULL)
     return NS_ERROR_FAILURE; // XXX right error?
@@ -695,6 +699,9 @@ NS_IMETHODIMP ns4xPluginInstance::Print(nsPluginPrint* platformPrint)
 
 NS_IMETHODIMP ns4xPluginInstance::HandleEvent(nsPluginEvent* event, PRBool* handled)
 {
+  if (fNPP.pdata == nsnull)
+    return NS_ERROR_FAILURE;
+
   PRInt16 res = 0;
   
   if (fCallbacks->event)
