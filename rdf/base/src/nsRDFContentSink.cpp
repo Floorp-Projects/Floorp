@@ -193,6 +193,24 @@ public:
     static nsIAtom* kXMLNSAtom;
     static nsIAtom* kParseTypeAtom;
 
+    typedef nsresult 
+    NS_STDCALL_FUNCPROTO(nsIRDFContainerUtils::*nsContainerTestFn,
+                         (nsIRDFDataSource* aDataSource,
+                          nsIRDFResource* aResource,
+                          PRBool* aResult));
+
+    typedef nsresult 
+    NS_STDCALL_FUNCPROTO(nsIRDFContainerUtils::*nsMakeContainerFn,
+                         (nsIRDFDataSource* aDataSource,
+                          nsIRDFResource* aContainer,
+                          nsIRDFContainer** aResult));
+
+    typedef struct ContainerInfo {
+        nsIRDFResource**  mType;
+        nsContainerTestFn mTestFn;
+        nsMakeContainerFn mMakeFn;
+    } ContainerInfo;
+
 protected:
     // Text management
     void ParseText(nsIRDFNode **aResult);
@@ -1498,36 +1516,6 @@ RDFContentSinkImpl::ParseAttributeString(const nsAString& aAttributeName,
     return NS_OK;
 }
 
-// XXX Wish there was a better macro in nsCom.h...
-#if defined(XP_WIN)
-#define STDCALL __stdcall
-#elif defined(XP_OS2)
-#define STDCALL
-#else
-#define STDCALL
-#endif
-
-typedef nsresult (STDCALL nsIRDFContainerUtils::*nsContainerTestFn)(nsIRDFDataSource* aDataSource,
-                                                                    nsIRDFResource* aResource,
-                                                                    PRBool* aResult);
-
-typedef nsresult (STDCALL nsIRDFContainerUtils::*nsMakeContainerFn)(nsIRDFDataSource* aDataSource,
-                                                                    nsIRDFResource* aContainer,
-                                                                    nsIRDFContainer** aResult);
-
-struct ContainerInfo {
-    nsIRDFResource**  mType;
-    nsContainerTestFn mTestFn;
-    nsMakeContainerFn mMakeFn;
-};
-
-ContainerInfo gContainerInfo[] = {
-    { &RDFContentSinkImpl::kRDF_Alt, &nsIRDFContainerUtils::IsAlt, &nsIRDFContainerUtils::MakeAlt },
-    { &RDFContentSinkImpl::kRDF_Bag, &nsIRDFContainerUtils::IsBag, &nsIRDFContainerUtils::MakeBag },
-    { &RDFContentSinkImpl::kRDF_Seq, &nsIRDFContainerUtils::IsSeq, &nsIRDFContainerUtils::MakeSeq },
-    { 0, 0, 0 },
-};
-
 nsresult
 RDFContentSinkImpl::InitContainer(nsIRDFResource* aContainerType, nsIRDFResource* aContainer)
 {
@@ -1536,7 +1524,14 @@ RDFContentSinkImpl::InitContainer(nsIRDFResource* aContainerType, nsIRDFResource
     // new container vs. 'reinitialize' the container).
     nsresult rv;
 
-    for (ContainerInfo* info = gContainerInfo; info->mType != 0; ++info) {
+    static const ContainerInfo gContainerInfo[] = {
+        { &RDFContentSinkImpl::kRDF_Alt, &nsIRDFContainerUtils::IsAlt, &nsIRDFContainerUtils::MakeAlt },
+        { &RDFContentSinkImpl::kRDF_Bag, &nsIRDFContainerUtils::IsBag, &nsIRDFContainerUtils::MakeBag },
+        { &RDFContentSinkImpl::kRDF_Seq, &nsIRDFContainerUtils::IsSeq, &nsIRDFContainerUtils::MakeSeq },
+        { 0, 0, 0 },
+    };
+
+    for (const ContainerInfo* info = gContainerInfo; info->mType != 0; ++info) {
         if (*info->mType != aContainerType)
             continue;
 
