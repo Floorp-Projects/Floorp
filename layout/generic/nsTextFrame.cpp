@@ -1095,14 +1095,15 @@ DrawSelectionIterator::FillCurrentData()
 {
   if (mDone)
     return;
+  mCurrentIdx += mCurrentLength; // advance to this chunk
+  mCurrentLength = 0;
+  if (mCurrentIdx >= mLength)
+  {
+    mDone = PR_TRUE;
+    return;
+  }
   if (!mTypes)
   {
-    mCurrentIdx+=mCurrentLength;
-    if (mCurrentIdx >= mLength)
-    {
-      mDone = PR_TRUE;
-      return;
-    }
     if (mCurrentIdx < (PRUint32)mDetails->mStart)
     {
       mCurrentLength = mDetails->mStart;
@@ -1118,17 +1119,16 @@ DrawSelectionIterator::FillCurrentData()
   }
   else
   {
-    mCurrentIdx+=mCurrentLength;//advance to this chunk
-    if (mCurrentIdx >= mLength)
-    {
-      mDone = PR_TRUE;
-      return;
-    }
     uint8 typevalue = mTypes[mCurrentIdx];
-    while (typevalue == mTypes[mCurrentIdx+mCurrentLength] && (mCurrentIdx+mCurrentLength) <mLength)
+    while (mCurrentIdx+mCurrentLength < mLength && typevalue == mTypes[mCurrentIdx+mCurrentLength])
     {
       mCurrentLength++;
     }
+  }
+  // never overrun past mLength
+  if (mCurrentIdx+mCurrentLength > mLength)
+  {
+    mCurrentLength = mLength - mCurrentIdx;
   }
 }
 
