@@ -30,7 +30,7 @@
 #include <ctype.h>      // for isalpha
 
 static NS_DEFINE_CID(kFileTransportService, NS_FILETRANSPORTSERVICE_CID);
-static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUE_CID);
+static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
