@@ -2,3 +2,5 @@ Makefile
 config.log
 config.cache
 config.status
+.fast-update
+
