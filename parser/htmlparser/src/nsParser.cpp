@@ -1638,7 +1638,14 @@ nsParser::Parse(const nsAString& aSourceBuffer,
 
       pc->mContextType=CParserContext::eCTString; 
       pc->SetMimeType(aMimeType);
-      pc->mDTDMode=aMode;
+      if (pc->mPrevContext && aMode == eDTDMode_autodetect) {
+        // Preserve the DTD mode from the last context, bug 265814.
+        pc->mDTDMode = pc->mPrevContext->mDTDMode;
+      }
+      else {
+        pc->mDTDMode = aMode;
+      }
+
       mUnusedInput.Truncate(0); 
 
       //printf("Parse(string) iterate: %i",PR_FALSE); 
