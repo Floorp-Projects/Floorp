@@ -54,7 +54,6 @@ CHROME_CONTENT= \
 		charsetOverlay.js \
 		strres.js \
 		builtinURLs.js \
-		about.html \
 		logo.gif \
 		about.xul \
 		credits.html \
