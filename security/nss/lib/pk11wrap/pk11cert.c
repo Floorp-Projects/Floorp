@@ -1681,7 +1681,7 @@ PK11_ImportCert(PK11SlotInfo *slot, CERTCertificate *cert,
 	PK11_SETATTRS(attrs,CKA_NETSCAPE_TRUST, certUsage,
 							 sizeof(SECCertUsage));
 	attrs++;
-	if (cert->emailAddr) {
+	if (cert->emailAddr && cert->emailAddr[0]) {
 	    PK11_SETATTRS(attrs,CKA_NETSCAPE_EMAIL, cert->emailAddr,
 						PORT_Strlen(cert->emailAddr);
 	    attrs++;
@@ -1765,7 +1765,7 @@ done:
 	goto loser;
     }
 
-    if (PK11_IsInternal(slot) && cert->emailAddr) {
+    if (PK11_IsInternal(slot) && cert->emailAddr && cert->emailAddr[0]) {
 	emailAddr = cert->emailAddr;
     }
 
