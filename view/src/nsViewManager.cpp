@@ -1331,113 +1331,6 @@ void nsViewManager :: UpdateDirtyViews(nsIView *aView, nsRect *aParentRect) cons
   }
 }
 
-#if 0
-
-  nsRect    bounds;
-  nsIRegion *dirtyRegion, *damager;
-  PRInt32   posx, posy;
-
-  aView->GetBounds(bounds);
-
-  //translate parent region into child coords.
-
-  if (nsnull != aParentDamage)
-  {
-    float     scale;
-
-    mContext->GetAppUnitsToDevUnits(scale);
-
-    posx = NSTwipsToIntPixels(bounds.x, scale);
-    posy = NSTwipsToIntPixels(bounds.y, scale);
-
-    aParentDamage->Offset(-posx, -posy);
-  }
-
-  // See if the view has a non-empty dirty region
-
-  aView->GetDirtyRegion(dirtyRegion);
-
-  if (nsnull != dirtyRegion)
-  {
-    if (PR_FALSE == dirtyRegion->IsEmpty())
-    {
-      if (nsnull != aParentDamage)
-        dirtyRegion->Union(*aParentDamage);
-
-      damager = dirtyRegion;
-    }
-    else
-      damager = aParentDamage;
-  }
-  else
-    damager = aParentDamage;
-
-  nsIWidget *widget;
-
-  aView->GetWidget(widget);
-
-  if (nsnull != widget)
-  {
-    //have we not yet figured out the rootmost
-    //view for the damage repair? if not, keep
-    //recording widgets as we find them as the
-    //topmost widget containing the topmost
-    //damaged view.
-
-    if (nsnull == *aTopDamaged)
-      *aTopWidget = widget;
-
-    if (nsnull != damager)
-    {
-      nsRegionComplexity cplx;
-
-      damager->GetRegionComplexity(cplx);
-
-      if (cplx == eRegionComplexity_rect)
-      {
-        nsRect trect;
-
-        damager->GetBoundingBox(&trect.x, &trect.y, &trect.width, &trect.height);
-        widget->Invalidate(trect, PR_FALSE);
-      }
-      else if (cplx == eRegionComplexity_complex)
-        widget->Invalidate(*damager, PR_FALSE);
-    }
-
-    NS_RELEASE(widget);
-  }
-
-  //record the topmost damaged view
-
-  if ((nsnull == *aTopDamaged) && (damager == dirtyRegion))
-    *aTopDamaged = aView;
-
-  // Check our child views
-  nsIView *child;
-
-  aView->GetChild(0, child);
-
-  while (nsnull != child)
-  {
-    UpdateDirtyViews(child, damager, aTopDamaged, aTopWidget);
-    child->GetNextSibling(child);
-  }
-
-  //translate the parent damage region back to where it used to be
-
-  if (nsnull != aParentDamage)
-    aParentDamage->Offset(posx, posy);
-
-  if (nsnull != dirtyRegion)
-  {
-    // Clear our dirty region
-
-    dirtyRegion->SetTo(0, 0, 0, 0);
-    NS_RELEASE(dirtyRegion);
-  }
-
-#endif
-
 NS_IMETHODIMP nsViewManager :: Composite()
 {
   if (mUpdateCnt > 0)
@@ -2484,10 +2377,11 @@ PRBool nsViewManager :: CreateDisplayList(nsIView *aView, PRInt32 *aIndex,
                                           const nsRect *aDamageRect, nsIView *aTopView,
                                           nsVoidArray *aArray, nscoord aX, nscoord aY)
 {
-  PRInt32     numkids, cnt;
+  PRInt32     numkids, zindex;
   PRBool      hasWidget, retval = PR_FALSE;
   nsIClipView *clipper = nsnull;
   nsPoint     *point;
+  nsIView     *child = nsnull;
 
   NS_ASSERTION(!(!aView), "no view");
   NS_ASSERTION(!(!aIndex), "no index");
@@ -2546,13 +2440,12 @@ PRBool nsViewManager :: CreateDisplayList(nsIView *aView, PRInt32 *aIndex,
 //    if ((aView == aTopView) || !hasWidget || (aView == aRealView))
 //    if ((aView == aTopView) || !(hasWidget && clipper) || (aView == aRealView))
     {
-      for (cnt = 0; cnt < numkids; cnt++)
+      for (aView->GetChild(0, child); nsnull != child; child->GetNextSibling(child))
       {
-        nsIView *child;
-
-        aView->GetChild(cnt, child);
+        child->GetZIndex(zindex);
+        if (zindex < 0)
+          break;
         retval = CreateDisplayList(child, aIndex, aOriginX, aOriginY, aRealView, aDamageRect, aTopView, aArray, lrect.x, lrect.y);
-
         if (retval)
           break;
       }
@@ -2592,32 +2485,19 @@ PRBool nsViewManager :: CreateDisplayList(nsIView *aView, PRInt32 *aIndex,
       if (retval || !trans && (opacity == 1.0f) && (irect == *aDamageRect))
         retval = PR_TRUE;
     }
+    
+    // any children with negative z-indices?
+    if (!retval && nsnull != child) {
+      lrect.x += aOriginX;
+      lrect.y += aOriginY;
+      for (; nsnull != child; child->GetNextSibling(child)) {
+        retval = CreateDisplayList(child, aIndex, aOriginX, aOriginY, aRealView, aDamageRect, aTopView, aArray, lrect.x, lrect.y);
+        if (retval)
+          break;
+	  }
+    }
   }
-
-#if 0
-  if ((aTopView == aView) &&
-      (trans || (opacity < 1.0f) ||
-      (nsViewVisibility_kHide == vis) ||
-      !overlap))
-  {
-    nsIView *parent;
-
-    //the root view that we were given is transparent, translucent or
-    //hidden, so we need to walk up the tree and add intervening parents
-    //to the view list until we find the root view or something opaque,
-    //non-transparent and not hidden. gross.
-
-    aView->GetBounds(lrect);
-    aView->GetParent(parent);
-
-    lrect.x = -lrect.x;
-    lrect.y = -lrect.y;
-
-    ComputeParentOffsets(parent, &lrect.x, &lrect.y);
-    FlattenViewTreeUp(aView, aIndex, aDamageRect, parent, aArray);
-  }
-#endif
-
+  
   return retval;
 }
 
