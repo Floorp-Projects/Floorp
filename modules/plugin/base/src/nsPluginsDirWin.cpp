@@ -214,7 +214,7 @@ nsPluginsDir::nsPluginsDir(PRUint16 location)
     // Case for looking for the Java OJI plugin via the JRE install path
     HKEY baseloc;
     HKEY keyloc;
-    FILETIME modTime;
+    FILETIME modTime = {0,0};  // initilize variables
     FILETIME curVer = {0,0};
     DWORD type; 
     DWORD index = 0;
@@ -245,7 +245,7 @@ nsPluginsDir::nsPluginsDir(PRUint16 location)
             // if the user installed an older version AFTER a newer one
             // This assumes the last version installed is the one the user wants to use
             // We can also tweak this for checking for a minimum version on szKey
-            if (::CompareFileTime(&modTime,&curVer) > 0 && atof(curKey) >= 1.3)
+            if (::CompareFileTime(&modTime,&curVer) >= 0 && atof(curKey) >= 1.3)
             {
               PL_strcpy(newestPath,path);
               curVer = modTime;
