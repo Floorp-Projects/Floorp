@@ -39,7 +39,6 @@ EXPORT_RESOURCE_SAMPLES = \
 	forward-hover.gif \
 	forward-hover-active.gif \
 	forward-disabled.gif \
-	home.gif \
 	location-hover.gif \
 	location.gif \
 	reload.gif \

@@ -511,7 +511,6 @@ skins/classic.jar:
     navigator/skin/forward-hover.gif                             (navigator/forward-hover.gif)
     navigator/skin/forward-hover-active.gif                      (navigator/forward-hover-active.gif)
     navigator/skin/forward-disabled.gif                          (navigator/forward-disabled.gif)
-    navigator/skin/home.gif                                      (navigator/home.gif)
     navigator/skin/location-hover.gif                            (navigator/location-hover.gif)
     navigator/skin/location.gif                                  (navigator/location.gif)
     navigator/skin/reload.gif                                    (navigator/reload.gif)
