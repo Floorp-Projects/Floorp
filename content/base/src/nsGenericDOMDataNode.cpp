@@ -1328,7 +1328,8 @@ nsGenericDOMDataNode::AppendTextTo(nsAString& aResult)
   if (mText.Is2b()) {
     aResult.Append(mText.Get2b(), mText.GetLength());
   } else {
-    AppendASCIItoUTF16(mText.Get1b(), aResult);
+    const char *str = mText.Get1b();
+    AppendASCIItoUTF16(Substring(str, str + mText.GetLength()), aResult);
   }
 
   return NS_OK;
