@@ -3485,7 +3485,7 @@ GlobalWindowImpl::GetPrivateParent(nsPIDOMWindow** aParent)
       }
 
    if(parent)
-      NS_ENSURE_SUCCESS(CallQueryInterface(parent, aParent), NS_ERROR_FAILURE);
+      NS_ENSURE_SUCCESS(CallQueryInterface(parent.get(), aParent), NS_ERROR_FAILURE);
    else
       *aParent = nsnull;
 
