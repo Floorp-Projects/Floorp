@@ -19,7 +19,7 @@
 #include "msgCore.h" // for pre-compiled headers
 #include "nsMsgIdentity.h"
 #include "nsIPref.h"
-
+#include "nsXPIDLString.h"
 
 static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
@@ -66,6 +66,10 @@ nsMsgIdentity::getBoolPref(const char *prefname,
 {
   char *prefName = getPrefName(m_identityKey, prefname);
   nsresult rv = m_prefs->GetBoolPref(prefName, val);
+  if (NS_FAILED(rv)) {
+    *val = PR_FALSE;
+    rv = NS_OK;
+  }
   PR_Free(prefName);
   return rv;
 }
@@ -86,6 +90,10 @@ nsMsgIdentity::getCharPref(const char *prefname,
 {
   char *prefName = getPrefName(m_identityKey, prefname);
   nsresult rv = m_prefs->CopyCharPref(prefName, val);
+  if (NS_FAILED(rv)) {
+    *val=nsnull;
+    rv = NS_OK;
+  }
   PR_Free(prefName);
   return rv;
 }
@@ -106,6 +114,10 @@ nsMsgIdentity::getIntPref(const char *prefname,
 {
   char *prefName = getPrefName(m_identityKey, prefname);
   nsresult rv = m_prefs->GetIntPref(prefName, val);
+  if (NS_FAILED(rv)) {
+    *val = 0;
+    rv = NS_OK;
+  }
   PR_Free(prefName);
   return rv;
 }
@@ -134,6 +146,37 @@ nsMsgIdentity::SetKey(char* identityKey)
   return NS_OK;
 }
 
+nsresult
+nsMsgIdentity::GetIdentityName(char **idName) {
+  if (!idName) return NS_ERROR_NULL_POINTER;
+
+  *idName = nsnull;
+  nsresult rv = getCharPref("identityName",idName);
+  if (NS_FAILED(rv)) return rv;
+
+  // there's probably a better way of doing this
+  // thats unicode friendly?
+  if (!(*idName)) {
+    nsXPIDLCString fullName;
+    rv = GetFullName(getter_Copies(fullName));
+    if (NS_FAILED(rv)) return rv;
+    
+    nsXPIDLCString email;
+    rv = GetEmail(getter_Copies(email));
+    if (NS_FAILED(rv)) return rv;
+    
+    *idName = PR_smprintf("%s <%s>", (const char*)fullName,
+                          (const char*)email);
+    rv = NS_OK;
+  }
+
+  return rv;
+}
+
+nsresult nsMsgIdentity::SetIdentityName(char *idName) {
+  return setCharPref("identityName", idName);
+}
+
 /* Identity attribute accessors */
 
 // XXX - these are a COM objects, use NS_ADDREF
@@ -142,7 +185,6 @@ NS_IMPL_GETSET(nsMsgIdentity, VCard, nsIMsgVCard*, m_vCard);
   
 NS_IMPL_GETTER_STR(nsMsgIdentity::GetKey, m_identityKey);
 
-NS_IMPL_IDPREF_STR(IdentityName, "identityName");
 NS_IMPL_IDPREF_STR(FullName, "fullName");
 NS_IMPL_IDPREF_STR(Email, "useremail");
 NS_IMPL_IDPREF_STR(ReplyTo, "reply_to");
