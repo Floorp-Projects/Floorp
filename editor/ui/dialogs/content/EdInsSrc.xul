@@ -23,7 +23,7 @@
           <p class="smallmargin" id="srcMessage">Enter HTML source to insert:</p>
           <input type="text" size="60" length="60" id="srcInput"></input>
 <!-- Want to use a textarea, but it doesn't work!
-          <textarea rows=1 cols="50" id="srcInput">
+          <textarea rows=6 cols="50" id="srcInput">
  -->
         </fieldset>
       </td>
