@@ -191,7 +191,7 @@ function fillFolderPaneContextMenu()
 
 	SetupRenameMenuItem(targetFolder, numSelected, isServer, serverType, specialFolder);
 	SetupRemoveMenuItem(targetFolder, numSelected, isServer, serverType, specialFolder);
-    SetupCompactMenuItem(targetFolder, numSelected, isServer, serverType);
+    SetupCompactMenuItem(targetFolder, numSelected);
 
 	ShowMenuItem("folderPaneContext-emptyTrash", (numSelected <= 1) && (specialFolder == 'Trash'));
 	EnableMenuItem("folderPaneContext-emptyTrash", true);
