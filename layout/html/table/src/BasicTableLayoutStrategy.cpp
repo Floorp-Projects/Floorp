@@ -206,6 +206,8 @@ PRBool BasicTableLayoutStrategy::BalanceColumnWidths(nsIStyleContext *aTableStyl
     availWidth = specifiedTableWidth - mFixedTableWidth;  // use it, minus the fixed columns already accounted for
   //if (0!=mMinTableWidth && mMinTableWidth>availWidth)     // if the computed available size is too small
     //availWidth = mMinTableWidth;                          // bump it up to the min
+  if (0>availWidth)                                       // avail width can never be negative
+    availWidth=0;
 
   // Step 3 - assign the width of all proportional-width columns in the remaining space
   if (PR_TRUE==gsDebug) 
@@ -523,8 +525,12 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
           // the current column (otherwise it would have already been deleted.)
           if (spanInfo->initialColIndex <= colIndex)
           {
-            if (0==spanInfo->effectiveMaxWidthOfSpannedCols)
+            if (-1==spanInfo->effectiveMaxWidthOfSpannedCols)
             { // if we have not yet computed effectiveMaxWidthOfSpannedCols, do it now
+              // first, initialize the sums
+              spanInfo->effectiveMaxWidthOfSpannedCols=0;
+              spanInfo->effectiveMinWidthOfSpannedCols=0;
+              // then compute the sums
               for (PRInt32 span=0; span<spanInfo->initialColSpan; span++)
               {
                 nsTableColFrame *nextColFrame = mTableFrame->GetColFrame(colIndex+span);
@@ -557,9 +563,9 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
             }
             else
             {
+              spanCellMinWidth = spanInfo->cellMinWidth/spanInfo->initialColSpan;
               if (colMinWidth < spanCellMinWidth)
               {
-                spanCellMinWidth = spanInfo->cellMinWidth/spanInfo->initialColSpan;
                 colFrame->SetAdjustedMinColWidth(spanCellMinWidth);
               }
             }

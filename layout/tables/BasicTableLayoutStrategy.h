@@ -44,7 +44,10 @@ struct SpanInfo
 
   SpanInfo(PRInt32 aColIndex, PRInt32 aSpan, nscoord aMinWidth, nscoord aDesiredWidth);
   ~SpanInfo() {};
+
 };
+
+static const PRInt32 kUninitialized=-1;
 
 inline SpanInfo::SpanInfo(PRInt32 aColIndex, PRInt32 aSpan, 
                           nscoord aMinWidth, nscoord aDesiredWidth)
@@ -54,8 +57,8 @@ inline SpanInfo::SpanInfo(PRInt32 aColIndex, PRInt32 aSpan,
   span = aSpan;
   cellMinWidth = aMinWidth;
   cellDesiredWidth = aDesiredWidth;
-  effectiveMinWidthOfSpannedCols=0;
-  effectiveMaxWidthOfSpannedCols=0;
+  effectiveMinWidthOfSpannedCols=kUninitialized;
+  effectiveMaxWidthOfSpannedCols=kUninitialized;
 }
 
 
