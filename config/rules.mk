@@ -208,6 +208,10 @@ ALL_TRASH		+= $(addprefix $(JAVA_DESTPATH)/,$(JDIRS))
 endif
 endif
 
+ifdef QTDIR
+ALL_TRASH		+= $(MOCSRCS)
+endif
+
 ifdef JAVA_OR_NSJVM
 JMC_SUBDIR              = _jmc
 else
@@ -660,6 +664,9 @@ ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
 else
 	$(CC) -o $@ -c $(CFLAGS) $<
 endif
+
+$(OBJDIR)/moc_%.cpp: %.h
+	$(MOC) $< -o $@ 
 
 # The AS_DASH_C_FLAG is needed cause not all assemblers (Solaris) accept
 # a '-c' flag.
