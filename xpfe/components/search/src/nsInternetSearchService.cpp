@@ -717,6 +717,7 @@ void
 InternetSearchDataSource::FireTimer(nsITimer* aTimer, void* aClosure)
 {
 	InternetSearchDataSource *search = NS_STATIC_CAST(InternetSearchDataSource *, aClosure);
+	nsresult rv;
 	if (!search)	return;
 
 #ifndef	REPEATING_TIMERS

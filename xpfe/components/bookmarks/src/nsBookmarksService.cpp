@@ -2209,6 +2209,7 @@ void
 nsBookmarksService::FireTimer(nsITimer* aTimer, void* aClosure)
 {
 	nsBookmarksService *bmks = NS_STATIC_CAST(nsBookmarksService *, aClosure);
+	nsresult			rv;
 	if (!bmks)	return;
 
 	if ((bmks->mBookmarksAvailable == PR_TRUE) && (bmks->mDirty == PR_TRUE))
@@ -2218,7 +2219,6 @@ nsBookmarksService::FireTimer(nsITimer* aTimer, void* aClosure)
 
 	if (bmks->busySchedule == PR_FALSE)
 	{
-		nsresult			rv;
 		nsCOMPtr<nsIRDFResource>	bookmark;
 		if (NS_SUCCEEDED(rv = bmks->GetBookmarkToPing(getter_AddRefs(bookmark))) && (bookmark))
 		{
