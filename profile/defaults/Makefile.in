@@ -25,9 +25,14 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
-
 include $(topsrcdir)/config/rules.mk
 
+FILES := \
+	bookmarks.html \
+	panels.rdf \
+	$(NULL)
+
+FILES := $(addprefix $(srcdir)/, $(FILES))
+
 install::
-	$(INSTALL) $(srcdir)/bookmarks.html $(DIST)/bin/defaults/profile
-	$(INSTALL) $(srcdir)/panels.rdf     $(DIST)/bin/defaults/profile
+	$(INSTALL) $(FILES) $(DIST)/bin/defaults/profile
