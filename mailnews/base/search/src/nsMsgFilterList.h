@@ -89,7 +89,6 @@ protected:
 		void Dump();
 #endif
 protected:
-	virtual uint32		GetExpectedMagic ();
 	nsresult SaveTextFilters();
 	// file streaming methods
 	char			ReadChar();

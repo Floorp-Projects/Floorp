@@ -42,6 +42,14 @@ nsMsgFilterList::nsMsgFilterList(nsIOFileStream *fileStream)
 	m_curFilter = nsnull;
 }
 
+NS_IMETHODIMP nsMsgFilterList::IsLoggingEnabled(PRBool *aResult)
+{
+	if (!aResult)
+		return NS_ERROR_NULL_POINTER;
+	*aResult = m_loggingEnabled;
+	return NS_OK;
+}
+
 #if 0
 nsresult nsMsgFilterList::Open(nsMsgFilterType type, nsIMsgFolder *folder, nsIMsgFilterList **filterList)
 {

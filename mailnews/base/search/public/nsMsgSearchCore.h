@@ -227,14 +227,7 @@ protected:
 	nsMsgSearchAttribute ParseAttribute(char *inStream);
 	nsMsgSearchOperator	ParseOperator(char *inStream);
 	nsresult		ParseValue(char *inStream);
-	virtual PRUint32 GetExpectedMagic ();
-	static PRUint32 m_expectedMagic;
 };
-
-inline PRUint32 nsMsgSearchTerm::GetExpectedMagic ()
-{
-	return m_expectedMagic; 
-}
 
 
 /* Use this to help build menus in the search dialog. See APIs below */
