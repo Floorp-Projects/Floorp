@@ -60,7 +60,7 @@ public:
 	nsMsgKey			GetLateredAt(PRInt32 laterIndex, time_t *pUntil);
 	void				RemoveLateredAt(PRInt32 laterIndex);
 
-	virtual void		SetMailboxName(const char *newBoxName);
+	virtual void		SetMailboxName(nsString &newBoxName);
 	virtual void		GetMailboxName(nsString &boxName);
 
 	void				SetViewType(PRInt32 viewType);
@@ -108,6 +108,7 @@ public:
 	nsresult	SetUint32Property(const char *propertyName, PRUint32 propertyValue);
 	nsresult	SetPropertyWithToken(mdb_token aProperty, nsString &propertyStr);
 	nsresult	SetUint32PropertyWithToken(mdb_token aProperty, PRUint32 propertyValue);
+	nsresult	SetInt32PropertyWithToken(mdb_token aProperty, PRInt32 propertyValue);
 	nsresult	GetPropertyWithToken(mdb_token aProperty, nsString &resultProperty);
 	nsresult	GetUint32Property(const char *propertyName, PRUint32 &propertyValue);
 	nsresult	GetUint32PropertyWithToken(mdb_token aProperty, PRUint32 &propertyValue);
@@ -126,8 +127,8 @@ public:
 	
 	// IMAP only
 	PRInt32		m_ImapUidValidity;
-	PRInt32		m_TotalPendingMessages;
-	PRInt32		m_UnreadPendingMessages;
+	PRInt32		m_totalPendingMessages;
+	PRInt32		m_unreadPendingMessages;
 
 	// news only (for now)
 	nsMsgKey	m_expiredMark;		// Highest invalid article number in group - for expiring
@@ -143,7 +144,6 @@ protected:
 	nsresult			InitMDBInfo();
 	nsresult			LoadMemberVariables();
 
-	nsString	m_mailboxName;		// name presented to the user, will match imap server name
 	PRInt32		m_numVisibleMessages;	// doesn't include expunged or ignored messages (but does include collapsed).
 	PRInt32		m_numNewMessages;
 	PRInt32		m_numMessages;		// includes expunged and ignored messages

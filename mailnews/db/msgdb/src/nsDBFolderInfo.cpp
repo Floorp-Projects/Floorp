@@ -59,8 +59,8 @@ nsDBFolderInfo::nsDBFolderInfo(nsMsgDatabase *mdb)
 	
 	// IMAP only
 	m_ImapUidValidity = 0;
-	m_TotalPendingMessages =0;
-	m_UnreadPendingMessages = 0;
+	m_totalPendingMessages =0;
+	m_unreadPendingMessages = 0;
 
 	m_mdbTokensInitialized = FALSE;
 
@@ -274,14 +274,14 @@ void nsDBFolderInfo::RemoveLateredAt(PRInt32 laterIndex)
 {
 }
 
-void nsDBFolderInfo::SetMailboxName(const char *newBoxName)
+void nsDBFolderInfo::SetMailboxName(nsString &newBoxName)
 {
-	m_mailboxName = newBoxName;
+	SetPropertyWithToken(m_mailboxNameColumnToken, newBoxName);
 }
 
 void nsDBFolderInfo::GetMailboxName(nsString &boxName)
 {
-	boxName = m_mailboxName;
+	GetPropertyWithToken(m_mailboxNameColumnToken, boxName);
 }
 
 void nsDBFolderInfo::SetViewType(PRInt32 viewType)
@@ -311,6 +311,7 @@ PRInt32	nsDBFolderInfo::ChangeNumNewMessages(PRInt32 delta)
 #endif
 		m_numNewMessages = 0;
 	}
+	SetUint32PropertyWithToken(m_numNewMessagesColumnToken, m_numNewMessages);
 	return m_numNewMessages;
 }
 
@@ -324,6 +325,7 @@ PRInt32	nsDBFolderInfo::ChangeNumMessages(PRInt32 delta)
 #endif
 		m_numMessages = 0;
 	}
+	SetUint32PropertyWithToken(m_numMessagesColumnToken, m_numMessages);
 	return m_numMessages;
 }
 
@@ -337,6 +339,7 @@ PRInt32	nsDBFolderInfo::ChangeNumVisibleMessages(PRInt32 delta)
 #endif
 		m_numVisibleMessages = 0;
 	}
+	SetUint32PropertyWithToken(m_numVisibleMessagesColumnToken, m_numVisibleMessages);
 	return m_numVisibleMessages;
 }
 
@@ -365,17 +368,20 @@ void nsDBFolderInfo::SetFlags(PRInt32 flags)
 	if (m_flags != flags)
 	{
 		m_flags = flags; 
+		SetInt32PropertyWithToken(m_flagsColumnToken, m_flags);
 	}
 }
 
 void nsDBFolderInfo::OrFlags(PRInt32 flags)
 {
 	m_flags |= flags;
+	SetInt32PropertyWithToken(m_flagsColumnToken, m_flags);
 }
 
 void nsDBFolderInfo::AndFlags(PRInt32 flags)
 {
 	m_flags &= flags;
+	SetInt32PropertyWithToken(m_flagsColumnToken, m_flags);
 }
 
 PRBool nsDBFolderInfo::TestFlag(PRInt32 flags)
@@ -405,22 +411,24 @@ void nsDBFolderInfo::SetIMAPHierarchySeparator(PRInt16 hierarchySeparator)
 
 PRInt32	nsDBFolderInfo::GetImapTotalPendingMessages() 
 {
-	return m_TotalPendingMessages;
+	return m_totalPendingMessages;
 }
 
 void nsDBFolderInfo::ChangeImapTotalPendingMessages(PRInt32 delta)
 {
-	m_TotalPendingMessages+=delta;
+	m_totalPendingMessages+=delta;
+	SetInt32PropertyWithToken(m_totalPendingMessagesColumnToken, m_totalPendingMessages);
 }
 
 PRInt32	nsDBFolderInfo::GetImapUnreadPendingMessages() 
 {
-	return m_UnreadPendingMessages;
+	return m_unreadPendingMessages;
 }
 
 void nsDBFolderInfo::ChangeImapUnreadPendingMessages(PRInt32 delta) 
 {
-	m_UnreadPendingMessages+=delta;
+	m_unreadPendingMessages+=delta;
+	SetInt32PropertyWithToken(m_unreadPendingMessagesColumnToken, m_unreadPendingMessages);
 }
 
 
@@ -443,6 +451,7 @@ nsMsgKey nsDBFolderInfo::GetLastMessageLoaded()
 void nsDBFolderInfo::SetLastMessageLoaded(nsMsgKey lastLoaded) 
 {
 	m_lastMessageLoaded = lastLoaded;
+	SetUint32PropertyWithToken(m_lastMessageLoadedColumnToken, m_lastMessageLoaded);
 }
 
 void nsDBFolderInfo::SetKnownArtsSet(nsString &newsArtSet)
@@ -499,6 +508,13 @@ nsresult nsDBFolderInfo::SetPropertyWithToken(mdb_token aProperty, nsString &pro
 }
 
 nsresult	nsDBFolderInfo::SetUint32PropertyWithToken(mdb_token aProperty, PRUint32 propertyValue)
+{
+	nsString propertyStr;
+	propertyStr.Append(propertyValue, 10);
+	return SetPropertyWithToken(aProperty, propertyStr);
+}
+
+nsresult	nsDBFolderInfo::SetInt32PropertyWithToken(mdb_token aProperty, PRInt32 propertyValue)
 {
 	nsString propertyStr;
 	propertyStr.Append(propertyValue, 10);
