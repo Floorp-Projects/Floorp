@@ -1422,7 +1422,10 @@ public:
                        PRUint32 aStartPos, PRUint32 aLength)
   {
     const PRUnichar* data;
-    PRUint32 len = NS_StringGetData(aStr, &data);
+#ifdef DEBUG
+    PRUint32 len =
+#endif
+    NS_StringGetData(aStr, &data);
     NS_ASSERTION(aStartPos + aLength <= len, "bad length");
     NS_StringContainerInit2(*this, data + aStartPos, aLength,
                             NS_STRING_CONTAINER_INIT_DEPEND |
@@ -1478,7 +1481,10 @@ public:
                         PRUint32 aStartPos, PRUint32 aLength)
   {
     const char* data;
-    PRUint32 len = NS_CStringGetData(aStr, &data);
+#ifdef DEBUG
+    PRUint32 len =
+#endif
+    NS_CStringGetData(aStr, &data);
     NS_ASSERTION(aStartPos + aLength <= len, "bad length");
     NS_CStringContainerInit2(*this, data + aStartPos, aLength,
                              NS_CSTRING_CONTAINER_INIT_DEPEND |
