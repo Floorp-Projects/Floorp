@@ -77,7 +77,7 @@
 // define home directory
 // For Windows platform, We are choosing Appdata folder as HOME
 #ifdef XP_OS2
-#define HOME_DIR NS_OS2_DIR
+#define HOME_DIR NS_OS2_HOME_DIR
 #elif defined (XP_PC)
 #define HOME_DIR NS_WIN_APPDATA_DIR
 #elif defined (XP_MAC)
@@ -288,6 +288,7 @@ nsIAtom*  nsDirectoryService::sHomeDirectory = nsnull;
 #elif defined (XP_OS2)
 nsIAtom*  nsDirectoryService::sSystemDirectory = nsnull;
 nsIAtom*  nsDirectoryService::sOS2Directory = nsnull;
+nsIAtom*  nsDirectoryService::sHomeDirectory = nsnull;
 nsIAtom*  nsDirectoryService::sDesktopDirectory = nsnull;
 #elif defined (XP_PC) 
 nsIAtom*  nsDirectoryService::sSystemDirectory = nsnull;
@@ -388,6 +389,7 @@ nsDirectoryService::Init(const char *productName)
 #elif defined (XP_OS2)
     nsDirectoryService::sSystemDirectory            = NS_NewAtom(NS_OS_SYSTEM_DIR);
     nsDirectoryService::sOS2Directory               = NS_NewAtom(NS_OS2_DIR);  
+    nsDirectoryService::sHomeDirectory              = NS_NewAtom(NS_OS2_HOME_DIR);
     nsDirectoryService::sDesktopDirectory           = NS_NewAtom(NS_OS2_DESKTOP_DIR);
 #elif defined (XP_PC) 
     nsDirectoryService::sSystemDirectory            = NS_NewAtom(NS_OS_SYSTEM_DIR);
@@ -468,6 +470,7 @@ nsDirectoryService::~nsDirectoryService()
 #elif defined (XP_OS2)
      NS_IF_RELEASE(nsDirectoryService::sSystemDirectory);
      NS_IF_RELEASE(nsDirectoryService::sOS2Directory);
+     NS_IF_RELEASE(nsDirectoryService::sHomeDirectory);
      NS_IF_RELEASE(nsDirectoryService::sDesktopDirectory);
 #elif defined (XP_PC)
      NS_IF_RELEASE(nsDirectoryService::sSystemDirectory);
@@ -862,6 +865,12 @@ nsDirectoryService::GetFile(const char *prop, PRBool *persistent, nsIFile **_ret
     {
         nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::OS2_OS2Directory); 
         rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+    }
+    else if (inAtom == nsDirectoryService::sHomeDirectory)
+    {
+        /* for now, set the "Home" directory to point to be the */
+        /*  current process directory */
+        rv = GetCurrentProcessDirectory(getter_AddRefs(localFile));
     }
     else if (inAtom == nsDirectoryService::sDesktopDirectory)
     {

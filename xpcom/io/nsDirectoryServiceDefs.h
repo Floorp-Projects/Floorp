@@ -67,6 +67,7 @@
     #define NS_MAC_HOME_DIR                     "Home"
 #elif defined (XP_OS2)
     #define NS_OS2_DIR                          "0S2Dir"
+    #define NS_OS2_HOME_DIR                     "Home"
     #define NS_OS2_DESKTOP_DIR                  "Desk"    
 #elif defined (XP_PC)
     #define NS_WIN_WINDOWS_DIR                  "WinD"
