@@ -132,7 +132,8 @@ public class ToolErrorReporter implements ErrorReporter {
                                            int lineOffset)
     {
         error(message, sourceName, line, lineSource, lineOffset);
-        return new EvaluatorException(message);
+        return new EvaluatorException(message, sourceName, line,
+                                      lineSource, lineOffset);
     }
 
     public boolean hasReportedError() {

@@ -41,14 +41,11 @@ package org.mozilla.javascript;
  */
 public class EvaluatorException extends RuntimeException
 {
-
     /**
-     * Create an exception with the specified detail message.
-     *
-     * Errors internal to the JavaScript engine will simply throw a
-     * RuntimeException.
-     *
-     * @param detail a message with detail about the exception
+     * @deprecated Use 
+     * {@link EvaluatorException(String detail, String sourceName, 
+int lineNumber)}
+     * to construct detailed error messages.
      */
     public EvaluatorException(String detail)
     {
@@ -59,6 +56,22 @@ public class EvaluatorException extends RuntimeException
             this.sourceName = cx.getSourcePositionFromStack(linep);
             this.lineNumber = linep[0];
         }
+    }
+
+    /**
+     * Create an exception with the specified detail message.
+     *
+     * Errors internal to the JavaScript engine will simply throw a
+     * RuntimeException.
+     *
+     * @param detail the error message
+     * @param sourceName the name of the source reponsible for the error
+     * @param lineNumber the line number of the source
+     */
+    public EvaluatorException(String detail, String sourceName, 
+                              int lineNumber)
+    {
+        this(detail, sourceName, lineNumber, null, 0);
     }
 
     /**

@@ -73,9 +73,9 @@ public class WrappedException extends EvaluatorException
      *
      * @param exception the exception to wrap
      */
-    public WrappedException(Throwable exception)
+    WrappedException(Throwable exception, String sourceName, int lineNumber)
     {
-        super(exception.getMessage());
+        super("Wrapped "+exception.toString(), sourceName, lineNumber);
         this.exception = exception;
         if (initCauseMethod != null) {
             try {
@@ -84,26 +84,6 @@ public class WrappedException extends EvaluatorException
                 // Ignore any exceptions
             }
         }
-    }
-
-    /**
-     * Get the message for the exception.
-     *
-     * Delegates to the wrapped exception.
-     */
-    public String getMessage()
-    {
-        return "WrappedException of " + exception.toString();
-    }
-
-    /**
-     * Gets the localized message.
-     *
-     * Delegates to the wrapped exception.
-     */
-    public String getLocalizedMessage()
-    {
-        return "WrappedException of " + exception.getLocalizedMessage();
     }
 
     /**
