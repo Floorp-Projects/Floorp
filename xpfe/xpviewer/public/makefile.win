@@ -15,8 +15,16 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH=..\..
+DEPTH=..\..\..
 
-DIRS=public src 
+IGNORE_MANIFEST=1
 
-include <$(DEPTH)\layout\config\rules.mak>
+MODULE=raptor 
+
+EXPORTS =					\
+        nsIXPBaseWindow.h			\
+        nsWindowListener.h			\
+	$(NULL)
+
+include <$(DEPTH)\config\rules.mak>
+
