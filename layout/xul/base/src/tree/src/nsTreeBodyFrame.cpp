@@ -2920,8 +2920,7 @@ nsTreeBodyFrame::PaintText(PRInt32              aRowIndex,
     nsBidiDirection direction =
       (NS_STYLE_DIRECTION_RTL == vis->mDirection) ?
       NSBIDI_RTL : NSBIDI_LTR;
-    PRUnichar* buffer = text.BeginWriting();
-    rv = bidiUtils->RenderText(buffer, text.Length(), direction,
+    rv = bidiUtils->RenderText(text.get(), text.Length(), direction,
                                aPresContext, aRenderingContext,
                                textRect.x, textRect.y + baseline);
   }
