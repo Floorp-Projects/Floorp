@@ -1,82 +1,97 @@
-<?xml version="1.0"?>  
+<?xml version="1.0"?> <!-- -*- Mode: SGML; indent-tabs-mode: nil; -*- -->
 <!--
-   The contents of this file are subject to the Netscape Public
-   License Version 1.1 (the "License"); you may not use this file
-   except in compliance with the License. You may obtain a copy of
-   the License at http://www.mozilla.org/NPL/
-    
-   Software distributed under the License is distributed on an "AS
-   IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
-   implied. See the License for the specific language governing
-   rights and limitations under the License.
-    
-   The Original Code is Mozilla Communicator client code, released
-   March 31, 1998.
-   
-   The Initial Developer of the Original Code is Netscape
-   Communications Corporation. Portions created by Netscape are
-   Copyright (C) 1998-1999 Netscape Communications Corporation. All
-   Rights Reserved.
-   
-   Contributor(s): 
-  -->
+
+  The contents of this file are subject to the Netscape Public License
+  Version 1.1 (the "NPL"); you may not use this file except in
+  compliance with the NPL.  You may obtain a copy of the NPL at
+  http://www.mozilla.org/NPL/
+
+  Software distributed under the NPL is distributed on an "AS IS" basis,
+  WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+  for the specific language governing rights and limitations under the
+  NPL.
+
+  The Initial Developer of this code under the NPL is Netscape
+  Communications Corporation.  Portions created by Netscape are
+  Copyright (C) 1999 Netscape Communications Corporation.  All Rights
+  Reserved.
+
+-->
+
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-languages.dtd" >
-<window xmlns:html="http://www.w3.org/1999/xhtml"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        class="color-dialog"
-        align="vertical" title="window.title"
-  		  onload="parent.initPanel('chrome://communicator/content/pref/pref-languages.xul');">
-		
-  <box class="box-smallheader" title="&lHeader;"/>
 
-  <titledbox orient="vertical">
+<window id="langPanel"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  class="color-dialog"
+  title="&languages.customize.window.title;" 
+  onload="Init();" orient="vertical">
+
+  <script language="javascript" src="chrome://communicator/content/pref/pref-languages.js"></script>
+  <script language="javascript" src="chrome://global/content/strres.js"></script>
+  <script language="javascript" src="chrome://communicator/content/pref/prefutilities.js"></script>
+  <script language="JavaScript">
+  <![CDATA[
+    _elementIDs = ["intlAcceptLanguages", "DefaultCharsetList"];
+  ]]>
+  </script>
+
+  <broadcaster  id="intlAcceptLanguages" 
+                value="" 
+                preftype="string" 
+                prefstring="intl.accept_languages"/>
+
+                
+    <box class="box-smallheader" title="&languages.customize.lHeader;"/>
+    <!--
+      description="&languages.customize.rHeader;    
+    -->
+
+  <titledbox orient="vertical" flex="1">
     <title><text value="&langtitle.label;"/></title>
-    <html>&prefLangDecript;</html>
-  
-    <separator/>
-    
-    <box>
-      <box orient="vertical" flex="1">
-        <tree id="langTree" class="inset" flex="1">
-          <treecolgroup>
-            <treecol flex="10" width="0"/>
-            <treecol flex="90" width="0"/>
-          </treecolgroup>
-          <treehead>
-            <treerow>
-              <treecell />
-              <treecell value="&languageColumnHeader.label;" />
-            </treerow>
-          </treehead>
-          <treechildren flex="1">
-            <treeitem>
-              <treerow>
-                <treecell class="propertylist" value="&engOrder.label;"/>
-                <treecell class="propertylist" value="&engOption.label;"/>
-              </treerow>
-            </treeitem>
-          </treechildren>
-        </tree>
-        <box>
-          <button class="dialog push" value="&addButton.label;" accesskey="&addButton.accesskey;"/>
-    			<button class="dialog push" value="&deleteButton.label;" accesskey="&deleteButton.accesskey;"/>
-        </box>
-      </box>
-  
-      <!-- XXX hard coding language value for now until tree is hooked up -->
-      <broadcaster id="intlAcceptLanguages" value="&engOption.label;" pref="true" 
-                   preftype="string" prefstring="intl.accept_languages" prefattribute="value"/>
-  
-      <box orient="vertical" valign="middle">
-        <button id="up" class="dialog push" value="&moveUp.label;" accesskey="&moveUp.accesskey;"/>
-        <button id="down" class="dialog push" value="&moveDown.label;" accesskey="&moveDown.accesskey;"/>
-      </box>
-  
-    </box>
-      
-  </titledbox>
 
+    <html>&languages.customize.prefLangDescript;</html>
+
+    <box flex="1">
+      <box orient="vertical" flex="1">
+        <html>&languages.customize.active.label;</html>
+        <tree class="inset" id="active_languages" flex="1"
+              datasources="rdf:null" multiple="true">
+              <treecolgroup>
+                <treecol flex="1"/>
+              </treecolgroup>
+              <treechildren id="active_languages_root" flex="1"/>
+        </tree>
+      </box>
+      <box orient="vertical" autostretch="never">
+        <spring flex="1"/>
+        <button oncommand="MoveUp();" id="up" class="up small" />
+        <button oncommand="MoveDown();" id="down" class="down small" />
+        <spring flex="1"/>
+      </box>
+      <box orient="vertical">
+        <button class="dialog" value="&languages.customize.addButton.label;" oncommand="AddLanguage();"/>
+        <button class="dialog" value="&languages.customize.deleteButton.label;" oncommand="RemoveActiveLanguage();"/>
+        <spring flex="1"/>
+      </box>
+    </box>
+	</titledbox>
+  <titledbox orient="vertical" autostretch="never">
+    <title><text value="&languages.customize.Charset.grouplabel;"/></title>
+    <box autostretch="never">
+      <text class="label" value="&languages.customize.DefaultCharset.label;" for="DefaultCharsetList"/>
+      <menulist id="DefaultCharsetList" ref="NC:MaileditCharsetMenuRoot" datasources="rdf:charset-menu"
+          pref="true" preftype="string" prefstring="intl.charset.default"
+          prefattribute="data" wsm_attributes="data">
+          <template>
+            <menupopup>
+              <menuitem value="rdf:http://home.netscape.com/NC-rdf#Name" data="..." uri="..."/>
+            </menupopup>
+          </template>
+      </menulist>       
+   </box> 
+  </titledbox>
 </window>
