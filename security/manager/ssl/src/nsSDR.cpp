@@ -79,7 +79,7 @@ NS_IMETHODIMP nsSDRContext::GetInterface(const nsIID & uuid, void * *result)
     if (!proxyman) return NS_ERROR_FAILURE;
 
     nsCOMPtr<nsIPrompt> prompter;
-    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
     if (wwatch) {
       wwatch->GetNewPrompter(0, getter_AddRefs(prompter));
       if (prompter) {

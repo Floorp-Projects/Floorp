@@ -369,7 +369,7 @@ nsXPInstallManager::OpenProgressDialog(const PRUnichar **aPackageList, PRUint32 
     params->AppendElement(callbackwrap);
 
     // --- open the window
-    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1", &rv));
+    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv));
     if (wwatch) {
         nsCOMPtr<nsIDOMWindow> newWindow;
         rv = wwatch->OpenWindow(0, 

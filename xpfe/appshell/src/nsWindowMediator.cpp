@@ -670,7 +670,7 @@ nsWindowMediator::Init()
         return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  mWatcher = do_GetService("@mozilla.org/embedcomp/window-watcher;1", &rv);
+  mWatcher = do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
   if (NS_FAILED(rv))
     return rv;
   

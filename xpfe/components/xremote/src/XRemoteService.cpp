@@ -538,7 +538,7 @@ XRemoteService::OpenChromeWindow(nsIDOMWindow *aParent,
 				 nsIDOMWindow **_retval)
 {
   nsCOMPtr<nsIWindowWatcher> watcher;
-  watcher = do_GetService("@mozilla.org/embedcomp/window-watcher;1");
+  watcher = do_GetService(NS_WINDOWWATCHER_CONTRACTID);
     
   if (!watcher)
     return NS_ERROR_FAILURE;

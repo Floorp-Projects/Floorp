@@ -321,7 +321,7 @@ OSErr nsMacCommandLine::HandlePrintOneDoc(const FSSpec& inFileSpec, OSType fileT
 nsresult nsMacCommandLine::OpenWindow(const char *chrome, const PRUnichar *url)
 //----------------------------------------------------------------------------------------
 {
-	nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+	nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
 	nsCOMPtr<nsISupportsString> urlWrapper(do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
 	if (!wwatch || !urlWrapper)
 		return NS_ERROR_FAILURE;

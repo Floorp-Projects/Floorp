@@ -139,7 +139,7 @@ nsHTTPIndex::GetInterface(const nsIID &anIID, void **aResult )
         if (!aDOMWindow) 
             return NS_ERROR_NO_INTERFACE;
 
-        nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+        nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
         
         return wwatch->GetNewPrompter(aDOMWindow, (nsIPrompt**)aResult);
     }  
@@ -153,7 +153,7 @@ nsHTTPIndex::GetInterface(const nsIID &anIID, void **aResult )
         if (!aDOMWindow) 
             return NS_ERROR_NO_INTERFACE;
 
-        nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+        nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
         
         return wwatch->GetNewAuthPrompter(aDOMWindow, (nsIAuthPrompt**)aResult);
     }  
