@@ -277,9 +277,6 @@ function DragOverPersonalToolbar ( event )
 //
 function BeginDragContentArea ( event )
 {
-  if ( !gDragDropEnabled )
-    return;
-
   var dragStarted = false;
   var dragService = Components.classes["component://netscape/widget/dragservice"].getService(Components.interfaces.nsIDragService);
   if ( dragService )
@@ -301,9 +298,8 @@ function BeginDragContentArea ( event )
           case 'IMG':
             var imgsrc = event.target.getAttribute("src");
             var baseurl = window.content.location.href;
-            src = baseurl + imgsrc;
-            htmlstring = "<IMG src=\"" + src + "\">";
-            dump("src is "+src+"\n");
+            src = imgsrc;
+            htmlstring = "<img src=\"" + src + "\">";
             dump("htmlstring is "+htmlstring+"\n");
             break;
           
@@ -315,13 +311,13 @@ function BeginDragContentArea ( event )
             {
               // link
               src = event.target.getAttribute("href");
-              htmlstring = "<A href=\"" + src + "\">" + src + "</A>";
+              htmlstring = "<a href=\"" + src + "\">" + src + "</a>";
             }
             else if (event.target.name )
             {
               // named anchor
               src = event.target.getAttribute("name");
-              htmlstring = "<A name=\"" + src + "\">" + src + "</A>"
+              htmlstring = "<a name=\"" + src + "\">" + src + "</a>"
             }
             break;
           
@@ -333,7 +329,7 @@ function BeginDragContentArea ( event )
           case 'DD':
             src = enclosingLink(event.target);
             if ( src != "" )
-              htmlstring = "<A href=\"" + src + "\">" + src + "</A>";
+              htmlstring = "<a href=\"" + src + "\">" + src + "</a>";
             else
               return;
             break;
@@ -408,8 +404,6 @@ function DragOverContentArea ( event )
 //
 function DropOnContentArea ( event )
 { 
-  var dropAccepted = false;
-
   var dragService = 
     Components.classes["component://netscape/widget/dragservice"].getService(Components.interfaces.nsIDragService);
   if ( dragService ) {
@@ -508,7 +502,7 @@ function DragProxyIcon ( event )
         if ( htmlData )
           htmlData = htmlData.QueryInterface(Components.interfaces.nsISupportsWString);
         if ( htmlData ) {
-          var htmlstring = "<A href=\"" + genTextData + "\">" + genTextData + "</A>";
+          var htmlstring = "<a href=\"" + genTextData + "\">" + genTextData + "</a>";
           htmlData.data = htmlstring;
           trans.addDataFlavor("text/html");
           trans.setTransferData( "text/html", htmlData, htmlstring.length * 2);
@@ -572,7 +566,7 @@ function DragContentLink ( event )
           return;
         var id = href
         genTextData.data = id;
-        var htmlstring = "<A href=\"" + id + "\">" + id + "</A>";
+        var htmlstring = "<a href=\"" + id + "\">" + id + "</a>";
         htmlData.data = htmlstring;
      
         dump("ID: " + id + "\n");
