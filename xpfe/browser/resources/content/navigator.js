@@ -1190,5 +1190,26 @@ function ShowAndSelectContentsOfURLBar()
   else
     gURLBar.focus();
 }
-  
-  
+
+// If "ESC" is pressed in the url bar, we replace the urlbar's value with the url of the page
+// and highlight it, unless it is about:blank, where we reset it to "".
+function resetURLBar()
+{
+  var url = _content.location.href;
+  var throbberElement = document.getElementById("navigator-throbber");
+
+  if (!throbberElement.getAttribute("busy")){
+    if (url != "about:blank"){ 
+      gURLBar.value = url;
+      gURLBar.select();
+    } else { //if about:blank, urlbar becomes ""
+      gURLBar.value = "";
+    }
+  }
+}
+
+function handleURLBarKeyPress(event)
+{
+  if (event.keyCode == KeyEvent.DOM_VK_RETURN) { addToUrlbarHistory(); BrowserLoadURL(); } 
+  else if (event.keyCode == KeyEvent.DOM_VK_ESCAPE) { resetURLBar(); }
+}
