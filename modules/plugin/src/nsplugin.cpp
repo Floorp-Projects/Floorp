@@ -30,6 +30,7 @@
 #ifdef OJI
 #include "nsplugin.h"
 #include "jvmmgr.h" 
+#include "nsILiveconnect.h"
 #endif
 #include "plstr.h" /* PL_strcasecmp */
 
@@ -50,7 +51,6 @@
 #include "nsMalloc.h"
 #include "nsICapsManager.h"
 #include "nsCCapsManager.h"
-#include "nsILiveconnect.h"
 
 #include "intl_csi.h"
 
@@ -298,12 +298,12 @@ nsPluginManager::GetCapsManager(const nsIID& aIID)
     return result;
 }
 
+#ifdef OJI
 nsILiveconnect*
 nsPluginManager::GetLiveconnect(const nsIID& aIID)
 {
     nsILiveconnect* result = NULL;
     PRThread       *threadAttached = NULL;
-#ifdef OJI
     nsresult        err    = NS_OK;
     if (fLiveconnect == NULL) {
 	     if ( PR_GetCurrentThread() == NULL )
@@ -327,9 +327,9 @@ nsPluginManager::GetLiveconnect(const nsIID& aIID)
      {
        PR_DetachThread();
      }
-#endif
     return result;
 }
+#endif
 
 
 
