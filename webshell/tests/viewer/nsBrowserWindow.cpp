@@ -93,6 +93,13 @@
 #include <TextEdit.h>
 #endif
 
+#ifdef DEBUG_akkana
+// Leave this commented out until we make sure it doesn't crash Linux boxes
+#if defined (XP_UNIX)
+#include <iostream.h>
+#endif
+#endif
+
 // For Copy
 #include "nsISelection.h"
 
@@ -274,7 +281,7 @@ nsBrowserWindow::AddBrowser(nsBrowserWindow* aBrowser)
 void
 nsBrowserWindow::RemoveBrowser(nsBrowserWindow* aBrowser)
 {
-  nsViewerApp* app = aBrowser->mApp;
+  //nsViewerApp* app = aBrowser->mApp;
   gBrowsers.RemoveElement(aBrowser);
   NS_RELEASE(aBrowser);
 }
@@ -620,7 +627,7 @@ nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
   }
 
   if (aEvent->message == 301 || aEvent->message == 302) {
-    int x = 0;
+    //int x = 0;
   }
 
   void * data;
@@ -661,7 +668,7 @@ NS_IMETHODIMP nsBrowserWindow::FindNext(const nsString &aSearchStr, PRBool aMatc
 	if (nsnull != shell) {
 	  nsIDocument* doc = shell->GetDocument();
 	  if (nsnull != doc) {
-		  PRBool foundIt = PR_FALSE;
+		  //PRBool foundIt = PR_FALSE;
 		  doc->FindNext(aSearchStr, aMatchCase, aSearchDown, aIsFound);
 		  if (!aIsFound) {
 		    // Display Dialog here
@@ -1333,7 +1340,7 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
     return rv;
   }
   r.x = r.y = 0;
-  nsRect ws = r;
+  //nsRect ws = r;
   rv = mWebShell->Init(mWindow->GetNativeData(NS_NATIVE_WIDGET), 
                        r.x, r.y, r.width, r.height,
                        nsScrollPreference_kAuto, aAllowPlugins);
@@ -1976,7 +1983,7 @@ nsBrowserWindow::Confirm(const nsString &aText)
 
   msg = aText.ToNewCString();
   if (nsnull != msg) {
-    printf("%cBrowser Window Confirm: %s (y/n)? ", msg);
+    printf("Browser Window Confirm: %s (y/n)? ", msg);
     PR_Free(msg);
     char c;
     for (;;) {
@@ -2183,11 +2190,29 @@ nsBrowserWindow::DoCopy()
 // been deprecated too), but stringstream doesn't seem to 
 // work in VC 5, so for the moment we have ifdefs
 #if defined(XP_MAC)
-	stringstream  data;
-#else
-	ostrstream  data;
+#define USE_STRINGSTREAM 1
+#endif
+#if defined(XP_WIN)
+#define USE_STRSTREAM 1
+#endif
+#ifdef DEBUG_akkana
+  // Leave this commented out until we're sure it won't crash Linux
+#if defined(XP_UNIX)
+#define USE_OSTREAM 1
+#endif
 #endif
 
+#if defined(USE_STRINGSTREAM)
+	stringstream  data;
+#else
+#if defined(USE_STRSTREAM)
+	ostrstream  data;
+#else
+#if defined(USE_OSTREAM)
+  ostream data;
+#endif
+#endif
+#endif
 	((nsHTMLContentSinkStream*)sink)->SetOutputStream(data);
 
 	if (NS_OK == rv) {
@@ -2204,13 +2229,15 @@ nsBrowserWindow::DoCopy()
 	  }
 	  NS_IF_RELEASE(dtd);
 	  NS_IF_RELEASE(sink);
-#if defined(XP_MAC)
+#if defined(USE_STRINGSTREAM)
 	  string      theString = data.str();
 	  PRInt32     len = theString.length();
 	  const char* str = theString.data();
 #else
+#if defined(USE_STRSTREAM)
 	  PRInt32 len = data.pcount();
 	  char* str = (char*)data.str();
+#endif
 #endif
 
 #if defined(WIN32)
