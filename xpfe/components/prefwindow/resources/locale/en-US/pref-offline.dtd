@@ -1,0 +1,17 @@
+<!-- extracted from content/pref-offline.xul -->
+
+<!ENTITY title.label "Offline">
+<!ENTITY header "Offline">
+<!ENTITY header1 "Startup State">
+<!ENTITY descipt1 "Communicator can start in either online or offline modes. When online you have full 
+access to your network.  When offline you can only read messages that you have previously downloaded.">
+<!ENTITY prevRadio.label "Remember Previous State">
+<!ENTITY communRemember "Communticator will remember the state it was in last and start in that mode.">
+<!ENTITY askOfflineRadio.label "Ask Me">
+<!ENTITY offlineStartAskEach "Communicator will ask you each time you start the program.">
+<!ENTITY heaeder2 "When Going Online">
+<!ENTITY unsentAskRadio.label "Ask me if I want to send my unsent messages">
+<!ENTITY unsentAutoRadio.label "Automatically send my unsent messages">
+<!ENTITY unsentDoNotRadio.label "Do not send my unsent messages">
+<!ENTITY header3 "When Exiting Communicator">
+<!ENTITY promptSynchCheck.label "Prompt me to synchronize my messages">

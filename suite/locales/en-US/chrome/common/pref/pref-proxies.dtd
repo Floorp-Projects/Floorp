@@ -1,0 +1,11 @@
+<!-- extracted from content/pref-proxies.xul -->
+
+<!ENTITY  title.label "Sample Prefs Panel">
+<!ENTITY  proxiesHeader.label  "Proxies">
+<!ENTITY  networkHeader.label "A network proxy is used to provide additional security between your
+	        computer and the Internet (usually along with a firewall) and/or to increase
+	        performance between networks by reducing redundant traffic via caching.">
+<!ENTITY  directTypeRadio.label "Direct connection to the Internet">
+<!ENTITY  manualTypeRadio.label "Manual proxy configuration">
+<!ENTITY  autoTypeRadio.label "Automatic proxy configuration">
+<!ENTITY  configAutoconfigText.label "Configuration location (URL):">

@@ -1,0 +1,14 @@
+<!-- extracted from content/pref-applications.xul -->
+
+<!ENTITY window.title "Advanced">
+<!ENTITY lHeader "Applications">
+<!ENTITY rHeader "Specify helper applications for different file types">
+<!ENTITY descript "Description">
+<!ENTITY aimLaunchSelect.label "AOL Instant Messenger Launch">
+<!ENTITY newTypeButton.label "New Type...">
+<!ENTITY editButton.label "Edit...">
+<!ENTITY removeButton.label "Remove">
+<!ENTITY file "File type details">
+<!ENTITY exten "Extention:">
+<!ENTITY mimeType "Mime Type:">
+<!ENTITY handle "Handled By:">

@@ -1,0 +1,23 @@
+<!-- extracted from content/pref-download.xul -->
+
+<!ENTITY  title.label "Download">
+<!ENTITY  lHeader "Download">
+<!ENTITY  rHeader "Choose settings for seading messages offline">
+<!ENTITY  downOnlyCheck "Download only unread messages">
+<!ENTITY  downDateCheck "Download by date">
+<!ENTITY  newmes "Newsgroup Messages">
+<!ENTITY  downUnread "Download only unread messages">
+<!ENTITY  downloadDate "Download by date">
+<!ENTITY  fromRadio.label "from">
+<!ENTITY  one.select "1 week ago">
+<!ENTITY  two.select "2 weeks ago">
+<!ENTITY  oneM.select "1 month ago">
+<!ENTITY  sixM.select "6 months ago">
+<!ENTITY  oneY.select "1 year ago">
+<!ENTITY  sinceRadio.label "since">
+<!ENTITY  daysAgo "days ago">
+<!ENTITY  Allmsg "All Messages">
+<!ENTITY  offlineMsgs "In order to read mail and newsgroup messages offline, you must
+          first select them for downloading.  Use the Select... button to 
+		      select items for dowloading.">
+<!ENTITY  select "Select...">

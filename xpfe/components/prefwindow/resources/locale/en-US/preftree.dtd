@@ -1,0 +1,25 @@
+<!-- extracted from content/preftree.xul -->
+
+<!ENTITY appear.label "Appearance">
+<!ENTITY fonts.label "Fonts">
+<!ENTITY colors.label "Colors">
+<!ENTITY navigator.label "Navigator">
+<!ENTITY languages.label "Languages">
+<!ENTITY applications.label "Applications">
+<!ENTITY smartBrowse.label "Smart Browsing">
+<!ENTITY mail.label "Mail &amp; Newsgroups">
+<!ENTITY address.label "Addressing">
+<!ENTITY mess.label "Messages">
+<!ENTITY windowSet.label "Window Settings">
+<!ENTITY copyFolder.label "Copies &amp; Folders">
+<!ENTITY format.label "Formatting">
+<!ENTITY return.label "Return Receipts">
+<!ENTITY disk.label "Disk Space">
+<!ENTITY compose.label "Composer">
+<!ENTITY publish.label "Publish">
+<!ENTITY offline.label "Offline">
+<!ENTITY advance.label "Advanced">
+<!ENTITY down.label "Download">
+<!ENTITY cache.label "Cache">
+<!ENTITY proxies.label "Proxies">
+<!ENTITY smart.label "Smart Update">

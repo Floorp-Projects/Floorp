@@ -1,0 +1,11 @@
+<!-- extracted from content/pref-languages.xul -->
+
+<!ENTITY  window.title "Languages">
+<!ENTITY  LangHeader "Languages">
+<!ENTITY  prefLangDecript "Choose in order of preference the language(s) 
+			in which you prefer to view web pages. Web pages are sometimes 
+			available in several languages.  Naveigator presents pages in 
+			the available language you most prefer.">
+<!ENTITY engOption.label  "English">
+<!ENTITY addButton.label  "Add...">
+<!ENTITY deleteButton.label  "Delete...">

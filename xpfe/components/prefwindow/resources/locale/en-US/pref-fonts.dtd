@@ -1,0 +1,17 @@
+<!-- extracted from content/pref-fonts.xul -->
+
+
+<!ENTITY  window.title "Fonts">
+<!ENTITY  header "Fonts">
+<!ENTITY  encod.select "For the Encoding:">
+<!ENTITY  encod1.option "Western">
+<!ENTITY  size.select "Size">
+<!ENTITY  size1.option "10">
+<!ENTITY  varFont.select "Variable Width Font:">
+<!ENTITY  varFont.option "10">
+<!ENTITY  fixedFont.Select "Fixed Width Font">
+<!ENTITY  fixedFont.option "Filler">
+<!ENTITY  header2 "Sometimes a document will provide its own fonts.">
+<!ENTITY  useDefaultFontRadio "Use my default fonts, overriding document-specified fonts">
+<!ENTITY  useDocFontRadio "Use document-specified fonts, but disable Dynamic Fonts">
+<!ENTITY  useDocFontsRadio "Use document-specified fonts, including Dynamic Fonts">

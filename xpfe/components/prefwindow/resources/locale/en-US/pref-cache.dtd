@@ -1,0 +1,18 @@
+<!-- extracted from content/pref-cache.xul -->
+
+<!ENTITY  title.label "Cache">
+<!ENTITY  lHeader "Cache">
+<!ENTITY  rHeader "Designate the size of the cache">
+<!ENTITY cachePara "The cache is used to keep local copies of frequently accessed documents
+	  and thus reduce time connected to the network. The Reload button will always
+	  compare the cache document to the network and show the most recent one.">
+<!ENTITY memCache "Memory Cache:">
+<!ENTITY diskCache "Disk Cache:">
+<!ENTITY kbyes "KBytes">
+<!ENTITY diskCacheFolder "Disk Cache Folder:">
+<!ENTITY clearMemcacheButton.label "Clear Memory Cache">
+<!ENTITY clearDiskcacheButton.label "Clear Disk Cache">
+<!ENTITY docCache "Document in cache is compared to document on network:">
+<!ENTITY oncePsessionRadio.label "Once per session">
+<!ENTITY everyTimeRadio.label "Every time">
+<!ENTITY neverRadio.label "Never">

@@ -1,0 +1,16 @@
+<!-- extracted from content/pref-colors.xul -->
+
+<!ENTITY  window.title "Colors">
+<!ENTITY  lHeader "Colors">
+<!ENTITY  rHeader "Change the colors in your display">
+<!ENTITY  color "Colors">
+<!ENTITY  text "Text:">
+<!ENTITY  colorPick "Color Picker">
+<!ENTITY  background "Background:">
+<!ENTITY  useWinColorsCheck.label "Use Windows colors">
+<!ENTITY  underLinksCheck.label "Underline links">
+<!ENTITY  links "Links">
+<!ENTITY  unvisit "Unvisited Links:">
+<!ENTITY  visit "Visited Links:">
+<!ENTITY  someProvColors "Sometimes a document will provide its own colors and background.">
+<!ENTITY  alwaysOverCheck.label "Always use my colors, overriding document">

@@ -1,0 +1,7 @@
+<!-- extracted from content/PrefsWindow.xul -->
+
+<!ENTITY categoryHeader "Category">
+<!ENTITY window.title "Preferences">
+<!ENTITY helpButton.label "Help">
+<!ENTITY cancelButton.label "Cancel">
+<!ENTITY okButton.label "OK">
