@@ -19,10 +19,6 @@
 #include "nsIStyleContext.h"
 #include "nsCSSRendering.h"
 
-static NS_DEFINE_IID(kStyleColorSID, NS_STYLECOLOR_SID);
-static NS_DEFINE_IID(kStylePositionSID, NS_STYLEPOSITION_SID);
-static NS_DEFINE_IID(kStyleSpacingSID, NS_STYLESPACING_SID);
-
 nsLeafFrame::nsLeafFrame(nsIContent* aContent, nsIFrame* aParentFrame)
   : nsFrame(aContent, aParentFrame)
 {
@@ -37,9 +33,9 @@ NS_METHOD nsLeafFrame::Paint(nsIPresContext& aPresContext,
                              const nsRect& aDirtyRect)
 {
   nsStyleColor* myColor =
-    (nsStyleColor*)mStyleContext->GetData(kStyleColorSID);
+    (nsStyleColor*)mStyleContext->GetData(eStyleStruct_Color);
   nsStyleSpacing* mySpacing =
-    (nsStyleSpacing*)mStyleContext->GetData(kStyleSpacingSID);
+    (nsStyleSpacing*)mStyleContext->GetData(eStyleStruct_Spacing);
   nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
                                   aDirtyRect, mRect, *myColor);
   nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
@@ -91,7 +87,7 @@ void nsLeafFrame::AddBordersAndPadding(nsIPresContext* aPresContext,
                                        nsReflowMetrics& aDesiredSize)
 {
   nsStyleSpacing* space =
-    (nsStyleSpacing*)mStyleContext->GetData(kStyleSpacingSID);
+    (nsStyleSpacing*)mStyleContext->GetData(eStyleStruct_Spacing);
   nsMargin  borderPadding;
   space->CalcBorderPaddingFor(this, borderPadding);
   aDesiredSize.width += borderPadding.left + borderPadding.right;
@@ -104,7 +100,7 @@ void nsLeafFrame::GetInnerArea(nsIPresContext* aPresContext,
                                nsRect& aInnerArea) const
 {
   nsStyleSpacing* space =
-    (nsStyleSpacing*)mStyleContext->GetData(kStyleSpacingSID);
+    (nsStyleSpacing*)mStyleContext->GetData(eStyleStruct_Spacing);
   nsMargin  borderPadding;
   space->CalcBorderPaddingFor(this, borderPadding);
   aInnerArea.x = borderPadding.left;

@@ -32,12 +32,6 @@
 
 #undef NOISY_REFLOW
 
-static NS_DEFINE_IID(kStyleDisplaySID, NS_STYLEDISPLAY_SID);
-static NS_DEFINE_IID(kStyleFontSID, NS_STYLEFONT_SID);
-static NS_DEFINE_IID(kStylePositionSID, NS_STYLEPOSITION_SID);
-static NS_DEFINE_IID(kStyleSpacingSID, NS_STYLESPACING_SID);
-static NS_DEFINE_IID(kStyleTextSID, NS_STYLETEXT_SID);
-
 NS_DEF_PTR(nsIContent);
 NS_DEF_PTR(nsIStyleContext);
 
@@ -317,7 +311,7 @@ nsLineLayout::WordBreakReflow()
       return rv;
     }
     nsStyleSpacing* kidSpacing = (nsStyleSpacing*)
-      kidSC->GetData(kStyleSpacingSID);
+      kidSC->GetData(eStyleStruct_Spacing);
     nsMargin kidMargin;
     kidSpacing->CalcMarginFor(frame, kidMargin);
     kidAvailSize.width -= kidMargin.left + kidMargin.right;
@@ -443,9 +437,9 @@ nsLineLayout::ReflowMappedChild(nsReflowCommand* aReflowCommand)
     return rv;
   }
   nsStyleSpacing* kidSpacing = (nsStyleSpacing*)
-    kidSC->GetData(kStyleSpacingSID);
+    kidSC->GetData(eStyleStruct_Spacing);
   nsStyleDisplay* kidDisplay = (nsStyleDisplay*)
-    kidSC->GetData(kStyleDisplaySID);
+    kidSC->GetData(eStyleStruct_Display);
   PRBool isBlock = PR_FALSE;
   switch (kidDisplay->mDisplay) {
   case NS_STYLE_DISPLAY_BLOCK:
@@ -546,7 +540,7 @@ nsLineLayout::ReflowChild(nsReflowCommand* aReflowCommand)
   // XXX floating frames
   // XXX break-before
   nsStyleDisplay * kidDisplay = (nsStyleDisplay*)
-    kidSC->GetData(kStyleDisplaySID);
+    kidSC->GetData(eStyleStruct_Display);
   PRBool isBlock = PR_FALSE;
   PRBool isFirstChild = PRBool(mKidFrame == mLine->mFirstChild);
   switch (kidDisplay->mDisplay) {
@@ -578,7 +572,7 @@ nsLineLayout::ReflowChild(nsReflowCommand* aReflowCommand)
   kidAvailSize.width = mReflowData.mAvailWidth;
   kidAvailSize.height = mMaxHeight;
   nsStyleSpacing* kidSpacing = (nsStyleSpacing*)
-    kidSC->GetData(kStyleSpacingSID);
+    kidSC->GetData(eStyleStruct_Spacing);
   nsMargin kidMargin;
   kidSpacing->CalcMarginFor(mKidFrame, kidMargin);
   if (!mUnconstrainedWidth) {
@@ -1103,7 +1097,7 @@ nsLineLayout::PullUpChildren()
         return rv;
       }
       nsStyleDisplay* kidDisplay = (nsStyleDisplay*)
-        kidSC->GetData(kStyleDisplaySID);
+        kidSC->GetData(eStyleStruct_Display);
       if (IsBlock(kidDisplay)) {
         if ((nsnull != mLine->mPrevLine) || (0 != mLine->mChildCount)) {
           goto done;
@@ -1209,9 +1203,9 @@ nsLineLayout::CreateFrameFor(nsIContent* aKid)
     return NS_ERROR_OUT_OF_MEMORY;
   }
   nsStylePosition* kidPosition = (nsStylePosition*)
-    kidSC->GetData(kStylePositionSID);
+    kidSC->GetData(eStyleStruct_Position);
   nsStyleDisplay* kidDisplay = (nsStyleDisplay*)
-    kidSC->GetData(kStyleDisplaySID);
+    kidSC->GetData(eStyleStruct_Display);
 
   // Check whether it wants to floated or absolutely positioned
   PRBool isBlock = PR_FALSE;
@@ -1431,9 +1425,9 @@ nsLineLayout::AlignChildren()
   nsIStyleContextPtr blockSC;
   mBlock->GetStyleContext(mPresContext, blockSC.AssignRef());
   nsStyleFont* blockFont = (nsStyleFont*)
-    blockSC->GetData(kStyleFontSID);
+    blockSC->GetData(eStyleStruct_Font);
   nsStyleText* blockText = (nsStyleText*)
-    blockSC->GetData(kStyleTextSID);
+    blockSC->GetData(eStyleStruct_Text);
 
   // First vertically align the children on the line; this will
   // compute the actual line height for us.

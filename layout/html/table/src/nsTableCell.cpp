@@ -31,9 +31,6 @@
 #include "nsHTMLAtoms.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kStyleTextSID, NS_STYLETEXT_SID);
-static NS_DEFINE_IID(kStyleSpacingSID, NS_STYLETEXT_SID);
-static NS_DEFINE_IID(kStyleBorderSID, NS_STYLETEXT_SID);
 
 #ifdef NS_DEBUG
 static PRBool gsDebug = PR_TRUE;
@@ -210,7 +207,7 @@ void nsTableCell::MapAttributesInto(nsIStyleContext* aContext,
   GetAttribute(nsHTMLAtoms::align, value);
   if (value.GetUnit() == eHTMLUnit_Enumerated) 
   {
-    nsStyleText* text = (nsStyleText*)aContext->GetData(kStyleTextSID);
+    nsStyleText* text = (nsStyleText*)aContext->GetData(eStyleStruct_Text);
     text->mTextAlign = value.GetIntValue();
   }
   MapBackgroundAttributesInto(aContext, aPresContext);

@@ -36,10 +36,6 @@ static PRBool gsDebug = PR_FALSE;
 static const PRBool gsDebug = PR_FALSE;
 #endif
 
-static NS_DEFINE_IID(kStyleSpacingSID, NS_STYLESPACING_SID);
-static NS_DEFINE_IID(kStyleColorSID, NS_STYLECOLOR_SID);
-static NS_DEFINE_IID(kStyleTextSID, NS_STYLETEXT_SID);
-
 /**
   */
 nsTableCellFrame::nsTableCellFrame(nsIContent* aContent,
@@ -57,9 +53,9 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext& aPresContext,
                                   const nsRect& aDirtyRect)
 {
   nsStyleColor* myColor =
-    (nsStyleColor*)mStyleContext->GetData(kStyleColorSID);
+    (nsStyleColor*)mStyleContext->GetData(eStyleStruct_Color);
   nsStyleSpacing* mySpacing =
-    (nsStyleSpacing*)mStyleContext->GetData(kStyleSpacingSID);
+    (nsStyleSpacing*)mStyleContext->GetData(eStyleStruct_Spacing);
   NS_ASSERTION(nsnull!=myColor, "bad style color");
   NS_ASSERTION(nsnull!=mySpacing, "bad style spacing");
 
@@ -93,9 +89,9 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext& aPresContext,
 void  nsTableCellFrame::VerticallyAlignChild(nsIPresContext* aPresContext)
 {
   nsStyleSpacing* spacing =
-      (nsStyleSpacing*)mStyleContext->GetData(kStyleSpacingSID);
+      (nsStyleSpacing*)mStyleContext->GetData(eStyleStruct_Spacing);
   nsStyleText* textStyle =
-      (nsStyleText*)mStyleContext->GetData(kStyleTextSID);
+      (nsStyleText*)mStyleContext->GetData(eStyleStruct_Text);
   nsMargin borderPadding;
   spacing->CalcBorderPaddingFor(this, borderPadding);
   
@@ -235,7 +231,7 @@ NS_METHOD nsTableCellFrame::ResizeReflow(nsIPresContext* aPresContext,
 
   // Compute the insets (sum of border and padding)
   nsStyleSpacing* spacing =
-    (nsStyleSpacing*)mStyleContext->GetData(kStyleSpacingSID);
+    (nsStyleSpacing*)mStyleContext->GetData(eStyleStruct_Spacing);
   nsMargin borderPadding;
   spacing->CalcBorderPaddingFor(this, borderPadding);
 
@@ -433,7 +429,7 @@ void nsTableCellFrame::MapBorderMarginPadding(nsIPresContext* aPresContext)
   spacing_result = table->GetAttribute(nsHTMLAtoms::cellspacing,spacing_value);
   border_result = table->GetAttribute(nsHTMLAtoms::border,border_value);
 
-  nsStyleSpacing* spacingData = (nsStyleSpacing*)mStyleContext->GetData(kStyleSpacingSID);
+  nsStyleSpacing* spacingData = (nsStyleSpacing*)mStyleContext->GetData(eStyleStruct_Spacing);
 
   // check to see if cellpadding or cellspacing is defined
   if (spacing_result == eContentAttr_HasValue || padding_result == eContentAttr_HasValue)
@@ -480,7 +476,7 @@ void nsTableCellFrame::MapTextAttributes(nsIPresContext* aPresContext)
   ((nsTableCell*)mContent)->GetAttribute(nsHTMLAtoms::align, value);
   if (value.GetUnit() == eHTMLUnit_Enumerated) 
   {
-    nsStyleText* text = (nsStyleText*)mStyleContext->GetData(kStyleTextSID);
+    nsStyleText* text = (nsStyleText*)mStyleContext->GetData(eStyleStruct_Text);
     text->mTextAlign = value.GetIntValue();
   }
 }

@@ -45,11 +45,6 @@
 
 #define DEFAULT_ASCENT_LEN  10
 
-static NS_DEFINE_IID(kStylePositionSID, NS_STYLEPOSITION_SID);
-static NS_DEFINE_IID(kStyleFontSID, NS_STYLEFONT_SID);
-static NS_DEFINE_IID(kStyleDisplaySID, NS_STYLEDISPLAY_SID);
-static NS_DEFINE_IID(kStyleSpacingSID, NS_STYLESPACING_SID);
-
 NS_DEF_PTR(nsIStyleContext);
 NS_DEF_PTR(nsIContent);
 NS_DEF_PTR(nsIContentDelegate);
@@ -593,9 +588,9 @@ nsReflowStatus nsInlineFrame::ReflowUnmappedChildren(nsIPresContext* aPresContex
     // Figure out how we should treat the child
     nsIFrame*        kidFrame;
     nsStyleDisplay*  kidDisplay =
-      (nsStyleDisplay*)kidStyleContext->GetData(kStyleDisplaySID);
+      (nsStyleDisplay*)kidStyleContext->GetData(eStyleStruct_Display);
     nsStylePosition* kidPosition = (nsStylePosition*)
-      kidStyleContext->GetData(kStylePositionSID);
+      kidStyleContext->GetData(eStyleStruct_Position);
 
     // Check whether it wants to floated or absolutely positioned
     nsresult rv;
@@ -736,9 +731,9 @@ NS_METHOD nsInlineFrame::ResizeReflow(nsIPresContext*  aPresContext,
 
   // Get the style molecule
   nsStyleFont* styleFont = (nsStyleFont*)
-    mStyleContext->GetData(kStyleFontSID);
+    mStyleContext->GetData(eStyleStruct_Font);
   nsStyleSpacing* styleSpacing = (nsStyleSpacing*)
-    mStyleContext->GetData(kStyleSpacingSID);
+    mStyleContext->GetData(eStyleStruct_Spacing);
 
   // Check for an overflow list
   MoveOverflowToChildList();
@@ -994,9 +989,9 @@ NS_METHOD nsInlineFrame::IncrementalReflow(nsIPresContext*  aPresContext,
 
   // Get the style molecule
   nsStyleFont* styleFont =
-    (nsStyleFont*)mStyleContext->GetData(kStyleFontSID);
+    (nsStyleFont*)mStyleContext->GetData(eStyleStruct_Font);
   nsStyleSpacing* styleSpacing =
-    (nsStyleSpacing*)mStyleContext->GetData(kStyleSpacingSID);
+    (nsStyleSpacing*)mStyleContext->GetData(eStyleStruct_Spacing);
 
   nscoord   lineHeight;
   PRInt32   kidIndex;

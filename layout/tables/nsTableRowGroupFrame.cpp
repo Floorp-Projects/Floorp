@@ -37,8 +37,6 @@ static const PRBool gsDebug1 = PR_FALSE;
 static const PRBool gsDebug2 = PR_FALSE;
 #endif
 
-static NS_DEFINE_IID(kStyleSpacingSID, NS_STYLESPACING_SID);
-
 NS_DEF_PTR(nsIStyleContext);
 NS_DEF_PTR(nsIContent);
 
@@ -281,7 +279,7 @@ PRBool nsTableRowGroupFrame::ReflowMappedChildren( nsIPresContext*      aPresCon
      
     kidFrame->GetStyleContext(aPresContext, kidSC.AssignRef());
     nsStyleSpacing* kidSpacing = (nsStyleSpacing*)
-      kidSC->GetData(kStyleSpacingSID);
+      kidSC->GetData(eStyleStruct_Spacing);
     nsMargin kidMargin;
     kidSpacing->CalcMarginFor(this, kidMargin);
     nscoord topMargin = GetTopMarginFor(aPresContext, aState, kidMargin);
@@ -737,7 +735,7 @@ nsTableRowGroupFrame::ReflowUnmappedChildren(nsIPresContext*      aPresContext,
     nsIStyleContextPtr kidSC =
       aPresContext->ResolveStyleContextFor(kid, this);
     nsStyleSpacing* kidSpacing = (nsStyleSpacing*)
-      kidSC->GetData(kStyleSpacingSID);
+      kidSC->GetData(eStyleStruct_Spacing);
     nsMargin kidMargin;
     kidSpacing->CalcMarginFor(this, kidMargin);
     nscoord topMargin = GetTopMarginFor(aPresContext, aState, kidMargin);

@@ -91,7 +91,7 @@ public:
   NS_IMETHOD  SetStyleContext(nsIPresContext* aPresContext, nsIStyleContext* aContext);
 
   // Get the style struct associated with this frame
-  NS_IMETHOD  GetStyleData(const nsIID& aSID, nsStyleStruct*& aStyleStruct) const;
+  NS_IMETHOD  GetStyleData(nsStyleStructID aSID, nsStyleStruct*& aStyleStruct) const;
 
 
   // Geometric and content parent

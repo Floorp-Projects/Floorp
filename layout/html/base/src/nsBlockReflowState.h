@@ -33,10 +33,6 @@
 // XXX what do we do with catastrophic errors (rv < 0)? What is the
 // state of the reflow world after such an error?
 
-static NS_DEFINE_IID(kStyleDisplaySID, NS_STYLEDISPLAY_SID);
-static NS_DEFINE_IID(kStylePositionSID, NS_STYLEPOSITION_SID);
-static NS_DEFINE_IID(kStyleSpacingSID, NS_STYLESPACING_SID);
-
 static NS_DEFINE_IID(kIAnchoredItemsIID, NS_IANCHOREDITEMS_IID);
 static NS_DEFINE_IID(kIRunaroundIID, NS_IRUNAROUND_IID);
 static NS_DEFINE_IID(kIFloaterContainerIID, NS_IFLOATERCONTAINER_IID);
@@ -63,7 +59,7 @@ void nsBlockBandData::ComputeAvailSpaceRect()
         nsStyleDisplay* display;
       
         // XXX Handle the case of multiple frames
-        trapezoid->frame->GetStyleData(kStyleDisplaySID, (nsStyleStruct*&)display);
+        trapezoid->frame->GetStyleData(eStyleStruct_Display, (nsStyleStruct*&)display);
         if (NS_STYLE_FLOAT_RIGHT == display->mFloats) {
           break;
         }
@@ -85,7 +81,7 @@ void nsBlockBandData::ComputeAvailSpaceRect()
     trapezoid->GetRect(availSpace);
 
     // XXX Handle the case of multiple frames
-    trapezoid->frame->GetStyleData(kStyleDisplaySID, (nsStyleStruct*&)display);
+    trapezoid->frame->GetStyleData(eStyleStruct_Display, (nsStyleStruct*&)display);
     if (NS_STYLE_FLOAT_LEFT == display->mFloats) {
       availSpace.x = availSpace.XMost();
     }
@@ -167,7 +163,7 @@ nsresult nsBlockReflowState::RecoverState(nsLineData* aLine)
       nsStyleSpacing* kidSpacing;
       nsIFrame*       kid = prevLine->mFirstChild;
   
-      kid->GetStyleData(kStyleSpacingSID, (nsStyleStruct*&)kidSpacing);
+      kid->GetStyleData(eStyleStruct_Spacing, (nsStyleStruct*&)kidSpacing);
       nsMargin  kidMargin;
       kidSpacing->CalcMarginFor(kid, kidMargin);
       if (kidMargin.bottom < 0) {
@@ -948,9 +944,9 @@ nsBlockFrame::InitializeState(nsIPresContext*     aPresContext,
   // Apply border and padding adjustments for regular frames only
   if (!aState.mBlockIsPseudo) {
     nsStyleSpacing* mySpacing = (nsStyleSpacing*)
-      mStyleContext->GetData(kStyleSpacingSID);
+      mStyleContext->GetData(eStyleStruct_Spacing);
     nsStylePosition* myPosition = (nsStylePosition*)
-      mStyleContext->GetData(kStylePositionSID);
+      mStyleContext->GetData(eStyleStruct_Position);
 
     mySpacing->CalcBorderPaddingFor(this, aState.mBorderPadding);
     aState.mY = aState.mBorderPadding.top;
@@ -1507,7 +1503,7 @@ nsBlockFrame::PlaceFloater(nsIPresContext*     aPresContext,
 
     // Get the type of floater
     nsStyleDisplay* floaterDisplay;
-    aFloater->GetStyleData(kStyleDisplaySID, (nsStyleStruct*&)floaterDisplay);
+    aFloater->GetStyleData(eStyleStruct_Display, (nsStyleStruct*&)floaterDisplay);
 
     // Commit some space in the space manager and adjust our current
     // band of available space.
@@ -1568,7 +1564,7 @@ nsBlockFrame::PlaceBelowCurrentLineFloaters(nsBlockReflowState& aState,
 
     // Get the type of floater
     nsStyleDisplay* sd;
-    floater->GetStyleData(kStyleDisplaySID, (nsStyleStruct*&)sd);
+    floater->GetStyleData(eStyleStruct_Display, (nsStyleStruct*&)sd);
   
     floater->GetRect(region);
     // XXX GetAvailableSpace() is translating availSpace by aState.mY...

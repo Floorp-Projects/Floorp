@@ -36,11 +36,6 @@
 #include "nsPlaceholderFrame.h"
 #include "nsIContentDelegate.h"
 
-static NS_DEFINE_IID(kStyleSpacingSID, NS_STYLESPACING_SID);
-static NS_DEFINE_IID(kStyleColorSID, NS_STYLECOLOR_SID);
-static NS_DEFINE_IID(kStylePositionSID, NS_STYLEPOSITION_SID);
-static NS_DEFINE_IID(kStyleDisplaySID, NS_STYLEDISPLAY_SID);
-
 NS_DEF_PTR(nsIStyleContext);
 
 nsHTMLContainerFrame::nsHTMLContainerFrame(nsIContent* aContent, nsIFrame* aParent)
@@ -60,9 +55,9 @@ NS_METHOD nsHTMLContainerFrame::Paint(nsIPresContext& aPresContext,
   if (PR_FALSE == IsPseudoFrame()) {
     PRIntn skipSides = GetSkipSides();
     nsStyleColor* color =
-      (nsStyleColor*)mStyleContext->GetData(kStyleColorSID);
+      (nsStyleColor*)mStyleContext->GetData(eStyleStruct_Color);
     nsStyleSpacing* spacing =
-      (nsStyleSpacing*)mStyleContext->GetData(kStyleSpacingSID);
+      (nsStyleSpacing*)mStyleContext->GetData(eStyleStruct_Spacing);
     nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
                                     aDirtyRect, mRect, *color);
     nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
@@ -145,7 +140,7 @@ NS_METHOD nsHTMLContainerFrame::GetCursorAt(nsIPresContext& aPresContext,
 {
   // Get my cursor
   nsStyleColor* styleColor = (nsStyleColor*)
-    mStyleContext->GetData(kStyleColorSID);
+    mStyleContext->GetData(eStyleStruct_Color);
   PRInt32 myCursor = styleColor->mCursor;
 
   // Get child's cursor, if any
@@ -251,9 +246,9 @@ nsHTMLContainerFrame::CreateFrameFor(nsIPresContext*  aPresContext,
 {
   // Get the style data for the frame
   nsStylePosition*    position = (nsStylePosition*)
-    aStyleContext->GetData(kStylePositionSID);
+    aStyleContext->GetData(eStyleStruct_Position);
   nsStyleDisplay*     display = (nsStyleDisplay*)
-    aStyleContext->GetData(kStyleDisplaySID);
+    aStyleContext->GetData(eStyleStruct_Display);
   nsIFrame*           frame = nsnull;
 
   // See whether it wants any special handling

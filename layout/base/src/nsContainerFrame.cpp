@@ -37,9 +37,6 @@
 
 static NS_DEFINE_IID(kIRunaroundIID, NS_IRUNAROUND_IID);
 
-static NS_DEFINE_IID(kStyleDisplaySID, NS_STYLEDISPLAY_SID);
-static NS_DEFINE_IID(kStylePositionSID, NS_STYLEPOSITION_SID);
-
 nsContainerFrame::nsContainerFrame(nsIContent* aContent, nsIFrame* aParent)
   : nsSplittableFrame(aContent, aParent),
     mLastContentIsComplete(PR_TRUE)
@@ -230,7 +227,7 @@ void nsContainerFrame::PaintChildren(nsIPresContext&      aPresContext,
 {
   // Set clip rect so that children don't leak out of us
   nsStylePosition* pos =
-    (nsStylePosition*)mStyleContext->GetData(kStylePositionSID);
+    (nsStylePosition*)mStyleContext->GetData(eStyleStruct_Position);
   PRBool hidden = PR_FALSE;
   if (NS_STYLE_OVERFLOW_HIDDEN == pos->mOverflow) {
     aRenderingContext.PushState();
@@ -513,7 +510,7 @@ nsReflowStatus nsContainerFrame::ReflowChild(nsIFrame*        aKidFrame,
         nsStyleDisplay* display;
       
         // XXX Handle the case of multiple frames
-        trapezoid->frame->GetStyleData(kStyleDisplaySID, (nsStyleStruct*&)display);
+        trapezoid->frame->GetStyleData(eStyleStruct_Display, (nsStyleStruct*&)display);
         if (NS_STYLE_FLOAT_RIGHT == display->mFloats) {
           break;
         }
@@ -535,7 +532,7 @@ nsReflowStatus nsContainerFrame::ReflowChild(nsIFrame*        aKidFrame,
     trapezoid->GetRect(availBand);
 
     // XXX Handle the case of multiple frames
-    trapezoid->frame->GetStyleData(kStyleDisplaySID, (nsStyleStruct*&)display);
+    trapezoid->frame->GetStyleData(eStyleStruct_Display, (nsStyleStruct*&)display);
     if (NS_STYLE_FLOAT_LEFT == display->mFloats) {
       availBand.x = availBand.XMost();
     }

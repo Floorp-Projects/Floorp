@@ -33,8 +33,6 @@
 static NS_DEFINE_IID(kIRunaroundIID, NS_IRUNAROUND_IID);
 static NS_DEFINE_IID(kIAnchoredItemsIID, NS_IANCHOREDITEMS_IID);
 
-static NS_DEFINE_IID(kStyleSpacingSID, NS_STYLESPACING_SID);
-
 nsresult nsBodyFrame::NewFrame(nsIFrame** aInstancePtrResult,
                                nsIContent* aContent,
                                nsIFrame*   aParent)
@@ -155,7 +153,7 @@ NS_METHOD nsBodyFrame::ResizeReflow(nsIPresContext*  aPresContext,
 
     // Get our border/padding info
     nsStyleSpacing* mySpacing =
-      (nsStyleSpacing*)mStyleContext->GetData(kStyleSpacingSID);
+      (nsStyleSpacing*)mStyleContext->GetData(eStyleStruct_Spacing);
     nsMargin  borderPadding;
     mySpacing->CalcBorderPaddingFor(this, borderPadding);
 
@@ -257,7 +255,7 @@ NS_METHOD nsBodyFrame::IncrementalReflow(nsIPresContext*  aPresContext,
 
   // Get our border/padding info
   nsStyleSpacing* mySpacing =
-    (nsStyleSpacing*)mStyleContext->GetData(kStyleSpacingSID);
+    (nsStyleSpacing*)mStyleContext->GetData(eStyleStruct_Spacing);
   nsMargin  borderPadding;
   mySpacing->CalcBorderPaddingFor(this, borderPadding);
 

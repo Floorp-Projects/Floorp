@@ -38,9 +38,6 @@
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kITableContentIID, NS_ITABLECONTENT_IID);
-static NS_DEFINE_IID(kStylePositionSID, NS_STYLEPOSITION_SID);
-static NS_DEFINE_IID(kStyleSpacingSID, NS_STYLESPACING_SID);
-static NS_DEFINE_IID(kStyleDisplaySID, NS_STYLEDISPLAY_SID);
 
 #ifdef NS_DEBUG
 static PRBool gsDebug = PR_FALSE;
@@ -1078,7 +1075,7 @@ void nsTablePart::MapAttributesInto(nsIStyleContext* aContext,
   GetAttribute(nsHTMLAtoms::width, value);
   if (value.GetUnit() != eHTMLUnit_Null) {
     nsStylePosition* position = (nsStylePosition*)
-      aContext->GetData(kStylePositionSID);
+      aContext->GetData(eStyleStruct_Position);
     switch (value.GetUnit()) {
     case eHTMLUnit_Percent:
       position->mWidth.SetPercentValue(value.GetPercentValue());
@@ -1097,7 +1094,7 @@ void nsTablePart::MapAttributesInto(nsIStyleContext* aContext,
   GetAttribute(nsHTMLAtoms::align, value);
   if (value.GetUnit() != eHTMLUnit_Null) {
     NS_ASSERTION(value.GetUnit() == eHTMLUnit_Enumerated, "unexpected unit");
-    nsStyleDisplay* display = (nsStyleDisplay*)aContext->GetData(kStyleDisplaySID);
+    nsStyleDisplay* display = (nsStyleDisplay*)aContext->GetData(eStyleStruct_Display);
 
     switch (value.GetIntValue()) {
     case NS_STYLE_TEXT_ALIGN_LEFT:
@@ -1126,7 +1123,7 @@ void nsTablePart::GetTableBorder(nsIHTMLContent* aContent,
   if ((value.GetUnit() == eHTMLUnit_Pixel) || 
       (value.GetUnit() == eHTMLUnit_Empty)) {
     nsStyleSpacing* spacing = (nsStyleSpacing*)
-      aContext->GetData(kStyleSpacingSID);
+      aContext->GetData(eStyleStruct_Spacing);
     float p2t = aPresContext->GetPixelsToTwips();
     nsStyleCoord twips;
     if (aForCell || (value.GetUnit() == eHTMLUnit_Empty)) {

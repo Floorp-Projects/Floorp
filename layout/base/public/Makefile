@@ -34,6 +34,7 @@ EXPORTS =			\
 	nsISelection.h		\
 	nsISpaceManager.h	\
 	nsStyleCoord.h		\
+	nsStyleStruct.h		\
 	nsIStyleContext.h	\
 	nsIStyleRule.h		\
 	nsIStyleSet.h		\

@@ -32,10 +32,6 @@
 
 #undef DEBUG_HR_REFCNT
 
-static NS_DEFINE_IID(kStyleFontSID, NS_STYLEFONT_SID);
-static NS_DEFINE_IID(kStyleColorSID, NS_STYLECOLOR_SID);
-static NS_DEFINE_IID(kStyleSpacingSID, NS_STYLESPACING_SID);
-
 // Default alignment value (so we can tell an unset value from a set value)
 #define ALIGN_UNSET PRUint8(-1)
 
@@ -118,9 +114,9 @@ NS_METHOD HRuleFrame::Paint(nsIPresContext& aPresContext,
 
   // Get style data
   nsStyleSpacing* spacing =
-    (nsStyleSpacing*)mStyleContext->GetData(kStyleSpacingSID);
+    (nsStyleSpacing*)mStyleContext->GetData(eStyleStruct_Spacing);
   nsStyleColor* color =
-    (nsStyleColor*)mStyleContext->GetData(kStyleColorSID);
+    (nsStyleColor*)mStyleContext->GetData(eStyleStruct_Color);
   nsMargin borderPadding;
   spacing->CalcBorderPaddingFor(this, borderPadding);
   nscoord x0 = borderPadding.left;
@@ -256,7 +252,7 @@ void HRuleFrame::GetDesiredSize(nsIPresContext* aPresContext,
 {
   // Get style data
   nsStyleFont* font =
-    (nsStyleFont*)mStyleContext->GetData(kStyleFontSID);
+    (nsStyleFont*)mStyleContext->GetData(eStyleStruct_Font);
 
   if (aMaxSize.width == NS_UNCONSTRAINEDSIZE) {
     aDesiredSize.width = 1;

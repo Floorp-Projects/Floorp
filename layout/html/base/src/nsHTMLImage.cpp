@@ -41,9 +41,6 @@
 #define BROKEN_IMAGE_URL "resource:/html/broken-image.gif"
 
 static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
-static NS_DEFINE_IID(kStyleColorSID, NS_STYLECOLOR_SID);
-static NS_DEFINE_IID(kStyleDisplaySID, NS_STYLEDISPLAY_SID);
-static NS_DEFINE_IID(kStyleTextSID, NS_STYLETEXT_SID);
 
 class ImageFrame : public nsLeafFrame {
 public:
@@ -462,7 +459,7 @@ ImageFrame::GetCursorAt(nsIPresContext& aPresContext,
   aCursor = NS_STYLE_CURSOR_INHERIT;
 
   nsStyleColor* styleColor = (nsStyleColor*)
-    mStyleContext->GetData(kStyleColorSID);
+    mStyleContext->GetData(eStyleStruct_Color);
   if (styleColor->mCursor != NS_STYLE_CURSOR_INHERIT) {
     // If we have a particular cursor, use it
     *aFrame = this;
@@ -708,9 +705,9 @@ void ImagePart::MapAttributesInto(nsIStyleContext* aContext,
 {
   if (ALIGN_UNSET != mAlign) {
     nsStyleDisplay* display = (nsStyleDisplay*)
-      aContext->GetData(kStyleDisplaySID);
+      aContext->GetData(eStyleStruct_Display);
     nsStyleText* text = (nsStyleText*)
-      aContext->GetData(kStyleTextSID);
+      aContext->GetData(eStyleStruct_Text);
     switch (mAlign) {
     case NS_STYLE_TEXT_ALIGN_LEFT:
       display->mFloats = NS_STYLE_FLOAT_LEFT;

@@ -29,15 +29,6 @@
 
 //#define DEBUG_REFS
 
-static NS_DEFINE_IID(kStyleFontSID, NS_STYLEFONT_SID);
-static NS_DEFINE_IID(kStyleColorSID, NS_STYLECOLOR_SID);
-static NS_DEFINE_IID(kStyleSpacingSID, NS_STYLESPACING_SID);
-static NS_DEFINE_IID(kStyleListSID, NS_STYLELIST_SID);
-static NS_DEFINE_IID(kStylePositionSID, NS_STYLEPOSITION_SID);
-static NS_DEFINE_IID(kStyleTextSID, NS_STYLETEXT_SID);
-static NS_DEFINE_IID(kStyleDisplaySID, NS_STYLEDISPLAY_SID);
-static NS_DEFINE_IID(kStyleTableSID, NS_STYLETABLE_SID);
-
 static NS_DEFINE_IID(kIStyleContextIID, NS_ISTYLECONTEXT_IID);
 
 
@@ -141,7 +132,7 @@ static nscoord CalcSideFor(const nsIFrame* aFrame, const nsStyleCoord& aCoord,
         nsIStyleContext* parentContext;
         parentFrame->GetStyleContext(nsnull, parentContext);
         if (nsnull != parentContext) {
-          nsStyleSpacing* parentSpacing = (nsStyleSpacing*)parentContext->GetData(kStyleSpacingSID);
+          nsStyleSpacing* parentSpacing = (nsStyleSpacing*)parentContext->GetData(eStyleStruct_Spacing);
           nsMargin  parentMargin;
           switch (aSpacing) {
             case NS_SPACING_MARGIN:   parentSpacing->CalcMarginFor(parentFrame, parentMargin);  
@@ -535,7 +526,7 @@ public:
   virtual PRBool    Equals(const nsIStyleContext* aOther) const;
   virtual PRUint32  HashValue(void) const;
 
-  virtual nsStyleStruct* GetData(const nsIID& aSID);
+  virtual nsStyleStruct* GetData(nsStyleStructID aSID);
 
   virtual void InheritFrom(const StyleContextImpl& aParent);
   virtual void RecalcAutomaticData(nsIPresContext* aPresContext);
@@ -708,42 +699,49 @@ PRUint32 StyleContextImpl::HashValue(void) const
 }
 
 
-nsStyleStruct* StyleContextImpl::GetData(const nsIID& aSID)
+nsStyleStruct* StyleContextImpl::GetData(nsStyleStructID aSID)
 {
-  if (aSID.Equals(kStyleFontSID)) {
-    return &mFont;
-  }
-  if (aSID.Equals(kStyleColorSID)) {
-    return &mColor;
-  }
-  if (aSID.Equals(kStyleSpacingSID)) {
-    return &mSpacing;
-  }
-  if (aSID.Equals(kStyleListSID)) {
-    return &mList;
-  }
-  if (aSID.Equals(kStylePositionSID)) {
-    return &mPosition;
-  }
-  if (aSID.Equals(kStyleTextSID)) {
-    return &mText;
-  }
-  if (aSID.Equals(kStyleDisplaySID)) {
-    return &mDisplay;
-  }
-  if (aSID.Equals(kStyleTableSID)) {  // this one gets created lazily
-    if (nsnull == mTable) {
-      mTable = new StyleTableImpl();
-      if (nsnull != mParent) {
-        StyleContextImpl* parent = (StyleContextImpl*)mParent;
-        if (nsnull != parent->mTable) {
-          mTable->InheritFrom(*(parent->mTable));
+  nsStyleStruct*  result = nsnull;
+
+  switch (aSID) {
+    case eStyleStruct_Font:
+      result = &mFont;
+      break;
+    case eStyleStruct_Color:
+      result = &mColor;
+      break;
+    case eStyleStruct_Spacing:
+      result = &mSpacing;
+      break;
+    case eStyleStruct_List:
+      result = &mList;
+      break;
+    case eStyleStruct_Position:
+      result = &mPosition;
+      break;
+    case eStyleStruct_Text:
+      result = &mText;
+      break;
+    case eStyleStruct_Display:
+      result = &mDisplay;
+      break;
+    case eStyleStruct_Table:  // this one gets created lazily
+      if (nsnull == mTable) {
+        mTable = new StyleTableImpl();
+        if (nsnull != mParent) {
+          StyleContextImpl* parent = (StyleContextImpl*)mParent;
+          if (nsnull != parent->mTable) {
+            mTable->InheritFrom(*(parent->mTable));
+          }
         }
       }
-    }
-    return mTable;
+      result = mTable;
+      break;
+    default:
+      NS_ERROR("Invalid style struct id");
+      break;
   }
-  return nsnull;
+  return result;
 }
 
 void StyleContextImpl::InheritFrom(const StyleContextImpl& aParent)

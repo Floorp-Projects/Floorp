@@ -47,9 +47,6 @@
 #include "nsStyleConsts.h"
 #include "nsUnitConversion.h"
 #include "nsCSSLayout.h"
-static NS_DEFINE_IID(kStyleFontSID, NS_STYLEFONT_SID);
-static NS_DEFINE_IID(kStylePositionSID, NS_STYLEPOSITION_SID);
-static NS_DEFINE_IID(kStyleSpacingSID, NS_STYLESPACING_SID);
 
 struct nsInputCallbackData
 {
@@ -439,7 +436,7 @@ nsInputFrame::GetTextSize(nsIPresContext& aPresContext, nsIFrame* aFrame,
   //printf("\n GetTextSize %s", aString.ToNewCString());
   nsIStyleContext* styleContext;
   aFrame->GetStyleContext(&aPresContext, styleContext);
-  nsStyleFont* styleFont = (nsStyleFont*)styleContext->GetData(kStyleFontSID);
+  nsStyleFont* styleFont = (nsStyleFont*)styleContext->GetData(eStyleStruct_Font);
   NS_RELEASE(styleContext);
   nsIDeviceContext* deviceContext = aPresContext.GetDeviceContext();
   nsIFontCache* fontCache = deviceContext->GetFontCache();
@@ -591,7 +588,7 @@ nsInputFrame::CalculateSize (nsIPresContext* aPresContext, nsInputFrame* aFrame,
 nsFont& 
 nsInputFrame::GetFont(nsIPresContext* aPresContext)
 {
-  nsStyleFont* styleFont = (nsStyleFont*)mStyleContext->GetData(kStyleFontSID);
+  nsStyleFont* styleFont = (nsStyleFont*)mStyleContext->GetData(eStyleStruct_Font);
 
   return styleFont->mFont;
 }

@@ -31,10 +31,6 @@ NS_DEF_PTR(nsTableCol);
 NS_DEF_PTR(nsTableCell);
 NS_DEF_PTR(nsIStyleContext);
 
-static NS_DEFINE_IID(kStyleColorSID, NS_STYLECOLOR_SID);
-static NS_DEFINE_IID(kStylePositionSID, NS_STYLEPOSITION_SID);
-static NS_DEFINE_IID(kStyleSpacingSID, NS_STYLESPACING_SID);
-
 
 #ifdef NS_DEBUG
 static PRBool gsDebug = PR_FALSE;
@@ -188,7 +184,7 @@ PRBool BasicTableLayoutStrategy::AssignFixedColumnWidths(nsIPresContext* aPresCo
     nsIStyleContextPtr colSC;
     colFrame->GetStyleContext(aPresContext, colSC.AssignRef());
     nsStylePosition* colPosition = (nsStylePosition*)
-      colSC->GetData(kStylePositionSID);
+      colSC->GetData(eStyleStruct_Position);
 
     // Get column width if it has one
     PRBool haveColWidth = PR_FALSE;
@@ -271,7 +267,7 @@ PRBool BasicTableLayoutStrategy::AssignFixedColumnWidths(nsIPresContext* aPresCo
         nsIStyleContextPtr cellSC;
         cellFrame->GetStyleContext(aPresContext, cellSC.AssignRef());
         nsStylePosition* cellPosition = (nsStylePosition*)
-          cellSC->GetData(kStylePositionSID);
+          cellSC->GetData(eStyleStruct_Position);
         switch (cellPosition->mWidth.GetUnit()) {
         case eStyleUnit_Coord:
           haveCellWidth = PR_TRUE;
@@ -674,7 +670,7 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsConstrained( nsIPresContext* aPre
 #if XXX_bug_kipp_about_this
     // XXX BUG: mStyleContext is for the table frame not for the column.
     nsStyleMolecule* colStyle =
-      (nsStyleMolecule*)mStyleContext->GetData(kStyleMoleculeSID);
+      (nsStyleMolecule*)mStyleContext->GetData(eStyleStruct_Molecule);
 #else
     nsStylePosition* colPosition = nsnull;
 #endif
