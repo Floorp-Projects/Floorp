@@ -440,7 +440,7 @@ if ($action eq 'delete') {
             SendSQL("DELETE FROM attachments WHERE bug_id=$bugid");
             SendSQL("DELETE FROM bugs_activity WHERE bug_id=$bugid");
             SendSQL("DELETE FROM dependencies WHERE blocked=$bugid");
-            PushGlobalSQLState();
+            PopGlobalSQLState();
         }
         print "Attachments, bug activity and dependencies deleted.<BR>\n";
 
