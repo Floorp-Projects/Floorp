@@ -291,6 +291,8 @@ my %authenticatedUsers; # hash of user@hostname=>users who have authenticated
 # Net::IRC handler subroutines #
 ################################
 
+my $lastNick;
+
 # setup connection
 sub connect {
     $uptime = time();
@@ -298,6 +300,8 @@ sub connect {
     &debug("connecting to $server:$port using nick '$nicks[$nick]'...");
 
     my ($bot, $mailed);
+
+    $lastNick = undef;
 
     my $ircname = 'mozbot';
     if ($serverRestrictsIRCNames ne $server) {
@@ -456,7 +460,7 @@ sub on_whois {
     # the bot's host, or whatever
 }
 
-my ($lastNick, $nickFirstTried, $nickHadProblem, $nickProblemEscalated) = (undef, 0, 0, 0);
+my ($nickFirstTried, $nickHadProblem, $nickProblemEscalated) = (0, 0, 0);
 
 # this is called both for the welcome message (001) and by the on_nick handler
 sub on_set_nick {
@@ -2063,8 +2067,9 @@ sub JoinedChannel {
     my $self = shift;
     my ($event, $channel) = @_;
     if ($self->{'autojoin'}) {
-        push(@{$self->{'channels'}}, $channel) unless ((scalar(grep $_ eq $channel, @{$self->{'channels'}})) or
-                                                       (scalar(grep $_ eq $channel, @{$self->{'channelsBlocked'}})));
+        push(@{$self->{'channels'}}, $channel)
+          unless ((scalar(grep $_ eq $channel, @{$self->{'channels'}})) or
+                  (scalar(grep $_ eq $channel, @{$self->{'channelsBlocked'}})));
         $self->saveConfig();
     }
 }
