@@ -21,7 +21,6 @@ MOZ_LIB_UTIL_PREFIX=moz
 ZLIB_LIBS = -lz
 
 BASE_LIBS =          \
-        -lraptorbase \
         -lpref       \
         $(ZLIB_LIBS) \
         -lreg        \
@@ -33,7 +32,6 @@ BASE_LIBS =          \
 
 TOOLKIT_WIDGET_LIB = -lwidgetgtk
 TOOLKIT_GFX_LIB = -lgfxgtk
-TOOLKIT_BASE_LIB = -lgmbasegtk
 
 GECKO_LIBS =                  \
         -lraptorwebwidget     \
@@ -41,7 +39,6 @@ GECKO_LIBS =                  \
         -lraptorgfx           \
         $(TOOLKIT_GFX_LIB)    \
         -lgfxps  \
-        $(TOOLKIT_BASE_LIB)   \
         -lraptorhtmlpars      \
         -lexpat \
         -lxmltok \

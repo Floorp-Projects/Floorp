@@ -96,14 +96,13 @@ MOZ_LIB_UTIL_PREFIX = moz
 
 ZLIB_LIBS = -lz
 
-BASE_LIBS =          -lraptorbase         -lpref               $(ZLIB_LIBS)         -lreg                -l$(MOZ_LIB_JS_PREFIX)js                     -lxpcom              -lsecfree            -l$(MOZ_LIB_UTIL_PREFIX)util            $(NULL)
+BASE_LIBS =          -lpref               $(ZLIB_LIBS)         -lreg                -l$(MOZ_LIB_JS_PREFIX)js                     -lxpcom              -lsecfree            -l$(MOZ_LIB_UTIL_PREFIX)util            $(NULL)
 
 
 TOOLKIT_WIDGET_LIB = -lwidgetgtk
 TOOLKIT_GFX_LIB = -lgfxgtk
-TOOLKIT_BASE_LIB = -lgmbasegtk
 
-GECKO_LIBS =          -lraptorwebwidget             $(TOOLKIT_WIDGET_LIB)         -lraptorgfx                   $(TOOLKIT_GFX_LIB)            -lgfxps          $(TOOLKIT_BASE_LIB)           -lraptorhtmlpars              -lexpat         -lxmltok         -ljsdom                       $(NULL)
+GECKO_LIBS =          -lraptorwebwidget             $(TOOLKIT_WIDGET_LIB)         -lraptorgfx                   $(TOOLKIT_GFX_LIB)            -lgfxps          -lraptorhtmlpars              -lexpat         -lxmltok         -ljsdom                       $(NULL)
 
 
 JPEG_LIBS = -ljpeg
@@ -162,6 +161,8 @@ DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 
 TAR = gtar
 GZIP_ENV = --best
+DEP_FILES =  .deps/GtkMozillaContainer.P .deps/gtkmozilla.P \
+.deps/nsSetupRegistry.P
 SOURCES = $(libgtkmozilla_la_SOURCES)
 OBJECTS = $(libgtkmozilla_la_OBJECTS)
 
@@ -169,9 +170,9 @@ all: all-redirect
 .SUFFIXES:
 .SUFFIXES: .S .c .cpp .lo .o .s
 $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) 
-	cd $(top_srcdir) && $(AUTOMAKE) --gnu --include-deps lib/Makefile
+	cd $(top_srcdir) && $(AUTOMAKE) --gnu lib/Makefile
 
-Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status
+Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status $(BUILT_SOURCES)
 	cd $(top_builddir) \
 	  && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
 
@@ -201,9 +202,6 @@ uninstall-libLTLIBRARIES:
 	  $(LIBTOOL)  --mode=uninstall rm -f $(DESTDIR)$(libdir)/$$p; \
 	done
 
-.c.o:
-	$(COMPILE) -c $<
-
 .s.o:
 	$(COMPILE) -c $<
 
@@ -219,9 +217,6 @@ distclean-compile:
 	-rm -f *.tab.c
 
 maintainer-clean-compile:
-
-.c.lo:
-	$(LIBTOOL) --mode=compile $(COMPILE) -c $<
 
 .s.lo:
 	$(LIBTOOL) --mode=compile $(COMPILE) -c $<
@@ -295,6 +290,11 @@ distdir = $(top_builddir)/$(PACKAGE)-$(VERSION)/$(subdir)
 subdir = lib
 
 distdir: $(DISTFILES)
+	here=`cd $(top_builddir) && pwd`; \
+	top_distdir=`cd $(top_distdir) && pwd`; \
+	distdir=`cd $(distdir) && pwd`; \
+	cd $(top_srcdir) \
+	  && $(AUTOMAKE) --include-deps --build-dir=$$here --srcdir-name=$(top_srcdir) --output-dir=$$top_distdir --gnu lib/Makefile
 	@for file in $(DISTFILES); do \
 	  d=$(srcdir); \
 	  if test -d $$d/$$file; then \
@@ -305,12 +305,57 @@ distdir: $(DISTFILES)
 	    || cp -p $$d/$$file $(distdir)/$$file || :; \
 	  fi; \
 	done
-GtkMozillaContainer.lo GtkMozillaContainer.o : GtkMozillaContainer.cpp \
-	GtkMozillaContainer.h gtkmozilla.h
-gtkmozilla.lo gtkmozilla.o : gtkmozilla.cpp gtkmozilla.h \
-	GtkMozillaContainer.h
-nsSetupRegistry.lo nsSetupRegistry.o : nsSetupRegistry.cpp
 
+DEPS_MAGIC := $(shell mkdir .deps > /dev/null 2>&1 || :)
+
+-include $(DEP_FILES)
+
+mostlyclean-depend:
+
+clean-depend:
+
+distclean-depend:
+	-rm -rf .deps
+
+maintainer-clean-depend:
+
+%.o: %.c
+	@echo '$(COMPILE) -c $<'; \
+	$(COMPILE) -Wp,-MD,.deps/$(*F).pp -c $<
+	@-cp .deps/$(*F).pp .deps/$(*F).P; \
+	tr ' ' '\012' < .deps/$(*F).pp \
+	  | sed -e 's/^\\$$//' -e '/^$$/ d' -e '/:$$/ d' -e 's/$$/ :/' \
+	    >> .deps/$(*F).P; \
+	rm .deps/$(*F).pp
+
+%.lo: %.c
+	@echo '$(LTCOMPILE) -c $<'; \
+	$(LTCOMPILE) -Wp,-MD,.deps/$(*F).pp -c $<
+	@-sed -e 's/^\([^:]*\)\.o[ 	]*:/\1.lo \1.o :/' \
+	  < .deps/$(*F).pp > .deps/$(*F).P; \
+	tr ' ' '\012' < .deps/$(*F).pp \
+	  | sed -e 's/^\\$$//' -e '/^$$/ d' -e '/:$$/ d' -e 's/$$/ :/' \
+	    >> .deps/$(*F).P; \
+	rm -f .deps/$(*F).pp
+
+%.o: %.cpp
+	@echo '$(CXXCOMPILE) -c $<'; \
+	$(CXXCOMPILE) -Wp,-MD,.deps/$(*F).pp -c $<
+	@-cp .deps/$(*F).pp .deps/$(*F).P; \
+	tr ' ' '\012' < .deps/$(*F).pp \
+	  | sed -e 's/^\\$$//' -e '/^$$/ d' -e '/:$$/ d' -e 's/$$/ :/' \
+	    >> .deps/$(*F).P; \
+	rm .deps/$(*F).pp
+
+%.lo: %.cpp
+	@echo '$(LTCXXCOMPILE) -c $<'; \
+	$(LTCXXCOMPILE) -Wp,-MD,.deps/$(*F).pp -c $<
+	@-sed -e 's/^\([^:]*\)\.o[ 	]*:/\1.lo \1.o :/' \
+	  < .deps/$(*F).pp > .deps/$(*F).P; \
+	tr ' ' '\012' < .deps/$(*F).pp \
+	  | sed -e 's/^\\$$//' -e '/^$$/ d' -e '/:$$/ d' -e 's/$$/ :/' \
+	    >> .deps/$(*F).P; \
+	rm -f .deps/$(*F).pp
 info-am:
 info: info-am
 dvi-am:
@@ -348,27 +393,27 @@ distclean-generic:
 
 maintainer-clean-generic:
 mostlyclean-am:  mostlyclean-libLTLIBRARIES mostlyclean-compile \
-		mostlyclean-libtool mostlyclean-tags \
+		mostlyclean-libtool mostlyclean-tags mostlyclean-depend \
 		mostlyclean-generic
 
 mostlyclean: mostlyclean-am
 
 clean-am:  clean-libLTLIBRARIES clean-compile clean-libtool clean-tags \
-		clean-generic mostlyclean-am
+		clean-depend clean-generic mostlyclean-am
 
 clean: clean-am
 
 distclean-am:  distclean-libLTLIBRARIES distclean-compile \
-		distclean-libtool distclean-tags distclean-generic \
-		clean-am
+		distclean-libtool distclean-tags distclean-depend \
+		distclean-generic clean-am
 	-rm -f libtool
 
 distclean: distclean-am
 
 maintainer-clean-am:  maintainer-clean-libLTLIBRARIES \
 		maintainer-clean-compile maintainer-clean-libtool \
-		maintainer-clean-tags maintainer-clean-generic \
-		distclean-am
+		maintainer-clean-tags maintainer-clean-depend \
+		maintainer-clean-generic distclean-am
 	@echo "This command is intended for maintainers to use;"
 	@echo "it deletes files that may require special tools to rebuild."
 
@@ -381,8 +426,9 @@ distclean-compile clean-compile maintainer-clean-compile \
 mostlyclean-libtool distclean-libtool clean-libtool \
 maintainer-clean-libtool uninstall-includeHEADERS \
 install-includeHEADERS tags mostlyclean-tags distclean-tags clean-tags \
-maintainer-clean-tags distdir info-am info dvi-am dvi check check-am \
-installcheck-am installcheck install-exec-am install-exec \
+maintainer-clean-tags distdir mostlyclean-depend distclean-depend \
+clean-depend maintainer-clean-depend info-am info dvi-am dvi check \
+check-am installcheck-am installcheck install-exec-am install-exec \
 install-data-am install-data install-am install uninstall-am uninstall \
 all-redirect all-am all installdirs mostlyclean-generic \
 distclean-generic clean-generic maintainer-clean-generic clean \

@@ -19,7 +19,7 @@
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
 #include "nsINetService.h"
-#include "nsXPComCIID.h"
+//#include "nsXPComCIID.h"
 
 static NS_DEFINE_IID(kIEventQueueServiceIID,
                      NS_IEVENTQUEUESERVICE_IID);
