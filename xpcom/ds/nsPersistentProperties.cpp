@@ -186,7 +186,15 @@ nsPersistentProperties::Load(nsIInputStream *aIn)
              switch(c) {
                case '\r':
                case '\n':
-                 c = SkipWhiteSpace(c);
+                 // Only skip first EOL characters and then next line's
+                 // whitespace characters. Skipping all EOL characters
+                 // and all upcoming whitespace is too agressive.
+                 if (c == '\r')
+                    c = Read();
+                 if (c == '\n')
+                    c = Read();
+                 while (c == ' ' || c == '\t')
+                    c = Read();
                  continue;
                case 'u':
                case 'U':
@@ -375,7 +383,7 @@ nsPersistentProperties::Read()
 PRInt32
 nsPersistentProperties::SkipWhiteSpace(PRInt32 c)
 {
-  while ((c >= 0) && IS_WHITE_SPACE(c)) {
+  while (IS_WHITE_SPACE(c)) {
     c = Read();
   }
 
