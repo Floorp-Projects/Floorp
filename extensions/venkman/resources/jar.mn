@@ -14,6 +14,7 @@ venkman.jar:
   content/venkman/venkman-msg.js        (content/venkman-msg.js)
   content/venkman/venkman-munger.js     (content/venkman-munger.js)
   content/venkman/venkman-outliners.js  (content/venkman-outliners.js)
+  content/venkman/outliner-utils.js     (content/outliner-utils.js)
   content/venkman/html-consts.js        (content/html-consts.js)
   content/venkman/command-manager.js    (content/command-manager.js)
   content/venkman/tests/testpage.html   (content/tests/testpage.html)
