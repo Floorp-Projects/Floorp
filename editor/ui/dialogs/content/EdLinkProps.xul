@@ -30,7 +30,7 @@
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/EditorLinkProperties.dtd">
 
-<dialog title="&windowTitle.label;"
+<dialog id="linkDlg" title="&windowTitle.label;"
    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    buttons="accept,cancel,help"
    onload = "Startup()"

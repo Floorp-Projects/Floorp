@@ -169,14 +169,14 @@ function InitDialog()
                     gInsertNewImage ? null : imageElement,
                     "height", "heightUnitsMenulist", gPixel);
 
+  var rg = gDialog.actualSizeRadio.radioGroup;
   // Set actual radio button if both set values are the same as actual
-  if (actualWidth && actualHeight)
-    gDialog.actualSizeRadio.checked = (width == actualWidth) && (height == actualHeight);
-  else if ( !(width || height) )
-    gDialog.actualSizeRadio.checked = true;
-
-  if (!gDialog.actualSizeRadio.checked)
-    gDialog.customSizeRadio.checked = true;
+  if (actualWidth && actualHeight) {
+    if ((width == actualWidth && height == actualHeight) || !(width || height))
+      rg.selectedItem = gDialog.actualSizeRadio;
+  }
+  if (!gDialog.actualSizeRadio.selected)
+    rg.selectedItem = gDialog.customSizeRadio;
 
   gDialog.widthInput.value  = constrainWidth = width ? width : (actualWidth ? actualWidth : "");
   gDialog.heightInput.value = constrainHeight = height ? height : (actualHeight ? actualHeight : "");
@@ -293,7 +293,7 @@ function PreviewImageLoaded()
       // Use values as start for constrain proportions
     }
 
-    if (gDialog.actualSizeRadio.checked)
+    if (gDialog.actualSizeRadio.selected)
       SetActualSize();
   }
 }
@@ -369,7 +369,7 @@ function ChangeImageSrc()
 
 function doDimensionEnabling()
 {
-  // Enabled only if "Custom" is checked
+  // Enabled only if "Custom" is selected
   var enable = (gDialog.customSizeRadio.selected);
 
   // BUG 74145: After input field is disabled,
@@ -400,7 +400,10 @@ function doOverallEnabling()
 
   wasEnableAll = canEnableOk;
 
-  SetElementEnabledById("ok", canEnableOk );
+  // anon. content, so can't use SetElementEnabledById here
+  var dialogNode = document.getElementById("imageDlg");
+  dialogNode.getButton("accept").disabled = !canEnableOk;
+
   SetElementEnabledById("AdvancedEditButton1", canEnableOk );
   SetElementEnabledById( "imagemapLabel",  canEnableOk );
   //TODO: Restore when Image Map editor is finished
@@ -512,7 +515,7 @@ function ValidateData()
   var width = "";
   var height = "";
 
-  if (!gDialog.actualSizeRadio.checked)
+  if (!gDialog.actualSizeRadio.selected)
   {
     // Get user values for width and height
     width = ValidateNumber(gDialog.widthInput, gDialog.widthUnitsMenulist, 1, maxPixels, 

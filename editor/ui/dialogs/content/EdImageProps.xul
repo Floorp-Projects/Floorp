@@ -34,7 +34,7 @@
 
 
 <!-- dialog containing a control requiring initial setup -->
-<dialog title="&windowTitle.label;"
+<dialog id="imageDlg" title="&windowTitle.label;"
     xmlns ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     onload = "Startup()"
     buttons="accept,cancel,help"
