@@ -322,7 +322,6 @@ netwerk/protocol/ftp/src/Makefile
 netwerk/protocol/http/Makefile
 netwerk/protocol/http/public/Makefile
 netwerk/protocol/http/src/Makefile
-netwerk/protocol/http/res/Makefile
 netwerk/protocol/jar/Makefile
 netwerk/protocol/jar/public/Makefile
 netwerk/protocol/jar/src/Makefile
