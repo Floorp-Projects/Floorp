@@ -32,7 +32,7 @@ interface nsICacheListener;
 
 
 [scriptable, uuid(49c1a11d-f5d2-4f09-8262-551e64908ada)]
-interface nsICacheEntryDescriptor : nsITransport
+interface nsICacheEntryDescriptor : nsISupports
 {
     /**
      * attributes from cache entry
@@ -45,13 +45,22 @@ interface nsICacheEntryDescriptor : nsITransport
 
     attribute PRTime  expirationTime;
 
+    attribute unsigned long  dataSize;
+
+
     /**
      *  Indicate whether the cached data is a stream or object.
      */
     boolean  isStreamBased();
 
     /**
-     * For accessing non-persistent cached objects
+     *  If the cache entry is a stream, a transport can be requested.
+     */
+    readonly attribute nsITransport  transport;
+
+    /**
+     * If the cache entry is not a stream, you can request the non-persistent
+     * cached object.
      */
     attribute nsISupports  cacheElement;
      
@@ -84,6 +93,6 @@ interface nsICacheEntryDescriptor : nsITransport
     string  getMetaDataElement(in string  key);
     void    setMetadataElement(in string  key, in string  value);
     
-    nsISimpleEnumerator  getMetaDataEnumerator();
+    nsISimpleEnumerator  getMetaDataEnumerator(); /* todo */
 };
 
