@@ -162,6 +162,8 @@ js_DestroyContext(JSContext *cx, JSGCMode gcmode)
     JSRuntime *rt;
     JSBool last;
     JSArgumentFormatMap *map;
+    JSLocalRootStack *lrs;
+    JSLocalRootChunk *lrc;
 
     rt = cx->runtime;
 
@@ -275,6 +277,15 @@ js_DestroyContext(JSContext *cx, JSGCMode gcmode)
         cx->resolvingTable = NULL;
     }
 
+    lrs = cx->localRootStack;
+    if (lrs) {
+        while ((lrc = lrs->topChunk) != &lrs->firstChunk) {
+            lrs->topChunk = lrc->down;
+            JS_free(cx, lrc);
+        }
+        JS_free(cx, lrs);
+    }
+
     /* Finally, free cx itself. */
     free(cx);
 }
@@ -308,6 +319,319 @@ js_ContextIterator(JSRuntime *rt, JSBool unlocked, JSContext **iterp)
     if (unlocked)
         JS_UNLOCK_GC(rt);
     return cx;
+}
+
+JS_STATIC_DLL_CALLBACK(const void *)
+resolving_GetKey(JSDHashTable *table, JSDHashEntryHdr *hdr)
+{
+    JSResolvingEntry *entry = (JSResolvingEntry *)hdr;
+
+    return &entry->key;
+}
+
+JS_STATIC_DLL_CALLBACK(JSDHashNumber)
+resolving_HashKey(JSDHashTable *table, const void *ptr)
+{
+    const JSResolvingKey *key = (const JSResolvingKey *)ptr;
+
+    return ((JSDHashNumber)key->obj >> JSVAL_TAGBITS) ^ key->id;
+}
+
+JS_PUBLIC_API(JSBool)
+resolving_MatchEntry(JSDHashTable *table,
+                     const JSDHashEntryHdr *hdr,
+                     const void *ptr)
+{
+    const JSResolvingEntry *entry = (const JSResolvingEntry *)hdr;
+    const JSResolvingKey *key = (const JSResolvingKey *)ptr;
+
+    return entry->key.obj == key->obj && entry->key.id == key->id;
+}
+
+static const JSDHashTableOps resolving_dhash_ops = {
+    JS_DHashAllocTable,
+    JS_DHashFreeTable,
+    resolving_GetKey,
+    resolving_HashKey,
+    resolving_MatchEntry,
+    JS_DHashMoveEntryStub,
+    JS_DHashClearEntryStub,
+    JS_DHashFinalizeStub,
+    NULL
+};
+
+JSBool
+js_StartResolving(JSContext *cx, JSResolvingKey *key, uint32 flag,
+                  JSResolvingEntry **entryp)
+{
+    JSDHashTable *table;
+    JSResolvingEntry *entry;
+
+    table = cx->resolvingTable;
+    if (!table) {
+        table = JS_NewDHashTable(&resolving_dhash_ops, NULL,
+                                 sizeof(JSResolvingEntry),
+                                 JS_DHASH_MIN_SIZE);
+        if (!table)
+            goto outofmem;
+        cx->resolvingTable = table;
+    }
+
+    entry = (JSResolvingEntry *)
+            JS_DHashTableOperate(table, key, JS_DHASH_ADD);
+    if (!entry)
+        goto outofmem;
+
+    if (entry->flags & flag) {
+        /* An entry for (key, flag) exists already -- dampen recursion. */
+        entry = NULL;
+    } else {
+        /* Fill in key if we were the first to add entry, then set flag. */
+        if (!entry->key.obj)
+            entry->key = *key;
+        entry->flags |= flag;
+    }
+    *entryp = entry;
+    return JS_TRUE;
+
+outofmem:
+    JS_ReportOutOfMemory(cx);
+    return JS_FALSE;
+}
+
+void
+js_StopResolving(JSContext *cx, JSResolvingKey *key, uint32 flag,
+                 JSResolvingEntry *entry, uint32 generation)
+{
+    JSDHashTable *table;
+
+    /*
+     * Clear flag from entry->flags and return early if other flags remain.
+     * We must take care to re-lookup entry if the table has changed since
+     * it was found by js_StartResolving.
+     */
+    table = cx->resolvingTable;
+    if (!entry || table->generation != generation) {
+        entry = (JSResolvingEntry *)
+                JS_DHashTableOperate(table, key, JS_DHASH_LOOKUP);
+    }
+    JS_ASSERT(JS_DHASH_ENTRY_IS_BUSY(&entry->hdr));
+    entry->flags &= ~flag;
+    if (entry->flags)
+        return;
+
+    /*
+     * Do a raw remove only if fewer entries were removed than would cause
+     * alpha to be less than .5 (alpha is at most .75).  Otherwise, we just
+     * call JS_DHashTableOperate to re-lookup the key and remove its entry,
+     * compressing or shrinking the table as needed.
+     */
+    if (table->removedCount < JS_DHASH_TABLE_SIZE(table) >> 2)
+        JS_DHashTableRawRemove(table, &entry->hdr);
+    else
+        JS_DHashTableOperate(table, key, JS_DHASH_REMOVE);
+}
+
+JSBool
+js_EnterLocalRootScope(JSContext *cx)
+{
+    JSLocalRootStack *lrs;
+    int mark;
+
+    lrs = cx->localRootStack;
+    if (!lrs) {
+        lrs = (JSLocalRootStack *) JS_malloc(cx, sizeof *lrs);
+        if (!lrs)
+            return JS_FALSE;
+        lrs->scopeMark = JSLRS_NULL_MARK;
+        lrs->rootCount = 0;
+        lrs->topChunk = &lrs->firstChunk;
+        lrs->firstChunk.down = NULL;
+        cx->localRootStack = lrs;
+    }
+
+    /* Push lrs->scopeMark to save it for restore when leaving. */
+    mark = js_PushLocalRoot(cx, lrs, INT_TO_JSVAL(lrs->scopeMark));
+    if (mark < 0)
+        return JS_FALSE;
+    lrs->scopeMark = (uint16) mark;
+    return JS_TRUE;
+}
+
+void
+js_LeaveLocalRootScope(JSContext *cx)
+{
+    JSLocalRootStack *lrs;
+    unsigned mark, m, n;
+    JSLocalRootChunk *lrc;
+
+    /* Defend against buggy native callers. */
+    lrs = cx->localRootStack;
+    JS_ASSERT(lrs && lrs->rootCount != 0);
+    if (!lrs || lrs->rootCount == 0)
+        return;
+
+    mark = lrs->scopeMark;
+    JS_ASSERT(mark != JSLRS_NULL_MARK);
+    if (mark == JSLRS_NULL_MARK)
+        return;
+
+    /* Free any chunks being popped by this leave operation. */
+    m = mark >> JSLRS_CHUNK_SHIFT;
+    n = (lrs->rootCount - 1) >> JSLRS_CHUNK_SHIFT;
+    while (n > m) {
+        lrc = lrs->topChunk;
+        JS_ASSERT(lrc != &lrs->firstChunk);
+        lrs->topChunk = lrc->down;
+        JS_free(cx, lrc);
+        --n;
+    }
+
+    /* Pop the scope, restoring lrs->scopeMark. */
+    lrc = lrs->topChunk;
+    m = mark & JSLRS_CHUNK_MASK;
+    lrs->scopeMark = JSVAL_TO_INT(lrc->roots[m]);
+    lrc->roots[m] = JSVAL_NULL;
+    lrs->rootCount = (uint16) mark;
+
+    /*
+     * Free the stack eagerly, risking malloc churn.  The alternative would
+     * require an lrs->entryCount member, maintained by Enter and Leave, and
+     * tested by the GC in addition to the cx->localRootStack non-null test.
+     *
+     * That approach would risk hoarding 264 bytes (net) per context.  Right
+     * now it seems better to give fresh (dirty in CPU write-back cache, and
+     * the data is no longer needed) memory back to the malloc heap.
+     */
+    if (mark == 0) {
+        cx->localRootStack = NULL;
+        JS_free(cx, lrs);
+    } else if (m == 0) {
+        lrs->topChunk = lrc->down;
+        JS_free(cx, lrc);
+    }
+}
+
+void
+js_ForgetLocalRoot(JSContext *cx, jsval v)
+{
+    JSLocalRootStack *lrs;
+    unsigned i, j, m, n, mark;
+    JSLocalRootChunk *lrc, *lrc2;
+    jsval top;
+
+    lrs = cx->localRootStack;
+    JS_ASSERT(lrs && lrs->rootCount);
+    if (!lrs || lrs->rootCount == 0)
+        return;
+
+    /* Prepare to pop the top-most value from the stack. */
+    n = lrs->rootCount - 1;
+    m = n & JSLRS_CHUNK_MASK;
+    lrc = lrs->topChunk;
+    top = lrc->roots[m];
+
+    /* Be paranoid about calls on an empty scope. */
+    mark = lrs->scopeMark;
+    JS_ASSERT(mark < n);
+    if (mark >= n)
+        return;
+
+    /* If v was not the last root pushed in the top scope, find it. */
+    if (top != v) {
+        /* Search downward in case v was recently pushed. */
+        i = n;
+        j = m;
+        lrc2 = lrc;
+        while (--i > mark) {
+            if (j == 0)
+                lrc2 = lrc2->down;
+            j = i & JSLRS_CHUNK_MASK;
+            if (lrc2->roots[j] == v)
+                break;
+        }
+
+        /* If we didn't find v in this scope, assert and bail out. */
+        JS_ASSERT(i != mark);
+        if (i == mark)
+            return;
+
+        /* Swap top and v so common tail code can pop v. */
+        lrc2->roots[j] = top;
+    }
+
+    /* Pop the last value from the stack. */
+    lrc->roots[m] = JSVAL_NULL;
+    lrs->rootCount = n;
+    if (m == 0) {
+        JS_ASSERT(n != 0);
+        JS_ASSERT(lrc != &lrs->firstChunk);
+        lrs->topChunk = lrc->down;
+        JS_free(cx, lrc);
+    }
+}
+
+int
+js_PushLocalRoot(JSContext *cx, JSLocalRootStack *lrs, jsval v)
+{
+    unsigned n, m;
+    JSLocalRootChunk *lrc;
+
+    n = lrs->rootCount;
+    m = n & JSLRS_CHUNK_MASK;
+    if (n == 0 || m != 0) {
+        /*
+         * At start of first chunk, or not at start of a non-first top chunk.
+         * Check for lrs->rootCount overflow.
+         */
+        if ((uint16)(n + 1) == 0) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                 JSMSG_TOO_MANY_LOCAL_ROOTS);
+            return -1;
+        }
+        lrc = lrs->topChunk;
+        JS_ASSERT(n != 0 || lrc == &lrs->firstChunk);
+    } else {
+        /*
+         * After lrs->firstChunk, trying to index at a power-of-two chunk
+         * boundary: need a new chunk.
+         */
+        lrc = (JSLocalRootChunk *) JS_malloc(cx, sizeof *lrc);
+        if (!lrc)
+            return -1;
+        lrc->down = lrs->topChunk;
+        lrs->topChunk = lrc;
+    }
+    lrs->rootCount = n + 1;
+    lrc->roots[m] = v;
+    return (int) m;
+}
+
+void
+js_MarkLocalRoots(JSContext *cx, JSLocalRootStack *lrs)
+{
+    unsigned n, m, mark;
+    JSLocalRootChunk *lrc;
+
+    n = lrs->rootCount;
+    if (n == 0)
+        return;
+
+    mark = lrs->scopeMark;
+    lrc = lrs->topChunk;
+    while (--n > mark) {
+#ifdef GC_MARK_DEBUG
+        char name[22];
+        JS_snprintf(name, sizeof name, "<local root %u>", n);
+#else
+        const char *name = NULL;
+#endif
+        m = n & JSLRS_CHUNK_MASK;
+        JS_ASSERT(JSVAL_IS_GCTHING(lrc->roots[m]));
+        JS_MarkGCThing(cx, JSVAL_TO_GCTHING(lrc->roots[m]), name, NULL);
+        if (m == 0)
+            lrc = lrc->down;
+    }
 }
 
 static void

@@ -1180,7 +1180,6 @@ have_fun:
     frame.sharpDepth = 0;
     frame.sharpArray = NULL;
     frame.dormantNext = NULL;
-    frame.objAtomMap = NULL;
 
     /* Compute the 'this' parameter and store it in frame as frame.thisp. */
     ok = ComputeThis(cx, thisp, &frame);
@@ -1479,7 +1478,6 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
     frame.sharpDepth = 0;
     frame.flags = flags;
     frame.dormantNext = NULL;
-    frame.objAtomMap = NULL;
 
     /*
      * Here we wrap the call to js_Interpret with code to (conditionally)

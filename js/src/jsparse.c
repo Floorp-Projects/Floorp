@@ -945,9 +945,11 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
         op = JSOP_NOP;
 
     /*
-     * Pending a better automatic GC root management scheme (see Mozilla bug
-     * 40757, http://bugzilla.mozilla.org/show_bug.cgi?id=40757), we need to
-     * atomize here to protect against a GC activation.
+     * Absent use of the new scoped local GC roots API around compiler calls,
+     * we need to atomize here to protect against a GC activation.  Atoms are
+     * protected from GC during compilation by the JS_FRIEND_API entry points
+     * in this file.  There doesn't seem to be any gain in switching from the
+     * atom-keeping method to the bulkier, slower scoped local roots method.
      */
     pn->pn_funAtom = js_AtomizeObject(cx, fun->object, 0);
     if (!pn->pn_funAtom)

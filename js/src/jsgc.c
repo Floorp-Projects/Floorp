@@ -458,6 +458,7 @@ js_AllocGCThing(JSContext *cx, uintN flags)
     JSRuntime *rt;
     JSGCThing *thing;
     uint8 *flagp;
+    JSLocalRootStack *lrs;
 
 #ifdef TOO_MUCH_GC
     js_GC(cx, GC_KEEP_ATOMS);
@@ -531,18 +532,35 @@ retry:
                 METER(rt->gcStats.retry++);
                 goto retry;
             }
-            METER(rt->gcStats.fail++);
-            JS_UNLOCK_GC(rt);
-            JS_ReportOutOfMemory(cx);
-            return NULL;
+            goto fail;
         }
 
         /* Find the flags pointer given thing's address. */
         flagp = js_GetGCThingFlags(thing);
     }
+
+    lrs = cx->localRootStack;
+    if (lrs) {
+        /*
+         * If we're in a local root scope, don't set cx->newborn[type] at all,
+         * to avoid entraining garbage from it for an unbounded amount of time
+         * on this context.  A caller will leave the local root scope and pop
+         * this reference, allowing thing to be GC'd if it has no other refs.
+         * See JS_EnterLocalRootScope and related APIs.
+         */
+        if (js_PushLocalRoot(cx, lrs, (jsval) thing) < 0)
+            goto fail;
+    } else {
+        /*
+         * No local root scope, so we're stuck with the old, fragile model of
+         * depending on a pigeon-hole newborn per type per context.
+         */
+        cx->newborn[flags & GCF_TYPEMASK] = thing;
+    }
+
+    /* We can't fail now, so update flags and rt->gcBytes. */
     *flagp = (uint8)flags;
     rt->gcBytes += sizeof(JSGCThing) + sizeof(uint8);
-    cx->newborn[flags & GCF_TYPEMASK] = thing;
 
     /*
      * Clear thing before unlocking in case a GC run is about to scan it,
@@ -552,6 +570,12 @@ retry:
     thing->flagp = NULL;
     JS_UNLOCK_GC(rt);
     return thing;
+
+fail:
+    METER(rt->gcStats.fail++);
+    JS_UNLOCK_GC(rt);
+    JS_ReportOutOfMemory(cx);
+    return NULL;
 }
 
 JSBool
@@ -584,7 +608,7 @@ js_LockGCThingRT(JSRuntime *rt, void *thing)
             /* Objects may require "deep locking", i.e., rooting by value. */
             if (lockbits == 0) {
                 if (!rt->gcLocksHash) {
-                    rt->gcLocksHash = 
+                    rt->gcLocksHash =
                         JS_NewDHashTable(JS_DHashGetStubOps(), NULL,
                                          sizeof(JSGCLockHashEntry),
                                          GC_ROOTS_SIZE);
@@ -592,7 +616,7 @@ js_LockGCThingRT(JSRuntime *rt, void *thing)
                         goto error;
                 } else {
 #ifdef DEBUG
-                    JSDHashEntryHdr *hdr = 
+                    JSDHashEntryHdr *hdr =
                         JS_DHashTableOperate(rt->gcLocksHash, thing,
                                              JS_DHASH_LOOKUP);
                     JS_ASSERT(JS_DHASH_ENTRY_IS_FREE(hdr));
@@ -1243,18 +1267,6 @@ restart:
                 GC_MARK(cx, fp->scopeChain, "scope chain", NULL);
                 if (fp->sharpArray)
                     GC_MARK(cx, fp->sharpArray, "sharp array", NULL);
-
-                if (fp->objAtomMap) {
-                    JSAtom **vector, *atom;
-
-                    nslots = fp->objAtomMap->length;
-                    vector = fp->objAtomMap->vector;
-                    for (i = 0; i < nslots; i++) {
-                        atom = vector[i];
-                        if (atom)
-                            GC_MARK_ATOM(cx, atom, NULL);
-                    }
-                }
             } while ((fp = fp->down) != NULL);
         }
 
@@ -1287,6 +1299,9 @@ restart:
             METER(rt->gcStats.segslots += sh->nslots);
             GC_MARK_JSVALS(cx, sh->nslots, JS_STACK_SEGMENT(sh), "stack");
         }
+
+        if (acx->localRootStack)
+            js_MarkLocalRoots(cx, acx->localRootStack);
     }
 #ifdef DUMP_CALL_TABLE
     js_DumpCallTable(cx);
