@@ -47,6 +47,8 @@
 // be callable from JavaScript
 //
 #include "plugin.h"
+#include "acmeIScriptObject.h"
+#include "npapi.h"
 
 static NS_DEFINE_IID(kI4xScriptablePluginIID, NS_I4XSCRIPTABLEPLUGIN_IID);
 static NS_DEFINE_IID(kIClassInfoIID, NS_ICLASSINFO_IID);
@@ -54,8 +56,9 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 nsScriptablePeer::nsScriptablePeer(CPlugin* aPlugin)
 {
-  mPlugin = aPlugin;
   mRefCnt = 0;
+  mPlugin = aPlugin;
+  mWindow = nsnull;
 }
 
 nsScriptablePeer::~nsScriptablePeer()
@@ -131,5 +134,35 @@ NS_IMETHODIMP nsScriptablePeer::GetVersion(char * *aVersion)
 {
   if (mPlugin)
     mPlugin->getVersion(aVersion);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsScriptablePeer::SetWindow(acmeIScriptObject *window)
+{
+  NS_IF_ADDREF(window);
+  NS_IF_RELEASE(mWindow);
+  mWindow = window;
+  
+  // evaluate a JavaScript expression.
+  acmeIScriptObject* result;
+  nsresult rv = window->Evaluate("Math.PI", &result);
+  if (NS_SUCCEEDED(rv) && result) {
+      double value;
+      result->ToNumber(&value);
+      NS_RELEASE(result);
+  }
+
+  // read the current window's location.
+  acmeIScriptObject* location = nsnull;
+  rv = window->GetProperty("location", &location);
+  if (NS_SUCCEEDED(rv) && location) {
+    char* locationStr = NULL;
+    rv = location->ToString(&locationStr);
+    if (NS_SUCCEEDED(rv) && locationStr) {
+      NPN_MemFree(locationStr);
+    }
+    NS_RELEASE(location);
+  }
+  
   return NS_OK;
 }
