@@ -59,6 +59,7 @@ enum {FORWARD  =1, BACKWARD = 0};
 #define DEBUG_OUT_RANGE(x)  
 #endif //MOZ_DEBUG
 
+//#define DEBUG_SELECTION // uncomment for printf describing every collapse and extend.
 
 class nsRangeListIterator;
 
@@ -1200,6 +1201,19 @@ nsRangeList::Collapse(nsIDOMNode* aParentNode, PRInt32 aOffset)
   setAnchor(aParentNode, aOffset);
   setFocus(aParentNode, aOffset);
 
+#ifdef DEBUG_SELECTION
+  nsCOMPtr<nsIContent>content;
+  content = do_QueryInterface(aParentNode);
+  nsIAtom *tag;
+  content->GetTag(tag);
+  nsString tagString;
+  tag->ToString(tagString);
+  char * tagCString = tagString.ToNewCString();
+  printf ("Sel. Collapse to %p %s %d\n", content, tagCString, aOffset);
+  delete [] tagCString;
+#endif
+
+
   result = AddItem(range);
   if (NS_FAILED(result))
     return result;
@@ -1300,6 +1314,17 @@ nsRangeList::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
         setFocus(aParentNode, aOffset);
 
       if (NS_FAILED(res)) return res;
+#ifdef DEBUG_SELECTION
+  nsCOMPtr<nsIContent>content;
+  content = do_QueryInterface(aParentNode);
+  nsIAtom *tag;
+  content->GetTag(tag);
+  nsString tagString;
+  tag->ToString(tagString);
+  char * tagCString = tagString.ToNewCString();
+  printf ("Sel. Extend to %p %s %d\n", content, tagCString, aOffset);
+  delete [] tagCString;
+#endif
       return NotifySelectionListeners();
     }
     
@@ -1316,6 +1341,17 @@ nsRangeList::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
         setFocus(aParentNode, aOffset);
 
       if (NS_FAILED(res)) return res;
+#ifdef DEBUG_SELECTION
+  nsCOMPtr<nsIContent>content;
+  content = do_QueryInterface(aParentNode);
+  nsIAtom *tag;
+  content->GetTag(tag);
+  nsString tagString;
+  tag->ToString(tagString);
+  char * tagCString = tagString.ToNewCString();
+  printf ("Sel. Extend to %p %s %d\n", content, tagCString, aOffset);
+  delete [] tagCString;
+#endif
       return NotifySelectionListeners();
     }
   }
