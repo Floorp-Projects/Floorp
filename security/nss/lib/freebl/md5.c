@@ -207,7 +207,6 @@
 struct MD5ContextStr {
 	PRUint32      lsbInput;
 	PRUint32      msbInput;
-	PRUint32      inBufIndex;
 	PRUint32      cv[4];
 	union {
 		PRUint8 b[64];
@@ -263,7 +262,6 @@ MD5_Begin(MD5Context *cx)
 {
 	cx->lsbInput = 0;
 	cx->msbInput = 0;
-	cx->inBufIndex = 0;
 	memset(cx->inBuf, 0, sizeof(cx->inBuf));
 	cx->cv[0] = CV0_1;
 	cx->cv[1] = CV0_2;
@@ -325,8 +323,22 @@ md5_compress(MD5Context *cx)
 	c = cx->cv[2];
 	d = cx->cv[3];
 #ifndef IS_LITTLE_ENDIAN
-	for (i=0; i<16; ++i)
-		cx->u.w[i] = lendian(cx->u.w[i]);
+	cx->u.w[0] = lendian(cx->u.w[0]);
+	cx->u.w[1] = lendian(cx->u.w[1]);
+	cx->u.w[2] = lendian(cx->u.w[2]);
+	cx->u.w[3] = lendian(cx->u.w[3]);
+	cx->u.w[4] = lendian(cx->u.w[4]);
+	cx->u.w[5] = lendian(cx->u.w[5]);
+	cx->u.w[6] = lendian(cx->u.w[6]);
+	cx->u.w[7] = lendian(cx->u.w[7]);
+	cx->u.w[8] = lendian(cx->u.w[8]);
+	cx->u.w[9] = lendian(cx->u.w[9]);
+	cx->u.w[10] = lendian(cx->u.w[10]);
+	cx->u.w[11] = lendian(cx->u.w[11]);
+	cx->u.w[12] = lendian(cx->u.w[12]);
+	cx->u.w[13] = lendian(cx->u.w[13]);
+	cx->u.w[14] = lendian(cx->u.w[14]);
+	cx->u.w[15] = lendian(cx->u.w[15]);
 #endif
 	FF(a, b, c, d, cx->u.w[R1B0 ], S1_0, T1_0);
 	FF(d, a, b, c, cx->u.w[R1B1 ], S1_1, T1_1);
@@ -396,21 +408,21 @@ md5_compress(MD5Context *cx)
 	cx->cv[1] += b;
 	cx->cv[2] += c;
 	cx->cv[3] += d;
-	cx->inBufIndex = 0;
 }
 
 void 
 MD5_Update(MD5Context *cx, const unsigned char *input, unsigned int inputLen)
 {
 	PRUint32 bytesToConsume;
+	PRUint32 inBufIndex = cx->lsbInput & 63;
 
 	/* Add the number of input bytes to the 64-bit input counter. */
 	addto64(cx->msbInput, cx->lsbInput, inputLen);
-	if (cx->inBufIndex) {
+	if (inBufIndex) {
 		/* There is already data in the buffer.  Fill with input. */
-		bytesToConsume = PR_MIN(inputLen, MD5_BUFFER_SIZE - cx->inBufIndex);
-		memcpy(&cx->inBuf[cx->inBufIndex], input, bytesToConsume);
-		if (cx->inBufIndex + bytesToConsume >= MD5_BUFFER_SIZE)
+		bytesToConsume = PR_MIN(inputLen, MD5_BUFFER_SIZE - inBufIndex);
+		memcpy(&cx->inBuf[inBufIndex], input, bytesToConsume);
+		if (inBufIndex + bytesToConsume >= MD5_BUFFER_SIZE)
 			/* The buffer is filled.  Run the compression function. */
 			md5_compress(cx);
 		/* Remaining input. */
@@ -429,7 +441,6 @@ MD5_Update(MD5Context *cx, const unsigned char *input, unsigned int inputLen)
 	/* Tail of message (message bytes mod 64). */
 	if (inputLen)
 		memcpy(cx->inBuf, input, inputLen);
-	cx->inBufIndex = inputLen;
 }
 
 static const unsigned char padbytes[] = {
@@ -453,6 +464,7 @@ MD5_End(MD5Context *cx, unsigned char *digest,
 {
 	PRUint32 tmp;
 	PRUint32 lowInput, highInput;
+	PRUint32 inBufIndex = cx->lsbInput & 63;
 	int i;
 
 	if (maxDigestLen < MD5_HASH_LEN) {
@@ -465,11 +477,11 @@ MD5_End(MD5Context *cx, unsigned char *digest,
 	highInput = (cx->msbInput << 3) | (lowInput >> 29);
 	lowInput <<= 3;
 
-	if (cx->inBufIndex < MD5_END_BUFFER) {
-		MD5_Update(cx, padbytes, MD5_END_BUFFER - cx->inBufIndex);
+	if (inBufIndex < MD5_END_BUFFER) {
+		MD5_Update(cx, padbytes, MD5_END_BUFFER - inBufIndex);
 	} else {
 		MD5_Update(cx, padbytes, 
-		           MD5_END_BUFFER + MD5_BUFFER_SIZE - cx->inBufIndex);
+		           MD5_END_BUFFER + MD5_BUFFER_SIZE - inBufIndex);
 	}
 
 	/* Store the number of bytes input (before padding) in final 64 bits. */
