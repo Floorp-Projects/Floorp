@@ -77,9 +77,33 @@ nsFrameImageLoader::~nsFrameImageLoader()
   NS_IF_RELEASE(mImage);
 }
 
+#ifndef LOG_ADDREF_RELEASE
 NS_IMPL_ADDREF(nsFrameImageLoader)
-
 NS_IMPL_RELEASE(nsFrameImageLoader)
+#else
+extern "C" {
+  void __log_addref(void* p, int oldrc, int newrc);
+  void __log_release(void* p, int oldrc, int newrc);
+}
+
+nsrefcnt nsFrameImageLoader::AddRef(void)
+{
+  NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");
+  __log_addref((void*) this, mRefCnt, mRefCnt + 1);
+  return ++mRefCnt;
+}
+
+nsrefcnt nsFrameImageLoader::Release(void)
+{
+  __log_release((void*) this, mRefCnt, mRefCnt - 1);
+  NS_PRECONDITION(0 != mRefCnt, "dup release");
+  if (--mRefCnt == 0) {
+    NS_DELETEXPCOM(this);
+    return 0;
+  }
+  return mRefCnt;
+}
+#endif
 
 NS_IMETHODIMP
 nsFrameImageLoader::QueryInterface(REFNSIID aIID, void** aInstancePtr)
