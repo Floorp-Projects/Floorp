@@ -428,7 +428,7 @@ public:
   NS_DECL_ISUPPORTS
 
   nsParserBundle ();
-  ~nsParserBundle ();
+  virtual ~nsParserBundle ();
 
   /** 
    * Retrieve data from the bundle by IID.

@@ -1049,9 +1049,13 @@ void nsParser::SetUnusedInput(nsString& aBuffer) {
  */
 nsresult nsParser::Terminate(void){
   nsresult result=NS_OK;
-  if(mParserContext && mParserContext->mDTD)
+  if(mParserContext && mParserContext->mDTD) {
     result=mParserContext->mDTD->Terminate();
-  mInternalState=result;
+    if(result==NS_ERROR_HTMLPARSER_STOPPARSING) {
+      mInternalState=result;
+      result=DidBuildModel(result);
+    }
+  }
   return result;
 }
 

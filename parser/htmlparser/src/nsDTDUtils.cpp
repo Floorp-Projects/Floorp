@@ -856,7 +856,7 @@ CToken* CTokenRecycler::CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag) 
 
 CNodeRecycler::CNodeRecycler(): mSharedNodes(0) {
 
-  MOZ_COUNT_CTOR(CTokenRecycler);
+  MOZ_COUNT_CTOR(CNodeRecycler);
 
 #ifdef NS_DEBUG
   gNodeCount=0;
@@ -865,7 +865,7 @@ CNodeRecycler::CNodeRecycler(): mSharedNodes(0) {
 
 CNodeRecycler::~CNodeRecycler() {
 
-  MOZ_COUNT_DTOR(CTokenRecycler);
+  MOZ_COUNT_DTOR(CNodeRecycler);
 
   nsCParserNode* theNode=0;
 
