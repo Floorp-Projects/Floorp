@@ -63,10 +63,16 @@ nsCertPicker::~nsCertPicker()
 {
 }
 
-/* nsIX509Cert pick (in nsIInterfaceRequestor ctx, in wstring title, in wstring infoPrompt, in PRInt32 certUsage, in boolean allowInvalid, in boolean allowDuplicateNicknames, out boolean canceled); */
-NS_IMETHODIMP nsCertPicker::PickByUsage(nsIInterfaceRequestor *ctx, const PRUnichar *title, const PRUnichar *infoPrompt, PRInt32 certUsage, PRBool allowInvalid, PRBool allowDuplicateNicknames, PRBool *canceled, nsIX509Cert **_retval)
+NS_IMETHODIMP nsCertPicker::PickByUsage(nsIInterfaceRequestor *ctx, 
+                                        const PRUnichar *selectedNickname, 
+                                        PRInt32 certUsage, 
+                                        PRBool allowInvalid, 
+                                        PRBool allowDuplicateNicknames, 
+                                        PRBool *canceled, 
+                                        nsIX509Cert **_retval)
 {
   PRInt32 selectedIndex = -1;
+  PRBool selectionFound = PR_FALSE;
   PRUnichar **certNicknameList = nsnull;
   PRUnichar **certDetailsList = nsnull;
   CERTCertListNode* node = nsnull;
@@ -80,7 +86,6 @@ NS_IMETHODIMP nsCertPicker::PickByUsage(nsIInterfaceRequestor *ctx, const PRUnic
     allcerts = PK11_ListCerts(PK11CertListUnique, ctx);
     CERT_DestroyCertList(allcerts);
   }
-
 
   /* find all user certs that are valid and for SSL */
   /* note that we are allowing expired certs in this list */
@@ -130,6 +135,13 @@ NS_IMETHODIMP nsCertPicker::PickByUsage(nsIInterfaceRequestor *ctx, const PRUnic
         nsAutoString nickWithSerial;
         nsAutoString details;
         
+        if (!selectionFound) {
+          if (i_nickname == nsDependentString(selectedNickname)) {
+            selectedIndex = CertsToUse;
+            selectionFound = PR_TRUE;
+          }
+        }
+        
         if (NS_SUCCEEDED(tempCert->FormatUIStrings(i_nickname, nickWithSerial, details))) {
           certNicknameList[CertsToUse] = ToNewUnicode(nickWithSerial);
           certDetailsList[CertsToUse] = ToNewUnicode(details);
@@ -151,7 +163,7 @@ NS_IMETHODIMP nsCertPicker::PickByUsage(nsIInterfaceRequestor *ctx, const PRUnic
 
     if (NS_SUCCEEDED(rv)) {
       /* Throw up the cert picker dialog and get back the index of the selected cert */
-      rv = dialogs->PickCertificate(ctx, title, infoPrompt,
+      rv = dialogs->PickCertificate(ctx,
         (const PRUnichar**)certNicknameList, (const PRUnichar**)certDetailsList,
         CertsToUse, &selectedIndex, canceled);
 

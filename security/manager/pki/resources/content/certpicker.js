@@ -44,26 +44,26 @@ function onLoad()
 {
   dialogParams = window.arguments[0].QueryInterface(nsIDialogParamBlock);
 
-  var pickerTitle = dialogParams.GetString(0);
-  var mainwin = document.getElementById("certPicker");
-  mainwin.setAttribute("title", pickerTitle);
-
-  var pickerInfo = dialogParams.GetString(1);
-  setText("pickerInfo", pickerInfo);
-
   var selectElement = document.getElementById("nicknames");
   itemCount = dialogParams.GetInt(0);
 
+  var selIndex = dialogParams.GetInt(1);
+  if (selIndex < 0)
+    selIndex = 0;
+  
   for (var i=0; i < itemCount; i++) {
       var menuItemNode = document.createElement("menuitem");
-      var nick = dialogParams.GetString(i+2);
+      var nick = dialogParams.GetString(i);
       menuItemNode.setAttribute("value", i);
       menuItemNode.setAttribute("label", nick); // this is displayed
       selectElement.firstChild.appendChild(menuItemNode);
-      if (i == 0) {
-          selectElement.selectedItem = menuItemNode;
+      
+      if (selIndex == i) {
+        selectElement.selectedItem = menuItemNode;
       }
   }
+
+  doSetOKCancel(doOK, doCancel, null, null);
 
   dialogParams.SetInt(0,0); // set cancel return value
   setDetails();
@@ -71,8 +71,12 @@ function onLoad()
 
 function setDetails()
 {
-  var index = parseInt(document.getElementById("nicknames").value);
-  var details = dialogParams.GetString(index+itemCount+2);
+  var selItem = document.getElementById("nicknames").value;
+  if (!selItem.length)
+    return;
+
+  var index = parseInt(selItem);
+  var details = dialogParams.GetString(index+itemCount);
   document.getElementById("details").value = details;
 }
 

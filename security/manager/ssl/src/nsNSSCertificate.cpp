@@ -1348,6 +1348,122 @@ nsNSSCertificate::GetValidity(nsIX509CertValidity **aValidity)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsNSSCertificate::VerifyForUsage(PRUint32 usage, PRUint32 *verificationResult)
+{
+  NS_ENSURE_ARG(verificationResult);
+
+  SECCertUsage nss_usage;
+  
+  switch (usage)
+  {
+    case CERT_USAGE_SSLClient:
+      nss_usage = certUsageSSLClient;
+      break;
+
+    case CERT_USAGE_SSLServer:
+      nss_usage = certUsageSSLServer;
+      break;
+
+    case CERT_USAGE_SSLServerWithStepUp:
+      nss_usage = certUsageSSLServerWithStepUp;
+      break;
+
+    case CERT_USAGE_SSLCA:
+      nss_usage = certUsageSSLCA;
+      break;
+
+    case CERT_USAGE_EmailSigner:
+      nss_usage = certUsageEmailSigner;
+      break;
+
+    case CERT_USAGE_EmailRecipient:
+      nss_usage = certUsageEmailRecipient;
+      break;
+
+    case CERT_USAGE_ObjectSigner:
+      nss_usage = certUsageObjectSigner;
+      break;
+
+    case CERT_USAGE_UserCertImport:
+      nss_usage = certUsageUserCertImport;
+      break;
+
+    case CERT_USAGE_VerifyCA:
+      nss_usage = certUsageVerifyCA;
+      break;
+
+    case CERT_USAGE_ProtectedObjectSigner:
+      nss_usage = certUsageProtectedObjectSigner;
+      break;
+
+    case CERT_USAGE_StatusResponder:
+      nss_usage = certUsageStatusResponder;
+      break;
+
+    case CERT_USAGE_AnyCA:
+      nss_usage = certUsageAnyCA;
+      break;
+
+    default:
+      return NS_ERROR_FAILURE;
+  }
+
+  CERTCertDBHandle *defaultcertdb = CERT_GetDefaultCertDB();
+
+  if (CERT_VerifyCertNow(defaultcertdb, mCert, PR_TRUE, 
+                         nss_usage, NULL) == SECSuccess)
+  {
+    *verificationResult = VERIFIED_OK;
+  }
+  else
+  {
+    int err = PR_GetError();
+
+    // this list was cloned from verifyFailed
+
+    switch (err)
+    {
+      case SEC_ERROR_INADEQUATE_KEY_USAGE:
+      case SEC_ERROR_INADEQUATE_CERT_TYPE:
+        *verificationResult = USAGE_NOT_ALLOWED;
+        break;
+
+      case SEC_ERROR_REVOKED_CERTIFICATE:
+        *verificationResult = CERT_REVOKED;
+        break;
+
+      case SEC_ERROR_EXPIRED_CERTIFICATE:
+        *verificationResult = CERT_EXPIRED;
+        break;
+        
+      case SEC_ERROR_UNTRUSTED_CERT:
+        *verificationResult = CERT_NOT_TRUSTED;
+        break;
+        
+      case SEC_ERROR_UNTRUSTED_ISSUER:
+        *verificationResult = ISSUER_NOT_TRUSTED;
+        break;
+        
+      case SEC_ERROR_UNKNOWN_ISSUER:
+        *verificationResult = ISSUER_UNKNOWN;
+        break;
+        
+      case SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE:
+        *verificationResult = INVALID_CA;
+        break;
+        
+      case SEC_ERROR_CERT_USAGES_INVALID:
+      default:
+        *verificationResult = NOT_VERIFIED_UNKNOWN; 
+        break;
+    }
+  }
+  
+  return NS_OK;  
+}
+
+
 PRBool
 nsNSSCertificate::verifyFailed(PRUint32 *_verified)
 {

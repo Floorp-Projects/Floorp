@@ -147,12 +147,10 @@ interface nsICertPickDialogs : nsISupports
    *   General purpose certificate prompter
    */
   void PickCertificate(in nsIInterfaceRequestor ctx, 
-                       in wstring title,
-                       in wstring infoPrompt,
                        [array, size_is(count)] in wstring certNickList,
                        [array, size_is(count)] in wstring certDetailsList,
                        in PRUint32 count,
-                       out PRInt32 selectedIndex,
+                       inout PRInt32 selectedIndex,
                        out boolean canceled);
 };
 
