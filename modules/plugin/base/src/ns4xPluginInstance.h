@@ -20,7 +20,11 @@
 #define ns4xPluginInstance_h__
 
 #define _UINT32
+
+/* On HPUX, int32 is already defined in /usr/include/moduel.h */
+#ifndef hpux
 #define _INT32
+#endif
 
 #include "nsplugin.h"
 #include "npupp.h"
