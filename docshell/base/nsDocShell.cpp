@@ -143,6 +143,7 @@ NS_INTERFACE_MAP_BEGIN(nsDocShell)
    NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END_THREADSAFE
 
+
 ///*****************************************************************************
 // nsDocShell::nsIInterfaceRequestor
 //*****************************************************************************   
@@ -210,17 +211,27 @@ NS_IMETHODIMP nsDocShell::LoadURI(nsIURI* aURI, nsIDocShellLoadInfo* aLoadInfo)
    nsCOMPtr<nsISupports> owner;
    PRBool replace = PR_FALSE;
    PRBool refresh = PR_FALSE;
+#ifdef SH_IN_FRAMES
+   nsCOMPtr<nsISHEntry>  loadInfoSHEntry;
+#endif /* SH_IN_FRAMES */
    if(aLoadInfo)
       {
       aLoadInfo->GetReferrer(getter_AddRefs(referrer));
       aLoadInfo->GetReplaceSessionHistorySlot(&replace);
       aLoadInfo->GetRefresh(&refresh);
       aLoadInfo->GetOwner(getter_AddRefs(owner));
+#ifdef SH_IN_FRAMES
+	  aLoadInfo->GetSHEntry(getter_AddRefs(loadInfoSHEntry));
+#endif 
       }
+#ifdef SH_IN_FRAMES
+      NS_ENSURE_SUCCESS(InternalLoad(aURI, referrer, owner, nsnull, nsnull, 
+       replace ? loadNormalReplace : (refresh ? loadRefresh : loadNormal),loadInfoSHEntry), NS_ERROR_FAILURE);
+#else
 
    NS_ENSURE_SUCCESS(InternalLoad(aURI, referrer, owner, nsnull, nsnull, 
        replace ? loadNormalReplace : (refresh ? loadRefresh : loadNormal)), NS_ERROR_FAILURE);
-
+#endif 
    return NS_OK;
 }
 
@@ -1095,6 +1106,50 @@ NS_IMETHODIMP nsDocShell::LoadURI(const PRUnichar* aURI)
 
 NS_IMETHODIMP nsDocShell::Reload(PRInt32 aReloadType)
 {  
+#ifdef SH_IN_FRAMES
+   // XXX Honor the reload type
+   NS_ENSURE_STATE(mCurrentURI);
+
+   // XXXTAB Convert reload type to our type
+   loadType type = loadReloadNormal;
+   if ( aReloadType == nsIWebNavigation::reloadBypassProxyAndCache )
+   	type = loadReloadBypassProxyAndCache;
+
+   if (mSessionHistory == nsnull) {
+      return NS_OK;
+   }
+
+   nsCOMPtr<nsIDocShellTreeItem> root;
+   GetSameTypeRootTreeItem(getter_AddRefs(root));
+   if(root.get() != NS_STATIC_CAST(nsIDocShellTreeItem*, this))
+      {
+      nsCOMPtr<nsIWebNavigation> rootAsNav(do_QueryInterface(root));
+      return rootAsNav->Reload(aReloadType);
+      }
+
+   NS_ENSURE_STATE(mSessionHistory);
+   
+   UpdateCurrentSessionHistory();  
+
+   nsCOMPtr<nsISHEntry> entry;
+   PRInt32 index = -1;
+   NS_ENSURE_SUCCESS(mSessionHistory->GetIndex(&index), NS_ERROR_FAILURE);
+   NS_ENSURE_SUCCESS(mSessionHistory->GetEntryAtIndex(index, PR_FALSE,
+      getter_AddRefs(entry)), NS_ERROR_FAILURE);
+   NS_ENSURE_TRUE(entry, NS_ERROR_FAILURE);
+   
+   nsCOMPtr<nsIURI> uri;
+   nsCOMPtr<nsIInputStream> postdata;
+
+   entry->GetURI(getter_AddRefs(uri));
+   entry->GetPostData(getter_AddRefs(postdata));
+
+   NS_ENSURE_SUCCESS(InternalLoad(uri, mReferrerURI, nsnull, nsnull, 
+      postdata, type, entry), NS_ERROR_FAILURE);
+
+
+#else
+
    // XXX Honor the reload type
    NS_ENSURE_STATE(mCurrentURI);
 
@@ -1107,7 +1162,7 @@ NS_IMETHODIMP nsDocShell::Reload(PRInt32 aReloadType)
 
    NS_ENSURE_SUCCESS(InternalLoad(mCurrentURI, mReferrerURI, nsnull, nsnull, 
       nsnull, type), NS_ERROR_FAILURE);
-
+#endif  /* SH_IN_FRAMES  */
    return NS_OK;
 }
 
@@ -2022,7 +2077,48 @@ NS_IMETHODIMP nsDocShell::Embed(nsIContentViewer* aContentViewer,
                                     const char      * aCommand,
                                     nsISupports     * aExtraInfo)
 {
+#ifdef SH_IN_FRAMES
+	// Save the LayoutHistoryState of the previous document, before
+	// setting up new document
+	PersistLayoutHistoryState();
+
+   nsresult rv = SetupNewViewer(aContentViewer);
+
+   // XXX What if SetupNewViewer fails?
+
+   OSHE = LSHE;
+   
+   PRBool updateHistory = PR_TRUE;
+
+    // Determine if this type of load should update history   
+    switch(mLoadType)
+    {
+    case loadHistory:
+    case loadReloadNormal:
+    case loadReloadBypassCache:
+    case loadReloadBypassProxy:
+    case loadReloadBypassProxyAndCache:
+        updateHistory = PR_FALSE;
+        break;
+    default:
+        break;
+    } 
+	nsCOMPtr<nsILayoutHistoryState> layoutState;
+    rv = OSHE->GetLayoutHistoryState(getter_AddRefs(layoutState));
+    if (!updateHistory && layoutState) {
+      // This is a SH load. That's why there is a LayoutHistoryState in OSHE
+       if (NS_SUCCEEDED(rv) && layoutState) {
+            nsCOMPtr<nsIPresShell> presShell;
+            rv = GetPresShell(getter_AddRefs(presShell));
+            if (NS_SUCCEEDED(rv) && presShell) {
+              rv = presShell->SetHistoryState(layoutState);
+            }
+       }
+    }
+    return NS_OK;
+#else
    return SetupNewViewer(aContentViewer);
+#endif  /* SH_IN_FRAMES */
 }
 
 //*****************************************************************************
@@ -2316,10 +2412,15 @@ NS_IMETHODIMP nsDocShell::SetupNewViewer(nsIContentViewer* aNewViewer)
 //*****************************************************************************
 // nsDocShell: Site Loading
 //*****************************************************************************   
-  
+#ifdef SH_IN_FRAMES
+NS_IMETHODIMP nsDocShell::InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
+   nsISupports* aOwner, const char* aWindowTarget, nsIInputStream* aPostData, 
+   loadType aLoadType, nsISHEntry * aSHEntry)
+#else
 NS_IMETHODIMP nsDocShell::InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
    nsISupports* aOwner, const char* aWindowTarget, nsIInputStream* aPostData, 
    loadType aLoadType)
+#endif
 {
     // Check to see if the new URI is an anchor in the existing document.
     if (aLoadType == loadNormal ||
@@ -2342,6 +2443,10 @@ NS_IMETHODIMP nsDocShell::InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
     CancelRefreshURITimers();
 
     mLoadType = aLoadType;
+#ifdef SH_IN_FRAMES
+   if (aSHEntry)
+	   LSHE = aSHEntry;
+#endif
 
     nsURILoadCommand  loadCmd = nsIURILoader::viewNormal;
     if(loadLink == aLoadType)
@@ -2813,7 +2918,8 @@ NS_IMETHODIMP nsDocShell::ScrollIfAnchor(nsIURI* aURI, PRBool* aWasAnchor)
 }
 
 
-void nsDocShell::OnNewURI(nsIURI *aURI, nsIChannel *aChannel, loadType aLoadType)
+NS_IMETHODIMP
+nsDocShell::OnNewURI(nsIURI *aURI, nsIChannel *aChannel, loadType aLoadType)
 {
     NS_ASSERTION(aURI, "uri is null");
 
@@ -2841,6 +2947,80 @@ void nsDocShell::OnNewURI(nsIURI *aURI, nsIChannel *aChannel, loadType aLoadType
         NS_ERROR("Need to update case");
         break;
     } 
+#ifdef SH_IN_FRAMES
+	   if (!LSHE && updateHistory) { // Page load not from SH
+      /* If no LSHE by this time, then this page load was not initiated 
+	   * from SH. Now check, if you 
+	   * can get your SHEntry from your parent's LSHE. This will help
+	   * determine if we are in the middle of restoring a sub-frame
+	   * after the page load was originally initiated by SH. ie., you clicked
+	   * on back/forward and went to a  frameset page. and currently,
+	   * a subframe in that page is being loaded.
+	   */
+       nsCOMPtr<nsISHEntry>   she;
+	   nsCOMPtr<nsIWebNavigation> parent;
+	   // Get your SHEntry from your parent
+	   if (mParent) {
+	      parent = do_QueryInterface(mParent);
+	      if (!parent)
+		     return NS_ERROR_FAILURE;
+          parent->GetSHEForChild(mOffset, getter_AddRefs(she));
+	   }
+	   
+	   if (!she) { // Parent didn't have any SHEntry for you
+		   /* This is  a fresh page getting loaded for the first time
+		    *. Create a Entry for it and add it to SH, if this is the
+			* rootDocShell
+			*/
+
+		    PRBool shouldPersist = PR_FALSE;
+            ShouldPersistInSessionHistory(aURI, &shouldPersist);
+
+            nsCOMPtr<nsISHEntry> entry;
+            if(loadNormalReplace == mLoadType)
+			{
+              PRInt32 index = 0;
+              mSessionHistory->GetIndex(&index);
+              mSessionHistory->GetEntryAtIndex(index, PR_FALSE, getter_AddRefs(entry));
+			}
+
+            if(!entry)
+              entry = do_CreateInstance(NS_SHENTRY_PROGID);
+            NS_ENSURE_TRUE(entry, NS_ERROR_FAILURE);
+
+            // Get the post data
+            nsCOMPtr<nsIInputStream> inputStream;
+            if (aChannel)
+			{
+               nsCOMPtr<nsIHTTPChannel> httpChannel(do_QueryInterface(aChannel));
+               if(httpChannel)
+			   {
+                 httpChannel->GetUploadStream(getter_AddRefs(inputStream));
+			   }
+			}
+
+
+            //Title is set in nsDocShell::SetTitle()
+            NS_ENSURE_SUCCESS(entry->Create(aURI, nsnull, nsnull, 
+                              inputStream, nsnull), NS_ERROR_FAILURE);
+
+			if (mSessionHistory) {
+              NS_ENSURE_SUCCESS(mSessionHistory->AddEntry(entry, shouldPersist),
+                              NS_ERROR_FAILURE);
+			}
+		    else {
+				NS_ENSURE_TRUE(parent, NS_ERROR_FAILURE);
+			   // OSHE could be null here
+			  NS_ENSURE_SUCCESS(parent->AddChildSHEntry(OSHE, she), 
+				              NS_ERROR_FAILURE);
+		   }
+	   }  //!she
+	   // Set the LSHE for non-SH initiated loads.
+	   LSHE = she;    
+   } //!LSHE
+
+
+#else
 
     if(updateHistory)
     {
@@ -2860,6 +3040,8 @@ void nsDocShell::OnNewURI(nsIURI *aURI, nsIChannel *aChannel, loadType aLoadType
             AddToGlobalHistory(aURI);
         }
     }
+#endif /* SH_IN_FRAMES */
+
 
    SetCurrentURI(aURI);
    nsCOMPtr<nsIHTTPChannel> httpChannel(do_QueryInterface(aChannel));
@@ -2944,6 +3126,7 @@ void nsDocShell::OnNewURI(nsIURI *aURI, nsIChannel *aChannel, loadType aLoadType
    }
 
    mInitialPageLoad = PR_FALSE;
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShell::OnLoadingSite(nsIChannel* aChannel)
@@ -3128,14 +3311,18 @@ NS_IMETHODIMP nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry)
 	   }
     }
     
-
+#ifdef SH_IN_FRAMES
+   NS_ENSURE_SUCCESS(InternalLoad(uri, nsnull, nsnull, nsnull, postData, loadHistory, aEntry),
+      NS_ERROR_FAILURE);
+#else
    NS_ENSURE_SUCCESS(InternalLoad(uri, nsnull, nsnull, nsnull, postData, loadHistory),
       NS_ERROR_FAILURE);
+#endif 
 
    return NS_OK;
 }
 
-
+/*
 NS_IMETHODIMP
 nsDocShell::GetSHEForChild(PRInt32 aChildOffset, nsISHEntry ** aResult)
 {
@@ -3147,14 +3334,16 @@ nsDocShell::GetSHEForChild(PRInt32 aChildOffset, nsISHEntry ** aResult)
     return NS_ERROR_FAILURE;
 
 }
-
+*/
 NS_IMETHODIMP
-nsDocShell::GetCurrentSHE(PRInt32 mOffset, nsISHEntry ** aResult)
+nsDocShell::GetSHEForChild(PRInt32 aChildOffset, nsISHEntry ** aResult)
 {
 	NS_ENSURE_ARG_POINTER(aResult);
 
     if (LSHE) {
-       return GetSHEForChild(mOffset, aResult);
+	    nsCOMPtr<nsISHContainer> container(do_QueryInterface(LSHE));
+        if (container)
+           return container->GetChildAt(aChildOffset, aResult);
 	}
     return NS_ERROR_FAILURE;
 }

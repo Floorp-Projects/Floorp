@@ -51,6 +51,8 @@
 #include "nsPoint.h" // mCurrent/mDefaultScrollbarPreferences
 #include "nsString.h"
 
+//#define SH_IN_FRAMES 1
+
 // Interfaces Needed
 #include "nsIDocumentCharsetInfo.h"
 #include "nsIGlobalHistory.h"
@@ -184,10 +186,15 @@ protected:
       loadLink,
       loadRefresh
    } loadType;
-
+#ifdef SH_IN_FRAMES
+   NS_IMETHOD InternalLoad(nsIURI* aURI, nsIURI* aReferrerURI, 
+      nsISupports* owner, const char* aWindowTarget=nsnull, 
+      nsIInputStream* aPostData=nsnull, loadType aLoadType=loadNormal, nsISHEntry * aSHEntry = nsnull);
+#else
    NS_IMETHOD InternalLoad(nsIURI* aURI, nsIURI* aReferrerURI, 
       nsISupports* owner, const char* aWindowTarget=nsnull, 
       nsIInputStream* aPostData=nsnull, loadType aLoadType=loadNormal);
+#endif
    NS_IMETHOD CreateFixupURI(const PRUnichar* aStringURI, nsIURI** aURI);
    NS_IMETHOD FileURIFixup(const PRUnichar* aStringURI, nsIURI** aURI);
    NS_IMETHOD ConvertFileToStringURI(nsString& aIn, nsString& aOut);
@@ -199,7 +206,7 @@ protected:
       nsIInputStream* aPostData);
    NS_IMETHOD ScrollIfAnchor(nsIURI* aURI, PRBool* aWasAnchor);
    NS_IMETHOD OnLoadingSite(nsIChannel* aChannel);
-   virtual void OnNewURI(nsIURI *aURI, nsIChannel* aChannel, loadType aLoadType);
+   NS_IMETHOD OnNewURI(nsIURI *aURI, nsIChannel* aChannel, loadType aLoadType);
    virtual void SetCurrentURI(nsIURI* aURI);
    virtual void SetReferrerURI(nsIURI* aURI);
 
@@ -209,7 +216,7 @@ protected:
    NS_IMETHOD AddToSessionHistory(nsIURI* aURI, nsIChannel *aChannel);
    NS_IMETHOD UpdateCurrentSessionHistory();
    NS_IMETHOD LoadHistoryEntry(nsISHEntry* aEntry);
-   NS_IMETHOD GetCurrentSHE(PRInt32 aChildOffset, nsISHEntry ** aResult);
+//   NS_IMETHOD GetCurrentSHE(PRInt32 aChildOffset, nsISHEntry ** aResult);
    NS_IMETHOD PersistLayoutHistoryState();
    NS_IMETHOD CloneAndReplace(nsISHEntry * srcEntry, nsISHEntry * aCloneRef,
 							nsISHEntry * areplaceEntry, nsISHEntry * destEntry);
