@@ -2653,7 +2653,6 @@ nsresult nsMsgLocalMailFolder::CopyMessagesTo(nsISupportsArray *messages,
    
   if (NS_SUCCEEDED(rv) && mCopyState->m_messageService)
   {
-    nsIURI * url = nsnull;
 	nsMsgKeyArray keyArray;
 	PRUint32 numMessages = 0;
 	messages->Count(&numMessages);
@@ -2686,7 +2685,7 @@ nsresult nsMsgLocalMailFolder::CopyMessagesTo(nsISupportsArray *messages,
     // before starting the next message.
     StartMessage();
 		mCopyState->m_messageService->CopyMessages(&keyArray, srcFolder, streamListener, isMove,
-                                            nsnull, aMsgWindow, &url);
+                                            nsnull, aMsgWindow, nsnull);
 	}
 
 	return rv;
@@ -2735,13 +2734,12 @@ nsresult nsMsgLocalMailFolder::CopyMessageTo(nsISupports *message,
    
   if (NS_SUCCEEDED(rv) && mCopyState->m_messageService)
   {
-    nsIURI * url = nsnull;
 		nsCOMPtr<nsIStreamListener>
       streamListener(do_QueryInterface(copyStreamListener));
 		if(!streamListener)
 			return NS_ERROR_NO_INTERFACE;
 		mCopyState->m_messageService->CopyMessage(uri, streamListener, isMove,
-                                            nsnull, aMsgWindow, &url);
+                                            nsnull, aMsgWindow, nsnull);
 	}
 
 	return rv;
