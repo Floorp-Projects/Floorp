@@ -81,32 +81,61 @@ static nsresult CreateCollationKey(nsICollation *t, nsCollationStrength strength
 }
 
 #ifdef WIN32
+static wchar_t* new_wchar(const nsString& aString)
+{
+  wchar_t *wchstring;
+
+  wchstring = new wchar_t [aString.Length() + 1];
+  if (wchstring) {
+    for (int i = 0; i < aString.Length(); i++) {
+      wchstring[i] = aString[i];
+    }
+    wchstring[i] = 0;
+  }
+  return wchstring;
+}
+static void delete_wchar(wchar_t *wch_ptr)
+{
+  if (wch_ptr)
+    delete [] wch_ptr;
+}
 static PRInt32 TestCompare_wcscmp(nsString& string1, nsString& string2)
 {
-    wchar_t *wchstring1, *wchstring2;
-    PRInt32 wcscmpresult;
-    PRInt32 i;
-    
-    wchstring1 = new wchar_t [string1.Length() + 1];
-    for (i = 0; i < string1.Length(); i++) {
-      wchstring1[i] = string1(i);
-    }
-    wchstring1[i] = 0;
-    wchstring2 = new wchar_t [string2.Length() + 1];
-    for (i = 0; i < string2.Length(); i++) {
-      wchstring2[i] = string2(i);
-    }
-    wchstring2[i] = 0;
+  wchar_t *wchstring1, *wchstring2;
+  PRInt32 wcscmpresult;
+  
+  wchstring1 = new_wchar(string1);
+  wchstring2 = new_wchar(string2);
 
-    wcscmpresult = (PRInt32) wcscmp(wchstring1, wchstring2);
+  wcscmpresult = (PRInt32) wcscmp(wchstring1, wchstring2);
 
-    delete [] wchstring1;
-    delete [] wchstring2;
+  delete [] wchstring1;
+  delete [] wchstring2;
 
-    return wcscmpresult;
+  delete_wchar(wchstring1);
+  delete_wchar(wchstring2);
+
+  return wcscmpresult;
 }
 #endif //WIN32
 
+static void DebugDump(nsString& aString, ostream& aStream) {
+#ifdef WIN32
+  wchar_t *wchstring;
+
+  wchstring = new_wchar(aString);
+  if (wchstring) {
+    aStream.flush();
+    wprintf(L"%s\n", wchstring);
+    delete_wchar(wchstring);
+  }
+#else
+  aString.DebugDump(aStream);
+#endif
+}
+
+// Test all functions in nsICollation.
+//
 static void TestCollation(nsILocale *locale)
 {
 //   nsString locale("en-US");
@@ -154,18 +183,14 @@ static void TestCollation(nsILocale *locale)
      nsresult res;
 
       cout << "String data used:\n";
-      for (i = 0; i < (PRUint32) string1.Length(); i++) {
-        cout << "string1[" << i << "]: " << (char) string1.CharAt(i) << "\n"; // warning:casting down to char
-      }
-      for (i = 0; i < (PRUint32) string2.Length(); i++) {
-        cout << "string2[" << i << "]: " << (char) string2.CharAt(i) << "\n"; // warning:casting down to char
-      }
-      for (i = 0; i < (PRUint32) string3.Length(); i++) {
-        cout << "string3[" << i << "]: " << (char) string3.CharAt(i) << "\n"; // warning:casting down to char
-      }
-      for (i = 0; i < (PRUint32) string4.Length(); i++) {
-        cout << "string4[" << i << "]: " << (char) string4.CharAt(i) << "\n"; // warning:casting down to char
-      }
+      cout << "string1: ";
+      DebugDump(string1, cout);
+      cout << "string2: ";
+      DebugDump(string2, cout);
+      cout << "string3: ";
+      DebugDump(string3, cout);
+      cout << "string4: ";
+      DebugDump(string4, cout);
 
       cout << "Test 2 - CompareString():\n";
       res = t->CompareString(kCollationCaseInSensitive, string1, string2, &result);
@@ -203,8 +228,12 @@ static void TestCollation(nsILocale *locale)
       }
       cout << "case sensitive key creation:\n";
       cout << "keyLength: " << keyLength1 << "\n";
+      DebugDump(string2, cout);
+
+      cout.flush();
       for (i = 0; i < keyLength1; i++) {
-        cout << "key[" << i << "]: " << aKey1[i] << "\n";
+        printf("%0.2x ", aKey1[i]);
+        //cout << "key[" << i << "]: " << aKey1[i] << " ";
       }
       cout << "\n";
 
@@ -214,8 +243,12 @@ static void TestCollation(nsILocale *locale)
       }
       cout << "case insensitive key creation:\n";
       cout << "keyLength: " << keyLength2 << "\n";
+      DebugDump(string2, cout);
+
+      cout.flush();
       for (i = 0; i < keyLength2; i++) {
-        cout << "key[" << i << "]: " << aKey2[i] << "\n";
+       printf("%0.2x ", aKey2[i]);
+       //cout << "key[" << i << "]: " << aKey2[i] << " ";
       }
       cout << "\n";
 
@@ -298,7 +331,8 @@ static nsICollation *g_collationInst = NULL;
 static void TestSortPrint1(nsString *string_array, int len)
 {
   for (int i = 0; i < len; i++) {
-    string_array[i].DebugDump(cout);
+    //string_array[i].DebugDump(cout);
+    DebugDump(string_array[i], cout);
   }
   cout << "\n";
 }
@@ -343,19 +377,20 @@ static void TestSortPrint2(collation_rec *key_array, int len)
   PRUint32 aLength;
   PRUint8 *aKey;
 
+  cout.flush();
   for (int i = 0; i < len; i++) {
     aLength = key_array[i].aLength;
     aKey = key_array[i].aKey;
     for (int j = 0; j < (int)aLength; j++) {
-      char str[8];
-      sprintf(str, "%0.2x ", aKey[j]);
-      cout << str;
+      printf("%0.2x ", aKey[j]);
     }
-    cout << "\n";
+    printf("\n");
   }
-  cout << "\n";
+  printf("\n");
 }
 
+// Use nsICollation for qsort.
+//
 static void TestSort(nsILocale *locale)
 {
   nsresult res;
@@ -477,6 +512,8 @@ static void TestSort(nsILocale *locale)
 NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
 NS_DEFINE_IID(kIDateTimeFormatIID, NS_IDATETIMEFORMAT_IID);
 
+// Test all functions in nsIDateTimeFormat.
+//
 static void TestDateTimeFormat(nsILocale *locale)
 {
   cout << "==============================\n";
@@ -609,11 +646,24 @@ int main(int argc, char** argv) {
   if (NS_FAILED(res)) cout << "RegisterFactory failed\n";
 
   // --------------------------------------------
+
   nsILocale *locale = NULL;
 
-  TestCollation(locale);
-  TestSort(locale);
-  TestDateTimeFormat(locale);
+  if (argc == 1) {
+    TestCollation(locale);
+    TestSort(locale);
+    TestDateTimeFormat(locale);
+  }
+  else {
+    while (argc--) {
+      if (!strcmp(argv[argc], "col"))
+        TestCollation(locale);
+      else if (!strcmp(argv[argc], "sort"))
+        TestSort(locale);
+      else if (!strcmp(argv[argc], "date"))
+        TestDateTimeFormat(locale);
+    }
+  }
 
   // --------------------------------------------
 
