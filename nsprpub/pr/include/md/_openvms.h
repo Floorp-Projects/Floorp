@@ -73,8 +73,8 @@ struct ip_mreq {
 
 #define NEED_TIME_R
 
-#undef  HAVE_DLL
-#undef  USE_DLFCN
+#define HAVE_DLL
+#define USE_DLFCN
 
 #define _PR_POLL_AVAILABLE
 #define _PR_USE_POLL

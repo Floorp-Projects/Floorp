@@ -177,5 +177,11 @@ endif
 export:: $(TARGETS) $(HEADERS)
 	$(INSTALL) -m 444 $(HEADERS) $(DIST)/include
 	$(INSTALL) -m 444 $(TARGETS) $(DIST)/lib
+ifeq ($(OS_ARCH),OpenVMS)
+	$(INSTALL) -m 444 $(SHARED_LIBRARY) $(DIST)/lib
+ifdef SHARED_LIBRARY
+	$(INSTALL) -m 444 $(SHARED_LIBRARY:.$(DLL_SUFFIX)=.vms) $(DIST)/lib
+endif
+endif
 
 install:: export

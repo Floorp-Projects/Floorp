@@ -52,6 +52,17 @@ typedef MPARAM WPARAM,LPARAM;
 
 #if defined(VMS)
 /*
+** If MOTIF is being used then XtAppAddInput is used as the notification
+** method and so event flags must be used, so you need to define
+** VMS_EVENTS_USE_EF. If gdk is being used then select is used for
+** notification, and then VMS_EVENTS_USE_SOCKETS should be defined.
+*/
+#undef VMS_EVENTS_USE_EF
+#define VMS_EVENTS_USE_SOCKETS
+#endif
+
+#if defined(VMS_EVENTS_USE_EF)
+/*
 ** On OpenVMS, XtAppAddInput doesn't want a regular fd, instead it 
 ** wants an event flag. So, we don't create and use a pipe for 
 ** notification of when an event queue has something ready, instead
@@ -61,7 +72,12 @@ typedef MPARAM WPARAM,LPARAM;
 #include <lib$routines.h>
 #include <starlet.h>
 #include <stsdef.h>
-#endif /* VMS */
+#endif /* VMS_EVENTS_USE_EF */
+
+#if defined(VMS_EVENTS_USE_SOCKETS)
+#include <socket.h>
+#endif /* VMS_EVENTS_USE_SOCKETS */
+
 
 static PRLogModuleInfo *event_lm = NULL;
 
@@ -87,7 +103,7 @@ struct PLEventQueue {
     PRThread*    handlerThread;
     EventQueueType type;
     PRBool       processingEvents;
-#if defined(VMS)
+#if defined(VMS_EVENTS_USE_EF)
     int		 efn;
     int		 notifyCount;
 #elif defined(XP_UNIX)
@@ -602,7 +618,7 @@ _pl_SetupNativeNotifier(PLEventQueue* self)
 #pragma unused (self)
 #endif
 
-#if defined(VMS)
+#if defined(VMS_EVENTS_USE_EF)
     {
 #ifdef VMS_USE_GETEF
         unsigned int status;
@@ -625,7 +641,11 @@ _pl_SetupNativeNotifier(PLEventQueue* self)
     int err;
     int flags;
 
+#if defined(VMS_EVENTS_USE_SOCKETS)
+    err = socketpair(AF_INET,SOCK_STREAM,0,self->eventPipe);
+#else
     err = pipe(self->eventPipe);
+#endif
     if (err != 0) {
         return PR_FAILURE;
     }
@@ -687,7 +707,7 @@ _pl_CleanupNativeNotifier(PLEventQueue* self)
 #pragma unused (self)
 #endif
 
-#if defined(VMS)
+#if defined(VMS_EVENTS_USE_EF)
 #ifdef VMS_USE_GETEF
     {
         unsigned int status;
@@ -720,7 +740,7 @@ _pl_NativeNotify(PLEventQueue* self)
 }/* --- end _pl_NativeNotify() --- */
 #endif /* XP_OS2 */
 
-#if defined(VMS)
+#if defined(VMS_EVENTS_USE_EF)
 /* Just set the event flag */
 static PRStatus
 _pl_NativeNotify(PLEventQueue* self)
@@ -779,7 +799,7 @@ _pl_NativeNotify(PLEventQueue* self)
 static PRStatus
 _pl_AcknowledgeNativeNotify(PLEventQueue* self)
 {
-#if defined(VMS)
+#if defined(VMS_EVENTS_USE_EF)
 /* Clear the event flag if we're all done */
 /* NOTE that we might want to always clear the event flag, even if the */
 /* notifyCount says we shouldn't. */
@@ -822,7 +842,7 @@ PL_GetEventQueueSelectFD(PLEventQueue* self)
     if (self == NULL)
     return -1;
 
-#if defined(VMS)
+#if defined(VMS_EVENTS_USE_EF)
     return self->efn;
 #elif defined(XP_UNIX)
     return self->eventPipe[0];

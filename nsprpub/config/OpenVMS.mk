@@ -37,4 +37,4 @@ CPU_ARCH_TAG		= _$(CPU_ARCH)
 OS_CFLAGS		= -DVMS
 
 # The command to build a shared library in POSIX on OpenVMS.
-XXXMKSHLIB = c89 -Wl,share
+MKSHLIB = vmsld $(OPTIMIZER)
