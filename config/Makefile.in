@@ -88,7 +88,7 @@ $(OBJDIR)/bsdecho$(BIN_SUFFIX):	$(OBJDIR)/bsdecho.o
 else
 $(OBJDIR)/bsdecho$(BIN_SUFFIX):	$(OBJDIR)/bsdecho.o
 	@$(MAKE_OBJDIR)
-	$(CCF) $(LDFLAGS) -o $@ $<
+	$(CC) $(LDFLAGS) -o $@ $<
 endif
 
 # Artificial target to make parallel builds play nice
@@ -97,7 +97,7 @@ $(DIST)/bin/bsdecho$(BIN_SUFFIX): $(OBJDIR)/nsinstall$(BINSUFFIX) $(OBJDIR)/bsde
 
 $(OBJDIR)/gtscc$(BIN_SUFFIX):	$(OBJDIR)/gtscc.o
 	@$(MAKE_OBJDIR)
-	$(CCF) $(LDFLAGS) -o $@ $< -lelf
+	$(CC) $(LDFLAGS) -o $@ $< -lelf
 	$(INSTALL) -m 444 $@ $(DIST)/bin
 
 #update build number from within make script
@@ -112,7 +112,7 @@ $(DEPTH)/modules/libpref/src/init/all.js: FORCE
 
 $(OBJDIR)/bdate$(BIN_SUFFIX): $(OBJDIR)/bdate.o
 	@$(MAKE_OBJDIR)
-	$(CCF) $(LDFLAGS) -o $@ $<
+	$(CC) $(LDFLAGS) -o $@ $<
 	$(INSTALL) -m 444 $@ $(DIST)/bin
 
 FORCE:
