@@ -546,13 +546,13 @@ nsMsgSendPart::Write()
       }
       
       PRUnichar* wresult = nsnull;
-      PRUint32 whattodo = 0;
-      PRBool enable_emoticons = PR_TRUE;
+      PRUint32 whattodo = mozITXTToHTMLConv::kURLs;
+      PRBool enable_structs = PR_TRUE;
 	NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
 	if (NS_SUCCEEDED(rv) && prefs) {
-		rv = prefs->GetBoolPref(PREF_MAIL_CONVERT_EMOTICONS,&enable_emoticons);
-		if (NS_FAILED(rv) || enable_emoticons) {
-			whattodo = whattodo | mozITXTToHTMLConv::kGlyphSubstitution;
+		rv = prefs->GetBoolPref(PREF_MAIL_CONVERT_STRUCTS,&enable_structs);
+		if (NS_FAILED(rv) || enable_structs) {
+			whattodo = whattodo | mozITXTToHTMLConv::kStructPhrase;
 		}
 	}
 
