@@ -45,6 +45,8 @@
 //#define DEBUG_EVENTS 1
 #endif
 
+//#define DEBUG_MOVE
+
 static void
 dispatch_superwin_event(GdkEvent *event, nsWindow *window);
 
@@ -1007,3 +1009,35 @@ handle_superwin_flush(gpointer aData)
   nsWindow *window = (nsWindow *)aData;
   window->Update();
 }
+
+gboolean
+handle_configure_event(GtkWidget *w, GdkEventConfigure *conf, gpointer p)
+{
+  // This event handler is only installed on toplevel windows, because:
+  //  a) gdk_window_get_root_origin gives bad results for inner windows, and
+  //  b) we don't really need to worry about move events on inner windows
+
+  nsWindow *widget = (nsWindow *)p;
+
+  // Find out if the window position has changed
+  nsRect oldBounds;
+  widget->GetBounds(oldBounds);
+
+  nscoord x,y;
+  gdk_window_get_root_origin(w->window, &x, &y);
+
+  if ((oldBounds.x == x) && (oldBounds.y == y))
+    return PR_FALSE;
+
+#ifdef DEBUG_MOVE
+  printf("Window: Move from (%d,%d) to (%d,%d)\n", oldBounds.x, oldBounds.y,
+         x, y);
+#endif
+
+  nscoord relX, relY;
+  gdk_window_get_origin(w->window, &relX, &relY);
+
+  widget->OnMove(relX, relY);
+  return PR_FALSE;
+}
+

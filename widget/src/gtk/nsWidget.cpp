@@ -586,7 +586,7 @@ NS_IMETHODIMP nsWidget::Move(PRInt32 aX, PRInt32 aY)
 
 NS_IMETHODIMP nsWidget::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
-#if 0
+#ifdef DEBUG_MOVE
   printf("nsWidget::Resize %s (%p) to %d %d\n",
          (const char *) debug_GetName(mWidget),
          this,
