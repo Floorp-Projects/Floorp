@@ -60,6 +60,7 @@ separator.thin {
 
 .acctCentralRowTitleBox {
   background-color: -moz-Dialog;
+  -moz-appearance: toolbox;
   font-size: 150%;
   font-weight: bold;
   color: #000000;
