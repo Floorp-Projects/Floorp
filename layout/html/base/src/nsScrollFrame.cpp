@@ -111,35 +111,16 @@ nsScrollFrame::DidReflow(nsIPresContext&   aPresContext,
     frame->GetSize(size);
     frame->GetView(&scrolledView);
     scrolledView->GetViewManager(vm);
-
     vm->ResizeView(scrolledView, size.width, size.height);
-
-    // XXX Troy, i lifted this from nsView. we need to find
-    // a better way to do this than assuming stuff about
-    // the internals of the scrolling view, but you already
-    // know that. let's figure out the right thing. MMP
-
-    nsIView *par;
-    scrolledView->GetParent(par);
-
-    if (nsnull != par) {
-      nsIScrollableView *scroller;
-
-      static NS_DEFINE_IID(kscroller, NS_ISCROLLABLEVIEW_IID);
-
-      // XXX The scrolled view is a child of the clip view which is a child of
-      // the scrolling view. It's kind of yucky the way this works. A parent
-      // notification that the child's size changed would be cleaner.
-      nsIView *grandParent;
-      par->GetParent(grandParent);
-      if ((nsnull != grandParent) &&
-          (NS_OK == grandParent->QueryInterface(kscroller, (void **)&scroller)))
-      {
-        scroller->ComputeContainerSize();
-      }
-    }
-
     NS_RELEASE(vm);
+
+    // Have the scrolling view layout
+    nsIScrollableView* scrollingView;
+    nsIView*           view;
+    GetView(&view);
+    if (NS_SUCCEEDED(view->QueryInterface(kScrollViewIID, (void**)&scrollingView))) {
+      scrollingView->ComputeContainerSize();
+    }
   }
 
   return rv;
