@@ -122,9 +122,11 @@ void nsStyleCoord::SetIntValue(PRInt32 aValue, nsStyleUnit aUnit)
 {
   NS_ASSERTION((aUnit == eStyleUnit_Proportional) ||
                (aUnit == eStyleUnit_Enumerated) ||
+               (aUnit == eStyleUnit_Chars) ||
                (aUnit == eStyleUnit_Integer), "not an int value");
   if ((aUnit == eStyleUnit_Proportional) ||
       (aUnit == eStyleUnit_Enumerated) ||
+      (aUnit == eStyleUnit_Chars) ||
       (aUnit == eStyleUnit_Integer)) {
     mUnit = aUnit;
     mValue.mInt = aValue;
@@ -200,6 +202,7 @@ void nsStyleCoord::AppendToString(nsString& aBuffer) const
     case eStyleUnit_Proportional: aBuffer.Append("*");        break;
     case eStyleUnit_Enumerated:   aBuffer.Append("enum");     break;
     case eStyleUnit_Integer:      aBuffer.Append("int");      break;
+    case eStyleUnit_Chars:        aBuffer.Append("chars");    break;
   }
   aBuffer.Append(' ');
 }
