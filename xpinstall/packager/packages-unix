@@ -230,6 +230,8 @@ bin/res/throbber/*
 bin/res/toolbar/*
 bin/res/ua.css
 
+bin/irc/*
+
 ;[editor]
 bin/chrome/editor/content/default/*
 bin/chrome/editor/locale/en-US/*

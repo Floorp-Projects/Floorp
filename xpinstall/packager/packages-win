@@ -205,6 +205,8 @@ bin\res\xpinstall\*
 bin\res\throbber\*
 bin\res\toolbar\*
 
+bin\irc\*
+
 [mail]
 bin\msgbsutl.dll
 bin\components\addrbook.dll
