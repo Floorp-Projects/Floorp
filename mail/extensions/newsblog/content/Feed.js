@@ -196,11 +196,11 @@ Feed.prototype.parse = function() {
   if (!this.request.responseText) {
     return this.onParseError(this);
   }
-  else if (this.request.responseText.search(/="http:\/\/purl\.org\/rss\/1\.0\/"/) != -1) {
+  else if (this.request.responseText.search(/=(['"])http:\/\/purl\.org\/rss\/1\.0\/\1/) != -1) {
     debug(this.url + " is an RSS 1.x (RDF-based) feed");
     this.parseAsRSS1();
   }
-  else if (this.request.responseText.search(/="http:\/\/purl.org\/atom\/ns#"/) != -1) {
+  else if (this.request.responseText.search(/=(['"])http:\/\/purl.org\/atom\/ns#\1/) != -1) {
     debug(this.url + " is an Atom feed");
     this.parseAsAtom();
   }
