@@ -2832,6 +2832,40 @@ CK_RV NSC_GenerateRandom(CK_SESSION_HANDLE hSession,
  **************************** Key Functions:  ************************
  */
 
+CK_RV
+pk11_pbe_hmac_key_gen(CK_MECHANISM_PTR pMechanism, char *buf, 
+                      unsigned long *len, PRBool faultyPBE3DES)
+{
+    PBEBitGenContext *pbeCx;
+    SECItem pwd, salt, *key;
+    SECOidTag hashAlg;
+    unsigned long keylenbits;
+    CK_PBE_PARAMS *pbe_params = NULL;
+    pbe_params = (CK_PBE_PARAMS *)pMechanism->pParameter;
+    pwd.data = (unsigned char *)pbe_params->pPassword;
+    pwd.len = (unsigned int)pbe_params->ulPasswordLen;
+    salt.data = (unsigned char *)pbe_params->pSalt;
+    salt.len = (unsigned int)pbe_params->ulSaltLen;
+    switch (pMechanism->mechanism) {
+    case CKM_NETSCAPE_PBE_SHA1_HMAC_KEY_GEN:
+	hashAlg = SEC_OID_SHA1; keylenbits = 160; break;
+    case CKM_NETSCAPE_PBE_MD5_HMAC_KEY_GEN:
+	hashAlg = SEC_OID_MD5;  keylenbits = 128; break;
+    case CKM_NETSCAPE_PBE_MD2_HMAC_KEY_GEN:
+	hashAlg = SEC_OID_MD2;  keylenbits = 128; break;
+    default:
+	return CKR_MECHANISM_INVALID;
+    }
+    pbeCx = PBE_CreateContext(hashAlg, pbeBitGenIntegrityKey, &pwd,
+                              &salt, keylenbits, pbe_params->ulIteration);
+    key = PBE_GenerateBits(pbeCx);
+    PORT_Memcpy(buf, key->data, key->len);
+    *len = key->len;
+    PBE_DestroyContext(pbeCx);
+    SECITEM_ZfreeItem(key, PR_TRUE);
+    return CKR_OK;
+}
+
 /*
  * generate a password based encryption key. This code uses
  * PKCS5 to do the work. Note that it calls PBE_PK11ParamToAlgid, which is
@@ -3041,7 +3075,7 @@ CK_RV NSC_GenerateKey(CK_SESSION_HANDLE hSession,
     int i;
     PK11Slot *slot = pk11_SlotFromSessionHandle(hSession);
     char buf[MAX_KEY_LEN];
-    enum {pk11_pbe, pk11_ssl, pk11_bulk} key_gen_type;
+    enum {pk11_pbe, pk11_pbe_hmac, pk11_ssl, pk11_bulk} key_gen_type;
     SECOidTag algtag = SEC_OID_UNKNOWN;
     SSL3RSAPreMasterSecret *rsa_pms;
     CK_VERSION *version;
@@ -3106,6 +3140,11 @@ CK_RV NSC_GenerateKey(CK_SESSION_HANDLE hSession,
 	break;
     case CKM_NETSCAPE_PBE_SHA1_FAULTY_3DES_CBC:
 	faultyPBE3DES = PR_TRUE;
+    case CKM_NETSCAPE_PBE_SHA1_HMAC_KEY_GEN:
+    case CKM_NETSCAPE_PBE_MD5_HMAC_KEY_GEN:
+    case CKM_NETSCAPE_PBE_MD2_HMAC_KEY_GEN:
+	key_gen_type = pk11_pbe_hmac;
+	break;
     case CKM_NETSCAPE_PBE_SHA1_TRIPLE_DES_CBC:
     case CKM_NETSCAPE_PBE_SHA1_40_BIT_RC2_CBC:
     case CKM_NETSCAPE_PBE_SHA1_DES_CBC:
@@ -3142,6 +3181,10 @@ CK_RV NSC_GenerateKey(CK_SESSION_HANDLE hSession,
      * now to the actual key gen.
      */
     switch (key_gen_type) {
+    case pk11_pbe_hmac:
+	crv = pk11_pbe_hmac_key_gen(pMechanism, buf, &key_length,
+	                            faultyPBE3DES);
+	break;
     case pk11_pbe:
 	crv = pk11_pbe_key_gen(algtag, pMechanism, buf, &key_length,
 			       faultyPBE3DES);
