@@ -1,4 +1,13 @@
 ; Package file for Unix
+;
+; File format:
+;
+; [] designates a toplevel component. Example: [core]
+; - in front of a file specifies it to be removed from the destination
+; * wildcard support to recursively copy the entire directory
+; ; file comment
+;
+
 
 [core]
 bin/mozilla-apprunner.sh
