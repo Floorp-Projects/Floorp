@@ -26,6 +26,7 @@
 #include "nsXPIDLString.h"
 
 #include "nsIChannel.h"
+#include "nsILoadGroup.h"
 #include "nsIHTTPChannel.h"
 #include "nsIInputStream.h"
 #include "imgILoader.h"
@@ -177,8 +178,13 @@ NS_IMETHODIMP imgRequest::Cancel(nsresult status)
   }
 
 
-  if (mChannel && mProcessing)
+  if (mChannel && mProcessing) {
+    nsCOMPtr<nsILoadGroup> lg;
+    mChannel->GetLoadGroup(getter_AddRefs(lg));
+    if (lg)
+      lg->RemoveRequest(mChannel, nsnull, NS_BINDING_SUCCEEDED, nsnull);
     mChannel->Cancel(NS_BINDING_ABORTED); // should prolly use status here
+  }
 
   return NS_OK;
 }
