@@ -6,7 +6,7 @@ use Sys::Hostname;
 use POSIX "sys_wait_h";
 use Cwd;
 
-$Version = '$Revision: 1.18 $ ';
+$Version = '$Revision: 1.19 $ ';
 
 
 sub PrintUsage {
@@ -463,8 +463,8 @@ sub BuildIt {
 		close MAKEDEPEND;
 	  } else {
 		# Building clobber
-        print LOG "$Make -f client.mk checkout clean build 2>&1 |\n";
-        open MAKECLOBBER, "$Make -f client.mk checkout clean build 2>&1 |";
+        print LOG "$Make -f client.mk checkout realclean build 2>&1 |\n";
+        open MAKECLOBBER, "$Make -f client.mk checkout realclean build 2>&1 |";
         while (<MAKECLOBBER>) {
           print $_;
           print LOG $_;
