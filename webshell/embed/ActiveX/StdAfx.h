@@ -98,6 +98,7 @@ typedef long int32;
 #include "nsIPref.h"
 #include "nsIURL.h"
 #include "nsIWebShell.h"
+#include "nsIBaseWindow.h"
 #include "nsIBrowserWindow.h"
 #include "nsIContentViewer.h"
 #include "nsIPresShell.h"

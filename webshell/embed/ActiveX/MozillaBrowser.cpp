@@ -79,7 +79,7 @@ CMozillaBrowser::CMozillaBrowser()
 
 	// Initialize layout interfaces
     m_pIWebShell = nsnull;
-
+	m_pIWebShellWin = nsnull;
 	m_pIPref = nsnull;
     m_pIServiceManager = nsnull;
 
@@ -227,9 +227,14 @@ LRESULT CMozillaBrowser::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
  	}
 
     // Destroy layout...
+	if (m_pIWebShellWin != nsnull)
+	{
+		m_pIWebShellWin->Destroy();
+		NS_RELEASE(m_pIWebShellWin);
+	}
+
     if (m_pIWebShell != nsnull)
 	{
-		m_pIWebShell->Destroy();
         NS_RELEASE(m_pIWebShell);
 	}
 
@@ -254,10 +259,11 @@ LRESULT CMozillaBrowser::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& b
 	NG_TRACE_METHOD(CMozillaBrowser::OnSize);
 
     // Pass resize information down to the WebShell...
-    if (m_pIWebShell)
+    if (m_pIWebShellWin)
 	{
-		m_pIWebShell->SetBounds(0, 0, LOWORD(lParam), HIWORD(lParam));
-    }
+		m_pIWebShellWin->SetPosition(0, 0);
+		m_pIWebShellWin->SetSize(LOWORD(lParam), HIWORD(lParam), PR_TRUE);
+	}
 	return 0;
 }
 
@@ -674,6 +680,8 @@ HRESULT CMozillaBrowser::CreateWebShell()
 		return E_FAIL;
 	}
 
+	m_pIWebShell->QueryInterface(kIBaseWindowIID, (void **) &m_pIWebShellWin);
+
 	// Register the cookie service
 	NS_WITH_SERVICE(nsICookieService, cookieService, kCookieServiceCID, &rv);
 	if (NS_FAILED(rv) || (cookieService == nsnull)) {
@@ -711,7 +719,7 @@ HRESULT CMozillaBrowser::CreateWebShell()
 	m_pIWebShell->SetDocLoaderObserver((nsIDocumentLoaderObserver*) m_pWebShellContainer);
 	m_pIWebShell->SetWebShellType(nsWebShellContent);
 
-	m_pIWebShell->Show();
+	m_pIWebShellWin->SetVisibility(PR_TRUE);
 
 	return S_OK;
 }
@@ -1848,7 +1856,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_LocationName(BSTR __RPC_FAR *Loca
 
 	// Get the url from the web shell
 	nsXPIDLString szLocationName;
-	m_pIWebShell->GetTitle(getter_Copies(szLocationName));
+	m_pIWebShellWin->GetTitle(getter_Copies(szLocationName));
 	if (nsnull == (const PRUnichar *) szLocationName)
 	{
 		RETURN_E_UNEXPECTED();
