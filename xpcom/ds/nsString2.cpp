@@ -719,7 +719,8 @@ nsString* nsString::ToNewString() const {
  */
 char* nsString::ToNewCString() const {
 
-  nsCString temp(*this);  //construct nsCString with alloc on heap (which we'll steal in a moment)
+  nsCString temp;
+  temp.AssignWithConversion(GetUnicode(), Length());  //construct nsCString with alloc on heap (which we'll steal in a moment)
   temp.SetCapacity(8);    //force it to have an allocated buffer, even if this is empty.
   char* result=temp.mStr; //steal temp's buffer
   temp.mStr=0;            //clear temp's buffer to prevent deallocation
