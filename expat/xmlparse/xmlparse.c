@@ -2066,14 +2066,14 @@ processXmlDecl(XML_Parser parser, int isGeneralTextEntity,
     }
     else if (encodingName) {
       enum XML_Error result;
-      const XML_Char *s = poolStoreString(&tempPool,
+      const XML_Char *str = poolStoreString(&tempPool,
 					  encoding,
 					  encodingName,
 					  encodingName
 					  + XmlNameLength(encoding, encodingName));
-      if (!s)
+      if (!str)
 	return XML_ERROR_NO_MEMORY;
-      result = handleUnknownEncoding(parser, s);
+      result = handleUnknownEncoding(parser, str);
       poolDiscard(&tempPool);
       if (result == XML_ERROR_UNKNOWN_ENCODING)
 	eventPtr = encodingName;
