@@ -34,7 +34,6 @@ function searchOnLoad()
 {
     initializeSearchWidgets();
     initializeSearchWindowWidgets();
-    setSearchScope(0);
 
     setupDatasource();
     onMore(null);
@@ -55,13 +54,17 @@ function onChooseFolder(event) {
     gCurrentFolder =
         RDF.GetResource(event.target.id).QueryInterface(nsIMsgFolder);
 
+    
+    setSearchScope(GetScopeForFolder(gCurrentFolder));
+
 }
 
 function onSearch(event)
 {
+    gSearchSession.clearScopes();
     // tell the search session what the new scope is
     gSearchSession.addScopeTerm(GetScopeForFolder(gCurrentFolder),
-                                gCurrentFolder)
+                                gCurrentFolder);
     
     saveSearchTerms(gSearchSession.searchTerms, gSearchSession);
 

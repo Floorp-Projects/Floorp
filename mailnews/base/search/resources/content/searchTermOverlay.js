@@ -74,9 +74,11 @@ function onLess(event)
 
 // set scope on all visible searhattribute tags
 function setSearchScope(scope) {
+    dump("Setting search scope to " + scope + "\n");
     gSearchScope = scope;
     var searchTermElements = gSearchTermContainer.childNodes;
     if (!searchTermElements) return;
+    dump("..on " + searchTermElements.length + " elements.\n");
     for (var i=0; i<searchTermElements.length; i++) {
         searchTermElements[i].searchattribute.searchScope = scope;
     }
@@ -217,6 +219,11 @@ function getBooleanAnd()
     return false;
 }
 
+// save the search terms from the UI back to the actual search terms
+// searchTerms: nsISupportsArray of terms
+// termOwner:   object which can contain and create the terms
+//              (will be unnecessary if we just make terms creatable
+//               via XPCOM)
 function saveSearchTerms(searchTerms, termOwner)
 {
     var searchTermElements =

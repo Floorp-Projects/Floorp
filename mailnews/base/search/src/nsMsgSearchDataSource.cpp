@@ -100,19 +100,11 @@ nsMsgSearchDataSource::OnSearchHit(nsIMsgDBHdr* aMsgHdr, nsIMsgFolder *folder)
     return NS_OK;
 }
 
+// for now also acts as a way of resetting the search datasource
 NS_IMETHODIMP
-nsMsgSearchDataSource::SetSearchSession(nsIMsgSearchSession* aSession)
+nsMsgSearchDataSource::OnNewSearch()
 {
-    mSearchSession = aSession;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMsgSearchDataSource::GetSearchSession(nsIMsgSearchSession** aResult)
-{
-    NS_ENSURE_ARG_POINTER(aResult);
-    (*aResult) = mSearchSession;
-    NS_IF_ADDREF(*aResult);
+    mSearchResults->Clear();
     return NS_OK;
 }
 

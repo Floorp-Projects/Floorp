@@ -39,11 +39,9 @@ interface nsIMsgSearchNotify : nsISupports
    * out-of-bound way to connect a set of search terms to a datasource
    */
 
-  /**
-   * searchSession - the current search session that's running
-   * for this listener
+  /*
+   * called when a new search begins
    */
-  attribute nsIMsgSearchSession searchSession;
-
+  void onNewSearch();
 };
 

@@ -70,6 +70,8 @@ interface nsIMsgSearchSession :  nsISupports {
     void addScopeTerm(in nsMsgSearchScopeValue attrib,
                       in nsIMsgFolder folder);
 
+    void clearScopes();
+    
     /* special cases for LDAP since LDAP isn't really a folderInfo */
     [noscript] void AddLdapScope(in nsMsgDIRServer server);
     /* void AddAllLdapScopes(XP_List* dirServerList); */

@@ -63,10 +63,11 @@ NS_IMETHODIMP
 nsMsgSearchSession::AddSearchTerm(nsMsgSearchAttribValue attrib,
                                   nsMsgSearchOpValue op,
                                   nsIMsgSearchValue * value,
-                                  PRBool BooleanAND,
+                                  PRBool BooleanANDp,
                                   const char *arbitraryHeader)
 {
-	nsMsgSearchTerm *pTerm = new nsMsgSearchTerm (attrib, op, value, nsMsgSearchBooleanOp::BooleanAND, arbitraryHeader);
+	nsMsgSearchTerm *pTerm = new nsMsgSearchTerm (attrib, op, value,
+                                                  BooleanANDp ? nsMsgSearchBooleanOp::BooleanAND : nsMsgSearchBooleanOp::BooleanOR, arbitraryHeader);
 	if (nsnull == pTerm)
 		return NS_ERROR_OUT_OF_MEMORY;
 	m_termList->AppendElement (pTerm);
@@ -153,6 +154,7 @@ nsMsgSearchSession::GetNthSearchScope(PRInt32 which,
 {
   // argh, does this do an addref?
 	nsMsgSearchScopeTerm *scopeTerm = m_scopeList.ElementAt(which);
+    if (!scopeTerm) return NS_ERROR_INVALID_ARG;
 	*scopeId = scopeTerm->m_attribute;
 	*folder = scopeTerm->m_folder;
   NS_IF_ADDREF(*folder);
@@ -191,7 +193,8 @@ nsMsgSearchSession::AddScopeTerm(nsMsgSearchScopeValue attrib,
 #endif
 	}
 
-  if ((attrib == nsMsgSearchScope::Newsgroup || attrib == nsMsgSearchScope::OfflineNewsgroup) /* && folder->IsNews() */)
+  if ((attrib == nsMsgSearchScope::Newsgroup ||
+       attrib == nsMsgSearchScope::OfflineNewsgroup) /* && folder->IsNews() */)
 	{
 #if 0
 		// Even unsubscribed newsgroups have a folderInfo, so filter them
@@ -254,6 +257,12 @@ nsMsgSearchSession::AddScopeTerm(nsMsgSearchScopeValue attrib,
 	return err;
 }
 
+NS_IMETHODIMP nsMsgSearchSession::ClearScopes()
+{
+    DestroyScopeList();
+    return NS_OK;
+}
+
 /* [noscript] void AddLdapScope (in nsMsgDIRServer server); */
 NS_IMETHODIMP nsMsgSearchSession::AddLdapScope(nsMsgDIRServer * server)
 {
@@ -291,6 +300,17 @@ nsMsgSearchSession::AddAllScopes(nsMsgSearchScopeValue attrib)
 NS_IMETHODIMP nsMsgSearchSession::Search(nsIMsgWindow *aWindow)
 {
 	nsresult err = Initialize ();
+    if (m_listenerList) {
+        PRUint32 count;
+        m_listenerList->Count(&count);
+        for (PRUint32 i=0; i<count;i++) {
+            nsCOMPtr<nsIMsgSearchNotify> listener;
+            m_listenerList->QueryElementAt(i, NS_GET_IID(nsIMsgSearchNotify),
+                                           (void **)getter_AddRefs(listener));
+            if (listener)
+                listener->OnNewSearch();
+        }
+    }
   m_window = aWindow;
 	if (NS_SUCCEEDED(err))
 		err = BeginSearching ();
@@ -586,11 +606,14 @@ void nsMsgSearchSession::DestroyResultList ()
 void nsMsgSearchSession::DestroyScopeList()
 {
 	nsMsgSearchScopeTerm *scope = NULL;
-	for (int i = 0; i < m_scopeList.Count(); i++)
+    PRInt32 count = m_scopeList.Count();
+    
+	for (PRInt32 i = count-1; i >= 0; i--)
 	{
 		scope = m_scopeList.ElementAt(i);
 //		NS_ASSERTION (scope->IsValid(), "invalid search scope");
 		delete scope;
+        m_scopeList.RemoveElementAt(i);
 	}
 }
 
@@ -625,7 +648,7 @@ nsresult nsMsgSearchSession::TimeSliceSerial (PRBool *aDone)
 	nsMsgSearchScopeTerm *scope = GetRunningScope();
 	if (scope)
 	{
-		nsresult err = scope->TimeSlice (aDone);
+		scope->TimeSlice (aDone);
 		if (*aDone)
 		{
 			m_idxRunningScope++;
