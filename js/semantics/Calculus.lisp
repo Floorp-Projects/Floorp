@@ -39,6 +39,10 @@
   (or (and a (not b)) (and (not a) b)))
 
 
+(defun digit-char-36 (char)
+  (assert-non-null (digit-char-p char 36)))
+
+
 ;;; ------------------------------------------------------------------------------------------------------
 ;;; DOUBLE-PRECISION FLOATING-POINT NUMBERS
 
@@ -1313,7 +1317,7 @@
   (assert-true (value-has-type value type t))
   (case (type-kind type)
     (:void (assert-true (null value))
-           (write-string "unit" stream))
+           (write-string "empty" stream))
     (:boolean (write-string (if value "true" "false") stream))
     ((:integer :rational :character :->) (write value :stream stream))
     (:double (case value
@@ -1760,6 +1764,8 @@
 
 ; (empty <vector-expr>)
 ; Returns true if the vector has zero elements.
+; This is equivalent to (= (length <vector-expr>) 0) and depicts the same as the latter but
+; is implemented more efficiently.
 (defun scan-empty (world type-env special-form vector-expr)
   (multiple-value-bind (vector-code vector-type vector-annotated-expr) (scan-kinded-value world type-env vector-expr :vector)
     (values
@@ -1781,85 +1787,47 @@
      (list 'expr-annotation:special-form special-form vector-annotated-expr))))
 
 
-; (first <vector-expr>)
-; Returns the first element of the vector.  Throws an error if the vector is empty.
-(defun scan-first (world type-env special-form vector-expr)
-  (multiple-value-bind (vector-code vector-type vector-annotated-expr) (scan-kinded-value world type-env vector-expr :vector)
-    (values
-     (if (eq vector-type (world-string-type world))
-       `(char ,vector-code 0)
-       `(car (non-empty-vector ,vector-code "first")))
-     (vector-element-type vector-type)
-     (list 'expr-annotation:special-form special-form vector-annotated-expr))))
-
-
-; (last <vector-expr>)
-; Returns the last element of the vector.  Throws an error if the vector is empty.
-(defun scan-last (world type-env special-form vector-expr)
-  (multiple-value-bind (vector-code vector-type vector-annotated-expr) (scan-kinded-value world type-env vector-expr :vector)
-    (values
-     (if (eq vector-type (world-string-type world))
-       (let ((var (gensym "STR")))
-         `(let ((,var ,vector-code))
-            (char ,var (1- (length ,var)))))
-       `(car (last (non-empty-vector ,vector-code "last"))))
-     (vector-element-type vector-type)
-     (list 'expr-annotation:special-form special-form vector-annotated-expr))))
-
-
 ; (nth <vector-expr> <n-expr>)
 ; Returns the nth element of the vector.  Throws an error if the vector's length is less than n.
 (defun scan-nth (world type-env special-form vector-expr n-expr)
   (multiple-value-bind (vector-code vector-type vector-annotated-expr) (scan-kinded-value world type-env vector-expr :vector)
     (multiple-value-bind (n-code n-annotated-expr) (scan-typed-value world type-env n-expr (world-integer-type world))
       (values
-       (if (eq vector-type (world-string-type world))
-         `(char ,vector-code ,n-code)
-         (let ((n (gensym "N")))
-           `(let ((,n ,n-code))
-              (car (non-empty-vector (nthcdr ,n ,vector-code) "nth")))))
+       (cond
+        ((eq vector-type (world-string-type world))
+         `(char ,vector-code ,n-code))
+        ((eql n-code 0)
+         `(car (non-empty-vector ,vector-code "first")))
+        (t (let ((n (gensym "N")))
+             `(let ((,n ,n-code))
+                (car (non-empty-vector (nthcdr ,n ,vector-code) "nth"))))))
        (vector-element-type vector-type)
        (list 'expr-annotation:special-form special-form vector-annotated-expr n-annotated-expr)))))
 
 
-; (rest <vector-expr>)
-; Returns all but the first elements of the vector.  Throws an error if the vector is empty.
-(defun scan-rest (world type-env special-form vector-expr)
-  (multiple-value-bind (vector-code vector-type vector-annotated-expr) (scan-kinded-value world type-env vector-expr :vector)
-    (values
-     (if (eq vector-type (world-string-type world))
-       `(subseq ,vector-code 1)
-       `(cdr (non-empty-vector ,vector-code "rest")))
-     vector-type
-     (list 'expr-annotation:special-form special-form vector-annotated-expr))))
-
-
-; (butlast <vector-expr>)
-; Returns all but the last elements of the vector.  Throws an error if the vector is empty.
-(defun scan-butlast (world type-env special-form vector-expr)
-  (multiple-value-bind (vector-code vector-type vector-annotated-expr) (scan-kinded-value world type-env vector-expr :vector)
-    (values
-     (if (eq vector-type (world-string-type world))
-       (let ((var (gensym "STR")))
-         `(let ((,var ,vector-code))
-            (subseq ,var 0 (1- (length ,var)))))
-       `(butlast (non-empty-vector ,vector-code "butlast")))
-     vector-type
-     (list 'expr-annotation:special-form special-form vector-annotated-expr))))
-
-
-; (subseq <vector-expr> <low-expr> <high-expr>)
+; (subseq <vector-expr> <low-expr> [<high-expr>])
 ; Returns a vector containing elements of the given vector from low-expr to high-expr inclusive.
+; high-expr defaults to length-1.
 ; It is required that 0 <= low-expr <= high-expr+1 <= length.
-(defun scan-subseq (world type-env special-form vector-expr low-expr high-expr)
+(defun scan-subseq (world type-env special-form vector-expr low-expr &optional high-expr)
   (let ((integer-type (world-integer-type world)))
     (multiple-value-bind (vector-code vector-type vector-annotated-expr) (scan-kinded-value world type-env vector-expr :vector)
       (multiple-value-bind (low-code low-annotated-expr) (scan-typed-value world type-env low-expr integer-type)
-        (multiple-value-bind (high-code high-annotated-expr) (scan-typed-value world type-env high-expr integer-type)
+        (if high-expr
+          (multiple-value-bind (high-code high-annotated-expr) (scan-typed-value world type-env high-expr integer-type)
+            (values
+             `(subseq ,vector-code ,low-code (1+ ,high-code))
+             vector-type
+             (list 'expr-annotation:special-form special-form vector-annotated-expr low-annotated-expr high-annotated-expr)))
           (values
-           `(subseq ,vector-code ,low-code (1+ ,high-code))
+           (case low-code
+             (0 vector-code)
+             (1 (if (eq vector-type (world-string-type world))
+                  `(subseq ,vector-code 1)
+                  `(cdr (non-empty-vector ,vector-code "rest"))))
+             (t `(subseq ,vector-code ,low-code)))
            vector-type
-           (list 'expr-annotation:special-form special-form vector-annotated-expr low-annotated-expr high-annotated-expr)))))))
+           (list 'expr-annotation:special-form special-form vector-annotated-expr low-annotated-expr nil)))))))
 
 
 ; (append <vector-expr> <vector-expr>)
@@ -2284,11 +2252,11 @@
     (define-action grammar production-name action-symbol body)))
 
 
-; (terminal-action <action-name> <terminal> <lisp-function-name>)
-(defun scan-terminal-action (world grammar-info-var action-name terminal function-name)
+; (terminal-action <action-name> <terminal> <lisp-function>)
+(defun scan-terminal-action (world grammar-info-var action-name terminal function)
   (let ((grammar (checked-grammar grammar-info-var))
         (action-symbol (world-intern world action-name)))
-    (define-terminal-action grammar terminal action-symbol (symbol-function function-name))))
+    (define-terminal-action grammar terminal action-symbol (symbol-function function))))
 
 
 ;;; ------------------------------------------------------------------------------------------------------
@@ -2337,11 +2305,7 @@
      (vector-of scan-vector-of depict-vector-of)
      (empty scan-empty depict-empty)
      (length scan-length depict-length)
-     (first scan-first depict-first)
-     (last scan-last depict-last)
      (nth scan-nth depict-nth)
-     (rest scan-rest depict-rest)
-     (butlast scan-butlast depict-butlast)
      (subseq scan-subseq depict-subseq)
      (append scan-append depict-append)
      (set-nth scan-set-nth depict-set-nth)
@@ -2385,34 +2349,34 @@
 
 
 (defparameter *default-primitives*
-  '((unit void nil :global :unit)
-    (true boolean t :global :true)
-    (false boolean nil :global :false)
-    (+infinity double :+inf :global ("+" :infinity))
-    (-infinity double :-inf :global (:minus :infinity))
-    (nan double :nan :global "NaN")
+  '((empty void nil :global :empty-10 %primary%)
+    (true boolean t :global :true %primary%)
+    (false boolean nil :global :false %primary%)
+    (+infinity double :+inf :global ("+" :infinity) %prefix%)
+    (-infinity double :-inf :global (:minus :infinity) %prefix%)
+    (nan double :nan :global "NaN" %primary%)
     
-    (neg (-> (integer) integer) #'- :unary :minus nil 2 2)
-    (+ (-> (integer integer) integer) #'+ :infix "+" t 5 5 5)
-    (- (-> (integer integer) integer) #'- :infix :minus t 5 5 4)
-    (* (-> (integer integer) integer) #'* :infix "*" nil 4 4 4)
-    (= (-> (integer integer) boolean) #'= :infix "=" t 6 5 5)
-    (/= (-> (integer integer) boolean) #'/= :infix :not-equal t 6 5 5)
-    (< (-> (integer integer) boolean) #'< :infix "<" t 6 5 5)
-    (> (-> (integer integer) boolean) #'> :infix ">" t 6 5 5)
-    (<= (-> (integer integer) boolean) #'<= :infix :less-or-equal t 6 5 5)
-    (>= (-> (integer integer) boolean) #'>= :infix :greater-or-equal t 6 5 5)
+    (neg (-> (integer) integer) #'- :unary :minus nil %suffix% %suffix%)
+    (+ (-> (integer integer) integer) #'+ :infix "+" t %term% %term% %term%)
+    (- (-> (integer integer) integer) #'- :infix :minus t %term% %term% %factor%)
+    (* (-> (integer integer) integer) #'* :infix "*" nil %factor% %factor% %factor%)
+    (= (-> (integer integer) boolean) #'= :infix "=" t %relational% %term% %term%)
+    (/= (-> (integer integer) boolean) #'/= :infix :not-equal t %relational% %term% %term%)
+    (< (-> (integer integer) boolean) #'< :infix "<" t %relational% %term% %term%)
+    (> (-> (integer integer) boolean) #'> :infix ">" t %relational% %term% %term%)
+    (<= (-> (integer integer) boolean) #'<= :infix :less-or-equal t %relational% %term% %term%)
+    (>= (-> (integer integer) boolean) #'>= :infix :greater-or-equal t %relational% %term% %term%)
     
-    (rational-neg (-> (rational) rational) #'- :unary "-" nil 2 2)
-    (rational+ (-> (rational rational) rational) #'+ :infix "+" t 5 5 5)
-    (rational- (-> (rational rational) rational) #'- :infix :minus t 5 5 4)
-    (rational* (-> (rational rational) rational) #'* :infix "*" nil 4 4 4)
-    (rational/ (-> (rational rational) rational) #'/ :infix "/" nil 4 4 3)
+    (rational-neg (-> (rational) rational) #'- :unary "-" nil %suffix% %suffix%)
+    (rational+ (-> (rational rational) rational) #'+ :infix "+" t %term% %term% %term%)
+    (rational- (-> (rational rational) rational) #'- :infix :minus t %term% %term% %factor%)
+    (rational* (-> (rational rational) rational) #'* :infix "*" nil %factor% %factor% %factor%)
+    (rational/ (-> (rational rational) rational) #'/ :infix "/" nil %factor% %factor% %unary%)
     
-    (not (-> (boolean) boolean) #'not :unary ((:semantic-keyword "not") " ") nil 7 6)
-    (and (-> (boolean boolean) boolean) #'and2 :infix ((:semantic-keyword "and")) t 7 6 6)
-    (or (-> (boolean boolean) boolean) #'or2 :infix ((:semantic-keyword "or")) t 7 6 6)
-    (xor (-> (boolean boolean) boolean) #'xor2 :infix ((:semantic-keyword "xor")) t 7 6 6)
+    (not (-> (boolean) boolean) #'not :unary ((:semantic-keyword "not") " ") nil %not% %not%)
+    (and (-> (boolean boolean) boolean) #'and2 :infix ((:semantic-keyword "and")) t %and% %and% %and%)
+    (or (-> (boolean boolean) boolean) #'or2 :infix ((:semantic-keyword "or")) t %or% %or% %or%)
+    (xor (-> (boolean boolean) boolean) #'xor2 :infix ((:semantic-keyword "xor")) t %xor% %xor% %xor%)
     
     (bitwise-and (-> (integer integer) integer) #'logand)
     (bitwise-or (-> (integer integer) integer) #'logior)
@@ -2437,35 +2401,57 @@
     (code-to-character (-> (integer) character) #'code-char)
     (character-to-code (-> (character) integer) #'char-code)
     
-    (char= (-> (character character) boolean) #'char= :infix "=" t 6 5 5)
-    (char/= (-> (character character) boolean) #'char/= :infix :not-equal t 6 5 5)
-    (char< (-> (character character) boolean) #'char< :infix "<" t 6 5 5)
-    (char> (-> (character character) boolean) #'char> :infix ">" t 6 5 5)
-    (char<= (-> (character character) boolean) #'char<= :infix :less-or-equal t 6 5 5)
-    (char>= (-> (character character) boolean) #'char>= :infix :greater-or-equal t 6 5 5)
+    (char= (-> (character character) boolean) #'char= :infix "=" t %relational% %term% %term%)
+    (char/= (-> (character character) boolean) #'char/= :infix :not-equal t %relational% %term% %term%)
+    (char< (-> (character character) boolean) #'char< :infix "<" t %relational% %term% %term%)
+    (char> (-> (character character) boolean) #'char> :infix ">" t %relational% %term% %term%)
+    (char<= (-> (character character) boolean) #'char<= :infix :less-or-equal t %relational% %term% %term%)
+    (char>= (-> (character character) boolean) #'char>= :infix :greater-or-equal t %relational% %term% %term%)
     
-    (string-equal (-> (string string) boolean) #'string= :infix "=" t 6 5 5)
+    (string-equal (-> (string string) boolean) #'string= :infix "=" t %relational% %term% %term%)
 
-    (integer-set-length (-> (integer-set) integer) #'intset-length :unary "|" "|" 6 5)
-    (integer-set-min (-> (integer-set) integer) #'integer-set-min :unary ((:semantic-keyword "min") " ") nil 6 2)
-    (integer-set-max (-> (integer-set) integer) #'integer-set-max :unary ((:semantic-keyword "max") " ") nil 6 2)
-    (integer-set-intersection (-> (integer-set integer-set) integer-set) #'intset-intersection :infix :intersection-10 t 4 4 4)
-    (integer-set-union (-> (integer-set integer-set) integer-set) #'intset-union :infix :union-10 t 5 5 5)
-    (integer-set-difference (-> (integer-set integer-set) integer-set) #'intset-difference :infix :minus t 5 5 4)
-    (integer-set-member (-> (integer integer-set) boolean) #'integer-set-member :infix :member-10 t 6 5 5)
-    (integer-set= (-> (integer-set integer-set) boolean) #'intset= :infix "=" t 6 5 5)
+    (integer-set-length (-> (integer-set) integer) #'intset-length :unary "|" "|" %primary% %expr%)
+    (integer-set-min (-> (integer-set) integer) #'integer-set-min :unary ((:semantic-keyword "min") " ") nil %min-max% %prefix%)
+    (integer-set-max (-> (integer-set) integer) #'integer-set-max :unary ((:semantic-keyword "max") " ") nil %min-max% %prefix%)
+    (integer-set-intersection (-> (integer-set integer-set) integer-set) #'intset-intersection :infix :intersection-10 t %factor% %factor% %factor%)
+    (integer-set-union (-> (integer-set integer-set) integer-set) #'intset-union :infix :union-10 t %term% %term% %term%)
+    (integer-set-difference (-> (integer-set integer-set) integer-set) #'intset-difference :infix :minus t %term% %term% %factor%)
+    (integer-set-member (-> (integer integer-set) boolean) #'integer-set-member :infix :member-10 t %relational% %term% %term%)
+    (integer-set= (-> (integer-set integer-set) boolean) #'intset= :infix "=" t %relational% %term% %term%)
     
-    (character-set-length (-> (character-set) integer) #'intset-length :unary "|" "|" 6 5)
-    (character-set-min (-> (character-set) character) #'character-set-min :unary ((:semantic-keyword "min") " ") nil 6 2)
-    (character-set-max (-> (character-set) character) #'character-set-max :unary ((:semantic-keyword "max") " ") nil 6 2)
-    (character-set-intersection (-> (character-set character-set) character-set) #'intset-intersection :infix :intersection-10 t 4 4 4)
-    (character-set-union (-> (character-set character-set) character-set) #'intset-union :infix :union-10 t 5 5 5)
-    (character-set-difference (-> (character-set character-set) character-set) #'intset-difference :infix :minus t 5 5 4)
-    (character-set-member (-> (character character-set) boolean) #'character-set-member :infix :member-10 t 6 5 5)
-    (character-set= (-> (character-set character-set) boolean) #'intset= :infix "=" t 6 5 5)
+    (character-set-length (-> (character-set) integer) #'intset-length :unary "|" "|" %primary% %expr%)
+    (character-set-min (-> (character-set) character) #'character-set-min :unary ((:semantic-keyword "min") " ") nil %min-max% %prefix%)
+    (character-set-max (-> (character-set) character) #'character-set-max :unary ((:semantic-keyword "max") " ") nil %min-max% %prefix%)
+    (character-set-intersection (-> (character-set character-set) character-set) #'intset-intersection :infix :intersection-10 t %factor% %factor% %factor%)
+    (character-set-union (-> (character-set character-set) character-set) #'intset-union :infix :union-10 t %term% %term% %term%)
+    (character-set-difference (-> (character-set character-set) character-set) #'intset-difference :infix :minus t %term% %term% %factor%)
+    (character-set-member (-> (character character-set) boolean) #'character-set-member :infix :member-10 t %relational% %term% %term%)
+    (character-set= (-> (character-set character-set) boolean) #'intset= :infix "=" t %relational% %term% %term%)
 
+    (digit-value (-> (character) integer) #'digit-char-36)
     (is-ordinary-initial-identifier-character (-> (character) boolean) #'ordinary-initial-identifier-character?)
     (is-ordinary-continuing-identifier-character (-> (character) boolean) #'ordinary-continuing-identifier-character?)))
+
+
+;;; Partial order of primitives for deciding when to depict parentheses.
+(defparameter *primitive-level* (make-partial-order))
+(def-partial-order-element *primitive-level* %primary%)                                          ;id, constant, (e), |e|, action
+(def-partial-order-element *primitive-level* %suffix% %primary%)                                 ;f(...), new(v), a[i], a[i...j], a[i<-v], a.f
+(def-partial-order-element *primitive-level* %prefix% %primary%)                                 ;-e, @, oneof-tag val
+(def-partial-order-element *primitive-level* %min-max% %prefix%)                                 ;min, max
+(def-partial-order-element *primitive-level* %unary% %suffix% %prefix%)                          ;
+(def-partial-order-element *primitive-level* %factor% %unary%)                                   ;/, *, intersection
+(def-partial-order-element *primitive-level* %term% %factor%)                                    ;+, -, append, union, set difference
+(def-partial-order-element *primitive-level* %relational% %term% %min-max%)                      ;<, <=, >, >=, =, /=, address=, is, member
+(def-partial-order-element *primitive-level* %not% %relational%)                                 ;not
+(def-partial-order-element *primitive-level* %and% %not%)                                        ;and
+(def-partial-order-element *primitive-level* %or% %not%)                                         ;or
+(def-partial-order-element *primitive-level* %xor% %not%)                                        ;xor
+(def-partial-order-element *primitive-level* %logical% %and% %or% %xor%)                         ;
+(def-partial-order-element *primitive-level* %unparenthesized-new% %logical%)                    ;new v
+(defparameter %expr% %unparenthesized-new%)
+(def-partial-order-element *primitive-level* %stmt% %expr%)                                      ;:=, function, if/then/else
+(defparameter %max% %stmt%)
 
 
 ; Return the tail end of the lambda list for make-primitive.  The returned list always starts with
@@ -2478,19 +2464,21 @@
        appearance
        (ecase appearance
          (:global
-          (assert-type args (tuple t))
-          (list ':markup1 (first args) ':level 1))
+          (assert-type args (tuple t symbol))
+          (list ':markup1 (first args) ':level (symbol-value (second args))))
          (:infix
-          (assert-type args (tuple t bool integer integer integer))
-          (list ':markup1 (first args) ':markup2 (second args) ':level (third args) ':level1 (fourth args) ':level2 (fifth args)))
+          (assert-type args (tuple t bool symbol symbol symbol))
+          (list ':markup1 (first args) ':markup2 (second args) ':level (symbol-value (third args))
+                ':level1 (symbol-value (fourth args)) ':level2 (symbol-value (fifth args))))
          (:unary
-          (assert-type args (tuple t t integer integer))
-          (list ':markup1 (first args) ':markup2 (second args) ':level (third args) ':level1 (fourth args)))
+          (assert-type args (tuple t t symbol symbol))
+          (list ':markup1 (first args) ':markup2 (second args) ':level (symbol-value (third args))
+                ':level1 (symbol-value (fourth args))))
          (:phantom
           (assert-true (null args))
-          (list ':level 0)))))
+          (list ':level %primary%)))))
     (let ((name (symbol-lower-mixed-case-name name)))
-      `(:global :markup1 ((:global-variable ,name)) :markup2 ,name :level 0))))
+      `(:global :markup1 ((:global-variable ,name)) :markup2 ,name :level ,%primary%))))
 
   
 ; Create a world with the given name and set up the built-in properties of its symbols.
