@@ -15,6 +15,6 @@
 <!ENTITY  clearLocationBarButton.accesskey  "b">
   
 <!ENTITY  shistory.label             "Session History">
-<!ENTITY  shistoryDescription1.label "Session History is a list of pages previously visited on each open browser window. Session History is accessible through the Back and Forward buttons">
-<!ENTITY  shistoryDescription2.label "Maximum number of pages maintained by Session History for each window">
+<!ENTITY  shistoryDescription1.label "Session History is a list of pages previously visited for an open browser window, accessible via the Back and Forward buttons.">
+<!ENTITY  shistoryDescription2.label "Session history size (number of pages):">
 <!ENTITY  shistory.accesskey         "s">

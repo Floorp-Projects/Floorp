@@ -1,8 +1,8 @@
 
 <!ENTITY  lHeader                       "Bookmarks">
-<!ENTITY  filingBookmarks.label         "Filing Bookmarks">
+<!ENTITY  filingBookmarks.label         "Adding Bookmarks">
 <!ENTITY  autoFile.label                "&brandShortName; will ask you to choose a title and folder when adding a new Bookmark.">
-<!ENTITY  enableAutoFile.label          "When adding a new Bookmark, automatically select its title and destination.">
+<!ENTITY  enableAutoFile.label          "Automatically set title and destination">
 <!ENTITY  defaultFolder.label           "By default, all new Bookmarks will be added into this folder:">
 <!ENTITY  chooseDefaultFolder.label     "Choose Folder...">
 <!ENTITY  chooseDefaultFolder.accesskey "c">
