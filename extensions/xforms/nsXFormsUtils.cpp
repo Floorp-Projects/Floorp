@@ -48,6 +48,7 @@
 #include "nsIDOMXPathResult.h"
 #include "nsIDOMXPathNSResolver.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMText.h"
 #include "nsIXFormsModelElement.h"
 
 /* static */ nsIDOMNode*
@@ -304,6 +305,159 @@ nsXFormsUtils::EvaluateNodeBinding(nsIDOMElement  *aElement,
 
   return EvaluateXPath(expr, docElement, aElement, aResultType);
 }
+
+/* static */ void
+nsXFormsUtils::GetNodeValue(nsIDOMNode* aDataNode, nsString& aNodeValue)
+{
+  PRUint16 nodeType;
+  aDataNode->GetNodeType(&nodeType);
+
+  switch(nodeType) {
+  case nsIDOMNode::ATTRIBUTE_NODE:
+  case nsIDOMNode::TEXT_NODE:
+    // "Returns the string-value of the node."
+    aDataNode->GetNodeValue(aNodeValue);
+    return;
+
+  case nsIDOMNode::ELEMENT_NODE:
+    {
+      // "If text child nodes are present, returns the string-value of the
+      // first text child node.  Otherwise, returns "" (the empty string)".
+
+      // Find the first child text node.
+      nsCOMPtr<nsIDOMNodeList> childNodes;
+      aDataNode->GetChildNodes(getter_AddRefs(childNodes));
+
+      if (childNodes) {
+        nsCOMPtr<nsIDOMNode> child;
+        PRUint32 childCount;
+        childNodes->GetLength(&childCount);
+
+        for (PRUint32 i = 0; i < childCount; ++i) {
+          childNodes->Item(i, getter_AddRefs(child));
+          NS_ASSERTION(child, "DOMNodeList length is wrong!");
+
+          child->GetNodeType(&nodeType);
+          if (nodeType == nsIDOMNode::TEXT_NODE) {
+            child->GetNodeValue(aNodeValue);
+            return;
+          }
+        }
+      }
+
+      // No child text nodes.  Return an empty string.
+    }
+    break;
+          
+  default:
+    // namespace, processing instruction, comment, XPath root node
+    NS_WARNING("String value for this node type is not defined");
+  }
+
+  aNodeValue.Truncate(0);
+}
+
+/* static */ void
+nsXFormsUtils::SetNodeValue(nsIDOMNode* aDataNode, const nsString& aNodeValue)
+{
+  PRUint16 nodeType;
+  aDataNode->GetNodeType(&nodeType);
+
+  switch(nodeType) {
+  case nsIDOMNode::ATTRIBUTE_NODE:
+    // "The string-value of the attribute is replaced with a string
+    // corresponding to the new value."
+    aDataNode->SetNodeValue(aNodeValue);
+    break;
+
+  case nsIDOMNode::TEXT_NODE:
+    // "The text node is replaced with a new one corresponding to the new
+    // value".
+    {
+      nsCOMPtr<nsIDOMDocument> document;
+      aDataNode->GetOwnerDocument(getter_AddRefs(document));
+      if (!document)
+        break;
+
+      nsCOMPtr<nsIDOMText> textNode;
+      document->CreateTextNode(aNodeValue, getter_AddRefs(textNode));
+      if (!textNode)
+        break;
+
+      nsCOMPtr<nsIDOMNode> parentNode;
+      aDataNode->GetParentNode(getter_AddRefs(parentNode));
+      if (parentNode) {
+        nsCOMPtr<nsIDOMNode> childReturn;
+        parentNode->ReplaceChild(textNode, aDataNode,
+                                 getter_AddRefs(childReturn));
+      }
+
+      break;
+    }
+
+  case nsIDOMNode::ELEMENT_NODE:
+    {
+      // "If the element has any child text nodes, the first text node is
+      // replaced with one corresponding to the new value."
+
+      // Start by creating a text node for the new value.
+      nsCOMPtr<nsIDOMDocument> document;
+      aDataNode->GetOwnerDocument(getter_AddRefs(document));
+      if (!document)
+        break;
+
+      nsCOMPtr<nsIDOMText> textNode;
+      document->CreateTextNode(aNodeValue, getter_AddRefs(textNode));
+      if (!textNode)
+        break;
+
+      // Now find the first child text node.
+      nsCOMPtr<nsIDOMNodeList> childNodes;
+      aDataNode->GetChildNodes(getter_AddRefs(childNodes));
+
+      if (!childNodes)
+        break;
+
+      nsCOMPtr<nsIDOMNode> child, childReturn;
+      PRUint32 childCount;
+      childNodes->GetLength(&childCount);
+
+      for (PRUint32 i = 0; i < childCount; ++i) {
+        childNodes->Item(i, getter_AddRefs(child));
+        NS_ASSERTION(child, "DOMNodeList length is wrong!");
+
+        child->GetNodeType(&nodeType);
+        if (nodeType == nsIDOMNode::TEXT_NODE) {
+          // We found one, replace it with our new text node.
+          aDataNode->ReplaceChild(textNode, child,
+                                  getter_AddRefs(childReturn));
+          return;
+        }
+      }
+
+      // "If no child text nodes are present, a text node is created,
+      // corresponding to the new value, and appended as the first child node."
+
+      // XXX This is a bit vague since "appended as the first child node"
+      // implies that there are no child nodes at all, but all we've
+      // established is that there are no child _text_nodes.
+      // Taking this to mean "inserted as the first child node" until this is
+      // clarified.
+
+      aDataNode->GetFirstChild(getter_AddRefs(child));
+      if (child)
+        aDataNode->InsertBefore(textNode, child, getter_AddRefs(childReturn));
+      else
+        aDataNode->AppendChild(textNode, getter_AddRefs(childReturn));
+
+    }
+    break;
+          
+  default:
+    NS_WARNING("Trying to set node value for unsupported node type");
+  }
+}
+
 
 /* static */ nsresult
 nsXFormsUtils::CloneScriptingInterfaces(const nsIID *aIIDList,

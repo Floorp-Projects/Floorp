@@ -376,24 +376,7 @@ nsXFormsInputElement::Blur(nsIDOMEvent *aEvent)
     mInput->GetValue(value);
   }
 
-  PRUint16 nodeType = 0;
-  singleNode->GetNodeType(&nodeType);
-
-  switch (nodeType) {
-  case nsIDOMNode::ATTRIBUTE_NODE:
-  case nsIDOMNode::TEXT_NODE:
-    singleNode->SetNodeValue(value);
-    break;
-  case nsIDOMNode::ELEMENT_NODE:
-    {
-      nsCOMPtr<nsIDOM3Node> node = do_QueryInterface(singleNode);
-      NS_ASSERTION(node, "DOM Nodes must support DOM3 interfaces");
-
-      node->SetTextContent(value);
-      break;
-    }
-  }
-
+  nsXFormsUtils::SetNodeValue(singleNode, value);
   return NS_OK;
 }
 
@@ -425,27 +408,8 @@ nsXFormsInputElement::Refresh()
       result->GetSingleNodeValue(getter_AddRefs(resultNode));
 
     if (resultNode) {
-      PRUint16 nodeType = 0;
-      resultNode->GetNodeType(&nodeType);
-
       nsAutoString text;
-
-      switch (nodeType) {
-      case nsIDOMNode::TEXT_NODE:
-      case nsIDOMNode::ATTRIBUTE_NODE:
-        resultNode->GetNodeValue(text);
-        break;
-      case nsIDOMNode::ELEMENT_NODE:
-        {
-          nsCOMPtr<nsIDOMNode> firstChild;
-          resultNode->GetFirstChild(getter_AddRefs(firstChild));
-          if (firstChild)
-            firstChild->GetNodeValue(text);
-          break;
-        }
-      default:
-        NS_ERROR("form control references invalid node type in instance data");
-      }
+      nsXFormsUtils::GetNodeValue(resultNode, text);
 
       nsCOMPtr<nsISchemaType> type;
       model->GetTypeForControl(this, getter_AddRefs(type));

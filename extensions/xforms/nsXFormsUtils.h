@@ -136,6 +136,20 @@ public:
                   PRUint16         aResultType);
 
   /**
+   * Given a node in the instance data, get its string value according
+   * to section 8.1.1 of the XForms specification.
+   */
+  static NS_HIDDEN_(void) GetNodeValue(nsIDOMNode *aDataNode,
+                                       nsString   &aNodeValue);
+
+  /**
+   * Given a node in the instance data and a string, store the value according
+   * to section 10.1.9 of the XForms specification.
+   */
+  static NS_HIDDEN_(void) SetNodeValue(nsIDOMNode     *aDataNode,
+                                       const nsString &aNodeValue);
+
+  /**
    * Clone the set of IIDs in |aIIDList| into |aOutArray|.
    * |aOutCount| is set to |aIIDCount|.
    */

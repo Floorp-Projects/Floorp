@@ -43,6 +43,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMText.h"
 #include "nsXFormsXPathNode.h"
+#include "nsXFormsUtils.h"
 
 MOZ_DECL_CTOR_COUNTER(nsXFormsMDG)
 
@@ -128,112 +129,15 @@ nsXFormsMDG::Clear() {
 }
 
 nsresult
-nsXFormsMDG::GetNodeValue(nsIDOMNode* aContextNode, nsAString& aNodeValue)
-{
-  nsresult rv;
-  nsCOMPtr<nsIDOMNode> childNode;
-
-  PRUint16 nodeType;
-  rv = aContextNode->GetNodeType(&nodeType);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  switch(nodeType) {
-  case nsIDOMNode::ATTRIBUTE_NODE:
-  case nsIDOMNode::TEXT_NODE:
-  case nsIDOMNode::CDATA_SECTION_NODE:
-  case nsIDOMNode::PROCESSING_INSTRUCTION_NODE:
-  case nsIDOMNode::COMMENT_NODE:
-    rv = aContextNode->GetNodeValue(aNodeValue);
-    NS_ENSURE_SUCCESS(rv, rv);
-    break;
-
-  case nsIDOMNode::ELEMENT_NODE:
-    rv = aContextNode->GetFirstChild(getter_AddRefs(childNode));
-    if (NS_FAILED(rv) || !childNode) {
-      // No child
-      aNodeValue.Truncate(0);
-    } else {
-      PRUint16 childType;
-      rv = childNode->GetNodeType(&childType);
-      NS_ENSURE_SUCCESS(rv, rv);
-  
-      if (   childType == nsIDOMNode::TEXT_NODE
-          || childType == nsIDOMNode::CDATA_SECTION_NODE) {
-        rv = childNode->GetNodeValue(aNodeValue);
-        NS_ENSURE_SUCCESS(rv, rv);
-      } else {
-        // Not a text child
-        aNodeValue.Truncate(0);
-      }
-    }
-    break;
-          
-  default:
-    // Asked for a node which cannot have a text child
-    // TODO: Should return more specific error?
-    return NS_ERROR_ILLEGAL_VALUE;
-    break;
-  }
-  
-  return NS_OK;
-}
-
-nsresult
-nsXFormsMDG::SetNodeValue(nsIDOMNode* aContextNode, nsAString& aNodeValue, PRBool aMarkNode)
+nsXFormsMDG::SetNodeValue(nsIDOMNode* aContextNode, const nsString& aNodeValue,
+                          PRBool aMarkNode)
 {
   if (IsReadonly(aContextNode)) {
     // TODO: Better feedback for readonly nodes?
     return NS_OK;
   }
 
-  nsresult rv;
-  nsCOMPtr<nsIDOMNode> childNode;
-  PRUint16 nodeType;
-  rv = aContextNode->GetNodeType(&nodeType);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  switch(nodeType) {
-  case nsIDOMNode::ATTRIBUTE_NODE:
-  case nsIDOMNode::TEXT_NODE:
-  case nsIDOMNode::CDATA_SECTION_NODE:
-  case nsIDOMNode::PROCESSING_INSTRUCTION_NODE:
-  case nsIDOMNode::COMMENT_NODE:
-    // TODO: Check existing value, and ignore if same??
-    rv = aContextNode->SetNodeValue(aNodeValue);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    break;
-
-  case nsIDOMNode::ELEMENT_NODE:
-    rv = aContextNode->GetFirstChild(getter_AddRefs(childNode));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (!childNode) {
-      rv = CreateNewChild(aContextNode, aNodeValue);
-      NS_ENSURE_SUCCESS(rv, rv);
-    } else {
-      PRUint16 childType;
-      rv = childNode->GetNodeType(&childType);
-      NS_ENSURE_SUCCESS(rv, rv);
-      
-      if (   childType == nsIDOMNode::TEXT_NODE
-          || childType == nsIDOMNode::CDATA_SECTION_NODE) {
-        rv = childNode->SetNodeValue(aNodeValue);
-        NS_ENSURE_SUCCESS(rv, rv);
-      } else {
-        // Not a text child, create a new one
-        rv = CreateNewChild(aContextNode, aNodeValue, childNode);
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
-    }
-    break;
-          
-  default:
-    // Unsupported nodeType
-    // TODO: Should return more specific error?
-    return NS_ERROR_ILLEGAL_VALUE;
-    break;
-  }
+  nsXFormsUtils::SetNodeValue(aContextNode, aNodeValue);
   
   // NB: Never reached for Readonly nodes.  
   if (aMarkNode) {

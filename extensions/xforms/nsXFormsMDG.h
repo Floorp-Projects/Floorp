@@ -132,16 +132,9 @@ public:
    * @param aNodeValue       The value
    * @param aMarkNode        Mark node as changed?
    */
-  nsresult SetNodeValue(nsIDOMNode* aContextNode, nsAString& aNodeValue, PRBool aMarkNode = PR_FALSE);
+  nsresult SetNodeValue(nsIDOMNode* aContextNode, const nsString& aNodeValue,
+                        PRBool aMarkNode = PR_FALSE);
 
-  /**
-   * Get the value of a node. (used by nsXFormsMDG)
-
-   * @param aContextNode     The node to get the value for
-   * @param aNodeValue       The value of the node
-   */
-  nsresult GetNodeValue(nsIDOMNode* aContextNode, nsAString& aNodeValue);
-  
   PRBool IsConstraint(nsIDOMNode* aContextNode);
   PRBool IsValid(nsIDOMNode* aContextNode);
   PRBool ShouldDispatchValid(nsIDOMNode* aContextNode);
