@@ -58,9 +58,9 @@ my $index=0;
 for my $msg (sort { $a <=> $b } $folder->message_list) {
     my $entity = $folder->get_mime_message($msg);
     my $submitter = $entity->get('From'); chomp($submitter);
+    $submitter =~ s/&/&amp;/g;
     $submitter =~ s/</&lt;/g;
     $submitter =~ s/>/&gt;/g;
-    $submitter =~ s/&/&amp;/g;
     my $submitdate = $entity->get('Date'); chomp($submitdate);
 
     #
@@ -94,9 +94,9 @@ for my $msg (sort { $a <=> $b } $folder->message_list) {
         if ( $entity->parts(0)->head->mime_type =~ /text\/plain/ ) {
              # line beginning with -- is a signature seperator. Delete the sig
              $summary =~ s/^--.*//ms;
+             $summary =~ s/&/&amp;/g;
              $summary =~ s/</&lt;/mg;
              $summary =~ s/>/&gt;/mg;
-             $summary =~ s/&/&amp;/g;
              $summary =~ s/(http:\/\/([\S])+)/<A HREF=\"$1\">$1<\/A>/mg;
              $summary =~ s/(ftp:\/\/([\S])+)/<A HREF=\"$1\">$1<\/A>/mg;
              $summary =~ s/&lt;(([\S])+@([\S])+)&gt;/&lt;<A HREF=\"mailto:$1\">$1<\/A>&gt;/mg;
@@ -121,9 +121,9 @@ for my $msg (sort { $a <=> $b } $folder->message_list) {
     $news  =~ /^Subject: ([^\n]+)/m;
     my $subject = $1;
     $subject =~ s/^Re://g;
+    $subject =~ s/&/&amp;/g;
     $subject =~ s/</&lt;/g;
     $subject =~ s/>/&gt;/g;
-    $subject =~ s/&/&amp;/g;
     $news  =~ /^Date: ([^\n]+)/m;
     my $date = $1;
 
@@ -263,10 +263,15 @@ When you see an article of interest to the general mozilla community
 forward it to <A HREF="mailto:newsbot@mozilla.org">newsbot@mozilla.org</A> 
 and write a summary of the article.  Newsbot will add your summary to this
 page and make pointers back to the original article and its thread in DejaNews.
+For My Netcape users we also have a 
+<A HREF="http://www.mozilla.org/my-mozilla.html">channel</A>
+for newsbot.
+
+
 
 <BLOCKQUOTE><FONT SIZE=-1>
 For Netscape Communicator users, this means pressing the <I>Forward</I>
-button and writing a summary in the message window.  (Forwarding as  "quoted" 
+button and writing a summary in the message window.  (Forwarding as "quoted" 
 or "inline" confuses newsbot. Be sure to forward as attachment.)  For users 
 of other clients, the forwarded message should be a multipart MIME message 
 where the first part is text/plain or text/html and contains your summary, 
