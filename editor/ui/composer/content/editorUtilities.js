@@ -52,6 +52,7 @@ const gOutputEncodeEntities = 256;
 var gStringBundle;
 var gIOService;
 var gPrefsService;
+var gPrefsBranch;
 var gFilePickerDirectory;
 
 var gOS = "";
@@ -263,11 +264,16 @@ function GetPrefsService()
 
 function GetPrefs()
 {
+  if (gPrefsBranch)
+    return gPrefsBranch;
+
   try {
     var prefService = GetPrefsService();
-    var prefs = prefService.getBranch(null);
-    if (prefs)
-      return prefs;
+    if (prefService)
+      gPrefsBranch = prefService.getBranch(null);
+
+    if (gPrefsBranch)
+      return gPrefsBranch;
     else
       dump("failed to get root prefs!\n");
 
@@ -314,33 +320,40 @@ function SetFilePickerDirectory(filePicker, fileType)
 {
   if (filePicker)
   {
-    var location = GetUnicharPref("editor.lastFileLocation."+fileType);
-    if (location)
-    {
-      try {
-        var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
-
-        var lastLocation = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsIFile);
-
-        ioService.initFileFromURLSpec(lastLocation) = location;
-
+    try {
+      var prefBranch = GetPrefs();
+      if (prefBranch)
+      {
         // Save current directory so we can reset it in SaveFilePickerDirectory
         gFilePickerDirectory = filePicker.displayDirectory;
 
-        filePicker.displayDirectory = lastLocation;
+        var location = prefBranch.getComplexValue("editor.lastFileLocation."+fileType, Components.interfaces.nsILocalFile);
+        if (location)
+          filePicker.displayDirectory = location;
       }
-      catch(e) {}
     }
+    catch(e) {}
   }
 }
 
 // Save the directory of the selected file to prefs
 function SaveFilePickerDirectory(filePicker, fileType)
 {
-  if (filePicker && filePicker.file && filePicker.file.parent)
+  if (filePicker && filePicker.file)
   {
-    var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
-    SetUnicharPref("editor.lastFileLocation."+fileType, ioService.getURLSpecFromFile(filePicker.file.parent));
+    try {
+      var prefBranch = GetPrefs();
+
+      var fileDir;
+      if (filePicker.file.parent)
+        fileDir = filePicker.file.parent.QueryInterface(Components.interfaces.nsILocalFile);
+
+      if (prefBranch)
+       prefBranch.setComplexValue("editor.lastFileLocation."+fileType, Components.interfaces.nsILocalFile, fileDir);
+    
+      var prefsService = GetPrefsService();
+        prefsService.savePrefFile(null);
+    } catch (e) {}
   }
 
   // Restore the directory used before SetFilePickerDirectory was called;
@@ -348,7 +361,7 @@ function SaveFilePickerDirectory(filePicker, fileType)
   if (gFilePickerDirectory)
     filePicker.displayDirectory = gFilePickerDirectory;
 
-  gFilePickerDirectory = "";
+  gFilePickerDirectory = null;
 }
 
 function GetDefaultBrowserColors()
