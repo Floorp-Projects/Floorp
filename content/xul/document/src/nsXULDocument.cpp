@@ -1748,7 +1748,7 @@ nsXULDocument::SelectAll()
     startPnt->SetPoint(start, -1, PR_TRUE);
     endPnt->SetPoint(end, -1, PR_FALSE);
 #endif
-    SetDisplaySelection(nsIDocument::SELECTION_ON);
+    SetDisplaySelection(nsISelectionController::SELECTION_ON);
 
     return NS_OK;
 }

@@ -3352,11 +3352,12 @@ nsBrowserWindow::DoToggleSelection()
 {
   nsIPresShell* shell = GetPresShell();
   if (nsnull != shell) {
-    nsCOMPtr<nsIDocument> doc;
-    shell->GetDocument(getter_AddRefs(doc));
-    if (doc) {
-      PRInt8  current = doc->GetDisplaySelection();
-      doc->SetDisplaySelection(!current);
+    nsCOMPtr<nsISelectionController> selCon;
+    selCon = do_QueryInterface(shell);
+    if (selCon) {
+      PRInt16  current;
+      selCon->GetDisplaySelection(&current);
+      selCon->SetDisplaySelection(!current);
       ForceRefresh();
     }
     NS_RELEASE(shell);
