@@ -26,7 +26,7 @@ EXPORTS =	\
 	nsIPluginHost.h         \
 	nsIPluginInstanceOwner.h
 
-MODULE		= gkplugin
+MODULE		= plugin
 LIBRARY_NAME	= gkplugin
 MODULE_NAME	= nsPluginModule
 REQUIRES	= xpcom \
@@ -51,8 +51,6 @@ REQUIRES	= xpcom \
 		  webBrowser_core \
 		  timer \
 		  windowwatcher \
-		  plugin \
-		  raptor \
 		  gfx \
 		  $(NULL)
 
