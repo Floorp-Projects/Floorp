@@ -225,8 +225,11 @@ MimeCMSHeadersAndCertsMatch(MimeObject *obj,
 	  content_info->GetSignerEmailAddress (getter_Copies(cert_addr));
 	}
 
-  if (!cert_addr)
+  if (!cert_addr) {
+    // no address, no match
+    match = PR_FALSE;
     goto DONE;
+  }
 
   /* Find the headers of the MimeMessage which is the parent (or grandparent)
 	 of this object (remember, crypto objects nest.) */
@@ -242,7 +245,11 @@ MimeCMSHeadersAndCertsMatch(MimeObject *obj,
 	  }
   }
 
-  if (!msg_headers) goto DONE;
+  if (!msg_headers) {
+    // no headers, no match
+    match = PR_FALSE;
+    goto DONE;
+  }
 
   /* Find the names and addresses in the From and/or Sender fields.
    */
@@ -280,9 +287,9 @@ MimeCMSHeadersAndCertsMatch(MimeObject *obj,
 	 First check the addresses.
    */
 
-  /* If there is no addr in the cert, then consider it a match. */
+  /* If there is no addr in the cert, it can not match and we fail. */
   if (!cert_addr)
-	match = PR_TRUE;
+	match = PR_FALSE;
 
   /* If there is both a from and sender address, and if neither of
 	 them match, then error. */
