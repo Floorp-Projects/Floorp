@@ -94,101 +94,7 @@ extern "C" char *fe_GetConfigDir(void) {
 }
 #endif /* XP_UNIX */
 
-extern NET_POP3TooEarlyForEnd(PRInt32 len);
 
-/*
- * This function takes an error code and associated error data
- * and creates a string containing a textual description of
- * what the error is and why it happened.
- *
- * The returned string is allocated and thus should be freed
- * once it has been used.
- *
- * This function is defined in mkmessag.c.
- */
-char * NET_ExplainErrorDetails (int code, ...)
-{
-	char * rv = PR_smprintf("%s", "Error descriptions not implemented yet");
-	return rv;
-}
-
-char * NET_SACopy (char **destination, const char *source)
-{
-	if(*destination)
-	  {
-	    XP_FREE(*destination);
-		*destination = 0;
-	  }
-    if (! source)
-	  {
-        *destination = NULL;
-	  }
-    else 
-	  {
-        *destination = (char *) PR_Malloc (PL_strlen(source) + 1);
-        if (*destination == NULL) 
- 	        return(NULL);
-
-        PL_strcpy (*destination, source);
-      }
-    return *destination;
-}
-
-/*  Again like strdup but it concatinates and free's and uses Realloc
-*/
-char * NET_SACat (char **destination, const char *source)
-{
-    if (source && *source)
-      {
-        if (*destination)
-          {
-            int length = PL_strlen (*destination);
-            *destination = (char *) PR_Realloc (*destination, length + PL_strlen(source) + 1);
-            if (*destination == NULL)
-            return(NULL);
-
-            PL_strcpy (*destination + length, source);
-          }
-        else
-          {
-            *destination = (char *) PR_Malloc (PL_strlen(source) + 1);
-            if (*destination == NULL)
-                return(NULL);
-
-             PL_strcpy (*destination, source);
-          }
-      }
-    return *destination;
-}
-
-char *MSG_UnEscapeSearchUrl (const char *commandSpecificData)
-{
-	char *result = (char*) PR_Malloc (PL_strlen(commandSpecificData) + 1);
-	if (result)
-	{
-		char *resultPtr = result;
-		while (1)
-		{
-			char ch = *commandSpecificData++;
-			if (!ch)
-				break;
-			if (ch == '\\')
-			{
-				char scratchBuf[3];
-				scratchBuf[0] = (char) *commandSpecificData++;
-				scratchBuf[1] = (char) *commandSpecificData++;
-				scratchBuf[2] = '\0';
-				int accum = 0;
-				sscanf (scratchBuf, "%X", &accum);
-				*resultPtr++ = (char) accum;
-			}
-			else
-				*resultPtr++ = ch;
-		}
-		*resultPtr = '\0';
-	}
-	return result;
-}
 
 
 /* SI::BUFFERED-STREAM-MIXIN
@@ -620,8 +526,8 @@ int main()
     nsresult result;
     nsIURL * pURL = NULL;
 
-    nsRepository::RegisterFactory(kNetServiceCID, NETLIB_DLL, PR_FALSE, PR_FALSE);
-	nsRepository::RegisterFactory(kEventQueueServiceCID, XPCOM_DLL, PR_FALSE, PR_FALSE);
+	nsRepository::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
+	nsRepository::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
 
 	// Create the Event Queue for this thread...
     nsIEventQueueService *pEventQService = nsnull;
