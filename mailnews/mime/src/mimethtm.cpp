@@ -179,7 +179,15 @@ MimeInlineTextHTML_parse_line (char *line, PRInt32 length, MimeObject *obj)
             char *token; 
             char* newStr; 
             token = nsCRT::strtok(cp, seps, &newStr); 
-            if (token != NULL) 
+            // Fix bug 101434, in this case since this parsing is a char* 
+            // operation, a real UTF-16 or UTF-32 document won't be parse 
+            // correctly, if it got parse, it cannot be UTF-16 nor UTF-32
+            // there fore, we ignore them if somehow we got that value
+            // 6 == strlen("UTF-16") or strlen("UTF-32"), this will cover
+            // UTF-16, UTF-16BE, UTF-16LE, UTF-32, UTF-32BE, UTF-32LE
+            if ((token != NULL) &&
+                nsCRT::strncasecmp(token, "UTF-16", 6) &&
+                nsCRT::strncasecmp(token, "UTF-32", 6))
               { 
                 textHTML->charset = nsCRT::strdup(token); 
               } 
