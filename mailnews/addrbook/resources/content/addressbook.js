@@ -1,4 +1,5 @@
 var addressbook = 0;
+var editCardCallback = 0;
 
 // functions used only by addressbook
 
@@ -9,7 +10,7 @@ function OnLoadAddressBook()
 	
 	top.addressbook = Components.classes["component://netscape/addressbook"].createInstance();
 	top.addressbook = top.addressbook.QueryInterface(Components.interfaces.nsIAddressBook);
-	top.addressbook.editCardCallback = UpdateCardView;
+	top.editCardCallback = UpdateCardView;
 
 	try {
 		top.addressbook.SetWebShellWindow(window)
@@ -18,11 +19,6 @@ function OnLoadAddressBook()
 		dump("failed to set webshell window\n");
 	}
 
-	// FIX ME! - can remove these as soon as waterson enables auto-registration
-	//document.commandDispatcher.addCommand(document.getElementById('CommandUpdate_AddressBook'));
-	//document.commandDispatcher.addCommand(document.getElementById('cmd_selectAll'));
-	//document.commandDispatcher.addCommand(document.getElementById('cmd_delete'));
-	
 	SetupCommandUpdateHandlers();
 	SelectFirstAddressBook();
 }
@@ -100,36 +96,6 @@ function AbUpdateCommandDelete()
 }
 
 
-/*
-function AbDelete()
-{
-//	dump("\AbDelete from XUL\n");
-	var tree = document.getElementById('resultsTree');
-	if ( tree )
-	{
-		//get the selected elements
-		var cardList = tree.selectedItems;
-		//get the current folder
-		var srcDirectory = document.getElementById('resultsTree');
-		dump("srcDirectory = " + srcDirectory + "\n");
-		top.addressbook.DeleteCards(tree, srcDirectory, cardList);
-	}
-}
-*/
-
-/*
-function AbDeleteDirectory()
-{
-//	dump("\AbDeleteDirectory from XUL\n");
-	var tree = document.getElementById('dirTree');
-	
-//	if ( tree && tree.selectedItems && tree.selectedItems.length )
-	if ( tree )
-		top.addressbook.DeleteAddressBooks(tree.database, tree, tree.selectedItems);
-}
-*/
-
-
 function UpdateCardView()
 {
 	var tree = document.getElementById('resultsTree');
@@ -184,3 +150,34 @@ function AbImport()
 {
 	addressbook.ImportAddressBook();
 }
+
+/*
+function AbDelete()
+{
+//	dump("\AbDelete from XUL\n");
+	var tree = document.getElementById('resultsTree');
+	if ( tree )
+	{
+		//get the selected elements
+		var cardList = tree.selectedItems;
+		//get the current folder
+		var srcDirectory = document.getElementById('resultsTree');
+		dump("srcDirectory = " + srcDirectory + "\n");
+		top.addressbook.DeleteCards(tree, srcDirectory, cardList);
+	}
+}
+*/
+
+/*
+function AbDeleteDirectory()
+{
+//	dump("\AbDeleteDirectory from XUL\n");
+	var tree = document.getElementById('dirTree');
+	
+//	if ( tree && tree.selectedItems && tree.selectedItems.length )
+	if ( tree )
+		top.addressbook.DeleteAddressBooks(tree.database, tree, tree.selectedItems);
+}
+*/
+
+

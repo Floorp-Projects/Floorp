@@ -131,11 +131,8 @@ function AbEditCard()
 		var uri = resultsTree.selectedItems[0].getAttribute('id');
 		var card = rdf.GetResource(uri);
 		card = card.QueryInterface(Components.interfaces.nsIAbCard);
-		var editCardCallback = 0;
-		if ( top.addressbook && top.addressbook.editCardCallback )
-			editCardCallback = top.addressbook.editCardCallback;
 		goEditCardDialog(document.getElementById('resultsTree').getAttribute('ref'),
-						 card, editCardCallback);
+						 card, top.editCardCallback);
 	}
 }
 

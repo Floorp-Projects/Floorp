@@ -1,6 +1,7 @@
 var addressbook = 0;
 var composeWindow = 0;
 var msgCompFields = 0;
+var editCardCallback = 0;
 
 // localization strings
 var prefixTo = "To: ";
