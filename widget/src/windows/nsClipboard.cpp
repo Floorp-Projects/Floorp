@@ -63,7 +63,6 @@ static NS_DEFINE_IID(kCImageCID, NS_IMAGE_CID);
 nsClipboard::nsClipboard() : nsBaseClipboard()
 {
   //NS_INIT_REFCNT();
-  mDataObj        = nsnull;
   mIgnoreEmptyNotification = PR_FALSE;
   mWindow         = nsnull;
 
@@ -74,8 +73,6 @@ nsClipboard::nsClipboard() : nsBaseClipboard()
 //-------------------------------------------------------------------------
 nsClipboard::~nsClipboard()
 {
-  if ( mDataObj )
-    mDataObj->Release();
 
 }
 
@@ -213,17 +210,10 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData ( PRInt32 aWhichClipboard )
   // Clear the native clipboard
   ::OleSetClipboard(NULL);
 
-  // Release the existing DataObject
-  if (mDataObj) {
-    mDataObj->Release();
-  }
-
   IDataObject * dataObj;
-  if (NS_OK == CreateNativeDataObject(mTransferable, &dataObj)) { // this add refs
-    // cast our native DataObject to its IDataObject pointer
-    // and put it on the clipboard
-    mDataObj = (IDataObject *)dataObj;
-    ::OleSetClipboard(mDataObj);
+  if ( NS_SUCCEEDED(CreateNativeDataObject(mTransferable, &dataObj)) ) { // this add refs
+    ::OleSetClipboard(dataObj);
+    dataObj->Release();
   }
 
   mIgnoreEmptyNotification = PR_FALSE;
@@ -883,54 +873,7 @@ static void PlaceDataOnClipboard(PRUint32 aFormat, char * aData, int aLength)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsClipboard::ForceDataToClipboard ( PRInt32 aWhichClipboard )
 {
-  // make sure we have a good transferable
-  if ( !mTransferable || aWhichClipboard != kGlobalClipboard ) {
-    return NS_ERROR_FAILURE;
-  }
-
-  HWND nativeWin = nsnull;//(HWND)mWindow->GetNativeData(NS_NATIVE_WINDOW);
-  ::OpenClipboard(nativeWin);
-  ::EmptyClipboard();
-
-  // get flavor list that includes all flavors that can be written (including ones 
-  // obtained through conversion)
-  nsCOMPtr<nsISupportsArray> flavorList;
-  nsresult errCode = mTransferable->FlavorsTransferableCanExport ( getter_AddRefs(flavorList) );
-  if ( NS_FAILED(errCode) )
-    return NS_ERROR_FAILURE;
-
-  // Walk through flavors and see which flavor is on the native clipboard,
-  PRUint32 i;
-  PRUint32 cnt;
-  flavorList->Count(&cnt);
-  for (i=0;i<cnt;i++) {
-    nsCOMPtr<nsISupports> genericFlavor;
-    flavorList->GetElementAt ( i, getter_AddRefs(genericFlavor) );
-    nsCOMPtr<nsISupportsString> currentFlavor ( do_QueryInterface(genericFlavor) );
-    if ( currentFlavor ) {
-      nsXPIDLCString flavorStr;
-      currentFlavor->ToString(getter_Copies(flavorStr));
-      UINT format = GetFormat(flavorStr);
-
-      void   * data;
-      PRUint32 dataLen = 0;
-
-      // Get the data as a bunch-o-bytes from the clipboard
-      // this call hands back new memory with the contents copied into it
-      nsCOMPtr<nsISupports> genericDataWrapper;
-      mTransferable->GetTransferData(flavorStr, getter_AddRefs(genericDataWrapper), &dataLen);
-      nsPrimitiveHelpers::CreateDataFromPrimitive ( flavorStr, genericDataWrapper, &data, dataLen );
-
-      // now place it on the Clipboard
-      if (nsnull != data) {
-        PlaceDataOnClipboard(format, (char *)data, dataLen);
-      }
-
-      // Now, delete the memory that was created by the transferable
-      nsCRT::free ( (char *) data );
-    }
-  }
-
+  ::OleFlushClipboard();
   ::CloseClipboard();
 
   return NS_OK;

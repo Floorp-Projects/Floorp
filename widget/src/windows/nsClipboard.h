@@ -70,7 +70,6 @@ protected:
   static void ResolveShortcut ( const char* inFileName, char** outURL ) ;
 
   nsIWidget         * mWindow;
-  IDataObject       * mDataObj;
 
 };
 
