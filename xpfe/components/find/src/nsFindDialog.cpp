@@ -16,6 +16,7 @@
  * Reserved.
  */
 
+#include "nsIAppShellService.h"
 #include "nsIFindComponent.h"
 
 #include "nsCOMPtr.h"
