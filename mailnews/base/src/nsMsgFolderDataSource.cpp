@@ -1153,28 +1153,28 @@ nsMsgFolderDataSource::createFolderSpecialNode(nsIMsgFolder *folder,
 {
   PRUint32 flags;
   nsresult rv = folder->GetFlags(&flags);
-  if(NS_FAILED(rv)) return rv;
+  if(NS_FAILED(rv)) 
+    return rv;
   
-  const PRUnichar *specialFolderString;
-  
-  if(flags & MSG_FOLDER_FLAG_INBOX)
-    specialFolderString = NS_LITERAL_STRING("Inbox").get();
-  else if(flags & MSG_FOLDER_FLAG_TRASH)
-    specialFolderString = NS_LITERAL_STRING("Trash").get();
-  else if(flags & MSG_FOLDER_FLAG_QUEUE)
-    specialFolderString = NS_LITERAL_STRING("Unsent Messages").get();
-  else if(flags & MSG_FOLDER_FLAG_SENTMAIL)
-    specialFolderString = NS_LITERAL_STRING("Sent").get();
-  else if(flags & MSG_FOLDER_FLAG_DRAFTS)
-    specialFolderString = NS_LITERAL_STRING("Drafts").get();
-  else if(flags & MSG_FOLDER_FLAG_TEMPLATES)
-    specialFolderString = NS_LITERAL_STRING("Templates").get();
+  nsAutoString specialFolderString;
+  if (flags & MSG_FOLDER_FLAG_INBOX)
+    specialFolderString = NS_LITERAL_STRING("Inbox");
+  else if (flags & MSG_FOLDER_FLAG_TRASH)
+    specialFolderString = NS_LITERAL_STRING("Trash");
+  else if (flags & MSG_FOLDER_FLAG_QUEUE)
+    specialFolderString = NS_LITERAL_STRING("Unsent Messages");
+  else if (flags & MSG_FOLDER_FLAG_SENTMAIL)
+    specialFolderString = NS_LITERAL_STRING("Sent");
+  else if (flags & MSG_FOLDER_FLAG_DRAFTS)
+    specialFolderString = NS_LITERAL_STRING("Drafts");
+  else if (flags & MSG_FOLDER_FLAG_TEMPLATES)
+    specialFolderString = NS_LITERAL_STRING("Templates");
   else {
     // XXX why do this at all? or just ""
-    specialFolderString = NS_LITERAL_STRING("none").get();
+    specialFolderString = NS_LITERAL_STRING("none");
   }
   
-  createNode(specialFolderString, target, getRDFService());
+  createNode(specialFolderString.get(), target, getRDFService());
   return NS_OK;
 }
 
@@ -1948,14 +1948,17 @@ nsMsgFolderDataSource::GetFolderSizeNode(PRInt32 aFolderSize, nsIRDFNode **aNode
     folderSize /= 1024;  // normalize into k;
     PRBool sizeInMB = (folderSize > 1024);
     sizeString.AppendInt((sizeInMB) ? folderSize / 1024 : folderSize);
-    /* On OS/2, we have an issue where temporaries get destructed in */
-    /* conditionals. Solution is to break it out */
+    // On OS/2, we have an issue where temporaries get destructed in
+    // conditionals. Solution is to break it out
+    //
+    // XXX todo
+    // can we catch this problem at compile time?
+    // see #179234
     nsAutoString units;
-    if (sizeInMB) {
+    if (sizeInMB)
       units = NS_LITERAL_STRING(" MB");
-    } else {
+    else
       units = NS_LITERAL_STRING(" kb");
-    }
     sizeString.Append(units);
     createNode(sizeString.get(), aNode, getRDFService());
   }
