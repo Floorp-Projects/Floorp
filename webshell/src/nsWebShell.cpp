@@ -3935,7 +3935,7 @@ NS_IMETHODIMP nsWebShell::SetDocument(nsIDOMDocument *aDOMDoc,
   rootContent->SetDocument(doc, PR_TRUE);
 
   // (6) reflow the document
-  SetScrolling(-1, PR_FALSE);
+  InitFrameData(PR_FALSE);  // Reset the scrolling state to initial
   PRInt32 i;
   PRInt32 ns = doc->GetNumberOfShells();
   for (i = 0; i < ns; i++) 
