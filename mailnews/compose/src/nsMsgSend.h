@@ -75,7 +75,7 @@ class nsMsgSendMimeDeliveryState : public nsIMsgSend
 {
 public:
 	nsMsgSendMimeDeliveryState();
-	~nsMsgSendMimeDeliveryState();
+	virtual ~nsMsgSendMimeDeliveryState();
 
 	/* this macro defines QueryInterface, AddRef and Release for this class */
 	NS_DECL_ISUPPORTS
