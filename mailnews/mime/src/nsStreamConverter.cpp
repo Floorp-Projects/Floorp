@@ -464,16 +464,17 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
 
 	SetStreamURI(aURI);
 	// now we want to create a pipe which we'll use for converting the data...
+  nsCOMPtr<nsIPipeObserver> pipeObserver = do_QueryInterface(mEmitter);
 	rv = NS_NewPipe(getter_AddRefs(mInputStream), getter_AddRefs(mOutputStream),
-                  nsnull,
+                  pipeObserver,
                   NS_STREAM_CONVERTER_SEGMENT_SIZE,
                   NS_STREAM_CONVERTER_BUFFER_SIZE);
 
-    if (NS_SUCCEEDED(rv))
-    {
-        mInputStream->SetNonBlocking(PR_TRUE);
-        mOutputStream->SetNonBlocking(PR_TRUE);
-    }
+  if (NS_SUCCEEDED(rv))
+  {
+      mInputStream->SetNonBlocking(PR_TRUE);
+      mOutputStream->SetNonBlocking(PR_TRUE);
+  }
 
 	// initialize our emitter
 	if (NS_SUCCEEDED(rv) && mEmitter)
