@@ -16,13 +16,11 @@
 #
 
 DEPTH		= ../../../../../..
-
 topsrcdir	= @top_srcdir@
 VPATH		= @srcdir@
 srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
-
 include $(topsrcdir)/config/config.mk
 
 CFLAGS		+= -DEXPORT_XPTC_API
@@ -47,15 +45,16 @@ endif
 
 # Solaris/sparc
 ifneq (,$(filter SunOS,$(OS_ARCH)))
+ifneq (86,$(findstring 86,$(OS_TEST)))
 CPPSRCS		= \
-	xptcinvoke_sparc_solaris.cpp \
-	xptcstubs_sparc_solaris.cpp \
-	$(NULL)
-
+		  xptcinvoke_sparc_solaris.cpp \
+		  xptcstubs_sparc_solaris.cpp \
+		  $(NULL)
 ASFILES		= \
-	xptcinvoke_asm_sparc_solaris.s \
-	xptcstubs_asm_sparc_solaris.s \
-	$(NULL)
+		  xptcinvoke_asm_sparc_solaris.s \
+		  xptcstubs_asm_sparc_solaris.s \
+		  $(NULL)
+endif
 endif
 
 include $(topsrcdir)/config/rules.mk
