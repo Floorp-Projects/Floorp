@@ -59,8 +59,16 @@ NS_IMETHODIMP nsFontMetricsMac :: Init(const nsFont& aFont, nsIDeviceContext* aC
 	
   FontInfo fInfo;
   // FetchFontInfo gets the font info without having to touch a grafport. It's 8.5 only
+  #if !TARGET_CARBON
   OSErr	err = ::FetchFontInfo(mFontNum, theStyle.tsSize, theStyle.tsFace, &fInfo);
   NS_ASSERTION(err == noErr, "Error in FetchFontInfo");
+  #else
+  // pinkerton - hack because this routine isn't yet in carbon.
+  fInfo.ascent = theStyle.tsSize;
+  fInfo.descent = 3;
+  fInfo.widMax = 12;
+  fInfo.leading = 3;
+  #endif
   
   float  dev2app;
   mContext->GetDevUnitsToAppUnits(dev2app);
