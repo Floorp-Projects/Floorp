@@ -1990,9 +1990,12 @@ nsImageFrame::RealLoadImage(const nsAString& aSpec, nsIPresContext *aPresContext
   /* get the URI, convert internal-gopher-stuff if needed */
   nsCOMPtr<nsIURI> uri;
   GetURI(aSpec, getter_AddRefs(uri));
-  if (!uri)
+  if (!uri) {
+    if (!realURI) 
+      return NS_ERROR_FAILURE;
     uri = realURI;
-
+  }
+  
   /* set this back to FALSE before we do the real load */
   mInitialLoadCompleted = PR_FALSE;
 
