@@ -25,12 +25,14 @@
 #include "nslayout.h"
 #include "nsCoord.h"
 
+// #define NS_MATHML_STRICT_LOOKUP 1  // see documentation of LookupOperator() below
+
 typedef PRUint32 nsOperatorFlags;
 
 // define the bits used to handle the operator
 
-#define NS_MATHML_OPERATOR_MUTABLE   0x80000000 // the very first bit
-
+#define NS_MATHML_OPERATOR_MUTABLE     0x80000000 // the very first bit
+#define NS_MATHML_OPERATOR_EMBELLISH_ANCESTOR     0x40000000 // the second bit
 
 // define the bits used in the operator dictionary
 
@@ -45,10 +47,15 @@ typedef PRUint32 nsOperatorFlags;
 #define NS_MATHML_OPERATOR_SEPARATOR     (1<<6)
 #define NS_MATHML_OPERATOR_MOVABLELIMITS (1<<7)
 
+#define NS_MATHML_OPERATOR_SYMMETRIC     (1<<8)
+
 // Macros that retrieve those bits
 
 #define NS_MATHML_OPERATOR_IS_MUTABLE(_flags) \
   (NS_MATHML_OPERATOR_MUTABLE == ((_flags) & NS_MATHML_OPERATOR_MUTABLE))
+
+#define NS_MATHML_OPERATOR_HAS_EMBELLISH_ANCESTOR(_flags) \
+  (NS_MATHML_OPERATOR_EMBELLISH_ANCESTOR == ((_flags) & NS_MATHML_OPERATOR_EMBELLISH_ANCESTOR))
 
 #define NS_MATHML_OPERATOR_GET_FORM(_flags) \
   ((_flags) & NS_MATHML_OPERATOR_FORM)
@@ -80,6 +87,8 @@ typedef PRUint32 nsOperatorFlags;
 #define NS_MATHML_OPERATOR_IS_MOVABLELIMITS(_flags) \
   (NS_MATHML_OPERATOR_MOVABLELIMITS == ((_flags) & NS_MATHML_OPERATOR_MOVABLELIMITS))
 
+#define NS_MATHML_OPERATOR_IS_SYMMETRIC(_flags) \
+  (NS_MATHML_OPERATOR_SYMMETRIC == ((_flags) & NS_MATHML_OPERATOR_SYMMETRIC))
 
 class nsMathMLOperators {
 public:
@@ -89,6 +98,11 @@ public:
   // Given the string value of an operator and its form (last two bits of flags),
   // this method returns true if the operator is found in the operator dictionary.
   // Attributes of the operator are returned in the output parameters.
+  // If the operator is not found under the supplied form but is found under a 
+  // different form, the method returns true as well (it is possible to set
+  // NS_MATHML_STRICT_LOOKUP to disable this feature). The caller can test the
+  // output parameter aFlags to know exactly under which form the operator was
+  // found in the operator dictionary.
 
   static PRBool LookupOperator(const nsStr&          aOperator,
                                const nsOperatorFlags aForm,
