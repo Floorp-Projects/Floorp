@@ -1236,10 +1236,8 @@ NS_IMETHODIMP nsImapMailFolder::CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDBHdr,
 	rv = msgDBHdr->GetMessageKey(&key);
 
 	if(NS_SUCCEEDED(rv))
-		rv = GetPathName(path);
+		rv = nsBuildImapMessageURI(mURI, key, &msgURI);
 
-	if(NS_SUCCEEDED(rv))
-		rv = nsBuildImapMessageURI(path, key, &msgURI);
 
 	if(NS_SUCCEEDED(rv))
 	{
@@ -1336,8 +1334,12 @@ NS_IMETHODIMP nsImapMailFolder::OnKeyAdded(nsMsgKey aKeyChanged,
 NS_IMETHODIMP nsImapMailFolder::OnAnnouncerGoingAway(nsIDBChangeAnnouncer *
 													 instigator)
 {
-	nsresult rv = NS_ERROR_FAILURE;
-	return rv;
+    if (m_mailDatabase)
+    {
+        m_mailDatabase->RemoveListener(this);
+        m_mailDatabase = nsnull;
+    }
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsImapMailFolder::BeginCopy(nsIMessage *message)
