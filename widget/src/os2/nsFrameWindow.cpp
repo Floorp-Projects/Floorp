@@ -80,7 +80,23 @@ void nsFrameWindow::RealDoCreate( HWND hwndP, nsWindow *aParent,
                                   nsIAppShell *aAppShell,
                                   nsWidgetInitData *aInitData, HWND hwndO)
 {
-   hwndP = aParent ? aParent->GetMainWindow() : NULLHANDLE;
+   nsRect rect;
+   if( aParent)  // Offset rect by position of owner
+   {
+      nsRect clientRect;
+      aParent->GetBounds(rect);
+      aParent->GetClientBounds(clientRect);
+      rect.x += aRect.x + clientRect.x;
+      rect.y += aRect.y + clientRect.y;
+      rect.width = aRect.width;
+      rect.height = aRect.height;
+      hwndP = aParent->GetMainWindow();
+   }
+   else          // Use original rect, no owner window
+   {
+      rect = aRect;
+      hwndP = NULLHANDLE;
+   }
 
 #if DEBUG_sobotka
    printf("\nIn nsFrameWindow::RealDoCreate:\n");
@@ -124,7 +140,7 @@ void nsFrameWindow::RealDoCreate( HWND hwndP, nsWindow *aParent,
    // Frames have a minimum height based on the pieces they are created with,
    // such as titlebar, menubar, frame borders, etc.  We need this minimum
    // height so we can correctly set the frame position (coordinate flipping).
-   nsRect frameRect = aRect;
+   nsRect frameRect = rect;
    long minheight; 
 
    if ( fcd.flCreateFlags & FCF_SIZEBORDER) {
@@ -226,8 +242,10 @@ void nsFrameWindow::UpdateClientSize()
 
 nsresult nsFrameWindow::GetClientBounds( nsRect &aRect)
 {
-   aRect.x = 0;
-   aRect.y = 0;
+   RECTL rcl = { 0, 0, mBounds.width, mBounds.height };
+   WinCalcFrameRect( hwndFrame, &rcl, TRUE); // provided == frame rect
+   aRect.x = rcl.xLeft;
+   aRect.y = mBounds.height - rcl.yTop;
    aRect.width = mSizeClient.width;
    aRect.height = mSizeClient.height;
    return NS_OK;
