@@ -712,7 +712,7 @@ NS_IMETHODIMP nsAbMDBDirectory::AddCard(nsIAbCard* card, nsIAbCard **addedCard)
 
   dbcard->SetAbDatabase (mDatabase);
   if (mIsMailingList == 1)
-    mDatabase->CreateNewListCardAndAddToDB(this, m_dbRowID, newCard, PR_TRUE);
+    mDatabase->CreateNewListCardAndAddToDB(this, m_dbRowID, newCard, PR_TRUE /* notify */);
   else
     mDatabase->CreateNewCardAndAddToDB(newCard, PR_TRUE);
   mDatabase->Commit(nsAddrDBCommitType::kLargeCommit);
