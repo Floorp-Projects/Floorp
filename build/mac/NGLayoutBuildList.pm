@@ -825,6 +825,9 @@ sub MakeResourceAliases()
     _InstallResources(":mozilla:xpfe:components:ucth:resources:locale:en-US:MANIFEST",      "$globalLocale");
     _InstallResources(":mozilla:xpfe:components:xfer:resources:MANIFEST",                   "$globalContent");
     _InstallResources(":mozilla:xpfe:components:xfer:resources:locale:en-US:MANIFEST",      "$globalLocale");
+
+    #file picker
+    _InstallResources(":mozilla:xpfe:components:filepicker:res:locale:en-US:MANIFEST",      "$globalLocale");
     
     # console
     _InstallResources(":mozilla:xpfe:components:console:resources:content:MANIFEST",        "$globalContent", 0);
