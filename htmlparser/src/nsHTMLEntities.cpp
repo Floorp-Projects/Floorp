@@ -73,24 +73,24 @@ struct EntityNode {
     MOZ_COUNT_DTOR(EntityNode);
   }
 
-  const char* const mStr; // never owns buffer
+  const char*   mStr; // never owns buffer
   PRInt32       mUnicode;
 };
 
-class EntityNameComparator: public nsAVLNodeComparator {
+class EntityNameComparitor: public nsAVLNodeComparitor {
 public:
-  virtual ~EntityNameComparator(void) {}
-  virtual PRInt32 operator()(const void* anItem1, const void* anItem2) {
+  virtual ~EntityNameComparitor(void) {}
+  virtual PRInt32 operator()(void* anItem1,void* anItem2) {
     EntityNode* one = (EntityNode*)anItem1;
     EntityNode* two = (EntityNode*)anItem2;
     return nsCRT::strcmp(one->mStr, two->mStr);
   }
 }; 
 
-class EntityCodeComparator: public nsAVLNodeComparator {
+class EntityCodeComparitor: public nsAVLNodeComparitor {
 public:
-  virtual ~EntityCodeComparator(void) {}
-  virtual PRInt32 operator()(const void* anItem1, const void* anItem2) {
+  virtual ~EntityCodeComparitor(void) {}
+  virtual PRInt32 operator()(void* anItem1,void* anItem2) {
     EntityNode* one = (EntityNode*)anItem1;
     EntityNode* two = (EntityNode*)anItem2;
     return (one->mUnicode - two->mUnicode);
@@ -99,33 +99,44 @@ public:
 
 
 static PRInt32        gTableRefCount;
+static EntityNode*    gEntityArray;
 static nsAVLTree*     gEntityToCodeTree;
 static nsAVLTree*     gCodeToEntityTree;
-static EntityNameComparator* gNameComparator;
-static EntityCodeComparator* gCodeComparator;
+static EntityNameComparitor* gNameComparitor;
+static EntityCodeComparitor* gCodeComparitor;
 
-#define HTML_ENTITY(_name, _value) _value,
-static const EntityNode gEntityArray[] = {
+// define array of entity names
+#define HTML_ENTITY(_name, _value) #_name,
+static const char* const gEntityNames[] = {
 #include "nsHTMLEntityList.h"
 };
 #undef HTML_ENTITY
 
-#define NS_HTML_ENTITY_COUNT ((PRInt32)(sizeof(gEntityArray) / sizeof(gEntityArray[0])))
+#define HTML_ENTITY(_name, _value) _value,
+static const PRInt32 gEntityCodes[] = {
+#include "nsHTMLEntityList.h"
+};
+#undef HTML_ENTITY
+
+#define NS_HTML_ENTITY_COUNT ((PRInt32)(sizeof(gEntityCodes) / sizeof(PRInt32)))
 
 void
 nsHTMLEntities::AddRefTable(void) 
 {
   if (0 == gTableRefCount++) {
-    if (! gNameComparator) {
-      gNameComparator = new EntityNameComparator();
-      gCodeComparator = new EntityCodeComparator();
-      if (gNameComparator && gCodeComparator) {
-        gEntityToCodeTree = new nsAVLTree(*gNameComparator, nsnull);
-        gCodeToEntityTree = new nsAVLTree(*gCodeComparator, nsnull);
+    if (! gEntityArray) {
+      gEntityArray = new EntityNode[NS_HTML_ENTITY_COUNT];
+      gNameComparitor = new EntityNameComparitor();
+      gCodeComparitor = new EntityCodeComparitor();
+      if (gEntityArray && gNameComparitor && gCodeComparitor) {
+        gEntityToCodeTree = new nsAVLTree(*gNameComparitor, nsnull);
+        gCodeToEntityTree = new nsAVLTree(*gCodeComparitor, nsnull);
       }
       if (gEntityToCodeTree && gCodeToEntityTree) {
         PRInt32 index = -1;
         while (++index < NS_HTML_ENTITY_COUNT) {
+          gEntityArray[index].mStr = gEntityNames[index];
+          gEntityArray[index].mUnicode = gEntityCodes[index];
           gEntityToCodeTree->AddItem(&(gEntityArray[index]));
           gCodeToEntityTree->AddItem(&(gEntityArray[index]));
         }
@@ -138,6 +149,10 @@ void
 nsHTMLEntities::ReleaseTable(void) 
 {
   if (0 == --gTableRefCount) {
+    if (gEntityArray) {
+      delete[] gEntityArray;
+      gEntityArray = nsnull;
+    }
     if (gEntityToCodeTree) {
       delete gEntityToCodeTree;
       gEntityToCodeTree = nsnull;
@@ -146,13 +161,13 @@ nsHTMLEntities::ReleaseTable(void)
       delete gCodeToEntityTree;
       gCodeToEntityTree = nsnull;
     }
-    if (gNameComparator) {
-      delete gNameComparator;
-      gNameComparator = nsnull;
+    if (gNameComparitor) {
+      delete gNameComparitor;
+      gNameComparitor = nsnull;
     }
-    if (gCodeComparator) {
-      delete gCodeComparator;
-      gCodeComparator = nsnull;
+    if (gCodeComparitor) {
+      delete gCodeComparitor;
+      gCodeComparitor = nsnull;
     }
   }
 }

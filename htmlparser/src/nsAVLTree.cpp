@@ -43,7 +43,7 @@ enum eLean      {eLeft,eNeutral,eRight};
 struct nsAVLNode {
 public:
 
-  nsAVLNode(const void* aValue) {
+  nsAVLNode(void* aValue) {
     mLeft=0;
     mRight=0;
     mSkew=eNeutral;
@@ -53,13 +53,13 @@ public:
   nsAVLNode*  mLeft;
   nsAVLNode*  mRight;
   eLean       mSkew;
-  const void* mValue;
+  void*       mValue;
 };
 
 
 /************************************************************
   Now begin the tree class. Don't forget that the comparison
-  between nodes must occur via the comparator function, 
+  between nodes must occur via the comparitor function, 
   otherwise all you're testing is pointer addresses.
  ************************************************************/
 
@@ -70,9 +70,9 @@ public:
  * @param  
  * @return 
  */ //----------------------------------------------
-nsAVLTree::nsAVLTree(nsAVLNodeComparator& aComparator, 
+nsAVLTree::nsAVLTree(nsAVLNodeComparitor& aComparitor, 
                      nsAVLNodeFunctor* aDeallocator) :
-  mComparator(aComparator), mDeallocator(aDeallocator) {
+  mComparitor(aComparitor), mDeallocator(aDeallocator) {
   mRoot=0;
   mCount=0;
 }
@@ -105,8 +105,8 @@ class CDoesntExist: public nsAVLNodeFunctor {
 public:
   CDoesntExist(const nsAVLTree& anotherTree) : mOtherTree(anotherTree) {
   }
-  virtual const void* operator()(const void* anItem) {
-    const void* result=mOtherTree.FindItem(anItem);
+  virtual void* operator()(void* anItem) {
+    void* result=mOtherTree.FindItem(anItem);
     if(result)
       return nsnull;
     return anItem;
@@ -123,7 +123,7 @@ protected:
  */
 PRBool nsAVLTree::operator==(const nsAVLTree& aCopy) const{
   CDoesntExist functor(aCopy);
-  const void* theItem=FirstThat(functor);
+  void* theItem=FirstThat(functor);
   PRBool result=PRBool(!theItem);
   return result;
 }
@@ -213,7 +213,7 @@ avlRotateLeft(nsAVLNode*& aRootNode){
  */ //----------------------------------------------
 static eAVLStatus 
 avlInsert(nsAVLNode*& aRootNode, nsAVLNode* aNewNode, 
-          nsAVLNodeComparator& aComparator) {
+          nsAVLNodeComparitor& aComparitor) {
   eAVLStatus result=eAVL_unknown;
   
   if(!aRootNode) {
@@ -225,9 +225,9 @@ avlInsert(nsAVLNode*& aRootNode, nsAVLNode* aNewNode,
     return eAVL_duplicate;
   }
 
-  PRInt32 theCompareResult=aComparator(aRootNode->mValue,aNewNode->mValue);
+  PRInt32 theCompareResult=aComparitor(aRootNode->mValue,aNewNode->mValue);
   if(0 < theCompareResult) { //if(anItem<aRootNode->mValue)
-    result=avlInsert(aRootNode->mLeft,aNewNode,aComparator);
+    result=avlInsert(aRootNode->mLeft,aNewNode,aComparitor);
     if(eAVL_ok==result) {
       switch(aRootNode->mSkew){
         case eLeft:
@@ -245,7 +245,7 @@ avlInsert(nsAVLNode*& aRootNode, nsAVLNode* aNewNode,
     }//if
   } //if
   else { 
-    result=avlInsert(aRootNode->mRight,aNewNode,aComparator);
+    result=avlInsert(aRootNode->mRight,aNewNode,aComparitor);
     if(eAVL_ok==result) {
       switch(aRootNode->mSkew){
         case eLeft:
@@ -436,20 +436,20 @@ avlRemoveChildren(nsAVLNode*& aRootNode,nsAVLNode*& anotherNode, PRBool& delOk){
  */ //----------------------------------------------
 static eAVLStatus 
 avlRemove(nsAVLNode*& aRootNode, void* anItem, PRBool& delOk,
-          nsAVLNodeComparator& aComparator){
+          nsAVLNodeComparitor& aComparitor){
   eAVLStatus result=eAVL_ok;
 
   if(!aRootNode)
     delOk=PR_FALSE;
   else {
-    PRInt32 cmp=aComparator(anItem,aRootNode->mValue);
+    PRInt32 cmp=aComparitor(anItem,aRootNode->mValue);
     if(cmp<0){
-      avlRemove(aRootNode->mLeft,anItem,delOk,aComparator);
+      avlRemove(aRootNode->mLeft,anItem,delOk,aComparitor);
       if(delOk)
         avlBalanceRight(aRootNode,delOk);
     }
     else if(cmp>0){
-      avlRemove(aRootNode->mRight,anItem,delOk,aComparator);
+      avlRemove(aRootNode->mRight,anItem,delOk,aComparitor);
       if(delOk)
         avlBalanceLeft(aRootNode,delOk);
     }
@@ -484,11 +484,11 @@ avlRemove(nsAVLNode*& aRootNode, void* anItem, PRBool& delOk,
  * @return 
  */ //----------------------------------------------
 eAVLStatus 
-nsAVLTree::AddItem(const void* anItem){
+nsAVLTree::AddItem(void* anItem){
   eAVLStatus result=eAVL_ok;
 
   nsAVLNode* theNewNode=new nsAVLNode(anItem);
-  result=avlInsert(mRoot,theNewNode,mComparator);
+  result=avlInsert(mRoot,theNewNode,mComparitor);
   if(eAVL_duplicate!=result)
     mCount++;
   else {
@@ -504,12 +504,12 @@ nsAVLTree::AddItem(const void* anItem){
  * @param  
  * @return 
  */ //----------------------------------------------
-const void* nsAVLTree::FindItem(const void* aValue) const{
+void* nsAVLTree::FindItem(void* aValue) const{
   nsAVLNode* result=mRoot;
   PRInt32 count=0;
   while(result) {
     count++;
-    PRInt32 cmp=mComparator(aValue,result->mValue);
+    PRInt32 cmp=mComparitor(aValue,result->mValue);
     if(0==cmp) {
       //we matched...
       break;
@@ -539,7 +539,7 @@ const void* nsAVLTree::FindItem(const void* aValue) const{
 eAVLStatus 
 nsAVLTree::RemoveItem(void* aValue){
   PRBool delOk=PR_TRUE;
-  eAVLStatus result=avlRemove(mRoot,aValue,delOk,mComparator);
+  eAVLStatus result=avlRemove(mRoot,aValue,delOk,mComparitor);
   if(eAVL_ok==result)
     mCount--;
   return result;
@@ -606,9 +606,9 @@ nsAVLTree::ForEach(nsAVLNodeFunctor& aFunctor) const{
  * @param 
  * @return
  */
-static const void* 
+static void* 
 avlFirstThat(nsAVLNode* aNode, nsAVLNodeFunctor& aFunctor) {
-  const void* result=nsnull;
+  void* result=nsnull;
   if(aNode) {
     result = avlFirstThat(aNode->mLeft,aFunctor);
     if (result) {
@@ -629,7 +629,7 @@ avlFirstThat(nsAVLNode* aNode, nsAVLNodeFunctor& aFunctor) {
  * @param 
  * @return
  */
-const void* 
+void* 
 nsAVLTree::FirstThat(nsAVLNodeFunctor& aFunctor) const{
   return ::avlFirstThat(mRoot,aFunctor);
 }
