@@ -324,19 +324,10 @@ ifeq ($(OS_ARCH), SunOS)
     endif
 
     ifneq ($(LOCAL_THREADS_ONLY),1)
-# SunOS 5.4 and 5.5 need to link with -lthread or -lpthread,
-# even though we already linked with these system libraries
-# when we built libnspr.so.
-        ifeq ($(OS_RELEASE), 5.4)
+        ifdef USE_PTHREADS
+            EXTRA_LIBS = -lpthread -lthread
+        else
             EXTRA_LIBS = -lthread
-        endif
-
-        ifeq ($(OS_RELEASE), 5.5)
-            ifdef USE_PTHREADS
-                EXTRA_LIBS = -lpthread
-            else
-                EXTRA_LIBS = -lthread
-            endif
         endif
     endif # LOCAL_THREADS_ONLY
 endif # SunOS
