@@ -88,6 +88,35 @@ expect = true;
 addThis();
 
 
+// now do the same thing, with non-default sorting:
+function g() {return 0;}
+
+status = inSection('1a');
+actual = arr1.sort(g) === arr1;
+expect = true;
+addThis();
+
+status = inSection('2a');
+actual = arr2.sort(g) === arr2;
+expect = true;
+addThis();
+
+status = inSection('3a');
+actual = arr3.sort(g) === arr3;
+expect = true;
+addThis();
+
+status = inSection('4a');
+actual = arr4.sort(g) === arr4;
+expect = true;
+addThis();
+
+status = inSection('5a');
+actual = arr5.sort(g) === arr5;
+expect = true;
+addThis();
+
+
 
 //-----------------------------------------------------------------------------
 test();
