@@ -2461,7 +2461,7 @@ lo_ProcessInputTag(MWContext *context, lo_DocState *state, PA_Tag *tag)
 				if (state->top_state) { /* null-check probably not needed */
 				    SI_RestoreOldSignonData
 					(context, form_element,
-					state->top_state->base_url);
+					context->hist.cur_doc_ptr->address);
 				}
 #endif
 				attr = lo_PopFont(state, tag->type);
