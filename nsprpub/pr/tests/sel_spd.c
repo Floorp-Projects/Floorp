@@ -65,7 +65,7 @@ static long _server_data = (8*1024);
 static long _threads_max = 10, _threads = 10;
 #else
 static long _server_data = (128*1024);
-static long _threads_max = 100, _threads = 100;
+static long _threads_max = 10, _threads = 10;
 #endif
 
 static int verbose=0;
