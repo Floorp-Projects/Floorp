@@ -63,7 +63,7 @@ static PRInt32         gOperatorCount = 0;
 static OperatorData*   gOperatorArray = nsnull;
 static nsHashtable*    gOperatorTable = nsnull;
 static nsVoidArray*    gStretchyOperatorArray = nsnull;
-static nsStringArray*  gInvariantChar = nsnull;
+static nsStringArray*  gInvariantCharArray = nsnull;
 static PRBool          gInitialized   = PR_FALSE;
 
 static const PRUnichar kNullCh  = PRUnichar('\0');
@@ -301,7 +301,7 @@ InitOperators(void)
     key.Assign(NS_LITERAL_STRING("mathvariant."));
     key.AppendWithConversion(kMathVariant_name[i]);
     mathfontProp->GetStringProperty(key, value);
-    gInvariantChar->AppendString(value); // i.e., gInvariantChar[i] holds this list
+    gInvariantCharArray->AppendString(value); // i.e., gInvariantCharArray[i] holds this list
   }
 
   // Parse the Operator Dictionary in two passes.
@@ -372,18 +372,18 @@ InitGlobals()
 {
   gInitialized = PR_TRUE;
   nsresult rv = NS_ERROR_OUT_OF_MEMORY;
-  gInvariantChar = new nsStringArray();
+  gInvariantCharArray = new nsStringArray();
   gStretchyOperatorArray = new nsVoidArray();
-  if (gInvariantChar && gStretchyOperatorArray) {
+  if (gInvariantCharArray && gStretchyOperatorArray) {
     gOperatorTable = new nsHashtable();
     if (gOperatorTable) {
       rv = InitOperators();
     }
   }
   if (NS_FAILED(rv)) {
-    if (gInvariantChar) {
-      delete gInvariantChar;
-      gInvariantChar = nsnull;
+    if (gInvariantCharArray) {
+      delete gInvariantCharArray;
+      gInvariantCharArray = nsnull;
     }
     if (gOperatorArray) {
       delete[] gOperatorArray;
@@ -623,13 +623,12 @@ nsMathMLOperators::LookupInvariantChar(PRUnichar     aChar,
     InitGlobals();
   }
   if (aType) *aType = eMATHVARIANT_NONE;
-  if (gInvariantChar) {
-    for (PRInt32 i = 0; i < gInvariantChar->Count(); ++i) {
-      nsAutoString list;
-      gInvariantChar->StringAt(i, list);
-      if (kNotFound != list.FindChar(aChar)) {
-         if (aType) *aType = eMATHVARIANT(i);
-         return PR_TRUE;
+  if (gInvariantCharArray) {
+    for (PRInt32 i = gInvariantCharArray->Count()-1; i >= 0; --i) {
+      nsString* list = gInvariantCharArray->StringAt(i);
+      if (kNotFound != list->FindChar(aChar)) {
+        if (aType) *aType = eMATHVARIANT(i);
+        return PR_TRUE;
       }
     }
   }
