@@ -1781,13 +1781,10 @@ nsXPCComponents::CanGetProperty(const nsIID * iid, const PRUnichar *propertyName
 {
     static const NS_NAMED_LITERAL_STRING(s_interfaces, "interfaces");
     static const NS_NAMED_LITERAL_STRING(s_results, "results");
-    static const NS_NAMED_LITERAL_STRING(s_manager, "manager");
 
     const nsDependentString name(propertyName);
 
-    if(name.Equals(s_interfaces) ||
-       name.Equals(s_results)    ||
-       name.Equals(s_manager))
+    if(name.Equals(s_interfaces) || name.Equals(s_results))
         *_retval = CloneAllAccess();
     else
         *_retval = nsnull;
