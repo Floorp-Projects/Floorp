@@ -4061,43 +4061,75 @@ deleteClassProperty:
         }
         if (JS2VAL_IS_DOUBLE(x))
             return engine->numberToString(JS2VAL_TO_DOUBLE(x));
-        return toString(toPrimitive(x));
+        return toString(toPrimitive(x, StringHint));
+    }
+
+    // Invoke the named function on the thisValue object (it is an object)
+    // Returns false if no callable function exists. Otherwise return the
+    // function result value.
+    bool JS2Metadata::invokeFunctionOnObject(js2val thisValue, const String *fnName, js2val &result)
+    {
+        Multiname mn(engine->toString_StringAtom, publicNamespace);
+        LookupKind lookup(false, JS2VAL_NULL);
+        js2val fnVal;
+
+        if (readProperty(thisValue, &mn, &lookup, RunPhase, &fnVal)) {
+            if (JS2VAL_IS_OBJECT(fnVal)) {
+                JS2Object *fnObj = JS2VAL_TO_OBJECT(fnVal);
+                if ((fnObj->kind == CallableInstanceKind) && (objectType(fnVal) == functionClass)) {
+                    FunctionWrapper *fWrap = (checked_cast<CallableInstance *>(fnObj))->fWrap;
+                    if (fWrap->code) {
+                        result = (fWrap->code)(this, thisValue, NULL, 0);
+                        return true;
+                    }
+                }
+                else // XXX here we accept the bound this, can that be right?
+                if (fnObj->kind == MethodClosureKind) {
+                    MethodClosure *mc = checked_cast<MethodClosure *>(fnObj);
+                    CallableInstance *fInst = mc->method->fInst;
+                    FunctionWrapper *fWrap = fInst->fWrap;
+                    if (fWrap->code) {
+                        result = (fWrap->code)(this, mc->thisObject, NULL, 0);
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     // x is not a primitive (it is an object and not null)
-    js2val JS2Metadata::convertValueToPrimitive(js2val x)
+    js2val JS2Metadata::convertValueToPrimitive(js2val x, Hint hint)
     {
         // return [[DefaultValue]] --> get property 'toString' and invoke it, 
         // if not available or result is not primitive then try property 'valueOf'
         // if that's not available or returns a non primitive, throw a TypeError
 
-        Multiname mn(engine->toString_StringAtom, publicNamespace);
-        LookupKind lookup(false, JS2VAL_NULL);
-        js2val result;
-        if (readProperty(x, &mn, &lookup, RunPhase, &result)) {
-            if (JS2VAL_IS_OBJECT(result)) {
-                JS2Object *obj = JS2VAL_TO_OBJECT(result);
-                if ((obj->kind == CallableInstanceKind) && (objectType(result) == functionClass)) {
-                    FunctionWrapper *fWrap = (checked_cast<CallableInstance *>(obj))->fWrap;
-                    if (fWrap->code) {
-                        result = (fWrap->code)(this, result, NULL, 0);
-                        return result;
-                    }
-                }
-                else
-                if (obj->kind == MethodClosureKind) {
-                    MethodClosure *mc = checked_cast<MethodClosure *>(obj);
-                    CallableInstance *fInst = mc->method->fInst;
-                    FunctionWrapper *fWrap = fInst->fWrap;
-                    if (fWrap->code) {
-                        result = (fWrap->code)(this, mc->thisObject, NULL, 0);
-                        return result;
-                    }
-                }
+        if (hint == StringHint) {
+            js2val result;
+            if (invokeFunctionOnObject(x, engine->toString_StringAtom, result)) {
+                if (JS2VAL_IS_PRIMITIVE(result))
+                    return result;
             }
+            if (invokeFunctionOnObject(x, engine->valueOf_StringAtom, result)) {
+                if (JS2VAL_IS_PRIMITIVE(result))
+                    return result;
+            }
+            reportError(Exception::typeError, "DefaultValue failure", engine->errorPos());
         }
-
-        return STRING_TO_JS2VAL(engine->object_StringAtom);
+        else {
+            js2val result;
+            if (invokeFunctionOnObject(x, engine->valueOf_StringAtom, result)) {
+                if (JS2VAL_IS_PRIMITIVE(result))
+                    return result;
+            }
+            if (invokeFunctionOnObject(x, engine->toString_StringAtom, result)) {
+                if (JS2VAL_IS_PRIMITIVE(result))
+                    return result;
+            }
+            reportError(Exception::typeError, "DefaultValue failure", engine->errorPos());
+        }
+        return JS2VAL_VOID;
     }
 
     // x is not a number
@@ -4118,7 +4150,7 @@ deleteClassProperty:
             reportError(Exception::compileExpressionError, "Inappropriate compile time expression", engine->errorPos());
         if (JS2VAL_IS_UNINITIALIZED(x))
             reportError(Exception::compileExpressionError, "Inappropriate compile time expression", engine->errorPos());
-        return toFloat64(toPrimitive(x));
+        return toFloat64(toPrimitive(x, NumberHint));
     }
 
     // x is not a number, convert it to one

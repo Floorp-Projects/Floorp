@@ -240,6 +240,7 @@ public:
     const String *prototype_StringAtom;
     const String *length_StringAtom;
     const String *toString_StringAtom;
+    const String *valueOf_StringAtom;
 
     // The activation stack, when it's empty and a return is executed, the
     // interpreter quits

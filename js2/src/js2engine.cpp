@@ -378,6 +378,7 @@ namespace MetaData {
                   INIT_STRINGATOM(prototype),
                   INIT_STRINGATOM(length),
                   INIT_STRINGATOM(toString),
+                  INIT_STRINGATOM(valueOf),
                   traceInstructions(false)
     {
         for (int i = 0; i < 256; i++)
@@ -847,6 +848,7 @@ namespace MetaData {
         JS2Object::mark(prototype_StringAtom);
         JS2Object::mark(length_StringAtom);
         JS2Object::mark(toString_StringAtom);
+        JS2Object::mark(valueOf_StringAtom);
     }
 
     void JS2Engine::pushHandler(uint8 *pc)

@@ -329,8 +329,8 @@
         {
 	    b = pop();
 	    a = pop();
-	    a = meta->toPrimitive(a);
-	    b = meta->toPrimitive(b);
+	    a = meta->toPrimitive(a, NumberHint);
+	    b = meta->toPrimitive(b, NumberHint);
 	    if (JS2VAL_IS_STRING(a) || JS2VAL_IS_STRING(b)) {
 	        const String *astr = meta->toString(a);
 	        const String *bstr = meta->toString(b);
@@ -692,8 +692,8 @@
         {
 	    b = pop();
 	    a = pop();
-            a = meta->toPrimitive(a);
-            b = meta->toPrimitive(b);
+            a = meta->toPrimitive(a, NumberHint);
+            b = meta->toPrimitive(b, NumberHint);
             bool rval;
             if (JS2VAL_IS_STRING(a) && JS2VAL_IS_STRING(b))
                 rval = (*JS2VAL_TO_STRING(a) < *JS2VAL_TO_STRING(b));
@@ -707,8 +707,8 @@
         {
 	    b = pop();
 	    a = pop();
-            a = meta->toPrimitive(a);
-            b = meta->toPrimitive(b);
+            a = meta->toPrimitive(a, NumberHint);
+            b = meta->toPrimitive(b, NumberHint);
             bool rval;
             if (JS2VAL_IS_STRING(a) && JS2VAL_IS_STRING(b))
                 rval = (*JS2VAL_TO_STRING(a) <= *JS2VAL_TO_STRING(b));
@@ -722,8 +722,8 @@
         {
 	    b = pop();
 	    a = pop();
-            a = meta->toPrimitive(a);
-            b = meta->toPrimitive(b);
+            a = meta->toPrimitive(a, NumberHint);
+            b = meta->toPrimitive(b, NumberHint);
             bool rval;
             if (JS2VAL_IS_STRING(a) && JS2VAL_IS_STRING(b))
                 rval = (*JS2VAL_TO_STRING(a) > *JS2VAL_TO_STRING(b));
@@ -737,8 +737,8 @@
         {
 	    b = pop();
 	    a = pop();
-            a = meta->toPrimitive(a);
-            b = meta->toPrimitive(b);
+            a = meta->toPrimitive(a, NumberHint);
+            b = meta->toPrimitive(b, NumberHint);
             bool rval;
             if (JS2VAL_IS_STRING(a) && JS2VAL_IS_STRING(b))
                 rval = (*JS2VAL_TO_STRING(a) >= *JS2VAL_TO_STRING(b));
@@ -761,7 +761,7 @@
                 if (JS2VAL_IS_BOOLEAN(b))
                     rval = (JS2VAL_TO_BOOLEAN(a) == JS2VAL_TO_BOOLEAN(b));
                 else {
-                    b = meta->toPrimitive(b);
+                    b = meta->toPrimitive(b, NumberHint);
                     if (JS2VAL_IS_NULL(b) || JS2VAL_IS_UNDEFINED(b))
                         rval = false;
                     else
@@ -770,7 +770,7 @@
             }
             else
             if (JS2VAL_IS_NUMBER(a)) {
-                b = meta->toPrimitive(b);
+                b = meta->toPrimitive(b, NumberHint);
                 if (JS2VAL_IS_NULL(b) || JS2VAL_IS_UNDEFINED(b))
                     rval = false;
                 else
@@ -778,7 +778,7 @@
             }
             else 
             if (JS2VAL_IS_STRING(a)) {
-                b = meta->toPrimitive(b);
+                b = meta->toPrimitive(b, NumberHint);
                 if (JS2VAL_IS_NULL(b) || JS2VAL_IS_UNDEFINED(b))
                     rval = false;
                 else
@@ -792,7 +792,7 @@
                 rval = false;
             else
             if (JS2VAL_IS_BOOLEAN(b)) {
-                a = meta->toPrimitive(a);
+                a = meta->toPrimitive(a, NumberHint);
                 if (JS2VAL_IS_NULL(a) || JS2VAL_IS_UNDEFINED(a))
                     rval = false;
                 else
@@ -803,7 +803,7 @@
             }
             else
             if (JS2VAL_IS_NUMBER(b)) {
-                a = meta->toPrimitive(a);
+                a = meta->toPrimitive(a, NumberHint);
                 if (JS2VAL_IS_NULL(a) || JS2VAL_IS_UNDEFINED(a))
                     rval = false;
                 else
@@ -811,7 +811,7 @@
             }
             else
             if (JS2VAL_IS_STRING(b)) {
-                a = meta->toPrimitive(a);
+                a = meta->toPrimitive(a, NumberHint);
                 if (JS2VAL_IS_NULL(a) || JS2VAL_IS_UNDEFINED(a))
                     rval = false;
                 else
