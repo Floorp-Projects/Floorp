@@ -24,7 +24,7 @@ MODULE = mime
 DEPTH = ..\..\..
 include <$(DEPTH)/config/config.mak>
 
-XPIDL_MODULE = mime
+XPIDL_MODULE = mimetype
 
 XPIDLSRCS =                        \
         .\nsIMIMEInfo.idl          \
