@@ -103,16 +103,20 @@ public:
         
     };
 
-    void MarkDoomed()          { mFlags |= eDoomedMask; }
-    void MarkEntryDirty()      { mFlags |= eEntryDirtyMask; }
-    void MarkDataDirty()       { mFlags |= eDataDirtyMask; }
-    void MarkMetaDataDirty()   { mFlags |= eMetaDataDirtyMask; }
-    void MarkStreamData()      { mFlags |= eStreamDataMask; }
-    void MarkActive()          { mFlags |= eActiveMask; }
+    void MarkDoomed()          { mFlags |=  eDoomedMask; }
+    void MarkEntryDirty()      { mFlags |=  eEntryDirtyMask; }
+    void MarkEntryClean()      { mFlags &= ~eEntryDirtyMask; }
+    void MarkDataDirty()       { mFlags |=  eDataDirtyMask; }
+    void MarkDataClean()       { mFlags &= ~eDataDirtyMask; }
+    void MarkMetaDataDirty()   { mFlags |=  eMetaDataDirtyMask; }
+    void MarkMetaDataClean()   { mFlags &= ~eMetaDataDirtyMask; }
+    void MarkStreamData()      { mFlags |=  eStreamDataMask; }
+    void MarkActive()          { mFlags |=  eActiveMask; }
     void MarkInactive()        { mFlags &= ~eActiveMask; }
-    void MarkValid();
-    void MarkAllowedInMemory() { mFlags |= eAllowedInMemoryMask; }
-    void MarkAllowedOnDisk()   { mFlags |= eAllowedOnDiskMask; }
+    void MarkValid()           { mFlags |=  eValidMask; }
+    void MarkInvalid()         { mFlags &= ~eValidMask; }
+    void MarkAllowedInMemory() { mFlags |=  eAllowedInMemoryMask; }
+    void MarkAllowedOnDisk()   { mFlags |=  eAllowedOnDiskMask; }
 
     PRBool IsDoomed()          { return (mFlags & eDoomedMask) != 0; }
     PRBool IsEntryDirty()      { return (mFlags & eEntryDirtyMask) != 0; }

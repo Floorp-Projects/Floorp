@@ -67,9 +67,8 @@ nsCacheEntry::nsCacheEntry(nsCString *          key,
 
 nsCacheEntry::~nsCacheEntry()
 {
-    if (mCacheDevice) {
-        //** ask device to clean up
-    }
+    delete mKey;
+    delete mMetaData;
 }
 
 
@@ -105,12 +104,9 @@ nsCacheEntry::SetMetaDataElement( const nsAReadableCString& key,
                                   const nsAReadableCString& value)
 {
     if (!mMetaData) {
-        mMetaData = new nsCacheMetaData();
+        mMetaData = nsCacheMetaData::Create();
         if (!mMetaData)
             return NS_ERROR_OUT_OF_MEMORY;
-        nsresult rv = mMetaData->Init();
-        if (NS_FAILED(rv))
-            return rv;
     }
     nsresult rv = mMetaData->SetElement(key, value);
     if (NS_SUCCEEDED(rv))
@@ -132,15 +128,6 @@ nsCacheEntry::GetKeyValueArray(nsCacheMetaDataKeyValuePair ** array,
         return NS_OK;
     }
     return mMetaData->GetKeyValueArray(array, count);
-}
-
-
-void
-nsCacheEntry::MarkValid()
-{
-    //** bind if not bound
-    //** convert pending requests to descriptors, etc.
-    mFlags |= eValidMask;
 }
 
 

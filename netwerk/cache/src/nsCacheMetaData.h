@@ -48,8 +48,11 @@ class nsCacheMetaData {
 public:
     nsCacheMetaData();
     ~nsCacheMetaData();
-    
-    nsresult  Init();
+
+    static
+    nsCacheMetaData *     Create(void);
+
+    nsresult              Init(void);
 
     nsAReadableCString *  GetElement(const nsAReadableCString * key);
 

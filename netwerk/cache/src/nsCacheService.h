@@ -73,6 +73,8 @@ public:
 
     nsresult       OnDataSizeChange(nsCacheEntry * entry, PRInt32 deltaSize);
 
+    nsresult       ValidateEntry(nsCacheEntry * entry);
+
     nsresult       GetTransportForEntry(nsCacheEntry *     entry,
                                         nsCacheAccessMode  mode,
                                         nsITransport    ** result);
@@ -128,6 +130,10 @@ private:
     //    nsCacheClientHashTable  mClientIDs;
     nsCacheEntryHashTable   mActiveEntries;
     PRCList                 mDoomedEntries;
+
+    // Unexpected error totals
+    PRUint32                mDeactivateFailures;
+    PRUint32                mDeactivatedUnboundEntries;
 };
 
 

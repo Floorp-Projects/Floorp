@@ -43,7 +43,7 @@ nsMemoryCacheDevice::Init()
 {
     nsresult  rv;
 
-    rv = mInactiveEntries.Init();
+    rv = mMemCacheEntries.Init();
 
     //** read user prefs for memory cache limits
 
@@ -61,12 +61,14 @@ nsMemoryCacheDevice::GetDeviceID()
 nsCacheEntry *
 nsMemoryCacheDevice::FindEntry(nsCString * key)
 {
-    nsCacheEntry * entry = mInactiveEntries.GetEntry(key);
+    nsCacheEntry * entry = mMemCacheEntries.GetEntry(key);
     if (!entry)  return nsnull;
 
-    //** need entry->UpdateFrom(ourEntry);
     entry->MarkActive(); // so we don't evict it
-    //** find eviction element and move it to the tail of the queue
+    
+    // move entry to the tail of the eviction list
+    PR_REMOVE_AND_INIT_LINK(entry->GetListNode());
+    PR_APPEND_LINK(entry->GetListNode(), &mEvictionList);
     
     return entry;;
 }
@@ -75,25 +77,39 @@ nsMemoryCacheDevice::FindEntry(nsCString * key)
 nsresult
 nsMemoryCacheDevice::DeactivateEntry(nsCacheEntry * entry)
 {
-    nsCString * key = entry->Key();
+    if (entry->IsDoomed()) {
+#if debug
+        //** verify we've removed it from mMemCacheEntries & eviction list
+#endif
+        delete entry;
+        return NS_OK;
+    }
 
-    nsCacheEntry * ourEntry = mInactiveEntries.GetEntry(key);
+    nsCacheEntry * ourEntry = mMemCacheEntries.GetEntry(entry->Key());
     NS_ASSERTION(ourEntry, "DeactivateEntry called for an entry we don't have!");
-    if (!ourEntry)
+    NS_ASSERTION(entry == ourEntry, "entry doesn't match ourEntry");
+    if (ourEntry != entry)
         return NS_ERROR_INVALID_POINTER;
 
-    //** need ourEntry->UpdateFrom(entry);
-    //** MarkInactive(); // to make it evictable again
-    return NS_ERROR_NOT_IMPLEMENTED;
+    entry->MarkInactive(); // to make it evictable again
+    return NS_OK;
 }
 
 
 nsresult
 nsMemoryCacheDevice::BindEntry(nsCacheEntry * entry)
 {
-    nsresult  rv = mInactiveEntries.AddEntry(entry);
-    if (NS_FAILED(rv))
+    NS_ASSERTION(PR_CLIST_IS_EMPTY(entry->GetListNode()),"entry is already on a list!");
+
+    // append entry to the eviction list
+    PR_APPEND_LINK(entry->GetListNode(), &mEvictionList);
+
+    // add entry to hashtable of mem cache entries
+    nsresult  rv = mMemCacheEntries.AddEntry(entry);
+    if (NS_FAILED(rv)) {
+        PR_REMOVE_AND_INIT_LINK(entry->GetListNode());
         return rv;
+    }
 
     //** add size of entry to memory totals
     return NS_OK;
@@ -103,7 +119,14 @@ nsMemoryCacheDevice::BindEntry(nsCacheEntry * entry)
 nsresult
 nsMemoryCacheDevice::DoomEntry(nsCacheEntry * entry)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult  rv = mMemCacheEntries.RemoveEntry(entry);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "dooming entry that we don't have");
+    if (NS_FAILED(rv)) return rv;
+
+    // remove entry from our eviction list
+    PR_REMOVE_AND_INIT_LINK(entry->GetListNode());
+
+    return NS_OK;
 }
 
 

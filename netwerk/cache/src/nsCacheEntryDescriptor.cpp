@@ -316,17 +316,13 @@ nsCacheEntryDescriptor::GetMetaDataElement(const char *key, char ** result)
     if (NS_SUCCEEDED(rv) && (value)) {
         *result = ToNewCString(*value);
         if (!*result) rv = NS_ERROR_OUT_OF_MEMORY;
-        else {
-            NS_ASSERTION(PR_FALSE, "FindCharInRead failed to find ':'");
-            rv = NS_ERROR_UNEXPECTED;
-        }
     }
     return rv;
 }
 
 
 NS_IMETHODIMP
-nsCacheEntryDescriptor::SetMetadataElement(const char *key, const char *value)
+nsCacheEntryDescriptor::SetMetaDataElement(const char *key, const char *value)
 {
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
 

@@ -68,17 +68,41 @@ nsCacheMetaData::Init()
 }
 
 
+nsCacheMetaData *
+nsCacheMetaData::Create()
+{
+    nsCacheMetaData * metaData = new nsCacheMetaData();
+    if (!metaData)
+        return nsnull;
+
+    nsresult rv = metaData->Init();
+    if (NS_FAILED(rv)) {
+        delete metaData;
+        return nsnull;
+    }
+
+    return metaData;
+}
+
+
 nsAReadableCString *
 nsCacheMetaData::GetElement(const nsAReadableCString * key)
 {
     PLDHashEntryHdr * hashEntry;
     nsCString *       result = nsnull;
 
+    //** need to copy string until we have scc's new flat string abstract class
+    //** see nsCacheMetaData::HashKey below (bug 70075)
+    nsCString * tempKey = new nsCString(*key);
+    if (!tempKey) return result;
+
     NS_ASSERTION(initialized, "nsCacheMetaDataHashTable not initialized");
-    hashEntry = PL_DHashTableOperate(&table, key, PL_DHASH_LOOKUP);
+    hashEntry = PL_DHashTableOperate(&table, tempKey, PL_DHASH_LOOKUP);
     if (PL_DHASH_ENTRY_IS_BUSY(hashEntry)) {
         result = ((nsCacheMetaDataHashTableEntry *)hashEntry)->value;
     }
+
+    delete tempKey;
     return result;
 }
 
@@ -87,29 +111,38 @@ nsresult
 nsCacheMetaData::SetElement(const nsAReadableCString& key,
                             const nsAReadableCString& value)
 {
-  nsCacheMetaDataHashTableEntry * metaEntry;
+    nsCacheMetaDataHashTableEntry * metaEntry;
 
-  NS_ASSERTION(initialized, "nsCacheMetaDataHashTable not initialized");
+    NS_ASSERTION(initialized, "nsCacheMetaDataHashTable not initialized");
 
-  //** should empty value remove the key?
+    //** need to copy string until we have scc's new flat string abstract class
+    //** see nsCacheMetaData::HashKey below (bug 70075)
+    nsCString * tempKey = new nsCString(key);
+    if (!tempKey) return NS_ERROR_OUT_OF_MEMORY;
 
-  metaEntry = (nsCacheMetaDataHashTableEntry *)
-      PL_DHashTableOperate(&table, &key, PL_DHASH_ADD);
-  if (metaEntry->key == nsnull) {
-      metaEntry->key = new nsCString(key);
-      if (metaEntry->key == nsnull)
-          return NS_ERROR_OUT_OF_MEMORY;
-  }
-  if (metaEntry->value != nsnull)
-      delete metaEntry->value;
+    //** should empty value remove the key?
 
-  metaEntry->value = new nsCString(value);
-  if (metaEntry->value == nsnull) {
-      //** remove key?
-      return NS_ERROR_OUT_OF_MEMORY;
-  }
+    metaEntry = (nsCacheMetaDataHashTableEntry *)
+        PL_DHashTableOperate(&table, tempKey, PL_DHASH_ADD);
+    if (metaEntry->key == nsnull) {
+        metaEntry->key = new nsCString(key);
+        if (metaEntry->key == nsnull) {
+            delete tempKey;
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
+    }
+    if (metaEntry->value != nsnull)
+        delete metaEntry->value;
 
-  return NS_OK;
+    metaEntry->value = new nsCString(value);
+    if (metaEntry->value == nsnull) {
+        //** remove key?
+        delete tempKey;
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    delete tempKey;
+    return NS_OK;
 }
 
 
@@ -144,12 +177,14 @@ nsCacheMetaData::GetKey( PLDHashTable * /* table */, PLDHashEntryHdr *hashEntry)
     return ((nsCacheMetaDataHashTableEntry *)hashEntry)->key;
 }
 
+
 PLDHashNumber
 nsCacheMetaData::HashKey( PLDHashTable * table, const void *key)
 {
     //** need scc's new flat string abstract class here (bug 70075)
     return PL_DHashStringKey(table, ((nsCString *)key)->get());
 }
+
 
 PRBool
 nsCacheMetaData::MatchEntry(PLDHashTable *       /* table */,
@@ -159,7 +194,8 @@ nsCacheMetaData::MatchEntry(PLDHashTable *       /* table */,
     NS_ASSERTION(key !=  nsnull, "nsCacheMetaDataHashTable::MatchEntry : null key");
     nsCString * entryKey = ((nsCacheMetaDataHashTableEntry *)hashEntry)->key;
     NS_ASSERTION(entryKey, "hashEntry->key == nsnull");
-    return nsStr::StrCompare(*(nsCString *)key, *entryKey, -1, PR_FALSE) == 0;
+
+    return entryKey->Equals(*NS_STATIC_CAST(const nsAReadableCString*,key));
 }
 
 
