@@ -80,10 +80,37 @@ interface nsICMSMessage : nsISupports
   void contentIsEncrypted(out boolean aEncrypted);
   void getSignerCommonName(out string aName);
   void getSignerEmailAddress(out string aEmail);
+  void getSignerCert(out nsIX509Cert scert);
+  void getEncryptionCert(out nsIX509Cert ecert);
   void verifySignature();
   void verifyDetachedSignature(in UnsignedCharPtr aDigestData, in unsigned long aDigestDataLen);
   void CreateEncrypted(in nsISupportsArray aRecipientCerts);
   void CreateSigned(in nsIX509Cert scert, in nsIX509Cert ecert, in UnsignedCharPtr aDigestData, in unsigned long aDigestDataLen);
+};
+
+/**
+ * nsICMSMessageErrors
+ *  Scriptable error constants for nsICMSMessage
+ */
+[scriptable,uuid(f2aec680-60a0-49f0-afe5-6cf1d3f15e0d)]
+interface nsICMSMessageErrors : nsISupports
+{
+  const long SUCCESS = 0;
+  const long VERIFY_NOT_SIGNED = 1024;
+  const long VERIFY_NO_CONTENT_INFO = 1025;
+  const long VERIFY_BAD_DIGEST = 1026;
+  const long VERIFY_NOCERT = 1028;
+  const long VERIFY_UNTRUSTED = 1029;
+  const long VERIFY_ERROR_UNVERIFIED = 1031;
+  const long VERIFY_ERROR_PROCESSING = 1032;
+  const long VERIFY_BAD_SIGNATURE = 1033;
+  const long VERIFY_DIGEST_MISMATCH = 1034;
+  const long VERIFY_UNKNOWN_ALGO = 1035;
+  const long VERIFY_UNSUPPORTED_ALGO = 1036;
+  const long VERIFY_MALFORMED_SIGNATURE = 1037;
+  const long VERIFY_HEADER_MISMATCH = 1038;
+
+  const long ENCRYPT_NO_BULK_ALG = 1056;
 };
 
 /**
@@ -120,4 +147,51 @@ interface nsICMSEncoder : nsISupports
 #define NS_CMSENCODER_CONTRACTID "@mozilla.org/nsCMSEncoder;1"
 #define NS_CMSMESSAGE_CONTRACTID "@mozilla.org/nsCMSMessage;1"
 #define NS_HASH_CONTRACTID "@mozilla.org/nsHash;1"
+
+/**
+ * CMS specific nsresult error codes
+ */
+
+#define NS_ERROR_CMS_VERIFY_NOT_SIGNED \
+  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_SECURITY, \
+                            nsICMSMessageErrors::VERIFY_NOT_SIGNED)
+#define NS_ERROR_CMS_VERIFY_NO_CONTENT_INFO \
+  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_SECURITY, \
+                            nsICMSMessageErrors::VERIFY_NO_CONTENT_INFO)
+#define NS_ERROR_CMS_VERIFY_BAD_DIGEST \
+  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_SECURITY, \
+                            nsICMSMessageErrors::VERIFY_BAD_DIGEST)
+#define NS_ERROR_CMS_VERIFY_NOCERT \
+  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_SECURITY, \
+                            nsICMSMessageErrors::VERIFY_NOCERT)
+#define NS_ERROR_CMS_VERIFY_UNTRUSTED \
+  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_SECURITY, \
+                            nsICMSMessageErrors::VERIFY_UNTRUSTED)
+#define NS_ERROR_CMS_VERIFY_ERROR_UNVERIFIED \
+  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_SECURITY, \
+                            nsICMSMessageErrors::VERIFY_ERROR_UNVERIFIED)
+#define NS_ERROR_CMS_VERIFY_ERROR_PROCESSING \
+  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_SECURITY, \
+                            nsICMSMessageErrors::VERIFY_ERROR_PROCESSING)
+#define NS_ERROR_CMS_VERIFY_BAD_SIGNATURE \
+  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_SECURITY, \
+                            nsICMSMessageErrors::VERIFY_BAD_SIGNATURE)
+#define NS_ERROR_CMS_VERIFY_DIGEST_MISMATCH \
+  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_SECURITY, \
+                            nsICMSMessageErrors::VERIFY_DIGEST_MISMATCH)
+#define NS_ERROR_CMS_VERIFY_UNKNOWN_ALGO \
+  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_SECURITY, \
+                            nsICMSMessageErrors::VERIFY_UNKNOWN_ALGO)
+#define NS_ERROR_CMS_VERIFY_UNSUPPORTED_ALGO \
+  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_SECURITY, \
+                            nsICMSMessageErrors::VERIFY_UNSUPPORTED_ALGO)
+#define NS_ERROR_CMS_VERIFY_MALFORMED_SIGNATURE \
+  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_SECURITY, \
+                            nsICMSMessageErrors::VERIFY_MALFORMED_SIGNATURE)
+#define NS_ERROR_CMS_VERIFY_HEADER_MISMATCH \
+  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_SECURITY, \
+                            nsICMSMessageErrors::VERIFY_HEADER_MISMATCH)
+#define NS_ERROR_CMS_ENCRYPT_NO_BULK_ALG \
+  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_SECURITY, \
+                            nsICMSMessageErrors::ENCRYPT_NO_BULK_ALG)
 %}
