@@ -483,8 +483,9 @@ void
 nsPrintEngine::InstallPrintPreviewListener()
 {
   if (!mPrt->mPPEventListeners) {
-    nsCOMPtr<nsIDOMEventReceiver> evRec (do_QueryInterface(mDocument));
-    mPrt->mPPEventListeners = new nsPrintPreviewListener(evRec);
+    nsCOMPtr<nsPIDOMWindow> win(do_GetInterface(mContainer));
+    nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(win->GetFrameElementInternal()));
+    mPrt->mPPEventListeners = new nsPrintPreviewListener(target);
 
     if (mPrt->mPPEventListeners) {
       mPrt->mPPEventListeners->AddListeners();

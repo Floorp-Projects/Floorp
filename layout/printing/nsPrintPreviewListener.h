@@ -40,19 +40,10 @@
 #define nsPrintPreviewListener_h__
 
 // Interfaces needed to be included
-#include "nsIDOMContextMenuListener.h"
-#include "nsIDOMKeyListener.h"
-#include "nsIDOMMouseListener.h"
-#include "nsIDOMMouseMotionListener.h"
+#include "nsIDOMEventListener.h"
+#include "nsIDOMEventTarget.h"
 // Helper Classes
-#include "nsIDOMEventReceiver.h"
 #include "nsCOMPtr.h"
-
-#define REG_NONE_LISTENER        0x00
-#define REG_CONTEXTMENU_LISTENER 0x01
-#define REG_KEY_LISTENER         0x02
-#define REG_MOUSE_LISTENER       0x04
-#define REG_MOUSEMOTION_LISTENER 0x08
 
 //
 // class nsPrintPreviewListener
@@ -62,40 +53,14 @@
 // with the DOM with AddChromeListeners() and removing itself with
 // RemoveChromeListeners().
 //
-class nsPrintPreviewListener : public nsIDOMContextMenuListener,
-                                public nsIDOMKeyListener,
-                                public nsIDOMMouseListener,
-                                public nsIDOMMouseMotionListener
+class nsPrintPreviewListener : public nsIDOMEventListener
 
 {
 public:
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIDOMEVENTLISTENER
   
-  nsPrintPreviewListener(nsIDOMEventReceiver* aEVRec);
-  virtual ~nsPrintPreviewListener()
-  {
-  }
-
-  // nsIDOMContextMenuListener
-  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent)        {	return NS_OK; }
-  NS_IMETHOD ContextMenu (nsIDOMEvent* aEvent)       { aEvent->PreventDefault(); return NS_OK; }
-
-  // nsIDOMKeyListener
-  NS_IMETHOD KeyDown(nsIDOMEvent* aKeyEvent);
-  NS_IMETHOD KeyUp(nsIDOMEvent* aKeyEvent);
-  NS_IMETHOD KeyPress(nsIDOMEvent* aKeyEvent);
-
-  // nsIDOMMouseListener
-  NS_IMETHOD MouseDown(nsIDOMEvent* aMouseEvent)     { aMouseEvent->StopPropagation();aMouseEvent->PreventDefault(); return NS_OK; }
-  NS_IMETHOD MouseUp(nsIDOMEvent* aMouseEvent)       { aMouseEvent->StopPropagation();aMouseEvent->PreventDefault(); return NS_OK; }
-  NS_IMETHOD MouseClick(nsIDOMEvent* aMouseEvent)    { aMouseEvent->StopPropagation();aMouseEvent->PreventDefault(); return NS_OK; }
-  NS_IMETHOD MouseDblClick(nsIDOMEvent* aMouseEvent) { aMouseEvent->StopPropagation();aMouseEvent->PreventDefault(); return NS_OK; }
-  NS_IMETHOD MouseOver(nsIDOMEvent* aMouseEvent)     { aMouseEvent->StopPropagation();aMouseEvent->PreventDefault(); return NS_OK; }
-  NS_IMETHOD MouseOut(nsIDOMEvent* aMouseEvent)      { aMouseEvent->StopPropagation();aMouseEvent->PreventDefault(); return NS_OK; }
-
-  // nsIDOMMouseMotionListener
-  NS_IMETHOD DragMove(nsIDOMEvent* aMouseEvent)      { return NS_OK; };
-  NS_IMETHOD MouseMove(nsIDOMEvent* aMouseEvent)     { aMouseEvent->PreventDefault(); return NS_OK; }
+  nsPrintPreviewListener(nsIDOMEventTarget* aTarget);
 
   // Add/remove the relevant listeners, based on what interfaces
   // the embedding chrome implements.
@@ -104,8 +69,7 @@ public:
 
 private:
 
-  nsCOMPtr<nsIDOMEventReceiver> mEventReceiver;
-  PRInt8 mRegFlags;
+  nsCOMPtr<nsIDOMEventTarget> mEventTarget;
 
 }; // class nsPrintPreviewListener
 
