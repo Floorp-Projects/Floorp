@@ -105,7 +105,7 @@ nsFileChannel::Init(nsFileProtocolHandler* handler,
 			nsSpecialSystemDirectory netscapeDir(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
 			mSpec = netscapeDir + (fileString + kNetscapeDirectoryLength);
 		} else {
-			nsFilePath filePath(fileString);
+			nsFilePath filePath(nsUnescape((char*)(const char*)fileString));
 			mSpec = filePath;
 			
 			// Don't assume we actually created a good file spec
@@ -114,14 +114,8 @@ nsFileChannel::Init(nsFileProtocolHandler* handler,
 			{
 				NS_ERROR("failed to create a file spec");
 
-				// Some temp debugstr hackery so optimized builds display an error message
-				// !!!!!REMOVE THIS ONCE WE GET THE FILE NAME UN-ESCAPING CODE IN
-				DebugStr("\p\rFailed to create a file spec for the specified file.\r"\
-						"This is usually due to having a space somewhere in the path\r"\
-						"to the application (say if your hard drive is named Macintosh HD\r"\
-						"or you're trying to run from the Desktop Folder). We'll fix this soon.");
-				
-				// Since we didn't actually create the file spec we return an error
+				// Since we didn't actually create the file spec 
+				// we return an error
 				return NS_ERROR_MALFORMED_URI;
 			}
 		}
