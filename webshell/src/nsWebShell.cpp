@@ -67,6 +67,10 @@
 #include "nsIGlobalHistory.h"
 #include "prmem.h"
 #include "nsXPIDLString.h"
+#include "nsIDOMHTMLElement.h"
+#include "nsIDOMHTMLDocument.h"
+#include "nsLayoutCID.h"
+#include "nsIDOMRange.h"
 
 #ifndef XP_MAC
 #include "nsMultiMixedConv.h" // for 
@@ -606,7 +610,8 @@ static NS_DEFINE_IID(kIBrowserWindowIID,      NS_IBROWSER_WINDOW_IID);
 static NS_DEFINE_IID(kIClipboardCommandsIID,  NS_ICLIPBOARDCOMMANDS_IID);
 static NS_DEFINE_IID(kIEventQueueServiceIID,  NS_IEVENTQUEUESERVICE_IID);
 static NS_DEFINE_IID(kISessionHistoryIID,  NS_ISESSION_HISTORY_IID);
-
+static NS_DEFINE_IID(kIDOMHTMLDocumentIID,    NS_IDOMHTMLDOCUMENT_IID);
+static NS_DEFINE_CID(kCDOMRangeCID,           NS_RANGE_CID);
 // XXX not sure
 static NS_DEFINE_IID(kILinkHandlerIID,        NS_ILINKHANDLER_IID);
 
@@ -4134,7 +4139,60 @@ nsWebShell::PasteSelection(void)
 NS_IMETHODIMP
 nsWebShell::SelectAll(void)
 {
-  return NS_ERROR_FAILURE;
+  nsresult rv;
+
+  nsCOMPtr<nsIDocumentViewer> docViewer;
+  rv = mContentViewer->QueryInterface(kIDocumentViewerIID,
+                                      getter_AddRefs(docViewer));
+  if (NS_FAILED(rv) || !docViewer) return rv;
+                   
+  nsCOMPtr<nsIPresShell> presShell;
+  rv = docViewer->GetPresShell(*getter_AddRefs(presShell));
+  if (NS_FAILED(rv) || !presShell) return rv;
+
+  nsCOMPtr<nsIDOMSelection> selection;
+  rv = presShell->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
+  if (NS_FAILED(rv) || !selection) return rv;
+
+  // Get the document object
+  nsCOMPtr<nsIDocument> doc;
+  rv = docViewer->GetDocument(*getter_AddRefs(doc));
+  if (NS_FAILED(rv) || !doc) return rv;
+
+
+  nsCOMPtr<nsIDOMHTMLDocument> htmldoc;
+  rv = doc->QueryInterface(kIDOMHTMLDocumentIID, (void**)&htmldoc);
+  if (NS_FAILED(rv) || !htmldoc) return rv;
+
+  nsCOMPtr<nsIDOMHTMLElement>bodyElement;
+  rv = htmldoc->GetBody(getter_AddRefs(bodyElement));
+  if (NS_FAILED(rv) || !bodyElement) return rv;
+
+  nsCOMPtr<nsIDOMNode>bodyNode = do_QueryInterface(bodyElement);
+  if (!bodyNode) return NS_ERROR_NO_INTERFACE;
+
+#if 0
+  rv = selection->Collapse(bodyNode, 0);
+  if (NS_FAILED(rv)) return rv;
+  
+  nsCOMPtr<nsIDOMRange>range;
+  rv = selection->GetRangeAt(0, getter_AddRefs(range));
+  if (NS_FAILED(rv) || !range) return rv;
+#endif
+
+  rv = selection->ClearSelection();
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIDOMRange> range;
+  rv = nsComponentManager::CreateInstance(kCDOMRangeCID, nsnull,
+                                          nsIDOMRange::GetIID(),
+                                          getter_AddRefs(range));
+
+  rv = range->SelectNodeContents(bodyNode);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = selection->AddRange(range);
+  return rv;
 }
 
 NS_IMETHODIMP

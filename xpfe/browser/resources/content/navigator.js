@@ -680,6 +680,14 @@ function OpenSearch(tabName, searchStr)
     }
   }
 
+  function BrowserSelectAll() {
+    if (appCore != null) {
+        appCore.selectAll();      
+    } else {
+        dump("BrowserAppCore has not been created!\n");
+    }
+  }
+
   function BrowserFind() {
     if (appCore != null) {
         appCore.find();      

@@ -95,6 +95,7 @@ class nsBrowserAppCore : public nsBaseAppCore,
     NS_IMETHOD    Copy();
     NS_IMETHOD    Close();
     NS_IMETHOD    Exit();
+    NS_IMETHOD    SelectAll();
     NS_IMETHOD    Find();
     NS_IMETHOD    FindNext();
     NS_IMETHOD    SetDocumentCharset(const nsString& aCharset); 
