@@ -35,20 +35,20 @@
               if ( scrollbarStyle == "double" ) {
                 downTop = document.getAnonymousElementByAttribute(this, "sbattr", "scrollbar-down-top");
                 upBottom = document.getAnonymousElementByAttribute(this, "sbattr", "scrollbar-up-bottom");
-                downTop.removeAttribute("collapsed");
-                upBottom.removeAttribute("collapsed");
+                downTop.removeAttribute("hidden");
+                upBottom.removeAttribute("hidden");
               }
               else if ( scrollbarStyle == "doubletop" ) {
                 downTop = document.getAnonymousElementByAttribute(this, "sbattr", "scrollbar-down-top");
                 var downBottom = document.getAnonymousElementByAttribute(this, "sbattr", "scrollbar-down-bottom");
-                downTop.removeAttribute("collapsed");
-                downBottom.setAttribute("collapsed","true");
+                downTop.removeAttribute("hidden");
+                downBottom.setAttribute("hidden","true");
               }
               else if ( scrollbarStyle == "doublebottom" ) {
                 var upTop = document.getAnonymousElementByAttribute(this, "sbattr", "scrollbar-up-top");
                 upBottom = document.getAnonymousElementByAttribute(this, "sbattr", "scrollbar-up-bottom");
-                upTop.setAttribute("collapsed","true");
-                upBottom.removeAttribute("collapsed");
+                upTop.setAttribute("hidden","true");
+                upBottom.removeAttribute("hidden");
               }
               if ( thumbStyle == "fixed" ) {
                 var thumb = document.getAnonymousElementByAttribute(this, "sbattr","scrollbar-thumb");

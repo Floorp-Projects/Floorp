@@ -37,34 +37,26 @@ scrollbar {
 /* ::::: slider ::::: */
 
 slider {
-  border-top: 1px solid #000000;
-  width: 14px;
+  height: 16px;
   background: url("chrome://global/skin/scrollbar/slider-hrz.gif") #AAAAAA;
 }
 
 slider[orient="vertical"] {
-  border-top: none;
-  border-right: 1px solid #000000;
-  border-bottom: none;
-  border-left: 1px solid #000000;
-  width: none;
-  height: 14px;
+  width: 16px;
+  height: none;
   background-image: url("chrome://global/skin/scrollbar/slider-vrt.gif");
 }
 
 /* ::::: borders for thumb and buttons ::::: */
 
 thumb {
-  border-top: 1px solid;
-  border-right: 2px solid;
-  border-bottom: 1px solid;
-  border-left: 2px solid;
-  -moz-border-top-colors: -moz-mac-accentregularhighlight;
+  border: 2px solid;
+  -moz-border-top-colors: #000000 -moz-mac-accentregularhighlight;
   -moz-border-right-colors: #000000 -moz-mac-accentlightshadow;
-  -moz-border-bottom-colors: -moz-mac-accentlightshadow;
+  -moz-border-bottom-colors: #000000 -moz-mac-accentlightshadow;
   -moz-border-left-colors: #000000 -moz-mac-accentregularhighlight;
-  background-color: -moz-mac-accentface;
-  list-style-image: url("chrome://global/skin/scrollbar/thumb-hrz.png");
+  min-width: 10px;
+  background: url("chrome://global/skin/scrollbar/thumb-hrz.png") -moz-mac-accentface no-repeat 50% 50%;
 }
 
 thumb:active {
@@ -73,23 +65,17 @@ thumb:active {
   -moz-border-bottom-colors: #000000 -moz-mac-accentlightshadow;
   -moz-border-left-colors: #000000 -moz-mac-accentregularhighlight;
   background-color: -moz-mac-accentlightshadow;
-  list-style-image: url("chrome://global/skin/scrollbar/thumb-hrz-act.png");
+  background-image: url("chrome://global/skin/scrollbar/thumb-hrz-act.png");
 }
 
 thumb[orient="vertical"] {
-  border-top: 2px solid;
-  border-right: 1px solid;
-  border-bottom: 2px solid;
-  border-left: 1px solid;
-  -moz-border-top-colors: #000000 -moz-mac-accentregularhighlight;
-  -moz-border-right-colors: -moz-mac-accentlightshadow;
-  -moz-border-bottom-colors: #000000 -moz-mac-accentlightshadow;
-  -moz-border-left-colors: -moz-mac-accentregularhighlight;
-  list-style-image: url("chrome://global/skin/scrollbar/thumb-vrt.gif");
+  min-width: 0;
+  min-height: 10px;
+  background-image: url("chrome://global/skin/scrollbar/thumb-vrt.png");
 }
 
-thumb[orient="horizontal"]:active {
-  list-style-image: url("chrome://global/skin/scrollbar/thumb-vrt-act.gif");
+thumb[orient="vertical"]:active {
+  background-image: url("chrome://global/skin/scrollbar/thumb-vrt-act.png");
 }
 
 /* ::::: thumb (horizontal) ::::: */
@@ -112,15 +98,15 @@ scrollbarbutton {
   -moz-border-right-colors: #000000 #BBBBBB;
   -moz-border-bottom-colors: #000000 #BBBBBB;
   -moz-border-left-colors: #000000 #FFFFFF;
-  background: -moz-Dialog no-repeat 50% 50%;
+  background: #DDDDDD no-repeat 50% 50%;
 }
 
 scrollbarbutton:hover:active {
-  -moz-border-top-colors: ThreeDDarkShadow -moz-Dialog;
-  -moz-border-right-colors: ThreeDDarkShadow -moz-Dialog;
-  -moz-border-bottom-colors: ThreeDDarkShadow -moz-Dialog;
-  -moz-border-left-colors: ThreeDDarkShadow -moz-Dialog;
-  background-color: ThreeDShadow;
+  -moz-border-top-colors: #000000 #444444;
+  -moz-border-right-colors: #000000 #AAAAAA;
+  -moz-border-bottom-colors: #000000 #AAAAAA;
+  -moz-border-left-colors: #000000 #444444;
+  background-color: #666666;
 }
 
 /* ..... increment .... */
