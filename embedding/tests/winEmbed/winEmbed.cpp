@@ -113,7 +113,7 @@ int main ()
 	MyRegisterClass(hInstance);
 
 // Init Embedding APIs
-    NS_InitEmbedding("");
+    NS_InitEmbedding(nsnull, nsnull);
 
 // put up at lease on browser window ....
 /////////////////////////////////////////////////////////////
