@@ -102,6 +102,7 @@ ShowSetupTypeWin(void)
 		HLock(gControls->cfg->st[gControls->opt->instChoice - 1].longDesc);
 		txtSize = strlen(*gControls->cfg->st[gControls->opt->instChoice - 1].longDesc);
 		TEInsert( *gControls->cfg->st[gControls->opt->instChoice - 1].longDesc, txtSize, gControls->stw->instDescTxt);
+		InsertCompList(gControls->opt->instChoice - 1);
 		TESetAlignment( teFlushDefault, gControls->stw->instDescTxt);
 		HUnlock(gControls->cfg->st[gControls->opt->instChoice - 1].longDesc);
 
@@ -189,6 +190,7 @@ InSetupTypeContent(EventRecord* evt, WindowPtr wCurrPtr)
 	short				cntlVal;
 	long 				len;
 	ControlHandle 		currCntl;
+	int					instChoice;
 	
 	/* NavChooseFolder vars */
 	NavReplyRecord		reply;	
@@ -218,16 +220,20 @@ InSetupTypeContent(EventRecord* evt, WindowPtr wCurrPtr)
 		part = TrackControl(currCntl, localPt, (ControlActionUPP) -1);
 		
 		gControls->opt->instChoice = GetControlValue(currCntl);
+		instChoice = gControls->opt->instChoice - 1;
 		
 		SetRect(&r, (**(gControls->stw->instDescTxt)).viewRect.left,
 					(**(gControls->stw->instDescTxt)).viewRect.top,
 					(**(gControls->stw->instDescTxt)).viewRect.right,
 					(**(gControls->stw->instDescTxt)).viewRect.bottom);
 					
-		HLock(gControls->cfg->st[gControls->opt->instChoice-1].longDesc);
-		len = strlen(*gControls->cfg->st[gControls->opt->instChoice-1].longDesc);
-		TESetText( *gControls->cfg->st[gControls->opt->instChoice-1].longDesc, len, gControls->stw->instDescTxt);
-		HUnlock(gControls->cfg->st[gControls->opt->instChoice-1].longDesc);
+		HLock(gControls->cfg->st[instChoice].longDesc);
+		len = strlen(*gControls->cfg->st[instChoice].longDesc);
+		TESetText( *gControls->cfg->st[instChoice].longDesc, len, gControls->stw->instDescTxt);
+		HUnlock(gControls->cfg->st[instChoice].longDesc);
+		
+		InsertCompList(instChoice);
+		
 		EraseRect( &r );
 		TEUpdate( &r, gControls->stw->instDescTxt);
 		
@@ -338,6 +344,35 @@ InSetupTypeContent(EventRecord* evt, WindowPtr wCurrPtr)
 		}
 	}
 	SetPort(oldPort);
+}
+
+void
+InsertCompList(int instChoice)
+{
+	int compsDone, i, len;
+	InstComp currComp;
+	char compName[128];
+	
+	// if not cutsom setup type show components list
+	if (gControls->opt->instChoice < gControls->cfg->numSetupTypes)
+	{
+		compsDone = 0;
+		for(i=0; i<kMaxComponents; i++)
+		{
+			if ( (gControls->cfg->st[instChoice].comp[i] == kInSetupType) &&
+				 (compsDone < gControls->cfg->st[instChoice].numComps) )
+			{
+				currComp = gControls->cfg->comp[i];
+				HLock(currComp.shortDesc);
+				len = strlen(*currComp.shortDesc) + 4;
+				memset(compName, 0, 128);
+				sprintf(compName, "\r ¥ %s", *currComp.shortDesc);
+				TEInsert(compName, len, gControls->stw->instDescTxt);
+				HUnlock(currComp.shortDesc);
+				compsDone++;
+			}
+		}
+	}
 }
 
 void

@@ -98,11 +98,14 @@ void HandleMouseDown(EventRecord* evt)
 	}
 }
 
+static sInstallStarted = false;
+
 void HandleKeyDown(EventRecord* evt)
 {
-	char keyPressed;
+	char 			keyPressed;
 	ThreadID		tid;
-	
+	unsigned long 	finalTicks;
+		
 	keyPressed = evt->message & charCodeMask;
 #ifdef MIW_DEBUG
 	if ( (keyPressed == 'z') || (keyPressed == 'Z'))
@@ -113,7 +116,12 @@ void HandleKeyDown(EventRecord* evt)
 		case '\r':
 		case '\3':
 			if (gControls->nextB)
-				TrackControl(gControls->nextB, evt->where, NULL);
+			{
+				HiliteControl(gControls->nextB, 1);
+				Delay(8, &finalTicks);
+				HiliteControl(gControls->nextB, 0);
+			}
+
 			switch(gCurrWin)
 			{
 				case kLicenseID:
@@ -150,7 +158,11 @@ void HandleKeyDown(EventRecord* evt)
 					ShowTerminalWin();
 					return;
 				case kTerminalID:
-					SpawnSDThread(Install, &tid);
+					if (!sInstallStarted)
+					{
+						SpawnSDThread(Install, &tid);
+						sInstallStarted = true;
+					}
 					return;
 				default:
 					break; // never reached
@@ -366,5 +378,3 @@ void React2InContent(EventRecord* evt, WindowPtr wCurrPtr)
 			break;
 	}
 }
-
-
