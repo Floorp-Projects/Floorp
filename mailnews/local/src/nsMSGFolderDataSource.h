@@ -97,13 +97,16 @@ public:
 
   NS_IMETHOD Flush();
 
-  NS_IMETHOD GetEnabledCommands(nsISupportsArray* aSources,
-                                nsISupportsArray* aArguments,
-                                nsIEnumerator**   aResult);
+  NS_IMETHOD GetAllCommands(nsIRDFResource* source,
+                            nsIEnumerator/*<nsIRDFResource>*/** commands);
 
-  NS_IMETHOD DoCommand(nsISupportsArray* aSources,
+  NS_IMETHOD IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
+                              nsIRDFResource*   aCommand,
+                              nsISupportsArray/*<nsIRDFResource>*/* aArguments);
+
+  NS_IMETHOD DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
                        nsIRDFResource*   aCommand,
-                       nsISupportsArray* aArguments);
+                       nsISupportsArray/*<nsIRDFResource>*/* aArguments);
 
   NS_IMETHOD OnItemAdded(nsIFolder *parentFolder, nsISupports *item);
 

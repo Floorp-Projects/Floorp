@@ -637,68 +637,70 @@ NS_IMETHODIMP nsMSGFolderDataSource::Flush()
 }
 
 NS_IMETHODIMP
-nsMSGFolderDataSource::GetEnabledCommands(nsISupportsArray* aSources,
-                                          nsISupportsArray* aArguments,
-                                          nsIEnumerator**   aResult)
+nsMSGFolderDataSource::GetAllCommands(nsIRDFResource* source,
+                                      nsIEnumerator/*<nsIRDFResource>*/** commands)
 {
-  nsresult rv = NS_ERROR_FAILURE;
-  nsCOMPtr<nsIEnumerator> commands;
-  PRBool haveFolderCmds = PR_FALSE;
-  PRBool haveMessageCmds = PR_FALSE;
+  nsresult rv;
 
-  PRUint32 cnt = aSources->Count();
-  for (PRUint32 i = 0; i < cnt; i++) {
-    nsISupports* source = (*aSources)[i];
-    nsIMsgFolder* folder;
-    nsIMessage* message;
+  nsIMsgFolder* folder;
+  nsIMessage* message;
+  nsISupportsArray* cmds = nsnull;
 
-    nsISupportsArray* cmds;
-
-    if (NS_SUCCEEDED(source->QueryInterface(nsIMsgFolder::GetIID(), (void**)&folder))) {
-      NS_RELEASE(folder);       // release now that we know it's a folder
-      if (!haveFolderCmds) {
-        rv = NS_NewISupportsArray(&cmds);
-        if (NS_FAILED(rv)) return rv;
-        cmds->AppendElement(kNC_Delete);
-        haveFolderCmds = PR_TRUE;
-      }
-    }
-    else if (NS_SUCCEEDED(source->QueryInterface(nsIMessage::GetIID(), (void**)&message))) {
-      NS_RELEASE(message);       // release now that we know it's a message
-      if (!haveMessageCmds) {
-        rv = NS_NewISupportsArray(&cmds);
-        if (NS_FAILED(rv)) return rv;
-        cmds->AppendElement(kNC_Delete);
-        cmds->AppendElement(kNC_Reply);
-        cmds->AppendElement(kNC_Forward);
-        haveMessageCmds = PR_TRUE;
-      }
-    }
-
-    if (cmds) {
-      nsIEnumerator* cmdEnum;
-      rv = cmds->Enumerate(&cmdEnum);
-      if (NS_FAILED(rv)) return rv;
-
-      if (commands == nsnull)
-        commands = dont_QueryInterface(cmdEnum);
-      else {
-        nsIEnumerator* unionCmds;
-        rv = NS_NewUnionEnumerator(commands, cmdEnum, &unionCmds);
-        if (NS_FAILED(rv)) return rv;
-        commands = dont_QueryInterface(unionCmds);
-      }
-    }
+  if (NS_SUCCEEDED(source->QueryInterface(nsIMsgFolder::GetIID(), (void**)&folder))) {
+    NS_RELEASE(folder);       // release now that we know it's a folder
+    rv = NS_NewISupportsArray(&cmds);
+    if (NS_FAILED(rv)) return rv;
+    cmds->AppendElement(kNC_Delete);
+  }
+  else if (NS_SUCCEEDED(source->QueryInterface(nsIMessage::GetIID(), (void**)&message))) {
+    NS_RELEASE(message);       // release now that we know it's a message
+    rv = NS_NewISupportsArray(&cmds);
+    if (NS_FAILED(rv)) return rv;
+    cmds->AppendElement(kNC_Delete);
+    cmds->AppendElement(kNC_Reply);
+    cmds->AppendElement(kNC_Forward);
   }
 
-  *aResult = commands;
-  return rv;
+  if (cmds != nsnull)
+    return cmds->Enumerate(commands);
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-nsMSGFolderDataSource::DoCommand(nsISupportsArray* aSources,
+nsMSGFolderDataSource::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
+                                        nsIRDFResource*   aCommand,
+                                        nsISupportsArray/*<nsIRDFResource>*/* aArguments)
+{
+  nsIMsgFolder* folder;
+  nsIMessage* message;
+
+  PRUint32 cnt = aSources->Count();
+  for (PRUint32 i = 0; i < cnt; i++) {
+    nsCOMPtr<nsISupports> source = dont_QueryInterface((*aSources)[i]);
+    if (NS_SUCCEEDED(source->QueryInterface(nsIMsgFolder::GetIID(), (void**)&folder))) {
+      NS_RELEASE(folder);       // release now that we know it's a folder
+
+      // we don't care about the arguments -- folder commands are always enabled
+      if (!(peq(aCommand, kNC_Delete)))
+        return NS_COMFALSE;
+    }
+    else if (NS_SUCCEEDED(source->QueryInterface(nsIMessage::GetIID(), (void**)&message))) {
+      NS_RELEASE(message);       // release now that we know it's a message
+
+      // we don't care about the arguments -- message commands are always enabled
+      if (!(peq(aCommand, kNC_Delete) ||
+            peq(aCommand, kNC_Reply) ||
+            peq(aCommand, kNC_Forward)))
+        return NS_COMFALSE;
+    }
+  }
+  return NS_OK; // succeeded for all sources
+}
+
+NS_IMETHODIMP
+nsMSGFolderDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
                                  nsIRDFResource*   aCommand,
-                                 nsISupportsArray* aArguments)
+                                 nsISupportsArray/*<nsIRDFResource>*/* aArguments)
 {
   nsresult rv = NS_OK;
 
@@ -721,8 +723,7 @@ nsMSGFolderDataSource::DoCommand(nsISupportsArray* aSources,
 
       if (peq(aCommand, kNC_Delete)) {
 				nsIMsgFolder *folder;
-				if(rv = NS_SUCCEEDED(GetFolderFromMessage(message, &folder)))
-				{
+				if (rv = NS_SUCCEEDED(GetFolderFromMessage(message, &folder))) {
 					rv = folder->DeleteMessage(message);
 				}
       }

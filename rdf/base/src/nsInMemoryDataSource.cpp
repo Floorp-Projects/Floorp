@@ -208,13 +208,16 @@ public:
 
     NS_IMETHOD Flush();
 
-    NS_IMETHOD GetEnabledCommands(nsISupportsArray* aSources,
-                                  nsISupportsArray* aArguments,
-                                  nsIEnumerator**   aResult);
+    NS_IMETHOD GetAllCommands(nsIRDFResource* source,
+                              nsIEnumerator/*<nsIRDFResource>*/** commands);
 
-    NS_IMETHOD DoCommand(nsISupportsArray* aSources,
+    NS_IMETHOD IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
+                                nsIRDFResource*   aCommand,
+                                nsISupportsArray/*<nsIRDFResource>*/* aArguments);
+
+    NS_IMETHOD DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
                          nsIRDFResource*   aCommand,
-                         nsISupportsArray* aArguments);
+                         nsISupportsArray/*<nsIRDFResource>*/* aArguments);
 
     // Implemenatation methods
     Assertion* GetForwardArcs(nsIRDFResource* u);
@@ -1444,18 +1447,26 @@ InMemoryDataSource::Flush()
 }
 
 NS_IMETHODIMP
-InMemoryDataSource::GetEnabledCommands(nsISupportsArray* aSources,
-                                       nsISupportsArray* aArguments,
-                                       nsIEnumerator**   aResult)
+InMemoryDataSource::GetAllCommands(nsIRDFResource* source,
+                                   nsIEnumerator/*<nsIRDFResource>*/** commands)
 {
     NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-InMemoryDataSource::DoCommand(nsISupportsArray* aSources,
+InMemoryDataSource::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
+                                     nsIRDFResource*   aCommand,
+                                     nsISupportsArray/*<nsIRDFResource>*/* aArguments)
+{
+    NS_NOTYETIMPLEMENTED("write me!");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+InMemoryDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
                               nsIRDFResource*   aCommand,
-                              nsISupportsArray* aArguments)
+                              nsISupportsArray/*<nsIRDFResource>*/* aArguments)
 {
     NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
