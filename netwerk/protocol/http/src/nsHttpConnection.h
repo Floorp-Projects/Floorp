@@ -30,6 +30,7 @@
 #include "nsISocketTransport.h"
 #include "nsIProgressEventSink.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIEventQueue.h"
 #include "nsIInputStream.h"
 #include "nsCOMPtr.h"

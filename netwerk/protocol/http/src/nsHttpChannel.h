@@ -32,6 +32,7 @@
 #include "nsIURI.h"
 #include "nsILoadGroup.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIInputStream.h"
 #include "nsIProgressEventSink.h"
 #include "nsICachingChannel.h"

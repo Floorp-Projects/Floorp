@@ -32,6 +32,7 @@
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIProgressEventSink.h"
 //#include "nsIHTTPProtocolHandler.h"
 //#include "nsIHTTPChannel.h"

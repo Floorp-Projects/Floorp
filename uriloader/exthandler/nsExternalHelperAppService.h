@@ -37,6 +37,7 @@
 #include "nsIOutputStream.h"
 #include "nsString.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsILocalFile.h"
 
 #include "nsIRDFDataSource.h"

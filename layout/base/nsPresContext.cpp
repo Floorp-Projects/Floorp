@@ -41,6 +41,7 @@
 #include "nsIComponentManager.h"
 #include "nsIURIContentListener.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIServiceManager.h"
 #include "nsBoxLayoutState.h"
 #include "nsIBox.h"

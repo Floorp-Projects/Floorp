@@ -25,6 +25,7 @@
 #include "nsIIconURI.h"
 #include "nsIServiceManager.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsXPIDLString.h"
 #include "nsMimeTypes.h"
 #include "nsMemory.h"

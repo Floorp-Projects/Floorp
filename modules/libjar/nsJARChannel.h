@@ -33,6 +33,7 @@
 #include "nsIChannel.h"
 #include "nsILoadGroup.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsCOMPtr.h"
 #include "nsIFile.h"
 #include "prmon.h"

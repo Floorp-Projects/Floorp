@@ -27,6 +27,7 @@
 #include "nsIXMLDocument.h"
 #include "nsIHTMLContentContainer.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIHttpEventSink.h"
 
 class nsIParser;

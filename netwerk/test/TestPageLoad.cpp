@@ -25,6 +25,7 @@
 #include "nsIEventQueueService.h"
 #include "nsIServiceManager.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIProgressEventSink.h"
 #include "nsIComponentManager.h"
 #include "prprf.h"

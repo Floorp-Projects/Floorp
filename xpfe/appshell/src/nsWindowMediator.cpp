@@ -51,6 +51,7 @@
 // Interfaces Needed
 #include "nsIDocShell.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIXULWindow.h"
 
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);

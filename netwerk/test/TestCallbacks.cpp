@@ -36,6 +36,7 @@
 #include "nsIChannel.h"
 #include "nsIURL.h"
 #include "nsIInterfaceRequestor.h" 
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIDNSService.h" 
 
 #include "nsISimpleEnumerator.h"

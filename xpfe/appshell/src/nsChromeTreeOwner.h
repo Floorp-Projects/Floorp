@@ -30,6 +30,7 @@
 #include "nsIBaseWindow.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIWebProgressListener.h"
 #include "nsWeakReference.h"
 

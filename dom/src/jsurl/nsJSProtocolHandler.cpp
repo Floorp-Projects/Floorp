@@ -39,6 +39,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsICodebasePrincipal.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIByteArrayInputStream.h"
 #include "nsIWindowMediator.h"
 #include "nsIDOMWindowInternal.h"

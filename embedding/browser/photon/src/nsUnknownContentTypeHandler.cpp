@@ -25,6 +25,7 @@
 
 #include "nsIDOMWindowInternal.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIDocShell.h"
 #include "nsIMIMEInfo.h"
 #include "nsIURI.h"

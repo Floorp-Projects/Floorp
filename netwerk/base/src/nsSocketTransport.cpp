@@ -37,6 +37,7 @@
 #include "nsISocketProviderService.h"
 #include "nsStdURL.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIProxyObjectManager.h"
 #include "nsXPIDLString.h"
 #include "nsNetUtil.h"

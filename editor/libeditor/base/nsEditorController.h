@@ -31,6 +31,7 @@
 #include "nsIEditorController.h"
 #include "nsIControllerCommand.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 
 #include "nsHashtable.h"
 #include "nsString.h"

@@ -73,6 +73,7 @@ EXPORTS		= \
 		nsWeakPtr.h \
 		nscore.h \
 		nslog.h \
+		nsIInterfaceRequestorUtils.h \
 		$(NULL)
 
 ifdef NS_TRACE_MALLOC

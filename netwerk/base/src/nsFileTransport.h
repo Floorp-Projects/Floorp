@@ -40,6 +40,7 @@
 #include "nsIOutputStream.h"
 #include "nsIStreamIO.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIFile.h"
 #include "prlog.h"
 #include "nsFileTransportService.h"

@@ -26,6 +26,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsDocument.h"
 #include "nsIArena.h"
 #include "nsIURL.h"
@@ -96,7 +97,6 @@
 #include "nsIAggregatePrincipal.h"
 #include "nsIPrivateDOMImplementation.h"
 
-#include "nsIInterfaceRequestor.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsPIDOMWindow.h"
 #include "nsIFocusController.h"

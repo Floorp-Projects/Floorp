@@ -62,6 +62,7 @@
 #include "nsLinebreakConverter.h"
 #include "nsIBinaryInputStream.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIByteArrayInputStream.h"
 #include "nsReadableUtils.h"
 #include "nsStaticNameTable.h"

@@ -53,6 +53,7 @@
 #include "nsAppShellCIDs.h"
 #include "nsIAppShellService.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIServiceManager.h"
 #include "nsIXULWindow.h"
 #include "nsIWebBrowserChrome.h"

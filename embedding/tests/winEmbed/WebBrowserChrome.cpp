@@ -30,6 +30,7 @@
 #include "nsIDOMWindow.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIRequest.h"
 #include "nsIChannel.h"
 #include "nsCWebBrowser.h"

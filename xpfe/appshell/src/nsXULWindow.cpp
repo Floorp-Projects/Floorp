@@ -43,6 +43,7 @@
 #include "nsIDOMScreen.h"
 #include "nsIDOMXULDocument.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIIOService.h"
 #include "nsNetCID.h"
 #include "nsIJSContextStack.h"

@@ -46,6 +46,7 @@
 
 #include "nsIProgressEventSink.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsPIXPIManagerCallbacks.h"
 
 #include "nsIDialogParamBlock.h"

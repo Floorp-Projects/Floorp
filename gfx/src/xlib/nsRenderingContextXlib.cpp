@@ -39,6 +39,7 @@
 #include "imgIContainer.h"
 #include "gfxIImageFrame.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #endif /* _IMPL_NS_XPRINT */
 
 #ifdef _IMPL_NS_XPRINT

@@ -31,6 +31,7 @@
 #include "nsWeakPtr.h"
 #include "nsWeakReference.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 
 class  nsISupportsArray;
 

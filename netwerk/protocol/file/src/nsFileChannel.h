@@ -25,6 +25,7 @@
 
 #include "nsIChannel.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsILoadGroup.h"
 #include "nsIStreamListener.h"
 #include "nsFileSpec.h"

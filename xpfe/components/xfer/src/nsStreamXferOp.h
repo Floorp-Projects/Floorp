@@ -24,6 +24,7 @@
 
 #include "nsIStreamTransferOperation.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIProgressEventSink.h"
 #include "nsIStreamListener.h"
 #include "nsIChannel.h"

@@ -59,6 +59,7 @@
 #include "nsIDocCharset.h"
 #include "nsIGlobalHistory.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIPrompt.h"
 #include "nsIRefreshURI.h"
 #include "nsIScriptGlobalObject.h"

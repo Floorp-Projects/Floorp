@@ -30,6 +30,7 @@
 #include "nsIDOMWindowInternal.h"
 #include "nsIFactory.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIXULWindow.h"
 
 #include "nsAppShellWindowEnumerator.h"

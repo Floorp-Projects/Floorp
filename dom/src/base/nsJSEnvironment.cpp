@@ -50,6 +50,7 @@
 #include "nsIPresContext.h"
 #include "nsIScriptError.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIPrompt.h"
 #include "nsIObserverService.h"
 #include "nsGUIEvent.h"

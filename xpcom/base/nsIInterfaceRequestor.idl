@@ -24,74 +24,32 @@
 
 /**
  * The nsIInterfaceRequestor interface defines a generic interface for 
- * requesting objects that a given object might implement.  This is very
- * similar to QueryInterface found in nsISupports.  The main difference being
- * that objects returned from this interface are not required to provide a way
- * back to the object implementing this interface.  The semantics of QI() 
- * dictate that given an interface A that you QI() on to get to interface B,
- * you must be able to QI on B to get back to A.  This interface however 
- * allows you to obtain an interface C from A that may or most likely will not
- * have the ability to get back to A. 
+ * requesting interfaces that a given object might provide access to.
+ * This is very similar to QueryInterface found in nsISupports.  
+ * The main difference is that interfaces returned from GetInterface()
+ * are not required to provide a way back to the object implementing this 
+ * interface.  The semantics of QI() dictate that given an interface A that 
+ * you QI() on to get to interface B, you must be able to QI on B to get back 
+ * to A.  This interface however allows you to obtain an interface C from A 
+ * that may or most likely will not have the ability to get back to A. 
+ *
+ * @status FROZEN
  */
 
 [scriptable, uuid(033A1470-8B2A-11d3-AF88-00A024FFC08C)]
 interface nsIInterfaceRequestor : nsISupports
 {
-	/*
-	Asks the object for a listener object supporting a particular interface.
-	This method is used to allow the listener to not adhere to the
-	QI rules.  By providing a a getInterface call the component can have
-	completely different objects for each distinct type of interface.
-	*/
+   /**
+    * Retrieves the specified interface pointer.
+    *
+    * @param uuid The IID of the interface being requested.
+    * @param result [out] The interface pointer to be filled in if
+    *               the interface is accessible.
+    * @return NS_OK - interface was successfully returned.
+    *         NS_NOINTERFACE - interface not accessible.
+    *         NS_ERROR* - method failure.
+    */
 	void getInterface(in nsIIDRef uuid, 
                       [iid_is(uuid),retval] out nsQIResult result);
 };
-
-
-%{C++
-
-#ifndef nsCOMPtr_h___
-#include "nsCOMPtr.h"
-#endif
-
-// a type-safe shortcut for calling the |GetInterface()| member function
-// T must inherit from nsIInterfaceRequestor, but the cast may be ambiguous.
-template <class T, class DestinationType>
-inline
-nsresult
-CallGetInterface( T* aSource, DestinationType** aDestination )
-  {
-    NS_PRECONDITION(aSource, "null parameter");
-    NS_PRECONDITION(aDestination, "null parameter");
-
-    return aSource->GetInterface(NS_GET_IID(DestinationType),
-                                 NS_REINTERPRET_CAST(void**, aDestination));
-  }
-
-class NS_EXPORT nsGetInterface : public nsCOMPtr_helper
-  {
-    public:
-      nsGetInterface( nsISupports* aSource, nsresult* error )
-          : mSource(aSource),
-            mErrorPtr(error)
-        {
-          // nothing else to do here
-        }
-
-      virtual nsresult operator()( const nsIID&, void** ) const;
-      virtual ~nsGetInterface() {};
-
-    private:
-      nsCOMPtr<nsISupports> mSource;
-      nsresult*             mErrorPtr;
-  };
-
-inline
-const nsGetInterface
-do_GetInterface( nsISupports* aSource, nsresult* error = 0 )
-  {
-    return nsGetInterface(aSource, error);
-  }
-
-%}
 

@@ -47,6 +47,7 @@
 #include "nsIHttpChannel.h"
 #include "nsIHttpEventSink.h" 
 #include "nsIInterfaceRequestor.h" 
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIDNSService.h" 
 
 #include "nsISimpleEnumerator.h"

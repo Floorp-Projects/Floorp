@@ -46,6 +46,7 @@
 #include "rdf.h"
 #include "nsIXULWindow.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 
 // These are needed to load a URL in a browser window.
 #include "nsIDOMLocation.h"

@@ -30,6 +30,7 @@
 #include "nsIEditorController.h"
 #include "nsIController.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIControllerCommand.h"
 #include "nsWeakPtr.h"
 

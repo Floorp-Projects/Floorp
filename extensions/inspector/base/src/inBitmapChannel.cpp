@@ -24,6 +24,7 @@
 #include "inIBitmapURI.h"
 #include "nsIServiceManager.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsXPIDLString.h"
 #include "nsMemory.h"
 #include "nsIStringStream.h"

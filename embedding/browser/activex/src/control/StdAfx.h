@@ -75,6 +75,7 @@
 #include "nsIContentViewer.h"
 #include "nsIContentViewerEdit.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIPresShell.h"
 #include "nsCOMPtr.h"
 #include "nsISelection.h"

@@ -35,6 +35,7 @@
 #include "nsIDOMWindow.h"
 #include "nsIDOMElement.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsIWebShell.h"
 #include "nsPIDOMWindow.h"

@@ -40,6 +40,7 @@
 #include "nsCRT.h"
 #include "nsIComponentManager.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIProgressEventSink.h"
 #include "prlog.h"
 #include "nsIPref.h"

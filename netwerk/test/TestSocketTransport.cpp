@@ -48,6 +48,7 @@
 #include "nsIThread.h"
 #include "nsITimer.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIProgressEventSink.h"
 #include "nsCRT.h"
 #include "nsNetUtil.h"
