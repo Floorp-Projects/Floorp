@@ -2215,7 +2215,6 @@ PRBool CSSParserImpl::ParseFontFamily(PRInt32* aErrorCode, nsICSSDeclaration* aD
       if (!firstOne) {
         family.Append(PRUnichar(','));
       }
-      family.Append(PRUnichar('"'));
       family.Append(tk->mIdent);
       for (;;) {
         if (!GetToken(aErrorCode, PR_FALSE)) {
@@ -2240,15 +2239,14 @@ PRBool CSSParserImpl::ParseFontFamily(PRInt32* aErrorCode, nsICSSDeclaration* aD
           break;
         }
       }
-      family.Append(PRUnichar('"'));
       firstOne = PR_FALSE;
     } else if (eCSSToken_String == tk->mType) {
       if (!firstOne) {
         family.Append(PRUnichar(','));
       }
-      family.Append(PRUnichar('"'));
+      family.Append(tk->mSymbol); // replace the quotes
       family.Append(tk->mIdent);
-      family.Append(PRUnichar('"'));
+      family.Append(tk->mSymbol);
       firstOne = PR_FALSE;
     } else if (eCSSToken_Symbol == tk->mType) {
       if (',' != tk->mSymbol) {
