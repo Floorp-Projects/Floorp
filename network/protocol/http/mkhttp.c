@@ -2727,18 +2727,19 @@ net_setup_http_stream(ActiveEntry * ce)
     }
 
     /* clear these */
-    if(!ce->URL_s->preset_content_type)
+    if(!ce->URL_s->preset_content_type) {
         PR_FREEIF(ce->URL_s->content_type);
         ce->URL_s->content_type = NULL;
-      PR_FREEIF(ce->URL_s->content_encoding);
-      ce->URL_s->content_encoding = NULL;
+    }
+    PR_FREEIF(ce->URL_s->content_encoding);
+    ce->URL_s->content_encoding = NULL;
     ce->URL_s->content_length = 0;       /* reset */
     ce->URL_s->real_content_length = 0;  /* reset */
     ce->URL_s->last_modified = 0;        /* reset */
 
     cd->posting = FALSE;
 
-        ce->URL_s->address_modified = TRUE;
+    ce->URL_s->address_modified = TRUE;
 
     if(do_redirect)
             return(MK_DO_REDIRECT); /*fall out of HTTP and load the redirecting url */
