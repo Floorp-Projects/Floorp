@@ -306,7 +306,7 @@ orkinTableRowCursor::SetDoFailOnSeedOutOfSync(nsIMdbEnv* mev, mdb_bool inFail)
 }
 
 /*virtual*/ mdb_err
-orkinTableRowCursor::SetDoFailOnSeedOutOfSync(nsIMdbEnv* mev, mdb_bool* outFail)
+orkinTableRowCursor::GetDoFailOnSeedOutOfSync(nsIMdbEnv* mev, mdb_bool* outFail)
 {
   mdb_err outErr = 0;
   morkEnv* ev =

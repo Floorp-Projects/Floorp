@@ -142,7 +142,7 @@ public: // type identification
   virtual mdb_err GetPos(nsIMdbEnv* ev, mdb_pos* outPos);
   
   virtual mdb_err SetDoFailOnSeedOutOfSync(nsIMdbEnv* ev, mdb_bool inFail);
-  virtual mdb_err SetDoFailOnSeedOutOfSync(nsIMdbEnv* ev, mdb_bool* outFail);
+  virtual mdb_err GetDoFailOnSeedOutOfSync(nsIMdbEnv* ev, mdb_bool* outFail);
   // } ----- end attribute methods -----
 
 // } ===== end nsIMdbCursor methods =====
