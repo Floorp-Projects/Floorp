@@ -586,27 +586,29 @@ nsHeaderSniffer.prototype = {
 
   get suggestedFileName()
   {
-    var filename = "";
-    var name = this.mContentDisposition;
-    if (name) {
-      const filenamePrefix = "filename=";
-      var ix = name.indexOf(filenamePrefix);
-      if (ix >= 0) {
-        // Adjust ix to point to start of actual name
-        ix += filenamePrefix.length;
-        filename = name.substr(ix, name.length);
-        if (filename != "") {
-          ix = filename.lastIndexOf(";");
-          if (ix > 0)
-            filename = filename.substr(0, ix);
-          
-          filename = filename.replace(/^"|"$/g, "");
+    var fileName = "";
+
+    if (this.mContentDisposition) {
+      const mhpContractID = "@mozilla.org/network/mime-hdrparam;1"
+      const mhpIID = Components.interfaces.nsIMIMEHeaderParam;
+      const mhp = Components.classes[mhpContractID].getService(mhpIID);
+      var dummy = { value: null }; // To make JS engine happy.
+      var charset = getCharsetforSave(null);
+
+      try {
+        fileName = mhp.getParameter(this.mContentDisposition, "filename", charset, true, dummy);
+      } 
+      catch (e) {
+        try {
+          fileName = mhp.getParameter(this.mContentDisposition, "name", charset, true, dummy);
+        }
+        catch (e) {
         }
       }
     }
-    return filename;
-  }  
-
+    fileName = fileName.replace(/^"|"$/g, "");
+    return fileName;
+  }
 };
 
 const MODE_COMPLETE = 0;
@@ -747,13 +749,7 @@ function getDefaultFileName(aDefaultFileName, aNameFromHeaders, aDocumentURI, aD
       // try unescape again with a characterSet
       var textToSubURI = Components.classes["@mozilla.org/intl/texttosuburi;1"]
                                    .getService(Components.interfaces.nsITextToSubURI);
-      var charset;
-      if (aDocument)
-        charset = aDocument.characterSet;
-      else if (document.commandDispatcher.focusedWindow)
-        charset = document.commandDispatcher.focusedWindow.document.characterSet;
-      else
-        charset = window._content.document.characterSet;
+      var charset = getCharsetforSave(aDocument);
       return textToSubURI.unEscapeURIForUI(charset, url.fileName);
     } catch (e) {
       // This is something like a wyciwyg:, data:, and so forth
@@ -880,5 +876,17 @@ function isDocumentType(aContentType)
   case "application/xml":
     return false; // XXX Disables Save As Complete until it works for XML
   }
+  return false;
+}
+
+function getCharsetforSave(aDocument)
+{
+  if (aDocument)
+    return aDocument.characterSet;
+
+  if (document.commandDispatcher.focusedWindow)
+    return document.commandDispatcher.focusedWindow.document.characterSet;
+
+  return  window._content.document.characterSet;
   return false;
 }
