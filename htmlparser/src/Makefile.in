@@ -30,7 +30,25 @@ MODULE		= htmlparser
 LIBRARY_NAME	= htmlpars
 IS_COMPONENT	= 1
 SHORT_LIBNAME	= htmlpars
-EXTRA_DSO_LIBS	= expat_s xmltok_s mozutil_s
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
+EXTRA_DSO_LIBS	= expat_s xmltok_s 
+
+ifdef MOZ_PERF_METRICS
+EXTRA_DSO_LIBS	+= mozutil_s
+endif
+
+else
+SHARED_LIBRARY_LIBS = \
+		$(DIST)/lib/libexpat_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libxmltok_s.$(LIB_SUFFIX) \
+		$(NULL)
+
+ifdef MOZ_PERF_METRICS
+SHARED_LIBRARY_LIBS += $(DIST)/lib/libmozutil_s.$(LIB_SUFFIX)
+endif
+
+endif
 
 
 CPPSRCS		= \
@@ -108,15 +126,6 @@ EXPORTS		= \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
-
-EXTRA_DSO_LDOPTS = \
-		$(DIST)/lib/libexpat_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/libxmltok_s.$(LIB_SUFFIX) \
-		$(NULL)
-
-ifdef MOZ_PERF_METRICS
-SHARED_LIBRARY_LIBS += $(DIST)/lib/libmozutil_s.$(LIB_SUFFIX)
-endif
 
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)
 
