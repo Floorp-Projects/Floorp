@@ -22,26 +22,27 @@
 DEPTH=..\..\..
 
 
-
 MAKE_OBJ_TYPE	= EXE
+
 PROG1 = .\$(OBJDIR)\TestCOM.exe
+PROG2 = .\$(OBJDIR)\TestHelloXPLoop.exe
 PROGRAMS = $(PROG1) $(PROG2)
 
 LINCS=-I$(PUBLIC)\xpcom
 
-LLIBS=					\
- rpcrt4.lib				\
- uuid.lib				\
- $(DIST)\lib\xpcom.lib			\
+LLIBS=                                  \
+ rpcrt4.lib                             \
+ uuid.lib                               \
+ $(DIST)\lib\xpcom.lib                  \
  $(LIBNSPR)
 
 include <$(DEPTH)\config\rules.mak>
 
 install:: $(PROGRAMS)
-	-for %p in ($(PROGRAMS)) do $(MAKE_INSTALL) %p $(DIST)\bin
+        -for %p in ($(PROGRAMS)) do $(MAKE_INSTALL) %p $(DIST)\bin
 
 clobber::
-	-for %p in ($(PROGRAMS)) do $(RM) %p $(DIST)\bin\%p
+        -for %p in ($(PROGRAMS)) do $(RM) %p $(DIST)\bin\%p
 
 $(PROG1): $(OBJDIR) TestCOM.cpp
-
+$(PROG2): $(OBJDIR) TestHelloXPLoop.cpp
