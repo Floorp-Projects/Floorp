@@ -116,7 +116,7 @@ else
 	endif
 endif
 
-ODD_CFLAGS		+= -DSVR4 -DIRIX
+ODD_CFLAGS		+= -DSVR4 -DIRIX -DHAVE_FCNTL_FILE_LOCKING
 
 CPU_ARCH		= mips
 

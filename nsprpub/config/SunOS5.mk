@@ -109,7 +109,7 @@ endif
 
 RANLIB			= echo
 
-OS_DEFINES		= -DSVR4 -DSYSV -D__svr4 -D__svr4__ -DSOLARIS
+OS_DEFINES		= -DSVR4 -DSYSV -D__svr4 -D__svr4__ -DSOLARIS -DHAVE_FCNTL_FILE_LOCKING
 
 ifeq ($(OS_TEST),i86pc)
 CPU_ARCH		= x86

@@ -134,6 +134,10 @@ ifeq ($(OS_RELEASE),4.3)
 OS_CFLAGS	+= -DHAVE_SOCKLEN_T
 endif
 
+ifneq (,$(filter-out 3.2 4.1 4.2,$(OS_RELEASE)))
+OS_CFLAGS	+= -DHAVE_FCNTL_FILE_LOCKING
+endif
+
 ifeq (,$(filter-out 4.2 4.3,$(OS_RELEASE)))
 # On these OS revisions, localtime_r() is declared if _THREAD_SAFE
 # is defined.

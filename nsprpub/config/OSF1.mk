@@ -96,6 +96,10 @@ ifneq (,$(filter-out V2.0 V3.2,$(OS_RELEASE)))
 OS_CFLAGS		+= -DOSF1_HAVE_MACHINE_BUILTINS_H
 endif
 
+ifneq (,$(filter-out V2.0 V3.2,$(OS_RELEASE)))
+OS_CFLAGS		+= -DHAVE_FCNTL_FILE_LOCKING
+endif
+
 ifeq (,$(filter-out V2.0 V3.2,$(OS_RELEASE)))
 OS_CFLAGS		+= -DHAVE_INT_LOCALTIME_R
 else
