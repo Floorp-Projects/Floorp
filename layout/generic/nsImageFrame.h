@@ -235,8 +235,9 @@ private:
    * Function to call when a load fails; this handles things like alt
    * text, broken image icons, etc.  Returns NS_ERROR_FRAME_REPLACED
    * if it called CantRenderReplacedElement, NS_OK otherwise.
+   * @param aImageStatus the status of the image (@see nsIContentPolicy)
    */
-  nsresult HandleLoadError(nsresult aStatus, nsIPresShell* aPresShell);
+  nsresult HandleLoadError(PRInt16 aImageStatus);
   
   nsImageMap*         mImageMap;
 
@@ -299,7 +300,6 @@ private:
     nsCOMPtr<imgIDecoderObserver> mLoadObserver; // keeps the observer alive
     PRUint8          mIconsLoaded;
     PRPackedBool     mPrefForceInlineAltText;
-    PRPackedBool     mPrefAllImagesBlocked;
     PRPackedBool     mPrefShowPlaceholders;
   };
   static IconLoad* gIconLoad; // singleton pattern: one LoadIcons instance is used

@@ -99,6 +99,9 @@
 #include "gfxIImageFrame.h"
 #include "nsIDOMRange.h"
 
+#include "nsIContentPolicy.h"
+#include "nsContentPolicyUtils.h"
+
 #include "nsLayoutErrors.h"
 
 #ifdef DEBUG
@@ -309,10 +312,9 @@ nsImageFrame::Init(nsPresContext*  aPresContext,
   }
 
   if (currentLoadStatus & imgIRequest::STATUS_ERROR) {
-    PRBool loadBlocked = PR_FALSE;
-    imageLoader->GetImageBlocked(&loadBlocked);
-    rv = HandleLoadError(loadBlocked ? NS_ERROR_IMAGE_BLOCKED : NS_ERROR_FAILURE,
-                         aPresContext->PresShell());
+    PRInt16 imageStatus = nsIContentPolicy::ACCEPT;
+    imageLoader->GetImageBlockingStatus(&imageStatus);
+    rv = HandleLoadError(imageStatus);
   }
   // If we already have an image container, OnStartContainer won't be called
   // Set the animation mode here
@@ -448,10 +450,11 @@ nsImageFrame::SourceRectToDest(const nsRect& aRect)
 }
 
 nsresult
-nsImageFrame::HandleLoadError(nsresult aStatus, nsIPresShell* aPresShell)
+nsImageFrame::HandleLoadError(PRInt16 aImageStatus)
 {
-  if (aStatus == NS_ERROR_IMAGE_BLOCKED &&
-      !(gIconLoad && gIconLoad->mPrefAllImagesBlocked)) {
+  if (!NS_CP_ACCEPTED(aImageStatus) &&
+      aImageStatus != nsIContentPolicy::REJECT_TYPE) {
+    // The image is blocked, but not because all images are blocked.
     // don't display any alt feedback in this case; we're blocking images
     // from that site and don't care to see anything from them
     return NS_OK;
@@ -466,6 +469,8 @@ nsImageFrame::HandleLoadError(nsresult aStatus, nsIPresShell* aPresShell)
   if (!usemap.IsEmpty()) {
     return NS_OK;
   }
+
+  nsPresContext* presContext = GetPresContext();
   
   // Check if we want to use a placeholder box with an icon or just
   // let the the presShell make us into inline text.  Decide as follows:
@@ -490,7 +495,7 @@ nsImageFrame::HandleLoadError(nsresult aStatus, nsIPresShell* aPresShell)
     useSizedBox = PR_FALSE;
   }
   else {
-    if (GetPresContext()->CompatibilityMode() != eCompatibility_NavQuirks) {
+    if (presContext->CompatibilityMode() != eCompatibility_NavQuirks) {
       useSizedBox = PR_FALSE;
     }
     else {
@@ -503,7 +508,7 @@ nsImageFrame::HandleLoadError(nsresult aStatus, nsIPresShell* aPresShell)
           !nodeInfo->Equals(nsHTMLAtoms::object)) {
         useSizedBox = PR_TRUE;
       }
-      else if (aStatus == NS_ERROR_IMAGE_BLOCKED) {
+      else if (!NS_CP_ACCEPTED(aImageStatus)) {
         useSizedBox = PR_FALSE;
       }
       else {
@@ -523,14 +528,14 @@ nsImageFrame::HandleLoadError(nsresult aStatus, nsIPresShell* aPresShell)
       // We have to try to get the primary frame for mContent, since for
       // <object> the frame CantRenderReplacedElement wants is the
       // ObjectFrame, not us (we're an anonymous frame then)....
-      aPresShell->GetPrimaryFrameFor(mContent, &primaryFrame);
+      presContext->PresShell()->GetPrimaryFrameFor(mContent, &primaryFrame);
     }
 
     if (!primaryFrame) {
       primaryFrame = this;
     }     
     
-    aPresShell->CantRenderReplacedElement(primaryFrame);
+    presContext->PresShell()->CantRenderReplacedElement(primaryFrame);
     return NS_ERROR_FRAME_REPLACED;
   }
 
@@ -692,9 +697,10 @@ nsImageFrame::OnStopDecode(imgIRequest *aRequest,
   // if src failed to load, determine how to handle it: 
   //  - either render the ALT text in this frame, or let the presShell
   //  handle it
-  if (NS_FAILED(aStatus) && aStatus != NS_ERROR_IMAGE_SRC_CHANGED &&
-      presShell) {
-    HandleLoadError(aStatus, presShell);
+  if (NS_FAILED(aStatus) && aStatus != NS_ERROR_IMAGE_SRC_CHANGED) {
+    PRInt16 imageStatus = nsIContentPolicy::ACCEPT;
+    imageLoader->GetImageBlockingStatus(&imageStatus);
+    HandleLoadError(imageStatus);
   }
 
   return NS_OK;
@@ -1329,13 +1335,14 @@ nsImageFrame::Paint(nsPresContext*      aPresContext,
         // No image yet, or image load failed. Draw the alt-text and an icon
         // indicating the status (unless image is blocked, in which case we show nothing)
 
-        PRBool imageBlocked = PR_FALSE;
+        PRInt16 imageStatus = nsIContentPolicy::ACCEPT;
         if (imageLoader) {
-          imageLoader->GetImageBlocked(&imageBlocked);
+          imageLoader->GetImageBlockingStatus(&imageStatus);
         }
       
         if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer &&
-            (!imageBlocked || gIconLoad->mPrefAllImagesBlocked)) {
+            (NS_CP_ACCEPTED(imageStatus) ||
+             imageStatus == nsIContentPolicy::REJECT_TYPE)) {
           DisplayAltFeedback(aPresContext, aRenderingContext, 
                              (loadStatus & imgIRequest::STATUS_ERROR)
                              ? gIconLoad->mBrokenImage
@@ -2009,7 +2016,6 @@ NS_IMPL_ISUPPORTS1(nsImageFrame::IconLoad, nsIObserver)
 
 static const char kIconLoadPrefs[][40] = {
   "browser.display.force_inline_alttext",
-  "permissions.default.image",
   "browser.display.show_image_placeholders"
 };
 
@@ -2050,9 +2056,6 @@ void nsImageFrame::IconLoad::GetPrefs()
 {
   mPrefForceInlineAltText =
     nsContentUtils::GetBoolPref("browser.display.force_inline_alttext");
-
-  mPrefAllImagesBlocked =
-    nsContentUtils::GetIntPref("permissions.default.image") == 2;
 
   mPrefShowPlaceholders =
     nsContentUtils::GetBoolPref("browser.display.show_image_placeholders",

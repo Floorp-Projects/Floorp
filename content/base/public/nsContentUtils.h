@@ -343,11 +343,19 @@ public:
    * @param aURI uri of the image to be loaded
    * @param aContext the context the image is loaded in (eg an element)
    * @param aLoadingDocument the document we belong to
-   * @return PR_TRUE if the load can proceed, or PR_FALSE if it is blocked
+   * @param aImageBlockingStatus the nsIContentPolicy blocking status for this
+   *        image.  This will be set even if a security check fails for the
+   *        image, to some reasonable REJECT_* value.  This out param will only
+   *        be set if it's non-null.
+   * @return PR_TRUE if the load can proceed, or PR_FALSE if it is blocked.
+   *         Note that aImageBlockingStatus, if set will always be an ACCEPT
+   *         status if PR_TRUE is returned and always be a REJECT_* status if
+   *         PR_FALSE is returned.
    */
   static PRBool CanLoadImage(nsIURI* aURI,
                              nsISupports* aContext,
-                             nsIDocument* aLoadingDocument);
+                             nsIDocument* aLoadingDocument,
+                             PRInt16* aImageBlockingStatus = nsnull);
   /**
    * Method to start an image load.  This does not do any security checks.
    *

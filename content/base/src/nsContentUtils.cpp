@@ -1797,7 +1797,8 @@ nsContentUtils::SplitExpatName(const PRUnichar *aExpatName, nsIAtom **aPrefix,
 // static
 PRBool
 nsContentUtils::CanLoadImage(nsIURI* aURI, nsISupports* aContext,
-                             nsIDocument* aLoadingDocument)
+                             nsIDocument* aLoadingDocument,
+                             PRInt16* aImageBlockingStatus)
 {
   NS_PRECONDITION(aURI, "Must have a URI");
   NS_PRECONDITION(aLoadingDocument, "Must have a document");
@@ -1830,6 +1831,9 @@ nsContentUtils::CanLoadImage(nsIURI* aURI, nsISupports* aContext,
       CheckLoadURIWithPrincipal(aLoadingDocument->GetPrincipal(), aURI,
                                 nsIScriptSecurityManager::ALLOW_CHROME);
     if (NS_FAILED(rv)) {
+      if (aImageBlockingStatus) {
+        *aImageBlockingStatus = nsIContentPolicy::REJECT_SERVER;
+      }
       return PR_FALSE;
     }
   }
@@ -1844,6 +1848,10 @@ nsContentUtils::CanLoadImage(nsIURI* aURI, nsISupports* aContext,
                                  nsnull,         //extra
                                  &decision);
 
+  if (aImageBlockingStatus) {
+    *aImageBlockingStatus =
+      NS_FAILED(rv) ? nsIContentPolicy::REJECT_REQUEST : decision;
+  }
   return NS_FAILED(rv) ? PR_FALSE : NS_CP_ACCEPTED(decision);
 }
 

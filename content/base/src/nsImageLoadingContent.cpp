@@ -69,6 +69,8 @@
 #include "nsIDOMNode.h"
 
 #include "nsContentUtils.h"
+#include "nsIContentPolicy.h"
+#include "nsContentPolicyUtils.h"
 
 #ifdef DEBUG_chb
 static void PrintReqURL(imgIRequest* req) {
@@ -93,8 +95,8 @@ static void PrintReqURL(imgIRequest* req) {
 
 nsImageLoadingContent::nsImageLoadingContent()
   : mObserverList(nsnull),
+    mImageBlockingStatus(nsIContentPolicy::ACCEPT),
     mLoadingEnabled(PR_TRUE),
-    mImageIsBlocked(PR_FALSE),
     mHaveHadObserver(PR_FALSE)
 {
   if (!nsContentUtils::GetImgLoader())
@@ -235,10 +237,10 @@ nsImageLoadingContent::SetLoadingEnabled(PRBool aLoadingEnabled)
 }
 
 NS_IMETHODIMP
-nsImageLoadingContent::GetImageBlocked(PRBool* aBlocked)
+nsImageLoadingContent::GetImageBlockingStatus(PRInt16* aStatus)
 {
-  NS_PRECONDITION(aBlocked, "Null out param");
-  *aBlocked = mImageIsBlocked;
+  NS_PRECONDITION(aStatus, "Null out param");
+  *aStatus = mImageBlockingStatus;
   return NS_OK;
 }
 
@@ -377,7 +379,8 @@ nsImageLoadingContent::LoadImageWithChannel(nsIChannel* aChannel,
     return NS_OK;
   }
   
-  CancelImageRequests(NS_ERROR_IMAGE_SRC_CHANGED, PR_FALSE);
+  CancelImageRequests(NS_ERROR_IMAGE_SRC_CHANGED, PR_FALSE,
+                      nsIContentPolicy::ACCEPT);
 
   nsCOMPtr<imgIRequest> & req = mCurrentRequest ? mPendingRequest : mCurrentRequest;
 
@@ -426,18 +429,18 @@ nsImageLoadingContent::ImageURIChanged(const nsACString& aNewURI)
   // content policy or security manager, we will want to cancel with
   // the error code from those.
 
-  // TODOtw: figure out whether we should show alternate text
-  //     (CanLoadImage can tell us this, since Content Policy tells it)
-  PRBool loadImage = nsContentUtils::CanLoadImage(imageURI, this, doc);
+  PRInt16 newImageStatus;
+  PRBool loadImage = nsContentUtils::CanLoadImage(imageURI, this, doc,
+                                                  &newImageStatus);
+  NS_ASSERTION(loadImage || !NS_CP_ACCEPTED(newImageStatus),
+               "CanLoadImage lied");
 
   nsresult cancelResult = loadImage ? NS_ERROR_IMAGE_SRC_CHANGED
                                     : NS_ERROR_IMAGE_BLOCKED;
 
-  mImageIsBlocked = !loadImage;
+  CancelImageRequests(cancelResult, PR_FALSE, newImageStatus);
 
-  CancelImageRequests(cancelResult, PR_FALSE);
-
-  if (mImageIsBlocked) {
+  if (!loadImage) {
     // Don't actually load anything!  This was blocked by CanLoadImage.
     return NS_OK;
   }
@@ -507,7 +510,8 @@ nsImageLoadingContent::ImageURIChanged(const nsACString& aNewURI)
 
 void
 nsImageLoadingContent::CancelImageRequests(nsresult aReason,
-                                           PRBool   aEvenIfSizeAvailable)
+                                           PRBool   aEvenIfSizeAvailable,
+                                           PRInt16  aNewImageStatus)
 {
   // Cancel the pending request, if any
   if (mPendingRequest) {
@@ -520,13 +524,33 @@ nsImageLoadingContent::CancelImageRequests(nsresult aReason,
   if (mCurrentRequest) {
     PRUint32 loadStatus = imgIRequest::STATUS_ERROR;
     mCurrentRequest->GetImageStatus(&loadStatus);
+
+    NS_ASSERTION(NS_CP_ACCEPTED(mImageBlockingStatus),
+                 "Have current request but blocked image?");
     
     if (aEvenIfSizeAvailable ||
         !(loadStatus & imgIRequest::STATUS_SIZE_AVAILABLE)) {
+      // The new image is going to become the current request.  Make sure to
+      // set mImageBlockingStatus _before_ we cancel the request... if we set
+      // it after, things that are watching the mCurrentRequest will get wrong
+      // data.
+      mImageBlockingStatus = aNewImageStatus;
       mCurrentRequest->Cancel(aReason);
       mCurrentRequest = nsnull;
     }
+  } else {
+    // No current request so the new image status will become the
+    // status of the current request
+    mImageBlockingStatus = aNewImageStatus;
   }
+
+  // Note that the only way we could have avoided setting the image blocking
+  // status above is if we have a current request and have kept it as the
+  // current request.  In that case, we want to leave our old status, since the
+  // status corresponds to the current request.  Even if we plan to do a
+  // pending request load, having an mCurrentRequest means that our current
+  // status is not a REJECT_* status, and doing the load shouldn't change that.
+  // XXXbz there is an issue here if different ACCEPT statuses are used, but...
 }
 
 nsIDocument*
