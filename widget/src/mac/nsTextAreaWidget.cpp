@@ -101,6 +101,8 @@ NS_IMETHODIMP nsTextAreaWidget::Create(nsIWidget *aParent,const nsRect &aRect,EV
 
 	StartDraw();
 	PRUint32 teFlags = weDoAutoScroll | weDoOutlineHilite | weDoMonoStyled;
+	if (!mVisible)
+		teFlags |= weDoInhibitRedraw;
 	WENew(&destRect, &viewRect, teFlags, &mTE_Data);
 	EndDraw();
 		
@@ -135,6 +137,24 @@ nsresult nsTextAreaWidget::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 	}
 
 	return nsWindow::QueryInterface(aIID, aInstancePtr);
+}
+
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsTextAreaWidget::Show(PRBool bState)
+{
+	if (! mTE_Data)
+		return NS_ERROR_NOT_INITIALIZED;
+
+	if (mVisible == bState)
+		return NS_OK;
+
+	Inherited::Show(bState);
+	WEFeatureFlag(weFInhibitRedraw, (bState ? weBitClear : weBitSet), mTE_Data);
+
+	return NS_OK;
 }
 
 //-------------------------------------------------------------------------
