@@ -165,6 +165,7 @@
     <broadcaster id="Editor:InsertHTML"   value="&insertHTMLSourceCmd.label;"  disabled="false"  oncommand="EditorInsertHTML()"/>
     <broadcaster id="Editor:InsertBreak"  value="&insertLineBreakCmd.label;"   disabled="false"  oncommand="_EditorNotImplemented()"/>
     <broadcaster id="Editor:InsertBreakAll"  value="&insertBreakBelowImagesCmd.label;"   disabled="false"  oncommand="_EditorNotImplemented()"/>
+  	<broadcaster id="cmd_preferences"/>
   </broadcasterset>
 
     <!-- Editor menu items -->
@@ -215,6 +216,9 @@
       <menuitem accesskey="&editfindnext.accesskey;"        key="findnextkb"     observes="Editor:FindNext"/>
       <menuseparator />
       <menuitem accesskey="&editcheckspelling.accesskey;"   key="checkspellingkb" observes="Editor:CheckSpelling"/>
+      <menuseparator />
+      <!-- TODO: PREF PANELS FOR EDITOR. Replace pref-publish with pref-editor -->
+      <menuitem id="menu_preferences" oncommand="goPreferences('navigator.xul', 'chrome://pref/content/pref-publish.xul')"/>
     </menupopup>
     </menu>
 
@@ -496,17 +500,6 @@
     <!-- List Style (opens dialog)  -->
     <menuitem id="listProps" value="&listProps.label;"  accesskey="&formatlistmenu.accesskey;"      oncommand="EditorListProperties()"/>
 
-<!--  We used a menu in 4.x, but we had list stuff in Paragraph Properties
-      Since we killed that, make list item bring up new List Properties dialog
-    <menu id="listMenu" value="&listMenu.label;"        accesskey="&formatlistmenu.accesskey;">
-    <menupopup>
-      <menuitem value="&listNoneCmd.label;"             accesskey="&listnone.accesskey;"            oncommand="EditorSetListStyle('')"/>
-      <menuitem value="&listBullettedCmd.label;"        accesskey="&listbulletted.accesskey;"       oncommand="EditorSetListStyle('ul')"/>
-      <menuitem value="&listNumberedCmd.label;"         accesskey="&listnumbered.accesskey;"        oncommand="EditorSetListStyle('ol')"/>
-      <menuitem value="&listDefinitionCmd.label;"       accesskey="&listdefinition.accesskey;"      oncommand="EditorSetListStyle('dl')"/>
-    </menupopup>
-    </menu>
--->
     <!-- Stylesheet submenu -->
     <menu id="stylesheetMenu" value="&stylesheetMenu.label;" accesskey="&formatstylesheetmenu.accesskey;">
     <menupopup>
@@ -657,11 +650,11 @@
       <observes element="Editor:Underline" attribute="underline" onbroadcast="onStyleChange('underline')"/>
     </titledbutton>
 
-    <titledbutton id="ulButton" src="&bulletListIcon.url;" align="bottom" onclick="EditorInsertList('ul')">
+    <titledbutton id="ulButton" src="&bulletListIcon.url;" align="bottom" onclick="EditorMakeOrChangeList('ul')">
         <observes element="Editor:Paragraph:ListType" attribute="format" onbroadcast="onListFormatChange('ul')"/>
     </titledbutton>
 
-    <titledbutton id="olButton" src="&numberListIcon.url;" align="bottom" onclick="EditorInsertList('ol')">
+    <titledbutton id="olButton" src="&numberListIcon.url;" align="bottom" onclick="EditorMakeOrChangeList('ol')">
         <observes element="Editor:Paragraph:ListType" attribute="format" onbroadcast="onListFormatChange('ol')"/>
     </titledbutton>
 
@@ -673,7 +666,8 @@
     <!-- DEBUG only -->
     <menu id="debugMenu" value="&debugMenu.label;">
     <menupopup>
-      <menuitem value="Composer with Test Page" oncommand="window.openDialog('chrome://editor/content','_blank','chrome,all,dialog=no','chrome://editor/content/EditorInitPage.html')"/>
+      <menuitem value="&newEditorTestPage.label;" oncommand="window.openDialog('chrome://editor/content','_blank','chrome,all,dialog=no','chrome://editor/content/EditorInitPage.html')"/>
+      <menuitem value="&textEditorCmd.label;"     oncommand="EditorNewPlaintext();" />
       <menuitem value="&outputTextCmd.label;"
              oncommand="EditorGetText()"/>
       <menuitem value="&outputHTMLCmd.label;"

@@ -24,14 +24,16 @@
 //Cancel() is in EdDialogCommon.js
 var insertNew = true;
 var tagname = "TAG NAME"
-var ListStyleList;
+var ListTypeList;
 var BulletStyleList;
 var BulletStyleLabel;
 var StartingNumberInput;
 var StartingNumberLabel;
 var BulletStyleIndex = 0;
 var NumberStyleIndex = 0;
-var ListStyle = "";
+var ListElement = 0;
+var ListType = "";
+var AdvancedEditButton;
 
 // dialog initialization code
 function Startup()
@@ -41,43 +43,46 @@ function Startup()
 
   doSetOKCancel(onOK, null);
 
-  ListStyleList = document.getElementById("ListStyle");
+  ListTypeList = document.getElementById("ListType");
   BulletStyleList = document.getElementById("BulletStyle");
   BulletStyleLabel = document.getElementById("BulletStyleLabel");
   StartingNumberInput = document.getElementById("StartingNumber");
   StartingNumberLabel = document.getElementById("StartingNumberLabel");
-
+  AdvancedEditButton = document.getElementById("AdvancedEditButton");
+  
   // Try to get an existing list
-  // 
+  ListElement = editorShell.GetElementOrParentByTagName("list",null);
+  
+  // The copy to use in AdvancedEdit
+  if (ListElement)
+    globalElement = ListElement.cloneNode(false);
+
+  dump("List and global elements: "+ListElement+globalElement+"\n");
+
   InitDialog();
-  ListStyleList.focus();
+
+  ListTypeList.focus();
 }
 
 function InitDialog()
 {
-  //TODO: Get the current list style and set in ListStyle variable
-  ListStyle = "ul";
+  if (ListElement)
+    ListType = ListElement.nodeName.toLowerCase();
+  else
+    ListType = "";
+
   BuildBulletStyleList();
-/*
-  if(!element)
-  {
-    dump("Failed to get selected element or create a new one!\n");
-    window.close();
-  }
-*/
 }
 
 function BuildBulletStyleList()
 {
-  // Put methods on the object if I can figure out its name!
-  // (SELECT and HTMLSelect don't work!)
-  //BulletStyleList.clear();
-  
   ClearList(BulletStyleList);
   var label = "";
   var selectedIndex = -1;
 
-  if (ListStyle == "ul")
+  dump("List Type: "+ListType+" globalElement: "+globalElement+"\n");
+
+  if (ListType == "ul")
   {
     BulletStyleList.removeAttribute("disabled");
     BulletStyleLabel.removeAttribute("disabled");
@@ -87,11 +92,12 @@ function BuildBulletStyleList()
 
     AppendStringToListByID(BulletStyleList,"SolidCircle");
     AppendStringToListByID(BulletStyleList,"OpenCircle");
-    AppendStringToListByID(BulletStyleList,"OpenSquare");
+    AppendStringToListByID(BulletStyleList,"SolidSquare");
 
     BulletStyleList.selectedIndex = BulletStyleIndex;
-    ListStyleList.selectedIndex = 1;
-  } else if (ListStyle == "ol")
+    ListTypeList.selectedIndex = 1;
+  }
+  else if (ListType == "ol")
   {
     BulletStyleList.removeAttribute("disabled");
     BulletStyleLabel.removeAttribute("disabled");
@@ -106,59 +112,135 @@ function BuildBulletStyleList()
     AppendStringToListByID(BulletStyleList,"Style_a");
 
     BulletStyleList.selectedIndex = NumberStyleIndex;
-    ListStyleList.selectedIndex = 2;
-  } else {
+    ListTypeList.selectedIndex = 2;
+  } 
+  else 
+  {
     BulletStyleList.setAttribute("disabled", "true");
     BulletStyleLabel.setAttribute("disabled", "true");
     StartingNumberInput.setAttribute("disabled", "true");
     StartingNumberLabel.setAttribute("disabled", "true");
 
-    if (ListStyle == "dl")
-      ListStyleList.selectedIndex = 3;
+    if (ListType == "dl")
+      ListTypeList.selectedIndex = 3;
     else
-      ListStyleList.selectedIndex = 0;
+      ListTypeList.selectedIndex = 0;
   }
+  
+  // Disable advanced edit button if changing to "normal"
+  if (ListType == "")
+    AdvancedEditButton.setAttribute("disabled","true");
+  else
+    AdvancedEditButton.removeAttribute("disabled");
 
   if (label)
   {
+    BulletStyleLabel.value = label;
     if (BulletStyleLabel.hasChildNodes())
+    {
+      dump("BulletStyleLabel.firstChild: "+BulletStyleLabel.firstChild+"\n");
       BulletStyleLabel.removeChild(BulletStyleLabel.firstChild);
+    }
     
     var textNode = document.createTextNode(label);
     BulletStyleLabel.appendChild(textNode);
   }
 }
 
-function SelectListStyle()
+function SelectListType()
 {
-  switch (ListStyleList.selectedIndex)
+  switch (ListTypeList.selectedIndex)
   {
     case 1:
-      ListStyle = "ul";
+      NewType = "ul";
       break;
     case 2:
-      ListStyle = "ol";
+      NewType = "ol";
       break;
     case 3:
-      ListStyle = "dl";
+      NewType = "dl";
       break;
     default:
-      ListStyle = "";
+      NewType = "";
+      break;
   }
-  BuildBulletStyleList();
+  if (ListType != NewType)
+  {
+    ListType = NewType;
+    
+    // Create a newlist object for Advanced Editing
+    if (ListType != "")
+      globalElement = editorShell.CreateElementWithDefaults(ListType);
+
+    BuildBulletStyleList();
+  }
 }
 
-// Save the selected index
-function SelectBulleStyle()
+function SelectBulletStyle()
 {
-  if (ListStyle == "ul")
+  // Save the selected index so when user changes
+  //   list style, restore index to associated list
+  if (ListType == "ul")
     BulletStyleIndex = BulletStyleList.selectedIndex;
-  else if (ListStyle == "ol")
+  else if (ListType == "ol")
     NumberStyleIndex = BulletStyleList.selectedIndex;
 }
 
 function ValidateData()
 {
+  var type = 0;
+  // globalElement should already be of the correct type 
+  dump("Global List element="+globalElement+"  should be type: "+ListType+"\n");
+
+  if (globalElement)
+  {
+    if (ListType == "ul")
+    {
+      switch (BulletStyleList.selectedIndex)
+      {
+        // Index 0 = "disc", the default, so we don't set it explicitly
+        case 1:
+          type = "circle";
+          break;
+        case 2:
+          type = "square";
+          break;
+      }
+      if (type)
+        globalElement.setAttribute("type",type);
+      else
+        globalElement.removeAttribute("type");
+
+    } else if (ListType == "ol")
+    {
+      switch (BulletStyleList.selectedIndex)
+      {
+        // Index 0 = "1", the default, so we don't set it explicitly
+        case 1:
+          type = "I";
+          break;
+        case 2:
+          type = "i";
+          break;
+        case 3:
+          type = "A";
+          break;
+        case 4:
+          type = "a";
+          break;
+      }
+      if (type)
+        globalElement.setAttribute("type",type);
+      else
+        globalElement.removeAttribute("type");
+        
+      var startingNumber = StartingNumberInput.value.trimString();
+      if (startingNumber)
+        globalElement.setAttribute("start",startingNumber);
+      else
+        globalElement.removeAttribute("start");
+    }
+  }
   return true;
 }
 
@@ -166,7 +248,21 @@ function onOK()
 {
   if (ValidateData())
   {
+    // Coalesce into one undo transaction
+    editorShell.BeginBatchChanges();
+
+    // Making a list is tricky!
+    // First, make the list
+    editorShell.MakeOrChangeList(ListType);
+
+    // Now we need to get ALL of the list nodes in the current selection
+    // For now, let's get just the one at the anchor
+    listElement = editorShell.GetElementOrParentByTagName("list",null);
     // Set the list attributes
+    if (listElement)
+      editorShell.CloneAttributes(listElement, globalElement);
+
+    editorShell.EndBatchChanges();
     return true;
   }
   return false;

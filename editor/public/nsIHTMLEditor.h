@@ -283,7 +283,7 @@ public:
    * Document me!
    * 
    */
-  NS_IMETHOD InsertList(const nsString& aListType)=0;
+  NS_IMETHOD MakeOrChangeList(const nsString& aListType)=0;
 
   /**
    * Document me!

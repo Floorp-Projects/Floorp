@@ -34,6 +34,10 @@ var NamedAnchorList = 0;
 var HNodeArray;
 var haveNamedAnchors = false;
 var haveHeadings = false;
+var MoreSection;
+var MoreFewerButton;
+var SeeMore = false;
+var AdvancedEditSection;
 
 // NOTE: Use "href" instead of "a" to distinguish from Named Anchor
 // The returned node is has an "a" tagName
@@ -54,6 +58,9 @@ function Startup()
   hrefInput       = document.getElementById("hrefInput");
   NamedAnchorList = document.getElementById("NamedAnchorList");
   HeadingsList    = document.getElementById("HeadingsList");
+  MoreSection     = document.getElementById("MoreSection");
+  MoreFewerButton  = document.getElementById("MoreFewerButton");
+  AdvancedEditSection = document.getElementById("AdvancedEditButton");
 
   // Get a single selected anchor element
   anchorElement = editorShell.GetSelectedElement(tagName);
@@ -165,8 +172,10 @@ function Startup()
       linkTextInput = null;
     }
   }
-
-  window.sizeToContent();
+  //TODO; We should get the current state of the "More" area from a pref
+  // Initialize to true, but calling onMoreFewer will toggle to "Fewer"
+  SeeMore = true;
+  onMoreFewer();
 }
 
 // Set dialog widgets with attribute data
@@ -220,9 +229,10 @@ function FillListboxes()
       //  (this may miss nearby anchors, but at least we don't insert another
       //   under the same heading)
       var child = heading.firstChild;
-      dump(child.nodeName+" = Heading's first child nodeName\n");
-      if (child && child.nodeName == "a" && child.name && child.name.length > 0)
+      dump(child.name+" = Child.name. Length="+child.name.length+"\n");
+      if (child && child.nodeName == "A" && child.name && (child.name.length>0)) {
         continue;
+      }
 
       var range = editorShell.editorDocument.createRange();
       range.setStart(heading,0);
@@ -256,8 +266,10 @@ function FillListboxes()
 
 function GetExistingHeadingIndex(text)
 {
+  dump("Heading text: "+text+"\n");
   for (i=0; i < HeadingsList.length; i++) {
-    if (HeadingsList[i].name == name)
+    dump("HeadingListItem"+i+": "+HeadingsList.options[i].value+"\n");
+    if (HeadingsList.options[i].value == text)
       return i;
   }
   return -1;
@@ -277,6 +289,33 @@ function SelectHeading()
   }
 }
 
+function onMoreFewer()
+{
+  if (SeeMore)
+  {
+// This doesn't work very well - lots of layout bugs
+//    MoreSection.setAttribute("style","visibility:collapse");
+    MoreSection.setAttribute("style","display: none");
+    MoreFewerButton.setAttribute("value",GetString("More"));
+    MoreFewerButton.removeAttribute("more");
+    //AdvancedEditSection.setAttribute("style","display: none");
+    dump("Set button text\n");
+
+    SeeMore = false;
+  }
+  else
+  {
+//    MoreSection.setAttribute("style","visibility: inherit");
+    MoreSection.setAttribute("style","display: inherit");
+    MoreFewerButton.setAttribute("value",GetString("Fewer"));
+    MoreFewerButton.setAttribute("more","1");
+    //AdvancedEditSection.setAttribute("style","display: inherit");
+    SeeMore = true;
+  }
+  window.sizeToContent();
+}
+
+
 // Get and validate data from widgets.
 // Set attributes on globalElement so they can be accessed by AdvancedEdit()
 function ValidateData()
@@ -290,6 +329,7 @@ function ValidateData()
   } else if (insertNew) {
     // We must have a URL to insert a new link
     //NOTE: WE ACCEPT AN EMPTY HREF TO ALLOW REMOVING AN EXISTING LINK,
+    dump("Empty HREF error\n");
     ShowInputErrorMessage(GetString("EmptyHREFError"));
     return false;
   }

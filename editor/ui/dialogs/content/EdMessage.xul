@@ -38,9 +38,12 @@
   </html:script>
 
   <broadcaster id="args" value=""/>
-  <!-- text node(s) with message text will be appended as children to this -->
-  <html:div id="message" flex="100%" style="width: 20em;"/>
-  <spring style="height: 15px"/>
+  <box align="horizontal" style="margin: 10px">
+    <html:img src="chrome://global/skin/alert-icon.gif"/>
+    <!-- text node(s) with message text will be appended as children to this -->
+    <html:div id="message" flex="100%"/>
+  </box>
+  <!-- spring style="height: 15px"/ -->
   <box align="horizontal" style="margin: 10px">
     <spring flex="100%"/>
     <titledbutton class="MsgButton" id="button1" onclick="onButton(1)"/> 

@@ -488,7 +488,7 @@ nsHTMLEditorLog::SetBodyAttribute(const nsString& aAttr, const nsString& aValue)
 }
 
 NS_IMETHODIMP
-nsHTMLEditorLog::InsertList(const nsString& aListType)
+nsHTMLEditorLog::MakeOrChangeList(const nsString& aListType)
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
@@ -496,13 +496,13 @@ nsHTMLEditorLog::InsertList(const nsString& aListType)
   {
     PrintSelection();
 
-    Write("window.editorShell.InsertList(\"");
+    Write("window.editorShell.MakeOrChangeList(\"");
     PrintUnicode(aListType);
     Write("\");\n");
     Flush();
   }
 
-  return nsHTMLEditor::InsertList(aListType);
+  return nsHTMLEditor::MakeOrChangeList(aListType);
 }
 
 NS_IMETHODIMP

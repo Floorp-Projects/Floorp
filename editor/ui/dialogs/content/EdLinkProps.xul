@@ -29,55 +29,58 @@
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/EditorLinkProperties.dtd">
 
-<xul:window title="&windowTitle.label;"
-    xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    xmlns="http://www.w3.org/TR/REC-html40"
-    onload = "Startup()"
-    align="vertical">
+<window title="&windowTitle.label;"
+	 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+	 xmlns:html="http://www.w3.org/TR/REC-html40"
+   onload = "Startup()"
+   align="vertical" >
 
-  <!-- Methods common to all editor dialogs -->
-  <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js">
-  </script>
-  <script language="JavaScript" src="chrome://editor/content/EdLinkProps.js">
-  </script>
-  <script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
+  <html:script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
+  <html:script language="JavaScript" src="chrome://editor/content/EdLinkProps.js"/>
+  <html:script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
 
-  <xul:broadcaster id="args" value=""/>
-  <xul:keyset id="keyset"/>
+  <broadcaster id="args" value=""/>
+  <keyset id="keyset"/>
 
-  <xul:box align="vertical" style="min-width: 20em">
-  	<label id="linkTextCaption" for="linkTextMessage"> &LinkText.label; </label>
-  	<div id="linkTextMessage" style="margin-left: 3em">[replace this]</div>
-	  <input type="text" size="25" length="25" id="linkTextInput"/>
-    <xul:spring class="spacer"/>
+  <box align="vertical" style="min-width: 20em">
+  	<html:label id="linkTextCaption" for="linkTextMessage"> &LinkText.label; </html:label>
+  	<html:div id="linkTextMessage" style="margin-left: 3em">[replace this]</html:div>
+	  <html:input type="text" size="25" length="25" id="linkTextInput"/>
+    <spring class="spacer"/>
 
-    <fieldset><legend align="left"> &LinkURLFieldset.label; </legend>
-    <xul:box align="vertical"  style="width: 100%; height: 100%">
-      <xul:box align="horizontal">
-        <div> &LinkURLEditField.label;</div>
-        <xul:spring flex="100%"/>
-	      <div><xul:titledbutton id="RemoveLink" onclick="RemoveLink()" value="&RemoveLinkButton.label;"/>
-        </div>
-	    </xul:box>
-	    <xul:box align="horizontal">
-  	    <input type="text" size="25" length="25" id="hrefInput"></input>
-        <xul:spring flex="100%"/>
-	      <!-- The div prevents button from being the same height as the input field -->
-        <div><xul:titledbutton id="ChooseFile1" onclick="ChooseFile()" value="&LinkChooseFileButton.label;"/></div>
-      </xul:box>
-    </xul:box>
-    <xul:spring class="spacer"/>
-    <div>&NamedAnchorMsg.label;</div>
-    <select id="NamedAnchorList" style="width: 15em;" size="3" onchange="SelectNamedAnchor()"/>
-    <xul:spring class="spacer"/>
-    <div>&HeadingMsg.label;</div>
-    <select id="HeadingsList" style="width: 15em;" size="3" onchange="SelectHeading()"/>
-    <div>&HeadingMsg2.label;</div>
-    </fieldset>
-  </xul:box>
+    <html:fieldset><html:legend align="left"> &LinkURLFieldset.label; </html:legend>
+      <box align="vertical"  style="width: 100%; height: 100%">
+        <box align="vertical">
+          <box align="horizontal">
+            <html:div> &LinkURLEditField.label;</html:div>
+            <spring flex="100%"/>
+	          <html:div><titledbutton id="RemoveLink" onclick="RemoveLink()" value="&RemoveLinkButton.label;"/>
+            </html:div>
+	        </box>
+	        <box align="horizontal">
+  	        <html:input type="text" size="25" length="25" id="hrefInput"></html:input>
+            <spring flex="100%"/>
+	          <!-- The div prevents button from being the same height as the input field -->
+            <html:div><titledbutton id="ChooseFile" onclick="ChooseFile()" value="&LinkChooseFileButton.label;"/></html:div>
+          </box>
+        </box>
+        <!-- ***** The style: width setting is need to cover a bug in button width resizing when text changes ***** -->
+        <html:div><titledbutton id="MoreFewerButton" align="left" style="width: 6em" onclick="onMoreFewer()"/></html:div>
+        <box id="MoreSection" align="vertical">
+          <spring class="spacer"/>
+          <html:div>&NamedAnchorMsg.label;</html:div>
+          <html:select id="NamedAnchorList" size="3" style="min-width: 1em"  onchange="SelectNamedAnchor()"/>
+          <spring class="spacer"/>
+          <html:div>&HeadingMsg.label;</html:div>
+          <html:select id="HeadingsList" size="3" style="min-width: 1em" onchange="SelectHeading()"/>
+          <html:div>&HeadingMsg2.label;</html:div>
+        </box>
+      </box>
+    </html:fieldset>
+  </box>
 
   <!-- from EdDialogOverlay -->
-  <xul:box id="AdvancedEditButton"/>
+  <box id="AdvancedEditButton"/>
   <!-- from global dialogOverlay -->
-	<xul:box id="okCancelButtons"/> 
-</xul:window>
+	<box id="okCancelButtons"/> 
+</window>

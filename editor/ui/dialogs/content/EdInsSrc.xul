@@ -36,23 +36,18 @@
     align="vertical" flex="100%">
 
   <!-- Methods common to all editor dialogs -->
-  <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js">
-  </script>
-  <script language="JavaScript" src="chrome://editor/content/EdInsSrc.js">
-  </script>
+  <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
+  <script language="JavaScript" src="chrome://editor/content/EdInsSrc.js"/>
   <script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
 
   <xul:broadcaster id="args" value=""/>
   <xul:keyset id="keyset"/>
 
-  <xul:box>
-    <label id="srcMessage"/>
-  </xul:box>
-  <xul:box>
-    <textarea rows="6" cols="50" id="srcInput" />
-  </xul:box>
-
-  <xul:spring flex="100%"/>    
+  <label id="srcMessage" for="srcInput">&sourceEditField.label;</label>
+  <textarea rows="6" cols="50" id="srcInput" />
+  <div>&example.label;</div>
+  <xul:spring class="spacer"/>
+  <div class="separator" align="horizontal"/>
   <!-- from global dialogOverlay -->
 	<xul:box id="okCancelButtons"/> 
 </xul:window>

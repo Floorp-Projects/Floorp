@@ -30,10 +30,12 @@
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/EditorAppShell.dtd"> 
 
+<!-- NOTE: If we don't have "title" set, text editor doesn't work! -->
 <window id="main-window" xmlns:html="http://www.w3.org/TR/REC-html40"
 			  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="TextEditorOnLoad()"
-			  onunload="EditorShutdown()" 
+			  onunload="EditorShutdown()"
+        title="&textEditorWindow.titlemodifier;" 
         titlemodifier="&textEditorWindow.titlemodifier;" 
         titlemenuseparator="&editorWindow.titlemodifiermenuseparator;"
         align="vertical"

@@ -243,19 +243,11 @@ function EditorOpen()
 
 function EditorNewPlaintext()
 {
-  dump("In EditorNewPlaintext..\n");
   window.openDialog( "chrome://editor/content/TextEditorAppShell.xul",
                      "_blank",
                      "chrome,dialog=no,all",
-                     "chrome://editor/content/EditorInitPagePlain.html" );
+                     "chrome://editor/content/EditorInitPagePlain.html");
 }
-
-function EditorNewBrowser()
-{
-  dump("In EditorNewBrowser..\n");
-  window.open( "chrome://navigator/content/", "_blank", "chrome" );
-}
-
 
 function EditorSave()
 {
@@ -392,11 +384,6 @@ function EditorListProperties()
   contentWindow.focus();
 }
 
-function EditorSetListStyle(listType)
-{
-  // Write me! Replace EditorInsertList when working?
-}
-
 function EditorSetFontSize(size)
 {
   if( size == "0" || size == "normal" || 
@@ -469,7 +456,7 @@ function EditorToggleStyle(styleName)
   // which is the appropriate button
   // cmanske: I don't think we should depend on button state!
   //  (this won't work for other list styles, anyway)
-  //  We need to get list type from document (See EditorSetListStyle)
+  //  We need to get list type from document
   var theButton = document.getElementById(styleName + "Button");
   dump("Toggling style " + styleName + "\n");
   if (theButton)
@@ -744,7 +731,7 @@ function EditorDeleteTableCell()
   contentWindow.focus();
 }
 
-function EditorInsertList(listType)
+function EditorMakeOrChangeList(listType)
 {
   // check the observer node,
   // which is the appropriate button
@@ -759,7 +746,7 @@ function EditorInsertList(listType)
       editorShell.RemoveList(listType);
     }
     else
-      editorShell.InsertList(listType);
+      editorShell.MakeOrChangeList(listType);
 
     contentWindow.focus();
   }

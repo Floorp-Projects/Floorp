@@ -23,4 +23,4 @@
 <!-- Window title -->
 <!ENTITY windowTitle.label "Insert HTML">
 <!ENTITY sourceEditField.label "Enter HTML tags and text:">
-<!ENTITY example.label "Hello World!">
+<!ENTITY example.label "Example: <b>&lt;i&gt;Hello World!&lt;/i&gt;</b>">

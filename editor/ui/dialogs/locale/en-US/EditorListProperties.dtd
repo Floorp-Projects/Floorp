@@ -24,10 +24,11 @@
 <!-- Window title -->
 <!ENTITY windowTitle.label "List Properties">
 
-<!ENTITY listStyle.label "List Style">
+<!ENTITY ListType.label "List Type:">
 <!ENTITY bulletStyle.label "Bullet Style:">
 <!ENTITY startingNumber.label "Starting number:">
 <!ENTITY none.value "None (normal paragraph)">
 <!ENTITY bulletList.value "Bullet (Unnumbered) List">
 <!ENTITY numberList.value "Numbered List">
 <!ENTITY definitionList.value "Definition List">
+<!ENTITY mixedListType.value "(mixed types)">
