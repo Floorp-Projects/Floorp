@@ -52,8 +52,9 @@ protected:
    * and the descent will be set to zero.
    */
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
-                              nsReflowMetrics& aDesiredSize,
-                              const nsSize& aMaxSize) = 0;
+                              const nsReflowState& aReflowState,
+                              const nsSize& aMaxSize,
+                              nsReflowMetrics& aDesiredSize) = 0;
 
   /**
    * Get the inner rect of this frame. This takes the outer size (mRect)

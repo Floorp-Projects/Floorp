@@ -61,6 +61,7 @@ protected:
   virtual ~nsSelectFrame();
 
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
+                              const nsReflowState& aReflowState,
                               const nsSize& aMaxSize,
                               nsReflowMetrics& aDesiredLayoutSize,
                               nsSize& aDesiredWidgetSize);
@@ -176,6 +177,7 @@ nsSelectFrame::GetCID()
 
 void 
 nsSelectFrame::GetDesiredSize(nsIPresContext* aPresContext,
+                              const nsReflowState& aReflowState,
                               const nsSize& aMaxSize,
                               nsReflowMetrics& aDesiredLayoutSize,
                               nsSize& aDesiredWidgetSize)
@@ -185,7 +187,7 @@ nsSelectFrame::GetDesiredSize(nsIPresContext* aPresContext,
 
   // get the css size 
   nsSize styleSize;
-  GetStyleSize(*aPresContext, styleSize);
+  GetStyleSize(*aPresContext, aReflowState, styleSize);
 
   // get the size of the longest child
   PRInt32 maxWidth = 1;

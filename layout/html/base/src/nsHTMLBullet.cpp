@@ -67,8 +67,10 @@ public:
 
 protected:
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
-                              nsReflowMetrics& aDesiredSize,
-                              const nsSize& aMaxSize);
+                              const nsReflowState& aReflowState,
+                              const nsSize& aMaxSize,
+                              nsReflowMetrics& aDesiredSize);
+
   /**
    * Return the reflow state for the list container that contains this
    * list item frame. There may be no list container (a dangling LI)
@@ -258,7 +260,7 @@ BulletFrame::Reflow(nsIPresContext*      aCX,
                     const nsReflowState& aReflowState,
                     nsReflowStatus&      aStatus)
 {
-  GetDesiredSize(aCX, aDesiredSize, aReflowState.maxSize);
+  GetDesiredSize(aCX, aReflowState, aReflowState.maxSize, aDesiredSize);
   if (nsnull != aDesiredSize.maxElementSize) {
     aDesiredSize.maxElementSize->width = aDesiredSize.width;
     aDesiredSize.maxElementSize->height = aDesiredSize.height;
@@ -491,8 +493,9 @@ BulletFrame::GetListItemText(nsIPresContext* aCX,
 
 void
 BulletFrame::GetDesiredSize(nsIPresContext*  aCX,
-                            nsReflowMetrics& aDesiredSize,
-                            const nsSize&    aMaxSize)
+                            const nsReflowState& aReflowState,
+                            const nsSize&    aMaxSize,
+                            nsReflowMetrics& aDesiredSize)
 {
   nsStyleList* myList =
     (nsStyleList*)mStyleContext->GetData(eStyleStruct_List);
@@ -502,7 +505,7 @@ BulletFrame::GetDesiredSize(nsIPresContext*  aCX,
   nsIFontMetrics* fm = aCX->GetMetricsFor(myFont->mFont);
   if (myList->mListStyleImage.Length() > 0) {
     mImageLoader.SetURL(myList->mListStyleImage);
-    mImageLoader.GetDesiredSize(aCX, this, aDesiredSize, aMaxSize);
+    mImageLoader.GetDesiredSize(aCX, aReflowState, aMaxSize, aDesiredSize);
     aDesiredSize.ascent = aDesiredSize.height;
     aDesiredSize.descent = 0;
   }

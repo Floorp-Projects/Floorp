@@ -794,10 +794,11 @@ done:;
 
 void
 nsInlineFrame::InitializeState(nsIPresContext* aPresContext,
+                               const nsReflowState& aReflowState,
                                nsInlineState& aState)
 {
   PRIntn ss = aState.mStyleSizeFlags =
-    nsCSSLayout::GetStyleSize(aPresContext, this, aState.mStyleSize);
+    nsCSSLayout::GetStyleSize(aPresContext, aReflowState, aState.mStyleSize);
   if (0 != (ss & NS_SIZE_HAS_WIDTH)) {
     // When we are given a width, change the reflow behavior to
     // unconstrained.
@@ -846,7 +847,7 @@ NS_METHOD nsInlineFrame::Reflow(nsIPresContext*      aPresContext,
   styleSpacing->CalcBorderPaddingFor(this, borderPadding);
   nsInlineState state(aPresContext, this, styleFont, borderPadding,
                       aReflowState, aDesiredSize.maxElementSize);
-  InitializeState(aPresContext, state);
+  InitializeState(aPresContext, aReflowState, state);
   state.SetNumAscents(mContent->ChildCount() - mFirstContentOffset);
 
   if (eReflowReason_Incremental == aReflowState.reason) {

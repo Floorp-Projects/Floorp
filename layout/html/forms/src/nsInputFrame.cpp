@@ -189,13 +189,14 @@ nsInputFrame::IsHidden()
 
 void 
 nsInputFrame::GetDesiredSize(nsIPresContext* aPresContext,
+                             const nsReflowState& aReflowState,
                              const nsSize& aMaxSize,
                              nsReflowMetrics& aDesiredLayoutSize,
                              nsSize& aDesiredWidgetSize)
 {
   // get the css size and let the frame use or override it
   nsSize styleSize;
-  GetStyleSize(*aPresContext, styleSize);
+  GetStyleSize(*aPresContext, aReflowState, styleSize);
 
   // subclasses should always override this method, but if not and no css, make it small
   aDesiredLayoutSize.width  = (styleSize.width  > CSS_NOTSET) ? styleSize.width  : 144;
@@ -208,11 +209,12 @@ nsInputFrame::GetDesiredSize(nsIPresContext* aPresContext,
 
 void 
 nsInputFrame::GetDesiredSize(nsIPresContext* aPresContext,
-                             nsReflowMetrics& aDesiredSize,
-                             const nsSize& aMaxSize)
+                             const nsReflowState& aReflowState,
+                             const nsSize& aMaxSize,
+                             nsReflowMetrics& aDesiredSize)
 {
   nsSize ignore;
-  GetDesiredSize(aPresContext, aMaxSize, aDesiredSize, ignore);
+  GetDesiredSize(aPresContext, aReflowState, aMaxSize, aDesiredSize, ignore);
 }
 
 NS_METHOD
@@ -242,7 +244,8 @@ nsInputFrame::Reflow(nsIPresContext*      aPresContext,
 	  nsIPresShell   *presShell = aPresContext->GetShell();     // need to release
 	  nsIViewManager *viewMan   = presShell->GetViewManager();  // need to release
 
-    GetDesiredSize(aPresContext, aReflowState.maxSize, aDesiredSize, mWidgetSize);
+    GetDesiredSize(aPresContext, aReflowState, aReflowState.maxSize,
+                   aDesiredSize, mWidgetSize);
 
     //nsRect boundBox(0, 0, mWidgetSize.width, mWidgetSize.height); 
     nsRect boundBox(0, 0, aDesiredSize.width, aDesiredSize.height); 
@@ -289,7 +292,8 @@ nsInputFrame::Reflow(nsIPresContext*      aPresContext,
 	  NS_IF_RELEASE(presShell); 
   }
   else {
-    GetDesiredSize(aPresContext, aReflowState.maxSize, aDesiredSize, mWidgetSize);
+    GetDesiredSize(aPresContext, aReflowState, aReflowState.maxSize,
+                   aDesiredSize, mWidgetSize);
 
     // If we are being reflowed and have a view, hide the view until
     // we are told to paint (which is when our location will have
@@ -409,9 +413,10 @@ NS_METHOD nsInputFrame::HandleEvent(nsIPresContext& aPresContext,
 }
 
 void nsInputFrame::GetStyleSize(nsIPresContext& aPresContext,
+                                const nsReflowState& aReflowState,
                                 nsSize& aSize)
 {
-  PRIntn ss = nsCSSLayout::GetStyleSize(&aPresContext, this, aSize);
+  PRIntn ss = nsCSSLayout::GetStyleSize(&aPresContext, aReflowState, aSize);
   if (0 == (ss & NS_SIZE_HAS_WIDTH)) {
     aSize.width = CSS_NOTSET;
   }

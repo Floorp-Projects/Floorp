@@ -54,6 +54,7 @@ protected:
   nsInputTextType GetTextType();
 
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
+                              const nsReflowState& aReflowState,
                               const nsSize& aMaxSize,
                               nsReflowMetrics& aDesiredLayoutSize,
                               nsSize& aDesiredWidgetSize);
@@ -109,6 +110,7 @@ nsInputTextFrame::GetTextType()
 
 void 
 nsInputTextFrame::GetDesiredSize(nsIPresContext* aPresContext,
+                                 const nsReflowState& aReflowState,
                                  const nsSize& aMaxSize,
                                  nsReflowMetrics& aDesiredLayoutSize,
                                  nsSize& aDesiredWidgetSize)
@@ -116,7 +118,7 @@ nsInputTextFrame::GetDesiredSize(nsIPresContext* aPresContext,
   nsInputTextType textType = GetTextType();
   // get the css size and let the frame use or override it
   nsSize styleSize;
-  GetStyleSize(*aPresContext, styleSize);
+  GetStyleSize(*aPresContext, aReflowState, styleSize);
 
   nsSize size;
   

@@ -68,8 +68,9 @@ protected:
   virtual ~ImageFrame();
 
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
-                              nsReflowMetrics& aDesiredSize,
-                              const nsSize& aMaxSize);
+                              const nsReflowState& aReflowState,
+                              const nsSize& aMaxSize,
+                              nsReflowMetrics& aDesiredSize);
 
   nsIImageMap* GetImageMap();
 
@@ -225,22 +226,22 @@ nsHTMLImageLoader::LoadImage(nsIPresContext* aPresContext,
 
 void
 nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
-                                  nsIFrame* aForFrame,
-                                  nsReflowMetrics& aDesiredSize,
-                                  const nsSize& aMaxSize)
+                                  const nsReflowState& aReflowState,
+                                  const nsSize& aMaxSize,
+                                  nsReflowMetrics& aDesiredSize)
 {
   nsSize styleSize;
-  PRIntn ss = nsCSSLayout::GetStyleSize(aPresContext, aForFrame, styleSize);
+  PRIntn ss = nsCSSLayout::GetStyleSize(aPresContext, aReflowState, styleSize);
   PRIntn loadStatus;
   if (0 != ss) {
     if (NS_SIZE_HAS_BOTH == ss) {
-      LoadImage(aPresContext, aForFrame, PR_FALSE, loadStatus);
+      LoadImage(aPresContext, aReflowState.frame, PR_FALSE, loadStatus);
       aDesiredSize.width = styleSize.width;
       aDesiredSize.height = styleSize.height;
     }
     else {
       // Preserve aspect ratio of image with unbound dimension.
-      LoadImage(aPresContext, aForFrame, PR_TRUE, loadStatus);
+      LoadImage(aPresContext, aReflowState.frame, PR_TRUE, loadStatus);
       if ((0 == (loadStatus & NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE)) ||
           (nsnull == mImageLoader)) {
         // Provide a dummy size for now; later on when the image size
@@ -279,7 +280,7 @@ nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
     }
   }
   else {
-    LoadImage(aPresContext, aForFrame, PR_TRUE, loadStatus);
+    LoadImage(aPresContext, aReflowState.frame, PR_TRUE, loadStatus);
     if ((0 == (loadStatus & NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE)) ||
         (nsnull == mImageLoader)) {
       // Provide a dummy size for now; later on when the image size
@@ -356,15 +357,17 @@ ImageFrame::DeleteFrame()
 
 void
 ImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
-                           nsReflowMetrics& aDesiredSize,
-                           const nsSize& aMaxSize)
+                           const nsReflowState& aReflowState,
+                           const nsSize& aMaxSize,
+                           nsReflowMetrics& aDesiredSize)
 {
   // Setup url before starting the image load
   nsAutoString src;
   if (eContentAttr_HasValue == mContent->GetAttribute("SRC", src)) {
     mImageLoader.SetURL(src);
   }
-  mImageLoader.GetDesiredSize(aPresContext, this, aDesiredSize, aMaxSize);
+  mImageLoader.GetDesiredSize(aPresContext, aReflowState,
+                              aMaxSize, aDesiredSize);
 }
 
 NS_METHOD

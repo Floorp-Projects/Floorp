@@ -189,10 +189,12 @@ protected:
     * @param aMaxSize the maximum size available for this frame
     */
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
-                              nsReflowMetrics& aDesiredSize,
-                              const nsSize& aMaxSize);
+                              const nsReflowState& aReflowState,
+                              const nsSize& aMaxSize,
+                              nsReflowMetrics& aDesiredSize);
 
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
+                              const nsReflowState& aReflowState,
                               const nsSize& aMaxSize,
                               nsReflowMetrics& aDesiredLayoutSize,
                               nsSize& aDesiredWidgetSize);
@@ -205,7 +207,9 @@ protected:
     * @param aSize the size that this frame wants, set by this method. values of -1 
     * for aSize.width or aSize.height indicate unset values.
     */
-  void GetStyleSize(nsIPresContext& aContext, nsSize& aSize);
+  void GetStyleSize(nsIPresContext& aContext,
+                    const nsReflowState& aReflowState,
+                    nsSize& aSize);
 
   nscoord GetStyleDim(nsIPresContext& aPresContext, nscoord aMaxDim, 
                       nscoord aMaxWidth, const nsStyleCoord& aCoord);
