@@ -22,6 +22,7 @@
 #include "nsIBrowserWindow.h"
 #include "nsIWebShell.h"
 #include "pratom.h"
+#include "prprf.h"
 #include "nsIComponentManager.h"
 #include "nsAppCores.h"
 #include "nsAppCoresCIDs.h"
@@ -31,6 +32,7 @@
 #include "nsIScriptContextOwner.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMXULDocument.h"
 #include "nsIDocument.h"
 #include "nsIDOMWindow.h"
 
@@ -71,7 +73,7 @@ static NS_DEFINE_IID(kIStreamObserverIID,        NS_ISTREAMOBSERVER_IID);
 
 static NS_DEFINE_IID(kIWebShellWindowIID,        NS_IWEBSHELL_WINDOW_IID);
 
-#define APP_DEBUG 0 
+#define APP_DEBUG 0
 
 /////////////////////////////////////////////////////////////////////////
 // nsBrowserAppCore
@@ -555,12 +557,67 @@ done:
   return NS_OK;
 }
 
+static nsresult setAttribute( nsIWebShell *shell,
+                              const char *id,
+                              const char *name,
+                              const nsString &value ) {
+    nsresult rv = NS_OK;
+  
+    nsCOMPtr<nsIContentViewer> cv;
+    rv = shell->GetContentViewer(getter_AddRefs(cv));
+    if ( cv ) {
+        // Up-cast.
+        nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(cv));
+        if ( docv ) {
+            // Get the document from the doc viewer.
+            nsCOMPtr<nsIDocument> doc;
+            rv = docv->GetDocument(*getter_AddRefs(doc));
+            if ( doc ) {
+                // Up-cast.
+                nsCOMPtr<nsIDOMXULDocument> xulDoc( do_QueryInterface(doc) );
+                if ( xulDoc ) {
+                    // Find specified element.
+                    nsCOMPtr<nsIDOMElement> elem;
+                    rv = xulDoc->GetElementById( id, getter_AddRefs(elem) );
+                    if ( elem ) {
+                        // Set the text attribute.
+                        rv = elem->SetAttribute( name, value );
+                        if ( APP_DEBUG ) {
+                            char *p = value.ToNewCString();
+                            //printf( "Set %s %s=\"%s\", rv=0x%08X\n", id, name, p, (int)rv );
+                            delete [] p;
+                        }
+                        if ( rv != NS_OK ) {
+                            if (APP_DEBUG) printf("SetAttribute failed, rv=0x%X\n",(int)rv);
+                        }
+                    } else {
+                        if (APP_DEBUG) printf("GetElementByID failed, rv=0x%X\n",(int)rv);
+                    }
+                } else {
+                    if (APP_DEBUG) printf("Upcast to nsIDOMXULDocument failed\n");
+                }
+            } else {
+                if (APP_DEBUG) printf("GetDocument failed, rv=0x%X\n",(int)rv);
+            }
+        } else {
+            if (APP_DEBUG) printf("Upcast to nsIDocumentViewer failed\n");
+        }
+    } else {
+        if (APP_DEBUG) printf("GetContentViewer failed, rv=0x%X\n",(int)rv);
+    }
+    return rv;
+}
 
 NS_IMETHODIMP
 nsBrowserAppCore::OnStartBinding(nsIURL* aURL, const char *aContentType)
 {
   nsresult rv = NS_OK;
-if (APP_DEBUG) printf("OnStartBinding\n");
+  const char *urlString = 0;
+  aURL->GetSpec( &urlString );
+  if ( urlString ) { 
+    setAttribute( mWebShell, "Browser:OnStartBinding", "content-type", aContentType );
+    setAttribute( mWebShell, "Browser:OnStartBinding", "url", urlString );
+  }
   return rv;
 }
 
@@ -569,7 +626,9 @@ NS_IMETHODIMP
 nsBrowserAppCore::OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax)
 {
   nsresult rv = NS_OK;
-  if (APP_DEBUG) printf("OnProgress\n");
+  PRUint32 progress = aProgressMax ? ( aProgress * 100 ) / aProgressMax : 0;
+  const char *urlString = 0;
+  aURL->GetSpec( &urlString );
   return rv;
 }
 
@@ -577,8 +636,7 @@ nsBrowserAppCore::OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgres
 NS_IMETHODIMP
 nsBrowserAppCore::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
 {
-  nsresult rv = NS_OK;
-  if (APP_DEBUG) printf("OnStatus\n");
+  nsresult rv = setAttribute( mWebShell, "Browser:Status", "text", aMsg );
   return rv;
 }
 
@@ -587,7 +645,15 @@ NS_IMETHODIMP
 nsBrowserAppCore::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg)
 {
   nsresult rv = NS_OK;
-  if (APP_DEBUG) printf("OnStopBinding\n");
+  const char *urlString = 0;
+  aURL->GetSpec( &urlString );
+  if ( urlString ) { 
+    char status[256];
+    PR_snprintf( status, sizeof status, "0x%08X", (int) aStatus );
+    setAttribute( mWebShell, "Browser:OnStopBinding", "status", status );
+    setAttribute( mWebShell, "Browser:OnStopBinding", "text", aMsg );
+    setAttribute( mWebShell, "Browser:OnStopBinding", "url", urlString );
+  }
   return rv;
 }
 
