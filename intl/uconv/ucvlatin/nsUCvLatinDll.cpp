@@ -36,8 +36,10 @@
 #include "nsISO88597ToUnicode.h"
 #include "nsISO88598ToUnicode.h"
 #include "nsISO88599ToUnicode.h"
+#include "nsISO885910ToUnicode.h"
 #include "nsISO885914ToUnicode.h"
 #include "nsISO885915ToUnicode.h"
+#include "nsISOIR111ToUnicode.h"
 #include "nsCP1250ToUnicode.h"
 #include "nsCP1251ToUnicode.h"
 #include "nsCP1252ToUnicode.h"
@@ -72,6 +74,7 @@
 #include "nsUCS2BEToUnicode.h"
 #include "nsUCS2LEToUnicode.h"
 #include "nsT61ToUnicode.h"
+#include "nsUserDefinedToUnicode.h"
 #include "nsUnicodeToISO88591.h"
 #include "nsUnicodeToISO88592.h"
 #include "nsUnicodeToISO88593.h"
@@ -81,8 +84,10 @@
 #include "nsUnicodeToISO88597.h"
 #include "nsUnicodeToISO88598.h"
 #include "nsUnicodeToISO88599.h"
+#include "nsUnicodeToISO885910.h"
 #include "nsUnicodeToISO885914.h"
 #include "nsUnicodeToISO885915.h"
+#include "nsUnicodeToISOIR111.h"
 #include "nsUnicodeToCP1250.h"
 #include "nsUnicodeToCP1251.h"
 #include "nsUnicodeToCP1252.h"
@@ -117,6 +122,7 @@
 #include "nsUnicodeToUCS4BE.h"
 #include "nsUnicodeToUCS4LE.h"
 #include "nsUnicodeToT61.h"
+#include "nsUnicodeToUserDefined.h"
 
 // just for NS_IMPL_IDS; this is a good, central place to implement GUIDs
 #include "nsIUnicodeDecoder.h"
@@ -203,6 +209,12 @@ FactoryData g_FactoryData[] =
     "Unicode"
   },
   {
+    &kISO885910ToUnicodeCID,
+    nsISO885910ToUnicode::CreateInstance,
+    "ISO-8859-10",
+    "Unicode"
+  },
+  {
     &kISO885914ToUnicodeCID,
     nsISO885914ToUnicode::CreateInstance,
     "ISO-8859-14",
@@ -212,6 +224,12 @@ FactoryData g_FactoryData[] =
     &kISO885915ToUnicodeCID,
     nsISO885915ToUnicode::CreateInstance,
     "ISO-8859-15",
+    "Unicode"
+  },
+  {
+    &kISOIR111ToUnicodeCID,
+    nsISOIR111ToUnicode::CreateInstance,
+    "ISO-IR-111",
     "Unicode"
   },
   {
@@ -419,6 +437,12 @@ FactoryData g_FactoryData[] =
     "Unicode"
   },
   {
+    &kUserDefinedToUnicodeCID,
+    nsUserDefinedToUnicode::CreateInstance,
+    "x-user-defined",
+    "Unicode"
+  },
+  {
     &kUnicodeToISO88591CID,
     nsUnicodeToISO88591::CreateInstance,
     "Unicode",
@@ -473,6 +497,12 @@ FactoryData g_FactoryData[] =
     "ISO-8859-9"
   },
   {
+    &kUnicodeToISO885910CID,
+    nsUnicodeToISO885910::CreateInstance,
+    "Unicode",
+    "ISO-8859-10"
+  },
+  {
     &kUnicodeToISO885914CID,
     nsUnicodeToISO885914::CreateInstance,
     "Unicode",
@@ -483,6 +513,12 @@ FactoryData g_FactoryData[] =
     nsUnicodeToISO885915::CreateInstance,
     "Unicode",
     "ISO-8859-15"
+  },
+  {
+    &kUnicodeToISOIR111CID,
+    nsUnicodeToISOIR111::CreateInstance,
+    "Unicode",
+    "ISO-IR-111"
   },
   {
     &kUnicodeToCP1250CID,
@@ -687,6 +723,12 @@ FactoryData g_FactoryData[] =
     nsUnicodeToT61::CreateInstance,
     "Unicode",
     "T.61-8bit"
+  },
+  {
+    &kUnicodeToUserDefinedCID,
+    nsUnicodeToUserDefined::CreateInstance,
+    "Unicode",
+    "x-user-defined"
   }
 };
 
