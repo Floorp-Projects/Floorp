@@ -22,7 +22,7 @@
 #include <stdio.h>
 
 #define PASS(msg)							      \
-  printf("PASSED : %s\n", msg);
+  fprintf(stderr, "PASSED : %s\n", msg);
 
 #define FAIL(msg)							      \
   fprintf(stderr, "FAILURE: %s\n", msg);
@@ -42,13 +42,15 @@ struct TestData {
     uint32	bit32;
     uint16      bit16;
     uint8       bit8[2];
-} input = { 0xdeadbeef, 0xcafe, {0xba, 0xbe} }, output = {0, 0, {0, 0} };
+    char	*cstr;
+} input = { 0xdeadbeef, 0xcafe, {0xba, 0xbe}, "foobar"},
+  output = {0, 0, {0, 0}, NULL };
 
 void
 dump_struct(char *label, struct TestData *str)
 {
-    printf("%s: {%#08x, %#04x, {%#02x, %#02x}\n", label,
-	   str->bit32, str->bit16, str->bit8[0], str->bit8[1]);
+    fprintf(stderr, "%s: {%#08x, %#04x, {%#02x, %#02x}, %s\n", label,
+	    str->bit32, str->bit16, str->bit8[0], str->bit8[1], str->cstr);
 }
 
 PRBool
@@ -58,6 +60,7 @@ XDR(XPTCursor *cursor, struct TestData *str)
     TRY("Do16", XPT_Do16(cursor, &str->bit16));
     TRY("Do8",  XPT_Do8 (cursor, &str->bit8[0]));
     TRY("Do8",  XPT_Do8 (cursor, &str->bit8[1]));
+    TRY("DoCString", XPT_DoCString(cursor, &str->cstr));
     return 0;
 }
 
@@ -66,44 +69,60 @@ main(int argc, char **argv)
 {
     XPTState *state;
     XPTCursor curs, *cursor = &curs;
-    char *data, *data2;
-    uint32 len = 0, i;
+    char *header, *data, *whole;
+    uint32 hlen, dlen, i;
 
     TRY("NewState (ENCODE)", (state = XPT_NewXDRState(XPT_ENCODE, NULL, 0)));
 
-    XPT_SetDataOffset(state, 1024);
+    XPT_SetDataOffset(state, sizeof input);
 
-    TRY("MakeCursor", XPT_MakeCursor(state, XPT_HEADER, cursor));
+    TRY("MakeCursor", XPT_MakeCursor(state, XPT_HEADER, sizeof input, cursor));
 
     dump_struct("before", &input);
 
     if (XDR(cursor, &input))
 	return 1;
 
-    XPT_GetXDRData(state, XPT_HEADER, &data, &len);
-    printf("XDR data %d bytes (really %d) at %p: ", len, sizeof input, data);
-    for (i = 0; i < sizeof input / 4; i++)
-	printf("%08x,", ((uint32 *)&input)[i]);
-    printf("\n");
+    fprintf(stderr, "ENCODE successful\n");
+    XPT_GetXDRData(state, XPT_HEADER, &header, &hlen);
+    fprintf(stderr, "XDR header %d bytes at %p:",
+	    hlen, header);
+    for (i = 0; i < hlen; i++)
+	fprintf(stderr, "%c%02x", i ? ',' : ' ', (uint8)header[i]);
+    fprintf(stderr, "\n");
 
-    data2 = malloc(len);
-    if (!data2) {
-	printf("what the fuck?\n");
+    XPT_GetXDRData(state, XPT_DATA, &data, &dlen);
+
+    fprintf(stderr, "XDR data %d bytes at %p:",
+	    dlen, data);
+    for (i = 0; i < dlen; i++)
+	fprintf(stderr, "%c%02x/%c", i ? ',' : ' ', (uint8)data[i],
+		(uint8)data[i]);
+    fprintf(stderr, "\n");
+
+    whole = malloc(dlen + hlen);
+    if (!whole) {
+	fprintf(stderr, "malloc %d failed!\n", dlen + hlen);
 	return 1;
     }
 
     /* TRY_Q("malloc", (data2 = malloc(len))); */
-    memcpy(data2, data, len);
+    memcpy(whole, header, hlen);
+    memcpy(whole + hlen, data, dlen);
     XPT_DestroyXDRState(state);
 
-    TRY("NewState (DECODE)", (state = XPT_NewXDRState(XPT_DECODE, data, len)));
+    TRY("NewState (DECODE)", (state = XPT_NewXDRState(XPT_DECODE, whole,
+						      hlen + dlen)));
 
-    XPT_SetDataOffset(state, 1024);
+    TRY("MakeCursor", XPT_MakeCursor(state, XPT_HEADER, sizeof input, cursor));
+    XPT_SetDataOffset(state, sizeof input);
+
     if (XDR(cursor, &output))
 	return 1;
     
     dump_struct("after", &output);
     XPT_DestroyXDRState(state);
+    free(whole);
 
     return 0;
 }

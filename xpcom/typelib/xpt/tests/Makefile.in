@@ -27,8 +27,7 @@ CSRCS		= PrimitiveTest.c
 
 include $(topsrcdir)/config/rules.mk
 
-EX_LIBS		= $(DIST)/lib/libxpt.$(LIB_SUFFIX) \
-		  $(NULL)
+LDFLAGS		+= -L $(DIST)/bin -lxpt
 
 PROGS		= $(addprefix $(OBJDIR)/, $(CSRCS:.c=))
 
