@@ -75,7 +75,9 @@ DIRS +=				\
   rdf				\
   webshell			\
   editor			\
-  silentdl
+  silentdl			\
+  sun-java			\
+  $(NULL)
 
 
 DIRS += xpfe

@@ -104,7 +104,6 @@ DIST_DIRS =			\
   modules\zlib			\
   modules\libutil		\
   sun-java			\
-  nav-java			\
   js				\
   modules\security\freenav	\
   modules\libpref		\
