@@ -137,7 +137,7 @@ struct JSRuntime {
 };
 
 #define JS_ENABLE_GC(rt)    JS_ATOMIC_ADDREF(&(rt)->gcDisabled, -1);
-#define JS_DISABLE_GC(rt)   JS_ATOMIC_ADDREF(&(rt)->gcDisabled, -1);
+#define JS_DISABLE_GC(rt)   JS_ATOMIC_ADDREF(&(rt)->gcDisabled, 1);
 
 #ifdef JS_ARGUMENT_FORMATTER_DEFINED
 /*
