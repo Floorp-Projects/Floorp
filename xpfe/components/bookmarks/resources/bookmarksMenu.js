@@ -720,11 +720,13 @@ var BookmarksToolbar =
     var buttons = document.getElementById("bookmarks-ptf");
     if (!buttons)
       return;
+
     var chevron = document.getElementById("bookmarks-chevron");
-    var width = buttons.boxObject.x + buttons.boxObject.width;
     chevron.collapsed = false;
     var chevronWidth = chevron.boxObject.width;
     chevron.collapsed = true;
+
+    var remainingWidth = buttons.boxObject.width;
     var overflowed = false;
 
     for (var i=0; i<buttons.childNodes.length; i++) {
@@ -733,7 +735,8 @@ var BookmarksToolbar =
       
       if (i == buttons.childNodes.length - 1)
         chevronWidth = 0;
-      if (button.boxObject.x + button.boxObject.width + chevronWidth > width) {
+      remainingWidth -= button.boxObject.width;
+      if (remainingWidth < chevronWidth) {
         overflowed = true;
         // This button doesn't fit. Show it in the menu. Hide it in the toolbar.
         if (!button.collapsed)
