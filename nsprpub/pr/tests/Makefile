@@ -150,6 +150,8 @@ CSRCS =             \
 	system.c		\
 	testbit.c    	\
 	testfile.c    	\
+	thrpool_server.c \
+	thrpool_client.c \
 	threads.c 	  	\
 	thruput.c 	  	\
 	timemac.c		\

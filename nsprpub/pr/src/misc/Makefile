@@ -48,6 +48,7 @@ CSRCS = \
 	prsystem.c \
 	prtime.c   \
 	prthinfo.c \
+	prtpool.c \
 	prtrace.c  \
 	$(NULL)
 
