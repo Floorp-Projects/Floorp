@@ -18,7 +18,7 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
-$::UtilsVersion = '$Revision: 1.45 $ ';
+$::UtilsVersion = '$Revision: 1.46 $ ';
 
 package TinderUtils;
 
@@ -489,6 +489,7 @@ sub mail_build_finished_message {
         
     # Put the status at the top of the log, so the server will not
     # have to search through the entire log to find it.
+    print OUTLOG "\n";
     print OUTLOG "tinderbox: tree: $Settings::BuildTree\n";
     print OUTLOG "tinderbox: builddate: $start_time\n";
     print OUTLOG "tinderbox: status: $build_status\n";
