@@ -23,7 +23,9 @@
 sub EmitHtmlTitleAndHeader {
     my($doctitle,$heading,$subheading) = @_;
     
-    print "<HTML><HEAD><TITLE>$doctitle</TITLE></HEAD>";
+    print "<HTML><HEAD><TITLE>$doctitle</TITLE>";
+    print "<link rel=\"icon\" href=\"http://mozilla.org/images/mozilla-16.png\" type=\"image/png\">";
+    print "</HEAD>";
     print "<BODY   BGCOLOR=\"#FFFFFF\" TEXT=\"#000000\"";
     print "LINK=\"#0000EE\" VLINK=\"#551A8B\" ALINK=\"#FF0000\">";
 
