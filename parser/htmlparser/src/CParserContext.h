@@ -68,7 +68,7 @@ public:
     PRBool              mMultipart;
     eContextType        mContextType;
     eAutoDetectResult   mAutoDetectStatus;
-
+    nsIChannel*         mChannel; // provided by necko to differnciate different input streams
 
     nsString            mSourceType;
 
