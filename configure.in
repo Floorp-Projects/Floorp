@@ -91,7 +91,6 @@ GTK2_VERSION=1.3.7
 
 dnl Set various checks
 dnl ========================================================
-MISSING_FULLCIRCLE=
 MISSING_MOTIF=
 MISSING_NSPR=
 MISSING_X=
