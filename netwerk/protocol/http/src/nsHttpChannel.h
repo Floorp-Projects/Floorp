@@ -132,7 +132,7 @@ private:
     nsresult OpenCacheEntry(PRBool offline, PRBool *delayed);
     nsresult GenerateCacheKey(nsACString &key);
     nsresult UpdateExpirationTime();
-    nsresult CheckCache(PRBool offline);
+    nsresult CheckCache();
     nsresult ReadFromCache();
     nsresult CloseCacheEntry(nsresult status);
     nsresult InitCacheEntry();
