@@ -37,7 +37,7 @@
     return false;
   }
 
-  function openNewWindowWith( url ) {
+  function openNewWindowWith(url) {
 
  // URL Loading Security Check
     const nsIStandardURL = Components.interfaces.nsIStandardURL;
@@ -66,7 +66,7 @@
     if (window && (wintype == "navigator:browser") &&
       window._content && window._content.document) {
       var DocCharset = window._content.document.characterSet;
-      charsetArg = "charset="+DocCharset;
+      var charsetArg = "charset="+DocCharset;
       dump("*** Current document charset: " + DocCharset + "\n");
  
       //we should "inherit" the charset menu setting in a new window
