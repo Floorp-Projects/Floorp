@@ -136,6 +136,27 @@ public:
   NS_IMETHOD HandleClick(nsIContent *aNewFocus, PRUint32 aContentOffset, PRUint32 aContentEndOffset , 
                        PRBool aContinueSelection, PRBool aMultipleSelection) = 0;
 
+  /** HandleDrag extends the selection to contain the frame closest to aPoint.
+   *  @param aPresContext is the context to use when figuring out what frame contains the point.
+   *  @param aFrame is the parent of all frames to use when searching for the closest frame to the point.
+   *  @param aPoint is relative to aFrame's parent view.
+   */
+  NS_IMETHOD HandleDrag(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint) = 0;
+
+  /** StartAutoScrollTimer is responsible for scrolling the view so that aPoint is always
+   *  visible, and for selecting any frame that contains aPoint. The timer will also reset
+   *  itself to fire again if the view has not scrolled to the end of the document.
+   *  @param aPresContext is the context to use when figuring out what frame contains the point.
+   *  @param aFrame is the parent of all frames to use when searching for the closest frame to the point.
+   *  @param aPoint is relative to aFrame's parent view.
+   *  @param aDelay is the timer's interval.
+   */
+  NS_IMETHOD StartAutoScrollTimer(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint, PRUint32 aDelay) = 0;
+
+  /** StopAutoScrollTimer stops any active auto scroll timer.
+   */
+  NS_IMETHOD StopAutoScrollTimer() = 0;
+
   /** EnableFrameNotification
    *  mutch like start batching, except all dirty calls are ignored. no notifications will go 
    *  out until enableNotifications with a PR_TRUE is called

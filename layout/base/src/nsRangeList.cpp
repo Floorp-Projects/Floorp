@@ -51,6 +51,8 @@
 #include "nsIViewManager.h"
 #include "nsIScrollableView.h"
 #include "nsIDeviceContext.h"
+#include "nsITimer.h"
+#include "nsITimerCallback.h"
 
 #define STATUS_CHECK_RETURN_MACRO() {if (!mTracker) return NS_ERROR_FAILURE;}
 
@@ -79,6 +81,7 @@ static void printRange(nsIDOMRange *aDomRange);
 
 class nsRangeListIterator;
 class nsRangeList;
+class nsAutoScrollTimer;
 
 class nsDOMSelection : public nsIDOMSelection , public nsIScriptObjectOwner
 {
@@ -159,6 +162,10 @@ public:
                              SelectionDetails **aReturnDetails, SelectionType aType);
   NS_IMETHOD   Repaint();
 
+  nsresult     StartAutoScrollTimer(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint, PRUint32 aDelay);
+  nsresult     StopAutoScrollTimer();
+  nsresult     DoAutoScroll(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint);
+
 private:
   friend class nsRangeListIterator;
 
@@ -182,6 +189,8 @@ private:
 
   // for nsIScriptContextOwner
   void*		mScriptObject;
+
+  nsAutoScrollTimer *mAutoScrollTimer; // timer for autoscrolling.
 };
 
 
@@ -200,6 +209,9 @@ public:
   NS_IMETHOD HandleKeyEvent(nsGUIEvent *aGuiEvent);
   NS_IMETHOD HandleClick(nsIContent *aNewFocus, PRUint32 aContentOffset, PRUint32 aContentEndOffset, 
                        PRBool aContinueSelection, PRBool aMultipleSelection);
+  NS_IMETHOD HandleDrag(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint);
+  NS_IMETHOD StartAutoScrollTimer(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint, PRUint32 aDelay);
+  NS_IMETHOD StopAutoScrollTimer();
   NS_IMETHOD EnableFrameNotification(PRBool aEnable){mNotifyFrames = aEnable; return NS_OK;}
   NS_IMETHOD LookUpSelection(nsIContent *aContent, PRInt32 aContentOffset, PRInt32 aContentLength,
                              SelectionDetails **aReturnDetails);
@@ -295,8 +307,108 @@ private:
   SelectionType mType;
 };
 
+class nsAutoScrollTimer : public nsITimerCallback
+{
+public:
 
+  NS_DECL_ISUPPORTS
 
+  nsAutoScrollTimer()
+      : mSelection(0), mTimer(0), mFrame(0), mPresContext(0), mPoint(0,0), mDelay(30)
+  {
+    NS_INIT_ISUPPORTS();
+  }
+
+  ~nsAutoScrollTimer()
+  {
+    if (mTimer)
+    {
+      mTimer->Cancel();
+      NS_RELEASE(mTimer);
+    }
+  }
+
+  nsresult Start(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint)
+  {
+    mFrame       = aFrame;
+    mPresContext = aPresContext;
+    mPoint       = aPoint;
+
+    if (!mTimer)
+    {
+      nsresult result = NS_NewTimer(&mTimer);
+
+      if (NS_FAILED(result))
+        return result;
+    }
+
+    return mTimer->Init(this, mDelay);
+  }
+
+  nsresult Stop()
+  {
+    nsresult result = NS_OK;
+
+    if (mTimer)
+    {
+      mTimer->Cancel();
+      NS_RELEASE(mTimer);
+      mTimer = 0;
+    }
+
+    return result;
+  }
+
+  nsresult Init(nsRangeList *aRangeList, nsDOMSelection *aSelection)
+  {
+    mRangeList = aRangeList;
+    mSelection = aSelection;
+    return NS_OK;
+  }
+
+  nsresult SetDelay(PRUint32 aDelay)
+  {
+    mDelay = aDelay;
+    return NS_OK;
+  }
+
+  virtual void Notify(nsITimer *timer)
+  {
+    if (mSelection && mPresContext && mFrame)
+    {
+      mRangeList->HandleDrag(mPresContext, mFrame, mPoint);
+      mSelection->DoAutoScroll(mPresContext, mFrame, mPoint);
+    }
+  }
+
+private:
+  nsRangeList    *mRangeList;
+  nsDOMSelection *mSelection;
+  nsITimer       *mTimer;
+  nsIFrame       *mFrame;
+  nsIPresContext *mPresContext;
+  nsPoint         mPoint;
+  PRUint32        mDelay;
+};
+
+NS_IMPL_ADDREF(nsAutoScrollTimer)
+NS_IMPL_RELEASE(nsAutoScrollTimer)
+NS_IMPL_QUERY_INTERFACE1(nsAutoScrollTimer, nsITimerCallback)
+
+nsresult NS_NewAutoScrollTimer(nsAutoScrollTimer **aResult)
+{
+  if (!aResult)
+    return NS_ERROR_NULL_POINTER;
+
+  *aResult = (nsAutoScrollTimer*) new nsAutoScrollTimer;
+
+  if (!aResult)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*aResult);
+
+  return NS_OK;
+}
 
 nsresult NS_NewRangeList(nsIFrameSelection **aRangeList);
 
@@ -914,6 +1026,44 @@ nsRangeList::HandleClick(nsIContent *aNewFocus, PRUint32 aContentOffset,
   return TakeFocus(aNewFocus, aContentOffset, aContentEndOffset, aContinueSelection, aMultipleSelection);
 }
 
+NS_IMETHODIMP
+nsRangeList::HandleDrag(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint)
+{
+  nsresult result;
+
+  nsCOMPtr<nsIPresShell> presShell;
+
+  result = aPresContext->GetShell(getter_AddRefs(presShell));
+
+  if (NS_FAILED(result))
+    return result;
+
+  PRInt32 startPos = 0;
+  PRInt32 contentOffsetEnd = 0;
+  nsCOMPtr<nsIContent> newContent;
+
+  result = aFrame->GetContentAndOffsetsFromPoint(*aPresContext, aPoint,
+                                                 getter_AddRefs(newContent), 
+                                                 startPos, contentOffsetEnd);
+
+  if (NS_SUCCEEDED(result))
+    result = HandleClick(newContent, startPos, contentOffsetEnd , PR_TRUE, PR_FALSE);
+
+  return result;
+}
+
+NS_IMETHODIMP
+nsRangeList::StartAutoScrollTimer(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint, PRUint32 aDelay)
+{
+  return mDomSelections[SELECTION_NORMAL]->StartAutoScrollTimer(aPresContext, aFrame, aPoint, aDelay);
+}
+
+NS_IMETHODIMP
+nsRangeList::StopAutoScrollTimer()
+{
+  return mDomSelections[SELECTION_NORMAL]->StopAutoScrollTimer();
+}
+
 /**
 hard to go from nodes to frames, easy the other way!
  */
@@ -1266,6 +1416,7 @@ nsDOMSelection::nsDOMSelection(nsRangeList *aList)
   mDirection = eDirNext;
   NS_NewISupportsArray(getter_AddRefs(mRangeArray));
   mScriptObject = nsnull;
+  mAutoScrollTimer = nsnull;
   NS_INIT_REFCNT();
 }
 
@@ -1282,6 +1433,8 @@ nsDOMSelection::~nsDOMSelection()
 	  mRangeArray->RemoveElementAt(0);
 	}
   setAnchorFocusRange(-1);
+
+  NS_IF_RELEASE(mAutoScrollTimer);
 }
 
 
@@ -1951,6 +2104,243 @@ nsDOMSelection::Repaint()
   }
 
   return NS_OK;
+}
+
+nsresult
+nsDOMSelection::StartAutoScrollTimer(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint, PRUint32 aDelay)
+{
+  nsresult result;
+
+  if (!mAutoScrollTimer)
+  {
+    result = NS_NewAutoScrollTimer(&mAutoScrollTimer);
+
+    if (NS_FAILED(result))
+      return result;
+
+    if (!mAutoScrollTimer)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    result = mAutoScrollTimer->Init(mRangeList, this);
+
+    if (NS_FAILED(result))
+      return result;
+  }
+
+  result = mAutoScrollTimer->SetDelay(aDelay);
+
+  if (NS_FAILED(result))
+    return result;
+
+  return DoAutoScroll(aPresContext, aFrame, aPoint);
+}
+
+nsresult
+nsDOMSelection::StopAutoScrollTimer()
+{
+  if (mAutoScrollTimer)
+    return mAutoScrollTimer->Stop();
+
+  return NS_OK;
+}
+
+nsresult
+nsDOMSelection::DoAutoScroll(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint)
+{
+  nsresult result;
+
+  if (!aPresContext || !aFrame)
+    return NS_ERROR_NULL_POINTER;
+
+  if (mAutoScrollTimer)
+    result = mAutoScrollTimer->Stop();
+
+  nsCOMPtr<nsIPresShell> presShell;
+
+  result = aPresContext->GetShell(getter_AddRefs(presShell));
+
+  //
+  // Get a hold of the root scrollable view for presShell.
+  //
+
+  nsCOMPtr<nsIViewManager> viewManager;
+
+  result = presShell->GetViewManager(getter_AddRefs(viewManager));
+
+  if (NS_FAILED(result))
+    return result;
+
+  if (!viewManager)
+    return NS_ERROR_NULL_POINTER;
+
+  nsIScrollableView *scrollableView = 0;
+
+  result = viewManager->GetRootScrollableView(&scrollableView);
+
+  if (NS_SUCCEEDED(result) && scrollableView)
+  {
+    //
+    // Get a hold of the scrollable view's clip view.
+    //
+
+    const nsIView *cView = 0;
+
+    result = scrollableView->GetClipView(&cView);
+
+    if (NS_SUCCEEDED(result) && cView)
+    {
+      //
+      // Find out if this frame's view is in the parent hierarchy of the clip view.
+      // If it is, then we know the drag is happening outside of the clip view,
+      // so we may need to auto scroll.
+      //
+
+      // Get the frame's parent view.
+
+      nsPoint viewOffset(0,0);
+
+      nsIView *frameView = 0;
+
+      nsIFrame *parentFrame = aFrame;
+
+      while (NS_SUCCEEDED(result) && parentFrame && !frameView)
+      {
+        result = parentFrame->GetView(&frameView);
+        if (NS_SUCCEEDED(result) && !frameView)
+          result = parentFrame->GetParent(&parentFrame);
+      }
+
+      if (NS_SUCCEEDED(result) && frameView)
+      {
+        //
+        // Now make sure that the frame's view is in the
+        // scrollable view's parent hierarchy.
+        //
+
+        nsIView *view = (nsIView*)cView;
+        nscoord x, y;
+
+        while (view && view != frameView)
+        {
+          result = view->GetParent(view);
+
+          if (NS_FAILED(result))
+            view = 0;
+          else if (view)
+          {
+            result = view->GetPosition(&x, &y);
+
+            if (NS_FAILED(result))
+              view = 0;
+            else
+            {
+              //
+              // Keep track of the view offsets so we can
+              // translate aPoint into the scrollable view's
+              // coordinate system.
+              //
+
+              viewOffset.x += x;
+              viewOffset.y += y;
+            }
+          }
+        }
+
+        if (view)
+        {
+          //
+          // See if aPoint is outside the clip view's boundaries.
+          // If it is, scroll the view till it is inside the visible area!
+          //
+
+          nsRect bounds;
+
+          result = cView->GetBounds(bounds);
+
+          if (NS_SUCCEEDED(result))
+          {
+            //
+            // Calculate the amount we would have to scroll in
+            // the vertical and horizontal directions to get the point
+            // within the clip area.
+            //
+
+            nscoord dx = 0, dy = 0;
+            nsPoint ePoint = aPoint;
+
+            ePoint.x -= viewOffset.x;
+            ePoint.y -= viewOffset.y;
+            
+            nscoord x1 = bounds.x;
+            nscoord x2 = bounds.x + bounds.width;
+            nscoord y1 = bounds.y;
+            nscoord y2 = bounds.y + bounds.height;
+
+            if (ePoint.x < x1)
+              dx = ePoint.x - x1;
+            else if (ePoint.x > x2)
+              dx = ePoint.x - x2;
+                
+            if (ePoint.y < y1)
+              dy = ePoint.y - y1;
+            else if (ePoint.y > y2)
+              dy = ePoint.y - y2;
+
+            //
+            // Now clip the scroll amounts so that we don't scroll
+            // beyond the ends of the document.
+            //
+
+            nscoord scrollX = 0, scrollY = 0;
+            nscoord docWidth = 0, docHeight = 0;
+
+            result = scrollableView->GetScrollPosition(scrollX, scrollY);
+
+            if (NS_SUCCEEDED(result))
+              result = scrollableView->GetContainerSize(&docWidth, &docHeight);
+
+            if (NS_SUCCEEDED(result))
+            {
+              if (dx < 0 && scrollX == 0)
+                dx = 0;
+              else if (dx > 0)
+              {
+                x1 = scrollX + dx + bounds.width;
+
+                if (x1 > docWidth)
+                  dx -= x1 - docWidth;
+              }
+
+
+              if (dy < 0 && scrollY == 0)
+                dy = 0;
+              else if (dy > 0)
+              {
+                y1 = scrollY + dy + bounds.height;
+
+                if (y1 > docHeight)
+                  dy -= y1 - docHeight;
+              }
+
+              //
+              // Now scroll the view if neccessary.
+              //
+
+              if (dx != 0 || dy != 0)
+              {
+                result = scrollableView->ScrollTo(scrollX + dx, scrollY + dy, NS_VMREFRESH_NO_SYNC);
+
+                if (mAutoScrollTimer)
+                  result = mAutoScrollTimer->Start(aPresContext, aFrame, aPoint);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return result;
 }
 
 NS_IMETHODIMP
@@ -2965,7 +3355,6 @@ nsDOMSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
   else if (NS_FAILED(mAnchorFocusRange->SetEnd(endNode,endOffset)))
           return NS_ERROR_FAILURE;//???
   /*end hack*/
-  ScrollIntoView();
 #ifdef DEBUG_SELECTION
   if (aParentNode)
   {
