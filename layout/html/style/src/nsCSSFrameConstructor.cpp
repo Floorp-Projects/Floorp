@@ -5321,7 +5321,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
 
         } 
       } // End of BUTTON CONSTRUCTION logic
-   // BUTTON CONSTRUCTION
+      // AUTOREPEATBUTTON CONSTRUCTION
       else if (aTag == nsXULAtoms::autorepeatbutton) {
         processChildren = PR_TRUE;
         isReplaced = PR_TRUE;
@@ -5342,7 +5342,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
           frameHasBeenInitialized = PR_TRUE;
 
         } 
-      } // End of BUTTON CONSTRUCTION logic
+      } // End of AUTOREPEATBUTTON CONSTRUCTION logic
 
 
 	   // TITLEBAR CONSTRUCTION
