@@ -1,5 +1,25 @@
 <!-- extracted from ./sidebar-registry.rdf -->
 
-<!ENTITY sidebar.headlines.label     "Headlines">
-<!ENTITY sidebar.news.label          "Local News">
-<!ENTITY sidebar.weather.label       "Weather">
+<!ENTITY sidebar.panel.weather.label             "Weather">
+<!ENTITY sidebar.panel.reuters.label             "Headlines">
+<!ENTITY sidebar.panel.horoscopes.label          "Horoscopes">
+<!ENTITY sidebar.panel.localnews.label           "Local News">
+<!ENTITY sidebar.panel.sports.label              "Sports">
+<!ENTITY sidebar.panel.whiteyellowpages.label    "White &amp; Yellow Pages">
+<!ENTITY sidebar.panel.travel.label              "Travel">
+<!ENTITY sidebar.panel.search.label              "Search">
+<!ENTITY sidebar.panel.memberdirectory.label     "Member Directory">
+<!ENTITY sidebar.panel.netcenter.label           "Netcenter">
+<!ENTITY sidebar.panel.newsedge.label            "Top Stories">
+<!ENTITY sidebar.panel.addressbook.label         "Addressbook">
+<!ENTITY sidebar.panel.announcements.label       "Announcements">
+<!ENTITY sidebar.panel.bookmarks.label           "Bookmarks">
+<!ENTITY sidebar.panel.calculator.label          "Calculator">
+<!ENTITY sidebar.panel.calendar.label            "Calendar">
+<!ENTITY sidebar.panel.delivery.label            "Delivery">
+<!ENTITY sidebar.panel.fishcam.label             "Fishcam">
+<!ENTITY sidebar.panel.localevent.label          "Local Events">
+<!ENTITY sidebar.panel.localmovie.label          "Local Movies">
+<!ENTITY sidebar.panel.maps.label                "Maps">
+<!ENTITY sidebar.panel.netcenterservices.label   "Netcenter Services">
+<!ENTITY sidebar.panel.netscape.label            "Netscape">
