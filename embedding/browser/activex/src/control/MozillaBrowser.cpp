@@ -2035,10 +2035,10 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_LocationURL(BSTR __RPC_FAR *Locat
     nsCOMPtr<nsIURI> uri;
 
 	// Get the current url from the browser
-    nsCOMPtr<nsIDocShell> rootDocShell = do_GetInterface(mWebBrowser);
-	if (rootDocShell)
+    nsCOMPtr<nsIWebNavigation> browserAsNav = do_QueryInterface(mWebBrowser);
+	if (browserAsNav)
 	{
-        rootDocShell->GetCurrentURI(getter_AddRefs(uri));
+        browserAsNav->GetCurrentURI(getter_AddRefs(uri));
     }
 
     if (uri)
