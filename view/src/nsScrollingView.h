@@ -43,6 +43,9 @@ public:
       						 nsViewVisibility aVisibilityFlag = nsViewVisibility_kShow);
   NS_IMETHOD  SetDimensions(nscoord width, nscoord height, PRBool aPaint = PR_TRUE);
   NS_IMETHOD  SetPosition(nscoord aX, nscoord aY);
+   // SetVisibility is overriden so that it will set it's components visibility (ClipView, 
+   // CornerView, ScrollBarView's),as well as it's own visibility.
+  NS_IMETHOD  SetVisibility(nsViewVisibility visibility);
   NS_IMETHOD  HandleEvent(nsGUIEvent *aEvent, PRUint32 aEventFlags, nsEventStatus &aStatus);
   NS_IMETHOD  SetWidget(nsIWidget *aWidget);
 
@@ -74,6 +77,20 @@ public:
 
   //locals
   void HandleScrollEvent(nsGUIEvent *aEvent, PRUint32 aEventFlags);
+ 
+   // Set the visibility of a nsScrollingView's component
+   // @param aView nsScrollingView component to set visibility for or nsnull.
+   // @param aViewVisibility new setting for the component view If not the same as the current setting 
+   // @returns the result of calling the SetVisibility on the component.
+  nsresult SetComponentVisibility(nsIView* aView, nsViewVisibility aViewVisibility); 
+
+   // Update the visibility of the nsScrollingView's components (ClipView, CornerView, ScrollBarView's)
+   // @param aScrollingViewVisibility Visibility setting of the ScrollingView to consider when
+   // setting the visibility of the components. If aScrollingViewVisibility == nsViewVisibility_kInherit then 
+   // UpdateComponent has no effect.
+   // @returns the result of calling SetComponentVisibility for each component.
+  nsresult UpdateComponentVisibility(nsViewVisibility aScrollingViewVisibility);
+
 
 private:
   NS_IMETHOD_(nsrefcnt) AddRef(void);
