@@ -204,19 +204,19 @@ sub Checkout()
 	#//
 	if ($main::pull{moz})
 	{
-		$session->checkout("SeaMonkeyAll")							|| die "checkout failure";
-		$session->checkout("mozilla/nsprpub",	$nsprpub_tag)		|| die "checkout failure";
+		$session->checkout("mozilla/nsprpub",	$nsprpub_tag)		|| print "checkout of nsprpub failed";
+		$session->checkout("SeaMonkeyAll")							|| print "checkout of SeaMonkeyAll failed";
 	}
 	elsif ($main::pull{runtime})
 	{
-		$session->checkout("mozilla/build")							|| die "checkout failure";
-		$session->checkout("mozilla/lib/mac/InterfaceLib")			|| die "checkout failure";
-		$session->checkout("mozilla/config")						|| die "checkout failure";
-		$session->checkout("mozilla/lib/mac/NSStdLib")				|| die "checkout failure";
-		$session->checkout("mozilla/lib/mac/NSRuntime")				|| die "checkout failure";
-		$session->checkout("mozilla/lib/mac/MoreFiles")				|| die "checkout failure";
-		$session->checkout("mozilla/lib/mac/MacMemoryAllocator")	|| die "checkout failure";
-		$session->checkout("mozilla/nsprpub",	$nsprpub_tag)		|| die "checkout failure";	
+		$session->checkout("mozilla/build")							|| print "checkout failure";
+		$session->checkout("mozilla/lib/mac/InterfaceLib")			|| print "checkout failure";
+		$session->checkout("mozilla/config")						|| print "checkout failure";
+		$session->checkout("mozilla/lib/mac/NSStdLib")				|| print "checkout failure";
+		$session->checkout("mozilla/lib/mac/NSRuntime")				|| print "checkout failure";
+		$session->checkout("mozilla/lib/mac/MoreFiles")				|| print "checkout failure";
+		$session->checkout("mozilla/lib/mac/MacMemoryAllocator")	|| print "checkout failure";
+		$session->checkout("mozilla/nsprpub",	$nsprpub_tag)		|| print "checkout failure";
 	}
 }
 
@@ -922,7 +922,7 @@ sub BuildClientDist()
 	 for $dir (qw(bookmarks find history related sample search shistory sidebar ucth xfer)) {
 	 _InstallFromManifest(":mozilla:xpfe:components:$dir:public:MANIFEST_IDL",		"$distdirectory:idl:");
 	 }
-	 _InstallFromManifest(":mozilla:xpfe:components:timbomb:MANIFEST_IDL",		    "$distdirectory:idl:");
+	 _InstallFromManifest(":mozilla:xpfe:components:timebomb:MANIFEST_IDL",		    "$distdirectory:idl:");
 
 	 # directory
 	 _InstallFromManifest(":mozilla:xpfe:components:directory:MANIFEST_IDL",		"$distdirectory:idl:");
