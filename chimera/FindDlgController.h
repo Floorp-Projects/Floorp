@@ -39,11 +39,11 @@
 #include "nsIWebBrowserFind.h"
 
 @interface FindDlgController : NSWindowController {
-    IBOutlet id mSearchField;
-    IBOutlet id mIgnoreCaseBox;
-    IBOutlet id mWrapAroundBox;
-    IBOutlet id mSearchBackwardsBox;
-    IBOutlet id mFindButton;
+    IBOutlet NSTextField* mSearchField;
+    IBOutlet NSButton* mIgnoreCaseBox;
+    IBOutlet NSButton* mWrapAroundBox;
+    IBOutlet NSButton* mSearchBackwardsBox;
+    IBOutlet NSButton* mFindButton;
     
     NSString* mSearchText;
 }
