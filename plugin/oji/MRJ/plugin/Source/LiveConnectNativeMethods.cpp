@@ -608,8 +608,8 @@ Java_netscape_javascript_JSObject_getWindow(JNIEnv* env,
 	MRJPluginInstance* pluginInstance = theJVMPlugin->getPluginInstance(java_applet_obj);
 	if (pluginInstance != NULL) {
 #ifdef MRJPLUGIN_4X
+		// keep an extra reference to the plugin instance, until it is finalized.
 		jobject jwindow = Wrap_JSObject(env, jsobject(pluginInstance));
-		pluginInstance->Release();
 		return jwindow;
 #else
 		jsobject jswindow = NULL;
@@ -634,6 +634,10 @@ Java_netscape_javascript_JSObject_finalize(JNIEnv* env, jobject java_wrapper_obj
 {
 	jsobject jsobj = Unwrap_JSObject(env, java_wrapper_obj);
 
+#ifdef MRJPLUGIN_4X
+	MRJPluginInstance* pluginInstance = (MRJPluginInstance*)jsobj;
+	NS_IF_RELEASE(pluginInstance);
+#else
 	class FinalizeMessage : public JavaMessage {
 		jsobject m_jsobj;
 	public:
@@ -649,4 +653,5 @@ Java_netscape_javascript_JSObject_finalize(JNIEnv* env, jobject java_wrapper_obj
 	};
 	FinalizeMessage msg(jsobj);
 	sendMessage(env, &msg);
+#endif
 }
