@@ -114,3 +114,15 @@ NS_METHOD nsDataFlavor::Equals(const nsIDataFlavor * aDataFlavor)
   return (mMimeType.Equals(mimeInQues)?NS_OK:NS_ERROR_FAILURE);
 }
 
+
+/**
+  *  Cache of nsDataFlavor instances.
+  *
+  *  Does this addRef, and do I have to release the last flavor 
+  *  before I call GetPredefined again?
+  */
+NS_METHOD nsDataFlavor::GetPredefinedDataFlavor(nsString & aStr, 
+                                                nsIDataFlavor ** aDataFlavor)
+{
+  return NS_OK;
+}

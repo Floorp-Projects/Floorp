@@ -44,6 +44,8 @@ public:
   NS_IMETHOD GetMimeType(nsString & aMimeStr) const;
   NS_IMETHOD GetHumanPresentableName(nsString & aReadableStr) const;
   NS_IMETHOD Equals(const nsIDataFlavor * aDataFlavor);
+  NS_IMETHOD GetPredefinedDataFlavor(nsString & aStr, 
+                        nsIDataFlavor ** aDataFlavor);
 
 protected:
   nsString mMimeType;
