@@ -40,5 +40,6 @@
 #define KEY_RENAME_DIR                  "rename dir: "
 #define KEY_WINDOWS_SHORTCUT            "windows shortcut: "
 #define KEY_WINDOWS_REGISTER_SERVER     "windows register server: "
+#define KEY_UNINSTALL_COMMAND           "uninstall command: "
 
 #endif

@@ -66,6 +66,9 @@ typedef int PRInt32;
 #define FILE_ALL_JS                     "all-proxy.js"
 #define VR_DEFAULT_PRODUCT_NAME         "Mozilla"
 
+#define LOG_IT                          TRUE
+#define DO_NOT_LOG_IT                   FALSE
+
 #define NEXT_DLG                        1
 #define PREV_DLG                        2
 #define OTHER_DLG_1                     3

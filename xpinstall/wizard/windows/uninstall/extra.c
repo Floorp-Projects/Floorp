@@ -285,22 +285,62 @@ void RemoveQuotes(LPSTR lpszSrc, LPSTR lpszDest, int iDestSize)
     lpszDest[lstrlen(lpszDest) - 1] = '\0';
 }
 
+/* Function to copy strings safely.
+ *   returns the amount of memory required (including NULL byte) if there's not enough
+ *   else, it returns 0 for success.
+ */
+int MozCopyStr(LPSTR szSrc, LPSTR szDest, DWORD dwDestBufSize)
+{
+  DWORD length = lstrlen(szSrc) + 1;
+  strncpy(szDest, szSrc, dwDestBufSize);
+  if(length > dwDestBufSize)
+  {
+    szDest[dwDestBufSize - 1] = '\0';
+    return(length);
+  }
+  return(0);
+}
+
 /* Function to locate the first non space character in a string,
  * and return a pointer to it. */
 LPSTR GetFirstNonSpace(LPSTR lpszString)
 {
-  int   i;
-  int   iStrLength;
+  char* p = lpszString;
+  while (*p && isspace(*p))
+    p = CharNext(p);
 
-  iStrLength = lstrlen(lpszString);
+  if(*p == '\0')  // null means end of string
+    return NULL;
 
-  for(i = 0; i < iStrLength; i++)
-  {
-    if(!isspace(lpszString[i]))
-      return(&lpszString[i]);
-  }
+  return p;
+}
 
-  return(NULL);
+/* Function to locate the first space character in a string,
+ * and return a pointer to it. */
+LPSTR GetFirstSpace(LPSTR lpszString)
+{
+  char* p = lpszString;
+  while (*p && !isspace(*p))
+    p = CharNext(p);
+
+  if (*p == '\0')  // null means end of string
+    return NULL;
+
+  return p;
+}
+
+/* Function to locate the first character c in lpszString,
+ * and return a pointer to it. */
+LPSTR MozStrChar(LPSTR lpszString, char c)
+{
+  char* p = lpszString;
+  while (*p && (*p != c))
+    p = CharNext(p);
+
+  if (*p == '\0')  // null means end of string
+    return NULL;
+
+  return p;
 }
 
 /* Function to return the argument count given a command line input

@@ -227,6 +227,76 @@ void DeleteWinRegValue(HKEY hkRootKey, LPSTR szKey, LPSTR szName)
   }
 }
 
+void ParseForUninstallCommand(LPSTR szString, LPSTR szKeyStr, LPSTR szFile, DWORD dwFileBufSize, LPSTR szParam, DWORD dwParamBufSize)
+{
+  LPSTR   szFirstNonSpace;
+  LPSTR   szBeginParamStr;
+  LPSTR   szEndOfFilePath;
+  LPSTR   szEndQuote;
+  char    *cmdStart;
+  int     length;
+
+  ZeroMemory(szFile, dwFileBufSize);
+  ZeroMemory(szParam, dwParamBufSize);
+
+  length = lstrlen(szString);
+  if(szString[length - 1] == '\n')
+    szString[length - 1] = '\0';
+
+  // get to the beginning of the command given an install log string
+  cmdStart = szString + lstrlen(szKeyStr);
+  if((szFirstNonSpace = GetFirstNonSpace(cmdStart)) != NULL)
+  {
+    if(*szFirstNonSpace == '\"')
+    {
+      ++szFirstNonSpace;
+      // found a beginning quote, look for the ending quote now
+      if((szEndQuote = MozStrChar(szFirstNonSpace, '\"')) != NULL)
+      {
+        // found ending quote. copy file path string *not* including the quotes
+        *szEndQuote = '\0';
+        MozCopyStr(szFirstNonSpace, szFile, dwFileBufSize);
+
+        // get the params substring now
+        if((szBeginParamStr = GetFirstNonSpace(++szEndQuote)) != NULL)
+        {
+          // the params string should be the first non space char after the
+          // quoted file path string to the end of the string.
+          MozCopyStr(szBeginParamStr, szParam, dwParamBufSize);
+        }
+      }
+      else
+      {
+        // could not find the ending quote.  assume the _entire_ string is the file path
+        MozCopyStr(szFirstNonSpace, szFile, dwFileBufSize);
+      }
+    }
+    else
+    {
+      // no beginning quote found.  file path is up to the first space character found
+      if((szEndOfFilePath = GetFirstSpace(szFirstNonSpace)) != NULL)
+      {
+        // found the first space char
+        *szEndOfFilePath = '\0';
+        MozCopyStr(szFirstNonSpace, szFile, dwFileBufSize);
+
+        // get the params substring now
+        if((szBeginParamStr = GetFirstNonSpace(++szEndOfFilePath)) != NULL)
+        {
+          // the params string should be the first non space char after the
+          // quoted file path string to the end of the string.
+          MozCopyStr(szBeginParamStr, szParam, dwParamBufSize);
+        }
+      }
+      else
+      {
+        // no space char found. assume the _entire_ string is the file path
+        MozCopyStr(szFirstNonSpace, szFile, dwFileBufSize);
+      }
+    }
+  }
+}
+
 void ParseForFile(LPSTR szString, LPSTR szKeyStr, LPSTR szFile, DWORD dwShortFilenameBufSize)
 {
   int     iLen;
@@ -498,6 +568,7 @@ DWORD Uninstall(sil* silInstallLogHead)
   char  szRootKey[MAX_BUF];
   char  szName[MAX_BUF];
   char  szFile[MAX_BUF];
+  char  szParams[MAX_BUF];
   HKEY  hkRootKey;
 
   if(silInstallLogHead != NULL)
@@ -612,6 +683,14 @@ DWORD Uninstall(sil* silInstallLogHead)
         /* check for "copy file: " string and delete the file */
         ParseForCopyFile(szSubStr, KEY_COPY_FILE, szFile, sizeof(szFile));
         DeleteOrDelayUntilReboot(szFile);
+      }
+      else if(((szSubStr = strstr(szLCLine, KEY_UNINSTALL_COMMAND)) != NULL) &&
+               (strstr(szLCLine, KEY_DO_NOT_UNINSTALL) == NULL))
+      {
+        ParseForUninstallCommand(szSubStr, KEY_UNINSTALL_COMMAND, szFile, sizeof(szFile), szParams, sizeof(szParams));
+        //execute szFile with szParams here!
+        if(FileExists(szFile))
+            WinSpawn(szFile, szParams, NULL, SW_HIDE, TRUE);
       }
 
       ProcessWindowsMessages();
