@@ -3924,9 +3924,6 @@ nsCSSBlockFrame::Paint(nsIPresContext&      aPresContext,
 
 // aDirtyRect is in our coordinate system
 // child rect's are also in our coordinate system
-
-// XXX take advantage of line information to skip entire lines
-
 void
 nsCSSBlockFrame::PaintChildren(nsIPresContext&      aPresContext,
                                nsIRenderingContext& aRenderingContext,
@@ -3943,47 +3940,58 @@ nsCSSBlockFrame::PaintChildren(nsIPresContext&      aPresContext,
     hidden = PR_TRUE;
   }
 
-  // XXX reminder: use the coordinates in the dirty rect to figure out
-  // which set of children are impacted and only do the intersection
-  // work for them. In addition, stop when we no longer overlap.
+  // Iterate the lines looking for lines that intersect the dirty rect
+  for (LineData* line = mLines; nsnull != line; line = line->mNext) {
+    // Stop when we get to a line that's below the dirty rect
+    if (line->mBounds.y >= aDirtyRect.YMost()) {
+      break;
+    }
 
-  nsIFrame* kid = (nsnull == mLines) ? nsnull : mLines->mFirstChild;
-  while (nsnull != kid) {
-    nsIView *pView;
-     
-    kid->GetView(pView);
-    if (nsnull == pView) {
-      nsRect kidRect;
-      kid->GetRect(kidRect);
-      nsRect damageArea;
-      PRBool overlap = damageArea.IntersectRect(aDirtyRect, kidRect);
-      if (overlap) {
-        // Translate damage area into kid's coordinate system
-        nsRect kidDamageArea(damageArea.x - kidRect.x,
-                             damageArea.y - kidRect.y,
-                             damageArea.width, damageArea.height);
-        aRenderingContext.PushState();
-        aRenderingContext.Translate(kidRect.x, kidRect.y);
-        kid->Paint(aPresContext, aRenderingContext, kidDamageArea);
-        if (nsIFrame::GetShowFrameBorders()) {
-          nsIView* view;
-          GetView(view);
-          if (nsnull != view) {
-            aRenderingContext.SetColor(NS_RGB(0,0,255));
-            NS_RELEASE(view);
+    // If the line overlaps the dirty rect then iterate the child frames
+    // and paint those frames that intersect the dirty rect
+    if (line->mBounds.YMost() > aDirtyRect.y) {
+      nsIFrame* kid = line->mFirstChild;
+      for (PRUint16 i = 0; i < line->mChildCount; i++) {
+  
+        nsIView *pView;
+         
+        kid->GetView(pView);
+        if (nsnull == pView) {
+          nsRect kidRect;
+          kid->GetRect(kidRect);
+          nsRect damageArea;
+          PRBool overlap = damageArea.IntersectRect(aDirtyRect, kidRect);
+          if (overlap) {
+            // Translate damage area into kid's coordinate system
+            nsRect kidDamageArea(damageArea.x - kidRect.x,
+                                 damageArea.y - kidRect.y,
+                                 damageArea.width, damageArea.height);
+            aRenderingContext.PushState();
+            aRenderingContext.Translate(kidRect.x, kidRect.y);
+            kid->Paint(aPresContext, aRenderingContext, kidDamageArea);
+            if (nsIFrame::GetShowFrameBorders()) {
+              nsIView* view;
+              GetView(view);
+              if (nsnull != view) {
+                aRenderingContext.SetColor(NS_RGB(0,0,255));
+                NS_RELEASE(view);
+              }
+              else {
+                aRenderingContext.SetColor(NS_RGB(255,0,0));
+              }
+              aRenderingContext.DrawRect(0, 0, kidRect.width, kidRect.height);
+            }
+            aRenderingContext.PopState();
           }
-          else {
-            aRenderingContext.SetColor(NS_RGB(255,0,0));
-          }
-          aRenderingContext.DrawRect(0, 0, kidRect.width, kidRect.height);
         }
-        aRenderingContext.PopState();
+        else {
+          NS_RELEASE(pView);
+        }
+  
+        // Get the next frame on this line
+        kid->GetNextSibling(kid);
       }
     }
-    else {
-      NS_RELEASE(pView);
-    }
-    kid->GetNextSibling(kid);
   }
 
   if (hidden) {
