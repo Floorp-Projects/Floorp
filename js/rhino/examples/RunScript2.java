@@ -30,10 +30,10 @@ public class RunScript2 {
         Context cx = Context.enter();
         Scriptable scope = cx.initStandardObjects(null);
 
-        // Add a global variable "args" that is a JavaScript reflection
-        // of the Java arguments
-        Scriptable jsArgs = Context.toObject(args, scope);
-        scope.put("args", scope, jsArgs);
+        // Add a global variable "out" that is a JavaScript reflection
+        // of System.out
+        Scriptable jsArgs = Context.toObject(System.out, scope);
+        scope.put("out", scope, jsArgs);
         
         String s = "";
         for (int i=0; i < args.length; i++)
