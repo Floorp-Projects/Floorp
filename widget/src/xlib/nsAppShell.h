@@ -50,6 +50,7 @@ class nsAppShell : public nsIAppShell
   NS_IMETHOD            Exit();
   virtual void *        GetNativeData(PRUint32 aDataType);
   static void           DispatchXEvent(XEvent *event);
+  static Display * mDisplay;
  private:
   int                   xlib_fd;
   nsDispatchListener*     mDispatchListener;
@@ -78,19 +79,17 @@ class nsAppShell : public nsIAppShell
   static PRTime mClickTime;
   static PRInt16 mClicks;
   static PRUint16 mClickedButton;
-  static Display * mDisplay;
   static PRBool mDragging;
   static PRBool mAltDown;
   static PRBool mShiftDown;
   static PRBool mCtrlDown;
   static PRBool mMetaDown;
 
+
 protected:
   nsIEventQueueService * mEventQueueService;
   nsIEventQueue *mEventQueue;
-
-
-  Screen *  mScreen;
+  Screen *mScreen;
 };
 
 #endif // nsAppShell_h__

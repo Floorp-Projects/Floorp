@@ -23,6 +23,7 @@
  *   Ken Faulkner <faulkner@igelaus.com.au>
  *   Tony Tsui <tony@igelaus.com.au>
  *   Caspian Maclean <caspian@igelaus.com.au>
+ *   Roland.Mainz <roland.mainz@informatik.med.uni-giessen.de>
  */
 
 #include <stdlib.h>
@@ -322,18 +323,18 @@ NS_METHOD nsAppShell::Create(int* bac, char ** bav)
       fprintf(stderr, "%s: Cannot connect to X server %s\n",
               argv[0], 
               XDisplayName(displayName));
-      exit(1);
+      exit(EXIT_FAILURE);
     }
 
     XtToolkitInitialize();
     app_context = XtCreateApplicationContext();
-    XtDisplayInitialize(app_context, mDisplay, NULL, "Wrapper", 
+    XtDisplayInitialize(app_context, mDisplay, NULL, "Mozilla", 
                         NULL, 0, &mArgc, mArgv);
 
   }
   //  _Xdebug = 1;
 
-  mScreen = DefaultScreenOfDisplay(mDisplay);
+  mScreen = XDefaultScreenOfDisplay(mDisplay);
 
   xlib_rgb_init(mDisplay, mScreen);
 
@@ -361,7 +362,7 @@ NS_METHOD nsAppShell::Spinup()
                                     kIEventQueueServiceIID,
                                     (nsISupports **) &mEventQueueService);
   if (NS_OK != rv) {
-    NS_ASSERTION("Could not obtain event queue service", PR_FALSE);
+    NS_WARNING("Could not obtain event queue service");
     return rv;
   }
   rv = mEventQueueService->GetThreadEventQueue(NS_CURRENT_THREAD, &mEventQueue);  // If a queue already present use it.
@@ -371,124 +372,79 @@ NS_METHOD nsAppShell::Spinup()
   // Create the event queue for the thread
   rv = mEventQueueService->CreateThreadEventQueue();
   if (NS_OK != rv) {
-    NS_ASSERTION("Could not create the thread event queue", PR_FALSE);
+    NS_WARNING("Could not create the thread event queue");
     return rv;
   }
   //Get the event queue for the thread
   rv = mEventQueueService->GetThreadEventQueue(NS_CURRENT_THREAD, &mEventQueue);  if (NS_OK != rv) {
-      NS_ASSERTION("Could not obtain the thread event queue", PR_FALSE);
+      NS_WARNING("Could not obtain the thread event queue");
       return rv;
   }   
   return NS_OK;
 }
 
+/* XtTimerCallbackProc!! */
+static
+void CallProcessTimeoutsXtProc( XtPointer dummy1, XtIntervalId *dummy2 )
+{
+  CallProcessTimeoutsProc(nsAppShell::mDisplay);
+
+  // Flush the nsWindow's drawing queue
+  nsWindow::UpdateIdle(nsnull); 
+
+  // reset timer
+  XtAppContext *app_context = (XtAppContext *) dummy1;
+  XtAppAddTimeOut(*app_context, 
+                  100,
+                  CallProcessTimeoutsXtProc, 
+                  app_context);
+}
+
+/* XtInputCallbackProc */
+static
+void HandleQueueXtProc(XtPointer ptr, int *source_fd, XtInputId* id)
+{
+  nsIEventQueue *queue = (nsIEventQueue *)ptr;
+  queue->ProcessPendingEvents();
+}
+
 nsresult nsAppShell::Run()
 {
   nsresult rv = NS_OK;
-  int queue_fd = -1;
-  fd_set select_set;
-  int select_retval;
-  int max_fd;
   XtInputMask mask;
   XtAppContext app_context = XtDisplayToApplicationContext(mDisplay);
+  
+  NS_ASSERTION(app_context!=nsnull, "XtDisplayToApplicationContext returned nsnull. BAD.");
 
   if (mEventQueue == nsnull)
     Spinup();
 
   if (mEventQueue == nsnull) {
-    NS_ASSERTION("Cannot initialize the Event Queue", PR_FALSE);
+    NS_WARNING("Cannot initialize the Event Queue");
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  printf("Getting the xlib connection number.\n");
-  xlib_fd = ConnectionNumber(mDisplay);
+  // set up our fds callbacks
+  XtAppAddInput(app_context,
+                mEventQueue->GetEventQueueSelectFD(),
+                (XtPointer)(long)(XtInputReadMask),
+                HandleQueueXtProc,
+                (XtPointer)mEventQueue);
+
+  // set initial timer
+  XtAppAddTimeOut(app_context, 
+                  100,
+                  CallProcessTimeoutsXtProc, 
+                  &app_context);
+                
   // process events.
-  while (DieAppShellDie == PR_FALSE) {
-
-    // Dont think these should be here, but go with the flow. (KenF)
-    XEvent          event;
-    struct timeval  cur_time;
-    struct timeval *cur_time_ptr;
-    int             please_run_timer_queue = 0;
-    struct timeval DelayTime ;
-
-    gettimeofday(&cur_time, NULL);
-    // set up our fds
-    queue_fd = mEventQueue->GetEventQueueSelectFD();
-    
-    // Get max of fd's
-    if (xlib_fd >= queue_fd) {
-      max_fd = xlib_fd + 1;
-    } else {
-      max_fd = queue_fd + 1;
-    }
-
-    FD_ZERO(&select_set);
-    // add the queue and the xlib connection to the select set
-    FD_SET(queue_fd, &select_set);
-    FD_SET(xlib_fd, &select_set);
-
-    //printf("cur time: %ld %ld\n", cur_time.tv_sec, cur_time.tv_usec);
-    if (CallTimeToNextTimeoutFunc(&cur_time) == 0) {
-      cur_time_ptr = NULL;
-    }
-    else {
-      cur_time_ptr = &cur_time;
-      // check to see if something is waiting right now
-      if ((cur_time.tv_sec == 0) && (cur_time.tv_usec == 0)) {
-        please_run_timer_queue = 1;
-      }
-    }
-
-    // FIXME!!! 
-    // Block for events. For moment, use a artificial timer to 
-    // only block for a certain amount of time.
-    // When properly fixed, this delay should be cur_time_ptr
-    // and  we need a way to detect an Xt event.
-    DelayTime.tv_sec = 0;
-    DelayTime.tv_usec = 100;
-    select_retval = select(max_fd, &select_set, NULL, NULL, &DelayTime);
-    if (select_retval == -1) {
-      fprintf(stderr, "Select returned error: %s.\n", strerror(errno));
-      return NS_ERROR_FAILURE;
-    }
-
-    if (select_retval == 0) {
-      // the select timed out, process the timeout queue.
-      please_run_timer_queue = 1;
-    }
-
-    // Xt event handler. (used for legacy plugins)
-    while ((mask = XtAppPending(app_context)) > 0) {
-      if (mask & XtIMXEvent) {
-        XtAppNextEvent(app_context, &event);
-        XtDispatchEvent(&event);
-        DispatchXEvent(&event);
-      } else {
-        XtAppProcessEvent(app_context, mask);
-      }
-    }
-    
-    // check to see if there's data avilable for the queue
-    if (FD_ISSET(queue_fd, &select_set)) {
-      mEventQueue->ProcessPendingEvents();
-    }
-
-    // Xlib event dispatcher.
-    if (FD_ISSET(xlib_fd, &select_set)) {
-      while (XPending(mDisplay)) {
-        XNextEvent(mDisplay, &event);
-        DispatchXEvent(&event);
-      }
-    }
-
-    if (please_run_timer_queue) {
-      CallProcessTimeoutsProc(mDisplay);
-    }
-
-    // Flush the nsWindow's drawing queue
-    nsWindow::UpdateIdle(nsnull);
-    XFlush(mDisplay);
+  while (DieAppShellDie == PR_FALSE) 
+  {   
+    XEvent event;
+    XtAppNextEvent(app_context, &event);
+   
+    if (XtDispatchEvent(&event) == False)
+      DispatchXEvent(&event);  
   }
   DieAppShellDie = PR_FALSE;
 
@@ -521,7 +477,7 @@ nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *&aEvent)
   int queue_fd = mEventQueue->GetEventQueueSelectFD();
 
   if (xlib_fd == -1)
-    xlib_fd = ConnectionNumber(mDisplay);
+    xlib_fd = XConnectionNumber(mDisplay);
 
   if (xlib_fd >= queue_fd) {
     max_fd = xlib_fd + 1;
@@ -605,8 +561,8 @@ nsAppShell::DispatchXEvent(XEvent *event)
   // switch on the type of event
   switch (event->type) 
   {
-  	case Expose:
-		HandleExposeEvent(event, widget);
+  case Expose:
+    HandleExposeEvent(event, widget);
     break;
 
   	case ConfigureNotify:
