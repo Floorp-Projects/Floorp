@@ -67,12 +67,41 @@ public:
 
 protected:
   void** mArray;
-  PRInt32 mArraySize;
+
+  // Packed bits. The highest 31 bits are the array's size, which must
+  // always be 0 mod 2. The lowest bit is a flag that indicates
+  // whether or not we "own" mArray, and must free() it when
+  // destroyed.
+  PRInt32 mInfo;
+
+  static const PRInt32 kArrayOwnerMask; // 1 << 31
+  static const PRInt32 kArraySizeMask;  // ~kArrayOwnerMask
+
+
+  // bit twiddlers
+  PRInt32 GetArraySize() const;
+  void SetArraySize(PRInt32 aSize);
+  PRBool IsArrayOwner() const;
+  void SetArrayOwner(PRBool aOwner);
+
+  // the number of elements currently in the array.
   PRInt32 mCount;
 
 private:
   /// Copy constructors are not allowed
   nsVoidArray(const nsVoidArray& other);
+};
+
+
+// A zero-based array with a bit of automatic internal storage
+class NS_COM nsAutoVoidArray : public nsVoidArray {
+public:
+  nsAutoVoidArray();
+
+protected:
+  // The internal storage. Note that this value must be divisible by
+  // two because we use the LSB of mInfo to indicate array ownership.
+  void* mElements[8];
 };
 
 
@@ -176,5 +205,6 @@ private:
   /// Copy constructors are not allowed
   nsCStringArray(const nsCStringArray& other);
 };
+
 
 #endif /* nsVoidArray_h___ */

@@ -26,32 +26,68 @@
 
 static PRInt32 kGrowArrayBy = 8;
 
-nsVoidArray::nsVoidArray()
+const PRInt32 nsVoidArray::kArrayOwnerMask = 1 << 31;
+const PRInt32 nsVoidArray::kArraySizeMask = ~nsVoidArray::kArrayOwnerMask;
+
+inline PRInt32
+nsVoidArray::GetArraySize() const
 {
-  mArray = nsnull;
-  mArraySize = 0;
-  mCount = 0;
+  return mInfo & kArraySizeMask;
+}
+
+inline void
+nsVoidArray::SetArraySize(PRInt32 aSize)
+{
+  mInfo &= kArrayOwnerMask; // preserve ownership bit
+  mInfo |= (aSize & kArraySizeMask);
+}
+
+inline PRBool
+nsVoidArray::IsArrayOwner() const
+{
+  return (mInfo & kArrayOwnerMask) != 0;
+}
+
+
+inline void
+nsVoidArray::SetArrayOwner(PRBool aOwner)
+{
+  mInfo &= kArraySizeMask; // preserve array size
+  mInfo |= (aOwner ? kArrayOwnerMask : 0);
+}
+
+nsVoidArray::nsVoidArray()
+  : mArray(nsnull),
+    mInfo(0),
+    mCount(0)
+{
+  MOZ_COUNT_CTOR(nsVoidArray);
+  SetArrayOwner(PR_TRUE);
 }
 
 nsVoidArray::nsVoidArray(PRInt32 aCount)
 {
+  MOZ_COUNT_CTOR(nsVoidArray);
   NS_PRECONDITION(aCount > 0, "bad count");
-  mCount = mArraySize = aCount;
-  mArray = new void*[mCount];
+  SetArraySize(aCount);
+  mCount = aCount;
+  mArray = new void*[GetArraySize()];
   nsCRT::memset(mArray, 0, mCount * sizeof(void*));
+  SetArrayOwner(PR_TRUE);
 }
 
 nsVoidArray& nsVoidArray::operator=(const nsVoidArray& other)
 {
-  if (nsnull != mArray) {
+  if (IsArrayOwner()) {
     delete [] mArray;
   }
   PRInt32 otherCount = other.mCount;
-  mArraySize = otherCount;
+  SetArraySize(otherCount);
   mCount = otherCount;
   if (otherCount != 0) {
-    mArray = new void*[otherCount];
+    mArray = new void*[GetArraySize()];
     nsCRT::memcpy(mArray, other.mArray, otherCount * sizeof(void*));
+    SetArrayOwner(PR_TRUE);
   } else {
     mArray = nsnull;
   }
@@ -60,7 +96,8 @@ nsVoidArray& nsVoidArray::operator=(const nsVoidArray& other)
 
 nsVoidArray::~nsVoidArray()
 {
-  if (nsnull != mArray) {
+  MOZ_COUNT_DTOR(nsVoidArray);
+  if (IsArrayOwner()) {
     delete [] mArray;
   }
 }
@@ -69,7 +106,7 @@ void
 nsVoidArray::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
 {
   if (aResult) {
-    *aResult = sizeof(*this) + sizeof(void*) * mArraySize;
+    *aResult = sizeof(*this) + sizeof(void*) * GetArraySize();
   }
 }
 
@@ -102,10 +139,11 @@ PRBool nsVoidArray::InsertElementAt(void* aElement, PRInt32 aIndex)
     return PR_FALSE;
   }
 
-  if (oldCount + 1 > mArraySize) {
+  if (oldCount >= GetArraySize()) {
     // We have to grow the array
     PRInt32 newCount = oldCount + kGrowArrayBy;
-    void** newArray = new void*[newCount];
+    SetArraySize(newCount);
+    void** newArray = new void*[GetArraySize()];
     if (mArray != nsnull && aIndex != 0)
       nsCRT::memcpy(newArray, mArray, aIndex * sizeof(void*));
     PRInt32 slide = oldCount - aIndex;
@@ -114,10 +152,10 @@ PRBool nsVoidArray::InsertElementAt(void* aElement, PRInt32 aIndex)
       nsCRT::memcpy(newArray + aIndex + 1, mArray + aIndex,
                     slide * sizeof(void*));
     }
-    if (mArray != nsnull)
+    if (IsArrayOwner())
       delete [] mArray;
     mArray = newArray;
-    mArraySize = newCount;
+    SetArrayOwner(PR_TRUE);
   } else {
     // The array is already large enough
     PRInt32 slide = oldCount - aIndex;
@@ -135,22 +173,23 @@ PRBool nsVoidArray::InsertElementAt(void* aElement, PRInt32 aIndex)
 
 PRBool nsVoidArray::ReplaceElementAt(void* aElement, PRInt32 aIndex)
 {
-  if (PRUint32(aIndex) >= PRUint32(mArraySize)) {
+  if (PRUint32(aIndex) >= PRUint32(GetArraySize())) {
 
     PRInt32 requestedCount = aIndex + 1;
     PRInt32 growDelta = requestedCount - mCount;
     PRInt32 newCount = mCount + (growDelta > kGrowArrayBy ? growDelta : kGrowArrayBy);
-    void** newArray = new void*[newCount];
-    nsCRT::memset(newArray, 0, newCount * sizeof(void*));
+    SetArraySize(newCount);
+    void** newArray = new void*[GetArraySize()];
     if (newArray==nsnull)
        return PR_FALSE;
+    nsCRT::memset(newArray, 0, newCount * sizeof(void*));
     if (mArray != nsnull && aIndex != 0) {
       nsCRT::memcpy(newArray, mArray, mCount * sizeof(void*));
-      if (mArray != nsnull)
+      if (IsArrayOwner())
          delete [] mArray;
     }
     mArray = newArray;
-    mArraySize = newCount;
+    SetArrayOwner(PR_TRUE);
   }
   mArray[aIndex] = aElement;
   if (aIndex >= mCount)
@@ -199,13 +238,13 @@ void nsVoidArray::Clear()
 void nsVoidArray::Compact()
 {
   PRInt32 count = mCount;
-  if (mArraySize != count) {
-    void** newArray = new void*[count];
+  if (IsArrayOwner() && (GetArraySize() > count)) {
+    SetArraySize(count);
+    void** newArray = new void*[GetArraySize()];
     if (nsnull != newArray) {
       nsCRT::memcpy(newArray, mArray, count * sizeof(void*));
       delete [] mArray;
       mArray = newArray;
-      mArraySize = count;
     }
   }
 }
@@ -233,6 +272,17 @@ PRBool nsVoidArray::EnumerateBackwards(nsVoidArrayEnumFunc aFunc, void* aData)
 }
 
 //----------------------------------------------------------------
+// nsAutoVoidArray
+
+nsAutoVoidArray::nsAutoVoidArray()
+  : nsVoidArray()
+{
+  mArray = mElements;
+  SetArraySize(sizeof(mElements) / sizeof(*mElements));
+  SetArrayOwner(PR_FALSE);
+}
+
+//----------------------------------------------------------------
 // nsStringArray
 
 nsStringArray::nsStringArray(void)
@@ -248,18 +298,19 @@ nsStringArray::~nsStringArray(void)
 nsStringArray& 
 nsStringArray::operator=(const nsStringArray& other)
 {
-  if (nsnull != mArray) {
+  if (IsArrayOwner()) {
     delete mArray;
   }
   PRInt32 otherCount = other.mCount;
-  mArraySize = otherCount;
+  SetArraySize(otherCount);
   mCount = otherCount;
   if (0 < otherCount) {
-    mArray = new void*[otherCount];
+    mArray = new void*[GetArraySize()];
     while (0 <= --otherCount) {
       nsString* otherString = (nsString*)(other.mArray[otherCount]);
       mArray[otherCount] = new nsString(*otherString);
     }
+    SetArrayOwner(PR_TRUE);
   } else {
     mArray = nsnull;
   }
@@ -436,18 +487,19 @@ nsCStringArray::~nsCStringArray(void)
 nsCStringArray& 
 nsCStringArray::operator=(const nsCStringArray& other)
 {
-  if (nsnull != mArray) {
+  if (IsArrayOwner()) {
     delete mArray;
   }
   PRInt32 otherCount = other.mCount;
-  mArraySize = otherCount;
+  SetArraySize(otherCount);
   mCount = otherCount;
   if (0 < otherCount) {
-    mArray = new void*[otherCount];
+    mArray = new void*[GetArraySize()];
     while (0 <= --otherCount) {
       nsCString* otherString = (nsCString*)(other.mArray[otherCount]);
       mArray[otherCount] = new nsCString(*otherString);
     }
+    SetArrayOwner(PR_TRUE);
   } else {
     mArray = nsnull;
   }
