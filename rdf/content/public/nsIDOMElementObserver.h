@@ -54,10 +54,10 @@ public:
 
 
 #define NS_FORWARD_IDOMELEMENTOBSERVER(_to)  \
-  NS_IMETHOD    OnSetAttribute(nsIDOMElement* aElement, const nsString& aName, const nsString& aValue) { return _to##OnSetAttribute(aElement, aName, aValue); }  \
-  NS_IMETHOD    OnRemoveAttribute(nsIDOMElement* aElement, const nsString& aName) { return _to##OnRemoveAttribute(aElement, aName); }  \
-  NS_IMETHOD    OnSetAttributeNode(nsIDOMElement* aElement, nsIDOMAttr* aNewAttr) { return _to##OnSetAttributeNode(aElement, aNewAttr); }  \
-  NS_IMETHOD    OnRemoveAttributeNode(nsIDOMElement* aElement, nsIDOMAttr* aOldAttr) { return _to##OnRemoveAttributeNode(aElement, aOldAttr); }  \
+  NS_IMETHOD    OnSetAttribute(nsIDOMElement* aElement, const nsString& aName, const nsString& aValue) { return _to OnSetAttribute(aElement, aName, aValue); }  \
+  NS_IMETHOD    OnRemoveAttribute(nsIDOMElement* aElement, const nsString& aName) { return _to OnRemoveAttribute(aElement, aName); }  \
+  NS_IMETHOD    OnSetAttributeNode(nsIDOMElement* aElement, nsIDOMAttr* aNewAttr) { return _to OnSetAttributeNode(aElement, aNewAttr); }  \
+  NS_IMETHOD    OnRemoveAttributeNode(nsIDOMElement* aElement, nsIDOMAttr* aOldAttr) { return _to OnRemoveAttributeNode(aElement, aOldAttr); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitElementObserverClass(nsIScriptContext *aContext, void **aPrototype);

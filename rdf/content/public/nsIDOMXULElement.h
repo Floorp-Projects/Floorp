@@ -59,11 +59,11 @@ public:
 
 
 #define NS_FORWARD_IDOMXULELEMENT(_to)  \
-  NS_IMETHOD    GetResource(nsIRDFResource** aResource) { return _to##GetResource(aResource); } \
-  NS_IMETHOD    AddBroadcastListener(const nsString& aAttr, nsIDOMElement* aElement) { return _to##AddBroadcastListener(aAttr, aElement); }  \
-  NS_IMETHOD    RemoveBroadcastListener(const nsString& aAttr, nsIDOMElement* aElement) { return _to##RemoveBroadcastListener(aAttr, aElement); }  \
-  NS_IMETHOD    DoCommand() { return _to##DoCommand(); }  \
-  NS_IMETHOD    GetElementsByAttribute(const nsString& aName, const nsString& aValue, nsIDOMNodeList** aReturn) { return _to##GetElementsByAttribute(aName, aValue, aReturn); }  \
+  NS_IMETHOD    GetResource(nsIRDFResource** aResource) { return _to GetResource(aResource); } \
+  NS_IMETHOD    AddBroadcastListener(const nsString& aAttr, nsIDOMElement* aElement) { return _to AddBroadcastListener(aAttr, aElement); }  \
+  NS_IMETHOD    RemoveBroadcastListener(const nsString& aAttr, nsIDOMElement* aElement) { return _to RemoveBroadcastListener(aAttr, aElement); }  \
+  NS_IMETHOD    DoCommand() { return _to DoCommand(); }  \
+  NS_IMETHOD    GetElementsByAttribute(const nsString& aName, const nsString& aValue, nsIDOMNodeList** aReturn) { return _to GetElementsByAttribute(aName, aValue, aReturn); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitXULElementClass(nsIScriptContext *aContext, void **aPrototype);

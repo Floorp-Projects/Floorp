@@ -56,11 +56,11 @@ public:
 
 
 #define NS_FORWARD_IDOMNODEOBSERVER(_to)  \
-  NS_IMETHOD    OnSetNodeValue(nsIDOMNode* aNode, const nsString& aValue) { return _to##OnSetNodeValue(aNode, aValue); }  \
-  NS_IMETHOD    OnInsertBefore(nsIDOMNode* aParent, nsIDOMNode* aNewChild, nsIDOMNode* aRefChild) { return _to##OnInsertBefore(aParent, aNewChild, aRefChild); }  \
-  NS_IMETHOD    OnReplaceChild(nsIDOMNode* aParent, nsIDOMNode* aNewChild, nsIDOMNode* aOldChild) { return _to##OnReplaceChild(aParent, aNewChild, aOldChild); }  \
-  NS_IMETHOD    OnRemoveChild(nsIDOMNode* aParent, nsIDOMNode* aOldChild) { return _to##OnRemoveChild(aParent, aOldChild); }  \
-  NS_IMETHOD    OnAppendChild(nsIDOMNode* aParent, nsIDOMNode* aNewChild) { return _to##OnAppendChild(aParent, aNewChild); }  \
+  NS_IMETHOD    OnSetNodeValue(nsIDOMNode* aNode, const nsString& aValue) { return _to OnSetNodeValue(aNode, aValue); }  \
+  NS_IMETHOD    OnInsertBefore(nsIDOMNode* aParent, nsIDOMNode* aNewChild, nsIDOMNode* aRefChild) { return _to OnInsertBefore(aParent, aNewChild, aRefChild); }  \
+  NS_IMETHOD    OnReplaceChild(nsIDOMNode* aParent, nsIDOMNode* aNewChild, nsIDOMNode* aOldChild) { return _to OnReplaceChild(aParent, aNewChild, aOldChild); }  \
+  NS_IMETHOD    OnRemoveChild(nsIDOMNode* aParent, nsIDOMNode* aOldChild) { return _to OnRemoveChild(aParent, aOldChild); }  \
+  NS_IMETHOD    OnAppendChild(nsIDOMNode* aParent, nsIDOMNode* aNewChild) { return _to OnAppendChild(aParent, aNewChild); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitNodeObserverClass(nsIScriptContext *aContext, void **aPrototype);
