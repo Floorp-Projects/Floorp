@@ -1976,7 +1976,185 @@ NS_NewLocalFile(const char* path, PRBool followLinks, nsILocalFile* *result)
     return NS_OK;
 }
 
+static nsresult UCS2toFS(const PRUnichar *aBuffer, char **aResult)
+{
+    NS_ENSURE_ARG_POINTER(aBuffer);
 
+    // includes null termination
+    size_t chars = ::WideCharToMultiByte(CP_ACP, 0,
+                                         aBuffer, -1,
+                                         NULL, 0, NULL, NULL);
+    if (chars == 0)
+        return NS_ERROR_FAILURE;
+    
+    *aResult = (char*)nsMemory::Alloc(chars * sizeof(char));
+    if (!*aResult)
+        return NS_ERROR_OUT_OF_MEMORY;
+    
+    chars = ::WideCharToMultiByte(CP_ACP, 0,
+                                  aBuffer, -1,
+                                  *aResult, chars, NULL, NULL);
+    if (chars == 0)
+        return NS_ERROR_FAILURE;
+    
+    return NS_OK;
+}
+
+static nsresult FStoUCS2(const char* aBuffer, PRUnichar **aResult)
+{
+    NS_ENSURE_ARG_POINTER(aBuffer);
+
+    // includes null termination
+    size_t chars = ::MultiByteToWideChar(CP_ACP, 0, aBuffer, -1, NULL, 0);
+
+    if (chars == 0)
+        return NS_ERROR_FAILURE;
+    
+    *aResult = (PRUnichar*)nsMemory::Alloc(chars * sizeof(PRUnichar));
+    if (!*aResult)
+        return NS_ERROR_OUT_OF_MEMORY;
+    
+    chars = ::MultiByteToWideChar(CP_ACP, 0,
+                                  aBuffer, -1,
+                                  *aResult, chars);
+    if (chars == 0)
+        return NS_ERROR_FAILURE;
+    
+    return NS_OK;
+}
+
+// Unicode interface Wrapper
+NS_IMETHODIMP  
+nsLocalFile::InitWithUnicodePath(const PRUnichar *filePath)
+{
+    nsXPIDLCString tmp;
+    nsresult rv = UCS2toFS(filePath, getter_Copies(tmp));
+    if (NS_SUCCEEDED(rv))
+        return InitWithPath(tmp);
+    
+    return rv;
+}
+
+NS_IMETHODIMP  
+nsLocalFile::AppendUnicode(const PRUnichar *node)
+{
+    nsXPIDLCString tmp;
+    nsresult rv = UCS2toFS(node, getter_Copies(tmp));
+    if (NS_SUCCEEDED(rv))
+        return Append(tmp);
+    
+    return rv;
+}
+
+
+NS_IMETHODIMP  
+nsLocalFile::AppendRelativeUnicodePath(const PRUnichar *node)
+{
+    nsXPIDLCString tmp;
+    nsresult rv = UCS2toFS(node, getter_Copies(tmp));
+    if (NS_SUCCEEDED(rv))
+        return AppendRelativePath(tmp);
+    return rv;
+}
+
+NS_IMETHODIMP  
+nsLocalFile::GetUnicodeLeafName(PRUnichar **aLeafName)
+{
+    nsXPIDLCString tmp;
+    nsresult rv = GetLeafName(getter_Copies(tmp));
+    if (NS_SUCCEEDED(rv))
+        return FStoUCS2(tmp, aLeafName);
+    
+    return rv;
+}
+
+NS_IMETHODIMP  
+nsLocalFile::SetUnicodeLeafName(const PRUnichar * aLeafName)
+{
+    nsXPIDLCString tmp;
+    nsresult rv = UCS2toFS(aLeafName, getter_Copies(tmp));
+    if (NS_SUCCEEDED(rv))
+        return SetLeafName(tmp);
+    
+    return rv;
+}
+
+NS_IMETHODIMP  
+nsLocalFile::GetUnicodePath(PRUnichar **_retval)
+{
+    nsXPIDLCString tmp;
+    nsresult rv = GetPath(getter_Copies(tmp));
+    if (NS_SUCCEEDED(rv))
+        return FStoUCS2(tmp, _retval);
+    
+    return rv;
+}
+
+NS_IMETHODIMP  
+nsLocalFile::CopyToUnicode(nsIFile *newParentDir, const PRUnichar *newName)
+{
+    if (!newName)
+        return CopyTo(newParentDir, nsnull);
+    
+    nsXPIDLCString tmp;
+    nsresult rv = UCS2toFS(newName, getter_Copies(tmp));
+    if (NS_SUCCEEDED(rv))
+        return CopyTo(newParentDir, tmp);
+    
+    return rv;
+}
+
+NS_IMETHODIMP  
+nsLocalFile::CopyToFollowingLinksUnicode(nsIFile *newParentDir, const PRUnichar *newName)
+{
+    if (!newName) return CopyToFollowingLinks(newParentDir, nsnull);
+    
+    nsXPIDLCString tmp;
+    nsresult rv = UCS2toFS(newName, getter_Copies(tmp));
+    if (NS_SUCCEEDED(rv))
+        return CopyToFollowingLinks(newParentDir, tmp);
+    
+    return rv;
+}
+
+NS_IMETHODIMP  
+nsLocalFile::MoveToUnicode(nsIFile *newParentDir, const PRUnichar *newName)
+{
+    if (!newName)
+        return MoveTo(newParentDir, nsnull);
+    
+    nsXPIDLCString tmp;
+    nsresult rv = UCS2toFS(newName, getter_Copies(tmp));
+    if (NS_SUCCEEDED(rv))
+        return MoveTo(newParentDir, tmp);
+
+    return rv;
+}
+
+NS_IMETHODIMP
+nsLocalFile::GetUnicodeTarget(PRUnichar **_retval)
+{
+    nsXPIDLCString tmp;
+    nsresult rv = GetTarget(getter_Copies(tmp));
+    if (NS_SUCCEEDED(rv))
+        return FStoUCS2(tmp, _retval);
+    
+    return rv;
+}
+
+nsresult 
+NS_NewUnicodeLocalFile(const PRUnichar* path, PRBool followLinks, nsILocalFile* *result)
+{
+    nsXPIDLCString tmp;
+    nsresult rv = UCS2toFS(path, getter_Copies(tmp));
+    if (NS_SUCCEEDED(rv))
+        return NS_NewLocalFile(tmp, followLinks, result);
+
+    return NS_OK;
+}
+
+// stub this out - windows maintains no state here
+void NS_ShutdownLocalFileUnicode() {}
 
 
 

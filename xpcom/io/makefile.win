@@ -21,7 +21,7 @@
 
 DEPTH=..\..
 MODULE = xpcom 
-REQUIRES	= uconv \
+REQUIRES	= \
 		  string \
 		  $(NULL)
 
@@ -98,7 +98,6 @@ CPP_OBJS =                                        \
         .\$(OBJDIR)\nsInputStreamTee.obj          \
         .\$(OBJDIR)\nsLinebreakConverter.obj      \
         .\$(OBJDIR)\nsLocalFileCommon.obj         \
-        .\$(OBJDIR)\nsLocalFileUnicode.obj        \
         .\$(OBJDIR)\nsLocalFileWin.obj            \
         .\$(OBJDIR)\nsPipe2.obj                   \
         .\$(OBJDIR)\nsScriptableInputStream.obj   \
