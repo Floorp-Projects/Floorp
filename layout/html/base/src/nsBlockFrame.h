@@ -208,8 +208,8 @@ public:
                             nsPlaceholderFrame* aPlaceholder);
 
   // nsBlockFrame
-  nsresult ReflowInlineChild(nsIFrame*            aKidFrame,
-                             nsIPresContext*      aPresContext,
+  nsresult ReflowInlineChild(nsLineLayout&        aLineLayout,
+                             nsIFrame*            aKidFrame,
                              nsReflowMetrics&     aDesiredSize,
                              const nsReflowState& aReflowState,
                              nsReflowStatus&      aStatus);
