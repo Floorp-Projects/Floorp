@@ -72,13 +72,11 @@ NS_IMETHODIMP gfxImageFrame::Init(nscoord aX, nscoord aY, nscoord aWidth, nscoor
   /* check to make sure we don't overflow a 32-bit */
   nscoord tmp = aWidth * aHeight;
   if (tmp / aHeight != aWidth) {
-    fprintf(stderr, "erp\n");
     NS_ASSERTION(0, "width or height too large\n");
     return NS_ERROR_FAILURE;
   }
   tmp = tmp * 4;
   if (tmp / 4 != aWidth * aHeight) {
-    fprintf(stderr, "erp2\n");
     NS_ASSERTION(0, "width or height too large\n");
     return NS_ERROR_FAILURE;
   }
