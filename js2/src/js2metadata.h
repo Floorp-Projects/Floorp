@@ -105,6 +105,7 @@ enum ObjectKind {
     MethodClosureKind,
     AlienInstanceKind,
     ForIteratorKind,
+    WithFrameKind,
 
     EnvironmentKind,         // Not an available JS2 runtime kind
     MetaDataKind
@@ -488,6 +489,15 @@ public:
 
 };
 
+class WithFrame : public Frame {
+public:
+    WithFrame(JS2Object *b) : Frame(WithFrameKind), obj(b) { }
+    virtual ~WithFrame()    { }
+
+    virtual void markChildren()     { GCMARKOBJECT(obj); }
+
+    JS2Object *obj;
+};
 
 class JS2Class : public Frame {
 public:

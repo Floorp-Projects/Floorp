@@ -503,6 +503,8 @@ namespace MetaData {
         { eReturnVoid,  "ReturnVoid", 0 },
         { ePushFrame,  "PushFrame", FRAME_INDEX },         // <frame index:u16>
         { ePopFrame,  "PopFrame", 0 },
+        { eWithin, "With", 0 },
+        { eWithout, "EndWith", 0 },
         { eBranchFalse,  "BranchFalse", BRANCH_OFFSET },       // <branch displacement:s32> XXX save space with short and long versions instead ?
         { eBranchTrue,  "BranchTrue", BRANCH_OFFSET },        // <branch displacement:s32>
         { eBranch,  "Branch", BRANCH_OFFSET },            // <branch displacement:s32>
@@ -745,6 +747,11 @@ namespace MetaData {
         case ePushFrame:    // affect the frame stack...
         case ePopFrame:     // ...not the exec stack
             return 0;
+
+        case eWithin:
+            return -1;      // pop with'd object
+        case eWithout:       
+            return 0;       // frame stack pop only
 
         case eBranchFalse:
         case eBranchTrue:

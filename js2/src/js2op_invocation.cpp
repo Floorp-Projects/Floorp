@@ -236,7 +236,16 @@
         }
         break;
 
+    case eWithin: 
+        {
+            a = pop();
+            a = meta->toObject(a);
+            meta->env->addFrame(new WithFrame(JS2VAL_TO_OBJECT(a)));
+        }
+        break;
+
     case ePopFrame: 
+    case eWithout: 
         {
             meta->env->removeTopFrame();
         }

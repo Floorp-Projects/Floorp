@@ -105,9 +105,8 @@ namespace MetaData {
 
         JS2Object::RootIterator ri = JS2Object::addRoot(&result);
         Frame *curTopFrame = env->getTopFrame();
-
+        CompilationData *oldData = startCompilationUnit(fnDef->fWrap->bCon, bCon->mSource, bCon->mSourceLocation);
         try {
-            CompilationData *oldData = startCompilationUnit(fnDef->fWrap->bCon, bCon->mSource, bCon->mSourceLocation);
             env->addFrame(compileFrame);
             VariableBinding *pb = fnDef->parameters;
             if (pb) {
@@ -134,13 +133,14 @@ namespace MetaData {
             }
             ValidateStmt(cxt, env, Plural, fnDef->body);
             env->removeTopFrame();
-            restoreCompilationUnit(oldData);
         }
         catch (Exception x) {
+            restoreCompilationUnit(oldData);
             env->setTopFrame(curTopFrame);
             JS2Object::removeRoot(ri);
             throw x;
         }
+        restoreCompilationUnit(oldData);
         JS2Object::removeRoot(ri);
         return result;
     }
@@ -635,8 +635,17 @@ namespace MetaData {
                     c->complete = true;
                 }
                 break;
+            case StmtNode::With:
+                {
+                    UnaryStmtNode *w = checked_cast<UnaryStmtNode *>(p);
+                    ValidateExpression(cxt, env, w->expr);
+                    ValidateStmt(cxt, env, pl, w->stmt);
+                }
+                break;
             case StmtNode::empty:
                 break;
+            default:
+                NOT_REACHED("Not Yet Implemented");
             }   // switch (p->getKind())
         }
         catch (Exception x) {
@@ -1226,6 +1235,16 @@ namespace MetaData {
                     env->removeTopFrame();
                     bCon->emitOp(ePopFrame, p->pos);
                 }
+            }
+            break;
+        case StmtNode::With:
+            {
+                UnaryStmtNode *w = checked_cast<UnaryStmtNode *>(p);
+                Reference *r = SetupExprNode(env, phase, w->expr, &exprType);
+                if (r) r->emitReadBytecode(bCon, p->pos);
+                bCon->emitOp(eWithin, p->pos);
+                SetupStmt(env, phase, w->stmt);                        
+                bCon->emitOp(eWithout, p->pos);
             }
             break;
         case StmtNode::empty:

@@ -124,6 +124,8 @@ enum JS2Op {
     eReturnVoid,
     ePushFrame,         // <frame index:u16>
     ePopFrame,
+    eWithin,
+    eWithout,
     eBranchFalse,       // <branch displacement:s32> XXX save space with short and long versions instead ?
     eBranchTrue,        // <branch displacement:s32>
     eBranch,            // <branch displacement:s32>
