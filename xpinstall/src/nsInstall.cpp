@@ -1207,7 +1207,7 @@ nsInstall::LoadResources(JSContext* cx, const nsString& aBaseName, jsval* aRetur
 #if 1
     {
       nsXPIDLCString spec;
-      NS_GetURLFromFile(resFile, getter_Copies(spec));
+      resFile->GetURL(getter_Copies(spec));
       if (NS_FAILED(ret)) {
         NS_WARNING("cannot get url spec\n");
         nsServiceManager::ReleaseService(kStringBundleServiceCID, service);
