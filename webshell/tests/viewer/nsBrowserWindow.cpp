@@ -530,9 +530,14 @@ static PRBool GetFileNameFromFileSelector(nsIWidget* aParentWindow,
 					     kIFileWidgetIID,
 					     (void**)&fileWidget);
   if (NS_OK == rv) {
-    nsString titles[] = {"all files","html" };
-    nsString filters[] = {"*.*", "*.html"};
-    fileWidget->SetFilterList(2, titles, filters);
+    nsString titles[] = {"All Readable Files", "HTML Files",
+                         "XML Files", "Image Files", "All Files"};
+    nsString filters[] = {"*.htm; *.html; *.xml; *.gif; *.jpg; *.jpeg; *.png",
+                          "*.htm; *.html",
+                          "*.xml",
+                          "*.gif; *.jpg; *.jpeg; *.png",
+                          "*.*"};
+    fileWidget->SetFilterList(5, titles, filters);
     fileWidget->Create(aParentWindow,
 		       title,
 		       eMode_load,
