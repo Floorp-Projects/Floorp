@@ -153,6 +153,7 @@ NS_IMETHODIMP CBrowserImpl::GetWebBrowser(nsIWebBrowser** aWebBrowser)
    *aWebBrowser = mWebBrowser;
 
    NS_IF_ADDREF(*aWebBrowser);
+   CQaUtils::QAOutput("nsIWebBrowserChrome::GetWebBrowser().", 1);
 
    return NS_OK;
 }
@@ -165,6 +166,7 @@ NS_IMETHODIMP CBrowserImpl::SetWebBrowser(nsIWebBrowser* aWebBrowser)
    NS_ENSURE_ARG_POINTER(aWebBrowser);
 
    mWebBrowser = aWebBrowser;
+   CQaUtils::QAOutput("nsIWebBrowserChrome::SetWebBrowser().", 1);
 
    return NS_OK;
 }
@@ -186,13 +188,22 @@ NS_IMETHODIMP CBrowserImpl::SetChromeFlags(PRUint32 aChromeMask)
 NS_IMETHODIMP CBrowserImpl::CreateBrowserWindow(PRUint32 chromeMask, PRInt32 aX, PRInt32 aY, PRInt32 aCX, PRInt32 aCY, nsIWebBrowser **aWebBrowser)
 {
 	if(! m_pBrowserFrameGlue)
+	{
+		CQaUtils::QAOutput("nsIWebBrowserChrome::CreateBrowserWindow(). Browser Window not created.", 1);
 		return NS_ERROR_FAILURE;
+	}
 
 	if(m_pBrowserFrameGlue->CreateNewBrowserFrame(chromeMask, 
 								aX, aY, aCX, aCY, aWebBrowser))
+	{
+		CQaUtils::QAOutput("nsIWebBrowserChrome::CreateBrowserWindow(): Browser Window created.", 1);
 		return NS_OK;
+	}
 	else
+	{
+		CQaUtils::QAOutput("nsIWebBrowserChrome::CreateBrowserWindow(): Browser Window not created.", 1);
 	    return NS_ERROR_FAILURE;
+	}
 }
 
 // Will get called in response to JavaScript window.close()
@@ -200,9 +211,13 @@ NS_IMETHODIMP CBrowserImpl::CreateBrowserWindow(PRUint32 chromeMask, PRInt32 aX,
 NS_IMETHODIMP CBrowserImpl::DestroyBrowserWindow()
 {
 	if(! m_pBrowserFrameGlue)
+	{
+		CQaUtils::QAOutput("nsIWebBrowserChrome::DestroyBrowserWindow(): Browser Window not destroyed.", 1);
 		return NS_ERROR_FAILURE;
+	}
 
 	m_pBrowserFrameGlue->DestroyBrowserFrame();
+	CQaUtils::QAOutput("nsIWebBrowserChrome::DestroyBrowserWindow(): Browser Window destroyed.", 1);
 
 	return NS_OK;
 }
@@ -222,6 +237,7 @@ NS_IMETHODIMP CBrowserImpl::SizeBrowserTo(PRInt32 aCX, PRInt32 aCY)
 		return NS_ERROR_FAILURE;
 
 	m_pBrowserFrameGlue->SetBrowserFrameSize(aCX, aCY);
+	CQaUtils::QAOutput("nsIWebBrowserChrome::SizeBrowserTo(): Browser resized.", 1);
 
 	return NS_OK;
 }

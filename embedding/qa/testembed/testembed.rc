@@ -143,48 +143,51 @@ BEGIN
     END
     POPUP "&Help"
     BEGIN
-        MENUITEM "&About TestEmbed...",          ID_APP_ABOUT
+        MENUITEM "&About TestEmbed...",         ID_APP_ABOUT
     END
     POPUP "&Tests"
     BEGIN
-        MENUITEM "&Change URL",                  ID_TESTS_CHANGEURL
-        MENUITEM "&Global &History",              ID_TESTS_GLOBALHISTORY
-        MENUITEM "Create &File",                 ID_TESTS_CREATEFILE
-        MENUITEM "Create/Switch &Profile",       ID_TESTS_CREATEPROFILE
-        MENUITEM "&Add Web Prog Listener",       ID_TESTS_ADDWEBPROGLISTENER
-        MENUITEM "Add History &Listener",        ID_TESTS_ADDHISTORYLISTENER
+        MENUITEM "&Change URL",                 ID_TESTS_CHANGEURL
+        MENUITEM "&Global &History",            ID_TESTS_GLOBALHISTORY
+        MENUITEM "Create &File",                ID_TESTS_CREATEFILE
+        MENUITEM "Create/Switch &Profile",      ID_TESTS_CREATEPROFILE
+        MENUITEM "&Add Web Prog Listener",      ID_TESTS_ADDWEBPROGLISTENER
+        MENUITEM "Add History &Listener",       ID_TESTS_ADDHISTORYLISTENER
     END
     POPUP "&Interfaces"
     BEGIN
-        MENUITEM "nsI&File",                     ID_INTERFACES_NSIFILE
-        MENUITEM "nsI&SHistory",                 ID_INTERFACES_NSISHISTORY
-        MENUITEM "nsI&WebNav",                   ID_INTERFACES_NSIWEBNAV
+        MENUITEM "nsI&File",                    ID_INTERFACES_NSIFILE
+        MENUITEM "nsI&SHistory",                ID_INTERFACES_NSISHISTORY
+        MENUITEM "nsI&WebNav",                  ID_INTERFACES_NSIWEBNAV
+        MENUITEM "nsI&Request",                 ID_INTERFACES_NSIREQUEST
     END
     POPUP "T&ools"
     BEGIN
-        MENUITEM "Remove &GH Page",              ID_TOOLS_REMOVEGHPAGE
-        MENUITEM "Remove &All GH",               ID_TOOLS_REMOVEALLGH
+        MENUITEM "Remove &GH Page",             ID_TOOLS_REMOVEGHPAGE
+        MENUITEM "Remove &All GH",              ID_TOOLS_REMOVEALLGH
+        MENUITEM "Test &Your Method",           ID_TOOLS_TESTYOURMETHOD
+        MENUITEM "Test Your &Method2",          ID_TOOLS_TESTYOURMETHOD2
     END
     POPUP "Ve&rify Bugs"
     BEGIN
-        MENUITEM "&70228",                       ID_VERIFYBUGS_70228
+        MENUITEM "&70228",                      ID_VERIFYBUGS_70228
     END
-
-	//DHARMA
     POPUP "Clip&BoardTest"
-
     BEGIN
-        MENUITEM "&Copy Selection",              ID_CLIPBOARDCMD_COPYSELECTION
-        MENUITEM "&Paste",                       ID_CLIPBOARDCMD_PASTE
-        MENUITEM "Select &All",                  ID_CLIPBOARDCMD_SELECTALL
-        MENUITEM "Select &None",                 ID_CLIPBOARDCMD_SELECTNONE
-        MENUITEM "Cu&t Selection",               ID_CLIPBOARDCMD_CUTSELECTION
-        MENUITEM "Copy &Link Location",          ID_CLIPBOARDCMD_COPYLINKLOCATION
-        MENUITEM "Can Copy &Selection",          ID_CLIPBOARDCMD_CANCOPYSELECTION
-        MENUITEM "Can C&ut Selection",           ID_CLIPBOARDCMD_CANCUTSELECTION
-        MENUITEM "Can Pas&Te",                   ID_CLIPBOARDCMD_CANPASTE
+        MENUITEM "&Copy Selection",             ID_CLIPBOARDCMD_COPYSELECTION
+
+        MENUITEM "&Paste",                      ID_CLIPBOARDCMD_PASTE
+        MENUITEM "Select &All",                 ID_CLIPBOARDCMD_SELECTALL
+        MENUITEM "Select &None",                ID_CLIPBOARDCMD_SELECTNONE
+        MENUITEM "Cu&t Selection",              ID_CLIPBOARDCMD_CUTSELECTION
+        MENUITEM "Copy &Link Location",         ID_CLIPBOARDCMD_COPYLINKLOCATION
+
+        MENUITEM "Can Copy &Selection",         ID_CLIPBOARDCMD_CANCOPYSELECTION
+
+        MENUITEM "Can C&ut Selection",          ID_CLIPBOARDCMD_CANCUTSELECTION
+
+        MENUITEM "Can Pas&Te",                  ID_CLIPBOARDCMD_CANPASTE
     END
-	//DHARMA
 END
 
 IDR_CTXMENU_DOCUMENT MENU DISCARDABLE 
