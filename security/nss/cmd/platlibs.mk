@@ -192,7 +192,9 @@ endif
 # Use the Solaris ld, which knows where to find libsoftokn3.so.
 ifeq ($(OS_ARCH), SunOS)
 ifdef NS_USE_GCC
-EXTRA_SHARED_LIBS += -B/usr/ccs/bin/
+ifdef GCC_USE_GNU_LD
+EXTRA_SHARED_LIBS += -Wl,-rpath-link,$(DIST)/lib
+endif
 endif
 endif
 
