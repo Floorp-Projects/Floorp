@@ -313,4 +313,12 @@ struct CK_FUNCTION_LIST {
 }
 #endif
 
+/* 
+** Functions called directly by applications to configure the FIPS token.
+*/
+extern void PK11_ConfigurePKCS11(char *man, char *libdes, char *tokdes, 
+		char *ptokdes, char *slotdes, char *pslotdes, char *fslotdes, 
+		char *fpslotdes, int minPwd, int pwdRequired);
+extern void PK11_ConfigureFIPS(char *slotdes, char *pslotdes);
+
 #endif
