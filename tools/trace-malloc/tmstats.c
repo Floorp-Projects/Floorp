@@ -64,6 +64,9 @@ typedef struct __struct_Options
 **  mHelp           Wether or not help should be shown.
 **  mOverhead       How much overhead an allocation will have.
 **  mAlignment      What boundry will the end of an allocation line up on.
+**  mAverages       Whether or not to display averages.
+**  mDeviances      Whether or not to display standard deviations.
+**  mRunLength      Whether or not to display run length.
 */
 {
     const char* mProgramName;
@@ -73,6 +76,9 @@ typedef struct __struct_Options
     int mHelp;
     unsigned mOverhead;
     unsigned mAlignment;
+    int mAverages;
+    int mDeviances;
+    int mRunLength;
 }
 Options;
 
@@ -97,12 +103,18 @@ static Switch gOutputSwitch = {"--output", "-o", 1, NULL, "Specify output file."
 static Switch gHelpSwitch = {"--help", "-h", 0, NULL, "Information on usage."};
 static Switch gAlignmentSwitch = {"--alignment", "-al", 1, NULL, "All allocation sizes are made to be a multiple of this number." DESC_NEWLINE "Closer to actual heap conditions; set to 1 for true sizes." DESC_NEWLINE "Default value is 16."};
 static Switch gOverheadSwitch = {"--overhead", "-ov", 1, NULL, "After alignment, all allocations are made to increase by this number." DESC_NEWLINE "Closer to actual heap conditions; set to 0 for true sizes." DESC_NEWLINE "Default value is 8."};
+static Switch gAveragesSwitch = {"--averages", "-avg", 0, NULL, "Display averages."};
+static Switch gDeviationsSwitch = {"--deviations", "-dev", 0, NULL, "Display standard deviations from the average."  DESC_NEWLINE "Implies --averages."};
+static Switch gRunLengthSwitch = {"--run-length", "-rl", 0, NULL, "Display the run length in seconds."};
 
 static Switch* gSwitches[] = {
         &gInputSwitch,
         &gOutputSwitch,
         &gAlignmentSwitch,
         &gOverheadSwitch,
+        &gAveragesSwitch,
+        &gDeviationsSwitch,
+        &gRunLengthSwitch,
         &gHelpSwitch
 };
 
@@ -348,6 +360,19 @@ int initOptions(Options* outOptions, int inArgc, char** inArgv)
                     ERROR_REPORT(retval, current->mValue, "Unable to convert to a number.");
                 }
             }
+            else if(current == &gAveragesSwitch)
+            {
+                outOptions->mAverages = __LINE__;
+            }
+            else if(current == &gDeviationsSwitch)
+            {
+                outOptions->mAverages = __LINE__;
+                outOptions->mDeviances = __LINE__;
+            }
+            else if(current == &gRunLengthSwitch)
+            {
+                outOptions->mRunLength = __LINE__;
+            }
             else
             {
                 retval = __LINE__;
@@ -565,7 +590,7 @@ void tmEventHandler(tmreader* inReader, tmevent* inEvent)
     unsigned size = inEvent->u.alloc.size;
     unsigned actualSize = 0;
     unsigned actualOldSize = 0;
-    unsigned interval = 0;
+    PRUint32 interval = 0;
 
     /*
     **  To match spacetrace stats, reallocs of size zero are frees.
@@ -706,61 +731,78 @@ int report_stats(Options* inOptions, TMStats* inStats)
 {
     int retval = 0;
 
-    fprintf(inOptions->mOutput, "Run Length:                          %11.4f\n", COST_PRINTABLE(inStats->uMaxTicks - inStats->uMinTicks));
-
-    fprintf(inOptions->mOutput, "\n");
-
     fprintf(inOptions->mOutput, "Peak Memory Usage:                   %11d\n", inStats->uPeakMemory);
     fprintf(inOptions->mOutput, "Memory Leaked:                       %11d\n", inStats->uMemoryInUse);
-
     fprintf(inOptions->mOutput, "\n");
 
     fprintf(inOptions->mOutput, "Peak Object Count:                   %11d\n", inStats->uPeakObjects);
     fprintf(inOptions->mOutput, "Objects Leaked:                      %11d\n", inStats->uObjectsInUse);
-
+    if(0 != inOptions->mAverages && 0 != inStats->uObjectsInUse)
+    {
+        fprintf(inOptions->mOutput, "Average Leaked Object Size:          %11.4f\n", (PRFloat64)inStats->uMemoryInUse / (PRFloat64)inStats->uObjectsInUse);
+    }
     fprintf(inOptions->mOutput, "\n");
 
-    fprintf(inOptions->mOutput, "Call Totals:\n");
+    fprintf(inOptions->mOutput, "Call Total:                          %11d\n", inStats->uMallocs + inStats->uCallocs + inStats->uReallocs + inStats->uFrees);
     fprintf(inOptions->mOutput, "        malloc:                      %11d\n", inStats->uMallocs);
     fprintf(inOptions->mOutput, "        calloc:                      %11d\n", inStats->uCallocs);
     fprintf(inOptions->mOutput, "       realloc:                      %11d\n", inStats->uReallocs);
     fprintf(inOptions->mOutput, "          free:                      %11d\n", inStats->uFrees);
-
     fprintf(inOptions->mOutput, "\n");
 
-    fprintf(inOptions->mOutput, "Byte Totals:\n");
+    fprintf(inOptions->mOutput, "Byte Total (sans free):              %11d\n", inStats->uMallocSize + inStats->uCallocSize + inStats->uReallocSize);
     fprintf(inOptions->mOutput, "        malloc:                      %11d\n", inStats->uMallocSize);
     fprintf(inOptions->mOutput, "        calloc:                      %11d\n", inStats->uCallocSize);
     fprintf(inOptions->mOutput, "       realloc:                      %11d\n", inStats->uReallocSize);
     fprintf(inOptions->mOutput, "          free:                      %11d\n", inStats->uFreeSize);
-    fprintf(inOptions->mOutput, "Byte Averages:\n");
-    fprintf(inOptions->mOutput, "        malloc:                      %11.4f\n", getAverage(&inStats->mMallocSizeVar));
-    fprintf(inOptions->mOutput, "        calloc:                      %11.4f\n", getAverage(&inStats->mCallocSizeVar));
-    fprintf(inOptions->mOutput, "       realloc:                      %11.4f\n", getAverage(&inStats->mReallocSizeVar));
-    fprintf(inOptions->mOutput, "          free:                      %11.4f\n", getAverage(&inStats->mFreeSizeVar));
-    fprintf(inOptions->mOutput, "Byte Standard Deviations:\n");
-    fprintf(inOptions->mOutput, "        malloc:                      %11.4f\n", getStdDev(&inStats->mMallocSizeVar));
-    fprintf(inOptions->mOutput, "        calloc:                      %11.4f\n", getStdDev(&inStats->mCallocSizeVar));
-    fprintf(inOptions->mOutput, "       realloc:                      %11.4f\n", getStdDev(&inStats->mReallocSizeVar));
-    fprintf(inOptions->mOutput, "          free:                      %11.4f\n", getStdDev(&inStats->mFreeSizeVar));
-
+    if(0 != inOptions->mAverages)
+    {
+        fprintf(inOptions->mOutput, "Byte Averages:\n");
+        fprintf(inOptions->mOutput, "        malloc:                      %11.4f\n", getAverage(&inStats->mMallocSizeVar));
+        fprintf(inOptions->mOutput, "        calloc:                      %11.4f\n", getAverage(&inStats->mCallocSizeVar));
+        fprintf(inOptions->mOutput, "       realloc:                      %11.4f\n", getAverage(&inStats->mReallocSizeVar));
+        fprintf(inOptions->mOutput, "          free:                      %11.4f\n", getAverage(&inStats->mFreeSizeVar));
+    }
+    if(0 != inOptions->mDeviances)
+    {
+        fprintf(inOptions->mOutput, "Byte Standard Deviations:\n");
+        fprintf(inOptions->mOutput, "        malloc:                      %11.4f\n", getStdDev(&inStats->mMallocSizeVar));
+        fprintf(inOptions->mOutput, "        calloc:                      %11.4f\n", getStdDev(&inStats->mCallocSizeVar));
+        fprintf(inOptions->mOutput, "       realloc:                      %11.4f\n", getStdDev(&inStats->mReallocSizeVar));
+        fprintf(inOptions->mOutput, "          free:                      %11.4f\n", getStdDev(&inStats->mFreeSizeVar));
+    }
     fprintf(inOptions->mOutput, "\n");
-
-    fprintf(inOptions->mOutput, "Overhead Totals:\n");
+    
+    fprintf(inOptions->mOutput, "Overhead Total:                      %11.4f\n", COST_PRINTABLE(inStats->uMallocCost) + COST_PRINTABLE(inStats->uCallocCost) + COST_PRINTABLE(inStats->uReallocCost) + COST_PRINTABLE(inStats->uFreeCost));
     fprintf(inOptions->mOutput, "        malloc:                      %11.4f\n", COST_PRINTABLE(inStats->uMallocCost));
     fprintf(inOptions->mOutput, "        calloc:                      %11.4f\n", COST_PRINTABLE(inStats->uCallocCost));
     fprintf(inOptions->mOutput, "       realloc:                      %11.4f\n", COST_PRINTABLE(inStats->uReallocCost));
     fprintf(inOptions->mOutput, "          free:                      %11.4f\n", COST_PRINTABLE(inStats->uFreeCost));
-    fprintf(inOptions->mOutput, "Overhead Averages:\n");
-    fprintf(inOptions->mOutput, "        malloc:                      %11.4f\n", COST_PRINTABLE(getAverage(&inStats->mMallocCostVar)));
-    fprintf(inOptions->mOutput, "        calloc:                      %11.4f\n", COST_PRINTABLE(getAverage(&inStats->mCallocCostVar)));
-    fprintf(inOptions->mOutput, "       realloc:                      %11.4f\n", COST_PRINTABLE(getAverage(&inStats->mReallocCostVar)));
-    fprintf(inOptions->mOutput, "          free:                      %11.4f\n", COST_PRINTABLE(getAverage(&inStats->mFreeCostVar)));
-    fprintf(inOptions->mOutput, "Overhead Standard Deviations:\n");
-    fprintf(inOptions->mOutput, "        malloc:                      %11.4f\n", COST_PRINTABLE(getStdDev(&inStats->mMallocCostVar)));
-    fprintf(inOptions->mOutput, "        calloc:                      %11.4f\n", COST_PRINTABLE(getStdDev(&inStats->mCallocCostVar)));
-    fprintf(inOptions->mOutput, "       realloc:                      %11.4f\n", COST_PRINTABLE(getStdDev(&inStats->mReallocCostVar)));
-    fprintf(inOptions->mOutput, "          free:                      %11.4f\n", COST_PRINTABLE(getStdDev(&inStats->mFreeCostVar)));
+    if(0 != inOptions->mAverages)
+    {
+        fprintf(inOptions->mOutput, "Overhead Averages:\n");
+        fprintf(inOptions->mOutput, "        malloc:                      %11.4f\n", COST_PRINTABLE(getAverage(&inStats->mMallocCostVar)));
+        fprintf(inOptions->mOutput, "        calloc:                      %11.4f\n", COST_PRINTABLE(getAverage(&inStats->mCallocCostVar)));
+        fprintf(inOptions->mOutput, "       realloc:                      %11.4f\n", COST_PRINTABLE(getAverage(&inStats->mReallocCostVar)));
+        fprintf(inOptions->mOutput, "          free:                      %11.4f\n", COST_PRINTABLE(getAverage(&inStats->mFreeCostVar)));
+    }
+    if(0 != inOptions->mDeviances)
+    {
+        fprintf(inOptions->mOutput, "Overhead Standard Deviations:\n");
+        fprintf(inOptions->mOutput, "        malloc:                      %11.4f\n", COST_PRINTABLE(getStdDev(&inStats->mMallocCostVar)));
+        fprintf(inOptions->mOutput, "        calloc:                      %11.4f\n", COST_PRINTABLE(getStdDev(&inStats->mCallocCostVar)));
+        fprintf(inOptions->mOutput, "       realloc:                      %11.4f\n", COST_PRINTABLE(getStdDev(&inStats->mReallocCostVar)));
+        fprintf(inOptions->mOutput, "          free:                      %11.4f\n", COST_PRINTABLE(getStdDev(&inStats->mFreeCostVar)));
+    }
+    fprintf(inOptions->mOutput, "\n");
+    
+    if(0 != inOptions->mRunLength)
+    {
+        unsigned length = inStats->uMaxTicks - inStats->uMinTicks;
+
+        fprintf(inOptions->mOutput, "Run Length:                          %11.4f\n", COST_PRINTABLE(length));
+        fprintf(inOptions->mOutput, "\n");
+    }
 
     return retval;
 }
