@@ -94,6 +94,13 @@ nsXPITriggerItem::SetPrincipal(nsIPrincipal* aPrincipal)
 {
     mPrincipal = aPrincipal;
 
+    // aPrincipal can be null for various failure cases.
+    // see bug 213894 for an example.
+    // nsXPInstallManager::OnCertAvailable can be called with a null principal
+    // and it can also force a null principal.
+    if (!aPrincipal)
+        return;
+
     PRBool hasCert;
     aPrincipal->GetHasCertificate(&hasCert);
     if (hasCert) {
