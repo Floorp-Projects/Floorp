@@ -43,7 +43,7 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIRDFDataSource methods
-    NS_IMETHOD Initialize(const nsString& uri);
+    NS_IMETHOD Init(const nsString& uri);
 
     NS_IMETHOD GetSource(nsIRDFNode* property,
                          nsIRDFNode* target,

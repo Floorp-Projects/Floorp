@@ -438,7 +438,7 @@ nsBookmarkDataSource::nsBookmarkDataSource(void)
     // this is actually true of all datasources.
     NS_INIT_REFCNT();
     ReadBookmarks(); // XXX do or die, eh?
-    Initialize(kURI_bookmarks);
+    Init(kURI_bookmarks);
 }
 
 nsBookmarkDataSource::~nsBookmarkDataSource(void)

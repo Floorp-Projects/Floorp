@@ -46,7 +46,7 @@ public:
      * that will be used to register the data source in the
      * data source registry.
      */
-    NS_IMETHOD Initialize(const nsString& uri) = 0;
+    NS_IMETHOD Init(const nsString& uri) = 0;
 
     /**
      * Find an RDF resource that points to a given node over the
