@@ -3505,6 +3505,8 @@ nsEnderEventListener::DispatchMouseEvent(nsIDOMMouseEvent *aEvent, PRInt32 aEven
       aEvent->GetMetaKey(&(event.isMeta));
       aEvent->GetClientX(&(event.refPoint.x));
       aEvent->GetClientY(&(event.refPoint.y));
+      aEvent->GetScreenX(&(event.point.x));
+      aEvent->GetScreenY(&(event.point.y));
 
       PRUint16 clickCount;
       aEvent->GetClickCount(&clickCount);
