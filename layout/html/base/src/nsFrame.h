@@ -280,7 +280,15 @@ public:
     fprintf(out, "@%p", this);
   }
 
+  static void IndentBy(FILE* out, PRInt32 aIndent) {
+    while (--aIndent >= 0) fputs("  ", out);
+  }
+
 protected:
+  // Protected constructor and destructor
+  nsFrame();
+  virtual ~nsFrame();
+
   virtual void NewContentIsBefore(nsIPresContext& aPresContext,
                           nsIRenderingContext * aRendContext,
                           nsGUIEvent * aEvent,
@@ -309,10 +317,6 @@ protected:
   // Style post processing hook
   NS_IMETHOD DidSetStyleContext(nsIPresContext* aPresContext);
 
-  // Protected constructor and destructor
-  nsFrame();
-  virtual ~nsFrame();
-
   void SizeOfWithoutThis(nsISizeOfHandler* aHandler) const;
 
   /**
@@ -325,10 +329,6 @@ protected:
    * XML container is dumped.
    */
   virtual void DumpBaseRegressionData(FILE* out, PRInt32 aIndent);
-
-  static void IndentBy(FILE* out, PRInt32 aIndent) {
-    while (--aIndent >= 0) fputs("  ", out);
-  }
 
   nsresult MakeFrameName(const char* aKind, nsString& aResult) const;
 
