@@ -276,8 +276,8 @@
                                   onget="return this.anonymousContent[0].firstChild.readonly;"/>
     </interface>
     <handlers>
-      <handler type="focus" value="this.setAttribute('focused','true');"/>
-      <handler type="blur" value="this.removeAttribute('focused');"/>
+      <handler type="focus" value="this.setAttribute('focused','true'); this.anonymousContent[0].firstChild.focus();"/>
+      <handler type="blur" value="this.removeAttribute('focused'); this.anonymousContent[0].firstChild.blur();"/>
     </handlers>    
   </binding>
 
