@@ -39,8 +39,6 @@ struct nsRectFast : public nsRect
   nsRectFast () {}      // No need to call parent constructor to set default values
   nsRectFast (PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight) : nsRect (aX, aY, aWidth, aHeight) {}
   nsRectFast (const nsRect& aRect) : nsRect (aRect) {}
-  operator nsRect () { return *NS_STATIC_CAST (nsRect*, this); }
-
 
 #if 1   // Override nsRect methods to make them inline. Do not check for emptiness.
   PRBool Contains (const nsRectFast &aRect) const
@@ -100,12 +98,13 @@ class nsRegion
 
     inline void* operator new (size_t);
     inline void  operator delete (void* aRect, size_t);
-    operator = (const RgnRect& aRect)       // Do not overwrite prev/next pointers
+    RgnRect& operator = (const RgnRect& aRect)       // Do not overwrite prev/next pointers
     { 
        x = aRect.x;
        y = aRect.y;
        width  = aRect.width;
        height = aRect.height;
+       return *this;
     }
   };
 
@@ -234,7 +233,7 @@ private:
   {    MoveInto (aDestRegion, mRectListHead.next);  }
 
   nsRegion (const nsRegion& aRegion);       // Prevent copying of regions
-  operator = (const nsRegion& aRegion);
+  nsRegion& operator = (const nsRegion& aRegion);
 };
 
 

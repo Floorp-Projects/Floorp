@@ -28,6 +28,7 @@
 #include "X11/Xlib.h"
 #include "X11/Xutil.h"
 #include <gdk/gdk.h>
+#include "nsRegion.h"
 
 #undef Bool
 
@@ -82,6 +83,7 @@ public:
                       PRInt32 aSXOffset, PRInt32 aSYOffset,
                       const nsRect &aTileRect);
 
+  void UpdateCachedImage();
   virtual void ImageUpdated(nsIDeviceContext *aContext,
                             PRUint8 aFlags, nsRect *aUpdateRect);
   virtual nsresult    Init(PRInt32 aWidth, PRInt32 aHeight,
@@ -187,6 +189,8 @@ private:
   PRInt32       mDecodedX2;
   PRInt32       mDecodedY2;
 
+  nsRegion      mUpdateRegion;
+
   // alpha layer members
   PRInt16       mAlphaRowBytes;     // alpha bytes per row
   PRInt16       mAlphaWidth;        // alpha layer width
@@ -194,6 +198,7 @@ private:
   PRInt8        mAlphaDepth;        // alpha layer depth
   PRPackedBool  mAlphaValid;
   PRPackedBool  mIsSpacer;
+  PRPackedBool  mPendingUpdate;
 
   PRPackedBool  mIsTopToBottom;
   PRInt8        mNumBytesPixel;

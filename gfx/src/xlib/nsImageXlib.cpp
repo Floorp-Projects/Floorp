@@ -74,6 +74,8 @@ nsImageXlib::nsImageXlib()
   mGC = nsnull;
   mNaturalWidth = 0;
   mNaturalHeight = 0;
+  mPendingUpdate = PR_FALSE;
+
   if (!mXlibRgbHandle)
     mXlibRgbHandle = xxlib_find_handle(XXLIBRGB_DEFAULT_HANDLE);
   if (!mXlibRgbHandle)
@@ -299,106 +301,124 @@ void nsImageXlib::ImageUpdated(nsIDeviceContext *aContext,
                                PRUint8 aFlags,
                                nsRect *aUpdateRect)
 {
-  unsigned bottom, left, right;
-  bottom = aUpdateRect->y + aUpdateRect->height;
-  left   = aUpdateRect->x;
-  right  = left + aUpdateRect->width;
-  
-  // check if the image has an all-opaque 8-bit alpha mask
-  if ((mAlphaDepth == 8) && !mAlphaValid) {
-    for (unsigned y = aUpdateRect->y; (y < bottom) && !mAlphaValid; y++) {
-      unsigned char *alpha = mAlphaBits + mAlphaRowBytes * y + left;
-      for (unsigned x = left; x < right; x++) {
-        if (*(alpha++) != 255) {
-          mAlphaValid = PR_TRUE;
-          break;
-        }
-      }
-    }
-  }
+  mPendingUpdate = PR_TRUE;
+  mUpdateRegion.Or(mUpdateRegion, *aUpdateRect);
+}
 
-  // check if the image is a spacer
-  if ((mAlphaDepth==1) && mIsSpacer) {
-    // mask of the leading/trailing bits in the update region
-    PRUint8  leftmask   = 0xff  >> (left & 0x7);
-    PRUint8  rightmask  = 0xff  << (7 - ((right-1) & 0x7));
+void nsImageXlib::UpdateCachedImage()
+{
+  nsRegionRectIterator ri(mUpdateRegion);
+  const nsRect *rect;
 
-    // byte where the first/last bits of the update region are located
-    PRUint32 leftindex  = left      >> 3;
-    PRUint32 rightindex = (right-1) >> 3;
+  while (rect = ri.Next()) {
 
-    // first/last bits in the same byte - combine mask into leftmask
-    // and fill rightmask so we don't try using it
-    if (leftindex == rightindex) {
-      leftmask &= rightmask;
-      rightmask = 0xff;
-    }
+//  fprintf(stderr, "ImageUpdated %p x,y=(%d %d) width,height=(%d %d)\n",
+//          this, rect->x, rect->y, rect->width, rect->height);
 
-    // check the leading bits
-    if (leftmask != 0xff) {
-      PRUint8 *ptr = mAlphaBits + mAlphaRowBytes * aUpdateRect->y + leftindex;
-      for (unsigned y=aUpdateRect->y; y<bottom; y++, ptr+=mAlphaRowBytes) {
-        if (*ptr & leftmask) {
-          mIsSpacer = PR_FALSE;
-          break;
-        }
-      }
-      // move to first full byte
-      leftindex++;
-    }
+    unsigned bottom, left, right;
+    bottom = rect->y + rect->height;
+    left   = rect->x;
+    right  = left + rect->width;
 
-    // check the trailing bits
-    if (mIsSpacer && (rightmask != 0xff)) {
-      PRUint8 *ptr = mAlphaBits + mAlphaRowBytes * aUpdateRect->y + rightindex;
-      for (unsigned y=aUpdateRect->y; y<bottom; y++, ptr+=mAlphaRowBytes) {
-        if (*ptr & rightmask) {
-          mIsSpacer = PR_FALSE;
-          break;
-        }
-      }
-      // move to last full byte
-      rightindex--;
-    }
-    
-    // check the middle bytes
-    if (mIsSpacer && (leftindex <= rightindex)) {
-      for (unsigned y=aUpdateRect->y; (y<bottom) && mIsSpacer; y++) {
-        unsigned char *alpha = mAlphaBits + mAlphaRowBytes*y + leftindex;
+    // check if the image has an all-opaque 8-bit alpha mask
+    if ((mAlphaDepth==8) && !mAlphaValid) {
+      for (unsigned y=rect->y; (y<bottom) && !mAlphaValid; y++) {
+        unsigned char *alpha = mAlphaBits + mAlphaRowBytes*y + left;
         for (unsigned x=left; x<right; x++) {
-          if (*(alpha++)!=0) {
-            mIsSpacer = PR_FALSE;
+          if (*(alpha++)!=255) {
+            mAlphaValid=PR_TRUE;
             break;
           }
         }
       }
     }
-  }
 
-  if (mAlphaValid && mImagePixmap) {
-    XFreePixmap(mDisplay, mImagePixmap);
-    mImagePixmap = 0;
-  }
-  
-  if (!mAlphaValid) {
-    CreateOffscreenPixmap(mWidth, mHeight);
+    // check if the image is a spacer
+    if ((mAlphaDepth==1) && mIsSpacer) {
+      // mask of the leading/trailing bits in the update region
+      PRUint8  leftmask   = 0xff  >> (left & 0x7);
+      PRUint8  rightmask  = 0xff  << (7 - ((right-1) & 0x7));
 
-    if (!sXbitGC) {
-      XGCValues gcv;
-      memset(&gcv, 0, sizeof(XGCValues));
-      gcv.function = GXcopy;
-      sXbitGC  = XCreateGC(mDisplay, mImagePixmap, GCFunction, &gcv);
+      // byte where the first/last bits of the update region are located
+      PRUint32 leftindex  = left      >> 3;
+      PRUint32 rightindex = (right-1) >> 3;
+
+      // first/last bits in the same byte - combine mask into leftmask
+      // and fill rightmask so we don't try using it
+      if (leftindex == rightindex) {
+        leftmask &= rightmask;
+        rightmask = 0xff;
+      }
+
+      // check the leading bits
+      if (leftmask != 0xff) {
+        PRUint8 *ptr = mAlphaBits + mAlphaRowBytes * rect->y + leftindex;
+        for (unsigned y=rect->y; y<bottom; y++, ptr+=mAlphaRowBytes) {
+          if (*ptr & leftmask) {
+            mIsSpacer = PR_FALSE;
+            break;
+          }
+        }
+        // move to first full byte
+        leftindex++;
+      }
+
+      // check the trailing bits
+      if (mIsSpacer && (rightmask != 0xff)) {
+        PRUint8 *ptr = mAlphaBits + mAlphaRowBytes * rect->y + rightindex;
+        for (unsigned y=rect->y; y<bottom; y++, ptr+=mAlphaRowBytes) {
+          if (*ptr & rightmask) {
+            mIsSpacer = PR_FALSE;
+            break;
+          }
+        }
+        // move to last full byte
+        rightindex--;
+      }
+    
+      // check the middle bytes
+      if (mIsSpacer && (leftindex <= rightindex)) {
+        for (unsigned y=rect->y; (y<bottom) && mIsSpacer; y++) {
+          unsigned char *alpha = mAlphaBits + mAlphaRowBytes*y + leftindex;
+          for (unsigned x=left; x<right; x++) {
+            if (*(alpha++)!=0) {
+              mIsSpacer = PR_FALSE;
+              break;
+            }
+          }
+        }
+      }
     }
-    xxlib_draw_rgb_image_dithalign(
+
+    if (mAlphaValid && mImagePixmap) {
+      XFreePixmap(mDisplay, mImagePixmap);
+      mImagePixmap = 0;
+    }
+    
+    if (!mAlphaValid) {
+      CreateOffscreenPixmap(mWidth, mHeight);
+
+      if (!sXbitGC) {
+        XGCValues gcv;
+        memset(&gcv, 0, sizeof(XGCValues));
+        gcv.function = GXcopy;
+        sXbitGC  = XCreateGC(mDisplay, mImagePixmap, GCFunction, &gcv);
+      }
+      xxlib_draw_rgb_image_dithalign(
                      mXlibRgbHandle,
                      mImagePixmap, sXbitGC,
-                     aUpdateRect->x, aUpdateRect->y,
-                     aUpdateRect->width, aUpdateRect->height,
+                     rect->x, rect->y,
+                     rect->width, rect->height,
                      XLIB_RGB_DITHER_MAX,
-                     mImageBits + mRowBytes * aUpdateRect->y + 3 * aUpdateRect->x,
+                     mImageBits + mRowBytes * rect->y + 3 * rect->x,
                      mRowBytes,
                      aUpdateRect->x, aUpdateRect->y);
+    }
   }
-  mFlags = aFlags; // this should be 0'd out by Draw()
+
+  mUpdateRegion.Empty();
+  mPendingUpdate = PR_FALSE;
+  mFlags = nsImageUpdateFlags_kBitsChanged; // this should be 0'd out by Draw()
 }
 
 NS_IMETHODIMP
@@ -579,6 +599,9 @@ nsImageXlib::Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
 {
   if (aSurface == nsnull)
     return NS_ERROR_FAILURE;
+
+  if (mPendingUpdate)
+    UpdateCachedImage();
 
   if ((mAlphaDepth == 1) && mIsSpacer)
     return NS_OK;
@@ -1225,6 +1248,9 @@ nsImageXlib::Draw(nsIRenderingContext &aContext,
                   PRInt32 aX, PRInt32 aY,
                   PRInt32 aWidth, PRInt32 aHeight)
 {
+  if (mPendingUpdate)
+    UpdateCachedImage();
+
   if ((mAlphaDepth == 1) && mIsSpacer)
     return NS_OK;
 
@@ -1342,6 +1368,9 @@ NS_IMETHODIMP nsImageXlib::DrawTile(nsIRenderingContext &aContext,
                                     nsRect &aSrcRect,
                                     nsRect &aTileRect)
 {
+  if (mPendingUpdate)
+    UpdateCachedImage();
+
   if ((mAlphaDepth == 1) && mIsSpacer)
     return NS_OK;
   
@@ -1452,6 +1481,9 @@ NS_IMETHODIMP nsImageXlib::DrawTile(nsIRenderingContext &aContext,
                                     PRInt32 aSXOffset, PRInt32 aSYOffset,
                                     const nsRect &aTileRect)
 {
+  if (mPendingUpdate)
+    UpdateCachedImage();
+
   if ((mAlphaDepth == 1) && mIsSpacer)
     return NS_OK;
 
@@ -1618,6 +1650,9 @@ NS_IMETHODIMP nsImageXlib::DrawToImage(nsIImage* aDstImage,
   nsImageXlib *dest = NS_STATIC_CAST(nsImageXlib *, aDstImage);
   if (!dest)
     return NS_ERROR_FAILURE;
+
+  if (mPendingUpdate)
+    UpdateCachedImage();
 
   if (!dest->mImagePixmap)
     dest->CreateOffscreenPixmap(dest->mWidth, dest->mHeight);

@@ -73,6 +73,7 @@ nsImageGTK::nsImageGTK()
   mNaturalHeight = 0;
   mAlphaValid = PR_FALSE;
   mIsSpacer = PR_TRUE;
+  mPendingUpdate = PR_FALSE;
 
 #ifdef TRACE_IMAGE_ALLOCATION
   printf("nsImageGTK::nsImageGTK(this=%p)\n",
@@ -279,12 +280,15 @@ void nsImageGTK::MoveAlphaMask(PRInt32 aX, PRInt32 aY)
 {
 }
 
-//------------------------------------------------------------
-
-// set up the palette to the passed in color array, RGB only in this array
 void nsImageGTK::ImageUpdated(nsIDeviceContext *aContext,
                               PRUint8 aFlags,
                               nsRect *aUpdateRect)
+{
+  mPendingUpdate = PR_TRUE;
+  mUpdateRegion.Or(mUpdateRegion, *aUpdateRect);
+}
+
+void nsImageGTK::UpdateCachedImage()
 {
 #ifdef TRACE_IMAGE_ALLOCATION
   printf("nsImageGTK::ImageUpdated(this=%p,%d)\n",
@@ -292,105 +296,112 @@ void nsImageGTK::ImageUpdated(nsIDeviceContext *aContext,
          aFlags);
 #endif
 
+  nsRegionRectIterator ri(mUpdateRegion);
+  const nsRect *rect;
+
+  while (rect = ri.Next()) {
+
 //  fprintf(stderr, "ImageUpdated %p x,y=(%d %d) width,height=(%d %d)\n",
-//          this, aUpdateRect->x, aUpdateRect->y, aUpdateRect->width,
-//          aUpdateRect->height);
+//          this, rect->x, rect->y, rect->width, rect->height);
 
-  unsigned bottom, left, right;
-  bottom = aUpdateRect->y + aUpdateRect->height;
-  left   = aUpdateRect->x;
-  right  = left + aUpdateRect->width;
+    unsigned bottom, left, right;
+    bottom = rect->y + rect->height;
+    left   = rect->x;
+    right  = left + rect->width;
 
-  // check if the image has an all-opaque 8-bit alpha mask
-  if ((mAlphaDepth==8) && !mAlphaValid) {
-    for (unsigned y=aUpdateRect->y; (y<bottom) && !mAlphaValid; y++) {
-      unsigned char *alpha = mAlphaBits + mAlphaRowBytes*y + left;
-      for (unsigned x=left; x<right; x++) {
-        if (*(alpha++)!=255) {
-          mAlphaValid=PR_TRUE;
-          break;
-        }
-      }
-    }
-  }
-
-  // check if the image is a spacer
-  if ((mAlphaDepth==1) && mIsSpacer) {
-    // mask of the leading/trailing bits in the update region
-    PRUint8  leftmask   = 0xff  >> (left & 0x7);
-    PRUint8  rightmask  = 0xff  << (7 - ((right-1) & 0x7));
-
-    // byte where the first/last bits of the update region are located
-    PRUint32 leftindex  = left      >> 3;
-    PRUint32 rightindex = (right-1) >> 3;
-
-    // first/last bits in the same byte - combine mask into leftmask
-    // and fill rightmask so we don't try using it
-    if (leftindex == rightindex) {
-      leftmask &= rightmask;
-      rightmask = 0xff;
-    }
-
-    // check the leading bits
-    if (leftmask != 0xff) {
-      PRUint8 *ptr = mAlphaBits + mAlphaRowBytes * aUpdateRect->y + leftindex;
-      for (unsigned y=aUpdateRect->y; y<bottom; y++, ptr+=mAlphaRowBytes) {
-        if (*ptr & leftmask) {
-          mIsSpacer = PR_FALSE;
-          break;
-        }
-      }
-      // move to first full byte
-      leftindex++;
-    }
-
-    // check the trailing bits
-    if (mIsSpacer && (rightmask != 0xff)) {
-      PRUint8 *ptr = mAlphaBits + mAlphaRowBytes * aUpdateRect->y + rightindex;
-      for (unsigned y=aUpdateRect->y; y<bottom; y++, ptr+=mAlphaRowBytes) {
-        if (*ptr & rightmask) {
-          mIsSpacer = PR_FALSE;
-          break;
-        }
-      }
-      // move to last full byte
-      rightindex--;
-    }
-    
-    // check the middle bytes
-    if (mIsSpacer && (leftindex <= rightindex)) {
-      for (unsigned y=aUpdateRect->y; (y<bottom) && mIsSpacer; y++) {
-        unsigned char *alpha = mAlphaBits + mAlphaRowBytes*y + leftindex;
+    // check if the image has an all-opaque 8-bit alpha mask
+    if ((mAlphaDepth==8) && !mAlphaValid) {
+      for (unsigned y=rect->y; (y<bottom) && !mAlphaValid; y++) {
+        unsigned char *alpha = mAlphaBits + mAlphaRowBytes*y + left;
         for (unsigned x=left; x<right; x++) {
-          if (*(alpha++)!=0) {
-            mIsSpacer = PR_FALSE;
+          if (*(alpha++)!=255) {
+            mAlphaValid=PR_TRUE;
             break;
           }
         }
       }
     }
+
+    // check if the image is a spacer
+    if ((mAlphaDepth==1) && mIsSpacer) {
+      // mask of the leading/trailing bits in the update region
+      PRUint8  leftmask   = 0xff  >> (left & 0x7);
+      PRUint8  rightmask  = 0xff  << (7 - ((right-1) & 0x7));
+
+      // byte where the first/last bits of the update region are located
+      PRUint32 leftindex  = left      >> 3;
+      PRUint32 rightindex = (right-1) >> 3;
+
+      // first/last bits in the same byte - combine mask into leftmask
+      // and fill rightmask so we don't try using it
+      if (leftindex == rightindex) {
+        leftmask &= rightmask;
+        rightmask = 0xff;
+      }
+
+      // check the leading bits
+      if (leftmask != 0xff) {
+        PRUint8 *ptr = mAlphaBits + mAlphaRowBytes * rect->y + leftindex;
+        for (unsigned y=rect->y; y<bottom; y++, ptr+=mAlphaRowBytes) {
+          if (*ptr & leftmask) {
+            mIsSpacer = PR_FALSE;
+            break;
+          }
+        }
+        // move to first full byte
+        leftindex++;
+      }
+
+      // check the trailing bits
+      if (mIsSpacer && (rightmask != 0xff)) {
+        PRUint8 *ptr = mAlphaBits + mAlphaRowBytes * rect->y + rightindex;
+        for (unsigned y=rect->y; y<bottom; y++, ptr+=mAlphaRowBytes) {
+          if (*ptr & rightmask) {
+            mIsSpacer = PR_FALSE;
+            break;
+          }
+        }
+        // move to last full byte
+        rightindex--;
+      }
+    
+      // check the middle bytes
+      if (mIsSpacer && (leftindex <= rightindex)) {
+        for (unsigned y=rect->y; (y<bottom) && mIsSpacer; y++) {
+          unsigned char *alpha = mAlphaBits + mAlphaRowBytes*y + leftindex;
+          for (unsigned x=left; x<right; x++) {
+            if (*(alpha++)!=0) {
+              mIsSpacer = PR_FALSE;
+              break;
+            }
+          }
+        }
+      }
+    }
+
+    if (mAlphaValid && mImagePixmap) {
+      gdk_pixmap_unref(mImagePixmap);
+      mImagePixmap = 0;
+    }
+
+    if (!mAlphaValid) {
+      CreateOffscreenPixmap(mWidth, mHeight);
+      if (!sXbitGC)
+        sXbitGC = gdk_gc_new(mImagePixmap);
+
+      gdk_draw_rgb_image_dithalign(mImagePixmap, sXbitGC, 
+                                   rect->x, rect->y,
+                                   rect->width, rect->height,
+                                   GDK_RGB_DITHER_MAX,
+                                   mImageBits + mRowBytes*rect->y + 3*rect->x,
+                                   mRowBytes,
+                                   rect->x, rect->y);
+    }
   }
 
-  if (mAlphaValid && mImagePixmap) {
-    gdk_pixmap_unref(mImagePixmap);
-    mImagePixmap = 0;
-  }
-
-  if (!mAlphaValid) {
-    CreateOffscreenPixmap(mWidth, mHeight);
-    if (!sXbitGC)
-      sXbitGC = gdk_gc_new(mImagePixmap);
-
-    gdk_draw_rgb_image_dithalign(mImagePixmap, sXbitGC, 
-                 aUpdateRect->x, aUpdateRect->y,
-                 aUpdateRect->width, aUpdateRect->height,
-                 GDK_RGB_DITHER_MAX,
-                 mImageBits + mRowBytes*aUpdateRect->y + 3*aUpdateRect->x,
-                 mRowBytes,
-                 aUpdateRect->x, aUpdateRect->y);
-  }
-
-  mFlags = aFlags; // this should be 0'd out by Draw()
+  mUpdateRegion.Empty();
+  mPendingUpdate = PR_FALSE;
+  mFlags = nsImageUpdateFlags_kBitsChanged; // this should be 0'd out by Draw()
 }
 
 #ifdef CHEAP_PERFORMANCE_MEASURMENT
@@ -542,6 +553,9 @@ nsImageGTK::Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
                  PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
 {
   g_return_val_if_fail ((aSurface != nsnull), NS_ERROR_FAILURE);
+
+  if (mPendingUpdate)
+    UpdateCachedImage();
 
   if ((mAlphaDepth==1) && mIsSpacer)
     return NS_OK;
@@ -1241,6 +1255,9 @@ nsImageGTK::Draw(nsIRenderingContext &aContext,
 {
   g_return_val_if_fail ((aSurface != nsnull), NS_ERROR_FAILURE);
 
+  if (mPendingUpdate)
+    UpdateCachedImage();
+
   if ((mAlphaDepth==1) && mIsSpacer)
     return NS_OK;
 
@@ -1411,6 +1428,12 @@ NS_IMETHODIMP nsImageGTK::DrawTile(nsIRenderingContext &aContext,
          aTileRect.width, aTileRect.height, this);
 #endif
 
+  if (mPendingUpdate)
+    UpdateCachedImage();
+
+  if (mPendingUpdate)
+    UpdateCachedImage();
+
   if ((mAlphaDepth==1) && mIsSpacer)
     return NS_OK;
 
@@ -1573,6 +1596,9 @@ NS_IMETHODIMP nsImageGTK::DrawToImage(nsIImage* aDstImage,
 
   if (!dest)
     return NS_ERROR_FAILURE;
+
+  if (mPendingUpdate)
+    UpdateCachedImage();
   
   if (!dest->mImagePixmap) {
     dest->CreateOffscreenPixmap(dest->mWidth, dest->mHeight);
