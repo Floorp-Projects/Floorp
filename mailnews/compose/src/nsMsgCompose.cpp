@@ -1808,7 +1808,30 @@ nsMsgCompose::ConvertTextToHTML(nsFileSpec& aSigFile, nsString &aSigData)
   if (NS_FAILED(rv))
     return rv;
 
-  aSigData.Append(origBuf);
+  // Ok, once we are here, we need to escape the data to make sure that
+  // we don't do HTML stuff with plain text sigs.
+  //
+  char *tString = origBuf.ToNewCString();
+  if (tString)
+  {
+    char *escaped = nsEscapeHTML(tString);
+    if (escaped) 
+    {
+      aSigData.Append(escaped);
+      nsCRT::free(escaped);
+    }
+    else
+    {
+      aSigData.Append(origBuf);
+    }
+
+    nsCRT::free(tString);
+  }
+  else
+  {
+    aSigData.Append(origBuf);
+  }
+
   return NS_OK;
 }
 
