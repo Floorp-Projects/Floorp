@@ -438,7 +438,7 @@ nsAboutCacheEntry::WriteCacheEntryDescription(nsIOutputStream *outputStream,
 
     // Expiration Time
     descriptor->GetExpirationTime(&u);
-    if (u) {
+    if (u < 0xFFFFFFFF) {
         PrintTimeString(timeBuf, sizeof(timeBuf), u);
         APPEND_ROW("expires", timeBuf);
     } else {

@@ -290,7 +290,7 @@ nsAboutCache::VisitEntry(const char *deviceID,
     // Expires time
     mBuffer.Append("\n<b>       Expires: </b>");
     entryInfo->GetExpirationTime(&t);
-    if (t) {
+    if (t < 0xFFFFFFFF) {
         PrintTimeString(buf, sizeof(buf), t);
         mBuffer.Append(buf);
     } else {
