@@ -8,17 +8,9 @@
 <!ENTITY  rHeader                   "Settings for authoring of new Web pages">
 
 <!ENTITY  tableEditing.label                    "Table Editing">
-
 <!ENTITY  maintainTableStructure.label          "Maintain table layout when inserting or deleting cells">
-<!ENTITY  maintainTableStructure.tooltip        "Prevents cell borders from collapsing when you delete one or more cells">
+<!ENTITY  maintainTableStructure.tooltip        "Preserves table's rectangular shape by automatically adding cells after inserting or deleting cells"
 <!ENTITY  maintainStructure.accesskey           "m">
-<!-- LOCALIZATION NOTE (pressingTheDeleteKey.label): Don't translate "Delete" -->
-<!ENTITY  pressingTheDeleteKey.label            "Delete key:">
-<!ENTITY  pressingTheDeleteKey.tooltip          "Assign an action to the Delete key for table editing purposes">
-<!ENTITY  deleteCell.label                      "Removes the entire cell">
-<!ENTITY  deleteCell.accesskey                  "r">
-<!ENTITY  deleteContent.label                   "Removes the cell's contents">
-<!ENTITY  deleteContent.accesskey               "c">
 
 <!ENTITY  savingFiles.title           "When Saving Files">
 <!ENTITY  preserveExistingFormatting  "Retain original source formatting">

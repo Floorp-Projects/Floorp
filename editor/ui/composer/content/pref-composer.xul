@@ -34,7 +34,7 @@
   <script type="application/x-javascript">
   <!-- Add "shouldAutoSave", "autoSaveAmount" to _elementIDs when implemented -->
   <![CDATA[
-    var _elementIDs = ["maintainTableStructure", "tableDeleteKey", "preserveFormatting", "recentFiles"];
+    var _elementIDs = ["maintainTableStructure", "preserveFormatting", "recentFiles"];
   ]]>
   </script>        
         
@@ -93,18 +93,6 @@
       prefstring= "editor.table.maintain_structure"
     />
     <separator class = "thin"/>
-    <hbox align="start">
-      <label value="&pressingTheDeleteKey.label;" 
-        tooltip = "aTooltip" tooltiptext="&pressingTheDeleteKey.tooltip;"
-        control="tableDeleteKey" 
-      />
-      <radiogroup
-          id       = "tableDeleteKey"
-          prefstring="editor.table.delete_key">
-        <radio value="0" label="&deleteCell.label;" accesskey="&deleteCell.accesskey;"/>
-        <radio value="1" label="&deleteContent.label;" accesskey="&deleteContent.accesskey;" />
-      </radiogroup>
-    </hbox>
   </groupbox>
 
 <!-- Take out Auto-Save; not supported at this time
