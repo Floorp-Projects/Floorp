@@ -20,6 +20,7 @@
  * Igor Kushnirskiy <idk@eng.sun.com>
  */
 
+#include "prmem.h"
 #include "nsIInterfaceInfo.h"
 #include "nsIInterfaceInfoManager.h"
 #include "xptcall.h"

@@ -20,6 +20,7 @@
  * Igor Kushnirskiy <idk@eng.sun.com>
  */
 
+#include "pratom.h"
 #include "nsIInterfaceInfoManager.h"
 
 #include "bcXPCOMProxy.h"

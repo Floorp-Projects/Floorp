@@ -60,7 +60,7 @@ void bcJavaGlobal::StartJVM() {
     if (jvmCount) {
         return;
     }
-#if 0
+#if  0
     JDK1_1InitArgs vm_args;
     char classpath[1024];
     JNI_GetDefaultJavaVMInitArgs(&vm_args);
@@ -77,12 +77,11 @@ void bcJavaGlobal::StartJVM() {
     vm_args.classpath = classpath;
     /* Create the Java VM */
     res = JNI_CreateJavaVM(&jvm, JNIENV &env, &vm_args);
-#endif
-#if 1
+#else
     char classpath[1024];
     JavaVMInitArgs vm_args;
     JavaVMOption options[2];
-    sprintf(classpath, "-Djava.class.path=%s:/ws/mozilla/dist/classes",PR_GetEnv("CLASSPATH"));
+    sprintf(classpath, "-Djava.class.path=%s",PR_GetEnv("CLASSPATH"));
     printf("--[c++] classpath %s\n",classpath);
     options[0].optionString = classpath;
     options[1].optionString=""; //-Djava.compiler=NONE";

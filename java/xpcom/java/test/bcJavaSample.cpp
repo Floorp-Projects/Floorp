@@ -23,6 +23,7 @@
 
 #include "nsIGenericFactory.h"
 #include "nsIModule.h"
+#include "stdlib.h"
 
 #define BC_JAVA_SAMPLE_CID \
 {0x072fa586, 0x1dd2, 0x11b2, \

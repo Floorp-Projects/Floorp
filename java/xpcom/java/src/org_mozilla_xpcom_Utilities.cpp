@@ -60,7 +60,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_xpcom_Utilities_callMethodByIndex
     }
     /*****/
     bcIMarshaler * m = call->GetMarshaler();
-    bcJavaMarshalToolkit * mt = new bcJavaMarshalToolkit(mid, interfaceInfo, args, env, 0, orb);
+    bcJavaMarshalToolkit * mt = new bcJavaMarshalToolkit((unsigned)mid, interfaceInfo, args, env, 0, orb);
     mt->Marshal(m);
     orb->SendReceive(call);
     bcIUnMarshaler * um = call->GetUnMarshaler();

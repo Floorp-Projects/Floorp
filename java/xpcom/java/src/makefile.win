@@ -42,6 +42,8 @@ OBJS= \
 	.\$(OBJDIR)\org_mozilla_xpcom_Utilities.obj \
 	$(NULL)
 
+LINCS=-I$(JDKHOME)\include -I$(JDKHOME)\include\win32
+
 LLIBS=$(LLIBS) $(LIBNSPR) $(DIST)\lib\xpcom.lib $(JDKHOME)\lib\jvm.lib
 
 include <$(DEPTH)\config\rules.mak>

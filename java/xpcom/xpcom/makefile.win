@@ -42,6 +42,7 @@ EXPORTS = \
 
 LLIBS=	\
 	$(DIST)\lib\xpcom.lib \
+	$(LIBNSPR) \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
