@@ -205,8 +205,14 @@ nsBlockReflowContext::AlignBlockHorizontally(nscoord                 aWidth,
               break;
             case NS_STYLE_TEXT_ALIGN_MOZ_CENTER:
             case NS_STYLE_TEXT_ALIGN_CENTER:
-              aAlign.mXOffset += remainingSpace / 2;
-              doCSS = PR_FALSE;
+              {
+                nsCompatibility mode;
+                mPresContext->GetCompatibilityMode(&mode);
+                if (eCompatibility_NavQuirks == mode) {
+                  aAlign.mXOffset += remainingSpace / 2;
+                  doCSS = PR_FALSE;
+                }
+              }
               break;
           }
         }
