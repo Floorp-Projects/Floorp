@@ -817,7 +817,7 @@ imgRequest::SniffMimeType(const char *buf, PRUint32 len)
   }
 
   // ICOs always begin with a 2-byte 0 followed by a 2-byte 1.
-  if (len >= 4 && !nsCRT::memcmp(buf, "\000\000\001\000", 4)) {
+  if (len >= 4 && !memcmp(buf, "\000\000\001\000", 4)) {
     mContentType = nsCRT::strndup("image/x-icon", 12);
     return;
   }

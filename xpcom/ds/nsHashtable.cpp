@@ -580,7 +580,7 @@ nsCStringKey::Equals(const nsHashKey* aKey) const
     NS_ASSERTION(other->mStrLen != PRUint32(-1), "never called HashCode");
     if (mStrLen != other->mStrLen)
         return PR_FALSE;
-    return nsCRT::memcmp(mStr, other->mStr, mStrLen * sizeof(char)) == 0;
+    return memcmp(mStr, other->mStr, mStrLen * sizeof(char)) == 0;
 }
 
 nsHashKey*
@@ -678,7 +678,7 @@ nsStringKey::Equals(const nsHashKey* aKey) const
     NS_ASSERTION(other->mStrLen != PRUint32(-1), "never called HashCode");
     if (mStrLen != other->mStrLen)
         return PR_FALSE;
-    return nsCRT::memcmp(mStr, other->mStr, mStrLen * sizeof(PRUnichar)) == 0;
+    return memcmp(mStr, other->mStr, mStrLen * sizeof(PRUnichar)) == 0;
 }
 
 nsHashKey*
@@ -743,7 +743,7 @@ nsOpaqueKey::Equals(const nsHashKey* aKey) const
     nsOpaqueKey* other = (nsOpaqueKey*)aKey;
     if (mBufLen != other->mBufLen)
         return PR_FALSE;
-    return nsCRT::memcmp(mBuf, other->mBuf, mBufLen) == 0;
+    return memcmp(mBuf, other->mBuf, mBufLen) == 0;
 }
 
 nsHashKey*
