@@ -42,8 +42,11 @@
 
 #ifndef __PRUNICHAR__
 #define __PRUNICHAR__
-/* typedef wchar_t PRUnichar; */
-typedef PRUint16 PRUnichar;
+  #ifdef HAVE_CPP_2BYTE_WCHAR_T
+    typedef wchar_t PRUnichar;
+  #else
+    typedef PRUint16 PRUnichar;
+  #endif
 #endif
 
 /* The preferred symbol for null. */
