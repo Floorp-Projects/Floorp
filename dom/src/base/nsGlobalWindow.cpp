@@ -3282,9 +3282,9 @@ GlobalWindowImpl::UpdateCommands(const nsAString& anAction)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-GlobalWindowImpl::Escape(const nsAString& aStr,
-                         nsAString& aReturn)
+nsresult
+GlobalWindowImpl::ConvertCharset(const nsAString& aStr,
+                                 char** aDest)
 {
   nsresult result = NS_OK;
   nsCOMPtr<nsIUnicodeEncoder> encoder;
@@ -3326,32 +3326,44 @@ GlobalWindowImpl::Escape(const nsAString& aStr,
     return result;
 
   // Allocate a buffer of the maximum length
-  char* dest = (char *) nsMemory::Alloc(maxByteLen + 1);
+  *aDest = (char *) nsMemory::Alloc(maxByteLen + 1);
   PRInt32 destLen2, destLen = maxByteLen;
-  if (!dest)
+  if (!*aDest)
     return NS_ERROR_OUT_OF_MEMORY;
 
   // Convert from unicode to the character set
-  result = encoder->Convert(src, &srcLen, dest, &destLen);
-  if (NS_FAILED(result)) {
-    nsMemory::Free(dest);
+  result = encoder->Convert(src, &srcLen, *aDest, &destLen);
+  if (NS_FAILED(result)) {    
+    nsMemory::Free(*aDest);
+    *aDest = nsnull;
     return result;
   }
 
   // Allow the encoder to finish the conversion
   destLen2 = maxByteLen - destLen;
-  encoder->Finish(dest + destLen, &destLen2);
-  dest[destLen + destLen2] = '\0';
-
-  // Escape the string
-  char *outBuf =
-    nsEscape(dest, nsEscapeMask(url_XAlphas | url_XPAlphas | url_Path));
-  CopyASCIItoUCS2(nsDependentCString(outBuf), aReturn);
-
-  nsMemory::Free(outBuf);
-  nsMemory::Free(dest);
+  encoder->Finish(*aDest + destLen, &destLen2);
+  (*aDest)[destLen + destLen2] = '\0';
 
   return result;
+}
+
+NS_IMETHODIMP
+GlobalWindowImpl::Escape(const nsAString& aStr,
+                         nsAString& aReturn)
+{
+  nsresult rv = NS_OK;
+  nsXPIDLCString dest;
+
+  rv = ConvertCharset(aStr, getter_Copies(dest));
+  if (NS_SUCCEEDED(rv)) {
+    // Escape the string
+    char *outBuf =
+      nsEscape(dest.get(), nsEscapeMask(url_XAlphas | url_XPAlphas | url_Path));
+    CopyASCIItoUCS2(nsDependentCString(outBuf), aReturn);
+    nsMemory::Free(outBuf);
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -4311,48 +4323,26 @@ GlobalWindowImpl::OpenInternal(const nsAString& aUrl,
                                nsISupports *aExtraArgument,
                                nsIDOMWindow **aReturn)
 {
-  nsresult rv = NS_OK;
-  nsXPIDLCString url;
+  nsCAutoString url;
+  nsresult rv = NS_OK;  
 
   *aReturn = nsnull;
 
   if (!aUrl.IsEmpty()) {
     // fix bug 35076
-    // if the URL contains non ASCII, escape from the first non ASCII char
-    nsAutoString unescapedURL(aUrl);
-    nsAutoString escapedURL;
-
-    if (unescapedURL.IsASCII())
-      escapedURL = unescapedURL;
-    else {
-      // const PRUnichar *pt = unescapedURL.get();
-      PRUint32 len = unescapedURL.Length();
-      PRUint32 nonAsciiPos = 0;
-
-      nsReadingIterator<PRUnichar> iter, end;
-      unescapedURL.BeginReading(iter);
-      unescapedURL.EndReading(end);
-
-      while (iter != end) {
-        if ((0xFF80 & *iter) != 0)
-          break;
-
-        ++nonAsciiPos;
-
-        ++iter;
-      }
-
-      nsAutoString right, escapedRight;
-      unescapedURL.Left(escapedURL, nonAsciiPos);
-      unescapedURL.Right(right, len - nonAsciiPos);
-      if (NS_SUCCEEDED(Escape(right, escapedRight)))
-        escapedURL.Append(escapedRight);
-      else
-        escapedURL = unescapedURL;
+    // Escape all non ASCII characters in the url.
+    // Earlier, this code used to call Escape() and would escape characters like
+    // '?', '&', and '=' in the url.  This caused bug 174628.
+    if (IsASCII(aUrl)) {
+      url.Append(NS_ConvertUCS2toUTF8(aUrl));
     }
-
-    if (!escapedURL.IsEmpty()) {
-      CopyUCS2toASCII(escapedURL, url);
+    else {
+      nsXPIDLCString dest;
+      rv = ConvertCharset(aUrl, getter_Copies(dest));
+      if (NS_SUCCEEDED(rv))
+        NS_EscapeURL(dest, esc_AlwaysCopy | esc_OnlyNonASCII, url);      
+      else
+        url.Append(NS_ConvertUCS2toUTF8(aUrl));
     }
 
     /* Check whether the URI is allowed, but not for dialogs --
