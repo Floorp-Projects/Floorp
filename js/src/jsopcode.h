@@ -82,7 +82,7 @@ typedef enum JSOp {
 #define JOF_POST          0x0400  /* postorder increment or decrement */
 #define JOF_IMPORT        0x0800  /* import property op */
 #define JOF_FOR           0x1000  /* for-in property op */
-#define JOF_ASSIGNING     0x2000  /* hint for JSClass.resolve, used for ops
+#define JOF_ASSIGNING     JOF_SET /* hint for JSClass.resolve, used for ops
                                      that do simplex assignment */
 #define JOF_BACKPATCH     0x4000  /* backpatch placeholder during codegen */
 #define JOF_LEFTASSOC     0x8000  /* left-associative operator */
