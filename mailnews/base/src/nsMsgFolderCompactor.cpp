@@ -264,6 +264,7 @@ nsFolderCompactState::Init(nsIMsgFolder *folder, const char *baseMsgUri, nsIMsgD
 
   pathSpec->GetFileSpec(&m_fileSpec);
   m_fileSpec.SetLeafName("nstmp");
+  m_fileSpec.MakeUnique();   //make sure we are not crunching existing nstmp file
   m_window = aMsgWindow;
   m_keyArray.RemoveAll();
   InitDB(db);
