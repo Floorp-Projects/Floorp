@@ -366,7 +366,7 @@ nsHttpResponseHead::ParseVersion(const char *str)
     // Parse HTTP-Version:: "HTTP" "/" 1*DIGIT "." 1*DIGIT
 
     // make sure we have HTTP at the beginning
-    if (PL_strncmp(str, "HTTP", 4) != 0) {
+    if (PL_strncasecmp(str, "HTTP", 4) != 0) {
         LOG(("looks like a HTTP/0.9 response\n"));
         mVersion = NS_HTTP_VERSION_0_9;
         return;
