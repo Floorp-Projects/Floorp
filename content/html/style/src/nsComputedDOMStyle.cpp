@@ -41,6 +41,8 @@
 #include "nsIPresContext.h"
 #include "nsIContent.h"
 #include "nsIFrame.h"
+#include "nsIScrollableFrame.h"
+#include "nsLayoutAtoms.h"
 #include "nsIDOMElement.h"
 #include "nsIStyleContext.h"
 #include "nsROCSSPrimitiveValue.h"
@@ -82,20 +84,31 @@ public:
 
 private:
   //Helpers
-  nsresult GetAbsoluteFrameRect(nsIFrame *aFrame, nsRect& aRect);
+  nsresult GetOffsetWidthFor(PRUint8 aSide, nsIFrame *aFrame,
+                             nsIDOMCSSPrimitiveValue*& aValue);
+  nsresult GetAbsoluteOffset(PRUint8 aSide, nsIFrame *aFrame,
+                             nsIDOMCSSPrimitiveValue*& aValue);
+  nsresult GetRelativeOffset(PRUint8 aSide, nsIFrame *aFrame,
+                             nsIDOMCSSPrimitiveValue*& aValue);
+  nsresult GetStaticOffset(PRUint8 aSide, nsIFrame *aFrame,
+                           nsIDOMCSSPrimitiveValue*& aValue);
+  nsIFrame* GetContainingBlock(nsIFrame *aFrame);
   nsresult GetStyleData(nsStyleStructID aID,
                         const nsStyleStruct*& aStyleStruct,
                         nsIFrame* aFrame=0);
   nsresult GetPaddingWidthFor(PRUint8 aSide, nsIFrame *aFrame,
                               nsIDOMCSSPrimitiveValue*& aValue);
+  nscoord GetPaddingWidthCoordFor(PRUint8 aSide, nsIFrame *aFrame);
   nsresult GetBorderStyleFor(PRUint8 aSide, nsIFrame *aFrame,
                              nsIDOMCSSPrimitiveValue*& aValue);
   nsresult GetBorderWidthFor(PRUint8 aSide, nsIFrame *aFrame,
                              nsIDOMCSSPrimitiveValue*& aValue);
+  nscoord GetBorderWidthCoordFor(PRUint8 aSide, nsIFrame *aFrame);
   nsresult GetBorderColorFor(PRUint8 aSide, nsIFrame *aFrame,
                              nsIDOMCSSPrimitiveValue*& aValue);
   nsresult GetMarginWidthFor(PRUint8 aSide, nsIFrame *aFrame,
                              nsIDOMCSSPrimitiveValue*& aValue);
+  nscoord GetMarginWidthCoordFor(PRUint8 aSide, nsIFrame *aFrame);
 
   // Properties
   nsresult GetWidth(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
@@ -205,7 +218,7 @@ private:
   nsCOMPtr<nsIContent> mContent;
   // When a frame is unavailable strong reference to the
   // style context while we're accessing  the data from in.
-  nsCOMPtr<nsISupports> mStyleContextHolder;
+  nsCOMPtr<nsIStyleContext> mStyleContextHolder;
   nsCOMPtr<nsIAtom> mPseudo;
 
   float mT2P; // For unit conversions
@@ -830,16 +843,7 @@ nsresult
 nsComputedDOMStyle::GetBottom(nsIFrame *aFrame,
                               nsIDOMCSSPrimitiveValue*& aValue)
 {
-  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
-  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
-
-  nsRect rect;
-  GetAbsoluteFrameRect(aFrame, rect);
-
-  val->SetTwips(rect.y + rect.height);
-
-  return val->QueryInterface(NS_GET_IID(nsIDOMCSSPrimitiveValue),
-                             (void **)&aValue);
+  return GetOffsetWidthFor(NS_SIDE_BOTTOM, aFrame, aValue);
 }
 
 
@@ -1371,18 +1375,21 @@ nsComputedDOMStyle::GetZIndex(nsIFrame *aFrame,
   const nsStylePosition* position = nsnull;
   nsAutoString zindex;
 
-  do {
-    GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)position,
-                 aFrame);
-
-    if(position){
-      if(position->mZIndex.GetUnit()==eStyleUnit_Integer) {
-        zindex.AppendInt(position->mZIndex.GetIntValue(), 10);
-        break;
-      }
+  GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)position, aFrame);
+  while (position) {
+    if (position->mZIndex.GetUnit() == eStyleUnit_Integer) {
+      zindex.AppendInt(position->mZIndex.GetIntValue(), 10);
+      break;
+    }
+    if (aFrame) {
       aFrame->GetParent(&aFrame);
     }
-  }while(aFrame && position);
+    if (aFrame) {
+      aFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)position);
+    } else {
+      position = nsnull;
+    }
+  }
 
   val->SetString(zindex);
 
@@ -1696,11 +1703,48 @@ nsComputedDOMStyle::GetHeight(nsIFrame *aFrame,
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  nsRect rect;
-  GetAbsoluteFrameRect(aFrame, rect);
+  if (aFrame) {
+    // Flush all pending notifications so that our frames are up to date
+    nsCOMPtr<nsIDocument> document;
+    mContent->GetDocument(*getter_AddRefs(document));
 
-  val->SetTwips(rect.height);
-
+    if (document) {
+      document->FlushPendingNotifications();
+    }
+  
+    const nsStyleDisplay* displayData = nsnull;
+    GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)displayData, aFrame);
+    if (displayData && displayData->mDisplay == NS_STYLE_DISPLAY_INLINE) {
+      nsFrameState frameState;
+      aFrame->GetFrameState(&frameState);
+      if (! (frameState & NS_FRAME_REPLACED_ELEMENT)) {
+        // XXX no useful height we can give for non-replaced inlines yet
+        return NS_ERROR_NOT_IMPLEMENTED;
+      }
+    }
+      
+    nsRect rect;
+    nsMargin padding;
+    nsMargin border;
+    aFrame->GetRect(rect);
+    const nsStylePadding* paddingData=nsnull;
+    GetStyleData(eStyleStruct_Padding, (const nsStyleStruct*&)paddingData, aFrame);
+    if (paddingData) {
+      paddingData->CalcPaddingFor(aFrame, padding);
+    }
+    const nsStyleBorder* borderData=nsnull;
+    GetStyleData(eStyleStruct_Border, (const nsStyleStruct*&)borderData, aFrame);
+    if (borderData) {
+      borderData->CalcBorderFor(aFrame, border);
+    }
+  
+    val->SetTwips(rect.height - padding.top - padding.bottom -
+                  border.top - border.bottom);
+  } else {
+    // XXX no frame.  This property makes no sense in this case
+    val->SetTwips(0);
+  }
+  
   return val->QueryInterface(NS_GET_IID(nsIDOMCSSPrimitiveValue),
                              (void **)&aValue);
 }
@@ -1709,16 +1753,7 @@ nsresult
 nsComputedDOMStyle::GetLeft(nsIFrame *aFrame,
                             nsIDOMCSSPrimitiveValue*& aValue)
 {
-  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
-  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
-
-  nsRect rect;
-  GetAbsoluteFrameRect(aFrame, rect);
-
-  val->SetTwips(rect.x);
-
-  return val->QueryInterface(NS_GET_IID(nsIDOMCSSPrimitiveValue),
-                             (void **)&aValue);
+  return GetOffsetWidthFor(NS_SIDE_LEFT, aFrame, aValue);
 }
 
 #if 0
@@ -1977,16 +2012,7 @@ nsresult
 nsComputedDOMStyle::GetRight(nsIFrame *aFrame,
                              nsIDOMCSSPrimitiveValue*& aValue)
 {
-  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
-  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
-
-  nsRect rect;
-  GetAbsoluteFrameRect(aFrame, rect);
-
-  val->SetTwips(rect.x + rect.width);
-
-  return val->QueryInterface(NS_GET_IID(nsIDOMCSSPrimitiveValue),
-                             (void **)&aValue);
+  return GetOffsetWidthFor(NS_SIDE_RIGHT, aFrame, aValue);
 }
 
 #if 0
@@ -2073,16 +2099,7 @@ nsresult
 nsComputedDOMStyle::GetTop(nsIFrame *aFrame,
                            nsIDOMCSSPrimitiveValue*& aValue)
 {
-  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
-  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
-
-  nsRect rect;
-  GetAbsoluteFrameRect(aFrame, rect);
-
-  val->SetTwips(rect.y);
-
-  return val->QueryInterface(NS_GET_IID(nsIDOMCSSPrimitiveValue),
-                             (void **)&aValue);
+  return GetOffsetWidthFor(NS_SIDE_TOP, aFrame, aValue);
 }
 
 #if 0
@@ -2142,85 +2159,297 @@ nsComputedDOMStyle::GetROCSSPrimitiveValue()
 }
 
 nsresult
-nsComputedDOMStyle::GetAbsoluteFrameRect(nsIFrame *aFrame, nsRect& aRect)
+nsComputedDOMStyle::GetOffsetWidthFor(PRUint8 aSide, nsIFrame* aFrame,
+                                      nsIDOMCSSPrimitiveValue*& aValue)
 {
-  nsresult res = NS_OK;
+  const nsStyleDisplay* display = nsnull;
+  GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display, aFrame);
 
-  aRect.x = aRect.y = 0;
-  aRect.Empty();
-
-  if (!aFrame) {
-    return NS_OK;
-  }
-
-  // Flush all pending notifications so that our frames are uptodate
+  // Flush all pending notifications so that our frames are up to date
   nsCOMPtr<nsIDocument> document;
   mContent->GetDocument(*getter_AddRefs(document));
-
   if (document) {
     document->FlushPendingNotifications();
   }
 
-  // Get the union of all rectangles in this and continuation frames
-  nsIFrame* next = aFrame;
-  do {
-    nsRect rect;
-    next->GetRect(rect);
-    aRect.UnionRect(aRect, rect);
-    next->GetNextInFlow(&next);
-  } while (nsnull != next);
-
-  nsIFrame* frame = aFrame;
-  nsPoint origin(0, 0), tmp(0, 0);
-  nsFrameState position;
-  do {
-    frame->GetOrigin(tmp);
-    origin += tmp;
-
-    frame->GetFrameState(&position);
-    if(position & NS_FRAME_OUT_OF_FLOW) {
-      break; // Do not include parent if absolutely positioned - Bug 49942
-    }
-    // Add the parent's origin to our own to
-    // get to the right coordinate system
-    frame->GetParent(&frame);
-  } while(frame);
-
-  // For the origin, add in the border for the frame
-  const nsStyleBorder* border;
-  const nsStylePadding* padding;
-  nsStyleCoord coord;
-  GetStyleData(eStyleStruct_Border, (const nsStyleStruct*&)border, aFrame);
-  GetStyleData(eStyleStruct_Padding, (const nsStyleStruct*&)padding, aFrame);
-  if (border && padding) {
-    if (eStyleUnit_Coord == border->mBorder.GetLeftUnit()) {
-      origin.x += border->mBorder.GetLeft(coord).GetCoordValue();
-      aRect.width -= border->mBorder.GetLeft(coord).GetCoordValue();
-      //aRect.width -= margin->mMargin.GetLeft(coord).GetCoordValue();
-      aRect.width -= padding->mPadding.GetLeft(coord).GetCoordValue();
-    }
-    if (eStyleUnit_Coord == border->mBorder.GetTopUnit()) {
-      origin.y += border->mBorder.GetTop(coord).GetCoordValue();
-      aRect.height -= border->mBorder.GetTop(coord).GetCoordValue();
-      //aRect.height -= margin->mMargin.GetTop(coord).GetCoordValue();
-      aRect.height -= padding->mPadding.GetTop(coord).GetCoordValue();
-    }
-    if (eStyleUnit_Coord == border->mBorder.GetRightUnit()) {
-      aRect.width -= border->mBorder.GetRight(coord).GetCoordValue();
-      //aRect.width -= margin->mMargin.GetRight(coord).GetCoordValue();
-      aRect.width -= padding->mPadding.GetRight(coord).GetCoordValue();
-    }
-    if (eStyleUnit_Coord == border->mBorder.GetBottomUnit()) {
-      aRect.height -= border->mBorder.GetBottom(coord).GetCoordValue();
-      //aRect.height -= margin->mMargin.GetBottom(coord).GetCoordValue();
-      aRect.height -= padding->mPadding.GetBottom(coord).GetCoordValue();
+  nsresult rv = NS_OK;
+  if (display) {
+    switch (display->mPosition) {
+      case NS_STYLE_POSITION_NORMAL:
+        rv = GetStaticOffset(aSide, aFrame, aValue);
+        break;
+      case NS_STYLE_POSITION_RELATIVE:
+        rv = GetRelativeOffset(aSide, aFrame, aValue);
+        break;
+      case NS_STYLE_POSITION_ABSOLUTE:
+      case NS_STYLE_POSITION_FIXED:
+        rv = GetAbsoluteOffset(aSide, aFrame, aValue);
+        break;
+      default:
+        NS_WARNING("double check the position");
+        break;
     }
   }
 
-  aRect.x = origin.x;
-  aRect.y = origin.y;
+  return rv;
+}
 
-  return res;
+nsresult
+nsComputedDOMStyle::GetAbsoluteOffset(PRUint8 aSide, nsIFrame* aFrame,
+                                      nsIDOMCSSPrimitiveValue*& aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  nsIFrame* container = GetContainingBlock(aFrame);
+  if (container) {
+    nsRect rect;
+    nsRect containerRect;
+    nscoord margin = GetMarginWidthCoordFor(aSide, aFrame);
+    nscoord border = GetBorderWidthCoordFor(aSide, container);
+    nscoord horScrollBarHeight = 0;
+    nscoord verScrollBarWidth = 0;
+    aFrame->GetRect(rect);
+    container->GetRect(containerRect);
+      
+    nsCOMPtr<nsIAtom> typeAtom;
+    container->GetFrameType(getter_AddRefs(typeAtom));
+    if (typeAtom == nsLayoutAtoms::viewportFrame) {
+      // For absolutely positioned frames scrollbars are taken into
+      // account by virtue of getting a containing block that does
+      // _not_ include the scrollbars.  For fixed positioned frames,
+      // the containing block is the viewport, which _does_ include
+      // scrollbars.  We have to do some extra work.
+      nsIFrame* scrollingChild;
+      nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShellWeak);
+      NS_ASSERTION(presShell, "Must have a presshell!");
+      nsCOMPtr<nsIPresContext> presContext;
+      presShell->GetPresContext(getter_AddRefs(presContext));
+      // the first child in the default frame list is what we want
+      container->FirstChild(presContext, nsnull, &scrollingChild);
+      nsCOMPtr<nsIScrollableFrame> scrollFrame(do_QueryInterface(scrollingChild));
+      if (scrollFrame) {
+        scrollFrame->GetScrollbarSizes(presContext, &verScrollBarWidth,
+                                       &horScrollBarHeight);
+        PRBool verScrollBarVisible;
+        PRBool horScrollBarVisible;
+        scrollFrame->GetScrollbarVisibility(presContext, &verScrollBarVisible,
+                                            &horScrollBarVisible);
+        if (!verScrollBarVisible) {
+          verScrollBarWidth = 0;
+        }
+        if (!horScrollBarVisible) {
+          horScrollBarHeight = 0;
+        }
+      }
+    }
+    nscoord offset = 0;
+    switch (aSide) {
+      case NS_SIDE_TOP:
+        offset = rect.y - margin - border;
+        break;
+      case NS_SIDE_RIGHT:
+        offset = containerRect.width - rect.width -
+          rect.x - margin - border - verScrollBarWidth;
+        break;
+      case NS_SIDE_BOTTOM:
+        offset = containerRect.height - rect.height -
+          rect.y - margin - border - horScrollBarHeight;
+        break;
+      case NS_SIDE_LEFT:
+        offset = rect.x - margin - border;
+        break;
+      default:
+        NS_WARNING("double check the side");
+        break;
+    }
+    val->SetTwips(offset);
+  } else {
+    // XXX no frame.  This property makes no sense
+    val->SetTwips(0);
+  }
+
+  return val->QueryInterface(NS_GET_IID(nsIDOMCSSPrimitiveValue),
+                             (void **)&aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetRelativeOffset(PRUint8 aSide, nsIFrame* aFrame,
+                                      nsIDOMCSSPrimitiveValue*& aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStylePosition* positionData = nsnull;
+  GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)positionData, aFrame);
+  if (positionData) {
+    nsStyleCoord coord;
+    PRInt32 sign = 1;
+    switch (aSide) {
+      case NS_SIDE_TOP:
+        positionData->mOffset.GetTop(coord);
+        if (coord.GetUnit() != eStyleUnit_Coord &&
+            coord.GetUnit() != eStyleUnit_Percent) {
+          positionData->mOffset.GetBottom(coord);
+          sign = -1;
+        }
+        break;
+      case NS_SIDE_RIGHT:
+        positionData->mOffset.GetRight(coord);
+        if (coord.GetUnit() != eStyleUnit_Coord &&
+            coord.GetUnit() != eStyleUnit_Percent) {
+          positionData->mOffset.GetLeft(coord);
+          sign = -1;
+        }
+        break;
+      case NS_SIDE_BOTTOM:
+        positionData->mOffset.GetBottom(coord);
+        if (coord.GetUnit() != eStyleUnit_Coord &&
+            coord.GetUnit() != eStyleUnit_Percent) {
+          positionData->mOffset.GetTop(coord);
+          sign = -1;
+        }
+        break;
+      case NS_SIDE_LEFT:
+        positionData->mOffset.GetLeft(coord);
+        if (coord.GetUnit() != eStyleUnit_Coord &&
+            coord.GetUnit() != eStyleUnit_Percent) {
+          positionData->mOffset.GetRight(coord);
+          sign = -1;
+        }
+        break;
+      default:
+        NS_WARNING("double check the side");
+        break;
+    }
+
+    nsIFrame* container = nsnull;
+    const nsStyleBorder* borderData = nsnull;
+    const nsStylePadding* paddingData = nsnull;
+    nsMargin border;
+    nsMargin padding;
+    nsRect rect;
+    switch(coord.GetUnit()) {
+      case eStyleUnit_Coord:
+        val->SetTwips(sign * coord.GetCoordValue());
+        break;
+      case eStyleUnit_Percent:
+        container = GetContainingBlock(aFrame);
+        if (container) {
+          container->GetStyleData(eStyleStruct_Border, (const nsStyleStruct*&)borderData);
+          if (borderData) {
+            borderData->CalcBorderFor(container, border);
+          }
+          container->GetStyleData(eStyleStruct_Padding, (const nsStyleStruct*&)paddingData);
+          if (paddingData) {
+            paddingData->CalcPaddingFor(container, padding);
+          }
+          container->GetRect(rect);
+          if (aSide == NS_SIDE_LEFT || aSide == NS_SIDE_RIGHT) {
+            val->SetTwips(sign * coord.GetPercentValue() *
+                          (rect.width - border.left - border.right -
+                           padding.left - padding.right));
+          } else {
+            val->SetTwips(sign * coord.GetPercentValue() *
+                          (rect.height - border.top - border.bottom -
+                           padding.top - padding.bottom));
+          }
+        } else {
+          // XXX no containing block.
+          val->SetTwips(0);
+        }
+        break;
+      default:
+        NS_WARNING("double check the unit");
+        val->SetTwips(0);
+        break;
+    }
+  }
+
+  return val->QueryInterface(NS_GET_IID(nsIDOMCSSPrimitiveValue),
+                             (void **)&aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetStaticOffset(PRUint8 aSide, nsIFrame* aFrame,
+                                    nsIDOMCSSPrimitiveValue*& aValue)
+
+{
+  /*
+    This does not work correctly yet.  Specifically, we _always_
+    return computed values here.  This needs to be worked on.
+  */
+  return NS_ERROR_NOT_IMPLEMENTED;
+#if 0
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStylePosition* positionData = nsnull;
+  GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)positionData, aFrame);
+  if (positionData) {
+    nsStyleCoord coord;
+    switch (aSide) {
+      case NS_SIDE_TOP:
+        positionData->mOffset.GetTop(coord);
+        break;
+      case NS_SIDE_RIGHT:
+        positionData->mOffset.GetRight(coord);
+        break;
+      case NS_SIDE_BOTTOM:
+        positionData->mOffset.GetBottom(coord);
+        break;
+      case NS_SIDE_LEFT:
+        positionData->mOffset.GetLeft(coord);
+        break;
+      default:
+        NS_WARNING("double check the side");
+        break;
+    }
+
+    char buf[16];
+    PRInt32 len;
+    switch(coord.GetUnit()) {
+      case eStyleUnit_Coord:
+        val->SetTwips(coord.GetCoordValue());
+        break;
+      case eStyleUnit_Percent:
+        len = PR_snprintf(buf, sizeof(buf), "%d%%",
+                          int(coord.GetPercentValue() * 100.0));
+        val->SetString(buf);
+        break;
+      default:
+        NS_WARNING("double check the unit");
+        val->SetTwips(0);
+        break;
+    }
+  }
+  
+  return val->QueryInterface(NS_GET_IID(nsIDOMCSSPrimitiveValue),
+                             (void **)&aValue);
+#endif
+}
+
+
+nsIFrame*
+nsComputedDOMStyle::GetContainingBlock(nsIFrame *aFrame)
+{
+  if (!aFrame) {
+    // Tell caller that they have no containing block, seeing as they
+    // are not being displayed
+    return nsnull;
+  }
+  nsIFrame* container = aFrame;
+  PRBool done = PR_FALSE;
+  do {
+    container->GetParent(&container);
+    if (container) {
+      (container)->IsPercentageBase(done);
+    }
+  } while (!done && container);
+
+  NS_POSTCONDITION(container, "Frame has no containing block");
+  
+  return container;
 }
 
 nsresult
@@ -2231,7 +2460,9 @@ nsComputedDOMStyle::GetStyleData(nsStyleStructID aID,
   if(aFrame && !mPseudo) {
     aFrame->GetStyleData(aID, aStyleStruct);
   }
-  else {
+  else if (mStyleContextHolder) {
+    aStyleStruct = mStyleContextHolder->GetStyleData(aID);    
+  } else {
     nsCOMPtr<nsIPresShell> presShell=do_QueryReferent(mPresShellWeak);
 
     NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
@@ -2254,6 +2485,7 @@ nsComputedDOMStyle::GetStyleData(nsStyleStructID aID,
       mStyleContextHolder=sctx;
     }
   }
+  NS_ASSERTION(aStyleStruct, "Failed to get a style struct");
   return NS_OK;
 }
 
@@ -2264,48 +2496,77 @@ nsComputedDOMStyle::GetPaddingWidthFor(PRUint8 aSide,
 {
   nsROCSSPrimitiveValue* val=GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
-
-  const nsStylePadding* padding=nsnull;
-  GetStyleData(eStyleStruct_Padding, (const nsStyleStruct*&)padding, aFrame);
-
-  if(padding) {
-     nsStyleCoord coord;
-     switch(aSide) {
-       case NS_SIDE_TOP:
-         padding->mPadding.GetTop(coord); break;
-       case NS_SIDE_BOTTOM :
-         padding->mPadding.GetBottom(coord); break;
-       case NS_SIDE_LEFT :
-         padding->mPadding.GetLeft(coord); break;
-       case NS_SIDE_RIGHT :
-         padding->mPadding.GetRight(coord); break;
-       default:
-         NS_WARNING("double check the side");
-         break;
-     }
-
-     switch(coord.GetUnit()) {
-       case eStyleUnit_Coord:
-         val->SetTwips(coord.GetCoordValue()); break;
-       case eStyleUnit_Percent:
-         {
-            nsIFrame* parent=nsnull;
-            aFrame->GetParent(&parent);
-            if(parent) {
-              nsRect rect;
-              parent->GetRect(rect);
-              val->SetTwips(nscoord(coord.GetPercentValue() * rect.width));
-              break; // intentionally breaking here...
-            }
-         }
-       default:
-         NS_WARNING("double check the unit");
-         break;
-     }
-  }
+  
+  nscoord width = GetPaddingWidthCoordFor(aSide, aFrame);
+  val->SetTwips(width);
 
   return val->QueryInterface(NS_GET_IID(nsIDOMCSSPrimitiveValue),
                              (void **)&aValue);
+}
+
+nscoord
+nsComputedDOMStyle::GetPaddingWidthCoordFor(PRUint8 aSide, nsIFrame* aFrame)
+{
+  const nsStylePadding* paddingData=nsnull;
+  GetStyleData(eStyleStruct_Padding, (const nsStyleStruct*&)paddingData, aFrame);
+
+  if(paddingData) {
+    nsMargin padding;
+    paddingData->CalcPaddingFor(aFrame, padding);
+    switch(aSide) {
+      case NS_SIDE_TOP    :
+        return padding.top;
+        break;
+      case NS_SIDE_BOTTOM :
+        return padding.bottom;
+        break;
+      case NS_SIDE_LEFT   :
+        return padding.left;
+        break;
+      case NS_SIDE_RIGHT  :
+        return padding.right;
+        break;
+      default:
+        NS_WARNING("double check the side");
+        break;
+    }
+  }
+
+  return 0;
+}
+
+nscoord
+nsComputedDOMStyle::GetBorderWidthCoordFor(PRUint8 aSide, nsIFrame *aFrame)
+{
+  nsROCSSPrimitiveValue* val=GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStyleBorder* borderData = nsnull;
+  GetStyleData(eStyleStruct_Border, (const nsStyleStruct*&)borderData, aFrame);
+
+  if(borderData) {
+    nsMargin border;
+    borderData->CalcBorderFor(aFrame, border);
+    switch(aSide) {
+      case NS_SIDE_TOP    :
+        return border.top;
+        break;
+      case NS_SIDE_BOTTOM :
+        return border.bottom;
+        break;
+      case NS_SIDE_LEFT   :
+        return border.left;
+        break;
+      case NS_SIDE_RIGHT  :
+        return border.right;
+        break;
+      default:
+        NS_WARNING("double check the side");
+        break;
+    }
+  }
+
+  return 0;
 }
 
 nsresult
@@ -2407,47 +2668,42 @@ nsComputedDOMStyle::GetMarginWidthFor(PRUint8 aSide,
   nsROCSSPrimitiveValue* val=GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleMargin* margin=nsnull;
-  GetStyleData(eStyleStruct_Margin, (const nsStyleStruct*&)margin, aFrame);
+  nscoord width = GetMarginWidthCoordFor(aSide, aFrame);
+  val->SetTwips(width);
 
-  if(margin) {
-    nsStyleCoord coord;
+  return val->QueryInterface(NS_GET_IID(nsIDOMCSSPrimitiveValue),
+                             (void **)&aValue);
+}
+
+nscoord
+nsComputedDOMStyle::GetMarginWidthCoordFor(PRUint8 aSide,
+                                           nsIFrame *aFrame)
+{
+  const nsStyleMargin* marginData=nsnull;
+  GetStyleData(eStyleStruct_Margin, (const nsStyleStruct*&)marginData, aFrame);
+  if(marginData) {
+    nsMargin margin;
+    marginData->CalcMarginFor(aFrame, margin);
     switch(aSide) {
       case NS_SIDE_TOP    :
-        margin->mMargin.GetTop(coord);    break;
+        return margin.top;
+        break;
       case NS_SIDE_BOTTOM :
-        margin->mMargin.GetBottom(coord); break;
+        return margin.bottom;
+        break;
       case NS_SIDE_LEFT   :
-        margin->mMargin.GetLeft(coord);   break;
+        return margin.left;
+        break;
       case NS_SIDE_RIGHT  :
-        margin->mMargin.GetRight(coord);  break;
+        return margin.right;
+        break;
       default:
         NS_WARNING("double check the side");
         break;
     }
-
-    switch(coord.GetUnit()) {
-      case eStyleUnit_Coord:
-        val->SetTwips(coord.GetCoordValue()); break;
-      case eStyleUnit_Percent:
-        {
-          nsIFrame* parent=nsnull;
-          aFrame->GetParent(&parent);
-          if(parent) {
-            nsRect rect;
-            parent->GetRect(rect);
-            val->SetTwips(nscoord(coord.GetPercentValue() * rect.width));
-            break; // intentionally breaking here...
-          }
-        }
-      default:
-        NS_WARNING("double check the unit");
-        break;
-    }
   }
 
-  return val->QueryInterface(NS_GET_IID(nsIDOMCSSPrimitiveValue),
-                             (void **)&aValue);
+  return 0;
 }
 
 nsresult
@@ -2482,10 +2738,46 @@ nsComputedDOMStyle::GetWidth(nsIFrame *aFrame,
   nsROCSSPrimitiveValue* val=GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  nsRect rect;
-  GetAbsoluteFrameRect(aFrame, rect);
-
-  val->SetTwips(rect.width);
+  if (aFrame) {
+    // Flush all pending notifications so that our frames are up to date
+    nsCOMPtr<nsIDocument> document;
+    mContent->GetDocument(*getter_AddRefs(document));
+  
+    if (document) {
+      document->FlushPendingNotifications();
+    }
+    
+    const nsStyleDisplay* displayData = nsnull;
+    GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)displayData, aFrame);
+    if (displayData && displayData->mDisplay == NS_STYLE_DISPLAY_INLINE) {
+      nsFrameState frameState;
+      aFrame->GetFrameState(&frameState);
+      if (! (frameState & NS_FRAME_REPLACED_ELEMENT)) {
+        // XXX no useful width we can give for non-replaced inlines yet
+        return NS_ERROR_NOT_IMPLEMENTED;
+      }
+    }
+    
+    nsRect rect;
+    nsMargin padding;
+    nsMargin border;
+    aFrame->GetRect(rect);
+    const nsStylePadding* paddingData=nsnull;
+    GetStyleData(eStyleStruct_Padding, (const nsStyleStruct*&)paddingData, aFrame);
+    if (paddingData) {
+      paddingData->CalcPaddingFor(aFrame, padding);
+    }
+    const nsStyleBorder* borderData=nsnull;
+    GetStyleData(eStyleStruct_Border, (const nsStyleStruct*&)borderData, aFrame);
+    if (borderData) {
+      borderData->CalcBorderFor(aFrame, border);
+    }
+    val->SetTwips(rect.width - padding.left - padding.right -
+                  border.left - border.right);
+  } else {
+    // XXX no frame.  This property makes no sense in this case
+    val->SetTwips(0);
+  }
 
   return val->QueryInterface(NS_GET_IID(nsIDOMCSSPrimitiveValue),
                              (void **)&aValue);

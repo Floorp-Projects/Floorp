@@ -47,6 +47,7 @@ REQUIRES	= xpcom \
 		  xuldoc \
 		  xpconnect \
 		  pref \
+		  view \
 		  $(NULL)
 
 CPPSRCS		= \

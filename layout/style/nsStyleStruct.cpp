@@ -128,7 +128,33 @@ inline nscoord CalcSideFor(const nsIFrame* aFrame, const nsStyleCoord& aCoord,
           if (isBase) {
             nsSize  size;
             frame->GetSize(size);
-            baseWidth = size.width; // not really width, need to subtract out padding...
+            baseWidth = size.width;
+            // subtract border of containing block
+            const nsStyleBorder* borderData = nsnull;
+            frame->GetStyleData(eStyleStruct_Border,
+                                (const nsStyleStruct*&)borderData);
+            if (borderData) {
+              nsMargin border;
+                borderData->CalcBorderFor(frame, border);
+                baseWidth -= (border.left + border.right);
+            }
+            // if aFrame is not absolutely positioned, subtract
+            // padding of containing block
+            const nsStyleDisplay* displayData = nsnull;
+            aFrame->GetStyleData(eStyleStruct_Display,
+                                 (const nsStyleStruct*&)displayData);
+            if (displayData &&
+                displayData->mPosition != NS_STYLE_POSITION_ABSOLUTE &&
+                displayData->mPosition != NS_STYLE_POSITION_FIXED) {
+              const nsStylePadding* paddingData = nsnull;
+              frame->GetStyleData(eStyleStruct_Padding,
+                                  (const nsStyleStruct*&)paddingData);
+              if (paddingData) {
+                nsMargin padding;
+                paddingData->CalcPaddingFor(frame, padding);
+                baseWidth -= (padding.left + padding.right);
+              }
+            }
             break;
           }
           frame->GetParent(&frame);

@@ -41,6 +41,7 @@ REQUIRES	= xpcom \
 		  layout \
 		  gfx \
 		  content_xul \
+		  view \
 		  $(NULL)
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
