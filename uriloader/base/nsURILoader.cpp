@@ -60,6 +60,7 @@ public:
     NS_DECL_ISUPPORTS
 
     nsresult Open(nsIURI *aURL, 
+                  nsURILoadCommand aCommand,
                   const char * aWindowTarget,
                   nsISupports * aWindowContext,
                   nsIURI * aReferringURI,
@@ -83,6 +84,7 @@ protected:
 protected:
     nsCOMPtr<nsIURIContentListener> m_contentListener;
     nsCOMPtr<nsIStreamListener> m_targetStreamListener;
+    nsURILoadCommand mCommand;
     nsCString m_windowTarget;
 };
 
@@ -90,6 +92,7 @@ NS_IMPL_ADDREF(nsDocumentOpenInfo);
 NS_IMPL_RELEASE(nsDocumentOpenInfo);
 
 NS_INTERFACE_MAP_BEGIN(nsDocumentOpenInfo)
+   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIStreamObserver)
    NS_INTERFACE_MAP_ENTRY(nsIStreamObserver)
    NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
 NS_INTERFACE_MAP_END
@@ -112,6 +115,7 @@ nsresult nsDocumentOpenInfo::Init(nsISupports * aWindowContext)
 }
 
 nsresult nsDocumentOpenInfo::Open(nsIURI *aURI, 
+                                  nsURILoadCommand aCommand,
                                   const char * aWindowTarget,
                                   nsISupports * aWindowContext,
                                   nsIURI * aReferringURI,
@@ -128,6 +132,7 @@ nsresult nsDocumentOpenInfo::Open(nsIURI *aURI,
 
   // store any local state
   m_windowTarget = aWindowTarget;
+  mCommand = aCommand;
 
   // get the requestor for the window context...
   nsCOMPtr<nsIInterfaceRequestor> requestor = do_QueryInterface(aWindowContext);
@@ -228,7 +233,7 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIChannel * aChannel, nsISupports 
   {
     nsCOMPtr<nsIURIContentListener> aContentListener;
     nsXPIDLCString aDesiredContentType;
-    rv = pURILoader->DispatchContent(aContentType, "view", m_windowTarget, 
+    rv = pURILoader->DispatchContent(aContentType, mCommand, m_windowTarget, 
                                      aChannel, aCtxt, 
                                      m_contentListener, 
                                      getter_Copies(aDesiredContentType), 
@@ -243,7 +248,7 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIChannel * aChannel, nsISupports 
       else
         contentTypeToUse = aContentType;
 
-      rv = aContentListener->DoContent(contentTypeToUse, "view", m_windowTarget, 
+      rv = aContentListener->DoContent(contentTypeToUse, mCommand, m_windowTarget, 
                                     aChannel, getter_AddRefs(aContentStreamListener),
                                     &aAbortProcess);
 
@@ -305,6 +310,7 @@ NS_IMPL_ADDREF(nsURILoader);
 NS_IMPL_RELEASE(nsURILoader);
 
 NS_INTERFACE_MAP_BEGIN(nsURILoader)
+   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIURILoader)
    NS_INTERFACE_MAP_ENTRY(nsIURILoader)
    NS_INTERFACE_MAP_ENTRY(nsPIURILoaderWithPostData)
 NS_INTERFACE_MAP_END
@@ -329,17 +335,19 @@ NS_IMETHODIMP nsURILoader::UnRegisterContentListener(nsIURIContentListener * aCo
 }
 
 NS_IMETHODIMP nsURILoader::OpenURI(nsIURI *aURI, 
+                                   nsURILoadCommand aCommand,
                                    const char * aWindowTarget,
                                    nsISupports * aWindowContext,
                                    nsIURI *aReferringURI,
                                    nsISupports *aOpenContext, 
                                    nsISupports **aCurrentOpenContext)
 {
-  return OpenURIVia(aURI, aWindowTarget, aWindowContext, aReferringURI, aOpenContext, 
+  return OpenURIVia(aURI, aCommand, aWindowTarget, aWindowContext, aReferringURI, aOpenContext, 
                     aCurrentOpenContext, 0 /* ip address */); 
 }
 
 NS_IMETHODIMP nsURILoader::OpenURIVia(nsIURI *aURI, 
+                                      nsURILoadCommand aCommand,
                                       const char * aWindowTarget,
                                       nsISupports * aWindowContext,
                                       nsIURI *aReferringURI,
@@ -348,11 +356,12 @@ NS_IMETHODIMP nsURILoader::OpenURIVia(nsIURI *aURI,
                                       PRUint32 aLocalIP)
 {
   // forward our call
-  return OpenURIWithPostDataVia(aURI, aWindowTarget, aWindowContext, aReferringURI, nsnull  /* post stream */,
+  return OpenURIWithPostDataVia(aURI, aCommand, aWindowTarget, aWindowContext, aReferringURI, nsnull  /* post stream */,
                                 aOpenContext,aCurrentOpenContext, aLocalIP);
 }
 
 NS_IMETHODIMP nsURILoader::OpenURIWithPostData(nsIURI *aURI, 
+                                  nsURILoadCommand aCommand,
                                   const char *aWindowTarget, 
                                   nsISupports * aWindowContext,
                                   nsIURI *aReferringURI, 
@@ -360,12 +369,13 @@ NS_IMETHODIMP nsURILoader::OpenURIWithPostData(nsIURI *aURI,
                                   nsISupports *aOpenContext, 
                                   nsISupports **aCurrentOpenContext)
 {
-  return OpenURIWithPostDataVia(aURI, aWindowTarget, aWindowContext, aReferringURI, 
+  return OpenURIWithPostDataVia(aURI, aCommand, aWindowTarget, aWindowContext, aReferringURI, 
                                 aPostDataStream, aOpenContext, aCurrentOpenContext, 0);
 
 }
 
 NS_IMETHODIMP nsURILoader::OpenURIWithPostDataVia(nsIURI *aURI, 
+                                     nsURILoadCommand aCommand,
                                      const char *aWindowTarget, 
                                      nsISupports * aWindowContext,
                                      nsIURI *aReferringURI, 
@@ -389,7 +399,7 @@ NS_IMETHODIMP nsURILoader::OpenURIWithPostDataVia(nsIURI *aURI,
   loader->Init(aWindowContext);    // Extra Info
 
   // now instruct the loader to go ahead and open the url
-  rv = loader->Open(aURI, aWindowTarget, aWindowContext,  
+  rv = loader->Open(aURI, aCommand, aWindowTarget, aWindowContext,  
                     aReferringURI, aPostDataStream, aOpenContext, aCurrentOpenContext);
   NS_RELEASE(loader);
 
@@ -398,7 +408,7 @@ NS_IMETHODIMP nsURILoader::OpenURIWithPostDataVia(nsIURI *aURI,
 
 
 nsresult nsURILoader::DispatchContent(const char * aContentType,
-                                      const char * aCommand,
+                                      nsURILoadCommand aCommand,
                                       const char * aWindowTarget,
                                       nsIChannel * aChannel, 
                                       nsISupports * aCtxt, 
@@ -456,7 +466,19 @@ nsresult nsURILoader::DispatchContent(const char * aContentType,
   nsCOMPtr<nsIContentHandler> aContentHandler;
   rv = nsComponentManager::CreateInstance(handlerProgID, nsnull, NS_GET_IID(nsIContentHandler), getter_AddRefs(aContentHandler));
   if (NS_SUCCEEDED(rv)) // we did indeed have a content handler for this type!! yippee...
-    rv = aContentHandler->HandleContent(aContentType, aCommand, aWindowTarget, aChannel);
+    rv = aContentHandler->HandleContent(aContentType, "view", aWindowTarget, aChannel);
+  else if (aContentListener)
+  {
+    // BIG TIME HACK ALERT!!!!! WE NEED THIS HACK IN PLACE UNTIL OUR NEW UNKNOWN CONTENT
+    // HANDLER COMES ONLINE!!! 
+    // Until that day, if we couldn't find a handler for the content type, then go back to the listener who
+    // originated the url request and force them to handle the content....this forces us through the old code
+    // path for unknown content types which brings up the file save as dialog...
+    *aContentListenerToUse = aContentListener;
+    NS_IF_ADDREF(*aContentListenerToUse);
+    rv = NS_OK;
+  }
+  
   return rv;
 }
 
