@@ -340,8 +340,6 @@ nsNntpIncomingServer::ConnectionTimeOut(nsINNTPProtocol* aConnection)
     if (!aConnection) return retVal;
     nsresult rv;
 
-    PR_CEnterMonitor(this);
-
     PRTime cacheTimeoutLimits;
 
     LL_I2L(cacheTimeoutLimits, 170 * 1000000); // 170 seconds in microseconds
@@ -362,7 +360,6 @@ nsNntpIncomingServer::ConnectionTimeOut(nsINNTPProtocol* aConnection)
             retVal = PR_TRUE;
         }
     }
-    PR_CExitMonitor(this);
     return retVal;
 }
 
@@ -398,7 +395,6 @@ nsNntpIncomingServer::GetNntpConnection(nsIURI * aUri, nsIMsgWindow *aMsgWindow,
 	nsCOMPtr<nsINNTPProtocol> freeConnection;
   PRBool isBusy = PR_FALSE;
 
-  PR_CEnterMonitor(this);
 
   PRInt32 maxConnections = 2; // default to be 2
   rv = GetMaximumConnectionsNumber(&maxConnections);
