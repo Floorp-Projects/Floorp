@@ -1504,22 +1504,10 @@ $table{profiles_activity} =
 $table{namedqueries} =
     'userid mediumint not null,
      name varchar(64) not null,
-     watchfordiffs tinyint not null,
      linkinfooter tinyint not null,
      query mediumtext not null,
 
-     unique(userid, name),
-     index(watchfordiffs)';
-
-# This isn't quite cooked yet...
-#
-#  $table{diffprefs} =
-#     'userid mediumint not null,
-#      fieldid mediumint not null,
-#      mailhead tinyint not null,
-#      maildiffs tinyint not null,
-#
-#      index(userid)';
+     unique(userid, name)';
 
 $table{fielddefs} =
    'fieldid mediumint not null auto_increment primary key,
@@ -3046,6 +3034,12 @@ if (GetFieldDef("quips", "quipid")) {
 if (-e 'data/comments.bak' && !$renamed_comments_file) {
     print "The data/comments.bak file can be removed, as it's no longer
            used.\n\n";
+}
+
+# 2002-07-31 bbaetz@student.usyd.edu.au bug 158236
+# Remove unused column
+if (GetFieldDef("namedqueries", "watchfordiffs")) {
+    DropField("namedqueries", "watchfordiffs");
 }
         
 # If you had to change the --TABLE-- definition in any way, then add your
