@@ -968,9 +968,9 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
       nsAboutBloat::Create
     },
     { "about:config",
-      NS_ABOUT_CONFIG_MODULE_CID,
+      NS_ABOUT_REDIRECTOR_MODULE_CID,
       NS_ABOUT_MODULE_CONTRACTID_PREFIX "config",
-      nsAboutConfig::Create
+      nsAboutRedirector::Create
     },
     { "about:credits",
       NS_ABOUT_REDIRECTOR_MODULE_CID,

@@ -41,7 +41,6 @@ CPP_OBJS=                                      \
 	.\$(OBJDIR)\nsAboutRedirector.obj		 	\
 	.\$(OBJDIR)\nsAboutCache.obj		\
 	.\$(OBJDIR)\nsAboutCacheEntry.obj \
-        .\$(OBJDIR)\nsAboutConfig.obj \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak> 
