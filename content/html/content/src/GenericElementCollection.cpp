@@ -98,7 +98,7 @@ GenericElementCollection::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
       NS_RELEASE(childTag);
       NS_RELEASE(child);
       childIndex++;
-      mParent->ChildAt(childIndex, child);
+      mParent->ChildAt(childIndex, chlid);
     }
   }
   return rv;

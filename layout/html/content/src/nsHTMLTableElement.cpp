@@ -212,6 +212,7 @@ TableRowsCollection::GetLength(PRUint32* aLength)
         NS_RELEASE(content);
         NS_RELEASE(node);
         tbodies->Item(index, &node);
+        NS_RELEASE(tbodies);
       }
     }
   }
@@ -270,6 +271,7 @@ TableRowsCollection::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
         NS_RELEASE(content);
         NS_RELEASE(node);
         tbodies->Item(index, &node);
+        NS_RELEASE(tbodies);
       }
     }
     // if it is to be found, it must be in the tfoot
@@ -567,7 +569,14 @@ nsHTMLTableElement::CreateTHead(nsIDOMHTMLElement** aValue)
 NS_IMETHODIMP
 nsHTMLTableElement::DeleteTHead()
 {
-  return NS_OK; // XXX write me
+  nsIDOMHTMLTableSectionElement *childToDelete;
+  nsresult rv = GetTHead(&childToDelete);
+  if ((NS_SUCCEEDED(rv)) && (nsnull!=childToDelete))
+  {
+    nsIDOMNode* resultingChild;
+    mInner.RemoveChild(childToDelete, &resultingChild); // mInner does the notification
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -600,7 +609,17 @@ nsHTMLTableElement::CreateTFoot(nsIDOMHTMLElement** aValue)
 NS_IMETHODIMP
 nsHTMLTableElement::DeleteTFoot()
 {
-  return NS_OK; // XXX write me
+{
+  nsIDOMHTMLTableSectionElement *childToDelete;
+  nsresult rv = GetTFoot(&childToDelete);
+  if ((NS_SUCCEEDED(rv)) && (nsnull!=childToDelete))
+  {
+    nsIDOMNode* resultingChild;
+    mInner.RemoveChild(childToDelete, &resultingChild); // mInner does the notification
+  }
+  return NS_OK;
+}
+
 }
 
 NS_IMETHODIMP
@@ -635,12 +654,12 @@ nsHTMLTableElement::CreateCaption(nsIDOMHTMLElement** aValue)
 NS_IMETHODIMP
 nsHTMLTableElement::DeleteCaption()
 {
-  nsIDOMHTMLTableCaptionElement *caption;
-  nsresult rv = GetCaption(&caption);
-  if ((NS_SUCCEEDED(rv)) && (nsnull!=caption))
+  nsIDOMHTMLTableCaptionElement *childToDelete;
+  nsresult rv = GetCaption(&childToDelete);
+  if ((NS_SUCCEEDED(rv)) && (nsnull!=childToDelete))
   {
     nsIDOMNode* resultingChild;
-    mInner.RemoveChild(caption, &resultingChild); // mInner does the notification
+    mInner.RemoveChild(childToDelete, &resultingChild); // mInner does the notification
   }
   return NS_OK;
 }
@@ -648,8 +667,109 @@ nsHTMLTableElement::DeleteCaption()
 NS_IMETHODIMP
 nsHTMLTableElement::InsertRow(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
 {
+  /* get the ref row at aIndex-1
+     if there is one, 
+       get it's parent
+       insert the new row just after the ref row
+     else
+       get the first row group
+       insert the new row as its first child
+  */
   *aValue = nsnull;
-  return NS_OK; // XXX write me
+  nsresult rv;
+  PRInt32 refIndex = aIndex-1;
+  if (0<=refIndex)
+  {
+    nsIDOMHTMLCollection *rows;
+    GetRows(&rows);
+    PRUint32 rowCount;
+    rows->GetLength(&rowCount);
+    if (rowCount>refIndex)
+      refIndex=rowCount-1;  // index >= the total number of rows means to append the row
+    nsIDOMNode *refRow;
+    rows->Item(refIndex, &refRow);
+    nsIDOMNode *parent;
+    refRow->GetParentNode(&parent);
+    // create the row
+    nsIHTMLContent *newRow=nsnull;
+    nsresult rv = NS_NewHTMLTableRowElement(&newRow, nsHTMLAtoms::tr);
+    if (NS_SUCCEEDED(rv) && (nsnull!=newRow))
+    {
+      nsIDOMNode *newRowNode=nsnull;
+      newRow->QueryInterface(kIDOMNodeIID, (void **)&newRowNode); // caller's addref
+      rv = parent->InsertBefore(newRowNode, refRow, (nsIDOMNode **)aValue);
+      NS_RELEASE(newRow);
+    }
+    NS_RELEASE(parent);
+    NS_RELEASE(refRow);
+    NS_RELEASE(rows);
+  }
+  else
+  {
+    // find the first row group and insert there
+    nsIDOMNode *rowGroup=nsnull;
+    GenericElementCollection head((nsIContent*)this, nsHTMLAtoms::thead);
+    PRUint32 length=0;
+    head.GetLength(&length);
+    if (0!=length)
+    {
+      head.Item(0, &rowGroup);
+    }
+    else
+    {
+      GenericElementCollection body((nsIContent*)this, nsHTMLAtoms::tbody);
+      length=0;
+      body.GetLength(&length);
+      if (0!=length)
+      {
+        body.Item(0, &rowGroup);
+      }
+      else
+      {
+        GenericElementCollection foot((nsIContent*)this, nsHTMLAtoms::tfoot);
+        length=0;
+        foot.GetLength(&length);
+        if (0!=length)
+        {
+          foot.Item(0, &rowGroup);
+        }
+      }
+    }
+    if (nsnull==rowGroup)
+    { // need to create a TBODY
+      nsIHTMLContent *newRowGroup=nsnull;
+      rv = NS_NewHTMLTableSectionElement(&newRowGroup, nsHTMLAtoms::tr);
+      if (NS_SUCCEEDED(rv) && (nsnull!=newRowGroup))
+      {
+        rv = mInner.AppendChildTo(newRowGroup, PR_FALSE);
+        newRowGroup->QueryInterface(kIDOMNodeIID, (void **)&rowGroup);
+        NS_RELEASE(newRowGroup);
+      }
+    }
+    if (nsnull!=rowGroup)
+    {
+      nsIHTMLContent *newRow=nsnull;
+      rv = NS_NewHTMLTableRowElement(&newRow, nsHTMLAtoms::tr);
+      nsIContent *rowGroupContent=nsnull;
+      rowGroup->QueryInterface(kIContentIID, (void **)&rowGroupContent);
+      GenericElementCollection rowGroupRows(rowGroupContent, nsHTMLAtoms::tr);
+      nsIDOMNode *firstRow=nsnull;
+      rowGroupRows.Item(0, &firstRow);  // it's ok if this returns nsnull
+      if (NS_SUCCEEDED(rv) && (nsnull!=newRow))
+      {
+        nsIDOMNode *newRowNode;
+        newRow->QueryInterface(kIDOMNodeIID, (void **)&newRowNode);
+        rowGroup->InsertBefore(newRowNode, firstRow, (nsIDOMNode **)aValue);
+        NS_RELEASE(newRowNode);
+        NS_RELEASE(newRow);
+      }
+      NS_IF_RELEASE(firstRow);  // it's legal for firstRow to be nsnull
+      NS_RELEASE(rowGroupContent);
+      NS_RELEASE(rowGroup);
+    }
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
