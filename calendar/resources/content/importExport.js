@@ -74,8 +74,46 @@ function loadEventsFromFile()
    {
       var aDataStream = readDataFromFile( fp.file.path );
       var calendarEventArray = parseIcalData( aDataStream );
+
+      // Show a dialog with option to import events with or without dialogs
+      var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(); 
+      promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService); 
+      var result = {value:0}; 
+      
+      var buttonPressed =      
+      promptService.confirmEx(window, 
+           "Import", "About to import " + calendarEventArray.length + " event(s). Do you want to open all events to import before importing?", 
+           (promptService.BUTTON_TITLE_YES * promptService.BUTTON_POS_0) + 
+           (promptService.BUTTON_TITLE_NO * promptService.BUTTON_POS_1) + 
+           (promptService.BUTTON_TITLE_CANCEL * promptService.BUTTON_POS_2), 
+            null,null,null,null, result); 
+      if(buttonPressed == 0) // YES
+      { 
       addEventsToCalendar( calendarEventArray );
    }
+      else if(buttonPressed == 1) // NO
+      { 
+        addEventsToCalendar( calendarEventArray, true );
+      } 
+      else if(buttonPressed == 2) // CANCEL
+      { 
+         return false; 
+      } 
+   }
+}
+
+
+/**** createUniqueID
+ *
+ * Creates a new unique ID. Format copied from the oeICalImpl.cpp AddEvent function
+ */
+
+function createUniqueID()
+{
+   var newID = "";
+   while( (newID == "") || (gICalLib.fetchEvent( newID ) != null) )
+     newID = Math.round(900000000 + (Math.random() * 100000000));
+   return newID;
 }
 
 
@@ -84,12 +122,22 @@ function loadEventsFromFile()
  * Takes an array of events and adds the evens one by one to the calendar
  */
  
-function addEventsToCalendar( calendarEventArray )
+function addEventsToCalendar( calendarEventArray, silent )
 {
    for(var i = 0; i < calendarEventArray.length; i++)
    {
+      calendarEvent = calendarEventArray[i]
+	       
+      // Check if event with same ID already in Calendar. If so, import event with new ID.
+      if( gICalLib.fetchEvent( calendarEvent.id ) != null ) {
+         calendarEvent.id = createUniqueID( );
+      }
+
       // open the event dialog with the event to add
-      editNewEvent( calendarEventArray[i] );
+      if( silent )
+         gICalLib.addEvent( calendarEvent );
+      else
+         editNewEvent( calendarEvent );
    }
 }
 
