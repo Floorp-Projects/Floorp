@@ -18,6 +18,7 @@
 MODULE = necko
 
 DEPTH = ..\..\..
+include <$(DEPTH)/config/config.mak>
 
 // temporary, until we land:
 !ifndef NECKO
