@@ -99,7 +99,9 @@ public:
 
   NS_IMETHOD MarkChildrenStyleChange();
   NS_IMETHOD MarkStyleChange(nsBoxLayoutState& aState);
+#ifdef DEBUG_LAYOUT
   NS_IMETHOD DumpBox(FILE* out);
+#endif
   NS_IMETHOD ChildrenMustHaveWidgets(PRBool& aMust);
   NS_IMETHOD GetIndexOf(nsIBox* aChild, PRInt32* aIndex);
 
@@ -130,10 +132,12 @@ public:
 
 protected:
 
+#ifdef DEBUG_LAYOUT
   virtual void AppendAttribute(const nsAutoString& aAttribute, const nsAutoString& aValue, nsAutoString& aResult);
 
   virtual void ListBox(nsAutoString& aResult);
-
+#endif
+  
   virtual PRBool HasStyleChange();
   virtual void SetStyleChangeFlag(PRBool aDirty);
 
@@ -146,7 +150,9 @@ protected:
   NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState);
   NS_IMETHOD EndLayout(nsBoxLayoutState& aState);
 
+#ifdef DEBUG_LAYOUT
   virtual void GetBoxName(nsAutoString& aName);
+#endif
 
   static PRUint32 gRefCnt;
   static nsITheme* gTheme;

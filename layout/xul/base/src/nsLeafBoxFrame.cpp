@@ -87,13 +87,13 @@ nsLeafBoxFrame::nsLeafBoxFrame(nsIPresShell* aShell):nsBox(aShell)
 {
 }
 
+#ifdef DEBUG_LAYOUT
 void
 nsLeafBoxFrame::GetBoxName(nsAutoString& aName)
 {
-#ifdef DEBUG
    GetFrameName(aName);
-#endif
 }
+#endif
 
 
 /**

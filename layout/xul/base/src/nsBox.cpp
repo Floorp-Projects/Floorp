@@ -61,8 +61,6 @@
 #include "nsITheme.h"
 #include "nsIServiceManager.h"
 
-//#define DEBUG_LAYOUT
-
 #ifdef DEBUG_COELESCED
 static PRInt32 coelesced = 0;
 #endif
@@ -82,6 +80,7 @@ nsBoxAddIndents()
 }
 #endif
 
+#ifdef DEBUG_LAYOUT
 void
 nsBox::AppendAttribute(const nsAutoString& aAttribute, const nsAutoString& aValue, nsAutoString& aResult)
 {
@@ -139,6 +138,7 @@ nsBox::DumpBox(FILE* aFile)
   fprintf(aFile, "%s", NS_LossyConvertUCS2toASCII(s).get());
   return NS_OK;
 }
+#endif
 
 /**
  * Hack for deck who requires that all its children has widgets
@@ -150,11 +150,13 @@ nsBox::ChildrenMustHaveWidgets(PRBool& aMust)
   return NS_OK;
 }
 
+#ifdef DEBUG_LAYOUT
 void
 nsBox::GetBoxName(nsAutoString& aName)
 {
   aName.Assign(NS_LITERAL_STRING("Box"));
 }
+#endif
 
 NS_IMETHODIMP
 nsBox::BeginLayout(nsBoxLayoutState& aState)

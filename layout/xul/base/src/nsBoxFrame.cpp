@@ -176,10 +176,12 @@ public:
                         nsFramePaintLayer aWhichLayer);
 */
 
+#ifdef DEBUG_LAYOUT
     nsresult DisplayDebugInfoFor(nsIBox* aBox, 
                                  nsIPresContext* aPresContext,
                                  nsPoint&        aPoint,
                                  PRInt32&        aCursor);
+#endif
 
     nsresult GetFrameSizeWithMargin(nsIBox* aBox, nsSize& aSize);
 
@@ -188,8 +190,10 @@ public:
     void GetDebugMargin(nsMargin& aInset);
     void PixelMarginToTwips(nsIPresContext* aPresContext, nsMargin& aMarginPixels);
 
+#ifdef DEBUG_LAYOUT
     void GetValue(nsIPresContext* aPresContext, const nsSize& a, const nsSize& b, char* value);
     void GetValue(nsIPresContext* aPresContext, PRInt32 a, PRInt32 b, char* value);
+#endif
     void DrawSpacer(nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext, PRBool aHorizontal, PRInt32 flex, nscoord x, nscoord y, nscoord size, nscoord spacerSize);
     void DrawLine(nsIRenderingContext& aRenderingContext,  PRBool aHorizontal, nscoord x1, nscoord y1, nscoord x2, nscoord y2);
     void FillRect(nsIRenderingContext& aRenderingContext,  PRBool aHorizontal, nscoord x, nscoord y, nscoord width, nscoord height);
@@ -327,7 +331,7 @@ nsBoxFrame::SetInitialChildList(nsIPresContext* aPresContext,
     InitChildren(state, aChildList);
     CheckFrameOrder();
   } else {
-    printf("Warning add child failed!!\n");
+    NS_WARNING("Warning add child failed!!\n");
   }
 
   SanityCheck(mFrames);
@@ -1960,13 +1964,13 @@ nsBoxFrame::GetFrame(nsIFrame** aFrame)
   return NS_OK;
 }
 
+#ifdef DEBUG_LAYOUT
 void
 nsBoxFrame::GetBoxName(nsAutoString& aName)
 {
-#ifdef DEBUG
    GetFrameName(aName);
-#endif
 }
+#endif
 
 #ifdef DEBUG
 NS_IMETHODIMP
@@ -2156,6 +2160,7 @@ nsBoxFrame::GetCursor(nsIPresContext* aPresContext,
     nsPoint newPoint;
     mInner->TranslateEventCoords(aPresContext, aPoint, newPoint);
     
+#ifdef DEBUG_LAYOUT
     // if we are in debug and we are in the debug area
     // return our own cursor and dump the debug information.
     if (mState & NS_STATE_CURRENTLY_IN_DEBUG) 
@@ -2164,6 +2169,7 @@ nsBoxFrame::GetCursor(nsIPresContext* aPresContext,
           if (rv == NS_OK)
              return rv;
     }
+#endif
 
     nsresult rv = nsContainerFrame::GetCursor(aPresContext, aPoint, aCursor);
 
@@ -2475,6 +2481,7 @@ nsBoxFrameInner::PixelMarginToTwips(nsIPresContext* aPresContext, nsMargin& aMar
 }
 
 
+#ifdef DEBUG_LAYOUT
 void
 nsBoxFrameInner::GetValue(nsIPresContext* aPresContext, const nsSize& a, const nsSize& b, char* ch) 
 {
@@ -2653,6 +2660,7 @@ nsBoxFrameInner::DisplayDebugInfoFor(nsIBox* aBox,
 
         return NS_OK;
 }
+#endif
 
 nsresult
 nsBoxFrameInner::GetFrameSizeWithMargin(nsIBox* aBox, nsSize& aSize)

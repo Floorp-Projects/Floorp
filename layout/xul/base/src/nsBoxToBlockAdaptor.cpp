@@ -207,10 +207,10 @@ nsBoxToBlockAdaptor::HasStyleChange()
   return mStyleChange;
 }
 
+#ifdef DEBUG_LAYOUT
 void
 nsBoxToBlockAdaptor::GetBoxName(nsAutoString& aName)
 {
-#ifdef DEBUG
    nsIFrameDebug*  frameDebug;
    nsAutoString name;
    if (NS_SUCCEEDED(mFrame->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&frameDebug))) {
@@ -218,8 +218,8 @@ nsBoxToBlockAdaptor::GetBoxName(nsAutoString& aName)
    }
 
   aName = name;
-#endif
 }
+#endif
 
 void
 nsBoxToBlockAdaptor::SetStyleChangeFlag(PRBool aDirty)
