@@ -33,6 +33,7 @@ UNUSED_CSRCS		= \
 				tree2.c \
 				tree3.c \
 				tree4.c \
+				tree5.c \
 				$(NULL)
 endif
 
