@@ -8,8 +8,8 @@
 #	 TreeState, Build, IgnoreBuilds, MOTD, Images, 
 
 
-# $Revision: 1.7 $ 
-# $Date: 2001/07/20 19:05:00 $ 
+# $Revision: 1.8 $ 
+# $Date: 2002/04/27 04:11:33 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderHeader.pm,v $ 
 # $Name:  $ 
@@ -111,7 +111,6 @@ $DEBUG = 1;
                          
                          'Build' => "",
                          'IgnoreBuilds' => "",
-                         'Image' => "",
                          'MOTD' => "",
                          'TreeState' => "Open",
                          
@@ -291,16 +290,6 @@ be processed this value only effects the display.
 
 =over 4
 
-=item B<TinderHeader::Image>
-
-A random image and caption which is displayed on the status page.  It
-is similar to the old program 'fortune' and is not set by the
-administrators.  Images are added by the users.
-
-=back
-
-
-=over 4
 
 =item B<TinderHeader::TreeState>
 

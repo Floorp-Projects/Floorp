@@ -2,8 +2,8 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
-# $Revision: 1.19 $ 
-# $Date: 2001/12/03 19:50:00 $ 
+# $Revision: 1.20 $ 
+# $Date: 2002/04/27 04:11:36 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/tinder.cgi,v $ 
 # $Name:  $ 
@@ -294,7 +294,6 @@ sub HTML_status_page {
   # load the headers these all have well known namespaces
   
   my ($motd) = TinderHeader::gettree_header('MOTD', $tree);
-  my ($image) = TinderHeader::gettree_header('Image', $tree);
   my ($tree_state) = TinderHeader::gettree_header('TreeState', $tree);
   my ($break_times) = TinderHeader::gettree_header('Build', $tree);
   my ($ignore_builds) = TinderHeader::gettree_header('IgnoreBuilds', $tree);
@@ -334,7 +333,7 @@ sub HTML_status_page {
   my ($display_2hours) = min($display_hours*2, $MAX_DISPLAY_HOURS);
   my ($display_4hours) = min($display_hours*4, $MAX_DISPLAY_HOURS);
   my ($display_8hours) = min($display_hours*8, $MAX_DISPLAY_HOURS);
-  my ($links) = 
+  my ($previous_links) = 
     HTMLPopUp::Link(
                     "linktxt"=>"Show previous $display_hours hours", 
                     "href"=>("$FileStructure::URLS{'tinderd'}".
@@ -375,37 +374,28 @@ sub HTML_status_page {
                     "linktxt"=>"Show current status", 
                     "href"=>$status_page_url,
                    ).
-   "<br><p>\n\n".
+  "<br><p>\n\n";
+  HTMLPopUp::Link(
+                  "linktxt"=>"Administrate this tree ($tree)",
+                  "href"=>("$FileStructure::URLS{'admintree'}".
+                           "\?".
+                           "tree=$tree"),
+                  ).
+  "<br>\n";
+  my ($links) = 
     HTMLPopUp::Link(
                     "linktxt"=>"Add to Notice Board",
                     "href"=>("$FileStructure::URLS{'addnote'}".
                              "\?".
                              "tree=$tree"),
                    ).
-   "<br>\n".
-    HTMLPopUp::Link(
-                    "linktxt"=>"Administrate this tree ($tree)",
-                    "href"=>("$FileStructure::URLS{'admintree'}".
-                             "\?".
-                             "tree=$tree"),
-                   ).
-   "<br>\n";
-  
+  "<br>\n".
+
   $out .= HTMLPopUp::page_header('title'=>"Tinderbox Status Page tree: $tree", 
                                  'refresh'=>$REFRESH_TIME);
   $out .= "\n\n";
   $out .= "<!-- /Build Page Headers -->\n\n\n";
   $out .= "$links\n";
-
-  # this used to be a one row table consisting of the image and the
-  # table legend, I may need to use a trick to move the image and put
-  # a border around it.
-
-  $out .= $image;
-  $out .= "<!-- Table Legend -->\n";
-  $out .= "<table width=\"100%\" cellpadding=0 cellspacing=0>\n";
-  $out .= "	@legend\n\n";
-  $out .= "</table>\n\n";
   $out .= "<!-- Message of the Day -->\n";
   $out .=  $motd;
   $out .= "<p>\n<!-- /Message of the Day -->\n";
@@ -426,7 +416,12 @@ sub HTML_status_page {
   $out .= "<!-- /Table Contents -->\n\n";
   $out .= "</table>\n\n";
   $out .= "<!-- Page Footer --><p>\n";
+  $out .= $previous_links;
   $out .= $links;
+  $out .= "<!-- Table Legend -->\n";
+  $out .= "<table width=\"100%\" cellpadding=0 cellspacing=0>\n";
+  $out .= "	@legend\n\n";
+  $out .= "</table>\n\n";
   my (@structures) = HTMLPopUp::define_structures();
   $out .= "@structures";
   $out .= "<!-- /Page Footer --><p>\n\n";
