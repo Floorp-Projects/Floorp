@@ -122,7 +122,7 @@ string = 'abccccc{3 }c{ 3}c{3, }c{3 ,}de';
   status = inSection(9);
   pattern = /c{3[.]}/;
   actualmatch = string.match(pattern);
-  expectedmatch = Array('c{3 ');
+  expectedmatch = Array('c{3 }');
   addThis();
 
   status = inSection(10);
