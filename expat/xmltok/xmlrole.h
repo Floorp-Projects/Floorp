@@ -12,6 +12,10 @@ See the file COPYING for copying permission.
 extern "C" {
 #endif
 
+/* avoid conflicts with system versions of libexpat */
+#define XmlPrologStateInit               MOZ_XmlPrologStateInit
+#define XmlPrologStateInitExternalEntity MOZ_XmlPrologStateInitExternalEntity
+
 enum {
   XML_ROLE_ERROR = -1,
   XML_ROLE_NONE = 0,

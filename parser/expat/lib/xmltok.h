@@ -14,6 +14,16 @@ extern "C" {
 #define XMLTOKAPI /* as nothing */
 #endif
 
+/* avoid conflicts with system versions of libexpat */
+#define XmlGetUtf16InternalEncoding MOZ_XmlGetUtf16InternalEncoding
+#define XmlGetUtf8InternalEncoding  MOZ_XmlGetUtf8InternalEncoding
+#define XmlInitEncoding             MOZ_XmlInitEncoding
+#define XmlInitUnknownEncoding      MOZ_XmlInitUnknownEncoding
+#define XmlParseXmlDecl             MOZ_XmlParseXmlDecl
+#define XmlSizeOfUnknownEncoding    MOZ_XmlSizeOfUnknownEncoding
+#define XmlUtf16Encode              MOZ_XmlUtf16Encode
+#define XmlUtf8Encode               MOZ_XmlUtf8Encode
+
 /* The following token may be returned by XmlContentTok */
 #define XML_TOK_TRAILING_RSQB -5 /* ] or ]] at the end of the scan; might be start of
                                     illegal ]]> sequence */
