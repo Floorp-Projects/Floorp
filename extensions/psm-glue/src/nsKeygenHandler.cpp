@@ -101,6 +101,7 @@ nsKeygenFormProcessor::ChooseToken(PCMT_CONTROL control,
     nsCRT::free(tokenNames->names[i]);
   }
   nsCRT::free((char*)tokenNames);
+  psmarg->current = NULL;
   resID = psmarg->rid;
   memset(&url, 0, sizeof(CMTItem));
   NS_WITH_PROXIED_SERVICE(nsIPSMUIHandler, handler, nsPSMUIHandlerImpl::GetCID(), NS_UI_THREAD_EVENTQ, &rv);
@@ -122,18 +123,22 @@ nsKeygenFormProcessor::ChooseToken(PCMT_CONTROL control,
 
 char *
 nsKeygenFormProcessor::SetUserPassword(PCMT_CONTROL control, 
-				       CMKeyGenTagArg *psmarg,
-				       CMKeyGenTagReq *reason)
+                                       CMKeyGenTagArg *psmarg,
+                                       CMKeyGenTagReq *reason)
 {
   nsresult rv;
   CMTStatus crv;
   CMTItem url;
   char *keystring=nsnull;
+  int numTries = 0;
 
   // We need to delete the memory the PSM client API allocated for us since
   // we're just gonna tell it to use it's own UI.
   nsCRT::free((char*)psmarg->current);
-  NS_WITH_PROXIED_SERVICE(nsIPSMUIHandler, handler, nsPSMUIHandlerImpl::GetCID(), NS_UI_THREAD_EVENTQ, &rv);
+  psmarg->current = nsnull;
+  NS_WITH_PROXIED_SERVICE(nsIPSMUIHandler, handler, 
+                          nsPSMUIHandlerImpl::GetCID(), NS_UI_THREAD_EVENTQ, 
+                          &rv);
   memset (&url, 0, sizeof(CMTItem));
   crv = CMT_GetStringAttribute(control,psmarg->rid, SSM_FID_INIT_DB_URL, &url);
   if (crv != CMTSuccess || NS_FAILED(rv)){
@@ -141,8 +146,12 @@ nsKeygenFormProcessor::SetUserPassword(PCMT_CONTROL control,
   }
 
   handler->DisplayURI(500, 450, PR_TRUE, (char*)url.data, nsnull);
-  
-  return CMT_GetGenKeyResponse(control, psmarg, reason);
+  while (keystring == nsnull && numTries < 120) {
+    PR_Sleep(PR_TicksPerSecond());
+    keystring = CMT_GetGenKeyResponse(control, psmarg, reason);
+    numTries++;
+  }
+  return keystring;
  loser:
   if (keystring)
     nsCRT::free(keystring);
@@ -161,7 +170,6 @@ nsKeygenFormProcessor::GetPublicKey(nsString& value, nsString& challenge,
     CMKeyGenTagReq reason;
     char *emptyCString = "null";
     char *keystring = nsnull;
-
     rv = mPSM->GetControlConnection(&control);
     if (NS_FAILED(rv)) {
 	goto loser;
@@ -193,14 +201,15 @@ nsKeygenFormProcessor::GetPublicKey(nsString& value, nsString& challenge,
       psmarg->op = reason;
       switch (psmarg->op) {
       case CM_KEYGEN_PICK_TOKEN:
-	keystring = ChooseToken(control, psmarg, &reason);
-	break;
+        keystring = ChooseToken(control, psmarg, &reason);
+        break;
       case CM_KEYGEN_SET_PASSWORD:
-	keystring = SetUserPassword(control, psmarg, &reason);
-	break;
+        keystring = SetUserPassword(control, psmarg, &reason);
+        break;
       case CM_KEYGEN_ERR:
       default:
-	goto loser;
+        CMT_UnlockConnection(control);
+        goto loser;
       }
     }
     CMT_UnlockConnection(control);
