@@ -979,14 +979,14 @@ out:
 }
 #endif /* JS_HAS_EXPORT_IMPORT */
 
-static JSBool
-CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs,
-                   JSBool *foundp)
+JSBool
+js_CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs,
+                      JSBool *foundp)
 {
     JSObject *obj2;
     JSProperty *prop;
     JSBool ok;
-    uintN oldAttrs;
+    uintN oldAttrs, report;
     JSBool isFunction;
     jsval value;
 
@@ -1000,17 +1000,22 @@ CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs,
     if (!ok)
         return JS_FALSE;
 
-    if ((oldAttrs & JSPROP_READONLY) == (attrs & JSPROP_READONLY) &&
-        !JS_HAS_STRICT_OPTION(cx)) {
+    /* If either property is readonly, we have an error. */
+    report = ((oldAttrs | attrs) & JSPROP_READONLY)
+             ? JSREPORT_ERROR
+             : JSREPORT_WARNING | JSREPORT_STRICT;
+
+    if (report != JSREPORT_ERROR) {
         /*
-         * Allow redefinition if const-ness isn't changing.  Also insist that
-         * the new value is not a getter or setter, or if it is, that the old
-         * property was not permanent.
+         * Allow redeclaration of variables and functions, but insist that the
+         * new value is not a getter or setter -- or if it is, insist that the
+         * property being replaced is not permanent.
          */
         if (!(attrs & (JSPROP_GETTER | JSPROP_SETTER)))
             return JS_TRUE;
         if (!(oldAttrs & JSPROP_PERMANENT))
             return JS_TRUE;
+        report = JSREPORT_ERROR;
     }
 
     isFunction = (oldAttrs & (JSPROP_GETTER | JSPROP_SETTER)) != 0;
@@ -1019,10 +1024,7 @@ CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs,
             return JS_FALSE;
         isFunction = JSVAL_IS_FUNCTION(cx, value);
     }
-    return JS_ReportErrorFlagsAndNumber(cx,
-                                        ((oldAttrs | attrs) & JSPROP_READONLY)
-                                        ? JSREPORT_ERROR
-                                        : JSREPORT_WARNING | JSREPORT_STRICT,
+    return JS_ReportErrorFlagsAndNumber(cx, report,
                                         js_GetErrorMessage, NULL,
                                         JSMSG_REDECLARED_VAR,
                                         isFunction
@@ -2821,7 +2823,7 @@ js_Interpret(JSContext *cx, jsval *result)
 
             /* Lookup id in order to check for redeclaration problems. */
             id = (jsid)atom;
-            ok = CheckRedeclaration(cx, obj, id, attrs, &defined);
+            ok = js_CheckRedeclaration(cx, obj, id, attrs, &defined);
             if (!ok)
                 goto out;
 
@@ -2885,7 +2887,7 @@ js_Interpret(JSContext *cx, jsval *result)
              * here at runtime as well as at compile-time, to handle eval
              * as well as multiple HTML script tags.
              */
-            ok = CheckRedeclaration(cx, parent, id, attrs, &cond);
+            ok = js_CheckRedeclaration(cx, parent, id, attrs, &cond);
             if (!ok)
                 goto out;
 
@@ -3138,7 +3140,7 @@ js_Interpret(JSContext *cx, jsval *result)
             attrs |= JSPROP_ENUMERATE;
 
             /* Check for a readonly or permanent property of the same name. */
-            ok = CheckRedeclaration(cx, obj, id, attrs, &cond);
+            ok = js_CheckRedeclaration(cx, obj, id, attrs, &cond);
             if (!ok)
                 goto out;
 
@@ -3281,6 +3283,27 @@ js_Interpret(JSContext *cx, jsval *result)
             ok = JS_FALSE;
             /* let the code at out try to catch the exception. */
             goto out;
+
+          case JSOP_INITCATCHVAR:
+            /* Pop the property's value into rval. */
+            JS_ASSERT(sp - newsp >= 2);
+            rval = POP();
+
+            /* Get the immediate catch variable name into id. */
+            atom = GET_ATOM(cx, script, pc);
+            id   = (jsid)atom;
+
+            /* Find the object being initialized at top of stack. */
+            lval = sp[-1];
+            JS_ASSERT(JSVAL_IS_OBJECT(lval));
+            obj = JSVAL_TO_OBJECT(lval);
+
+            /* Define obj[id] to contain rval and to be permanent. */
+            ok = OBJ_DEFINE_PROPERTY(cx, obj, id, rval, NULL, NULL,
+                                     JSPROP_PERMANENT, NULL);
+            if (!ok)
+                goto out;
+            break;
 #endif /* JS_HAS_EXCEPTIONS */
 
 #if JS_HAS_INSTANCEOF

@@ -467,14 +467,14 @@ js_InitNumberClass(JSContext *cx, JSObject *obj)
 
     /* ECMA 15.1.1.1 */
     if (!JS_DefineProperty(cx, obj, js_NaN_str, DOUBLE_TO_JSVAL(rt->jsNaN),
-			   NULL, NULL, 0)) {
+			   NULL, NULL, JSPROP_PERMANENT)) {
 	return NULL;
     }
 
     /* ECMA 15.1.1.2 */
     if (!JS_DefineProperty(cx, obj, "Infinity",
 			   DOUBLE_TO_JSVAL(rt->jsPositiveInfinity),
-			   NULL, NULL, 0)) {
+			   NULL, NULL, JSPROP_PERMANENT)) {
 	return NULL;
     }
     return proto;

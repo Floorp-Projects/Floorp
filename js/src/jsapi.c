@@ -950,7 +950,7 @@ JS_InitStandardClasses(JSContext *cx, JSObject *obj)
      */
     if (!OBJ_DEFINE_PROPERTY(cx, obj,
                              (jsid)cx->runtime->atomState.typeAtoms[JSTYPE_VOID],
-                             JSVAL_VOID, NULL, NULL, 0, NULL)) {
+                             JSVAL_VOID, NULL, NULL, JSPROP_PERMANENT, NULL)) {
         return JS_FALSE;
     }
 #endif

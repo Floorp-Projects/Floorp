@@ -290,7 +290,7 @@ enum string_tinyid {
 };
 
 static JSPropertySpec string_props[] = {
-    {js_length_str,     STRING_LENGTH,  JSPROP_READONLY,0,0},
+    {js_length_str,     STRING_LENGTH,  JSPROP_READONLY|JSPROP_PERMANENT,0,0},
     {0,0,0,0,0}
 };
 

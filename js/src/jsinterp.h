@@ -256,6 +256,10 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script, JSFunction *fun,
 	   JSStackFrame *down, uintN flags, jsval *result);
 
 extern JSBool
+js_CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs,
+                      JSBool *foundp);
+
+extern JSBool
 js_Interpret(JSContext *cx, jsval *result);
 
 JS_END_EXTERN_C

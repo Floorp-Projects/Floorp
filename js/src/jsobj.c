@@ -968,10 +968,11 @@ obj_propertyIsEnumerable(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 #if JS_HAS_GETTER_SETTER
 static JSBool
 obj_defineGetter(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-                   jsval *rval)
+                 jsval *rval)
 {
     jsval fval;
     jsid id;
+    JSBool found;
 
     fval = argv[1];
     if (JS_TypeOfValue(cx, fval) != JSTYPE_FUNCTION) {
@@ -983,7 +984,8 @@ obj_defineGetter(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     if (!JS_ValueToId(cx, argv[0], &id))
 	return JS_FALSE;
-
+    if (!js_CheckRedeclaration(cx, obj, id, JSPROP_GETTER, &found))
+        return JS_FALSE;
     return OBJ_DEFINE_PROPERTY(cx, obj, id, JSVAL_VOID,
                                (JSPropertyOp) JSVAL_TO_OBJECT(fval), NULL,
                                JSPROP_GETTER, NULL);
@@ -991,10 +993,11 @@ obj_defineGetter(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
 static JSBool
 obj_defineSetter(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-                   jsval *rval)
+                 jsval *rval)
 {
     jsval fval;
     jsid id;
+    JSBool found;
 
     fval = argv[1];
     if (JS_TypeOfValue(cx, fval) != JSTYPE_FUNCTION) {
@@ -1006,7 +1009,8 @@ obj_defineSetter(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     if (!JS_ValueToId(cx, argv[0], &id))
 	return JS_FALSE;
-
+    if (!js_CheckRedeclaration(cx, obj, id, JSPROP_SETTER, &found))
+        return JS_FALSE;
     return OBJ_DEFINE_PROPERTY(cx, obj, id, JSVAL_VOID,
                                NULL, (JSPropertyOp) JSVAL_TO_OBJECT(fval),
                                JSPROP_SETTER, NULL);
@@ -2697,8 +2701,8 @@ js_SetClassPrototype(JSContext *cx, JSObject *ctor, JSObject *proto,
 {
     /*
      * Use the given attributes for the prototype property of the constructor,
-     * as user-defined constructors have a DontEnum prototype (it can be reset
-     * or even deleted), while native "system" constructors require DontEnum |
+     * as user-defined constructors have a DontEnum | DontDelete prototype (it
+     * may be reset), while native or "system" constructors require DontEnum |
      * ReadOnly | DontDelete.
      */
     if (!OBJ_DEFINE_PROPERTY(cx, ctor,
