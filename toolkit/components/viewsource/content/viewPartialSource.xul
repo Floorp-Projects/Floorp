@@ -34,7 +34,8 @@
 # GPL.
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
-<?xul-overlay href="chrome://global/content/viewSourceOverlay.xul"?>
+<?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
+<?xul-overlay href="chrome://global/content/charsetOverlay.xul"?>
 
 <!DOCTYPE window [
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
@@ -56,15 +57,79 @@
         screenX="10" screenY="10"
         persist="screenX screenY width height sizemode">
 
+  <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/findUtils.js"/>
   <script type="application/x-javascript" src="chrome://global/content/viewPartialSource.js"/>
 
-  <commandset id="commands"/>
-  <keyset id="viewSourceKeys"/>
-  <stringbundleset id="viewSource-stringbundleset"/>
-  <popupset id="viewSourceContextSet" />
-  <popup id="contentAreaContextMenu"/>
+  <stringbundle id="findBundle" src="chrome://global/locale/finddialog.properties"/>
 
-  <toolbox id="viewSource-toolbox"/>
+  <commandset id="editMenuCommands"/>
+  <command id="cmd_highlightSyntax" oncommand="highlightSyntax();"/>
+  <command id="cmd_wrapLongLines" oncommand="wrapLongLines()"/>
+  <command id="cmd_print" disabled="true"/>
+  <command id="cmd_savePage" disabled="true" oncommand="ViewSourceSavePage();"/>
+  <command id="cmd_close" oncommand="window.close();"/>
+
+  <keyset id="editMenuKeys"/>
+  <keyset id="viewSourceKeys">
+    <key id="key_savePage" key="&savePageCmd.commandkey;" modifiers="accel" command="cmd_savePage"/>
+    <key id="key_print" key="&printCmd.commandkey;" modifiers="accel" command="cmd_print"/>
+    <key id="key_close" key="&closeCmd.commandkey;" modifiers="accel" command="cmd_close"/>
+    <key keycode="VK_ESCAPE" command="cmd_close"/>
+  </keyset>
+
+  <popup id="viewSourceContextMenu">
+    <menuitem id="cMenu_findAgain"/>
+    <menuseparator/>
+    <menuitem id="cMenu_copy"/>
+    <menuseparator/>
+    <menuitem id="cMenu_selectAll"/>
+  </popup>
+
+  <!-- Menu --> 
+  <toolbox id="viewSource-toolbox">
+    <menubar id="viewSource-main-menubar">
+
+      <menu label="&fileMenu.label;" accesskey="&fileMenu.accesskey;">
+        <menupopup id="filemenu-popup">
+          <menuitem key="key_savePage" command="cmd_savePage"
+                    label="&savePageCmd.label;" accesskey="&savePageCmd.accesskey;"/>
+          <menuitem key="key_print" command="cmd_print"
+                    label="&printCmd.label;" accesskey="&printCmd.accesskey;"/>
+          <menuseparator/>
+          <menuitem key="key_close" command="cmd_close"
+                    label="&closeCmd.label;" accesskey="&closeCmd.accesskey;"/>
+        </menupopup>
+      </menu>
+
+      <menu id="menu_edit">
+        <menupopup>
+          <menuitem id="menu_undo"/>
+          <menuitem id="menu_redo"/>
+          <menuseparator/>
+          <menuitem id="menu_cut"/>
+          <menuitem id="menu_copy"/>
+          <menuitem id="menu_paste"/>
+          <menuitem id="menu_delete"/>
+          <menuseparator/>
+          <menuitem id="menu_selectAll"/>
+          <menuseparator/>
+          <menuitem id="menu_find"/>
+          <menuitem id="menu_findAgain"/>
+        </menupopup>
+      </menu>
+
+      <menu label="&viewMenu.label;" accesskey="&viewMenu.accesskey;">
+        <menupopup>
+          <menu id="charsetMenu"/>
+          <menuitem id="menu_wrapLongLines" type="checkbox" command="cmd_wrapLongLines"
+                    label="&menu_wrapLongLines.title;" accesskey="&menu_wrapLongLines.accesskey;"/>
+          <menuitem type="checkbox" id="menu_highlightSyntax" command="cmd_highlightSyntax"
+                    label="&menu_highlightSyntax.label;" accesskey="&menu_highlightSyntax.accesskey;"/>
+        </menupopup>
+      </menu>
+    </menubar>  
+  </toolbox>
 
   <vbox id="appcontent" flex="1"
         ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);">
