@@ -27,7 +27,7 @@ static PRBool getRangeFromFrame(nsIFrame *aFrame, nsIDOMRange *aRange,  PRInt32 
 static void printRange(nsIDOMRange *aDomRange);
 static nsIFrame *findFrameFromContent(nsIFrame *aParent, nsIContent *aContent, PRBool aTurnOff);
 
-#if 1
+#if 0
 #define DEBUG_OUT_RANGE(x)  printRange(x)
 #else
 #define DEBUG_OUT_RANGE(x)  
