@@ -28,7 +28,10 @@
 #include "nsBufferHandle.h"
 
   /**
-   *
+   * This class is (will be) part of the machinery that makes
+   * most string implementations in this family share their underlying buffers
+   * when convenient.  It is _not_ part of the abstract string interface,
+   * though other machinery interested in sharing buffers will know about it.
    */
 template <class CharT>
 class nsPrivateSharableString
