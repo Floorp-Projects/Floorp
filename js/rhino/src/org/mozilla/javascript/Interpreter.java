@@ -79,80 +79,88 @@ public class Interpreter
 
     // helper codes to deal with activation
         Icode_SCOPE                     = -12,
-        Icode_TYPEOFNAME                = -13,
+
+    // load/save scope from/to local
+        Icode_SCOPE_LOAD                = -13,
+        Icode_SCOPE_SAVE                = -14,
+
+        Icode_TYPEOFNAME                = -15,
 
     // helper for function calls
-        Icode_NAME_AND_THIS             = -14,
-        Icode_PROP_AND_THIS             = -15,
-        Icode_ELEM_AND_THIS             = -16,
-        Icode_VALUE_AND_THIS            = -17,
+        Icode_NAME_AND_THIS             = -16,
+        Icode_PROP_AND_THIS             = -17,
+        Icode_ELEM_AND_THIS             = -18,
+        Icode_VALUE_AND_THIS            = -19,
 
     // Create closure object for nested functions
-        Icode_CLOSURE_EXPR              = -18,
-        Icode_CLOSURE_STMT              = -19,
+        Icode_CLOSURE_EXPR              = -20,
+        Icode_CLOSURE_STMT              = -21,
 
     // Special calls
-        Icode_CALLSPECIAL               = -20,
+        Icode_CALLSPECIAL               = -22,
 
     // To return undefined value
-        Icode_RETUNDEF                  = -21,
+        Icode_RETUNDEF                  = -23,
 
     // Exception handling implementation
-        Icode_GOSUB                     = -22,
-        Icode_STARTSUB                  = -23,
-        Icode_RETSUB                    = -24,
+        Icode_GOSUB                     = -24,
+        Icode_STARTSUB                  = -25,
+        Icode_RETSUB                    = -26,
 
     // To indicating a line number change in icodes.
-        Icode_LINE                      = -25,
+        Icode_LINE                      = -27,
 
     // To store shorts and ints inline
-        Icode_SHORTNUMBER               = -26,
-        Icode_INTNUMBER                 = -27,
+        Icode_SHORTNUMBER               = -28,
+        Icode_INTNUMBER                 = -29,
 
     // To create and populate array to hold values for [] and {} literals
-        Icode_LITERAL_NEW               = -28,
-        Icode_LITERAL_SET               = -29,
+        Icode_LITERAL_NEW               = -30,
+        Icode_LITERAL_SET               = -31,
 
     // Array literal with skipped index like [1,,2]
-        Icode_SPARE_ARRAYLIT            = -30,
+        Icode_SPARE_ARRAYLIT            = -32,
 
     // Load index register to prepare for the following index operation
-        Icode_REG_IND_C0                = -31,
-        Icode_REG_IND_C1                = -32,
-        Icode_REG_IND_C2                = -33,
-        Icode_REG_IND_C3                = -34,
-        Icode_REG_IND_C4                = -35,
-        Icode_REG_IND_C5                = -36,
-        Icode_REG_IND1                  = -37,
-        Icode_REG_IND2                  = -38,
-        Icode_REG_IND4                  = -39,
+        Icode_REG_IND_C0                = -33,
+        Icode_REG_IND_C1                = -34,
+        Icode_REG_IND_C2                = -35,
+        Icode_REG_IND_C3                = -36,
+        Icode_REG_IND_C4                = -37,
+        Icode_REG_IND_C5                = -38,
+        Icode_REG_IND1                  = -39,
+        Icode_REG_IND2                  = -40,
+        Icode_REG_IND4                  = -41,
 
     // Load string register to prepare for the following string operation
-        Icode_REG_STR_C0                = -40,
-        Icode_REG_STR_C1                = -41,
-        Icode_REG_STR_C2                = -42,
-        Icode_REG_STR_C3                = -43,
-        Icode_REG_STR1                  = -44,
-        Icode_REG_STR2                  = -45,
-        Icode_REG_STR4                  = -46,
+        Icode_REG_STR_C0                = -42,
+        Icode_REG_STR_C1                = -43,
+        Icode_REG_STR_C2                = -44,
+        Icode_REG_STR_C3                = -45,
+        Icode_REG_STR1                  = -46,
+        Icode_REG_STR2                  = -47,
+        Icode_REG_STR4                  = -48,
 
     // Version of getvar/setvar that read var index directly from bytecode
-        Icode_GETVAR1                   = -47,
-        Icode_SETVAR1                   = -48,
+        Icode_GETVAR1                   = -49,
+        Icode_SETVAR1                   = -50,
 
     // Load unefined
-        Icode_UNDEF                     = -49,
-        Icode_ZERO                      = -50,
-        Icode_ONE                       = -51,
+        Icode_UNDEF                     = -51,
+        Icode_ZERO                      = -52,
+        Icode_ONE                       = -53,
 
     // entrance and exit from .()
-       Icode_ENTERDQ                    = -52,
-       Icode_LEAVEDQ                    = -53,
+       Icode_ENTERDQ                    = -54,
+       Icode_LEAVEDQ                    = -55,
 
-       Icode_TAIL_CALL                  = -54,
+       Icode_TAIL_CALL                  = -56,
+
+       // Clear local to allow GC its context
+       Icode_LOCAL_CLEAR                = -57,
 
     // Last icode
-        MIN_ICODE                       = -54;
+        MIN_ICODE                       = -57;
 
     // data for parsing
 
@@ -164,7 +172,6 @@ public class Interpreter
     private ScriptOrFnNode scriptOrFn;
     private int itsICodeTop;
     private int itsStackDepth;
-    private int itsWithDepth;
     private int itsLineNumber;
     private int itsDoubleTableTop;
     private ObjToIntMap itsStrings = new ObjToIntMap(20);
@@ -184,10 +191,10 @@ public class Interpreter
     private static final int EXCEPTION_TRY_END_SLOT    = 1;
     private static final int EXCEPTION_HANDLER_SLOT    = 2;
     private static final int EXCEPTION_TYPE_SLOT       = 3;
-    private static final int EXCEPTION_WITH_DEPTH_SLOT = 4;
-    private static final int EXCEPTION_LOCAL_SLOT      = 5;
-    // 6 = space for try start/end, handler, start, handler type, with depth,
-    //                exception local
+    private static final int EXCEPTION_LOCAL_SLOT      = 4;
+    private static final int EXCEPTION_SCOPE_SLOT      = 5;
+    // SLOT_SIZE: space for try start/end, handler, start, handler type,
+    //            exception local and scope local
     private static final int EXCEPTION_SLOT_SIZE       = 6;
 
 // ECF_ or Expression Context Flags constants: for now only TAIL is available
@@ -229,7 +236,6 @@ public class Interpreter
         int pc;
         int pcPrevBranch;
         int pcSourceLineStart;
-        int withDepth;
         Scriptable scope;
 
         int savedStackTop;
@@ -278,6 +284,8 @@ public class Interpreter
           case Icode_ELEM_INC_DEC:     return "ELEM_INC_DEC";
           case Icode_REF_INC_DEC:      return "REF_INC_DEC";
           case Icode_SCOPE:            return "SCOPE";
+          case Icode_SCOPE_LOAD:       return "SCOPE_LOAD";
+          case Icode_SCOPE_SAVE:       return "SCOPE_SAVE";
           case Icode_TYPEOFNAME:       return "TYPEOFNAME";
           case Icode_NAME_AND_THIS:    return "NAME_AND_THIS";
           case Icode_PROP_AND_THIS:    return "PROP_AND_THIS";
@@ -320,6 +328,7 @@ public class Interpreter
           case Icode_ENTERDQ:          return "ENTERDQ";
           case Icode_LEAVEDQ:          return "LEAVEDQ";
           case Icode_TAIL_CALL:        return "TAIL_CALL";
+          case Icode_LOCAL_CLEAR:      return "LOCAL_CLEAR";
         }
 
         // icode without name
@@ -561,21 +570,12 @@ public class Interpreter
           case Token.LOOP:
           case Token.BLOCK:
           case Token.EMPTY:
-            updateLineNumber(node);
-            while (child != null) {
-                visitStatement(child);
-                child = child.getNext();
-            }
-            break;
-
           case Token.WITH:
-            ++itsWithDepth;
             updateLineNumber(node);
             while (child != null) {
                 visitStatement(child);
                 child = child.getNext();
             }
-            --itsWithDepth;
             break;
 
           case Token.ENTERWITH:
@@ -597,6 +597,7 @@ public class Interpreter
                     visitStatement(child);
                     child = child.getNext();
                 }
+                addIndexOp(Icode_LOCAL_CLEAR, local);
                 releaseLocal(local);
             }
             break;
@@ -685,8 +686,11 @@ public class Interpreter
             {
                 Node.Jump tryNode = (Node.Jump)node;
                 int exceptionObjectLocal = getLocalBlockRef(tryNode);
-                int tryStart = itsICodeTop;
+                int scopeLocal = allocLocal();
 
+                addIndexOp(Icode_SCOPE_SAVE, scopeLocal);
+
+                int tryStart = itsICodeTop;
                 while (child != null) {
                     visitStatement(child);
                     child = child.getNext();
@@ -698,7 +702,7 @@ public class Interpreter
                         = itsLabelTable[getTargetLabel(catchTarget)];
                     addExceptionHandler(
                         tryStart, catchStartPC, catchStartPC,
-                        false, itsWithDepth, exceptionObjectLocal);
+                        false, exceptionObjectLocal, scopeLocal);
                 }
                 Node.Target finallyTarget = tryNode.getFinally();
                 if (finallyTarget != null) {
@@ -706,8 +710,11 @@ public class Interpreter
                         = itsLabelTable[getTargetLabel(finallyTarget)];
                     addExceptionHandler(
                         tryStart, finallyStartPC, finallyStartPC,
-                        true, itsWithDepth, exceptionObjectLocal);
+                        true, exceptionObjectLocal, scopeLocal);
                 }
+
+                addIndexOp(Icode_LOCAL_CLEAR, scopeLocal);
+                releaseLocal(scopeLocal);
             }
             break;
 
@@ -1616,7 +1623,7 @@ public class Interpreter
 
     private void addExceptionHandler(int icodeStart, int icodeEnd,
                                      int handlerStart, boolean isFinally,
-                                     int withDepth, int exceptionObjectLocal)
+                                     int exceptionObjectLocal, int scopeLocal)
     {
         int top = itsExceptionTableTop;
         int[] table = itsData.itsExceptionTable;
@@ -1633,8 +1640,8 @@ public class Interpreter
         table[top + EXCEPTION_TRY_END_SLOT]    = icodeEnd;
         table[top + EXCEPTION_HANDLER_SLOT]    = handlerStart;
         table[top + EXCEPTION_TYPE_SLOT]       = isFinally ? 1 : 0;
-        table[top + EXCEPTION_WITH_DEPTH_SLOT] = withDepth;
         table[top + EXCEPTION_LOCAL_SLOT]      = exceptionObjectLocal;
+        table[top + EXCEPTION_SCOPE_SLOT]      = scopeLocal;
 
         itsExceptionTableTop = top + EXCEPTION_SLOT_SIZE;
     }
@@ -1696,11 +1703,21 @@ public class Interpreter
                | ((iCode[pc + 2] & 0xFF) << 8) | (iCode[pc + 3] & 0xFF);
     }
 
-    private static int getExceptionHandler(int[] exceptionTable, int pc,
+    private static int getExceptionHandler(CallFrame frame,
                                            boolean onlyFinally)
     {
+        int[] exceptionTable = frame.idata.itsExceptionTable;
+        if (exceptionTable == null) {
+            // No exception handlers
+            return -1;
+        }
+
+        // Icode switch in the interpreter increments PC immediately
+        // and it is necessary to subtract 1 from the saved PC
+        // to point it before the start of the next instruction.
+        int pc = frame.pc - 1;
+
         // OPT: use binary search
-        if (exceptionTable == null) { return -1; }
         int best = -1, bestStart = 0, bestEnd = 0;
         for (int i = 0; i != exceptionTable.length; i += EXCEPTION_SLOT_SIZE) {
             int start = exceptionTable[i + EXCEPTION_TRY_START_SLOT];
@@ -1900,13 +1917,12 @@ public class Interpreter
                 int tryEnd         = table[i + EXCEPTION_TRY_END_SLOT];
                 int handlerStart   = table[i + EXCEPTION_HANDLER_SLOT];
                 int type           = table[i + EXCEPTION_TYPE_SLOT];
-                int withDepth      = table[i + EXCEPTION_WITH_DEPTH_SLOT];
                 int exceptionLocal = table[i + EXCEPTION_LOCAL_SLOT];
+                int scopeLocal     = table[i + EXCEPTION_SCOPE_SLOT];
 
                 out.println(" tryStart="+tryStart+" tryEnd="+tryEnd
                             +" handlerStart="+handlerStart
                             +" type="+(type == 0 ? "catch" : "finally")
-                            +" withDepth="+withDepth
                             +" exceptionLocal="+exceptionLocal);
             }
         }
@@ -2080,38 +2096,64 @@ public class Interpreter
     {
         final Object DBL_MRK = Interpreter.DBL_MRK;
         final Scriptable undefined = Undefined.instance;
+
+        final boolean instructionCounting = (cx.instructionThreshold != 0);
         // arbitrary number to add to instructionCount when calling
         // other functions
         final int INVOCATION_COST = 100;
+        // arbitrary exception cost for instruction counting
+        final int EXCEPTION_COST = 100;
 
         String stringReg = null;
-        int indexReg = 0;
-        final boolean instructionCounting = (cx.instructionThreshold != 0);
+        int indexReg = -1;
+        // Exception object to rethrow or catch
+        Throwable throwable = null;
 
         StateLoop: for (;;) {
-            // Use local variables for constant values in frame
-            // for faster access
-            Object[] stack = frame.stack;
-            double[] sDbl = frame.sDbl;
-            byte[] iCode = frame.idata.itsICode;
-            String[] strings = frame.idata.itsStringTable;
-            boolean useActivation = frame.useActivation;
 
-            // Use local for stackTop as well. Since execption handlers
-            // can only exist at statement level where stack is empty,
-            // it is necessary to save/restore stackTop only accross
-            // function calls and normal returns.
-            int stackTop = frame.savedStackTop;
+            withoutExceptions: try {
 
-            // Point line counting to the new frame
-            cx.interpreterLineCounting = frame;
+                if (throwable != null) {
+                    // Recovering from exception, indexReg contains
+                    // the index of handler
 
-            Loop: for (;;) {
+                    int[] table = frame.idata.itsExceptionTable;
 
-                // Exception object to rethrow or catch
-                Throwable throwable;
+                    frame.pc = table[indexReg + EXCEPTION_HANDLER_SLOT];
+                    if (instructionCounting) {
+                        frame.pcPrevBranch = frame.pc;
+                    }
 
-                withoutExceptions: try {
+                    frame.savedStackTop = frame.emptyStackTop;
+                    int scopeLocal = frame.localShift
+                                     + table[indexReg + EXCEPTION_SCOPE_SLOT];
+                    int exLocal = frame.localShift
+                                     + table[indexReg + EXCEPTION_LOCAL_SLOT];
+                    frame.scope = (Scriptable)frame.stack[scopeLocal];
+                    frame.stack[exLocal] = throwable;
+
+                    throwable = null;
+                }
+
+                // Use local variables for constant values in frame
+                // for faster access
+                Object[] stack = frame.stack;
+                double[] sDbl = frame.sDbl;
+                byte[] iCode = frame.idata.itsICode;
+                String[] strings = frame.idata.itsStringTable;
+                boolean useActivation = frame.useActivation;
+
+                // Use local for stackTop as well. Since execption handlers
+                // can only exist at statement level where stack is empty,
+                // it is necessary to save/restore stackTop only accross
+                // function calls and normal returns.
+                int stackTop = frame.savedStackTop;
+
+                // Point line counting to the new frame
+                cx.interpreterLineCounting = frame;
+
+                Loop: for (;;) {
+
                     // Exception handler assumes that PC is already incremented
                     // pass the instruction start when it searches the
                     // exception handler
@@ -2478,6 +2520,10 @@ switch (op) {
         stack[stackTop] = stack[indexReg];
         sDbl[stackTop] = sDbl[indexReg];
         continue Loop;
+    case Icode_LOCAL_CLEAR :
+        indexReg += frame.localShift;
+        stack[indexReg] = null;
+        continue Loop;
     case Icode_NAME_AND_THIS :
         // stringReg: name
         ++stackTop;
@@ -2703,12 +2749,10 @@ switch (op) {
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
         --stackTop;
         frame.scope = ScriptRuntime.enterWith(lhs, frame.scope);
-        ++frame.withDepth;
         continue Loop;
     }
     case Token.LEAVEWITH :
         frame.scope = ScriptRuntime.leaveWith(frame.scope);
-        --frame.withDepth;
         continue Loop;
     case Token.CATCH_SCOPE :
         // stack top: exception object
@@ -2761,6 +2805,14 @@ switch (op) {
     case Icode_SCOPE :
         stack[++stackTop] = frame.scope;
         continue Loop;
+    case Icode_SCOPE_LOAD :
+        indexReg += frame.localShift;
+        frame.scope = (Scriptable)stack[indexReg];
+        continue Loop;
+    case Icode_SCOPE_SAVE :
+        indexReg += frame.localShift;
+        stack[indexReg] = frame.scope;
+        continue Loop;
     case Icode_CLOSURE_EXPR :
         stack[++stackTop] = InterpretedFunction.createFunction(cx, frame.scope,
                                                                frame.fnOrScript,
@@ -2811,7 +2863,6 @@ switch (op) {
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
         --stackTop;
         frame.scope = ScriptRuntime.enterDotQuery(lhs, frame.scope);
-        ++frame.withDepth;
         continue Loop;
     }
     case Icode_LEAVEDQ : {
@@ -2820,7 +2871,6 @@ switch (op) {
         if (x != null) {
             stack[stackTop] = x;
             frame.scope = ScriptRuntime.leaveDotQuery(frame.scope);
-            --frame.withDepth;
             frame.pc += 2;
             continue Loop;
         }
@@ -2956,47 +3006,121 @@ switch (op) {
                     }
                     continue Loop;
 
-                }  // end of interpreter withoutExceptions: try
-                catch (Throwable ex) {
-                    throwable = ex;
-                }
+                } // end of Loop: for
 
-                // This should be reachable only after above catch or from
-                // finally when it needs to propagate exception or from
-                // explicit throw
-                if (throwable == null) Kit.codeBug();
+                exitFrame(cx, frame, null);
+                if (frame.parentFrame != null) {
+                    Object calleeResult = frame.result;
+                    double calleeResultDbl = frame.resultDbl;
+                    frame = frame.parentFrame;
 
-                frame = handleException(cx, frame, throwable);
-                continue StateLoop;
-
-            } // end of Loop: for
-
-            releaseFrame(cx, frame, null);
-            if (frame.parentFrame != null) {
-                Object calleeResult = frame.result;
-                double calleeResultDbl = frame.resultDbl;
-                frame = frame.parentFrame;
-
-                if (frame.savedCallOp == Token.CALL) {
-                    frame.stack[frame.savedStackTop] = calleeResult;
-                    frame.sDbl[frame.savedStackTop] = calleeResultDbl;
-                } else if (frame.savedCallOp == Token.NEW) {
-                    // If construct returns scriptable,
-                    // then it replaces on stack top saved original instance
-                    // of the object.
-                    if (calleeResult instanceof Scriptable
-                        && calleeResult != undefined)
-                    {
+                    if (frame.savedCallOp == Token.CALL) {
                         frame.stack[frame.savedStackTop] = calleeResult;
+                        frame.sDbl[frame.savedStackTop] = calleeResultDbl;
+                    } else if (frame.savedCallOp == Token.NEW) {
+                        // If construct returns scriptable,
+                        // then it replaces on stack top saved original instance
+                        // of the object.
+                        if (calleeResult instanceof Scriptable
+                            && calleeResult != undefined)
+                        {
+                            frame.stack[frame.savedStackTop] = calleeResult;
+                        }
+                    } else {
+                        Kit.codeBug();
                     }
-                } else {
-                    Kit.codeBug();
+                    frame.savedCallOp = 0;
+                    continue StateLoop;
                 }
-                frame.savedCallOp = 0;
-                continue StateLoop;
+
+                return frame;
+
+            }  // end of interpreter withoutExceptions: try
+            catch (Throwable ex) {
+                if (throwable != null) {
+                    // This is serious bug and it is better to track it ASAP
+                    ex.printStackTrace(System.err);
+                    throw new IllegalStateException();
+                }
+                throwable = ex;
             }
 
-            return frame;
+            // This should be reachable only after above catch or from
+            // finally when it needs to propagate exception or from
+            // explicit throw
+            if (throwable == null) Kit.codeBug();
+
+            // Exception type
+            final int EX_CATCH_STATE = 2; // Can execute JS catch
+            final int EX_FINALLY_STATE = 1; // Can execute JS finally
+            final int EX_NO_JS_STATE = 0; // Terminate JS execution
+
+            int exState;
+
+            if (throwable instanceof JavaScriptException) {
+                exState = EX_CATCH_STATE;
+            } else if (throwable instanceof EcmaError) {
+                // an offical ECMA error object,
+                exState = EX_CATCH_STATE;
+            } else if (throwable instanceof EvaluatorException) {
+                exState = EX_CATCH_STATE;
+            } else if (throwable instanceof RuntimeException) {
+                exState = EX_FINALLY_STATE;
+            } else {
+                // Error instance
+                exState = EX_NO_JS_STATE;
+            }
+
+            if (instructionCounting) {
+                try {
+                    addInstructionCount(cx, frame, EXCEPTION_COST);
+                } catch (RuntimeException ex) {
+                    throwable = ex;
+                    exState = EX_FINALLY_STATE;
+                } catch (Error ex) {
+                    // Error from instruction counting
+                    //     => unconditionally terminate JS
+                    throwable = ex;
+                    exState = EX_NO_JS_STATE;
+                }
+            }
+            if (frame.debuggerFrame != null && !(throwable instanceof Error)) {
+                try {
+                    frame.debuggerFrame.onExceptionThrown(cx, throwable);
+                } catch (Throwable ex) {
+                    // Any exception from debugger
+                    //     => unconditionally terminate JS
+                    throwable = ex;
+                    exState = EX_NO_JS_STATE;
+                }
+            }
+
+            do {
+                if (exState != EX_NO_JS_STATE) {
+                    boolean onlyFinally = (exState != EX_CATCH_STATE);
+                    indexReg = getExceptionHandler(frame, onlyFinally);
+                    if (indexReg >= 0) {
+                        // We caught an exception, restart the loop
+                        // with exception pending the processing at the loop
+                        // start
+                        continue StateLoop;
+                    }
+                }
+                // No allowed execption handlers in this frame, unwind
+                // to parent and try to look there
+
+                exitFrame(cx, frame, throwable);
+
+                frame = frame.parentFrame;
+            } while (frame != null);
+
+            // No more frames, rethrow the exception.
+            if (throwable instanceof RuntimeException) {
+                throw (RuntimeException)throwable;
+            } else {
+                // Must be instance of Error or code bug
+                throw (Error)throwable;
+            }
 
         } // end of StateLoop: for(;;)
     }
@@ -3118,7 +3242,6 @@ switch (op) {
         frame.pc = 0;
         frame.pcPrevBranch = 0;
         frame.pcSourceLineStart = idata.firstLinePC;
-        frame.withDepth = 0;
         frame.scope = scope;
 
         frame.savedStackTop = emptyStackTop;
@@ -3150,7 +3273,7 @@ switch (op) {
         }
     }
 
-    private static void releaseFrame(Context cx, CallFrame frame,
+    private static void exitFrame(Context cx, CallFrame frame,
                                      Throwable throwable)
     {
         if (frame.idata.itsNeedsActivation) {
@@ -3170,111 +3293,6 @@ switch (op) {
                 ex.printStackTrace(System.err);
             }
         }
-    }
-
-    private static CallFrame handleException(Context cx, CallFrame frame,
-                                             Throwable throwable)
-    {
-        // arbitrary exception cost for instruction counting
-        final int EXCEPTION_COST = 100;
-        final boolean instructionCounting = (cx.instructionThreshold != 0);
-
-        // Exception type
-        final int EX_CATCH_STATE = 2; // Can execute JS catch
-        final int EX_FINALLY_STATE = 1; // Can execute JS finally
-        final int EX_NO_JS_STATE = 0; // Terminate JS execution
-
-        int exState;
-
-        if (throwable instanceof JavaScriptException) {
-            exState = EX_CATCH_STATE;
-        } else if (throwable instanceof EcmaError) {
-            // an offical ECMA error object,
-            exState = EX_CATCH_STATE;
-        } else if (throwable instanceof EvaluatorException) {
-            exState = EX_CATCH_STATE;
-        } else if (throwable instanceof RuntimeException) {
-            exState = EX_FINALLY_STATE;
-        } else {
-            // Error instance
-            exState = EX_NO_JS_STATE;
-        }
-
-        if (instructionCounting) {
-            try {
-                addInstructionCount(cx, frame, EXCEPTION_COST);
-            } catch (RuntimeException ex) {
-                throwable = ex;
-                exState = EX_FINALLY_STATE;
-            } catch (Error ex) {
-                // Error from instruction counting
-                //     => unconditionally terminate JS
-                throwable = ex;
-                exState = EX_NO_JS_STATE;
-            }
-        }
-        if (frame.debuggerFrame != null && !(throwable instanceof Error)) {
-            try {
-                frame.debuggerFrame.onExceptionThrown(cx, throwable);
-            } catch (Throwable ex) {
-                // Any exception from debugger
-                //     => unconditionally terminate JS
-                throwable = ex;
-                exState = EX_NO_JS_STATE;
-            }
-        }
-
-        int[] table;
-        int handler;
-        for (;;) {
-            if (exState != EX_NO_JS_STATE) {
-                table = frame.idata.itsExceptionTable;
-                // Icode switch in the interpreter increments PC immediately
-                // and it is necessary to subtract 1 from the saved PC
-                // to point it before the start of the next instruction.
-                boolean onlyFinally = (exState != EX_CATCH_STATE);
-                handler = getExceptionHandler(table, frame.pc - 1, onlyFinally);
-                if (handler >= 0) {
-                    break;
-                }
-            }
-            // No allowed execption handlers in this frame, unwind
-            // to parent and try to look there
-
-            releaseFrame(cx, frame, throwable);
-
-            if (frame.parentFrame == null) {
-                // No more parent frame frames, rethrow the exception.
-                if (throwable instanceof RuntimeException) {
-                    throw (RuntimeException)throwable;
-                } else {
-                    // Must be instance of Error or code bug
-                    throw (Error)throwable;
-                }
-            }
-
-            frame = frame.parentFrame;
-        }
-
-        // We caught an exception
-
-        int tryWithDepth = table[handler + EXCEPTION_WITH_DEPTH_SLOT];
-        while (frame.withDepth != tryWithDepth) {
-            if (frame.scope == null) Kit.codeBug();
-            frame.scope = ScriptRuntime.leaveWith(frame.scope);
-            --frame.withDepth;
-        }
-
-        frame.pc = table[handler + EXCEPTION_HANDLER_SLOT];
-        if (instructionCounting) {
-            frame.pcPrevBranch = frame.pc;
-        }
-
-        frame.savedStackTop = frame.emptyStackTop;
-        int exLocal = table[handler + EXCEPTION_LOCAL_SLOT];
-        frame.stack[frame.localShift + exLocal] = throwable;
-
-        return frame;
     }
 
     /**
@@ -3323,7 +3341,7 @@ switch (op) {
                           calleeFrame);
                 if (op == Icode_TAIL_CALL) {
                     // Release the parent
-                    releaseFrame(cx, frame, null);
+                    exitFrame(cx, frame, null);
                 } else {
                     frame.savedStackTop = stackTop;
                     frame.savedCallOp = op;
