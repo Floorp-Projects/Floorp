@@ -1216,7 +1216,18 @@ nsresult nsRenderingContextWin :: CopyOffScreenBits(nsRect &aBounds)
       ::SelectClipRgn(mMainDC, NULL);
 #endif
 
+    // If there's a palette make sure it's selected.
+    // XXX This doesn't seem like the best place to be doing this...
+    nsPaletteInfo palInfo;
+    HPALETTE      oldPalette;
+    mContext->GetPaletteInfo(palInfo);
+    if (palInfo.isPaletteDevice && palInfo.palette) {
+      oldPalette = ::SelectPalette(mMainDC, (HPALETTE)palInfo.palette, TRUE);
+    }
     ::BitBlt(mMainDC, 0, 0, aBounds.width, aBounds.height, mDC, 0, 0, SRCCOPY);
+    if (palInfo.isPaletteDevice && palInfo.palette) {
+      ::SelectPalette(mMainDC, oldPalette, TRUE);
+    }
   }
   else
     NS_ASSERTION(0, "attempt to blit with bad DCs");
