@@ -89,7 +89,7 @@ nsLegendFrame::SetInitialChildList(nsIPresContext& aPresContext,
   GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) styleDisplay);
   mInline = (NS_STYLE_DISPLAY_BLOCK != styleDisplay->mDisplay);
 
-  PRUint8 flags = (mInline) ? NS_BODY_SHRINK_WRAP : 0;
+  PRUint8 flags = (mInline) ? NS_BLOCK_SHRINK_WRAP : 0;
   NS_NewAreaFrame(mFirstChild, flags);
 
   // Resolve style and initialize the frame

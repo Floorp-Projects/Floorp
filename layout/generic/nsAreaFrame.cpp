@@ -443,7 +443,7 @@ nsAreaFrame::Reflow(nsIPresContext&          aPresContext,
   }
 
   // If this is really the body, force a repaint of the damage area
-  if ((NS_BODY_THE_BODY & mFlags) && !damageArea.IsEmpty()) {
+  if ((NS_BLOCK_DOCUMENT_ROOT & mFlags) && !damageArea.IsEmpty()) {
     Invalidate(damageArea);
   }
 
