@@ -3777,17 +3777,17 @@ nsContextMenu.prototype = {
     // Open linked-to URL in a new window.
     openLink : function () {
         // Determine linked-to URL.
-        openNewWindowWith(this.linkURL(), this.link);
+        openNewWindowWith(this.linkURL(), this.link, true);
     },
     // Open linked-to URL in a new tab.
     openLinkInTab : function () {
         // Determine linked-to URL.
-        openNewTabWith(this.linkURL(), this.link);
+        openNewTabWith(this.linkURL(), this.link, null, true);
     },
     // Open frame in a new tab.
     openFrameInTab : function () {
         // Determine linked-to URL.
-        openNewTabWith(this.target.ownerDocument.location.href, null);
+        openNewTabWith(this.target.ownerDocument.location.href, null, null, true);
     },
     // Reload clicked-in frame.
     reloadFrame : function () {
@@ -3795,7 +3795,7 @@ nsContextMenu.prototype = {
     },
     // Open clicked-in frame in its own window.
     openFrame : function () {
-        openNewWindowWith(this.target.ownerDocument.location.href, null);
+        openNewWindowWith(this.target.ownerDocument.location.href, null, true);
     },
     // Open clicked-in frame in the same window
     showOnlyThisFrame : function () {
@@ -4253,73 +4253,18 @@ nsDefaultEngine.prototype =
    return true;
  }
 
-function openNewTabWith(href, linkNode, event)
-{
-  urlSecurityCheck(href, document); 
-
-  // should we open it in a new tab?
-  var loadInBackground;
-  try {
-    loadInBackground = gPrefService.getBoolPref("browser.tabs.loadInBackground");
-  }
-  catch(ex) {
-    loadInBackground = true;
-  }
-  
-  if (event && event.shiftKey)
-    loadInBackground = !loadInBackground;
-
-  var theTab = getBrowser().addTab(href, getReferrer(document));
-  if (!loadInBackground)
-    getBrowser().selectedTab = theTab;
-  
-  if (linkNode)
-    markLinkVisited(href, linkNode);
-}
-
-function openNewWindowWith(href, linkNode) 
-{
-  urlSecurityCheck(href, document);
-
-  // if and only if the current window is a browser window and it has a document with a character
-  // set, then extract the current charset menu setting from the current document and use it to
-  // initialize the new browser window...
-  var charsetArg = null;
-  var wintype = document.firstChild.getAttribute('windowtype');
-  if (wintype == "navigator:browser")
-    charsetArg = "charset=" + window._content.document.characterSet;
-
-  var referrer = getReferrer(document);
-  window.openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", href, charsetArg, referrer);
-  
-  if (linkNode)
-    markLinkVisited(href, linkNode);
-}
-
-function markLinkVisited(href, linkNode)
-{
-   var globalHistory = Components.classes["@mozilla.org/browser/global-history;1"]
-                               .getService(Components.interfaces.nsIGlobalHistory);
-   if (!globalHistory.isVisited(href)) {
-     globalHistory.addPage(href);
-     var oldHref = linkNode.href;
-     linkNode.href = "";
-     linkNode.href = oldHref;
-   }    
-}
-
 function handleLinkClick(event, href, linkNode)
 {
   switch (event.button) {                                   
     case 0:  
       if (event.ctrlKey) {
-        openNewTabWith(href, linkNode, event);
+        openNewTabWith(href, linkNode, event, true);
         event.preventBubble();
         return true;
       } 
                                                        // if left button clicked
       if (event.shiftKey) {
-        openNewWindowWith(href, linkNode);
+        openNewWindowWith(href, linkNode, true);
         event.preventBubble();
         return true;
       }
@@ -4339,9 +4284,9 @@ function handleLinkClick(event, href, linkNode)
         tab = true;
       }
       if (tab)
-        openNewTabWith(href, linkNode, event);
+        openNewTabWith(href, linkNode, event, true);
       else
-        openNewWindowWith(href, linkNode);
+        openNewWindowWith(href, linkNode, true);
       event.preventBubble();
       return true;
   }
@@ -4359,7 +4304,7 @@ function middleMousePaste( event )
 
   // On ctrl-middleclick, open in new tab.
   if (event.ctrlKey)
-    openNewTabWith(url, null);
+    openNewTabWith(url, null, event, true);
 
   // If ctrl wasn't down, then just load the url in the current win/tab.
   loadURI(url);
@@ -4375,33 +4320,6 @@ function makeURLAbsolute( base, url )
   var baseURI  = ioService.newURI(base, null, null);
 
   return ioService.newURI(baseURI.resolve(url), null, null).spec;
-}
-
-
-function isContentFrame(aFocusedWindow)
-{
-  if (!aFocusedWindow)
-    return false;
-
-  var focusedTop = Components.lookupMethod(aFocusedWindow, 'top')
-                             .call(aFocusedWindow);
-
-  return (focusedTop == window.content);
-}
-
-function urlSecurityCheck(url, doc) 
-{
-  // URL Loading Security Check
-  var focusedWindow = doc.commandDispatcher.focusedWindow;
-  var sourceURL = getContentFrameURI(focusedWindow);
-  const nsIScriptSecurityManager = Components.interfaces.nsIScriptSecurityManager;
-  var secMan = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
-                         .getService(nsIScriptSecurityManager);
-  try {
-    secMan.checkLoadURIStr(sourceURL, url, nsIScriptSecurityManager.STANDARD);
-  } catch (e) {
-    throw "Load of " + url + " denied.";
-  }
 }
 
 function findParentNode(node, parentNode)

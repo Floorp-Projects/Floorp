@@ -39,25 +39,23 @@
 
 var gHistoryTree;
 var gGlobalHistory;
-var gHistoryBundle;
 var gSearchBox;
 var gHistoryGrouping = "";
 
 function HistoryCommonInit()
 {
-    gHistoryTree =  document.getElementById("historyTree");
-    gHistoryBundle =    document.getElementById("historyBundle");    
+    gHistoryTree =  document.getElementById("historyTree");    
     gSearchBox = document.getElementById("search-box");
 
     var treeController = new nsTreeController(gHistoryTree);
-    var mode = document.getElementById("viewButton").getAttribute("selectedsort");
-    if (mode == "site")
+    gHistoryGrouping = document.getElementById("viewButton").getAttribute("selectedsort");
+    if (gHistoryGrouping == "site")
       document.getElementById("bysite").setAttribute("checked", "true");
-    else if (mode == "visited")
+    else if (gHistoryGrouping == "visited")
       document.getElementById("byvisited").setAttribute("checked", "true");
-    else if (mode == "lastvisited")
+    else if (gHistoryGrouping == "lastvisited")
       document.getElementById("bylastvisited").setAttribute("checked", "true");
-    else if (mode == "dayandsite")
+    else if (gHistoryGrouping == "dayandsite")
       document.getElementById("bydayandsite").setAttribute("checked", "true");
     else
       document.getElementById("byday").setAttribute("checked", "true");
@@ -89,49 +87,41 @@ var historyDNDObserver = {
     }
 };
 
-function validClickConditions(event)
-{
-  var currentIndex = gHistoryTree.currentIndex;
-  if (currentIndex == -1) return false;
-  var container = isContainer(gHistoryTree, currentIndex);
-  return (event.button == 0 &&
-          event.originalTarget.localName == 'treechildren' &&
-          !container);
-}
-
 function collapseExpand()
 {
     var currentIndex = gHistoryTree.currentIndex;
     gHistoryTree.treeBoxObject.view.toggleOpenState(currentIndex);
 }
 
-function OpenURL(aInNewWindow)
+function onDoubleClick(event)
 {
-    var currentIndex = gHistoryTree.currentIndex;     
-    var builder = gHistoryTree.builder.QueryInterface(Components.interfaces.nsIXULTreeBuilder);
-    var url = builder.getResourceAtIndex(currentIndex).Value;
-    
-    if (aInNewWindow) {
-      var count = gHistoryTree.treeBoxObject.view.selection.count;
-      if (count == 1) {
-        openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", url );
-      }
-      else {
-        var min = new Object(); 
-        var max = new Object();
-        var rangeCount = gHistoryTree.treeBoxObject.view.selection.getRangeCount();
-        for (var i = 0; i < rangeCount; ++i) {
-          gHistoryTree.treeBoxObject.view.selection.getRangeAt(i, min, max);
-          for (var k = max.value; k >= min.value; --k) {
-            url = gHistoryTree.treeBoxObject.view.getCellText(k, "URL");
-            window.openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", url);
-          }
-        }
-      }
-    }        
-    else if (!isContainer(gHistoryTree, currentIndex))
-      openTopWin(url);
-    return true;
+  if (event.metaKey || event.shiftKey)
+    OpenURL(1);
+  else if (event.ctrlKey)
+    OpenURL(2, event);
+  else
+    OpenURL(0);
+}
+
+function OpenURL(aWhere, event)
+{
+  var count = gHistoryTree.treeBoxObject.view.selection.count;
+  if (count != 1)
+    return;
+
+  var currentIndex = gHistoryTree.currentIndex;     
+  if (isContainer(gHistoryTree, currentIndex))
+    return;
+ 
+  var builder = gHistoryTree.builder.QueryInterface(Components.interfaces.nsIXULTreeBuilder);
+  var url = builder.getResourceAtIndex(currentIndex).Value;
+
+  if (aWhere == 0)
+    openTopWin(url);
+  else if (aWhere == 1)
+    openNewWindowWith(url, null, false);
+  else
+    openNewTabWith(url, null, event, false);     
 }
 
 function SortBy(sortKey)
@@ -188,105 +178,66 @@ function GroupBy(groupingType)
 function historyAddBookmarks()
 {
   var count = gHistoryTree.treeBoxObject.view.selection.count;
-  var url;
-  var title;
-  if (count == 1) {
-    var currentIndex = gHistoryTree.currentIndex;
-    url = gHistoryTree.treeBoxObject.view.getCellText(currentIndex, "URL");
-    title = gHistoryTree.treeBoxObject.view.getCellText(currentIndex, "Name");
-    BookmarksUtils.addBookmark(url, title, undefined, true);
-  }
-  else if (count > 1) {
-    var min = new Object(); 
-    var max = new Object();
-    var rangeCount = gHistoryTree.treeBoxObject.view.selection.getRangeCount();
-    for (var i = 0; i < rangeCount; ++i) {
-      gHistoryTree.treeBoxObject.view.selection.getRangeAt(i, min, max);
-      for (var k = max.value; k >= min.value; --k) {
-        url = gHistoryTree.treeBoxObject.view.getCellText(k, "URL");
-        title = gHistoryTree.treeBoxObject.view.getCellText(k, "Name");
-        BookmarksUtils.addBookmark(url, title, undefined, false);
-      }
-    }
-  }
+  if (count != 1)
+    return;
+  
+  var currentIndex = gHistoryTree.currentIndex;
+  var url = gHistoryTree.treeBoxObject.view.getCellText(currentIndex, "URL");
+  var title = gHistoryTree.treeBoxObject.view.getCellText(currentIndex, "Name");
+  BookmarksUtils.addBookmark(url, title, undefined, true);
 }
 
 
-function updateItems()
+function buildContextMenu()
 {
   var count = gHistoryTree.treeBoxObject.view.selection.count;
   var openItem = document.getElementById("miOpen");
+  var openItemInNewWindow = document.getElementById("miOpenInNewWindow");
+  var openItemInNewTab = document.getElementById("miOpenInNewTab");
   var bookmarkItem = document.getElementById("miAddBookmark");
   var copyLocationItem = document.getElementById("miCopyLinkLocation");
   var sep1 = document.getElementById("pre-bookmarks-separator");
-  var openItemInNewWindow = document.getElementById("miOpenInNewWindow");
+  var sep2 = document.getElementById("post-bookmarks-separator");
   var collapseExpandItem = document.getElementById("miCollapseExpand");
   if (count > 1) {
-    var hasContainer = false;
-    if (gHistoryGrouping == "day") {
-      var min = new Object(); 
-      var max = new Object();
-      var rangeCount = gHistoryTree.treeBoxObject.view.selection.getRangeCount();
-      for (var i = 0; i < rangeCount; ++i) {
-        gHistoryTree.treeBoxObject.view.selection.getRangeAt(i, min, max);
-        for (var k = max.value; k >= min.value; --k) {
-          if (isContainer(gHistoryTree, k)) {
-            hasContainer = true;
-            break;
-          }
-        }
-      }
-    }
-    if (hasContainer) {
-      bookmarkItem.setAttribute("hidden", "true");
-      copyLocationItem.setAttribute("hidden", "true");
-      sep1.setAttribute("hidden", "true");
-      document.getElementById("post-bookmarks-separator").setAttribute("hidden", "true");
-      openItem.setAttribute("hidden", "true");
-      openItemInNewWindow.setAttribute("hidden", "true");
-      collapseExpandItem.setAttribute("hidden", "true");
-    }
-    else {
-      bookmarkItem.removeAttribute("hidden");
-      copyLocationItem.removeAttribute("hidden");
-      sep1.removeAttribute("hidden");
-      bookmarkItem.setAttribute("label", document.getElementById('multipleBookmarks').getAttribute("label"));
-      openItem.setAttribute("hidden", "true");
-      openItem.removeAttribute("default");
-      openItemInNewWindow.setAttribute("default", "true");
-    }
+    openItem.hidden = true;
+    openItemInNewWindow.hidden = true;
+    openItemInNewTab.hidden = true;
+    bookmarkItem.hidden = true;
+    copyLocationItem.hidden = true;
+    sep1.hidden = true;
+    sep2.hidden = true;
+    collapseExpandItem.hidden = true;    
   }
   else {
-    bookmarkItem.setAttribute("label", document.getElementById('oneBookmark').getAttribute("label"));
     var currentIndex = gHistoryTree.currentIndex;
-    if (isContainer(gHistoryTree, currentIndex)) {
-        openItem.setAttribute("hidden", "true");
-        openItemInNewWindow.setAttribute("hidden", "true");
-        openItem.removeAttribute("default");        
-        collapseExpandItem.removeAttribute("hidden");
-        collapseExpandItem.setAttribute("default", "true");
-        bookmarkItem.setAttribute("hidden", "true");
-        copyLocationItem.setAttribute("hidden", "true");
-        sep1.setAttribute("hidden", "true");
-        if (isContainerOpen(gHistoryTree, currentIndex))
-          collapseExpandItem.setAttribute("label", gHistoryBundle.getString("collapseLabel"));
-        else
-          collapseExpandItem.setAttribute("label", gHistoryBundle.getString("expandLabel"));
-        return true;
+    if ((gHistoryGrouping == "day" || gHistoryGrouping == "dayandsite")
+        && isContainer(gHistoryTree, currentIndex)) {
+      var bundle = document.getElementById("historyBundle");    
+      openItem.hidden = true;
+      openItemInNewWindow.hidden = true;
+      openItemInNewTab.hidden = true;
+      bookmarkItem.hidden = true;
+      copyLocationItem.hidden = true;
+      sep1.hidden = true;
+      sep2.hidden = false;
+      collapseExpandItem.hidden = false;      
+      if (isContainerOpen(gHistoryTree, currentIndex))
+        collapseExpandItem.setAttribute("label", bundle.getString("collapseLabel"));
+      else
+        collapseExpandItem.setAttribute("label", bundle.getString("expandLabel"));
     }
     else {
-      collapseExpandItem.setAttribute("hidden", "true");
-      bookmarkItem.removeAttribute("hidden");
-      copyLocationItem.removeAttribute("hidden");
-      sep1.removeAttribute("hidden");
-      openItem.removeAttribute("hidden");
-      openItemInNewWindow.removeAttribute("hidden");
-      if (!openItem.hasAttribute("default"))
-        openItem.setAttribute("default", "true");
-      openItemInNewWindow.removeAttribute("default");
+      openItem.hidden = false;
+      openItemInNewWindow.hidden = false;
+      openItemInNewTab.hidden = false;
+      bookmarkItem.hidden = false;
+      copyLocationItem.hidden = false;
+      sep1.hidden = false;
+      sep2.hidden = false;
+      collapseExpandItem.hidden = true;
     }
   }
-  return true;
 }
 
 function searchHistory(aInput)

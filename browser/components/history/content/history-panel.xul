@@ -41,6 +41,7 @@
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/history/history.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/bookmarks/bookmarks.js"/>
+  <script type="application/x-javascript" src="chrome://browser/content/contentAreaUtils.js"/>
   <stringbundle id="historyBundle" src="chrome://browser/locale/history/history.properties"/>
   <commandset id="selectEditMenuItems">
     <command id="cmd_delete"/>
@@ -57,12 +58,15 @@
     <command id="cmd_copy"/>
     <command id="cmd_delete"/>
     <command id="cmd_selectAll"/>
-    <popup id="historyMenu" onpopupshowing="return updateItems();">
-      <menuitem id="miCollapseExpand" accesskey="&collapseExpand.accesskey;" oncommand="collapseExpand();"/>
+    <popup id="historyMenu" onpopupshowing="buildContextMenu();">
+      <menuitem id="miCollapseExpand" accesskey="&collapseExpand.accesskey;" default="true"
+                oncommand="collapseExpand();"/>
       <menuitem id="miOpen" label="&openLinkInWindowCmd.label;" accesskey="&openLinkInWindowCmd.accesskey;" default="true"
-                oncommand="OpenURL(false);"/>
+                oncommand="OpenURL(0);"/>
       <menuitem id="miOpenInNewWindow" label="&openInNewWindow.label;" accesskey="&openInNewWindow.accesskey;"
-                oncommand="OpenURL(true);"/>
+                oncommand="OpenURL(1);"/>
+      <menuitem id="miOpenInNewTab" label="&openInNewTab.label;" accesskey="&openInNewTab.accesskey;"
+                oncommand="OpenURL(2);"/>
       <menuseparator id="pre-bookmarks-separator"/>
       <menuitem id="miAddBookmark" label="&bookmarkLinkCmd.label;" oncommand="historyAddBookmarks();"/>
       <menuitem id="miCopyLinkLocation" label="&copyLinkCmd.label;" accesskey="&copyLinkCmd.accesskey;"
@@ -73,8 +77,6 @@
       <menuitem id="miSelectAll" label="&selectAllCmd.label;" accesskey="&selectAllCmd.accesskey;"
                 command="cmd_selectAll"/>
     </popup>
-    <data id="multipleBookmarks" label="&addToBookmarksCmd.label;" accesskey="&addToBookmarksCmd.accesskey;"/>
-    <data id="oneBookmark" label="&bookmarkLinkCmd.label;" accesskey="&bookmarkLinkCmd.accesskey;"/>
   </popupset>
   <hbox align="center">
     <label value="&find.label;" accesskey="&find.accesskey;" control="search-box"/>
@@ -110,7 +112,8 @@
                       historyOnSelect();"
             hidecolumnpicker="true"
             ondraggesture="if (event.originalTarget.localName == 'treechildren') nsDragAndDrop.startDrag(event, historyDNDObserver);"
-            ondblclick="if (validClickConditions(event)) OpenURL(event.shiftKey || event.metaKey);">
+            onclick="if (event.button == 1) OpenURL(2, event);" 
+            ondblclick="if (event.button == 0) onDoubleClick(event);">
     <template>
       <rule>
         <treechildren>
