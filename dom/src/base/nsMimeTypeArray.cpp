@@ -40,12 +40,7 @@ MimeTypeArrayImpl::MimeTypeArrayImpl(nsIDOMNavigator* navigator)
 
 MimeTypeArrayImpl::~MimeTypeArrayImpl()
 {
-	if (mMimeTypeArray != nsnull) {
-		for (PRUint32 i = 0; i < mMimeTypeCount; i++) {
-			NS_IF_RELEASE(mMimeTypeArray[i]);
-		}
-		delete[] mMimeTypeArray;
-	}
+  Clear();
 }
 
 
@@ -122,8 +117,29 @@ MimeTypeArrayImpl::NamedItem(const nsAReadableString& aName,
   return NS_OK;
 }
 
+void  MimeTypeArrayImpl::Clear()
+{
+  if (mMimeTypeArray != nsnull) {
+    for (PRUint32 i = 0; i < mMimeTypeCount; i++) {
+      NS_IF_RELEASE(mMimeTypeArray[i]);
+    }
+    delete[] mMimeTypeArray;
+    mMimeTypeArray = nsnull;
+  }
+  mMimeTypeCount = 0;
+}
+
+nsresult MimeTypeArrayImpl::Refresh()
+{
+  Clear();
+  return GetMimeTypes();
+}
+
 nsresult MimeTypeArrayImpl::GetMimeTypes()
 {
+  NS_PRECONDITION(!mMimeTypeArray && mMimeTypeCount==0,
+                      "already initialized");
+
 	nsIDOMPluginArray* pluginArray = nsnull;
 	nsresult rv = mNavigator->GetPlugins(&pluginArray);
 	if (rv == NS_OK) {

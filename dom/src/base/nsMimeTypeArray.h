@@ -39,9 +39,11 @@ public:
 	NS_IMETHOD GetLength(PRUint32* aLength);
 	NS_IMETHOD Item(PRUint32 aIndex, nsIDOMMimeType** aReturn);
 	NS_IMETHOD NamedItem(const nsAReadableString& aName, nsIDOMMimeType** aReturn);
+	nsresult   Refresh();
 
 private:
-	nsresult GetMimeTypes();
+  nsresult GetMimeTypes();
+  void     Clear();
 
 protected:
 	nsIDOMNavigator* mNavigator;

@@ -27,7 +27,7 @@
 #include "nsIDOMPlugin.h"
 #include "nsIPluginHost.h"
 
-class nsIDOMNavigator;
+class NavigatorImpl;
 class nsIDocShell;
 struct nsIPluginHost;
 
@@ -35,7 +35,7 @@ class PluginArrayImpl : public nsIDOMPluginArray,
                         public nsIDOMJSPluginArray
 {
 public:
-  PluginArrayImpl(nsIDOMNavigator* navigator, nsIDocShell *aDocShell);
+  PluginArrayImpl(NavigatorImpl* navigator, nsIDocShell *aDocShell);
   virtual ~PluginArrayImpl();
 
   NS_DECL_ISUPPORTS
@@ -55,7 +55,7 @@ public:
   void SetDocShell(nsIDocShell* aDocShell);
 
 protected:
-  nsIDOMNavigator* mNavigator;
+  NavigatorImpl* mNavigator;
   nsCOMPtr<nsIPluginHost> mPluginHost;
   PRUint32 mPluginCount;
   nsIDOMPlugin** mPluginArray;

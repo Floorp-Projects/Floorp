@@ -59,6 +59,7 @@
 #include "nsISidebar.h"
 #include "nsIPrincipal.h"
 #include "nsPluginArray.h"
+#include "nsMimeTypeArray.h"
 #include "nsIXPCScriptable.h"
 
 #define DEFAULT_HOME_PAGE "www.mozilla.org"
@@ -293,11 +294,12 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMNAVIGATOR
   NS_DECL_NSIDOMJSNAVIGATOR
-
+  
   void SetDocShell(nsIDocShell *aDocShell);
+  nsresult RefreshMIMEArray();
 
 protected:
-  nsIDOMMimeTypeArray* mMimeTypes;
+  MimeTypeArrayImpl* mMimeTypes;
   PluginArrayImpl* mPlugins;
   nsIDocShell* mDocShell; // weak reference
 };
