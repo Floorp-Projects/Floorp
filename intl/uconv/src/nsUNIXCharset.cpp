@@ -125,7 +125,7 @@ nsPlatformCharset::ConvertLocaleToCharsetUsingDeprecatedConfig(nsAutoString& loc
    }
    NS_ASSERTION(0, "unable to convert locale to charset using deprecated config");
    mCharset.Assign(NS_LITERAL_STRING("ISO-8859-1"));
-   return NS_ERROR_USING_FALLBACK_LOCALE;
+   return NS_SUCCESS_USING_FALLBACK_LOCALE;
 }
 
 nsPlatformCharset::~nsPlatformCharset()
@@ -179,7 +179,7 @@ nsPlatformCharset::GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUni
   NS_ASSERTION(0, "GetDefaultCharsetForLocale: need to add multi locale support");
   // until we add multi locale support: use the the charset of the user's locale
   *_retValue = ToNewUnicode(mCharset);
-  return NS_ERROR_USING_FALLBACK_LOCALE;
+  return NS_SUCCESS_USING_FALLBACK_LOCALE;
 #endif
 
   //
@@ -197,7 +197,7 @@ nsPlatformCharset::GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUni
   NS_ASSERTION(0, "unable to convert locale to charset using deprecated config");
   charset.Assign(NS_LITERAL_STRING("ISO-8859-1"));
   *_retValue = ToNewUnicode(charset);
-  return NS_ERROR_USING_FALLBACK_LOCALE;
+  return NS_SUCCESS_USING_FALLBACK_LOCALE;
 }
 
 nsresult
@@ -335,7 +335,7 @@ nsPlatformCharset::Init()
   // last resort fallback
   NS_ASSERTION(0, "unable to convert locale to charset using deprecated config");
   mCharset.Assign(NS_LITERAL_STRING("ISO-8859-1"));
-  return NS_ERROR_USING_FALLBACK_LOCALE;
+  return NS_SUCCESS_USING_FALLBACK_LOCALE;
 }
 
 nsresult
