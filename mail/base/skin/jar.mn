@@ -1,6 +1,5 @@
 classic.jar:
 +   skin/classic/global/tree.css                    (tree.css)
-+   skin/classic/global/Preview.png                 (Preview.png) 
 *+  skin/classic/global/contents.rdf                (contents.rdf)
 +   skin/classic/communicator/communicator.css      (communicator.css)
 +   skin/classic/communicator/smileys.css           (smileys.css)
@@ -84,3 +83,4 @@ classic.jar:
     skin/classic/communicator/icons/smileys/smiley-innocent.png    (icons/smileys/smiley-innocent.png)
     skin/classic/communicator/icons/smileys/smiley-cry.png         (icons/smileys/smiley-cry.png)                                                                  
     skin/classic/communicator/icons/smileys/smiley-sealed.png      (icons/smileys/smiley-sealed.png) 
+    icon.png                                                       (icons/new-mail-alert.png)

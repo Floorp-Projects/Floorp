@@ -16,6 +16,7 @@ skin/classic/messenger/addressbook/icons,            classic/skin/classic/messen
 skin/classic/messenger/messengercompose,             classic/skin/classic/messenger/messengercompose
 skin/classic/messenger/smime,                        classic/skin/classic/messenger/smime
 skin/classic/messenger/smime/icons,                  classic/skin/classic/messenger/smime/icons
+icon.png,                                            classic/icon.png
 
 #################################################################################################
 # communicator
