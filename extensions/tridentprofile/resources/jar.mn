@@ -1,0 +1,8 @@
+comm.jar:
+  content/tridentprofile/contents.rdf                     (content/contents.rdf)
+  content/tridentprofile/tridentNavigatorOverlay.xul      (content/tridentNavigatorOverlay.xul)
+
+en-US.jar:
+  locale/en-US/tridentprofile/contents.rdf                (locale/en-US/contents.rdf)
+  locale/en-US/tridentprofile/tridentNavigatorOverlay.dtd (locale/en-US/tridentNavigatorOverlay.dtd)
+  locale/en-US/tridentprofile/tridentProfile.properties   (locale/en-US/tridentProfile.properties)

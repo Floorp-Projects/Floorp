@@ -1,0 +1,4 @@
+<!-- LOCALIZATION NOTE: file menu overlay from trident profile migration
+     extension -->
+
+<!ENTITY tridentMenuMigrate.label          "Migrate IE Profile">
