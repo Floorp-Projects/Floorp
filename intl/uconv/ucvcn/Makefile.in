@@ -29,14 +29,8 @@ CSRCS		=  \
 		  $(NULL)
 
 CPPSRCS		= \
-                  nsBIG5ToUnicode.cpp \
-                  nsEUCTWToUnicode.cpp \
                   nsGB2312ToUnicode.cpp \
-                  nsEUCKRToUnicode.cpp \
-                  nsUnicodeToBIG5.cpp \
-                  nsUnicodeToEUCTW.cpp \
                   nsUnicodeToGB2312.cpp \
-                  nsUnicodeToEUCKR.cpp \
 		  nsUCvCnSupport.cpp \
                   nsUCvCnDll.cpp \
 		  $(NULL)
