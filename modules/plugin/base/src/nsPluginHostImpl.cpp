@@ -4353,6 +4353,7 @@ NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugi
           if (NS_SUCCEEDED(rv)) 
             rv = factory->CreatePlugin(serviceManager, 
                                        pluginTag->mFileName, 
+                                       pluginTag->mFullPath,
                                        pluginTag->mLibrary, 
                                        &pluginTag->mEntryPoint);
           if (!pluginTag->mEntryPoint)  // plugin wasn't found

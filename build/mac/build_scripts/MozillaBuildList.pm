@@ -1606,8 +1606,9 @@ sub BuildLayoutProjects()
     BuildOneProjectWithOutput(":mozilla:gfx:macbuild:gfxComponent.xml",         "gfxComponent$C$dbg.$S", "gfxComponent$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
 
     BuildOneProject(":mozilla:dom:macbuild:dom.xml",                            "dom$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:modules:plugin:base:macbuild:plugin.xml",          "plugin$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
-
+    BuildOneProject(":mozilla:modules:plugin:base:macbuild:plugin.xml",         "plugin$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:modules:plugin:base:macbuild:pluginClassic.xml",  "pluginClassic$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
+    
     # Static library shared between different content- and layout-related libraries
     BuildProject(":mozilla:content:macbuild:contentshared.xml",                 "contentshared$D.o");
     MakeAlias(":mozilla:content:macbuild:contentshared$D.o",                    ":mozilla:dist:content:");
