@@ -35,7 +35,7 @@
  * Support for DEcoding ASN.1 data based on BER/DER (Basic/Distinguished
  * Encoding Rules).
  *
- * $Id: secasn1d.c,v 1.3 2000/06/13 21:56:36 chrisk%netscape.com Exp $
+ * $Id: secasn1d.c,v 1.4 2000/06/20 13:24:01 chrisk%netscape.com Exp $
  */
 
 #include "secasn1.h"
@@ -628,8 +628,15 @@ sec_asn1d_parse_identifier (sec_asn1d_state *state,
 	 */
 	state->pending = 1;
     } else {
-	if (byte == 0 && state->parent != NULL
-		      && state->parent->indefinite) {
+	if (byte == 0 && state->parent != NULL &&
+		    (state->parent->indefinite ||
+			(
+			    (state->parent->place == afterImplicit ||
+			     state->parent->place == afterPointer)
+			    && state->parent->parent != NULL && state->parent->parent->indefinite
+			)
+		    )
+	    ) {
 	    /*
 	     * Our parent has indefinite-length encoding, and the
 	     * entire tag found is 0, so it seems that we have hit the
@@ -1730,7 +1737,7 @@ sec_asn1d_next_in_sequence (sec_asn1d_state *state)
 	 */
 	sec_asn1d_notify_before (state->top, child->dest, child->depth);
 
-	if (child_missing) {
+	if (child_missing) { /* if previous child was missing, copy the tag data we already have */
 	    child_found_tag_modifiers = child->found_tag_modifiers;
 	    child_found_tag_number = child->found_tag_number;
 	}
@@ -1928,6 +1935,7 @@ sec_asn1d_absorb_child (sec_asn1d_state *state)
 		     || state->place == afterPointer);
 	state->found_tag_number = state->child->found_tag_number;
 	state->found_tag_modifiers = state->child->found_tag_modifiers;
+	state->endofcontents = state->child->endofcontents;
     }
 
     /*
