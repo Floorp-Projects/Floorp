@@ -1126,6 +1126,7 @@ sub MakeResourceAliases()
 
 		_InstallResources(":mozilla:editor:ui:composer:content:MANIFEST",			"$editor_chrome_dir:content:default:", 0);
 		_InstallResources(":mozilla:editor:ui:composer:skin:MANIFEST",				"$editor_chrome_dir:skin:default:", 0);
+		_InstallResources(":mozilla:editor:ui:composer:locale:en-US:MANIFEST",	"$editor_chrome_dir:locale:en-US:", 0);
 
 		_InstallResources(":mozilla:editor:ui:dialogs:content:MANIFEST",				"$editor_chrome_dir:content:default:", 0);
 		_InstallResources(":mozilla:editor:ui:dialogs:skin:MANIFEST",				    "$editor_chrome_dir:skin:default:", 0);
