@@ -668,6 +668,8 @@ case "$target" in
     	MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_LDOPTS) -o $@'
     	MKCSHLIB='$(CC) $(CFLAGS) $(DSO_LDOPTS) -o $@'
     else
+        CFLAGS = "$CFLAGS -Dhpux"
+        CXXFLAGS = "$CXXFLAGS -Dhpux"
     	DSO_LDOPTS='-b -E +s -L$(DIST)/bin -L$(DIST)/lib'
     	MKSHLIB='$(LD) $(DSO_LDOPTS) -o $@'
     	MKCSHLIB='$(LD) $(DSO_LDOPTS) -o $@'
@@ -676,7 +678,7 @@ case "$target" in
     AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
     ;;
 
-*-irix5*)
+*-irixp5*)
     AC_DEFINE(IRIX)
     DSO_LDOPTS='-elf -shared'
     if test "$GNU_CC"; then
