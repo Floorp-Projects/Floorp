@@ -265,7 +265,7 @@ nsresult ArabicShaping(const PRUnichar* aString, PRUint32 aLen,
   PRUnichar formB;
   PRInt8 leftJ, thisJ, rightJ;
   PRInt8 leftNoTrJ, rightNoTrJ;
-  thisJ = eNJ;
+  thisJ = leftNoTrJ = eNJ;
   rightJ = GetJoiningClass(*(src));
   while(src<tempBuf+aLen-1) {
     leftJ = thisJ;
@@ -371,7 +371,9 @@ nsresult Conv_FE_06_WithReverse(const nsString& aSrc, nsString& aDst)
 {
   PRUnichar *aSrcUnichars = (PRUnichar *)aSrc.get();
   PRBool foundArabic = PR_FALSE;
-  PRUint32 i,endArabic, beginArabic, size = aSrc.Length();
+  PRUint32 i, endArabic, beginArabic, size;
+  beginArabic = 0;
+  size = aSrc.Length();
   aDst.Truncate();
   for (endArabic=0;endArabic<size;endArabic++) {
     if (aSrcUnichars[endArabic] == 0x0000) 
@@ -419,7 +421,9 @@ nsresult Conv_06_FE_WithReverse(const nsString& aSrc,
                                 PRUint32 aDir)
 {
   PRUnichar *aSrcUnichars = (PRUnichar *)aSrc.get();
-  PRUint32 i,beginArabic, endArabic, size = aSrc.Length();
+  PRUint32 i, beginArabic, endArabic, size;
+  beginArabic = 0;
+  size = aSrc.Length();
   aDst.Truncate();
   PRBool foundArabic = PR_FALSE;
   for (endArabic=0;endArabic<size;endArabic++) {
@@ -446,7 +450,7 @@ nsresult Conv_06_FE_WithReverse(const nsString& aSrc,
                     buf, &len, 
                     PR_TRUE, PR_FALSE);
       // to reverse the numerals
-      PRUint32 endNumeral, beginNumeral;
+      PRUint32 endNumeral, beginNumeral = 0;
       for (endNumeral=0;endNumeral<=len-1;endNumeral++){
         PRBool foundNumeral = PR_FALSE;
         while((endNumeral < len) && (IS_ARABIC_DIGIT(buf[endNumeral]))  ) {
