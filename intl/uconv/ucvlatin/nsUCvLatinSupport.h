@@ -27,9 +27,14 @@
 // Class nsEncoderSupport [declaration]
 
 /**
- * Support class for the Unicode encoders.
+ * Support class for the Unicode encoders. 
+ *
+ * The class source files for this class are in /ucvlatin/nsUCvLatinSupport. 
+ * However, because these objects requires non-xpcom subclassing, local copies
+ * will be made into the other directories using them. Just don't forget to 
+ * keep in sync with the master copy!
  * 
- * It implements: 
+ * This class implements:
  * - nsISupports
  * - the buffer management
  * - error handling procedure(s)
