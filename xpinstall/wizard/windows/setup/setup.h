@@ -226,6 +226,7 @@ typedef int PRInt32;
 #define WIZ_ERROR_REGKEY                1032
 #define WIZ_ERROR_INIT                  1033
 #define WIZ_ERROR_LOADING_RESOURCE_LIB  1034
+#define WIZ_ERROR_CREATE_DIRECTORY      1035
 
 /* E: Errors */
 #define E_REBOOT                        999
@@ -473,6 +474,7 @@ typedef struct setupStruct
   LPSTR     szAppID;
   LPSTR     szAppPath;
   LPSTR     szRegPath;
+  char      greID[MAX_BUF];
   char      grePrivateKey[MAX_BUF];
 } setupGen;
 

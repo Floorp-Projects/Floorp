@@ -52,11 +52,11 @@ ULONG  (PASCAL *NS_GetDiskFreeSpace)(LPCTSTR, LPDWORD, LPDWORD, LPDWORD, LPDWORD
 ULONG  (PASCAL *NS_GetDiskFreeSpaceEx)(LPCTSTR, PULARGE_INTEGER, PULARGE_INTEGER, PULARGE_INTEGER);
 HRESULT InitGre(greInfo *gre);
 void    DeInitGre(greInfo *gre);
-void    UpdateGreInstallerCmdLine(char *aParameter, DWORD aParameterBufSize);
+void    UpdateGreInstallerCmdLine(greInfo *aGre, char *aParameter, DWORD aParameterBufSize, BOOL forExistingGre);
 void    LaunchExistingGreInstaller(greInfo *gre);
-void    UpdateGREAppInstallerProgress(int percent);
 HRESULT GetInstalledGreConfigIni(greInfo *aGre, char *aGreConfigIni, DWORD aGreConfigIniBufSize);
 HRESULT GetInfoFromInstalledGreConfigIni(greInfo *aGre);
+HRESULT DetermineGreComponentDestinationPath(char *aInPath, char *aOutPath, DWORD aOutPathBufSize);
 
 static greInfo gGre;
 
@@ -74,6 +74,9 @@ typedef LONG (CALLBACK* LPFNDLLFUNC)(LPCTSTR,INT);
 #define GRE_APP_INSTALLER_PROXY_DLL      "ProgUpd.dll"
 #define GRE_PROXY_UPD_FUNC               "StdUpdateProgress"
 #define GRE_INSTALLER_ID                 "gre"
+
+#define FOR_EXISTING_GRE                 TRUE
+#define FOR_NEW_GRE                      FALSE
 
 LPSTR szProxyDLLPath;
 LPFNDLLFUNC lpfnProgressUpd;
@@ -2078,13 +2081,25 @@ void ParsePath(LPSTR szInput, LPSTR szOutput, DWORD dwOutputSize, BOOL bURLPath,
 }
 
 /* Function: UpdateGreInstallerCmdLine()
+ *       in: greInfo *aGre - contains infor needed by this function
+ *           BOOL forExistingGre - to determine if the caller is needing the
+ *               aParameter to be used by an existing GRE installer or by
+ *               a new GRE installer.
  *   in/out: char *aParameter.
  *  purpose: To update the default GRE installer's command line parameters
  *           with new defaults depending on config.ini or cmdline arguments
  *           to this app's installer.
+ *           It will also check to make sure GRE's default destination path
+ *           is writable.  If not, it will change the GRE's destination path
+ *           to [product path]\GRE\[gre ver].
  */
-void UpdateGreInstallerCmdLine(char *aParameter, DWORD aParameterBufSize)
+void UpdateGreInstallerCmdLine(greInfo *aGre, char *aParameter, DWORD aParameterBufSize, BOOL forExistingGre)
 {
+  char productPath[MAX_BUF];
+
+  MozCopyStr(sgProduct.szPath, productPath, sizeof(productPath));
+  RemoveBackSlash(productPath);
+
   /* Decide GRE installer's run mode.  Default should be -ma (AUTO).
    * The only other possibility is -ms (SILENT).  We don't want to allow
    * the GRE installer to run in NORMAL mode because we don't want to
@@ -2115,8 +2130,52 @@ void UpdateGreInstallerCmdLine(char *aParameter, DWORD aParameterBufSize)
   {
     char buf[MAX_BUF];
 
-    wsprintf(buf, " -dd \"%s\" -reg_path %s", sgProduct.szPath, sgProduct.grePrivateKey);
+    wsprintf(buf, " -dd \"%s\" -reg_path %s", productPath, sgProduct.grePrivateKey);
     lstrcat(aParameter, buf);
+  }
+  else if(!forExistingGre)
+  {
+    char buf[MAX_BUF];
+
+    assert(aGre);
+    assert(*aGre->homePath);
+    assert(*aGre->userAgent);
+
+    /* Append a backslash to the path so CreateDirectoriesAll() will see the
+     * the last directory name as a directory instead of a file. */
+    AppendBackSlash(aGre->homePath, sizeof(aGre->homePath));
+
+    /* Attempt to create the GRE destination directory.  If it fails, we don't
+     * have sufficient access to the default path.  We then need to install
+     * GRE to:
+     *   [product path]\GRE\[gre id]
+     *
+     * This path should be guaranteed to be writable because the user had
+     * already created the parent path ([product path]). */
+    if(CreateDirectoriesAll(aGre->homePath, ADD_TO_UNINSTALL_LOG) != WIZ_OK)
+    {
+      int rv = WIZ_OK;
+
+      /* Update the homePath to the new destination path of where GRE will be
+       * installed to. homePath is used elsewhere and it needs to be
+       * referencing the new path, else things will break. */
+      _snprintf(aGre->homePath, sizeof(aGre->homePath), "%s\\GRE\\%s\\", productPath, aGre->userAgent);
+      aGre->homePath[sizeof(aGre->homePath) - 1] = '\0';
+
+      /* CreateDirectoriesAll() is guaranteed to succeed using the new GRE
+       * destination path because it is a subdir of this product's destination
+       * path that has already been created successfully. */
+      rv = CreateDirectoriesAll(aGre->homePath, ADD_TO_UNINSTALL_LOG);
+      assert(rv == WIZ_OK);
+
+      /* When using the -dd option to override the GRE's destination path, the
+       * path must be a path which includes the GRE ID, ie:
+       *   C:\Program Files\mozilla.org\Mozilla\GRE\1.4_0000000000
+       */
+      _snprintf(buf, sizeof(buf), " -dd \"%s\"", aGre->homePath);
+      buf[sizeof(buf) - 1] = '\0';
+      lstrcat(aParameter, buf);
+    }
   }
 }
 
@@ -2148,9 +2207,9 @@ HRESULT GetInstalledGreConfigIni(greInfo *aGre, char *aGreConfigIni, DWORD aGreC
  *      out: returns info in aGre.
  *  purpose: To retrieve the GRE uninstaller file (full path) from
  *           the installed GRE's config.ini file.
- *           GetGrePathFromGreInstaller() retrieves information from
- *           the GRE installer's config.ini, not from the installed
- *           GRE installer's config.ini file.
+ *           GetInfoFromGreInstaller() retrieves information from
+ *           the (to be run) GRE installer's config.ini, not from the
+ *           installed GRE installer's config.ini file.
  */
 HRESULT GetInfoFromInstalledGreConfigIni(greInfo *aGre)
 {
@@ -2174,13 +2233,13 @@ HRESULT GetInfoFromInstalledGreConfigIni(greInfo *aGre)
   return(rv);
 }
 
-/* Function: GetGrePathFromGreInstaller()
+/* Function: GetInfoFromGreInstaller()
  *       in: char    *aGreInstallerFile: full path to the gre installer.
  *           greInfo *aGre: gre class to fill the homePath for.
  *      out: returns homePath in aGre.
  *  purpose: To retrieve the GRE home path from the GRE installer.
  */
-void GetGrePathFromGreInstaller(char *aGreInstallerFile, greInfo *aGre)
+void GetInfoFromGreInstaller(char *aGreInstallerFile, greInfo *aGre)
 {
   char szBuf[MAX_BUF];
   char extractedConfigFile[MAX_BUF];
@@ -2202,6 +2261,7 @@ void GetGrePathFromGreInstaller(char *aGreInstallerFile, greInfo *aGre)
   /* uncompress gre installer's config.ini file in order to parse for:
    *   [General]
    *   Path=
+   *   User Agent=
    */
   wsprintf(szBuf, "-mmi -ms -u %s", FILE_INI_CONFIG);
   WinSpawn(aGreInstallerFile, szBuf, szOSTempDir, SW_SHOWNORMAL, WS_WAIT);
@@ -2210,6 +2270,7 @@ void GetGrePathFromGreInstaller(char *aGreInstallerFile, greInfo *aGre)
   lstrcat(extractedConfigFile, FILE_INI_CONFIG);
   GetPrivateProfileString("General", "Path", "", szBuf, sizeof(szBuf), extractedConfigFile);
   DecryptString(aGre->homePath, szBuf);
+  GetPrivateProfileString("General", "User Agent", "", aGre->userAgent, sizeof(aGre->userAgent), extractedConfigFile);
   DeleteFile(extractedConfigFile);
 }
 
@@ -2285,8 +2346,8 @@ void LaunchOneComponent(siC *siCObject, greInfo *aGre)
 
       if(aGre)
       {
-        GetGrePathFromGreInstaller(szSpawnFile, aGre);
-        UpdateGreInstallerCmdLine(szParameterBuf, sizeof(szParameterBuf));
+        GetInfoFromGreInstaller(szSpawnFile, aGre);
+        UpdateGreInstallerCmdLine(aGre, szParameterBuf, sizeof(szParameterBuf), FOR_NEW_GRE);
       }
 
       LogISLaunchAppsComponent(siCObject->szDescriptionShort);
@@ -2322,7 +2383,7 @@ void LaunchExistingGreInstaller(greInfo *aGre)
   }
 
   DecryptString(szParameterBuf, siCObject->szParameter);
-  UpdateGreInstallerCmdLine(szParameterBuf, sizeof(szParameterBuf));
+  UpdateGreInstallerCmdLine(NULL, szParameterBuf, sizeof(szParameterBuf), FOR_EXISTING_GRE);
   LogISLaunchAppsComponent(siCObject->szDescriptionShort);
   WinSpawn(aGre->installerAppPath, szParameterBuf, szTempDir, SW_SHOWNORMAL, WS_WAIT);
   if(*szMessageString != '\0')
@@ -3029,6 +3090,7 @@ HRESULT InitSetupGeneral()
   if((sgProduct.szRegPath                     = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
 
+  *sgProduct.greID         = '\0';
   *sgProduct.grePrivateKey = '\0';
   return(0);
 }
@@ -4366,6 +4428,48 @@ void UpdatePathDiskSpaceRequired(LPSTR szPath, ULONGLONG ullSize, dsN **dsnCompo
   }
 }
 
+/* Function: DetermineGreComponentDestinationPath()
+ *
+ *       in: char *aInPath - original path to where the 'Component GRE' is to
+ *               be installed to.
+ *           char *aOutPath - out buffer of what the new destinaton path will
+ *               be for 'Component GRE'.  This can be the same as aInPath.
+ *
+ *  purpose: To figure determine if the original path is writable or not.  If
+ *           not, then use following as the new destination path:
+ *
+ *               [product path]\GRE\[gre id]
+ *
+ *           This path is guaranteed to work because the user chose it.  There
+ *           is logic to make sure we have write access to this new path thru
+ *           the Setup Type dialog.
+ *           This path is also the same path that will be passed on to the GRE
+ *           installer in it's -dd command line parameter.
+ */
+HRESULT DetermineGreComponentDestinationPath(char *aInPath, char *aOutPath, DWORD aOutPathBufSize)
+{
+  int  rv = WIZ_OK;
+  char inPath[MAX_BUF];
+
+  MozCopyStr(aInPath, inPath, sizeof(inPath));
+  AppendBackSlash(inPath, sizeof(inPath));
+  if(DirHasWriteAccess(inPath) != WIZ_OK)
+  {
+    char productPath[MAX_BUF];
+
+    MozCopyStr(sgProduct.szPath, productPath, sizeof(productPath));
+    RemoveBackSlash(productPath);
+
+    assert(*sgProduct.greID);
+    _snprintf(aOutPath, aOutPathBufSize, "%s\\GRE\\%s", productPath, sgProduct.greID);
+    aOutPath[aOutPathBufSize - 1] = '\0';
+  }
+  else
+    MozCopyStr(aInPath, aOutPath, aOutPathBufSize);
+
+  return(rv);
+}
+
 HRESULT InitComponentDiskSpaceInfo(dsN **dsnComponentDSRequirement)
 {
   DWORD     dwIndex0;
@@ -4400,6 +4504,12 @@ HRESULT InitComponentDiskSpaceInfo(dsN **dsnComponentDSRequirement)
     {
       if(*(siCObject->szDestinationPath) == '\0')
         lstrcpy(szBuf, sgProduct.szPath);
+      else if((lstrcmpi(siCObject->szReferenceName, "Component GRE") == 0) &&
+              (lstrcmpi(sgProduct.szProductName, "GRE") != 0))
+        /* We found 'Component GRE' and this product is not 'GRE'.  The GRE
+         * product happens to also have a 'Component GRE', but we don't
+         * care about that one. */
+        DetermineGreComponentDestinationPath(siCObject->szDestinationPath, szBuf, sizeof(szBuf));
       else
         lstrcpy(szBuf, siCObject->szDestinationPath);
 
@@ -6400,9 +6510,6 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   }
   RemoveBackSlash(sgProduct.szPath);
 
-  /* make a copy of sgProduct.szPath to be used in the Setup Type dialog */
-  lstrcpy(szTempSetupPath, sgProduct.szPath);
-  
   /* get main program folder path */
   GetPrivateProfileString("General", "Program Folder Path", "", szBuf, sizeof(szBuf), szFileIniConfig);
   DecryptString(sgProduct.szProgramFolderPath, szBuf);
@@ -6427,6 +6534,7 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
       sgProduct.greType = GRE_SHARED;
   }
 
+  GetPrivateProfileString("General", "GRE ID", "", sgProduct.greID, sizeof(sgProduct.greID), szFileIniConfig);
   GetPrivateProfileString("General", "GRE Private Key", "", szBuf, sizeof(szBuf), szFileIniConfig);
   if(*szBuf != '\0')
     DecryptString(sgProduct.grePrivateKey, szBuf);
@@ -6439,6 +6547,9 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   if(iRv)
     return(iRv);
 
+  /* make a copy of sgProduct.szPath to be used in the Setup Type dialog */
+  lstrcpy(szTempSetupPath, sgProduct.szPath);
+  
   // check to see if files need to be installed for share installations
   if(sgProduct.bSharedInst == TRUE)
     SetInstallFilesVar(sgProduct.szPath);
@@ -8298,124 +8409,6 @@ void SaveInstallerFiles()
     ++dwIndex0;
     siCObject = SiCNodeGetObject(dwIndex0, TRUE, AC_ALL);
   }
-}
-
-/* Function: AddGrePathToApplicationAppPathsKey()
- *       in: none.
- *      out: result value indicating gre path was set or not.
- *  purpose: To prepend the GRE path to the applications App Paths
- *           key in the windows registry.  It will only be prepended
- *           if it does not already exist.
- */
-int AddGrePathToApplicationAppPathsKey()
-{
-  int  rv = APPPATH_GRE_PATH_NOT_SET;
-  char path[MAX_BUF];
-  char fullAppPathsKey[MAX_BUF];
-  char keyPathUpr[MAX_BUF];
-  char grePathUpr[MAX_BUF];
-  char newPath[MAX_BUF];
-  char pathStr[] = "Path";
-
-  /* only add gre path if this is instance of the installer is
-   * not installing GRE, else return. */
-  if(lstrcmpi(sgProduct.szProductNameInternal, "GRE") == 0)
-    return(rv);
-
-  if(!sgProduct.szProgramName || (*sgProduct.szProgramName == '\0'))
-    return(rv);
-
-  /* if gGre.homePath is not set at this point, we should try to set it */
-  if(*gGre.homePath == '\0')
-  {
-    siC  *siCObject = NULL;
-    int  index;
-    char greInstaller[MAX_BUF];
-    char greInstallerUncompressed[MAX_BUF];
-    BOOL fileUncompressed = FALSE;
-
-    /* Hard coded GRE component name.  The GRE component name has to be
-     * 'Component GRE' in config.ini, or we'll fail. */
-    index = SiCNodeGetIndexRN("Component GRE");
-    if(index == -1)
-      return(rv);
-
-    /* Get the internal GRE component object */
-    siCObject = SiCNodeGetObject(index, INCLUDE_INVISIBLE_OBJS, AC_ALL);
-    if(!siCObject ||
-      (LocateJar(siCObject, greInstaller, sizeof(greInstaller), TRUE) == AP_NOT_FOUND))
-      return(rv);
-
-    /* If this object is a .zip file (which probably is, it's attribute
-     * will contain SIC_UNCOMPRESS, in which case we'll need to uncompress
-     * this file to get at the .exe file. */
-    AppendBackSlash(greInstaller, sizeof(greInstaller));
-    lstrcat(greInstaller, siCObject->szArchiveName);
-    if(siCObject->dwAttributes & SIC_UNCOMPRESS)
-    {
-      /* Build the full path including filename to the GRE installer
-       * .exe file */
-      MozCopyStr(szTempDir, greInstallerUncompressed, sizeof(greInstallerUncompressed));
-      AppendBackSlash(greInstallerUncompressed, sizeof(greInstallerUncompressed));
-      lstrcat(greInstallerUncompressed, siCObject->szArchiveNameUncompressed);
-
-      /* If it's not already there, then we need to uncompress it */
-      if(!FileExists(greInstallerUncompressed))
-      {
-        /* Uncompress the GRE component .zip file into the %TEMP%\ns_temp dir. */
-        if(FileUncompress(greInstaller, szTempDir) != FO_SUCCESS)
-          return(rv);
-
-        fileUncompressed = TRUE;
-      }
-    }
-    else
-      MozCopyStr(greInstallerUncompressed, greInstaller, sizeof(greInstaller));
-
-    /* Finally attempt to retrieve the GRE destination path from it's
-     * config.ini file */
-    GetGrePathFromGreInstaller(greInstallerUncompressed, &gGre);
-
-    /* Delete the file only if we uncompressed it */
-    if(fileUncompressed)
-      /* Regardless if GetGrePathFromGreInstaller() succeeds or fails, we
-       * need to clean the uncompressed file from the temp dir. */
-      DeleteFile(greInstallerUncompressed);
-
-    if(*gGre.homePath == '\0')
-      return(rv);
-  }
-
-  wsprintf(fullAppPathsKey, APP_PATHS_KEY,  sgProduct.szProgramName);
-  GetWinReg(HKEY_LOCAL_MACHINE, fullAppPathsKey, pathStr, path, sizeof(path));
-  if(*path == '\0')
-    MozCopyStr(gGre.homePath, newPath, sizeof(newPath));
-  else
-  {
-    rv = APPPATH_GRE_PATH_SET;
-    MozCopyStr(path, keyPathUpr, sizeof(keyPathUpr));
-    MozCopyStr(gGre.homePath, grePathUpr, sizeof(grePathUpr));
-    CharUpperBuff(grePathUpr, sizeof(grePathUpr));
-    CharUpperBuff(keyPathUpr, sizeof(keyPathUpr));
-    if(!strstr(keyPathUpr, grePathUpr))
-      wsprintf(newPath, "%s;%s", gGre.homePath, path);
-    else
-      rv = APPPATH_GRE_PATH_ALREADY_SET;
-  }
-
-  if(rv != APPPATH_GRE_PATH_ALREADY_SET)
-    SetWinReg(HKEY_LOCAL_MACHINE,
-              fullAppPathsKey,
-              WINREG_OVERWRITE_KEY,
-              pathStr,
-              WINREG_OVERWRITE_NAME,
-              REG_SZ,
-              newPath,
-              lstrlen(newPath),
-              ADD_TO_UNINSTALL_LOG,
-              DNU_DO_NOT_UNINSTALL);
-
-  return(rv);
 }
 
 BOOL ShowAdditionalOptionsDialog(void)
