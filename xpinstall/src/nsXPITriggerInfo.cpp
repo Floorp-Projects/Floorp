@@ -53,7 +53,7 @@ nsXPITriggerItem::nsXPITriggerItem( const PRUnichar* aName,
     else
     {
         URL.Left(mURL,pos);
-        URL.Right(mArguments, URL.Length()-pos+1);
+        URL.Right(mArguments, URL.Length()-(pos+1));
     }
 }
 
