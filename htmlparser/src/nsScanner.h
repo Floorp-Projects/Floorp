@@ -391,8 +391,8 @@ class nsScanner {
       PRUint32        mCountRemaining; // The number of bytes still to be read
                                        // from the scanner buffer
       PRUint32        mTotalRead;
-      PRBool          mOwnsStream;
-      PRBool          mIncremental;
+      PRPackedBool    mOwnsStream;
+      PRPackedBool    mIncremental;
       PRInt32         mCharsetSource;
       nsString        mCharset;
       nsIUnicodeDecoder *mUnicodeDecoder;

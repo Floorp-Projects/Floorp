@@ -384,11 +384,11 @@ class CAttributeToken: public CHTMLToken {
     
     PRPackedBool       mHasEqualWithoutValue;
   protected:
-    nsAutoString       mTextValue;
-    nsSlidingSubstring mTextKey;
 #ifdef DEBUG
     PRPackedBool       mLastAttribute;
 #endif
+    nsAutoString       mTextValue;
+    nsSlidingSubstring mTextKey;
 }; 
 
 

@@ -99,8 +99,6 @@ Stopwatch vsTimer;
 
 static NS_DEFINE_IID(kClassIID,     NS_VIEWSOURCE_HTML_IID);
 
-static int gErrorThreshold = 10;
-
 // Define this to dump the viewsource stuff to a file
 //#define DUMP_TO_FILE
 #ifdef DUMP_TO_FILE
@@ -350,8 +348,13 @@ CViewSourceHTML::CViewSourceHTML() : mFilename(), mTags(), mErrors() {
   mWrapLongLines = PR_FALSE;
   nsCOMPtr<nsIPref> thePrefsService(do_GetService(NS_PREF_CONTRACTID));
   if (thePrefsService) {
-    thePrefsService->GetBoolPref("view_source.syntax_highlight", &mSyntaxHighlight);
-    thePrefsService->GetBoolPref("view_source.wrap_long_lines", &mWrapLongLines);
+    PRBool temp;
+    nsresult rv;
+    rv = thePrefsService->GetBoolPref("view_source.syntax_highlight", &temp);
+    mSyntaxHighlight = NS_SUCCEEDED(rv) ? temp : PR_TRUE;
+
+    rv = thePrefsService->GetBoolPref("view_source.wrap_long_lines", &temp);
+    mWrapLongLines = NS_SUCCEEDED(rv) ? temp : PR_FALSE;
   }
 
   mParser=0;

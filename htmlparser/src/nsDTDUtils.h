@@ -222,12 +222,12 @@ public:
     return result;
   }
 
-  PRBool  mHasCaption;
-  PRBool  mHasCols;
-  PRBool  mHasTHead;
-  PRBool  mHasTFoot;
-  PRBool  mHasTBody;
-  CTableState *mPrevious;
+  PRPackedBool  mHasCaption;
+  PRPackedBool  mHasCols;
+  PRPackedBool  mHasTHead;
+  PRPackedBool  mHasTFoot;
+  PRPackedBool  mHasTBody;
+  CTableState   *mPrevious;
 };
 
 #ifdef DEBUG
