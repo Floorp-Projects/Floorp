@@ -268,7 +268,19 @@ nsMathMLmfencedFrame::doReflow(nsIPresContext*          aPresContext,
 
   nsMathMLContainerFrame* mathMLFrame =
     NS_STATIC_CAST(nsMathMLContainerFrame*, aForFrame);
- 
+
+  PRInt32 i;
+  const nsStyleFont* font;
+  aForFrame->GetStyleData(eStyleStruct_Font, (const nsStyleStruct *&)font);
+  nsCOMPtr<nsIFontMetrics> fm;
+  aReflowState.rendContext->SetFont(font->mFont);
+  aReflowState.rendContext->GetFontMetrics(*getter_AddRefs(fm));
+  nscoord axisHeight, em;
+  GetAxisHeight(*aReflowState.rendContext, fm, axisHeight);
+  GetEmHeight(fm, em);
+  // leading to be left at the top and the bottom of stretched chars
+  nscoord leading = NSToCoordRound(0.2f * em); 
+
   /////////////
   // Reflow children
   // Asking each child to cache its bounding metrics
@@ -287,6 +299,12 @@ nsMathMLmfencedFrame::doReflow(nsIPresContext*          aPresContext,
   nsIFrame* firstChild;
   aForFrame->FirstChild(aPresContext, nsnull, &firstChild);
   nsIFrame* childFrame = firstChild;
+  if (firstChild || aOpenChar || aCloseChar || aSeparatorsCount > 0) {
+    // We use the ASCII metrics to get our minimum height. This way, if we have
+    // borders or a background, they will fit better with other elements on the line
+    fm->GetMaxAscent(aDesiredSize.ascent);
+    fm->GetMaxDescent(aDesiredSize.descent);
+  }
   while (childFrame) {
     nsHTMLReflowState childReflowState(aPresContext, aReflowState,
                                        childFrame, availSize);
@@ -360,16 +378,6 @@ nsMathMLmfencedFrame::doReflow(nsIPresContext*          aPresContext,
   // Prepare the opening fence, separators, and closing fence, and
   // adjust the origin of children.
 
-  PRInt32 i;
-  const nsStyleFont* font;
-  aForFrame->GetStyleData(eStyleStruct_Font, (const nsStyleStruct *&)font);
-  nsCOMPtr<nsIFontMetrics> fm;
-  aReflowState.rendContext->SetFont(font->mFont);
-  aReflowState.rendContext->GetFontMetrics(*getter_AddRefs(fm));
-  nscoord axisHeight, em;
-  GetAxisHeight(*aReflowState.rendContext, fm, axisHeight);
-  GetEmHeight(fm, em);
-
   // we need to center around the axis
   if (firstChild) { // do nothing for an empty <mfenced></mfenced>
     nscoord delta = PR_MAX(containerSize.ascent - axisHeight, 
@@ -382,19 +390,19 @@ nsMathMLmfencedFrame::doReflow(nsIPresContext*          aPresContext,
   // opening fence ...
   ReflowChar(aPresContext, *aReflowState.rendContext, aOpenChar,
              NS_MATHML_OPERATOR_FORM_PREFIX, presentationData.scriptLevel, 
-             axisHeight, em, containerSize, aDesiredSize);
+             axisHeight, leading, em, containerSize, aDesiredSize);
   /////////////////
   // separators ...
   for (i = 0; i < aSeparatorsCount; i++) {
     ReflowChar(aPresContext, *aReflowState.rendContext, &aSeparatorsChar[i],
                NS_MATHML_OPERATOR_FORM_INFIX, presentationData.scriptLevel,
-               axisHeight, em, containerSize, aDesiredSize);
+               axisHeight, leading, em, containerSize, aDesiredSize);
   }
   /////////////////
   // closing fence ...
   ReflowChar(aPresContext, *aReflowState.rendContext, aCloseChar,
              NS_MATHML_OPERATOR_FORM_POSTFIX, presentationData.scriptLevel,
-             axisHeight, em, containerSize, aDesiredSize);
+             axisHeight, leading, em, containerSize, aDesiredSize);
 
   //////////////////
   // Adjust the origins of each child.
@@ -465,6 +473,7 @@ nsMathMLmfencedFrame::ReflowChar(nsIPresContext*      aPresContext,
                                  nsOperatorFlags      aForm,
                                  PRInt32              aScriptLevel,
                                  nscoord              axisHeight,
+                                 nscoord              leading,
                                  nscoord              em,
                                  nsBoundingMetrics&   aContainerSize,
                                  nsHTMLReflowMetrics& aDesiredSize)
@@ -473,7 +482,7 @@ nsMathMLmfencedFrame::ReflowChar(nsIPresContext*      aPresContext,
     nsOperatorFlags flags = 0;
     float leftSpace = 0.0f;
     float rightSpace = 0.0f;
- 
+
     nsAutoString data;
     aMathMLChar->GetData(data);
     PRBool found = nsMathMLOperators::LookupOperator(data, aForm,              
@@ -491,8 +500,7 @@ nsMathMLmfencedFrame::ReflowChar(nsIPresContext*      aPresContext,
                                         NS_STRETCH_DIRECTION_VERTICAL,
                                         aContainerSize, charSize);
 
-    if (NS_STRETCH_DIRECTION_UNSUPPORTED != aMathMLChar->GetStretchDirection())
-    {
+    if (NS_STRETCH_DIRECTION_UNSUPPORTED != aMathMLChar->GetStretchDirection()) {
       // has changed... so center the char around the axis
       nscoord height = charSize.ascent + charSize.descent;
       charSize.ascent = height/2 + axisHeight;
@@ -501,6 +509,7 @@ nsMathMLmfencedFrame::ReflowChar(nsIPresContext*      aPresContext,
     else {
       // either it hasn't changed or stretching the char failed (i.e.,
       // GetBoundingMetrics failed)
+      leading = 0;
       if (NS_FAILED(res)) {
         nsTextDimensions dimensions;
         aRenderingContext.GetTextDimensions(data.get(), data.Length(), dimensions);
@@ -513,10 +522,10 @@ nsMathMLmfencedFrame::ReflowChar(nsIPresContext*      aPresContext,
       }
     }
 
-    if (aDesiredSize.ascent < charSize.ascent) 
-      aDesiredSize.ascent = charSize.ascent;
-    if (aDesiredSize.descent < charSize.descent) 
-      aDesiredSize.descent = charSize.descent;
+    if (aDesiredSize.ascent < charSize.ascent + leading) 
+      aDesiredSize.ascent = charSize.ascent + leading;
+    if (aDesiredSize.descent < charSize.descent + leading) 
+      aDesiredSize.descent = charSize.descent + leading;
 
     // account the spacing
     charSize.width += NSToCoordRound((leftSpace + rightSpace) * em);
@@ -542,22 +551,20 @@ nsMathMLmfencedFrame::PlaceChar(nsMathMLChar*      aMathMLChar,
   // the char's y-origin was used to store the ascent ... 
   nsRect rect;
   aMathMLChar->GetRect(rect);
- 
+
   nscoord dy = aDesiredAscent - rect.y;
-  if (aMathMLChar->GetStretchDirection() != NS_STRETCH_DIRECTION_UNSUPPORTED)
-  {
+  if (aMathMLChar->GetStretchDirection() != NS_STRETCH_DIRECTION_UNSUPPORTED) {
     // the stretchy char will be centered around the axis
     // so we adjust the returned bounding metrics accordingly
     bm.descent = (bm.ascent + bm.descent) - rect.y;
     bm.ascent = rect.y;
   }
 
-  aMathMLChar->SetRect(nsRect(dx + rect.x, dy,
-                              bm.width, rect.height));
+  aMathMLChar->SetRect(nsRect(dx + rect.x, dy, bm.width, rect.height));
 
   bm.leftBearing += rect.x;
   bm.rightBearing += rect.x;
-  
+
   // return rect.width since it includes lspace and rspace
   bm.width = rect.width;
   dx += rect.width;

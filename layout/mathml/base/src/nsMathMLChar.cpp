@@ -918,7 +918,7 @@ nsGlyphTableList::GetPreferredListAt(nsIPresContext* aPresContext,
         aGlyphTableList->Clear();
       }
       aGlyphTableList->AppendElement(glyphTable);
-      *aCount++;
+      ++*aCount;
     }
     glyphTable = TableAt(++index);
   } 
@@ -1851,36 +1851,38 @@ nsMathMLChar::Paint(nsIPresContext*      aPresContext,
   const nsStyleVisibility *visib = NS_STATIC_CAST(const nsStyleVisibility*,
     styleContext->GetStyleData(eStyleStruct_Visibility));
 
-  if (visib->IsVisible() && NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer)
-  {
+  // if the leaf style context that we use for stretchy chars has a background
+  // color we use it -- this feature is mostly used for testing and debugging
+  // purposes. Normally, users will set the background on the container frame.
+  if (visib->IsVisible() && NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
     if (mRect.width && mRect.height) {
-      // Paint our background and border
-      PRIntn skipSides = 0; //aForFrame->GetSkipSides();
       const nsStyleBorder *border = NS_STATIC_CAST(const nsStyleBorder*,
         styleContext->GetStyleData(eStyleStruct_Border));
-      const nsStyleOutline *outline = NS_STATIC_CAST(const nsStyleOutline*,
-        styleContext->GetStyleData(eStyleStruct_Outline));
-
-      // if the leaf style context that we use for stretchy chars has a background color
-      // we use it, otherwise we let the rendering code lookup in our parent context
       const nsStyleBackground *backg = NS_STATIC_CAST(const nsStyleBackground*,
         styleContext->GetStyleData(eStyleStruct_Background));
       nsRect rect(mRect); //0, 0, mRect.width, mRect.height);
-      if (0 == (backg->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT))
+      if (styleContext != parentContext.get() &&
+          0 == (backg->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT))
         nsCSSRendering::PaintBackgroundWithSC(aPresContext, aRenderingContext, aForFrame,
                                               aDirtyRect, rect, *backg, *border, 0, 0);
-      else
-        nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, aForFrame,
-                                        aDirtyRect, rect, *border, 0, 0);
+      //else
+      //  our container frame will take care of painting its background
+      //  nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, aForFrame,
+      //                                  aDirtyRect, rect, *border, 0, 0);
+#if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
+      // for visual debug
+      PRIntn skipSides = 0; //aForFrame->GetSkipSides();
+      const nsStyleOutline *outline = NS_STATIC_CAST(const nsStyleOutline*,
+        styleContext->GetStyleData(eStyleStruct_Outline));
       nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, aForFrame,
                                   aDirtyRect, rect, *border, styleContext, skipSides);
       nsCSSRendering::PaintOutline(aPresContext, aRenderingContext, aForFrame,
                                    aDirtyRect, rect, *border, *outline, styleContext, 0);
+#endif
     }
   }
 
-  if (visib->IsVisible() && NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer)
-  {
+  if (visib->IsVisible() && NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
     // Set color ...
     const nsStyleColor *color = NS_STATIC_CAST(const nsStyleColor*,
       styleContext->GetStyleData(eStyleStruct_Color));
@@ -2072,7 +2074,7 @@ nsMathMLChar::PaintVertically(nsIPresContext*      aPresContext,
         rbearing = bmdata[first].rightBearing;
       }
       else {
-        NS_ASSERTION(PR_FALSE, "Cannot stretch - All parts missing");
+        NS_ERROR("Cannot stretch - All parts missing");
         return NS_ERROR_UNEXPECTED;
       }
       // paint the rule between the parts
@@ -2108,7 +2110,7 @@ nsMathMLChar::PaintVertically(nsIPresContext*      aPresContext,
         count++;
         dy += stride;
         aGlyphTable->DrawGlyph(aRenderingContext, aFont, glue, dx, dy);
-        // NS_ASSERTION(5000 == count, "Error - glyph table is incorrectly set");
+        NS_ASSERTION(1000 != count, "something is probably wrong somewhere");
         if (1000 == count) return NS_ERROR_UNEXPECTED;
       }
       aRenderingContext.PopState(clipState);
@@ -2250,7 +2252,7 @@ nsMathMLChar::PaintHorizontally(nsIPresContext*      aPresContext,
         descent = bmdata[first].descent;
       }
       else {
-        NS_ASSERTION(PR_FALSE, "Cannot stretch - All parts missing");
+        NS_ERROR("Cannot stretch - All parts missing");
         return NS_ERROR_UNEXPECTED;
       }
       // paint the rule between the parts
@@ -2286,7 +2288,7 @@ nsMathMLChar::PaintHorizontally(nsIPresContext*      aPresContext,
         count++;
         dx += stride;
         aGlyphTable->DrawGlyph(aRenderingContext, aFont, glue, dx, dy);
-        // NS_ASSERTION(5000 == count, "Error - glyph table is incorrectly set");
+        NS_ASSERTION(1000 != count, "something is probably wrong somewhere");
         if (1000 == count) return NS_ERROR_UNEXPECTED;
       }
       aRenderingContext.PopState(clipState);

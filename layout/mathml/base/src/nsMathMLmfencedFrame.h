@@ -92,6 +92,7 @@ public:
              nsOperatorFlags      aForm,
              PRInt32              aScriptLevel,
              nscoord              axisHeight,
+             nscoord              leading,
              nscoord              em,
              nsBoundingMetrics&   aContainerSize,
              nsHTMLReflowMetrics& aDesiredSize);

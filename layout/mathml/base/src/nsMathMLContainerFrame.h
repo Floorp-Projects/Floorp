@@ -369,8 +369,20 @@ public:
     // re-resolve our subtree to set any mathml-expected data
     nsMathMLContainerFrame::MapAttributesIntoCSS(aPresContext, this);
     nsMathMLContainerFrame::RebuildAutomaticDataForChildren(aPresContext, this);
-    nsMathMLContainerFrame::PropagateScriptStyleFor(aPresContext, this, 0);
     return rv;
+  }
+
+  NS_IMETHOD
+  Reflow(nsIPresContext*          aPresContext,
+         nsHTMLReflowMetrics&     aDesiredSize,
+         const nsHTMLReflowState& aReflowState,
+         nsReflowStatus&          aStatus)
+  {
+    if (mScriptStyleChanged) {
+      mScriptStyleChanged = PR_FALSE;
+      nsMathMLContainerFrame::PropagateScriptStyleFor(aPresContext, this, 0);
+    }
+    return nsBlockFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
   }
 
   NS_IMETHOD
@@ -422,6 +434,15 @@ public:
 protected:
   nsMathMLmathBlockFrame() {}
   virtual ~nsMathMLmathBlockFrame() {}
+
+  NS_IMETHOD
+  DidSetStyleContext(nsIPresContext* aPresContext)
+  {
+    mScriptStyleChanged = PR_TRUE;
+    return nsBlockFrame::DidSetStyleContext(aPresContext);
+  }
+
+  PRBool mScriptStyleChanged;
 };
 
 // --------------
@@ -439,8 +460,20 @@ public:
     // re-resolve our subtree to set any mathml-expected data
     nsMathMLContainerFrame::MapAttributesIntoCSS(aPresContext, this);
     nsMathMLContainerFrame::RebuildAutomaticDataForChildren(aPresContext, this);
-    nsMathMLContainerFrame::PropagateScriptStyleFor(aPresContext, this, 0);
     return rv;
+  }
+
+  NS_IMETHOD
+  Reflow(nsIPresContext*          aPresContext,
+         nsHTMLReflowMetrics&     aDesiredSize,
+         const nsHTMLReflowState& aReflowState,
+         nsReflowStatus&          aStatus)
+  {
+    if (mScriptStyleChanged) {
+      mScriptStyleChanged = PR_FALSE;
+      nsMathMLContainerFrame::PropagateScriptStyleFor(aPresContext, this, 0);
+    }
+    return nsInlineFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
   }
 
   NS_IMETHOD
@@ -492,6 +525,15 @@ public:
 protected:
   nsMathMLmathInlineFrame() {}
   virtual ~nsMathMLmathInlineFrame() {}
+
+  NS_IMETHOD
+  DidSetStyleContext(nsIPresContext* aPresContext)
+  {
+    mScriptStyleChanged = PR_TRUE;
+    return nsInlineFrame::DidSetStyleContext(aPresContext);
+  }
+
+  PRBool mScriptStyleChanged;
 };
 
 #endif /* nsMathMLContainerFrame_h___ */
