@@ -752,6 +752,12 @@ NS_METHOD nsWidget::SetMenuBar(nsIMenuBar * aMenuBar)
   return NS_OK;
 }
 
+NS_METHOD nsWidget::ShowMenuBar( PRBool aShow)
+{
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::ShowMenuBar aShow=<%d> - Not Implemented.\n",aShow));
+  return NS_ERROR_FAILURE;
+}
+
 
 nsresult nsWidget::CreateWidget(nsIWidget *aParent,
                                 const nsRect &aRect,
