@@ -62,6 +62,8 @@ REQUIRES	= \
 		mimetype \
 		$(NULL)
 
+XPIDLSRCS	= nsIXFormsModelElement.idl
+
 CPPSRCS		= \
 		nsXFormsElementFactory.cpp \
 		nsXFormsElement.cpp \
