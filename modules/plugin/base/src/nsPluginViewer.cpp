@@ -100,8 +100,9 @@ public:
 
   NS_IMETHOD CreateWidget(void);
 
-  NS_IMETHOD GetURL(const char *aURL, const char *aTarget, void *aPostData,
-                    PRUint32 aPostDataLen);
+  NS_IMETHOD GetURL(const char *aURL, const char *aTarget, 
+                    void *aPostData, PRUint32 aPostDataLen, 
+                    void *aHeadersData, PRUint32 aHeadersDataLen);
 
   NS_IMETHOD ShowStatus(const char *aStatusMsg);
 
@@ -816,7 +817,8 @@ NS_IMETHODIMP pluginInstanceOwner :: CreateWidget(void)
   return NS_OK;
 }
 
-NS_IMETHODIMP pluginInstanceOwner :: GetURL(const char *aURL, const char *aTarget, void *aPostData, PRUint32 aPostDataLen)
+NS_IMETHODIMP pluginInstanceOwner :: GetURL(const char *aURL, const char *aTarget, void *aPostData, PRUint32 aPostDataLen, void *aHeadersData, 
+                                            PRUint32 aHeadersDataLen)
 {
   nsresult  rv;
 

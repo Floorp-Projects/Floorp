@@ -724,18 +724,21 @@ nsWebShell::SetRendering(PRBool aRender)
 struct OnLinkClickEvent : public PLEvent {
   OnLinkClickEvent(nsWebShell* aHandler, nsIContent* aContent,
                    nsLinkVerb aVerb, const PRUnichar* aURLSpec,
-                   const PRUnichar* aTargetSpec, nsIInputStream* aPostDataStream = 0);
+                   const PRUnichar* aTargetSpec, nsIInputStream* aPostDataStream = 0, 
+                   nsIInputStream* aHeadersDataStream = 0);
   ~OnLinkClickEvent();
 
   void HandleEvent() {
     mHandler->HandleLinkClickEvent(mContent, mVerb, mURLSpec->GetUnicode(),
-                                   mTargetSpec->GetUnicode(), mPostDataStream);
+                                   mTargetSpec->GetUnicode(), mPostDataStream,
+                                   mHeadersDataStream);
   }
 
   nsWebShell*  mHandler;
   nsString*    mURLSpec;
   nsString*    mTargetSpec;
   nsIInputStream* mPostDataStream;
+  nsIInputStream* mHeadersDataStream;
   nsIContent*     mContent;
   nsLinkVerb      mVerb;
 };
@@ -755,7 +758,8 @@ OnLinkClickEvent::OnLinkClickEvent(nsWebShell* aHandler,
                                    nsLinkVerb aVerb,
                                    const PRUnichar* aURLSpec,
                                    const PRUnichar* aTargetSpec,
-                                   nsIInputStream* aPostDataStream)
+                                   nsIInputStream* aPostDataStream,
+                                   nsIInputStream* aHeadersDataStream)
 {
   nsIEventQueue* eventQueue;
 
@@ -765,6 +769,8 @@ OnLinkClickEvent::OnLinkClickEvent(nsWebShell* aHandler,
   mTargetSpec = new nsString(aTargetSpec);
   mPostDataStream = aPostDataStream;
   NS_IF_ADDREF(mPostDataStream);
+  mHeadersDataStream = aHeadersDataStream;
+  NS_IF_ADDREF(mHeadersDataStream);
   mContent = aContent;
   NS_IF_ADDREF(mContent);
   mVerb = aVerb;
@@ -783,6 +789,7 @@ OnLinkClickEvent::~OnLinkClickEvent()
   NS_IF_RELEASE(mContent);
   NS_IF_RELEASE(mHandler);
   NS_IF_RELEASE(mPostDataStream);
+  NS_IF_RELEASE(mHeadersDataStream);
   if (nsnull != mURLSpec) delete mURLSpec;
   if (nsnull != mTargetSpec) delete mTargetSpec;
 
@@ -795,13 +802,14 @@ nsWebShell::OnLinkClick(nsIContent* aContent,
                         nsLinkVerb aVerb,
                         const PRUnichar* aURLSpec,
                         const PRUnichar* aTargetSpec,
-                        nsIInputStream* aPostDataStream)
+                        nsIInputStream* aPostDataStream,
+                        nsIInputStream* aHeadersDataStream)
 {
   OnLinkClickEvent* ev;
   nsresult rv = NS_OK;
 
   ev = new OnLinkClickEvent(this, aContent, aVerb, aURLSpec,
-                            aTargetSpec, aPostDataStream);
+                            aTargetSpec, aPostDataStream, aHeadersDataStream);
   if (nsnull == ev) {
     rv = NS_ERROR_OUT_OF_MEMORY;
   }
@@ -820,7 +828,8 @@ nsWebShell::HandleLinkClickEvent(nsIContent *aContent,
                                  nsLinkVerb aVerb,
                                  const PRUnichar* aURLSpec,
                                  const PRUnichar* aTargetSpec,
-                                 nsIInputStream* aPostDataStream)
+                                 nsIInputStream* aPostDataStream,
+                                 nsIInputStream* aHeadersDataStream)
 {
   nsCAutoString target; target.AssignWithConversion(aTargetSpec);
 
@@ -839,9 +848,12 @@ nsWebShell::HandleLinkClickEvent(nsIContent *aContent,
         NS_NewURI(getter_AddRefs(uri), nsLiteralString(aURLSpec), nsnull);
 
 #ifdef SH_IN_FRAMES
-		InternalLoad(uri, mCurrentURI, nsnull, PR_TRUE, target, aPostDataStream, nsIDocShellLoadInfo::loadLink, nsnull); 
+		InternalLoad(uri, mCurrentURI, nsnull, PR_TRUE, target, aPostDataStream, 
+                 aHeadersDataStream, nsIDocShellLoadInfo::loadLink, nsnull); 
 #else
-        InternalLoad(uri, mCurrentURI, nsnull, PR_TRUE, target, aPostDataStream, nsIDocShellLoadInfo::loadLink); 
+        InternalLoad(uri, mCurrentURI, nsnull, PR_TRUE, target, 
+                     aPostDataStream, aHeadersDataStream, 
+                     nsIDocShellLoadInfo::loadLink); 
 #endif  /* SH_IN_FRAMES */
       }
       break;

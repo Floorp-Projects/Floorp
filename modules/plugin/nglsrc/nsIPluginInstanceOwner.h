@@ -81,8 +81,9 @@ public:
    * 
    */
   NS_IMETHOD
-  GetURL(const char *aURL, const char *aTarget, void *aPostData, 
-         PRUint32 aPostDataLen) = 0;
+  GetURL(const char *aURL, const char *aTarget, 
+         void *aPostData, PRUint32 aPostDataLen, 
+         void *aHeadersData, PRUint32 aHeadersDataLen) = 0;
 
   /**
    * Show a status message in the host environment.

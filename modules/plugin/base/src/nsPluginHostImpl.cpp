@@ -1484,7 +1484,7 @@ NS_IMETHODIMP nsPluginHostImpl::GetURL(nsISupports* pluginInst,
           else if (0 == PL_strcmp(target, "_current"))
             target = "_self";
 
-          rv = owner->GetURL(url, target, nsnull, 0);
+          rv = owner->GetURL(url, target, nsnull, 0, nsnull, nsnull);
         }
 
         NS_RELEASE(peer);
@@ -1549,7 +1549,8 @@ NS_IMETHODIMP nsPluginHostImpl::PostURL(nsISupports* pluginInst,
               else if (0 == PL_strcmp(target, "_current"))
                 target = "_self";
             }
-            rv = owner->GetURL(url, target, (void*)postData, postDataLen);
+            rv = owner->GetURL(url, target, (void*)postData, postDataLen,
+                               (void*) postHeaders, postHeadersLength);
           }
         
         NS_RELEASE(peer);

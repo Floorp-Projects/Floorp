@@ -84,6 +84,24 @@ static NS_DEFINE_CID(kSimpleURICID,            NS_SIMPLEURI_CID);
 static NS_DEFINE_CID(kDocumentCharsetInfoCID, NS_DOCUMENTCHARSETINFO_CID);
 static NS_DEFINE_CID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
 
+//
+// Local function prototypes
+//
+
+/**
+
+ * Used in AddHeadersToChannel
+
+ */ 
+
+static NS_METHOD AHTC_WriteFunc(nsIInputStream* in,
+                                void* closure,
+                                const char* fromRawSegment,
+                                PRUint32 toOffset,
+                                PRUint32 count,
+                                PRUint32 *writeCount);
+
+
 //*****************************************************************************
 //***    nsDocShell: Object Management
 //*****************************************************************************
@@ -282,7 +300,8 @@ nsDocShell::LoadURI(nsIURI* aURI, nsIDocShellLoadInfo* aLoadInfo)
   if (shEntry) {
     rv = LoadHistoryEntry(shEntry, loadType);
   } else {
-    rv = InternalLoad(aURI, referrer, owner, inheritOwner, nsnull, nsnull, loadType, nsnull);
+    rv = InternalLoad(aURI, referrer, owner, inheritOwner, nsnull, nsnull, 
+                      nsnull, loadType, nsnull);
   }
 
   return rv;
@@ -1306,7 +1325,7 @@ NS_IMETHODIMP nsDocShell::Reload(PRInt32 aReloadType)
    else {
 	   //May be one of those <META> charset reloads in a composer or Messenger
       return InternalLoad(mCurrentURI, mReferrerURI, nsnull, PR_TRUE, nsnull, 
-      nsnull, type);
+                          nsnull, nsnull, type);
 
    }
 #else
@@ -1316,7 +1335,7 @@ NS_IMETHODIMP nsDocShell::Reload(PRInt32 aReloadType)
    // there is no major difference between this one and the one inside #if 0
    
    return InternalLoad(mCurrentURI, mReferrerURI, nsnull, PR_TRUE, nsnull, 
-      nsnull, type);
+                       nsnull, nsnull, type);
 #endif /* 0 */
 
 	   
@@ -1335,8 +1354,9 @@ NS_IMETHODIMP nsDocShell::Reload(PRInt32 aReloadType)
 
    UpdateCurrentSessionHistory();
 
-   NS_ENSURE_SUCCESS(InternalLoad(mCurrentURI, mReferrerURI, nsnull, PR_TRUE, nsnull, 
-      nsnull, type), NS_ERROR_FAILURE);
+   NS_ENSURE_SUCCESS(InternalLoad(mCurrentURI, mReferrerURI, nsnull, PR_TRUE,
+                                  nsnull, nsnull, nsnull, type), 
+                     NS_ERROR_FAILURE);
    return NS_OK;
 #endif  /* SH_IN_FRAMES  */
  
@@ -2677,13 +2697,13 @@ NS_IMETHODIMP nsDocShell::SetupNewViewer(nsIContentViewer* aNewViewer)
 //*****************************************************************************   
 #ifdef SH_IN_FRAMES
 NS_IMETHODIMP nsDocShell::InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
-   nsISupports* aOwner, PRBool aInheritOwner,
-   const char* aWindowTarget, nsIInputStream* aPostData, 
+   nsISupports* aOwner, PRBool aInheritOwner, const char* aWindowTarget, 
+   nsIInputStream* aPostData, nsIInputStream* aHeadersData,
    nsDocShellInfoLoadType aLoadType, nsISHEntry * aSHEntry)
 #else
 NS_IMETHODIMP nsDocShell::InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
-   nsISupports* aOwner, PRBool aInheritOwner,
-   const char* aWindowTarget, nsIInputStream* aPostData, 
+   nsISupports* aOwner, PRBool aInheritOwner, const char* aWindowTarget, 
+   nsIInputStream* aPostData, nsIInputStream* aHeadersData,
    nsDocShellInfoLoadType aLoadType)
 #endif
 {
@@ -2745,7 +2765,8 @@ NS_IMETHODIMP nsDocShell::InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
     if(nsIDocShellLoadInfo::loadLink == aLoadType)
         loadCmd = nsIURILoader::viewUserClick;
     NS_ENSURE_SUCCESS(DoURILoad(aURI, aReferrer, aOwner, aInheritOwner,
-                                loadCmd, aWindowTarget, aPostData), NS_ERROR_FAILURE);
+                                loadCmd, aWindowTarget, 
+                                aPostData, aHeadersData), NS_ERROR_FAILURE);
 
     return NS_OK;
 }
@@ -3008,8 +3029,9 @@ NS_IMETHODIMP nsDocShell::GetCurrentDocumentOwner(nsISupports** aOwner)
 }
 
 NS_IMETHODIMP nsDocShell::DoURILoad(nsIURI* aURI, nsIURI* aReferrerURI,  
-   nsISupports* aOwner, PRBool aInheritOwner, nsURILoadCommand aLoadCmd,
-   const char* aWindowTarget, nsIInputStream* aPostData)
+   nsISupports* aOwner, PRBool aInheritOwner, nsURILoadCommand aLoadCmd, 
+   const char* aWindowTarget, nsIInputStream* aPostData, 
+   nsIInputStream *aHeadersData)
 {
   static const char jsSchemeName[] = "javascript";
   // if the load cmd is a user click....and we are supposed to try using
@@ -3072,6 +3094,10 @@ NS_IMETHODIMP nsDocShell::DoURILoad(nsIURI* aURI, nsIURI* aReferrerURI,
          httpChannel->SetRequestMethod(method);
          httpChannel->SetUploadStream(aPostData);
          }
+      if (aHeadersData) 
+          {
+              rv = AddHeadersToChannel(aHeadersData, httpChannel);
+          }
       // Set the referrer explicitly
       if(aReferrerURI) // Referrer is currenly only set for link clicks here.
          httpChannel->SetReferrer(aReferrerURI, 
@@ -3107,6 +3133,164 @@ NS_IMETHODIMP nsDocShell::DoURILoad(nsIURI* aURI, nsIURI* aReferrerURI,
    NS_ENSURE_SUCCESS(DoChannelLoad(channel, aLoadCmd, aWindowTarget, uriLoader), NS_ERROR_FAILURE);
 
    return NS_OK;
+}
+
+static NS_METHOD AHTC_WriteFunc(nsIInputStream* in,
+                                void* closure,
+                                const char* fromRawSegment,
+                                PRUint32 toOffset,
+                                PRUint32 count,
+                                PRUint32 *writeCount)
+{
+    if (nsnull == writeCount || nsnull == closure || 
+        nsnull == fromRawSegment || nsCRT::strlen(fromRawSegment) < 1) {
+        return NS_BASE_STREAM_CLOSED;
+    }
+
+    *writeCount = 0;
+    char *headersBuf = *((char **)closure);
+    // pointer to where we should start copying bytes from rawSegment
+    char *pHeadersBuf = nsnull;
+    PRUint32 headersBufLen;
+    PRUint32 rawSegmentLen = nsCRT::strlen(fromRawSegment);
+    
+    // if the buffer has no data yet
+    if (!headersBuf) {
+        headersBufLen = rawSegmentLen;
+        pHeadersBuf = headersBuf = (char *) nsMemory::Alloc(headersBufLen + 1);
+        if (!headersBuf) {
+            return NS_BASE_STREAM_WOULD_BLOCK;
+        }
+        nsCRT::memset(headersBuf, nsnull, headersBufLen + 1);
+    }
+    else {
+        // data has been read, reallocate
+        // store a pointer to the old full buffer
+        pHeadersBuf = headersBuf;
+        
+        // create a new buffer
+        headersBufLen = nsCRT::strlen(headersBuf);
+        headersBuf = (char *) nsMemory::Alloc(rawSegmentLen+headersBufLen + 1);
+        if (!headersBuf) {
+            headersBuf = pHeadersBuf;
+            pHeadersBuf = nsnull;
+            return NS_BASE_STREAM_WOULD_BLOCK;
+        }
+        memset(headersBuf, nsnull, rawSegmentLen + headersBufLen + 1);
+        // copy the old buffer to the beginning of the new buffer
+        nsCRT::memcpy(headersBuf, pHeadersBuf, headersBufLen);
+        // free the old buffer
+        nsCRT::free(pHeadersBuf);
+        // make the buffer pointer point to the writeable part
+        // of the new buffer
+        pHeadersBuf = headersBuf + headersBufLen;
+        // increment the length of the buffer
+        headersBufLen += rawSegmentLen;
+    }    
+
+    // at this point, pHeadersBuf points to where we should copy bits
+    // from fromRawSegment.
+    nsCRT::memcpy(pHeadersBuf, fromRawSegment, rawSegmentLen);
+    // null termination
+    headersBuf[headersBufLen] = nsnull;
+    *((char **)closure) = headersBuf;
+    *writeCount = rawSegmentLen;
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShell::AddHeadersToChannel(nsIInputStream *aHeadersData, 
+                                              nsIChannel *aGenericChannel)
+{
+    if (nsnull == aHeadersData || nsnull == aGenericChannel) {
+        return NS_ERROR_NULL_POINTER;
+    }
+    nsCOMPtr<nsIHTTPChannel> aChannel = do_QueryInterface(aGenericChannel);
+    if (!aChannel) {
+        return NS_ERROR_NULL_POINTER;
+    }
+
+    // used during the manipulation of the InputStream
+    nsresult rv = NS_ERROR_FAILURE;
+    PRUint32 available = 0;
+    PRUint32 bytesRead;
+    char *headersBuf = nsnull;
+
+    // used during the manipulation of the String from the InputStream
+    nsCAutoString headersString;
+    nsCAutoString oneHeader;
+    nsCAutoString headerName;
+    nsCAutoString headerValue;
+    PRUint32 crlf = 0;
+    PRUint32 colon = 0;
+    nsIAtom *headerAtom;
+
+    //
+    // Suck all the data out of the nsIInputStream into a char * buffer.
+    //
+
+    rv = aHeadersData->Available(&available);
+    if (NS_FAILED(rv) || available < 1) {
+        goto AHTC_CLEANUP;
+    }
+
+    do {
+        aHeadersData->ReadSegments(AHTC_WriteFunc, &headersBuf, available,
+                                   &bytesRead);
+        rv = aHeadersData->Available(&available);
+        if (NS_FAILED(rv)) {
+            goto AHTC_CLEANUP;
+        }
+    } while(0 < available);
+    
+    //
+    // Turn the char * buffer into an nsString.
+    //
+    headersString = (const char *) headersBuf;
+
+    //
+    // Iterate over the nsString: for each "\r\n" delimeted chunk,
+    // add the value as a header to the nsIHTTPChannel
+    //
+
+    while (true) {
+        crlf = headersString.Find("\r\n", PR_TRUE);
+        if (-1 == crlf) {
+            rv = NS_OK;
+            goto AHTC_CLEANUP;
+        }
+        headersString.Mid(oneHeader, 0, crlf);
+        headersString.Cut(0, crlf + 2);
+        oneHeader.StripWhitespace();
+        colon = oneHeader.Find(":");
+        if (-1 == colon) {
+            rv = NS_ERROR_NULL_POINTER;
+            goto AHTC_CLEANUP;
+        }
+        oneHeader.Left(headerName, colon);
+        colon++;
+        oneHeader.Mid(headerValue, colon, oneHeader.Length() - colon);
+        headerAtom = NS_NewAtom((const char *) headerName);
+        if (!headerAtom) {
+            rv = NS_ERROR_NULL_POINTER;
+            goto AHTC_CLEANUP;
+        }
+
+        //
+        // FINALLY: we can set the header!
+        // 
+
+        rv =aChannel->SetRequestHeader(headerAtom, (const char *) headerValue);
+        if (NS_FAILED(rv)) {
+            rv = NS_ERROR_NULL_POINTER;
+            goto AHTC_CLEANUP;
+        }
+    }    
+    
+ AHTC_CLEANUP:
+    nsMemory::Free((void *) headersBuf);
+    headersBuf = nsnull;
+    return rv;
 }
 
 NS_IMETHODIMP nsDocShell::DoChannelLoad(nsIChannel *aChannel, nsURILoadCommand aLoadCmd, 
@@ -3630,10 +3814,13 @@ NS_IMETHODIMP nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry)
     
 
 #ifdef SH_IN_FRAMES
-   NS_ENSURE_SUCCESS(InternalLoad(uri, nsnull, nsnull, PR_TRUE, nsnull, postData, aLoadType, aEntry),
+   NS_ENSURE_SUCCESS(InternalLoad(uri, nsnull, nsnull, PR_TRUE, nsnull, 
+                                  postData, nsnull, aLoadType, aEntry),
       NS_ERROR_FAILURE);
 #else
-   NS_ENSURE_SUCCESS(InternalLoad(uri, nsnull, nsnull, PR_TRUE,  nsnull, postData, nsIDocShellLoadInfo::loadHistory),
+   NS_ENSURE_SUCCESS(InternalLoad(uri, nsnull, nsnull, nsnull, PR_TRUE,
+                                  postData, nsnull, 
+                                  nsIDocShellLoadInfo::loadHistory),
       NS_ERROR_FAILURE);
 #endif 
 

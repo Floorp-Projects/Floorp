@@ -69,7 +69,8 @@ public:
                          nsLinkVerb aVerb,
                          const PRUnichar* aURLSpec,
                          const PRUnichar* aTargetSpec,
-                         nsIInputStream* aPostDataStream = 0) = 0;
+                         nsIInputStream* aPostDataStream = 0,
+                         nsIInputStream* aHeadersDataStream = 0) = 0;
 
   /**
    * Process a mouse-over a link. aContent is the 
