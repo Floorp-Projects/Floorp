@@ -167,10 +167,8 @@ Components:pipbootDebug.shlb
 Components:pipboot.xpt
 Components:PIPNSSDebug.shlb
 Components:pipnss.xpt
-Chrome:pipnss.jar
 Components:PIPPKIDebug.shlb
 Components:pippki.xpt
-Chrome:pippki.jar
 defaults:pref:security-prefs.js
 Essential Files:NSS3Debug.shlb
 Essential Files:SMIME3Debug.shlb
@@ -180,6 +178,7 @@ Essential Files:SSL3Debug.shlb
 ; appcomps
 ; Optional - only if you want global history (requires mork) or
 ;   directory viewer (off by default for ftp view)
+Components:appcompsDebug.shlb
 Components:mozcomps.xpt
 Components:morkDebug.shlb
 

@@ -349,6 +349,36 @@ sub DumpChromeToTemp($$$$)
   }
 }
 
+
+#//--------------------------------------------------------------------------------------------------
+#// ProcessEmbedJarManifest
+#//
+#// Pick up an embedding manifest specified by $jar_file. We first need to do some extra processing on
+#// it to get the correct locale. 
+#//--------------------------------------------------------------------------------------------------
+sub ProcessEmbedJarManifest ( $$$$$$ )
+{
+  my($top_path, $inc_path, $temp_chrome_dir, $jar_file, $locale, $jars) = @_;
+  
+  # copy over our manifest so that it's also at the root
+  # of our chrome tree then run it through the jar machine. We need to
+  # use GenerateManifest to get the locales correct.
+  copy("$inc_path$jar_file", "$temp_chrome_dir:$jar_file") || die "can't copy $jar_file manifest";
+  my($temp_manifest) = "$temp_chrome_dir:$jar_file.tmp.mn";
+  local(*TMPMANIFEST);
+  open(TMPMANIFEST, ">$temp_manifest") || die "couldn't create embed jar manifest";
+  GenerateManifest::GenerateManifest($top_path, "$inc_path$jar_file", $temp_chrome_dir,
+                                      $locale, *TMPMANIFEST, ":", 1);
+  close(TMPMANIFEST);
+
+  CreateJarFromManifest($temp_manifest, "$temp_chrome_dir:", $jars);
+
+  # clean up our temp files
+  unlink("$temp_chrome_dir:$jar_file");
+  unlink($temp_manifest);
+}
+
+
 #//--------------------------------------------------------------------------------------------------
 #// PackageEmbeddingChrome
 #//
@@ -403,27 +433,16 @@ sub PackageEmbeddingChrome($$)
                                       "en-US", *MANIFEST, ":", 1);
   close(MANIFEST);
   
-  # make embed.jar.
+  # make embed.jar from the above manifest, adding in any other manifests if the
+  # right options are set.
   my(%jars);
   CreateJarFromManifest($temp_manifest, "$temp_chrome_dir:", \%jars);
   if ($main::options{embedding_xulprefs}) {
-    # copy over our xul-pref manifest so that it's also at the root
-    # of our chrome tree then run it through the jar machine. We need to
-    # use GenerateManifest to get the locales correct.
-    copy($inc_path."xulprefs.mn", "$temp_chrome_dir:xulprefs.mn") || die "can't copy xul prefs manifest";
-    my($temp_pref_manifest) = "$temp_chrome_dir:xulprefs.tmp.mn";
-    local(*PREFMANIFEST);
-    open(PREFMANIFEST, ">$temp_pref_manifest") || die "couldn't create embed jar manifest";
-    GenerateManifest::GenerateManifest($top_path, $inc_path . "xulprefs.mn", $temp_chrome_dir,
-                                        "en-US", *PREFMANIFEST, ":", 1);
-    close(PREFMANIFEST);
-
-    CreateJarFromManifest($temp_pref_manifest, "$temp_chrome_dir:", \%jars);
-
-    # clean up our temp files
-    unlink("$temp_chrome_dir:xulprefs.mn");
-    unlink($temp_pref_manifest);
+    ProcessEmbedJarManifest($top_path, $inc_path, $temp_chrome_dir, "xulprefs.mn", "en-US", \%jars);
   }
+  if ($main::options{embedding_xulsecurity}) {
+    ProcessEmbedJarManifest($top_path, $inc_path, $temp_chrome_dir, "xulsecurity.mn", "en-US", \%jars);
+  }  
   WriteOutJarFiles("$temp_chrome_dir:", \%jars);
 
   # clean up after ourselves and move everything to the right locations. The embed.jar
@@ -471,12 +490,13 @@ sub BuildEmbeddingPackage
   Packager::Copy($dist_dir, $destination, $manifest, "mac", 0, 0, 0, () );
 
   # the Embed.jar is in the wrong place, move it into the chrome dir
-  move("$destination:Embed:embed.jar", "$destination:Embed:Chrome");
-  move("$destination:Embed:installed-chrome.txt", "$destination:Embed:Chrome");
+  mkdir("$destination:Embed:Chrome", 0);
+  move("$destination:Embed:embed.jar", "$destination:Embed:Chrome:embed.jar");
+  move("$destination:Embed:installed-chrome.txt", "$destination:Embed:Chrome:installed-chrome.txt");
   
   # copy PPEmbed into our new package
-  print("-- copying PPEmbed to embed package");
-  copy("$dist_dir:PPEmbed$D", "$destination:Embed");
+  print("-- copying PPEmbed to embed package\n");
+  copy("$dist_dir:PPEmbed$D", "$destination:Embed:PPEmbed$D");
 }
 
 
