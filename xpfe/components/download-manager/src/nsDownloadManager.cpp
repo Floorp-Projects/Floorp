@@ -270,6 +270,74 @@ nsDownloadManager::Open(nsIDOMWindowInternal* aOwnerDocument)
 }
 
 NS_IMETHODIMP
+nsDownloadManager::UninitializeUI()
+{
+  mDocument = nsnull;
+  return NS_OK;
+}
+
+nsresult
+nsDownloadManager::NotifyDownloadEnded(const char* aTargetPath)
+{
+  nsCStringKey key(aTargetPath);
+  if (mCurrDownloadItems->Exists(&key))
+    mCurrDownloadItems->Remove(&key);
+
+  return NS_OK;
+}
+
+nsresult
+nsDownloadManager::GetProfileDownloadsFileURL(char** aDownloadsFileURL)
+{
+  nsCOMPtr<nsIProperties> fileLocator(do_GetService("@mozilla.org/file/directory_service;1"));
+  nsCOMPtr<nsIFile> profileDir;
+
+  // get the profile directory
+  nsresult rv = fileLocator->Get(NS_APP_USER_PROFILE_50_DIR, NS_GET_IID(nsIFile), getter_AddRefs(profileDir));
+  if (NS_FAILED(rv)) return rv;
+
+  // add downloads.rdf to the path
+  rv = profileDir->Append(PROFILE_DOWNLOAD_FILE);
+  if (NS_FAILED(rv)) return rv;
+
+  return NS_GetURLSpecFromFile(profileDir, aDownloadsFileURL);
+}
+
+nsresult
+nsDownloadManager::GetDownloadsContainer(nsIRDFContainer** aResult)
+{
+  nsresult rv;
+
+  nsCOMPtr<nsIRDFContainerUtils> rdfC(do_GetService(NS_RDF_CONTRACTID "/container-utils;1", &rv));
+  if (NS_FAILED(rv)) return rv;
+
+  PRBool isContainer;
+  rv = mRDFContainerUtils->IsContainer(mInner, gNC_DownloadsRoot, &isContainer);
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIRDFContainer> ctr;
+
+  if (!isContainer) {
+    rv = mRDFContainerUtils->MakeSeq(mInner, gNC_DownloadsRoot, getter_AddRefs(ctr));
+    if (NS_FAILED(rv)) return rv;
+  }
+  else {
+    ctr = do_CreateInstance(NS_RDF_CONTRACTID "/container;1", &rv);
+    if (NS_FAILED(rv)) return rv;
+    rv = ctr->Init(mInner, gNC_DownloadsRoot);
+    if (NS_FAILED(rv)) return rv;
+  }
+
+  *aResult = ctr;
+  NS_IF_ADDREF(*aResult);
+
+  return rv;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// nsIDOMEventListener
+
+NS_IMETHODIMP
 nsDownloadManager::HandleEvent(nsIDOMEvent* aEvent)
 {
   nsCOMPtr<nsIDOMEventTarget> target;
@@ -343,71 +411,6 @@ nsDownloadManager::HandleEvent(nsIDOMEvent* aEvent)
   }
 
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDownloadManager::UninitializeUI()
-{
-  mDocument = nsnull;
-  return NS_OK;
-}
-
-nsresult
-nsDownloadManager::NotifyDownloadEnded(const char* aTargetPath)
-{
-  nsCStringKey key(aTargetPath);
-  if (mCurrDownloadItems->Exists(&key))
-    mCurrDownloadItems->Remove(&key);
-
-  return NS_OK;
-}
-
-nsresult
-nsDownloadManager::GetProfileDownloadsFileURL(char** aDownloadsFileURL)
-{
-  nsCOMPtr<nsIProperties> fileLocator(do_GetService("@mozilla.org/file/directory_service;1"));
-  nsCOMPtr<nsIFile> profileDir;
-
-  // get the profile directory
-  nsresult rv = fileLocator->Get(NS_APP_USER_PROFILE_50_DIR, NS_GET_IID(nsIFile), getter_AddRefs(profileDir));
-  if (NS_FAILED(rv)) return rv;
-
-  // add downloads.rdf to the path
-  rv = profileDir->Append(PROFILE_DOWNLOAD_FILE);
-  if (NS_FAILED(rv)) return rv;
-
-  return NS_GetURLSpecFromFile(profileDir, aDownloadsFileURL);
-}
-
-nsresult
-nsDownloadManager::GetDownloadsContainer(nsIRDFContainer** aResult)
-{
-  nsresult rv;
-
-  nsCOMPtr<nsIRDFContainerUtils> rdfC(do_GetService(NS_RDF_CONTRACTID "/container-utils;1", &rv));
-  if (NS_FAILED(rv)) return rv;
-
-  PRBool isContainer;
-  rv = mRDFContainerUtils->IsContainer(mInner, gNC_DownloadsRoot, &isContainer);
-  if (NS_FAILED(rv)) return rv;
-
-  nsCOMPtr<nsIRDFContainer> ctr;
-
-  if (!isContainer) {
-    rv = mRDFContainerUtils->MakeSeq(mInner, gNC_DownloadsRoot, getter_AddRefs(ctr));
-    if (NS_FAILED(rv)) return rv;
-  }
-  else {
-    ctr = do_CreateInstance(NS_RDF_CONTRACTID "/container;1", &rv);
-    if (NS_FAILED(rv)) return rv;
-    rv = ctr->Init(mInner, gNC_DownloadsRoot);
-    if (NS_FAILED(rv)) return rv;
-  }
-
-  *aResult = ctr;
-  NS_IF_ADDREF(*aResult);
-
-  return rv;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
