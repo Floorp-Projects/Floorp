@@ -123,6 +123,9 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext&          aPresContext,
       nextFrame->GetNextSibling(&nextFrame);
     }
 
+	// XXX We're always complete...
+	aStatus = NS_FRAME_COMPLETE;
+
   } else {
     nsReflowReason  reflowReason = aReflowState.reason;
 
