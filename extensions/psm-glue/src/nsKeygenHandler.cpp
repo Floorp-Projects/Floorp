@@ -50,7 +50,7 @@ NS_IMPL_ADDREF(nsKeygenFormProcessor);
 NS_IMPL_RELEASE(nsKeygenFormProcessor); 
 NS_IMPL_QUERY_INTERFACE(nsKeygenFormProcessor, kFormProcessorIID); 
 
-MOZ_DECL_CTOR_COUNTER(nsKeygenFormProcessor);
+MOZ_DECL_CTOR_COUNTER(nsKeygenFormProcessor)
 
 nsKeygenFormProcessor::nsKeygenFormProcessor()
 	:	mPSM(0)

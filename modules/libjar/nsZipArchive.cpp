@@ -1439,7 +1439,7 @@ cleanup:
 //------------------------------------------
 
 #ifndef STANDALONE
-MOZ_DECL_CTOR_COUNTER(nsZipArchive);
+MOZ_DECL_CTOR_COUNTER(nsZipArchive)
 #endif
 
 nsZipArchive::nsZipArchive()
@@ -1473,7 +1473,7 @@ nsZipArchive::~nsZipArchive()
 //------------------------------------------
 
 #ifndef STANDALONE
-MOZ_DECL_CTOR_COUNTER(nsZipItem);
+MOZ_DECL_CTOR_COUNTER(nsZipItem)
 #endif
 
 nsZipItem::nsZipItem() : name(0), next(0) 
@@ -1501,7 +1501,7 @@ nsZipItem::~nsZipItem()
 //------------------------------------------
 
 #ifndef STANDALONE
-MOZ_DECL_CTOR_COUNTER(nsZipRead);
+MOZ_DECL_CTOR_COUNTER(nsZipRead)
 #endif
 
 nsZipRead::nsZipRead( nsZipArchive* aZipArchive, nsZipItem* aZipItem )
@@ -1529,7 +1529,7 @@ nsZipRead::~nsZipRead()
 //------------------------------------------
 
 #ifndef STANDALONE
-MOZ_DECL_CTOR_COUNTER(nsZipFind);
+MOZ_DECL_CTOR_COUNTER(nsZipFind)
 #endif
 
 nsZipFind::nsZipFind( nsZipArchive* aZip, char* aPattern, PRBool aRegExp )
