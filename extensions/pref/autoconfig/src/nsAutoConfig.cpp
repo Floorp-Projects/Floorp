@@ -46,6 +46,9 @@
 #include "nsIObserverService.h"
 #include "nsIEventQueueService.h"
 #include "nsLiteralString.h"
+#include "nsIPromptService.h"
+#include "nsIServiceManager.h"
+#include "nsIStringBundle.h"
 #include "nsCRT.h"
 
 extern nsresult EvaluateAdminConfigScript(const char *js_buffer, size_t length,
@@ -539,12 +542,43 @@ nsresult nsAutoConfig::getEmailAddr(nsACString & emailAddr)
         // look for 4.x pref in case we just migrated.
         rv = mPrefBranch->GetCharPref("mail.identity.useremail", 
                                   getter_Copies(prefValue));
-        if (NS_SUCCEEDED(rv))
+        if (NS_SUCCEEDED(rv) && !prefValue.IsEmpty())
           emailAddr = prefValue;
-        else  if (!mCurrProfile.IsEmpty())
+        else if (NS_FAILED(PromptForEMailAddress(emailAddr))  && (!mCurrProfile.IsEmpty()))
             emailAddr = mCurrProfile;
     }
     
     return NS_OK;
 }
         
+nsresult nsAutoConfig::PromptForEMailAddress(nsACString &emailAddress)
+{
+    nsresult rv;
+    nsCOMPtr<nsIPromptService> promptService = do_GetService("@mozilla.org/embedcomp/prompt-service;1", &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIStringBundle> bundle;
+    rv = bundleService->CreateBundle("chrome://autoconfig/locale/autoconfig.properties",
+                                getter_AddRefs(bundle));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsXPIDLString title;
+    rv = bundle->GetStringFromName(NS_LITERAL_STRING("emailPromptTitle").get(), getter_Copies(title));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsXPIDLString err;
+    rv = bundle->GetStringFromName(NS_LITERAL_STRING("emailPromptMsg").get(), getter_Copies(err));
+    NS_ENSURE_SUCCESS(rv, rv);
+    PRBool check = PR_FALSE;
+    nsXPIDLString emailResult;
+    PRBool success;
+    rv = promptService->Prompt(nsnull, title.get(), err.get(), getter_Copies(emailResult), nsnull, &check, &success);
+    if (!success)
+      return NS_ERROR_FAILURE;
+    NS_ENSURE_SUCCESS(rv, rv);
+    CopyUCS2toASCII(emailResult, emailAddress);
+    return NS_OK;
+}
+
