@@ -29,6 +29,11 @@ class nsTableFrame;
 class nsHTMLValue;
 
 /**
+ * Additional frame-state bits
+ */
+#define NS_TABLE_CELL_FRAME_CONTENT_EMPTY 0x80000000
+
+/**
  * nsTableCellFrame
  * data structure to maintain information about a single table cell's frame
  *
@@ -246,10 +251,6 @@ protected:
 
   nsresult     mCalculated;
   nsMargin     mMargin;
-  PRBool       mIsContentEmpty;  // PR_TRUE if the cell's contents take up no space
-  //XXX: mIsContentEmpty should get yanked in favor of using free a bit on the frame base class
-  //     the FrameState slot (mState; GetFrameState/SetFrameState)
-
   nsPoint      mCollapseOffset;
 
 public:
@@ -322,12 +323,17 @@ inline NS_METHOD nsTableCellFrame::GetMargin(nsMargin& aMargin)
 
 inline PRBool nsTableCellFrame::GetContentEmpty()
 {
-  return mIsContentEmpty;
+  return (mState & NS_TABLE_CELL_FRAME_CONTENT_EMPTY) ==
+         NS_TABLE_CELL_FRAME_CONTENT_EMPTY;
 }
 
 inline void nsTableCellFrame::SetContentEmpty(PRBool aContentEmpty)
 {
-  mIsContentEmpty = aContentEmpty;
+  if (aContentEmpty) {
+    mState |= NS_TABLE_CELL_FRAME_CONTENT_EMPTY;
+  } else {
+    mState &= ~NS_TABLE_CELL_FRAME_CONTENT_EMPTY;
+  }
 }
 
 #endif
