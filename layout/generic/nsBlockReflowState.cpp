@@ -580,6 +580,8 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
     mLineNumber(0),
     mNeedResizeReflow(PR_FALSE)
 {
+  const nsMargin& borderPadding = BorderPadding();
+
   if (aBlockMarginRoot) {
     mIsTopMarginRoot = PR_TRUE;
     mIsBottomMarginRoot = PR_TRUE;
@@ -596,11 +598,13 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
   
   mSpaceManager = aReflowState.mSpaceManager;
 
-  // Translate into our content area and then save the 
-  // coordinate system origin for later.
-  const nsMargin& borderPadding = BorderPadding();
-  mSpaceManager->Translate(borderPadding.left, borderPadding.top);
-  mSpaceManager->GetTranslation(mSpaceManagerX, mSpaceManagerY);
+  NS_ASSERTION( nsnull != mSpaceManager, "SpaceManager should be set in nsBlockReflowState" );
+  if( nsnull != mSpaceManager ) {
+    // Translate into our content area and then save the 
+    // coordinate system origin for later.
+    mSpaceManager->Translate(borderPadding.left, borderPadding.top);
+    mSpaceManager->GetTranslation(mSpaceManagerX, mSpaceManagerY);
+  }
 
   mReflowStatus = NS_FRAME_COMPLETE;
 
