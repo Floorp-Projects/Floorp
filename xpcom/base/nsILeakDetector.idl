@@ -22,6 +22,8 @@
 
 #include "nsISupports.idl"
 
+interface nsICollection;
+
 /**
  * Controls the leak detector.
  */
@@ -29,5 +31,7 @@
 interface nsILeakDetector : nsISupports {
 	void dumpLeaks();
 	void traceObject(in nsISupports object, in PRBool verbose);
+	void traceCollection(in nsICollection objects, in PRBool verbose);
 	void markObject(in nsISupports object, in PRBool marked);
+	nsISupports getServices();
 };
