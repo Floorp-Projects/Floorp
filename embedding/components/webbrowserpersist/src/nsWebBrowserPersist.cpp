@@ -2549,7 +2549,7 @@ nsWebBrowserPersist::EnumCheckForDuplicateFileNames(nsHashKey *aKey, void *aData
     NS_ENSURE_TRUE(dupData, PR_TRUE);
     NS_ENSURE_TRUE(data, PR_TRUE);
 
-    if (data->mNeedsPersisting)
+    if (data->mNeedsPersisting || data->mIsSubFrame)
     {
         NS_ENSURE_TRUE(data->mDataPath, PR_TRUE);
 
