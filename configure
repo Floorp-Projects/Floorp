@@ -4602,9 +4602,9 @@ EOF
        AR_FLAGS='-o $@'
        AS='/usr/ccs/bin/as'
        AS_DASH_C_FLAG=''
-       NS_USE_NATIVE=1
        case $OS_TEST in
          sun4u)
+           NS_USE_NATIVE=1
            ASFLAGS='-xarch=v8plus -DULTRA_SPARC -P -L -D_ASM -D__STDC__=0 -K PIC'
            cat >> confdefs.h <<\EOF
 #define ULTRA_SPARC 1
