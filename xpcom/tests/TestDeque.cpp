@@ -192,6 +192,7 @@ nsresult _TestDeque::StupidIterations() {
   return NS_OK;
 }
 
-void main (void){
+int main (void){
   _TestDeque test;
+  return 0;
 }
