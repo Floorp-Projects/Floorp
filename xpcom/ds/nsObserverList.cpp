@@ -141,11 +141,15 @@ nsObserverList::GetObserverList(nsISimpleEnumerator** anEnumerator)
 
 
 ObserverListEnumerator::ObserverListEnumerator(nsISupportsArray* aValueArray)
-    : mValueArray(aValueArray),
-      mIndex(0)
+    : mValueArray(aValueArray), mIndex(0)
 {
     NS_INIT_REFCNT();
     NS_IF_ADDREF(mValueArray);
+    if (mValueArray) {
+        PRUint32 total;
+        mValueArray->Count(&total);
+        mIndex = PRInt32(total);
+    }
 }
 
 ObserverListEnumerator::~ObserverListEnumerator(void)
@@ -170,7 +174,7 @@ ObserverListEnumerator::HasMoreElements(PRBool* aResult)
     PRUint32 cnt;
     nsresult rv = mValueArray->Count(&cnt);
     if (NS_FAILED(rv)) return rv;
-    *aResult = (mIndex < (PRInt32) cnt);
+    *aResult = (mIndex > 0);
     return NS_OK;
 }
 
@@ -189,10 +193,10 @@ ObserverListEnumerator::GetNext(nsISupports** aResult)
     PRUint32 cnt;
     nsresult rv = mValueArray->Count(&cnt);
     if (NS_FAILED(rv)) return rv;
-    if (mIndex >= (PRInt32) cnt)
+    if (mIndex <= 0 )
         return NS_ERROR_UNEXPECTED;
 
-    *aResult = mValueArray->ElementAt(mIndex++);
+    mValueArray->GetElementAt(--mIndex, aResult);
     if (*aResult) {
         nsCOMPtr<nsIWeakReference> weakRefFactory = do_QueryInterface(*aResult);
         if ( weakRefFactory ) {
