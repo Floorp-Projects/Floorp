@@ -198,7 +198,7 @@ public:
 
   nsIDocument* mDocument;
   nsIHTMLDocument* mHTMLDocument;
-  nsIURI* mDocumentURL;
+  nsIURI* mDocumentURI;
   nsIURI* mDocumentBaseURL;
   nsIWebShell* mWebShell;
   nsIParser* mParser;
@@ -1549,7 +1549,7 @@ HTMLContentSink::~HTMLContentSink()
 
   NS_IF_RELEASE(mDocument);
   NS_IF_RELEASE(mHTMLDocument);
-  NS_IF_RELEASE(mDocumentURL);
+  NS_IF_RELEASE(mDocumentURI);
   NS_IF_RELEASE(mDocumentBaseURL);
   NS_IF_RELEASE(mWebShell);
   NS_IF_RELEASE(mParser);
@@ -1605,7 +1605,7 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   mDocument = aDoc;
   NS_ADDREF(aDoc);
   aDoc->QueryInterface(kIHTMLDocumentIID, (void**)&mHTMLDocument);
-  mDocumentURL = aURL;
+  mDocumentURI = aURL;
   NS_ADDREF(aURL);
   mDocumentBaseURL = aURL;
   NS_ADDREF(aURL);
@@ -2240,16 +2240,16 @@ HTMLContentSink::StartLayout()
   // If the document we are loading has a reference or it is a 
   // frameset document, disable the scroll bars on the views.
 #ifdef NECKO
-  char* ref;
+  char* ref = nsnull;           // init in case mDocumentURI is not a url
   nsIURL* url;
-  nsresult rv = mDocumentURL->QueryInterface(nsIURL::GetIID(), (void**)&url);
+  nsresult rv = mDocumentURI->QueryInterface(nsIURL::GetIID(), (void**)&url);
   if (NS_SUCCEEDED(rv)) {
     rv = url->GetRef(&ref);
     NS_RELEASE(url);
   }
 #else
   const char* ref;
-  nsresult rv = mDocumentURL->GetRef(&ref);
+  nsresult rv = mDocumentURI->GetRef(&ref);
 #endif
   if (rv == NS_OK) {
     mRef = new nsString(ref);
@@ -2870,7 +2870,7 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
 #ifndef NECKO
       // If we are processing an HTTP url, handle meta http-equiv cases
       nsIHttpURL* httpUrl = nsnull;
-      rv = mDocumentURL->QueryInterface(kIHTTPURLIID, (void **)&httpUrl);
+      rv = mDocumentURI->QueryInterface(kIHTTPURLIID, (void **)&httpUrl);
 #endif
 
       // set any HTTP-EQUIV data into document's header data as well as url
