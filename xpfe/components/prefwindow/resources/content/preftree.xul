@@ -25,7 +25,7 @@
 
 <?xul-overlay href="chrome://communicator/content/pref/platformPrefOverlay.xul"?>
 
-<!DOCTYPE overlay SYSTEM "chrome://communicator/locale/pref/preftree.dtd" >
+<!DOCTYPE overlay SYSTEM "chrome://communicator/locale/pref/preftree.dtd">
 
 <overlay id="prefTreeOverlay"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
@@ -130,6 +130,11 @@
         <treeitem>
           <treerow>
             <treecell url="chrome://communicator/content/pref/pref-scripts.xul" label="&scriptsAndWindows.label;"/> 
+          </treerow>
+        </treeitem>
+        <treeitem>
+          <treerow>
+            <treecell url="chrome://communicator/content/pref/pref-keynav.xul" label="&keynav.label;"/>
           </treerow>
         </treeitem>
         <treeitem>
