@@ -1306,7 +1306,7 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
         if (targetFrame == mDisplayFrame) {
           nsresult rv = ReflowComboChildFrame(mDisplayFrame, aPresContext, aDesiredSize, 
                                               aReflowState, aStatus,
-                                              aReflowState.availableWidth, 
+                                              mCacheSize.width, 
                                               aReflowState.availableHeight);
           NS_ASSERTION(aDesiredSize.width != kSizeNotSet,  "aDesiredSize.width != kSizeNotSet");
           NS_ASSERTION(aDesiredSize.height != kSizeNotSet, "aDesiredSize.height != kSizeNotSet");
