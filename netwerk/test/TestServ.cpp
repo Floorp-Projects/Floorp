@@ -104,7 +104,7 @@ MySocketListener::OnSocketAccepted(nsIServerSocket *serv,
         return rv;
 
     const char response[] = "HTTP/1.0 200 OK\r\nContent-Type: text/plain\r\n\r\nFooooopy!!\r\n";
-    rv = output->Write(response, sizeof(response), &n);
+    rv = output->Write(response, sizeof(response) - 1, &n);
     if (NS_FAILED(rv))
         return rv;
 
