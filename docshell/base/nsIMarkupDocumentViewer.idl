@@ -52,7 +52,7 @@
 interface nsIDOMNode;
 
 
-[scriptable, uuid(c33a616e-8020-4f01-a1eb-19a32370d566)]
+[scriptable, uuid(18cbdb18-3917-42fd-9c4a-0b2112d41a6d)]
 interface nsIMarkupDocumentViewer : nsISupports
 {
 
@@ -60,9 +60,6 @@ interface nsIMarkupDocumentViewer : nsISupports
 	Scrolls to a given DOM content node. 
 	*/
 	void scrollToNode(in nsIDOMNode node);
-
-	/** if true, plugins are allowed within the doc shell.  default = true */
-	attribute boolean allowPlugins;
 
 	/** The amount by which to scale all text. Default is 1.0. */
 	attribute float textZoom;

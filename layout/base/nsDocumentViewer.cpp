@@ -434,7 +434,6 @@ protected:
   // document management data
   //   these items are specific to markup documents (html and xml)
   //   may consider splitting these out into a subclass
-  PRPackedBool mAllowPlugins;
   PRPackedBool mIsSticky;
 
 };
@@ -493,7 +492,6 @@ void DocumentViewerImpl::PrepareToStartLoad()
 DocumentViewerImpl::DocumentViewerImpl(nsPresContext* aPresContext)
   : mPresContext(aPresContext),
     mHintCharsetSource(kCharsetUninitialized),
-    mAllowPlugins(PR_TRUE),
     mIsSticky(PR_TRUE)
 {
   PrepareToStartLoad();
@@ -2254,20 +2252,6 @@ NS_IMETHODIMP DocumentViewerImpl::ScrollToNode(nsIDOMNode* aNode)
                                                     NS_PRESSHELL_SCROLL_TOP,
                                                     NS_PRESSHELL_SCROLL_ANYWHERE),
                      NS_ERROR_FAILURE);
-   return NS_OK;
-}
-
-NS_IMETHODIMP DocumentViewerImpl::GetAllowPlugins(PRBool* aAllowPlugins)
-{
-   NS_ENSURE_ARG_POINTER(aAllowPlugins);
-
-   *aAllowPlugins = mAllowPlugins;
-   return NS_OK;
-}
-
-NS_IMETHODIMP DocumentViewerImpl::SetAllowPlugins(PRBool aAllowPlugins)
-{
-   mAllowPlugins = aAllowPlugins;
    return NS_OK;
 }
 
