@@ -1,0 +1,13 @@
+<toplevel>
+  <child id="foo">
+    <one/>
+    <two/>
+    <three/>
+  </child>
+  <child id="baz"/>
+  <child id="bar">
+    <four/>
+    <five/>
+    <six/>
+  </child>
+</toplevel>
