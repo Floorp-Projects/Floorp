@@ -1323,6 +1323,8 @@ sub BuildLayoutProjects()
 	BuildOneProject(":mozilla:rdf:macbuild:rdf.mcp",							"RDFLibrary$D.shlb", "rdf.toc", 1, $main::ALIAS_SYM_FILES, 1);
     
     BuildOneProject(":mozilla:xpinstall:macbuild:xpinstall.mcp",                "xpinstall$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
+    
+    BuildOneProject(":mozilla:xpinstall:macbuild:xpistub.mcp",                  "xpistub$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 0);
 
 	print("--- Layout projects complete ---\n")
 }
