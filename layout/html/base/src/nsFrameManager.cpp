@@ -694,7 +694,7 @@ FrameManager::SetPrimaryFrameFor(nsIContent* aContent,
     // Add a mapping to the hash table
     PrimaryFrameMapEntry *entry = NS_STATIC_CAST(PrimaryFrameMapEntry*,
         PL_DHashTableOperate(&mPrimaryFrameMap, aContent, PL_DHASH_ADD));
-#ifdef DEBUG
+#ifdef DEBUG_dbaron
     if (entry->frame) {
       NS_WARNING("already have primary frame for content");
     }
