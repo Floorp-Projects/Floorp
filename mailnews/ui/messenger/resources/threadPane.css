@@ -65,3 +65,8 @@ treeitem > treecell > titledbutton {
  width: 16px;
  list-style-image: url("chrome://messenger/skin/mailMessage.gif");
 }
+
+treecol {
+ display: table-column;
+ }
+
