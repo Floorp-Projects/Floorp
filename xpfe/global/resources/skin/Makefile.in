@@ -76,49 +76,6 @@ EXPORT_RESOURCE_CONTENT = \
 	$(srcdir)/TB_popup.gif \
 	$(srcdir)/TB_Tab_mo.gif \
 	$(NULL)
-		$(srcdir)/dialogs.css \
-		$(srcdir)/tasksOverlay.css \
-		$(srcdir)/xul.css \
-		$(srcdir)/lessCols.gif \
-		$(srcdir)/lessCols_mo.gif \
-		$(srcdir)/lessCOls_dis.gif \
-		$(srcdir)/moreCols.gif \
-		$(srcdir)/moreCols_mo.gif \
-		$(srcdir)/moreCols_dis.gif \
-		$(srcdir)/scrollUp.gif \
-		$(srcdir)/scrollUp_mo.gif \
-		$(srcdir)/scrollUp_dis.gif \
-		$(srcdir)/scrollDown.gif \
-		$(srcdir)/scrollDown_mo.gif \
-		$(srcdir)/scrollDown_dis.gif \
-		$(srcdir)/scroll-left.gif \
-		$(srcdir)/scroll-left-hover.gif \
-		$(srcdir)/scroll-left-disabled.gif \
-		$(srcdir)/scroll-right.gif \
-		$(srcdir)/scroll-right-hover.gif \
-		$(srcdir)/scroll-right-disabled.gif \
-		$(srcdir)/scroll-thumb-horiz.gif \
-		$(srcdir)/scroll-thumb-horiz-hover.gif \
-		$(srcdir)/scroll-thumb-horiz-disabled.gif \
-		$(srcdir)/scroll-thumb-vert.gif \
-		$(srcdir)/scroll-thumb-vert-hover.gif \
-		$(srcdir)/scroll-thumb-vert-disabled.gif \
-		$(srcdir)/menuArrow.gif \
-		$(srcdir)/menuArrow_mo.gif \
-		$(srcdir)/menuArrow_dis.gif \
-		$(srcdir)/menuCheck.gif \
-		$(srcdir)/menuCheck_mo.gif \
-		$(srcdir)/menuCheck_dis.gif \
-		$(srcdir)/opentwisty.gif \
-		$(srcdir)/closedtwisty.gif \
-		$(srcdir)/alert-icon.gif \
-		$(srcdir)/error-icon.gif \
-		$(srcdir)/message-icon.gif \
-		$(srcdir)/question-icon.gif \
-		$(srcdir)/return.gif \
-		$(srcdir)/stop.gif \
-		$(srcdir)/print.gif \
-		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
