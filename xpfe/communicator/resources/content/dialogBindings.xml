@@ -24,7 +24,9 @@
   <binding id="largeheader">
     <content>
       <xul:box class="box-header-header toolbar-primary" flex="1" autostretch="never">
-        <xul:image inherits="src" class="box-header-circle"/>
+        <xul:box class="box-header-circle-box" autostretch="never">
+          <xul:image inherits="src" class="box-header-circle"/>
+        </xul:box>
         <xul:box autostretch="never" class="box-header-text-box">
           <xul:text class="box-header-text" inherits="value"/>
         </xul:box>
