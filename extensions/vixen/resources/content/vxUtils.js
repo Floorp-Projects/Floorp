@@ -71,9 +71,7 @@ ArrayEnumerator.prototype = {
   
   hasMoreElements: function ()
   {
-    if (this.mIndex < this.mArray.length)
-      return true;
-    return false;
+    return this.mIndex < this.mArray.length;
   }
 };
 
