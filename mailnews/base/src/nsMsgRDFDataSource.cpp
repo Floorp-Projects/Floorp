@@ -31,6 +31,7 @@ nsMsgRDFDataSource::nsMsgRDFDataSource():
     mObservers(nsnull)
 {
     NS_INIT_REFCNT();
+    fprintf("nsMsgRDFDataSource being created\n");
 }
 
 nsMsgRDFDataSource::~nsMsgRDFDataSource()
@@ -57,16 +58,16 @@ nsMsgRDFDataSource::QueryInterface(const nsIID& iid, void **result)
   
   if (iid.Equals(nsIRDFDataSource::GetIID()) ||
       iid.Equals(kISupportsIID))
-      *result = NS_STATIC_CAST(nsIRDFDataSource*, this);
+      res = NS_STATIC_CAST(nsIRDFDataSource*, this);
   else if(iid.Equals(nsIShutdownListener::GetIID()))
-      *result = NS_STATIC_CAST(nsIShutdownListener*, this);
+      res = NS_STATIC_CAST(nsIShutdownListener*, this);
 
   if (res) {
       NS_ADDREF(this);
+      *result = res;
       rv = NS_OK;
   }
 
-  *result = res;
   return rv;
 }
 
@@ -157,7 +158,8 @@ nsMsgRDFDataSource::Unassert(nsIRDFResource *aSource, nsIRDFResource *aProperty,
 NS_IMETHODIMP
 nsMsgRDFDataSource::HasAssertion(nsIRDFResource *aSource, nsIRDFResource *aProperty, nsIRDFNode *aTarget, PRBool aTruthValue, PRBool *_retval)
 {
-    return NS_RDF_NO_VALUE;
+    *_retval = PR_FALSE;
+    return NS_OK;
 }
 
 
