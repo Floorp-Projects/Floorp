@@ -256,7 +256,7 @@ nsBrowserAppCore::Forward()
 //#define WALLET_SAMPLES_URL "http://peoplestage/morse/wallet/samples/"
 
 PRInt32
-newWindow(char* urlName) {
+newWind(char* urlName) {
   nsresult rv;
   nsString controllerCID;
 
@@ -361,7 +361,7 @@ nsBrowserAppCore::WalletEditor()
   }
 
   /* bring up the wallet editor in a new window */
-  return newWindow(WALLET_EDITOR_URL);
+  return newWind(WALLET_EDITOR_URL);
 }
 
 NS_IMETHODIMP    
@@ -384,7 +384,7 @@ nsBrowserAppCore::WalletSafeFillin()
   }
 
 #ifndef HTMLDialogs 
-  return newWindow("file:///y|/htmldlgs.htm");
+  return newWind("file:///y|/htmldlgs.htm");
 #endif
 
   return NS_OK;
