@@ -851,16 +851,12 @@ public: /* ----- Cell Map public methods ----- */
   /*------------end of nsITableLayout methods -----------------------*/
 
 public:
-  static nsIAtom* gColGroupAtom;
+ 
 #ifdef DEBUG
   void Dump(PRBool          aDumpRows,
             PRBool          aDumpCols, 
             PRBool          aDumpCellMap);
-#endif
-  nsAutoVoidArray mColFrames; // XXX temporarily public 
-
-#ifdef DEBUG
-  static void DumpTableFrames(nsIFrame*       aFrame);
+  static void DumpTableFrames(nsIFrame* aFrame);
 #endif
 
 protected:
@@ -868,6 +864,7 @@ protected:
   void DumpRowGroup(nsIFrame* aChildFrame);
 #endif
   // DATA MEMBERS
+  nsAutoVoidArray mColFrames;  
 
   struct TableBits {
     PRUint32 mHadInitialReflow:1;      // has intial reflow happened
