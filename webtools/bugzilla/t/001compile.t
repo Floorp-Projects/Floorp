@@ -40,10 +40,14 @@ BEGIN { use Support::Files; }
 BEGIN { $tests = @Support::Files::testitems + 4; }
 BEGIN { use Test::More tests => $tests; }
 
+sub foo {
+$warnings = "foo"; #oy!
+}
+
 # First now we test the scripts                                                   
 @testitems = @Support::Files::testitems; 
 
-our $warnings;
+my $warnings;
 my $verbose = $::ENV{VERBOSE};
 $perlapp=$^X;
 foreach $file (@testitems) {
