@@ -71,13 +71,11 @@ static PRInt32
 AppendEscaped(nsACString &buf, const char *str, PRInt32 len, PRInt16 mask)
 {
     nsCAutoString escaped;
-    NS_EscapeURL(str, len, mask, escaped);
-    if (escaped.IsEmpty())
-        buf.Append(str, len);
-    else {
-        buf.Append(escaped);
+    if (NS_EscapeURLPart(str, len, mask, escaped)) {
+        str = escaped.get();
         len = escaped.Length();
     }
+    buf.Append(str, len);
     return len;
 }
 
@@ -183,11 +181,10 @@ nsStandardURL::EscapeSegment(const char *str, const URLSegment &seg, PRInt16 mas
 {
     PRInt32 len = 0;
     if (seg.mLen > 0) {
-        NS_EscapeURL(str + seg.mPos, seg.mLen, mask, result);
-        if (result.IsEmpty())
-            len = seg.mLen;
-        else
+        if (NS_EscapeURLPart(str + seg.mPos, seg.mLen, mask, result))
             len = result.Length();
+        else
+            len = seg.mLen;
     }
     return len;
 }
@@ -873,8 +870,7 @@ nsStandardURL::SetUsername(const char *username)
 
     // escape username if necessary
     nsCAutoString escaped;
-    NS_EscapeURL(username, len, esc_Username, escaped);
-    if (!escaped.IsEmpty()) {
+    if (NS_EscapeURLPart(username, len, esc_Username, escaped)) {
         username = escaped.get();
         len = escaped.Length();
     }
@@ -934,8 +930,7 @@ nsStandardURL::SetPassword(const char *password)
 
     // escape password if necessary
     nsCAutoString escaped;
-    NS_EscapeURL(password, len, esc_Password, escaped);
-    if (!escaped.IsEmpty()) {
+    if (NS_EscapeURLPart(password, len, esc_Password, escaped)) {
         password = escaped.get();
         len = escaped.Length();
     }
@@ -1423,8 +1418,7 @@ nsStandardURL::SetQuery(const char *query)
 
     // escape query if necessary
     nsCAutoString escaped;
-    NS_EscapeURL(query, queryLen, esc_Query, escaped);
-    if (!escaped.IsEmpty()) {
+    if (NS_EscapeURLPart(query, queryLen, esc_Query, escaped)) {
         query = escaped.get();
         queryLen = escaped.Length();
     }
@@ -1475,8 +1469,7 @@ nsStandardURL::SetRef(const char *ref)
 
     // escape ref if necessary
     nsCAutoString escaped;
-    NS_EscapeURL(ref, refLen, esc_Ref, escaped);
-    if (!escaped.IsEmpty()) {
+    if (NS_EscapeURLPart(ref, refLen, esc_Ref, escaped)) {
         ref = escaped.get();
         refLen = escaped.Length();
     }
