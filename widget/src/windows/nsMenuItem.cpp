@@ -97,11 +97,8 @@ nsMenuItem::nsMenuItem() : nsIMenuItem()
 nsMenuItem::~nsMenuItem()
 {
   //NS_IF_RELEASE(mMenu);
-
   //NS_IF_RELEASE(mTarget);
-
   //NS_IF_RELEASE(mListener);
-
 }
 
 //-------------------------------------------------------------------------
@@ -149,16 +146,15 @@ nsIWidget * nsMenuItem::GetMenuBarParent(nsISupports * aParent)
 }
 
 //-------------------------------------------------------------------------
-NS_METHOD nsMenuItem::Create(nsIMenu * aParent, const nsString &aLabel, PRUint32 aCommand)
+NS_METHOD nsMenuItem::Create(
+  nsIMenu * aParent, 
+  const nsString &aLabel, 
+  PRBool aIsSeparator)
 {
-  mCommand = aCommand;
+  //mCommand = aCommand;
   mLabel   = aLabel;
   mMenu    = aParent;
   //NS_ADDREF(mMenu);
-
-
-
-  //NS_ASSERTION(false,"get debugger");
 
   nsISupports * sups;
   if (NS_OK == aParent->QueryInterface(kISupportsIID,(void**)&sups)) {

@@ -22,6 +22,7 @@
 #include "nsISupports.h"
 #include "nsString.h"
 #include "nsIMenu.h"
+#include "nsIWebShell.h"
 
 class nsIWidget;
 
@@ -109,6 +110,7 @@ class nsIMenuBar : public nsISupports {
     *
     */
     NS_IMETHOD  Paint() = 0;
+   
 };
 
 #endif
