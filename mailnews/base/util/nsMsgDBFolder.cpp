@@ -295,10 +295,16 @@ NS_IMETHODIMP nsMsgDBFolder::EndFolderLoading(void)
     if (!hasNewMessages)
     {
       for (PRUint32 keyIndex = 0; keyIndex < m_newMsgs.GetSize(); keyIndex++)
-        mDatabase->AddToNewList(m_newMsgs[keyIndex]);
-
-      hasNewMessages = (m_newMsgs.GetSize() > 0);
-      m_newMsgs.RemoveAll();
+      {
+        PRBool isRead = PR_FALSE;
+        mDatabase->IsRead(m_newMsgs[keyIndex], &isRead);
+        if (!isRead)
+        {
+          mDatabase->AddToNewList(m_newMsgs[keyIndex]);
+          hasNewMessages = PR_TRUE;
+        }
+      }
+     m_newMsgs.RemoveAll();
     }
     SetHasNewMessages(hasNewMessages);
   }
@@ -1255,12 +1261,14 @@ nsMsgDBFolder::MarkAllMessagesRead(void)
   // ### fix me need nsIMsgWindow
   nsresult rv = GetDatabase(nsnull);
   
+  m_newMsgs.RemoveAll();
   if(NS_SUCCEEDED(rv))
   {
     EnableNotifications(allMessageCountNotifications, PR_FALSE, PR_TRUE /*dbBatching*/);
     rv = mDatabase->MarkAllRead(nsnull);
     EnableNotifications(allMessageCountNotifications, PR_TRUE, PR_TRUE /*dbBatching*/);
   }
+  SetHasNewMessages(PR_FALSE);
   return rv;
 }
 
