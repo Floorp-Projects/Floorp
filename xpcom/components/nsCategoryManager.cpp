@@ -42,7 +42,6 @@
 #include "nsCOMPtr.h"
 #include "nsHashtable.h"
 #include "nsIFactory.h"
-#include "nsIRegistry.h"
 #include "nsSupportsPrimitives.h"
 #include "nsIObserver.h"
 #include "nsComponentManager.h"
@@ -61,6 +60,9 @@
     Internal nodes (or Categories) are hashtables.
     Leaf nodes are strings.
   */
+
+// this function is not public yet, hence it is externed here.
+extern nsresult NS_GetComponentLoaderManager(nsIComponentLoaderManager* *result);
 
 
 static
@@ -270,8 +272,6 @@ nsCategoryManager::AddCategoryEntry( const char *aCategoryName,
         nsCStringKey entryNameKey(aEntryName);
         category->Put(&entryNameKey, entry);
 
-        // this function is not public yet, hence it is externed here.
-        extern nsresult NS_GetComponentLoaderManager(nsIComponentLoaderManager* *result);
         nsCOMPtr<nsIComponentLoaderManager> mgr;
         NS_GetComponentLoaderManager(getter_AddRefs(mgr));
         if (mgr)
@@ -303,6 +303,12 @@ nsCategoryManager::DeleteCategoryEntry( const char *aCategoryName,
       {
         nsCStringKey entryKey(aEntryName);
         category->RemoveAndDelete(&entryKey);
+
+        nsCOMPtr<nsIComponentLoaderManager> mgr;
+        NS_GetComponentLoaderManager(getter_AddRefs(mgr));
+        if (mgr)
+          mgr->FlushPersistentStore(PR_FALSE);
+
       }
 
     return NS_OK;
@@ -314,6 +320,11 @@ NS_IMETHODIMP
 nsCategoryManager::DeleteCategory( const char *aCategoryName )
   {
     NS_ASSERTION(aCategoryName, "aCategoryName is NULL!");
+
+    nsCOMPtr<nsIComponentLoaderManager> mgr;
+    NS_GetComponentLoaderManager(getter_AddRefs(mgr));
+    if (mgr)
+      mgr->FlushPersistentStore(PR_FALSE);
 
       // QUESTION: consider whether this should be an error
     nsCStringKey categoryKey(aCategoryName);
