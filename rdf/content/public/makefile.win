@@ -20,7 +20,7 @@
 # Contributor(s): 
 
 
-MODULE=rdf
+MODULE=xul
 
 DEPTH=..\..\..
 

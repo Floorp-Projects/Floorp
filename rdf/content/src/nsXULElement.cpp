@@ -97,6 +97,7 @@
 #include "nsIXULDocument.h"
 #include "nsIXULPopupListener.h"
 #include "nsIXULPrototypeDocument.h"
+#include "nsIXULTemplateBuilder.h"
 #include "nsIXBLService.h"
 #include "nsLayoutCID.h"
 #include "nsRDFCID.h"
@@ -1811,6 +1812,26 @@ nsXULElement::ForceElementToOwnResource(PRBool aForce)
 
     return NS_OK;
 }
+
+
+NS_IMETHODIMP
+nsXULElement::InitTemplateRoot(nsIRDFCompositeDataSource* aDatabase,
+                               nsIXULTemplateBuilder* aBuilder)
+{
+    // Sanity check
+    NS_PRECONDITION(Database() == nsnull, "already initialized");
+    if (Database())
+        return NS_ERROR_ALREADY_INITIALIZED;
+
+    nsresult rv;
+    rv = EnsureSlots();
+    if (NS_FAILED(rv)) return rv;
+
+    mSlots->mDatabase = aDatabase;
+    mSlots->mBuilder = aBuilder;
+    return NS_OK;
+}
+
 
 //----------------------------------------------------------------------
 // nsIDOMEventReceiver interface
@@ -3529,10 +3550,6 @@ nsXULElement::GetResource(nsIRDFResource** aResource)
 NS_IMETHODIMP
 nsXULElement::GetDatabase(nsIRDFCompositeDataSource** aDatabase)
 {
-    NS_PRECONDITION(aDatabase != nsnull, "null ptr");
-    if (! aDatabase)
-        return NS_ERROR_NULL_POINTER;
-
     *aDatabase = Database();
     NS_IF_ADDREF(*aDatabase);
     return NS_OK;
@@ -3540,21 +3557,10 @@ nsXULElement::GetDatabase(nsIRDFCompositeDataSource** aDatabase)
 
 
 NS_IMETHODIMP
-nsXULElement::SetDatabase(nsIRDFCompositeDataSource* aDatabase)
+nsXULElement::GetBuilder(nsIXULTemplateBuilder** aBuilder)
 {
-    // XXX maybe someday you'll be allowed to change it.
-    NS_PRECONDITION(Database() == nsnull, "already initialized");
-    if (Database())
-        return NS_ERROR_ALREADY_INITIALIZED;
-
-    nsresult rv;
-    rv = EnsureSlots();
-    if (NS_FAILED(rv)) return rv;
-
-    mSlots->mDatabase = aDatabase;
-
-    // XXX reconstruct the entire tree now!
-
+    *aBuilder = Builder();
+    NS_IF_ADDREF(*aBuilder);
     return NS_OK;
 }
 
@@ -4494,6 +4500,7 @@ nsXULElement::Slots::Slots(nsXULElement* aElement)
       mNameSpaceID(0),
       mBroadcastListeners(nsnull),
       mBroadcaster(nsnull),
+      mBuilder(nsnull),
       mAttributes(nsnull),
       mInnerXULElement(nsnull)
 {

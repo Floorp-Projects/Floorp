@@ -31,6 +31,8 @@
 
 #include "nsISupports.h"
 class nsIAtom;
+class nsIRDFCompositeDataSource;
+class nsIXULTemplateBuilder;
 class nsString;
 
 // {39C5ECC0-5C47-11d3-BE36-00104BDE6048}
@@ -111,6 +113,12 @@ public:
      * should call this method, think again. You shouldn't.
      */
     NS_IMETHOD ForceElementToOwnResource(PRBool aForce) = 0;
+
+    /**
+     * Initialize the root element in a XUL template
+     */
+    NS_IMETHOD InitTemplateRoot(nsIRDFCompositeDataSource* aDatabase,
+                                nsIXULTemplateBuilder* aBuilder) = 0;
 };
 
 #endif // nsIXULContent_h__
