@@ -112,12 +112,7 @@ static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 #include "nsIContentViewerFile.h"
 #include "nsINameSpaceManager.h"
 #include "nsFileStream.h"
-
-#ifdef DEBUG_radha
-#include "nsISHTransaction.h"
-#include "nsISHEntry.h"
-PRBool isDoingHistory=PR_FALSE;
-#endif 
+ 
 
 #ifdef DEBUG
 #ifndef DEBUG_pavlov
@@ -229,18 +224,9 @@ nsBrowserAppCore::Init()
                                           NS_GET_IID(nsISessionHistory),
                                           (void **)&mSHistory );
 
-  if ( NS_SUCCEEDED( rv ) ) {
-#ifdef DEBUG_radha
-    printf("Successfully created instance of session history\n");
+  if ( !NS_SUCCEEDED( rv ) ) {
+    printf("Error initialising session history\n");
 
-    rv = nsComponentManager::CreateInstance(NS_SHISTORY_PROGID,
-                        nsnull,
-                        NS_GET_IID(nsISHistory),
-                        (void **) &mNewSHistory);
-    if (NS_SUCCEEDED(rv)) {
-      printf("**** Successfully created new Session History ****\n");
-    }
-#endif
   }
 
   // register ourselves as a content listener with the uri dispatcher service
@@ -1566,67 +1552,6 @@ nsBrowserAppCore::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* chan
                             urlStr.GetUnicode());
 
 
-#ifdef DEBUG_radha
-    if (!isDoingHistory) {
-  nsCOMPtr<nsISHEntry> shEntry;
-  rv = nsComponentManager::CreateInstance(NS_SHENTRY_PROGID,
-                                        nsnull,
-                      NS_GET_IID(nsISHEntry),
-                      (void **) &shEntry);
-
-  const PRUnichar * title=nsnull;
-  webshell->GetName(&title);
-  nsString titlestr(title);
-  nsCOMPtr<nsIURI>     histURI;
-  NS_NewURI(getter_AddRefs(histURI), url, nsnull);
-  nsCOMPtr<nsISupports>  histLayoutState;
-  webshell->GetHistoryState(getter_AddRefs(histLayoutState));
-  
-
-  if (NS_SUCCEEDED(rv))  {
-    printf("******* Successfully created nsSHEntry ********* \n");
-    shEntry->Create(histURI, titlestr.ToNewUnicode(), nsnull, nsnull, histLayoutState); 
-  
-  } 
-  if (mNewSHistory) {
-   rv = mNewSHistory->Add(shEntry);
-     if (NS_SUCCEEDED(rv))
-      printf("*** Successfully added entry to New SH ***\n");
-   PRInt32 index=0, ccount=0;
-   mNewSHistory->GetIndex(&index);
-   mNewSHistory->GetLength(&ccount);
-   printf("%%%% Session History Index = %d, count = %d %%%%\n", index, ccount);
-  }
-    }
-
-#if 0
-  nsCOMPtr<nsISHTransaction> shTransaction;
-  rv = nsComponentManager::CreateInstance(NS_SHTRANSACTION_PROGID,
-                                        nsnull,
-                      NS_GET_IID(nsISHTransaction),
-                      (void **) &shTransaction);
-  if (NS_SUCCEEDED(rv))  {
-    printf("******* Successfully created nsSHEntry ********* \n");
-
-    if (mNewSHistory) {
-           // If there is already a transaction
-      shTransaction->Create(shEntry, mNewSHistory);
-    }
-    else {
-           // This is the first transaction
-      mNewSHistory = shTransaction;
-      shTransaction->Create(shEntry, nsnull);
-      mNewSHistoryIndex++;
-      mNewSHistoryCount++;
-    }
-
-  }
-#endif  /* 0 */
-
-  if (isDoingHistory)
-      isDoingHistory = PR_FALSE;
-#endif  /* DEBUG_radha  */
-   
 
       // XXX Ignore rv for now. They are using nsIEnumerator instead of
       // nsISimpleEnumerator.
@@ -1737,25 +1662,6 @@ nsBrowserAppCore::GoBack(nsIWebShell * aPrev)
     return mSHistory->GoBack(aPrev);
   }
 
-#ifdef DEBUG_radha
-  isDoingHistory= PR_TRUE;
-  PRInt32 index=0, ccount = 0;
-  nsresult rv;
-  if (mNewSHistory) {
-     mNewSHistory->GetLength(&ccount);
-   mNewSHistory->GetIndex(&index);
-
-   if (index > -1) {
-        index -=1;
-        nsCOMPtr<nsISHTransaction> backTXN;
-    rv = mNewSHistory->GetTransactionForIndex(index, getter_AddRefs(backTXN));
-    if (NS_SUCCEEDED(rv) && backTXN) 
-          printf("##### Got the back Transaction successfully #####\n");
-    else
-      printf("@@@@@ Error getting back Transaction @@@@@\n");
-   }
-  }
-#endif   /* DEBUG_radha  */
 
   return NS_OK;
 }
@@ -1772,28 +1678,6 @@ nsBrowserAppCore::GoForward(nsIWebShell * aPrev)
     //mSHistory checks for null pointers
     return mSHistory->GoForward(aPrev);
   }
-
-#ifdef DEBUG_radha
-  isDoingHistory = PR_TRUE;
-  PRInt32 index=0, ccount = 0;
-  nsresult rv;
-  if (mNewSHistory) {
-     mNewSHistory->GetLength(&ccount);
-   mNewSHistory->GetIndex(&index);
-
-   if (index < ccount) {
-        index +=1;
-        nsCOMPtr<nsISHTransaction> forwardTXN;
-    rv = mNewSHistory->GetTransactionForIndex(index, getter_AddRefs(forwardTXN));
-    if (NS_SUCCEEDED(rv) && forwardTXN) 
-          printf("##### Got the forward Transaction successfully #####\n");
-    else
-      printf("@@@@@ Error getting forwardTransaction @@@@@\n");
-   }
-  }  // mNewSHistory
-#endif   /* DEBUG_radha  */
-
-
 
   return NS_OK;
 }
