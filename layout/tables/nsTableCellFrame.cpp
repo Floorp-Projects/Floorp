@@ -49,6 +49,7 @@
 
 //TABLECELL SELECTION
 #include "nsIFrameSelection.h"
+#include "nsILookAndFeel.h"
 
 static NS_DEFINE_IID(kIHTMLTableCellElementIID, NS_IHTMLTABLECELLELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLTableCellElementIID, NS_IDOMHTMLTABLECELLELEMENT_IID);
@@ -277,6 +278,11 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext* aPresContext,
             if (NS_SUCCEEDED(result) && tableCellSelectionMode)
             {
               frameSelection->GetTableCellSelectionStyleColor(&myColor); 
+	            nsILookAndFeel* look = nsnull;
+	            if (NS_SUCCEEDED(aPresContext->GetLookAndFeel(&look)) && look) {
+	              look->GetColor(nsILookAndFeel::eColor_TextSelectBackground, ((nsStyleColor *)myColor)->mBackgroundColor);//VERY BAD CAST..TEMPORARY
+	              NS_RELEASE(look);
+	            }
             }
           }
         }
