@@ -29,6 +29,7 @@ CHROME_L10N = \
 	.\messenger.properties \
 	.\threadpane.dtd \
 	.\folderpane.dtd \
+  .\folderProps.dtd \
 	.\newFolderNameDialog.dtd \
 	.\subscribe.dtd \
 	.\subscribe.properties \
@@ -40,6 +41,7 @@ CHROME_L10N = \
 	.\mailNavigatorOverlay.dtd \
 	.\mailEditorOverlay.dtd \
 	.\mailOverlay.dtd \
+  .\folderProps.dtd \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

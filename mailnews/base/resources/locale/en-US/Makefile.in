@@ -35,6 +35,7 @@ CHROME_L10N = \
 		threadpane.dtd \
 		msgHdrViewOverlay.dtd \
 		folderpane.dtd \
+    folderProps.dtd \
 		newFolderNameDialog.dtd \
 		subscribe.dtd \
 		subscribe.properties \

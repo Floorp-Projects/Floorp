@@ -2,6 +2,7 @@ messenger.dtd
 messenger.properties
 threadpane.dtd
 folderpane.dtd
+folderProps.dtd
 newFolderNameDialog.dtd
 subscribe.dtd
 subscribe.properties
