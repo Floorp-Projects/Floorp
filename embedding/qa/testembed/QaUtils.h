@@ -60,6 +60,7 @@ extern void QAOutput(const char *pLine, int displayMethod=1);
 extern void FormatAndPrintOutput(const char *, const char *, int);
 extern void FormatAndPrintOutput(const char *, nsCAutoString, int);
 extern void FormatAndPrintOutput(const char *, int, int);
+extern void FormatAndPrintOutput(const char *, double, int);
 extern void RequestName(nsIRequest *, nsCString &, int displayMethod=1);
 extern void WebProgDOMWindowTest(nsIWebProgress *, const char *,int displayMethod=1);
 extern nsIDOMWindow * GetTheDOMWindow(nsIWebBrowser *);
