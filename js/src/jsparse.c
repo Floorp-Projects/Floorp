@@ -603,8 +603,18 @@ js_CompileFunctionBody(JSContext *cx, JSTokenStream *ts, JSFunction *fun)
     if (!pn) {
         ok = JS_FALSE;
     } else {
-        ok = js_FoldConstants(cx, pn, &funcg.treeContext) &&
-             js_EmitFunctionBody(cx, &funcg, pn, fun);
+        /*
+         * No need to emit code here -- Statements (via FunctionBody) already
+         * has.  See similar comment in js_CompileTokenStream, and bug 108257.
+         */
+        fun->script = js_NewScriptFromCG(cx, &funcg, fun);
+        if (!fun->script) {
+            ok = JS_FALSE;
+        } else {
+            if (funcg.treeContext.flags & TCF_FUN_HEAVYWEIGHT)
+                fun->flags |= JSFUN_HEAVYWEIGHT;
+            ok = JS_TRUE;
+        }
     }
 
     /* Restore saved state and release code generation arenas. */
