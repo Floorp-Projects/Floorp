@@ -24,7 +24,7 @@
 #define __editor_h__
 
 #include "nsCOMPtr.h"
-#include "nsWeakPtr.h"
+#include "nsWeakReference.h"
 
 #include "nsIEditor.h"
 #include "nsIEditorIMESupport.h"
@@ -140,7 +140,8 @@ class nsSelectionState
  *  delegate the actual commands to the editor independent of the XPFE implementation.
  */
 class nsEditor : public nsIEditor,
-                 public nsIEditorIMESupport
+                 public nsIEditorIMESupport,
+                 public nsSupportsWeakReference
 {
 public:
 
@@ -192,6 +193,7 @@ public:
   NS_IMETHOD SetFlags(PRUint32 aFlags) = 0;
   NS_IMETHOD GetDocument(nsIDOMDocument **aDoc);
   NS_IMETHOD GetPresShell(nsIPresShell **aPS);
+  NS_IMETHOD GetSelectionController(nsISelectionController **aSel);
   NS_IMETHOD GetSelection(nsIDOMSelection **aSelection);
   
   NS_IMETHOD EnableUndo(PRBool aEnable);

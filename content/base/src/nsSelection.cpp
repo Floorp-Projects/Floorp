@@ -69,6 +69,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"
 
+#include "nsISelectionController.h"//for the enums
 
 #define STATUS_CHECK_RETURN_MACRO() {if (!mTracker) return NS_ERROR_FAILURE;}
 //#define DEBUG_TABLE 1
@@ -156,7 +157,7 @@ public:
   nsresult      GetSelectionRegionRect(SelectionRegion aRegion, nsRect *aRect);
   nsresult      ScrollRectIntoView(nsRect& aRect, PRIntn  aVPercent, PRIntn  aHPercent);
 
-  NS_IMETHOD    ScrollIntoView(SelectionRegion aRegion=SELECTION_FOCUS_REGION);
+  NS_IMETHOD    ScrollIntoView(SelectionRegion aRegion=nsISelectionController::SELECTION_FOCUS_REGION);
   nsresult      AddItem(nsIDOMRange *aRange);
   nsresult      RemoveItem(nsIDOMRange *aRange);
 
@@ -320,7 +321,7 @@ private:
   NS_IMETHOD    SetHint(PRBool aHintRight);
   NS_IMETHOD    GetHint(PRBool *aHintRight);
 
-  nsDOMSelection *mDomSelections[NUM_SELECTIONTYPES];
+  nsDOMSelection *mDomSelections[nsISelectionController::NUM_SELECTIONTYPES];
 
   // Table selection support. Unfortunately, we can't get at nsITableCellLayout
   //   and nsITableLayout through nsIFrame, so we have to duplicate editor code here
@@ -537,12 +538,12 @@ GetIndexFromSelectionType(SelectionType aType)
 {
     switch (aType)
     {
-    case SELECTION_NORMAL: return 0; break;
-    case SELECTION_SPELLCHECK: return 1; break;
-    case SELECTION_IME_RAWINPUT: return 2; break;
-    case SELECTION_IME_SELECTEDRAWTEXT: return 3; break;
-    case SELECTION_IME_CONVERTEDTEXT: return 4; break;
-    case SELECTION_IME_SELECTEDCONVERTEDTEXT: return 5; break;
+    case nsISelectionController::SELECTION_NORMAL: return 0; break;
+    case nsISelectionController::SELECTION_SPELLCHECK: return 1; break;
+    case nsISelectionController::SELECTION_IME_RAWINPUT: return 2; break;
+    case nsISelectionController::SELECTION_IME_SELECTEDRAWTEXT: return 3; break;
+    case nsISelectionController::SELECTION_IME_CONVERTEDTEXT: return 4; break;
+    case nsISelectionController::SELECTION_IME_SELECTEDCONVERTEDTEXT: return 5; break;
     default:return -1;break;
     }
 }
@@ -552,14 +553,14 @@ GetSelectionTypeFromIndex(PRInt8 aIndex)
 {
   switch (aIndex)
   {
-    case 0: return SELECTION_NORMAL;break;
-    case 1: return SELECTION_SPELLCHECK;break;
-    case 2: return SELECTION_IME_RAWINPUT;break;
-    case 3: return SELECTION_IME_SELECTEDRAWTEXT;break;
-    case 4: return SELECTION_IME_CONVERTEDTEXT;break;
-    case 5: return SELECTION_IME_SELECTEDCONVERTEDTEXT;break;
+    case 0: return nsISelectionController::SELECTION_NORMAL;break;
+    case 1: return nsISelectionController::SELECTION_SPELLCHECK;break;
+    case 2: return nsISelectionController::SELECTION_IME_RAWINPUT;break;
+    case 3: return nsISelectionController::SELECTION_IME_SELECTEDRAWTEXT;break;
+    case 4: return nsISelectionController::SELECTION_IME_CONVERTEDTEXT;break;
+    case 5: return nsISelectionController::SELECTION_IME_SELECTEDCONVERTEDTEXT;break;
     default:
-      return SELECTION_NORMAL;break;
+      return nsISelectionController::SELECTION_NORMAL;break;
   }
 }
 
@@ -728,10 +729,10 @@ nsSelection::nsSelection()
 {
   NS_INIT_REFCNT();
   PRInt32 i;
-  for (i = 0;i<NUM_SELECTIONTYPES;i++){
+  for (i = 0;i<nsISelectionController::NUM_SELECTIONTYPES;i++){
     mDomSelections[i] = nsnull;
   }
-  for (i = 0;i<NUM_SELECTIONTYPES;i++){
+  for (i = 0;i<nsISelectionController::NUM_SELECTIONTYPES;i++){
     mDomSelections[i] = new nsDOMSelection(this);
     if (!mDomSelections[i])
       return;
@@ -769,7 +770,7 @@ nsSelection::nsSelection()
   NS_WITH_SERVICE(nsIAutoCopyService, autoCopyService, "component://netscape/autocopy", &rv);
   if (NS_SUCCEEDED(rv) && autoCopyService)
   {
-    PRInt8 index = GetIndexFromSelectionType(SELECTION_NORMAL);
+    PRInt8 index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
     if (mDomSelections[index])
       autoCopyService->Listen(mDomSelections[index]);
   }
@@ -796,7 +797,7 @@ nsSelection::~nsSelection()
     NS_IF_RELEASE(sTbodyAtom);
   }
   PRInt32 i;
-  for (i = 0;i<NUM_SELECTIONTYPES;i++){
+  for (i = 0;i<nsISelectionController::NUM_SELECTIONTYPES;i++){
     if (mDomSelections[i])
         NS_IF_RELEASE(mDomSelections[i]);
   }
@@ -1040,7 +1041,7 @@ nsSelection::ConstrainFrameAndPointToAnchorSubtree(nsIPresContext *aPresContext,
   PRInt32 anchorOffset = 0;
   PRInt32 anchorFrameOffset = 0;
 
-  PRInt8 index = GetIndexFromSelectionType(SELECTION_NORMAL);
+  PRInt8 index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
   if (! mDomSelections[index])
     return NS_ERROR_NULL_POINTER;
 
@@ -1244,7 +1245,7 @@ nsSelection::HandleTextEvent(nsGUIEvent *aGUIEvent)
 #endif
   nsresult result(NS_OK);
 	if (NS_TEXT_EVENT == aGUIEvent->message) {
-    PRInt8 index = GetIndexFromSelectionType(SELECTION_NORMAL);
+    PRInt8 index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
     result = mDomSelections[index]->ScrollIntoView();
 	}
 	return result;
@@ -1265,7 +1266,7 @@ nsSelection::MoveCaret(PRUint32 aKeycode, PRBool aContinue, nsSelectionAmount aA
   PRBool isCollapsed;
   nscoord desiredX; //we must keep this around and revalidate it when its just UP/DOWN
 
-  PRInt8 index = GetIndexFromSelectionType(SELECTION_NORMAL);
+  PRInt8 index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
   result = mDomSelections[index]->GetIsCollapsed(&isCollapsed);
   if (NS_FAILED(result))
     return result;
@@ -1571,14 +1572,14 @@ nsSelection::HandleDrag(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint&
 NS_IMETHODIMP
 nsSelection::StartAutoScrollTimer(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint, PRUint32 aDelay)
 {
-  PRInt8 index = GetIndexFromSelectionType(SELECTION_NORMAL);
+  PRInt8 index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
   return mDomSelections[index]->StartAutoScrollTimer(aPresContext, aFrame, aPoint, aDelay);
 }
 
 NS_IMETHODIMP
 nsSelection::StopAutoScrollTimer()
 {
-  PRInt8 index = GetIndexFromSelectionType(SELECTION_NORMAL);
+  PRInt8 index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
   return mDomSelections[index]->StopAutoScrollTimer();
 }
 
@@ -1605,7 +1606,7 @@ nsSelection::TakeFocus(nsIContent *aNewFocus, PRUint32 aContentOffset,
     //return NS_ERROR_FAILURE;
 
   //END HACKHACKHACK /checking for root frames/content
-  PRInt8 index = GetIndexFromSelectionType(SELECTION_NORMAL);
+  PRInt8 index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
   domNode = do_QueryInterface(aNewFocus);
   //traverse through document and unselect crap here
   if (!aContinueSelection){ //single click? setting cursor down
@@ -1646,7 +1647,7 @@ nsSelection::TakeFocus(nsIContent *aNewFocus, PRUint32 aContentOffset,
     }
   }
     
-  return NotifySelectionListeners(SELECTION_NORMAL);
+  return NotifySelectionListeners(nsISelectionController::SELECTION_NORMAL);
 }
 
 
@@ -1662,7 +1663,7 @@ nsSelection::LookUpSelection(nsIContent *aContent, PRInt32 aContentOffset, PRInt
 
   *aReturnDetails = nsnull;
   PRInt8 j;
-  for (j = (PRInt8) 0; j < (PRInt8)NUM_SELECTIONTYPES; j++){
+  for (j = (PRInt8) 0; j < (PRInt8)nsISelectionController::NUM_SELECTIONTYPES; j++){
     if (mDomSelections[j])
      mDomSelections[j]->LookUpSelection(aContent, aContentOffset, aContentLength, aReturnDetails, (SelectionType)(1<<j), aSlowCheck);
   }
@@ -1681,7 +1682,7 @@ nsSelection::SetMouseDownState(PRBool aState)
     mSelectingTableCells = PR_FALSE;
     mStartSelectedCell = nsnull;
     mEndSelectedCell = nsnull;
-    NotifySelectionListeners(SELECTION_NORMAL);
+    NotifySelectionListeners(nsISelectionController::SELECTION_NORMAL);
   }
   return NS_OK;
 }
@@ -1960,7 +1961,7 @@ nsSelection::EndBatchChanges()
   NS_ASSERTION(mBatching >=0,"Bad mBatching");
   if (mBatching == 0 && mChangesDuringBatching){
     mChangesDuringBatching = PR_FALSE;
-    NotifySelectionListeners(SELECTION_NORMAL);
+    NotifySelectionListeners(nsISelectionController::SELECTION_NORMAL);
   }
   return result;
 }
@@ -2038,7 +2039,7 @@ nsSelection::HandleTableSelection(nsIContent *aParentContent, PRInt32 aContentOf
 
   // Stack-class to wrap all table selection changes in 
   //  BeginBatchChanges() / EndBatchChanges()
-  PRInt8 index = GetIndexFromSelectionType(SELECTION_NORMAL);
+  PRInt8 index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
   nsSelectionBatcher selectionBatcher(mDomSelections[index]);
 
   // When doing table selection, always set the direction to next
@@ -2252,7 +2253,7 @@ nsSelection::SelectBlockOfCells(nsIContent *aEndCell)
   PRInt32 curRowIndex, curColIndex;
 
   // Examine all cell nodes, starting with first one found above
-  PRInt8 index = GetIndexFromSelectionType(SELECTION_NORMAL);
+  PRInt8 index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
   while (cellNode)
   {
     nsCOMPtr<nsIContent> cellContent = do_QueryInterface(cellNode);
@@ -2367,7 +2368,7 @@ nsSelection::GetFirstSelectedCellAndRange(nsIDOMNode **aCell, nsIDOMRange **aRan
   *aRange = nsnull;
 
   nsCOMPtr<nsIDOMRange> firstRange;
-  PRInt8 index = GetIndexFromSelectionType(SELECTION_NORMAL);
+  PRInt8 index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
   nsresult result = mDomSelections[index]->GetRangeAt(0, getter_AddRefs(firstRange));
   if (NS_FAILED(result)) return result;
   if (!firstRange) return NS_ERROR_FAILURE;
@@ -2396,7 +2397,7 @@ nsSelection::GetNextSelectedCellAndRange(nsIDOMNode **aCell, nsIDOMRange **aRang
   *aRange = nsnull;
 
   PRInt32 rangeCount;
-  PRInt8 index = GetIndexFromSelectionType(SELECTION_NORMAL);
+  PRInt8 index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
   nsresult result = mDomSelections[index]->GetRangeCount(&rangeCount);
   if (NS_FAILED(result)) return result;
 
@@ -2520,7 +2521,7 @@ nsSelection::CreateAndAddRange(nsIDOMNode *aParentNode, PRInt32 aOffset)
   result = range->SetEnd(aParentNode, aOffset+1);
   if (NS_FAILED(result)) return result;
   
-  PRInt8 index = GetIndexFromSelectionType(SELECTION_NORMAL);
+  PRInt8 index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
   return mDomSelections[index]->AddRange(range);
 }
 
@@ -2572,7 +2573,7 @@ nsSelection::DeleteFromDocument()
   // last item BEFORE the current range, rather than the range itself,
   // before we do the delete.
   PRBool isCollapsed;
-  PRInt8 index = GetIndexFromSelectionType(SELECTION_NORMAL);
+  PRInt8 index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
   mDomSelections[index]->GetIsCollapsed( &isCollapsed);
   if (isCollapsed)
   {
@@ -4870,12 +4871,12 @@ nsDOMSelection::GetSelectionRegionRect(SelectionRegion aRegion, nsRect *aRect)
 
   switch (aRegion)
   {
-  case SELECTION_ANCHOR_REGION:
+  case nsISelectionController::SELECTION_ANCHOR_REGION:
     node       = FetchAnchorNode();
     nodeOffset = FetchAnchorOffset();
     isEndNode  = GetDirection() == eDirPrevious;
     break;
-  case SELECTION_FOCUS_REGION:
+  case nsISelectionController::SELECTION_FOCUS_REGION:
     node       = FetchFocusNode();
     nodeOffset = FetchFocusOffset();
     isEndNode  = GetDirection() == eDirNext;
@@ -5116,19 +5117,23 @@ nsDOMSelection::ScrollIntoView(SelectionRegion aRegion)
   result = GetPresShell(getter_AddRefs(presShell));
   if (NS_FAILED(result))
     return result;
+  nsCOMPtr<nsISelectionController> selCon;
+  selCon = do_QueryInterface(presShell);
+  if (selCon)
+  {
+    StCaretHider  caretHider(selCon);			// stack-based class hides and shows the caret
 
-  StCaretHider  caretHider(presShell);			// stack-based class hides and shows the caret
+    //
+    // Scroll the selection region into view.
+    //
+    nsRect rect;
+    result = GetSelectionRegionRect(aRegion, &rect);
 
-  //
-  // Scroll the selection region into view.
-  //
-  nsRect rect;
-  result = GetSelectionRegionRect(aRegion, &rect);
+    if (NS_FAILED(result))
+      return result;
 
-  if (NS_FAILED(result))
-    return result;
-
-  result = ScrollRectIntoView(rect, NS_PRESSHELL_SCROLL_ANYWHERE, NS_PRESSHELL_SCROLL_ANYWHERE);
+    result = ScrollRectIntoView(rect, NS_PRESSHELL_SCROLL_ANYWHERE, NS_PRESSHELL_SCROLL_ANYWHERE);
+  }
   return result;
 }
 

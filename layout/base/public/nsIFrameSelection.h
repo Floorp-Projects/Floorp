@@ -38,6 +38,7 @@
 #include "nsIContent.h"
 #include "nsCOMPtr.h"
 #include "nsIStyleContext.h"
+#include "nsISelectionController.h"
 
 
 // IID for the nsIFrameSelection interface

@@ -279,15 +279,11 @@ nsSelectionMoveCommands::DoCommand(const PRUnichar *aCommand, nsISupports * refC
     return NS_ERROR_FAILURE;
  
   nsresult rv;
-  
-  nsCOMPtr<nsIPresShell> presShell;
-  rv = aEditor->GetPresShell(getter_AddRefs(presShell)); 
-  if (NS_FAILED(rv) || !presShell)
-    return rv ? rv : NS_ERROR_FAILURE;
-  
-  nsCOMPtr<nsISelectionController> selCont = do_QueryInterface(presShell); 
-  if (!selCont)
-    return NS_ERROR_FAILURE;
+    
+  nsCOMPtr<nsISelectionController> selCont;
+  rv = aEditor->GetSelectionController(getter_AddRefs(selCont)); 
+  if (NS_FAILED(rv) || !selCont)
+    return rv?rv:NS_ERROR_FAILURE;
   
   nsAutoString cmdString(aCommand);
   

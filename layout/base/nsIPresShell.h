@@ -29,6 +29,9 @@
 #include "nsIReflowCommand.h"
 #include "nsGUIEvent.h"
 
+#include "nsISelectionController.h" //for the selection enums.
+
+
 class nsIContent;
 class nsIContentIterator;
 class nsIDocument;
@@ -62,19 +65,6 @@ class nsIArena;
 #define NS_PRESSHELL_SCROLL_ANYWHERE -1
 #define NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE -2
 
-typedef enum SelectionType{
-                           SELECTION_NONE = 0,
-                           SELECTION_NORMAL = 1, 
-                           SELECTION_SPELLCHECK = 2, 
-                           SELECTION_IME_RAWINPUT= 4, 
-                           SELECTION_IME_SELECTEDRAWTEXT = 8, 
-                           SELECTION_IME_CONVERTEDTEXT = 16, 
-                           SELECTION_IME_SELECTEDCONVERTEDTEXT = 32, 
-                           NUM_SELECTIONTYPES=6} SelectionType;
-
-typedef enum SelectionRegion{SELECTION_ANCHOR_REGION = 0, 
-                             SELECTION_FOCUS_REGION,
-                             NUM_SELECTION_REGIONS} SelectionRegion;
 
 // debug VerifyReflow flags
 #define VERIFY_REFLOW_ON              0x01
@@ -134,30 +124,6 @@ public:
    * fills void array with nsString* caller must free strings
    */
   NS_IMETHOD ListAlternateStyleSheets(nsStringArray& aTitleList) = 0;
-
-  /**
-   * GetSelection will return the selection that the presentation
-   *  shell may implement.
-   *
-   * @param aSelection will hold the return value
-   */
-  NS_IMETHOD GetSelection(SelectionType aType, nsIDOMSelection** aSelection) = 0;
-
-  /**
-   * ScrollSelectionIntoView scrolls a region of the selection,
-   * so that it is visible in the scrolled view.
-   *
-   * @param aType the selection to scroll into view.
-   * @param aRegion the region inside the selection to scroll into view.
-   */
-  NS_IMETHOD ScrollSelectionIntoView(SelectionType aType, SelectionRegion aRegion) = 0;
-
-  /**
-   * RepaintSelection repaints the selection specified by aType.
-   *
-   * @param aType specifies the selection to repaint.
-   */
-  NS_IMETHOD RepaintSelection(SelectionType aType) = 0;
 
   /**
    * GetFrameSelection will return the Frame based selection API you 
@@ -351,23 +317,6 @@ public:
    * Get the caret, if it exists. AddRefs it.
    */
   NS_IMETHOD GetCaret(nsICaret **aOutCaret) = 0;
-  
-  /**
-   * Set the caret as enabled or disabled. An enabled caret will
-   * draw or blink when made visible. A disabled caret will never show up.
-   * Can be called any time.
-   * @param aEnable PR_TRUE to enable caret.  PR_FALSE to disable.
-   * @return always NS_OK
-   */
-  NS_IMETHOD SetCaretEnabled(PRBool aInEnable) = 0;
-
-  /**
-   * Gets the current state of the caret.
-   * @param aEnabled  [OUT] set to the current caret state, as set by SetCaretEnabled
-   * @return   if aOutEnabled==null, returns NS_ERROR_INVALID_ARG
-   *           else NS_OK
-   */
-  NS_IMETHOD GetCaretEnabled(PRBool *aOutEnabled) = 0;
 
   /**
    * Should the images have borders etc.  Actual visual effects are determined

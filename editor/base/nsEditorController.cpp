@@ -295,42 +295,7 @@ NS_IMETHODIMP nsEditorController::GetSelectionController(nsISelectionController 
   if (NS_FAILED(result) || !editor)
     return result ? result : NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIPresShell> presShell;
-  result = editor->GetPresShell(getter_AddRefs(presShell)); 
-  if (NS_FAILED(result) || !presShell)
-    return result ? result : NS_ERROR_FAILURE;
-  
-  nsCOMPtr<nsISelectionController> selController = do_QueryInterface(presShell); 
-  if (selController)
-  {
-    *aSelCon = selController;
-    NS_ADDREF(*aSelCon);
-    return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
-/*
-  NS_ENSURE_ARG_POINTER(aSelCon);
-  nsCOMPtr<nsIDocument> doc; 
-  mContent->GetDocument(*getter_AddRefs(doc)); 
-
-  *aSelCon = nsnull;
-  if (doc)
-  {
-    PRInt32 i = doc->GetNumberOfShells(); 
-    if (i == 0) 
-      return NS_ERROR_FAILURE; 
-
-    nsCOMPtr<nsIPresShell> presShell = getter_AddRefs(doc->GetShellAt(0)); 
-    nsCOMPtr<nsISelectionController> selController = do_QueryInterface(presShell); 
-    if (selController)
-    {
-      *aSelCon = selController;
-      (*aSelCon)->AddRef();
-      return NS_OK;
-    }
-  }
-  return NS_ERROR_FAILURE;
-  */
+  return  editor->GetSelectionController(aSelCon); 
 }
 
 NS_IMETHODIMP nsEditorController::GetFrame(nsIGfxTextControlFrame **aFrame)

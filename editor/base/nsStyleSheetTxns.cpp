@@ -68,8 +68,14 @@ AddStyleSheetTxn::Do()
   if (!mEditor || !mSheet)
     return NS_ERROR_NOT_INITIALIZED;
   
+  nsCOMPtr<nsISelectionController> selCon;
+  mEditor->GetSelectionController(getter_AddRefs(selCon));
+  if (!selCon)
+    return NS_ERROR_UNEXPECTED;
+
   nsCOMPtr<nsIPresShell> presShell;
-  mEditor->GetPresShell(getter_AddRefs(presShell));
+  presShell = do_QueryInterface(selCon);
+
   if (!presShell)
     return NS_ERROR_UNEXPECTED;
   
@@ -99,8 +105,13 @@ AddStyleSheetTxn::Undo()
   if (!mEditor || !mSheet)
     return NS_ERROR_NOT_INITIALIZED;
   
+  nsCOMPtr<nsISelectionController> selCon;
+  mEditor->GetSelectionController(getter_AddRefs(selCon));
+  if (!selCon)
+    return NS_ERROR_UNEXPECTED;
+
   nsCOMPtr<nsIPresShell> presShell;
-  mEditor->GetPresShell(getter_AddRefs(presShell));
+  presShell = do_QueryInterface(selCon);
   if (!presShell)
     return NS_ERROR_UNEXPECTED;
   
@@ -205,8 +216,13 @@ RemoveStyleSheetTxn::Do()
   if (!mEditor || !mSheet)
     return NS_ERROR_NOT_INITIALIZED;
   
+  nsCOMPtr<nsISelectionController> selCon;
+  mEditor->GetSelectionController(getter_AddRefs(selCon));
+  if (!selCon)
+    return NS_ERROR_UNEXPECTED;
+
   nsCOMPtr<nsIPresShell> presShell;
-  mEditor->GetPresShell(getter_AddRefs(presShell));
+  presShell = do_QueryInterface(selCon);
   if (!presShell)
     return NS_ERROR_UNEXPECTED;
   
@@ -236,8 +252,13 @@ RemoveStyleSheetTxn::Undo()
   if (!mEditor || !mSheet)
     return NS_ERROR_NOT_INITIALIZED;
   
+  nsCOMPtr<nsISelectionController> selCon;
+  mEditor->GetSelectionController(getter_AddRefs(selCon));
+  if (!selCon)
+    return NS_ERROR_UNEXPECTED;
+
   nsCOMPtr<nsIPresShell> presShell;
-  mEditor->GetPresShell(getter_AddRefs(presShell));
+  presShell = do_QueryInterface(selCon);
   if (!presShell)
     return NS_ERROR_UNEXPECTED;
   

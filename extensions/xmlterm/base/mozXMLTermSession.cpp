@@ -1117,8 +1117,12 @@ NS_IMETHODIMP mozXMLTermSession::Abort(mozILineTermAux* lineTermAux,
     SetDOMText(textNode, errMsg);
 
     // Collapse selection and position cursor
+    nsCOMPtr<nsISelectionController> selCon;
+    selCon = do_QueryInterface(mPresShell);
+    if (!selCon)
+      return NS_ERROR_FAILURE;
     nsCOMPtr<nsIDOMSelection> selection;
-    result = mPresShell->GetSelection(SELECTION_NORMAL,
+    result = selCon->GetSelection(SELECTION_NORMAL,
                                       getter_AddRefs(selection));
     if (NS_SUCCEEDED(result) && selection) {
       selection->Collapse(textNode, errMsg.Length());
@@ -1156,9 +1160,13 @@ NS_IMETHODIMP mozXMLTermSession::DisplayInput(const nsString& aString,
   nsCRT::free(temCString);
 
   // Collapse selection and position cursor
+  nsCOMPtr<nsISelectionController> selCon;
+  selCon = do_QueryInterface(mPresShell);
+  if (!selCon)
+    return NS_ERROR_FAILURE;
   nsCOMPtr<nsIDOMSelection> selection;
 
-  result = mPresShell->GetSelection(SELECTION_NORMAL,
+  result = selCon->GetSelection(SELECTION_NORMAL,
                                     getter_AddRefs(selection));
   if (NS_FAILED(result) || !selection)
     return NS_ERROR_FAILURE;
@@ -2222,7 +2230,11 @@ NS_IMETHODIMP mozXMLTermSession::AppendLineLS(const nsString& aString,
   // Get selection
   nsCOMPtr<nsIDOMSelection> selection;
 
-  result = mPresShell->GetSelection(SELECTION_NORMAL,
+  nsCOMPtr<nsISelectionController> selCon;
+  selCon = do_QueryInterface(mPresShell);
+  if (!selCon)
+    return NS_ERROR_FAILURE;
+  result = selCon->GetSelection(SELECTION_NORMAL,
                                     getter_AddRefs(selection));
   if (NS_FAILED(result) || !selection)
     return NS_ERROR_FAILURE;
@@ -2807,7 +2819,11 @@ void mozXMLTermSession::PositionOutputCursor(mozILineTermAux* lineTermAux)
   // Get selection
   nsCOMPtr<nsIDOMSelection> selection;
 
-  result = mPresShell->GetSelection(SELECTION_NORMAL,
+  nsCOMPtr<nsISelectionController> selCon;
+  selCon = do_QueryInterface(mPresShell);
+  if (!selCon)
+    return NS_ERROR_FAILURE;
+  result = selCon->GetSelection(SELECTION_NORMAL,
                                     getter_AddRefs(selection));
   if (NS_SUCCEEDED(result) && selection) {
     // Position cursor at end of line
@@ -3373,7 +3389,11 @@ NS_IMETHODIMP mozXMLTermSession::PositionScreenCursor(PRInt32 aRow,
   // Get selection
   nsCOMPtr<nsIDOMSelection> selection;
 
-  result = mPresShell->GetSelection(SELECTION_NORMAL,
+  nsCOMPtr<nsISelectionController> selCon;
+  selCon = do_QueryInterface(mPresShell);
+  if (!selCon)
+    return NS_ERROR_FAILURE;
+  result = selCon->GetSelection(SELECTION_NORMAL,
                                     getter_AddRefs(selection));
 
   if (NS_SUCCEEDED(result) && selection) {

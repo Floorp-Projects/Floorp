@@ -44,6 +44,7 @@
 #include "nsILookAndFeel.h"
 #include "nsWidgetsCID.h"			// for NS_LOOKANDFEEL_CID
 #include "nsBlockFrame.h"
+#include "nsISelectionController.h"
 
 #include "nsCaret.h"
 
@@ -79,8 +80,8 @@ NS_IMETHODIMP nsCaret::Init(nsIPresShell *inPresShell)
 	if (!inPresShell)
 		return NS_ERROR_NULL_POINTER;
 	
-	mPresShell = inPresShell;		// the presshell owns us, so no addref
-	
+	mPresShell = getter_AddRefs(NS_GetWeakReference(inPresShell));		// the presshell owns us, so no addref
+
   nsILookAndFeel* touchyFeely;
   if (NS_SUCCEEDED(nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, NS_GET_IID(nsILookAndFeel), (void**)&touchyFeely)))
   {
@@ -98,10 +99,16 @@ NS_IMETHODIMP nsCaret::Init(nsIPresShell *inPresShell)
 	// listener
 	
   nsCOMPtr<nsIDOMSelection> domSelection;
-  if (NS_SUCCEEDED(mPresShell->GetSelection(SELECTION_NORMAL, getter_AddRefs(domSelection))))
+  nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mPresShell);
+  if (selCon)
   {
-		domSelection->AddSelectionListener(this);
-	}
+    if (NS_SUCCEEDED(selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domSelection))))
+    {
+		  domSelection->AddSelectionListener(this);
+	  }
+  }
+  else
+    return NS_ERROR_FAILURE;
 	
 	// set up the blink timer
 	if (mVisible)
@@ -181,9 +188,16 @@ NS_IMETHODIMP nsCaret::GetWindowRelativeCoordinates(nsRect& outCoordinates, PRBo
 		return NS_ERROR_NOT_INITIALIZED;
 		
 	nsCOMPtr<nsIDOMSelection> domSelection;
-	nsresult err = mPresShell->GetSelection(SELECTION_NORMAL,getter_AddRefs(domSelection));
-	if (NS_FAILED(err))
-		return err;
+  nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mPresShell);
+  nsresult err;
+  if (selCon)
+  {
+    err = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL,getter_AddRefs(domSelection));
+	  if (NS_FAILED(err))
+		  return err;
+  }
+  else
+    return NS_ERROR_FAILURE;
 		
 	if (!domSelection)
 		return NS_ERROR_NOT_INITIALIZED;		// no selection
@@ -227,9 +241,13 @@ NS_IMETHODIMP nsCaret::GetWindowRelativeCoordinates(nsRect& outCoordinates, PRBo
 
   //get frame selection and find out what frame to use...
   nsCOMPtr<nsIFrameSelection> frameSelection;
-  err = mPresShell->GetFrameSelection(getter_AddRefs(frameSelection));
-	if (NS_FAILED(err) || !frameSelection)
-		return err;  
+  nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
+  if (presShell)
+    err = presShell->GetFrameSelection(getter_AddRefs(frameSelection));
+  else
+    return NS_ERROR_FAILURE;
+  if (NS_FAILED(err) || !frameSelection)
+    return err?err : NS_ERROR_FAILURE;  
 
 	// find the frame that contains the content node that has focus
 	nsIFrame*       theFrame = nsnull;
@@ -247,7 +265,7 @@ NS_IMETHODIMP nsCaret::GetWindowRelativeCoordinates(nsRect& outCoordinates, PRBo
 	// ramp up to make a rendering context for measuring text.
 	// First, we get the pres context ...
 	nsCOMPtr<nsIPresContext> presContext;
-	err = mPresShell->GetPresContext(getter_AddRefs(presContext));
+	err = presShell->GetPresContext(getter_AddRefs(presContext));
 	if (NS_FAILED(err))
 		return err;
 	
@@ -386,10 +404,16 @@ nsresult nsCaret::StopBlinking()
 PRBool nsCaret::SetupDrawingFrameAndOffset()
 {
 	nsCOMPtr<nsIDOMSelection> domSelection;
-	nsresult err = mPresShell->GetSelection(SELECTION_NORMAL, getter_AddRefs(domSelection));
-	if (!NS_SUCCEEDED(err) || !domSelection)
-		return PR_FALSE;
-
+  nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mPresShell);
+  nsresult err;
+  if (selCon)
+  {
+	  err = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domSelection));
+	  if (!NS_SUCCEEDED(err) || !domSelection)
+	  	return PR_FALSE;
+  }
+  else
+    return NS_ERROR_FAILURE;
 	PRBool isCollapsed;
 
 	if (domSelection && NS_SUCCEEDED(domSelection->GetIsCollapsed(&isCollapsed)) && isCollapsed)
@@ -433,7 +457,11 @@ PRBool nsCaret::SetupDrawingFrameAndOffset()
 
 				//get frame selection and find out what frame to use...
 				nsCOMPtr<nsIFrameSelection> frameSelection;
-				err = mPresShell->GetFrameSelection(getter_AddRefs(frameSelection));
+        nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
+        if (presShell)
+				  err = presShell->GetFrameSelection(getter_AddRefs(frameSelection));
+        else
+          return NS_ERROR_FAILURE;
 				if (NS_FAILED(err) || !frameSelection)
 					return PR_FALSE;
 				
@@ -476,7 +504,11 @@ void nsCaret::GetViewForRendering(nsIFrame *caretFrame, EViewCoordinates coordTy
 	nsIView* theView = nsnull;
 	NS_ASSERTION(caretFrame, "Should have frame here");
   nsCOMPtr<nsIPresContext>  presContext;
-  mPresShell->GetPresContext(getter_AddRefs(presContext));
+  nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
+  if (presShell)
+    presShell->GetPresContext(getter_AddRefs(presContext));
+  else
+    return;
 	caretFrame->GetOffsetFromView(presContext, viewOffset, &theView);
 	if (theView == nsnull) return;
 	
@@ -526,10 +558,15 @@ PRBool nsCaret::MustDrawCaret()
 		return PR_TRUE;
 		
 	nsCOMPtr<nsIDOMSelection> domSelection;
-	nsresult err = mPresShell->GetSelection(SELECTION_NORMAL, getter_AddRefs(domSelection));
-	if (NS_FAILED(err) || !domSelection)
-		return PR_FALSE;
-
+  nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mPresShell);
+  if (selCon)
+  {
+	  nsresult err = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domSelection));
+	  if (NS_FAILED(err) || !domSelection)
+	  	return PR_FALSE;
+  }
+  else
+    return NS_ERROR_FAILURE;
 	PRBool isCollapsed;
 
 	if (NS_FAILED(domSelection->GetIsCollapsed(&isCollapsed)))
@@ -573,8 +610,14 @@ void nsCaret::DrawCaretWithContext(nsIRenderingContext* inRendContext)
 	frameRect += viewOffset;
 
 	nsCOMPtr<nsIPresContext> presContext;
-	if (NS_FAILED(mPresShell->GetPresContext(getter_AddRefs(presContext))))
-		return;
+  nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
+  if (presShell)
+  {
+    if (NS_FAILED(presShell->GetPresContext(getter_AddRefs(presContext))))
+		  return;
+  }
+  else
+    return;
 
 	// make a rendering context, if we didn't get passed one
 	nsCOMPtr<nsIRenderingContext>	localRC = do_QueryInterface(inRendContext);		// OK if inRendContext is null

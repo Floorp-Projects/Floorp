@@ -4339,9 +4339,9 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable
   // Try to scroll the selection into view if the paste/drop succeeded
   if (NS_SUCCEEDED(rv))
   {
-    nsCOMPtr<nsIPresShell> presShell;
-    if (NS_SUCCEEDED(GetPresShell(getter_AddRefs(presShell))) && presShell)
-      presShell->ScrollSelectionIntoView(SELECTION_NORMAL, SELECTION_FOCUS_REGION);
+    nsCOMPtr<nsISelectionController> selCon;
+    if (NS_SUCCEEDED(GetSelectionController(getter_AddRefs(selCon))) && selCon)
+      selCon->ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL, nsISelectionController::SELECTION_FOCUS_REGION);
   }
 
   return rv;

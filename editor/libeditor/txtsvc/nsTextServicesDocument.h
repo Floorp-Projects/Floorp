@@ -78,7 +78,7 @@ private:
   } TSDIteratorStatus;
 
   nsCOMPtr<nsIDOMDocument>        mDOMDocument;
-  nsCOMPtr<nsIPresShell>          mPresShell;
+  nsCOMPtr<nsISelectionController>mSelCon;
   nsCOMPtr<nsIEditor>             mEditor;
   nsCOMPtr<nsIContentIterator>    mIterator;
   TSDIteratorStatus               mIteratorStatus;

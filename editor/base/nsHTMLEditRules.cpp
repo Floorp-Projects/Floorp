@@ -168,9 +168,9 @@ nsHTMLEditRules::BeforeEdit(PRInt32 action, nsIEditor::EDirection aDirection)
     nsComponentManager::CreateInstance(kRangeCID, nsnull, NS_GET_IID(nsIDOMRange),
                                                     getter_AddRefs(mUtilRange));
     // turn off caret
-    nsCOMPtr<nsIPresShell> pres;
-    mEditor->GetPresShell(getter_AddRefs(pres));
-    if (pres) pres->SetCaretEnabled(PR_FALSE);
+    nsCOMPtr<nsISelectionController> selCon;
+    mEditor->GetSelectionController(getter_AddRefs(selCon));
+    if (selCon) selCon->SetCaretEnabled(PR_FALSE);
     // check that selection is in subtree defined by body node
     ConfirmSelectionInBody();
     // let rules remember the top level action
@@ -260,9 +260,9 @@ nsHTMLEditRules::AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection)
     res = CreateBogusNodeIfNeeded(selection);
 
     // turn on caret
-    nsCOMPtr<nsIPresShell> pres;
-    mEditor->GetPresShell(getter_AddRefs(pres));
-    if (pres) pres->SetCaretEnabled(PR_TRUE);
+    nsCOMPtr<nsISelectionController> selCon;
+    mEditor->GetSelectionController(getter_AddRefs(selCon));
+    if (selCon) selCon->SetCaretEnabled(PR_TRUE);
   }
 
   return res;

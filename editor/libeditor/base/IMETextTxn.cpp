@@ -113,8 +113,8 @@ NS_IMETHODIMP IMETextTxn::Undo(void)
   printf("Undo IME Text element = %p\n", mElement.get());
 #endif
 
-  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
-  if (!ps) return NS_ERROR_NOT_INITIALIZED;
+  nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mPresShellWeak);
+  if (!selCon) return NS_ERROR_NOT_INITIALIZED;
 
   nsresult result;
   PRUint32 length = mStringToInsert.Length();
@@ -122,7 +122,7 @@ NS_IMETHODIMP IMETextTxn::Undo(void)
   if (NS_SUCCEEDED(result))
   { // set the selection to the insertion point where the string was removed
     nsCOMPtr<nsIDOMSelection> selection;
-    result = ps->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
+    result = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
     if (NS_SUCCEEDED(result) && selection) {
       result = selection->Collapse(mElement, mOffset);
       NS_ASSERTION((NS_SUCCEEDED(result)), "selection could not be collapsed after undo of IME insert.");
@@ -242,16 +242,16 @@ static SelectionType TextRangeToSelection(int aTextRangeType)
    switch(aTextRangeType)
    {
       case nsIPrivateTextRange::TEXTRANGE_RAWINPUT:
-           return SELECTION_IME_RAWINPUT;
+           return nsISelectionController::SELECTION_IME_RAWINPUT;
       case nsIPrivateTextRange::TEXTRANGE_SELECTEDRAWTEXT:
-           return SELECTION_IME_SELECTEDRAWTEXT;
+           return nsISelectionController::SELECTION_IME_SELECTEDRAWTEXT;
       case nsIPrivateTextRange::TEXTRANGE_CONVERTEDTEXT:
-           return SELECTION_IME_CONVERTEDTEXT;
+           return nsISelectionController::SELECTION_IME_CONVERTEDTEXT;
       case nsIPrivateTextRange::TEXTRANGE_SELECTEDCONVERTEDTEXT:
-           return SELECTION_IME_SELECTEDCONVERTEDTEXT;
+           return nsISelectionController::SELECTION_IME_SELECTEDCONVERTEDTEXT;
       case nsIPrivateTextRange::TEXTRANGE_CARETPOSITION:
       default:
-           return SELECTION_NORMAL;
+           return nsISelectionController::SELECTION_NORMAL;
    };
 }
 
@@ -267,10 +267,10 @@ NS_IMETHODIMP IMETextTxn::GetData(nsString& aResult,nsIPrivateTextRangeList** aT
 
 static SelectionType sel[4]=
 {
- SELECTION_IME_RAWINPUT,
- SELECTION_IME_SELECTEDRAWTEXT,
- SELECTION_IME_CONVERTEDTEXT,
- SELECTION_IME_SELECTEDCONVERTEDTEXT
+  nsISelectionController::SELECTION_IME_RAWINPUT,
+  nsISelectionController::SELECTION_IME_SELECTEDRAWTEXT,
+  nsISelectionController::SELECTION_IME_CONVERTEDTEXT,
+  nsISelectionController::SELECTION_IME_SELECTEDCONVERTEDTEXT
 };
 
 NS_IMETHODIMP IMETextTxn::CollapseTextSelection(void)
@@ -309,13 +309,14 @@ NS_IMETHODIMP IMETextTxn::CollapseTextSelection(void)
     //
     // run through the text range list, if any
     //
-    nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
-    if (!ps) return NS_ERROR_NOT_INITIALIZED;
+    nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mPresShellWeak);
+    if (!selCon) return NS_ERROR_NOT_INITIALIZED;
+
     result = mRangeList->GetLength(&textRangeListLength);
     if(NS_FAILED(result))
         return result;
     nsCOMPtr<nsIDOMSelection> selection;
-    result = ps->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
+    result = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
     nsCOMPtr<nsIDOMSelection> imeSel;
     if(NS_SUCCEEDED(result))
     {
@@ -324,7 +325,7 @@ NS_IMETHODIMP IMETextTxn::CollapseTextSelection(void)
       {
         for(PRInt8 selIdx = 0; selIdx < 4;selIdx++)
         {
-          result = ps->GetSelection(sel[selIdx], getter_AddRefs(imeSel));
+          result = selCon->GetSelection(sel[selIdx], getter_AddRefs(imeSel));
             if(NS_SUCCEEDED(result))
             {
              result = imeSel->ClearSelection();
@@ -369,7 +370,7 @@ NS_IMETHODIMP IMETextTxn::CollapseTextSelection(void)
 
              nsCOMPtr<nsIDOMRange> newRange;
 
-             result= ps->GetSelection(TextRangeToSelection(textRangeType),
+             result= selCon->GetSelection(TextRangeToSelection(textRangeType),
                      getter_AddRefs(imeSel));
              NS_ASSERTION(NS_SUCCEEDED(result), "Cannot get selction");
              if(NS_FAILED(result))

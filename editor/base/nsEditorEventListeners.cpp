@@ -330,17 +330,14 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
 nsresult
 nsTextEditorKeyListener::ScrollSelectionIntoView()
 {
-  nsCOMPtr<nsIPresShell> presShell;
+  nsCOMPtr<nsISelectionController> selCon;
   
-  nsresult result = mEditor->GetPresShell(getter_AddRefs(presShell));
+  nsresult result = mEditor->GetSelectionController(getter_AddRefs(selCon));
 
-  if (NS_FAILED(result))
-    return result;
+  if (NS_FAILED(result) || ! selCon)
+    return result ? result: NS_ERROR_FAILURE;
 
-  if (!presShell)
-    return NS_ERROR_NULL_POINTER;
-
-  return presShell->ScrollSelectionIntoView(SELECTION_NORMAL, SELECTION_FOCUS_REGION);
+  return selCon->ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL, nsISelectionController::SELECTION_FOCUS_REGION);
 }
 
 /*
@@ -1077,13 +1074,13 @@ nsTextEditorFocusListener::Focus(nsIDOMEvent* aEvent)
       nsCOMPtr<nsIEditor>editor = do_QueryInterface(mEditor);
       if (editor)
       {
-        nsCOMPtr<nsIPresShell>ps;
-        editor->GetPresShell(getter_AddRefs(ps));
-        if (ps)
+        nsCOMPtr<nsISelectionController>selCon;
+        editor->GetSelectionController(getter_AddRefs(selCon));
+        if (selCon)
         {
           if (! (flags & nsIHTMLEditor::eEditorReadonlyMask))
           { // only enable caret if the editor is not readonly
-            ps->SetCaretEnabled(PR_TRUE);
+            selCon->SetCaretEnabled(PR_TRUE);
           }
 
           nsCOMPtr<nsIDOMDocument>domDoc;
@@ -1109,7 +1106,7 @@ nsTextEditorFocusListener::Focus(nsIDOMEvent* aEvent)
           }
   // end hack repaint
 #else
-          ps->RepaintSelection(SELECTION_NORMAL);
+          selCon->RepaintSelection(nsISelectionController::SELECTION_NORMAL);
 #endif
         }
       }
@@ -1129,11 +1126,11 @@ nsTextEditorFocusListener::Blur(nsIDOMEvent* aEvent)
     nsCOMPtr<nsIEditor>editor = do_QueryInterface(mEditor);
     if (editor)
     {
-      nsCOMPtr<nsIPresShell>ps;
-      editor->GetPresShell(getter_AddRefs(ps));
-      if (ps)
+      nsCOMPtr<nsISelectionController>selCon;
+      editor->GetSelectionController(getter_AddRefs(selCon));
+      if (selCon)
       {
-        ps->SetCaretEnabled(PR_FALSE);
+        selCon->SetCaretEnabled(PR_FALSE);
 
         nsCOMPtr<nsIDOMDocument>domDoc;
         editor->GetDocument(getter_AddRefs(domDoc));
@@ -1159,7 +1156,7 @@ nsTextEditorFocusListener::Blur(nsIDOMEvent* aEvent)
         }
 // end hack repaint
 #else
-        ps->RepaintSelection(SELECTION_NORMAL);
+        selCon->RepaintSelection(nsISelectionController::SELECTION_NORMAL);
 #endif
       }
     }
