@@ -512,6 +512,9 @@ nsStreamConverter::nsStreamConverter()
   mMimeStreamConverterListener = nsnull;
   mForwardInline = PR_FALSE;
   mDesiredOutputType = nsnull;
+  
+  mPendingChannel = nsnull;
+  mPendingContext = nsnull;
 }
 
 nsStreamConverter::~nsStreamConverter()
@@ -841,6 +844,7 @@ char *output = "\
   
     PR_snprintf(outBuf, sizeof(outBuf), output, url, url);
     PR_FREEIF(url);
+    
     if (mEmitter)
       mEmitter->Write(outBuf, nsCRT::strlen(outBuf), &written);
     mTotalRead += written;
@@ -904,9 +908,17 @@ nsStreamConverter::OnStartRequest(nsIChannel * aChannel, nsISupports *ctxt)
     aChannel->SetContentType(contentType);
   }
 
-	// forward the start rquest to any listeners
+	// forward the start request to any listeners
   if (mOutListener)
-  	mOutListener->OnStartRequest(aChannel, ctxt);
+    if (mOutputType == nsMimeOutput::nsMimeMessageRaw)
+    {
+      //we need to delay the on start request until we have figure out the real content type
+      mPendingChannel = aChannel;
+      mPendingContext = ctxt; 
+    }
+    else
+  	  mOutListener->OnStartRequest(aChannel, ctxt);
+
 	return NS_OK;
 }
 
@@ -1062,3 +1074,12 @@ NS_IMETHODIMP nsStreamConverter::AsyncConvertData(const PRUnichar *aFromType, co
 	return Init(aUri, aListener, aChannel);
 }
 
+NS_IMETHODIMP nsStreamConverter::FirePendingStartRequest()
+{
+  if (mPendingChannel && mOutListener)
+  {
+  	mOutListener->OnStartRequest(mPendingChannel, mPendingContext);
+    mPendingChannel = nsnull;
+    mPendingContext = nsnull; 
+  }
+}

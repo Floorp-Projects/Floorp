@@ -66,8 +66,6 @@
 
 #include "mimeebod.h"
 
-#include "nsISaveMsgListener.h"
-
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
@@ -776,6 +774,10 @@ mime_output_fn(char *buf, PRInt32 size, void *stream_closure)
   if ( (!msd->pluginObj2) && (!msd->output_emitter) )
     return -1;
   
+  // Fire pending start request
+  ((nsStreamConverter*)msd->pluginObj2)->FirePendingStartRequest();
+  
+  
   // Now, write to the WriteBody method if this is a message body and not
   // a part retrevial
   if (!msd->options->part_to_load)
@@ -1016,20 +1018,6 @@ mime_output_init_fn (const char *type,
 {
   struct mime_stream_data *msd = (struct mime_stream_data *) stream_closure;
   
-#ifdef XP_MAC
-  if (msd && msd->output_emitter)
-  {
-    nsCOMPtr<nsIStreamListener> outputListener;
-    msd->output_emitter->GetOutputListener(getter_AddRefs(outputListener));
-    nsCOMPtr<nsISaveMsgListener> saveListener(do_QueryInterface(outputListener));
-    if (saveListener)
-    {
-      saveListener->SetMacTypeAndCreator(mime_convert_chars_to_ostype(x_mac_type),
-        mime_convert_chars_to_ostype(x_mac_creator));
-    }
-  }
-#endif
-
   // Now, all of this stream creation is done outside of libmime, so this
   // is just a check of the pluginObj member and returning accordingly.
   if (!msd->pluginObj2)

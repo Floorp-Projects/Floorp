@@ -57,8 +57,6 @@
 PRBool	
 nsMsgIsMacFile(char *aUrlString)
 {
-	Boolean returnValue = PR_FALSE;
-
   nsAutoString urlStr; urlStr.AssignWithConversion(aUrlString);
   char  *ext = nsMsgGetExtensionFromFileURL(urlStr);
   if ( (!ext) || (!*ext) )

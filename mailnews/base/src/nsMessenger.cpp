@@ -76,11 +76,6 @@
 #include "nsIMsgStatusFeedback.h"
 #include "nsMsgRDFUtils.h"
 
-#include "nsISaveMsgListener.h"
-#ifdef XP_MAC
-  #include "nsDecodeAppleFile.h"
-#endif
-
 // compose
 #include "nsMsgCompCID.h"
 #include "nsMsgI18N.h"
@@ -189,8 +184,7 @@ ConvertBufToPlainText(nsString &aConBuf)
 // 
 class nsSaveAllAttachmentsState;
 
-class nsSaveMsgListener : public nsISaveMsgListener,
-                          public nsIUrlListener,
+class nsSaveMsgListener : public nsIUrlListener,
                           public nsIMsgCopyServiceListener,
                           public nsIStreamListener
 {
@@ -200,7 +194,6 @@ public:
 
     NS_DECL_ISUPPORTS
 
-    NS_DECL_NSISAVEMSGLISTENER
     NS_DECL_NSIURLLISTENER
     NS_DECL_NSIMSGCOPYSERVICELISTENER
     NS_DECL_NSISTREAMLISTENER
@@ -219,12 +212,6 @@ public:
     nsString      m_charset;
     nsString      m_outputFormat;
     nsString      m_msgBuffer;
-
-private:
-#ifdef XP_MAC
-    //For Mac attachment handling
-    ProcessAppleDoubleResourceFork  *m_processADRsrcFk;
-#endif   
 };
 
 class nsSaveAllAttachmentsState
@@ -1502,10 +1489,6 @@ nsSaveMsgListener::nsSaveMsgListener(nsIFileSpec* aSpec, nsMessenger *aMessenger
     // rhp: for charset handling
     m_doCharsetConversion = PR_FALSE;
     m_saveAllAttachmentsState = nsnull;
-
-#ifdef XP_MAC    
-    m_processADRsrcFk = nsnull;
-#endif
 }
 
 nsSaveMsgListener::~nsSaveMsgListener()
@@ -1515,8 +1498,7 @@ nsSaveMsgListener::~nsSaveMsgListener()
 // 
 // nsISupports
 //
-NS_IMPL_ISUPPORTS4(nsSaveMsgListener, nsISaveMsgListener, nsIUrlListener,
-                   nsIMsgCopyServiceListener, nsIStreamListener)
+NS_IMPL_ISUPPORTS3(nsSaveMsgListener, nsIUrlListener, nsIMsgCopyServiceListener, nsIStreamListener)
 
 // 
 // nsIUrlListener
@@ -1658,16 +1640,6 @@ nsSaveMsgListener::OnStopRequest(nsIChannel* aChannel, nsISupports* aSupport,
     if ( (NS_SUCCEEDED(rv)) && (conBuf) )
     {
       PRUint32      writeCount;
-#ifdef XP_MAC
-      if (m_processADRsrcFk)
-      {
-        if (noErr == m_processADRsrcFk->Write((unsigned char *)conBuf, conLength, &writeCount))
-		      rv = NS_OK;
-		    else
-		      rv = NS_ERROR_FAILURE;
-      }
-      else
-#endif
       rv = m_outputStream->Write(conBuf, conLength, &writeCount);
       if (conLength != writeCount)
         rv = NS_ERROR_FAILURE;
@@ -1677,13 +1649,6 @@ nsSaveMsgListener::OnStopRequest(nsIChannel* aChannel, nsISupports* aSupport,
   }
 
   // close down the file stream and release ourself
-#ifdef XP_MAC    
-  if (m_processADRsrcFk)
-  {
-    delete m_processADRsrcFk;
-    m_processADRsrcFk = nsnull;
-  }
-#endif
   if (m_fileSpec)
   {
     m_fileSpec->Flush();
@@ -1789,19 +1754,7 @@ nsSaveMsgListener::OnDataAvailable(nsIChannel* aChannel,
             m_msgBuffer.AppendWithConversion(m_dataBuffer, readCount);
         }
         else
-        {
-#ifdef XP_MAC
-          if (m_processADRsrcFk)
-          {
-            if (noErr == m_processADRsrcFk->Write((unsigned char *)m_dataBuffer, readCount, &writeCount))
-				      rv = NS_OK;
-				    else
-				      rv = NS_ERROR_FAILURE;
-          }
-          else
-#endif
           rv = m_outputStream->Write(m_dataBuffer, readCount, &writeCount);
-        }
 
         available -= readCount;
       }
@@ -1809,61 +1762,6 @@ nsSaveMsgListener::OnDataAvailable(nsIChannel* aChannel,
   }
   return rv;
 }
-
-NS_IMETHODIMP
-nsSaveMsgListener::SetMacTypeAndCreator(PRUint32 type, PRUint32 creator)
-{
-#ifdef XP_MAC
-  if (m_fileSpec)
-  {
-    nsFileSpec realSpec;
-    m_fileSpec->GetFileSpec(&realSpec);
-    realSpec.SetFileTypeAndCreator((OSType)type, (OSType)creator);
-  }
-#endif
-  
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSaveMsgListener::OnStartAppleDoubleDataFork()
-{
-#ifdef XP_MAC
-  if (m_processADRsrcFk)
-  {
-    delete m_processADRsrcFk;
-    m_processADRsrcFk = nsnull;
-  }
-#endif
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSaveMsgListener::OnStartAppleDoubleResourceFork()
-{
-#ifdef XP_MAC
-  if (m_fileSpec)
-  {
-    nsFileSpec realSpec;
-    m_fileSpec->GetFileSpec(&realSpec);
-    
-    if (m_processADRsrcFk)
-      return NS_ERROR_FAILURE;
-
-    OSErr anErr = -1;
-    m_processADRsrcFk = new ProcessAppleDoubleResourceFork;
-    if (m_processADRsrcFk)
-      anErr = m_processADRsrcFk->Initialize(realSpec);
-
-    if (anErr != noErr)
-      return NS_ERROR_FAILURE;
-  }
-#endif
-
-  return NS_OK;
-}
-
 
 #define MESSENGER_STRING_URL       "chrome://messenger/locale/messenger.properties"
 

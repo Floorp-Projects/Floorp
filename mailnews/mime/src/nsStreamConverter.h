@@ -60,6 +60,7 @@ public:
   NS_IMETHOD GetContentType(char **aOutputContentType);
   NS_IMETHOD InternalCleanup(void);
   NS_IMETHOD DetermineOutputFormat(const char *url, nsMimeOutputType *newType);
+  NS_IMETHOD FirePendingStartRequest(void);
 
 private:
   nsresult Close();
@@ -69,7 +70,7 @@ private:
   nsCOMPtr<nsIInputStream>	    mInputStream;
 
   nsCOMPtr<nsIStreamListener>   mOutListener;   // output stream listener
-  nsCOMPtr<nsIChannel>			mOutgoingChannel;
+  nsCOMPtr<nsIChannel>			    mOutgoingChannel;
 
   nsCOMPtr<nsIMimeEmitter>      mEmitter;       // emitter being used...
   nsCOMPtr<nsIURI>              mURI;           // URI being processed
@@ -89,11 +90,13 @@ private:
   PRBool                        mDoneParsing;     // If this is true, we've already been told by libmime to stop sending
                                                   // data so don't feed the parser any more!
   nsIMimeStreamConverterListener*	mMimeStreamConverterListener;
-  PRBool 						mForwardInline;
-  nsCOMPtr<nsIMsgIdentity>		mIdentity;
+  PRBool 						            mForwardInline;
+  nsCOMPtr<nsIMsgIdentity>		  mIdentity;
 #ifdef DEBUG_mscott  
   PRTime mConvertContentTime;
 #endif
+  nsIChannel *                  mPendingChannel;  //Will be use whenn we need to delay to fire onStartRequest
+  nsISupports *                 mPendingContext;  //Will be use whenn we need to delay to fire onStartRequest
 }; 
 
 #endif /* nsStreamConverter_h_ */

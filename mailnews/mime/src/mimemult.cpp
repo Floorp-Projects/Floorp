@@ -29,7 +29,6 @@
 #include "prio.h"
 #include "nsMimeStringResources.h"
 #include "nsMimeTypes.h"
-#include "nsISaveMsgListener.h"
 
 #ifdef XP_MAC
   extern MimeObjectClass mimeMultipartAppleDoubleClass;
@@ -385,30 +384,12 @@ MimeMultipart_create_child(MimeObject *obj)
 	  status = body->clazz->parse_begin(body);
 
 #ifdef XP_MAC
-    /* if we are saving an apple double attachment, we need to inform the output stream listener
-       which fork we are currently processing
-    */
+    /* if we are saving an apple double attachment, we need to set correctly the conten type of the channel */
     if (mime_typep(obj, (MimeObjectClass *) &mimeMultipartAppleDoubleClass))
     {
       struct mime_stream_data *msd = (struct mime_stream_data *)body->options->stream_closure;
-      
-      if (msd && msd->output_emitter)
-      {
-        nsCOMPtr<nsIStreamListener> outputListener;
-        msd->output_emitter->GetOutputListener(getter_AddRefs(outputListener));
-        nsCOMPtr<nsISaveMsgListener> saveListener(do_QueryInterface(outputListener));
-        if (saveListener)
-        {
-          if (body->content_type && !nsCRT::strcasecmp(body->content_type, APPLICATION_APPLEFILE))
-            saveListener->OnStartAppleDoubleResourceFork();
-          else
-          {
-            /* before start writting the data fork, we mush flush the emitter buffer */
-            msd->output_emitter->Complete();
-            saveListener->OnStartAppleDoubleDataFork();
-          }
-        }
-      }
+      if (!body->options->write_html_p && body->content_type && !nsCRT::strcasecmp(body->content_type, APPLICATION_APPLEFILE))
+        msd->channel->SetContentType(APPLICATION_APPLEFILE);
     }
 #endif
 
