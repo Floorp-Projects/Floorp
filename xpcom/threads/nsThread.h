@@ -37,6 +37,7 @@
 #include "nsIThread.h"
 #include "nsIThreadPool.h"
 #include "nsISupportsArray.h"
+#include "nsCOMArray.h"
 #include "prcvar.h"
 #include "nsCOMPtr.h"
 
@@ -103,8 +104,8 @@ protected:
     nsresult RemoveThread(nsIThread* currentThread);
 
     nsCOMPtr<nsISupportsArray>  mThreads;
-    nsCOMPtr<nsISupportsArray>  mPendingRequests;
-    nsCOMPtr<nsISupportsArray>  mRunningRequests;
+    nsCOMArray<nsIRunnable>     mPendingRequests;
+    nsCOMArray<nsIRunnable>     mRunningRequests;
     
     PRLock*                     mLock;
     PRCondVar*                  mThreadExit;
