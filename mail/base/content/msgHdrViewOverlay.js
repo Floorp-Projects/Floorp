@@ -849,6 +849,14 @@ function AddExtraAddressProcessing(emailAddress, addressNode)
     addressNode.setAttribute('label', displayName); 
 } 
 
+function fillEmailAddressPopup(emailAddressNode)
+{
+  var emailAddressPlaceHolder = document.getElementById('emailAddressPlaceHolder');
+  var emailAddress = emailAddressNode.getTextAttribute('emailAddress');
+
+  emailAddressPlaceHolder.setAttribute('label', emailAddress);
+}
+
 // returns true if we should use the display name for this address
 // otherwise returns false
 function useDisplayNameForAddress(emailAddress)
