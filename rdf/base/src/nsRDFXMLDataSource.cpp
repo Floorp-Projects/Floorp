@@ -538,6 +538,7 @@ RDFXMLDataSourceImpl::Init(const char* uri)
 {
 static const char kFileURIPrefix[] = "file:";
 static const char kResourceURIPrefix[] = "resource:";
+    nsAutoString utf8("UTF-8");
 
     NS_PRECONDITION(mInner != nsnull, "not initialized");
     if (! mInner)
@@ -601,6 +602,8 @@ static const char kResourceURIPrefix[] = "resource:";
                                                     kIParserIID,
                                                     (void**) &parser)))
         goto done;
+
+    parser->SetDocumentCharset(utf8, kCharsetFromDocTypeDefault);
 
     parser->SetContentSink(sink);
 

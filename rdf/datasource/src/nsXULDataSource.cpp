@@ -354,6 +354,7 @@ static const char kResourceURIPrefix[] = "resource:";
     nsIDTD* dtd             = nsnull;
     nsIStreamListener* lsnr = nsnull;
     nsIURL* url             = nsnull;
+    nsAutoString utf8("UTF-8");
 
     if (NS_FAILED(rv = NS_NewURL(&url, uri)))
         goto done;
@@ -395,6 +396,7 @@ static const char kResourceURIPrefix[] = "resource:";
                                                     (void**) &parser)))
         goto done;
 
+    parser->SetDocumentCharset(utf8, kCharsetFromDocTypeDefault);
     parser->SetContentSink(sink);
 
     // XXX this should eventually be kRDFDTDCID (oh boy, that's a
