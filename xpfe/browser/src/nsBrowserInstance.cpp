@@ -2194,7 +2194,8 @@ nsBrowserInstance::CanHandleContent(const char * aContentType,
        *aDesiredContentType = nsCRT::strdup("text/html");
        *aCanHandleContent = PR_TRUE;
      }
-     if (nsCRT::strcasecmp(aContentType, "text/html") == 0)
+     if (nsCRT::strcasecmp(aContentType, "text/html") == 0
+       || nsCRT::strcasecmp(aContentType, "text/xul") == 0)
        *aCanHandleContent = PR_TRUE;
         
   }
