@@ -5,8 +5,8 @@
 # customizable settings.
 
 
-# $Revision: 1.39 $ 
-# $Date: 2002/05/03 04:16:40 $ 
+# $Revision: 1.40 $ 
+# $Date: 2002/05/03 19:43:58 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/TinderConfig.pm,v $ 
 # $Name:  $ 
@@ -312,6 +312,10 @@ $PersistenceImpl = (
                      'Persistence::Storable',
                    );
 
+# Do you wish the main status page to display the number of errors
+# which the error parser found in the build logs.
+
+$DISPLAY_BUILD_ERRORS = 0;
 
 # If you your using VCDisplay:Bonsai we need to know how to make HTML
 # to point to the bonsai CGI programs.
