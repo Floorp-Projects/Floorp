@@ -407,8 +407,11 @@ void nsTransform2D :: TransformCoord(nscoord *ptX, nscoord *ptY)
       break;
 
     case MG_2DSCALE | MG_2DTRANSLATION:
-      *ptX = NSToCoordRound(*ptX * m00 + m20);
-      *ptY = NSToCoordRound(*ptY * m11 + m21);
+      // You need to round the translation seperatly than the scale
+      // The translation is added into the matrix as pixels (after the scale
+      // multiply, so taking out the numbers requires it to be on pixel boundries
+      *ptX = NSToCoordRound(*ptX * m00) + NSToCoordRound(m20);
+      *ptY = NSToCoordRound(*ptY * m11) + NSToCoordRound(m21);
       break;
 
     default:
@@ -521,8 +524,11 @@ void nsTransform2D :: TransformCoord(nscoord *aX, nscoord *aY, nscoord *aWidth, 
       break;
 
     case MG_2DSCALE | MG_2DTRANSLATION:
-      *aX = NSToCoordRound(*aX * m00 + m20);
-      *aY = NSToCoordRound(*aY * m11 + m21);
+      // You need to round the translation seperatly than the scale
+      // The translation is added into the matrix as pixels (after the scale
+      // multiply, so taking out the numbers requires it to be on pixel boundries
+      *aX = NSToCoordRound(*aX * m00) + NSToCoordRound(m20);
+      *aY = NSToCoordRound(*aY * m11) + NSToCoordRound(m21);
       *aWidth = NSToCoordRound(*aWidth * m00);
       *aHeight = NSToCoordRound(*aHeight * m11);
       break;
@@ -531,7 +537,7 @@ void nsTransform2D :: TransformCoord(nscoord *aX, nscoord *aY, nscoord *aWidth, 
     case MG_2DGENERAL | MG_2DTRANSLATION:
       x = (float)*aX;
       y = (float)*aY;
-
+      
       *aX = NSToCoordRound(x * m00 + y * m10 + m20);
       *aY = NSToCoordRound(x * m01 + y * m11 + m21);
 
