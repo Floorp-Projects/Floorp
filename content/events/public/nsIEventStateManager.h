@@ -85,6 +85,9 @@ public:
 
   //Method for centralized distribution of new DOM events
   NS_IMETHOD DispatchNewEvent(nsISupports* aTarget, nsIDOMEvent* aEvent) = 0;
+
+  // Method for moving the focus forward/back.
+  NS_IMETHOD MoveFocus(PRBool aDirection, nsIContent* aRoot)=0;
 };
 
 #define NS_EVENT_STATE_UNSPECIFIED  0x0000
