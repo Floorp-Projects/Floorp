@@ -873,8 +873,11 @@ NS_IMETHODIMP
 nsDocument::AddPrincipal(nsIPrincipal *aNewPrincipal)
 {
   nsresult rv;
-  if (!mPrincipal)
-    GetPrincipal(nsnull);
+  if (!mPrincipal) {
+    nsCOMPtr<nsIPrincipal> principal;
+    rv = GetPrincipal(getter_AddRefs(principal));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   nsCOMPtr<nsIAggregatePrincipal> agg(do_QueryInterface(mPrincipal, &rv));
   if (NS_SUCCEEDED(rv)) {
