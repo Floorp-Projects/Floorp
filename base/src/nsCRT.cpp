@@ -198,6 +198,16 @@ PRUnichar nsCRT::ToLower(PRUnichar aChar)
   return TOLOWER(aChar);
 }
 
+PRBool nsCRT::IsUpper(PRUnichar aChar)
+{
+  return aChar != nsCRT::ToLower(aChar);
+}
+
+PRBool nsCRT::IsLower(PRUnichar aChar)
+{
+  return aChar != nsCRT::ToUpper(aChar);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // My lovely strtok routine
 
