@@ -854,7 +854,8 @@ void nsEudoraAddress::RememberGroupMembers(nsVoidArray &membersArray, nsVoidArra
       continue;
 
     PRInt32 memberCnt = membersArray.Count();
-    for (PRInt32 j = 0; j < memberCnt; j++)
+    PRInt32 j = 0;
+    for (j = 0; j < memberCnt; j++)
     {
       if (pData == membersArray.ElementAt(j))
         break;
