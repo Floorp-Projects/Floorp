@@ -150,7 +150,7 @@ menulist[disabled="true"] > .menulist-dropmarker {
   border: 1px solid #000000;
   border-right: none;
   background-color: #FFFFFF;
-  padding: 1px 0px 1px 2px;
+  padding: 2px 0px 2px 2px;
 }
 
 html|*.menulist-editable-input {
