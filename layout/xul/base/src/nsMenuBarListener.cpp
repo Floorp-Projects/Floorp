@@ -161,6 +161,8 @@ nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
       return NS_OK;       // don't consume event
   }
 
+  nsresult retVal = NS_OK;  // default is to not consume event
+  
   InitAccessKey();
 
   if (mAccessKey)
@@ -199,12 +201,13 @@ nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
           aKeyEvent->PreventBubble();
           aKeyEvent->PreventCapture();
           aKeyEvent->PreventDefault();
+          
+          retVal = NS_ERROR_BASE;       // I am consuming event
         }
-        return NS_ERROR_BASE; // I am consuming event
       }    
     } 
   }
-  return NS_OK;
+  return retVal;
 }
 
 PRBool
