@@ -47,6 +47,7 @@ XPIDLSRCS	= \
 		nsIMailboxSpec.idl \
 		nsIImapMailFolderSink.idl \
         nsIMsgImapMailFolder.idl \
+		nsIMsgLogonRedirector.idl \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
