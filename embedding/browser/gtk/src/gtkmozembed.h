@@ -103,8 +103,9 @@ GtkType      gtk_moz_embed_get_type         (void);
 GtkWidget   *gtk_moz_embed_new              (void);
 void         gtk_moz_embed_push_startup     (void);
 void         gtk_moz_embed_pop_startup      (void);
-void         gtk_moz_embed_set_comp_path    (char *aPath);
-void         gtk_moz_embed_set_profile_path (char *aDir, char *aName);
+void         gtk_moz_embed_set_comp_path    (const char *aPath);
+void         gtk_moz_embed_set_profile_path (const char *aDir,
+                                             const char *aName);
 void         gtk_moz_embed_load_url         (GtkMozEmbed *embed, 
 					     const char *url);
 void         gtk_moz_embed_stop_load        (GtkMozEmbed *embed);

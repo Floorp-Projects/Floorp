@@ -85,10 +85,10 @@ class EmbedPrivate {
 
   static void PushStartup     (void);
   static void PopStartup      (void);
-  static void SetCompPath     (char *aPath);
+  static void SetCompPath     (const char *aPath);
   static void SetAppComponents (const nsModuleComponentInfo* aComps,
                                 int aNumComponents);
-  static void SetProfilePath  (char *aDir, char *aName);
+  static void SetProfilePath  (const char *aDir, const char *aName);
   static void SetDirectoryServiceProvider (nsIDirectoryServiceProvider * appFileLocProvider);
 
   nsresult OpenStream         (const char *aBaseURI, const char *aContentType);
