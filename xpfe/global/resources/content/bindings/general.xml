@@ -209,7 +209,7 @@
 
   <binding id="statusbar-panel" extends="xul:button">
     <content>
-      <xul:hbox align="center" flex="1">
+      <xul:hbox class="statusbar-panel-box" align="center" flex="1">
         <xul:image class="statusbar-panel-icon" inherits="src"/>
         <xul:text class="statusbar-panel-text" inherits="value=label,crop" crop="right" flex="1"/>
       </xul:hbox>
