@@ -307,6 +307,10 @@ nsXBLEventHandler::MouseEventMatched(nsIDOMUIEvent* aMouseEvent)
 NS_IMETHODIMP
 nsXBLEventHandler::ExecuteHandler(const nsString& aEventName, nsIDOMEvent* aEvent)
 {
+  // We are the default action for this command.
+  // Stop any other default action from executing.
+  aEvent->PreventDefault();
+
   // This is a special-case optimization to make command handling fast.
   // It isn't really a part of XBL, but it helps speed things up.
   nsAutoString command;
