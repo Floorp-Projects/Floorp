@@ -709,8 +709,7 @@ gif_delay_time_callback(void *closure)
   gs->delay_timeout = NULL;
 
   if(gs->ic){
-        if(gs->ic->type != NULL)
-            nsCRT::free(gs->ic->type);
+     if(gs->ic->type == NULL)
         gs->ic->type = nsCRT::strdup("image/gif"); //mime string
   }
   else

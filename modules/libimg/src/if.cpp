@@ -1072,18 +1072,24 @@ IL_StreamFirstWrite(il_container *ic, const unsigned char *str, int32 len)
 
   /* we did our best. Gotta give up. */
   if (NS_FAILED(rv)){
-          return MK_IMAGE_LOSSAGE; 
-      
+      return MK_IMAGE_LOSSAGE; 
   }
   
   imgdec->SetContainer(ic);
+      // We will already have a decoder instance for this
+      //  image container if the image is animated. For now,
+      //  we release it before taking the new one. 
+      //  Later I'll see how animated image containers can
+      //   reuse the decoder for subsequent frames.
+  if(ic->imgdec)
+      NS_RELEASE(ic->imgdec);
   ic->imgdec = imgdec;
   
   rv = imgdec->ImgDInit();
 
   if(NS_FAILED(rv)){
-     NS_RELEASE(ic->imgdec);
-     ic->imgdec = nsnull; //ptn add il_delete_container()
+    NS_RELEASE(ic->imgdec);
+    ic->imgdec = nsnull; 
     ILTRACE(0,("il: image init failed"));
     return MK_OUT_OF_MEMORY;
   }
