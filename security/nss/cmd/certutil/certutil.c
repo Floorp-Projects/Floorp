@@ -1725,7 +1725,6 @@ AddSubjectAltNames(void *extHandle, const char *names, CERTGeneralNameType type)
 	    nameList = current;
 	}
 	current->type = type;
-	current->type = certRFC822Name;
 	current->name.other.data = (unsigned char *)tbuf;
 	current->name.other.len = PORT_Strlen(tbuf);
 	prev = &(current->l);
