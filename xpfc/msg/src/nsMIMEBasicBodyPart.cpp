@@ -18,6 +18,7 @@
 
 #include "nsMIMEBasicBodyPart.h"
 #include "nsxpfcCIID.h"
+#include "nspr.h"
 
 static NS_DEFINE_IID(kISupportsIID,     NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kMIMEBodyPartIID,  NS_IMIME_BODY_PART_IID);
@@ -25,11 +26,16 @@ static NS_DEFINE_IID(kMIMEBodyPartIID,  NS_IMIME_BODY_PART_IID);
 nsMIMEBasicBodyPart :: nsMIMEBasicBodyPart() : nsMIMEBodyPart()
 {
   NS_INIT_REFCNT();
-
+  mMimeBasicPart = nsnull;
 }
 
 nsMIMEBasicBodyPart :: ~nsMIMEBasicBodyPart()  
 {
+  if (nsnull != mMimeBasicPart)
+  {
+		mime_basicPart_free_all(mMimeBasicPart);
+		PR_Free (mMimeBasicPart);
+  }
 }
 
 NS_IMPL_ADDREF(nsMIMEBasicBodyPart)
@@ -39,5 +45,37 @@ NS_IMPL_QUERY_INTERFACE(nsMIMEBasicBodyPart, kMIMEBodyPartIID)
 nsresult nsMIMEBasicBodyPart::Init()
 {
   return (nsMIMEBodyPart::Init());
+}
+
+
+nsresult nsMIMEBasicBodyPart::SetBody(nsString& aBody)
+{
+  char * body = aBody.ToNewCString();
+
+	mMimeBasicPart = (mime_basicPart_t *) PR_Malloc (sizeof (mime_basicPart_t));
+
+	if (mMimeBasicPart == NULL)
+		return MIME_ERR_OUTOFMEMORY; // XXX convert
+	else   
+		memset (mMimeBasicPart, 0, sizeof (mime_basicPart_t));
+
+	mMimeBasicPart->content_type = MIME_CONTENT_TEXT;
+	mMimeBasicPart->content_subtype = strdup ("plain");
+	mMimeBasicPart->content_type_params = strdup ("charset=us-ascii");
+	mMimeBasicPart->encoding_type = MIME_ENCODING_7BIT;
+
+	int ret = mime_basicPart_setDataBuf (mMimeBasicPart, strlen (body), body, TRUE);
+
+	if (MIME_OK != ret)
+	{
+    delete body;
+		mime_basicPart_free_all(mMimeBasicPart);
+		free (mMimeBasicPart);
+		return ret;
+	}
+
+  delete body;
+
+  return NS_OK;
 }
 
