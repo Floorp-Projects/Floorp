@@ -612,6 +612,10 @@ nsresult
 nsLocalFile::CopyDirectoryTo(nsIFile *newParent)
 {
     nsresult rv;
+    /** 
+     *  dirCheck is used for various bool 
+     *  tests like Equals, Exists, isDir etc
+     */
     PRBool dirCheck, isSymlink;
     PRUint32 oldPerms;
 
@@ -659,20 +663,15 @@ nsLocalFile::CopyDirectoryTo(nsIFile *newParent)
         rv = dirIterator->GetNext((nsISupports**)getter_AddRefs(entry));
         if (NS_FAILED(rv)) 
             continue;
-        if (NS_FAILED(rv = entry->IsDirectory(&dirCheck)))
-            return rv;
         if (NS_FAILED(rv = entry->IsSymlink(&isSymlink)))
+            return rv;
+        if (NS_FAILED(rv = entry->IsDirectory(&dirCheck)))
             return rv;
         if (dirCheck && !isSymlink) {
             nsCOMPtr<nsIFile> destClone;
             rv = newParent->Clone(getter_AddRefs(destClone));
             if (NS_SUCCEEDED(rv)) {
                 nsCOMPtr<nsILocalFile> newDir(do_QueryInterface(destClone));
-                nsXPIDLCString leafName;
-                if (NS_FAILED(rv = entry->GetLeafName(getter_Copies(leafName))))
-                    return rv;
-                if (NS_FAILED(rv = newDir->Append(leafName)))
-                    return rv;
                 if (NS_FAILED(rv = entry->CopyTo(newDir, nsnull))) {
 #ifdef DEBUG
                     nsresult rv2;
@@ -708,7 +707,6 @@ NS_IMETHODIMP
 nsLocalFile::CopyTo(nsIFile *newParent, const char *newName)
 {
     nsresult rv;
-
     // check to make sure that this has been initialized properly
     CHECK_mPath();
 
@@ -760,8 +758,8 @@ nsLocalFile::CopyTo(nsIFile *newParent, const char *newName)
         PRUint32 myPerms;
         GetPermissions(&myPerms);
 
-        // create the new file with the same permissions
-        rv = newFile->Create(NORMAL_FILE_TYPE, myPerms);
+        // create the new file with user rwx permissions
+        rv = newFile->Create(NORMAL_FILE_TYPE, S_IRWXU);
         if (NS_FAILED(rv)) {
             NS_RELEASE(newFile);
             return rv;
@@ -772,16 +770,33 @@ nsLocalFile::CopyTo(nsIFile *newParent, const char *newName)
         PRInt32     modeFlags = myPerms;
         PRFileDesc *newFD;
 
-        rv = newFile->OpenNSPRFileDesc(openFlags, modeFlags, &newFD);
+        rv = newFile->OpenNSPRFileDesc(openFlags, S_IRWXU, &newFD);
         if (NS_FAILED(rv)) {
             NS_RELEASE(newFile);
             return rv;
         }
 
+        // set the permissions of newFile to original files 
+        if (NS_FAILED(rv = newFile->SetPermissions(myPerms)))
+            return rv;
+
         // open the old file, too
         openFlags = PR_RDONLY;
         PRFileDesc *oldFD;
 
+        PRBool specialFile;
+        if (NS_FAILED(rv = IsSpecial(&specialFile)))
+            return rv;
+        if (specialFile) {
+#ifdef DEBUG
+            printf("Operation not supported: %s\n", mPath.get());
+#endif
+            // make sure to clean up properly
+            PR_Close(newFD);
+            NS_RELEASE(newFile);
+            return NS_OK;
+        }
+               
         rv = OpenNSPRFileDesc(openFlags, modeFlags, &oldFD);
         if (NS_FAILED(rv)) {
             // make sure to clean up properly
@@ -831,7 +846,6 @@ nsLocalFile::CopyTo(nsIFile *newParent, const char *newName)
         if (bytesRead < 0) 
             return NS_ERROR_OUT_OF_MEMORY;
     }
-
     return rv;
 }
 
@@ -1296,11 +1310,9 @@ nsLocalFile::IsSpecial(PRBool *_retval)
 {
     NS_ENSURE_ARG_POINTER(_retval);
     VALIDATE_STAT_CACHE();
-    *_retval = S_ISCHR(mCachedStat.st_mode)    ||
+    *_retval = S_ISCHR(mCachedStat.st_mode)      ||
                  S_ISBLK(mCachedStat.st_mode)    ||
-#ifndef XP_BEOS
-                 S_ISSOCK(mCachedStat.st_mode) ||
-#endif
+                 S_ISSOCK(mCachedStat.st_mode)   ||
                  S_ISFIFO(mCachedStat.st_mode);
 
     return NS_OK;
