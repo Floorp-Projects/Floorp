@@ -303,8 +303,8 @@ void CnsICmdParams::RunAllTests()
 	else
 	    QAOutput("We didn't get nsICommandParams object.", 2);
 
-	SetBooleanValueTest(PR_TRUE, "state_attribute");
 	SetBooleanValueTest(PR_FALSE, "state_attribute");
+	SetBooleanValueTest(PR_TRUE, "state_attribute");
 	SetLongValueTest(15000000, "state_attribute");
 	SetDoubleValueTest(100.295375, "state_attribute");
 	SetStringValueTest("Hello world!", "state_attribute");

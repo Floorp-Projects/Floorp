@@ -74,7 +74,7 @@ public:
 	void IsCommandSupportedTest(const char *);
 	void IsCommandEnabledTest(const char *);
 	void GetCommandStateTest(const char *);
-	void DoCommandTest(const char *);
+	void DoCommandTest(const char *, const char *);
 	void OnStartTests(UINT nMenuID);
 	void RunAllTests();
 // Operations
