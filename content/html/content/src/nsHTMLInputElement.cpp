@@ -1502,6 +1502,9 @@ nsHTMLInputElement::HandleDOMEvent(nsPresContext* aPresContext,
                       rv = radioContent->HandleDOMEvent(aPresContext, &event,
                                                         nsnull, NS_EVENT_FLAG_INIT, 
                                                         &status);
+                      if (NS_SUCCEEDED(rv)) {
+                        *aEventStatus = nsEventStatus_eConsumeNoDefault;
+                      }
                     }
                   }
                 }
