@@ -693,7 +693,7 @@ BookmarksUIElement.prototype = {
   {
     if (aBookmarkItem.getAttribute("type") != NC_NS + "BookmarkSeparator") 
       openDialog("chrome://communicator/content/bookmarks/bm-props.xul",
-                 "", "centerscreen,chrome,dialog=no,resizable=no", 
+                 "", "centerscreen,chrome,resizable=no", 
                  NODE_ID(aBookmarkItem));
   },
 
@@ -701,7 +701,7 @@ BookmarksUIElement.prototype = {
   {
     openDialog("chrome://communicator/content/bookmarks/findBookmark.xul",
                "FindBookmarksWindow",
-               "dialog=no,centerscreen,resizable=no,chrome,dependent");
+               "centerscreen,resizable=no,chrome,dependent");
   },
 
   getLocaleString: function (aStringKey)
