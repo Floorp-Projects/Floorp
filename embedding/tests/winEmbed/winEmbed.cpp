@@ -257,11 +257,8 @@ NS_IMETHODIMP ProfileChangeObserver::Observe(nsISupports *aSubject, const char *
 }
 
 /* InitializeWindowCreator creates and hands off an object with a callback
-   to a window creation function. This will be used by Gecko C++ code
-   (never JS) to create new windows when no previous window is handy
-   to begin with. This is done in a few exceptional cases, like PSM code.
-   Failure to set this callback will only disable the ability to create
-   new windows under these circumstances. */
+   to a window creation function. This is how all new windows are opened,
+   except any created directly by the embedding app. */
 nsresult InitializeWindowCreator()
 {
     // create an nsWindowCreator and give it to the WindowWatcher service
@@ -303,7 +300,6 @@ nsresult OpenWebPage(const char *url)
            nsnull, getter_AddRefs(chrome));
     if (NS_SUCCEEDED(rv))
     {
-        WebBrowserChromeUI::ShowWindow(chrome, PR_TRUE);
         // Start loading a page
         nsCOMPtr<nsIWebBrowser> newBrowser;
         chrome->GetWebBrowser(getter_AddRefs(newBrowser));
@@ -1345,6 +1341,11 @@ nsresult AppCallbacks::CreateBrowserWindow(PRUint32 aChromeFlags,
   if (observerService)
     observerService->AddObserver(NS_STATIC_CAST(nsIObserver *, chrome),
                                  "profile-change-teardown", PR_FALSE);
+
+  // if opened as chrome, it'll be made visible after the chrome has loaded.
+  // otherwise, go ahead and show it now.
+  if (!(aChromeFlags & nsIWebBrowserChrome::CHROME_OPENAS_CHROME))
+    WebBrowserChromeUI::ShowWindow(*aNewWindow, PR_TRUE);
 
   return NS_OK;
 }
