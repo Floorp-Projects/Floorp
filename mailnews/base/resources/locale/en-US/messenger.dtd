@@ -133,14 +133,13 @@ Rights Reserved.
 <!ENTITY sortByFlagCmd.accesskey "f">  
 <!ENTITY sortByPriorityCmd.label "Priority">  
 <!ENTITY sortByPriorityCmd.accesskey "p">  
-<!ENTITY sortBySenderCmd.label "Sender">  
-<!ENTITY sortBySenderCmd.accesskey "r">  
 <!ENTITY sortBySizeCmd.label "Size">  
 <!ENTITY sortBySizeCmd.accesskey "z">  
 <!ENTITY sortByStatusCmd.label "Status">  
 <!ENTITY sortByStatusCmd.accesskey "u">  
 <!ENTITY sortBySubjectCmd.label "Subject">  
 <!ENTITY sortBySubjectCmd.accesskey "s">  
+<!-- Sender / Recipient lives in messenger.properties, since that item is dynamic -->
 <!ENTITY sortByUnreadCmd.label "Unread">  
 <!ENTITY sortByUnreadCmd.accesskey "n">  
 <!ENTITY sortByThreadCmd.label "Thread">  

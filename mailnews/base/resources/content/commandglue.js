@@ -291,11 +291,11 @@ function RerootFolder(uri, newFolder, viewType, viewFlags, sortType, sortOrder)
   // null this out, so we don't try sort.
   gDBView = null;
 
-  // if this is the drafts folder, the sent folder or the send later folder,
-  // set the columns like it was the sent folder
+  // if this is the drafts, sent, or send later folder,
+  // we show "Recipient" instead of "Author"
   SetSentFolderColumns(IsSpecialFolder(newFolder, MSG_FOLDER_FLAG_SENTMAIL | MSG_FOLDER_FLAG_DRAFTS | MSG_FOLDER_FLAG_QUEUE));
-  // now create the db view, which will sort it.
 
+  // now create the db view, which will sort it.
   CreateDBView(newFolder, viewType, viewFlags, sortType, sortOrder);
   // that should have initialized gDBView, now re-root the thread pane
   var outlinerView = gDBView.QueryInterface(Components.interfaces.nsIOutlinerView);
@@ -345,21 +345,20 @@ function SwitchView(command)
   {
     var outliner = GetThreadOutliner();
     outliner.boxObject.QueryInterface(Components.interfaces.nsIOutlinerBoxObject).view = outlinerView;
-    dump('set outliner view\n');
   }
 }
 
 function SetSentFolderColumns(isSentFolder)
 {
-  var senderColumn = document.getElementById("senderCol");
+  var senderOrRecipientColumn = document.getElementById("senderOrRecipientCol");
 
   if(isSentFolder)
   {
-    senderColumn.setAttribute("label", gMessengerBundle.getString("recipientColumnHeader"));
+    senderOrRecipientColumn.setAttribute("label", gMessengerBundle.getString("recipientColumnHeader"));
   }
   else
   {
-    senderColumn.setAttribute("label", gMessengerBundle.getString("senderColumnHeader"));
+    senderOrRecipientColumn.setAttribute("label", gMessengerBundle.getString("senderColumnHeader"));
   }
 }
 
@@ -403,8 +402,13 @@ function ConvertColumnIDToSortType(columnID)
     case "dateCol":
       sortKey = nsMsgViewSortType.byDate;
       break;
-    case "senderCol":
-      sortKey = nsMsgViewSortType.byAuthor;
+    case "senderOrRecipientCol":
+      if (IsSpecialFolderSelected(MSG_FOLDER_FLAG_SENTMAIL | MSG_FOLDER_FLAG_DRAFTS | MSG_FOLDER_FLAG_QUEUE)) {
+      	sortKey = nsMsgViewSortType.byRecipient;
+      }
+      else {
+      	sortKey = nsMsgViewSortType.byAuthor;
+      }
       break;
     case "subjectCol":
       sortKey = nsMsgViewSortType.bySubject;
@@ -448,7 +452,8 @@ function ConvertSortTypeToColumnID(sortKey)
       columnID = "dateCol";
       break;
     case nsMsgViewSortType.byAuthor:
-      columnID = "senderCol";
+    case nsMsgViewSortType.byRecipient:
+      columnID = "senderOrRecipientCol";
       break;
     case nsMsgViewSortType.bySubject:
       columnID = "subjectCol";
@@ -543,10 +548,15 @@ function CreateBareDBView(msgFolder, viewType, viewFlags, sortType, sortOrder)
   if (!gThreadPaneCommandUpdater)
     gThreadPaneCommandUpdater = new nsMsgDBViewCommandUpdater();
 
-  gCurSortType = sortType;
+  if ((sortType == nsMsgViewSortType.byAuthor) && IsSpecialFolder(msgFolder, MSG_FOLDER_FLAG_SENTMAIL | MSG_FOLDER_FLAG_DRAFTS | MSG_FOLDER_FLAG_QUEUE)) {
+    gCurSortType = nsMsgViewSortType.byRecipient;
+  }
+  else {
+    gCurSortType = sortType;
+  }
 
   gDBView.init(messenger, msgWindow, gThreadPaneCommandUpdater);
-  gDBView.open(msgFolder, sortType, sortOrder, viewFlags, count);
+  gDBView.open(msgFolder, gCurSortType, sortOrder, viewFlags, count);
 }
 
 function CreateDBView(msgFolder, viewType, viewFlags, sortType, sortOrder)
@@ -753,7 +763,7 @@ function OpenToFolder(item, folderURI)
 
 function IsSpecialFolder(msgFolder, flags)
 {
-    if ((msgFolder.flags & flags) == 0) {
+    if (!msgFolder || ((msgFolder.flags & flags) == 0)) {
         return false;
     }
     else {

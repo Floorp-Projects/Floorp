@@ -38,7 +38,7 @@ Rights Reserved.
   <outlinercol id="threadCol" display="&threadColumn.label;" class="outlinercol-header outlinercol-image outlinercol-inset-header threadColumnHeader" currentView="unthreaded" cycler="true" />
   <outlinercol id="subjectCol" class="outlinercol-header outlinercell-inset-header sortDirectionIndicator" persist="hidden width" flex="7" label="&subjectColumn.label;" primary="true"/>
   <splitter class="tree-splitter"/>
-  <outlinercol id="senderCol" class="outlinercol-header outlinercol-inset-header sortDirectionIndicator" persist="hidden width"  flex="4" label="&senderColumn.label;"/>
+  <outlinercol id="senderOrRecipientCol" class="outlinercol-header outlinercol-inset-header sortDirectionIndicator" persist="hidden width"  flex="4" label="&senderColumn.label;"/>
   <splitter class="tree-splitter"/>
   <outlinercol id="unreadButtonColHeader" fixed="true" persist="hidden" class="outlinercol-header outlinercol-image outlinercol-inset-header readColumnHeader" display="&readColumn.label;" cycler="true"/> 
   <splitter class="tree-splitter"/>

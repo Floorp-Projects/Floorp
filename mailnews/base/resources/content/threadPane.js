@@ -147,14 +147,14 @@ function MsgSortByDate()
     MsgSortThreadPane(nsMsgViewSortType.byDate);
 }
 
-function MsgSortBySender()
+function MsgSortBySenderOrRecipient()
 {
-    MsgSortThreadPane(nsMsgViewSortType.byAuthor);
-}
-
-function MsgSortByRecipient()
-{
-    MsgSortThreadPane(nsMsgViewSortType.byRecipient);
+    if (IsSpecialFolderSelected(MSG_FOLDER_FLAG_SENTMAIL | MSG_FOLDER_FLAG_DRAFTS | MSG_FOLDER_FLAG_QUEUE)) {
+      MsgSortThreadPane(nsMsgViewSortType.byRecipient);
+    }
+    else {
+      MsgSortThreadPane(nsMsgViewSortType.byAuthor);
+    }
 }
 
 function MsgSortByStatus()
@@ -272,10 +272,8 @@ function UpdateSortIndicators(sortType, sortOrder)
 
 function IsSpecialFolderSelected(flags)
 {
-	var selectedFolder = GetThreadPaneFolder();
-    if (!selectedFolder) return false;
-
-    if ((selectedFolder.flags & flags) == 0) {
+    var selectedFolder = GetThreadPaneFolder();
+    if (!selectedFolder || ((selectedFolder.flags & flags) == 0)) {
         return false;
     }
     else {
