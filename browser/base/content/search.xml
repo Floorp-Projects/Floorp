@@ -146,20 +146,22 @@
 
     <handlers>
 
-      <handler event="keypress" keycode="vk_up" modifiers="control">
+      <handler event="keypress" keycode="vk_up" modifiers="control" phase="capturing">
         <![CDATA[
           var currentEngine = this.currentEngine;
-          if (!currentEngine || currentEngine == "__PhoenixFindInPage")
-            return;
-          var searchEngineMenuitem = document.getElementById(currentEngine);
-          var newEngine = searchEngineMenuitem.previousSibling;
-          if (!newEngine.id)
-            newEngine = {id: "__PhoenixFindInPage"}
-          this.currentEngine = newEngine.id;
+          if (currentEngine && currentEngine != "__PhoenixFindInPage") {
+            var searchEngineMenuitem = document.getElementById(currentEngine);
+            var newEngine = searchEngineMenuitem.previousSibling;
+            if (!newEngine.id)
+              newEngine = {id: "__PhoenixFindInPage"}
+            this.currentEngine = newEngine.id;
+          }
+          event.preventDefault();
+          event.stopPropagation();
         ]]>
       </handler>
 
-      <handler event="keypress" keycode="vk_down" modifiers="control">
+      <handler event="keypress" keycode="vk_down" modifiers="control" phase="capturing">
         <![CDATA[
           var currentEngine = this.currentEngine;
           if (!currentEngine)
@@ -173,6 +175,8 @@
           }
           if (newEngine)
             this.currentEngine = newEngine.id;
+          event.preventDefault();
+          event.stopPropagation();
         ]]>
       </handler>
 

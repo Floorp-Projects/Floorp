@@ -328,11 +328,9 @@
       <method name="onKeyPress">
         <parameter name="aEvent"/>
         <body><![CDATA[
-          // this handler is called before the one in search.xml
-          // that's sucks because the next line will also cancel
-          // keys like ctrl-L, ctrl-N in the search bar.
-          if (aEvent.ctrlKey || aEvent.metaKey || aEvent.altKey)
-            return false; // don't capture key + modifiers
+          //XXXpch this is so bogus...
+          if (aEvent.getPreventDefault())
+            return false;
 
           var cancel = false;
           const IController = Components.interfaces.nsIAutoCompleteController;
