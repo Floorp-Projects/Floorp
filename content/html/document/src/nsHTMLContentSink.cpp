@@ -4656,7 +4656,7 @@ HTMLContentSink::ProcessHeaderData(nsIAtom* aHeader,const nsAReadableString& aVa
 
     nsCOMPtr<nsIRefreshURI> reefer = do_QueryInterface(mWebShell);
     if (reefer) {
-      rv = reefer->RefreshURIFromHeader(baseURI, aValue);
+      rv = reefer->SetupRefreshURIFromHeader(baseURI, aValue);
       if (NS_FAILED(rv)) return rv;
     }
   } // END refresh

@@ -122,6 +122,7 @@ public:
  
     // nsITimerCallback interface
     NS_IMETHOD_(void) Notify(nsITimer * timer);
+    PRInt32 GetDelay() { return mDelay ;}
 
     nsCOMPtr<nsIDocShell> mDocShell;
     nsCOMPtr<nsIURI>      mURI;
@@ -129,6 +130,7 @@ public:
     PRInt32               mDelay;
     PRBool                mMetaRefresh;
 
+    
 protected:
     virtual ~nsRefreshTimer();
 };
@@ -245,6 +247,7 @@ protected:
     NS_IMETHOD EnsureScriptEnvironment();
     NS_IMETHOD EnsureEditorData();
     NS_IMETHOD EnsureFind();
+    NS_IMETHOD RefreshURIFromQueue();
 
     static  inline  PRUint32
     PRTimeToSeconds(PRTime t_usec)
