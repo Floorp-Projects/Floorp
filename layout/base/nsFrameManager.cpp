@@ -157,6 +157,10 @@ public:
   // nsIFrameManager
   NS_IMETHOD Init(nsIPresShell* aPresShell, nsIStyleSet* aStyleSet);
 
+  // Gets and sets the root frame
+  NS_IMETHOD GetRootFrame(nsIFrame** aRootFrame) const;
+  NS_IMETHOD SetRootFrame(nsIFrame* aRootFrame);
+  
   // Primary frame functions
   NS_IMETHOD GetPrimaryFrameFor(nsIContent* aContent, nsIFrame** aPrimaryFrame);
   NS_IMETHOD SetPrimaryFrameFor(nsIContent* aContent,
@@ -255,6 +259,7 @@ private:
 
   nsIPresShell*                   mPresShell;    // weak link, because the pres shell owns us
   nsIStyleSet*                    mStyleSet;     // weak link. pres shell holds a reference
+  nsIFrame*                       mRootFrame;
   nsDST::NodeArena*               mDSTNodeArena; // weak link. DST owns
   nsDST*                          mPrimaryFrameMap;
   FrameHashTable*                 mPlaceholderMap;
@@ -312,10 +317,23 @@ FrameManager::~FrameManager()
 {
   // Revoke any events posted to the event queue that we haven't processed yet
   RevokePostedEvents();
-  
+
   delete mPrimaryFrameMap;
   delete mPlaceholderMap;
   delete mUndisplayedMap;
+  
+  // Destroy the frame hierarchy. Don't destroy the property lists until after
+  // we've destroyed the frame hierarchy because some frames may expect to be
+  // able to retrieve their properties during destruction
+  if (mRootFrame) {
+    nsIPresContext* presContext;
+
+    mPresShell->GetPresContext(&presContext);
+    mRootFrame->Destroy(*presContext);
+    mRootFrame = nsnull;
+    NS_IF_RELEASE(presContext);
+  }
+  
   DestroyPropertyList();
 }
 
@@ -343,6 +361,26 @@ FrameManager::Init(nsIPresShell* aPresShell,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+FrameManager::GetRootFrame(nsIFrame** aRootFrame) const
+{
+  NS_ENSURE_ARG_POINTER(aRootFrame);
+  *aRootFrame = mRootFrame;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+FrameManager::SetRootFrame(nsIFrame* aRootFrame)
+{
+  NS_PRECONDITION(!mRootFrame, "already have a root frame");
+  if (mRootFrame) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  mRootFrame = aRootFrame;
   return NS_OK;
 }
 

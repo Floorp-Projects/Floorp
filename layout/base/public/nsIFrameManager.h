@@ -57,6 +57,12 @@ public:
   // Initialization
   NS_IMETHOD Init(nsIPresShell* aPresShell, nsIStyleSet* aStyleSet) = 0;
 
+  // Gets and sets the root frame (typically the viewport). The lifetime of the
+  // root frame is controlled by the frame manager. When the frame manager is
+  // destroyed it destroys the entire frame hierarchy
+  NS_IMETHOD GetRootFrame(nsIFrame** aRootFrame) const = 0;
+  NS_IMETHOD SetRootFrame(nsIFrame* aRootFrame) = 0;
+
   // Primary frame functions
   NS_IMETHOD GetPrimaryFrameFor(nsIContent* aContent, nsIFrame** aPrimaryFrame) = 0;
   NS_IMETHOD SetPrimaryFrameFor(nsIContent* aContent,
