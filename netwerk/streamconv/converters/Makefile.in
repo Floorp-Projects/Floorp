@@ -40,11 +40,7 @@ CPPSRCS		= \
 		nsUnknownDecoder.cpp \
 		nsHTTPChunkConv.cpp \
 		nsHTTPCompressConv.cpp \
-		$(NULL)
-
-EXPORTS		= \
-		nsMultiMixedConv.h \
-		nsFTPDirListingConv.h \
+		nsTXTToHTMLConv.cpp \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS) \
