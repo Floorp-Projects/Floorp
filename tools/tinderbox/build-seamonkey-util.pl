@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.291 $ ';
+$::UtilsVersion = '$Revision: 1.292 $ ';
 
 package TinderUtils;
 
@@ -1072,7 +1072,7 @@ sub get_profile_dir {
     my $profile_dir;
 
     # XXXldb Many of these codepaths look like they won't actually return
-    # an empty string when there's no profile directory, which callers
+    # a nonexistant directory when there's no profile directory, which callers
     # depend on this function doing.  In particular, the use of
     #   ($profile_dir) = <$profile_dir . "...">;
     # doesn't overwrite $profile_dir when the <> gives a 0-length list.
