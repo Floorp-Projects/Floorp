@@ -1972,92 +1972,87 @@ void
 nsHTMLReflowState::CalculateBlockSideMargins(nscoord aAvailWidth,
                                              nscoord aComputedWidth)
 {
+  // Because of the ugly way we do intrinsic sizing within Reflow, this method
+  // doesn't necessarily produce the right results.  The results will be
+  // adjusted in nsBlockReflowContext::AlignBlockHorizontally after reflow.
+  // The code for tables is particularly sensitive to regressions; the
+  // numerous |isTable| checks are technically incorrect, but necessary
+  // for basic testcases.
+
   // We can only provide values for auto side margins in a constrained
   // reflow. For unconstrained reflow there is no effective width to
   // compute against...
-  if ((NS_UNCONSTRAINEDSIZE == aComputedWidth) ||
-      (NS_UNCONSTRAINEDSIZE == aAvailWidth)) {
+  if (NS_UNCONSTRAINEDSIZE == aComputedWidth ||
+      NS_UNCONSTRAINEDSIZE == aAvailWidth)
     return;
-  }
 
   nscoord sum = mComputedMargin.left + mComputedBorderPadding.left +
     aComputedWidth + mComputedBorderPadding.right + mComputedMargin.right;
-  if (sum == aAvailWidth) {
+  if (sum == aAvailWidth)
     // The sum is already correct
     return;
-  }
 
   // Determine the left and right margin values. The width value
   // remains constant while we do this.
+
+  PRBool isTable = mStyleDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE ||
+                   mStyleDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE_CAPTION;
+
+  // Calculate how much space is available for margins
+  nscoord availMarginSpace = aAvailWidth - sum;
+
+  // XXXldb Should this be quirks-mode only?  And why captions?
+  if (isTable)
+    // XXXldb Why does this break things so badly if this is changed to
+    // availMarginSpace += mComputedBorderPadding.left +
+    //                     mComputedBorderPadding.right;
+    availMarginSpace = aAvailWidth - aComputedWidth;
+
+  // If the available margin space is negative, then don't follow the
+  // usual overconstraint rules.
+  if (availMarginSpace < 0) {
+    if (!isTable) {
+      if (mStyleVisibility->mDirection == NS_STYLE_DIRECTION_LTR) {
+        mComputedMargin.right += availMarginSpace;
+      } else {
+        mComputedMargin.left += availMarginSpace;
+      }
+    } else {
+      mComputedMargin.left = 0;
+      mComputedMargin.right = 0;
+      if (mStyleVisibility->mDirection == NS_STYLE_DIRECTION_RTL) {
+        mComputedMargin.left = availMarginSpace;
+      }
+    }
+    return;
+  }
+
+  // The css2 spec clearly defines how block elements should behave
+  // in section 10.3.3.
   PRBool isAutoLeftMargin =
     eStyleUnit_Auto == mStyleMargin->mMargin.GetLeftUnit();
   PRBool isAutoRightMargin =
     eStyleUnit_Auto == mStyleMargin->mMargin.GetRightUnit();
-
-  // Calculate how much space is available for margins
-  nscoord availMarginSpace = aAvailWidth - aComputedWidth -
-    mComputedBorderPadding.left - mComputedBorderPadding.right;
-
-  // XXXldb Why are tables special?
-  if ((mStyleDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE) ||
-      (mStyleDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE_CAPTION))  {
-    // Special rules for tables. In general, tables will stick to the
-    // left edge when they are too large otherwise they behave like
-    // blocks.
-
-    // the borderpadding should not influence the margin relative to the 
-    // outertable frame  
-    availMarginSpace = aAvailWidth - aComputedWidth;
-
-    if (availMarginSpace < 0) {
-      // Whoops - the TABLE element is too large for the available
-      // space. In this case use the "direction" property to pin the
-      // element to the left or right side. Note that we look at the
-      // parent's direction since the parent will be placing this
-      // element.
-      mComputedMargin.left = 0;
-      mComputedMargin.right = 0;
-      const nsHTMLReflowState* prs = (const nsHTMLReflowState*)
-        parentReflowState;
-      if (prs && (NS_STYLE_DIRECTION_RTL == prs->mStyleVisibility->mDirection)) {
-        mComputedMargin.left = availMarginSpace;
-      }
-      isAutoLeftMargin = isAutoRightMargin = PR_FALSE;
+  if (!isAutoLeftMargin && !isAutoRightMargin && !isTable) {
+    // Neither margin is 'auto' so we're over constrained. Use the
+    // 'direction' property of the parent to tell which margin to
+    // ignore
+    // First check if there is an HTML alignment that we should honor
+    const nsHTMLReflowState* prs = parentReflowState;
+    if (prs &&
+        (prs->mStyleText->mTextAlign == NS_STYLE_TEXT_ALIGN_MOZ_CENTER ||
+         prs->mStyleText->mTextAlign == NS_STYLE_TEXT_ALIGN_MOZ_RIGHT)) {
+      isAutoLeftMargin = PR_TRUE;
+      isAutoRightMargin =
+        prs->mStyleText->mTextAlign == NS_STYLE_TEXT_ALIGN_MOZ_CENTER;
     }
-  }
-  else {
-    // The css2 spec clearly defines how block elements should be have
-    // in section 10.3.3.
-    if (!isAutoLeftMargin && !isAutoRightMargin) {
-      // Neither margin is 'auto' so we're over constrained. Use the
-      // 'direction' property of the parent to tell which margin to
-      // ignore
-      const nsHTMLReflowState* prs = (const nsHTMLReflowState*)
-        parentReflowState;
-      if (prs) {
-
-        // First check if there is an HTML alignment that we should honor
-        if ((prs->mStyleText->mTextAlign == NS_STYLE_TEXT_ALIGN_MOZ_CENTER) ||
-            (prs->mStyleText->mTextAlign == NS_STYLE_TEXT_ALIGN_MOZ_RIGHT))
-        {
-          isAutoLeftMargin = PR_TRUE;
-          isAutoRightMargin =
-            (prs->mStyleText->mTextAlign == NS_STYLE_TEXT_ALIGN_MOZ_CENTER);
-        } else
-        // Otherwise apply the CSS rules
-        if (NS_STYLE_DIRECTION_LTR == prs->mStyleVisibility->mDirection) {
-          // The specified value of margin-right is ignored (== forced
-          // to auto)
-          isAutoRightMargin = PR_TRUE;
-        }
-        else {
-          isAutoLeftMargin = PR_TRUE;
-        }
-      }
-      else {
-        // No parent reflow state -- assume direction is ltr
-        isAutoRightMargin = PR_TRUE;
-      }
+    // Otherwise apply the CSS rules, and ignore one margin by forcing
+    // it to 'auto', depending on 'direction'.
+    else if (NS_STYLE_DIRECTION_LTR == mStyleVisibility->mDirection) {
+      isAutoRightMargin = PR_TRUE;
+    }
+    else {
+      isAutoLeftMargin = PR_TRUE;
     }
   }
 
@@ -2068,10 +2063,10 @@ nsHTMLReflowState::CalculateBlockSideMargins(nscoord aAvailWidth,
       mComputedMargin.left = availMarginSpace / 2;
       mComputedMargin.right = availMarginSpace - mComputedMargin.left;
     } else {
-      mComputedMargin.left = availMarginSpace - mComputedMargin.right;
+      mComputedMargin.left = availMarginSpace;
     }
   } else if (isAutoRightMargin) {
-    mComputedMargin.right = availMarginSpace - mComputedMargin.left;
+    mComputedMargin.right = availMarginSpace;
   }
 }
 
