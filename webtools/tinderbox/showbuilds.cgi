@@ -689,7 +689,7 @@ sub do_panel {
 
   print q(
     <head>
-      <META HTTP-EQUIV="Refresh" CONTENT="60">
+      <META HTTP-EQUIV="Refresh" CONTENT="300">
       <style>
         body, td { 
           font-family: Verdana, Sans-Serif;
