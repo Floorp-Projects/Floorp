@@ -641,7 +641,7 @@ nsDOMCSSAttributeDeclaration::StylePropertyChanged(const nsString& aPropertyName
   if (nsnull != mContent) {
     nsIDocument *doc;
     result = mContent->GetDocument(doc);
-    if (NS_OK == result) {
+    if (NS_SUCCEEDED(result) && (nsnull != doc)) {
       result = doc->AttributeChanged(mContent, nsHTMLAtoms::style, aHint);
       NS_RELEASE(doc);
     }
@@ -2880,11 +2880,13 @@ nsGenericHTMLElement::TriggerLink(nsIPresContext& aPresContext,
                                   PRBool aClick)
 {
   nsILinkHandler* handler;
-  if (NS_OK == aPresContext.GetLinkHandler(&handler) && (nsnull != handler)) {
+  nsresult rv = aPresContext.GetLinkHandler(&handler);
+  if (NS_SUCCEEDED(rv) && (nsnull != handler)) {
     // Resolve url to an absolute url
     nsIURL* docURL = nsnull;
     nsIDocument* doc;
-    if (NS_OK == GetDocument(doc)) {
+    rv = GetDocument(doc);
+    if (NS_SUCCEEDED(rv) && (nsnull != doc)) {
       docURL = doc->GetDocumentURL();
       NS_RELEASE(doc);
     }
@@ -2897,9 +2899,7 @@ nsGenericHTMLElement::TriggerLink(nsIPresContext& aPresContext,
       absURLSpec = aURLSpec;
     }
 
-    if (nsnull != docURL) {
-      NS_RELEASE(docURL);
-    }
+    NS_IF_RELEASE(docURL);
 
     // Now pass on absolute url to the click handler
     if (aClick) {
@@ -2935,10 +2935,13 @@ nsGenericHTMLLeafElement::CopyInnerTo(nsIHTMLContent* aSrcContent,
 nsresult
 nsGenericHTMLLeafElement::GetChildNodes(nsIDOMNodeList** aChildNodes)
 {
-  nsDOMSlots *slots = GetDOMSlots();
+  nsDOMSlots* slots = GetDOMSlots();
 
   if (nsnull == slots->mChildNodes) {
     slots->mChildNodes = new nsChildContentList(nsnull);
+    if (nsnull == slots->mChildNodes) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
     NS_ADDREF(slots->mChildNodes);
   }
 
