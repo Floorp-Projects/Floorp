@@ -116,6 +116,15 @@ struct nsKeyEvent : public nsGUIEvent {
 };
 
 /**
+ * Tooltip event
+ */
+
+struct nsTooltipEvent : public nsGUIEvent {
+                /// Index of tooltip area which generated the event. @see SetTooltips in nsIWidget
+    PRUint32        tipIndex;           
+};
+
+/**
  * GUI MESSAGES
  */
  //@{

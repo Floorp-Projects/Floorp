@@ -761,7 +761,10 @@ nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
 
         case NS_SHOW_TOOLTIP:
           {
-            statusText->SetText("Show tooltip");
+            char buf[256];
+            nsTooltipEvent* tEvent = (nsTooltipEvent*)aEvent;
+            sprintf(buf,"Show tooltip %d", tEvent->tipIndex);
+            statusText->SetText(buf);
             nsRect oldPos;
             oldPos.x = aEvent->point.x;
             oldPos.y = aEvent->point.y;
@@ -892,7 +895,7 @@ nsEventStatus PR_CALLBACK HandleFileButtonEvent(nsGUIEvent *aEvent)
       nsString titles[] = {"all files","html","executables" };
       nsString filters[] = {"*.*", "*.html", "*.exe" };
       fileWidget->SetFilterList(3, titles, filters);
-      fileWidget->Create(nsnull,
+      fileWidget->Create(window,
                          title,
                          eMode_save,
                          nsnull,
@@ -941,21 +944,47 @@ void SetTooltipPos(int pos, nsIWidget *aWidget, nsIButton *aButton1, nsIButton *
 {
   switch(pos) {
     case 1: {
-      nsRect* tips1 = {&nsRect(kTooltip1_x,kTooltip1_y,
-                      kTooltip1_width,kTooltip1_height)};
-      aWidget->SetTooltips(1, tips1);
+      nsRect* tips1[2];
+      tips1[0] = new nsRect(
+                        kTooltip1_x,
+                        kTooltip1_y,
+                        kTooltip1_width / 2,
+                        kTooltip1_height);
+      tips1[1] = new nsRect(
+                        kTooltip1_x + (kTooltip1_width / 2),
+                        kTooltip1_y,
+                        kTooltip1_width / 2,
+                        kTooltip1_height);
+      aWidget->SetTooltips(2, tips1);
       aButton1->Move(kTooltip1_x, kTooltip1_y);
       aButton2->Move(kTooltip1_x + kTooltip1_width,
                      kTooltip1_y + kTooltip1_height);
+      delete tips1[0];
+      delete tips1[1];
             }
       break;
     case 2: {
-      nsRect* tips2 = {&nsRect(kTooltip2_x,kTooltip2_y,
-                      kTooltip2_width,kTooltip2_height)};
-      aWidget->SetTooltips(1, tips2);
+      nsRect* tipsDummy[1];
+
+        // Test updating the tooltips by initialy giving a tooltip
+        // location that is 100 pixels to the left, then changing
+        // it to the correct position.
+      tipsDummy[0] = new nsRect(kTooltip2_x - 100,kTooltip2_y,
+                      kTooltip2_width,kTooltip2_height);
+     
+      aWidget->SetTooltips(1, tipsDummy);
+
+      nsRect* tips2[1];
+      tips2[0] = new nsRect(kTooltip2_x,kTooltip2_y,
+                      kTooltip2_width,kTooltip2_height);
+
+      aWidget->UpdateTooltips(tips2); // Put it in the correct position
+
       aButton1->Move(kTooltip2_x, kTooltip2_y);
       aButton2->Move(kTooltip2_x + kTooltip2_width,
                      kTooltip2_y + kTooltip2_height);
+      delete tips2[0];
+      delete tipsDummy[0];
       }
       break;
     }
