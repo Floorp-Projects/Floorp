@@ -57,10 +57,6 @@
 <!ENTITY dcharThaiCmd.label "Thai (TIS-620)">
 <!ENTITY dcharArmCmd.label "Armenian (ARMSCII-8)">
 
-
-<!-- Insert menu items -->
-<!ENTITY insertMenu.label ".Insert">
-
 <!-- Format menu items -->
 <!ENTITY formatMenu.label "Format">
 
