@@ -711,15 +711,15 @@
   <button class="button-toolbar" id="IncreaseFontSizeButton" observes="cmd_increaseFont"
           tooltip="aTooltip"     tooltiptext="&increaseFontSizeToolbarCmd.tooltip;"/>
 
-  <button class="button-toolbar" id="boldButton" align="center" observes="cmd_bold"
+  <button class="button-toolbar" id="boldButton" observes="cmd_bold"
           tooltip="aTooltip"     tooltiptext="&boldToolbarCmd.tooltip;">
     <observes element="cmd_bold" attribute="state" onbroadcast="onButtonUpdate(this.parentNode, 'cmd_bold')"/>
   </button>
-  <button class="button-toolbar" id="italicButton" align="center" observes="cmd_italic"
+  <button class="button-toolbar" id="italicButton" observes="cmd_italic"
           tooltip="aTooltip"     tooltiptext="&italicToolbarCmd.tooltip;">
     <observes element="cmd_italic" attribute="state" onbroadcast="onButtonUpdate(this.parentNode, 'cmd_italic')"/>
   </button>
-  <button class="button-toolbar" id="underlineButton" align="center" observes="cmd_underline"
+  <button class="button-toolbar" id="underlineButton" observes="cmd_underline"
           tooltip="aTooltip"     tooltiptext="&underlineToolbarCmd.tooltip;">
     <observes element="cmd_underline" attribute="state" onbroadcast="onButtonUpdate(this.parentNode, 'cmd_underline')"/>
   </button>

@@ -66,18 +66,17 @@ function Startup()
     
   // Element to edit is passed in
   element = window.arguments[1];
-  if (!element || element == "undefined") {
+  if (!element || element == undefined) {
     dump("Advanced Edit: Element to edit not supplied\n");
     window.close();  
   }
-  dump("*** Element passed into Advanced Edit: "+element+" ***\n");
 
   // place the tag name in the header
   var tagLabel = document.getElementById("tagLabel");
-  tagLabel.setAttribute("value", ("<" + element.nodeName + ">"));
+  tagLabel.setAttribute("value", ("<" + element.localName + ">"));
 
   // Create dialog object to store controls for easy access
-  dialog                            = new Object;
+  dialog                            = {};
   dialog.AddHTMLAttributeNameInput  = document.getElementById("AddHTMLAttributeNameInput");
   dialog.AddHTMLAttributeValueInput = document.getElementById("AddHTMLAttributeValueInput");
   dialog.AddHTMLAttribute           = document.getElementById("AddHTMLAttribute");
