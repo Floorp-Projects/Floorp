@@ -29,29 +29,30 @@
 class nsILookAndFeel: public nsISupports {
 public:
   typedef enum {
-    WindowBackground,
-    WindowForeground,
-    WidgetBackground,
-    WidgetForeground,
-    WidgetSelectBackground,
-    WidgetSelectForeground,
-    Widget3DHighlight,
-    Widget3DShadow,
-    TextBackground,
-    TextForeground,
-    TextSelectBackground,
-    TextSelectForeground
+    eColor_WindowBackground,
+    eColor_WindowForeground,
+    eColor_WidgetBackground,
+    eColor_WidgetForeground,
+    eColor_WidgetSelectBackground,
+    eColor_WidgetSelectForeground,
+    eColor_Widget3DHighlight,
+    eColor_Widget3DShadow,
+    eColor_TextBackground,
+    eColor_TextForeground,
+    eColor_TextSelectBackground,
+    eColor_TextSelectForeground
   } nsColorID;
 
   typedef enum {
-    WindowTitleHeight,
-    WindowBorderWidth,
-    WindowBorderHeight,
-    Widget3DBorder
+    eMetric_WindowTitleHeight,
+    eMetric_WindowBorderWidth,
+    eMetric_WindowBorderHeight,
+    eMetric_Widget3DBorder,
+    eMetric_TextFieldHeight,
   } nsMetricID;
 
-  NS_IMETHOD_(nscolor) GetColor(nsColorID aID) = 0;
-  NS_IMETHOD_(PRInt32) GetMetric(nsMetricID aID) = 0;
+  NS_IMETHOD GetColor(const nsColorID aID, nscolor &aColor) = 0;
+  NS_IMETHOD GetMetric(const nsMetricID aID, PRInt32 & aMetric) = 0;
 };
 
 #define nsLAF nsILookAndFeel
