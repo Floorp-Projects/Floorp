@@ -16,7 +16,7 @@ comm.jar:
       content/editor/EditorAllTags.css                         (composer/content/EditorAllTags.css) 
       content/editor/EditorParagraphMarks.css                  (composer/content/EditorParagraphMarks.css)
       content/editor/EditorContent.css                         (composer/content/EditorContent.css)  
-      content/editor/editorOverlay.xul                         (composer/content/editorOverlay.xul) 
+*     content/editor/editorOverlay.xul                         (composer/content/editorOverlay.xul) 
       content/editor/editorOverlay.js                          (composer/content/editorOverlay.js) 
       content/editor/composerOverlay.xul                       (composer/content/composerOverlay.xul) 
       content/editor/pref-toolbars.xul                         (composer/content/pref-toolbars.xul) 
