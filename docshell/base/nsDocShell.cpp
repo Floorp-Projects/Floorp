@@ -2242,7 +2242,7 @@ NS_IMETHODIMP nsDocShell::Embed(nsIContentViewer* aContentViewer,
     nsCOMPtr<nsILayoutHistoryState> layoutState;
 
     rv = OSHE->GetLayoutHistoryState(getter_AddRefs(layoutState));
-    if (layoutState) {
+    if (layoutState && (mLoadType != nsIDocShellLoadInfo::loadNormalReplace)) {
       // This is a SH load. That's why there is a LayoutHistoryState in OSHE
       nsCOMPtr<nsIPresShell> presShell;
       rv = GetPresShell(getter_AddRefs(presShell));
@@ -3344,7 +3344,8 @@ nsresult nsDocShell::AddToSessionHistory(nsIURI *aURI,
   // will be deleted when it loses scope...
   //
   if (mSessionHistory) {
-    rv = mSessionHistory->AddEntry(entry, shouldPersist);
+	  if (mLoadType != nsIDocShellLoadInfo::loadNormalReplace)
+         rv = mSessionHistory->AddEntry(entry, shouldPersist);
   } else {
     rv = AddChildSHEntry(nsnull, entry, mChildOffset);
   }
