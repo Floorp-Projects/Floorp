@@ -230,6 +230,12 @@ NS_IMETHODIMP GlobalWindowImpl::GetContext(nsIScriptContext **aContext)
 
 NS_IMETHODIMP GlobalWindowImpl::SetNewDocument(nsIDOMDocument *aDocument)
 {
+   if (aDocument) {
+      nsCOMPtr<nsIDocument> doc(do_QueryInterface(aDocument));
+      if (doc)
+         doc->GetPrincipal(getter_AddRefs(mDocumentPrincipal));
+   }
+
    if(mFirstDocumentLoad)
       {
       mFirstDocumentLoad = PR_FALSE;
@@ -457,10 +463,15 @@ NS_IMETHODIMP GlobalWindowImpl::HandleDOMEvent(nsIPresContext* aPresContext,
 
 NS_IMETHODIMP GlobalWindowImpl::GetPrincipal(nsIPrincipal **result) 
 {
-   nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
-   if(doc)
-      return doc->GetPrincipal(result);
-   return NS_ERROR_FAILURE;
+   if (!mDocumentPrincipal)
+     return NS_ERROR_FAILURE;
+
+   NS_ENSURE_ARG_POINTER(result);
+   
+   *result = mDocumentPrincipal;
+   NS_ADDREF(*result);
+
+   return NS_OK;
 }
 
 //*****************************************************************************
