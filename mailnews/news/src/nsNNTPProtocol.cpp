@@ -3836,7 +3836,7 @@ PRInt32 nsNNTPProtocol::PostMessageInFile(nsIFileSpec *aPostMessageFile)
     // calls to post data...
 
 	// always issue a '.' and CRLF when we are done...
-    PL_strcpy(m_dataBuf, CRLF "." CRLF);
+    PL_strcpy(m_dataBuf, "." CRLF);
 	if (url)
 		SendData(url, m_dataBuf);
 #ifdef UNREADY_CODE
@@ -3878,7 +3878,7 @@ PRInt32 nsNNTPProtocol::PostData()
     {
         /* normal done
          */
-        PL_strcpy(cd->output_buffer, CRLF "." CRLF);
+        PL_strcpy(cd->output_buffer, "." CRLF);
         NNTP_LOG_WRITE(cd->output_buffer);
         status = (int) NET_BlockingWrite(ce->socket,
                                             cd->output_buffer,
@@ -4437,9 +4437,10 @@ PRInt32 nsNNTPProtocol::DoCancel()
                        "Newsgroups: %s" CRLF
                        "Subject: %s" CRLF
                        "References: %s" CRLF
-                       "%s" CRLF /* other_random_headers */
-                       "%s"     /* body */
-                       CRLF "." CRLF CRLF, /* trailing SMTP "." */
+                       "%s" /* other_random_headers, already with CRLF */
+                       CRLF /* body separator */
+                       "%s" /* body, already with CRLF */
+                       "." CRLF, /* trailing message terminator "." */
                        cancelInfo.from, newsgroups, subject, id,
                        other_random_headers, body);
     
