@@ -15,7 +15,8 @@ CString configPath;
 CString workspacePath;
 CString cdPath;
 CString tempPath;
-CString iniPath;
+CString iniDstPath;
+CString iniSrcPath;
 CString scriptPath;
 CString nscpxpiPath;
 
@@ -191,8 +192,7 @@ int interpret(char *cmd)
 		}
 		if (!section || !key || !newvalue)
 			return FALSE;
-		CString iniSrc = nscpxpiPath + "\\config.ini";
-		if (!CopyFile(iniSrc, iniPath, TRUE))
+		if (!CopyFile(iniSrcPath, iniDstPath, TRUE))
 			DWORD e = GetLastError();
 		if (strcmp(key, "Program Folder Name") == 0)
 		{
@@ -200,7 +200,7 @@ int interpret(char *cmd)
 			strcat(temp, newvalue);
 			newvalue = temp;
 		}
-		WritePrivateProfileString(section, key, newvalue, iniPath);
+		WritePrivateProfileString(section, key, newvalue, iniDstPath);
 	}
 	else if (strcmp(cmdname, "replaceXPI") == 0)
 	{
@@ -260,11 +260,11 @@ void init_components()
 {
 	int i;
 	WIDGET *w = findWidget("SelectedComponents");
-	BuildComponentList(Components, &numComponents);
+	BuildComponentList(Components, &numComponents, iniSrcPath);
 
 	// Turn off components that aren't selected
 	for (i=0; i<numComponents; i++)
-		if (strstr(Components[i].name, w->value) == NULL)
+		if (strstr(w->value, Components[i].name) == NULL)
 			Components[i].selected = FALSE;
 
 }
@@ -281,13 +281,14 @@ int StartIB(CString parms, WIDGET *curWidget)
 	configPath  = rootPath + "Configs\\" + configName;
 	cdPath 		= configPath + "\\CD";
 	tempPath 	= configPath + "\\Temp";
-	iniPath		= cdPath + "\\config.ini";
+	iniDstPath	= cdPath + "\\config.ini";
 	scriptPath	= rootPath + "\\script.ib";
 	workspacePath = configPath + "\\Workspace";
 	if (SearchPath(workspacePath, "NSCPXPI", NULL, 0, NULL, NULL))
 		nscpxpiPath = workspacePath + "\\NSCPXPI";
 	else
 		nscpxpiPath = rootPath + "NSCPXPI";
+	iniSrcPath	= nscpxpiPath + "\\config.ini";
 
 	init_components();
 
@@ -344,8 +345,8 @@ int StartIB(CString parms, WIDGET *curWidget)
 	for (int i=0; i<numComponents; i++)
 	{
 		if (Components[i].selected)
-			CopyFile(nscpxpiPath + Components[i].archive, 
-					 cdPath + Components[i].archive, FALSE);
+			CopyFile(nscpxpiPath + "\\" + Components[i].archive, 
+					 cdPath + "\\" + Components[i].archive, TRUE);
 	}
 	// Didn't work...
 

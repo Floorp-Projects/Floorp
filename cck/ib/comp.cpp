@@ -11,7 +11,8 @@ extern CString configPath;
 extern CString workspacePath;
 extern CString cdPath;
 extern CString tempPath;
-extern CString iniPath;
+extern CString iniSrcPath;
+extern CString iniDstPath;
 extern CString scriptPath;
 extern CString nscpxpiPath;
 
@@ -19,7 +20,7 @@ extern COMPONENT Components[100];
 extern int		numComponents;
 
 extern "C" __declspec(dllexport)
-int BuildComponentList(COMPONENT *comps, int *compNum)
+int BuildComponentList(COMPONENT *comps, int *compNum, CString iniSrcPath)
 {
 	*compNum = 0;
 
@@ -30,15 +31,15 @@ int BuildComponentList(COMPONENT *comps, int *compNum)
 	char desc[MAX_SIZE];
 	char attr[MAX_SIZE];
 	component.Format("Component%d", *compNum);
-	GetPrivateProfileString(component, "Archive", "", archive, MAX_SIZE, iniPath);
+	GetPrivateProfileString(component, "Archive", "", archive, MAX_SIZE, iniSrcPath);
 	while (*archive)
 	{
 		GetPrivateProfileString(component, "Description Short", "", 
-			name, MAX_SIZE, iniPath);
+			name, MAX_SIZE, iniSrcPath);
 		GetPrivateProfileString(component, "Description Long", "", 
-			desc, MAX_SIZE, iniPath);
+			desc, MAX_SIZE, iniSrcPath);
 		GetPrivateProfileString(component, "Attributes", "", 
-			attr, MAX_SIZE, iniPath);
+			attr, MAX_SIZE, iniSrcPath);
 
 		comps[*compNum].archive  = CString(archive);
 		comps[*compNum].compname = component;
@@ -50,7 +51,7 @@ int BuildComponentList(COMPONENT *comps, int *compNum)
 
 		(*compNum)++;
 		component.Format("Component%d", *compNum);
-		GetPrivateProfileString(component, "Archive", "", archive, MAX_SIZE, iniPath);
+		GetPrivateProfileString(component, "Archive", "", archive, MAX_SIZE, iniSrcPath);
 	}
 
 
@@ -69,9 +70,9 @@ int GenerateComponentList(CString parms, WIDGET *curWidget)
 		nscpxpiPath = workspacePath + "\\NSCPXPI";
 	else
 		nscpxpiPath = rootPath + "NSCPXPI";
-	iniPath		= nscpxpiPath + "\\config.ini";
+	iniSrcPath		= nscpxpiPath + "\\config.ini";
 
-	BuildComponentList(Components, &numComponents);
+	BuildComponentList(Components, &numComponents, iniSrcPath);
 
 	int i;
 	CString WidgetValue("");

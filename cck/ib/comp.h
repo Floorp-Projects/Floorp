@@ -8,4 +8,5 @@ typedef struct s_component {
 	BOOL	launchapp;
 	} COMPONENT;
 
-extern "C" __declspec(dllexport) int BuildComponentList(COMPONENT *comps, int *compNum);
+extern "C" __declspec(dllexport) 
+int BuildComponentList(COMPONENT *comps, int *compNum, CString iniSrcPath);
