@@ -44,7 +44,7 @@ var actualmatches = new Array();
 var expectedmatch = '';
 var expectedmatches = new Array();
 
-/*******************************************************
+
 pattern = /[]/;
   string = 'abc';
   status = inSection(1);
@@ -95,8 +95,6 @@ pattern = /a[]/;
   actualmatch = string.match(pattern);
   expectedmatch = null;
   addThis();
-
-*******************************************************/
 
 
 pattern = /[^]/;
