@@ -66,7 +66,7 @@ public:
     mOuter = aThis;
     mRefCnt = 0;
   }
-
+  virtual ~nsBoxDebugInner() {}
 
    NS_DECL_ISUPPORTS
 
