@@ -17,6 +17,6 @@
 
 DEPTH=..\..
 
-DIRS=mork msgdb mdb
+DIRS=msgdb
 
 include <$(DEPTH)\config\rules.mak>
