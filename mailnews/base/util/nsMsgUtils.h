@@ -40,7 +40,7 @@ protected:
 public:
 	NS_DECL_ISUPPORTS
 	nsMessageFromMsgHdrEnumerator(nsIEnumerator *srcEnumerator, nsIMsgFolder *folder);
-	~nsMessageFromMsgHdrEnumerator();
+	virtual ~nsMessageFromMsgHdrEnumerator();
 
 	NS_IMETHOD First(void);
 	NS_IMETHOD Next(void);
