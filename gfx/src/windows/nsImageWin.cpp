@@ -1345,29 +1345,27 @@ PRBool nsImageWin::CanAlphaBlend(void)
 nsresult 
 nsImageWin :: Optimize(nsIDeviceContext* aContext)
 {
-#define DONT_OPTIMIZE 1
-#ifdef DONT_OPTIMIZE
-  // XXX
-  // see bug 205893 & bug 204374
-  // With the increase memory cache size, we hold to many images.
-  // Every image is also holding onto a GDI HBITMAP which hurts
-  // system performance.  So until we can get a handle on the
-  // situation lets just NOT optimize.  
-  // NOTE the previous patch (127547) in bug 205893 doesn't fix the 
-  // problem reported by bug 184933 so I suggest going with NEVER
-  // optimizing for now
-
-  return NS_OK;
-#else
-  // we used to set a flag because  a valid HDC may not be ready, 
+  // we used to set a flag because a valid HDC may not be ready, 
   // like at startup, but now we just roll our own HDC for the given screen.
-  
+
+  //
+  // Some images should not be converted to DDB...
+  //
   // Windows 95/98/Me: DDB size cannot exceed ~16MB in size.
   // We also can not optimize empty images, or 8-bit alpha depth images on
   // Win98 due to a Windows API bug.
+  //
+  // Create DDBs only for large (> 128k) images to minimize GDI handle usage.
+  // See bug 205893, bug 204374, and bug 216430 for more info on the situation.
+  // Bottom-line: we need a better accounting mechanism to avoid exceeding the
+  // system's GDI object limit.  The rather arbitrary size limitation imposed
+  // here is based on the typical size of the Mozilla memory cache.  This is 
+  // most certainly the wrong place to impose this policy, but we do it for
+  // now as a stop-gap measure.
+  //
   if ((gPlatform == VER_PLATFORM_WIN32_WINDOWS && mSizeImage >= 0xFF0000) ||
       (mAlphaDepth == 8 && !CanAlphaBlend()) ||
-      (mSizeImage <= 0)) {
+      (mSizeImage < 0x20000)) {
     return NS_OK;
   }
 
@@ -1407,7 +1405,6 @@ nsImageWin :: Optimize(nsIDeviceContext* aContext)
   }
 
   return NS_OK;
-#endif
 }
 
 
