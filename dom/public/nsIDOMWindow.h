@@ -21,7 +21,9 @@
 
 #include "nsISupports.h"
 #include "nsString.h"
+#include "nsIScriptContext.h"
 
+class nsIDOMNavigator;
 class nsIDOMDocument;
 class nsIDOMWindow;
 
@@ -32,9 +34,15 @@ class nsIDOMWindow;
 class nsIDOMWindow : public nsISupports {
 public:
 
+  NS_IMETHOD    GetWindow(nsIDOMWindow** aWindow)=0;
+
   NS_IMETHOD    GetDocument(nsIDOMDocument** aDocument)=0;
 
+  NS_IMETHOD    GetNavigator(nsIDOMNavigator** aNavigator)=0;
+
   NS_IMETHOD    Dump(nsString& aStr)=0;
+
+  NS_IMETHOD    Alert(nsString& aStr)=0;
 };
 
 extern nsresult NS_InitWindowClass(nsIScriptContext *aContext, nsIScriptGlobalObject *aGlobalObject);

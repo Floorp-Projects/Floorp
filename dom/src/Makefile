@@ -32,12 +32,13 @@ CPPSRCS =				\
 	nsJSAttribute.cpp	\
 	nsJSAttributeList.cpp\
 	nsJSWindow.cpp\
+	nsJSNavigator.cpp \
 	nsGlobalWindow.cpp \
 	$(NULL)
 
 MODULE = raptor
 
-REQUIRES = xpcom raptor dom js
+REQUIRES = xpcom raptor dom js netlib
 
 include $(DEPTH)/config/config.mk
 

@@ -24,7 +24,9 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMDocument.h"
-#include "nsHashtable.h"
+#include "nsIDOMNavigator.h"
+#include "nsINetService.h"
+#include "nsINetContainerApplication.h"
 
 #include "jsapi.h"
 
@@ -32,6 +34,7 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIDOMWindowIID, NS_IDOMWINDOW_IID);
+static NS_DEFINE_IID(kIDOMNavigatorIID, NS_IDOMNAVIGATOR_IID);
 
 // Global object for scripting
 class GlobalWindowImpl : public nsIScriptObjectOwner, public nsIScriptGlobalObject, public nsIDOMWindow
@@ -48,20 +51,57 @@ public:
   NS_IMETHOD_(void)       SetContext(nsIScriptContext *aContext);
   NS_IMETHOD_(void)       SetNewDocument(nsIDOMDocument *aDocument);
 
+  NS_IMETHOD    GetWindow(nsIDOMWindow** aWindow);
   NS_IMETHOD    GetDocument(nsIDOMDocument** aDocument);
+  NS_IMETHOD    GetNavigator(nsIDOMNavigator** aNavigator);
   NS_IMETHOD    Dump(nsString& aStr);
+  NS_IMETHOD    Alert(nsString& aStr);
 
 protected:
   nsIScriptContext *mContext;
   void *mScriptObject;
   nsIDOMDocument *mDocument;
+  nsIDOMNavigator *mNavigator;
 };
+
+// Script "navigator" object
+class NavigatorImpl : public nsIScriptObjectOwner, public nsIDOMNavigator {
+public:
+  NavigatorImpl();
+  ~NavigatorImpl();
+
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
+  NS_IMETHOD ResetScriptObject();
+
+  NS_IMETHOD    GetUserAgent(nsString& aUserAgent);
+
+  NS_IMETHOD    GetAppCodeName(nsString& aAppCodeName);
+
+  NS_IMETHOD    GetAppVersion(nsString& aAppVersion);
+
+  NS_IMETHOD    GetAppName(nsString& aAppName);
+
+  NS_IMETHOD    GetLanguage(nsString& aLanguage);
+
+  NS_IMETHOD    GetPlatform(nsString& aPlatform);
+
+  NS_IMETHOD    GetSecurityPolicy(nsString& aSecurityPolicy);
+
+  NS_IMETHOD    JavaEnabled(PRBool* aReturn);
+
+protected:
+  void *mScriptObject;
+};
+
 
 GlobalWindowImpl::GlobalWindowImpl()
 {
   mContext = nsnull;
   mScriptObject = nsnull;
   mDocument = nsnull;
+  mNavigator = nsnull;
 }
 
 GlobalWindowImpl::~GlobalWindowImpl() 
@@ -78,6 +118,8 @@ GlobalWindowImpl::~GlobalWindowImpl()
   if (nsnull != mDocument) {
     NS_RELEASE(mDocument);
   }
+  
+  NS_IF_RELEASE(mNavigator);
 }
 
 NS_IMPL_ADDREF(GlobalWindowImpl)
@@ -174,10 +216,33 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument *aDocument)
 }
 
 NS_IMETHODIMP    
+GlobalWindowImpl::GetWindow(nsIDOMWindow** aWindow)
+{
+  *aWindow = this;
+  NS_ADDREF(this);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
 GlobalWindowImpl::GetDocument(nsIDOMDocument** aDocument)
 {
   *aDocument = mDocument;
   NS_ADDREF(mDocument);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GlobalWindowImpl::GetNavigator(nsIDOMNavigator** aNavigator)
+{
+  if (nsnull == mNavigator) {
+    mNavigator = new NavigatorImpl();
+    NS_IF_ADDREF(mNavigator);
+  }
+
+  *aNavigator = mNavigator;
+  NS_IF_ADDREF(mNavigator);
 
   return NS_OK;
 }
@@ -192,6 +257,12 @@ GlobalWindowImpl::Dump(nsString& aStr)
     delete [] cstr;
   }
   
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GlobalWindowImpl::Alert(nsString& aStr)
+{
   return NS_OK;
 }
 
@@ -210,4 +281,214 @@ NS_NewScriptGlobalObject(nsIScriptGlobalObject **aResult)
   }
 
   return global->QueryInterface(kIScriptGlobalObjectIID, (void **)aResult);
+}
+
+
+
+//
+//  Navigator class implementation 
+//
+NavigatorImpl::NavigatorImpl()
+{
+  mScriptObject = nsnull;
+}
+
+NavigatorImpl::~NavigatorImpl()
+{
+}
+
+NS_IMPL_ADDREF(NavigatorImpl)
+NS_IMPL_RELEASE(NavigatorImpl)
+
+nsresult 
+NavigatorImpl::QueryInterface(const nsIID& aIID,
+			      void** aInstancePtrResult)
+{
+  NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
+  if (nsnull == aInstancePtrResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (aIID.Equals(kIScriptObjectOwnerIID)) {
+    *aInstancePtrResult = (void*) ((nsIScriptObjectOwner*)this);
+    AddRef();
+    return NS_OK;
+  }
+  if (aIID.Equals(kIDOMNavigatorIID)) {
+    *aInstancePtrResult = (void*) ((nsIDOMNavigator*)this);
+    AddRef();
+    return NS_OK;
+  }
+  if (aIID.Equals(kISupportsIID)) {
+    *aInstancePtrResult = (void*)(nsISupports*)(nsIScriptObjectOwner*)this;
+    AddRef();
+    return NS_OK;
+  }
+  return NS_NOINTERFACE;
+}
+
+nsresult 
+NavigatorImpl::ResetScriptObject()
+{
+  mScriptObject = nsnull;
+  return NS_OK;
+}
+
+nsresult 
+NavigatorImpl::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
+{
+  NS_PRECONDITION(nsnull != aScriptObject, "null arg");
+  nsresult res = NS_OK;
+  if (nsnull == mScriptObject) {
+    nsIScriptGlobalObject *global = aContext->GetGlobalObject();
+    res = NS_NewScriptNavigator(aContext, this, global, &mScriptObject);
+    NS_IF_RELEASE(global);
+  }
+  
+  *aScriptObject = mScriptObject;
+  return res;
+}
+
+NS_IMETHODIMP
+NavigatorImpl::GetUserAgent(nsString& aUserAgent)
+{
+  nsINetService *service;
+  nsresult res = NS_OK;
+  
+  res = NS_NewINetService(&service, nsnull);
+  if ((NS_OK == res) && (nsnull != service)) {
+    nsINetContainerApplication *container;
+
+    res = service->GetContainerApplication(&container);
+    if ((NS_OK == res) && (nsnull != container)) {
+      nsAutoString appVersion;
+      container->GetAppCodeName(aUserAgent);
+      container->GetAppVersion(appVersion);
+
+      aUserAgent.Append('/');
+      aUserAgent.Append(appVersion);
+      NS_RELEASE(container);
+    }
+    
+    NS_RELEASE(service);
+  }
+
+  return res;
+}
+
+NS_IMETHODIMP
+NavigatorImpl::GetAppCodeName(nsString& aAppCodeName)
+{
+  nsINetService *service;
+  nsresult res = NS_OK;
+  
+  res = NS_NewINetService(&service, nsnull);
+  if ((NS_OK == res) && (nsnull != service)) {
+    nsINetContainerApplication *container;
+
+    res = service->GetContainerApplication(&container);
+    if ((NS_OK == res) && (nsnull != container)) {
+      res = container->GetAppCodeName(aAppCodeName);
+      NS_RELEASE(container);
+    }
+    
+    NS_RELEASE(service);
+  }
+  return res;
+}
+
+NS_IMETHODIMP
+NavigatorImpl::GetAppVersion(nsString& aAppVersion)
+{
+  nsINetService *service;
+  nsresult res = NS_OK;
+  
+  res = NS_NewINetService(&service, nsnull);
+  if ((NS_OK == res) && (nsnull != service)) {
+    nsINetContainerApplication *container;
+
+    res = service->GetContainerApplication(&container);
+    if ((NS_OK == res) && (nsnull != container)) {
+      res = container->GetAppVersion(aAppVersion);
+      NS_RELEASE(container);
+    }
+    
+    NS_RELEASE(service);
+  }
+  return res;
+}
+
+NS_IMETHODIMP
+NavigatorImpl::GetAppName(nsString& aAppName)
+{
+  nsINetService *service;
+  nsresult res = NS_OK;
+  
+  res = NS_NewINetService(&service, nsnull);
+  if ((NS_OK == res) && (nsnull != service)) {
+    nsINetContainerApplication *container;
+
+    res = service->GetContainerApplication(&container);
+    if ((NS_OK == res) && (nsnull != container)) {
+      res = container->GetAppName(aAppName);
+      NS_RELEASE(container);
+    }
+    
+    NS_RELEASE(service);
+  }
+  return res;
+}
+
+NS_IMETHODIMP
+NavigatorImpl::GetLanguage(nsString& aLanguage)
+{
+  nsINetService *service;
+  nsresult res = NS_OK;
+  
+  res = NS_NewINetService(&service, nsnull);
+  if ((NS_OK == res) && (nsnull != service)) {
+    nsINetContainerApplication *container;
+
+    res = service->GetContainerApplication(&container);
+    if ((NS_OK == res) && (nsnull != container)) {
+      res = container->GetLanguage(aLanguage);
+      NS_RELEASE(container);
+    }
+    
+    NS_RELEASE(service);
+  }
+  return res;
+}
+
+NS_IMETHODIMP
+NavigatorImpl::GetPlatform(nsString& aPlatform)
+{
+  nsINetService *service;
+  nsresult res = NS_OK;
+  
+  res = NS_NewINetService(&service, nsnull);
+  if ((NS_OK == res) && (nsnull != service)) {
+    nsINetContainerApplication *container;
+
+    res = service->GetContainerApplication(&container);
+    if ((NS_OK == res) && (nsnull != container)) {
+      res = container->GetPlatform(aPlatform);
+      NS_RELEASE(container);
+    }
+    
+    NS_RELEASE(service);
+  }
+  return res;
+}
+
+NS_IMETHODIMP
+NavigatorImpl::GetSecurityPolicy(nsString& aSecurityPolicy)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+NavigatorImpl::JavaEnabled(PRBool* aReturn)
+{
+  *aReturn = PR_FALSE;
+  return NS_OK;
 }

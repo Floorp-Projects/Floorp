@@ -29,6 +29,7 @@ IDLSRCS =  \
 	DocumentContext.idl \
 	DocumentFragment.idl \
 	Element.idl \
+        Navigator.idl \
 	Node.idl \
 	NodeIterator.idl \
 	PI.idl \

@@ -24,6 +24,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIPtr.h"
 #include "nsString.h"
+#include "nsIDOMNavigator.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMWindow.h"
 
@@ -31,9 +32,11 @@
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
+static NS_DEFINE_IID(kINavigatorIID, NS_IDOMNAVIGATOR_IID);
 static NS_DEFINE_IID(kIDocumentIID, NS_IDOMDOCUMENT_IID);
 static NS_DEFINE_IID(kIWindowIID, NS_IDOMWINDOW_IID);
 
+NS_DEF_PTR(nsIDOMNavigator);
 NS_DEF_PTR(nsIDOMDocument);
 NS_DEF_PTR(nsIDOMWindow);
 
@@ -41,7 +44,9 @@ NS_DEF_PTR(nsIDOMWindow);
 // Window property ids
 //
 enum Window_slots {
-  WINDOW_DOCUMENT = -11
+  WINDOW_WINDOW = -11,
+  WINDOW_DOCUMENT = -12,
+  WINDOW_NAVIGATOR = -13
 };
 
 /***********************************************************************/
@@ -52,14 +57,72 @@ PR_STATIC_CALLBACK(JSBool)
 GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMWindow *a = (nsIDOMWindow*)JS_GetPrivate(cx, obj);
-  NS_ASSERTION(nsnull != a, "null pointer");
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == a) {
+    return JS_TRUE;
+  }
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
+      case WINDOW_WINDOW:
+      {
+        nsIDOMWindow* prop;
+        if (NS_OK == a->GetWindow(&prop)) {
+          // get the js object
+          if (prop != nsnull) {
+            nsIScriptObjectOwner *owner = nsnull;
+            if (NS_OK == prop->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+              JSObject *object = nsnull;
+              nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
+              if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
+                // set the return value
+                *vp = OBJECT_TO_JSVAL(object);
+              }
+              NS_RELEASE(owner);
+            }
+            NS_RELEASE(prop);
+          }
+          else {
+            *vp = JSVAL_NULL;
+          }
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
       case WINDOW_DOCUMENT:
       {
         nsIDOMDocument* prop;
         if (NS_OK == a->GetDocument(&prop)) {
+          // get the js object
+          if (prop != nsnull) {
+            nsIScriptObjectOwner *owner = nsnull;
+            if (NS_OK == prop->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+              JSObject *object = nsnull;
+              nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
+              if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
+                // set the return value
+                *vp = OBJECT_TO_JSVAL(object);
+              }
+              NS_RELEASE(owner);
+            }
+            NS_RELEASE(prop);
+          }
+          else {
+            *vp = JSVAL_NULL;
+          }
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case WINDOW_NAVIGATOR:
+      {
+        nsIDOMNavigator* prop;
+        if (NS_OK == a->GetNavigator(&prop)) {
           // get the js object
           if (prop != nsnull) {
             nsIScriptObjectOwner *owner = nsnull;
@@ -107,7 +170,11 @@ PR_STATIC_CALLBACK(JSBool)
 SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMWindow *a = (nsIDOMWindow*)JS_GetPrivate(cx, obj);
-  NS_ASSERTION(nsnull != a, "null pointer");
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == a) {
+    return JS_TRUE;
+  }
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
@@ -214,6 +281,46 @@ WindowDump(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 }
 
 
+//
+// Native method Alert
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowAlert(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMWindow *nativeThis = (nsIDOMWindow*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsAutoString b0;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 1) {
+
+    JSString *jsstring0 = JS_ValueToString(cx, argv[0]);
+    if (nsnull != jsstring0) {
+      b0.SetString(JS_GetStringChars(jsstring0));
+    }
+    else {
+      b0.SetString("");   // Should this really be null?? 
+    }
+
+    if (NS_OK != nativeThis->Alert(b0)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
 /***********************************************************************/
 //
 // class for Window
@@ -237,7 +344,9 @@ JSClass WindowClass = {
 //
 static JSPropertySpec WindowProperties[] =
 {
+  {"window",    WINDOW_WINDOW,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"document",    WINDOW_DOCUMENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"navigator",    WINDOW_NAVIGATOR,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 
@@ -248,6 +357,7 @@ static JSPropertySpec WindowProperties[] =
 static JSFunctionSpec WindowMethods[] = 
 {
   {"dump",          WindowDump,     1},
+  {"alert",          WindowAlert,     1},
   {0}
 };
 
