@@ -20,7 +20,7 @@
 #define nsIPop3URL_h___
 
 #include "nscore.h"
-#include "nsIURL.h"
+#include "nsIMsgMailNewsUrl.h"
 #include "nsIPop3Sink.h"
 
 #include "nsISupports.h"
@@ -33,7 +33,7 @@
 { 0x73c043d0, 0xb7e2, 0x11d2,                   \
     { 0xab, 0x5c, 0x0, 0x80, 0x5f, 0x8a, 0xc9, 0x68 } }
 
-class nsIPop3URL : public nsIURL
+class nsIPop3URL : public nsIMsgMailNewsUrl
 {
 public:
     static const nsIID& GetIID() { static nsIID iid = NS_IPOP3URL_IID; return iid; }
