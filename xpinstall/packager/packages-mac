@@ -99,6 +99,7 @@ viewer:Components:layout.shlb
 viewer:Components:layout.xpt
 viewer:Components:layout_base.xpt
 viewer:Components:layout_xul.xpt
+viewer:Components:chardet.xpt
 viewer:Components:libjar.xpt 
 viewer:Components:libpref.shlb 
 viewer:Components:libpref.xpt 

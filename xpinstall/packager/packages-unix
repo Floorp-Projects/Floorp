@@ -74,6 +74,7 @@ bin/components/dom.xpt
 bin/components/editor.xpt
 bin/components/gfx.xpt
 bin/components/intl.xpt
+bin/components/chardet.xpt
 bin/components/jar.xpt
 bin/components/jsconsole-clhandler.js
 bin/components/libnsappshell.so
