@@ -49,6 +49,7 @@
 #include <jssutil.h>
 #include <java_ids.h>
 #include <jss_exceptions.h>
+#include <jssver.h>
 
 #include "pk11util.h"
 
@@ -65,10 +66,9 @@
 /*                                                                  */
 /********************************************************************/
 
-static const char* DLL_JSS_VERSION     = "JSS_VERSION = JSS_3_2";
-static const char* DLL_JDK_VERSION     = "JDK_VERSION = JDK 1.2.2";
-static const char* DLL_NSS_VERSION     = "NSS_VERSION = NSS_3_4_1_RTM";
-static const char* DLL_NSPR_VERSION    = "NSPR_VERSION = NSPRPUB_RELEASE_4_2";
+static const char* DLL_JSS_VERSION     = "JSS_VERSION = " JSS_VERSION;
+static const char* DLL_NSS_VERSION     = "NSS_VERSION = " NSS_VERSION;
+static const char* DLL_NSPR_VERSION    = "NSPR_VERSION = " PR_VERSION;
 
 static jobject
 makePWCBInfo(JNIEnv *env, PK11SlotInfo *slot);

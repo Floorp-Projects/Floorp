@@ -52,7 +52,7 @@ import org.mozilla.jss.provider.java.security.JSSMessageDigestSpi;
  * Initialization is done with static methods, and must be done before
  * an instance can be created.  All other operations are done with instance
  * methods.
- * @version $Revision: 1.7 $ $Date: 2002/05/23 18:45:00 $ 
+ * @version $Revision: 1.8 $ $Date: 2002/07/03 23:46:02 $ 
  */
 public final class CryptoManager implements TokenSupplier
 {
@@ -1299,7 +1299,7 @@ public final class CryptoManager implements TokenSupplier
     public static final String
     JAR_JDK_VERSION     = "JDK_VERSION = N/A";
     public static final String
-    JAR_NSS_VERSION     = "NSS_VERSION = NSS_3_4_1_RTM";
+    JAR_NSS_VERSION     = "NSS_VERSION = NSS_3_4_2_RTM";
     public static final String
     JAR_DBM_VERSION     = "DBM_VERSION = N/A";
     public static final String
