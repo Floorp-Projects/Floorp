@@ -43,6 +43,12 @@ class nsImageOS2 : public nsIImage
    void    *GetBitInfo()      { return mInfo; }
    nsColorMap *GetColorMap()  { return mColorMap; }
    PRInt32  GetBytesPix()     { return mInfo ? mInfo->cBitCount : 0; }
+ 
+   NS_IMETHOD          SetDecodedRect(PRInt32 x1, PRInt32 y1, PRInt32 x2, PRInt32 y2);        
+   virtual PRInt32     GetDecodedX1() { return mDecodedX1;}
+   virtual PRInt32     GetDecodedY1() { return mDecodedY1;}
+   virtual PRInt32     GetDecodedX2() { return mDecodedX2;}
+   virtual PRInt32     GetDecodedY2() { return mDecodedY2;}
 
    PRBool   GetIsRowOrderTopToBottom() { return PR_FALSE; }
 
@@ -83,6 +89,11 @@ class nsImageOS2 : public nsIImage
    PRBool       mOptimized;
    PRInt32      mAlphaDepth;
    PRUint32     mDeviceDepth;
+
+   PRInt32             mDecodedX1;       //Keeps track of what part of image
+   PRInt32             mDecodedY1;       // has been decoded.
+   PRInt32             mDecodedX2; 
+   PRInt32             mDecodedY2;    
 
    void Cleanup();
    void CreateBitmaps( nsDrawingSurfaceOS2 *surf);

@@ -100,6 +100,16 @@ public:
   virtual PRInt32 GetHeight() = 0;
 
   /**
+   * Set/Get the decoded dimensions for the pixelmap
+   * 01/11/2000 - pnunn
+   */
+  NS_IMETHOD          SetDecodedRect(PRInt32, PRInt32, PRInt32, PRInt32) = 0;
+  virtual PRInt32     GetDecodedX1() = 0;
+  virtual PRInt32     GetDecodedY1() = 0;
+  virtual PRInt32     GetDecodedX2() = 0;
+  virtual PRInt32     GetDecodedY2() = 0;
+
+  /**
    * Get a pointer to the bits for the pixelmap, only if it is not optimized
    * @update - dwc 2/1/99
    * @return address of the DIB pixel array

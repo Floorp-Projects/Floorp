@@ -75,6 +75,8 @@ nsresult nsImageOS2::Init( PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,
 // // Make sure image width is 4byte aligned
 // mStride = (mStride + 3) & ~0x3;
 
+  SetDecodedRect(0,0,0,0);  //init
+
    mImageBits = new PRUint8 [ aHeight * mStride ];
 
    // Set up bitmapinfo header
@@ -370,3 +372,18 @@ nsImageOS2::UnlockImagePixels(PRBool aMaskPixels)
 {
   return NS_OK;
 } 
+
+// ---------------------------------------------------
+//	Set the decoded dimens of the image
+//
+NS_IMETHODIMP
+nsImageOS2::SetDecodedRect(PRInt32 x1, PRInt32 y1, PRInt32 x2, PRInt32 y2 )
+{
+    
+  mDecodedX1 = x1; 
+  mDecodedY1 = y1; 
+  mDecodedX2 = x2; 
+  mDecodedY2 = y2; 
+  return NS_OK;
+}
+

@@ -95,6 +95,8 @@ nsresult nsImageQT::Init(PRInt32 aWidth,
         return NS_ERROR_FAILURE;
     }
 
+    SetDecodedRect(0,0,0,0);  //init
+
     if (nsnull != mImageBits) 
     {
         delete[] (PRUint8*)mImageBits;
@@ -519,3 +521,18 @@ nsImageQT::UnlockImagePixels(PRBool aMaskPixels)
 {
   return NS_OK;
 }
+
+/** ---------------------------------------------------
+ *	Set the decoded dimens of the image
+ */
+NS_IMETHODIMP
+nsImageQT::SetDecodedRect(PRInt32 x1, PRInt32 y1, PRInt32 x2, PRInt32 y2 )
+{
+    
+  mDecodedX1 = x1; 
+  mDecodedY1 = y1; 
+  mDecodedX2 = x2; 
+  mDecodedY2 = y2; 
+  return NS_OK;
+}
+

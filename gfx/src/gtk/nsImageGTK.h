@@ -49,6 +49,13 @@ public:
   virtual void*       GetBitInfo();
   virtual PRBool      GetIsRowOrderTopToBottom() { return mIsTopToBottom; }
   virtual PRInt32     GetLineStride();
+
+  NS_IMETHOD          SetDecodedRect(PRInt32 x1, PRInt32 y1, PRInt32 x2, PRInt32 y2);        
+  virtual PRInt32     GetDecodedX1() { return mDecodedX1;}
+  virtual PRInt32     GetDecodedY1() { return mDecodedY1;}
+  virtual PRInt32     GetDecodedX2() { return mDecodedX2;}
+  virtual PRInt32     GetDecodedY2() { return mDecodedY2;}
+
   virtual nsColorMap* GetColorMap();
   NS_IMETHOD Draw(nsIRenderingContext &aContext,
                   nsDrawingSurface aSurface,
@@ -105,6 +112,11 @@ private:
   PRBool     mIsTopToBottom;
 
   PRInt8     mNumBytesPixel;
+
+  PRInt32             mDecodedX1;       //Keeps track of what part of image
+  PRInt32             mDecodedY1;       // has been decoded.
+  PRInt32             mDecodedX2; 
+  PRInt32             mDecodedY2;    
 
   // alpha layer members
   PRUint8    *mAlphaBits;

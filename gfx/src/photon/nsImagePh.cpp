@@ -93,6 +93,8 @@ nsresult nsImagePh :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMas
     mImage.type = Pg_IMAGE_PALETTE_BYTE;
     mImage.colors = 256;
 
+    SetDecodedRect(0,0,0,0);  //init
+
     mColorMap = new nsColorMap;
     if( mColorMap != nsnull )
     {
@@ -800,3 +802,16 @@ nsImagePh::UnlockImagePixels(PRBool aMaskPixels)
   return NS_OK;
 }
 
+/** ---------------------------------------------------
+ *	Set the decoded dimens of the image
+ */
+NS_IMETHODIMP
+nsImagePh::SetDecodedRect(PRInt32 x1, PRInt32 y1, PRInt32 x2, PRInt32 y2 )
+{
+    
+  mDecodedX1 = x1; 
+  mDecodedY1 = y1; 
+  mDecodedX2 = x2; 
+  mDecodedY2 = y2; 
+  return NS_OK;
+}

@@ -100,6 +100,8 @@ nsresult nsImageMotif :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,ns
   mOriginalRowBytes = CalcBytesSpan(aWidth);
   mConverted = PR_FALSE;
 
+  SetDecodedRect(0,0,0,0);  //init
+
   ComputePaletteSize(aDepth);
 
   // create the memory for the image
@@ -419,3 +421,17 @@ nsImageMotif::UnlockImagePixels(PRBool aMaskPixels)
 {
   return NS_OK;
 } 
+
+/** ---------------------------------------------------
+ *	Set the decoded dimens of the image
+ */
+NS_IMETHODIMP
+nsImageMotif::SetDecodedRect(PRInt32 x1, PRInt32 y1, PRInt32 x2, PRInt32 y2 )
+{
+    
+  mDecodedX1 = x1; 
+  mDecodedY1 = y1; 
+  mDecodedX2 = x2; 
+  mDecodedY2 = y2; 
+  return NS_OK;
+}

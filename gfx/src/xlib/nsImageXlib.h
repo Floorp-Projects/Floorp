@@ -40,6 +40,13 @@ public:
   virtual PRInt32     GetWidth();
   virtual PRUint8*    GetBits();
   virtual PRInt32     GetLineStride();
+
+  NS_IMETHOD          SetDecodedRect(PRInt32 x1, PRInt32 y1, PRInt32 x2, PRInt32 y2);        
+  virtual PRInt32     GetDecodedX1() { return mDecodedX1;}
+  virtual PRInt32     GetDecodedY1() { return mDecodedY1;}
+  virtual PRInt32     GetDecodedX2() { return mDecodedX2;}
+  virtual PRInt32     GetDecodedY2() { return mDecodedY2;}
+
   NS_IMETHOD          Draw(nsIRenderingContext &aContext,
                            nsDrawingSurface aSurface,
                            PRInt32 aX, PRInt32 aY,
@@ -88,6 +95,11 @@ private:
   Pixmap    mImagePixmap;
   Display * mDisplay;
 
+  PRInt32             mDecodedX1;       //Keeps track of what part of image
+  PRInt32             mDecodedY1;       // has been decoded.
+  PRInt32             mDecodedX2; 
+  PRInt32             mDecodedY2;    
+  
   // for alpha mask
   PRUint8  *mAlphaBits;
   Pixmap    mAlphaPixmap;

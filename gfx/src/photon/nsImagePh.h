@@ -41,6 +41,13 @@ public:
   virtual PRInt32     GetWidth();
   virtual PRUint8*    GetBits();
   virtual PRInt32     GetLineStride();
+
+  NS_IMETHOD          SetDecodedRect(PRInt32 x1, PRInt32 y1, PRInt32 x2, PRInt32 y2);        
+  virtual PRInt32     GetDecodedX1() { return mDecodedX1;}
+  virtual PRInt32     GetDecodedY1() { return mDecodedY1;}
+  virtual PRInt32     GetDecodedX2() { return mDecodedX2;}
+  virtual PRInt32     GetDecodedY2() { return mDecodedY2;}
+
   NS_IMETHOD          Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
   NS_IMETHOD          Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
                       PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight);
@@ -130,7 +137,12 @@ private:
   PRUint8*            mImageBits;         // starting address of DIB bits
   PRBool              mIsOptimized;       // Have we turned our DIB into a GDI?
   nsColorMap*         mColorMap;          // Redundant with mColorTable, but necessary
-    
+
+  PRInt32             mDecodedX1;       //Keeps track of what part of image
+  PRInt32             mDecodedY1;       // has been decoded.
+  PRInt32             mDecodedX2; 
+  PRInt32             mDecodedY2;    
+   
   // alpha layer members
   PRUint8             *mAlphaBits;        // alpha layer if we made one
   PRInt8              mAlphaDepth;        // alpha layer depth
