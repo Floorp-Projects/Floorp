@@ -250,14 +250,14 @@ public:
     nsresult  result=NS_OK;
 
     CStartToken theToken(*aTagList);
-    nsCParserNode theNode(&theToken,theLineNumber);
+    nsCParserNode theNode(&theToken,theLineNumber,aContext->mTokenAllocator);
     result=OpenContainer(&theNode,*aTagList,aContext,aSink);
     if(eHTMLTag_unknown!=*(aTagList+1)) {
       AutoGenerateStructure(++aTagList,aContext,aSink);
     }
     
     CEndToken theEndToken(*aTagList--);
-    nsCParserNode theEndNode(&theEndToken,theLineNumber);
+    nsCParserNode theEndNode(&theEndToken,theLineNumber,aContext->mTokenAllocator);
     result=CloseContainer(&theEndNode,*aTagList,aContext,aSink);
 
     return result;
@@ -1005,7 +1005,7 @@ public:
 
     CTextToken theToken(theNumber);
     PRInt32 theLineNumber=0;
-    nsCParserNode theNewNode(&theToken,theLineNumber);
+    nsCParserNode theNewNode(&theToken,theLineNumber,aContext->mTokenAllocator);
     result=aSink->AddLeaf(theNewNode);
     return result;
   }

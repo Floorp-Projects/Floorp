@@ -188,15 +188,12 @@ class CSharedVSContext {
 public:
 
   CSharedVSContext() : 
-    mEndNode(), 
+    mEndNode(),
     mStartNode(),
     mTokenNode(),
     mErrorNode(),
     mITextToken(),
-    mITextNode(&mITextToken),
-    mTextToken(),
-    mErrorToken(NS_ConvertASCIItoUCS2("error")),
-    mTextNode(&mTextToken){
+    mErrorToken(NS_ConvertASCIItoUCS2("error")) {
   }
   
   ~CSharedVSContext() {
@@ -212,10 +209,7 @@ public:
   nsCParserNode       mTokenNode;
   nsCParserNode       mErrorNode;
   CIndirectTextToken  mITextToken;
-  nsCParserNode       mITextNode;
-  CTextToken          mTextToken;
   CTextToken          mErrorToken;
-  nsCParserNode       mTextNode;
 };
 
 #ifdef VIEW_SOURCE_HTML
@@ -449,24 +443,6 @@ nsresult CViewSourceHTML::WillBuildModel(  const CParserContext& aParserContext,
     mErrorCount=0;
     mTagCount=0;
 
-#ifdef VIEW_SOURCE_HTML
-    nsAutoString tag;
-    
-    tag.AssignWithConversion("HTML");
-    CStartToken htmlToken(tag, eHTMLTag_html);
-    nsCParserNode htmlNode(&htmlToken,0);
-    mSink->OpenHTML(htmlNode);
-
-    tag.AssignWithConversion("BODY");
-    CStartToken bodyToken(tag, eHTMLTag_body);
-    nsCParserNode bodyNode(&bodyToken,0);
-    mSink->OpenBody(bodyNode);
-#else
-    CCommentToken ssToken(NS_LITERAL_STRING("<?xml version=\"1.0\"?>"));
-    nsCParserNode ssNode(&ssToken);
-    result= mSink->AddCharacterData(ssNode);
-#endif // VIEW_SOURCE_HTML
-
   #ifdef rickgdebug
     (*gDumpFile) << theHeader << endl;
     (*gDumpFile) << "<viewsource xmlns=\"viewsource\">" << endl;
@@ -503,17 +479,37 @@ NS_IMETHODIMP CViewSourceHTML::BuildModel(nsIParser* aParser,nsITokenizer* aToke
 
     if(!mHasOpenRoot) {
 #ifdef VIEW_SOURCE_HTML
+      // For the stack-allocated tokens below, it's safe to pass a null
+      // token allocator, because there are no attributes on the tokens.
       nsAutoString tag;
+
+      tag.AssignWithConversion("HTML");
+      CStartToken htmlToken(tag, eHTMLTag_html);
+      nsCParserNode htmlNode(&htmlToken,0,mTokenizer->GetTokenAllocator());
+      mSink->OpenHTML(htmlNode);
+
+      tag.AssignWithConversion("BODY");
+      CStartToken bodyToken(tag, eHTMLTag_body);
+      nsCParserNode bodyNode(&bodyToken,0,mTokenizer->GetTokenAllocator());
+      mSink->OpenBody(bodyNode);
+#else
+      CCommentToken ssToken(NS_LITERAL_STRING("<?xml version=\"1.0\"?>"));
+      nsCParserNode ssNode(&ssToken,0,nsnull);
+      result= mSink->AddCharacterData(ssNode,0,mTokenizer->GetTokenAllocator());
+#endif // VIEW_SOURCE_HTML
+
+#ifdef VIEW_SOURCE_HTML
       tag.AssignWithConversion("PRE");
       CStartToken theToken(tag, eHTMLTag_pre);
 #else
       //now let's automatically open the root container...
       CStartToken theToken(NS_LITERAL_STRING("viewsource"));
 #endif // VIEW_SOURCE_HTML
-      nsCParserNode theNode(&theToken,0);
-     
       CAttributeToken *theAttr=nsnull;
       nsTokenAllocator* theAllocator=mTokenizer->GetTokenAllocator();
+
+      nsCParserNode theNode(&theToken,0,theAllocator);
+     
       if(theAllocator) {
 #ifdef VIEW_SOURCE_HTML
         theAttr=(CAttributeToken*)theAllocator->CreateTokenOfType(eToken_attribute,eHTMLTag_unknown,NS_ConvertASCIItoUCS2(kPreStyle));
@@ -607,15 +603,15 @@ NS_IMETHODIMP CViewSourceHTML::DidBuildModel(nsresult anErrorCode,PRBool aNotify
       if(ePlainText!=mDocType) {
 #ifdef VIEW_SOURCE_HTML
         CEndToken theToken(eHTMLTag_pre);
-        nsCParserNode preNode(&theToken,0);
+        nsCParserNode preNode(&theToken,0,mTokenizer->GetTokenAllocator());
         mSink->CloseContainer(preNode);
         
         CEndToken bodyToken(eHTMLTag_body);
-        nsCParserNode bodyNode(&bodyToken,0);
+        nsCParserNode bodyNode(&bodyToken,0,mTokenizer->GetTokenAllocator());
         mSink->CloseBody(bodyNode);
         
         CEndToken htmlToken(eHTMLTag_html);
-        nsCParserNode htmlNode(&htmlToken,0);
+        nsCParserNode htmlNode(&htmlToken,0,mTokenizer->GetTokenAllocator());
         mSink->CloseHTML(htmlNode);
 #else
         //now let's automatically close the root container...
@@ -886,7 +882,8 @@ nsresult CViewSourceHTML::WriteTag(nsString &theXMLTagName,const nsAReadableStri
     nsAutoString beforeText;
     beforeText.AssignWithConversion(kBeforeText[aTagType]);
     theContext.mITextToken.SetIndirectString(beforeText);
-    mSink->AddLeaf(theContext.mITextNode);
+    nsCParserNode theNode(&theContext.mITextToken,0,mTokenizer->GetTokenAllocator());
+    mSink->AddLeaf(theNode);
   }
 
 #ifdef VIEW_SOURCE_COLORING
@@ -900,7 +897,7 @@ nsresult CViewSourceHTML::WriteTag(nsString &theXMLTagName,const nsAReadableStri
 #ifdef VIEW_SOURCE_COLORING
   if (syntaxHighlight)
   {
-  	theContext.mStartNode.Init(&theTagToken,mLineNumber);
+  	theContext.mStartNode.Init(&theTagToken,mLineNumber,mTokenizer->GetTokenAllocator());
 #ifdef VIEW_SOURCE_HTML
     nsTokenAllocator* theAllocator=mTokenizer->GetTokenAllocator();
     if(theAllocator) {
@@ -931,7 +928,8 @@ nsresult CViewSourceHTML::WriteTag(nsString &theXMLTagName,const nsAReadableStri
 
   theContext.mITextToken.SetIndirectString(aText);  //now emit the tag name...
 
-  mSink->AddLeaf(theContext.mITextNode);
+  nsCParserNode theNode(&theContext.mITextToken,0,mTokenizer->GetTokenAllocator());
+  mSink->AddLeaf(theNode);
 
   if(attrCount){
     result=WriteAttributes(attrCount);
@@ -943,7 +941,7 @@ nsresult CViewSourceHTML::WriteTag(nsString &theXMLTagName,const nsAReadableStri
   {
     theContext.mStartNode.ReleaseAll(); 
     CEndToken theEndToken(eHTMLTag_span);
-    theContext.mEndNode.Init(&theEndToken,mLineNumber);
+    theContext.mEndNode.Init(&theEndToken,mLineNumber,mTokenizer->GetTokenAllocator());
     mSink->CloseContainer(theContext.mEndNode);  //emit </starttag>...
   }
 #endif // VIEW_SOURCE_COLORING
@@ -951,7 +949,8 @@ nsresult CViewSourceHTML::WriteTag(nsString &theXMLTagName,const nsAReadableStri
     nsAutoString afterText;
     afterText.AssignWithConversion(kAfterText[aTagType]);
     theContext.mITextToken.SetIndirectString(afterText);
-    mSink->AddLeaf(theContext.mITextNode);
+    nsCParserNode theNode(&theContext.mITextToken,0,mTokenizer->GetTokenAllocator());
+    mSink->AddLeaf(theNode);
   }
 #else
   theContext.mEndNode.Init(&theTagToken,mLineNumber);
@@ -990,7 +989,7 @@ nsresult CViewSourceHTML::WriteTagWithError(nsString &theXMLTagName,const nsARea
 
     //first write the error tag itself...
 
-    theContext.mErrorNode.Init(&theContext.mErrorToken,mLineNumber);
+    theContext.mErrorNode.Init(&theContext.mErrorToken,mLineNumber,mTokenizer->GetTokenAllocator());
     result=mSink->OpenContainer(theContext.mErrorNode);  //emit <error>...
   }
 
@@ -1005,7 +1004,7 @@ nsresult CViewSourceHTML::WriteTagWithError(nsString &theXMLTagName,const nsARea
 
    //now close the error tag...
     STOP_TIMER();
-    theContext.mErrorNode.Init(&theContext.mErrorToken,mLineNumber);
+    theContext.mErrorNode.Init(&theContext.mErrorToken,mLineNumber,mTokenizer->GetTokenAllocator());
     mSink->CloseContainer(theContext.mErrorNode);
     START_TIMER();
   }
@@ -1057,7 +1056,7 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
 #endif // VIEW_SOURCE_HTML
  
   CSharedVSContext& theContext=CSharedVSContext::GetSharedContext();
-  theContext.mTokenNode.Init(theToken,mLineNumber);
+  theContext.mTokenNode.Init(theToken,mLineNumber,mTokenizer->GetTokenAllocator());
 
   eHTMLTags theParent=(mTags.Length()) ? (eHTMLTags)mTags.Last() : eHTMLTag_unknown;
   eHTMLTags theChild=(eHTMLTags)aToken->GetTypeID();
