@@ -293,7 +293,13 @@
           <menuitem id="printSetupMenuItem" label="&printSetupCmd.label;" accesskey="&printSetupCmd.accesskey;" command="cmd_printSetup"/>
           <menuitem id="printMenuItem" label="&printCmd.label;" accesskey="&printCmd.accesskey;" key="key_print" command="cmd_print"/>
           <menuseparator id="menu_FileQuitSeparator"/>
-          <menuitem label="&quitApplicationCmd.label;" id="menu_FileQuitItem" key="key_quit" accesskey="&quitApplicationCmd.accesskey;" oncommand="goQuitApplication();"/>
+
+          <menuitem  id="menu_FileQuitItem" key="key_quit" oncommand="goQuitApplication();" 
+#ifdef XP_WIN
+          label="&quitApplicationCmdWin.label;" accesskey="&quitApplicationCmdWin.accesskey;"/>
+#else
+          label="&quitApplicationCmd.label;" accesskey="&quitApplicationCmd.accesskey;"/>
+#endif
         </menupopup>
       </menu>
       

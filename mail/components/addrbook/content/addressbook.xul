@@ -232,7 +232,13 @@
                 <menuitem id="printMenuItem" label="&printCardViewCmd.label;" accesskey="&printCardViewCmd.accesskey;" key="key_printCard" oncommand="AbPrintCard()"/>
                 <menuitem id="printAddressBook" label="&printAddressBook.label;" accesskey="&printAddressBook.accesskey;" oncommand="AbPrintAddressBook()"/>
                 <menuseparator id="menu_FileQuitSeparator"/>
-                <menuitem id="menu_FileQuitItem" label="&quitApplicationCmd.label;" accesskey="&quitApplicationCmd.accesskey;" key="key_quit" oncommand="goQuitApplication()"/>
+                <menuitem id="menu_FileQuitItem" 
+#ifdef XP_WIN
+                label="&quitApplicationCmdWin.label;" accesskey="&quitApplicationCmdWin.accesskey;" 
+#else
+                label="&quitApplicationCmd.label;" accesskey="&quitApplicationCmd.accesskey;" 
+#endif
+                key="key_quit" oncommand="goQuitApplication()"/>
             </menupopup>
         </menu>
         

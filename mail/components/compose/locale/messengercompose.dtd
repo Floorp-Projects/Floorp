@@ -48,9 +48,11 @@
 <!ENTITY printCmd.label "Print...">
 <!ENTITY printCmd.key "P">
 <!ENTITY printCmd.accesskey "P">
-<!ENTITY quitApplicationCmd.label "Exit"> 
+<!ENTITY quitApplicationCmdWin.label                    "Exit"> 
+<!ENTITY quitApplicationCmdWin.accesskey                "x">
+<!ENTITY quitApplicationCmd.label                       "Quit"> 
+<!ENTITY quitApplicationCmd.accesskey                   "Q">
 <!ENTITY quitApplicationCmd.key "Q"> 
-<!ENTITY quitApplicationCmd.accesskey "x">
 
 <!-- Edit Menu -->
 <!ENTITY editMenu.label "Edit"> 
