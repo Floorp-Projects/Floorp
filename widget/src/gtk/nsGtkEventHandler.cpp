@@ -986,38 +986,21 @@ handle_xlib_shell_event(GdkSuperWin *superwin, XEvent *event, gpointer p)
 
 //==============================================================
 void
-handle_xlib_bin_event(GdkSuperWin *superwin, XEvent *event, gpointer p)
-{
-  nsWindow *window = (nsWindow *)p;
-
-  switch(event->xany.type) {
-  case Expose:
-    window->HandleXlibExposeEvent(event);
-    break;
-  case ButtonPress:
-  case ButtonRelease:
-    window->HandleXlibButtonEvent((XButtonEvent *)event);
-    break;
-  case MotionNotify:
-    while (XCheckMaskEvent(GDK_DISPLAY(), ButtonMotionMask, event));
-    window->HandleXlibMotionNotifyEvent((XMotionEvent *) event);
-    break;
-  case EnterNotify:
-  case LeaveNotify:
-    window->HandleXlibCrossingEvent((XCrossingEvent *) event);
-    break;
-  default:
-    break;
-  }
-}
-
-//==============================================================
-void
 handle_superwin_paint(gint aX, gint aY,
                       gint aWidth, gint aHeight, gpointer aData)
 {
   nsWindow *window = (nsWindow *)aData;
-
-  window->DoPaint(aX, aY, aWidth, aHeight, NULL);
+  nsRect    rect;
+  rect.x = aX;
+  rect.y = aY;
+  rect.width = aWidth;
+  rect.height = aHeight;
+  window->Invalidate(rect, PR_FALSE);
 }
 
+void
+handle_superwin_flush(gpointer aData)
+{
+  nsWindow *window = (nsWindow *)aData;
+  window->Update();
+}

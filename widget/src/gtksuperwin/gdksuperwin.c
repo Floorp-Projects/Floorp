@@ -24,31 +24,43 @@ static void gdk_superwin_expose_area  (GdkSuperWin *superwin,
                                        gint         y,
                                        gint         width,
                                        gint         height);
+static void gdk_superwin_flush(GdkSuperWin *superwin);
 static void gdk_superwin_destroy(GtkObject *object);
 
-static int  gdk_superwin_clear_rect_queue(GdkSuperWin *superwin, XEvent *xevent);
-static void gdk_superwin_clear_translate_queue(GdkSuperWin *superwin, unsigned long serial);
+static void gdk_superwin_add_translation(GdkSuperWin *superwin, unsigned long serial,
+                                         gint dx, gint dy);
+static void gdk_superwin_add_antiexpose (GdkSuperWin *superwin, unsigned long serial,
+                                         gint x, gint y,
+                                         gint width, gint height);
+
+static void gdk_superwin_handle_expose (GdkSuperWin *superwin, XEvent *xevent,
+                                        GdkRegion **region, gboolean dont_recurse);
+
 static Bool gdk_superwin_expose_predicate(Display  *display,
                                           XEvent   *xevent,
                                           XPointer  arg);
 
 typedef struct _GdkSuperWinTranslate GdkSuperWinTranslate;
-typedef struct _GdkSuperWinRect      GdkSuperWinRect;
+
+enum {
+  GDK_SUPERWIN_TRANSLATION = 1,
+  GDK_SUPERWIN_ANTIEXPOSE
+};
+  
 
 struct _GdkSuperWinTranslate
 {
+  int type;
   unsigned long serial;
-  gint dx;
-  gint dy;
-};
-
-struct _GdkSuperWinRect
-{
-  unsigned long serial;
-  gint x;
-  gint y;
-  gint width;
-  gint height;
+  union {
+    struct {
+      gint dx;
+      gint dy;
+    } translation;
+    struct {
+      GdkRectangle rect;
+    } antiexpose;
+  } data;
 };
 
 GtkType
@@ -117,11 +129,10 @@ gdk_superwin_new (GdkWindow *parent_window,
   GdkSuperWin *superwin = gtk_type_new(GDK_TYPE_SUPERWIN);
 
   superwin->translate_queue = NULL;
-  superwin->rect_queue = NULL;
 
   superwin->shell_func = NULL;
-  superwin->bin_func = NULL;
   superwin->paint_func = NULL;
+  superwin->flush_func = NULL;
   superwin->func_data = NULL;
   superwin->notify = NULL;
 
@@ -201,6 +212,15 @@ void gdk_superwin_destroy(GtkObject *object)
                            superwin);
   gdk_window_destroy(superwin->bin_window);
   gdk_window_destroy(superwin->shell_window);
+
+  if (superwin->translate_queue) {
+    GSList *tmp_list = superwin->translate_queue;
+    while (tmp_list) {
+      g_free(tmp_list->data);
+      tmp_list = tmp_list->next;
+    }
+    g_slist_free(superwin->translate_queue);
+  }
 }
 
 void         
@@ -208,81 +228,224 @@ gdk_superwin_scroll (GdkSuperWin *superwin,
                      gint dx,
                      gint dy)
 {
-  GdkSuperWinTranslate *translate;
   gint width, height;
 
+  gint first_resize_x = 0;
+  gint first_resize_y = 0;
+  gint first_resize_width = 0;
+  gint first_resize_height = 0;
+
+  unsigned long first_resize_serial = 0;
+  unsigned long move_serial = 0;
+  unsigned long last_resize_serial = 0;
+  gint move_x = 0;
+  gint move_y = 0;
+
+  /* get the current dimensions of the window */
   gdk_window_get_size (superwin->shell_window, &width, &height);
 
-  if (dx > 0 || dy > 0) 
-    {
-      translate = g_new (GdkSuperWinTranslate, 1);
-      translate->dx = MAX (0, dx);
-      translate->dy = MAX (0, dy);
-      translate->serial = NextRequest (GDK_DISPLAY());
-      superwin->translate_queue = g_list_append (superwin->translate_queue, translate);
-    }
-  
-  gdk_window_move_resize (superwin->bin_window,
-			  MIN (0, -dx), MIN (0, -dy),
-			  width + ABS(dx), height + ABS(dy));
+  /* calculate the first resize. */
 
-  gdk_window_move (superwin->bin_window,
-		   MIN (0, -dx) + dx, MIN (0, -dy) + dy);  
+  /* for the first move resize, the width + height default to the
+     width and height of the window. */
+  first_resize_width = width;
+  first_resize_height = height;
 
-  if (dx < 0 || dy < 0) 
-    {
-      translate = g_new (GdkSuperWinTranslate, 1);
-      translate->dx = MIN (0, dx);
-      translate->dy = MIN (0, dy);
-      translate->serial = NextRequest (GDK_DISPLAY());
-      superwin->translate_queue = g_list_append (superwin->translate_queue, translate);
-    }
-
-  gdk_window_move_resize (superwin->bin_window,
-			  0, 0, width, height);
-
-  if (dx < 0)
-  {
-    gdk_superwin_expose_area(superwin,
-                             width + dx, 0,
-                             -dx, height);
-  }
-  else if (dx > 0)
-  {
-    gdk_superwin_expose_area(superwin,
-                             0, 0,
-                             dx, height);
+  /* if scrolling left ( dx < 0 ) need to extend window right by
+     ABS(dx) and left side of window won't move. */
+  if (dx < 0) {
+    /* left side of the window doesn't move. */
+    first_resize_x = 0;
+    /* right side of window will be the width + the offset of the
+       scroll */
+    first_resize_width = width + ABS(dx);
   }
 
-  if (dy < 0)
-  {
-    gdk_superwin_expose_area(superwin,
-                             0, height + dy,
-                             width, -dy);
-  }
-  else if (dy > 0)
-  {
-    gdk_superwin_expose_area(superwin,
-                             0, 0,
-                             width, dy);
+  /* if scrolling right ( dx > 0 ) need to extend window left by
+     ABS(dx) and right side of the window doesn't move */
+  if (dx > 0) {
+    /* left side of the window will be offset to the left by ABS(dx) (
+       x will be < 0 ) */
+    first_resize_x = -dx;
+    /* right side of the window won't move.  We have to add the offset
+       to the width so that it doesn't. */
+    first_resize_width = width + dx;
   }
 
+  /* if scrolling down ( dy < 0 ) need to extend window down by
+     ABS(dy) and top of window won't move */
+  if (dy < 0) {
+    /* top of window not moving */
+    first_resize_y = 0;
+    /* bottom of window will be the height + the offset of the scroll */
+    first_resize_height = height + ABS(dy);
+  }
+
+  /* if scrolling up ( dy > 0 ) need to extend window up by ABS(dy)
+     and bottom of window won't move. */
+  if (dy > 0) {
+    /* top of the window will be moved up by ABS(dy) ( y will be < 0 ) */
+    first_resize_y = -dy;
+    /* this will cause the bottom of the window not to move since
+       we're moving y by the offset up. */
+    first_resize_height = height + dy; 
+  }
+
+  /* calculate our move offsets  */
+
+  /* if scrolling left ( dx < 0 ) we need to move the window left by
+     ABS(dx) */
+  if (dx < 0) {
+    /* dx will be negative - this will move it left */
+    move_x = dx;
+  }
+
+  /* if scrolling right ( dx > 0 ) we need to move the window right by
+     ABS(dx).  Because we already resized the window to -dx by moving
+     it to zero we are actually moving the window to the right. */
+  if (dx > 0) {
+    move_x = 0;
+  }
+
+  /* If scrolling down ( dy < 0 ) we need to move the window up by
+     ABS(dy) */
+  if (dy < 0) {
+    /* dy will be negative - this will move it up */
+    move_y = dy;
+  }
+
+  /* If scrolling up ( dy > 0 ) we need to move the window down by
+     ABS(dy).  In this case we already resized the top of the window
+     to -dy so by moving it to zero we are actually moving the window
+     down. */
+  if (dy > 0) {
+    move_y = 0;
+  }
+
+  /* save the serial of the first request */
+  first_resize_serial = NextRequest(GDK_DISPLAY());
+
+  /* move our window */
+  gdk_window_move_resize(superwin->bin_window,
+                         first_resize_x, first_resize_y,
+                         first_resize_width, first_resize_height);
+
+  /* window move - this move will cause all of the exposes to happen
+     and is where all the translation magic has to be applied.  we
+     need to save the serial of this operation since any expose events
+     with serial request numbers lower than it will have to have their
+     coordinates translated into the new coordinate system. */
+
+  move_serial = NextRequest(GDK_DISPLAY());
+
+  gdk_window_move(superwin->bin_window,
+                  move_x, move_y);
+
+  /* last resize.  This will resize the window to its original
+     position. */
+
+  /* save the request of the last resize */
+  last_resize_serial = NextRequest(GDK_DISPLAY());
+
+  gdk_window_move_resize(superwin->bin_window,
+                         0, 0, width, height);
+
+  /* now that we have moved everything, repaint the damaged areas */
+
+  /* if scrolling left ( dx < 0 ) moving window left so expose area at
+     the right of the window.  Clip the width of the exposure to the
+     width of the window or the offset, whichever is smaller.  Also
+     clip the start to the origin ( 0 ) if the width minus the
+     absolute value of the offset is < 0 to handle > 1 page
+     scrolls. */
+  if (dx < 0) {
+    gdk_superwin_expose_area(superwin, MAX(0, width - ABS(dx)), 0,
+                             MIN(width, ABS(dx)), height);
+    /* If we've exposed this area add an antiexpose for it.  When the
+       window was moved left the expose will be offset by ABS(dx).
+       For greated than one page scrolls, the expose will be offset by
+       the actual offset of the move, hence the MAX(height,
+       ABS(dy)). */
+    gdk_superwin_add_antiexpose(superwin, move_serial,
+                                MAX(width, ABS(dx)),
+                                0, MIN(width, ABS(dx)), height);
+  }
+
+  /* if scrolling right ( dx > 0 ) moving window right so expose area
+     at the left of the window.  Clip the width of the exposure to the
+     width of the window or the offset, whichever is smaller. */
+  if (dx > 0) {
+    gdk_superwin_expose_area(superwin, 0, 0, 
+                             MIN(width, ABS(dx)), height);
+    /* If we've exposed this area add an antiexpose for it. */
+    gdk_superwin_add_antiexpose(superwin, move_serial,
+                                0, 0, MIN(width, ABS(dx)), height);
+  }
+
+  /* if scrolling down ( dy < 0 ) moving window up so expose area at
+     the bottom of the window.  Clip the exposed area to the height of
+     the window or the offset, whichever is smaller.  Also clip the
+     start to the origin ( 0 ) if the the height minus the absolute
+     value of the offset is < 0 to handle > 1 page scrolls. */
+
+  if (dy < 0) {
+    gdk_superwin_expose_area(superwin, 0, MAX(0, height - ABS(dy)),
+                             width, MIN(height, ABS(dy)));
+    /* If we've exposed this area add an antiexpose for it.  When the
+       was moved up before the second move the expose will be offset
+       by ABS(dy).  For greater than one page scrolls, the expose will
+       be offset by actual offset of the move, hence the MAX(height,
+       ABS(dy)).  */
+        gdk_superwin_add_antiexpose(superwin, move_serial,
+                                    0,
+                                    MAX(height, ABS(dy)),
+                                    width, MIN(height, ABS(dy)));
+  }
+
+  /* if scrolling up ( dy > 0 ) moving window down so expose area at
+     the top of the window.  Clip the exposed area to the height or
+     the offset, whichever is smaller. */
+  if (dy > 0) {
+    gdk_superwin_expose_area(superwin, 0, 0,
+                             width, MIN(height, ABS(dy)));
+    /* if we've exposed this area add an antiexpose for it. */
+    gdk_superwin_add_antiexpose(superwin, move_serial,
+                                0, 0, width, MIN(height, ABS(dy)));
+  }
+
+  /* if we are scrolling right or down ( dx > 0 or dy > 0 ) we need to
+     add our translation before the fist move_resize.  Once we do this
+     all previous expose events will be translated into the new
+     coordinate space */
+  if (dx > 0 || dy > 0) {
+    gdk_superwin_add_translation(superwin, first_resize_serial,
+                                 MAX(0, dx), MAX(0, dy));
+  }
+
+  /* If we are scrolling left or down ( x < 0 or y < 0 ) we need to
+     add our translation before the last move_resize.  Once we do this
+     all previous expose events will be translated in the new
+     coordinate space. */
+  if (dx < 0 || dy < 0) {
+    gdk_superwin_add_translation(superwin, last_resize_serial,
+                                 MIN(0, dx), MIN(0, dy));
+  }
 }
 
 void  
-gdk_superwin_set_event_funcs (GdkSuperWin         *superwin,
-                              GdkSuperWinFunc      shell_func,
-                              GdkSuperWinFunc      bin_func,
-                              GdkSuperWinPaintFunc paint_func,
-                              gpointer             func_data,
-                              GDestroyNotify       notify)
+gdk_superwin_set_event_funcs (GdkSuperWin               *superwin,
+                              GdkSuperWinFunc            shell_func,
+                              GdkSuperWinPaintFunc       paint_func,
+                              GdkSuperWinPaintFlushFunc  flush_func,
+                              gpointer                   func_data,
+                              GDestroyNotify             notify)
 {
   if (superwin->notify && superwin->func_data)
     superwin->notify (superwin->func_data);
   
   superwin->shell_func = shell_func;
-  superwin->bin_func = bin_func;
   superwin->paint_func = paint_func;
+  superwin->flush_func = flush_func;
   superwin->func_data = func_data;
   superwin->notify = notify;
 
@@ -303,20 +466,15 @@ gdk_superwin_expose_area  (GdkSuperWin *superwin,
                            gint         width,
                            gint         height)
 {
-  GdkSuperWinRect *rect;
-  rect = g_new(GdkSuperWinRect, 1);
-  /* oh, taste the magic and hackery. */
-  rect->serial = NextRequest(GDK_DISPLAY()) - 2;
-  rect->x = x;
-  rect->y = y;
-  rect->width = width;
-  rect->height = height;
-  superwin->rect_queue = g_list_append(superwin->rect_queue, rect);
-
-  /* ok, we know the rect that we need to paint.  paint it right now. */
-
   if (superwin->paint_func)
     superwin->paint_func(x, y, width, height, superwin->func_data);
+}
+
+static void
+gdk_superwin_flush(GdkSuperWin *superwin)
+{
+  if (superwin->flush_func)
+    superwin->flush_func(superwin->func_data);
 }
 
 static GdkFilterReturn 
@@ -326,41 +484,22 @@ gdk_superwin_bin_filter (GdkXEvent *gdk_xevent,
 {
   XEvent *xevent = (XEvent *)gdk_xevent;
   GdkSuperWin *superwin = data;
-  GdkSuperWinTranslate *translate;
-  GList *tmp_list;
-  
+  GdkFilterReturn retval = GDK_FILTER_CONTINUE;
+  GdkRegion *region = NULL;
+
   switch (xevent->xany.type) {
   case Expose:
-    /* if we pulled something out of the rect queue for this
-       window it means that it was handled earlier as part of a scroll
-       so just ignore igt. */
-    if (!gdk_superwin_clear_rect_queue(superwin, xevent))
-    {
-      /* otherwise, translate the coords for this expose normally. */
-      tmp_list = superwin->translate_queue;
-      while (tmp_list)
-      {
-        translate = tmp_list->data;
-        xevent->xexpose.x += translate->dx;
-        xevent->xexpose.y += translate->dy;
-        tmp_list = tmp_list->next;
-      }
-      /* call the function that will handle the expose */
-      if (superwin->bin_func)
-        superwin->bin_func (superwin, xevent, superwin->func_data);
-    }
-    return GDK_FILTER_REMOVE;
+    region = gdk_region_new();
+    retval = GDK_FILTER_REMOVE;
+    gdk_superwin_handle_expose(superwin, xevent, &region, FALSE);
+    gdk_region_destroy(region);
     break;
-
-  case ConfigureNotify:
-    /* we got a configure notify. clear the xlate queue */
-    gdk_superwin_clear_translate_queue(superwin, xevent->xany.serial);
-    return GDK_FILTER_REMOVE;
+  default:
     break;
   }
-
-  return GDK_FILTER_CONTINUE;
+  return retval;
 }
+    
 
 static GdkFilterReturn 
 gdk_superwin_shell_filter (GdkXEvent *gdk_xevent,
@@ -369,7 +508,7 @@ gdk_superwin_shell_filter (GdkXEvent *gdk_xevent,
 {
   XEvent *xevent = (XEvent *)gdk_xevent;
   GdkSuperWin *superwin = data;
-  
+
   if (xevent->type == VisibilityNotify)
     {
       switch (xevent->xvisibility.state)
@@ -391,11 +530,8 @@ gdk_superwin_shell_filter (GdkXEvent *gdk_xevent,
     }
   
   if (superwin->shell_func) {
-    /* g_print("calling func %p with arg %p in win %p\n",
-       superwin->event_func, superwin->func_data, superwin); */
     superwin->shell_func (superwin, xevent, superwin->func_data);
   }
-
   return GDK_FILTER_CONTINUE;
 }
 
@@ -413,132 +549,136 @@ Bool gdk_superwin_expose_predicate(Display  *display,
   case Expose:
     return True;
     break;
-  case ConfigureNotify:
-    return True;
-    break;
   default:
     return False;
     break;
   }
 }
 
-/* this function allows you to do simple expose compression.
-   it will return the properly xlated x/y width/height of
-   the expose event.  also, it can return after processing 
-   a ConfigureNotify event without setting any of the members.
-   always check the value of was_expose, too */
-
-gint gdk_superwin_check_expose_events (GdkSuperWin *superwin,
-                                       gint *x, gint *y,
-                                       gint *width, gint *height,
-                                       gboolean *was_expose)
+/* static */
+void gdk_superwin_add_translation(GdkSuperWin *superwin, unsigned long serial,
+                                  gint dx, gint dy)
 {
-  XEvent  event_return;
-  XEvent *xevent = &event_return;
-  GList *tmp_list;
-  GdkSuperWinTranslate *translate;
-  *was_expose = FALSE;
-  *x = 0;
-  *y = 0;
-  *width = 0;
-  *height = 0;
-  /* check to see if we have any events */
-  if (XCheckIfEvent(GDK_DISPLAY(), xevent,
-                    gdk_superwin_expose_predicate, (XPointer)superwin)) {
-    switch (xevent->xany.type) {
-    case Expose:
-      /* if we pulled something out of the rect queue for this
-         window it means that it was handled earlier as part of a scroll
-         so just ignore igt. */
-      if (!gdk_superwin_clear_rect_queue(superwin, xevent))
-        {
-          /* otherwise, translate the coords for this expose normally. */
-          tmp_list = superwin->translate_queue;
-          while (tmp_list)
-            {
-              translate = tmp_list->data;
-              xevent->xexpose.x += translate->dx;
-              xevent->xexpose.y += translate->dy;
-              tmp_list = tmp_list->next;
-            }
-        }
-      /* set our return values */
-      *x = xevent->xexpose.x;
-      *y = xevent->xexpose.y;
-      *width = xevent->xexpose.width;
-      *height = xevent->xexpose.height;
-      *was_expose = TRUE;
-      return 1;
-      break;
-      
-    case ConfigureNotify:
-      /* we got a configure notify. clear the xlate queue */
-      gdk_superwin_clear_translate_queue(superwin, event_return.xany.serial);
-      /* note that we are returning 1 here but was_expose is still FALSE */
-      return 1;
-      break;
-    }
-    
-  }
-  return 0;
+  GdkSuperWinTranslate *translate = g_new(GdkSuperWinTranslate, 1);
+  translate->type = GDK_SUPERWIN_TRANSLATION;
+  translate->serial = serial;
+  translate->data.translation.dx = dx;
+  translate->data.translation.dy = dy;
+  superwin->translate_queue = g_slist_append(superwin->translate_queue, translate);
 }
 
-void
-gdk_superwin_clear_translate_queue(GdkSuperWin *superwin, unsigned long serial)
-{
-  GdkSuperWinTranslate *translate;
-  GList *tmp_list;
-  GList *link_to_remove = NULL;
+/* static */
+void gdk_superwin_add_antiexpose (GdkSuperWin *superwin, unsigned long serial,
+                                  gint x, gint y,
+                                  gint width, gint height)
 
-  if (superwin->translate_queue) {
-    tmp_list = superwin->translate_queue;
-    while (tmp_list) {
-      translate = tmp_list->data;
-      if (serial == translate->serial) {
-        g_free (tmp_list->data);
-        superwin->translate_queue = g_list_remove_link (superwin->translate_queue, tmp_list);
-        link_to_remove = tmp_list;
-      }
-      tmp_list = tmp_list->next;
-      if (link_to_remove) {
-        g_list_free_1(link_to_remove);
-        link_to_remove = NULL;
-      }
-    }
-  }
+{
+  GdkSuperWinTranslate *translate = g_new(GdkSuperWinTranslate, 1);
+  translate->type = GDK_SUPERWIN_ANTIEXPOSE;
+  translate->serial = serial;
+  translate->data.antiexpose.rect.x = x;
+  translate->data.antiexpose.rect.y = y;
+  translate->data.antiexpose.rect.width = width;
+  translate->data.antiexpose.rect.height = height;
+  superwin->translate_queue = g_slist_append(superwin->translate_queue, translate);
 }
 
-int gdk_superwin_clear_rect_queue(GdkSuperWin *superwin, XEvent *xevent)
+/* static */
+void gdk_superwin_handle_expose (GdkSuperWin *superwin, XEvent *xevent,
+                                 GdkRegion **region, gboolean dont_recurse)
 {
-  GdkSuperWinRect *rect;
-  GList *tmp_list;
-  GList *link_to_remove = NULL;
-  int retval = 0;
+  GSList *tmp_list;
+  gboolean send_event = TRUE;
+  unsigned long serial = xevent->xany.serial;
+  XEvent extra_event;
+  GdkRectangle rect;
+  GdkRegion *tmp_region = NULL;
+  gboolean   is_special = TRUE;
 
-  if (superwin->rect_queue) {
-    tmp_list = superwin->rect_queue;
-    while (tmp_list) {
-      rect = tmp_list->data;
-      /* if the serial matches something in the list and the rect is the
-         same size then this is the expose event that was put into the xlate
-         queue.  remove it and note via the return value that something was
-         removed from the queue */
-      if (xevent->xany.serial == rect->serial &&
-          xevent->xexpose.x == rect->x &&
-          xevent->xexpose.y == rect->y &&
-          xevent->xexpose.width == rect->width &&
-          xevent->xexpose.height == rect->height) {
-        retval = 1;
-        g_free(tmp_list->data);
-        superwin->rect_queue = g_list_remove_link(superwin->rect_queue, tmp_list);
-        link_to_remove = tmp_list;
+  /* set up our rect for the damaged area */
+  rect.x = xevent->xexpose.x;
+  rect.y = xevent->xexpose.y;
+  rect.width = xevent->xexpose.width;
+  rect.height = xevent->xexpose.height;
+
+  /* try to see if this is a special event that matches an antiexpose */
+  tmp_list = superwin->translate_queue;
+  while (tmp_list) {
+    GdkSuperWinTranslate *xlate = tmp_list->data;
+    if (xlate->type == GDK_SUPERWIN_ANTIEXPOSE && serial == xlate->serial) {
+      GdkRegion *antiexpose_region = gdk_region_new();
+      tmp_region = gdk_region_union_with_rect(antiexpose_region, 
+                                              &xlate->data.antiexpose.rect);
+      gdk_region_destroy(antiexpose_region);
+      antiexpose_region = tmp_region;
+      /* if the rect of the expose event is contained in the
+         antiexpose then we should just drop it on the floor. */
+      if (gdk_region_rect_in(antiexpose_region, &rect) == GDK_OVERLAP_RECTANGLE_IN) {
+        goto end;
       }
+      gdk_region_destroy(antiexpose_region);
+
+    }
+    tmp_list = tmp_list->next;
+  }
+
+  /* we walk the list looking for any transformations */
+  tmp_list = superwin->translate_queue;
+  while (tmp_list) {
+    GdkSuperWinTranslate *xlate = tmp_list->data;
+    /* apply translations to this event if we can. */
+    if (xlate->type == GDK_SUPERWIN_TRANSLATION && serial < xlate->serial ) {
+      rect.x += xlate->data.translation.dx;
+      rect.y += xlate->data.translation.dy;
+    }
+    tmp_list = tmp_list->next;
+  }
+
+  /* add this expose area to our damaged rect */
+
+  tmp_region = gdk_region_union_with_rect(*region, &rect);
+  gdk_region_destroy(*region);
+  *region = tmp_region;
+
+ end:
+
+  /* remove any events from the queue that are old */
+  tmp_list = superwin->translate_queue;
+  while (tmp_list) {
+    GdkSuperWinTranslate *xlate = tmp_list->data;
+    if (serial > xlate->serial) {
+      GSList *tmp_link = tmp_list;
       tmp_list = tmp_list->next;
-      if (link_to_remove) {
-        g_list_free(link_to_remove);
-        link_to_remove = NULL;
-      }
+      superwin->translate_queue = g_slist_remove_link(superwin->translate_queue,
+                                                      tmp_link);
+      g_free(tmp_link->data);
+      g_slist_free_1(tmp_link);
+    }
+    else {
+      tmp_list = tmp_list->next;
     }
   }
-  return retval;
+
+  /* if we're not supposed to recurse or paint then return now */
+  if (dont_recurse)
+    return;
+
+  /* try to do any expose event compression we can */
+  while (XCheckTypedWindowEvent(xevent->xany.display,
+                                xevent->xany.window,
+                                Expose,
+                                &extra_event) == True) {
+    gdk_superwin_handle_expose(superwin, &extra_event, region, TRUE);
+  }
+
+  /* if the region isn't empty, send the paint event */
+  if (gdk_region_empty(*region) == FALSE) {
+      GdkRectangle clip_box;
+      gdk_region_get_clipbox(*region, &clip_box);
+      if (superwin->paint_func)
+        superwin->paint_func(clip_box.x, clip_box.y,
+                             clip_box.width, clip_box.height,
+                             superwin->func_data);
+  }
+
 }

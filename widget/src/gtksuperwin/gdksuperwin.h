@@ -42,6 +42,7 @@ typedef void (*GdkSuperWinFunc) (GdkSuperWin *super_win,
 typedef void (*GdkSuperWinPaintFunc) (gint x, gint y,
                                       gint width, gint height,
                                       gpointer data);
+typedef void (*GdkSuperWinPaintFlushFunc) (gpointer data);
 
 struct _GdkSuperWin
 {
@@ -50,15 +51,14 @@ struct _GdkSuperWin
   GdkWindow *bin_window;
 
   /* Private */
-  GList               *translate_queue;
-  GList               *rect_queue;
-  GdkSuperWinFunc      shell_func;
-  GdkSuperWinFunc      bin_func;
-  GdkSuperWinPaintFunc paint_func;
-  gpointer             func_data;
-  GDestroyNotify       notify;
+  GSList                    *translate_queue;
+  GdkSuperWinFunc            shell_func;
+  GdkSuperWinPaintFunc       paint_func;
+  GdkSuperWinPaintFlushFunc  flush_func;
+  gpointer                   func_data;
+  GDestroyNotify             notify;
 
-  GdkVisibilityState   visibility;
+  GdkVisibilityState         visibility;
 };
 
 struct _GdkSuperWinClass
@@ -75,12 +75,12 @@ GdkSuperWin *gdk_superwin_new (GdkWindow      *parent_window,
                                guint           height);
 
 void  
-gdk_superwin_set_event_funcs (GdkSuperWin         *superwin,
-                              GdkSuperWinFunc      shell_func,
-                              GdkSuperWinFunc      bin_func,
-                              GdkSuperWinPaintFunc paint_func,
-                              gpointer             func_data,
-                              GDestroyNotify       notify);
+gdk_superwin_set_event_funcs (GdkSuperWin               *superwin,
+                              GdkSuperWinFunc            shell_func,
+                              GdkSuperWinPaintFunc       paint_func,
+                              GdkSuperWinPaintFlushFunc  flush_func,
+                              gpointer                   func_data,
+                              GDestroyNotify             notify);
 
 void gdk_superwin_scroll (GdkSuperWin *superwin,
                           gint         dx,
@@ -88,10 +88,6 @@ void gdk_superwin_scroll (GdkSuperWin *superwin,
 void gdk_superwin_resize (GdkSuperWin *superwin,
                           gint         width,
                           gint         height);
-gint gdk_superwin_check_expose_events (GdkSuperWin *superwin,
-                                       gint *x, gint *y,
-                                       gint *width, gint *height,
-                                       gboolean *was_expose);
 
 #ifdef __cplusplus
 }
