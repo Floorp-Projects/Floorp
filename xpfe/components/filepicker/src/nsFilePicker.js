@@ -52,6 +52,9 @@ const nsIFilePicker         = Components.interfaces.nsIFilePicker;
 const nsIInterfaceRequestor = Components.interfaces.nsIInterfaceRequestor
 const nsIDOMWindow          = Components.interfaces.nsIDOMWindow;
 const nsIStringBundleService = Components.interfaces.nsIStringBundleService;
+const nsIWebNavigation      = Components.interfaces.nsIWebNavigation;
+const nsIDocShellTreeItem   = Components.interfaces.nsIDocShellTreeItem;
+const nsIBaseWindow         = Components.interfaces.nsIBaseWindow;
 
 var   bundle                = null;
 var   lastDirectory         = null;
@@ -195,11 +198,26 @@ nsFilePicker.prototype = {
       }
     }
 
+    var parentWin = null;
     try {
+      parentWin = parent.QueryInterface(nsIInterfaceRequestor)
+                        .getInterface(nsIWebNavigation)
+                        .QueryInterface(nsIDocShellTreeItem)
+                        .treeOwner
+                        .QueryInterface(nsIInterfaceRequestor)
+                        .getInterface(nsIBaseWindow);
+    } catch(ex) {
+      dump("file picker couldn't get base window\n"+ex+"\n");
+    }
+    try {
+      if (parentWin)
+        parentWin.blurSuppression = true;
       parent.openDialog("chrome://global/content/filepicker.xul",
                         "",
                         "chrome,modal,titlebar,resizable=yes,dependent=yes",
                         o);
+      if (parentWin)
+        parentWin.blurSuppression = false;
       this.mFile = o.retvals.file;
       this.mFilterIndex = o.retvals.filterIndex;
       this.mFilesEnumerator = o.retvals.files;

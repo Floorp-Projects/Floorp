@@ -76,7 +76,7 @@ protected:
   char * ConvertToFileSystemCharset(const PRUnichar *inString);
   PRUnichar * ConvertFromFileSystemCharset(const char *inString);
 
-  HWND                   mWnd;
+  nsIWidget              *mParentWidget;
   nsString               mTitle;
   PRInt16                mMode;
   nsCString              mFile;
