@@ -27,6 +27,7 @@ nsLayoutAtoms.h
 nsStyleCoord.h
 nsStyleStruct.h
 nsStyleConsts.h
+nsIStyledContent.h
 nsIStyleContext.h
 nsIStyleRule.h
 nsIStyleSet.h
