@@ -59,7 +59,10 @@ public:
     NS_IMETHOD GetToolbarManager(nsIToolbarManager *& aToolbarManager);
     NS_IMETHOD SetBorderType(nsToolbarBorderType aBorderType);
 
-    virtual nsEventStatus HandleEvent(nsGUIEvent *aEvent);
+    NS_IMETHOD_(nsEventStatus) HandleEvent(nsGUIEvent *aEvent);
+    NS_IMETHOD_(nsEventStatus) OnPaint(nsIRenderingContext& aRenderingContext,
+                                       const nsRect& aDirtyRect);
+
 
     // nsIToolbarItem
     NS_IMETHOD Repaint(PRBool aIsSynchronous);

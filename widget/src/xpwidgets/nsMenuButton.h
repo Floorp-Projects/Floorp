@@ -54,7 +54,7 @@ public:
 
   NS_IMETHOD  SetBounds(const nsRect& aBounds);
 
-  nsEventStatus OnPaint(nsIRenderingContext& aRenderingContext,
+  NS_IMETHOD_(nsEventStatus) OnPaint(nsIRenderingContext& aRenderingContext,
                                      const nsRect& aDirtyRect);
 
   NS_IMETHOD_(nsEventStatus) OnMouseEnter(nsGUIEvent *aEvent);
@@ -75,7 +75,7 @@ public:
   NS_IMETHOD           GetShadowColor(nscolor &aColor);
   NS_IMETHOD           SetShadowColor(const nscolor &aColor);
 
-  virtual nsEventStatus HandleEvent(nsGUIEvent *aEvent);
+  NS_IMETHOD_(nsEventStatus) HandleEvent(nsGUIEvent *aEvent);
 
   NS_IMETHOD SetImageDimensions(const PRInt32 & aWidth, const PRInt32 & aHeight);
   NS_IMETHOD SetImageURLs(const nsString& aUpURL,
