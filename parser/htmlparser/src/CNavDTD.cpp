@@ -116,24 +116,28 @@ public:
  ***************************************************************/
 class CTagFinder: public nsDequeFunctor{
 public:
-  CTagFinder(nsAutoString* aTagName) {
-  }
+  CTagFinder(){mTagName = nsnull;}
+  void Initialize(nsAutoString* aTagName) {mTagName = aTagName;}
 
   virtual ~CTagFinder() {
   }
 
-  virtual void* operator()(void* anObject) {
+  virtual void* operator()(void* anObject) 
+  {
+  nsITagHandler* thetaghandler;
+  nsAutoString  *thestring;
 
-    mCurTagHandler = 0;
-    if( ((nsITagHandler*)anObject)->GetString()== mTagName){
-      mCurTagHandler = (nsITagHandler*)anObject;
-      return 0;
+    //mCurTagHandler = 0;
+    thestring = ((nsITagHandler*)anObject)->GetString();
+    if( thestring->Equals(*mTagName)){
+      //thetaghandler = (nsITagHandler*)anObject;
+      return anObject;
       }
-    return(anObject); 
+    return(0); 
    }
 
   nsAutoString*  mTagName;
-  nsITagHandler* mCurTagHandler;
+  //nsITagHandler* mCurTagHandler;
 };
 
 /***************************************************************
@@ -156,17 +160,18 @@ public:
   }
   
   nsITagHandler*  FindTagHandler(nsAutoString* aTagName){
+    nsITagHandler *foundhandler = nsnull;
+    mTagFinder.Initialize(aTagName);
     mTagHandlerDeque.Begin();
-
-    return 0;
+    foundhandler = (nsITagHandler*) mTagHandlerDeque.FirstThat(mTagFinder);
+    return foundhandler;
   }
 
   CTagHandlerDeallocator  mDeallocator;
   nsDeque                 mTagHandlerDeque;
+  CTagFinder              mTagFinder;
 
 };
-
-
 
 
 CTagHandlerRegister gTagHandlerRegister;
@@ -330,6 +335,7 @@ CNavDTD::CNavDTD() : nsIDTD(), mTokenDeque(gTokenKiller)  {
   mBodyContext=new nsDTDContext();
   mFormContext=0;
   mMapContext=0;
+
 }
 
 /**
@@ -479,6 +485,11 @@ nsresult CNavDTD::DidBuildModel(PRInt32 anErrorCode,PRBool aNotifySink){
  */
 nsresult CNavDTD::HandleToken(CToken* aToken){
   nsresult result=NS_OK;
+
+  // test and example of finding the tag handler
+  //nsAutoString* findstring = new nsAutoString(aToken->GetStringValueXXX());
+  //nsITagHandler* taghandler = gTagHandlerRegister.FindTagHandler(findstring);
+
 
   if(aToken) {
     CHTMLToken*     theToken= (CHTMLToken*)(aToken);
