@@ -134,18 +134,12 @@ nsFileProtocolHandler::NewChannel(const char* verb, nsIURI* url,
                                  nsIChannel* *result)
 {
     nsresult rv;
-
-    nsIProgressEventSink* eventSink;
-    rv = eventSinkGetter->GetEventSink(verb, nsIProgressEventSink::GetIID(), 
-                                       (nsISupports**)&eventSink);
+    
+    nsFileChannel* channel;
+    rv = nsFileChannel::Create(nsnull, nsIFileChannel::GetIID(), (void**)&channel);
     if (NS_FAILED(rv)) return rv;
 
-    nsFileChannel* channel = new nsFileChannel();
-    if (channel == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(channel);
-
-    rv = channel->Init(url, eventSinkGetter, eventQueue);
+    rv = channel->Init(verb, url, eventSinkGetter, eventQueue);
     if (NS_FAILED(rv)) {
         NS_RELEASE(channel);
         return rv;
