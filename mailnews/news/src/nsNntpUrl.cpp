@@ -34,6 +34,8 @@
 #include "nsCRT.h"
 #include "nsNewsUtils.h"
 
+#include "nntpCore.h"
+
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
 // that multiply inherits from nsISupports
@@ -61,7 +63,7 @@ nsNntpUrl::nsNntpUrl(nsISupports* aContainer, nsIURLGroup* aGroup)
     m_host = nsnull;
     m_file = nsnull;
     m_ref = nsnull;
-    m_port = -1;
+    m_port = NEWS_PORT;
     m_spec = nsnull;
     m_search = nsnull;
  
@@ -464,7 +466,7 @@ nsresult nsNntpUrl::ParseURL(const nsString& aSpec, const nsIURL* aURL)
     PR_FREEIF(m_file);
     PR_FREEIF(m_ref);
     PR_FREEIF(m_search);
-    m_port = -1;
+    m_port = NEWS_PORT;
 
     if (nsnull == cSpec) {
         if (nsnull == aURL) {
@@ -725,7 +727,9 @@ nsresult nsNntpUrl::ParseURL(const nsString& aSpec, const nsIURL* aURL)
         }
     }
 
-//printf("protocol='%s' host='%s' file='%s'\n", m_protocol, m_host, m_file);
+#ifdef DEBUG_sspitzer
+    printf("protocol='%s' host='%s' file='%s'\n", m_protocol, m_host, m_file);
+#endif
     delete [] cSpec;
 
     NS_UNLOCK_INSTANCE();
@@ -737,12 +741,7 @@ void nsNntpUrl::ReconstructSpec(void)
     PR_FREEIF(m_spec);
 
     char portBuffer[10];
-    if (-1 != m_port) {
-        PR_snprintf(portBuffer, 10, ":%d", m_port);
-    }
-    else {
-        portBuffer[0] = '\0';
-    }
+    PR_snprintf(portBuffer, 10, ":%u", m_port);
 
     PRInt32 plen = PL_strlen(m_protocol) + PL_strlen(m_host) +
         PL_strlen(portBuffer) + PL_strlen(m_file) + 4;
