@@ -32,6 +32,9 @@ sub usage {
 
 use FileHandle;
 
+# This is for gunzip (should add a configure script to handle this).
+$ENV{PATH} .= ":/usr/local/bin";
+
 unless ($#ARGV == 1) {
   &usage;
   die "Error: Wrong number of arguments\n";
