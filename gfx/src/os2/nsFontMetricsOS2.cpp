@@ -1610,7 +1610,7 @@ nsFontMetricsOS2::ResolveForwards(HPS                  aPS,
   {
     while( running && firstChar < lastChar )
     {
-      if( *currChar > 0x00FF )
+      if(( *currChar > 0x00FF ) && (*currChar != 0x20AC))
       { 
         fh = GetUnicodeFont(aPS);
         fontSwitch.mFont = fh;
@@ -1630,7 +1630,7 @@ nsFontMetricsOS2::ResolveForwards(HPS                  aPS,
         fontSwitch.mFont = fh;
         while( ++currChar < lastChar )
         {
-          if( *currChar > 0x00FF )
+          if( (*currChar > 0x00FF) && (*currChar != 0x20AC) )
             break;
         }
 
@@ -1644,7 +1644,7 @@ nsFontMetricsOS2::ResolveForwards(HPS                  aPS,
   {
     while( running && firstChar < lastChar )
     {
-      if( *currChar >= 0x0080 && *currChar <= 0x00FF )
+      if( (*currChar >= 0x0080 && *currChar <= 0x00FF) || (*currChar == 0x20AC)  )
       { 
         fh = new nsFontOS2();
         *fh = *mFontHandle;
@@ -1652,7 +1652,7 @@ nsFontMetricsOS2::ResolveForwards(HPS                  aPS,
         fontSwitch.mFont = fh;
         while( ++currChar < lastChar )
         {
-          if( *currChar < 0x0080 || *currChar > 0x00FF )
+          if(( *currChar < 0x0080 || *currChar > 0x00FF) && (*currChar != 0x20AC) )
             break;
         }
 
@@ -1666,7 +1666,7 @@ nsFontMetricsOS2::ResolveForwards(HPS                  aPS,
         fontSwitch.mFont = fh;
         while( ++currChar < lastChar )
         {
-          if( *currChar >= 0x0080 && *currChar <= 0x00FF )
+          if( (*currChar >= 0x0080 && *currChar <= 0x00FF) || (*currChar == 0x20AC)  )
             break;
         }
 
@@ -1701,7 +1701,7 @@ nsFontMetricsOS2::ResolveBackwards(HPS                  aPS,
   {
     while( running && firstChar > lastChar )
     {
-      if( *currChar > 0x00FF )
+      if(( *currChar > 0x00FF ) && (*currChar != 0x20AC))
       { 
         fh = GetUnicodeFont(aPS);
         fontSwitch.mFont = fh;
@@ -1721,7 +1721,7 @@ nsFontMetricsOS2::ResolveBackwards(HPS                  aPS,
         fontSwitch.mFont = fh;
         while( --currChar > lastChar )
         {
-          if( *currChar > 0x00FF )
+          if(( *currChar > 0x00FF ) && (*currChar != 0x20AC))
             break;
         }
 
@@ -1735,7 +1735,7 @@ nsFontMetricsOS2::ResolveBackwards(HPS                  aPS,
   {
     while( running && firstChar > lastChar )
     {
-      if( *currChar >= 0x0080 && *currChar <= 0x00FF )
+      if( (*currChar >= 0x0080 && *currChar <= 0x00FF) || (*currChar == 0x20AC)  )
       { 
         fh = new nsFontOS2();
         *fh = *mFontHandle;
@@ -1743,7 +1743,7 @@ nsFontMetricsOS2::ResolveBackwards(HPS                  aPS,
         fontSwitch.mFont = fh;
         while( --currChar > lastChar )
         {
-          if( *currChar < 0x0080 || *currChar > 0x00FF )
+          if(( *currChar < 0x0080 || *currChar > 0x00FF) && (*currChar != 0x20AC) )
             break;
         }
 
@@ -1757,7 +1757,7 @@ nsFontMetricsOS2::ResolveBackwards(HPS                  aPS,
         fontSwitch.mFont = fh;
         while( --currChar > lastChar )
         {
-          if( *currChar >= 0x0080 && *currChar <= 0x00FF )
+          if( (*currChar >= 0x0080 && *currChar <= 0x00FF) || (*currChar == 0x20AC)  )
             break;
         }
 
