@@ -1928,10 +1928,16 @@ nsBookmarksService::ReadBookmarks()
 	if (NS_FAILED(rv)) return rv;
 
 	PRBool	foundIERoot = PR_FALSE;
+
 #ifdef	XP_WIN
 	nsCOMPtr<nsIRDFResource>	ieFolder;
 	char				*ieFavoritesURL = nsnull;
 #endif
+#ifdef	XP_BEOS
+	nsCOMPtr<nsIRDFResource>	netPositiveFolder;
+	char				*netPositiveURL = nsnull;
+#endif
+
 	{ // <-- scope the stream to get the open/close automatically.
 		nsInputFileStream strm(bookmarksFile);
 
@@ -1959,13 +1965,32 @@ nsBookmarksService::ReadBookmarks()
 		parser.SetIEFavoritesRoot(ieFavoritesURL);
 #endif
 
+#ifdef	XP_BEOS
+		nsSpecialSystemDirectory	netPositiveFile(nsSpecialSystemDirectory::BeOS_SettingsDirectory);
+		nsFileURL			netPositiveURLSpec(netPositiveFile);
+
+		// XXX Currently hard-coded; does the BeOS have anything like a
+		// system registry which we could use to get this instead?
+		netPositiveURLSpec += "NetPositive/Bookmarks/";
+
+		const char			*constNetPositiveURL = netPositiveURLSpec.GetAsString();
+		if (constNetPositiveURL)
+		{
+			netPositiveURL = strdup(constNetPositiveURL);
+		}
+		parser.SetIEFavoritesRoot(netPositiveURL);
+#endif
+
 		parser.Parse(kNC_BookmarksRoot, kNC_Bookmark);
 
 		parser.ParserFoundIEFavoritesRoot(&foundIERoot);
 	} // <-- scope the stream to get the open/close automatically.
 	
 	// look for and import any IE Favorites
-	nsAutoString	ieTitle("Imported IE Favorites");		// XXX localization?
+	nsAutoString	ieTitle("Imported IE Favorites");			// XXX localization?
+#ifdef	XP_BEOS
+	nsAutoString	netPositiveTitle("Imported NetPositive Bookmarks");	// XXX localization?
+#endif
 
 #ifdef	XP_MAC
 	nsSpecialSystemDirectory ieFavoritesFile(nsSpecialSystemDirectory::Mac_PreferencesDirectory);
@@ -2042,6 +2067,42 @@ nsBookmarksService::ReadBookmarks()
 		ieFavoritesURL = nsnull;
 	}
 #endif
+
+#ifdef	XP_BEOS
+	rv = gRDF->GetResource(netPositiveURL, getter_AddRefs(netPositiveFolder));
+	if (NS_SUCCEEDED(rv))
+	{
+		nsCOMPtr<nsIRDFLiteral>	netPositiveTitleLiteral;
+		rv = gRDF->GetLiteral(netPositiveTitle.GetUnicode(), getter_AddRefs(netPositiveTitleLiteral));
+		if (NS_SUCCEEDED(rv) && netPositiveTitleLiteral)
+		{
+			rv = mInner->Assert(netPositiveFolder, kNC_Name, netPositiveTitleLiteral, PR_TRUE);
+		}
+
+		// if the Favorites root isn't somewhere in bookmarks.html, add it
+		if (!foundIERoot)
+		{
+			nsCOMPtr<nsIRDFContainer> container;
+			rv = nsComponentManager::CreateInstance(kRDFContainerCID,
+								nsnull,
+								nsIRDFContainer::GetIID(),
+								getter_AddRefs(container));
+			if (NS_FAILED(rv)) return rv;
+
+			rv = container->Init(mInner, kNC_BookmarksRoot);
+			if (NS_FAILED(rv)) return rv;
+
+			rv = container->AppendElement(netPositiveFolder);
+			if (NS_FAILED(rv)) return rv;
+		}
+	}
+	if (netPositiveURL)
+	{
+		free(netPositiveURL);
+		netPositiveURL = nsnull;
+	}
+#endif
+
 
 	return NS_OK;	
 }
