@@ -98,16 +98,6 @@ nsLineLayout::nsLineLayout(nsIPresContext& aPresContext,
   aOuterReflowState->frame->GetStyleData(eStyleStruct_Text,
                                          (const nsStyleStruct*&) mStyleText);
   mTextAlign = mStyleText->mTextAlign;
-  switch (mStyleText->mWhiteSpace) {
-  case NS_STYLE_WHITESPACE_PRE:
-  case NS_STYLE_WHITESPACE_NOWRAP:
-    mNoWrap = PR_TRUE;
-    break;
-  default:
-    mNoWrap = PR_FALSE;
-    break;
-  }
-  mDirection = aOuterReflowState->mStyleDisplay->mDirection;
   mMinLineHeight = nsHTMLReflowState::CalcLineHeight(mPresContext,
                                                      aOuterReflowState->frame);
   mBRFrame = nsnull;
@@ -117,8 +107,6 @@ nsLineLayout::nsLineLayout(nsIPresContext& aPresContext,
   mUnderstandsWhiteSpace = PR_FALSE;
   mFirstLetterStyleOK = PR_FALSE;
   mIsTopOfPage = PR_FALSE;
-  mWasInWord = PR_FALSE;
-  mCanBreakBeforeFrame = PR_FALSE;
   mUpdatedBand = PR_FALSE;
   mPlacedFloaters = 0;
   mImpactedByFloaters = PR_FALSE;
@@ -236,7 +224,6 @@ nsLineLayout::BeginLineReflow(nscoord aX, nscoord aY,
   mUnderstandsWhiteSpace = PR_FALSE;
   mFirstLetterStyleOK = PR_FALSE;
   mIsTopOfPage = aIsTopOfPage;
-  mCanBreakBeforeFrame = PR_FALSE;
   mUpdatedBand = PR_FALSE;
   mPlacedFloaters = 0;
   mImpactedByFloaters = aImpactedByFloaters;
@@ -266,6 +253,17 @@ nsLineLayout::BeginLineReflow(nscoord aX, nscoord aY,
   else {
     mBottomEdge = aY + aHeight;
   }
+
+  switch (mStyleText->mWhiteSpace) {
+  case NS_STYLE_WHITESPACE_PRE:
+  case NS_STYLE_WHITESPACE_NOWRAP:
+    psd->mNoWrap = PR_TRUE;
+    break;
+  default:
+    psd->mNoWrap = PR_FALSE;
+    break;
+  }
+  psd->mDirection = mBlockReflowState->mStyleDisplay->mDirection;
 }
 
 void
@@ -344,16 +342,18 @@ nsLineLayout::UpdateBand(nscoord aX, nscoord aY,
   mImpactedByFloaters = PR_TRUE;
 }
 
+// Note: Only adjust the outermost frames (the ones that are direct
+// children of the block), not the ones in the child spans. The reason
+// is simple: the frames in the spans have coordinates local to their
+// parent therefore they are moved when their parent span is moved.
 void
 nsLineLayout::UpdateFrames()
 {
-  if (NS_STYLE_DIRECTION_LTR == mDirection) {
+  NS_ASSERTION(nsnull != mRootSpan, "UpdateFrames with no active spans");
+
+  PerSpanData* psd = mRootSpan;
+  if (NS_STYLE_DIRECTION_LTR == psd->mDirection) {
     if (PLACED_LEFT & mPlacedFloaters) {
-      // Note: Only adjust the outermost frames (the ones that are
-      // direct children of the block), not the ones in the child
-      // spans. The reason is simple: the frames in the spans have
-      // coordinates local to their parent therefore they are moved
-      // when their parent span is moved.
       PerSpanData* psd = mRootSpan;
       PerFrameData* pfd = psd->mFirstFrame;
       while (nsnull != pfd) {
@@ -427,6 +427,20 @@ nsLineLayout::BeginSpan(nsIFrame* aFrame,
     psd->mLeftEdge = aLeftEdge;
     psd->mX = aLeftEdge;
     psd->mRightEdge = aRightEdge;
+
+    const nsStyleText* styleText;
+    aSpanReflowState->frame->GetStyleData(eStyleStruct_Text,
+                                          (const nsStyleStruct*&) styleText);
+    switch (styleText->mWhiteSpace) {
+    case NS_STYLE_WHITESPACE_PRE:
+    case NS_STYLE_WHITESPACE_NOWRAP:
+        psd->mNoWrap = PR_TRUE;
+        break;
+    default:
+        psd->mNoWrap = PR_FALSE;
+        break;
+    }
+    psd->mDirection = aSpanReflowState->mStyleDisplay->mDirection;
 
     // Switch to new span
     mCurrentSpan = psd;
@@ -626,6 +640,10 @@ nsLineLayout::NewPerFrameData(PerFrameData** aResult)
   }
   pfd->mSpan = nsnull;
   pfd->mNext = nsnull;
+#ifdef DEBUG
+  pfd->mVerticalAlign = 0xFF;
+  pfd->mRelativePos = PRBool(0xFF);
+#endif
   *aResult = pfd;
   return NS_OK;
 }
@@ -658,8 +676,10 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   }
   else {
     availSize.width = psd->mRightEdge - psd->mX;
-    if (mNoWrap) {
-      // XXX Shouldn't this use NS_UNCONSTRAINEDSIZE?
+    if (psd->mNoWrap) {
+      // Make up a width to use for reflowing into.  XXX what value to
+      // use? for tables, we want to limit it; for other elements
+      // (e.g. text) it can be unlimited...
       availSize.width = psd->mReflowState->availableWidth;
     }
   }
@@ -693,7 +713,6 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   reflowState.lineLayout = this;
   reflowState.isTopOfPage = mIsTopOfPage;
   mUnderstandsWhiteSpace = PR_FALSE;
-  mCanBreakBeforeFrame = mTotalPlacedFrames > 0;
 
   // Stash copies of some of the computed state away for later
   // (vertical alignment, for example)
@@ -707,10 +726,18 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
     pfd->mOffsets = reflowState.computedOffsets;
   }
 
+  // We want to guarantee that we always make progress when
+  // formatting. Therefore, if the object being placed on the line is
+  // too big for the line, but it is the only thing on the line
+  // (including counting floaters) then we go ahead and place it
+  // anyway. Its also true that if the object is a part of a larger
+  // object (a multiple frame word) then we will place it on the line
+  // too.
+  //
   // Capture this state *before* we reflow the frame in case it clears
   // the state out. We need to know how to treat the current frame
   // when breaking.
-  mWasInWord = InWord();
+  PRBool notSafeToBreak = (mTotalPlacedFrames == 0) || InWord();
 
   // Apply left margins (as appropriate) to the frame computing the
   // new starting x,y coordinates for the frame.
@@ -841,7 +868,8 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
 
     // See if we can place the frame. If we can't fit it, then we
     // return now.
-    if (CanPlaceFrame(pfd, reflowState, metrics, aReflowStatus)) {
+    if (CanPlaceFrame(pfd, reflowState, notSafeToBreak, metrics,
+                      aReflowStatus)) {
       // Place the frame, updating aBounds with the final size and
       // location.  Then apply the bottom+right margins (as
       // appropriate) to the frame.
@@ -946,6 +974,7 @@ nsLineLayout::ApplyLeftMargin(PerFrameData* pfd,
 PRBool
 nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
                             const nsHTMLReflowState& aReflowState,
+                            PRBool aNotSafeToBreak,
                             nsHTMLReflowMetrics& aMetrics,
                             nsReflowStatus& aStatus)
 {
@@ -977,14 +1006,14 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
   }
   pfd->mMargin.right = rightMargin;
 
-  if (mNoWrap) {
+  PerSpanData* psd = mCurrentSpan;
+  if (psd->mNoWrap) {
     // When wrapping is off, everything fits
     return PR_TRUE;
   }
 
   // Set outside to PR_TRUE if the result of the reflow leads to the
   // frame sticking outside of our available area.
-  PerSpanData* psd = mCurrentSpan;
   PRBool outside = pfd->mBounds.XMost() + rightMargin > psd->mRightEdge;
   if (!outside) {
     // If it fits, it fits
@@ -998,17 +1027,10 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
     return PR_TRUE;
   }
 
-  // We want to guarantee that we always make progress when
-  // formatting. Therefore, if the object being placed on the line is
-  // too big for the line, but it is the only thing on the line
-  // (including counting floaters) then we go ahead and place it
-  // anyway. Its also true that if the object is a part of a larger
-  // object (a multiple frame word) then we will place it on the line
-  // too.
-  if (!mCanBreakBeforeFrame || mWasInWord) {
-    // There are no words on the line or we are in the first word on
-    // the line. If the line isn't impacted by a floater then this
-    // object fits.
+  if (aNotSafeToBreak) {
+    // There are no frames on the line or we are in the first word on
+    // the line. If the line isn't impacted by a floater then the
+    // current frame fits.
     if (!mImpactedByFloaters) {
       return PR_TRUE;
     }
@@ -1081,7 +1103,8 @@ nsLineLayout::AddBulletFrame(nsIFrame* aFrame,
     pfd->mRelativePos = PR_FALSE;
     pfd->mAscent = aMetrics.ascent;
     pfd->mDescent = aMetrics.descent;
-    aFrame->GetRect(pfd->mBounds);        // y value is irrelevant
+    // Note: y value will be updated during vertical alignment
+    aFrame->GetRect(pfd->mBounds);
     pfd->mCombinedArea = aMetrics.mCombinedArea;
     if (mComputeMaxElementSize) {
       pfd->mMaxElementSize.SizeTo(aMetrics.width, aMetrics.height);
@@ -1222,6 +1245,9 @@ nsLineLayout::VerticalAlignFrames(nsRect& aLineBoxResult,
       }
     }
     PerSpanData* span = pfd->mSpan;
+#ifdef DEBUG
+    NS_ASSERTION(0xFF != pfd->mVerticalAlign, "umr");
+#endif
     switch (pfd->mVerticalAlign) {
       case VALIGN_TOP:
         if (span) {
@@ -1281,6 +1307,9 @@ nsLineLayout::PlaceTopBottomFrames(PerSpanData* psd,
   PerFrameData* pfd = psd->mFirstFrame;
   while (nsnull != pfd) {
     PerSpanData* span = pfd->mSpan;
+#ifdef DEBUG
+    NS_ASSERTION(0xFF != pfd->mVerticalAlign, "umr");
+#endif
     switch (pfd->mVerticalAlign) {
       case VALIGN_TOP:
         if (span) {
@@ -1357,9 +1386,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
     // values so that only the child frames will impact their values
     // (since these are children of the block, there is no span box to
     // provide initial values).
-    baselineY = 0;
-    minY = 0;
-    maxY = 0;
+    baselineY = minY = maxY = 0;
 #ifdef NOISY_VERTICAL_ALIGN
     nsFrame::ListTag(stdout, parentFrame);
     printf(": pass1 valign frames: topEdge=%d minLineHeight=%d\n",
@@ -1402,24 +1429,14 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
   else {
     // When a span container is zero height it means that all of its
     // kids are zero height as well.
-    psd->mMinY = 0;
-    psd->mMaxY = 0;
+    baselineY = minY = maxY = 0;
     psd->mTopLeading = 0;
     psd->mBottomLeading = 0;
     psd->mLogicalHeight = 0;
-
-    // Make sure we fixup their y coordinates to be relative to the
-    // parent, however, otherwise later calculations will bust.
-    PerFrameData* pfd = psd->mFirstFrame;
-    while (nsnull != pfd) {
-      pfd->mBounds.x = 0;
-      pfd->mBounds.y = 0;
-      pfd = pfd->mNext;
-    }
 #ifdef NOISY_VERTICAL_ALIGN
     printf("  ==> [empty line]\n");
 #endif
-    return;
+//    return;
   }
 
   nscoord maxTopBoxHeight = 0;
@@ -1697,7 +1714,7 @@ nsLineLayout::HorizontalAlignFrames(nsRect& aLineBounds, PRBool aAllowJustify)
     nscoord dx = 0;
     switch (mTextAlign) {
       case NS_STYLE_TEXT_ALIGN_DEFAULT:
-        if (NS_STYLE_DIRECTION_LTR == mDirection) {
+        if (NS_STYLE_DIRECTION_LTR == psd->mDirection) {
           // default alignment for left-to-right is left so do nothing
           break;
         }
@@ -1718,9 +1735,9 @@ nsLineLayout::HorizontalAlignFrames(nsRect& aLineBounds, PRBool aAllowJustify)
         if (aAllowJustify) {
           break;
         }
-        else if (NS_STYLE_DIRECTION_RTL == mDirection) {
+        else if (NS_STYLE_DIRECTION_RTL == psd->mDirection) {
           // right align the frames
-          dx = remainingWidth;;
+          dx = remainingWidth;
         }
         break;
 

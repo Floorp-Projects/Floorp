@@ -218,11 +218,10 @@ protected:
   nsBlockReflowState* mBlockRS;/* XXX hack! */
   nscoord mMinLineHeight;
   PRBool mComputeMaxElementSize;
-  PRBool mNoWrap;
   PRUint8 mTextAlign;
-  PRUint8 mDirection;
 
-  // This state varies during the reflow of a line
+  // This state varies during the reflow of a line but is line
+  // "global" state not span "local" state.
   nsIFrame* mBRFrame;
   PRInt32 mLineNumber;
   PRInt32 mColumn;
@@ -230,8 +229,6 @@ protected:
   PRBool mUnderstandsWhiteSpace;
   PRBool mFirstLetterStyleOK;
   PRBool mIsTopOfPage;
-  PRBool mWasInWord;
-  PRBool mCanBreakBeforeFrame;
   PRBool mUpdatedBand;
   PRBool mImpactedByFloaters;
   PRUint8 mPlacedFloaters;
@@ -292,6 +289,9 @@ protected:
     PerFrameData* mLastFrame;
 
     const nsHTMLReflowState* mReflowState;
+    PRBool mNoWrap;
+    PRUint8 mDirection;
+
     nscoord mLeftEdge;
     nscoord mX;
     nscoord mRightEdge;
@@ -340,6 +340,7 @@ protected:
 
   PRBool CanPlaceFrame(PerFrameData* pfd,
                        const nsHTMLReflowState& aReflowState,
+                       PRBool aNotSafeToBreak,
                        nsHTMLReflowMetrics& aMetrics,
                        nsReflowStatus& aStatus);
 
