@@ -373,7 +373,7 @@ SetHTMLIFrameElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         if (NS_SUCCEEDED(rv)) {
           nsIDOMDocument* prop;
           if (PR_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&prop,
-                                                  kIDocumentIID, NS_ConvertToString("Document"),
+                                                  kIDocumentIID, NS_ConvertASCIItoUCS2("Document"),
                                                   cx, *vp)) {
             rv = NS_ERROR_DOM_NOT_OBJECT_ERR;
           }

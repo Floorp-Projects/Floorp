@@ -554,7 +554,7 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         if (NS_SUCCEEDED(rv)) {
           nsIDOMWindow* prop;
           if (PR_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&prop,
-                                                  kIWindowIID, NS_ConvertToString("Window"),
+                                                  kIWindowIID, NS_ConvertASCIItoUCS2("Window"),
                                                   cx, *vp)) {
             rv = NS_ERROR_DOM_NOT_OBJECT_ERR;
           }
@@ -2036,7 +2036,7 @@ WindowRouteEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b0),
                                            kIEventIID,
-                                           NS_ConvertToString("Event"),
+                                           NS_ConvertASCIItoUCS2("Event"),
                                            cx,
                                            argv[0])) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);

@@ -400,14 +400,14 @@ NodeInsertBefore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b0),
                                            kINodeIID,
-                                           NS_ConvertToString("Node"),
+                                           NS_ConvertASCIItoUCS2("Node"),
                                            cx,
                                            argv[0])) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
     }
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b1),
                                            kINodeIID,
-                                           NS_ConvertToString("Node"),
+                                           NS_ConvertASCIItoUCS2("Node"),
                                            cx,
                                            argv[1])) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
@@ -456,14 +456,14 @@ NodeReplaceChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b0),
                                            kINodeIID,
-                                           NS_ConvertToString("Node"),
+                                           NS_ConvertASCIItoUCS2("Node"),
                                            cx,
                                            argv[0])) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
     }
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b1),
                                            kINodeIID,
-                                           NS_ConvertToString("Node"),
+                                           NS_ConvertASCIItoUCS2("Node"),
                                            cx,
                                            argv[1])) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
@@ -511,7 +511,7 @@ NodeRemoveChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b0),
                                            kINodeIID,
-                                           NS_ConvertToString("Node"),
+                                           NS_ConvertASCIItoUCS2("Node"),
                                            cx,
                                            argv[0])) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
@@ -559,7 +559,7 @@ NodeAppendChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b0),
                                            kINodeIID,
-                                           NS_ConvertToString("Node"),
+                                           NS_ConvertASCIItoUCS2("Node"),
                                            cx,
                                            argv[0])) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);

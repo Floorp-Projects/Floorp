@@ -343,7 +343,7 @@ SelectionCollapse(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b0),
                                            kINodeIID,
-                                           NS_ConvertToString("Node"),
+                                           NS_ConvertASCIItoUCS2("Node"),
                                            cx,
                                            argv[0])) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
@@ -394,7 +394,7 @@ SelectionExtend(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b0),
                                            kINodeIID,
-                                           NS_ConvertToString("Node"),
+                                           NS_ConvertASCIItoUCS2("Node"),
                                            cx,
                                            argv[0])) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
@@ -516,7 +516,7 @@ SelectionContainsNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b0),
                                            kINodeIID,
-                                           NS_ConvertToString("Node"),
+                                           NS_ConvertASCIItoUCS2("Node"),
                                            cx,
                                            argv[0])) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
@@ -601,7 +601,7 @@ SelectionAddRange(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b0),
                                            kIRangeIID,
-                                           NS_ConvertToString("Range"),
+                                           NS_ConvertASCIItoUCS2("Range"),
                                            cx,
                                            argv[0])) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
@@ -648,7 +648,7 @@ SelectionRemoveRange(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b0),
                                            kIRangeIID,
-                                           NS_ConvertToString("Range"),
+                                           NS_ConvertASCIItoUCS2("Range"),
                                            cx,
                                            argv[0])) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
@@ -765,7 +765,7 @@ SelectionAddSelectionListener(JSContext *cx, JSObject *obj, uintN argc, jsval *a
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b0),
                                            kISelectionListenerIID,
-                                           NS_ConvertToString("SelectionListener"),
+                                           NS_ConvertASCIItoUCS2("SelectionListener"),
                                            cx,
                                            argv[0])) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
@@ -812,7 +812,7 @@ SelectionRemoveSelectionListener(JSContext *cx, JSObject *obj, uintN argc, jsval
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b0),
                                            kISelectionListenerIID,
-                                           NS_ConvertToString("SelectionListener"),
+                                           NS_ConvertASCIItoUCS2("SelectionListener"),
                                            cx,
                                            argv[0])) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
