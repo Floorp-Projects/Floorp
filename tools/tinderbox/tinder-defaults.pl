@@ -42,6 +42,10 @@ $Tinderbox_server = 'tinderbox-daemon@tinderbox.mozilla.org';
 #- Set if you want to build in a separate object tree
 $ObjDir = '';
 
+# User comment, eg. ip address for dhcp builds.
+# ex: $UserComment = "ip = 208.12.36.108";
+$UserComment = 0;
+
 #-
 #- The rest should not need to be changed
 #-

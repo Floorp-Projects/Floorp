@@ -18,7 +18,7 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
-$::UtilsVersion = '$Revision: 1.37 $ ';
+$::UtilsVersion = '$Revision: 1.38 $ ';
 
 package TinderUtils;
 
@@ -581,6 +581,11 @@ sub BuildIt {
         print_log "current dir is -- " . $ENV{HOST} . ":$build_dir\n";
         print_log "Build Administrator is $Settings::BuildAdministrator\n";
         
+		# Print user comment if there is one.
+		if ($Settings::UserComment) {
+		  print_log "$Settings::UserComment\n";
+		}
+
 		# System id
 		print_log "uname -a = " . `uname -a`;
 

@@ -26,7 +26,10 @@
 # Assumes that at most two tinderboxes are running
 # simultaneously, depend and clobber.
 #
-# Assumes that if mozconfig exists, use it.
+# Assumes that if mozconfig exists, use it. Format:
+#   mk_add_options MOZ_MAKE_FLAGS=j8
+#   ac_add_options --disable-debug
+#   ac_add_options --enable-optimize
 #
 
 
