@@ -767,10 +767,12 @@ nsNNTPHost::ProcessLine(char* line, PRUint32 line_size)
 	else {
         PRUint32 depth;
         rv = m_hostinfo->GetDepth(&depth);
-        
+
+#if 0                           // not defined yet
         if (NS_SUCCEEDED(rv))
             rv = NS_NewNewsgroup(&info, line, set, subscribed, this,
                                  depth+1);
+#endif
     }
 
 	if (NS_FAILED(rv) || !info) return MK_OUT_OF_MEMORY;
@@ -1834,8 +1836,9 @@ nsNNTPHost::SwitchNewsToCategoryContainer(nsINNTPNewsgroup *newsInfo)
         // create a category container to hold this newsgroup
 		nsINNTPCategoryContainer *newCatCont;
         // formerly newsInfo->CloneIntoCategoryContainer();
+#if 0                           // not implemented yet
         NS_NewCategoryContainerFromNewsgroup(&newCatCont, newsInfo);
-
+#endif
         
 		// slip the category container where the newsInfo was.
 		m_groups->ReplaceElementAt(newCatCont, groupIndex);
@@ -3239,10 +3242,10 @@ MSG_IMPL_GETFOLDER(nsINNTPCategoryContainer)
 
 // this is just to make sure we can instantiate a news host
 nsresult
-NS_NewNNTPHost(nsINNTPHost *aNNTPHost)
+NS_NewNNTPHost(nsINNTPHost **aNNTPHost, const char* name, PRUint32 port)
 {
     nsresult rv;
-    nsNNTPHost *aHost = new nsNNTPHost("news", 119);
+    nsNNTPHost *aHost = new nsNNTPHost(name, port);
     if (aHost)
         return aHost->QueryInterface(nsINNTPHost::GetIID(),
                                      (void **)aNNTPHost);
