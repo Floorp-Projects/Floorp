@@ -20,8 +20,21 @@
  Definitions for all routines normally found in string.h, but not there in the Metrowerks
  ANSII headers.
 */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 extern char *strdup(const char *source);
 
 extern int strcasecmp(const char*, const char*);
 
 extern int strncasecmp(const char*, const char*, int length);
+
+#if DEBUG
+extern void InitializeSIOUX(unsigned char isStandAlone);
+#endif		/* DEBUG */
+
+#ifdef __cplusplus
+}
+#endif

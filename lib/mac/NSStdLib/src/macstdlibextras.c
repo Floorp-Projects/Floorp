@@ -128,3 +128,41 @@ char *strdup(const char *source)
 	BlockMoveData(source, newAllocation, stringLength);
 	return newAllocation;
 }
+
+
+#pragma mark -
+
+#if DEBUG
+
+#include <SIOUX.h>
+
+void InitializeSIOUX(unsigned char isStandAlone)
+{
+
+	SIOUXSettings.initializeTB = isStandAlone;
+	SIOUXSettings.standalone = isStandAlone;
+	SIOUXSettings.setupmenus = isStandAlone;
+	SIOUXSettings.autocloseonquit = true;
+	SIOUXSettings.asktosaveonclose = isStandAlone;
+	SIOUXSettings.showstatusline = true;
+	
+	if (isStandAlone)
+	{
+		SIOUXSettings.toppixel = 42;
+		SIOUXSettings.leftpixel = 6;
+		SIOUXSettings.rows = 40;
+		SIOUXSettings.columns = 82;
+	}
+	else
+	{
+		SIOUXSettings.toppixel = 480;
+		SIOUXSettings.leftpixel = 4;
+		SIOUXSettings.rows = 20;
+		SIOUXSettings.columns = 100;
+	}
+	
+	//InstallConsole();
+}
+
+
+#endif
