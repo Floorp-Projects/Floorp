@@ -35,9 +35,12 @@ else
 PROGRAM		= mozilla-bin
 endif
 
-EXTRA_DSO_LIBS	= gkgfx \
-		mpfilelocprovider_s \
-		$(NULL)
+ifndef NO_STATIC_LIB
+EXTRA_DSO_LDOPTS = -L$(DEPTH)/dist/lib/components
+EXTRA_DSO_LIBS = $(shell cat $(FINAL_LINK_COMPS) $(FINAL_LINK_LIBS))
+else
+EXTRA_DSO_LIBS = gkgfx mpfilelocprovider_s
+endif
 
 CPPSRCS		= \
 		nsAppRunner.cpp \
@@ -50,8 +53,16 @@ CPPSRCS		= \
 XP_LIBS		= \
 		$(EXTRA_DSO_LDOPTS) \
 		$(EXTRA_DSO_LIBS) \
+		$(NULL)
+
+ifdef NO_STATIC_LIB
+XP_LIBS		+= \
 		$(XPCOM_LIBS) \
 		$(MOZ_JS_LIBS) \
+		$(NULL)
+endif
+
+XP_LIBS		+= \
 		$(OJI_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
@@ -143,6 +154,8 @@ EXTRA_DEPS	= \
 		$(addprefix $(DIST)/,$(patsubst -l%,bin/lib%$(DLL_SUFFIX),$(XP_DIST_DEP_LIBS:-l%_s=lib/lib%_s.a))) \
 		$(NULL)
 endif
+
+EXTRA_DEPS	+= $(FINAL_LINK_COMPS) $(FINAL_LINK_LIBS)
 
 CXXFLAGS	+= $(MOZ_TOOLKIT_REGISTRY_CFLAGS)
 
