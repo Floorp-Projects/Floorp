@@ -657,7 +657,7 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *ide
     rv = NS_ERROR_NOT_INITIALIZED;
   
   if (NS_FAILED(rv))
-    NotifyStateListeners(eComposeProcessDone);
+    NotifyStateListeners(eComposeProcessDone,rv);
 	
   return rv;
 }
@@ -1465,7 +1465,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
     composeService->TimeStamp("done with mime. Lets update some UI element", PR_FALSE);
 #endif
 
-    compose->NotifyStateListeners(eComposeFieldsReady);
+    compose->NotifyStateListeners(eComposeFieldsReady,NS_OK);
 
 #ifdef MSGCOMP_TRACE_PERFORMANCE
     composeService->TimeStamp("addressing widget, windows title and focus are now set, time to insert the body", PR_FALSE);
@@ -1816,7 +1816,7 @@ nsresult nsMsgComposeSendListener::OnStopSending(const char *aMsgID, nsresult aS
         {
 			    if (nsCRT::strcasecmp(fieldsFCC, "nocopy://") == 0)
 			    {
-			      compose->NotifyStateListeners(eComposeProcessDone);
+			      compose->NotifyStateListeners(eComposeProcessDone, NS_OK);
             if (progress)
               progress->CloseProgressDialog(PR_FALSE);
             compose->CloseWindow();
@@ -1825,7 +1825,7 @@ nsresult nsMsgComposeSendListener::OnStopSending(const char *aMsgID, nsresult aS
       }
       else
       {
-			  compose->NotifyStateListeners(eComposeProcessDone);
+			  compose->NotifyStateListeners(eComposeProcessDone, NS_OK);
         if (progress)
           progress->CloseProgressDialog(PR_FALSE);
         compose->CloseWindow();  // if we fail on the simple GetFcc call, close the window to be safe and avoid
@@ -1844,7 +1844,7 @@ nsresult nsMsgComposeSendListener::OnStopSending(const char *aMsgID, nsresult aS
 #ifdef NS_DEBUG
 			printf("nsMsgComposeSendListener: the message send operation failed!\n");
 #endif
-			compose->NotifyStateListeners(eComposeProcessDone);
+			compose->NotifyStateListeners(eComposeProcessDone,aStatus);
       if (progress)
         progress->CloseProgressDialog(PR_TRUE);
 		}
@@ -1899,7 +1899,7 @@ nsMsgComposeSendListener::OnStopCopy(nsresult aStatus)
 	  compose->GetProgress(getter_AddRefs(progress));
     if (progress)
       progress->CloseProgressDialog(NS_FAILED(aStatus));
-		compose->NotifyStateListeners(eComposeProcessDone);
+		compose->NotifyStateListeners(eComposeProcessDone,aStatus);
 
 		if (NS_SUCCEEDED(aStatus))
 		{
@@ -2147,7 +2147,7 @@ nsMsgDocumentStateListener::NotifyDocumentCreated(void)
       return compose->BuildQuotedMessageAndSignature();
     else
     {
-      compose->NotifyStateListeners(eComposeFieldsReady);
+      compose->NotifyStateListeners(eComposeFieldsReady,NS_OK);
       return compose->BuildBodyMessageAndSignature();
     }
   }
@@ -2496,7 +2496,7 @@ nsMsgCompose::BuildBodyMessageAndSignature()
   return rv;
 }
 
-nsresult nsMsgCompose::NotifyStateListeners(TStateListenerNotification aNotificationType)
+nsresult nsMsgCompose::NotifyStateListeners(TStateListenerNotification aNotificationType, nsresult aResult)
 {
   if (!mStateListeners)
     return NS_OK;    // maybe there just aren't any.
@@ -2519,7 +2519,7 @@ nsresult nsMsgCompose::NotifyStateListeners(TStateListenerNotification aNotifica
           break;
         
         case eComposeProcessDone:
-          thisListener->ComposeProcessDone();
+          thisListener->ComposeProcessDone(aResult);
           break;
         
         case eSaveInFolderDone:

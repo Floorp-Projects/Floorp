@@ -80,10 +80,15 @@ var stateListener = {
 		ComposeFieldsReady();
 	},
 
-	ComposeProcessDone: function() {
+	ComposeProcessDone: function(aResult) {
 		dump("\n RECEIVE ComposeProcessDone\n\n");
 		windowLocked = false;
 	  CommandUpdate_MsgCompose();
+    if (aResult== Components.results.NS_OK)
+    {
+      contentChanged = false;
+      msgCompose.bodyModified = false;
+    }
 	},
 
   SaveInFolderDone: function(folderURI) {
@@ -1084,8 +1089,8 @@ function GenericSendMessage( msgType )
 
 				// Before sending the message, check what to do with HTML message, eventually abort.
         var convert = DetermineConvertibility();
-				var action = DetermineHTMLAction(convert);
-				if (action == msgCompSendFormat.AskUser)
+        var action = DetermineHTMLAction(convert);
+        if (action == msgCompSendFormat.AskUser)
 				{
                     var recommAction = convert == msgCompConvertible.No
                                    ? msgCompSendFormat.AskUser
@@ -1128,8 +1133,6 @@ function GenericSendMessage( msgType )
           sendOrSaveOperationInProgress = true;
         }
 				msgCompose.SendMsg(msgType, getCurrentIdentity(), progress);
-				contentChanged = false;
-				msgCompose.bodyModified = false;
 			}
 			catch (ex) {
 				dump("failed to SendMsg: " + ex + "\n");

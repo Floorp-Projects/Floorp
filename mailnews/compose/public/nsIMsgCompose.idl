@@ -88,8 +88,8 @@ interface nsIMsgComposeStateListener : nsISupports
 {
 	/* ... */
 	void        NotifyComposeFieldsReady();
-	void        ComposeProcessDone();
-  void        SaveInFolderDone(in string folderName);
+	void        ComposeProcessDone(in nsresult aResult);
+	void        SaveInFolderDone(in string folderName);
 };
 
 %{ C++
@@ -206,7 +206,7 @@ interface nsIMsgCompose : nsISupports {
                                               in nsStringRef aSignature, in boolean aQuoted, in boolean aHTMLEditor);
 
 	/* Tell the doc state listeners that the doc state has changed */
-	[noscript] void notifyStateListeners(in TStateListenerNotification aNotificationType);
+	[noscript] void notifyStateListeners(in TStateListenerNotification aNotificationType, in nsresult aResult);
 
   /* Retreive the progress object */
   [noscript] nsIMsgProgress getProgress();
