@@ -83,4 +83,16 @@ interface nsIDOMJSWindow : nsISupports
    */
 
   readonly attribute nsIDOMWindow             frames;
+
+  /* Scriptable version of find(). See nsIDOMWindowInternal for the
+   * non-scriptable version. It takes 7 optional arguments:
+   * @param searchString: the search string
+   * @param caseSensitive: is the search case sensitive?
+   * @param backwards: should we search backwards?
+   * @param wrapAround: should wrap the search?
+   * @param wholeWord: should we search only for whole words?
+   * @param searchInFrames: should we search in all frames?
+   * @param showDialog: should we show the Find Dialog?
+   */  
+  boolean                   find();                
 };

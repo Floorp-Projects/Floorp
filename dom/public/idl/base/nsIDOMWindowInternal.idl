@@ -161,4 +161,21 @@ interface nsIDOMWindowInternal : nsIDOMWindow
 
   DOMString                 escape(in DOMString str);
   DOMString                 unescape(in DOMString str);
+
+  /* See nsIDOMJSWindow for the scriptable version of find()
+   * @param str: the search pattern
+   * @param caseSensitive: is the search caseSensitive
+   * @param backwards: should we search backwards
+   * @param wrapAround: should we wrap the search
+   * @param wholeWord: should we search only for whole words
+   * @param searchInFrames: should we search through all frames
+   * @param showDialog: should we show the Find dialog
+   */
+  [noscript] boolean         find(in DOMString str, 
+                                  in boolean caseSensitive,
+                                  in boolean backwards, 
+                                  in boolean wrapAround,
+                                  in boolean wholeWord, 
+                                  in boolean searchInFrames, 
+                                  in boolean showDialog);
 };

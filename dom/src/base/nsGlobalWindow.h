@@ -232,6 +232,12 @@ protected:
   nsresult CheckSecurityWidthAndHeight(PRInt32* width, PRInt32* height);
   nsresult CheckSecurityLeftAndTop(PRInt32* left, PRInt32* top);
 
+  // Helper for window.find()
+  nsresult FindInternal(nsAReadableString& aStr, PRBool caseSensitive,
+                       PRBool backwards, PRBool wrapAround, PRBool wholeWord, 
+                       PRBool searchInFrames, PRBool showDialog, 
+                       PRBool *aReturn);
+
 protected:
   // When adding new member variables, be careful not to create cycles
   // through JavaScript.  If there is any chance that a member variable
