@@ -196,25 +196,29 @@ function ConfirmDelete()
 }
 
 // Delete the profile, with the delete flag set as per instruction above.
-function DeleteProfile( deleteFiles )
+function DeleteProfile(deleteFiles)
 {
-  var profileList = document.getElementById( "profiles" );
+  var profileList = document.getElementById("profiles");
   if (profileList.selectedItems && profileList.selectedItems.length) {
     var selected = profileList.selectedItems[0];
-    var firstAdjacent = selected.previousSibling;
-    var name = selected.getAttribute( "rowName" );
+    var name = selected.getAttribute("rowName");
+    var previous = profileList.getPreviousItem(selected, 1);
+
     try {
-      profile.deleteProfile( name, deleteFiles );
-      profileList.removeChild( selected );
+      profile.deleteProfile(name, deleteFiles);
+      profileList.removeChild(selected);
+
+      if (previous) {
+        profileList.selectItem(previous);
+        profileList.ensureElementIsVisible(previous);
+      }
+
+      // set the button state
+      DoEnabling();
     }
     catch (ex) {
+      dump("Exception during profile deletion.\n");
     }
-    if( firstAdjacent ) {
-      profileList.selectItem( firstAdjacent );
-      profileList.ensureElementIsVisible( firstAdjacent );
-    }
-    // set the button state
-    DoEnabling();
   }
 }
 
