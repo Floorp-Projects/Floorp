@@ -677,14 +677,26 @@ protected:
 
 /**
  * A macro to implement the getter and setter for a given string
- * valued content property. The method uses the generic SetAttr and
- * GetAttribute methods.
+ * valued content property. The method uses the generic GetAttr and
+ * SetAttr methods.
  */
 #define NS_IMPL_STRING_ATTR(_class, _method, _atom)                  \
+  NS_IMPL_STRING_ATTR_DEFAULT_VALUE(_class, _method, _atom, "")
+
+/**
+ * A macro to implement the getter and setter for a given string
+ * valued content property with a default value.
+ * The method uses the generic GetAttr and SetAttr methods.
+ */
+#define NS_IMPL_STRING_ATTR_DEFAULT_VALUE(_class, _method, _atom, _default) \
   NS_IMETHODIMP                                                      \
   _class::Get##_method(nsAWritableString& aValue)                    \
   {                                                                  \
-    GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::_atom, aValue);          \
+    nsresult rv = GetAttr(kNameSpaceID_HTML,                         \
+                          nsHTMLAtoms::_atom, aValue);               \
+    if (rv == NS_CONTENT_ATTR_NOT_THERE) {                           \
+      aValue.Assign(NS_LITERAL_STRING(_default));                    \
+    }                                                                \
     return NS_OK;                                                    \
   }                                                                  \
   NS_IMETHODIMP                                                      \
@@ -696,16 +708,15 @@ protected:
 
 /**
  * A macro to implement the getter and setter for a given boolean
- * valued content property. The method uses the generic SetAttr and
- * GetAttribute methods.
+ * valued content property. The method uses the generic GetAttr and
+ * SetAttr methods.
  */
 #define NS_IMPL_BOOL_ATTR(_class, _method, _atom)                     \
   NS_IMETHODIMP                                                       \
   _class::Get##_method(PRBool* aValue)                                \
   {                                                                   \
     nsHTMLValue val;                                                  \
-    nsresult rv;                                                      \
-    rv = GetHTMLAttribute(nsHTMLAtoms::_atom, val);                   \
+    nsresult rv = GetHTMLAttribute(nsHTMLAtoms::_atom, val);          \
     *aValue = NS_CONTENT_ATTR_NOT_THERE != rv;                        \
     return NS_OK;                                                     \
   }                                                                   \
@@ -724,15 +735,23 @@ protected:
 
 /**
  * A macro to implement the getter and setter for a given integer
- * valued content property. The method uses the generic SetAttr and
- * GetAttribute methods.
+ * valued content property. The method uses the generic GetAttr and
+ * SetAttr methods.
  */
 #define NS_IMPL_INT_ATTR(_class, _method, _atom)                    \
+  NS_IMPL_INT_ATTR_DEFAULT_VALUE(_class, _method, _atom, -1)
+
+/**
+ * A macro to implement the getter and setter for a given integer
+ * valued content property with a default value.
+ * The method uses the generic GetAttr and SetAttr methods.
+ */
+#define NS_IMPL_INT_ATTR_DEFAULT_VALUE(_class, _method, _atom, _default) \
   NS_IMETHODIMP                                                     \
   _class::Get##_method(PRInt32* aValue)                             \
   {                                                                 \
     nsHTMLValue value;                                              \
-    *aValue = -1;                                                   \
+    *aValue = _default;                                             \
     if (NS_CONTENT_ATTR_HAS_VALUE ==                                \
         GetHTMLAttribute(nsHTMLAtoms::_atom, value)) {              \
       if (value.GetUnit() == eHTMLUnit_Integer) {                   \
@@ -751,14 +770,22 @@ protected:
 /**
  * A macro to implement the getter and the setter for a given pixel
  * valued content property. The method uses the generic GetAttr and
- * SetAttr methods
+ * SetAttr methods.
  */
 #define NS_IMPL_PIXEL_ATTR(_class, _method, _atom)                  \
+  NS_IMPL_PIXEL_ATTR_DEFAULT_VALUE(_class, _method, _atom, -1)
+
+/**
+ * A macro to implement the getter and the setter for a given pixel
+ * valued content property with a default value.
+ * The method uses the generic GetAttr and SetAttr methods.
+ */
+#define NS_IMPL_PIXEL_ATTR_DEFAULT_VALUE(_class, _method, _atom, _default) \
   NS_IMETHODIMP                                                     \
   _class::Get##_method(PRInt32* aValue)                             \
   {                                                                 \
     nsHTMLValue value;                                              \
-    *aValue = -1;                                                   \
+    *aValue = _default;                                                   \
     if (NS_CONTENT_ATTR_HAS_VALUE ==                                \
         GetHTMLAttribute(nsHTMLAtoms::_atom, value)) {              \
       if (value.GetUnit() == eHTMLUnit_Pixel) {                     \

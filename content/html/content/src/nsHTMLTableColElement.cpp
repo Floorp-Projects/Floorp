@@ -166,11 +166,11 @@ nsHTMLTableColElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 }
 
 
-NS_IMPL_STRING_ATTR(nsHTMLTableColElement, Align, align)
-NS_IMPL_STRING_ATTR(nsHTMLTableColElement, Ch, _char)
+NS_IMPL_STRING_ATTR_DEFAULT_VALUE(nsHTMLTableColElement, Align, align, "left")
+NS_IMPL_STRING_ATTR_DEFAULT_VALUE(nsHTMLTableColElement, Ch, _char, ".")
 NS_IMPL_STRING_ATTR(nsHTMLTableColElement, ChOff, charoff)
-NS_IMPL_INT_ATTR(nsHTMLTableColElement, Span, span)
-NS_IMPL_STRING_ATTR(nsHTMLTableColElement, VAlign, valign)
+NS_IMPL_INT_ATTR_DEFAULT_VALUE(nsHTMLTableColElement, Span, span, 1)
+NS_IMPL_STRING_ATTR_DEFAULT_VALUE(nsHTMLTableColElement, VAlign, valign, "middle")
 NS_IMPL_STRING_ATTR(nsHTMLTableColElement, Width, width)
 
 

@@ -521,11 +521,11 @@ nsHTMLTableRowElement::DeleteCell(PRInt32 aValue)
   return NS_OK;
 }
 
-NS_IMPL_STRING_ATTR(nsHTMLTableRowElement, Align, align)
+NS_IMPL_STRING_ATTR_DEFAULT_VALUE(nsHTMLTableRowElement, Align, align, "left")
 NS_IMPL_STRING_ATTR(nsHTMLTableRowElement, BgColor, bgcolor)
-NS_IMPL_STRING_ATTR(nsHTMLTableRowElement, Ch, _char)
+NS_IMPL_STRING_ATTR_DEFAULT_VALUE(nsHTMLTableRowElement, Ch, _char, ".")
 NS_IMPL_STRING_ATTR(nsHTMLTableRowElement, ChOff, charoff)
-NS_IMPL_STRING_ATTR(nsHTMLTableRowElement, VAlign, valign)
+NS_IMPL_STRING_ATTR_DEFAULT_VALUE(nsHTMLTableRowElement, VAlign, valign, "middle")
 
 
 NS_IMETHODIMP

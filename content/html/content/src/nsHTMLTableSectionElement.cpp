@@ -172,9 +172,9 @@ nsHTMLTableSectionElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 }
 
 
-NS_IMPL_STRING_ATTR(nsHTMLTableSectionElement, Align, align)
-NS_IMPL_STRING_ATTR(nsHTMLTableSectionElement, VAlign, valign)
-NS_IMPL_STRING_ATTR(nsHTMLTableSectionElement, Ch, _char)
+NS_IMPL_STRING_ATTR_DEFAULT_VALUE(nsHTMLTableSectionElement, Align, align, "left")
+NS_IMPL_STRING_ATTR_DEFAULT_VALUE(nsHTMLTableSectionElement, VAlign, valign, "middle")
+NS_IMPL_STRING_ATTR_DEFAULT_VALUE(nsHTMLTableSectionElement, Ch, _char, ".")
 NS_IMPL_STRING_ATTR(nsHTMLTableSectionElement, ChOff, charoff)
 
 
