@@ -74,9 +74,7 @@ bin\components\necko_file.dll
 bin\components\necko_file.xpt
 bin\components\necko_ftp.xpt
 bin\components\necko_ftp.dll
-bin\components\nsjpg3250.dll
 bin\components\nslocale.dll
-bin\components\nspng3250.dll
 bin\components\nsprefm.dll
 bin\components\nsxpi.dll
 bin\components\nsxpi.xpt
@@ -85,8 +83,6 @@ bin\components\pref.xpt
 bin\components\prefwind.dll
 bin\components\prefwindow.xpt
 bin\components\profile.dll
-bin\components\profileservices.dll
-bin\components\profileservices.xpt
 bin\components\proxyObjInst.xpt
 bin\components\raptorhtml.dll
 bin\components\rdf.dll
@@ -106,9 +102,7 @@ bin\components\ucvlatin.dll
 bin\components\ucvtw.dll
 bin\components\ucvtw2.dll
 bin\components\walleteditor.xpt
-bin\components\walletlib.dll
 bin\components\walletpreview.xpt
-bin\components\walletviewers.dll
 bin\components\widget.xpt
 bin\components\winpref.js
 bin\components\xpc3250.dll
@@ -133,7 +127,6 @@ bin\help\browserhelp\*
 bin\help\troubleshoot\*
 
 [mail]
-bin\msgbaseutil.dll
 bin\components\addrbook.dll
 bin\components\addrbook.xpt
 bin\components\emitter.dll
@@ -163,7 +156,6 @@ bin\help\mailhelp\*
 bin\components\editor.js
 bin\components\editor.xpt
 bin\components\ender.dll
-bin\components\editguimgr.dll
 bin\components\txmgr.dll
 bin\components\txtsvc.dll
 bin\chrome\editor\*
