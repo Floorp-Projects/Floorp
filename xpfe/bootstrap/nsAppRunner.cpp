@@ -171,6 +171,10 @@ int main(int argc, char* argv[])
   nsIURI* url = nsnull;
   nsIPref *prefs = nsnull;
 
+#ifdef NECKO
+  nsICookieService *cookieService = nsnull;
+#endif // NECKO
+
   // initialization for Full Circle
 #ifdef MOZ_FULLCIRCLE
   {
@@ -244,15 +248,6 @@ int main(int argc, char* argv[])
   // XXX: This call will be replaced by a registry initialization...
   NS_SetupRegistry_1();
 
-#ifdef NECKO
-    // fire up an instance of the cookie manager.
-    // I'm doing this using the serviceManager for convenience's sake.
-    // Presumably an application will init it's own cookie service a 
-    // different way (this way works too though).
-    NS_WITH_SERVICE(nsICookieService, cookieService, kCookieServiceCID, &rv);
-    if (NS_FAILED(rv)) goto done;
-#endif // NECKO
-
   // get and start the ProfileManager service
 #if defined(NS_USING_PROFILES)
   rv = nsServiceManager::GetService(kProfileCID, 
@@ -267,6 +262,17 @@ int main(int argc, char* argv[])
 
 #endif // defined(NS_USING_PROFILES)
 
+#ifdef NECKO
+  // fire up an instance of the cookie manager.
+  // I'm doing this using the serviceManager for convenience's sake.
+  // Presumably an application will init it's own cookie service a 
+  // different way (this way works too though).
+  rv = nsServiceManager::GetService(kCookieServiceCID,
+                                    nsCOMTypeInfo<nsICookieService>::GetIID(),
+                                    (nsISupports **)&cookieService);
+  if (NS_FAILED(rv))
+      goto done;
+#endif // NECKO
 
   /*
    * Start up the core services:
@@ -723,6 +729,12 @@ done:
     nsServiceManager::ReleaseService(kCmdLineProcessorCID, cmdLineArgs);
   }
 #endif
+
+#ifdef NECKO
+  if (nsnull != cookieService)
+    nsServiceManager::ReleaseService(kCookieServiceCID, cookieService);
+#endif // NECKO
+
 
   /* Release the shell... */
   if (nsnull != appShell) {
