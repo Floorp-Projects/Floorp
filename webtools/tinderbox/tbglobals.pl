@@ -357,6 +357,8 @@ sub load_who {
       if ($checkin_time < $build_time_times->[$ii]) {
         $who_list->[$ii+1]->{$email} = 1;
         last;
+      } elsif ($ii == 0) {
+        $who_list->[0]->{$email} = 1;
       }
     }
   }
@@ -482,12 +484,16 @@ sub make_build_table {
         if (defined($br1 = $build_table->[$ti+1][$bi])) {
           $br->{previousbuildtime} = $br1->{buildtime};
         }
-                                
+
         $ti1 = $ti-1;
         while ($ti1 >= 0 and not defined $build_table->[$ti1][$bi]) {
           $build_table->[$ti1][$bi] = -1;
           $ti1--;
         }
+        if ($ti1 > 0 and defined($br1 = $build_table->[$ti1][$bi])) {
+          $br->{nextbuildtime} = $br1->{buildtime};
+        }
+
         $br->{rowspan} = $ti - $ti1;
         unless ($br->{rowspan} == 1) {
           $build_table->[$ti1+1][$bi] = $br;
