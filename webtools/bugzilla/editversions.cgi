@@ -427,29 +427,35 @@ if ($action eq 'delete') {
     # so I have to iterate over bugs and delete all the indivial entries
     # in bugs_activies and attachments.
 
-    SendSQL("SELECT bug_id
+    if (Param("allowbugdeletion")) {
+
+        SendSQL("SELECT bug_id
              FROM bugs
              WHERE product=" . SqlQuote($product) . "
                AND version=" . SqlQuote($version));
-    while (MoreSQLData()) {
-        my $bugid = FetchOneColumn();
+        while (MoreSQLData()) {
+            my $bugid = FetchOneColumn();
 
-        my $query = $::db->query("DELETE FROM attachments WHERE bug_id=$bugid")
+            my $query =
+                $::db->query("DELETE FROM attachments WHERE bug_id=$bugid")
                 or die "$::db_errstr";
-        $query = $::db->query("DELETE FROM bugs_activity WHERE bug_id=$bugid")
+            $query =
+                $::db->query("DELETE FROM bugs_activity WHERE bug_id=$bugid")
                 or die "$::db_errstr";
-        $query = $::db->query("DELETE FROM dependencies WHERE blocked=$bugid")
+            $query =
+                $::db->query("DELETE FROM dependencies WHERE blocked=$bugid")
                 or die "$::db_errstr";
-    }
-    print "Attachments, bug activity and dependencies deleted.<BR>\n";
+        }
+        print "Attachments, bug activity and dependencies deleted.<BR>\n";
 
 
-    # Deleting the rest is easier:
+        # Deleting the rest is easier:
 
-    SendSQL("DELETE FROM bugs
+        SendSQL("DELETE FROM bugs
              WHERE product=" . SqlQuote($product) . "
                AND version=" . SqlQuote($version));
-    print "Bugs deleted.<BR>\n";
+        print "Bugs deleted.<BR>\n";
+    }
 
     SendSQL("DELETE FROM versions
              WHERE program=" . SqlQuote($product) . "
