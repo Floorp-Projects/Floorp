@@ -66,8 +66,11 @@ Rights Reserved.
 											flex="100%"
 											class="addressingWidget"
 											style="width:0px"
-											onkeyup="if (event.which == 13) awReturnHit(this);"
-											onkeyp="if (event.which == 9) {dump('TAB\n'); awTabFromRecipient(this, event);}"
+											onkeypress="if (event.keyCode == 13)
+															awReturnHit(this);
+														else if (event.which == 9)
+															awTabFromRecipient(this, event);
+														"
 											onchange="contentChanged=true;"
 											onclick="awNotAnEmptyArea(event);"
 											autocomplete="true"
