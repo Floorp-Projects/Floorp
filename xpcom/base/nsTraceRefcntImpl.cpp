@@ -585,7 +585,7 @@ static void InitTraceLog(void)
 
   const char* classes = getenv("XPCOM_MEM_LOG_CLASSES");
   if (classes) {
-    // if XPCOM_LOG_REFCNTS was set to some value, the value is interpreted
+    // if XPCOM_MEM_LOG_CLASSES was set to some value, the value is interpreted
     // as a list of class names to track
     gTypesToLog = PL_NewHashTable(256,
                                   PL_HashString,
