@@ -22,78 +22,10 @@
 #define PL_ARENA_CONST_ALIGN_MASK 3
 #include "nslayout.h"
 #include "nsDST.h"
-#include "plarena.h"
 #include "nsISupportsUtils.h"
 #ifdef NS_DEBUG
 #include <string.h>
 #endif
-
-/////////////////////////////////////////////////////////////////////////////
-// Classes that represents nodes in the DST
-
-// To reduce the amount of memory we use there are two types of nodes:
-// - leaf nodes
-// - two nodes (left and right child)
-//
-// We distinguish the two types of nodes by looking at the low-order
-// bit of the key. If it is 0, then the node is a leaf node. If it is
-// 1, then the node is a two node. Use function Key() when retrieving
-// the key, and function IsLeaf() to tell what type of node it is
-//
-// It's an invariant of the tree that a two node can not have both child links
-// NULL. In that case it must be converted back to a leaf node
-
-// Definition of NodeArena class
-class nsDST::NodeArena {
-public:
-  NodeArena(PRUint32 aArenaSize);
-  ~NodeArena();
-
-  // Memory management functions
-  void*     AllocLeafNode();
-  void*     AllocTwoNode();
-  void      FreeNode(LeafNode*);
-  void      FreeNode(TwoNode*);
-  void      FreeArenaPool();
-
-  // Lifetime management functions
-  void      AddRef() {mRefCnt++;}
-  void      Release();
-  PRBool    IsShared() const {return mRefCnt > 1;}
-
-#ifdef NS_DEBUG
-  int       NumArenas() const;
-  PRUint32  ArenaSize() const {return mPool.arenasize;}
-#endif
-
-private:
-  PLArenaPool mPool;
-  LeafNode*   mLeafNodeFreeList;
-  TwoNode*    mTwoNodeFreeList;
-  PRUint32    mRefCnt;
-};
-
-// Definition of LeafNode class
-class nsDST::LeafNode {
-public:
-  void* mKey;
-  void* mValue;
-  
-  // Constructors
-  LeafNode(void* aKey, void* aValue);
-  LeafNode(const LeafNode& aLeafNode);
-
-  // Accessor for getting the key. Clears the bit used to tell if the
-  // node is a leaf. This function can be safely used on any node without
-  // knowing whether it's a leaf or a two node
-  void*   Key() const {return (void*)(PtrBits(mKey) & ~0x1);}
-
-  // Helper function that returns TRUE if the node is a leaf
-  int     IsLeaf() const {return 0 == (PtrBits(mKey) & 0x1);}
-
-  // Overloaded placement operator for allocating from an arena
-  void* operator new(size_t aSize, NodeArena* aArena) {return aArena->AllocLeafNode();}
-};
 
 // Constructors
 inline nsDST::LeafNode::LeafNode(void* aKey, void* aValue)
@@ -107,30 +39,9 @@ inline nsDST::LeafNode::LeafNode(const LeafNode& aNode)
 {
 }
 
-// Definition of TwoNode class
-class nsDST::TwoNode : public nsDST::LeafNode {
-public:
-  LeafNode* mLeft;   // left subtree
-  LeafNode* mRight;  // right subtree
-  
-  TwoNode(const LeafNode& aLeafNode);
-
-  void    SetKeyAndValue(void* aKey, void* aValue) {
-    mKey = (void*)(PtrBits(aKey) | 0x01);
-    mValue = aValue;
-  }
-
-  // Overloaded placement operator for allocating from an arena
-  void* operator new(size_t aSize, NodeArena* aArena) {return aArena->AllocTwoNode();}
-
-private:
-	TwoNode(const TwoNode&);        // no implementation
-	void operator=(const TwoNode&); // no implementation
-};
-
 // Constructor
 inline nsDST::TwoNode::TwoNode(const LeafNode& aLeafNode)
-  : LeafNode((void*)(PtrBits(aLeafNode.mKey) | 0x1), aLeafNode.mValue),
+  : nsDST::LeafNode((void*)(PtrBits(aLeafNode.mKey) | 0x1), aLeafNode.mValue),
     mLeft(0), mRight(0)
 {
 }
