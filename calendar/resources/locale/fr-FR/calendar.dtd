@@ -410,7 +410,7 @@
 
 
 <!-- Calendar Server Dialog -->
-<!ENTITY calendar.server.dialog.title.new           "Nouveau fichier du calendrier">
+<!ENTITY calendar.server.dialog.title.new           "Nouveau fichier de calendrier">
 <!ENTITY calendar.server.dialog.title.open          "Ouvrez le fichier du calendrier">
 <!ENTITY calendar.server.dialog.title.edit          "Modifier le calendrier">
 <!ENTITY calendar.server.dialog.name.label          "Nom">
