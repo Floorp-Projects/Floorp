@@ -23,6 +23,7 @@
 <!ENTITY openFileCmd.commandkey "o">
 <!ENTITY sendPageCmd.label "Send Page">
 <!ENTITY sendPageCmd.accesskey "s">
+<!ENTITY sendLinkCmd.label "Send Link"> 
 <!ENTITY editPageCmd.label					"Edit Page">
 <!ENTITY editPageCmd.accesskey				"d">
 <!ENTITY offlineMenu.label "Offline">
