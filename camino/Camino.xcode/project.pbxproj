@@ -983,7 +983,7 @@
 				INSTALL_PATH = "$(HOME)/Applications";
 				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../dist/Embed/components ../intl/unicharutil/util";
 				OTHER_CFLAGS = "-fshort-wchar";
-				OTHER_LDFLAGS = "-lxpcom -lplds4 -lplc4 -lnspr4 -lpthread -lm";
+				OTHER_LDFLAGS = "-lmozz -lxpcom -lplds4 -lplc4 -lnspr4 -lpthread -lm";
 				PREBINDING = NO;
 				PRODUCT_NAME = Camino;
 				SECTORDER_FLAGS = "";
@@ -3875,6 +3875,7 @@
 				3F44AD8405BDFB9F00CB4B08,
 				3F44AD8505BDFB9F00CB4B08,
 				3FECC8E605D1FE800068E7ED,
+				3FE5BA0D068A1A6F0001CECD,
 			);
 			isa = PBXFrameworksBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -7620,6 +7621,7 @@
 				3F44AFC305BDFBA000CB4B08,
 				3FECC8E705D1FE800068E7ED,
 				82C39664065B156600A82035,
+				3FE5BA0C068A1A140001CECD,
 			);
 			isa = PBXFrameworksBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -8850,6 +8852,34 @@
 		};
 		3FC949640642ED39008E2E3D = {
 			fileRef = 3FC949600642ED39008E2E3D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3FE5B9FC068A090F0001CECD = {
+			isa = PBXFileReference;
+			lastKnownFileType = "compiled.mach-o.dylib";
+			name = libmozz.dylib;
+			path = ../modules/zlib/src/libmozz.dylib;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		3FE5BA0B068A1A140001CECD = {
+			isa = PBXFileReference;
+			lastKnownFileType = archive.ar;
+			name = libmozz.a;
+			path = ../modules/zlib/src/libmozz.a;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		3FE5BA0C068A1A140001CECD = {
+			fileRef = 3FE5BA0B068A1A140001CECD;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3FE5BA0D068A1A6F0001CECD = {
+			fileRef = 3FE5B9FC068A090F0001CECD;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -11268,6 +11298,7 @@
 		};
 		F56F242202AC6F7101A967F3 = {
 			children = (
+				3FE5BA0B068A1A140001CECD,
 				82C39663065B156600A82035,
 				0FA8EFCA0423EAAD00A80166,
 				F56F242602AC706801A967F3,
@@ -12655,6 +12686,7 @@
 				F6BD638101B30EA301A962F7,
 				F6BD638201B30EA301A962F7,
 				F6BD638701B30F5301A962F7,
+				3FE5B9FC068A090F0001CECD,
 				F5F14E9602A5A43A01A967F3,
 				F5461CBB03AAC25C01A96660,
 				F5247C2F0228B5E7013DD99A,
