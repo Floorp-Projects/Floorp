@@ -151,7 +151,11 @@ nsContextMenu.prototype = {
         this.showItem( "context-blockimage", this.onImage);
         if (this.onImage) {
           var blockImage = document.getElementById("context-blockimage");
-          blockImage.checked = this.isImageBlocked();
+          if (this.isImageBlocked()) {
+            blockImage.setAttribute("checked", "true");
+          }
+          else
+            blockImage.removeAttribute("checked");
         }
     },
     initClipboardItems : function () {
