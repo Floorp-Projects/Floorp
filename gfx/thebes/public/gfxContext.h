@@ -43,11 +43,11 @@
 #include "gfxColor.h"
 #include "gfxPattern.h"
 #include "gfxPoint.h"
+#include "gfxRect.h"
 
 class gfxASurface;
 class gfxMatrix;
 class gfxRegion;
-class gfxRect;
 class gfxFilter;
 class gfxTextRun;
 

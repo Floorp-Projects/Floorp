@@ -237,11 +237,9 @@ double gfxContext::CurrentMiterLimit() const
 // clipping
 void gfxContext::Clip(const gfxRect& rect)
 {
-    /*
-    cairo_new_path();
+    cairo_new_path(mCairo);
     cairo_rectangle(mCairo, rect.x, rect.y, rect.width, rect.height);
-    cairo_clip();
-    */
+    cairo_clip(mCairo);
 }
 void gfxContext::Clip(const gfxRegion& region)
 {

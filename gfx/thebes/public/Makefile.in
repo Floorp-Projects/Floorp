@@ -16,6 +16,7 @@ EXPORTS		= 	gfxASurface.h \
 			gfxMatrix.h \
 			gfxPattern.h \
 			gfxPoint.h \
+			gfxRect.h \
 			gfxRegion.h \
 			gfxTextRun.h \
 			$(NULL)
