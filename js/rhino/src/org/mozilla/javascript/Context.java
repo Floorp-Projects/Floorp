@@ -1984,7 +1984,8 @@ public class Context
      * settings. The method can only be called once.
      * @see #hasGlobalSecurityController()
      */
-    public final void setGlobalSecurityController(SecurityController controller)
+    public static void setGlobalSecurityController(SecurityController
+controller)
     {
         if (controller == null) throw new IllegalArgumentException();
         if (globalSecurityController != null) {
