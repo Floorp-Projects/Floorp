@@ -403,7 +403,6 @@ nsXULKeyListenerImpl::Init(
   nsIDOMElement  * aElement,
   nsIDOMDocument * aDocument)
 {
-  printf("nsXULKeyListenerImpl::Init()\n");
   element = aElement; // Weak reference. Don't addref it.
 
   nsCOMPtr<nsIDOMXULDocument> xulDoc = do_QueryInterface(aDocument);
@@ -1552,12 +1551,14 @@ nsXULKeyListenerImpl::HandleEventUsingKeyset(nsIDOMElement* aKeysetElement, nsID
               nsAutoString value;
               keyContent->GetAttribute(kNameSpaceID_None, eventName, value);
               if (value != "") {
-                context->CompileEventHandler(scriptObject, eventName, value,
-                                             PR_TRUE, &handler);
+                  if (handlerOwner) {
+                      handlerOwner->CompileEventHandler(context, scriptObject, eventName, value, &handler);
+                  }
+                  else {
+                      context->CompileEventHandler(scriptObject, eventName, value,
+                                                   PR_TRUE, &handler);
+                  }
               }
-
-              if (handler)
-                handlerOwner->SetCompiledEventHandler(eventName, handler);
             }
 
             if (handler) {

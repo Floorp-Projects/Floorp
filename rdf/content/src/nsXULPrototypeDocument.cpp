@@ -27,19 +27,23 @@
 */
 
 #include "nsCOMPtr.h"
-#include "nsString2.h"
-#include "nsVoidArray.h"
 #include "nsIPrincipal.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIScriptGlobalObjectData.h"
+#include "nsIScriptSecurityManager.h"
+#include "nsIServiceManager.h"
 #include "nsISupportsArray.h"
 #include "nsIURI.h"
-#include "nsIServiceManager.h"
-#include "nsIScriptSecurityManager.h"
 #include "nsIXULPrototypeDocument.h"
+#include "nsString2.h"
+#include "nsVoidArray.h"
 #include "nsXULElement.h"
-#include "nsIJSRuntimeService.h"
+
 
 class nsXULPrototypeDocument : public nsIXULPrototypeDocument,
-                               public nsIScriptObjectOwner
+                               public nsIScriptObjectOwner,
+                               public nsIScriptGlobalObject,
+                               public nsIScriptGlobalObjectData
 {
 public:
     static nsresult
@@ -71,12 +75,33 @@ public:
     NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void **aObject);
     NS_IMETHOD SetScriptObject(void *aObject);
 
+    // nsIScriptGlobalObject methods
+    NS_IMETHOD SetContext(nsIScriptContext *aContext);
+    NS_IMETHOD GetContext(nsIScriptContext **aContext);
+    NS_IMETHOD SetNewDocument(nsIDOMDocument *aDocument);
+    NS_IMETHOD SetWebShell(nsIWebShell *aWebShell);
+    NS_IMETHOD GetWebShell(nsIWebShell **aWebShell);
+    NS_IMETHOD SetOpenerWindow(nsIDOMWindow *aOpener);
+    NS_IMETHOD SetGlobalObjectOwner(nsIScriptGlobalObjectOwner* aOwner);
+    NS_IMETHOD GetGlobalObjectOwner(nsIScriptGlobalObjectOwner** aOwner);
+    NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext, 
+                              nsEvent* aEvent, 
+                              nsIDOMEvent** aDOMEvent,
+                              PRUint32 aFlags,
+                              nsEventStatus* aEventStatus);
+
+    // nsIScriptGlobalObjectData methods
+    NS_IMETHOD GetPrincipal(nsIPrincipal** aPrincipal);
+    
+
 protected:
     nsCOMPtr<nsIURI> mURI;
     nsXULPrototypeElement* mRoot;
     nsCOMPtr<nsISupportsArray> mStyleSheetReferences;
     nsCOMPtr<nsISupportsArray> mOverlayReferences;
     nsCOMPtr<nsIPrincipal> mDocumentPrincipal;
+
+    nsCOMPtr<nsIScriptContext> mScriptContext;
     JSObject *mScriptObject;    // XXX JS language rabies bigotry badness
 
     nsXULPrototypeDocument();
@@ -85,13 +110,30 @@ protected:
 
     friend NS_IMETHODIMP
     NS_NewXULPrototypeDocument(nsISupports* aOuter, REFNSIID aIID, void** aResult);
+
+    static JSClass gSharedGlobalClass;
+
+    static void PR_CALLBACK
+    FinalizeScriptObject(JSContext* cx, JSObject* obj);
+};
+
+JSClass nsXULPrototypeDocument::gSharedGlobalClass = {
+    "nsXULPrototypeScript compilation scope",
+    JSCLASS_HAS_PRIVATE,
+    JS_PropertyStub,  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
+    JS_EnumerateStub, JS_ResolveStub,  JS_ConvertStub,  nsXULPrototypeDocument::FinalizeScriptObject
 };
 
 
+
 //----------------------------------------------------------------------
+//
+// ctors, dtors, n' stuff
+//
 
 nsXULPrototypeDocument::nsXULPrototypeDocument()
-    : mRoot(nsnull), mScriptObject(nsnull)
+    : mRoot(nsnull),
+      mScriptObject(nsnull)
 {
     NS_INIT_REFCNT();
 }
@@ -115,19 +157,14 @@ nsXULPrototypeDocument::Init()
 nsXULPrototypeDocument::~nsXULPrototypeDocument()
 {
     delete mRoot;
-
-    nsresult rv;
-    NS_WITH_SERVICE(nsIJSRuntimeService, rtsvc, "nsJSRuntimeService", &rv);
-    if (NS_SUCCEEDED(rv)) {
-        JSRuntime *rt;
-        rv = rtsvc->GetRuntime(&rt);
-        if (NS_SUCCEEDED(rv) && rt)
-            JS_RemoveRootRT(rt, &mScriptObject);
-    }
 }
 
 
-NS_IMPL_ISUPPORTS2(nsXULPrototypeDocument, nsIXULPrototypeDocument, nsIScriptObjectOwner);
+NS_IMPL_ISUPPORTS4(nsXULPrototypeDocument,
+                   nsIXULPrototypeDocument,
+                   nsIScriptObjectOwner,
+                   nsIScriptGlobalObject,
+                   nsIScriptGlobalObjectData);
 
 NS_IMETHODIMP
 NS_NewXULPrototypeDocument(nsISupports* aOuter, REFNSIID aIID, void** aResult)
@@ -156,6 +193,9 @@ NS_NewXULPrototypeDocument(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 
 
 //----------------------------------------------------------------------
+//
+// nsIXULPrototypeDocument methods
+//
 
 NS_IMETHODIMP
 nsXULPrototypeDocument::GetURI(nsIURI** aResult)
@@ -169,7 +209,7 @@ nsXULPrototypeDocument::GetURI(nsIURI** aResult)
 NS_IMETHODIMP
 nsXULPrototypeDocument::SetURI(nsIURI* aURI)
 {
-    mURI = aURI;
+    mURI = dont_QueryInterface(aURI);
     return NS_OK;
 }
 
@@ -257,14 +297,20 @@ nsXULPrototypeDocument::GetDocumentPrincipal(nsIPrincipal** aResult)
 {
     if (!mDocumentPrincipal) {
         nsresult rv;
-        NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager,
-                        NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+        NS_WITH_SERVICE(nsIScriptSecurityManager,
+                        securityManager,
+                        NS_SCRIPTSECURITYMANAGER_PROGID,
+                        &rv);
+
         if (NS_FAILED(rv))
             return NS_ERROR_FAILURE;
+
         rv = securityManager->GetCodebasePrincipal(mURI, getter_AddRefs(mDocumentPrincipal));
+
         if (NS_FAILED(rv))
             return NS_ERROR_FAILURE;
     }
+
     *aResult = mDocumentPrincipal;
     NS_ADDREF(*aResult);
     return NS_OK;
@@ -278,40 +324,43 @@ nsXULPrototypeDocument::SetDocumentPrincipal(nsIPrincipal* aPrincipal)
     return NS_OK;
 }
 
-JSClass null_class = {
-    "nsXULPrototypeScript compilation scope", 0,
-    JS_PropertyStub,  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
-    JS_EnumerateStub, JS_ResolveStub,  JS_ConvertStub,  JS_FinalizeStub
-};
-
 //----------------------------------------------------------------------
+//
+// nsIScriptObjectOwner methods
+//
 
 NS_IMETHODIMP
 nsXULPrototypeDocument::GetScriptObject(nsIScriptContext *aContext, void **aObject)
 {
-    // The prototype document will have its own special secret script
-    // object that can be used to compile scripts and event handlers.
-    if (!mScriptObject) {
-        JSContext *cx = (JSContext *)aContext->GetNativeContext();
-        if (!cx)
-            return NS_ERROR_UNEXPECTED;
+    // The prototype document has its own special secret script object
+    // that can be used to compile scripts and event handlers.
+    nsresult rv;
 
-        mScriptObject = JS_NewObject(cx, &null_class, nsnull, nsnull);
-        if (!mScriptObject)
+    nsCOMPtr<nsIScriptContext> context;
+
+    if (mScriptContext && aContext != mScriptContext.get()) {
+        rv = GetContext(getter_AddRefs(context));
+        if (NS_FAILED(rv)) return rv;
+    }
+    else {
+        context = aContext;
+    }
+
+    if (! mScriptObject) {
+        JSContext* cx = NS_STATIC_CAST(JSContext*, context->GetNativeContext());
+        if (! cx)
             return NS_ERROR_OUT_OF_MEMORY;
 
-        // Be sure to unlink the script object from the parent global
-        // object. This ensures that we don't end up with a circular
-        // reference back to the first document.
-        JS_SetPrototype(cx, mScriptObject, nsnull);
-        JS_SetParent(cx, mScriptObject, nsnull);
+        mScriptObject = JS_NewObject(cx, &gSharedGlobalClass, nsnull, nsnull);
+        if (! mScriptObject)
+            return NS_ERROR_OUT_OF_MEMORY;
 
-        JS_AddNamedRoot(cx, &mScriptObject, "nsXULPrototypeDocument::mScriptObject");
-
-        // We need standard classes, in particular RegExp, to compile JS.
-        if (!JS_InitStandardClasses(cx, mScriptObject))
-            return NS_ERROR_FAILURE;
+        // Add an owning reference from JS back to us. This'll be
+        // released when the JSObject is finalized.
+        ::JS_SetPrivate(cx, mScriptObject, this);
+        NS_ADDREF(this);
     }
+
     *aObject = mScriptObject;
     return NS_OK;
 }
@@ -321,4 +370,121 @@ nsXULPrototypeDocument::SetScriptObject(void *aObject)
 {
     mScriptObject = (JSObject *)aObject;
     return NS_OK;
+}
+
+//----------------------------------------------------------------------
+//
+// nsIScriptGlobalObject methods
+//
+
+NS_IMETHODIMP
+nsXULPrototypeDocument::SetContext(nsIScriptContext *aContext)
+{
+    mScriptContext = aContext;
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsXULPrototypeDocument::GetContext(nsIScriptContext **aContext)
+{
+    if (! mScriptContext) {
+        nsresult rv;
+        rv = NS_CreateScriptContext(this, getter_AddRefs(mScriptContext));
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    *aContext = mScriptContext;
+    NS_IF_ADDREF(*aContext);
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsXULPrototypeDocument::SetNewDocument(nsIDOMDocument *aDocument)
+{
+    NS_NOTREACHED("waaah!");
+    return NS_ERROR_UNEXPECTED;
+}
+
+
+NS_IMETHODIMP
+nsXULPrototypeDocument::SetWebShell(nsIWebShell *aWebShell)
+{
+    NS_NOTREACHED("waaah!");
+    return NS_ERROR_UNEXPECTED;
+}
+
+
+NS_IMETHODIMP
+nsXULPrototypeDocument::GetWebShell(nsIWebShell **aWebShell)
+{
+    NS_NOTREACHED("waaah!");
+    return NS_ERROR_UNEXPECTED;
+}
+
+
+NS_IMETHODIMP
+nsXULPrototypeDocument::SetOpenerWindow(nsIDOMWindow *aOpener)
+{
+    NS_NOTREACHED("waaah!");
+    return NS_ERROR_UNEXPECTED;
+}
+
+
+NS_IMETHODIMP
+nsXULPrototypeDocument::SetGlobalObjectOwner(nsIScriptGlobalObjectOwner* aOwner)
+{
+    NS_NOTREACHED("waaah!");
+    return NS_ERROR_UNEXPECTED;
+}
+
+
+NS_IMETHODIMP
+nsXULPrototypeDocument::GetGlobalObjectOwner(nsIScriptGlobalObjectOwner** aOwner)
+{
+    NS_NOTREACHED("waaah!");
+    return NS_ERROR_UNEXPECTED;
+}
+
+
+NS_IMETHODIMP
+nsXULPrototypeDocument::HandleDOMEvent(nsIPresContext* aPresContext, 
+                                       nsEvent* aEvent, 
+                                       nsIDOMEvent** aDOMEvent,
+                                       PRUint32 aFlags,
+                                       nsEventStatus* aEventStatus)
+{
+    NS_NOTREACHED("waaah!");
+    return NS_ERROR_UNEXPECTED;
+}
+
+//----------------------------------------------------------------------
+//
+// nsIScriptGlobalObjectData methods
+//
+
+NS_IMETHODIMP
+nsXULPrototypeDocument::GetPrincipal(nsIPrincipal** aPrincipal)
+{
+    return GetDocumentPrincipal(aPrincipal);
+}
+
+//----------------------------------------------------------------------
+//
+// Implementation methods
+//
+
+void PR_CALLBACK
+nsXULPrototypeDocument::FinalizeScriptObject(JSContext* cx, JSObject* obj)
+{
+    nsXULPrototypeDocument* native =
+        NS_STATIC_CAST(nsXULPrototypeDocument*, ::JS_GetPrivate(cx, obj));
+
+    if (native) {
+        // Clear the native object's reference back to us, and release
+        // our ownership of it.
+        native->SetScriptObject(nsnull);
+        NS_RELEASE(native);
+    }
 }

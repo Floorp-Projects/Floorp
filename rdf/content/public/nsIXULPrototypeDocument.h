@@ -33,8 +33,8 @@
 
 class nsIAtom;
 class nsIPrincipal;
-class nsIURI;
 class nsIStyleSheet;
+class nsIURI;
 class nsString;
 class nsVoidArray;
 class nsXULPrototypeElement;

@@ -553,13 +553,17 @@ nsEventListenerManager::AddScriptEventListener(nsIScriptContext* aContext,
     }
 
     if (!done) {
-      rv = aContext->CompileEventHandler(scriptObject, aName, aBody,
-                                         (handlerOwner != nsnull),
-                                         &handler);
-      if (NS_FAILED(rv))
-        return rv;
-      if (handlerOwner)
-        handlerOwner->SetCompiledEventHandler(aName, handler);
+      if (handlerOwner) {
+        // Always let the handler owner compile the event handler, as
+        // it may want to use a special context or scope object.
+        rv = handlerOwner->CompileEventHandler(aContext, scriptObject, aName, aBody, &handler);
+      }
+      else {
+        rv = aContext->CompileEventHandler(scriptObject, aName, aBody,
+                                           (handlerOwner != nsnull),
+                                           &handler);
+      }
+      if (NS_FAILED(rv)) return rv;
     }
   }
   return SetJSEventListener(aContext, aScriptObjectOwner, aName, aIID, aDeferCompilation);
@@ -621,12 +625,19 @@ nsEventListenerManager::HandleEventSubType(nsListenerStruct* aListenerStruct,
                 nsAutoString handlerBody;
                 result = content->GetAttribute(kNameSpaceID_None, atom, handlerBody);
                 if (NS_SUCCEEDED(result)) {
-                  result = scriptCX->CompileEventHandler(jsobj, atom, handlerBody,
-                                                         (handlerOwner != nsnull),
-                                                         &handler);
-                  aListenerStruct->mHandlerIsString &= ~aSubType;
-                  if (handlerOwner)
-                    handlerOwner->SetCompiledEventHandler(atom, handler);
+                  if (handlerOwner) {
+                    // Always let the handler owner compile the event
+                    // handler, as it may want to use a special
+                    // context or scope object.
+                    result = handlerOwner->CompileEventHandler(scriptCX, jsobj, atom, handlerBody, &handler);
+                  }
+                  else {
+                    result = scriptCX->CompileEventHandler(jsobj, atom, handlerBody,
+                                                           (handlerOwner != nsnull),
+                                                           &handler);
+                  }
+                  if (NS_SUCCEEDED(result))
+                    aListenerStruct->mHandlerIsString &= ~aSubType;
                 }
               }
             }
