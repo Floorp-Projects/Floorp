@@ -45,6 +45,7 @@ use Bugzilla::Config;
 use Bugzilla::Constants;
 use Bugzilla::Error;
 use Bugzilla::BugMail;
+use Bugzilla::Bug;
 
 # Shut up misguided -w warnings about "used only once".  For some reason,
 # "use vars" chokes on me when I try it here.
@@ -127,22 +128,6 @@ sub CheckFormFieldDefined (\%$) {
     }
 }
 
-sub BugAliasToID {
-    # Queries the database for the bug with a given alias, and returns
-    # the ID of the bug if it exists or the undefined value if it doesn't.
-    
-    my ($alias) = @_;
-    
-    return undef unless Param("usebugaliases");
-    
-    PushGlobalSQLState();
-    SendSQL("SELECT bug_id FROM bugs WHERE alias = " . SqlQuote($alias));
-    my $id = FetchOneColumn();
-    PopGlobalSQLState();
-    
-    return $id;
-}
-
 sub ValidateBugID {
     # Validates and verifies a bug ID, making sure the number is a 
     # positive integer, that it represents an existing bug in the
@@ -157,7 +142,7 @@ sub ValidateBugID {
     # If the ID isn't a number, it might be an alias, so try to convert it.
     my $alias = $id;
     if (!detaint_natural($id)) {
-        $id = BugAliasToID($alias);
+        $id = bug_alias_to_id($alias);
         $id || ThrowUserError("invalid_bug_id_or_alias",
                               {'bug_id' => $alias,
                                'field'  => $field });

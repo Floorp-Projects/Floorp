@@ -46,6 +46,7 @@ use Bugzilla::Error;
 
 use base qw(Exporter);
 @Bugzilla::Bug::EXPORT = qw(
+    bug_alias_to_id
     ValidateComment
 );
 
@@ -123,7 +124,7 @@ sub initBug  {
   my $old_bug_id = $bug_id;
 
   # If the bug ID isn't numeric, it might be an alias, so try to convert it.
-  $bug_id = &::BugAliasToID($bug_id) if $bug_id !~ /^0*[1-9][0-9]*$/;
+  $bug_id = bug_alias_to_id($bug_id) if $bug_id !~ /^0*[1-9][0-9]*$/;
 
   if ((! defined $bug_id) || (!$bug_id) || (!detaint_natural($bug_id))) {
       # no bug number given or the alias didn't match a bug
@@ -494,6 +495,20 @@ sub choices {
       };
 
     return $self->{'choices'};
+}
+
+# Convenience Function. If you need speed, use this. If you need
+# other Bug fields in addition to this, just create a new Bug with
+# the alias.
+# Queries the database for the bug with a given alias, and returns
+# the ID of the bug if it exists or the undefined value if it doesn't.
+sub bug_alias_to_id ($) {
+    my ($alias) = @_;
+    return undef unless Param("usebugaliases");
+    my $dbh = Bugzilla->dbh;
+    trick_taint($alias);
+    return $dbh->selectrow_array(
+        "SELECT bug_id FROM bugs WHERE alias = ?", undef, $alias);
 }
 
 sub EmitDependList {
