@@ -24,13 +24,13 @@
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-editing.dtd">
+<!DOCTYPE window SYSTEM "chrome://editor/locale/pref-editing.dtd">
 
 <window xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="color-dialog"
         orient="vertical" 
-        onload="parent.initPanel('chrome://communicator/content/pref/pref-editing.xul');">
+        onload="parent.initPanel('chrome://editor/content/pref-editing.xul');">
 
   <script lanugage="JavaScript">
   <![CDATA[
@@ -38,7 +38,7 @@
   ]]>
   </script>
 
-  <script language="JavaScript" src="chrome://communicator/content/pref/pref-composer.js"></script>
+  <script language="JavaScript" src="chrome://editor/content/pref-composer.js"></script>
   <script language="JavaScript" src="chrome://global/content/strres.js"></script>
   <script language="JavaScript" src="chrome://communicator/content/pref/prefutilities.js"></script>
         

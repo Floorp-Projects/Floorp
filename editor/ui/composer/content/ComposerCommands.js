@@ -1220,7 +1220,7 @@ var nsPreferencesCommand =
   },
   doCommand: function(aCommand)
   {
-    goPreferences('navigator.xul', 'chrome://communicator/content/pref/pref-composer.xul','editor');
+    goPreferences('navigator.xul', 'chrome://editor/content/pref-composer.xul','editor');
   }
 };
 
