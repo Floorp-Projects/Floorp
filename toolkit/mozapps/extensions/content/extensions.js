@@ -246,20 +246,16 @@ XPInstallDownloadManager.prototype = {
     var element = document.getElementById(aURL);
     switch (aState) {
     case nsIXPIProgressDialog.DOWNLOAD_START:
-      dump("*** download start\n");
       element.setAttribute("state", "waiting");
       element.setAttribute("progress", "0");
       break;
     case nsIXPIProgressDialog.DOWNLOAD_DONE:
-      dump("*** download done\n");
       element.setAttribute("progress", "100");
       break;
     case nsIXPIProgressDialog.INSTALL_START:
-      dump("*** install start\n");
       element.setAttribute("state", "installing");
       break;
     case nsIXPIProgressDialog.INSTALL_DONE:
-      dump("*** install done\n");
       element.setAttribute("state", "done");
       var msg;
       if (aValue != 0) {
