@@ -243,7 +243,7 @@ function GET(url, filename)
 
     buffered.init(outstream, 64 * 1024);
     davSvc.getToOutputStream(new Resource(url), buffered,
-                             new OperationListener());
+                             new OperationListener(), null);
     runEventPump();
 }
 
