@@ -150,7 +150,6 @@ public:
   virtual  PRBool OnExpose(nsPaintEvent &event);
   virtual  PRBool OnDraw(nsPaintEvent &event);
 
-  PRBool   OnKey(nsKeyEvent &aEvent);
   virtual  PRBool OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos);
   // in nsWidget now
   //    virtual  PRBool OnResize(nsSizeEvent &aEvent);

@@ -74,6 +74,28 @@ PRUint32 nsWidget::sWidgetCount = 0;
 nsWidget *nsWidget::focusWindow = NULL;
 
 
+PRBool nsWidget::OnInput(nsInputEvent &aEvent)
+{
+
+  PRBool    releaseWidget = PR_FALSE;
+  nsWidget *widget = NULL;
+
+  // rewrite the key event to the window with 'de focus
+  if (focusWindow) {
+    widget = focusWindow;
+    NS_ADDREF(widget);
+    aEvent.widget = focusWindow;
+    releaseWidget = PR_TRUE;
+  }
+  if (mEventCallback) {
+    return DispatchWindowEvent(&aEvent);
+  }
+
+  if (releaseWidget)
+    NS_RELEASE(widget);
+
+  return PR_FALSE;
+}
 
 nsresult nsWidget::KillICSpotTimer ()
 {
@@ -108,7 +130,6 @@ nsresult nsWidget::UpdateICSpot()
 {
    // set spot location
    nsCompositionEvent compEvent;
-   nsEventStatus status;
    compEvent.widget = (nsWidget*)this;
    compEvent.point.x = 0;
    compEvent.point.y = 0;
@@ -120,7 +141,7 @@ nsresult nsWidget::UpdateICSpot()
    static gint oldy =0;
    compEvent.theReply.mCursorPosition.x=-1;
    compEvent.theReply.mCursorPosition.y=-1;
-   DispatchEvent(&compEvent, status);
+   this->OnComposition(compEvent);
    // set SpotLocation
    if((compEvent.theReply.mCursorPosition.x <= 0) &&
       (compEvent.theReply.mCursorPosition.y <= 0))
@@ -2675,7 +2696,6 @@ NS_IMETHODIMP nsWidget::ResetInputState()
           //-------------------------------------------------------
           // send START_COMPOSITION
           //-------------------------------------------------------
-          nsEventStatus aStatus;
           nsCompositionEvent compEvent;
           compEvent.widget= (nsWidget*) this;
           compEvent.point.x = compEvent.point.y = 0;
@@ -2683,7 +2703,7 @@ NS_IMETHODIMP nsWidget::ResetInputState()
           compEvent.message = compEvent.eventStructType 
               = compEvent.compositionMessage = NS_COMPOSITION_START;
    
-          DispatchEvent(&compEvent, aStatus);
+          this->OnComposition(compEvent);
           //-------------------------------------------------------
           // send Text Event
           //-------------------------------------------------------
@@ -2697,7 +2717,7 @@ NS_IMETHODIMP nsWidget::ResetInputState()
           textEvent.rangeArray = nsnull;
           textEvent.isShift = textEvent.isControl = 
               textEvent.isAlt = textEvent.isMeta = PR_FALSE;
-          DispatchEvent(&textEvent, aStatus);
+          this->OnText(textEvent);
    
           //-------------------------------------------------------
           // send END_COMPOSITION
@@ -2705,17 +2725,7 @@ NS_IMETHODIMP nsWidget::ResetInputState()
           compEvent.widget= (nsWidget*) this;
           compEvent.message = compEvent.eventStructType 
               = compEvent.compositionMessage = NS_COMPOSITION_END;
-          DispatchEvent(&compEvent, aStatus);
-   
-          //-------------------------------------------------------
-          // finally, we update the preedit position
-          //-------------------------------------------------------
-          nsPoint spot;
-          spot.x = compEvent.theReply.mCursorPosition.x;
-          spot.y = compEvent.theReply.mCursorPosition.y + 
-                compEvent.theReply.mCursorPosition.height;
-          SetXICBaseFontSize( compEvent.theReply.mCursorPosition.height - 1);
-          SetXICSpotLocation(spot);
+          this->OnComposition(compEvent);
         }
       }
       XFree(uncommitted_text);
@@ -2805,6 +2815,7 @@ gdk_fontset_load("-*-*-*-*-*-*-16-*-*-*-*-*-*-*");
       //gdk_fontset_load("-misc-fixed-medium-r-normal--*-130-*-*-*-*-*-0");
 
       GdkWindow *gdkWindow = (GdkWindow*) GetNativeData(NS_NATIVE_WINDOW);
+      
       if (!gdkWindow) return nsnull;
 
       GdkWindowPrivate *gdkWindow_private = (GdkWindowPrivate*) gdkWindow;
@@ -2926,6 +2937,10 @@ nsWidget::SetXICBaseFontSize(int height)
 void
 nsWidget::SetXICSpotLocation(nsPoint aPoint)
 {
+  NS_ASSERTION( (aPoint.x > 0) && (aPoint.y >0), "strange position for XIC");
+  if(! ( (aPoint.x > 0) && (aPoint.y >0)))
+    return;
+
   if(mIMEEnable == PR_FALSE)
   {
     return;
