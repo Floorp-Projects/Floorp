@@ -99,15 +99,13 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CI
 //*****************************************************************************
 
 GlobalWindowImpl::GlobalWindowImpl() : mScriptObject(nsnull),
-   mNavigator(nsnull), mScreen(nsnull), mHistory(nsnull),
-   mMenubar(nsnull), mToolbar(nsnull), mLocationbar(nsnull),
+   mNavigator(nsnull), mScreen(nsnull), mHistory(nsnull), mFrames(nsnull),
+   mLocation(nsnull), mMenubar(nsnull), mToolbar(nsnull), mLocationbar(nsnull),
    mPersonalbar(nsnull), mStatusbar(nsnull), mScrollbars(nsnull),
-   mLocation(nsnull), mFrames(nsnull), 
-   mGlobalObjectOwner(nsnull), mTimeouts(nsnull),
-   mTimeoutInsertionPoint(nsnull), mRunningTimeout(nsnull),
-   mTimeoutPublicIdCounter(1), mTimeoutFiringDepth(0),
-   mFirstDocumentLoad(PR_TRUE), mChromeEventHandler(nsnull), mDocShell(nsnull),
-   mSidebar(nsnull)
+   mTimeouts(nsnull), mTimeoutInsertionPoint(nsnull), mRunningTimeout(nsnull),
+   mTimeoutPublicIdCounter(1), mTimeoutFiringDepth(0), 
+   mFirstDocumentLoad(PR_TRUE), mGlobalObjectOwner(nsnull), 
+   mDocShell(nsnull), mChromeEventHandler(nsnull)
 {
    NS_INIT_REFCNT();
 }
@@ -3943,7 +3941,6 @@ nsDOMWindowController::nsDOMWindowController( nsIDOMWindow* aWindow)
 
 nsresult nsDOMWindowController::GetEditInterface(nsIContentViewerEdit** aEditInterface)
 {	 
-   nsresult result = NS_ERROR_FAILURE;
 	nsCOMPtr<nsPIDOMWindow> piwindow(do_QueryInterface(mWindow));
    NS_ENSURE_TRUE(piwindow, NS_ERROR_FAILURE);
 
@@ -3963,7 +3960,6 @@ nsresult nsDOMWindowController::GetEditInterface(nsIContentViewerEdit** aEditInt
 
 nsresult nsDOMWindowController::GetPresShell(nsIPresShell** aPresShell)
 {
-   nsresult result = NS_ERROR_FAILURE;
 	nsCOMPtr<nsPIDOMWindow> piwindow(do_QueryInterface(mWindow));
    NS_ENSURE_TRUE(piwindow, NS_ERROR_FAILURE);
 
