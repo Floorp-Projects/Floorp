@@ -536,9 +536,10 @@ public:
 class InstanceVariable : public InstanceMember {
 public:
     InstanceVariable(Multiname *multiname, JS2Class *type, bool immutable, bool final, bool enumerable, uint32 slotIndex) 
-        : InstanceMember(InstanceVariableMember, multiname, final, enumerable), type(type), immutable(immutable), slotIndex(slotIndex) { }
-    Invokable *evalInitialValue;    // A function that computes this variable's initial value
+        : InstanceMember(InstanceVariableMember, multiname, final, enumerable), 
+                type(type), defaultValue(JS2VAL_UNDEFINED), immutable(immutable), slotIndex(slotIndex) { }
     JS2Class *type;                 // Type of values that may be stored in this variable
+    js2val defaultValue;            // This variable's default value, if provided
     bool immutable;                 // true if this variable's value may not be changed once set
     uint32 slotIndex;               // The index into an instance's slot array in which this variable is stored
 
@@ -818,6 +819,8 @@ public:
     Slot                *slots;             // A set of slots that hold this instance's fixed property values
 
     FunctionWrapper     *fWrap;
+
+    void initializeSlots(JS2Class *type);
 
     virtual void markChildren();
     virtual ~SimpleInstance();

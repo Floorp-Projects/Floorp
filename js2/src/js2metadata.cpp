@@ -1206,6 +1206,12 @@ namespace MetaData {
                                     t = objectClass;
                             }
                             v->type = t;
+                            if (vb->initializer) {
+                                js2val newValue = EvalExpression(env, CompilePhase, vb->initializer);
+                                v->defaultValue = t->implicitCoerce(this, newValue);
+                            }
+                            else
+                                v->defaultValue = t->defaultValue;
                         }
                     }
                     else { // HoistedVariable
@@ -3779,6 +3785,14 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                 *rval = s->value;
                 return true;
             }
+        case Member::InstanceMethodMember:
+            {
+                InstanceMethod *im = checked_cast<InstanceMethod *>(m);
+                if (phase == CompilePhase)
+                    reportError(Exception::compileExpressionError, "Inappropriate compile time expression", engine->errorPos());
+                *rval = OBJECT_TO_JS2VAL(new MethodClosure(containerVal, im));
+                return true;
+            }
         default:
             ASSERT(false);
         }
@@ -4260,6 +4274,23 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
  ************************************************************************************/
 
     
+    void SimpleInstance::initializeSlots(JS2Class *type)
+    {
+        if (type->super)
+            initializeSlots(type->super);
+        for (InstanceBindingIterator rib = type->instanceBindings.begin(), riend = type->instanceBindings.end(); (rib != riend); rib++) {
+            InstanceBindingEntry *ibe = *rib;
+            for (InstanceBindingEntry::NS_Iterator i = ibe->begin(), end = ibe->end(); (i != end); i++) {
+                InstanceBindingEntry::NamespaceBinding ns = *i;
+                InstanceMember *im = ns.second->content;
+                if (im->memberKind == Member::InstanceVariableMember) {
+                    InstanceVariable *iv = checked_cast<InstanceVariable *>(im);
+                    slots[iv->slotIndex].value = iv->defaultValue;
+                }
+            }
+        }
+    }
+
     // Construct a Simple instance of a class. Set the
     // initial value of all slots to uninitialized.
     SimpleInstance::SimpleInstance(JS2Metadata *meta, js2val parent, JS2Class *type) 
@@ -4273,6 +4304,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         for (uint32 i = 0; i < type->slotCount; i++) {
             slots[i].value = JS2VAL_UNINITIALIZED;
         }
+        initializeSlots(type);
     }
 
     // gc-mark all contained JS2Objects and visit contained structures to do likewise

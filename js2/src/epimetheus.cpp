@@ -255,6 +255,32 @@ void printLocalBindings(LocalBindingMap *lMap)
     }
 }
 
+void printInstanceVariables(JS2Class *c, Slot *slots)
+{
+    if (c->super)
+        printInstanceVariables(c->super, slots);
+
+    for (InstanceBindingIterator rib = c->instanceBindings.begin(), riend = c->instanceBindings.end(); (rib != riend); rib++) {
+        InstanceBindingEntry *ibe = *rib;
+        for (InstanceBindingEntry::NS_Iterator i = ibe->begin(), end = ibe->end(); (i != end); i++) {
+            InstanceBindingEntry::NamespaceBinding ns = *i;
+            if (ns.second->content->memberKind == Member::InstanceVariableMember) {
+                stdOut << "\t" << *(ns.first->name) << "::" << ibe->name;
+                if (ns.second->accesses & ReadAccess)
+                    if (ns.second->accesses & WriteAccess)
+                        stdOut << " [read/write] ";
+                    else
+                        stdOut << " [read-only] ";
+                else
+                    stdOut << " [write-only] ";
+                InstanceVariable *iv = checked_cast<InstanceVariable *>(ns.second->content);
+                stdOut << *metadata->toString(slots[iv->slotIndex].value);
+            }
+        }
+    }
+    stdOut << "\n";
+}
+
 js2val dump(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint32 argc)
 {
     if (argc) {
@@ -278,6 +304,8 @@ js2val dump(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint
                     stdOut << ((s->sealed) ? "sealed " : "not-sealed ") << '\n';
                     stdOut << "type = " << *s->type->getName() << '\n';
                     printLocalBindings(&s->localBindings);
+                    stdOut << " Instance Bindings:\n";   
+                    printInstanceVariables(s->type, s->slots);
                     if (meta->objectType(argv[0]) == meta->functionClass) {
                         FunctionWrapper *fWrap;
                         fWrap = (checked_cast<SimpleInstance *>(fObj))->fWrap;
@@ -335,6 +363,8 @@ js2val dump(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint
                 break;
             }
         }
+        else
+            stdOut << *metadata->toString(argv[0]);
     }
     return JS2VAL_UNDEFINED;
 }
