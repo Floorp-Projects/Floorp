@@ -314,6 +314,18 @@ nsNntpService::RunNewsUrl(const nsString& urlString, nsISupports * aConsumer,
 				delete [] urlSpec;
 			}
 
+            nsINNTPNewsgroup *newsgroup = nsnull;
+            rv = NS_NewNewsgroup(&newsgroup, nsnull /* line */, nsnull /* set */, PR_FALSE /* subscribed */, nsnull /* host*/, 1 /* depth */);
+            
+            if (NS_SUCCEEDED(rv)) {
+              // hard coded for now, until I get the wiring worked out...
+              newsgroup->SetName("netscape.test");
+            }
+            else {
+              return rv;
+            }            
+            nntpUrl->SetNewsgroup(newsgroup);
+            
 			const char * hostname = nsnull;
 			PRUint32 port = NEWS_PORT;
 			
@@ -340,7 +352,7 @@ nsNntpService::RunNewsUrl(const nsString& urlString, nsISupports * aConsumer,
 
 			if (aURL)
 				*aURL = nntpUrl; // transfer ref count
-			else
+			else 
 				NS_RELEASE(nntpUrl);
 		} // if nntpUrl
 
@@ -371,15 +383,14 @@ nsresult nsNntpService::GetNewNews(nsIUrlListener * aUrlListener,
   
   // convert normal host to nntp host.
   // XXX - this doesn't handle QI failing very well
-  if (server) 
-	{
+  if (server) {
 #ifdef DEBUG_sspitzer
-      printf("server != nsnull\n");
+    printf("server != nsnull\n");
 #endif
-      // load up required server information
-      server->GetHostName(&nntpHostName);
-    }
-
+    // load up required server information
+    server->GetHostName(&nntpHostName);
+  }
+  
 #ifdef DEBUG_sspitzer
   if (nntpHostName) {
     printf("get news from news://%s\n", nntpHostName);
@@ -388,7 +399,10 @@ nsresult nsNntpService::GetNewNews(nsIUrlListener * aUrlListener,
     printf("nntpHostName is null\n");
   }
 #endif
-	
+
+  // hard coded for now, until I get the wiring worked out.
+  rv = RunNewsUrl("news://news.mozilla.org/netscape.test", nsnull, aUrlListener, aURL);
+  
   NS_UNLOCK_INSTANCE();
   return rv;
 }
