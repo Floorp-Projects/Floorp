@@ -3640,7 +3640,7 @@ PRBool GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
 
       if(timeout->expr) {
         /* Evaluate the timeout expression. */
-        nsAutoString script = NS_REINTERPRET_CAST(const PRUnichar*, JS_GetStringChars(timeout->expr));
+        nsAutoString script( NS_REINTERPRET_CAST(const PRUnichar*, JS_GetStringChars(timeout->expr)) );
         nsAutoString blank;
         PRBool isUndefined;
         rv = mContext->EvaluateString(script,
