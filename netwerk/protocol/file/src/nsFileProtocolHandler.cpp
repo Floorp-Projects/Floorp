@@ -248,6 +248,7 @@ nsFileProtocolHandler::NewFileURI(nsIFile *file, nsIURI **result)
 NS_IMETHODIMP
 nsFileProtocolHandler::GetURLSpecFromFile(nsIFile *file, nsACString &result)
 {
+    NS_ENSURE_ARG_POINTER(file);
     return net_GetURLSpecFromFile(file, result);
 }
 
