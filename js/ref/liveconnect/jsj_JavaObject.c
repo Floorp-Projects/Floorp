@@ -681,7 +681,7 @@ JSObjectOps JavaObject_ops = {
     NULL,                       /* hasInstance */
 };
 
-JSObjectOps *
+static JSObjectOps *
 JavaObject_getObjectOps(JSContext *cx, JSClass *clazz)
 {
     return &JavaObject_ops;
