@@ -65,7 +65,7 @@ const ENCODING *NS(findEncoding)(const ENCODING *enc, const char *ptr, const cha
   if (ptr != end)
     return 0;
   *p = 0;
-  if (streqci(buf, "UTF-16") && enc->minBytesPerChar == 2)
+  if (streqci(buf, KW_UTF_16) && enc->minBytesPerChar == 2)
     return enc;
   i = getEncodingIndex(buf);
   if (i == UNKNOWN_ENC)

@@ -1,31 +1,6 @@
 /*
-The contents of this file are subject to the Mozilla Public License
-Version 1.1 (the "License"); you may not use this file except in
-compliance with the License. You may obtain a copy of the License at
-http://www.mozilla.org/MPL/
-
-Software distributed under the License is distributed on an "AS IS"
-basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
-License for the specific language governing rights and limitations
-under the License.
-
-The Original Code is expat.
-
-The Initial Developer of the Original Code is James Clark.
-Portions created by James Clark are Copyright (C) 1998, 1999
-James Clark. All Rights Reserved.
-
-Contributor(s):
-
-Alternatively, the contents of this file may be used under the terms
-of the GNU General Public License (the "GPL"), in which case the
-provisions of the GPL are applicable instead of those above.  If you
-wish to allow use of your version of this file only under the terms of
-the GPL and not to allow others to use your version of this file under
-the MPL, indicate your decision by deleting the provisions above and
-replace them with the notice and other provisions required by the
-GPL. If you do not delete the provisions above, a recipient may use
-your version of this file under either the MPL or the GPL.
+Copyright (c) 1998, 1999, 2000 Thai Open Source Software Center Ltd
+See the file copying.txt for copying permission.
 */
 
 #ifndef XmlParse_INCLUDED
@@ -167,6 +142,17 @@ typedef void (*XML_NotationDeclHandler)(void *userData,
 					const XML_Char *base,
 					const XML_Char *systemId,
 					const XML_Char *publicId);
+
+typedef void (*XML_ExternalParsedEntityDeclHandler)(void *userData,
+						    const XML_Char *entityName,
+						    const XML_Char *base,
+						    const XML_Char *systemId,
+						    const XML_Char *publicId);
+
+typedef void (*XML_InternalParsedEntityDeclHandler)(void *userData,
+						    const XML_Char *entityName,
+						    const XML_Char *replacementText,
+						    int replacementTextLength);
 
 /* When namespace processing is enabled, these are called once for
 each namespace declaration. The call to the start and end element
@@ -331,6 +317,14 @@ XML_SetNotationDeclHandler(XML_Parser parser,
 			   XML_NotationDeclHandler handler);
 
 void XMLPARSEAPI
+XML_SetExternalParsedEntityDeclHandler(XML_Parser parser,
+				       XML_ExternalParsedEntityDeclHandler handler);
+
+void XMLPARSEAPI
+XML_SetInternalParsedEntityDeclHandler(XML_Parser parser,
+				       XML_InternalParsedEntityDeclHandler handler);
+
+void XMLPARSEAPI
 XML_SetNamespaceDeclHandler(XML_Parser parser,
 			    XML_StartNamespaceDeclHandler start,
 			    XML_EndNamespaceDeclHandler end);
@@ -367,7 +361,7 @@ XML_SetUserData(XML_Parser parser, void *userData);
 #define XML_GetUserData(parser) (*(void **)(parser))
 
 /* This is equivalent to supplying an encoding argument
-to XML_CreateParser. It must not be called after XML_Parse
+to XML_ParserCreate. It must not be called after XML_Parse
 or XML_ParseBuffer. */
 
 int XMLPARSEAPI
@@ -393,11 +387,19 @@ XML_SetBase(XML_Parser parser, const XML_Char *base);
 const XML_Char XMLPARSEAPI *
 XML_GetBase(XML_Parser parser);
 
-/* Returns the number of the attributes passed in last call to the
-XML_StartElementHandler that were specified in the start-tag rather
-than defaulted. */
+/* Returns the number of the attribute/value pairs passed in last call
+to the XML_StartElementHandler that were specified in the start-tag
+rather than defaulted. Each attribute/value pair counts as 2; thus
+this correspondds to an index into the atts array passed to the
+XML_StartElementHandler. */
 
 int XMLPARSEAPI XML_GetSpecifiedAttributeCount(XML_Parser parser);
+
+/* Returns the index of the ID attribute passed in the last call to
+XML_StartElementHandler, or -1 if there is no ID attribute.  Each
+attribute/value pair counts as 2; thus this correspondds to an index
+into the atts array passed to the XML_StartElementHandler. */
+int XMLPARSEAPI XML_GetIdAttributeIndex(XML_Parser parser);
 
 /* Parses some input. Returns 0 if a fatal error is detected.
 The last call to XML_Parse must have isFinal true;
