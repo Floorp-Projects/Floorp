@@ -265,7 +265,9 @@ doeditwhiteboard.cgi	TCL.  Edits the free-for-all whiteboard.
 			Calls:
 				nobody
 
-dolog.pl		???
+dolog.pl		Perl.  Magic file that causes CVS to send mail to
+			Bonsai whenever someone makes a change.  Please read
+			the comments towards the beginning for more clues.
 
 dotweak.cgi		TCL.  Tweaks a bunch of checkins in ahook at once.
 			Called by:
