@@ -536,14 +536,6 @@ nsDeviceContextMac :: FindScreenForSurface ( nsIScreen** outScreen )
       ::LocalToGlobal ( &topLeft );
       ::LocalToGlobal ( &bottomRight );
       Rect globalWindowBounds = { topLeft.v, topLeft.h, bottomRight.v, bottomRight.h } ;
-        
-      // subtract out the height of title bar from the size
-      StRegionFromPool structRgn;
-      ::GetWindowRegion(window, kWindowStructureRgn, structRgn);
-      Rect structBox;
-      ::GetRegionBounds ( structRgn, &structBox );
-      PRInt32 wTitleHeight = topLeft.v - 1 - structBox.top;
-      globalWindowBounds.top -= wTitleHeight;
       
       mScreenManager->ScreenForRect ( globalWindowBounds.left, globalWindowBounds.top, 
                                        globalWindowBounds.bottom - globalWindowBounds.top, 
