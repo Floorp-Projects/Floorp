@@ -52,9 +52,11 @@
 #include "nsReadableUtils.h"
 #include "nsAWritableString.h"
 #include "nsXPIDLString.h"
+#include "nsXFontNormal.h"
+#include "nsX11AlphaBlend.h"
+#include "nsXFontAAScaledBitmap.h"
 
 #include <gdk/gdk.h>
-#include <gdk/gdkx.h>
 
 #include <X11/Xatom.h>
 
@@ -133,6 +135,9 @@ struct nsFontCharSetInfo
   nsIAtom*               mLangGroup;
   PRBool                 mInitedSizeInfo;
   PRInt32                mOutlineScaleMin;
+  PRInt32                mAABitmapScaleMin;
+  double                 mAABitmapOversize;
+  double                 mAABitmapUndersize;
   PRInt32                mBitmapScaleMin;
   double                 mBitmapOversize;
   double                 mBitmapUndersize;
@@ -243,10 +248,19 @@ static nsIAtom* gUserDefined = nsnull;
 static nsIAtom* gUsersLocale = nsnull;
 static nsIAtom* gWesternLocale = nsnull;
 
+// Controls for Outline Scaled Fonts (okay looking)
+
 static PRInt32 gOutlineScaleMinimum = 6;
+// Controls for Anti-Aliased Scaled Bitmaps (okay looking)
+static PRBool  gAABitmapScaleEnabled = PR_TRUE;
+static PRInt32 gAABitmapScaleMinimum = 6;
+static double  gAABitmapOversize = 1.1;
+static double  gAABitmapUndersize = 0.9;
+
+// Controls for (regular) Scaled Bitmaps (very ugly)
 static PRInt32 gBitmapScaleMinimum = 10;
-static double  gBitmapOversize = 1.1;
-static double  gBitmapUndersize = 0.9;
+static double  gBitmapOversize = 1.2;
+static double  gBitmapUndersize = 0.8;
 
 static gint SingleByteConvert(nsFontCharSetInfo* aSelf, XFontStruct* aFont,
   const PRUnichar* aSrcBuf, PRInt32 aSrcLen, char* aDestBuf, PRInt32 aDestLen);
@@ -723,6 +737,8 @@ FreeGlobals(void)
 
   gInitialized = 0;
 
+  nsXFontAAScaledBitmap::FreeGlobals();
+  nsX11AlphaBlendFreeGlobals();
 
   if (gAliases) {
     delete gAliases;
@@ -834,13 +850,64 @@ InitGlobals(void)
     gOutlineScaleMinimum = scale_minimum;
     SIZE_FONT_PRINTF(("gOutlineScaleMinimum = %d", gOutlineScaleMinimum));
   }
+
+  val = PR_TRUE;
+  rv = gPref->GetBoolPref("font.scale.aa_bitmap.enable", &val);
+  if (NS_SUCCEEDED(rv)) {
+    gAABitmapScaleEnabled = val;
+    SIZE_FONT_PRINTF(("gAABitmapScaleEnabled = %d", gAABitmapScaleEnabled));
+  }
+
+  rv = gPref->GetIntPref("font.scale.aa_bitmap.min", &scale_minimum);
+  if (NS_SUCCEEDED(rv)) {
+    gAABitmapScaleMinimum = scale_minimum;
+    SIZE_FONT_PRINTF(("gAABitmapScaleMinimum = %d", gAABitmapScaleMinimum));
+  }
+
+  PRInt32 percent = 0;
+  rv = gPref->GetIntPref("font.scale.aa_bitmap.undersize", &percent);
+  if ((NS_SUCCEEDED(rv)) && (percent)) {
+    gAABitmapUndersize = percent/100.0;
+    SIZE_FONT_PRINTF(("gAABitmapUndersize = %g", gAABitmapUndersize));
+  }
+  percent = 0;
+  rv = gPref->GetIntPref("font.scale.aa_bitmap.oversize", &percent);
+  if ((NS_SUCCEEDED(rv)) && (percent)) {
+    gAABitmapOversize = percent/100.0;
+    SIZE_FONT_PRINTF(("gAABitmapOversize = %g", gAABitmapOversize));
+  }
+  PRInt32 int_val = 0;
+  rv = gPref->GetIntPref("font.scale.aa_bitmap.dark_text.min", &int_val);
+  if (NS_SUCCEEDED(rv)) {
+    gAASBDarkTextMinValue = int_val;
+    SIZE_FONT_PRINTF(("gAASBDarkTextMinValue = %d", gAASBDarkTextMinValue));
+  }
+  nsXPIDLCString str;
+  rv = gPref->GetCharPref("font.scale.aa_bitmap.dark_text.gain",
+                           getter_Copies(str));
+  if (NS_SUCCEEDED(rv)) {
+    gAASBDarkTextGain = atof(str.get());
+    SIZE_FONT_PRINTF(("gAASBDarkTextGain = %g", gAASBDarkTextGain));
+  }
+  int_val = 0;
+  rv = gPref->GetIntPref("font.scale.aa_bitmap.light_text.min", &int_val);
+  if (NS_SUCCEEDED(rv)) {
+    gAASBLightTextMinValue = int_val;
+    SIZE_FONT_PRINTF(("gAASBLightTextMinValue = %d", gAASBLightTextMinValue));
+  }
+  rv = gPref->GetCharPref("font.scale.aa_bitmap.light_text.gain",
+                           getter_Copies(str));
+  if (NS_SUCCEEDED(rv)) {
+    gAASBLightTextGain = atof(str.get());
+    SIZE_FONT_PRINTF(("gAASBLightTextGain = %g", gAASBLightTextGain));
+  }
+
   rv = gPref->GetIntPref("font.scale.bitmap.min", &scale_minimum);
   if (NS_SUCCEEDED(rv)) {
     gBitmapScaleMinimum = scale_minimum;
     SIZE_FONT_PRINTF(("gBitmapScaleMinimum = %d", gBitmapScaleMinimum));
   }
-
-  PRInt32 percent = 0;
+  percent = 0;
   gPref->GetIntPref("font.scale.bitmap.oversize", &percent);
   if (percent) {
     gBitmapOversize = percent/100.0;
@@ -948,6 +1015,21 @@ InitGlobals(void)
   if (!gUsersLocale) {
     FreeGlobals();
     return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  if (gAABitmapScaleEnabled) {
+    rv = nsX11AlphaBlendInitGlobals(GDK_DISPLAY());
+    if (NS_SUCCEEDED(rv)) {
+      // disable Anti-Aliased Scaled Bitmaps if the
+      // hardware does not support it
+      gAABitmapScaleEnabled = nsX11AlphaBlend::CanAntiAlias();
+    }
+    else
+      gAABitmapScaleEnabled = PR_FALSE;
+  }
+  if (gAABitmapScaleEnabled) {
+      gAABitmapScaleEnabled = nsXFontAAScaledBitmap::InitGlobals(GDK_DISPLAY(),
+                                     DefaultScreen(GDK_DISPLAY()));
   }
 
   gInitialized = 1;
@@ -1161,9 +1243,8 @@ NS_IMETHODIMP  nsFontMetricsGTK::Destroy()
 
 void nsFontMetricsGTK::RealizeFont()
 {
-  XFontStruct *fontInfo;
-  
-  fontInfo = (XFontStruct *)GDK_FONT_XFONT(mWesternFont->GetGDKFont());
+  nsXFont *xFont = mWesternFont->GetXFont();
+  XFontStruct *fontInfo = xFont->GetXFontStruct();
 
   float f;
   mDeviceContext->GetDevUnitsToAppUnits(f);
@@ -1187,19 +1268,18 @@ void nsFontMetricsGTK::RealizeFont()
 
   gint rawWidth;
   if ((fontInfo->min_byte1 == 0) && (fontInfo->max_byte1 == 0)) {
-    rawWidth = gdk_text_width(mWesternFont->GetGDKFont(), " ", 1); 
+    rawWidth = xFont->TextWidth8(" ", 1);
   }
   else {
     XChar2b _16bit_space;
     _16bit_space.byte1 = 0;
     _16bit_space.byte2 = ' ';
-    rawWidth = gdk_text_width(mWesternFont->GetGDKFont(), 
-                               (const char *)&_16bit_space, sizeof(_16bit_space)); 
+    rawWidth = xFont->TextWidth16(&_16bit_space, sizeof(_16bit_space)/2);
   }
   mSpaceWidth = NSToCoordRound(rawWidth * f);
 
   unsigned long pr = 0;
-  if (::XGetFontProperty(fontInfo, XA_X_HEIGHT, &pr) &&
+  if (xFont->GetXFontProperty(XA_X_HEIGHT, &pr) &&
       pr < 0x00ffffff)  // Bug 43214: arbitrary to exclude garbage values
   {
     mXHeight = nscoord(pr * f);
@@ -1213,7 +1293,7 @@ void nsFontMetricsGTK::RealizeFont()
     mXHeight = NSToCoordRound((float) fontInfo->ascent* f * 0.56f);
   }
 
-  if (::XGetFontProperty(fontInfo, XA_UNDERLINE_POSITION, &pr))
+  if (xFont->GetXFontProperty(XA_UNDERLINE_POSITION, &pr))
   {
     /* this will only be provided from adobe .afm fonts and TrueType
      * fonts served by xfsft (not xfstt!) */
@@ -1230,7 +1310,7 @@ void nsFontMetricsGTK::RealizeFont()
     mUnderlineOffset = -NSToIntRound(MAX (1, floor (0.1 * height + 0.5)) * f);
   }
 
-  if (::XGetFontProperty(fontInfo, XA_UNDERLINE_THICKNESS, &pr))
+  if (xFont->GetXFontProperty(XA_UNDERLINE_THICKNESS, &pr))
   {
     /* this will only be provided from adobe .afm fonts */
     mUnderlineSize = nscoord(MAX(f, NSToIntRound(pr * f)));
@@ -1245,7 +1325,7 @@ void nsFontMetricsGTK::RealizeFont()
     mUnderlineSize = NSToIntRound(MAX(1, floor (0.05 * height + 0.5)) * f);
   }
 
-  if (::XGetFontProperty(fontInfo, XA_SUPERSCRIPT_Y, &pr))
+  if (xFont->GetXFontProperty(XA_SUPERSCRIPT_Y, &pr))
   {
     mSuperscriptOffset = nscoord(MAX(f, NSToIntRound(pr * f)));
 #ifdef REALLY_NOISY_FONTS
@@ -1257,7 +1337,7 @@ void nsFontMetricsGTK::RealizeFont()
     mSuperscriptOffset = mXHeight;
   }
 
-  if (::XGetFontProperty(fontInfo, XA_SUBSCRIPT_Y, &pr))
+  if (xFont->GetXFontProperty(XA_SUBSCRIPT_Y, &pr))
   {
     mSubscriptOffset = nscoord(MAX(f, NSToIntRound(pr * f)));
 #ifdef REALLY_NOISY_FONTS
@@ -1821,14 +1901,14 @@ struct nsFontSearch
 
 #if 0
 static void
-GetUnderlineInfo(XFontStruct* aFont, unsigned long* aPositionX2,
+GetUnderlineInfo(nsXFont* aFont, unsigned long* aPositionX2,
   unsigned long* aThickness)
 {
   /*
    * XLFD 1.5 says underline position defaults descent/2.
    * Hence we return position*2 to avoid rounding error.
    */
-  if (::XGetFontProperty(aFont, XA_UNDERLINE_POSITION, aPositionX2)) {
+  if (aFont->GetXFontProperty(XA_UNDERLINE_POSITION, aPositionX2)) {
     *aPositionX2 *= 2;
   }
   else {
@@ -1840,7 +1920,7 @@ GetUnderlineInfo(XFontStruct* aFont, unsigned long* aPositionX2,
    * We don't know what that is, so we just take the thickness of "_".
    * This way, we get thicker underlines for bold fonts.
    */
-  if (!::XGetFontProperty(aFont, XA_UNDERLINE_THICKNESS, aThickness)) {
+  if (!xFont->GetXFontProperty(XA_UNDERLINE_THICKNESS, aThickness)) {
     int dir, ascent, descent;
     XCharStruct overall;
     XTextExtents(aFont, "_", 1, &dir, &ascent, &descent, &overall);
@@ -1875,12 +1955,9 @@ GetMapFor10646Font(XFontStruct* aFont)
 }
 
 PRBool
-nsFontGTK::IsEmptyFont(GdkFont* aGdkFont)
+nsFontGTK::IsEmptyFont(nsXFont* aXFont)
 {
-  if (!aGdkFont)
-    return PR_TRUE;
-
-  XFontStruct* xFont = (XFontStruct*) GDK_FONT_XFONT(aGdkFont);
+  XFontStruct* xFont = aXFont->GetXFontStruct();
 
   //
   // scan and see if we can find at least one glyph
@@ -1913,11 +1990,36 @@ nsFontGTK::LoadFont(void)
   }
 
   mAlreadyCalledLoadFont = PR_TRUE;
-  gdk_error_trap_push();
-  GdkFont* gdkFont = ::gdk_font_load(mName);
-  gdk_error_trap_pop();
+  GdkFont* gdkFont;
+  NS_ASSERTION(!mFont, "mFont should not be loaded");
+  if (mAABaseSize==0) {
+    NS_ASSERTION(!mFontHolder, "mFontHolder should not be loaded");
+    gdk_error_trap_push();
+    gdkFont = ::gdk_font_load(mName);
+    gdk_error_trap_pop();
+    if (!gdkFont)
+      return;
+    mXFont = new nsXFontNormal(gdkFont);
+  }
+  else {
+    NS_ASSERTION(mFontHolder, "mFontHolder should be loaded");
+    gdkFont = mFontHolder;
+    mXFont = new nsXFontAAScaledBitmap(GDK_DISPLAY(),
+                                       DefaultScreen(GDK_DISPLAY()),
+                                       gdkFont, mSize, mAABaseSize);
+  }
+
+  NS_ASSERTION(mXFont,"failed to load mXFont");
+  if (!mXFont)
+    return;
+  if (!mXFont->LoadFont()) {
+    delete mXFont;
+    mXFont = nsnull;
+    return;
+  }
+
   if (gdkFont) {
-    XFontStruct* xFont = (XFontStruct*) GDK_FONT_XFONT(gdkFont);
+    XFontStruct* xFont = mXFont->GetXFontStruct();
 
     mMaxAscent = xFont->ascent;
     mMaxDescent = xFont->descent;
@@ -1925,7 +2027,10 @@ nsFontGTK::LoadFont(void)
     if (mCharSetInfo == &ISO106461) {
       mCCMap = GetMapFor10646Font(xFont);
       if (!mCCMap) {
+        mXFont->UnloadFont();
+        mXFont = nsnull;
         ::gdk_font_unref(gdkFont);
+        mFontHolder = nsnull;
         return;
       }
     }
@@ -1944,7 +2049,7 @@ if ((mCharSetInfo == &JISX0201)
     || (mCharSetInfo == &CNS116437)
    ) {
 
-    if (IsEmptyFont(gdkFont)) {
+    if (IsEmptyFont(mXFont)) {
 #ifdef NS_FONT_DEBUG_LOAD_FONT
       if (gDebug & NS_FONT_DEBUG_LOAD_FONT) {
         printf("\n");
@@ -1954,23 +2059,14 @@ if ((mCharSetInfo == &JISX0201)
         printf("\n");
       }
 #endif
+      mXFont->UnloadFont();
+      mXFont = nsnull;
       ::gdk_font_unref(gdkFont);
+      mFontHolder = nsnull;
       return;
     }
 }
     mFont = gdkFont;
-
-#if 0
-    if (aCharSet->mSpecialUnderline && aMetrics->mFontHandle) {
-      XFontStruct* asciiXFont =
-        (XFontStruct*) GDK_FONT_XFONT(aMetrics->mFontHandle);
-      unsigned long positionX2;
-      unsigned long thickness;
-      GetUnderlineInfo(asciiXFont, &positionX2, &thickness);
-      mActualSize += (positionX2 + thickness);
-      mBaselineAdjust = (-xFont->max_bounds.descent);
-    }
-#endif /* 0 */
 
 #ifdef NS_FONT_DEBUG_LOAD_FONT
     if (gDebug & NS_FONT_DEBUG_LOAD_FONT) {
@@ -1994,8 +2090,14 @@ nsFontGTK::GetGDKFont(void)
   return mFont;
 }
 
+nsXFont*
+nsFontGTK::GetXFont(void)
+{
+  return mXFont;
+}
+
 PRBool
-nsFontGTK::GetGDKFontIs10646(void)
+nsFontGTK::GetXFontIs10646(void)
 {
   return ((PRBool) (mCharSetInfo == &ISO106461));
 }
@@ -2010,7 +2112,10 @@ nsFontGTK::nsFontGTK()
 nsFontGTK::~nsFontGTK()
 {
   MOZ_COUNT_DTOR(nsFontGTK);
-  if (mFont) {
+  if (mXFont) {
+    delete mXFont;
+  }
+  if (mFont && (mAABaseSize==0)) {
     gdk_font_unref(mFont);
   }
   if (mCharSetInfo == &ISO106461) {
@@ -2025,6 +2130,7 @@ class nsFontGTKNormal : public nsFontGTK
 {
 public:
   nsFontGTKNormal();
+  nsFontGTKNormal(nsFontGTK*);
   virtual ~nsFontGTKNormal();
 
   virtual gint GetWidth(const PRUnichar* aString, PRUint32 aLength);
@@ -2041,10 +2147,25 @@ public:
 
 nsFontGTKNormal::nsFontGTKNormal()
 {
+  mFontHolder = nsnull;
+}
+
+nsFontGTKNormal::nsFontGTKNormal(nsFontGTK *aFont)
+{
+  mAABaseSize = aFont->mSize;
+  mFontHolder = aFont->GetGDKFont();
+  if (!mFontHolder)
+    aFont->LoadFont();
+  mFontHolder = aFont->GetGDKFont();
+  NS_ASSERTION(mFontHolder, "font to copy not loaded");
+  if (mFontHolder)
+    ::gdk_font_ref(mFontHolder);
 }
 
 nsFontGTKNormal::~nsFontGTKNormal()
 {
+  if (mFontHolder)
+    ::gdk_font_unref(mFontHolder);
 }
 
 gint
@@ -2062,9 +2183,13 @@ nsFontGTKNormal::GetWidth(const PRUnichar* aString, PRUint32 aLength)
   PRInt32 bufLen;
   ENCODER_BUFFER_ALLOC_IF_NEEDED(p, mCharSetInfo->mConverter,
                          aString, aLength, buf, sizeof(buf), bufLen);
-  gint len = mCharSetInfo->Convert(mCharSetInfo,
-    (XFontStruct*) GDK_FONT_XFONT(mFont), aString, aLength, p, bufLen);
-  gint outWidth = ::gdk_text_width(mFont, p, len);
+  gint len = mCharSetInfo->Convert(mCharSetInfo, mXFont->GetXFontStruct(),
+                                   aString, aLength, p, bufLen);
+  gint outWidth;
+  if (mXFont->IsSingleByte())
+    outWidth = mXFont->TextWidth8(p, len);
+  else
+    outWidth = mXFont->TextWidth16((const XChar2b*)p, len/2);
   ENCODER_BUFFER_FREE_IF_NEEDED(p, buf);
   return outWidth;
 }
@@ -2087,13 +2212,21 @@ nsFontGTKNormal::DrawString(nsRenderingContextGTK* aContext,
   PRInt32 bufLen;
   ENCODER_BUFFER_ALLOC_IF_NEEDED(p, mCharSetInfo->mConverter,
                          aString, aLength, buf, sizeof(buf), bufLen);
-  gint len = mCharSetInfo->Convert(mCharSetInfo,
-    (XFontStruct*) GDK_FONT_XFONT(mFont), aString, aLength, p, bufLen);
+  gint len = mCharSetInfo->Convert(mCharSetInfo, mXFont->GetXFontStruct(),
+                                   aString, aLength, p, bufLen);
   GdkGC *gc = aContext->GetGC();
-  nsRenderingContextGTK::my_gdk_draw_text(aSurface->GetDrawable(), mFont, gc, aX,
+  gint outWidth;
+  if (mXFont->IsSingleByte()) {
+    mXFont->DrawText8(aSurface->GetDrawable(), gc, aX,
                                           aY + mBaselineAdjust, p, len);
+    outWidth = mXFont->TextWidth8(p, len);
+  }
+  else {
+    mXFont->DrawText16(aSurface->GetDrawable(), gc, aX, aY + mBaselineAdjust,
+                       (const XChar2b*)p, len/2);
+    outWidth = mXFont->TextWidth16((const XChar2b*)p, len/2);
+  }
   gdk_gc_unref(gc);
-  gint outWidth = ::gdk_text_width(mFont, p, len);
   ENCODER_BUFFER_FREE_IF_NEEDED(p, buf);
   return outWidth;
 }
@@ -2116,7 +2249,7 @@ nsFontGTKNormal::GetBoundingMetrics (const PRUnichar*   aString,
   }
 
   if (aString && 0 < aLength) {
-    XFontStruct *fontInfo = (XFontStruct *) GDK_FONT_XFONT (mFont);
+    XFontStruct *fontInfo = mXFont->GetXFontStruct();
     XChar2b buf[512];
     char* p;
     PRInt32 bufLen;
@@ -2124,12 +2257,22 @@ nsFontGTKNormal::GetBoundingMetrics (const PRUnichar*   aString,
                          aString, aLength, buf, sizeof(buf), bufLen);
     gint len = mCharSetInfo->Convert(mCharSetInfo, fontInfo, aString, aLength,
                                      p, bufLen);
-    gdk_text_extents (mFont, p, len, 
-                      &aBoundingMetrics.leftBearing, 
-                      &aBoundingMetrics.rightBearing, 
-                      &aBoundingMetrics.width, 
-                      &aBoundingMetrics.ascent, 
-                      &aBoundingMetrics.descent); 
+    if (mXFont->IsSingleByte()) {
+      mXFont->TextExtents8(p, len,
+                           &aBoundingMetrics.leftBearing,
+                           &aBoundingMetrics.rightBearing,
+                           &aBoundingMetrics.width,
+                           &aBoundingMetrics.ascent,
+                           &aBoundingMetrics.descent);
+    }
+    else {
+      mXFont->TextExtents16((const XChar2b*)p, len,
+                           &aBoundingMetrics.leftBearing,
+                           &aBoundingMetrics.rightBearing,
+                           &aBoundingMetrics.width,
+                           &aBoundingMetrics.ascent,
+                           &aBoundingMetrics.descent);
+    }
     ENCODER_BUFFER_FREE_IF_NEEDED(p, buf);
   }
 
@@ -2144,7 +2287,8 @@ public:
   virtual ~nsFontGTKSubstitute();
 
   virtual GdkFont* GetGDKFont(void);
-  virtual PRBool   GetGDKFontIs10646(void);
+  virtual nsXFont* GetXFont(void);
+  virtual PRBool   GetXFontIs10646(void);
   virtual gint GetWidth(const PRUnichar* aString, PRUint32 aLength);
   virtual gint DrawString(nsRenderingContextGTK* aContext,
                           nsDrawingSurfaceGTK* aSurface, nscoord aX,
@@ -2303,10 +2447,16 @@ nsFontGTKSubstitute::GetGDKFont(void)
   return mSubstituteFont->GetGDKFont();
 }
 
-PRBool
-nsFontGTKSubstitute::GetGDKFontIs10646(void)
+nsXFont*
+nsFontGTKSubstitute::GetXFont(void)
 {
-  return mSubstituteFont->GetGDKFontIs10646();
+  return mSubstituteFont->GetXFont();
+}
+
+PRBool
+nsFontGTKSubstitute::GetXFontIs10646(void)
+{
+  return mSubstituteFont->GetXFontIs10646();
 }
 
 class nsFontGTKUserDefined : public nsFontGTK
@@ -2342,14 +2492,14 @@ nsFontGTKUserDefined::~nsFontGTKUserDefined()
 PRBool
 nsFontGTKUserDefined::Init(nsFontGTK* aFont)
 {
-  if (!aFont->GetGDKFont()) {
+  if (!aFont->GetXFont()) {
     aFont->LoadFont();
-    if (!aFont->GetGDKFont()) {
+    if (!aFont->GetXFont()) {
       mCCMap = gEmptyCCMap;
       return PR_FALSE;
     }
   }
-  mFont = aFont->GetGDKFont();
+  mXFont = aFont->GetXFont();
   mCCMap = gUserDefinedCCMap;
   mName = aFont->mName;
 
@@ -2378,7 +2528,11 @@ nsFontGTKUserDefined::GetWidth(const PRUnichar* aString, PRUint32 aLength)
                          aString, aLength, buf, sizeof(buf), bufLen);
   PRUint32 len = Convert(aString, aLength, p, bufLen);
 
-  gint outWidth = ::gdk_text_width(mFont, p, len);
+  gint outWidth;
+  if (mXFont->IsSingleByte())
+    outWidth = mXFont->TextWidth8(p, len);
+  else
+    outWidth = mXFont->TextWidth16((const XChar2b*)p, len/2);
   ENCODER_BUFFER_FREE_IF_NEEDED(p, buf);
   return outWidth;
 }
@@ -2396,11 +2550,19 @@ nsFontGTKUserDefined::DrawString(nsRenderingContextGTK* aContext,
                          aString, aLength, buf, sizeof(buf), bufLen);
   PRUint32 len = Convert(aString, aLength, p, bufLen);
   GdkGC *gc = aContext->GetGC();
-  nsRenderingContextGTK::my_gdk_draw_text(aSurface->GetDrawable(), mFont, gc, aX,
-                                          aY + mBaselineAdjust, p, len);
-  gdk_gc_unref(gc);
 
-  gint outWidth = ::gdk_text_width(mFont, buf, len);
+  gint outWidth;
+  if (mXFont->IsSingleByte()) {
+    mXFont->DrawText8(aSurface->GetDrawable(), gc, aX,
+                                          aY + mBaselineAdjust, p, len);
+    outWidth = mXFont->TextWidth8(p, len);
+  }
+  else {
+    mXFont->DrawText16(aSurface->GetDrawable(), gc, aX, aY + mBaselineAdjust,
+                       (const XChar2b*)p, len);
+    outWidth = mXFont->TextWidth16((const XChar2b*)p, len/2);
+  }
+  gdk_gc_unref(gc);
   ENCODER_BUFFER_FREE_IF_NEEDED(p, buf);
   return outWidth;
 }
@@ -2422,12 +2584,22 @@ nsFontGTKUserDefined::GetBoundingMetrics(const PRUnichar*   aString,
     ENCODER_BUFFER_ALLOC_IF_NEEDED(p, gUserDefinedConverter,
                          aString, aLength, buf, sizeof(buf), bufLen);
     PRUint32 len = Convert(aString, aLength, p, bufLen);
-    gdk_text_extents (mFont, p, len, 
-                      &aBoundingMetrics.leftBearing, 
-                      &aBoundingMetrics.rightBearing, 
-                      &aBoundingMetrics.width, 
-                      &aBoundingMetrics.ascent, 
-                      &aBoundingMetrics.descent); 
+    if (mXFont->IsSingleByte()) {
+      mXFont->TextExtents8(p, len,
+                           &aBoundingMetrics.leftBearing,
+                           &aBoundingMetrics.rightBearing,
+                           &aBoundingMetrics.width,
+                           &aBoundingMetrics.ascent,
+                           &aBoundingMetrics.descent);
+    }
+    else {
+      mXFont->TextExtents16((const XChar2b*)p, len,
+                           &aBoundingMetrics.leftBearing,
+                           &aBoundingMetrics.rightBearing,
+                           &aBoundingMetrics.width,
+                           &aBoundingMetrics.ascent,
+                           &aBoundingMetrics.descent);
+    }
     ENCODER_BUFFER_FREE_IF_NEEDED(p, buf);
   }
 
@@ -2460,17 +2632,14 @@ nsFontMetricsGTK::AddToLoadedFontsList(nsFontGTK* aFont)
   return aFont;
 }
 
-nsFontGTK*
-nsFontMetricsGTK::PickASizeAndLoad(nsFontStretch* aStretch,
-  nsFontCharSetInfo* aCharSet, PRUnichar aChar, const char *aName)
-{
-  nsFontGTK* font = nsnull;
-  PRBool use_scaled_font = PR_FALSE;
 // define a size such that a scaled font would always be closer
 // to the desired size than this
 #define NOT_FOUND_FONT_SIZE 1000*1000*1000
-  PRInt32 bitmap_size = NOT_FOUND_FONT_SIZE;
-  PRInt32 scale_size = mPixelSize;
+
+nsFontGTK*
+nsFontMetricsGTK::FindNearestSize(nsFontStretch* aStretch, PRUint16 aSize)
+{
+  nsFontGTK* font = nsnull;
   if (aStretch->mSizes) {
     nsFontGTK** begin = aStretch->mSizes;
     nsFontGTK** end = &aStretch->mSizes[aStretch->mSizesCount];
@@ -2478,7 +2647,7 @@ nsFontMetricsGTK::PickASizeAndLoad(nsFontStretch* aStretch,
     // scan the list of sizes
     for (s = begin; s < end; s++) {
       // stop when we hit or overshoot the size
-      if ((*s)->mSize >= mPixelSize) {
+      if ((*s)->mSize >= aSize) {
         break;
       }
     }
@@ -2488,13 +2657,68 @@ nsFontMetricsGTK::PickASizeAndLoad(nsFontStretch* aStretch,
     }
     else if (s != begin) {
       // if we overshot pick the closest size
-      if (((*s)->mSize - mPixelSize) >= (mPixelSize - (*(s - 1))->mSize)) {
+      if (((*s)->mSize - aSize) >= (aSize - (*(s - 1))->mSize)) {
         s--;
       }
     }
     // this is the nearest bitmap font
     font = *s;
-    bitmap_size = (*s)->mSize;
+  }
+  return font;
+}
+
+static PRBool
+SetFontCharsetInfo(nsFontGTK *aFont, nsFontCharSetInfo* aCharSet,
+                   PRUnichar aChar)
+{
+  if (aCharSet->mCharSet) {
+    aFont->mCCMap = aCharSet->mCCMap;
+    // check that the font is not empty
+    if (CCMAP_HAS_CHAR(aFont->mCCMap, aChar)) {
+      aFont->LoadFont();
+      if (!aFont->GetXFont()) {
+        return PR_FALSE;
+      }
+    }
+  }
+  else {
+    if (aCharSet == &ISO106461) {
+      aFont->LoadFont();
+      if (!aFont->GetXFont()) {
+        return PR_FALSE;
+      }
+    }
+  }
+  return PR_TRUE;
+}
+
+static nsFontGTK*
+SetupUserDefinedFont(nsFontGTK *aFont)
+{
+  if (!aFont->mUserDefinedFont) {
+    aFont->mUserDefinedFont = new nsFontGTKUserDefined();
+    if (!aFont->mUserDefinedFont) {
+      return nsnull;
+    }
+    if (!aFont->mUserDefinedFont->Init(aFont)) {
+      return nsnull;
+    }
+  }
+  return aFont->mUserDefinedFont;
+}
+
+nsFontGTK*
+nsFontMetricsGTK::PickASizeAndLoad(nsFontStretch* aStretch,
+  nsFontCharSetInfo* aCharSet, PRUnichar aChar, const char *aName)
+{
+  PRBool use_scaled_font = PR_FALSE;
+  nsFontGTK* base_aafont = nsnull;
+
+  PRInt32 bitmap_size = NOT_FOUND_FONT_SIZE;
+  PRInt32 scale_size = mPixelSize;
+  nsFontGTK* font = FindNearestSize(aStretch, mPixelSize);
+  if (font) {
+    bitmap_size = font->mSize;
   }
 
   // if we do not have the correct size 
@@ -2514,24 +2738,52 @@ nsFontMetricsGTK::PickASizeAndLoad(nsFontStretch* aStretch,
       }
     }
     else {
-      // if we do not have any similarly sized font
-      // use a bitmap scaled font (ugh!)
-      scale_size = PR_MAX(mPixelSize, aCharSet->mBitmapScaleMin);
+      // if we do not have a near-the-right-size font or scalable font
+      // see if we can anti-alias bitmap scale one
+      scale_size = PR_MAX(mPixelSize, aCharSet->mAABitmapScaleMin);
       double ratio = (bitmap_size / ((double) mPixelSize));
-      if ((ratio < aCharSet->mBitmapUndersize) 
-          || (ratio > aCharSet->mBitmapOversize)) {
-        if ((ABS(mPixelSize-scale_size) < ABS(mPixelSize-bitmap_size))) {
-          use_scaled_font = 1;
-          SIZE_FONT_PRINTF(("bitmap scaled font: %s\n"
+      if (gAABitmapScaleEnabled && (bitmap_size<NOT_FOUND_FONT_SIZE)
+           && ((ratio < aCharSet->mAABitmapUndersize)
+               || (ratio > aCharSet->mAABitmapOversize))) {
+        //
+        // Try to get a size font to scale that is 2x larger 
+        // (but at least 16 pixel)
+        //
+        PRUint32 aa_target_size = MAX((scale_size*2), 16);
+        base_aafont = FindNearestSize(aStretch, aa_target_size);
+        NS_ASSERTION(base_aafont,
+               "failed to find a base font for Anti-Aliased bitmap Scaling");
+        if (base_aafont) {
+          use_scaled_font = PR_TRUE;
+          int aa_bitmap_size = base_aafont->mSize;
+          bitmap_size = font->mSize;
+          SIZE_FONT_PRINTF(("anti-aliased bitmap scaled font: %s\n"
+                "                    desired=%d, aa-scaled=%d, bitmap=%d, "
+                "aa_bitmap=%d",
+                aName, mPixelSize, scale_size, bitmap_size, aa_bitmap_size));
+        }
+      }
+      else {
+        // if we do not have any similarly sized font
+        // use a bitmap scaled font (ugh!)
+        scale_size = PR_MAX(mPixelSize, aCharSet->mBitmapScaleMin);
+        double ratio = (bitmap_size / ((double) mPixelSize));
+        if ((ratio < aCharSet->mBitmapUndersize)
+            || (ratio > aCharSet->mBitmapOversize)) {
+          if ((ABS(mPixelSize-scale_size) < ABS(mPixelSize-bitmap_size))) {
+            use_scaled_font = 1;
+            SIZE_FONT_PRINTF(("bitmap scaled font: %s\n"
                     "                    desired=%d, scaled=%d, bitmap=%d", 
                     aStretch->mScalable, mPixelSize, scale_size,
                     (bitmap_size=NOT_FOUND_FONT_SIZE?0:bitmap_size)));
+          }
         }
       }
     }
   }
 
-  NS_ASSERTION((bitmap_size<NOT_FOUND_FONT_SIZE)||use_scaled_font, "did not find font size");
+  NS_ASSERTION((bitmap_size<NOT_FOUND_FONT_SIZE)||use_scaled_font,
+                "did not find font size");
   if (!use_scaled_font) {
     SIZE_FONT_PRINTF(("bitmap font:_______ %s\n" 
                       "                    desired=%d, scaled=%d, bitmap=%d", 
@@ -2553,13 +2805,32 @@ nsFontMetricsGTK::PickASizeAndLoad(nsFontStretch* aStretch,
       }
     }
     if (i == n) {
-      font = new nsFontGTKNormal;
+      if (base_aafont) {
+        // setup the base font
+        if (!SetFontCharsetInfo(base_aafont, aCharSet, aChar))
+          return nsnull;
+        if (mIsUserDefined) {
+          base_aafont = SetupUserDefinedFont(base_aafont);
+          if (!base_aafont)
+            return nsnull;
+        }
+        font = new nsFontGTKNormal(base_aafont);
+      }
+      else
+        font = new nsFontGTKNormal;
       if (font) {
         /*
          * XXX Instead of passing pixel size, we ought to take underline
          * into account. (Extra space for underline for Asian fonts.)
          */
-        font->mName = PR_smprintf(aStretch->mScalable, scale_size);
+        if (base_aafont) {
+          font->mName = PR_smprintf("%s", base_aafont->mName);
+          font->mAABaseSize = base_aafont->mSize;
+        }
+        else {
+          font->mName = PR_smprintf(aStretch->mScalable, scale_size);
+          font->mAABaseSize = 0;
+        }
         if (!font->mName) {
           delete font;
           return nsnull;
@@ -2577,35 +2848,13 @@ nsFontMetricsGTK::PickASizeAndLoad(nsFontStretch* aStretch,
     }
   }
 
-  if (aCharSet->mCharSet) {
-    font->mCCMap = aCharSet->mCCMap;
-    if (CCMAP_HAS_CHAR(font->mCCMap, aChar)) {
-      font->LoadFont();
-      if (!font->GetGDKFont()) {
-        return nsnull;
-      }
-    }
-  }
-  else {
-    if (aCharSet == &ISO106461) {
-      font->LoadFont();
-      if (!font->GetGDKFont()) {
-        return nsnull;
-      }
-    }
-  }
+  if (!SetFontCharsetInfo(font, aCharSet, aChar))
+    return nsnull;
 
   if (mIsUserDefined) {
-    if (!font->mUserDefinedFont) {
-      font->mUserDefinedFont = new nsFontGTKUserDefined();
-      if (!font->mUserDefinedFont) {
-        return nsnull;
-      }
-      if (!font->mUserDefinedFont->Init(font)) {
-        return nsnull;
-      }
-    }
-    font = font->mUserDefinedFont;
+    font = SetupUserDefinedFont(font);
+    if (!font)
+      return nsnull;
   }
 
   return AddToLoadedFontsList(font);
@@ -2954,32 +3203,60 @@ SetFontLangGroupInfo(nsFontCharSetMap* aCharSetMap)
     charSetInfo->mInitedSizeInfo = PR_TRUE;
 
     nsCAutoString name;
+    nsresult rv;
     name.Assign("font.scale.outline.min.");
     name.Append(langGroup);
-    gPref->GetIntPref(name.get(), &charSetInfo->mOutlineScaleMin);
-    if (charSetInfo->mOutlineScaleMin)
-      SIZE_FONT_PRINTF(("%s = %d", name.get(), 
-                               charSetInfo->mOutlineScaleMin));
+    rv = gPref->GetIntPref(name.get(), &charSetInfo->mOutlineScaleMin);
+    if (NS_SUCCEEDED(rv))
+      SIZE_FONT_PRINTF(("%s = %d", name.get(), charSetInfo->mOutlineScaleMin));
     else
       charSetInfo->mOutlineScaleMin = gOutlineScaleMinimum;
 
+    name.Assign("font.scale.aa_bitmap.min.");
+    name.Append(langGroup);
+    rv = gPref->GetIntPref(name.get(), &charSetInfo->mAABitmapScaleMin);
+    if (NS_SUCCEEDED(rv))
+      SIZE_FONT_PRINTF(("%s = %d", name.get(), charSetInfo->mAABitmapScaleMin));
+    else
+      charSetInfo->mAABitmapScaleMin = gAABitmapScaleMinimum;
+
     name.Assign("font.scale.bitmap.min.");
     name.Append(langGroup);
-    gPref->GetIntPref(name.get(), &charSetInfo->mBitmapScaleMin);
-    if (charSetInfo->mBitmapScaleMin)
-      SIZE_FONT_PRINTF(("%s = %d", name.get(), 
-                               charSetInfo->mBitmapScaleMin));
+    rv = gPref->GetIntPref(name.get(), &charSetInfo->mBitmapScaleMin);
+    if (NS_SUCCEEDED(rv))
+      SIZE_FONT_PRINTF(("%s = %d", name.get(), charSetInfo->mBitmapScaleMin));
     else
       charSetInfo->mBitmapScaleMin = gBitmapScaleMinimum;
 
+    name.Assign("font.scale.aa_bitmap.oversize.");
+    name.Append(langGroup);
     PRInt32 percent = 0;
+    rv = gPref->GetIntPref(name.get(), &percent);
+    if (NS_SUCCEEDED(rv)) {
+      charSetInfo->mAABitmapOversize = percent/100.0;
+      SIZE_FONT_PRINTF(("%s = %g", name.get(), charSetInfo->mAABitmapOversize));
+    }
+    else
+      charSetInfo->mAABitmapOversize = gAABitmapOversize;
+
+    percent = 0;
+    name.Assign("font.scale.aa_bitmap.undersize.");
+    name.Append(langGroup);
+    rv = gPref->GetIntPref(name.get(), &percent);
+    if (NS_SUCCEEDED(rv)) {
+      charSetInfo->mAABitmapUndersize = percent/100.0;
+      SIZE_FONT_PRINTF(("%s = %g", name.get(),charSetInfo->mAABitmapUndersize));
+    }
+    else
+      charSetInfo->mAABitmapUndersize = gAABitmapUndersize;
+
+    percent = 0;
     name.Assign("font.scale.bitmap.oversize.");
     name.Append(langGroup);
-    gPref->GetIntPref(name.get(), &percent);
-    if (percent) {
+    rv = gPref->GetIntPref(name.get(), &percent);
+    if (NS_SUCCEEDED(rv)) {
       charSetInfo->mBitmapOversize = percent/100.0;
-      SIZE_FONT_PRINTF(("%s = %g", name.get(), 
-                               charSetInfo->mBitmapOversize));
+      SIZE_FONT_PRINTF(("%s = %g", name.get(), charSetInfo->mBitmapOversize));
     }
     else
       charSetInfo->mBitmapOversize = gBitmapOversize;
@@ -2987,11 +3264,10 @@ SetFontLangGroupInfo(nsFontCharSetMap* aCharSetMap)
     percent = 0;
     name.Assign("font.scale.bitmap.undersize.");
     name.Append(langGroup);
-    gPref->GetIntPref(name.get(), &percent);
-    if (percent) {
+    rv = gPref->GetIntPref(name.get(), &percent);
+    if (NS_SUCCEEDED(rv)) {
       charSetInfo->mBitmapUndersize = percent/100.0;
-      SIZE_FONT_PRINTF(("%s = %g", name.get(), 
-                               charSetInfo->mBitmapUndersize));
+      SIZE_FONT_PRINTF(("%s = %g", name.get(), charSetInfo->mBitmapUndersize));
     }
     else
       charSetInfo->mBitmapUndersize = gBitmapUndersize;
@@ -3011,7 +3287,7 @@ GetFontNames(const char* aPattern, nsFontNodeArray* aNodes)
 
   /*
    * We do not use XListFontsWithInfo here, because it is very expensive.
-   * Instead, we get that info at load time (gdk_font_load).
+   * Instead, we get that info at the time when we actually load the font.
    */
   int count;
   char** list = ::XListFonts(GDK_DISPLAY(), aPattern, INT_MAX, &count);
