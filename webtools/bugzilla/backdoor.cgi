@@ -122,12 +122,18 @@ $::FORM{'reporter'} =
     DBNameToIdAndCheck("$::FORM{'reporter'}\@netscape.com", 1);
 $::FORM{'assigned_to'} = 
     DBNameToIdAndCheck("$::FORM{'assigned_to'}\@netscape.com", 1);
+if ($::FORM{'qa_contact'} ne "") {
+    $::FORM{'qa_contact'} =
+        DBNameToIdAndCheck("$::FORM{'qa_contact'}\@netscape.com", 1);
+} else {
+    $::FORM{'qa_contact'} = 0;
+}
     
 
 my @list = ('reporter', 'assigned_to', 'product', 'version', 'rep_platform',
             'op_sys', 'bug_status', 'bug_severity', 'priority', 'component',
             'short_desc', 'long_desc', 'creation_ts', 'delta_ts',
-            'bug_file_loc');
+            'bug_file_loc', 'qa_contact');
 
 my @vallist;
 foreach my $i (@list) {
@@ -145,6 +151,13 @@ SendSQL($query);
 
 SendSQL("select LAST_INSERT_ID()");
 my $zillaid = FetchOneColumn();
+
+foreach my $cc (split(/,/, $::FORM{'cc'})) {
+    if ($cc ne "") {
+        my $cid = DBNameToIdAndCheck("$cc\@netscape.com", 1);
+        SendSQL("insert into cc (bug_id, who) values ($zillaid, $cid)");
+    }
+}
 
 print "Created bugzilla bug $zillaid\n";
 system("./processmail $zillaid < /dev/null > /dev/null 2> /dev/null &");
