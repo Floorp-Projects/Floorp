@@ -12,16 +12,17 @@ Missing Features
 Open Issues
 -----------
 
- the open location menu item should go (?)
  the online and security indicators need to go to the left where they won't be accidentally clicked (?)
  about mozilla needs to be a dialog
- the file menu still says "Navigator"
-
+ help | help contents needs to be (re)added
+ personal toolbar d&d is fubar (moreso than in the trunk)
+ need to readd platformNavigationOverlay.xul once proper makefiles are in win/unix directories (this is why View | Full Screen is missing and things like alt+<-/-> don't work)
+ doesn't load homepage upon startup (does in subsequent windows)
 
 See Also
 --------
 
- bugs with [MB] it the status whiteboard:
+ bugs with [MB] in the status whiteboard:
  - 115903 Each app should run in a separate process
  - 135533 Support preprocessing of XUL files 
  - 130999 Clicks cause elements to go out of :hover
