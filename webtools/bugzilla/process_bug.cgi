@@ -432,22 +432,47 @@ sub ChangeStatus {
     my ($str) = (@_);
     if ($str ne $::dontchange) {
         DoComma();
-        # Ugly, but functional.  We don't want to change Status if we are
-        # reasigning non-open bugs via the mass change form.
-        if ( ($::FORM{knob} eq 'reassign' || $::FORM{knob} eq 'reassignbycomponent') &&
-             ! defined $::FORM{id} && $str eq 'NEW' ) {
-            # If we got to here, we're dealing with a reassign from the mass
-            # change page.  We don't know (and can't easily figure out) if this
-            # bug is open or closed.  If it's closed, we don't want to change
-            # its status to NEW.  We have to put some logic into the SQL itself
-            # to handle that.
+        if ($::FORM{knob} eq 'reopen') {
+            # When reopening, we need to check whether the bug was ever
+            # confirmed or not
+            $::query .= "bug_status = IF(everconfirmed = 1, " .
+                         SqlQuote($str) . ", " .
+                         SqlQuote($::unconfirmedstate) . ")";
+        } elsif (IsOpenedState($str)) {
+            # Note that we cannot combine this with the above branch - here we
+            # need to check if bugs.bug_status is open, (since we don't want to
+            # reopen closed bugs when reassigning), while above the whole point
+            # is to reopen a closed bug.
+            # Currently, the UI doesn't permit a user to reassign a closed bug
+            # from the single bug page (only during a mass change), but they
+            # could still hack the submit, so don't restrict this extended
+            # check to the mass change page for safety/sanity/consistency
+            # purposes.
+
+            # The logic for this block is:
+            # If the new state is open:
+            #   If the old state was open
+            #     If the bug was confirmed
+            #       - move it to the new state
+            #     Else
+            #       - Set the state to unconfirmed
+            #   Else
+            #     - leave it as it was
+
+            # This is valid only because 'reopen' is the only thing which moves
+            # from closed to open, and its handled above
+            # This also relies on the fact that confirming and accepting have
+            # already called DoConfirm before this is called
+
             my @open_state = map(SqlQuote($_), OpenStates());
             my $open_state = join(", ", @open_state);
-            $::query .= "bug_status = IF(bug_status IN($open_state), '$str', bug_status)";
-        } elsif (IsOpenedState($str)) {
-            $::query .= "bug_status = IF(everconfirmed = 1, '$str', '$::unconfirmedstate')";
+            $::query .= "bug_status = IF(bug_status IN($open_state), " .
+                                        "IF(everconfirmed = 1, " .
+                                            SqlQuote($str) . ", " .
+                                            SqlQuote($::unconfirmedstate) . " ), " .
+                                        "bug_status)";
         } else {
-            $::query .= "bug_status = '$str'";
+            $::query .= "bug_status = " . SqlQuote($str);
         }
         $::FORM{'bug_status'} = $str; # Used later for call to
                                       # CheckCanChangeField to make sure this
