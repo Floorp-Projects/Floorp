@@ -88,7 +88,7 @@ XPT_SizeOfHeaderBlock(XPTHeader *header)
 }
 
 XPT_PUBLIC_API(XPTHeader *)
-XPT_NewHeader(uint32 num_interfaces)
+XPT_NewHeader(uint16 num_interfaces)
 {
     XPTHeader *header = PR_NEWZAP(XPTHeader);
     if (!header)
@@ -115,7 +115,6 @@ XPT_DoHeader(XPTCursor *cursor, XPTHeader **headerp)
     XPTHeader *header;
     uint32 ide_offset;
     int i;
-
     if (mode == XPT_DECODE) {
         header = PR_NEWZAP(XPTHeader);
         if (!header)
@@ -253,9 +252,9 @@ DoInterfaceDirectoryEntryIndex(XPTCursor *cursor,
                 return PR_FALSE;
         } else {
             index = 0;          /* no interface */
-        }
+        } 
     }
-
+ 
     if (!XPT_Do16(cursor, &index))
         return PR_FALSE;
 
@@ -273,9 +272,10 @@ DoInterfaceDirectoryEntryIndex(XPTCursor *cursor,
 }
 
 XPT_PUBLIC_API(XPTInterfaceDescriptor *)
-XPT_NewInterfaceDescriptor(uint32 parent_interface, uint32 num_methods,
-                           uint32 num_constants)
+XPT_NewInterfaceDescriptor(uint16 parent_interface, uint16 num_methods,
+                           uint16 num_constants)
 {
+
     XPTInterfaceDescriptor *id = PR_NEWZAP(XPTInterfaceDescriptor);
     if (!id)
         return NULL;
@@ -294,6 +294,12 @@ XPT_NewInterfaceDescriptor(uint32 parent_interface, uint32 num_methods,
         if (!id->const_descriptors)
             goto free_meth;
         id->num_constants = num_constants;
+    }
+
+    if (parent_interface) {
+        id->parent_interface = parent_interface;
+    } else {
+        id->parent_interface = 0;
     }
 
     return id;
@@ -440,7 +446,7 @@ DoInterfaceDescriptor(XPTCursor *outer, XPTInterfaceDescriptor **idp)
         *idp = NULL;
         return PR_TRUE;
     }
-    if(!DoInterfaceDirectoryEntryIndex(cursor, &id->parent_interface) ||
+    if(!XPT_Do16(cursor, &id->parent_interface) ||
        !XPT_Do16(cursor, &id->num_methods)) {
         goto error;
     }
@@ -719,7 +725,7 @@ DoAnnotation(XPTCursor *cursor, XPTAnnotation **annp)
 
 PRBool
 XPT_GetInterfaceIndexByName(XPTInterfaceDirectoryEntry *ide_block,
-                            uint32 num_interfaces, char *name, 
+                            uint16 num_interfaces, char *name, 
                             uint16 *indexp) 
 {
     int i;
