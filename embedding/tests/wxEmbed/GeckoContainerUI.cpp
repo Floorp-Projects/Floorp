@@ -66,6 +66,7 @@ void GeckoContainerUI::UpdateCurrentURI()
 
 void GeckoContainerUI::UpdateBusyState(PRBool aBusy)
 {
+    mBusy = aBusy;
 }
 
 void GeckoContainerUI::UpdateProgress(PRInt32 aCurrent, PRInt32 aMax)

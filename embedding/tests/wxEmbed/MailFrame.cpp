@@ -37,19 +37,39 @@
 #include "nsIURI.h"
 
 const char msg1[] =
-"Attention: Sir, \n"
-"Good day. I am ALEXANDER NENE, Solicitor and Notary Public, The Personal Attorney to MR HENRI CARLTON, The president of DIAMOND SAFARIESCO.LTD.ACCRA-GHANA who is a National of your country. On the 21st of April 2000, my client, his wife and their only son were Involved in a car accident along ACCRA/KUMASI Express Road. \n"
-"Unfortunately, they all lost their lives in the event of the accident, since then I have made several enquiries to locate any of my clients extended relatives and this has also proved unsuccessful.After these several unsuccessful attempts, I decided to trace his Relatives over the Internet, to locate any member of his family but of no avail, hence I contacted youI contacted you to assist in repatriating the money and property left Behind before they get confiscated or declare unserviceable by the bank where my client lodged this huge deposits. Particularly, the Bank where the deceased had an account valued at about 28.3 million dollars.Conseqently, the bank issued me a notice to provide the next of kin or Have the account confiscated within a short time. Since I have been Unsuccessful in locating the relatives for over some years now, I seek your consent to present you as the next of kin of the deceased since you share the same surname so that the proceeds of this account va!\n"
-"lued at 48.3 million dollars can be paid to you for both of us to share the money; 70% to me and 25% to you, while 5% should be for expenses or tax as your government may require. I have all necessary legal documents that can be used to backup the claim.All I require is your honest cooperation to enable us see this deal \n"
-"Through. I guarantee that this will be executed under a legitimate arrangement that will protect you from any breach of the law. Please get in touch with me through my email to enable us discuss further. \n"
-"Thanks for you kind co-operation \n"
-"ALEXANDER NENE \n"
-"\n"
-"\n"
-"___________________________________________________\n"
-"GO.com Mail                                    \n"
-"Get Your Free, Private E-mail at http://mail.go.com\n";
+"<html><body>"
+"Attention: Sir,<br>\n"
+"Good day. I am ALEXANDER NENE, Solicitor and Notary Public, The Personal Attorney<br>"
+"to MR HENRI CARLTON, The president of DIAMOND SAFARIESCO.LTD.ACCRA-GHANA who is a<br>"
+"National of your country. On the 21st of April 2000, my client, his wife and their <br>"
+"only son were Involved in a car accident along ACCRA/KUMASI Express Road.<br>\n"
+"Unfortunately, they all lost their lives in the event of the accident, since then<br>"
+"I have made several enquiries to locate any of my clients extended relatives and<br>"
+"this has also proved unsuccessful.After these several unsuccessful attempts, I decided<br>"
+"to trace his Relatives over the Internet, to locate any member of his family but of<br>"
+"no avail, hence I contacted youI contacted you to assist in repatriating the money and<br>"
+"property left Behind before they get confiscated or declare unserviceable by the bank<br>"
+"where my client lodged this huge deposits. Particularly, the Bank where the deceased had<br>"
+"an account valued at about 28.3 million dollars.Conseqently, the bank issued me a notice<br>"
+"to provide the next of kin or Have the account confiscated within a short time. Since<br>"
+"I have been Unsuccessful in locating the relatives for over some years now, I seek your<br>"
+"consent to present you as the next of kin of the deceased since you share the same surname<br>"
+" so that the proceeds of this account valued at 48.3 million dollars can be paid to you<br>"
+"for both of us to share the money; 70% to me and 25% to you, while 5% should be for<br>"
+"expenses or tax as your government may require. I have all necessary legal documents that<br>"
+"can be used to backup the claim.All I require is your honest cooperation to enable us see<br>"
+"this deal Through. I guarantee that this will be executed under a legitimate arrangement<br>"
+"that will protect you from any breach of the law. Please get in touch with me through my<br>"
+"email to enable us discuss further.<br><br> \n"
+"Thanks for you kind co-operation<br><br> \n"
+"ALEXANDER NENE<br><br><br></body></html>";
 
+
+const char msg2[] =
+"<html><body>The network will be going down tonight so please log off your computers before going home.</body></html>";
+
+const char msg3[] =
+"<html><body>Please submit expense reports ASAP if you want to see payment in your accounts this month!</body></html>";
 
 static bool gMailChannelCallbackRegistered = FALSE;
 
@@ -63,15 +83,24 @@ public:
         void **aData,
         PRUint32 *aSize)
     {
-        nsCAutoString txt(msg1);
-        aContentType.Assign("text/plain");
+        nsCAutoString txt;
+        aContentType.Assign("text/html");
+
+        nsCAutoString path;
+        aURI->GetPath(path);
+        if (path.Equals("//0"))
+            txt = msg1;
+        else if (path.Equals("//1"))
+            txt = msg2;
+        else
+            txt = msg3;
 
         size_t size = txt.Length();
-        *aData = (void *) nsMemory::Alloc(size);
+        *aData = (void *) nsMemory::Alloc(size + 1);
         if (!*aData)
             return NS_ERROR_OUT_OF_MEMORY;
-        memset(*aData, 0, size);
-        memcpy((char *) *aData, txt.get(), size);
+        memset(*aData, 0, size + 1);
+        memcpy(*aData, txt.get(), size);
         *aSize = size;
         return NS_OK;
     }
@@ -136,6 +165,13 @@ MailFrame::MailFrame(wxWindow* aParent) :
         }
     }
 
+    wxWindow *hdrPanel = FindWindowById(XRCID("mail_header_panel"), this);
+    if (hdrPanel)
+    {
+        hdrPanel->Show(FALSE);
+    }
+
+
     CreateStatusBar();
 }
 
@@ -143,9 +179,15 @@ void MailFrame::OnArticleClick(wxListEvent &event)
 {
     if (mWebbrowser)
     {
-        wxString url = "wxmail:" + event.GetIndex();
+        wxString url = wxString::Format("wxmail://%ld", event.GetIndex());
         if (!url.IsEmpty())
         {
+            wxWindow *hdrPanel = FindWindowById(XRCID("mail_header_panel"), this);
+            if (hdrPanel)
+            {
+                hdrPanel->Show(TRUE);
+            }
+
             nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(mWebbrowser);
             webNav->LoadURI(NS_ConvertASCIItoUCS2(url.c_str()).get(),
                                    nsIWebNavigation::LOAD_FLAGS_NONE,

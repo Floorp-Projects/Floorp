@@ -25,7 +25,7 @@
  *
  * Contributor(s):
  *
- *   adamlock@netscape.com
+ *   Adam Lock <adamlock@netscape.com>
  *
  * ***** END LICENSE BLOCK ***** */
 
@@ -40,7 +40,7 @@
 #include "nsILoadGroup.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsIStringStream.h"
+#include "nsIByteArrayInputStream.h"
 #include "nsIStreamListener.h"
 #include "nsIInputStreamPump.h"
 
@@ -167,15 +167,15 @@ nsresult GeckoProtocolHandler::RegisterHandler(const char *aScheme, const char *
 GeckoProtocolChannel::GeckoProtocolChannel() :
     mContentLength(0),
     mData(nsnull),
-    mStatus(NS_ERROR_FAILURE),
+    mStatus(NS_OK),
     mLoadFlags(LOAD_NORMAL)
 {
 }
 
 GeckoProtocolChannel::~GeckoProtocolChannel()
 {
-    if (mData)
-        nsMemory::Free(mData);
+//    if (mData)
+//        nsMemory::Free(mData);
 }
 
 static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
@@ -366,17 +366,18 @@ GeckoProtocolChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *aCont
                 mURI, NS_STATIC_CAST(nsIChannel *,this), mContentType, &mData, &mContentLength);
             if (NS_FAILED(rv)) return rv;
             
-            nsCOMPtr<nsISupports> stream;
-            rv = NS_NewByteInputStream(getter_AddRefs(stream), (const char *) mData, mContentLength);
+            nsCOMPtr<nsIByteArrayInputStream> stream;
+            rv = NS_NewByteArrayInputStream(getter_AddRefs(stream), (char *) mData, mContentLength);
             if (NS_FAILED(rv)) return rv;
-            nsCOMPtr<nsIInputStream> contentStream = do_QueryInterface(stream);
-
-            nsresult rv = NS_NewInputStreamPump(getter_AddRefs(mPump), contentStream,
-                                             -1, mContentLength, 0, 0, PR_TRUE);
-            if (NS_FAILED(rv)) return rv;
+            mContentStream = do_QueryInterface(stream);
 
             mListenerContext = aContext;
             mListener = aListener;
+
+            nsresult rv = NS_NewInputStreamPump(
+                getter_AddRefs(mPump), mContentStream, -1, mContentLength, 0, 0, PR_TRUE);
+            if (NS_FAILED(rv)) return rv;
+
             if (mLoadGroup)
             {
                 mLoadGroup->AddRequest(this, nsnull);

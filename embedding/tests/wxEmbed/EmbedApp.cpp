@@ -58,11 +58,11 @@ public:
         aContentType.Assign("text/html");
 
         size_t size = txt.Length();
-        *aData = (void *) nsMemory::Alloc(size);
+        *aData = (void *) nsMemory::Alloc(size + 1);
         if (!*aData)
             return NS_ERROR_OUT_OF_MEMORY;
-        memset(*aData, 0, size);
-        memcpy((char *) *aData, txt.get(), size);
+        memset(*aData, 0, size + 1);
+        memcpy(*aData, txt.get(), size);
         *aSize = size;
         return NS_OK;
     }
@@ -109,7 +109,6 @@ bool EmbedApp::OnInit()
     if (NS_FAILED(rv)) return FALSE;
 
     GeckoProtocolHandler::RegisterHandler("foo", "Test handler", new FooCallback);
-
 
     // create an nsWindowCreator and give it to the WindowWatcher service
     GeckoWindowCreator *creatorCallback = new GeckoWindowCreator();

@@ -23,6 +23,21 @@
           <label>E_xit\tAlt-Q</label>
         </object>
       </object>
+      <object class="wxMenu" name="menu_go">
+        <label>_Go</label>
+        <object class="wxMenuItem" name="browse_back">
+          <label>_Back</label>
+        </object>
+        <object class="wxMenuItem" name="browse_fwd">
+          <label>_Forward</label>
+        </object>
+        <object class="wxMenuItem" name="browse_reload">
+          <label>Reload</label>
+        </object>
+        <object class="wxMenuItem" name="browse_stop">
+          <label>Stop</label>
+        </object>
+      </object>
       <object class="wxMenu" name="menu_apps">
         <label>_Other Apps</label>
         <object class="wxMenuItem" name="menu_mail">
@@ -40,20 +55,20 @@
   
       <object class="tool" name="browse_back">
         <bitmap>back.gif</bitmap>
-        <tooltip>Back</tooltip>
+        <tooltip>Go back one page</tooltip>
       </object>
       <object class="tool" name="browse_fwd">
         <bitmap>forward.gif</bitmap>
-        <tooltip>Forward</tooltip>
+        <tooltip>Go forward one page</tooltip>
       </object>
       <object class="separator"/>
       <object class="tool" name="browse_reload">
         <bitmap>reload.gif</bitmap>
-        <tooltip>Reload</tooltip>
+        <tooltip>Reload current page</tooltip>
       </object>
       <object class="tool" name="browse_stop">
         <bitmap>stop.gif</bitmap>
-        <tooltip>Stop</tooltip>
+        <tooltip>Stop loading this page</tooltip>
       </object>
       <object class="separator"/>
       <object class="tool" name="browse_home">
