@@ -641,6 +641,11 @@ security/psm/lib/protocol/Makefile
 
 END_NGMAKEFILES
 
+#
+# themes/
+#
+add_makefiles < ${srcdir}/themes/makefiles
+
 #if [ "$MOZ_MAIL_NEWS" ]; then
   add_makefiles < ${srcdir}/mailnews/makefiles
 #fi

@@ -98,6 +98,7 @@ DIRS		+= \
 		editor \
 		sun-java \
 		profile \
+        themes \
 		$(NULL)
 
 # This must preceed xpfe
