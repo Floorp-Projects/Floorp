@@ -194,7 +194,11 @@ nsresult
 nsViewerApp::AutoregisterComponents()
 {
   // Autoregister components to populate registry
-  // All this logic is in nsSpecialFileSpec in apprunner. But hey this is viewer a different app.
+  // All this logic is in nsSpecialFileSpec in apprunner.
+  // But hey this is viewer a different app.
+
+  nsresult rv = NS_ERROR_FAILURE;
+
   nsSpecialSystemDirectory sysdir(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
 #ifdef XP_MAC
   sysdir += "Components";
@@ -205,8 +209,10 @@ nsViewerApp::AutoregisterComponents()
   const char *componentsDirPath = (const char *) componentsDir;
   if (componentsDirPath != NULL)
   {
-    nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, componentsDirPath);
+    rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, componentsDirPath);
   }
+
+  return rv;
 }
 
 
