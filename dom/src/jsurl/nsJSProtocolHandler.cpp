@@ -832,13 +832,10 @@ nsJSProtocolHandler::NewURI(const nsACString &aSpec,
     // CreateInstance.
 
     nsIURI* url;
-    if (aBaseURI) {
-        rv = aBaseURI->Clone(&url);
-    } else {
-        rv = nsComponentManager::CreateInstance(kSimpleURICID, nsnull,
-                                                NS_GET_IID(nsIURI),
-                                                (void**)&url);
-    }
+    rv = nsComponentManager::CreateInstance(kSimpleURICID, nsnull,
+                                            NS_GET_IID(nsIURI),
+                                            (void**)&url);
+
     if (NS_FAILED(rv))
         return rv;
 
