@@ -55,7 +55,8 @@ typedef int PRInt32;
 #include "sdinst.h"
 #endif
 
-#define CLASS_NAME                      "Setup"
+#define CLASS_NAME_SETUP                "Setup"
+#define CLASS_NAME_SETUP_DLG            "SetupDlg"
 #define FILE_INI_SETUP                  "setup.ini"
 #define FILE_INI_CONFIG                 "config.ini"
 #define FILE_IDI_GETCONFIGINI           "getconfigini.idi"
@@ -177,8 +178,6 @@ typedef struct stStruct
   BOOL  bVisible;
   DWORD dwCItems;
   DWORD dwCItemsSelected[MAX_BUF]; /* components */
-  DWORD dwAItems;
-//  DWORD dwAItemsSelected[MAX_BUF]; /* additions */
   LPSTR szDescriptionShort;
   LPSTR szDescriptionLong;
 } st;
@@ -243,7 +242,8 @@ typedef struct dlgStartInstall
 {
   BOOL  bShowDialog;
   LPSTR szTitle;
-  LPSTR szMessage0;
+  LPSTR szMessageInstall;
+  LPSTR szMessageDownload;
 } diSI;
 
 typedef struct dlgReboot

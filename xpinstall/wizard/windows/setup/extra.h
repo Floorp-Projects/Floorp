@@ -42,6 +42,7 @@ typedef struct structVer
   ULONGLONG ullBuild;
 } verBlock;
 
+BOOL              InitDialogClass(HINSTANCE hInstance, HINSTANCE hSetupRscInst);
 BOOL              InitApplication(HINSTANCE hInstance, HINSTANCE hSetupRscInst);
 BOOL              InitInstance(HINSTANCE hInstance, DWORD dwCmdShow);
 void              PrintError(LPSTR szMsg, DWORD dwErrorCodeSH);
