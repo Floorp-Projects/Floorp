@@ -18,7 +18,8 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- *   Pierre Phaneuf <pp@ludusdesign.com>
+ *    Pierre Phaneuf <pp@ludusdesign.com>
+ *    Travis Bogard <travis@netscape.com>
  */
 
 #include "nsBrowserInstance.h"
@@ -27,6 +28,7 @@
 
 #include "nsIWebShell.h"
 #include "nsIDocShell.h"
+#include "nsIWebNavigation.h"
 #include "nsIMarkupDocumentViewer.h"
 #include "nsIClipboardCommands.h"
 #include "pratom.h"
@@ -313,7 +315,9 @@ nsBrowserAppCore::Forward()
 NS_IMETHODIMP    
 nsBrowserAppCore::Stop()
 {
-  mContentAreaWebShell->Stop();
+   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mContentAreaWebShell));
+   if(webNav)
+      webNav->Stop();
 
   if (mIsLoadingHistory) {
     SetLoadingFlag(PR_FALSE);
@@ -1881,10 +1885,10 @@ nsBrowserAppCore::Reload(nsIWebShell * aPrev, nsLoadFlags aType)
      SetLoadingFlag(PR_FALSE);
   }
   mIsLoadingHistory = PR_TRUE;
-  if (mSHistory) {
-    //mSHistory checks for null pointers
-  return mSHistory->Reload(aPrev, aType);
-  }
+  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(aPrev));
+  NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
+
+  webNav->Reload(nsIWebNavigation::reloadNormal);
   return NS_OK;
 }
 
