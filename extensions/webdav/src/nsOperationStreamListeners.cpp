@@ -50,23 +50,19 @@ public:
     NS_DECL_NSIREQUESTOBSERVER
     NS_DECL_NSISTREAMLISTENER
     
-    enum OperationMode {
-        PUT, GET, DELETE, MKCOL
-    };
-    
     OperationStreamListener(nsIWebDAVResource *resource,
                             nsIWebDAVOperationListener *listener,
                             nsIOutputStream *outstream,
-                            OperationMode mode) :
+                            PRUint32 mode) :
         mResource(resource), mListener(listener), 
-        mOutputStream(outstream), mMode(mode) { }
+        mOutputStream(outstream), mOperation(mode) { }
     virtual ~OperationStreamListener() { }
     
 protected:
     nsCOMPtr<nsIWebDAVResource>          mResource;
     nsCOMPtr<nsIWebDAVOperationListener> mListener;
     nsCOMPtr<nsIOutputStream>            mOutputStream;
-    OperationMode                        mMode;
+    PRUint32                             mOperation;
 };
 
 NS_IMPL_ADDREF(OperationStreamListener)
@@ -79,7 +75,7 @@ NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP
 OperationStreamListener::OnStartRequest(nsIRequest *aRequest,
-                                           nsISupports *aContext)
+                                        nsISupports *aContext)
 {
   return NS_OK;
 }
@@ -89,21 +85,17 @@ OperationStreamListener::OnStopRequest(nsIRequest *aRequest,
                                        nsISupports *aContext,
                                        nsresult aStatusCode)
 {
-    switch (mMode) {
-    case PUT:
-        mListener->OnPutResult(aStatusCode, mResource);
-        break;
-    case GET:
-        mListener->OnGetResult(aStatusCode, mResource);
-        break;
-    case DELETE:
-        mListener->OnRemoveResult(aStatusCode, mResource);
-        break;
-    case MKCOL:
-        mListener->OnMakeCollectionResult(aStatusCode, mResource);
-        break;
-    }
+    nsresult rv, status;
+    nsCOMPtr<nsIHttpChannel> channel = do_QueryInterface(aContext);
+    
+    if (NS_FAILED(aStatusCode))
+        rv = aStatusCode;
+    else if (channel && NS_SUCCEEDED(channel->GetResponseStatus(&status)))
+        rv = status;
+    else
+        rv = NS_ERROR_UNEXPECTED;
 
+    mListener->OnOperationComplete(rv, mResource, mOperation);
     if (mOutputStream)
         mOutputStream->Flush();
     return NS_OK;
@@ -137,7 +129,7 @@ NS_WD_NewPutOperationStreamListener(nsIWebDAVResource *resource,
 {
     nsCOMPtr<nsIRequestObserver> osl = 
         new OperationStreamListener(resource, listener, nsnull,
-                                    OperationStreamListener::PUT);
+                                    nsIWebDAVOperationListener::PUT);
     if (!osl)
         return NS_ERROR_OUT_OF_MEMORY;
     return CallQueryInterface(osl, streamListener);
@@ -150,7 +142,7 @@ NS_WD_NewDeleteOperationStreamListener(nsIWebDAVResource *resource,
 {
     nsCOMPtr<nsIRequestObserver> osl = 
         new OperationStreamListener(resource, listener, nsnull,
-                                    OperationStreamListener::DELETE);
+                                    nsIWebDAVOperationListener::REMOVE);
     if (!osl)
         return NS_ERROR_OUT_OF_MEMORY;
     return CallQueryInterface(osl, streamListener);
@@ -163,7 +155,7 @@ NS_WD_NewMkcolOperationStreamListener(nsIWebDAVResource *resource,
 {
     nsCOMPtr<nsIRequestObserver> osl = 
         new OperationStreamListener(resource, listener, nsnull,
-                                    OperationStreamListener::MKCOL);
+                                    nsIWebDAVOperationListener::MAKE_COLLECTION);
     if (!osl)
         return NS_ERROR_OUT_OF_MEMORY;
     return CallQueryInterface(osl, streamListener);
@@ -177,7 +169,7 @@ NS_WD_NewGetOperationRequestObserver(nsIWebDAVResource *resource,
 {
     nsCOMPtr<nsIRequestObserver> osl = 
         new OperationStreamListener(resource, listener, outstream,
-                                    OperationStreamListener::GET);
+                                    nsIWebDAVOperationListener::GET);
     if (!osl)
         return NS_ERROR_OUT_OF_MEMORY;
     return CallQueryInterface(osl, observer);

@@ -92,29 +92,21 @@ function OperationListener()
 {
 }
 
+OperationListener.opToName = { };
+OperationListener.opNames =
+    ["PUT", "GET", "MOVE", "COPY", "REMOVE",
+     "MAKE_COLLECTION", "LOCK", "UNLOCK"];
+for (var i in OperationListener.opNames) {
+    var opName = OperationListener.opNames[i];
+    OperationListener.opToName[CI.nsIWebDAVOperationListener[opName]] = opName;
+}
+
 OperationListener.prototype =
 {
-    onPutResult: function (status, resource)
+    onOperationComplete: function (status, resource, op)
     {
-        dump("PUT " + resource.urlSpec + " complete: " + status + "\n");
-        stopEventPump();
-    },
-
-    onGetResult: function (status, resource)
-    {
-        dump("GET " + resource.urlSpec + " complete: " + status + "\n");
-        stopEventPump();
-    },
-    
-    onRemoveResult: function (status, resource)
-    {
-        dump("DELETE " + resource.urlSpec + " complete: " + status + "\n");
-        stopEventPump();
-    },
-    
-    onMakeCollectionResult: function (status, resource)
-    {
-        dump("MKCOL " + resource.urlSpec + " complete: " + status + "\n");
+        dump(OperationListener.opToName[op] + " " + resource.urlSpec +
+             " complete: " + status + "\n");
         stopEventPump();
     },
 }

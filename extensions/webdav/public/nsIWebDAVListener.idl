@@ -63,22 +63,18 @@ interface nsIWebDAVMetadataListener : nsISupports
 [scriptable,uuid(e198a0fd-9e62-4299-84e3-d93c0cd68881)]
 interface nsIWebDAVOperationListener : nsISupports
 {
-    void onLockResult(in unsigned long aStatusCode,
-                      in nsIWebDAVResource aResource);
-    void onUnlockResult(in unsigned long aStatusCode,
-                        in nsIWebDAVResource aResource);
-    void onMoveResult(in unsigned long aStatusCode,
-                      in nsIWebDAVResource aResource);
-    void onCopyResult(in unsigned long aStatusCode,
-                      in nsIWebDAVResource aResource);
-    void onPutResult(in unsigned long aStatusCode,
-                     in nsIWebDAVResource aResource);
-    void onGetResult(in unsigned long aStatusCode,
-                     in nsIWebDAVResource aResource);
-    void onRemoveResult(in unsigned long aStatusCode,
-                        in nsIWebDAVResource aResource);
-    void onMakeCollectionResult(in unsigned long aStatusCode,
-                                in nsIWebDAVResource aResource);
+    const unsigned long PUT = 1;
+    const unsigned long GET = 2;
+    const unsigned long MOVE = 3;
+    const unsigned long COPY = 4;
+    const unsigned long REMOVE = 5;
+    const unsigned long MAKE_COLLECTION = 6;
+    const unsigned long LOCK = 7; // XXX need a different listener for token?
+    const unsigned long UNLOCK = 8;
+
+    void onOperationComplete(in unsigned long aStatusCode,
+                             in nsIWebDAVResource aResource,
+                             in unsigned long aOperation);
 };
 
 [scriptable,uuid(be99d517-9161-4a7d-8bee-2ee98c1c2c6f)]

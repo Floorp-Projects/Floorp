@@ -250,7 +250,6 @@ PropfindStreamListener::ProcessResponse(nsIDOMElement *responseElt)
         LOG(("status: %s", statusUTF8.get()));
         PRInt32 statusVal = nsCAutoString(Substring(statusUTF8, 8)).ToInteger(&res, 10);
         NS_ENSURE_SUCCESS(res, (nsresult)res);
-        
 
         if (mNameOnly) {
             mListener->OnGetPropertyNamesResult((PRUint32)statusVal, hrefUTF8,

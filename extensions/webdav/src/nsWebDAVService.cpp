@@ -450,7 +450,7 @@ nsWebDAVService::Get(nsIWebDAVResource *resource, nsIStreamListener *listener)
     if (NS_FAILED(rv))
         return rv;
 
-    return channel->AsyncOpen(listener, nsnull);
+    return channel->AsyncOpen(listener, channel);
 }
 
 NS_IMETHODIMP
