@@ -51,6 +51,7 @@
 #include "nsIPresShell.h"
 #include "nsIFrame.h"
 #include "nsIDOMHTMLSelectElement.h"
+#include "nsCOMPtr.h"
 
 
 static NS_DEFINE_IID(kIDOMHTMLSelectElementIID, NS_IDOMHTMLSELECTELEMENT_IID);
@@ -299,7 +300,8 @@ NS_IMPL_STRING_ATTR(nsHTMLOptionElement, Value, value)
 NS_IMETHODIMP                                                      
 nsHTMLOptionElement::GetLabel(nsString& aValue)                             
 {                                                                  
-  return mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::label, aValue);                                                  
+  mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::label, aValue);                                                  
+  return NS_OK;
 }         
                                                          
 NS_IMETHODIMP                                                      
@@ -317,7 +319,7 @@ nsHTMLOptionElement::SetLabel(const nsString& aValue)
       }
     }
   }
-  return result;
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
@@ -473,11 +475,11 @@ nsHTMLOptionElement::GetText(nsString& aText)
     return rv;
   }
   for (PRInt32 i = 0; i < numNodes; i++) {
-    nsIContent* node;
+    nsIContent* node = nsnull;
     rv = ChildAt(i, node);
-    if (NS_SUCCEEDED(rv)) {
-      nsIDOMText* domText = nsnull;
-      rv = node->QueryInterface(kIDOMTextIID, (void**)&domText);
+    if (NS_SUCCEEDED(rv) && node) {
+      nsCOMPtr<nsIDOMText> domText;
+      rv = node->QueryInterface(kIDOMTextIID, (void**)getter_AddRefs(domText));
       if (NS_SUCCEEDED(rv) && domText) {
         rv = domText->GetData(aText);
         // the option could be all spaces, so compress the white space
@@ -489,14 +491,14 @@ nsHTMLOptionElement::GetText(nsString& aText)
             aText = compressText;
           }
         }
-        NS_RELEASE(domText);
         NS_RELEASE(node);
         break;
       }
       NS_RELEASE(node);
     }
   }
-  return rv;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -508,46 +510,49 @@ nsHTMLOptionElement::SetText(const nsString& aText)
   if (NS_FAILED(result)) {
     return result;
   }
-  nsIDOMText* domText = nsnull;
+
   for (PRInt32 i = 0; i < numNodes; i++) {
-    nsIContent* node;
+    nsIContent * node = nsnull;
     result = ChildAt(i, node);
-    if (NS_SUCCEEDED(result)) {
-      result = node->QueryInterface(kIDOMTextIID, (void**)&domText);
+    if (NS_SUCCEEDED(result) && node) {
+      nsCOMPtr<nsIDOMText> domText;
+      result = node->QueryInterface(kIDOMTextIID, (void**)getter_AddRefs(domText));
       if (NS_SUCCEEDED(result) && domText) {
         result = domText->SetData(aText);
-	if (NS_SUCCEEDED(result)) usedExistingTextNode = PR_TRUE;
-        NS_RELEASE(domText);
-	NS_RELEASE(node);
+        if (NS_SUCCEEDED(result)) {
+          usedExistingTextNode = PR_TRUE;
+        }
+        NS_RELEASE(node);
         break;
       }
       NS_RELEASE(node);
     }
   }
+
   if (!usedExistingTextNode) {
-    nsIContent* text;
-    result = NS_NewTextNode(&text);
+    nsCOMPtr<nsIContent> text;
+    result = NS_NewTextNode(getter_AddRefs(text));
     if (NS_OK == result) {
       nsIDOMText* domtext;
       result = text->QueryInterface(kIDOMTextIID, (void**)&domtext);
-      if (NS_OK == result) {
+      if (NS_SUCCEEDED(result) && domtext) {
         result = domtext->SetData(aText);
-	if (NS_SUCCEEDED(result)) {
+	      if (NS_SUCCEEDED(result)) {
           result = AppendChildTo(text, PR_FALSE);
           if (NS_SUCCEEDED(result)) {
             nsIDocument * doc;
             result = GetDocument(doc);
             if (NS_SUCCEEDED(result)) {
               text->SetDocument(doc, PR_FALSE);
-	      NS_IF_RELEASE(doc);
-	    }
-	  }
-	}
+              NS_IF_RELEASE(doc);
+            }
+          }
+        }
         NS_RELEASE(domtext);
       }
-      NS_RELEASE(text);
     }
   }
+
   if (NS_SUCCEEDED(result)) {
     nsIFormControlFrame* fcFrame = nsnull;
     result = GetPrimaryFrame(fcFrame);
@@ -559,7 +564,7 @@ nsHTMLOptionElement::SetText(const nsString& aText)
       }
     }
   }
-  return result;
+  return NS_OK;
 }
 
 // Options don't have frames - get the select content node
