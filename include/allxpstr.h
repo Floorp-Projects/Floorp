@@ -7579,7 +7579,7 @@ ResDef(MK_ACCESS_NAME, XP_MSG_BASE + 1340,
 ResDef(MK_ACCESS_VALUE, XP_MSG_BASE + 1341,
        "Value:")
 ResDef(MK_ACCESS_HOST, XP_MSG_BASE + 1342,
-	   "Host:")
+       "Host:")
 
 ResDef(MK_ACCESS_SECURE, XP_MSG_BASE + 1348,
        "Secure:")
@@ -7865,19 +7865,19 @@ ResDef(PRVCY_HAS_NO_POLICY, XP_MSG_BASE + 1451,
 with the information you give it.\n")
 
 ResDef(PRVCY_CANNOT_SET_COOKIES, XP_MSG_BASE + 1452,
-"This site cannot store information on your computer.\n")
+"This site cannot store information (cookies) on your computer.\n")
 
 ResDef(PRVCY_CAN_SET_COOKIES, XP_MSG_BASE + 1453,
-"This site can store information on your computer.\n")
+"This site has permission to store information (cookies) on your computer.\n")
 
 ResDef(PRVCY_NEEDS_PERMISSION_TO_SET_COOKIES, XP_MSG_BASE + 1454,
-"This site needs permission to store information on your computer.\n")
+"This site needs to ask for permission before storing information (cookies) on your computer.\n")
 
 ResDef(PRVCY_HAS_NOT_SET_COOKIES, XP_MSG_BASE + 1455,
-"This site has not stored information on your computer.\n")
+"This site has not stored any information on your computer.\n")
 
 ResDef(PRVCY_HAS_SET_COOKIES, XP_MSG_BASE + 1456,
-"This site has <a href=\042javascript:ViewCookies();\042);>stored information</a> \
+"This site has stored some <a href=\042javascript:ViewCookies();\042);>information</a> \
 on your computer.\n")
 
 
@@ -7935,13 +7935,13 @@ ResDef(MK_ACCESS_COOKIES_ACCEPTED, (XP_MSG_BASE + 1484),
 "Cookies stored on your system")
 
 ResDef(MK_ACCESS_COOKIES_PERMISSION, (XP_MSG_BASE + 1485),
-"Sites that can(+) and cannot(-) store cookies")
+"Sites that can(+) or cannot(-) store cookies")
 
 ResDef(MK_ACCESS_VIEW_COOKIES, (XP_MSG_BASE + 1486),
 "View stored cookies")
 
 ResDef(MK_ACCESS_VIEW_SITES, (XP_MSG_BASE + 1487),
-"View sites that can store cookies")
+"View sites that can or cannot store cookies")
 
 ResDef(MK_SIGNON_PASSWORDS_GENERATE, (XP_MSG_BASE + 1490), \
 "********")
@@ -7982,7 +7982,7 @@ ResDef(MK_SIGNON_NAG, (XP_MSG_BASE + 1497),
 "Do you want to save the user name and password contained on this form?")
 
 ResDef(MK_SIGNON_REMEMBER, (XP_MSG_BASE + 1498),
-"Do you want to remember this decision?")
+"If not, do you want to remember this decision?")
 
 ResDef(MK_SIGNON_SELECTUSER, (XP_MSG_BASE + 1499),
 "Select a username to be entered on this form")
@@ -8077,6 +8077,91 @@ Cannot connect to the LI server.")
 ResDef(JULIAN_STRING_1, JULIAN_MSG_BASE+1,
 "Put your Julian strings here.")
 
+/* Cookie Viewer strings for the trust label processing 
+ * NOTE: the purpose strings (_PUR ) consist of a series of
+ * english phrases that are glued together based on the value
+ * of the purpose setting in the trust label.  There can be
+ * one or more of these phrases.  They are glued together in
+ * a comma seperated list.
+ * For example:
+ * "It is used for completion of the current activity, 
+ *   site administration, R&D, and personalization."
+ */
+/* #if defined( TRUST_LABELS ) */
+#define TRUST_LABEL_BASE  XP_MSG_BASE + 1570
+ResDef(MK_ACCESS_TL_PUR1, (TRUST_LABEL_BASE + 1),
+"This information is used for %1$s.")
+
+ResDef(MK_ACCESS_TL_PUR2, (TRUST_LABEL_BASE + 2),
+"This information is used for %1$s and %2$s.")
+
+ResDef(MK_ACCESS_TL_PUR3, (TRUST_LABEL_BASE + 3),
+"This information is used for %1$s, %2$s and %3$s.")
+
+ResDef(MK_ACCESS_TL_PUR4, (TRUST_LABEL_BASE + 4),
+"This information is used for %1$s, %2$s, %3$s and %4$s.")
+
+ResDef(MK_ACCESS_TL_PUR5, (TRUST_LABEL_BASE + 5),
+"This information is used for %1$s, %2$s, %3$s, %4$s and %5$s.")
+
+ResDef(MK_ACCESS_TL_PUR6, (TRUST_LABEL_BASE + 6),
+"This information is used for %1$s, %2$s, %3$s, %4$s, %5$s and %6$s.")
+
+/* One or more of these next PPHx strings are inserted into the preceeding 
+   PURx strings.
+*/
+ResDef(MK_ACCESS_TL_PPH0, (TRUST_LABEL_BASE + 7),
+"the completion of your current activity")
+
+ResDef(MK_ACCESS_TL_PPH1, (TRUST_LABEL_BASE + 8),
+"site administration")
+
+ResDef(MK_ACCESS_TL_PPH2, (TRUST_LABEL_BASE + 9),
+"research and development")
+
+ResDef(MK_ACCESS_TL_PPH3, (TRUST_LABEL_BASE + 10),
+"personalization")
+
+ResDef(MK_ACCESS_TL_PPH4, (TRUST_LABEL_BASE + 11),
+"direct marketing of products and services")
+
+ResDef(MK_ACCESS_TL_PPH5, (TRUST_LABEL_BASE + 12),
+"other uses" )
+
+ResDef(MK_ACCESS_TL_ID1, (TRUST_LABEL_BASE + 13),
+"This cookie contains information that is used to identify you." )
+
+ResDef(MK_ACCESS_TL_ID0, (TRUST_LABEL_BASE + 14),
+"This cookie contains information that is not used to identify you." )
+
+ResDef(MK_ACCESS_TL_BY, (TRUST_LABEL_BASE + 15),
+"Contact %1$s to confirm these privacy practices.")   
+
+ResDef(MK_ACCESS_TL_RECP1, (TRUST_LABEL_BASE + 16),
+"It is %1$s." )
+
+ResDef(MK_ACCESS_TL_RECP2, (TRUST_LABEL_BASE + 17),
+"It is %1$s and %2$s." )
+
+ResDef(MK_ACCESS_TL_RECP3, (TRUST_LABEL_BASE + 18),
+"It is %1$s, %2$s and %3$s." )
+
+/* One or more of these next 4 strings are inserted into the preceeding 
+   RECPx strings.
+*/
+ResDef(MK_ACCESS_TL_RPH0, (TRUST_LABEL_BASE + 19),
+"used only by this site" )
+
+ResDef(MK_ACCESS_TL_RPH1, (TRUST_LABEL_BASE + 20),
+"shared with this site's partners who have the same privacy practices" )
+
+ResDef(MK_ACCESS_TL_RPH2, (TRUST_LABEL_BASE + 21),
+"shared with this site's partners who have different privacy practices" )
+
+ResDef(MK_ACCESS_TL_RPH3, (TRUST_LABEL_BASE + 22),
+"available to anybody" )
+
+/* #endif */
 
 /* RDF XP Strings */
 
