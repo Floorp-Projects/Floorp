@@ -515,7 +515,7 @@ NS_IMETHODIMP nsRenderingContextGTK::CreateDrawingSurface(nsRect *aBounds,
   }
  
   g_return_val_if_fail (aBounds != NULL, NS_ERROR_FAILURE);
-  g_return_val_if_fail ((aBounds->width != 0) && (aBounds->height != 0), NS_ERROR_FAILURE);
+  g_return_val_if_fail ((aBounds->width > 0) && (aBounds->height > 0), NS_ERROR_FAILURE);
  
   pixmap = ::gdk_pixmap_new(mRenderingSurface->drawable, aBounds->width, aBounds->height, -1);
   nsDrawingSurfaceGTK * surface = new nsDrawingSurfaceGTK();
