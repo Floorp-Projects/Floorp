@@ -159,6 +159,7 @@ CPPSRCS		= \
 		nsUnicodeToSymbol.cpp \
 		nsUnicodeToZapfDingbat.cpp \
 		nsUnicodeToAdobeEuro.cpp \
+		nsUnicodeToTSCII.cpp \
 		$(NULL)
 
 ifdef MOZ_EXTRA_X11CONVERTERS

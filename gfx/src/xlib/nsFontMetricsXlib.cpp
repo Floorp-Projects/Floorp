@@ -420,6 +420,9 @@ static nsFontCharSetInfoXlib JohabNoAscii =
 static nsFontCharSetInfoXlib JamoTTF =
   { "x-koreanjamo-0", DoubleByteConvert, 1,
     TT_OS2_CPR1_KO_WANSUNG | TT_OS2_CPR1_KO_JOHAB, 0 };
+static nsFontCharSetInfoXlib TamilTTF =
+  { "x-tamilttf-0", DoubleByteConvert, 1,
+    0, 0 };
 
 #ifdef SUNCTL
 /* Hindi range currently unsupported in FT2 range. Change TT* once we 
@@ -471,7 +474,10 @@ static nsFontLangGroupXlib FLG_ZHCN    = { "zh-CN",         nsnull };
 static nsFontLangGroupXlib FLG_ZHTW    = { "zh-TW",         nsnull };
 static nsFontLangGroupXlib FLG_JA      = { "ja",            nsnull };
 static nsFontLangGroupXlib FLG_KO      = { "ko",            nsnull };
+#ifdef SUNCTL
 static nsFontLangGroupXlib FLG_INDIC   = { "x-devanagari",  nsnull };
+#endif
+static nsFontLangGroupXlib FLG_TAMIL   = { "x-tamil",       nsnull };
 static nsFontLangGroupXlib FLG_NONE    = { nsnull,          nsnull };
 
 /*
@@ -620,6 +626,7 @@ static const nsFontCharSetMapXlib gConstCharSetMap[] =
   { "ucs2.cjk_korea-0",   &FLG_KO,      &ISO106461     },
   { "ucs2.cjk_taiwan-0",  &FLG_ZHTW,    &ISO106461     },
   { "ucs2.thai-0",        &FLG_THAI,    &ISO106461     },
+  { "tamilttf-0",         &FLG_TAMIL,   &TamilTTF      },
 #ifdef SUNCTL
   { "sun.unicode.india-0",&FLG_INDIC,   &SunIndic      },
 #endif /* SUNCTL */
