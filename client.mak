@@ -116,21 +116,48 @@ pull_seamonkey:
 clobber_all:
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\.
 	rd /s /q dist
-	set CLOBBER_ALL=1
+	set DIST_DIRS=1
+	set LAYOUT_DIRS=1
+	set CLIENT_DIRS=1
 	nmake -f makefile.win clobber_all 
 
 depend:
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\.
+	set DIST_DIRS=1
+	set LAYOUT_DIRS=1
+	set CLIENT_DIRS=1
 	nmake -f makefile.win depend 
 
 build_all:
 	@cd $(MOZ_SRC)\mozilla\.
-	set BUILD_CLIENT=1
+	set DIST_DIRS=1
+	set LAYOUT_DIRS=1
+	set CLIENT_DIRS=1
 	nmake -f makefile.win all
 
 build_layout:
 	@cd $(MOZ_SRC)\mozilla\.
+	set DIST_DIRS=1
+	set LAYOUT_DIRS=1
 	nmake -f makefile.win all
+
+build_dist:
+	@cd $(MOZ_SRC)\mozilla\.
+	rd /s /q dist
+	set DIST_DIRS=1
+	nmake -f makefile.win all
+
+clobber_dist:
+	@cd $(MOZ_SRC)\mozilla\.
+	rd /s /q dist
+	set DIST_DIRS=1
+	nmake -f makefile.win clobber_all
+
+clobber_layout:
+	@cd $(MOZ_SRC)\mozilla\.
+	rd /s /q dist
+	set LAYOUT_DIRS=1
+	nmake -f makefile.win clobber_all
 
 #//------------------------------------------------------------------------
 #// Utility stuff...

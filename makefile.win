@@ -37,6 +37,7 @@ DEPTH=.
 #//------------------------------------------------------------------------
 
 DIRS = \
+!if defined(DIST_DIRS)
   config			\
   dbm				\
   nsprpub			\
@@ -60,6 +61,8 @@ DIRS = \
   lib\xp			\
   lib\libpwcac			\
   network			\
+!endif
+!if defined(LAYOUT_DIRS)
 # the following are associated with the layout engine
   expat				\
   htmlparser			\
@@ -70,12 +73,13 @@ DIRS = \
   layout			\
   rdf                           \
   silentdl                      \
-  xpinstall                     \
   webshell			\
   editor 			\
-!if defined(BUILD_CLIENT) || defined(CLOBBER_ALL)
+!endif
+!if defined(CLIENT_DIRS)
 # the following are associated with the browser
   xpfe				\
+  xpinstall                     \
   extensions			\
 !ifndef DISABLE_MAILNEWS
   mailnews			\
