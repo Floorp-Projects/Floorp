@@ -49,6 +49,12 @@ extern "C" {
 #include <libgnomevfs/gnome-vfs-ops.h>
 }
 
+#include <gtk/gtkwidget.h>
+#include <gtk/gtkiconfactory.h>
+#include <gtk/gtkimage.h>
+#include <gtk/gtkwindow.h>
+#include <gtk/gtkfixed.h>
+
 #include "nsIMIMEService.h"
 
 #include "nsIStringBundle.h"
@@ -94,11 +100,87 @@ pngfile_to_channel(const char* aFilename, nsIChannel** aChannel) {
   return rv;
 }
 
-nsresult
-nsIconChannel::Init(nsIURI* aURI) {
-  mURI = do_QueryInterface(aURI);
-  NS_ASSERTION(mURI, "URI passed to nsIconChannel is no nsIMozIconURI!");
+static nsresult
+moz_gdk_pixbuf_to_channel(GdkPixbuf* aPixbuf, nsIChannel **aChannel)
+{
+  char tmpfile[] = "/tmp/moziconXXXXXX";
+  int fd = mkstemp(tmpfile);
+  if (fd == -1) {
+    return NS_ERROR_UNEXPECTED;
+  }
 
+  GError *err = NULL;
+  gboolean ok = gdk_pixbuf_save(aPixbuf, tmpfile, "png", &err, NULL);
+  if (!ok) {
+    close(fd);
+    remove(tmpfile);
+    if (err)
+      g_error_free(err);
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  nsresult rv = pngfile_to_channel(tmpfile, aChannel);
+  close(fd);
+  if (NS_FAILED(rv))
+    remove(tmpfile);
+  return rv;
+}
+
+static GtkWidget *gProtoWindow = nsnull;
+static GtkWidget *gStockImageWidget = nsnull;
+static GtkIconFactory *gIconFactory = nsnull;
+
+static void
+ensure_stock_image_widget()
+{
+  if (!gProtoWindow) {
+    gProtoWindow = gtk_window_new(GTK_WINDOW_POPUP);
+    gtk_widget_realize(gProtoWindow);
+    GtkWidget* protoLayout = gtk_fixed_new();
+    gtk_container_add(GTK_CONTAINER(gProtoWindow), protoLayout);
+
+    gStockImageWidget = gtk_image_new();
+    gtk_container_add(GTK_CONTAINER(protoLayout), gStockImageWidget);
+    gtk_widget_realize(gStockImageWidget);
+  }
+}
+
+static void
+ensure_icon_factory()
+{
+  if (!gIconFactory) {
+    gIconFactory = gtk_icon_factory_new();
+    gtk_icon_factory_add_default(gIconFactory);
+    g_object_unref(gIconFactory);
+  }
+}
+
+static GtkIconSize
+moz_gtk_icon_size(const char *name)
+{
+  if (strcmp(name, "button") == 0)
+    return GTK_ICON_SIZE_BUTTON;
+
+  if (strcmp(name, "menu") == 0)
+    return GTK_ICON_SIZE_MENU;
+
+  if (strcmp(name, "toolbar") == 0)
+    return GTK_ICON_SIZE_LARGE_TOOLBAR;
+
+  if (strcmp(name, "toolbarsmall") == 0)
+    return GTK_ICON_SIZE_SMALL_TOOLBAR;
+
+  if (strcmp(name, "dialog") == 0)
+    return GTK_ICON_SIZE_DIALOG;
+
+  return GTK_ICON_SIZE_MENU;
+}
+
+nsresult
+nsIconChannel::InitWithGnome()
+{
+  nsresult rv;
+  
   if (!gnome_program_get()) {
     // Get the brandShortName from the string bundle to pass to GNOME
     // as the application name.  This may be used for things such as
@@ -125,9 +207,21 @@ nsIconChannel::Init(nsIURI* aURI) {
     gnome_init(NS_ConvertUTF16toUTF8(appName).get(), "1.0", 1, empty);
   }
 
+  nsCAutoString iconSizeString;
+  mURI->GetIconSize(iconSizeString);
+
   PRUint32 iconSize;
-  nsresult rv = mURI->GetImageSize(&iconSize);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "GetImageSize failed");
+
+  if (iconSizeString.IsEmpty()) {
+    rv = mURI->GetImageSize(&iconSize);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "GetImageSize failed");
+  } else {
+    int size;
+    
+    GtkIconSize icon_size = moz_gtk_icon_size(iconSizeString.get());
+    gtk_icon_size_lookup(icon_size, &size, NULL);
+    iconSize = size;
+  }
 
   nsCAutoString type;
   mURI->GetContentType(type);
@@ -220,27 +314,67 @@ nsIconChannel::Init(nsIURI* aURI) {
       return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  char tmpfile[] = "/tmp/moziconXXXXXX";
-  int fd = mkstemp(tmpfile);
-  if (fd == -1) {
-    gdk_pixbuf_unref(scaled);
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  gboolean ok = gdk_pixbuf_save(scaled, tmpfile, "png", &err, NULL);
+  // XXX Respect icon state
+  
+  rv = moz_gdk_pixbuf_to_channel(scaled, getter_AddRefs(mRealChannel));
   gdk_pixbuf_unref(scaled);
-  if (!ok) {
-    close(fd);
-    remove(tmpfile);
-    if (err)
-      g_error_free(err);
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  rv = pngfile_to_channel(tmpfile, getter_AddRefs(mRealChannel));
-  close(fd);
-  if (NS_FAILED(rv))
-    remove(tmpfile);
   return rv;
 }
 
+nsresult
+nsIconChannel::Init(nsIURI* aURI) {
+  mURI = do_QueryInterface(aURI);
+  NS_ASSERTION(mURI, "URI passed to nsIconChannel is no nsIMozIconURI!");
+
+  nsCAutoString stockIcon;
+  mURI->GetStockIcon(stockIcon);
+  if (stockIcon.IsEmpty()) {
+    return InitWithGnome();
+  }
+
+  nsCAutoString iconSizeString;
+  mURI->GetIconSize(iconSizeString);
+
+  nsCAutoString iconStateString;
+  mURI->GetIconState(iconStateString);
+
+  GtkIconSize icon_size = moz_gtk_icon_size(iconSizeString.get());
+   
+  ensure_stock_image_widget();
+
+  gboolean sensitive = strcmp(iconStateString.get(), "disabled");
+  gtk_widget_set_sensitive (gStockImageWidget, sensitive);
+
+  GdkPixbuf *icon = gtk_widget_render_icon(gStockImageWidget, stockIcon.get(),
+                                           icon_size, NULL);
+  if (!icon) {
+    ensure_icon_factory();
+      
+    GtkIconSet *icon_set = gtk_icon_set_new();
+    GtkIconSource *icon_source = gtk_icon_source_new();
+    
+    gtk_icon_source_set_icon_name(icon_source, stockIcon.get());
+    gtk_icon_set_add_source(icon_set, icon_source);
+    gtk_icon_factory_add(gIconFactory, stockIcon.get(), icon_set);
+    gtk_icon_set_unref(icon_set);
+    gtk_icon_source_free(icon_source);
+
+    icon = gtk_widget_render_icon(gStockImageWidget, stockIcon.get(),
+                                  icon_size, NULL);
+  }
+
+  if (!icon)
+    return NS_ERROR_NOT_AVAILABLE;
+  
+  nsresult rv = moz_gdk_pixbuf_to_channel(icon, getter_AddRefs(mRealChannel));
+
+  gdk_pixbuf_unref(icon);
+
+  return rv;
+}
+
+void
+nsIconChannel::Shutdown() {
+  if (gProtoWindow)
+    gtk_widget_destroy(gProtoWindow);
+}

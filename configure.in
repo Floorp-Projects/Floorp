@@ -3882,7 +3882,9 @@ then
         ])
     fi
 
-
+    if test "$MOZ_ENABLE_GNOMEUI"; then
+        AC_DEFINE(MOZ_ENABLE_GNOMEUI)
+    fi
 fi
 AC_SUBST(MOZ_ENABLE_GNOMEUI)
 AC_SUBST(MOZ_GNOMEUI_CFLAGS)
