@@ -43,7 +43,7 @@
 #include "nsIHTMLContent.h"
 #include "prprf.h"
 #include "nsLayoutAtoms.h"
-#include "nsComPtr.h"
+#include "nsCOMPtr.h"
 
 // XXX temporary for :first-letter support
 #include "nsITextContent.h"
