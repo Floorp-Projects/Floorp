@@ -4648,6 +4648,20 @@ case "$target" in
 
 esac
 
+MOZ_COMPONENTLIB=
+MOZ_ARG_ENABLE_BOOL(componentlib,
+[  --enable-componentlib  Build a shared library containing all of the components],
+   MOZ_COMPONENTLIB=1,
+   MOZ_COMPONENTLIB= )
+
+AC_SUBST(MOZ_COMPONENTLIB)
+if test "$MOZ_COMPONENTLIB"; then
+   BUILD_SHARED_LIBS=
+   BUILD_STATIC_LIBS=1
+   MOZ_STATIC_COMPONENT_LIBS=1
+   MOZ_META_COMPONENTS=mozcomps
+fi
+
 dnl ========================================================
 dnl =
 dnl = Standalone module options

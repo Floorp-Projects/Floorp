@@ -104,6 +104,9 @@ endif
 ifneq (,$(filter mozcomps,$(MOZ_META_COMPONENTS)))
 BUILD_STATIC_LIBS=
 BUILD_SHARED_LIBS=1
+ifdef MOZ_COMPONENTLIB
+DEFINES += -D_MOZCOMPS_SHARED_LIBRARY -D_BUILD_STATIC_BIN
+endif
 endif
 
 CPPSRCS		= \
@@ -124,8 +127,7 @@ STACKWALK_CPPSRCS := $(addprefix $(topsrcdir)/xpcom/base/, $(STACKWALK_SRC_LCSRC
 CPPSRCS		+= nsSigHandlers.cpp nsStackFrameUnix.cpp
 endif
 
-LIBS	= $(EXTRA_DSO_LDOPTS) \
-	  $(EXTRA_DSO_LIBS) \
+LIBS	= $(EXTRA_DSO_LIBS) \
 	  $(NULL)
 
 
@@ -133,6 +135,11 @@ ifndef BUILD_STATIC_LIBS
 
 ifdef NS_TRACE_MALLOC
 EXTRA_DSO_LIBS	+= tracemalloc
+endif
+
+ifdef MOZ_COMPONENTLIB
+EXTRA_DSO_LIBS += $(MOZ_COMPONENTLIB_EXTRA_DSO_LIBS)
+LIBS += $(MOZ_COMPONENTLIB_EXTRA_LIBS)
 endif
 
 else
@@ -143,9 +150,6 @@ EXTRA_DEPS	+= \
 	$(NULL)
 DEFINES		+= $(STATIC_DEFINES)
 CPPSRCS		+= $(STATIC_CPPSRCS)
-ifneq ($(OS_ARCH),WINNT)
-EXTRA_DSO_LDOPTS+= -L$(DEPTH)/dist/lib/components
-endif # !WINNT
 EXTRA_DSO_LIBS	+= $(STATIC_EXTRA_DSO_LIBS)
 REQUIRES	+= $(STATIC_REQUIRES)
 LIBS		+= $(STATIC_EXTRA_LIBS)
@@ -309,10 +313,6 @@ endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk)
 $(PROGRAM): $(SPLASH_XPM)
-endif
-
-ifeq ($(OS_ARCH),Darwin)
-EXTRA_DSO_LDOPTS := $(subst -dynamiclib -install_name @executable_path/\$@ -compatibility_version 1 -current_version 1,-execute,$(EXTRA_DSO_LDOPTS))
 endif
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))

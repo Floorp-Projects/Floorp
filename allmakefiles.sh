@@ -1111,12 +1111,22 @@ if [ "$MOZ_LDAP_XPCOM" ]; then
 "
 fi
 
+# embedding/componentlib
+
+if [ "$MOZ_COMPONENTLIB" ]; then
+    MAKEFILES_static_components="$MAKEFILE_static_components
+	embedding/componentlib/Makefile
+"
+
+else
+
 # modules/staticmod
 
 if [ "$MOZ_STATIC_COMPONENTS" -o "$MOZ_META_COMPONENTS" ]; then
     MAKEFILES_static_components="$MAKEFILES_static_components
 	modules/staticmod/Makefile
 "
+fi
 fi
 
 for extension in $MOZ_EXTENSIONS; do

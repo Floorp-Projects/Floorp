@@ -695,6 +695,18 @@ endif
 endif
 endif
 
+# Flags needed to link against the component library
+ifdef MOZ_COMPONENTLIB
+MOZ_COMPONENTLIB_EXTRA_DSO_LIBS = mozcomps xpcom_compat
+
+# Tell the linker where NSS is, if we're building crypto
+ifeq ($(OS_ARCH),Darwin)
+ifeq (,$(findstring crypto,$(MOZ_META_COMPONENTS)))
+MOZ_COMPONENTLIB_EXTRA_LIBS = $(foreach library, $(patsubst -l%, $(LIB_PREFIX)%$(DLL_SUFFIX), $(filter -l%, $(NSS_LIBS))), -dylib_file @executable_path/$(library):$(DIST)/bin/$(library))
+endif
+endif
+endif
+
 #
 # Include any personal overrides the user might think are needed.
 #
