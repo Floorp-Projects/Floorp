@@ -248,7 +248,7 @@ sub toArrayOfStrings {
     push @result, &::DBID_to_name($i);
   }
 
-  return sort(@result);
+  return sort { lc($a) cmp lc($b) } @result;
 }  
 
 # return this set in string form (comma-separated and sorted)
