@@ -318,6 +318,10 @@ public:
   NS_IMETHOD GetScriptContext(nsIScriptContext **aContext);
   NS_IMETHOD GetScriptGlobalObject(nsIScriptGlobalObject **aGlobal);
   NS_IMETHOD ReleaseScriptContext(nsIScriptContext *aContext);
+  NS_IMETHOD ReportScriptError(const char* aErrorString,
+                               const char* aFileName,
+                               PRInt32     aLineNo,
+                               const char* aLineBuf);
 
 #ifdef NECKO
   // nsIDocumentLoaderObserver
@@ -746,7 +750,10 @@ nsWebShell::~nsWebShell()
     mScriptGlobal->SetWebShell(nsnull);
     NS_RELEASE(mScriptGlobal);
   }
-  NS_IF_RELEASE(mScriptContext);
+  if (nsnull != mScriptContext) {
+    mScriptContext->SetOwner(nsnull);
+    NS_RELEASE(mScriptContext);
+  }
 
   InitFrameData(PR_TRUE);
   mIsFrame = PR_FALSE;
@@ -3303,6 +3310,9 @@ nsWebShell::CreateScriptEnvironment()
 
   if (nsnull == mScriptContext) {
     res = NS_CreateScriptContext(mScriptGlobal, &mScriptContext);
+    if (NS_SUCCEEDED(res)) {
+      mScriptContext->SetOwner(this);
+    }
   }
 
   return res;
@@ -3348,6 +3358,41 @@ nsWebShell::ReleaseScriptContext(nsIScriptContext *aContext)
   return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsWebShell::ReportScriptError(const char* aErrorString,
+                              const char* aFileName,
+                              PRInt32     aLineNo,
+                              const char* aLineBuf)
+{
+  // XXX To be implemented by scc. The following implementation
+  // is temporary.
+
+  nsCAutoString error;
+  error.SetString(aErrorString);
+  error += "\n";
+
+  if (aFileName) {
+    error += "URL: ";
+    error += aFileName;
+    error += "\n";
+  }
+
+  if(aLineNo) {
+    error += "LineNo: ";
+    error.Append(aLineNo, 10);
+    error += "\n";
+  }
+
+  if(aLineBuf) {
+    error += "Line text: '";
+    error += aLineBuf;
+    error += "'\n";
+  }
+
+  printf("JavaScript Error: %s\n", error.GetBuffer());
+  
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsWebShell::OnStartDocumentLoad(nsIDocumentLoader* loader,
