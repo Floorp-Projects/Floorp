@@ -40,6 +40,23 @@
     The cookie that was remembering your login is now gone. You will be 
     prompted for a login the next time it is required.
 
+  [% ELSIF message_tag == "login_changed" %]
+    [% title = "Bugzilla Login Changed" %]
+    Your Bugzilla login has been changed.
+
+  [% ELSIF message_tag == "password_changed" %]
+    [% title = "Password Changed" %]
+    Your password has been changed.
+
+  [% ELSIF message_tag == "password_change_canceled"
+    [% title = "Cancel Request to Change Password" %]
+    Your request has been cancelled.
+
+  [% ELSIF message_tag == "password_change_request" %]
+    [% title = "Request to Change Password" %]
+    A token for changing your password has been emailed to you.
+    Follow the instructions in that email to change your password.
+
   [% ELSE %]
     [%# Cope with legacy calling convention, where "message" was the string
       # to print. 

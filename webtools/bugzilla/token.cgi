@@ -172,10 +172,7 @@ exit;
 sub requestChangePassword {
     Token::IssuePasswordToken($::FORM{'loginname'});
 
-    $vars->{'title'} = "Request to Change Password";
-    $vars->{'message'} = "A token for changing your password has been 
-                          emailed to you. Follow the instructions in 
-                          that email to change your password.";
+    $vars->{'message'} = "password_change_request";
 
     print "Content-Type: text/html\n\n";
     $template->process("global/message.html.tmpl", $vars)
@@ -183,7 +180,6 @@ sub requestChangePassword {
 }
 
 sub confirmChangePassword {
-    $vars->{'title'} = "Change Password";
     $vars->{'token'} = $::token;
     
     print "Content-Type: text/html\n\n";
@@ -194,8 +190,7 @@ sub confirmChangePassword {
 sub cancelChangePassword {    
     Token::Cancel($::token, "user requested cancellation");
 
-    $vars->{'title'} = "Cancel Request to Change Password";
-    $vars->{'message'} = "Your request has been cancelled.";
+    $vars->{'message'} = "password_change_canceled";
 
     print "Content-Type: text/html\n\n";
     $template->process("global/message.html.tmpl", $vars)
@@ -222,8 +217,7 @@ sub changePassword {
 
     InvalidateLogins($userid);
 
-    $vars->{'title'} = "Password Changed";
-    $vars->{'message'} = "Your password has been changed.";
+    $vars->{'message'} = "password_changed";
 
     print "Content-Type: text/html\n\n";
     $template->process("global/message.html.tmpl", $vars)
@@ -234,7 +228,6 @@ sub confirmChangeEmail {
     # Return HTTP response headers.
     print "Content-Type: text/html\n\n";
 
-    $vars->{'title'} = "Confirm Change Email";
     $vars->{'token'} = $::token;
 
     $template->process("account/email/confirm.html.tmpl", $vars)
@@ -279,8 +272,7 @@ sub changeEmail {
 
     # Let the user know their email address has been changed.
 
-    $vars->{'title'} = "Bugzilla Login Changed";
-    $vars->{'message'} = "Your Bugzilla login has been changed.";
+    $vars->{'message'} = "login_changed";
 
     $template->process("global/message.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
