@@ -709,6 +709,8 @@ CSSParserImpl::SkipDeclaration(PRInt32* aErrorCode, PRBool aCheckForBraces)
 void CSSParserImpl::SkipRuleSet(PRInt32* aErrorCode)
 {
   nsCSSToken* tk = &mToken;
+
+  // Eat junk until we find something that starts a selector
   for (;;) {
     if (!GetToken(aErrorCode, PR_TRUE)) {
       break;
@@ -724,6 +726,14 @@ void CSSParserImpl::SkipRuleSet(PRInt32* aErrorCode)
       } else if ('[' == symbol) {
         SkipUntil(aErrorCode, ']');
       }
+      else if (('.' == symbol) || (':' == symbol)) {
+        UngetToken();
+        break;
+      }
+    }
+    else if ((eCSSToken_Ident == tk->mType) || (eCSSToken_ID == tk->mType)) {
+      UngetToken();
+      break;
     }
   }
 }
