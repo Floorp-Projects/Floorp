@@ -39,22 +39,27 @@ class nsBoxFrameInner;
 class nsBoxDebugInner;
 
 class nsHTMLReflowCommand;
+class nsHTMLInfo;
 
 class nsCalculatedBoxInfo : public nsBoxInfo {
 public:
     nsSize calculatedSize;
-    PRBool prefWidthIntrinsic;
-    PRBool prefHeightIntrinsic;
     PRBool sizeValid;
     PRBool needsReflow;
     PRBool needsRecalc;
     PRBool collapsed;
     PRBool isIncremental;
+    nsHTMLInfo* htmlInfo;
+    nsCalculatedBoxInfo* next;
+    virtual void clear()=0;
+};
 
-    nsCalculatedBoxInfo();
-    nsCalculatedBoxInfo(const nsBoxInfo& aInfo);
-    virtual void clear();
-
+class nsInfoList 
+{
+public:
+    virtual nsCalculatedBoxInfo* GetFirst()=0;
+    virtual nsCalculatedBoxInfo* GetLast()=0;
+    virtual PRInt32 GetCount()=0;
 };
 
 class nsBoxFrame : public nsHTMLContainerFrame, public nsIBox
@@ -125,9 +130,15 @@ public:
                           nsIAtom*        aListName,
                           nsIFrame*       aOldFrame);
 
+  NS_IMETHOD ReplaceFrame(nsIPresContext& aPresContext,
+                          nsIPresShell&   aPresShell,
+                          nsIAtom*        aListName,
+                          nsIFrame*       aOldFrame,
+                          nsIFrame*       aNewFrame);
+
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 
-  virtual PRBool IsHorizontal() const { return mHorizontal; }
+  virtual PRBool IsHorizontal() const;
 
   
   NS_IMETHOD_(nsrefcnt) AddRef(void);
@@ -182,18 +193,16 @@ protected:
     nsresult GenerateDirtyReflowCommand(nsIPresContext& aPresContext,
                                         nsIPresShell&   aPresShell);
 
-    PRBool mHorizontal;
-    nsCalculatedBoxInfo mSprings[100];
-    nscoord mSpringCount;
+    // return true if the alignment is horizontal false if vertical
+    virtual PRBool GetInitialAlignment(); 
 
+    virtual nsInfoList* GetInfoList();
 private: 
   
     friend class nsBoxFrameInner;
     friend class nsBoxDebugInner;
     nsBoxFrameInner* mInner;
 }; // class nsBoxFrame
-
-
 
 #endif
 

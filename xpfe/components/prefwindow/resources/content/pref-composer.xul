@@ -21,6 +21,8 @@
    Contributor(s): 
   -->
 
+<?xml-stylesheet href="chrome://pref/skin/pref.css" type="text/css"?>
+
 <!DOCTYPE window SYSTEM "chrome://pref/locale/pref-composer.dtd" >
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
@@ -44,18 +46,13 @@
 </html:script>
 
 
-<html:div flex="100%">
-	<box id="header" style="width:100%" align="horizontal">  
-		  <spring style="width:20px"/>
-		  <html:div style="vertical-align: middle;">
-		  <html:B>&lHeader;</html:B>
-		  </html:div>
-   		  <spring flex="100%"/>
-		  <html:div>&rHeader;</html:div><spring style="width:5px"/>
+  	<box class="header" align="horizontal">  
+	      <titledbutton class="left-header-text" value="&lHeader;"/>
+   		  <spring class="header-spring" flex="1"/>
+		  <titledbutton class="right-header-text" value="&rHeader;"/>
 	</box>
 
-	<box align="vertical" flex="100%" style="width: 100%;">
-		<html:fieldset style="width: 100%;">
+		<html:fieldset>
 		<html:div>
 			&authorName;
 			<html:input name="author" type="text" id="pref:string:editor.author" />
@@ -73,11 +70,9 @@
 		</html:div>
   -->
 	</html:fieldset>
-	</box>  
 
 <!-- External Editors are not supported at this time
-<box align="vertical" flex="100%" style="width: 100%;">
-		<html:fieldset style="width: 100%;">
+		<html:fieldset>
 					<html:legend align="left"> 
 			<html:div>&exterLegend.label;</html:div> 
 					</html:legend> 
@@ -99,12 +94,10 @@
 		</html:div> 
 
 	</html:fieldset>
-	</box> 
   -->
 
 
-	<box align="vertical" flex="100%" style="width: 100%;">
-		<html:fieldset style="width: 50%;">
+    <html:fieldset>
 					<html:legend align="left"> 
 			<html:div>&pageColorHeader;</html:div> 
 					</html:legend> 
@@ -121,12 +114,15 @@
 		</html:label>
 	</html:div>
 	
-	<box align="horizontal" flex="100%" >
-	<box align="vertical" flex="100%" >
+	<box align="horizontal" style="width: 100%; height: 100%">
+	<box align="vertical" flex="1">
 		<box>
-			<html:input name="text" type="checkbox" id="pref:0:int:editor.text_color" />
-			<html:label for="pref:0:int:editor.text_color" accesskey="t" tabindex="0">			
-			</html:label>
+		    <html:div>
+				<html:input name="text" type="checkbox" id="pref:0:int:editor.text_color" />
+				<html:label for="pref:0:int:editor.text_color" accesskey="t" tabindex="0">			
+    			</html:label>
+			</html:div>
+
 			<menu>
 				<titledbutton value="&NormalText.label;" class="push dialog popup" align="right"/>
 				<html:div style="width:30px; background-color:white"/>
@@ -137,9 +133,11 @@
 		</box>
 
 		<box>
-			<html:input name="link" type="checkbox" id="pref:0:int:editor.link_color" />
-			<html:label for="pref:0:int:editor.link_color" accesskey="l" tabindex="0">
-			</html:label>
+     	    <html:div>
+				<html:input name="link" type="checkbox" id="pref:0:int:editor.link_color" />
+				<html:label for="pref:0:int:editor.link_color" accesskey="l" tabindex="0">
+				</html:label>
+			</html:div>
 			<menu>
 				<titledbutton value="&LinkText.label;" class="push dialog popup" align="right"/>
 				<html:div style="width:30px; background-color:white"/>
@@ -150,9 +148,11 @@
 		</box>
 
 		<box>
-			<html:input name="active" type="checkbox" id="pref:0:int:editor.active_link_color" />
-			<html:label for="pref:0:int:editor.active_link_color" accesskey="c" tabindex="0">			
-			</html:label>
+     	    <html:div>
+				<html:input name="active" type="checkbox" id="pref:0:int:editor.active_link_color" />
+				<html:label for="pref:0:int:editor.active_link_color" accesskey="c" tabindex="0">			
+				</html:label>
+			</html:div>
 			<menu>
 				<titledbutton value="&ActiveLinkText.label;" class="push dialog popup" align="right"/>
 				<html:div style="width:30px; background-color:white"/>
@@ -164,9 +164,11 @@
 		</box>
 
 		<box>
-			<html:input name="followed" type="checkbox" id="pref:0:int:editor.followed_link_color" />
-			<html:label for="pref:0:int:editor.followed_link_color" accesskey="f" tabindex="0">			
-			</html:label>
+            <html:div>
+				<html:input name="followed" type="checkbox" id="pref:0:int:editor.followed_link_color" />
+				<html:label for="pref:0:int:editor.followed_link_color" accesskey="f" tabindex="0">			
+				</html:label>
+			</html:div>
 			<menu>
 				<titledbutton value="&FollowedLinkText.label;" class="push dialog popup" align="right"/>
 				<html:div style="width:30px; background-color:white"/>
@@ -177,9 +179,11 @@
 		</box>
 
 		<box>
-			<html:input name="background" type="checkbox" id="pref:0:int:editor.background_color" />
-			<html:label for="pref:0:int:editor.background_color" accesskey="b" tabindex="0">			
-			</html:label>
+            <html:div>		
+				<html:input name="background" type="checkbox" id="pref:0:int:editor.background_color" />
+				<html:label for="pref:0:int:editor.background_color" accesskey="b" tabindex="0">			
+				</html:label>
+			</html:div>
 
 			&colorPick; &BackgroundColor.label;
 			<menu>
@@ -194,7 +198,7 @@
 
 	</box>
 
-	<box align="vertical" flex="100%" id="colorpreview" style="min-width:100px; min-height:50px; background-color:gray">
+	<box align="vertical" flex="1" id="colorpreview" style="min-width:100px; min-height:50px; background-color:gray">
 	<html:div id="normaltext" style="color:black;">  &NormalText.label;  </html:div>
 	<html:div id="linktext" style="color:red;">  &LinkText.label;  </html:div>
 	<html:div id="activelinktext" style="color:blue;">  &ActiveLinkText.label;  </html:div>
@@ -203,10 +207,5 @@
 
 	</box>
 	</html:fieldset>
-	</box>  
-
-
-
-</html:div>
 </window>
 

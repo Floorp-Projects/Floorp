@@ -22,31 +22,27 @@
    Contributor(s): 
   -->
 
+<?xml-stylesheet href="chrome://pref/skin/pref.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://pref/locale/pref-appearance.dtd" >
 <window  xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="dialog"
-		onload="StartUp('Appearance')" >
+		onload="StartUp('Appearance')" 
+		align="vertical">
 
 
 
 <html:script language="javascript" src="chrome://pref/content/PrefsWindow.js"/>
-<html:div flex="100%">
-
  
-  	<box id="header" align="horizontal">  
-		  <spring style="width:20px"/>
-		  <html:div style="vertical-align: middle;">
-		  <html:B>&lHeader;</html:B>
-		  </html:div>
-   		  <spring flex="100%"/><spring style="width:60px"/>
-		  <html:div >&rHeader;</html:div><spring style="width:5px"/>
+	<box class="header" align="horizontal">  
+	      <titledbutton class="left-header-text" value="&lHeader;"/>
+   		  <spring class="header-spring" flex="1"/>
+		  <titledbutton class="right-header-text" value="&rHeader;"/>
 	</box>
 
-<html:form>
-	<box align="vertical" style="width: 100%;">
-		<html:fieldset style="width: 100%;">
+
+		<html:fieldset>
 			<html:legend align="left">
 			<html:div>&onStartLegend.label;</html:div> 
 			</html:legend>
@@ -76,13 +72,8 @@
 			</html:div>
 		
 		</html:fieldset>
-	</box>
-</html:form>
 
-
-<html:form>
-	<box align="vertical" style="width: 100%;">
-		<html:fieldset style="width: 100%;">
+		<html:fieldset>
 			<html:legend align="left">
 			<html:div>&showToolsLegend.label;</html:div> 
 			</html:legend>
@@ -103,11 +94,6 @@
 				<html:label for="pref:1:int:browser.chrome.toolbar_style" accesskey="t" tabindex="0">
 				&textonlyRadio.label;
 				</html:label>
-			</html:div>
-			
-		</html:fieldset>
-	</box>
-</html:form>
-
-</html:div>
+			</html:div>		
+		</html:fieldset>	
 </window>

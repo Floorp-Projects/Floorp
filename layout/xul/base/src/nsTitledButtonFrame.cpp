@@ -1387,7 +1387,7 @@ nsTitledButtonFrame::GetBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflow
   // depending on the type of alignment add in the space for the text
   nsSize size;
   GetTextSize(aPresContext, *aReflowState.rendContext,
-               mCroppedTitle.Length() ? mCroppedTitle : mTitle, size);
+              mTitle, size);
  
    switch (mAlign) {
       case NS_SIDE_TOP:

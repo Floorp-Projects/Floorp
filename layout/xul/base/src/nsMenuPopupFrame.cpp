@@ -109,15 +109,6 @@ nsMenuPopupFrame::Init(nsIPresContext&  aPresContext,
   // XXX Hack
   mPresContext = &aPresContext;
 
-  // We default to being vertical.
-  nsString value;
-  mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::align, value);
-  mHorizontal = PR_FALSE;
-  if (value.EqualsIgnoreCase("vertical"))
-    mHorizontal = PR_FALSE;
-  else if (value.EqualsIgnoreCase("horizontal"))
-    mHorizontal = PR_TRUE;
-
   CreateViewForFrame(aPresContext, this, aContext, PR_TRUE);
 
   // Now that we've made a view, remove it and insert it at the correct
@@ -165,6 +156,19 @@ nsMenuPopupFrame::Init(nsIPresContext&  aPresContext,
 #endif   
 
   return rv;
+}
+
+PRBool
+nsMenuPopupFrame::GetInitialAlignment()
+{
+ // by default we are vertical unless horizontal is specifically specified
+  nsString value;
+
+  mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::align, value);
+  if (value.EqualsIgnoreCase("horizontal"))
+    return PR_TRUE;
+  else 
+    return PR_FALSE;
 }
 
 void

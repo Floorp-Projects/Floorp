@@ -108,6 +108,9 @@ public:
   PRBool IsDisabled(nsIContent* aContent);
 
 protected:
+  // return true if the alignment is horizontal false if vertical
+  virtual PRBool GetInitialAlignment(); 
+
   nsIMenuFrame* mCurrentMenu; // The current menu that is active.
   PRBool mIsCapturingMouseEvents; // Whether or not we're grabbing the mouse events.
   // XXX Hack

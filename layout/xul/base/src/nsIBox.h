@@ -63,6 +63,8 @@ public:
       maxSize.width = NS_INTRINSICSIZE;
       maxSize.height = NS_INTRINSICSIZE;
     }
+
+    virtual ~nsBoxInfo() {}
   
 };
 

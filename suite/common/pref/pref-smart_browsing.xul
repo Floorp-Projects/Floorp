@@ -21,27 +21,26 @@
    Contributor(s): 
   -->
 
+<?xml-stylesheet href="chrome://pref/skin/pref.css" type="text/css"?>
+
 <!DOCTYPE window SYSTEM "chrome://pref/locale/pref-smart_browsing.dtd" >
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
         class="dialog"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="return StartUp('smart_browsing');"  title="&title.label;">
+        onload="return StartUp('smart_browsing');"  title="&title.label;"
+		align="vertical">
 
 <html:script language="javascript" src="chrome://pref/content/PrefsWindow.js"/>
-<html:div flex="100%">
 
-<box id="header" align="horizontal">  
-		  <spring style="width:20px"/>
-		  <html:div style="vertical-align: middle;">
-		  <html:B>&lHeader;</html:B>
-		  </html:div>
-   		  <spring flex="100%"/><spring style="width:60px"/>
-		  <html:div >&rHeader;</html:div><spring style="width:5px"/>
+  	<box class="header" align="horizontal">  
+	      <titledbutton class="left-header-text" value="&lHeader;"/>
+   		  <spring class="header-spring" flex="1"/>
+		  <titledbutton class="right-header-text" value="&rHeader;"/>
 	</box>
 
-<html:form>
-	<box align="vertical" style="width: 100%;">
-		<html:fieldset style="width: 100%;">
+
+	<box align="vertical">
+		<html:fieldset flex="1">
 			<html:legend align="left">
 			<html:div>&lHeader;</html:div> 
 			</html:legend>
@@ -80,11 +79,8 @@
 		</html:fieldset>
 	</box>
 
-</html:form>
-
-
-	<box align="vertical" style="width: 100%;">
-		<html:fieldset style="width: 100%;">
+	<box align="vertical">
+		<html:fieldset flex="1">
 			<html:legend align="left">
 			<html:div>&internetKeywordsHeader.label;</html:div> 
 			</html:legend>
@@ -96,5 +92,4 @@
 			</html:div>
 		</html:fieldset>
 	</box>
-</html:div>
 </window>
