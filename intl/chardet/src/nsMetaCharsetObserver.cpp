@@ -211,7 +211,7 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
               contentValue=valueArray[i];
       }
       static nsAutoString contenttype("Content-Type");
-      static nsAutoString texthtml("text/html;");
+      static nsAutoString texthtml("text/html");
       if((nsnull != httpEquivValue) && 
          (nsnull != contentValue) && 
          ((0==nsCRT::strcasecmp(httpEquivValue,contenttype.GetUnicode())) ||
