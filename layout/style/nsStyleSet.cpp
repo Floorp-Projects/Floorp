@@ -663,6 +663,8 @@ NS_IMETHODIMP StyleSetImpl::EnableQuirkStyleSheet(PRBool aEnable)
             mQuirkStyleSheet = quirkSheet.get();
             // addref for our cached reference
             NS_ADDREF(mQuirkStyleSheet);
+            // only one quirk style sheet can exist, so stop looking
+            break;
           }
         }
       }
