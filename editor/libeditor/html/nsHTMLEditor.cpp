@@ -4378,7 +4378,7 @@ nsHTMLEditor::SetSelectionAtDocumentStart(nsISelection *aSelection)
   nsresult res = GetRootElement(getter_AddRefs(bodyElement));  
   if (NS_SUCCEEDED(res))
   {
-  	if (!bodyElement) return NS_ERROR_NULL_POINTER;
+    if (!bodyElement) return NS_ERROR_NULL_POINTER;
     res = aSelection->Collapse(bodyElement,0);
   }
   return res;
