@@ -534,6 +534,7 @@ public:
       // Cache the original decorations and reuse the current font
       // to query metrics, rather than creating a new font which is expensive.
       nsFont* plainFont = (nsFont *)&mFont->mFont; //XXX: Change to use a CONST_CAST macro.
+      NS_ASSERTION(plainFont, "null plainFont: font problems in TextStyle::TextStyle");
       PRUint8 originalDecorations = plainFont->decorations;
       plainFont->decorations = NS_FONT_DECORATION_NONE;
       nsCOMPtr<nsIDeviceContext> deviceContext;
@@ -542,13 +543,16 @@ public:
       if (mVisibility->mLanguage) {
         mVisibility->mLanguage->GetLanguageGroup(getter_AddRefs(langGroup));
       }
-      deviceContext->GetMetricsFor(*plainFont, langGroup, mNormalFont);
-      aRenderingContext.SetFont(mNormalFont); // some users of the struct expect this state
-      mNormalFont->GetSpaceWidth(mSpaceWidth);
       mAveCharWidth = 0;
+      deviceContext->GetMetricsFor(*plainFont, langGroup, mNormalFont);
+      NS_ASSERTION(mNormalFont, "null normal font cannot be handled");
+      if (mNormalFont) {
+        aRenderingContext.SetFont(mNormalFont); // some users of the struct expect this state
+        mNormalFont->GetSpaceWidth(mSpaceWidth);
 #if defined(_WIN32) || defined(XP_OS2)
-      mNormalFont->GetAveCharWidth(mAveCharWidth);
+        mNormalFont->GetAveCharWidth(mAveCharWidth);
 #endif
+      }
       if (0 == mAveCharWidth) {
         // provide a default if it could not be resolved
         mAveCharWidth = 10;
