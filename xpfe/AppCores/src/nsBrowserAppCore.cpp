@@ -357,7 +357,8 @@ NS_IMETHODIMP
 nsBrowserAppCore::Stop()
 {
   mContentAreaWebShell->Stop();
-  setAttribute( mWebShell, "Browser:Throbber", "busy", "false" );
+  nsAutoString v("false");
+  setAttribute( mWebShell, "Browser:Throbber", "busy", v );
 	return NS_OK;
 }
 
@@ -1561,13 +1562,15 @@ nsBrowserAppCore::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURI* aURL, 
 #endif
 
   // Kick start the throbber
-  setAttribute( mWebShell, "Browser:Throbber", "busy", "true" );
+  nsAutoString trueStr("true");
+  nsAutoString emptyStr;
+  setAttribute( mWebShell, "Browser:Throbber", "busy", trueStr );
 
   // Enable the Stop buton
-  setAttribute( mWebShell, "canStop", "disabled", "" );
+  setAttribute( mWebShell, "canStop", "disabled", emptyStr );
 
   //Disable the reload button
-  setAttribute(mWebShell, "canReload", "disabled", "true");
+  setAttribute(mWebShell, "canReload", "disabled", trueStr);
     
   //Set the "at-work" protocol icon.
 
@@ -1595,7 +1598,7 @@ nsBrowserAppCore::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURI* aURL, 
       }
       else
       {
-        setAttribute(mWebShell, "Browser:ProtocolIcon", "uri", "");
+        setAttribute(mWebShell, "Browser:ProtocolIcon", "uri", emptyStr);
       }
 
       NS_RELEASE(chrome);
@@ -1677,8 +1680,9 @@ nsBrowserAppCore::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIURI *aUrl, PR
 
 done:
   // Stop the throbber and set the urlbar string
-	if (aStatus == NS_OK)
-      setAttribute( mWebShell, "urlbar", "value", url);  
+	if (aStatus == NS_OK) {
+      setAttribute( mWebShell, "urlbar", "value", urlStr);
+  }
 
 	/* To satisfy a request from the QA group */
 	if (aStatus == NS_OK) {
@@ -2469,9 +2473,9 @@ nsBrowserAppCore::BeginObserving() {
                                                 (nsISupports**)&svc );
     if ( NS_SUCCEEDED( rv ) && svc ) {
         // Add/Remove object as observer of web shell window topics.
-        nsString topic1 = prefix;
+        nsAutoString topic1(prefix);
         topic1 += ";status";
-        nsString topic2 = prefix;
+        nsAutoString topic2(prefix);
         topic2 += ";progress";
         rv = svc->AddObserver( this, topic1.GetUnicode() );
         rv = svc->AddObserver( this, topic2.GetUnicode() );
@@ -2491,9 +2495,9 @@ nsBrowserAppCore::EndObserving() {
                                                 (nsISupports**)&svc );
     if ( NS_SUCCEEDED( rv ) && svc ) {
         // Add/Remove object as observer of web shell window topics.
-        nsString topic1 = prefix;
+        nsAutoString topic1(prefix);
         topic1 += ";status";
-        nsString topic2 = prefix;
+        nsAutoString topic2(prefix);
         topic2 += ";progress";
         rv = svc->RemoveObserver( this, topic1.GetUnicode() );
         rv = svc->RemoveObserver( this, topic2.GetUnicode() );
@@ -2515,16 +2519,17 @@ nsBrowserAppCore::Observe( nsISupports *aSubject,
         nsIWebShellWindow *window = 0;
         rv = aSubject->QueryInterface( nsIWebShellWindow::GetIID(), (void**)&window );
         if ( NS_SUCCEEDED( rv ) && window ) {
-            nsString topic1 = prefix;
+            nsAutoString topic1(prefix);
             topic1 += ";status";
-            nsString topic2 = prefix;
+            nsAutoString topic2(prefix);
             topic2 += ";progress";
             // Compare to our window.
             if ( window == mWebShellWin ) {
                 // Get topic substring.
                 if ( topic1 == aTopic ) {
                     // Update status text.
-                    rv = setAttribute( mWebShell, "Browser:Status", "value", someData );
+                    nsAutoString v(someData);
+                    rv = setAttribute( mWebShell, "Browser:Status", "value", v);
                 } else if ( topic2 == aTopic ) {
                     // We don't process this, yet.
                 }
