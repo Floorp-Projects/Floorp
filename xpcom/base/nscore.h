@@ -173,15 +173,6 @@ typedef PRUint16 PRUnichar;
   #define HAVE_CPP_UNAMBIGUOUS_STD_NOTEQUAL
 #endif
 
-#ifdef HAVE_CPP_NAMESPACE_STD
-  #define NS_STD_ std
-#else
-  #define NS_STD_
-#endif
-
-#define NS_MIN NS_STD_ ::min
-#define NS_MAX NS_STD_ ::max
-
   /* under VC++ (Windows), we don't have autoconf yet */
 #if defined(_MSC_VER) && (_MSC_VER>=1100)
   /* VC++ 5.0 and greater implement template specialization, 4.2 is unknown */
@@ -201,13 +192,6 @@ typedef PRUint16 PRUnichar;
 
   #define HAVE_CPP_NAMESPACE_STD
   #define HAVE_CPP_UNAMBIGUOUS_STD_NOTEQUAL
-
-  /* VC++ is special and doesn't use naked min() and max() */
-  #undef NS_MIN
-  #define NS_MIN std::_cpp_min
-
-  #undef NS_MAX
-  #define NS_MAX std::_cpp_max
 #endif
 
 #ifdef HAVE_CPP_MODERN_SPECIALIZE_TEMPLATE_SYNTAX
@@ -265,5 +249,22 @@ typedef PRUint16 PRUnichar;
 /* No sense in making an NS_DYNAMIC_CAST() macro: you can't duplicate
    the semantics. So if you want to dynamic_cast, then just use it
    "straight", no macro. */
+
+template <class T>
+inline
+const T&
+NS_MIN( const T& a, const T& b )
+  {
+    return b < a ? b : a;
+  }
+
+template <class T>
+inline
+const T&
+NS_MAX( const T& a, const T& b )
+  {
+    return a > b ? a : b;
+  }
+
 
 #endif /* nscore_h___ */
