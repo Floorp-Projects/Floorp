@@ -1599,11 +1599,12 @@ MOZ_ARG_DISABLE_BOOL(mailnews,
 [  --disable-mailnews      Dont build Mail & News],
   MOZ_MAIL_NEWS= )
 
+NECKO=1
 
-dnl NECKO is the new netlib landing.
-MOZ_ARG_ENABLE_BOOL(necko,
-[  --enable-necko  Enable NECKO, the new network library.],
-  NECKO=1)
+dnl NECKO is the new netlib module. Build Necko by default
+MOZ_ARG_DISABLE_BOOL(necko,
+[  --disable-necko  Dont build Necko, the new network library.],
+  NECKO=)
 
 dnl Note: This conflicts with --disable-shared
 MOZ_ARG_ENABLE_BOOL(oji,
