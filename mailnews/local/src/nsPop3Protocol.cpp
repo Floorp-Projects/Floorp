@@ -40,7 +40,6 @@
 #include "MailNewsTypes.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
-#include "nsINetSupportDialogService.h"
 #include "nsIPrompt.h"
 #include "nsIMsgIncomingServer.h"
 #include "nsLocalStringBundle.h"
@@ -54,7 +53,6 @@
 
 static PRLogModuleInfo *POP3LOGMODULE = nsnull;
 
-static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID); 
 
 /* km
@@ -794,24 +792,27 @@ nsPop3Protocol::Error(PRInt32 err_code)
 	// the error code is just the resource id for the error string...
 	// so print out that error message!
 	nsresult rv = NS_OK;
-	NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &rv);
-	if (NS_SUCCEEDED(rv))
-	{
-		PRUnichar * alertString = nsnull;
-        mStringService->GetStringByID(err_code, &alertString);
-        if (alertString) {
-			dialog->Alert(nsnull, alertString); 
+    nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_url, &rv);
+    if (NS_SUCCEEDED(rv))
+    {
+        nsCOMPtr<nsIMsgWindow> msgWindow;
+        nsCOMPtr<nsIPrompt> dialog;
+        rv = mailnewsUrl->GetMsgWindow(getter_AddRefs(msgWindow));
+        if (NS_SUCCEEDED(rv))
+        {
+            rv = msgWindow->GetPromptDialog(getter_AddRefs(dialog));
+            if (NS_SUCCEEDED(rv))
+            {
+                PRUnichar * alertString = nsnull;
+                mStringService->GetStringByID(err_code, &alertString);
+                if (alertString)
+                {
+                    dialog->Alert(nsnull, alertString); 
+                    nsCRT::free(alertString);
+                }
+            }
         }
-		nsCRT::free(alertString);
-	}
-		
-
-#if 0
-    ce->URL_s->error_msg = NET_ExplainErrorDetails(err_code, 
-							m_pop3ConData->command_response ? m_pop3ConData->command_response :
-							XP_GetString( XP_NO_ANSWER ) );
-#endif
-
+    }
 	m_pop3ConData->next_state = POP3_ERROR_DONE;
 	m_pop3ConData->pause_for_read = PR_FALSE;
 

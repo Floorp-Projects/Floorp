@@ -29,6 +29,7 @@ interface nsITransactionManager;
 interface nsIDocShell;
 interface nsIDOMWindow;
 interface nsIMsgHeaderSink;
+interface nsIPrompt;
 /*
  *  This interface can be used to set data specific to a window.
  */
@@ -43,6 +44,7 @@ interface nsIMsgWindow : nsISupports {
 	attribute nsIMessageView messageView;
 	attribute nsIMsgFolder openFolder;
 	attribute nsIDocShell rootDocShell;
+    readonly attribute nsIPrompt promptDialog;
 	
 	void SetDOMWindow(in nsIDOMWindow window);
 	void StopUrls();

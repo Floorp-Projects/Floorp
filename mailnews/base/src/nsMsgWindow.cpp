@@ -38,6 +38,7 @@
 #include "nsIWebProgress.h"
 #include "nsIWebProgressListener.h"
 #include "nsPIDOMWindow.h"
+#include "nsIPrompt.h"
 
 // XXX Remove
 #include "nsIWebShell.h"
@@ -395,4 +396,23 @@ NS_IMETHODIMP nsMsgWindow::GetLoadCookie(nsISupports ** aLoadCookie)
 NS_IMETHODIMP nsMsgWindow::SetLoadCookie(nsISupports * aLoadCookie)
 {
   return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgWindow::GetPromptDialog(nsIPrompt **aPrompt)
+{
+    nsresult rv = NS_OK;
+    NS_ENSURE_ARG_POINTER(aPrompt);
+    if (mRootDocShell)
+    {
+        nsCOMPtr<nsIPrompt> dialog;
+        dialog = do_GetInterface(mRootDocShell, &rv);
+        if (dialog)
+        {
+            *aPrompt = dialog;
+            NS_ADDREF(*aPrompt);
+        }
+        return rv;
+    }
+    else
+        return NS_ERROR_NULL_POINTER;
 }
