@@ -1482,8 +1482,7 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
 
     if (msgHdr)
     {
-      nsXPIDLCString subject;
-      nsXPIDLString decodedString;
+      nsXPIDLString subject;
       nsXPIDLCString decodedCString;
 
       if (!charsetOverride)
@@ -1496,14 +1495,14 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
       if (isFirstPass && !charset.IsEmpty())
         m_compFields->SetCharacterSet(charset);
 
-      rv = msgHdr->GetSubject(getter_Copies(subject));
+      rv = msgHdr->GetMime2DecodedSubject(getter_Copies(subject));
       if (NS_FAILED(rv)) return rv;
 
       // Check if (was: is present in the subject
-      nsACString::const_iterator wasStart, wasEnd;
+      nsAString::const_iterator wasStart, wasEnd;
       subject.BeginReading(wasStart);
       subject.EndReading(wasEnd);
-      PRBool wasFound = RFindInReadable(NS_LITERAL_CSTRING(" (was:"), wasStart, wasEnd);
+      PRBool wasFound = RFindInReadable(NS_LITERAL_STRING(" (was:"), wasStart, wasEnd);
       PRBool strip = PR_TRUE;
 
       if (wasFound) {
@@ -1548,8 +1547,8 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
   
 
       if (strip && wasFound) {
-        // Strip of the "(was: old subject)" part
-        nsACString::const_iterator start;
+        // Strip off the "(was: old subject)" part
+        nsAString::const_iterator start;
         subject.BeginReading(start);
         subject.Assign(Substring(start, wasStart));
       }
@@ -1570,15 +1569,8 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
             }
             mQuotingToFollow = PR_TRUE;
 
-            nsCAutoString subjectStr("Re: ");
-            subjectStr.Append(subject);
-            rv = mimeConverter->DecodeMimeHeader(subjectStr.get(),
-                getter_Copies(decodedString),
-                charset, charsetOverride);
-            if (NS_SUCCEEDED(rv))
-              m_compFields->SetSubject(decodedString);
-            else
-              m_compFields->SetSubject(subjectStr.get());
+            subject.Insert(NS_LITERAL_STRING("Re: "), 0);
+            m_compFields->SetSubject(subject.get());
 
             nsXPIDLCString author;
             rv = msgHdr->GetAuthor(getter_Copies(author));
@@ -1601,38 +1593,27 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
           }
         case nsIMsgCompType::ForwardAsAttachment:
           {
-            nsAutoString decodedSubject;
             PRUint32 flags;
 
             msgHdr->GetFlags(&flags);
-            nsCAutoString subjectStr;
             if (flags & MSG_FLAG_HAS_RE)
-              subjectStr.Assign("Re: ");
-            subjectStr.Append(subject);
-
-            rv = mimeConverter->DecodeMimeHeader(subjectStr.get(), 
-                getter_Copies(decodedString),
-                charset, charsetOverride);
-            if (NS_SUCCEEDED(rv))
-              decodedSubject.Assign(decodedString);
-            else
-              decodedSubject.AssignWithConversion(subjectStr.get());
+              subject.Insert(NS_LITERAL_STRING("Re: "), 0);
 
             // Setup quoting callbacks for later...
             mQuotingToFollow = PR_FALSE;  //We don't need to quote the original message.
             nsCOMPtr<nsIMsgAttachment> attachment = do_CreateInstance(NS_MSGATTACHMENT_CONTRACTID, &rv);
             if (NS_SUCCEEDED(rv) && attachment)
             {
-              attachment->SetName(decodedSubject.get());
+              attachment->SetName(subject.get());
               attachment->SetUrl(uri);
               m_compFields->AddAttachment(attachment);
             }
 
             if (isFirstPass)
             {
-              decodedSubject.Insert(NS_LITERAL_STRING("[Fwd: ").get(), 0);
-              decodedSubject.Append(NS_LITERAL_STRING("]").get());
-              m_compFields->SetSubject(decodedSubject.get()); 
+              subject.Insert(NS_LITERAL_STRING("[Fwd: ").get(), 0);
+              subject.Append(NS_LITERAL_STRING("]").get());
+              m_compFields->SetSubject(subject.get()); 
             }
             break;
           }
