@@ -21,11 +21,11 @@ Rights Reserved.
 <?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?> 
 
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
-<?xul-overlay href="chrome://global/content/tasksOverlay.xul"?>
 <?xul-overlay href="chrome://messenger/content/threadPane.xul"?>
 <?xul-overlay href="chrome://messenger/content/folderPane.xul"?>
 <?xul-overlay href="chrome://messenger/content/msgHdrViewOverlay.xul"?>
 <?xul-overlay href="chrome://sidebar/content/sidebarOverlay.xul"?>
+<?xul-overlay href="chrome://global/content/tasksOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/messenger.dtd">
                      

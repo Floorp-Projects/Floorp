@@ -440,6 +440,63 @@ titledbutton.toolbar[disabled="true"]:active {
 
 
 /**
+ * Bookmarks n' stuff
+ */
+
+/* These rules style the buttons that appear in the Personal Toolbar
+   for leaf bookmarks */
+titledbutton.bookmarkbutton { 
+  margin: 0px; 
+  max-width: 8em; 
+  font: inherit; 
+  color: #99CCCC; 
+  border: none; 
+  padding: 1px; 
+} 
+
+titledbutton.bookmarkbutton:hover { 
+  color: #CCFFFF; 
+  background-color: #336699; 
+} 
+
+titledbutton.bookmarkbutton:active { 
+  color: #CCFFFF; 
+  background-color: #336699; 
+  padding-left: 2px; 
+  padding-top: 2px; 
+  padding-right: 0px; 
+  padding-bottom: 0px; 
+} 
+
+/* These rules style the menus that appear in the Personal Toolbar
+   for bookmark folders. */
+titledbutton.bookmarkFolder { 
+  margin: 0px; 
+  max-width: 8em; 
+  font: inherit; 
+  color: #99CCCC; 
+  border: none; 
+  padding: 1px; 
+  list-style-image: url("chrome://global/skin/toolbar-dropdown.gif");
+} 
+
+menu:hover > .bookmarkFolder { 
+  color: #CCFFFF; 
+  background-color: #336699; 
+  list-style-image: url("chrome://global/skin/toolbar-dropdown-hover.gif");
+} 
+
+menu:active > .bookmarkFolder { 
+  color: #CCFFFF; 
+  background-color: #336699; 
+  padding-left: 2px; 
+  padding-top: 2px; 
+  padding-right: 0px; 
+  padding-bottom: 0px; 
+  list-style-image: url("chrome://global/skin/toolbar-dropdown-hover.gif");
+}
+
+/**
  * status-bar
  */
 box#status-bar {
@@ -879,7 +936,15 @@ menu.standard {
 }
 
 menu.standard > .menu-right {
-  list-style-image: url("chrome://global/skin/menu-arrow-hover.gif");
+  list-style-image: url("chrome://global/skin/toolbar-menu-arrow.gif");
+}
+
+menu.standard:hover > .menu-right {
+  list-style-image: url("chrome://global/skin/toolbar-menu-arrow-hover.gif");
+}
+
+menu.standard[disabled="true"] > .menu-right {
+  list-style-image: url("chrome://global/skin/toolbar-menu-arrow-disabled.gif");
 }
 
 menuitem.standard {

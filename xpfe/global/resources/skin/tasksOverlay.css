@@ -26,15 +26,15 @@ toolbar#taskbar {
 	user-focus: ignore;
 }
 
-toolbar#taskbar titledbutton {
+titledbutton.taskbutton {
 	margin-right: 1em;
 	padding-left: 3px;
 }
 
-toolbar#taskbar titledbutton:hover {
+titledbutton.taskbutton:hover {
 	padding-left: 3px;
 }
 
-toolbar#taskbar titledbutton:active {
+titledbutton.taskbutton:active {
   padding: 2px 0px 0px 4px;
 }

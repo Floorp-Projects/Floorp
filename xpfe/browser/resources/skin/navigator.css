@@ -138,24 +138,6 @@ toolbar#PersonalToolbar:-moz-drop-marker {
    color: white;
 }
 
-titledbutton.bookmarkbutton {
-  max-width: 8em;
-  background-image: none;
-  padding-left: 4px ! important;
-  padding-right: 4px ! important;
-}
-
-titledbutton.bookmarkbutton:hover,  
-titledbutton.bookmarkbutton:active {
-   padding-left: 4px;
-   padding-right: 4px;
-}
-
-titledbutton.bookmarkFolder {
-  background-color: transparent;
-  list-style-image: url("chrome://global/skin/toolbar-dropdown.gif");
-}
-
 toolbar#PersonalToolbar #personaltoolbar-endcap { 
 	background-color: #CCCCCC;
 	min-width: 68px;
