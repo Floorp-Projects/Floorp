@@ -1492,11 +1492,6 @@ sub BuildIDLProjects()
     BuildIDLProject(":mozilla:intl:uconv:macbuild:uconvIDL.xml",                    "uconv");
     BuildIDLProject(":mozilla:intl:chardet:macbuild:chardetIDL.xml",                "chardet");
 
-    if ($main::options{transformiix})
-    {
-        BuildIDLProject(":mozilla:extensions:transformiix:macbuild:transformiixIDL.xml", "transformiix");
-    }
-
     if ($main::options{iiextras})
     {
         BuildIDLProject(":mozilla:extensions:interfaceinfo:macbuild:iiextrasIDL.xml", "iiextras");
