@@ -2,10 +2,12 @@
 #include "nsIFactory.h"
 #include "nsIEnumerator.h"
 #include "nsIDOMRange.h"
+#include "nsISelection.h"
 
 static NS_DEFINE_IID(kIRangeListIterator, NS_IENUMERATOR_IID);
-static NS_DEFINE_IID(kIRangeList, NS_ICOLLECTION_IID);
+static NS_DEFINE_IID(kICollectionIID, NS_ICOLLECTION_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kISelectionIID, NS_ISELECTION_IID);
 
 
 class nsRangeListIterator;
@@ -25,7 +27,9 @@ see the nsICollection for more details*/
 
   virtual nsresult Clear();
 /*END nsICollection interfaces*/
-
+/*BEGIN nsISelection interfaces*/
+  virtual nsresult HandleKeyEvent(nsGUIEvent *aGuiEvent, nsIFrame *aFrame);
+/*END nsISelection interfacse*/
   nsRangeList();
   virtual ~nsRangeList();
 
@@ -77,7 +81,7 @@ nsresult NS_NewRangeList(nsICollection **aRangeList)
   nsRangeList *rlist = new nsRangeList;
   if (!rlist)
     return NS_ERROR_OUT_OF_MEMORY;
-  nsresult result = rlist->QueryInterface(kIRangeList , (void **)aRangeList);
+  nsresult result = rlist->QueryInterface(kICollectionIID , (void **)aRangeList);
   if (!NS_SUCCEEDED(result))
   {
     delete rlist;
@@ -210,7 +214,7 @@ nsRangeListIterator::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIRangeList)) {
+  if (aIID.Equals(kICollectionIID)) {
     *aInstancePtr = (void *)mRangeList;
     NS_ADDREF(mRangeList);
     return NS_OK;
@@ -275,7 +279,7 @@ nsRangeList::ResizeBuffer(PRUint32 aNewBufSize)
 
 //END nsRangeList methods
 
-//BEGIN nsIRangeList interface implementations
+//BEGIN nsICollection interface implementations
 
 
 NS_IMPL_ADDREF(nsRangeList)
@@ -294,8 +298,13 @@ nsRangeList::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIRangeList)) {
-    *aInstancePtr = (void*)(nsIEnumerator*)this;
+  if (aIID.Equals(kICollectionIID)) {
+    *aInstancePtr = (void*)(nsICollection *)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(  kISelectionIID)) {
+    *aInstancePtr = (void*)(nsISelection *)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -356,5 +365,17 @@ nsRangeList::Clear()
 
 
 
-//END nsIDOMRangeInterface methods
+//END nsICollection methods
 
+//BEGIN nsISelection methods
+
+
+
+nsresult
+nsRangeList::HandleKeyEvent(nsGUIEvent *aGuiEvent, nsIFrame *aFrame)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+//END nsISelection methods

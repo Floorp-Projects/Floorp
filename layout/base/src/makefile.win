@@ -33,9 +33,6 @@ CPPSRCS =				\
 	nsPresContext.cpp		\
 	nsPrintContext.cpp	\
 	nsPrintPreviewContext.cpp	\
-	nsSelection.cpp			\
-	nsSelectionPoint.cpp		\
-	nsSelectionRange.cpp		\
 	nsSpaceManager.cpp		\
 	nsStyleContext.cpp		\
 	nsStyleCoord.cpp		\
@@ -61,9 +58,6 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsPresContext.obj		\
 	.\$(OBJDIR)\nsPrintContext.obj	\
 	.\$(OBJDIR)\nsPrintPreviewContext.obj	\
-	.\$(OBJDIR)\nsSelection.obj		\
-	.\$(OBJDIR)\nsSelectionPoint.obj	\
-	.\$(OBJDIR)\nsSelectionRange.obj	\
 	.\$(OBJDIR)\nsSpaceManager.obj		\
 	.\$(OBJDIR)\nsStyleContext.obj		\
 	.\$(OBJDIR)\nsStyleCoord.obj		\
