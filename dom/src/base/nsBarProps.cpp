@@ -314,8 +314,14 @@ nsScrollbarsProp::SetVisible(PRBool aVisible)
       do_QueryInterface(mDOMWindow->GetDocShell());
 
     if (scroller) {
-      PRInt32 prefValue = aVisible ? nsIScrollable::Scrollbar_Auto :
-                                     nsIScrollable::Scrollbar_Never ;
+      PRInt32 prefValue;
+
+      if (aVisible) {
+        prefValue = nsIScrollable::Scrollbar_Auto;
+      } else {
+        prefValue = nsIScrollable::Scrollbar_Never;
+      }
+
       scroller->SetDefaultScrollbarPreferences(
                   nsIScrollable::ScrollOrientation_Y, prefValue);
       scroller->SetDefaultScrollbarPreferences(
