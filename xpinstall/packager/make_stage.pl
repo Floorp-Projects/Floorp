@@ -59,7 +59,6 @@ $gDirCwd          = cwd();
 push(@INC, $gDirScripts);
 require StageUtils;
 
-$gOsPkg           = undef;
 $inProductName    = undef;
 $inStagingScript  = undef;
 $inOs             = undef;
@@ -87,15 +86,6 @@ if(defined($ENV{DEBUG_INSTALLER_BUILD}))
 if(!$inProductName || !$inOs)
 {
   PrintUsage();
-}
-
-if($inOs =~ /^win$/i)
-{
-  $gOsPkg = "dos";
-}
-else
-{
-  $gOsPkg = $inOs;
 }
 
 if(!$inStagingScript)
@@ -128,7 +118,7 @@ else
 }
 
 # This is where the stage area is actually created.
-&StageProduct($inDirSrcDist, $inDirDestStage, $inProductName, $gOsPkg);
+&StageProduct($inDirSrcDist, $inDirDestStage, $inProductName, $inOs);
 chdir($gDirCwd);
 
 exit(0);
@@ -195,6 +185,7 @@ sub ParseArgV
         ++$counter;
         if(($myArgv[$counter] =~ /^win$/i) ||
            ($myArgv[$counter] =~ /^mac$/i) ||
+           ($myArgv[$counter] =~ /^os2$/i) ||
            ($myArgv[$counter] =~ /^unix$/i))
         {
           $inOs = $myArgv[$counter];
@@ -251,7 +242,7 @@ sub PrintUsage
               mozilla
 
       * -os
-            win, mac, unix
+            win, mac, unix, os2
 
         '*' indicates required parameters.
 \n";
