@@ -1818,7 +1818,7 @@ nsSaveMsgListener::OnStartRequest(nsIRequest* request, nsISupports* aSupport)
             if (NS_SUCCEEDED(rv) && macFile)
             {
               macFile->SetFileCreator((OSType)aMacCreator);
-              macFile->SetFileCreator((OSType)aMacType);
+              macFile->SetFileType((OSType)aMacType);
             }
           }
         }
