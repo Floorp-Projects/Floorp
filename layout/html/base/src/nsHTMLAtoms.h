@@ -225,6 +225,7 @@ public:
   static nsIAtom* onreset;
   static nsIAtom* onsubmit;
   static nsIAtom* onunload;
+  static nsIAtom* option;
   static nsIAtom* overflow;
 
   static nsIAtom* p;

@@ -194,6 +194,7 @@ nsIAtom* nsHTMLAtoms::onpaint;
 nsIAtom* nsHTMLAtoms::onreset;
 nsIAtom* nsHTMLAtoms::onsubmit;
 nsIAtom* nsHTMLAtoms::onunload;
+nsIAtom* nsHTMLAtoms::option;
 nsIAtom* nsHTMLAtoms::overflow;
 nsIAtom* nsHTMLAtoms::p;
 nsIAtom* nsHTMLAtoms::pagex;
@@ -455,6 +456,7 @@ void nsHTMLAtoms::AddrefAtoms()
     onreset = NS_NewAtom("onreset");
     onsubmit = NS_NewAtom("onsubmit");
     onunload = NS_NewAtom("onunload");
+    option = NS_NewAtom("option");
     overflow = NS_NewAtom("overflow");
     p = NS_NewAtom("p");
     pagex = NS_NewAtom("pagex");
@@ -706,6 +708,7 @@ void nsHTMLAtoms::ReleaseAtoms()
     NS_RELEASE(onreset);
     NS_RELEASE(onsubmit);
     NS_RELEASE(onunload);
+    NS_RELEASE(option);
     NS_RELEASE(overflow);
     NS_RELEASE(p);
     NS_RELEASE(pagex);
