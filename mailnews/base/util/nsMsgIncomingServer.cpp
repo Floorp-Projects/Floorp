@@ -228,6 +228,14 @@ nsMsgIncomingServer::Shutdown()
     NS_ENSURE_SUCCESS(rv,rv);
     mFilterList = nsnull;
   }
+
+  if (mSpamSettings) 
+  {
+    // close the spam log stream
+    rv = mSpamSettings->SetLogStream(nsnull);
+    NS_ENSURE_SUCCESS(rv,rv);
+    mSpamSettings = nsnull;
+  }
   return rv;
 }
 
