@@ -1758,7 +1758,7 @@ nsHTMLEditor::GetSelectedElement(const nsString& aTagName, nsIDOMElement** aRetu
                   if (image)
                   {
                     nsCOMPtr<nsIDOMNode> parent;
-                    nsCOMPtr<nsIDOMNode> current = selectedElement; 
+                    nsCOMPtr<nsIDOMNode> current = do_QueryInterface(selectedElement); 
                     PRBool notDone = PR_TRUE;
                     do {
                       result = current->GetParentNode(getter_AddRefs(parent));
