@@ -24,6 +24,4 @@
  *
  */
 
-#define MOZ_XSL
-
 #include "MacSharedPrefix_debug.h"
