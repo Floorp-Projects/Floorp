@@ -363,7 +363,7 @@ public:
 
 protected:
 
-    nsresult        CollectAttributes(nsIParserNode* aNode,eHTMLTags aTag,PRInt32 aCount,PRBool aDiscardAttributes);
+    nsresult        CollectAttributes(nsIParserNode* aNode,eHTMLTags aTag,PRInt32 aCount);
     nsresult        CollectSkippedContent(nsIParserNode& aNode,PRInt32& aCount);
     nsresult        WillHandleStartTag(CToken* aToken,eHTMLTags aChildTag,nsIParserNode& aNode);
     nsresult        DidHandleStartTag(nsIParserNode& aNode,eHTMLTags aChildTag);
