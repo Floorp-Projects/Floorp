@@ -150,17 +150,28 @@ nsScrollFrame::CreateScrollingView()
                                              (void **)&view);
 
   if (NS_OK == rv) {
+    const nsStylePosition* position = (const nsStylePosition*)
+      mStyleContext->GetStyleData(eStyleStruct_Position);
+    const nsStyleColor*    color = (const nsStyleColor*)
+      mStyleContext->GetStyleData(eStyleStruct_Color);
+    const nsStyleSpacing*  spacing = (const nsStyleSpacing*)
+      mStyleContext->GetStyleData(eStyleStruct_Spacing);
+
+    // Get the z-index
+    PRInt32 zIndex = 0;
+
+    if (eStyleUnit_Integer == position->mZIndex.GetUnit()) {
+      zIndex = position->mZIndex.GetIntValue();
+    }
+
     // Initialize the scrolling view
-    // XXX Check for opacity...
-    view->Init(viewManager, mRect, parentView, nsnull, nsnull, nsnull);
-  
+    view->Init(viewManager, mRect, parentView, nsnull, nsnull, nsnull,
+               zIndex, nsnull, color->mOpacity);
+
     // Insert the view into the view hierarchy
-    viewManager->InsertChild(parentView, view, 0);
+    viewManager->InsertChild(parentView, view, zIndex);
   
     // If the background is transparent then inform the view manager
-    const nsStyleColor* color = (const nsStyleColor*)
-      mStyleContext->GetStyleData(eStyleStruct_Color);
-
     PRBool  isTransparent = (NS_STYLE_BG_COLOR_TRANSPARENT & color->mBackgroundFlags);
     if (isTransparent) {
       viewManager->SetViewContentTransparency(view, PR_TRUE);
@@ -171,8 +182,6 @@ nsScrollFrame::CreateScrollingView()
     view->QueryInterface(kScrollViewIID, (void**)&scrollingView);
 
     // Set the scrolling view's insets to whatever our border is
-    const nsStyleSpacing* spacing = (const nsStyleSpacing*)
-      mStyleContext->GetStyleData(eStyleStruct_Spacing);
     nsMargin border;
     spacing->CalcBorderFor(this, border);
     scrollingView->SetControlInsets(border);
@@ -188,10 +197,10 @@ nsScrollFrame::CreateScrollingView()
       mFirstChild->SetView(scrolledView);
   
       // Initialize the view
-      scrolledView->Init(viewManager, nsRect(0, 0, 0, 0), parentView);
+      scrolledView->Init(viewManager, nsRect(0, 0, 0, 0), parentView, nsnull,
+                         nsnull, nsnull, 0, nsnull, color->mOpacity);
   
-      // If the background is transparent then inform the view manager. Note:
-      // we need to do this before we set the scrolling view's scrolled view
+      // If the background is transparent then inform the view manager
       if (isTransparent) {
         viewManager->SetViewContentTransparency(scrolledView, PR_TRUE);
       }
