@@ -34,7 +34,7 @@
 /*
  * Certificate handling code
  *
- * $Id: lowcert.c,v 1.5 2002/01/17 00:20:52 ian.mcgreer%sun.com Exp $
+ * $Id: lowcert.c,v 1.6 2002/02/21 22:41:37 ian.mcgreer%sun.com Exp $
  */
 
 #include "seccomon.h"
@@ -116,6 +116,39 @@ const SEC_ASN1Template nsslowcert_DHPublicKeyTemplate[] = {
     { SEC_ASN1_INTEGER, offsetof(NSSLOWKEYPublicKey,u.dh.publicValue), },
     { 0, }
 };
+
+/*
+ * See bugzilla bug 125359
+ * Since NSS (via PKCS#11) wants to handle big integers as unsigned ints,
+ * all of the templates above that en/decode into integers must be converted
+ * from ASN.1's signed integer type.  This is done by marking either the
+ * source or destination (encoding or decoding, respectively) type as
+ * siUnsignedInteger.
+ */
+
+static void
+prepare_low_rsa_pub_key_for_asn1(NSSLOWKEYPublicKey *pubk)
+{
+    pubk->u.rsa.modulus.type = siUnsignedInteger;
+    pubk->u.rsa.publicExponent.type = siUnsignedInteger;
+}
+
+static void
+prepare_low_dsa_pub_key_for_asn1(NSSLOWKEYPublicKey *pubk)
+{
+    pubk->u.dsa.publicValue.type = siUnsignedInteger;
+    pubk->u.dsa.params.prime.type = siUnsignedInteger;
+    pubk->u.dsa.params.subPrime.type = siUnsignedInteger;
+    pubk->u.dsa.params.base.type = siUnsignedInteger;
+}
+
+static void
+prepare_low_dh_pub_key_for_asn1(NSSLOWKEYPublicKey *pubk)
+{
+    pubk->u.dh.prime.type = siUnsignedInteger;
+    pubk->u.dh.base.type = siUnsignedInteger;
+    pubk->u.dh.publicValue.type = siUnsignedInteger;
+}
 
 /*
  * Allow use of default cert database, so that apps(such as mozilla) don't
@@ -339,45 +372,23 @@ nsslowcert_FixupEmailAddr(char *emailAddr)
     return(retaddr);
 }
 
-/* NSS has traditionally keyed certificate entries in the cert database
- * by (serial number, DER_ISSUER).  The serial number may have a leading zero
- * in order to make it a signed integer.  However, the ASN.1 decoder now 
- * strips the leading zero, treating any INTEGER as unsigned.  In order to
- * be compatible with version 7 of the database, it is necessary to reapply
- * that leading zero to the serial number when needed, before computing the
- * database key.
- */
 static SECStatus
 nsslowcert_KeyFromIssuerAndSN(PRArenaPool *arena, SECItem *issuer, SECItem *sn,
 			SECItem *key)
 {
-    PRBool leadingZero = PR_FALSE;
-    int start;
 
     key->len = sn->len + issuer->len;
 
-    if (sn->data[0] & 0x80) {
-	leadingZero = PR_TRUE;
-	key->len++;
-    }
-    
     key->data = (unsigned char*)PORT_ArenaAlloc(arena, key->len);
     if ( !key->data ) {
 	goto loser;
     }
 
-    if (leadingZero) {
-	key->data[0] = 0;
-	start = 1;
-    } else {
-	start = 0;
-    }
-
     /* copy the serialNumber */
-    PORT_Memcpy(key->data + start, sn->data, sn->len);
+    PORT_Memcpy(key->data, sn->data, sn->len);
 
     /* copy the issuer */
-    PORT_Memcpy(&key->data[start + sn->len], issuer->data, issuer->len);
+    PORT_Memcpy(&key->data[sn->len], issuer->data, issuer->len);
 
     return(SECSuccess);
 
@@ -453,6 +464,7 @@ nsslowcert_ExtractPublicKey(NSSLOWCERTCertificate *cert)
       case SEC_OID_X500_RSA_ENCRYPTION:
       case SEC_OID_PKCS1_RSA_ENCRYPTION:
         pubk->keyType = NSSLOWKEYRSAKey;
+        prepare_low_rsa_pub_key_for_asn1(pubk);
         rv = SEC_ASN1DecodeItem(arena, pubk, 
 				nsslowcert_RSAPublicKeyTemplate, &os);
         if (rv == SECSuccess)
@@ -460,12 +472,14 @@ nsslowcert_ExtractPublicKey(NSSLOWCERTCertificate *cert)
         break;
       case SEC_OID_ANSIX9_DSA_SIGNATURE:
         pubk->keyType = NSSLOWKEYDSAKey;
+        prepare_low_dsa_pub_key_for_asn1(pubk);
         rv = SEC_ASN1DecodeItem(arena, pubk,
 				 nsslowcert_DSAPublicKeyTemplate, &os);
         if (rv == SECSuccess) return pubk;
         break;
       case SEC_OID_X942_DIFFIE_HELMAN_KEY:
         pubk->keyType = NSSLOWKEYDHKey;
+        prepare_low_dh_pub_key_for_asn1(pubk);
         rv = SEC_ASN1DecodeItem(arena, pubk,
 				 nsslowcert_DHPublicKeyTemplate, &os);
         if (rv == SECSuccess) return pubk;

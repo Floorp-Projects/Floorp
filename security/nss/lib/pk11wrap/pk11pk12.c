@@ -185,6 +185,45 @@ SEC_ASN1_CHOOSER_IMPLEMENT(SECKEY_PointerToEncryptedPrivateKeyInfoTemplate)
 SEC_ASN1_CHOOSER_IMPLEMENT(SECKEY_PrivateKeyInfoTemplate)
 SEC_ASN1_CHOOSER_IMPLEMENT(SECKEY_PointerToPrivateKeyInfoTemplate)
 
+/*
+ * See bugzilla bug 125359
+ * Since NSS (via PKCS#11) wants to handle big integers as unsigned ints,
+ * all of the templates above that en/decode into integers must be converted
+ * from ASN.1's signed integer type.  This is done by marking either the
+ * source or destination (encoding or decoding, respectively) type as
+ * siUnsignedInteger.
+ */
+
+static void
+prepare_rsa_priv_key_export_for_asn1(SECKEYRawPrivateKey *key)
+{
+    key->u.rsa.modulus.type = siUnsignedInteger;
+    key->u.rsa.publicExponent.type = siUnsignedInteger;
+    key->u.rsa.privateExponent.type = siUnsignedInteger;
+    key->u.rsa.prime1.type = siUnsignedInteger;
+    key->u.rsa.prime2.type = siUnsignedInteger;
+    key->u.rsa.exponent1.type = siUnsignedInteger;
+    key->u.rsa.exponent2.type = siUnsignedInteger;
+    key->u.rsa.coefficient.type = siUnsignedInteger;
+}
+
+static void
+prepare_dsa_priv_key_export_for_asn1(SECKEYRawPrivateKey *key)
+{
+    key->u.dsa.privateValue.type = siUnsignedInteger;
+    key->u.dsa.params.prime.type = siUnsignedInteger;
+    key->u.dsa.params.subPrime.type = siUnsignedInteger;
+    key->u.dsa.params.base.type = siUnsignedInteger;
+}
+
+static void
+prepare_dh_priv_key_export_for_asn1(SECKEYRawPrivateKey *key)
+{
+    key->u.dh.privateValue.type = siUnsignedInteger;
+    key->u.dh.prime.type = siUnsignedInteger;
+    key->u.dh.base.type = siUnsignedInteger;
+}
+
 
 SECStatus
 PK11_ImportDERPrivateKeyInfo(PK11SlotInfo *slot, SECItem *derPKI, 
@@ -437,6 +476,7 @@ PK11_ImportPrivateKeyInfoAndReturnKey(PK11SlotInfo *slot,
 
     switch(SECOID_GetAlgorithmTag(&pki->algorithm)) {
 	case SEC_OID_PKCS1_RSA_ENCRYPTION:
+	    prepare_rsa_priv_key_export_for_asn1(lpk);
 	    keyTemplate = SECKEY_RSAPrivateKeyExportTemplate;
 	    paramTemplate = NULL;
 	    paramDest = NULL;
@@ -444,6 +484,7 @@ PK11_ImportPrivateKeyInfoAndReturnKey(PK11SlotInfo *slot,
 	    keyType = CKK_RSA;
 	    break;
 	case SEC_OID_ANSIX9_DSA_SIGNATURE:
+	    prepare_dsa_priv_key_export_for_asn1(lpk);
 	    keyTemplate = SECKEY_DSAPrivateKeyExportTemplate;
 	    paramTemplate = SECKEY_PQGParamsTemplate;
 	    paramDest = &(lpk->u.dsa.params);
@@ -454,6 +495,7 @@ PK11_ImportPrivateKeyInfoAndReturnKey(PK11SlotInfo *slot,
 	    if(!publicValue) {
 		goto loser;
 	    }
+	    prepare_dh_priv_key_export_for_asn1(lpk);
 	    keyTemplate = SECKEY_DHPrivateKeyExportTemplate;
 	    paramTemplate = NULL;
 	    paramDest = NULL;

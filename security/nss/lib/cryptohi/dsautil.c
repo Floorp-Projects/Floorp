@@ -149,8 +149,10 @@ DSAU_EncodeDerSig(SECItem *dest, SECItem *src)
     ** prepend with leading zero.  
     ** Must remove all but one leading zero byte from numbers.
     */
+    sig.r.type = siUnsignedInteger;
     sig.r.data = signedR;
     sig.r.len  = sizeof signedR;
+    sig.s.type = siUnsignedInteger;
     sig.s.data = signedS;
     sig.s.len  = sizeof signedR;
 
@@ -193,6 +195,8 @@ DSAU_DecodeDerSig(SECItem *item)
     if (result->data == NULL)
 	goto loser;
 
+    sig.r.type = siUnsignedInteger;
+    sig.s.type = siUnsignedInteger;
     status = SEC_ASN1DecodeItem(NULL, &sig, DSA_SignatureTemplate, item);
     if (status != SECSuccess)
 	goto loser;

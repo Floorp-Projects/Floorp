@@ -32,7 +32,7 @@
  *
  * Private Key Database code
  *
- * $Id: keydb.c,v 1.12 2001/12/07 01:36:17 relyea%netscape.com Exp $
+ * $Id: keydb.c,v 1.13 2002/02/21 22:41:37 ian.mcgreer%sun.com Exp $
  */
 
 #include "lowkeyi.h"
@@ -1579,6 +1579,7 @@ seckey_encrypt_private_key(
     /* Encode the key, and set the algorithm (with params) */
     switch (pk->keyType) {
       case NSSLOWKEYRSAKey:
+        prepare_low_rsa_priv_key_for_asn1(pk);
 	dummy = SEC_ASN1EncodeItem(temparena, &(pki->privateKey), pk, 
 				   nsslowkey_RSAPrivateKeyTemplate);
 	if (dummy == NULL) {
@@ -1594,6 +1595,7 @@ seckey_encrypt_private_key(
 	
 	break;
       case NSSLOWKEYDSAKey:
+        prepare_low_dsa_priv_key_for_asn1(pk);
 	dummy = SEC_ASN1EncodeItem(temparena, &(pki->privateKey), pk,
 				   nsslowkey_DSAPrivateKeyTemplate);
 	if (dummy == NULL) {
@@ -1601,6 +1603,7 @@ seckey_encrypt_private_key(
 	    goto loser;
 	}
 	
+        prepare_low_pqg_params_for_asn1(&pk->u.dsa.params);
 	dummy = SEC_ASN1EncodeItem(temparena, NULL, &pk->u.dsa.params,
 				   nsslowkey_PQGParamsTemplate);
 	if (dummy == NULL) {
@@ -1616,6 +1619,7 @@ seckey_encrypt_private_key(
 	
 	break;
       case NSSLOWKEYDHKey:
+        prepare_low_dh_priv_key_for_asn1(pk);
 	dummy = SEC_ASN1EncodeItem(temparena, &(pki->privateKey), pk,
 				   nsslowkey_DHPrivateKeyTemplate);
 	if (dummy == NULL) {
@@ -1860,23 +1864,27 @@ seckey_decrypt_private_key(NSSLOWKEYEncryptedPrivateKeyInfo *epki,
 	      case SEC_OID_X500_RSA_ENCRYPTION:
 	      case SEC_OID_PKCS1_RSA_ENCRYPTION:
 		pk->keyType = NSSLOWKEYRSAKey;
+		prepare_low_rsa_priv_key_for_asn1(pk);
 		rv = SEC_ASN1DecodeItem(permarena, pk,
 					nsslowkey_RSAPrivateKeyTemplate,
 					&pki->privateKey);
 		break;
 	      case SEC_OID_ANSIX9_DSA_SIGNATURE:
 		pk->keyType = NSSLOWKEYDSAKey;
+		prepare_low_dsa_priv_key_for_asn1(pk);
 		rv = SEC_ASN1DecodeItem(permarena, pk,
 					nsslowkey_DSAPrivateKeyTemplate,
 					&pki->privateKey);
 		if (rv != SECSuccess)
 		    goto loser;
+		prepare_low_pqg_params_for_asn1(&pk->u.dsa.params);
 		rv = SEC_ASN1DecodeItem(permarena, &pk->u.dsa.params,
 					nsslowkey_PQGParamsTemplate,
 					&pki->algorithm.parameters);
 		break;
 	      case SEC_OID_X942_DIFFIE_HELMAN_KEY:
 		pk->keyType = NSSLOWKEYDHKey;
+		prepare_low_dh_priv_key_for_asn1(pk);
 		rv = SEC_ASN1DecodeItem(permarena, pk,
 					nsslowkey_DHPrivateKeyTemplate,
 					&pki->privateKey);

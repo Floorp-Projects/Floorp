@@ -34,7 +34,7 @@
 /*
  * Support routines for SECItem data structure.
  *
- * $Id: secitem.c,v 1.5 2001/12/07 01:36:25 relyea%netscape.com Exp $
+ * $Id: secitem.c,v 1.6 2002/02/21 22:41:44 ian.mcgreer%sun.com Exp $
  */
 
 #include "seccomon.h"
@@ -196,6 +196,7 @@ SECITEM_DupItem(const SECItem *from)
 SECStatus
 SECITEM_CopyItem(PRArenaPool *arena, SECItem *to, const SECItem *from)
 {
+    to->type = from->type;
     if (from->data && from->len) {
 	if ( arena ) {
 	    to->data = (unsigned char*) PORT_ArenaAlloc(arena, from->len);
