@@ -274,6 +274,14 @@ function loadPermissions() {
   var enumerator = permissionmanager.enumerator;
   var count = 0;
   var contentStr;
+  var canStr, cannotStr;
+  if (isImages) {
+    canStr="canImages";
+    cannotStr="cannotImages";
+  } else {
+    canStr="can";
+    cannotStr="cannot";
+  }
   while (enumerator.hasMoreElements()) {
     var nextPermission = enumerator.getNext();
     nextPermission = nextPermission.QueryInterface(Components.interfaces.nsIPermission);
@@ -283,7 +291,7 @@ function loadPermissions() {
         new Permission(count++, host,
                        (host.charAt(0)==".") ? host.substring(1,host.length) : host,
                        nextPermission.type,
-                       cookieBundle.getString(nextPermission.capability?"can":"cannot"));
+                       cookieBundle.getString(nextPermission.capability?canStr:cannotStr));
     }
   }
   permissionsOutlinerView.rowCount = permissions.length;
