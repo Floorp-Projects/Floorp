@@ -25,6 +25,10 @@
 #include "domstubs.idl"
 #include "nsIPref.idl"
 
+%{ C++
+#include "nsIPresContext.h"
+%}
+
 /**
  * The nsIDocShell
  */
