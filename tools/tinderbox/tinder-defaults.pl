@@ -183,3 +183,6 @@ $LogCompression = '';
 # binary data is transferred properly.
 $LogEncoding = '';
 
+# Prevent Extension Manager from spawning child processes during tests
+# - processes that tbox scripts cannot kill. 
+$ENV{NO_EM_RESTART} = '1';
