@@ -3317,7 +3317,9 @@ nsCSSFrameConstructor::HasGfxScrollbars(nsIPresContext* aPresContext)
     nsCOMPtr<nsIPref> pref;
     aPresContext->GetPrefs(getter_AddRefs(pref));
     PRBool gfx = PR_FALSE;
-    pref->GetBoolPref("nglayout.widget.gfxscrollbars", &gfx);
+    if (pref) {
+	    pref->GetBoolPref("nglayout.widget.gfxscrollbars", &gfx);
+    }
 
     return gfx;
 
