@@ -13,7 +13,7 @@
         chrome:author="mozilla.org"
         chrome:name="communicator"
         chrome:localeVersion="0.9.9"
-        chrome:skinVersion="0.9.4">
+        chrome:skinVersion="1.0">
   </RDF:Description>
 
 </RDF:RDF>
