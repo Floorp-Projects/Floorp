@@ -39,6 +39,7 @@ XPIDLSRCS	= \
 		nsIPrintOptions.idl \
 		nsIPrintSettings.idl \
 		nsIPrintSettingsService.idl \
+		nsIFontCatalogService.idl \
 		nsIPrintSession.idl \
 		gfxIFormats.idl \
 		gfxIImageFrame.idl \
