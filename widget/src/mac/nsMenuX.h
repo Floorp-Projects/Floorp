@@ -93,7 +93,9 @@ public:
     NS_IMETHOD AddMenu(nsIMenu * aMenu);
 
 protected:
-    nsresult GetNextVisibleMenu(nsIMenu** outNextVisibleMenu);
+      // Determines how many menus are visible among the siblings that are before me.
+      // It doesn't matter if I am visible.
+    nsresult CountVisibleBefore ( PRUint32* outVisibleBefore ) ;
 
     // fetch the content node associated with the menupopup item
     void GetMenuPopupContent ( nsIContent** aResult ) ;
@@ -133,6 +135,7 @@ protected:
     PRPackedBool                mDestroyHandlerCalled;
     PRPackedBool                mNeedsRebuild;
     PRPackedBool                mConstructed;
+    PRPackedBool                mVisible;               // are we visible to the user?
 };
 
 #endif // nsMenuX_h__
