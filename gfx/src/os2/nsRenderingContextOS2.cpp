@@ -1098,12 +1098,20 @@ void nsRenderingContextOS2::PMDrawRect( nsRect &rect, BOOL fill)
 
    SetupDrawingColor();
 
-   long lOps = DRO_OUTLINE;
-   if( fill)
-      lOps |= DRO_FILL;
-
    GpiMove( mSurface->mPS, (PPOINTL) &rcl);
-   GpiBox( mSurface->mPS, lOps, ((PPOINTL)&rcl) + 1, 0, 0);
+   if (rcl.xLeft == rcl.xRight ||
+       rcl.yTop == rcl.yBottom )
+   {
+      GpiLine( mSurface->mPS, ((PPOINTL)&rcl) + 1);
+   }
+   else 
+   {
+      long lOps = DRO_OUTLINE;
+      if( fill)
+         lOps |= DRO_FILL;
+   
+      GpiBox( mSurface->mPS, lOps, ((PPOINTL)&rcl) + 1, 0, 0);
+   }
 }
 
 // Arc-drawing methods, all proxy on to PMDrawArc
