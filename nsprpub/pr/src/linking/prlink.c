@@ -824,7 +824,7 @@ pr_Mac_LoadNamedFragment(const FSSpec *fileSpec, const char* fragmentName)
 
 	/* See if library is already loaded */
 	PR_EnterMonitor(pr_linker_lock);
-
+  
 	result = pr_UnlockedFindLibrary(fragmentName);
 	if (result != NULL) goto unlock;
 
@@ -885,6 +885,7 @@ pr_Mac_LoadIndexedFragment(const FSSpec *fileSpec, PRUint32 fragIndex)
 	PRLibrary* 					result;
 	FSSpec							resolvedSpec = *fileSpec;
 	char*								fragmentName = NULL;
+	UInt32              fragOffset, fragLength;                
 	CFragConnectionID		connectionID = 0;
 	Boolean							isFolder, wasAlias;
 	OSErr								err = noErr;
@@ -893,14 +894,6 @@ pr_Mac_LoadIndexedFragment(const FSSpec *fileSpec, PRUint32 fragIndex)
 
 	/* See if library is already loaded */
 	PR_EnterMonitor(pr_linker_lock);
-
-	result = pr_UnlockedFindLibrary(fragmentName);
-	if (result != NULL) goto unlock;
-
-	newLib = PR_NEWZAP(PRLibrary);
-	if (newLib == NULL) goto unlock;
-	newLib->staticTable = NULL;
-
 
 	/* Resolve an alias if this was one */
 	err = ResolveAliasFile(&resolvedSpec, true, &isFolder, &wasAlias);
@@ -912,6 +905,17 @@ pr_Mac_LoadIndexedFragment(const FSSpec *fileSpec, PRUint32 fragIndex)
   	err = fnfErr;
   	goto unlock;
   }
+    err = GetIndexedFragmentOffsets(&resolvedSpec, fragIndex, &fragOffset, &fragLength, &fragmentName);
+  if (err != noErr) goto unlock;
+  
+	result = pr_UnlockedFindLibrary(fragmentName);
+	free(fragmentName);
+	fragmentName = NULL;
+	if (result != NULL) goto unlock;
+
+	newLib = PR_NEWZAP(PRLibrary);
+	if (newLib == NULL) goto unlock;
+	newLib->staticTable = NULL;
     
 	/* Finally, try to load the library */
 	err = NSLoadIndexedFragment(&resolvedSpec, fragIndex, &fragmentName, &connectionID);
