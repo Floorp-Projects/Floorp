@@ -39,7 +39,14 @@
         ondblclick="return OnDblClick(event.target.parentNode);">
 
     <template>
-      <!-- XXX need a rule for separators -->
+      <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator" rootcontainment="treebody" subcontainment="treechildren">
+        <treeitem uri="...">
+          <treecell>
+            <html:hr width="75%" align="center" size="1" />
+          </treecell>
+        </treeitem>
+      </rule>
+
       <rule rootcontainment="treebody" subcontainment="treechildren">
         <treeitem uri="...">
           <treecell>

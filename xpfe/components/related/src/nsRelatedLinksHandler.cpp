@@ -362,14 +362,6 @@ RelatedLinksStreamListener::OnDataAvailable(nsIURL* aURL, nsIInputStream *aIStre
 				nsAutoString			rlRoot(kURINC_RelatedLinksRoot);
 				if (NS_SUCCEEDED(rv = CreateAnonymousResource(rlRoot, &newSeparator)))
 				{
-					nsAutoString		defaultSeparatorName("-----");
-					nsCOMPtr<nsIRDFLiteral> nameLiteral;
-					if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(defaultSeparatorName.GetUnicode(), getter_AddRefs(nameLiteral))))
-					{
-						if (NS_SUCCEEDED(rv = mDataSource->Assert(newSeparator, kNC_Name, nameLiteral, PR_TRUE)))
-						{
-						}
-					}
 					mDataSource->Assert(newSeparator, kRDF_type, kNC_BookmarkSeparator, PR_TRUE);
 
 					PRInt32		numParents = mParentArray.Count();
@@ -512,8 +504,6 @@ private:
 	static nsIRDFResource	*kNC_RelatedLinksRoot;
 	static nsIRDFResource	*kNC_Child;
 	static nsIRDFResource	*kNC_Name;
-	static nsIRDFResource	*kNC_URL;
-	static nsIRDFResource	*kRDF_InstanceOf;
 	static nsIRDFResource	*kRDF_type;
 
 	nsCOMPtr<nsIRDFDataSource> mInner;
@@ -591,8 +581,6 @@ nsIRDFService		*RelatedLinksHandlerImpl::gRDFService;
 nsIRDFResource		*RelatedLinksHandlerImpl::kNC_RelatedLinksRoot;
 nsIRDFResource		*RelatedLinksHandlerImpl::kNC_Child;
 nsIRDFResource		*RelatedLinksHandlerImpl::kNC_Name;
-nsIRDFResource		*RelatedLinksHandlerImpl::kNC_URL;
-nsIRDFResource		*RelatedLinksHandlerImpl::kRDF_InstanceOf;
 nsIRDFResource		*RelatedLinksHandlerImpl::kRDF_type;
 
 
@@ -621,8 +609,6 @@ RelatedLinksHandlerImpl::~RelatedLinksHandlerImpl (void)
 		NS_RELEASE(kNC_RelatedLinksRoot);
 		NS_RELEASE(kNC_Child);
 		NS_RELEASE(kNC_Name);
-		NS_RELEASE(kNC_URL);
-		NS_RELEASE(kRDF_InstanceOf);
 		NS_RELEASE(kRDF_type);
 
 		nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
@@ -792,8 +778,6 @@ RelatedLinksHandlerImpl::Init(const char *aURI)
 		gRDFService->GetResource(kURINC_RelatedLinksRoot, &kNC_RelatedLinksRoot);
 		gRDFService->GetResource(NC_NAMESPACE_URI  "child", &kNC_Child);
 		gRDFService->GetResource(NC_NAMESPACE_URI  "Name", &kNC_Name);
-		gRDFService->GetResource(NC_NAMESPACE_URI  "URL", &kNC_URL);
-		gRDFService->GetResource(RDF_NAMESPACE_URI "instanceOf", &kRDF_InstanceOf);
 		gRDFService->GetResource(RDF_NAMESPACE_URI "type", &kRDF_type);
 	}
 
