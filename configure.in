@@ -1868,7 +1868,7 @@ then
     dnl If we don't have a libIDL config program & not cross-compiling, 
     dnl     look for orbit-config instead.
     dnl
-    if test -z "$LIBIDL_CONFIG" && test -z "$CROSS_COMPILE"; then
+    if test -n "$_LIBIDL_NOT_FOUND" && test -z "$CROSS_COMPILE"; then
         AC_PATH_PROGS(ORBIT_CONFIG, $ORBIT_CONFIG orbit-config)
         if test -n "$ORBIT_CONFIG"; then
         	_ORBIT_CFLAGS=`${ORBIT_CONFIG} client --cflags`
@@ -1877,6 +1877,7 @@ then
             _ORBIT_LIB_PATH=`${PERL} -e '{ for $f (@ARGV) { print "$f " if ($f =~ m/^-L/); } }' -- ${_ORBIT_LIBS}`
             LIBIDL_CFLAGS="$_ORBIT_INC_PATH"
             LIBIDL_LIBS="$_ORBIT_LIB_PATH -lIDL -lglib"
+            LIBIDL_CONFIG=
             _LIBIDL_NOT_FOUND=
         fi
     fi
