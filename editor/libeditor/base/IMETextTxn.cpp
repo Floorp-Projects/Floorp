@@ -51,7 +51,6 @@
 // #define DEBUG_IMETXN
 static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
 
-static NS_DEFINE_IID(kIDOMSelectionIID, NS_ISELECTION_IID);
 
 nsIAtom *IMETextTxn::gIMETextTxnName = nsnull;
 

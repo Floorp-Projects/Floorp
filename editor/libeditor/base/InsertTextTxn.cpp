@@ -42,8 +42,6 @@
 #include "nsISelection.h"
 #include "EditAggregateTxn.h"
 
-static NS_DEFINE_IID(kIDOMSelectionIID, NS_ISELECTION_IID);
-
 #ifdef NS_DEBUG
 static PRBool gNoisy = PR_FALSE;
 #else
