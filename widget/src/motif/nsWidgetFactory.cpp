@@ -41,11 +41,13 @@
 #include "nsMenu.h"
 #include "nsMenuItem.h"
 #include "nsPopUpMenu.h"
+/* XXX Not checked in yet
 #include "nsImageButton.h"
 #include "nsMenuButton.h"
 #include "nsToolbar.h"
 #include "nsToolbarManager.h"
 #include "nsToolbarItemHolder.h"
+*/
 
 
 static NS_DEFINE_IID(kCWindow,        NS_WINDOW_CID);
@@ -77,12 +79,14 @@ static NS_DEFINE_IID(kIListBox,       NS_ILISTBOX_IID);
 static NS_DEFINE_IID(kCMenuBar,       NS_MENUBAR_CID);
 static NS_DEFINE_IID(kCMenu,          NS_MENU_CID);
 static NS_DEFINE_IID(kCMenuItem,      NS_MENUITEM_CID);
+static NS_DEFINE_IID(kCPopUpMenu,     NS_POPUPMENU_CID);
+/* XXX Not checked in yet
 static NS_DEFINE_IID(kCImageButton,   NS_IMAGEBUTTON_CID);
 static NS_DEFINE_IID(kCToolBar,       NS_TOOLBAR_CID);
 static NS_DEFINE_IID(kCToolBarManager,  NS_TOOLBARMANAGER_CID);
 static NS_DEFINE_IID(kCToolBarItemHolder,  NS_TOOLBARITEMHOLDER_CID);
-static NS_DEFINE_IID(kCPopUpMenu,     NS_POPUPMENU_CID);
 static NS_DEFINE_IID(kCMenuButton,     NS_MENUBUTTON_CID);
+*/
 
 
 static NS_DEFINE_IID(kISupportsIID,   NS_ISUPPORTS_IID);
@@ -215,8 +219,8 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     else if (mClassID.Equals(kCMenuItem)) {
         inst = (nsISupports*)new nsMenuItem();
     }
+ /* XXX Not checked in yet       inst = (nsISupports*)(nsWindow*)new nsImageButton();
     else if (mClassID.Equals(kCImageButton)) {
-        inst = (nsISupports*)(nsWindow*)new nsImageButton();
     }
     else if (mClassID.Equals(kCMenuButton)) {
         inst = (nsISupports*)(nsWindow*)new nsMenuButton();
@@ -230,6 +234,7 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     else if (mClassID.Equals(kCToolBarItemHolder)) {
         inst = (nsISupports*)(nsIToolbarItemHolder *) new nsToolbarItemHolder();
     }
+ */
     else if (mClassID.Equals(kCPopUpMenu)) {
         inst = (nsISupports*)new nsPopUpMenu();
     }
