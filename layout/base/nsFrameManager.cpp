@@ -2239,32 +2239,25 @@ FrameManager::GenerateStateKey(nsIContent* aContent,
     return NS_OK;
   }
 
-  // If we have a dom element, add tag/type/name to hash key
-  // This is paranoia, but guarantees that we won't restore
-  // state to the wrong type of control.
-  nsCOMPtr<nsIAtom> tag;
-  if (aContent->IsContentOfType(nsIContent::eHTML_FORM_CONTROL)) {
-
-    aContent->GetTag(*getter_AddRefs(tag));
-    KeyAppendAtom(tag, aKey);
-
-    nsAutoString name;
-    aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, name);
-    KeyAppendString(name, aKey);
-  }
-
   // If we have a form control and can calculate form information, use
   // that as the key - it is more reliable than contentID.
   // Important to have a unique key, and tag/type/name may not be.
+  //
+  // If the control has a form, the format of the key is:
+  // type>IndOfFormInDoc>IndOfControlInForm>FormName>name
+  // else:
+  // type>IndOfControlInDoc>name
+  //
+  // XXX We don't need to use index if name is there
+  //
   nsCOMPtr<nsIFormControl> control(do_QueryInterface(aContent));
   PRBool generatedUniqueKey = PR_FALSE;
   if (control && mHTMLFormControls && mHTMLForms) {
 
-    if (tag == nsHTMLAtoms::input) {
-      PRInt32 type;
-      control->GetType(&type);
-      KeyAppendInt(type, aKey);
-    }
+    // Append the control type
+    PRInt32 type;
+    control->GetType(&type);
+    KeyAppendInt(type, aKey);
 
     // If in a form, add form name / index of form / index in form
     PRInt32 index = -1;
@@ -2277,10 +2270,7 @@ FrameManager::GenerateStateKey(nsIContent* aContent,
         return NS_OK;
       }
 
-      nsAutoString formName;
-      formElement->GetName(formName);
-      KeyAppendString(formName, aKey);
-
+      // Append the index of the form in the document
       nsCOMPtr<nsIContent> formContent(do_QueryInterface(formElement));
       mHTMLForms->IndexOf(formContent, index, PR_FALSE);
       if (index <= -1) {
@@ -2302,6 +2292,7 @@ FrameManager::GenerateStateKey(nsIContent* aContent,
       if (index > -1) {
         KeyAppendInt(index, aKey);
 
+        // Append the index of the control in the form
         nsCOMPtr<nsIForm> form(do_QueryInterface(formElement));
         form->IndexOfControl(control, &index);
         NS_ASSERTION(index > -1,
@@ -2312,6 +2303,11 @@ FrameManager::GenerateStateKey(nsIContent* aContent,
           generatedUniqueKey = PR_TRUE;
         }
       }
+
+      // Append the form name
+      nsAutoString formName;
+      formElement->GetName(formName);
+      KeyAppendString(formName, aKey);
 
     } else {
 
@@ -2328,6 +2324,11 @@ FrameManager::GenerateStateKey(nsIContent* aContent,
         generatedUniqueKey = PR_TRUE;
       }
     }
+
+    // Append the control name
+    nsAutoString name;
+    aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, name);
+    KeyAppendString(name, aKey);
   }
 
   if (!generatedUniqueKey) {
