@@ -46,7 +46,7 @@ LIBS = \
 	-lnetwork \
 	-lnetlib \
 	-lnetutil \
-	-lcompose	\
+	-lmsgcompose \
 	-lrdf \
 	-lmailnewsbase \
 	-lreg	\
