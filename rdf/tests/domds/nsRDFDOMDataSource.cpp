@@ -168,10 +168,12 @@ nsRDFDOMDataSource::GetTarget(nsIRDFResource *aSource, nsIRDFResource *aProperty
     nsCOMPtr<nsIDOMViewerElement> nodeContainer =
       do_QueryInterface(aSource);
 
-    nsCOMPtr<nsISupports> supports;
-    nodeContainer->GetObject(getter_AddRefs(supports));
+    if (nodeContainer) {
+	    nsCOMPtr<nsISupports> supports;
+	    nodeContainer->GetObject(getter_AddRefs(supports));
 
-    rv = getTargetForKnownObject(supports, aProperty, _retval);
+	    rv = getTargetForKnownObject(supports, aProperty, _retval);
+    }
   }
 
   // if nobody set _retval, then create a literal from *str
