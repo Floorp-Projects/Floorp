@@ -494,7 +494,7 @@ PRBool nsDefaultURIFixup::PossiblyHostPortUrl(const nsAString &aUrl)
     //   <hostname>:<port>/
     //
     // Where <hostname> is a string of alphanumeric characters and dashes
-    // seperated by dots.
+    // separated by dots.
     // and <port> is a 5 or less digits. This actually breaks the rfc2396
     // definition of a scheme which allows dots in schemes.
     //

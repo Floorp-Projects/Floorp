@@ -29,7 +29,7 @@ bug 41564 to get charsets working.
   are now all valid commands.
 * add prefs for when to make noise; new msg, msg in existing query view, and/or
   /stalk matches.
-* allow for space seperated list of sounds to play, like "beep beep", or
+* allow for space separated list of sounds to play, like "beep beep", or
   "file:/foo.wav"
 * fix bogus "connection refused" error when disconnecting.
 * add editable topic in header area.
@@ -291,7 +291,7 @@ commands.js:
 
 handlers.js:
 - don't call setOutputStyle() onLoad (it's been deleted.)
-- we can now call setClientOutput() and initStatic() onLoad, because the output window is a seperate .html file.  This means the the xul onLoad will not be called until the .html file is loaded, and so we can be sure that the content model for the output window will be stable.
+- we can now call setClientOutput() and initStatic() onLoad, because the output window is a separate .html file.  This means the the xul onLoad will not be called until the .html file is loaded, and so we can be sure that the content model for the output window will be stable.
 - global change from 'quotes like this' to ``quotes like this''.
 - set client.debugMode variable when debug messages are on.  This flag is used to determine how we display irc message codes.
 - remove onToggleToolbarIcons() because we don't have a toolbar anymore.

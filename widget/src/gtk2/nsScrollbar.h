@@ -132,7 +132,7 @@ private:
     GtkOrientation  mOrientation;
     GtkAdjustment  *mAdjustment;
 
-    // We track these seperately because sometimes their values might
+    // We track these separately because sometimes their values might
     // be different than the values stored in the adjustment.
     PRUint32 mMaxRange;
     PRUint32 mThumbSize;

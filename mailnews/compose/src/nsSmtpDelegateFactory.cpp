@@ -83,7 +83,7 @@ nsSmtpDelegateFactory::CreateDelegate(nsIRDFResource *aOuter,
   
   rv = url->SetSpec(nsDependentCString(uri));
 
-  // seperate out username, hostname
+  // separate out username, hostname
   nsCAutoString hostname;
   nsCAutoString userpass;
 

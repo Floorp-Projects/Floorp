@@ -749,7 +749,7 @@ nsNntpService::SetUpNntpUrlForPosting(nsINntpUrl *nntpUrl, const char *newsgroup
 
   nsCAutoString host;
 
-  // newsgroupsNames can be a comma seperated list of these:
+  // newsgroupsNames can be a comma separated list of these:
   // news://host/group
   // news://group
   // host/group
@@ -862,7 +862,7 @@ nsNntpService::GenerateNewsHeaderValsForPosting(const char *newsgroupsList, char
   NS_ENSURE_ARG_POINTER(newshostHeaderVal);
   NS_ENSURE_ARG_POINTER(*newsgroupsList);
 
-  // newsgroupsList can be a comma seperated list of these:
+  // newsgroupsList can be a comma separated list of these:
   // news://host/group
   // news://group
   // host/group

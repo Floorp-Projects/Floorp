@@ -73,7 +73,7 @@ interface nsIPrefMigration: nsISupports
   void GetError();	
 
   /**
-   * this should be in a seperate interface
+   * this should be in a separate interface
    **/
 
   void WindowCloseCallback();  

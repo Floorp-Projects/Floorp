@@ -1348,7 +1348,7 @@ NS_IMETHODIMP nsAddressBook::ExportAddressBook(nsIAbDirectory *aDirectory)
     if (extension.Equals(CSV_FILE_EXTENSION))
       rv = ExportDirectoryToDelimitedText(aDirectory, CSV_DELIM, CSV_DELIM_LEN, localFile);
     else if (extension.Equals(TAB_FILE_EXTENSION) || extension.Equals(TXT_FILE_EXTENSION)) {
-      // .tab and .txt are both tab seperated
+      // .tab and .txt are both tab separated
       rv = ExportDirectoryToDelimitedText(aDirectory, TAB_DELIM, TAB_DELIM_LEN, localFile);
     }
     else {
@@ -1500,7 +1500,7 @@ nsAddressBook::ExportDirectoryToDelimitedText(nsIAbDirectory *aDirectory, const 
             }
           }
 
-          // write out the linebreak that seperates the cards
+          // write out the linebreak that separates the cards
           rv = outputStream->Write(MSG_LINEBREAK, MSG_LINEBREAK_LEN, &writeCount);
           NS_ENSURE_SUCCESS(rv,rv);
           if (MSG_LINEBREAK_LEN != writeCount)
@@ -1618,7 +1618,7 @@ nsAddressBook::ExportDirectoryToLDIF(nsIAbDirectory *aDirectory, nsILocalFile *a
             }
           }
         
-          // write out the linebreak that seperates the cards
+          // write out the linebreak that separates the cards
           rv = outputStream->Write(LDIF_LINEBREAK, LDIF_LINEBREAK_LEN, &writeCount);
           NS_ENSURE_SUCCESS(rv,rv);
           if (LDIF_LINEBREAK_LEN != writeCount)

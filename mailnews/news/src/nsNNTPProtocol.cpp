@@ -1403,7 +1403,7 @@ nsNNTPProtocol::ParseURL(nsIURI * aURL, char ** aGroup, char ** aMessageID,
 
     /* At this point, the search data is attached to `message_id' (if there
 	 is one) or `group' (if there is one) or `host_and_port' (otherwise.)
-	 Seperate the search data from what it is clinging to, being careful
+        Separate the search data from what it is clinging to, being careful
 	 to interpret the "?" only if it comes after the "@" in an ID, since
 	 the syntax of message IDs is tricky.  (There may be a ? in the
 	 random-characters part of the ID (before @), but not in the host part

@@ -76,7 +76,7 @@ interface nsIMsgHeaderParser : nsISupports {
                              out string addresses, out PRUint32 numAddresses);
 
   /* Given a string which contains a list of Header addresses, returns a
-     comma-seperated list of just the `mailbox' portions.
+     comma-separated list of just the `mailbox' portions.
 
      The caller may pass nsnull for charset and it will be interpreted as "us-ascii".
 
@@ -86,7 +86,7 @@ interface nsIMsgHeaderParser : nsISupports {
 
 
   /* Given a string which contains a list of Header addresses, returns a
-     comma-seperated list of just the `user name' portions.  If any of
+     comma-separated list of just the `user name' portions.  If any of
      the addresses doesn't have a name, then the mailbox is used instead.
 
      The caller may pass nsnull for charset and it will be interpreted as "us-ascii".

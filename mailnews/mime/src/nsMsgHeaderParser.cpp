@@ -975,7 +975,7 @@ msg_quote_phrase_or_addr(char *address, PRInt32 length, PRBool addr_p)
                  || *in == '<' || *in == '>' || *in == '@' || *in == ',') 
             /* If the name contains control chars or Header specials, it needs to
              * be enclosed in quotes.  Double-quotes and backslashes will be dealt
-             * with seperately.
+             * with separately.
              *
              * The ":" character is explicitly not in this list, though Header says
              * it should be quoted, because that has been seen to break VMS
@@ -1186,7 +1186,7 @@ msg_unquote_phrase_or_addr(const char *line, PRBool preserveIntegrity, char **li
 /* msg_extract_Header_address_mailboxes
  *
  * Given a string which contains a list of Header addresses, returns a
- * comma-seperated list of just the `mailbox' portions.
+ * comma-separated list of just the `mailbox' portions.
  */
 static char *
 msg_extract_Header_address_mailboxes(const char *line)
@@ -1236,7 +1236,7 @@ msg_extract_Header_address_mailboxes(const char *line)
 /* msg_extract_Header_address_names
  *
  * Given a string which contains a list of Header addresses, returns a
- * comma-seperated list of just the `user name' portions.  If any of
+ * comma-separated list of just the `user name' portions.  If any of
  * the addresses doesn't have a name, then the mailbox is used instead.
  *
  * The names are *unquoted* and therefore cannot be re-parsed in any way.

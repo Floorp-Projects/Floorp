@@ -57,7 +57,7 @@ class nsISupports;
 
 #if (defined(DEBUG) || defined(FORCE_BUILD_REFCNT_LOGGING))
 // Make refcnt logging part of the build. This doesn't mean that
-// actual logging will occur (that requires a seperate enable; see
+// actual logging will occur (that requires a separate enable; see
 // nsTraceRefcnt.h for more information).
 #define NS_BUILD_REFCNT_LOGGING 1
 #endif

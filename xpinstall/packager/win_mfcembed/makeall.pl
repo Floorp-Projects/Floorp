@@ -60,7 +60,7 @@ print "  Raw version id   : $inDefaultProductVersion\n";
 # $inDefaultProductVersion has the form maj.min.release.bld where maj, min, release
 #   and bld are numerics representing version information.
 # Other variables need to use parts of the version info also so we'll
-#   split out the dot seperated values into the array @versionParts
+#   split out the dot separated values into the array @versionParts
 #   such that:
 #
 #   $versionParts[0] = maj

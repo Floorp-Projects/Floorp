@@ -2664,7 +2664,7 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
         switch(m_pop3ConData->next_state)
         {
         case POP3_READ_PASSWORD:
-            /* This is a seperate state so that we're waiting for the
+            /* This is a separate state so that we're waiting for the
                user to type in a password while we don't actually have
                a connection to the pop server open; this saves us from
                having to worry about the server timing out on us while

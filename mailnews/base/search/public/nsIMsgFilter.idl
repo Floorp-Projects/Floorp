@@ -100,7 +100,7 @@ interface nsIMsgFilter : nsISupports {
 
     attribute nsIMsgSearchScopeTerm scope;
 
-    // marking noscript because "headers" is actually a null-seperated
+    // marking noscript because "headers" is actually a null-separated
     // list of headers, which is not scriptable
     [noscript] void MatchHdr(in nsIMsgDBHdr msgHdr, in nsIMsgFolder folder,
                   in nsIMsgDatabase db,

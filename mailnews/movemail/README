@@ -24,7 +24,7 @@ of the product)
 
 It's actually probably simpler than your description - we've done a fairly good job at keeping
 the idea of POP (as a protocol for retrieving remote mail) and Local Mail (as a way of storing
-mail messages locally) as seperate entities, though there is still work to be done to seperate
+mail messages locally) as separate entities, though there is still work to be done to separate
 the two. Both implementations reside in mozilla/mailnews/local though.
 
 the movemail implementation could leverage the Local Mail work, performing the same function as

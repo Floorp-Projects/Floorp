@@ -518,7 +518,7 @@ function GetSelectedAddresses()
   return GetAddressesForCards(selectedCards);
 }
 
-// Generate a comma seperate list of addresses from a given
+// Generate a comma separated list of addresses from a given
 // set of cards.
 function GetAddressesForCards(cards)
 {

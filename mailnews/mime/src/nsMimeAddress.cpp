@@ -63,7 +63,7 @@ ParseRFC822Addresses (const char *line,
 }
 
 /* Given a string which contains a list of RFC822 addresses, returns a
-   comma-seperated list of just the `mailbox' portions.
+   comma-separated list of just the `mailbox' portions.
  */
 char *
 ExtractRFC822AddressMailboxes (const char *line)
@@ -80,7 +80,7 @@ ExtractRFC822AddressMailboxes (const char *line)
 
 
 /* Given a string which contains a list of RFC822 addresses, returns a
-   comma-seperated list of just the `user name' portions.  If any of
+   comma-separated list of just the `user name' portions.  If any of
    the addresses doesn't have a name, then the mailbox is used instead.
 
    The names are *unquoted* and therefore cannot be re-parsed in any way.

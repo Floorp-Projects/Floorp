@@ -711,7 +711,7 @@ nsPlainTextSerializer::DoOpenContainer(const nsIParserNode* aNode, PRInt32 aTag)
     // We must make sure that the content of two table cells get a
     // space between them.
 
-    // To make the seperation between cells most obvious and
+    // To make the separation between cells most obvious and
     // importable, we use a TAB.
     if (GetLastBool(mHasWrittenCellsForRow)) {
       // Bypass |Write| so that the TAB isn't compressed away.

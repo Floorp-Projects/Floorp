@@ -38,7 +38,7 @@
 
 
 /*
- *  npapi.h $Revision: 3.28 $
+ *  npapi.h $Revision: 3.29 $
  *  Netscape client plug-in API spec
  */
 
@@ -125,7 +125,7 @@
 
 /* The OS/2 version of Netscape uses RC_DATA to define the
    mime types, file extentions, etc that are required.
-   Use a vertical bar to seperate types, end types with \0.
+   Use a vertical bar to separate types, end types with \0.
    FileVersion and ProductVersion are 32bit ints, all other
    entries are strings the MUST be terminated wwith a \0.
 

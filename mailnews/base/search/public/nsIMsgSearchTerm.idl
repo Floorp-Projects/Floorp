@@ -75,7 +75,7 @@ interface nsIMsgSearchTerm : nsISupports {
                       in nsIMsgDBHdr msg,
                       in nsIMsgDatabase db);
 
-    // marking noscript because headers is a null-seperated list of strings,
+    // marking noscript because headers is a null-separated list of strings,
     // which is not scriptable
     [noscript]
     boolean matchArbitraryHeader(in nsIMsgSearchScopeTerm scopeTerm,

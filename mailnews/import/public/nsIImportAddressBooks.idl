@@ -55,7 +55,7 @@
   1) The first UI
   panel will allow selection of the address book and will indicate to the user
   if the address book will be imported into an existing address book or new address
-  books.  (This could be 2 seperate xul UI's?).
+  books.  (This could be 2 separate xul UI's?).
   2) The second panel will show field mapping if it is required - if it is required then
   there will be one panel per address book for formats that support multiple
   address books.  If it is not required then there will be no second panel.

@@ -159,9 +159,9 @@ nsSOAPException::GetData(nsISupports * *aData)
   return NS_OK;
 }
 
-static NS_NAMED_LITERAL_STRING(kErrorSeperator1, ": ");
-static NS_NAMED_LITERAL_STRING(kErrorSeperator2, ", called by ");
-static NS_NAMED_LITERAL_STRING(kErrorSeperator3, ", caused by ");
+static NS_NAMED_LITERAL_STRING(kErrorSeparator1, ": ");
+static NS_NAMED_LITERAL_STRING(kErrorSeparator2, ", called by ");
+static NS_NAMED_LITERAL_STRING(kErrorSeparator3, ", caused by ");
 
 /* string toString (); */
 NS_IMETHODIMP 
@@ -170,13 +170,13 @@ nsSOAPException::ToString(char **_retval)
   NS_ENSURE_ARG_POINTER(_retval);
   nsAutoString s;
   s.Append(mName);
-  s.Append(kErrorSeperator1);
+  s.Append(kErrorSeparator1);
   s.Append(mMessage);
   if (mFrame) {
     char* str = nsnull;
     mFrame->ToString(&str);
     if (str) {
-      s.Append(kErrorSeperator2);
+      s.Append(kErrorSeparator2);
       nsAutoString i;
       CopyASCIItoUCS2(nsDependentCString(str),i);
       nsMemory::Free(str);
@@ -190,7 +190,7 @@ nsSOAPException::ToString(char **_retval)
       nsAutoString i;
       CopyASCIItoUCS2(nsDependentCString(str),i);
       nsMemory::Free(str);
-      s.Append(kErrorSeperator3);
+      s.Append(kErrorSeparator3);
       s.Append(i);
     }
   }

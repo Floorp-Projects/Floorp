@@ -5754,7 +5754,7 @@ nsHTMLEditor::SetCSSBackgroundColor(const nsAString& aColor)
           }
         }
         // first check the start parent of the range to see if it needs to 
-        // be seperately handled (it does if it's a text node, due to how the
+        // be separately handled (it does if it's a text node, due to how the
         // subtree iterator works - it will not have reported it).
         if (IsTextNode(startNode) && IsEditable(startNode))
         {
@@ -5798,7 +5798,7 @@ nsHTMLEditor::SetCSSBackgroundColor(const nsAString& aColor)
         arrayOfNodes.Clear();
         
         // last check the end parent of the range to see if it needs to 
-        // be seperately handled (it does if it's a text node, due to how the
+        // be separately handled (it does if it's a text node, due to how the
         // subtree iterator works - it will not have reported it).
         if (IsTextNode(endNode) && IsEditable(endNode))
         {

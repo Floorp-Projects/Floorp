@@ -3155,7 +3155,7 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
     mCachedAttrParamValues[mNumCachedAttrs-1] = ToNewUTF8String(data);
   }
 
-  // add our PARAM and null seperator
+  // add our PARAM and null separator
   mCachedAttrParamNames [mNumCachedAttrs] = ToNewUTF8String(NS_LITERAL_STRING("PARAM"));
   mCachedAttrParamValues[mNumCachedAttrs] = nsnull;
 

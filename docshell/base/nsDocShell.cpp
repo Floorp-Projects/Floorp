@@ -3816,7 +3816,7 @@ nsDocShell::SetupRefreshURIFromHeader(nsIURI * aBaseURI,
     //  Refresh immediately using URI as the destination.
     // 
     // Currently, anything immediately following the URI, if
-    // seperated by any char in the set "'\"\t\r\n " will be
+    // separated by any char in the set "'\"\t\r\n " will be
     // ignored. So "10; url=go.html ; foo=bar" will work,
     // and so will "10; url='go.html'; foo=bar". However,
     // "10; url=go.html; foo=bar" will result in the uri

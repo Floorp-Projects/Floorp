@@ -744,7 +744,7 @@ NS_IMETHODIMP nsWindowsHooks::IsOptionEnabled(const char* option, PRBool *_retva
   *                   passed to the executable in the (appname) Quick Launch registry key
   *
   * Description:
-  *     This function seperates out the arguments from the optinline string
+  *     This function separates out the arguments from the optinline string
   *     Returning a pointer into the first arguments buffer.
   *     This function is used only locally, and is meant to reduce code size and readability.
   *

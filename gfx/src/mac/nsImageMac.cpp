@@ -1031,7 +1031,7 @@ nsImageMac::ConvertToIcon(  const nsRect& aSrcRegion,
     'XXX#' resources (icm#, ics#, ICN# or ich#) contain a 1 bit icon of the 
     indicated
     size, followed immediate by a 1 bit mask of the same size. 
-    That's how it works, you can't have the mask seperately.
+    That's how it works, you can't have the mask separately.
     This mask is used for all icons of that size in a suite or family.
     
     So if you want to use a 256 colour 32x32 icon you will typically call

@@ -434,7 +434,7 @@ NS_IMETHODIMP nsAppShell::ListenToEventQueue(nsIEventQueue *aQueue,
                                 (XtPointer)mEventQueue);
 
 /* This hack would not be neccesary if we would have a hashtable function
- * which returns success/failure in a seperate var ...
+ * which returns success/failure in a separate var ...
  */
 #define NEVER_BE_ZERO_MAGIC (54321) 
       tag += NEVER_BE_ZERO_MAGIC; /* be sure that |tag| is _never_ 0 */

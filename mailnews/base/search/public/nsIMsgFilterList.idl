@@ -100,7 +100,7 @@ interface nsIMsgFilterList : nsISupports {
     void saveToDefaultFile();
     
 
-    // marking noscript because headers is a null-seperated list
+    // marking noscript because headers is a null-separated list
     // of strings, which is not scriptable
     [noscript]
     void applyFiltersToHdr(in nsMsgFilterTypeType filterType,

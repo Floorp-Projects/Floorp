@@ -207,7 +207,7 @@ NS_IMETHODIMP nsHTMLEditor::SetInlineProperty(nsIAtom *aProperty,
           }
         }
         // first check the start parent of the range to see if it needs to 
-        // be seperately handled (it does if it's a text node, due to how the
+        // be separately handled (it does if it's a text node, due to how the
         // subtree iterator works - it will not have reported it).
         if (IsTextNode(startNode) && IsEditable(startNode))
         {
@@ -232,7 +232,7 @@ NS_IMETHODIMP nsHTMLEditor::SetInlineProperty(nsIAtom *aProperty,
         arrayOfNodes.Clear();
         
         // last check the end parent of the range to see if it needs to 
-        // be seperately handled (it does if it's a text node, due to how the
+        // be separately handled (it does if it's a text node, due to how the
         // subtree iterator works - it will not have reported it).
         if (IsTextNode(endNode) && IsEditable(endNode))
         {
@@ -1518,7 +1518,7 @@ nsHTMLEditor::RelativeFontChange( PRInt32 aSizeChange)
         arrayOfNodes.Clear();
       }
       // now check the start and end parents of the range to see if they need to 
-      // be seperately handled (they do if they are text nodes, due to how the
+      // be separately handled (they do if they are text nodes, due to how the
       // subtree iterator works - it will not have reported them).
       if (IsTextNode(startNode) && IsEditable(startNode))
       {

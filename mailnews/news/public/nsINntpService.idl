@@ -52,11 +52,11 @@ interface nsICacheSession;
 [scriptable, uuid(4C9F90E0-E19B-11d2-806E-006008128C4E)]
 interface nsINntpService : nsISupports {
   
-  /* newsgroupsList is a comma seperated list of newsgroups, which may be
+  /* newsgroupsList is a comma separated list of newsgroups, which may be
    * in news://host/group or group form
    * "news://host/group1,news://host/group2" or "group1,group2"
    *
-   * newsgroupsHeaderVal is a comma seperated list of groups in the group form
+   * newsgroupsHeaderVal is a comma separated list of groups in the group form
    * "group1,group2"
    *
    * newshostHeaderVal is a single hostname.
