@@ -800,7 +800,7 @@ nsContentAreaDragDrop::CreateTransferable(const nsAString & inURLString, const n
   nsCOMPtr<nsISupportsWString> textPrimitive(do_CreateInstance("@mozilla.org/supports-wstring;1"));
   if ( !textPrimitive )
     return NS_ERROR_FAILURE;
-  textPrimitive->SetData(inIsAnchor ? PromiseFlatString(inURLString).get() : PromiseFlatString(inTitleString).get());
+  textPrimitive->SetData(PromiseFlatString(inIsAnchor ? inURLString : inTitleString).get());
   trans->SetTransferData(kUnicodeMime, textPrimitive, (inIsAnchor ? inURLString.Length() : inTitleString.Length()) * 2);
   
   *outTrans = trans;
