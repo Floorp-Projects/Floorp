@@ -180,8 +180,34 @@ XFormsFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
       //   its index.
       if (!requireParams(1, 1, aContext))
           return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
-   
-      return NS_ERROR_NOT_IMPLEMENTED;
+
+      nsAutoString indexId;
+      evaluateToString((Expr*)iter.next(), aContext, indexId);
+
+      // here document is the XForms document
+      nsCOMPtr<nsIDOMDocument> document;
+      rv = mResolverNode->GetOwnerDocument(getter_AddRefs(document)); 
+      NS_ENSURE_SUCCESS(rv, rv);
+      NS_ENSURE_TRUE(document, NS_ERROR_NULL_POINTER);
+
+      // indexId should be the id of a nsIXFormsRepeatElement
+      nsCOMPtr<nsIDOMElement> repeatEle;
+      rv = document->GetElementById(indexId, getter_AddRefs(repeatEle)); 
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      // now get the index value from the xforms:repeat.  Need to use the
+      //   service to do this work so that we don't have dependencies in
+      //   transformiix on XForms.
+      nsCOMPtr<nsIXFormsUtilityService>xformsService = 
+            do_GetService("@mozilla.org/xforms-utility-service;1", &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      PRUint32 index;
+      rv = xformsService->GetRepeatIndex(repeatEle, &index);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      return aContext->recycler()->getNumberResult(index, aResult);
+
     }
     case INSTANCE:
     {

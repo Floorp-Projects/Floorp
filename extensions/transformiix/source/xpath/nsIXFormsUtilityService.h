@@ -65,7 +65,8 @@ class nsIXFormsModelElement; /* forward declaration */
   NS_IMETHOD GetModelFromNode(nsIDOMNode *node, nsIDOMNode **_retval); \
   NS_IMETHOD IsNodeAssocWithModel(nsIDOMNode *aNode, nsIDOMNode *aModel, PRBool *_retval); \
   NS_IMETHOD GetInstanceDocumentRoot(const nsAString & aID, nsIDOMNode *aModelNode, nsIDOMNode **_retval); \
-  NS_IMETHOD ValidateString(const nsAString & aValue, const nsAString & aType, const nsAString & aNamespace, PRBool *_retval); 
+  NS_IMETHOD ValidateString(const nsAString & aValue, const nsAString & aType, const nsAString & aNamespace, PRBool *_retval); \
+  NS_IMETHOD GetRepeatIndex(nsIDOMNode *aRepeat, PRUint32 *aIndex);
 
 /**
  * Private interface implemented by the nsXFormsUtilityService in XForms extension.
@@ -115,6 +116,12 @@ class NS_NO_VTABLE nsIXFormsUtilityService : public nsISupports {
    */
   /* boolean validateString (in AString aValue, in AString aType, in AString aNamespace); */
   NS_IMETHOD ValidateString(const nsAString & aValue, const nsAString & aType, const nsAString & aNamespace, PRBool *_retval) = 0;
+
+  /**
+   * Function to retrieve the index from the given repeat element.
+   */
+  /* unsigned long getRepeatIndex (in nsIDOMNode aRepeat); */
+  NS_IMETHOD GetRepeatIndex(nsIDOMNode *aRepeat, PRUint32 *aIndex) = 0;
 
 };
 

@@ -46,6 +46,7 @@
 #include "nsIXFormsModelElement.h"
 #include "nsIDOMNodeList.h"
 #include "nsIInstanceElementPrivate.h"
+#include "nsIXFormsRepeatElement.h"
 
 NS_IMPL_ISUPPORTS1(nsXFormsUtilityService, nsIXFormsUtilityService)
 
@@ -222,4 +223,16 @@ nsXFormsUtilityService::ValidateString(const nsAString & aValue,
 #endif
 
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsXFormsUtilityService::GetRepeatIndex(nsIDOMNode *aRepeat, PRUint32 *aIndex)
+{
+  NS_ASSERTION(aIndex, "no return buffer for index, we'll crash soon");
+  *aIndex = 0;
+
+  nsCOMPtr<nsIXFormsRepeatElement> repeatEle = do_QueryInterface(aRepeat);
+  NS_ENSURE_TRUE(repeatEle, NS_ERROR_NULL_POINTER);
+
+  return repeatEle->GetIndex(aIndex);
 }
