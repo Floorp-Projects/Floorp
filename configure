@@ -2810,11 +2810,11 @@ case "$target" in
 
 *-hpux*)
     DLL_SUFFIX="sl"
+    DSO_PIC_CFLAGS="+Z"
     if test "$GNU_CC"; then
 	DSO_LDOPTS="$DSO_LDOPTS -Wl,-E"
     else
 	DSO_CFLAGS=""
-	DSO_PIC_CFLAGS="+Z"
 	DSO_LDOPTS='-b -E -L$(DIST)/bin'
     fi
     cat >> confdefs.h <<\EOF
