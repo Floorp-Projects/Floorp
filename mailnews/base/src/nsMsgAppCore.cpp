@@ -449,6 +449,9 @@ NS_NewMsgAppCore(const nsIID &aIID, void **aResult)
 NS_IMETHODIMP    
 nsMsgAppCore::SetWindow(nsIDOMWindow* aWin)
 {
+	if(!aWin)
+		return NS_ERROR_NULL_POINTER;
+
   nsAutoString  webShellName("browser.webwindow");
   mWindow = aWin;
   NS_ADDREF(aWin);
@@ -562,6 +565,10 @@ NS_IMETHODIMP
 nsMsgAppCore::DeleteMessages(nsIDOMXULTreeElement *tree, nsIDOMXULElement *srcFolderElement, nsIDOMNodeList *nodeList)
 {
 	nsresult rv;
+
+	if(!tree || !srcFolderElement || !nodeList)
+		return NS_ERROR_NULL_POINTER;
+
 	nsCOMPtr<nsIRDFCompositeDataSource> database;
 	nsCOMPtr<nsISupportsArray> resourceArray, folderArray;
 	nsCOMPtr<nsIRDFResource> resource;
@@ -596,6 +603,10 @@ NS_IMETHODIMP nsMsgAppCore::DeleteFolders(nsIRDFCompositeDataSource *db, nsIDOMX
 							nsIDOMXULElement *folderElement)
 {
 	nsresult rv;
+
+	if(!db || !parentFolderElement || !folderElement)
+		return NS_ERROR_NULL_POINTER;
+
 	nsCOMPtr<nsISupportsArray> parentArray, deletedArray;
 	nsCOMPtr<nsIRDFResource> parentResource, deletedFolderResource;
 
@@ -636,6 +647,10 @@ nsMsgAppCore::CopyMessages(nsIDOMXULElement *srcFolderElement, nsIDOMXULElement 
 						   nsIDOMNodeList *nodeList, PRBool isMove)
 {
 	nsresult rv;
+
+	if(!srcFolderElement || !dstFolderElement || !nodeList)
+		return NS_ERROR_NULL_POINTER;
+
 	nsIRDFResource *srcResource, *dstResource;
 	nsICopyMessageListener *dstFolder;
 	nsIMsgFolder *srcFolder;
@@ -695,6 +710,9 @@ nsMsgAppCore::GetRDFResourceForMessage(nsIDOMXULTreeElement *tree,
                                        **aSupport) 
 {
       nsresult rv;
+	  if(!tree || !nodeList)
+		  return NS_ERROR_NULL_POINTER;
+
       nsISupportsArray *resourceArray;
     nsIBidirectionalEnumerator *aEnumerator = nsnull;
     *aSupport = nsnull;
@@ -788,6 +806,10 @@ NS_IMETHODIMP
 nsMsgAppCore::MarkMessagesRead(nsIRDFCompositeDataSource *database, nsIDOMNodeList *messages, PRBool markRead)
 {
 	nsresult rv;
+
+	if(!database || !messages)
+		return NS_ERROR_NULL_POINTER;
+
 	nsCOMPtr<nsISupportsArray> resourceArray, argumentArray;
 
 
