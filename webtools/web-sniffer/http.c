@@ -354,7 +354,7 @@ httpGetObject(HTTP *http, App *app, int sock, URL *url, unsigned char **headers)
 		len += countOrCopy(&p, "\n");
 		if (!buf)
 		{
-			buf = malloc(len);
+			buf = malloc(len + 1);
 			if (!buf)
 			{
 				return;
