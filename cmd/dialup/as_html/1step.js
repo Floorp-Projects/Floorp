@@ -132,7 +132,7 @@ function configureDialer( configFolder, acctSetupIni, regFile )
 	{
 		plugin.DialerHangup();
 		// XXX hardcode in name of next screen???
-		window.location.replace( "error.htm" );							
+		window.location.replace( "error2.htm" );							
 		return;
 	}
 }
@@ -231,7 +231,7 @@ function loadData()
 		if ( result == true )
 			window.location.replace( "compwrap.htm" );
 		else
-			window.location.replace( "error.htm" );
+			window.location.replace( "error2.htm" );
 	}
 }
 
