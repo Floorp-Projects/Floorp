@@ -689,6 +689,7 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
           }
         }
       }
+      NS_RELEASE(option);
     }
   }
 
