@@ -34,7 +34,7 @@
 /*
  * Moved from secpkcs7.c
  *
- * $Id: crl.c,v 1.23 2002/09/11 00:28:22 jpierre%netscape.com Exp $
+ * $Id: crl.c,v 1.24 2002/09/11 01:08:06 jpierre%netscape.com Exp $
  */
  
 #include "cert.h"
@@ -972,6 +972,16 @@ SECStatus DPCache_Destroy(CRLDPCache* cache)
     {
         CERT_DestroyCertificate(cache->issuer);
     }
+    /* free the subject */
+    if (cache->subject)
+    {
+        SECITEM_FreeItem(cache->subject, PR_TRUE);
+    }
+    /* free the distribution points */
+    if (cache->distributionPoint)
+    {
+        SECITEM_FreeItem(cache->distributionPoint, PR_TRUE);
+    }
     return SECSuccess;
 }
 
@@ -982,22 +992,24 @@ SECStatus IssuerCache_Destroy(CRLIssuerCache* cache)
     {
         return SECFailure;
     }
-    if (!--cache->refcount)
-    {
 #if 0
-        /* XCRL */
-        if (cache->lock)
-        {
-            NSSRWLock_Destroy(cache->lock);
-        }
-        if (cache->issuer)
-        {
-            CERT_DestroyCertificate(cache->issuer);
-        }
-#endif
-        DPCache_Destroy(&cache->dp);
-        PR_Free(cache);
+    /* XCRL */
+    if (cache->lock)
+    {
+        NSSRWLock_Destroy(cache->lock);
     }
+    if (cache->issuer)
+    {
+        CERT_DestroyCertificate(cache->issuer);
+    }
+#endif
+    /* free the subject */
+    if (cache->subject)
+    {
+        SECITEM_FreeItem(cache->subject, PR_TRUE);
+    }
+    DPCache_Destroy(&cache->dp);
+    PR_Free(cache);
     return SECSuccess;
 }
 
@@ -1537,7 +1549,6 @@ SECStatus IssuerCache_Create(CRLIssuerCache** returned,
         return SECFailure;
     }
     memset(cache, 0, sizeof(CRLIssuerCache));
-    cache->refcount = 0;
     cache->subject = SECITEM_DupItem(subject);
 #if 0
     /* XCRL */
