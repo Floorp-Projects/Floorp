@@ -57,6 +57,7 @@ class nsIBinaryInputStream;
 class nsIBinaryOutputStream;
 class nsIIDNService;
 class nsICharsetConverterManager;
+class nsIPrefBranch;
 
 //-----------------------------------------------------------------------------
 // standard URL implementation
@@ -214,6 +215,8 @@ private:
     // fastload helper functions
     nsresult ReadSegment(nsIBinaryInputStream *, URLSegment &);
     nsresult WriteSegment(nsIBinaryOutputStream *, const URLSegment &);
+
+    static void PrefsChanged(nsIPrefBranch *prefs, const char *pref);
 
     // mSpec contains the normalized version of the URL spec (UTF-8 encoded).
     nsCString mSpec;
