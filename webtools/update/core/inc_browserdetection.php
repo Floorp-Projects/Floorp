@@ -118,7 +118,7 @@ if (!$application) {$application = $moz_array[0];}
 if (!$app_version) {$app_version = $moz_array[1];}
 
 //If the applicatin is user-defined and not the same as what was detected, ignore the detected version and use the user-defined.
-if ($_GET["application"] and $_GET[application] !==$moz_array[0]) {$app_version = $_GET["version"]; }
+if ($_GET["application"] and $_GET["application"] !==$moz_array[0]) {$app_version = escape_string($_GET["version"]); }
 
 
 } else {
