@@ -121,12 +121,6 @@ if (Param("useqacontact")) {
     }
 }
 
-# If we're using bug groups, we need to include the groupset in the list of
-# fields.  -JMR, 2/18/00
-if(Param("usebuggroups")) {
-  push(@bug_fields, "groupset");
-}
-
 if (exists $::FORM{'bug_status'}) {
     if (!UserInGroup("canedit") && !UserInGroup("canconfirm")) {
         delete $::FORM{'bug_status'};

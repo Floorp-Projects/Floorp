@@ -946,6 +946,9 @@ sub GetCommandMenu {
         if (UserInGroup("editkeywords")) {
             $html .= ", <a href=editkeywords.cgi>keywords</a>";
         }
+        if (UserInGroup("creategroups") && Param("usebuggroups")) {
+            $html .= ", <a href=editgroups.cgi>groups</a>";
+        }
         $html .= " | <NOBR><a href=relogin.cgi>Log out</a> $::COOKIE{'Bugzilla_login'}</NOBR>";
     } else {
         $html .=
