@@ -28,10 +28,10 @@ XPIDLSRCS = \
 			.\nsIPop3Sink.idl			\
 			.\nsIPop3URL.idl			\
 			.\nsIMailboxUrl.idl			\
+			.\nsIMsgParseMailMsgState.idl	\
 			$(NULL)
 
 EXPORTS =								\
-			nsIMsgParseMailMsgState.h	\
 			$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
