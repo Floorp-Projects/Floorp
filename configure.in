@@ -4334,6 +4334,9 @@ if test "$MOZ_SVG"; then
     msvc*|mksnt*|cygwin*|mingw*)
         MOZ_LIBART_LIBS='$(DIST)/lib/$(LIB_PREFIX)moz_art_lgpl.$(LIB_SUFFIX)' 
         ;;
+    beos*)
+        MOZ_LIBART_LIBS='-lmoz_art_lgpl -lroot -lbe'
+        ;;
     *)
         MOZ_LIBART_LIBS='-lmoz_art_lgpl -lm'
         ;;
