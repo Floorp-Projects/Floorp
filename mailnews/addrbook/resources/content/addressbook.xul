@@ -26,6 +26,7 @@ Contributor(s):
 
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/tasksOverlay.xul"?>
+<?xul-overlay href="chrome://communicator/content/contentAreaContextOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/sidebar/sidebarOverlay.xul"?>
 <?xul-overlay href="chrome://messenger/content/addressbook/abDirTreeOverlay.xul"?>
 <?xul-overlay href="chrome://messenger/content/addressbook/abResultsPaneOverlay.xul"?>
