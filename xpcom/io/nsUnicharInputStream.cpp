@@ -138,18 +138,14 @@ NS_NewB2UConverter(nsIUnicodeDecoder** aInstancePtrResult,
 
   // Create converter
   nsresult res;
-  nsICharsetConverterManager * ccm;
   nsAutoString defaultCharset("ISO-8859-1");
 
   if (aCharSet == nsnull) aCharSet = &defaultCharset;
-  res = nsServiceManager::GetService(kCharsetConverterManagerCID,
-      nsCOMTypeInfo<nsICharsetConverterManager>::GetIID(), (nsISupports**)&ccm);
+
+  NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &res);
   if (NS_FAILED(res)) return res;
 
-  res = ccm->GetUnicodeDecoder(aCharSet, aInstancePtrResult);
-  nsServiceManager::ReleaseService(kCharsetConverterManagerCID, ccm);
-
-  return res;
+  return ccm->GetUnicodeDecoder(aCharSet, aInstancePtrResult);
 }
 
 //----------------------------------------------------------------------
