@@ -55,6 +55,8 @@ CVSCO = cvs -q co -P -D "$(MOZ_DATE)"
 CVSCO = cvs -q co -P
 !endif
 
+CVSCO_TAG = cvs -q co -P
+
 # Branch tags we use
 
 IMGLIB_BRANCH =
@@ -178,7 +180,7 @@ pull_lizard:
 	$(CVSCO_LIZARD) $(MOZ_TOP)/lib/liblayer
 	$(CVSCO_LIZARD) $(MOZ_TOP)/modules/zlib
 	$(CVSCO_LIZARD) $(MOZ_TOP)/modules/libutil
-	$(CVSCO_LIZARD) -rNSPRPUB_RELEASE_3_0 $(MOZ_TOP)/nsprpub
+	$(CVSCO_TAG) -r NSPRPUB_RELEASE_3_0 $(MOZ_TOP)/nsprpub
 	$(CVSCO_LIZARD) $(MOZ_TOP)/sun-java
 	$(CVSCO_LIZARD) $(MOZ_TOP)/nav-java
 	$(CVSCO_LIZARD) $(MOZ_TOP)/js
