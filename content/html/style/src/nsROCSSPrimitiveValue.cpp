@@ -27,7 +27,7 @@
 
 
 nsROCSSPrimitiveValue::nsROCSSPrimitiveValue(nsISupports *aOwner, float aT2P)
-  : mType(0), mTwips(0), mString(), mOwner(aOwner), mT2P(aT2P)
+  : mType(0), mTwips(0), mString(), mOwner(aOwner), mT2P(aT2P), mScriptObject(nsnull)
 {
   NS_INIT_REFCNT();
 }
