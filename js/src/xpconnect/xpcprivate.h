@@ -166,8 +166,8 @@ public:
 
     static nsXPCWrappedJSClass* GetNewOrUsedClass(XPCContext* xpcc,
                                                   REFNSIID aIID);
-    REFNSIID GetIID(){return mIID;}
-    XPCContext*  GetXPCContext() {return mXPCContext;}
+    REFNSIID GetIID() const {return mIID;}
+    XPCContext*  GetXPCContext() const {return mXPCContext;}
     nsIInterfaceInfo* GetInterfaceInfo() const {return mInfo;}
 
     static JSBool InitForContext(XPCContext* xpcc);
@@ -188,7 +188,7 @@ private:
     nsXPCWrappedJSClass(XPCContext* xpcc, REFNSIID aIID,
                         nsIInterfaceInfo* aInfo);
 
-    JSContext* GetJSContext() {return mXPCContext->GetJSContext();}
+    JSContext* GetJSContext() const {return mXPCContext->GetJSContext();}
     JSObject*  CreateIIDJSObject(REFNSIID aIID);
     JSObject*  NewOutObject();
 
@@ -220,10 +220,10 @@ public:
                                                JSObject* aJSObj,
                                                REFNSIID aIID);
 
-    JSObject* GetJSObject() {return mJSObj;}
-    nsXPCWrappedJSClass*  GetClass() {return mClass;}
-    REFNSIID GetIID() {return GetClass()->GetIID();}
-    nsXPCWrappedJS* GetRootWrapper() {return mRoot;}
+    JSObject* GetJSObject() const {return mJSObj;}
+    nsXPCWrappedJSClass*  GetClass() const {return mClass;}
+    REFNSIID GetIID() const {return GetClass()->GetIID();}
+    nsXPCWrappedJS* GetRootWrapper() const {return mRoot;}
     void DebugDump(int depth);
 
     virtual ~nsXPCWrappedJS();
@@ -255,7 +255,7 @@ public:
     nsXPCWrappedJSMethods(nsXPCWrappedJS* aWrapper);
     virtual ~nsXPCWrappedJSMethods();
     // used in nsXPCWrappedJS::DebugDump
-    int GetRefCnt() {return mRefCnt;}
+    int GetRefCnt() const {return mRefCnt;}
 
 private:
     nsXPCWrappedJSMethods();  // not implemented
@@ -285,6 +285,9 @@ public:
     jsid            id;  /* hashed name for quick JS property lookup */
     uintN           index; /* in InterfaceInfo for const, method, and get */
     uintN           index2; /* in InterfaceInfo for set */
+private:
+    uint16          flags;
+public:
 
     JSBool IsConstant() const  {return (flags & NMD_CAT_MASK) == NMD_CONSTANT;}
     JSBool IsMethod() const    {return (flags & NMD_CAT_MASK) == NMD_METHOD;}
@@ -298,8 +301,6 @@ public:
     void SetWritableAttribute() {flags=(flags&~NMD_CAT_MASK)|NMD_ATTRIB_RW;}
 
     XPCNativeMemberDescriptor();
-private:
-    uint16          flags;
 };
 
 /*************************/
@@ -331,8 +332,8 @@ public:
     const char* GetInterfaceName();
     nsIInterfaceInfo* GetInterfaceInfo() const {return mInfo;}
     XPCContext*  GetXPCContext() const {return mXPCContext;}
-    JSContext* GetJSContext() {return mXPCContext->GetJSContext();}
-    nsIXPCScriptable* GetArbitraryScriptable()
+    JSContext* GetJSContext() const {return mXPCContext->GetJSContext();}
+    nsIXPCScriptable* GetArbitraryScriptable() const
         {return GetXPCContext()->GetXPConnect()->GetArbitraryScriptable();}
 
     static JSBool InitForContext(XPCContext* xpcc);
@@ -432,10 +433,10 @@ public:
     nsXPCWrappedNativeClass* GetClass() const {return mClass;}
     REFNSIID GetIID() const {return GetClass()->GetIID();}
 
-    nsIXPCScriptable* GetDynamicScriptable()
+    nsIXPCScriptable* GetDynamicScriptable() const
         {return mRoot->mDynamicScriptable;}
 
-    nsIXPCScriptable* GetArbitraryScriptable()
+    nsIXPCScriptable* GetArbitraryScriptable() const
         {return GetClass()->GetArbitraryScriptable();}
 
     void JSObjectFinalized();
@@ -466,7 +467,9 @@ public:
     // all the interface method declarations...
     NS_DECL_ISUPPORTS;
     XPC_DECLARE_IXPCSCRIPTABLE;
-    nsXPCArbitraryScriptable() {NS_INIT_REFCNT();NS_ADDREF_THIS();}
+
+public:
+    nsXPCArbitraryScriptable();
 };
 
 /***************************************************************************/

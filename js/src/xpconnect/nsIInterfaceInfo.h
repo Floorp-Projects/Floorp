@@ -21,11 +21,7 @@
 #ifndef nsIInterfaceInfo_h___
 #define nsIInterfaceInfo_h___
 
-#ifndef NS_DEFINE_STATIC_IID_ACCESSOR
-#define NS_DEFINE_STATIC_IID_ACCESSOR(the_iid) \
-  public: \
-  static const nsIID& IID() {static nsIID iid = the_iid; return iid;}
-#endif
+#include "nsISupports.h"
 
 // forward declaration of non-XPCOM types
 class nsXPTMethodInfo;
@@ -138,6 +134,7 @@ public:
                                   nsID**   p14,
                                   char**   p15,
                                   uint16** p16) = 0;
+    NS_IMETHOD MethodWithNative(int p1, void* p2) = 0;
 };
 
 /***************************************************************************/

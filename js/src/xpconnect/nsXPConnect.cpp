@@ -38,9 +38,9 @@ static NS_DEFINE_IID(kIAllocatorIID, NS_IALLOCATOR_IID);
 nsXPConnect*
 nsXPConnect::GetXPConnect()
 {
-    if(mSelf)
-        NS_ADDREF(mSelf);
-    else
+    // XXX This pattern causes us to retain an extra ref on the singleton.
+    // XXX Should the singleton nsXpConnect object *ever* be deleted?
+    if(!mSelf)
     {
         mSelf = new nsXPConnect();
         if(mSelf && (!mSelf->mContextMap ||
@@ -49,6 +49,8 @@ nsXPConnect::GetXPConnect()
                      !mSelf->mInterfaceInfoManager))
             NS_RELEASE(mSelf);
     }
+    if(mSelf)
+        NS_ADDREF(mSelf);
     return mSelf;
 }
 
@@ -154,7 +156,7 @@ nsXPConnect::InitJSContext(JSContext* aJSContext,
             return NS_OK;
         }
     }
-    NS_ASSERTION(0,"nsXPConnect::InitJSContext failed");
+    XPC_LOG_ERROR(("nsXPConnect::InitJSContext failed"));
     return NS_ERROR_FAILURE;
 }
 
@@ -187,6 +189,7 @@ nsXPConnect::InitJSContextWithNewWrappedGlobal(JSContext* aJSContext,
         mContextMap->Remove(xpcc);
         delete xpcc;
     }
+    XPC_LOG_ERROR(("nsXPConnect::InitJSContextWithNewWrappedGlobal failed"));
     *aWrapper = NULL;
     return NS_ERROR_FAILURE;
 }
@@ -206,6 +209,7 @@ nsXPConnect::NewContext(JSContext* cx, JSObject* global,
                                   NATIVE_CLASS_MAP_SIZE);
     if(doInit && xpcc && !xpcc->Init())
     {
+        XPC_LOG_ERROR(("nsXPConnect::NewContext failed"));
         delete xpcc;
         xpcc = NULL;
     }
@@ -224,20 +228,20 @@ nsXPConnect::WrapNative(JSContext* aJSContext,
     NS_PRECONDITION(aCOMObj,"bad param");
     NS_PRECONDITION(aWrapper,"bad param");
 
-    *aWrapper = NULL;
-
     XPCContext* xpcc = nsXPConnect::GetContext(aJSContext, this);
-    if(!xpcc)
-        return NS_ERROR_FAILURE;
-
-    nsXPCWrappedNative* wrapper =
-        nsXPCWrappedNative::GetNewOrUsedWrapper(xpcc, aCOMObj, aIID);
-
-    if(!wrapper)
-        return NS_ERROR_FAILURE;
-
-    *aWrapper = wrapper;
-    return NS_OK;
+    if(xpcc)
+    {
+        nsXPCWrappedNative* wrapper =
+            nsXPCWrappedNative::GetNewOrUsedWrapper(xpcc, aCOMObj, aIID);
+        if(wrapper)
+        {
+            *aWrapper = wrapper;
+            return NS_OK;
+        }        
+    }
+    XPC_LOG_ERROR(("nsXPConnect::WrapNative failed"));
+    *aWrapper = NULL;
+    return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -250,20 +254,21 @@ nsXPConnect::WrapJS(JSContext* aJSContext,
     NS_PRECONDITION(aJSObj,"bad param");
     NS_PRECONDITION(aWrapper,"bad param");
 
-    *aWrapper = NULL;
 
     XPCContext* xpcc = nsXPConnect::GetContext(aJSContext, this);
-    if(!xpcc)
-        return NS_ERROR_FAILURE;
-
-    nsXPCWrappedJS* wrapper =
-        nsXPCWrappedJS::GetNewOrUsedWrapper(xpcc, aJSObj, aIID);
-
-    if(!wrapper)
-        return NS_ERROR_FAILURE;
-
-    *aWrapper = wrapper;
-    return NS_OK;
+    if(xpcc)
+    {
+        nsXPCWrappedJS* wrapper =
+            nsXPCWrappedJS::GetNewOrUsedWrapper(xpcc, aJSObj, aIID);
+        if(wrapper)
+        {
+            *aWrapper = wrapper;
+            return NS_OK;
+        }        
+    }
+    XPC_LOG_ERROR(("nsXPConnect::WrapJS failed"));
+    *aWrapper = NULL;
+    return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -278,6 +283,13 @@ nsXPConnect::GetWrappedNativeOfJSObject(JSContext* aJSContext,
     if(!(*aWrapper = nsXPCWrappedNativeClass::GetWrappedNativeOfJSObject(aJSContext,aJSObj)))
         return NS_ERROR_UNEXPECTED;
     return NS_OK;
+}
+
+// has to go somewhere...
+nsXPCArbitraryScriptable::nsXPCArbitraryScriptable()
+{
+    NS_INIT_REFCNT();
+    NS_ADDREF_THIS();
 }
 
 #ifdef DEBUG

@@ -168,11 +168,6 @@ XPCConvert::IsMethodReflectable(const nsXPTMethodInfo& info)
     return JS_TRUE;
 }
 
-// XXX these conversion functions need to be finished.
-// XXX conversion functions may still need paramInfo to handle the additional
-// types
-
-
 #define JAM_DOUBLE(cx,v,d) (d=JS_NewDouble(cx,(jsdouble)v),DOUBLE_TO_JSVAL(d))
 #define FIT_32(cx,i,d) (INT_FITS_IN_JSVAL(i)?INT_TO_JSVAL(i):JAM_DOUBLE(cx,i,d))
 // Win32 can't handle uint64 to double conversion
@@ -226,7 +221,7 @@ XPCConvert::NativeData2JS(JSContext* cx, jsval* d, const void* s,
     default:
         if(!type.IsPointer())
         {
-            NS_ASSERTION(0,"unsupported type");
+            XPC_LOG_ERROR(("XPCConvert::NativeData2JS : unsupported type"));
             return JS_FALSE;
         }
 
@@ -237,7 +232,7 @@ XPCConvert::NativeData2JS(JSContext* cx, jsval* d, const void* s,
         {
         case nsXPTType::T_VOID:
             // XXX implement void* ?
-            NS_ASSERTION(0,"void* params not supported");
+            XPC_LOG_ERROR(("XPCConvert::NativeData2JS : void* params not supported"));
             return JS_FALSE;
 
         case nsXPTType::T_IID:
@@ -254,7 +249,7 @@ XPCConvert::NativeData2JS(JSContext* cx, jsval* d, const void* s,
 
         case nsXPTType::T_BSTR:
             // XXX implement BSTR ?
-            NS_ASSERTION(0,"'BSTR' string params not supported");
+            XPC_LOG_ERROR(("XPCConvert::NativeData2JS : BSTR params not supported"));
             return JS_FALSE;
 
         case nsXPTType::T_CHAR_STR:
@@ -438,6 +433,7 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
         {
         case nsXPTType::T_VOID:
             // XXX implement void* ?
+            XPC_LOG_ERROR(("XPCConvert::JSData2Native : void* params not supported"));
             NS_ASSERTION(0,"void* params not supported");
             return JS_FALSE;
         case nsXPTType::T_IID:
@@ -468,7 +464,7 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
 
         case nsXPTType::T_BSTR:
             // XXX implement BSTR
-            NS_ASSERTION(0,"'BSTR' string params not supported");
+            XPC_LOG_ERROR(("XPCConvert::JSData2Native : BSTR params not supported"));
             return JS_FALSE;
 
         case nsXPTType::T_CHAR_STR:

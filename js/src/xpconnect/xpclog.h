@@ -33,11 +33,10 @@
  * SET NSPR_LOG_MODULES=xpclog:5
  * SET NSPR_LOG_FILE=logfile.txt
  *
- * use:
+ * usage:
  *   XPC_LOG_ERROR(("my comment number %d", 5))   // note the double parens
  *
  */
-
 
 #ifdef DEBUG
 #define XPC_LOG_INTERNAL(number,_args)  \
@@ -68,7 +67,6 @@ JS_END_EXTERN_C
 #define XPC_LOG_ERROR(_args)   ((void)0)
 #define XPC_LOG_WARNING(_args) ((void)0)
 #define XPC_LOG_DEBUG(_args)   ((void)0)
-#define XPC_LOG(_args)         ((void)0)
 #define XPC_LOG_FLUSH()        ((void)0)
 #define XPC_LOG_INDENT()       ((void)0)
 #define XPC_LOG_OUTDENT()      ((void)0)

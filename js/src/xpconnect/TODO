@@ -1,0 +1,37 @@
+/* jband - 02/20/99 - TODO and issues list */
+
+**** ISSUES ****
+- convert some assertions to LOG warnings
+- Ports!
+- proto object per class?
+- Param gc rooting?
+- safe use of jsdoubles?
+
+- Write Docs!
+- improve nsID JS class
+- add xpcom JS object and util functions
+- reflect IID and CID trees. 
+- ProgIDs? (mixed in with CID tree or separate?)
+- errors
+    - throw exceptions into JS?
+- loosen restrictions re. current cx when calling wrappers across cx boundaries
+
+
+**** ISSUES ****
+
+- Contexts\Runtimes\ScopeChain problems
+
+- Constants fo WrappedJS objects? 
+    - Even for WrappedNatives the constants should (perhaps) be in the 
+      (as yet not created) class proto object rather than props of each object?
+      This makes then overwritable?
+
+- Ref counting for contexts?
+
+- JSContext and JSRuntime life times and how that impacts XPConnect stuff
+
+- wrappedJS stub stuff can't handle (non-xpcom) natives passed by value -
+  we need to know the object size to cleanup the stack!
+
+- Listener interface for class and instance create/destroy?
+

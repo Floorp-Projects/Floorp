@@ -423,7 +423,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(nsXPCWrappedNative* wrapper,
     for(i = 0; i < paramCount; i++)
     {
         nsIAllocator* conditional_al = NULL;
-        nsID* conditional_iid = NULL;
+        const nsID* conditional_iid = NULL;
         const nsXPTParamInfo& param = info->GetParam(i);
         const nsXPTType& type = param.GetType();
 
@@ -515,7 +515,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(nsXPCWrappedNative* wrapper,
     {
         const nsXPTParamInfo& param = info->GetParam(i);
         const nsXPTType& type = param.GetType();
-        nsID* conditional_iid = NULL;
+        const nsID* conditional_iid = NULL;
 
         nsXPCVariant* dp = &dispatchParams[i];
         if(param.IsOut())
@@ -1106,7 +1106,6 @@ WrappedNative_Finalize(JSContext *cx, JSObject *obj)
     if(!wrapper)
         return;
     NS_ASSERTION(obj == wrapper->GetJSObject(),"bad obj");
-    NS_ASSERTION(cx == wrapper->GetClass()->GetXPCContext()->GetJSContext(),"bad obj");
     // wrapper is responsible for calling DynamicScriptable->Finalize
     wrapper->JSObjectFinalized();
 }

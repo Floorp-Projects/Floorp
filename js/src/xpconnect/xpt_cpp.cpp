@@ -206,7 +206,12 @@ XPTParamDescriptor nsIEcho_SendInOutManyTypesParams[16] = {
     {XPT_PD_IN|XPT_PD_OUT, {XPT_TDP_POINTER|TD_PWSTRING ,0}}
 };
 
-XPTMethodDescriptor nsIEchoMethods[8] = {
+XPTParamDescriptor nsIEcho_MethodWithNativeParams[2] = {
+    {XPT_PD_IN, {TD_INT32,0}},
+    {XPT_PD_IN, {XPT_TDP_POINTER|TD_VOID,0}}
+};
+
+XPTMethodDescriptor nsIEchoMethods[9] = {
  {0, "SetReciever",         1, nsIEcho_SetRecieverParams,        ResultParam},
  {0, "SendOneString",       1, nsIEcho_SendOneStringParams,      ResultParam},
  {0, "In2OutOneInt",        2, nsIEcho_In2OutOneIntParams,       ResultParam},
@@ -214,11 +219,12 @@ XPTMethodDescriptor nsIEchoMethods[8] = {
  {0, "In2OutOneString",     2, nsIEcho_In2OutOneStringParams,    ResultParam},
  {0, "SimpleCallNoEcho",    0, NULL,                             ResultParam},
  {0, "SendManyTypes",      16, nsIEcho_SendManyTypesParams,      ResultParam},
- {0, "SendInOutManyTypes", 16, nsIEcho_SendInOutManyTypesParams, ResultParam}
+ {0, "SendInOutManyTypes", 16, nsIEcho_SendInOutManyTypesParams, ResultParam},
+ {0, "MethodWithNative",    2, nsIEcho_MethodWithNativeParams,   ResultParam}
 };
 
 XPTInterfaceDescriptor nsIEchoInterfaceDescriptor =
-    {NULL, 8, nsIEchoMethods, 0, NULL};
+    {NULL, 9, nsIEchoMethods, 0, NULL};
 
 /***************/
 
@@ -268,7 +274,7 @@ nsXPTParamInfo::GetInterface() const
     return info;
 }
 
-nsIID*
+const nsIID*
 nsXPTParamInfo::GetInterfaceIID() const
 {
     NS_PRECONDITION(GetType().TagPart() == nsXPTType::T_INTERFACE,"not an interface");
