@@ -436,5 +436,12 @@ CURDIR=$(MAKEDIR)^\
 XPIDL_PROG=$(DIST)\bin\xpidl
 XPTLINK_PROG=$(DIST)\bin\xpt_link
 
+# XXX If you change this name, be _sure_ to update rules.mak;
+# specifically, the rules that compute XPIDL_HEADERS and
+# XPIDL_TYPELIBS. 'nmake' is too dumb to allow recursive macro
+# substitution.
+
+XPIDL_GEN_DIR=.\_xpidlgen
+
 !endif # CONFIG_CONFIG_MAK
 

@@ -632,5 +632,72 @@ MANIFEST_LEVEL=RULES
 CFLAGS = $(CFLAGS) -DNO_JNI_STUBS
 !endif
 
+!if "$(XPIDLSRCS)" != "$(NULL)"
+!if "$(MODULE)" != "$(NULL)"
+
+# Generate header files and type libraries from the XPIDLSRCS variable.
+
+.SUFFIXES: .idl .xpt
+
+# XXX Note the direct use of '.\_xpidlgen' instead of
+# $(XPIDL_GEN_DIR). 'nmake' is too stupid to deal with recursive macro
+# substitution.
+
+XPIDL_INCLUDES=$(XPIDL_INCLUDES) -I$(XPDIST)\idl
+
+XPIDL_HEADERS=$(XPIDLSRCS:.idl=.h)
+XPIDL_HEADERS=$(XPIDL_HEADERS:.\=.\_xpidlgen\)
+
+XPIDL_TYPELIBS=$(XPIDLSRCS:.idl=.xpt)
+XPIDL_TYPELIBS=$(XPIDL_TYPELIBS:.\=.\_xpidlgen\)
+
+$(XPIDL_GEN_DIR):
+	@echo +++ make: Creating directory: $(XPIDL_GEN_DIR)
+	echo.
+	-mkdir $(XPIDL_GEN_DIR)
+
+.idl{$(XPIDL_GEN_DIR)}.h:
+        $(XPIDL_PROG) -m header $(XPIDL_INCLUDES) -o $* $<
+
+.idl{$(XPIDL_GEN_DIR)}.xpt:
+        $(XPIDL_PROG) -m typelib $(XPIDL_INCLUDES) -o $* $<
+
+TYPELIB = $(XPIDL_GEN_DIR)\$(MODULE).xpt
+
+$(TYPELIB): $(XPIDL_TYPELIBS)
+        @echo +++ make: Creating typelib: $(TYPELIB)
+	@echo.
+        $(XPTLINK_PROG) $(TYPELIB) $(XPIDL_TYPELIBS)
+
+$(DIST)\include:
+	@echo +++ make: Creating directory: $(DIST)\include
+	@echo.
+	-mkdir $(DIST)\include
+
+$(XPDIST)\idl:
+        @echo +++ make: Creating directory: $(XPDIST)\idl
+        @echo.
+        -mkdir $(XPDIST)\idl
+
+export:: $(XPDIST)\idl
+        @echo +++ make: exporting IDL files
+        @echo.
+        -for %i in ($(XPIDLSRCS:/=\)) do @$(MAKE_INSTALL) %i $(XPDIST)\idl
+
+export:: $(XPIDL_GEN_DIR) $(XPIDL_HEADERS) $(XPDIST)\public\$(MODULE)
+        @echo +++ make: exporting generated XPIDL header files
+        @echo.
+        -for %i in ($(XPIDL_HEADERS:/=\)) do @$(MAKE_INSTALL) %i $(XPDIST)\public\$(MODULE)
+
+install:: $(XPIDL_GEN_DIR) $(TYPELIB)
+        @echo +++ make: installing typelib '$(TYPELIB)' to components directory
+        @echo.
+        $(MAKE_INSTALL) $(TYPELIB) $(DIST)\bin\components
+
+GARBAGE=$(GARBAGE) $(XPIDL_GEN_DIR) $(DIST)\bin\components\$(MODULE).xpt
+
+!endif
+!endif
+
 !endif # CONFIG_RULES_MAK
 
