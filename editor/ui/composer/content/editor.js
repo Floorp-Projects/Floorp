@@ -538,7 +538,11 @@ function SetFocusOnStartup()
 
 function EditorStartup()
 {
-  GetCurrentEditorElement().docShell.appType =
+  var ds = GetCurrentEditorElement().docShell;
+  var root = ds.QueryInterface(Components.interfaces.nsIDocShellTreeItem).
+    rootTreeItem.QueryInterface(Components.interfaces.nsIDocShell);
+
+  root.QueryInterface(Components.interfaces.nsIDocShell).appType =
     Components.interfaces.nsIDocShell.APP_TYPE_EDITOR;
 
   var is_HTMLEditor = IsHTMLEditor();
