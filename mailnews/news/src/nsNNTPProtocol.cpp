@@ -27,6 +27,7 @@
 #include "rosetta.h"
 #include HG40855
 
+#include "allxpstr.h"
 #include "prtime.h"
 #include "prlog.h"
 #include "prerror.h"
@@ -304,6 +305,7 @@ NS_IMETHODIMP nsNNTPProtocol::OnStopBinding(nsIURL* aURL, nsresult aStatus, cons
 ////////////////////////////////////////////////////////////////////////////////////////////
 // TEMPORARY HARD CODED FUNCTIONS 
 ///////////////////////////////////////////////////////////////////////////////////////////
+char *XP_AppCodeName = "Mozilla";
 #define NET_IS_SPACE(x) ((((unsigned int) (x)) > 0x7f) ? 0 : isspace(x))
 typedef PRUint32 MessageKey;
 const MessageKey MSG_MESSAGEKEYNONE = 0xffffffff;
@@ -324,6 +326,54 @@ char * NET_ExplainErrorDetails (int code, ...)
 	return rv;
 }
 
+char * NET_SACopy (char **destination, const char *source)
+{
+	if(*destination)
+	  {
+	    XP_FREE(*destination);
+		*destination = 0;
+	  }
+    if (! source)
+	  {
+        *destination = NULL;
+	  }
+    else 
+	  {
+        *destination = (char *) PR_Malloc (PL_strlen(source) + 1);
+        if (*destination == NULL) 
+ 	        return(NULL);
+
+        PL_strcpy (*destination, source);
+      }
+    return *destination;
+}
+
+/*  Again like strdup but it concatinates and free's and uses Realloc
+*/
+char * NET_SACat (char **destination, const char *source)
+{
+    if (source && *source)
+      {
+        if (*destination)
+          {
+            int length = PL_strlen (*destination);
+            *destination = (char *) PR_Realloc (*destination, length + PL_strlen(source) + 1);
+            if (*destination == NULL)
+            return(NULL);
+
+            PL_strcpy (*destination + length, source);
+          }
+        else
+          {
+            *destination = (char *) PR_Malloc (PL_strlen(source) + 1);
+            if (*destination == NULL)
+                return(NULL);
+
+             PL_strcpy (*destination, source);
+          }
+      }
+    return *destination;
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 // END OF TEMPORARY HARD CODED FUNCTIONS 
@@ -1763,7 +1813,7 @@ PRInt32 nsNNTPProtocol::ProcessNewsgroups(nsIInputStream * inputStream, PRUint32
 		  if (NS_SUCCEEDED(rv) && m_newsgroup)
 		  {
                 rv = m_newsHost->FindGroup(groupName, &m_newsgroup);
-                PR_ASSERT(NS_SUCCEEEDED(rv));
+                PR_ASSERT(NS_SUCCEEDED(rv));
 				m_nextState = NNTP_LIST_XACTIVE;
 #ifdef DEBUG_bienvenu1
 				PR_LogPrint("listing xactive for %s\n", m_groupName);
@@ -2653,8 +2703,11 @@ PRInt32 nsNNTPProtocol::Cancel()
   m_cancelID = 0;
 
   L = PL_strlen (id);
-
+#ifdef UNREADY_CODE
   from = MIME_MakeFromField ();
+#else
+  from = "testSender@nowhere.com";
+#endif
   subject = (char *) PR_Malloc (L + 20);
   other_random_headers = (char *) PR_Malloc (L + 20);
   body = (char *) PR_Malloc (PL_strlen (XP_AppCodeName) + 100);
