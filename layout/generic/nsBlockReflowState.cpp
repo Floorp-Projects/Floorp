@@ -6334,19 +6334,13 @@ nsBlockFrame::HandleEvent(nsIPresContext* aPresContext,
   if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN || aEvent->message == NS_MOUSE_MOVE ||
     aEvent->message == NS_MOUSE_LEFT_DOUBLECLICK ) {
 
-    //we have to add this because any frame that overrides nsFrame::HandleEvent for mouse down MUST capture the mouse events!!
-    if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN)
-    {
-      if (!IsMouseCaptured(aPresContext))
-        CaptureMouse(aPresContext, PR_TRUE);
-    }
 
     nsIFrame *resultFrame = nsnull;//this will be passed the handle event when we 
                                    //can tell who to pass it to
     nsCOMPtr<nsILineIterator> it; 
     nsIFrame *mainframe = this;
     nsCOMPtr<nsIFocusTracker> tracker;
-	aPresContext->GetShell(getter_AddRefs(shell));
+    aPresContext->GetShell(getter_AddRefs(shell));
     if (!shell)
       return NS_OK;
     result = shell->QueryInterface(NS_GET_IID(nsIFocusTracker),getter_AddRefs(tracker));
@@ -6424,9 +6418,19 @@ nsBlockFrame::HandleEvent(nsIPresContext* aPresContext,
 
 
     if (resultFrame)
-      return resultFrame->HandleEvent(aPresContext, aEvent, aEventStatus);
+    {
+      result = resultFrame->HandleEvent(aPresContext, aEvent, aEventStatus);
+      if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN && !IsMouseCaptured(aPresContext))
+          CaptureMouse(aPresContext, PR_TRUE);
+      return result;
+    }
     else
+    {
+      /*we have to add this because any frame that overrides nsFrame::HandleEvent for mouse down MUST capture the mouse events!!
+      if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN && !IsMouseCaptured(aPresContext))
+          CaptureMouse(aPresContext, PR_TRUE);*/
       return NS_OK; //just stop it
+    }
   }
   return nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 }

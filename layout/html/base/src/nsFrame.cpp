@@ -1247,6 +1247,7 @@ nsresult nsFrame::GetContentAndOffsetsFromPoint(nsIPresContext* aCX,
         // It's generated content, so skip it!
         skipThisKid = PR_TRUE;
       }
+#if 0
       else {
         // The frame's content is not generated. Now check
         // if it is anonymous content!
@@ -1280,6 +1281,7 @@ nsresult nsFrame::GetContentAndOffsetsFromPoint(nsIPresContext* aCX,
           }
         }
       }
+#endif //XXX we USED to skip anonymous content i dont think we should anymore leaving this here as a flah
 
       if (skipThisKid) {
         kid->GetNextSibling(&kid);
@@ -1988,13 +1990,15 @@ nsFrame::GetSelectionController(nsIPresContext *aPresContext, nsISelectionContro
   if (state & NS_FRAME_INDEPENDENT_SELECTION) 
   {
     nsIFrame *tmp = this;
-    while ( NS_SUCCEEDED(tmp->GetParent(&tmp)) && tmp)
+    while (tmp)
     {
       nsIGfxTextControlFrame2 *tcf;
       if (NS_SUCCEEDED(tmp->QueryInterface(nsIGfxTextControlFrame2::GetIID(),(void**)&tcf)))
       {
         return tcf->GetSelectionController(aSelCon);
       }
+      if (NS_FAILED(tmp->GetParent(&tmp)))
+        break;
     }
   }
   nsCOMPtr<nsIPresShell> shell;
@@ -2974,10 +2978,14 @@ nsFrame::CaptureMouse(nsIPresContext* aPresContext, PRBool aGrabMouseEvents)
     // get its view
   nsIView* view = nsnull;
   nsIFrame *parent;//might be THIS frame thats ok
-  nsresult rv = GetParentWithView(aPresContext, &parent);
-  if (!parent || NS_FAILED(rv))
-    return rv?rv:NS_ERROR_FAILURE;
-  parent->GetView(aPresContext,&view);
+  GetView(aPresContext, & view);
+  if (!view)
+  {
+    nsresult rv = GetParentWithView(aPresContext, &parent);
+    if (!parent || NS_FAILED(rv))
+      return rv?rv:NS_ERROR_FAILURE;
+    parent->GetView(aPresContext,&view);
+  }
 
   nsCOMPtr<nsIViewManager> viewMan;
   PRBool result;
@@ -3001,13 +3009,15 @@ nsFrame::IsMouseCaptured(nsIPresContext* aPresContext)
 {
     // get its view
   nsIView* view = nsnull;
-
-  nsIFrame *parent;//might be THIS frame thats ok
-  nsresult rv = GetParentWithView(aPresContext, &parent);
-  if (!parent || NS_FAILED(rv))
-    return rv?rv:NS_ERROR_FAILURE;
-  parent->GetView(aPresContext,&view);
-
+  GetView(aPresContext, & view);
+  if (!view)
+  {
+    nsIFrame *parent;//might be THIS frame thats ok
+    nsresult rv = GetParentWithView(aPresContext, &parent);
+    if (!parent || NS_FAILED(rv))
+      return rv?rv:NS_ERROR_FAILURE;
+    parent->GetView(aPresContext,&view);
+  }
   nsCOMPtr<nsIViewManager> viewMan;
   
   if (view) {
