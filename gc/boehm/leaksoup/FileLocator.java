@@ -64,30 +64,47 @@ public class FileLocator {
 		int rightBracket = line.indexOf(']', leftBracket + 1);
 		if (rightBracket == -1)
 			return line;
-		int comma = line.indexOf(',', leftBracket + 1);
-		String macPath = line.substring(leftBracket + 1, comma);
-		String fullPath = "/" + macPath.replace(':', '/');
+        
+        // generalize for Linux & Mac versions of the Leak detector.
+        String fullPath;
+        int lineNumber, lineAnchor;
+        int colon = line.indexOf(':', leftBracket + 1);
+        if (colon != -1) {
+            // Linux format: unmangled_symbol[unix_path:line_number]
+            fullPath = line.substring(leftBracket + 1, colon);
+            try {
+                lineNumber = Integer.parseInt(line.substring(colon + 1, rightBracket));
+            } catch (NumberFormatException nfe) {
+                return line;
+            }
+            lineAnchor = lineNumber;
+        } else {
+            // Mac format: unmangled_symbol[mac_path,byte_offset]
+            int comma = line.indexOf(',', leftBracket + 1);
+            String macPath = line.substring(leftBracket + 1, comma);
+            fullPath = "/" + macPath.replace(':', '/');
 		
-		// compute the line number in the file.
-		int offset = 0;
-		try {
-			offset = Integer.parseInt(line.substring(comma + 1, rightBracket));
-		} catch (NumberFormatException nfe) {
-			return line;
-		} catch (StringIndexOutOfBoundsException sobe) {
-		    System.err.println("### Error processing line: " + line);
-		    System.err.println("### comma = " + comma + ", rightBracket = " + rightBracket);
-		    System.err.flush();
-		    return line;
-		}
+            // compute the line number in the file.
+            int offset = 0;
+            try {
+                offset = Integer.parseInt(line.substring(comma + 1, rightBracket));
+            } catch (NumberFormatException nfe) {
+                return line;
+            } catch (StringIndexOutOfBoundsException sobe) {
+                System.err.println("### Error processing line: " + line);
+                System.err.println("### comma = " + comma + ", rightBracket = " + rightBracket);
+                System.err.flush();
+                return line;
+            }
 		
-		FileTable table = (FileTable) fileTables.get(fullPath);
-		if (table == null) {
-			table = new FileTable(fullPath);
-			fileTables.put(fullPath, table);
-		}
-		int lineNumber = 1 + table.getLine(offset);
-		int lineAnchor = lineNumber;
+            FileTable table = (FileTable) fileTables.get(fullPath);
+            if (table == null) {
+                table = new FileTable(fullPath);
+                fileTables.put(fullPath, table);
+            }
+            lineNumber = 1 + table.getLine(offset);
+            lineAnchor = lineNumber;
+        }
 
 		// compute the URL of the file.
 		int mozillaIndex = fullPath.indexOf(MOZILLA_BASE);
