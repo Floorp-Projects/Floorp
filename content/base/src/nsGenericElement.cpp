@@ -1732,21 +1732,19 @@ nsGenericElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
       }
     }
 
-    if (aDocument) {
-      // check the document on the nodeinfo to see whether we need a
-      // new nodeinfo
-      if (aDocument != mNodeInfo->GetDocument()) {
-        // get a new nodeinfo
-        nsINodeInfoManager* nodeInfoManager = aDocument->GetNodeInfoManager();
-        if (nodeInfoManager) {
-          nsCOMPtr<nsINodeInfo> newNodeInfo;
-          nodeInfoManager->GetNodeInfo(mNodeInfo->NameAtom(),
-                                       mNodeInfo->GetPrefixAtom(),
-                                       mNodeInfo->NamespaceID(),
-                                       getter_AddRefs(newNodeInfo));
-          if (newNodeInfo) {
-            mNodeInfo = newNodeInfo;
-          }
+    // check the document on the nodeinfo to see whether we need a
+    // new nodeinfo
+    if (aDocument && aDocument != mNodeInfo->GetDocument()) {
+      // get a new nodeinfo
+      nsINodeInfoManager* nodeInfoManager = aDocument->GetNodeInfoManager();
+      if (nodeInfoManager) {
+        nsCOMPtr<nsINodeInfo> newNodeInfo;
+        nodeInfoManager->GetNodeInfo(mNodeInfo->NameAtom(),
+                                     mNodeInfo->GetPrefixAtom(),
+                                     mNodeInfo->NamespaceID(),
+                                     getter_AddRefs(newNodeInfo));
+        if (newNodeInfo) {
+          mNodeInfo.swap(newNodeInfo);
         }
       }
     }
@@ -2855,8 +2853,10 @@ nsGenericElement::doInsertBefore(nsIContent *aElement, nsIDOMNode *aNewChild,
       }
     }
 
-    nsContentUtils::ReparentContentWrapper(newContent, aElement,
-                                           aElement->GetDocument(), old_doc);
+    if (!newContent->IsContentOfType(eXUL)) {
+      nsContentUtils::ReparentContentWrapper(newContent, aElement,
+                                             aElement->GetDocument(), old_doc);
+    }
 
     res = aElement->InsertChildAt(newContent, refPos, PR_TRUE, PR_TRUE);
 
@@ -3036,8 +3036,10 @@ nsGenericElement::doReplaceChild(nsIContent* aElement, nsIDOMNode* aNewChild,
       }
     }
 
-    nsContentUtils::ReparentContentWrapper(newContent, aElement,
-                                           aElement->GetDocument(), old_doc);
+    if (!newContent->IsContentOfType(eXUL)) {
+      nsContentUtils::ReparentContentWrapper(newContent, aElement,
+                                             aElement->GetDocument(), old_doc);
+    }
 
     if (aNewChild == aOldChild) {
       // We're replacing a child with itself. In this case the child
