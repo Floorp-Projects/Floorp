@@ -659,7 +659,7 @@ date_parseString(const jschar *s, jsdouble *result)
             for (k = (sizeof(wtb)/sizeof(char*)); --k >= 0;)
                 if (date_regionMatches(wtb[k], 0, s, st, i-st, 1)) {
                     int action = ttb[k];
-                    if (action != 0)
+                    if (action != 0) {
                         if (action == 1) { /* pm */
                             if (hour > 12 || hour < 0) {
                                 goto syntax;
@@ -675,6 +675,7 @@ date_parseString(const jschar *s, jsdouble *result)
                         } else {
                             tzoffset = action - 10000;
                         }
+                    }
                     break;
                 }
             if (k < 0)
