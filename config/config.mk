@@ -321,7 +321,7 @@ MKDEPEND_DIR	=
 # (Picking 3000 somewhat arbitrarily.)
 MKDEPEND	= $(MOZ_NATIVE_MAKEDEPEND) -Y -w 3000
 else
-MKDEPEND_DIR	= $(srcdir)/mkdepend
+MKDEPEND_DIR	= $(DEPTH)/config/mkdepend
 MKDEPEND	= $(MKDEPEND_DIR)/mkdepend
 endif
 
