@@ -681,12 +681,11 @@ NS_IMETHODIMP nsTextEditor::InsertText(const nsString& aStringToInsert)
 
   // pre-process
   nsEditor::GetSelection(getter_AddRefs(selection));
-  nsAutoString stringToInsert;
   PlaceholderTxn *placeholderTxn=nsnull;
   nsresult result = mRules->WillDoAction(nsTextEditRules::kInsertText, selection, (void**)&placeholderTxn, &cancel);
   if ((PR_FALSE==cancel) && (NS_SUCCEEDED(result)))
   {
-    result = nsEditor::InsertText(stringToInsert);
+    result = nsEditor::InsertText(aStringToInsert);
     // post-process 
     result = mRules->DidDoAction(nsTextEditRules::kInsertText, selection, nsnull, result);
   }
