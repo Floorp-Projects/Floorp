@@ -427,10 +427,6 @@ nsIOService::GetProtocolHandler(const char* scheme, nsIProtocolHandler* *result)
 {
     nsresult rv;
 
-    NS_ASSERTION(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX_LENGTH
-                 == strlen(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX),
-                 "need to fix NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX_LENGTH");
-
     NS_ENSURE_ARG_POINTER(scheme);
     // XXX we may want to speed this up by introducing our own protocol 
     // scheme -> protocol handler mapping, avoiding the string manipulation
