@@ -4994,8 +4994,8 @@ nsBookmarksService::EnsureBookmarksFile()
                                          getter_AddRefs(prefVal));      
         if (NS_SUCCEEDED(rv))
         {
-            nsXPIDLString bookmarksFile;
-            prefVal->ToString(getter_Copies(bookmarksFile));
+            nsAutoString bookmarksFile;
+            prefVal->GetData(bookmarksFile); // more efficient than ToString
             rv = NS_NewLocalFile(bookmarksFile, PR_TRUE,
                                  getter_AddRefs(mBookmarksFile));
 
