@@ -110,6 +110,8 @@ int main(int argc, char **argv)
     if (!inFile) inFile = PR_STDIN;
     if (!outFile) outFile = stdout;
 
+     NSS_NoDB_Init();
+
 	rv = SECU_ReadDERFromFile(&der, inFile, PR_FALSE);
     if (rv == SECSuccess) {
 	rv = DER_PrettyPrint(outFile, &der, raw);
