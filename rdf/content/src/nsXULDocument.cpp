@@ -4588,7 +4588,7 @@ nsXULDocument::LoadScript(nsXULPrototypeScript* aScriptProto, PRBool* aBlock)
         NS_ASSERTION(!mCurrentScriptProto, "still loading a script when starting another load?");
         mCurrentScriptProto = aScriptProto;
 
-        if (aScriptProto->mSrcLoading) {
+        if (0 && aScriptProto->mSrcLoading) {
             // Another XULDocument load has started, which is still in progress.
             // Remember to ResumeWalk this document when the load completes.
             mNextSrcLoadWaiter = aScriptProto->mSrcLoadWaiters;
@@ -4624,7 +4624,7 @@ nsXULDocument::OnUnicharStreamComplete(nsIUnicharStreamLoader* aLoader,
     // from the prototype.
     nsresult rv;
 
-    NS_ASSERTION(mCurrentScriptProto && mCurrentScriptProto->mSrcLoading,
+    NS_ASSERTION(mCurrentScriptProto /* && mCurrentScriptProto->mSrcLoading */,
                  "script source not loading on unichar stream complete?");
 
     if (NS_SUCCEEDED(aStatus)) {
