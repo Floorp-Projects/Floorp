@@ -34,6 +34,7 @@ CPPSRCS		= \
 		  nsXMLEncodingObserver.cpp \
 		  nsMetaCharsetObserver.cpp \
 		  nsDetectionAdaptor.cpp \
+		  nsDebugDetector.cpp \
 		  $(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
