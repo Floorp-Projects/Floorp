@@ -396,7 +396,7 @@ private:
     static DWORD mInstance;
     static char *mAppName;
     static nsIDOMWindow *mInitialWindow;
-    static PRBool mDidProfileStartup;
+    static PRBool mForceProfileStartup;
     friend struct MessageWindow;
 }; // nsNativeAppSupportWin
 
@@ -720,7 +720,7 @@ HSZ   nsNativeAppSupportWin::mApplication   = 0;
 HSZ   nsNativeAppSupportWin::mTopics[nsNativeAppSupportWin::topicCount] = { 0 };
 DWORD nsNativeAppSupportWin::mInstance      = 0;
 nsIDOMWindow* nsNativeAppSupportWin::mInitialWindow = nsnull;
-PRBool nsNativeAppSupportWin::mDidProfileStartup = PR_FALSE;
+PRBool nsNativeAppSupportWin::mForceProfileStartup = PR_FALSE;
 
 NOTIFYICONDATA nsNativeAppSupportWin::mIconData = { sizeof(NOTIFYICONDATA),
                                                     0,
@@ -1594,10 +1594,14 @@ nsNativeAppSupportWin::EnsureProfile(nsICmdLineService* args)
   nsCOMPtr<nsIAppShellService> appShell(do_GetService("@mozilla.org/appshell/appShellService;1", &rv));
   if (NS_FAILED(rv)) return rv;
 
-  // If we have a profile, everything is fine.
+  // If we have a profile, everything is fine -
+  // unless mForceProfileStartup is TRUE. This flag is set when the
+  // last window is closed in -turbo mode. When TRUE, it forces the
+  // profile UI to come up at the beginning of the next -turbo session
+  // even if we currently have a profile.
   PRBool haveProfile;
   rv = profileMgr->IsCurrentProfileAvailable(&haveProfile);
-  if (mDidProfileStartup && NS_SUCCEEDED(rv) && haveProfile)
+  if (!mForceProfileStartup && NS_SUCCEEDED(rv) && haveProfile)
       return NS_OK;
 
   // If the profile selection is happening, fail.
@@ -1607,7 +1611,7 @@ nsNativeAppSupportWin::EnsureProfile(nsICmdLineService* args)
 
   rv = appShell->DoProfileStartup(args, PR_TRUE);
 
-  mDidProfileStartup = PR_TRUE;
+  mForceProfileStartup = PR_FALSE;
 
   return rv;
 }
@@ -2060,7 +2064,7 @@ nsNativeAppSupportWin::OnLastWindowClosing( nsIXULWindow *aWindow ) {
     if (NS_FAILED(rv)) return rv;
     observerService->NotifyObservers(nsnull, "session-logout", nsnull);
 
-    mDidProfileStartup = PR_FALSE;
+    mForceProfileStartup = PR_TRUE;
 
     return NS_OK;
 }
