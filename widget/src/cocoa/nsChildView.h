@@ -94,6 +94,8 @@ class nsChildView;
   NSRange mSelectedRange;
   BOOL mInComposition;
 
+  BOOL mToggleMouseMoveEventWatching;
+
   BOOL mInHandScroll; // true for as long as we are hand scrolling
   // hand scroll locations
   NSPoint mHandScrollStartMouseLoc;

@@ -2180,6 +2180,12 @@ nsChildView::Idle()
   mIsPluginView = NO;
   mLastKeyEventWasSentToCocoa = NO;
   mCurEvent = NULL;
+
+  // See if hack code for enabling and disabling mouse move
+  // events is necessary. Fixed by at least 10.2.8
+  long version = 0;
+  ::Gestalt(gestaltSystemVersion, &version);
+  mToggleMouseMoveEventWatching = (version < 0x00001028);
   
   // initialization for NSTextInput
   mMarkedRange.location = NSNotFound;
@@ -2612,9 +2618,11 @@ nsChildView::Idle()
 {
   // checks to see if we should change to the hand cursor
   [self flagsChanged:theEvent];
+  
   // we need to forward mouse move events to gecko when the mouse
   // is over a gecko view
-  [[self window] setAcceptsMouseMovedEvents: YES];
+  if (mToggleMouseMoveEventWatching)
+    [[self window] setAcceptsMouseMovedEvents: YES];
 }
 
 - (void)mouseExited:(NSEvent*)theEvent
@@ -2622,9 +2630,10 @@ nsChildView::Idle()
   // Gecko may have set the cursor to ibeam or link hand, or handscroll may
   // have set it to the open hand cursor. Cocoa won't call this during a drag.
   mGeckoChild->SetCursor(eCursor_standard);
+   
   // no need to monitor mouse movements outside of the gecko view,
   // but make sure we are not a plugin view.
-  if (![[self superview] isKindOfClass: [ChildView class]])
+  if (mToggleMouseMoveEventWatching && ![[self superview] isKindOfClass: [ChildView class]])
     [[self window] setAcceptsMouseMovedEvents: NO];
 }
 
