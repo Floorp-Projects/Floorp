@@ -291,7 +291,6 @@ NS_IMETHODIMP
 nsSoftwareUpdate::InstallJar(  nsIFile* aLocalFile,
                                const PRUnichar* aURL,
                                const PRUnichar* aArguments,
-                               nsIDOMWindowInternal* aParentWindow,
                                PRUint32 flags,
                                nsIXPIListener* aListener)
 {
@@ -310,7 +309,7 @@ nsSoftwareUpdate::InstallJar(  nsIFile* aLocalFile,
 
     // we want to call this with or without a chrome registry
     nsInstallInfo *info = new nsInstallInfo( 0, aLocalFile, aURL, aArguments,
-                                             flags, aListener, aParentWindow, chromeReg );
+                                             flags, aListener, chromeReg );
 
     if (!info)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -346,7 +345,6 @@ nsSoftwareUpdate::InstallChrome( PRUint32 aType,
                                              aName,
                                              (PRUint32)aSelect,
                                              aListener,
-                                             nsnull,
                                              chromeReg);
     if (!info)
         return NS_ERROR_OUT_OF_MEMORY;

@@ -33,6 +33,9 @@
 [scriptable,uuid(6F9D2890-167D-11d5-8DAF-000064657374)]
 interface nsPIXPIProxy : nsISupports
 {
-    void refreshPlugins(in nsISupports aWindow);
+    void refreshPlugins(in boolean reloadPages);
     void notifyRestartNeeded();
+
+    void    alert(in wstring title, in wstring text);
+    boolean confirm(in wstring title, in wstring text);
 };

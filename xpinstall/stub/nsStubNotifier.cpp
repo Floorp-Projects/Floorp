@@ -40,28 +40,21 @@ NS_IMPL_ISUPPORTS1(nsStubListener, nsIXPIListener)
 
 
 NS_IMETHODIMP
-nsStubListener::BeforeJavascriptEvaluation(const PRUnichar *URL)
+nsStubListener::OnInstallStart(const PRUnichar *URL)
 {
     // we're not interested in this one
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsStubListener::AfterJavascriptEvaluation(const PRUnichar *URL)
+nsStubListener::OnPackageNameSet(const PRUnichar *URL, const PRUnichar* UIPackageName)
 {
     // we're not interested in this one
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsStubListener::InstallStarted(const PRUnichar *URL, const PRUnichar* UIPackageName)
-{
-    // we're not interested in this one
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsStubListener::ItemScheduled(const PRUnichar* message )
+nsStubListener::OnItemScheduled(const PRUnichar* message )
 {
     if (m_progress)
       {
@@ -71,7 +64,7 @@ nsStubListener::ItemScheduled(const PRUnichar* message )
 }
 
 NS_IMETHODIMP
-nsStubListener::FinalizeProgress(const PRUnichar* message, PRInt32 itemNum, PRInt32 totNum )
+nsStubListener::OnFinalizeProgress(const PRUnichar* message, PRInt32 itemNum, PRInt32 totNum )
 {
     if (m_progress)
       {
@@ -81,7 +74,7 @@ nsStubListener::FinalizeProgress(const PRUnichar* message, PRInt32 itemNum, PRIn
 }
 
 NS_IMETHODIMP
-nsStubListener::FinalStatus(const PRUnichar *URL, PRInt32 status)
+nsStubListener::OnInstallDone(const PRUnichar *URL, PRInt32 status)
 {
 //    if (m_final)
 //        m_final( nsCAutoString(URL), status );
@@ -90,7 +83,7 @@ nsStubListener::FinalStatus(const PRUnichar *URL, PRInt32 status)
 }
 
 NS_IMETHODIMP
-nsStubListener::LogComment(const PRUnichar* comment)
+nsStubListener::OnLogComment(const PRUnichar* comment)
 {
     // we're not interested in this one
     return NS_OK;

@@ -48,6 +48,7 @@ REQUIRES	= xpcom \
 		  windowwatcher \
 		  zlib \
 		  content \
+		  plugin \
 		  $(NULL)
 
 include <$(DEPTH)/config/config.mak>
@@ -102,7 +103,6 @@ OBJS =                                          \
        .\$(OBJDIR)\nsWinProfile.obj             \
        .\$(OBJDIR)\nsJSWinProfile.obj           \
        .\$(OBJDIR)\nsWinProfileItem.obj         \
-       .\$(OBJDIR)\nsInstallProgressDialog.obj  \
        .\$(OBJDIR)\nsXPIProxy.obj               \
        .\$(OBJDIR)\nsXPITriggerInfo.obj         \
        .\$(OBJDIR)\nsXPInstallManager.obj       \

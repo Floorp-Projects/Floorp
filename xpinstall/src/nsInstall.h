@@ -81,7 +81,6 @@ class nsInstallInfo
                    const PRUnichar* aArgs,
                    PRUint32         aFlags,
                    nsIXPIListener*  aListener,
-                   nsIDOMWindowInternal* aParentWindow,
                    nsIChromeRegistry*   aChromeReg);
 
     virtual ~nsInstallInfo();
@@ -93,7 +92,6 @@ class nsInstallInfo
     PRUint32            GetType()               { return mType; }
     nsIXPIListener*     GetListener()           { return mListener.get(); }
     nsIChromeRegistry*  GetChromeRegistry()     { return mChromeReg.get(); }
-    nsIDOMWindowInternal* GetParentDOMWindow()  { return mParent.get(); }
 
   private:
 
@@ -106,7 +104,6 @@ class nsInstallInfo
 
     nsCOMPtr<nsIFile>           mFile;
     nsCOMPtr<nsIXPIListener>    mListener;
-    nsCOMPtr<nsIDOMWindowInternal> mParent;
     nsCOMPtr<nsIChromeRegistry> mChromeReg;
 };
 
@@ -234,7 +231,7 @@ class nsInstall
         PRInt32    Patch(const nsString& aRegName, const nsString& aVersion, const nsString& aJarSource, nsInstallFolder* aFolder, const nsString& aTargetName, PRInt32* aReturn);
         PRInt32    Patch(const nsString& aRegName, const nsString& aJarSource, nsInstallFolder* aFolder, const nsString& aTargetName, PRInt32* aReturn);
         PRInt32    RegisterChrome(nsIFile* chrome, PRUint32 chromeType, const char* path);
-        PRInt32    RefreshPlugins();
+        PRInt32    RefreshPlugins(PRBool aReloadPages);
         PRInt32    ResetError(PRInt32 aError);
         PRInt32    SetPackageFolder(nsInstallFolder& aFolder);
         PRInt32    StartInstall(const nsString& aUserPackageName, const nsString& aPackageName, const nsString& aVersion, PRInt32* aReturn);
@@ -289,11 +286,7 @@ class nsInstall
         void                SetChromeRegistry(nsIChromeRegistry* reg)
                                 { mChromeRegistry = reg; }
 
-        nsIDOMWindowInternal*  GetParentDOMWindow() { return mParent; }
-        void                   SetParentDOMWindow(nsIDOMWindowInternal* parent)
-        { mParent = parent; }
-
-        PRBool     GetStatusSent() { return mStatusSent; }
+        PRUint32   GetFinalStatus() { return mFinalStatus; }
         PRBool     InInstallTransaction(void) { return mInstalledFiles != nsnull; }
 
         PRInt32    Alert(nsString& string);
@@ -319,11 +312,10 @@ class nsInstall
         PRUint32            mInstallFlags;
         nsCString           mInstallPlatform;
         nsIChromeRegistry*  mChromeRegistry; // we don't own it, it outlives us
-        nsIDOMWindowInternal* mParent;
         nsInstallFolder*    mPackageFolder;
 
         PRBool              mUserCancelled;
-        PRBool              mStatusSent;
+        PRUint32            mFinalStatus;
 
         PRBool              mUninstallPackage;
         PRBool              mRegisterPackage;

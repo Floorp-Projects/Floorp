@@ -14,7 +14,7 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is 
+ * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
  * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
@@ -22,7 +22,7 @@
  * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or 
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
  * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
@@ -67,7 +67,7 @@ extern JSClass FileOpClass;
 //
 // Install property ids
 //
-enum Install_slots 
+enum Install_slots
 {
   INSTALL_PLATFORM        = -1,
   INSTALL_JARFILE         = -2,
@@ -75,7 +75,7 @@ enum Install_slots
   INSTALL_ARGUMENTS       = -4,
   INSTALL_URL             = -5,
   INSTALL_FLAGS           = -6,
-  INSTALL_STATUSSENT      = -7,
+  INSTALL_FINALSTATUS     = -7,
   INSTALL_INSTALL         = -8,
   INSTALL_INSTALLED_FILES = -9
 };
@@ -102,7 +102,7 @@ GetInstallProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
   }
 
-  if (JSVAL_IS_INT(id)) 
+  if (JSVAL_IS_INT(id))
   {
     switch(JSVAL_TO_INT(id)) {
       case INSTALL_PLATFORM:
@@ -120,7 +120,7 @@ GetInstallProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         if ( folder )
         {
           folder->Init(a->GetJarFileLocation());
-          JSObject* fileSpecObject = 
+          JSObject* fileSpecObject =
               JS_NewObject(cx, &FileSpecObjectClass, gFileSpecProto, NULL);
 
           if (fileSpecObject)
@@ -137,20 +137,20 @@ GetInstallProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case INSTALL_ARGUMENTS:
       {
         nsAutoString prop;
-        
-        a->GetInstallArguments(prop); 
+
+        a->GetInstallArguments(prop);
         *vp = STRING_TO_JSVAL( JS_NewUCStringCopyN(cx, NS_REINTERPRET_CAST(const jschar*, prop.get()), prop.Length()) );
-        
+
         break;
       }
-        
+
       case INSTALL_URL:
       {
         nsString prop;
-        
-        a->GetInstallURL(prop); 
+
+        a->GetInstallURL(prop);
         *vp = STRING_TO_JSVAL( JS_NewUCStringCopyN(cx, NS_REINTERPRET_CAST(const jschar*, prop.get()), prop.Length()) );
-        
+
         break;
       }
 
@@ -158,14 +158,14 @@ GetInstallProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           *vp = INT_TO_JSVAL( a->GetInstallFlags() );
           break;
 
-      case INSTALL_STATUSSENT:
-          *vp = BOOLEAN_TO_JSVAL( a->GetStatusSent() );
+      case INSTALL_FINALSTATUS:
+          *vp = INT_TO_JSVAL( a->GetFinalStatus() );
           break;
 
       case INSTALL_INSTALL:
           *vp = OBJECT_TO_JSVAL(obj);
           break;
-        
+
       case INSTALL_INSTALLED_FILES:
           *vp = BOOLEAN_TO_JSVAL( a->InInstallTransaction() );
           break;
@@ -273,7 +273,7 @@ PRBool ConvertJSValToObj(nsISupports** aSupports,
     *aSupports = nsnull;
   }
   else if (JSVAL_IS_OBJECT(aValue)) {
-    JSObject* jsobj = JSVAL_TO_OBJECT(aValue); 
+    JSObject* jsobj = JSVAL_TO_OBJECT(aValue);
     JSClass* jsclass = JS_GetClass(aContext, jsobj);
     if ((nsnull != jsclass) && (jsclass->flags & JSCLASS_HAS_PRIVATE)) {
       nsISupports *supports = (nsISupports *)JS_GetPrivate(aContext, jsobj);
@@ -303,7 +303,7 @@ PRBool ConvertJSValToObj(nsISupports** aSupports,
 void ConvertJSvalToVersionString(nsString& versionString, JSContext* cx, jsval argument)
 {
     versionString.SetLength(0);
-    
+
     if( JSVAL_IS_OBJECT(argument) )
     {
         if(!JSVAL_IS_NULL(argument))
@@ -311,7 +311,7 @@ void ConvertJSvalToVersionString(nsString& versionString, JSContext* cx, jsval a
             JSObject* jsobj   = JSVAL_TO_OBJECT(argument);
             JSClass*  jsclass = JS_GetClass(cx, jsobj);
 
-            if ((nsnull != jsclass) && (jsclass->flags & JSCLASS_HAS_PRIVATE)) 
+            if ((nsnull != jsclass) && (jsclass->flags & JSCLASS_HAS_PRIVATE))
             {
                 nsIDOMInstallVersion* version = (nsIDOMInstallVersion*)JS_GetPrivate(cx, jsobj);
                 version->ToString(versionString);
@@ -404,12 +404,12 @@ InstallAddDirectory(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
     return JS_TRUE;
   }
 
-  if (argc == 1)                             
+  if (argc == 1)
   {
     // public int AddDirectory (String jarSourcePath)
 
     ConvertJSValToStr(b0, cx, argv[0]);
-       
+
     if(NS_OK != nativeThis->AddDirectory(b0, &nativeRet))
     {
       return JS_FALSE;
@@ -417,12 +417,12 @@ InstallAddDirectory(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
 
     *rval = INT_TO_JSVAL(nativeRet);
   }
-  else if (argc == 4)                             
+  else if (argc == 4)
   {
     //  public int AddDirectory ( String registryName,
     //                            String jarSourcePath,
     //                            String localDirSpec,
-    //                            String relativeLocalPath); 
+    //                            String relativeLocalPath);
 
     ConvertJSValToStr(b0, cx, argv[0]);
     ConvertJSValToStr(b1, cx, argv[1]);
@@ -451,13 +451,13 @@ InstallAddDirectory(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
 
     *rval = INT_TO_JSVAL(nativeRet);
   }
-  else if (argc == 5)                             
+  else if (argc == 5)
   {
     //  public int AddDirectory ( String registryName,
     //                            String version,  --OR-- VersionInfo version
     //                            String jarSourcePath,
     //                            Object localDirSpec,
-    //                            String relativeLocalPath); 
+    //                            String relativeLocalPath);
 
     ConvertJSValToStr(b0, cx, argv[0]);
     ConvertJSvalToVersionString(b1, cx, argv[1]);
@@ -470,33 +470,33 @@ InstallAddDirectory(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
       nativeThis->SaveError(nsInstall::INVALID_ARGUMENTS);
       return JS_TRUE;
     }
-    
+
     jsObj = JSVAL_TO_OBJECT(argv[3]);
     if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, nsnull))
     {
       *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
       nativeThis->SaveError(nsInstall::INVALID_ARGUMENTS);
-      return JS_TRUE; 
+      return JS_TRUE;
     }
-    
+
     folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
 
     if(NS_OK != nativeThis->AddDirectory(b0, b1, b2, folder, b4, &nativeRet))
     {
         return JS_FALSE;
     }
-    
+
     *rval = INT_TO_JSVAL(nativeRet);
 
   }
   else if (argc == 6)
   {
      //   public int AddDirectory (  String registryName,
-     //                              String version,        --OR--     VersionInfo version, 
+     //                              String version,        --OR--     VersionInfo version,
      //                              String jarSourcePath,
      //                              Object localDirSpec,
      //                              String relativeLocalPath,
-     //                              Int    flags);  
+     //                              Int    flags);
 
     ConvertJSValToStr(b0, cx, argv[0]);
     ConvertJSvalToVersionString(b1, cx, argv[1]);
@@ -515,7 +515,7 @@ InstallAddDirectory(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
     {
       *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
       nativeThis->SaveError(nsInstall::INVALID_ARGUMENTS);
-      return JS_TRUE; 
+      return JS_TRUE;
     }
 
     if(JSVAL_IS_INT(argv[5]))
@@ -529,7 +529,7 @@ InstallAddDirectory(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
     {
         return JS_FALSE;
     }
-    
+
     *rval = INT_TO_JSVAL(nativeRet);
   }
   else
@@ -570,17 +570,17 @@ InstallAddSubcomponent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
   if(argc >= 6)
   {
     //  public int AddSubcomponent ( String registryName,
-    //                               String version,        --OR--     VersionInfo version, 
+    //                               String version,        --OR--     VersionInfo version,
     //                               String jarSourcePath,
     //                               Object localDirSpec,
     //                               String relativeLocalPath,
-    //                               Int    flags); 
+    //                               Int    flags);
 
     ConvertJSValToStr(b0, cx, argv[0]);
     ConvertJSvalToVersionString(b1, cx, argv[1]);
     ConvertJSValToStr(b2, cx, argv[2]);
     ConvertJSValToStr(b4, cx, argv[4]);
-    
+
     if ((argv[3] == JSVAL_NULL) || !JSVAL_IS_OBJECT(argv[3])) //argv[3] MUST be a jsval
     {
       *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
@@ -593,7 +593,7 @@ InstallAddSubcomponent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
     {
       *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
       nativeThis->SaveError(nsInstall::INVALID_ARGUMENTS);
-      return JS_TRUE; 
+      return JS_TRUE;
     }
 
     if(JSVAL_IS_INT(argv[5]))
@@ -638,7 +638,7 @@ InstallAddSubcomponent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
     {
       *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
       nativeThis->SaveError(nsInstall::INVALID_ARGUMENTS);
-      return JS_TRUE; 
+      return JS_TRUE;
     }
 
     folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
@@ -649,7 +649,7 @@ InstallAddSubcomponent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
     JS_ResumeRequest(cx, saveDepth);
     if (NS_FAILED(rv))
         return JS_FALSE;
-    
+
     *rval = INT_TO_JSVAL(nativeRet);
   }
   else if(argc >= 4)
@@ -669,13 +669,13 @@ InstallAddSubcomponent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
       nativeThis->SaveError(nsInstall::INVALID_ARGUMENTS);
       return JS_TRUE;
     }
-    
+
     jsObj = JSVAL_TO_OBJECT(argv[2]);
     if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, nsnull))
     {
       *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
       nativeThis->SaveError(nsInstall::INVALID_ARGUMENTS);
-      return JS_TRUE; 
+      return JS_TRUE;
     }
 
     folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
@@ -752,10 +752,10 @@ InstallDiskSpaceAvailable(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     }
 
     double d;
-    
+
     LL_L2D(d, nativeRet);
     JS_NewDoubleValue( cx, d, rval );
-    
+
   }
   else
   {
@@ -791,7 +791,7 @@ InstallExecute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
     //  public int Execute ( String jarSourcePath,
     //                       String args,
     //                       Bool   blocking);
-    
+
     ConvertJSValToStr(b1, cx, argv[1]);
     ConvertJSValToBool(&blocking, cx,argv[2]);
   }
@@ -957,7 +957,7 @@ InstallGetComponentFolder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   {
     return JS_TRUE;
   }
-  
+
   /* Now create the new JSObject */
   JSObject* fileSpecObject;
 
@@ -997,7 +997,7 @@ InstallGetFolder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
   if(argc >= 2)
   {
     ConvertJSValToStr(b1, cx, argv[1]); // we know that the second param must be a string
-    if(JSVAL_IS_STRING(argv[0])) // check if the first argument is a string 
+    if(JSVAL_IS_STRING(argv[0])) // check if the first argument is a string
     {
       ConvertJSValToStr(b0, cx, argv[0]);
       if(NS_OK != nativeThis->GetFolder(b0, b1, &folder))
@@ -1005,7 +1005,7 @@ InstallGetFolder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
     }
     else /* it must be an object */
     {
-      
+
       if ((argv[0] == JSVAL_NULL) || !JSVAL_IS_OBJECT(argv[0])) //argv[0] MUST be a jsval
       {
         *rval = JSVAL_NULL;
@@ -1018,7 +1018,7 @@ InstallGetFolder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
       {
         *rval = JSVAL_NULL;
         JS_ReportError(cx, "GetFolder:Invalid Parameter");
-        return JS_TRUE; 
+        return JS_TRUE;
       }
 
       folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
@@ -1071,7 +1071,7 @@ InstallGetFolder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
   }
 
 
-  return JS_TRUE;  
+  return JS_TRUE;
 }
 
 
@@ -1115,7 +1115,7 @@ InstallGetWinProfile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
   nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
   nsAutoString b0;
   nsAutoString b1;
-  
+
   // If there's no private data, this must be the prototype, so ignore
   if(nsnull == nativeThis)
   {
@@ -1155,7 +1155,7 @@ InstallGetWinRegistry(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
   *rval = JSVAL_NULL;
 
 #ifdef _WINDOWS
-  
+
   nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
@@ -1194,16 +1194,16 @@ InstallLoadResources(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
 
     if (argc >= 1)
     {
-	    ConvertJSValToStr(b0, cx, argv[0]);
-	    if (NS_OK != nativeThis->LoadResources(cx, b0, rval))
-	    {
-		    return JS_FALSE;
-	    }
+        ConvertJSValToStr(b0, cx, argv[0]);
+        if (NS_OK != nativeThis->LoadResources(cx, b0, rval))
+        {
+            return JS_FALSE;
+        }
     }
     else
     {
         JS_ReportError(cx, "Function LoadResources requires 1 parameter");
-	    return JS_FALSE;
+        return JS_FALSE;
     }
 
     return JS_TRUE;
@@ -1225,7 +1225,7 @@ InstallPatch(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   nsAutoString b4;
 
   JSObject *jsObj;
-  
+
   nsInstallFolder *folder = nsnull;
 
 
@@ -1255,7 +1255,7 @@ InstallPatch(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
       nativeThis->SaveError(nsInstall::INVALID_ARGUMENTS);
       return JS_TRUE;
     }
-    
+
     jsObj = JSVAL_TO_OBJECT(argv[3]);
     if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, nsnull))
     {
@@ -1283,14 +1283,14 @@ InstallPatch(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     ConvertJSValToStr(b0, cx, argv[0]);
     ConvertJSValToStr(b1, cx, argv[1]);
     ConvertJSValToStr(b2, cx, argv[3]);
-    
+
     if ((argv[2] == JSVAL_NULL) || !JSVAL_IS_OBJECT(argv[2])) //argv[2] MUST be a jsval
     {
       *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
       nativeThis->SaveError(nsInstall::INVALID_ARGUMENTS);
       return JS_TRUE;
     }
-    
+
     jsObj = JSVAL_TO_OBJECT(argv[2]);
     if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, nsnull))
     {
@@ -1323,7 +1323,7 @@ InstallPatch(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 //    int registerChrome(
 //         int  type,
 //         FileSpecObject chrome,
-//         String extraPath) 
+//         String extraPath)
 PR_STATIC_CALLBACK(JSBool)
 InstallRegisterChrome(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
@@ -1373,11 +1373,17 @@ InstallRefreshPlugins(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 {
   // If there's no private data, this must be the prototype, so ignore
   nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
-  if (!nativeThis) {
+  if (!nativeThis)
+  {
     *rval = INT_TO_JSVAL(nsInstall::UNEXPECTED_ERROR);
   }
-  else {
-    *rval = INT_TO_JSVAL(nativeThis->RefreshPlugins());
+  else
+  {
+    PRBool reloadPages = PR_TRUE;
+    if (argc >= 1)
+      reloadPages = JSVAL_TO_BOOLEAN(argv[0]);
+
+    *rval = INT_TO_JSVAL(nativeThis->RefreshPlugins(reloadPages));
   }
   return JS_TRUE;
 }
@@ -1397,7 +1403,7 @@ InstallResetError(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
   if (!nativeThis)
     return JS_TRUE;
 
-  // Supported forms: 
+  // Supported forms:
   //    void resetError()
   //    void resetError(int error)
   int32 val = 0;
@@ -1443,16 +1449,16 @@ InstallSetPackageFolder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
     {
       *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
       nativeThis->SaveError(nsInstall::INVALID_ARGUMENTS);
-      return JS_TRUE; 
+      return JS_TRUE;
     }
 
     folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
     if (!folder)
     {
       JS_ReportError(cx, "setPackageFolder:Invalid Parameter");
-      return JS_FALSE; 
+      return JS_FALSE;
     }
-    else 
+    else
       if(NS_OK != nativeThis->SetPackageFolder(*folder))
         return JS_FALSE;
 
@@ -1565,9 +1571,9 @@ PR_STATIC_CALLBACK(JSBool)
 InstallTRACE(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsAutoString b0;
-  
+
   ConvertJSValToStr(b0, cx, argv[0]);
-  
+
   char *tempStr;
   tempStr = ToNewCString(b0);
   printf("Install:\t%s\n", tempStr);
@@ -1680,7 +1686,7 @@ InstallConfirm(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
     jsrefcount saveDepth = JS_SuspendRequest(cx);//Need to suspend use of thread or deadlock occurs
 
     nativeThis->Confirm(b0, &nativeRet);
-  
+
     JS_ResumeRequest(cx, saveDepth);
 
     *rval = INT_TO_JSVAL(nativeRet);
@@ -1699,7 +1705,7 @@ InstallConfirm(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
 // class for Install
 //
 JSClass InstallClass = {
-  "Install", 
+  "Install",
   JSCLASS_HAS_PRIVATE,
   JS_PropertyStub,
   JS_PropertyStub,
@@ -1722,14 +1728,14 @@ static JSPropertySpec InstallProperties[] =
   {"arguments",         INSTALL_ARGUMENTS,          JSPROP_ENUMERATE | JSPROP_READONLY},
   {"url",               INSTALL_URL,                JSPROP_ENUMERATE | JSPROP_READONLY},
   {"flags",             INSTALL_FLAGS,              JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"_statusSent",       INSTALL_STATUSSENT,         JSPROP_READONLY},
+  {"_finalStatus",      INSTALL_FINALSTATUS,        JSPROP_READONLY},
   {"Install",           INSTALL_INSTALL,            JSPROP_READONLY},
   {"_installedFiles",   INSTALL_INSTALLED_FILES,    JSPROP_READONLY},
   {0}
 };
 
 
-static JSConstDoubleSpec install_constants[] = 
+static JSConstDoubleSpec install_constants[] =
 {
     { nsInstall::BAD_PACKAGE_NAME,           "BAD_PACKAGE_NAME"             },
     { nsInstall::UNEXPECTED_ERROR,           "UNEXPECTED_ERROR"             },
@@ -1803,7 +1809,7 @@ static JSConstDoubleSpec install_constants[] =
 //
 // Install class methods
 //
-static JSFunctionSpec InstallMethods[] = 
+static JSFunctionSpec InstallMethods[] =
 {
 /*START HACK FOR DEBUGGING UNTIL ALERTS WORK*/
   {"TRACE",                     InstallTRACE,                   1},
@@ -1827,7 +1833,7 @@ static JSFunctionSpec InstallMethods[] =
   {"patch",                     InstallPatch,                   5},
   {"performInstall",            InstallFinalizeInstall,         0},
   {"registerChrome",            InstallRegisterChrome,          2},
-  {"refreshPlugins",            InstallRefreshPlugins,          0},
+  {"refreshPlugins",            InstallRefreshPlugins,          1},
   {"resetError",                InstallResetError,              1},
 //  {"selectChrome",              InstallSelectChrome,            2},
   {"setPackageFolder",          InstallSetPackageFolder,        1},
@@ -1860,7 +1866,7 @@ static JSFunctionSpec InstallMethods[] =
   {"deleteRegisteredFile",      InstallDeleteComponent,         1},
 
   // -- obsolete forms for temporary compatibility --
-  {"abortInstall",              InstallAbortInstall,            1}, 
+  {"abortInstall",              InstallAbortInstall,            1},
   {"finalizeInstall",           InstallFinalizeInstall,         0},
   {"startInstall",              InstallStartInstall,            4},
   {0}
@@ -1870,14 +1876,13 @@ static JSFunctionSpec InstallMethods[] =
 
 
 
-JSObject * InitXPInstallObjects(JSContext *jscontext, 
-                             JSObject *global, 
-                             nsIFile* jarfile, 
+JSObject * InitXPInstallObjects(JSContext *jscontext,
+                             JSObject *global,
+                             nsIFile* jarfile,
                              const PRUnichar* url,
                              const PRUnichar* args,
                              PRUint32 flags,
                              nsIChromeRegistry* reg,
-                             nsIDOMWindowInternal* aParent,
                              nsIZipReader * theJARFile)
 {
   JSObject *installObject  = nsnull;
@@ -1892,7 +1897,7 @@ JSObject * InitXPInstallObjects(JSContext *jscontext,
 
   installObject  = JS_InitClass( jscontext,         // context
                                  global,            // global object
-                                 nsnull,            // parent proto 
+                                 nsnull,            // parent proto
                                  &InstallClass,     // JSClass
                                  nsnull,            // JSNative ctor
                                  0,                 // ctor args
@@ -1901,14 +1906,14 @@ JSObject * InitXPInstallObjects(JSContext *jscontext,
                                  InstallProperties, // ctor props (static)
                                  InstallMethods);   // ctor funcs (static)
 
-  if (nsnull == installObject) 
+  if (nsnull == installObject)
   {
       return nsnull;
   }
 
   if ( PR_FALSE == JS_DefineConstDoubles(jscontext, installObject, install_constants) )
             return nsnull;
-  
+
   nativeInstallObject = new nsInstall(theJARFile);
 
   nativeInstallObject->SetJarFileLocation(jarfile);
@@ -1916,7 +1921,6 @@ JSObject * InitXPInstallObjects(JSContext *jscontext,
   nativeInstallObject->SetInstallURL(nsAutoString(url));
   nativeInstallObject->SetInstallFlags(flags);
   nativeInstallObject->SetChromeRegistry(reg);
-  nativeInstallObject->SetParentDOMWindow(aParent);
 
   JS_SetPrivate(jscontext, installObject, nativeInstallObject);
   nativeInstallObject->SetScriptObject(installObject);
@@ -1933,12 +1937,12 @@ JSObject * InitXPInstallObjects(JSContext *jscontext,
   gFileOpObject = JS_NewObject(jscontext, &FileOpClass, gFileOpProto, nsnull);
   if (gFileOpObject == nsnull)
       return nsnull;
-  
+
   JS_SetPrivate(jscontext, gFileOpObject, nativeInstallObject);
 
   JS_DefineProperty (jscontext, installObject, "File", OBJECT_TO_JSVAL(gFileOpObject),
                      JS_PropertyStub, JS_PropertyStub, JSPROP_READONLY | JSPROP_PERMANENT);
- 
+
 
   //
   // Initialize the FileSpecObject

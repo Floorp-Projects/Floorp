@@ -89,31 +89,25 @@ nsInstallProgressDialog::QueryInterface(REFNSIID aIID,void** aInstancePtr)
 }
 
 NS_IMETHODIMP 
-nsInstallProgressDialog::BeforeJavascriptEvaluation(const PRUnichar *URL)
+nsInstallProgressDialog::OnInstallStart(const PRUnichar *URL)
 {
     return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsInstallProgressDialog::AfterJavascriptEvaluation(const PRUnichar *URL)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsInstallProgressDialog::InstallStarted(const PRUnichar *URL, const PRUnichar *UIPackageName)
+nsInstallProgressDialog::OnPackageNameSet(const PRUnichar *URL, const PRUnichar *UIPackageName)
 {
     return SetHeading( UIPackageName );
 }
 
 NS_IMETHODIMP 
-nsInstallProgressDialog::ItemScheduled(const PRUnichar *message)
+nsInstallProgressDialog::OnItemScheduled(const PRUnichar *message)
 {
     return SetActionText( message );
 }
 
 NS_IMETHODIMP 
-nsInstallProgressDialog::FinalizeProgress(const PRUnichar *message, PRInt32 itemNum, PRInt32 totNum)
+nsInstallProgressDialog::OnFinalizeProgress(const PRUnichar *message, PRInt32 itemNum, PRInt32 totNum)
 {
 
     nsresult rv = SetActionText( message );
@@ -125,14 +119,14 @@ nsInstallProgressDialog::FinalizeProgress(const PRUnichar *message, PRInt32 item
 }
 
 NS_IMETHODIMP 
-nsInstallProgressDialog::FinalStatus(const PRUnichar *URL, PRInt32 status)
+nsInstallProgressDialog::OnInstallDone(const PRUnichar *URL, PRInt32 status)
 {
     return NS_OK;
 }
 
 
 NS_IMETHODIMP 
-nsInstallProgressDialog::LogComment(const PRUnichar* comment)
+nsInstallProgressDialog::OnLogComment(const PRUnichar* comment)
 {
     return NS_OK;
 }

@@ -65,8 +65,6 @@
 
 #include "nsIProxyObjectManager.h"
 #include "nsProxiedService.h"
-#include "nsIPromptService.h"
-#include "nsIPrompt.h"
 
 #ifdef _WINDOWS
 #include "nsWinReg.h"
@@ -110,7 +108,6 @@ nsInstallInfo::nsInstallInfo(PRUint32           aInstallType,
                              const PRUnichar*   aArgs,
                              PRUint32           flags,
                              nsIXPIListener*    aListener,
-                             nsIDOMWindowInternal* aParentWindow,
                              nsIChromeRegistry* aChromeReg)
 : mError(0),
   mType(aInstallType),
@@ -119,7 +116,6 @@ nsInstallInfo::nsInstallInfo(PRUint32           aInstallType,
   mArgs(aArgs),
   mFile(aFile),
   mListener(aListener),
-  mParent(aParentWindow),
   mChromeReg(aChromeReg)
 {
     MOZ_COUNT_CTOR(nsInstallInfo);
@@ -151,7 +147,7 @@ nsInstall::nsInstall(nsIZipReader * theJARFile)
     mPatchList              = nsnull;
     mUninstallPackage       = PR_FALSE;
     mRegisterPackage        = PR_FALSE;
-    mStatusSent             = PR_FALSE;
+    mFinalStatus            = SUCCESS;
     mStartInstallCompleted  = PR_FALSE;
     mJarFileLocation        = nsnull;
     //mInstallArguments       = "";
@@ -321,11 +317,7 @@ nsInstall::GetInstallPlatform(nsCString& aPlatform)
 void
 nsInstall::InternalAbort(PRInt32 errcode)
 {
-    if (mListener)
-    {
-        mListener->FinalStatus(mInstallURL.get(), errcode);
-        mStatusSent = PR_TRUE;
-    }
+    mFinalStatus = errcode;
 
     nsInstallObject* ie;
     if (mInstalledFiles != nsnull)
@@ -763,11 +755,7 @@ nsInstall::FinalizeInstall(PRInt32* aReturn)
     if (*aReturn != nsInstall::SUCCESS)
     {
         SaveError( *aReturn );
-        if (mListener)
-        {
-            mListener->FinalStatus(mInstallURL.get(), *aReturn);
-            mStatusSent = PR_TRUE;
-        }
+        mFinalStatus = *aReturn;
         return NS_OK;
     }
 
@@ -813,8 +801,9 @@ nsInstall::FinalizeInstall(PRInt32* aReturn)
                 char *objString = ie->toString();
                 if (objString)
                 {
-                    mListener->FinalizeProgress(NS_ConvertASCIItoUCS2(objString).get(),
-                                               (i+1), mInstalledFiles->Count());
+                    mListener->OnFinalizeProgress(
+                                    NS_ConvertASCIItoUCS2(objString).get(),
+                                    (i+1), mInstalledFiles->Count());
                     delete [] objString;
                 }
             }
@@ -859,22 +848,14 @@ nsInstall::FinalizeInstall(PRInt32* aReturn)
         else
             *aReturn = SaveError( result );
 
-        if (mListener)
-        {
-            mListener->FinalStatus(mInstallURL.get(), *aReturn);
-            mStatusSent = PR_TRUE;
-        }
+        mFinalStatus = *aReturn;
     }
     else
     {
         // no actions queued: don't register the package version
         // and no need for user confirmation
 
-        if (mListener)
-        {
-            mListener->FinalStatus(mInstallURL.get(), *aReturn);
-            mStatusSent = PR_TRUE;
-        }
+        mFinalStatus = *aReturn;
     }
 
     CleanUp();
@@ -1358,14 +1339,13 @@ nsPIXPIProxy* nsInstall::GetUIThreadProxy()
 }
 
 PRInt32
-nsInstall::RefreshPlugins()
+nsInstall::RefreshPlugins(PRBool aReloadPages)
 {
     nsPIXPIProxy* proxy = GetUIThreadProxy();
+    if (!proxy)
+        return UNEXPECTED_ERROR;
 
-    if (proxy)
-        return proxy->RefreshPlugins(GetParentDOMWindow());
-
-    return NS_ERROR_FAILURE;
+    return proxy->RefreshPlugins(aReloadPages);
 }
 
 
@@ -1373,7 +1353,7 @@ PRInt32
 nsInstall::ResetError(PRInt32 aError)
 {
     mLastError = aError;
-    return NS_OK;
+    return SUCCESS;
 }
 
 PRInt32
@@ -1385,24 +1365,24 @@ nsInstall::SetPackageFolder(nsInstallFolder& aFolder)
     nsInstallFolder* folder = new nsInstallFolder();
     if (folder == nsnull)
     {
-        return NS_ERROR_OUT_OF_MEMORY;
+        return OUT_OF_MEMORY;
     }
     nsresult res = folder->Init(aFolder, nsAutoString());
 
     if (NS_FAILED(res))
     {
         delete folder;
-        return res;
+        return UNEXPECTED_ERROR;
     }
     mPackageFolder = folder;
-    return NS_OK;
+    return SUCCESS;
 }
 
 
 PRInt32
 nsInstall::StartInstall(const nsString& aUserPackageName, const nsString& aRegistryPackageName, const nsString& aVersion, PRInt32* aReturn)
 {
-    if ( aUserPackageName.Length() == 0 )
+    if ( aUserPackageName.IsEmpty() )
     {
         // There must be some pretty name for the UI and the uninstall list
         *aReturn = SaveError(INVALID_ARGUMENTS);
@@ -1424,58 +1404,63 @@ nsInstall::StartInstall(const nsString& aUserPackageName, const nsString& aRegis
 
     if (*aReturn != nsInstall::SUCCESS)
     {
+        SaveError( *aReturn );
         return NS_OK;
     }
 
-    if(REGERR_OK == VR_GetDefaultDirectory(
-                        NS_CONST_CAST(char *, NS_ConvertUCS2toUTF8(mRegistryPackageName).get()),
-                        sizeof(szRegPackagePath), szRegPackagePath))
-    {
-        nsInstallFolder* folder = new nsInstallFolder();
-        if (folder == nsnull)
-        {
-            return NS_ERROR_OUT_OF_MEMORY;
-        }
-        nsresult res = folder->Init(NS_ConvertASCIItoUCS2(szRegPackagePath), nsAutoString());
-
-        if (NS_FAILED(res))
-        {
-            delete folder;
-        }
-        else
-        {
-            mPackageFolder = folder;
-        }
-    }
-    else
-    {
-      mPackageFolder = nsnull;
-    }
-
+    // initialize default version
     if (mVersionInfo != nsnull)
         delete mVersionInfo;
 
     mVersionInfo    = new nsInstallVersion();
     if (mVersionInfo == nsnull)
     {
-        *aReturn = nsInstall::OUT_OF_MEMORY;
-        return SaveError(nsInstall::OUT_OF_MEMORY);
+        *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
+        return NS_OK;
     }
-
     mVersionInfo->Init(aVersion);
 
+    // initialize item queue
     mInstalledFiles = new nsVoidArray();
 
     if (mInstalledFiles == nsnull)
     {
-        *aReturn = nsInstall::OUT_OF_MEMORY;
-        return SaveError(nsInstall::OUT_OF_MEMORY);
+        *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
+        return NS_OK;
     }
 
-    if (mListener)
-            mListener->InstallStarted(mInstallURL.get(), mUIName.get());
+    // initialize default folder if any (errors are OK)
+    if (mPackageFolder != nsnull)
+        delete mPackageFolder;
 
+    mPackageFolder = nsnull;
+    if(REGERR_OK == VR_GetDefaultDirectory(
+                        NS_CONST_CAST(char *, NS_ConvertUCS2toUTF8(mRegistryPackageName).get()),
+                        sizeof(szRegPackagePath), szRegPackagePath))
+    {
+        // found one saved in the registry
+        mPackageFolder = new nsInstallFolder();
+        if (mPackageFolder)
+        {
+            if (NS_FAILED( mPackageFolder->Init(
+                                NS_ConvertASCIItoUCS2(szRegPackagePath),
+                                nsAutoString() ) ))
+            {
+                delete mPackageFolder;
+                mPackageFolder = nsnull;
+            }
+        }
+    }
+
+    // We've correctly initialized an install transaction
+    // - note that for commands that are only valid within one
+    // - save error in case script doesn't call performInstall or cancelInstall
+    // - broadcast to listeners
     mStartInstallCompleted = PR_TRUE;
+    mFinalStatus = MALFORMED_INSTALL;
+    if (mListener)
+        mListener->OnPackageNameSet(mInstallURL.get(), mUIName.get());
+
     return NS_OK;
 }
 
@@ -2204,7 +2189,7 @@ void
 nsInstall::LogComment(nsString& aComment)
 {
   if(mListener)
-    mListener->LogComment(aComment.get());
+    mListener->OnLogComment(aComment.get());
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -2227,7 +2212,7 @@ nsInstall::ScheduleForInstall(nsInstallObject* ob)
     // flash current item
 
     if (mListener)
-        mListener->ItemScheduled(NS_ConvertASCIItoUCS2(objString).get());
+        mListener->OnItemScheduled(NS_ConvertASCIItoUCS2(objString).get());
 
 
     // do any unpacking or other set-up
@@ -2257,7 +2242,7 @@ nsInstall::ScheduleForInstall(nsInstallObject* ob)
             nsString errstr; errstr.AssignWithConversion(errprefix);
             errstr.AppendWithConversion(objString);
 
-            mListener->LogComment( errstr.get() );
+            mListener->OnLogComment( errstr.get() );
 
             PR_smprintf_free(errprefix);
             nsCRT::free(errRsrc);
@@ -2549,18 +2534,12 @@ PRUnichar *GetTranslatedString(const PRUnichar* aString)
 PRInt32
 nsInstall::Alert(nsString& string)
 {
-    nsCOMPtr<nsIProxyObjectManager> proxyman(do_GetService(NS_XPCOMPROXY_CONTRACTID));
-    nsCOMPtr<nsIPromptService> dialog(do_GetService("@mozilla.org/embedcomp/prompt-service;1"));
-    nsCOMPtr<nsIPromptService> proxiedDialog;
-    if (proxyman && dialog)
-      proxyman->GetProxyForObject(NS_UI_THREAD_EVENTQ, NS_GET_IID(nsIPromptService),
-                  dialog, PROXY_SYNC, getter_AddRefs(proxiedDialog));
-    if (!proxiedDialog)
-        return NS_ERROR_FAILURE;
+    nsPIXPIProxy *ui = GetUIThreadProxy();
+    if (!ui)
+        return UNEXPECTED_ERROR;
 
-    PRUnichar *title = GetTranslatedString(NS_LITERAL_STRING("Alert").get());
-
-    return proxiedDialog->Alert(mParent, title, string.get());
+    return ui->Alert( GetTranslatedString(NS_LITERAL_STRING("Alert").get()),
+                      string.get());
 }
 
 PRInt32
@@ -2568,18 +2547,13 @@ nsInstall::Confirm(nsString& string, PRBool* aReturn)
 {
     *aReturn = PR_FALSE; /* default value */
 
-    nsCOMPtr<nsIProxyObjectManager> proxyman(do_GetService(NS_XPCOMPROXY_CONTRACTID));
-    nsCOMPtr<nsIPromptService> dialog(do_GetService("@mozilla.org/embedcomp/prompt-service;1"));
-    nsCOMPtr<nsIPromptService> proxiedDialog;
-    if (proxyman && dialog)
-      proxyman->GetProxyForObject(NS_UI_THREAD_EVENTQ, NS_GET_IID(nsIPromptService),
-                  dialog, PROXY_SYNC, getter_AddRefs(proxiedDialog));
-    if (!proxiedDialog)
-        return NS_ERROR_FAILURE;
+    nsPIXPIProxy *ui = GetUIThreadProxy();
+    if (!ui)
+        return UNEXPECTED_ERROR;
 
-    PRUnichar *title = GetTranslatedString(NS_LITERAL_STRING("Confirm").get());
-
-    return proxiedDialog->Confirm(mParent, title, string.get(), aReturn);
+    return ui->Confirm( GetTranslatedString(NS_LITERAL_STRING("Confirm").get()),
+                        string.get(),
+                        aReturn);
 }
 
 

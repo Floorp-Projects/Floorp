@@ -1,7 +1,2 @@
-<!ENTITY dialogCancel.label "Cancel"> 
-<!ENTITY progress.label "Downloading...">
 <!ENTITY progressTitle.label "Software Installation">
-<!ENTITY currentlyProcessing.text "Products">
-<!ENTITY downloadBeforeUpdate.text "All items will be downloaded before they are updated.">
-<!ENTITY moduleName.label "Module name">
-<!ENTITY moduleSource.label "Location">
+<!ENTITY group.caption      "Download and installation status">

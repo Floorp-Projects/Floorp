@@ -1,4 +1,4 @@
-<?xml version="1.0"?> 
+<?xml version="1.0"?>
 
 <!-- The contents of this file are subject to the Netscape Public
 License Version 1.1 (the "License"); you may not use this file
@@ -17,14 +17,13 @@ Communications Corporation. Portions created by Netscape are
 Copyright (C) 1998-1999 Netscape Communications Corporation. All
 Rights Reserved.
 
-Contributor(s): 
-   Don Bragg (dbragg@netscape.com)
+Contributor(s):
+   Don Bragg <dbragg@netscape.com>
    Dan Veditz <dveditz@netscape.com>
    Blake Ross <blakeross@telocity.com>
    Håkan Waara <hwaara@chello.se>
 -->
 
-<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?> 
 <?xml-stylesheet href="chrome://communicator/skin/xpinstall/xpinstall.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/xpinstall/institems.dtd">
@@ -32,9 +31,10 @@ Contributor(s):
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="onLoad()"
         title="&dialog.title;"
+        id="confirmDlg"
         class="dialog"
-        width="450"
-        height="260">
+        style="width: 50em"
+        >
 
     <script src="chrome://communicator/content/xpinstall/institems.js"/>
     <keyset id="dialogKeys"/>
@@ -42,35 +42,31 @@ Contributor(s):
 
     <hbox flex="1" align="center">
         <hbox align="center">
-            <image class="alert-icon" style="margin: 5px"/>
+            <image id="alert-image" class="alert-icon"/>
         </hbox>
 
-        <vbox flex="1">
-            <separator class="thin"/>
-            <label value="&areYouSure.label;" id="sureText"/>
-            <separator class="thin"/>
+        <vbox id="confirmBox" flex="1">
+            <description id="warn1" flex="1">
+                &warningText.label;
+            </description>
 
-            <tree id="modulesTree">
-                <treecolgroup>
-                    <treecol flex="35%"/>
-                    <splitter class="tree-splitter"/>
-                    <treecol flex="65%"/>
-                </treecolgroup>
+            <separator class="confirmSeparator"/>
 
-                <treehead>
-                    <treerow>
-                        <treecell id="moduleName" class="treecell-header" label="&moduleName.label;"/>
-                        <treecell id="moduleSource" class="treecell-header" label="&moduleSource.label;"/>
-                    </treerow>
-                </treehead>
+            <grid id="confirmGrid" flex="1">
+                <columns>
+                    <column id="xpiColumn"/>
+                    <column id="urlColumn" flex="1"/>
+                </columns>
+                <rows id="xpirows">
+                </rows>
+            </grid>
 
-                <treechildren id="theTreeBody" flex="1"/>
-            </tree>
+            <separator class="confirmSeparator"/>
 
-            <description>&warningText2.label;</description>
+            <description id="warn2" flex="1">
+                &warningText2.label;
+            </description>
         </vbox>
     </hbox>
-    <separator class="thin"/>
-
     <hbox id="okCancelButtonsRight"/>
 </window>

@@ -55,10 +55,13 @@ nsXPITriggerItem::nsXPITriggerItem( const PRUnichar* aName,
     {
         // Use the filename as the display name by starting after the last
         // slash in the URL, looking backwards from the arguments delimiter if
-        // we found one. By good fortune using kNotFound as the 3rd param of
-        // RFindChar() makes it start at the end so we can always use qmark
+        // we found one. By good fortune using kNotFound as the offset for
+        // RFindChar() starts at the end, so we can use qmark in all cases.
 
-        PRInt32 namestart = mURL.RFindChar( '/', PR_FALSE, qmark ) + 1;
+        PRInt32 namestart = mURL.RFindChar( '/', qmark );
+
+        // the real start is after the slash (or 0 if not found)
+        namestart = ( namestart==kNotFound ) ? 0 : namestart + 1;
 
         PRInt32 length;
         if (qmark == kNotFound)

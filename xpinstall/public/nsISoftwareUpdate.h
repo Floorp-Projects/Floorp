@@ -35,7 +35,6 @@
 #include "nsCOMPtr.h"
 #include "nsIModule.h"
 #include "nsIGenericFactory.h"
-#include "nsIDOMWindowInternal.h"
 
 #include "nsIRegistry.h"
 #include "nsIRegistryUtils.h"
@@ -68,7 +67,6 @@ class nsISoftwareUpdate : public nsISupports
             NS_IMETHOD InstallJar(nsIFile* localFile,
                                   const PRUnichar* URL,
                                   const PRUnichar* arguments,
-                                  nsIDOMWindowInternal* aParentWindow,
                                   PRUint32 flags,
                                   nsIXPIListener* aListener = 0) = 0;
 

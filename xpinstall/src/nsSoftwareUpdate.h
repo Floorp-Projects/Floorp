@@ -18,18 +18,17 @@
 class nsInstallInfo;
 
 #include "nsIScriptExternalNameSet.h"
-#include "nsIDOMWindowInternal.h"
 #include "nsIObserver.h"
 #include "nsPIXPIStubHook.h"
 #include "nsTopProgressNotifier.h"
 
 
-class nsSoftwareUpdate: public nsISoftwareUpdate, 
+class nsSoftwareUpdate: public nsISoftwareUpdate,
                         public nsPIXPIStubHook,
                         public nsIObserver
 {
     public:
-        
+
         NS_DEFINE_STATIC_CID_ACCESSOR( NS_SoftwareUpdate_CID );
 
         static nsSoftwareUpdate *GetInstance();
@@ -50,11 +49,10 @@ class nsSoftwareUpdate: public nsISoftwareUpdate,
         NS_DECL_ISUPPORTS
         NS_DECL_NSPIXPISTUBHOOK
         NS_DECL_NSIOBSERVER
-        
+
         NS_IMETHOD InstallJar( nsIFile* localFile,
                                const PRUnichar* URL,
                                const PRUnichar* arguments,
-                               nsIDOMWindowInternal* aParentWindow,
                                PRUint32 flags = 0,
                                nsIXPIListener* aListener = 0);
 
@@ -66,7 +64,7 @@ class nsSoftwareUpdate: public nsISoftwareUpdate,
                                   nsIXPIListener* aListener = 0);
 
         NS_IMETHOD RegisterListener(nsIXPIListener *aListener);
-        
+
         NS_IMETHOD InstallJarCallBack();
         NS_IMETHOD GetMasterListener(nsIXPIListener **aListener);
         NS_IMETHOD SetActiveListener(nsIXPIListener *aListener);
@@ -86,7 +84,7 @@ class nsSoftwareUpdate: public nsISoftwareUpdate,
         nsresult RegisterNameset();
         void     CreateMasterListener();
         void     Shutdown();
-        
+
         PRLock*               mLock;
         PRBool                mInstalling;
         nsVoidArray           mJarInstallQueue;
@@ -96,7 +94,7 @@ class nsSoftwareUpdate: public nsISoftwareUpdate,
 };
 
 
-class nsSoftwareUpdateNameSet : public nsIScriptExternalNameSet 
+class nsSoftwareUpdateNameSet : public nsIScriptExternalNameSet
 {
     public:
         nsSoftwareUpdateNameSet();
