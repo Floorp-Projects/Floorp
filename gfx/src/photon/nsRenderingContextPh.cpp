@@ -1793,7 +1793,7 @@ NS_IMETHODIMP nsRenderingContextPh :: CopyOffScreenBits(nsDrawingSurface aSrcSur
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::CopyOffScreenBits area(x,y,w,h)=<%d,%d,%d,%d>\n",area.pos.x, area.pos.y,area.size.w, area.size.h ));
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::CopyOffScreenBits clip valid=<%d> rect(x,y,w,h)=<%d,%d,%d,%d>\n",valid, rect.x,rect.y,rect.width,rect.height));
 
-  /* Flush the Source buffer */
+  /* Flush the Source buffer, Really need this  */
   ((nsDrawingSurfacePh *)aSrcSurf)->Flush();
   
   PhImage_t *image;
@@ -1836,6 +1836,7 @@ NS_IMETHODIMP nsRenderingContextPh :: CopyOffScreenBits(nsDrawingSurface aSrcSur
 		abort();
       }
 
+      /* The need for this is questionable */
       destsurf->Flush();
 
 #if 1
@@ -1870,6 +1871,7 @@ NS_IMETHODIMP nsRenderingContextPh :: CopyOffScreenBits(nsDrawingSurface aSrcSur
 	  abort();
 	}
 
+    /* The need for this is questionable */
     destsurf->Flush();
 
 #if 1
