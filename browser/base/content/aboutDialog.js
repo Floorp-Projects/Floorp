@@ -65,7 +65,7 @@ function switchPage(aEvent)
 
   var iframe = document.getElementById("creditsIframe");
   if (gSelectedPage == 0) { 
-    iframe.setAttribute("src", "chrome://browser/locale/credits.html");
+    iframe.setAttribute("src", "chrome://browser/content/credits.xhtml");
     button.setAttribute("label", document.documentElement.getAttribute("aboutlabel"));
     gSelectedPage = 1;
   }

@@ -33,7 +33,8 @@ REQUIRES	= xpcom \
 		  string \
 		  rdf \
 		  appshell \
-		  appcomps \
+      appcomps \
+      appstartup \
 		  widget \
 		  necko \
 		  nkcache \
@@ -46,10 +47,14 @@ REQUIRES	= xpcom \
 		  unicharutil \
 		  txmgr \
 		  xmlextras \
+		  caps \
+		  xpconnect \
+		  js \
 		  $(NULL)
 
 CPPSRCS		= nsBookmarksService.cpp \
 		  nsBookmarksFeedHandler.cpp \
+		  nsForwardProxyDataSource.cpp \
 		  $(NULL)
 
 #EXTRA_COMPONENTS = nsBookmarkProtocolHandler.js

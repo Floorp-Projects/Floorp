@@ -20,7 +20,7 @@
 # Rights Reserved.
 #
 # Contributor(s): 
-#   Blake Ross <blaker@netscape.com>
+#   Blake Ross <blake@cs.stanford.edu>
 #   David Hyatt <hyatt@mozilla.org>
 #   Joe Hewitt <hewitt@netscape.com>
 #   Pierre Chanial <chanial@noos.fr>
@@ -28,6 +28,7 @@
 
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://browser/content/browser.css" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/findBar.css" type="text/css"?>
 
 #ifdef XP_MACOSX
 <?xul-overlay href="chrome://browser/content/macBrowserOverlay.xul"?>
@@ -72,21 +73,6 @@
            onclick="checkForMiddleClick(this, event);"/>
     <tooltip id="aHTMLTooltip" onpopupshowing="return FillInHTMLTooltip(document.tooltipNode);"/>
 
-    <popup id="SearchBarPopup" position="after_start"
-           datasources="rdf:internetsearch" ref="NC:SearchEngineRoot" 
-           oncommand="return SearchBarPopupCommand(event);"
-           onpopupshowing="SearchBarPopupShowing(event);">
-      <menuitem id="__PhoenixFindInPage" class="menuitem-iconic"
-                label="&findOnSearchBarCmd.label;"/>
-      <menuseparator/>
-      <template>
-        <menuitem type="checkbox"
-                  uri="..." value="..."
-                  src="rdf:http://home.netscape.com/NC-rdf#Icon"
-                  label="rdf:http://home.netscape.com/NC-rdf#Name"/>
-      </template>
-    </popup>
-
     <popup type="autocomplete" id="PopupAutoComplete"/>
 
     <popup id="toolbar-context-menu"
@@ -95,6 +81,14 @@
       <menuitem command="cmd_CustomizeToolbars"
                 label="&viewCustomizeToolbar.label;"
                 accesskey="&viewCustomizeToolbar.accesskey;"/>
+    </popup>
+
+    <popup id="blockedPopupOptions" 
+           onpopupshowing="gPopupBlockerObserver.fillPopupList(event);">
+      <menuitem observes="blockedPopupAllowSite"/>
+      <menuitem observes="blockedPopupEditSettings"/>
+      <menuitem observes="blockedPopupDontShowMessage"/>
+      <menuseparator observes="blockedPopupsSeparator"/>
     </popup>
 
 #include browser-context.inc
@@ -122,24 +116,25 @@
     </vbox>
   </tooltip>
 
-  <toolbox id="navigator-toolbox" class="toolbox-top" mode="icons" iconsize="small">
+  <toolbox id="navigator-toolbox" class="toolbox-top" mode="icons">
     <!-- Menu -->
-      <toolbar type="menubar" id="toolbar-menubar" class="chromeclass-menubar" customizable="true"
+    <toolbar type="menubar" id="toolbar-menubar" class="chromeclass-menubar" customizable="true"
 #ifdef XP_MACOSX
-               defaultset="menubar-items"
+             defaultset="menubar-items"
 #else
-               defaultset="menubar-items,spring,throbber-box"
+             defaultset="menubar-items,spring,throbber-box"
 #endif
-               mode="icons" iconsize="small" context="toolbar-context-menu">
-        <toolbaritem id="menubar-items" align="center">
-
+             mode="icons" context="toolbar-context-menu">
+      <toolbaritem id="menubar-items" align="center">
 #ifndef XP_MACOSX
 # The entire main menubar is placed into browser-menubar.inc, so that it can be shared by 
 # hiddenWindow.xul.
 #include browser-menubar.inc
 #endif
-
-        </toolbaritem>
+      </toolbaritem>
+      <toolbaritem id="softwareupdate-item" title="&updatesItem.title;" align="center" pack="center">
+        <toolbarbutton type="updates" id="softwareupdate"/>
+      </toolbaritem>
     </toolbar>
 
     <toolbarpalette id="BrowserToolbarPalette">
@@ -221,31 +216,22 @@
         </textbox>
       </toolbaritem>
 
-      <toolbaritem id="search-container" align="center"
-                   title="&searchItem.title;" class="chromeclass-additional">
-        <textbox id="search-bar" type="autocomplete" flex="1"
-                 autocompletepopup="PopupAutoComplete"
-                 autocompletesearch="form-history"
-                 tabscrolling="true"
-                 onfocus="URLBarFocusHandler(event, this);"
-                 onmousedown="URLBarMouseDownHandler(event, this);"
-                 onclick="URLBarClickHandler(event, this);"
-                 persist="searchengine,autocompletesearchparam">
-          <button id="search-proxy-button" type="menu"
-                  popup="SearchBarPopup" persist="src"/>
-        </textbox>
+      <toolbaritem id="search-container" title="&searchItem.title;" 
+                   align="center" class="chromeclass-toolbar-additional">
+        <searchbar id="searchbar"/>
       </toolbaritem>
       
-      <toolbaritem id="go-container" align="center" class="chromeclass-additional">
-        <button id="go-button" class="button-toolbar"
-                label="&goButton.label;"
-                oncommand="handleURLBarCommand(event);"
-                ondragover="nsDragAndDrop.dragOver(event, goButtonObserver);"
-                ondragdrop="nsDragAndDrop.drop(event, goButtonObserver);"
-                ondragexit="nsDragAndDrop.dragExit(event, goButtonObserver);"
-                tooltiptext="&goButton.tooltip;"/> 
+      <toolbaritem id="go-container" align="center" class="chromeclass-toolbar-additional">
+        <toolbarbutton id="go-button"
+                       chromedir="&locale.dir;"
+                       label="&goButton.label;"
+                       oncommand="handleURLBarCommand(event);"
+                       ondragover="nsDragAndDrop.dragOver(event, goButtonObserver);"
+                       ondragdrop="nsDragAndDrop.drop(event, goButtonObserver);"
+                       ondragexit="nsDragAndDrop.dragExit(event, goButtonObserver);"
+                       tooltiptext="&goButton.tooltip;"/> 
       </toolbaritem>
-
+      
       <toolbarbutton id="print-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                      label="&printButton.label;" command="cmd_print"
                      tooltiptext="&printButton.tooltip;"/>
@@ -262,13 +248,11 @@
         <stack id="bookmarks-stack" flex="1" style="min-width:0px; width:0px;"
                onpopupshowing="BookmarksToolbar.setOpenedMenu(event);"
                onpopuphidden="BookmarksToolbar.unsetOpenedMenu(event);">
-          <hbox id="insertion-feedback" hidden="true">
-            <button id="insertion-feedback-button" style="margin:0px !important;"/>
-          </hbox>
           <hbox id="bookmarks-ptf" class="bookmarks-toolbar-items" contextmenu="bookmarks-context-menu"
                 flex="1" style="min-width:0px; width:0px;margin-left: 3px;" 
                 datasources="rdf:bookmarks rdf:files rdf:localsearch"
                 template="bookmarks-template" flags="dont-test-empty"
+                infer="forward-proxy"
                 rdf:type="http://home.netscape.com/NC-rdf#Folder"
                 onpopupshowing="BookmarksMenu.onShowMenu(event.target)"
                 onpopuphidden="BookmarksMenu.onHideMenu(event.target)"
@@ -283,6 +267,7 @@
           <hbox class="bookmarks-toolbar-overflow-items" mousethrough="always">
             <hbox mousethrough="always" id="overflow-padder"/>
               <toolbarbutton id="bookmarks-chevron" type="menu" class="chevron"
+                             chromedir="&locale.dir;"
                              mousethrough="never" collapsed="true" 
                              datasources="rdf:bookmarks rdf:files rdf:localsearch"
                              template="bookmarks-template" flags="dont-test-empty"
@@ -323,20 +308,11 @@
                        onmouseover="MailIntegration.updateUnreadCount();"
                        tooltiptext="&mailButton.tooltip;">
           <menupopup tooltiptext="">
-            <menuitem label="&mailButton.readMail.label;" 
-                      id="readMailItem"
-                      accesskey="&mailButton.readMail.accesskey;"
+            <menuitem accesskey="&mailButton.readMail.accesskey;"
                       command="Browser:ReadMail"/>
             <menuitem label="&mailButton.newMessage.label;" 
                       accesskey="&mailButton.newMessage.accesskey;"
                       command="Browser:NewMessage"/>
-            <menuitem label="&mailButton.sendLink.label;" 
-                      accesskey="&mailButton.sendLink.accesskey;"
-                      command="Browser:SendLink"/>
-            <menuseparator/>
-            <menuitem label="&mailButton.readNews.label;" 
-                      accesskey="&mailButton.readNews.accesskey;"
-                      command="Browser:ReadNews"/>
           </menupopup>
         </toolbarbutton>                       
 #endif
@@ -377,10 +353,16 @@
 
     <toolbar id="nav-bar" class="toolbar-primary chromeclass-toolbar"
              toolbarname="&navbarCmd.label;" accesskey="&navbarCmd.accesskey;"
-             fullscreentoolbar="true" mode="icons" iconsize="small"
+             fullscreentoolbar="true" mode="icons" 
              customizable="true"
-             defaultset="back-button,forward-button,reload-button,stop-button,home-button,urlbar-container,go-container,search-container,window-controls"
+#ifdef XP_MACOSX
+             defaultset="back-button,forward-button,reload-button,stop-button,home-button,urlbar-container,go-container,search-container,throbber-box"
+#else
+             defaultset="back-button,forward-button,reload-button,stop-button,home-button,urlbar-container,go-container,search-container,fullscreenflex,window-controls"
+#endif
              context="toolbar-context-menu">
+#ifndef XP_MACOSX
+      <hbox id="fullscreenflex" flex="1" hidden="true" fullscreencontrol="true"/>
       <hbox id="window-controls" hidden="true" fullscreencontrol="true">
         <toolbarbutton id="minimize-button" class="toolbarbutton-1"
                        tooltiptext="&fullScreenMinimize.tooltip;"
@@ -394,6 +376,7 @@
                        tooltiptext="&fullScreenClose.tooltip;"
                        oncommand="window.close();"/>
       </hbox>
+#endif
     </toolbar>
  
     <toolbarset id="customToolbars" context="toolbar-context-menu"/>
@@ -401,8 +384,7 @@
     <toolbar id="PersonalToolbar" class="chromeclass-directories" iconsize="small"
              customizable="true" defaultset="personal-bookmarks" mode="icons"
              toolbarname="&personalbarCmd.label;" accesskey="&personalbarCmd.accesskey;"
-             context="toolbar-context-menu"/>
-    
+             context="toolbar-context-menu"/>   
   </toolbox>
   
   <hbox flex="1" id="browser">
@@ -422,36 +404,50 @@
                   flex="1" contenttooltip="aHTMLTooltip"
                   contentcontextmenu="contentAreaContextMenu"
                   onnewtab="BrowserOpenTab();"
+                  onkeyup="onBrowserKeyUp(event);"
                   autocompletepopup="PopupAutoComplete"
                   ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);"
                   onclick="return contentAreaClick(event, false);"/>
     </vbox>
   </hbox>
+  
+#include ../../../toolkit/components/typeaheadfind/content/findBar.inc
+  
   <statusbar class="chromeclass-status" id="status-bar"
              ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);">
-    <statusbarpanel id="security-button" class="statusbarpanel-iconic"
-                    ondblclick="if (event.button == 0) displaySecurityInfo();"/>
-    <statusbarpanel id="page-report-button" class="statusbarpanel-iconic" tooltiptext="&pageReportIcon.tooltip;"
-                    ondblclick="displayPageReport();"/>
-    <statusbarpanel id="page-theme-button" type="menu" class="statusbarpanel-menu-iconic" tooltiptext="&pageThemeIcon.tooltip;">
-      <menupopup onpopupshowing="stylesheetFillPopup(this);"
-                  oncommand="stylesheetSwitchAll(window._content, event.target.getAttribute('data'));">
-        <menuitem label="&pageThemeNoTheme.label;" accesskey="&pageThemeNoTheme.accesskey;" type="radio" data="_nostyle"/>
-        <menuitem label="&pageThemePersistentOnly.label;" accesskey="&pageThemePersistentOnly.accesskey;" type="radio" checked="true"/>
-        <menuseparator/>
-      </menupopup>
-    </statusbarpanel>
-    <statusbarpanel id="livemark-button" type="menu" class="statusbarpanel-menu-iconic">
-      <menupopup onpopupshowing="return livemarkFillPopup(this);"
-                 oncommand="livemarkAddMark(window._content, event.target.getAttribute('data'));" />
-    </statusbarpanel>
-
     <statusbarpanel id="statusbar-display" flex="1"/>
     <statusbarpanel class="statusbarpanel-progress" collapsed="true" id="statusbar-progresspanel">
       <progressmeter class="progressmeter-statusbar" id="statusbar-icon" mode="normal" value="0"/>
     </statusbarpanel>
-    <statusbarpanel id="statusbar-updates"/>
+    <statusbarpanel id="security-button" class="statusbarpanel-iconic-text"
+                    ondblclick="if (event.button == 0) displaySecurityInfo();"/>
+    <statusbarpanel id="page-report-button" type="menu" 
+                    class="statusbarpanel-menu-iconic" 
+                    tooltiptext="&pageReportIcon.tooltip;">
+      <menupopup onpopupshowing="gPopupBlockerObserver.fillPopupList(event);">
+        <menuitem observes="blockedPopupAllowSite"/>
+        <menuitem observes="blockedPopupEditSettings"/>
+        <menuitem observes="blockedPopupDontShowMessage"/>
+        <menuseparator observes="blockedPopupsSeparator"/>
+      </menupopup>
+    </statusbarpanel>
+#ifdef ALTSS_ICON
+    <statusbarpanel id="page-theme-button" type="menu"
+                    class="statusbarpanel-menu-iconic" 
+                    tooltiptext="&pageStyleIcon.tooltip;">
+      <menupopup onpopupshowing="stylesheetFillPopup(this);"
+                 oncommand="stylesheetSwitchAll(window._content, event.target.getAttribute('data')); setStyleDisabled(false);">
+        <menuitem label="&pageStyleNoStyle.label;" accesskey="&pageStyleNoStyle.accesskey;"
+                  oncommand="setStyleDisabled(true); event.preventBubble();" type="radio" hidden="true"/>
+        <menuitem label="&pageStylePersistentOnly.label;" accesskey="&pageStylePersistentOnly.accesskey;" type="radio" checked="true"/>
+        <menuseparator/>
+      </menupopup>
+    </statusbarpanel>
+#endif
+    <statusbarpanel id="livemark-button" type="menu" class="statusbarpanel-menu-iconic" chromedir="&locale.dir;">
+      <menupopup onpopupshowing="return livemarkFillPopup(this);"
+                 oncommand="livemarkAddMark(window._content, event.target.getAttribute('data'));" />
+    </statusbarpanel>
   </statusbar>
-
 </window>
   

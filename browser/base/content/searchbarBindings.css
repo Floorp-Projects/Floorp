@@ -1,0 +1,11 @@
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+.searchbar-textbox {
+  -moz-binding: url("chrome://browser/content/search.xml#searchbar-textbox");
+}
+
+.searchbar-dropmarker {
+  -moz-binding: url("chrome://browser/content/search.xml#searchbar-dropmarker");
+  -moz-user-focus: none;
+}
+

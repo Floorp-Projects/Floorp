@@ -13,6 +13,18 @@ toolbarbutton#newbookmark[disabled="true"] {
   -moz-image-region: rect(64px, 224px, 96px, 192px);
 }
 
+toolbarbutton#newlivemark {
+  -moz-image-region: rect(0px, 224px, 32px, 192px);
+}
+
+toolbarbutton#newlivemark:hover {
+  -moz-image-region: rect(32px, 224px, 64px, 192px);
+}
+
+toolbarbutton#newlivemark[disabled="true"] {
+  -moz-image-region: rect(64px, 224px, 96px, 192px);
+}
+
 toolbarbutton#newfolder {
   -moz-image-region: rect(0px, 32px, 32px, 0px);
 }
@@ -75,4 +87,12 @@ toolbarbutton#delete[disabled="true"] {
 
 #bookmarks-search {
 	background-image: none;
+}
+
+.bookmarksTree {
+  margin: 0px !important;
+}
+
+#bookmark-views-splitter {
+  border-right: 1px solid #bebebe;
 }

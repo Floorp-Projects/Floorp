@@ -107,7 +107,7 @@ function SortTree(tree, view, table, column, lastSortColumn, lastSortAscending, 
 
   // remember which item was selected so we can restore it after the sort
   var selections = GetTreeSelections(tree);
-  var selectedNumber = selections.length ? table[selections[0]].number : -1;
+  var selectedNumber = selections.length ? table[selections[0]].id : -1;
 
   // determine if sort is to be ascending or descending
   var ascending = (column == lastSortColumn) ? !lastSortAscending : true;
@@ -124,7 +124,7 @@ function SortTree(tree, view, table, column, lastSortColumn, lastSortAscending, 
   var selectedRow = -1;
   if (selectedNumber>=0 && updateSelection) {
     for (var s=0; s<table.length; s++) {
-      if (table[s].number == selectedNumber) {
+      if (table[s].id == selectedNumber) {
         // update selection
         // note: we need to deselect before reselecting in order to trigger ...Selected()
         tree.view.selection.select(-1);

@@ -46,92 +46,90 @@
       headertitle="&lHeader;">
 
   <script type="application/x-javascript" src="chrome://browser/content/pref/pref-features.js"/>
-  <script type="application/x-javascript" src="chrome://browser/content/pref/permissions.js"/>
   <script src="chrome://browser/content/cookieviewer/treeUtils.js"/>
 
   <stringbundle id="stringBundle" src="chrome://browser/locale/pref/addPopup.properties"/>
 
-  <groupbox flex="1">
-    <checkbox label="&popupReject.label;"
-              prefstring="dom.disable_open_during_load"
-              accesskey="&popupReject.accesskey;"
-              id="popupPolicy"/>
-    <vbox id="servers" class="indent" flex="1">
-        <label id="popupDescription" value="&div.blessedservers.label;"/>
+  <groupbox>
+    <grid>
+      <columns>
+        <column flex="1"/>
+        <column/>
+      </columns>
+      <rows>
+        <row>
+          <vbox align="start">
+            <checkbox id="popupPolicy"
+                      label="&popupReject.label;"
+                      oncommand="updateButtons('popup')"
+                      prefstring="dom.disable_open_during_load"
+                      accesskey="&popupReject.accesskey;"/>
+          </vbox>
+          <button id="popupPolicyButton" label="&allowedSites.label;"
+                  permissiontype="popup" oncommand="showExceptions(event);"/>
+        </row>
+        <row>
+          <vbox align="start">
+            <checkbox id="enableSoftwareInstall" label="&enableSoftwareUpdate.label;"
+                      oncommand="updateButtons('install')"
+                      accesskey="&enableSoftwareUpdate.accesskey;"
+                      prefstring="xpinstall.enabled"/>
+          </vbox>
+          <button id="enableSoftwareInstallButton" label="&allowedSites.label;"
+                  permissiontype="install" oncommand="showExceptions(event);"/>
+        </row>
+        <row>
+          <vbox align="start">
+            <checkbox id="enableImages"
+                      oncommand="updateImagePref()"
+                      label="&enableImages.label;"
+                      accesskey="&enableImages.accesskey;"/>
+            <checkbox id="enableRestricted"
+                      label="&forOriginatingSiteOnly.label;"
+                      accesskey="&forOriginatingSiteOnly.accesskey;"
+                      oncommand="updateImagePref()"
+                      style="margin-left: 23px;"/>
+            <data id="enableImagePref" preftype="int" prefstring="network.image.imageBehavior"/>
+          </vbox>
+          <vbox>
+            <button label="&exceptions.label;"
+                    permissiontype="image" oncommand="showExceptions(event);"
+                    id="manageImages" prefstring="pref.advanced.images.disable_button.view_image"/>
+          </vbox>
+        </row>
         <separator class="thin"/>
-        <tree id="permissionsTree" flex="1"
-              seltype="multiple" hidecolumnpicker="true"
-              onkeypress="HandlePermissionKeyPress(event)"
-              onselect="PermissionSelected();">
-          <treecols>
-            <treecol id="siteCol" hideheader="true" flex="1"/>
-          </treecols>
-          <treechildren/>
-        </tree>
-        <hbox>
-          <button id="addPermission"
-                        label="&addpermission.label;"
-                        oncommand="AddPermission();"/>
-          <button id="removePermission" disabled="true" 
-                        label="&removepermission.label;" 
-                        oncommand="DeletePermission();"/>
-          <button id="removeAllPermissions"
-                        label="&removeallpermissions.label;" 
-                        oncommand="DeleteAllPermissions();"/>
-        </hbox>
-    </vbox>
-
-
+        <row>
+          <vbox align="start">
+            <checkbox id="advancedJavaAllow" label="&enbJavaCheck.label;" accesskey="&enbJavaCheck.accesskey;"
+                      prefstring="security.enable_java"/>
+          </vbox>
+        </row>
+        <row>
+          <vbox align="start">
+            <checkbox id="enableJavaScript" label="&enableJavaScript.label;" accesskey="&enableJavaScript.accesskey;"
+                      prefstring="javascript.enabled"
+                      oncommand="updateButtons('javascript');"/>
+            <spring flex="1"/>
+            
+            <checkbox id="allowWindowMoveResize" hidden="true"
+                      reversed="true" prefstring="dom.disable_window_move_resize"/>
+            <checkbox id="allowWindowFlip" hidden="true"
+                      reversed="true" prefstring="dom.disable_window_flip"/>
+            <checkbox id="allowControlContextMenu" hidden="true"
+                      prefstring="dom.event.contextmenu.enabled"/>
+            <checkbox id="allowHideStatusBar" hidden="true"
+                      reversed="true" prefstring="dom.disable_window_open_feature.status"/>
+            <checkbox id="allowWindowStatusChange" hidden="true"
+                      reversed="true" prefstring="dom.disable_window_status_change"/>
+            <checkbox id="allowImageSrcChange" hidden="true"
+                      reversed="true" prefstring="dom.disable_image_src_set"/>
+          </vbox>
+          <button id="advancedJavascript" label="&advancedJavaScript.label;" accesskey="&advancedJavaScript.accesskey;"
+                  oncommand="advancedJavaScript();" class="uniWidthButton"/>
+        </row>
+      </rows>
+    </grid>
   </groupbox>  
 
-  <groupbox>
-    <checkbox id="advancedJavaAllow" label="&enbJavaCheck.label;" accesskey="&enbJavaCheck.accesskey;"
-              prefstring="security.enable_java"/>
-    <hbox>
-      <checkbox id="enableJavaScript" label="&enableJavaScript.label;" accesskey="&enableJavaScript.accesskey;"
-                prefstring="javascript.enabled"
-                oncommand="javascriptEnabledChange();"/>
-      <spring flex="1"/>
-      
-      <checkbox id="allowWindowMoveResize" hidden="true"
-                reversed="true" prefstring="dom.disable_window_move_resize"/>
-      <checkbox id="allowWindowFlip" hidden="true"
-                reversed="true" prefstring="dom.disable_window_flip"/>
-      <checkbox id="allowControlContextMenu" hidden="true"
-                prefstring="dom.event.contextmenu.enabled"/>
-      <checkbox id="allowHideStatusBar" hidden="true"
-                reversed="true" prefstring="dom.disable_window_open_feature.status"/>
-      <checkbox id="allowWindowStatusChange" hidden="true"
-                reversed="true" prefstring="dom.disable_window_status_change"/>
-      <checkbox id="allowImageSrcChange" hidden="true"
-                reversed="true" prefstring="dom.disable_image_src_set"/>
-      
-      <button id="advancedJavascript" label="&advancedJavaScript.label;" accesskey="&advancedJavaScript.accesskey;"
-              oncommand="advancedJavaScript();" class="uniWidthButton"/>
-    </hbox>
-  </groupbox>
-
-  <groupbox>
-    <hbox>
-      <vbox flex="1">
-        <checkbox id="enableImages"
-                  oncommand="updateImagePref()"
-                  label="&enableImages.label;"
-                  accesskey="&enableImages.accesskey;"/>
-        <checkbox id="enableRestricted"
-                  label="&forOriginatingSiteOnly.label;"
-                  accesskey="&forOriginatingSiteOnly.accesskey;"
-                  oncommand="updateImagePref()"
-                  style="margin-left: 23px;"/>
-        <data id="enableImagePref" preftype="int" prefstring="network.image.imageBehavior"/>
-      </vbox>
-      <vbox>
-        <button id="manageImages" class="uniWidthButton"
-                label="&manageImages.label;" accesskey="&manageImages.accesskey;"
-                oncommand="viewImages();"
-                prefstring="pref.advanced.images.disable_button.view_image"/>
-      </vbox>
-    </hbox>            
-  </groupbox>
 </page>
 

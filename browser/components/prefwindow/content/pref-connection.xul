@@ -38,6 +38,7 @@
 
     <radiogroup id="networkProxyType" prefstring="network.proxy.type">
         <radio value="0" label="&directTypeRadio.label;" accesskey="&directTypeRadio.accesskey;" oncommand="DoEnabling();"/>
+        <radio value="4" label="&WPADTypeRadio.label;" accesskey="&WPADTypeRadio.accesskey;" oncommand="DoEnabling()"/>
         <radio value="1" label="&manualTypeRadio.label;" accesskey="&manualTypeRadio.accesskey;" oncommand="DoEnabling();"/>
       <grid class="indent" flex="1">
         <columns>
@@ -46,16 +47,24 @@
         </columns>
         
         <rows>
+          <row>
+            <hbox/>
+            <hbox>
+              <checkbox id="shareAllProxies" oncommand="toggleProxySettings();" 
+                        label="&shareproxy.label;" accesskey="&shareproxy.accesskey;"
+                        preftype="bool" prefstring="network.proxy.share_proxy_settings"/>
+            </hbox>
+          </row>
           <row align="center">
             <hbox align="center" pack="end">
               <label value="&http.label;" accesskey="&http.accesskey;" control="networkProxyHTTP"/>
             </hbox>
             <hbox align="center">
               <textbox id="networkProxyHTTP" preftype="string" prefstring="network.proxy.http"
-                       flex="1"/>
+                       flex="1" onblur="copyProxySettings()"/>
               <label value="&port.label;" accesskey="&HTTPport.accesskey;" control="networkProxyHTTP_Port"/>
               <textbox id="networkProxyHTTP_Port" preftype="int" prefstring="network.proxy.http_port"
-                       size="5"/>
+                       size="5" onblur="copyProxySettings()"/>
             </hbox>
           </row>
           <row align="center">

@@ -34,17 +34,17 @@
 # 
 # ***** END LICENSE BLOCK *****
 
-var _elementIDs = ["advancedJavaAllow", "enableJavaScript", "enableImagePref",
-                   "popupPolicy", "allowWindowMoveResize", "allowWindowFlip", "allowControlContextMenu", 
-                   "allowHideStatusBar", "allowWindowStatusChange", "allowImageSrcChange"];
-var permType = "popup";
+var _elementIDs = ["advancedJavaAllow", "enableSoftwareInstall", 
+                   "enableJavaScript", "enableImagePref",
+                   "popupPolicy", "allowWindowMoveResize", 
+                   "allowWindowFlip", "allowControlContextMenu", 
+                   "allowHideStatusBar", "allowWindowStatusChange", 
+                   "allowImageSrcChange"];
 var gImagesPref, gImagesEnabled, gImagesRestricted;
 
 function Startup()
 {
-  loadPermissions();
-
-  javascriptEnabledChange()
+  updateButtons('popup', 'install', 'javascript');
   
   gImagesPref = document.getElementById("enableImagePref");
   gImagesEnabled = document.getElementById("enableImages");
@@ -53,30 +53,35 @@ function Startup()
   if (!prefValue)
     prefValue = "0";
   switch (prefValue) {
-  case "1": gImagesRestricted.checked=true;
-  case "0": gImagesEnabled.checked=true;
+  case "1": 
+    gImagesRestricted.checked = true;
+  case "0": 
+    gImagesEnabled.checked = true;
+    break;
   }
   if (!gImagesEnabled.checked)
-    gImagesRestricted.disabled=true;
-  
-  top.hPrefWindow.registerOKCallbackFunc(onPopupPrefsOK);
+    gImagesRestricted.disabled = true;
+
+  if (parent.hPrefWindow.getPrefIsLocked("network.image.imageBehavior")) {  
+    gImagesRestricted.disabled = true;
+    gImagesEnabled.disabled = true;
+  }
 }
 
 function updateImagePref()
 {
-  if (!gImagesEnabled.checked) {
-    gImagesPref.setAttribute("value", 2)
-    gImagesRestricted.disabled=true;
+  if (!parent.hPrefWindow.getPrefIsLocked("network.image.imageBehavior")) {
+    if (!gImagesEnabled.checked) {
+      gImagesPref.setAttribute("value", 2)
+      gImagesRestricted.disabled = true;
+    } else {
+      gImagesPref.setAttribute("value", gImagesRestricted.checked ? 1 : 0)
+      gImagesRestricted.disabled = false;
+    }
   } else {
-    gImagesPref.setAttribute("value", gImagesRestricted.checked?1:0)
-    gImagesRestricted.disabled=false;
+    gImagesRestricted.disabled = true;
+    gImagesEnabled.disabled = true;
   }
-}
-
-function viewImages() 
-{
-  openDialog("chrome://browser/content/pref/pref-features-images.xul","_blank",
-              "chrome,resizable=yes,modal", "imageManager" );
 }
 
 function advancedJavaScript()
@@ -85,106 +90,50 @@ function advancedJavaScript()
              "chrome,modal");
 }
 
-function javascriptEnabledChange()
+function updateButtons()
 {
-  var isEnabled = document.getElementById("enableJavaScript").checked;
-  var advancedButton = document.getElementById("advancedJavascript");
-  advancedButton.disabled = !isEnabled;
-}
+  var i;
+  var checkbox;
+  var button;
 
-function AddPermission() {
-  var host = enterNewSite(null);
-  if (!host)
-    return;
-  permissions[permissions.length] = new Permission(permissions.length, host,
-                                                   (host.charAt(0)==".") ? host.substring(1,host.length) : host,
-                                                   "popup",
-                                                   "");
-  permissionsTreeView.rowCount = permissions.length;
-  permissionsTree.treeBoxObject.rowCountChanged(permissions.length-1, 1);
-  permissionsTree.treeBoxObject.ensureRowIsVisible(permissions.length-1);
-}
-
-function enterNewSite(site) {
-  var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
-                                .getService(Components.interfaces.nsIPromptService);
-
-  var stringBundle = document.getElementById("stringBundle");
-  var message = stringBundle.getString("enterSiteName");
-  var title = stringBundle.getString("enterSiteTitle");
-
-  var name = (!site ? {} : site);
-  if (!promptService.prompt(window, title, message, name, null, {}))
-      return null;
-  var host = name.value.replace(/^\s*([-\w]*:\/+)?/, ""); // trim any leading space and scheme
-  try {
-    var ioService = Components.classes["@mozilla.org/network/io-service;1"]
-                              .getService(Components.interfaces.nsIIOService);
-    var uri = ioService.newURI("http://"+host, null, null);
-    host = uri.host;
-    return host;
-  } catch(ex) {
-    // if we get here, the user has managed to enter something that couldn't get parsed to a real URI
-    var alertTitle = stringBundle.getString("addSiteFailedTitle");
-    var alertMsg = stringBundle.getFormattedString("addSiteFailedMessage",[host]);
-    promptService.alert(window, alertTitle, alertMsg);
+  for (i=0; i < arguments.length; ++i) {
+    switch (arguments[i]) {
+    case "popup":
+      checkbox = document.getElementById("popupPolicy");
+      button   = document.getElementById("popupPolicyButton");
+      break;
+    case "install":
+      checkbox = document.getElementById("enableSoftwareInstall");
+      button   = document.getElementById("enableSoftwareInstallButton");
+      break;
+    case "javascript":
+      checkbox = document.getElementById("enableJavaScript");
+      button   = document.getElementById("advancedJavascript");
+      break;
+    }
+    button.disabled = !checkbox.checked;
   }
-  return null;
 }
 
-function onPopupPrefsOK()
+var gExceptionsParams = {
+  install: { blockVisible: false, sessionVisible: false, allowVisible: true, prefilledHost: "", permissionType: "install" },
+  popup:   { blockVisible: false, sessionVisible: false, allowVisible: true, prefilledHost: "", permissionType: "popup"   },
+  image:   { blockVisible: true,  sessionVisible: false, allowVisible: true, prefilledHost: "", permissionType: "image"   },
+};
+
+function showExceptions(aEvent)
 {
-  if (!nsIPermissionManager)
-    var nsIPermissionManager = Components.interfaces.nsIPermissionManager;
-
-  var permissionmanager = Components.classes["@mozilla.org/permissionmanager;1"].getService();
-  permissionmanager = permissionmanager.QueryInterface(nsIPermissionManager);
-
-  var dataObject = parent.hPrefWindow.wsm.dataManager.pageData["chrome://browser/content/pref/pref-features.xul"].userData;
-  if ('deletedPermissions' in dataObject) {
-    for (var p = 0; p < dataObject.deletedPermissions.length; ++p) {
-      permissionmanager.remove(dataObject.deletedPermissions[p].host, dataObject.deletedPermissions[p].type);
-    }
+  var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                     .getService(Components.interfaces.nsIWindowMediator);
+  var existingWindow = wm.getMostRecentWindow("exceptions");
+  if (existingWindow) {
+    existingWindow.setHost("");
+    existingWindow.focus();
   }
-  
-  if ('permissions' in dataObject) {
-    var uri = Components.classes["@mozilla.org/network/standard-url;1"]
-                        .createInstance(Components.interfaces.nsIURI);    
-
-    for (p = 0; p < dataObject.permissions.length; ++p) {
-      uri.spec = dataObject.permissions[p].host;
-      if (permissionmanager.testPermission(uri, "popup") != dataObject.permissions[p].perm)
-        permissionmanager.add(uri, "popup", nsIPermissionManager.ALLOW_ACTION);
-    }
+  else {
+    const kURL = "chrome://browser/content/cookieviewer/CookieExceptions.xul";
+    var params = gExceptionsParams[aEvent.target.getAttribute("permissiontype")];
+    window.openDialog(kURL, "_blank", "chrome,modal,resizable=yes", params);
   }
 }
-
-function onImagePrefsOK()
-{
-  if (!nsIPermissionManager)
-    var nsIPermissionManager = Components.interfaces.nsIPermissionManager;
-
-  var permissionmanager = Components.classes["@mozilla.org/permissionmanager;1"].getService();
-  permissionmanager = permissionmanager.QueryInterface(nsIPermissionManager);
-
-  var dataObject = parent.hPrefWindow.wsm.dataManager.pageData["chrome://browser/content/pref/pref-features-images.xul"].userData;
-  if ('deletedPermissions' in dataObject) {
-    for (var p = 0; p < dataObject.deletedPermissions.length; ++p) {
-      permissionmanager.remove(dataObject.deletedPermissions[p].host, dataObject.deletedPermissions[p].type);
-    }
-  }
-  
-  if ('permissions' in dataObject) {
-    var uri = Components.classes["@mozilla.org/network/standard-url;1"]
-                        .createInstance(Components.interfaces.nsIURI);    
-
-    for (p = 0; p < dataObject.permissions.length; ++p) {
-      uri.spec = dataObject.permissions[p].host;
-      if (permissionmanager.testPermission(uri, "image") != dataObject.permissions[p].perm)
-        permissionmanager.add(uri, "image", nsIPermissionManager.ALLOW_ACTION);
-    }
-  }
-}
-
-
 

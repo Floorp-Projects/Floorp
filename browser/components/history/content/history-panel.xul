@@ -44,23 +44,22 @@
   <commandset id="editMenuCommands"/>
   <keyset id="editMenuKeys"/>
   
-  <popup id="historyContextMenu" onpopupshowing="buildContextMenu();">
+  <popup id="historyContextMenu" onpopupshowing="buildContextMenu(event);">
     <menuitem id="miExpand" label="&expand.label;" accesskey="&expand.accesskey;"
               default="true" oncommand="collapseExpand();"/>
     <menuitem id="miCollapse" label="&collapse.label;" accesskey="&collapse.accesskey;"
               default="true" oncommand="collapseExpand();"/>
     <menuitem id="miOpen" label="&openLinkInWindow.label;" accesskey="&openLinkInWindow.accesskey;" default="true"
-              oncommand="OpenURLIn('current');"/>
+              oncommand="openURLIn('current');"/>
     <menuitem id="miOpenInNewWindow" label="&openInNewWindow.label;" accesskey="&openInNewWindow.accesskey;"
-              oncommand="OpenURLIn('window');"/>
+              oncommand="openURLIn('window');"/>
     <menuitem id="miOpenInNewTab" label="&openInNewTab.label;" accesskey="&openInNewTab.accesskey;"
-              oncommand="OpenURLIn('tab');"/>
+              oncommand="openURLIn('tab');"/>
     <menuseparator id="pre-bookmarks-separator"/>
     <menuitem id="miAddBookmark" label="&bookmarkLink.label;" accesskey="&bookmarkLink.accesskey;" oncommand="historyAddBookmarks();"/>
     <menuitem id="miCopyLink" label="&copyLink.label;" accesskey="&copyLink.accesskey;" oncommand="historyCopyLink();"/>
     <menuseparator id="post-bookmarks-separator"/>
     <menuitem id="cMenu_delete"/>
-    <menuitem id="cMenu_selectAll"/>
   </popup>
 
   <hbox align="center">
@@ -90,15 +89,12 @@
     </toolbarbutton>
   </hbox>
   <tree id="historyTree" flex="1" class="plain"
-            context="historyContextMenu"
-            datasources="rdf:history" ref="NC:HistoryByDate" flags="dont-build-content"
-            onkeypress="if (event.keyCode == 13) OpenURL(event);" 
-            onselect="this.treeBoxObject.view.selectionChanged();
-                      historyOnSelect();"
-            hidecolumnpicker="true"
-            ondraggesture="if (event.originalTarget.localName == 'treechildren') nsDragAndDrop.startDrag(event, historyDNDObserver);"
-            onclick="if (event.button == 1) OpenURL(event);" 
-            ondblclick="if (isValidLeftClick(event,'treechildren')) OpenURL(event);">
+        context="historyContextMenu" seltype="multiple"
+        datasources="rdf:history" ref="NC:HistoryByDate" flags="dont-build-content"
+        onkeypress="if (event.keyCode == 13) openURL(event);" 
+        hidecolumnpicker="true"
+        ondraggesture="if (event.originalTarget.localName == 'treechildren') nsDragAndDrop.startDrag(event, historyDNDObserver);"
+        onclick="handleHistoryClick(event);">
     <template>
       <rule>
         <treechildren>

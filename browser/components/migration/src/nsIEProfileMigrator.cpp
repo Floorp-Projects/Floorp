@@ -60,7 +60,6 @@
 #include "nsILocalFile.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
-#include "nsServiceManagerUtils.h"
 #include "nsISimpleEnumerator.h"
 #include "nsISupportsArray.h"
 #include "nsIProfileMigrator.h"
@@ -568,7 +567,7 @@ nsIEProfileMigrator::CopyHistory(PRBool aReplace)
           // to the system, so we should just avoid importing them. 
           const char* schemes[] = { "http", "https", "ftp", "file" };
           for (int i = 0; i < 4; ++i) {
-            if (validScheme = scheme.EqualsASCII(schemes[i]))
+            if (validScheme = scheme.Equals(schemes[i]))
               break;
           }
           

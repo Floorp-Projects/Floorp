@@ -46,8 +46,12 @@
 
   <hbox pack="center">
     <statusbar style="width:20em">
-      <statusbarpanel class="statusbarpanel-iconic" style="min-height:18px" id="page-report-button" blocked="true"/>
       <statusbarpanel flex="1" pack="left"><description>&done.label;</description></statusbarpanel>
+      <statusbarpanel class="statusbarpanel-iconic" style="min-height:18px" id="security-button"/>
+      <statusbarpanel class="statusbarpanel-iconic" style="min-height:18px" id="page-report-button" blocked="true"/>
+      <statusbarpanel class="statusbarpanel-iconic" style="min-height:18px" id="page-theme-button"/>
+      <statusbarpanel class="statusbarpanel-iconic" style="min-height:18px" id="livemark-button"/>
+      <statusbarpanel id="statusbar-updates"/>
     </statusbar>
   </hbox>
 

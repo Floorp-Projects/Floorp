@@ -118,6 +118,7 @@ nsPrefWindow.prototype =
           {
             this.cancelHandlers[this.cancelHandlers.length] = aFunctionReference;
           },
+          
       getPrefIsLocked:
         function ( aPrefString )
           {

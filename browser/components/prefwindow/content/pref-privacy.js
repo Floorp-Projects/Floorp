@@ -103,6 +103,8 @@ function Startup() {
   drp.removeAttribute("hidden");
   document.documentElement.removeChild(drp);
   drb.appendChild(drp);
+  
+  setMasterPasswordButtonLabel();
 }
 
 function unload()
@@ -301,16 +303,30 @@ function viewCookies()
                     "chrome,resizable=yes", "cookieManager");
 }
 
-function cookieExceptions()
+function viewCookieExceptions()
 {
-  window.openDialog("chrome://browser/content/cookieviewer/CookieExceptions.xul","_blank",
-                    "chrome,resizable=yes", "cookieExceptions");
+  var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                     .getService(Components.interfaces.nsIWindowMediator);
+  var existingWindow = wm.getMostRecentWindow("exceptions");
+  if (existingWindow) {
+    existingWindow.setHost("");
+    existingWindow.focus();
+  }
+  else {
+    var params = { blockVisible   : true,
+                   sessionVisible : true,
+                   allowVisible   : true,
+                   prefilledHost  : "",
+                   permissionType : "cookie" };
+    window.openDialog("chrome://browser/content/cookieviewer/CookieExceptions.xul",
+                      "_blank", "chrome,modal,resizable=yes", params);
+  }
 }
 
 function viewSignons() 
 {
-    window.openDialog("chrome://passwordmgr/content/passwordManager.xul","_blank",
-                      "chrome,resizable=yes", "8");
+  window.openDialog("chrome://passwordmgr/content/passwordManager.xul","_blank",
+                    "chrome,resizable=yes", "8");
 }
 
 function updateCookieBehavior()
@@ -322,6 +338,9 @@ function updateCookieBehavior()
 
 function updateCookieBroadcaster()
 {
+  cookieBehaviorIsLocked = parent.hPrefWindow.getPrefIsLocked("network.cookie.cookieBehavior");
+  cookieLifetimeIsLocked = parent.hPrefWindow.getPrefIsLocked("network.cookie.lifetimePolicy");
+
   var broadcaster = document.getElementById("cookieBroadcaster");
   var checkbox    = document.getElementById("enableCookies");
   var radiogroup  = document.getElementById("networkCookieLifetime");
@@ -332,31 +351,12 @@ function updateCookieBroadcaster()
   }
   else {
     broadcaster.removeAttribute("disabled");
-    radiogroup.removeAttribute("disabled");
+    if (!cookieLifetimeIsLocked)
+      radiogroup.removeAttribute("disabled");
   }
-}
-
-function onPrefsOK()
-{
-  var permissionmanager = Components.classes["@mozilla.org/permissionmanager;1"].getService();
-  permissionmanager = permissionmanager.QueryInterface(Components.interfaces.nsIPermissionManager);
-
-  var dataObject = parent.hPrefWindow.wsm.dataManager.pageData["chrome://browser/content/cookieviewer/CookieExceptions.xul"].userData;
-  if ('deletedPermissions' in dataObject) {
-    for (var p = 0; p < dataObject.deletedPermissions.length; ++p) {
-      permissionmanager.remove(dataObject.deletedPermissions[p].host, dataObject.deletedPermissions[p].type);
-    }
-  }
-  
-  if ('permissions' in dataObject) {
-    var uri = Components.classes["@mozilla.org/network/standard-url;1"]
-                        .createInstance(Components.interfaces.nsIURI);    
-
-    for (p = 0; p < dataObject.permissions.length; ++p) {
-      uri.spec = dataObject.permissions[p].host;
-      if (permissionmanager.testPermission(uri, "cookie") != dataObject.permissions[p].perm)
-        permissionmanager.add(uri, "cookie", dataObject.permissions[p].perm);
-    }
+  if (cookieBehaviorIsLocked) {
+    checkbox.setAttribute("disabled", "true");
+    broadcaster.setAttribute("disabled", "true");
   }
 }
 
@@ -367,5 +367,39 @@ function unexpandOld(event)
   for (var i = 0; i < box.childNodes.length; ++i) {
     if (box.childNodes[i] != newExpander && box.childNodes[i].getAttribute("open"))
       box.childNodes[i].open = false;
+  }
+}
+
+function changeMasterPassword()
+{
+  window.openDialog("chrome://browser/content/pref/pref-masterpass.xul","",
+                    "chrome,centerscreen,modal,resizable=yes");
+  setMasterPasswordButtonLabel();
+}
+
+function setMasterPasswordButtonLabel()
+{
+  // see if there's a master password and set the button label accordingly
+  const nsPKCS11ModuleDB = "@mozilla.org/security/pkcs11moduledb;1";
+  const nsIPKCS11ModuleDB = Components.interfaces.nsIPKCS11ModuleDB;
+  const nsIPKCS11Slot = Components.interfaces.nsIPKCS11Slot;
+
+  var secmoddb = Components.classes[nsPKCS11ModuleDB].getService(nsIPKCS11ModuleDB);
+  var slot = secmoddb.findSlotByName("");
+
+  if (slot) {
+    var status = slot.status;
+    var masterPasswordBtn = document.getElementById("masterPasswordBtn");
+    var privacyBundle = document.getElementById("privacyBundle");
+    var buttonLabel = "";
+    if (status == nsIPKCS11Slot.SLOT_UNINITIALIZED
+      || status == nsIPKCS11Slot.SLOT_READY) {
+
+      buttonLabel = privacyBundle.getString("setMasterPassword");
+      masterPasswordBtn.setAttribute("label",buttonLabel);
+    } else {
+      buttonLabel = privacyBundle.getString("changeMasterPassword");
+      masterPasswordBtn.setAttribute("label",buttonLabel);
+    }
   }
 }

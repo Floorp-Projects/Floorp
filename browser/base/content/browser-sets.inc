@@ -35,12 +35,18 @@
 # 
 # ***** END LICENSE BLOCK *****
 
+#ifdef XP_UNIX
+#ifndef XP_MACOSX
+#define XP_GNOME 1
+#endif
+#endif
+
   <stringbundleset id="stringbundleset"> 
     <stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
     <stringbundle id="bundle_shell" src="chrome://browser/locale/shellservice.properties"/>
     <stringbundle id="bundle_browser" src="chrome://browser/locale/browser.properties"/>
+    <stringbundle id="bundle_findBar" src="chrome://browser/locale/browser.properties"/>
     <stringbundle id="bundle_browser_region" src="chrome://browser-region/locale/region.properties"/>
-    <stringbundle id="findBundle" src="chrome://global/locale/finddialog.properties"/>
   </stringbundleset>
 
   <commandset commandupdater="true"
@@ -71,6 +77,7 @@
     <command id="cmd_bm_refreshlivemark"           oncommand="goDoCommand('cmd_bm_refreshlivemark');"/>
     <command id="cmd_bm_rename"                    oncommand="goDoCommand('cmd_bm_rename');"/>
     <command id="cmd_bm_moveBookmark"              oncommand="goDoCommand('cmd_bm_moveBookmark');"/>
+    <command id="cmd_bm_sortbyname"                oncommand="goDoCommand('cmd_bm_sortbyname');"/>
 
 #ifndef XP_MACOSX
     <command id="cmd_handleBackspace"  oncommand="BrowserHandleBackspace();" />
@@ -83,7 +90,7 @@
     <command id="Browser:SendLink" oncommand="MailIntegration.sendLinkForContent();"/>
     <command id="Browser:NewMessage" oncommand="MailIntegration.sendMessage('', '');"/>
 #ifdef HAVE_SHELL_SERVICE
-    <command id="Browser:ReadMail" oncommand="MailIntegration.readMail();"/>
+    <command id="Browser:ReadMail" oncommand="MailIntegration.readMail();" label="&mailButton.readMail.label;"/>
     <command id="Browser:ReadNews" oncommand="MailIntegration.readNews();"/>
 #endif
 
@@ -123,13 +130,16 @@
     <command id="cmd_selectAll"
              oncommand="goDoCommand('cmd_selectAll')"
              disabled="true"/>
+    <command id="cmd_SwitchTextDirection"
+             oncommand="SwitchFocusedTextEntryDirection()"
+             disabled="true"/>
 
     <command id="View:PageSource" oncommand="BrowserViewSourceOfDocument(_content.document);"/>
     <command id="View:PageInfo" oncommand="BrowserPageInfo();"/>
     <command id="View:FullScreen" oncommand="BrowserFullScreen();"/>
-    <command id="cmd_find" oncommand="getBrowser().find();"/>
-    <command id="cmd_findAgain" oncommand="getBrowser().findAgain();"/>
-    <command id="cmd_findPrevious" oncommand="getBrowser().findPrevious();"/>
+    <command id="cmd_find" oncommand="onFindCmd();"/>
+    <command id="cmd_findAgain" oncommand="onFindAgainCmd();"/>
+    <command id="cmd_findPrevious" oncommand="onFindPreviousCmd();"/>    
     <command id="Browser:AddBookmarkAs" oncommand="addBookmarkAs(document.getElementById('content'));"/>
     <command id="Browser:Home"    oncommand="BrowserHome();"/>
     <command id="Browser:Back"    oncommand="BrowserBack();" disabled="true"/>
@@ -137,6 +147,7 @@
     <command id="Browser:Stop"    oncommand="BrowserStop();" disabled="true"/>
     <command id="cmd_textZoomReduce"  oncommand="ZoomManager.prototype.getInstance().reduce();"/>
     <command id="cmd_textZoomEnlarge" oncommand="ZoomManager.prototype.getInstance().enlarge();"/>
+    <command id="cmd_textZoomReset" oncommand="ZoomManager.prototype.getInstance().reset();"/>
     <command id="Browser:OpenLocation" oncommand="openLocation();"/>
 
     <command id="Tools:Search" oncommand="focusSearchBar();"/>    
@@ -147,7 +158,8 @@
     <command id="Tools:Themes" oncommand="BrowserOpenExtensions('themes');"/>
     
 #ifdef XP_MACOSX
-    <command id="minimizeWindow" label="&minimizeWindow.label;" disabled="true"/>
+    <command id="minimizeWindow" label="&minimizeWindow.label;" oncommand="window.minimize();" />
+    <command id="zoomWindow" label="&zoomWindow.label;" oncommand="zoomWindow();" />
 #endif
   </commandset>
 
@@ -164,6 +176,20 @@
                  type="checkbox" group="sidebar" sidebarurl="chrome://browser/content/web-panels.xul"
                  oncommand="toggleSidebar('viewWebPanelsSidebar');"/>
 
+    <!-- popup blocking menu items -->
+    <broadcaster id="blockedPopupAllowSite" 
+                 accesskey="&allowPopups.accesskey;" 
+                 oncommand="gPopupBlockerObserver.toggleAllowPopupsForSite(event);"/>
+    <broadcaster id="blockedPopupEditSettings" 
+                 label="&editPopupSettings.label;" 
+                 accesskey="&editPopupSettings.accesskey;" 
+                 oncommand="gPopupBlockerObserver.editPopupSettings();"/>
+    <broadcaster id="blockedPopupDontShowMessage" 
+                 accesskey="&dontShowMessage.accesskey;" 
+                 type="checkbox"
+                 oncommand="gPopupBlockerObserver.dontShowMessage();"/>
+    <broadcaster id="blockedPopupsSeparator"/>
+
   </broadcasterset>
 
   <keyset id="mainKeyset">
@@ -179,8 +205,8 @@
 #
 # Search Command Key Logic works like this:
 # 
-# Unix: Ctrl+J (0.8, 0.9 support)
-#       Ctrl+K (cross platform binding)
+# Unix: Ctrl+K (cross platform binding)
+#       Ctrl+J (in case of emacs Ctrl-K conflict)
 # Mac:  Ctrl+K (cross platform binding)
 # Win:  Ctrl+K (cross platform binding)
 #       Ctrl+E (IE compat)
@@ -194,14 +220,15 @@
 #
 # Do *not* tamper with these values without talking to ben@mozilla.org
 #
-#ifdef XP_UNIX
-#ifndef XP_MACOSX
-    <key id="key_search2" key="&searchFocusUnix.commandkey;" command="Tools:Search" modifiers="accel"/>
-#endif
     <key id="key_search" key="&searchFocus.commandkey;" command="Tools:Search" modifiers="accel"/>
-#else
-    <key id="key_search" key="&searchFocus.commandkey;" command="Tools:Search" modifiers="accel"/>
+#ifdef XP_WIN
     <key id="key_search2" key="&searchFocus.commandkey2;" command="Tools:Search" modifiers="accel"/>
+#endif
+#ifdef XP_GNOME
+    <key id="key_search2" key="&searchFocusUnix.commandkey;" command="Tools:Search" modifiers="accel"/>
+    <key id="key_openDownloads" key="&downloadsUnix.commandkey;" command="Tools:Downloads" modifiers="accel"/>
+#else
+    <key id="key_openDownloads" key="&downloads.commandkey;" command="Tools:Downloads" modifiers="accel"/>
 #endif
     <key id="openFileKb" key="&openFileCmd.commandkey;" command="Browser:OpenFile"  modifiers="accel"/>
     <key id="key_savePage" key="&savePageCmd.commandkey;" command="Browser:SavePage" modifiers="accel"/>
@@ -211,9 +238,11 @@
     <key id="key_undo"
          key="&undoCmd.key;"
          modifiers="accel"/>
-    <key id="key_redo"
-         key="&redoCmd.key;"
-         modifiers="accel"/>
+#ifdef XP_UNIX
+    <key id="key_redo" key="&undoCmd.key;" modifiers="accel,shift"/>
+#else
+    <key id="key_redo" key="&redoCmd.key;" modifiers="accel"/>
+#endif
     <key id="key_cut"
          key="&cutCmd.key;"
          modifiers="accel"/>
@@ -224,6 +253,7 @@
          key="&pasteCmd.key;"
          modifiers="accel"/>
     <key id="key_delete" keycode="VK_DELETE" command="cmd_delete"/>
+    <key id="key_selectAll" key="&selectAllCmd.key;" modifiers="accel"/>
 
 #ifndef XP_MACOSX
     <key keycode="VK_BACK" command="cmd_handleBackspace"/>
@@ -232,13 +262,6 @@
 #ifdef XP_UNIX
     <key key="&goBackCmd.commandKey;" command="Browser:Back" modifiers="accel"/>
     <key key="&goForwardCmd.commandKey;" command="Browser:Forward" modifiers="accel"/>
-#ifdef XP_MACOSX
-    <key id="key_selectAll" key="&selectAllCmd.key;" modifiers="accel"/>
-#else
-    <key id="key_selectAll" key="&selectAllCmd.key;" modifiers="alt"/>
-#endif
-#else
-    <key id="key_selectAll" key="&selectAllCmd.key;" modifiers="accel"/>
 #endif
 #ifdef XP_MACOSX
     <key id="goBackKb"  keycode="VK_LEFT" command="Browser:Back" modifiers="accel"/>
@@ -254,9 +277,7 @@
     <key id="key_reload"  key="&reloadCmd.commandkey;" oncommand="BrowserReload();" modifiers="accel"/>
     <key key="&reloadCmd.commandkey;" oncommand="BrowserReloadSkipCache();" modifiers="accel,shift"/>
     <key id="key_viewSource" key="&pageSourceCmd.commandkey;" command="View:PageSource" modifiers="accel"/>
-#ifdef XP_WIN
-    <key id="key_viewInfo"   key="&pageInfoWinCmd.commandkey;"   command="View:PageInfo"   modifiers="accel"/>
-#else
+#ifndef XP_WIN
     <key id="key_viewInfo"   key="&pageInfoCmd.commandkey;"   command="View:PageInfo"   modifiers="accel"/>
 #endif
     <key id="key_find" key="&findOnCmd.commandkey;" command="cmd_find" modifiers="accel"/>
@@ -268,27 +289,32 @@
     <key id="addBookmarkAsKb" key="&addCurPageAsCmd.commandkey;" command="Browser:AddBookmarkAs" modifiers="accel"/>
     <key id="viewBookmarksSidebarKb" key="&bookmarksSidebarCmd.commandkey;" command="viewBookmarksSidebar" modifiers="accel"/>
 #ifdef XP_WIN
-# Cmd+I is conventially mapped to Info on MacOS X, 
-# thus it should not be overridden for other purposes there.
+# Cmd+I is conventially mapped to Info on MacOS X, thus it should not be 
+# overridden for other purposes there. 
     <key id="viewBookmarksSidebarWinKb" key="&bookmarksSidebarWinCmd.commandkey;" command="viewBookmarksSidebar" modifiers="accel"/>
 #endif
 
-    <key id="key_stop" keycode="VK_ESCAPE" command="Browser:Stop"/>
+    <key id="key_stop" keycode="VK_ESCAPE" oncommand="BrowserStop();"/>
 #ifdef XP_MACOSX
     <key id="key_gotoHistory"  key="&historySidebarCmd.commandKey;"  command="viewHistorySidebar" modifiers="accel,shift"/>
 #else
     <key id="key_gotoHistory"  key="&historySidebarCmd.commandKey;"  command="viewHistorySidebar" modifiers="accel"/>
 #endif
 
-    <key id="key_openDownloads"   key="&downloads.commandkey;"           command="Tools:Downloads" modifiers="accel"/>
-
-    <key id="key_newMessage" key="&sendMessage.commandkey;" command="Browser:NewMessage" modifiers="accel"/>
-
+    <key id="key_newMessage"
+         key="&sendMessage.commandkey;"
+         command="Browser:NewMessage"
+#ifdef XP_MACOSX
+         modifiers="accel,shift"/>
+#else
+         modifiers="accel"/>
+#endif
     <key id="key_textZoomReduce"  key="&textZoomReduceCmd.commandkey;"   command="cmd_textZoomReduce"  modifiers="accel"/>
     <key id="key_textZoomEnlarge" key="&textZoomEnlargeCmd.commandkey;"  command="cmd_textZoomEnlarge" modifiers="accel"/>
     <key                          key="&textZoomEnlargeCmd.commandkey2;" command="cmd_textZoomEnlarge" modifiers="accel"/>
-    <key                          key="&textZoomResetCmd.commandkey;"    oncommand="ZoomManager.prototype.getInstance().reset();"   modifiers="accel"/>
+    <key id="key_textZoomReset"   key="&textZoomResetCmd.commandkey;"    command="cmd_textZoomReset"   modifiers="accel"/>
     
+    <key id="key_SwitchTextDirection" key="&bidiSwitchTextDirectionItem.commandkey;" command="cmd_SwitchTextDirection" modifiers="accel,shift" />
 #ifdef XP_MACOSX
     <key id="key_minimizeWindow" command="minimizeWindow" key="&minimizeWindow.key;" modifiers="accel"/>
 #endif

@@ -26,10 +26,12 @@ var MigrationWizard = {
       this._migrator = window.arguments[1].QueryInterface(kIMig);
       this._autoMigrate = window.arguments[2].QueryInterface(kIPStartup);
       
-      // Show the "nothing" option in the automigrate case to provide an
-      // easily identifiable way to avoid migration and create a new profile.
-      var nothing = document.getElementById("nothing");
-      nothing.hidden = false;
+      if (this._autoMigrate) {
+        // Show the "nothing" option in the automigrate case to provide an
+        // easily identifiable way to avoid migration and create a new profile.
+        var nothing = document.getElementById("nothing");
+        nothing.hidden = false;
+      }
     }
     
     this.onImportSourcePageShow();
@@ -92,6 +94,15 @@ var MigrationWizard = {
       }
     }
 
+    if (this._source) {
+      // Somehow the Profile Migrator got confused, and gave us a migrate source
+      // that doesn't actually exist. This could be because of a bogus registry
+      // state. Set the _source property to null so the first visible item in
+      // the list is selected instead. 
+      var source = document.getElementById(this._source);
+      if (source.hidden)
+        this._source = null;
+    }
     group.selectedItem = !this._source ? firstSelectable : document.getElementById(this._source);
   },
   
@@ -114,8 +125,7 @@ var MigrationWizard = {
       this._itemsFlags = kIMig.ALL;
       this._selectedProfile = null;
     }
-    if (!this._autoMigrate)
-      this._source = newSource;
+    this._source = newSource;
       
     // check for more than one source profile
     if (this._migrator.sourceHasMultipleProfiles)

@@ -87,7 +87,7 @@ function Init()
   SelectLanguage();
 
   LoadAvailableLanguages();
-  gSelectLabel = gAvailableLanguages.getAttribute("label");
+  gSelectLabel = gAvailableLanguages.label;
   gSelectAccesskey = gAvailableLanguages.getAttribute("accesskey");
 }
 
@@ -265,7 +265,7 @@ function AddAvailableLanguage()
     AddMenuOrListItem(document, gActiveLanguages, "listitem", languageId, languageName);
 
   // restore the "select" label and accesskey, disable the "add" button again
-  gAvailableLanguages.setAttribute("label", gSelectLabel);
+  gAvailableLanguages.label = gSelectLabel;
   gAvailableLanguages.setAttribute("accesskey", gSelectAccesskey);
   addButton.disabled = true;
 

@@ -1,7 +1,7 @@
 <!ENTITY aboutDialog.title      "About &brandFullName;">
 <!ENTITY copyright              "Credits">
 <!ENTITY aboutLink              "&lt; About &brandFullName;">
-<!ENTITY aboutVersion           "version &version;">
+<!ENTITY aboutVersion           "version">
 <!ENTITY copyrightText          "&#169;1998-2004 Contributors. All Rights Reserved. Firefox and the 
                                  Firefox logos are trademarks of the Mozilla Foundation.  All rights 
                                  reserved. Some trademark rights used under license from The 

@@ -56,7 +56,8 @@ public:
 protected:
   ~nsProfileMigrator() { };
 
-  void GetDefaultBrowserMigratorKey(nsACString& key);
+  nsresult GetDefaultBrowserMigratorKey(nsACString& key,
+                                        nsCOMPtr<nsIBrowserProfileMigrator>& bpm);
 
   /**
    * Import profiles from ~/.firefox/ or ~/.phoenix/

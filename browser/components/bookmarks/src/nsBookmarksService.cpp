@@ -87,7 +87,6 @@
 #include "nsICharsetConverterManager.h"
 #include "nsICharsetAlias.h"
 #include "nsIPlatformCharset.h"
-#include "nsIPref.h"
 
 #include "plbase64.h"
 
@@ -141,6 +140,8 @@ nsIRDFResource      *kNC_BookmarkCommand_Import;
 nsIRDFResource      *kNC_BookmarkCommand_Export;
 nsIRDFResource      *kNC_BookmarkCommand_RefreshLivemark;
 
+nsIRDFResource      *kForwardProxy;
+
 /* RDF Resources for RSS parsing */
 #ifndef RSS09_NAMESPACE_URI
 #define RSS09_NAMESPACE_URI "http://my.netscape.com/rdf/simple/0.9/"
@@ -159,6 +160,12 @@ nsIRDFResource      *kRSS10_channel;
 nsIRDFResource      *kRSS10_items;
 nsIRDFResource      *kRSS10_title;
 nsIRDFResource      *kRSS10_link;
+
+#ifndef DC_NAMESPACE_URI
+#define DC_NAMESPACE_URI "http://purl.org/dc/elements/1.1/"
+#endif 
+
+nsIRDFResource      *kDC_date;
 
 #define BOOKMARK_TIMEOUT        15000       // fire every 15 seconds
 // #define  DEBUG_BOOKMARK_PING_OUTPUT  1
@@ -207,22 +214,16 @@ bm_AddRefGlobals()
     {
         nsresult rv;
         rv = CallGetService(kRDFServiceCID, &gRDF);
-        if (NS_FAILED(rv)) {
-            NS_ERROR("unable to get RDF service");
-            return rv;
-        }
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
+        if (NS_FAILED(rv)) return rv;
 
         rv = CallGetService(kRDFContainerUtilsCID, &gRDFC);
-        if (NS_FAILED(rv)) {
-            NS_ERROR("unable to get RDF container utils");
-            return rv;
-        }
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF container utils");
+        if (NS_FAILED(rv)) return rv;
 
         rv = CallGetService(kCharsetAliasCID, &gCharsetAlias);
-        if (NS_FAILED(rv)) {
-            NS_ERROR("unable to get charset alias service");
-            return rv;
-        } 
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get charset alias service");
+        if (NS_FAILED(rv)) return rv;
 
         gRDF->GetResource(NS_LITERAL_CSTRING(kURINC_BookmarksTopRoot),
                           &kNC_BookmarksTopRoot);
@@ -323,6 +324,8 @@ bm_AddRefGlobals()
                           &kNC_BookmarkCommand_Export);
         gRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "command?cmd=refreshlivemark"),
                           &kNC_BookmarkCommand_RefreshLivemark);
+        gRDF->GetResource(NS_LITERAL_CSTRING(DEVMO_NAMESPACE_URI_PREFIX "forward-proxy#forward-proxy"),
+                          &kForwardProxy);
 
         /* RSS Resources */
         gRDF->GetResource(NS_LITERAL_CSTRING(RSS09_NAMESPACE_URI "channel"),
@@ -342,6 +345,9 @@ bm_AddRefGlobals()
                           &kRSS10_title);
         gRDF->GetResource(NS_LITERAL_CSTRING(RSS10_NAMESPACE_URI "link"),
                           &kRSS10_link);
+
+        gRDF->GetResource(NS_LITERAL_CSTRING(DC_NAMESPACE_URI "date"),
+                          &kDC_date);
     }
     return NS_OK;
 }
@@ -353,9 +359,23 @@ bm_ReleaseGlobals()
 {
     if (--gRefCnt == 0)
     {
-        NS_IF_RELEASE(gRDF);
-        NS_IF_RELEASE(gRDFC);
-        NS_IF_RELEASE(gCharsetAlias);
+        if (gRDF)
+        {
+            nsServiceManager::ReleaseService(kRDFServiceCID, gRDF);
+            gRDF = nsnull;
+        }
+
+        if (gRDFC)
+        {
+            nsServiceManager::ReleaseService(kRDFContainerUtilsCID, gRDFC);
+            gRDFC = nsnull;
+        }
+
+        if (gCharsetAlias)
+        {
+            nsServiceManager::ReleaseService(kCharsetAliasCID, gCharsetAlias);
+            gCharsetAlias = nsnull;
+        }
 
         NS_IF_RELEASE(kNC_Bookmark);
         NS_IF_RELEASE(kNC_BookmarkSeparator);
@@ -405,6 +425,7 @@ bm_ReleaseGlobals()
         NS_IF_RELEASE(kNC_BookmarkCommand_Import);
         NS_IF_RELEASE(kNC_BookmarkCommand_Export);
         NS_IF_RELEASE(kNC_BookmarkCommand_RefreshLivemark);
+        NS_IF_RELEASE(kForwardProxy);
 
         NS_IF_RELEASE(kRSS09_channel);
         NS_IF_RELEASE(kRSS09_item);
@@ -415,9 +436,10 @@ bm_ReleaseGlobals()
         NS_IF_RELEASE(kRSS10_items);
         NS_IF_RELEASE(kRSS10_title);
         NS_IF_RELEASE(kRSS10_link);
+
+        NS_IF_RELEASE(kDC_date);
     }
 }
-
 
 class nsSpillableStackBuffer
 {
@@ -1088,9 +1110,9 @@ BookmarkParser::ParseMetaTag(const nsString &aLine, nsIUnicodeDecoder **decoder)
     if (charset.Length() < 1)   return NS_ERROR_UNEXPECTED;
 
     // found a charset, now try and get a decoder from it to Unicode
-    nsICharsetConverterManager *charsetConv;
+    nsICharsetConverterManager  *charsetConv;
     rv = CallGetService(kCharsetConverterManagerCID, &charsetConv);
-    if (NS_SUCCEEDED(rv))
+    if (NS_SUCCEEDED(rv) && (charsetConv))
     {
         rv = charsetConv->GetUnicodeDecoderRaw(charset.get(), decoder);
         NS_RELEASE(charsetConv);
@@ -1113,12 +1135,15 @@ BookmarkParser::gBookmarkFieldTable[] =
   { kWebPanelEquals,        NC_NAMESPACE_URI  "WebPanel",          nsnull,  BookmarkParser::ParseLiteral,   nsnull },
   { kPostDataEquals,        NC_NAMESPACE_URI  "PostData",          nsnull,  BookmarkParser::ParseLiteral,   nsnull },
   { kLastCharsetEquals,     WEB_NAMESPACE_URI "LastCharset",       nsnull,  BookmarkParser::ParseLiteral,   nsnull },
+  // don't parse scheduling bits, disabled for 1.0 (bug 2534768)
+#if 0
   { kScheduleEquals,        WEB_NAMESPACE_URI "Schedule",          nsnull,  BookmarkParser::ParseLiteral,   nsnull },
   { kLastPingEquals,        WEB_NAMESPACE_URI "LastPingDate",      nsnull,  BookmarkParser::ParseDate,      nsnull },
   { kPingETagEquals,        WEB_NAMESPACE_URI "LastPingETag",      nsnull,  BookmarkParser::ParseLiteral,   nsnull },
   { kPingLastModEquals,     WEB_NAMESPACE_URI "LastPingModDate",   nsnull,  BookmarkParser::ParseLiteral,   nsnull },
   { kPingContentLenEquals,  WEB_NAMESPACE_URI "LastPingContentLen",nsnull,  BookmarkParser::ParseLiteral,   nsnull },
   { kPingStatusEquals,      WEB_NAMESPACE_URI "status",            nsnull,  BookmarkParser::ParseLiteral,   nsnull },
+#endif
   // Note: end of table
   { nsnull,                 nsnull,                                nsnull,  nsnull,                         nsnull },
 };
@@ -1345,6 +1370,9 @@ BookmarkParser::ParseBookmarkInfo(BookmarkField *fields, PRBool isBookmarkFlag,
                 rv = Parse(bookmark, aNodeType);
                 NS_ASSERTION(NS_SUCCEEDED(rv), "unable to parse bookmarks");
             }
+        } else {
+            // update the kForwardProxy property, based on the URL, if any
+            nsBookmarksService::UpdateBookmarkForwardProxy(mDataSource, bookmark);
         }
 
         // prevent duplicates                                                       
@@ -1654,19 +1682,16 @@ nsBookmarksService::Init()
     if (NS_FAILED(rv)) return rv;
 
     /* create a URL for the string resource file */
-    nsCOMPtr<nsIURI> uri;
-    mNetService->NewURI(bookmark_properties, nsnull, nsnull,
-                        getter_AddRefs(uri));
-    if (uri)
+    nsCOMPtr<nsIURI>    uri;
+    if (NS_SUCCEEDED(rv = mNetService->NewURI(bookmark_properties, nsnull, nsnull,
+        getter_AddRefs(uri))))
     {
         /* create a bundle for the localization */
-        nsCOMPtr<nsIStringBundleService> stringService =
-                do_GetService(kStringBundleServiceCID);
-        if (stringService)
+        nsCOMPtr<nsIStringBundleService>    stringService = do_GetService(kStringBundleServiceCID, &rv);
+        if (NS_SUCCEEDED(rv))
         {
             nsCAutoString spec;
-            uri->GetSpec(spec);
-            if (!spec.IsEmpty())
+            if (NS_SUCCEEDED(rv = uri->GetSpec(spec)))
             {
                 stringService->CreateBundle(spec.get(), getter_AddRefs(mBundle));
             }
@@ -1678,7 +1703,8 @@ nsBookmarksService::Init()
     {
         // get browser icon pref
         prefServ->GetBoolPref("browser.chrome.site_icons", &mBrowserIcons);
-        
+
+        prefServ->GetBranch("browser.bookmarks.", getter_AddRefs(mBookmarksPrefs));
     }
 
     if (mPersonalToolbarName.IsEmpty())
@@ -1976,6 +2002,9 @@ nsBookmarksService::FireTimer(nsITimer* aTimer, void* aClosure)
         bmks->Flush();
     }
 
+    // bookmark timers and scheduling are disabled for 1.0, until
+    // they can be fixed (bug 253478)
+#if 0
     if (bmks->busySchedule == PR_FALSE)
     {
         nsCOMPtr<nsIRDFResource>    bookmark;
@@ -2020,6 +2049,28 @@ nsBookmarksService::FireTimer(nsITimer* aTimer, void* aClosure)
         printf("nsBookmarksService::FireTimer - busy pinging.\n");
     }
 #endif
+#endif
+
+    // go through all live bookmarks and check whether they need to be refreshed
+    nsCOMPtr<nsISimpleEnumerator> livemarkEnumerator;
+    rv = bmks->GetSources(kRDF_type, kNC_Livemark, PR_TRUE, getter_AddRefs(livemarkEnumerator));
+    if (NS_FAILED(rv))
+        return;
+
+    PRBool hasMore = PR_FALSE;
+    while (NS_SUCCEEDED(rv = livemarkEnumerator->HasMoreElements(&hasMore)) && hasMore) {
+        nsCOMPtr<nsISupports> supports;
+        rv = livemarkEnumerator->GetNext(getter_AddRefs(supports));
+        if (NS_FAILED(rv))
+            return;
+
+        nsCOMPtr<nsIRDFResource> livemark = do_QueryInterface(supports);
+        if (!livemark)
+            return;
+
+        if (bmks->LivemarkNeedsUpdate(livemark))
+            bmks->UpdateLivemarkChildren(livemark);
+    }
 }
 
 
@@ -2285,7 +2336,7 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
                                schedule,
                                nsCaseInsensitiveStringComparator()))
             {
-                nsCOMPtr<nsISound> soundInterface = do_CreateInstance(kSoundCID, &rv);
+                nsCOMPtr<nsISound>  soundInterface = do_CreateInstance(kSoundCID, &rv);
                 if (NS_SUCCEEDED(rv))
                 {
                     // for the moment, just beep
@@ -2300,8 +2351,12 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
                                schedule,
                                nsCaseInsensitiveStringComparator()))
             {
+                nsCOMPtr<nsIInterfaceRequestor> interfaces;
                 nsCOMPtr<nsIPrompt> prompter;
-                NS_QueryNotificationCallbacks(channel, prompter);
+
+                channel->GetNotificationCallbacks(getter_AddRefs(interfaces));
+                if (interfaces)
+                    interfaces->GetInterface(NS_GET_IID(nsIPrompt), getter_AddRefs(prompter));
                 if (!prompter)
                 {
                     nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
@@ -2446,10 +2501,12 @@ NS_IMETHODIMP nsBookmarksService::Observe(nsISupports *aSubject, const char *aTo
         // The profile has aleady changed.
         rv = LoadBookmarks();
     }
+#ifdef MOZ_PHOENIX
     else if (!nsCRT::strcmp(aTopic, "quit-application"))
     {
         rv = Flush();
     }
+#endif
 
     return rv;
 }
@@ -2656,7 +2713,7 @@ nsBookmarksService::CreateBookmark(const PRUnichar* aName,
     if (NS_FAILED(rv)) 
         return rv;
 
-    // Resource: URL
+    // Literal: URL
     nsAutoString url;
     url.Assign(aURL);
     nsCOMPtr<nsIRDFLiteral> urlLiteral;
@@ -2666,6 +2723,17 @@ nsBookmarksService::CreateBookmark(const PRUnichar* aName,
     rv = mInner->Assert(bookmarkResource, kNC_URL, urlLiteral, PR_TRUE);
     if (NS_FAILED(rv)) 
         return rv;
+
+    // Resource: ForwardProxy
+    if (!url.IsEmpty()) {
+        nsCOMPtr<nsIRDFResource> urlResource;
+        rv = gRDF->GetUnicodeResource(url, getter_AddRefs(urlResource));
+        if (NS_FAILED(rv))
+            return rv;
+        rv = mInner->Assert(bookmarkResource, kForwardProxy, urlResource, PR_TRUE);
+        if (NS_FAILED(rv))
+            return rv;
+    }
 
     // Literal: Shortcut URL
     if (aShortcutURL && *aShortcutURL) {
@@ -3562,21 +3630,6 @@ nsBookmarksService::GetLastModifiedFolders(nsISimpleEnumerator **aResult)
     for (index = folderArray.Count()-1; index >= MAX_LAST_MODIFIED_FOLDERS; index--)
         folderArray.RemoveObjectAt(index);
 
-    // always show the bookmarks root
-    if (folderArray.IndexOfObject(kNC_BookmarksRoot) < 0)
-        folderArray.ReplaceObjectAt(kNC_BookmarksRoot, MAX_LAST_MODIFIED_FOLDERS-1);
-
-    // always show the bookmarks toolbar folder
-    nsCOMPtr<nsIRDFResource> btfResource;
-    rv = GetBookmarksToolbarFolder(getter_AddRefs(btfResource));
-    if (NS_SUCCEEDED(rv) && folderArray.IndexOfObject(btfResource) < 0) {
-        if (folderArray.ObjectAt(MAX_LAST_MODIFIED_FOLDERS-1) == kNC_BookmarksRoot)
-            index = MAX_LAST_MODIFIED_FOLDERS - 2;
-        else
-            index = MAX_LAST_MODIFIED_FOLDERS - 1;
-        folderArray.ReplaceObjectAt(btfResource, index);
-    }
-
     return NS_NewArrayEnumerator(aResult, folderArray);
 }
 
@@ -3731,6 +3784,46 @@ nsBookmarksService::AnnotateBookmarkSchedule(nsIRDFResource* aSource, PRBool sch
     }
 }
 
+nsresult
+nsBookmarksService::UpdateBookmarkForwardProxy(nsIRDFDataSource* aDS, nsIRDFResource* aBookmarkResource)
+{
+    nsresult rv;
+
+    nsCOMPtr<nsIRDFNode> oldForwardProxy;
+    rv = aDS->GetTarget(aBookmarkResource, kForwardProxy, PR_TRUE, getter_AddRefs(oldForwardProxy));
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIRDFNode> urlNode;
+    rv = aDS->GetTarget(aBookmarkResource, kNC_URL, PR_TRUE, getter_AddRefs(urlNode));
+    if (NS_FAILED(rv)) return rv;
+
+    if (rv == NS_RDF_NO_VALUE) {
+        rv = NS_OK;
+        if (oldForwardProxy)
+            rv = aDS->Unassert(aBookmarkResource, kForwardProxy, oldForwardProxy);
+        return rv;
+    }
+
+    // unfortunately, urlNode is a Literal; we need it to be a Resource
+    nsCOMPtr<nsIRDFLiteral> urlLiteral = do_QueryInterface(urlNode);
+    const PRUnichar *urlstr;
+    rv = urlLiteral->GetValueConst(&urlstr);
+    if (NS_FAILED(rv)) return rv;
+
+    nsDependentString url(urlstr);
+    nsCOMPtr<nsIRDFResource> urlRsrc;
+    rv = gRDF->GetUnicodeResource(url, getter_AddRefs(urlRsrc));
+    if (NS_FAILED(rv)) return rv;
+
+    if (oldForwardProxy)
+        rv = aDS->Change(aBookmarkResource, kForwardProxy, oldForwardProxy, urlRsrc);
+    else
+        rv = aDS->Assert(aBookmarkResource, kForwardProxy, urlRsrc, PR_TRUE);
+    if (NS_FAILED(rv)) return rv;
+
+    return NS_OK;
+}
+
 NS_IMETHODIMP
 nsBookmarksService::Assert(nsIRDFResource* aSource,
                            nsIRDFResource* aProperty,
@@ -3748,7 +3841,9 @@ nsBookmarksService::Assert(nsIRDFResource* aSource,
         UpdateBookmarkLastModifiedDate(aSource);
             
         if (aProperty == kWEB_Schedule) {
-              AnnotateBookmarkSchedule(aSource, PR_TRUE);
+            AnnotateBookmarkSchedule(aSource, PR_TRUE);
+        } else if (aProperty == kNC_URL) {
+            UpdateBookmarkForwardProxy(mInner, aSource);
         } else if (aProperty == kNC_FeedURL) {
             /* Reload feed URL - also allow only one LivemarkExpiration */
             nsCOMPtr<nsIRDFNode> oldExpiration;
@@ -3781,12 +3876,14 @@ nsBookmarksService::Unassert(nsIRDFResource* aSource,
 
         if (aProperty == kWEB_Schedule) {
             AnnotateBookmarkSchedule(aSource, PR_FALSE);
+        } else if (aProperty == kNC_URL) {
+            UpdateBookmarkForwardProxy(mInner, aSource);
         } else if (aProperty == kRDF_type && aTarget == kNC_Livemark) {
             rv = nsBMSVCUnmakeSeq(mInner, aSource);
         } else if (aProperty == kNC_LivemarkExpiration) {
             // reload livemark if someone unasserted the expiration
             // clear the Seq to make the command feel more responsive
-            nsBMSVCClearSeqContainer(mInner, aSource);
+            ClearBookmarksContainer(aSource);
             rv = UpdateLivemarkChildren(aSource);
         }
     }
@@ -3811,6 +3908,8 @@ nsBookmarksService::Change(nsIRDFResource* aSource,
 
         if (aProperty == kWEB_Schedule) {
             AnnotateBookmarkSchedule(aSource, PR_TRUE);
+        } else if (aProperty == kNC_URL) {
+            UpdateBookmarkForwardProxy(mInner, aSource);
         } else if (aProperty == kNC_FeedURL) {
             /* Reload feed data */
             nsCOMPtr<nsIRDFNode> oldExpiration;
@@ -3847,6 +3946,14 @@ nsBookmarksService::Move(nsIRDFResource* aOldSource,
 
         UpdateBookmarkLastModifiedDate(aOldSource);
         UpdateBookmarkLastModifiedDate(aNewSource);
+
+        if (aProperty == kNC_URL) {
+            // our observers might get odd-looking notifications
+            // for this; we really should just give them an
+            // OnMove with kForwardProxy
+            UpdateBookmarkForwardProxy(mInner, aOldSource);
+            UpdateBookmarkForwardProxy(mInner, aNewSource);
+        }
     }
     return rv;
 }
@@ -4578,11 +4685,6 @@ nsBookmarksService::LoadBookmarks()
 
     PRBool foundIERoot = PR_FALSE;
 
-    nsCOMPtr<nsIPrefService> prefSvc(do_GetService(NS_PREF_CONTRACTID));
-    nsCOMPtr<nsIPrefBranch>  bookmarksPrefs;
-    if (prefSvc)
-        prefSvc->GetBranch("browser.bookmarks.", getter_AddRefs(bookmarksPrefs));
-
 #ifdef DEBUG_varga
     PRTime now;
 #if defined(XP_MAC)
@@ -4615,8 +4717,8 @@ nsBookmarksService::LoadBookmarks()
     useDynamicSystemBookmarks = PR_TRUE;
 #else
     useDynamicSystemBookmarks = PR_FALSE;
-    if (bookmarksPrefs)
-        bookmarksPrefs->GetBoolPref("import_system_favorites", &useDynamicSystemBookmarks);
+    if (mBookmarksPrefs)
+        mBookmarksPrefs->GetBoolPref("import_system_favorites", &useDynamicSystemBookmarks);
 #endif
 
 #ifdef XP_BEOS 
@@ -4699,9 +4801,9 @@ nsBookmarksService::LoadBookmarks()
     // not to perform this operation. 
 #if defined(XP_MAC) || defined(XP_MACOSX)
     PRBool addedStaticRoot = PR_FALSE;
-    if (bookmarksPrefs) 
-        bookmarksPrefs->GetBoolPref("added_static_root", 
-                                    &addedStaticRoot);
+    if (mBookmarksPrefs) 
+        mBookmarksPrefs->GetBoolPref("added_static_root", 
+                                     &addedStaticRoot);
 
     // Add the root that System bookmarks are imported into as real bookmarks. This is 
     // only done once. 
@@ -4750,7 +4852,8 @@ nsBookmarksService::LoadBookmarks()
             if (NS_FAILED(rv)) return rv;
         }
 
-        bookmarksPrefs->SetBoolPref("added_static_root", PR_TRUE);
+        if (mBookmarksPrefs)
+            mBookmarksPrefs->SetBoolPref("added_static_root", PR_TRUE);
     }
 #endif
 
@@ -4848,8 +4951,9 @@ nsBookmarksService::WriteBookmarks(nsIFile* aBookmarksFile,
     nsCOMPtr<nsIOutputStream> out;
     nsresult rv = NS_NewSafeLocalFileOutputStream(getter_AddRefs(out),
                                                   aBookmarksFile,
-                                                  -1,
-                                                  /*octal*/ 0600);
+                                                  PR_WRONLY | PR_CREATE_FILE,
+                                                  /*octal*/ 0600,
+                                                  0);
     if (NS_FAILED(rv)) return rv;
 
     // We need a buffered output stream for performance.
@@ -4875,7 +4979,6 @@ nsBookmarksService::WriteBookmarks(nsIFile* aBookmarksFile,
     // All went ok. Maybe except for problems in Write(), but the stream detects
     // that for us
     nsCOMPtr<nsISafeOutputStream> safeStream = do_QueryInterface(strm);
-    NS_ASSERTION(safeStream, "expected a safe output stream!");
     if (NS_SUCCEEDED(rv) && safeStream)
         rv = safeStream->Finish();
   
@@ -5364,9 +5467,21 @@ nsBookmarksService::OnAssert(nsIRDFDataSource* aDataSource,
     if (mUpdateBatchNest != 0)  return NS_OK;
 
     PRInt32 count = mObservers.Count();
+    if (count == 0)
+        return NS_OK;
+
+    // Make a copy of the array first, because some
+    // observers remove themselves from the list while
+    // in the callback.  This causes much badness.
+    nsCOMArray<nsIRDFObserver> observersCopy;
     for (PRInt32 i = 0; i < count; ++i)
     {
-        (void) mObservers[i]->OnAssert(this, aSource, aProperty, aTarget);
+        observersCopy.AppendObject(mObservers[i]);
+    }
+
+    for (PRInt32 j = 0; j < count; ++j)
+    {
+        (void) observersCopy[j]->OnAssert(this, aSource, aProperty, aTarget);
     }
 
     return NS_OK;
@@ -5381,9 +5496,21 @@ nsBookmarksService::OnUnassert(nsIRDFDataSource* aDataSource,
     if (mUpdateBatchNest != 0)  return NS_OK;
 
     PRInt32 count = mObservers.Count();
+    if (count == 0)
+        return NS_OK;
+
+    // Make a copy of the array first, because some
+    // observers remove themselves from the list while
+    // in the callback.  This causes much badness.
+    nsCOMArray<nsIRDFObserver> observersCopy;
     for (PRInt32 i = 0; i < count; ++i)
     {
-        (void) mObservers[i]->OnUnassert(this, aSource, aProperty, aTarget);
+        observersCopy.AppendObject(mObservers[i]);
+    }
+
+    for (PRInt32 j = 0; j < count; ++j)
+    {
+        (void) observersCopy[j]->OnUnassert(this, aSource, aProperty, aTarget);
     }
 
     return NS_OK;
@@ -5399,9 +5526,21 @@ nsBookmarksService::OnChange(nsIRDFDataSource* aDataSource,
     if (mUpdateBatchNest != 0)  return NS_OK;
 
     PRInt32 count = mObservers.Count();
+    if (count == 0)
+        return NS_OK;
+
+    // Make a copy of the array first, because some
+    // observers remove themselves from the list while
+    // in the callback.  This causes much badness.
+    nsCOMArray<nsIRDFObserver> observersCopy;
     for (PRInt32 i = 0; i < count; ++i)
     {
-        (void) mObservers[i]->OnChange(this, aSource, aProperty, aOldTarget, aNewTarget);
+        observersCopy.AppendObject(mObservers[i]);
+    }
+
+    for (PRInt32 j = 0; j < count; ++j)
+    {
+        (void) observersCopy[j]->OnChange(this, aSource, aProperty, aOldTarget, aNewTarget);
     }
 
     return NS_OK;
@@ -5417,9 +5556,21 @@ nsBookmarksService::OnMove(nsIRDFDataSource* aDataSource,
     if (mUpdateBatchNest != 0)  return NS_OK;
 
     PRInt32 count = mObservers.Count();
+    if (count == 0)
+        return NS_OK;
+
+    // Make a copy of the array first, because some
+    // observers remove themselves from the list while
+    // in the callback.  This causes much badness.
+    nsCOMArray<nsIRDFObserver> observersCopy;
     for (PRInt32 i = 0; i < count; ++i)
     {
-        (void) mObservers[i]->OnMove(this, aOldSource, aNewSource, aProperty, aTarget);
+        observersCopy.AppendObject(mObservers[i]);
+    }
+
+    for (PRInt32 j = 0; j < count; ++j)
+    {
+        (void) observersCopy[j]->OnMove(this, aOldSource, aNewSource, aProperty, aTarget);
     }
 
     return NS_OK;
@@ -5450,6 +5601,72 @@ nsBookmarksService::OnEndUpdateBatch(nsIRDFDataSource* aDataSource)
         for (PRInt32 i = 0; i < count; ++i) {
             (void) mObservers[i]->OnEndUpdateBatch(this);
         }
+    }
+
+    return NS_OK;
+}
+
+void
+nsBookmarksService::RemoveBookmark(nsIRDFResource* aBookmark)
+{
+    nsresult rv;
+
+    // RDF really, really, really sucks.
+    // No, really.
+
+    nsCOMPtr<nsISimpleEnumerator> arcsOut;
+
+    rv = ArcLabelsOut(aBookmark, getter_AddRefs(arcsOut));
+    if (NS_FAILED(rv)) return;
+
+    PRBool hasMore = PR_FALSE;
+    for (rv = arcsOut->HasMoreElements(&hasMore);
+         NS_SUCCEEDED(rv) && hasMore;
+         rv = arcsOut->HasMoreElements(&hasMore))
+    {
+        nsCOMPtr<nsISupports> sup;
+        rv = arcsOut->GetNext(getter_AddRefs(sup));
+        if (NS_FAILED(rv)) return;
+
+        nsCOMPtr<nsIRDFResource> rsrc = do_QueryInterface(sup);
+        if (!rsrc) return;
+
+        nsCOMPtr<nsIRDFNode> node;
+        rv = mInner->GetTarget(aBookmark, rsrc, PR_TRUE, getter_AddRefs(node));
+        if (NS_FAILED(rv) || rv == NS_RDF_NO_VALUE)
+            continue;
+
+        (void) mInner->Unassert(aBookmark, rsrc, node);
+    }
+}
+
+nsresult
+nsBookmarksService::ClearBookmarksContainer(nsIRDFResource* aContainer)
+{
+    nsresult rv;
+
+    nsCOMPtr<nsIRDFContainer> itemsContainer = do_CreateInstance (kRDFContainerCID, &rv);
+    rv = itemsContainer->Init (mInner, aContainer);
+    if (NS_FAILED(rv)) return rv;
+
+    PRInt32 itemsCount = 0;
+    rv = itemsContainer->GetCount(&itemsCount);
+    if (NS_FAILED(rv)) return rv;
+    if (itemsCount) {
+        do {
+            nsCOMPtr<nsIRDFNode> removed;
+            rv = itemsContainer->RemoveElementAt(itemsCount, PR_TRUE, getter_AddRefs(removed));
+            if (NS_FAILED(rv)) continue;
+
+            nsCOMPtr<nsIRDFResource> rsrc = do_QueryInterface(removed);
+            if (!rsrc) continue;
+
+            // hackzor.
+            if (rsrc == mLivemarkLoadingBookmark ||
+                rsrc == mLivemarkLoadFailedBookmark)
+                continue;
+            RemoveBookmark(rsrc);
+        } while (--itemsCount > 0);
     }
 
     return NS_OK;

@@ -96,7 +96,7 @@ function collapseExpand()
     gHistoryTree.treeBoxObject.view.toggleOpenState(currentIndex);
 }
 
-function OpenURLIn(where)
+function openURLIn(where)
 {
   var count = gHistoryTree.view.selection.count;
   if (count != 1)
@@ -115,9 +115,41 @@ function OpenURLIn(where)
   openUILinkIn(url, where);
 }
 
-function OpenURL(event)
+function openURL(aEvent)
 {
-  OpenURLIn(whereToOpenLink(event));
+  openURLIn(whereToOpenLink(aEvent));
+}
+
+function handleHistoryClick(aEvent)
+{
+  var tbo = gHistoryTree.treeBoxObject;
+
+  var row = { }, col = { }, obj = { };
+  tbo.getCellAt(aEvent.clientX, aEvent.clientY, row, col, obj);
+  
+  var x = { }, y = { }, w = { }, h = { };
+  tbo.getCoordsForCellItem(row.value, col.value, "image",
+                           x, y, w, h);
+  var mouseInGutter = aEvent.clientX < x.value;
+
+  if (row.value == -1 || obj.value == "twisty")
+    return;
+  var modifKey = aEvent.shiftKey || aEvent.ctrlKey || aEvent.altKey || 
+                 aEvent.metaKey  || aEvent.button == 1;
+  if (!modifKey && tbo.view.isContainer(row.value)) {
+    tbo.view.toggleOpenState(row.value);
+    return;
+  }
+  if (!mouseInGutter && 
+      aEvent.originalTarget.localName == "treechildren" && 
+      (aEvent.button == 0 || aEvent.button == 1)) {
+    // Clear all other selection since we're loading a link now. We must
+    // do this *before* attempting to load the link since openURL uses
+    // selection as an indication of which link to load. 
+    tbo.selection.select(row.value);
+
+    openURL(aEvent);
+  }
 }
 
 function checkURLSecurity(aURL)
@@ -245,9 +277,15 @@ function historyCopyLink()
   clipboard.copyString(url);
 }
 
-function buildContextMenu()
+function buildContextMenu(aEvent)
 {
+  // if nothing is selected, bail and don't show a context menu
   var count = gHistoryTree.view.selection.count;
+  if (count != 1) {
+    aEvent.preventDefault();
+    return;
+  }
+
   var openItem = document.getElementById("miOpen");
   var openItemInNewWindow = document.getElementById("miOpenInNewWindow");
   var openItemInNewTab = document.getElementById("miOpenInNewTab");
@@ -257,47 +295,35 @@ function buildContextMenu()
   var sep2 = document.getElementById("post-bookmarks-separator");
   var expandItem = document.getElementById("miExpand");
   var collapseItem = document.getElementById("miCollapse");
-  if (count > 1) {
+
+  var currentIndex = gHistoryTree.currentIndex;
+  if ((gHistoryGrouping == "day" || gHistoryGrouping == "dayandsite")
+      && isContainer(gHistoryTree, currentIndex)) {
     openItem.hidden = true;
     openItemInNewWindow.hidden = true;
     openItemInNewTab.hidden = true;
     bookmarkItem.hidden = true;
     copyLocationItem.hidden = true;
     sep1.hidden = true;
-    sep2.hidden = true;
-    expandItem.hidden = true;    
-    collapseItem.hidden = true;    
-  }
-  else {
-    var currentIndex = gHistoryTree.currentIndex;
-    if ((gHistoryGrouping == "day" || gHistoryGrouping == "dayandsite")
-        && isContainer(gHistoryTree, currentIndex)) {
-      openItem.hidden = true;
-      openItemInNewWindow.hidden = true;
-      openItemInNewTab.hidden = true;
-      bookmarkItem.hidden = true;
-      copyLocationItem.hidden = true;
-      sep1.hidden = true;
-      sep2.hidden = false;
-      if (isContainerOpen(gHistoryTree, currentIndex)) {
-        expandItem.hidden = true;
-        collapseItem.hidden = false;
-      } else {
-        expandItem.hidden = false;
-        collapseItem.hidden = true;
-      }
-    }
-    else {
-      openItem.hidden = false;
-      openItemInNewWindow.hidden = false;
-      openItemInNewTab.hidden = false;
-      bookmarkItem.hidden = false;
-      copyLocationItem.hidden = false;
-      sep1.hidden = false;
-      sep2.hidden = false;
+    sep2.hidden = false;
+    if (isContainerOpen(gHistoryTree, currentIndex)) {
       expandItem.hidden = true;
+      collapseItem.hidden = false;
+    } else {
+      expandItem.hidden = false;
       collapseItem.hidden = true;
     }
+  }
+  else {
+    openItem.hidden = false;
+    openItemInNewWindow.hidden = false;
+    openItemInNewTab.hidden = false;
+    bookmarkItem.hidden = false;
+    copyLocationItem.hidden = false;
+    sep1.hidden = false;
+    sep2.hidden = false;
+    expandItem.hidden = true;
+    collapseItem.hidden = true;
   }
 }
 

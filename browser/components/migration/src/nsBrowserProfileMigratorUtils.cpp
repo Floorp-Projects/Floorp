@@ -40,7 +40,6 @@
 #include "nsIProperties.h"
 #include "nsIProfileMigrator.h"
 
-#include "nsServiceManagerUtils.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsXPCOMCID.h"
 #include "nsCRT.h"

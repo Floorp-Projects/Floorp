@@ -16,7 +16,7 @@
 # Reserved.
 #
 
-## $Id: mozilla.in,v 1.9 2004/08/19 21:30:51 bryner%brianryner.com Exp $
+## $Id: mozilla.in,v 1.10 2004/11/30 08:22:42 ben%bengoodger.com Exp $
 ## 
 ## Usage:
 ##
@@ -176,11 +176,9 @@ if [ $ALREADY_RUNNING -eq 1 ]; then
 		# There were "some" command line args.
 		if [ ${_USE_EXIST} -eq 1 ]; then
 			# We should use an existing instance, as _USE_EXIST=$_USE_EXIST=-1
-			_open_type="window"
-			#_open_type="tab"
-			_remote_cmd="openURL(${_optLast} , new-${_open_type})"
+			_remote_cmd="openURL(${_optLast})"
 			"${run_moz}" "$MOZ_CLIENT_PROGRAM" -a "${progbase}" "${_remote_cmd}"
-			unset _remote_cmd _open_type
+			unset _remote_cmd
 			exit $?
 		fi
 	else

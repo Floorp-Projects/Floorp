@@ -65,6 +65,9 @@
 #define NS_GLOBALHISTORY_AUTOCOMPLETE_CONTRACTID \
     "@mozilla.org/autocomplete/search;1?name=history"
 
+#define NS_TYPEAHEADFIND_CONTRACTID \
+    "@mozilla.org/typeaheadfind;1"
+
 /////////////////////////////////////////////////////////////////////////////
 
 // {A0CCAAF8-09DA-44D8-B250-9AC3E93C8117}
@@ -94,3 +97,7 @@
 #define NS_GLOBALHISTORY_CID \
 { 0x59648a91, 0x5a60, 0x4122, { 0x8f, 0xf2, 0x54, 0xb8, 0x39, 0xc8, 0x4a, 0xed} }
 
+// {e7f70966-9a37-48d7-8aeb-35998f31090e}
+#define NS_TYPEAHEADFIND_CID \
+{ 0xe7f70966, 0x9a37, 0x48d7, { 0x8a, 0xeb, 0x35, 0x99, 0x8f, 0x31, 0x09, 0x0e} }
+  

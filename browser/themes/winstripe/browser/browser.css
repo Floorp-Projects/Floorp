@@ -23,6 +23,7 @@
  *   Jason Kersey (kerz@netscape.com)
  *   Pierre Chanial (chanial@noos.fr)
  *   Dean Tessman (dean_tessman@hotmail.com)
+ *   Blake Ross (blake@cs.stanford.edu)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -47,10 +48,6 @@
 }
 
 /* ::::: bookmark buttons ::::: */
-
-#insertion-feedback-button {
-  max-width: 10px;
-}
 
 toolbarbutton.bookmark-item {
   margin: 0;
@@ -78,10 +75,10 @@ toolbarbutton.bookmark-item[open="true"] {
   display: none;
 }
 
-.toolbarpaletteitem-box[type="bookmarks-toolbar"][place="palette"] {
-  width: 32px;
-  height: 32px;
-  background: url("chrome://browser/skin/Bookmarks-folder.png") no-repeat;
+#wrapper-personal-bookmarks .toolbarpaletteitem-box {
+  width: 16px;
+  height: 16px;
+  background: url("chrome://browser/skin/Bookmarks-folder.png") no-repeat !important;
 }
 
 .bookmarks-toolbar-customize {
@@ -109,9 +106,8 @@ menuitem.bookmark-item {
   max-width: 26em;
   border-top: 1px solid transparent !important;
   border-bottom: 1px solid transparent !important;
-  border-left: 0px solid transparent !important;
-  border-right: 0px solid transparent !important;
   padding: 1px 3px 1px 2px;
+  margin-top: -1px;
 }
 
 .bookmark-item > .menu-iconic-left > .menu-iconic-icon {
@@ -121,13 +117,17 @@ menuitem.bookmark-item {
 
 /* ..... drag and drop styles ..... */
 
+.bookmark-item[dragover-left="true"] {
+  -moz-border-left-colors: #000000;
+}
+.bookmark-item[dragover-right="true"] {
+  -moz-border-right-colors: #000000;
+}
 .bookmark-item[dragover-top="true"] {
-  -moz-appearance: none !important;
-  -moz-border-top-colors: MenuText;
+  -moz-border-top-colors: #000000;
 }
 .bookmark-item[dragover-bottom="true"] {
-  -moz-appearance: none !important;
-  -moz-border-bottom-colors: MenuText;
+  -moz-border-bottom-colors: #000000;
 }
 
 /* ::::: bookmark items ::::: */
@@ -140,9 +140,24 @@ menuitem.bookmark-item {
 .bookmark-item[container="true"] {
   -moz-image-region: rect(0px, 32px, 16px, 16px) !important;
 }
+
 .bookmark-item[open="true"],
 .bookmark-item[container="true"][open="true"] {
   -moz-image-region: rect(16px, 32px, 32px, 16px) !important;
+}
+
+/* livemarks have the same layout as folder-item, but in the browser-only livemark-item.png */
+/* only the folder icon has any effect for now, item icon is unused */
+.bookmark-item[livemark="true"] { 
+  list-style-image: url("chrome://browser/skin/livemark-item.png") !important;
+}
+
+.bookmark-item[type="menu"][livemark="true"] { 
+  -moz-image-region: rect(0px, 48px, 16px, 32px) !important;
+}
+
+.bookmark-item[type="menu"][livemark="true"][open="true"] { 
+  -moz-image-region: rect(16px, 48px, 32px, 32px) !important;
 }
 
 /* ::::: primary toolbar buttons ::::: */
@@ -151,18 +166,30 @@ menuitem.bookmark-item {
   -moz-box-orient: vertical;
   min-width: 0px;
   list-style-image: url("chrome://browser/skin/Toolbar.png");
+}
 
+.toolbarbutton-1 .toolbarbutton-icon {
+  margin-right: 0px;
+}
+
+toolbar[mode="full"] .toolbarbutton-1,
+toolbar[mode="full"] .toolbarbutton-menubutton-button {
+  min-width: 57px;
 }
 
 .toolbarbutton-1, .toolbarbutton-menubutton-button {
-  padding: 7px;
+  padding: 5px;
 }
 
-.toolbarbutton-1[checked="true"], 
+.toolbarbutton-1:hover:active:not([disabled]),
 .toolbarbutton-1[open="true"], 
-.toolbarbutton-menubutton-button[checked="true"], 
+.toolbarbutton-menubutton-button:hover:active:not([disabled]),
 .toolbarbutton-menubutton-button[open="true"] {
-  padding: 8px 6px 6px 8px !important;
+  padding: 5px 4px 5px 6px;
+}
+
+.toolbarbutton-1[checked="true"] {
+  padding: 5px 4px 5px 6px !important;
 }
 
 .toolbarbutton-1[type="menu-button"] {
@@ -183,7 +210,6 @@ toolbar[mode="icons"] .toolbarbutton-text {
   display: none;
 }
 
-toolbar[mode="text"] .toolbarbutton-menubutton-dropmarker,
 toolbar[mode="text"] .toolbarbutton-icon {
   display: none;
 }
@@ -289,6 +315,9 @@ toolbar[mode="text"] .toolbarbutton-text {
 #bookmarks-button[disabled="true"] {
   -moz-image-region: rect(48px 192px 72px 168px) !important;
 }
+#bookmarks-button[checked="true"] {
+  -moz-image-region: rect(72px 192px 96px 168px) !important;
+}
 
 /* print button */
 
@@ -379,8 +408,41 @@ toolbar[mode="text"] .toolbarbutton-text {
 
 toolbar[iconsize="small"] .toolbarbutton-1 {
   -moz-box-orient: vertical;
-  min-width: 0px;
   list-style-image: url("chrome://browser/skin/Toolbar-small.png");
+}
+
+toolbar[iconsize="small"] .toolbarbutton-1 .toolbarbutton-icon {
+  margin-right: 0px;
+}
+
+toolbar[iconsize="small"] .toolbarbutton-1, toolbar[iconsize="small"] .toolbarbutton-menubutton-button {
+  padding: 3px;
+	margin-right: 2px;
+}
+
+toolbar[iconsize="small"] .toolbarbutton-1:hover:active:not([disabled]),
+toolbar[iconsize="small"] .toolbarbutton-1[open="true"], 
+toolbar[iconsize="small"] .toolbarbutton-menubutton-button:hover:active:not([disabled]),
+toolbar[iconsize="small"] .toolbarbutton-menubutton-button[open="true"] {
+  padding: 3px 2px 3px 4px;
+}
+
+toolbar[iconsize="small"] .toolbarbutton-1[checked="true"] {
+  padding: 3px 2px 3px 4px !important;
+}
+
+toolbar[iconsize="small"] .toolbarbutton-1[type="menu-button"] {
+  padding: 0px !important;
+}
+
+toolbar[iconsize="small"] .toolbarbutton-menubutton-stack,
+toolbar[iconsize="small"] .toolbarbutton-menubutton-button,
+toolbar[iconsize="small"] .toolbarbutton-menubutton-stack:hover,
+toolbar[iconsize="small"] .toolbarbutton-menubutton-button:hover,
+toolbar[iconsize="small"] .toolbarbutton-menubutton-stack:hover:active,
+toolbar[iconsize="small"] .toolbarbutton-menubutton-button:hover:active {
+  margin: 0 !important;
+  display: -moz-box;
 }
 
 /* back button-- */
@@ -476,6 +538,9 @@ toolbar[iconsize="small"] #bookmarks-button:hover {
 }
 toolbar[iconsize="small"] #bookmarks-button[disabled="true"] {
   -moz-image-region: rect(32px 128px 48px 112px) !important;
+}
+toolbar[iconsize="small"] #bookmarks-button[checked="true"] {
+  -moz-image-region: rect(48px 128px 64px 112px) !important;
 }
 
 /* print button */
@@ -588,10 +653,6 @@ toolbar[iconsize="small"] #mail-button[disabled="true"] {
   margin: 2px 3px;
 }
 
-#search-bar {
-  width: 12em;
-}
-
 /* ::::: page proxy icon ::::: */
 
 #page-proxy-deck,
@@ -624,83 +685,34 @@ statusbarpanel#statusbar-display {
   padding-left: 0;
 }
 
-/* ::::: search-bar ::::: */
-
-#search-proxy-button {
-  margin-top: 2px;
-  margin-bottom: 1px;
-}
-
-.search-proxy-button-image {
-  margin: 0px;
-  list-style-image: url("chrome://browser/skin/Search-bar.png");
-}
-
-.search-proxy-button-dropmarker {
-  margin-left: 12px;
-  margin-top: 8px;
-  list-style-image: url("chrome://browser/skin/search-arrow.gif");
-}
-
-#__PhoenixFindInPage {
-  list-style-image: url("chrome://browser/skin/Search-bar.png");
-}
-
 /* ::::: autocomplete ::::: */
 
 .autocomplete-treebody::-moz-tree-cell-text(treecolAutoCompleteComment) {
   color: #555566;
 }
-
+	
 /* ::::: go button ::::: */
 
-#go-button,
-#go-container {
-  -moz-appearance: none;
-  background-color: transparent;
-  margin: 0;
-  padding: 0;
-  min-width: 0;
-  list-style-image: url("chrome://browser/skin/Go.png");
-  -moz-image-region: rect(0px, 20px, 20px, 0px);
-}
-
 #go-button {
-  -moz-appearance: toolbarbutton;
-  border-width: 1px !important;
-  -moz-border-top-colors: transparent;
-  -moz-border-right-colors: transparent;
-  -moz-border-bottom-colors: transparent;
-  -moz-border-left-colors: transparent;
-  -moz-appearance: toolbarbutton;
+  list-style-image: url("chrome://browser/skin/Go.png");
+  -moz-image-region: rect(0px 20px 20px 0px);
+  padding: 2px 5px 2px 3px;
 }
 
 #go-button:hover {
-  -moz-border-top-colors: ThreeDHighlight;
-  -moz-border-right-colors: ThreeDShadow;
-  -moz-border-bottom-colors: ThreeDShadow;
-  -moz-border-left-colors: ThreeDHighlight;
-  -moz-image-region: rect(0px, 40px, 20px, 20px);
+  -moz-image-region: rect(0px 40px 20px 20px);
 }
 
 #go-button:hover:active {
-  -moz-border-top-colors: ThreeDShadow;
-  -moz-border-right-colors: ThreeDHighlight;
-  -moz-border-bottom-colors: ThreeDHighlight;
-  -moz-border-left-colors: ThreeDShadow;
+  padding: 3px 4px 1px 4px;
 }
 
 #go-button[disabled="true"] {
-  -moz-image-region: rect(0px, 60px, 20px, 40px);
-  border-color: transparent;
+  -moz-image-region: rect(0px 60px 20px 40px);
 }
 
-#go-button > .button-box > .button-text {
-  margin-left: 5px !important;
-}
-
-#go-button > .button-box {
-  border: none;
+#go-button > .toolbarbutton-text {
+  display: -moz-box !important;
 }
 
 #sidebar {
@@ -714,6 +726,9 @@ statusbarpanel#statusbar-display {
 }
 
 #security-button {
+  list-style-image: none;
+  min-width: 20px;
+  -moz-box-direction: reverse;
   display: none;
 }
 
@@ -732,34 +747,31 @@ statusbarpanel#statusbar-display {
   display: -moz-box;
 }
 
+/* XXXsw prevent margins of a value-less label from shifting the image */
+#security-button > label:not([value]) {
+  display: none;
+}
+
 #page-report-button {
+  list-style-image: none;
+  width: 20px;
   display: none;
 }
 
 #page-report-button[blocked] {
-  display: -moz-box;
   list-style-image: url("chrome://browser/skin/Info.png");
-  padding: 0px 3px 0px 3px;
-}
-
-#page-theme-button {
-  display: none;
-}
-
-#page-theme-button[themes] {
   display: -moz-box;
-  list-style-image: url("chrome://browser/skin/page-themes.png");
-  padding: 0px 3px 0px 3px;
 }
 
 #livemark-button {
+  list-style-image: none;
+  width: 20px;
   display: none;
 }
 
 #livemark-button[livemarks] {
-  display: -moz-box;
   list-style-image: url("chrome://browser/skin/page-livemarks.png");
-  padding: 0px 3px 0px 3px;
+  display: -moz-box;
 }
 
 /* ::::: throbber ::::: */
@@ -774,6 +786,7 @@ statusbarpanel#statusbar-display {
   background-color: transparent;
   list-style-image: url("chrome://browser/skin/Throbber-small.png");
 }
+
 #navigator-throbber[busy="true"] {
   list-style-image: url("chrome://browser/skin/Throbber-small.gif");
   -moz-opacity: 0.5;
@@ -789,31 +802,52 @@ toolbar[mode="text"] #navigator-throbber[busy="true"] {
   -moz-opacity: 0.5;
 }
 
+.tabs-closebutton > .toolbarbutton-icon {
+  margin-right: 0px !important;
+  padding-right: 2px !important;
+  padding-left: 2px !important;
+}
+
 .tabs-closebutton {
-  list-style-image: url("chrome://browser/skin/Close-tab.png");
-  -moz-image-region: rect(0px, 16px, 16px, 0px);
+  list-style-image: url("chrome://global/skin/icons/close.png");
   -moz-appearance: none;
-  padding: 0px !important;
+  -moz-image-region: rect(0px, 16px, 16px, 0px);
+  padding: 4px 2px;
   border: none !important;
-  margin-right: 2px;
 }
 
 .tabs-closebutton:hover {
   -moz-image-region: rect(0px, 32px, 16px, 16px);
-  padding: 0px !important;
 }
 
 .tabs-closebutton:hover:active {
   -moz-image-region: rect(0px, 48px, 16px, 32px);
-  padding: 0px !important;
+}
+
+#sidebar-box .tabs-closebutton {
+  margin-bottom: 0px !important;
+  padding: 0px 2px 0px 2px !important;
+}
+
+#FindToolbar > .tabs-closebutton {
+	border: 1px solid transparent;
+  padding: 3px 2px 4px 2px !important;
 }
 
 toolbarbutton.chevron {
   list-style-image: url("chrome://global/skin/toolbar/chevron.gif") !important;
 }
 
+toolbarbutton.chevron > .toolbarbutton-text {
+  display: none; /* hide chevron label */
+}
+
 toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   display: none;
+}
+
+toolbar[mode="text"] toolbarbutton.chevron > .toolbarbutton-icon {
+  display: -moz-box; /* display chevron icon in text mode */
 }
 
 toolbar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-icon {
@@ -825,7 +859,9 @@ toolbar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-text {
 }
 
 #sidebar-throbber[loading="true"] {
-  list-style-image: url(chrome://global/skin/icons/Loading.gif);
+  list-style-image: url("chrome://browser/skin/Throbber-small.gif");
+  -moz-opacity: 0.5;
+  margin-right: 4px;
 }
 
 #urlbar[level="high"] > .autocomplete-textbox-container,

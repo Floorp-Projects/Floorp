@@ -41,24 +41,35 @@
 
 #include "nscore.h"
 #include "nsIWindowsShellService.h"
+#include "nsIObserver.h"
+#include "nsIGenericFactory.h"
 
 #include <windows.h>
 
-class nsWindowsShellService : public nsIWindowsShellService 
+class nsWindowsShellService : public nsIWindowsShellService,
+                              public nsIObserver
 {
 public:
-  nsWindowsShellService() : mCheckedThisSession(PR_FALSE) {};
+  nsWindowsShellService();
   virtual ~nsWindowsShellService() {};
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISHELLSERVICE
   NS_DECL_NSIWINDOWSSHELLSERVICE
+  NS_DECL_NSIOBSERVER
+
+  static NS_METHOD Register(nsIComponentManager *aCompMgr, nsIFile *aPath, const char *registryLocation,
+                            const char *componentType, const nsModuleComponentInfo *info);
 
 protected:
   PRBool    GetMailAccountKey(HKEY* aResult);
   void      SetRegKey(const char* aKeyName, const char* aValueName, 
                       const char* aValue, PRBool aBackup, HKEY aBackupKey,
                       PRBool aReplaceExisting, PRBool aForAllUsers);
+  DWORD     DeleteRegKey(HKEY baseKey, const char *keyName);
+
+  nsresult  RegisterDDESupport();
+  nsresult  UnregisterDDESupport();
 
 private:
   PRBool    mCheckedThisSession;

@@ -47,6 +47,7 @@ REQUIRES = 	\
 		autocomplete \
 		appcomps \
 		downloads \
+		fastfind \
 		mimetype \
 		webbrowserpersist \
 		progressDlg \
@@ -58,6 +59,17 @@ REQUIRES = 	\
 		xpinstall \
 		xulapp \
 		embed_base \
+		embedcomponents \
+		content \
+		find \
+		gfx \
+		locale \
+		necko \
+		unicharutil \
+		view \
+		webshell \
+		webbrwsr \
+		xuldoc \
 		$(NULL)
 
 ifeq ($(OS_ARCH),WINNT)
@@ -75,6 +87,7 @@ LOCAL_INCLUDES = \
 	-I$(srcdir)/../satchel/src \
 	-I$(srcdir)/../passwordmgr/base \
 	-I$(srcdir)/../startup/src \
+	-I$(srcdir)/../typeaheadfind/src \
 	$(NULL)
 
 ifeq ($(OS_ARCH),WINNT)
@@ -92,6 +105,7 @@ SHARED_LIBRARY_LIBS += \
 		$(DIST)/lib/$(LIB_PREFIX)history_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)satchel_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)passwordmgr_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)fastfind_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 ifeq ($(OS_ARCH),WINNT)

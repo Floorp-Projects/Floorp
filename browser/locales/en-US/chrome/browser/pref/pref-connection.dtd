@@ -5,6 +5,8 @@
 <!ENTITY  proxyTitle.label              "Configure Proxies to Access the Internet">
 <!ENTITY  directTypeRadio.label         "Direct connection to the Internet">
 <!ENTITY  directTypeRadio.accesskey     "d">
+<!ENTITY  WPADTypeRadio.label           "Auto-detect proxy settings for this network">
+<!ENTITY  WPADTypeRadio.accesskey       "w">
 <!ENTITY  manualTypeRadio.label         "Manual proxy configuration">
 <!ENTITY  manualTypeRadio.accesskey     "m">
 <!ENTITY  autoTypeRadio.label           "Automatic proxy configuration URL:">
@@ -37,3 +39,5 @@
 <!ENTITY  noproxy.label                 "No Proxy for:">
 <!ENTITY  noproxy.accesskey             "n">
 <!ENTITY  noproxyExplain.label          "Example: .mozilla.org, .net.nz, 192.168.1.0/24">
+<!ENTITY  shareproxy.label              "Use the same proxy for all protocols">
+<!ENTITY  shareproxy.accesskey          "x">

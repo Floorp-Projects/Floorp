@@ -46,8 +46,10 @@ pref("general.startup.browser", true);
 pref("browser.chromeURL","chrome://browser/content/");
 pref("browser.hiddenWindowChromeURL", "chrome://browser/content/hiddenWindow.xul");
 pref("xpinstall.dialog.confirm", "chrome://mozapps/content/xpinstall/xpinstallConfirm.xul");
-pref("xpinstall.dialog.progress", "chrome://mozapps/content/downloads/downloads.xul");
-pref("xpinstall.dialog.progress.type", "Download:Manager");
+pref("xpinstall.dialog.progress.skin", "chrome://mozapps/content/extensions/extensions.xul?type=themes");
+pref("xpinstall.dialog.progress.chrome", "chrome://mozapps/content/extensions/extensions.xul?type=extensions");
+pref("xpinstall.dialog.progress.type.skin", "Extension:Manager-themes");
+pref("xpinstall.dialog.progress.type.chrome", "Extension:Manager-extensions");
 
 // This is this application's unique identifier used by the Extension System to identify
 // this application as an extension target, and by the SmartUpdate system to identify
@@ -55,7 +57,7 @@ pref("xpinstall.dialog.progress.type", "Download:Manager");
 pref("app.id", "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}");
 pref("app.version", @APP_VERSION@);
 pref("app.build_id", @BUILD_ID@);
-pref("app.extensions.version", "0.9");
+pref("app.extensions.version", "1.0");
 
 pref("update.app.enabled", true);               // Whether or not app updates are enabled
 pref("update.app.url", "chrome://mozapps/locale/update/update.properties");
@@ -68,26 +70,51 @@ pref("update.extensions.wsdl", "chrome://mozapps/locale/extensions/extensions.pr
 pref("extensions.getMoreExtensionsURL", "chrome://mozapps/locale/extensions/extensions.properties");
 pref("extensions.getMoreThemesURL", "chrome://mozapps/locale/extensions/extensions.properties");
 
-pref("update.extensions.autoUpdate", false);    // Automatically download and install 
+// App-specific update preferences
+pref("app.update.enabled", true);               // Whether or not app updates are enabled
+pref("app.update.autoUpdateEnabled", true);     // Whether or not background app updates 
+                                                // are enabled
+pref("app.update.url", "chrome://mozapps/locale/update/update.properties");
+pref("app.update.updatesAvailable", false);
+pref("app.update.interval", 86400000);          // Check for updates to Firefox every day
+pref("app.update.lastUpdateDate", 0);           // UTC offset when last App update was 
+                                                // performed. 
+pref("app.update.performed", false);            // Whether or not an update has been 
+                                                // performed this session. 
+// Symmetric (can be overridden by individual extensions) update preferences.
+// e.g.
+//  extensions.{GUID}.update.enabled
+//  extensions.{GUID}.update.url
+//  extensions.{GUID}.update.interval
+//  .. etc ..
+//
+pref("extensions.update.enabled", true);
+pref("extensions.update.autoUpdateEnabled", true);
+pref("extensions.update.url", "chrome://mozapps/locale/extensions/extensions.properties");
+pref("extensions.update.autoUpdate", false);    // Automatically download and install 
                                                 // updates to themes and extensions. 
                                                 // Does nothing at present. 
-pref("update.extensions.interval", 604800000);  // Check for updates to Extensions and 
+pref("extensions.update.interval", 604800000);  // Check for updates to Extensions and 
                                                 // Themes every week
-pref("update.extensions.lastUpdateDate", 0);    // UTC offset when last Extension/Theme 
+pref("extensions.update.lastUpdateDate", 0);    // UTC offset when last Extension/Theme 
                                                 // update was performed. 
-pref("update.extensions.severity.threshold", 5);// The number of pending Extension/Theme
+// Non-symmetric (not shared by extensions) extension-specific [update] preferences
+pref("extensions.getMoreExtensionsURL", "chrome://mozapps/locale/extensions/extensions.properties");
+pref("extensions.getMoreThemesURL", "chrome://mozapps/locale/extensions/extensions.properties");
+pref("extensions.update.severity.threshold", 5);// The number of pending Extension/Theme
                                                 // updates you can have before the update
                                                 // notifier goes from low->medium severity.
-pref("update.app.interval", 86400000);          // Check for updates to Firefox every day
-pref("update.app.lastUpdateDate", 0);           // UTC offset when last App update was 
-                                                // performed. 
+pref("extensions.update.count", 0);             // The number of extension/theme/etc 
+                                                // updates available
+pref("extensions.dss.enabled", false);          // Dynamic Skin Switching                                               
+pref("extensions.dss.switchPending", false);    // Non-dynamic switch pending after next
+                                                // restart.
+
+// General Update preferences
 pref("update.interval", 3600000);               // Check each of the above intervals 
                                                 // every 60 mins
 pref("update.showSlidingNotification", true);   // Windows-only slide-up taskbar 
                                                 // notification.
-pref("update.app.performed", false);            // Whether or not an update has been 
-                                                // performed this session. 
-
 // These prefs relate to the number and severity of updates available. This is a 
 // cache that the browser notification mechanism uses to determine if it should show
 // status bar UI if updates are detected and the app is shut down before installing
@@ -96,8 +123,8 @@ pref("update.app.performed", false);            // Whether or not an update has 
 // 1 = medium (numerous extension/theme updates), 
 // 2 = high   (new version of Firefox/Security patch)
 pref("update.severity", 0); 
-// The number of extension/theme/etc updates available
-pref("update.extensions.count", 0);
+
+pref("xpinstall.whitelist.add", "update.mozilla.org");
 
 pref("keyword.enabled", true);
 pref("keyword.URL", "http://www.google.com/search?btnI=I%27m+Feeling+Lucky&ie=UTF-8&oe=UTF-8&q=");
@@ -121,7 +148,11 @@ pref("browser.shell.checkDefaultBrowser", true);
 // 0 = blank, 1 = home (browser.startup.homepage), 2 = last
 // XXXBlake Remove this stupid pref
 pref("browser.startup.page",                1);
-pref("browser.startup.homepage",	        "chrome://browser-region/locale/region.properties");
+pref("browser.startup.homepage",	          "resource:/browserconfig.properties");
+
+// These values are deliberately non-localizable for official builds.
+pref("browser.startup.homepage_reset",      "resource:/browserconfig.properties");
+pref("browser.update.resetHomepage",        false);
 // "browser.startup.homepage_override" was for 4.x
 pref("browser.startup.homepage_override.1", false);
 
@@ -145,13 +176,18 @@ pref("browser.download.manager.focusWhenStarting", false);
 pref("browser.download.manager.flashCount", 2);
 
 // pointer to the default engine name
-pref("browser.search.defaultenginename", "chrome://browser-region/locale/region.properties");
+pref("browser.search.defaultenginename",      "chrome://browser-region/locale/region.properties");
 // pointer to the Web Search url (content area context menu)
-pref("browser.search.defaulturl", "chrome://browser-region/locale/region.properties");
-
-pref("browser.search.param.Google.1.name", "chrome://browser/content/searchconfig.properties");
-pref("browser.search.param.Google.1.custom", "chrome://browser/content/searchconfig.properties");
+pref("browser.search.defaulturl",             "chrome://browser-region/locale/region.properties");
+// Ordering of Search Engines in the Engine list. 
+pref("browser.search.order.1",                "chrome://browser-region/locale/region.properties");
+pref("browser.search.order.2",                "chrome://browser-region/locale/region.properties");
+ 
 pref("browser.search.param.Google.1.default", "chrome://browser/content/searchconfig.properties");
+pref("browser.search.param.Google.1.custom",  "chrome://browser/content/searchconfig.properties");
+pref("browser.search.order.Yahoo.1",          "chrome://browser/content/searchconfig.properties");
+pref("browser.search.order.Yahoo.2",          "chrome://browser/content/searchconfig.properties");
+pref("browser.search.order.Yahoo",            "chrome://browser/content/searchconfig.properties");
 
 // basic search popup constraint: minimum sherlock plugin version displayed
 // (note: must be a string representation of a float or it'll default to 0.0)
@@ -165,7 +201,10 @@ pref("browser.tabs.loadInBackground", true);
 pref("browser.tabs.loadFolderAndReplace", true);
 pref("browser.tabs.opentabfor.middleclick", true);
 pref("browser.tabs.opentabfor.urlbar", true);
+pref("browser.tabs.loadDivertedInBackground", false);
 pref("browser.tabs.loadBookmarksInBackground", false);
+// XXXben - Hide Single Window mode prefs for 1.0 to avoid crashes (see 266759)
+pref("browser.tabs.showSingleWindowModePrefs", true);
 
 // Smart Browsing prefs
 pref("browser.related.enabled", true);
@@ -179,17 +218,26 @@ pref("browser.bookmarks.sort.direction", "descending");
 pref("browser.bookmarks.sort.resource", "rdf:http://home.netscape.com/NC-rdf#Name");
 
 // Scripts & Windows prefs
-pref("dom.disable_open_during_load",        true);
-pref("javascript.options.showInConsole",    false);
-
-// Make the location bar reliably present and unaffected by pages
-pref("dom.disable_window_open_feature.location",  true);
+pref("dom.disable_open_during_load",              true);
+pref("javascript.options.showInConsole",          false);
+/ Make the status bar reliably present and unaffected by pages
+pref("dom.disable_window_open_feature.status",    true);
+// This is the pref to control the location bar, change this to true to 
+// force this instead of or in addition to the status bar - this makes 
+// the origin of popup windows more obvious to avoid spoofing but we 
+// cannot do it by default because it affects UE for web applications.
+pref("dom.disable_window_open_feature.location",  false);
 pref("dom.disable_window_status_change",          true);
+ 
+pref("browser.trim_user_and_password",            true);
 
 // popups.policy 1=allow,2=reject
 pref("privacy.popups.policy",               1);
 pref("privacy.popups.usecustom",            true);
 pref("privacy.popups.firstTime",            true);
+pref("privacy.popups.showBrowserMessage",   true);
+ 
+pref("network.proxy.share_proxy_settings",  false); // use the same proxy settings for all protocols
 
 pref("network.cookie.cookieBehavior",       0); // cookies enabled
 pref("network.cookie.enableForCurrentSessionOnly", false);
@@ -274,3 +322,13 @@ pref("browser.urlbar.clickSelectsAll", false);
 #endif
 #endif
 
+pref("accessibility.typeaheadfind", false);
+pref("accessibility.typeaheadfind.timeout", 5000);
+pref("accessibility.typeaheadfind.linksonly", false);
+pref("accessibility.typeaheadfind.flashBar", 1);
+
+// Disable the default plugin for firefox
+pref("plugin.default_plugin_disabled", true);
+
+// plugin finder service
+pref("pfs.datasource.url", "chrome://mozapps/locale/plugins/plugins.properties");

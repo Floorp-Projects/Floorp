@@ -1,0 +1,110 @@
+#filter substitution
+
+var srDest = $SpaceRequired$;
+var err;
+var fProgram;
+var platformNode;
+var searchPlugins = "searchplugins";
+
+platformNode = getPlatform();
+if (platformNode == 'mac') {
+  searchPlugins = "Search Plugins";
+}
+logComment("initInstall: platformNode=" + platformNode);
+// end
+// end - OS type detection
+
+var prettyName = "@AB_CD@ Language Pack";
+var chromeNode = "@AB_CD@";
+
+var regName    = "locales/mozilla/" + chromeNode;
+var chromeName = chromeNode + ".jar";
+var localeName = "locale/" + chromeNode + "/";
+
+err = initInstall(prettyName, regName, "$Version$"); 
+logComment("initInstall: " + err);
+
+fProgram = getFolder("Program");
+logComment("fProgram: " + fProgram);
+
+if (verifyDiskSpace(fProgram, srDest))
+{
+    var chromeType = LOCALE;
+    var fTarget;
+
+    err = addDirectory("",
+                       "bin",
+                       fProgram,
+                       "");
+    logComment("addDirectory() returned: " + err);
+
+    if (err != SUCCESS)
+    {
+        logComment("addDirectory() to " + fProgram + "failed!");
+        // couldn't install globally, try installing to the profile
+        resetError();
+        chromeType |= PROFILE_CHROME;
+        fProgram = getFolder("Profile");
+        logComment("try installing to the user profile:" + fProgram);
+        err = addDirectory("","bin",fProgram,"");
+    }
+ 
+    setPackageFolder(fProgram);
+ 
+    // check return value
+    if (err == SUCCESS)
+    {
+        fTarget = getFolder("Program", "defaults");
+        logComment("fTarget: " + fTarget);
+        err = addDirectory("",
+                           "bin/defaults", // dir name in JAR to extract
+                           fTarget,        // Where to put this file
+                           "");            // subdir name relative to fProgram
+        logComment("addDirectory() returned: " + err);
+
+        fTarget = getFolder("Program", searchPlugins);
+        logComment("fTarget: " + fTarget);
+        err = addDirectory("",
+                           "bin/searchplugins",
+                           fTarget,
+                           "");
+        logComment("addDirectory() returned: " + err);
+
+        // register chrome
+        var cf = getFolder(fProgram, "chrome/"+chromeName);
+
+        registerChrome(chromeType, cf, "locale/global/");
+        registerChrome(chromeType, cf, "locale/global-platform/");
+        registerChrome(chromeType, cf, "locale/global-region/");
+
+        registerChrome(chromeType, cf, "locale/browser/");
+        registerChrome(chromeType, cf, "locale/browser-region/");
+        registerChrome(chromeType, cf, "locale/passwordmgr/");
+        registerChrome(chromeType, cf, "locale/mozapps/");
+
+        registerChrome(chromeType, cf, "locale/necko/");
+#ifdef EXTENSION_PREF
+        registerChrome(chromeType, cf, "locale/autoconfig/");
+#endif
+        registerChrome(chromeType, cf, "locale/cookie/");
+        registerChrome(chromeType, cf, "locale/pipnss/");
+        registerChrome(chromeType, cf, "locale/pippki/");
+
+#ifdef LOCALE_HAS_HELP
+        registerChrome(chromeType, cf, "locale/help/");
+#endif
+#ifdef LOCALE_HAS_DOMI
+        registerChrome(chromeType, cf, "locale/inspector/");
+#endif
+
+        err = performInstall(); 
+        logComment("performInstall() returned: " + err);
+    }
+    else
+    {
+        cancelInstall(err);
+        logComment("cancelInstall due to error: " + err);
+    }
+}
+else
+    cancelInstall(INSUFFICIENT_DISK_SPACE);

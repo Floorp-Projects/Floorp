@@ -98,10 +98,6 @@
               url="chrome://browser/content/pref/pref-features.xul"/>
       <button id="catDownloadsButton" orient="vertical" class="buttonBoxButton" type="radio" group="categories" label="&downloads.label;" 
               url="chrome://mozapps/content/downloads/pref-downloads.xul"/>
-      <button id="catThemesButton"    orient="vertical" class="buttonBoxButton" type="radio" group="categories" label="&themes.label;"    
-              url="chrome://browser/content/pref/pref-themes.xul"/>
-      <button id="catExtButton"       orient="vertical" class="buttonBoxButton" type="radio" group="categories" label="&ext.label;"       
-              url="chrome://browser/content/pref/pref-extensions.xul"/>
       <button id="catAdvancedButton"  orient="vertical" class="buttonBoxButton" type="radio" group="categories" label="&advanced.label;"
               url="chrome://browser/content/pref/pref-advanced.xul"/>
     </vbox>

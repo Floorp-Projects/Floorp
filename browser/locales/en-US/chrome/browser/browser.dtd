@@ -47,7 +47,6 @@
 <!ENTITY pageInfoCmd.label "Page Info">
 <!ENTITY pageInfoCmd.accesskey "I">
 <!ENTITY pageInfoCmd.commandkey "i">
-<!ENTITY pageInfoWinCmd.commandkey "j">
 <!ENTITY fullScreenCmd.label "Full Screen">
 <!ENTITY fullScreenCmd.accesskey "F">
 
@@ -57,14 +56,6 @@
 
 <!ENTITY closeWindow.label "Close Window">
 
-<!ENTITY findOnCmd.label "Find in This Page...">
-<!ENTITY findOnCmd.accesskey "F">
-<!ENTITY findOnCmd.commandkey "f">
-<!ENTITY findAgainCmd.label "Find Again">
-<!ENTITY findAgainCmd.accesskey "g">
-<!ENTITY findAgainCmd.commandkey "g">
-<!ENTITY findAgainCmd.commandkey2 "VK_F3">
-
 <!ENTITY bookmarksMenu.label "Bookmarks">
 <!ENTITY bookmarksMenu.accesskey "B">
 <!ENTITY addCurPageAsCmd.label "Bookmark This Page...">
@@ -72,7 +63,6 @@
 <!ENTITY addCurPageAsCmd.commandkey "d">
 <!ENTITY manBookmarksCmd.label "Manage Bookmarks...">
 <!ENTITY manBookmarksCmd.accesskey "M">
-<!ENTITY emptyItem.label "(Empty)">
 
 <!ENTITY backCmd.label                "Back">
 <!ENTITY backCmd.accesskey            "B">
@@ -95,6 +85,7 @@
 <!ENTITY searchItem.title             "Search">
 <!ENTITY throbberItem.title           "Activity Indicator">
 <!ENTITY bookmarksItem.title          "Bookmarks">
+<!ENTITY updatesItem.title            "Updates">
 
 <!ENTITY throbber.tooltip             "Go to the &brandShortName; home page">
 
@@ -124,8 +115,9 @@
 <!ENTITY downloads.label              "Downloads">
 <!ENTITY downloads.tooltip            "Display the progress of ongoing downloads">
 <!ENTITY downloads.accesskey          "D">
-<!ENTITY downloads.commandkey         "y">
-<!ENTITY extensions.label             "Extensions - TESTING ONLY">
+<!ENTITY downloads.commandkey         "j">
+<!ENTITY downloadsUnix.commandkey     "y">
+<!ENTITY extensions.label             "Extensions">
 <!ENTITY extensions.tooltip           "Show and Manage installed Extensions">
 <!ENTITY extensions.accesskey         "E">
 <!ENTITY themes.label                 "Themes">
@@ -195,14 +187,14 @@
 <!ENTITY helpMenuWin.label      "Help"> 
 <!ENTITY helpMenuWin.accesskey  "H"> 
 
-<!ENTITY releaseCmd.label       "Release Notes">
-<!ENTITY releaseCmd.accesskey       "R">
+<!ENTITY releaseCmd.accesskey "R">
+<!ENTITY releaseCmd.label     "Release Notes">
+
 <!ENTITY aboutCmd.label         "About &brandFullName;">
 <!ENTITY aboutCmd.accesskey       "A">
 
 <!ENTITY openCmd.commandkey           "l">
 <!ENTITY urlbar.accesskey             "d">
-
 
 <!-- 
   Comment duplicated from browser-sets.inc:
@@ -225,10 +217,9 @@
   Do *not* tamper with these values without talking to ben@mozilla.org
   
  -->
-
 <!ENTITY searchFocus.commandkey       "k">
-<!ENTITY searchFocusUnix.commandkey   "j">
 <!ENTITY searchFocus.commandkey2      "e">
+<!ENTITY searchFocusUnix.commandkey   "j">
 
 <!ENTITY openLinkCmd.label            "Open Link in New Window">
 <!ENTITY openLinkCmd.accesskey        "W">
@@ -268,7 +259,7 @@
 <!ENTITY bookmarkLinkCmd.accesskey    "L">
 <!ENTITY bookmarkFrameCmd.label       "Bookmark This Frame...">
 <!ENTITY bookmarkFrameCmd.accesskey   "F">
-<!ENTITY sendPageCmd.label            "Send Page...">
+<!ENTITY sendPageCmd.label            "Send Link...">
 <!ENTITY sendPageCmd.accesskey        "e">
 <!ENTITY savePageCmd.label            "Save Page As...">
 <!ENTITY savePageCmd.accesskey        "A">
@@ -296,17 +287,20 @@
 <!ENTITY copyEmailCmd.accesskey       "E">
 <!ENTITY thisFrameMenu.label              "This Frame">
 <!ENTITY thisFrameMenu.accesskey          "h">
-<!ENTITY search.accesskey             "S">
 
-<!ENTITY textZoomEnlargeCmd.label       "Increase Text Size">
+<!ENTITY textZoomEnlargeCmd.label       "Increase">
 <!ENTITY textZoomEnlargeCmd.accesskey   "I">
 <!ENTITY textZoomEnlargeCmd.commandkey  "+">
 <!ENTITY textZoomEnlargeCmd.commandkey2 "="> <!-- + is above this key on many keyboards -->
 
-<!ENTITY textZoomReduceCmd.label        "Decrease Text Size">
+<!ENTITY textZoomReduceCmd.label        "Decrease">
 <!ENTITY textZoomReduceCmd.accesskey    "D">
 <!ENTITY textZoomReduceCmd.commandkey   "-">
 <!ENTITY textZoomResetCmd.commandkey    "0">
+<!ENTITY textZoomResetCmd.label         "Normal">
+<!ENTITY textZoomResetCmd.accesskey     "N">
+<!ENTITY textSize.label                 "Text Size">
+<!ENTITY textSize.accesskey             "S">
 
 <!ENTITY mailMenu.label                   "Mail &amp; News">
 <!ENTITY mailMenu.accesskey               "M">
@@ -349,11 +343,46 @@
 <!ENTITY zoomWindow.label "Zoom">
 <!ENTITY windowMenu.label "Window">
 
-<!ENTITY pageThemeButton.label "Page Themes">
-<!ENTITY pageThemeNoTheme.label "No Theme">
-<!ENTITY pageThemeNoTheme.accesskey "n">
-<!ENTITY pageThemePersistentOnly.label "Basic Theme">
-<!ENTITY pageThemePersistentOnly.accesskey "b">
+<!ENTITY pageStyleMenu.label "Page Style">
+<!ENTITY pageStyleMenu.accesskey "y">
+<!ENTITY pageStyleButton.label "Page Styles">
+<!ENTITY pageStyleNoStyle.label "No Style">
+<!ENTITY pageStyleNoStyle.accesskey "n">
+<!ENTITY pageStylePersistentOnly.label "Basic Page Style">
+<!ENTITY pageStylePersistentOnly.accesskey "b">
 
-<!ENTITY pageThemeIcon.tooltip            "Switch to an alternate stylesheet">
-<!ENTITY pageReportIcon.tooltip            "Change popup blocking settings for this website">
+<!ENTITY pageStyleIcon.tooltip             "Switch to an alternate page style">
+<!ENTITY pageReportIcon.tooltip            "Change popup blocking settings for this web site">
+
+<!ENTITY allowPopups.accesskey "p">
+<!ENTITY editPopupSettings.label "Edit Popup Blocker Options...">
+<!ENTITY editPopupSettings.accesskey "E">
+<!ENTITY dontShowMessage.accesskey "D">
+
+<!ENTITY tellAFriend.label "Tell a Friend">
+<!ENTITY tellAFriend.accesskey "T">
+<!ENTITY promote.label "Promote &brandShortName;">
+<!ENTITY promote.accesskey "P">
+
+<!ENTITY bidiSwitchPageDirectionItem.label        "Switch Page Direction">
+<!ENTITY bidiSwitchPageDirectionItem.accesskey    "g">
+<!ENTITY bidiSwitchTextDirectionItem.label        "Switch Text Direction">
+<!ENTITY bidiSwitchTextDirectionItem.accesskey    "w">
+<!ENTITY bidiSwitchTextDirectionItem.commandkey   "X">
+
+<!ENTITY find.label "Find:">
+<!ENTITY findNext.label "Find Next">
+<!ENTITY findNext.tooltip "Find the next occurrence of the phrase">
+<!ENTITY findPrevious.label "Find Previous">
+<!ENTITY findPrevious.tooltip "Find the previous occurrence of the phrase">
+<!ENTITY findCloseButton.tooltip "Close Find bar">
+<!ENTITY highlight.label "Highlight">
+<!ENTITY highlight.tooltip "Highlight all occurrences of the phrase (Ctrl+Enter)">
+
+<!ENTITY findOnCmd.label     "Find in This Page...">
+<!ENTITY findOnCmd.accesskey "F">
+<!ENTITY findOnCmd.commandkey "f">
+<!ENTITY findAgainCmd.label  "Find Again">
+<!ENTITY findAgainCmd.accesskey "g">
+<!ENTITY findAgainCmd.commandkey "g">
+<!ENTITY findAgainCmd.commandkey2 "VK_F3">

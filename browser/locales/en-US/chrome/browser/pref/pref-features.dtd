@@ -9,14 +9,12 @@
 
 <!ENTITY  enableImages.label                "Load Images">
 <!ENTITY  enableImages.accesskey            "i">
-<!ENTITY  forOriginatingSiteOnly.label      "for the originating Web site only">
+<!ENTITY  forOriginatingSiteOnly.label      "for the originating web site only">
 <!ENTITY  forOriginatingSiteOnly.accesskey  "W">
-<!ENTITY  manageImages.label                "Permissions...">
-<!ENTITY  manageImages.accesskey            "p">
 <!ENTITY  popupReject.label                 "Block Popup Windows">
 <!ENTITY  popupReject.accesskey             "b">
+<!ENTITY  enableSoftwareUpdate.label        "Allow web sites to install software">
+<!ENTITY  enableSoftwareUpdate.accesskey    "i">
 
-<!ENTITY  div.blessedservers.label          "Always allow the sites below to open popup windows:">
-<!ENTITY  addpermission.label               "Add Site...">
-<!ENTITY  removepermission.label            "Remove Site">
-<!ENTITY  removeallpermissions.label        "Remove All Sites">
+<!ENTITY  allowedSites.label                "Allowed Sites">
+<!ENTITY  exceptions.label                  "Exceptions">

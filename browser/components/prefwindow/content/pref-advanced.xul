@@ -1,7 +1,5 @@
 <?xml version="1.0"?> 
 
-#define PROVISIONAL_SECURITY_UI
-
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://mozapps/skin/pref/pref.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/pref/pref.css" type="text/css"?>
@@ -18,31 +16,56 @@
       headertitle="&lHeader;">
 
   <script type="application/x-javascript" src="chrome://browser/content/pref/pref-advanced.js"/>
+  
+  <stringbundle id="advancedBundle" src="chrome://browser/locale/pref/prefutilities.properties"/>
 
   <vbox class="listBox settingsBox" flex="1" style="overflow: auto;">
     <expander id="accessibility" label="&accessibility.label;" open="true" persist="open" clearhidden="true">
       <checkbox id="moveSystemCaret" label="&moveSystemCaret.label;"
                 prefstring="accessibility.browsewithcaret"/>
       <checkbox id="useTypeAheadFind" label="&useTypeAheadFind.label;"
-                prefstring="accessibility.typeaheadfind" oncommand="updatePrefs()"/>
-      <checkbox class="indent" id="linksOnlyTypeAheadFind" label="&linksOnlyTypeAheadFind.label;"
-                prefstring="accessibility.typeaheadfind.linksonly"/>
+                prefstring="accessibility.typeaheadfind"/>
     </expander>
-    <expander id="browsing" label="&browsing.label;" open="true" persist="open" clearhidden="true">
-      <checkbox id="hideTabBar" label="&hideTabBar.label;"
-                prefstring="browser.tabs.autoHide"/>
-      <checkbox id="loadInBackground" label="&loadInBackground.label;"
-                prefstring="browser.tabs.loadInBackground" reversed="true"/>
-      <checkbox id="warnOnClose" label="&warnOnClose.label;"
-                prefstring="browser.tabs.warnOnClose"/>
+    <expander id="browsing" label="&browsing.label;" open="true" persist="open"
+              clearhidden="true">
+      <checkbox id="enableAutoImageResizing"
+                label="&enableAutoImageResizing.label;"
+                prefstring="browser.enable_automatic_image_resizing"/>
       <checkbox id="useAutoScrolling" label="&useAutoScrolling.label;"
                 prefstring="general.autoScroll"/>
       <checkbox id="useSmoothScrolling" label="&useSmoothScrolling.label;"
                 prefstring="general.smoothScroll"/>
     </expander>
-    <expander id="multimedia" label="&multimedia.label;" open="true" persist="open" clearhidden="true">
-      <checkbox id="enableAutoImageResizing" label="&enableAutoImageResizing.label;"
-                prefstring="browser.enable_automatic_image_resizing"/>
+
+    <!-- tabbed browsing -->
+    <expander id="tabbedBrowsing" label="&tabbedBrowsing.label;"
+              open="true" persist="open" clearhidden="true">
+      <groupbox align="start">
+        <caption label="&openExternalLinksIn.label;"/>
+        <radiogroup id="tabbedExternalLinks"
+                    prefstring="browser.link.open_external">
+          <radio label="&newWindow.label;" value="2"/>
+          <radio label="&newTabInRecentWindow.label;" value="3"/>
+          <radio label="&recentWindowOrTab.label;" value="1"/>
+        </radiogroup>
+      </groupbox>
+      <!--  XXXben hide single window mode prefs for 1.0 to avoid crashes (see 266759) -->
+      <checkbox id="tabbedOpenForce" label="&forceNewWindowLinks.label;"
+                oncommand="updateWindowLinksBehavior()" hidden="true"/>
+      <radiogroup id="tabbedWindowLinks" hidden="true"
+                  prefstring="browser.link.open_newwindow.ui"
+                  style="margin-left: 23px">
+        <radio label="&sameTabOrWindow.label;" value="1"/>
+        <radio label="&newTab.label;" value="3"/>
+      </radiogroup>
+      <checkbox id="hideTabBar" label="&hideTabBar.label;"
+                prefstring="browser.tabs.autoHide"/>
+      <checkbox id="loadInBackground" label="&loadInBackground.label;"
+                prefstring="browser.tabs.loadInBackground" reversed="true"/>
+      <checkbox id="loadBookmarksInBackground" label="&loadBookmarksInBackground.label;"
+                prefstring="browser.tabs.loadBookmarksInBackground" reversed="true"/>
+      <checkbox id="warnOnClose" label="&warnOnClose.label;"
+                prefstring="browser.tabs.warnOnClose"/>
     </expander>
 
     <expander id="softwareupdate" label="&softwareupdate.label;" 
@@ -51,22 +74,14 @@
       <vbox class="indent" align="left">
         <checkbox id="enableSmartUpdate"
                   label="&enableSmartUpdate.label;" accesskey="&enableSmartUpdate.accesskey;"
-                  prefstring="update.app.enabled"/>
+                  prefstring="app.update.autoUpdateEnabled"/>
         <checkbox id="enableExtensionUpdate"
                   label="&enableExtensionUpdate.label;" accesskey="&enableExtensionUpdate.accesskey;"
-                  prefstring="update.extensions.enabled"/>      
-        <checkbox id="enableAutoInstall" class="indent"
-                  label="&enableAutoInstall.label;" accesskey="&enableAutoInstall.accesskey;"
-                  prefstring="update.extensions.autoUpdate"/>
+                  prefstring="extensions.update.autoUpdateEnabled"/>      
         <separator class="thin"/>
         <button label="&checkNow.label;" accesskey="&checkNow.accesskey;"
                 oncommand="checkForUpdates();"/>
       </vbox>
-      <separator class="thin"/>
-      <!-- XXXben - this will move to "Web Features" once I reorg Options again -->
-      <checkbox id="enableSoftwareInstall" label="&enableSoftwareUpdate.label;"
-                accesskey="&enableSoftwareUpdate.accesskey;"
-                prefstring="xpinstall.enabled"/>
     </expander>
 
     <expander id="security" label="&security.label;" open="true" persist="open" clearhidden="true">
@@ -78,9 +93,7 @@
                 prefstring="security.enable_tls"/>
     </expander>
     
-#ifdef PROVISIONAL_SECURITY_UI
     <expander id="certs" label="&certs.label;" open="false" persist="open" clearhidden="true">      
-      <description>&securityUIDisclaimer.label;</description>
       <groupbox align="start">
         <caption label="&SSLClientAuthMethod;"/>
         <description>&certselect.description;</description>
@@ -120,7 +133,6 @@
     </expander>
     
     <expander id="validation" label="&validation.label;" open="false" persist="open" clearhidden="true">      
-      <description>&securityUIDisclaimer.label;</description>
       <groupbox>
         <caption label="&validation.crl.label;"/>
         <description>&validation.crl.description;</description>
@@ -168,8 +180,6 @@
               flex="1" oncommand="changeURL()" hidden="true">
       <menupopup/>
     </menulist>
-
-#endif
   </vbox>
 </page>
 

@@ -84,7 +84,31 @@ nsProfileMigrator::Migrate(nsIProfileStartup* aStartup)
   nsresult rv;
 
   nsCAutoString key;
-  GetDefaultBrowserMigratorKey(key);
+  nsCOMPtr<nsIBrowserProfileMigrator> bpm;
+
+  rv = GetDefaultBrowserMigratorKey(key, bpm);
+  if (NS_FAILED(rv)) return rv;
+
+  if (!bpm) {
+    nsCAutoString contractID =
+      NS_LITERAL_CSTRING(NS_BROWSERPROFILEMIGRATOR_CONTRACTID_PREFIX) + key;
+
+    bpm = do_CreateInstance(contractID.get());
+    if (!bpm) return NS_ERROR_FAILURE;
+  }
+
+  PRBool sourceExists;
+  bpm->GetSourceExists(&sourceExists);
+  if (!sourceExists) {
+#ifdef XP_WIN
+    // The "Default Browser" key in the registry was set to a browser for which
+    // no profile data exists. On Windows, this means the Default Browser settings
+    // in the registry are bad, and we should just fall back to IE in this case.
+    bpm = do_CreateInstance(NS_BROWSERPROFILEMIGRATOR_CONTRACTID_PREFIX "ie");
+#else
+    return NS_ERROR_FAILURE;
+#endif
+  }
 
   nsCOMPtr<nsISupportsCString> cstr
     (do_CreateInstance("@mozilla.org/supports-cstring;1"));
@@ -99,6 +123,7 @@ nsProfileMigrator::Migrate(nsIProfileStartup* aStartup)
   if (!ww || !params) return NS_ERROR_FAILURE;
 
   params->AppendElement(cstr);
+  params->AppendElement(bpm);
   params->AppendElement(aStartup);
 
   nsCOMPtr<nsIDOMWindow> migrateWizard;
@@ -139,8 +164,9 @@ typedef struct {
 #define INTERNAL_NAME_OPERA           "Opera"
 #endif
 
-void
-nsProfileMigrator::GetDefaultBrowserMigratorKey(nsACString& aKey)
+nsresult
+nsProfileMigrator::GetDefaultBrowserMigratorKey(nsACString& aKey,
+                                                nsCOMPtr<nsIBrowserProfileMigrator>& bpm)
 {
 #if XP_WIN
   HKEY hkey;
@@ -205,52 +231,58 @@ nsProfileMigrator::GetDefaultBrowserMigratorKey(nsACString& aKey)
 
             if (!nsCRT::strcasecmp((char*)internalName, INTERNAL_NAME_IEXPLORE)) {
               aKey = "ie";
-              return;
+              return NS_OK;
             }
             if (!nsCRT::strcasecmp((char*)internalName, INTERNAL_NAME_SEAMONKEY)) {
               aKey = "seamonkey";
-              return;
+              return NS_OK;
             }
             if (!nsCRT::strcasecmp((char*)internalName, INTERNAL_NAME_DOGBERT)) {
               aKey = "dogbert";
-              return;
+              return NS_OK;
             }
             if (!nsCRT::strcasecmp((char*)internalName, INTERNAL_NAME_OPERA)) {
               aKey = "opera";
-              return;
+              return NS_OK;
             }
             // Migrate data from any existing Application Data\Phoenix\* installations.
             if (!nsCRT::strcasecmp((char*)internalName, INTERNAL_NAME_FIREBIRD) || 
                 !nsCRT::strcasecmp((char*)internalName, INTERNAL_NAME_FIREFOX) ||
                 !nsCRT::strcasecmp((char*)internalName, INTERNAL_NAME_PHOENIX)) {
               aKey = "phoenix";
-              return;
+              return NS_OK;
             }
           }
         }
       }
     }
   }
+  return NS_ERROR_FAILURE;
 #else
   // XXXben - until we figure out what to do here with default browsers on MacOS and
   // GNOME, simply copy data from a previous Seamonkey install. 
   PRBool exists = PR_FALSE;
-  nsCOMPtr<nsIBrowserProfileMigrator> bpm =
-    do_CreateInstance(NS_BROWSERPROFILEMIGRATOR_CONTRACTID_PREFIX "phoenix");
+  bpm = do_CreateInstance(NS_BROWSERPROFILEMIGRATOR_CONTRACTID_PREFIX "phoenix");
   if (bpm)
     bpm->GetSourceExists(&exists);
-  if (exists) {
+  if (exists)
     aKey = "phoenix";
-    return;
-  }
-
-  bpm = do_CreateInstance(NS_BROWSERPROFILEMIGRATOR_CONTRACTID_PREFIX "seamonkey");
-  if (bpm)
-    bpm->GetSourceExists(&exists);
-  if (exists) {
-    aKey = "seamonkey";
+  else {
+    bpm = do_CreateInstance(NS_BROWSERPROFILEMIGRATOR_CONTRACTID_PREFIX "seamonkey");
+    if (bpm)
+      bpm->GetSourceExists(&exists);
+    if (exists)
+      aKey = "seamonkey";
+    else {
+       bpm = do_CreateInstance(NS_BROWSERPROFILEMIGRATOR_CONTRACTID_PREFIX "opera");
+       if (bpm)
+         bpm->GetSourceExists(&exists);
+       if (exists)
+         aKey = "opera";
+    }
   }
 #endif
+  return NS_OK;
 }
 
 PRBool
@@ -285,6 +317,12 @@ nsProfileMigrator::ImportRegistryProfiles(const nsACString& aAppName)
   NS_ENSURE_SUCCESS(rv, PR_FALSE);
   regFile->AppendNative(aAppName);
   regFile->AppendNative(NS_LITERAL_CSTRING("registry.dat"));
+#elif defined(XP_BEOS)
+  rv = dirService->Get(NS_BEOS_SETTINGS_DIR, NS_GET_IID(nsILocalFile),
+                       getter_AddRefs(regFile));
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+  regFile->AppendNative(aAppName);
+  regFile->AppendNative(NS_LITERAL_CSTRING("appreg"));
 #else
   rv = dirService->Get(NS_UNIX_HOME_DIR, NS_GET_IID(nsILocalFile),
                        getter_AddRefs(regFile));
@@ -338,8 +376,12 @@ nsProfileMigrator::ImportRegistryProfiles(const nsACString& aAppName)
     if (!profileFile)
       continue;
 
+#if defined (XP_MACOSX)
+    rv = profileFile->SetPersistentDescriptor(nsDependentCString(profilePath));
+#else
     NS_ConvertUTF8toUTF16 widePath(profilePath);
     rv = profileFile->InitWithPath(widePath);
+#endif
     if (NS_FAILED(rv)) continue;
 
     nsCOMPtr<nsIToolkitProfile> tprofile;
