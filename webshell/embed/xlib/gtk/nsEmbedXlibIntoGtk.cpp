@@ -211,9 +211,11 @@ int main(int argc, char **argv)
   if (!NS_SUCCEEDED(rv))
 	return 1;
 
-  sgWebShell->Init((nsNativeWidget *)GDK_WINDOW_XWINDOW(main_window->window),
-		  0, 0,
-		  500, 500);
+  // XXX - fix me!
+  //sgWebShell->Init((nsNativeWidget *)GDK_WINDOW_XWINDOW(main_window->window),
+  //		  0, 0,
+  //500, 500);
+  NS_ASSERTION(PR_FALSE, "Please fix this code.");
 
   gsWindowService->GetEventDispatcher(&gsEventDispatcher);
 
@@ -228,8 +230,10 @@ int main(int argc, char **argv)
   sgPrefs->StartUp();
   sgPrefs->ReadUserPrefs();
 
-  nsIContentViewer *content_viewer;
-  rv = sgWebShell->GetContentViewer(&content_viewer);
+  nsIContentViewer *content_viewer=nsnull;
+  // XXX fix me!
+  //rv = sgWebShell->GetContentViewer(&content_viewer);
+  NS_ASSERTION(PR_FALSE, "Please fix this code.");
   if (NS_SUCCEEDED(rv) && content_viewer) {
     content_viewer->Show();
     NS_RELEASE(content_viewer);
@@ -277,10 +281,12 @@ void handle_size_allocate(GtkWidget *w, GtkAllocation *alloc, gpointer p)
 {
   printf("handling size allocate\n");
   nsIWebShell *moz_widget = (nsIWebShell *)p;
-  nsIContentViewer *content_viewer;
-  nsresult rv;
-  
-  rv = moz_widget->GetContentViewer(&content_viewer);
+  nsIContentViewer *content_viewer=nsnull;
+  nsresult rv=NS_OK;
+ 
+  // XXX - fix me!
+  //  rv = moz_widget->GetContentViewer(&content_viewer);
+  NS_ASSERTION(PR_FALSE, "Please fix this code.");
   if (NS_SUCCEEDED(rv) && content_viewer) {
     nsRect bounds(0,0, alloc->width, alloc->height);
     
