@@ -21,6 +21,7 @@
  */
 
 #include "nsFontMetricsWin.h"
+#include "nsQuickSort.h"
 #include "prmem.h"
 #include "plhash.h"
 
@@ -950,6 +951,13 @@ static int CALLBACK enumProc(const LOGFONT* logFont, const TEXTMETRIC* metrics,
     return 1;
   }
 
+  for (int i = 0; i < nsFontMetricsWin::gGlobalFontsCount; i++) {
+    if (!strcmp(nsFontMetricsWin::gGlobalFonts[i].logFont.lfFaceName,
+                logFont->lfFaceName)) {
+      return 1;
+    }
+  }
+
   // XXX make this smarter: don't add font to list if we already have a font
   // with the same font signature -- erik
   if (nsFontMetricsWin::gGlobalFontsCount == gGlobalFontsAlloc) {
@@ -979,6 +987,7 @@ static int CALLBACK enumProc(const LOGFONT* logFont, const TEXTMETRIC* metrics,
   font->map = nsnull;
   font->logFont = *logFont;
   font->skip = 0;
+  font->signature = ((NEWTEXTMETRICEX*) metrics)->ntmFontSig;
 
   return 1;
 }
@@ -2271,6 +2280,7 @@ struct nsCharSetInfo
 {
   char*    mName;
   PRUint16 mCodePage;
+  char*    mLangGroup;
   void     (*GenerateMap)(nsCharSetInfo* aSelf);
   PRUint8* mMap;
 };
@@ -2320,21 +2330,21 @@ GenerateMultiByte(nsCharSetInfo* aSelf)
 
 static nsCharSetInfo gCharSetInfo[eCharSet_COUNT] =
 {
-  { "DEFAULT",     0,    GenerateDefault },
-  { "ANSI",        1252, GenerateSingleByte },
-  { "EASTEUROPE",  1250, GenerateSingleByte },
-  { "RUSSIAN",     1251, GenerateSingleByte },
-  { "GREEK",       1253, GenerateSingleByte },
-  { "TURKISH",     1254, GenerateSingleByte },
-  { "HEBREW",      1255, GenerateSingleByte },
-  { "ARABIC",      1256, GenerateSingleByte },
-  { "BALTIC",      1257, GenerateSingleByte },
-  { "THAI",        874,  GenerateSingleByte },
-  { "SHIFTJIS",    932,  GenerateMultiByte },
-  { "GB2312",      936,  GenerateMultiByte },
-  { "HANGEUL",     949,  GenerateMultiByte },
-  { "CHINESEBIG5", 950,  GenerateMultiByte },
-  { "JOHAB",       1361, GenerateMultiByte }
+  { "DEFAULT",     0,    "",               GenerateDefault },
+  { "ANSI",        1252, "x-western",      GenerateSingleByte },
+  { "EASTEUROPE",  1250, "x-central-euro", GenerateSingleByte },
+  { "RUSSIAN",     1251, "x-cyrillic",     GenerateSingleByte },
+  { "GREEK",       1253, "el",             GenerateSingleByte },
+  { "TURKISH",     1254, "tr",             GenerateSingleByte },
+  { "HEBREW",      1255, "he",             GenerateSingleByte },
+  { "ARABIC",      1256, "ar",             GenerateSingleByte },
+  { "BALTIC",      1257, "x-baltic",       GenerateSingleByte },
+  { "THAI",        874,  "th",             GenerateSingleByte },
+  { "SHIFTJIS",    932,  "ja",             GenerateMultiByte },
+  { "GB2312",      936,  "zh-CN",          GenerateMultiByte },
+  { "HANGEUL",     949,  "ko",             GenerateMultiByte },
+  { "CHINESEBIG5", 950,  "zh-TW",          GenerateMultiByte },
+  { "JOHAB",       1361, "ko-XXX",         GenerateMultiByte }
 };
 
 static int
@@ -2652,4 +2662,218 @@ nsFontMetricsWinA::FindGlobalFont(HDC aDC, PRUnichar c)
   }
 
   return nsnull;
+}
+
+
+// The Font Enumerator
+
+nsFontEnumeratorWin::nsFontEnumeratorWin()
+{
+  NS_INIT_REFCNT();
+}
+
+NS_IMPL_ISUPPORTS(nsFontEnumeratorWin,
+                  nsCOMTypeInfo<nsIFontEnumerator>::GetIID());
+
+static int gInitializedFontEnumerator = 0;
+
+static int
+InitializeFontEnumerator(void)
+{
+  gInitializedFontEnumerator = 1;
+
+  if (!nsFontMetricsWin::gGlobalFonts) {
+    HDC dc = ::GetDC(nsnull);
+    if (!nsFontMetricsWin::InitializeGlobalFonts(dc)) {
+      ::ReleaseDC(nsnull, dc);
+      return 0;
+    }
+    ::ReleaseDC(nsnull, dc);
+  }
+
+  return 1;
+}
+
+static int
+CompareFontNames(const void* aArg1, const void* aArg2, void* aClosure)
+{
+  const PRUnichar* str1 = *((const PRUnichar**) aArg1);
+  const PRUnichar* str2 = *((const PRUnichar**) aArg2);
+
+  // XXX add nsICollation stuff
+
+  return nsCRT::strcmp(str1, str2);
+}
+
+NS_IMETHODIMP
+nsFontEnumeratorWin::EnumerateAllFonts(PRUint32* aCount, PRUnichar*** aResult)
+{
+  if ((!aCount) || (!aResult)) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  if (!gInitializedFontEnumerator) {
+    if (!InitializeFontEnumerator()) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  PRUnichar** array = (PRUnichar**)
+    nsAllocator::Alloc(nsFontMetricsWin::gGlobalFontsCount * sizeof(PRUnichar*));
+  if (!array) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  for (int i = 0; i < nsFontMetricsWin::gGlobalFontsCount; i++) {
+    PRUnichar* str = nsFontMetricsWin::gGlobalFonts[i].name->ToNewUnicode();
+    if (!str) {
+      for (i = i - 1; i >= 0; i--) {
+        nsAllocator::Free(array[i]);
+      }
+      nsAllocator::Free(array);
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    array[i] = str;
+  }
+
+  NS_QuickSort(array, nsFontMetricsWin::gGlobalFontsCount, sizeof(PRUnichar*),
+    CompareFontNames, nsnull);
+
+  *aCount = nsFontMetricsWin::gGlobalFontsCount;
+  *aResult = array;
+
+  return NS_OK;
+}
+
+static int
+SignatureMatchesLangGroup(FONTSIGNATURE* aSignature,
+  const char* aLangGroup)
+{
+  int dword;
+  DWORD* array = aSignature->fsCsb;
+  int i = 0;
+  for (dword = 0; dword < 2; dword++) {
+    for (int bit = 0; bit < sizeof(DWORD) * 8; bit++) {
+      if ((array[dword] >> bit) & 1) {
+        if (!strcmp(gCharSetInfo[gCharSetToIndex[bitToCharSet[i]]].mLangGroup,
+                    aLangGroup)) {
+          return 1;
+        }
+      }
+      i++;
+    }
+  }
+
+  return 0;
+}
+
+static int
+FontMatchesGenericType(nsGlobalFont* aFont, const char* aGeneric,
+  const char* aLangGroup)
+{
+  if (!strcmp(aLangGroup, "ja")) {
+    return 1;
+  }
+  else if (!strcmp(aLangGroup, "zh-TW")) {
+    return 1;
+  }
+  else if (!strcmp(aLangGroup, "zh-CN")) {
+    return 1;
+  }
+  else if (!strcmp(aLangGroup, "ko")) {
+    return 1;
+  }
+  else if (!strcmp(aLangGroup, "th")) {
+    return 1;
+  }
+  else if (!strcmp(aLangGroup, "he")) {
+    return 1;
+  }
+  else if (!strcmp(aLangGroup, "ar")) {
+    return 1;
+  }
+
+  switch (aFont->logFont.lfPitchAndFamily & 0xF0) {
+  case FF_DONTCARE:
+    return 0;
+  case FF_ROMAN:
+    if (!strcmp(aGeneric, "serif")) {
+      return 1;
+    }
+    return 0;
+  case FF_SWISS:
+    if (!strcmp(aGeneric, "sans-serif")) {
+      return 1;
+    }
+    return 0;
+  case FF_MODERN:
+    if (!strcmp(aGeneric, "monospace")) {
+      return 1;
+    }
+    return 0;
+  case FF_SCRIPT:
+    if (!strcmp(aGeneric, "cursive")) {
+      return 1;
+    }
+    return 0;
+  case FF_DECORATIVE:
+    if (!strcmp(aGeneric, "fantasy")) {
+      return 1;
+    }
+    return 0;
+  default:
+    return 0;
+  }
+
+  return 0;
+}
+
+NS_IMETHODIMP
+nsFontEnumeratorWin::EnumerateFonts(const char* aLangGroup,
+  const char* aGeneric, PRUint32* aCount, PRUnichar*** aResult)
+{
+  if ((!aLangGroup) || (!aGeneric) || (!aCount) || (!aResult)) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  if ((!strcmp(aLangGroup, "x-unicode")) ||
+      (!strcmp(aLangGroup, "x-user-def"))) {
+    return EnumerateAllFonts(aCount, aResult);
+  }
+
+  if (!gInitializedFontEnumerator) {
+    if (!InitializeFontEnumerator()) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  PRUnichar** array = (PRUnichar**)
+    nsAllocator::Alloc(nsFontMetricsWin::gGlobalFontsCount * sizeof(PRUnichar*));
+  if (!array) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  int j = 0;
+  for (int i = 0; i < nsFontMetricsWin::gGlobalFontsCount; i++) {
+    if (SignatureMatchesLangGroup(&nsFontMetricsWin::gGlobalFonts[i].signature,
+                                  aLangGroup) &&
+        FontMatchesGenericType(&nsFontMetricsWin::gGlobalFonts[i], aGeneric,
+                               aLangGroup)) {
+      PRUnichar* str = nsFontMetricsWin::gGlobalFonts[i].name->ToNewUnicode();
+      if (!str) {
+        for (j = j - 1; j >= 0; j--) {
+          nsAllocator::Free(array[j]);
+        }
+        nsAllocator::Free(array);
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      array[j] = str;
+      j++;
+    }
+  }
+
+  NS_QuickSort(array, j, sizeof(PRUnichar*), CompareFontNames, nsnull);
+
+  *aCount = j;
+  *aResult = array;
+
+  return NS_OK;
 }
