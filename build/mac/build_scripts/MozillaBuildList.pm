@@ -2322,22 +2322,26 @@ sub BuildPluginsProjects()
 
     # as a temporary measure, make sure that the folder "MacOS Support:JNIHeaders" exists,
     # before we attempt to build the MRJ plugin. This will allow a gradual transition.
-    if (!$main::options{carbon} && -e GetCodeWarriorRelativePath("Java_Support:VM_Support:MRJ_Support"))
+    if ($main::options{carbon} || -e GetCodeWarriorRelativePath("Java_Support:VM_Support:MRJ_Support"))
     {
-	    my($plugin_path) = ":mozilla:plugin:oji:MRJ:plugin:";
+	    my($plugin_path) = ":mozilla:plugin:oji:MRJ$C:plugin:";
 
 	    # Build MRJPlugin
-	    BuildProject($plugin_path . "MRJPlugin.xml", "MRJPlugin");
+	    BuildProject($plugin_path . "MRJPlugin$C.xml", "MRJPlugin$C");
 	    # Build MRJPlugin.jar (if Java tools exist)
 	    my($linker_path) = GetCodeWarriorRelativePath("CodeWarrior Plugins:Linkers:Java Linker");
 	    if (-e $linker_path) {
 	        print("CodeWarrior Java tools detected, building MRJPlugin.jar.\n");
-	        BuildProject($plugin_path . "MRJPlugin.xml", "MRJPlugin.jar");
+	        BuildProject($plugin_path . "MRJPlugin$C.xml", "MRJPlugin.jar");
 	    }
 	    # Copy MRJPlugin, MRJPlugin.jar to appropriate plugins folder.
 	    my($plugin_dist) = GetBinDirectory() . "Plug-ins:";
-	    MakeAlias($plugin_path . "MRJPlugin", $plugin_dist);
+	    MakeAlias($plugin_path . "MRJPlugin$C", $plugin_dist);
 	    MakeAlias($plugin_path . "MRJPlugin.jar", $plugin_dist);
+	    if ($main::options{carbon}) {
+            MakeAlias($plugin_path . "MRJPlugin.policy", $plugin_dist);
+            MakeAlias($plugin_path . "MRJPlugin.properties", $plugin_dist);
+	    }
 	}
 
     # Build the Default Plug-in and place an alias in the appropriate plugins folder.
