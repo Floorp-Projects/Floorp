@@ -1170,6 +1170,7 @@ FindFrameWithContent(nsIFrame* aFrame, nsIContent* aContent)
     NS_IF_RELEASE(pseudoTag);
 
     if (!isPlaceholder) {
+      NS_IF_RELEASE(frameContent);
       return aFrame;
     }
   }
