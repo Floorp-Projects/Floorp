@@ -52,15 +52,14 @@ enum {
     PREF_PARSE_INIT,
     PREF_PARSE_MATCH_STRING,
     PREF_PARSE_UNTIL_NAME,
-    PREF_PARSE_NAME,
+    PREF_PARSE_QUOTED_STRING,
     PREF_PARSE_UNTIL_COMMA,
     PREF_PARSE_UNTIL_VALUE,
-    PREF_PARSE_STRING_VALUE,
     PREF_PARSE_INT_VALUE,
     PREF_PARSE_COMMENT_MAYBE_START,
     PREF_PARSE_COMMENT_BLOCK,
     PREF_PARSE_COMMENT_BLOCK_MAYBE_END,
-    PREF_PARSE_ESC_STRING,
+    PREF_PARSE_ESC_SEQUENCE,
     PREF_PARSE_UNTIL_OPEN_PAREN,
     PREF_PARSE_UNTIL_CLOSE_PAREN,
     PREF_PARSE_UNTIL_SEMICOLON,
@@ -246,11 +245,29 @@ PREF_ParseBuf(PrefParseState *ps, const char *buf, int bufLen)
             }
             break;
 
+        /* quoted string parsing */
+        case PREF_PARSE_QUOTED_STRING:
+            /* we assume that the initial quote has already been consumed */
+            if (ps->lbcur == ps->lbend && !pref_GrowBuf(ps))
+                return PR_FALSE; /* out of memory */
+            if (c == '\\')
+                state = PREF_PARSE_ESC_SEQUENCE;
+            else if (c == ps->quotechar) {
+                *ps->lbcur++ = '\0';
+                state = ps->nextstate;
+                ps->nextstate = PREF_PARSE_INIT; /* reset next state */
+            }
+            else
+                *ps->lbcur++ = c;
+            break;
+
         /* name parsing */
         case PREF_PARSE_UNTIL_NAME:
-            if (c == '\"') {
+            if (c == '\"' || c == '\'') {
                 ps->fdefault = (ps->smatch == kPref);
-                state = PREF_PARSE_NAME;
+                ps->quotechar = c;
+                ps->nextstate = PREF_PARSE_UNTIL_COMMA; /* return here when done */
+                state = PREF_PARSE_QUOTED_STRING;
             }
             else if (c == '/') {       /* allow embedded comment */
                 ps->nextstate = state; /* return here when done with comment */
@@ -260,20 +277,6 @@ PREF_ParseBuf(PrefParseState *ps, const char *buf, int bufLen)
                 NS_WARNING("malformed pref file");
                 return PR_FALSE;
             }
-            break;
-        case PREF_PARSE_NAME:
-            if (ps->lbcur == ps->lbend && !pref_GrowBuf(ps))
-                return PR_FALSE; /* out of memory */
-            if (c == '\\') {
-                ps->nextstate = state; /* return here when done */
-                state = PREF_PARSE_ESC_STRING;
-            }
-            else if (c == '\"') {
-                *ps->lbcur++ = '\0';
-                state = PREF_PARSE_UNTIL_COMMA;
-            }
-            else
-                *ps->lbcur++ = c;
             break;
 
         /* parse until we find a comma separating name and value */
@@ -296,9 +299,11 @@ PREF_ParseBuf(PrefParseState *ps, const char *buf, int bufLen)
         case PREF_PARSE_UNTIL_VALUE:
             /* the pref value type is unknown.  so, we scan for the first
              * character of the value, and determine the type from that. */
-            if (c == '\"') {
+            if (c == '\"' || c == '\'') {
                 ps->vtype = PREF_STRING;
-                state = PREF_PARSE_STRING_VALUE;
+                ps->quotechar = c;
+                ps->nextstate = PREF_PARSE_UNTIL_CLOSE_PAREN;
+                state = PREF_PARSE_QUOTED_STRING;
             }
             else if (c == 't' || c == 'f') {
                 ps->vb = (char *) (c == 't' ? kTrue : kFalse);
@@ -323,23 +328,6 @@ PREF_ParseBuf(PrefParseState *ps, const char *buf, int bufLen)
             else if (!isspace(c)) {
                 NS_WARNING("malformed pref file");
                 return PR_FALSE;
-            }
-            break;
-        case PREF_PARSE_STRING_VALUE:
-            /* grow line buffer if necessary... */
-            if (ps->lbcur == ps->lbend && !pref_GrowBuf(ps))
-                return PR_FALSE; /* out of memory */
-            /* skip char if start of escape sequence.  handle escaped
-             * characters using a separate state. */
-            if (c == '\\') {
-                ps->nextstate = state; /* return here when done */
-                state = PREF_PARSE_ESC_STRING;
-            }
-            else if (c != '\"')
-                *ps->lbcur++ = c;
-            else { 
-                *ps->lbcur++ = '\0';
-                state = PREF_PARSE_UNTIL_CLOSE_PAREN;
             }
             break;
         case PREF_PARSE_INT_VALUE:
@@ -398,10 +386,10 @@ PREF_ParseBuf(PrefParseState *ps, const char *buf, int bufLen)
             break;
 
         /* string escape sequence parsing */
-        case PREF_PARSE_ESC_STRING:
-            /* not necessary to resize buffer here since we are writing
-             * only one character and the resize check would have been
-             * done for us in the previous state */
+        case PREF_PARSE_ESC_SEQUENCE:
+            /* not necessary to resize buffer here since we should be writing
+             * only one character and the resize check would have been done
+             * for us in the previous state */
             switch (c) {
             case '\"':
             case '\\':
@@ -414,12 +402,14 @@ PREF_ParseBuf(PrefParseState *ps, const char *buf, int bufLen)
                 break;
             default:
                 NS_WARNING("preserving unexpected JS escape sequence");
+                /* grow line buffer if necessary... */
+                if (ps->lbcur == ps->lbend && !pref_GrowBuf(ps))
+                    return PR_FALSE; /* out of memory */
                 *ps->lbcur++ = '\\'; /* preserve the escape sequence */
                 break;
             }
             *ps->lbcur++ = c;
-            state = ps->nextstate;
-            ps->nextstate = PREF_PARSE_INIT; /* reset next state */
+            state = PREF_PARSE_QUOTED_STRING;
             break;
 
         /* function open and close parsing */

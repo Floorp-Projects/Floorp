@@ -72,6 +72,7 @@ typedef struct PrefParseState {
     int         nextstate;  /* sometimes used...             */
     const char *smatch;     /* string to match               */
     int         sindex;     /* next char of smatch to check  */
+    char        quotechar;  /* char delimiter for quotations */
     char       *lb;         /* line buffer (only allocation) */
     char       *lbcur;      /* line buffer cursor            */
     char       *lbend;      /* line buffer end               */
