@@ -2993,6 +2993,49 @@ HTMLContentSink::OpenBody(const nsIParserNode& aNode)
 
   MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::OpenBody()\n"));
   MOZ_TIMER_STOP(mWatch);
+
+
+  // Check to see if InitialReflow() has been called on any of our
+  // presShells. If so, the InitialReflow() call inside StartLayout()
+  // will be supressed, so we can't rely on it to construct the body
+  // frame for us, so we'll have to manually call NotifyInsert() or
+  // NotifyAppend() to make sure a body frame gets constructed. (Bug 153815)
+
+  PRBool didInitialReflow = PR_FALSE;
+
+  PRInt32 i, ns = mDocument->GetNumberOfShells();
+  for (i = 0; i < ns; i++) {
+    nsCOMPtr<nsIPresShell> shell;
+    mDocument->GetShellAt(i, getter_AddRefs(shell));
+    if (shell) {
+      shell->GetDidInitialReflow(&didInitialReflow);
+      if (didInitialReflow)
+        break;
+    }
+  }
+
+  if (didInitialReflow && mCurrentContext->mStackPos > 1) {
+    PRInt32 parentIndex    = mCurrentContext->mStackPos - 2;
+    nsIHTMLContent *parent = mCurrentContext->mStack[parentIndex].mContent;
+    PRInt32 numFlushed     = mCurrentContext->mStack[parentIndex].mNumFlushed;
+    PRInt32 insertionPoint = mCurrentContext->mStack[parentIndex].mInsertionPoint;
+
+    // XXX: I have yet to see a case where numFlushed is non-zero and
+    //      insertionPoint is not -1, but this code will try to handle
+    //      those cases too.
+
+    if (insertionPoint != -1) {
+      NotifyInsert(parent, mBody, insertionPoint - 1);
+    }
+    else {
+      // XXX: Would it be better to use |parent->ChildCount() - 1| so that
+      //      we don't cause notifications for the <head> element and it's
+      //      children?
+
+      NotifyAppend(parent, numFlushed);
+    }
+  }
+
   StartLayout();
   return NS_OK;
 }
@@ -3755,6 +3798,24 @@ HTMLContentSink::StartLayout()
     nsCOMPtr<nsIPresShell> shell;
     mDocument->GetShellAt(i, getter_AddRefs(shell));
     if (shell) {
+
+      // Make sure we don't call InitialReflow() for a shell that has
+      // already called it. This can happen when the layout frame for
+      // an iframe is constructed *between* the Embed() call for the
+      // docshell in the iframe, and the content sink's call to OpenBody().
+      // (Bug 153815)
+
+      PRBool didInitialReflow = PR_FALSE;
+      shell->GetDidInitialReflow(&didInitialReflow);
+      if (didInitialReflow) {
+        // XXX: The assumption here is that if something already called
+        //      InitialReflow() on this shell, it also did some of the
+        //      setup below, so we do nothing and just move on to the next
+        //      shell in the list.
+
+        continue;
+      }
+
       // Make shell an observer for next time
       shell->BeginObservingDocument();
 
