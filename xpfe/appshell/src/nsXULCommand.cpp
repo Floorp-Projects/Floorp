@@ -18,9 +18,16 @@
  */
 #include "nsIDOMNode.h"
 #include "nsIMenuItem.h"
+#include "nsDOMEvent.h"
+#include "nsGUIEvent.h"
 
-// FOr JS Execution
-#include "nsIScriptContextOwner.h"
+#include "nsIContentViewerContainer.h"
+#include "nsIContentViewer.h"
+#include "nsIDocumentViewer.h"
+#include "nsIPresContext.h"
+#include "nsIContent.h"
+
+#include "nsCOMPtr.h"
 
 #include "nsIComponentManager.h"
 
@@ -34,7 +41,6 @@
 // IID's
 static NS_DEFINE_IID(kIDOMNodeIID,             NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kISupportsIID,            NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIScriptContextOwnerIID,  NS_ISCRIPTCONTEXTOWNER_IID);
 static NS_DEFINE_IID(kIXULCommandIID,          NS_IXULCOMMAND_IID);
 
 //----------------------------------------------------------------------
@@ -125,19 +131,49 @@ NS_IMETHODIMP nsXULCommand::AttributeHasBeenSet(const nsString & aAttr)
 //----------------------------------------------------------------------
 NS_IMETHODIMP nsXULCommand::DoCommand()
 {
-  const PRUnichar * name;
-  mWebShell->GetName( &name);
-  nsAutoString str(name);
-
-  if (DEBUG_MENUSDEL)
-  {
-	  char * cstr = str.ToNewCString();
-
-      printf("DoCommand -  mWebShell is [%s] 0x%x\n",cstr, mWebShell);
-
-	  if (cstr) delete [] cstr;
+  nsresult rv = NS_ERROR_FAILURE;
+ 
+  nsCOMPtr<nsIContentViewerContainer> contentViewerContainer;
+  contentViewerContainer = do_QueryInterface(mWebShell);
+  if (!contentViewerContainer) {
+      NS_ERROR("Webshell doesn't support the content viewer container interface");
+      return rv;
   }
-  return ExecuteJavaScriptString(mWebShell, mCommandStr);
+
+  nsCOMPtr<nsIContentViewer> contentViewer;
+  if (NS_FAILED(rv = contentViewerContainer->GetContentViewer(getter_AddRefs(contentViewer)))) {
+      NS_ERROR("Unable to retrieve content viewer.");
+      return rv;
+  }
+
+  nsCOMPtr<nsIDocumentViewer> docViewer;
+  docViewer = do_QueryInterface(contentViewer);
+  if (!docViewer) {
+      NS_ERROR("Document viewer interface not supported by the content viewer.");
+      return rv;
+  }
+
+  nsCOMPtr<nsIPresContext> presContext;
+  if (NS_FAILED(rv = docViewer->GetPresContext(*getter_AddRefs(presContext)))) {
+      NS_ERROR("Unable to retrieve the doc viewer's presentation context.");
+      return rv;
+  }
+
+  nsEventStatus status = nsEventStatus_eIgnore;
+  nsMouseEvent event;
+  event.eventStructType = NS_MOUSE_EVENT;
+  event.message = NS_MOUSE_LEFT_CLICK;
+
+  nsCOMPtr<nsIContent> contentNode;
+  contentNode = do_QueryInterface(mDOMElement);
+  if (!contentNode) {
+      NS_ERROR("DOM Node doesn't support the nsIContent interface required to handle DOM events.");
+      return rv;
+  }
+
+  rv = contentNode->HandleDOMEvent(*presContext, &event, nsnull, DOM_EVENT_INIT, status);
+
+  return rv;
 }
 
 //----------------------------------------------------------------------
@@ -157,30 +193,7 @@ NS_IMETHODIMP nsXULCommand::SetDOMElement(nsIDOMElement * aDOMElement)
 //----------------------------------------------------------------------
 NS_IMETHODIMP nsXULCommand::ExecuteJavaScriptString(nsIWebShell* aWebShell, nsString& aJavaScript)
 {
-  if (0 == aJavaScript.Length()) {
-    return NS_ERROR_FAILURE;
-  }
-  nsresult status;
-
-  NS_ASSERTION(nsnull != aWebShell, "null webshell passed to EvaluateJavaScriptString");
-
-  // Get nsIScriptContextOwner
-  nsCOMPtr<nsIScriptContextOwner> scriptContextOwner ( do_QueryInterface(aWebShell) );
-  if ( scriptContextOwner ) {
-    const char* url = "";
-      // Get nsIScriptContext
-    nsCOMPtr<nsIScriptContext> scriptContext;
-    status = scriptContextOwner->GetScriptContext(getter_AddRefs(scriptContext));
-    if (NS_OK == status) {
-      // Ask the script context to evalute the javascript string
-      PRBool isUndefined = PR_FALSE;
-      nsString rVal("xxx");
-      scriptContext->EvaluateString(aJavaScript, url, 0, rVal, &isUndefined);
-      if (DEBUG_MENUSDEL) printf("EvaluateString - %d [%s]\n", isUndefined, rVal.ToNewCString());
-    }
-
-  }
-  return status;
+  return NS_OK; // XXX Kill this method. It's worthless.
 }
 
 /////////////////////////////////////////////////////////////////////////
