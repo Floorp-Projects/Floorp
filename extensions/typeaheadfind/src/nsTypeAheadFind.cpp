@@ -1981,8 +1981,8 @@ nsTypeAheadFind::GetAutoStart(nsIDOMWindow *aDOMWin, PRBool *aIsAutoStartOn)
       browserElement->GetLocalName(tagName);
       browserElement->GetAttribute(NS_LITERAL_STRING("type"), test);
       browserElement->GetAttribute(NS_LITERAL_STRING("autofind"), autoFind);
-      if (tagName.EqualsWithConversion("editor") || 
-          autoFind.EqualsWithConversion("false")) {
+      if (tagName.EqualsLiteral("editor") || 
+          autoFind.EqualsLiteral("false")) {
         return NS_OK;
       }
     }

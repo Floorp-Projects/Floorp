@@ -1968,7 +1968,7 @@ SI_LoadSignonData() {
   if (NS_FAILED(si_ReadLine(strm, format))) {
     return -1;
   }
-  if (!format.EqualsWithConversion(HEADER_VERSION)) {
+  if (!format.EqualsLiteral(HEADER_VERSION)) {
     /* something's wrong */
     return -1;
   }
@@ -2596,9 +2596,9 @@ si_RestoreOldSignonDataFromBrowser
     data = NS_STATIC_CAST(si_SignonDataStruct*, user->signonData_list.ElementAt(i));
     nsAutoString decrypted;
     if (NS_SUCCEEDED(si_Decrypt(data->value, decrypted))) {
-      if(data->name.EqualsWithConversion(USERNAMEFIELD)) {
+      if(data->name.EqualsLiteral(USERNAMEFIELD)) {
         username = decrypted;
-      } else if(data->name.EqualsWithConversion(PASSWORDFIELD)) {
+      } else if(data->name.EqualsLiteral(PASSWORDFIELD)) {
         password = decrypted;
       }
     }

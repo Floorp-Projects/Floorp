@@ -61,7 +61,7 @@ NS_IMETHODIMP mozSpellI18NManager::GetUtil(const PRUnichar *aLanguage, mozISpell
  *_retval = NULL;
  nsAutoString lang;
  lang.Assign(aLanguage);
- if(lang.EqualsWithConversion("en")){
+ if(lang.EqualsLiteral("en")){
    *_retval = new mozEnglishWordUtils;
  }
  else{

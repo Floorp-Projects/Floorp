@@ -1173,7 +1173,7 @@ XULSortServiceImpl::SortContainer(nsIContent *container, sortPtr sortInfo,
         if (NS_SUCCEEDED(rv = contentSortInfoArray[loop]->content->GetAttr(kNameSpaceID_RDF,
             nsXULAtoms::type, type)) && (rv == NS_CONTENT_ATTR_HAS_VALUE))
         {
-          if (type.EqualsWithConversion(kURINC_BookmarkSeparator)) {
+          if (type.EqualsASCII(kURINC_BookmarkSeparator)) {
             if (loop > startIndex + 1) {
               if (merelyInvertFlag)
                 InvertSortInfo(&contentSortInfoArray[startIndex], loop-startIndex);

@@ -491,7 +491,7 @@ nsXMLContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
     if (mParser) {
       mParser->GetCommand(cmd);
     }
-    if (cmd.EqualsWithConversion(kLoadAsData)) {
+    if (cmd.EqualsASCII(kLoadAsData)) {
       // XXXbz Should this be done to all elements, not just XHTML ones?
       // We don't have any non-XHTML image loading things yet, but....
       nsCOMPtr<nsIImageLoadingContent> imgLoader(do_QueryInterface(content));
@@ -625,7 +625,7 @@ nsXMLContentSink::ProcessStyleLink(nsIContent* aElement,
 
   nsAutoString cmd;
   if (mParser) mParser->GetCommand(cmd);
-  if (cmd.EqualsWithConversion(kLoadAsData))
+  if (cmd.EqualsASCII(kLoadAsData))
     return NS_OK; // Do not load stylesheets when loading as data
 
   NS_ConvertUTF16toUTF8 type(aType);
