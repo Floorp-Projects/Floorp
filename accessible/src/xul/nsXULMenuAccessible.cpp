@@ -84,13 +84,10 @@ NS_IMETHODIMP nsXULMenuitemAccessible::GetState(PRUint32 *_retval)
       *_retval |= STATE_SELECTABLE;
 
     // Checked?
-    PRBool isChecked = PR_FALSE;
-    element->HasAttribute(NS_LITERAL_STRING("checked"), &isChecked); 
-    if (isChecked) {
-      nsAutoString checkValue;
-      element->GetAttribute(NS_LITERAL_STRING("checked"), checkValue);
-      if (!checkValue.EqualsIgnoreCase("false"))
-        *_retval |= STATE_CHECKED;
+    nsAutoString checkValue;
+    element->GetAttribute(NS_LITERAL_STRING("checked"), checkValue);
+    if (checkValue.EqualsLiteral("true")) {
+      *_retval |= STATE_CHECKED;
     }
   }
 
