@@ -67,31 +67,31 @@ CPPSRCS		= \
 EXPORTS		= nsContentCID.h
 
 SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/libgkconevents_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/libgkconhtmlcon_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/libgkconhtmldoc_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/libgkconhtmlstyle_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/libgkconxmlcon_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/libgkconxmldoc_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/libgkconxsldoc_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/libgkconxulcon_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/libgkconxuldoc_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/libgkconxultmpl_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/libgkconxbl_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/libgkconbase_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/libgkconshared_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)gkconevents_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)gkconhtmlcon_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)gkconhtmldoc_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)gkconhtmlstyle_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)gkconxmlcon_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)gkconxmldoc_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)gkconxsldoc_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)gkconxulcon_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)gkconxuldoc_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)gkconxultmpl_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)gkconxbl_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)gkconbase_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)gkconshared_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 ifdef MOZ_SVG
 SHARED_LIBRARY_LIBS += \
-		$(DIST)/lib/libgkconsvgdoc_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/libgkcontentsvg_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)gkconsvgdoc_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)gkcontentsvg_s.$(LIB_SUFFIX) \
 		$(NULL)
 endif
 
 ifdef MOZ_PERF_METRICS
 SHARED_LIBRARY_LIBS += \
-		$(DIST)/lib/libmozutil_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)mozutil_s.$(LIB_SUFFIX) \
 		$(NULL)
 endif
 

@@ -43,7 +43,7 @@ LOCAL_INCLUDES	= \
 EXTRA_DSO_LIBS	= gkgfx
 
 LIBS		+= \
-		$(DIST)/lib/libgkbase_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)gkbase_s.$(LIB_SUFFIX) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(MOZ_JS_LIBS) \
 		$(EXTRA_DSO_LIBS) \

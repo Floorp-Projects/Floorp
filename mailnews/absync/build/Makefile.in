@@ -54,7 +54,7 @@ CPPSRCS		= nsAbSyncFactory.cpp
 EXPORTS		= nsAbSyncCID.h
 
 SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/libabsync_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)absync_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \

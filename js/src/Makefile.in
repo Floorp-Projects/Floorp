@@ -132,11 +132,7 @@ EXPORTS		= \
 		jsstddef.h \
 		$(NULL)
 
-ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
-FDLIBM_LIBRARY	= fdlibm/fdm.$(LIB_SUFFIX)
-else
-FDLIBM_LIBRARY	= fdlibm/libfdm.$(LIB_SUFFIX)
-endif
+FDLIBM_LIBRARY	= fdlibm/$(LIB_PREFIX)fdm.$(LIB_SUFFIX)
 JSMATH_PRELINK	= jsmathtemp.o
 JS_SAFE_ARENA	= 1
 

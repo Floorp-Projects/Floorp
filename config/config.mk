@@ -181,9 +181,9 @@ NSS_LIBS	= \
 	$(DIST)/lib/libdbm.$(LIB_SUFFIX) \
 	$(NULL)
 
-MOZ_UNICHARUTIL_LIBS = $(DIST)/lib/libunicharutil_s.$(LIB_SUFFIX)
-MOZ_REGISTRY_LIBS          = $(DIST)/lib/libmozreg_s.$(LIB_SUFFIX)
-MOZ_WIDGET_SUPPORT_LIBS    = $(DIST)/lib/libwidgetsupport_s.$(LIB_SUFFIX)
+MOZ_UNICHARUTIL_LIBS = $(DIST)/lib/$(LIB_PREFIX)unicharutil_s.$(LIB_SUFFIX)
+MOZ_REGISTRY_LIBS          = $(DIST)/lib/$(LIB_PREFIX)mozreg_s.$(LIB_SUFFIX)
+MOZ_WIDGET_SUPPORT_LIBS    = $(DIST)/lib/$(LIB_PREFIX)widgetsupport_s.$(LIB_SUFFIX)
 
 # determine debug-related options
 _DEBUG_CFLAGS :=
@@ -520,7 +520,7 @@ endif
 # We need to know where to find the libraries we
 # put on the link line for binaries, and should
 # we link statically or dynamic?  Assuming dynamic for now.
-ifneq (_WINNT,$(GNU_CC)_$(OS_ARCH))
+ifneq (,$(filter-out WINNT OS2, $(OS_ARCH)))
 LIBS_DIR	= -L$(DIST)/bin -L$(DIST)/lib
 endif
 

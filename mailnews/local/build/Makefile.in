@@ -59,12 +59,12 @@ CPPSRCS		= nsMsgLocalFactory.cpp
 EXPORTS		= nsMsgLocalCID.h
 
 SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/libmsglocal_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)msglocal_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/lib \
-		$(DIST)/lib/librdfutil_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)rdfutil_s.$(LIB_SUFFIX) \
 		-L$(DIST)/bin \
 		$(EXTRA_DSO_LIBS) \
 		$(MOZ_UNICHARUTIL_LIBS) \

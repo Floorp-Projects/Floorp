@@ -62,7 +62,7 @@ CPPSRCS		= nsMsgCompFactory.cpp
 EXPORTS		= nsMsgCompCID.h
 
 SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/libmsgcompose_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)msgcompose_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \

@@ -74,12 +74,13 @@ CPPSRCS		= \
 #		nsDataObj.cpp      \
 #		nsDataObjCollection.cpp      \
 
-SHARED_LIBRARY_LIBS = $(DIST)/lib/libxpwidgets_s.$(LIB_SUFFIX) \
-	$(DIST)/lib/libtimeros2_s.$(LIB_SUFFIX) \
+SHARED_LIBRARY_LIBS = \
+	$(DIST)/lib/$(LIB_PREFIX)xpwidgets_s.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)timeros2_s.$(LIB_SUFFIX) \
 	$(NULL)
 
 EXTRA_DSO_LDOPTS = \
-	  	$(EXTRA_DSO_LIBS) \
+		$(EXTRA_DSO_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 

@@ -49,9 +49,9 @@ EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 # XXX Note dependencies on implementation headers for factory functions
 
 SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/librdfbase_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/librdfdatasource_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/librdfutil_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)rdfbase_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)rdfdatasource_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)rdfutil_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \

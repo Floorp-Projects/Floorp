@@ -59,8 +59,8 @@ CPPSRCS		= nsImapFactory.cpp
 EXPORTS		= nsMsgImapCID.h
 
 SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/libmsgimap_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/librdfutil_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)msgimap_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)rdfutil_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \

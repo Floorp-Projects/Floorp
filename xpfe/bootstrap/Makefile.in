@@ -87,7 +87,7 @@ CPPSRCS		= \
 		nsSetupRegistry.cpp \
 		nsWindowCreator.cpp \
 		nsSigHandlers.cpp \
-                showOSAlert.cpp \
+		showOSAlert.cpp \
 		$(NULL)
 
 XP_LIBS		= \
@@ -119,17 +119,9 @@ XP_LIBS		+= \
 endif
 
 ifdef MOZ_LDAP_XPCOM
-ifeq ($(OS_ARCH),OS2)
-# link with import ldap libs on os/2
-XP_LIBS   += \
-		$(DIST)/lib/ldap40.lib \
-		$(DIST)/lib/lber40.lib \
-		$(NULL)
-else  
 XP_LIBS		+= \
 		-lldap40 -llber40 \
 		$(NULL)
-endif
 endif
 
 ifdef MOZ_SVG
@@ -169,11 +161,7 @@ XP_LIBS         += -ljprof
 endif
 
 ifdef MOZ_OJI
-ifeq ($(MOZ_OS2_TOOLS),VACPP)
-OJI_LIBS	= $(DIST)/lib/jsj.lib
-else
 OJI_LIBS	= -ljsj
-endif
 endif
 
 LIBS		= $(XP_LIBS)

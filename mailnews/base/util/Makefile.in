@@ -106,7 +106,7 @@ EXPORTS		= \
 EXTRA_DSO_LDOPTS = \
 	-L$(DIST)/bin \
 	-L$(DIST)/lib \
-	$(DIST)/lib/librdfutil_s.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)rdfutil_s.$(LIB_SUFFIX) \
 	$(MOZ_UNICHARUTIL_LIBS) \
 	$(MOZ_COMPONENT_LIBS) \
 	$(NULL)

@@ -48,12 +48,12 @@ REQUIRES	= xpcom \
 CPPSRCS		= nsXMLExtrasModule.cpp
 
 SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/libxmlextrasbase_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)xmlextrasbase_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 
 ifdef MOZ_SOAP
-SHARED_LIBRARY_LIBS += $(DIST)/lib/libxmlextrasschema_s.$(LIB_SUFFIX) $(DIST)/lib/libxmlextraswsdl_s.$(LIB_SUFFIX) $(DIST)/lib/libxmlextrassoap_s.$(LIB_SUFFIX)
+SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)xmlextrasschema_s.$(LIB_SUFFIX) $(DIST)/lib/$(LIB_PREFIX)xmlextraswsdl_s.$(LIB_SUFFIX) $(DIST)/lib/$(LIB_PREFIX)xmlextrassoap_s.$(LIB_SUFFIX)
 DEFINES = -DMOZ_SOAP
 endif
 

@@ -53,7 +53,7 @@ CPPSRCS		= nsEmitterFactory.cpp
 EXPORTS		= nsMimeEmitterCID.h
 
 SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/libemitterutil_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)emitterutil_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \

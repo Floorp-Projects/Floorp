@@ -70,13 +70,13 @@ CPPSRCS		= nsMsgFactory.cpp
 EXPORTS		= nsMsgBaseCID.h
 
 SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/libmsgbase_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/libmsgsearch_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)msgbase_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)msgsearch_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/lib	\
-		$(DIST)/lib/librdfutil_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)rdfutil_s.$(LIB_SUFFIX) \
 		-L$(DIST)/bin \
 		$(EXTRA_DSO_LIBS) \
 		$(MOZ_JS_LIBS) \

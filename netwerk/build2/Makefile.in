@@ -41,11 +41,11 @@ REQUIRES	= xpcom \
 CPPSRCS		= nsNetModule2.cpp
 
 SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/libnkgopher_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/libnkftp_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/libnkfinger_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/libnkdatetm_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/libnkviewsource_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)nkgopher_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)nkftp_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)nkfinger_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)nkdatetm_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)nkviewsource_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 LOCAL_INCLUDES	= \
@@ -62,3 +62,7 @@ EXTRA_DSO_LDOPTS = \
 
 include $(topsrcdir)/config/rules.mk
 
+DEFINES                += -D_IMPL_NS_NET
+ifeq ($(OS_ARCH),WINNT)
+DEFINES                += -DWIN32_LEAN_AND_MEAN
+endif

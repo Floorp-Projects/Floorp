@@ -56,7 +56,7 @@ CPPSRCS		= \
 		$(NULL)
 
 SHARED_LIBRARY_LIBS= \
-		$(DIST)/lib/libbasedocshell_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)basedocshell_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS= \

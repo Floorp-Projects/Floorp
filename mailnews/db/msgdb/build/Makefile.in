@@ -52,7 +52,7 @@ endif
 CPPSRCS		= nsMsgDBFactory.cpp
 EXPORTS		= nsMsgDBCID.h
 
-SHARED_LIBRARY_LIBS = $(DIST)/lib/libmsgdb_s.$(LIB_SUFFIX)
+SHARED_LIBRARY_LIBS = $(DIST)/lib/$(LIB_PREFIX)msgdb_s.$(LIB_SUFFIX)
 
 EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/bin \

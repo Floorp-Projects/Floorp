@@ -50,7 +50,7 @@ CPPSRCS			= nsMimeModule.cpp
 EXPORTS		= nsMsgMimeCID.h
 
 SHARED_LIBRARY_LIBS = \
-                $(DIST)/lib/libmime_s.$(LIB_SUFFIX) \
+                $(DIST)/lib/$(LIB_PREFIX)mime_s.$(LIB_SUFFIX) \
                 $(NULL)
 
 EXTRA_DSO_LDOPTS = \

@@ -62,9 +62,9 @@ else
 # We're building both plain and html editing
 CPPSRCS = nsEditorRegistration.cpp
 SHARED_LIBRARY_LIBS = \
-		../html/libhtmleditor_s.$(LIB_SUFFIX)      \
+		../html/$(LIB_PREFIX)htmleditor_s.$(LIB_SUFFIX)      \
 		$(NULL)
-#		../composer/src/libcomposer_s.$(LIB_SUFFIX)    
+#		../composer/src/$(LIB_PREFIX)composer_s.$(LIB_SUFFIX)    
 endif
 
 #ifndef MKSHLIB_FORCE_ALL
@@ -73,8 +73,8 @@ endif
 
 # These libraries always get built:
 SHARED_LIBRARY_LIBS += \
-		../text/libtexteditor_s.$(LIB_SUFFIX)      \
-		../base/libeditorbase_s.$(LIB_SUFFIX)      \
+		../text/$(LIB_PREFIX)texteditor_s.$(LIB_SUFFIX)      \
+		../base/$(LIB_PREFIX)editorbase_s.$(LIB_SUFFIX)      \
 		$(NULL)
 
 ifdef ENABLE_EDITOR_API_LOG
