@@ -151,6 +151,18 @@ nsScrollFrame::DidReflow(nsIPresContext&   aPresContext,
 }
 
 nsresult
+nsScrollFrame::CreateScrollingViewWidget(nsIView* aView, const nsStylePosition* aPosition)
+{
+  nsresult rv = NS_OK;
+   // If it's fixed positioned, then create a widget 
+  if (NS_STYLE_POSITION_FIXED == aPosition->mPosition) {
+    rv = aView->CreateWidget(kWidgetCID);
+  }
+
+  return(rv);
+}
+
+nsresult
 nsScrollFrame::CreateScrollingView(nsIPresContext& aPresContext)
 {
   nsIView*  view;
@@ -205,9 +217,7 @@ nsScrollFrame::CreateScrollingView(nsIPresContext& aPresContext)
     viewManager->SetViewContentTransparency(view, PR_TRUE);
 
     // XXX If it's fixed positioned, then create a widget too
-    if (NS_STYLE_POSITION_FIXED == position->mPosition) {
-      view->CreateWidget(kWidgetCID);
-    }
+    CreateScrollingViewWidget(view, position);
 
     // Get the nsIScrollableView interface
     nsIScrollableView* scrollingView;

@@ -66,6 +66,9 @@ public:
 protected:
   nsScrollFrame();
   virtual PRIntn GetSkipSides() const;
+   // Creation of the widget for the scrolling view is factored into a virtual method so
+   // that sub-classes may control widget creation.
+  virtual nsresult CreateScrollingViewWidget(nsIView* aView,const nsStylePosition* aPosition);
 
 private:
   nsresult CreateScrollingView(nsIPresContext& aPresContext);

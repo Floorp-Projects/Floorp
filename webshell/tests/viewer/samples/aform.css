@@ -1,0 +1,50 @@
+
+input[type="checkbox"] {
+ -moz-border-radius:0px; 
+ width:11px; 
+ height:11px; 
+ border:2px inset rgb(192, 192, 192);
+ background-color:white;
+ color:black;
+}
+
+input[type="radio"] {
+ -moz-border-radius:0px; 
+ width:12px; 
+ height:12px; 
+ border:2px inset; 
+ background-color:white;
+ color:black;
+}
+
+input[type=button] {
+ -moz-border-radius:0px; 
+ border: 2px outset rgb(156, 154, 156);
+ background-color: rgb(206, 206, 206);
+ color:black;
+ padding: 1px;
+}
+
+input[type="button"]:active {
+  border-style:inset;
+  padding-left: 2px;
+  padding-right: 0px;
+  padding-top: 2px;
+  padding-bottom: 0px;
+}
+
+
+input[type="button"]:active:-moz-outline {
+ border : 1px solid black;
+}
+
+select {
+  -moz-border-radius:2px;
+  border:2px inset;
+}
+
+:-moz-dropdown-list {
+  border-color:black;
+
+}
+  

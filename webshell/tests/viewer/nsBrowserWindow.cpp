@@ -518,6 +518,8 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
   case VIEWER_DEMO13:
   case VIEWER_DEMO14:
   case VIEWER_DEMO15:
+  case VIEWER_DEMO16:
+  case VIEWER_DEMO17:
     {
       PRIntn ix = aID - VIEWER_DEMO0;
       nsAutoString url(SAMPLES_BASE_URL);
