@@ -61,6 +61,7 @@ nsEditorSpellCheck::nsEditorSpellCheck()
   : mSuggestedWordIndex(0)
   , mDictionaryIndex(0)
 {
+  NS_INIT_ISUPPORTS();
 }
 
 nsEditorSpellCheck::~nsEditorSpellCheck()

@@ -491,7 +491,11 @@ function doDefault()
 function CancelSpellCheck()
 {
   if (gSpellChecker)
-    gSpellChecker.UninitSpellChecker();
+  {
+    try {
+      gSpellChecker.UninitSpellChecker();
+    } finally { gSpellChecker = null; }
+  }
 
   // Signal to calling window that we canceled
   window.opener.cancelSendMessage = true;
@@ -501,7 +505,12 @@ function CancelSpellCheck()
 function onClose()
 {
   if (gSpellChecker)
-    gSpellChecker.UninitSpellChecker();
+  {
+    try {
+      gSpellChecker.UninitSpellChecker();
+    } finally { gSpellChecker = null; }
+  }
+
   window.opener.cancelSendMessage = false;
   window.close();
 }
