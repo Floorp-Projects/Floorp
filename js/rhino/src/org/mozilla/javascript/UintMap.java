@@ -50,7 +50,7 @@ import java.io.ObjectOutputStream;
  *
  */
 
-class UintMap implements Serializable {
+public class UintMap implements Serializable {
 
 // Map implementation via hashtable,
 // follows "The Art of Computer Programming" by Donald E. Knuth
