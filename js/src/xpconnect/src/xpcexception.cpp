@@ -507,8 +507,7 @@ static char* CloneAllAccess()
 NS_IMETHODIMP
 nsXPCException::CanCreateWrapper(const nsIID * iid, char **_retval)
 {
-    // If you have to ask, then the answer is NO
-    *_retval = nsnull;
+    *_retval = CloneAllAccess();
     return NS_OK;
 }
 
@@ -533,12 +532,14 @@ nsXPCException::CanGetProperty(const nsIID * iid, const PRUnichar *propertyName,
 {
     static const NS_NAMED_LITERAL_STRING(s_message, "message");
     static const NS_NAMED_LITERAL_STRING(s_result , "result");
+    static const NS_NAMED_LITERAL_STRING(s_code   , "code");
     static const NS_NAMED_LITERAL_STRING(s_name   , "name");
 
     const nsLiteralString name(propertyName);
 
     if(name.Equals(s_message) ||
        name.Equals(s_result)  ||
+       name.Equals(s_code)    ||
        name.Equals(s_name))
         *_retval = CloneAllAccess();
     else
