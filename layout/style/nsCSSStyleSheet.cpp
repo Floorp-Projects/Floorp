@@ -2980,7 +2980,7 @@ static PRBool SelectorMatches(SelectorMatchesData &data,
           PRInt32 index = -1;
           do {
             parent->ChildAt(++index, firstChild);
-            if (firstChild) { // skip text & comments (and whitespace for firstNode as well)
+            if (firstChild) { // stop at first non-comment and non-whitespace node (and non-text node for firstChild)
               if (IsSignificantChild(firstChild, (nsCSSAtoms::firstNodePseudo == pseudoClass->mAtom))) {
                 break;
               }
@@ -2994,7 +2994,8 @@ static PRBool SelectorMatches(SelectorMatchesData &data,
         result = PRBool(localTrue == (data.mContent == firstChild));
         NS_IF_RELEASE(firstChild);
       }
-      else if (nsCSSAtoms::lastNodePseudo == pseudoClass->mAtom) {
+      else if ((nsCSSAtoms::lastChildPseudo == pseudoClass->mAtom) ||
+               (nsCSSAtoms::lastNodePseudo == pseudoClass->mAtom)) {
         nsIContent* lastChild = nsnull;
         nsIContent* parent = data.mParentContent;
         if (parent) {
@@ -3002,8 +3003,8 @@ static PRBool SelectorMatches(SelectorMatchesData &data,
           parent->ChildCount(index);
           do {
             parent->ChildAt(--index, lastChild);
-            if (lastChild) { // skip whitespace text & comments
-              if (IsSignificantChild(lastChild, PR_TRUE)) {
+            if (lastChild) { // stop at first non-comment and non-whitespace node (and non-text node for lastChild)
+              if (IsSignificantChild(lastChild, (nsCSSAtoms::lastNodePseudo == pseudoClass->mAtom))) {
                 break;
               }
               NS_RELEASE(lastChild);

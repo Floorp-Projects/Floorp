@@ -56,6 +56,7 @@ CSS_ATOM(enabledPseudo, ":enabled")
 
 CSS_ATOM(firstChildPseudo, ":first-child")
 CSS_ATOM(firstNodePseudo, ":first-node")
+CSS_ATOM(lastChildPseudo, ":last-child")
 CSS_ATOM(lastNodePseudo, ":last-node")
 CSS_ATOM(focusPseudo, ":focus")
 
