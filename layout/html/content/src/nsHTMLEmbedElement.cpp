@@ -160,15 +160,32 @@ nsHTMLEmbedElement::AttributeToString(nsIAtom* aAttribute,
 }
 
 static void
-MapAttributesInto(nsIHTMLAttributes* aAttributes,
+MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
                   nsIStyleContext* aContext,
                   nsIPresContext* aPresContext)
 {
   nsGenericHTMLElement::MapImageAlignAttributeInto(aAttributes, aContext, aPresContext);
   nsGenericHTMLElement::MapImageAttributesInto(aAttributes, aContext, aPresContext);
-  nsGenericHTMLElement::MapImageBorderAttributesInto(aAttributes, aContext, aPresContext, nsnull);
+  nsGenericHTMLElement::MapImageBorderAttributeInto(aAttributes, aContext, aPresContext, nsnull);
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
 }
+
+NS_IMETHODIMP
+nsHTMLEmbedElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
+                                             PRInt32& aHint) const
+{
+  if (! nsGenericHTMLElement::GetCommonMappedAttributesImpact(aAttribute, aHint)) {
+    if (! nsGenericHTMLElement::GetImageMappedAttributesImpact(aAttribute, aHint)) {
+      if (! nsGenericHTMLElement::GetImageAlignAttributeImpact(aAttribute, aHint)) {
+        if (! nsGenericHTMLElement::GetImageBorderAttributeImpact(aAttribute, aHint)) {
+          aHint = NS_STYLE_HINT_CONTENT;
+        }
+      }
+    }
+  }
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsHTMLEmbedElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,
@@ -191,11 +208,3 @@ nsHTMLEmbedElement::HandleDOMEvent(nsIPresContext& aPresContext,
                                aFlags, aEventStatus);
 }
 
-NS_IMETHODIMP
-nsHTMLEmbedElement::GetStyleHintForAttributeChange(
-    const nsIAtom* aAttribute,
-    PRInt32 *aHint) const
-{
-  nsGenericHTMLElement::GetStyleHintForCommonAttributes(this, aAttribute, aHint);
-  return NS_OK;
-}

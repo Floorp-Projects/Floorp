@@ -220,7 +220,7 @@ nsHTMLTableColElement::AttributeToString(nsIAtom* aAttribute,
 }
 
 static void
-MapAttributesInto(nsIHTMLAttributes* aAttributes,
+MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
                   nsIStyleContext* aContext,
                   nsIPresContext* aPresContext)
 {
@@ -284,6 +284,23 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
 }
 
+NS_IMETHODIMP
+nsHTMLTableColElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
+                                                PRInt32& aHint) const
+{
+  if ((aAttribute == nsHTMLAtoms::width) ||
+      (aAttribute == nsHTMLAtoms::align) ||
+      (aAttribute == nsHTMLAtoms::valign) ||
+      (aAttribute == nsHTMLAtoms::span)) {
+    aHint = NS_STYLE_HINT_REFLOW;
+  }
+  else if (! nsGenericHTMLElement::GetCommonMappedAttributesImpact(aAttribute, aHint)) {
+    aHint = NS_STYLE_HINT_CONTENT;
+  }
+
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsHTMLTableColElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,
@@ -319,18 +336,3 @@ NS_METHOD nsHTMLTableColElement::GetSpanValue(PRInt32* aSpan)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHTMLTableColElement::GetStyleHintForAttributeChange(
-    const nsIAtom* aAttribute,
-    PRInt32 *aHint) const
-{
-  if (PR_TRUE == nsGenericHTMLElement::GetStyleHintForCommonAttributes(this, 
-    aAttribute, aHint)) {
-    // Do nothing
-  }
-  else {
-    // XXX put in real handling for known attributes, return CONTENT for anything else
-    *aHint = NS_STYLE_HINT_CONTENT;
-  }
-  return NS_OK;
-}

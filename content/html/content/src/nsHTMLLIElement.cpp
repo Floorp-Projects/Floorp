@@ -174,7 +174,7 @@ nsHTMLLIElement::AttributeToString(nsIAtom* aAttribute,
 }
 
 static void
-MapAttributesInto(nsIHTMLAttributes* aAttributes,
+MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
                   nsIStyleContext* aContext,
                   nsIPresContext* aPresContext)
 {
@@ -191,6 +191,22 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
   }
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
 }
+
+NS_IMETHODIMP
+nsHTMLLIElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
+                                          PRInt32& aHint) const
+{
+  if (aAttribute == nsHTMLAtoms::type) {
+    aHint = NS_STYLE_HINT_REFLOW;
+  }
+  else if (! nsGenericHTMLElement::GetCommonMappedAttributesImpact(aAttribute, aHint)) {
+    aHint = NS_STYLE_HINT_CONTENT;
+  }
+
+  return NS_OK;
+}
+
+
 
 NS_IMETHODIMP
 nsHTMLLIElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,
@@ -212,22 +228,3 @@ nsHTMLLIElement::HandleDOMEvent(nsIPresContext& aPresContext,
                                aFlags, aEventStatus);
 }
 
-NS_IMETHODIMP
-nsHTMLLIElement::GetStyleHintForAttributeChange(
-    const nsIAtom* aAttribute,
-    PRInt32 *aHint) const
-{
-  if (aAttribute == nsHTMLAtoms::value) {
-    *aHint = NS_STYLE_HINT_CONTENT;
-  }
-  else if (aAttribute == nsHTMLAtoms::type) {
-    // XXX This shouldn't require a frame change, just a reapplication
-    // of style down the tree (and a reflow). The style changes aren't 
-    // percolating down far enough.
-    *aHint = NS_STYLE_HINT_REFLOW;
-  }
-  else {
-    nsGenericHTMLElement::GetStyleHintForCommonAttributes(this, aAttribute, aHint);
-  }
-  return NS_OK;
-}

@@ -161,7 +161,7 @@ nsHTMLTableCaptionElement::AttributeToString(nsIAtom* aAttribute,
 }
 
 static void
-MapAttributesInto(nsIHTMLAttributes* aAttributes,
+MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
                   nsIStyleContext* aContext,
                   nsIPresContext* aPresContext)
 {
@@ -187,6 +187,22 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
 }
 
 NS_IMETHODIMP
+nsHTMLTableCaptionElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
+                                                    PRInt32& aHint) const
+{
+  if (aAttribute == nsHTMLAtoms::align) {
+    aHint = NS_STYLE_HINT_REFLOW;
+  }
+  else if (! nsGenericHTMLElement::GetCommonMappedAttributesImpact(aAttribute, aHint)) {
+    aHint = NS_STYLE_HINT_CONTENT;
+  }
+
+  return NS_OK;
+}
+
+
+
+NS_IMETHODIMP
 nsHTMLTableCaptionElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,
                                                         nsMapAttributesFunc& aMapFunc) const
 {
@@ -207,11 +223,3 @@ nsHTMLTableCaptionElement::HandleDOMEvent(nsIPresContext& aPresContext,
                                aFlags, aEventStatus);
 }
 
-NS_IMETHODIMP
-nsHTMLTableCaptionElement::GetStyleHintForAttributeChange(
-    const nsIAtom* aAttribute,
-    PRInt32 *aHint) const
-{
-  nsGenericHTMLElement::GetStyleHintForCommonAttributes(this, aAttribute, aHint);
-  return NS_OK;
-}

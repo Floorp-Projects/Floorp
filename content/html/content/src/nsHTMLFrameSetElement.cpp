@@ -162,12 +162,30 @@ nsHTMLFrameSetElement::AttributeToString(nsIAtom* aAttribute,
 }
 
 static void
-MapAttributesInto(nsIHTMLAttributes* aAttributes,
+MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
                   nsIStyleContext* aContext,
                   nsIPresContext* aPresContext)
 {
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
 }
+
+
+NS_IMETHODIMP
+nsHTMLFrameSetElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
+                                                PRInt32& aHint) const
+{
+  if ((aAttribute == nsHTMLAtoms::rows) ||
+      (aAttribute == nsHTMLAtoms::cols)) {
+    aHint = NS_STYLE_HINT_REFLOW;
+  }
+  else if (! nsGenericHTMLElement::GetCommonMappedAttributesImpact(aAttribute, aHint)) {
+    aHint = NS_STYLE_HINT_CONTENT;
+  }
+
+  return NS_OK;
+}
+
+
 
 NS_IMETHODIMP
 nsHTMLFrameSetElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,
@@ -189,15 +207,3 @@ nsHTMLFrameSetElement::HandleDOMEvent(nsIPresContext& aPresContext,
                                aFlags, aEventStatus);
 }
 
-NS_IMETHODIMP
-nsHTMLFrameSetElement::GetStyleHintForAttributeChange(
-    const nsIAtom* aAttribute,
-    PRInt32 *aHint) const
-{
-  if ((nsHTMLAtoms::rows == aAttribute) || (nsHTMLAtoms::cols == aAttribute)) {
-    *aHint = NS_STYLE_HINT_REFLOW;
-  } else {
-    nsGenericHTMLElement::GetStyleHintForCommonAttributes(this, aAttribute, aHint);
-  }
-  return NS_OK;
-}

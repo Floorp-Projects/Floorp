@@ -149,7 +149,7 @@ nsHTMLBaseFontElement::AttributeToString(nsIAtom* aAttribute,
 }
 
 static void
-MapFontAttributesInto(nsIHTMLAttributes* aAttributes,
+MapFontAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
                       nsIStyleContext* aContext,
                       nsIPresContext* aPresContext)
 {
@@ -157,11 +157,27 @@ MapFontAttributesInto(nsIHTMLAttributes* aAttributes,
 }
 
 static void
-MapAttributesInto(nsIHTMLAttributes* aAttributes,
+MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
                   nsIStyleContext* aContext,
                   nsIPresContext* aPresContext)
 {
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
+}
+
+
+NS_IMETHODIMP
+nsHTMLBaseFontElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
+                                                PRInt32& aHint) const
+{
+  if ((nsHTMLAtoms::color == aAttribute) ||
+      (nsHTMLAtoms::face == aAttribute) ||
+      (nsHTMLAtoms::size == aAttribute)) {
+    aHint = NS_STYLE_HINT_RECONSTRUCT_ALL;  // XXX this seems a bit harsh, perhaps we need a reflow_all?
+  }
+  else if (! nsGenericHTMLElement::GetCommonMappedAttributesImpact(aAttribute, aHint)) {
+    aHint = NS_STYLE_HINT_CONTENT;
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -186,18 +202,3 @@ nsHTMLBaseFontElement::HandleDOMEvent(nsIPresContext& aPresContext,
                                aFlags, aEventStatus);
 }
 
-NS_IMETHODIMP
-nsHTMLBaseFontElement::GetStyleHintForAttributeChange(
-    const nsIAtom* aAttribute,
-    PRInt32 *aHint) const
-{
-  if (nsHTMLAtoms::color == aAttribute ||
-    nsHTMLAtoms::face == aAttribute ||
-    nsHTMLAtoms::size == aAttribute) {
-    *aHint = NS_STYLE_HINT_RECONSTRUCT_ALL;
-  }
-  else {
-    nsGenericHTMLElement::GetStyleHintForCommonAttributes(this, aAttribute, aHint);
-  }
-  return NS_OK;
-}

@@ -421,7 +421,7 @@ nsHTMLTableCellElement::AttributeToString(nsIAtom* aAttribute,
 }
 
 static void
-MapAttributesInto(nsIHTMLAttributes* aAttributes,
+MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
                   nsIStyleContext* aContext,
                   nsIPresContext* aPresContext)
 {
@@ -494,6 +494,32 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
 }
 
 NS_IMETHODIMP
+nsHTMLTableCellElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
+                                                 PRInt32& aHint) const
+{
+  if ((aAttribute == nsHTMLAtoms::align) || 
+      (aAttribute == nsHTMLAtoms::valign) ||
+      (aAttribute == nsHTMLAtoms::nowrap) ||
+      (aAttribute == nsHTMLAtoms::abbr) ||
+      (aAttribute == nsHTMLAtoms::axis) ||
+      (aAttribute == nsHTMLAtoms::headers) ||
+      (aAttribute == nsHTMLAtoms::scope) ||
+      (aAttribute == nsHTMLAtoms::width) ||
+      (aAttribute == nsHTMLAtoms::height)) {
+    aHint = NS_STYLE_HINT_REFLOW;
+  }
+  else if (! nsGenericHTMLElement::GetCommonMappedAttributesImpact(aAttribute, aHint)) {
+    if (! nsGenericHTMLElement::GetBackgroundAttributesImpact(aAttribute, aHint)) {
+      aHint = NS_STYLE_HINT_CONTENT;
+    }
+  }
+
+  return NS_OK;
+}
+
+
+
+NS_IMETHODIMP
 nsHTMLTableCellElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,
                                                      nsMapAttributesFunc& aMapFunc) const
 {
@@ -514,21 +540,3 @@ nsHTMLTableCellElement::HandleDOMEvent(nsIPresContext& aPresContext,
                                aFlags, aEventStatus);
 }
 
-NS_IMETHODIMP
-nsHTMLTableCellElement::GetStyleHintForAttributeChange(
-    const nsIAtom* aAttribute,
-    PRInt32 *aHint) const
-{
-  if (PR_TRUE == nsGenericHTMLElement::GetStyleHintForCommonAttributes(this, 
-    aAttribute, aHint)) {
-    // Do nothing
-  }
-  else if (nsHTMLAtoms::abbr != aAttribute &&
-      nsHTMLAtoms::axis != aAttribute &&
-      nsHTMLAtoms::headers != aAttribute &&
-      nsHTMLAtoms::scope != aAttribute)
-  {
-    *aHint = NS_STYLE_HINT_REFLOW;
-  }
-  return NS_OK;
-}

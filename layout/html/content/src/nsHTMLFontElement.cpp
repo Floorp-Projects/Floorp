@@ -188,7 +188,7 @@ nsHTMLFontElement::AttributeToString(nsIAtom* aAttribute,
 }
 
 static void
-MapFontAttributesInto(nsIHTMLAttributes* aAttributes,
+MapFontAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
                       nsIStyleContext* aContext,
                       nsIPresContext* aPresContext)
 {
@@ -251,8 +251,11 @@ MapFontAttributesInto(nsIHTMLAttributes* aAttributes,
     }
     else {
       // size: int, enum , NOTE: this does not count as an explicit size
-      // also this has no effect if font is already explicit
-      if (0 == (font->mFlags & NS_STYLE_FONT_SIZE_EXPLICIT)) {
+      // also this has no effect if font is already explicit (quirk mode)
+      nsCompatibility mode;
+      aPresContext->GetCompatibilityMode(&mode);
+      if ((eCompatibility_Standard == mode) || 
+          (0 == (font->mFlags & NS_STYLE_FONT_SIZE_EXPLICIT))) {
         aAttributes->GetAttribute(nsHTMLAtoms::size, value);
         if ((value.GetUnit() == eHTMLUnit_Integer) ||
             (value.GetUnit() == eHTMLUnit_Enumerated)) { 
@@ -297,7 +300,7 @@ MapFontAttributesInto(nsIHTMLAttributes* aAttributes,
 }
 
 static void
-MapAttributesInto(nsIHTMLAttributes* aAttributes,
+MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
                   nsIStyleContext* aContext,
                   nsIPresContext* aPresContext)
 {
@@ -312,23 +315,36 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
         aContext->GetMutableStyleData(eStyleStruct_Color);
       nsStyleText* text = (nsStyleText*)
         aContext->GetMutableStyleData(eStyleStruct_Text);
-      if (value.GetUnit() == eHTMLUnit_Color) {
+      if (((eHTMLUnit_Color == value.GetUnit())) ||
+          (eHTMLUnit_ColorName == value.GetUnit())) {
         color->mColor = value.GetColorValue();
-        text->mTextDecoration = font->mFont.decorations;  // re-apply inherited text decoration, so colors sync
-      }
-      else if (value.GetUnit() == eHTMLUnit_String) {
-        nsAutoString buffer;
-        value.GetStringValue(buffer);
-        char cbuf[40];
-        buffer.ToCString(cbuf, sizeof(cbuf));
-
-        NS_ColorNameToRGB(cbuf, &(color->mColor));
         text->mTextDecoration = font->mFont.decorations;  // re-apply inherited text decoration, so colors sync
       }
     }
   }
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
 }
+
+NS_IMETHODIMP
+nsHTMLFontElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
+                                            PRInt32& aHint) const
+{
+  if (aAttribute == nsHTMLAtoms::color) {
+    aHint = NS_STYLE_HINT_VISUAL;
+  }
+  else if ((aAttribute == nsHTMLAtoms::face) ||
+           (aAttribute == nsHTMLAtoms::pointSize) ||
+           (aAttribute == nsHTMLAtoms::size) ||
+           (aAttribute == nsHTMLAtoms::fontWeight)) {
+    aHint = NS_STYLE_HINT_REFLOW;
+  }
+  else if (! nsGenericHTMLElement::GetCommonMappedAttributesImpact(aAttribute, aHint)) {
+    aHint = NS_STYLE_HINT_CONTENT;
+  }
+
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsHTMLFontElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,
@@ -350,16 +366,3 @@ nsHTMLFontElement::HandleDOMEvent(nsIPresContext& aPresContext,
                                aFlags, aEventStatus);
 }
 
-NS_IMETHODIMP
-nsHTMLFontElement::GetStyleHintForAttributeChange(
-    const nsIAtom* aAttribute,
-    PRInt32 *aHint) const
-{
-  if (nsHTMLAtoms::color == aAttribute) {
-    *aHint = NS_STYLE_HINT_VISUAL;
-  }
-  else {
-    nsGenericHTMLElement::GetStyleHintForCommonAttributes(this, aAttribute, aHint);
-  }
-  return NS_OK;
-}

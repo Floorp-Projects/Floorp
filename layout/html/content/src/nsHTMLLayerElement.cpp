@@ -237,81 +237,103 @@ nsHTMLLayerElement::AttributeToString(nsIAtom* aAttribute,
 }
 
 static void
-MapAttributesInto(nsIHTMLAttributes* aAttributes,
+MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
                   nsIStyleContext* aContext,
                   nsIPresContext* aPresContext)
 {
   // Note: ua.css specifies that the 'position' is absolute
-  if (nsnull != aAttributes) {
-    nsHTMLValue      value;
-    float            p2t;
-    aPresContext->GetScaledPixelsToTwips(&p2t);
-    nsStylePosition* position = (nsStylePosition*)
-      aContext->GetMutableStyleData(eStyleStruct_Position);
+  nsHTMLValue      value;
+  float            p2t;
+  aPresContext->GetScaledPixelsToTwips(&p2t);
+  nsStylePosition* position = (nsStylePosition*)
+    aContext->GetMutableStyleData(eStyleStruct_Position);
 
-    // Left
-    aAttributes->GetAttribute(nsHTMLAtoms::left, value);
-    if (value.GetUnit() == eHTMLUnit_Pixel) {
-      nscoord twips = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
-      position->mOffset.SetLeft(nsStyleCoord(twips));
-    }
-    else if (value.GetUnit() == eHTMLUnit_Percent) {
-      position->mOffset.SetLeft(nsStyleCoord(value.GetPercentValue(), eStyleUnit_Percent));
-    }
-
-    // Top
-    aAttributes->GetAttribute(nsHTMLAtoms::top, value);
-    if (value.GetUnit() == eHTMLUnit_Pixel) {
-      nscoord twips = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
-      position->mOffset.SetTop(nsStyleCoord(twips));
-    }
-    else if (value.GetUnit() == eHTMLUnit_Percent) {
-      position->mOffset.SetTop(nsStyleCoord(value.GetPercentValue(), eStyleUnit_Percent));
-    }
-
-    // Width
-    aAttributes->GetAttribute(nsHTMLAtoms::width, value);
-    if (value.GetUnit() == eHTMLUnit_Pixel) {
-      nscoord twips = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
-      position->mWidth.SetCoordValue(twips);
-    }
-    else if (value.GetUnit() == eHTMLUnit_Percent) {
-      position->mWidth.SetPercentValue(value.GetPercentValue());
-    }
-
-    // Height
-    aAttributes->GetAttribute(nsHTMLAtoms::height, value);
-    if (value.GetUnit() == eHTMLUnit_Pixel) {
-      nscoord twips = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
-      position->mHeight.SetCoordValue(twips);
-    }
-    else if (value.GetUnit() == eHTMLUnit_Percent) {
-      position->mHeight.SetPercentValue(value.GetPercentValue());
-    }
-
-    // Z-index
-    aAttributes->GetAttribute(nsHTMLAtoms::zindex, value);
-    if (value.GetUnit() == eHTMLUnit_Integer) {
-      position->mZIndex.SetIntValue(value.GetIntValue(), eStyleUnit_Integer);
-    }
-    aAttributes->GetAttribute(nsHTMLAtoms::z_index, value);
-    if (value.GetUnit() == eHTMLUnit_Integer) {
-      position->mZIndex.SetIntValue(value.GetIntValue(), eStyleUnit_Integer);
-    }
-
-    // Visibility
-    aAttributes->GetAttribute(nsHTMLAtoms::visibility, value);
-    if (value.GetUnit() == eHTMLUnit_Enumerated) {
-      nsStyleDisplay* display = (nsStyleDisplay*)
-        aContext->GetMutableStyleData(eStyleStruct_Display);
-
-      display->mVisible = value.GetIntValue() == NS_STYLE_VISIBILITY_VISIBLE;
-    }
-
-    // Background and bgcolor
-    nsGenericHTMLElement::MapBackgroundAttributesInto(aAttributes, aContext, aPresContext);
+  // Left
+  aAttributes->GetAttribute(nsHTMLAtoms::left, value);
+  if (value.GetUnit() == eHTMLUnit_Pixel) {
+    nscoord twips = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
+    position->mOffset.SetLeft(nsStyleCoord(twips));
   }
+  else if (value.GetUnit() == eHTMLUnit_Percent) {
+    position->mOffset.SetLeft(nsStyleCoord(value.GetPercentValue(), eStyleUnit_Percent));
+  }
+
+  // Top
+  aAttributes->GetAttribute(nsHTMLAtoms::top, value);
+  if (value.GetUnit() == eHTMLUnit_Pixel) {
+    nscoord twips = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
+    position->mOffset.SetTop(nsStyleCoord(twips));
+  }
+  else if (value.GetUnit() == eHTMLUnit_Percent) {
+    position->mOffset.SetTop(nsStyleCoord(value.GetPercentValue(), eStyleUnit_Percent));
+  }
+
+  // Width
+  aAttributes->GetAttribute(nsHTMLAtoms::width, value);
+  if (value.GetUnit() == eHTMLUnit_Pixel) {
+    nscoord twips = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
+    position->mWidth.SetCoordValue(twips);
+  }
+  else if (value.GetUnit() == eHTMLUnit_Percent) {
+    position->mWidth.SetPercentValue(value.GetPercentValue());
+  }
+
+  // Height
+  aAttributes->GetAttribute(nsHTMLAtoms::height, value);
+  if (value.GetUnit() == eHTMLUnit_Pixel) {
+    nscoord twips = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
+    position->mHeight.SetCoordValue(twips);
+  }
+  else if (value.GetUnit() == eHTMLUnit_Percent) {
+    position->mHeight.SetPercentValue(value.GetPercentValue());
+  }
+
+  // Z-index
+  aAttributes->GetAttribute(nsHTMLAtoms::zindex, value);
+  if (value.GetUnit() == eHTMLUnit_Integer) {
+    position->mZIndex.SetIntValue(value.GetIntValue(), eStyleUnit_Integer);
+  }
+  aAttributes->GetAttribute(nsHTMLAtoms::z_index, value);
+  if (value.GetUnit() == eHTMLUnit_Integer) {
+    position->mZIndex.SetIntValue(value.GetIntValue(), eStyleUnit_Integer);
+  }
+
+  // Visibility
+  aAttributes->GetAttribute(nsHTMLAtoms::visibility, value);
+  if (value.GetUnit() == eHTMLUnit_Enumerated) {
+    nsStyleDisplay* display = (nsStyleDisplay*)
+      aContext->GetMutableStyleData(eStyleStruct_Display);
+
+    display->mVisible = value.GetIntValue() == NS_STYLE_VISIBILITY_VISIBLE;
+  }
+
+  // Background and bgcolor
+  nsGenericHTMLElement::MapBackgroundAttributesInto(aAttributes, aContext, aPresContext);
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
+}
+
+NS_IMETHODIMP
+nsHTMLLayerElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
+                                             PRInt32& aHint) const
+{
+  if ((aAttribute == nsHTMLAtoms::visibility) ||
+      (aAttribute == nsHTMLAtoms::zindex) ||
+      (aAttribute == nsHTMLAtoms::z_index)) {
+    aHint = NS_STYLE_HINT_VISUAL;
+  }
+  else if ((aAttribute == nsHTMLAtoms::left) || 
+           (aAttribute == nsHTMLAtoms::top) ||
+           (aAttribute == nsHTMLAtoms::width) ||
+           (aAttribute == nsHTMLAtoms::height)) {
+    aHint = NS_STYLE_HINT_REFLOW;
+  }
+  else if (! nsGenericHTMLElement::GetCommonMappedAttributesImpact(aAttribute, aHint)) {
+    if (! nsGenericHTMLElement::GetBackgroundAttributesImpact(aAttribute, aHint)) {
+      aHint = NS_STYLE_HINT_CONTENT;
+    }
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -335,22 +357,3 @@ nsHTMLLayerElement::HandleDOMEvent(nsIPresContext& aPresContext,
                                aFlags, aEventStatus);
 }
 
-NS_IMETHODIMP
-nsHTMLLayerElement::GetStyleHintForAttributeChange(
-    const nsIAtom* aAttribute,
-    PRInt32 *aHint) const
-{
-  if ((aAttribute == nsHTMLAtoms::visibility) ||
-      (aAttribute == nsHTMLAtoms::z_index) ||
-      (aAttribute == nsHTMLAtoms::zindex)) {
-    *aHint = NS_STYLE_HINT_VISUAL;
-  }
-  else if ((aAttribute == nsHTMLAtoms::top) ||
-           (aAttribute == nsHTMLAtoms::left)) {
-    *aHint = NS_STYLE_HINT_REFLOW;
-  }
-  else {
-    nsGenericHTMLElement::GetStyleHintForCommonAttributes(this, aAttribute, aHint);
-  }
-  return NS_OK;
-}

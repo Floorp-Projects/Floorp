@@ -209,7 +209,7 @@ nsHTMLTableColGroupElement::AttributeToString(nsIAtom* aAttribute,
 }
 
 static void
-MapAttributesInto(nsIHTMLAttributes* aAttributes,
+MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
                   nsIStyleContext* aContext,
                   nsIPresContext* aPresContext)
 {
@@ -261,16 +261,24 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
         textStyle = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
       textStyle->mVerticalAlign.SetIntValue(value.GetIntValue(), eStyleUnit_Enumerated);
     }
-
-    // span: int
-    aAttributes->GetAttribute(nsHTMLAtoms::span, value);
-    if (value.GetUnit() == eHTMLUnit_Integer)
-    {
-      nsStyleTable *tableStyle = (nsStyleTable*)aContext->GetMutableStyleData(eStyleStruct_Table);
-      tableStyle->mSpan = value.GetIntValue();
-    }
   }
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
+}
+
+NS_IMETHODIMP
+nsHTMLTableColGroupElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
+                                                     PRInt32& aHint) const
+{
+  if ((aAttribute == nsHTMLAtoms::width) ||
+      (aAttribute == nsHTMLAtoms::align) ||
+      (aAttribute == nsHTMLAtoms::valign)) {
+    aHint = NS_STYLE_HINT_REFLOW;
+  }
+  else if (! nsGenericHTMLElement::GetCommonMappedAttributesImpact(aAttribute, aHint)) {
+    aHint = NS_STYLE_HINT_CONTENT;
+  }
+
+  return NS_OK;
 }
 
 
@@ -295,18 +303,3 @@ nsHTMLTableColGroupElement::HandleDOMEvent(nsIPresContext& aPresContext,
                                aFlags, aEventStatus);
 }
 
-NS_IMETHODIMP
-nsHTMLTableColGroupElement::GetStyleHintForAttributeChange(
-    const nsIAtom* aAttribute,
-    PRInt32 *aHint) const
-{
-  if (PR_TRUE == nsGenericHTMLElement::GetStyleHintForCommonAttributes(this, 
-    aAttribute, aHint)) {
-    // Do nothing
-  }
-  else {
-    // XXX put in real handling for known attributes, return CONTENT for anything else
-    *aHint = NS_STYLE_HINT_CONTENT;
-  }
-  return NS_OK;
-}

@@ -371,7 +371,7 @@ nsHTMLTextAreaElement::AttributeToString(nsIAtom* aAttribute,
 }
 
 static void
-MapAttributesInto(nsIHTMLAttributes* aAttributes,
+MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
                   nsIStyleContext* aContext,
                   nsIPresContext* aPresContext)
 {
@@ -396,6 +396,20 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
     }
   }
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
+}
+
+NS_IMETHODIMP
+nsHTMLTextAreaElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
+                                                PRInt32& aHint) const
+{
+  if (aAttribute == nsHTMLAtoms::align) {
+    aHint = NS_STYLE_HINT_REFLOW;
+  }
+  else if (! nsGenericHTMLElement::GetCommonMappedAttributesImpact(aAttribute, aHint)) {
+    aHint = NS_STYLE_HINT_CONTENT;
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -457,15 +471,3 @@ nsHTMLTextAreaElement::SetForm(nsIDOMHTMLFormElement* aForm)
   return result;
 }
 
-NS_IMETHODIMP
-nsHTMLTextAreaElement::GetStyleHintForAttributeChange(
-    const nsIAtom* aAttribute,
-    PRInt32 *aHint) const
-{
-  if (nsHTMLAtoms::readonly == aAttribute) {
-    *aHint = NS_STYLE_HINT_CONTENT;
-  } else {
-    nsGenericHTMLElement::GetStyleHintForCommonAttributes(this, aAttribute, aHint);
-  }
-  return NS_OK;
-}

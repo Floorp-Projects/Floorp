@@ -169,7 +169,7 @@ nsHTMLPreElement::AttributeToString(nsIAtom* aAttribute,
 }
 
 static void
-MapFontAttributesInto(nsIHTMLAttributes* aAttributes,
+MapFontAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
                       nsIStyleContext* aContext,
                       nsIPresContext* aPresContext)
 {
@@ -187,7 +187,7 @@ MapFontAttributesInto(nsIHTMLAttributes* aAttributes,
 }
 
 static void
-MapAttributesInto(nsIHTMLAttributes* aAttributes,
+MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
                   nsIStyleContext* aContext,
                   nsIPresContext* aPresContext)
 {
@@ -239,6 +239,26 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
 }
 
 NS_IMETHODIMP
+nsHTMLPreElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
+                                           PRInt32& aHint) const
+{
+  if ((aAttribute == nsHTMLAtoms::variable) || 
+      (aAttribute == nsHTMLAtoms::wrap) ||
+      (aAttribute == nsHTMLAtoms::cols) ||
+      (aAttribute == nsHTMLAtoms::width) ||
+      (aAttribute == nsHTMLAtoms::tabstop)) {
+    aHint = NS_STYLE_HINT_REFLOW;
+  }
+  else if (! nsGenericHTMLElement::GetCommonMappedAttributesImpact(aAttribute, aHint)) {
+    aHint = NS_STYLE_HINT_CONTENT;
+  }
+
+  return NS_OK;
+}
+
+
+
+NS_IMETHODIMP
 nsHTMLPreElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,
                                                nsMapAttributesFunc& aMapFunc) const
 {
@@ -259,11 +279,3 @@ nsHTMLPreElement::HandleDOMEvent(nsIPresContext& aPresContext,
                                aFlags, aEventStatus);
 }
 
-NS_IMETHODIMP
-nsHTMLPreElement::GetStyleHintForAttributeChange(
-    const nsIAtom* aAttribute,
-    PRInt32 *aHint) const
-{
-  nsGenericHTMLElement::GetStyleHintForCommonAttributes(this, aAttribute, aHint);
-  return NS_OK;
-}
