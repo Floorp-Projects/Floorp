@@ -1,12 +1,7 @@
 ?AddRef@nsStreamTransferModule@@UAGKXZ ; 4
-?GetIID@nsIModule@@SAABUnsID@@XZ ; 3
-?Release@nsStreamTransferModule@@UAGKXZ ; 3
-?GetIID@?$nsCOMTypeInfo@VnsIModule@@@@SAABUnsID@@XZ ; 3
-?QueryInterface@nsStreamTransferModule@@UAGIABUnsID@@PAPAX@Z ; 2
-?Equals@nsID@@QBEHABU1@@Z ; 2
-??0nsStreamTransferModule@@QAE@XZ ; 1
-??0nsISupports@@QAE@XZ ; 1
-?RegisterSelf@nsStreamTransferModule@@UAGIPAVnsIComponentManager@@PAVnsIFile@@PBD2@Z ; 1
-??0nsIModule@@QAE@XZ ; 1
-?GetCID@nsStreamTransfer@@SAABUnsID@@XZ ; 1
+?Release@nsStreamTransferModule@@UAGKXZ ; 4
+?CanUnload@nsStreamTransferModule@@UAGIPAVnsIComponentManager@@PAH@Z ; 1
 _NSGetModule ; 1
+??_GnsStreamTransferModule@@UAEPAXI@Z ; 1
+?QueryInterface@nsStreamTransferModule@@UAGIABUnsID@@PAPAX@Z ; 1
+?RegisterSelf@nsStreamTransferModule@@UAGIPAVnsIComponentManager@@PAVnsIFile@@PBD2@Z ; 1

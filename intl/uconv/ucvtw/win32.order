@@ -1,17 +1,1 @@
-?get@?$nsCOMPtr@VnsIRegistry@@@@QBEPAV?$nsDerivedSafe@VnsIRegistry@@@@XZ ; 15
-??C?$nsCOMPtr@VnsIRegistry@@@@QBEPAV?$nsDerivedSafe@VnsIRegistry@@@@XZ ; 12
-?assign_assuming_AddRef@?$nsCOMPtr@VnsIRegistry@@@@AAEXPAVnsIRegistry@@@Z ; 6
-??1?$nsCOMPtr@VnsIRegistry@@@@QAE@XZ ; 6
-?GetIID@nsIRegistry@@SAABUnsID@@XZ ; 6
-?GetIID@?$nsCOMTypeInfo@VnsIRegistry@@@@SAABUnsID@@XZ ; 6
-?assign_from_helper@?$nsCOMPtr@VnsIRegistry@@@@AAEXABVnsCOMPtr_helper@@ABUnsID@@@Z ; 6
-?Assert_NoQueryNeeded@?$nsCOMPtr@VnsIRegistry@@@@QAEXXZ ; 3
-??0?$nsCOMPtr@VnsIRegistry@@@@QAE@ABVnsQueryInterface@@@Z ; 3
-?ns_if_addref@@YAKPAVnsIUnicharEncoder@@@Z ; 3
-??0?$nsCOMPtr@VnsIRegistry@@@@QAE@ABVnsCOMPtr_helper@@@Z ; 3
-?do_QueryInterface@@YA?BVnsQueryInterface@@PAVnsISupports@@PAI@Z ; 3
-?do_GetService@@YA?BVnsGetServiceByContractID@@PBDPAI@Z ; 3
-?do_GetService@@YA?BVnsGetServiceByContractID@@PBDPAI@Z ; 1
 _NSGetModule ; 1
-?do_GetService@@YA?BVnsGetServiceByContractID@@PBDPAI@Z ; 1
-?ns_if_addref@@YAKPAVnsIUnicharEncoder@@@Z ; 1
