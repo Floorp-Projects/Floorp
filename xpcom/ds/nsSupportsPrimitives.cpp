@@ -233,7 +233,7 @@ NS_IMETHODIMP nsSupportsWStringImpl::SetDataWithLength(PRInt32 aLength, const PR
 
 /***************************************************************************/
 
-NS_IMPL_ISUPPORTS1(nsSupportsPRBoolImpl, nsISupportsPRBool)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsSupportsPRBoolImpl, nsISupportsPRBool)
 
 nsSupportsPRBoolImpl::nsSupportsPRBoolImpl()
     : mData(PR_FALSE)
@@ -273,6 +273,21 @@ NS_IMETHODIMP nsSupportsPRBoolImpl::ToString(char **_retval)
     *_retval = result;
     return result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }  
+
+NS_COM nsresult
+NS_NewISupportsPRBool (nsISupportsPRBool ** aResult)
+{
+    NS_ENSURE_ARG_POINTER (aResult);
+    nsISupportsPRBool * rval = (nsISupportsPRBool *) (new nsSupportsPRBoolImpl ());
+    
+    if (!rval)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    NS_ADDREF (rval);
+    *aResult = rval;
+
+    return NS_OK;
+}
 
 /***************************************************************************/
 
