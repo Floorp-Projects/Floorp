@@ -268,5 +268,5 @@ static int CompareDWord (const void *v1, const void *v2, void *)
 void nsUInt32Array::QuickSort (int (*compare) (const void *elem1, const void *elem2, void *data))
 {
 	if (m_nSize > 1)
-		nsQuickSort(m_pData, m_nSize, sizeof(void*), compare ? compare : CompareDWord, nsnull);
+		NS_QuickSort(m_pData, m_nSize, sizeof(void*), compare ? compare : CompareDWord, nsnull);
 }

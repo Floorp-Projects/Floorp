@@ -97,7 +97,7 @@ med3(char *a, char *b, char *c, cmp_t* cmp, void *data)
               :(cmp(b, c, data) > 0 ? b : (cmp(a, c, data) < 0 ? a : c ));
 }
 
-void nsQuickSort (
+void NS_QuickSort (
 	void *a,
 	unsigned int n,
     unsigned int es,
@@ -171,12 +171,12 @@ loop:	SWAPINIT(a, es);
 	r = PR_MIN(pd - pc, pn - pd - es);
 	vecswap(pb, pn - r, r);
 	if ((r = pb - pa) > es)
-        nsQuickSort(a, r / es, es, cmp, data);
+        NS_QuickSort(a, r / es, es, cmp, data);
 	if ((r = pd - pc) > es) {
 		/* Iterate rather than recurse to save stack space */
 		a = pn - r;
 		n = r / es;
 		goto loop;
 	}
-/*		nsQuickSort(pn - r, r / es, es, cmp, data);*/
+/*		NS_QuickSort(pn - r, r / es, es, cmp, data);*/
 }

@@ -3793,7 +3793,7 @@ nsMsgCompose::ResultsRecipients(PRBool cancelled, PRInt32* nohtml,
 	}
 	if (changed) {
 		// Now nuke dups.
-		nsQuickSort(domainstrings, num, sizeof(char*), DomainCompare, NULL);
+		NS_QuickSort(domainstrings, num, sizeof(char*), DomainCompare, NULL);
 		for (i=0 ; i < num-1 ; i++) {
 			while (i < num-1 &&
 				   PL_strcmp(domainstrings[i], domainstrings[i+1]) == 0) {

@@ -1502,7 +1502,7 @@ CompareSizes(const void* aArg1, const void* aArg2, void *data)
 void
 nsFontStretch::SortSizes(void)
 {
-  nsQuickSort(mSizes, mSizesCount, sizeof(*mSizes), CompareSizes, NULL);
+  NS_QuickSort(mSizes, mSizesCount, sizeof(*mSizes), CompareSizes, NULL);
 }
 
 void
