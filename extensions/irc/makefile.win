@@ -126,4 +126,5 @@ install::
     $(MAKE_INSTALL) $(CONTENTFILES) $(INSTALLROOT)\content
     $(MAKE_INSTALL) $(SKINFILES) $(INSTALLROOT)\skin
     $(MAKE_INSTALL) $(IMAGEFILES) $(INSTALLROOT)\skin\images
+	$(MAKE_INSTALL) .\js\lib\chatzilla-service.js $(DIST)\bin\components
 

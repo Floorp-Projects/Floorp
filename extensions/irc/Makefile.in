@@ -128,3 +128,4 @@ install::
 	$(INSTALL) $(CONTENTFILES) $(INSTALLROOT)/content
 	$(INSTALL) $(SKINFILES) $(INSTALLROOT)/skin
 	$(INSTALL) $(IMAGEFILES) $(INSTALLROOT)/skin/images
+	$(INSTALL) $(srcdir)/js/lib/chatzilla-service.js $(DIST)/bin/components
