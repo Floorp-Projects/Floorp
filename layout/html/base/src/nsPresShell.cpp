@@ -236,8 +236,9 @@ public:
   NS_IMETHOD ContentChanged(nsIDocument *aDocument,
                             nsIContent* aContent,
                             nsISupports* aSubContent);
-  NS_IMETHOD ContentStateChanged(nsIDocument* aDocument,
-                                 nsIContent* aContent);
+  NS_IMETHOD ContentStatesChanged(nsIDocument* aDocument,
+                                  nsIContent* aContent1,
+                                  nsIContent* aContent2);
   NS_IMETHOD AttributeChanged(nsIDocument *aDocument,
                               nsIContent*  aContent,
                               nsIAtom*     aAttribute,
@@ -1704,13 +1705,14 @@ PresShell::ContentChanged(nsIDocument *aDocument,
 }
 
 NS_IMETHODIMP
-PresShell::ContentStateChanged(nsIDocument* aDocument,
-                               nsIContent* aContent)
+PresShell::ContentStatesChanged(nsIDocument* aDocument,
+                                nsIContent* aContent1,
+                                nsIContent* aContent2)
 {
   NS_PRECONDITION(nsnull != mRootFrame, "null root frame");
 
   EnterReflowLock();
-  nsresult rv = mStyleSet->ContentStateChanged(mPresContext, aContent);
+  nsresult rv = mStyleSet->ContentStatesChanged(mPresContext, aContent1, aContent2);
   ExitReflowLock();
   //if (mSelection)
     //mSelection->ResetSelection(this, mRootFrame);

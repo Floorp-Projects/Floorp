@@ -1523,8 +1523,9 @@ nsWebShellWindow::ContentChanged(nsIDocument *aDocument,
 }
 
 NS_IMETHODIMP
-nsWebShellWindow::ContentStateChanged(nsIDocument *aDocument,
-                                      nsIContent* aContent)
+nsWebShellWindow::ContentStatesChanged(nsIDocument *aDocument,
+                                       nsIContent* aContent1,
+                                       nsIContent* aContent2)
 {
   return NS_OK;
 }
