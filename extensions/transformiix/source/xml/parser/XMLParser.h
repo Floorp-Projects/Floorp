@@ -23,11 +23,14 @@
  * Keith Visco 
  *    -- finished implementation
  *
- * $Id: XMLParser.h,v 1.2 1999/11/15 07:12:54 nisheeth%netscape.com Exp $
+ * $Id: XMLParser.h,v 1.3 2000/05/23 13:27:50 axel%pike.org Exp $
  */
 
 #include <iostream.h>
 #include "baseutils.h"
+#ifndef XML_UNICODE
+#define XML_UNICODE
+#endif
 #include "xmlparse.h"
 #include "dom.h"
 
@@ -41,7 +44,7 @@ typedef struct  {
  * parsing is provided by EXPAT.
  * @author <a href="tomk@mitre.org">Tom Kneeland</a>
  * @author <a href="kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.2 $ $Date: 1999/11/15 07:12:54 $
+ * @version $Revision: 1.3 $ $Date: 2000/05/23 13:27:50 $
 **/
 class XMLParser
 {
