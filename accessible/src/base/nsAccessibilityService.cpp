@@ -112,7 +112,6 @@ nsAccessibilityService::nsAccessibilityService()
     return;
 
   observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
-  observerService->AddObserver(this, NS_PRESSHELL_DESTROY_TOPIC, PR_FALSE);
   nsAccessNodeWrap::InitAccessibility();
 }
 
@@ -134,19 +133,8 @@ nsAccessibilityService::Observe(nsISupports *aSubject, const char *aTopic,
       do_GetService("@mozilla.org/observer-service;1");
     if (observerService) {
       observerService->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-      observerService->RemoveObserver(this, NS_PRESSHELL_DESTROY_TOPIC);
     }
     nsAccessNodeWrap::ShutdownAccessibility();
-  }
-  else if (!nsCRT::strcmp(aTopic, NS_PRESSHELL_DESTROY_TOPIC)) {
-    nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(aSubject));
-    if (weakShell) {
-      nsCOMPtr<nsIAccessibleDocument> accessibleDoc;
-      nsAccessNode::GetDocAccessibleFor(weakShell, getter_AddRefs(accessibleDoc));
-      if (accessibleDoc) {
-        accessibleDoc->Destroy();
-      }
-    }
   }
   return NS_OK;
 }
