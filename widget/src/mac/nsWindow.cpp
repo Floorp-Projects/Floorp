@@ -199,8 +199,17 @@ NS_IMETHODIMP nsWindow::Destroy()
 
 	nsBaseWidget::OnDestroy();
 	nsBaseWidget::Destroy();
+	SetMenuBar(nsnull);
 
 	ReportDestroyEvent();	// beard: this seems to cause the window to be deleted. moved all release code to destructor.
+
+	/* following is a terrible hack. what the heck is the relationship between the webshell window
+	   and this nsWindow?  To make a new window, you make one of the former, which makes one
+	   of the latter. To delete a window, you come to this method.  What the!!???  Here we are
+	   doing something really awful because it allows you to actually close (or appear to close)
+	   a window on the Mac, whose OS doesn't kill the window for you.
+	*/
+	Release();	// the ref added when nsWebShellWindow made us
 
 	return NS_OK;
 }
@@ -377,6 +386,8 @@ NS_IMETHODIMP nsWindow::SetColorMap(nsColorMap *aColorMap)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsWindow::SetMenuBar(nsIMenuBar * aMenuBar)
 {
+  if (mMenuBar != nsnull)
+    mMenuBar->SetParent(nsnull);
   NS_IF_RELEASE(mMenuBar);
   NS_IF_ADDREF(aMenuBar);
   mMenuBar = aMenuBar;
