@@ -1,4 +1,5 @@
-<?xml version="1.0"?> <!-- -*- Mode: SGML; indent-tabs-mode: nil; -*- -->
+<?xml version="1.0"?> 
+<!-- -*- Mode: SGML; indent-tabs-mode: nil; -*- -->
 <!--
 
   The contents of this file are subject to the Netscape Public License
@@ -28,7 +29,6 @@
 <window 
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" class="color-dialog wizardPanel"
-  width="500" height="500"
   orient="vertical"
   onload="initFields();parent.wizardManager.onPageLoad('newProfile1_2');"> 
 
@@ -37,10 +37,15 @@
 
   <html>&pnl2.intro.text;</html> 
   <html>&pnl2.pname.label;</html> 
-  <!-- spank me -->
+
+
   <textfield id="ProfileName" value="&pnl2.defaultPName.label;" onblur="updateProfileName();"/>
+
   <separator/>
+
   <html>&pnl2.pdir.label;</html> 
+
+
   <box id="dirbox">
     <box orient="vertical" flex="1">
       <html class="indent" id="ProfileDir"/>
@@ -51,8 +56,11 @@
       <button id="useDefault" value="&button.usedefault.label;" oncommand="setDisplayToDefaultFolder();" disabled="true"/>
     </box>
   </box>
-  <spring flex="1"/>
+    
+  <!--spring flex="1"/-->
+
   <html id="finishtext">&pnl2.finish.text;</html> 
+
 
 </window>
 
