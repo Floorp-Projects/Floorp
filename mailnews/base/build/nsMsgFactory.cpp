@@ -41,7 +41,6 @@
 #include "nsIAppShellComponent.h"
 #include "nsIRegistry.h"
 
-
 /* Include all of the interfaces our factory can generate components for */
 
 #include "nsIUrlListenerManager.h"
@@ -420,6 +419,8 @@ struct Components {
     const char* mDescription;
     const nsID* mCID;
     const char* mProgID;
+    NSRegisterSelfProcPtr mRegisterSelfProc;
+    NSUnregisterSelfProcPtr mUnregisterSelfProc;
 };
 
 // The list of components we register
@@ -431,7 +432,9 @@ static Components gComponents[] = {
     { "Mail Session", &kCMsgMailSessionCID,
       NS_MSGMAILSESSION_PROGID },    
     { "Messenger DOM interaction object", &kCMessengerCID,
-      NS_MESSENGER_PROGID },
+      NS_MESSENGER_PROGID,
+      nsMessenger::RegisterProc,
+      nsMessenger::UnregisterProc },
     { "Messenger Account Manager", &kMsgAccountManagerCID,
       NS_MSGACCOUNTMANAGER_PROGID },
     { "Messenger Migrator", &kMessengerMigratorCID,
@@ -487,8 +490,13 @@ NS_IMETHODIMP nsMsgBaseModule::RegisterSelf(nsIComponentManager *aCompMgr,
         rv = aCompMgr->RegisterComponentSpec(*cp->mCID, cp->mDescription,
                                              cp->mProgID, aPath, PR_TRUE,
                                              PR_TRUE);
-        if (NS_FAILED(rv)) 
-            break;
+        if (NS_FAILED(rv)) break;
+
+        if (cp->mRegisterSelfProc) {
+            rv = cp->mRegisterSelfProc(aCompMgr,aPath,registryLocation,componentType);
+            if (NS_FAILED(rv)) break;
+        }
+
         cp++;
     }
 
@@ -518,15 +526,24 @@ NS_IMETHODIMP nsMsgBaseModule::UnregisterSelf(nsIComponentManager* aCompMgr,
                                               nsIFile* aPath,
                                               const char* registryLocation)
 {
+    nsresult rv = NS_OK;
+
     Components* cp = gComponents;
     Components* end = cp + NUM_COMPONENTS;
     while (cp < end) 
     {
         aCompMgr->UnregisterComponentSpec(*cp->mCID, aPath);
+
+        if (cp->mRegisterSelfProc) {
+            rv = cp->mUnregisterSelfProc(aCompMgr,aPath,registryLocation);
+            if (NS_FAILED(rv)) break;
+        }
+
+
         cp++;
     }
 
-    return NS_OK;
+    return rv;
 }
 
 NS_IMETHODIMP nsMsgBaseModule::CanUnload(nsIComponentManager *aCompMgr, PRBool *okToUnload)

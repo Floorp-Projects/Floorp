@@ -31,8 +31,9 @@
 #include "nsIDocumentLoaderObserver.h"
 #include "nsFileSpec.h"
 #include "nsIWebShell.h"
+#include "nsICmdLineHandler.h"
 
-class nsMessenger : public nsIMessenger
+class nsMessenger : public nsIMessenger, public nsICmdLineHandler
 {
   
 public:
@@ -42,6 +43,9 @@ public:
 	NS_DECL_ISUPPORTS
   
 	NS_DECL_NSIMESSENGER
+    NS_DECL_NSICMDLINEHANDLER
+
+    CMDLINEHANDLER_REGISTERPROC_DECLS
 
 protected:
 	nsresult DoDelete(nsIRDFCompositeDataSource* db, nsISupportsArray *srcArray, nsISupportsArray *deletedArray);
