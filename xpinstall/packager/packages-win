@@ -181,7 +181,7 @@ bin\defaults\pref\config.js
 bin\defaults\pref\initpref.js
 bin\defaults\pref\winpref.js
 bin\defaults\pref\xpinstall.js
-bin\defaults\profile\bookmarks.html
+bin\defaults\profile\*
 bin\plugins\*
 bin\res\html.css
 bin\res\ua.css
