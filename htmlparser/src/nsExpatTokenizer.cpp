@@ -545,6 +545,7 @@ nsresult nsExpatTokenizer::LoadStream(nsIInputStream* in,
                                        in,
                                        aCount,
                                        utf8);
+  if (NS_FAILED(res)) return res;
 
   PRUint32 aReadCount = 0;
   uniBuf = (PRUnichar *) PR_Malloc(bufsize);
