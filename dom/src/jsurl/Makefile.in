@@ -29,6 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= jsurl
 LIBRARY_NAME	= jsurl
 IS_COMPONENT	= 1
+REQUIRES	= xpcom js dom necko caps widget layout docshell uriloader locale appshell rdf
 
 XPIDLSRCS	= \
 		nsIEvaluateStringProxy.idl \

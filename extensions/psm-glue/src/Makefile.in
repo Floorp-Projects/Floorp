@@ -32,6 +32,7 @@ MODULE = psmglue
 
 IS_COMPONENT	= 1
 LIBRARY_NAME	= psmglue
+REQUIRES	= xpcom security necko uriloader intl dom js locale profile caps pref jar libreg widget layout appshell docshell rdf oji
 
 EXPORTS = \
         nsPSMShimLayer.h \

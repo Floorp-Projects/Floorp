@@ -26,7 +26,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= history
+MODULE		= appcomps
+XPIDL_MODULE	= history
 
 XPIDLSRCS	= nsIGlobalHistory.idl  \
                   $(NULL)

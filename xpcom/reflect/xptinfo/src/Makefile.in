@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpcom
 LIBRARY_NAME	= xptinfo
-
+REQUIRES	= jar
 
 CPPSRCS		= \
 		xptiFile.cpp	\

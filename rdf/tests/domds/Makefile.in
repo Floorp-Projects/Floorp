@@ -29,6 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= rdfdomds
 LIBRARY_NAME	= rdfdomds
 IS_COMPONENT	= 1
+REQUIRES	= xpcom rdf dom layout widget js locale docshell necko webshell htmlparser uriloader view rdfutil
 
 DIRS		= resources
 

@@ -22,9 +22,11 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-include $(topsrcdir)/config/config.mk
-
+MODULE = layout
 LIBRARY_NAME = gkxsldoc_s
+REQUIRES = xpcom htmlparser view widget dom locale necko
+
+include $(topsrcdir)/config/config.mk
 
 DEFINES += -D_IMPL_NS_HTML
 
@@ -46,9 +48,6 @@ EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 LOCAL_INCLUDES = 				\
 	-I$(srcdir)/../../../xml/document/src	\
 	$(NULL)
-
-MODULE=layout
-
 
 MKSHLIB :=
 

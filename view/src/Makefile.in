@@ -30,6 +30,7 @@ MODULE		= view
 LIBRARY_NAME	= gkview
 SHORT_LIBNAME	= ngview
 IS_COMPONENT    = 1
+REQUIRES	= xpcom layout widget dom locale timer pref js
 
 EXTRA_DSO_LIBS = gkgfx
 

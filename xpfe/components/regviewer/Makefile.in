@@ -30,6 +30,7 @@ MODULE		= regviewer
 LIBRARY_NAME	= regviewer
 SHORT_LIBNAME	= regviewr
 IS_COMPONENT	= 1
+REQUIRES	= xpcom rdf
 
 XPIDLSRCS	= nsIRegistryDataSource.idl
 

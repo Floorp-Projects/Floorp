@@ -29,6 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= mozucth
 LIBRARY_NAME	= mozucth
 IS_COMPONENT	= 1
+REQUIRES	= xpcom appshell dom js necko widget layout intl locale exthandler
 
 CPPSRCS		= nsUnknownContentTypeHandler.cpp
 

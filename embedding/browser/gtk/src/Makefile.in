@@ -26,7 +26,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= gtkembedmoz
-
+REQUIRES	= xpcom docshell webshell necko widget dom layout locale js uriloader webbrwsr shistory appshell embed_base xpconnect
 
 CPPSRCS		= \
 		GtkMozEmbedChrome.cpp \

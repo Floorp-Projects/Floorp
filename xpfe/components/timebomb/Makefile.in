@@ -10,6 +10,7 @@ DIRS = tools resources
 MODULE          = appcomps
 LIBRARY_NAME    = timebomb_s
 XPIDL_MODULE = timebomb
+REQUIRES	= xpcom pref appshell necko js dom webbrwsr
 
 XPIDLSRCS       = nsITimeBomb.idl
 

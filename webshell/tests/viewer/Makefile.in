@@ -28,6 +28,8 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS			:= public
 
+REQUIRES		= xpcom webshell widget layout dom js webbrwsr docshell util uriloader locale necko htmlparser view timer unicharutil pref intl editor oji java chardet cookie
+
 PROGRAM			:= viewer$(BIN_SUFFIX)
 
 CPPSRCS			= \

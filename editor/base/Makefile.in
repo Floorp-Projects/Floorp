@@ -29,6 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= editor
 LIBRARY_NAME	= editor
 IS_COMPONENT	= 1
+REQUIRES	= xpcom dom js locale layout uriloader widget txmgr htmlparser necko pref view appshell rdf webshell timer txtsvc intl lwbrk docshell chrome caps appcomps
 
 CPPSRCS		= \
 		nsEditor.cpp \

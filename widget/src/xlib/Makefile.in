@@ -26,9 +26,10 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE		= widget
 LIBRARY_NAME	= widget_xlib
 IS_COMPONENT	= 1
-
+REQUIRES	= xpcom appshell layout dom js xlibrgb timer uconv pref webshell htmlparser view necko
 
 DIRS		= window_service
 

@@ -27,7 +27,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= xpcom_eventloop_photon
+MODULE		= xpcom
 LIBRARY_NAME	= eventloop
 IS_COMPONENT	= 1
 

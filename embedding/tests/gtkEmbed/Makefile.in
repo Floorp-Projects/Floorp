@@ -24,6 +24,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+REQUIRES	= xpcom webbrwsr widget necko docshell view layout webshell dom js locale htmlparser uriloader embed_base
+
 CPPSRCS		= WebBrowserChrome.cpp  \
 	          main.cpp        \
               $(NULL)

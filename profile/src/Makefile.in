@@ -26,8 +26,10 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE		= profile
 LIBRARY_NAME	= profile
 IS_COMPONENT	= 1
+REQUIRES	= xpcom chrome docshell webbrwsr dom js layout widget necko uriloader locale cookie intl pref prefmigr appshell rdf uconv appcomps
 
 CPPSRCS		= 	nsProfile.cpp	\
 			nsProfileFactory.cpp	\

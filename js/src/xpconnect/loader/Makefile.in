@@ -25,6 +25,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= jsloader
 LIBRARY_NAME	= jsloader
 IS_COMPONENT	= 1
+REQUIRES	= xpcom xpconnect js caps dom
 
 CPPSRCS		= mozJSComponentLoader.cpp
 

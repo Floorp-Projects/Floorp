@@ -29,6 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= locale
 LIBRARY_NAME	= nslocale
 IS_COMPONENT	= 1
+REQUIRES	= xpcom unicharutil pref js uconv
 
 SHARED_LIBRARY_LIBS = ../libnslocale_s.a
 

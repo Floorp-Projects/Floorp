@@ -30,6 +30,7 @@ IS_COMPONENT=1
 MODULE		= appshell
 LIBRARY_NAME	= nsappshell
 SHORT_LIBNAME	= appshell
+REQUIRES	= xpcom widget docshell webshell layout dom necko uriloader js locale webbrwsr rdf  pref xpconnect view htmlparser timer chardet intl wallet chrome profile prefmigr
 
 EXTRA_DSO_LIBS	= jsdom
 

@@ -28,6 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= appcomps
 LIBRARY_NAME	= related_s
+REQUIRES	= xpcom rdf necko uconv pref js
 
 CPPSRCS		= nsRelatedLinksHandler.cpp
 

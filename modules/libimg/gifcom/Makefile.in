@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= nsgif
 IS_COMPONENT	= 1
-
+REQUIRES	= xpcom img layout locale util
 
 CPPSRCS		= \
 		gif.cpp \

@@ -26,7 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= sample
+MODULE		= xpcom
 LIBRARY_NAME	= sample
 IS_COMPONENT	= 1
 

@@ -29,6 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= mozbrwsr
 LIBRARY_NAME	= mozbrwsr
 IS_COMPONENT	= 1
+REQUIRES	= xpcom webshell necko shistory widget layout docshell appshell dom js timer uriloader htmlparser view locale pref history editor appcomps rdf urlbarhistory webbrwsr uconv chardet
 
 CPPSRCS		= nsBrowserInstance.cpp
 

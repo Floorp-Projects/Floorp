@@ -28,15 +28,16 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-include $(topsrcdir)/config/config.mk
-
+MODULE	= layout
 LIBRARY_NAME = gkmathmlcon_s
+REQUIRES	= xpcom
+
+include $(topsrcdir)/config/config.mk
 
 DEFINES += -D_IMPL_NS_HTML
 
 INCLUDES += \
 	-I$(srcdir)/../../../base/src		\
-	-I$(DIST)/public/raptor			\
 	$(NULL)
 
 CPPSRCS =				\
@@ -51,8 +52,6 @@ EXPORTS =				\
   $(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
-
-MODULE=layout
 
 
 MKSHLIB :=

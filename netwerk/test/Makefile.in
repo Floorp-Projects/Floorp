@@ -26,6 +26,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE		= test_necko
+REQUIRES	= xpcom necko timer cookie layout widget dom
 
 CPPSRCS		= \
 		TestSocketIO.cpp \

@@ -27,6 +27,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= necko
 LIBRARY_NAME	= nkfinger_s
+REQUIRES	= xpcom mime
 
 CPPSRCS		= \
 		nsFingerHandler.cpp \

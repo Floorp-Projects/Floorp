@@ -28,6 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= TestXPTC
 SIMPLE_PROGRAMS	= TestXPTCInvoke$(BIN_SUFFIX)
+REQUIRES	= xpcom
 
 CPPSRCS		= TestXPTCInvoke.cpp
 

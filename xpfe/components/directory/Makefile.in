@@ -30,6 +30,7 @@ MODULE		= appcomps
 LIBRARY_NAME	= directory_s
 XPIDL_MODULE=directory
 XPIDLSRCS	= nsIHTTPIndex.idl
+REQUIRES	= xpcom necko rdf layout timer js xpconnect docshell widget dom webshell uconv uriloader
 
 CPPSRCS		= nsDirectoryViewer.cpp
 

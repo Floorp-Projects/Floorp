@@ -23,8 +23,9 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
-MODULE		= webBrowser_core
+MODULE		= webbrwsr
 LIBRARY_NAME	= nsWebBrowser_s
+REQUIRES	= xpcom docshell widget layout dom js locale necko uriloader shistory webshell htmlparser view rdf
 
 include $(DEPTH)/config/autoconf.mk
 

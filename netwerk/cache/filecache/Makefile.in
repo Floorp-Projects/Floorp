@@ -28,8 +28,8 @@ srcdir		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE = nkcache
-
 LIBRARY_NAME = nkfilecache_s
+REQUIRES	= xpcom necko dbm pref js exthandler mime
                                                
 SHARED_LIBRARY_LIBS = $(DIST)/lib/libmozdbm_s.$(LIB_SUFFIX)
 

@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= rdfbase
 LIBRARY_NAME	= chrome_s
-
+REQUIRES	= xpcom rdf layout necko dom intl locale widget js appshell chrome caps
 
 CPPSRCS		= \
 		nsChromeRegistry.cpp \

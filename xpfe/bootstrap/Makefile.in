@@ -27,6 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= apprunner
+REQUIRES	= xpcom webbrwsr widget dom js necko pref appshell wallet layout chrome rdf profile xpinstall uriloader editor view java oji
 
 ifeq ($(USE_SHORT_LIBNAME),1)
 PROGRAM		= mozilla$(BIN_SUFFIX)

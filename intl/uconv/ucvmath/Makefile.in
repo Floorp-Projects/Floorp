@@ -29,7 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= ucvmath
 LIBRARY_NAME	= ucvmath
 IS_COMPONENT	= 1
-
+REQUIRES	= xpcom uconv
 
 CPPSRCS		= \
 		nsUnicodeToTeXCMSYt1.cpp \

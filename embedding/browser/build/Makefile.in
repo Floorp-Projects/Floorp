@@ -31,6 +31,7 @@ include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= webbrwsr
 EXTRA_DSO_LIBS	= jsdom
+REQUIRES	= xpcom docshell dom widget layout locale js necko uriloader webshell shistory
 
 CPPSRCS		= \
 		nsWebBrowserModule.cpp		\

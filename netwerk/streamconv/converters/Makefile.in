@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= necko
 LIBRARY_NAME	= nkcnvts_s
-
+REQUIRES	= xpcom mime locale util pref js
 
 EXPORTS =                 \
         nsHTTPChunkConv.h \

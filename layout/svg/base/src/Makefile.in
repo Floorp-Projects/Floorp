@@ -28,6 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= layout
 LIBRARY_NAME	= gksvgbase_s
+REQUIRES	= xpcom widget dom js locale htmlparser view pref necko webshell
 
 CPPSRCS		= \
   nsSVGContainerFrame.cpp \

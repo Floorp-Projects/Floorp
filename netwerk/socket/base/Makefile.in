@@ -29,6 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= necko
 XPIDL_MODULE	= necko_socket
 LIBRARY_NAME	= neckosocket_s
+REQUIRES	= xpcom
 
 CPPSRCS		= nsSocketProviderService.cpp nsSOCKSSocketProvider.cpp nsSOCKSIOLayer.cpp
 

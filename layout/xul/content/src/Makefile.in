@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= layout
 LIBRARY_NAME	= gkxulcon_s
-
+REQUIRES	= xpcom
 
 CPPSRCS		= nsXULAtoms.cpp
 

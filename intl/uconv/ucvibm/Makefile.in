@@ -40,7 +40,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= ucvibm
 LIBRARY_NAME	= ucvibm
 IS_COMPONENT	= 1
-
+REQUIRES	= xpcom uconv
 
 CPPSRCS		= \
 		nsCP850ToUnicode.cpp \

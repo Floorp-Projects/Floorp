@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= dom
 LIBRARY_NAME	= jsdomhtml_s
-
+REQUIRES	= xpcom js widget layout caps rdf
 
 CPPSRCS		= \
 		nsJSHTMLIFrameElement.cpp \

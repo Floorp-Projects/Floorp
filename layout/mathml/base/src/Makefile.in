@@ -27,7 +27,9 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE = layout
 LIBRARY_NAME = gkmathmlbase_s
+REQUIRES = xpcom js dom widget webshell locale view htmlparser necko docshell webbrwsr
 
 LOCAL_INCLUDES = \
 	-I$(srcdir)/../../../base/src		\
@@ -66,10 +68,6 @@ CPPSRCS =         nsMathMLChar.cpp		        \
                   $(NULL)
 
 include $(topsrcdir)/config/config.mk
-
-DEFINES += 
-
-MODULE=layout
 
 MKSHLIB :=
 

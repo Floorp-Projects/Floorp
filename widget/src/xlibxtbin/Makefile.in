@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE          = xlibxtbin
 LIBRARY_NAME	= xlibxtbin
 
-REQUIRES	= xlibxtbin
+REQUIRES	= xlibrgb
 
 CPPSRCS         = \
                 xlibxtbin.cpp \

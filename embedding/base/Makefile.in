@@ -28,6 +28,8 @@ LIBRARY_NAME    = embed_base_s
 
 include $(DEPTH)/config/autoconf.mk
 
+REQUIRES	= xpcom widget view dom js oji java necko rdf appshell  uriloader layout editor intl chrome locale
+
 EXPORTS         = \
                 nsEmbedAPI.h \
                 $(NULL)

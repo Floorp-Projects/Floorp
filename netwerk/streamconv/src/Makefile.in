@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= necko
 LIBRARY_NAME	= nkconv_s
-
+REQUIRES	= xpcom
 
 CPPSRCS		= \
 		nsStreamConverterService.cpp \
