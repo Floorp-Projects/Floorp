@@ -500,7 +500,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
       // Hold the blur, wait for the focus so we can query the style of the focus
       // target as to what to do with the event. If appropriate we fire the blur
       // at that time.
-#ifdef XP_WIN
+#if defined(XP_WIN) || defined(XP_OS2)
       if(! NS_STATIC_CAST(nsFocusEvent*, aEvent)->isMozWindowTakingFocus) {
         EnsureDocument(aPresContext);
 
