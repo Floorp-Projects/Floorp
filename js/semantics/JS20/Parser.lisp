@@ -10,7 +10,7 @@
   (defparameter *jw*
     (generate-world
      "J"
-     '((grammar code-grammar :lalr-1 :program)
+     '((line-grammar code-grammar :lalr-1 :program)
        
        
        (%section "Expressions")
@@ -39,7 +39,7 @@
        (production :primary-expression (true) primary-expression-true)
        (production :primary-expression (false) primary-expression-false)
        (production :primary-expression ($number) primary-expression-number)
-       (production :primary-expression ($number :~ $string) primary-expression-number-with-unit)
+       (production :primary-expression ($number :no-line-break $string) primary-expression-number-with-unit)
        (production :primary-expression ($string) primary-expression-string)
        (production :primary-expression (this) primary-expression-this)
        (production :primary-expression (super) primary-expression-super)
@@ -47,7 +47,7 @@
        (production :primary-expression (? :identifier) primary-expression-scope-identifier)
        (production :primary-expression ($regular-expression) primary-expression-regular-expression)
        (production :primary-expression (:parenthesized-expression) primary-expression-parenthesized-expression)
-       (production :primary-expression (:parenthesized-expression :~ $string) primary-expression-parenthesized-expression-with-unit)
+       (production :primary-expression (:parenthesized-expression :no-line-break $string) primary-expression-parenthesized-expression-with-unit)
        (production :primary-expression (:array-literal) primary-expression-array-literal)
        (production :primary-expression (:object-literal) primary-expression-object-literal)
        (production :primary-expression (:function-expression) primary-expression-function-expression)
@@ -92,8 +92,8 @@
        (production :full-postfix-expression (:full-new-expression) full-postfix-expression-full-new-expression)
        (production :full-postfix-expression (:full-postfix-expression :member-operator) full-postfix-expression-member-operator)
        (production :full-postfix-expression (:full-postfix-expression :arguments) full-postfix-expression-call)
-       (production :full-postfix-expression (:postfix-expression :~ ++) full-postfix-expression-increment)
-       (production :full-postfix-expression (:postfix-expression :~ --) full-postfix-expression-decrement)
+       (production :full-postfix-expression (:postfix-expression :no-line-break ++) full-postfix-expression-increment)
+       (production :full-postfix-expression (:postfix-expression :no-line-break --) full-postfix-expression-decrement)
        
        (production :full-new-expression (new :full-new-subexpression :arguments) full-new-expression-new)
        
@@ -293,7 +293,7 @@
        
        (%subsection "Block")
        (production :annotated-block (:block) annotated-block-block)
-       (production :annotated-block (:visibility :~ :block) annotated-block-visibility-block)
+       (production :annotated-block (:visibility :no-line-break :block) annotated-block-visibility-block)
        
        (production :block ({ :top-statements }) block-top-statements)
        
@@ -366,20 +366,20 @@
        
        
        (%subsection "Continue and Break Statements")
-       (production :continue-statement (continue :~ :optional-label) continue-statement-optional-label)
+       (production :continue-statement (continue :no-line-break :optional-label) continue-statement-optional-label)
        
-       (production :break-statement (break :~ :optional-label) break-statement-optional-label)
+       (production :break-statement (break :no-line-break :optional-label) break-statement-optional-label)
        
        (production :optional-label () optional-label-default)
        (production :optional-label (:identifier) optional-label-identifier)
        
        
        (%subsection "Return Statement")
-       (production :return-statement (return :~ :optional-expression) return-statement-optional-expression)
+       (production :return-statement (return :no-line-break :optional-expression) return-statement-optional-expression)
        
        
        (%subsection "Throw Statement")
-       (production :throw-statement (throw :~ (:expression allow-in)) throw-statement-throw)
+       (production :throw-statement (throw :no-line-break (:expression allow-in)) throw-statement-throw)
        
        
        (%subsection "Try Statement")
@@ -414,7 +414,7 @@
        |#
        
        (%section "Definitions")
-       (production (:annotated-definition :omega) (:visibility :~ (:definition :omega)) annotated-definition-visibility-and-definition)
+       (production (:annotated-definition :omega) (:visibility :no-line-break (:definition :omega)) annotated-definition-visibility-and-definition)
        (production (:annotated-definition :omega) ((:definition :omega)) annotated-definition-definition)
        
        ;(production (:definition :omega) (:version-definition (:semicolon :omega)) definition-version-definition)
@@ -492,8 +492,8 @@
        
        (production :named-function (function :identifier :function-signature :block) named-function-signature-and-body)
        
-       (production :accessor-function (function get :~ :identifier :function-signature :block) accessor-function-getter)
-       (production :accessor-function (function set :~ :identifier :function-signature :block) accessor-function-setter)
+       (production :accessor-function (function get :no-line-break :identifier :function-signature :block) accessor-function-getter)
+       (production :accessor-function (function set :no-line-break :identifier :function-signature :block) accessor-function-setter)
 
        (production :function-signature (:parameter-signature :result-signature) function-signature-parameter-and-result-signatures)
        
@@ -531,25 +531,25 @@
        (production (:member-definition :omega) ((:method-definition :omega)) member-definition-method-definition)
        (production (:member-definition :omega) (:constructor-definition) member-definition-constructor-definition)
        
-       (production :field-definition (field :~ (:variable-binding-list allow-in)) field-definition-variable-binding-list)
+       (production :field-definition (field :no-line-break (:variable-binding-list allow-in)) field-definition-variable-binding-list)
        
        (production (:method-definition :omega) (:concrete-method-definition) method-definition-concrete-method-definition)
        (production (:method-definition :omega) ((:abstract-method-definition :omega)) method-definition-abstract-method-definition)
        
-       (production :concrete-method-definition (:method-prefix :~ :method-name :function-signature :block) concrete-method-definition-signature-and-body)
+       (production :concrete-method-definition (:method-prefix :no-line-break :method-name :function-signature :block) concrete-method-definition-signature-and-body)
        
-       (production (:abstract-method-definition :omega) (:method-prefix :~ :method-name :function-signature (:semicolon :omega)) abstract-method-definition-signature)
+       (production (:abstract-method-definition :omega) (:method-prefix :no-line-break :method-name :function-signature (:semicolon :omega)) abstract-method-definition-signature)
        
        (production :method-prefix (method) method-prefix-method)
-       (production :method-prefix (override :~ method) method-prefix-override-method)
-       (production :method-prefix (final :~ method) method-prefix-final-method)
-       (production :method-prefix (final :~ override :~ method) method-prefix-final-override-method)
+       (production :method-prefix (override :no-line-break method) method-prefix-override-method)
+       (production :method-prefix (final :no-line-break method) method-prefix-final-method)
+       (production :method-prefix (final :no-line-break override :no-line-break method) method-prefix-final-override-method)
        
        (production :method-name (:identifier) method-name-method)
-       (production :method-name (get :~ :identifier) method-name-getter-method)
-       (production :method-name (set :~ :identifier) method-name-setter-method)
+       (production :method-name (get :no-line-break :identifier) method-name-getter-method)
+       (production :method-name (set :no-line-break :identifier) method-name-setter-method)
        
-       (production :constructor-definition (constructor :~ :constructor-name :parameter-signature :block) constructor-definition-signature-and-body)
+       (production :constructor-definition (constructor :no-line-break :constructor-name :parameter-signature :block) constructor-definition-signature-and-body)
        
        (production :constructor-name (new) constructor-name-new)
        (production :constructor-name (:identifier) constructor-name-identifier)
@@ -587,6 +587,51 @@
   
   (defparameter *jg* (world-grammar *jw* 'code-grammar)))
 
+
+
+; Print a list of states that have both $REGULAR-EXPRESSION and either / or /= as valid lookaheads.
+(defun show-regexp-and-division-states (grammar)
+  (all-state-transitions
+   #'(lambda (state transitions-hash)
+       (when (and (gethash '$regular-expression transitions-hash)
+                  (or (gethash '/ transitions-hash) (gethash '/= transitions-hash)))
+         (format *error-output* "State ~S~%" state)))
+   grammar))
+
+
+; Return five values:
+;   A list of terminals that may precede a $regular-expression terminal;
+;   A list of terminals that may precede a $virtual-semicolon but not / or /= terminal;
+;   A list of terminals that may precede a / or /= terminal;
+;   The intersection of the $regular-expression and /|/= lists.
+;   The intersection of the $regular-expression|$virtual-semicolon and /|/= lists.
+(defun show-regexp-and-division-predecessors (grammar)
+  (let* ((nstates (length (grammar-states grammar)))
+         (state-predecessors (make-array nstates :element-type 'terminalset :initial-element *empty-terminalset*)))
+    (dolist (state (grammar-states grammar))
+      (dolist (transition-pair (state-transitions state))
+        (let ((transition (cdr transition-pair)))
+          (when (eq (transition-kind transition) :shift)
+            (terminalset-union-f (svref state-predecessors (state-number (transition-state transition)))
+                                 (make-terminalset grammar (car transition-pair)))))))
+    (let ((regexp-predecessors *empty-terminalset*)
+          (virtual-predecessors *empty-terminalset*)
+          (div-predecessors *empty-terminalset*))
+      (all-state-transitions
+       #'(lambda (state transitions-hash)
+           (when (gethash '$regular-expression transitions-hash)
+             (terminalset-union-f regexp-predecessors (svref state-predecessors (state-number state))))
+           (if (or (gethash '/ transitions-hash) (gethash '/= transitions-hash))
+             (terminalset-union-f div-predecessors (svref state-predecessors (state-number state)))
+             (when (gethash '$virtual-semicolon transitions-hash)
+               (terminalset-union-f virtual-predecessors (svref state-predecessors (state-number state))))))
+       grammar)
+      (values
+       (terminalset-list grammar regexp-predecessors)
+       (terminalset-list grammar virtual-predecessors)
+       (terminalset-list grammar div-predecessors)
+       (terminalset-list grammar (terminalset-intersection regexp-predecessors div-predecessors))
+       (terminalset-list grammar (terminalset-intersection (terminalset-union regexp-predecessors virtual-predecessors) div-predecessors))))))
 
 
 (defun depict-js-terminals (markup-stream grammar)
@@ -651,4 +696,5 @@
 (with-local-output (s "JS20/ParserGrammar.txt") (print-grammar *jg* s))
 |#
 
+(ensure-lf-subset *jg*)
 (length (grammar-states *jg*))
