@@ -43,7 +43,7 @@
 
 const PRInt32 kImapFlagAndUidStateSize =	100;
 
-#include "nsHashTable.h"
+#include "nsHashtable.h"
 
 class nsImapFlagAndUidState : public nsIImapFlagAndUidState
 {
