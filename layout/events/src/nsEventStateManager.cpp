@@ -2346,7 +2346,7 @@ nsIFrame*
 nsEventStateManager::GetDocumentFrame(nsIPresContext* aPresContext)
 {
   nsCOMPtr<nsIPresShell> presShell;
-  nsIDocument* aDocument;
+  nsCOMPtr<nsIDocument> aDocument;
   nsIFrame* aFrame;
   nsIView* aView;
 
@@ -2357,8 +2357,9 @@ nsEventStateManager::GetDocumentFrame(nsIPresContext* aPresContext)
     return nsnull;
   }
 
-  presShell->GetDocument(&aDocument);
-  presShell->GetPrimaryFrameFor(aDocument->GetRootContent(), &aFrame);
+  presShell->GetDocument(getter_AddRefs(aDocument));
+  nsCOMPtr<nsIContent> rootContent(dont_AddRef(aDocument->GetRootContent()));
+  presShell->GetPrimaryFrameFor(rootContent, &aFrame);
 
   aFrame->GetView(aPresContext, &aView);
   PR_LOG(MOUSEWHEEL, PR_LOG_DEBUG, ("GetDocumentFrame: got document view = %p\n", aView));
