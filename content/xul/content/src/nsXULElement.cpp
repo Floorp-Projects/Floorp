@@ -4735,6 +4735,76 @@ nsXULElement::SetMaxHeight(const nsAReadableString& aAttr)
 }
 
 nsresult
+nsXULElement::GetPersist(nsAWritableString& aAttr)
+{
+  GetAttribute(NS_LITERAL_STRING("persist"), aAttr);
+  return NS_OK;
+}
+
+nsresult
+nsXULElement::SetPersist(const nsAReadableString& aAttr)
+{
+  SetAttribute(NS_LITERAL_STRING("maxheight"), aAttr);
+  return NS_OK;
+}
+
+nsresult
+nsXULElement::GetLeft(nsAWritableString& aAttr)
+{
+  GetAttribute(NS_LITERAL_STRING("left"), aAttr);
+  return NS_OK;
+}
+
+nsresult
+nsXULElement::SetLeft(const nsAReadableString& aAttr)
+{
+  SetAttribute(NS_LITERAL_STRING("left"), aAttr);
+  return NS_OK;
+}
+
+nsresult
+nsXULElement::GetTop(nsAWritableString& aAttr)
+{
+  GetAttribute(NS_LITERAL_STRING("top"), aAttr);
+  return NS_OK;
+}
+
+nsresult
+nsXULElement::SetTop(const nsAReadableString& aAttr)
+{
+  SetAttribute(NS_LITERAL_STRING("top"), aAttr);
+  return NS_OK;
+}
+
+nsresult
+nsXULElement::GetDatasources(nsAWritableString& aAttr)
+{
+  GetAttribute(NS_LITERAL_STRING("datasources"), aAttr);
+  return NS_OK;
+}
+
+nsresult
+nsXULElement::SetDatasources(const nsAReadableString& aAttr)
+{
+  SetAttribute(NS_LITERAL_STRING("datasources"), aAttr);
+  return NS_OK;
+}
+
+nsresult
+nsXULElement::GetRef(nsAWritableString& aAttr)
+{
+  GetAttribute(NS_LITERAL_STRING("ref"), aAttr);
+  return NS_OK;
+}
+
+nsresult
+nsXULElement::SetRef(const nsAReadableString& aAttr)
+{
+  SetAttribute(NS_LITERAL_STRING("ref"), aAttr);
+  return NS_OK;
+}
+
+nsresult
 nsXULElement::GetTooltipText(nsAWritableString& aAttr)
 {
   GetAttribute(NS_LITERAL_STRING("tooltiptext"), aAttr);
