@@ -105,7 +105,7 @@ public: // morkNode virtual methods
     else
       ::delete array;
 #else
-    ::delete ioAddress;
+    delete ioAddress;
 #endif
   }
 
