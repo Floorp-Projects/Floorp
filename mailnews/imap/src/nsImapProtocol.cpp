@@ -980,7 +980,6 @@ NS_IMETHODIMP nsImapProtocol::GetDisplayStream (nsIWebShell **webShell)
 nsresult nsImapProtocol::SendData(const char * dataBuffer)
 {
 	PRUint32 writeCount = 0; 
-	PRInt32 status = 0; 
     nsresult rv = NS_ERROR_NULL_POINTER;
 
     if (!m_transport)
@@ -2811,9 +2810,9 @@ NS_IMETHODIMP nsImapProtocol::NotifyBodysToDownload(PRUint32 *keys, PRUint32 key
 
 NS_IMETHODIMP nsImapProtocol::GetFlagsForUID(PRUint32 uid, PRBool *foundIt, imapMessageFlagsType *resultFlags)
 {
-	PRInt32 index;
+	PRInt32 i;
 
-	imapMessageFlagsType flags = m_flagState.GetMessageFlagsFromUID(uid, foundIt, &index);
+	imapMessageFlagsType flags = m_flagState.GetMessageFlagsFromUID(uid, foundIt, &i);
 	if (*foundIt)
 		*resultFlags = flags;
 	return NS_OK;
@@ -3836,7 +3835,7 @@ void nsImapProtocol::AuthLogin(const char *userName, const char *password, eIMAP
 #endif
     IncrementCommandTagNumber();
 
-	char * currentCommand;
+	char * currentCommand=nsnull;
     nsresult rv;
     
 	if (flag & kHasAuthPlainCapability)

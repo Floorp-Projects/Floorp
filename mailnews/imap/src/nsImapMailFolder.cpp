@@ -899,7 +899,8 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages)
         rv = messages->Count(&count);
         NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
         nsString2 messageIds("", eOneByte);
-        for (PRUint32 i = 0; i < count; i++)
+        PRUint32 i;
+        for (i = 0; i < count; i++)
         {
             nsCOMPtr<nsISupports> msgSupports =
                 getter_AddRefs(messages->ElementAt(i));
@@ -927,7 +928,7 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages)
             if (mDatabase) // *** jt - do we really need to do this?
                            // especially if using imap delete model
             {
-                for (PRUint32 i = 0; i < count; i++)
+                for (i = 0; i < count; i++)
                 {
                     nsCOMPtr<nsISupports> msgSupports =
                         getter_AddRefs(messages->ElementAt(i));
@@ -1417,15 +1418,15 @@ void nsImapMailFolder::FindKeysToDelete(const nsMsgKeyArray &existingKeys, nsMsg
 {
 	PRBool imapDeleteIsMoveToTrash = /* DeleteIsMoveToTrash() */ PR_TRUE;
 	PRUint32 total = existingKeys.GetSize();
-	PRInt32 index;
+	PRInt32 messageIndex;
 
 	int onlineIndex=0; // current index into flagState
 	for (PRUint32 keyIndex=0; keyIndex < total; keyIndex++)
 	{
 		PRUint32 uidOfMessage;
 
-		flagState->GetNumberOfMessages(&index);
-		while ((onlineIndex < index) && 
+		flagState->GetNumberOfMessages(&messageIndex);
+		while ((onlineIndex < messageIndex) && 
 			   (flagState->GetUidOfMessage(onlineIndex, &uidOfMessage), (existingKeys[keyIndex] > uidOfMessage) ))
 		{
 			onlineIndex++;
@@ -1435,7 +1436,7 @@ void nsImapMailFolder::FindKeysToDelete(const nsMsgKeyArray &existingKeys, nsMsg
 		flagState->GetUidOfMessage(onlineIndex, &uidOfMessage);
 		flagState->GetMessageFlags(onlineIndex, &flags);
 		// delete this key if it is not there or marked deleted
-		if ( (onlineIndex >= index ) ||
+		if ( (onlineIndex >= messageIndex ) ||
 			 (existingKeys[keyIndex] != uidOfMessage) ||
 			 ((flags & kImapMsgDeletedFlag) && imapDeleteIsMoveToTrash) )
 		{
@@ -1458,11 +1459,11 @@ void nsImapMailFolder::FindKeysToAdd(const nsMsgKeyArray &existingKeys, nsMsgKey
 
 	int dbIndex=0; // current index into existingKeys
 	PRInt32 existTotal, numberOfKnownKeys;
-	PRInt32 index;
+	PRInt32 messageIndex;
 	
 	existTotal = numberOfKnownKeys = existingKeys.GetSize();
-	flagState->GetNumberOfMessages(&index);
-	for (PRInt32 flagIndex=0; flagIndex < index; flagIndex++)
+	flagState->GetNumberOfMessages(&messageIndex);
+	for (PRInt32 flagIndex=0; flagIndex < messageIndex; flagIndex++)
 	{
 		PRUint32 uidOfMessage;
 		flagState->GetUidOfMessage(flagIndex, &uidOfMessage);
@@ -1807,9 +1808,9 @@ void nsImapMailFolder::SetIMAPDeletedFlag(nsIMsgDatabase *mailDB, const nsMsgKey
 	nsresult markStatus = 0;
 	PRUint32 total = msgids.GetSize();
 
-	for (PRUint32 index=0; !markStatus && (index < total); index++)
+	for (PRUint32 msgIndex=0; !markStatus && (msgIndex < total); msgIndex++)
 	{
-		markStatus = mailDB->MarkImapDeleted(msgids[index], markDeleted, nsnull);
+		markStatus = mailDB->MarkImapDeleted(msgids[msgIndex], markDeleted, nsnull);
 	}
 }
 

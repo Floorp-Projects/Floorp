@@ -116,19 +116,19 @@ void nsImapFlagAndUidState::Reset(PRUint32 howManyLeft)
 
 // Remove (expunge) a message from our array, since now it is gone for good
 
-void nsImapFlagAndUidState::ExpungeByIndex(PRUint32 index)
+void nsImapFlagAndUidState::ExpungeByIndex(PRUint32 msgIndex)
 {
 	PRUint32 counter = 0;
 	
-	if ((PRUint32) fNumberOfMessagesAdded < index)
+	if ((PRUint32) fNumberOfMessagesAdded < msgIndex)
 		return;
 
     PR_CEnterMonitor(this);
-	index--;
+	msgIndex--;
 	fNumberOfMessagesAdded--;
-	if (fFlags[index] & kImapMsgDeletedFlag)	// see if we already had counted this one as deleted
+	if (fFlags[msgIndex] & kImapMsgDeletedFlag)	// see if we already had counted this one as deleted
 		fNumberDeleted--;
-	for (counter = index; counter < (PRUint32) fNumberOfMessagesAdded; counter++)
+	for (counter = msgIndex; counter < (PRUint32) fNumberOfMessagesAdded; counter++)
 	{
 		fUids.SetAt(counter, fUids[counter + 1]);
 		fFlags[counter] = fFlags[counter + 1];
@@ -203,14 +203,14 @@ PRInt32 nsImapFlagAndUidState::GetNumberOfDeletedMessages()
 
 PRUint32  nsImapFlagAndUidState::GetHighestNonDeletedUID()
 {
-	PRUint32 index = fNumberOfMessagesAdded;
+	PRUint32 msgIndex = fNumberOfMessagesAdded;
 	do {
-		if (index <= 0)
+		if (msgIndex <= 0)
 			return(0);
-		index--;
-		if (fUids[index] && !(fFlags[index] & kImapMsgDeletedFlag))
-			return fUids[index];
-	} while (index > 0);
+		msgIndex--;
+		if (fUids[msgIndex] && !(fFlags[msgIndex] & kImapMsgDeletedFlag))
+			return fUids[msgIndex];
+	} while (msgIndex > 0);
 	return 0;
 }
 
@@ -220,13 +220,13 @@ PRUint32  nsImapFlagAndUidState::GetHighestNonDeletedUID()
 
 PRBool nsImapFlagAndUidState::IsLastMessageUnseen()
 {
-	PRUint32 index = fNumberOfMessagesAdded;
+	PRUint32 msgIndex = fNumberOfMessagesAdded;
 
-	if (index <= 0)
+	if (msgIndex <= 0)
 		return FALSE;
-	index--;
+	msgIndex--;
 	// if last message is deleted, it was probably filtered the last time around
-	if (fUids[index] && (fFlags[index] & (kImapMsgSeenFlag | kImapMsgDeletedFlag)))
+	if (fUids[msgIndex] && (fFlags[msgIndex] & (kImapMsgSeenFlag | kImapMsgDeletedFlag)))
 		return FALSE;
 	return TRUE; 
 }
@@ -241,7 +241,7 @@ imapMessageFlagsType nsImapFlagAndUidState::GetMessageFlagsFromUID(PRUint32 uid,
 {
     PR_CEnterMonitor(this);
 
-	PRInt32 index = 0;
+	PRInt32 msgIndex = 0;
 	PRInt32 hi = fNumberOfMessagesAdded - 1;
 	PRInt32 lo = 0;
 
@@ -249,27 +249,27 @@ imapMessageFlagsType nsImapFlagAndUidState::GetMessageFlagsFromUID(PRUint32 uid,
 	*ndx = -1;
 	while (lo <= hi)
 	{
-		index = (lo + hi) / 2;
-		if (fUids[index] == (PRUint32) uid)
+		msgIndex = (lo + hi) / 2;
+		if (fUids[msgIndex] == (PRUint32) uid)
 		{
-			PRInt32 returnFlags = fFlags[index];
+			PRInt32 returnFlags = fFlags[msgIndex];
 			
 			*foundIt = TRUE;
-			*ndx = index;
+			*ndx = msgIndex;
 		    PR_CExitMonitor(this);
 			return returnFlags;
 		}
-		if (fUids[index] > (PRUint32) uid)
-			hi = index -1;
-		else if (fUids[index] < (PRUint32) uid)
-			lo = index + 1;
+		if (fUids[msgIndex] > (PRUint32) uid)
+			hi = msgIndex -1;
+		else if (fUids[msgIndex] < (PRUint32) uid)
+			lo = msgIndex + 1;
 	}
-	index = lo;
-	while ((index > 0) && (fUids[index] > (PRUint32) uid))
-		index--;
-	if (index < 0)
-		index = 0;
-	*ndx = index;
+	msgIndex = lo;
+	while ((msgIndex > 0) && (fUids[msgIndex] > (PRUint32) uid))
+		msgIndex--;
+	if (msgIndex < 0)
+		msgIndex = 0;
+	*ndx = msgIndex;
     PR_CExitMonitor(this);
 	return 0;
 }
