@@ -181,9 +181,14 @@ struct JSObject {
  * obj->slots[slot] from the GC's thread, once rt->gcRunning has been set.  See
  * jsgc.c for details.
  */
+#define THREAD_IS_RUNNING_GC(rt, thread)                                      \
+    ((rt)->gcRunning && (rt)->gcThread == (thread))
+
+#define CX_THREAD_IS_RUNNING_GC(cx)                                           \
+    THREAD_IS_RUNNING_GC((cx)->runtime, (cx)->thread)
+
 #define GC_AWARE_GET_SLOT(cx, obj, slot)                                      \
-    (OBJ_IS_NATIVE(obj) &&                                                    \
-     ((cx)->runtime->gcRunning && (cx)->runtime->gcThread == (cx)->thread)    \
+    ((OBJ_IS_NATIVE(obj) && CX_THREAD_IS_RUNNING_GC(cx))                      \
      ? (obj)->slots[slot]                                                     \
      : OBJ_GET_SLOT(cx, obj, slot))
 

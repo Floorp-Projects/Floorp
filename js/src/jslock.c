@@ -558,8 +558,10 @@ js_GetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot)
     scope = OBJ_SCOPE(obj);
     JS_ASSERT(scope->ownercx != cx);
     JS_ASSERT(obj->slots && slot < obj->map->freeslot);
-    if (scope->ownercx && ClaimScope(scope, cx))
+    if ((scope->ownercx && ClaimScope(scope, cx)) ||
+        CX_THREAD_IS_RUNNING_GC(cx)) {
         return obj->slots[slot];
+    }
 
 #ifndef NSPR_LOCK
     tl = &scope->lock;
@@ -638,7 +640,8 @@ js_SetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
     scope = OBJ_SCOPE(obj);
     JS_ASSERT(scope->ownercx != cx);
     JS_ASSERT(obj->slots && slot < obj->map->freeslot);
-    if (scope->ownercx && ClaimScope(scope, cx)) {
+    if ((scope->ownercx && ClaimScope(scope, cx)) ||
+        CX_THREAD_IS_RUNNING_GC(cx)) {
         obj->slots[slot] = v;
         return;
     }
@@ -1035,6 +1038,8 @@ js_LockScope(JSContext *cx, JSScope *scope)
     JS_ASSERT(scope->ownercx != cx);
     if (scope->ownercx && ClaimScope(scope, cx))
         return;
+    if (CX_THREAD_IS_RUNNING_GC(cx))
+        return;
 
     if (Thin_RemoveWait(ReadWord(scope->lock.owner)) == me) {
         JS_ASSERT(scope->u.count > 0);
@@ -1053,6 +1058,10 @@ void
 js_UnlockScope(JSContext *cx, JSScope *scope)
 {
     jsword me = cx->thread;
+
+    /* We hope compilers use me instead of reloading cx->thread in the macro. */
+    if (CX_THREAD_IS_RUNNING_GC(cx))
+        return;
 
     JS_ASSERT(scope->ownercx == NULL);
     JS_ASSERT(scope->u.count > 0);
