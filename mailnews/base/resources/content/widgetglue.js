@@ -50,7 +50,7 @@ var FolderPaneController =
 
 	isCommandEnabled: function(command)
 	{
-		dump("FolderPaneController.IsCommandEnabled(" + command + ")\n");
+        //		dump("FolderPaneController.IsCommandEnabled(" + command + ")\n");
 		switch ( command )
 		{
 			case "cmd_selectAll":
@@ -156,7 +156,7 @@ var DefaultController =
 
 	isCommandEnabled: function(command)
 	{
-		dump("ThreadPaneController.isCommandEnabled\n");
+        //		dump("ThreadPaneController.isCommandEnabled(" + command + ")\n");
 		switch ( command )
 		{
 			case "cmd_selectAll":
@@ -165,7 +165,6 @@ var DefaultController =
 			case "cmd_delete":
 			case "button_delete":
 				var threadTree = GetThreadTree();
-				dump("threadTree = " + threadTree + "\n");
 				var numSelected = 0;
 				if ( threadTree && threadTree.selectedItems )
 					numSelected = threadTree.selectedItems.length;
