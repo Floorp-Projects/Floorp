@@ -140,7 +140,7 @@
 <!-- Calendar Timezone preferences information -->
 <!ENTITY pref.calendar.timezone.label "Mon fuseau horaire">
 <!ENTITY pref.calendar.timezone.caption "Fuseau horaire">
-<!ENTITY pref.calendar.timezone.description "Timezone ID is (continent or ocean)/(largest city in legal timezone region).">
+<!ENTITY pref.calendar.timezone.description "Le nom des fuseaux horaires est (continent ou océan)/(ville principale dans la région).">
 <!ENTITY pref.defaultzone.label     "Fuseau horaire par défaut :" >
 
 <!ENTITY pref.timezone.Africa.Abidjan "Afrique/Abidjan" >
@@ -291,14 +291,14 @@
 <!ENTITY pref.timezone.America.Regina "Amériques/Regina" >
 <!ENTITY pref.timezone.America.Rio_Branco "Amériques/Rio Branco" >
 <!ENTITY pref.timezone.America.Rosario "Amériques/Rosario" >
-<!ENTITY pref.timezone.America.Santo_Domingo "Amériques/Saint Domingue" >
-<!ENTITY pref.timezone.America.St_Lucia "Amériques/Sainte Lucie" >
 <!ENTITY pref.timezone.America.Santiago "Amériques/Santiago" >
+<!ENTITY pref.timezone.America.Santo_Domingo "Amériques/Saint Domingue" >
 <!ENTITY pref.timezone.America.Sao_Paulo "Amériques/Sao Paulo" >
 <!ENTITY pref.timezone.America.Scoresbysund "Amériques/Scoresbysund" >
 <!ENTITY pref.timezone.America.Shiprock "Amériques/Shiprock" >
 <!ENTITY pref.timezone.America.St_Johns "Amériques/St Johns" >
 <!ENTITY pref.timezone.America.St_Kitts "Amériques/St Kitts" >
+<!ENTITY pref.timezone.America.St_Lucia "Amériques/Sainte Lucie" >
 <!ENTITY pref.timezone.America.St_Thomas "Amériques/St Thomas" >
 <!ENTITY pref.timezone.America.St_Vincent "Amériques/St Vincent" >
 <!ENTITY pref.timezone.America.Swift_Current "Amériques/Swif Current" >
@@ -360,8 +360,8 @@
 <!ENTITY pref.timezone.Asia.Katmandu "Asie/Katmandou" >
 <!ENTITY pref.timezone.Asia.Krasnoyarsk "Asie/Krasnoyarsk" >
 <!ENTITY pref.timezone.Asia.Kuala_Lumpur "Asie/Kuala Lumpur" >
-<!ENTITY pref.timezone.Asia.Kuwait "Asie/Koweït" >
 <!ENTITY pref.timezone.Asia.Kuching "Asie/Kuching" >
+<!ENTITY pref.timezone.Asia.Kuwait "Asie/Koweït" >
 <!ENTITY pref.timezone.Asia.Macao "Asie/Macao" >
 <!ENTITY pref.timezone.Asia.Magadan "Asie/Magadan" >
 <!ENTITY pref.timezone.Asia.Manila "Asie/Manille" >
@@ -369,7 +369,6 @@
 <!ENTITY pref.timezone.Asia.Nicosia "Asie/Nicosie" >
 <!ENTITY pref.timezone.Asia.Novosibirsk "Asie/Novosibirsk" >
 <!ENTITY pref.timezone.Asia.Omsk "Asie/Omsk" >
-<!ENTITY pref.timezone.Asia.Ulaanbaatar "Asie/Oulan Bator" >
 <!ENTITY pref.timezone.Asia.Phnom_Penh "Asie/Phnom Penh" >
 <!ENTITY pref.timezone.Asia.Pontianak "Asie/Pontianak" >
 <!ENTITY pref.timezone.Asia.Pyongyang "Asie/Pyongyang" >
@@ -388,6 +387,7 @@
 <!ENTITY pref.timezone.Asia.Thimphu "Asie/Thimphu" >
 <!ENTITY pref.timezone.Asia.Tokyo "Asie/Tokyo" >
 <!ENTITY pref.timezone.Asia.Ujung_Pandang "Asie/Ujung Pandang" >
+<!ENTITY pref.timezone.Asia.Ulaanbaatar "Asie/Oulan Bator" >
 <!ENTITY pref.timezone.Asia.Urumqi "Asie/Urumqi" >
 <!ENTITY pref.timezone.Asia.Vientiane "Asie/Vientiane" >
 <!ENTITY pref.timezone.Asia.Vladivostok "Asie/Vladivostok" >
@@ -399,10 +399,10 @@
 <!ENTITY pref.timezone.Atlantic.Canary "Atlantique/Canaries" >
 <!ENTITY pref.timezone.Atlantic.Cape_Verde "Atlantique/Cap Vert" >
 <!ENTITY pref.timezone.Atlantic.Faeroe "Atlantique/Feroe" >
-<!ENTITY pref.timezone.Atlantic.South_Georgia "Atlantique/Géorgie du Sud" >
 <!ENTITY pref.timezone.Atlantic.Jan_Mayen "Atlantique/Jan Mayen" >
 <!ENTITY pref.timezone.Atlantic.Madeira "Atlantique/Madère" >
 <!ENTITY pref.timezone.Atlantic.Reykjavik "Atlantique/Reykjavik" >
+<!ENTITY pref.timezone.Atlantic.South_Georgia "Atlantique/Géorgie du Sud" >
 <!ENTITY pref.timezone.Atlantic.St_Helena "Atlantique/Sainte Hélène" >
 <!ENTITY pref.timezone.Atlantic.Stanley "Atlantique/Stanley" >
 <!ENTITY pref.timezone.Australia.Adelaide "Australie/Adélaïde" >
