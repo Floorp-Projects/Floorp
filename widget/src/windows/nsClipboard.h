@@ -22,9 +22,10 @@
 #include "nsBaseClipboard.h"
 
 class nsITransferable;
-class nsDataObj;
+//class nsDataObj;
 class nsIClipboardOwner;
 class nsIWidget;
+struct IDataObject;
 
 /**
  * Native Win32 Clipboard wrapper
@@ -44,13 +45,16 @@ public:
   // nsIClipboard  
   NS_IMETHOD ForceDataToClipboard();
 
+  // Internal Native Routines
+  NS_IMETHODIMP CreateNativeDataObject(nsITransferable * aTransferable, IDataObject ** aDataObj);
+
 
 protected:
   NS_IMETHOD SetNativeClipboardData();
   NS_IMETHOD GetNativeClipboardData(nsITransferable * aTransferable);
 
   nsIWidget         * mWindow;
-  nsDataObj         * mDataObj;
+  IDataObject       * mDataObj;
 
 };
 

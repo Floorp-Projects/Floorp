@@ -25,7 +25,7 @@
 //#include "OLEIDL.H"
 
 class nsITransferable;
-class CfDropSource;
+struct IDropSource;
 
 /**
  * Native Win32 DragSource wrapper
@@ -47,13 +47,13 @@ public:
   NS_IMETHOD DragStopped(nsIDraggedObject * aDraggedObj, PRInt32 anAction);
 
 
-  CfDropSource * GetNativeDragSrc() { return mNativeDragSrc; } // XXX this needs to be moved into impl
+  IDropSource * GetNativeDragSrc() { return mNativeDragSrc; } // XXX this needs to be moved into impl
 
 protected:
 
   nsITransferable * mTransferable;
 
-  CfDropSource * mNativeDragSrc;
+  IDropSource * mNativeDragSrc;
 
 };
 
