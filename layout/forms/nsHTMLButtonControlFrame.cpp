@@ -51,7 +51,6 @@
 #include "nsIStyleContext.h"
 #include "nsLeafFrame.h"
 #include "nsCSSRendering.h"
-#include "nsHTMLIIDs.h"
 #include "nsISupports.h"
 #include "nsHTMLAtoms.h"
 #include "nsIImage.h"
@@ -236,18 +235,16 @@ NS_IMETHODIMP
 nsHTMLButtonControlFrame::GetName(nsAString* aResult)
 {
   nsresult result = NS_FORM_NOTOK;
-  if (mContent) {
-    nsIHTMLContent* formControl = nsnull;
-    result = mContent->QueryInterface(kIHTMLContentIID, (void**)&formControl);
-    if ((NS_OK == result) && formControl) {
-      nsHTMLValue value;
-      result = formControl->GetHTMLAttribute(nsHTMLAtoms::name, value);
-      if (NS_CONTENT_ATTR_HAS_VALUE == result) {
-        if (eHTMLUnit_String == value.GetUnit()) {
-          value.GetStringValue(*aResult);
-        }
+
+  nsCOMPtr<nsIHTMLContent> formControl(do_QueryInterface(mContent));
+
+  if (formControl) {
+    nsHTMLValue value;
+    result = formControl->GetHTMLAttribute(nsHTMLAtoms::name, value);
+    if (NS_CONTENT_ATTR_HAS_VALUE == result) {
+      if (eHTMLUnit_String == value.GetUnit()) {
+        value.GetStringValue(*aResult);
       }
-      NS_RELEASE(formControl);
     }
   }
   return result;
@@ -257,18 +254,16 @@ NS_IMETHODIMP
 nsHTMLButtonControlFrame::GetValue(nsAString* aResult)
 {
   nsresult result = NS_FORM_NOTOK;
-  if (mContent) {
-    nsIHTMLContent* formControl = nsnull;
-    result = mContent->QueryInterface(kIHTMLContentIID, (void**)&formControl);
-    if ((NS_OK == result) && formControl) {
-      nsHTMLValue value;
-      result = formControl->GetHTMLAttribute(nsHTMLAtoms::value, value);
-      if (NS_CONTENT_ATTR_HAS_VALUE == result) {
-        if (eHTMLUnit_String == value.GetUnit()) {
-          value.GetStringValue(*aResult);
-        }
+
+  nsCOMPtr<nsIHTMLContent> formControl(do_QueryInterface(mContent));
+
+  if (formControl) {
+    nsHTMLValue value;
+    result = formControl->GetHTMLAttribute(nsHTMLAtoms::value, value);
+    if (NS_CONTENT_ATTR_HAS_VALUE == result) {
+      if (eHTMLUnit_String == value.GetUnit()) {
+        value.GetStringValue(*aResult);
       }
-      NS_RELEASE(formControl);
     }
   }
   return result;

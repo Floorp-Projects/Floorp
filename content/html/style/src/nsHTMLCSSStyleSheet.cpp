@@ -47,7 +47,6 @@
 #include "nsIHTMLContent.h"
 #include "nsIStyleRule.h"
 #include "nsIFrame.h"
-#include "nsHTMLIIDs.h"
 #include "nsICSSStyleRule.h"
 #include "nsIStyleRuleProcessor.h"
 #include "nsIStyleContext.h"

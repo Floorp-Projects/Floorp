@@ -60,7 +60,6 @@
 #include "nsIPref.h"
 #include "nsIViewObserver.h"
 #include "nsContainerFrame.h"
-#include "nsHTMLIIDs.h"
 #include "nsIDeviceContext.h"
 #include "nsIEventStateManager.h"
 #include "nsIDOMEvent.h"

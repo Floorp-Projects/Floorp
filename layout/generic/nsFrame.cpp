@@ -68,7 +68,6 @@
 #include "nsIDOMHTMLAreaElement.h"
 #include "nsIDOMHTMLImageElement.h"
 #include "nsIDeviceContext.h"
-#include "nsHTMLIIDs.h"
 #include "nsIEventStateManager.h"
 #include "nsISelection.h"
 #include "nsISelectionPrivate.h"

@@ -46,7 +46,6 @@
 #include "nsIContent.h"
 #include "nsVoidArray.h"
 #include "prinrval.h"
-#include "nsHTMLIIDs.h"
 #include "nsLayoutAtoms.h"
 #include "nsHTMLParts.h"
 #include "nsIPresShell.h"

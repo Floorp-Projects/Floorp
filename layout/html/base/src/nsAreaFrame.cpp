@@ -42,7 +42,6 @@
 #include "nsIViewManager.h"
 #include "nsHTMLAtoms.h"
 #include "nsIView.h"
-#include "nsHTMLIIDs.h"
 #include "nsHTMLValue.h"
 #include "nsHTMLParts.h"
 #include "nsLayoutAtoms.h"

@@ -46,7 +46,6 @@
 #include "nsIContent.h"
 #include "nsIView.h"
 #include "nsReflowPath.h"
-#include "nsHTMLIIDs.h"
 #include "nsIDeviceContext.h"
 #include "nsHTMLAtoms.h"
 #include "nsIStyleSet.h"

@@ -47,7 +47,6 @@
 #include "nsIView.h"
 #include "nsIViewManager.h"
 #include "nsHTMLContainerFrame.h"
-#include "nsHTMLIIDs.h"
 #include "nsCSSRendering.h"
 #include "nsIScrollableView.h"
 #include "nsWidgetsCID.h"

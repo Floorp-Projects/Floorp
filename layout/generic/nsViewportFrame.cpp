@@ -37,7 +37,6 @@
 #include "nsCOMPtr.h"
 #include "nsContainerFrame.h"
 #include "nsHTMLParts.h"
-#include "nsHTMLIIDs.h"
 #include "nsLayoutAtoms.h"
 #include "nsIViewManager.h"
 #include "nsIScrollableFrame.h"

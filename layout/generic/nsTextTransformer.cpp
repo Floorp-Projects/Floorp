@@ -44,7 +44,6 @@
 #include "nsStyleConsts.h"
 #include "nsILineBreaker.h"
 #include "nsIWordBreaker.h"
-#include "nsHTMLIIDs.h"
 #include "nsIServiceManager.h"
 #include "nsUnicharUtilCIID.h"
 #include "nsICaseConversion.h"

@@ -56,7 +56,6 @@
 #include "nsTableColFrame.h"
 #include "nsIDOMHTMLTableColElement.h"
 #include "nsTableCellFrame.h" // to get IS_CELL_FRAME
-#include "nsHTMLIIDs.h"
 #include "nsIStyleFrameConstruction.h"
 #include "nsHTMLParts.h"
 #include "nsIPresShell.h"

@@ -41,7 +41,6 @@
 #include "nsIRenderingContext.h"
 #include "nsIStyleContext.h"
 #include "nsHTMLAtoms.h"
-#include "nsHTMLIIDs.h"
 #include "nsIDeviceContext.h"
 #include "nsIViewManager.h"
 #include "nsIPresShell.h"
@@ -203,7 +202,7 @@ nsSimplePageSequenceFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(kIPageSequenceFrameIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIPageSequenceFrame))) {
     *aInstancePtr = (void*)(nsIPageSequenceFrame*)this;
     return NS_OK;
   }

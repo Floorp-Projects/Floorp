@@ -51,7 +51,6 @@
 #include "nsIAtom.h"
 #include "nsIPresContext.h"
 #include "nsIHTMLContent.h"
-#include "nsHTMLIIDs.h"
 #include "nsHTMLParts.h"
 #include "nsHTMLAtoms.h"
 #include "nsIStyleContext.h"

@@ -42,7 +42,6 @@
 #include "nsGenericHTMLElement.h"
 #include "nsILink.h"
 #include "nsHTMLAtoms.h"
-#include "nsHTMLIIDs.h"
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"

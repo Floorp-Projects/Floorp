@@ -42,7 +42,6 @@
 #include "nsListControlFrame.h"
 #include "nsFormControlFrame.h" // for COMPARE macro
 #include "nsFormControlHelper.h"
-#include "nsHTMLIIDs.h"
 #include "nsHTMLAtoms.h"
 #include "nsIHTMLContent.h"
 #include "nsIFormControl.h"

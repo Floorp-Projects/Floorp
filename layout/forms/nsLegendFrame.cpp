@@ -46,7 +46,6 @@
 #include "nsISupports.h"
 #include "nsIAtom.h"
 #include "nsIHTMLContent.h"
-#include "nsHTMLIIDs.h"
 #include "nsHTMLParts.h"
 #include "nsHTMLAtoms.h"
 #include "nsIStyleContext.h"
@@ -144,16 +143,16 @@ PRInt32 nsLegendFrame::GetAlign()
     intValue = NS_STYLE_TEXT_ALIGN_RIGHT;
   }
 #endif // IBMBIDI
-  nsIHTMLContent* content = nsnull;
-  mContent->QueryInterface(kIHTMLContentIID, (void**) &content);
-  if (nsnull != content) {
+
+  nsCOMPtr<nsIHTMLContent> content(do_QueryInterface(mContent));
+
+  if (content) {
     nsHTMLValue value;
     if (NS_CONTENT_ATTR_HAS_VALUE == (content->GetHTMLAttribute(nsHTMLAtoms::align, value))) {
       if (eHTMLUnit_Enumerated == value.GetUnit()) {
         intValue = value.GetIntValue();
       }
     }
-    NS_RELEASE(content);
   }
   return intValue;
 }

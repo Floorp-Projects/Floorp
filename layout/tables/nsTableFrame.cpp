@@ -61,7 +61,6 @@
 #include "nsVoidArray.h"
 #include "nsIView.h"
 #include "nsHTMLAtoms.h"
-#include "nsHTMLIIDs.h"
 #include "nsHTMLReflowCommand.h"
 #include "nsLayoutAtoms.h"
 #include "nsIDeviceContext.h"

@@ -41,7 +41,6 @@
 #include "nsIContent.h"
 #include "nsLineLayout.h"
 #include "nsHTMLAtoms.h"
-#include "nsHTMLIIDs.h"
 #include "nsLayoutAtoms.h"
 
 #define nsFirstLetterFrameSuper nsHTMLContainerFrame

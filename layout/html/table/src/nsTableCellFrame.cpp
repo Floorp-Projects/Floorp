@@ -48,11 +48,9 @@
 #include "nsCSSRendering.h"
 #include "nsIContent.h"
 #include "nsIHTMLContent.h"
-#include "nsHTMLIIDs.h"
 #include "nsHTMLParts.h"
 #include "nsHTMLValue.h"
 #include "nsHTMLAtoms.h"
-#include "nsHTMLIIDs.h"
 #include "nsVoidArray.h"
 #include "nsIView.h"
 #include "nsStyleUtil.h"
@@ -713,15 +711,14 @@ nsTableCellFrame::HasVerticalAlignBaseline()
 PRInt32 nsTableCellFrame::GetRowSpan()
 {  
   PRInt32 rowSpan=1;
-  nsIHTMLContent *hc=nsnull;
-  nsresult rv = mContent->QueryInterface(kIHTMLContentIID, (void**) &hc);
-  if (NS_OK==rv) {
+  nsCOMPtr<nsIHTMLContent> hc(do_QueryInterface(mContent));
+
+  if (hc) {
     nsHTMLValue val;
     hc->GetHTMLAttribute(nsHTMLAtoms::rowspan, val); 
     if (eHTMLUnit_Integer == val.GetUnit()) { 
        rowSpan=val.GetIntValue(); 
     }
-    NS_RELEASE(hc);
   }
   return rowSpan;
 }
@@ -729,15 +726,14 @@ PRInt32 nsTableCellFrame::GetRowSpan()
 PRInt32 nsTableCellFrame::GetColSpan()
 {  
   PRInt32 colSpan=1;
-  nsIHTMLContent *hc=nsnull;
-  nsresult rv = mContent->QueryInterface(kIHTMLContentIID, (void**) &hc);
-  if (NS_OK==rv) {
+  nsCOMPtr<nsIHTMLContent> hc(do_QueryInterface(mContent));
+
+  if (hc) {
     nsHTMLValue val;
     hc->GetHTMLAttribute(nsHTMLAtoms::colspan, val); 
     if (eHTMLUnit_Integer == val.GetUnit()) { 
        colSpan=val.GetIntValue(); 
     }
-    NS_RELEASE(hc);
   }
   return colSpan;
 }

@@ -52,7 +52,6 @@
 #include "nsCoord.h"
 #include "nsIFontMetrics.h"
 #include "nsIRenderingContext.h"
-#include "nsHTMLIIDs.h"
 #include "nsIPresShell.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
@@ -5589,78 +5588,73 @@ nsTextFrame::ComputeTotalWordDimensions(nsIPresContext* aPresContext,
   PRUnichar *newWordBuf = aWordBuf;
   PRUint32 newWordBufSize = aWordBufSize;
   while (nsnull != aNextFrame) {
-    nsIContent* content = nsnull;
-    if ((NS_OK == aNextFrame->GetContent(&content)) && (nsnull != content)) {
-#ifdef DEBUG_WORD_WRAPPING
-      printf("  next textRun=");
-      nsFrame::ListTag(stdout, aNextFrame);
-      printf("\n");
-#endif
-      nsITextContent* tc;
-      if (NS_OK == content->QueryInterface(kITextContentIID, (void**)&tc)) {
-        PRBool stop = PR_FALSE;
-        nsTextDimensions moreDimensions;
-        moreDimensions = ComputeWordFragmentDimensions(aPresContext,
-                                                   aLineBreaker,
-                                                   aLineLayout,
-                                                   aReflowState,
-                                                   aNextFrame, content, tc,
-                                                   &stop,
-                                                   newWordBuf,
-                                                   aWordLen,
-                                                   newWordBufSize,
-                                                   aIsBreakable);
-        if (moreDimensions.width < 0) {
-          PRUint32 moreSize = -moreDimensions.width;
-          //Oh, wordBuf is too small, we have to grow it
-          newWordBufSize += moreSize;
-          if (newWordBuf != aWordBuf) {
-            newWordBuf = (PRUnichar*)nsMemory::Realloc(newWordBuf, sizeof(PRUnichar)*newWordBufSize);
-            NS_ASSERTION(newWordBuf, "not enough memory");
-          } else {
-            newWordBuf = (PRUnichar*)nsMemory::Alloc(sizeof(PRUnichar)*newWordBufSize);
-            NS_ASSERTION(newWordBuf, "not enough memory");
-            if(newWordBuf)  {
-                memcpy((void*)newWordBuf, aWordBuf, sizeof(PRUnichar)*(newWordBufSize-moreSize));
-            }
-          }
+    nsCOMPtr<nsIContent> content;
+    aNextFrame->GetContent(getter_AddRefs(content));
 
+#ifdef DEBUG_WORD_WRAPPING
+    printf("  next textRun=");
+    nsFrame::ListTag(stdout, aNextFrame);
+    printf("\n");
+#endif
+
+    nsCOMPtr<nsITextContent> tc(do_QueryInterface(content));
+    if (tc) {
+      PRBool stop = PR_FALSE;
+      nsTextDimensions moreDimensions;
+      moreDimensions = ComputeWordFragmentDimensions(aPresContext,
+                                                     aLineBreaker,
+                                                     aLineLayout,
+                                                     aReflowState,
+                                                     aNextFrame, content, tc,
+                                                     &stop,
+                                                     newWordBuf,
+                                                     aWordLen,
+                                                     newWordBufSize,
+                                                     aIsBreakable);
+      if (moreDimensions.width < 0) {
+        PRUint32 moreSize = -moreDimensions.width;
+        //Oh, wordBuf is too small, we have to grow it
+        newWordBufSize += moreSize;
+        if (newWordBuf != aWordBuf) {
+          newWordBuf = (PRUnichar*)nsMemory::Realloc(newWordBuf, sizeof(PRUnichar)*newWordBufSize);
+          NS_ASSERTION(newWordBuf, "not enough memory");
+        } else {
+          newWordBuf = (PRUnichar*)nsMemory::Alloc(sizeof(PRUnichar)*newWordBufSize);
+          NS_ASSERTION(newWordBuf, "not enough memory");
           if(newWordBuf)  {
-            moreDimensions = ComputeWordFragmentDimensions(aPresContext,
-                                                 aLineBreaker,
-                                                 aLineLayout,
-                                                 aReflowState,
-                                                 aNextFrame, content, tc,
-                                                 &stop,
-                                                 newWordBuf,
-                                                 aWordLen,
-                                                 newWordBufSize,
-                                                 aIsBreakable);
-            NS_ASSERTION((moreDimensions.width >= 0), "ComputeWordFragmentWidth is returning negative");
-          } else {
-            stop = PR_TRUE;
-            moreDimensions.Clear();
-          }  
+            memcpy((void*)newWordBuf, aWordBuf, sizeof(PRUnichar)*(newWordBufSize-moreSize));
+          }
         }
 
-        NS_RELEASE(tc);
-        NS_RELEASE(content);
-        addedDimensions.Combine(moreDimensions);
-#ifdef DEBUG_WORD_WRAPPING
-        printf("  moreWidth=%d (addedWidth=%d) stop=%c\n", moreDimensions.width,
-               addedDimensions.width, stop?'T':'F');
-#endif
-        if (stop) {
-          goto done;
-        }
+        if(newWordBuf)  {
+          moreDimensions =
+            ComputeWordFragmentDimensions(aPresContext, aLineBreaker,
+                                          aLineLayout, aReflowState,
+                                          aNextFrame, content, tc, &stop,
+                                          newWordBuf, aWordLen, newWordBufSize,
+                                          aIsBreakable);
+          NS_ASSERTION((moreDimensions.width >= 0),
+                       "ComputeWordFragmentWidth is returning negative");
+        } else {
+          stop = PR_TRUE;
+          moreDimensions.Clear();
+        }  
       }
-      else {
-        // It claimed it was text but it doesn't implement the
-        // nsITextContent API. Therefore I don't know what to do with it
-        // and can't look inside it. Oh well.
-        NS_RELEASE(content);
+
+      addedDimensions.Combine(moreDimensions);
+#ifdef DEBUG_WORD_WRAPPING
+      printf("  moreWidth=%d (addedWidth=%d) stop=%c\n", moreDimensions.width,
+             addedDimensions.width, stop?'T':'F');
+#endif
+      if (stop) {
         goto done;
       }
+    }
+    else {
+      // It claimed it was text but it doesn't implement the
+      // nsITextContent API. Therefore I don't know what to do with it
+      // and can't look inside it. Oh well.
+      goto done;
     }
 
     // Move on to the next frame in the text-run
@@ -5805,12 +5799,11 @@ nsTextFrame::ToCString(nsString& aBuf, PRInt32* aTotalContentLength) const
   const nsTextFragment* frag;
 
   // Get the frames text content
-  nsITextContent* tc;
-  if (NS_OK != mContent->QueryInterface(kITextContentIID, (void**) &tc)) {
+  nsCOMPtr<nsITextContent> tc(do_QueryInterface(mContent));
+  if (!tc) {
     return;
   }
   tc->GetText(&frag);
-  NS_RELEASE(tc);
 
   // Compute the total length of the text content.
   *aTotalContentLength = frag->GetLength();

@@ -49,7 +49,6 @@
 #include "nsLineLayout.h"
 #include "nsPlaceholderFrame.h"
 #include "nsStyleConsts.h"
-#include "nsHTMLIIDs.h"
 #include "nsCSSRendering.h"
 #include "nsIFrameManager.h"
 #include "nsIPresContext.h"
@@ -3016,27 +3015,31 @@ nsBlockFrame::GetTopBlockChild()
     // whitespace.
     PRInt32 n = mLines.front()->GetChildCount();
     while (--n >= 0) {
-      nsIContent* content;
-      nsresult rv = firstChild->GetContent(&content);
-      if (NS_FAILED(rv) || !content) {
+      nsCOMPtr<nsIContent> content;
+      firstChild->GetContent(getter_AddRefs(content));
+      if (!content) {
         return nsnull;
       }
+
       if (!content->IsContentOfType(nsIContent::eTEXT)) {
-        NS_RELEASE(content);
         return nsnull;
       }
-      nsITextContent* tc;
-      rv = content->QueryInterface(kITextContentIID, (void**) &tc);
-      NS_RELEASE(content);
-      if (NS_FAILED(rv) || (nsnull == tc)) {
+
+      nsCOMPtr<nsITextContent> tc(do_QueryInterface(content));
+
+      NS_ASSERTION(tc, "Huh, eTEXT content not an nsITextContent!");
+
+      if (!tc) {
         return nsnull;
       }
+
       PRBool isws = PR_FALSE;
       tc->IsOnlyWhitespace(&isws);
-      NS_RELEASE(tc);
+
       if (!isws) {
         return nsnull;
       }
+
       firstChild->GetNextSibling(&firstChild);
     }
 
@@ -6136,8 +6139,10 @@ nsBlockFrame::RenumberLists(nsIPresContext* aPresContext)
   // Setup initial list ordinal value
   // XXX Map html's start property to counter-reset style
   PRInt32 ordinal = 1;
-  nsIHTMLContent* hc;
-  if (mContent && (NS_OK == mContent->QueryInterface(kIHTMLContentIID, (void**) &hc))) {
+
+  nsCOMPtr<nsIHTMLContent> hc(do_QueryInterface(mContent));
+
+  if (hc) {
     nsHTMLValue value;
     if (NS_CONTENT_ATTR_HAS_VALUE ==
         hc->GetHTMLAttribute(nsHTMLAtoms::start, value)) {
@@ -6148,7 +6153,6 @@ nsBlockFrame::RenumberLists(nsIPresContext* aPresContext)
         }
       }
     }
-    NS_RELEASE(hc);
   }
 
   // Get to first-in-flow

@@ -58,13 +58,11 @@
 #include "nsIForm.h"
 #include "nsIFormControl.h"
 #include "nsIAtom.h"
-#include "nsHTMLIIDs.h"
 #include "nsIRenderingContext.h"
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
 #include "nsIStyleContext.h"
 #include "nsCSSRendering.h"
-#include "nsHTMLIIDs.h"
 #include "nsDebug.h"
 #include "nsIWidget.h"
 #include "nsVoidArray.h"
@@ -260,22 +258,18 @@ nsFormFrame::GetDisabled(nsIFrame* aChildFrame, nsIContent* aContent)
 {
   PRBool result = PR_FALSE;
 
-  nsIContent* content = aContent;
-  if (nsnull == content) {
-    aChildFrame->GetContent(&content);
+  nsCOMPtr<nsIContent> content = aContent;
+
+  if (!content) {
+    aChildFrame->GetContent(getter_AddRefs(content));
   }
-  if (nsnull != content) {
-    nsIHTMLContent* htmlContent = nsnull;
-    content->QueryInterface(kIHTMLContentIID, (void**)&htmlContent);
-    if (nsnull != htmlContent) {
-      nsHTMLValue value;
-      if (NS_CONTENT_ATTR_HAS_VALUE == htmlContent->GetHTMLAttribute(nsHTMLAtoms::disabled, value)) {
-        result = PR_TRUE;
-      }
-      NS_RELEASE(htmlContent);
-    }
-    if (nsnull == aContent) {
-      NS_RELEASE(content);
+
+  nsCOMPtr<nsIHTMLContent> htmlContent(do_QueryInterface(content));
+
+  if (htmlContent) {
+    nsHTMLValue value;
+    if (NS_CONTENT_ATTR_HAS_VALUE == htmlContent->GetHTMLAttribute(nsHTMLAtoms::disabled, value)) {
+      result = PR_TRUE;
     }
   }
   return result;
@@ -286,22 +280,18 @@ nsFormFrame::GetReadonly(nsIFrame* aChildFrame, nsIContent* aContent)
 {
   PRBool result = PR_FALSE;
 
-  nsIContent* content = aContent;
-  if (nsnull == content) {
-    aChildFrame->GetContent(&content);
+  nsCOMPtr<nsIContent> content = aContent;
+
+  if (!content) {
+    aChildFrame->GetContent(getter_AddRefs(content));
   }
-  if (nsnull != content) {
-    nsIHTMLContent* htmlContent = nsnull;
-    content->QueryInterface(kIHTMLContentIID, (void**)&htmlContent);
-    if (nsnull != htmlContent) {
-      nsHTMLValue value;
-      if (NS_CONTENT_ATTR_HAS_VALUE == htmlContent->GetHTMLAttribute(nsHTMLAtoms::readonly, value)) {
-        result = PR_TRUE;
-      }
-      NS_RELEASE(htmlContent);
-    }
-    if (nsnull == aContent) {
-      NS_RELEASE(content);
+
+  nsCOMPtr<nsIHTMLContent> htmlContent(do_QueryInterface(content));
+
+  if (htmlContent) {
+    nsHTMLValue value;
+    if (NS_CONTENT_ATTR_HAS_VALUE == htmlContent->GetHTMLAttribute(nsHTMLAtoms::readonly, value)) {
+      result = PR_TRUE;
     }
   }
   return result;
@@ -314,25 +304,21 @@ nsFormFrame::GetName(nsIFrame* aChildFrame,
 {
   nsresult result = NS_FORM_NOTOK;
 
-  nsIContent* content = aContent;
-  if (nsnull == content) {
-    aChildFrame->GetContent(&content);
+  nsCOMPtr<nsIContent> content = aContent;
+
+  if (!content) {
+    aChildFrame->GetContent(getter_AddRefs(content));
   }
-  if (nsnull != content) {
-    nsIHTMLContent* htmlContent = nsnull;
-    result = content->QueryInterface(kIHTMLContentIID, (void**)&htmlContent);
-    if (NS_SUCCEEDED(result) && (nsnull != htmlContent)) {
-      nsHTMLValue value;
-      result = htmlContent->GetHTMLAttribute(nsHTMLAtoms::name, value);
-      if (NS_CONTENT_ATTR_HAS_VALUE == result) {
-        if (eHTMLUnit_String == value.GetUnit()) {
-          value.GetStringValue(aName);
-        }
+
+  nsCOMPtr<nsIHTMLContent> htmlContent(do_QueryInterface(content));
+
+  if (htmlContent) {
+    nsHTMLValue value;
+    result = htmlContent->GetHTMLAttribute(nsHTMLAtoms::name, value);
+    if (NS_CONTENT_ATTR_HAS_VALUE == result) {
+      if (eHTMLUnit_String == value.GetUnit()) {
+        value.GetStringValue(aName);
       }
-      NS_RELEASE(htmlContent);
-    }
-    if (nsnull == aContent) {
-      NS_RELEASE(content);
     }
   }
   return result;
@@ -345,25 +331,21 @@ nsFormFrame::GetValue(nsIFrame* aChildFrame,
 {
   nsresult result = NS_FORM_NOTOK;
 
-  nsIContent* content = aContent;
-  if (nsnull == content) {
-    aChildFrame->GetContent(&content);
+  nsCOMPtr<nsIContent> content = aContent;
+
+  if (!content) {
+    aChildFrame->GetContent(getter_AddRefs(content));
   }
-  if (nsnull != content) {
-    nsIHTMLContent* htmlContent = nsnull;
-    result = content->QueryInterface(kIHTMLContentIID, (void**)&htmlContent);
-    if (NS_SUCCEEDED(result) && (nsnull != htmlContent)) {
-      nsHTMLValue value;
-      result = htmlContent->GetHTMLAttribute(nsHTMLAtoms::value, value);
-      if (NS_CONTENT_ATTR_HAS_VALUE == result) {
-        if (eHTMLUnit_String == value.GetUnit()) {
-          value.GetStringValue(aValue);
-        }
+
+  nsCOMPtr<nsIHTMLContent> htmlContent(do_QueryInterface(content));
+
+  if (htmlContent) {
+    nsHTMLValue value;
+    result = htmlContent->GetHTMLAttribute(nsHTMLAtoms::value, value);
+    if (NS_CONTENT_ATTR_HAS_VALUE == result) {
+      if (eHTMLUnit_String == value.GetUnit()) {
+        value.GetStringValue(aValue);
       }
-      NS_RELEASE(htmlContent);
-    }
-    if (nsnull == aContent) {
-      NS_RELEASE(content);
     }
   }
   return result;

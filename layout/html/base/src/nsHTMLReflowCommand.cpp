@@ -43,7 +43,6 @@
 #include "nsIContent.h"
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
-#include "nsHTMLIIDs.h"
 #include "nsFrame.h"
 #include "nsContainerFrame.h"
 #include "nsLayoutAtoms.h"

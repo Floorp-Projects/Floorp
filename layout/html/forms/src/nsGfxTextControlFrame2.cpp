@@ -77,7 +77,6 @@
 #include "nsIPrintContext.h"
 #include "nsIPrintPreviewContext.h"
 #endif // USE_QI_IN_SUPPRESS_EVENT_HANDLERS
-#include "nsHTMLIIDs.h"
 #include "nsHTMLAtoms.h"
 #include "nsIComponentManager.h"
 #include "nsIView.h"
@@ -1560,31 +1559,25 @@ nsGfxTextControlFrame2::GetColRowSizeAttr(nsIFormControlFrame*  aFrame,
                                          nsHTMLValue & aRowSize,
                                          nsresult &    aRowStatus)
 {
-  nsIContent* iContent = nsnull;
-  aFrame->GetFormContent((nsIContent*&) iContent);
-  if (!iContent) {
-    return NS_ERROR_FAILURE;
-  }
-  nsIHTMLContent* hContent = nsnull;
-  nsresult result = iContent->QueryInterface(kIHTMLContentIID, (void**)&hContent);
-  if ((NS_OK != result) || !hContent) {
-    NS_RELEASE(iContent);
+  nsCOMPtr<nsIContent> iContent;
+  aFrame->GetFormContent(*getter_AddRefs(iContent));
+
+  nsCOMPtr<nsIHTMLContent> hContent(do_QueryInterface(iContent));
+
+  if (!hContent) {
     return NS_ERROR_FAILURE;
   }
 
   aColStatus = NS_CONTENT_ATTR_NOT_THERE;
-  if (nsnull != aColSizeAttr) {
+  if (aColSizeAttr) {
     aColStatus = hContent->GetHTMLAttribute(aColSizeAttr, aColSize);
   }
 
   aRowStatus= NS_CONTENT_ATTR_NOT_THERE;
-  if (nsnull != aRowSizeAttr) {
+  if (aRowSizeAttr) {
     aRowStatus = hContent->GetHTMLAttribute(aRowSizeAttr, aRowSize);
   }
 
-  NS_RELEASE(hContent);
-  NS_RELEASE(iContent);
-  
   return NS_OK;
 }
 
@@ -2464,15 +2457,14 @@ nsGfxTextControlFrame2::GetSizeFromContent(PRInt32* aSize) const
 {
   *aSize = -1;
   nsresult result = NS_CONTENT_ATTR_NOT_THERE;
-  nsIHTMLContent* content = nsnull;
-  mContent->QueryInterface(kIHTMLContentIID, (void**) &content);
-  if (nsnull != content) {
+  nsCOMPtr<nsIHTMLContent> content(do_QueryInterface(mContent));
+
+  if (content) {
     nsHTMLValue value;
     result = content->GetHTMLAttribute(nsHTMLAtoms::size, value);
     if (eHTMLUnit_Integer == value.GetUnit()) { 
       *aSize = value.GetIntValue();
     }
-    NS_RELEASE(content);
   }
   if (*aSize < 1) {
     // This is part of bug 46224
@@ -3102,15 +3094,15 @@ nsGfxTextControlFrame2::GetMaxLength(PRInt32* aSize)
 {
   *aSize = -1;
   nsresult rv = NS_CONTENT_ATTR_NOT_THERE;
-  nsIHTMLContent* content = nsnull;
-  mContent->QueryInterface(kIHTMLContentIID, (void**) &content);
-  if (nsnull != content) {
+
+  nsCOMPtr<nsIHTMLContent> content(do_QueryInterface(mContent));
+
+  if (content) {
     nsHTMLValue value;
     rv = content->GetHTMLAttribute(nsHTMLAtoms::maxlength, value);
     if (eHTMLUnit_Integer == value.GetUnit()) { 
       *aSize = value.GetIntValue();
     }
-    NS_RELEASE(content);
   }
   return rv;
 }
@@ -3119,13 +3111,12 @@ NS_IMETHODIMP
 nsGfxTextControlFrame2::DoesAttributeExist(nsIAtom *aAtt)
 {
   nsresult rv = NS_CONTENT_ATTR_NOT_THERE;
-  nsIHTMLContent* content = nsnull;
-  mContent->QueryInterface(kIHTMLContentIID, (void**) &content);
-  if (nsnull != content) 
-  {
+
+  nsCOMPtr<nsIHTMLContent> content(do_QueryInterface(mContent));
+
+  if (content) {
     nsHTMLValue value;
     rv = content->GetHTMLAttribute(aAtt, value);
-    NS_RELEASE(content);
   }
   return rv;
 }

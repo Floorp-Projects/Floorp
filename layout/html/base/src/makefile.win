@@ -86,7 +86,6 @@ CPP_OBJS= \
 	.\$(OBJDIR)\nsHRFrame.obj \
 	.\$(OBJDIR)\nsHTMLContainerFrame.obj \
 	.\$(OBJDIR)\nsHTMLFrame.obj \
-	.\$(OBJDIR)\nsHTMLIIDs.obj \
 	.\$(OBJDIR)\nsHTMLReflowCommand.obj \
 	.\$(OBJDIR)\nsHTMLReflowState.obj \
 	.\$(OBJDIR)\nsImageFrame.obj \
