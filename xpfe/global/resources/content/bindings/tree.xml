@@ -595,7 +595,7 @@
       <xul:hbox flex="1" class="tree-bodybox">
         <children/>
       </xul:hbox>
-      <xul:scrollbar orient="vertical" class="tree-scrollbar" collapsed="true"/>
+      <xul:scrollbar height="0" orient="vertical" class="tree-scrollbar" collapsed="true"/>
     </content>
     <handlers>
       <handler event="underflow">
