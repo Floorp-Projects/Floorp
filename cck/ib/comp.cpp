@@ -17,13 +17,39 @@ extern CString scriptPath;
 extern CString nscpxpiPath;
 
 extern COMPONENT Components[100];
-extern int		numComponents;
+extern int numComponents;
+extern CString compString;
 
 extern "C" __declspec(dllexport)
-int BuildComponentList(COMPONENT *comps, int *compNum, CString iniSrcPath,int invisibleCount)
+int BuildComponentList(COMPONENT *comps, CString compString, int& compNum, CString iniSrcPath,int invisibleCount)
 {
-	*compNum = 0;
-	int invNum = *compNum;
+	CString configcompString[50];
+	compNum=0;
+
+	configcompString[0]="XPCOM";
+	configcompString[1]="Navigator";
+	configcompString[2]="Java";
+	configcompString[3]="MailNews";
+	configcompString[4]="Instant Messenger";
+	configcompString[5]="QFA";
+	configcompString[6]="PSM";
+	configcompString[7]="Spell Checker";
+	configcompString[8]="AOL Art";
+	configcompString[9]="Net2Phone";
+	configcompString[10]="Flash";
+	configcompString[11]="Uninstaller";
+	configcompString[12]="AOD";
+	configcompString[13]="RealPlayer";
+	configcompString[14]="US English Profile Defaults";
+	configcompString[15]="HP Printer Plugin";
+	configcompString[16]="Classic Skin";
+	configcompString[17]="En US lang pack";
+	configcompString[18]="US region pack";
+	configcompString[19]=" ";
+
+	int arrayindex=compNum;
+	compString = configcompString[compNum];
+	CString invNum = compString;
 
 	// Get all the component info from each component section
 	CString component;
@@ -31,7 +57,9 @@ int BuildComponentList(COMPONENT *comps, int *compNum, CString iniSrcPath,int in
 	char name[MAX_SIZE];
 	char desc[MAX_SIZE];
 	char attr[MAX_SIZE];
-	component.Format("Component%d", *compNum);
+	
+	component.Format("Component %s", compString);
+
 	GetPrivateProfileString(component, "Archive", "", archive, MAX_SIZE, iniSrcPath);
 	while (*archive)
 	{
@@ -42,30 +70,31 @@ int BuildComponentList(COMPONENT *comps, int *compNum, CString iniSrcPath,int in
 		GetPrivateProfileString(component, "Attributes", "", 
 			attr, MAX_SIZE, iniSrcPath);
 
-		comps[*compNum].archive  = CString(archive);
-		comps[*compNum].compname = component;
-		comps[*compNum].name 	 = CString(name);
-		comps[*compNum].desc 	 = CString(desc);
-		comps[*compNum].selected = (strstr(attr, "SELECTED") != NULL);
-		comps[*compNum].invisible = (strstr(attr, "INVISIBLE") != NULL);
-		comps[*compNum].launchapp = (strstr(attr, "LAUNCHAPP") != NULL);
-		comps[*compNum].additional = (strstr(attr, "ADDITIONAL") != NULL);
-
+		comps[compNum].archive  = CString(archive);
+		comps[compNum].compname = component;
+		comps[compNum].name 	 = CString(name);
+		comps[compNum].desc 	 = CString(desc);
+		comps[compNum].selected = (strstr(attr, "SELECTED") != NULL);
+		comps[compNum].invisible = (strstr(attr, "INVISIBLE") != NULL);
+		comps[compNum].launchapp = (strstr(attr, "LAUNCHAPP") != NULL);
+		comps[compNum].additional = (strstr(attr, "ADDITIONAL") != NULL);
 		
-		if (!(comps[*compNum].selected && comps[*compNum].invisible && invisibleCount))
+		if (!(comps[compNum].selected && comps[compNum].invisible && invisibleCount))
 		{
-			(*compNum)++;
-			invNum++;
-			component.Format("Component%d", invNum);
+			compNum++;
+			compString = configcompString[compNum];
+			arrayindex++;
+			invNum = configcompString[arrayindex];
+			component.Format("Component %s", invNum);
 		}
 		else
 		{
-			invNum++;
-			component.Format("Component%d", invNum);
+			arrayindex++;
+			invNum=configcompString[arrayindex];
+			component.Format("Component %s", invNum);
 		}
 		GetPrivateProfileString(component, "Archive", "", archive, MAX_SIZE, iniSrcPath);
 	}
-
 
 	return TRUE;
 }
@@ -84,8 +113,8 @@ int GenerateComponentList(CString parms, WIDGET *curWidget)
 		nscpxpiPath = rootPath + "NSCPXPI";
 	iniSrcPath		= nscpxpiPath + "\\config.ini";
 
-	BuildComponentList(Components, &numComponents, iniSrcPath, 1);
-
+	BuildComponentList(Components, compString, numComponents, iniSrcPath, 1);
+	
 	int i;
 	CString WidgetValue("");
 	for (i=0; i<numComponents; i++)

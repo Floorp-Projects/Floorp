@@ -43,6 +43,7 @@ BOOL prefDoesntExist = TRUE;
 COMPONENT Components[100];
 int		numComponents;
 int		componentOrder;
+CString	compString=" ";
 
 int findXPI(CString xpiname, CString filename)
 {
@@ -541,8 +542,7 @@ void init_components()
 {
 	int i;
 	WIDGET *w = findWidget("SelectedComponents");
-	BuildComponentList(Components, &numComponents, iniSrcPath,0);
-
+	BuildComponentList(Components, compString, numComponents, iniSrcPath,0);
 	// Turn off components that aren't selected
 	for (i=0; i<numComponents; i++)
 	{
@@ -669,7 +669,7 @@ void AddThirdParty()
 
 	if ((firstSix.CompareNoCase("Please") != 0) && !(tpCompPath1.IsEmpty()))
 	{
-		componentName.Format("Component%d", (numComponents));
+		componentName.Format("Component %s", (compString));
 		cName.Format("C%d", componentOrder);
 		componentOrder++;
 
@@ -685,7 +685,7 @@ void AddThirdParty()
 	firstSix = tpCompPath2.Left(6);
 	if ((firstSix.CompareNoCase("Please") != 0) && !(tpCompPath2.IsEmpty()))
 	{
-		componentName.Format("Component%d", (numComponents));
+		componentName.Format("Component %s", (compString));
 		cName.Format("C%d", componentOrder);
 
 		WritePrivateProfileString("Setup Type0", cName, componentName, iniDstPath);
