@@ -328,6 +328,43 @@ jsdStackFrame::GetPc(PRUint32 *_rval)
 }
 
 NS_IMETHODIMP
+jsdStackFrame::GetLine(PRUint32 *_rval)
+{
+    if (!_rval)
+        return NS_ERROR_NULL_POINTER;
+    
+    JSDScript *script = JSD_GetScriptForStackFrame (mCx, mThreadState,
+                                                    mStackFrameInfo);
+    jsuword pc = JSD_GetPCForStackFrame (mCx, mThreadState, mStackFrameInfo);
+    *_rval = JSD_GetClosestLine (mCx, script, pc);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdStackFrame::PcToLine(PRUint32 aPc, PRUint32 *_rval)
+{
+    if (!_rval)
+        return NS_ERROR_NULL_POINTER;
+    
+    JSDScript *script = JSD_GetScriptForStackFrame (mCx, mThreadState,
+                                                    mStackFrameInfo);
+    *_rval = JSD_GetClosestLine (mCx, script, aPc);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdStackFrame::LineToPc(PRUint32 aLine, PRUint32 *_rval)
+{
+    if (!_rval)
+        return NS_ERROR_NULL_POINTER;
+    
+    JSDScript *script = JSD_GetScriptForStackFrame (mCx, mThreadState,
+                                                    mStackFrameInfo);
+    *_rval = JSD_GetClosestPC (mCx, script, aLine);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 jsdStackFrame::GetCallee(jsdIValue **_rval)
 {
     if (!_rval)
@@ -492,16 +529,6 @@ jsdValue::GetJSDValue (JSDValue **_rval)
 }
 
 NS_IMETHODIMP
-jsdValue::GetIsFunction (PRBool *_rval)
-{
-    if (!_rval)
-        return NS_ERROR_NULL_POINTER;
-    
-    *_rval = JSD_IsValueFunction (mCx, mValue);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 jsdValue::GetIsNative (PRBool *_rval)
 {
     if (!_rval)
@@ -553,7 +580,7 @@ jsdValue::GetJsType (PRUint32 *_rval)
     else if (JSD_IsValueVoid(mCx, mValue))
         *_rval = TYPE_VOID;
     else
-        return NS_ERROR_FAILURE;    
+        *_rval = TYPE_UNKNOWN;    
 
     return NS_OK;
 }
@@ -665,6 +692,16 @@ jsdValue::GetStringValue(char **_rval)
     
     JSString *jstr_val = JSD_GetValueString(mCx, mValue);
     *_rval = nsCString(JS_GetStringBytes(jstr_val)).ToNewCString();
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdValue::GetPropertyCount (PRUint32 *_rval)
+{
+    if (!_rval)
+        return NS_ERROR_NULL_POINTER;
+
+    *_rval = JSD_GetCountOfProperties (mCx, mValue);
     return NS_OK;
 }
 
