@@ -41,7 +41,7 @@ class nsObserverListEnumerator : public nsIBidirectionalEnumerator
 	{
 		public:
 			nsObserverListEnumerator( nsISupportsArray* );
-
+			virtual ~nsObserverListEnumerator() {};
 			NS_DECL_ISUPPORTS
 			NS_DECL_NSIENUMERATOR
 			NS_DECL_NSIBIDIRECTIONALENUMERATOR
