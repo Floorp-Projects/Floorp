@@ -52,6 +52,7 @@ var gWindowManager = null;
 
 function HistoryWindowInit()
 {
+    gHistoryStatus =    document.getElementById("statusbar-display");
     HistoryCommonInit();
     gHistoryTree.focus();
 }
@@ -61,8 +62,7 @@ function HistoryCommonInit()
     gHistoryTree =  document.getElementById("historyTree");
     gDeleteByHostname = document.getElementById("menu_deleteByHostname");
     gDeleteByDomain =   document.getElementById("menu_deleteByDomain");
-    gHistoryBundle =    document.getElementById("historyBundle");
-    gHistoryStatus =    document.getElementById("statusbar-display");
+    gHistoryBundle =    document.getElementById("historyBundle");    
     gSearchBox = document.getElementById("search-box");
 
     var treeController = new nsTreeController(gHistoryTree);
@@ -148,10 +148,12 @@ function historyOnSelect()
         if (match && match.length>1)
             gLastHostname = match[3];
       
-        gHistoryStatus.label = url;
+        if (gHistoryStatus)
+            gHistoryStatus.label = url;
     }
     else {
-        gHistoryStatus.label = "";
+        if (gHistoryStatus)
+            gHistoryStatus.label = "";
     }
 
     if (gLastHostname) {
