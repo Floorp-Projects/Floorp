@@ -67,6 +67,7 @@ nsCacheEntry::Fetched()
 {
     mLastFetched = SecondsFromPRTime(PR_Now());
     ++mFetchCount;
+    MarkEntryDirty();
 }
 
 
