@@ -38,12 +38,6 @@ Rights Reserved.
   xmlns:nc="http://home.netscape.com/NC-rdf#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<!-- Context menu -->
-<script type="application/x-javascript">
-  // Global variable that holds the nsContextMenu instance.
-  var gMessagePaneContextMenu = null;
-</script>
-
 <script src="chrome://messenger/content/mailCommands.js"/>
 <script src="chrome://messenger/content/mailWindowOverlay.js"/>
 <script src="chrome://messenger/content/commandglue.js"/>
@@ -554,7 +548,7 @@ Rights Reserved.
         <menuitem id="context-openlink"
                   label="&openLinkCmd.label;"
                   accesskey="&openLinkCmd.accesskey;"
-                  oncommand="gMessagePaneContextMenu.openLink();"/>
+                  oncommand="gContextMenu.openLink();"/>
         <menuseparator id="messagePaneContext-sep-link"/>
         <menuitem id="context-selectall"
                   label="&selectAllCmd.label;"
@@ -741,7 +735,7 @@ Rights Reserved.
         <menuitem id="context-viewimage"
                   label="&viewImageCmd.label;"
                   accesskey="&viewImageCmd.accesskey;"
-                  oncommand="gMessagePaneContextMenu.viewImage();"/>
+                  oncommand="gContextMenu.viewImage();"/>
         <menuseparator id="messagePaneContext-sep-image"/>
         <menuitem id="context-copylink"
                   label="&copyLinkCmd.label;"
@@ -754,20 +748,20 @@ Rights Reserved.
         <menuitem id="context-copyemail"
                   label="&copyEmailCmd.label;"
                   accesskey="&copyEmailCmd.accesskey;"
-                  oncommand="gMessagePaneContextMenu.copyEmail();"/>
+                  oncommand="gContextMenu.copyEmail();"/>
         <menuseparator id="messagePaneContext-sep-copy"/>
         <menuitem id="context-savelink"
                   label="&saveLinkCmd.label;"
                   accesskey="&saveLinkCmd.accesskey;"
-                  oncommand="gMessagePaneContextMenu.saveLink();"/>
+                  oncommand="gContextMenu.saveLink();"/>
         <menuitem id="context-saveimage"
                   accesskey="&saveImageCmd.accesskey;"
-                  oncommand="gMessagePaneContextMenu.saveImage();"/>
+                  oncommand="gContextMenu.saveImage();"/>
         <menuitem id="context-bookmarklink"
                   label="&bookmarkLinkCmd.label;"
                   accesskey="&bookmarkLinkCmd.accesskey;"
-                  oncommand="BookmarksUtils.addBookmark(gMessagePaneContextMenu.linkURL(),
-                                                        gMessagePaneContextMenu.linkText());"/>
+                  oncommand="BookmarksUtils.addBookmark(gContextMenu.linkURL(),
+                                                        gContextMenu.linkText());"/>
 
 </popup>
 
