@@ -94,7 +94,7 @@ endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk)
 CPPSRCS += nsNativeAppSupportGtk.cpp
-LIBS += -lgdk
+LIBS += $(MOZ_GTK_LDFLAGS) -lgdk -lglib -lX11 
 endif
 
 include $(topsrcdir)/config/rules.mk
