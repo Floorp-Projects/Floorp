@@ -29,7 +29,9 @@ IGNORE_MANIFEST=1
 # Make sure we have MOZILLA_CLIENT defined so we get the
 #   proper JS includes
 #
-LCFLAGS		= $(LCFLAGS)  -DMOZILLA_CLIENT
+LCFLAGS		= $(LCFLAGS)  -DMOZILLA_CLIENT -DMOZ_BRPROF
+
+LCFLAGS = $(LCFLAGS)
 
 !ifdef BUILD_DEBUG_GC
 LCFLAGS		= $(LCFLAGS) -DDEBUG_GC
@@ -43,11 +45,18 @@ OBJS=   \
 	.\$(OBJDIR)\mkaccess.obj		\
 	$(NULL)
 
+CPP_OBJS= \
+        .\$(OBJDIR)\nsGetBrowsingProfile.obj    \
+        $(NULL)
+
 CSRCS =	\
 	mkhttp.c	\
 	mkaccess.c	\
 	$(NULL)
 
+CPPSRCS = \
+        nsGetBrowsingProfile.cpp        \
+        $(NULL)
 
 LIBRARY_NAME=httpurl 
 MODULE=httpurl 
@@ -55,7 +64,6 @@ DEPTH=..\..\..
 
 LOCAL_INCLUDES=-I. -I$(DEPTH)/dist/public/zlib  -I$(DEPTH)/dist/public/parse
 INCLUDES = $(LOCAL_INCLUDES)
-
 
 EXTRA_LIBS=
 
@@ -78,6 +86,9 @@ LINCS= \
 !ifdef MOZ_SMOOTH_PROGRESS
     -I$(PUBLIC)\progress        \
 !endif
+    -I$(PUBLIC)\xpcom   \
+    -I$(PUBLIC)\brprof  \
+    -I$(PUBLIC)\raptor  \
     $(NULL)
 #!endif
 
