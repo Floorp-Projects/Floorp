@@ -1317,8 +1317,12 @@ Boolean MRJContext::loadApplet()
             }
             cfref<CFStringRef> pathRef = CFStringCreateWithCString(NULL, path, kCFStringEncodingUTF8);
             delete[] path;
-            if (pathRef)
-                documentBase = CFURLCreateWithFileSystemPath(NULL, pathRef, kCFURLHFSPathStyle, false);
+            if (pathRef) {
+                // unescape the path in case there are spaces in it
+                cfref<CFStringRef> unescPathRef = CFURLCreateStringByReplacingPercentEscapes(NULL, pathRef, CFSTR(""));
+                if (unescPathRef)
+                    documentBase = CFURLCreateWithFileSystemPath(NULL, unescPathRef, kCFURLHFSPathStyle, false);
+            }
         }
     } else {
         documentBase = CFURLCreateWithBytes(NULL, (const UInt8*)mDocumentBase,
