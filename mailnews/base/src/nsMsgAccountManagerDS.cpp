@@ -241,7 +241,8 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
   }
 
   // handle sorting of servers
-  else if ((property == kNC_NameSort) || (property == kNC_FolderTreeNameSort)) {
+  else if ((property == kNC_NameSort) ||
+           (property == kNC_FolderTreeNameSort)) {
     // make sure we're handling a root folder that is a server
     nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(source,&rv);
     if (NS_FAILED(rv))
@@ -262,6 +263,20 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
     
     accountNum += 1000;
     str.Append(accountNum);
+  }
+
+  // GetTargets() stuff - need to return a valid answer so that
+  // twisties will appear
+  else if (property == kNC_Settings) {
+    nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(source,&rv);
+    if (NS_FAILED(rv))
+      return NS_RDF_NO_VALUE;
+    
+    PRBool isServer=PR_FALSE;
+    folder->GetIsServer(&isServer);
+    // no need to localize this!
+    if (isServer)
+      str = "ServerSettings";
   }
   
   if (str!="")

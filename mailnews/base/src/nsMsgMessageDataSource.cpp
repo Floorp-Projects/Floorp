@@ -316,13 +316,8 @@ NS_IMETHODIMP nsMsgMessageDataSource::GetTargets(nsIRDFResource* source,
 	nsCOMPtr<nsIMessage> message(do_QueryInterface(source, &rv));
 	if (NS_SUCCEEDED(rv)) {
 		PRBool showThreads;
-		nsCOMPtr<nsIMessageView> messageView;
-		rv = mWindow->GetMessageView(getter_AddRefs(messageView));
-		if(NS_FAILED(rv)) return rv;
-
-		rv = messageView->GetShowThreads(&showThreads);
-		if(NS_FAILED(rv)) return rv;
-
+    GetIsThreaded(&showThreads);
+    
 		if(showThreads && property == kNC_MessageChild)
 		{
 			nsCOMPtr<nsIMsgFolder> msgfolder;
@@ -438,11 +433,7 @@ NS_IMETHODIMP nsMsgMessageDataSource::ArcLabelsOut(nsIRDFResource* source,
 	{
 
 		PRBool showThreads;
-		nsCOMPtr<nsIMessageView> messageView;
-		rv = mWindow->GetMessageView(getter_AddRefs(messageView));
-		if(NS_FAILED(rv)) return rv;
-
-		rv = messageView->GetShowThreads(&showThreads);
+    rv = GetIsThreaded(&showThreads);
 		if(NS_FAILED(rv)) return rv;
 
 		if(showThreads)
@@ -660,7 +651,9 @@ nsMsgMessageDataSource::createMessageNode(nsIMessage *message,
 		return createMessageTotalNode(message, target);
 	else if ((kNC_Unread == property))
 		return createMessageUnreadNode(message, target);
-
+  else if ((kNC_MessageChild == property))
+    return createMessageMessageChildNode(message, target);
+  
 	return NS_RDF_NO_VALUE;
 }
 
@@ -907,12 +900,7 @@ nsresult nsMsgMessageDataSource::createMessageTotalNode(nsIMessage *message, nsI
 	nsString emptyString("");
 
 	PRBool showThreads;
-	nsCOMPtr<nsIMessageView> messageView;
-	rv = mWindow->GetMessageView(getter_AddRefs(messageView));
-	if(NS_FAILED(rv)) return rv;
-
-	rv = messageView->GetShowThreads(&showThreads);
-	if(NS_FAILED(rv)) return rv;
+  GetIsThreaded(&showThreads);
 
 	if(!showThreads)
 		rv = createNode(emptyString, target, getRDFService());
@@ -955,11 +943,7 @@ nsresult nsMsgMessageDataSource::createMessageUnreadNode(nsIMessage *message, ns
 	nsString emptyString("");
 
 	PRBool showThreads;
-	nsCOMPtr<nsIMessageView> messageView;
-	rv = mWindow->GetMessageView(getter_AddRefs(messageView));
-	if(NS_FAILED(rv)) return rv;
-
-	rv = messageView->GetShowThreads(&showThreads);
+  rv = GetIsThreaded(&showThreads);
 	if(NS_FAILED(rv)) return rv;
 
 	if(!showThreads)
@@ -992,6 +976,39 @@ nsresult nsMsgMessageDataSource::createMessageUnreadNode(nsIMessage *message, ns
 		return rv;
 	else 
 		return NS_RDF_NO_VALUE;
+}
+
+nsresult
+nsMsgMessageDataSource::createMessageMessageChildNode(nsIMessage *message,
+                                                 nsIRDFNode **target)
+{
+  nsresult rv;
+  // this is slow, but for now, call GetTargets and then create
+  // a node out of the first message, if any
+  nsCOMPtr<nsIRDFResource> messageResource(do_QueryInterface(message));
+  nsCOMPtr<nsISimpleEnumerator> messages;
+  rv = GetTargets(messageResource, kNC_MessageChild, PR_TRUE,
+                  getter_AddRefs(messages));
+
+  PRBool hasMessages;
+  messages->HasMoreElements(&hasMessages);
+
+  if (hasMessages)
+    return createNode("has messages", target, getRDFService());
+
+  return NS_RDF_NO_VALUE;
+}
+
+
+nsresult
+nsMsgMessageDataSource::GetIsThreaded(PRBool *threaded)
+{
+  nsresult rv;
+  nsCOMPtr<nsIMessageView> messageView;
+  rv = mWindow->GetMessageView(getter_AddRefs(messageView));
+  if (NS_FAILED(rv)) return rv;
+
+  return messageView->GetShowThreads(threaded);
 }
 
 nsresult nsMsgMessageDataSource::GetMessageFolderAndThread(nsIMessage *message,

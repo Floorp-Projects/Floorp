@@ -109,7 +109,7 @@ public:
 protected:
 
 	nsresult  GetSenderName(nsAutoString& sender, nsAutoString *senderUserName);
-
+  nsresult  GetIsThreaded(PRBool *threaded);
 
 	nsresult createMessageNode(nsIMessage *message, nsIRDFResource *property,
 							 nsIRDFNode **target);
@@ -140,6 +140,7 @@ protected:
 
 	nsresult createMessageUnreadNode(nsIMessage *message, nsIRDFNode **target);
 	nsresult createMessageTotalNode(nsIMessage *message, nsIRDFNode **target);
+  nsresult createMessageMessageChildNode(nsIMessage* message, nsIRDFNode **target);
 	nsresult GetMessageFolderAndThread(nsIMessage *message, nsIMsgFolder **folder,
 										nsIMsgThread **thread);
 	PRBool IsThreadsFirstMessage(nsIMsgThread *thread, nsIMessage *message);
