@@ -3011,7 +3011,7 @@ PRBool    nsDocument::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID
 
         if (manager) {
           nsCOMPtr<nsIScriptContext> scriptContext;
-          nsresult rv = nsLayoutUtils::GetStaticScriptContext(aContext, NS_STATIC_CAST(JSObject*, mScriptObject),
+          nsresult rv = nsLayoutUtils::GetStaticScriptContext(aContext, NS_REINTERPRET_CAST(JSObject*, mScriptObject),
                                                               getter_AddRefs(scriptContext));
           if (NS_SUCCEEDED(rv) && scriptContext) {
             rv = manager->RegisterScriptEventListener(scriptContext, this, atom, theIID);
