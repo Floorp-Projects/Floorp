@@ -41,13 +41,15 @@ class nsVoidArray;
 class TimeVal {
 public:
   TimeVal();
+  TimeVal(const TimeVal& rv);   // copy constructor
   virtual ~TimeVal();
 
   void Set(PRUint32 sec, PRUint32 usec);
 
+  TimeVal& operator+=(PRInt32 msec);
+  
   TimeVal& operator=(const struct timeval &);
 
-  TimeVal operator+(PRUint32 msec) const; // this is a special class.  only add milli secs to it.
   PRBool operator==(const TimeVal &) const;
   PRBool operator==(const struct timeval &) const;
 
