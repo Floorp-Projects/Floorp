@@ -85,9 +85,7 @@ namespace ICodeASM {
         Register asRegister;
         bool asBool;
         ArgumentList *asArgumentList;
-        struct {
-            iter begin, end;
-        } asString;
+        string *asString;
     };
         
     struct StatementNode {
@@ -105,22 +103,26 @@ namespace ICodeASM {
     public:
         void ParseSourceFromString (const string source);
         TokenLocation SeekTokenStart (iter begin, iter end);
+        iter ParseUInt32  (iter begin, iter end, uint32 *rval);
+        iter ParseDouble  (iter begin, iter end, double *rval);
+        iter ParseAlpha (iter begin, iter end, string *rval);
+        iter ParseString  (iter begin, iter end, string *rval);
         iter ParseStatement (iter begin, iter end);
         iter ParseInstruction (uint icodeID, iter start, iter end);
 
-        iter ParseArgumentListOperand (iter start, iter end, AnyOperand *rval);
-        iter ParseBinaryOpOperand (iter start, iter end, AnyOperand *rval);
-        iter ParseBoolOperand (iter start, iter end, AnyOperand *rval);
-        iter ParseDoubleOperand (iter start, iter end, AnyOperand *rval);
-        iter ParseICodeModuleOperand (iter start, iter end, AnyOperand *rval);
-        iter ParseJSClassOperand (iter start, iter end, AnyOperand *rval);
-        iter ParseJSStringOperand (iter start, iter end, AnyOperand *rval);
-        iter ParseJSFunctionOperand (iter start, iter end, AnyOperand *rval);
-        iter ParseJSTypeOperand (iter start, iter end, AnyOperand *rval);
-        iter ParseLabelOperand (iter start, iter end, AnyOperand *rval);
-        iter ParseUInt32Operand (iter start, iter end, AnyOperand *rval);
-        iter ParseRegisterOperand (iter start, iter end, AnyOperand *rval);
-        iter ParseStringAtomOperand (iter start, iter end, AnyOperand *rval);
+        iter ParseArgumentListOperand (iter begin, iter end, AnyOperand *o);
+        iter ParseBinaryOpOperand (iter begin, iter end, AnyOperand *o);
+        iter ParseBoolOperand (iter begin, iter end, AnyOperand *o);
+        iter ParseDoubleOperand (iter begin, iter end, AnyOperand *o);
+        iter ParseICodeModuleOperand (iter begin, iter end, AnyOperand *o);
+        iter ParseJSClassOperand (iter begin, iter end, AnyOperand *o);
+        iter ParseJSStringOperand (iter begin, iter end, AnyOperand *o);
+        iter ParseJSFunctionOperand (iter begin, iter end, AnyOperand *o);
+        iter ParseJSTypeOperand (iter begin, iter end, AnyOperand *o);
+        iter ParseLabelOperand (iter begin, iter end, AnyOperand *o);
+        iter ParseUInt32Operand (iter begin, iter end, AnyOperand *o);
+        iter ParseRegisterOperand (iter begin, iter end, AnyOperand *o);
+        iter ParseStringAtomOperand (iter begin, iter end, AnyOperand *o);
     };
     
 }

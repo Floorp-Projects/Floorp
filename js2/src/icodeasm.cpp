@@ -115,6 +115,173 @@ namespace ICodeASM {
     }
 
     iter
+    ICodeParser::ParseUInt32 (iter begin, iter end, uint32 *rval)
+    {
+        uint32 position = 0;
+        iter curpos;
+        
+      scan_loop:
+        for (curpos = begin; curpos < end; ++curpos) {
+            switch (*curpos)
+            {
+                case '0'...'9':
+                    position++;
+                    break;
+
+                default:
+                    break scan_loop;
+            }
+        }
+
+        curpos = begin;
+        for (; position >= 0; --position)
+            *rval += (*curpos++ - '0') * pow (10, position);
+
+        return curpos;
+    }
+
+    iter
+    ICodeParser::ParseDouble (iter begin, iter end, double *rval)
+    {
+        uint32 integer
+        iter curpos = ParseUInt32 (begin, end, *integer);
+        *rval = static_cast<double>(integer);
+        if (*curpos != '.')
+            return curpos;
+
+        ++curpos;
+        uint32 position = 0;
+        
+      scan_loop:
+        for (curpos = begin; curpos < end; ++curpos) {
+            switch (*curpos)
+            {
+                case '0'...'9':
+                    *rval += (*curpos - '0') * (1 / pow (10, ++position));
+                    break;
+                    
+                default:
+                    break scan_loop;
+            }
+        }
+
+        return curpos;
+    }
+        
+    iter
+    ICodeParser::ParseAlpha (iter begin, iter end, string *rval)
+    {
+        string str = new string();
+        
+      scan_loop:
+        for (curpos = begin; curpos < end; ++curpos) {
+            switch (*curpos)
+            {
+                case 'a'...'z':
+                case 'A'...'Z':
+                case '0'...'9':
+                case '_':
+                    str += *curpos;
+                    break;
+
+                default:
+                    break scan_loop;
+            }
+        }
+
+        rval = str;
+        return curpos;
+    }
+    
+    iter
+    ICodeParser::ParseString (iter begin, iter end, string *rval)
+    {
+        char delim = *begin;
+        bool isTerminated = false;
+        string *str = new string();
+        
+        if (delim != '\'' && delim != '"')
+            ASSERT ("|begin| does not point at a string");
+
+      scan_loop:
+        for (bool isEscaped = false, iter curpos = ++tl.begin; curpos < end;
+             ++curpos) {
+
+            switch (*curpos) {
+                case '\\':
+                    if (isEscaped) {
+                        str += '\\';
+                        isEscaped = false;
+                    } else {
+                        isEscaped = true;
+                    }
+                    break;
+                    
+                case 't':
+                    if (isEscaped) {
+                        str += '\t';
+                        isEscaped = false;
+                    } else {
+                        str += 't';
+                    }
+                    break;
+                    
+                case 'n':
+                    if (isEscaped) {
+                        str += '\n';
+                        isEscaped = false;
+                    } else {
+                        str += 'n';
+                    }
+                    break;
+
+                case 'r':
+                    if (isEscaped) {
+                        str += '\r';
+                        isEscaped = false;
+                    } else {
+                        str += 'r';
+                    }
+                    break;
+
+                case '\n':
+                    if (isEscaped) {
+                        str += '\r';
+                        isEscaped = false;
+                    } else {
+                        /* unescaped newline == unterminated string */
+                        break scan_loop;
+                    }
+                    break;
+                    
+                case delim:
+                    if (isEscaped) {
+                        str += delim;
+                        isEscaped = false;
+                    } else {
+                        ++curpos;
+                        isTerminated = true;
+                        break scan_loop;
+                    }
+                    break;
+
+                default:
+                    isEscaped = false;
+                    str += *curpos;
+            }
+        }
+
+        if (!isTerminated)
+        {
+            delete str;
+            throw new ICodeParseException ("Unterminated string literal.");
+        }
+
+        rval = str;
+        return curpos;
+    }
+    
+    iter
     ICodeParser::ParseStatement (iter begin, iter end)
     {
         TokenLocation tl = SeekTokenStart (begin, end);
@@ -150,7 +317,7 @@ namespace ICodeASM {
         }
         
         if (tl.type == ttLabel) {
-            string label_str(tl.begin, tl.end - 1);  /* ignore the trailing : */
+            string label_str(tl.begin, tl.end - 1); /* ignore the trailing : */
             mLabels[label_str] = mStatementNodes.end();
             return tl.end;
         } else if (tl.type == ttInstruction) {
@@ -192,8 +359,37 @@ namespace ICodeASM {
                 CASE_TYPE(UInt32);
                 CASE_TYPE(Register);
                 CASE_TYPE(StringAtom);
+                default:
+                    break;                    
             }
         }
+
+#       undef CASE_TYPE
+        
+        return curpos;
     }
+
+    iter
+    ICodeParser::ParseArgumentListOperand (iter begin, iter end,
+                                           AnyOperand *rval)
+    {
+        /* XXX this is hard, lets go shopping */
+        ASSERT ("Not Implemented.");
+    }
+
+    iter
+    ICodeParser::ParseBinaryOpOperand (iter begin, iter end,
+                                       AnyOperand *rval)
+    {
+        TokenLocation tl = SeekTokenStart (begin, end);
+
+        if (tl.estimate != teString)
+            throw new ICodeParseException ("Expected BinaryOp as a quoted string.");
+        string *str;
+        end = ParseString (tl.begin, end, str);
+        rval->asString = str;
+        return end;
+    }
+    
 }
 }
