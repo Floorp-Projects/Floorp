@@ -18,6 +18,8 @@
 
 #include <stdio.h>
 #include <assert.h>
+#include <windows.h>
+
 #include "plstr.h"
 
 #include "nsIStreamNotification.h"
