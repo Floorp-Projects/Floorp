@@ -165,13 +165,13 @@
 </keyset>
 <keyset id="editorKeys"/>
 
-<popup id="msgComposeContext">
+<popup id="msgComposeContext" onpopupshowing="updateEditItems();">
   <menuitem label="&undo.label;" accesskey="&undo.accesskey;" command="cmd_undo"/>
   <menuseparator/>
   <menuitem label="&cut.label;" accesskey="&cut.accesskey;" command="cmd_cut"/>
   <menuitem label="&copy.label;" accesskey="&copy.accesskey;" command="cmd_copy"/>
   <menuitem label="&paste.label;" accesskey="&paste.accesskey;" command="cmd_paste"/>
-  <menuitem id="menu_pasteQuote"/>
+  <menuitem label="&pasteQuote.label;" accesskey="&pasteQuote.accesskey;" command="cmd_pasteQuote"/>
   <menuitem label="&delete.label;" accesskey="&delete.accesskey;" command="cmd_delete"/>
   <menuseparator/>
   <menuitem label="&selectAll.label;" accesskey="&selectAll.accesskey;" command="cmd_selectAll"/>
