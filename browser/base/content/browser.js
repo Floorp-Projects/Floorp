@@ -4186,7 +4186,7 @@ nsDefaultEngine.prototype =
    return true;
  }
 
-function openNewTabWith(href, linkNode)
+function openNewTabWith(href, linkNode, event)
 {
   urlSecurityCheck(href, document); 
 
@@ -4199,6 +4199,9 @@ function openNewTabWith(href, linkNode)
     loadInBackground = true;
   }
   
+  if (event && event.shiftKey)
+    loadInBackground = !loadInBackground;
+
   var theTab = getBrowser().addTab(href, getReferrer(document));
   if (!loadInBackground)
     getBrowser().selectedTab = theTab;
@@ -4241,19 +4244,19 @@ function markLinkVisited(href, linkNode)
 function handleLinkClick(event, href, linkNode)
 {
   switch (event.button) {                                   
-    case 0:                                                         // if left button clicked
+    case 0:  
+      if (event.ctrlKey) {
+        openNewTabWith(href, linkNode, event);
+        event.preventBubble();
+        return true;
+      } 
+                                                       // if left button clicked
       if (event.shiftKey) {
         openNewWindowWith(href, linkNode);
         event.preventBubble();
         return true;
       }
-
-      if (event.ctrlKey) {
-        openNewTabWith(href, linkNode);
-        event.preventBubble();
-        return true;
-      } 
-
+      
       if (event.altKey) {
         saveURL(href, linkNode ? gatherTextUnder(linkNode) : "");
         return true;
@@ -4269,7 +4272,7 @@ function handleLinkClick(event, href, linkNode)
         tab = true;
       }
       if (tab)
-        openNewTabWith(href, linkNode);
+        openNewTabWith(href, linkNode, event);
       else
         openNewWindowWith(href, linkNode);
       event.preventBubble();
