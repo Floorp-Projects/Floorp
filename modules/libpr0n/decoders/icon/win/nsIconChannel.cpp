@@ -274,7 +274,7 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBloc
       BITMAPINFO maskInfo = {{sizeof(BITMAPINFOHEADER)}};
       if (GetDIBits(hDC, iconInfo.hbmMask, 0, 0, NULL, &maskInfo, DIB_RGB_COLORS) &&
           maskInfo.bmiHeader.biSizeImage > 0) {
-        PRUint32 colorSize = (((maskInfo.bmiHeader.biWidth + 1) * 3) & ~3) * maskInfo.bmiHeader.biHeight;
+        PRUint32 colorSize = maskInfo.bmiHeader.biWidth * maskInfo.bmiHeader.biHeight * 4;
         PRUint32 iconSize = sizeof(ICONFILEHEADER) + sizeof(ICONENTRY) + sizeof(BITMAPINFOHEADER) + colorSize + maskInfo.bmiHeader.biSizeImage;
         char *buffer = new char[iconSize];
         if (!buffer)
@@ -292,20 +292,22 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBloc
           iconEntry->ieColors = 0;
           iconEntry->ieReserved = 0;
           iconEntry->iePlanes = 1;
-          iconEntry->ieBitCount = 24;
+          iconEntry->ieBitCount = 32;
           iconEntry->ieSizeImage = sizeof(BITMAPINFOHEADER) + colorSize + maskInfo.bmiHeader.biSizeImage;
           iconEntry->ieFileOffset = sizeof(ICONFILEHEADER) + sizeof(ICONENTRY);
           // followed by the bitmap info header and the bits
           LPBITMAPINFO lpBitmapInfo = (LPBITMAPINFO)(buffer + sizeof(ICONFILEHEADER) + sizeof(ICONENTRY));
           memcpy(lpBitmapInfo, &maskInfo.bmiHeader, sizeof(BITMAPINFOHEADER));
           if (GetDIBits(hDC, iconInfo.hbmMask, 0, maskInfo.bmiHeader.biHeight, buffer + sizeof(ICONFILEHEADER) + sizeof(ICONENTRY) + sizeof(BITMAPINFOHEADER) + colorSize, lpBitmapInfo, DIB_RGB_COLORS)) {
-            lpBitmapInfo->bmiHeader.biBitCount = 24;
+            PRUint32 maskSize = lpBitmapInfo->bmiHeader.biSizeImage;
+            lpBitmapInfo->bmiHeader.biBitCount = 32;
             lpBitmapInfo->bmiHeader.biSizeImage = colorSize;
             lpBitmapInfo->bmiHeader.biClrUsed = 0;
             lpBitmapInfo->bmiHeader.biClrImportant = 0;
             if (GetDIBits(hDC, iconInfo.hbmColor, 0, maskInfo.bmiHeader.biHeight, buffer + sizeof(ICONFILEHEADER) + sizeof(ICONENTRY) + sizeof(BITMAPINFOHEADER), lpBitmapInfo, DIB_RGB_COLORS)) {
               // doubling the height because icons have two bitmaps
               lpBitmapInfo->bmiHeader.biHeight *= 2;
+              lpBitmapInfo->bmiHeader.biSizeImage += maskSize;
 
               // Now, create a pipe and stuff our data into it
               nsCOMPtr<nsIInputStream> inStream;
