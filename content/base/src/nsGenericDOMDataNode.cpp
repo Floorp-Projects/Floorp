@@ -590,24 +590,64 @@ nsGenericDOMDataNode::GetDocument() const
   return GetCurrentDoc();
 }
 
-void
-nsGenericDOMDataNode::SetDocument(nsIDocument* aDocument, PRBool aDeep,
-                                  PRBool aCompileEventHandlers)
+nsresult
+nsGenericDOMDataNode::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                                 nsIContent* aBindingParent,
+                                 PRBool aCompileEventHandlers)
 {
+  NS_PRECONDITION(aParent || aDocument, "Must have document if no parent!");
+  // XXXbz XUL elements are confused about their current doc when they're
+  // cloned, so we don't assert if aParent is a XUL element and aDocument is
+  // null, even if aParent->GetCurrentDoc() is non-null
+  //  NS_PRECONDITION(!aParent || aDocument == aParent->GetCurrentDoc(),
+  //                  "aDocument must be current doc of aParent");
+  NS_PRECONDITION(!aParent ||
+                  (aParent->IsContentOfType(eXUL) && aDocument == nsnull) ||
+                  aDocument == aParent->GetCurrentDoc(),
+                  "aDocument must be current doc of aParent");
+  NS_PRECONDITION(!GetCurrentDoc(), "Already have a document.  Unbind first!");
+  // Note that as we recurse into the kids, they'll have a non-null parent.  So
+  // only assert if our parent is _changing_ while we have a parent.
+  NS_PRECONDITION(!GetParent() || aParent == GetParent(),
+                  "Already have a parent.  Unbind first!");
+  // XXXbz GetBindingParent() is broken for us, so can't assert
+  // anything about it yet.
+  //  NS_PRECONDITION(!GetBindingParent() ||
+  //                  aBindingParent == GetBindingParent() ||
+  //                  (aParent &&
+  //                   aParent->GetBindingParent() == GetBindingParent()),
+  //                  "Already have a binding parent.  Unbind first!");
+
+  // XXXbz we don't keep track of the binding parent yet.  We should.
+  
+  // Set parent
+  PtrBits new_bits = NS_REINTERPRET_CAST(PtrBits, aParent);
+  new_bits |= mParentPtrBits & nsIContent::kParentBitMask;
+  mParentPtrBits = new_bits;
+
+  // Set document
   mDocument = aDocument;
   if (mDocument && mText.IsBidi()) {
-    aDocument->SetBidiEnabled(PR_TRUE);
+    mDocument->SetBidiEnabled(PR_TRUE);
   }
+
+  NS_POSTCONDITION(aDocument == GetCurrentDoc(), "Bound to wrong document");
+  NS_POSTCONDITION(aParent == GetParent(), "Bound to wrong parent");
+  // XXXbz GetBindingParent() is broken for us, so can't assert
+  // anything about it yet.
+  //  NS_POSTCONDITION(aBindingParent = GetBindingParent(),
+  //                   "Bound to wrong binding parent");
+
+  return NS_OK;
 }
 
 void
-nsGenericDOMDataNode::SetParent(nsIContent* aParent)
+nsGenericDOMDataNode::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 {
-  PtrBits new_bits = NS_REINTERPRET_CAST(PtrBits, aParent);
-
-  new_bits |= mParentPtrBits & nsIContent::kParentBitMask;
-
-  mParentPtrBits = new_bits;
+  mDocument = nsnull;
+  if (aNullParent) {
+    mParentPtrBits &= nsIContent::kParentBitMask;
+  }
 }
 
 PRBool
@@ -919,12 +959,6 @@ nsGenericDOMDataNode::GetBindingParent() const
 {
   nsIContent* parent = GetParent();
   return parent ? parent->GetBindingParent() : nsnull;
-}
-
-nsresult
-nsGenericDOMDataNode::SetBindingParent(nsIContent* aParent)
-{
-  return NS_OK;
 }
 
 PRBool

@@ -296,12 +296,12 @@ void txMozillaXMLOutput::endElement(const nsAString& aName, const PRInt32 aNsID)
     // up the tree
     // we can't use GetParentNode to check if mCurrentNode is the
     // "non-added node" since that does strange things when we've called
-    // SetDocument manually
+    // BindToTree manually
     if (mCurrentNode == mNonAddedNode) {
         nsCOMPtr<nsIDocument> document = do_QueryInterface(mNonAddedParent);
         if (document && !mRootContent) {
             mRootContent = do_QueryInterface(mCurrentNode);
-            mRootContent->SetDocument(document, PR_FALSE, PR_TRUE);
+            mRootContent->BindToTree(document, nsnull, nsnull, PR_TRUE);
             document->SetRootContent(mRootContent);
         }
         else {
@@ -455,11 +455,6 @@ void txMozillaXMLOutput::startElement(const nsAString& aName,
             ssle->InitStyleLinkElement(nsnull, PR_FALSE);
             ssle->SetEnableUpdates(PR_FALSE);
         }
-
-        nsCOMPtr<nsIContent> cont = do_QueryInterface(element);
-        NS_ASSERTION(cont, "element doesn't implement nsIContent");
-        nsCOMPtr<nsIDocument> doc = do_QueryInterface(mDocument);
-        cont->SetDocument(doc, PR_FALSE, PR_TRUE);
     }
     mParentNode = mCurrentNode;
     mCurrentNode = do_QueryInterface(element);
@@ -498,7 +493,7 @@ void txMozillaXMLOutput::closePrevious(PRInt8 aAction)
 
             mParentNode = wrapper;
             mRootContent = do_QueryInterface(wrapper);
-            mRootContent->SetDocument(document, PR_FALSE, PR_TRUE);
+            mRootContent->BindToTree(document, nsnull, nsnull, PR_TRUE);
             document->SetRootContent(mRootContent);
         }
 
@@ -509,7 +504,7 @@ void txMozillaXMLOutput::closePrevious(PRInt8 aAction)
         else {
             if (document && currentElement && !mRootContent) {
                 mRootContent = do_QueryInterface(mCurrentNode);
-                mRootContent->SetDocument(document, PR_FALSE, PR_TRUE);
+                mRootContent->BindToTree(document, nsnull, nsnull, PR_TRUE);
                 document->SetRootContent(mRootContent);
             }
             else {

@@ -130,8 +130,7 @@ CleanupGeneratedContentIn(nsIContent* aRealContent, nsIFrame* aRoot) {
     while (child) {
       nsIContent* content = child->GetContent();
       if (content && content != aRealContent) {
-        content->SetParent(nsnull);
-        content->SetDocument(nsnull, PR_TRUE, PR_TRUE);
+        content->UnbindFromTree();
       }
       ::CleanupGeneratedContentIn(aRealContent, child);
       child = child->GetNextSibling();

@@ -703,6 +703,8 @@ public:
   // appended to it's parent until the container is closed. By setting
   // pre-append to true, the container will be appended when it is
   // created.
+  // XXXbz why do we really need this "no pre-appending" thing?  Seems
+  // a little weird to me....
   void SetPreAppend(PRBool aPreAppend)
   {
     mPreAppend = aPreAppend;
@@ -1237,7 +1239,6 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
   mStack[mStackPos].mFlags = 0;
   mStack[mStackPos].mNumFlushed = 0;
   mStack[mStackPos].mInsertionPoint = -1;
-  content->SetDocument(mSink->mDocument, PR_FALSE, PR_TRUE);
 
   // Make sure to add base tag info, if needed, before setting any other
   // attributes -- what URI attrs do will depend on the base URI.  Only do this
@@ -1477,9 +1478,6 @@ SinkContext::AddLeaf(const nsIParserNode& aNode)
                                    mSink->mCurrentForm, mSink->mDocShell);
       NS_ENSURE_TRUE(content, NS_ERROR_OUT_OF_MEMORY);
 
-      // Set the content's document
-      content->SetDocument(mSink->mDocument, PR_FALSE, PR_TRUE);
-
       // Make sure to add base tag info, if needed, before setting any other
       // attributes -- what URI attrs do will depend on the base URI.  Only do
       // this for elements that have useful URI attributes.
@@ -1606,8 +1604,6 @@ SinkContext::AddComment(const nsIParserNode& aNode)
   NS_ENSURE_TRUE(domComment, NS_ERROR_UNEXPECTED);
 
   domComment->AppendData(aNode.GetText());
-
-  comment->SetDocument(mSink->mDocument, PR_FALSE, PR_TRUE);
 
   NS_ASSERTION(mStackPos > 0, "stack out of bounds");
   if (mStackPos <= 0) {
@@ -1874,9 +1870,6 @@ SinkContext::FlushText(PRBool* aDidFlush, PRBool aReleaseLast)
       NS_ENSURE_SUCCESS(rv, rv);
 
       mLastTextNode = textContent;
-
-      // Set the content's document
-      mLastTextNode->SetDocument(mSink->mDocument, PR_FALSE, PR_TRUE);
 
       // Set the text in the text node
       mLastTextNode->SetText(mText, mTextLength, PR_FALSE);
@@ -2176,7 +2169,11 @@ HTMLContentSink::Init(nsIDocument* aDoc,
     }
     NS_ADDREF(mRoot);
 
-    mRoot->SetDocument(mDocument, PR_FALSE, PR_TRUE);
+    rv = mRoot->BindToTree(mDocument, nsnull, nsnull, PR_TRUE);
+    if (NS_FAILED(rv)) {
+      mRoot->UnbindFromTree();
+      return rv;
+    }
     mDocument->SetRootContent(mRoot);
   }
 
@@ -3188,7 +3185,6 @@ HTMLContentSink::SetDocumentTitle(const nsAString& aTitle, const nsIParserNode* 
   text->SetText(title, PR_TRUE);
 
   it->AppendChildTo(text, PR_FALSE, PR_FALSE);
-  text->SetDocument(mDocument, PR_FALSE, PR_TRUE);
 
   mHead->AppendChildTo(it, PR_FALSE, PR_FALSE);
 
@@ -3710,9 +3706,6 @@ HTMLContentSink::ProcessAREATag(const nsIParserNode& aNode)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  // Set the content's document
-  area->SetDocument(mDocument, PR_FALSE, PR_TRUE);
-
   // Make sure to add base tag info, if needed, before setting any other
   // attributes -- what URI attrs do will depend on the base URI.  Only do this
   // for elements that have useful URI attributes.
@@ -3844,9 +3837,8 @@ HTMLContentSink::ProcessBASETag(const nsIParserNode& aNode)
 
     element->SetContentID(mDocument->GetAndIncrementContentID());
 
-    // Add in the attributes and add the style content object to the
+    // Add in the attributes and add the base content object to the
     // head container.
-    element->SetDocument(mDocument, PR_FALSE, PR_TRUE);
     result = AddAttributes(aNode, element);
     NS_ENSURE_SUCCESS(result, result);
 
@@ -3904,7 +3896,6 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
 
     // Add in the attributes and add the style content object to the
     // head container.
-    element->SetDocument(mDocument, PR_FALSE, PR_TRUE);
     AddBaseTagInfo(element);
     result = AddAttributes(aNode, element);
     if (NS_FAILED(result)) {
@@ -3991,7 +3982,6 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
 
   // Add in the attributes and add the meta content object to the head
   // container.
-  it->SetDocument(mDocument, PR_FALSE, PR_TRUE);
   AddBaseTagInfo(it);
   rv = AddAttributes(aNode, it);
   if (NS_FAILED(rv)) {
@@ -4180,9 +4170,8 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
 
   element->SetContentID(mDocument->GetAndIncrementContentID());
 
-  // Add in the attributes and add the style content object to the
+  // Add in the attributes and add the script content object to the
   // head container.
-  element->SetDocument(mDocument, PR_FALSE, PR_TRUE);
   AddBaseTagInfo(element);
   rv = AddAttributes(aNode, element);
   if (NS_FAILED(rv)) {
@@ -4214,7 +4203,6 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
     text->SetText(script, PR_TRUE);
 
     element->AppendChildTo(text, PR_FALSE, PR_FALSE);
-    text->SetDocument(mDocument, PR_FALSE, PR_TRUE);
   }
 
   nsCOMPtr<nsIScriptLoader> loader;
@@ -4241,6 +4229,13 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
     mScriptElements.AppendObject(sele);
   }
 
+  // Now flush out tags so that the script will actually be bound to a
+  // document and will evaluate as soon as it's appended.
+  SINK_TRACE(SINK_TRACE_CALLS,
+             ("HTMLContentSink::ProcessSCRIPTTag: flushing tags before "
+              "appending script"));
+  mCurrentContext->FlushTags(PR_FALSE);
+  
   // Insert the child into the content tree. This will evaluate the
   // script as well.
   if (mCurrentContext->mStack[mCurrentContext->mStackPos - 1].mInsertionPoint != -1) {
@@ -4312,7 +4307,6 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
 
   // Add in the attributes and add the style content object to the
   // head container.
-  element->SetDocument(mDocument, PR_FALSE, PR_TRUE);
   AddBaseTagInfo(element);
   rv = AddAttributes(aNode, element);
   if (NS_FAILED(rv)) {

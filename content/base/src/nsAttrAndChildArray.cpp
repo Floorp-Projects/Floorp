@@ -617,7 +617,9 @@ nsAttrAndChildArray::Clear()
   PRUint32 end = slotCount * ATTRSIZE + ChildCount();
   for (i = slotCount * ATTRSIZE; i < end; ++i) {
     nsIContent* child = NS_STATIC_CAST(nsIContent*, mImpl->mBuffer[i]);
-    child->SetParent(nsnull); // XXX is it better to let the owner do this?
+    // making this PR_FALSE so tree teardown doesn't end up being
+    // O(N*D) (number of nodes times average depth of tree).
+    child->UnbindFromTree(PR_FALSE); // XXX is it better to let the owner do this?
     NS_RELEASE(child);
   }
 

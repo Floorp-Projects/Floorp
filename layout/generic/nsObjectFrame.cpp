@@ -1564,9 +1564,13 @@ nsObjectFrame::CreateDefaultFrames(nsPresContext *aPresContext,
   img->SetNativeAnonymous(PR_TRUE);
   text->SetNativeAnonymous(PR_TRUE);
 
-  // Set up the anonymous tree
-  anchor->SetParent(mContent);
-  anchor->SetDocument(doc, PR_TRUE, PR_TRUE);
+  // Set up the anonymous tree.  Note that the binding parent for the anchor is
+  // used to cut off style rules from the page so they won't apply to it.
+  rv = anchor->BindToTree(doc, mContent, anchor, PR_TRUE);
+  if (NS_FAILED(rv)) {
+    anchor->UnbindFromTree();
+    return rv;
+  }
 
   anchor->AppendChildTo(img, PR_FALSE, PR_TRUE);
   anchor->AppendChildTo(text, PR_FALSE, PR_TRUE);

@@ -171,8 +171,11 @@ public:
                                   nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
                                   PRUint32 aFlags,
                                   nsEventStatus* aEventStatus);
-  virtual void SetDocument(nsIDocument* aDocument, PRBool aDeep,
-                           PRBool aCompileEventHandlers);
+  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                              nsIContent* aBindingParent,
+                              PRBool aCompileEventHandlers);
+  virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
+                              PRBool aNullParent = PR_TRUE);
   nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                    const nsAString& aValue, PRBool aNotify)
   {
@@ -614,25 +617,36 @@ nsHTMLFormElement::ParseAttribute(nsIAtom* aAttribute,
   return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
 }
 
-void
-nsHTMLFormElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
-                               PRBool aCompileEventHandlers)
+nsresult
+nsHTMLFormElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                              nsIContent* aBindingParent,
+                              PRBool aCompileEventHandlers)
 {
-  nsCOMPtr<nsIHTMLDocument> oldDocument = do_QueryInterface(GetCurrentDoc());
-  nsGenericHTMLElement::SetDocument(aDocument, aDeep, aCompileEventHandlers);
-  
-  nsCOMPtr<nsIHTMLDocument> newDocument = do_QueryInterface(GetCurrentDoc());
-  if (oldDocument != newDocument) {
-    if (oldDocument) {
-      oldDocument->RemovedForm();
-      ForgetCurrentSubmission();
-    }
-    if (newDocument) {
-      newDocument->AddedForm();
-    }
+  nsresult rv = nsGenericHTMLElement::BindToTree(aDocument, aParent,
+                                                 aBindingParent,
+                                                 aCompileEventHandlers);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIHTMLDocument> htmlDoc(do_QueryInterface(aDocument));
+  if (htmlDoc) {
+    htmlDoc->AddedForm();
   }
+
+  return rv;
 }
 
+void
+nsHTMLFormElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
+{
+  nsCOMPtr<nsIHTMLDocument> oldDocument = do_QueryInterface(GetCurrentDoc());
+
+  nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
+
+  if (oldDocument) {
+    oldDocument->RemovedForm();
+  }     
+  ForgetCurrentSubmission();
+}
 
 nsresult
 nsHTMLFormElement::HandleDOMEvent(nsPresContext* aPresContext,

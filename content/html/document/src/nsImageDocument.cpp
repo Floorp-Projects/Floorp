@@ -587,7 +587,6 @@ nsImageDocument::CreateSyntheticDocument()
   if (!mImageContent) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  mImageContent->SetDocument(this, PR_FALSE, PR_TRUE);
   nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mImageContent);
   NS_ENSURE_TRUE(imageLoader, NS_ERROR_UNEXPECTED);
 

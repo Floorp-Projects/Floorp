@@ -115,46 +115,83 @@ nsXTFElementWrapper::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 //----------------------------------------------------------------------
 // nsIContent methods:
 
-void
-nsXTFElementWrapper::SetDocument(nsIDocument* aDocument, PRBool aDeep,
-                                 PRBool aCompileEventHandlers)
+nsresult
+nsXTFElementWrapper::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                                nsIContent* aBindingParent,
+                                PRBool aCompileEventHandlers)
 {
-  // XXX For some reason we often get 2 SetDocument notifications with
-  // identical aDocument (one when expat encounters the element and
-  // another when the element is appended to its parent). We want to
-  // make sure that we only route notifications if the document has
-  // actually changed.
-  bool docReallyChanged = false;
-  if (aDocument!=GetCurrentDoc()) docReallyChanged = true;
-  
+  // XXXbz making up random order for the notifications... Perhaps
+  // this api should more closely match BindToTree/UnbindFromTree?
+  nsCOMPtr<nsIDOMElement> domParent;
+  if (aParent != GetParent()) {
+    domParent = do_QueryInterface(aParent);
+  }
+
   nsCOMPtr<nsIDOMDocument> domDocument;
-  if (docReallyChanged &&
-      mNotificationMask & (nsIXTFElement::NOTIFY_WILL_CHANGE_DOCUMENT |
-                           nsIXTFElement::NOTIFY_DOCUMENT_CHANGED))
+  if (aDocument &&
+      (mNotificationMask & (nsIXTFElement::NOTIFY_WILL_CHANGE_DOCUMENT |
+                            nsIXTFElement::NOTIFY_DOCUMENT_CHANGED))) {
     domDocument = do_QueryInterface(aDocument);
-  
-  if (docReallyChanged &&
-      (mNotificationMask & nsIXTFElement::NOTIFY_WILL_CHANGE_DOCUMENT))
+  }
+
+  if (domDocument &&
+      (mNotificationMask & (nsIXTFElement::NOTIFY_WILL_CHANGE_DOCUMENT))) {
     GetXTFElement()->WillChangeDocument(domDocument);
-  nsXTFElementWrapperBase::SetDocument(aDocument, aDeep, aCompileEventHandlers);
-  if (docReallyChanged &&
-      (mNotificationMask & nsIXTFElement::NOTIFY_DOCUMENT_CHANGED))
+  }
+
+  if (domParent &&
+      (mNotificationMask & (nsIXTFElement::NOTIFY_WILL_CHANGE_PARENT))) {
+    GetXTFElement()->WillChangeParent(domParent);
+  }
+
+  nsresult rv = nsXTFElementWrapperBase::BindToTree(aDocument, aParent,
+                                                    aBindingParent,
+                                                    aCompileEventHandlers);
+
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (domDocument &&
+      (mNotificationMask & (nsIXTFElement::NOTIFY_DOCUMENT_CHANGED))) {
     GetXTFElement()->DocumentChanged(domDocument);
+  }
+
+  if (domParent &&
+      (mNotificationMask & (nsIXTFElement::NOTIFY_PARENT_CHANGED))) {
+    GetXTFElement()->ParentChanged(domParent);
+  }
+
+  return rv;  
 }
 
 void
-nsXTFElementWrapper::SetParent(nsIContent* aParent)
+nsXTFElementWrapper::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 {
-  nsCOMPtr<nsIDOMElement> domParent;
-  if (mNotificationMask & (nsIXTFElement::NOTIFY_WILL_CHANGE_PARENT |
-                           nsIXTFElement::NOTIFY_PARENT_CHANGED))
-    domParent = do_QueryInterface(aParent);
-  
-  if (mNotificationMask & nsIXTFElement::NOTIFY_WILL_CHANGE_PARENT)
-    GetXTFElement()->WillChangeParent(domParent);
-  nsXTFElementWrapperBase::SetParent(aParent);
-  if (mNotificationMask & nsIXTFElement::NOTIFY_PARENT_CHANGED)
-    GetXTFElement()->ParentChanged(domParent);
+  // XXXbz making up random order for the notifications... Perhaps
+  // this api should more closely match BindToTree/UnbindFromTree?
+  PRBool inDoc = IsInDoc();
+  if (inDoc &&
+      (mNotificationMask & nsIXTFElement::NOTIFY_WILL_CHANGE_DOCUMENT)) {
+    GetXTFElement()->WillChangeDocument(nsnull);
+  }
+
+  PRBool parentChanged = aNullParent && GetParent();
+
+  if (parentChanged &&
+      (mNotificationMask & nsIXTFElement::NOTIFY_WILL_CHANGE_PARENT)) {
+    GetXTFElement()->WillChangeParent(nsnull);
+  }
+
+  nsXTFElementWrapperBase::UnbindFromTree(aDeep, aNullParent);
+
+  if (parentChanged &&
+      (mNotificationMask & nsIXTFElement::NOTIFY_PARENT_CHANGED)) {
+    GetXTFElement()->ParentChanged(nsnull);
+  }
+
+  if (inDoc &&
+      (mNotificationMask & nsIXTFElement::NOTIFY_DOCUMENT_CHANGED)) {
+    GetXTFElement()->DocumentChanged(nsnull);
+  }
 }
 
 nsresult

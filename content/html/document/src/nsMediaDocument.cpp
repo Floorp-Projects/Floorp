@@ -242,7 +242,11 @@ nsMediaDocument::CreateSyntheticDocument()
   if (!root) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  root->SetDocument(this, PR_FALSE, PR_TRUE);
+  rv = root->BindToTree(this, nsnull, nsnull, PR_TRUE);
+  if (NS_FAILED(rv)) {
+    root->UnbindFromTree();
+    return rv;
+  }
   SetRootContent(root);
 
   rv = mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::body, nsnull,
@@ -254,7 +258,6 @@ nsMediaDocument::CreateSyntheticDocument()
   if (!body) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  body->SetDocument(this, PR_FALSE, PR_TRUE);
   mBodyContent = do_QueryInterface(body);
 
   root->AppendChildTo(body, PR_FALSE, PR_FALSE);

@@ -98,8 +98,11 @@ public:
   NS_IMETHOD SetLinkState(nsLinkState aState);
   NS_IMETHOD GetHrefURI(nsIURI** aURI);
 
-  virtual void SetDocument(nsIDocument* aDocument, PRBool aDeep,
-                           PRBool aCompileEventHandlers);
+  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                              nsIContent* aBindingParent,
+                              PRBool aCompileEventHandlers);
+  virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
+                              PRBool aNullParent = PR_TRUE);
   virtual void SetFocus(nsPresContext* aPresContext);
   virtual PRBool IsFocusable(PRBool *aTabIndex = nsnull);
 
@@ -168,24 +171,31 @@ NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Type, type)
 NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, AccessKey, accesskey)
 
 
-void
-nsHTMLAnchorElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
-                                 PRBool aCompileEventHandlers)
+nsresult
+nsHTMLAnchorElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                                nsIContent* aBindingParent,
+                                PRBool aCompileEventHandlers)
 {
-  nsIDocument *document = GetCurrentDoc();
-  PRBool documentChanging = (aDocument != document);
-  
-  // Unregister the access key for the old document.
-  if (documentChanging && document) {
+  nsresult rv = nsGenericHTMLElement::BindToTree(aDocument, aParent,
+                                                 aBindingParent,
+                                                 aCompileEventHandlers);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (aDocument) {
+    RegUnRegAccessKey(PR_TRUE);
+  }
+
+  return rv;
+}
+
+void
+nsHTMLAnchorElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
+{
+  if (IsInDoc()) {
     RegUnRegAccessKey(PR_FALSE);
   }
 
-  nsGenericHTMLElement::SetDocument(aDocument, aDeep, aCompileEventHandlers);
-
-  // Register the access key for the new document.
-  if (documentChanging && aDocument) {
-    RegUnRegAccessKey(PR_TRUE);
-  }
+  nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
 }
 
 NS_IMETHODIMP
@@ -245,7 +255,6 @@ nsHTMLAnchorElement::IsFocusable(PRInt32 *aTabIndex)
     return PR_FALSE;
   }
 
-  PRBool isFocusable = PR_FALSE;
   if (!HasAttr(kNameSpaceID_None, nsHTMLAtoms::tabindex)) {
     // check whether we're actually a link
     nsCOMPtr<nsIURI> linkURI = nsContentUtils::GetLinkURI(this);

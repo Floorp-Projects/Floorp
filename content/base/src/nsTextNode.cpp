@@ -117,13 +117,12 @@ public:
   virtual ~nsAttributeTextNode() {
     DetachListener();
   }
-  
-  virtual void SetParent(nsIContent* aParent) {
-    if (!aParent) {
-      DetachListener();
-    }
-    nsTextNode::SetParent(aParent);
-  }
+
+  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                              nsIContent* aBindingParent,
+                              PRBool aCompileEventHandlers);
+  virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
+                              PRBool aNullParent = PR_TRUE);
 
   nsRefPtr<nsAttrChangeListener> mListener;  // our listener
 private:
@@ -305,10 +304,9 @@ nsAttributeTextNode::nsAttrChangeListener::HandleEvent(nsIDOMEvent* aEvent)
 }
 
 nsresult
-NS_NewAttributeContent(nsIContent* aContent, PRInt32 aNameSpaceID,
-                       nsIAtom* aAttrName, nsIContent** aResult)
+NS_NewAttributeContent(PRInt32 aNameSpaceID, nsIAtom* aAttrName,
+                       nsIContent** aResult)
 {
-  NS_PRECONDITION(aContent, "Must have parent content");
   NS_PRECONDITION(aAttrName, "Must have an attr name");
   NS_PRECONDITION(aNameSpaceID != kNameSpaceID_Unknown, "Must know namespace");
   
@@ -317,29 +315,55 @@ NS_NewAttributeContent(nsIContent* aContent, PRInt32 aNameSpaceID,
   nsRefPtr<nsAttributeTextNode> textNode = new nsAttributeTextNode();
   NS_ENSURE_TRUE(textNode, NS_ERROR_OUT_OF_MEMORY);
 
-  nsCOMPtr<nsIDOMEventTarget> eventTarget(do_QueryInterface(aContent));
-  NS_ENSURE_TRUE(eventTarget, NS_ERROR_UNEXPECTED);
-  
-  nsRefPtr<nsAttributeTextNode::nsAttrChangeListener> listener =
+  textNode->mListener =
     new nsAttributeTextNode::nsAttrChangeListener(aNameSpaceID,
                                                   aAttrName,
                                                   textNode);
-  NS_ENSURE_TRUE(listener, NS_ERROR_OUT_OF_MEMORY);
-
-  nsresult rv = eventTarget->AddEventListener(NS_LITERAL_STRING("DOMAttrModified"),
-                                              listener,
-                                              PR_FALSE);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsAutoString attrValue;
-  aContent->GetAttr(aNameSpaceID, aAttrName, attrValue);
-  textNode->SetData(attrValue);
-
-  textNode->SetParent(aContent);
-  textNode->mListener = listener;  // Now textNode going away will detach the listener automatically.
+  NS_ENSURE_TRUE(textNode->mListener, NS_ERROR_OUT_OF_MEMORY);
 
   NS_ADDREF(*aResult = textNode);
   return NS_OK;
+}
+
+nsresult
+nsAttributeTextNode::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                                nsIContent* aBindingParent,
+                                PRBool aCompileEventHandlers)
+{
+  NS_PRECONDITION(aParent, "This node can't be a child of the document");
+
+  nsresult rv = nsTextNode::BindToTree(aDocument, aParent,
+                                       aBindingParent, aCompileEventHandlers);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  if (mListener) {
+    // Attach it to the new parent
+    
+    nsCOMPtr<nsIDOMEventTarget> eventTarget(do_QueryInterface(aParent));
+    NS_ENSURE_TRUE(eventTarget, NS_ERROR_UNEXPECTED);
+  
+    rv = eventTarget->AddEventListener(NS_LITERAL_STRING("DOMAttrModified"),
+                                       mListener,
+                                       PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsAutoString attrValue;
+    aParent->GetAttr(mListener->mNameSpaceID, mListener->mAttrName,
+                     attrValue);
+    SetData(attrValue);
+  }
+
+  return NS_OK;
+}
+
+void
+nsAttributeTextNode::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
+{
+  // Detach the listener while we know who our parent is!
+  if (aNullParent) {
+    DetachListener();
+  }
+  nsTextNode::UnbindFromTree(aDeep, aNullParent);
 }
 
 void
@@ -348,16 +372,16 @@ nsAttributeTextNode::DetachListener()
   if (!mListener)
     return;
 
-  NS_ASSERTION(GetParent(), "How did our parent go away while we still have an observer?");
-
   nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(GetParent()));
+  if (target) {
 #ifdef DEBUG
-  nsresult rv =
+    nsresult rv =
 #endif
-    target->RemoveEventListener(NS_LITERAL_STRING("DOMAttrModified"),
-                                mListener,
-                                PR_FALSE);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "'Leaking' listener for lifetime of this page");
+      target->RemoveEventListener(NS_LITERAL_STRING("DOMAttrModified"),
+                                  mListener,
+                                  PR_FALSE);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "'Leaking' listener for lifetime of this page");
+  }
   mListener->mContent = nsnull;  // Make it forget us
   mListener = nsnull; // Goodbye, listener
 }

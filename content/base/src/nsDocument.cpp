@@ -543,13 +543,15 @@ nsDocument::~nsDocument()
   }
 
   if (mRootContent) {
-    if (mRootContent->GetDocument()) {
+    if (mRootContent->GetCurrentDoc()) {
+      NS_ASSERTION(mRootContent->GetCurrentDoc() == this,
+                   "Unexpected current doc in root content");
       // The root content still has a pointer back to the document,
       // clear the document pointer in all children.
 
       PRInt32 count = mChildren.Count();
       for (indx = 0; indx < count; ++indx) {
-        mChildren[indx]->SetDocument(nsnull, PR_TRUE, PR_FALSE);
+        mChildren[indx]->UnbindFromTree();
       }
     }
   }
@@ -751,7 +753,7 @@ nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup)
   for (i = 0; i < count; i++) {
     nsCOMPtr<nsIContent> content = mChildren[i];
 
-    content->SetDocument(nsnull, PR_TRUE, PR_TRUE);
+    content->UnbindFromTree();
     ContentRemoved(nsnull, content, i);
   }
   mChildren.Clear();
@@ -1837,7 +1839,7 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
     mIsGoingAway = PR_TRUE;
 
     for (indx = 0; indx < count; ++indx) {
-      mChildren[indx]->SetDocument(nsnull, PR_TRUE, PR_TRUE);
+      mChildren[indx]->UnbindFromTree();
     }
 
     // Propagate the out-of-band notification to each PresShell's
@@ -3291,7 +3293,9 @@ nsDocument::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
     }
 
     indx = mChildren.Count();
-    mChildren.AppendObject(content);
+    if (!mChildren.AppendObject(content)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
   }
   else {
     nsCOMPtr<nsIContent> refContent(do_QueryInterface(aRefChild));
@@ -3311,7 +3315,9 @@ nsDocument::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
       return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
     }
 
-    mChildren.InsertObjectAt(content, indx);
+    if (!mChildren.InsertObjectAt(content, indx)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
   }
 
   // If we get here, we've succesfully inserted content into the
@@ -3320,7 +3326,16 @@ nsDocument::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
     mRootContent = content;
   }
 
-  content->SetDocument(this, PR_TRUE, PR_TRUE);
+  rv = content->BindToTree(this, nsnull, nsnull, PR_TRUE);
+  if (NS_FAILED(rv)) {
+    mChildren.RemoveObjectAt(indx);
+    if (mRootContent == content) {
+      mRootContent = nsnull;
+    }
+    content->UnbindFromTree();
+    return rv;
+  }
+  
   ContentInserted(nsnull, content, indx);
 
   NS_ADDREF(*aReturn = aNewChild);
@@ -3371,16 +3386,28 @@ nsDocument::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
     return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
 
-  ContentRemoved(nsnull, refContent, indx);
-  refContent->SetDocument(nsnull, PR_TRUE, PR_TRUE);
+  mChildren.RemoveObjectAt(indx);
 
-  mChildren.ReplaceObjectAt(content, indx);
+  ContentRemoved(nsnull, refContent, indx);
+  refContent->UnbindFromTree();
+
   // This is OK because we checked above.
   if (nodeType == nsIDOMNode::ELEMENT_NODE) {
     mRootContent = content;
   }
 
-  content->SetDocument(this, PR_TRUE, PR_TRUE);
+  mChildren.InsertObjectAt(content, indx);
+  
+  rv = content->BindToTree(this, nsnull, nsnull, PR_TRUE);
+  if (NS_FAILED(rv)) {
+    mChildren.RemoveObjectAt(indx);
+    if (mRootContent == content) {
+      mRootContent = nsnull;
+    }
+    content->UnbindFromTree();
+    return rv;
+  }
+  
   ContentInserted(nsnull, content, indx);
 
   NS_ADDREF(*aReturn = aNewChild);
@@ -3411,7 +3438,7 @@ nsDocument::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
   if (content == mRootContent)
     mRootContent = nsnull;
 
-  content->SetDocument(nsnull, PR_TRUE, PR_TRUE);
+  content->UnbindFromTree();
 
   *aReturn = aOldChild;
   NS_ADDREF(aOldChild);

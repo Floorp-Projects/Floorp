@@ -2573,6 +2573,9 @@ nsXULDocument::PrepareToWalk()
         rv = CreateElementFromPrototype(proto, getter_AddRefs(root));
         if (NS_FAILED(rv)) return rv;
 
+        rv = root->BindToTree(this, nsnull, nsnull, PR_TRUE);
+        if (NS_FAILED(rv)) return rv;
+        
         SetRootContent(root);
 
         // Add the root element to the XUL document's ID-to-element map.
@@ -3544,8 +3547,6 @@ nsXULDocument::CreateElementFromPrototype(nsXULPrototypeElement* aPrototype,
                            aPrototype->mNodeInfo->NamespaceID(),
                            aPrototype->mNodeInfo);
         if (NS_FAILED(rv)) return rv;
-
-        result->SetDocument(this, PR_FALSE, PR_TRUE);
 
         rv = AddAttributes(aPrototype, result);
         if (NS_FAILED(rv)) return rv;

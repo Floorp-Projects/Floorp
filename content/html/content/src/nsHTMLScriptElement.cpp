@@ -346,8 +346,10 @@ public:
   virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,
                            PRBool aNotify);
-  virtual void SetDocument(nsIDocument* aDocument, PRBool aDeep,
-                           PRBool aCompileEventHandlers);
+
+  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                              nsIContent* aBindingParent,
+                              PRBool aCompileEventHandlers);
   virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
                                  PRBool aNotify, PRBool aDeepSetDocument);
   virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify,
@@ -437,14 +439,21 @@ nsHTMLScriptElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   return rv;
 }
 
-void
-nsHTMLScriptElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
-                                 PRBool aCompileEventHandlers)
+nsresult
+nsHTMLScriptElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                                nsIContent* aBindingParent,
+                                PRBool aCompileEventHandlers)
 {
-  nsGenericHTMLElement::SetDocument(aDocument, aDeep, aCompileEventHandlers);
+  nsresult rv = nsGenericHTMLElement::BindToTree(aDocument, aParent,
+                                                 aBindingParent,
+                                                 aCompileEventHandlers);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   if (aDocument) {
     MaybeProcessScript();
   }
+
+  return rv;
 }
 
 nsresult
@@ -639,7 +648,7 @@ nsHTMLScriptElement::GetScriptLineNumber()
 void
 nsHTMLScriptElement::MaybeProcessScript()
 {
-  if (mIsEvaluated || mEvaluating || !IsInDoc() || !GetParent()) {
+  if (mIsEvaluated || mEvaluating || !IsInDoc()) {
     return;
   }
 
