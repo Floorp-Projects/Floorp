@@ -23,6 +23,7 @@
 #include "nsIUrlListenerManager.h"
 #include "nsINetlibURL.h" /* this should be temporary until Network N2 project lands */
 #include "nsFileSpec.h"
+#include "nsIFileSpec.h"
 #include "nsCOMPtr.h"
 
 class nsMailboxUrl : public nsIMailboxUrl, public nsINetlibURL, public nsIMsgUriUrl
@@ -76,6 +77,10 @@ public:
 	NS_IMETHOD SetMessageSize(PRUint32 aMessageSize);
 	NS_IMPL_CLASS_GETSET(MailboxAction, nsMailboxAction, m_mailboxAction);
 
+	// used by save message to disk....
+	NS_IMETHOD SetMessageFile(nsIFileSpec * aFileSpec);
+	NS_IMETHOD GetMessageFile(nsIFileSpec ** aFileSpec);
+
 	// from nsIMsgMailNewsUrl:
 	NS_IMETHOD SetUrlState(PRBool aRunningUrl, nsresult aExitCode);
 	NS_IMETHOD GetUrlState(PRBool * aRunningUrl);
@@ -127,6 +132,9 @@ protected:
 	char		*m_messageID;
 	PRUint32	m_messageSize;
 	nsMsgKey	m_messageKey;
+
+	// used by save message to disk
+	nsCOMPtr<nsIFileSpec> m_messageFileSpec;
 
 	void ReconstructSpec(void);
 	nsresult ParseSearchPart();

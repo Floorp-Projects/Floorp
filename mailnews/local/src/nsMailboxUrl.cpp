@@ -140,6 +140,7 @@ nsMailboxUrl::nsMailboxUrl(nsISupports* aContainer, nsIURLGroup* aGroup)
 	m_messageID = nsnull;
 	m_messageKey = 0;
 	m_messageSize = 0;
+	m_messageFileSpec = nsnull;
 
 	m_runningUrl = PR_FALSE;
 
@@ -153,11 +154,7 @@ nsMailboxUrl::~nsMailboxUrl()
     NS_IF_RELEASE(m_container);
 	PR_FREEIF(m_errorMessage);
 
-	if (m_filePath) 
-	{
-		delete m_filePath;
-        m_filePath = nsnull;
-    }
+	delete m_filePath;
 
 	PR_FREEIF(m_messageID);
     PR_FREEIF(m_spec);
@@ -413,6 +410,22 @@ NS_IMETHODIMP nsMailboxUrl::GetMessageHeader(nsIMsgDBHdr ** aMsgHdr)
 		rv = NS_ERROR_NULL_POINTER;
 
 	return rv;
+}
+
+NS_IMETHODIMP nsMailboxUrl::SetMessageFile(nsIFileSpec * aFileSpec)
+{
+	m_messageFileSpec = dont_QueryInterface(aFileSpec);
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMailboxUrl::GetMessageFile(nsIFileSpec ** aFileSpec)
+{
+	if (aFileSpec)
+	{
+		*aFileSpec = m_messageFileSpec;
+		NS_IF_ADDREF(*aFileSpec);
+	}
+	return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
