@@ -36,6 +36,11 @@
 
 #include "domstubs.idl"
 
+interface nsIDOMNodeIterator;
+interface nsIDOMNodeFilter;
+interface nsIDOMTreeWalker;
+
+
 [scriptable, uuid(13f236c0-47f8-11d5-b6a3-009027446e84)]
 // Introduced in DOM Level 2:
 interface nsIDOMDocumentTraversal : nsISupports {
