@@ -107,9 +107,9 @@ static NS_DEFINE_IID(kIDOMFocusListenerIID, NS_IDOMFOCUSLISTENER_IID);
 //#define NOISY
 const nscoord kSuggestedNotSet = -1;
 
-nsAutoString kTextControl_Wrap_Soft = "SOFT";
-nsAutoString kTextControl_Wrap_Hard = "HARD";
-nsAutoString kTextControl_Wrap_Off  = "OFF";
+#define kTextControl_Wrap_Soft "SOFT"
+#define kTextControl_Wrap_Hard "HARD"
+#define kTextControl_Wrap_Off  "OFF"
 
 
 /************************************** MODULE NOTES ***********************************
@@ -647,7 +647,8 @@ void nsGfxTextControlFrame::GetTextControlFrameState(nsString& aValue)
     nsresult result = GetWrapProperty(wrap);
     if (NS_CONTENT_ATTR_NOT_THERE != result) 
     {
-      if (kTextControl_Wrap_Hard.EqualsIgnoreCase(wrap))
+      nsAutoString wrapHard(kTextControl_Wrap_Hard);
+      if (wrap.EqualsIgnoreCase(wrapHard))
       {
         flags |= nsIDocumentEncoder::OutputFormatted;
       }
@@ -1452,12 +1453,14 @@ nsGfxTextControlFrame::InitializeTextControl(nsIPresShell *aPresShell, nsIDOMDoc
         result = GetWrapProperty(wrap);
         if (NS_CONTENT_ATTR_NOT_THERE != result) 
         {
-          if (kTextControl_Wrap_Off.EqualsIgnoreCase(wrap))
+          nsAutoString wrapOff(kTextControl_Wrap_Off);
+          if (wrap.EqualsIgnoreCase(wrapOff))
           {
             result = mailEditor->SetBodyWrapWidth(-1);
             wrapToContainerWidth = PR_FALSE;
           }
-          if (kTextControl_Wrap_Hard.EqualsIgnoreCase(wrap))
+          nsAutoString wrapHard(kTextControl_Wrap_Hard);
+          if (wrap.EqualsIgnoreCase(wrapHard))
           {
             PRInt32 widthInCharacters = GetWidthInCharacters();
             result = mailEditor->SetBodyWrapWidth(widthInCharacters);

@@ -62,6 +62,7 @@ static PRInt32      gTableRefCount;
 static KeywordNode* gKeywordArray;
 static nsAVLTree*   gKeywordTree;
 static KeywordComparitor* gComparitor;
+static const nsCString* kNullStr;
 
 void
 nsCSSKeywords::AddRefTable(void) 
@@ -83,6 +84,7 @@ nsCSSKeywords::AddRefTable(void)
         }
       }
     }
+    kNullStr = new nsCString();
   }
 }
 
@@ -102,6 +104,7 @@ nsCSSKeywords::ReleaseTable(void)
       delete gComparitor;
       gComparitor = nsnull;
     }
+    delete kNullStr;
   }
 }
 
@@ -131,8 +134,7 @@ nsCSSKeywords::GetStringValue(nsCSSKeyword aKeyword)
     return gKeywordArray[aKeyword].mStr;
   }
   else {
-    static const nsCString kNullStr;
-    return kNullStr;
+    return *kNullStr;
   }
 }
 
