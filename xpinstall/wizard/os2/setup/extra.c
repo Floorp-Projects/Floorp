@@ -3244,7 +3244,7 @@ HRESULT ErrorMsgDiskSpace(ULONGLONG ullDSAvailable, ULONGLONG ullDSRequired, LPS
   if(bCrutialMsg)
   {
     dwDlgType = MB_RETRYCANCEL;
-    if(!GetPrivateProfileString("Messages", "DLG_DISK_SPACE_CHECK_CRUTIAL_MSG", "", szDlgDiskSpaceCheckMsg, sizeof(szDlgDiskSpaceCheckMsg), szFileIniInstall))
+    if(!GetPrivateProfileString("Messages", "DLG_DISK_SPACE_CHECK_CRUCIAL_MSG", "", szDlgDiskSpaceCheckMsg, sizeof(szDlgDiskSpaceCheckMsg), szFileIniInstall))
       exit(1);
   }
   else
@@ -5495,8 +5495,6 @@ HRESULT ParseInstallIni()
   GetPrivateProfileString("General", "TO", "", sgInstallGui.szTo, sizeof(sgInstallGui.szTo), szFileIniInstall);
   GetPrivateProfileString("General", "ACCEPT_", "", sgInstallGui.szAccept_, sizeof(sgInstallGui.szAccept_), szFileIniInstall);
   GetPrivateProfileString("General", "DECLINE_", "", sgInstallGui.szDecline_, sizeof(sgInstallGui.szDecline_), szFileIniInstall);
-  GetPrivateProfileString("General", "PROGRAMFOLDER_", "", sgInstallGui.szProgramFolder_, sizeof(sgInstallGui.szProgramFolder_), szFileIniInstall);
-  GetPrivateProfileString("General", "EXISTINGFOLDERS_", "", sgInstallGui.szExistingFolder_, sizeof(sgInstallGui.szExistingFolder_), szFileIniInstall);
   GetPrivateProfileString("General", "SETUPMESSAGE", "", sgInstallGui.szSetupMessage, sizeof(sgInstallGui.szSetupMessage), szFileIniInstall);
   GetPrivateProfileString("General", "YESRESTART", "", sgInstallGui.szYesRestart, sizeof(sgInstallGui.szYesRestart), szFileIniInstall);
   GetPrivateProfileString("General", "NORESTART", "", sgInstallGui.szNoRestart, sizeof(sgInstallGui.szNoRestart), szFileIniInstall);

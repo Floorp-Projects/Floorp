@@ -1373,7 +1373,7 @@ HRESULT ProcessOS2INI(ULONG ulTiming, char *szSectionPrefix)
   ULONG   ulSize;
 
   ulIndex = 0;
-  BuildNumberedString(ulIndex, szSectionPrefix, "OS2INI", szSection, sizeof(szSection));
+  BuildNumberedString(ulIndex, szSectionPrefix, "OS2 INI", szSection, sizeof(szSection));
   GetPrivateProfileString(szSection, "App", "", szBuf, sizeof(szBuf), szFileIniConfig);
   while(*szBuf != '\0')
   {
