@@ -802,6 +802,9 @@ nsEventStatus nsMenu::MenuConstruct(
   
   gCurrentMenuDepth++;
    
+  // Fire our oncreate handler. If we're told to stop, don't build the menu at all
+  PRBool keepProcessing = OnCreate();
+  
   // Now get the kids. Retrieve our menupopup child.
   nsCOMPtr<nsIDOMNode> menuPopupNode;
   GetMenuPopupElement(getter_AddRefs(menuPopupNode));
@@ -813,9 +816,6 @@ nsEventStatus nsMenu::MenuConstruct(
   menuPopupNode->GetFirstChild(getter_AddRefs(menuitemNode));
 
   unsigned short menuIndex = 0;
-
-  // Fire our oncreate handler. If we're told to stop, don't build the menu at all
-  PRBool keepProcessing = OnCreate();
   if ( keepProcessing )
   {
     while (menuitemNode)
@@ -876,6 +876,9 @@ nsEventStatus nsMenu::HelpMenuConstruct(
 
   gCurrentMenuDepth++;
    
+   // Fire our oncreate handler. If we're told to stop, don't build the menu at all
+  PRBool keepProcessing = OnCreate();
+    
   // Now get the kids. Retrieve our menupopup child.
   nsCOMPtr<nsIDOMNode> menuPopupNode;
   GetMenuPopupElement ( getter_AddRefs(menuPopupNode) );
@@ -887,9 +890,6 @@ nsEventStatus nsMenu::HelpMenuConstruct(
   menuPopupNode->GetFirstChild(getter_AddRefs(menuitemNode));
 
 	unsigned short menuIndex = 0;
-
-  // Fire our oncreate handler. If we're told to stop, don't build the menu at all
-  PRBool keepProcessing = OnCreate();
   if ( keepProcessing ) {
     while (menuitemNode)
     {      
