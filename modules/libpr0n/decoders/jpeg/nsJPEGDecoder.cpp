@@ -49,10 +49,10 @@ PRLogModuleInfo *gJPEGlog = PR_NewLogModule("JPEGDecoder");
 
 
 
-void PR_CALLBACK init_source (j_decompress_ptr jd);
-boolean PR_CALLBACK fill_input_buffer (j_decompress_ptr jd);
-void PR_CALLBACK skip_input_data (j_decompress_ptr jd, long num_bytes);
-void PR_CALLBACK term_source (j_decompress_ptr jd);
+static void PR_CALLBACK init_source (j_decompress_ptr jd);
+static boolean PR_CALLBACK fill_input_buffer (j_decompress_ptr jd);
+static void PR_CALLBACK skip_input_data (j_decompress_ptr jd, long num_bytes);
+static void PR_CALLBACK term_source (j_decompress_ptr jd);
 void PR_CALLBACK my_error_exit (j_common_ptr cinfo);
 
 /* Normal JFIF markers can't have more bytes than this. */

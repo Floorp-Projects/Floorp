@@ -97,7 +97,7 @@ do {gs->state=gif_gather; gs->gather_request_size = (n);                      \
  *   source_length   is the length of the block being added to the 
  *   destination block
  */
-char * 
+static char * 
 il_BACat (char **destination, 
           size_t destination_length, 
           const char *source, 

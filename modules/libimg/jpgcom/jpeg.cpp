@@ -22,7 +22,7 @@
 
 /*
  *    jpeg.c --- Glue code to Independent JPEG Group decoder library
- *    $Id: jpeg.cpp,v 1.27 2001/03/20 05:30:52 cls%seawood.org Exp $
+ *    $Id: jpeg.cpp,v 1.28 2001/05/15 06:18:18 kandrot%netscape.com Exp $
  */
 
 
@@ -180,7 +180,7 @@ il_error_exit (j_common_ptr cinfo)
 }
 
 
-void PR_CALLBACK
+static void PR_CALLBACK
 init_source (j_decompress_ptr jd)
 {
 }
@@ -213,7 +213,7 @@ init_source (j_decompress_ptr jd)
  *  TRUE if additional data is available, FALSE if no data present and
  *   the JPEG library should therefore suspend processing of input stream
  *---------------------------------------------------------------------------*/
-boolean PR_CALLBACK
+static boolean PR_CALLBACK
 fill_input_buffer (j_decompress_ptr jd)
 {
     il_source_mgr *src = (il_source_mgr *)jd->src;
@@ -325,7 +325,7 @@ fill_input_buffer (j_decompress_ptr jd)
     return FALSE;
 }
 
-void PR_CALLBACK
+static void PR_CALLBACK
 skip_input_data (j_decompress_ptr jd, long num_bytes)
 {
     il_source_mgr *src = (il_source_mgr *)jd->src;
@@ -357,7 +357,7 @@ skip_input_data (j_decompress_ptr jd, long num_bytes)
  * Terminate source --- called by jpeg_finish_decompress() after all
  * data has been read to clean up JPEG source manager.
  */
-void PR_CALLBACK
+static void PR_CALLBACK
 term_source (j_decompress_ptr jd)
 {
     /* No work necessary here */
