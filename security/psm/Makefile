@@ -79,5 +79,6 @@ ifeq ($(OS_RELEASE), 5.5.1)
 endif
 endif
 	cd ../nss; gmake nss_RelEng_bld
+	gmake import IMPORTS=i18n/m14 RELEASE_TREE=/h/tortoise/export/share/builds/components
 	gmake
 
