@@ -400,8 +400,8 @@ mime_generate_headers (nsMsgCompFields *fields,
   PR_snprintf(buffer_tail, buffer + size - buffer_tail,
         "%c%02d%02d" CRLF,
         (gmtoffset >= 0 ? '+' : '-'),
-        ((gmtoffset >= 0 ? gmtoffset : -gmtoffset) / 60),
-        ((gmtoffset >= 0 ? gmtoffset : -gmtoffset) % 60));
+        (PR_ABS(gmtoffset) / 60),
+        (PR_ABS(gmtoffset) % 60));
   buffer_tail += PL_strlen (buffer_tail);
 
   if (pFrom && *pFrom) {

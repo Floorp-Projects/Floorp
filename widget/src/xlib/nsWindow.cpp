@@ -50,8 +50,6 @@
 #include "nsIPlatformCharset.h"
 #include "nsIServiceManager.h"
 
-#define ABS(i) ( (i)<0 ? 0-(i) : (i) )
-
 // Variables for grabbing
 PRBool   nsWindow::sIsGrabbing = PR_FALSE;
 nsWindow *nsWindow::sGrabWindow = nsnull;
@@ -679,21 +677,21 @@ NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
  
   if (aDx < 0 || aDy < 0)
   {
-    srcX = mBounds.x + ABS(aDx);
-    srcY = mBounds.y + ABS(aDy);
-    destX = mBounds.x;
-    destY = mBounds.y;
-    width = mBounds.width - ABS(aDx);
-    height = mBounds.height - ABS(aDy);
+    srcX   = mBounds.x + PR_ABS(aDx);
+    srcY   = mBounds.y + PR_ABS(aDy);
+    destX  = mBounds.x;
+    destY  = mBounds.y;
+    width  = mBounds.width  - PR_ABS(aDx);
+    height = mBounds.height - PR_ABS(aDy);
   } 
   else if (aDx > 0 || aDy > 0)
   {
-    srcX = mBounds.x;
-    srcY = mBounds.y;
-    destX = mBounds.x + ABS(aDx);
-    destY = mBounds.y + ABS(aDy);
-    width = mBounds.width - ABS(aDx);
-    height = mBounds.height - ABS(aDy);
+    srcX   = mBounds.x;
+    srcY   = mBounds.y;
+    destX  = mBounds.x + PR_ABS(aDx);
+    destY  = mBounds.y + PR_ABS(aDy);
+    width  = mBounds.width  - PR_ABS(aDx);
+    height = mBounds.height - PR_ABS(aDy);
   }
 
   XCopyArea(mDisplay, mBaseWindow, mBaseWindow, mScrollGC,

@@ -1315,8 +1315,6 @@ nsMathMLChar::SetData(nsIPresContext* aPresContext,
 */
 // -----------------------------------------------------------------------------------
 
-#undef PR_ABS
-#define PR_ABS(x) ((x) < 0 ? -(x) : (x))
 
 // plain TeX settings (TeXbook p.152)
 #define NS_MATHML_DELIMITER_FACTOR      0.901f

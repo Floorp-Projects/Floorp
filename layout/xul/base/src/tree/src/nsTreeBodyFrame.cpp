@@ -1482,7 +1482,7 @@ NS_IMETHODIMP nsOutlinerBodyFrame::RowCountChanged(PRInt32 aIndex, PRInt32 aCoun
   if (aCount == 0 || !mView)
     return NS_OK; // Nothing to do.
 
-  PRInt32 count = aCount > 0 ? aCount : -aCount;
+  PRInt32 count = PR_ABS(aCount);
   PRInt32 rowCount;
   mView->GetRowCount(&rowCount);
 
@@ -2934,7 +2934,7 @@ nsOutlinerBodyFrame::ScrollInternal(PRInt32 aRow)
       mStyleContext->GetStyleData(eStyleStruct_Background);
   PRBool hasBackground = myColor->mBackgroundImage.Length() > 0;
 
-  PRInt32 absDelta = delta > 0 ? delta : -delta;
+  PRInt32 absDelta = PR_ABS(delta);
   if (hasBackground || absDelta*mRowHeight >= mRect.height)
     Invalidate();
   else if (mOutlinerWidget)
