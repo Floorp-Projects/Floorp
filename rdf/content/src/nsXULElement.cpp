@@ -1984,7 +1984,11 @@ nsXULElement::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject)
                     cssDecl->GetPropertyValue(behavior, value);
                     if (!value.IsEmpty()) {
                       // We have a binding that must be installed.
-                      xblService->LoadBindings(NS_STATIC_CAST(nsIStyledContent*, this), value, PR_FALSE);
+                      xblService->LoadBindings(NS_STATIC_CAST(nsIStyledContent*, this), value, PR_FALSE,
+                                               getter_AddRefs(binding));
+                      if (binding) {
+                        binding->ExecuteAttachedHandler();
+                      }
                     }
                   }
                 }

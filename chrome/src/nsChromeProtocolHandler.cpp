@@ -677,6 +677,10 @@ nsChromeProtocolHandler::NewChannel(nsIURI* aURI,
         rv = aURI->Clone(getter_AddRefs(chromeURI));        // don't mangle the original
         if (NS_FAILED(rv)) return rv;
 
+        //nsXPIDLCString oldSpec;
+        //aURI->GetSpec(getter_Copies(oldSpec));
+        //printf("*************************** %s\n", (const char*)oldSpec);
+
         nsXPIDLCString spec;
         rv = reg->ConvertChromeURL(chromeURI, getter_Copies(spec));
         if (NS_FAILED(rv)) return rv;
