@@ -59,6 +59,11 @@
 #include "prefapi.h"	
 #include "xplocale.h"
 
+/* start turning on XPCOM interfaces here.
+ * when they are all turned on, PLEASE remove dead code */
+#define XPCOM_XOVER
+
+
 #ifdef XPCOM_XOVER
 #include "nsIMsgXOVERParser.h"
 #endif
@@ -453,13 +458,13 @@ typedef struct _NewsConData {
 
     /* random pointer for libmsg state */
 #ifdef XPCOM_XOVER
-    nsINetXOVERParser *xover_parser;
+    nsIMsgXOVERParser *xover_parser;
 #else
     void *xover_parse_state;
 #endif
 
 #ifdef XPCOM_NEWSPARSE
-    nsINetNewsArticleList *article_list;
+    nsIMsgNewsArticleList *article_list;
 #else
 	void *newsgroup_parse_state;
 #endif
@@ -873,7 +878,9 @@ net_nntp_send_mode_reader_response (ActiveEntry * ce)
 	/* ignore the response code and continue
 	 */
 #ifdef XPCOM_NEWSHOST
-    if (cd->news_host->GetPushAuth())
+    PRBool pushAuth;
+    nsresult rv = cd->news_host->GetPushAuth(&pushAuth);
+    if (rv && pushAuth);
 #else
 	if (MSG_GetNewsHostPushAuth(cd->host))
 #endif
@@ -2128,7 +2135,7 @@ net_news_password_response(ActiveEntry * ce)
         MK_NNTP_RESPONSE_AUTHINFO_SIMPLE_OK == cd->response_code) 
 	  {
         /* successful login */
-         
+         nsresult rv = NS_OK;
 		/* If we're here because the host demanded authentication before we
 		 * even sent a single command, then jump back to the beginning of everything
 		 */
@@ -2149,7 +2156,7 @@ net_news_password_response(ActiveEntry * ce)
 
 		net_news_last_username_probably_valid = TRUE;
 #ifdef XPCOM_XOVER
-        nsresult = cd->xover_parser->Reset();
+        rv = cd->xover_parser->Reset();
 #else
 		MSG_ResetXOVER( ce->URL_s->msg_pane, &cd->xover_parse_state );
 #endif
@@ -2500,18 +2507,20 @@ PRIVATE int
 net_figure_next_chunk(ActiveEntry *ce)
 {
     NewsConData * cd = (NewsConData *)ce->con_data;
-
+    nsresult rv;
 	char *host_and_port = NET_ParseURL (ce->URL_s->address, GET_HOST_PART);
 
 	if (!host_and_port) return MK_OUT_OF_MEMORY;
 
 	if (cd->first_art > 0) {
 #ifdef XPCOM_NEWSPARSE
+      nsresult rv;
       /* XXX - parse state stored in MSG_Pane cd->pane */
-      nsresult = cd->article_list->AddToKnownArticles(cd->host,
+      rv = cd->article_list->AddToKnownArticles(cd->host,
                                                       cd->group_name,
                                                       cd->first_art,
                                                       cd->last_art);
+      
 #else
 	  ce->status = MSG_AddToKnownArticles(cd->pane, cd->host,
 										 cd->group_name,
@@ -2534,7 +2543,7 @@ net_figure_next_chunk(ActiveEntry *ce)
 
 #ifdef XPCOM_NEWSPARSE
     /* XXX - parse state stored in MSG_Pane cd->pane */
-    nsresult =
+    rv =
       cd->xover_parser->GetRangeOfArtsToDownload(cd->host,
                                                  cd->group_name,
                                                  cd->first_possible_art,
@@ -2544,7 +2553,7 @@ net_figure_next_chunk(ActiveEntry *ce)
                                                  &(cd->last_art));
 #else
 	ce->status = MSG_GetRangeOfArtsToDownload(cd->pane,
-											 &cd->xover_parse_state,
+											 (void **)&cd->xover_parser,
 											 cd->host,
 											 cd->group_name,
 											 cd->first_possible_art,
@@ -2571,11 +2580,13 @@ net_figure_next_chunk(ActiveEntry *ce)
 
 	cd->article_num = cd->first_art;
 #ifdef XPCOM_XOVER
-    nsresult= NS_NewMsgXOVERParser(&cd->xover_parser,
+    rv = NS_NewMsgXOVERParser(&cd->xover_parser,
                                    cd->host, cd->group_name,
                                    cd->first_art, cd->last_art,
                                    cd->first_possible_art,
                                    cd->last_possible_art);
+    /* convert nsresult->status */
+    ce->status = !NS_SUCCEEDED(rv);
 #else    
 	ce->status = MSG_InitXOVER (cd->pane,
 							   cd->host, cd->group_name,
@@ -2669,6 +2680,7 @@ net_read_xover (ActiveEntry *ce)
 {
     NewsConData * cd = (NewsConData *)ce->con_data;
     char *line;
+    nsresult rv;
 
     ce->status = NET_BufferedReadLine(ce->socket, &line, &cd->data_buf,
 									 &cd->data_buf_size,
@@ -2718,7 +2730,8 @@ net_read_xover (ActiveEntry *ce)
 	  }
 
 #ifdef XPCOM_XOVER
-    nsresult = cd->xover_parser->Process(line);
+    rv = cd->xover_parser->Process(line, &ce->status);
+    PR_ASSERT(NS_SUCCEEDED(rv));
 #else
 	ce->status = MSG_ProcessXOVER (cd->pane, line, &cd->xover_parse_state);
 #endif
@@ -2735,17 +2748,17 @@ PRIVATE int
 net_process_xover (ActiveEntry *ce)
 {
     NewsConData * cd = (NewsConData *)ce->con_data;
-
+    nsresult rv;
 
 #ifdef XPCOM_XOVER
     /* xover_parse_state stored in MSG_Pane cd->pane */
-      nsresult = cd->xover_parser->Finish(0);
+    rv = cd->xover_parser->Finish(0,&ce->status);
 #else
 	/*	if (cd->xover_parse_state) { ### dmb - we need a different check */
 	  ce->status = MSG_FinishXOVER (cd->pane, &cd->xover_parse_state, 0);
 	  PR_ASSERT (!cd->xover_parse_state);
 #endif
-	  if (ce->status < 0) return ce->status;
+	  if (NS_SUCCEEDED(rv) && ce->status < 0) return ce->status;
 
 	cd->next_state = NEWS_DONE;
 
@@ -2887,7 +2900,8 @@ PRIVATE int
 net_read_news_group_response (ActiveEntry *ce)
 {
   NewsConData * cd = (NewsConData *)ce->con_data;
-
+  nsresult rv;
+  
   if (cd->response_code == MK_NNTP_RESPONSE_ARTICLE_HEAD)
 	{     /* Head follows - parse it:*/
 	  cd->next_state = NNTP_READ_GROUP_BODY;
@@ -2896,9 +2910,10 @@ net_read_news_group_response (ActiveEntry *ce)
 		*cd->message_id = '\0';
 
 	  /* Give the message number to the header parser. */
-#if XPCOM_XOVER
-      nsresult = cd->xover_parser->ProcessNonXOVER(cd->response_txt);
-      return nsresult; /* XXX need to find out how that works */
+#ifdef XPCOM_XOVER
+      rv = cd->xover_parser->ProcessNonXOVER(cd->response_txt);
+      /* convert nsresult->status */
+      return !NS_SUCCEEDED(rv);
 #else
 	  return MSG_ProcessNonXOVER (cd->pane, cd->response_txt,
 								  &cd->xover_parse_state);
@@ -2919,6 +2934,7 @@ net_read_news_group_body (ActiveEntry *ce)
 {
   NewsConData * cd = (NewsConData *)ce->con_data;
   char *line;
+  nsresult rv;
 
   ce->status = NET_BufferedReadLine(ce->socket, &line, &cd->data_buf,
 								   &cd->data_buf_size, (Bool*)&cd->pause_for_read);
@@ -2958,8 +2974,9 @@ net_read_news_group_body (ActiveEntry *ce)
 	line++;
 
 #ifdef XPCOM_XOVER
-  nsresult = cd->xover_parser->ProcessNonXOVER(line);
-  return nsresult; /* XXX - must find out how this works */
+  rv = cd->xover_parser->ProcessNonXOVER(line);
+  /* convert nsresult->status */
+  return !NS_SUCCEEDED(rv);
 #else
   return MSG_ProcessNonXOVER (cd->pane, line, &cd->xover_parse_state);
 #endif
@@ -5420,23 +5437,30 @@ net_ProcessNews (ActiveEntry *ce)
 					   something.  So, tell libmsg there was an abnormal
 					   exit so that it can free its data. */
 #ifdef XPCOM_XOVER
-              if (cd->xover_parse != NULL)
+              if (cd->xover_parser != NULL)
 #else
 				if (cd->xover_parse_state != NULL)
 #endif
 				{
 					int status;
+                    nsresult rv;
 /*					PR_ASSERT (ce->status < 0);*/
 #ifdef XPCOM_XOVER
                     /* XXX - how/when to Release() this? */
-                    nsresult = cd->xover_parser->Finish(ce->status);
+                    rv = cd->xover_parser->Finish(ce->status,&status);
+                    PR_ASSERT(NS_SUCCEEDED(rv));
+
+                    if (NS_SUCCEEDED(rv))
+                      NS_RELEASE(cd->xover_parser);
+
 #else
 					status = MSG_FinishXOVER (cd->pane,
 											  &cd->xover_parse_state,
 											  ce->status);
 					PR_ASSERT (!cd->xover_parse_state);
 #endif
-					if (ce->status >= 0 && status < 0)
+					if (NS_SUCCEEDED(rv) &&
+                        ce->status >= 0 && status < 0)
 					  ce->status = status;
 				}
 				else
