@@ -1854,8 +1854,15 @@ TextFrame::GetSelected(PRBool *aSelected, PRInt32 *aBeginOffset, PRInt32 *aEndOf
 NS_IMETHODIMP
 TextFrame::GetPointFromOffset(nsIPresContext* inPresContext, nsIRenderingContext* inRendContext, PRInt32 inOffset, nsPoint* outPoint)
 {
-  if (!inPresContext || !inRendContext)
+  if (!inPresContext || !inRendContext || !outPoint)
     return NS_ERROR_NULL_POINTER;
+
+  if (mContentLength <= 0) {
+    outPoint->x = 0;
+    outPoint->y = 0;
+    return NS_OK;
+  }
+
   inOffset-=mContentOffset;
   if (inOffset < 0){
     NS_ASSERTION(0,"offset less than this frame has in GetPointFromOffset");
