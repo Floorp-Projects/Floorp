@@ -329,9 +329,6 @@ static void InitializeMacOSXApp(int argc, char* argv[])
 
 #ifdef MOZ_WIDGET_GTK
 #include <gtk/gtk.h>
-#ifdef MOZ_PHOENIX
-#include SPLASH_XPM
-#endif
 #endif //MOZ_WIDGET_GTK
 
 /* Define Class IDs */
@@ -768,9 +765,6 @@ static PRBool IsStartupCommand(const char *arg)
 
 static nsresult HandleArbitraryStartup( nsICmdLineService* cmdLineArgs, nsIPref *prefs,  PRBool heedGeneralStartupPrefs, PRBool *windowOpened)
 {
-#ifdef MOZ_PHOENIX
-  heedGeneralStartupPrefs = PR_FALSE;
-#endif
 	nsresult rv;
 	PRInt32 height = nsIAppShellService::SIZE_TO_CONTENT;
 	PRInt32 width  = nsIAppShellService::SIZE_TO_CONTENT;
@@ -1725,10 +1719,6 @@ static PRBool HandleDumpArguments(int argc, char* argv[])
 
 static PRBool GetWantSplashScreen(int argc, char* argv[])
 {
-  #ifdef MOZ_PHOENIX
-  return PR_FALSE;
-  #endif
-
   int i;
   PRBool dosplash;
   // We can't use the command line service here because it isn't running yet
