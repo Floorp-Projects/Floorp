@@ -34,7 +34,5 @@ EXPORTS= $(srcdir)/remoturl.h
 REQUIRES	= network dbm util pref js java fileurl \
 	security layer img httpurl
 
-NO_STATIC_LIB=1
-
 include $(topsrcdir)/config/rules.mk
 

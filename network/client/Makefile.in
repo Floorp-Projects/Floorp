@@ -25,7 +25,6 @@ MODULE		= cnetinit
 
 ifndef MODULAR_NETLIB
 LIBRARY_NAME	= cnetinit
-NO_STATIC_LIB=1
 
 CSRCS		= \
 	cnetinit.c	\

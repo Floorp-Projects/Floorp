@@ -84,8 +84,6 @@ symbols::
 	@echo "LIBRARY          is $(LIBRARY)"
 	@echo  "DIST		is $(DIST)"
 
-NO_STATIC_LIB=1
-
 include $(topsrcdir)/config/rules.mk
 
 #

@@ -27,7 +27,7 @@ include $(topsrcdir)/config/config.mk
 
 PROGS= $(OBJDIR)/apprunner
 
-MODULE=apprunner
+MODULE=raptor
 
 REQUIRES=raptor xpcom base netlib pref js dom
 
@@ -41,7 +41,7 @@ INCLUDES+= -I../public -I$(PUBLIC)/raptor	\
 
 EX_LIBS=\
 	-L$(DIST)/bin	\
-	-lnsappshell	\
+	$(DIST)/lib/libnsappshell.a \
 	-lxpcom		\
 	-lraptorbase	\
 	-lwidgetgtk	\
@@ -63,8 +63,15 @@ EX_LIBS=\
 	-lnetwork	\
 	-lnetlib	\
 	-lraptorwebwidget	\
-	-lraptorhtml	\
-	-ljsdom		\
+	$(DIST)/lib/libraptorhtmlbase_s.a \
+	$(DIST)/lib/libraptorlayout_s.a \
+	$(DIST)/lib/libraptorevents_s.a	\
+	$(DIST)/lib/libraptorhtmlstyle_s.a \
+	$(DIST)/lib/libjsdombase_s.a	\
+	$(DIST)/lib/libjsdomhtml_s.a	\
+	$(DIST)/lib/libjsdomcss_s.a	\
+	$(DIST)/lib/libjsdomcore_s.a	\
+	-ljsurl		\
 	-lraptorbase	\
 	-lsecfree	\
 	-ljs		\
@@ -101,7 +108,7 @@ include $(topsrcdir)/config/rules.mk
 
 $(PROGS) : $(OBJS)
 	@$(MAKE_OBJDIR)
-	$(CCC) -o $@ $(OBJS) $(LDFLAGS) $(EX_LIBS) $(OS_LIBS)
+	$(CCC) -o $@ $(OBJS) $(LDFLAGS) $(EX_LIBS) $(OS_LIBS) $(TK_GTK_LIBS)
 
 install:: $(TARGETS)
 	$(INSTALL) $(PROGS) $(DIST)/bin

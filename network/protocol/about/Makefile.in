@@ -34,7 +34,5 @@ EXPORTS= $(srcdir)/abouturl.h
 REQUIRES	= netcache network dbm util pref js java fileurl \
 	security layer img httpurl jtools
 
-NO_STATIC_LIB=1
-
 include $(topsrcdir)/config/rules.mk
 
