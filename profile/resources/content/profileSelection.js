@@ -76,11 +76,6 @@ function StartUp()
   Registry = Registry.QueryInterface(Components.interfaces.nsIRegistry);
   Registry.open(regFile);
 
-  // get new profile registry & users location and dump it to console
-  // to let users know about it.
-  var regFolder = dirServ.get("AppRegD", Components.interfaces.nsIFile);
-  dump("New location for profile registry and user profile directories is -> " + regFolder.path + "\n");
-
   loadElements();
   highlightCurrentProfile();
 
