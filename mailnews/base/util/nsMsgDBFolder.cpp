@@ -566,6 +566,12 @@ NS_IMETHODIMP nsMsgDBFolder:: DownloadMessagesForOffline(nsISupportsArray *messa
   return NS_OK;
 }
 
+NS_IMETHODIMP nsMsgDBFolder:: DownloadAllForOffline(nsIUrlListener *listener, nsIMsgWindow *msgWindow)
+{
+  NS_ASSERTION(PR_FALSE, "imap and news need to override this");
+  return NS_OK;
+}
+
 nsresult nsMsgDBFolder::GetOfflineStoreInputStream(nsIInputStream **stream)
 {
   nsresult rv = NS_ERROR_NULL_POINTER;

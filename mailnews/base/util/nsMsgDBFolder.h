@@ -96,6 +96,7 @@ public:
   NS_IMETHOD GetOfflineFileChannel(nsMsgKey msgKey, nsIFileChannel **aFileChannel);
   NS_IMETHOD HasMsgOffline(nsMsgKey msgKey, PRBool *result);
   NS_IMETHOD DownloadMessagesForOffline(nsISupportsArray *messages);
+  NS_IMETHOD DownloadAllForOffline(nsIUrlListener *listener, nsIMsgWindow *msgWindow);
   NS_IMETHOD GetRetentionSettings(nsIMsgRetentionSettings **settings);
   NS_IMETHOD SetRetentionSettings(nsIMsgRetentionSettings *settings);
 

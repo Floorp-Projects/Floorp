@@ -344,7 +344,7 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
   nsIFileChannel getOfflineFileChannel(in nsMsgKey msgKey);
   void DownloadMessagesForOffline(in nsISupportsArray messages);        
 	nsIMsgFolder getChildWithURI(in string uri, in boolean deep);
-
+  void downloadAllForOffline(in nsIUrlListener listener, in nsIMsgWindow window);
 	/**
 	 *	Turn notifications on/off for various notification types. Currently only supporting
 	 *  allMessageCountNotifications which refers to both total and unread message counts.
