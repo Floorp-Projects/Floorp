@@ -781,6 +781,8 @@ GlobalWindowImpl::Forward()
     //XXX tbi
     //mBrowser->Forward();
     NS_RELEASE(mBrowser);
+  } else {
+    mWebShell->Forward(); // I added this - rods
   }
   return NS_OK;
 }
@@ -794,6 +796,8 @@ GlobalWindowImpl::Back()
     //XXX tbi
     //mBrowser->Back();
     NS_RELEASE(mBrowser);
+  }  else {
+    mWebShell->Back();// I added this - rods
   }
   return NS_OK;  
 }
