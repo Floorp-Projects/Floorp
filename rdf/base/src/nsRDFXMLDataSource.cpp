@@ -1161,14 +1161,14 @@ RDFXMLDataSourceImpl::MakeQName(nsIRDFResource* resource,
         }
     }
 
-    // Okay, so we don't have it in our map. Try to make one up.
+    // Okay, so we don't have it in our map. Try to make one up. This
+    // is very bogus.
     PRInt32 i = uri.RFindChar('#'); // first try a '#'
     if (i == -1) {
         i = uri.RFindChar('/');
         if (i == -1) {
             // Okay, just punt and assume there is _no_ namespace on
             // this thing...
-            //NS_ASSERTION(PR_FALSE, "couldn't find reasonable namespace prefix");
             nameSpaceURI.Truncate();
             nameSpacePrefix.Truncate();
             property = uri;
@@ -1241,6 +1241,26 @@ rdf_EscapeAmpersands(nsString& s)
     }
 }
 
+static void
+rdf_EscapeQuotes(nsString& s)
+{
+    PRInt32 i = 0;
+    while ((i = s.FindChar('"', PR_FALSE, i)) != -1) {
+        s.SetCharAt('&', i);
+        s.Insert(NS_ConvertASCIItoUCS2("quot;"), i + 1);
+        i += 5;
+    }
+}
+
+static void
+rdf_EscapeAttributeValue(nsString& s)
+{
+    rdf_EscapeAmpersands(s);
+    rdf_EscapeAngleBrackets(s);
+    rdf_EscapeQuotes(s);
+}
+
+
 nsresult
 RDFXMLDataSourceImpl::SerializeAssertion(nsIOutputStream* aStream,
                                          nsIRDFResource* aResource,
@@ -1279,9 +1299,10 @@ RDFXMLDataSourceImpl::SerializeAssertion(nsIOutputStream* aStream,
 
         nsXPIDLCString docURI;
 
-        nsAutoString uri; uri.AssignWithConversion(NS_STATIC_CAST(const char*, s));
+        nsAutoString uri;
+        uri.AssignWithConversion(NS_STATIC_CAST(const char*, s));
         rdf_MakeRelativeRef(NS_ConvertASCIItoUCS2(mURLSpec), uri);
-        rdf_EscapeAmpersands(uri);
+        rdf_EscapeAttributeValue(uri);
 
 static const char kRDFResource1[] = " resource=\"";
 static const char kRDFResource2[] = "\"/>\n";
@@ -1354,7 +1375,8 @@ nsresult
 RDFXMLDataSourceImpl::SerializeDescription(nsIOutputStream* aStream,
                                            nsIRDFResource* aResource)
 {
-static const char kRDFDescription1[] = "  <RDF:Description about=\"";
+static const char kRDFDescriptionAbout[] = "  <RDF:Description about=\"";
+static const char kRDFDescriptionID[]    = "  <RDF:Description ID=\"";
 static const char kRDFDescription2[] = "\">\n";
 static const char kRDFDescription3[] = "  </RDF:Description>\n";
 
@@ -1368,11 +1390,19 @@ static const char kRDFDescription3[] = "  </RDF:Description>\n";
     rv = aResource->GetValue(getter_Copies(s));
     if (NS_FAILED(rv)) return rv;
 
-    nsAutoString uri; uri.AssignWithConversion(s);
+    nsAutoString uri;
+    uri.AssignWithConversion(s);
     rdf_MakeRelativeRef(NS_ConvertASCIItoUCS2(mURLSpec), uri);
-    rdf_EscapeAmpersands(uri);
+    rdf_EscapeAttributeValue(uri);
 
-    rdf_BlockingWrite(aStream, kRDFDescription1, sizeof(kRDFDescription1) - 1);
+    if (uri[0] == PRUnichar('#')) {
+        uri.Cut(0, 1);
+        rdf_BlockingWrite(aStream, kRDFDescriptionID, sizeof(kRDFDescriptionID) - 1);
+    }
+    else {
+        rdf_BlockingWrite(aStream, kRDFDescriptionAbout, sizeof(kRDFDescriptionAbout) - 1);
+    }
+
     rdf_BlockingWrite(aStream, uri);
     rdf_BlockingWrite(aStream, kRDFDescription2, sizeof(kRDFDescription2) - 1);
 
@@ -1443,9 +1473,10 @@ RDFXMLDataSourceImpl::SerializeMember(nsIOutputStream* aStream,
 static const char kRDFLIResource1[] = "    <RDF:li resource=\"";
 static const char kRDFLIResource2[] = "\"/>\n";
 
-            nsAutoString uri; uri.AssignWithConversion(s);
+            nsAutoString uri;
+            uri.AssignWithConversion(s);
             rdf_MakeRelativeRef(NS_ConvertASCIItoUCS2(mURLSpec), uri);
-            rdf_EscapeAmpersands(uri);
+            rdf_EscapeAttributeValue(uri);
 
             rdf_BlockingWrite(aStream, kRDFLIResource1, sizeof(kRDFLIResource1) - 1);
             rdf_BlockingWrite(aStream, uri);
@@ -1511,10 +1542,11 @@ static const char kRDFAlt[] = "RDF:Alt";
 
     nsXPIDLCString s;
     if (NS_SUCCEEDED(aContainer->GetValue( getter_Copies(s) ))) {
-        nsAutoString uri; uri.AssignWithConversion(s);
+        nsAutoString uri;
+        uri.AssignWithConversion(s);
         rdf_MakeRelativeRef(NS_ConvertASCIItoUCS2(mURLSpec), uri);
 
-        rdf_EscapeAmpersands(uri);
+        rdf_EscapeAttributeValue(uri);
 
         if (uri.First() == PRUnichar('#')) {
             // Okay, it's actually identified as an element in the
