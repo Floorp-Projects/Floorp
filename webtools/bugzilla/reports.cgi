@@ -28,6 +28,7 @@
 
 use diagnostics;
 use strict;
+use GD;
 eval "use Chart::Lines";
 
 require "CGI.pl";
@@ -438,8 +439,14 @@ FIN
 
         $prodname =~ s/\//-/gs;
 
+	my $testimg = Chart::Lines->new(2,2);
+	my $x = '$testimg->gif()';
+	eval $x;
+	my $type = ($@ =~ /Can't locate object method/) ? "png" : "gif";
+
         my $file = join '/', $dir, $prodname;
-	my $image = "$file.gif";
+	my $image = "$file.$type";
+	my $url_image = $dir . "/" . url_quote($prodname) . ".$type";
 
 	if (! open FILE, $file)
 		{
@@ -495,11 +502,11 @@ FIN
 	$img->set (%settings);
 	
 	open IMAGE, ">$image" or die "$image: $!";
-	$img->gif (*IMAGE, \@data);
+	$img->$type (*IMAGE, \@data);
 	close IMAGE;
 
 	print <<FIN;
-<img src="$image">
+<img src="$url_image">
 <br clear=left>
 <br>
 FIN
