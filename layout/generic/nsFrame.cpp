@@ -64,6 +64,9 @@
 #endif
 
 #include "nsIDOMText.h"
+#include "nsIDOMHTMLAnchorElement.h"
+#include "nsIDOMHTMLAreaElement.h"
+#include "nsIDOMHTMLImageElement.h"
 #include "nsIDeviceContext.h"
 #include "nsHTMLIIDs.h"
 #include "nsIEventStateManager.h"
@@ -1017,29 +1020,51 @@ nsFrame::HandlePress(nsIPresContext* aPresContext,
   if (!isEditor && !keyEvent->isAlt) {
     nsCOMPtr<nsIContent> content;
     GetContent (getter_AddRefs(content));
+    static NS_NAMED_LITERAL_STRING(simple, "simple");
+    
     while (content) {
-       // are we an anchor with an href? If so, bail out now!
-       nsCOMPtr<nsIAtom> tag;
-       content->GetTag(*getter_AddRefs(tag));
-       if ( tag.get() == nsHTMLAtoms::a ) {
-         // Fix for bug #53326: Make sure we bail only
-         // in the presence of an href with a value!
-         nsAutoString href;
-         if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::href, href))
-         {// fix for bug #55921
-           nsIView *dummyView = 0;
-           nsRect frameRect = mRect;
-           nsPoint offsetPoint;
-
-           GetOffsetFromView(aPresContext, offsetPoint, &dummyView);
-
-           frameRect.x = offsetPoint.x;
-           frameRect.y = offsetPoint.y;
-
-           if (frameRect.x <= aEvent->point.x && (frameRect.x + frameRect.width >= aEvent->point.x) &&
-               frameRect.y <= aEvent->point.y && (frameRect.y + frameRect.height >= aEvent->point.y))
-           return NS_OK;
+       // are we a link with an href? If so, bail out now!
+       nsAutoString href;
+       // a?
+       nsCOMPtr<nsIDOMHTMLAnchorElement> a(do_QueryInterface(content));
+       if (a) {
+         a->GetHref(href);
+       } else {
+         // area?
+         nsCOMPtr<nsIDOMHTMLAnchorElement> area(do_QueryInterface(content));
+         if (area) {
+           area->GetHref(href);
+         } else {
+           // img?
+           nsCOMPtr<nsIDOMHTMLImageElement> img(do_QueryInterface(content));
+           if (img) {
+             img->GetSrc(href);
+           } else {
+             // XLink?
+             nsAutoString value;
+             content->GetAttr(kNameSpaceID_XLink, nsHTMLAtoms::type, value);
+             if (value.Equals(simple)) {
+               content->GetAttr(kNameSpaceID_XLink, nsHTMLAtoms::href, href);
+             }
+           }
          }
+       }
+       // Fix for bug #53326: Make sure we bail only
+       // in the presence of an href with a value!
+       if ( !href.IsEmpty() ) {
+         // coordinate stuff is the fix for bug #55921
+         nsIView *dummyView = 0;
+         nsRect frameRect = mRect;
+         nsPoint offsetPoint;
+
+         GetOffsetFromView(aPresContext, offsetPoint, &dummyView);
+
+         frameRect.x = offsetPoint.x;
+         frameRect.y = offsetPoint.y;
+
+         if (frameRect.x <= aEvent->point.x && (frameRect.x + frameRect.width >= aEvent->point.x) &&
+             frameRect.y <= aEvent->point.y && (frameRect.y + frameRect.height >= aEvent->point.y))
+           return NS_OK;
        }
   
        // now try the parent
