@@ -138,7 +138,7 @@ const char js_current_str[]          = "current";
 
 #define HASH_OBJECT(o)  ((JSHashNumber)(o) >> JSVAL_TAGBITS)
 #define HASH_INT(i)     ((JSHashNumber)(i))
-#define HASH_DOUBLE(dp) ((JSHashNumber)(((uint32*)(dp))[0] ^ ((uint32*)(dp))[1]))
+#define HASH_DOUBLE(dp) ((JSHashNumber)(JSDOUBLE_HI32(*dp) ^ JSDOUBLE_LO32(*dp)))
 #define HASH_BOOLEAN(b) ((JSHashNumber)(b))
 
 JS_STATIC_DLL_CALLBACK(JSHashNumber)
