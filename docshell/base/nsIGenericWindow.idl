@@ -128,11 +128,6 @@ interface nsIGenericWindow : nsISupports
 	void setPositionAndSize(in long x, in long y, in long cx, in long cy, 
 		in boolean fRepaint); 
 
-	/**
-	* Tell the window to shrink-to-fit its contents
-	*/
-	void sizeToContent();
-
 	/** 
 	 * Tell the window to repaint itself
 	 * @param aForce - if true, repaint immediately
@@ -182,11 +177,6 @@ interface nsIGenericWindow : nsISupports
 	* Give the window focus.
 	*/
 	void setFocus();
-
-	/**
-	* Remove focus from the window
-	*/
-	void removeFocus();
 
 	attribute wstring title;
 

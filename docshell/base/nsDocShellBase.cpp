@@ -397,7 +397,29 @@ NS_IMETHODIMP nsDocShellBase::SetPosition(PRInt32 x, PRInt32 y)
       }
    else
       {
-      //XXX Manipulate normal position stuff
+      /* XXX Implement below is code from old webShell
+      We don't have a heavy-weight window, we want to talk to our view I think.
+      We also don't want to duplicate the bounds locally.  No need, let the
+      view keep up with that.
+
+        PRInt32 w, h;
+        nsresult rv = GetSize(w, h);
+        if (NS_FAILED(rv)) { return rv; }
+
+        PRInt32 borderWidth  = 0;
+        PRInt32 borderHeight = 0;
+        if (mWindow) 
+        {
+          mWindow->GetBorderSize(borderWidth, borderHeight);
+          // Don't have the widget repaint. Layout will generate repaint requests
+          // during reflow
+          mWindow->Resize(aX, aY, w, h, PR_FALSE);
+        }
+
+        mBounds.SetRect(aX,aY,w,h);   // set the webshells bounds 
+
+        return rv;
+      */
       }
 
    return NS_OK;
@@ -414,7 +436,23 @@ NS_IMETHODIMP nsDocShellBase::GetPosition(PRInt32* x, PRInt32* y)
       }
    else
       {
-      //XXX query normal position objects
+      /* XXX Implement below is code from old webShell
+      We don't have a heavy-weight window, we want to talk to our view I think.
+      We also don't want to duplicate the bounds locally.  No need, let the
+      view keep up with that.
+
+        nsRect result;
+        if (nsnull != mWindow) {
+          mWindow->GetClientBounds(result);
+        } else {
+          result = mBounds;
+        }
+
+        *aX = result.x;
+        *aY = result.y;
+
+        return NS_OK;
+      */
       }
 
    return NS_OK;
@@ -429,7 +467,36 @@ NS_IMETHODIMP nsDocShellBase::SetSize(PRInt32 cx, PRInt32 cy, PRBool fRepaint)
       }
    else
       {
-      // XXX Do Normal Size Stuff
+      /*  XXX Implement below is code from old webShell
+      We don't have a heavy-weight window, we want to talk to our view I think.
+      We also don't want to duplicate the bounds locally.  No need, let the
+      view keep up with that.
+
+
+        PRInt32 x, y;
+     nsresult rv = GetPosition(x, y);
+     if (NS_FAILED(rv)) { return rv; }
+
+     PRInt32 borderWidth  = 0;
+     PRInt32 borderHeight = 0;
+     if (mWindow) 
+     {
+       mWindow->GetBorderSize(borderWidth, borderHeight);
+       // Don't have the widget repaint. Layout will generate repaint requests
+       // during reflow
+       mWindow->Resize(x, y, aCX, aCY, PR_FALSE);
+     }
+
+     mBounds.SetRect(x, y, aCX, aCY);   // set the webshells bounds --dwc0001
+
+     // Set the size of the content area, which is the size of the window
+     // minus the borders
+     if (nsnull != mContentViewer) {
+       nsRect rr(0, 0, aCX-(borderWidth*2), aCY-(borderHeight*2));
+       mContentViewer->SetBounds(rr);
+     }
+     return rv;
+      */
       }
 
    return NS_OK;
@@ -446,7 +513,23 @@ NS_IMETHODIMP nsDocShellBase::GetSize(PRInt32* cx, PRInt32* cy)
       }
    else
       {
-      //XXX Query normal Size Objects
+      /* XXX Implement below is code from old webShell
+      We don't have a heavy-weight window, we want to talk to our view I think.
+      We also don't want to duplicate the bounds locally.  No need, let the
+      view keep up with that.
+
+        nsRect result;
+     if (nsnull != mWindow) {
+       mWindow->GetClientBounds(result);
+     } else {
+       result = mBounds;
+     }
+
+     *aCX = result.width;
+     *aCY = result.height;
+
+     return NS_OK;
+      */
       }
 
    return NS_OK;
@@ -467,18 +550,35 @@ NS_IMETHODIMP nsDocShellBase::SetPositionAndSize(PRInt32 x, PRInt32 y, PRInt32 c
       // XXX Do normal size and position stuff.  Could just call 
       // Size and then Position, but underlying control probably supports 
       // some optimized setting of both like this.
+
+      /* XXX Implement below is code from old webShell
+      We don't have a heavy-weight window, we want to talk to our view I think.
+      We also don't want to duplicate the bounds locally.  No need, let the
+      view keep up with that.
+
+        PRInt32 borderWidth  = 0;
+     PRInt32 borderHeight = 0;
+     if (mWindow) 
+     {
+       mWindow->GetBorderSize(borderWidth, borderHeight);
+       // Don't have the widget repaint. Layout will generate repaint requests
+       // during reflow
+       mWindow->Resize(aX, aY, aCX, aCY, PR_FALSE);
+     }
+
+     mBounds.SetRect(aX, aY, aCX, aCY);   // set the webshells bounds --dwc0001
+
+     // Set the size of the content area, which is the size of the window
+     // minus the borders
+     if (nsnull != mContentViewer) {
+       nsRect rr(0, 0, aCX-(borderWidth*2), aCY-(borderHeight*2));
+       mContentViewer->SetBounds(rr);
+     }
+     return rv;
+      */
       }
 
    return NS_OK;
-}
-
-NS_IMETHODIMP nsDocShellBase::SizeToContent()
-{
-   //XXX First Check
-	/**
-	* Tell the window to shrink-to-fit its contents
-	*/
-   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP nsDocShellBase::Repaint(PRBool fForce)
@@ -489,6 +589,24 @@ NS_IMETHODIMP nsDocShellBase::Repaint(PRBool fForce)
 	 * @param aForce - if true, repaint immediately
 	 *                 if false, the window may defer repainting as it sees fit.
 	 */
+
+   /* XXX Implement Tell our view to repaint
+
+     if (mWindow) {
+    mWindow->Invalidate(aForce);
+  }
+
+	nsresult rv;
+	nsCOMPtr<nsIViewManager> viewManager;
+	rv = GetViewManager(getter_AddRefs(viewManager));
+  if (NS_FAILED(rv)) { return rv; }
+  if (!viewManager) { return NS_ERROR_NULL_POINTER; }
+
+  //XXX: what about aForce?
+	rv = viewManager->UpdateAllViews(0);
+	return rv;
+
+   */
    return NS_ERROR_FAILURE;
 }
 
@@ -570,15 +688,16 @@ NS_IMETHODIMP nsDocShellBase::SetFocus()
 	/**
 	* Give the window focus.
 	*/
-   return NS_ERROR_FAILURE;
-}
 
-NS_IMETHODIMP nsDocShellBase::RemoveFocus()
-{
-   //XXX First Check
-	/**
-	* Remove focus from the window
-	*/
+   /* XXX implement
+
+     if (mWindow) {
+    mWindow->SetFocus();
+  }
+
+  return NS_OK;
+
+   */
    return NS_ERROR_FAILURE;
 }
 
@@ -682,6 +801,18 @@ NS_IMETHODIMP nsDocShellBase::SetCurScrollPos(PRInt32 scrollOrientation,
    return NS_OK;
 }
 
+NS_IMETHODIMP nsDocShellBase::SetCurScrollPosEx(PRInt32 curHorizontalPos, 
+   PRInt32 curVerticalPos)
+{
+   nsCOMPtr<nsIScrollableView> scrollView;
+   NS_ENSURE_SUCCESS(GetRootScrollableView(getter_AddRefs(scrollView)), 
+      NS_ERROR_FAILURE);
+
+   NS_ENSURE_SUCCESS(scrollView->ScrollTo(curHorizontalPos, curVerticalPos, 
+      NS_VMREFRESH_IMMEDIATE), NS_ERROR_FAILURE);
+   return NS_OK;
+}
+
 // XXX This is wrong
 NS_IMETHODIMP nsDocShellBase::GetScrollRange(PRInt32 scrollOrientation,
    PRInt32* minPos, PRInt32* maxPos)
@@ -717,6 +848,21 @@ NS_IMETHODIMP nsDocShellBase::GetScrollRange(PRInt32 scrollOrientation,
 
 NS_IMETHODIMP nsDocShellBase::SetScrollRange(PRInt32 scrollOrientation,
    PRInt32 minPos, PRInt32 maxPos)
+{
+   //XXX First Check
+	/*
+	Retrieves or Sets the valid ranges for the thumb.  When maxPos is set to 
+	something less than the current thumb position, curPos is set = to maxPos.
+
+	@return	NS_OK - Setting or Getting completed successfully.
+				NS_ERROR_INVALID_ARG - returned when curPos is not within the
+					minPos and maxPos.
+	*/
+   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsDocShellBase::SetScrollRangeEx(PRInt32 minHorizontalPos,
+   PRInt32 maxHorizontalPos, PRInt32 minVerticalPos, PRInt32 maxVerticalPos)
 {
    //XXX First Check
 	/*

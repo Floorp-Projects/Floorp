@@ -58,6 +58,12 @@ interface nsIScrollable : nsISupports
 	void setCurScrollPos(in long scrollOrientation, in long curPos);
 
 	/*
+	This function atomizes the ability to scroll in two dimensions at the same
+	time.
+	*/
+	void setCurScrollPosEx(in long curHorizontalPos, in long curVerticalPos);
+
+	/*
 	Retrieves or Sets the valid ranges for the thumb.  When maxPos is set to 
 	something less than the current thumb position, curPos is set = to maxPos.
 
@@ -67,6 +73,13 @@ interface nsIScrollable : nsISupports
 	*/
 	void getScrollRange(in long scrollOrientation, out long minPos, out long maxPos);
 	void setScrollRange(in long scrollOrientation, in long minPos, in long maxPos);
+
+	/*
+	This function atomizes the ability to set the ranges in two dimensions at 
+	the same time.
+	*/
+	void setScrollRangeEx(in long minHorizontalPos, in long maxHorizontalPos,
+		in long minVerticalPos, in long maxVerticalPos);
 
 	/*
 	Constants declaring the states of the scroll bars.

@@ -23,6 +23,10 @@
 #ifndef nsHTMLDocShell_h__
 #define nsHTMLDocShell_h__
 
+#include "nsIFrame.h"
+#include "nsIContent.h"
+#include "nsIDOMDocument.h"
+
 #include "nsCHTMLDocShell.h"
 #include "nsDocShellBase.h"
 
@@ -36,13 +40,23 @@ public:
 
    NS_DECL_NSIHTMLDOCSHELL
 
+   //nsIDocShellEdit Overrides
+   NS_IMETHOD SelectAll();
+
    static NS_METHOD Create(nsISupports* aOuter, const nsIID& aIID, void** ppv);
 
 protected:
    nsHTMLDocShell();
    virtual ~nsHTMLDocShell();
 
+   nsresult GetPrimaryFrameFor(nsIContent* content, nsIFrame** frame);
+
 protected:
+   PRBool   m_AllowPlugins;
+   PRInt32  m_MarginWidth;
+   PRInt32  m_MarginHeight;
+   PRBool   m_IsFrame;
+   nsCOMPtr<nsIDOMDocument> m_Document;
 };
 
 #endif /* nsHTMLDocShell_h__ */

@@ -27,7 +27,8 @@
 //***    nsHTMLDocShell: Object Management
 //*****************************************************************************
 
-nsHTMLDocShell::nsHTMLDocShell() : nsDocShellBase()
+nsHTMLDocShell::nsHTMLDocShell() : nsDocShellBase(), m_AllowPlugins(PR_TRUE),
+   m_MarginWidth(0), m_MarginHeight(0), m_IsFrame(PR_FALSE)
 {
 }
 
@@ -82,81 +83,80 @@ NS_IMETHODIMP nsHTMLDocShell::CanHandleContentType(const PRUnichar* contentType,
 
 NS_IMETHODIMP nsHTMLDocShell::ScrollToNode(nsIDOMNode* aNode)
 {
-  NS_ENSURE_ARG(aNode);
+   NS_ENSURE_ARG(aNode);
+   NS_ENSURE_STATE(m_PresShell);
 
-  // get the presentation shell
-  nsCOMPtr<nsIPresShell> presShell;
-  nsresult rv = GetPresShell(getter_AddRefs(presShell));
-  if (NS_FAILED(rv)) { return rv; }
-  if (!presShell) { return NS_ERROR_NOT_INITIALIZED; }
-  
-  // Get the nsIContent interface, because that's what we need to 
-  // get the primary frame 
-  rv = aNode->QueryInterface(kIContentIID, getter_AddRefs(content)); 
-  if (NS_FAILED(rv)) { return rv; }
-  if (!content) { return NS_ERROR_NULL_POINTER; }
+   // Get the nsIContent interface, because that's what we need to 
+   // get the primary frame
+   
+   nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
+   NS_ENSURE(content, NS_ERROR_FAILURE);
 
-  // Get the primary frame 
-  nsIFrame* frame;
-  rv = GetPrimaryFrameFor(content, &frame); 
-  if (NS_FAILED(rv)) { return rv; }
-  if (!frame) { return NS_ERROR_NULL_POINTER; }
- 
-  // tell the pres shell to scroll to the frame
-  rv = presShell->ScrollFrameIntoView(frame, NS_PRESSHELL_SCROLL_TOP, 
-                                      NS_PRESSHELL_SCROLL_ANYWHERE); 
-  return rv; 
+   // Get the primary frame
+   nsIFrame* frame; 
+
+   NS_ENSURE_SUCCESS(GetPrimaryFrameFor(content, &frame),
+      NS_ERROR_FAILURE);
+
+   // tell the pres shell to scroll to the frame
+   NS_ENSURE_SUCCESS(m_PresShell->ScrollFrameIntoView(frame, 
+      NS_PRESSHELL_SCROLL_TOP, NS_PRESSHELL_SCROLL_ANYWHERE), NS_ERROR_FAILURE); 
+   return NS_OK; 
 }
 
 NS_IMETHODIMP nsHTMLDocShell::GetAllowPlugins(PRBool* aAllowPlugins)
 {
-  NS_ENSURE_ARG_POINTER(allowPlugins);
-  *aAllowPlugins = mAllowPlugins;
-  return NS_OK;
+   NS_ENSURE_ARG_POINTER(aAllowPlugins);
+
+   *aAllowPlugins = m_AllowPlugins;
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsHTMLDocShell::SetAllowPlugins(PRBool aAllowPlugins)
 {
-  mAllowPlugins = aAllowPlugins;
-  return NS_OK;
+   m_AllowPlugins = aAllowPlugins;
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsHTMLDocShell::GetMarginWidth(PRInt32* aMarginWidth)
 {
-  NS_ENSURE_ARG_POINTER(aMarginWidth);
-  *aMarginWidth = mMarginWidth;
-  return NS_OK;  
+   NS_ENSURE_ARG_POINTER(aMarginWidth);
+
+   *aMarginWidth = m_MarginWidth;
+   return NS_OK;  
 }
 
 NS_IMETHODIMP nsHTMLDocShell::SetMarginWidth(PRInt32 aMarginWidth)
 {
-  mMarginWidth = aMarginWidth;
-  return NS_OK;
+   m_MarginWidth = aMarginWidth;
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsHTMLDocShell::GetMarginHeight(PRInt32* aMarginHeight)
 {
-  NS_ENSURE_ARG_POINTER(aMarginHeight);
-  *aMarginHeight = mMarginHeight;
-  return NS_OK; 
+   NS_ENSURE_ARG_POINTER(aMarginHeight);
+
+   *aMarginHeight = m_MarginHeight;
+   return NS_OK; 
 }
 
 NS_IMETHODIMP nsHTMLDocShell::SetMarginHeight(PRInt32 aMarginHeight)
 {
-  mMarginHeight = aMarginHeight;
-  return NS_OK;
+   m_MarginHeight = aMarginHeight;
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsHTMLDocShell::GetIsFrame(PRBool* aIsFrame)
 {
   NS_ENSURE_ARG_POINTER(aIsFrame);
-  *aIsFrame = mIsFrame;
+
+  *aIsFrame = m_IsFrame;
   return NS_OK;
 }
 
 NS_IMETHODIMP nsHTMLDocShell::SetIsFrame(PRBool aIsFrame)
 {
-  mIsFrame = aIsFrame;
+  m_IsFrame = aIsFrame;
   return NS_OK;
 }
 
@@ -167,32 +167,32 @@ NS_IMETHODIMP nsHTMLDocShell::GetDefaultCharacterSet(PRUnichar** aDefaultCharact
 {
   NS_ENSURE_ARG_POINTER(aDefaultCharacterSet);
 
-  if (0 == mDefaultCharacterSet.Length()) 
+/*  if (0 == m_DefaultCharacterSet.Length()) 
   {
     if ((nsnull == gDefCharset) || (nsnull == *gDefCharset)) 
     {
-      if(mPrefs)
-        mPrefs->CopyCharPref("intl.charset.default", &gDefCharset);
+      if(m_Prefs)
+        m_Prefs->CopyCharPref("intl.charset.default", &gDefCharset);
     }
     if ((nsnull == gDefCharset) || (nsnull == *gDefCharset))
       mDefaultCharacterSet = "ISO-8859-1";
     else
       mDefaultCharacterSet = gDefCharset;
   }
-  *aDefaultCharacterSet = mDefaultCharacterSet.ToNewUnicode();
+  *aDefaultCharacterSet = mDefaultCharacterSet.ToNewUnicode();     */
   return NS_OK;
 }
 
 NS_IMETHODIMP nsHTMLDocShell::SetDefaultCharacterSet(const PRUnichar* aDefaultCharacterSet)
 {
-  mDefaultCharacterSet = aDefaultCharacterSet;
+/*  mDefaultCharacterSet = aDefaultCharacterSet;
   PRInt32 i, n = mChildren.Count();
   for (i = 0; i < n; i++) {
     nsIWebShell* child = (nsIWebShell*) mChildren.ElementAt(i);
     if (nsnull != child) {
       child->SetDefaultCharacterSet(aDefaultCharacterSet);
     }
-  }
+  }     */
   return NS_OK;
 }
 
@@ -201,216 +201,35 @@ NS_IMETHODIMP nsHTMLDocShell::SetDefaultCharacterSet(const PRUnichar* aDefaultCh
 //      using Recycle(aForceCharacterSet)
 NS_IMETHODIMP nsHTMLDocShell::GetForceCharacterSet(PRUnichar** aForceCharacterSet)
 {
-  NS_ENSURE_ARG_POINTER(forceCharacterSet);
+  NS_ENSURE_ARG_POINTER(aForceCharacterSet);
 
-  nsAutoString emptyStr;
+/*  nsAutoString emptyStr;
   if (mForceCharacterSet.Equals(emptyStr)) {
     *aForceCharacterSet = nsnull;
   }
   else {
     *aForceCharacterSet = mForceCharacterSet.ToNewUnicode();
-  }
+  }        */
   return NS_OK;
 }
 
 NS_IMETHODIMP nsHTMLDocShell::SetForceCharacterSet(const PRUnichar* forceCharacterSet)
 {
-  mForceCharacterSet = aForceCharacterSet;
+/*  mForceCharacterSet = aForceCharacterSet;
   PRInt32 i, n = mChildren.Count();
   for (i = 0; i < n; i++) {
     nsIWebShell* child = (nsIWebShell*) mChildren.ElementAt(i);
     if (nsnull != child) {
       child->SetForceCharacterSet(aForceCharacterSet);
     }
-  }
+  }   */
   return NS_OK;
-}
-
-//*****************************************************************************
-// nsHTMLDocShell::nsIDocShellEdit Overrides
-//*****************************************************************************   
-
-
-/* the basic idea here is to grab the topmost content object
- * (for HTML documents, that's the BODY)
- * and select all it's children
- */
-NS_IMETHODIMP SelectAll()
-{
-  NS_ENSURE(mDoc, NS_ERROR_NOT_INITIALIZED);
-
-  // get the presentation shell
-  nsCOMPtr<nsIPresShell> presShell;
-  nsresult rv = GetPresShell(getter_AddRefs(presShell));
-  if (NS_FAILED(rv)) { return rv; }
-  if (!presShell) { return NS_ERROR_NOT_INITIALIZED; }
-
-  // get the selection object
-  nsresult rv = presShell->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
-  if (NS_FAILED(rv)) { return rv; }
-  if (!selection) { return NS_ERROR_NULL_POINTER; }
-
-  // get the body node
-  nsCOMPtr<nsIDOMNodeList>nodeList;
-  nsCOMPtr<nsIDOMElement>bodyElement;
-  nsAutoString bodyTag = "body";
-  rv = mDoc->GetElementsByTagName(bodyTag, getter_AddRefs(nodeList));
-  if (NS_FAILED(rv)) { return rv; }
-  if (!nodeList) { return NS_OK; } // this means the document has no body, so nothing to select
-
-  PRUint32 count; 
-  nodeList->GetLength(&count);
-  if (count != 1) { return NS_ERROR_FAILURE; }  // could be true for a frameset doc
-
-  // select all children of the body
-  nsCOMPtr<nsIDOMNode> node;
-  rv = nodeList->Item(0, getter_AddRefs(node)); 
-  if (NS_FAILED(rv)) { return rv; }
-  if (!node) { return NS_ERROR_NULL_POINTER; }
-
-  rv = aSelection->Collapse(bodyNode, 0);
-  if (NS_FAILED(rv)) { return rv; }
-  PRInt32 numBodyChildren=0;
-  nsCOMPtr<nsIDOMNode>lastChild;
-  rv = bodyNode->GetLastChild(getter_AddRefs(lastChild));
-  if (NS_FAILED(rv)) { return rv; }
-  if (lastChild)
-  { // body isn't required to have any children, so it's ok if lastChild is null
-    rv = GetChildOffset(lastChild, bodyNode, numBodyChildren);
-    if (NS_FAILED(rv)) { return rv; }
-    rv = aSelection->Extend(bodyNode, numBodyChildren+1);
-  }
-  return rv;
-}
-
-//*****************************************************************************
-// nsHTMLDocShell::nsIDocShellFile Overrides
-//*****************************************************************************   
-
-//*****************************************************************************
-// nsHTMLDocShell::nsIGenericWindow Overrides
-//*****************************************************************************   
-
-  /* void setPosition (in long x, in long y); */
-NS_IMETHODIMP SetPosition(PRInt32 aX, PRInt32 aY)
-{
-  PRInt32 w, h;
-  nsresult rv = GetSize(w, h);
-  if (NS_FAILED(rv)) { return rv; }
-
-  PRInt32 borderWidth  = 0;
-  PRInt32 borderHeight = 0;
-  if (mWindow) 
-  {
-    mWindow->GetBorderSize(borderWidth, borderHeight);
-    // Don't have the widget repaint. Layout will generate repaint requests
-    // during reflow
-    mWindow->Resize(aX, aY, w, h, PR_FALSE);
-  }
-
-  mBounds.SetRect(aX,aY,w,h);   // set the webshells bounds 
-
-  return rv;
-}
-
-NS_IMETHODIMP GetPosition(PRInt32 *aX, PRInt32 *aY)
-{
-  NS_ENSURE_ARG_POINTER(aX);
-  NS_ENSURE_ARG_POINTER(aY);
-
-  nsRect result;
-  if (nsnull != mWindow) {
-    mWindow->GetClientBounds(result);
-  } else {
-    result = mBounds;
-  }
-
-  *aX = result.x;
-  *aY = result.y;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP SetSize(PRInt32 aCX, PRInt32 aCY, PRBool aRepaint)
-{
-  PRInt32 x, y;
-  nsresult rv = GetPosition(x, y);
-  if (NS_FAILED(rv)) { return rv; }
-
-  PRInt32 borderWidth  = 0;
-  PRInt32 borderHeight = 0;
-  if (mWindow) 
-  {
-    mWindow->GetBorderSize(borderWidth, borderHeight);
-    // Don't have the widget repaint. Layout will generate repaint requests
-    // during reflow
-    mWindow->Resize(x, y, aCX, aCY, PR_FALSE);
-  }
-
-  mBounds.SetRect(x, y, aCX, aCY);   // set the webshells bounds --dwc0001
-
-  // Set the size of the content area, which is the size of the window
-  // minus the borders
-  if (nsnull != mContentViewer) {
-    nsRect rr(0, 0, aCX-(borderWidth*2), aCY-(borderHeight*2));
-    mContentViewer->SetBounds(rr);
-  }
-  return rv;
-}
-
-  /* void getSize (out long cx, out long cy); */
-NS_IMETHODIMP GetSize(PRInt32 *aCX, PRInt32 *aCY)
-{
-  NS_ENSURE_ARG_POINTER(aCX);
-  NS_ENSURE_ARG_POINTER(aCY);
-
-  nsRect result;
-  if (nsnull != mWindow) {
-    mWindow->GetClientBounds(result);
-  } else {
-    result = mBounds;
-  }
-
-  *aCX = result.width;
-  *aCY = result.height;
-
-  return NS_OK;
-}
-
-/* XXX: aRepaint is unused in this implementation
- *      the only way I know how to use it is to turn off updates on the view manager, 
- *      but then when do they get turned back on?  We'd need a "repaint now" call
- *      from the caller, I guess?
- *      If aRepaint makes sense here, it should make sense on SetPosition and SetSize as well
- */
-
-NS_IMETHODIMP SetPositionAndSize(PRInt32 aX, PRInt32 aY, PRInt32 aCX, PRInt32 aCY, PRBool aRepaint)
-{
-  PRInt32 borderWidth  = 0;
-  PRInt32 borderHeight = 0;
-  if (mWindow) 
-  {
-    mWindow->GetBorderSize(borderWidth, borderHeight);
-    // Don't have the widget repaint. Layout will generate repaint requests
-    // during reflow
-    mWindow->Resize(aX, aY, aCX, aCY, PR_FALSE);
-  }
-
-  mBounds.SetRect(aX, aY, aCX, aCY);   // set the webshells bounds --dwc0001
-
-  // Set the size of the content area, which is the size of the window
-  // minus the borders
-  if (nsnull != mContentViewer) {
-    nsRect rr(0, 0, aCX-(borderWidth*2), aCY-(borderHeight*2));
-    mContentViewer->SetBounds(rr);
-  }
-  return rv;
 }
 
 // XXX: poor error checking
-NS_IMETHODIMP SizeToContent()
+NS_IMETHODIMP nsHTMLDocShell::SizeToContent()
 {
-  nsresult rv;
+/*  nsresult rv;
 
   // get the presentation shell
   nsCOMPtr<nsIPresShell> presShell;
@@ -449,27 +268,76 @@ NS_IMETHODIMP SizeToContent()
                             windowBounds.height + heightDelta);
     }
   }
-  return rv;
+  return rv; */
+  return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP Repaint(PRBool aForce)
+//*****************************************************************************
+// nsHTMLDocShell::nsIDocShellEdit Overrides
+//*****************************************************************************   
+
+
+/* the basic idea here is to grab the topmost content object
+ * (for HTML documents, that's the BODY)
+ * and select all it's children
+ */
+NS_IMETHODIMP nsHTMLDocShell::SelectAll()
 {
-  if (mWindow) {
-    mWindow->Invalidate(aForce);
-  }
+   NS_ENSURE_STATE(m_Document && m_PresShell);
+/*  XXX Implement - There is something not quite right with the objects
+   being retrieved.  bodyNode isn't defined and bodyElement isn't used
+   and nor is node.
+   // get the selection object
+   nsCOMPtr<nsIDOMSelection> selection;
+   NS_ENSURE_SUCCESS(m_PresShell->GetSelection(SELECTION_NORMAL, 
+      getter_AddRefs(selection)), NS_ERROR_FAILURE);
+   NS_ENSURE(selection, NS_ERROR_FAILURE);
 
-	nsresult rv;
-	nsCOMPtr<nsIViewManager> viewManager;
-	rv = GetViewManager(getter_AddRefs(viewManager));
-  if (NS_FAILED(rv)) { return rv; }
-  if (!viewManager) { return NS_ERROR_NULL_POINTER; }
+   // get the body node
+   nsCOMPtr<nsIDOMNodeList> nodeList;
+   nsCOMPtr<nsIDOMElement> bodyElement;
+   nsAutoString bodyTag = "body";
 
-  //XXX: what about aForce?
-	rv = viewManager->UpdateAllViews(0);
-	return rv;
+   NS_ENSURE_SUCCESS(m_Document->GetElementsByTagName(bodyTag, 
+      getter_AddRefs(nodeList)), NS_ERROR_FAILURE);
+   NS_ENSURE(nodeList, NS_OK); // this means the document has no body, so nothing to select
+
+   PRUint32 count; 
+   NS_ENSURE_SUCCESS(nodeList->GetLength(&count), NS_ERROR_FAILURE);
+   NS_ENSURE(count != 1, NS_OK); // could be true for a frameset doc
+
+   // select all children of the body
+   nsCOMPtr<nsIDOMNode> node;
+   NS_ENSURE_SUCCESS(nodeList->Item(0, getter_AddRefs(node)), NS_ERROR_FAILURE); 
+   NS_ENSURE(node, NS_ERROR_FAILURE);
+
+   NS_ENSURE_SUCCESS(selection->Collapse(bodyNode, 0), NS_ERROR_FAILURE);
+
+   PRInt32 numBodyChildren=0;
+   nsCOMPtr<nsIDOMNode>lastChild;
+   NS_ENSURE_SUCCESS(bodyNode->GetLastChild(getter_AddRefs(lastChild)), 
+      NS_ERROR_FAILURE);
+   
+   NS_ENSURE(lastChild, NS_OK); // body isn't required to have any children, so it's ok if lastChild is null
+
+   NS_ENSURE_SUCCESS(GetChildOffset(lastChild, bodyNode, numBodyChildren), 
+      NS_ERROR_FAILURE);
+
+   NS_ENSURE_SUCCESS(selection->Extend(bodyNode, numBodyChildren+1);
+   */
+   return NS_OK;
 }
 
-NS_IMETHODIMP GetVisibility(PRBool *aVisibility)
+//*****************************************************************************
+// nsHTMLDocShell::nsIDocShellFile Overrides
+//*****************************************************************************   
+
+//*****************************************************************************
+// nsHTMLDocShell::nsIGenericWindow Overrides
+//*****************************************************************************   
+
+
+/*NS_IMETHODIMP GetVisibility(PRBool *aVisibility)
 {
   NS_ENSURE_ARG_POINTER(aVisibility);
 
@@ -501,34 +369,13 @@ NS_IMETHODIMP SetVisibility(PRBool aVisibility)
 
   rv = rootView->SetVisibility(aVisibility);
   return rv;
-}
+}      */
 
-NS_IMETHODIMP SetFocus()
-{
-  if (mWindow) {
-    mWindow->SetFocus();
-  }
-
-  return NS_OK;
-
-}
-
-NS_IMETHODIMP RemoveFocus()
-{
-  if (nsnull != mWindow) {
-    nsIWidget *parentWidget = mWindow->GetParent();
-    if (nsnull != parentWidget) {
-      parentWidget->SetFocus();
-      NS_RELEASE(parentWidget);
-    }
-  }
-  return NS_OK;
-}
 
 // XXX: SEMANTIC CHANGE! 
 //      returns a copy of the string.  Caller is responsible for freeing result
 //      using Recycle(aTitle)
-NS_IMETHODIMP GetTitle(PRUnichar **aTitle)
+/*NS_IMETHODIMP GetTitle(PRUnichar **aTitle)
 {
   NS_ENSURE_ARG_POINTER(aTitle);
 
@@ -570,9 +417,9 @@ NS_IMETHODIMP SetTitle(const PRUnichar * aTitle)
   }
 
   return NS_OK;
-}
+}       */
 
-NS_IMETHODIMP GetZoom(float *aZoom)
+/*NS_IMETHODIMP GetZoom(float *aZoom)
 {
   NS_ENSURE_ARG_POINTER(aZoom);
 
@@ -604,7 +451,7 @@ NS_IMETHODIMP SetZoom(float aZoom)
     vm->UpdateView(rootview, nsnull, 0);
   }
   return NS_OK;
-} 
+}    */
 
 //*****************************************************************************
 // nsHTMLDocShell::nsIScrollable Overrides
@@ -617,3 +464,9 @@ NS_IMETHODIMP SetZoom(float aZoom)
 //*****************************************************************************
 // nsHTMLDocShell: Helper Routines
 //***************************************************************************** 
+
+nsresult nsHTMLDocShell::GetPrimaryFrameFor(nsIContent* content, nsIFrame** frame)
+{
+   //XXX Implement
+   return NS_ERROR_FAILURE;
+}
