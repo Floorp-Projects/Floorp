@@ -26,6 +26,7 @@
  *  Jan Varga <varga@utcru.sk>
  *  Dean Tessman <dean_tessman@hotmail.com>
  *  Brian Ryner <bryner@netscape.com>
+ *  Blake Ross <blaker@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -2459,7 +2460,28 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintText(int aRowIndex,
 
           case 1:
           {
-            // XXX Not yet implemented.
+            // Crop center.
+            nsAutoString leftStr, rightStr;
+            nscoord cwidth, twidth = 0;
+            int length = text.Length();
+            int rightPos = length - 1;
+            for (int leftPos = 0; leftPos < rightPos; ++leftPos) {
+              PRUnichar ch = text[leftPos];
+              aRenderingContext.GetWidth(ch, cwidth);
+              twidth += cwidth;
+              if (twidth > width)
+                break;
+              leftStr.Append(ch);
+ 
+              ch = text[rightPos];
+              aRenderingContext.GetWidth(ch, cwidth);
+              twidth += cwidth;
+              if (twidth > width)
+                break;
+              rightStr.Insert(ch, 0);
+              --rightPos;
+            }
+            text = leftStr + NS_LITERAL_STRING(ELLIPSIS) + rightStr;
           }
           break;
         }
