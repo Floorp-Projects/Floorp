@@ -131,7 +131,6 @@ private:
   nsSpaceManager* mSpaceManager;
   nsVoidArray     mAbsoluteItems;
 
-  void CreateColumnFrame(nsIPresContext* aPresContext);
   nsSize GetColumnAvailSpace(nsIPresContext* aPresContext,
                              const nsMargin& aBorderPadding,
                              const nsSize&   aMaxSize);

@@ -120,15 +120,6 @@ NS_METHOD nsBodyFrame::Reflow(nsIPresContext&      aPresContext,
 
   aStatus = NS_FRAME_COMPLETE;  // initialize out parameter
 
-  // XXX CONSTRUCTION
-  // Do we have any children?
-  if (nsnull == mFirstChild) {
-    // No, create a pseudo block frame.
-    // XXX Temp hack until all frame construction work is complete. This is needed
-    // in case the Init() member function wasn't called...
-    NS_ASSERTION(eReflowReason_Initial == aReflowState.reason, "bad reason");
-    CreateColumnFrame(&aPresContext);
-  }
 #if 0
   else {
     NS_ASSERTION(eReflowReason_Initial != aReflowState.reason, "bad reason");
@@ -344,20 +335,6 @@ NS_METHOD nsBodyFrame::Reflow(nsIPresContext&      aPresContext,
   return NS_OK;
 }
 
-// XXX CONSTRUCTION
-#if 0
-NS_METHOD nsBodyFrame::ContentAppended(nsIPresShell*   aShell,
-                                       nsIPresContext* aPresContext,
-                                       nsIContent*     aContainer)
-{
-  NS_ASSERTION(mContent == aContainer, "bad content-appended target");
-
-  // Pass along the notification to our pseudo frame. It will generate a
-  // reflow command
-  return mFirstChild->ContentAppended(aShell, aPresContext, aContainer);
-}
-#endif
-
 NS_METHOD nsBodyFrame::ContentInserted(nsIPresShell*   aShell,
                                        nsIPresContext* aPresContext,
                                        nsIContent*     aContainer,
@@ -502,32 +479,6 @@ nsBodyFrame::DidSetStyleContext(nsIPresContext* aPresContext)
 }
 /////////////////////////////////////////////////////////////////////////////
 // Helper functions
-
-void nsBodyFrame::CreateColumnFrame(nsIPresContext* aPresContext)
-{
-  nsIStyleContext* styleContext =
-   aPresContext->ResolvePseudoStyleContextFor(nsHTMLAtoms::columnPseudo, this);
-
-  // Do we have a prev-in-flow?
-  if (nsnull == mPrevInFlow) {
-    // No, create a column pseudo frame
-    NS_NewBlockFrame(mContent, this, mFirstChild);
-    mChildCount = 1;
-    mFirstChild->SetStyleContext(aPresContext,styleContext);
-  } else {
-    // Create a continuing column
-    nsBodyFrame*  prevBody = (nsBodyFrame*)mPrevInFlow;
-    nsIFrame* prevColumn = prevBody->mFirstChild;
-    NS_ASSERTION(prevBody->ChildIsPseudoFrame(prevColumn),
-                 "bad previous column");
-
-    prevColumn->CreateContinuingFrame(*aPresContext, this, styleContext,
-                                      mFirstChild);
-    mChildCount = 1;
-  }
-
-  NS_RELEASE(styleContext);
-}
 
 nsSize nsBodyFrame::GetColumnAvailSpace(nsIPresContext*  aPresContext,
                                         const nsMargin&  aBorderPadding,
