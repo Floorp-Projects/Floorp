@@ -1345,7 +1345,7 @@ nsPop3Protocol::GetStat()
       nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_url);
       if (mailnewsUrl)
         rv = mailnewsUrl->GetMsgWindow(getter_AddRefs(msgWindow));
-	    NS_ASSERTION(NS_SUCCEEDED(rv) && msgWindow, "no msg window");
+//	    NS_ASSERTION(NS_SUCCEEDED(rv) && msgWindow, "no msg window");
 
       rv = m_nsIPop3Sink->BeginMailDelivery(m_pop3ConData->only_uidl != nsnull, msgWindow,
                                                     &m_pop3ConData->msg_del_started);
@@ -1919,8 +1919,13 @@ nsPop3Protocol::GetMsg()
     int i;
     PRBool prefBool = PR_FALSE;
 
-    if(m_pop3ConData->last_accessed_msg >= m_pop3ConData->number_of_messages) {
+    if(m_pop3ConData->last_accessed_msg >= m_pop3ConData->number_of_messages) 
+    {
         /* Oh, gee, we're all done. */
+        if(m_pop3ConData->msg_del_started)
+            m_nsIPop3Sink->EndMailDelivery();
+
+
         m_pop3ConData->next_state = POP3_SEND_QUIT;
         return 0;
     }
@@ -3078,9 +3083,6 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
         case POP3_DONE:
             CommitState(PR_FALSE);
             
-            if(m_pop3ConData->msg_del_started)
-                m_nsIPop3Sink->EndMailDelivery();
-
 			      if (mailnewsurl)
 				      mailnewsurl->SetUrlState(PR_FALSE, NS_OK);
             m_pop3ConData->next_state = POP3_FREE;
