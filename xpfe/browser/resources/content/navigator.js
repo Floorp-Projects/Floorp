@@ -124,9 +124,7 @@ const gHomepagePrefListener =
     if (topic != "nsPref:changed")
       return;
 
-    var homePage = getHomePage();
-    if (homePage)
-      setTooltipText("home-button", homePage);
+    updateHomeButtonTooltip();
   }
 };
 
@@ -227,6 +225,22 @@ function contentAreaFrameFocus()
   }
 }
 
+function updateHomeButtonTooltip()
+{
+  const XUL_NAMESPACE = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+  var homePage = getHomePage();
+  var tooltip = document.getElementById("home-button-tooltip-inner");
+
+  while (tooltip.firstChild)
+    tooltip.removeChild(tooltip.firstChild);
+
+  for (var i in homePage) {
+    var label = document.createElementNS(XUL_NAMESPACE, "label");
+    label.setAttribute("value", homePage[i]);
+    tooltip.appendChild(label);
+  }
+}
+
 //////////////////////////////// BOOKMARKS ////////////////////////////////////
 
 function UpdateBookmarksLastVisitedDate(event)
@@ -290,18 +304,19 @@ function getBrowser()
 
 function getHomePage()
 {
-  var url;
+  var URIs = [];
   try {
-    url = pref.getComplexValue("browser.startup.homepage",
-                               Components.interfaces.nsIPrefLocalizedString).data;
-  } catch (e) {
+    URIs[0] = pref.getComplexValue("browser.startup.homepage",
+                                   Components.interfaces.nsIPrefLocalizedString).data;
+    var count = pref.getIntPref("browser.startup.homepage.count");
+    for (var i = 1; i < count; ++i) {
+      URIs[i] = pref.getComplexValue("browser.startup.homepage."+i,
+                                     Components.interfaces.nsIPrefLocalizedString).data;
+    }
+  } catch(e) {
   }
 
-  // use this if we can't find the pref
-  if (!url)
-    url = gNavigatorRegionBundle.getString("homePageDefault");
-
-  return url;
+  return URIs;
 }
 
 function UpdateBackForwardButtons()
@@ -401,9 +416,7 @@ function Startup()
   // Do all UI building here:
 
   // set home button tooltip text
-  var homePage = getHomePage();
-  if (homePage)
-    document.getElementById("home-button").setAttribute("tooltiptext", homePage);
+  updateHomeButtonTooltip();
 
   // initialize observers and listeners
   window.XULBrowserWindow = new nsBrowserStatusHandler();
@@ -483,8 +496,12 @@ function Startup()
     var uriToLoad;
 
     // Check for window.arguments[0]. If present, use that for uriToLoad.
-    if ("arguments" in window && window.arguments.length >= 1 && window.arguments[0])
-      uriToLoad = window.arguments[0];
+    if ("arguments" in window && window.arguments.length >= 1 && window.arguments[0]) {
+      var uriArray = window.arguments[0].split('\n');
+      uriToLoad = uriArray.splice(0, 1);
+      if (uriArray.length > 0)
+        window.setTimeout(function(arg) { for (var i in arg) gBrowser.addTab(arg[i]); }, 0, uriArray);
+    }
     
     if (uriToLoad && uriToLoad != "about:blank") {
       gURLBar.value = uriToLoad;
@@ -701,7 +718,12 @@ function BrowserReloadSkipCache()
 function BrowserHome()
 {
   var homePage = getHomePage();
-  loadURI(homePage);
+  if (homePage.length == 1) {
+    loadURI(homePage[0]);
+  } else {
+    for (var i in homePage)
+      gBrowser.addTab(homePage[i]);
+  }
 }
 
 function OpenBookmarkGroup(element, datasource)

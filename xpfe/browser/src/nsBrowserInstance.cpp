@@ -719,6 +719,43 @@ PRBool nsBrowserContentHandler::NeedHomepageOverride(nsIPref *aPrefService)
   return PR_FALSE;
 }
 
+nsresult GetHomePageGroup(nsIPref* aPref, PRUnichar** aResult)
+{
+  nsresult rv;
+
+  nsXPIDLString uri;
+  rv = aPref->GetLocalizedUnicharPref(PREF_BROWSER_STARTUP_HOMEPAGE, getter_Copies(uri));
+  if (NS_FAILED(rv))
+    return rv;
+
+  PRInt32 count = 0;
+  rv = aPref->GetIntPref("browser.startup.homepage.count", &count);
+
+  // if we couldn't get the pref (unlikely) or only have one homepage
+  if (NS_FAILED(rv) || count <= 1) {
+    *aResult = ToNewUnicode(uri);
+    return NS_OK;
+  }
+
+  // The "homepage" is a group of pages, put them in uriList separated by '\n'
+  nsAutoString uriList(uri);
+
+  for (PRInt32 i = 1; i < count; ++i) {
+    nsCAutoString pref(NS_LITERAL_CSTRING("browser.startup.homepage."));
+    pref.AppendInt(i);
+
+    rv = aPref->GetLocalizedUnicharPref(pref.get(), getter_Copies(uri));
+    if (NS_FAILED(rv))
+      return rv;
+
+    uriList.Append(PRUnichar('\n'));
+    uriList.Append(uri);
+  }
+
+  *aResult = ToNewUnicode(uriList);
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsBrowserContentHandler::GetDefaultArgs(PRUnichar **aDefaultArgs)
 {
   if (!aDefaultArgs)
@@ -769,10 +806,8 @@ NS_IMETHODIMP nsBrowserContentHandler::GetDefaultArgs(PRUnichar **aDefaultArgs)
       if (NS_SUCCEEDED(rv)) {
         switch (choice) {
           case 1: {
-            nsXPIDLString url;
-            rv = prefs->GetLocalizedUnicharPref(PREF_BROWSER_STARTUP_HOMEPAGE, getter_Copies(url));
-            args = url;
-            break;
+            // skip the code below
+            return GetHomePageGroup(prefs, aDefaultArgs);
           }
           case 2: {
             nsCOMPtr<nsIBrowserHistory> history(do_GetService(kCGlobalHistoryCID));
