@@ -247,14 +247,22 @@ nsAppShellService::CreateTopLevelWindow(nsIWidget *aParent,
 NS_IMETHODIMP
 nsAppShellService::CloseTopLevelWindow(nsIWidget* aWindow)
 {
-  nsresult rv;
+  nsresult closerv, unregrv;
+  void     *data;
 
-  rv = UnregisterTopLevelWindow(aWindow);
-  if (0 == mWindowList->Count()) {
-    mAppShell->Exit();
+  aWindow->GetClientData(data);
+  if (data == nsnull)
+    closerv = NS_ERROR_NULL_POINTER;
+  else {
+    nsWebShellWindow* window = (nsWebShellWindow *) data;
+    window->Close();
   }
 
-  return rv;
+  unregrv = UnregisterTopLevelWindow(aWindow);
+  if (0 == mWindowList->Count())
+    mAppShell->Exit();
+
+  return closerv == NS_OK ? unregrv : closerv;
 }
 
 /*
