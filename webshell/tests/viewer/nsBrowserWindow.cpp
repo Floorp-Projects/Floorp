@@ -77,7 +77,7 @@
 #if defined(WIN32)
 #include <strstrea.h>
 #else
-#include <strstream>
+#include <strstream.h>
 #endif
 
 #if defined(WIN32)
