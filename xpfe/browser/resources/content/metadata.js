@@ -514,6 +514,9 @@ function convertLanguageCode(abbr)
 {
     if (!abbr) return "";
     var result;
+    var language = "";
+    var region;
+    var is_region_set = false;
     var tokens = abbr.split("-");
 
     if (tokens[0] === "x" || tokens[0] === "i")
@@ -525,13 +528,14 @@ function convertLanguageCode(abbr)
         if (tokens[0])
         {
             // Upper-case first letter
-            result = tokens[0].substr(0, 1).toUpperCase() + tokens[0].substr(1);
+            language = tokens[0].substr(0, 1).toUpperCase() + tokens[0].substr(1);
             tokens.shift();
 
             if (tokens[0])
             {
                 // Add on the rest as space-separated strings inside the brackets
-                result += " (" + tokens.join(" ") + ")";
+                region = tokens.join(" ");
+                is_region_set = true;
             }
         }
     }
@@ -541,12 +545,12 @@ function convertLanguageCode(abbr)
         // and the rest as strings.
         try
         {
-            result = gLangBundle.getString(tokens[0]);
+            language = gLangBundle.getString(tokens[0]);
         }
         catch (e) 
         {
             // Language not present in lang bundle
-            result = tokens[0]; 
+            language = tokens[0]; 
         }
 
         tokens.shift();
@@ -557,17 +561,32 @@ function convertLanguageCode(abbr)
             {
                 // We don't add it on to the result immediately
                 // because we want to get the spacing right.
-                tokens[0] = gRegionBundle.getString(tokens[0].toLowerCase());
+                region = gRegionBundle.getString(tokens[0].toLowerCase());
+
+                tokens.shift();
+
+                if (tokens[0])
+                {
+                    // Add on the rest as space-separated strings inside the brackets
+                    region += " " + tokens.join(" ");
+                }
             }
             catch (e) 
             {
                 // Region not present in region bundle
+                region = tokens.join(" ");
             }
 
-            result += " (" + tokens.join(" ") + ")";
+            is_region_set = true;
         }
     }
 
+    if (is_region_set) {
+        result = gMetadataBundle.getFormattedString("languageRegionFormat",
+                                                    [language, region]);
+    } else {
+        result = language;
+    }
     return result;
 }
 
