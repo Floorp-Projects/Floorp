@@ -80,7 +80,7 @@ if (defined $warning_buildnames_pat
 if (defined $bloat_buildnames_pat
     and $tinderbox{build} =~ /^$bloat_buildnames_pat$/
     and $tinderbox{status} eq 'success') {
-  system './bloat.pl $tindexbox{tree} $tinderbox{logfile}';
+  system "./bloat.pl $tindexbox{tree} $tinderbox{logfile}";
 }
 
 # Static pages
