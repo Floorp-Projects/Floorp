@@ -26,22 +26,6 @@
 
 static NS_DEFINE_IID(kISpaceManagerIID, NS_ISPACEMANAGER_IID);
 
-PR_CALLBACK PLHashNumber
-NS_HashNumber(const void* key)
-{
-  return (PLHashNumber)key;
-}
-
-PR_CALLBACK PRIntn
-NS_RemoveFrameInfoEntries(PLHashEntry* he, PRIntn i, void* arg)
-{
-  nsSpaceManager::FrameInfo* frameInfo = (nsSpaceManager::FrameInfo*)he->value;
-
-  NS_ASSERTION(nsnull != frameInfo, "null frameInfo");
-  delete frameInfo;
-  return HT_ENUMERATE_REMOVE;
-}
-
 /////////////////////////////////////////////////////////////////////////////
 // BandList
 
@@ -85,10 +69,10 @@ nsSpaceManager::nsSpaceManager(nsIFrame* aFrame)
 void
 nsSpaceManager::ClearFrameInfo()
 {
-  if (nsnull != mFrameInfoMap) {
-    PL_HashTableEnumerateEntries(mFrameInfoMap, NS_RemoveFrameInfoEntries, 0);
-    PL_HashTableDestroy(mFrameInfoMap);
-    mFrameInfoMap = nsnull;
+  while (mFrameInfoMap) {
+    FrameInfo*  next = mFrameInfoMap->mNext;
+    delete mFrameInfoMap;
+    mFrameInfoMap = next;
   }
 }
 
@@ -976,8 +960,10 @@ nsSpaceManager::GetFrameInfoFor(nsIFrame* aFrame)
 {
   FrameInfo*  result = nsnull;
 
-  if (nsnull != mFrameInfoMap) {
-    result = (FrameInfo*)PL_HashTableLookup(mFrameInfoMap, (const void*)aFrame);
+  for (result = mFrameInfoMap; result; result = result->mNext) {
+    if (result->mFrame == aFrame) {
+      break;
+    }
   }
 
   return result;
@@ -986,17 +972,12 @@ nsSpaceManager::GetFrameInfoFor(nsIFrame* aFrame)
 nsSpaceManager::FrameInfo*
 nsSpaceManager::CreateFrameInfo(nsIFrame* aFrame, const nsRect& aRect)
 {
-  if (nsnull == mFrameInfoMap) {
-    mFrameInfoMap = PL_NewHashTable(17, NS_HashNumber, PL_CompareValues,
-                                    PL_CompareValues, nsnull, nsnull);
-    if (nsnull == mFrameInfoMap) {
-      return nsnull;
-    }
-  }
-
   FrameInfo*  frameInfo = new FrameInfo(aFrame, aRect);
-  if (nsnull != frameInfo) {
-    PL_HashTableAdd(mFrameInfoMap, (const void*)aFrame, frameInfo);
+
+  if (frameInfo) {
+    // Link it into the list
+    frameInfo->mNext = mFrameInfoMap;
+    mFrameInfoMap = frameInfo;
   }
   return frameInfo;
 }
@@ -1004,7 +985,25 @@ nsSpaceManager::CreateFrameInfo(nsIFrame* aFrame, const nsRect& aRect)
 void
 nsSpaceManager::DestroyFrameInfo(FrameInfo* aFrameInfo)
 {
-  PL_HashTableRemove(mFrameInfoMap, (const void*)aFrameInfo->mFrame);
+  // See if it's at the head of the list
+  if (mFrameInfoMap == aFrameInfo) {
+    mFrameInfoMap = aFrameInfo->mNext;
+
+  } else {
+    FrameInfo*  prev;
+    
+    // Find the previous node in the list
+    for (prev = mFrameInfoMap; prev && (prev->mNext != aFrameInfo); prev = prev->mNext) {
+      ;
+    }
+
+    // Disconnect it from the list
+    NS_ASSERTION(prev, "element not in list");
+    if (prev) {
+      prev->mNext = aFrameInfo->mNext;
+    }
+  }
+
   delete aFrameInfo;
 }
 
@@ -1012,7 +1011,7 @@ nsSpaceManager::DestroyFrameInfo(FrameInfo* aFrameInfo)
 // FrameInfo
 
 nsSpaceManager::FrameInfo::FrameInfo(nsIFrame* aFrame, const nsRect& aRect)
-  : mFrame(aFrame), mRect(aRect)
+  : mFrame(aFrame), mRect(aRect), mNext(0)
 {
 }
 
@@ -1220,11 +1219,9 @@ nsSpaceManager::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
     } while (bandRect != &mBandList);
   }
 
-  // Add in the size of the hash table
-  if (mFrameInfoMap) {
-    *aResult += sizeof(PLHashTable);
-    *aResult += (1 << (PL_HASH_BITS - mFrameInfoMap->shift)) * sizeof(PLHashEntry*);
-    *aResult += mFrameInfoMap->nentries * sizeof(PLHashEntry);
+  // Add in the size of the frame info map
+  for (FrameInfo* info = mFrameInfoMap; info; info = info->mNext) {
+    *aResult += sizeof(*info);
   }
 }
 #endif
