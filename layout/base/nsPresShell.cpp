@@ -36,6 +36,7 @@
 #include "nsIViewManager.h"
 #include "nsCRT.h"
 #include "prlog.h"
+#include "prmem.h"
 #include "prinrval.h"
 #include "nsVoidArray.h"
 #include "nsIPref.h"
@@ -174,13 +175,13 @@ struct StackBlock {
    StackBlock* mNext;
    StackBlock()
    {
-      mBlock = new char*[BLOCK_INCREMENT];
+      mBlock = PR_Malloc(BLOCK_INCREMENT);
       mNext = nsnull;
    }
 
    ~StackBlock()
    {
-     delete[] mBlock;
+     PR_Free(mBlock);
    }
 };
 
