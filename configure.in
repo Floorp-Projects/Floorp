@@ -729,6 +729,7 @@ case "$target" in
     AC_DEFINE(_POSIX_SOURCE)
     AC_DEFINE(_SVID_SOURCE)
     TARGET_NSPR_MDCPUCFG='\"md/_linux.cfg\"'
+    DSO_LDOPTS="$DSO_LDOPTS -Wl,-Bsymbolic"
     LIBS="$LIBS -lc"
 
     case "${host_cpu}" in
