@@ -22,21 +22,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-SAMPLES_DIR	= $(DIST)/bin/res/profile
-
-EXPORT_RESOURCE_SAMPLES = \
-		prefmProgress.xul \
-		progress_undetermined.xul \
-		prefmProgress.css \
-		pmunprog.dtd	\
-		pmunprog.js	\
-		pmunprog.xul	\
-		$(NULL)
+DIRS		= content locale
 
 include $(topsrcdir)/config/rules.mk
-
-GARBAGE		+= $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))
-
-install::
-	$(INSTALL) $(addprefix $(srcdir)/, $(EXPORT_RESOURCE_SAMPLES)) $(SAMPLES_DIR)
-

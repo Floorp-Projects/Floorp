@@ -16,18 +16,7 @@
 # Reserved.
 
 DEPTH=..\..\..
-MODULE=profile
+
+DIRS=locale content
 
 include <$(DEPTH)\config\rules.mak>
-
-FILES=\
-        prefmProgress.xul					\
-        progress_undetermined.xul \
-        prefmProgress.css					\
-	pmunprog.dtd	\
-	pmunprog.js	\
-	pmunprog.xul	\
-        $(NULL)
-
-install::
-        -for %i in ($(FILES:/=\)) do $(MAKE_INSTALL) %i $(DIST)\bin\res\profile
