@@ -449,7 +449,7 @@ if (!UserInGroup(Param("timetrackinggroup"))) {
 my @selectcolumns = ("id");
 
 # remaining and actual_time are required for precentage_complete calculation:
-if (lsearch(\@displaycolumns, "percentage_complete")) {
+if (lsearch(\@displaycolumns, "percentage_complete") >= 0) {
     push (@selectcolumns, "remaining_time");
     push (@selectcolumns, "actual_time");
 }
