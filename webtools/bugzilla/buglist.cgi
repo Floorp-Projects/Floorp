@@ -40,7 +40,7 @@ sub sillyness {
     $zz = @::legal_platform;
     $zz = @::legal_priority;
     $zz = @::legal_product;
-    $zz = @::legal_resolution_no_dup;
+    $zz = @::settable_resolution;
     $zz = @::legal_severity;
     $zz = @::versions;
     $zz = @::target_milestone;
@@ -1217,7 +1217,8 @@ function SetCheckboxes(value) {
 }
 document.write(\" <input type=button value=\\\"Uncheck All\\\" onclick=\\\"SetCheckboxes(false);\\\"> <input type=button value=\\\"Check All\\\" onclick=\\\"SetCheckboxes(true);\\\">\");
 </SCRIPT>";
-    my $resolution_popup = make_options(\@::legal_resolution_no_dup, "FIXED");
+
+    my $resolution_popup = make_options(\@::settable_resolution, "FIXED");
     my @prod_list = keys %prodhash;
     my @list = @prod_list;
     my @legal_versions;

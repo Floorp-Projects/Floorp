@@ -412,10 +412,20 @@ sub GenerateVersionTable {
     @::legal_opsys = SplitEnumType($cols->{"op_sys,type"});
     @::legal_bug_status = SplitEnumType($cols->{"bug_status,type"});
     @::legal_resolution = SplitEnumType($cols->{"resolution,type"});
-    @::legal_resolution_no_dup = @::legal_resolution;
-    my $w = lsearch(\@::legal_resolution_no_dup, "DUPLICATE");
+
+    # 'settable_resolution' is the list of resolutions that may be set 
+    # directly by hand in the bug form. Start with the list of legal 
+    # resolutions and remove 'MOVED' and 'DUPLICATE' because setting 
+    # bugs to those resolutions requires a special process.
+    #
+    @::settable_resolution = @::legal_resolution;
+    my $w = lsearch(\@::settable_resolution, "DUPLICATE");
     if ($w >= 0) {
-        splice(@::legal_resolution_no_dup, $w, 1);
+        splice(@::settable_resolution, $w, 1);
+    }
+    my $z = lsearch(\@::settable_resolution, "MOVED");
+    if ($z >= 0) {
+        splice(@::settable_resolution, $z, 1);
     }
 
     my @list = sort { uc($a) cmp uc($b)} keys(%::versions);
@@ -439,9 +449,10 @@ sub GenerateVersionTable {
     @::legal_components = sort {uc($a) cmp uc($b)} keys(%carray);
     print FID GenerateCode('@::legal_components');
     foreach my $i('product', 'priority', 'severity', 'platform', 'opsys',
-                  'bug_status', 'resolution', 'resolution_no_dup') {
+                  'bug_status', 'resolution') {
         print FID GenerateCode('@::legal_' . $i);
     }
+    print FID GenerateCode('@::settable_resolution');
     print FID GenerateCode('%::proddesc');
     print FID GenerateCode('%::prodmaxvotes');
     print FID GenerateCode('$::anyvotesallowed');

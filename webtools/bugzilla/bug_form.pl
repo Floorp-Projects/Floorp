@@ -39,7 +39,7 @@ sub bug_form_pl_sillyness {
     $zz = @::legal_platform;
     $zz = @::legal_product;
     $zz = @::legal_priority;
-    $zz = @::legal_resolution_no_dup;
+    $zz = @::settable_resolution;
     $zz = @::legal_severity;
     $zz = %::target_milestone;
 }
@@ -140,7 +140,7 @@ GetVersionTable();
 # These should be read from the database ...
 #
 
-my $resolution_popup = make_options(\@::legal_resolution_no_dup,
+my $resolution_popup = make_options(\@::settable_resolution,
 				    $bug{'resolution'});
 my $platform_popup = make_options(\@::legal_platform, $bug{'rep_platform'});
 my $priority_popup = make_options(\@::legal_priority, $bug{'priority'});
