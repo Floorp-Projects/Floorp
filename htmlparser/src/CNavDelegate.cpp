@@ -58,7 +58,7 @@ CNavDelegate::CNavDelegate() :
  *  @return  
  */
 CNavDelegate::CNavDelegate(CNavDelegate& aDelegate) : 
-  ITokenizerDelegate(), mTokenDeque() {
+  ITokenizerDelegate(), mTokenDeque(PR_TRUE,TokenFreeProc) {
 }
 
 

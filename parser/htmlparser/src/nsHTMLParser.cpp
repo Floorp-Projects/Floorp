@@ -613,19 +613,19 @@ extern "C" NS_EXPORT void DumpVectorRecord(void)
 	if (gVectorCount) {
 
         // hopefully, they wont exceed 1K.
-		char vector_string[1024];
-		char path[1024];
+      char vector_string[1024];
+      char path[1024];
 
-		path[0] = '\0';
+      path[0] = '\0';
 
-        // put in the verification directory.. else the root
-		if (gVerificationOutputDir)
-			strcpy(path,gVerificationOutputDir);
+      // put in the verification directory.. else the root
+      if (gVerificationOutputDir)
+         strcpy(path,gVerificationOutputDir);
 
-		strcat(path,CONTEXT_VECTOR_STAT);
+      strcat(path,CONTEXT_VECTOR_STAT);
 
-        // open the stat file creaming any existing stat file
-		PRFileDesc * statisticFile = PR_Open(path,PR_CREATE_FILE|PR_RDWR,0);
+      // open the stat file creaming any existing stat file
+      PRFileDesc * statisticFile = PR_Open(path,PR_CREATE_FILE|PR_RDWR,0);
 		if (statisticFile) {
 
             PRInt32 i;
@@ -633,43 +633,46 @@ extern "C" NS_EXPORT void DumpVectorRecord(void)
             ps.attach(statisticFile);
         
             // oh what the heck, sort it again
-			SortVectorRecord();
+            SortVectorRecord();
 
             // cute little header
-		    sprintf(vector_string,"Context vector occurance results. Processed %d unique vectors.\r\n\r\n", gVectorCount);
-		    ps << vector_string;
+            sprintf(vector_string,"Context vector occurance results. Processed %d unique vectors.\r\n\r\n", gVectorCount);
+            ps << vector_string;
 
             ps << "Invalid context vector summary (see " CONTEXT_VECTOR_STAT ") for mapping.\r\n";
-		    ps << VECTOR_TABLE_HEADER;
+            ps << VECTOR_TABLE_HEADER;
 
             // dump out the bad vectors encountered
-			for (i = 0; i < gVectorCount; i++) {
-                if (!gVectorInfoArray[i]->good_vector) {
-                    MakeVectorString(vector_string, gVectorInfoArray[i]);
-	    			ps << vector_string;
-                }
+            for (i = 0; i < gVectorCount; i++) {
+               if (!gVectorInfoArray[i]->good_vector) {
+                  MakeVectorString(vector_string, gVectorInfoArray[i]);
+                  ps << vector_string;
+               }
             }
 
             ps << "\r\n\r\nValid context vector summary\r\n";
-		    ps << VECTOR_TABLE_HEADER;
+            ps << VECTOR_TABLE_HEADER;
             
             // take a big vector table dump (good vectors)
-			for (i = 0; i < gVectorCount; i++) {
-                if (gVectorInfoArray[i]->good_vector) {
-                    MakeVectorString(vector_string, gVectorInfoArray[i]);
-	    			ps << vector_string;
-                }
+            for (i = 0; i < gVectorCount; i++) {
+               if (gVectorInfoArray[i]->good_vector) {
+                  MakeVectorString(vector_string, gVectorInfoArray[i]);
+                  ps << vector_string;
+               }
                 // free em up.  they mean nothing to me now (I'm such a user)
-				PR_Free(gVectorInfoArray[i]);
-			}
-		}
+
+            if (gVectorInfoArray[i]->vector)
+               PR_Free(gVectorInfoArray[i]->vector);
+            PR_Free(gVectorInfoArray[i]);
+         }
+      }
 
         // ok, we are done with the table, free it up as well
-		PR_Free(gVectorInfoArray);
-		gVectorInfoArray = 0;
-		gVectorCount = 0;
-		PR_Close(statisticFile);
-	}
+      PR_Free(gVectorInfoArray);
+      gVectorInfoArray = 0;
+      gVectorCount = 0;
+      PR_Close(statisticFile);
+   }
 }
 
 /**
