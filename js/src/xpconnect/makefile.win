@@ -31,9 +31,9 @@ REQUIRES=xpcom js
 DEFINES=-DWIN32_LEAN_AND_MEAN -DEXPORT_XPC_API
 
 OBJS=					\
+	.\$(OBJDIR)\xpt_cpp.obj	\
 	.\$(OBJDIR)\nsXPConnect.obj	\
 	.\$(OBJDIR)\xpcarbitrary.obj	\
-	.\$(OBJDIR)\xpcbogusii.obj	\
 	.\$(OBJDIR)\xpccontext.obj	\
 	.\$(OBJDIR)\xpcconvert.obj	\
 	.\$(OBJDIR)\xpcinvoke.obj	\
@@ -48,11 +48,12 @@ OBJS=					\
 
 EXPORTS =					\
     nsIXPCScriptable.h \
+    nsIInterfaceInfo.h \
+    nsIInterfaceInfoManager.h \
     nsIXPConnect.h     \
-    xpcbogusii.h       \
 	$(NULL)
 
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\js -I$(PUBLIC)\raptor
+LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\js -I$(PUBLIC)\raptor -I$(PUBLIC)\libxpt
 
 LCFLAGS = \
         $(LCFLAGS) \

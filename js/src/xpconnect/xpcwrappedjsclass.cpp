@@ -46,12 +46,21 @@ nsXPCWrappedJSClass::GetNewOrUsedClass(XPCContext* xpcc,
     }
     else
     {
-        nsIInterfaceInfo* info;
         nsXPConnect* xpc;
-        if((xpc = nsXPConnect::GetXPConnect()) != NULL &&
-           NS_SUCCEEDED(xpc->GetInterfaceInfo(aIID, &info)))
+        if((xpc = nsXPConnect::GetXPConnect()) != NULL)
         {
-            clazz = new nsXPCWrappedJSClass(xpcc, aIID, info);
+            nsIInterfaceInfoManager* iimgr;
+            if((iimgr = xpc->GetInterfaceInfoManager()) != NULL)
+            {
+                nsIInterfaceInfo* info;
+                if(NS_SUCCEEDED(iimgr->GetInfoForIID(&aIID, &info)))
+                {
+                    clazz = new nsXPCWrappedJSClass(xpcc, aIID, info);
+                    NS_RELEASE(info);
+                }
+                NS_RELEASE(iimgr);
+            }
+            NS_RELEASE(xpc);
         }
     }
     return clazz;
@@ -220,7 +229,7 @@ nsXPCWrappedJSClass::GetRootJSObject(JSObject* aJSObj)
 
 NS_IMETHODIMP
 nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper,
-                                const nsXPCMethodInfo* info,
+                                const nsXPTMethodInfo* info,
                                 nsXPCMiniVariant* params)
 {
 #define ARGS_BUFFER_COUNT     32
@@ -257,8 +266,8 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper,
     // build the args
     for(i = 0; i < argc; i++)
     {
-        const nsXPCParamInfo& param = info->GetParam(i);
-        const nsXPCType& type = param.GetType();
+        const nsXPTParamInfo& param = info->GetParam(i);
+        const nsXPTType& type = param.GetType();
 
         jsval val;
 
@@ -271,7 +280,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper,
             else
                 pv = &params[i];
 
-            if(type & nsXPCType::IS_POINTER)
+            if(type.IsPointer())
                 pv = (nsXPCMiniVariant*) pv->val.p;
 
             if(!xpc_ConvertNativeData2JS(&val, &pv->val, type))
@@ -312,12 +321,12 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper,
     // NOTE: this is the total number of native params, not just the args
     for(i = 0; i < paramCount; i++)
     {
-        const nsXPCParamInfo& param = info->GetParam(i);
+        const nsXPTParamInfo& param = info->GetParam(i);
 
         if(param.IsOut())
         {
             jsval val;
-            const nsXPCType& type = param.GetType();
+            const nsXPTType& type = param.GetType();
             nsXPCMiniVariant* pv;
 
             if(param.IsRetval())
@@ -326,7 +335,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper,
                 goto done;
 
             pv = (nsXPCMiniVariant*) params[i].val.p;
-            if(type & nsXPCType::IS_POINTER)
+            if(type.IsPointer())
                 pv = (nsXPCMiniVariant*) pv->val.p;
 
             if(!xpc_ConvertJSData2Native(cx, &pv->val, &val, type))

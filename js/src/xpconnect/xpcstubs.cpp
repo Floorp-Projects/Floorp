@@ -32,7 +32,7 @@ PrepareAndDispatch(nsXPCWrappedJS* self, uint32 methodIndex,
     nsXPCMiniVariant* dispatchParams = NULL;
     nsXPCWrappedJSClass* clazz;
     nsIInterfaceInfo* iface_info;
-    const nsXPCMethodInfo* info;
+    const nsXPTMethodInfo* info;
     uint8 paramCount;
     uint8 i;
     nsresult result = NS_ERROR_FAILURE;
@@ -48,7 +48,7 @@ PrepareAndDispatch(nsXPCWrappedJS* self, uint32 methodIndex,
     iface_info = clazz->GetInterfaceInfo();
     NS_ASSERTION(iface_info,"no interface info");
 
-    iface_info->GetMethodInfo(methodIndex, &info);
+    iface_info->GetMethodInfo(uint16(methodIndex), &info);
     NS_ASSERTION(info,"no interface info");
 
     paramCount = info->GetParamCount();
@@ -63,11 +63,11 @@ PrepareAndDispatch(nsXPCWrappedJS* self, uint32 methodIndex,
     uint32* ap = args;
     for(i = 0; i < paramCount; i++, ap++)
     {
-        const nsXPCParamInfo& param = info->GetParam(i);
-        const nsXPCType& type = param.GetType();
+        const nsXPTParamInfo& param = info->GetParam(i);
+        const nsXPTType& type = param.GetType();
         nsXPCMiniVariant* dp = &dispatchParams[i];
 
-        if(param.IsOut() || (type & nsXPCType::IS_POINTER))
+        if(param.IsOut() || type.IsPointer())
         {
             dp->val.p = (void*) *ap;
             continue;
@@ -75,19 +75,19 @@ PrepareAndDispatch(nsXPCWrappedJS* self, uint32 methodIndex,
         // else
         switch(type)
         {
-        case nsXPCType::T_I8     : dp->val.i8  = *((int8*)   ap);       break;
-        case nsXPCType::T_I16    : dp->val.i16 = *((int16*)  ap);       break;
-        case nsXPCType::T_I32    : dp->val.i32 = *((int32*)  ap);       break;
-        case nsXPCType::T_I64    : dp->val.i64 = *((int64*)  ap); ap++; break;
-        case nsXPCType::T_U8     : dp->val.u8  = *((uint8*)  ap);       break;
-        case nsXPCType::T_U16    : dp->val.u16 = *((uint16*) ap);       break;
-        case nsXPCType::T_U32    : dp->val.u32 = *((uint32*) ap);       break;
-        case nsXPCType::T_U64    : dp->val.u64 = *((uint64*) ap); ap++; break;
-        case nsXPCType::T_FLOAT  : dp->val.f   = *((float*)  ap);       break;
-        case nsXPCType::T_DOUBLE : dp->val.d   = *((double*) ap); ap++; break;
-        case nsXPCType::T_BOOL   : dp->val.b   = *((PRBool*) ap);       break;
-        case nsXPCType::T_CHAR   : dp->val.c   = *((char*)   ap);       break;
-        case nsXPCType::T_WCHAR  : dp->val.wc  = *((wchar_t*)ap);       break;
+        case nsXPTType::T_I8     : dp->val.i8  = *((int8*)   ap);       break;
+        case nsXPTType::T_I16    : dp->val.i16 = *((int16*)  ap);       break;
+        case nsXPTType::T_I32    : dp->val.i32 = *((int32*)  ap);       break;
+        case nsXPTType::T_I64    : dp->val.i64 = *((int64*)  ap); ap++; break;
+        case nsXPTType::T_U8     : dp->val.u8  = *((uint8*)  ap);       break;
+        case nsXPTType::T_U16    : dp->val.u16 = *((uint16*) ap);       break;
+        case nsXPTType::T_U32    : dp->val.u32 = *((uint32*) ap);       break;
+        case nsXPTType::T_U64    : dp->val.u64 = *((uint64*) ap); ap++; break;
+        case nsXPTType::T_FLOAT  : dp->val.f   = *((float*)  ap);       break;
+        case nsXPTType::T_DOUBLE : dp->val.d   = *((double*) ap); ap++; break;
+        case nsXPTType::T_BOOL   : dp->val.b   = *((PRBool*) ap);       break;
+        case nsXPTType::T_CHAR   : dp->val.c   = *((char*)   ap);       break;
+        case nsXPTType::T_WCHAR  : dp->val.wc  = *((wchar_t*)ap);       break;
         default:
             // XXX deal with other types
             NS_ASSERTION(0, "type not yet supported");

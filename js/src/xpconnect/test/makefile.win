@@ -27,7 +27,8 @@ LCFLAGS=-DUSE_NSREG
 
 REQUIRES=xpcom js xpconnect
 
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\js -I$(PUBLIC)\xpconnect -I$(PUBLIC)\raptor
+LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\js -I$(PUBLIC)\xpconnect \
+      -I$(PUBLIC)\raptor -I..\..\..\..\xpcom\src
 
 LLIBS=					\
  $(DIST)\lib\xpcom32.lib		\

@@ -46,17 +46,23 @@ nsXPCWrappedNativeClass::GetNewOrUsedClass(XPCContext* xpcc,
     }
     else
     {
-        nsIInterfaceInfo* info;
         nsXPConnect* xpc;
-        if((xpc = nsXPConnect::GetXPConnect()) != NULL &&
-           NS_SUCCEEDED(xpc->GetInterfaceInfo(aIID, &info)))
+        if((xpc = nsXPConnect::GetXPConnect()) != NULL)
         {
-            clazz = new nsXPCWrappedNativeClass(xpcc, aIID, info);
-            if(-1 == clazz->mMemberCount) // -1 means 'failed to init'
+            nsIInterfaceInfoManager* iimgr;
+            if((iimgr = xpc->GetInterfaceInfoManager()) != NULL)
             {
-                NS_RELEASE(clazz);
-                clazz = NULL;
+                nsIInterfaceInfo* info;
+                if(NS_SUCCEEDED(iimgr->GetInfoForIID(&aIID, &info)))
+                {
+                    clazz = new nsXPCWrappedNativeClass(xpcc, aIID, info);
+                    if(-1 == clazz->mMemberCount) // -1 means 'failed to init'
+                        NS_RELEASE(clazz);  // NULLs out 'clazz'
+                    NS_RELEASE(info);
+                }
+                NS_RELEASE(iimgr);
             }
+            NS_RELEASE(xpc);
         }
     }
     return clazz;
@@ -66,6 +72,7 @@ nsXPCWrappedNativeClass::nsXPCWrappedNativeClass(XPCContext* xpcc, REFNSIID aIID
                                                nsIInterfaceInfo* aInfo)
     : mXPCContext(xpcc),
       mIID(aIID),
+      mName(NULL),
       mInfo(aInfo),
       mMemberCount(-1),
       mMembers(NULL)
@@ -84,6 +91,20 @@ nsXPCWrappedNativeClass::~nsXPCWrappedNativeClass()
 {
     mXPCContext->GetWrappedNativeClassMap()->Remove(this);
     DestroyMemberDescriptors();
+    if(mName)
+    {
+        nsXPConnect* xpc;
+        if((xpc = nsXPConnect::GetXPConnect()) != NULL)
+        {
+            nsIAllocator* al;
+            if((al = xpc->GetAllocator()) != NULL)
+            {
+                al->Free(mName);
+                NS_RELEASE(al);
+            }
+            NS_RELEASE(xpc);
+        }
+    }
     NS_RELEASE(mInfo);
 }
 
@@ -91,9 +112,9 @@ JSBool
 nsXPCWrappedNativeClass::BuildMemberDescriptors()
 {
     int i;
-    int constCount;
-    int methodCount;
-    int totalCount;
+    uint16 constCount;
+    uint16 methodCount;
+    uint16 totalCount;
     JSContext* cx = GetJSContext();
 
     if(NS_FAILED(mInfo->GetMethodCount(&methodCount))||
@@ -119,7 +140,7 @@ nsXPCWrappedNativeClass::BuildMemberDescriptors()
         jsval idval;
         jsid id;
         XPCNativeMemberDescriptor* desc;
-        const nsXPCMethodInfo* info;
+        const nsXPTMethodInfo* info;
         if(NS_FAILED(mInfo->GetMethodInfo(i, &info)))
             return JS_FALSE;
 
@@ -164,7 +185,7 @@ nsXPCWrappedNativeClass::BuildMemberDescriptors()
         jsval idval;
         jsid id;
         XPCNativeMemberDescriptor* desc;
-        const nsXPCConstant* constant;
+        const nsXPTConstant* constant;
         if(NS_FAILED(mInfo->GetConstant(i, &constant)))
             return JS_FALSE;
 
@@ -278,7 +299,7 @@ nsXPCWrappedNativeClass::GetMemberName(const XPCNativeMemberDescriptor* desc) co
     {
     case XPCNativeMemberDescriptor::CONSTANT:
     {
-        const nsXPCConstant* constant;
+        const nsXPTConstant* constant;
         if(NS_SUCCEEDED(mInfo->GetConstant(desc->index, &constant)))
             return constant->GetName();
         break;
@@ -287,7 +308,7 @@ nsXPCWrappedNativeClass::GetMemberName(const XPCNativeMemberDescriptor* desc) co
     case XPCNativeMemberDescriptor::ATTRIB_RO:
     case XPCNativeMemberDescriptor::ATTRIB_RW:
     {
-        const nsXPCMethodInfo* info;
+        const nsXPTMethodInfo* info;
         if(NS_SUCCEEDED(mInfo->GetMethodInfo(desc->index, &info)))
             return info->GetName();
         break;
@@ -301,11 +322,11 @@ nsXPCWrappedNativeClass::GetMemberName(const XPCNativeMemberDescriptor* desc) co
 }
 
 const char*
-nsXPCWrappedNativeClass::GetInterfaceName() const
+nsXPCWrappedNativeClass::GetInterfaceName()
 {
-    const char* name;
-    mInfo->GetName(&name);
-    return name;
+    if(!mName)
+        mInfo->GetName(&mName);
+    return mName;
 }
 
 JSBool
@@ -313,7 +334,7 @@ nsXPCWrappedNativeClass::GetConstantAsJSVal(nsXPCWrappedNative* wrapper,
                                             const XPCNativeMemberDescriptor* desc,
                                             jsval* vp)
 {
-    const nsXPCConstant* constant;
+    const nsXPTConstant* constant;
 
     NS_ASSERTION(desc->category == XPCNativeMemberDescriptor::CONSTANT,"bad type");
     if(NS_FAILED(mInfo->GetConstant(desc->index, &constant)))
@@ -322,9 +343,15 @@ nsXPCWrappedNativeClass::GetConstantAsJSVal(nsXPCWrappedNative* wrapper,
         *vp = JSVAL_NULL;
         return JS_TRUE;
     }
-    const nsXPCVariant& var = constant->GetValue();
+    const nsXPCMiniVariant& mv = *constant->GetValue();
 
-    return xpc_ConvertNativeData2JS(vp, &var.val, var.type);
+    // XXX Big Hack!
+    nsXPCVariant v;
+    v.flags = 0;
+    v.type = constant->GetType();
+    memcpy(&v.val, &mv.val, sizeof(mv.val));
+
+    return xpc_ConvertNativeData2JS(vp, &v.val, v.type);
 }
 
 void
@@ -350,7 +377,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(nsXPCWrappedNative* wrapper,
     nsXPCVariant* dispatchParams = NULL;
     JSContext* cx = GetJSContext();
     uint8 i;
-    const nsXPCMethodInfo* info;
+    const nsXPTMethodInfo* info;
     uint8 requiredArgs;
     uint8 paramCount;
     uint8 dispatchParamsInitedCount = 0;
@@ -402,8 +429,8 @@ nsXPCWrappedNativeClass::CallWrappedMethod(nsXPCWrappedNative* wrapper,
     // iterate through the params doing conversions
     for(i = 0; i < paramCount; i++)
     {
-        const nsXPCParamInfo& param = info->GetParam(i);
-        const nsXPCType& type = param.GetType();
+        const nsXPTParamInfo& param = info->GetParam(i);
+        const nsXPTType& type = param.GetType();
 
         nsXPCVariant* dp = &dispatchParams[i];
         dp->type = type;
@@ -419,7 +446,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(nsXPCWrappedNative* wrapper,
             dp->flags = nsXPCVariant::PTR_IS_DATA;
 
             // XXX are there no type alignment issues here?
-            if(type & nsXPCType::IS_POINTER)
+            if(type.IsPointer())
             {
                 dp->ptr = &dp->ptr2;
                 dp->ptr2 = &dp->val;
@@ -449,7 +476,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(nsXPCWrappedNative* wrapper,
         }
         else
         {
-            if(type & nsXPCType::IS_POINTER)
+            if(type.IsPointer())
             {
                 dp->ptr = &dp->val;
                 dp->flags = nsXPCVariant::PTR_IS_DATA;
@@ -478,8 +505,8 @@ nsXPCWrappedNativeClass::CallWrappedMethod(nsXPCWrappedNative* wrapper,
     // iterate through the params to gather the results
     for(i = 0; i < paramCount; i++)
     {
-        const nsXPCParamInfo& param = info->GetParam(i);
-        const nsXPCType& type = param.GetType();
+        const nsXPTParamInfo& param = info->GetParam(i);
+        const nsXPTType& type = param.GetType();
 
         nsXPCVariant* dp = &dispatchParams[i];
         if(param.IsOut())
@@ -520,7 +547,7 @@ done:
             continue;
         if(dp->flags & nsXPCVariant::VAL_IS_OWNED)
             delete [] p;
-        else if(info->GetParam(i).GetType() == nsXPCType::T_INTERFACE)
+        else if(info->GetParam(i).GetType() == nsXPTType::T_INTERFACE)
             ((nsISupports*)p)->Release();
     }
 
