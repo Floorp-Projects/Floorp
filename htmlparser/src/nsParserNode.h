@@ -168,6 +168,7 @@ class nsCParserNode :  public nsIParserNode {
     PRInt32   mLineNumber;
     CToken*   mToken;
     CToken*   mAttributes[eMaxAttr]; // XXX Ack! This needs to be dynamic! 
+    CToken*   mSkippedContent;
     // nsAutoString  mName;
 
     static const nsAutoString  mEmptyString;

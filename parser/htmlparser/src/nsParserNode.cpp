@@ -41,6 +41,7 @@ nsCParserNode::nsCParserNode(CToken* aToken,PRInt32 aLineNumber): nsIParserNode(
   mLineNumber=aLineNumber;
   mToken=aToken;
   memset(mAttributes,0,sizeof(mAttributes));
+  mSkippedContent=nsnull;
 }
 
 
@@ -129,18 +130,15 @@ void nsCParserNode::AddAttribute(CToken* aToken) {
 /**
  *  This method gets called when the parser encounters 
  *  skipped content after a start token.
- *  NOTE: To determine if we have skipped content, simply
- *        check mAttributes[mAttributeCount].
  *  
  *  @update  gess 3/26/98
  *  @param   aToken -- really a skippedcontent token
  *  @return  nada
  */
 void nsCParserNode::SetSkippedContent(CToken* aToken){
-  NS_PRECONDITION(mAttributeCount<PRInt32(sizeof(mAttributes)-1), "Buffer overrun!");
-  NS_PRECONDITION(0!=aToken, "Error: Token shouldn't be null!");
   if(aToken) {
-    mAttributes[mAttributeCount++]=aToken;
+    NS_ASSERTION(eToken_skippedcontent == aToken->GetTokenType(), "not a skipped content token");
+    mSkippedContent = aToken;
   }
 }
 
@@ -179,13 +177,8 @@ const nsString& nsCParserNode::GetText() const {
  *  @return  string ref of text from internal token
  */
 const nsString& nsCParserNode::GetSkippedContent() const {
-  if (0 < mAttributeCount) {
-    if(mAttributes[mAttributeCount-1]) {
-      CSkippedContentToken* sc=(CSkippedContentToken*)(mAttributes[mAttributeCount-1]);
-      if(sc) {
-        return sc->GetKey();
-      }
-    }
+  if (nsnull != mSkippedContent) {
+    return ((CSkippedContentToken*)mSkippedContent)->GetKey();
   }
   return mEmptyString;
 }
