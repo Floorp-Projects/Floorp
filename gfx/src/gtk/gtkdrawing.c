@@ -571,6 +571,7 @@ moz_gtk_dropdown_arrow_paint(GdkDrawable* drawable, GdkRectangle* rect,
   arrow_rect.height = MAX(1, rect->height - (arrow_rect.y - rect->y) * 2);
 
   calculate_arrow_dimensions(&arrow_rect, &real_arrow_rect);
+  style = gArrowWidget->style;
   TSOffsetStyleGCs(style, real_arrow_rect.x, real_arrow_rect.y);
   gtk_paint_arrow(style, drawable, state_type, shadow_type, cliprect,
                   gScrollbarWidget, "arrow",  GTK_ARROW_DOWN, TRUE,
