@@ -173,30 +173,30 @@ bin/components/xml-rpc.xpt
 bin/components/nsDictionary.js
 bin/components/nsXmlRpcClient.js
 
+bin/chrome/locales/*
+bin/chrome/packages/*
 bin/chrome/skins/*
-bin/chrome/editor/*
--bin/chrome/editor/content/EditorInitPage.html
--bin/chrome/editor/content/EditorInitPagePlain.html
+-bin/chrome/packages/core/editor/content/EditorInitPage.html
+-bin/chrome/packages/core/editor/content/EditorInitPagePlain.html
 ;Include this for "debug" testing - remove for actual beta release:
-;-bin/chrome/editor/content/TextEditorAppShell.xul
--bin/chrome/editor/content/sb-bookmarks-panel.xul
--bin/chrome/editor/content/sb-bookmarks.js
--bin/chrome/editor/content/sb-file-contextMenu.js
--bin/chrome/editor/content/sb-file-panel.js
--bin/chrome/editor/content/sb-file-panel.xul
--bin/chrome/editor/content/sb-FileWidgetFileHandler.js
--bin/chrome/editor/content/viewsource.js
--bin/chrome/editor/content/viewsource.xul
-bin/chrome/communicator/*
--bin/chrome/communicator/content/domviewer
-bin/chrome/global/*
-bin/chrome/navigator/*
+;-bin/chrome/packages/core/editor/content/TextEditorAppShell.xul
+-bin/chrome/packages/core/editor/content/sb-bookmarks-panel.xul
+-bin/chrome/packages/core/editor/content/sb-bookmarks.js
+-bin/chrome/packages/core/editor/content/sb-file-contextMenu.js
+-bin/chrome/packages/core/editor/content/sb-file-panel.js
+-bin/chrome/packages/core/editor/content/sb-file-panel.xul
+-bin/chrome/packages/core/editor/content/sb-FileWidgetFileHandler.js
+-bin/chrome/packages/core/editor/content/viewsource.js
+-bin/chrome/packages/core/editor/content/viewsource.xul
+-bin/chrome/packages/core/communicator/content/domviewer
+bin/chrome/autocomplete.xml
 bin/chrome/htmlBindings.xml
+bin/chrome/menulistBindings.xml
 bin/chrome/platformHTMLBindings.xml
 bin/chrome/xul.css
 bin/chrome/xulBindings.xml
-bin/chrome/menulistBindings.xml
-bin/chrome/autocomplete.xml
+; temporary, until the installer begins generating one of its own
+bin/chrome/installed-chrome.txt
 
 bin/defaults/pref/editor.js
 bin/defaults/pref/all.js
@@ -239,12 +239,6 @@ bin/res/samples/*
 ; this is only there if you build the irc client
 ; bin/irc/*
 
-;[editor]
-; these are redundant because bin/chrome/editor/* is listed above -blizzard
-; bin/chrome/editor/content/*
-; bin/chrome/editor/locale/*
-; bin/chrome/editor/skin/*
-
 [mail]
 bin/components/addrbook.xpt
 bin/components/libaddrbook.so
@@ -274,6 +268,5 @@ bin/components/msgsearch.xpt
 bin/components/txmgr.xpt
 bin/components/import.xpt
 
-bin/chrome/messenger/*
 ; this doesn't seem to be in the tree. -blizzard
 ;bin/help/mailhelp/*
