@@ -157,8 +157,7 @@ function SetupComposerWindowCommands()
     return;
   }
 
-  // Note: We init with the editorShell for the main composer window, not the HTML Source textfield?
-  editorController.Init(window.editorShell);
+  editorController.Init(gEditor); // gEditor may be null at this point
 
   var interfaceRequestor;
   try {
@@ -240,7 +239,159 @@ function GetEditorController()
   return null;
 }
 
+
 //-----------------------------------------------------------------------------------
+
+// this function should go away when we move to nsICommandGroups for command handling
+function noUIStateUpdateNeeded(commandID)
+{
+  if (commandID == "cmd_removeNamedAnchors"
+   || commandID == "cmd_removeLinks"
+   || commandID == "cmd_advancedProperties"
+   || commandID == "cmd_spelling"
+   || commandID == "cmd_validate"
+   || commandID == "cmd_findNext"
+   || commandID == "cmd_find"
+   || commandID == "cmd_preview"
+   || commandID == "cmd_revert"
+   || commandID == "cmd_publishAs"
+   || commandID == "cmd_publish"
+   || commandID == "cmd_saveAsCharset"
+   || commandID == "cmd_exportToText"
+   || commandID == "cmd_saveAs"
+   || commandID == "cmd_save"
+   || commandID == "cmd_renderedHTMLEnabler"
+   || commandID == "cmd_editLink"
+   || commandID == "cmd_checkLinks"
+   || commandID == "cmd_PreviewMode"
+   || commandID == "cmd_HTMLSourceMode"
+   || commandID == "cmd_AllTagsMode"
+   || commandID == "cmd_NormalMode"
+   || commandID == "cmd_insertBreakAll"
+   || commandID == "cmd_insertBreak"
+   || commandID == "cmd_insertHTML"
+   || commandID == "cmd_insertChars"
+   || commandID == "cmd_objectProperties" 
+   || commandID == "cmd_colorProperties"
+   || commandID == "cmd_pageProperties"
+   || commandID == "cmd_listProperties"
+   || commandID == "cmd_image"
+   || commandID == "cmd_link"  
+   || commandID == "cmd_anchor"
+   || commandID == "cmd_hline"
+   || commandID == "cmd_table"
+   || commandID == "cmd_form"
+   || commandID == "cmd_inputtag"
+   || commandID == "cmd_inputimage"
+   || commandID == "cmd_textarea"
+   || commandID == "cmd_select"
+   || commandID == "cmd_button"
+   || commandID == "cmd_label"
+   || commandID == "cmd_fieldset"
+   || commandID == "cmd_isindex"
+   || commandID == "cmd_editSendPage"
+   || commandID == "cmd_open"
+   || commandID == "cmd_openRemote"
+   || commandID == "cmd_close"
+   || commandID == "cmd_printSetup"
+   || commandID == "cmd_print"
+   || commandID == "cmd_quit"
+   || commandID == "cmd_publishSettings"
+   || commandID == "cmd_preferences")
+      return true;
+
+  return false;
+}
+
+function goUpdateCommandState(command)
+{
+  // this code need to be trimmed down and possibly reworked 
+  // when we move to nsICommandGroup for command handling
+  if (noUIStateUpdateNeeded(command))
+    return;
+
+  // these commands need to go somewhere:
+  if (command == "cmd_smiley"
+   || command == "cmd_dt"
+   || command == "cmd_dd"
+   || command == "cmd_removeList"
+   || command == "cmd_cut"
+   || command == "cmd_copy"
+   || command == "cmd_paste"
+   || command == "cmd_pasteQuote"
+   || command == "cmd_delete"
+   || command == "cmd_selectAll"
+   || command == "cmd_redo"
+   || command == "cmd_undo")
+     return;
+
+  try
+  {
+    var controller = top.document.commandDispatcher.getControllerForCommand(command);
+    if (!controller) return;
+    
+    var cmdController;
+    try
+    {
+      cmdController = controller.QueryInterface(Components.interfaces.nsICommandController);
+    } catch(e) {}
+    if (!cmdController) return;
+
+    var params = newCommandParams();
+    if (!params) return;
+
+    try {
+      cmdController.getCommandStateWithParams(command, params);
+    } catch(e) {
+//      dump("getCommandStateWithParams error "+e+" updating "+command+"\n");
+    }
+
+    switch (command)
+    {
+      case "cmd_bold":
+      case "cmd_italic":
+      case "cmd_underline":
+      case "cmd_var":
+      case "cmd_samp":
+      case "cmd_code":
+      case "cmd_acronym":
+      case "cmd_abbr":
+      case "cmd_cite":
+      case "cmd_strong":
+      case "cmd_em":
+      case "cmd_superscript":
+      case "cmd_subscript":
+      case "cmd_strikethrough":
+      case "cmd_tt":
+      case "cmd_nobreak":
+      case "cmd_ul":
+      case "cmd_ol":
+        pokeStyleUI(command, params.getBooleanValue("state_all"));
+        break;
+
+      case "cmd_smiley":
+      case "cmd_paragraphState":
+      case "cmd_align":
+      case "cmd_highlight":
+      case "cmd_backgroundColor":
+      case "cmd_fontColor":
+      case "cmd_fontFace":
+        pokeMultiStateUI(command, params);
+        break;
+
+      case "cmd_indent":
+      case "cmd_outdent":
+      case "cmd_increaseFont":
+      case "cmd_decreaseFont":
+      case "cmd_removeStyles":
+        break;
+
+      default: dump("no update for command: " +command+"\n");
+    }
+  }
+  catch (e) { dump("An error occurred updating the "+command+" command: \n"+e+"\n"); }
+}
+
 function goUpdateComposerMenuItems(commandset)
 {
   // dump("Updating commands for " + commandset.id + "\n");
@@ -250,9 +401,126 @@ function goUpdateComposerMenuItems(commandset)
     var commandID = commandset.childNodes[i].getAttribute("id");
     if (commandID)
     {
-      goUpdateCommand(commandID);
+      goUpdateCommand(commandID);  // enable or disable
+      goUpdateCommandState(commandID);
     }
   }
+}
+
+//-----------------------------------------------------------------------------------
+function goDoCommandParams(command, params)
+{
+  try
+  {
+    var controller = top.document.commandDispatcher.getControllerForCommand(command);
+    if (controller && controller.isCommandEnabled(command))
+    {
+      var cmdController;
+      try
+      {
+        cmdController = controller.QueryInterface(Components.interfaces.nsICommandController);
+      } catch(e) {}
+
+      if (cmdController)
+      {
+        cmdController.doCommandWithParams(command, params);
+
+        // the following two lines should be removed when we implement observers
+        if (params)
+          cmdController.getCommandStateWithParams(command, params);
+      }
+      else
+      {
+        controller.doCommand(command);
+      }
+    }
+  }
+  catch (e)
+  {
+    dump("An error occurred executing the "+command+" command\n");
+  }
+}
+
+function pokeStyleUI(uiID, aDesiredState)
+{
+ try {
+  var commandNode = top.document.getElementById(uiID);
+  if (!commandNode)
+    return;
+
+  var uiState = ("true" == commandNode.getAttribute("state"));
+  if (aDesiredState != uiState)
+  {
+    var newState;
+    if (aDesiredState)
+      newState = "true";
+    else
+      newState = "false";
+    commandNode.setAttribute("state", newState);
+  }
+ } catch(e) { dump("poking UI for "+uiID+" failed: "+e+"\n"); }
+}
+
+function newCommandParams()
+{
+  try {
+    return Components.classes["@mozilla.org/embedcomp/command-params;1"].createInstance(Components.interfaces.nsICommandParams);
+  }
+  catch(e) { dump("error thrown in newCommandParams: "+e+"\n"); }
+  return null;
+}
+
+function doStyleUICommand(cmdStr)
+{
+  try
+  {
+    var cmdParams = newCommandParams();
+    goDoCommandParams(cmdStr, cmdParams);
+    if (cmdParams)
+      pokeStyleUI(cmdStr, cmdParams.getBooleanValue("state_all"));
+  } catch(e) {}
+}
+
+function pokeMultiStateUI(uiID, cmdParams)
+{
+  try
+  {
+    var commandNode = document.getElementById(uiID);
+    if (!commandNode)
+      return;
+
+    var isMixed = cmdParams.getBooleanValue("state_mixed");
+    var desiredAttrib;
+    if (isMixed)
+      desiredAttrib = "mixed";
+    else
+      desiredAttrib = cmdParams.getCStringValue("state_attribute");
+
+    var uiState = commandNode.getAttribute("state");
+    if (desiredAttrib != uiState)
+    {
+      commandNode.setAttribute("state", desiredAttrib);
+    }
+  } catch(e) {}
+}
+
+function doStatefulCommand(commandID, newState)
+{
+  var commandNode = document.getElementById(commandID);
+  if (commandNode)
+      commandNode.setAttribute("state", newState);
+  gContentWindow.focus();   // needed for command dispatch to work
+
+  try
+  {
+    var cmdParams = newCommandParams();
+    if (!cmdParams) return;
+
+    cmdParams.setCStringValue("state_attribute", newState);
+    goDoCommandParams(commandID, cmdParams);
+
+    pokeMultiStateUI(commandID, cmdParams);
+  } catch(e) { dump("error thrown in doStatefulCommand: "+e+"\n"); }
 }
 
 //-----------------------------------------------------------------------------------
@@ -287,6 +555,9 @@ var nsDummyHTMLCommand =
     return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
   },
 
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     // do nothing
@@ -302,6 +573,9 @@ var nsOpenCommand =
   {
     return true;    // we can always do this
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
 
   doCommand: function(aCommand)
   {
@@ -353,6 +627,9 @@ var nsSaveCommand =
     } catch (e) {return false;}
   },
   
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     var result = false;
@@ -372,6 +649,9 @@ var nsSaveAsCommand =
   {
     return (window.editorShell && window.editorShell.documentEditable);
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
 
   doCommand: function(aCommand)
   {
@@ -393,6 +673,9 @@ var nsExportToTextCommand =
     return (window.editorShell && window.editorShell.documentEditable);
   },
 
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     if (window.editorShell)
@@ -412,6 +695,10 @@ var nsSaveAsCharsetCommand =
   {
     return (window.editorShell && window.editorShell.documentEditable);
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {    
     FinishHTMLSource();
@@ -461,6 +748,9 @@ var nsPublishCommand =
     return false;
   },
   
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     if (window.editorShell)
@@ -515,6 +805,9 @@ var nsPublishAsCommand =
     return (window.editorShell && window.editorShell.documentEditable);
   },
   
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     if (window.editorShell)
@@ -1776,6 +2069,9 @@ var nsPublishSettingsCommand =
     return (window.editorShell && window.editorShell.documentEditable);
   },
 
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     if (window.editorShell)
@@ -1799,6 +2095,9 @@ var nsRevertCommand =
             window.editorShell.documentModified &&
             !IsUrlAboutBlank(GetDocumentUrl()));
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
 
   doCommand: function(aCommand)
   {
@@ -1836,6 +2135,9 @@ var nsCloseCommand =
     return window.editorShell;
   },
   
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     CloseWindow();
@@ -1863,6 +2165,9 @@ var nsOpenRemoteCommand =
     return true;    // we can always do this
   },
 
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
 	  /* The last parameter is the current browser window.
@@ -1883,6 +2188,9 @@ var nsPreviewCommand =
             gIsHTMLEditor && 
             (DocumentHasBeenSaved() || window.editorShell.documentModified));
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
 
   doCommand: function(aCommand)
   {
@@ -1937,6 +2245,9 @@ var nsSendPageCommand =
             (DocumentHasBeenSaved() || window.editorShell.documentModified));
   },
 
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     // Don't continue if user canceled during prompt for saving
@@ -1967,6 +2278,9 @@ var nsPrintCommand =
     return true;    // we can always do this
   },
 
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     // In editor.js
@@ -1985,6 +2299,9 @@ var nsPrintSetupCommand =
     return true;    // we can always do this
   },
 
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     // In editor.js
@@ -1999,7 +2316,10 @@ var nsQuitCommand =
   isCommandEnabled: function(aCommand, dummy)
   {
     return true;    // we can always do this
-  }
+  },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {}
 
   /* The doCommand is not used, since cmd_quit's oncommand="goQuitApplication()" in platformCommunicatorOverlay.xul
   doCommand: function(aCommand)
@@ -2018,6 +2338,9 @@ var nsFindCommand =
   {
     return ((window.editorShell));
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
 
   doCommand: function(aCommand)
   {
@@ -2042,6 +2365,9 @@ var nsFindNextCommand =
     return (window.editorShell && !IsInHTMLSourceMode());
   },
 
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     try {
@@ -2061,6 +2387,9 @@ var nsSpellingCommand =
     return (window.editorShell && window.editorShell.documentEditable && 
             !IsInHTMLSourceMode() && IsSpellCheckerInstalled());
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
 
   doCommand: function(aCommand)
   {
@@ -2082,6 +2411,9 @@ var nsValidateCommand =
   {
     return (window.editorShell != null);
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
 
   doCommand: function(aCommand)
   {
@@ -2135,6 +2467,9 @@ var nsCheckLinksCommand =
     return (window.editorShell && window.editorShell.documentEditable);
   },
 
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     window.openDialog("chrome://editor/content/EdLinkChecker.xul","_blank", "chrome,close,titlebar,modal");
@@ -2149,6 +2484,10 @@ var nsFormCommand =
   {
     return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     window.openDialog("chrome://editor/content/EdFormProps.xul", "_blank", "chrome,close,titlebar,modal");
@@ -2163,6 +2502,10 @@ var nsInputTagCommand =
   {
     return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     window.openDialog("chrome://editor/content/EdInputProps.xul", "_blank", "chrome,close,titlebar,modal");
@@ -2177,6 +2520,10 @@ var nsInputImageCommand =
   {
     return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     window.openDialog("chrome://editor/content/EdInputImage.xul", "_blank", "chrome,close,titlebar,modal");
@@ -2191,6 +2538,10 @@ var nsTextAreaCommand =
   {
     return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     window.openDialog("chrome://editor/content/EdTextAreaProps.xul", "_blank", "chrome,close,titlebar,modal");
@@ -2205,6 +2556,10 @@ var nsSelectCommand =
   {
     return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     window.openDialog("chrome://editor/content/EdSelectProps.xul", "_blank", "chrome,close,titlebar,modal");
@@ -2220,6 +2575,10 @@ var nsButtonCommand =
     // && !editorShell.editorSelection.isCollapsed()?
     return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     window.openDialog("chrome://editor/content/EdButtonProps.xul", "_blank", "chrome,close,titlebar,modal");
@@ -2234,6 +2593,10 @@ var nsLabelCommand =
   {
     return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     var tagName = "label";
@@ -2259,6 +2622,10 @@ var nsFieldSetCommand =
   {
     return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     window.openDialog("chrome://editor/content/EdFieldSetProps.xul", "_blank", "chrome,close,titlebar,modal");
@@ -2273,6 +2640,10 @@ var nsIsIndexCommand =
   {
     return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     var isindexElement = editorShell.CreateElementWithDefaults("isindex");
@@ -2288,6 +2659,10 @@ var nsImageCommand =
   {
     return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     window.openDialog("chrome://editor/content/EdImageProps.xul","_blank", "chrome,close,titlebar,modal");
@@ -2302,6 +2677,10 @@ var nsHLineCommand =
   {
     return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     // Inserting an HLine is different in that we don't use properties dialog
@@ -2370,6 +2749,10 @@ var nsLinkCommand =
   {
     return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     // If selected element is an image, launch that dialog instead 
@@ -2390,6 +2773,10 @@ var nsAnchorCommand =
   {
     return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     window.openDialog("chrome://editor/content/EdNamedAnchorProps.xul", "_blank", "chrome,close,titlebar,modal", "");
@@ -2404,6 +2791,10 @@ var nsInsertHTMLCommand =
   {
     return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     window.openDialog("chrome://editor/content/EdInsSrc.xul","_blank", "chrome,close,titlebar,modal,resizable", "");
@@ -2418,6 +2809,10 @@ var nsInsertCharsCommand =
   {
     return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     EditorFindOrCreateInsertCharWindow();
@@ -2431,6 +2826,10 @@ var nsInsertBreakCommand =
   {
     return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     window.editorShell.InsertSource("<br>");
@@ -2444,6 +2843,10 @@ var nsInsertBreakAllCommand =
   {
     return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     window.editorShell.InsertSource("<br clear='all'>");
@@ -2457,6 +2860,10 @@ var nsListPropertiesCommand =
   {
     return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     window.openDialog("chrome://editor/content/EdListProps.xul","_blank", "chrome,close,titlebar,modal");
@@ -2472,6 +2879,10 @@ var nsPagePropertiesCommand =
   {
     return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     window.openDialog("chrome://editor/content/EdPageProps.xul","_blank", "chrome,close,titlebar,modal", "");
@@ -2492,6 +2903,10 @@ var nsObjectPropertiesCommand =
     }
     return isEnabled;
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     // Launch Object properties for appropriate selected element 
@@ -2581,6 +2996,9 @@ var nsSetSmiley =
 
   },
 
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
 	
@@ -2668,6 +3086,10 @@ var nsAdvancedPropertiesCommand =
   {
     return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     // Launch AdvancedEdit dialog for the selected element
@@ -2683,6 +3105,10 @@ var nsColorPropertiesCommand =
   {
     return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     window.openDialog("chrome://editor/content/EdColorProps.xul","_blank", "chrome,close,titlebar,modal", ""); 
@@ -2699,6 +3125,10 @@ var nsRemoveLinksCommand =
     // We could see if there's any link in selection, but it doesn't seem worth the work!
     return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     window.editorShell.RemoveTextProperty("href", "");
@@ -2715,6 +3145,10 @@ var nsRemoveNamedAnchorsCommand =
     // We could see if there's any link in selection, but it doesn't seem worth the work!
     return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     window.editorShell.RemoveTextProperty("name", "");
@@ -2731,6 +3165,10 @@ var nsEditLinkCommand =
     // Not really used -- this command is only in context menu, and we do enabling there
     return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     var element = gEditor.getSelectedElement("href");
@@ -2749,6 +3187,10 @@ var nsNormalModeCommand =
   {
     return gIsHTMLEditor && window.editorShell.documentEditable;
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     FinishHTMLSource();
@@ -2763,6 +3205,10 @@ var nsAllTagsModeCommand =
   {
     return (window.editorShell && window.editorShell.documentEditable && gIsHTMLEditor);
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     FinishHTMLSource();
@@ -2777,6 +3223,10 @@ var nsHTMLSourceModeCommand =
   {
     return (window.editorShell && window.editorShell.documentEditable && gIsHTMLEditor);
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     if (gEditorDisplayMode != DisplayModeSource)
@@ -2790,6 +3240,10 @@ var nsPreviewModeCommand =
   {
     return (window.editorShell && window.editorShell.documentEditable && gIsHTMLEditor);
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     FinishHTMLSource();
@@ -2805,6 +3259,10 @@ var nsInsertOrEditTableCommand =
   {
     return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     if (IsInTableCell())
@@ -2821,6 +3279,10 @@ var nsEditTableCommand =
   {
     return IsInTable();
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     EditorInsertOrEditTable(false);
@@ -2834,6 +3296,10 @@ var nsSelectTableCommand =
   {
     return IsInTable();
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     window.editorShell.SelectTable();
@@ -2847,6 +3313,10 @@ var nsSelectTableRowCommand =
   {
     return IsInTableCell();
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     window.editorShell.SelectTableRow();
@@ -2860,6 +3330,10 @@ var nsSelectTableColumnCommand =
   {
     return IsInTableCell();
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     window.editorShell.SelectTableColumn();
@@ -2873,6 +3347,10 @@ var nsSelectTableCellCommand =
   {
     return IsInTableCell();
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     window.editorShell.SelectTableCell();
@@ -2886,6 +3364,10 @@ var nsSelectAllTableCellsCommand =
   {
     return IsInTable();
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     window.editorShell.SelectAllTableCells();
@@ -2900,6 +3382,10 @@ var nsInsertTableCommand =
   {
     return window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML();
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     EditorInsertTable();
@@ -2912,6 +3398,10 @@ var nsInsertTableRowAboveCommand =
   {
     return IsInTableCell();
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     window.editorShell.InsertTableRow(1, false);
@@ -2925,6 +3415,10 @@ var nsInsertTableRowBelowCommand =
   {
     return IsInTableCell();
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     window.editorShell.InsertTableRow(1,true);
@@ -2938,6 +3432,10 @@ var nsInsertTableColumnBeforeCommand =
   {
     return IsInTableCell();
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     window.editorShell.InsertTableColumn(1, false);
@@ -2951,6 +3449,10 @@ var nsInsertTableColumnAfterCommand =
   {
     return IsInTableCell();
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     window.editorShell.InsertTableColumn(1, true);
@@ -2964,6 +3466,10 @@ var nsInsertTableCellBeforeCommand =
   {
     return IsInTableCell();
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     window.editorShell.InsertTableCell(1, false);
@@ -2976,6 +3482,10 @@ var nsInsertTableCellAfterCommand =
   {
     return IsInTableCell();
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     window.editorShell.InsertTableCell(1, true);
@@ -2990,6 +3500,10 @@ var nsDeleteTableCommand =
   {
     return IsInTable();
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     window.editorShell.DeleteTable();        
@@ -3003,6 +3517,10 @@ var nsDeleteTableRowCommand =
   {
     return IsInTableCell();
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     var rows = GetNumberOfContiguousSelectedRows();
@@ -3033,6 +3551,10 @@ var nsDeleteTableColumnCommand =
   {
     return IsInTableCell();
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     var columns = GetNumberOfContiguousSelectedColumns();
@@ -3063,6 +3585,10 @@ var nsDeleteTableCellCommand =
   {
     return IsInTableCell();
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     window.editorShell.DeleteTableCell(1);   
@@ -3076,6 +3602,10 @@ var nsDeleteTableCellContentsCommand =
   {
     return IsInTableCell();
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     window.editorShell.DeleteTableCellContents();
@@ -3091,6 +3621,10 @@ var nsNormalizeTableCommand =
   {
     return IsInTable();
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     // Use nsnull to let editor find table enclosing current selection
@@ -3139,6 +3673,10 @@ var nsJoinTableCellsCommand =
     }
     return false;
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     // Param: Don't merge non-contiguous cells
@@ -3173,6 +3711,10 @@ var nsSplitTableCellCommand =
     }
     return false;
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     window.editorShell.SplitTableCell();
@@ -3187,6 +3729,10 @@ var nsTableOrCellColorCommand =
   {
     return IsInTable();
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     EditorSelectColor("TableOrCell");
@@ -3200,6 +3746,10 @@ var nsPreferencesCommand =
   {
     return true;
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     goPreferences('editor', 'chrome://editor/content/pref-composer.xul','editor');
@@ -3214,6 +3764,10 @@ var nsFinishHTMLSource =
   {
     return true;
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     // In editor.js
@@ -3227,6 +3781,10 @@ var nsCancelHTMLSource =
   {
     return true;
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     // In editor.js
@@ -3240,6 +3798,10 @@ var nsBuildRecentPagesMenu =
   {
     return true;
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     // In editor.js. True means save menu to prefs
@@ -3280,6 +3842,10 @@ var nsConvertToTable =
     }
     return false;
   },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+
   doCommand: function(aCommand)
   {
     if (this.isCommandEnabled())
