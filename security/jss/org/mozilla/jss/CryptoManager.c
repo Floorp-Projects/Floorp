@@ -39,7 +39,6 @@
 #include <key.h>
 #include <ocsp.h>
 #include <pk11func.h>
-#include <secrng.h>
 #include <nspr.h>
 #include <plstr.h>
 #include <pkcs11.h>
