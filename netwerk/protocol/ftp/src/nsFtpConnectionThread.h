@@ -46,15 +46,7 @@
 // ftp server types
 #define FTP_GENERIC_TYPE     0
 #define FTP_UNIX_TYPE        1
-#define FTP_DCTS_TYPE        2
-#define FTP_NCSA_TYPE        3
-#define FTP_PETER_LEWIS_TYPE 4
-#define FTP_MACHTEN_TYPE     5
-#define FTP_CMS_TYPE         6
-#define FTP_TCPC_TYPE        7
-#define FTP_VMS_TYPE         8
 #define FTP_NT_TYPE          9
-#define FTP_WEBSTAR_TYPE     10
 
 // ftp states
 typedef enum _FTP_STATE {
@@ -71,7 +63,6 @@ typedef enum _FTP_STATE {
     FTP_S_PASS, FTP_R_PASS,
     FTP_S_SYST, FTP_R_SYST,
     FTP_S_ACCT, FTP_R_ACCT,
-    FTP_S_MACB, FTP_R_MACB,
     FTP_S_PWD , FTP_R_PWD ,
     FTP_S_DEL_FILE, FTP_R_DEL_FILE,
     FTP_S_DEL_DIR , FTP_R_DEL_DIR ,
@@ -131,7 +122,6 @@ private:
     nsresult        S_syst(); FTP_STATE       R_syst();
     nsresult        S_acct(); FTP_STATE       R_acct();
 
-    nsresult        S_macb(); FTP_STATE       R_macb();
     nsresult        S_pwd();  FTP_STATE       R_pwd();
     nsresult        S_mode(); FTP_STATE       R_mode();
     nsresult        S_cwd();  FTP_STATE       R_cwd();
@@ -152,9 +142,7 @@ private:
 
     // internal methods
     nsresult    StopProcessing();
-    void        SetSystInternals(void);
     FTP_STATE   FindActionState(void);
-    FTP_STATE   FindGetState(void);
     nsresult    MapResultCodeToString(nsresult aResultCode, PRUnichar* *aOutMsg);
     void        SetDirMIMEType(nsString& aString);
     nsresult    Process();
@@ -214,6 +202,7 @@ private:
     nsAutoString           mFilename;   // url filename (if any)
     PRInt32                mLength;     // length of the file
     PRTime                 mLastModified;// last modified time for file
+    nsXPIDLCString         mPath;       // the url's path
 
         // ****** other vars
     PRBool                 mConnected;  // are we connected.
