@@ -17,12 +17,18 @@
  */
 #include "nsXPIDLString.h"
 #include "nsMsgCopy.h"
+#include "nsCOMPtr.h"
 #include "nsIPref.h"
 #include "nsIMsgCopyService.h"
 #include "nsMsgBaseCID.h"
 #include "nsIMsgMailSession.h"
 #include "nsMsgFolderFlags.h"
 #include "nsIMsgFolder.h"
+#include "nsIMsgAccountManager.h"
+#include "nsIFolder.h"
+#include "nsISupportsArray.h"
+#include "nsIMsgIncomingServer.h"
+#include "nsISupports.h"
 #ifdef MSCOTT_IMPLEMENTED_NEWURI_FOR_IMAP
 #include "nsIURI.h"
 #include "nsIIOService.h" 
