@@ -104,7 +104,7 @@ public:
 
   virtual PRBool GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
                                 nsString* aValues, nsString* aNames)=0;
-  virtual void Reset()=0;
+  virtual void Reset(nsIPresContext* aPresContext)=0;
 
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,

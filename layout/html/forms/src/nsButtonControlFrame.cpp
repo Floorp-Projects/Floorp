@@ -333,7 +333,7 @@ nsButtonControlFrame::Redraw(nsIPresContext* aPresContext)
 }
 
 
-NS_IMETHODIMP nsButtonControlFrame::SetProperty(nsIAtom* aName, const nsString& aValue)
+NS_IMETHODIMP nsButtonControlFrame::SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsString& aValue)
 {
   return NS_OK;
 }

@@ -395,7 +395,7 @@ public:
 
   virtual PRBool GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
                                 nsString* aValues, nsString* aNames);
-  virtual void Reset();
+  virtual void Reset(nsIPresContext* aPresContext);
 
   // override to interact with webshell
   NS_IMETHOD Reflow(nsIPresContext&          aPresContext,

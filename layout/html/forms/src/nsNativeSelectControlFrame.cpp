@@ -766,7 +766,7 @@ nsNativeSelectControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumV
 
 
 void
-nsNativeSelectControlFrame::Reset(nsIPresContext* aPresContext)
+nsNativeSelectControlFrame::Reset(nsIPresContext* aPresContext) 
 {
   if (mCachedState) {
     mCachedState = PR_FALSE;

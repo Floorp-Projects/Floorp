@@ -96,7 +96,7 @@ public:
                                 nsString* aValues, nsString* aNames);
 
   NS_METHOD GetMultiple(PRBool* aResult, nsIDOMHTMLSelectElement* aSelect = nsnull);
-  virtual void Reset();
+  virtual void Reset(nsIPresContext* aPresContext);
 
   //
   // XXX: The following paint methods are TEMPORARY. It is being used to get printing working
@@ -122,7 +122,7 @@ public:
   virtual void ControlChanged(nsIPresContext* aPresContext);
 
   // nsIFormControLFrame
-  NS_IMETHOD SetProperty(nsIAtom* aName, const nsString& aValue);
+  NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsString& aValue);
   NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue);
 
   NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
@@ -604,7 +604,7 @@ nsSelectControlFrame::PostCreateWidget(nsIPresContext* aPresContext,
     }
   }
 
-  Reset();  // initializes selections 
+  Reset(aPresContext);  // initializes selections 
 }
 
 
@@ -691,7 +691,7 @@ nsSelectControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
 
 
 void 
-nsSelectControlFrame::Reset() 
+nsSelectControlFrame::Reset(nsIPresContext* aPresContext) 
 {
   nsIDOMHTMLCollection* options = GetOptions();
   if (!options) {
@@ -1198,7 +1198,7 @@ nsSelectControlFrame::AttributeChanged(nsIPresContext* aPresContext,
 }
 
 
-NS_IMETHODIMP nsSelectControlFrame::SetProperty(nsIAtom* aName, const nsString& aValue)
+NS_IMETHODIMP nsSelectControlFrame::SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsString& aValue)
 {
   if (nsHTMLAtoms::selected == aName) {
     return NS_ERROR_INVALID_ARG; // Selected is readonly according to spec.
@@ -1367,7 +1367,7 @@ NS_IMETHODIMP nsSelectControlFrame::SetProperty(nsIAtom* aName, const nsString& 
     if (saveOptionSelected)
       delete [] saveOptionSelected;
   } else {
-    return nsFormControlFrame::SetProperty(aName, aValue);
+    return nsFormControlFrame::SetProperty(aPresContext, aName, aValue);
   }
   return NS_OK;
 }
