@@ -111,7 +111,7 @@ protected:
   nsresult ProcessValue(nsIFormProcessor& aFormProcessor, nsIFormControlFrame* aFrameControl, const nsString& aName, nsString& aNewValue);
   nsresult ProcessAsURLEncoded(nsIFormProcessor* aFormProcessor, PRBool aIsPost, nsString& aData, nsIFormControlFrame* aFrame);
   nsresult ProcessAsMultipart(nsIFormProcessor* aFormProcessor, nsIFileSpec*& aMultipartDataFile, nsIFormControlFrame* aFrame);
-  static const char* GetFileNameWithinPath(char* aPathName);
+  PRUint32 GetFileNameWithinPath(nsString aPathName);
   nsresult GetContentType(char* aPathName, char** aContentType);
   
   // i18n helper routines
