@@ -87,8 +87,9 @@ case "$(uname -p)" in
               [7]="111721-04" [7_title]="SunOS 5.8: Math Library (libm) patch"
               [8]="113261-02" [8_title]="SunOS 5.8: UTF-8 locale ICONV patch"
               [9]="114542-01" [9_title]="SunOS 5.8: Adds extended Arabic support"
+              [10]="111721-04" [10_title]="SunOS 5.8: Math Library (libm) patch"
             )
-            num_required_patches=10
+            num_required_patches=11
             ;;
 
         # Solaris 2.9/SPARC
@@ -103,8 +104,9 @@ case "$(uname -p)" in
               [6]="113902-03" [6_title]="SunOS 5.9: Asian UTF-8 iconv modules enhancement"
               [7]="114276-02" [7_title]="SunOS 5.9: Extended Arabic support in UTF-8"
               [8]="114641-02" [8_title]="SunOS 5.9: Japanese iconv for UTF-8 patch"
+              [9]="111722-04" [9_title]="SunOS 5.9: Math Library (libm) patch"
             )
-            num_required_patches=9
+            num_required_patches=10
             ;;
 
 	# Solaris 10/SPARC - no patches yet
@@ -144,8 +146,9 @@ case "$(uname -p)" in
               [6]="112757-01" [6_title]="SunOS 5.8_x86: Math Library (libm) patch"
               [7]="113262-02" [7_title]="SunOS 5.8_x86: UTF-8 locale ICONV patch"
               [8]="114543-01" [8_title]="SunOS 5.8_x86: Adds extended Arabic support"
+              [9]="112757-01" [9_title]="SunOS 5.8_x86: Math Library (libm) patch"
             )
-            num_required_patches=9
+            num_required_patches=10
             ;;
 
         # Solaris 2.9/x86
@@ -159,8 +162,9 @@ case "$(uname -p)" in
               [5]="113903-03" [5_title]="SunOS 5.9_x86: Asian UTF-8 iconv modules enhancement"
               [6]="114277-02" [6_title]="SunOS 5.9_x86: Extended Arabic support in UTF-8 "
               [7]="114642-02" [7_title]="SunOS 5.9_x86: Japanese iconv for UTF-8 patch"
+              [8]="111728-03" [8_title]="SunOS 5.9_x86: Math Library (libm) patch"
             )
-            num_required_patches=8
+            num_required_patches=9
             ;;
 
 	# Solaris 10/x86 - no patches yet
