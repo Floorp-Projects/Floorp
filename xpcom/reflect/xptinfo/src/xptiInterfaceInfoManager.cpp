@@ -724,6 +724,13 @@ xptiInterfaceInfoManager::AddOnlyNewFileFromFileList(nsISupportsArray* aFileList
             typelibRecord.Init(aWorkingSet->GetFileCount());
     
             PRBool AddedFile = PR_FALSE;
+
+            if(header->major_version >= XPT_MAJOR_INCOMPATIBLE_VERSION)
+            {
+                NS_ASSERTION(!header->num_interfaces,"bad libxpt");
+                LOG_AUTOREG(("      file is version %d.%d  Type file of version %d.0 or higher can not be read.\n", (int)header->major_version, (int)header->minor_version, (int)XPT_MAJOR_INCOMPATIBLE_VERSION));
+            }
+
             for(PRUint16 k = 0; k < header->num_interfaces; k++)
             {
                 xptiInterfaceInfo* info = nsnull;
@@ -851,6 +858,13 @@ xptiInterfaceInfoManager::DoFullValidationMergeFromFileList(nsISupportsArray* aF
             typelibRecord.Init(aWorkingSet->GetFileCount());
     
             PRBool AddedFile = PR_FALSE;
+
+            if(header->major_version >= XPT_MAJOR_INCOMPATIBLE_VERSION)
+            {
+                NS_ASSERTION(!header->num_interfaces,"bad libxpt");
+                LOG_AUTOREG(("      file is version %d.%d  Type file of version %d.0 or higher can not be read.\n", (int)header->major_version, (int)header->minor_version, (int)XPT_MAJOR_INCOMPATIBLE_VERSION));
+            }
+
             for(PRUint16 k = 0; k < header->num_interfaces; k++)
             {
                 xptiInterfaceInfo* info = nsnull;
@@ -915,6 +929,12 @@ xptiInterfaceInfoManager::FoundEntry(const char* entryName,
     xptiZipItem zipItemRecord(entryName, aWorkingSet);
     
     LOG_AUTOREG(("    finding interfaces in file: %s\n", entryName));
+
+    if(header->major_version >= XPT_MAJOR_INCOMPATIBLE_VERSION)
+    {
+        NS_ASSERTION(!header->num_interfaces,"bad libxpt");
+        LOG_AUTOREG(("      file is version %d.%d. Type file of version %d.0 or higher can not be read.\n", (int)header->major_version, (int)header->minor_version, (int)XPT_MAJOR_INCOMPATIBLE_VERSION));
+    }
 
     if(!header->num_interfaces)
     {

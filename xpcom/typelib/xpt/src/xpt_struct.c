@@ -196,12 +196,24 @@ XPT_DoHeader(XPTArena *arena, XPTCursor *cursor, XPTHeader **headerp)
         goto error;
     }
     
-    if(!XPT_Do8(cursor, &header->major_version) ||
-       !XPT_Do8(cursor, &header->minor_version) ||
-       /* XXX check major for compat! */
-       !XPT_Do16(cursor, &header->num_interfaces) ||
-       !XPT_Do32(cursor, &header->file_length) ||
-       !XPT_Do32(cursor, &ide_offset)) {
+    if (!XPT_Do8(cursor, &header->major_version) ||
+        !XPT_Do8(cursor, &header->minor_version)) {
+        goto error;
+    }
+
+    if (mode == XPT_DECODE &&
+        header->major_version >= XPT_MAJOR_INCOMPATIBLE_VERSION) {
+        /* This file is newer than we are and set to an incompatible version
+         * number. We must set the header state thusly and return.
+         */
+        header->num_interfaces = 0;
+        header->file_length = 0;
+        return PR_TRUE;
+    }
+
+    if (!XPT_Do16(cursor, &header->num_interfaces) ||
+        !XPT_Do32(cursor, &header->file_length) ||
+        !XPT_Do32(cursor, &ide_offset)) {
         goto error;
     }
     

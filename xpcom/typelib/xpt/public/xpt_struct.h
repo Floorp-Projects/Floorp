@@ -103,6 +103,19 @@ struct XPTHeader {
 #define XPT_MAJOR_VERSION 0x01
 #define XPT_MINOR_VERSION 0x00
 
+/* Any file with a major version number of XPT_MAJOR_INCOMPATIBLE_VERSION 
+ * or higher is to be considered incompatible by this version of xpt and
+ * we will refuse to read it. We will return a header with magic, major and
+ * minor versions set from the file. num_interfaces and file_length will be
+ * set to zero to confirm our inability to read the file; i.e. even if some
+ * client of this library gets out of sync with us regarding the agreed upon
+ * value for XPT_MAJOR_INCOMPATIBLE_VERSION, anytime num_interfaces and
+ * file_length are both zero we *know* that this library refused to read the 
+ * file due to version imcompatibility.  
+ */
+#define XPT_MAJOR_INCOMPATIBLE_VERSION 0x02
+
+
 extern XPT_PUBLIC_API(XPTHeader *)
 XPT_NewHeader(XPTArena *arena, PRUint16 num_interfaces);
 
