@@ -746,14 +746,16 @@ void imgContainer::BuildCompositeMask(gfxIImageFrame *aCompositingFrame, gfxIIma
 
           PRInt32 offset;
 
-#ifdef XP_WIN // Windows has the funky bottom up data storage we need to account for
+// Windows and OS/2 have the funky bottom up data storage we need to account for
+#if defined(XP_WIN) || defined(XP_OS2)
           offset = ((heightComposite - 1) * abprComposite) - y*abprComposite;
 #else
           offset = y*abprComposite;
 #endif
           PRUint8* alphaLine = compositingAlphaData + offset;
 
-#ifdef XP_WIN // Windows has the funky bottom up data storage we need to account for
+// Windows and OS/2 have the funky bottom up data storage we need to account for
+#if defined(XP_WIN) || defined(XP_OS2)
           offset = ((heightOverlay - 1) * abprOverlay) - i*abprOverlay;
 #else
           offset = i*abprOverlay;
