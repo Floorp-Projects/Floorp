@@ -424,7 +424,7 @@ public class Context
      * with the thread during call to {@link ContextAction#run(Context)}.
      * <p>
      * It is allowed to use null for <tt>factory</tt> argument
-     * in which case <tt>ContextFactory.getGlobal().makeContext()</tt> will be
+     * in which case the factory associated with the scope will be
      * used to create new context instances.
      *
      * @see ContextFactory#call(ContextAction)
@@ -435,7 +435,7 @@ public class Context
         throws JavaScriptException
     {
         if (factory == null) {
-            factory = ContextFactory.getGlobal();
+            factory = ScriptRuntime.getContextFactory(scope);
         }
         Context[] storage = getThreadContextStorage();
         Context cx;

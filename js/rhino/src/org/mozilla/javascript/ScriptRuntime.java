@@ -124,7 +124,7 @@ public class ScriptRuntime {
             scope = new NativeObject();
         }
         scope.associateValue(LIBRARY_SCOPE_KEY, scope);
-
+        scope.associateValue(CONTEXT_FACTORY_KEY, cx.getFactory());
         (new ClassCache()).associate(scope);
 
         BaseFunction.init(cx, scope, sealed);
@@ -178,6 +178,17 @@ public class ScriptRuntime {
             throw new IllegalStateException("Failed to find library scope");
         }
         return libScope;
+    }
+
+    public static ContextFactory getContextFactory(Scriptable scope)
+    {
+        ContextFactory factory;
+        factory = (ContextFactory)ScriptableObject.
+                      getTopScopeValue(scope, CONTEXT_FACTORY_KEY);
+        if (factory == null) {
+            throw new IllegalStateException("Failed to find ContextFactory");
+        }
+        return factory;
     }
 
     public static Boolean wrapBoolean(boolean b)

@@ -69,7 +69,6 @@ public final class JavaAdapter implements IdFunctionCall
                 copy = null;
             }
             copy.function = function;
-            copy.contextFactory = currentFactory();
             return copy;
         }
 
@@ -85,7 +84,7 @@ public final class JavaAdapter implements IdFunctionCall
         {
             Scriptable scope = function.getParentScope();
             Scriptable thisObj = scope;
-            return Context.call(contextFactory, this, scope, thisObj, args);
+            return Context.call(null, this, scope, thisObj, args);
         }
 
         public Object call(Context cx, Scriptable scope, Scriptable thisObj,
@@ -107,7 +106,6 @@ public final class JavaAdapter implements IdFunctionCall
 
 
         private Function function;
-        private ContextFactory contextFactory;
         private int[] argsToConvert;
     }
 
@@ -387,10 +385,6 @@ public final class JavaAdapter implements IdFunctionCall
         cfw.addField("self", "Lorg/mozilla/javascript/Scriptable;",
                      (short) (ClassFileWriter.ACC_PUBLIC |
                               ClassFileWriter.ACC_FINAL));
-        cfw.addField("contextFactory",
-                     "Lorg/mozilla/javascript/ContextFactory;",
-                     (short) (ClassFileWriter.ACC_PRIVATE |
-                              ClassFileWriter.ACC_FINAL));
         int interfacesCount = interfaces == null ? 0 : interfaces.length;
         for (int i=0; i < interfacesCount; i++) {
             if (interfaces[i] != null)
@@ -602,52 +596,37 @@ public final class JavaAdapter implements IdFunctionCall
             return null;
         }
         if (!(x instanceof Function))
-            throw ScriptRuntime.typeError1("msg.isnt.function", functionName);
+            throw ScriptRuntime.notFunctionError(x, functionName);
 
         return (Function)x;
-    }
-
-    public static ContextFactory currentFactory()
-    {
-        ContextFactory factory;
-        Context cx = Context.getCurrentContext();
-        if (cx == null) {
-            // It can happen during instantiating of classes created
-            // with the class compiler in script-unaware application.
-            factory = ContextFactory.getGlobal();
-        } else {
-            factory = cx.getFactory();
-        }
-        return factory;
     }
 
     /**
      * Utility method which dynamically binds a Context to the current thread,
      * if none already exists.
      */
-    public static Object callMethod(Scriptable scope, final Scriptable thisObj,
+    public static Object callMethod(final Scriptable thisObj,
                                     final Function f, final Object[] args,
-                                    final long argsToWrap,
-                                    ContextFactory factory)
+                                    final long argsToWrap)
     {
         if (f == null) {
             // See comments in getFunction
             return Undefined.instance;
         }
-        scope = ScriptableObject.getTopLevelScope(scope);
+        final Scriptable scope = f.getParentScope();
         if (argsToWrap == 0) {
-            return Context.call(factory, f, scope, thisObj, args);
+            return Context.call(null, f, scope, thisObj, args);
         }
 
         Context cx = Context.getCurrentContext();
         if (cx != null) {
             return doCall(cx, scope, thisObj, f, args, argsToWrap);
         } else {
-            final Scriptable finalScope = scope;
+            ContextFactory factory = ScriptRuntime.getContextFactory(scope);
             return factory.call(new ContextAction() {
                 public Object run(Context cx)
                 {
-                    return doCall(cx, finalScope, thisObj, f, args, argsToWrap);
+                    return doCall(cx, scope, thisObj, f, args, argsToWrap);
                 }
             });
         }
@@ -712,8 +691,6 @@ public final class JavaAdapter implements IdFunctionCall
         cfw.add(ByteCode.PUTFIELD, adapterName, "self",
                 "Lorg/mozilla/javascript/Scriptable;");
 
-        generateContextFactoryInit(cfw, adapterName);
-
         cfw.add(ByteCode.RETURN);
         cfw.stopMethod((short)3); // 2: this + delegee
     }
@@ -743,8 +720,6 @@ public final class JavaAdapter implements IdFunctionCall
         cfw.add(ByteCode.ALOAD_2);  // second arg
         cfw.add(ByteCode.PUTFIELD, adapterName, "self",
                 "Lorg/mozilla/javascript/Scriptable;");
-
-        generateContextFactoryInit(cfw, adapterName);
 
         cfw.add(ByteCode.RETURN);
         cfw.stopMethod((short)20); // TODO: magic number "20"
@@ -793,22 +768,8 @@ public final class JavaAdapter implements IdFunctionCall
         cfw.add(ByteCode.PUTFIELD, adapterName, "self",
                 "Lorg/mozilla/javascript/Scriptable;");
 
-        generateContextFactoryInit(cfw, adapterName);
-
         cfw.add(ByteCode.RETURN);
         cfw.stopMethod((short)2); // this + delegee
-    }
-
-    private static void generateContextFactoryInit(ClassFileWriter cfw,
-                                                   String adapterName)
-    {
-        cfw.add(ByteCode.ALOAD_0);  // this for the following PUTFIELD for self
-        cfw.addInvoke(ByteCode.INVOKESTATIC,
-                      "org/mozilla/javascript/JavaAdapter",
-                      "currentFactory",
-                      "()Lorg/mozilla/javascript/ContextFactory;");
-        cfw.add(ByteCode.PUTFIELD, adapterName, "contextFactory",
-                "Lorg/mozilla/javascript/ContextFactory;");
     }
 
     /**
@@ -986,15 +947,12 @@ public final class JavaAdapter implements IdFunctionCall
         cfw.startMethod(methodName, methodSignature,
                         ClassFileWriter.ACC_PUBLIC);
 
-        int DELEGEE = firstLocal;
-        int FUNCTION = firstLocal + 1;
-        int LOCALS_END = firstLocal + 2;
+        int FUNCTION = firstLocal;
+        int LOCALS_END = firstLocal + 1;
 
         cfw.add(ByteCode.ALOAD_0);
         cfw.add(ByteCode.GETFIELD, genName, "delegee",
                 "Lorg/mozilla/javascript/Scriptable;");
-        cfw.add(ByteCode.DUP);
-        cfw.addAStore(DELEGEE);
         cfw.addPush(methodName);
         cfw.addInvoke(ByteCode.INVOKESTATIC,
                       "org/mozilla/javascript/JavaAdapter",
@@ -1006,8 +964,6 @@ public final class JavaAdapter implements IdFunctionCall
         cfw.addAStore(FUNCTION);
 
         // Prepare stack to call calMethod
-        // push scope
-        cfw.addALoad(DELEGEE);
         // push thisObj
         cfw.add(ByteCode.ALOAD_0);
         cfw.add(ByteCode.GETFIELD, genName, "self",
@@ -1034,21 +990,15 @@ public final class JavaAdapter implements IdFunctionCall
         }
         cfw.addPush(convertionMask);
 
-        cfw.add(ByteCode.ALOAD_0);
-        cfw.add(ByteCode.GETFIELD, genName, "contextFactory",
-                "Lorg/mozilla/javascript/ContextFactory;");
-
         // go through utility method, which creates a Context to run the
         // method in.
         cfw.addInvoke(ByteCode.INVOKESTATIC,
                       "org/mozilla/javascript/JavaAdapter",
                       "callMethod",
                       "(Lorg/mozilla/javascript/Scriptable;"
-                      +"Lorg/mozilla/javascript/Scriptable;"
                       +"Lorg/mozilla/javascript/Function;"
                       +"[Ljava/lang/Object;"
                       +"J"
-                      +"Lorg/mozilla/javascript/ContextFactory;"
                       +")Ljava/lang/Object;");
 
         generateReturnResult(cfw, returnType);

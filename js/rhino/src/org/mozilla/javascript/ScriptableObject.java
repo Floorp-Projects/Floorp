@@ -1483,8 +1483,6 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
 
     /**
      * Call a method of an object.
-     * The method requires to have active Context associated with
-     * the current thread.
      * @param obj the JavaScript object
      * @param methodName the name of the function property
      * @param args the arguments for the call
@@ -1494,13 +1492,11 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
     public static Object callMethod(Scriptable obj, String methodName,
                                     Object[] args)
     {
-        return callMethod(Context.getContext(), obj, methodName, args);
+        return callMethod(null, obj, methodName, args);
     }
 
     /**
      * Call a method of an object.
-     * The method requires to have active Context associated with
-     * the current thread.
      * @param cx the Context object associated with the current thread.
      * @param obj the JavaScript object
      * @param methodName the name of the function property
@@ -1515,7 +1511,12 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
             throw ScriptRuntime.notFunctionError(obj, methodName);
         }
         Function fun = (Function)funObj;
-        return fun.call(cx, getTopLevelScope(obj), obj, args);
+        Scriptable scope = fun.getParentScope();
+        if (cx != null) {
+            return fun.call(cx, scope, obj, args);
+        } else {
+            return Context.call(null, fun, scope, obj, args);
+        }
     }
 
     private static Scriptable getBase(Scriptable obj, String name)
