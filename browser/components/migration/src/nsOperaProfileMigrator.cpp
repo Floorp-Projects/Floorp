@@ -917,7 +917,7 @@ nsOperaProfileMigrator::CopyHistory(PRBool aReplace)
 
   nsCOMPtr<nsILineInputStream> lineStream = do_QueryInterface(fileStream);
 
-  nsAutoString buffer, title, url;
+  nsCAutoString buffer, title, url;
   PRTime lastVisitDate;
   PRBool moreData = PR_FALSE;
 
@@ -948,8 +948,8 @@ nsOperaProfileMigrator::CopyHistory(PRBool aReplace)
       LL_I2L(million, PR_USEC_PER_SEC);
       LL_MUL(lastVisitDate, temp, million);
 
-      nsCAutoString urlStr; urlStr.AssignWithConversion(url);
-      hist->AddPageWithDetails(urlStr.get(), title.get(), lastVisitDate);
+      nsAutoString titleStr; titleStr.AssignWithConversion(title);
+      hist->AddPageWithDetails(url.get(), titleStr.get(), lastVisitDate);
       
       state = TITLE;
       break;
@@ -1222,11 +1222,13 @@ nsOperaProfileMigrator::ParseBookmarksFolder(nsILineInputStream* aStream,
   PRBool onToolbar = PR_FALSE;
   NS_NAMED_LITERAL_STRING(empty, "");
   do {
-    rv = aStream->ReadLine(buffer, &moreData);
+    nsCAutoString cBuffer;
+    rv = aStream->ReadLine(cBuffer, &moreData);
     if (NS_FAILED(rv)) return rv;
     
     if (!moreData) break;
 
+    CopyASCIItoUTF16(cBuffer, buffer);
     nsXPIDLString data;
     LineType type = GetLineType(buffer, getter_Copies(data));
     switch(type) {

@@ -246,8 +246,10 @@ nsJVMConfigManagerUnix::ParseStream(nsILineInputStream* aStream)
     nsAutoString lineBuffer;
     do {
         nsAutoString line;
-        nsresult rv = aStream->ReadLine(line, &notEOF);
+        nsCAutoString cLine;
+        nsresult rv = aStream->ReadLine(cLine, &notEOF);
         NS_ENSURE_SUCCESS(rv, rv);
+        CopyASCIItoUTF16(cLine, line);
 
         PRInt32 slashOffset, equalsOffset;
         slashOffset = line.FindChar('\\');

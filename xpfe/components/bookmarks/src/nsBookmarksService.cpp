@@ -928,10 +928,12 @@ BookmarkParser::Parse(nsIRDFResource *aContainer, nsIRDFResource *nodeType)
 
         while(NS_SUCCEEDED(rv) && isActiveFlag && moreData)
         {
-            rv = lineInputStream->ReadLine(line, &moreData);
+            nsCAutoString cLine;
+            rv = lineInputStream->ReadLine(cLine, &moreData);
 
             if (NS_SUCCEEDED(rv))
             {
+                CopyASCIItoUTF16(cLine, line);
                 rv = ProcessLine(container, nodeType, bookmarkNode,
                     line, description, inDescriptionFlag, isActiveFlag);
             }

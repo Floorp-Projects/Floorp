@@ -643,11 +643,9 @@ nsPermissionManager::Read()
 
   mHasUnknownTypes = PR_FALSE;
 
-  nsAutoString bufferUnicode;
   nsCAutoString buffer;
   PRBool isMore = PR_TRUE;
-  while (isMore && NS_SUCCEEDED(lineInputStream->ReadLine(bufferUnicode, &isMore))) {
-    CopyUCS2toASCII(bufferUnicode, buffer);
+  while (isMore && NS_SUCCEEDED(lineInputStream->ReadLine(buffer, &isMore))) {
     if (buffer.IsEmpty() || buffer.First() == '#') {
       continue;
     }
@@ -848,11 +846,9 @@ nsPermissionManager::Write()
     if (NS_SUCCEEDED(rv)) {
       nsCOMPtr<nsILineInputStream> lineInputStream = do_QueryInterface(fileInputStream, &rv);
       if (NS_SUCCEEDED(rv)) {
-        nsAutoString bufferUnicode;
         nsCAutoString buffer;
         PRBool isMore = PR_TRUE;
-        while (isMore && NS_SUCCEEDED(lineInputStream->ReadLine(bufferUnicode, &isMore))) {
-          LossyCopyUTF16toASCII(bufferUnicode, buffer);
+        while (isMore && NS_SUCCEEDED(lineInputStream->ReadLine(buffer, &isMore))) {
           if (buffer.IsEmpty() || buffer.First() == '#' ||
               StringBeginsWith(buffer, NS_LITERAL_CSTRING(kMatchTypeHost)))
             continue;
