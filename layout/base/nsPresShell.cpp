@@ -1661,7 +1661,7 @@ PresShell::EnablePrefStyleRules(PRBool aEnable, PRUint8 aPrefType/*=0xFF*/)
   // set to desired state
   mEnablePrefStyleSheet = aEnable;
 
-#ifdef NS_DEBUG
+#ifdef DEBUG_attinasi
   printf("PrefStyleSheet %s %s\n",
     mEnablePrefStyleSheet ? "ENABLED" : "DISABLED",
     bChanging ? "(state toggled)" : "(state unchanged)");
@@ -1701,7 +1701,7 @@ PresShell::SetPreferenceStyleRules(PRBool aForceReflow)
     // XXX: may get more granularity later 
     //      (i.e. each pref may be controlled independently)
     if (!mEnablePrefStyleSheet) {
-#ifdef NS_DEBUG
+#ifdef DEBUG_attinasi
       printf("PrefStyleSheet disabled\n");
 #endif
       return PR_TRUE;
@@ -1724,7 +1724,7 @@ PresShell::SetPreferenceStyleRules(PRBool aForceReflow)
     }
     if (NS_SUCCEEDED(result)) {
     
-#ifdef NS_DEBUG
+#ifdef DEBUG_attinasi
       printf("Setting Preference Style Rules:\n");
 #endif
       // if here, we need to create rules for the prefs
@@ -1753,7 +1753,7 @@ PresShell::SetPreferenceStyleRules(PRBool aForceReflow)
         }
       }
     }
-#ifdef NS_DEBUG
+#ifdef DEBUG_attinasi
     printf( "Preference Style Rules set: error=%ld\n", (long)result);
 #endif    
 
@@ -1797,7 +1797,7 @@ nsresult PresShell::ClearPreferenceStyleRules(void)
       mStyleSet->RemoveBackstopStyleSheet(mPrefStyleSheet);
  #endif
 
-#ifdef NS_DEBUG
+#ifdef DEBUG_attinasi
  #ifdef PREFS_USE_OVERRIDE
       NS_ASSERTION((numBefore - 1) == mStyleSet->GetNumberOfOverrideStyleSheets(),
                    "Pref stylesheet was not removed");
@@ -1840,7 +1840,7 @@ nsresult PresShell::CreatePreferenceStyleSheet(void)
     result = NS_ERROR_OUT_OF_MEMORY;
   }
 
-#ifdef NS_DEBUG
+#ifdef DEBUG_attinasi
   printf("CreatePrefStyleSheet completed: error=%ld\n",(long)result);
 #endif
 
@@ -1858,7 +1858,7 @@ nsresult PresShell::SetPrefColorRules(void)
     if (NS_SUCCEEDED(mPresContext->GetCachedBoolPref(kPresContext_UseDocumentColors, useDocColors))) {
       if (!useDocColors) {
 
-#ifdef NS_DEBUG
+#ifdef DEBUG_attinasi
         printf(" - Creating rules for document colors\n");
 #endif
 
@@ -1934,7 +1934,7 @@ nsresult PresShell::SetPrefLinkRules(void)
       nsCOMPtr<nsIDOMCSSStyleSheet> sheet(do_QueryInterface(mPrefStyleSheet,&result));
       if (NS_SUCCEEDED(result)) {
 
-#ifdef NS_DEBUG
+#ifdef DEBUG_attinasi
         printf(" - Creating rules for link and visited colors\n");
 #endif
 
@@ -2000,13 +2000,13 @@ nsresult PresShell::SetPrefLinkRules(void)
               // no need for important, we want these to be overridable
               // NOTE: these must go in the backstop stylesheet or they cannot be
               //       overridden by authors
-  #ifdef NS_DEBUG
+  #ifdef DEBUG_attinasi
               printf (" - Creating rules for enabling link underlines\n");
   #endif
               // make a rule to make text-decoration: underline happen for links
               strRule.Append(NS_LITERAL_STRING(":link, :visited {text-decoration:underline;}"));
             } else {
-  #ifdef NS_DEBUG
+  #ifdef DEBUG_attinasi
               printf (" - Creating rules for disabling link underlines\n");
   #endif
               // make a rule to make text-decoration: none happen for links
