@@ -448,10 +448,10 @@ nsStyleBorder::nsStyleBorder(nsPresContext* aPresContext)
   mBorder.SetRight(medium);
   mBorder.SetBottom(medium);
   
-  mBorderStyle[0] = NS_STYLE_BORDER_STYLE_NONE;  
-  mBorderStyle[1] = NS_STYLE_BORDER_STYLE_NONE; 
-  mBorderStyle[2] = NS_STYLE_BORDER_STYLE_NONE; 
-  mBorderStyle[3] = NS_STYLE_BORDER_STYLE_NONE;  
+  mBorderStyle[0] = NS_STYLE_BORDER_STYLE_NONE | BORDER_COLOR_FOREGROUND;
+  mBorderStyle[1] = NS_STYLE_BORDER_STYLE_NONE | BORDER_COLOR_FOREGROUND;
+  mBorderStyle[2] = NS_STYLE_BORDER_STYLE_NONE | BORDER_COLOR_FOREGROUND;
+  mBorderStyle[3] = NS_STYLE_BORDER_STYLE_NONE | BORDER_COLOR_FOREGROUND;
 
   mBorderColor[0] = NS_RGB(0, 0, 0);  
   mBorderColor[1] = NS_RGB(0, 0, 0);  
@@ -526,14 +526,6 @@ void nsStyleBorder::RecalcData(nsPresContext* aContext)
   }
   else {
     mHasCachedBorder = PR_FALSE;
-  }
-
-  NS_FOR_CSS_SIDES(side) {
-    if ((mBorderStyle[side] & BORDER_COLOR_DEFINED) == 0) {
-      NS_ASSERTION(!(mBorderStyle[side] & BORDER_COLOR_SPECIAL),
-                   "Clearing special border because BORDER_COLOR_DEFINED is not set");
-      SetBorderToForeground(side);
-    }
   }
 }
 
