@@ -45,7 +45,7 @@ var UBound = 0;
 var bug = 224956;
 var summary = "|expr()| should cause TypeError if |typeof expr| != 'function'";
 var TEST_PASSED = 'TypeError';
-var TEST_FAILED = 'Generated an error, but NOT a TypeError!';
+var TEST_FAILED = 'Generated an error, but NOT a TypeError! ';
 var TEST_FAILED_BADLY = 'Did not generate ANY error!!!';
 var CHECK_PASSED = 'Should not generate an error';
 var CHECK_FAILED = 'Generated an error!';
@@ -163,6 +163,15 @@ testThis('x(1)');
 
 
 /*
+ * Expression from website in original bug report above -
+ */
+status = inSection(27);
+var A = 1, C=2, Y=3, T=4, I=5;
+testThis('(((C/A-0.3)/0.2)+((Y/A-3)/4)+((T/A)/0.05)+((0.095-I/A)/0.4))(100/6)');
+
+
+
+/*
  * Functions and RegExps both have |typeof| == 'function'.
  * See http://bugzilla.mozilla.org/show_bug.cgi?id=61911.
  *
@@ -170,30 +179,30 @@ testThis('x(1)');
  * Note we use checkThis() instead of testThis()
  *
  */
-status = inSection(27);
+status = inSection(28);
 x = function (y) {return y+1;};
 checkThis('x("abc")');
 
-status = inSection(28);
+status = inSection(29);
 checkThis('function (y) {return y+1;}("abc")');
 
-status = inSection(29);
+status = inSection(30);
 function f(y) { function g() {return y;}; return g();};
 checkThis('f("abc")');
 
-status = inSection(30);
+status = inSection(31);
 x = /a()/;
 checkThis('x("abc")');
 
-status = inSection(31);
+status = inSection(32);
 x = /a()/gi;
 checkThis('x("abc")');
 
-status = inSection(32);
+status = inSection(33);
 x = RegExp('a()');
 checkThis('x("abc")');
 
-status = inSection(33);
+status = inSection(34);
 x = new RegExp('a()', 'gi');
 checkThis('x("")');
 
