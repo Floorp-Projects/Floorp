@@ -113,7 +113,7 @@ my $last_moon = 0;
 
 # leave @trees empty if you don't want tinderbox details
 
-my @trees = qw (Mozilla Mozilla-External raptor);
+my @trees = qw (Mozilla-External raptor);
 my $trees;
 my $status;
 my $last_tree;
