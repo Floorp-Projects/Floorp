@@ -56,7 +56,7 @@ LINCS=	\
 !endif
   -I$(PUBLIC)\pref \
 !ifdef MOZ_FULLCIRCLE
-  -I$(PUBLIC)\fulls32 \
+  -I$(PUBLIC)\fullsoft \
 !endif
   $(NULL)
 
