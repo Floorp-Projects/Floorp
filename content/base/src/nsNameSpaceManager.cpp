@@ -391,11 +391,17 @@ NameSpaceManagerImpl::RegisterNameSpace(const nsAReadableString& aURI,
   PRInt32 id = FindNameSpaceID(aURI);
 
   if (kNameSpaceID_Unknown == id) {
-    nsString* uri = new nsString(aURI);
-    gURIArray->AppendElement(uri); 
-    id = gURIArray->Count();  // id is index + 1
-    nsStringKey key(*uri);
-    gURIToIDTable->Put(&key, (void*)id);
+    if (aURI.IsEmpty()) {
+      id = kNameSpaceID_None; // xmlns="", see bug 75700 for details
+    } else {
+      nsString* uri = new nsString(aURI);
+      if (!uri)
+        return NS_ERROR_OUT_OF_MEMORY;
+      gURIArray->AppendElement(uri); 
+      id = gURIArray->Count();  // id is index + 1
+      nsStringKey key(*uri);
+      gURIToIDTable->Put(&key, (void*)id);
+    }
   }
   aNameSpaceID = id;
   return NS_OK;

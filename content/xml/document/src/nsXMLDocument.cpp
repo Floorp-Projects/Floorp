@@ -50,7 +50,6 @@
 #include "nsIDOMCDATASection.h"
 #include "nsIDOMProcessingInstruction.h"
 #include "nsIDOMDocumentType.h"
-#include "nsExpatDTD.h"
 #include "nsINameSpaceManager.h"
 #include "nsICSSLoader.h"
 #include "nsCOMPtr.h"
