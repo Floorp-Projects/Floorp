@@ -15,8 +15,6 @@ nsIServiceManager.h
 nsISupportsArray.h
 nsRepository.h
 nsIEnumerator.h
-nsIMalloc.h
-nsMalloc.h
 nsVector.h
 nsMacRepository.h
 nsTraceRefcnt.h
