@@ -51,9 +51,9 @@
         <tab label="&Offline.tab;"/>
         <tab label="&Advanced.tab;"/>
       </tabs>
-	   
+   
       <tabpanels id="directoryTabPanels" flex="1">
-	      <vbox>
+          <vbox>
              <grid flex="1">
                  <columns>
                      <column/>
@@ -71,7 +71,7 @@
                      <row align="center">
                          <label value="&directoryHostname.label;" accesskey="&directoryHostname.accesskey;"
                                 control="hostname"/>
-                         <textbox id="hostname" flex="1"/>
+                         <textbox id="hostname" flex="1" disableiflocked="true"/>
                          <spacer flex="1"/>
                      </row>
                      <row align="center">
@@ -79,7 +79,7 @@
                                 accesskey="&directoryBaseDN.accesskey;"
                                 control="basedn"/>
                          <vbox>
-                           <textbox id="basedn"/>
+                           <textbox id="basedn" disableiflocked="true"/>
                          </vbox>
                          <button label="&findButton.label;" 
                                  accesskey="&findButton.accesskey;" disabled="true"/>
@@ -89,13 +89,13 @@
                                 accesskey="&portNumber.accesskey;"
                                 control="port"/>
                          <hbox>
-                             <textbox id="port" size="6"/> 
+                             <textbox id="port" size="6" disableiflocked="true"/> 
                          </hbox>
                      </row>
                      <row align="center">
                          <label value="&directoryLogin.label;"
-				accesskey="&directoryLogin.accesskey;"
-				control="login"/>
+                                accesskey="&directoryLogin.accesskey;"
+                                control="login"/>
                          <textbox id="login" flex="1"/>
                      </row>
                  </rows>
@@ -103,19 +103,19 @@
              <separator/>
              <checkbox id="secure" label="&directorySecure.label;"
                        accesskey="&directorySecure.accesskey;"
-                       oncommand="onSecure();"/>
-           </vbox>
-           <vbox>
+                       oncommand="onSecure();" disableiflocked="true"/>
+          </vbox>
+          <vbox>
               <description>&offlineText.label;</description>
               <separator/>
               <hbox>
-                  <button label="&downloadNowButton.label;" 
+                  <button id="download" label="&downloadNowButton.label;" 
                       accesskey="&downloadNowButton.accesskey;"
                       oncommand="DownloadNow();"/>
                   <spacer flex="1"/>
               </hbox>
-           </vbox>
-           <grid>
+          </vbox>
+          <grid>
              <columns>
                <column/>
                <column flex="1"/>
@@ -134,15 +134,17 @@
                <row align="center">
                  <label value="&scope.label;" control="scope"/>
                  <radiogroup id="scope" orient="horizontal">
-                   <radio id="one" value="1" label="&scopeOneLevel.label;"/>
-                   <radio id="sub" value="2" label="&scopeSubtree.label;"/>                
+                   <radio id="one" value="1" label="&scopeOneLevel.label;"
+                          disableiflocked="true"/>
+                   <radio id="sub" value="2" label="&scopeSubtree.label;"
+                          disableiflocked="true"/>
                  </radiogroup>
                </row>
                <row>
                  <label value="&searchFilter.label;" 
                        accesskey="&searchFilter.accesskey;"
                        control="search"/>
-                 <textbox multiline="true" id="search" flex="1"/>
+                 <textbox multiline="true" id="search" flex="1" disableiflocked="true"/>
               </row>
             </rows>
           </grid>

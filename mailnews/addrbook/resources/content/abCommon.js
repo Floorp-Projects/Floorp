@@ -153,8 +153,27 @@ var DirPaneController =
       case "button_delete":
         if (command == "cmd_delete")
           goSetMenuValue(command, "valueAddressBook");
-        if (dirTree && dirTree.currentIndex >= 0)
+        var selectedDir = GetSelectedDirectory();
+        if (selectedDir) {
+          // If the selected directory is an ldap directory
+          // and if the prefs for this directory are locked
+          // disable the delete button.
+          var ldapUrlPrefix = "moz-abldapdirectory://";
+          if ((selectedDir.indexOf(ldapUrlPrefix, 0)) == 0)
+          {
+            var prefName = selectedDir.substr(ldapUrlPrefix.length, selectedDir.length);
+			var disable = false;
+	        try {
+	          disable = gPrefs.getBoolPref(prefName + ".disable_delete");
+	        }
+	        catch(ex){
+	          // if this preference is not set its ok.
+	        }
+            if (disable)
+              return false;
+          }
           return true;
+        }
         else
           return false;
       case "button_edit":

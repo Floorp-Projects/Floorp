@@ -149,12 +149,16 @@ function OnLoadAddressBook()
 
   // FIX ME - later we will be able to use onload from the overlay
   OnLoadCardView();
-	
+
   SetupAbCommandUpdateHandlers();
 
   //workaround - add setTimeout to make sure dynamic overlays get loaded first
   setTimeout('SelectFirstAddressBook()',0);
-  
+
+  // if the pref is locked disable the menuitem New->LDAP directory
+  if (gPrefs.prefIsLocked("ldap_2.disable_button_add"))
+    document.getElementById("addLDAP").setAttribute("disabled", "true");
+
   // add a listener, so we can switch directories if
   // the current directory is deleted
   var addrbookSession = Components.classes["@mozilla.org/addressbook/services/session;1"].getService().QueryInterface(Components.interfaces.nsIAddrBookSession);

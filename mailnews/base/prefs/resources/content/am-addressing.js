@@ -1,3 +1,6 @@
+var gIdentity = null;
+var gPrefInt = null;
+
 function onLoad()
 {
   createDirectoriesList(false);
@@ -8,6 +11,11 @@ function onInit()
 {
   setupDirectoriesList();
   enabling();
+}
+
+function onPreInit(account, accountValues)
+{
+  gIdentity = account.defaultIdentity;
 }
 
 function enabling()
@@ -33,15 +41,28 @@ function enabling()
         editButton.removeAttribute("disabled");
       break;      
   }
-  var attrVal=overrideGlobalPref.getAttribute("disabled");
-  document.getElementById("ldapAutocomplete").disabled=attrVal;
 
-  // if the pref is locked, we'll need to disable the elements
-  if (overrideGlobalPref.getAttribute("disabled") == "true") {
-    directoriesList.setAttribute("disabled", true);
-    directoriesListPopup.setAttribute("disabled", true);
-    editButton.setAttribute("disabled", true);
+  if (!gPrefInt) {
+    gPrefInt = Components.classes["@mozilla.org/preferences-service;1"]
+                           .getService(Components.interfaces.nsIPrefBranch);
   }
+
+  // If the default per-identity directory preferences are locked 
+  // disable the corresponding elements.
+  if (gPrefInt.prefIsLocked("mail.identity." + gIdentity.key + ".overrideGlobal_Pref")) {
+    document.getElementById("useGlobalPref").setAttribute("disabled", "true");
+    document.getElementById("directories").setAttribute("disabled", "true");
+  }
+  else
+  {
+	document.getElementById("useGlobalPref").removeAttribute("disabled");
+    document.getElementById("directories").removeAttribute("disabled");
+  }
+  if (gPrefInt.prefIsLocked("mail.identity." + gIdentity.key + ".directoryServer")) {
+    document.getElementById("directoriesList").setAttribute("disabled", "true");
+    document.getElementById("directoriesListPopup").setAttribute("disabled", "true");
+  }
+
   gFromGlobalPref = false;
   LoadDirectories(directoriesListPopup);
 }

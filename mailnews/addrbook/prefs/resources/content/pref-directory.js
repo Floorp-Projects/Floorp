@@ -42,8 +42,16 @@ function enableAutocomplete()
 //  var autocompleteSkipDirectory = document.getElementById("autocompleteSkipDirectory");
 
   if (autocompleteLDAP.checked) {
-    directoriesList.removeAttribute("disabled");
-    directoriesListPopup.removeAttribute("disabled");
+    // If the default directory preference is locked 
+    // disable the list popup
+    if (gPrefInt.prefIsLocked("ldap_2.autoComplete.directoryServer")) {
+      directoriesList.setAttribute("disabled", true);
+      directoriesListPopup.setAttribute("disabled", true);
+    }
+    else {
+      directoriesList.removeAttribute("disabled");
+      directoriesListPopup.removeAttribute("disabled");
+    } 
     editButton.removeAttribute("disabled");
 //    autocompleteSkipDirectory.removeAttribute("disabled");
   }
@@ -289,9 +297,10 @@ function onInitEditDirectories()
 {
   var listbox = document.getElementById("directoriesList");
   gFromGlobalPref = window.arguments[0].fromGlobalPref;
-  if (listbox) {
-    LoadDirectoriesList(listbox);
-  }
+  LoadDirectoriesList(listbox);
+  // If the pref is locked disable the "Add" button
+  if (gPrefInt.prefIsLocked("ldap_2.disable_button_add"))
+    document.getElementById("addButton").setAttribute('disabled', true);
 }
 
 function LoadDirectoriesList(listbox)
@@ -318,9 +327,9 @@ function selectDirectory()
      && directoriesList.selectedItems.length)
   {
     gCurrentDirectoryServer = 
-	  directoriesList.selectedItems[0].getAttribute('label');
+      directoriesList.selectedItems[0].getAttribute('label');
     gCurrentDirectoryServerId = 
-	  directoriesList.selectedItems[0].getAttribute('string');
+     directoriesList.selectedItems[0].getAttribute('string');
   }
   else
   {
@@ -332,7 +341,19 @@ function selectDirectory()
   var removeButton = document.getElementById("removeButton");
   if(gCurrentDirectoryServer && gCurrentDirectoryServerId) {
     editButton.removeAttribute("disabled");
-    removeButton.removeAttribute("disabled");
+    // If the disable delete button pref for the selected directory is set
+    // disable the delete button for that directory.
+    var disable = false;
+	try {
+	  disable = gPrefInt.getBoolPref(gCurrentDirectoryServerId + ".disable_delete");
+	}
+	catch(ex){
+	  // if this preference is not set its ok.
+	}
+	if (disable)
+      removeButton.setAttribute("disabled", true);
+    else
+      removeButton.removeAttribute("disabled");
   }
   else {
     editButton.setAttribute("disabled", true);

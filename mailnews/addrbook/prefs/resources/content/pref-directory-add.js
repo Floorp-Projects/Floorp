@@ -96,6 +96,30 @@ function fillSettings()
     prefValue="";
   }
   document.getElementById("login").value = prefValue;
+
+  // check if any of the preferences for this server are locked.
+  //If they are locked disable them
+  DisableUriFields(gCurrentDirectoryString + ".uri");
+  DisableElementIfPrefIsLocked(gCurrentDirectoryString + ".description", "description");
+  DisableElementIfPrefIsLocked(gCurrentDirectoryString + ".disable_button_download", "download");
+  DisableElementIfPrefIsLocked(gCurrentDirectoryString + ".maxHits", "results");
+  DisableElementIfPrefIsLocked(gCurrentDirectoryString + ".auth.dn", "login");
+}
+
+function DisableElementIfPrefIsLocked(aPrefName, aElementId)
+{
+  if (gPrefInt.prefIsLocked(aPrefName))
+    document.getElementById(aElementId).setAttribute('disabled', true);
+}
+
+// disables all the text fields corresponding to the .uri pref.
+function DisableUriFields(aPrefName)
+{
+  if (gPrefInt.prefIsLocked(aPrefName)) {
+    var lockedElements = document.getElementsByAttribute("disableiflocked", "true");
+    for (var i=0; i<lockedElements.length; i++)
+      lockedElements[i].setAttribute('disabled', 'true');
+  }
 }
 
 function onSecure()
@@ -299,7 +323,7 @@ function onAccept()
 }
 
 function onCancel()
-{	  
+{  
   window.opener.gUpdate = false;
 }
 
