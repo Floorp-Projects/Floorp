@@ -1,0 +1,700 @@
+{\rtf1\mac\ansicpg10000\uc1\deff0\deflang2057\deflangfe2057
+{\fonttbl{\f0\froman\fcharset256\fprq2{\*\panose 02020603050405020304}Times New Roman;}
+{\f3\ftech\fcharset2\fprq2 Symbol;}{\f4\fnil\fcharset256\fprq2 Helvetica;}
+{\f5\fmodern\fcharset256\fprq2 Courier New;}{\f6\fnil\fcharset256\fprq2 Palatino;}
+{\f7\fscript\fcharset256\fprq2 Zapf Chancery;}{\f8\ftech\fcharset2\fprq2 Zapf Dingbats;}}
+{\colortbl;\red0\green0\blue0;\red0\green0\blue255;\red0\green255\blue255;\red0\green255\blue0;
+\red255\green0\blue255;\red255\green0\blue0;\red255\green255\blue0;\red255\green255\blue255;\red0
+\green0\blue128;\red0\green128\blue128;\red0\green128\blue0;\red128\green0\blue128;\red128\green0
+\blue0;\red128\green128\blue0;\red128\green128\blue128;\red192\green192\blue192;}
+{\stylesheet{\widctlpar\fs20\lang2057\snext0 Normal;}
+{\s1\qj\sa120\widctlpar\fs20\lang2057\sbasedon0\snext1 Body Text;}
+{\s2\sa60\keep\keepn\nowidctlpar\hyphpar0\level3\b\fs24\lang2057\sbasedon3\snext1 heading 3;}
+{\s3\sa30\keep\keepn\nowidctlpar\hyphpar0\level4\b\fs20\lang2057\sbasedon0\snext1 heading 4;}
+{\s10\nowidctlpar\hyphpar0\fs20\lang1024\sbasedon0\snext10 Grammar;}
+{\s11\sb60\keep\keepn\nowidctlpar\hyphpar0\b\fs20\lang2057\sbasedon0\snext12 Grammar Header;}
+{\s12\fi-1440\li1800\sb120\keep\keepn\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024\sbasedon10
+\snext14 Grammar LHS;}
+{\s13\fi-1440\li1800\sb120\sa120\keep\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024\sbasedon10
+\snext12 Grammar LHS Last;}
+{\s14\fi-1260\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\sbasedon10\snext14 Grammar 
+RHS;}
+{\s15\fi-1260\li1800\sa120\keep\nowidctlpar\tx720\hyphpar0\fs20\lang1024\sbasedon14\snext12 Grammar 
+RHS Last;}
+{\s16\fi-1440\li1800\sb120\sa120\keep\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024\sbasedon10
+\snext12 Grammar Argument;}
+{\s20\li180\sb60\sa60\keep\nowidctlpar\hyphpar0\fs20\lang1024\sbasedon0\snext20 Semantics;}
+{\s21\li540\sa60\keep\nowidctlpar\hyphpar0\fs20\lang1024\sbasedon20\snext21 Semantics Next;}
+{\*\cs30\additive Default Paragraph Font;}
+{\*\cs31\b\f5\cf2\lang1024\additive\sbasedon30 Character Literal;}
+{\*\cs32\b0\f0\cf9\additive\sbasedon30 Character Literal Control;}
+{\*\cs33\b\f6\cf10\lang1024\additive\sbasedon30 Terminal;}
+{\*\cs34\b\f5\cf2\lang1024\additive\sbasedon33 Terminal Keyword;}
+{\*\cs35\i\f6\cf13\lang1024\additive\sbasedon30 Nonterminal;}
+{\*\cs36\i0\additive\sbasedon30 Nonterminal Attribute;}
+{\*\cs37\additive\sbasedon30 Nonterminal Argument;}
+{\*\cs40\b\f0\additive\sbasedon30 Semantic Keyword;}
+{\*\cs41\f0\cf6\lang1024\additive\sbasedon30 Type Expression;}
+{\*\cs42\scaps\f0\cf6\lang1024\additive\sbasedon41 Type Name;}
+{\*\cs43\f4\cf6\lang1024\additive\sbasedon41 Field Name;}
+{\*\cs44\i\f0\cf11\lang1024\additive\sbasedon30 Global Variable;}
+{\*\cs45\i\f0\cf4\lang1024\additive\sbasedon30 Local Variable;}
+{\*\cs46\f7\cf12\lang1024\additive\sbasedon30 Action Name;}}
+\widowctrl\ftnbj\aenddoc\fet0\formshade\viewkind4\viewscale125\pgbrdrhead\pgbrdrfoot\sectd\pard
+\plain\s2\sa60\keep\keepn\nowidctlpar\hyphpar0\level3\b\fs24\lang2057 Expressions\par\pard\plain\s3
+\sa30\keep\keepn\nowidctlpar\hyphpar0\level4\b\fs20\lang2057 Primary Expressions\par\pard\plain\s12
+\fi-1440\li1800\sb120\keep\keepn\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 PrimaryExpression} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab{\cs34\b\f5\cf2\lang1024 this}\par|
+\tab{\cs34\b\f5\cf2\lang1024 null}\par|\tab{\cs34\b\f5\cf2\lang1024 true}\par|\tab
+{\cs34\b\f5\cf2\lang1024 false}\par|\tab{\cs33\b\f6\cf10\lang1024 Number}\par|\tab
+{\cs33\b\f6\cf10\lang1024 String}\par|\tab{\cs33\b\f6\cf10\lang1024 Identifier}\par|\tab
+{\cs33\b\f6\cf10\lang1024 RegularExpression}\par\pard\plain\s15\fi-1260\li1800\sa120\keep
+\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab{\cs34\b\f5\cf2\lang1024(} 
+{\cs35\i\f6\cf13\lang1024 Expression} {\cs34\b\f5\cf2\lang1024)}\par\pard\plain\s3\sa30\keep\keepn
+\nowidctlpar\hyphpar0\level4\b\fs20\lang2057 Left-Side Expressions\par\pard\plain\s16\fi-1440\li1800
+\sb120\sa120\keep\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024\cs37{\field{\*\fldinst SYMBOL 99 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}} 
+{\field{\*\fldinst SYMBOL 206 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} \{
+{\cs35\i\f6\cf13\lang1024\cs36\i0 allowCalls}, {\cs35\i\f6\cf13\lang1024\cs36\i0 noCalls}\}\par
+{\cs35\i\f6\cf13\lang1024\cs37{\field{\*\fldinst SYMBOL 97 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}} 
+{\field{\*\fldinst SYMBOL 206 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} \{
+{\cs35\i\f6\cf13\lang1024\cs36\i0 allowIn}, {\cs35\i\f6\cf13\lang1024\cs36\i0 noIn}\}\par\pard\plain
+\s12\fi-1440\li1800\sb120\keep\keepn\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 MemberExpression\super\cs36\i0 noCalls} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab
+{\cs35\i\f6\cf13\lang1024 PrimaryExpression}\par|\tab
+{\cs35\i\f6\cf13\lang1024 MemberExpression\super\cs36\i0 noCalls} {\cs34\b\f5\cf2\lang1024[} 
+{\cs35\i\f6\cf13\lang1024 Expression} {\cs34\b\f5\cf2\lang1024]}\par|\tab
+{\cs35\i\f6\cf13\lang1024 MemberExpression\super\cs36\i0 noCalls} {\cs34\b\f5\cf2\lang1024.} 
+{\cs33\b\f6\cf10\lang1024 Identifier}\par\pard\plain\s15\fi-1260\li1800\sa120\keep\nowidctlpar\tx720
+\hyphpar0\fs20\lang1024|\tab{\cs34\b\f5\cf2\lang1024 new} 
+{\cs35\i\f6\cf13\lang1024 MemberExpression\super\cs36\i0 noCalls} 
+{\cs35\i\f6\cf13\lang1024 Arguments}\par\pard\plain\s12\fi-1440\li1800\sb120\keep\keepn\nowidctlpar
+\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 MemberExpression\super\cs36\i0 allowCalls} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab
+{\cs35\i\f6\cf13\lang1024 MemberExpression\super\cs36\i0 noCalls} 
+{\cs35\i\f6\cf13\lang1024 Arguments}\par|\tab
+{\cs35\i\f6\cf13\lang1024 MemberExpression\super\cs36\i0 allowCalls} 
+{\cs35\i\f6\cf13\lang1024 Arguments}\par|\tab
+{\cs35\i\f6\cf13\lang1024 MemberExpression\super\cs36\i0 allowCalls} {\cs34\b\f5\cf2\lang1024[} 
+{\cs35\i\f6\cf13\lang1024 Expression} {\cs34\b\f5\cf2\lang1024]}\par\pard\plain\s15\fi-1260\li1800
+\sa120\keep\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab
+{\cs35\i\f6\cf13\lang1024 MemberExpression\super\cs36\i0 allowCalls} {\cs34\b\f5\cf2\lang1024.} 
+{\cs33\b\f6\cf10\lang1024 Identifier}\par\pard\plain\s12\fi-1440\li1800\sb120\keep\keepn\nowidctlpar
+\hyphpar0\outlinelevel4\fs20\lang1024{\cs35\i\f6\cf13\lang1024 NewExpression} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab
+{\cs35\i\f6\cf13\lang1024 MemberExpression\super\cs36\i0 noCalls}\par\pard\plain\s15\fi-1260\li1800
+\sa120\keep\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab{\cs34\b\f5\cf2\lang1024 new} 
+{\cs35\i\f6\cf13\lang1024 NewExpression}\par\pard\plain\s12\fi-1440\li1800\sb120\keep\keepn
+\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024{\cs35\i\f6\cf13\lang1024 Arguments} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab{\cs34\b\f5\cf2\lang1024(} 
+{\cs34\b\f5\cf2\lang1024)}\par\pard\plain\s15\fi-1260\li1800\sa120\keep\nowidctlpar\tx720\hyphpar0
+\fs20\lang1024|\tab{\cs34\b\f5\cf2\lang1024(} {\cs35\i\f6\cf13\lang1024 ArgumentList} 
+{\cs34\b\f5\cf2\lang1024)}\par\pard\plain\s12\fi-1440\li1800\sb120\keep\keepn\nowidctlpar\hyphpar0
+\outlinelevel4\fs20\lang1024{\cs35\i\f6\cf13\lang1024 ArgumentList} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab
+{\cs35\i\f6\cf13\lang1024 AssignmentExpression\super\cs36\i0 allowIn}\par\pard\plain\s15\fi-1260
+\li1800\sa120\keep\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab
+{\cs35\i\f6\cf13\lang1024 ArgumentList} {\cs34\b\f5\cf2\lang1024,} 
+{\cs35\i\f6\cf13\lang1024 AssignmentExpression\super\cs36\i0 allowIn}\par\pard\plain\s12\fi-1440
+\li1800\sb120\keep\keepn\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 LeftSideExpression} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab
+{\cs35\i\f6\cf13\lang1024 NewExpression}\par\pard\plain\s15\fi-1260\li1800\sa120\keep\nowidctlpar
+\tx720\hyphpar0\fs20\lang1024|\tab
+{\cs35\i\f6\cf13\lang1024 MemberExpression\super\cs36\i0 allowCalls}\par\pard\plain\s3\sa30\keep
+\keepn\nowidctlpar\hyphpar0\level4\b\fs20\lang2057 Postfix Expressions\par\pard\plain\s12\fi-1440
+\li1800\sb120\keep\keepn\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 PostfixExpression} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab
+{\cs35\i\f6\cf13\lang1024 LeftSideExpression}\par|\tab{\cs35\i\f6\cf13\lang1024 LeftSideExpression} 
+{\cs34\b\f5\cf2\lang1024 ++}\par\pard\plain\s15\fi-1260\li1800\sa120\keep\nowidctlpar\tx720\hyphpar0
+\fs20\lang1024|\tab{\cs35\i\f6\cf13\lang1024 LeftSideExpression} {\cs34\b\f5\cf2\lang1024 --}\par
+\pard\plain\s3\sa30\keep\keepn\nowidctlpar\hyphpar0\level4\b\fs20\lang2057 Unary Operators\par\pard
+\plain\s12\fi-1440\li1800\sb120\keep\keepn\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 UnaryExpression} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab
+{\cs35\i\f6\cf13\lang1024 PostfixExpression}\par|\tab{\cs34\b\f5\cf2\lang1024 delete} 
+{\cs35\i\f6\cf13\lang1024 LeftSideExpression}\par|\tab{\cs34\b\f5\cf2\lang1024 void} 
+{\cs35\i\f6\cf13\lang1024 UnaryExpression}\par|\tab{\cs34\b\f5\cf2\lang1024 typeof} 
+{\cs35\i\f6\cf13\lang1024 UnaryExpression}\par|\tab{\cs34\b\f5\cf2\lang1024 ++} 
+{\cs35\i\f6\cf13\lang1024 LeftSideExpression}\par|\tab{\cs34\b\f5\cf2\lang1024 --} 
+{\cs35\i\f6\cf13\lang1024 LeftSideExpression}\par|\tab{\cs34\b\f5\cf2\lang1024 +} 
+{\cs35\i\f6\cf13\lang1024 UnaryExpression}\par|\tab{\cs34\b\f5\cf2\lang1024 -} 
+{\cs35\i\f6\cf13\lang1024 UnaryExpression}\par|\tab{\cs34\b\f5\cf2\lang1024~} 
+{\cs35\i\f6\cf13\lang1024 UnaryExpression}\par\pard\plain\s15\fi-1260\li1800\sa120\keep\nowidctlpar
+\tx720\hyphpar0\fs20\lang1024|\tab{\cs34\b\f5\cf2\lang1024!} 
+{\cs35\i\f6\cf13\lang1024 UnaryExpression}\par\pard\plain\s3\sa30\keep\keepn\nowidctlpar\hyphpar0
+\level4\b\fs20\lang2057 Multiplicative Operators\par\pard\plain\s12\fi-1440\li1800\sb120\keep\keepn
+\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024{\cs35\i\f6\cf13\lang1024 MultiplicativeExpression}
+ {\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab
+{\cs35\i\f6\cf13\lang1024 UnaryExpression}\par|\tab
+{\cs35\i\f6\cf13\lang1024 MultiplicativeExpression} {\cs34\b\f5\cf2\lang1024*} 
+{\cs35\i\f6\cf13\lang1024 UnaryExpression}\par|\tab
+{\cs35\i\f6\cf13\lang1024 MultiplicativeExpression} {\cs34\b\f5\cf2\lang1024/} 
+{\cs35\i\f6\cf13\lang1024 UnaryExpression}\par\pard\plain\s15\fi-1260\li1800\sa120\keep\nowidctlpar
+\tx720\hyphpar0\fs20\lang1024|\tab{\cs35\i\f6\cf13\lang1024 MultiplicativeExpression} 
+{\cs34\b\f5\cf2\lang1024%} {\cs35\i\f6\cf13\lang1024 UnaryExpression}\par\pard\plain\s3\sa30\keep
+\keepn\nowidctlpar\hyphpar0\level4\b\fs20\lang2057 Additive Operators\par\pard\plain\s12\fi-1440
+\li1800\sb120\keep\keepn\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 AdditiveExpression} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab
+{\cs35\i\f6\cf13\lang1024 MultiplicativeExpression}\par|\tab
+{\cs35\i\f6\cf13\lang1024 AdditiveExpression} {\cs34\b\f5\cf2\lang1024 +} 
+{\cs35\i\f6\cf13\lang1024 MultiplicativeExpression}\par\pard\plain\s15\fi-1260\li1800\sa120\keep
+\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab{\cs35\i\f6\cf13\lang1024 AdditiveExpression} 
+{\cs34\b\f5\cf2\lang1024 -} {\cs35\i\f6\cf13\lang1024 MultiplicativeExpression}\par\pard\plain\s3
+\sa30\keep\keepn\nowidctlpar\hyphpar0\level4\b\fs20\lang2057 Bitwise Shift Operators\par\pard\plain
+\s12\fi-1440\li1800\sb120\keep\keepn\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 ShiftExpression} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab
+{\cs35\i\f6\cf13\lang1024 AdditiveExpression}\par|\tab{\cs35\i\f6\cf13\lang1024 ShiftExpression} 
+{\cs34\b\f5\cf2\lang1024<<} {\cs35\i\f6\cf13\lang1024 AdditiveExpression}\par|\tab
+{\cs35\i\f6\cf13\lang1024 ShiftExpression} {\cs34\b\f5\cf2\lang1024>>} 
+{\cs35\i\f6\cf13\lang1024 AdditiveExpression}\par\pard\plain\s15\fi-1260\li1800\sa120\keep
+\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab{\cs35\i\f6\cf13\lang1024 ShiftExpression} 
+{\cs34\b\f5\cf2\lang1024>>>} {\cs35\i\f6\cf13\lang1024 AdditiveExpression}\par\pard\plain\s3\sa30
+\keep\keepn\nowidctlpar\hyphpar0\level4\b\fs20\lang2057 Relational Operators\par\pard\plain\s12
+\fi-1440\li1800\sb120\keep\keepn\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 RelationalExpression\super\cs36\i0 allowIn} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab
+{\cs35\i\f6\cf13\lang1024 ShiftExpression}\par|\tab
+{\cs35\i\f6\cf13\lang1024 RelationalExpression\super\cs36\i0 allowIn} {\cs34\b\f5\cf2\lang1024<} 
+{\cs35\i\f6\cf13\lang1024 ShiftExpression}\par|\tab
+{\cs35\i\f6\cf13\lang1024 RelationalExpression\super\cs36\i0 allowIn} {\cs34\b\f5\cf2\lang1024>} 
+{\cs35\i\f6\cf13\lang1024 ShiftExpression}\par|\tab
+{\cs35\i\f6\cf13\lang1024 RelationalExpression\super\cs36\i0 allowIn} {\cs34\b\f5\cf2\lang1024<=} 
+{\cs35\i\f6\cf13\lang1024 ShiftExpression}\par|\tab
+{\cs35\i\f6\cf13\lang1024 RelationalExpression\super\cs36\i0 allowIn} {\cs34\b\f5\cf2\lang1024>=} 
+{\cs35\i\f6\cf13\lang1024 ShiftExpression}\par|\tab
+{\cs35\i\f6\cf13\lang1024 RelationalExpression\super\cs36\i0 allowIn} 
+{\cs34\b\f5\cf2\lang1024 instanceof} {\cs35\i\f6\cf13\lang1024 ShiftExpression}\par\pard\plain\s15
+\fi-1260\li1800\sa120\keep\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab
+{\cs35\i\f6\cf13\lang1024 RelationalExpression\super\cs36\i0 allowIn} {\cs34\b\f5\cf2\lang1024 in} 
+{\cs35\i\f6\cf13\lang1024 ShiftExpression}\par\pard\plain\s12\fi-1440\li1800\sb120\keep\keepn
+\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 RelationalExpression\super\cs36\i0 noIn} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab
+{\cs35\i\f6\cf13\lang1024 ShiftExpression}\par|\tab
+{\cs35\i\f6\cf13\lang1024 RelationalExpression\super\cs36\i0 noIn} {\cs34\b\f5\cf2\lang1024<} 
+{\cs35\i\f6\cf13\lang1024 ShiftExpression}\par|\tab
+{\cs35\i\f6\cf13\lang1024 RelationalExpression\super\cs36\i0 noIn} {\cs34\b\f5\cf2\lang1024>} 
+{\cs35\i\f6\cf13\lang1024 ShiftExpression}\par|\tab
+{\cs35\i\f6\cf13\lang1024 RelationalExpression\super\cs36\i0 noIn} {\cs34\b\f5\cf2\lang1024<=} 
+{\cs35\i\f6\cf13\lang1024 ShiftExpression}\par|\tab
+{\cs35\i\f6\cf13\lang1024 RelationalExpression\super\cs36\i0 noIn} {\cs34\b\f5\cf2\lang1024>=} 
+{\cs35\i\f6\cf13\lang1024 ShiftExpression}\par\pard\plain\s15\fi-1260\li1800\sa120\keep\nowidctlpar
+\tx720\hyphpar0\fs20\lang1024|\tab{\cs35\i\f6\cf13\lang1024 RelationalExpression\super\cs36\i0 noIn}
+ {\cs34\b\f5\cf2\lang1024 instanceof} {\cs35\i\f6\cf13\lang1024 ShiftExpression}\par\pard\plain\s3
+\sa30\keep\keepn\nowidctlpar\hyphpar0\level4\b\fs20\lang2057 Equality Operators\par\pard\plain\s12
+\fi-1440\li1800\sb120\keep\keepn\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 EqualityExpression\super\cs37
+{\field{\*\fldinst SYMBOL 97 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+ {\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab
+{\cs35\i\f6\cf13\lang1024 RelationalExpression\super\cs37
+{\field{\*\fldinst SYMBOL 97 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+\par|\tab
+{\cs35\i\f6\cf13\lang1024 EqualityExpression\super\cs37
+{\field{\*\fldinst SYMBOL 97 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+ {\cs34\b\f5\cf2\lang1024==} 
+{\cs35\i\f6\cf13\lang1024 RelationalExpression\super\cs37
+{\field{\*\fldinst SYMBOL 97 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+\par|\tab
+{\cs35\i\f6\cf13\lang1024 EqualityExpression\super\cs37
+{\field{\*\fldinst SYMBOL 97 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+ {\cs34\b\f5\cf2\lang1024!=} 
+{\cs35\i\f6\cf13\lang1024 RelationalExpression\super\cs37
+{\field{\*\fldinst SYMBOL 97 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+\par|\tab
+{\cs35\i\f6\cf13\lang1024 EqualityExpression\super\cs37
+{\field{\*\fldinst SYMBOL 97 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+ {\cs34\b\f5\cf2\lang1024===} 
+{\cs35\i\f6\cf13\lang1024 RelationalExpression\super\cs37
+{\field{\*\fldinst SYMBOL 97 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+\par\pard\plain\s15\fi-1260\li1800\sa120\keep\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab
+{\cs35\i\f6\cf13\lang1024 EqualityExpression\super\cs37
+{\field{\*\fldinst SYMBOL 97 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+ {\cs34\b\f5\cf2\lang1024!==} 
+{\cs35\i\f6\cf13\lang1024 RelationalExpression\super\cs37
+{\field{\*\fldinst SYMBOL 97 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+\par\pard\plain\s3\sa30\keep\keepn\nowidctlpar\hyphpar0\level4\b\fs20\lang2057 Binary Bitwise Operat
+ors\par\pard\plain\s12\fi-1440\li1800\sb120\keep\keepn\nowidctlpar\hyphpar0\outlinelevel4\fs20
+\lang1024
+{\cs35\i\f6\cf13\lang1024 BitwiseAndExpression\super\cs37
+{\field{\*\fldinst SYMBOL 97 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+ {\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab
+{\cs35\i\f6\cf13\lang1024 EqualityExpression\super\cs37
+{\field{\*\fldinst SYMBOL 97 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+\par\pard\plain\s15\fi-1260\li1800\sa120\keep\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab
+{\cs35\i\f6\cf13\lang1024 BitwiseAndExpression\super\cs37
+{\field{\*\fldinst SYMBOL 97 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+ {\cs34\b\f5\cf2\lang1024&} 
+{\cs35\i\f6\cf13\lang1024 EqualityExpression\super\cs37
+{\field{\*\fldinst SYMBOL 97 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+\par\pard\plain\s12\fi-1440\li1800\sb120\keep\keepn\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 BitwiseXorExpression\super\cs37
+{\field{\*\fldinst SYMBOL 97 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+ {\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab
+{\cs35\i\f6\cf13\lang1024 BitwiseAndExpression\super\cs37
+{\field{\*\fldinst SYMBOL 97 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+\par\pard\plain\s15\fi-1260\li1800\sa120\keep\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab
+{\cs35\i\f6\cf13\lang1024 BitwiseXorExpression\super\cs37
+{\field{\*\fldinst SYMBOL 97 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+ {\cs34\b\f5\cf2\lang1024^} 
+{\cs35\i\f6\cf13\lang1024 BitwiseAndExpression\super\cs37
+{\field{\*\fldinst SYMBOL 97 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+\par\pard\plain\s12\fi-1440\li1800\sb120\keep\keepn\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 BitwiseOrExpression\super\cs37
+{\field{\*\fldinst SYMBOL 97 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+ {\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab
+{\cs35\i\f6\cf13\lang1024 BitwiseXorExpression\super\cs37
+{\field{\*\fldinst SYMBOL 97 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+\par\pard\plain\s15\fi-1260\li1800\sa120\keep\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab
+{\cs35\i\f6\cf13\lang1024 BitwiseOrExpression\super\cs37
+{\field{\*\fldinst SYMBOL 97 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+ {\cs34\b\f5\cf2\lang1024|} 
+{\cs35\i\f6\cf13\lang1024 BitwiseXorExpression\super\cs37
+{\field{\*\fldinst SYMBOL 97 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+\par\pard\plain\s3\sa30\keep\keepn\nowidctlpar\hyphpar0\level4\b\fs20\lang2057 Binary Logical Operat
+ors\par\pard\plain\s12\fi-1440\li1800\sb120\keep\keepn\nowidctlpar\hyphpar0\outlinelevel4\fs20
+\lang1024
+{\cs35\i\f6\cf13\lang1024 LogicalAndExpression\super\cs37
+{\field{\*\fldinst SYMBOL 97 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+ {\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab
+{\cs35\i\f6\cf13\lang1024 BitwiseOrExpression\super\cs37
+{\field{\*\fldinst SYMBOL 97 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+\par\pard\plain\s15\fi-1260\li1800\sa120\keep\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab
+{\cs35\i\f6\cf13\lang1024 LogicalAndExpression\super\cs37
+{\field{\*\fldinst SYMBOL 97 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+ {\cs34\b\f5\cf2\lang1024&&} 
+{\cs35\i\f6\cf13\lang1024 BitwiseOrExpression\super\cs37
+{\field{\*\fldinst SYMBOL 97 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+\par\pard\plain\s12\fi-1440\li1800\sb120\keep\keepn\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 LogicalOrExpression\super\cs37
+{\field{\*\fldinst SYMBOL 97 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+ {\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab
+{\cs35\i\f6\cf13\lang1024 LogicalAndExpression\super\cs37
+{\field{\*\fldinst SYMBOL 97 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+\par\pard\plain\s15\fi-1260\li1800\sa120\keep\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab
+{\cs35\i\f6\cf13\lang1024 LogicalOrExpression\super\cs37
+{\field{\*\fldinst SYMBOL 97 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+ {\cs34\b\f5\cf2\lang1024||} 
+{\cs35\i\f6\cf13\lang1024 LogicalAndExpression\super\cs37
+{\field{\*\fldinst SYMBOL 97 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+\par\pard\plain\s3\sa30\keep\keepn\nowidctlpar\hyphpar0\level4\b\fs20\lang2057 Conditional Operator
+\par\pard\plain\s12\fi-1440\li1800\sb120\keep\keepn\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 ConditionalExpression\super\cs37
+{\field{\*\fldinst SYMBOL 97 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+ {\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab
+{\cs35\i\f6\cf13\lang1024 LogicalOrExpression\super\cs37
+{\field{\*\fldinst SYMBOL 97 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+\par\pard\plain\s15\fi-1260\li1800\sa120\keep\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab
+{\cs35\i\f6\cf13\lang1024 LogicalOrExpression\super\cs37
+{\field{\*\fldinst SYMBOL 97 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+ {\cs34\b\f5\cf2\lang1024?} 
+{\cs35\i\f6\cf13\lang1024 AssignmentExpression\super\cs37
+{\field{\*\fldinst SYMBOL 97 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+ {\cs34\b\f5\cf2\lang1024:} 
+{\cs35\i\f6\cf13\lang1024 AssignmentExpression\super\cs37
+{\field{\*\fldinst SYMBOL 97 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+\par\pard\plain\s3\sa30\keep\keepn\nowidctlpar\hyphpar0\level4\b\fs20\lang2057 Assignment Operators
+\par\pard\plain\s12\fi-1440\li1800\sb120\keep\keepn\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 AssignmentExpression\super\cs37
+{\field{\*\fldinst SYMBOL 97 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+ {\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab
+{\cs35\i\f6\cf13\lang1024 ConditionalExpression\super\cs37
+{\field{\*\fldinst SYMBOL 97 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+\par|\tab{\cs35\i\f6\cf13\lang1024 LeftSideExpression} {\cs34\b\f5\cf2\lang1024=} 
+{\cs35\i\f6\cf13\lang1024 AssignmentExpression\super\cs37
+{\field{\*\fldinst SYMBOL 97 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+\par\pard\plain\s15\fi-1260\li1800\sa120\keep\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab
+{\cs35\i\f6\cf13\lang1024 LeftSideExpression} {\cs35\i\f6\cf13\lang1024 CompoundAssignment} 
+{\cs35\i\f6\cf13\lang1024 AssignmentExpression\super\cs37
+{\field{\*\fldinst SYMBOL 97 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+\par\pard\plain\s12\fi-1440\li1800\sb120\keep\keepn\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 CompoundAssignment} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab{\cs34\b\f5\cf2\lang1024*=}\par|\tab
+{\cs34\b\f5\cf2\lang1024/=}\par|\tab{\cs34\b\f5\cf2\lang1024%=}\par|\tab{\cs34\b\f5\cf2\lang1024 +=}
+\par\pard\plain\s15\fi-1260\li1800\sa120\keep\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab
+{\cs34\b\f5\cf2\lang1024 -=}\par\pard\plain\s3\sa30\keep\keepn\nowidctlpar\hyphpar0\level4\b\fs20
+\lang2057 Expressions\par\pard\plain\s13\fi-1440\li1800\sb120\sa120\keep\nowidctlpar\hyphpar0
+\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 CommaExpression\super\cs37
+{\field{\*\fldinst SYMBOL 97 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+ {\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 AssignmentExpression\super\cs37
+{\field{\*\fldinst SYMBOL 97 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+\par{\cs35\i\f6\cf13\lang1024 Expression} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 CommaExpression\super\cs36\i0 allowIn}\par\pard\plain\s12\fi-1440\li1800
+\sb120\keep\keepn\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 OptionalExpression} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab{\cs35\i\f6\cf13\lang1024 Expression}
+\par\pard\plain\s15\fi-1260\li1800\sa120\keep\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab\u171\'C7
+empty\u187\'C8\par\pard\plain\s2\sa60\keep\keepn\nowidctlpar\hyphpar0\level3\b\fs24\lang2057 Stateme
+nts\par\pard\plain\s16\fi-1440\li1800\sb120\sa120\keep\nowidctlpar\hyphpar0\outlinelevel4\fs20
+\lang1024
+{\cs35\i\f6\cf13\lang1024\cs37{\field{\*\fldinst SYMBOL 119 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+ {\field{\*\fldinst SYMBOL 206 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} \{
+{\cs35\i\f6\cf13\lang1024\cs36\i0 abbrev}, {\cs35\i\f6\cf13\lang1024\cs36\i0 abbrevNonEmpty}, 
+{\cs35\i\f6\cf13\lang1024\cs36\i0 abbrevNoShortIf}, {\cs35\i\f6\cf13\lang1024\cs36\i0 full}\}\par
+\pard\plain\s12\fi-1440\li1800\sb120\keep\keepn\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 Statement\super\cs37
+{\field{\*\fldinst SYMBOL 119 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+ {\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab
+{\cs35\i\f6\cf13\lang1024 BlocklikeStatement}\par|\tab
+{\cs35\i\f6\cf13\lang1024 UnterminatedStatement} {\cs34\b\f5\cf2\lang1024;}\par|\tab
+{\cs35\i\f6\cf13\lang1024 NonuniformStatement\super\cs37
+{\field{\*\fldinst SYMBOL 119 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+\par|\tab
+{\cs35\i\f6\cf13\lang1024 IfStatement\super\cs37
+{\field{\*\fldinst SYMBOL 119 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+\par|\tab
+{\cs35\i\f6\cf13\lang1024 WhileStatement\super\cs37
+{\field{\*\fldinst SYMBOL 119 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+\par|\tab
+{\cs35\i\f6\cf13\lang1024 ForStatement\super\cs37
+{\field{\*\fldinst SYMBOL 119 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+\par\pard\plain\s15\fi-1260\li1800\sa120\keep\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab
+{\cs35\i\f6\cf13\lang1024 LabeledStatement\super\cs37
+{\field{\*\fldinst SYMBOL 119 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+\par\pard\plain\s12\fi-1440\li1800\sb120\keep\keepn\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 NonuniformStatement\super\cs36\i0 abbrev} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab
+{\cs35\i\f6\cf13\lang1024 EmptyStatement} {\cs34\b\f5\cf2\lang1024;}\par|\tab
+{\cs35\i\f6\cf13\lang1024 EmptyStatement}\par\pard\plain\s15\fi-1260\li1800\sa120\keep\nowidctlpar
+\tx720\hyphpar0\fs20\lang1024|\tab{\cs35\i\f6\cf13\lang1024 UnterminatedStatement}\par\pard\plain
+\s12\fi-1440\li1800\sb120\keep\keepn\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 NonuniformStatement\super\cs36\i0 abbrevNonEmpty} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab
+{\cs35\i\f6\cf13\lang1024 EmptyStatement} {\cs34\b\f5\cf2\lang1024;}\par\pard\plain\s15\fi-1260
+\li1800\sa120\keep\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab
+{\cs35\i\f6\cf13\lang1024 UnterminatedStatement}\par\pard\plain\s12\fi-1440\li1800\sb120\keep\keepn
+\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 NonuniformStatement\super\cs36\i0 abbrevNoShortIf} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab
+{\cs35\i\f6\cf13\lang1024 EmptyStatement} {\cs34\b\f5\cf2\lang1024;}\par|\tab
+{\cs35\i\f6\cf13\lang1024 UnterminatedStatement}\par\pard\plain\s15\fi-1260\li1800\sa120\keep
+\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab{\cs35\i\f6\cf13\lang1024 EmptyStatement}\par\pard
+\plain\s13\fi-1440\li1800\sb120\sa120\keep\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 NonuniformStatement\super\cs36\i0 full} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 EmptyStatement} {\cs34\b\f5\cf2\lang1024;}\par\pard\plain\s12\fi-1440
+\li1800\sb120\keep\keepn\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 BlocklikeStatement} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab{\cs35\i\f6\cf13\lang1024 Block}\par|
+\tab{\cs35\i\f6\cf13\lang1024 SwitchStatement}\par\pard\plain\s15\fi-1260\li1800\sa120\keep
+\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab{\cs35\i\f6\cf13\lang1024 TryStatement}\par\pard\plain
+\s12\fi-1440\li1800\sb120\keep\keepn\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 UnterminatedStatement} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab
+{\cs35\i\f6\cf13\lang1024 VariableStatement}\par|\tab{\cs35\i\f6\cf13\lang1024 ExpressionStatement}
+\par|\tab{\cs35\i\f6\cf13\lang1024 DoStatement}\par|\tab{\cs35\i\f6\cf13\lang1024 ContinueStatement}
+\par|\tab{\cs35\i\f6\cf13\lang1024 BreakStatement}\par|\tab
+{\cs35\i\f6\cf13\lang1024 ReturnStatement}\par\pard\plain\s15\fi-1260\li1800\sa120\keep\nowidctlpar
+\tx720\hyphpar0\fs20\lang1024|\tab{\cs35\i\f6\cf13\lang1024 ThrowStatement}\par\pard\plain\s3\sa30
+\keep\keepn\nowidctlpar\hyphpar0\level4\b\fs20\lang2057 Block\par\pard\plain\s13\fi-1440\li1800
+\sb120\sa120\keep\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024{\cs35\i\f6\cf13\lang1024 Block} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} {\cs34\b\f5\cf2\lang1024\{} 
+{\cs35\i\f6\cf13\lang1024 BlockStatements} {\cs34\b\f5\cf2\lang1024\}}\par\pard\plain\s12\fi-1440
+\li1800\sb120\keep\keepn\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 BlockStatements} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab
+{\cs35\i\f6\cf13\lang1024 Statement\super\cs36\i0 abbrev}\par\pard\plain\s15\fi-1260\li1800\sa120
+\keep\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab{\cs35\i\f6\cf13\lang1024 BlockStatementsPrefix} 
+{\cs35\i\f6\cf13\lang1024 Statement\super\cs36\i0 abbrevNonEmpty}\par\pard\plain\s12\fi-1440\li1800
+\sb120\keep\keepn\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 BlockStatementsPrefix} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab
+{\cs35\i\f6\cf13\lang1024 Statement\super\cs36\i0 full}\par\pard\plain\s15\fi-1260\li1800\sa120\keep
+\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab{\cs35\i\f6\cf13\lang1024 BlockStatementsPrefix} 
+{\cs35\i\f6\cf13\lang1024 Statement\super\cs36\i0 full}\par\pard\plain\s3\sa30\keep\keepn
+\nowidctlpar\hyphpar0\level4\b\fs20\lang2057 Variable Statement\par\pard\plain\s13\fi-1440\li1800
+\sb120\sa120\keep\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 VariableStatement} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} {\cs34\b\f5\cf2\lang1024 var} 
+{\cs35\i\f6\cf13\lang1024 VariableDeclarationList\super\cs36\i0 allowIn}\par\pard\plain\s12\fi-1440
+\li1800\sb120\keep\keepn\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 VariableDeclarationList\super\cs37
+{\field{\*\fldinst SYMBOL 97 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+ {\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab
+{\cs35\i\f6\cf13\lang1024 VariableDeclaration\super\cs37
+{\field{\*\fldinst SYMBOL 97 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+\par\pard\plain\s15\fi-1260\li1800\sa120\keep\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab
+{\cs35\i\f6\cf13\lang1024 VariableDeclarationList\super\cs37
+{\field{\*\fldinst SYMBOL 97 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+ {\cs34\b\f5\cf2\lang1024,} 
+{\cs35\i\f6\cf13\lang1024 VariableDeclaration\super\cs37
+{\field{\*\fldinst SYMBOL 97 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+\par\pard\plain\s12\fi-1440\li1800\sb120\keep\keepn\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 VariableDeclaration\super\cs37
+{\field{\*\fldinst SYMBOL 97 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+ {\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab{\cs33\b\f6\cf10\lang1024 Identifier}
+\par\pard\plain\s15\fi-1260\li1800\sa120\keep\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab
+{\cs33\b\f6\cf10\lang1024 Identifier} {\cs34\b\f5\cf2\lang1024=} 
+{\cs35\i\f6\cf13\lang1024 AssignmentExpression\super\cs37
+{\field{\*\fldinst SYMBOL 97 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+\par\pard\plain\s3\sa30\keep\keepn\nowidctlpar\hyphpar0\level4\b\fs20\lang2057 Empty Statement\par
+\pard\plain\s13\fi-1440\li1800\sb120\sa120\keep\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 EmptyStatement} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} \u171\'C7empty\u187\'C8\par
+\pard\plain\s3\sa30\keep\keepn\nowidctlpar\hyphpar0\level4\b\fs20\lang2057 Expression Statement\par
+\pard\plain\s13\fi-1440\li1800\sb120\sa120\keep\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 ExpressionStatement} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 Expression}\par\pard\plain\s3\sa30\keep\keepn\nowidctlpar\hyphpar0\level4
+\b\fs20\lang2057 If Statement\par\pard\plain\s12\fi-1440\li1800\sb120\keep\keepn\nowidctlpar
+\hyphpar0\outlinelevel4\fs20\lang1024{\cs35\i\f6\cf13\lang1024 IfStatement\super\cs36\i0 abbrev} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab{\cs34\b\f5\cf2\lang1024 if} 
+{\cs34\b\f5\cf2\lang1024(} {\cs35\i\f6\cf13\lang1024 Expression} {\cs34\b\f5\cf2\lang1024)} 
+{\cs35\i\f6\cf13\lang1024 Statement\super\cs36\i0 abbrev}\par\pard\plain\s15\fi-1260\li1800\sa120
+\keep\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab{\cs34\b\f5\cf2\lang1024 if} 
+{\cs34\b\f5\cf2\lang1024(} {\cs35\i\f6\cf13\lang1024 Expression} {\cs34\b\f5\cf2\lang1024)} 
+{\cs35\i\f6\cf13\lang1024 Statement\super\cs36\i0 abbrevNoShortIf} {\cs34\b\f5\cf2\lang1024 else} 
+{\cs35\i\f6\cf13\lang1024 Statement\super\cs36\i0 abbrev}\par\pard\plain\s12\fi-1440\li1800\sb120
+\keep\keepn\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 IfStatement\super\cs36\i0 abbrevNonEmpty} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab{\cs34\b\f5\cf2\lang1024 if} 
+{\cs34\b\f5\cf2\lang1024(} {\cs35\i\f6\cf13\lang1024 Expression} {\cs34\b\f5\cf2\lang1024)} 
+{\cs35\i\f6\cf13\lang1024 Statement\super\cs36\i0 abbrevNonEmpty}\par\pard\plain\s15\fi-1260\li1800
+\sa120\keep\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab{\cs34\b\f5\cf2\lang1024 if} 
+{\cs34\b\f5\cf2\lang1024(} {\cs35\i\f6\cf13\lang1024 Expression} {\cs34\b\f5\cf2\lang1024)} 
+{\cs35\i\f6\cf13\lang1024 Statement\super\cs36\i0 abbrevNoShortIf} {\cs34\b\f5\cf2\lang1024 else} 
+{\cs35\i\f6\cf13\lang1024 Statement\super\cs36\i0 abbrevNonEmpty}\par\pard\plain\s12\fi-1440\li1800
+\sb120\keep\keepn\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 IfStatement\super\cs36\i0 full} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab{\cs34\b\f5\cf2\lang1024 if} 
+{\cs34\b\f5\cf2\lang1024(} {\cs35\i\f6\cf13\lang1024 Expression} {\cs34\b\f5\cf2\lang1024)} 
+{\cs35\i\f6\cf13\lang1024 Statement\super\cs36\i0 full}\par\pard\plain\s15\fi-1260\li1800\sa120\keep
+\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab{\cs34\b\f5\cf2\lang1024 if} 
+{\cs34\b\f5\cf2\lang1024(} {\cs35\i\f6\cf13\lang1024 Expression} {\cs34\b\f5\cf2\lang1024)} 
+{\cs35\i\f6\cf13\lang1024 Statement\super\cs36\i0 abbrevNoShortIf} {\cs34\b\f5\cf2\lang1024 else} 
+{\cs35\i\f6\cf13\lang1024 Statement\super\cs36\i0 full}\par\pard\plain\s13\fi-1440\li1800\sb120
+\sa120\keep\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 IfStatement\super\cs36\i0 abbrevNoShortIf} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} {\cs34\b\f5\cf2\lang1024 if} 
+{\cs34\b\f5\cf2\lang1024(} {\cs35\i\f6\cf13\lang1024 Expression} {\cs34\b\f5\cf2\lang1024)} 
+{\cs35\i\f6\cf13\lang1024 Statement\super\cs36\i0 abbrevNoShortIf} {\cs34\b\f5\cf2\lang1024 else} 
+{\cs35\i\f6\cf13\lang1024 Statement\super\cs36\i0 abbrevNoShortIf}\par\pard\plain\s3\sa30\keep\keepn
+\nowidctlpar\hyphpar0\level4\b\fs20\lang2057 Do-While Statement\par\pard\plain\s13\fi-1440\li1800
+\sb120\sa120\keep\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 DoStatement} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} {\cs34\b\f5\cf2\lang1024 do} 
+{\cs35\i\f6\cf13\lang1024 Statement\super\cs36\i0 abbrevNonEmpty} {\cs34\b\f5\cf2\lang1024 while} 
+{\cs34\b\f5\cf2\lang1024(} {\cs35\i\f6\cf13\lang1024 Expression} {\cs34\b\f5\cf2\lang1024)}\par\pard
+\plain\s3\sa30\keep\keepn\nowidctlpar\hyphpar0\level4\b\fs20\lang2057 While Statement\par\pard\plain
+\s13\fi-1440\li1800\sb120\sa120\keep\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 WhileStatement\super\cs37
+{\field{\*\fldinst SYMBOL 119 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+ {\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs34\b\f5\cf2\lang1024 while} {\cs34\b\f5\cf2\lang1024(} {\cs35\i\f6\cf13\lang1024 Expression} 
+{\cs34\b\f5\cf2\lang1024)} 
+{\cs35\i\f6\cf13\lang1024 Statement\super\cs37
+{\field{\*\fldinst SYMBOL 119 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+\par\pard\plain\s3\sa30\keep\keepn\nowidctlpar\hyphpar0\level4\b\fs20\lang2057 For Statements\par
+\pard\plain\s12\fi-1440\li1800\sb120\keep\keepn\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 ForStatement\super\cs37
+{\field{\*\fldinst SYMBOL 119 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+ {\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab{\cs34\b\f5\cf2\lang1024 for} 
+{\cs34\b\f5\cf2\lang1024(} {\cs35\i\f6\cf13\lang1024 ForInitializer} {\cs34\b\f5\cf2\lang1024;} 
+{\cs35\i\f6\cf13\lang1024 OptionalExpression} {\cs34\b\f5\cf2\lang1024;} 
+{\cs35\i\f6\cf13\lang1024 OptionalExpression} {\cs34\b\f5\cf2\lang1024)} 
+{\cs35\i\f6\cf13\lang1024 Statement\super\cs37
+{\field{\*\fldinst SYMBOL 119 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+\par\pard\plain\s15\fi-1260\li1800\sa120\keep\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab
+{\cs34\b\f5\cf2\lang1024 for} {\cs34\b\f5\cf2\lang1024(} {\cs35\i\f6\cf13\lang1024 ForInBinding} 
+{\cs34\b\f5\cf2\lang1024 in} {\cs35\i\f6\cf13\lang1024 Expression} {\cs34\b\f5\cf2\lang1024)} 
+{\cs35\i\f6\cf13\lang1024 Statement\super\cs37
+{\field{\*\fldinst SYMBOL 119 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+\par\pard\plain\s12\fi-1440\li1800\sb120\keep\keepn\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 ForInitializer} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab\u171\'C7empty\u187\'C8\par|\tab
+{\cs35\i\f6\cf13\lang1024 CommaExpression\super\cs36\i0 noIn}\par\pard\plain\s15\fi-1260\li1800
+\sa120\keep\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab{\cs34\b\f5\cf2\lang1024 var} 
+{\cs35\i\f6\cf13\lang1024 VariableDeclarationList\super\cs36\i0 noIn}\par\pard\plain\s12\fi-1440
+\li1800\sb120\keep\keepn\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 ForInBinding} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab
+{\cs35\i\f6\cf13\lang1024 LeftSideExpression}\par\pard\plain\s15\fi-1260\li1800\sa120\keep
+\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab{\cs34\b\f5\cf2\lang1024 var} 
+{\cs35\i\f6\cf13\lang1024 VariableDeclaration\super\cs36\i0 noIn}\par\pard\plain\s3\sa30\keep\keepn
+\nowidctlpar\hyphpar0\level4\b\fs20\lang2057 Continue and Break Statements\par\pard\plain\s13
+\fi-1440\li1800\sb120\sa120\keep\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 ContinueStatement} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs34\b\f5\cf2\lang1024 continue} {\cs35\i\f6\cf13\lang1024 OptionalLabel}\par
+{\cs35\i\f6\cf13\lang1024 BreakStatement} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs34\b\f5\cf2\lang1024 break} {\cs35\i\f6\cf13\lang1024 OptionalLabel}\par\pard\plain\s12\fi-1440
+\li1800\sb120\keep\keepn\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 OptionalLabel} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab\u171\'C7empty\u187\'C8\par\pard
+\plain\s15\fi-1260\li1800\sa120\keep\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab
+{\cs33\b\f6\cf10\lang1024 Identifier}\par\pard\plain\s3\sa30\keep\keepn\nowidctlpar\hyphpar0\level4
+\b\fs20\lang2057 Labeled Statements\par\pard\plain\s13\fi-1440\li1800\sb120\sa120\keep\nowidctlpar
+\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 LabeledStatement\super\cs37
+{\field{\*\fldinst SYMBOL 119 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+ {\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs33\b\f6\cf10\lang1024 Identifier} {\cs34\b\f5\cf2\lang1024:} 
+{\cs35\i\f6\cf13\lang1024 Statement\super\cs37
+{\field{\*\fldinst SYMBOL 119 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+\par\pard\plain\s3\sa30\keep\keepn\nowidctlpar\hyphpar0\level4\b\fs20\lang2057 Return Statement\par
+\pard\plain\s13\fi-1440\li1800\sb120\sa120\keep\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 ReturnStatement} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs34\b\f5\cf2\lang1024 return} {\cs35\i\f6\cf13\lang1024 OptionalExpression}\par\pard\plain\s3
+\sa30\keep\keepn\nowidctlpar\hyphpar0\level4\b\fs20\lang2057 Switch Statement\par\pard\plain\s12
+\fi-1440\li1800\sb120\keep\keepn\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 SwitchStatement} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab{\cs34\b\f5\cf2\lang1024 switch} 
+{\cs34\b\f5\cf2\lang1024(} {\cs35\i\f6\cf13\lang1024 Expression} {\cs34\b\f5\cf2\lang1024)} 
+{\cs34\b\f5\cf2\lang1024\{} {\cs34\b\f5\cf2\lang1024\}}\par\pard\plain\s15\fi-1260\li1800\sa120\keep
+\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab{\cs34\b\f5\cf2\lang1024 switch} 
+{\cs34\b\f5\cf2\lang1024(} {\cs35\i\f6\cf13\lang1024 Expression} {\cs34\b\f5\cf2\lang1024)} 
+{\cs34\b\f5\cf2\lang1024\{} {\cs35\i\f6\cf13\lang1024 CaseGroups} 
+{\cs35\i\f6\cf13\lang1024 LastCaseGroup} {\cs34\b\f5\cf2\lang1024\}}\par\pard\plain\s12\fi-1440
+\li1800\sb120\keep\keepn\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 CaseGroups} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab\u171\'C7empty\u187\'C8\par\pard
+\plain\s15\fi-1260\li1800\sa120\keep\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab
+{\cs35\i\f6\cf13\lang1024 CaseGroups} {\cs35\i\f6\cf13\lang1024 CaseGroup}\par\pard\plain\s13
+\fi-1440\li1800\sb120\sa120\keep\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 CaseGroup} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 CaseGuards} {\cs35\i\f6\cf13\lang1024 BlockStatementsPrefix}\par
+{\cs35\i\f6\cf13\lang1024 LastCaseGroup} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 CaseGuards} {\cs35\i\f6\cf13\lang1024 BlockStatements}\par\pard\plain\s12
+\fi-1440\li1800\sb120\keep\keepn\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 CaseGuards} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab{\cs35\i\f6\cf13\lang1024 CaseGuard}
+\par\pard\plain\s15\fi-1260\li1800\sa120\keep\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab
+{\cs35\i\f6\cf13\lang1024 CaseGuards} {\cs35\i\f6\cf13\lang1024 CaseGuard}\par\pard\plain\s12
+\fi-1440\li1800\sb120\keep\keepn\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 CaseGuard} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab{\cs34\b\f5\cf2\lang1024 case} 
+{\cs35\i\f6\cf13\lang1024 Expression} {\cs34\b\f5\cf2\lang1024:}\par\pard\plain\s15\fi-1260\li1800
+\sa120\keep\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab{\cs34\b\f5\cf2\lang1024 default} 
+{\cs34\b\f5\cf2\lang1024:}\par\pard\plain\s3\sa30\keep\keepn\nowidctlpar\hyphpar0\level4\b\fs20
+\lang2057 Throw Statement\par\pard\plain\s13\fi-1440\li1800\sb120\sa120\keep\nowidctlpar\hyphpar0
+\outlinelevel4\fs20\lang1024{\cs35\i\f6\cf13\lang1024 ThrowStatement} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs34\b\f5\cf2\lang1024 throw} {\cs35\i\f6\cf13\lang1024 Expression}\par\pard\plain\s3\sa30\keep
+\keepn\nowidctlpar\hyphpar0\level4\b\fs20\lang2057 Try Statement\par\pard\plain\s12\fi-1440\li1800
+\sb120\keep\keepn\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 TryStatement} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab{\cs34\b\f5\cf2\lang1024 try} 
+{\cs35\i\f6\cf13\lang1024 Block} {\cs35\i\f6\cf13\lang1024 CatchClauses}\par|\tab
+{\cs34\b\f5\cf2\lang1024 try} {\cs35\i\f6\cf13\lang1024 Block} 
+{\cs35\i\f6\cf13\lang1024 FinallyClause}\par\pard\plain\s15\fi-1260\li1800\sa120\keep\nowidctlpar
+\tx720\hyphpar0\fs20\lang1024|\tab{\cs34\b\f5\cf2\lang1024 try} {\cs35\i\f6\cf13\lang1024 Block} 
+{\cs35\i\f6\cf13\lang1024 CatchClauses} {\cs35\i\f6\cf13\lang1024 FinallyClause}\par\pard\plain\s12
+\fi-1440\li1800\sb120\keep\keepn\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 CatchClauses} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab
+{\cs35\i\f6\cf13\lang1024 CatchClause}\par\pard\plain\s15\fi-1260\li1800\sa120\keep\nowidctlpar
+\tx720\hyphpar0\fs20\lang1024|\tab{\cs35\i\f6\cf13\lang1024 CatchClauses} 
+{\cs35\i\f6\cf13\lang1024 CatchClause}\par\pard\plain\s13\fi-1440\li1800\sb120\sa120\keep
+\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024{\cs35\i\f6\cf13\lang1024 CatchClause} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs34\b\f5\cf2\lang1024 catch} {\cs34\b\f5\cf2\lang1024(} {\cs33\b\f6\cf10\lang1024 Identifier} 
+{\cs34\b\f5\cf2\lang1024)} {\cs35\i\f6\cf13\lang1024 Block}\par
+{\cs35\i\f6\cf13\lang1024 FinallyClause} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs34\b\f5\cf2\lang1024 finally} {\cs35\i\f6\cf13\lang1024 Block}\par\pard\plain\s2\sa60\keep\keepn
+\nowidctlpar\hyphpar0\level3\b\fs24\lang2057 Functions\par\pard\plain\s13\fi-1440\li1800\sb120\sa120
+\keep\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024{\cs35\i\f6\cf13\lang1024 FunctionDeclaration}
+ {\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs34\b\f5\cf2\lang1024 function} {\cs33\b\f6\cf10\lang1024 Identifier} {\cs34\b\f5\cf2\lang1024(} 
+{\cs35\i\f6\cf13\lang1024 FormalParameters} {\cs34\b\f5\cf2\lang1024)} {\cs34\b\f5\cf2\lang1024\{} 
+{\cs35\i\f6\cf13\lang1024 FunctionStatements} {\cs34\b\f5\cf2\lang1024\}}\par\pard\plain\s12\fi-1440
+\li1800\sb120\keep\keepn\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 FormalParameters} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab\u171\'C7empty\u187\'C8\par\pard
+\plain\s15\fi-1260\li1800\sa120\keep\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab
+{\cs35\i\f6\cf13\lang1024 FormalParametersPrefix}\par\pard\plain\s12\fi-1440\li1800\sb120\keep\keepn
+\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024{\cs35\i\f6\cf13\lang1024 FormalParametersPrefix} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab{\cs33\b\f6\cf10\lang1024 Identifier}
+\par\pard\plain\s15\fi-1260\li1800\sa120\keep\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab
+{\cs35\i\f6\cf13\lang1024 FormalParametersPrefix} {\cs34\b\f5\cf2\lang1024,} 
+{\cs33\b\f6\cf10\lang1024 Identifier}\par\pard\plain\s12\fi-1440\li1800\sb120\keep\keepn\nowidctlpar
+\hyphpar0\outlinelevel4\fs20\lang1024{\cs35\i\f6\cf13\lang1024 FunctionStatements} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab
+{\cs35\i\f6\cf13\lang1024 FunctionStatement\super\cs36\i0 abbrev}\par\pard\plain\s15\fi-1260\li1800
+\sa120\keep\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab
+{\cs35\i\f6\cf13\lang1024 FunctionStatementsPrefix} 
+{\cs35\i\f6\cf13\lang1024 FunctionStatement\super\cs36\i0 abbrevNonEmpty}\par\pard\plain\s12\fi-1440
+\li1800\sb120\keep\keepn\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 FunctionStatementsPrefix} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab
+{\cs35\i\f6\cf13\lang1024 FunctionStatement\super\cs36\i0 full}\par\pard\plain\s15\fi-1260\li1800
+\sa120\keep\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab
+{\cs35\i\f6\cf13\lang1024 FunctionStatementsPrefix} 
+{\cs35\i\f6\cf13\lang1024 FunctionStatement\super\cs36\i0 full}\par\pard\plain\s12\fi-1440\li1800
+\sb120\keep\keepn\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 FunctionStatement\super\cs37
+{\field{\*\fldinst SYMBOL 119 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+ {\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab
+{\cs35\i\f6\cf13\lang1024 Statement\super\cs37
+{\field{\*\fldinst SYMBOL 119 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+\par\pard\plain\s15\fi-1260\li1800\sa120\keep\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab
+{\cs35\i\f6\cf13\lang1024 FunctionDeclaration}\par\pard\plain\s2\sa60\keep\keepn\nowidctlpar
+\hyphpar0\level3\b\fs24\lang2057 Programs\par\pard\plain\s13\fi-1440\li1800\sb120\sa120\keep
+\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024{\cs35\i\f6\cf13\lang1024 Program} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 FunctionStatements}\par}
