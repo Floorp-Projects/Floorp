@@ -44,7 +44,6 @@ use vars qw($db_name
             @components
             @default_column_list
             $defaultqueryname
-            @dontchange
             @legal_keywords
             @legal_platform
             @legal_priority
@@ -689,9 +688,6 @@ if ($dotweak) {
     $vars->{'priorities'} = \@::legal_priority;
     $vars->{'severities'} = \@::legal_severity;
     $vars->{'resolutions'} = \@::settable_resolution;
-
-    # The value that represents "don't change the value of this field".
-    $vars->{'dontchange'} = $::dontchange;
 
     $vars->{'unconfirmedstate'} = $::unconfirmedstate;
 

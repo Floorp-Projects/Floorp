@@ -88,9 +88,10 @@
       [% current_tab.description FILTER lower %] have been saved.
     </font>
   </p>
-  [% IF changes_saved != 1 %]
+  [% IF email_changes_saved %]
     <p>
-      [% changes_saved %]
+      An email has been sent to both old and new email 
+      addresses to confirm the change of email address.
     </p>
   [% END %]
 [% END %]

@@ -138,9 +138,7 @@ sub SaveAccount {
             Token::IssueEmailChangeToken($userid,$old_login_name,
                                                  $new_login_name);
 
-            $vars->{'changes_saved'} = 
-                "An email has been sent to both old and new email 
-                 addresses to confirm the change of email address.";
+            $vars->{'email_changes_saved'} = 1;
         }
     }
 

@@ -38,11 +38,9 @@ use Bugzilla::Config qw(:DEFAULT ChmodDataFile);
 sub globals_pl_sillyness {
     my $zz;
     $zz = @main::SqlStateStack;
-    $zz = @main::chooseone;
     $zz = $main::contenttypes;
     $zz = @main::default_column_list;
     $zz = $main::defaultqueryname;
-    $zz = @main::dontchange;
     $zz = @main::enterable_products;
     $zz = %main::keywordsbyname;
     $zz = @main::legal_bug_status;
@@ -96,8 +94,6 @@ $::ENV{'PATH'} = '';
 $::SIG{TERM} = 'IGNORE';
 $::SIG{PIPE} = 'IGNORE';
 
-$::dontchange = "--do_not_change--";
-$::chooseone = "--Choose_one:--";
 $::defaultqueryname = "(Default query)"; # This string not exposed in UI
 $::unconfirmedstate = "UNCONFIRMED";
 $::dbwritesallowed = 1;

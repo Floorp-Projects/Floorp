@@ -121,7 +121,7 @@ foreach my $field ("dependson", "blocked") {
 ######################################################################
 
 print "Content-type: text/html\n\n";
-$vars->{'title'} = "Bug processed";
+$vars->{'title_tag'} = "bug_processed";
 
 # Set the title if we can see a mid-air coming. This test may have false
 # negatives, but never false positives, and should catch the majority of cases.
@@ -133,12 +133,12 @@ if (defined($::FORM{'id'})) {
     if (defined $::FORM{'delta_ts'} && $delta_ts && 
         $::FORM{'delta_ts'} ne $delta_ts) 
     {
-        $vars->{'title'} = "Mid-air collision!";
+        $vars->{'title_tag'} = "mid_air";
     }
 }
 
 # Start displaying the response page.
-$template->process("global/header.html.tmpl", $vars)
+$template->process("bug/process/header.html.tmpl", $vars)
   || ThrowTemplateError($template->error());
 
 $vars->{'header_done'} = 1;
@@ -190,7 +190,7 @@ if ( $::FORM{'id'} ) {
     $::oldproduct = FetchSQLData();
 }
 if ((($::FORM{'id'} && $::FORM{'product'} ne $::oldproduct) 
-     || (!$::FORM{'id'} && $::FORM{'product'} ne $::dontchange))
+     || (!$::FORM{'id'} && $::FORM{'product'} ne $::FORM{'dontchange'}))
     && CheckonComment( "reassignbycomponent" ))
 {
     CheckFormField(\%::FORM, 'product', \@::legal_product);
@@ -509,7 +509,7 @@ sub DoConfirm {
 
 sub ChangeStatus {
     my ($str) = (@_);
-    if ($str ne $::dontchange) {
+    if ($str ne $::FORM{'dontchange'}) {
         DoComma();
         if ($::FORM{knob} eq 'reopen') {
             # When reopening, we need to check whether the bug was ever
@@ -561,7 +561,7 @@ sub ChangeStatus {
 
 sub ChangeResolution {
     my ($str) = (@_);
-    if ($str ne $::dontchange) {
+    if ($str ne $::FORM{'dontchange'}) {
         DoComma();
         $::query .= "resolution = " . SqlQuote($str);
     }
@@ -604,7 +604,7 @@ foreach my $field ("rep_platform", "priority", "bug_severity",
                    "version", "op_sys",
                    "target_milestone", "status_whiteboard") {
     if (defined $::FORM{$field}) {
-        if ($::FORM{$field} ne $::dontchange) {
+        if ($::FORM{$field} ne $::FORM{'dontchange'}) {
             DoComma();
             $::query .= "$field = " . SqlQuote(trim($::FORM{$field}));
         }
@@ -612,7 +612,7 @@ foreach my $field ("rep_platform", "priority", "bug_severity",
 }
 
 my $prod_id; # Remember, can't use this for mass changes
-if ($::FORM{'product'} ne $::dontchange) {
+if ($::FORM{'product'} ne $::FORM{'dontchange'}) {
     $prod_id = get_product_id($::FORM{'product'});
     $prod_id ||
       ThrowUserError("invalid_product_name", {product => $::FORM{'product'}});
@@ -627,7 +627,7 @@ if ($::FORM{'product'} ne $::dontchange) {
 }
 
 my $comp_id; # Remember, can't use this for mass changes
-if ($::FORM{'component'} ne $::dontchange) {
+if ($::FORM{'component'} ne $::FORM{'dontchange'}) {
     if (!defined $prod_id) {
         ThrowUserError("no_component_change_for_multiple_products");
     }
@@ -693,7 +693,7 @@ if (Param("usebugaliases") && defined($::FORM{'alias'})) {
 
 if (defined $::FORM{'qa_contact'}) {
     my $name = trim($::FORM{'qa_contact'});
-    if ($name ne $::dontchange) {
+    if ($name ne $::FORM{'dontchange'}) {
         my $id = 0;
         if ($name ne "") {
             $id = DBNameToIdAndCheck($name);
@@ -829,10 +829,10 @@ SWITCH: for ($::FORM{'knob'}) {
         last SWITCH;
     };
     /^reassignbycomponent$/  && CheckonComment( "reassignbycomponent" ) && do {
-        if ($::FORM{'product'} eq $::dontchange) {
+        if ($::FORM{'product'} eq $::FORM{'dontchange'}) {
             ThrowUserError("need_product");
         }
-        if ($::FORM{'component'} eq $::dontchange) {
+        if ($::FORM{'component'} eq $::FORM{'dontchange'}) {
             ThrowUserError("need_component");
         }
         if ($::FORM{'compconfirm'}) {
@@ -1073,7 +1073,7 @@ foreach my $id (@idlist) {
     $oldhash{'product'} = get_product_name($oldhash{'product_id'});
     if ($requiremilestone) {
         my $value = $::FORM{'target_milestone'};
-        if (!defined $value || $value eq $::dontchange) {
+        if (!defined $value || $value eq $::FORM{'dontchange'}) {
             $value = $oldhash{'target_milestone'};
         }
         SendSQL("SELECT defaultmilestone FROM products WHERE name = " .
@@ -1341,7 +1341,7 @@ foreach my $id (@idlist) {
 
       # the user has changed the product to which the bug belongs;
       && defined $::FORM{'product'} 
-        && $::FORM{'product'} ne $::dontchange 
+        && $::FORM{'product'} ne $::FORM{'dontchange'} 
           && $::FORM{'product'} ne $oldhash{'product'} 
     ) {
         if (

@@ -19,6 +19,9 @@
   # Contributor(s): Myk Melez <myk@mozilla.org>
   #%]
 
+[% dontchange = "--do_not_change--" %]
+<input type="hidden" name="dontchange" value="[% dontchange %]">
+
 <script type="text/javascript" language="JavaScript">
   var numelements = document.forms.changeform.elements.length;
   function SetCheckboxes(value) {
