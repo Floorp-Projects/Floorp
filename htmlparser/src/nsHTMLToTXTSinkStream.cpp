@@ -515,8 +515,9 @@ nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode)
   if (!DoOutput())
     return NS_OK;
 
-  if (type == eHTMLTag_p)
+  if (type == eHTMLTag_p || type == eHTMLTag_pre)
     EnsureVerticalSpace(1); // Should this be 0 in unformatted case?
+
   // Else make sure we'll separate block level tags,
   // even if we're about to leave before doing any other formatting.
   // Oddly, I can't find a case where this actually makes any difference.
@@ -578,10 +579,6 @@ nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode)
       mCiteQuoteLevel++;
     else
       mIndent += gTabSize; // Check for some maximum value?
-  }
-  else if (type == eHTMLTag_pre)
-  {
-    EnsureVerticalSpace(1);
   }
   else if (type == eHTMLTag_a)
   {
@@ -1149,6 +1146,8 @@ nsHTMLToTXTSinkStream::Write(const nsString& aString)
 
     NS_WARN_IF_FALSE(mCurrentLine.Length() == 0,
                  "Mixed wrapping data and nonwrapping data on the same line");
+    if (mCurrentLine.Length() > 0)
+      FlushLine();
     
     // Put the mail quote "> " chars in, if appropriate.
     // Have to put it in before every line.
