@@ -29,6 +29,80 @@
 #include "nsCOMPtr.h"
 #include "nsLayoutAtoms.h"
 #include "nsILineIterator.h"
+
+/**
+ * Helper class for comparing the location of frames. Used by
+ * GetPrevVisualFor() and GetNextVisualFor()
+ */
+#define LINE_MIN 0
+#define XCOORD_MIN 0x80000000
+#define LINE_MAX 0x7fffffff
+#define XCOORD_MAX 0x7fffffff
+class nsFrameOrigin {
+public:
+  // default constructor
+  nsFrameOrigin() {
+    mLine = 0;
+    mXCoord = 0;
+  }
+
+  nsFrameOrigin(PRInt32 line, nscoord xCoord) {
+    mLine = line;
+    mXCoord = xCoord;
+  }
+
+  // copy constructor
+  nsFrameOrigin(const nsFrameOrigin& aFrameOrigin) {
+    mLine = aFrameOrigin.mLine;
+    mXCoord = aFrameOrigin.mXCoord;
+  }
+
+  ~nsFrameOrigin() {
+  }
+
+  nsFrameOrigin& operator=(const nsFrameOrigin& aFrameOrigin) { 
+    mLine = aFrameOrigin.mLine;
+    mXCoord = aFrameOrigin.mXCoord;
+    return *this;
+  }
+
+  PRBool operator<(const nsFrameOrigin& aFrameOrigin) {
+    if (mLine < aFrameOrigin.mLine) {
+      return PR_TRUE;
+    }
+    if (mLine > aFrameOrigin.mLine) {
+      return PR_FALSE;
+    }
+    if (mXCoord < aFrameOrigin.mXCoord) {
+      return PR_TRUE;
+    }
+    return PR_FALSE;
+  }
+  
+  PRBool operator>(const nsFrameOrigin& aFrameOrigin) {
+    if (mLine > aFrameOrigin.mLine) {
+      return PR_TRUE;
+    }
+    if (mLine < aFrameOrigin.mLine) {
+      return PR_FALSE;
+    }
+    if (mXCoord > aFrameOrigin.mXCoord) {
+      return PR_TRUE;
+    }
+    return PR_FALSE;
+  }
+
+  PRBool operator==(const nsFrameOrigin& aFrameOrigin) {
+    if (aFrameOrigin.mLine == mLine && aFrameOrigin.mXCoord == mXCoord) {
+      return PR_TRUE;
+    }
+    return PR_FALSE;
+  }
+
+protected:
+  PRInt32 mLine;
+  nscoord mXCoord;
+};
 #endif // IBMBIDI
 
 void
@@ -428,31 +502,23 @@ nsFrameList::GetPrevVisualFor(nsIFrame* aFrame) const
   if (!blockFrame || !iter)
     return nsnull;
 
-  PRInt64 maxOrig, limOrig, testOrig;
+  nsFrameOrigin maxOrig(LINE_MIN, XCOORD_MIN);
   PRInt32 testLine, thisLine;
-  PRInt64 tmp64;
 
-  maxOrig = LL_MININT;
   aFrame->GetRect(tempRect);
   result = iter->FindLineContaining(aFrame, &thisLine);
   if (NS_FAILED(result) || thisLine < 0)
     return nsnull;
 
-  LL_I2L(tmp64, thisLine);
-  LL_SHL(limOrig, tmp64, 32);
-  LL_I2L(tmp64, tempRect.x);
-  LL_OR2(limOrig, tmp64);
+  nsFrameOrigin limOrig(thisLine, tempRect.x);
 
   while (frame) {
     if (NS_SUCCEEDED(iter->FindLineContaining(frame, &testLine))
         && testLine >= 0
         && (testLine == thisLine || testLine == thisLine - 1)) {
       frame->GetRect(tempRect);
-      LL_I2L(tmp64, testLine);
-      LL_SHL(testOrig, tmp64, 32);
-      LL_I2L(tmp64, tempRect.x);
-      LL_OR2(testOrig, tmp64);
-      if (LL_CMP(testOrig, >, maxOrig) && LL_CMP(testOrig, <, limOrig)) { // we are looking for the highest value less than the current one
+      nsFrameOrigin testOrig(testLine, tempRect.x);
+      if (testOrig > maxOrig && testOrig < limOrig) { // we are looking for the highest value less than the current one
         maxOrig = testOrig;
         furthestFrame = frame;
       }
@@ -509,32 +575,23 @@ nsFrameList::GetNextVisualFor(nsIFrame* aFrame) const
   if (!blockFrame || !iter)
     return nsnull;
 
-  PRInt64 minOrig, limOrig, testOrig;
+  nsFrameOrigin minOrig(LINE_MAX, XCOORD_MAX);
   PRInt32 testLine, thisLine;
 
-  minOrig = LL_MAXINT;
   aFrame->GetRect(tempRect);
   result = iter->FindLineContaining(aFrame, &thisLine);
   if (NS_FAILED(result) || thisLine < 0)
     return nsnull;
 
-  PRInt64 tmp64;
-
-  LL_I2L(tmp64, thisLine);
-  LL_SHL(limOrig, tmp64, 32);
-  LL_I2L(tmp64, tempRect.x);
-  LL_OR2(limOrig, tmp64);
+  nsFrameOrigin limOrig(thisLine, tempRect.x);
 
   while (frame) {
     if (NS_SUCCEEDED(iter->FindLineContaining(frame, &testLine))
         && testLine >= 0
         && (testLine == thisLine || testLine == thisLine + 1)) {
       frame->GetRect(tempRect);
-      LL_I2L(tmp64, testLine);
-      LL_SHL(testOrig, tmp64, 32);
-      LL_I2L(tmp64, tempRect.x);
-      LL_OR2(testOrig, tmp64);
-      if (LL_CMP(testOrig, <, minOrig) && LL_CMP(testOrig, >, limOrig)) { // we are looking for the lowest value greater than the current one
+      nsFrameOrigin testOrig(testLine, tempRect.x);
+      if (testOrig < minOrig && testOrig > limOrig) { // we are looking for the lowest value greater than the current one
         minOrig = testOrig;
         nearestFrame = frame;
       }
