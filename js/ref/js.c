@@ -42,6 +42,10 @@
 #include "jsscope.h"
 #include "jsscript.h"
 
+#ifdef PERLCONNECT
+#include "jsperl.h"
+#endif
+
 #ifdef LIVECONNECT
 #include "jsjava.h"
 #endif
@@ -51,6 +55,9 @@
 #ifdef JSDEBUGGER_JAVA_UI
 #include "jsdjava.h"
 #endif /* JSDEBUGGER_JAVA_UI */
+#ifdef JSDEBUGGER_C_UI
+#include "jsdb.h"
+#endif /* JSDEBUGGER_C_UI */
 #endif /* JSDEBUGGER */
 
 #ifdef XP_UNIX
@@ -64,7 +71,7 @@
 #define isatty(f) 1
 
 #include <SIOUX.h>
-#include <Types.h>
+#include <MacTypes.h>
 
 static char* mac_argv[] = { "js", NULL };
 
@@ -72,12 +79,12 @@ static void initConsole(StringPtr consoleName, const char* startupMessage, int *
 {
 	SIOUXSettings.autocloseonquit = true;
 	SIOUXSettings.asktosaveonclose = false;
-	// SIOUXSettings.initializeTB = false;
-	// SIOUXSettings.showstatusline = true;
+	/* SIOUXSettings.initializeTB = false;
+	 SIOUXSettings.showstatusline = true;*/
 	puts(startupMessage);
 	SIOUXSetTitle(consoleName);
 
-	// set up a buffer for stderr (otherwise it's a pig).
+	/* set up a buffer for stderr (otherwise it's a pig). */
 	setvbuf(stderr, malloc(BUFSIZ), _IOLBF, BUFSIZ);
 
 	*argc = 1;
@@ -261,8 +268,6 @@ my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report);
 static JSBool
 Load(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    JSContext *cx2;
-    JSVersion version;
     uintN i;
     JSString *str;
     const char *filename;
@@ -270,39 +275,22 @@ Load(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSBool ok;
     jsval result;
 
-    /*
-     * Create new context to execute in so that gc will still find
-     * roots for the script that called load().
-     */
-    cx2 = JS_NewContext(cx->runtime, 8192);
-    if (!cx2)
-	return JS_FALSE;
-    JS_SetErrorReporter(cx2, my_ErrorReporter);
-    JS_SetGlobalObject(cx2, JS_GetGlobalObject(cx));
-    version = JS_GetVersion(cx);
-    if (version != JSVERSION_DEFAULT)
-	JS_SetVersion(cx2, version);
-
-    ok = JS_TRUE;
     for (i = 0; i < argc; i++) {
 	str = JS_ValueToString(cx, argv[i]);
-        if (!str) {
-            ok = JS_FALSE;
-            break;
-        }
+	if (!str)
+	    return JS_FALSE;
 	argv[i] = STRING_TO_JSVAL(str);
 	filename = JS_GetStringBytes(str);
 	errno = 0;
 	script = JS_CompileFile(cx, obj, filename);
 	if (!script)
 	    continue;
-	ok = JS_ExecuteScript(cx2, obj, script, &result);
+	ok = JS_ExecuteScript(cx, obj, script, &result);
 	JS_DestroyScript(cx, script);
 	if (!ok)
-	    break;
+	    return JS_FALSE;
     }
-    JS_DestroyContext(cx2);
-    return ok;
+    return JS_TRUE;
 }
 
 static JSBool
@@ -543,6 +531,11 @@ SrcNotes(JSContext *cx, JSFunction *fun )
 		atom = js_GetAtom(cx, &fun->script->atomMap, atomIndex);
 		printf(" atom %u (%s)", (uintN)atomIndex, ATOM_BYTES(atom));
 		break;
+	      case SRC_CATCH:
+		delta = (uintN) js_GetSrcNoteOffset(sn, 0);
+		if (delta)
+		    printf(" guard size %u", delta);
+		break;
 	      default:;
 	    }
 	    putchar('\n');
@@ -573,10 +566,10 @@ TryNotes(JSContext *cx, JSFunction *fun)
 
     if (!tn)
 	return JS_TRUE;
-    printf("\nException table:\nstart\tend\tcatch\tfinally\n");
-    while (tn->catchStart || tn->finallyStart) {
-	printf("  %d\t%d\t%d\t%d\n",
-	       tn->start, tn->length, tn->catchStart, tn->finallyStart);
+    printf("\nException table:\nstart\tend\tcatch\n");
+    while (tn->start && tn->catchStart) {
+	printf("  %d\t%d\t%d\n",
+	       tn->start, tn->length, tn->catchStart);
 	tn++;
     }
     return JS_TRUE;
@@ -1285,9 +1278,10 @@ main(int argc, char **argv)
 #endif
 
     version = JSVERSION_DEFAULT;
+#ifndef LIVECONNECT
     argc--;
     argv++;
-
+#endif
     rt = JS_NewRuntime(8L * 1024L * 1024L);
     if (!rt)
 	return 1;
@@ -1313,6 +1307,11 @@ main(int argc, char **argv)
 	return 1;
     if (!JS_DefineProperties(cx, it, its_props))
 	return 1;
+
+#ifdef PERLCONNECT
+    if (!js_InitPerlClass(cx, glob))
+        return 1;
+#endif
 
 #ifdef LIVECONNECT
 	if (!JSJ_SimpleInit(cx, glob, NULL, getenv("CLASSPATH")))
@@ -1340,6 +1339,9 @@ main(int argc, char **argv)
     * is passed on the cmd line.
     */
 #endif /* JSDEBUGGER_JAVA_UI */
+#ifdef JSDEBUGGER_C_UI
+    JSDB_InitDebugger(rt, _jsdc, 0);
+#endif /* JSDEBUGGER_C_UI */
 #endif /* JSDEBUGGER */
 
     result = ProcessArgs(cx, glob, argv, argc);

@@ -815,37 +815,35 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		    js_printf(jp, "\t}\n");
 		    break;
 
-		  case SRC_TRY:
-		    js_printf(jp, "\ttry {\n");
+		  case SRC_TRYFIN:
+		    if (js_GetSrcNoteOffset(sn, 0) == 0) {
+			js_printf(jp, "\ttry {\n");
+		    } else {
+			jp->indent -= 4;
+			js_printf(jp, "\t} finally {\n");
+		    }
 		    jp->indent += 4;
 		    break;
 
 		  case SRC_CATCH:
 		    jp->indent -= 4;
+		    sn = js_GetSrcNote(jp->script, pc);
 		    pc += oplen;
 		    js_printf(jp, "\t} catch ("); /* balance) */
-		    sn = js_GetSrcNote(jp->script, pc);
-		    len = js_CodeSpec[*pc].length;
-		    switch (*pc) {
-		      case JSOP_SETVAR:
-			lval = ATOM_BYTES(GetSlotAtom(jp->scope, js_GetLocalVariable,
-						      GET_VARNO(pc)));
-			goto do_catchvar;
-		      case JSOP_SETARG:
-			lval = ATOM_BYTES(GetSlotAtom(jp->scope, js_GetArgument,
-						      GET_ARGNO(pc)));
-			goto do_catchvar;
-		      case JSOP_SETNAME:
-			lval = ATOM_BYTES(GET_ATOM(cx, jp->script, pc));
-		    do_catchvar:
-			js_printf(jp, "%s%s",
-				  (sn && SN_TYPE(sn) == SRC_VAR ? "var " : ""), lval);
-			break;
-		      default:
-			PR_ASSERT(0);
+		    pc += 6;	/* name Object, pushobj, exception */
+		    js_printf(jp, "%s", ATOM_BYTES(GET_ATOM(cx, 
+							    jp->script, pc)));
+		    len = js_GetSrcNoteOffset(sn, 0);
+		    pc += 4;	/* initprop, enterwith */
+		    if (len) {
+			js_printf(jp, " if ");
+			DECOMPILE_CODE(pc, len - 3); /* don't decompile ifeq */
+			js_printf(jp, "%s", POP_STR());
+			pc += len;
 		    }
 		    js_printf(jp, ") {\n"); /* balance} */
 		    jp->indent += 4;
+		    len = 0;
 		    break;
 
 		  case SRC_FUNCDEF: {
@@ -879,6 +877,17 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 	      case JSOP_PUSHOBJ:
 	      case JSOP_BINDNAME:
 		todo = Sprint(&ss->sprinter, "");
+		break;
+
+	      case JSOP_JSR:
+	      case JSOP_RETSUB:
+		todo = -2;
+		break;
+
+	      case JSOP_EXCEPTION:
+		sn = js_GetSrcNote(jp->script, pc);
+		if (sn && SN_TYPE(sn) == SRC_HIDDEN)
+		    todo = -2;
 		break;
 
 	      case JSOP_POP:
@@ -934,10 +943,13 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		break;
 
 	      case JSOP_ENTERWITH:
+		sn = js_GetSrcNote(jp->script, pc);
+		todo = -2;
+		if (sn && SN_TYPE(sn) == SRC_HIDDEN)
+		    break;
 		rval = POP_STR();
 		js_printf(jp, "\twith (%s) {\n", rval);
 		jp->indent += 4;
-		todo = -2;
 		break;
 
 	      case JSOP_LEAVEWITH:
@@ -959,9 +971,12 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		break;
 
 	      case JSOP_THROW:
+		sn = js_GetSrcNote(jp->script, pc);
+		todo = -2;
+		if (sn && SN_TYPE(sn) == SRC_HIDDEN)
+		    break;
 		rval = POP_STR();
 		js_printf(jp, "\t%s %s;\n", cs->name, rval);
-		todo = -2;
 		break;
 
 	      case JSOP_GOTO:
@@ -1763,6 +1778,13 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 #endif /* JS_HAS_SHARP_VARS */
 #endif /* JS_HAS_INITIALIZERS */
 
+#if JS_HAS_DEBUGGER_KEYWORD
+	      case JSOP_DEBUGGER:
+	        js_printf(jp, "\tdebugger;\n");
+		todo = -2;
+		break;
+#endif /* JS_HAS_DEBUGGER_KEYWORD */
+
 	      default:
 		todo = -2;
 		break;
@@ -1889,7 +1911,7 @@ js_DecompileFunction(JSPrinter *jp, JSFunction *fun, JSBool newlines)
             }
             if (atom == NULL)
                 break;
-            js_printf(jp, (i > 0 ? ", %s" : "%s"), ATOM_BYTES(atom));
+            js_printf(jp, (i > 0 ? ", %s" : "%s"), ATOM_BYTES(atom));            
         }
     }
     js_puts(jp, ") {\n");

@@ -38,8 +38,6 @@ struct JSTryNote {
     ptrdiff_t    start;         /* start of try statement */
     ptrdiff_t    length;        /* count of try statement bytecodes */
     ptrdiff_t    catchStart;    /* start of catch block (0 if none) */
-    ptrdiff_t    finallyStart;  /* XXX unneeded except for end-of-vector mark:
-				   if (!catchStart && !finallyStart) break */
 };
 
 struct JSScript {

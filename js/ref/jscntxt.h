@@ -80,6 +80,8 @@ struct JSRuntime {
     void                *newScriptHookData;
     JSDestroyScriptHook destroyScriptHook;
     void                *destroyScriptHookData;
+    JSTrapHandler       debuggerHandler;
+    void                *debuggerHandlerData;
 
     /* More debugging state, see jsdbgapi.c. */
     PRCList             trapList;
@@ -147,7 +149,7 @@ struct JSContext {
 
     /* Client opaque pointer */
     void                *data;
-
+    
     /* Java environment and JS errors to throw as exceptions. */
     void                *javaEnv;
     void                *savedErrors;
@@ -157,6 +159,7 @@ struct JSContext {
     JSPackedBool        gcActive;
     jsrefcount          requestDepth;
 #endif
+    JSStackFrame        *dormantFrameChain;   /* dormant frame chains */
 };
 
 typedef struct JSInterpreterHooks {

@@ -248,7 +248,7 @@ typedef enum JSSrcNoteType {
     SRC_ASSIGNOP    = 8,        /* += or another assign-op follows */
     SRC_COND        = 9,        /* JSOP_IFEQ is from conditional ?: operator */
     SRC_PAREN       = 10,       /* JSOP_NOP generated to mark user parens */
-    SRC_HIDDEN      = 11,       /* JSOP_LEAVEWITH for break/continue in with */
+    SRC_HIDDEN      = 11,       /* opcode shouldn't be decompiled */
     SRC_PCBASE      = 12,       /* offset of first obj.prop.subprop bytecode */
     SRC_LABEL       = 13,       /* JSOP_NOP for label: with atomid immediate */
     SRC_LABELBRACE  = 14,       /* JSOP_NOP for label: {...} begin brace */
@@ -257,8 +257,8 @@ typedef enum JSSrcNoteType {
     SRC_CONT2LABEL  = 17,       /* JSOP_GOTO for 'continue label' with atomid */
     SRC_SWITCH      = 18,       /* JSOP_*SWITCH with offset to end of switch */
     SRC_FUNCDEF     = 19,       /* JSOP_NOP for function f() with atomid */
-    SRC_TRY	    = 20,       /* JSOP_NOP for beginning of try{} section */
-    SRC_CATCH       = 21,       /* beginning of catch block (at conditional) */
+    SRC_TRYFIN	    = 20,       /* JSOP_NOP for try{} or finally{} section */
+    SRC_CATCH       = 21,       /* catch block has guard */
     SRC_NEWLINE     = 22,       /* bytecode follows a source newline */
     SRC_SETLINE     = 23,       /* a file-absolute source line number note */
     SRC_XDELTA      = 24        /* 24-31 are for extended delta notes */
@@ -362,7 +362,7 @@ js_AllocTryNotes(JSContext *cx, JSCodeGenerator *cg);
  */
 extern JS_FRIEND_API(JSTryNote *)
 js_NewTryNote(JSContext *cx, JSCodeGenerator *cg, ptrdiff_t start,
-	      ptrdiff_t end, ptrdiff_t catchStart, ptrdiff_t finallyStart);
+	      ptrdiff_t end, ptrdiff_t catchStart);
 
 /*
  * Finish generating exception information, and copy it to JS_malloc

@@ -44,7 +44,7 @@ static PRArenaStats *arena_stats_list;
 #define PR_ARENA_DEFAULT_ALIGN  sizeof(double)
 
 PR_PUBLIC_API(void)
-PR_InitArenaPool(PRArenaPool *pool, const char *name, size_t size, size_t align)
+PR_InitArenaPool(PRArenaPool *pool, const char *name, PRUint32 size, PRUint32 align)
 {
     if (align == 0)
 	align = PR_ARENA_DEFAULT_ALIGN;
@@ -63,13 +63,13 @@ PR_InitArenaPool(PRArenaPool *pool, const char *name, size_t size, size_t align)
 }
 
 PR_PUBLIC_API(void *)
-PR_ArenaAllocate(PRArenaPool *pool, size_t nb)
+PR_ArenaAllocate(PRArenaPool *pool, PRUint32 nb)
 {
     PRArena **ap, *a, *b;
 #ifdef JS_THREADSAFE
 	PRArena *c;
 #endif
-    size_t sz;
+    PRUint32 sz;
     void *p;
 
     PR_ASSERT((nb & pool->mask) == 0);
@@ -118,7 +118,7 @@ PR_ArenaAllocate(PRArenaPool *pool, size_t nb)
 }
 
 PR_PUBLIC_API(void *)
-PR_ArenaGrow(PRArenaPool *pool, void *p, size_t size, size_t incr)
+PR_ArenaGrow(PRArenaPool *pool, void *p, PRUint32 size, PRUint32 incr)
 {
     void *newp;
 
@@ -258,7 +258,7 @@ PR_ArenaFinish()
 
 #ifdef PR_ARENAMETER
 PR_PUBLIC_API(void)
-PR_ArenaCountAllocation(PRArenaPool *pool, size_t nb)
+PR_ArenaCountAllocation(PRArenaPool *pool, PRUint32 nb)
 {
     pool->stats.nallocs++;
     pool->stats.nbytes += nb;
@@ -268,13 +268,13 @@ PR_ArenaCountAllocation(PRArenaPool *pool, size_t nb)
 }
 
 PR_PUBLIC_API(void)
-PR_ArenaCountInplaceGrowth(PRArenaPool *pool, size_t size, size_t incr)
+PR_ArenaCountInplaceGrowth(PRArenaPool *pool, PRUint32 size, PRUint32 incr)
 {
     pool->stats.ninplace++;
 }
 
 PR_PUBLIC_API(void)
-PR_ArenaCountGrowth(PRArenaPool *pool, size_t size, size_t incr)
+PR_ArenaCountGrowth(PRArenaPool *pool, PRUint32 size, PRUint32 incr)
 {
     pool->stats.ngrows++;
     pool->stats.nbytes += incr;

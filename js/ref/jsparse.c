@@ -1081,114 +1081,108 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	return pn;
 
 #if JS_HAS_EXCEPTIONS
-      case TOK_TRY:
+      case TOK_TRY: {
+	JSParseNode *catchtail = NULL;
 	/*
 	 * try nodes are ternary.
 	 * kid1 is the try Statement
 	 * kid2 is the catch node
 	 * kid3 is the finally Statement
+	 *
+	 * catch nodes are ternary.
+	 * kid1 is the discriminant
+	 * kid2 is the next catch node, or NULL
+	 * kid3 is the catch block (on kid3 so that we can always append a
+	 *                          new catch pn on catchtail->kid2)
+	 *
+	 * catch discriminant nodes are binary
+	 * atom is the receptacle
+	 * expr is the discriminant code
+	 *
+	 * finally nodes are unary (just the finally expression)
 	 */
 	pn = NewParseNode(cx, &ts->token, PN_TERNARY);
-	pn1 = Statement(cx, ts, tc);
-	if (!pn1)
+	pn->pn_op = JSOP_NOP;
+
+	MUST_MATCH_TOKEN(TOK_LC, "missing { after before try block");
+	/* } balance */
+	pn->pn_kid1 = Statements(cx, ts, tc);
+	if (!pn->pn_kid1)
 	    return NULL;
-	if (js_PeekToken(cx, ts) == TOK_CATCH) {
-	    pn2 = NewParseNode(cx, &ts->token, PN_BINARY);
-	    if (!pn2)
+	/* { balance */
+	MUST_MATCH_TOKEN(TOK_RC, "missing } after try block");
+
+	pn->pn_kid2 = NULL;
+	catchtail = pn;
+	while(js_PeekToken(cx, ts) == TOK_CATCH) {
+	    /*
+	     * legal catch forms are:
+	     * catch (v)
+	     * catch (v if <boolean_expression>)
+	     */
+	    
+	    if (!catchtail->pn_kid1->pn_expr) {
+		js_ReportCompileError(cx, ts,
+				      "catch clause after general catch");
 		return NULL;
-	    (void)js_GetToken(cx, ts);
+	    }
+
+	    /* catch node */
+	    pn2 = NewParseNode(cx, &ts->token, PN_TERNARY);
+	    pn2->pn_op = JSOP_NOP;
+	    /*
+	     * We use a PN_NAME for the discriminant (catchguard) node
+	     * with the actual discriminant code in the initializer spot
+	     */
+	    pn3 = NewParseNode(cx, &ts->token, PN_NAME);
+	    if (!pn2 || !pn3)
+		return NULL;
+
+	    (void)js_GetToken(cx, ts); /* eat `catch' */
+
 	    MUST_MATCH_TOKEN(TOK_LP, "missing ( after catch"); /* balance) */
-	    tt = js_PeekToken(cx, ts);
-	    if (tt == TOK_VAR) {
-		(void)js_GetToken(cx, ts);
-		pn4 = Variables(cx, ts, tc);
-		if (!pn4)
+	    MUST_MATCH_TOKEN(TOK_NAME, "missing identifier in catch");
+	    pn3->pn_atom = ts->token.t_atom;
+	    if (js_PeekToken(cx, ts) == TOK_COLON) {
+		(void)js_GetToken(cx, ts); /* eat `:' */
+		pn3->pn_expr = Expr(cx, ts, tc);
+		if (!pn3->pn_expr)
 		    return NULL;
-		if (pn4->pn_count != 1) {
-		    js_ReportCompileError(cx, ts,
-	       "only one variable declaration permitted in catch declaration");
-		    return NULL;
-		}
 	    } else {
-		pn4 = Expr(cx, ts, tc);
-		if (!pn4)
-		    return NULL;
-		/* restrict the expression to instanceof */
-		if (pn4->pn_op != JSOP_INSTANCEOF &&
-		    pn4->pn_op != JSOP_NAME &&
-		    pn4->pn_op != JSOP_GETARG &&
-		    pn4->pn_op != JSOP_GETVAR) {
-		    js_ReportCompileError(cx, ts,
-	       "catch conditional must be instanceof or variable declaration");
-		    PR_ASSERT(0);
-		    return NULL;
-		}
+		pn3->pn_expr = NULL;
 	    }
+	    pn2->pn_kid1 = pn3;
 
-	    /* rewrite the declaration/conditional expr as appropriate */
-	    switch(pn4->pn_type) {
-	      case TOK_NAME:
-		switch(pn4->pn_op) {
-		  case JSOP_NAME:
-		    pn4->pn_op = JSOP_SETNAME;
-		    break;
-		  case JSOP_GETARG:
-		    pn4->pn_op = JSOP_SETARG;
-		    break;
-		default:
-		    PR_ASSERT(0);
-		}
-		break;
-	      case TOK_VAR:
-		PR_ASSERT(pn4->pn_head->pn_type == TOK_NAME);
-		switch(pn4->pn_head->pn_op) {
-		  case JSOP_GETVAR:
-		    pn4->pn_head->pn_op = JSOP_SETVAR;
-		    break;
-		  case JSOP_GETARG:
-		    pn4->pn_head->pn_op = JSOP_SETARG;
-		    break;
-		  case JSOP_NAME:
-		    pn4->pn_head->pn_op = JSOP_SETNAME;
-		  case JSOP_NOP:
-		    break;
-		  default:
-		    PR_ASSERT(0);
-		}
-		break;
-	    case TOK_INSTANCEOF:
-		PR_ASSERT(0);
-	    default:
-		PR_ASSERT(0);
-	    }
-	    pn2->pn_left = pn4;
+	    /* ( balance: */
+	    MUST_MATCH_TOKEN(TOK_RP, "missing ) after catch");
 
-	    /* (balance: */
-	    MUST_MATCH_TOKEN(TOK_RP, "missing ) after catch declaration");
-	    pn2->pn_right = Statement(cx, ts, tc);
-	    if (!pn2->pn_right)
+	    MUST_MATCH_TOKEN(TOK_LC, "missing { before catch block");
+	    pn2->pn_kid3 = Statements(cx, ts, tc);
+	    if (!pn2->pn_kid3)
 		return NULL;
-	} else {
-	    pn2 = NULL;
+	    MUST_MATCH_TOKEN(TOK_RC, "missing } after catch block");
+
+	    catchtail = catchtail->pn_kid2 = pn2;
 	}
+	catchtail->pn_kid2 = NULL;
+
 	if (js_MatchToken(cx, ts, TOK_FINALLY)) {
-	    pn3 = Statement(cx, ts, tc);
-	    if (!pn3)
+	    MUST_MATCH_TOKEN(TOK_LC, "missing { before finally block");
+	    pn->pn_kid3 = Statements(cx, ts, tc);
+	    if (!pn->pn_kid3)
 		return NULL;
+	    MUST_MATCH_TOKEN(TOK_RC, "missing } after finally block");
 	} else {
-	    pn3 = NULL;
+	    pn->pn_kid3 = NULL;
 	}
-	if (!pn2 && !pn3) {
+	if (!pn->pn_kid2 && !pn->pn_kid3) {
 	    js_ReportCompileError(cx, ts,
 				  "missing catch or finally after try");
 	    return NULL;
 	}
 	tc->tryCount++;
-	pn->pn_kid1 = pn1;
-	pn->pn_kid2 = pn2;
-	pn->pn_kid3 = pn3;
 	return pn;
-
+      }
       case TOK_THROW:
 	pn = NewParseNode(cx, &ts->token, PN_UNARY);
 	if (!pn)
@@ -1204,6 +1198,16 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	pn->pn_op = JSOP_THROW;
 	pn->pn_kid = pn2;
         break;
+
+      /* TOK_CATCH and TOK_FINALLY are both handled in the TOK_TRY case */
+      case TOK_CATCH:
+	js_ReportCompileError(cx, ts, "catch without try");
+	return NULL;
+	
+      case TOK_FINALLY:
+	js_ReportCompileError(cx, ts, "finally without try");
+	return NULL;
+
 #endif /* JS_HAS_EXCEPTIONS */
 
       case TOK_BREAK:
@@ -1372,6 +1376,17 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	pn->pn_type = TOK_SEMI;
 	pn->pn_kid = NULL;
 	return pn;
+
+#if JS_HAS_DEBUGGER_KEYWORD
+      case TOK_DEBUGGER:
+        if(!WellTerminated(cx, ts, TOK_ERROR))
+	    return NULL;
+	pn = NewParseNode(cx, &ts->token, PN_NULLARY);
+	if (!pn)
+	    return NULL;
+	pn->pn_type = TOK_DEBUGGER;
+	return pn;
+#endif /* JS_HAS_DEBUGGER_KEYWORD */
 
       case TOK_ERROR:
 	return NULL;

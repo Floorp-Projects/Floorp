@@ -390,6 +390,7 @@ js_SetLocalVariable(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 }
 
+
 /*
  * Find a function reference and its 'this' object implicit first parameter
  * under argc arguments on cx's stack, and call the function.  Push missing
@@ -506,6 +507,7 @@ have_fun:
     frame.overrides = 0;
     frame.debugging = JS_FALSE;
     frame.throwing = JS_FALSE;
+    frame.dormantNext = NULL;
 
     /* Compute the 'this' parameter and store it in frame. */
     if (thisp && OBJ_GET_CLASS(cx, thisp) != &js_CallClass) {
@@ -652,7 +654,7 @@ have_fun:
     /* Native or script returns JS_FALSE on error or uncaught exception */
     if (!ok && frame.throwing) {
 	fp->throwing = JS_TRUE;
-	fp->rval = frame.rval;
+	fp->exception = frame.exception;
     }
 #endif
 
@@ -774,9 +776,37 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script, JSFunction *fun,
     frame.overrides = 0;
     frame.debugging = debugging;
     frame.throwing = JS_FALSE;
+    frame.dormantNext = NULL;
+
+
+    /* Here we wrap the call to js_Interpret with code to (conditionally)
+     * save and restore the old stack frame chain into a chain of 'dormant'
+     * frame chains. Since we are replacing cx->fp we were running into the
+     * problem that if gc was called, then some of the objects associated 
+     * with the old frame chain (stored here in the C stack as 'oldfp') were 
+     * not rooted and were being collected. This was bad. So, now we
+     * preserve the links to these 'dormant' frame chains in cx before
+     * calling js_Interpret and cleanup afterwards. gc walks these dormant
+     * chains and marks objects in the same way that it marks object in the
+     * primary cx->fp chain.
+     */
+
+    if (oldfp && oldfp != down) {
+        PR_ASSERT(!oldfp->dormantNext);
+        oldfp->dormantNext = cx->dormantFrameChain;
+        cx->dormantFrameChain = oldfp;
+    }
+
     cx->fp = &frame;
     ok = js_Interpret(cx, result);
     cx->fp = oldfp;
+
+    if (oldfp && oldfp != down) {
+        PR_ASSERT(cx->dormantFrameChain == oldfp);
+        cx->dormantFrameChain = oldfp->dormantNext;
+        oldfp->dormantNext = NULL;
+    }
+
     return ok;
 }
 
@@ -1034,19 +1064,21 @@ js_Interpret(JSContext *cx, jsval *result)
 
 	if (rt->interruptHandler) {
 	    JSTrapHandler handler = (JSTrapHandler) rt->interruptHandler;
-
-	    switch (handler(cx, script, pc, &rval,
-			    rt->interruptHandlerData)) {
-	      case JSTRAP_ERROR:
-		ok = JS_FALSE;
-		goto out;
-	      case JSTRAP_CONTINUE:
-		break;
-	      case JSTRAP_RETURN:
-		fp->rval = rval;
-		goto out;
-	      default:;
-	    }
+            /* check copy of pointer for safety in multithreaded situation */
+            if (handler) {
+	        switch (handler(cx, script, pc, &rval,
+			        rt->interruptHandlerData)) {
+	          case JSTRAP_ERROR:
+		    ok = JS_FALSE;
+		    goto out;
+	          case JSTRAP_CONTINUE:
+		    break;
+	          case JSTRAP_RETURN:
+		    fp->rval = rval;
+		    goto out;
+	          default:;
+	        }
+            }
 	}
 
 	switch (op) {
@@ -1869,8 +1901,7 @@ js_Interpret(JSContext *cx, jsval *result)
 		cx->newborn[GCX_OBJECT] = NULL;
 #if JS_HAS_EXCEPTIONS
 		if (fp->throwing) {
-		    /* do_throw expects to have the exception on the stack */
-		    PR_ASSERT(vp == sp - 1 && *vp == fp->rval);
+		    sp[-1] = fp->exception;
 		    goto do_throw;
 		}
 #endif
@@ -2091,7 +2122,7 @@ js_Interpret(JSContext *cx, jsval *result)
 #if JS_HAS_EXCEPTIONS
 		if (fp->throwing) {
 		    /* do_throw expects to have the exception on the stack */
-		    PR_ASSERT(sp[-1] == fp->rval);
+		    sp[-1] = fp->exception;
 		    goto do_throw;
 		}
 #endif
@@ -2549,18 +2580,31 @@ js_Interpret(JSContext *cx, jsval *result)
 #endif /* JS_HAS_INITIALIZERS */
 
 #if JS_HAS_EXCEPTIONS
+	  case JSOP_JSR:
+	    len = GET_JUMP_OFFSET(pc);
+	    PUSH(INT_TO_JSVAL(pc - script->code));
+	    CHECK_BRANCH(len);
+	    break;
+
+	  case JSOP_RETSUB:
+	    rval = POP();
+	    PR_ASSERT(JSVAL_IS_INT(rval));
+	    pc = script->code + JSVAL_TO_INT(rval) + 3 /* JSR */;
+	    len = 0;
+	    CHECK_BRANCH(-1);
+	    break;
+	      
+	  case JSOP_EXCEPTION:
+	    PUSH(fp->exception);
+	    break;
+
 	  case JSOP_THROW:
-	    /*
-	     * We enter here with an exception on the stack already, so we
-	     * need to pop it off if we're leaving this frame, but we leave
-	     * it on if we're jumping to a catch block.
-	     */
-	    PR_ASSERT(!fp->throwing);
 	  do_throw:
+	    fp->exception = POP();
 	    tn = script->trynotes;
 	    offset = PTRDIFF(pc, script->code, jsbytecode);
 	    if (tn) {
-		while (PR_UPTRDIFF(offset, tn->start) >= tn->length)
+		while (PR_UPTRDIFF(offset, tn->start) >= (pruword)tn->length)
 		    tn++;
 		if (tn->catchStart) {
 		    pc = script->code + tn->catchStart;
@@ -2571,7 +2615,6 @@ js_Interpret(JSContext *cx, jsval *result)
 
 	    /* Not in a catch block, so propagate the exception. */
 	    fp->throwing = JS_TRUE;
-	    fp->rval = POP();
 	    ok = JS_FALSE;
 	    goto out;
 #endif /* JS_HAS_EXCEPTIONS */
@@ -2600,6 +2643,29 @@ js_Interpret(JSContext *cx, jsval *result)
 	    PUSH_OPND(BOOLEAN_TO_JSVAL(cond));
 	    break;
 #endif /* JS_HAS_INSTANCEOF */
+
+#if JS_HAS_DEBUGGER_KEYWORD
+          case JSOP_DEBUGGER:
+	    if (rt->debuggerHandler) {
+	        JSTrapHandler handler = (JSTrapHandler) rt->debuggerHandler;
+                /* check copy of pointer for safety in multithread situation */
+                if (handler) {
+	            switch (handler(cx, script, pc, &rval,
+	        	            rt->debuggerHandlerData)) {
+	              case JSTRAP_ERROR:
+	        	    ok = JS_FALSE;
+	        	    goto out;
+	              case JSTRAP_CONTINUE:
+	        	    break;
+	              case JSTRAP_RETURN:
+	        	    fp->rval = rval;
+	        	    goto out;
+	              default:;
+	            }
+                }
+	    }
+	    break;
+#endif /* JS_HAS_DEBUGGER_KEYWORD */
 
 	  default:
 	    JS_ReportError(cx, "unimplemented JavaScript bytecode %d", op);
@@ -2631,7 +2697,6 @@ js_Interpret(JSContext *cx, jsval *result)
 	}
 #endif
     }
-
 out:
     /*
      * Restore the previous frame's execution state.
@@ -2640,4 +2705,3 @@ out:
     cx->interpLevel--;
     return ok;
 }
-

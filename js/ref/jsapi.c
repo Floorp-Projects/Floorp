@@ -2541,7 +2541,7 @@ JS_GetPendingException(JSContext *cx, jsval *vp)
 #if JS_HAS_EXCEPTIONS
     if (!cx->fp->throwing)
 	return JS_FALSE;
-    *vp = cx->fp->rval;
+    *vp = cx->fp->exception;
     return JS_TRUE;
 #else
     return JS_FALSE;
@@ -2554,7 +2554,7 @@ JS_SetPendingException(JSContext *cx, jsval v)
     CHECK_REQUEST(cx);
 #if JS_HAS_EXCEPTIONS
     cx->fp->throwing = JS_TRUE;
-    cx->fp->rval = v;
+    cx->fp->exception = v;
 #endif
 }
 

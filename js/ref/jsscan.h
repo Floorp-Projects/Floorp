@@ -91,6 +91,7 @@ typedef enum JSTokenType {
     TOK_FINALLY = 57,                   /* finally keyword */
     TOK_THROW = 58,                     /* throw keyword */
     TOK_INSTANCEOF = 59,                /* instanceof keyword */
+    TOK_DEBUGGER = 60,                  /* debugger keyword */
     TOK_RESERVED,                       /* reserved keywords */
     TOK_LIMIT                           /* domain size */
 } JSTokenType;

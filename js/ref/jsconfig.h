@@ -20,7 +20,7 @@
  * JS configuration macros.
  */
 #ifndef JS_VERSION
-#define JS_VERSION 130
+#define JS_VERSION 140
 #endif
 
 #if JS_VERSION == 100

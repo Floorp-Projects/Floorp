@@ -164,8 +164,8 @@ struct PRArenaPool {
  * with a minimum size per arena of size bytes.
  */
 extern PR_PUBLIC_API(void)
-PR_InitArenaPool(PRArenaPool *pool, const char *name, size_t size,
-		 size_t align);
+PR_InitArenaPool(PRArenaPool *pool, const char *name, PRUint32 size,
+		 PRUint32 align);
 
 /*
  * Free the arenas in pool.  The user may continue to allocate from pool
@@ -197,10 +197,10 @@ PR_ArenaFinish(void);
  * Friend functions used by the PR_ARENA_*() macros.
  */
 extern PR_PUBLIC_API(void *)
-PR_ArenaAllocate(PRArenaPool *pool, size_t nb);
+PR_ArenaAllocate(PRArenaPool *pool, PRUint32 nb);
 
 extern PR_PUBLIC_API(void *)
-PR_ArenaGrow(PRArenaPool *pool, void *p, size_t size, size_t incr);
+PR_ArenaGrow(PRArenaPool *pool, void *p, PRUint32 size, PRUint32 incr);
 
 extern PR_PUBLIC_API(void)
 PR_ArenaRelease(PRArenaPool *pool, char *mark);
@@ -210,13 +210,13 @@ PR_ArenaRelease(PRArenaPool *pool, char *mark);
 #include <stdio.h>
 
 extern PR_PUBLIC_API(void)
-PR_ArenaCountAllocation(PRArenaPool *pool, size_t nb);
+PR_ArenaCountAllocation(PRArenaPool *pool, PRUint32 nb);
 
 extern PR_PUBLIC_API(void)
-PR_ArenaCountInplaceGrowth(PRArenaPool *pool, size_t size, size_t incr);
+PR_ArenaCountInplaceGrowth(PRArenaPool *pool, PRUint32 size, PRUint32 incr);
 
 extern PR_PUBLIC_API(void)
-PR_ArenaCountGrowth(PRArenaPool *pool, size_t size, size_t incr);
+PR_ArenaCountGrowth(PRArenaPool *pool, PRUint32 size, PRUint32incr);
 
 extern PR_PUBLIC_API(void)
 PR_ArenaCountRelease(PRArenaPool *pool, char *mark);

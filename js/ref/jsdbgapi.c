@@ -757,3 +757,13 @@ JS_PutPropertyDescArray(JSContext *cx, JSPropertyDescArray *pda)
     }
     JS_free(cx, pd);
 }
+
+/************************************************************************/
+
+JS_PUBLIC_API(JSBool)
+JS_SetDebuggerHandler(JSRuntime *rt, JSTrapHandler handler, void *closure)
+{
+    rt->debuggerHandler = handler;
+    rt->debuggerHandlerData = closure;
+    return JS_TRUE;
+}

@@ -49,6 +49,8 @@ struct JSStackFrame {
     uint8           overrides;      /* bit-set of overridden Call properties */
     JSPackedBool    debugging;      /* true if for JS_EvaluateInStackFrame */
     JSPackedBool    throwing;       /* is there a pending exception? */
+    jsval	    exception;      /* most-recently-thrown exceptin */
+    JSStackFrame    *dormantNext;   /* next dormant frame chain */
 };
 
 /*

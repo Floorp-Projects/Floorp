@@ -127,10 +127,14 @@ static struct keyword {
 #endif
 
 #ifdef RESERVE_ECMA_KEYWORDS
-    {"debugger",       TOK_RESERVED,            JSOP_NOP,       JSVERSION_1_3},
     {"enum",           TOK_RESERVED,            JSOP_NOP,       JSVERSION_1_3},
 #endif
 
+#if JS_HAS_DEBUGGER_KEYWORD
+    {"debugger",       TOK_DEBUGGER,            JSOP_NOP}, /* XXX version? */
+#elif defined(RESERVE_ECMA_KEYWORDS)
+    {"debugger",       TOK_RESERVED,            JSOP_NOP,       JSVERSION_1_3},
+#endif
     {0}
 };
 
@@ -249,8 +253,17 @@ static void
 SendSourceToJSDebugger(JSTokenStream *ts, jschar *str, size_t length)
 {
     if (!ts->jsdsrc) {
-        ts->jsdsrc = JSD_NewSourceText(ts->jsdc,
-                                       ts->filename ? ts->filename : "typein");
+        const char* filename = ts->filename ? ts->filename : "typein";
+
+        if (1 == ts->lineno) {
+            ts->jsdsrc = JSD_NewSourceText(ts->jsdc, filename);
+        } else {
+            ts->jsdsrc = JSD_FindSourceForURL(ts->jsdc, filename);
+            if (ts->jsdsrc && JSD_SOURCE_PARTIAL != 
+                JSD_GetSourceStatus(ts->jsdc, ts->jsdsrc)) {
+                ts->jsdsrc = NULL;
+            }
+        }
     }
     if (ts->jsdsrc) {
         /* here we convert our Unicode into a C string to pass to JSD */
@@ -283,11 +296,11 @@ GetChar(JSTokenStream *ts)
     int32 c;
     ptrdiff_t len, olen;
     jschar *nl;
-
+    
     if (ts->ungetpos != 0) {
 	c = ts->ungetbuf[--ts->ungetpos];
     } else {
-	if (ts->linebuf.ptr == ts->linebuf.limit) {
+	if (ts->linebuf.ptr == ts->linebuf.limit) {                                                                                                         
 	    len = PTRDIFF(ts->userbuf.limit, ts->userbuf.ptr, jschar);
 	    if (len <= 0) {
 #ifdef JSFILE
@@ -518,6 +531,7 @@ js_ReportCompileError(JSContext *cx, JSTokenStream *ts, const char *format,
 	fprintf(stderr, "%s:\n%s\n",message,
                 js_DeflateString(cx, ts->linebuf.base,
                                  ts->linebuf.limit - ts->linebuf.base));
+        
 #endif
     }
     if (lastc == '\n')
