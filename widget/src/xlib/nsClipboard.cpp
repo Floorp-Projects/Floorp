@@ -309,7 +309,9 @@ NS_IMETHODIMP nsClipboard::GetData(nsITransferable *aTransferable,
   // Get which transferable we should use.
   NS_IF_RELEASE(mTransferable);
   mTransferable = GetTransferable(aWhichClipboard);
-  NS_IF_ADDREF(mTransferable);
+  NS_ASSERTION(!mTransferable,"mTransferable is null!! see bug 80181");
+  if (!mTransferable) return NS_ERROR_FAILURE;
+  NS_ADDREF(mTransferable);
   
   // If we currently own the selection, we will handle the paste 
   // internally, otherwise get the data from the X server
