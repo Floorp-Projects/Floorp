@@ -46,7 +46,7 @@ ifeq ($(OS_ARCH),WINNT)
 	CFLAGS += -YX -Fp$(OBJDIR)/ef.pch -Fd$(OBJDIR)/ef.pdb
 	MKDIR = mkdir
 else
-	CCC = gcc
+	CCC = g++
 	AS = gcc
 	ASFLAGS += -x assembler-with-cpp
 #	EXC_FLAGS = -fexceptions
