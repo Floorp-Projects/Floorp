@@ -34,7 +34,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.7 2001/01/05 01:38:02 nelsonb%netscape.com Exp $
+ * $Id: pcertdb.c,v 1.8 2001/01/08 19:24:23 mcgreer%netscape.com Exp $
  */
 #include "prtime.h"
 
@@ -1189,7 +1189,8 @@ loser:
 }
 
 static SECStatus
-DecodeDBNicknameEntry(certDBEntryNickname *entry, SECItem *dbentry)
+DecodeDBNicknameEntry(certDBEntryNickname *entry, SECItem *dbentry,
+                      char *nickname)
 {
     /* is record long enough for header? */
     if ( dbentry->len < DB_NICKNAME_ENTRY_HEADER_LEN ) {
@@ -1216,6 +1217,12 @@ DecodeDBNicknameEntry(certDBEntryNickname *entry, SECItem *dbentry)
     PORT_Memcpy(entry->subjectName.data,
 	      &dbentry->data[DB_NICKNAME_ENTRY_HEADER_LEN],
 	      entry->subjectName.len);
+    
+    entry->nickname = (char *)PORT_ArenaAlloc(entry->common.arena, 
+                                              PORT_Strlen(nickname)+1);
+    if ( entry->nickname ) {
+	PORT_Strcpy(entry->nickname, nickname);
+    }
     
     return(SECSuccess);
 
@@ -1367,7 +1374,7 @@ ReadDBNicknameEntry(CERTCertDBHandle *handle, char *nickname)
 	goto loser;
     }
 
-    rv = DecodeDBNicknameEntry(entry, &dbentry);
+    rv = DecodeDBNicknameEntry(entry, &dbentry, nickname);
     if ( rv != SECSuccess ) {
 	goto loser;
     }
@@ -6955,7 +6962,9 @@ CERT_FindSMimeProfile(CERTCertificate *cert)
     entry = ReadDBSMimeEntry(cert->dbhandle, cert->emailAddr);
 
     if ( entry ) {
-	retitem = SECITEM_DupItem(&entry->smimeOptions);
+	/*  May not be for this cert...  */
+	if (SECITEM_ItemsAreEqual(&cert->derSubject, &entry->subjectName))
+	    retitem = SECITEM_DupItem(&entry->smimeOptions);
 	DestroyDBEntry((certDBEntry *)entry);
     }
 

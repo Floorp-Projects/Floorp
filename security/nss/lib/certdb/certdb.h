@@ -270,6 +270,12 @@ typedef union {
     certDBEntryRevocation revocation;
 } certDBEntry;
 
+typedef struct {
+    PRCList      link;
+    certDBEntry  entry;
+    void        *appData;
+} certDBEntryListNode;
+
 /* length of the fixed part of a database entry */
 #define DBCERT_V4_HEADER_LEN	7
 #define DB_CERT_V5_ENTRY_HEADER_LEN	7
