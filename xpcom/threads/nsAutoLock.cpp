@@ -76,7 +76,7 @@ static PRBool WellOrdered(const void* addr1, const void* addr2,
     // Now check for (addr2 < addr1) and return false if so.
     nsNamedVector* vec2 = GetVector(table, addr2);
     if (!vec2) return PR_TRUE;
-    for (i = 0, n = vec2->GetSize(); i < n; i++)
+    for (PRUint32 i = 0, n = vec2->GetSize(); i < n; i++)
         if (vec2->Get(i) == addr1) {
             *vec1p = vec1;
             *vec2p = vec2;
