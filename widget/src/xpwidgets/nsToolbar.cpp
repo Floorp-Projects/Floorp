@@ -796,6 +796,7 @@ nsEventStatus nsToolbar::OnPaint(nsIRenderingContext& aRenderingContext,
       aRenderingContext.DrawLine(rect.width,0,rect.width,rect.height);
     }
   }
+  NS_RELEASE(widget);
 
   return nsEventStatus_eIgnore;
 }
