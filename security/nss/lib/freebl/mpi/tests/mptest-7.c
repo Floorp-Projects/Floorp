@@ -34,7 +34,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- *  $Id: mptest-7.c,v 1.1 2000/07/14 00:44:46 nelsonb%netscape.com Exp $
+ *  $Id: mptest-7.c,v 1.2 2000/08/22 01:19:26 nelsonb%netscape.com Exp $
  */
 
 #include <stdio.h>
@@ -51,7 +51,7 @@
 
 int main(int argc, char *argv[])
 {
-  int       ix, size;
+  mp_digit  num;
   mp_int    a, b;
 
   srand(time(NULL));
@@ -91,7 +91,8 @@ int main(int argc, char *argv[])
   printf("b = "); mp_print(&b, stdout); fputc('\n', stdout);
 
   printf("\nTesting a for divisibility by first 170 primes\n");
-  if(mpp_divis_primes(&a, 170) == MP_YES)
+  num = 170;
+  if(mpp_divis_primes(&a, &num) == MP_YES)
     printf("It is divisible by at least one of them\n");
   else
     printf("It is not divisible by any of them\n");
