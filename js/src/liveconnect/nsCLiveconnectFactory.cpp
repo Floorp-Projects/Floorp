@@ -34,12 +34,6 @@
 static NS_DEFINE_IID(kISupportsIID,    NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID,     NS_IFACTORY_IID);
 static NS_DEFINE_CID(kCLiveconnectCID, NS_CLIVECONNECT_CID);
-static NS_DEFINE_IID(kILiveconnectIID, NS_ILIVECONNECT_IID);
-
-nsIFactory      *nsCLiveconnectFactory::m_pNSIFactory     = NULL;
-nsCLiveconnect  *nsCLiveconnectFactory::m_pNSCLiveconnect = NULL;
-
-
 
 /*+++++++++++++++++++++++++++++++++++++++++++++++++
  * NSGetFactory:
@@ -57,11 +51,11 @@ NSGetFactory(nsISupports* serviceMgr,
     if (!aClass.Equals(kCLiveconnectCID)) {
         return NS_ERROR_FACTORY_NOT_LOADED;     // XXX right error?
     }
-    nsCLiveconnectFactory* pCLiveConnectFactory = new nsCLiveconnectFactory();
-    if (pCLiveConnectFactory == NULL)
+    nsCLiveconnectFactory* factory = new nsCLiveconnectFactory();
+    if (factory == NULL)
         return NS_ERROR_OUT_OF_MEMORY;
-    pCLiveConnectFactory->AddRef();
-    *aFactory = pCLiveConnectFactory;
+    factory->AddRef();
+    *aFactory = factory;
     return NS_OK;
 }
 
@@ -70,11 +64,6 @@ NSCanUnload(nsISupports* serviceMgr)
 {
     return PR_FALSE;
 }
-
-
-
-
-
 
 
 ////////////////////////////////////////////////////////////////////////////
@@ -99,32 +88,26 @@ nsCLiveconnectFactory::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 NS_IMPL_ADDREF(nsCLiveconnectFactory)
 NS_IMPL_RELEASE(nsCLiveconnectFactory)
 
-
 ////////////////////////////////////////////////////////////////////////////
 // from nsIFactory:
 
 NS_METHOD
 nsCLiveconnectFactory::CreateInstance(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
-   *aResult  = NULL;
-   
-   if (aOuter && !aIID.Equals(kISupportsIID))
-       return NS_NOINTERFACE;   // XXX right error?
-   if (m_pNSCLiveconnect == NULL)
-   {
-      m_pNSCLiveconnect = new nsCLiveconnect(aOuter);
-   }
-   if (m_pNSCLiveconnect == NULL)
-   {
-         return NS_ERROR_FAILURE;
-   }
-   if (m_pNSCLiveconnect->QueryInterface(aIID,
-                            (void**)aResult) != NS_OK) {
-       // then we're trying get a interface other than nsISupports and
-       // nsICapsManager
-       return NS_ERROR_FAILURE;
-   }
-   return NS_OK;
+	*aResult  = NULL;
+
+	if (aOuter && !aIID.Equals(kISupportsIID))
+		return NS_NOINTERFACE;   // XXX right error?
+
+	nsILiveconnect* liveconnect = new nsCLiveconnect(aOuter);
+	if (liveconnect == NULL)
+		return NS_ERROR_FAILURE;
+		
+	nsresult result = liveconnect->QueryInterface(aIID, aResult);
+	if (result != NS_OK)
+		delete liveconnect;
+
+	return result;
 }
 
 NS_METHOD
@@ -133,39 +116,14 @@ nsCLiveconnectFactory::LockFactory(PRBool aLock)
    return NS_OK;
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////////
 // from nsCLiveconnectFactory:
 
 nsCLiveconnectFactory::nsCLiveconnectFactory(void)
 {
-      if( m_pNSIFactory != NULL)
-      {
-         return;
-      }
-
       NS_INIT_REFCNT();
-      nsresult     err         = NS_OK;
-      NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
-
-      err = this->QueryInterface(kIFactoryIID, (void**)&m_pNSIFactory);
-      if ( (err == NS_OK) && (m_pNSIFactory != NULL) )
-      {
-         NS_DEFINE_CID(kCLiveconnectCID, NS_CLIVECONNECT_CID);
-         nsRepository::RegisterFactory(kCLiveconnectCID, NULL, NULL,
-                                       m_pNSIFactory, PR_FALSE);
-      }
 }
 
 nsCLiveconnectFactory::~nsCLiveconnectFactory()
 {
-    if(mRefCnt == 0)
-    {
-      NS_DEFINE_CID(kCLiveconnectCID, NS_CLIVECONNECT_CID);
-      nsRepository::UnregisterFactory(kCLiveconnectCID, (nsIFactory *)m_pNSIFactory);
-      
-    }
 }
-
-
