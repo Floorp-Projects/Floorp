@@ -2120,11 +2120,13 @@ nsTextControlFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
 
   nsPresContext* presContext = aState.PresContext();
   const nsHTMLReflowState* reflowState = aState.GetReflowState();
-  nsSize styleSize(CSS_NOTSET,CSS_NOTSET);
-  nsFormControlFrame::GetStyleSize(presContext, *reflowState, styleSize);
-
+  // XXXldb Is there a good reason to think this is both non-null and the
+  // correct reflow state?
   if (!reflowState)
     return NS_OK;
+
+  nsSize styleSize(CSS_NOTSET,CSS_NOTSET);
+  nsFormControlFrame::GetStyleSize(presContext, *reflowState, styleSize);
 
   if (mState & NS_FRAME_FIRST_REFLOW)
     mNotifyOnInput = PR_TRUE; //its ok to notify now. all has been prepared.
