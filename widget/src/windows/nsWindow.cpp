@@ -1509,13 +1509,15 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             result = PR_TRUE;
             break;
 
-        case WM_SETFOCUS:
+        // Commenting these fixes several crashes, 
+        // but it is unclear whether we need these events or not
+        /*case WM_SETFOCUS:
             result = DispatchFocus(NS_GOTFOCUS);
             break;
 
         case WM_KILLFOCUS:
             result = DispatchFocus(NS_LOSTFOCUS);
-            break;
+            break;*/
 
         case WM_WINDOWPOSCHANGED: 
         {
