@@ -3,8 +3,8 @@
 # Utils.pm - General purpose utility functions.  Every project needs a
 # kludge bucket for common access.
 
-# $Revision: 1.40 $ 
-# $Date: 2004/07/18 17:57:13 $ 
+# $Revision: 1.41 $ 
+# $Date: 2004/07/18 17:58:39 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Utils.pm,v $ 
 # $Name:  $ 
@@ -599,7 +599,7 @@ sub group_files {
         push @{$dirs{$dirname}}, $file; 
     }
     
-    foreach $dir (keys %dirs) {
+    foreach $dir (sort keys %dirs) {
         
         if ($#{$dirs{$dir}} >= $limit_dir_files) {
             push @out, $dir.'/*';
