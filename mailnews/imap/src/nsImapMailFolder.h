@@ -284,6 +284,7 @@ protected:
 	nsresult GetTrashFolder(nsIMsgFolder **pTrashFolder);
   PRBool TrashOrDescendentOfTrash(nsIMsgFolder* folder);
 	nsresult GetServerKey(char **serverKey);
+  nsresult GetImapIncomingServer(nsIImapIncomingServer **aImapIncomingServer);
 
   nsresult DisplayStatusMsg(nsIImapUrl *aImapUrl, const PRUnichar *msg);
 

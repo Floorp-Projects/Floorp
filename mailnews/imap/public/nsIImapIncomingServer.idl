@@ -71,6 +71,7 @@ interface nsIImapIncomingServer : nsISupports {
   void ResetNamespaceReferences();
   void PseudoInterruptMsgLoad(in nsIImapUrl aImapUrl, out boolean interrupted);
   void ResetConnection(in string folderName);
+  void CloseConnectionForFolder(in nsIMsgFolder aMsgFolder);
   void CreatePRUnicharStringFromUTF7(in string aSourceString, out wstring aUnicodeStr);
   void reDiscoverAllFolders();
   attribute boolean doingLsub;

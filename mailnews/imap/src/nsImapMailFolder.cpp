@@ -945,6 +945,12 @@ NS_IMETHODIMP nsImapMailFolder::Delete ()
 NS_IMETHODIMP nsImapMailFolder::Rename (const PRUnichar *newName)
 {
     nsresult rv = NS_ERROR_FAILURE;
+    nsCOMPtr <nsIImapIncomingServer> incomingImapServer;
+
+    GetImapIncomingServer(getter_AddRefs(incomingImapServer));
+    if (incomingImapServer)
+      RecursiveCloseActiveConnections(incomingImapServer);
+
     NS_WITH_SERVICE (nsIImapService, imapService, kCImapService, &rv);
     if (NS_SUCCEEDED(rv))
         rv = imapService->RenameLeaf(m_eventQueue, this, newName, this,
@@ -952,6 +958,31 @@ NS_IMETHODIMP nsImapMailFolder::Rename (const PRUnichar *newName)
     return rv;
 }
 
+NS_IMETHODIMP nsImapMailFolder::RecursiveCloseActiveConnections(nsIImapIncomingServer *incomingImapServer)
+{
+  NS_ENSURE_ARG(incomingImapServer);
+  incomingImapServer->CloseConnectionForFolder(this);
+  PRUint32 cnt = 0, i;
+  if (mSubFolders)
+  {
+      nsCOMPtr<nsISupports> aSupport;
+      nsCOMPtr<nsIMsgImapMailFolder> folder;
+      mSubFolders->Count(&cnt);
+      if (cnt > 0)
+      {
+          for (i = 0; i < cnt; i++)
+          {
+              aSupport = getter_AddRefs(mSubFolders->ElementAt(i));
+              folder = do_QueryInterface(aSupport);
+              if (folder)
+                  folder->RecursiveCloseActiveConnections(incomingImapServer);
+          }
+      }
+  }
+  return NS_OK;  
+}
+
+// this is called *after* we've done the rename on the server.
 NS_IMETHODIMP nsImapMailFolder::PrepareToRename()
 {
     PRUint32 cnt = 0, i;
@@ -1121,6 +1152,24 @@ nsresult nsImapMailFolder::GetServerKey(char **serverKey)
   if (NS_SUCCEEDED(rv) && server)
     return server->GetKey(serverKey);
   return rv;
+}
+
+nsresult nsImapMailFolder::GetImapIncomingServer(nsIImapIncomingServer **aImapIncomingServer)
+{
+  NS_ENSURE_ARG(aImapIncomingServer);
+
+  *aImapIncomingServer = nsnull;
+
+  nsCOMPtr<nsIMsgIncomingServer> server;
+
+  if (NS_SUCCEEDED(GetServer(getter_AddRefs(server))) && server)
+  {
+    nsCOMPtr <nsIImapIncomingServer> incomingServer = do_QueryInterface(server);
+    *aImapIncomingServer = incomingServer;
+    NS_IF_ADDREF(*aImapIncomingServer);
+    return NS_OK;
+  }
+  return NS_ERROR_NULL_POINTER;
 }
 
 NS_IMETHODIMP nsImapMailFolder::UserNeedsToAuthenticateForFolder(PRBool
@@ -1447,27 +1496,24 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
                                                nsIMsgWindow *msgWindow,
                                                PRBool deleteStorage, PRBool isMove)
 {
-    nsresult rv = NS_ERROR_FAILURE;
-    // *** jt - assuming delete is move to the trash folder for now
-    nsCOMPtr<nsIEnumerator> aEnumerator;
-    nsCOMPtr<nsIRDFResource> res;
-    nsCAutoString uri;
-    PRBool deleteImmediatelyNoTrash = PR_FALSE;
-    nsCAutoString messageIds;
-    nsMsgKeyArray srcKeyArray;
+  nsresult rv = NS_ERROR_FAILURE;
+  // *** jt - assuming delete is move to the trash folder for now
+  nsCOMPtr<nsIEnumerator> aEnumerator;
+  nsCOMPtr<nsIRDFResource> res;
+  nsCAutoString uri;
+  PRBool deleteImmediatelyNoTrash = PR_FALSE;
+  nsCAutoString messageIds;
+  nsMsgKeyArray srcKeyArray;
 
-    nsMsgImapDeleteModel deleteModel = nsMsgImapDeleteModels::MoveToTrash;
+  nsMsgImapDeleteModel deleteModel = nsMsgImapDeleteModels::MoveToTrash;
 
   nsCOMPtr<nsIImapIncomingServer> imapServer;
-    nsCOMPtr<nsIMsgIncomingServer> server;
-
   rv = GetFlag(MSG_FOLDER_FLAG_TRASH, &deleteImmediatelyNoTrash);
+  rv = GetImapIncomingServer(getter_AddRefs(imapServer));
 
-  if (NS_SUCCEEDED(GetServer(getter_AddRefs(server))) && server)
+  if (NS_SUCCEEDED(rv) && imapServer)
   {
-    imapServer = do_QueryInterface(server);
-    if (imapServer)
-      imapServer->GetDeleteModel(&deleteModel);
+    imapServer->GetDeleteModel(&deleteModel);
     if (deleteModel != nsMsgImapDeleteModels::MoveToTrash || deleteStorage)
       deleteImmediatelyNoTrash = PR_TRUE;
   }
@@ -1617,19 +1663,14 @@ nsImapMailFolder::DeleteSubFolders(nsISupportsArray* folders, nsIMsgWindow *msgW
               if (canHaveSubFoldersOfTrash) // UW server doesn't set NOINFERIORS - check dual use pref
               {
                 nsCOMPtr<nsIImapIncomingServer> imapServer;
-                nsCOMPtr<nsIMsgIncomingServer> server;
+                rv = GetImapIncomingServer(getter_AddRefs(imapServer));
 
-                rv = GetServer(getter_AddRefs(server));
-                if (server) 
+                if (NS_SUCCEEDED(rv) && imapServer) 
                 {
-                  imapServer = do_QueryInterface(server, &rv);
-                  if (NS_SUCCEEDED(rv) && imapServer) 
-                  {
-                    PRBool serverSupportsDualUseFolders;
-                    imapServer->GetDualUseFolders(&serverSupportsDualUseFolders);
-                    if (!serverSupportsDualUseFolders)
-                      canHaveSubFoldersOfTrash = PR_FALSE;
-                  }
+                  PRBool serverSupportsDualUseFolders;
+                  imapServer->GetDualUseFolders(&serverSupportsDualUseFolders);
+                  if (!serverSupportsDualUseFolders)
+                    canHaveSubFoldersOfTrash = PR_FALSE;
                 }
               }
               if (!canHaveSubFoldersOfTrash)
@@ -3089,23 +3130,18 @@ PRBool nsImapMailFolder::ShowDeletedMessages()
   if (!showDeleted)
   {
     nsCOMPtr<nsIImapIncomingServer> imapServer;
-    nsCOMPtr<nsIMsgIncomingServer> server;
+    nsresult rv = GetImapIncomingServer(getter_AddRefs(imapServer));
 
-    nsresult rv = GetServer(getter_AddRefs(server));
-    if (server) 
+    if (NS_SUCCEEDED(rv) && imapServer) 
     {
-      imapServer = do_QueryInterface(server, &rv);
-      if (NS_SUCCEEDED(rv) && imapServer) 
+      PRBool isAOLServer = PR_FALSE;
+      imapServer->GetIsAOLServer(&isAOLServer);
+      if (isAOLServer)
       {
-        PRBool isAOLServer = PR_FALSE;
-        imapServer->GetIsAOLServer(&isAOLServer);
-        if (isAOLServer)
-        {
-          nsXPIDLString folderName;
-          GetName(getter_Copies(folderName));
-          if (!nsCRT::strncasecmp(folderName, "Trash", 5))
-            showDeleted = PR_TRUE;
-        }
+        nsXPIDLString folderName;
+        GetName(getter_Copies(folderName));
+        if (!nsCRT::strncasecmp(folderName, "Trash", 5))
+          showDeleted = PR_TRUE;
       }
     }
   }
@@ -4377,11 +4413,8 @@ NS_IMETHODIMP nsImapMailFolder::PerformExpand(nsIMsgWindow *aMsgWindow)
     nsresult rv;
     PRBool usingSubscription = PR_FALSE;
     nsCOMPtr<nsIImapIncomingServer> imapServer;
-    nsCOMPtr<nsIMsgIncomingServer> server;
+    rv = GetImapIncomingServer(getter_AddRefs(imapServer));
 
-    rv = GetServer(getter_AddRefs(server));
-    if (NS_FAILED(rv) || !server) return NS_ERROR_FAILURE;
-    imapServer = do_QueryInterface(server, &rv);
     if (NS_FAILED(rv) || !imapServer) return NS_ERROR_FAILURE;
     rv = imapServer->GetUsingSubscription(&usingSubscription);
     if (NS_SUCCEEDED(rv) && !usingSubscription)

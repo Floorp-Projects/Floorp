@@ -778,6 +778,8 @@ nsImapProtocol::TellThreadToDie(PRBool isSaveToClose)
     // **** jt - This routine should only be called by imap service.
   nsAutoCMonitor(this);
 
+  m_urlInProgress = PR_TRUE;  // let's say it's busy so no one tries to use
+                              // this about to die connection.
   PRBool closeNeeded = GetServerStateParser().GetIMAPstate() ==
   nsImapServerResponseParser::kFolderSelected && isSaveToClose;
   nsCString command;
@@ -1399,7 +1401,7 @@ NS_IMETHODIMP nsImapProtocol::IsBusy(PRBool *aIsConnectionBusy,
 }
 
 #define IS_SUBSCRIPTION_RELATED_ACTION(action) (action == nsIImapUrl::nsImapSubscribe\
-|| action == nsIImapUrl::nsImapUnsubscribe || action == nsIImapUrl::nsImapDiscoverAllBoxesUrl)
+|| action == nsIImapUrl::nsImapUnsubscribe || action == nsIImapUrl::nsImapDiscoverAllBoxesUrl || action == nsIImapUrl::nsImapListFolder)
 
 
 // canRunUrl means the connection is not busy, and is in the selcted state
@@ -1460,7 +1462,7 @@ NS_IMETHODIMP nsImapProtocol::CanHandleUrl(nsIImapUrl * aImapUrl,
     aImapUrl->GetRequiredImapState(&imapState);
 
     // OK, this is a bit of a hack - we're going to pretend that
-    // a delete folder url requires a selected state connection on
+    // a delete or rename folder url requires a selected state connection on
     // the folder to be deleted. This isn't technically true,
     // but we would much rather use that connection for several reasons,
     // one is that some UW servers require us to use that connection
@@ -1469,7 +1471,7 @@ NS_IMETHODIMP nsImapProtocol::CanHandleUrl(nsIImapUrl * aImapUrl,
     // If we don't find a connection in that selected state,
     // we'll fall back to the first free connection.
     PRBool isSelectedStateUrl = imapState == nsIImapUrl::nsImapSelectedState 
-      || actionForProposedUrl == nsIImapUrl::nsImapDeleteFolder;
+      || actionForProposedUrl == nsIImapUrl::nsImapDeleteFolder || actionForProposedUrl == nsIImapUrl::nsImapRenameFolder;
     
     nsCOMPtr<nsIMsgMailNewsUrl> msgUrl = do_QueryInterface(aImapUrl);
     nsCOMPtr<nsIMsgIncomingServer> server;

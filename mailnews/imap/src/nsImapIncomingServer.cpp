@@ -737,6 +737,46 @@ nsImapIncomingServer::CreateProtocolInstance(nsIEventQueue *aEventQueue,
 	return rv;
 }
 
+NS_IMETHODIMP nsImapIncomingServer::CloseConnectionForFolder(nsIMsgFolder *aMsgFolder)
+{
+    nsresult rv = NS_OK;
+    nsCOMPtr<nsIImapProtocol> connection;
+    nsCOMPtr<nsISupports> aSupport;
+    PRBool isBusy = PR_FALSE, isInbox = PR_FALSE;
+    PRUint32 cnt = 0;
+    nsXPIDLCString inFolderName;
+    nsXPIDLCString connectionFolderName;
+    nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(aMsgFolder);
+
+    if (!imapFolder)
+      return NS_ERROR_NULL_POINTER;
+
+    rv = m_connectionCache->Count(&cnt);
+    if (NS_FAILED(rv)) return rv;
+
+    imapFolder->GetOnlineName(getter_Copies(inFolderName));
+    PR_CEnterMonitor(this);
+    
+    for (PRUint32 i=0; i < cnt; i++)
+    {
+        aSupport = getter_AddRefs(m_connectionCache->ElementAt(i));
+        connection = do_QueryInterface(aSupport);
+        if (connection)
+        {
+            rv = connection->GetSelectedMailboxName(getter_Copies(connectionFolderName));
+            if (PL_strcmp(connectionFolderName,inFolderName) == 0)
+            {
+                rv = connection->IsBusy(&isBusy, &isInbox);
+                if (!isBusy)
+                    rv = connection->TellThreadToDie(PR_TRUE);
+                break; // found it, end of the loop
+            }
+        }
+    }
+
+    PR_CExitMonitor(this);
+    return rv;
+}
 
 NS_IMETHODIMP nsImapIncomingServer::ResetConnection(const char* folderName)
 {

@@ -24,6 +24,7 @@
 #include "nsIMsgFolder.idl"
 
 interface nsIMsgWindow;
+interface nsIImapIncomingServer;
 
 [scriptable, uuid(FBFEBE79-C1DD-11d2-8A40-0060B0FC04D2)]
 interface nsIMsgImapMailFolder : nsISupports {
@@ -33,6 +34,7 @@ interface nsIMsgImapMailFolder : nsISupports {
   void RenameLocal(in string newname);
   void PrepareToRename();
   void PerformExpand(in nsIMsgWindow aMsgWindow);
+  void RecursiveCloseActiveConnections(in nsIImapIncomingServer aImapServer);
 
   attribute boolean verifiedAsOnlineFolder;
   attribute boolean explicitlyVerify;
