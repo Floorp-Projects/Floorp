@@ -902,6 +902,19 @@ inline int key_sym_displayable(const PhKeyEvent_t *kevent)
   return 0;
 }
 
+/* similar to PhKeyToMb */
+inline int key_cap_displayable(const PhKeyEvent_t *kevent)
+{
+  if(kevent->key_flags & Pk_KF_Cap_Valid) {
+    unsigned long const cap = kevent->key_cap;
+    if  ( cap >= 0xF000
+      ? cap >= 0xF100 && ( sizeof(wchar_t) > 2 || cap < 0x10000 )
+      : ( cap & ~0x9F ) != 0 // exclude 0...0x1F and 0x80...0x9F
+        ) return 1;
+  }
+  return 0;
+}
+
 inline void nsWidget::InitKeyPressEvent(PhKeyEvent_t *aPhKeyEvent, nsKeyEvent &anEvent )
 {
 	anEvent.isShift =   ( aPhKeyEvent->key_mods & Pk_KM_Shift ) ? PR_TRUE : PR_FALSE;
@@ -913,15 +926,13 @@ inline void nsWidget::InitKeyPressEvent(PhKeyEvent_t *aPhKeyEvent, nsKeyEvent &a
 	else {
 		/* in photon Ctrl<something> or Alt<something> is not a displayable character, but
 			mozilla wants the keypress event as a charCode+isControl+isAlt, instead of a keyCode */
-		if( anEvent.isControl || anEvent.isAlt )
+		if( ( anEvent.isControl || anEvent.isAlt ) && key_cap_displayable( aPhKeyEvent ) )
 			anEvent.charCode = aPhKeyEvent->key_cap;
 		else anEvent.keyCode = nsConvertKey( aPhKeyEvent );
 		}
 
 	anEvent.time = 			PR_IntervalNow();
 }
-
-
 
 // used only once
 inline PRBool nsWidget::HandleEvent( PtWidget_t *widget, PtCallbackInfo_t* aCbInfo ) {
