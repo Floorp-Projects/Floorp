@@ -38,7 +38,7 @@ use strict;
 # Shut up misguided -w warnings about "used only once".  For some reason,
 # "use vars" chokes on me when I try it here.
 
-sub bug_form_pl_sillyness {
+sub defparams_pl_sillyness {
     my $zz;
     $zz = %::param_checker;
     $zz = %::param_desc;
