@@ -36,9 +36,7 @@ LLIBS=					\
  $(LIBNSPR)				\
  $(DIST)\lib\js3250.lib \
  $(DIST)\lib\xpc3250.lib \
-!if "$(MOZ_BITS)"=="32" && defined(MOZ_DEBUG) && defined(GLOWCODE)
-LLIBS=$(LLIBS) $(GLOWDIR)\glowcode.lib
-!endif
+ $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
 

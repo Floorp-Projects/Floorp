@@ -49,13 +49,9 @@ LCFLAGS = \
         $(NULL)
 
 LLIBS=	$(LIBNSPR)	\
-		$(DIST)\lib\xpcom$(MOZ_BITS).lib	\
-		$(DIST)\lib\xptinfo$(MOZ_BITS).lib	\
-
-!if "$(MOZ_BITS)"=="32" && defined(MOZ_DEBUG) && defined(GLOWCODE)
-LLIBS=$(LLIBS) $(GLOWDIR)\glowcode.lib
-!endif
-
+	$(DIST)\lib\xpcom$(MOZ_BITS).lib	\
+	$(DIST)\lib\xptinfo$(MOZ_BITS).lib	\
+	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
 
