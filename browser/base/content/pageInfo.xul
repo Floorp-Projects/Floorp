@@ -290,10 +290,10 @@
               <row>
                 <label value="&mediaDimensions;"/>
                 <separator/>
-                <hbox>
-                  <textbox readonly="true" crop="right" id="imagewidth"/>
-                  <textbox readonly="true" crop="right" id="imageheight"/>
-                </hbox>
+                <vbox>
+                  <textbox readonly="true" crop="right" id="imageSize"/>
+                  <textbox readonly="true" crop="right" id="physSize"/>
+                </vbox>
               </row>
             </rows>
           </grid>
