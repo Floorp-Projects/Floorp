@@ -1108,12 +1108,8 @@ void nsTableCellFrame::MapBorderPadding(nsIPresContext* aPresContext)
   if (!tableFrame)
     return;
 
-  // get the table frame style context, and from it get cellpadding, cellspacing, and border info
-  const nsStyleTable* tableStyle = tableFrame->GetStyleTable();
-
   MapVAlignAttribute(aPresContext, tableFrame);
   MapHAlignAttribute(aPresContext, tableFrame);
-  
 }
 
 /* XXX: this code will not work properly until the style and layout code has been updated 
