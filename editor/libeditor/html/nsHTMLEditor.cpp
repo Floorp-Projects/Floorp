@@ -3682,6 +3682,9 @@ nsHTMLEditor::SetBackgroundColor(const nsString& aColor)
   nsAutoString tagName;
   nsresult res = GetSelectedOrParentTableElement(*getter_AddRefs(element), tagName, selectedCount);
   if (NS_FAILED(res)) return res;
+
+  PRBool setColor = (aColor.Length() > 0);
+
   if (element)
   {
     if (selectedCount > 0)
@@ -3693,10 +3696,15 @@ nsHTMLEditor::SetBackgroundColor(const nsString& aColor)
       {
         while(cell)
         {
-          SetAttribute(cell, NS_ConvertASCIItoUCS2("bgcolor"), aColor);
+          if (setColor)
+            res = SetAttribute(cell, NS_ConvertASCIItoUCS2("bgcolor"), aColor);
+          else
+            res = RemoveAttribute(cell, NS_ConvertASCIItoUCS2("bgcolor"));
+          if (NS_FAILED(res)) break;
+
           GetNextSelectedCell(getter_AddRefs(cell), nsnull);
         };
-        return NS_OK;
+        return res;
       }
     }
     // If we failed to find a cell, fall through to use originally-found element
@@ -3707,7 +3715,12 @@ nsHTMLEditor::SetBackgroundColor(const nsString& aColor)
     if (!element)       return NS_ERROR_NULL_POINTER;
   }
   // Use the editor method that goes through the transaction system
-  return SetAttribute(element, NS_ConvertASCIItoUCS2("bgcolor"), aColor);
+  if (setColor)
+    res = SetAttribute(element, NS_ConvertASCIItoUCS2("bgcolor"), aColor);
+  else
+    res = RemoveAttribute(element, NS_ConvertASCIItoUCS2("bgcolor"));
+
+  return res;
 }
 
 NS_IMETHODIMP nsHTMLEditor::SetBodyAttribute(const nsString& aAttribute, const nsString& aValue)

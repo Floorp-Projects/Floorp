@@ -1503,13 +1503,15 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
             if (NS_SUCCEEDED(res)) 
             { 
               PRUnichar *titleUnicode;
-              nsAutoString captionStr, msgStr;
+              nsAutoString captionStr, msgStr1, msgStr2;
               
               GetBundleString(NS_ConvertASCIItoUCS2("DocumentTitle"), captionStr);
-              GetBundleString(NS_ConvertASCIItoUCS2("NeedDocTitle"), msgStr); 
+              GetBundleString(NS_ConvertASCIItoUCS2("NeedDocTitle"), msgStr1); 
+              GetBundleString(NS_ConvertASCIItoUCS2("DocTitleHelp"), msgStr2);
+              msgStr1 += NS_ConvertASCIItoUCS2("\n") + msgStr2;
               
               PRBool retVal = PR_FALSE;
-              res = dialog->Prompt(mContentWindow, captionStr.GetUnicode(), msgStr.GetUnicode(),
+              res = dialog->Prompt(mContentWindow, captionStr.GetUnicode(), msgStr1.GetUnicode(),
                                    title.GetUnicode(), &titleUnicode, &retVal); 
               
               if( retVal == PR_FALSE)
@@ -2037,8 +2039,9 @@ nsEditorShell::SetDocumentTitle(const PRUnichar *title)
             res = domDoc->CreateTextNode(titleStr, getter_AddRefs(textNode));
             if (NS_FAILED(res)) return res;
             if (!textNode) return NS_ERROR_FAILURE;
-            // Go through the editor API so action is undoable
-            res = editor->InsertNode(textNode, titleNode, 0);
+            // Do NOT use editor transaction -- we don't want this to be undoable
+            res = titleNode->AppendChild(textNode, getter_AddRefs(resultNode));
+            if (NS_FAILED(res)) return res;
           }
         }
       }
