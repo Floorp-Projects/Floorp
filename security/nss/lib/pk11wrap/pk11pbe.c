@@ -38,7 +38,6 @@
 #include "secport.h"
 #include "hasht.h"
 #include "pkcs11t.h"
-/*#include "blapi.h" */
 #include "sechash.h"
 #include "secasn1.h"
 #include "secder.h"
@@ -47,19 +46,7 @@
 #include "secerr.h"
 #include "secmod.h"
 #include "pk11func.h"
-
-/* stuff for the new secpkcs5.h */
-/* used for V2 PKCS 12 Draft Spec */
-typedef enum {
-    pbeBitGenIDNull = 0,
-    pbeBitGenCipherKey = 0x01,
-    pbeBitGenCipherIV = 0x02,
-    pbeBitGenIntegrityKey = 0x03
-} PBEBitGenID;
-
-typedef struct PBEBitGenContextStr PBEBitGenContext;
-
-/* end new secpkcs5.h */
+#include "secpkcs5.h"
 
 typedef struct SEC_PKCS5PBEParameterStr SEC_PKCS5PBEParameter;
 struct SEC_PKCS5PBEParameterStr {
@@ -274,6 +261,7 @@ sec_pkcs5_destroy_pbe_param(SEC_PKCS5PBEParameter *pbe_param)
  * once a parameter is allocated, it should be destroyed calling 
  * sec_pkcs5_destroy_pbe_parameter or SEC_PKCS5DestroyPBEParameter.
  */
+#define DEFAULT_SALT_LENGTH 16
 static SEC_PKCS5PBEParameter *
 sec_pkcs5_create_pbe_parameter(SECOidTag algorithm, 
 			SECItem *salt, 
@@ -281,15 +269,12 @@ sec_pkcs5_create_pbe_parameter(SECOidTag algorithm,
 {
     PRArenaPool *poolp = NULL;
     SEC_PKCS5PBEParameter *pbe_param = NULL;
-    SECStatus rv; 
+    SECStatus rv= SECSuccess; 
     void *dummy = NULL;
 
     if(iteration < 0) {
 	return NULL;
     }
-    if(!salt || !salt->data) {
-	return NULL;
-    } 
 
     poolp = PORT_NewArena(SEC_ASN1_DEFAULT_ARENA_SIZE);
     if(poolp == NULL)
@@ -304,7 +289,18 @@ sec_pkcs5_create_pbe_parameter(SECOidTag algorithm,
 
     pbe_param->poolp = poolp;
 
-    rv = SECITEM_CopyItem(poolp, &pbe_param->salt, salt);
+    rv = SECFailure;
+    if (salt && salt->data) {
+    	rv = SECITEM_CopyItem(poolp, &pbe_param->salt, salt);
+    } else {
+	/* sigh, the old interface generated salt on the fly, so we have to
+	 * preserve the semantics */
+	pbe_param->salt.len = DEFAULT_SALT_LENGTH;
+	pbe_param->salt.data = PORT_ArenaZAlloc(poolp,DEFAULT_SALT_LENGTH);
+	if (pbe_param->salt.data) {
+	   rv = PK11_GenerateRandom(pbe_param->salt.data,DEFAULT_SALT_LENGTH);
+	}
+    }
 
     if(rv != SECSuccess) {
 	PORT_FreeArena(poolp, PR_TRUE);
@@ -342,11 +338,6 @@ SEC_PKCS5CreateAlgorithmID(SECOidTag algorithm,
     SECItem der_param;
     SECStatus rv = SECFailure;
     SEC_PKCS5PBEParameter *pbe_param;
-
-#ifdef nodef
-    if(sec_pkcs5_hash_algorithm(algorithm) == SEC_OID_UNKNOWN)
-	return NULL;
-#endif
 
     if(iteration <= 0) {
 	return NULL;

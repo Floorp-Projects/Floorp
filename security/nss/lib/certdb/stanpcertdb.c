@@ -277,6 +277,9 @@ CERT_FindCertByDERCert(CERTCertDBHandle *handle, SECItem *derCert)
     NSSDER encoding;
     NSSITEM_FROM_SECITEM(&encoding, derCert);
     c = NSSTrustDomain_FindCertificateByEncodedCertificate(handle, &encoding);
+    if (!c) {
+	return NULL;
+    }
     return STAN_GetCERTCertificate(c);
 }
 

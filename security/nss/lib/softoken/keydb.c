@@ -32,7 +32,7 @@
  *
  * Private Key Database code
  *
- * $Id: keydb.c,v 1.8 2001/11/08 00:15:31 relyea%netscape.com Exp $
+ * $Id: keydb.c,v 1.9 2001/11/08 05:39:53 relyea%netscape.com Exp $
  */
 
 #include "lowkeyi.h"
@@ -1007,7 +1007,18 @@ nsslowkey_StoreKeyByPublicKey(NSSLOWKEYDBHandle *handle,
 			   SECItem *arg)
 {
     return nsslowkey_StoreKeyByPublicKeyAlg(handle, privkey, pubKeyData, 
-			     nickname, arg, nsslowkey_GetDefaultKeyDBAlg());
+	     nickname, arg, nsslowkey_GetDefaultKeyDBAlg(),PR_FALSE);
+}
+
+SECStatus
+nsslowkey_UpdateNickname(NSSLOWKEYDBHandle *handle, 
+			   NSSLOWKEYPrivateKey *privkey,
+			   SECItem *pubKeyData,
+			   char *nickname,
+			   SECItem *arg)
+{
+    return nsslowkey_StoreKeyByPublicKeyAlg(handle, privkey, pubKeyData, 
+	     nickname, arg, nsslowkey_GetDefaultKeyDBAlg(),PR_TRUE);
 }
 
 /* see if the public key for this cert is in the database filed
@@ -1538,7 +1549,8 @@ nsslowkey_StoreKeyByPublicKeyAlg(NSSLOWKEYDBHandle *handle,
 			      SECItem *pubKeyData,
 			      char *nickname,
 			      SECItem *pwitem,
-			      SECOidTag algorithm)
+			      SECOidTag algorithm,
+                              PRBool update)
 {
     DBT namekey;
     SECStatus rv;
@@ -1554,7 +1566,7 @@ nsslowkey_StoreKeyByPublicKeyAlg(NSSLOWKEYDBHandle *handle,
 
     /* encrypt the private key */
     rv = seckey_put_private_key(handle, &namekey, pwitem, privkey, nickname,
-				PR_FALSE, algorithm);
+				update, algorithm);
     
     return(rv);
 }
@@ -1815,6 +1827,33 @@ nsslowkey_FindKeyByPublicKey(NSSLOWKEYDBHandle *handle, SECItem *modulus,
     return(pk);
 }
 
+char *
+nsslowkey_FindKeyNicknameByPublicKey(NSSLOWKEYDBHandle *handle, 
+					SECItem *modulus, SECItem *pwitem)
+{
+    DBT namekey;
+    NSSLOWKEYPrivateKey *pk = NULL;
+    char *nickname = NULL;
+
+    if (handle == NULL) {
+	PORT_SetError(SEC_ERROR_BAD_DATABASE);
+	return NULL;
+    }
+
+    /* set up db key */
+    namekey.data = modulus->data;
+    namekey.size = modulus->len;
+
+    pk = seckey_get_private_key(handle, &namekey, &nickname, pwitem);
+    if (pk) {
+	nsslowkey_DestroyPrivateKey(pk);
+    }
+    
+    /* no need to free dbkey, since its on the stack, and the data it
+     * points to is owned by the database
+     */
+    return(nickname);
+}
 /* ===== ENCODING ROUTINES ===== */
 
 static SECStatus

@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.2 $ $Date: 2001/11/08 04:12:26 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.3 $ $Date: 2001/11/08 05:39:52 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -126,9 +126,21 @@ STAN_GetCertIdentifierFromDER(NSSArena *arenaOpt, NSSDER *der)
     SECItem secDER;
     SECItem secKey = { 0 };
     SECStatus secrv;
+    PRArenaPool *arena;
+
     SECITEM_FROM_NSSITEM(&secDER, der);
-    secrv = CERT_KeyFromDERCert(NULL, &secDER, &secKey);
+
+    /* nss3 call uses nss3 arena's */
+    arena = PORT_NewArena(256);
+    if (!arena) {
+	return NULL;
+    }
+    secrv = CERT_KeyFromDERCert(arena, &secDER, &secKey);
+    if (!secrv) {
+	return NULL;
+    }
     rvKey = nssItem_Create(arenaOpt, NULL, secKey.len, (void *)secKey.data);
+    PORT_FreeArena(arena,PR_FALSE);
     return rvKey;
 }
 
@@ -379,10 +391,16 @@ STAN_GetCERTCertificate(NSSCertificate *c)
 }
 
 static CK_TRUST
-get_stan_trust(unsigned int t) 
+get_stan_trust(unsigned int t, PRBool isClientAuth) 
 {
-    if (t & CERTDB_TRUSTED_CA || t & CERTDB_NS_TRUSTED_CA) {
-	return CKT_NETSCAPE_TRUSTED_DELEGATOR;
+    if (isClientAuth) {
+	if (t & CERTDB_TRUSTED_CLIENT_CA) {
+	    return CKT_NETSCAPE_TRUSTED_DELEGATOR;
+	}
+    } else {
+	if (t & CERTDB_TRUSTED_CA || t & CERTDB_NS_TRUSTED_CA) {
+	    return CKT_NETSCAPE_TRUSTED_DELEGATOR;
+	}
     }
     if (t & CERTDB_TRUSTED) {
 	return CKT_NETSCAPE_TRUSTED;
@@ -447,10 +465,10 @@ STAN_GetNSSCertificate(CERTCertificate *cc)
     cc->nssCertificate = c;
     if (cc->trust) {
 	CERTCertTrust *trust = cc->trust;
-	c->trust.serverAuth = get_stan_trust(trust->sslFlags);
-	c->trust.clientAuth = get_stan_trust(trust->sslFlags);
-	c->trust.emailProtection = get_stan_trust(trust->emailFlags);
-	c->trust.codeSigning= get_stan_trust(trust->objectSigningFlags);
+	c->trust.serverAuth = get_stan_trust(trust->sslFlags, PR_FALSE);
+	c->trust.clientAuth = get_stan_trust(trust->sslFlags, PR_TRUE);
+	c->trust.emailProtection = get_stan_trust(trust->emailFlags, PR_FALSE);
+	c->trust.codeSigning= get_stan_trust(trust->objectSigningFlags, PR_FALSE);
     }
     return c;
 loser:
@@ -466,10 +484,10 @@ STAN_ChangeCertTrust(NSSCertificate *c, CERTCertTrust *trust)
     /* Set the CERTCertificate's trust */
     cc->trust = trust;
     /* Set the NSSCerticate's trust */
-    nssTrust.serverAuth = get_stan_trust(trust->sslFlags);
-    nssTrust.clientAuth = get_stan_trust(trust->sslFlags);
-    nssTrust.emailProtection = get_stan_trust(trust->emailFlags);
-    nssTrust.codeSigning= get_stan_trust(trust->objectSigningFlags);
+    nssTrust.serverAuth = get_stan_trust(trust->sslFlags, PR_FALSE);
+    nssTrust.clientAuth = get_stan_trust(trust->sslFlags, PR_TRUE);
+    nssTrust.emailProtection = get_stan_trust(trust->emailFlags, PR_FALSE);
+    nssTrust.codeSigning= get_stan_trust(trust->objectSigningFlags, PR_FALSE);
     return nssCertificate_SetCertTrust(c, &nssTrust);
 }
 
