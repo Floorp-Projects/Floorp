@@ -220,24 +220,6 @@ public:
   static PRInt32 strncmp(const PRUnichar* s1, const PRUnichar* s2,
                          PRUint32 aMaxLen);
 
-  /// Like strcasecmp except for ucs2 strings
-  static PRInt32 strcasecmp(const PRUnichar* s1, const PRUnichar* s2);
-  /// Like strncasecmp except for ucs2 strings
-  static PRInt32 strncasecmp(const PRUnichar* s1, const PRUnichar* s2,
-                             PRUint32 aMaxLen);
-
-  /// Like strcmp with a char* and a ucs2 string
-  static PRInt32 strcmp(const PRUnichar* s1, const char* s2);
-  /// Like strncmp with a char* and a ucs2 string
-  static PRInt32 strncmp(const PRUnichar* s1, const char* s2,
-                         PRUint32 aMaxLen);
-
-  /// Like strcasecmp with a char* and a ucs2 string
-  static PRInt32 strcasecmp(const PRUnichar* s1, const char* s2);
-  /// Like strncasecmp with a char* and a ucs2 string
-  static PRInt32 strncasecmp(const PRUnichar* s1, const char* s2,
-                             PRUint32 aMaxLen);
-
   // Note: uses new[] to allocate memory, so you must use delete[] to
   // free the memory
   static PRUnichar* strdup(const PRUnichar* str);
@@ -258,20 +240,9 @@ public:
   // Computes the hashcode for a buffer with a specified length.
   static PRUint32 BufferHashCode(const char* str, PRUint32 strLen);
 
-  /// String to integer.
-  static PRInt32 atoi( const PRUnichar *string );
-
   // String to longlong
   static PRInt64 atoll(const char *str);
-
-  static PRUnichar ToUpper(PRUnichar aChar);
-
-  static PRUnichar ToLower(PRUnichar aChar);
   
-  static PRBool IsUpper(PRUnichar aChar);
-
-  static PRBool IsLower(PRUnichar aChar);
-
   static char ToUpper(char aChar);
 
   static char ToLower(char aChar);

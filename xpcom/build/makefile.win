@@ -24,7 +24,6 @@
 DEPTH=..\..
 MODULE = xpcom 
 REQUIRES	= mozreg \
-		  unicharutil \
 		  string \
 		  $(NULL)
 

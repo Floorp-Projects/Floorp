@@ -99,12 +99,6 @@
 #include "nsLeakDetector.h"
 #endif
 
-#ifndef XPCOM_STANDALONE
-// Include files that dont reside under xpcom
-// Our goal was to make this zero. But... :-(
-#include "nsICaseConversion.h"
-#endif /* XPCOM_STANDALONE */
-
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kMemoryCID, NS_MEMORY_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
@@ -175,10 +169,6 @@ RegisterGenericFactory(nsIComponentManager* compMgr,
     return rv;
 }
 
-// Globals in xpcom
-#ifndef XPCOM_STANDALONE
-nsICaseConversion *gCaseConv = NULL;
-#endif /* XPCOM_STANDALONE */
 
 nsComponentManagerImpl* nsComponentManagerImpl::gComponentManager = NULL;
 nsIProperties     *gDirectoryService = NULL;
@@ -493,11 +483,6 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
         currentQ = 0;
     }
 
-#ifndef XPCOM_STANDALONE
-    // Release the global case converter
-    NS_IF_RELEASE(gCaseConv);
-#endif /* XPCOM_STANDALONE */
-    
     // Release the directory service
     NS_IF_RELEASE(gDirectoryService);
 
