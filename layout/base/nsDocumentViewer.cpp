@@ -551,6 +551,10 @@ nsIContentViewer  *viewer;
     mPresContext->GetPrefs(&prefs);
     cx->Init(aDContext, prefs);
 
+    nsCompatibility mode;
+    mPresContext->GetCompatibilityMode(&mode);
+    cx->SetCompatibilityMode(mode);
+
     CreateStyleSet(mDocument, &ss);
 
     nsIPresShell *ps;
