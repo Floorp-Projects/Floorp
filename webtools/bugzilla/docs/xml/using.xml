@@ -465,11 +465,11 @@
       <member>
       <emphasis>RSS</emphasis>
 
-      get the buglist as a RSS 1.0 feed. It is used by setting up your 
-      buglist query and then copying this links url into your RSS reader. If
-      you are using firefox, you can also save the buglist as a live
+      get the buglist as an RSS 1.0 feed. It is used by setting up your 
+      bug list query and then copying this links url into your RSS reader. If
+      you are using Firefox, you can also save the bug list as a live
       bookmark. If you would like to limit the number of RSS items, add
-      a limit=n url parameter.</memeber>
+      a limit=n URL parameter.</member>
 
       <member>
       <emphasis>iCalendar</emphasis>
