@@ -450,26 +450,6 @@ nsSVGElement::GetInlineStyleRule(nsIStyleRule** aStyleRule)
   return mStyle->GetStyleRule(this, aStyleRule);
 }
 
-NS_IMETHODIMP
-nsSVGElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
-                                       nsChangeHint& aHint) const
-{
-  // we don't rely on the cssframeconstructor to map attribute changes
-  // to changes in our frames. an exception is css.
-  // style_hint_content will trigger a re-resolve of the style context
-  // if the attribute is used in a css selector:
-  aHint = NS_STYLE_HINT_CONTENT;
-
-  // ... and we special case the style attribute
-  if (aAttribute == nsSVGAtoms::style) {
-    aHint = NS_STYLE_HINT_VISUAL;
-//    aHint = NS_STYLE_HINT_FRAMECHANGE;
-  }
-  
-  return NS_OK;
-}
-
-
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 
