@@ -356,7 +356,6 @@ protected:
    
   // Focus used global variable
   static nsWidget* sFocusWidget; //Current Focus Widget
-  static PRBool    sJustGotActivated; //For getting rid of the ASSERT ERROR due to reducing suppressing of focus.
   
   static nsILookAndFeel *sLookAndFeel;
 #ifdef PHOTON_DND
