@@ -49,10 +49,13 @@
     "version"           => { maxlength => 5 , title => "Vers" } , 
     "os"                => { maxlength => 4 } , 
     "target_milestone"  => { title => "TargetM" } , 
+    "percentage_complete" => { format_value => "%d %%" } , 
   }
 %]
 
 [% qorder = order FILTER url_quote IF order %]
+
+[% PROCESS bug/time.html.tmpl %]
 
 [%############################################################################%]
 [%# Table Header                                                             #%]
@@ -132,7 +135,15 @@
     [% FOREACH column = displaycolumns %]
     <td>
       [% '<nobr>' IF NOT abbrev.$column.wrap %]
-      [%- bug.$column.truncate(abbrev.$column.maxlength, abbrev.$column.ellipsis) FILTER html -%]
+      [% IF abbrev.$column.format_value %] 
+        [%- bug.$column FILTER format(abbrev.$column.format_value) FILTER html -%] 
+      [% ELSIF column == 'actual_time' ||
+               column == 'remaining_time' ||
+               column == 'estimated_time' %]
+        [% PROCESS formattimeunit time_unit=bug.$column %] 
+      [% ELSE %]
+        [%- bug.$column.truncate(abbrev.$column.maxlength, abbrev.$column.ellipsis) FILTER html -%]
+      [% END %]
       [%- '</nobr>' IF NOT abbrev.$column.wrap %]
     </td>
     [% END %]

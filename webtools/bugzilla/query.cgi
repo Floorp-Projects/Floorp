@@ -281,7 +281,16 @@ shift @::legal_resolution;
       # Another hack - this array contains "" for some reason. See bug 106589.
 $vars->{'resolution'} = \@::legal_resolution;
 
-$vars->{'chfield'} = ["[Bug creation]", @::log_columns];
+my @chfields = @::log_columns;
+push @chfields, "[Bug creation]";
+if (UserInGroup(Param('timetrackinggroup'))) {
+    push @chfields, "work_time";
+} else {
+    @chfields = grep($_ ne "estimated_time", @chfields);
+    @chfields = grep($_ ne "remaining_time", @chfields);
+}
+@chfields = (sort(@chfields));
+$vars->{'chfield'} = \@chfields;
 $vars->{'bug_status'} = \@::legal_bug_status;
 $vars->{'rep_platform'} = \@::legal_platform;
 $vars->{'op_sys'} = \@::legal_opsys;
@@ -295,6 +304,13 @@ push(@fields, { name => "noop", description => "---" });
 SendSQL("SELECT name, description FROM fielddefs ORDER BY sortkey");
 while (MoreSQLData()) {
     my ($name, $description) = FetchSQLData();
+    if (($name eq "estimated_time" ||
+         $name eq "remaining_time" ||
+         $name eq "work_time" ||
+         $name eq "percentage_complete" ) &&
+        (!UserInGroup(Param('timetrackinggroup')))) {
+        next;
+    }
     push(@fields, { name => $name, description => $description });
 }
 

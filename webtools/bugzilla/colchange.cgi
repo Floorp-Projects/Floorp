@@ -58,6 +58,11 @@ if (@::legal_keywords) {
     push(@masterlist, "keywords");
 }
 
+if (UserInGroup(Param("timetrackinggroup"))) {
+    push(@masterlist, ("estimated_time", "remaining_time", "actual_time",
+                       "percentage_complete")); 
+}
+
 push(@masterlist, ("summary", "summaryfull"));
 
 $vars->{'masterlist'} = \@masterlist;

@@ -862,6 +862,14 @@ Reason: %reason%
   },
 
   {
+   name => 'timetrackinggroup',
+   desc => 'The name of the group of users who can see/change time tracking ' .
+           'information.',
+   type => 't',
+   default => ''
+  },
+  
+  {
    name => 'loginnetmask',
    desc => 'The number of bits for the netmask used if a user chooses to ' .
            'allow a login to be valid for more than a single IP. Setting ' .

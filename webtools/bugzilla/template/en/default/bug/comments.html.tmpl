@@ -30,6 +30,7 @@
   [% count = count + 1 %]
 [% END %]
 
+[% PROCESS bug/time.html.tmpl %]
 
 [%############################################################################%]
 [%# Block for individual comments                                            #%]
@@ -43,9 +44,11 @@
         <i>------- Additional Comment
         <a name="c[% count %]" href="#c[% count %]">#[% count %]</a> From 
         <a href="mailto:[% comment.email FILTER html %]">[% comment.name FILTER html %]</a>
-        [%+ comment.time %] -------
+        [%+ comment.time %] 
+        -------
         </i>
       [% END %]
+        
       [% IF mode == "edit" && isinsider %]
         <i>
           <input type=hidden name="oisprivate-[% count %]" 
@@ -55,7 +58,12 @@
           [% " checked=\"checked\"" IF comment.isprivate %]> Private
         </i>
       [% END %]
-    
+      [% IF UserInGroup(Param('timetrackinggroup')) &&
+            (comment.work_time > 0 || comment.work_time < 0) %]
+         <br>
+         Additional hours worked: 
+         [% PROCESS formattimeunit time_unit=comment.work_time %]
+      [% END %]
 [%# Don't indent the <pre> block, since then the spaces are displayed in the
   # generated HTML
   #%]

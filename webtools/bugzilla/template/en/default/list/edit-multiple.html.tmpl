@@ -116,6 +116,25 @@
 
   </tr>
 
+  [% IF UserInGroup(Param("timetrackinggroup")) %]
+    <tr>
+      <th><label for="estimated_time">Estimated Hours:</label></th>
+      <td>
+        <input id="estimated_time"
+               name="estimated_time"
+               value="[% dontchange FILTER html %]"
+               size="6">
+      </td>
+      <th><label for="remaining_time">Remaining Hours:</label></th>
+      <td>
+        <input id="remaining_time"
+               name="remaining_time"
+               value="[% dontchange FILTER html %]"
+               size="6">
+      </td>
+    </tr>
+  [% END %]
+
   [% IF Param("useqacontact") %]
     <tr>
       <th><label for="qa_contact">QA Contact:</label></th>

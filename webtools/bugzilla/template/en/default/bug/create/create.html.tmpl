@@ -155,6 +155,20 @@
     <td colspan="3"></td>
   </tr>
 
+[% IF UserInGroup(Param('timetrackinggroup')) %]
+  <tr>
+    <td align="right"><strong>Estimated Hours:</strong></td>
+    <td colspan="3">
+      <input name="estimated_time" size="6" maxlength="6" value="0.0"/>
+    </td>
+  </tr>
+
+  <tr>
+    <td>&nbsp;</td>
+    <td colspan="3"></td>
+  </tr>
+[% END %]
+
   <tr>
     <td align="right"><strong>URL:</strong></td>
     <td colspan="3">

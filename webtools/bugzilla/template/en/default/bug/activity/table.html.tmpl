@@ -32,6 +32,8 @@
   # incomplete_data: boolean. True if some of the data is incomplete (because
   #                  it was affected by an old Bugzilla bug.)
   #%]
+
+[% PROCESS bug/time.html.tmpl %]
  
 [% IF incomplete_data %]
   <p>
@@ -72,14 +74,26 @@
             </td>
             <td>
               [% IF change.removed %]
-                [% change.removed FILTER html %]
+                [% IF change.fieldname == 'estimated_time' ||
+                      change.fieldname == 'remaining_time' ||
+                      change.fieldname == 'work_time' %]
+                  [% PROCESS formattimeunit time_unit=change.removed %]
+                [% ELSE %]
+                  [% change.removed FILTER html %]
+                [% END %]
               [% ELSE %]
                 &nbsp;
               [% END %]
             </td>
             <td>
               [% IF change.added %]
-                [% change.added FILTER html %]
+                [% IF change.fieldname == 'estimated_time' ||
+                      change.fieldname == 'remaining_time' ||
+                      change.fieldname == 'work_time' %]
+                  [% PROCESS formattimeunit time_unit=change.added %]
+                [% ELSE %]
+                  [% change.added FILTER html %]
+                [% END %]
               [% ELSE %]
                 &nbsp;
               [% END %]

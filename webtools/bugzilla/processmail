@@ -129,12 +129,13 @@ sub ProcessOneBug {
     if ($values{'qa_contact'}) {
         $values{'qa_contact'} = DBID_to_name($values{'qa_contact'});
     }
+    $values{'estimated_time'} = FormatTimeUnit($values{'estimated_time'});
 
     my @diffs;
 
 
     SendSQL("SELECT profiles.login_name, fielddefs.description, " .
-            "       bug_when, removed, added, attach_id " .
+            "       bug_when, removed, added, attach_id, fielddefs.name " .
             "FROM bugs_activity, fielddefs, profiles " .
             "WHERE bug_id = $id " .
             "  AND fielddefs.fieldid = bugs_activity.fieldid " .
@@ -150,20 +151,31 @@ sub ProcessOneBug {
     }
 
     my $difftext = "";
+    my $diffheader = "";
+    my $diffpart = {};
+    my @diffparts;
     my $lastwho = "";
     foreach my $ref (@diffs) {
-        my ($who, $what, $when, $old, $new, $attachid) = (@$ref);
+        my ($who, $what, $when, $old, $new, $attachid, $fieldname) = (@$ref);
+        $diffpart = {};
         if ($who ne $lastwho) {
             $lastwho = $who;
-            $difftext .= "\n$who" . Param('emailsuffix') . " changed:\n\n";
-            $difftext .= FormatTriple("What    ", "Removed", "Added");
-            $difftext .= ('-' x 76) . "\n";
+            $diffheader = "\n$who" . Param('emailsuffix') . " changed:\n\n";
+            $diffheader .= FormatTriple("What    ", "Removed", "Added");
+            $diffheader .= ('-' x 76) . "\n";
         }
         $what =~ s/^Attachment/Attachment #$attachid/ if $attachid;
-        $difftext .= FormatTriple($what, $old, $new);
+        if( $fieldname eq 'estimated_time' ||
+            $fieldname eq 'remaining_time' ) {
+            $old = FormatTimeUnit($old);
+            $new = FormatTimeUnit($new);
+        }
+        $difftext = FormatTriple($what, $old, $new);
+        $diffpart->{'header'} = $diffheader;
+        $diffpart->{'fieldname'} = $fieldname;
+        $diffpart->{'text'} = $difftext;
+        push(@diffparts, $diffpart);
     }
-
-    $difftext = trim($difftext);
 
 
     my $deptext = "";
@@ -220,7 +232,9 @@ sub ProcessOneBug {
     $deptext = trim($deptext);
 
     if ($deptext) {
-        $difftext = trim($difftext . "\n\n" . $deptext);
+        #$difftext = trim($difftext . "\n\n" . $deptext);
+        $diffpart->{'text'} = trim("\n\n" . $deptext);
+        push(@diffparts, $diffpart);
     }
 
 
@@ -301,9 +315,9 @@ sub ProcessOneBug {
         if ( !defined(NewProcessOnePerson($person, $count, \@headerlist,
                                           \@reasons, \%values,
                                           \%defmailhead, 
-                                          \%fielddescription, $difftext, 
-                                          $newcomments, $anyprivate, 
-                                          $start, $id, 
+                                          \%fielddescription, \@diffparts,
+                                          $newcomments, 
+                                          $anyprivate, $start, $id, 
                                           \@depbugs))) 
         {
 
@@ -613,14 +627,16 @@ sub filterEmailGroup ($$$) {
 }
 
 sub NewProcessOnePerson ($$$$$$$$$$$$$) {
-    my ($person, $count, $hlRef, $reasonsRef, $valueRef, $dmhRef, $fdRef, $difftext, 
-        $newcomments, $anyprivate, $start, $id, $depbugsRef) = @_;
+    my ($person, $count, $hlRef, $reasonsRef, $valueRef, $dmhRef, $fdRef,  
+        $diffRef, $newcomments, $anyprivate, $start, 
+        $id, $depbugsRef) = @_;
 
     my %values = %$valueRef;
     my @headerlist = @$hlRef;
     my @reasons = @$reasonsRef;
     my %defmailhead = %$dmhRef;
     my %fielddescription = %$fdRef;
+    my @diffparts = @$diffRef;
     my @depbugs = @$depbugsRef;
     
     if ($seen{$person}) {
@@ -680,9 +696,40 @@ sub NewProcessOnePerson ($$$$$$$$$$$$$) {
         if (! $value) {
           next;
         }
-        my $desc = $fielddescription{$f};
-        $head .= FormatDouble($desc, $value);
+        # Don't send estimated_time if user not in the group, or not enabled
+        if ($f ne 'estimated_time' ||
+            UserInGroup(Param('timetrackinggroup'), $userid)) { 
+             
+            my $desc = $fielddescription{$f};
+            $head .= FormatDouble($desc, $value);
+        }
       }
+    }
+
+    # Build difftext (the actions) by verifying the user should see them
+    my $difftext = "";
+    my $diffheader = "";
+    my $add_diff;
+    foreach my $diff (@diffparts) {
+        
+        $add_diff = 0;
+        
+        if ($diff->{'fieldname'} eq 'estimated_time' ||
+            $diff->{'fieldname'} eq 'remaining_time' ||
+            $diff->{'fieldname'} eq 'work_time') {
+            if (UserInGroup(Param("timetrackinggroup"), $userid)) {
+                $add_diff = 1;
+            }
+        } else {
+            $add_diff = 1;
+        }
+        if ($add_diff) {
+            if ($diffheader ne $diff->{'header'}) {
+                $diffheader = $diff->{'header'};
+                $difftext .= $diffheader;
+            }
+            $difftext .= $diff->{'text'};
+        }
     }
     
     if ($difftext eq "" && $newcomments eq "") {

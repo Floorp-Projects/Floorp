@@ -86,7 +86,8 @@ sub show_bug {
         reporter, bug_file_loc, short_desc, target_milestone, 
         qa_contact, status_whiteboard, 
         date_format(creation_ts,'%Y-%m-%d %H:%i'),
-        delta_ts, sum(votes.count), delta_ts calc_disp_date
+        delta_ts, sum(votes.count), delta_ts calc_disp_date,
+        estimated_time, remaining_time
     FROM bugs LEFT JOIN votes USING(bug_id), products, components
     WHERE bugs.bug_id = $id
         AND bugs.product_id = products.id
@@ -110,7 +111,8 @@ sub show_bug {
                        "priority", "bug_severity", "component_id", "component", 
                        "assigned_to", "reporter", "bug_file_loc", "short_desc", 
                        "target_milestone", "qa_contact", "status_whiteboard", 
-                       "creation_ts", "delta_ts", "votes", "calc_disp_date") 
+                       "creation_ts", "delta_ts", "votes", "calc_disp_date", 
+                       "estimated_time", "remaining_time")
     {
         $value = shift(@row);
         if ($field eq "calc_disp_date") {
@@ -231,6 +233,14 @@ sub show_bug {
     while (MoreSQLData()) {
         my ($i) = FetchSQLData();
         push(@list, $i);
+    }
+
+    if (UserInGroup(Param("timetrackinggroup"))) {
+
+        SendSQL("SELECT SUM(work_time) 
+                 FROM longdescs WHERE longdescs.bug_id=$id");
+        $bug{'actual_time'} = FetchSQLData();
+
     }
 
     $bug{'dependson'} = \@list;

@@ -1438,6 +1438,8 @@ $table{bugs} =
     everconfirmed tinyint not null,
     reporter_accessible tinyint not null default 1,
     cclist_accessible tinyint not null default 1,
+    estimated_time decimal(5,2) not null default 0,
+    remaining_time decimal(5,2) not null default 0,
     alias varchar(20),
     
     index (assigned_to),
@@ -1478,6 +1480,7 @@ $table{longdescs} =
    'bug_id mediumint not null,
     who mediumint not null,
     bug_when datetime not null,
+    work_time decimal(5,2) not null default 0,
     thetext mediumtext,
     isprivate tinyint not null default 0,
     index(bug_id),
@@ -1853,6 +1856,8 @@ AddFDef("everconfirmed", "Ever Confirmed", 0);
 AddFDef("reporter_accessible", "Reporter Accessible", 0);
 AddFDef("cclist_accessible", "CC Accessible", 0);
 AddFDef("bug_group", "Group", 0);
+AddFDef("estimated_time", "Estimated Hours", 1);
+AddFDef("remaining_time", "Remaining Hours", 0);
 
 # Oops. Bug 163299
 $dbh->do("DELETE FROM fielddefs WHERE name='cc_accessible'");
@@ -1860,6 +1865,8 @@ $dbh->do("DELETE FROM fielddefs WHERE name='cc_accessible'");
 AddFDef("flagtypes.name", "Flag", 0);
 AddFDef("requesters.login_name", "Flag Requester", 0);
 AddFDef("setters.login_name", "Flag Setter", 0);
+AddFDef("work_time", "Hours Worked", 0);
+AddFDef("percentage_complete", "Percentage Complete", 0);
 
 ###########################################################################
 # Detect changed local settings
@@ -2902,6 +2909,11 @@ if (GetFieldDef("bugs","qacontact_accessible")) {
     DropField("bugs", "qacontact_accessible");
     DropField("bugs", "assignee_accessible");
 }
+
+# 2002-02-20 jeff.hedlund@matrixsi.com - bug 24789 time tracking
+AddField("longdescs", "work_time", "decimal(5,2) not null default 0");
+AddField("bugs", "estimated_time", "decimal(5,2) not null default 0");
+AddField("bugs", "remaining_time", "decimal(5,2) not null default 0");
 
 # 2002-03-15 bbaetz@student.usyd.edu.au - bug 129466
 # 2002-05-13 preed@sigkill.com - bug 129446 patch backported to the 

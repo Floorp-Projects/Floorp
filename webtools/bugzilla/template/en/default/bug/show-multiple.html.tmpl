@@ -24,6 +24,7 @@
   title = "Full Text Bug Listing"
   style_urls = [ "css/show_multiple.css" ]
 %]
+[% PROCESS bug/time.html.tmpl %]
 [% IF bugs.first %]
   [% FOREACH bug = bugs %]
     [% PROCESS bug_display %]
@@ -33,6 +34,7 @@
     You'd have more luck if you gave me some bug numbers.
   </p>
 [% END %]
+
 
 [% PROCESS global/footer.html.tmpl %]
 
@@ -126,6 +128,32 @@
         <td colspan="4">
           <b>Status Whiteboard:</b>&nbsp;
           [% bug.status_whiteboard FILTER html %]
+        </td>
+      </tr>
+    [% END %]
+
+    [% IF UserInGroup(Param("timetrackinggroup")) %]
+      <tr>
+        <td colspan="4">
+          <b>Orig. Est.:</b>&nbsp;
+          [% PROCESS formattimeunit time_unit=bug.estimated_time %]
+          &nbsp;
+          <b>Current Est.:</b>&nbsp;
+          [% PROCESS formattimeunit 
+                     time_unit=(bug.remaining_time + bug.actual_time) %]
+          &nbsp;
+          <b>Hours Worked:</b>&nbsp;
+          [% PROCESS formattimeunit time_unit=bug.actual_time %]&nbsp;
+          <b>Hours Left:</b>&nbsp;
+          [% PROCESS formattimeunit time_unit=bug.remaining_time %]
+          &nbsp;
+          <b>Percentage Complete:</b>&nbsp;
+          [% PROCESS calculatepercentage act=bug.actual_time 
+                                         rem=bug.remaining_time %]&nbsp;
+          <b>Gain</b>&nbsp;
+          [% PROCESS formattimeunit 
+                     time_unit=bug.estimated_time - (bug.actual_time + bug.remaining_time) %]
+          &nbsp;
         </td>
       </tr>
     [% END %]

@@ -382,8 +382,10 @@ DefineColumn("os"                , "bugs.op_sys"                , "OS"          
 DefineColumn("target_milestone"  , "bugs.target_milestone"      , "Target Milestone" );
 DefineColumn("votes"             , "bugs.votes"                 , "Votes"            );
 DefineColumn("keywords"          , "bugs.keywords"              , "Keywords"         );
-
-
+DefineColumn("estimated_time"   , "bugs.estimated_time"       , "Estimated Hours"  );
+DefineColumn("remaining_time"   , "bugs.remaining_time"       , "Remaining Hours"  );
+DefineColumn("actual_time"      , "(SUM(ldtime.work_time)*COUNT(DISTINCT ldtime.bug_when)/COUNT(bugs.bug_id)) AS actual_time", "Actual Hours");
+DefineColumn("percentage_complete","(100*((SUM(ldtime.work_time)*COUNT(DISTINCT ldtime.bug_when)/COUNT(bugs.bug_id))/((SUM(ldtime.work_time)*COUNT(DISTINCT ldtime.bug_when)/COUNT(bugs.bug_id))+bugs.remaining_time))) AS percentage_complete", "% Complete"); 
 ################################################################################
 # Display Column Determination
 ################################################################################
@@ -430,6 +432,14 @@ if (trim($::FORM{'votes'}) && !grep($_ eq 'votes', @displaycolumns)) {
     push(@displaycolumns, 'votes');
 }
 
+# Remove the timetracking columns if they are not a part of the group
+# (happens if a user had access to time tracking and it was revoked/disabled)
+if (!UserInGroup(Param("timetrackinggroup"))) {
+   @displaycolumns = grep($_ ne 'estimated_time', @displaycolumns);
+   @displaycolumns = grep($_ ne 'remaining_time', @displaycolumns);
+   @displaycolumns = grep($_ ne 'actual_time', @displaycolumns);
+   @displaycolumns = grep($_ ne 'percentage_complete', @displaycolumns);
+}
 
 ################################################################################
 # Select Column Determination
@@ -439,6 +449,12 @@ if (trim($::FORM{'votes'}) && !grep($_ eq 'votes', @displaycolumns)) {
 
 # The bug ID is always selected because bug IDs are always displayed 
 my @selectcolumns = ("id");
+
+# remaining and actual_time are required for precentage_complete calculation:
+if (lsearch(\@displaycolumns, "percentage_complete")) {
+    push (@selectcolumns, "remaining_time");
+    push (@selectcolumns, "actual_time");
+}
 
 # Display columns are selected because otherwise we could not display them.
 push (@selectcolumns, @displaycolumns);
@@ -458,6 +474,10 @@ if ($dotweak) {
 
 # Convert the list of columns being selected into a list of column names.
 my @selectnames = map($columns->{$_}->{'name'}, @selectcolumns);
+
+# Remove columns with no names, such as percentage_complete
+#  (or a removed *_time column due to permissions)
+@selectnames = grep($_ ne '', @selectnames);
 
 # Generate the basic SQL query that will be used to generate the bug list.
 my $search = new Bugzilla::Search('fields' => \@selectnames, 
@@ -537,6 +557,15 @@ if ($order) {
     # If we are sorting by votes, sort in descending order if no explicit
     # sort order was given
     $db_order =~ s/bugs.votes\s*(,|$)/bugs.votes desc$1/i;
+
+    # the 'actual_time' field is defined as an aggregate function, but 
+    # for order we just need the column name 'actual_time'
+    my $aggregate_search = quotemeta($columns->{'actual_time'}->{'name'});
+    $db_order =~ s/$aggregate_search/actual_time/g;
+
+    # the 'percentage_complete' field is defined as an aggregate too
+    $aggregate_search = quotemeta($columns->{'percentage_complete'}->{'name'});
+    $db_order =~ s/$aggregate_search/percentage_complete/g;
 
     $query .= " ORDER BY $db_order ";
 }

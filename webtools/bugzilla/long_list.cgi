@@ -56,7 +56,9 @@ my $generic_query = "
     bugs.target_milestone,
     bugs.qa_contact, 
     bugs.status_whiteboard, 
-    bugs.keywords
+    bugs.keywords,
+    bugs.estimated_time,
+    bugs.remaining_time
   FROM bugs,profiles assign,profiles report, products, components
   WHERE assign.userid = bugs.assigned_to AND report.userid = bugs.reporter
     AND bugs.product_id=products.id AND bugs.component_id=components.id";
@@ -79,7 +81,8 @@ foreach my $bug_id (split(/[:,]/, $buglist)) {
                        "op_sys", "bug_status", "resolution", "priority",
                        "bug_severity", "component", "assigned_to", "reporter",
                        "bug_file_loc", "short_desc", "target_milestone",
-                       "qa_contact", "status_whiteboard", "keywords") 
+                       "qa_contact", "status_whiteboard", "keywords", 
+                       "estimated_time", "remaining_time") 
     {
         $bug{$field} = shift @row;
     }
@@ -90,6 +93,12 @@ foreach my $bug_id (split(/[:,]/, $buglist)) {
                                           DBID_to_name($bug{'qa_contact'}) : "";
 
         push (@bugs, \%bug);
+    }
+
+    if (UserInGroup(Param("timetrackinggroup"))) {
+        SendSQL("SELECT SUM(work_time) FROM longdescs WHERE bug_id=$bug_id");
+
+        $bug{'actual_time'} = FetchSQLData();
     }
 }
 

@@ -956,6 +956,7 @@ sub GetBugActivity {
     
     my $query = "
         SELECT IFNULL(fielddefs.description, bugs_activity.fieldid),
+                fielddefs.name,
                 bugs_activity.attach_id,
                 bugs_activity.bug_when,
                 bugs_activity.removed, bugs_activity.added,
@@ -974,41 +975,59 @@ sub GetBugActivity {
     my $changes = [];
     my $incomplete_data = 0;
     
-    while (my ($field, $attachid, $when, $removed, $added, $who) 
+    while (my ($field, $fieldname, $attachid, $when, $removed, $added, $who) 
                                                                = FetchSQLData())
     {
         my %change;
+        my $activity_visible = 1;
         
-        # This gets replaced with a hyperlink in the template.
-        $field =~ s/^Attachment// if $attachid;
+        # check if the user should see this field's activity
+        if ($fieldname eq 'remaining_time' ||
+            $fieldname eq 'estimated_time' ||
+            $fieldname eq 'work_time') {
 
-        # Check for the results of an old Bugzilla data corruption bug
-        $incomplete_data = 1 if ($added =~ /^\?/ || $removed =~ /^\?/);
+            if (!UserInGroup(Param('timetrackinggroup'))) {
+                $activity_visible = 0;
+            } else {
+                $activity_visible = 1;
+            }
+        } else {
+            $activity_visible = 1;
+        }
+                
+        if ($activity_visible) {
+            # This gets replaced with a hyperlink in the template.
+            $field =~ s/^Attachment// if $attachid;
+
+            # Check for the results of an old Bugzilla data corruption bug
+            $incomplete_data = 1 if ($added =~ /^\?/ || $removed =~ /^\?/);
         
-        # An operation, done by 'who' at time 'when', has a number of
-        # 'changes' associated with it.
-        # If this is the start of a new operation, store the data from the
-        # previous one, and set up the new one.
-        if ($operation->{'who'} 
-            && ($who ne $operation->{'who'} 
-                || $when ne $operation->{'when'})) 
-        {
-            $operation->{'changes'} = $changes;
-            push (@operations, $operation);
+            # An operation, done by 'who' at time 'when', has a number of
+            # 'changes' associated with it.
+            # If this is the start of a new operation, store the data from the
+            # previous one, and set up the new one.
+            if ($operation->{'who'} 
+                && ($who ne $operation->{'who'} 
+                    || $when ne $operation->{'when'})) 
+            {
+                $operation->{'changes'} = $changes;
+                push (@operations, $operation);
             
-            # Create new empty anonymous data structures.
-            $operation = {};
-            $changes = [];
-        }  
+                # Create new empty anonymous data structures.
+                $operation = {};
+                $changes = [];
+            }  
         
-        $operation->{'who'} = $who;
-        $operation->{'when'} = $when;            
+            $operation->{'who'} = $who;
+            $operation->{'when'} = $when;            
         
-        $change{'field'} = $field;
-        $change{'attachid'} = $attachid;
-        $change{'removed'} = $removed;
-        $change{'added'} = $added;
-        push (@$changes, \%change);
+            $change{'field'} = $field;
+            $change{'fieldname'} = $fieldname;
+            $change{'attachid'} = $attachid;
+            $change{'removed'} = $removed;
+            $change{'added'} = $added;
+            push (@$changes, \%change);
+        }   
     }
     
     if ($operation->{'who'}) {

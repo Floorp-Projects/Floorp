@@ -330,8 +330,16 @@
         
   [% ELSIF error == "need_component" %]
     [% title = "Component Required" %]
-    You must specify a component to help determine the new owner of these bugs.
-                  
+    You must specify a component to help determine the new owner of these bugs.                            
+
+  [% ELSIF error == "need_numeric_value" %]
+    [% title = "Numeric Value Required" %]
+    Hours requires a numeric value.
+
+  [% ELSIF error == "need_positive_number" %]
+    [% title = "Positive Number Required" %]
+    [% field %] requires a positive number.
+
   [% ELSIF error == "need_product" %]
     [% title = "Product Required" %]
     You must specify a product to help determine the new owner of these bugs.
@@ -445,7 +453,7 @@
   [% ELSIF error == "report_access_denied" %]
     [% title = "Access Denied" %]
     You do not have the permissions necessary to view reports for this product.
-     
+
   [% ELSIF error == "requestee_too_short" %]
     [% title = "Requestee Name Too Short" %]
     One or two characters match too many users, so please enter at least 
@@ -470,6 +478,11 @@
   [% ELSIF error == "require_summary" %]
     [% title = "Summary Needed" %]
     You must enter a summary for this bug.
+  
+  [% ELSIF error == "resolving_remaining_time" %]
+    [% title = "Trying to Resolve with Hours Remaining" %]
+    You cannot resolve a bug with hours still remaining.  Set 
+    Remaining Hours to zero if you want to resolve the bug.
 
   [% ELSIF error == "sanity_check_access_denied" %]
     [% title = "Access Denied" %]
@@ -520,6 +533,10 @@
   [% ELSIF error == "wrong_token_for_confirming_email_change" %]
     [% title = "Wrong Token" %]
     That token cannot be used to change your email address.
+
+  [% ELSIF error == "value_out_of_range" %]
+    [% title = "Value Out Of Range" %]
+    Value is out of range for field [% variable %].
 
   [% ELSIF error == "z_axis_defined_with_no_x_axis" %]
     [% title = "Nonsensical Options" %]

@@ -32,6 +32,29 @@
 [% END %]
 
 [% PROCESS bug/navigate.html.tmpl %]
+[% PROCESS bug/time.html.tmpl %]
+
+<script type="text/javascript" language="JavaScript">
+<!--
+var fRemainingTime = [% bug.remaining_time %]; // holds the original value
+function adjustRemainingTime() {
+   // subtracts time spent from remaining time
+   var new_time;
+
+   new_time =
+      fRemainingTime - document.changeform.work_time.value;
+   // get upto 2 decimal places
+   document.changeform.remaining_time.value = 
+        Math.round(new_time * 100)/100;
+}
+
+function updateRemainingTime() {
+   // if the remaining time is changed manually, update fRemainingTime
+   fRemainingTime = document.changeform.remaining_time.value;
+}
+
+//-->
+</script>
 
 <hr>
 
@@ -264,6 +287,62 @@
     </tr> 
   [% END %]
   </table>
+
+  [% IF UserInGroup(Param('timetrackinggroup')) %]
+    <br>
+    <table cellpadding=0 cellspacing=0 border=1>
+      <tr>
+        <th width="16.6%" align="center" bgcolor="#cccccc">
+          Orig. Est.
+        </th>
+        <th width="16.6%" align="center" bgcolor="#cccccc">
+          Current Est.
+        </th>
+        <th width="16.6%" align="center" bgcolor="#cccccc">
+          Hours Worked
+        </th>
+        <th width="16.6%" align="center" bgcolor="#cccccc">
+          Hours Left
+        </th>
+        <th width="16.6%" align="center" bgcolor="#cccccc">
+          %Complete
+        </th>
+        <th width="16.6%" align="center" bgcolor="#cccccc">
+          Gain
+        </th>
+      </tr>
+      <tr>
+        <td align="center">
+          <input name="estimated_time"
+                 value="[% PROCESS formattimeunit 
+                                   time_unit=bug.estimated_time %]"
+                 size="6" maxlength="6">
+        </td>
+        <td align="center">
+          [% PROCESS formattimeunit 
+                     time_unit=(bug.actual_time + bug.remaining_time) %]
+        </td>
+        <td align="center">
+          [% PROCESS formattimeunit time_unit=bug.actual_time %] + 
+          <input name="work_time" value="0" size="3" maxlength="6"
+                 onChange="adjustRemainingTime();">
+        </td>
+        <td align="center">
+          <input name="remaining_time"
+                 value="[% PROCESS formattimeunit
+                                   time_unit=bug.remaining_time %]"
+                 size="6" maxlength="6" onChange="updateRemainingTime();">
+        </td>
+        <td align="center">
+          [% PROCESS calculatepercentage act=bug.actual_time
+                                         rem=bug.remaining_time %]
+        </td>
+        <td align="center">
+          [% PROCESS formattimeunit time_unit=bug.estimated_time - (bug.actual_time + bug.remaining_time) %]
+        </td>
+      </tr>
+    </table>
+  [% END %]
   
 [%# *** Attachments *** %]
 

@@ -296,7 +296,8 @@ sub FetchOneColumn {
                           "status", "resolution", "summary");
 
 sub AppendComment {
-    my ($bugid, $who, $comment, $isprivate, $timestamp) = @_;
+    my ($bugid, $who, $comment, $isprivate, $timestamp, $work_time) = @_;
+    $work_time ||= 0;
     
     # Use the date/time we were given if possible (allowing calling code
     # to synchronize the comment's timestamp with those of other records).
@@ -304,15 +305,26 @@ sub AppendComment {
     
     $comment =~ s/\r\n/\n/g;     # Get rid of windows-style line endings.
     $comment =~ s/\r/\n/g;       # Get rid of mac-style line endings.
-    if ($comment =~ /^\s*$/) {  # Nothin' but whitespace.
+
+    # allowing negatives though so people can back out errors in time reporting
+    if (defined $work_time) {
+       # regexp verifies one or more digits, optionally followed by a period and
+       # zero or more digits, OR we have a period followed by one or more digits
+       if ($work_time !~ /^-?(?:\d+(?:\.\d*)?|\.\d+)$/) { 
+          ThrowUserError("need_numeric_value");
+          return;
+       }
+    } else { $work_time = 0 };
+
+    if ($comment =~ /^\s*$/) {  # Nothin' but whitespace
         return;
     }
 
     my $whoid = DBNameToIdAndCheck($who);
     my $privacyval = $isprivate ? 1 : 0 ;
-    SendSQL("INSERT INTO longdescs (bug_id, who, bug_when, thetext, isprivate) " .
+    SendSQL("INSERT INTO longdescs (bug_id, who, bug_when, thetext, isprivate, work_time) " .
         "VALUES($bugid, $whoid, $timestamp, " . SqlQuote($comment) . ", " . 
-        $privacyval . ")");
+        $privacyval . ", " . SqlQuote($work_time) . ")");
 
     SendSQL("UPDATE bugs SET delta_ts = now() WHERE bug_id = $bugid");
 }
@@ -1104,7 +1116,7 @@ sub GetLongDescriptionAsText {
     $query .= "ORDER BY longdescs.bug_when";
     SendSQL($query);
     while (MoreSQLData()) {
-        my ($who, $when, $text, $isprivate) = (FetchSQLData());
+        my ($who, $when, $text, $isprivate, $work_time) = (FetchSQLData());
         if ($count) {
             $result .= "\n\n------- Additional Comments From $who".Param('emailsuffix')."  ".
                 time2str("%Y-%m-%d %H:%M", str2time($when)) . " -------\n";
@@ -1124,7 +1136,7 @@ sub GetComments {
     my @comments;
     SendSQL("SELECT  profiles.realname, profiles.login_name, 
                      date_format(longdescs.bug_when,'%Y-%m-%d %H:%i'), 
-                     longdescs.thetext,
+                     longdescs.thetext, longdescs.work_time,
                      isprivate,
                      date_format(longdescs.bug_when,'%Y%m%d%H%i%s') 
             FROM     longdescs, profiles
@@ -1134,7 +1146,8 @@ sub GetComments {
              
     while (MoreSQLData()) {
         my %comment;
-        ($comment{'name'}, $comment{'email'}, $comment{'time'}, $comment{'body'},
+        ($comment{'name'}, $comment{'email'}, $comment{'time'}, 
+        $comment{'body'}, $comment{'work_time'},
         $comment{'isprivate'}, $comment{'when'}) = FetchSQLData();
         
         $comment{'email'} .= Param('emailsuffix');
@@ -1490,6 +1503,20 @@ sub PerformSubsts {
     return $str;
 }
 
+sub FormatTimeUnit {
+    # Returns a number with 2 digit precision, unless the last digit is a 0
+    # then it returns only 1 digit precision
+    my ($time) = (@_);
+ 
+    my $newtime = sprintf("%.2f", $time);
+
+    if ($newtime =~ /0\Z/) {
+        $newtime = sprintf("%.1f", $time);
+    }
+
+    return $newtime;
+    
+}
 ###############################################################################
 # Global Templatization Code
 

@@ -703,6 +703,25 @@ if (defined $::FORM{'qa_contact'}) {
     }
 }
 
+# jeff.hedlund@matrixsi.com time tracking data processing:
+foreach my $field ("estimated_time", "remaining_time") {
+
+    if (defined $::FORM{$field}) {
+        my $er_time = trim($::FORM{$field});
+        if ($er_time ne $::FORM{'dontchange'}) {
+            if ($er_time > 99999.99) {
+                ThrowUserError("value_out_of_range", {variable => $field});
+            }
+            if ($er_time =~ /^(?:\d+(?:\.\d*)?|\.\d+)$/) {
+                DoComma();
+                $::query .= "$field = " . SqlQuote($er_time);
+            } else {
+                $vars->{'field'} = $field;
+                ThrowUserError("need_positive_number");
+            }
+        }
+    }
+}
 
 # If the user is submitting changes from show_bug.cgi for a single bug,
 # and that bug is restricted to a group, process the checkboxes that
@@ -808,6 +827,12 @@ SWITCH: for ($::FORM{'knob'}) {
         last SWITCH;
     };
     /^resolve$/ && CheckonComment( "resolve" ) && do {
+        if (UserInGroup(Param('timetrackinggroup'))) {
+            if (defined $::FORM{'remaining_time'} &&
+                $::FORM{'remaining_time'} > 0) {
+                ThrowUserError("resolving_remaining_time");
+            }
+        }
         # Check here, because its the only place we require the resolution
         CheckFormField(\%::FORM, 'resolution', \@::settable_resolution);
         ChangeStatus('RESOLVED');
@@ -1170,6 +1195,26 @@ foreach my $id (@idlist) {
         }
     }
 
+    SendSQL("select now()");
+    $timestamp = FetchOneColumn();
+
+    if ($::FORM{'work_time'} > 99999.99) {
+        ThrowUserError("value_out_of_range", {variable => 'work_time'});
+    }
+    if (defined $::FORM{'comment'} || defined $::FORM{'work_time'}) {
+        if ($::FORM{'work_time'} != 0 && 
+            (!defined $::FORM{'comment'} || $::FORM{'comment'} =~ /^\s*$/)) {
+        
+            ThrowUserError('comment_required');
+        } else {
+            AppendComment($id, $::COOKIE{'Bugzilla_login'}, $::FORM{'comment'},
+                $::FORM{'commentprivacy'}, $timestamp, $::FORM{'work_time'});
+            if ($::FORM{'work_time'} != 0) {
+                LogActivityEntry($id, "work_time", "", $::FORM{'work_time'});
+            }
+        }
+    }
+
     if (@::legal_keywords) {
         # There are three kinds of "keywordsaction": makeexact, add, delete.
         # For makeexact, we delete everything, and then add our things.
@@ -1229,17 +1274,11 @@ foreach my $id (@idlist) {
         SendSQL("DELETE FROM bug_group_map 
                  WHERE bug_id = $id AND group_id = $grouptodel");
     }
-    SendSQL("select now()");
-    $timestamp = FetchOneColumn();
 
     my $groupDelNames = join(',', @groupDelNames);
     my $groupAddNames = join(',', @groupAddNames);
 
     LogActivityEntry($id, "bug_group", $groupDelNames, $groupAddNames); 
-    if (defined $::FORM{'comment'}) {
-        AppendComment($id, $::COOKIE{'Bugzilla_login'}, $::FORM{'comment'},
-            $::FORM{'commentprivacy'}, $timestamp);
-    }
     
     my $removedCcString = "";
     if (defined $::FORM{newcc} || defined $::FORM{removecc} || defined $::FORM{masscc}) {

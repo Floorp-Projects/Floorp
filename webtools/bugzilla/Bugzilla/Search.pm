@@ -149,6 +149,11 @@ sub init {
         push(@specialchart, ["keywords", $t, $F{'keywords'}]);
     }
 
+    if (lsearch($fieldsref, "(SUM(ldtime.work_time)*COUNT(DISTINCT ldtime.bug_when)/COUNT(bugs.bug_id)) AS actual_time") != -1) {
+        push(@supptables, "longdescs AS ldtime");
+        push(@wherepart, "ldtime.bug_id = bugs.bug_id");
+    }
+
     foreach my $id ("1", "2") {
         if (!defined ($F{"email$id"})) {
             next;
@@ -322,6 +327,62 @@ sub init {
              }
              push(@wherepart, "$table.bug_id = bugs.bug_id");
              $f = "$table.thetext";
+         },
+         "^work_time,changedby" => sub {
+             my $table = "longdescs_$chartid";
+             push(@supptables, "longdescs $table");
+             push(@wherepart, "$table.bug_id = bugs.bug_id");
+             my $id = &::DBNameToIdAndCheck($v);
+             $term = "(($table.who = $id";
+             $term .= ") AND ($table.work_time <> 0))";
+         },
+         "^work_time,changedbefore" => sub {
+             my $table = "longdescs_$chartid";
+             push(@supptables, "longdescs $table");
+             push(@wherepart, "$table.bug_id = bugs.bug_id");
+             $term = "(($table.bug_when < " . &::SqlQuote(SqlifyDate($v));
+             $term .= ") AND ($table.work_time <> 0))";
+         },
+         "^work_time,changedafter" => sub {
+             my $table = "longdescs_$chartid";
+             push(@supptables, "longdescs $table");
+             push(@wherepart, "$table.bug_id = bugs.bug_id");
+             $term = "(($table.bug_when > " . &::SqlQuote(SqlifyDate($v));
+             $term .= ") AND ($table.work_time <> 0))";
+         },
+         "^work_time," => sub {
+             my $table = "longdescs_$chartid";
+             push(@supptables, "longdescs $table");
+             push(@wherepart, "$table.bug_id = bugs.bug_id");
+             $f = "$table.work_time";
+         },
+         "^percentage_complete," => sub {
+             my $oper;
+             if ($t eq "equals") {
+                 $oper = "=";
+             } elsif ($t eq "greaterthan") {
+                 $oper = ">";
+             } elsif ($t eq "lessthan") {
+                 $oper = "<";
+             } elsif ($t eq "notequal") {
+                 $oper = "<>";
+             } elsif ($t eq "regexp") {
+                 $oper = "REGEXP";
+             } elsif ($t eq "notregexp") {
+                 $oper = "NOT REGEXP";
+             } else {
+                 $oper = "noop";
+             }
+             if ($oper ne "noop") {
+                 my $table = "longdescs_$chartid";
+                 push(@supptables, "longdescs $table");
+                 push(@wherepart, "$table.bug_id = bugs.bug_id");
+                 my $field = "(100*((SUM($table.work_time)*COUNT(DISTINCT $table.bug_when)/COUNT(bugs.bug_id))/((SUM($table.work_time)*COUNT(DISTINCT $table.bug_when)/COUNT(bugs.bug_id))+bugs.remaining_time))) AS percentage_complete_$table";
+                 push(@fields, $field);
+                 push(@having, 
+                      "percentage_complete_$table $oper " . &::SqlQuote($v));
+             }
+             $term = "0=0";
          },
          "^bug_group,(?!changed)" => sub {
             push(@supptables, "LEFT JOIN bug_group_map bug_group_map_$chartid ON bugs.bug_id = bug_group_map_$chartid.bug_id");

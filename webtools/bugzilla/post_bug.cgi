@@ -233,7 +233,8 @@ if ($::FORM{'keywords'} && UserInGroup("editbugs")) {
 
 # Build up SQL string to add bug.
 my $sql = "INSERT INTO bugs " . 
-  "(" . join(",", @used_fields) . ", reporter, creation_ts) " . 
+  "(" . join(",", @used_fields) . ", reporter, creation_ts, " .
+  "estimated_time, remaining_time) " .
   "VALUES (";
 
 foreach my $field (@used_fields) {
@@ -246,7 +247,23 @@ $comment = trim($comment);
 # OK except for the fact that it causes e-mail to be suppressed.
 $comment = $comment ? $comment : " ";
 
-$sql .= "$::userid, now() )";
+$sql .= "$::userid, now(), ";
+
+# Time Tracking
+if (UserInGroup(Param("timetrackinggroup")) &&
+    defined $::FORM{'estimated_time'}) {
+
+    my $est_time = $::FORM{'estimated_time'};
+    if ($est_time =~ /^(?:\d+(?:\.\d*)?|\.\d+)$/) {
+        $sql .= SqlQuote($est_time) . "," . SqlQuote($est_time);
+    } else {
+        $vars->{'field'} = "estimated_time";
+        ThrowUserError("need_positive_number");
+    }
+} else {
+    $sql .= "0, 0";
+}
+$sql .= ")";
 
 # Groups
 my @groupstoadd = ();
