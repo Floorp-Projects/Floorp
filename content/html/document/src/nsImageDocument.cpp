@@ -41,6 +41,7 @@
 #include "nsRect.h"
 #include "nsHTMLDocument.h"
 #include "nsIImageDocument.h"
+#include "nsIImageLoadingContent.h"
 #include "nsGenericHTMLElement.h"
 #include "nsIDOMHTMLImageElement.h"
 #include "nsIDOMEvent.h"
@@ -122,7 +123,6 @@ protected:
 
   nsCOMPtr<nsIStringBundle>     mStringBundle;
   nsCOMPtr<nsIDOMElement>       mImageElement;
-  nsCOMPtr<imgIRequest>         mImageRequest;
 
   nscoord                       mVisibleWidth;
   nscoord                       mVisibleHeight;
@@ -154,19 +154,16 @@ NS_IMETHODIMP
 ImageListener::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
 {
   nsImageDocument *imgDoc = (nsImageDocument*)mDocument.get();
-  NS_PRECONDITION(!imgDoc->mImageRequest, "OnStartRequest called twice!");
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
   if (!channel) {
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<imgILoader> il(do_GetService("@mozilla.org/image/loader;1"));
-  nsCOMPtr<nsISupports> docSupports;
-  CallQueryInterface(imgDoc, NS_STATIC_CAST(nsISupports**,
-                                            getter_AddRefs(docSupports)));
-  il->LoadImageWithChannel(channel, imgDoc, docSupports,
-                           getter_AddRefs(mNextStream), 
-                           getter_AddRefs(imgDoc->mImageRequest));
+  nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(imgDoc->mImageElement);
+  NS_ENSURE_TRUE(imageLoader, NS_ERROR_UNEXPECTED);
+
+  imageLoader->AddObserver(imgDoc);
+  imageLoader->LoadImageWithChannel(channel, getter_AddRefs(mNextStream));
 
   return nsMediaDocumentStreamListener::OnStartRequest(request, ctxt);
 }
@@ -175,7 +172,13 @@ NS_IMETHODIMP
 ImageListener::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
                              nsresult status)
 {
-  ((nsImageDocument*) mDocument.get())->UpdateTitle();
+  nsImageDocument *imgDoc = (nsImageDocument*)mDocument.get();
+  imgDoc->UpdateTitle();
+  
+  nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(imgDoc->mImageElement);
+  NS_ENSURE_TRUE(imageLoader, NS_ERROR_UNEXPECTED);
+
+  imageLoader->RemoveObserver(imgDoc);
 
   return nsMediaDocumentStreamListener::OnStopRequest(request, ctxt, status);
 }
@@ -194,9 +197,6 @@ nsImageDocument::nsImageDocument()
 
 nsImageDocument::~nsImageDocument()
 {
-  if (mImageRequest) {
-    mImageRequest->Cancel(NS_ERROR_FAILURE);
-  }
 }
 
 NS_IMPL_ADDREF_INHERITED(nsImageDocument, nsMediaDocument)
@@ -265,15 +265,6 @@ NS_IMETHODIMP
 nsImageDocument::SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject)
 {
   if (!aScriptGlobalObject) {
-    // If the global object is being set to null, then it means we are going
-    // away soon. Drop our ref to imgRequest so that we don't end up leaking
-    // due to cycles through imgLib.  This should not be really necessary
-    // anymore, but it's a belt-and-suspenders thing.
-    if (mImageRequest) {
-      mImageRequest->Cancel(NS_ERROR_FAILURE);
-      mImageRequest = nsnull;
-    }
-
     if (mImageResizingEnabled) {
       nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(mImageElement);
       target->RemoveEventListener(NS_LITERAL_STRING("click"), this, PR_FALSE);
@@ -283,6 +274,9 @@ nsImageDocument::SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObjec
       target->RemoveEventListener(NS_LITERAL_STRING("keypress"), this,
                                   PR_FALSE);
     }
+
+    // drop the ref to mImageElement, in case it has a ref to us
+    mImageElement = nsnull;
   }
 
   // Set the script global object on the superclass before doing
@@ -504,13 +498,17 @@ nsImageDocument::CreateSyntheticDocument()
   }
   image->SetDocument(this, PR_FALSE, PR_TRUE);
   mImageElement = do_QueryInterface(image);
+  nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(image);
+  NS_ENSURE_TRUE(imageLoader, NS_ERROR_UNEXPECTED);
 
   nsCAutoString src;
   mDocumentURL->GetSpec(src);
 
   NS_ConvertUTF8toUCS2 srcString(src);
-
+  // Make sure not to start the image load from here...
+  imageLoader->SetLoadingEnabled(PR_FALSE);
   image->SetAttr(kNameSpaceID_None, nsHTMLAtoms::src, srcString, PR_FALSE);
+  imageLoader->SetLoadingEnabled(PR_TRUE);
 
   if (mStringBundle) {
     const PRUnichar* formatString[1] = { srcString.get() };
@@ -606,9 +604,16 @@ nsImageDocument::UpdateTitle()
     widthStr.AppendInt(mImageWidth);
     heightStr.AppendInt(mImageHeight);
 
-    if (mImageRequest) {
+    nsCOMPtr<imgIRequest> imageRequest;
+    nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mImageElement);
+    if (imageLoader) {
+      imageLoader->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
+                              getter_AddRefs(imageRequest));
+    }
+    
+    if (imageRequest) {
       nsXPIDLCString mimeType;
-      mImageRequest->GetMimeType(getter_Copies(mimeType));
+      imageRequest->GetMimeType(getter_Copies(mimeType));
       ToUpperCase(mimeType);
       nsXPIDLCString::const_iterator start, end;
       mimeType.BeginReading(start);
