@@ -28,8 +28,8 @@
 #
 ##############################################################################
 
-require 'timelocal.pl';         # timestamps
-use Date::Format;               # human-readable dates
+use Time::Local qw(timegm);         # timestamps
+use POSIX qw(strftime);             # human-readable dates
 
 $debug = 0;
 
@@ -58,15 +58,17 @@ sub cvsblame_init {
 # Generic traversal of a CVS tree.  Invoke callback function for
 # individual directories that contain CVS files.
 sub traverse_cvs_tree {
-    local ($dir, *callback, $nlink) = @_;
-    local ($dev, $ino, $mode, $subcount);
+    my $dir, $nlink;
+    local *callback;
+    ($dir, *callback, $nlink) = @_;
+    my ($dev, $ino, $mode, $subcount);
 
     # Get $nlink for top-level directory
     ($dev, $ino, $mode, $nlink) = stat($dir) unless $nlink;
 
     # Read directory
     opendir(DIR, $dir) || die "Can't open $dir\n";
-    local(@filenames) = readdir(DIR);
+    my (@filenames) = readdir(DIR);
     closedir(DIR);
 
     return if ! -d "$dir/CVS";
@@ -142,9 +144,9 @@ sub get_token {
 # Consume a token from RCS filehandle and ensure that it matches
 # the given string constant.
 sub match_token {
-    local ($match) = @_;
+    my ($match) = @_;
 
-    local ($token) = &get_token;
+    my ($token) = &get_token;
     die "Unexpected parsing error in RCS file $rcs_pathname.\n",
         "Expected token: $match, but saw: $token\n"
             if ($token ne $match);
@@ -152,7 +154,7 @@ sub match_token {
 
 # Push RCS token back into the input buffer.
 sub unget_token {
-    local ($token) = @_;
+    my ($token) = @_;
     $line_buffer = $token . " " . $line_buffer;
 }
 
@@ -165,7 +167,7 @@ sub unget_token {
 # %tag_revision            -- mapping from symbolic tag to numerical revision #
 #
 sub parse_rcs_admin {
-    local ($token, $tag, $tag_name, $tag_revision);
+    my ($token, $tag, $tag_name, $tag_revision);
 
     # Undefine variables, because we may have already read another RCS file
     undef %tag_revision;
@@ -241,9 +243,9 @@ sub parse_rcs_admin {
 #   e.g. $last_revision{"1.2.8"} == 1.2.8.5
 #
 sub parse_rcs_tree {
-    local($revision, $date, $author, $branches, $next);
-    local($branch, $is_trunk_revision);
-    local($mon,$day,$hhmm,$year);
+    my ($revision, $date, $author, $branches, $next);
+    my ($branch, $is_trunk_revision);
+
     # Undefine variables, because we may have already read another RCS file
     undef %timestamp;
     undef %revision_age;
@@ -280,14 +282,12 @@ sub parse_rcs_tree {
         # Convert date into timestamp
         @date_fields = reverse(split(/\./, $date));
         $date_fields[4]--;      # Month ranges from 0-11, not 1-12
-        $timestamp{$revision} = &timegm(@date_fields);
+        $timestamp{$revision} = timegm(@date_fields);
 
-        # Compute date string;  Format it the way I like.
-        
-        ($mon, $day, $hhmm, $year) = split(/#/,
-                                           time2str("%b#%e#%H:%M#%Y",
-                                                    $timestamp{$revision}));
-        $revision_ctime{$revision} = "$day $mon $year $hhmm";
+        # Pretty print the date string
+        my $formated_date = strftime("%d %b %Y %H:%M",
+                                     localtime($timestamp{$revision}));
+        $revision_ctime{$revision} = $formated_date;
 
         # Save age
         $revision_age{$revision} =
@@ -301,7 +301,7 @@ sub parse_rcs_tree {
 
         # Parse state;
         &match_token('state');
-        (1) while (&get_token ne ';');
+        {} while &get_token ne ';';
 
         # Parse branches
         &match_token('branches');
@@ -394,9 +394,9 @@ sub parse_rcs_file {
 # branch tag, a symbolic revision tag, or an ordinary numerical
 # revision number.
 sub map_tag_to_revision {
-    local($tag_or_revision) = @_;
+    my ($tag_or_revision) = @_;
 
-    local ($revision) = $tag_revision{$tag_or_revision};
+    my ($revision) = $tag_revision{$tag_or_revision};
     
     # Is this a branch tag, e.g. xxx.yyy.0.zzz
     if ($revision =~ /(.*)\.0\.([0-9]+)/o) {
@@ -418,8 +418,8 @@ sub map_tag_to_revision {
 #       the path traverses the tree "backwards" on branches.
 
 sub ancestor_revisions {
-    local ($revision) = @_;
-    local (@ancestors);
+    my ($revision) = @_;
+    my (@ancestors);
      
     $revision = $prev_revision{$revision};
     while ($revision) {
@@ -433,8 +433,8 @@ sub ancestor_revisions {
 # Extract the given revision from the digested RCS file.
 # (Essentially the equivalent of cvs up -rXXX)
 sub extract_revision {
-    local ($revision) = @_;
-    local (@path);
+    my ($revision) = @_;
+    my (@path);
 
     # Compute path through tree of revision deltas to most recent trunk revision
     while ($revision) {
@@ -445,15 +445,15 @@ sub extract_revision {
     shift @path;                # Get rid of head revision
 
     # Get complete contents of head revision
-    local (@text) = split(/^/, $revision_deltatext{$head_revision});
+    my (@text) = split(/^/, $revision_deltatext{$head_revision});
 
     # Iterate, applying deltas to previous revision
     foreach $revision (@path) {
         $adjust = 0;
         @diffs = split(/^/, $revision_deltatext{$revision});
 
-        local ($lines_added) = 0;
-        local ($lines_removed) = 0;
+        my ($lines_added) = 0;
+        my ($lines_removed) = 0;
 
         foreach $command (@diffs) {
             if ($add_lines_remaining > 0) {
@@ -485,7 +485,7 @@ sub extract_revision {
 }
 
 sub parse_cvs_file {
-    local($rcs_pathname) = @_;
+    my ($rcs_pathname) = @_;
 
     # Args in:  $opt_rev - requested revision
     #           $opt_m - time since modified
@@ -653,8 +653,8 @@ __END__
 #  a space-separated list of the files under CVS control in the directory
 sub read_cvs_entries
 {
-    local ($directory) = @_;
-    local ($filename, $rev, $date, $idunno, $sticky, $pathname);
+    my ($directory) = @_;
+    my ($filename, $rev, $date, $idunno, $sticky, $pathname);
 
     $cvsdir = $directory . '/CVS';
 
@@ -705,7 +705,7 @@ sub rcs_pathname {
     }
 
     print STDERR "file: $filename\n" if $debug;
-    local ($rcs_path) = $repository{$directory} . '/' . $filename . ',v';
+    my ($rcs_path) = $repository{$directory} . '/' . $filename . ',v';
     return $rcs_path if (-r $rcs_path);
 
     # A file that exists only on the branch, not on the trunk, is found
@@ -714,8 +714,8 @@ sub rcs_pathname {
 }
 
 sub show_annotated_cvs_file {
-    local($pathname) = @_;
-    local(@output) = ();
+    my ($pathname) = @_;
+    my (@output) = ();
 
     $revision = &parse_cvs_file($pathname);
 
@@ -801,7 +801,7 @@ $multiple_files_on_command_line = 1 if ($#ARGV != 0);
 
 sub annotate_cvs_directory
 {
-    local($dir) = @_;
+    my ($dir) = @_;
     &read_cvs_entries($dir);
     foreach $file (split(/\\/, $cvs_files{$dir})) {
         &show_annotated_cvs_file("$dir/$file");
