@@ -7,8 +7,8 @@
 # module which uses this library is: lib/TinderDB/VC_Bonsai.pm
 
 
-# $Revision: 1.9 $ 
-# $Date: 2002/04/25 00:55:26 $ 
+# $Revision: 1.10 $ 
+# $Date: 2002/04/25 23:46:10 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/BonsaiData.pm,v $ 
 # $Name:  $ 
@@ -94,7 +94,7 @@ sub load_bonsai_libs {
         die(
             "Error in Tinderbox2 package: BonsaiData".
             "Could not load Bonsai file: \n".
-            "\t'$BONSAI_DIR/adminfuncs.pl'\n ".
+            "\t'$BONSAI_DIR/cvsquery.pl'\n ".
             "or\n".
             "\t'$BONSAI_DIR/adminfuncs.pl'\n".
             "Check that CVS repository is readable at: '$::CVS_ROOT'\n".

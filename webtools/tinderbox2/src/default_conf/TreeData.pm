@@ -29,8 +29,8 @@
 # issue to work out.
 
 
-# $Revision: 1.8 $ 
-# $Date: 2001/12/03 19:47:24 $ 
+# $Revision: 1.9 $ 
+# $Date: 2002/04/25 23:46:12 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/TreeData.pm,v $ 
 # $Name:  $ 
@@ -172,17 +172,17 @@ $VERSION = '#tinder_version#';
 	    # these are dummy trees for testing.	    
  
 	    'Project_A' =>  {
-                   root => ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot',
+                   root => '/cvsroot',
                    module => 'SeaMonkeyAll',
                    branch => 'main',
                   },
 	    'Project_B' =>  {
-                   root => ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot',
+                   root => '/cvsroot',
                    module => 'Grendel',
                    branch => 'main',
                   },
 	    'Project_C' =>  {
-                   root => ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot',
+                   root => '/cvsroot',
                    module => 'NSPR',
                    branch => 'main',
                   },
