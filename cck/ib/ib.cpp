@@ -575,7 +575,7 @@ int StartIB(CString parms, WIDGET *curWidget)
 	_mkdir((char *)(LPCTSTR) cdPath);
 	_mkdir((char *)(LPCTSTR) tempPath);
 	_mkdir((char *)(LPCTSTR) workspacePath);
-	_mkdir((char *)(LPCTSTR) cdshellPath);
+//	_mkdir((char *)(LPCTSTR) cdshellPath);
 	GetCurrentDirectory(sizeof(olddir), olddir);
 
 	if(SetCurrentDirectory((char *)(LPCTSTR) tempPath) == FALSE)
@@ -648,12 +648,12 @@ int StartIB(CString parms, WIDGET *curWidget)
 	else
 	{
 		FILE *infout;
-		CString infFile = cdPath + "\\autorun.inf";
+		CString infFile = outputPath + "\\autorun.inf";
 		infout = fopen(infFile, "w");
 		if (!infout)
 			exit( 3 );
 
-		fprintf(infout,"Seamonkey32e.exe");
+		fprintf(infout,"[autorun]\nopen = .\\Core\\Seamonkey32e.exe");
 	}
 	CString component;
 	CString configiniPath = cdPath +"\\config.ini";
