@@ -806,6 +806,9 @@ NS_IMETHODIMP nsRenderingContextWin :: SetClipRect(const nsRect& aRect, nsClipCo
 	mTMatrix->TransformCoord(&trect.x, &trect.y,
                            &trect.width, &trect.height);
 
+  RECT nr;
+  ConditionRect(trect, nr);
+
   mStates->mFlags |= FLAG_LOCAL_CLIP_VALID;
 
   //how we combine the new rect with the previous?
@@ -814,19 +817,19 @@ NS_IMETHODIMP nsRenderingContextWin :: SetClipRect(const nsRect& aRect, nsClipCo
   {
     PushClipState();
 
-    cliptype = ::IntersectClipRect(mDC, trect.x,
-                                   trect.y,
-                                   trect.XMost(),
-                                   trect.YMost());
+    cliptype = ::IntersectClipRect(mDC, nr.left,
+                                   nr.top,
+                                   nr.right,
+                                   nr.bottom);
   }
   else if (aCombine == nsClipCombine_kUnion)
   {
     PushClipState();
 
-    HRGN  tregion = ::CreateRectRgn(trect.x,
-                                    trect.y,
-                                    trect.XMost(),
-                                    trect.YMost());
+    HRGN  tregion = ::CreateRectRgn(nr.left,
+                                    nr.top,
+                                    nr.right,
+                                    nr.bottom);
 
     cliptype = ::ExtSelectClipRgn(mDC, tregion, RGN_OR);
     ::DeleteObject(tregion);
@@ -835,19 +838,19 @@ NS_IMETHODIMP nsRenderingContextWin :: SetClipRect(const nsRect& aRect, nsClipCo
   {
     PushClipState();
 
-    cliptype = ::ExcludeClipRect(mDC, trect.x,
-                                 trect.y,
-                                 trect.XMost(),
-                                 trect.YMost());
+    cliptype = ::ExcludeClipRect(mDC, nr.left,
+                                 nr.top,
+                                 nr.right,
+                                 nr.bottom);
   }
   else if (aCombine == nsClipCombine_kReplace)
   {
     PushClipState();
 
-    HRGN  tregion = ::CreateRectRgn(trect.x,
-                                    trect.y,
-                                    trect.XMost(),
-                                    trect.YMost());
+    HRGN  tregion = ::CreateRectRgn(nr.left,
+                                    nr.top,
+                                    nr.right,
+                                    nr.bottom);
     cliptype = ::SelectClipRgn(mDC, tregion);
     ::DeleteObject(tregion);
   }
@@ -1173,15 +1176,11 @@ NS_IMETHODIMP nsRenderingContextWin :: DrawRect(nscoord aX, nscoord aY, nscoord 
 NS_IMETHODIMP nsRenderingContextWin :: FillRect(const nsRect& aRect)
 {
   RECT nr;
-	nsRect	tr;
+	nsRect tr;
 
 	tr = aRect;
 	mTMatrix->TransformCoord(&tr.x,&tr.y,&tr.width,&tr.height);
-	nr.left = tr.x;
-	nr.top = tr.y;
-	nr.right = tr.x+tr.width;
-	nr.bottom = tr.y+tr.height;
-
+  ConditionRect(tr, nr);
   ::FillRect(mDC, &nr, SetupSolidBrush());
 
   return NS_OK;
@@ -2256,3 +2255,41 @@ FoundFont:
   else
     return NS_ERROR_FAILURE;
 }
+
+
+// ConditionRect is used to fix a coordinate overflow problem under WIN95. 
+// Convert nsRect to RECT with cooordinates modified to acceptable ranges for WIN95.
+// XXX: TODO find all calls under WIN95 that will fail if passed large coordinate values
+// and make calls to this method to fix them.
+
+void 
+nsRenderingContextWin::ConditionRect(nsRect aSrcRect, RECT& aDestRect)
+{
+  aDestRect.left = aSrcRect.x;
+  aDestRect.right = aSrcRect.x + aSrcRect.width; 
+
+   // XXX: TODO find the exact values for the and bottom limits. These limits were determined by
+   // printing out the RECT coordinates and noticing when they failed. There must be an offical
+   // document that describes what the coordinate limits are for calls
+   // such as ::FillRect and ::IntersectClipRect under WIN95 which fail when large negative and
+   // position values are passed.
+
+   // The following is for WIN95. If range of legal values for the rectangles passed for 
+   // clipping and drawing is smaller on WIN95 than under WINNT.                              
+  const nscoord kBottomLimit = 16384;
+  const nscoord kTopLimit = -8192;
+
+  if (aSrcRect.y < kTopLimit)
+    aDestRect.top = kTopLimit;
+  else 
+    aDestRect.top = aSrcRect.y;
+
+  if ((aSrcRect.y + aSrcRect.height) > kBottomLimit) 
+     aDestRect.bottom = kBottomLimit;
+  else
+     aDestRect.bottom = aSrcRect.y + aSrcRect.height;
+
+}
+
+
+
