@@ -69,6 +69,7 @@ public:
   static nsIAtom* blockFrame;
   static nsIAtom* inlineFrame;
   static nsIAtom* pageFrame;
+  static nsIAtom* positionedInlineFrame;
   static nsIAtom* rootFrame;
   static nsIAtom* scrollFrame;
   static nsIAtom* tableOuterFrame;

@@ -55,6 +55,7 @@ nsIAtom* nsLayoutAtoms::areaFrame;
 nsIAtom* nsLayoutAtoms::blockFrame;
 nsIAtom* nsLayoutAtoms::inlineFrame;
 nsIAtom* nsLayoutAtoms::pageFrame;
+nsIAtom* nsLayoutAtoms::positionedInlineFrame;
 nsIAtom* nsLayoutAtoms::rootFrame;
 nsIAtom* nsLayoutAtoms::scrollFrame;
 nsIAtom* nsLayoutAtoms::tableOuterFrame;
@@ -101,6 +102,7 @@ void nsLayoutAtoms::AddrefAtoms()
     blockFrame = NS_NewAtom("BlockFrame");
     inlineFrame = NS_NewAtom("InlineFrame");
     pageFrame = NS_NewAtom("PageFrame");
+    positionedInlineFrame = NS_NewAtom("PositionedInlineFrame");
     rootFrame = NS_NewAtom("RootFrame");
     scrollFrame = NS_NewAtom("ScrollFrame");
     tableOuterFrame = NS_NewAtom("TableOuterFrame");
@@ -149,6 +151,7 @@ void nsLayoutAtoms::ReleaseAtoms()
     NS_RELEASE(blockFrame);
     NS_RELEASE(inlineFrame);
     NS_RELEASE(pageFrame);
+    NS_RELEASE(positionedInlineFrame);
     NS_RELEASE(rootFrame);
     NS_RELEASE(scrollFrame);
     NS_RELEASE(tableOuterFrame);
