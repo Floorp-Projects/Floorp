@@ -41,8 +41,6 @@
 
 #include "nsXMLDocument.h"
 #include "nsIDOMSVGDocument.h"
-#include "nsString.h"
-#include "nsIURI.h"
 
 class nsSVGDocument : public nsXMLDocument,
                       public nsIDOMSVGDocument
