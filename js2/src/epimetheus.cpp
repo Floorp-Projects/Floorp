@@ -310,12 +310,12 @@ void printInstanceVariables(JS2Class *c, Slot *slots)
         printInstanceVariables(c->super, slots);
 
     for (InstanceBindingIterator rib = c->instanceBindings.begin(), riend = c->instanceBindings.end(); (rib != riend); rib++) {
-        InstanceBindingEntry *ibe = *rib;
-        for (InstanceBindingEntry::NS_Iterator i = ibe->begin(), end = ibe->end(); (i != end); i++) {
+        InstanceBindingEntry &ibe = *rib;
+        for (InstanceBindingEntry::NS_Iterator i = ibe.begin(), end = ibe.end(); (i != end); i++) {
             InstanceBindingEntry::NamespaceBinding ns = *i;
             if (ns.second->content->memberKind == Member::InstanceVariableMember) {
                 InstanceVariable *iv = checked_cast<InstanceVariable *>(ns.second->content);
-                stdOut << "\t" << ns.first->name << "::" << ibe->name << ":" << iv->type->name;
+                stdOut << "\t" << ns.first->name << "::" << ibe.name << ":" << iv->type->name;
                 accessAccess(ns.second->accesses);
                 stdOut << *metadata->toString(slots[iv->slotIndex].value) << "\n";
             }
@@ -370,14 +370,14 @@ js2val dump(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint
                     printLocalBindings(&c->localBindings, c->frameSlots);
                     stdOut << " Instance Bindings:\n";                    
                     for (InstanceBindingIterator rib = c->instanceBindings.begin(), riend = c->instanceBindings.end(); (rib != riend); rib++) {
-                        InstanceBindingEntry *ibe = *rib;
-                        for (InstanceBindingEntry::NS_Iterator i = ibe->begin(), end = ibe->end(); (i != end); i++) {
+                        InstanceBindingEntry &ibe = *rib;
+                        for (InstanceBindingEntry::NS_Iterator i = ibe.begin(), end = ibe.end(); (i != end); i++) {
                             InstanceBindingEntry::NamespaceBinding ns = *i;
                             switch (ns.second->content->memberKind) {
                             case Member::InstanceVariableMember:
                                 {
                                     InstanceVariable *iv = checked_cast<InstanceVariable *>(ns.second->content);
-                                    stdOut << "\tVariable " << ns.first->name << "::" << ibe->name << ":" << iv->type->name;
+                                    stdOut << "\tVariable " << ns.first->name << "::" << ibe.name << ":" << iv->type->name;
                                     accessAccess(ns.second->accesses);
                                     stdOut << ((iv->immutable) ? " immutable, " : " non-immutable, ") << ((iv->final) ? "final, " : "non-final, ") << ((iv->enumerable) ? "enumerable, " : "non-enumerable, ") ;
                                     stdOut << "slot:" << iv->slotIndex << ", defaultValue:" << *metadata->toString(iv->defaultValue) << "\n";
@@ -386,7 +386,7 @@ js2val dump(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint
                             case Member::InstanceMethodMember:
                                 {
                                     InstanceMethod *im = checked_cast<InstanceMethod *>(ns.second->content);
-                                    stdOut << "\tMethod " << ns.first->name << "::" << ibe->name; // XXX << *iv->type; the signature
+                                    stdOut << "\tMethod " << ns.first->name << "::" << ibe.name; // XXX << *iv->type; the signature
                                     accessAccess(ns.second->accesses);
                                     stdOut << ((im->final) ? "final, " : "non-final, ") << ((im->enumerable) ? "enumerable, " : "non-enumerable, ") ;
                                     printFormat(stdOut, "function = 0x%08X\n", im->fInst);
@@ -395,14 +395,14 @@ js2val dump(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint
 							case Member::InstanceGetterMember:
 								{
 									InstanceGetter *g = checked_cast<InstanceGetter *>(ns.second->content);
-									stdOut << "\t" << ns.first->name << "::" << ibe->name;
+									stdOut << "\t" << ns.first->name << "::" << ibe.name;
 									stdOut << " get" << ":" << g->type->name << "\n";
 								}
 								break;
 							case Member::InstanceSetterMember:
 								{
 									InstanceSetter *s = checked_cast<InstanceSetter *>(ns.second->content);
-									stdOut << "\t" << ns.first->name << "::" << ibe->name;
+									stdOut << "\t" << ns.first->name << "::" << ibe.name;
 									stdOut << " set" << ":" << s->type->name << "\n";
 								}
 								break;
