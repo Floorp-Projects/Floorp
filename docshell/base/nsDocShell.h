@@ -57,6 +57,7 @@
 #include "nsIDocumentCharsetInfo.h"
 #include "nsIGlobalHistory.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIPrompt.h"
 #include "nsIRefreshURI.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptGlobalObjectOwner.h"
@@ -126,6 +127,9 @@ friend class nsDSURIContentListener;
 friend class nsDSWebProgressListener;
 
 public:
+   // Object Management
+   nsDocShell();
+
    NS_DECL_ISUPPORTS
 
    NS_DECL_NSIDOCSHELL
@@ -150,11 +154,8 @@ public:
                    nsISupports* aExtraInfo);
 
 
-   static NS_METHOD Create(nsISupports* aOuter, const nsIID& aIID, void** ppv);
-
 protected:
    // Object Management
-   nsDocShell();
    virtual ~nsDocShell();
    NS_IMETHOD DestroyChildren();
 
@@ -207,7 +208,6 @@ protected:
    NS_IMETHOD LoadHistoryEntry(nsISHEntry* aEntry);
 
    // Global History
-   NS_IMETHOD EnsureGlobalHistory();
    NS_IMETHOD ShouldAddToGlobalHistory(nsIURI* aURI, PRBool* aShouldAdd);
    NS_IMETHOD AddToGlobalHistory(nsIURI* aURI);
    NS_IMETHOD UpdateCurrentGlobalHistory();
@@ -227,7 +227,8 @@ protected:
 
    // Helper Routines
    nsDocShellInitInfo* InitInfo();
-   NS_IMETHOD GetStringBundle(nsIStringBundle** aStringBundle);
+   NS_IMETHOD GetPromptAndStringBundle(nsIPrompt** aPrompt, nsIStringBundle**
+      aStringBundle);
    NS_IMETHOD GetChildOffset(nsIDOMNode* aChild, nsIDOMNode* aParent, 
       PRInt32* aOffset);
    NS_IMETHOD GetRootScrollableView(nsIScrollableView** aOutScrollView);
