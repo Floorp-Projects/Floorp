@@ -417,15 +417,6 @@ public class Interpreter
                 markTargetLabel(node, iCodeTop);
                 break;
 
-            case Token.EQOP :
-                iCodeTop = generateICode(child, iCodeTop);
-                child = child.getNext();
-                iCodeTop = generateICode(child, iCodeTop);
-                int op = node.getOperation();
-                iCodeTop = addToken(op, iCodeTop);
-                itsStackDepth--;
-                break;
-
             case Token.NEW :
             case Token.CALL : {
                 int childCount = 0;
@@ -583,6 +574,10 @@ public class Interpreter
             case Token.DIV :
             case Token.MUL :
             case Token.GETELEM :
+            case Token.EQ:
+            case Token.NE:
+            case Token.SHEQ:
+            case Token.SHNE:
             case Token.IN :
             case Token.INSTANCEOF :
             case Token.LE :

@@ -1365,7 +1365,10 @@ public class Codegen extends Interpreter {
                 visitRelOp(node, child);
                 break;
 
-              case Token.EQOP:
+              case Token.EQ:
+              case Token.NE:
+              case Token.SHEQ:
+              case Token.SHNE:
                 visitEqOp(node, child);
                 break;
 
@@ -1536,7 +1539,10 @@ public class Codegen extends Interpreter {
             visitIfJumpRelOp(node, child, trueLabel, falseLabel);
             break;
 
-          case Token.EQOP:
+          case Token.EQ:
+          case Token.NE:
+          case Token.SHEQ:
+          case Token.SHNE:
             visitIfJumpEqOp(node, child, trueLabel, falseLabel);
             break;
           
@@ -2781,10 +2787,10 @@ public class Codegen extends Interpreter {
 
     private void visitEqOp(Node node, Node child)
     {
-        int op = node.getOperation();
+        int type = node.getType();
         Node rightChild = child.getNext();
-        boolean isStrict = op == Token.SHEQ ||
-                           op == Token.SHNE;
+        boolean isStrict = type == Token.SHEQ ||
+                           type == Token.SHNE;
         if (rightChild.getType() == Token.NULL) {
             generateCodeFromNode(child, node);
             if (isStrict) {
@@ -2795,7 +2801,7 @@ public class Codegen extends Interpreter {
                 pushUndefined();
                 addByteCode(ByteCode.IF_ACMPEQ, 10);
             }
-            if ((op == Token.EQ) || (op == Token.SHEQ))
+            if ((type == Token.EQ) || (type == Token.SHEQ))
                 classFile.add(ByteCode.GETSTATIC, "java/lang/Boolean",
                                         "FALSE", "Ljava/lang/Boolean;");
             else
@@ -2807,7 +2813,7 @@ public class Codegen extends Interpreter {
                 addByteCode(ByteCode.GOTO, 7);
                 addByteCode(ByteCode.POP);
             }
-            if ((op == Token.EQ) || (op == Token.SHEQ))
+            if ((type == Token.EQ) || (type == Token.SHEQ))
                 classFile.add(ByteCode.GETSTATIC, "java/lang/Boolean",
                                         "TRUE", "Ljava/lang/Boolean;");
             else
@@ -2820,7 +2826,7 @@ public class Codegen extends Interpreter {
         generateCodeFromNode(child.getNext(), node);
 
         String name;
-        switch (op) {
+        switch (type) {
           case Token.EQ:
             name = "eqB";
             break;
@@ -2850,13 +2856,13 @@ public class Codegen extends Interpreter {
     private void visitIfJumpEqOp(Node node, Node child,
                                  int trueGOTO, int falseGOTO)
     {
-        int op = node.getOperation();
+        int type = node.getType();
         Node rightChild = child.getNext();
-        boolean isStrict = op == Token.SHEQ ||
-                           op == Token.SHNE;
+        boolean isStrict = type == Token.SHEQ ||
+                           type == Token.SHNE;
 
         if (rightChild.getType() == Token.NULL) {
-            if (op != Token.EQ && op != Token.SHEQ) {
+            if (type != Token.EQ && type != Token.SHEQ) {
                 // invert true and false.
                 int temp = trueGOTO;
                 trueGOTO = falseGOTO;
@@ -2912,7 +2918,7 @@ public class Codegen extends Interpreter {
                 dload((short)(lVar1.getJRegister() + 1));
                 push(convertChild.getDouble());
                 addByteCode(ByteCode.DCMPL);
-                if (op == Token.EQ)
+                if (type == Token.EQ)
                     addByteCode(ByteCode.IFEQ, trueGOTO);
                 else
                     addByteCode(ByteCode.IFNE, trueGOTO);
@@ -2926,7 +2932,7 @@ public class Codegen extends Interpreter {
         generateCodeFromNode(rChild, node);
 
         String name;
-        switch (op) {
+        switch (type) {
           case Token.EQ:
             name = "eq";
             addScriptRuntimeInvoke(name,

@@ -200,24 +200,22 @@ public class Token
          * by the scanner.
          */
 
-        EQOP        = 105, // equality ops (== !=)
+        BLOCK       = 105, // statement block
+        ARRAYLIT    = 106, // array literal
+        OBJLIT      = 107, // object literal
+        LABEL       = 108, // label
+        TARGET      = 109,
+        LOOP        = 110,
+        ENUMDONE    = 111,
+        EXPRSTMT    = 112,
+        PARENT      = 113,
+        JSR         = 114,
+        NEWLOCAL    = 115,
+        USELOCAL    = 116,
+        SCRIPT      = 117,   // top-level node for entire script
+        TYPEOFNAME  = 118,  // for typeof(simple-name)
 
-        BLOCK       = 106, // statement block
-        ARRAYLIT    = 107, // array literal
-        OBJLIT      = 108, // object literal
-        LABEL       = 109, // label
-        TARGET      = 110,
-        LOOP        = 111,
-        ENUMDONE    = 112,
-        EXPRSTMT    = 113,
-        PARENT      = 114,
-        JSR         = 115,
-        NEWLOCAL    = 116,
-        USELOCAL    = 117,
-        SCRIPT      = 118,   // top-level node for entire script
-        TYPEOFNAME  = 119,  // for typeof(simple-name)
-
-        LAST_TOKEN  = 119;
+        LAST_TOKEN  = 118;
 
     public static String name(int token)
     {
@@ -305,7 +303,6 @@ public class Token
                 case COLON:           return "colon";
                 case OR:              return "or";
                 case AND:             return "and";
-                case EQOP:            return "eqop";
                 case INC:             return "inc";
                 case DEC:             return "dec";
                 case DOT:             return "dot";

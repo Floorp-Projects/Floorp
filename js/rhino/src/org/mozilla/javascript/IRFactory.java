@@ -74,11 +74,6 @@ public class IRFactory {
         return new Node(nodeType, nodeOp);
     }
 
-    public int getLeafType(Object leaf) {
-        Node n = (Node) leaf;
-        return n.getType();
-    }
-
     /**
      * Statement leaf nodes.
      */
@@ -168,13 +163,11 @@ public class IRFactory {
      * Break (possibly labeled)
      */
     public Object createBreak(String label, int lineno) {
-        Node result = new Node(Token.BREAK, lineno);
         if (label == null) {
-            return result;
+            return new Node(Token.BREAK, lineno);
         } else {
             Node name = Node.newString(Token.NAME, label);
-            result.addChildToBack(name);
-            return result;
+            return new Node(Token.BREAK, name, lineno);
         }
     }
 
@@ -182,13 +175,11 @@ public class IRFactory {
      * Continue (possibly labeled)
      */
     public Object createContinue(String label, int lineno) {
-        Node result = new Node(Token.CONTINUE, lineno);
         if (label == null) {
-            return result;
+            return new Node(Token.CONTINUE, lineno);
         } else {
             Node name = Node.newString(Token.NAME, label);
-            result.addChildToBack(name);
-            return result;
+            return new Node(Token.CONTINUE, name, lineno);
         }
     }
 
@@ -344,7 +335,7 @@ public class IRFactory {
         Node next = new Node(Token.ENUMNEXT);
         next.putProp(Node.ENUM_PROP, init);
         Node temp = createNewTemp(next);
-        Node cond = new Node(Token.EQOP, Token.NE);
+        Node cond = new Node(Token.NE);
         cond.addChildToBack(temp);
         cond.addChildToBack(new Node(Token.NULL));
         Node newBody = new Node(Token.BLOCK);
@@ -574,8 +565,7 @@ public class IRFactory {
      */
     public Object createArrayLiteral(Object obj) {
         Node array;
-        array = new Node(Token.NEW,
-                         Node.newString(Token.NAME, "Array"));
+        array = new Node(Token.NEW, Node.newString(Token.NAME, "Array"));
         Node temp = createNewTemp(array);
 
         Node elem = null;
@@ -790,12 +780,6 @@ public class IRFactory {
             // OPT: could optimize to GETPROP iff string can't be a number
             nodeType = Token.GETELEM;
             break;
-            
-          case Token.EQ:
-          case Token.NE:
-          case Token.SHEQ:
-          case Token.SHNE:
-            return new Node(Token.EQOP, left, right, nodeType);
         }
         return new Node(nodeType, left, right);
     }

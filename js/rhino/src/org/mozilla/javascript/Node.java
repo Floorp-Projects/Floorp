@@ -102,24 +102,24 @@ public class Node implements Cloneable {
         right.next = null;
     }
 
-    public Node(int nodeType, int value) {
+    public Node(int nodeType, int line) {
         type = nodeType;
-        intDatum = value;
+        lineno = line;
     }
 
-    public Node(int nodeType, Node child, int value) {
+    public Node(int nodeType, Node child, int line) {
         this(nodeType, child);
-        intDatum = value;
+        lineno = line;
     }
 
-    public Node(int nodeType, Node left, Node right, int value) {
+    public Node(int nodeType, Node left, Node right, int line) {
         this(nodeType, left, right);
-        intDatum = value;
+        lineno = line;
     }
 
-    public Node(int nodeType, Node left, Node mid, Node right, int value) {
+    public Node(int nodeType, Node left, Node mid, Node right, int line) {
         this(nodeType, left, mid, right);
-        intDatum = value;
+        lineno = line;
     }
 
     public static Node newNumber(double number) {
@@ -439,14 +439,8 @@ public class Node implements Cloneable {
         item.intValue = prop;
     }
 
-    public int getOperation() {
-        if (type != Token.EQOP) Context.codeBug();
-        return intDatum;
-    }
-
     public int getLineno() {
-        if (type == Token.EQOP) Context.codeBug();
-        return intDatum;
+        return lineno;
     }
 
     /** Can only be called when <tt>getType() == Token.NUMBER</tt> */
@@ -503,9 +497,9 @@ public class Node implements Cloneable {
                 sb.append(' ');
                 sb.append(getDouble());
             }
-            if (intDatum != -1) {
+            if (lineno != -1) {
                 sb.append(' ');
-                sb.append(intDatum);
+                sb.append(lineno);
             }
 
             for (PropListItem x = propListHead; x != null; x = x.next) {
@@ -575,7 +569,7 @@ public class Node implements Cloneable {
     Node next;             // next sibling
     private Node first;    // first element of a linked list of children
     private Node last;     // last element of a linked list of children
-    private int intDatum = -1;    // encapsulated int data; depends on type
+    private int lineno = -1;    // encapsulated int data; depends on type
 
     /**
      * Linked list of properties. Since vast majority of nodes would have
