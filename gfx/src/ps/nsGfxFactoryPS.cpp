@@ -16,15 +16,34 @@
  * Reserved.
  */
 
-#include "nscore.h"
-#include "nsIFactory.h"
-#include "nsDeviceContextPS.h"
-#include "nsIComponentManager.h"
-#include "nsIServiceManager.h"
-#include "nsGfxPSCID.h"
 
+#include "nsIGenericFactory.h"
+#include "nsIModule.h"
 #include "nsCOMPtr.h"
 
+#include "nsDeviceContextPS.h"
+#include "nsGfxPSCID.h"
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextPS)
+
+struct components_t {
+  nsCID cid;
+  nsIGenericFactory::ConstructorProcPtr constructor;
+  const char *progid;
+  const char *description;
+};
+
+static components_t components[] =
+{
+  { NS_DEVICECONTEXTPS_CID, &nsDeviceContextPSConstructor, "component://netscape/gfx/decidecontext/ps", "GFX Postscript Device Context", },
+};
+
+NS_IMPL_MODULE(components)
+NS_IMPL_NSGETMODULE(nsModule)
+
+
+
+#if 0
 static NS_DEFINE_CID(kCDeviceContextPS, NS_DEVICECONTEXTPS_CID);
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
@@ -165,3 +184,4 @@ NSUnregisterSelf(nsISupports* aServMgr, const char *fullpath)
   
   return NS_OK;
 }
+#endif /* 0 */
