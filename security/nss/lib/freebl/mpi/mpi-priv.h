@@ -1,7 +1,10 @@
 /*
- *  mpi-priv.h
- *
+ *  mpi-priv.h	- Private header file for MPI 
  *  Arbitrary precision integer arithmetic library
+ *
+ *  NOTE WELL: the content of this header file is NOT part of the "public"
+ *  API for the MPI library, and may change at any time.  
+ *  Application programs that use libmpi should NOT include this header file.
  *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -35,7 +38,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- *  $Id: mpi-priv.h,v 1.8 2000/08/09 20:42:18 nelsonb%netscape.com Exp $
+ *  $Id: mpi-priv.h,v 1.9 2000/08/22 01:57:33 nelsonb%netscape.com Exp $
  */
 #ifndef _MPI_PRIV_H_
 #define _MPI_PRIV_H_ 1
@@ -142,6 +145,7 @@ extern const float s_logv_2[];
  void     s_mp_free(void *ptr);                   /* general free function */
 extern unsigned long mp_allocs;
 extern unsigned long mp_frees;
+extern unsigned long mp_copies;
 #else
 
  /* Even if these are defined as macros, we need to respect the settings
@@ -198,9 +202,11 @@ mp_err   s_mp_mod_d(mp_int *mp, mp_digit d, mp_digit *r);
 mp_err   s_mp_reduce(mp_int *x, const mp_int *m, const mp_int *mu);
                                                /* Barrett reduction       */
 mp_err   s_mp_add(mp_int *a, const mp_int *b); /* magnitude addition      */
+mp_err   s_mp_add_3arg(const mp_int *a, const mp_int *b, mp_int *c);
+mp_err   s_mp_sub(mp_int *a, const mp_int *b); /* magnitude subtract      */
+mp_err   s_mp_sub_3arg(const mp_int *a, const mp_int *b, mp_int *c);
 mp_err   s_mp_add_offset(mp_int *a, mp_int *b, mp_size offset);
                                                /* a += b * RADIX^offset   */
-mp_err   s_mp_sub(mp_int *a, const mp_int *b); /* magnitude subtract      */
 mp_err   s_mp_mul(mp_int *a, const mp_int *b); /* magnitude multiply      */
 #if MP_SQUARE
 mp_err   s_mp_sqr(mp_int *a);                  /* magnitude square        */
@@ -219,11 +225,17 @@ int      s_mp_tovalue(char ch, int r);          /* convert ch to value    */
 char     s_mp_todigit(mp_digit val, int r, int low); /* convert val to digit */
 int      s_mp_outlen(int bits, int r);          /* output length in bytes */
 mp_digit s_mp_invmod_32b(mp_digit P);   /* returns (P ** -1) mod (2 ** 32) */
-void    s_mp_mul_add(const mp_digit *a, mp_size a_len, mp_digit b, mp_digit *c);
-                                       /* c += a * b * (MP_RADIX ** offset);  */
 
+/* ------ mpv functions, operate on arrays of digits, not on mp_int's ------ */
+void     s_mpv_mul_d(const mp_digit *a, mp_size a_len, mp_digit b, mp_digit *c);
+void     s_mpv_mul_d_add(const mp_digit *a, mp_size a_len, mp_digit b, 
+			 mp_digit *c);
+void     s_mpv_mul_d_add_prop(const mp_digit *a, mp_size a_len, mp_digit b, 
+			      mp_digit *c);
+
+/* c += a * b * (MP_RADIX ** offset);  */
 #define s_mp_mul_d_add_offset(a, b, c, off) \
-  (s_mp_mul_add(MP_DIGITS(a), MP_USED(a), b, MP_DIGITS(c) + off), MP_OKAY)
+(s_mpv_mul_d_add_prop(MP_DIGITS(a), MP_USED(a), b, MP_DIGITS(c) + off), MP_OKAY)
 
 /* }}} */
 #endif
