@@ -32,14 +32,16 @@ OBJS	= $(CPPSRCS:.cpp=.o)
 EX_LIBS = $(DIST)/lib/libshell_s.a \
 	$(DIST)/bin/libxpcom.so	\
 	$(DIST)/bin/libreg.so	\
+	$(DIST)/bin/libgfxunix.so	\
 	$(DIST)/bin/libraptorbase.so	\
 	$(DIST)/bin/libraptorgfx.so	\
-	$(DIST)/bin/libgfxunix.so	\
+	$(DIST)/bin/libimg.so	\
 	$(DIST)/lib/libplc21.a	\
 	$(DIST)/lib/libplds21.a	\
 	$(DIST)/lib/libnspr21.a	\
 	$(DIST)/bin/libshell.so \
 	$(NULL)
+
 
 PROGS	= $(addprefix $(OBJDIR)/, $(CPPSRCS:.cpp=))
 
