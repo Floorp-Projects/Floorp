@@ -41,6 +41,7 @@
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMXMLDocument.h"
 #include "nsIDOMNSDocument.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMKeyEvent.h"
@@ -972,6 +973,7 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(Document, nsIDOMDocument)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocument)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMXMLDocument)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSDocument)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentEvent)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentStyle)

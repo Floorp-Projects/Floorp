@@ -3065,13 +3065,6 @@ nsXULDocument::SetTitle(const nsAReadableString& aTitle)
 }
 
 NS_IMETHODIMP
-nsXULDocument::Load(const nsAReadableString& aUrl)
-{
-    NS_NOTREACHED("nsXULDocument::Load");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 nsXULDocument::GetPlugins(nsIDOMPluginArray** aPlugins)
 {
     NS_NOTREACHED("nsXULDocument::GetPlugins");

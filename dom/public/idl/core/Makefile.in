@@ -49,6 +49,7 @@ XPIDLSRCS =                                     \
 	nsIDOMNotation.idl			\
 	nsIDOMProcessingInstruction.idl		\
 	nsIDOMText.idl				\
+	nsIDOMXMLDocument.idl			\
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

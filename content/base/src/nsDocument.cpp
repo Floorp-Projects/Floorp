@@ -2286,13 +2286,6 @@ nsDocument::GetDefaultView(nsIDOMAbstractView** aDefaultView)
 }
 
 
-NS_IMETHODIMP
-nsDocument::Load (const nsAReadableString& aUrl)
-{
-  // Should be implemented by subclass
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 NS_IMETHODIMP    
 nsDocument::GetPlugins(nsIDOMPluginArray** aPlugins)
 {

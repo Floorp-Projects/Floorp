@@ -39,8 +39,6 @@ interface nsIDOMNSDocument : nsISupports
 
            attribute DOMString            title;
 
-  void                      load(in DOMString url);
-
   nsIBoxObject              getBoxObjectFor(in nsIDOMElement elt);
   void                      setBoxObjectFor(in nsIDOMElement elt,
                                             in nsIBoxObject boxObject);
