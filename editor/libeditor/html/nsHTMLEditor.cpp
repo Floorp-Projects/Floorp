@@ -56,6 +56,7 @@
 #include "nsICSSParser.h"
 #include "nsIDOMCSSStyleRule.h"
 #include "nsIDOMText.h"
+#include "nsITextContent.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMAttr.h"
@@ -111,6 +112,10 @@
 #include "nsISupportsPrimitives.h"
 #include "SetDocTitleTxn.h"
 #include "nsGUIEvent.h"
+
+#define _IMPL_NS_LAYOUT
+#include "nsTextFragment.h"
+#undef _IMPL_NS_LAYOUT
 
 // netwerk
 #include "nsIURI.h"
@@ -1094,6 +1099,42 @@ nsHTMLEditor::IsPrevCharWhitespace(nsIDOMNode *aParentNode,
 
 
 /* ------------ End Block methods -------------- */
+
+
+PRBool nsHTMLEditor::IsVisBreak(nsIDOMNode *aNode)
+{
+  if (!aNode) 
+    return PR_FALSE;
+  if (!nsTextEditUtils::IsBreak(aNode)) 
+    return PR_FALSE;
+  // check if there is a later node in block after br
+  nsCOMPtr<nsIDOMNode> priorNode, nextNode;
+  GetPriorHTMLNode(aNode, address_of(priorNode), PR_TRUE); 
+  GetNextHTMLNode(aNode, address_of(nextNode), PR_TRUE); 
+  // if we are next to another break, we are visible
+  if (priorNode && nsTextEditUtils::IsBreak(priorNode))
+    return PR_TRUE;
+  if (nextNode && nsTextEditUtils::IsBreak(nextNode))
+    return PR_TRUE;
+  
+  // if we are right before block boundary, then br not visible
+  if (!nextNode) 
+    return PR_FALSE;  // this break is trailer in block, it's not visible
+  if (IsBlockNode(nextNode))
+    return PR_FALSE; // break is right before a block, it's not visible
+    
+  // sigh.  We have to use expensive whitespace calculation code to 
+  // determine what is going on
+  nsCOMPtr<nsIDOMNode> selNode, tmp;
+  PRInt32 selOffset;
+  GetNodeLocation(aNode, address_of(selNode), &selOffset);
+  selOffset++; // lets look after the break
+  nsWSRunObject wsObj(this, selNode, selOffset);
+  if (wsObj.mEndReason | nsWSRunObject::eBlock)
+    return PR_FALSE;
+  
+  return PR_TRUE;
+}
 
 
 PRBool nsHTMLEditor::IsModifiable()
@@ -4824,9 +4865,9 @@ nsHTMLEditor::GetFirstEditableLeaf( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOu
   *aOutFirstLeaf = child;
   return res;
 }
+#endif
 
 
-// jfrancis or glazman may want to use this method (currently it's unused)
 nsresult 
 nsHTMLEditor::GetLastEditableLeaf( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutLastLeaf)
 {
@@ -4839,7 +4880,7 @@ nsHTMLEditor::GetLastEditableLeaf( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOut
   // find rightmost leaf
   nsCOMPtr<nsIDOMNode> child;
   nsresult res = NS_OK;
-  child = GetRightmostChild(aNode);  
+  child = GetRightmostChild(aNode, PR_FALSE);  
   while (child && (!IsEditable(child) || !nsHTMLEditUtils::IsLeafNode(child)))
   {
     nsCOMPtr<nsIDOMNode> tmp;
@@ -4859,7 +4900,6 @@ nsHTMLEditor::GetLastEditableLeaf( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOut
   *aOutLastLeaf = child;
   return res;
 }
-#endif
 
 
 

@@ -3378,7 +3378,8 @@ nsEditor::GetNextNodeImpl(nsIDOMNode  *aCurrentNode,
 
 
 nsCOMPtr<nsIDOMNode>
-nsEditor::GetRightmostChild(nsIDOMNode *aCurrentNode, PRBool bNoBlockCrossing)
+nsEditor::GetRightmostChild(nsIDOMNode *aCurrentNode, 
+                            PRBool bNoBlockCrossing)
 {
   if (!aCurrentNode) return nsnull;
   nsCOMPtr<nsIDOMNode> resultNode, temp=aCurrentNode;
@@ -3402,7 +3403,8 @@ nsEditor::GetRightmostChild(nsIDOMNode *aCurrentNode, PRBool bNoBlockCrossing)
 }
 
 nsCOMPtr<nsIDOMNode>
-nsEditor::GetLeftmostChild(nsIDOMNode *aCurrentNode, PRBool bNoBlockCrossing)
+nsEditor::GetLeftmostChild(nsIDOMNode *aCurrentNode,
+                           PRBool bNoBlockCrossing)
 {
   if (!aCurrentNode) return nsnull;
   nsCOMPtr<nsIDOMNode> resultNode, temp=aCurrentNode;

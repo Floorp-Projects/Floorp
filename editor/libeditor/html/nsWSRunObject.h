@@ -345,6 +345,7 @@ class nsWSRunObject
     nsHTMLEditor *mHTMLEditor;            // non-owning.
     
     friend class nsHTMLEditRules;  // opening this class up for pillaging
+    friend class nsHTMLEditor;     // opening this class up for more pillaging
 };
 
 #endif

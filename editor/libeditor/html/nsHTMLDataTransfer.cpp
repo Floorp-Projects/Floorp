@@ -42,6 +42,7 @@
 #include "nsHTMLEditRules.h"
 #include "nsTextEditUtils.h"
 #include "nsHTMLEditUtils.h"
+#include "nsWSRunObject.h"
 
 #include "nsEditorEventListeners.h"
 
@@ -379,6 +380,20 @@ nsHTMLEditor::InsertHTMLWithCharsetAndContext(const nsAString & aInputString,
     if (!parentNode) res = NS_ERROR_FAILURE;
     if (NS_FAILED(res)) return res;
     
+    // if there are any invisible br's after our insertion point, remove them.
+    // this is because if there is a br at end of what we paste, it will make
+    // the invisible br visible.
+    nsWSRunObject wsObj(this, parentNode, offsetOfNewNode);
+    if ( nsTextEditUtils::IsBreak(wsObj.mEndReasonNode) && 
+        !IsVisBreak(wsObj.mEndReasonNode) )
+    {
+      res = DeleteNode(wsObj.mEndReasonNode);
+      if (NS_FAILED(res)) return res;
+    }
+    
+    // remeber if we are in a link.  
+    PRBool bStartedInLink = IsInLink(parentNode);
+  
     // are we in a text node?  If so, split it.
     if (IsTextNode(parentNode))
     {
@@ -589,15 +604,126 @@ nsHTMLEditor::InsertHTMLWithCharsetAndContext(const nsAString & aInputString,
     // Now collapse the selection to the end of what we just inserted:
     if (lastInsertNode) 
     {
-      res = GetNodeLocation(lastInsertNode, address_of(parentNode), &offsetOfNewNode);
-      NS_ENSURE_SUCCESS(res, res);
-      selection->Collapse(parentNode, offsetOfNewNode+1);
+      // set selection to the end of what we just pasted.
+      nsCOMPtr<nsIDOMNode> selNode, tmp, visNode, highTable;
+      PRInt32 selOffset;
+      
+      // but dont cross tables
+      if (!nsHTMLEditUtils::IsTable(lastInsertNode))
+      {
+        res = GetLastEditableLeaf(lastInsertNode, address_of(selNode));
+        if (NS_FAILED(res)) return res;
+        tmp = selNode;
+        while (tmp && (tmp != lastInsertNode))
+        {
+          if (nsHTMLEditUtils::IsTable(tmp))
+            highTable = tmp;
+          nsCOMPtr<nsIDOMNode> parent = tmp;
+          tmp->GetParentNode(getter_AddRefs(parent));
+          tmp = parent;
+        }
+        if (highTable)
+          selNode = highTable;
+      }
+      if (!selNode) 
+        selNode = lastInsertNode;
+      if (IsTextNode(selNode) || (IsContainer(selNode) && !nsHTMLEditUtils::IsTable(selNode)))  
+      {
+        res = GetLengthOfDOMNode(selNode, (PRUint32&)selOffset);
+        if (NS_FAILED(res)) return res;
+      }
+      else // we need to find a container for selection.  Look up.
+      {
+        tmp = selNode;
+        res = GetNodeLocation(tmp, address_of(selNode), &selOffset);
+        ++selOffset;  // want to be *after* last leaf node in paste
+        if (NS_FAILED(res)) return res;
+      }
+      
+      // make sure we dont end up with selection collapsed after an invisible break node
+      nsWSRunObject wsRunObj(this, selNode, selOffset);
+      PRInt32 outVisOffset=0;
+      PRInt16 visType=0;
+      res = wsRunObj.PriorVisibleNode(selNode, selOffset, address_of(visNode), &outVisOffset, &visType);
+      if (NS_FAILED(res)) return res;
+      if (visType == nsWSRunObject::eBreak)
+      {
+        // we are after a break.  Is it visible?  Despite the name, 
+        // PriorVisibleNode does not make that determination for breaks.
+        // It also may not return the break in visNode.  We have to pull it
+        // out of the nsWSRunObject's state.
+        if (!IsVisBreak(wsRunObj.mStartReasonNode))
+        {
+          // dont leave selection past an invisible break;
+          // reset {selNode,selOffset} to point before break
+          res = GetNodeLocation(wsRunObj.mStartReasonNode, address_of(selNode), &selOffset);
+          // we want to be inside any inline style prior to break
+          nsWSRunObject wsRunObj(this, selNode, selOffset);
+          res = wsRunObj.PriorVisibleNode(selNode, selOffset, address_of(visNode), &outVisOffset, &visType);
+          if (NS_FAILED(res)) return res;
+          if (visType == nsWSRunObject::eText ||
+              visType == nsWSRunObject::eNormalWS)
+          {
+            selNode = visNode;
+            selOffset = outVisOffset;  // PriorVisibleNode already set offset to _after_ the text or ws
+          }
+          else if (visType == nsWSRunObject::eSpecial)
+          {
+            // prior visible thing is an image or some other non-text thingy.  
+            // We want to be right after it.
+            res = GetNodeLocation(wsRunObj.mStartReasonNode, address_of(selNode), &selOffset);
+            ++selOffset;
+          }
+        }
+      }
+      selection->Collapse(selNode, selOffset);
+      
+      // if we just pasted a link, discontinue link style
+      nsCOMPtr<nsIDOMNode> link;
+      if (!bStartedInLink && IsInLink(selNode, address_of(link)))
+      {
+        // so, if we just pasted a link, I split it.  Why do that instead of just
+        // nudging selection point beyond it?  Because it might have ended in a BR
+        // that is not visible.  If so, the code above just placed selection
+        // inside that.  So I split it instead.
+        nsCOMPtr<nsIDOMNode> leftLink;
+        PRInt32 linkOffset;
+        res = SplitNodeDeep(link, selNode, selOffset, &linkOffset, PR_TRUE, address_of(leftLink));
+        if (NS_FAILED(res)) return res;
+        res = GetNodeLocation(leftLink, address_of(selNode), &selOffset);
+        if (NS_FAILED(res)) return res;
+        selection->Collapse(selNode, selOffset+1);
+      }
     }
   }
   
   res = mRules->DidDoAction(selection, &ruleInfo, res);
   return res;
 }
+
+
+PRBool
+nsHTMLEditor::IsInLink(nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *outLink)
+{
+  if (!aNode) 
+    return PR_FALSE;
+  if (outLink)
+    *outLink = nsnull;
+  nsCOMPtr<nsIDOMNode> tmp, node = aNode;
+  while (node)
+  {
+    if (nsHTMLEditUtils::IsLink(node)) 
+    {
+      if (outLink)
+        *outLink = node;
+      return PR_TRUE;
+    }
+    tmp = node;
+    tmp->GetParentNode(getter_AddRefs(node));
+  }
+  return PR_FALSE;
+}
+
 
 nsresult
 nsHTMLEditor::StripFormattingNodes(nsIDOMNode *aNode, PRBool aListOnly)

@@ -426,6 +426,14 @@ nsHTMLEditUtils::IsDescendantOf(nsIDOMNode *aNode, nsIDOMNode *aParent, PRInt32 
   return PR_FALSE;
 }
 
+PRBool
+nsHTMLEditUtils::IsLeafNode(nsIDOMNode *aNode)
+{
+  if (!aNode) return PR_FALSE;
+  PRBool hasChildren = PR_FALSE;
+  aNode->HasChildNodes(&hasChildren);
+  return !hasChildren;
+}
 
 PRBool
 nsHTMLEditUtils::SupportsAlignAttr(nsIDOMNode * aNode)
