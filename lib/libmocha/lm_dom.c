@@ -29,6 +29,10 @@
 #include "pa_parse.h"
 #include "intl_csi.h"
 
+#ifdef DEBUG_shaver
+#define DEBUG_shaver_verbose
+#endif
+
 static JSBool
 lm_DOMInsertBefore(JSContext *cx, DOM_Node *node, DOM_Node *child,
                    DOM_Node *ref)
@@ -97,7 +101,7 @@ lm_CDataOp(JSContext *cx, DOM_CharacterData *cdata, DOM_CDataOperationCode op)
     MWContext *context;
     MochaDecoder *decoder;
     char *data;
-    int32 len;
+    LO_TextBlock *text;
 
     node = cdata->node.parent;
     data = cdata->data;
@@ -117,6 +121,22 @@ lm_CDataOp(JSContext *cx, DOM_CharacterData *cdata, DOM_CDataOperationCode op)
             return JS_TRUE;
         }
     }
+    text = (LO_TextBlock *)ELEMENT_PRIV(cdata)->ele_start;
+    if (!text) {
+#ifdef DEBUG
+        fprintf(stderr, "no data for text node on %s %s\n",
+                ((DOM_Element *)node)->tagName, node->name);
+#endif
+        return JS_TRUE;
+    }
+
+    /*
+     * Tell layout to use the new text instead.
+     */
+#ifdef NOT_YET
+    return lo_RefillTextBlock(text, data, cdata->len);
+#endif              
+  
     return JS_TRUE;
 }
 
@@ -128,8 +148,15 @@ lm_NodeForTag(PA_Tag *tag, DOM_Node *current, MWContext *context, int16 csid)
     DOM_HTMLElementPrivate *elepriv;
     DOM_CharacterData *cdata;
 
+    if (current->type == NODE_TYPE_TEXT)
+        /*
+         * it's going to get skipped back over by the HTMLPushNode stuff,
+         * so build a tag as though we were pushing on its parent.
+         */
+        current = current->parent;
+
     switch (tag->type) {
-    case P_TEXT:
+      case P_TEXT:
         if (current->type != NODE_TYPE_ELEMENT)
             return NULL;
         /* create Text node */
@@ -146,15 +173,15 @@ lm_NodeForTag(PA_Tag *tag, DOM_Node *current, MWContext *context, int16 csid)
             return NULL;
         }
         XP_MEMCPY(cdata->data, tag->data, cdata->len);
-        return node;
+        break;
 #if 0                           /* Urgh...we don't reflect comments! */
-    case P_COMMENT:
+      case P_COMMENT:
         /* create Comment node */
         break;
 #endif
-    case P_UNKNOWN:
+      case P_UNKNOWN:
         return NULL;
-    default:
+      default:
         /* just a regular old element */
         element = XP_NEW_ZAP(DOM_Element);
         if (!element) {
@@ -163,20 +190,20 @@ lm_NodeForTag(PA_Tag *tag, DOM_Node *current, MWContext *context, int16 csid)
         element->ops = &lm_ElementOps;
         element->tagName = PA_TagString(tag->type);
 
-        elepriv = XP_NEW_ZAP(DOM_HTMLElementPrivate);
-        if (!elepriv) {
-            XP_FREE(element);
-            return NULL;
-        }
-        elepriv->tagtype = tag->type;
         node = (DOM_Node *)element;
         node->type = NODE_TYPE_ELEMENT;
-        node->data = elepriv;
         /* what about ID? */
         node->name = (char *)PA_FetchParamValue(tag, "name", csid);
         node->ops = &lm_NodeOps;
-        return node;
     }
+    elepriv = XP_NEW_ZAP(DOM_HTMLElementPrivate);
+    if (!elepriv) {
+        XP_FREE(element);
+        return NULL;
+    }
+    elepriv->tagtype = tag->type;
+    node->data = elepriv;
+    return node;
 }
 
 #ifdef DEBUG_shaver
@@ -223,18 +250,29 @@ DOM_HTMLPushNode(DOM_Node *node, DOM_Node *parent)
             default:;
             }
         }
+    } else if (parent->type != NODE_TYPE_DOCUMENT) {
+        /* if it's not an element, it doesn't get kids XXX oversimplified */
+#ifdef DEBUG_shaver_verbose
+        fprintf(stderr, "can't put kids on type %d\n", parent->type);
+#endif
+        parent = parent->parent;
     }
+#if 0
     if (node->type == NODE_TYPE_TEXT &&
         parent->type != NODE_TYPE_ELEMENT)
-        /* only elements can have text */
+        /* only elements can have text XXX oversimplified*/
         return JS_FALSE;
-#ifdef DEBUG_shaver
+#endif 
+#ifdef DEBUG_shaver_verbose
     {
-        TagType dbgtype = 0;       /* text */
+        TagType dbgtype = 0, partype = 0;       /* text */
         if (node->type == NODE_TYPE_ELEMENT)
             dbgtype = ELEMENT_PRIV(element)->tagtype;
-        fprintf(stderr, "%*s<%s %s>\n", LM_Node_indent, "",
-                PA_TagString(dbgtype), node->name ? node->name : "");
+        if (parent->type == NODE_TYPE_ELEMENT)
+            partype = ELEMENT_PRIV(parent)->tagtype;
+        fprintf(stderr, "%*s<%s %s> on <%s %s>\n", LM_Node_indent, "",
+                PA_TagString(dbgtype), node->name ? node->name : "",
+                PA_TagString(partype), parent->name ? parent->name : "");
         if (dbgtype)
             LM_Node_indent += 2;
     }
@@ -246,7 +284,7 @@ DOM_HTMLPushNode(DOM_Node *node, DOM_Node *parent)
     return JS_TRUE;
 }
 
-void *
+void /* DOM_Node */ *
 LM_ReflectTagNode(PA_Tag *tag, void *doc_state, MWContext *context)
 {
     INTL_CharSetInfo c = LO_GetDocumentCharacterSetInfo(context);
@@ -280,31 +318,48 @@ LM_ReflectTagNode(PA_Tag *tag, void *doc_state, MWContext *context)
         return CURRENT_NODE(doc);
 
     if (tag->is_end) {
+        DOM_Node *last_node;
         if (CURRENT_NODE(doc) == TOP_NODE(doc)) {
             XP_ASSERT(CURRENT_NODE(doc)->type == NODE_TYPE_DOCUMENT);
-#ifdef DEBUG_shaver
+#ifdef DEBUG_shaver_verbose
             fprintf(stderr, "not popping tag </%s> from doc-only stack\n",
                     PA_TagString(tag->type));
 #endif
             return CURRENT_NODE(doc);
         }
-        CURRENT_NODE(doc) = (DOM_Node *)DOM_HTMLPopElementByType(tag->type,
-                                            (DOM_Element *)CURRENT_NODE(doc));
-        CURRENT_NODE(doc) = CURRENT_NODE(doc)->parent;
-        return CURRENT_NODE(doc);
+        last_node = (DOM_Node *)DOM_HTMLPopElementByType(tag->type,
+                                           (DOM_Element *)CURRENT_NODE(doc));
+        CURRENT_NODE(doc) = last_node->parent;
+        return last_node;
     }
 
     node = lm_NodeForTag(tag, CURRENT_NODE(doc), context, csid);
     if (node) {
         if (!DOM_HTMLPushNode(node, CURRENT_NODE(doc))) {
+#ifdef DEBUG_shaver
+            fprintf(stderr, "bad push of node %d for tag %d\n",
+                    node->type, tag->type);
+#endif
             if (node->ops->destroyNode)
                 node->ops->destroyNode(context->mocha_context,
                                        node);
             return NULL;
         }
-        /* only elements have children (I think) */
-        if (node->type == NODE_TYPE_ELEMENT)
-            CURRENT_NODE(doc) = node;
+        /* 
+         * we always have to have CURRENT_NODE(doc) pointing at the
+         * node for which we are parsing a tag.  Even in the case of
+         * Text and other child-less nodes (Comments?), we need layout
+         * to be able to find the node for which it's generating
+         * LO_Elements.  This means that the `Text has no children' logic
+         * has to be in the DOM_HTMLPushNode code, and has to be driven
+         * by pre-check of parent.  Sorry.
+         */
+        CURRENT_NODE(doc) = node;
+    } else {
+#ifdef DEBUG_shaver
+        fprintf(stderr, "lm_NodeForTag returned NULL for tag %d\n",
+                tag->type);
+#endif
     }
     PR_ASSERT(!CURRENT_NODE(doc)->parent || 
               CURRENT_NODE(doc)->parent->type != NODE_TYPE_TEXT);
@@ -354,17 +409,21 @@ DOM_Element *
 DOM_HTMLPopElementByType(TagType type, DOM_Element *element)
 {
     DOM_Element *closing;
-#ifdef DEBUG_shaver
+#ifdef DEBUG_shaver_verbose
     int new_indent = LM_Node_indent;
 #endif
 
     if (element->node.type == NODE_TYPE_DOCUMENT) {
-#ifdef DEBUG_shaver
+#ifdef DEBUG_shaver_verbose
             fprintf(stderr, "popping tag </%s> from empty stack\n",
                     PA_TagString(type));
 #endif
         return element;
     }
+
+    if (element->node.type == NODE_TYPE_TEXT)
+        /* really, we're closing the enclosing parent */
+        element = (DOM_Element *)element->node.parent;
 
     PR_ASSERT(element->node.type == NODE_TYPE_ELEMENT);
     if (element->node.type != NODE_TYPE_ELEMENT)
@@ -374,7 +433,7 @@ DOM_HTMLPopElementByType(TagType type, DOM_Element *element)
     while (closing && 
            closing->node.type == NODE_TYPE_ELEMENT && 
            ELEMENT_PRIV(closing)->tagtype != type) {
-#ifdef DEBUG_shaver
+#ifdef DEBUG_shaver_verbose
         fprintf(stderr, "skipping <%s> in search of <%s>\n",
                 closing->tagName, PA_TagString(type));
         new_indent -= 2;
@@ -383,14 +442,14 @@ DOM_HTMLPopElementByType(TagType type, DOM_Element *element)
     }
 
     if (!closing || closing->node.type == NODE_TYPE_DOCUMENT) {
-#ifdef DEBUG_shaver
+#ifdef DEBUG_shaver_verbose
         fprintf(stderr, "ignoring </%s> with no matching <%s>\n",
                 PA_TagString(type), PA_TagString(type));
 #endif
     return element;
     }
 
-#ifdef DEBUG_shaver
+#ifdef DEBUG_shaver_verbose
     LM_Node_indent = new_indent - 2;
     fprintf(stderr, "%*s</%s %s>\n", LM_Node_indent, "",
             closing->tagName,
