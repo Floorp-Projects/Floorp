@@ -1785,7 +1785,7 @@ nsresult nsCharsetMenu::ReorderMenuItemArray(nsVoidArray * aArray)
   for (i = 0; i < count && NS_SUCCEEDED(res); i++) {
     array[i].item = (nsMenuEntry *)aArray->ElementAt(i);
 
-    res = collation->AllocateRawSortKey(kCollationCaseInSensitive, 
+    res = collation->AllocateRawSortKey(nsICollation::kCollationCaseInSensitive, 
                                        (array[i].item)->mTitle, &array[i].key, &array[i].len);
   }
 
