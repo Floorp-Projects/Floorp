@@ -22,23 +22,23 @@ MAKE_OBJ_TYPE=DLL
 DLLNAME=$(MODULE)
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
-XPIDLSRCS=      .\nsISample.idl                  \
+XPIDLSRCS=      .\nsISample.idl \
                 $(NULL)
 
 CPP_OBJS=\
-        .\$(OBJDIR)\nsSample.obj         \
-        .\$(OBJDIR)\nsSampleFactory.obj  \
+        .\$(OBJDIR)\nsSample.obj \
+        .\$(OBJDIR)\nsSampleModule.obj \
         $(NULL)
 
 LLIBS=\
-        $(DIST)\lib\xpcom.lib         \
-        $(DIST)\lib\plc3.lib            \
+        $(DIST)\lib\xpcom.lib \
+        $(DIST)\lib\plc3.lib \
         $(NULL)
 
 LINCS=\
-        -I$(PUBLIC)\sample               \
-        -I$(PUBLIC)\raptor              \
-        -I$(PUBLIC)\xpcom               \
+        -I$(PUBLIC)\sample \
+        -I$(PUBLIC)\raptor \
+        -I$(PUBLIC)\xpcom \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
