@@ -134,7 +134,8 @@ nsMenuBarListener::KeyUp(nsIDOMEvent* aKeyEvent)
 
     if (mAccessKeyDown && (PRInt32)theChar == mAccessKey)
     {
-      // The access key was down and is now up.
+      // The access key was down and is now up, and no other
+      // keys were pressed in between.
       mMenuBarFrame->ToggleMenuActiveState();
     }
     mAccessKeyDown = PR_FALSE; 
@@ -179,16 +180,7 @@ nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
       PRUint32 theChar;
       keyEvent->GetKeyCode(&theChar);
 
-      PRBool doShortcut = PR_FALSE;
-      if (!mAccessKeyFocuses) {
-        if (IsAccessKeyPressed(keyEvent) && (theChar != (PRUint32)mAccessKey))
-          doShortcut = PR_TRUE;
-      }
-      else if (mAccessKeyDown && (theChar != (PRUint32)mAccessKey)) {
-        doShortcut = PR_TRUE;
-      }
-
-      if (doShortcut)
+      if (IsAccessKeyPressed(keyEvent) && (theChar != (PRUint32)mAccessKey))
       {
         mAccessKeyDown = PR_FALSE;
 
@@ -265,12 +257,7 @@ nsMenuBarListener::KeyDown(nsIDOMEvent* aKeyEvent)
     PRUint32 theChar;
     keyEvent->GetKeyCode(&theChar);
 
-    PRBool access = IsAccessKeyPressed(keyEvent);
-    if (theChar == nsIDOMKeyEvent::DOM_VK_TAB && mAccessKeyDown) {
-      mAccessKeyDown = PR_FALSE;
-    }
-
-    if (theChar == (PRUint32)mAccessKey || access) {
+    if (theChar == (PRUint32)mAccessKey) {
       // No other modifiers can be down.
       // Especially CTRL.  CTRL+ALT == AltGR, and
       // we'll fuck up on non-US enhanced 102-key
@@ -291,6 +278,13 @@ nsMenuBarListener::KeyDown(nsIDOMEvent* aKeyEvent)
         // The access key just went down by itself. Track this.
         mAccessKeyDown = PR_TRUE;
       }
+    }
+    else {
+      // Some key other than the access key just went down,
+      // so we won't activate the menu bar when the access
+      // key is released.
+
+      mAccessKeyDown = PR_FALSE;
     }
   }
 
@@ -323,11 +317,13 @@ nsresult
 nsMenuBarListener::MouseDown(nsIDOMEvent* aMouseEvent)
 {
   if (!mMenuBarFrame->IsOpen() && mMenuBarFrame->IsActive()) {
-	  mMenuBarFrame->ToggleMenuActiveState();
-	  PRBool handled;
+    mMenuBarFrame->ToggleMenuActiveState();
+    PRBool handled;
     mMenuBarFrame->Escape(handled);
-	  mAccessKeyDown = PR_FALSE;
   }
+
+  mAccessKeyDown = PR_FALSE;
+
   return NS_OK; // means I am NOT consuming event
 }
 
