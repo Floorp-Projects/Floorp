@@ -57,7 +57,6 @@ ifeq ($(USE_64), 1)
   else
       ARCHFLAG=-xarch=v9
   endif
-      LD=/usr/ccs/bin/ld
 else
   ifdef NS_USE_GCC
     ifdef USE_HYBRID
@@ -73,6 +72,8 @@ else
     endif
   endif
 endif
+
+LD=/usr/ccs/bin/ld
 
 #
 # The default implementation strategy for Solaris is classic nspr.

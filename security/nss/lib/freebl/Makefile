@@ -161,7 +161,7 @@ ifeq ($(SYSV_SPARC),1)
 SOLARIS_AS = /usr/ccs/bin/as
 ifdef NS_USE_GCC
 LD = gcc
-DSO_LDOPTS += -shared -Wl,-B,symbolic,-z,defs,-z,now,-z,text,-M,mapfile.Solaris
+DSO_LDOPTS = -B/usr/ccs/bin/ -shared -h,$(notdir $@) -Wl,-B,symbolic,-z,defs,-z,now,-z,text,-M,mapfile.Solaris
 else
 MKSHLIB += -B symbolic -z defs -z now -z text -M mapfile.Solaris
 endif
