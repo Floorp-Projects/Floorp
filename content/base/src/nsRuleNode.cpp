@@ -3451,7 +3451,12 @@ nsRuleNode::ComputeOutlineData(nsStyleStruct* aStartStruct,
   // outline-width: length, enum, inherit
   SetCoord(marginData.mOutlineWidth, outline->mOutlineWidth, parentOutline->mOutlineWidth,
            SETCOORD_LEH, aContext, mPresContext, inherited);
+
+  // outline-offset: length, enum, inherit
+  SetCoord(marginData.mOutlineOffset, outline->mOutlineOffset, parentOutline->mOutlineOffset,
+           SETCOORD_LEH, aContext, mPresContext, inherited);
   
+
   // outline-color: color, string, enum, inherit
   nscolor outlineColor;
   nscolor unused = NS_RGB(0,0,0);

@@ -523,6 +523,16 @@ struct nsStyleOutline: public nsStyleStruct {
   nsStyleSides  mOutlineRadius;    // [reset] length, percent, inherit
   																// (top=topLeft, right=topRight, bottom=bottomRight, left=bottomLeft)
 
+  nsStyleCoord  mOutlineOffset;   // [reset] length
+  PRBool GetOutlineOffset(nscoord& aOffset) const
+  {
+    if (mHasCachedOutline) {
+      aOffset = mCachedOutlineOffset;
+      return PR_TRUE;
+    }
+    return PR_FALSE;
+  }
+
   nsStyleCoord  mOutlineWidth;    // [reset] length, enum (see nsStyleConsts.h)
 
   PRBool GetOutlineWidth(nscoord& aWidth) const
@@ -574,6 +584,7 @@ struct nsStyleOutline: public nsStyleStruct {
 
 protected:
   nscoord       mCachedOutlineWidth;
+  nscoord       mCachedOutlineOffset;
 
   nscolor       mOutlineColor;    // [reset] 
 

@@ -642,6 +642,7 @@ nsStyleOutline::nsStyleOutline(nsPresContext* aPresContext)
  
   // spacing values not inherited
   mOutlineRadius.Reset();
+  mOutlineOffset.Reset();
 
   nsStyleCoord  medium(NS_STYLE_BORDER_WIDTH_MEDIUM, eStyleUnit_Enumerated);
   mOutlineWidth = medium;
@@ -664,6 +665,7 @@ nsStyleOutline::RecalcData(void)
       mCachedOutlineWidth = 0;
     else
       mCachedOutlineWidth = CalcCoord(mOutlineWidth, mBorderWidths, 3);
+    mCachedOutlineOffset = CalcCoord(mOutlineOffset, mBorderWidths, 3);
     mHasCachedOutline = PR_TRUE;
   }
   else
@@ -676,8 +678,9 @@ nsChangeHint nsStyleOutline::CalcDifference(const nsStyleOutline& aOther) const
     mCachedOutlineWidth > 0 && mOutlineStyle != NS_STYLE_BORDER_STYLE_NONE;
   PRBool outlineIsVisible = 
     aOther.mCachedOutlineWidth > 0 && aOther.mOutlineStyle != NS_STYLE_BORDER_STYLE_NONE;
-  if (outlineWasVisible != outlineIsVisible || 
-      mOutlineWidth != aOther.mOutlineWidth) {
+  if (outlineWasVisible != outlineIsVisible ||
+      (outlineIsVisible && (mOutlineOffset != aOther.mOutlineOffset ||
+                            mOutlineWidth != aOther.mOutlineWidth))) {
     return NS_CombineHint(nsChangeHint_ReflowFrame, nsChangeHint_RepaintFrame);
   }
   if ((mOutlineStyle != aOther.mOutlineStyle) ||

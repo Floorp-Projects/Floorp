@@ -1373,6 +1373,42 @@ nsComputedDOMStyle::GetOutlineStyle(nsIFrame *aFrame,
 }
 
 nsresult
+nsComputedDOMStyle::GetOutlineOffset(nsIFrame *aFrame,
+                                     nsIDOMCSSValue** aValue)
+{
+  nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStyleOutline* outline = nsnull;
+  GetStyleData(eStyleStruct_Outline, (const nsStyleStruct*&)outline, aFrame);
+
+  if (outline) {
+    switch (outline->mOutlineOffset.GetUnit()) {
+      case eStyleUnit_Coord:
+        val->SetTwips(outline->mOutlineOffset.GetCoordValue());
+        break;
+      case eStyleUnit_Integer:
+      case eStyleUnit_Proportional:
+      case eStyleUnit_Enumerated:
+      case eStyleUnit_Chars:
+        {
+          const nsAFlatCString& width=
+            nsCSSProps::ValueToKeyword(outline->mOutlineOffset.GetIntValue(),
+                                       nsCSSProps::kBorderWidthKTable);
+          val->SetIdent(width);
+          break;
+        }
+      default:
+        NS_WARNING("Double check the unit");
+        val->SetTwips(0);
+        break;
+    }
+  }
+
+  return CallQueryInterface(val, aValue);
+}
+
+nsresult
 nsComputedDOMStyle::GetOutlineRadiusBottomLeft(nsIFrame *aFrame,
                                               nsIDOMCSSValue** aValue)
 {
@@ -3742,6 +3778,7 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(_moz_outline_color,            OutlineColor),
     COMPUTED_STYLE_MAP_ENTRY(_moz_outline_style,            OutlineStyle),
     COMPUTED_STYLE_MAP_ENTRY(_moz_outline_width,            OutlineWidth),
+    COMPUTED_STYLE_MAP_ENTRY(_moz_outline_offset,           OutlineOffset),
     COMPUTED_STYLE_MAP_ENTRY(_moz_outline_radius_bottomLeft, OutlineRadiusBottomLeft),
     COMPUTED_STYLE_MAP_ENTRY(_moz_outline_radius_bottomRight,OutlineRadiusBottomRight),
     COMPUTED_STYLE_MAP_ENTRY(_moz_outline_radius_topLeft,    OutlineRadiusTopLeft),

@@ -2053,7 +2053,7 @@ nsStyleCoord        bordStyleRadius[4];
 PRInt16             borderRadii[4],i;
 float               percent;
 const nsStyleBackground* bgColor = nsCSSRendering::FindNonTransparentBackground(aStyleContext);
-nscoord width;
+nscoord width, offset;
 
   // Get our style context's color struct.
   const nsStyleColor* ourColor = aStyleContext->GetStyleColor();
@@ -2065,7 +2065,7 @@ nscoord width;
     return;
   }
 
-  // get the radius for our border
+  // get the radius for our outline
   aOutlineStyle.mOutlineRadius.GetTop(bordStyleRadius[0]);      //topleft
   aOutlineStyle.mOutlineRadius.GetRight(bordStyleRadius[1]);    //topright
   aOutlineStyle.mOutlineRadius.GetBottom(bordStyleRadius[2]);   //bottomright
@@ -2092,14 +2092,30 @@ nscoord width;
     return;
   }
 
+  // get the offset for our outline
+  aOutlineStyle.GetOutlineOffset(offset);
   nsRect outside(*overflowArea);
   nsRect inside(outside);
-  inside.Deflate(width, width);
+  if (width + offset >= 0) {
+    // the overflow area is exactly the outside edge of the outline
+    inside.Deflate(width, width);
+  } else {
+    // the overflow area is exactly the rectangle containing the frame and its
+    // children; we can compute the outline directly
+    inside.Deflate(-offset, -offset);
+    if (inside.width < 0 || inside.height < 0) {
+      return; // Protect against negative outline sizes
+    }
+    outside = inside;
+    outside.Inflate(width, width);
+  }
 
   // rounded version of the border
   for(i=0;i<4;i++){
     if(borderRadii[i] > 0){
-      PaintRoundedBorder(aPresContext,aRenderingContext,aForFrame,aDirtyRect,aBorderArea,nsnull,&aOutlineStyle,aStyleContext,aSkipSides,borderRadii,aGap,PR_TRUE);
+      PaintRoundedBorder(aPresContext, aRenderingContext, aForFrame, aDirtyRect,
+                         outside, nsnull, &aOutlineStyle, aStyleContext, 
+                         aSkipSides, borderRadii, aGap, PR_TRUE);
       return;
     }
   }

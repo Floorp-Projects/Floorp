@@ -321,6 +321,7 @@ struct nsCSSMargin : public nsCSSStruct  {
   nsCSSValue  mOutlineWidth;
   nsCSSValue  mOutlineColor;
   nsCSSValue  mOutlineStyle;
+  nsCSSValue  mOutlineOffset;
   nsCSSRect   mOutlineRadius; // (extension)
   nsCSSValue  mFloatEdge; // NEW
 };
