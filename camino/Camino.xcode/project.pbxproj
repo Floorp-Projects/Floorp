@@ -365,7 +365,7 @@
 				F564872E023B954E010001CA,
 				F50EA33D02BAAAB701000103,
 				3FAA54C70587778700BBF630,
-				F568C3D3023A4F71010001CA,
+				3F8C00930681262400658CBC,
 				089C165CFE840E0CC02AAC07,
 				F52CE65C02BFA8B701026D5D,
 				F51B70B4026EC8A601A80166,
@@ -1593,7 +1593,7 @@
 				3F44AC3705BDFB9E00CB4B08,
 				3F44AC3805BDFB9E00CB4B08,
 				3F44AC3905BDFB9E00CB4B08,
-				3F44AC3A05BDFB9E00CB4B08,
+				3F8C00940681262400658CBC,
 				3F44AC3B05BDFB9E00CB4B08,
 				3F44AC3C05BDFB9E00CB4B08,
 				3F44AC3D05BDFB9E00CB4B08,
@@ -1781,12 +1781,6 @@
 		};
 		3F44AC3905BDFB9E00CB4B08 = {
 			fileRef = F507A85303116EA401026D5D;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		3F44AC3A05BDFB9E00CB4B08 = {
-			fileRef = F568C3D3023A4F71010001CA;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -5527,7 +5521,7 @@
 				3F44AE7005BDFBA000CB4B08,
 				3F44AE7105BDFBA000CB4B08,
 				3F44AE7205BDFBA000CB4B08,
-				3F44AE7305BDFBA000CB4B08,
+				3F8C00950681262400658CBC,
 				3F44AE7405BDFBA000CB4B08,
 				3F44AE7505BDFBA000CB4B08,
 				3F44AE7605BDFBA000CB4B08,
@@ -5715,12 +5709,6 @@
 		};
 		3F44AE7205BDFBA000CB4B08 = {
 			fileRef = F507A85303116EA401026D5D;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		3F44AE7305BDFBA000CB4B08 = {
-			fileRef = F568C3D3023A4F71010001CA;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -8351,6 +8339,27 @@
 		};
 		3F8C005706800E1300658CBC = {
 			fileRef = 3F8C005506800E1300658CBC;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3F8C00930681262400658CBC = {
+			children = (
+				F568C3D3023A4F71010001CA,
+			);
+			isa = PBXVariantGroup;
+			name = Credits.rtf;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		3F8C00940681262400658CBC = {
+			fileRef = 3F8C00930681262400658CBC;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3F8C00950681262400658CBC = {
+			fileRef = 3F8C00930681262400658CBC;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -11243,8 +11252,8 @@
 		F568C3D3023A4F71010001CA = {
 			isa = PBXFileReference;
 			lastKnownFileType = text.rtf;
-			name = Credits.rtf;
-			path = resources/application/Credits.rtf;
+			name = English;
+			path = resources/application/English.lproj/Credits.rtf;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
