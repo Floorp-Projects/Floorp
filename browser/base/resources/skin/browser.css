@@ -125,6 +125,19 @@
   list-style-image: none;
 }
 
+#home-button {
+  -moz-image-region: rect(0px 138px 21px 115px) !important;
+}
+  
+#home-button:hover,
+#home-button[dragover] {
+  -moz-image-region: rect(42px 138px 63px 115px) !important;
+}
+  
+#home-button:hover:active {
+  -moz-image-region: rect(63px 138px 84px 115px) !important;
+}
+
 /* ::::: small primary toolbar buttons ::::: */
 
 .toolbarbutton-1[toolbarmode="small"] {
@@ -298,19 +311,6 @@
 }
 
 /* ::::: personal toolbar ::::: */
-
-#home-button {
-  list-style-image: url("chrome://browser/skin/home.gif");
-}
-  
-#home-button:hover,
-#home-button[dragover] {
-  list-style-image: url("chrome://browser/skin/home-hover.gif");
-}
-  
-#home-button:hover:active {
-  list-style-image: url("chrome://browser/skin/home-active.gif");
-}
 
 #security-button {
   list-style-image: url("chrome://communicator/skin/icons/lock-insecure.gif");
