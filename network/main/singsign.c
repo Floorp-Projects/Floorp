@@ -759,7 +759,7 @@ si_OkToSave(MWContext *context, char *URLName, char *userName) {
         return FALSE;
     }
 
-    if (!FE_Confirm(context, XP_GetString(MK_SIGNON_NAG),)) {
+    if (!FE_Confirm(context, XP_GetString(MK_SIGNON_NAG))) {
         si_PutReject(strippedURLName, userName, TRUE);
         XP_FREE(strippedURLName);
         return FALSE;
