@@ -1142,8 +1142,9 @@ DocumentXBLGetAnonymousElementByAttribute(JSContext *cx, JSObject *obj, uintN ar
   }
 
   nsIDOMElement* nativeRet;
-  nsAutoString b0;
+  nsCOMPtr<nsIDOMElement> b0;
   nsAutoString b1;
+  nsAutoString b2;
   // If there's no private data, this must be the prototype, so ignore
   if (!nativeThis) {
     return JS_TRUE;
@@ -1158,14 +1159,21 @@ DocumentXBLGetAnonymousElementByAttribute(JSContext *cx, JSObject *obj, uintN ar
     if (NS_FAILED(result)) {
       return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (argc < 2) {
+    if (argc < 3) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
-    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b0),
+                                           kIElementIID,
+                                           NS_ConvertASCIItoUCS2("Element"),
+                                           cx,
+                                           argv[0])) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
+    }
     nsJSUtils::nsConvertJSValToString(b1, cx, argv[1]);
+    nsJSUtils::nsConvertJSValToString(b2, cx, argv[2]);
 
-    result = nativeThis->GetAnonymousElementByAttribute(b0, b1, &nativeRet);
+    result = nativeThis->GetAnonymousElementByAttribute(b0, b1, b2, &nativeRet);
     if (NS_FAILED(result)) {
       return nsJSUtils::nsReportError(cx, obj, result);
     }
@@ -1625,7 +1633,7 @@ static JSFunctionSpec DocumentMethods[] =
   {"getOverrideStyle",          DocumentCSSGetOverrideStyle,     2},
   {"createEvent",          DocumentEventCreateEvent,     1},
   {"getAnonymousNodes",          DocumentXBLGetAnonymousNodes,     1},
-  {"getAnonymousElementByAttribute",          DocumentXBLGetAnonymousElementByAttribute,     2},
+  {"getAnonymousElementByAttribute",          DocumentXBLGetAnonymousElementByAttribute,     3},
   {"addBinding",          DocumentXBLAddBinding,     2},
   {"removeBinding",          DocumentXBLRemoveBinding,     2},
   {"getBindingParent",          DocumentXBLGetBindingParent,     1},

@@ -2130,6 +2130,7 @@ nsXULDocument::AddContentModelBuilder(nsIRDFContentModelBuilder* aBuilder)
     return mBuilders->AppendElement(aBuilder) ? NS_OK : NS_ERROR_FAILURE;
 }
 
+
 NS_IMETHODIMP
 nsXULDocument::AddForwardReference(nsForwardReference* aRef)
 {
@@ -2818,12 +2819,70 @@ nsXULDocument::GetBindingParent(nsIDOMNode* aNode, nsIDOMElement** aResult)
   return NS_OK;
 }
 
+static nsresult
+GetElementByAttribute(nsIContent* aContent, 
+                      nsIAtom* aAttrName,
+                      const nsAReadableString& aAttrValue,
+                      PRBool aUniversalMatch,
+                      nsIDOMElement** aResult)
+{
+  nsAutoString value;
+  nsresult rv = aContent->GetAttribute(kNameSpaceID_None, aAttrName, value);
+  if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
+    if (aUniversalMatch || value.Equals(aAttrValue))
+      return aContent->QueryInterface(NS_GET_IID(nsIDOMElement), (void**)aResult);
+  }
+  
+
+  PRInt32 childCount;
+  aContent->ChildCount(childCount);
+
+  for (PRInt32 i = 0; i < childCount; ++i) {
+    nsCOMPtr<nsIContent> current;
+    current->ChildAt(i, *getter_AddRefs(current));
+
+    GetElementByAttribute(current, aAttrName, aAttrValue, aUniversalMatch, aResult);
+
+    if (*aResult)
+      return NS_OK;
+  }
+
+  return NS_OK;
+}
+
+
 NS_IMETHODIMP
-nsXULDocument::GetAnonymousElementByAttribute(const nsAReadableString& aAttrName, 
+nsXULDocument::GetAnonymousElementByAttribute(nsIDOMElement* aElement,
+                                              const nsAReadableString& aAttrName, 
                                               const nsAReadableString& aAttrValue, 
                                               nsIDOMElement** aResult)
 {
   *aResult = nsnull;
+
+  nsCOMPtr<nsIDOMNodeList> nodeList;
+  GetAnonymousNodes(aElement, getter_AddRefs(nodeList));
+  
+  if (!nodeList) 
+    return NS_OK;
+
+  nsCOMPtr<nsIAtom> attribute = getter_AddRefs(NS_NewAtom(aAttrName));
+
+  PRUint32 length;
+  nodeList->GetLength(&length);
+
+  PRBool universalMatch = aAttrValue.Equals(NS_LITERAL_STRING("*"));
+
+  for (PRUint32 i = 0; i < length; ++i) {
+    nsCOMPtr<nsIDOMNode> current;
+    nodeList->Item(i, getter_AddRefs(current));
+    
+    nsCOMPtr<nsIContent> content(do_QueryInterface(current));
+
+    GetElementByAttribute(content, attribute, aAttrValue, universalMatch, aResult);
+    if (*aResult)
+      return NS_OK;
+  }
+
   return NS_OK;
 }
 
@@ -2841,8 +2900,7 @@ nsXULDocument::GetAnonymousNodes(nsIDOMElement* aElement,
   PRBool dummy;
   nsCOMPtr<nsIContent> dummyElt;
   nsCOMPtr<nsIContent> content(do_QueryInterface(aElement));
-  return xblService->GetContentList(content, aResult, 
-                                    getter_AddRefs(dummyElt), &dummy);
+  return xblService->GetContentList(content, aResult, getter_AddRefs(dummyElt), &dummy);
 }
 
 NS_IMETHODIMP    

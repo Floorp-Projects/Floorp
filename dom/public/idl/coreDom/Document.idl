@@ -77,7 +77,7 @@ interface DocumentXBL {
   { 0x9f, 0x2c, 0xc1, 0x8d, 0xeb, 0x62, 0xee, 0x8b } } */
 
   NodeList getAnonymousNodes(in Element elt);
-  Element getAnonymousElementByAttribute(in DOMString attrName, in DOMString attrValue);
+  Element getAnonymousElementByAttribute(in Element elt, in DOMString attrName, in DOMString attrValue);
 
   void addBinding(in Element elt, in DOMString bindingURL);
   void removeBinding(in Element elt, in DOMString bindingURL);
