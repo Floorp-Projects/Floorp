@@ -1219,8 +1219,8 @@ public class Interpreter extends LabelTable {
         }
     }
     
-    private static final Double zero = new Double(0.0);
-    private static final Double one = new Double(1.0);
+    private static final Byte zero = new Byte((byte)0);
+    private static final Byte one = new Byte((byte)1);
     
     private static void createFunctionObject(InterpretedFunction fn, 
                                              Scriptable scope)
