@@ -748,15 +748,19 @@ nsFrameManager::NotifyDestroyingFrame(nsIFrame* aFrame)
   // Dequeue and destroy and posted events for this frame
   DequeuePostedEventFor(aFrame);
 
-#ifdef DEBUG
+  // We've already removed from the primary frame map once, but we're
+  // going to try to do it again here to fix callers of GetPrimaryFrameFor
+  // during frame destruction, since this problem keeps coming back to
+  // bite us.  We may want to remove the previous caller.
   if (mPrimaryFrameMap.ops) {
     PrimaryFrameMapEntry *entry = NS_STATIC_CAST(PrimaryFrameMapEntry*,
         PL_DHashTableOperate(&mPrimaryFrameMap, aFrame->GetContent(), PL_DHASH_LOOKUP));
-    NS_ASSERTION(!PL_DHASH_ENTRY_IS_BUSY(entry) || entry->frame != aFrame,
-                 "frame was not removed from primary frame map before "
-                 "destruction or was readded to map after being removed");
+    if (PL_DHASH_ENTRY_IS_BUSY(entry) && entry->frame == aFrame) {
+      NS_NOTREACHED("frame was not removed from primary frame map before "
+                    "destruction or was readded to map after being removed");
+      PL_DHashTableRawRemove(&mPrimaryFrameMap, entry);
+    }
   }
-#endif
 }
 
 nsresult
