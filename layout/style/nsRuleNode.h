@@ -41,7 +41,6 @@
 #define nsRuleNode_h___
 
 #include "nsCOMPtr.h"
-#include "nsHashtable.h"
 #include "nsIStyleRule.h"
 #include "nsIFrame.h"
 #include "nsFixedSizeAllocator.h"
@@ -51,6 +50,7 @@
 
 class nsIStyleContext;
 struct nsRuleList;
+struct PLDHashTable;
 
 typedef void (*nsPostResolveFunc)(nsStyleStruct* aStyleStruct, nsRuleData* aData);
 
@@ -360,19 +360,54 @@ public:
 private:
   nsIPresContext* mPresContext; // Our pres context.
 
-  nsRuleNode* mParent; // A pointer to the parent node in the tree.  This enables us to
-                       // walk backwards from the most specific rule matched to the least
-                       // specific rule (which is the optimal order to use for lookups
-                       // of style properties.
+  nsRuleNode* mParent; // A pointer to the parent node in the tree.
+                       // This enables us to walk backwards from the
+                       // most specific rule matched to the least
+                       // specific rule (which is the optimal order to
+                       // use for lookups of style properties.
   nsCOMPtr<nsIStyleRule> mRule; // A pointer to our specific rule.
 
-  union {
-    nsHashtable* mRootChildren; // A hashtable that maps from rules to our RuleNode children.
-                                // When matching rules, we use this table to transition from
-                                // node to node (constructing new nodes as needed to flesh out
-                                // the tree).
-    nsRuleList*  mChildren;
+  // The children of this node are stored in either a hashtable or list
+  // that maps from rules to our nsRuleNode children.  When matching
+  // rules, we use this mapping to transition from node to node
+  // (constructing new nodes as needed to flesh out the tree).
+
+  void *mChildrenTaggedPtr; // Accessed only through the methods below.
+
+  enum {
+    kTypeMask = 0x1,
+    kListType = 0x0,
+    kHashType = 0x1
   };
+  enum {
+    // Maximum to have in a list before converting to a hashtable.
+    // XXX Need to optimize this.
+    kMaxChildrenInList = 32
+  };
+
+  PRBool HaveChildren() {
+    return mChildrenTaggedPtr != nsnull;
+  }
+  PRBool ChildrenAreHashed() {
+    return (PRWord(mChildrenTaggedPtr) & kTypeMask) == kHashType;
+  }
+  nsRuleList* ChildrenList() {
+    return NS_STATIC_CAST(nsRuleList*, mChildrenTaggedPtr);
+  }
+  PLDHashTable* ChildrenHash() {
+    return (PLDHashTable*) (PRWord(mChildrenTaggedPtr) & ~PRWord(kTypeMask));
+  }
+  void SetChildrenList(nsRuleList *aList) {
+    NS_ASSERTION(!(PRWord(aList) & kTypeMask),
+                 "pointer not 2-byte aligned");
+    mChildrenTaggedPtr = aList;
+  }
+  void SetChildrenHash(PLDHashTable *aHashtable) {
+    NS_ASSERTION(!(PRWord(aHashtable) & kTypeMask),
+                 "pointer not 2-byte aligned");
+    mChildrenTaggedPtr = (void*)(PRWord(aHashtable) | kHashType);
+  }
+  void ConvertChildrenToHash();
 
   nsCachedStyleData mStyleData;   // Any data we cached on the rule node.
 
@@ -398,10 +433,6 @@ private:
                       // inherited data.
 
 friend struct nsRuleList;
-
-protected:
-  // The callback function for deleting rule nodes from our rule tree.
-  static PRBool PR_CALLBACK DeleteChildren(nsHashKey *aKey, void *aData, void *closure);
 
 public:
   // Overloaded new operator. Initializes the memory to 0 and relies on an arena
@@ -556,6 +587,10 @@ public:
     *aResult = mRule;
     NS_IF_ADDREF(*aResult);
     return NS_OK;
+  }
+  nsIStyleRule* Rule() {
+    // NOTE:  Does not |AddRef|.
+    return mRule;
   }
 
   nsresult ClearCachedData(nsIStyleRule* aRule);
