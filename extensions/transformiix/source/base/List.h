@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: List.h,v 1.5 2000/04/12 10:53:21 kvisco%ziplink.net Exp $
+ * $Id: List.h,v 1.6 2000/05/29 07:14:03 kvisco%ziplink.net Exp $
  */
 
 #include "baseutils.h"
@@ -47,6 +47,13 @@ public:
      * List destructor, object references will not be deleted.
     **/
     virtual ~List();
+
+    /**
+     * Returns the object located at the given index. This may
+     * be slow or fast depending on the implementation.
+     * @return the object located at the given index
+    **/
+    void* get(int index);
 
     /**
      * Returns the number of items in this List
