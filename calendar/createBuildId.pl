@@ -55,8 +55,7 @@ foreach $file (@ARGV)
     while(<IN>)
     {
         $line = $_;
-        $line =~ s/gDateMade =.+/gDateMade = "$buildid"/;
-        $line =~ s/XX_DATE_XX/$buildid/;
+        $line =~ s/\d{10}-cal/$buildid/;
         print OUT $line;
     }
     close(IN); close (OUT);
