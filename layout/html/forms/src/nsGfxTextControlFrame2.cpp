@@ -395,6 +395,15 @@ NS_IMETHODIMP nsTextInputListener::ContentRemoved(nsIDocument *aDocument,
 nsresult
 nsTextInputListener::Focus(nsIDOMEvent* aEvent)
 {
+  nsCOMPtr<nsIContent> content;
+  if (NS_SUCCEEDED(mFrame->GetContent(getter_AddRefs(content))) && content)
+  {
+    nsCOMPtr<nsIDocument> doc;
+    if (NS_SUCCEEDED(content->GetDocument(*getter_AddRefs(doc))) && doc)
+    {
+      doc->AddObserver(this);
+    }
+  }
   return mFrame->GetText(&mFocusedValue, PR_FALSE);
 }
 
@@ -409,6 +418,16 @@ nsTextInputListener::Blur (nsIDOMEvent* aEvent)
   {
     return mFrame->CallOnChange();
   }
+  nsCOMPtr<nsIContent> content;
+  if (NS_SUCCEEDED(mFrame->GetContent(getter_AddRefs(content))) && content)
+  {
+    nsCOMPtr<nsIDocument> doc;
+    if (NS_SUCCEEDED(content->GetDocument(*getter_AddRefs(doc))) && doc)
+    {
+      doc->RemoveObserver(this);
+    }
+  }
+
   return NS_OK;
 }
 
@@ -976,7 +995,7 @@ nsGfxTextControlFrame2::Destroy(nsIPresContext* aPresContext)
       return rv?rv:NS_ERROR_FAILURE;
     if (doc)
     {
-      //doc->RemoveObserver(mTextListener);
+      doc->RemoveObserver(mTextListener);
     }
   }
   return nsBoxFrame::Destroy(aPresContext);
@@ -2547,27 +2566,21 @@ nsGfxTextControlFrame2::SetInitialChildList(nsIPresContext* aPresContext,
       first->QueryInterface(NS_GET_IID(nsIScrollableFrame), (void **) &scrollableFrame);
     if (scrollableFrame)
       scrollableFrame->SetScrollbarVisibility(aPresContext,PR_FALSE,PR_FALSE);
-    //register keylistener
-    nsCOMPtr<nsIDOMEventReceiver> erP;
-    if (NS_SUCCEEDED(mContent->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), getter_AddRefs(erP))) && erP)
-    {
-      // register the event listeners with the DOM event reveiver
-      rv = erP->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMKeyListener *,mTextListener), NS_GET_IID(nsIDOMKeyListener));
-      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register key listener");
-      rv = erP->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMFocusListener *,mTextListener), NS_GET_IID(nsIDOMFocusListener));
-      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register focus listener");
-      nsCOMPtr<nsIPresShell> shell;
-      nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
-      if (NS_FAILED(rv) || !shell)
-        return rv?rv:NS_ERROR_FAILURE;
 
-    //get the document
-      nsCOMPtr<nsIDocument> doc;
-      rv = shell->GetDocument(getter_AddRefs(doc));
-      if (NS_FAILED(rv) || !doc)
-        return rv?rv:NS_ERROR_FAILURE;
-      //doc->AddObserver(mTextListener);
-    }
+  }
+  //register keylistener
+  nsCOMPtr<nsIDOMEventReceiver> erP;
+  if (NS_SUCCEEDED(mContent->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), getter_AddRefs(erP))) && erP)
+  {
+    // register the event listeners with the DOM event reveiver
+    rv = erP->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMKeyListener *,mTextListener), NS_GET_IID(nsIDOMKeyListener));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register key listener");
+    rv = erP->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMFocusListener *,mTextListener), NS_GET_IID(nsIDOMFocusListener));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register focus listener");
+    nsCOMPtr<nsIPresShell> shell;
+    nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
+    if (NS_FAILED(rv) || !shell)
+      return rv?rv:NS_ERROR_FAILURE;
 
   }
   while(first)
