@@ -1059,7 +1059,7 @@ void nsDocument::SelectAll() {
   nsIContent * end   = nsnull;
 
   nsString bodyStr("BODY");
-  PRUint32 i;
+  PRInt32 i;
   for (i=0;i<mRootContent->ChildCount();i++) {
     nsIContent * child = mRootContent->ChildAt(i);
     PRBool isSynthetic;
