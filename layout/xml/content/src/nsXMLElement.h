@@ -37,6 +37,7 @@ class nsIDocument;
 class nsIAtom;
 class nsIEventListenerManager;
 class nsIHTMLAttributes;
+class nsIURI;
 
 class nsXMLElement : public nsIDOMElement,
 		     public nsIXMLContent,
@@ -238,6 +239,7 @@ public:
   }
 
 protected:
+  nsresult GetXMLBaseURI(nsIURI **aURI);  // XXX This should perhaps be moved to nsIXMLContent
   nsGenericXMLElement mInner;
   PRBool mIsLink;
   PRUint32 mContentID;

@@ -32,6 +32,8 @@
 #include "nsINameSpace.h"
 #include "nsINameSpaceManager.h"
 #include "nsIURL.h"
+#include "nsIIOService.h"
+#include "nsIServiceManager.h"
 
 //static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIXMLContentIID, NS_IXMLCONTENT_IID);
@@ -54,6 +56,7 @@ static nsIAtom* kSimpleAtom;  // XXX these should get moved to nsXMLAtoms
 static nsIAtom* kHrefAtom;
 static nsIAtom* kShowAtom;
 static nsIAtom* kTypeAtom;
+static nsIAtom* kBaseAtom;
 static PRUint32 kElementCount;
 
 nsXMLElement::nsXMLElement(nsIAtom *aTag)
@@ -68,6 +71,7 @@ nsXMLElement::nsXMLElement(nsIAtom *aTag)
     kHrefAtom = NS_NewAtom("href");
     kShowAtom = NS_NewAtom("show");
     kTypeAtom = NS_NewAtom("type");
+    kBaseAtom = NS_NewAtom("base");
   }
 }
  
@@ -78,6 +82,7 @@ nsXMLElement::~nsXMLElement()
     NS_RELEASE(kHrefAtom);
     NS_RELEASE(kShowAtom);
     NS_RELEASE(kTypeAtom);
+    NS_RELEASE(kBaseAtom);
   }
 }
 
@@ -105,6 +110,97 @@ nsXMLElement::QueryInterface(REFNSIID aIID,
 NS_IMPL_ADDREF(nsXMLElement)
 NS_IMPL_RELEASE(nsXMLElement)
 
+static inline nsresult MakeURI(const char *aSpec, nsIURI *aBase, nsIURI **aURI)
+{
+  nsresult rv;
+  static NS_DEFINE_CID(ioServCID,NS_IOSERVICE_CID);
+  NS_WITH_SERVICE(nsIIOService,service,ioServCID,&rv);
+  if (NS_FAILED(rv))
+    return rv;
+
+  return service->NewURI(aSpec,aBase,aURI);
+}
+
+nsresult 
+nsXMLElement::GetXMLBaseURI(nsIURI **aURI)
+{
+  NS_ABORT_IF_FALSE(aURI,"null ptr");
+  if (!aURI)
+    return NS_ERROR_NULL_POINTER;
+
+  *aURI = nsnull;
+  
+  nsresult rv;
+
+  nsAutoString base;
+  nsCOMPtr<nsIContent> content = do_QueryInterface(NS_STATIC_CAST(nsIXMLContent*,this),&rv);
+  while (NS_SUCCEEDED(rv) && content) {
+    nsAutoString value;
+    rv = content->GetAttribute(kNameSpaceID_XML,kBaseAtom,value);
+    PRInt32 value_len;
+    if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
+      // XXX Need to convert unicode to ???
+      // XXX Need to URL-escape string
+      PRInt32 colon = value.FindChar(':',PR_FALSE);
+      PRInt32 slash = value.FindChar('/',PR_FALSE);
+      if (colon > 0 && !( slash >= 0 && slash < colon)) {
+        // Yay, we have absolute path!
+        // The complex looking if above is to make sure that we do not erroneously
+        // think a value of "./this:that" would have a scheme of "./that"
+
+        nsCAutoString str(value);
+      
+        rv = MakeURI(str,nsnull,aURI);
+        if (NS_FAILED(rv))
+          break;
+
+        if (!base.IsEmpty()) {
+          str = base.GetUnicode();
+          rv = (*aURI)->SetRelativePath(str);
+        }
+        break;
+
+      } else if ((value_len = value.Length()) > 0) {        
+        if (base.Length() > 0) {
+          if (base[0] == '/') {
+            // Do nothing, we are waiting for a scheme starting value
+          } else {
+            // We do not want to add double / delimiters (although the user is free to do so)
+            if (value[value_len - 1] != '/')
+              value += '/';
+            base = value + base;
+          }
+        } else {
+          if (value[value_len - 1] != '/')
+            value += '/'; // Add delimiter/make sure we treat this as dir
+          base = value;
+        }
+      }
+    } // if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
+    nsCOMPtr<nsIContent> parent;
+    rv = content->GetParent(*getter_AddRefs(parent));
+    content = parent;
+  } // while
+
+  if (NS_SUCCEEDED(rv)) {
+    if (!*aURI && mInner.mDocument) {
+      nsCOMPtr<nsIURI> docBase = dont_AddRef(mInner.mDocument->GetDocumentURL());
+      if (base.IsEmpty()) {
+        *aURI = docBase.get();    
+        NS_IF_ADDREF(*aURI);  // nsCOMPtr releases this once
+      } else {
+        // XXX Need to convert unicode to ???
+        // XXX Need to URL-escape string
+        nsCAutoString str(base);
+        rv = MakeURI(str,docBase,aURI);
+      }
+    }
+  } else {
+    NS_IF_RELEASE(*aURI);
+  }
+
+  return rv;
+}
 
 NS_IMETHODIMP 
 nsXMLElement::SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, 
@@ -170,6 +266,10 @@ nsXMLElement::HandleDOMEvent(nsIPresContext* aPresContext,
           nsIURI* baseURL = nsnull;
 	        nsLinkVerb verb = eLinkVerb_Undefined;
           GetAttribute(kNameSpaceID_XLink, kHrefAtom, href);
+          if (href.IsEmpty()) {
+            *aEventStatus = nsEventStatus_eConsumeDoDefault; 
+            break;
+          }
           GetAttribute(kNameSpaceID_XLink, kShowAtom, show);
 	        // XXX Should probably do this using atoms 
 	        if (show.Equals("new")) {
@@ -182,10 +282,8 @@ nsXMLElement::HandleDOMEvent(nsIPresContext* aPresContext,
 	          verb = eLinkVerb_Embed;
 	        }
           
-          if (nsnull != mInner.mDocument) {
-            baseURL = mInner.mDocument->GetDocumentURL();
-            // XXX XML Base W3C
-          }
+          GetXMLBaseURI(&baseURL);
+
           ret = mInner.TriggerLink(aPresContext, verb, baseURL, href, target, PR_TRUE);
           NS_IF_RELEASE(baseURL);
           *aEventStatus = nsEventStatus_eConsumeDoDefault; 
@@ -202,10 +300,12 @@ nsXMLElement::HandleDOMEvent(nsIPresContext* aPresContext,
         nsAutoString href, target;
         nsIURI* baseURL = nsnull;
         GetAttribute(kNameSpaceID_XLink, kHrefAtom, href);
-        if (nsnull != mInner.mDocument) {
-          baseURL = mInner.mDocument->GetDocumentURL();
-          // XXX XML Base W3C
+        if (href.IsEmpty()) {
+          *aEventStatus = nsEventStatus_eConsumeDoDefault; 
+          break;
         }
+
+        GetXMLBaseURI(&baseURL);
 
         ret = mInner.TriggerLink(aPresContext, eLinkVerb_Replace, baseURL, href, target, PR_FALSE);
         
