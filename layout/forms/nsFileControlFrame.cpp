@@ -194,11 +194,10 @@ nsFileControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   return nsHTMLContainerFrame::QueryInterface(aIID, aInstancePtr);
 }
 
-NS_IMETHODIMP 
-nsFileControlFrame::GetType(PRInt32* aType) const
+NS_IMETHODIMP_(PRInt32)
+nsFileControlFrame::GetType() const
 {
-  *aType = NS_FORM_INPUT_FILE;
-  return NS_OK;
+  return NS_FORM_INPUT_FILE;
 }
 
 

@@ -1929,11 +1929,10 @@ nsListControlFrame::GetSkipSides() const
 }
 
 //---------------------------------------------------------
-NS_IMETHODIMP
-nsListControlFrame::GetType(PRInt32* aType) const
+NS_IMETHODIMP_(PRInt32)
+nsListControlFrame::GetType() const
 {
-  *aType = NS_FORM_SELECT;
-  return NS_OK;
+  return NS_FORM_SELECT;
 }
 
 

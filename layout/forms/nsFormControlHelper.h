@@ -136,7 +136,7 @@ public:
    * @return NS_CONTENT_ATTR_NOT_THERE if the type attribute is undefined
    * @return NS_ERROR_FAILURE if aContent is null or is not HTML content
    */
-  static nsresult GetType(nsIContent* aContent, PRInt32* aType);
+  static PRInt32 GetType(nsIContent* aContent);
   /**
    * Get the value of the form control (if it's just living in an attr)
    * @param aContent the content to get the name of

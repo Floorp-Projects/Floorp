@@ -243,7 +243,7 @@ public:
   NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext);   
 
   // Overriden nsIFormControl methods
-  NS_IMETHOD GetType(PRInt32* aType);
+  NS_IMETHOD_(PRInt32) GetType() { return NS_FORM_SELECT; }
   NS_IMETHOD Reset();
   NS_IMETHOD SubmitNamesValues(nsIFormSubmission* aFormSubmission,
                                nsIContent* aSubmitElement);
@@ -1940,14 +1940,6 @@ nsHTMLSelectElement::HandleDOMEvent(nsIPresContext* aPresContext,
 }
 
 // nsIFormControl
-
-NS_IMETHODIMP
-nsHTMLSelectElement::GetType(PRInt32* aType)
-{
-  NS_ASSERTION(aType, "Null pointer bad!");
-  *aType = NS_FORM_SELECT;
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 nsHTMLSelectElement::SaveState()

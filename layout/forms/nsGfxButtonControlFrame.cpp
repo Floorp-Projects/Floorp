@@ -320,8 +320,7 @@ nsGfxButtonControlFrame::GetDefaultLabel(nsString& aString)
 {
   const char * propname = nsFormControlHelper::GetHTMLPropertiesFileName();
   nsresult rv = NS_OK;
-  PRInt32 type;
-  GetType(&type);
+  PRInt32 type = GetType();
   if (type == NS_FORM_INPUT_RESET) {
     rv = nsFormControlHelper::GetLocalizedString(propname, NS_LITERAL_STRING("Reset").get(), aString);
   } 

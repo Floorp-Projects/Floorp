@@ -2286,9 +2286,7 @@ FrameManager::GenerateStateKey(nsIContent* aContent,
   if (control && mHTMLFormControls && mHTMLForms) {
 
     // Append the control type
-    PRInt32 type;
-    control->GetType(&type);
-    KeyAppendInt(type, aKey);
+    KeyAppendInt(control->GetType(), aKey);
 
     // If in a form, add form name / index of form / index in form
     PRInt32 index = -1;

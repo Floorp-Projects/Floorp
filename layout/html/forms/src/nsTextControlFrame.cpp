@@ -1313,12 +1313,8 @@ nsTextControlFrame::GetFrameType(nsIAtom** aType) const
 // XXX: wouldn't it be nice to get this from the style context!
 PRBool nsTextControlFrame::IsSingleLineTextControl() const
 {
-  PRInt32 type;
-  GetType(&type);
-  if ((NS_FORM_INPUT_TEXT==type) || (NS_FORM_INPUT_PASSWORD==type)) {
-    return PR_TRUE;
-  }
-  return PR_FALSE; 
+  PRInt32 type = GetType();
+  return (type == NS_FORM_INPUT_TEXT) || (type == NS_FORM_INPUT_PASSWORD);
 }
 
 PRBool nsTextControlFrame::IsTextArea() const
@@ -1344,12 +1340,7 @@ PRBool nsTextControlFrame::IsPlainTextControl() const
 
 PRBool nsTextControlFrame::IsPasswordTextControl() const
 {
-  PRInt32 type;
-  GetType(&type);
-  if (NS_FORM_INPUT_PASSWORD==type) {
-    return PR_TRUE;
-  }
-  return PR_FALSE;
+  return GetType() == NS_FORM_INPUT_PASSWORD;
 }
 
 
@@ -2101,10 +2092,10 @@ nsTextControlFrame::GetName(nsAString* aResult)
   return nsFormControlHelper::GetName(mContent, aResult);
 }
 
-NS_IMETHODIMP
-nsTextControlFrame::GetType(PRInt32* aType) const
+NS_IMETHODIMP_(PRInt32)
+nsTextControlFrame::GetType() const
 {
-  return nsFormControlHelper::GetType(mContent, aType);
+  return nsFormControlHelper::GetType(mContent);
 }
 
 void    nsTextControlFrame::SetFocus(PRBool aOn , PRBool aRepaint){}
@@ -3001,9 +2992,7 @@ nsTextControlFrame::SetInitialChildList(nsIPresContext* aPresContext,
   first->SetFrameState(state);
 
 //we must turn off scrollbars for singleline text controls
-  PRInt32 type;
-  GetType(&type);
-  if ((NS_FORM_INPUT_TEXT == type) || (NS_FORM_INPUT_PASSWORD == type)) 
+  if (IsSingleLineTextControl()) 
   {
     nsIScrollableFrame *scrollableFrame = nsnull;
     if (first)

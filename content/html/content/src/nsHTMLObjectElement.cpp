@@ -70,7 +70,7 @@ public:
   NS_DECL_NSIDOMHTMLOBJECTELEMENT
 
   // Overriden nsIFormControl methods
-  NS_IMETHOD GetType(PRInt32* aType);
+  NS_IMETHOD_(PRInt32) GetType() { return NS_FORM_OBJECT; }
   NS_IMETHOD Reset();
   NS_IMETHOD SubmitNamesValues(nsIFormSubmission* aFormSubmission,
                                nsIContent* aSubmitElement);
@@ -173,14 +173,6 @@ nsHTMLObjectElement::GetForm(nsIDOMHTMLFormElement** aForm)
 }
 
 // nsIFormControl
-
-NS_IMETHODIMP
-nsHTMLObjectElement::GetType(PRInt32* aType)
-{
-  NS_PRECONDITION(aType, "aType must not be null!");
-  *aType = NS_FORM_OBJECT;
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 nsHTMLObjectElement::Reset()

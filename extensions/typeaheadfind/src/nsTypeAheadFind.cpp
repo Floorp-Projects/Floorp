@@ -2233,8 +2233,7 @@ nsTypeAheadFind::GetTargetIfTypeAheadOkay(nsIDOMEvent *aEvent,
 
   if (targetContent->IsContentOfType(nsIContent::eHTML_FORM_CONTROL)) {
     nsCOMPtr<nsIFormControl> formControl(do_QueryInterface(targetContent));
-    PRInt32 controlType;
-    formControl->GetType(&controlType);
+    PRInt32 controlType = formControl->GetType();
     if (controlType == NS_FORM_SELECT || 
         controlType == NS_FORM_TEXTAREA ||
         controlType == NS_FORM_INPUT_TEXT ||

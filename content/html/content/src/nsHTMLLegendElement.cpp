@@ -72,7 +72,7 @@ public:
   NS_DECL_NSIDOMHTMLLEGENDELEMENT
 
   // nsIFormControl
-  NS_IMETHOD GetType(PRInt32* aType);
+  NS_IMETHOD_(PRInt32) GetType() { return NS_FORM_LEGEND; }
   NS_IMETHOD Reset();
   NS_IMETHOD SubmitNamesValues(nsIFormSubmission* aFormSubmission,
                                nsIContent* aSubmitElement);
@@ -170,16 +170,6 @@ NS_IMETHODIMP
 nsHTMLLegendElement::GetForm(nsIDOMHTMLFormElement** aForm)
 {
   return nsGenericHTMLContainerFormElement::GetForm(aForm);
-}
-
-// nsIFormControl
-
-NS_IMETHODIMP
-nsHTMLLegendElement::GetType(PRInt32* aType)
-{
-  NS_ASSERTION(aType, "Null pointer bad!");
-  *aType = NS_FORM_LEGEND;
-  return NS_OK;
 }
 
 

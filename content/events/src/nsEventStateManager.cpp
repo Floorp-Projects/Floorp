@@ -2899,8 +2899,7 @@ nsEventStateManager::ChangeFocus(nsIContent* aFocusContent, PRInt32 aFocusedWith
         mCurrentFocus && 
         mCurrentFocus->IsContentOfType(nsIContent::eHTML_FORM_CONTROL)) {
       nsCOMPtr<nsIFormControl> formControl(do_QueryInterface(mCurrentFocus));
-      PRInt32 controlType;
-      formControl->GetType(&controlType);
+      PRInt32 controlType = formControl->GetType();
       if (controlType == NS_FORM_INPUT_TEXT ||
           controlType == NS_FORM_INPUT_PASSWORD) {
         nsCOMPtr<nsIDOMHTMLInputElement> inputElement = 

@@ -145,7 +145,7 @@ public:
      // nsIFormControlFrame
   NS_IMETHOD SetSuggestedSize(nscoord aWidth, nscoord aHeight);
   NS_IMETHOD GetName(nsAString* aName);
-  NS_IMETHOD GetType(PRInt32* aType) const;
+  NS_IMETHOD_(PRInt32) GetType() const;
   NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsAString& aValue);
   NS_IMETHOD GetProperty(nsIAtom* aName, nsAString& aValue); 
   void       SetFocus(PRBool aOn, PRBool aRepaint);

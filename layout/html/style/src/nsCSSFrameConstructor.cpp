@@ -1672,9 +1672,7 @@ nsCSSFrameConstructor::CreateInputFrame(nsIPresShell    *aPresShell,
   nsCOMPtr<nsIFormControl> control = do_QueryInterface(aContent);
   NS_ASSERTION(control, "input is not an nsIFormControl!");
   
-  PRInt32 type;
-  control->GetType(&type);
-  switch (type) {
+  switch (control->GetType()) {
     case NS_FORM_INPUT_SUBMIT:
     case NS_FORM_INPUT_RESET:
     case NS_FORM_INPUT_BUTTON:
