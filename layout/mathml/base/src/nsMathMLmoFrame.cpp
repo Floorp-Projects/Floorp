@@ -292,22 +292,17 @@ nsMathMLmoFrame::InitData(nsIPresContext* aPresContext)
   // it mutable irrespective of the form of the embellished container
   mFlags &= NS_MATHML_OPERATOR_MUTABLE;
 
-  // find our form
-  nsAutoString value;
-  nsOperatorFlags form = NS_MATHML_OPERATOR_FORM_INFIX;
-
+  // Get our outermost embellished container and its parent. 
+  // We ensure that we are the core, not just a sibling of the core
   nsIMathMLFrame* mathMLFrame = nsnull;
   nsIFrame* embellishAncestor = this;
   nsEmbellishData embellishData;
-
-  // Get our outermost embellished container and its parent. 
-  // We ensure that we are the core, not just a sibling of the core
   nsIFrame* parentAncestor = this;
   do {
     embellishAncestor = parentAncestor;
     embellishAncestor->GetParent(&parentAncestor);
-    rv = parentAncestor->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
-    if (NS_SUCCEEDED(rv) && mathMLFrame) {
+    parentAncestor->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
+    if (mathMLFrame) {
       mathMLFrame->GetEmbellishData(embellishData);
     }
     else {
@@ -319,6 +314,9 @@ nsMathMLmoFrame::InitData(nsIPresContext* aPresContext)
     mFlags |= NS_MATHML_OPERATOR_EMBELLISH_ANCESTOR;
   }
 
+  // find our form
+  nsAutoString value;
+  nsOperatorFlags form = NS_MATHML_OPERATOR_FORM_INFIX;
   if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
                    nsMathMLAtoms::form_, value)) {
     if (value.Equals(NS_LITERAL_STRING("prefix")))

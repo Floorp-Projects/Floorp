@@ -87,6 +87,25 @@ nsMathMLmunderFrame::Init(nsIPresContext*  aPresContext,
 }
 
 NS_IMETHODIMP
+nsMathMLmunderFrame::UpdatePresentationData(nsIPresContext* aPresContext,
+                                            PRInt32         aScriptLevelIncrement,
+                                            PRUint32        aFlagsValues,
+                                            PRUint32        aFlagsToUpdate)
+{
+  nsMathMLContainerFrame::UpdatePresentationData(aPresContext,
+    aScriptLevelIncrement, aFlagsValues, aFlagsToUpdate);
+  // disable the stretch-all flag if we are going to act like a subscript
+  if ( NS_MATHML_IS_MOVABLELIMITS(mPresentationData.flags) &&
+      !NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags)) {
+    mEmbellishData.flags &= ~NS_MATHML_STRETCH_ALL_CHILDREN_HORIZONTALLY;
+  }
+  else {
+    mEmbellishData.flags |= NS_MATHML_STRETCH_ALL_CHILDREN_HORIZONTALLY;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsMathMLmunderFrame::SetInitialChildList(nsIPresContext* aPresContext,
                                          nsIAtom*        aListName,
                                          nsIFrame*       aChildList)
@@ -194,7 +213,7 @@ XXX The winner is the outermost setting in conflicting settings like these:
   if (underscriptMathMLFrame) {
     PRInt32 increment;
     increment = NS_MATHML_IS_ACCENTUNDER(mPresentationData.flags)? 0 : 1;
-    underscriptMathMLFrame->UpdatePresentationData(increment,
+    underscriptMathMLFrame->UpdatePresentationData(aPresContext, increment,
       ~NS_MATHML_DISPLAYSTYLE | NS_MATHML_COMPRESSED,
        NS_MATHML_DISPLAYSTYLE | NS_MATHML_COMPRESSED);
     underscriptMathMLFrame->UpdatePresentationDataFromChildAt(aPresContext, 0, -1, increment,

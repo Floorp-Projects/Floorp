@@ -31,7 +31,6 @@
 #include "nsUnitConversion.h"
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
-#include "nsStyleChangeList.h"
 #include "nsINameSpaceManager.h"
 #include "nsIRenderingContext.h"
 #include "nsIFontMetrics.h"
@@ -329,89 +328,6 @@ nsMathMLmtableOuterFrame::Init(nsIPresContext*  aPresContext,
   return rv;
 }
 
-// helper to let the update of presentation data pass through
-// a subtree that may contain non-math container frames
-void
-UpdatePresentationDataFor(nsIPresContext* aPresContext,
-                          nsIFrame*       aFrame,
-                          PRInt32         aScriptLevelIncrement,
-                          PRUint32        aFlagsValues,
-                          PRUint32        aFlagsToUpdate)
-{
-  nsIMathMLFrame* mathMLFrame = nsnull;
-  nsresult rv = aFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
-  if (NS_SUCCEEDED(rv) && mathMLFrame) {
-    // update
-    mathMLFrame->UpdatePresentationData(
-      aScriptLevelIncrement, aFlagsValues, aFlagsToUpdate);
-  }
-  // propagate down the subtrees
-  nsIFrame* childFrame;
-  aFrame->FirstChild(aPresContext, nsnull, &childFrame);
-  while (childFrame) {
-    UpdatePresentationDataFor(aPresContext, childFrame,
-      aScriptLevelIncrement, aFlagsValues, aFlagsToUpdate);
-    childFrame->GetNextSibling(&childFrame);
-  }
-}
-
-// helper to let the scriptstyle re-resolution pass through
-// a subtree that may contain non-math container frames
-void
-ReResolveScriptStyleFor(nsIPresContext*  aPresContext,
-                        nsIFrame*        aFrame,
-                        PRInt32          aScriptLevel)
-{
-  nsIFrame* childFrame = nsnull;
-  nsCOMPtr<nsIStyleContext> styleContext;
-  aFrame->GetStyleContext(getter_AddRefs(styleContext));
-  aFrame->FirstChild(aPresContext, nsnull, &childFrame);
-  while (childFrame) {
-    nsIMathMLFrame* mathMLFrame;
-    nsresult res = childFrame->QueryInterface(
-      NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
-    if (NS_SUCCEEDED(res) && mathMLFrame) {
-      mathMLFrame->ReResolveScriptStyle(aPresContext, styleContext, aScriptLevel);
-    }
-    else {
-      ReResolveScriptStyleFor(aPresContext, childFrame, aScriptLevel);
-    }
-    childFrame->GetNextSibling(&childFrame);
-  }
-}
-
-NS_IMETHODIMP
-nsMathMLmtableOuterFrame::UpdatePresentationDataFromChildAt(nsIPresContext* aPresContext,
-                                                            PRInt32         aFirstIndex,
-                                                            PRInt32         aLastIndex,
-                                                            PRInt32         aScriptLevelIncrement,
-                                                            PRUint32        aFlagsValues,
-                                                            PRUint32        aFlagsToUpdate)
-{
-  PRInt32 index = 0;
-  nsIFrame* childFrame = mFrames.FirstChild();
-  while (childFrame) {
-    if ((index >= aFirstIndex) &&
-        ((aLastIndex <= 0) || ((aLastIndex > 0) && (index <= aLastIndex)))) {
-      UpdatePresentationDataFor(aPresContext, childFrame,
-        aScriptLevelIncrement, aFlagsValues, aFlagsToUpdate);
-    }
-    index++;
-    childFrame->GetNextSibling(&childFrame);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMathMLmtableOuterFrame::ReResolveScriptStyle(nsIPresContext*  aPresContext,
-                                               nsIStyleContext* aParentContext,
-                                               PRInt32          aParentScriptLevel)
-{
-  // pass aParentScriptLevel -- it is as if we were not there...
-  ReResolveScriptStyleFor(aPresContext, this, aParentScriptLevel);
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsMathMLmtableOuterFrame::Reflow(nsIPresContext*          aPresContext,
                                  nsHTMLReflowMetrics&     aDesiredSize,
@@ -539,10 +455,10 @@ nsMathMLmtdInnerFrame::~nsMathMLmtdInnerFrame()
 
 NS_IMETHODIMP
 nsMathMLmtdInnerFrame::Init(nsIPresContext*  aPresContext,
-                       nsIContent*      aContent,
-                       nsIFrame*        aParent,
-                       nsIStyleContext* aContext,
-                       nsIFrame*        aPrevInFlow)
+                            nsIContent*      aContent,
+                            nsIFrame*        aParent,
+                            nsIStyleContext* aContext,
+                            nsIFrame*        aPrevInFlow)
 {
   nsresult rv;
   rv = nsBlockFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
@@ -573,16 +489,6 @@ nsMathMLmtdInnerFrame::Init(nsIPresContext*  aPresContext,
   }
 
   return rv;
-}
-
-NS_IMETHODIMP
-nsMathMLmtdInnerFrame::ReResolveScriptStyle(nsIPresContext*  aPresContext,
-                                       nsIStyleContext* aParentContext,
-                                       PRInt32          aParentScriptLevel)
-{
-  // pass aParentScriptLevel -- it is as if we were not there...
-  ReResolveScriptStyleFor(aPresContext, this, aParentScriptLevel);
-  return NS_OK;
 }
 
 NS_IMETHODIMP

@@ -54,19 +54,10 @@ public:
                       nsIFrame*       aChildList);
 
   NS_IMETHOD
-  UpdatePresentationData(PRInt32  aScriptLevelIncrement,
-                         PRUint32 aFlagsValues,
-                         PRUint32 aFlagsToUpdate)
-  {
-    nsMathMLContainerFrame::UpdatePresentationData(aScriptLevelIncrement,
-                                                   aFlagsValues, aFlagsToUpdate);
-    // disable the stretch-all flag if we are going to act like a subscript-superscript pair
-    if ( NS_MATHML_IS_MOVABLELIMITS(mPresentationData.flags) &&
-        !NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags)) {
-      mEmbellishData.flags &= ~NS_MATHML_STRETCH_ALL_CHILDREN_HORIZONTALLY;
-    }
-    return NS_OK;
-  }
+  UpdatePresentationData(nsIPresContext* aPresContext,
+                         PRInt32         aScriptLevelIncrement,
+                         PRUint32        aFlagsValues,
+                         PRUint32        aFlagsToUpdate);
 
 protected:
   nsMathMLmunderoverFrame();

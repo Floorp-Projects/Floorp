@@ -205,9 +205,10 @@ public:
   *        update some flags in the frame, leaving the other flags unchanged.
   */
   NS_IMETHOD
-  UpdatePresentationData(PRInt32  aScriptLevelIncrement,
-                         PRUint32 aFlagsValues,
-                         PRUint32 aFlagsToUpdate) = 0;
+  UpdatePresentationData(nsIPresContext* aPresContext,
+                         PRInt32         aScriptLevelIncrement,
+                         PRUint32        aFlagsValues,
+                         PRUint32        aFlagsToUpdate) = 0;
 
  /* UpdatePresentationDataFromChildAt :
   * Increments the scriplevel and sets the displaystyle and compression flags
@@ -270,6 +271,10 @@ public:
   * ReResolveScriptStyle() will walk a subtree to cause this mathml-specific behavior
   * to happen. The method is recursive and only a top-level parent wishing to reflect
   * the changes in its children needs to call to the method.
+  *
+  * This function is *very* expensive. Unfortunately, there isn't much
+  * to do about it at the moment. For background on the problem @see 
+  * http://groups.google.com/groups?selm=3A9192B5.D22B6C38%40maths.uq.edu.au
   */
   NS_IMETHOD
   ReResolveScriptStyle(nsIPresContext*  aPresContext,
