@@ -21,7 +21,7 @@ IGNORE_MANIFEST=1
 LIBRARY_NAME=raptorhtmlpars 
 DEFINES=-D_IMPL_NS_HTMLPARS -DWIN32_LEAN_AND_MEAN
 MODULE=raptor 
-REQUIRES=xpcom raptor netlib
+REQUIRES=xpcom raptor netlib 
 
 CPPSRCS=					\
 	nsDTDUtils.cpp				\
@@ -110,7 +110,7 @@ EXTRA_EXPORTS=					\
 	nsHTMLTags.h				\
 	$(NULL)
 
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\netlib
+LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\netlib -I$(PUBLIC)\uconv
 
 MAKE_OBJ_TYPE = DLL
 DLLNAME = raptorhtmlpars
