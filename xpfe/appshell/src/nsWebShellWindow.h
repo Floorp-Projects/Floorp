@@ -263,9 +263,10 @@ protected:
   nsString mDefaultStatus;
 
   nsCOMPtr<nsITimer>      mSPTimer;
+  PRBool                  mSPTimerSize, mSPTimerPosition;
   PRLock *                mSPTimerLock;
 
-  void        SetPersistenceTimer(void);
+  void        SetPersistenceTimer(PRBool aSize, PRBool aPosition);
   static void FirePersistenceTimer(nsITimer *aTimer, void *aClosure);
 
 private:

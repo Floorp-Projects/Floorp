@@ -441,7 +441,8 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
         win = NS_REINTERPRET_CAST(nsWebShellWindow *, data);
         // persist position, but not immediately, in case this OS is firing
         // repeated move events as the user drags the window
-        win->SetPersistenceTimer();
+//      win->SetPersistenceTimer();
+        win->StoreBoundsToXUL(PR_TRUE, PR_FALSE);
         break;
       }
       case NS_SIZE: {
@@ -455,7 +456,8 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
         win = NS_REINTERPRET_CAST(nsWebShellWindow *, data);
         // persist size, but not immediately, in case this OS is firing
         // repeated size events as the user drags the sizing handle
-        win->SetPersistenceTimer();
+        //win->SetPersistenceTimer();
+        win->StoreBoundsToXUL(PR_FALSE, PR_TRUE);
         result = nsEventStatus_eConsumeNoDefault;
         break;
       }
@@ -1224,15 +1226,20 @@ nsWebShellWindow::DestroyModalDialogEvent(PLEvent *aEvent)
 }
 
 void
-nsWebShellWindow::SetPersistenceTimer(void)
+nsWebShellWindow::SetPersistenceTimer(PRBool aSize, PRBool aPosition)
 {
   PR_Lock(mSPTimerLock);
-  if (mSPTimer)
+  if (mSPTimer) {
     mSPTimer->SetDelay(SIZE_PERSISTENCE_TIMEOUT);
-  else
+    mSPTimerSize |= aSize;
+    mSPTimerPosition |= aPosition;
+  } else {
     if (NS_SUCCEEDED(NS_NewTimer(getter_AddRefs(mSPTimer))))
       mSPTimer->Init(FirePersistenceTimer, this,
                      SIZE_PERSISTENCE_TIMEOUT, NS_TYPE_ONE_SHOT);
+      mSPTimerSize = aSize;
+      mSPTimerPosition = aPosition;
+  }
   PR_Unlock(mSPTimerLock);
 }
 
@@ -1243,7 +1250,7 @@ nsWebShellWindow::FirePersistenceTimer(nsITimer *aTimer, void *aClosure)
   PR_Lock(win->mSPTimerLock);
   win->mSPTimer = nsnull;
   PR_Unlock(win->mSPTimerLock);
-  win->StoreBoundsToXUL(PR_TRUE, PR_TRUE);
+  win->StoreBoundsToXUL(win->mSPTimerSize, win->mSPTimerPosition);
 }
 
 
