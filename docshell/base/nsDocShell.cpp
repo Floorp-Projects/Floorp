@@ -2077,114 +2077,64 @@ nsDocShell::GetGlobalHistory(nsIGlobalHistory ** aGlobalHistory)
 NS_IMETHODIMP
 nsDocShell::GetCanGoBack(PRBool * aCanGoBack)
 {
-    nsCOMPtr<nsIDocShellTreeItem> root;
-    //Get the root docshell
-    GetSameTypeRootTreeItem(getter_AddRefs(root));
-    NS_ENSURE_TRUE(root, NS_ERROR_FAILURE);
-    // QI to nsIWebNavigation
-    nsCOMPtr<nsIWebNavigation> rootAsWebnav(do_QueryInterface(root));
-    if (rootAsWebnav) {
-        // Get the handle to SH from the root docshell
-        nsCOMPtr<nsISHistory> rootSH;
-        rootAsWebnav->GetSessionHistory(getter_AddRefs(rootSH));
-        NS_ENSURE_TRUE(rootSH, NS_ERROR_FAILURE);
-        // QI SH to nsIWebNavigation
-        nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(rootSH));
-        if (webNav)
-            return webNav->GetCanGoBack(aCanGoBack);
-    }
-    return NS_ERROR_FAILURE;
+    nsresult rv;
+    nsCOMPtr<nsISHistory> rootSH;
+    rv = GetRootSessionHistory(getter_AddRefs(rootSH));
+    nsCOMPtr<nsIWebNavigation> webnav(do_QueryInterface(rootSH));
+    NS_ENSURE_TRUE(webnav, NS_ERROR_FAILURE);
+    rv = webnav->GetCanGoBack(aCanGoBack);   
+    return rv;
 
 }
 
 NS_IMETHODIMP
 nsDocShell::GetCanGoForward(PRBool * aCanGoForward)
 {
-    nsCOMPtr<nsIDocShellTreeItem> root;
-    //Get the root docshell
-    GetSameTypeRootTreeItem(getter_AddRefs(root));
-    NS_ENSURE_TRUE(root, NS_ERROR_FAILURE);
-    // QI to nsIWebNavigation
-    nsCOMPtr<nsIWebNavigation> rootAsWebnav(do_QueryInterface(root));
-    if (rootAsWebnav) {
-        // Get the handle to SH from the root docshell
-        nsCOMPtr<nsISHistory> rootSH;
-        rootAsWebnav->GetSessionHistory(getter_AddRefs(rootSH));
-        NS_ENSURE_TRUE(rootSH, NS_ERROR_FAILURE);
-        // QI SH to nsIWebNavigation
-        nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(rootSH));
-        if (webNav)
-            return webNav->GetCanGoForward(aCanGoForward);
-    }
-    return NS_ERROR_FAILURE;
+    nsresult rv;
+    nsCOMPtr<nsISHistory> rootSH;
+    rv = GetRootSessionHistory(getter_AddRefs(rootSH)); 
+    nsCOMPtr<nsIWebNavigation> webnav(do_QueryInterface(rootSH));
+    NS_ENSURE_TRUE(webnav, NS_ERROR_FAILURE);
+    rv = webnav->GetCanGoForward(aCanGoForward);
+    return rv;
 
 }
 
 NS_IMETHODIMP
 nsDocShell::GoBack()
 {
-    nsCOMPtr<nsIDocShellTreeItem> root;
-    //Get the root docshell
-    GetSameTypeRootTreeItem(getter_AddRefs(root));
-    NS_ENSURE_TRUE(root, NS_ERROR_FAILURE);
-    // QI to nsIWebNavigation
-    nsCOMPtr<nsIWebNavigation> rootAsWebnav(do_QueryInterface(root));
-    if (rootAsWebnav) {
-        // Get the handle to SH from the root docshell
-        nsCOMPtr<nsISHistory> rootSH;
-        rootAsWebnav->GetSessionHistory(getter_AddRefs(rootSH));
-        NS_ENSURE_TRUE(rootSH, NS_ERROR_FAILURE);
-        // QI SH to nsIWebNavigation
-        nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(rootSH));
-        if (webNav)
-            return webNav->GoBack();
-    }
-    return NS_ERROR_FAILURE;
+    nsresult rv;
+    nsCOMPtr<nsISHistory> rootSH;
+    rv = GetRootSessionHistory(getter_AddRefs(rootSH));
+    nsCOMPtr<nsIWebNavigation> webnav(do_QueryInterface(rootSH));
+    NS_ENSURE_TRUE(webnav, NS_ERROR_FAILURE);
+    rv = webnav->GoBack();
+    return rv;
 
 }
 
 NS_IMETHODIMP
 nsDocShell::GoForward()
 {
-    nsCOMPtr<nsIDocShellTreeItem> root;
-    //Get the root docshell
-    GetSameTypeRootTreeItem(getter_AddRefs(root));
-    NS_ENSURE_TRUE(root, NS_ERROR_FAILURE);
-    // QI to nsIWebNavigation
-    nsCOMPtr<nsIWebNavigation> rootAsWebnav(do_QueryInterface(root));
-    if (rootAsWebnav) {
-        // Get the handle to SH from the root docshell
-        nsCOMPtr<nsISHistory> rootSH;
-        rootAsWebnav->GetSessionHistory(getter_AddRefs(rootSH));
-        NS_ENSURE_TRUE(rootSH, NS_ERROR_FAILURE);
-        // QI SH to nsIWebNavigation
-        nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(rootSH));
-        if (webNav)
-            return webNav->GoForward();
-    }
-    return NS_ERROR_FAILURE;
+    nsresult rv;
+    nsCOMPtr<nsISHistory> rootSH;
+    rv = GetRootSessionHistory(getter_AddRefs(rootSH));
+    nsCOMPtr<nsIWebNavigation> webnav(do_QueryInterface(rootSH));
+    NS_ENSURE_TRUE(webnav, NS_ERROR_FAILURE);
+    rv = webnav->GoForward();
+    return rv;
 
 }
 
 NS_IMETHODIMP nsDocShell::GotoIndex(PRInt32 aIndex)
 {
-    nsCOMPtr<nsIDocShellTreeItem> root;
-    //Get the root docshell
-    GetSameTypeRootTreeItem(getter_AddRefs(root));
-    NS_ENSURE_TRUE(root, NS_ERROR_FAILURE);
-    // QI to nsIWebNavigation
-    nsCOMPtr<nsIWebNavigation> rootAsWebnav(do_QueryInterface(root));
-    if (rootAsWebnav) {
-        // Get the handle to SH from the root docshell
-        nsCOMPtr<nsISHistory> rootSH;
-        rootAsWebnav->GetSessionHistory(getter_AddRefs(rootSH));
-        NS_ENSURE_TRUE(rootSH, NS_ERROR_FAILURE);
-        // QI SH to nsIWebNavigation
-        nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(rootSH));
-        if (webNav)
-            return webNav->GotoIndex(aIndex);
-    }
-    return NS_ERROR_FAILURE;
+    nsresult rv;
+    nsCOMPtr<nsISHistory> rootSH;
+    rv = GetRootSessionHistory(getter_AddRefs(rootSH));
+    nsCOMPtr<nsIWebNavigation> webnav(do_QueryInterface(rootSH));
+    NS_ENSURE_TRUE(webnav, NS_ERROR_FAILURE);
+    rv = webnav->GotoIndex(aIndex);
+    return rv;
 
 }
 
@@ -2377,6 +2327,7 @@ nsDocShell::SetSessionHistory(nsISHistory * aSessionHistory)
     return NS_ERROR_FAILURE;
 
 }
+
 
 NS_IMETHODIMP
 nsDocShell::GetSessionHistory(nsISHistory ** aSessionHistory)
@@ -4706,21 +4657,12 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel,
      * the current frame or in the root docshell
      */
     nsCOMPtr<nsISHistory> rootSH=mSessionHistory;
-    if (!mSessionHistory) {
-        nsCOMPtr<nsIDocShellTreeItem> root;
-        //Get the root docshell
-        GetSameTypeRootTreeItem(getter_AddRefs(root));
-        if (root) {
-            // QI root to nsIWebNavigation
-            nsCOMPtr<nsIWebNavigation> rootAsWebnav(do_QueryInterface(root));
-            if (rootAsWebnav) {
-                // Get the handle to SH from the root docshell          
-                rootAsWebnav->GetSessionHistory(getter_AddRefs(rootSH));
-                if (!rootSH)
-                    shAvailable = PR_FALSE;
-            }
-        }
-    }  // mSessionHistory
+    if (!rootSH) {
+        // Get the handle to SH from the root docshell          
+        nsresult rv = GetRootSessionHistory(getter_AddRefs(rootSH));
+        if (!rootSH)
+            shAvailable = PR_FALSE;
+    }  // rootSH
 
 
     // Determine if this type of load should update history.    
@@ -5423,6 +5365,23 @@ nsDocShell::CloneAndReplace(nsISHEntry * src, PRUint32 aCloneID,
 
     return result;
 
+}
+
+nsresult
+nsDocShell::GetRootSessionHistory(nsISHistory ** aReturn)
+{
+    nsresult rv;
+
+    nsCOMPtr<nsIDocShellTreeItem> root;
+    //Get the root docshell
+    rv = GetSameTypeRootTreeItem(getter_AddRefs(root));
+    // QI to nsIWebNavigation
+    nsCOMPtr<nsIWebNavigation> rootAsWebnav(do_QueryInterface(root));
+    if (rootAsWebnav) {
+        // Get the handle to SH from the root docshell
+        rv = rootAsWebnav->GetSessionHistory(aReturn);
+    }
+    return rv;
 }
 
 //*****************************************************************************
