@@ -36,9 +36,11 @@ CPPSRCS		= \
 		nsMsgSearchTerm.cpp \
 		nsMsgBodyHandler.cpp \
 		nsMsgLocalSearch.cpp \
+		nsMsgLocalSearch.cpp \
 		nsMsgSearchAdapter.cpp \
 		nsMsgSearchSession.cpp \
 		nsMsgImapSearch.cpp \
+		nsMsgSearchNews.cpp \
 		nsMsgFilterDataSource.cpp \
 		nsMsgFilterDelegateFactory.cpp \
 		$(NULL)

@@ -38,6 +38,7 @@ CPPSRCS=    nsMsgFilterService.cpp\
 			nsMsgSearchAdapter.cpp\
 			nsMsgSearchSession.cpp\
 			nsMsgImapSearch.cpp\
+			nsMsgSearchNews.cpp \
 			nsMsgFilterDataSource.cpp \
 			nsMsgFilterDelegateFactory.cpp \
 			$(NULL)
@@ -48,6 +49,7 @@ CPP_OBJS=   .\$(OBJDIR)\nsMsgFilterService.obj  \
 			.\$(OBJDIR)\nsMsgSearchTerm.obj\
 			.\$(OBJDIR)\nsMsgBodyHandler.obj\
 			.\$(OBJDIR)\nsMsgLocalSearch.obj\
+			.\$(OBJDIR)\nsMsgSearchNews.obj\
 			.\$(OBJDIR)\nsMsgImapSearch.obj\
 			.\$(OBJDIR)\nsMsgSearchSession.obj\
 			.\$(OBJDIR)\nsMsgSearchAdapter.obj\
