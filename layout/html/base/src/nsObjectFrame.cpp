@@ -120,7 +120,7 @@ public:
   NS_IMETHOD GetWidth(PRUint32 *result);
   
   NS_IMETHOD GetHeight(PRUint32 *result);
-  
+
   NS_IMETHOD GetBorderVertSpace(PRUint32 *result);
   
   NS_IMETHOD GetBorderHorizSpace(PRUint32 *result);
@@ -152,6 +152,8 @@ public:
   //locals
 
   NS_IMETHOD Init(nsIPresContext *aPresContext, nsObjectFrame *aFrame);
+
+  nsresult GetContainingBlock(nsIFrame *aFrame, nsIFrame **aContainingBlock);
   
   nsPluginPort* GetPluginPort();
   void ReleasePluginPort(nsPluginPort * pluginPort);//~~~
@@ -520,9 +522,9 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
 
   // could be an image
   nsIFrame * child = mFrames.FirstChild();
-  if(child != nsnull)
-  	return HandleImage(aPresContext, aMetrics, aReflowState, aStatus, child);
-
+  if(child != nsnull) {
+  	nsresult imageResult = HandleImage(aPresContext, aMetrics, aReflowState, aStatus, child);
+  }
   // if mInstance is null, we need to determine what kind of object we are and instantiate ourselves
   if(!mInstanceOwner)
   {
@@ -548,20 +550,20 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
     {
       nsCID widgetCID;
 	
-	PRBool bJavaObject = PR_FALSE;
-	PRBool bJavaPluginClsid = PR_FALSE;
+	    PRBool bJavaObject = PR_FALSE;
+	    PRBool bJavaPluginClsid = PR_FALSE;
 
-	if (classid.Find("java:") != -1)
-	{
-	    classid.Cut(0, 5); // Strip off the "java:". What's left is the class file.
-	    bJavaObject = PR_TRUE;
-	}
+	    if (classid.Find("java:") != -1)
+	    {
+	      classid.Cut(0, 5); // Strip off the "java:". What's left is the class file.
+	      bJavaObject = PR_TRUE;
+	    }
 
-	if (classid.Find("clsid:") != -1)
-	{
-            classid.Cut(0, 6); // Strip off the "clsid:". What's left is the class ID.
-	    bJavaPluginClsid = (classid.EqualsWithConversion(JAVA_CLASS_ID));
-	}
+	    if (classid.Find("clsid:") != -1)
+	    {
+        classid.Cut(0, 6); // Strip off the "clsid:". What's left is the class ID.
+	      bJavaPluginClsid = (classid.EqualsWithConversion(JAVA_CLASS_ID));
+	    }
 
       // if we find "java:" in the class id, or we match the Java classid number, we have a java applet
       if(bJavaObject || bJavaPluginClsid)
@@ -569,8 +571,8 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
         mimeType = (char *)PR_Malloc(PL_strlen("application/x-java-vm") + 1);
         PL_strcpy(mimeType, "application/x-java-vm");
 
-      if((rv = GetBaseURL(baseURL)) != NS_OK)
-	return rv;
+        if((rv = GetBaseURL(baseURL)) != NS_OK)
+	        return rv;
 
         nsAutoString codeBase;
         if(NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::codebase, codeBase) &&
@@ -630,7 +632,7 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
           } else {
 	          fullURL = baseURL;
               NS_IF_ADDREF(fullURL);
-	      }
+          }
 
           // get the nsIPluginHost interface
           pluginHost = do_GetService(kCPluginManagerCID);
@@ -2055,12 +2057,13 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetHeight(PRUint32 *result)
         }
 
         // now make it nicely fit counting margins
-        nsIFrame *parent;
-        mOwner->GetParent(&parent);
-        parent->GetRect(rect);
-
-        h -= 2*rect.y;
-
+        nsIFrame *containingBlock=nsnull;
+        rv = GetContainingBlock(mOwner, &containingBlock);
+        if (NS_SUCCEEDED(rv) && containingBlock)
+        {
+          containingBlock->GetRect(rect);
+          h -= 2*rect.y;
+        }
         *result = NSTwipsToIntPixels(attr*h/100, t2p);
       }
     }
@@ -2072,6 +2075,31 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetHeight(PRUint32 *result)
 
   return rv;
 }
+
+nsresult
+nsPluginInstanceOwner::GetContainingBlock(nsIFrame *aFrame, 
+                                          nsIFrame **aContainingBlock)
+{
+  NS_ENSURE_ARG_POINTER(aFrame);
+  NS_ENSURE_ARG_POINTER(aContainingBlock);
+
+  *aContainingBlock = nsnull;
+  nsIFrame *containingBlock = aFrame;
+  while (containingBlock) {
+    PRBool isContainingBlock=PR_FALSE;
+    nsresult rv = containingBlock->IsPercentageBase(isContainingBlock);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (isContainingBlock) 
+    {
+      *aContainingBlock = containingBlock;
+      break;
+    }
+    containingBlock->GetParent(&containingBlock);
+  }
+  return NS_OK;
+}
+
+
   
 NS_IMETHODIMP nsPluginInstanceOwner::GetBorderVertSpace(PRUint32 *result)
 {
