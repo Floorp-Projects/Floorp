@@ -82,7 +82,7 @@
 #include "nsMorkCID.h"
 #include "nsIMdbFactoryFactory.h"
 
-#include "nsIPref.h"
+#include "nsIPrefService.h"
 #include "nsIPrefBranchInternal.h"
 
 #include "nsIObserverService.h"
@@ -103,29 +103,31 @@ nsIRDFResource* nsGlobalHistory::kNC_URL;
 nsIRDFResource* nsGlobalHistory::kNC_HistoryRoot;
 nsIRDFResource* nsGlobalHistory::kNC_HistoryByDate;
 nsIMdbFactory* nsGlobalHistory::gMdbFactory = nsnull;
+nsIPrefBranch* nsGlobalHistory::gPrefBranch = nsnull;
 
-#define PREF_BROWSER_HISTORY_LAST_PAGE_VISITED "browser.history.last_page_visited"
-#define PREF_BROWSER_HISTORY_EXPIRE_DAYS "browser.history_expire_days"
-#define PREF_AUTOCOMPLETE_ONLY_TYPED "browser.urlbar.matchOnlyTyped"
-#define PREF_AUTOCOMPLETE_ENABLED "browser.urlbar.autocomplete.enabled"
+#define PREF_BRANCH_BASE                        "browser."
+#define PREF_BROWSER_HISTORY_LAST_PAGE_VISITED  "history.last_page_visited"
+#define PREF_BROWSER_HISTORY_EXPIRE_DAYS        "history_expire_days"
+#define PREF_BROWSER_STARTUP_PAGE               "startup.page"
+#define PREF_AUTOCOMPLETE_ONLY_TYPED            "urlbar.matchOnlyTyped"
+#define PREF_AUTOCOMPLETE_ENABLED               "urlbar.autocomplete.enabled"
 
 #define FIND_BY_AGEINDAYS_PREFIX "find:datasource=history&match=AgeInDays&method="
 
 // sync history every 10 seconds
-#define HISTORY_SYNC_TIMEOUT 10 * PR_MSEC_PER_SEC
+#define HISTORY_SYNC_TIMEOUT (10 * PR_MSEC_PER_SEC)
 //#define HISTORY_SYNC_TIMEOUT 3000 // every 3 seconds - testing only!
 
 // the value of mLastNow expires every 3 seconds
-#define HISTORY_EXPIRE_NOW_TIMEOUT 3 * PR_MSEC_PER_SEC
+#define HISTORY_EXPIRE_NOW_TIMEOUT (3 * PR_MSEC_PER_SEC)
 
-#define MSECS_PER_DAY PR_MSEC_PER_SEC * 60 * 60 * 24
+#define MSECS_PER_DAY (PR_MSEC_PER_SEC * 60 * 60 * 24)
 
 //----------------------------------------------------------------------
 //
 // CIDs
 
 static NS_DEFINE_CID(kRDFServiceCID,        NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kPrefCID,              NS_PREF_CID);
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 // closure structures for RemoveMatchingRows
@@ -562,6 +564,7 @@ nsGlobalHistory::~nsGlobalHistory()
     NS_IF_RELEASE(kNC_HistoryByDate);
     
     NS_IF_RELEASE(gMdbFactory);
+    NS_IF_RELEASE(gPrefBranch);
   }
 
   NS_IF_RELEASE(mEnv);
@@ -610,12 +613,17 @@ nsGlobalHistory::AddPage(const char *aURL)
   NS_ENSURE_ARG_POINTER(aURL);
   NS_ENSURE_SUCCESS(OpenDB(), NS_ERROR_FAILURE);
 
-  nsresult rv;
-  rv = SaveLastPageVisited(aURL);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = AddPageToDatabase(aURL, GetNow());
+  nsresult rv = AddPageToDatabase(aURL, GetNow());
   NS_ENSURE_SUCCESS(rv, rv);
+
+  if (gPrefBranch) {
+    PRInt32 choice = 0;
+    gPrefBranch->GetIntPref(PREF_BROWSER_STARTUP_PAGE, &choice);
+    if (choice == 2) {
+      rv = SaveLastPageVisited(aURL);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
 
   return NS_OK;
 }
@@ -1185,34 +1193,27 @@ nsGlobalHistory::IsVisited(const char *aURL, PRBool *_retval)
 nsresult
 nsGlobalHistory::SaveLastPageVisited(const char *aURL)
 {
-  nsresult rv;
+  NS_ENSURE_TRUE(aURL, NS_ERROR_FAILURE);
+  NS_ENSURE_STATE(gPrefBranch);
 
-  if (!aURL) return NS_ERROR_FAILURE;
-  
-  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv));
-  if (NS_FAILED(rv)) return rv;
-
-  rv = prefs->SetCharPref(PREF_BROWSER_HISTORY_LAST_PAGE_VISITED, aURL);
-
-  return rv;
+  return gPrefBranch->SetCharPref(PREF_BROWSER_HISTORY_LAST_PAGE_VISITED, aURL);
 }
 
 NS_IMETHODIMP
 nsGlobalHistory::GetLastPageVisited(char **_retval)
 { 
-  nsresult rv;
-
-  if (!_retval) return NS_ERROR_NULL_POINTER;
-
-  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv));
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_ARG_POINTER(_retval);
+  NS_ENSURE_STATE(gPrefBranch);
 
   nsXPIDLCString lastPageVisited;
-  rv = prefs->CopyCharPref(PREF_BROWSER_HISTORY_LAST_PAGE_VISITED, getter_Copies(lastPageVisited));
-  if (NS_FAILED(rv)) return rv;
+  nsresult rv =
+    gPrefBranch->GetCharPref(PREF_BROWSER_HISTORY_LAST_PAGE_VISITED,
+                             getter_Copies(lastPageVisited));
 
-  *_retval = nsCRT::strdup((const char *)lastPageVisited);
+  NS_ENSURE_SUCCESS(rv, rv);
 
+  *_retval = ToNewCString(lastPageVisited);
+  NS_ENSURE_TRUE(*_retval, NS_ERROR_OUT_OF_MEMORY);
 
   return NS_OK;
 }
@@ -2287,15 +2288,20 @@ nsGlobalHistory::Init()
   // we'd like to get this pref when we need it, but at that point,
   // we can't get the pref service. register a pref observer so we update
   // if the pref changes
-  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv));
-  if (NS_SUCCEEDED(rv)) {
-    prefs->GetIntPref(PREF_BROWSER_HISTORY_EXPIRE_DAYS, &mExpireDays);
-    prefs->GetBoolPref(PREF_AUTOCOMPLETE_ONLY_TYPED, &mAutocompleteOnlyTyped);
-    nsCOMPtr<nsIPrefBranchInternal> prefInternal = do_QueryInterface(prefs, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      prefInternal->AddObserver(PREF_AUTOCOMPLETE_ONLY_TYPED, this, PR_FALSE);
-      prefInternal->AddObserver(PREF_BROWSER_HISTORY_EXPIRE_DAYS, this, PR_FALSE);
-    }
+
+  if (!gPrefBranch) {
+    nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = prefs->GetBranch(PREF_BRANCH_BASE, &gPrefBranch);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  gPrefBranch->GetIntPref(PREF_BROWSER_HISTORY_EXPIRE_DAYS, &mExpireDays);
+  gPrefBranch->GetBoolPref(PREF_AUTOCOMPLETE_ONLY_TYPED, &mAutocompleteOnlyTyped);
+  nsCOMPtr<nsIPrefBranchInternal> pbi = do_QueryInterface(gPrefBranch);
+  if (pbi) {
+    pbi->AddObserver(PREF_AUTOCOMPLETE_ONLY_TYPED, this, PR_FALSE);
+    pbi->AddObserver(PREF_BROWSER_HISTORY_EXPIRE_DAYS, this, PR_FALSE);
   }
 
   if (gRefCnt++ == 0) {
@@ -3415,17 +3421,14 @@ nsGlobalHistory::Observe(nsISupports *aSubject,
   nsresult rv;
   // pref changing - update member vars
   if (!nsCRT::strcmp(aTopic, "nsPref:changed")) {
+    NS_ENSURE_STATE(gPrefBranch);
 
     // expiration date
     if (!nsCRT::strcmp(aSomeData, NS_LITERAL_STRING(PREF_BROWSER_HISTORY_EXPIRE_DAYS).get())) {
-      nsCOMPtr<nsIPref> prefs = do_GetService(kPrefCID, &rv);
-      if (NS_SUCCEEDED(rv))
-        prefs->GetIntPref(PREF_BROWSER_HISTORY_EXPIRE_DAYS, &mExpireDays);
+      gPrefBranch->GetIntPref(PREF_BROWSER_HISTORY_EXPIRE_DAYS, &mExpireDays);
     }
     else if (!nsCRT::strcmp(aSomeData, NS_LITERAL_STRING(PREF_AUTOCOMPLETE_ONLY_TYPED).get())) {
-      nsCOMPtr<nsIPref> prefs = do_GetService(kPrefCID, &rv);
-      if (NS_SUCCEEDED(rv))
-        prefs->GetBoolPref(PREF_AUTOCOMPLETE_ONLY_TYPED, &mAutocompleteOnlyTyped);
+      gPrefBranch->GetBoolPref(PREF_AUTOCOMPLETE_ONLY_TYPED, &mAutocompleteOnlyTyped);
     }
   }
   else if (!nsCRT::strcmp(aTopic, "profile-before-change")) {
@@ -3889,27 +3892,23 @@ nsGlobalHistory::OnStartLookup(const PRUnichar *searchString,
                                nsIAutoCompleteListener *listener)
 {
   NS_ASSERTION(searchString, "searchString can't be null, fix your caller");
+  NS_ENSURE_ARG_POINTER(listener);
+  NS_ENSURE_STATE(gPrefBranch);
+
   NS_ENSURE_SUCCESS(OpenDB(), NS_ERROR_FAILURE);
 
-  if (!listener)
-    return NS_ERROR_NULL_POINTER;
-      
-  nsresult rv = NS_OK;
-
-  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv));
-  if (NS_FAILED(rv)) return rv;
-
   PRBool enabled = PR_FALSE;
-  prefs->GetBoolPref(PREF_AUTOCOMPLETE_ENABLED, &enabled);      
+  gPrefBranch->GetBoolPref(PREF_AUTOCOMPLETE_ENABLED, &enabled);      
 
   if (!enabled || searchString[0] == 0) {
     listener->OnAutoComplete(nsnull, nsIAutoCompleteStatus::ignored);
     return NS_OK;
   }
   
+  nsresult rv = NS_OK;
   nsCOMPtr<nsIAutoCompleteResults> results;
   results = do_CreateInstance(NS_AUTOCOMPLETERESULTS_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   AutoCompleteStatus status = nsIAutoCompleteStatus::failed;
 

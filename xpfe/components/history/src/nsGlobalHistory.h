@@ -44,6 +44,7 @@
 #include "nsIGlobalHistory.h"
 #include "nsIBrowserHistory.h"
 #include "nsIObserver.h"
+#include "nsIPrefBranch.h"
 #include "nsIRDFDataSource.h"
 #include "nsIRDFRemoteDataSource.h"
 #include "nsIRDFService.h"
@@ -342,6 +343,7 @@ protected:
   static nsIRDFResource* kNC_HistoryByDate;
 
   static nsIMdbFactory* gMdbFactory;
+  static nsIPrefBranch* gPrefBranch;
   //
   // custom enumerators
   //
