@@ -357,6 +357,7 @@ nsComboboxControlFrame::ShowList(nsIPresContext* aPresContext, PRBool aShowList)
     mDroppedDown = PR_TRUE;
      // The listcontrol frame will call back to the nsComboboxControlFrame's ListWasSelected
      // which will stop the capture.
+    mListControlFrame->AboutToDropDown();
     mListControlFrame->CaptureMouseEvents(PR_TRUE);
   } else {
     ShowPopup(PR_FALSE);
@@ -892,7 +893,7 @@ nsComboboxControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
   PositionDropdown(*mPresContext, displayRect.height, absoluteTwips, absolutePixels);
 
   ToggleList(mPresContext);
-  mIgnoreMouseUp = PR_TRUE;
+  //mIgnoreMouseUp = PR_TRUE;
 */
   return NS_OK;
 }

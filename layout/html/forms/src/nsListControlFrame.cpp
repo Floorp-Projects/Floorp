@@ -201,6 +201,8 @@ nsListControlFrame::Reflow(nsIPresContext&          aPresContext,
   //longest element in the list
   nsHTMLReflowState secondPassState(aReflowState);
   nsHTMLReflowState firstPassState(aReflowState);
+  //nsHTMLReflowState   firstPassState(aPresContext, nsnull,
+  //                                   this, aDesiredSize);
 
    // Get the size of option elements inside the listbox
    // Compute the width based on the longest line in the listbox.
@@ -259,6 +261,12 @@ nsListControlFrame::Reflow(nsIPresContext&          aPresContext,
   if (!aReflowState.mStyleSpacing->GetBorder(border)) {
     NS_NOTYETIMPLEMENTED("percentage border");
     border.SizeTo(0, 0, 0, 0);
+  }
+
+  nsMargin padding;
+  if (!aReflowState.mStyleSpacing->GetPadding(padding)) {
+    NS_NOTYETIMPLEMENTED("percentage padding");
+    padding.SizeTo(0, 0, 0, 0);
   }
 
   mBorderOffsetY = border.top;
@@ -1122,6 +1130,7 @@ nsListControlFrame::IsContentSelected(nsIContent* aContent)
 {
   nsString value; 
   nsIAtom * selectedAtom = NS_NewAtom(kMozSelected);
+  //nsIAtom * selectedAtom = NS_NewAtom("selected");
   nsresult result = aContent->GetAttribute(kNameSpaceID_None, selectedAtom, value);
   NS_RELEASE(selectedAtom);
 
@@ -1752,6 +1761,14 @@ nsListControlFrame::SyncViewWithFrame()
 }
 
 //---------------------------------------------------------
+NS_IMETHODIMP 
+nsListControlFrame::AboutToDropDown()
+{
+  mSelectedIndexWhenPoppedDown = mSelectedIndex;
+  return NS_OK;
+}
+
+//---------------------------------------------------------
 nsresult
 nsListControlFrame::GetScrollingParentView(nsIFrame* aParent, nsIView** aParentView)
 {
@@ -1829,18 +1846,53 @@ nsListControlFrame::SetSuggestedSize(nscoord aWidth, nscoord aHeight)
   return NS_OK;
 }
 
+//---------------------------------------------------------
+NS_IMETHODIMP 
+nsListControlFrame::IsTargetOptionDisabled(PRBool &aIsDisabled)
+{
+  nsresult rv = NS_ERROR_FAILURE;
+  aIsDisabled = PR_FALSE;
+
+  nsIEventStateManager *stateManager;
+  rv = mPresContext->GetEventStateManager(&stateManager);
+  if (NS_OK == rv) {
+    nsIContent * content;
+    rv = stateManager->GetEventTargetContent(&content);
+    if (NS_OK == rv && nsnull != content) {
+      if (IsOptionElement(content)) {
+        aIsDisabled = nsFormFrame::GetDisabled(this, content);
+      } else {
+        rv = NS_ERROR_FAILURE; // return error when it is not an option
+      }
+      NS_RELEASE(content);
+    }
+    NS_RELEASE(stateManager);
+  }
+  return rv;
+}
+
 //----------------------------------------------------------------------
 // nsIDOMMouseListener
 //----------------------------------------------------------------------
 nsresult
 nsListControlFrame::MouseUp(nsIDOMEvent* aMouseEvent)
 {
-  //if (nsEventStatus_eConsumeNoDefault == aEventStatus) {
-  //  return NS_OK;
-  //}
 
   if (nsFormFrame::GetDisabled(this)) { 
     return NS_OK;
+  }
+
+  // Check to see if the disabled option was clicked on
+  // NS_ERROR_FAILURE is returned is it isn't over an option
+  PRBool optionIsDisabled;
+  if (NS_OK == IsTargetOptionDisabled(optionIsDisabled)) {
+    if (optionIsDisabled) {
+      mSelectedIndex = mSelectedIndexWhenPoppedDown;
+      if (IsInDropDownMode() == PR_TRUE && mComboboxFrame) {
+        mComboboxFrame->ListWasSelected(mPresContext); 
+      } 
+      return NS_OK;
+    }
   }
 
   const nsStyleDisplay* disp = (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
@@ -1912,6 +1964,15 @@ nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
   if (nsFormFrame::GetDisabled(this)) { 
     return NS_OK;
   }
+
+  // Check to see if the disabled option was clicked on
+  // NS_ERROR_FAILURE is returned is it isn't over an option
+  PRBool optionIsDisabled;
+  if (NS_OK == IsTargetOptionDisabled(optionIsDisabled)) {
+    mSelectedIndex = mSelectedIndexWhenPoppedDown;
+    return NS_OK;
+  }
+
   PRInt32 oldIndex;
   PRInt32 curIndex = mSelectedIndex;
 
@@ -1927,6 +1988,7 @@ nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
       HandleListSelection(aMouseEvent);
     }
   } else {
+    // NOTE: the combo box is responsible for dropping it down
     if (mComboboxFrame) {
       PRBool isDroppedDown;
       mComboboxFrame->IsDroppedDown(&isDroppedDown);
