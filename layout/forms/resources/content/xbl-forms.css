@@ -65,11 +65,12 @@ xul|*.select-outlinercol {
 }
 
 xul|*.select-outlinerrows {
-  -moz-binding: none;
+  -moz-binding: url("chrome://forms/content/select.xml#select-outlinerrows");
 }
 
 xul|*.select-outlinerbody {
   -moz-binding: url("chrome://forms/content/select.xml#select-outlinerbody");
+  display: -moz-box;
 }
 
 /*
