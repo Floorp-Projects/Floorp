@@ -26,13 +26,26 @@ OBJS =					\
 	.\$(OBJDIR)\nsSetupRegistry.obj	\
 	$(NULL)
 
+TEST_FILES      = \
+		plain.html \
+		plainwrap.out \
+		plainnowrap.out \
+		simple.html \
+		simplecopy.out \
+		entityxif.xif \
+		entityxif.out \
+		mailquote.html \
+		mailquote.out \
+		xifstuff.xif \
+		xifstuff.out \
+		$(NULL)
+
 LINCS=					\
   -I$(PUBLIC)\raptor			\
   -I$(PUBLIC)\xpcom			\
   -I$(PUBLIC)\netlib
 
 LLIBS=					\
- $(DIST)\lib\raptorhtmlpars.lib		\
  $(DIST)\lib\xpcom.lib	        \
  $(LIBNSPR)				\
  $(NULL)
@@ -47,6 +60,7 @@ include <$(DEPTH)\config\rules.mak>
 
 install:: $(PROGRAM)
 	$(MAKE_INSTALL) $(PROGRAM) $(DIST)\bin
+	$(MAKE_INSTALL) $(TEST_FILES) $(DIST)/bin/OutTestData
 
 clobber::
 	rm -f $(OBJS) $(DIST)\bin\Convert.exe

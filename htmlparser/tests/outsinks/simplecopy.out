@@ -1,3 +1,3 @@
 Simple html page Here is a link to mozilla.org. Here is some underlined and boldenedified text.
-Here is a line ending with a space followed by a line break. The output should contain only one space between "space" and "followed".
+Here is a line ending with a space followed by a line break. The output should contain only one space (and no line breaks) between "space" and "followed".
 

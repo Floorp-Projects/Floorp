@@ -1,3 +1,4 @@
+
 <html>
 <head>
 <!--
@@ -19,22 +20,23 @@
   -- Copyright (C) 1998-1999 Netscape Communications Corporation. All
   -- Rights Reserved.
   -- 
-  -- Contributor(s): Akkana Peck
+  -- Contributor(s): 
   -->
-<title>Simple html page</title>
+
+<title>XIF Test Page</title>
+
+
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 </head>
 
+
 <body>
-<h1>Simple html page</h1>
+<h2>Here's the deal...</h2>
 
-Here is a <a href="http://www.mozilla.org">link to the mozilla.org</a> page.
-Here is some <u>underlined and <b>bold</b>ened</u>ified text.
+<p>This is a good place to add in <b>html</b> to aid in testing features 
+under development.  It's also a great place to not use latin.
+<!-- This is a comment;
+     Here is more of the comment.
+ -->
 
-<p>
-Here is a line ending with a space
-followed by a line break.
-The output should contain only one space (and no line breaks) between "space" and "followed".
-</p>
-
-</body>
-</html>
+</p></body>

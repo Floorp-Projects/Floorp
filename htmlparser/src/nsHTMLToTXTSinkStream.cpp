@@ -164,6 +164,7 @@ nsHTMLToTXTSinkStream::nsHTMLToTXTSinkStream()
   NS_INIT_REFCNT();
   mColPos = 0;
   mIndent = 0;
+  mCiteQuote = PR_FALSE;
   mDoOutput = PR_FALSE;
   mBufferSize = 0;
   mBufferLength = 0;
@@ -355,6 +356,24 @@ nsHTMLToTXTSinkStream::AddComment(const nsIParserNode& aNode)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsHTMLToTXTSinkStream::GetValueOfAttribute(const nsIParserNode& aNode,
+                                           char* aMatchKey,
+                                           nsString& aValueRet)
+{
+  nsAutoString matchKey (aMatchKey);
+  PRInt32 count=aNode.GetAttributeCount();
+  for (PRInt32 i=0;i<count;i++)
+  {
+    const nsString& key = aNode.GetKeyAt(i);
+    if (key == matchKey)
+    {
+      aValueRet = aNode.GetValueAt(i);
+      return NS_OK;
+    }
+  }
+  return NS_ERROR_NOT_AVAILABLE;
+}
     
 /**
   * This method is used to a general container. 
@@ -371,19 +390,13 @@ nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode)
   const nsString&   name = aNode.GetText();
   if (name.Equals("XIF_DOC_INFO"))
   {
-    PRInt32 count=aNode.GetAttributeCount();
-    for(PRInt32 i=0;i<count;i++)
+    nsString value;
+    if (NS_SUCCEEDED(GetValueOfAttribute(aNode, "charset", value)))
     {
-      const nsString& key=aNode.GetKeyAt(i);
-      const nsString& value=aNode.GetValueAt(i);
-
-      if (key.Equals("charset"))
-      {
-        if (mCharsetOverride.Length() == 0)
-          InitEncoder(value);
-        else
-          InitEncoder(mCharsetOverride);
-      }
+      if (mCharsetOverride.Length() == 0)
+        InitEncoder(value);
+      else
+        InitEncoder(mCharsetOverride);
     }
   }
 
@@ -427,7 +440,17 @@ nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode)
     mColPos++;
   }
   else if (type == eHTMLTag_blockquote)
-    mIndent += gTabSize;
+  {
+    // Find out whether it's a type=cite, and insert "> " instead.
+    // Eventually we should get the value of the pref controlling citations,
+    // and handle AOL-style citations as well.
+    nsString value;
+    if (NS_SUCCEEDED(GetValueOfAttribute(aNode, "type", value))
+        && value.StripChars("\"").Equals("cite", PR_TRUE))
+      mCiteQuote = PR_TRUE;
+    else
+      mIndent += gTabSize;
+  }
   else if (type == eHTMLTag_pre)
   {
     nsAutoString temp(NS_LINEBREAK);
@@ -489,14 +512,19 @@ nsHTMLToTXTSinkStream::CloseContainer(const nsIParserNode& aNode)
     --mOLStackIndex;
 
   else if (type == eHTMLTag_blockquote)
-    mIndent -= gTabSize;
+  {
+    if (mCiteQuote)
+      mCiteQuote = PR_FALSE;
+    else
+      mIndent -= gTabSize;
+  }
 
   // End current line if we're ending a block level tag
   if (IsBlockLevel(type))
   {
     if (mColPos != 0)
     {
-      if (mFlags & nsIDocumentEncoder::OutputFormatted)
+      //if (mFlags & nsIDocumentEncoder::OutputFormatted)
       {
         nsAutoString temp(NS_LINEBREAK);
         Write(temp);
@@ -538,15 +566,7 @@ nsHTMLToTXTSinkStream::AddLeaf(const nsIParserNode& aNode)
     }
 #endif
 
-    if ((mFlags & nsIDocumentEncoder::OutputFormatted
-         || mFlags & nsIDocumentEncoder::OutputWrap)
-        && mWrapColumn > 0)
-      WriteWrapped(text);
-    else
-    {
-      Write(text);
-      mColPos += text.Length();
-    }
+    Write(text);
   } 
   else if (type == eHTMLTag_entity)
   {
@@ -650,15 +670,16 @@ void nsHTMLToTXTSinkStream::EncodeToBuffer(const nsString& aSrc)
 
 
 /**
- *  Write places the contents of aString into either the output stream
+ *  WriteSimple places the contents of aString into either the output stream
  *  or the output string.
- *  When going to the stream, all data is run through the encoder
+ *  When going to the stream, all data is run through the encoder.
+ *  No formatting or wrapping is done here; that happens in ::Write.
  *  
  *  @updated gpk02/03/99
  *  @param   
  *  @return  
  */
-void nsHTMLToTXTSinkStream::Write(const nsString& aString)
+void nsHTMLToTXTSinkStream::WriteSimple(const nsString& aString)
 {
   // If a encoder is being used then convert first convert the input string
   if (mUnicodeEncoder != nsnull)
@@ -696,51 +717,86 @@ void nsHTMLToTXTSinkStream::Write(const nsString& aString)
 
 //
 // Write a string, wrapping appropriately to mWrapColumn.
+// This routine also handles indentation and mail-quoting,
+// and so should be used for formatted output even if we're not wrapping.
 //
 void
-nsHTMLToTXTSinkStream::WriteWrapped(const nsString& aString)
+nsHTMLToTXTSinkStream::Write(const nsString& aString)
 {
 #ifdef DEBUG_wrapping
   char* foo = aString.ToNewCString();
-  printf("WriteWrapped(%s): wrap col = %d\n", foo, mWrapColumn);
+  printf("Write(%s): wrap col = %d, mColPos = %d\n", foo, mWrapColumn, mColPos);
   nsAllocator::Free(foo);
 #endif
 
   PRInt32 bol = 0;
   int totLen = aString.Length();
-  while (bol < totLen)     // Loop over lines
-  {
-#ifdef DEBUG_wrapping
-    nsString remaining;
-    aString.Right(remaining, totLen - bol);
-    foo = remaining.ToNewCString();
-    printf("Next line: bol = %d, totLen = %d, string = '%s'\n",
-           bol, totLen, foo);
-    nsAllocator::Free(foo);
-#endif
 
-    // Indent at the beginning of the line, if necessary
-    if (mColPos == 0 && mIndent > 0)
+  // Put the mail quote "> " chars in, if appropriate:
+  if (mColPos == 0)
+  {
+    if (mCiteQuote)
+    {
+      nsAutoString temp("> ");
+      WriteSimple(temp);
+      mColPos += 2;
+    }
+    // Indent if necessary
+    if (mIndent > 0)
     {
       char* spaces = NS_STATIC_CAST(char*, nsAllocator::Alloc(mIndent+1));
       for (int i=0; i<mIndent; ++i)
         spaces[i] = ' ';
       spaces[mIndent] = '\0';
       nsAutoString temp(spaces);
-      Write (temp);
+      WriteSimple(temp);
       mColPos += mIndent;
       nsAllocator::Free(spaces);
     }
+  }
 
-    // See if there's a newline in the string:
-    PRInt32 newline = aString.FindCharInSet("\n\r", bol);
+  // Don't wrap mail-quoted text
+  PRUint32 wrapcol = (mCiteQuote ? 0 : mWrapColumn);
+
+  // See if there's a newline in the string:
+  PRInt32 newline = aString.FindCharInSet("\n\r", bol);
+
+  if ((!(mFlags & nsIDocumentEncoder::OutputFormatted)
+       && !(mFlags & nsIDocumentEncoder::OutputWrap))
+      || wrapcol == 0)
+  {
+    WriteSimple(aString);
+
+    // Simple attempt to be smart about col pos:
+    if (newline >= 0)
+      mColPos = totLen - newline - 1;
+    else
+      mColPos += totLen;
+#ifdef DEBUG_wrapping
+    printf("No wrapping: newline is %d, totLen is %d; leaving mColPos = %d\n",
+           newline, totLen, mColPos);
+#endif
+    return;
+  }
+
+  while (bol < totLen)     // Loop over lines
+  {
+#ifdef DEBUG_wrapping
+    nsString remaining;
+    aString.Right(remaining, totLen - bol);
+    foo = remaining.ToNewCString();
+    printf("Next line: bol = %d, newline = %d, totLen = %d, string = '%s'\n",
+           bol, newline, totLen, foo);
+    nsAllocator::Free(foo);
+#endif
 
     // Set eol to the end of the string or the first newline,
     // whichever comes first:
-    int eol = bol + mWrapColumn - mColPos;
+    int eol = bol + wrapcol - mColPos;
 
-    if (eol > totLen)
-      eol = totLen;
+    if (eol > totLen || wrapcol == 0)
+      eol = bol + totLen;
+
     else if (newline > 0 && eol > newline)
       eol = newline;
     // else we have to wrap
@@ -773,11 +829,11 @@ nsHTMLToTXTSinkStream::WriteWrapped(const nsString& aString)
         if (mColPos > mIndent)
         {
           nsAutoString linebreak(NS_LINEBREAK);
-          Write(linebreak);
+          WriteSimple(linebreak);
           mColPos = 0;
           continue;
         }
-#endif /* CONFUSED */
+#endif /* NOTSURE */
 
         // Else apparently we really can't break this line at whitespace --
         // so scan forward to the next space or newline, and dump a long line.
@@ -786,9 +842,8 @@ nsHTMLToTXTSinkStream::WriteWrapped(const nsString& aString)
                && (newline < 0 || eol < newline))
         {
 #ifdef DEBUG_wrapping
-          nsString linestr;
-          aString.Mid(linestr, bol, lastSpace - bol);
-          foo = linestr.ToNewCString();
+          aString.Mid(remaining, bol, lastSpace - bol);
+          foo = remaining.ToNewCString();
           printf("Searching foreward: '%c' is not a space\n  line = '%s'\n",
                  (char)aString[lastSpace], foo);
           nsAllocator::Free(foo);
@@ -817,8 +872,16 @@ nsHTMLToTXTSinkStream::WriteWrapped(const nsString& aString)
     }
     else                        // Not wrapping and not writing a newline
       mColPos += lineStr.Length();
-    Write(lineStr);
+    WriteSimple(lineStr);
+#ifdef DEBUG_wrapping
+    foo = lineStr.ToNewCString();
+    printf("Calling WriteSimple(%s), leaving mColPos = %d\n", foo, mColPos);
+    nsAllocator::Free(foo);
+#endif
+
+    // Reset bol and newline:
     bol = eol+1;
+    newline = aString.FindCharInSet("\n\r", bol);
   } // Continue looping over the string
 }
 
