@@ -245,7 +245,7 @@ nsresult nsSVGMarkerFrame::Init()
   marker->GetMarkerUnits(getter_AddRefs(mMarkerUnits));
   marker->GetOrientType(getter_AddRefs(mOrientType));
 
-  mMarkerParent = NULL;
+  mMarkerParent = nsnull;
 
   return NS_OK;
 }
@@ -333,6 +333,7 @@ nsSVGMarkerFrame::PaintMark(nsISVGRendererCanvas *aCanvas,
       SVGFrame->Paint(aCanvas, dirtyRectTwips);
     }
   }
+  mMarkerParent = nsnull;
 }
 
 
@@ -369,6 +370,7 @@ NS_IMETHODIMP_(already_AddRefed<nsISVGRendererRegion>)
     }
     kid = kid->GetNextSibling();
   }
+  mMarkerParent = nsnull;
 
   return accu_region;
 }
