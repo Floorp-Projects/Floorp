@@ -34,6 +34,8 @@ public:
 	nsMsgThread(nsMsgDatabase *db, nsIMdbTable *table);
 	virtual ~nsMsgThread();
 
+	friend class nsMsgThreadEnumerator;
+
     NS_DECL_ISUPPORTS
 
 	NS_IMETHOD		SetThreadKey(nsMsgKey threadKey);
@@ -52,6 +54,7 @@ public:
 	NS_IMETHOD		RemoveChildHdr(nsIMsgDBHdr *child);
 	NS_IMETHOD		MarkChildRead(PRBool bRead);
 	NS_IMETHOD		EnumerateMessages(nsMsgKey parent, nsIEnumerator* *result);
+	NS_IMETHOD		GetRootHdr(PRInt32 *resultIndex, nsIMsgDBHdr **result);
 
 	// non-interface methods
 	PRBool TryReferenceThreading(nsIMsgDBHdr *newHeader);
@@ -66,6 +69,10 @@ protected:
 	nsresult			ChangeChildCount(PRInt32 delta);
 	nsresult			ChangeUnreadChildCount(PRInt32 delta);
 	nsresult			RemoveChild(nsMsgKey msgKey);
+	nsresult			SetThreadRootKey(nsMsgKey threadRootKey);
+	nsresult			GetChildHdrForKey(nsMsgKey desiredKey, 
+												nsIMsgDBHdr **result, PRInt32 *resultIndex); 
+
 
 	nsMsgKey		m_threadKey; 
 	PRUint32		m_numChildren;		
@@ -74,7 +81,7 @@ protected:
     nsIMdbTable		*m_mdbTable;
 	nsIMdbRow		*m_metaRow;
 	PRBool			m_cachedValuesInitialized;
-
+	nsMsgKey		m_threadRootKey;
 };
 
 #endif

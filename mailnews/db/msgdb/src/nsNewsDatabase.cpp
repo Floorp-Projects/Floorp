@@ -73,7 +73,7 @@ nsresult nsNewsDatabase::MessageDBOpenUsingURL(const char * groupURL)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsNewsDatabase::Open(nsIFileSpec *aNewsgroupName, PRBool create, nsIMsgDatabase** pMessageDB, PRBool upgrading /*=PR_FALSE*/)
+NS_IMETHODIMP nsNewsDatabase::Open(nsIFileSpec *aNewsgroupName, PRBool create, PRBool upgrading, nsIMsgDatabase** pMessageDB)
 {
   nsNewsDatabase	        *newsDB;
 
@@ -159,7 +159,7 @@ nsresult nsNewsDatabase::ForceClosed()
   return nsMsgDatabase::ForceClosed();
 }
 
-nsresult nsNewsDatabase::Commit(nsMsgDBCommitType commitType)
+nsresult nsNewsDatabase::Commit(nsMsgDBCommit commitType)
 {
   return nsMsgDatabase::Commit(commitType);
 }
@@ -210,7 +210,7 @@ NS_IMETHODIMP nsNewsDatabase::MarkHdrRead(nsIMsgDBHdr *msgHdr, PRBool bRead,
 	// since committing every time is expensive if we mark a
 	// whole bunch of headers as read, we should commit after we are
 	// done marking.
-    Commit(kSessionCommit);
+    Commit(nsMsgDBCommitType::kSessionCommit);
 	
 	return rv;
 }

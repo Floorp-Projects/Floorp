@@ -22,13 +22,13 @@ XPIDLSRCS =	\
 			.\nsIDBFolderInfo.idl		\
 			.\nsIDBChangeListener.idl		\
 			.\nsIDBChangeAnnouncer.idl		\
+			.\nsIMsgDatabase.idl		\
 			$(NULL)
 
 ################################################################################
 ## exports
 
 EXPORTS =	 						\
-			nsIMsgDatabase.h		\
 			nsINewsDatabase.h		\
 			nsMsgDatabase.h			\
 			nsMailDatabase.h		\

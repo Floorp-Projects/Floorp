@@ -37,10 +37,10 @@ public:
 
   virtual  nsresult         MessageDBOpenUsingURL(const char * groupURL);
   char *GetGroupURL()       { return m_groupURL; }
-  NS_IMETHOD				Open(nsIFileSpec *newsgroupName, PRBool create, nsIMsgDatabase** pMessageDB, PRBool upgrading /*=PR_FALSE*/);
+  NS_IMETHOD				Open(nsIFileSpec *newsgroupName, PRBool create, PRBool upgrading, nsIMsgDatabase** pMessageDB);
   NS_IMETHOD				Close(PRBool forceCommit);
   NS_IMETHOD				ForceClosed();
-  NS_IMETHOD				Commit(nsMsgDBCommitType commitType);
+  NS_IMETHOD				Commit(nsMsgDBCommit commitType);
   virtual PRUint32          GetCurVersion();
 
   // methods to get and set docsets for ids.

@@ -29,7 +29,7 @@ nsImapMailDatabase::~nsImapMailDatabase()
 {
 }
 
-NS_IMETHODIMP nsImapMailDatabase::Open(nsIFileSpec *aFolderName, PRBool create, nsIMsgDatabase** pMessageDB, PRBool upgrading /*=PR_FALSE*/)
+NS_IMETHODIMP nsImapMailDatabase::Open(nsIFileSpec *aFolderName, PRBool create, PRBool upgrading, nsIMsgDatabase** pMessageDB)
 {
 	nsImapMailDatabase	*mailDB;
 	PRBool			summaryFileExists;

@@ -40,8 +40,7 @@ class nsMailDatabase : public nsMsgDatabase
 public:
 	nsMailDatabase();
 	virtual ~nsMailDatabase();
-	NS_IMETHOD				Open(nsIFileSpec *aFolderName, PRBool create, nsIMsgDatabase** pMessageDB,
-                                 PRBool upgrading = PR_FALSE);
+	NS_IMETHOD				Open(nsIFileSpec *aFolderName, PRBool create, PRBool upgrading, nsIMsgDatabase** pMessageDB);
 
 	static  nsresult		CloneInvalidDBInfoIntoNewDB(nsFileSpec &pathName, nsMailDatabase** pMailDB);
 

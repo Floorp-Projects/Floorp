@@ -592,3 +592,16 @@ const char *nsMsgHdr::GetPrevReference(const char *prevRef, nsString2 &reference
 	return ptr;
 }
 
+PRBool nsMsgHdr::IsParentOf(nsIMsgDBHdr *possibleChild)
+{
+	PRUint16 numReferences = 0;
+	possibleChild->GetNumReferences(&numReferences);
+	nsAutoString2 reference(eOneByte);
+	nsAutoString2 messageId(eOneByte);
+
+	GetMessageId(messageId);
+	possibleChild->GetStringReference(numReferences - 1, reference);
+
+	return (messageId.Equals(reference));
+}
+

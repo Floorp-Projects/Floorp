@@ -58,7 +58,7 @@ public:
 
   //////////////////////////////////////////////////////////////////////////////
   // nsIMsgDatabase methods:
-  NS_IMETHOD Open(nsIFileSpec *folderName, PRBool create, nsIMsgDatabase** pMessageDB, PRBool upgrading);
+  NS_IMETHOD Open(nsIFileSpec *folderName, PRBool create, PRBool upgrading, nsIMsgDatabase** pMessageDB);
   NS_IMETHOD Close(PRBool forceCommit);
 
   // argh, these two shouldn't be Interface methods, but I can't diddle the interfaces
@@ -66,7 +66,7 @@ public:
   NS_IMETHOD OpenMDB(const char *dbName, PRBool create);
   NS_IMETHOD CloseMDB(PRBool commit);
 
-  NS_IMETHOD Commit(nsMsgDBCommitType commitType);
+  NS_IMETHOD Commit(nsMsgDBCommit commitType);
   // Force closed is evil, and we should see if we can do without it.
   // In 4.x, it was mainly used to remove corrupted databases.
   NS_IMETHOD ForceClosed(void);
@@ -128,9 +128,9 @@ public:
   NS_IMETHOD MarkHasAttachments(nsMsgKey key, PRBool bHasAttachments, 
                                 nsIDBChangeListener *instigator);
 
-  NS_IMETHOD MarkThreadIgnored(nsThreadMessageHdr *thread, nsMsgKey threadKey, PRBool bIgnored,
+  NS_IMETHOD MarkThreadIgnored(nsIMsgThread *thread, nsMsgKey threadKey, PRBool bIgnored,
                                nsIDBChangeListener *instigator);
-  NS_IMETHOD MarkThreadWatched(nsThreadMessageHdr *thread, nsMsgKey threadKey, PRBool bWatched,
+  NS_IMETHOD MarkThreadWatched(nsIMsgThread *thread, nsMsgKey threadKey, PRBool bWatched,
                                nsIDBChangeListener *instigator);
 
   NS_IMETHOD IsRead(nsMsgKey key, PRBool *pRead);
@@ -157,7 +157,7 @@ public:
                          nsIDBChangeListener *instigator);
 
   // returns NS_OK on success, NS_COMFALSE on failure
-  NS_IMETHOD  AllMsgKeysImapDeleted(const nsMsgKeyArray *keys);
+  NS_IMETHOD  AllMsgKeysImapDeleted(nsMsgKeyArray *keys);
 
   NS_IMETHOD MarkImapDeleted(nsMsgKey key, PRBool deleted,
                              nsIDBChangeListener *instigator);
@@ -199,8 +199,8 @@ public:
 
 	//helper function to fill in nsStrings from hdr row cell contents.
 	nsresult				RowCellColumnTonsString(nsIMdbRow *row, mdb_token columnToken, nsString &resultStr);
-	nsresult				RowCellColumnToUInt32(nsIMdbRow *row, mdb_token columnToken, PRUint32 *uint32Result);
-	nsresult				RowCellColumnToUInt32(nsIMdbRow *row, mdb_token columnToken, PRUint32 &uint32Result);
+	nsresult				RowCellColumnToUInt32(nsIMdbRow *row, mdb_token columnToken, PRUint32 *uint32Result, PRUint32 defaultValue = 0);
+	nsresult				RowCellColumnToUInt32(nsIMdbRow *row, mdb_token columnToken, PRUint32 &uint32Result, PRUint32 defaultValue = 0);
 	nsresult				RowCellColumnToMime2EncodedString(nsIMdbRow *row, mdb_token columnToken, nsString &resultStr);
 	nsresult				RowCellColumnToCollationKey(nsIMdbRow *row, mdb_token columnToken, nsString &resultStr);
 
@@ -241,7 +241,6 @@ protected:
 	nsMsgHdr	*	GetMsgHdrForReference(nsString2 &reference);
 	nsIMsgDBHdr	*	GetMsgHdrForMessageID(nsString2 &msgID);
 	nsIMsgDBHdr	*	GetMsgHdrForSubject(nsString2 &msgID);
-	nsMsgThread *	GetThreadContainingMsgHdr(nsMsgHdr *msgHdr);
 	// threading interfaces
 	virtual nsresult CreateNewThread(nsMsgKey key, const char *subject, nsMsgThread **newThread);
 	virtual PRBool	ThreadBySubjectWithoutRe();
@@ -319,6 +318,7 @@ protected:
 	mdb_token			m_numReferencesColumnToken;
 	mdb_token			m_messageCharSetColumnToken;
 	mdb_token			m_threadParentColumnToken;
+	mdb_token			m_threadRootKeyColumnToken;
 	nsIMsgHeaderParser	*m_HeaderParser;
 };
 

@@ -302,6 +302,7 @@ nsMsgDatabase::nsMsgDatabase()
 	  m_numReferencesColumnToken(0),
 	  m_messageCharSetColumnToken(0),
 	  m_threadParentColumnToken(0),
+	  m_threadRootKeyColumnToken(0),
 	  m_HeaderParser(nsnull)
 {
 	NS_INIT_REFCNT();
@@ -495,7 +496,7 @@ void nsMsgDatabase::NativeToUnix(char*& ioPath)
 }
 #endif /* XP_MAC */
 
-NS_IMETHODIMP nsMsgDatabase::Open(nsIFileSpec *folderName, PRBool create, nsIMsgDatabase** pMessageDB, PRBool upgrading /*=PR_FALSE*/)
+NS_IMETHODIMP nsMsgDatabase::Open(nsIFileSpec *folderName, PRBool create, PRBool upgrading, nsIMsgDatabase** pMessageDB)
 {
 	NS_ASSERTION(FALSE, "must override");
 	return NS_ERROR_NOT_IMPLEMENTED;
@@ -620,7 +621,7 @@ NS_IMETHODIMP nsMsgDatabase::OpenMDB(const char *dbName, PRBool create)
 NS_IMETHODIMP nsMsgDatabase::CloseMDB(PRBool commit)
 {
 	if (commit)
-		Commit(kSessionCommit);
+		Commit(nsMsgDBCommitType::kSessionCommit);
 	return(NS_OK);
 }
 
@@ -657,28 +658,28 @@ NS_IMETHODIMP nsMsgDatabase::GetDBFolderInfo(nsIDBFolderInfo	**result)
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgDatabase::Commit(nsMsgDBCommitType commitType)
+NS_IMETHODIMP nsMsgDatabase::Commit(nsMsgDBCommit commitType)
 {
 	nsresult	err = NS_OK;
 	nsIMdbThumb	*commitThumb = NULL;
 
-	commitType = kCompressCommit;	// ### until incremental writing works.
+	commitType = nsMsgDBCommitType::kCompressCommit;	// ### until incremental writing works.
 
 	if (m_mdbStore)
 	{
 		switch (commitType)
 		{
-		case kSmallCommit:
+		case nsMsgDBCommitType::kSmallCommit:
 			err = m_mdbStore->SmallCommit(GetEnv());
 			break;
-		case kLargeCommit:
+		case nsMsgDBCommitType::kLargeCommit:
 			err = m_mdbStore->LargeCommit(GetEnv(), &commitThumb);
 			break;
-		case kSessionCommit:
+		case nsMsgDBCommitType::kSessionCommit:
 			// comment out until persistence works.
 			err = m_mdbStore->SessionCommit(GetEnv(), &commitThumb);
 			break;
-		case kCompressCommit:
+		case nsMsgDBCommitType::kCompressCommit:
 			err = m_mdbStore->CompressCommit(GetEnv(), &commitThumb);
 			break;
 		}
@@ -732,6 +733,7 @@ const char *kThreadUnreadChildrenColumnName = "unreadChildren";
 const char *kThreadSubjectColumnName = "threadSubject";
 const char *kMessageCharSetColumnName = "msgCharSet";
 const char *kThreadParentColumnName = "threadParent";
+const char *kThreadRootColumnName = "threadRoot";
 struct mdbOid gAllMsgHdrsTableOID;
 struct mdbOid gAllThreadsTableOID;
 
@@ -840,6 +842,7 @@ nsresult nsMsgDatabase::InitMDBInfo()
 			err = GetStore()->StringToToken(GetEnv(), kAllThreadsTableKind, &m_allThreadsTableKindToken); 
 			err	= GetStore()->StringToToken(GetEnv(), kThreadHdrsScope, &m_threadRowScopeToken); 
 			err	= GetStore()->StringToToken(GetEnv(), kThreadParentColumnName, &m_threadParentColumnToken);
+			err	= GetStore()->StringToToken(GetEnv(), kThreadRootColumnName, &m_threadRootKeyColumnToken);
 			if (err == NS_OK)
 			{
 				// The table of all message hdrs will have table id 1.
@@ -941,7 +944,7 @@ NS_IMETHODIMP nsMsgDatabase::DeleteMessages(nsMsgKeyArray* nsMsgKeys, nsIDBChang
 		if (err != NS_OK)
 			break;
 	}
-	Commit(kSmallCommit);
+	Commit(nsMsgDBCommitType::kSmallCommit);
 	return err;
 }
 
@@ -985,7 +988,7 @@ NS_IMETHODIMP nsMsgDatabase::DeleteHeader(nsIMsgDBHdr *msg, nsIDBChangeListener 
     }
 
 	if (commit)
-		Commit(kLargeCommit);			// ### dmb is this a good time to commit?
+		Commit(nsMsgDBCommitType::kLargeCommit);			// ### dmb is this a good time to commit?
 	return ret;
 }
 
@@ -1088,7 +1091,7 @@ NS_IMETHODIMP nsMsgDatabase::IsIgnored(nsMsgKey key, PRBool *pIgnored)
 	if (!pIgnored)
 		return NS_ERROR_NULL_POINTER;
 #ifdef WE_DO_THREADING_YET
-	nsThreadMessageHdr *threadHdr = GetnsThreadHdrForMsgID(nsMsgKey);
+	nsIMsgThread *threadHdr = GetnsThreadHdrForMsgID(nsMsgKey);
 	// This should be very surprising, but we leave that up to the caller
 	// to determine for now.
 	if (threadHdr == NULL)
@@ -1182,14 +1185,14 @@ NS_IMETHODIMP nsMsgDatabase::MarkHasAttachments(nsMsgKey key, PRBool bHasAttachm
 }
 
 NS_IMETHODIMP
-nsMsgDatabase::MarkThreadIgnored(nsThreadMessageHdr *thread, nsMsgKey threadKey, PRBool bIgnored,
+nsMsgDatabase::MarkThreadIgnored(nsIMsgThread *thread, nsMsgKey threadKey, PRBool bIgnored,
                                  nsIDBChangeListener *instigator)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsMsgDatabase::MarkThreadWatched(nsThreadMessageHdr *thread, nsMsgKey threadKey, PRBool bWatched,
+nsMsgDatabase::MarkThreadWatched(nsIMsgThread *thread, nsMsgKey threadKey, PRBool bWatched,
                                  nsIDBChangeListener *instigator)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -1208,7 +1211,7 @@ NS_IMETHODIMP nsMsgDatabase::MarkOffline(nsMsgKey key, PRBool offline,
 }
 
 NS_IMETHODIMP
-nsMsgDatabase::AllMsgKeysImapDeleted(const nsMsgKeyArray *keys)
+nsMsgDatabase::AllMsgKeysImapDeleted(nsMsgKeyArray *keys)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -1324,7 +1327,7 @@ NS_IMETHODIMP nsMsgDatabase::MarkHdrRead(nsIMsgDBHdr *msgHdr, PRBool bRead,
 	if (!!isRead != !!bRead)
 	{
 #ifdef WE_DO_THREADING_YET
-		nsThreadMessageHdr *threadHdr = GetnsThreadHdrForMsgID(msgHdr->GetMessageKey());
+		nsIMsgThread *threadHdr = GetnsThreadHdrForMsgID(msgHdr->GetMessageKey());
 		if (threadHdr != NULL)
 		{
 			threadHdr->MarkChildRead(bRead);
@@ -1366,7 +1369,7 @@ NS_IMETHODIMP nsMsgDatabase::MarkAllRead(nsMsgKeyArray *thoseMarked)
 	}
 
 	if (numChanged > 0)	// commit every once in a while
-		Commit(kSmallCommit);
+		Commit(nsMsgDBCommitType::kSmallCommit);
 	// force num new to 0.
 	PRInt32 numNewMessages;
 
@@ -1418,7 +1421,7 @@ NS_IMETHODIMP nsMsgDatabase::MarkReadByDate (PRTime startDate, PRTime endDate, n
 		NS_RELEASE(pHeader);
 	}
 	if (numChanged > 0)
-		Commit(kSmallCommit);
+		Commit(nsMsgDBCommitType::kSmallCommit);
 	return rv;
 }
 
@@ -2059,18 +2062,18 @@ nsIMsgHeaderParser *nsMsgDatabase::GetHeaderParser()
 }
 
 
-nsresult nsMsgDatabase::RowCellColumnToUInt32(nsIMdbRow *hdrRow, mdb_token columnToken, PRUint32 &uint32Result)
+nsresult nsMsgDatabase::RowCellColumnToUInt32(nsIMdbRow *hdrRow, mdb_token columnToken, PRUint32 &uint32Result, PRUint32 defaultValue)
 {
-	return RowCellColumnToUInt32(hdrRow, columnToken, &uint32Result);
+	return RowCellColumnToUInt32(hdrRow, columnToken, &uint32Result, defaultValue);
 }
 
-nsresult nsMsgDatabase::RowCellColumnToUInt32(nsIMdbRow *hdrRow, mdb_token columnToken, PRUint32 *uint32Result)
+nsresult nsMsgDatabase::RowCellColumnToUInt32(nsIMdbRow *hdrRow, mdb_token columnToken, PRUint32 *uint32Result, PRUint32 defaultValue)
 {
 	nsresult	err = NS_OK;
 	nsIMdbCell	*hdrCell;
 
 	if (uint32Result)
-		*uint32Result = 0;
+		*uint32Result = defaultValue;
 	if (hdrRow)	// ### probably should be an error if hdrRow is NULL...
 	{
 		err = hdrRow->GetCell(GetEnv(), columnToken, &hdrCell);
@@ -2327,7 +2330,7 @@ nsresult nsMsgDatabase::ThreadNewHdr(nsMsgHdr* newHdr, PRBool &newThread)
 	newHdr->GetNumReferences(&numReferences);
 
 #define SUBJ_THREADING 1// try reference threading first
-	for (PRInt32 i = 0; i < numReferences; i++)
+	for (PRInt32 i = numReferences - 1; i >= 0;  i--)
 	{
 		nsString2 reference(eOneByte);
 

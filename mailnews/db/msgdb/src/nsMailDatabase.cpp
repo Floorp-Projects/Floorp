@@ -38,7 +38,7 @@ nsMailDatabase::~nsMailDatabase()
 
 
 
-NS_IMETHODIMP nsMailDatabase::Open(nsIFileSpec *aFolderName, PRBool create, nsIMsgDatabase** pMessageDB, PRBool upgrading /*=PR_FALSE*/)
+NS_IMETHODIMP nsMailDatabase::Open(nsIFileSpec *aFolderName, PRBool create, PRBool upgrading, nsIMsgDatabase** pMessageDB)
 {
 	nsMailDatabase	*mailDB;
 	PRBool			summaryFileExists;
@@ -485,7 +485,7 @@ nsresult nsMailDatabase::SetFolderInfoValid(nsFileSpec *folderName, int num, int
 	}
 	else if (pMessageDB)
 	{ 
-		err = pMessageDB->Commit(kSessionCommit);
+		err = pMessageDB->Commit(nsMsgDBCommitType::kSessionCommit);
 		pMessageDB->Release();
 	}
 	return err;
@@ -501,7 +501,7 @@ void nsMailDatabase::SetReparse(PRBool reparse)
 
 
 static PRBool gGotThreadingPrefs = PR_FALSE;
-static PRBool gThreadWithoutRe = PR_FALSE;
+static PRBool gThreadWithoutRe = PR_TRUE;
 
 
 // should we thread messages with common subjects that don't start with Re: together?
@@ -514,6 +514,7 @@ PRBool	nsMailDatabase::ThreadBySubjectWithoutRe()
 		gGotThreadingPrefs = PR_TRUE;
 	}
 
+	gThreadWithoutRe = PR_TRUE;	// we need to this to be true for now.
 	return gThreadWithoutRe;
 }
 

@@ -26,7 +26,6 @@ include $(DEPTH)/config/autoconf.mk
 
 EXPORTS= \
 		nsMsgHdr.h \
-		nsIMsgDatabase.h \
 		nsINewsDatabase.h \
 		nsMsgDatabase.h \
 		nsMailDatabase.h				\
@@ -40,6 +39,7 @@ XPIDLSRCS = \
 		nsIDBFolderInfo.idl \
 		nsIDBChangeListener.idl		\
 		nsIDBChangeAnnouncer.idl		\
+		nsIMsgDatabase.idl		\
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk
