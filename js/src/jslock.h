@@ -41,6 +41,9 @@
 #include "prcvar.h"
 #include "jshash.h" /* Added by JSIFY */
 
+#include "jsprvtd.h"    /* for JSScope, etc. */
+#include "jspubtd.h"    /* for JSRuntime, etc. */
+
 #define Thin_GetWait(W) ((jsword)(W) & 0x1)
 #define Thin_SetWait(W) ((jsword)(W) | 0x1)
 #define Thin_RemoveWait(W) ((jsword)(W) & ~0x1)
