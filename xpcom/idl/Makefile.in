@@ -29,13 +29,14 @@ IDLSRCS = \
 	nsIFactory.idl \
 	nsIBaseStream.idl	\
 	nsIInputStream.idl	\
+	nsICollection.idl \
 	$(NULL)
 
 # for testing purposes
-#EXPORTS =	\
-#	nsIServiceManager.h \
-#	nsIShutdownListener.h \
-#	$(NULL)
+#EXPORTS = $(XIDLSRCS:.idl=.h)
 
+# to build in the static methods
+#CPPSRCS = $(XIDLSRCS:.idl=.cpp)
+#LIBRARY_NAME = xpcomidl
 
 include $(topsrcdir)/config/rules.mk
