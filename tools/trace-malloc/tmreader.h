@@ -169,6 +169,24 @@ extern tmgraphnode  *tmreader_component(tmreader *tmr, const char *name);
 extern tmgraphnode  *tmreader_method(tmreader *tmr, uint32 serial);
 extern tmcallsite   *tmreader_callsite(tmreader *tmr, uint32 serial);
 
+/*
+ * Connect node 'from' to node 'to' with an edge, if there isn't one already
+ * connecting the nodes.  Add site's allocation stats to the edge only if we
+ * create the edge, or if we find that it exists, but that to->low is zero or
+ * less than from->low.
+ *
+ * If the callsite tree already totals allocation costs (tmcounts.total for
+ * each site includes tmcounts.direct for that site, plus tmcounts.total for
+ * all kid sites), then the node->low watermarks should be set from the tree
+ * level when walking the callsite tree, and should be set to non-zero values
+ * only if zero (the root is at level 0).  A low watermark should be cleared
+ * when the tree walk unwinds past the level at which it was set non-zero.
+ *
+ * Return 0 on error (malloc failure) and 1 on success.
+ */
+extern int tmgraphnode_connect(tmgraphnode *from, tmgraphnode *to,
+                               tmcallsite *site);
+
 PR_END_EXTERN_C
 
 #endif /* tmreader_h___ */
