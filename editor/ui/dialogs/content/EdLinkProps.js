@@ -150,9 +150,9 @@ function Startup()
   if (insertLinkAtCaret)
   {
     // Groupbox caption:
-    dialog.linkTextCaption.setAttribute("value",GetString("LinkText"));
+    dialog.linkTextCaption.setAttribute("label",GetString("LinkText"));
     // Message above input field:
-    dialog.linkTextMessage.setAttribute("value", GetString("EnterLinkText"));
+    dialog.linkTextMessage.setAttribute("label", GetString("EnterLinkText"));
   }
   else
   {
@@ -324,20 +324,9 @@ function FillListboxes()
 
 function ChangeText()
 {
-  var enable = true;
- 
-  // Disable OK button only if inserting a new link
-  // (allow empty location to remove existing link)
-  if (insertNew)
-  {
-    if (insertLinkAtCaret)
-      enable = dialog.linkTextInput.value.trimString().length > 0;
-
-    if (enable)
-      enable = dialog.hrefInput.value.trimString().length > 0;
-  }
-
+  var enable = dialog.hrefInput.value.trimString().length > 0;
   SetElementEnabledById( "ok", enable);
+  SetElementEnabledById("MakeRelativeUrl", enable);
 }
 
 var gClearListSelections = true;
@@ -426,7 +415,7 @@ function UnselectHeadings()
 function ValidateData()
 {
   href = dialog.hrefInput.value.trimString();
-  if (href.length > 0)
+  if (href)
   {
     // Set the HREF directly on the editor document's anchor node
     //  or on the newly-created node if insertNew is true
@@ -444,11 +433,16 @@ function ValidateData()
     // The text we will insert isn't really an attribute,
     //  but it makes sense to validate it
     newLinkText = TrimString(dialog.linkTextInput.value);
-    if (newLinkText.length == 0)
+    if (!newLinkText)
     {
-      ShowInputErrorMessage(GetString("EmptyLinkTextError"));
-      SetTextboxFocus(dialog.linkTextInput);
-      return false;
+      if (href)
+        newLinkText = href
+      else
+      {
+        ShowInputErrorMessage(GetString("EmptyLinkTextError"));
+        SetTextboxFocus(dialog.linkTextInput);
+        return false;
+      }
     }
   }
   return true;
