@@ -22,6 +22,7 @@
 # Contributor(s):
 #  Brian Ryner <bryner@brianryner.com>
 #  Jean-Jacques Enser <jj@netscape.com>
+#  Arthur Wiebe <artooro@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -122,9 +123,9 @@ fi
 echo "unmounting disk image"
 hdiutil detach $DEV_NAME
 
-# convert to read-only image
-echo "converting disk image to read-only"
-hdiutil convert $DMG_TEMP_NAME -format UDRO -o ${DMG_DIR}/${DMG_NAME}
+# compress image
+echo "compressing disk image"
+hdiutil convert $DMG_TEMP_NAME -format UDZO -imagekey zlib-level=9 -o ${DMG_DIR}/${DMG_NAME}
 rm -f $DMG_TEMP_NAME
 
 # adding EULA resources
