@@ -39,6 +39,7 @@
 
 #include "nsGdkUtils.h"
 #include <gdk/gdkprivate.h>
+#include <gdk/gdkx.h>
 
 void
 my_gdk_draw_text(GdkDrawable *drawable,
