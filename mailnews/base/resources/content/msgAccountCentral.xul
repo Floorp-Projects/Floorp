@@ -142,7 +142,12 @@ Rights Reserved.
         </hbox> 
       </row>
       <separator id="OfflineSettings.separator" class="thin"/>
-
+      <row id="JunkSettings" class="acctCentralRow">
+        <hbox> 
+          <label class="acctCentralText acctCentralLinkText" value="&junkSettings.label;" onclick="JunkSettings();"/> 
+        </hbox> 
+      </row>
+      <separator id="JunkSettings.separator" class="thin"/>
     </rows>
   </grid>
 </page>

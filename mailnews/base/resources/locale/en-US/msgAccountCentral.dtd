@@ -19,6 +19,7 @@ Rights Reserved.
 
 Contributor(s):
    Stephen Donner <stephend@netscape.com>
+   Seth Spitzer <sspitzer@netscape.com>
 --> 
 
 <!ENTITY emailSectionHdr.label        "Email"> 
@@ -35,4 +36,5 @@ Contributor(s):
 <!ENTITY advFeaturesSectionHdr.label  "Advanced Features"> 
 <!ENTITY searchMsgsLink.label         "Search messages"> 
 <!ENTITY filtersLink.label            "Create message filters">
+<!ENTITY junkSettings.label           "Junk mail settings">
 <!ENTITY offlineLink.label            "Offline settings">

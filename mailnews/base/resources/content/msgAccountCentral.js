@@ -142,8 +142,12 @@ function ArrangeAccountCentralItems(server, protocolInfo, msgFolder)
         // Offline Settings
         var supportsOffline = (server.offlineSupportLevel != 0);
         SetItemDisplay("OfflineSettings", supportsOffline);
-    
-        var displayAdvFeatures = canSearchMessages || canHaveFilters || supportsOffline;
+
+        // Junk mail settings
+        var canGetMessages = protocolInfo.canGetMessages;
+        SetItemDisplay("JunkSettings", canGetMessages);
+            
+        var displayAdvFeatures = canSearchMessages || canHaveFilters || supportsOffline || canGetMessages;
         // Display Adv Features header, only if any of the items are displayed
         SetItemDisplay("AdvancedFeaturesHeader", displayAdvFeatures);
     
@@ -243,4 +247,10 @@ function CreateMsgFilters()
 function SubscribeNewsgroups()
 {
     window.parent.MsgSubscribe();
+} 
+
+// Open junk mail settings dialog
+function JunkSettings()
+{
+    window.parent.MsgJunkMail();
 } 
