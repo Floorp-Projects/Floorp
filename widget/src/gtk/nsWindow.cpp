@@ -892,15 +892,13 @@ void nsWindow::NativeGrab(PRBool aGrab)
   mLastGrabFailed = PR_FALSE;
 
   if (aGrab) {
-    GdkCursor *cursor = gdk_cursor_new (GDK_ARROW);
-    
     DropMotionTarget();
     gint retval;
-    retval = gdk_pointer_grab (GDK_SUPERWIN(mSuperWin)->bin_window, PR_TRUE,(GdkEventMask)
+    retval = gdk_pointer_grab (GDK_SUPERWIN(mSuperWin)->bin_window, PR_TRUE, (GdkEventMask)
                                (GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
                                 GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK |
                                 GDK_POINTER_MOTION_MASK),
-                               (GdkWindow*)NULL, cursor, GDK_CURRENT_TIME);
+                               (GdkWindow*)NULL, NULL, GDK_CURRENT_TIME);
 #ifdef DEBUG_GRAB
     printf("nsWindow::NativeGrab %p pointer_grab %d\n", this, retval);
 #endif
@@ -921,12 +919,14 @@ void nsWindow::NativeGrab(PRBool aGrab)
     if (retval != 0)
       mLastGrabFailed = PR_TRUE;
 
-    gdk_cursor_destroy(cursor);
+    // make sure to add outselves as the grab window
+    gtk_grab_add(GetOwningWidget());
   } else {
 #ifdef DEBUG_GRAB
     printf("nsWindow::NativeGrab %p ungrab\n", this);
 #endif
     nsXKBModeSwitch::UnGrabKeyboard(GDK_CURRENT_TIME);
+    gtk_grab_remove(GetOwningWidget());
     DropMotionTarget();
     gdk_pointer_ungrab(GDK_CURRENT_TIME);
   }
@@ -1021,7 +1021,7 @@ NS_IMETHODIMP nsWindow::SetCursor(nsCursor aCursor)
   // the toplevel window to handle it.
   if (!mMozArea) {
     // find the toplevel mozarea for this widget
-    GtkWidget *top_mozarea = GetMozArea();
+    GtkWidget *top_mozarea = GetOwningWidget();
     void *data = gtk_object_get_data(GTK_OBJECT(top_mozarea), "nsWindow");
     nsWindow *mozAreaWindow = NS_STATIC_CAST(nsWindow *, data);
     return mozAreaWindow->SetCursor(aCursor);
@@ -1184,7 +1184,7 @@ nsWindow::SetFocus(PRBool aRaise)
   printf("nsWindow::SetFocus %p\n", NS_STATIC_CAST(void *, this));
 #endif /* DEBUG_FOCUS */
 
-  GtkWidget *top_mozarea = GetMozArea();
+  GtkWidget *top_mozarea = GetOwningWidget();
   GtkWidget *toplevel = nsnull;
 
   if (top_mozarea)
@@ -1850,6 +1850,10 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
                        "focus_out_event",
                        GTK_SIGNAL_FUNC(handle_mozarea_focus_out),
                        this);
+    // Install button press and release signals so in the grab case we
+    // get the events.
+    InstallButtonPressSignal(mMozArea);
+    InstallButtonReleaseSignal(mMozArea);
   }
 
   // end of settup up focus handling
@@ -1953,7 +1957,7 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
 
   // Any time the toplevel window invalidates mark ourselves as dirty
   // with respect to caching window positions.
-  GtkWidget *top_mozarea = GetMozArea();
+  GtkWidget *top_mozarea = GetOwningWidget();
   if (top_mozarea) {
     gtk_signal_connect_while_alive(GTK_OBJECT(top_mozarea),
                                    "toplevel_configure",
@@ -2313,8 +2317,8 @@ NS_IMETHODIMP nsWindow::CaptureMouse(PRBool aCapture)
 {
   GtkWidget *grabWidget;
 
-  if (mIsToplevel && mShell)
-    grabWidget = mShell;
+  if (mIsToplevel && mMozArea)
+    grabWidget = mMozArea;
   else
     grabWidget = mWidget;
 
@@ -2329,7 +2333,7 @@ NS_IMETHODIMP nsWindow::CaptureMouse(PRBool aCapture)
 
     GdkCursor *cursor = gdk_cursor_new (GDK_ARROW);
     DropMotionTarget();
-    gdk_pointer_grab (GTK_WIDGET(grabWidget)->window, PR_TRUE,(GdkEventMask)
+    gdk_pointer_grab (GTK_WIDGET(grabWidget)->window, PR_TRUE, (GdkEventMask)
                       (GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
                        GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK |
                        GDK_POINTER_MOTION_MASK),
@@ -2544,7 +2548,7 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth,
 NS_IMETHODIMP nsWindow::GetAttention(void)
 {
   // get the next up moz area
-  GtkWidget *top_mozarea = GetMozArea();
+  GtkWidget *top_mozarea = GetOwningWidget();
   if (top_mozarea) {
     GtkWidget *top_window = gtk_widget_get_toplevel(top_mozarea);
     if (top_window && GTK_WIDGET_VISIBLE(top_window)) {
@@ -2714,7 +2718,7 @@ nsWindow::HandleXlibConfigureNotifyEvent(XEvent *event)
 
 // Return the GtkMozArea that is the nearest parent of this widget
 GtkWidget *
-nsWindow::GetMozArea()
+nsWindow::GetOwningWidget()
 {
   GdkWindow *parent = nsnull;
   GtkWidget *widget;
@@ -2803,7 +2807,7 @@ GtkWindow *nsWindow::GetTopLevelWindow(void)
 
   if (!mSuperWin)
     return NULL;
-  moz_area = GetMozArea();
+  moz_area = GetOwningWidget();
   return GTK_WINDOW(gtk_widget_get_toplevel(moz_area));
 }
 
@@ -3505,7 +3509,7 @@ nsWindow::IMEGetShellWindow(void)
 {
   if (!mIMEShellWindow) {
     nsWindow *mozAreaWindow = nsnull;
-    GtkWidget *top_mozarea = GetMozArea();
+    GtkWidget *top_mozarea = GetOwningWidget();
     if (top_mozarea) {
       mozAreaWindow = NS_STATIC_CAST(nsWindow *,
                     gtk_object_get_data(GTK_OBJECT(top_mozarea), "nsWindow"));

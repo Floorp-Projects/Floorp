@@ -67,10 +67,7 @@ static void
 dispatch_superwin_event(GdkEvent *event, nsWindow *window);
 
 static PRBool
-superwin_child_of_gtk_widget(nsWindow *window, GtkWidget *widget);
-
-static PRBool
-gtk_widget_child_of_gdk_window(GtkWidget *widget, GdkWindow *window);
+gdk_window_child_of_gdk_window(GdkWindow *window, GdkWindow *ancestor);
 
 // This is a flag that says if we should suppress the next key down
 // event.  This is used when that last key release event was
@@ -562,8 +559,8 @@ gint handle_key_press_event(GtkObject *w, GdkEventKey* event, gpointer p)
   nsWidget *win = (nsWidget*)p;
 
   // if there's a focused window rewrite the event to use that window.
-  if (win->sFocusWindow)
-    win = win->sFocusWindow;
+  if (nsWidget::sFocusWindow)
+    win = nsWidget::sFocusWindow;
 
   // work around for annoying things.
   if (event->keyval == GDK_Tab)
@@ -668,8 +665,8 @@ gint handle_key_release_event(GtkObject *w, GdkEventKey* event, gpointer p)
     return PR_TRUE;
 
   nsWidget *win = (nsWidget *)p;
-  if (win->sFocusWindow)
-    win = win->sFocusWindow;
+  if (nsWidget::sFocusWindow)
+    win = nsWidget::sFocusWindow;
 
   nsKeyEvent kevent;
   InitKeyEvent(event, win, kevent, NS_KEY_UP);
@@ -690,7 +687,7 @@ gint handle_key_release_event(GtkObject *w, GdkEventKey* event, gpointer p)
 void 
 handle_gdk_event (GdkEvent *event, gpointer data)
 {
-  GtkObject *object = nsnull;
+  GtkObject *eventObject = nsnull;
 
   // set the last time that we got an event.  we need this for drag
   // and drop if you can believe that.
@@ -702,7 +699,7 @@ handle_gdk_event (GdkEvent *event, gpointer data)
   // processing.  If it stays zero then events won't be processed
   // later.  We're using this as a flag too but with a number this big
   // we're probably not going to overflow and even if we did there
-  // wouldn't any harm.
+  // wouldn't be any harm.
   unsigned long serial = 0;
 
   if (XPending(GDK_DISPLAY())) {
@@ -713,156 +710,154 @@ handle_gdk_event (GdkEvent *event, gpointer data)
 
   // try to get the user data for the event window.
   if (event->any.window)
-    gdk_window_get_user_data (event->any.window, (void **)&object);
+    gdk_window_get_user_data (event->any.window, (void **)&eventObject);
 
-  // check to see if this is an event on a superwin window.  if it is,
-  // we have to handle it because if it gets down to the standard gtk
-  // event handler it will cause all sorts of mischief.
+  // If there is an event object and it's a superwin then we need to
+  // make sure that the event either is handled locally or is passed
+  // on with a legitimate GtkWidget object associated with it so the
+  // Gtk mainloop doesn't go spastic.
 
-  if (object != nsnull && GDK_IS_SUPERWIN (object))
-    {
-      // try to find the nsWindow object associated with this superwin
-      nsWindow *window = (nsWindow *)gtk_object_get_data (object, "nsWindow");
+  if (eventObject && GDK_IS_SUPERWIN(eventObject)) {
+    // try to find the nsWindow object associated with this superwin
+    nsWindow *window = (nsWindow *)gtk_object_get_data (eventObject,
+                                                        "nsWindow");
 
-      // if we don't have a window here anymore, we are probably in
-      // the process of being or have been destroyed.  give up now.
-      if (!window)
-        goto end;
+    // If we don't have a window here anymore, we are probably in
+    // the process of being or have been destroyed.  give up now.
+    if (!window)
+      goto end;
 
-      // there are three possibilities here.
-      // o there's a gtk grab in effect but no superwin grab
-      //
-      // if this is the case then we need to see if the superwin is a
-      // child of the grabbed widget.  if it is, then let the event
-      // pass to the nsWindow associated with the superwin, as normal.
-      //
-      // if not, then rewrite the event widget window to the nearest
-      // MozArea widget and let it pass to the default gtk event
-      // handler.
-      //
-      // o there's a superwin grab in effect but no gtk grab
-      //
-      // easy.  let the nsWindow associated with the superwin handle
-      // the event.
-      //
-      // o there's both a gtk and superwin grab in effect
-      //
-      // this is where things get messy.  we need to see if the
-      // superwin is a child of the grabbing gtk widget.  if it is,
-      // pass it to the nsWindow to be handled
-      //
-      // if it in't then rewrite the event to the nearest MozArea
-      // widget since it will get rewritten again in gtk.
-      
-      // find out what grabs are in effect
-      GtkWidget *current_grab = gtk_grab_get_current();
-      PRBool     superwin_grab = window->GrabInProgress();
+    // Get the grabbing widget, if there is one.  We will need this
+    // later.
+    GtkWidget *grabWidget;
+    grabWidget = gtk_grab_get_current();
+    PRBool grabIsRegularWidget = (grabWidget && !GTK_IS_MOZAREA(grabWidget));
 
-      // check to see if there are no grabs in effect
-      if (!current_grab && !superwin_grab)
+    // There are a lot of events that are always dispatched to our
+    // internal handler, no matter if there is a grab or not.
+    switch(event->type)
       {
+      case GDK_NOTHING:
+        break;
+
+      case GDK_DESTROY:
+      case GDK_DELETE:
+      case GDK_PROPERTY_NOTIFY:
+      case GDK_EXPOSE:
+      case GDK_NO_EXPOSE:
+      case GDK_FOCUS_CHANGE:
+      case GDK_CONFIGURE:
+      case GDK_MAP:
+      case GDK_UNMAP:
+      case GDK_SELECTION_CLEAR:
+      case GDK_SELECTION_REQUEST:
+      case GDK_SELECTION_NOTIFY:
+      case GDK_CLIENT_EVENT:
+      case GDK_VISIBILITY_NOTIFY:
         dispatch_superwin_event(event, window);
-        goto end;
-      }
+        break;
 
-      // o there's a gtk grab in effect but no superwin grab
-      else if (current_grab && !superwin_grab)
-      {
-        //
-        // if this is the case then we need to see if the superwin is a
-        // child of the grabbed widget.  if it is, then let the event
-        // pass to the nsWindow associated with the superwin, as normal.
-        if (superwin_child_of_gtk_widget(window, current_grab))
-        {
-          dispatch_superwin_event(event, window);
-          goto end;
-        }
-        //
-        // if not, then rewrite the event widget window to the nearest
-        // MozArea widget and let it pass to the default gtk event
-        // handler.
-        gdk_window_unref (event->any.window);
-        event->any.window = GTK_WIDGET (window->GetMozArea())->window;
-        gdk_window_ref (event->any.window);
-        // dispatch it.
-        gtk_main_do_event(event);
-        goto end;
-      }
-      
-      // o there's a superwin grab in effect but no gtk grab
-      else if (!current_grab && superwin_grab)
-      {
-        // easy.  let the nsWindow associated with the superwin handle
-        // the event.
-        dispatch_superwin_event(event, window);
-        goto end;
-      }
-
-      // o there's both a gtk and superwin grab in effect
-      else if (current_grab && superwin_grab) 
-      {
-        // this is where things get messy.  we need to see if the
-        // superwin is a child of the grabbing gtk widget.  if it is,
-        // pass it to the nsWindow to be handled
-        //
-        nsWindow *grabbingWindow = nsWindow::GetGrabWindow();
-        // the grabbingWindow wasn't addrefed by the getter but we
-        // want to keep a reference on it.
-        nsCOMPtr<nsIWidget> grabbingWindowGuard(grabbingWindow);
-        GdkWindow *grabbingGdkWindow = 
-          NS_STATIC_CAST(GdkWindow *,
-                         grabbingWindow->GetNativeData(NS_NATIVE_WINDOW));
-        GtkWidget *grabbingMozArea = grabbingWindow->GetMozArea();
-        if (gtk_widget_child_of_gdk_window(current_grab, grabbingGdkWindow))
-        {
-          gdk_window_unref (event->any.window);
-          event->any.window = grabbingMozArea->window;
-          gdk_window_ref (event->any.window);
-          // dispatch it.
+      case GDK_BUTTON_PRESS:
+      case GDK_2BUTTON_PRESS:
+      case GDK_3BUTTON_PRESS:
+      case GDK_KEY_PRESS:
+      case GDK_KEY_RELEASE:
+        // Always rewrite the event to the grab widget.  If it's a
+        // MozArea widget, the handler will get called as normal.
+        if (grabWidget &&
+            !gdk_window_child_of_gdk_window(window->GetOwningWidget()->window,
+                                            grabWidget->window)) {
+          gdk_window_unref(event->any.window);
+          event->any.window = grabWidget->window;
+          gdk_window_ref(event->any.window);
           gtk_main_do_event(event);
-          goto end;
+          break;
         }
-        // if it in't then rewrite the event to the nearest MozArea
-        // widget since it will get rewritten again in gtk.
-        else
-        {
-          dispatch_superwin_event(event, window);
-          goto end;
 
+        // Otherwise, just send it to our event handler
+        dispatch_superwin_event(event, window);
+        break;
+
+      case GDK_MOTION_NOTIFY:
+      case GDK_BUTTON_RELEASE:
+      case GDK_PROXIMITY_IN:
+      case GDK_PROXIMITY_OUT:
+        // We only rewrite these events if the grab happens on a
+        // non-mozilla window.  Menus get really sad if we don't do it
+        // this way since they expect to get events on their native
+        // windows, no matter if there is a grab in effect or not.
+        if (grabIsRegularWidget &&
+            !gdk_window_child_of_gdk_window(window->GetOwningWidget()->window,
+                                            grabWidget->window)) {
+          // We rewrite the event to the nearest "real" widget so that
+          // the gtk mainloop doesn't get confuse-ed.
+          gdk_window_unref(event->any.window);
+          event->any.window = window->GetOwningWidget()->window;
+          gdk_window_ref(event->any.window);
+          gtk_propagate_event(grabWidget, event);
+
+          if (event->type == GDK_BUTTON_RELEASE) {
+            // Always clear the button motion target when sending a
+            // button release event to a real gtk widget, otherwise
+            // mozilla will still think it has the grab.  This happens
+            // when there's a native gtk widget popup over a Mozilla
+            // area.
+            nsWidget::DropMotionTarget();
+          }
+          break;
         }
+
+        dispatch_superwin_event(event, window);
+        break;
+
+      case GDK_ENTER_NOTIFY:
+      case GDK_LEAVE_NOTIFY:
+        // We rewrite the event to the nearest "real" widget so that
+        // the gtk mainloop doesn't get confuse-ed.
+        if (grabWidget &&
+            gdk_window_child_of_gdk_window(window->GetOwningWidget()->window,
+                                           grabWidget->window)) {
+          gdk_window_unref(event->any.window);
+          event->any.window = window->GetOwningWidget()->window;
+          gdk_window_ref(event->any.window);
+          gtk_widget_event(grabWidget, event);
+          break;
+        }
+
+        // XXX these should track sensitivity!
+        dispatch_superwin_event(event, window);
+        break;
+
+      default:
+        // XXX lots of DND events not handled?  I don't think that we have to.
+        NS_WARNING("Odd, hit default case in handle_gdk_event()\n");
+        break;
       }
-    }
-  else
-  {
-    // we need to make sure that if we're doing a gdk_pointer_grab on
-    // a superwin that we check to make sure that we account for a
-    // real GtkWidget being inside of it.  the grab code in gtk that
-    // checks to see if a window is contained within a grabbed window
-    // only knows how to walk up a heirarchy of GtkWidget objects, not
-    // GdkWindow objects.  so, we have to fake it out.
-    
-    // the most obvious example of this is a popup scrolling window
-    // with a gtk scrollbar in it.
-    
+  }
+  else {
     nsWindow  *grabbingWindow = nsWindow::GetGrabWindow();
-    // the grabbingWindow wasn't addrefed by the getter but we
-    // want to keep a reference on it.
+    
     nsCOMPtr<nsIWidget> grabbingWindowGuard(grabbingWindow);
     GtkWidget *tempWidget = NULL;
-    if (grabbingWindow)
-    {
+    
+    if (grabbingWindow) {
       // get the GdkWindow that we are grabbing on
       GdkWindow *grabbingGdkWindow =
         NS_STATIC_CAST(GdkWindow *,
                        grabbingWindow->GetNativeData(NS_NATIVE_WINDOW));
-      // only if this is a GtkWidget object
-      if (GTK_IS_WIDGET(object))
-      {
-        tempWidget = GTK_WIDGET(object);
-        // check to see if this widget is the child of the GdkWindow
-        // that we are grabbing on.
-        if (gtk_widget_child_of_gdk_window(tempWidget, grabbingGdkWindow))
-        {
+      
+      // If the object getting the event in question is a GtkWidget
+      // and it's a child of the grabbing window, we need to put a
+      // grab on that window before dispatching the event.  We do this
+      // so that the gtk mainloop will recognize the widget in
+      // question as having the grab.  If we didn't the mainloop
+      // wouldn't think that the widget that got the event is the
+      // child of the grabbing window, due to the superwin(s) in the
+      // middle.
+      if (GTK_IS_WIDGET(eventObject)) {
+        tempWidget = GTK_WIDGET(eventObject);
+        if (gdk_window_child_of_gdk_window(tempWidget->window,
+                                           grabbingGdkWindow)) {
           // this is so awesome.  gtk_grab_add/gtk_grab_remove don't
           // have exact push and pop semantics.  if we call grab_add
           // on the object and as part of the dispatching of this
@@ -876,17 +871,14 @@ handle_gdk_event (GdkEvent *event, gpointer data)
           // question has a parent.  if it does and it's a mozbox
           // object we slam a grab on that instead of the widget
           // itself.  we know that no one is doing grabs on those.
-          if (tempWidget->parent)
-          {
-            if (GTK_IS_MOZBOX(tempWidget->parent))
-            {
+          if (tempWidget->parent) {
+            if (GTK_IS_MOZBOX(tempWidget->parent)) {
               tempWidget = tempWidget->parent;
             }
           }
           gtk_grab_add(tempWidget);
         }
-        else 
-        {
+        else  {
           // if the gtk widget in question wasn't the child of the
           // grabbing window then the grabbing window gets it.
           dispatch_superwin_event(event, grabbingWindow);
@@ -894,13 +886,23 @@ handle_gdk_event (GdkEvent *event, gpointer data)
         }
       }
     }
-    gtk_main_do_event (event);
+
+    gtk_main_do_event(event);
+
     if (tempWidget)
       gtk_grab_remove(tempWidget);
+
+    if (event->type == GDK_BUTTON_RELEASE) {
+      // Always clear the button motion target when sending a
+      // button release event to a real gtk widget, otherwise
+      // mozilla will still think it has the grab.  This happens
+      // when there's a native gtk widget popup over a Mozilla
+      // area.
+      nsWidget::DropMotionTarget();
+    }
   }
 
  end:
-
 
   // use the saved serial to process any pending events, now that all
   // the window events have been processed
@@ -916,11 +918,10 @@ dispatch_superwin_event(GdkEvent *event, nsWindow *window)
   {
     // Check to see whether or not we need to send this to the
     // toplevel window to get passed to the GtkWidget with focus.
-    // This happens in the embedding case.  If there's a superwin grab
-    // in progress it gets the window events, not the gtk widget.
-    if (!window->sFocusWindow && !window->GrabInProgress()) 
+    // This happens in the embedding case.
+    if (!nsWidget::sFocusWindow)
     {
-      GtkWidget *mozArea = window->GetMozArea();
+      GtkWidget *mozArea = window->GetOwningWidget();
       NS_ASSERTION(mozArea, "Failed to get GtkMozArea for superwin event!\n");
       // get the toplevel window for that widget
       GtkWidget *toplevel = gtk_widget_get_toplevel(mozArea);
@@ -946,29 +947,12 @@ dispatch_superwin_event(GdkEvent *event, nsWindow *window)
 }
 
 PRBool
-superwin_child_of_gtk_widget(nsWindow *window, GtkWidget *widget)
+gdk_window_child_of_gdk_window(GdkWindow *window, GdkWindow *ancestor)
 {
-  GtkWidget *this_widget = GTK_WIDGET(window->GetMozArea());
-  while (this_widget)
-  {
-    if (this_widget == widget)
-    {
-      return PR_TRUE;
-    }
-    this_widget = this_widget->parent;
-  }
-  return PR_FALSE;
-}
-
-PRBool
-gtk_widget_child_of_gdk_window(GtkWidget *widget, GdkWindow *window)
-{
-  GdkWindow *gdk_window = widget->window;
-  
-  GdkWindow *this_window = gdk_window;
+  GdkWindow *this_window = window;
   while (this_window)
   {
-    if (this_window == window)
+    if (this_window == ancestor)
       return PR_TRUE;
     this_window = gdk_window_get_parent(this_window);
   }

@@ -114,6 +114,13 @@ PRBool nsWidget::OnInput(nsInputEvent &aEvent)
   return ret;
 }
 
+/* virtual - really to be implemented by nsWindow */
+GtkWidget *nsWidget::GetOwningWidget()
+{
+  NS_WARNING("nsWidget::GetOwningWidget called!\n");
+  return nsnull;
+}
+
 void nsWidget::SetLastEventTime(guint32 aTime)
 {
   sLastEventTime = aTime;
@@ -123,6 +130,17 @@ void nsWidget::GetLastEventTime(guint32 *aTime)
 {
   if (aTime)
     *aTime = sLastEventTime;
+}
+
+void nsWidget::DropMotionTarget(void)
+{
+  if (sButtonMotionTarget) {
+    GtkWidget *owningWidget = sButtonMotionTarget->GetOwningWidget();
+    if (owningWidget)
+      gtk_grab_remove(owningWidget);
+
+    sButtonMotionTarget = nsnull;
+  }
 }
 
 nsCOMPtr<nsIRollupListener> nsWidget::gRollupListener;
@@ -1138,9 +1156,14 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
   gtk_widget_pop_visual();
 
   if (mWidget) {
-
-    InstallButtonPressSignal(mWidget);
-    InstallButtonReleaseSignal(mWidget);
+    /* we used to listen to motion notify signals, button press
+       signals and button release signals here but since nsWindow
+       became its own managed class we don't need to do that by
+       default anymore.  Any subclasses that need to listen to those
+       events should do so on their own. */
+    
+    // InstallButtonPressSignal(mWidget);
+    // InstallButtonReleaseSignal(mWidget);
     
     // InstallMotionNotifySignal(mWidget);
     
@@ -1883,6 +1906,13 @@ nsWidget::OnButtonPressSignal(GdkEventButton * aGdkButtonEvent)
   // Set the button motion target and remeber the widget and root coords
   sButtonMotionTarget = this;
 
+  // Make sure to add this widget to the gtk grab list so that events
+  // are rewritten to this window.
+  GtkWidget *owningWidget;
+  owningWidget = GetOwningWidget();
+  if (owningWidget)
+    gtk_grab_add(owningWidget);
+
   sButtonMotionRootX = (gint) aGdkButtonEvent->x_root;
   sButtonMotionRootY = (gint) aGdkButtonEvent->y_root;
 
@@ -1953,6 +1983,10 @@ nsWidget::OnButtonReleaseSignal(GdkEventButton * aGdkButtonEvent)
     event.point.y = nscoord(sButtonMotionWidgetY + diffY);
   }
 
+  // Drop the motion target before dispatching the event so that we
+  // don't get events that we shouldn't.
+  DropMotionTarget();
+
   // event.widget can get set to null when calling DispatchMouseEvent,
   // so to release it we must make a copy
   nsWidget* theWidget = NS_STATIC_CAST(nsWidget*,event.widget);
@@ -1961,7 +1995,6 @@ nsWidget::OnButtonReleaseSignal(GdkEventButton * aGdkButtonEvent)
   theWidget->DispatchMouseEvent(event);
   NS_IF_RELEASE(theWidget);
 
-  DropMotionTarget();
 }
 //////////////////////////////////////////////////////////////////////
 /* virtual */ void

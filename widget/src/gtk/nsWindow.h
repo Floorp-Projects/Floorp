@@ -142,8 +142,9 @@ public:
   //    virtual  PRBool OnResize(nsSizeEvent &aEvent);
   
   void HandleXlibConfigureNotifyEvent(XEvent *event);
+
   // Return the GtkMozArea that is the nearest parent of this widget
-  GtkWidget *GetMozArea();
+  virtual GtkWidget *GetOwningWidget();
 
   // Return the Gdk window used for rendering
   virtual GdkWindow * GetRenderWindow(GtkObject * aGtkWidget);
