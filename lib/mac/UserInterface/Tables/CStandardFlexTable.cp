@@ -2456,6 +2456,20 @@ Boolean CStandardFlexTable::TableSupportsNaturalOrderSort() const
 	return true;
 } // CStandardFlexTable::TableSupportsNaturalOrderSort
 
+
+//----------------------------------------------------------------------------------------
+void CStandardFlexTable::ClickCountToOpen ( Uint16 inNewCount )
+// Set the number of clicks required to open a row. Validates incoming count.
+//----------------------------------------------------------------------------------------
+{
+	if ( inNewCount <= 0 )
+		inNewCount = 1;
+	
+	mClickCountToOpen = inNewCount;
+
+} // CStandardFlexTable::TableSupportsNaturalOrderSort
+
+
 #pragma mark -
 #if defined(QAP_BUILD)
 

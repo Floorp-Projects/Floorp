@@ -165,6 +165,8 @@ protected:
 // ------------------------------------------------------------
 public:
 	void				SetFancyDoubleClick(Boolean inFancy) { mFancyDoubleClick = inFancy; }
+	Uint16				ClickCountToOpen ( ) const { return mClickCountToOpen; }
+	void				ClickCountToOpen ( Uint16 inCount );
 
 protected:
 	virtual Boolean		ClickSelect(
@@ -187,8 +189,6 @@ protected:
 	virtual void		TrackSelection( const SMouseDownEvent & inMouseDown ) ;
 	virtual Boolean 	HitCellHotSpot( const STableCell &inCell, 
 											const Rect &inTotalSelectionRect ) ;
-
-	virtual Uint16		ClickCountToOpen ( ) const { return mClickCountToOpen; }
 
 	// the the cell rect in local coords even if scrolled out the the view
 	virtual void		GetLocalCellRectAnywhere( const STableCell	&inCell, Rect &outCellRect) const;
