@@ -42,3 +42,4 @@ en-US.jar:
     locale/en-US/browser/pref/prefutilities.properties     (locale/prefutilities.properties)
 *   locale/en-US/browser/pref/pref.dtd                     (locale/pref.dtd)
     locale/en-US/browser/pref/pref-winhooks.dtd            (locale/pref-winhooks.dtd)
+    locale/en-US/browser/pref/addPopup.properties          (locale/addPopup.properties)

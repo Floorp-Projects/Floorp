@@ -16,5 +16,6 @@
 
 <!ENTITY div.blessedservers.label       "Always allow the sites below to open popup windows:">
 
+<!ENTITY addpermission.label         "Add Site...">
 <!ENTITY removepermission.label         "Remove Site">
 <!ENTITY removeallpermissions.label     "Remove All Sites">
