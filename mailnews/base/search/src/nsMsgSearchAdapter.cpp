@@ -971,7 +971,7 @@ nsMsgSearchValidityTable::GetAvailableOperators(nsMsgSearchAttribValue aAttribut
     if (aAttribute == nsMsgSearchAttrib::Default)
       attr = m_defaultAttrib;
     else
-      attr = aAttribute;
+       attr = PR_MIN(aAttribute, nsMsgSearchAttrib::OtherHeader);
 
     PRUint32 totalOperators=0;
     PRInt32 i;
