@@ -1688,7 +1688,7 @@ NS_IMETHODIMP nsPluginHostImpl::SetUpPluginInstance(const char *aMimeType,
        nsIPluginInstance* instance = NULL;
 	nsIPlugin* plugin = NULL;
 	const char* mimetype;
-       nsString2 strProgID (NS_INLINE_PLUGIN_PROGID_PREFIX);
+       nsString strProgID (NS_INLINE_PLUGIN_PROGID_PREFIX);
        char buf[255];  // todo: need to use a const
 		
 	if(!aURL)
