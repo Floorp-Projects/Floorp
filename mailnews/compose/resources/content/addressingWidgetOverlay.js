@@ -189,11 +189,9 @@ function awClickEmptySpace()
 	var lastInput = awGetInputElement(top.MAX_RECIPIENTS);
 
 	if ( lastInput && lastInput.value )
-	{
 		awAppendNewRow();
-	}
 	else
-		lastInput.focus();
+		awSetFocus(top.MAX_RECIPIENTS, lastInput);
 }
 
 function awReturnHit(inputElement)
@@ -206,7 +204,7 @@ function awReturnHit(inputElement)
 		if ( !nextInput )
 			awAppendNewRow();
 		else
-			nextInput.focus();
+			awSetFocus(row+1, nextInput);
 	}
 	else
 	{
@@ -227,7 +225,7 @@ function awAppendNewRow()
 		// focus on new input widget
 		var newInput = awGetInputElement(top.MAX_RECIPIENTS);
 		if ( newInput )
-			newInput.focus();
+			awSetFocus(top.MAX_RECIPIENTS, newInput);
 	}
 }
 
@@ -417,4 +415,33 @@ function awRemoveNodeAndChildren(parent, nodeToRemove)
 	
 	parent.removeChild(nodeToRemove);
 
+}
+
+function awSetFocus(row, inputElement)
+{
+	top.awRow = row;
+	top.awInputElement = inputElement;
+	top.awFocusRetry = 0;
+	setTimeout("_awSetFocus();", 0);
+}
+
+function _awSetFocus()
+{
+	var tree = document.getElementById('addressingWidgetTree');
+	try
+	{
+		tree.ensureElementIsVisible(awGetTreeRow(top.awRow));
+		top.awInputElement.focus();
+	}
+	catch(ex)
+	{
+		top.awFocusRetry ++;
+		if (top.awFocusRetry < 3)
+		{
+			dump("_awSetFocus failed, try it again...\n");
+			setTimeout("_awSetFocus();", 0);
+		}
+		else
+			dump("_awSetFocus failed, forget about it!\n");
+	}
 }
