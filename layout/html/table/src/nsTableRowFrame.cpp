@@ -212,8 +212,7 @@ nscoord nsTableRowFrame::GetChildMaxBottomMargin() const
 PRInt32 nsTableRowFrame::GetMaxColumns() const
 {
   int sum = 0;
-  nsTableCellFrame *cell=nsnull;
-  ChildAt(0, (nsIFrame *&)cell);
+  nsTableCellFrame *cell=(nsTableCellFrame *)mFirstChild;
   while (nsnull!=cell) {
     sum += cell->GetColSpan();
     cell->GetNextSibling((nsIFrame *&)cell);

@@ -931,14 +931,24 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsTableFits(nsIPresContext* aPresCo
     mTableFrame->GetColumnsByType(eStyleUnit_Auto, numAutoColumns, autoColumns);
     if (0!=numAutoColumns)
     {
-      // TODO - should extra space be proportionately distributed?
-      nscoord excessPerColumn = excess/numAutoColumns;
+      // proportionately distributed extra space, based on the column's desired size
+      nscoord totalWidthOfAutoColumns = 0;
       if (gsDebug==PR_TRUE) 
         printf("  aTableFixedWidth specified as %d, expanding columns by excess = %d\n", aTableFixedWidth, excess);
+      // first, get the total width
       for (PRInt32 i = 0; i<numAutoColumns; i++)
       {
         PRInt32 colIndex = autoColumns[i];
-        nscoord colWidth = excessPerColumn+mTableFrame->GetColumnWidth(colIndex);
+        totalWidthOfAutoColumns += mTableFrame->GetColumnWidth(colIndex);
+      }
+      // next, compute the proportion to be added to each column, and add it
+      for (i = 0; i<numAutoColumns; i++)
+      {
+        PRInt32 colIndex = autoColumns[i];
+        nscoord oldColWidth = mTableFrame->GetColumnWidth(colIndex);
+        float percent = (float)oldColWidth/(float)totalWidthOfAutoColumns;
+        nscoord excessForThisColumn = excess*percent;
+        nscoord colWidth = excessForThisColumn+oldColWidth;
         if (gsDebug==PR_TRUE) 
           printf("  column %d was %d, now set to %d\n", colIndex, mTableFrame->GetColumnWidth(colIndex), colWidth);
         mTableFrame->SetColumnWidth(colIndex, colWidth);
@@ -1171,7 +1181,7 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsConstrained( nsIPresContext* aPre
         PRUint32 D = aMaxTableWidth - aMinTableWidth;
         if (0==D) // fixed-size table
           D=1;
-        PRUint32 d = maxColWidth - minColWidth;
+        PRUint32 d = maxColWidth - minColWidth;   // XXX: if this is 0, set to minColWidth?
         PRInt32 width = (d*W)/D;
         mTableFrame->SetColumnWidth(colIndex, minColWidth + width);
         if (gsDebug==PR_TRUE) 

@@ -259,13 +259,6 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext* aPresContext,
   nsTableFrame* tableFrame = GetTableFrame();
   tableFrame->GetCellMarginData(this,margin);
 
-  // reduce available space by insets
-
-  if (NS_UNCONSTRAINEDSIZE!=availSize.width)
-    availSize.width -= leftInset+rightInset+margin.left+margin.right;
-  if (NS_UNCONSTRAINEDSIZE!=availSize.height)
-    availSize.height -= topInset+bottomInset+margin.top+margin.bottom;
-
   mLastContentIsComplete = PR_TRUE;
 
   // get frame, creating one if needed
@@ -276,11 +269,10 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext* aPresContext,
 
   // Determine the width we have to work with
   nscoord cellWidth = -1;
-  if (NS_UNCONSTRAINEDSIZE!=availSize.width)
+  //if (NS_UNCONSTRAINEDSIZE!=availSize.width)
   {
-    /*
-    nsStylePosition* kidPosition = (nsStylePosition*)
-      mStyleContext->GetData(eStyleStruct_Position);
+    const nsStylePosition* kidPosition = (const nsStylePosition*)
+      (mStyleContext->GetStyleData(eStyleStruct_Position));
     switch (kidPosition->mWidth.GetUnit()) {
       case eStyleUnit_Coord:
         cellWidth = kidPosition->mWidth.GetCoordValue();
@@ -305,10 +297,16 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext* aPresContext,
       case eStyleUnit_Auto:
         break;
     }
-    */
     if (-1!=cellWidth)
       availSize.width = cellWidth;
   }
+
+  // reduce available space by insets
+
+  if (NS_UNCONSTRAINEDSIZE!=availSize.width)
+    availSize.width -= leftInset+rightInset+margin.left+margin.right;
+  if (NS_UNCONSTRAINEDSIZE!=availSize.height)
+    availSize.height -= topInset+bottomInset+margin.top+margin.bottom;
 
   // Try to reflow the child into the available space. It might not
   // fit or might need continuing.
