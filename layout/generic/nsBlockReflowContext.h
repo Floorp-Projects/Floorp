@@ -130,7 +130,7 @@ protected:
   nsHTMLReflowMetrics mMetrics;
   nscoord mTopMargin;
   nsSize mMaxElementSize;
-  PRBool mIsTable;
+  PRPackedBool mIsTable;
   PRPackedBool mComputeMaximumWidth;
 };
 

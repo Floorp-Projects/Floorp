@@ -446,13 +446,10 @@ public:
 
   nscoord mBottomEdge;
 
-  PRBool mUnconstrainedWidth;
-
-  PRBool mUnconstrainedHeight;
-
-  PRBool mShrinkWrapWidth;
-
-  PRBool mNeedResizeReflow;
+  PRPackedBool mUnconstrainedWidth;
+  PRPackedBool mUnconstrainedHeight;
+  PRPackedBool mShrinkWrapWidth;
+  PRPackedBool mNeedResizeReflow;
 
   // The content area to reflow child frames within. The x/y
   // coordinates are known to be mBorderPadding.left and
@@ -462,13 +459,13 @@ public:
   nsSize mContentArea;
 
   // Our wrapping behavior
-  PRBool mNoWrap;
+  PRPackedBool mNoWrap;
 
   // Is this frame a root for top/bottom margin collapsing?
-  PRBool mIsTopMarginRoot, mIsBottomMarginRoot;
+  PRPackedBool mIsTopMarginRoot, mIsBottomMarginRoot;
 
   // See ShouldApplyTopMargin
-  PRBool mApplyTopMargin;
+  PRPackedBool mApplyTopMargin;
 
   //----------------------------------------
 
@@ -541,8 +538,8 @@ public:
   // being N^2.
   nsFloaterCacheFreeList mBelowCurrentLineFloaters;
 
-  PRBool mComputeMaxElementSize;
-  PRBool mComputeMaximumWidth;
+  PRPackedBool mComputeMaxElementSize;
+  PRPackedBool mComputeMaximumWidth;
 
   nsSize mMaxElementSize;
   nscoord mMaximumWidth;
