@@ -9,11 +9,8 @@
 <!ENTITY openButton.label            "Open">
 <!ENTITY deleteButton.label          "Delete">
 <!ENTITY searchDialogTitle.label     "Search Messages">
-<!ENTITY conditionDesc.label         "Search for messages which:">
+<!ENTITY conditionDesc.label         "Search for messages that match:">
 <!ENTITY conditions.label            "Criteria">
 <!ENTITY results.label               "Results">
 <!ENTITY fileHereMenu.label          "File Here">
 <!ENTITY fileButton.label            "File">
-
-
-
