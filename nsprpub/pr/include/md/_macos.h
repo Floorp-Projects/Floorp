@@ -44,6 +44,7 @@
 #define PR_DLL_SUFFIX		""
 #define _PR_LOCAL_THREADS_ONLY
 #define _PR_NO_PREEMPT	1
+#define _PR_HAVE_ATOMIC_OPS 1
 
 #include "prinit.h"
 #include "prio.h"
@@ -61,7 +62,9 @@
 
 #include <stddef.h>
 #include <setjmp.h>
+
 #include <Errors.h>
+#include <OpenTransport.h>
 
 #define _PR_HAVE_PEEK_BUFFER
 #define _PR_PEEK_BUFFER_MAX (16 * 1024)
@@ -676,6 +679,22 @@ extern void LeaveCritialRegion();
 #define LEAVE_CRITICAL_REGION()
 
 #endif
+
+
+/*
+ * Atomic operations
+ */
+#ifdef _PR_HAVE_ATOMIC_OPS
+
+extern PRInt32 _MD_AtomicSet(PRInt32 *val, PRInt32 newval);
+
+#define _MD_INIT_ATOMIC()
+#define _MD_ATOMIC_INCREMENT(val)   OTAtomicAdd32(1, (SInt32 *)val)
+#define _MD_ATOMIC_ADD(ptr, val)    OTAtomicAdd32(val, (SInt32 *)ptr)
+#define _MD_ATOMIC_DECREMENT(val)   OTAtomicAdd32(-1, (SInt32 *)val)
+#define _MD_ATOMIC_SET(val, newval) _MD_AtomicSet(val, newval)
+
+#endif /* _PR_HAVE_ATOMIC_OPS */
 
 
 #endif /* prmacos_h___ */
