@@ -103,55 +103,6 @@ PRInt32 nsInputFrame::GetHorizontalInsidePadding(float aPixToTwip,
   return GetVerticalInsidePadding(aPixToTwip, aInnerWidth);
 }
 
-NS_METHOD
-nsInputFrame::MoveTo(nscoord aX, nscoord aY)
-{
-  //if ( ((aX == 0) && (aY == 0)) || (aX != mRect.x) || (aY != mRect.y)) {
-  if ((aX != mRect.x) || (aY != mRect.y)) {
-    mRect.x = aX;
-    mRect.y = aY;
-
-    // Let the view know
-    nsIView* view = nsnull;
-    GetView(view);
-    if (nsnull != view) {
-      // Position view relative to it's parent, not relative to our
-      // parent frame (our parent frame may not have a view). Also,
-      // inset the view by the border+padding if present
-      nsIView* parentWithView;
-      nsPoint origin;
-      GetOffsetFromView(origin, parentWithView);
-      nsIViewManager *vm = view->GetViewManager();
-      vm->MoveViewTo(view, origin.x, origin.y);
-      NS_RELEASE(vm);
-      NS_IF_RELEASE(parentWithView);
-      NS_RELEASE(view);
-    }
-  }
-
-  return NS_OK;
-}
-
-NS_METHOD
-nsInputFrame::SizeTo(nscoord aWidth, nscoord aHeight)
-{
-  mRect.width = aWidth;
-  mRect.height = aHeight;
-
-  // Let the view know the correct size
-  nsIView* view = nsnull;
-  GetView(view);
-  if (nsnull != view) {
-    // XXX combo boxes need revision, they cannot have their height altered
-    nsIViewManager *vm = view->GetViewManager();
-    vm->ResizeView(view, aWidth, aHeight);
-    NS_RELEASE(vm);
-    NS_RELEASE(view);
-  }
-  return NS_OK;
-}
-
-
 // XXX it would be cool if form element used our rendering sw, then
 // they could be blended, and bordered, and so on...
 NS_METHOD
@@ -252,6 +203,25 @@ nsInputFrame::GetDesiredSize(nsIPresContext* aPresContext,
   GetDesiredSize(aPresContext, aReflowState, aDesiredSize, ignore);
 }
 
+NS_IMETHODIMP
+nsInputFrame::DidReflow(nsIPresContext& aPresContext,
+                        nsDidReflowStatus aStatus)
+{
+  nsresult rv = nsInputFrameSuper::DidReflow(aPresContext, aStatus);
+
+  // The view is created hidden; once we have reflowed it and it has been
+  // positioned then we show it.
+  if (NS_FRAME_REFLOW_FINISHED == aStatus) {
+    nsIView* view = nsnull;
+    GetView(view);
+    if (nsnull != view) {
+      view->SetVisibility(nsViewVisibility_kShow);
+      NS_RELEASE(view);
+    }
+  }
+  return rv;
+}
+
 NS_METHOD
 nsInputFrame::Reflow(nsIPresContext*      aPresContext,
                      nsReflowMetrics&     aDesiredSize,
@@ -295,7 +265,7 @@ nsInputFrame::Reflow(nsIPresContext*      aPresContext,
 	  // initialize the view as hidden since we don't know the (x,y) until Paint
     result = view->Init(viewMan, boundBox, parView, &id, initData,
                         nsnull, 0, nsnull,
-                        1.0f, nsViewVisibility_kShow);
+                        1.0f, nsViewVisibility_kHide);
     if (nsnull != initData) {
       delete(initData);
     }
@@ -621,7 +591,7 @@ nsInputFrame::GetFont(nsIPresContext* aPresContext, nsFont& aFont)
   // no way to actually set it to "Courier New" until this hack is obsoleted by fixing the style 
   // system.
 
-  nsAutoString magicName("HACK");
+  nsAutoString magicName("XXXHACK");
   nscoord magicSize = 100 * 20;
   nscoord size10 = 10 * 20;
   nscoord size12 = 12 * 20;
