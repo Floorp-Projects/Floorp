@@ -33,6 +33,7 @@ class nsIPosixLocale : public nsISupports {
 
 public:
 	
+        NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPOSIXLOCALE_IID)
 	NS_IMETHOD GetPlatformLocale(const nsString* locale,char* posixLocale,size_t length)=0;
 	NS_IMETHOD GetXPLocale(const char* posixLocale, nsString* locale)=0;
 };

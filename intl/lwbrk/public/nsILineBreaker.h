@@ -33,6 +33,7 @@
 class nsILineBreaker : public nsISupports
 {
 public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ILINEBREAKER_IID)
   NS_IMETHOD BreakInBetween(const PRUnichar* aText1 , PRUint32 aTextLen1,
                             const PRUnichar* aText2 , PRUint32 aTextLen2,
                                   PRBool *oCanBreak) = 0;

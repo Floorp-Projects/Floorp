@@ -34,6 +34,7 @@ class nsIMacLocale : public nsISupports {
 
 public:
 	
+        NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMACLOCALE_IID)
 	NS_IMETHOD GetPlatformLocale(const nsString* locale,short* scriptCode,short* langCode) = 0;
 	NS_IMETHOD GetXPLocale(short scriptCode,short langCode, nsString* locale) = 0;
 };

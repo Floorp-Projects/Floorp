@@ -27,6 +27,8 @@
 
 class nsIMetaCharsetService : public nsISupports {
 public:
+   NS_DEFINE_STATIC_IID_ACCESSOR( NS_IMETA_CHARSET_SERVICE_IID )
+
    NS_IMETHOD Start() = 0;
    NS_IMETHOD End() = 0;
 };

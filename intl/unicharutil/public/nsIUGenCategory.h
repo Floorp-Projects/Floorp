@@ -32,6 +32,8 @@ class nsIUGenCategory : public nsISupports {
 
 public: 
 
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IUGENCATEGORY_IID)
+
    /**
     *  Read ftp://ftp.unicode.org/Public/UNIDATA/ReadMe-Latest.txt
     *  section GENERAL CATEGORY

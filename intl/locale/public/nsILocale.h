@@ -32,6 +32,8 @@
 class nsILocale : public nsISupports {
 
 public:
+  
+        NS_DEFINE_STATIC_IID_ACCESSOR(NS_ILOCALE_IID)
 	
 	NS_IMETHOD GetCategory(const nsString* category, nsString* result) = 0;
 

@@ -34,6 +34,8 @@ class nsIOrderIdFormater : public nsISupports {
 
 public: 
 
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IORDERIDFORMATER_IID)
+
   // Convert one Unicode character into upper case
   NS_IMETHOD ToString( PRUint32 aOrder, nsString& aResult) = 0;
 

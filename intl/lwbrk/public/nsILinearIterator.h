@@ -32,6 +32,8 @@ class nsILinearIterator : public nsISupports {
 
 public: 
 
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ILINEARITERATOR_IID)
+
   NS_IMETHOD First() = 0; 
   NS_IMETHOD Next() = 0; 
   NS_IMETHOD Current(PRUint32 *oPosition) = 0; 

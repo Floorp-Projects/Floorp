@@ -33,6 +33,8 @@ class nsIUGenDetailCategory : public nsISupports {
 
 public: 
 
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IUGENDETAILCATEGORY_IID)
+
    /**
     *  Read ftp://ftp.unicode.org/Public/UNIDATA/ReadMe-Latest.txt
     *  section GENERAL CATEGORY
