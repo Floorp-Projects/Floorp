@@ -194,7 +194,7 @@ public:
   nsScrollPreference GetScrolling();
   virtual void MapAttributesInto(nsIStyleContext* aContext,
                                  nsIPresContext* aPresContext);
-  PRBool GetFrameBorder();
+  nsFrameborder GetFrameBorder();
   PRBool IsInline() { return mInline; }
 
   virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
@@ -745,19 +745,21 @@ nsScrollPreference nsHTMLFrame::GetScrolling()
   return nsScrollPreference_kAuto;
 }
 
-PRBool nsHTMLFrame::GetFrameBorder()
+nsFrameborder nsHTMLFrame::GetFrameBorder()
 {
   nsHTMLValue value;
   if (eContentAttr_HasValue == (GetAttribute(nsHTMLAtoms::frameborder, value))) {
     if (eHTMLUnit_String == value.GetUnit()) {
       nsAutoString frameborder;
       value.GetStringValue(frameborder);
-      if (frameborder.EqualsIgnoreCase("0")) {
-        return PR_FALSE;
-      } 
+      if (frameborder.EqualsIgnoreCase("no") || frameborder.EqualsIgnoreCase("0")) {
+        return eFrameborder_No;
+      } else {
+        return eFrameborder_Yes;
+      }
     }
   }
-  return PR_TRUE;
+  return eFrameborder_Notset;
 }
 
 nsresult

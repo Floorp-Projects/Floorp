@@ -39,6 +39,12 @@ enum nsFramesetUnit {
   eFramesetUnit_Pixel
 };
 
+enum nsFrameborder {
+  eFrameborder_Yes = 0,
+  eFrameborder_No,
+  eFrameborder_Notset
+};
+
 struct nsFramesetSpec {
   nsFramesetUnit mUnit;
   nscoord        mValue;
@@ -74,6 +80,9 @@ public:
 
   NS_IMETHOD  VerifyTree() const;
 
+  nsFrameborder GetParentFrameborder() { return mParentFrameborder; }
+  void SetParentFrameborder(nsFrameborder aValue) { mParentFrameborder = aValue; }
+
 protected:
   void CalculateRowCol(nsIPresContext* aPresContext, nscoord aSize, PRInt32 aNumSpecs, 
                        nsFramesetSpec* aSpecs, nscoord* aValues);
@@ -83,8 +92,11 @@ protected:
                               nsReflowMetrics& aDesiredSize);
 
   PRInt32 GetBorderWidth(nsIPresContext* aPresContext);
+  PRInt32 GetParentBorderWidth() { return mParentBorderWidth; }
+  void    SetParentBorderWidth(PRInt32 aWidth) { mParentBorderWidth = aWidth; }
 
-  PRBool GetFrameBorder(nsHTMLTagContent* aFrameContent);
+  nsFrameborder GetFrameborder();
+  nsFrameborder GetFrameborder(nsHTMLTagContent* aFrameContent);
   
   virtual PRIntn GetSkipSides() const;
 
@@ -106,6 +118,8 @@ protected:
   nscoord*         mColSizes;  // currently computed col sizes 
   PRInt32          mNonBorderChildCount; 
   PRInt32          mEdgeVisibility;
+  nsFrameborder    mParentFrameborder;
+  PRInt32          mParentBorderWidth;
 };
 
 /*******************************************************************************
