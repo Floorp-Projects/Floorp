@@ -40,7 +40,8 @@
 #define nsAttrValue_h___
 
 #include "nscore.h"
-#include "nsDependentSubstring.h"
+#include "nsString.h"
+#include "nsStringBuffer.h"
 #include "nsColor.h"
 #include "nsCOMArray.h"
 
@@ -65,6 +66,19 @@ class nsIDocument;
 #define NS_ATTRVALUE_ENUMTABLEINDEX_BITS (32 - 16 - NS_ATTRVALUE_INTEGERTYPE_BITS)
 #define NS_ATTRVALUE_ENUMTABLEINDEX_MAXVALUE ((1 << NS_ATTRVALUE_ENUMTABLEINDEX_BITS) - 1)
 #define NS_ATTRVALUE_ENUMTABLEINDEX_MASK (PtrBits((1 << NS_ATTRVALUE_ENUMTABLEINDEX_BITS) - 1))
+
+/**
+ * A class used to construct a nsString from a nsStringBuffer (we might
+ * want to move this to nsString at some point).
+ */
+class nsCheapString : public nsString {
+public:
+  nsCheapString(nsStringBuffer* aBuf)
+  {
+    if (aBuf)
+      aBuf->ToString(aBuf->StorageSize()/2 - 1, *this);
+  }
+};
 
 class nsAttrValue {
 public:
@@ -118,7 +132,7 @@ public:
   // Methods to get value. These methods do not convert so only use them
   // to retrieve the datatype that this nsAttrValue has.
   inline PRBool IsEmptyString() const;
-  const nsDependentSubstring GetStringValue() const;
+  const nsCheapString GetStringValue() const;
   inline nsIAtom* GetAtomValue() const;
   inline PRInt32 GetIntegerValue() const;
   PRBool GetColorValue(nscolor& aColor) const;

@@ -50,95 +50,95 @@
 
 nsVoidArray* nsAttrValue::sEnumTableArray = nsnull;
 
+/**
+ * Routines for cheaply storing and accessing a string.  This code leverages
+ * the reference counted string buffer code used by the XPCOM string classes.
+ */
 class nsCheapStringBufferUtils {
 public:
   /**
-   * Get the string pointer
-   * @param aBuf the buffer
-   * @return a pointer to the string
-   */
-  static const PRUnichar* StrPtr(const PRUnichar* aBuf) {
-    NS_ASSERTION(aBuf, "Cannot work on null buffer!");
-    return (const PRUnichar*)( ((const char*)aBuf) + sizeof(PRUint32) );
-  }
-  static PRUnichar* StrPtr(PRUnichar* aBuf) {
-    NS_ASSERTION(aBuf, "Cannot work on null buffer!");
-    return (PRUnichar*)( ((char*)aBuf) + sizeof(PRUint32) );
-  }
-  /**
-   * Get the string length
-   * @param aBuf the buffer
-   * @return the string length
-   */
-  static PRUint32 Length(const PRUnichar* aBuf) {
-    NS_ASSERTION(aBuf, "Cannot work on null buffer!");
-    return *((PRUint32*)aBuf);
-  }
-  /**
-   * Get a DependentString from a buffer
+   * Get a nsCheapString (a nsString really) from a nsStringBuffer
    *
    * @param aBuf the buffer to get string from
-   * @return a DependentString representing this string
+   * @return a nsCheapString representing this string
    */
-  static nsDependentSubstring GetDependentString(const PRUnichar* aBuf) {
-    NS_ASSERTION(aBuf, "Cannot work on null buffer!");
-    const PRUnichar* buf = StrPtr(aBuf);
-    return Substring(buf, buf + Length(aBuf));
+  static const nsCheapString GetDependentString(nsStringBuffer* aBuf) {
+    return nsCheapString(aBuf);
   }
+
   /**
-   * Construct from an AString
+   * Construct from an nsAString
+   *
    * @param aBuf the buffer to copy to
    * @param aStr the string to construct from
    */
-  static void CopyToBuffer(PRUnichar*& aBuf, const nsAString& aStr) {
+  static void CopyToBuffer(nsStringBuffer*& aBuf, const nsAString& aStr) {
     PRUint32 len = aStr.Length();
-    aBuf = (PRUnichar*)nsMemory::Alloc(sizeof(PRUint32) +
-                                       len * sizeof(PRUnichar));
-    *((PRUint32*)aBuf) = len;
-    CopyUnicodeTo(aStr, 0, StrPtr(aBuf), len);
+
+    nsStringBuffer* buf = nsStringBuffer::FromString(aStr);
+    if (buf) {
+      if (buf->StorageSize()/sizeof(PRUnichar) - 1 == len) {
+        buf->AddRef();
+        aBuf = buf;
+        return;
+      }
+    }
+    buf = nsStringBuffer::Alloc((len + 1) * sizeof(PRUnichar));
+    PRUnichar *data = NS_STATIC_CAST(PRUnichar*, buf->Data());
+    CopyUnicodeTo(aStr, 0, data, len);
+    data[len] = PRUnichar(0);
+    aBuf = buf;
   }
+
   /**
    * Construct from an AString
    * @param aBuf the buffer to copy to
    * @param aStr the string to construct from
    */
-  static void CopyToExistingBuffer(PRUnichar*& aBuf, PRUnichar* aOldBuf,
+  static void CopyToExistingBuffer(nsStringBuffer*& aBuf,
+                                   nsStringBuffer* aOldBuf,
                                    const nsAString& aStr) {
     NS_ASSERTION(aOldBuf, "Cannot work on null buffer!");
-    PRUint32 len = aStr.Length();
-    aBuf = NS_STATIC_CAST(PRUnichar*,
-                          nsMemory::Realloc(aOldBuf, sizeof(PRUint32) +
-                                                     len * sizeof(PRUnichar)));
-    *(NS_REINTERPRET_CAST(PRUint32*, aBuf)) = len;
-    CopyUnicodeTo(aStr, 0, StrPtr(aBuf), len);
+    // since we are using the buffer's storage size as the length, aOldBuf
+    // would only be usable if its storage size matched the length of aStr's
+    // exactly.  that only matters of course if aStr is not sharable.
+    CopyToBuffer(aBuf, aStr);
+    Free(aOldBuf);
   }
+
+  static void ToString(nsStringBuffer* aBuf, nsAString& aStr) {
+    aBuf->ToString(aBuf->StorageSize()/sizeof(PRUnichar) - 1, aStr);
+  }
+
   /**
    * Construct from another nsCheapStringBuffer
    * @param aBuf the buffer to put into
    * @param aSrc the buffer to construct from
    */
-  static void Clone(PRUnichar*& aBuf, const PRUnichar* aSrc) {
+  static void Clone(nsStringBuffer*& aBuf, nsStringBuffer* aSrc) {
     NS_ASSERTION(aSrc, "Cannot work on null buffer!");
-    aBuf = (PRUnichar*)nsMemory::Clone(aSrc, sizeof(PRUint32) +
-                                             Length(aSrc) * sizeof(PRUnichar));
+    aSrc->AddRef();
+    aBuf = aSrc;
   }
+
   /**
    * Free the memory for the buf
    * @param aBuf the buffer to free
    */
-  static void Free(PRUnichar* aBuf) {
+  static void Free(nsStringBuffer* aBuf) {
     NS_ASSERTION(aBuf, "Cannot work on null buffer!");
-    nsMemory::Free(aBuf);
+    aBuf->Release();
   }
+
   /**
    * Get a hashcode for the buffer
    * @param aBuf the buffer
    * @return the hashcode
    */
-  static PRUint32 HashCode(const PRUnichar* aBuf) {
+  static PRUint32 HashCode(nsStringBuffer* aBuf) {
     NS_ASSERTION(aBuf, "Cannot work on null buffer!");
-    return nsCRT::BufferHashCode(StrPtr(aBuf),
-                                 Length(aBuf));
+    PRUint32 len = aBuf->StorageSize()/sizeof(PRUnichar) - 1;
+    return nsCRT::BufferHashCode(NS_STATIC_CAST(PRUnichar*, aBuf->Data()), len);
   }
 };
 
@@ -223,7 +223,7 @@ nsAttrValue::Reset()
   switch(BaseType()) {
     case eStringBase:
     {
-      PRUnichar* str = NS_STATIC_CAST(PRUnichar*, GetPtr());
+      nsStringBuffer* str = NS_STATIC_CAST(nsStringBuffer*, GetPtr());
       if (str) {
         nsCheapStringBufferUtils::Free(str);
       }
@@ -323,16 +323,16 @@ nsAttrValue::SetTo(const nsAttrValue& aOther)
 void
 nsAttrValue::SetTo(const nsAString& aValue)
 {
-  PRUnichar* str = nsnull;
+  nsStringBuffer* str = nsnull;
   PRBool empty = aValue.IsEmpty();
   void* ptr;
   if (BaseType() == eStringBase && (ptr = GetPtr())) {
     if (!empty) {
       nsCheapStringBufferUtils::
-        CopyToExistingBuffer(str, NS_STATIC_CAST(PRUnichar*, ptr), aValue);
+        CopyToExistingBuffer(str, NS_STATIC_CAST(nsStringBuffer*, ptr), aValue);
     }
     else {
-      nsCheapStringBufferUtils::Free(NS_STATIC_CAST(PRUnichar*, ptr));
+      nsCheapStringBufferUtils::Free(NS_STATIC_CAST(nsStringBuffer*, ptr));
     }
   }
   else {
@@ -387,9 +387,9 @@ nsAttrValue::ToString(nsAString& aResult) const
   switch(Type()) {
     case eString:
     {
-      PRUnichar* str = NS_STATIC_CAST(PRUnichar*, GetPtr());
+      nsStringBuffer* str = NS_STATIC_CAST(nsStringBuffer*, GetPtr());
       if (str) {
-        aResult = nsCheapStringBufferUtils::GetDependentString(str);
+        nsCheapStringBufferUtils::ToString(str, aResult);
       }
       else {
         aResult.Truncate();
@@ -490,16 +490,13 @@ nsAttrValue::ToString(nsAString& aResult) const
   }
 }
 
-const nsDependentSubstring
+const nsCheapString
 nsAttrValue::GetStringValue() const
 {
   NS_PRECONDITION(Type() == eString, "wrong type");
 
-  static const PRUnichar blankStr[] = { '\0' };
   void* ptr = GetPtr();
-  return ptr
-         ? nsCheapStringBufferUtils::GetDependentString(NS_STATIC_CAST(PRUnichar*, ptr))
-         : Substring(blankStr, blankStr);
+  return nsCheapStringBufferUtils::GetDependentString(NS_STATIC_CAST(nsStringBuffer*, ptr));
 }
 
 PRBool
@@ -571,7 +568,7 @@ nsAttrValue::HashValue() const
   switch(BaseType()) {
     case eStringBase:
     {
-      PRUnichar* str = NS_STATIC_CAST(PRUnichar*, GetPtr());
+      nsStringBuffer* str = NS_STATIC_CAST(nsStringBuffer*, GetPtr());
       return str ? nsCheapStringBufferUtils::HashCode(str) : 0;
     }
     case eOtherBase:
