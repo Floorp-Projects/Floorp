@@ -616,16 +616,15 @@ nsHTMLAnchorElement::GetHash(nsAWritableString& aHash)
     result = NS_NewURI(getter_AddRefs(uri), href);
 
     if (NS_OK == result) {
-      char *ref;
+      nsXPIDLCString ref;
       nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
       if (url) {
-        result = url->GetRef(&ref);
+        result = url->GetRef(getter_Copies(ref));
       }
 
       if (result == NS_OK && (nsnull != ref) && ('\0' != *ref)) {
         aHash.Assign(PRUnichar('#'));
         aHash.Append(NS_ConvertASCIItoUCS2(ref));
-        nsCRT::free(ref);
       }
       else {
         aHash.SetLength(0);
