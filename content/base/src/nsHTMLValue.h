@@ -276,9 +276,21 @@ public:
                            nsAString& aResult) const;
 
   /**
+   * Parse a string value into an int or pixel HTMLValue.
+   *
+   * @param aString the string to parse
+   * @param aDefaultUnit the unit to use (eHTMLUnit_Pixel or Integer)
+   * @return whether the value could be parsed
+   */
+  PRBool ParseIntValue(const nsAString& aString, nsHTMLUnit aDefaultUnit) {
+    return ParseIntWithBounds(aString, aDefaultUnit, PR_INT32_MIN, PR_INT32_MAX);
+  }
+
+  /**
    * Parse a string value into an int or pixel HTMLValue with minimum
    * value and maximum value (can optionally parse percent (n%) and
-   * proportional (n%)
+   * proportional (n%).  This method explicitly sets a lower bound of zero on
+   * the element, whether it be proportional or percent or raw integer.
    *
    * @param aString the string to parse
    * @param aDefaultUnit the unit to use (eHTMLUnit_Pixel or Integer)
@@ -286,9 +298,9 @@ public:
    * @param aCanBeProportional true if it can be a proportional value (*)
    * @return whether the value could be parsed
    */
-  PRBool ParseIntValue(const nsAString& aString, nsHTMLUnit aDefaultUnit,
-                       PRBool aCanBePercent = PR_FALSE,
-                       PRBool aCanBeProportional = PR_FALSE);
+  PRBool ParseSpecialIntValue(const nsAString& aString, nsHTMLUnit aDefaultUnit,
+                              PRBool aCanBePercent,
+                              PRBool aCanBeProportional);
 
   /**
    * Parse a string value into an int or pixel HTMLValue with minimum
