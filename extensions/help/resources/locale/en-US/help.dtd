@@ -14,3 +14,7 @@
 
 <!ENTITY tab1.label       "Contents">
 <!ENTITY tab2.label       "Index">
+
+<!ENTITY findOnCmd.commandkey "f">
+<!ENTITY printCmd.commandkey "p">
+<!ENTITY findAgainCmd.commandkey "g">
