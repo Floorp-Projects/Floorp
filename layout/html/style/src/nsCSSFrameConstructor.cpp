@@ -8089,24 +8089,30 @@ static nsresult InsertOutOfFlow(nsIPresContext* aPresContext,
 }
 
 static nsresult
-InsertOutOfFlowFrames(const nsFrameConstructorState& aState,
+InsertOutOfFlowFrames(nsFrameConstructorState& aState,
                       nsIPresContext* aPresContext) {
   // If there are new absolutely positioned child frames, then notify
   // the parent
   nsresult rv = InsertOutOfFlow(aPresContext, aState.mAbsoluteItems,
                                 nsLayoutAtoms::absoluteList);
   NS_ENSURE_SUCCESS(rv, rv);
+  aState.mAbsoluteItems.childList = nsnull;
   
   // If there are new fixed positioned child frames, then notify
   // the parent
   rv = InsertOutOfFlow(aPresContext, aState.mFixedItems,
                        nsLayoutAtoms::fixedList);
   NS_ENSURE_SUCCESS(rv, rv);
+  aState.mAbsoluteItems.childList = nsnull;
 
   // If there are new floating child frames, then notify
   // the parent
-  return InsertOutOfFlow(aPresContext, aState.mFloatedItems,
-                         nsLayoutAtoms::floatList);
+  rv = InsertOutOfFlow(aPresContext, aState.mFloatedItems,
+                       nsLayoutAtoms::floatList);
+  NS_ENSURE_SUCCESS(rv, rv);
+  aState.mFloatedItems.childList = nsnull;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
