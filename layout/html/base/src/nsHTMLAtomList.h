@@ -42,6 +42,8 @@ HTML_ATOM(mozLetterFrame, ":-moz-letter-frame")
 HTML_ATOM(mozLineFrame, ":-moz-line-frame")
 HTML_ATOM(mozListBulletPseudo, ":-moz-list-bullet")
 HTML_ATOM(mozSingleLineTextControlFrame, ":-moz-singleline-textcontrol-frame")
+HTML_ATOM(mozFocusInnerPseudo, ":-moz-focus-inner")
+HTML_ATOM(mozFocusOuterPseudo, ":-moz-focus-outer")
 
 HTML_ATOM(_baseHref, NS_HTML_BASE_HREF)
 HTML_ATOM(_baseTarget, NS_HTML_BASE_TARGET)
