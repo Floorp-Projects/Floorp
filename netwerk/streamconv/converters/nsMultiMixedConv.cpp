@@ -166,6 +166,7 @@ nsMultiMixedConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
                             nsCString headerStr(headerStart);
                             headerStr.ToLowerCase();
                             nsIAtom *header = NS_NewAtom(headerStr.GetBuffer());
+                            if (!header) return NS_ERROR_OUT_OF_MEMORY;
                             *colon = ':';
 
                             nsCString headerVal(colon + 1);
@@ -173,9 +174,11 @@ nsMultiMixedConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
 
                             if (headerStr == "content-type") {
                                 contentTypeStr = headerVal;
+                                NS_RELEASE(header);
                             } else {
                                 // XXX we need a way to set other header's such as cookies :/
                                 // XXX maybe we just handle cookies directly here.
+                                NS_RELEASE(header);
                             }
                         }
                         
