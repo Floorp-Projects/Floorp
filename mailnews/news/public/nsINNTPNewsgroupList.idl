@@ -22,10 +22,8 @@
  * to destroy the DBView)
  */
 #include "nsISupports.idl"
-
-%{ C++
-#include "nsINNTPHost.h"
-%}
+#include "nsINNTPHost.idl"
+#include "nsINNTPNewsgroup.idl"
 
 interface nsINNTPHost;
 interface nsINNTPNewsgroup;

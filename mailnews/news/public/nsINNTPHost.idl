@@ -18,10 +18,8 @@
 
 #include "nsISupports.idl"
 
-%{ C++
-#include "nsINNTPNewsgroup.h"
-#include "nsINNTPNewsgroupList.h"
-%}
+#include "nsINNTPNewsgroup.idl"
+#include "nsINNTPNewsgroupList.idl"
 
 interface nsINNTPNewsgroup;
 interface nsINNTPNewsgroupList;
