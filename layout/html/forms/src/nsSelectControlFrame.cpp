@@ -1011,7 +1011,7 @@ nsSelectControlFrame::Paint(nsIPresContext& aPresContext,
 void
 nsSelectControlFrame::MouseClicked(nsIPresContext* aPresContext)
 {
-  if ((nsnull != mFormFrame) && !nsFormFrame::GetDisabled(this)) {
+  if (!nsFormFrame::GetDisabled(this)) {
 
     PRBool changed = PR_FALSE;
     PRBool multiple;
