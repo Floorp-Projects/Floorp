@@ -32,6 +32,7 @@ NS_DECLARE_ID(kICharsetAliasIID,\
 NS_DECLARE_ID(kCharsetAliasCID,\
  0x98d41c21, 0xccf3, 0x11d2, 0xb3, 0xb1, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70 );
 
+#define NS_CHARSETALIAS_PROGID "component://netscape/intl/charsetalias"
 
 class nsICharsetAlias : public nsISupports
 {

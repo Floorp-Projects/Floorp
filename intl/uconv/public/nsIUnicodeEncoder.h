@@ -43,6 +43,9 @@ NS_DECLARE_ID(kIUnicharEncoderIID,
 #define NS_ERROR_UENC_NOMAPPING     \
   NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_UCONV, 0x23)
 
+
+#define NS_UNICODEENCODER_PROGID_BASE "component://netscape/intl/unicode/encoder?charset="
+
 /**
  * Interface which converts a single character from Unicode into a given 
  * charset.

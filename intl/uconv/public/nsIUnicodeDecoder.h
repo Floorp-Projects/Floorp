@@ -56,6 +56,9 @@ NS_DECLARE_ID(kIUnicodeDecoderIID,
 #define NS_ERROR_UDEC_ILLEGALINPUT  \
   NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_UCONV, 14)
 
+
+#define NS_UNICODEDECODER_PROGID_BASE "component://netscape/intl/unicode/decoder?charset="
+
 /**
  * Interface for a Converter from a Charset into Unicode.
  *
