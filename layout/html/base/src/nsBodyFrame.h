@@ -19,8 +19,8 @@
 #define nsBodyFrame_h___
 
 #include "nsHTMLContainerFrame.h"
-#include "nsIAnchoredItems.h"
 #include "nsIAbsoluteItems.h"
+#include "nsISpaceManager.h"
 #include "nsVoidArray.h"
 
 class nsSpaceManager;
@@ -29,7 +29,6 @@ struct nsStyleDisplay;
 struct nsStylePosition;
 
 class nsBodyFrame : public nsHTMLContainerFrame,
-                    public nsIAnchoredItems,
                     public nsIAbsoluteItems
 {
 public:
@@ -44,6 +43,10 @@ public:
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
+
+  NS_IMETHOD Paint(nsIPresContext&      aPresContext,
+                   nsIRenderingContext& aRenderingContext,
+                   const nsRect&        aDirtyRect);
 
   NS_IMETHOD CreateContinuingFrame(nsIPresContext&  aPresContext,
                                    nsIFrame*        aParent,
@@ -61,12 +64,6 @@ public:
 
   NS_IMETHOD DidSetStyleContext(nsIPresContext* aPresContext);
   NS_IMETHOD ListTag(FILE* out) const;
-
-  // nsIAnchoredItems
-  virtual void AddAnchoredItem(nsIFrame*         aAnchoredItem,
-                               AnchoringPosition aPosition,
-                               nsIFrame*         aContainer);
-  virtual void RemoveAnchoredItem(nsIFrame* aAnchoredItem);
 
   // nsIAbsoluteItems
   NS_IMETHOD  AddAbsoluteItem(nsAbsoluteFrame* aAnchorFrame);
@@ -116,6 +113,29 @@ private:
   nsSize GetColumnAvailSpace(nsIPresContext& aPresContext,
                              const nsMargin& aBorderPadding,
                              const nsHTMLReflowState& aReflowState);
+
+#ifdef NS_DEBUG
+  struct BandData : public nsBandData {
+    // Trapezoids used during band processing
+    nsBandTrapezoid data[12];
+
+    // Bounding rect of available space between any left and right floaters
+    nsRect          availSpace;
+
+    BandData() {
+      size = 12;
+      trapezoids = data;
+    }
+
+    /**
+     * Computes the bounding rect of the available space, i.e. space
+     * between any left and right floaters Uses the current trapezoid
+     * data, see nsISpaceManager::GetBandData(). Also updates member
+     * data "availSpace".
+     */
+    void ComputeAvailSpaceRect();
+  };
+#endif
 };
 
 #endif /* nsBodyFrame_h___ */
