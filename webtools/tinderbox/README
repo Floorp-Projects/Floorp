@@ -111,6 +111,7 @@ These modes do not show on my browser:
 
 These are self explanatory:
         legend=0;  
+        norules=0;  
         hours=n; 
 
 

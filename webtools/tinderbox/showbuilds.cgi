@@ -171,14 +171,16 @@ sub print_page_head {
 
   # Print rules, sheriff, and status.  Only on the first pageful.
   if ($nowdate eq $maxdate) {
-     do "$::tree/rules.pl";
-     print "<a NAME=\"rules\"></a>$rules_message<br>";  # from $::tree/rules.pl
-     
-     do "$::tree/sheriff.pl";
-     print "<a NAME=\"sheriff\"></a>$current_sheriff<br>";  # from $::tree/sheriff.pl
-
-     do "$::tree/status.pl";
-     print "<a NAME=\"status\"></a>$status_message<br>";  # from $::tree/status.pl
+    unless ($form{norules}) {
+      do "$::tree/rules.pl";
+      print "<a NAME=\"rules\"></a>$rules_message<br>";  # from $::tree/rules.pl
+    }
+    
+    do "$::tree/sheriff.pl";
+    print "<a NAME=\"sheriff\"></a>$current_sheriff<br>";  # from $::tree/sheriff.pl
+    
+    do "$::tree/status.pl";
+    print "<a NAME=\"status\"></a>$status_message<br>";  # from $::tree/status.pl
   }
 
   # Quote and Lengend
@@ -446,6 +448,7 @@ sub print_table_footer {
 sub open_showbuilds_url {
   my %args = (
         legend => "$form{legend}",
+        norules => "$form{norules}",
         @_
   );
 
