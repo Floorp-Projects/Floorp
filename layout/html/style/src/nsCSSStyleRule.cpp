@@ -1845,7 +1845,7 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
         nsStyleList* list = (nsStyleList*)aContext->GetMutableStyleData(eStyleStruct_List);
 
         const nsStyleList* parentList = list;
-        if (nsnull != parentList) {
+        if (nsnull != parentContext) {
           parentList = (const nsStyleList*)parentContext->GetStyleData(eStyleStruct_List);
         }
 
@@ -1887,7 +1887,7 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
         nsStyleTable* table = (nsStyleTable*)aContext->GetMutableStyleData(eStyleStruct_Table);
 
         const nsStyleTable* parentTable = table;
-        if (nsnull != parentTable) {
+        if (nsnull != parentContext) {
           parentTable = (const nsStyleTable*)parentContext->GetStyleData(eStyleStruct_Table);
         }
         nsStyleCoord  coord;
