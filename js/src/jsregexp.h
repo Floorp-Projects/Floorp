@@ -51,8 +51,7 @@ struct JSRegExpStatics {
 
 struct JSRegExp {
     JSString    *source;        /* locked source string, sans // */
-    size_t      length;         /* program length in bytes */
-    size_t      lastIndex;      /* index after last match, for //g iterator */
+    uintN       lastIndex;      /* index after last match, for //g iterator */
     uintN       parenCount;     /* number of parenthesized submatches */
     uint8       flags;          /* flags, see jsapi.h */
     struct RENode *ren;         /* regular expression tree root */
