@@ -128,11 +128,11 @@ extern "C" NS_EXPORT PRBool NSCanUnload() {
 
 extern "C" NS_EXPORT nsresult NSRegisterSelf(const char *path)
 {
-  return nsRepository::RegisterFactory(kTestLoadedFactoryCID, path, 
+  return NSRepository::RegisterFactory(kTestLoadedFactoryCID, path, 
                                        PR_TRUE, PR_TRUE);
 }
 
 extern "C" NS_EXPORT nsresult NSUnregisterSelf(const char *path)
 {
-  return nsRepository::UnregisterFactory(kTestLoadedFactoryCID, path);
+  return NSRepository::UnregisterFactory(kTestLoadedFactoryCID, path);
 }
