@@ -209,7 +209,9 @@ ifeq ($(OS_ARCH),SunOS)
 endif
 
 ifeq ($(OS_ARCH), SINIX)
-    ASFILES   = os_ReliantUNIX.s
+    ifeq ($(CPU_ARCH),mips)
+        ASFILES   = os_ReliantUNIX.s
+    endif
 endif
 
 ifeq ($(OS_ARCH), IRIX)

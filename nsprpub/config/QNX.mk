@@ -37,3 +37,5 @@ OS_CFLAGS	= -DQNX -Di386 -D_PR_LOCAL_THREADS_ONLY -D_PR_NEED_H_ERRNO
 #IMPL_STRATEGY	= _EMU
 
 NOSUCHFILE	= /no-such-file
+
+GARBAGE		= $(wildcard *.err)

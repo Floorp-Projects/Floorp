@@ -430,7 +430,7 @@ getcomponent(char *path, char *name)
     return path;
 }
 
-#ifdef UNIXWARE
+#ifdef UNIXWARE_READDIR_BUFFER_TOO_SMALL
 /* Sigh.  The static buffer in Unixware's readdir is too small. */
 struct dirent * readdir(DIR *d)
 {
