@@ -37,11 +37,6 @@ nsGenericDOMHTMLCollection::~nsGenericDOMHTMLCollection()
 NS_IMPL_ADDREF(nsGenericDOMHTMLCollection)
 NS_IMPL_RELEASE(nsGenericDOMHTMLCollection)
 
-// XPConnect interface list for nsGenericDOMHTMLCollection
-NS_CLASSINFO_MAP_BEGIN(HTMLGenericCollection)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMHTMLCollection)
-NS_CLASSINFO_MAP_END
-
 NS_INTERFACE_MAP_BEGIN(nsGenericDOMHTMLCollection)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLCollection)
   NS_INTERFACE_MAP_ENTRY(nsISupports)

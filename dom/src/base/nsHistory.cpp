@@ -50,12 +50,6 @@ HistoryImpl::~HistoryImpl()
 }
 
 
-// XPConnect interface list for HistoryImpl
-NS_CLASSINFO_MAP_BEGIN(History)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMNSHistory)
-NS_CLASSINFO_MAP_END
-
-
 // QueryInterface implementation for HistoryImpl
 NS_INTERFACE_MAP_BEGIN(HistoryImpl)
   NS_INTERFACE_MAP_ENTRY(nsISupports)

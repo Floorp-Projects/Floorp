@@ -103,13 +103,6 @@ NS_IMPL_ADDREF(nsHTMLDListElement);
 NS_IMPL_RELEASE(nsHTMLDListElement);
 
 
-// XPConnect interface list for nsHTMLDListElement
-NS_CLASSINFO_MAP_BEGIN(HTMLDListElement)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMHTMLDListElement)
-  NS_CLASSINFO_MAP_ENTRY_FUNCTION(GetGenericHTMLElementIIDs)
-NS_CLASSINFO_MAP_END
-
-
 // QueryInterface implementation for nsHTMLDListElement
 NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLDListElement,
                                     nsGenericHTMLContainerElement)

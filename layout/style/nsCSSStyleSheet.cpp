@@ -851,12 +851,6 @@ CSSRuleListImpl::~CSSRuleListImpl()
 {
 }
 
-// XPConnect interface list for CSSStyleRuleImpl
-NS_CLASSINFO_MAP_BEGIN(CSSRuleList)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMCSSRuleList)
-NS_CLASSINFO_MAP_END
-
-
 // QueryInterface implementation for CSSRuleList
 NS_INTERFACE_MAP_BEGIN(CSSRuleListImpl)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSRuleList)
@@ -935,12 +929,6 @@ private:
   nsCOMPtr<nsISupportsArray> mArray;
   CSSStyleSheetImpl*         mStyleSheet;
 };
-
-
-// XPConnect interface list for CSSStyleSheetStyleRuleImpl
-NS_CLASSINFO_MAP_BEGIN(MediaList)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMMediaList)
-NS_CLASSINFO_MAP_END
 
 
 // QueryInterface implementation for CSSStyleRuleImpl
@@ -1137,12 +1125,6 @@ CSSImportsCollectionImpl::CSSImportsCollectionImpl(nsICSSStyleSheet *aStyleSheet
 CSSImportsCollectionImpl::~CSSImportsCollectionImpl()
 {
 }
-
-
-// XPConnect interface list for CSSImportsCollectionImpl
-NS_CLASSINFO_MAP_BEGIN(StyleSheetList)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMStyleSheetList)
-NS_CLASSINFO_MAP_END
 
 
 // QueryInterface implementation for CSSImportsCollectionImpl
@@ -1586,12 +1568,6 @@ CSSStyleSheetImpl::~CSSStyleSheetImpl()
     delete mRuleProcessors; // weak refs, should be empty here anyway
   }
 }
-
-
-// XPConnect interface list for CSSStyleSheetImpl
-NS_CLASSINFO_MAP_BEGIN(CSSStyleSheet)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMCSSStyleSheet)
-NS_CLASSINFO_MAP_END
 
 
 // QueryInterface implementation for CSSStyleSheetImpl

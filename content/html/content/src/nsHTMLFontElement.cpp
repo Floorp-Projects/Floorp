@@ -113,13 +113,6 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLFontElement, nsGenericElement);
 NS_IMPL_RELEASE_INHERITED(nsHTMLFontElement, nsGenericElement);
 
 
-// XPConnect interface list for nsHTMLFontElement
-NS_CLASSINFO_MAP_BEGIN(HTMLFontElement)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMHTMLFontElement)
-  NS_CLASSINFO_MAP_ENTRY_FUNCTION(GetGenericHTMLElementIIDs)
-NS_CLASSINFO_MAP_END
-
-
 // QueryInterface implementation for nsHTMLFontElement
 NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLFontElement,
                                     nsGenericHTMLContainerElement)

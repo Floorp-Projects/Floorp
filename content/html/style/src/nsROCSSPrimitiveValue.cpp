@@ -43,12 +43,6 @@ NS_IMPL_ADDREF(nsROCSSPrimitiveValue);
 NS_IMPL_RELEASE(nsROCSSPrimitiveValue);
 
 
-// XPConnect interface list for nsROCSSPrimitiveValue
-NS_CLASSINFO_MAP_BEGIN(ROCSSPrimitiveValue)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMCSSPrimitiveValue)
-NS_CLASSINFO_MAP_END
-
-
 // QueryInterface implementation for nsROCSSPrimitiveValue
 NS_INTERFACE_MAP_BEGIN(nsROCSSPrimitiveValue)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSPrimitiveValue)

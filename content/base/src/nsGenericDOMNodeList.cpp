@@ -37,12 +37,6 @@ NS_IMPL_ADDREF(nsGenericDOMNodeList)
 NS_IMPL_RELEASE(nsGenericDOMNodeList)
 
 
-// XPConnect interface list for nsGenericDOMNodeList
-NS_CLASSINFO_MAP_BEGIN(NodeList)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMNodeList)
-NS_CLASSINFO_MAP_END
-
-
 // QueryInterface implementation for nsGenericDOMNodeList
 NS_INTERFACE_MAP_BEGIN(nsGenericDOMNodeList)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNodeList)

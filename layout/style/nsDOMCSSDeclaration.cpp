@@ -42,14 +42,6 @@ nsDOMCSSDeclaration::~nsDOMCSSDeclaration()
 }
 
 
-// XPConnect interface list for nsDOMCSSDeclaration
-NS_CLASSINFO_MAP_BEGIN(CSSStyleDeclaration)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMCSSStyleDeclaration)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMCSS2Properties)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMNSCSS2Properties)
-NS_CLASSINFO_MAP_END
-
-
 // QueryInterface implementation for CSSStyleSheetImpl
 NS_INTERFACE_MAP_BEGIN(nsDOMCSSDeclaration)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSStyleDeclaration)

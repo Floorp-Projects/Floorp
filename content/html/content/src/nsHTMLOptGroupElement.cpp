@@ -101,13 +101,6 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLOptGroupElement, nsGenericElement);
 NS_IMPL_RELEASE_INHERITED(nsHTMLOptGroupElement, nsGenericElement);
 
 
-// XPConnect interface list for nsHTMLOptGroupElement
-NS_CLASSINFO_MAP_BEGIN(HTMLOptGroupElement)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMHTMLOptGroupElement)
-  NS_CLASSINFO_MAP_ENTRY_FUNCTION(GetGenericHTMLElementIIDs)
-NS_CLASSINFO_MAP_END
-
-
 // QueryInterface implementation for nsHTMLOptGroupElement
 NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLOptGroupElement,
                                     nsGenericHTMLContainerElement)

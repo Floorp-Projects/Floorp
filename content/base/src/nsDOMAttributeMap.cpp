@@ -49,12 +49,6 @@ nsDOMAttributeMap::DropReference()
 }
 
 
-// XPConnect interface list for nsDOMAttributeMap
-NS_CLASSINFO_MAP_BEGIN(NamedNodeMap)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMNamedNodeMap)
-NS_CLASSINFO_MAP_END
-
-
 // QueryInterface implementation for nsDOMAttributeMap
 NS_INTERFACE_MAP_BEGIN(nsDOMAttributeMap)
   NS_INTERFACE_MAP_ENTRY(nsISupports)

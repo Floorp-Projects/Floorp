@@ -302,14 +302,6 @@ nsXMLProcessingInstruction::~nsXMLProcessingInstruction()
 }
 
 
-// XPConnect interface list for nsXMLProcessingInstruction
-NS_CLASSINFO_MAP_BEGIN(ProcessingInstruction)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMProcessingInstruction)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMLinkStyle)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-NS_CLASSINFO_MAP_END
-
-
 // QueryInterface implementation for nsXMLProcessingInstruction
 NS_INTERFACE_MAP_BEGIN(nsXMLProcessingInstruction)
   NS_INTERFACE_MAP_ENTRY_DOM_DATA()

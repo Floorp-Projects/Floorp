@@ -145,14 +145,6 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLAnchorElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLAnchorElement, nsGenericElement) 
 
 
-// XPConnect interface list for nsHTMLAnchorElement
-NS_CLASSINFO_MAP_BEGIN(HTMLAnchorElement)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMHTMLAnchorElement)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMNSHTMLAnchorElement)
-  NS_CLASSINFO_MAP_ENTRY_FUNCTION(GetGenericHTMLElementIIDs)
-NS_CLASSINFO_MAP_END
-
-
 // QueryInterface implementation for nsHTMLAnchorElement
 NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLAnchorElement,
                                     nsGenericHTMLContainerElement)

@@ -230,14 +230,6 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLSelectElement, nsGenericElement);
 NS_IMPL_RELEASE_INHERITED(nsHTMLSelectElement, nsGenericElement);
 
 
-// XPConnect interface list for nsHTMLSelectElement
-NS_CLASSINFO_MAP_BEGIN(HTMLSelectElement)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMHTMLSelectElement)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMNSHTMLSelectElement)
-  NS_CLASSINFO_MAP_ENTRY_FUNCTION(GetGenericHTMLElementIIDs)
-NS_CLASSINFO_MAP_END
-
-
 // QueryInterface implementation for nsHTMLSelectElement
 NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLSelectElement,
                                     nsGenericHTMLContainerFormElement)
@@ -1515,13 +1507,6 @@ nsHTMLOptionCollection::DropReference()
 }
 
 // nsISupports
-
-// XPConnect interface list for nsHTMLOptionCollection
-NS_CLASSINFO_MAP_BEGIN(HTMLOptionCollection)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMNSHTMLOptionCollection)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMHTMLCollection)
-NS_CLASSINFO_MAP_END
-
 
 // QueryInterface implementation for nsHTMLOptionCollection
 NS_INTERFACE_MAP_BEGIN(nsHTMLOptionCollection)

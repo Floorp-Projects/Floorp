@@ -57,13 +57,6 @@ LocationImpl::~LocationImpl()
 }
 
 
-// XPConnect interface list for LocationImpl
-NS_CLASSINFO_MAP_BEGIN(Location)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMLocation)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMNSLocation)
-NS_CLASSINFO_MAP_END
-
-
 // QueryInterface implementation for LocationImpl
 NS_INTERFACE_MAP_BEGIN(LocationImpl)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSLocation)

@@ -547,19 +547,6 @@ NS_IMPL_ADDREF(nsXULDocument)
 NS_IMPL_RELEASE(nsXULDocument) 
 
 
-// XPConnect interface list for nsXULDocument
-NS_CLASSINFO_MAP_BEGIN(XULDocument)
-    NS_CLASSINFO_MAP_ENTRY(nsIDOMXULDocument)
-    NS_CLASSINFO_MAP_ENTRY(nsIDOMNSDocument)
-    NS_CLASSINFO_MAP_ENTRY(nsIDOMDocumentEvent)
-    NS_CLASSINFO_MAP_ENTRY(nsIDOMDocumentView)
-    NS_CLASSINFO_MAP_ENTRY(nsIDOMDocumentXBL)
-    NS_CLASSINFO_MAP_ENTRY(nsIDOMDocumentStyle)
-    NS_CLASSINFO_MAP_ENTRY(nsIDOMDocumentRange)
-    NS_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-NS_CLASSINFO_MAP_END
-
-
 // QueryInterface implementation for nsHTMLAnchorElement
 NS_INTERFACE_MAP_BEGIN(nsXULDocument)
     NS_INTERFACE_MAP_ENTRY(nsIDocument)

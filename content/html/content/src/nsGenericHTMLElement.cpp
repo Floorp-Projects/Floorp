@@ -452,15 +452,6 @@ nsGenericHTMLElementTearoff::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 
-// XPConnect interface list for nsGenericHTMLElement
-NS_CLASSINFO_MAP_BEGIN_EXPORTED(GenericHTMLElement)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMNSHTMLElement)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMElementCSSInlineStyle)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOM3Node)
-NS_CLASSINFO_MAP_END
-
-
 nsGenericHTMLElement::nsGenericHTMLElement()
 {
   mAttributes = nsnull;

@@ -105,13 +105,6 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLOListElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLOListElement, nsGenericElement) 
 
 
-// XPConnect interface list for nsHTMLOListElement
-NS_CLASSINFO_MAP_BEGIN(HTMLOListElement)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMHTMLOListElement)
-  NS_CLASSINFO_MAP_ENTRY_FUNCTION(GetGenericHTMLElementIIDs)
-NS_CLASSINFO_MAP_END
-
-
 // QueryInterface implementation for nsHTMLOListElement
 NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLOListElement,
                                     nsGenericHTMLContainerElement)

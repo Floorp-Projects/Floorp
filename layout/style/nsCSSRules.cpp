@@ -116,11 +116,6 @@ CSSCharsetRuleImpl::~CSSCharsetRuleImpl(void)
 NS_IMPL_ADDREF_INHERITED(CSSCharsetRuleImpl, nsCSSRule);
 NS_IMPL_RELEASE_INHERITED(CSSCharsetRuleImpl, nsCSSRule);
 
-// XPConnect interface list for CSSCharsetRuleImpl
-NS_CLASSINFO_MAP_BEGIN(CSSCharsetRule)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMCSSRule)
-NS_CLASSINFO_MAP_END
-
 // QueryInterface implementation for CSSCharsetRuleImpl
 NS_INTERFACE_MAP_BEGIN(CSSCharsetRuleImpl)
   NS_INTERFACE_MAP_ENTRY(nsICSSCharsetRule)
@@ -333,11 +328,6 @@ CSSImportRuleImpl::~CSSImportRuleImpl(void)
 
 NS_IMPL_ADDREF_INHERITED(CSSImportRuleImpl, nsCSSRule);
 NS_IMPL_RELEASE_INHERITED(CSSImportRuleImpl, nsCSSRule);
-
-// XPConnect interface list for CSSImportRuleImpl
-NS_CLASSINFO_MAP_BEGIN(CSSImportRule)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMCSSRule)
-NS_CLASSINFO_MAP_END
 
 // QueryInterface implementation for CSSImportRuleImpl
 NS_INTERFACE_MAP_BEGIN(CSSImportRuleImpl)
@@ -610,11 +600,6 @@ CSSMediaRuleImpl::~CSSMediaRuleImpl(void)
 
 NS_IMPL_ADDREF_INHERITED(CSSMediaRuleImpl, nsCSSRule);
 NS_IMPL_RELEASE_INHERITED(CSSMediaRuleImpl, nsCSSRule);
-
-// XPConnect interface list for CSSMediaRuleImpl
-NS_CLASSINFO_MAP_BEGIN(CSSMediaRule)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMCSSRule)
-NS_CLASSINFO_MAP_END
 
 // QueryInterface implementation for CSSMediaRuleImpl
 NS_INTERFACE_MAP_BEGIN(CSSMediaRuleImpl)
@@ -992,11 +977,6 @@ CSSNameSpaceRuleImpl::~CSSNameSpaceRuleImpl(void)
 
 NS_IMPL_ADDREF_INHERITED(CSSNameSpaceRuleImpl, nsCSSRule);
 NS_IMPL_RELEASE_INHERITED(CSSNameSpaceRuleImpl, nsCSSRule);
-
-// XPConnect interface list for CSSNameSpaceRuleImpl
-NS_CLASSINFO_MAP_BEGIN(CSSNameSpaceRule)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMCSSRule)
-NS_CLASSINFO_MAP_END
 
 // QueryInterface implementation for CSSNameSpaceRuleImpl
 NS_INTERFACE_MAP_BEGIN(CSSNameSpaceRuleImpl)

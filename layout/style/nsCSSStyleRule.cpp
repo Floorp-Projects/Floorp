@@ -1385,12 +1385,6 @@ CSSStyleRuleImpl::~CSSStyleRuleImpl(void)
   }
 }
 
-// XPConnect interface list for CSSStyleRuleImpl
-NS_CLASSINFO_MAP_BEGIN(CSSStyleRule)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMCSSStyleRule)
-NS_CLASSINFO_MAP_END
-
-
 // QueryInterface implementation for CSSStyleRuleImpl
 NS_INTERFACE_MAP_BEGIN(CSSStyleRuleImpl)
   NS_INTERFACE_MAP_ENTRY(nsICSSStyleRule)

@@ -217,18 +217,6 @@ void GlobalWindowImpl::CleanUp()
 //*****************************************************************************
 
 
-// XPConnect interface list for GlobalWindowImpl
-NS_CLASSINFO_MAP_BEGIN(Window)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMWindow)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMJSWindow)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMWindowInternal)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMEventReceiver)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMViewCSS)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMAbstractView)
-NS_CLASSINFO_MAP_END
-
-
 // QueryInterface implementation for GlobalWindowImpl
 NS_INTERFACE_MAP_BEGIN(GlobalWindowImpl)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIScriptGlobalObject)
@@ -3876,13 +3864,6 @@ NavigatorImpl::~NavigatorImpl()
 //*****************************************************************************
 //    NavigatorImpl::nsISupports
 //*****************************************************************************
-
-
-// XPConnect interface list for NavigatorImpl
-NS_CLASSINFO_MAP_BEGIN(Navigator)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMNavigator)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMJSNavigator)
-NS_CLASSINFO_MAP_END
 
 
 // QueryInterface implementation for NavigatorImpl

@@ -95,14 +95,6 @@ NS_IMPL_ADDREF(nsTextNode)
 NS_IMPL_RELEASE(nsTextNode)
 
 
-// XPConnect interface list for nsTextNode
-NS_CLASSINFO_MAP_BEGIN(Text)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMText)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOM3Node)
-NS_CLASSINFO_MAP_END
-
-
 // QueryInterface implementation for nsTextNode
 NS_INTERFACE_MAP_BEGIN(nsTextNode)
   NS_INTERFACE_MAP_ENTRY_DOM_DATA()

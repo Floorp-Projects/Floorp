@@ -92,13 +92,6 @@ nsXMLCDATASection::~nsXMLCDATASection()
 }
 
 
-// XPConnect interface list for nsXMLCDATASection
-NS_CLASSINFO_MAP_BEGIN(CDATASection)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMCDATASection)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-NS_CLASSINFO_MAP_END
-
-
 // QueryInterface implementation for nsXMLCDATASection
 NS_INTERFACE_MAP_BEGIN(nsXMLCDATASection)
   NS_INTERFACE_MAP_ENTRY_DOM_DATA()

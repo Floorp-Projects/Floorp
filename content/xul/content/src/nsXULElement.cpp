@@ -673,21 +673,6 @@ nsXULElement::Create(nsINodeInfo *aNodeInfo, nsIContent** aResult)
 //----------------------------------------------------------------------
 // nsISupports interface
 
-// XPConnect interface list for nsXULElement
-NS_CLASSINFO_MAP_BEGIN(XULElement)
-    NS_CLASSINFO_MAP_ENTRY(nsIDOMXULElement)
-    NS_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-NS_CLASSINFO_MAP_END
-
-
-// XPConnect interface list for nsXULElement
-NS_CLASSINFO_MAP_BEGIN(XULTreeElement)
-    NS_CLASSINFO_MAP_ENTRY(nsIDOMXULElement)
-    NS_CLASSINFO_MAP_ENTRY(nsIDOMXULTreeElement)
-    NS_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-NS_CLASSINFO_MAP_END
-
-
 NS_IMPL_ADDREF(nsXULElement);
 NS_IMPL_RELEASE(nsXULElement);
 

@@ -29,12 +29,6 @@
 static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,  NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 
 
-// XPConnect interface list for NodeSet
-NS_CLASSINFO_MAP_BEGIN(NodeSet)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMNodeList)
-NS_CLASSINFO_MAP_END
-
-
 // QueryInterface implementation for nsNodeSet
 NS_INTERFACE_MAP_BEGIN(nsNodeSet)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNodeList)

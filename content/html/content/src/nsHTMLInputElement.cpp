@@ -281,14 +281,6 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLInputElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLInputElement, nsGenericElement) 
 
 
-// XPConnect interface list for nsHTMLInputElement
-NS_CLASSINFO_MAP_BEGIN(HTMLInputElement)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMHTMLInputElement)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMNSHTMLInputElement)
-  NS_CLASSINFO_MAP_ENTRY_FUNCTION(GetGenericHTMLElementIIDs)
-NS_CLASSINFO_MAP_END
-
-
 // QueryInterface implementation for nsHTMLInputElement
 NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLInputElement,
                                     nsGenericHTMLLeafFormElement)

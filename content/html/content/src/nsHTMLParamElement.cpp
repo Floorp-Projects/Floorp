@@ -95,13 +95,6 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLParamElement, nsGenericElement);
 NS_IMPL_RELEASE_INHERITED(nsHTMLParamElement, nsGenericElement);
 
 
-// XPConnect interface list for nsHTMLParamElement
-NS_CLASSINFO_MAP_BEGIN(HTMLParamElement)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMHTMLParamElement)
-  NS_CLASSINFO_MAP_ENTRY_FUNCTION(GetGenericHTMLElementIIDs)
-NS_CLASSINFO_MAP_END
-
-
 // QueryInterface implementation for nsHTMLParamElement
 NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLParamElement,
                                     nsGenericHTMLLeafElement)

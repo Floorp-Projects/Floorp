@@ -89,12 +89,6 @@ nsXMLNamedNodeMap::~nsXMLNamedNodeMap()
   NS_IF_RELEASE(mArray);
 }
 
-// XPConnect interface list for nsXMLNamedNodeMap
-NS_CLASSINFO_MAP_BEGIN(NamedNodeMap)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMNamedNodeMap)
-NS_CLASSINFO_MAP_END
-
-
 // QueryInterface implementation for nsXMLNamedNodeMap
 NS_INTERFACE_MAP_BEGIN(nsXMLNamedNodeMap)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNamedNodeMap)

@@ -110,13 +110,6 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLTableColElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLTableColElement, nsGenericElement) 
 
 
-// XPConnect interface list for nsHTMLTableColElement
-NS_CLASSINFO_MAP_BEGIN(HTMLTableColElement)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMHTMLTableColElement)
-  NS_CLASSINFO_MAP_ENTRY_FUNCTION(GetGenericHTMLElementIIDs)
-NS_CLASSINFO_MAP_END
-
-
 // QueryInterface implementation for nsHTMLTableColElement
 NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLTableColElement,
                                     nsGenericHTMLContainerElement)

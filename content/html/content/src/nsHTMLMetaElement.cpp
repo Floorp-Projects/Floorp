@@ -96,13 +96,6 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLMetaElement, nsGenericElement)
 
 
 
-// XPConnect interface list for nsHTMLMetaElement
-NS_CLASSINFO_MAP_BEGIN(HTMLMetaElement)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMHTMLMetaElement)
-  NS_CLASSINFO_MAP_ENTRY_FUNCTION(GetGenericHTMLElementIIDs)
-NS_CLASSINFO_MAP_END
-
-
 // QueryInterface implementation for nsHTMLMetaElement
 NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLMetaElement,
                                     nsGenericHTMLLeafElement)

@@ -436,13 +436,6 @@ void nsRange::Shutdown()
  ******************************************************/
 
 
-// XPConnect interface list for nsRange
-NS_CLASSINFO_MAP_BEGIN(Range)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMRange)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMNSRange)
-NS_CLASSINFO_MAP_END
-
-
 // QueryInterface implementation for nsRange
 NS_INTERFACE_MAP_BEGIN(nsRange)
   NS_INTERFACE_MAP_ENTRY(nsIDOMRange)
