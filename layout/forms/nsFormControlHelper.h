@@ -132,6 +132,9 @@ public:
 
   static void ForceDrawFrame(nsIPresContext* aPresContext, nsIFrame * aFrame);
 
+  // Map platform line endings (CR, CRLF, LF) to DOM line endings (LF)
+  static void PlatformToDOMLineBreaks(nsString &aString);
+
   static nsresult GetValue(nsIContent* aContent, nsString* aResult);
   static nsresult GetName(nsIContent* aContent, nsString* aResult);
   static nsresult GetInputElementValue(nsIContent* aContent, nsString* aText, PRBool aInitialValue);

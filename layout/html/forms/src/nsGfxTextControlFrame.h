@@ -513,9 +513,7 @@ public:
   NS_IMETHOD DoesAttributeExist(nsIAtom *aAtt);
 
   // Remove CR and LF:
-  void RemoveNewlines(nsString &aString);
-  // Remove just CR:
-  void RemoveReturns(nsString &aString);
+  static void RemoveNewlines(nsString &aString);
 
   nsCWeakReferent *WeakReferent()
     { return &mWeakReferent; }
@@ -678,7 +676,6 @@ protected:
   // editing state
   nsCOMPtr<nsIEditor>         mEditor;  // ref counted
   nsCOMPtr<nsIDOMDocument>    mDoc;     // ref counted
-
 
   // the PassThroughState is used to manage a tiny state machine so 
   // only the proper messages get passed through
