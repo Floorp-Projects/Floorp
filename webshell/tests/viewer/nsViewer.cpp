@@ -919,9 +919,7 @@ printf("Id %d\n", aId);
       return nsEventStatus_eConsumeNoDefault;
 
     case VIEWER_FILE_OPEN:
-      printf("Before OpenHTMLFile\n");
       OpenHTMLFile(wd);
-      printf("After OpenHTMLFile\n");
       break;
 
     case VIEWER_EDIT_CUT:
