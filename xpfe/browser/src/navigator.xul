@@ -304,6 +304,8 @@
         <menuitem name="Tri-state checkbox" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/checkboxTest.xul'"/>
         <menuitem name="Toolbar" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/toolbarTest1.xul'"/>
         <menuitem name="Tree" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/treeTest1.xul'"/>
+        <menuitem name="Dialog" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/dexsimplemaster.xul'"/>
+        <menuitem name="Dialog w/ animation" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/dexanimmaster.xul'"/>
       </menu>
 
     </menu>
