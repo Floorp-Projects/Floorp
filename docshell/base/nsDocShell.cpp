@@ -2175,6 +2175,14 @@ nsDocShell::SetFocus()
         nsIFrame *focusFrame = nsnull;
         presShell->GetPrimaryFrameFor(focusContent, &focusFrame);
         esm->ChangeFocus(focusContent, focusFrame, PR_TRUE);
+    } else {
+        nsCOMPtr<nsIScriptGlobalObject> sgo;
+        document->GetScriptGlobalObject(getter_AddRefs(sgo));
+        if (sgo) {
+            nsCOMPtr<nsIDOMWindowInternal> domwin(do_QueryInterface(sgo));
+            if (domwin)
+                domwin->Focus();
+        }
     }
 
     return NS_OK;
