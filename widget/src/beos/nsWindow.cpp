@@ -2491,7 +2491,11 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, nsPoint aPoint, PRUint3
 
 		// call the event callback
 		if(nsnull != mEventCallback)
-			return DispatchWindowEvent(&event);
+		{
+			PRBool result = DispatchWindowEvent(&event);
+			NS_RELEASE(event.widget);
+			return result;
+		}
 		else
 		{
 			switch(aEventType)
@@ -2513,8 +2517,9 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, nsPoint aPoint, PRUint3
 					mMouseListener->MouseClicked(event);
 					break;
 			}
+			
+			NS_RELEASE(event.widget);
 		}
-		NS_RELEASE(event.widget);
 	}
 
 	return PR_FALSE;
@@ -2654,12 +2659,17 @@ NS_METHOD nsWindow::SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight)
 nsIWidgetStore::nsIWidgetStore( nsIWidget *aWidget )
 	: mWidget( aWidget )
 {
-	NS_ADDREF(mWidget);
+// NS_ADDREF/NS_RELEASE is not needed here.
+// This class is used as internal (BeOS native) object of nsWindow,
+// so it must not addref/release nsWindow here. 
+// Otherwise, nsWindow object will leak. (Makoto Hamanaka)
+
+//	NS_ADDREF(mWidget);
 }
 
 nsIWidgetStore::~nsIWidgetStore()
 {
-	NS_RELEASE(mWidget);
+//	NS_RELEASE(mWidget);
 }
 
 nsIWidget *nsIWidgetStore::GetMozillaWidget(void)
@@ -2691,17 +2701,16 @@ nsWindowBeOS::~nsWindowBeOS()
 
 bool nsWindowBeOS::QuitRequested( void )
 {
+	// tells nsWindow to kill me
 	nsWindow	*w = (nsWindow *)GetMozillaWidget();
 	nsToolkit	*t;
 	if(w && (t = w->GetToolkit()) != 0)
 	{
-		if(ChildAt(0))
-			RemoveChild(ChildAt(0));
 		MethodInfo *info = new MethodInfo(w, w, nsWindow::CLOSEWINDOW);
 		t->CallMethodAsync(info);
 		NS_RELEASE(t);
 	}
-	return true;
+	return false;
 }
 
 void nsWindowBeOS::MessageReceived(BMessage *msg)
