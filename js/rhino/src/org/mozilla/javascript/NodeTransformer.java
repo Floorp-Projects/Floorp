@@ -37,7 +37,6 @@
 
 package org.mozilla.javascript;
 
-import java.util.Hashtable;
 import java.util.Stack;
 import java.util.Vector;
 
@@ -442,7 +441,7 @@ public class NodeTransformer {
                     ((FunctionNode) tree).setRequiresActivation(true);
                 }
                 VariableTable vars = getVariableTable(tree);
-                if (vars.getVariable(name) != null) {
+                if (vars.hasVariable(name)) {
                     if (type == TokenStream.SETNAME) {
                         node.setType(TokenStream.SETVAR);
                         bind.setType(TokenStream.STRING);
@@ -484,7 +483,7 @@ public class NodeTransformer {
                     ((FunctionNode) tree).setRequiresActivation(true);
                 }
                 VariableTable vars = getVariableTable(tree);
-                if (vars.getVariable(name) != null) {
+                if (vars.hasVariable(name)) {
                     node.setType(TokenStream.GETVAR);
                 }
                 break;
@@ -500,7 +499,7 @@ public class NodeTransformer {
         // Could special case to go into statements only.
         boolean inFunction = tree.getType() == TokenStream.FUNCTION;
         PreorderNodeIterator iterator = tree.getPreorderIterator();
-        Hashtable ht = null;
+        ObjToIntMap fNames = null;
         Node node;
         while ((node = iterator.nextNode()) != null) {
             int nodeType = node.getType();
@@ -515,24 +514,24 @@ public class NodeTransformer {
                 if (name == null)
                     continue;
                 vars.removeLocal(name);
-                if (ht == null)
-                    ht = new Hashtable();
-                ht.put(name, Boolean.TRUE);
+                if (fNames == null)
+                    fNames = new ObjToIntMap();
+                fNames.put(name, 0);
             }
             if (nodeType != TokenStream.VAR)
                 continue;
             for (Node cursor = node.getFirstChild(); cursor != null;
                  cursor = cursor.getNextSibling())
             {
-                if (ht == null || ht.get(cursor.getString()) == null)
-                    vars.addLocal(cursor.getString());
+                String name = cursor.getString();
+                if (fNames == null || !fNames.has(name))
+                    vars.addLocal(name);
             }
         }
         String name = tree.getString();
         if (inFunction && ((FunctionNode) tree).getFunctionType() ==
                           FunctionNode.FUNCTION_EXPRESSION &&
-            name != null && name.length() > 0 &&
-            vars.getVariable(name) == null)
+            name != null && name.length() > 0 && vars.hasVariable(name))
         {
             // A function expression needs to have its name as a variable
             // (if it isn't already allocated as a variable). See
@@ -597,9 +596,7 @@ public class NodeTransformer {
         if (left.getType() == TokenStream.NAME) {
             VariableTable vars = getVariableTable(tree);
             String name = left.getString();
-            if (inFunction && vars.getVariable(name) != null &&
-                !inWithStatement())
-            {
+            if (inFunction && vars.hasVariable(name) && !inWithStatement()) {
                 // call to a var. Transform to Call(GetVar("a"), b, c)
                 left.setType(TokenStream.GETVAR);
                 // fall through to code to add GetParent
