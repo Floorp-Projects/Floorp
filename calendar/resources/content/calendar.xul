@@ -214,13 +214,10 @@
   </vbox>
 
   <statusbar id="status-bar" class="chromeclass-status">
-             ondragover="nsDragAndDrop.dragOver(event, contentAreaDNDObserver);"
-             ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);">
-    <hbox id="component-bar"/>
-    <statusbarpanel id="statusbar-display" label="&statusText.label;" crop="right" flex="1"/>
-    <progressmeter class="progressmeter-statusbar" statusbar="true" id="statusbar-icon" mode="normal" value="0"/>
-    <statusbarpanel class="statusbarpanel-icononly" id="offline-status"/>
-  </statusbar> 
+    <statusbarpanel id="component-bar"/>
+    <statusbarpanel id="statusText" flex="1" value="&statusText.label;"/>  
+    <statusbarpanel id="offline-status" class="statusbarpanel-iconic"/>           
+  </statusbar>  
 
 </window>
 
