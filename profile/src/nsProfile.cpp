@@ -477,7 +477,7 @@ nsProfile::StartupWithArgs(nsICmdLineService *cmdLineArgs, PRBool canInteract)
     if (uilocale && uilocale[0]) {
 #ifdef DEBUG_profile_verbose
         nsCAutoString temp1; temp1.AssignWithConversion(uilocale);
-        printf(" install new UILocaleName: %s\n", NS_STATIC_CAST(const char*, temp1));
+        printf(" install new UILocaleName: %s\n", temp1.get());
 #endif
         rv = chromeRegistry->SelectLocaleForProfile(uilocale,
                                           NS_ConvertUTF8toUCS2(fileStr).get());
@@ -488,7 +488,7 @@ nsProfile::StartupWithArgs(nsICmdLineService *cmdLineArgs, PRBool canInteract)
     if (contentlocale && contentlocale[0]) {
 #ifdef DEBUG_profile_verbose
         nsCAutoString temp2; temp2.AssignWithConversion(contentlocale);
-        printf(" install new mContentLocaleName: %s\n", NS_STATIC_CAST(const char*, temp2));
+        printf(" install new mContentLocaleName: %s\n", temp2.get());
 #endif
         rv = chromeRegistry->SelectLocaleForProfile(contentlocale,
                                           NS_ConvertUTF8toUCS2(fileStr).get());
@@ -1576,10 +1576,10 @@ nsProfile::CreateNewProfileWithLocales(const PRUnichar* profileName,
 
 #if defined(DEBUG_profile_verbose)
         nsCAutoString temp1; temp1.AssignWithConversion(uiLocale);
-        printf(" uiLocale=%s\n", NS_STATIC_CAST(const char*, temp1));
+        printf(" uiLocale=%s\n", temp1.get());
 
         nsCAutoString temp2; temp2.AssignWithConversion(contentLocale);
-        printf(" contentLocale=%s\n", NS_STATIC_CAST(const char*, temp2));
+        printf(" contentLocale=%s\n", temp2.get());
 #endif
 
         nsXPIDLCString  pathBuf;
@@ -1615,7 +1615,7 @@ nsProfile::CreateNewProfileWithLocales(const PRUnichar* profileName,
                 rv = profDefaultsDir->GetUnicodePath(getter_Copies(profilePath));
                 if (NS_SUCCEEDED(rv)) {
                     nsCAutoString temp5; temp5.AssignWithConversion(profilePath);
-                    printf(" profDefaultsDir is set to: %s\n", NS_STATIC_CAST(const char*, temp5));
+                    printf(" profDefaultsDir is set to: %s\n", temp5.get());
                 }
 #endif
             }
@@ -2276,7 +2276,7 @@ NS_IMETHODIMP nsProfile::CloneProfile(const PRUnichar* newProfile)
       printf("ProfileManager : Cloned CurrentProfile\n");
 
       nsCAutoString temp; temp.AssignWithConversion(newProfile);
-      printf("The new profile is ->%s<-\n", NS_STATIC_CAST(const char*, temp));
+      printf("The new profile is ->%s<-\n", temp.get());
     }
 #endif
 
