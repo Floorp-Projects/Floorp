@@ -25,16 +25,19 @@
 
 #include "msgCore.h"
 #include "nsINoIncomingServer.h"
+#include "nsILocalMailIncomingServer.h"
 #include "nsMsgIncomingServer.h"
 
 /* get some implementation from nsMsgIncomingServer */
 class nsNoIncomingServer : public nsMsgIncomingServer,
-                             public nsINoIncomingServer
+                             public nsINoIncomingServer,
+                             public nsILocalMailIncomingServer
                              
 {
 public:
     NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSINOINCOMINGSERVER
+    NS_DECL_NSILOCALMAILINCOMINGSERVER
 
     nsNoIncomingServer();
     virtual ~nsNoIncomingServer();

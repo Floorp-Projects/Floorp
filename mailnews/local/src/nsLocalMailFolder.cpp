@@ -54,7 +54,7 @@
 #include "nsMsgUtils.h"
 #include "nsLocalUtils.h"
 #include "nsIPop3IncomingServer.h"
-#include "nsINoIncomingServer.h"
+#include "nsILocalMailIncomingServer.h"
 #include "nsIPop3Service.h"
 #include "nsIMsgIncomingServer.h"
 #include "nsMsgBaseCID.h"
@@ -663,49 +663,27 @@ nsMsgLocalMailFolder::GetSubFolders(nsIEnumerator* *result)
     if (path.IsDirectory()) {
       newFlags |= (MSG_FOLDER_FLAG_DIRECTORY | MSG_FOLDER_FLAG_ELIDED);
       SetFlag(newFlags);
-      const char *type = GetIncomingServerType();
 
-      if (NS_SUCCEEDED(rv) && isServer)
-      {
-        // TODO:  move this into the IncomingServer
-        if (PL_strcmp(type, "pop3") == 0) {
+      if (isServer) {
           nsCOMPtr<nsIMsgIncomingServer> server;
           rv = GetServer(getter_AddRefs(server));
+	  if (NS_FAILED(rv)) return rv;
+	  if (!server) return NS_ERROR_FAILURE;
 
-          if (NS_SUCCEEDED(rv) && server) {
-            nsCOMPtr<nsIPop3IncomingServer> popServer = do_QueryInterface(server, &rv);
-            if (NS_SUCCEEDED(rv)) {
-              nsCOMPtr<nsIFileSpec> spec;
-              rv = NS_NewFileSpecWithSpec(path, getter_AddRefs(spec));
-              if (NS_FAILED(rv)) return rv;
-              rv = popServer->CreateDefaultMailboxes(spec);
-              if (NS_FAILED(rv)) return rv;
-            }
-          }
-        }
-        else if (PL_strcmp(type, "none") == 0) {
-          nsCOMPtr<nsIMsgIncomingServer> server;
-          rv = GetServer(getter_AddRefs(server));
-        
-          if (NS_SUCCEEDED(rv) && server) {
-            nsCOMPtr<nsINoIncomingServer> noneServer = do_QueryInterface(server, &rv);
-            if (NS_SUCCEEDED(rv)) {
-              nsCOMPtr<nsIFileSpec> spec;
-              rv = NS_NewFileSpecWithSpec(path, getter_AddRefs(spec));
-              if (NS_FAILED(rv)) return rv;
-              rv = noneServer->CreateDefaultMailboxes(spec);
-              if (NS_FAILED(rv)) return rv;
-            }
-          }
-        }
-        else {
-#ifdef DEBUG
-		  printf("server type is = %s\n",type);
-#endif /* DEBUG */
-          NS_ASSERTION(0,"error, don't know about this server type yet.\n");
-        }
+          nsCOMPtr<nsILocalMailIncomingServer> localMailServer = do_QueryInterface(server, &rv);
+	  if (NS_FAILED(rv)) return rv;
+	  if (!localMailServer) return NS_ERROR_FAILURE;
+
+          nsCOMPtr<nsIFileSpec> spec;
+          rv = NS_NewFileSpecWithSpec(path, getter_AddRefs(spec));
+          if (NS_FAILED(rv)) return rv;
+
+          rv = localMailServer->CreateDefaultMailboxes(spec);
+          if (NS_FAILED(rv)) return rv;
       }
+
       rv = CreateSubFolders(path);
+
     }
     UpdateSummaryTotals(PR_FALSE);
     
@@ -1967,32 +1945,17 @@ nsMsgLocalMailFolder::CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDBHdr,
 NS_IMETHODIMP nsMsgLocalMailFolder::GetNewMessages(nsIMsgWindow *aWindow)
 {
     nsresult rv = NS_OK;
-    
-    // TODO:  move this into the IncomingServer
-    const char *type = GetIncomingServerType();
-    if (PL_strcmp(type, "pop3") == 0) {
-	    NS_WITH_SERVICE(nsIPop3Service, pop3Service, kCPop3ServiceCID, &rv);
-	    if (NS_FAILED(rv)) return rv;
 
-	    nsCOMPtr<nsIMsgIncomingServer> server;
-	    rv = GetServer(getter_AddRefs(server));
+    nsCOMPtr<nsIMsgIncomingServer> server;
+    rv = GetServer(getter_AddRefs(server)); 
+    if (NS_FAILED(rv)) return rv;
+    if (!server) return NS_ERROR_FAILURE;
 
-	    nsCOMPtr<nsIPop3IncomingServer> popServer = do_QueryInterface(server, &rv);
-	    if (NS_SUCCEEDED(rv)) {
-		rv = pop3Service->GetNewMail(aWindow, nsnull,popServer,nsnull);
-	    }
-    }
-    else if (PL_strcmp(type, "none") == 0) {
-#ifdef DEBUG_seth
-	printf("none means don't do anything\n");
-#endif
-	rv = NS_OK;
-    }
-    else {
-	NS_ASSERTION(0,"ERROR: how do we get new messages for this incoming server type");
-	rv = NS_ERROR_FAILURE;
-    }
-    if (NS_FAILED(rv)) printf("GetNewMessages failed\n");
+    nsCOMPtr<nsILocalMailIncomingServer> localMailServer = do_QueryInterface(server, &rv);
+    if (NS_FAILED(rv)) return rv;
+    if (!localMailServer) return NS_ERROR_FAILURE;
+
+    rv = localMailServer->GetNewMail(aWindow, nsnull, nsnull);
     return rv;
 }
 

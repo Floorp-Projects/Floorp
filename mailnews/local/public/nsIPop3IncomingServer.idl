@@ -32,7 +32,6 @@ interface nsIPop3IncomingServer : nsISupports {
   attribute boolean limitMessageSize;
   attribute boolean maxMessageSize;
   attribute unsigned long pop3CapabilityFlags;
-  void createDefaultMailboxes(in nsIFileSpec path);
 };
 
 

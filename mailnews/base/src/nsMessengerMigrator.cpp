@@ -104,12 +104,15 @@ static NS_DEFINE_CID(kAddressBookCID, NS_ADDRESSBOOK_CID);
 #define PREF_IMAP_DIRECTORY "mail.imap.root_dir"
 #define PREF_MAIL_DEFAULT_SENDLATER_URI "mail.default_sendlater_uri"
 
-/* 
- * TODO:  these need to be put into a string bundle
- * see bug #18364
- */
 #define LOCAL_MAIL_FAKE_USER_NAME "nobody"
 #define LOCAL_MAIL_FAKE_HOST_NAME "Local Folders"
+
+/* 
+ * TODO:  this needs to be put into a string bundle
+ * see bug #33852
+ */
+#define LOCAL_MAIL_PRETTY_NAME "Local Folders" 
+
 #ifdef HAVE_MOVEMAIL
 #define MOVEMAIL_FAKE_HOST_NAME "movemail"
 #endif /* HAVE_MOVEMAIL */
@@ -528,8 +531,9 @@ nsMessengerMigrator::CreateLocalMailAccount(PRBool migrating)
 
   // we don't want "nobody at Local Folders" to show up in the
   // folder pane, so we set the pretty name to "Local Folders"
-  nsAutoString localMailFakeHostName(LOCAL_MAIL_FAKE_HOST_NAME);
-  server->SetPrettyName(localMailFakeHostName.GetUnicode());
+  // TODO:  get this from a string bundle, see bug #33852
+  nsAutoString localMailPrettyName(LOCAL_MAIL_PRETTY_NAME);
+  server->SetPrettyName(localMailPrettyName.GetUnicode());
 
   // notice, no identity for local mail
   account->SetIncomingServer(server);

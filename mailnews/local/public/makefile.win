@@ -36,6 +36,7 @@ XPIDLSRCS = \
 			.\nsINoIncomingServer.idl	\
 			.\nsINoneService.idl		\
             .\nsIMsgLocalMailFolder.idl \
+			.\nsILocalMailIncomingServer.idl	\
 			$(NULL)
 
 EXPORTS =								\

@@ -33,9 +33,10 @@
 #include "nsXPIDLString.h"
 
 
-NS_IMPL_ISUPPORTS_INHERITED(nsNoIncomingServer,
+NS_IMPL_ISUPPORTS_INHERITED2(nsNoIncomingServer,
                             nsMsgIncomingServer,
-                            nsINoIncomingServer);
+                            nsINoIncomingServer,
+			    nsILocalMailIncomingServer);
 
                             
 
@@ -62,11 +63,11 @@ NS_IMETHODIMP nsNoIncomingServer::CreateDefaultMailboxes(nsIFileSpec *path)
         PRBool exists;
         if (!path) return NS_ERROR_NULL_POINTER;
 
-        // todo, use a string bundle for this
+        // todo, use a string bundle for these
 
 	// notice, no Inbox
 
-        rv =path->AppendRelativeUnixPath("Trash");
+        rv = path->AppendRelativeUnixPath("Trash");
         if (NS_FAILED(rv)) return rv;
         rv = path->Exists(&exists);
         if (!exists) {
@@ -112,4 +113,8 @@ NS_IMETHODIMP nsNoIncomingServer::CreateDefaultMailboxes(nsIFileSpec *path)
         return rv;
 }
 
-
+NS_IMETHODIMP nsNoIncomingServer::GetNewMail(nsIMsgWindow *aMsgWindow, nsIUrlListener *aUrlListener, nsIURI **aResult)
+{
+	// do nothing, there is no new mail for this incoming server, ever.
+	return NS_OK;
+}

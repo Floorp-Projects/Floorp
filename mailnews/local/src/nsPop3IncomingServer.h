@@ -25,16 +25,19 @@
 
 #include "msgCore.h"
 #include "nsIPop3IncomingServer.h"
+#include "nsILocalMailIncomingServer.h"
 #include "nsMsgIncomingServer.h"
 
 /* get some implementation from nsMsgIncomingServer */
 class nsPop3IncomingServer : public nsMsgIncomingServer,
-                             public nsIPop3IncomingServer
+                             public nsIPop3IncomingServer,
+                             public nsILocalMailIncomingServer
                              
 {
 public:
     NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSIPOP3INCOMINGSERVER
+    NS_DECL_NSILOCALMAILINCOMINGSERVER
 
     nsPop3IncomingServer();
     virtual ~nsPop3IncomingServer();

@@ -43,8 +43,10 @@ static NS_DEFINE_CID(kCPop3ServiceCID, NS_POP3SERVICE_CID);
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 
 
-NS_IMPL_ISUPPORTS_INHERITED(nsPop3IncomingServer,nsMsgIncomingServer,
-                            nsIPop3IncomingServer)
+NS_IMPL_ISUPPORTS_INHERITED2(nsPop3IncomingServer,
+				nsMsgIncomingServer,
+                            	nsIPop3IncomingServer,
+				nsILocalMailIncomingServer)
 
 nsPop3IncomingServer::nsPop3IncomingServer()
 {    
@@ -218,5 +220,13 @@ NS_IMETHODIMP nsPop3IncomingServer::CreateDefaultMailboxes(nsIFileSpec *path)
         return rv;
 }
 
+NS_IMETHODIMP nsPop3IncomingServer::GetNewMail(nsIMsgWindow *aMsgWindow, nsIUrlListener *aUrlListener, nsIURI **aResult)
+{
+	nsresult rv;
 
+	NS_WITH_SERVICE(nsIPop3Service, pop3Service, kCPop3ServiceCID, &rv);
+  	if (NS_FAILED(rv)) return rv;
 
+        rv = pop3Service->GetNewMail(aMsgWindow, aUrlListener, this, aResult);
+	return rv;
+}
