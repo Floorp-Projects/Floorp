@@ -23,4 +23,5 @@
 importMsgs.properties
 fieldMapExport.dtd
 fieldMapImport.dtd
+importDialog.dtd
 

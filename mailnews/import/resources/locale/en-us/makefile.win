@@ -27,10 +27,12 @@ install::
 	$(MAKE_INSTALL) importMsgs.properties $(DIST)\bin\chrome\messenger\locale\en-US
 	$(MAKE_INSTALL) fieldMapExport.dtd $(DIST)\bin\chrome\messenger\locale\en-US
 	$(MAKE_INSTALL) fieldMapImport.dtd $(DIST)\bin\chrome\messenger\locale\en-US
+	$(MAKE_INSTALL) importDialog.dtd $(DIST)\bin\chrome\messenger\locale\en-US
 
 clobber::
 	rm -f $(DIST)bin\chrome\messenger\locale\en-US\importMsgs.properties
 	rm -f $(DIST)bin\chrome\messenger\locale\en-US\fieldMapExport.dtd
 	rm -f $(DIST)bin\chrome\messenger\locale\en-US\fieldMapImport.dtd
+	rm -f $(DIST)bin\chrome\messenger\locale\en-US\importDialog.dtd
 
 
