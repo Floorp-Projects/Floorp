@@ -285,10 +285,8 @@ nsXIFFormatConverter::ConvertFromXIFToText(const nsAutoString & aFromStr, nsCAut
   static nsAutoString platformCharset;
   static PRBool hasDeterminedCharset = PR_FALSE;
   if ( !hasDeterminedCharset ) {
-    nsCOMPtr <nsIPlatformCharset> platformCharsetService;
-    nsresult res = nsComponentManager::CreateInstance(NS_PLATFORMCHARSET_PROGID, nsnull, 
-                                                       NS_GET_IID(nsIPlatformCharset), 
-                                                       getter_AddRefs(platformCharsetService));
+    nsresult res;
+    nsCOMPtr <nsIPlatformCharset> platformCharsetService = do_GetService(NS_PLATFORMCHARSET_PROGID, &res);
     if (NS_SUCCEEDED(res))
       res = platformCharsetService->GetCharset(kPlatformCharsetSel_PlainTextInClipboard, platformCharset);
     if (NS_FAILED(res))
