@@ -68,7 +68,7 @@ class nsInstallInfo
 
     virtual ~nsInstallInfo();
 
-    void GetLocalFile(char** aPath);
+    nsresult GetLocalFile(nsFileSpec& aSpec);
 
     void GetURL(nsString& aURL) { aURL = mURL; }
 
@@ -242,7 +242,7 @@ class nsInstall
         void       GetPatch(nsHashKey *aKey, nsFileSpec** fileName);
         
         void       GetJarFileLocation(nsString& aFile);
-        void       SetJarFileLocation(const nsString& aFile);
+        void       SetJarFileLocation(const nsFileSpec& aFile);
 
         void       GetInstallArguments(nsString& args);
         void       SetInstallArguments(const nsString& args);
@@ -265,7 +265,7 @@ class nsInstall
         JSObject*           mWinRegObject;
         JSObject*           mWinProfileObject;
         
-        nsString            mJarFileLocation;
+        nsFileSpec          mJarFileLocation;
         nsIZipReader*       mJarFileData;
         
         nsString            mInstallArguments;

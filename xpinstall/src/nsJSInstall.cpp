@@ -2655,7 +2655,7 @@ static JSFunctionSpec InstallMethods[] =
 
 JSObject * InitXPInstallObjects(JSContext *jscontext, 
                              JSObject *global, 
-                             const char* jarfile, 
+                             const nsFileSpec& jarfile, 
                              const PRUnichar* url,
                              const PRUnichar* args)
 {
