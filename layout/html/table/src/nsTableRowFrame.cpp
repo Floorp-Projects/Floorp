@@ -970,7 +970,7 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext*      aPresContext,
               aReflowState.tableFrame->InvalidateMaximumWidth();
             }
             if (kidMaxElementSize) {
-              ((nsTableCellFrame *)kidFrame)->SetPass1MaxElementSize(*kidMaxElementSize);
+              ((nsTableCellFrame *)kidFrame)->SetPass1MaxElementSize(desiredSize.width, *kidMaxElementSize);
             }
             // XXX if we did an unconstrained reflow, do we need to do another one
             // there needs to be more test cases to show this             
@@ -1134,7 +1134,7 @@ nsTableRowFrame::InitialReflow(nsIPresContext*      aPresContext,
       }
 
       ((nsTableCellFrame *)kidFrame)->SetMaximumWidth(kidSize.width);
-      ((nsTableCellFrame *)kidFrame)->SetPass1MaxElementSize(kidMaxElementSize);
+      ((nsTableCellFrame *)kidFrame)->SetPass1MaxElementSize(kidSize.width, kidMaxElementSize);
       NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "unexpected child reflow status");
 
       // Place the child
@@ -1357,7 +1357,7 @@ NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext*      aPresContext,
     
     // Update the cell layout data.. If the cell's maximum width changed,
     // then inform the table that its maximum width needs to be recomputed
-    ((nsTableCellFrame *)aNextFrame)->SetPass1MaxElementSize(kidMaxElementSize);
+    ((nsTableCellFrame *)aNextFrame)->SetPass1MaxElementSize(cellMet.width, kidMaxElementSize);
     if (cellMet.mFlags & NS_REFLOW_CALC_MAX_WIDTH) {
       ((nsTableCellFrame *)aNextFrame)->SetMaximumWidth(cellMet.mMaximumWidth);
       if (oldCellMaximumWidth != cellMet.mMaximumWidth) {
