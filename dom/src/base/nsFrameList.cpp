@@ -22,7 +22,6 @@
 
 #include "nsFrameList.h"
 #include "nsIWebShell.h"
-#include "nsIScriptContextOwner.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMWindow.h"
 
@@ -94,54 +93,34 @@ nsFrameList::GetLength(PRUint32* aLength)
 NS_IMETHODIMP 
 nsFrameList::Item(PRUint32 aIndex, nsIDOMWindow** aReturn)
 {
-  nsIWebShell *mItem;
-  nsresult ret;
+  nsCOMPtr<nsIWebShell> item;
 
-  mWebShell->ChildAt(aIndex, mItem);
+  mWebShell->ChildAt(aIndex, *getter_AddRefs(item));
 
-  if (nsnull != mItem) {
-    nsIScriptContextOwner *mItemContextOwner;
-    if (NS_OK == mItem->QueryInterface(kIScriptContextOwnerIID, (void**)&mItemContextOwner)) {
-      nsIScriptGlobalObject *mItemGlobalObject;
-      if (NS_OK == mItemContextOwner->GetScriptGlobalObject(&mItemGlobalObject)) {
-        ret = mItemGlobalObject->QueryInterface(kIDOMWindowIID, (void**)aReturn);
-        NS_RELEASE(mItemGlobalObject);
-      }
-      NS_RELEASE(mItemContextOwner);
-    }
-    NS_RELEASE(mItem);
-  }
-  else {
+  nsCOMPtr<nsIScriptGlobalObject> globalObject(do_GetInterface(item));
+  if (NS_WARN_IF_FALSE(globalObject, "Couldn't get to the globalObject")) {
     *aReturn = nsnull;
   }
-  
+  else {
+    CallQueryInterface(globalObject.get(), aReturn);
+  }
   return NS_OK;
 }
 
 NS_IMETHODIMP 
 nsFrameList::NamedItem(const nsString& aName, nsIDOMWindow** aReturn)
 {
-  nsIWebShell *mItem;
-  nsresult ret;
-  
-  mWebShell->FindChildWithName(aName.GetUnicode(), mItem);
+  nsCOMPtr<nsIWebShell> item;
 
-  if (nsnull != mItem) {
-    nsIScriptContextOwner *mItemContextOwner;
-    if (NS_OK == mItem->QueryInterface(kIScriptContextOwnerIID, (void**)&mItemContextOwner)) {
-      nsIScriptGlobalObject *mItemGlobalObject;
-      if (NS_OK == mItemContextOwner->GetScriptGlobalObject(&mItemGlobalObject)) {
-        ret = mItemGlobalObject->QueryInterface(kIDOMWindowIID, (void**)aReturn);
-        NS_RELEASE(mItemGlobalObject);
-      }
-      NS_RELEASE(mItemContextOwner);
-    }
-    NS_RELEASE(mItem);
+  mWebShell->FindChildWithName(aName.GetUnicode(), *getter_AddRefs(item));
+
+  nsCOMPtr<nsIScriptGlobalObject> globalObject(do_GetInterface(item));
+  if (NS_WARN_IF_FALSE(globalObject, "Couldn't get to the globalObject")) {
+    CallQueryInterface(globalObject.get(), aReturn);
   }
   else {
     *aReturn = nsnull;
   }
-  
   return NS_OK;
 }
 
