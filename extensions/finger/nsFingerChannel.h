@@ -1,9 +1,9 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
- * The contents of this file are subject to the Netscape Public
+ * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
- * the License at http://www.mozilla.org/NPL/
+ * the License at http://www.mozilla.org/MPL/
  *
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
@@ -12,12 +12,12 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
- * Rights Reserved.
+ * The Initial Developer of the Original Code is Brian Ryner.
+ * Portions created by Brian Ryner are Copyright (C) 2000 Brian Ryner.
+ * All Rights Reserved.
  *
  * Contributor(s): 
+ *  Brian Ryner <bryner@uiuc.edu>
  */
 
 #ifndef nsFingerChannel_h___
