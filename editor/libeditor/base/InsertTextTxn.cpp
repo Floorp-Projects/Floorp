@@ -107,7 +107,8 @@ NS_IMETHODIMP InsertTextTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransacti
   {
     // if aTransaction isa InsertTextTxn, and if the selection hasn't changed, 
     // then absorb it
-    nsCOMPtr<InsertTextTxn> otherTxn( do_QueryInterface(aTransaction) );
+    InsertTextTxn *otherTxn = nsnull;
+    aTransaction->QueryInterface(kInsertTextTxnIID, (void **)&otherTxn);
     if (otherTxn)
     {
       if (PR_TRUE==IsSequentialInsert(otherTxn))
@@ -118,10 +119,12 @@ NS_IMETHODIMP InsertTextTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransacti
         *aDidMerge = PR_TRUE;
         if (gNoisy) { printf("InsertTextTxn assimilated %p\n", aTransaction); }
       }
+      NS_RELEASE(otherTxn);
     }
     else
     { // the next InsertTextTxn might be inside an aggregate that we have special knowledge of
-      nsCOMPtr<EditAggregateTxn> otherTxn( do_QueryInterface(aTransaction) );
+      EditAggregateTxn *otherTxn = nsnull;
+      aTransaction->QueryInterface(EditAggregateTxn::GetCID(), (void **)&otherTxn);
       if (otherTxn)
       {
         nsCOMPtr<nsIAtom> txnName;
@@ -149,6 +152,7 @@ NS_IMETHODIMP InsertTextTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransacti
             }
           }
         }
+        NS_RELEASE(otherTxn);
       }
     }
   }
