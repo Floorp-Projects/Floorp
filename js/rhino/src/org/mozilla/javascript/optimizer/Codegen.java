@@ -127,7 +127,13 @@ public class Codegen extends Interpreter {
                           Object securityDomain, String encodedSource)
     {
         initScriptOrFnNodesData(scriptOrFn);
-        initClassNames();
+
+        Class[] interfaces = nameHelper.getTargetImplements();
+        Class superClass = nameHelper.getTargetExtends();
+        boolean isPrimary = (interfaces == null && superClass == null);
+        mainClassName = nameHelper.getScriptClassName(isPrimary);
+        mainClassSignature
+            = ClassFileWriter.classNameToSignature(mainClassName);
 
         generateCode(encodedSource);
 
@@ -140,22 +146,12 @@ public class Codegen extends Interpreter {
                 {
                     onlySave = true;
                 }
-                if (generateHelperClass) {
-                    if (!repository.storeClass(helperClassName,
-                                               helperClassBytes,
-                                               false))
-                    {
-                        onlySave = true;
-                    }
-                }
             } catch (IOException iox) {
                 throw ScriptRuntime.throwAsUncheckedException(iox);
             }
 
-            Class[] interfaces = nameHelper.getTargetImplements();
-            Class superClass = nameHelper.getTargetExtends();
-            if (interfaces != null || superClass != null) {
-                String adapterClassName = getScriptClassName(true);
+            if (!isPrimary) {
+                String adapterClassName = nameHelper.getScriptClassName(true);
                 ScriptableObject obj = new NativeObject();
                 int functionCount = scriptOrFn.getFunctionCount();
                 for (int i = 0; i != functionCount; ++i) {
@@ -200,9 +196,6 @@ public class Codegen extends Interpreter {
 
         try {
             result = loader.defineClass(mainClassName, mainClassBytes);
-            if (generateHelperClass) {
-                loader.defineClass(helperClassName, helperClassBytes);
-            }
             loader.linkClass(result);
         } catch (SecurityException x) {
             e = x;
@@ -257,14 +250,6 @@ public class Codegen extends Interpreter {
         for (int i = 0; i != count; ++i) {
             scriptOrFnIndexes.put(scriptOrFnNodes[i], i);
         }
-
-        if (scriptOrFnNodes.length == 1
-            ||scriptOrFn.getType() == Token.FUNCTION)
-        {
-            generateHelperClass = false;
-        } else {
-            generateHelperClass = true;
-        }
     }
 
     private static void collectScriptOrFnNodes_r(ScriptOrFnNode n,
@@ -277,114 +262,53 @@ public class Codegen extends Interpreter {
         }
     }
 
-    private void initClassNames()
-    {
-        boolean isPrimary = (nameHelper.getTargetExtends() == null
-                             && nameHelper.getTargetImplements() == null);
-        mainClassName = getScriptClassName(isPrimary);
-        mainClassSignature
-            = ClassFileWriter.classNameToSignature(mainClassName);
-        if (generateHelperClass) {
-            helperClassName = getScriptClassName(false);
-            functionClassName = helperClassName;
-            functionClassSignature
-                = ClassFileWriter.classNameToSignature(helperClassName);
-        } else {
-            functionClassName = mainClassName;
-            functionClassSignature = mainClassSignature;
-        }
-    }
-
-    private String getScriptClassName(boolean primary)
-    {
-        return nameHelper.getScriptClassName(null, primary);
-    }
-
     private void generateCode(String encodedSource)
     {
+        boolean hasScript = (scriptOrFnNodes[0].getType() == Token.SCRIPT);
+        boolean hasFunctions = (scriptOrFnNodes.length > 1 || !hasScript);
+        
         String sourceFile = null;
         if (generateDebugInfo) {
             sourceFile = scriptOrFnNodes[0].getSourceName();
         }
 
-        ClassFileWriter cfwMain;
-        if (!generateHelperClass) {
-            if (getFunctionCount() != 0) {
-                cfwMain = generateFunctionSpecific(sourceFile, encodedSource);
-            } else {
-                cfwMain = generateScriptSpecific(sourceFile, encodedSource);
-            }
-        } else {
-            ClassFileWriter cfwHelper;
-            cfwHelper = generateFunctionSpecific(sourceFile, encodedSource);
-            helperClassBytes = cfwHelper.toByteArray();
-            cfwMain = generateScriptSpecific(sourceFile, encodedSource);
-        }
-
-        generateBodyMethods(cfwMain, encodedSource);
-
-        mainClassBytes = cfwMain.toByteArray();
-    }
-
-    private ClassFileWriter generateScriptSpecific(String sourceFile,
-                                                   String encodedSource)
-    {
         ClassFileWriter cfw = new ClassFileWriter(mainClassName,
-                                                  SUPER_CLASS_NAME,
-                                                  sourceFile);
-        cfw.addInterface("org/mozilla/javascript/Script");
-        cfw.addField(REGEXP_ARRAY_FIELD_NAME, REGEXP_ARRAY_FIELD_TYPE,
-                     (short)0);
-
-        generateScriptCtor(cfw);
-        generateMain(cfw);
-        generateExecute(cfw);
-        if (encodedSource != null) {
-            generateGetEncodedSource(cfw, true);
-        }
-
-        return cfw;
-    }
-
-    private ClassFileWriter generateFunctionSpecific(String sourceFile,
-                                                     String encodedSource)
-    {
-        ClassFileWriter cfw = new ClassFileWriter(functionClassName,
                                                   SUPER_CLASS_NAME,
                                                   sourceFile);
         cfw.addField(ID_FIELD_NAME, "I",
                      ClassFileWriter.ACC_PRIVATE);
         cfw.addField(DIRECT_CALL_PARENT_FIELD, mainClassSignature,
-                     (short)0);
+                     ClassFileWriter.ACC_PRIVATE);
         cfw.addField(REGEXP_ARRAY_FIELD_NAME, REGEXP_ARRAY_FIELD_TYPE,
-                     (short)0);
+                     ClassFileWriter.ACC_PRIVATE);
 
-        generateFunctionConstructor(cfw);
-        generateFunctionCallMethod(cfw);
-        if (encodedSource != null) {
-            generateGetEncodedSource(cfw, false);
+        if (hasFunctions) {
+            generateFunctionConstructor(cfw);
+        }
+        
+        if (hasScript) {
+            cfw.addInterface("org/mozilla/javascript/Script");
+            generateScriptCtor(cfw);
+            generateMain(cfw);
+            generateExecute(cfw);
         }
 
-        return cfw;
-    }
+        generateCallMethod(cfw);
+        if (encodedSource != null) {
+            generateGetEncodedSource(cfw, encodedSource);
+        }
 
-    private void generateBodyMethods(ClassFileWriter cfw, String encodedSource)
-    {
         int count = scriptOrFnNodes.length;
         for (int i = 0; i != count; ++i) {
             ScriptOrFnNode n = scriptOrFnNodes[i];
 
             boolean isFunction = (n.getType() == Token.FUNCTION);
 
-            String zeroArgClassName
-                = (isFunction) ? functionClassName: mainClassName;
-
-            generateInitImpl(cfw, n, zeroArgClassName);
+            generateInitImpl(cfw, n);
 
             BodyCodegen bodygen = new BodyCodegen();
             bodygen.cfw = cfw;
             bodygen.codegen = this;
-            bodygen.zeroArgClassName = zeroArgClassName;
             bodygen.scriptOrFn = n;
 
             bodygen.generateBodyCode();
@@ -403,16 +327,14 @@ public class Codegen extends Interpreter {
                 OptFunctionNode
                     fn = (OptFunctionNode)directCallTargets.get(j);
                 cfw.addField(getDirectTargetFieldName(j),
-                             functionClassSignature,
-                             (short)0);
+                             mainClassSignature,
+                             ClassFileWriter.ACC_PRIVATE);
             }
         }
 
-        if (encodedSource != null) {
-            generateGetEncodedSourceImpl(cfw, encodedSource);
-        }
-
         emitConstantDudeInitializers(cfw);
+
+        mainClassBytes = cfw.toByteArray();
     }
 
     private void emitDirectConstructor(ClassFileWriter cfw,
@@ -431,7 +353,8 @@ public class Codegen extends Interpreter {
 */
         cfw.startMethod(getDirectCtorName(fn),
                         getBodyMethodSignature(fn),
-                        ClassFileWriter.ACC_STATIC);
+                        (short)(ClassFileWriter.ACC_STATIC
+                                | ClassFileWriter.ACC_PRIVATE));
 
         int argCount = fn.getParamCount();
         int firstLocal = (4 + argCount * 3) + 1;
@@ -479,7 +402,7 @@ public class Codegen extends Interpreter {
 
     }
 
-    private void generateFunctionCallMethod(ClassFileWriter cfw)
+    private void generateCallMethod(ClassFileWriter cfw)
     {
         cfw.startMethod("call",
                         "(Lorg/mozilla/javascript/Context;" +
@@ -495,61 +418,64 @@ public class Codegen extends Interpreter {
         cfw.addALoad(3);
         cfw.addALoad(4);
 
-        int start = (scriptOrFnNodes[0].getType() == Token.SCRIPT) ? 1 : 0;
         int end = scriptOrFnNodes.length;
-        boolean generateSwitch = (2 <= end - start);
+        boolean generateSwitch = (2 <= end);
 
         int switchStart = 0;
         int switchStackTop = 0;
         if (generateSwitch) {
-            cfw.addALoad(0);
+            cfw.addLoadThis();
             cfw.add(ByteCode.GETFIELD, cfw.getClassName(), ID_FIELD_NAME, "I");
-            // do switch from (start + 1,  end - 1) mapping start to
+            // do switch from (1,  end - 1) mapping 0 to
             // the default case
-            switchStart = cfw.addTableSwitch(start + 1, end - 1);
+            switchStart = cfw.addTableSwitch(1, end - 1);
         }
 
-        for (int i = start; i != end; ++i) {
+        for (int i = 0; i != end; ++i) {
+            ScriptOrFnNode n = scriptOrFnNodes[i];
             if (generateSwitch) {
-                if (i == start) {
+                if (i == 0) {
                     cfw.markTableSwitchDefault(switchStart);
                     switchStackTop = cfw.getStackTop();
                 } else {
-                    cfw.markTableSwitchCase(switchStart, i - 1 - start,
+                    cfw.markTableSwitchCase(switchStart, i - 1,
                                             switchStackTop);
                 }
             }
-            OptFunctionNode fn = (OptFunctionNode)scriptOrFnNodes[i];
-            if (fn.isTargetOfDirectCall()) {
-                int pcount = fn.getParamCount();
-                if (pcount != 0) {
-                    // loop invariant: stack top == arguments array from aload4
-                    for (int p = 0; p != pcount; ++p) {
-                        cfw.add(ByteCode.ARRAYLENGTH);
-                        cfw.addPush(p);
-                        int undefArg = cfw.acquireLabel();
-                        int beyond = cfw.acquireLabel();
-                        cfw.add(ByteCode.IF_ICMPLE, undefArg);
-                        // get array[p]
-                        cfw.addALoad(4);
-                        cfw.addPush(p);
-                        cfw.add(ByteCode.AALOAD);
-                        cfw.add(ByteCode.GOTO, beyond);
-                        cfw.markLabel(undefArg);
-                        pushUndefined(cfw);
-                        cfw.markLabel(beyond);
-                        // Only one push
-                        cfw.adjustStackTop(-1);
-                        cfw.addPush(0.0);
-                        // restore invariant
-                        cfw.addALoad(4);
+            if (n.getType() == Token.FUNCTION) {
+                OptFunctionNode fn = (OptFunctionNode)n;
+                if (fn.isTargetOfDirectCall()) {
+                    int pcount = fn.getParamCount();
+                    if (pcount != 0) {
+                        // loop invariant:
+                        // stack top == arguments array from addALoad4()
+                        for (int p = 0; p != pcount; ++p) {
+                            cfw.add(ByteCode.ARRAYLENGTH);
+                            cfw.addPush(p);
+                            int undefArg = cfw.acquireLabel();
+                            int beyond = cfw.acquireLabel();
+                            cfw.add(ByteCode.IF_ICMPLE, undefArg);
+                            // get array[p]
+                            cfw.addALoad(4);
+                            cfw.addPush(p);
+                            cfw.add(ByteCode.AALOAD);
+                            cfw.add(ByteCode.GOTO, beyond);
+                            cfw.markLabel(undefArg);
+                            pushUndefined(cfw);
+                            cfw.markLabel(beyond);
+                            // Only one push
+                            cfw.adjustStackTop(-1);
+                            cfw.addPush(0.0);
+                            // restore invariant
+                            cfw.addALoad(4);
+                        }
                     }
                 }
             }
             cfw.addInvoke(ByteCode.INVOKESTATIC,
                           mainClassName,
-                          getBodyMethodName(fn),
-                          getBodyMethodSignature(fn));
+                          getBodyMethodName(n),
+                          getBodyMethodSignature(n));
             cfw.add(ByteCode.ARETURN);
         }
         cfw.stopMethod((short)5, null);
@@ -576,7 +502,7 @@ public class Codegen extends Interpreter {
         cfw.stopMethod((short)1, null);
     }
 
-    private static void generateExecute(ClassFileWriter cfw)
+    private void generateExecute(ClassFileWriter cfw)
     {
         cfw.startMethod("exec",
                         "(Lorg/mozilla/javascript/Context;"
@@ -589,13 +515,14 @@ public class Codegen extends Interpreter {
         final byte ALOAD_SCOPE = ByteCode.ALOAD_2;
 
         // to begin a script, call the initScript method
-        cfw.add(ByteCode.ALOAD_0); // load 'this'
-        cfw.add(ALOAD_SCOPE);
+        cfw.addLoadThis();
         cfw.add(ALOAD_CONTEXT);
+        cfw.add(ALOAD_SCOPE);
         cfw.addInvoke(ByteCode.INVOKEVIRTUAL, cfw.getClassName(),
-                      "initScript", SCRIPT_INIT_SIGNATURE);
+                      getInitImplMethodName(scriptOrFnNodes[0]),
+                      INIT_SIGNATURE);
 
-        cfw.add(ByteCode.ALOAD_0); // load 'this'
+        cfw.addLoadThis();
         cfw.add(ALOAD_CONTEXT);
         cfw.add(ALOAD_SCOPE);
         cfw.add(ByteCode.DUP);
@@ -620,6 +547,10 @@ public class Codegen extends Interpreter {
         cfw.add(ByteCode.ALOAD_0);
         cfw.addInvoke(ByteCode.INVOKESPECIAL, SUPER_CLASS_NAME,
                       "<init>", "()V");
+        // set id to 0
+        cfw.addLoadThis();
+        cfw.addPush(0);
+        cfw.add(ByteCode.PUTFIELD, cfw.getClassName(), ID_FIELD_NAME, "I");
         cfw.add(ByteCode.RETURN);
         // 1 parameter = this
         cfw.stopMethod((short)1, null);
@@ -647,6 +578,7 @@ public class Codegen extends Interpreter {
 
         int start = (scriptOrFnNodes[0].getType() == Token.SCRIPT) ? 1 : 0;
         int end = scriptOrFnNodes.length;
+        if (start == end) badTree();
         boolean generateSwitch = (2 <= end - start);
 
         int switchStart = 0;
@@ -669,10 +601,10 @@ public class Codegen extends Interpreter {
                 }
             }
             OptFunctionNode fn = (OptFunctionNode)scriptOrFnNodes[i];
-            cfw.addInvoke(ByteCode.INVOKESTATIC,
+            cfw.addInvoke(ByteCode.INVOKEVIRTUAL,
                           mainClassName,
                           getInitImplMethodName(fn),
-                          getInitImplMethodSignature(fn));
+                          INIT_SIGNATURE);
             cfw.add(ByteCode.RETURN);
         }
 
@@ -681,8 +613,7 @@ public class Codegen extends Interpreter {
     }
 
     private void generateInitImpl(ClassFileWriter cfw,
-                                  ScriptOrFnNode scriptOrFn,
-                                  String zeroArgClassName)
+                                  ScriptOrFnNode scriptOrFn)
     {
         boolean isScript = (scriptOrFn.getType() == Token.SCRIPT);
         OptFunctionNode fn;
@@ -692,25 +623,15 @@ public class Codegen extends Interpreter {
             fn = null;
         }
 
-        final byte SELF_ARG = 0; // scriptThis/functionRef
-        final byte CONTEXT_ARG;
-        final byte SCOPE_ARG;
-
-        if (fn != null) {
-            CONTEXT_ARG = 1;
-            SCOPE_ARG = 2;
-            cfw.startMethod(getInitImplMethodName(fn),
-                            getInitImplMethodSignature(fn),
-                            ClassFileWriter.ACC_STATIC);
-        } else {
-            CONTEXT_ARG = 2;
-            SCOPE_ARG = 1;
-            cfw.startMethod("initScript", SCRIPT_INIT_SIGNATURE,
-                            ClassFileWriter.ACC_PUBLIC);
-        }
+        final int CONTEXT_ARG = 1;
+        final int SCOPE_ARG = 2;
+        cfw.startMethod(getInitImplMethodName(scriptOrFn),
+                        INIT_SIGNATURE,
+                        (short)(ClassFileWriter.ACC_PRIVATE
+                                | ClassFileWriter.ACC_FINAL));
 
         // Prepare stack to call NativeFunction.initScriptFunction
-        cfw.addALoad(SELF_ARG);
+        cfw.addLoadThis();
         cfw.addPush(languageVersion);
 
         if (fn != null) {
@@ -744,7 +665,7 @@ public class Codegen extends Interpreter {
                     "(ILjava/lang/String;[Ljava/lang/String;I)V");
 
         if (fn != null) {
-            cfw.addALoad(SELF_ARG);
+            cfw.addLoadThis();
             cfw.addALoad(SCOPE_ARG);
             cfw.addInvoke(ByteCode.INVOKEVIRTUAL,
                           "org/mozilla/javascript/ScriptableObject",
@@ -755,7 +676,7 @@ public class Codegen extends Interpreter {
         // precompile all regexp literals
         int regexpCount = scriptOrFn.getRegexpCount();
         if (regexpCount != 0) {
-            cfw.addALoad(SELF_ARG);
+            cfw.addLoadThis();
             cfw.addPush(regexpCount);
             cfw.add(ByteCode.ANEWARRAY,
                     "org/mozilla/javascript/regexp/NativeRegExp");
@@ -789,7 +710,7 @@ public class Codegen extends Interpreter {
 
                 cfw.add(ByteCode.AASTORE);
             }
-            cfw.add(ByteCode.PUTFIELD, zeroArgClassName,
+            cfw.add(ByteCode.PUTFIELD, mainClassName,
                     REGEXP_ARRAY_FIELD_NAME, REGEXP_ARRAY_FIELD_TYPE);
         }
 
@@ -799,38 +720,13 @@ public class Codegen extends Interpreter {
     }
 
     private void generateGetEncodedSource(ClassFileWriter cfw,
-                                          boolean forScript)
+                                          String encodedSource)
     {
         // Override NativeFunction.getEncodedSourceg() with
         // public String getEncodedSource()
         // {
-        //     return main_class.getEncodedSourceImpl(scriptOrFnIndex);
-        // }
-        cfw.startMethod("getEncodedSource", "()Ljava/lang/Object;",
-                        ClassFileWriter.ACC_PUBLIC);
-        if (forScript) {
-            cfw.addPush(0);
-        } else {
-            cfw.addALoad(0);
-            cfw.add(ByteCode.GETFIELD, cfw.getClassName(), ID_FIELD_NAME, "I");
-        }
-        cfw.addInvoke(ByteCode.INVOKESTATIC,
-                      mainClassName,
-                      "getEncodedSourceImpl",
-                      "(I)Ljava/lang/String;");
-        cfw.add(ByteCode.ARETURN);
-        // 1: this and no argument or locals
-        cfw.stopMethod((short)1, null);
-    }
-
-    private void generateGetEncodedSourceImpl(ClassFileWriter cfw,
-                                              String encodedSource)
-    {
-        // generate
-        // static String getEncodedSourceImpl(int index)
-        // {
         //     int start, end;
-        //     switch (index) {
+        //     switch (id) {
         //       case 1: start, end = embedded_constants_for_function_1;
         //       case 2: start, end = embedded_constants_for_function_2;
         //       ...
@@ -838,8 +734,8 @@ public class Codegen extends Interpreter {
         //     }
         //     return ENCODED.substring(start, end);
         // }
-        cfw.startMethod("getEncodedSourceImpl", "(I)Ljava/lang/String;",
-                        ClassFileWriter.ACC_STATIC);
+        cfw.startMethod("getEncodedSource", "()Ljava/lang/Object;",
+                        ClassFileWriter.ACC_PUBLIC);
 
         cfw.addPush(encodedSource);
 
@@ -850,7 +746,9 @@ public class Codegen extends Interpreter {
             cfw.addPush(n.getEncodedSourceStart());
             cfw.addPush(n.getEncodedSourceEnd());
         } else {
-            cfw.addILoad(0);
+            cfw.addLoadThis();
+            cfw.add(ByteCode.GETFIELD, cfw.getClassName(), ID_FIELD_NAME, "I");
+
             // do switch from 1 .. count - 1 mapping 0 to the default case
             int switchStart = cfw.addTableSwitch(1, count - 1);
             int afterSwitch = cfw.acquireLabel();
@@ -879,6 +777,8 @@ public class Codegen extends Interpreter {
                       "substring",
                       "(II)Ljava/lang/String;");
         cfw.add(ByteCode.ARETURN);
+
+        // 1: this and no argument or locals
         cfw.stopMethod((short)1, null);
     }
 
@@ -894,10 +794,11 @@ public class Codegen extends Interpreter {
         double[] array = itsConstantList;
         for (int i = 0; i != N; ++i) {
             double num = array[i];
-            String constantName = "jsK_" + i;
+            String constantName = "_k" + i;
             String constantType = getStaticConstantWrapperType(num);
             cfw.addField(constantName, constantType,
-                         ClassFileWriter.ACC_STATIC);
+                         (short)(ClassFileWriter.ACC_STATIC
+                                 | ClassFileWriter.ACC_PRIVATE));
             pushNewNumberObject(cfw, num);
             cfw.add(ByteCode.PUTSTATIC, mainClassName,
                     constantName, constantType);
@@ -921,7 +822,7 @@ public class Codegen extends Interpreter {
             // statically init'd constants.
             pushNewNumberObject(cfw, num);
         } else {
-            String constantName = "jsK_" + addNumberConstant(num);
+            String constantName = "_k" + addNumberConstant(num);
             String constantType = getStaticConstantWrapperType(num);
             cfw.add(ByteCode.GETSTATIC, mainClassName,
                     constantName, constantType);
@@ -998,13 +899,6 @@ public class Codegen extends Interpreter {
                 "instance", "Lorg/mozilla/javascript/Scriptable;");
     }
 
-    private int getFunctionCount()
-    {
-        return (scriptOrFnNodes[0].getType() == Token.SCRIPT)
-               ? scriptOrFnNodes.length - 1
-               : scriptOrFnNodes.length;
-    }
-
     int getIndex(ScriptOrFnNode n)
     {
         return scriptOrFnIndexes.getExisting(n);
@@ -1020,43 +914,35 @@ public class Codegen extends Interpreter {
         return "_n"+getIndex(n);
     }
 
-    String getBodyMethodName(OptFunctionNode fn)
+    String getBodyMethodName(ScriptOrFnNode n)
     {
-        return "_c"+getIndex(fn);
+        return "_c"+getIndex(n);
     }
 
-    String getBodyMethodSignature(OptFunctionNode fn)
+    String getBodyMethodSignature(ScriptOrFnNode n)
     {
         StringBuffer sb = new StringBuffer();
         sb.append('(');
-        sb.append(functionClassSignature);
+        sb.append(mainClassSignature);
         sb.append("Lorg/mozilla/javascript/Context;"
                   +"Lorg/mozilla/javascript/Scriptable;"
                   +"Lorg/mozilla/javascript/Scriptable;");
-        if (fn.isTargetOfDirectCall()) {
-            int pCount = fn.getParamCount();
-            for (int i = 0; i != pCount; i++) {
-                sb.append("Ljava/lang/Object;D");
+        if (n.getType() == Token.FUNCTION) {
+            OptFunctionNode fn = (OptFunctionNode)n;
+            if (fn.isTargetOfDirectCall()) {
+                int pCount = fn.getParamCount();
+                for (int i = 0; i != pCount; i++) {
+                    sb.append("Ljava/lang/Object;D");
+                }
             }
         }
         sb.append("[Ljava/lang/Object;)Ljava/lang/Object;");
         return sb.toString();
     }
 
-    String getInitImplMethodName(OptFunctionNode fn)
+    String getInitImplMethodName(ScriptOrFnNode n)
     {
-        return "_i"+getIndex(fn);
-    }
-
-    String getInitImplMethodSignature(OptFunctionNode fn)
-    {
-        StringBuffer sb = new StringBuffer();
-        sb.append('(');
-        sb.append(functionClassSignature);
-        sb.append("Lorg/mozilla/javascript/Context;"
-                  +"Lorg/mozilla/javascript/Scriptable;"
-                  +")V");
-        return sb.toString();
+        return "_i"+getIndex(n);
     }
 
     static RuntimeException badTree()
@@ -1075,9 +961,10 @@ public class Codegen extends Interpreter {
     static final String REGEXP_ARRAY_FIELD_TYPE
         = "[Lorg/mozilla/javascript/regexp/NativeRegExp;";
 
-   static final String SCRIPT_INIT_SIGNATURE
-        = "(Lorg/mozilla/javascript/Scriptable;"
-          +"Lorg/mozilla/javascript/Context;)V";
+    static final String INIT_SIGNATURE
+        =  "(Lorg/mozilla/javascript/Context;"
+           +"Lorg/mozilla/javascript/Scriptable;"
+           +")V";
 
    static final String FUNCTION_CONSTRUCTOR_SIGNATURE
         = "(Lorg/mozilla/javascript/Scriptable;"
@@ -1088,18 +975,10 @@ public class Codegen extends Interpreter {
     ScriptOrFnNode[] scriptOrFnNodes;
     private ObjToIntMap scriptOrFnIndexes;
 
-    private boolean generateHelperClass;
-
     String mainClassName;
     String mainClassSignature;
 
-    private String helperClassName;
-
-    String functionClassName;
-    String functionClassSignature;
-
     private byte[] mainClassBytes;
-    private byte[] helperClassBytes;
 
     boolean itsUseDynamicScope;
     boolean generateDebugInfo;
@@ -1116,19 +995,10 @@ class BodyCodegen
     {
         initBodyGeneration();
 
-        if (fnCurrent != null) {
-            cfw.startMethod(codegen.getBodyMethodName(fnCurrent),
-                            codegen.getBodyMethodSignature(fnCurrent),
-                            ClassFileWriter.ACC_STATIC);
-        } else {
-            cfw.startMethod("call",
-                            "(Lorg/mozilla/javascript/Context;" +
-                            "Lorg/mozilla/javascript/Scriptable;" +
-                            "Lorg/mozilla/javascript/Scriptable;" +
-                            "[Ljava/lang/Object;)Ljava/lang/Object;",
-                            (short)(ClassFileWriter.ACC_PUBLIC
-                                    | ClassFileWriter.ACC_FINAL));
-        }
+        cfw.startMethod(codegen.getBodyMethodName(scriptOrFn),
+                        codegen.getBodyMethodSignature(scriptOrFn),
+                        (short)(ClassFileWriter.ACC_STATIC
+                                | ClassFileWriter.ACC_PRIVATE));
 
         generatePrologue();
 
@@ -1970,15 +1840,14 @@ class BodyCodegen
 
     private void visitFunction(OptFunctionNode fn, int functionType)
     {
-        String fnClassName = codegen.functionClassName;
         int fnIndex = codegen.getIndex(fn);
-        cfw.add(ByteCode.NEW, fnClassName);
+        cfw.add(ByteCode.NEW, codegen.mainClassName);
         // Call function constructor
         cfw.add(ByteCode.DUP);
         cfw.addALoad(variableObjectLocal);
         cfw.addALoad(contextLocal);           // load 'cx'
         cfw.addPush(fnIndex);
-        cfw.addInvoke(ByteCode.INVOKESPECIAL, fnClassName,
+        cfw.addInvoke(ByteCode.INVOKESPECIAL, codegen.mainClassName,
                       "<init>", Codegen.FUNCTION_CONSTRUCTOR_SIGNATURE);
 
         // Init mainScript field;
@@ -1988,12 +1857,12 @@ class BodyCodegen
         } else {
             cfw.add(ByteCode.ALOAD_0);
             cfw.add(ByteCode.GETFIELD,
-                    zeroArgClassName,
+                    codegen.mainClassName,
                     Codegen.DIRECT_CALL_PARENT_FIELD,
                     codegen.mainClassSignature);
         }
         cfw.add(ByteCode.PUTFIELD,
-                fnClassName,
+                codegen.mainClassName,
                 Codegen.DIRECT_CALL_PARENT_FIELD,
                 codegen.mainClassSignature);
 
@@ -2005,7 +1874,7 @@ class BodyCodegen
             } else {
                 cfw.add(ByteCode.ALOAD_0);
                 cfw.add(ByteCode.GETFIELD,
-                        zeroArgClassName,
+                        codegen.mainClassName,
                         Codegen.DIRECT_CALL_PARENT_FIELD,
                         codegen.mainClassSignature);
             }
@@ -2013,7 +1882,7 @@ class BodyCodegen
             cfw.add(ByteCode.PUTFIELD,
                     codegen.mainClassName,
                     Codegen.getDirectTargetFieldName(directTargetIndex),
-                    codegen.functionClassSignature);
+                    codegen.mainClassSignature);
         }
 
         // Dup function reference for function expressions to have it
@@ -2177,13 +2046,13 @@ class BodyCodegen
                 cfw.add(ByteCode.ALOAD_0);
             } else {
                 cfw.add(ByteCode.ALOAD_0);
-                cfw.add(ByteCode.GETFIELD, zeroArgClassName,
+                cfw.add(ByteCode.GETFIELD, codegen.mainClassName,
                         Codegen.DIRECT_CALL_PARENT_FIELD,
                         codegen.mainClassSignature);
             }
             cfw.add(ByteCode.GETFIELD, codegen.mainClassName,
                     Codegen.getDirectTargetFieldName(directTargetIndex),
-                    codegen.functionClassSignature);
+                    codegen.mainClassSignature);
 
             short stackHeight = cfw.getStackTop();
 
@@ -3427,7 +3296,7 @@ class BodyCodegen
     {
         int i = node.getExistingIntProp(Node.REGEXP_PROP);
         cfw.addALoad(funObjLocal);
-        cfw.add(ByteCode.GETFIELD, zeroArgClassName,
+        cfw.add(ByteCode.GETFIELD, codegen.mainClassName,
                 Codegen.REGEXP_ARRAY_FIELD_NAME,
                 Codegen.REGEXP_ARRAY_FIELD_TYPE);
         cfw.addPush(i);
@@ -3900,7 +3769,6 @@ class BodyCodegen
 
     ClassFileWriter cfw;
     Codegen codegen;
-    String zeroArgClassName;
     ScriptOrFnNode scriptOrFn;
 
     private OptFunctionNode fnCurrent;
