@@ -3818,6 +3818,7 @@ nsDocShell::SetupRefreshURIFromHeader(nsIURI * aBaseURI,
     //            uriAttrib is empty or the URI specified
     nsCAutoString uriAttrib;
     PRInt32 seconds = 0;
+    PRBool specifiesSeconds = PR_FALSE;
 
     nsACString::const_iterator iter, tokenStart, doneIterating;
 
@@ -3837,6 +3838,7 @@ nsDocShell::SetupRefreshURIFromHeader(nsIURI * aBaseURI,
     // parse number
     while (iter != doneIterating && (*iter >= '0' && *iter <= '9')) {
         seconds = seconds * 10 + (*iter - '0');
+        specifiesSeconds = PR_TRUE;
         ++iter;
     }
 
@@ -3846,17 +3848,41 @@ nsDocShell::SetupRefreshURIFromHeader(nsIURI * aBaseURI,
             seconds = -seconds;
 
         // skip to next ';' or ','
+        nsACString::const_iterator iterAfterDigit = iter;
         while (iter != doneIterating && !(*iter == ';' || *iter == ','))
+        {
+            if (specifiesSeconds)
+            {
+                // Non-whitespace characters here mean that the string is
+                // malformed.
+                if (iter == iterAfterDigit && !nsCRT::IsAsciiSpace(*iter))
+                {
+                    // There is no space between the seconds and this character
+                    // so the seconds are garbage!
+                    //   e.g. content="2a0z+,URL=http://www.mozilla.org/"
+                    // Just ignore this redirect.
+                    return NS_ERROR_FAILURE;
+                }
+                else if (nsCRT::IsAsciiSpace(*iter))
+                {
+                    // We've had at least one whitespace so tolerate the mistake
+                    // and drop through.
+                    // e.g. content="10 foo"
+                    ++iter;
+                    break;
+                }
+            }
             ++iter;
+        }
 
         // skip ';' or ','
         if (iter != doneIterating && (*iter == ';' || *iter == ',')) {
             ++iter;
-
-            // skip whitespace
-            while (iter != doneIterating && nsCRT::IsAsciiSpace(*iter))
-                ++iter;
         }
+
+        // skip whitespace
+        while (iter != doneIterating && nsCRT::IsAsciiSpace(*iter))
+            ++iter;
     }
 
     // possible start of URI
@@ -3914,12 +3940,22 @@ nsDocShell::SetupRefreshURIFromHeader(nsIURI * aBaseURI,
     nsresult rv = NS_OK;
 
     nsCOMPtr<nsIURI> uri;
+    PRBool specifiesURI = PR_FALSE;
     if (tokenStart == iter) {
         uri = aBaseURI;
     }
     else {
         uriAttrib = Substring(tokenStart, iter);
         rv = NS_NewURI(getter_AddRefs(uri), uriAttrib, nsnull, aBaseURI);
+        specifiesURI = PR_TRUE;
+    }
+
+    // No URI or seconds were specified
+    if (!specifiesSeconds && !specifiesURI)
+    {
+        // Do nothing because the alternative is to spin around in a refresh
+        // loop forever!
+        return NS_ERROR_FAILURE;
     }
 
     if (NS_SUCCEEDED(rv)) {
