@@ -1531,11 +1531,11 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
          * If this is input type=text, and the user hit enter, fire onChange and
          * submit the form (if we are in one)
          *
-         * Bug 99920 and bug 109463:
-         * (a) if there is only one text input in the form, submit by sending
+         * Bug 99920, bug 109463 and bug 147850:
+         * (a) if there is a submit control in the form, click the first submit
+         *     control in the form.
+         * (b) if there is just one text control in the form, submit by sending
          *     a submit event directly to the form
-         * (b) if there is more than one text input, submit by sending a click
-         *     to the first submit button in the form.
          * (c) if there is more than one text input and no submit buttons, do
          *     not submit, period.
          */
@@ -1557,7 +1557,7 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
               }
             }
 
-            // Find the nearest submit control in elements[]
+            // Find the first submit control in elements[]
             // and also check how many text controls we have in the form
             nsCOMPtr<nsIContent> submitControl;
             PRInt32 numTextControlsFound = 0;
@@ -1575,6 +1575,10 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
                      type == NS_FORM_BUTTON_SUBMIT ||
                      type == NS_FORM_INPUT_IMAGE)) {
                   submitControl = do_QueryInterface(currentControl);
+                  // We know as soon as we find a submit control that it no
+                  // longer matters how many text controls there are--we are
+                  // going to fire the onClick handler.
+                  break;
                 } else if (type == NS_FORM_INPUT_TEXT ||
                            type == NS_FORM_INPUT_PASSWORD) {
                   numTextControlsFound++;
@@ -1585,10 +1589,9 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
             nsCOMPtr<nsIPresShell> shell;
             aPresContext->GetShell(getter_AddRefs(shell));
             if (shell) {
-              if (submitControl && numTextControlsFound > 1) {
-                // IE actually fires the button's onclick handler.  Dispatch
-                // the click event and let the button handle submitting the
-                // form.
+              if (submitControl) {
+               // Fire the button's onclick handler and let the button handle
+               // submitting the form.
                 nsGUIEvent event;
                 event.eventStructType = NS_MOUSE_EVENT;
                 event.message = NS_MOUSE_LEFT_CLICK;
