@@ -71,7 +71,7 @@ function setLabelForNode(aNode, aLabel, aIsLabelFlag)
 {
   // This is for labels with possible accesskeys
   var accessKeyIndex;
-  if (aLabel.charAt(0) == '&') {
+  if (/^\&[^\&]/.test(aLabel)) { // access key is at the start
    accessKeyIndex = 0;
   } else {
     accessKeyIndex = aLabel.search(/[^\&]\&[^\&]/) + 1;
@@ -88,7 +88,7 @@ function setLabelForNode(aNode, aLabel, aIsLabelFlag)
     aLabel = aLabel.substr(0, accessKeyIndex) + 
              aLabel.substr(accessKeyIndex + 1);
   }
-  aLabel = aLabel.replace(/\&\&/, "&");
+  aLabel = aLabel.replace(/\&\&/g, "&");
   if (aIsLabelFlag) {    // Set text for <label> element
     aNode.setAttribute("value", aLabel);
   } else {    // Set text for other xul elements
@@ -135,32 +135,24 @@ function commonDialogOnLoad()
     iconClass = "message-icon";
   iconElement.setAttribute("class", iconElement.getAttribute("class") + " " + iconClass);
 
-  var firstButton = null;
-  var newButton;
+  var firstButton = document.documentElement.getButton("accept");
   switch (nButtons) {
     case 4:
-      setLabelForNode(firstButton = document.documentElement.getButton("extra2"), 
-                      gCommonDialogParam.GetString(11));               
+      setLabelForNode(document.documentElement.getButton("extra2"), gCommonDialogParam.GetString(11));
       // fall through
     case 3:
-      newButton = document.documentElement.getButton("extra1");
-      firstButton = firstButton || newButton;
-      setLabelForNode(newButton, gCommonDialogParam.GetString(10));
+      setLabelForNode(document.documentElement.getButton("extra1"), gCommonDialogParam.GetString(10));
       // fall through
     default:
     case 2:
-      newButton = document.documentElement.getButton("accept");
-      firstButton = firstButton || newButton;
-      var string = gCommonDialogParam.GetString(8);
+      var string = gCommonDialogParam.GetString(9);
       if (string)
-        setLabelForNode(newButton, string);
+        setLabelForNode(document.documentElement.getButton("cancel"), string);
       // fall through
     case 1:
-      newButton = document.documentElement.getButton("cancel");
-      firstButton = firstButton || newButton;
-      string = gCommonDialogParam.GetString(9);
+      string = gCommonDialogParam.GetString(8);
       if (string)
-        setLabelForNode(newButton, string);
+        setLabelForNode(firstButton, string);
       break;
   }
 
@@ -168,8 +160,9 @@ function commonDialogOnLoad()
   gCommonDialogParam.SetInt(0, 1); 
 
   // initialize the checkbox
-  if (setCheckbox(gCommonDialogParam.GetString(1), gCommonDialogParam.GetInt(1)) &&
-      gCommonDialogParam.GetInt(3) == 0)  // if no text fields
+  setCheckbox(gCommonDialogParam.GetString(1), gCommonDialogParam.GetInt(1));
+
+  if (gCommonDialogParam.GetInt(3) == 0) // If no text fields
     firstButton.focus(); // Don't focus checkbox, focus first button instead
 
   getAttention();
@@ -208,9 +201,7 @@ function setCheckbox(aChkMsg, aChkValue)
     var checkboxElement = document.getElementById("checkbox");
     setLabelForNode(checkboxElement, aChkMsg);
     checkboxElement.checked = aChkValue > 0;
-    return true;
   }
-  return false;
 }
 
 function unHideElementById(aElementID)
