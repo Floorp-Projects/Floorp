@@ -174,6 +174,7 @@ function ChangeFolderByURI(uri, isThreaded, sortID, sortDirection)
     
   gBeforeFolderLoadTime = new Date();
   gCurrentLoadingFolderURI = uri;
+  gNextMessageAfterDelete = null; // forget what message to select, if any
 
   if(msgfolder.manyHeadersToDownload())
   {
