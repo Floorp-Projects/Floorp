@@ -60,7 +60,6 @@ EXPORTS =                          \
         nsVector.h                 \
         nsVoidArray.h              \
         nsVoidBTree.h              \
-        nsWorkString.h             \
         nsXPIDLString.h            \
         plvector.h                 \
         $(NULL)			
@@ -125,7 +124,6 @@ CPP_OBJS =                                        \
         .\$(OBJDIR)\nsUnicharBuffer.obj           \
         .\$(OBJDIR)\nsVoidArray.obj               \
         .\$(OBJDIR)\nsVoidBTree.obj               \
-        .\$(OBJDIR)\nsWorkString.obj              \
         .\$(OBJDIR)\nsXPIDLString.obj             \
         .\$(OBJDIR)\plvector.obj                  \
         $(NULL)
