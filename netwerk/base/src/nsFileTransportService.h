@@ -27,7 +27,8 @@
 #include "nsIThreadPool.h"
 #include "nsISupportsArray.h"
 
-#define NS_FILE_TRANSPORT_WORKER_COUNT  1//4
+#define NS_FILE_TRANSPORT_WORKER_COUNT_MIN  1
+#define NS_FILE_TRANSPORT_WORKER_COUNT_MAX  16
 
 class nsFileTransportService : public nsIFileTransportService
 {
