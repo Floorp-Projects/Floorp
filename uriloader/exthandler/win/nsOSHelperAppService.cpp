@@ -251,11 +251,17 @@ static nsresult GetMIMEInfoFromRegistry( LPBYTE fileType, nsIMIMEInfo *pInfo )
     if ( rc == ERROR_SUCCESS )
     {
         // OK, the default value here is the description of the type.
-        LPBYTE pDesc = GetValueBytes( fileTypeKey, "" );
+        DWORD lenDesc = 0;
+        LPBYTE pDesc = GetValueBytes( fileTypeKey, "", &lenDesc );
         if ( pDesc )
         {
-            nsAutoString desc; desc.AssignWithConversion((const char*)pDesc);
-            pInfo->SetDescription( desc.GetUnicode() );
+            PRUnichar *pUniDesc = new PRUnichar[lenDesc+1];
+            if (pUniDesc) {
+              int len = MultiByteToWideChar(CP_ACP, 0, (const char *)pDesc, -1, pUniDesc, lenDesc); 
+              pUniDesc[len] = 0;
+              pInfo->SetDescription( pUniDesc );
+              delete [] pUniDesc;
+            }
             delete [] pDesc;
         }
     }
