@@ -374,19 +374,16 @@ function WalletDialog( which )
       window.openDialog("chrome://communicator/content/wallet/CookieViewer.xul","CookieViewer","modal=yes,chrome,resizable=no",2); 
       break;
     case "samples":
-      server = this.pref.getLocalizedUnicharPref("wallet.Samples");
-      window._content.location.href = server + 'wallet2.html';
+      window._content.location.href = 'chrome://communicator/locale/wallet/index.html';
       break;
     case "interview":
-      window._content.location.href = 'chrome://communicator/content/wallet/interview.html';
+      window._content.location.href = 'chrome://communicator/locale/wallet/interview.html';
       break;
     case "walletsites":
       window.openDialog("chrome://communicator/content/wallet/SignonViewer.xul","SSViewer","modal=yes,chrome,resizable=no","W"); 
       break;
     case "tutorial":
-      server = this.pref.getLocalizedUnicharPref("wallet.Samples");
-      window._content.location.href = 'http://www.mozilla.org/wallet/samples/privacy.html';
-//      window._content.location.href = server + 'privacy.html';
+      window._content.location.href = 'chrome://communicator/locale/wallet/privacy.html';
       break;
     case "wallet":
     default:
