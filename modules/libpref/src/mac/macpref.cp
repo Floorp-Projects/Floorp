@@ -20,13 +20,26 @@
 #include "prefapi.h"
 #include "jsapi.h"
 #include "prlink.h"
+
+#if 0
+// beard these are old world APIs that must be excised in the new world.
+#include "LString.h"
 #include "ufilemgr.h"
 #include "uprefd.h"
-#include "LString.h"
+#endif
 
-#include <Types.h>
+#include "MacPrefUtils.h"
+
+#ifndef __RESOURCES__
 #include <Resources.h>
+#endif
+#ifndef __MEMORY__
 #include <Memory.h>
+#endif
+#ifndef __ALIASES__
+#include <Aliases.h>
+#endif
+
 
 /*
  * Mac-specific libpref routines
@@ -111,7 +124,7 @@ PREF_CopyPathPref(const char *pref_name, char ** return_buffer)
 	if (err != noErr)
 		return PREF_ERROR; // bad alias
 		
-	*return_buffer = CFileMgr::EncodedPathNameFromFSSpec(fileSpec, TRUE);
+	*return_buffer = EncodedPathNameFromFSSpec(fileSpec, TRUE);
 	
 	return PREF_NOERROR;
 }
@@ -121,7 +134,7 @@ PREF_SetPathPref(const char *pref_name, const char *path, PRBool set_default)
 {
 	FSSpec fileSpec;
 	AliasHandle	aliasH;
-	OSErr err = CFileMgr::FSSpecFromLocalUnixPath(path, &fileSpec);
+	OSErr err = FSSpecFromLocalUnixPath(path, &fileSpec);
 	if (err != noErr)
 		return PREF_ERROR;
 
@@ -142,6 +155,7 @@ PREF_SetPathPref(const char *pref_name, const char *path, PRBool set_default)
 	return result;
 }
 
+#if 0
 /* Looks for AutoAdminLib in Essential Files and returns FSSpec */
 Boolean
 pref_FindAutoAdminLib(FSSpec& spec)
@@ -154,10 +168,14 @@ pref_FindAutoAdminLib(FSSpec& spec)
 	
 	return CFileMgr::FileExists(spec);
 }
+#endif
 
 PR_IMPLEMENT(PRBool)
 PREF_IsAutoAdminEnabled()
 {
+#if 0
 	FSSpec spec;
 	return (XP_Bool) pref_FindAutoAdminLib(spec);
+#endif
+	return PR_FALSE;
 }

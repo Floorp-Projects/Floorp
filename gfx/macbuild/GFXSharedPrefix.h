@@ -16,6 +16,6 @@
  * Reserved.
  */
 
-#define GFX_SHARED 1
+#define _IMPL_NS_GFX 1
 
-#include "MacPrefix.h"
+#include "MacSharedPrefix.h"

@@ -179,7 +179,7 @@ NS_IMETHODIMP nsFontMetricsMac :: GetFontHandle(nsFontHandle &aHandle)
 
 //------------------------------------------------------------------------
 
-void nsFontMetricsMac :: SetFont(const nsFont& aFont, nsIDeviceContext* aContext)
+NS_GFX void nsFontMetricsMac :: SetFont(const nsFont& aFont, nsIDeviceContext* aContext)
 {
 	short fontNum;
 			//¥TODO?: This is not very efficient. Look in nsDeviceContextMac::GetMacFontNumber()

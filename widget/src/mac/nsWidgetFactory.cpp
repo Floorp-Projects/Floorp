@@ -106,7 +106,8 @@ private:
 
 
 nsWidgetFactory::nsWidgetFactory(const nsCID &aClass)   
-{   
+{
+ NS_INIT_REFCNT();
  mClassID = aClass;
 }   
 
@@ -261,12 +262,10 @@ nsresult nsWidgetFactory::LockFactory(PRBool aLock)
 }  
 
 // return the proper factory to the caller
-#ifdef MAC_STATIC
+#if defined(XP_MAC) && defined(MAC_STATIC)
 extern "C" NS_WIDGET nsresult NSGetFactory_WIDGET_DLL(const nsCID &aClass, nsIFactory **aFactory)
-#elif defined(MAC_SHARED)
-#pragma export on
+#else
 extern "C" NS_WIDGET nsresult NSGetFactory(const nsCID &aClass, nsIFactory **aFactory)
-#pragma export off
 #endif
 {
     if (nsnull == aFactory) {
@@ -281,5 +280,3 @@ extern "C" NS_WIDGET nsresult NSGetFactory(const nsCID &aClass, nsIFactory **aFa
 
     return (*aFactory)->QueryInterface(kIFactoryIID, (void**)aFactory);
 }
-
-

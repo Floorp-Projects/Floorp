@@ -660,10 +660,10 @@ nsresult nsDOMFactory::LockFactory(PRBool aLock)
 }  
 
 // return the proper factory to the caller
-#ifdef XP_MAC
+#if defined(XP_MAC) && defined(MAC_STATIC)
 extern "C" NS_DOM nsresult NSGetFactory_DOM_DLL(const nsCID &aClass, nsIFactory **aFactory)
 #else
-extern "C" NS_DOM nsresult NSGetFactory(const nsCID &aClass, nsIFactory **aFactory)
+extern "C" NS_DOM NS_EXPORT_(nsresult) NSGetFactory(const nsCID &aClass, nsIFactory **aFactory)
 #endif
 {
   if (nsnull == aFactory) {

@@ -2225,10 +2225,26 @@ pref_ErrorReporter(JSContext *cx, const char *message,
 	}
 }
 
+#if defined(XP_MAC)
+
+#include <Dialogs.h>
+#include <Memory.h>
+
+void pref_Alert(char* msg)
+{
+	Str255 pmsg;
+	SInt16 itemHit;
+	pmsg[0] = strlen(msg);
+	BlockMoveData(msg, pmsg + 1, pmsg[0]);
+	StandardAlert(kAlertPlainAlert, "\pNetscape -- JS Preference Warning", pmsg, NULL, &itemHit);
+}
+
+#else
+
 /* Platform specific alert messages */
 void pref_Alert(char* msg)
 {
-#if defined(XP_MAC) || defined(XP_UNIX) || defined(XP_OS2)
+#if defined(XP_UNIX) || defined(XP_OS2)
 #if defined(XP_UNIX)
     if ( getenv("NO_PREF_SPAM") == NULL )
 #endif
@@ -2239,6 +2255,7 @@ void pref_Alert(char* msg)
 #endif
 }
 
+#endif
 
 #ifdef XP_WIN16
 #define ADMNLIBNAME "adm1640.dll"
