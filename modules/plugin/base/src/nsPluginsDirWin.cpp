@@ -184,7 +184,7 @@ nsPluginsDir::nsPluginsDir(PRUint16 location)
       ::RegCloseKey(keyloc); 
     } 
 
-	  allocPath = PL_strdup(path);
+	  allocPath = path;
 	  *(nsFileSpec*)this = allocPath;
   }
 
@@ -315,9 +315,39 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
 	else
 		res = NS_ERROR_FAILURE;
 
+
 	PR_Free(verbuf);
 
   return res;
 }
 
+nsresult nsPluginFile::FreePluginInfo(nsPluginInfo& info)
+{
+  if(info.fName != nsnull)
+    PL_strfree(info.fName);
 
+  if(info.fDescription != nsnull)
+    PL_strfree(info.fDescription);
+
+  if(info.fMimeType != nsnull)
+    PL_strfree(info.fMimeType);
+
+  if(info.fMimeDescription != nsnull)
+    PL_strfree(info.fMimeDescription);
+
+  if(info.fExtensions != nsnull)
+    PL_strfree(info.fExtensions);
+
+  if(info.fMimeTypeArray != nsnull)
+    PR_Free(info.fMimeTypeArray);
+
+  if(info.fMimeDescriptionArray != nsnull)
+    PR_Free(info.fMimeDescriptionArray);
+
+  if(info.fExtensionArray != nsnull)
+    PR_Free(info.fExtensionArray);
+
+  ZeroMemory((void *)&info, sizeof(info));
+
+  return NS_OK;
+}

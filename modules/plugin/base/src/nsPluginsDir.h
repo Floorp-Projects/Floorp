@@ -95,6 +95,11 @@ public:
 	 * Obtains all of the information currently available for this plugin.
 	 */
 	nsresult GetPluginInfo(nsPluginInfo &outPluginInfo);
+
+  /**
+	 * Should be called after GetPluginInfo to free all allocated stuff
+	 */
+	nsresult FreePluginInfo(nsPluginInfo &PluginInfo);
 };
 
 #endif /* nsPluginsDir_h___ */

@@ -221,3 +221,8 @@ nsresult nsPluginFile::GetPluginInfo( nsPluginInfo &info)
 
    return rc;
 }
+
+nsresult nsPluginFile::FreePluginInfo(nsPluginInfo& info)
+{
+  return NS_OK;
+}
