@@ -166,10 +166,8 @@ NS_IMETHODIMP nsNoIncomingServer::CreateDefaultMailboxes(nsIFileSpec *path)
 {
         nsresult rv;
         PRBool exists;
-        if (!path) return NS_ERROR_NULL_POINTER;
-
-        // todo, use a string bundle for these
-
+        if (!path) 
+          return NS_ERROR_NULL_POINTER;
 
 		// notice, no Inbox
         rv = path->AppendRelativeUnixPath("Trash");

@@ -216,7 +216,7 @@ protected:
   PRBool      mCheckForNewMessagesAfterParsing;
   nsCOMPtr<nsIMsgStringService> mMsgStringService;
 
-  nsresult setSubfolderFlag(PRUnichar *aFolderName, PRUint32 flags);
+  nsresult setSubfolderFlag(const char *aFolderName, PRUint32 flags);
 };
 
 #endif // nsMsgLocalMailFolder_h__

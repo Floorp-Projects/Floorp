@@ -60,17 +60,6 @@ static NS_DEFINE_CID(kCPop3ServiceCID, NS_POP3SERVICE_CID);
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
-#define INBOX_NAME "Inbox"
-
-nsrefcnt nsPop3IncomingServer::gInstanceCount	= 0;
-
-PRUnichar *nsPop3IncomingServer::kInboxName = 0;
-PRUnichar *nsPop3IncomingServer::kTrashName = 0;
-PRUnichar *nsPop3IncomingServer::kSentName = 0;
-PRUnichar *nsPop3IncomingServer::kDraftsName = 0;
-PRUnichar *nsPop3IncomingServer::kTemplatesName = 0;
-PRUnichar *nsPop3IncomingServer::kUnsentName = 0;
-
 NS_IMPL_ISUPPORTS_INHERITED2(nsPop3IncomingServer,
                              nsMsgIncomingServer,
                              nsIPop3IncomingServer,
@@ -87,52 +76,11 @@ nsPop3IncomingServer::nsPop3IncomingServer()
         POP3_TOP_UNDEFINED |
         POP3_XTND_XLST_UNDEFINED;
 
-    if (gInstanceCount++ == 0) {
-        initializeStrings();
-
-    }
-
 	m_canHaveFilters = PR_TRUE;
 }
 
 nsPop3IncomingServer::~nsPop3IncomingServer()
 {
-    if (--gInstanceCount == 0) {
-        CRTFREEIF(kInboxName);
-        CRTFREEIF(kTrashName);
-        CRTFREEIF(kSentName);
-        CRTFREEIF(kDraftsName);
-        CRTFREEIF(kTemplatesName);
-        CRTFREEIF(kUnsentName);
-    }
-}
-
-nsresult
-nsPop3IncomingServer::initializeStrings()
-{
-    nsresult rv;
-    nsCOMPtr<nsIStringBundleService> bundleService =
-        do_GetService(kStringBundleServiceCID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-    
-    nsCOMPtr<nsIStringBundle> bundle;
-    rv = bundleService->CreateBundle("chrome://messenger/locale/messenger.properties",
-                                     getter_AddRefs(bundle));
-    NS_ENSURE_SUCCESS(rv, rv);
-    
-    bundle->GetStringFromName(NS_LITERAL_STRING("inboxFolderName").get(),
-                              &kInboxName);
-    bundle->GetStringFromName(NS_LITERAL_STRING("trashFolderName").get(),
-                              &kTrashName);
-    bundle->GetStringFromName(NS_LITERAL_STRING("sentFolderName").get(),
-                              &kSentName);
-    bundle->GetStringFromName(NS_LITERAL_STRING("draftsFolderName").get(),
-                              &kDraftsName);
-    bundle->GetStringFromName(NS_LITERAL_STRING("templatesFolderName").get(),
-                              &kTemplatesName);
-    bundle->GetStringFromName(NS_LITERAL_STRING("unsentFolderName").get(),
-                              &kUnsentName);
-    return NS_OK;
 }
 
 
@@ -260,8 +208,7 @@ NS_IMETHODIMP nsPop3IncomingServer::CreateDefaultMailboxes(nsIFileSpec *path)
 	PRBool exists;
 	if (!path) return NS_ERROR_NULL_POINTER;
 
-	// todo, use a string bundle for this
-        rv =path->AppendRelativeUnixPath(INBOX_NAME);
+  rv =path->AppendRelativeUnixPath("Inbox");
 	if (NS_FAILED(rv)) return rv;
 	rv = path->Exists(&exists);
 	if (!exists) {

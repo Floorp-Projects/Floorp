@@ -118,8 +118,6 @@ NS_IMETHODIMP nsMovemailIncomingServer::CreateDefaultMailboxes(nsIFileSpec *path
         PRBool exists;
         if (!path) return NS_ERROR_NULL_POINTER;
 
-        // todo, use a string bundle for this
-
         rv =path->AppendRelativeUnixPath("Inbox");
         if (NS_FAILED(rv)) return rv;
         rv = path->Exists(&exists);

@@ -1035,11 +1035,9 @@ PRBool PR_CALLBACK nsMsgAccountManager::cleanupOnExit(nsHashKey *aKey, void *aDa
              {  
                rv = aEnumerator->CurrentItem(getter_AddRefs(aSupport));
                nsCOMPtr<nsIMsgFolder>inboxFolder = do_QueryInterface(aSupport);
-               nsXPIDLString folderName;
-               inboxFolder->GetName(getter_Copies(folderName));
-               if (folderName &&
-                   folderName.Equals(NS_LITERAL_STRING("INBOX"),
-                                     nsCaseInsensitiveStringComparator()))
+               PRUint32 flags;
+               inboxFolder->GetFlags(&flags);
+               if (flags & MSG_FOLDER_FLAG_INBOX)
                {
                  rv1 = inboxFolder->Compact(urlListener, nsnull /* msgwindow */);
                  if (NS_SUCCEEDED(rv1))

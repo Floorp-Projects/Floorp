@@ -90,12 +90,12 @@ static NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
 
 nsrefcnt nsMsgFolder::gInstanceCount	= 0;
 
-PRUnichar *nsMsgFolder::kInboxName = 0;
-PRUnichar *nsMsgFolder::kTrashName = 0;
-PRUnichar *nsMsgFolder::kSentName = 0;
-PRUnichar *nsMsgFolder::kDraftsName = 0;
-PRUnichar *nsMsgFolder::kTemplatesName = 0;
-PRUnichar *nsMsgFolder::kUnsentName = 0;
+PRUnichar *nsMsgFolder::kLocalizedInboxName;
+PRUnichar *nsMsgFolder::kLocalizedTrashName;
+PRUnichar *nsMsgFolder::kLocalizedSentName;
+PRUnichar *nsMsgFolder::kLocalizedDraftsName;
+PRUnichar *nsMsgFolder::kLocalizedTemplatesName;
+PRUnichar *nsMsgFolder::kLocalizedUnsentName;
 
 nsIAtom * nsMsgFolder::kTotalMessagesAtom	= nsnull;
 nsIAtom * nsMsgFolder::kBiffStateAtom	= nsnull;
@@ -195,12 +195,12 @@ nsMsgFolder::~nsMsgFolder(void)
       NS_IF_RELEASE(kSynchronizeAtom);
 	  NS_IF_RELEASE(kOpenAtom);
     NS_IF_RELEASE(kCollationKeyGenerator);
-      CRTFREEIF(kInboxName);
-      CRTFREEIF(kTrashName);
-      CRTFREEIF(kSentName);
-      CRTFREEIF(kDraftsName);
-      CRTFREEIF(kTemplatesName);
-      CRTFREEIF(kUnsentName);
+      CRTFREEIF(kLocalizedInboxName);
+      CRTFREEIF(kLocalizedTrashName);
+      CRTFREEIF(kLocalizedSentName);
+      CRTFREEIF(kLocalizedDraftsName);
+      CRTFREEIF(kLocalizedTemplatesName);
+      CRTFREEIF(kLocalizedUnsentName);
 #ifdef MSG_FASTER_URI_PARSING
       mParsingURL = nsnull;
 #endif
@@ -218,7 +218,7 @@ nsMsgFolder::initializeStrings()
 {
     nsresult rv;
     nsCOMPtr<nsIStringBundleService> bundleService =
-        do_GetService(kStringBundleServiceCID, &rv);
+        do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
     nsCOMPtr<nsIStringBundle> bundle;
     rv = bundleService->CreateBundle("chrome://messenger/locale/messenger.properties",
@@ -226,17 +226,17 @@ nsMsgFolder::initializeStrings()
     NS_ENSURE_SUCCESS(rv, rv);
     
     bundle->GetStringFromName(NS_LITERAL_STRING("inboxFolderName").get(),
-                              &kInboxName);
+                              &kLocalizedInboxName);
     bundle->GetStringFromName(NS_LITERAL_STRING("trashFolderName").get(),
-                              &kTrashName);
+                              &kLocalizedTrashName);
     bundle->GetStringFromName(NS_LITERAL_STRING("sentFolderName").get(),
-                              &kSentName);
+                              &kLocalizedSentName);
     bundle->GetStringFromName(NS_LITERAL_STRING("draftsFolderName").get(),
-                              &kDraftsName);
+                              &kLocalizedDraftsName);
     bundle->GetStringFromName(NS_LITERAL_STRING("templatesFolderName").get(),
-                              &kTemplatesName);
+                              &kLocalizedTemplatesName);
     bundle->GetStringFromName(NS_LITERAL_STRING("unsentFolderName").get(),
-                              &kUnsentName);
+                              &kLocalizedUnsentName);
     return NS_OK;
 }
 
@@ -873,7 +873,33 @@ NS_IMETHODIMP nsMsgFolder::GetPrettyName(PRUnichar ** name)
 
 NS_IMETHODIMP nsMsgFolder::SetPrettyName(const PRUnichar *name)
 {
-  return SetName(name);
+  nsresult rv;
+  nsAutoString unicodeName(name);
+
+  //Set pretty name only if special flag is set and if it the default folder name
+
+  if (mFlags & MSG_FOLDER_FLAG_INBOX && unicodeName.Equals(NS_LITERAL_STRING("Inbox"), nsCaseInsensitiveStringComparator()))
+    rv = SetName(kLocalizedInboxName);
+
+  else if (mFlags & MSG_FOLDER_FLAG_SENTMAIL && unicodeName.Equals(NS_LITERAL_STRING("Sent"), nsCaseInsensitiveStringComparator()))
+    rv = SetName(kLocalizedSentName);
+  
+  else if (mFlags & MSG_FOLDER_FLAG_DRAFTS && unicodeName.Equals(NS_LITERAL_STRING("Drafts"), nsCaseInsensitiveStringComparator()))
+    rv = SetName(kLocalizedDraftsName);
+
+  else if (mFlags & MSG_FOLDER_FLAG_TEMPLATES && unicodeName.Equals(NS_LITERAL_STRING("Templates"), nsCaseInsensitiveStringComparator())) 
+    rv = SetName(kLocalizedTemplatesName);
+  
+  else if (mFlags & MSG_FOLDER_FLAG_TRASH && unicodeName.Equals(NS_LITERAL_STRING("Trash"), nsCaseInsensitiveStringComparator()))
+    rv = SetName(kLocalizedTrashName);
+
+  else if (mFlags & MSG_FOLDER_FLAG_QUEUE && unicodeName.Equals(NS_LITERAL_STRING("Unsent Messages"), nsCaseInsensitiveStringComparator()))
+    rv = SetName(kLocalizedUnsentName);
+
+  else
+    rv = SetName(name);
+
+  return rv;
 }
 
 NS_IMETHODIMP nsMsgFolder::GetName(PRUnichar **name)
@@ -1628,7 +1654,7 @@ NS_IMETHODIMP nsMsgFolder::OnFlagChange(PRUint32 flag)
 #ifdef DEBUG_bienvenu
        nsXPIDLString name;
        rv = GetName(getter_Copies(name));
-       NS_ASSERTION(Compare(name, NS_LITERAL_STRING("Trash")) || (mFlags & MSG_FOLDER_FLAG_TRASH), "lost trash flag");
+       NS_ASSERTION(Compare(name, kLocalizedTrashName)) || (mFlags & MSG_FOLDER_FLAG_TRASH), "lost trash flag");
 #endif
       folderInfo->SetFlags((PRInt32) mFlags);
       if (db)
@@ -2914,5 +2940,4 @@ NS_IMETHODIMP nsMsgFolder::CompareSortKeys(nsIMsgFolder *aFolder, PRInt32 *sortO
   PR_Free(sortKey2);
   return rv;
 }
-
 

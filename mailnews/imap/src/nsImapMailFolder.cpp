@@ -365,15 +365,15 @@ NS_IMETHODIMP nsImapMailFolder::AddSubfolderWithPath(nsAutoString *name, nsIFile
        name->Equals(NS_LITERAL_STRING("Inbox"),
                     nsCaseInsensitiveStringComparator()))
       flags |= MSG_FOLDER_FLAG_INBOX;
-    else if((isServer || isParentInbox) && name->Equals(kTrashName,
+    else if((isServer || isParentInbox) && name->Equals(NS_LITERAL_STRING("Trash"),
                                                         nsCaseInsensitiveStringComparator()))
       flags |= MSG_FOLDER_FLAG_TRASH;
 #if 0
-    else if(name->EqualsIgnoreCase(kSentName))
+    else if(name->EqualsIgnoreCase(NS_LITERAL_STRING("Sent")))
       folder->SetFlag(MSG_FOLDER_FLAG_SENTMAIL);
-    else if(name->EqualsIgnoreCase(kDraftsName))
+    else if(name->EqualsIgnoreCase(NS_LITERAL_STRING("Drafts")))
       folder->SetFlag(MSG_FOLDER_FLAG_DRAFTS);
-    else if (name->EqualsIgnoreCase(kTemplatesName));
+    else if (name->EqualsIgnoreCase(NS_LITERAL_STRING("Templates")));
       folder->SetFlag(MSG_FOLDER_FLAG_TEMPLATES);
 #endif 
   }
@@ -508,7 +508,7 @@ nsresult nsImapMailFolder::CreateSubFolders(nsFileSpec &path)
       // use the unicode name as the "pretty" name. Set it so it won't be
       // automatically computed from the URI, which is in utf7 form.
       if (currentFolderNameStr.Length() > 0)
-        child->SetName(currentFolderNameStr.get());
+        child->SetPrettyName(currentFolderNameStr.get());
 
     }
     PL_strfree(folderName);

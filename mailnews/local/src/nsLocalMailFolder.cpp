@@ -242,7 +242,7 @@ nsMsgLocalMailFolder::CreateSubFolders(nsFileSpec &path)
 
     rv = AddSubfolder(&currentFolderNameStr, getter_AddRefs(child));
     if (child)
-      child->SetName(currentFolderNameStr.get());
+      child->SetPrettyName(currentFolderNameStr.get());
   }
 	return rv;
 }
@@ -295,24 +295,24 @@ NS_IMETHODIMP nsMsgLocalMailFolder::AddSubfolder(nsAutoString *name,
 	//Only set these is these are top level children.
 	if(NS_SUCCEEDED(rv) && isServer)
 	{
-		if(name->Equals(kInboxName, nsCaseInsensitiveStringComparator()))
+		if(name->Equals(NS_LITERAL_STRING("Inbox"), nsCaseInsensitiveStringComparator()))
 		{
 			flags |= MSG_FOLDER_FLAG_INBOX;
                         SetBiffState(nsIMsgFolder::nsMsgBiffState_Unknown);
 		}
-		else if (name->Equals(kTrashName, nsCaseInsensitiveStringComparator()))
+		else if (name->Equals(NS_LITERAL_STRING("Trash"), nsCaseInsensitiveStringComparator()))
 			flags |= MSG_FOLDER_FLAG_TRASH;
-		else if (name->Equals(kUnsentName, nsCaseInsensitiveStringComparator()) ||
+		else if (name->Equals(NS_LITERAL_STRING("Unsent Messages"), nsCaseInsensitiveStringComparator()) ||
 			name->Equals(NS_LITERAL_STRING("Outbox"), nsCaseInsensitiveStringComparator()))
 			flags |= MSG_FOLDER_FLAG_QUEUE;
 #if 0
 		// the logic for this has been moved into 
 		// SetFlagsOnDefaultMailboxes()
-    else if(name->EqualsIgnoreCase(kSentName))
+    else if(name->EqualsIgnoreCase(NS_LITERAL_STRING("Sent"), nsCaseInsensitiveStringComparator()))
 			folder->SetFlag(MSG_FOLDER_FLAG_SENTMAIL);
-		else if(name->EqualsIgnoreCase(kDraftsName))
+		else if(name->EqualsIgnoreCase(NS_LITERAL_STRING("Drafts"), nsCaseInsensitiveStringComparator()))
 			folder->SetFlag(MSG_FOLDER_FLAG_DRAFTS);
-		else if(name->EqualsIgnoreCase(kTemplatesName))
+		else if(name->EqualsIgnoreCase(NS_LITERAL_STRING("Templates"), nsCaseInsensitiveStringComparator()))
 			folder->SetFlag(MSG_FOLDER_FLAG_TEMPLATES);
 #endif 
   }
@@ -352,7 +352,6 @@ NS_IMETHODIMP nsMsgLocalMailFolder::ParseFolder(nsIMsgWindow *aMsgWindow, nsIUrl
 	nsMsgMailboxParser *parser = new nsMsgMailboxParser;
 	if(!parser)
 		return NS_ERROR_OUT_OF_MEMORY;
-  
 	rv = mailboxService->ParseMailbox(aMsgWindow, path, parser, listener, nsnull);
 
 	return rv;
@@ -842,7 +841,7 @@ nsMsgLocalMailFolder::CreateSubfolder(const PRUnichar *folderName, nsIMsgWindow 
 			//Now let's create the actual new folder
 			rv = AddSubfolder(&folderNameStr, getter_AddRefs(child));
 			if (child)
-				child->SetName(folderNameStr.get());
+				child->SetPrettyName(folderNameStr.get());  //because empty trash will create a new trash folder
             unusedDB->SetSummaryValid(PR_TRUE);
             unusedDB->Close(PR_TRUE);
         }
@@ -983,33 +982,27 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EmptyTrash(nsIMsgWindow *msgWindow,
         rv = trashFolder->GetParentMsgFolder(getter_AddRefs(parentFolder));
         if (NS_SUCCEEDED(rv) && parentFolder)
         {
-          nsXPIDLString idlFolderName;
-          rv = trashFolder->GetName(getter_Copies(idlFolderName));
-          if (NS_SUCCEEDED(rv))
-          {
-            nsCOMPtr <nsIDBFolderInfo> dbFolderInfo;
-            nsCOMPtr <nsIDBFolderInfo> transferInfo;
-            nsCOMPtr <nsIMsgDatabase> db;
-            trashFolder->GetDBFolderInfoAndDB(getter_AddRefs(dbFolderInfo), getter_AddRefs(db));
-            if (dbFolderInfo)
-              dbFolderInfo->GetTransferInfo(getter_AddRefs(transferInfo));
-            dbFolderInfo = nsnull;
+          nsCOMPtr <nsIDBFolderInfo> dbFolderInfo;
+          nsCOMPtr <nsIDBFolderInfo> transferInfo;
+          nsCOMPtr <nsIMsgDatabase> db;
+          trashFolder->GetDBFolderInfoAndDB(getter_AddRefs(dbFolderInfo), getter_AddRefs(db));
+          if (dbFolderInfo)
+            dbFolderInfo->GetTransferInfo(getter_AddRefs(transferInfo));
+          dbFolderInfo = nsnull;
 
-            nsString folderName(idlFolderName);
-            trashFolder->SetParent(nsnull);
-            parentFolder->PropagateDelete(trashFolder, PR_TRUE, msgWindow);
-            parentFolder->CreateSubfolder(folderName.get(),nsnull);
-            nsCOMPtr<nsIMsgFolder> newTrashFolder;
-            rv = GetTrashFolder(getter_AddRefs(newTrashFolder));
-            if (NS_SUCCEEDED(rv) && newTrashFolder)
-              newTrashFolder->GetMsgDatabase(msgWindow, getter_AddRefs(db));
+          trashFolder->SetParent(nsnull);
+          parentFolder->PropagateDelete(trashFolder, PR_TRUE, msgWindow);
+          parentFolder->CreateSubfolder(NS_LITERAL_STRING("Trash").get(),nsnull);
+          nsCOMPtr<nsIMsgFolder> newTrashFolder;
+          rv = GetTrashFolder(getter_AddRefs(newTrashFolder));
+          if (NS_SUCCEEDED(rv) && newTrashFolder)
+            newTrashFolder->GetMsgDatabase(msgWindow, getter_AddRefs(db));
             
-            if (transferInfo && db)
-            {
-              db->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
-              if (dbFolderInfo)
-                dbFolderInfo->InitFromTransferInfo(transferInfo);
-            }
+          if (transferInfo && db)
+          {
+            db->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
+            if (dbFolderInfo)
+              dbFolderInfo->InitFromTransferInfo(transferInfo);
           }
         }
     }
@@ -3256,44 +3249,52 @@ NS_IMETHODIMP
 nsMsgLocalMailFolder::SetFlagsOnDefaultMailboxes(PRUint32 flags)
 {
   if (flags & MSG_FOLDER_FLAG_INBOX)
-    setSubfolderFlag(kInboxName, MSG_FOLDER_FLAG_INBOX);
+    setSubfolderFlag("Inbox", MSG_FOLDER_FLAG_INBOX);
 
   if (flags & MSG_FOLDER_FLAG_SENTMAIL)
-    setSubfolderFlag(kSentName, MSG_FOLDER_FLAG_SENTMAIL);
+    setSubfolderFlag("Sent", MSG_FOLDER_FLAG_SENTMAIL);
   
   if (flags & MSG_FOLDER_FLAG_DRAFTS)
-    setSubfolderFlag(kDraftsName, MSG_FOLDER_FLAG_DRAFTS);
+    setSubfolderFlag("Drafts", MSG_FOLDER_FLAG_DRAFTS);
 
   if (flags & MSG_FOLDER_FLAG_TEMPLATES)
-    setSubfolderFlag(kTemplatesName, MSG_FOLDER_FLAG_TEMPLATES);
+    setSubfolderFlag("Templates", MSG_FOLDER_FLAG_TEMPLATES);
   
   if (flags & MSG_FOLDER_FLAG_TRASH)
-    setSubfolderFlag(kTrashName, MSG_FOLDER_FLAG_TRASH);
+    setSubfolderFlag("Trash", MSG_FOLDER_FLAG_TRASH);
 
   if (flags & MSG_FOLDER_FLAG_QUEUE)
-    setSubfolderFlag(kUnsentName, MSG_FOLDER_FLAG_QUEUE);
+    setSubfolderFlag("Unsent Messages", MSG_FOLDER_FLAG_QUEUE);
 	
 	return NS_OK;
 }
 
 nsresult
-nsMsgLocalMailFolder::setSubfolderFlag(PRUnichar* aFolderName,
+nsMsgLocalMailFolder::setSubfolderFlag(const char *aFolderName,
                                        PRUint32 flags)
 {
 
   nsresult rv;
 
   nsCOMPtr<nsIFolder> folder;
-	rv = FindSubFolder(NS_ConvertUCS2toUTF8(aFolderName).get(), getter_AddRefs(folder));
+	rv = FindSubFolder(aFolderName, getter_AddRefs(folder));
   
-	if (NS_FAILED(rv)) return rv;
-	if (!folder) return NS_ERROR_FAILURE;
+	if (NS_FAILED(rv)) 
+    return rv;
+	if (!folder) 
+    return NS_ERROR_FAILURE;
   
  	nsCOMPtr<nsIMsgFolder> msgFolder = do_QueryInterface(folder);
-	if (!msgFolder) return NS_ERROR_FAILURE;
+	if (!msgFolder) 
+    return NS_ERROR_FAILURE;
     
 	rv = msgFolder->SetFlag(flags);
-	if (NS_FAILED(rv)) return rv;
+	if (NS_FAILED(rv)) 
+    return rv;
+
+  nsAutoString unicodeFolderName;
+  unicodeFolderName.AssignWithConversion(aFolderName);
+  msgFolder->SetPrettyName(unicodeFolderName.get());
 
   return NS_OK;
 }

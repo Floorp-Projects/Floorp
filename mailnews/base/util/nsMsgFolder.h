@@ -266,6 +266,7 @@ protected:
   nsresult GetWarnFilterChanged(PRBool *aVal);
   nsresult SetWarnFilterChanged(PRBool aVal);
   nsresult CreateCollationKey(const nsString &aSource,  PRUint8 **aKey, PRUint32 *aLength);
+
 protected:
   PRUint32 mFlags;
   nsWeakPtr mParent;     //This won't be refcounted for ownership reasons.
@@ -310,12 +311,12 @@ protected:
   static nsresult initializeStrings();
   static nsresult createCollationKeyGenerator();
 
-  static PRUnichar *kInboxName;
-  static PRUnichar *kTrashName;
-  static PRUnichar *kSentName;
-  static PRUnichar *kDraftsName;
-  static PRUnichar *kTemplatesName;
-  static PRUnichar *kUnsentName;
+  static PRUnichar *kLocalizedInboxName;
+  static PRUnichar *kLocalizedTrashName;
+  static PRUnichar *kLocalizedSentName;
+  static PRUnichar *kLocalizedDraftsName;
+  static PRUnichar *kLocalizedTemplatesName;
+  static PRUnichar *kLocalizedUnsentName;
   
   static nsIAtom* kTotalUnreadMessagesAtom;
   static nsIAtom* kBiffStateAtom;

@@ -584,13 +584,12 @@ function setDefaultCopiesAndFoldersPrefs(identity, server)
     if (protocolInfo.needToBuildSpecialFolderURIs)
     {
         var folderDelim = "/";
-        var sentFolderName =  gMessengerBundle.getString("sentFolderName");
-        var draftsFolderName =  gMessengerBundle.getString("draftsFolderName");
-        var templatesFolderName =  gMessengerBundle.getString("templatesFolderName");
 
-        identity.draftFolder = msgFolder.server.serverURI+ folderDelim + draftsFolderName;
-        identity.stationeryFolder = msgFolder.server.serverURI+ folderDelim + templatesFolderName;
-        identity.fccFolder = msgFolder.server.serverURI+ folderDelim + sentFolderName;
+        /* we use internal names known to everyone like Sent, Templates and Drafts */
+
+        identity.draftFolder = msgFolder.server.serverURI+ folderDelim + "Drafts";
+        identity.stationeryFolder = msgFolder.server.serverURI+ folderDelim + "Templates";
+        identity.fccFolder = msgFolder.server.serverURI+ folderDelim + "Sent";
     }
     else {
         // these hex values come from nsMsgFolderFlags.h

@@ -429,7 +429,7 @@ nsresult nsMsgDBFolder::ReadDBFolderInfo(PRBool force)
 #ifdef DEBUG_bienvenu
                 nsXPIDLString name;
                 GetName(getter_Copies(name));
-                NS_ASSERTION(Compare(name, NS_LITERAL_STRING("Trash")) || (mFlags & MSG_FOLDER_FLAG_TRASH), "lost trash flag");
+                NS_ASSERTION(Compare(name, kLocalizedTrashName) || (mFlags & MSG_FOLDER_FLAG_TRASH), "lost trash flag");
 #endif
                 mInitializedFromCache = PR_TRUE;
               }

@@ -1312,7 +1312,7 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
       if (hierarchyDelimiter != '/')
         nsImapUrl::UnescapeSlashes(NS_CONST_CAST(char*, folderName.get()));
       if (NS_SUCCEEDED(CreatePRUnicharStringFromUTF7(folderName.get(), getter_Copies(unicodeName))))
-        child->SetName(unicodeName);
+        child->SetPrettyName(unicodeName);
       // Call ConvertFolderName() and HideFolderName() to do special folder name
       // mapping and hiding, if configured to do so. For example, need to hide AOL's
       // 'RECYCLE_OUT' & convert a few AOL folder names. Regular imap accounts
