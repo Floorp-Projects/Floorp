@@ -40,18 +40,23 @@ static NS_DEFINE_CID(kFileLocatorCID,       NS_FILELOCATOR_CID);
 //static NS_DEFINE_CID(kPop3IncomingServerCID, NS_POP3INCOMINGSERVER_CID);
 //static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
     
+MOZ_DECL_CTOR_COUNTER(nsMsgMailSession);
 
 nsMsgMailSession::nsMsgMailSession():
   mRefCnt(0),
   m_accountManager(0),
   m_msgFolderCache(0)
 {
+	MOZ_COUNT_CTOR(nsMsgMailSession);
+
 	NS_INIT_REFCNT();
 }
 
 
 nsMsgMailSession::~nsMsgMailSession()
 {
+  MOZ_COUNT_DTOR(nsMsgMailSession);
+	
   if(m_accountManager)
   {
 //	  if (m_msgFolderCache)

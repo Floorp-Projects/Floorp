@@ -40,17 +40,24 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
+MOZ_DECL_CTOR_COUNTER(nsMsgIncomingServer);
+
 nsMsgIncomingServer::nsMsgIncomingServer():
     m_prefs(0),
     m_serverKey(0),
     m_rootFolder(0)
 {
+  MOZ_COUNT_CTOR(nsMsgIncomingServer);
+
   NS_INIT_REFCNT();
   m_serverBusy = PR_FALSE;
 }
 
 nsMsgIncomingServer::~nsMsgIncomingServer()
 {
+	
+	MOZ_COUNT_DTOR(nsMsgIncomingServer);
+
     if (m_prefs) nsServiceManager::ReleaseService(kPrefServiceCID,
                                                   m_prefs,
                                                   nsnull);

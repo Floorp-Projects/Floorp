@@ -38,6 +38,7 @@
 static NS_DEFINE_CID(kMsgIdentityCID, NS_MSGIDENTITY_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
+
 class nsMsgAccount : public nsIMsgAccount,
                      public nsIShutdownListener
 {
@@ -94,17 +95,23 @@ nsMsgAccount::QueryInterface(const nsIID& iid, void **result)
   return rv;
 }
 
+MOZ_DECL_CTOR_COUNTER(nsMsgAccount);
+
 nsMsgAccount::nsMsgAccount():
   m_accountKey(0),
   m_prefs(0),
   m_incomingServer(null_nsCOMPtr()),
   m_defaultIdentity(null_nsCOMPtr())
 {
+  MOZ_COUNT_CTOR(nsMsgAccount);
+
   NS_INIT_REFCNT();
 }
 
 nsMsgAccount::~nsMsgAccount()
 {
+  MOZ_COUNT_DTOR(nsMsgAccount);
+
   // release of servers an identites happen automatically
   // thanks to nsCOMPtrs and nsISupportsArray
   
