@@ -75,7 +75,7 @@ nsPrintSettingsWin::~nsPrintSettingsWin()
 {
   if (mDeviceName) nsMemory::Free(mDeviceName);
   if (mDriverName) nsMemory::Free(mDriverName);
-  if (mDevMode) free(mDevMode);
+  if (mDevMode) ::HeapFree(::GetProcessHeap(), 0, mDevMode);
 }
 
 /* [noscript] attribute charPtr deviceName; */
@@ -110,15 +110,24 @@ NS_IMETHODIMP nsPrintSettingsWin::GetDriverName(char * *aDriverName)
   return NS_OK;
 }
 
+void nsPrintSettingsWin::CopyDevMode(DEVMODE* aInDevMode, DEVMODE *& aOutDevMode)
+{
+  aOutDevMode = nsnull;
+  size_t size = aInDevMode->dmSize + aInDevMode->dmDriverExtra;
+  aOutDevMode = (LPDEVMODE)::HeapAlloc (::GetProcessHeap(), HEAP_ZERO_MEMORY, size);
+  if (aOutDevMode) {
+    memcpy(aOutDevMode, aInDevMode, size);
+  }
+
+}
+
 /* [noscript] attribute nsDevMode devMode; */
 NS_IMETHODIMP nsPrintSettingsWin::GetDevMode(DEVMODE * *aDevMode)
 {
   NS_ENSURE_ARG_POINTER(aDevMode);
 
   if (mDevMode) {
-    size_t size = sizeof(*mDevMode);
-    *aDevMode = (LPDEVMODE)malloc(size);
-    memcpy(*aDevMode, mDevMode, size);
+    CopyDevMode(mDevMode, *aDevMode);
   } else {
     *aDevMode = nsnull;
   }
@@ -128,14 +137,12 @@ NS_IMETHODIMP nsPrintSettingsWin::GetDevMode(DEVMODE * *aDevMode)
 NS_IMETHODIMP nsPrintSettingsWin::SetDevMode(DEVMODE * aDevMode)
 {
   if (mDevMode) {
-    free(mDevMode);
+    ::HeapFree(::GetProcessHeap(), 0, mDevMode);
     mDevMode = NULL;
   }
 
   if (aDevMode) {
-    size_t size = sizeof(*aDevMode);
-    mDevMode = (LPDEVMODE)malloc(size);
-    memcpy(mDevMode, aDevMode, size);
+    CopyDevMode(aDevMode, mDevMode);
   }
   return NS_OK;
 }
@@ -167,16 +174,14 @@ nsPrintSettingsWin& nsPrintSettingsWin::operator=(const nsPrintSettingsWin& rhs)
 
   // Use free because we used the native malloc to create the memory
   if (mDevMode) {
-    free(mDevMode);
+    ::HeapFree(::GetProcessHeap(), 0, mDevMode);
   }
 
   mDeviceName = rhs.mDeviceName?nsCRT::strdup(rhs.mDeviceName):nsnull;
   mDriverName = rhs.mDriverName?nsCRT::strdup(rhs.mDriverName):nsnull;
 
   if (rhs.mDevMode) {
-    size_t size = sizeof(*rhs.mDevMode);
-    mDevMode = (LPDEVMODE)malloc(size);
-    memcpy(mDevMode, rhs.mDevMode, size);
+    CopyDevMode(rhs.mDevMode, mDevMode);
   } else {
     mDevMode = nsnull;
   }

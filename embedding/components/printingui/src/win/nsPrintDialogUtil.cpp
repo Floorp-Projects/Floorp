@@ -780,21 +780,26 @@ static HGLOBAL CreateGlobalDevModeAndInit(LPTSTR aPrintName, nsIPrintSettings* a
     prtName.AssignWithConversion((char*)aPrintName);
 #endif
 
-    // Allocate a buffer of the correct size.
+    // Get the buffer size
     dwNeeded = ::DocumentProperties(gParentWnd, hPrinter, aPrintName, NULL, NULL, 0);
+    if (dwNeeded == 0) {
+      return NULL;
+    }
 
-    pNewDevMode = (LPDEVMODE)malloc(dwNeeded);
+    // Allocate a buffer of the correct size.
+    pNewDevMode = (LPDEVMODE)::HeapAlloc (::GetProcessHeap(), HEAP_ZERO_MEMORY, dwNeeded);
     if (!pNewDevMode) return NULL;
 
     hGlobalDevMode = (HGLOBAL)::GlobalAlloc(GHND, dwNeeded);
     if (!hGlobalDevMode) {
-      free(pNewDevMode);
+      ::HeapFree(::GetProcessHeap(), 0, pNewDevMode);
+      return NULL;
     }
 
     dwRet = ::DocumentProperties(gParentWnd, hPrinter, aPrintName, pNewDevMode, NULL, DM_OUT_BUFFER);
 
     if (dwRet != IDOK) {
-      free(pNewDevMode);
+      ::HeapFree(::GetProcessHeap(), 0, pNewDevMode);
       ::GlobalFree(hGlobalDevMode);
       ::ClosePrinter(hPrinter);
       return NULL;
@@ -813,7 +818,7 @@ static HGLOBAL CreateGlobalDevModeAndInit(LPTSTR aPrintName, nsIPrintSettings* a
       hGlobalDevMode = NULL;
     }
 
-    free(pNewDevMode);
+    ::HeapFree(::GetProcessHeap(), 0, pNewDevMode);
 
     ::ClosePrinter(hPrinter);
 
