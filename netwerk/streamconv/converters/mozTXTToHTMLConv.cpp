@@ -715,7 +715,8 @@ mozTXTToHTMLConv::GlyphHit(const PRUnichar * aInString, PRInt32 aInLength, PRBoo
         )
     )
   {
-    MOZ_TIMER_STOP(mGlyphHitTimer);
+    aOutputString.Append(outputHTML);
+    MOZ_TIMER_STOP(mGlyphHitTimer);    
     return PR_TRUE;
   }
   if (text0 == '+' || text1 == '+')
