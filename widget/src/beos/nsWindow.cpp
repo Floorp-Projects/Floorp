@@ -61,6 +61,7 @@
 #include <app/Message.h>
 #include <app/MessageRunner.h>
 #include <support/String.h>
+#include <Screen.h>
 
 #include <nsBeOSCursors.h>
 
@@ -96,6 +97,14 @@ static PRBool 			  gGotQuitShortcut = PR_FALSE;
 ////////////////////////////////////////////////////
 static BWindow           * gLastActiveWindow = NULL;
 static NS_DEFINE_IID(kIWidgetIID,       NS_IWIDGET_IID);
+
+
+// Used in contrain position.  Specifies how much of a window must remain on screen
+#define kWindowPositionSlop 20
+
+// BeOS does not provide this information, so we must hard-code it
+#define kWindowBorderWidth 5
+#define kWindowTitleBarHeight 24
 
 //-------------------------------------------------------------------------
 //
@@ -1027,7 +1036,45 @@ NS_METHOD nsWindow::IsVisible(PRBool & bState)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::ConstrainPosition(PRBool aAllowSlop, PRInt32 *aX, PRInt32 *aY)
 {
-	NS_WARNING("nsWindow::ConstrainPosition - not implemented");
+	if (mIsTopWidgetWindow && mView->Window()) {
+		BScreen screen;
+		// If no valid screen, just return
+		if (! screen.IsValid()) return NS_OK;
+		
+		BRect screen_rect = screen.Frame();
+		BRect win_bounds = mView->Window()->Frame();
+
+#ifdef DEBUG_CONSTRAIN_POSITION
+		printf("ConstrainPosition: allowSlop=%s, x=%d, y=%d\n\tScreen :", (aAllowSlop?"T":"F"),*aX,*aY);
+		screen_rect.PrintToStream();
+		printf("\tWindow: ");
+		win_bounds.PrintToStream();
+#endif
+		
+		if (aAllowSlop) {
+			if (*aX < kWindowPositionSlop - win_bounds.IntegerWidth() + kWindowBorderWidth)
+				*aX = kWindowPositionSlop - win_bounds.IntegerWidth() + kWindowBorderWidth;
+			else if (*aX > screen_rect.IntegerWidth() - kWindowPositionSlop - kWindowBorderWidth)
+				*aX = screen_rect.IntegerWidth() - kWindowPositionSlop - kWindowBorderWidth;
+				
+			if (*aY < kWindowPositionSlop - win_bounds.IntegerHeight() + kWindowTitleBarHeight)
+				*aY = kWindowPositionSlop - win_bounds.IntegerHeight() + kWindowTitleBarHeight;
+			else if (*aY > screen_rect.IntegerHeight() - kWindowPositionSlop - kWindowBorderWidth)
+				*aY = screen_rect.IntegerHeight() - kWindowPositionSlop - kWindowBorderWidth;
+				
+		} else {
+			
+			if (*aX < kWindowBorderWidth)
+				*aX = kWindowBorderWidth;
+			else if (*aX > screen_rect.IntegerWidth() - win_bounds.IntegerWidth() - kWindowBorderWidth)
+				*aX = screen_rect.IntegerWidth() - win_bounds.IntegerWidth() - kWindowBorderWidth;
+				
+			if (*aY < kWindowTitleBarHeight)
+				*aY = kWindowTitleBarHeight;
+			else if (*aY > screen_rect.IntegerHeight() - win_bounds.IntegerHeight() - kWindowBorderWidth)
+				*aY = screen_rect.IntegerHeight() - win_bounds.IntegerHeight() - kWindowBorderWidth;
+		}
+	}
 	return NS_OK;
 }
 
