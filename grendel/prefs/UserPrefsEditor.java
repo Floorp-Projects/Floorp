@@ -182,6 +182,7 @@ public class UserPrefsEditor
       fValues.put(kNameKey, fPrefs.getUserName());
       fValues.put(kOrganizationKey, fPrefs.getUserOrganization());
       fValues.put(kEmailAddressKey, fPrefs.getUserEmailAddress());
+      fValues.put(kSignatureKey, fPrefs.getSignatureFile());
 
       fPanel.initAll();
 
