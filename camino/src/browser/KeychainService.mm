@@ -1060,6 +1060,11 @@ nsresult
 FindUsernamePasswordFields(nsIDOMHTMLFormElement* inFormElement, nsIDOMHTMLInputElement** outUsername,
                             nsIDOMHTMLInputElement** outPassword, PRBool inStopWhenFound)
 {
+  PRBool autoCompleteOverride = PR_FALSE;
+  nsCOMPtr<nsIPrefBranch> pref(do_GetService("@mozilla.org/preferences-service;1"));
+  if (pref)
+    pref->GetBoolPref("wallet.crypto.autocompleteoverride", &autoCompleteOverride);
+  
   if ( !outUsername || !outPassword )
     return NS_ERROR_FAILURE;
   *outUsername = *outPassword = nsnull;
@@ -1068,7 +1073,7 @@ FindUsernamePasswordFields(nsIDOMHTMLFormElement* inFormElement, nsIDOMHTMLInput
   // "autocomplete=off" attribute on the form. 
   nsAutoString autocomplete;
   inFormElement->GetAttribute(NS_LITERAL_STRING("autocomplete"), autocomplete);
-  if ( autocomplete.EqualsIgnoreCase("off") )
+  if ( autocomplete.EqualsIgnoreCase("off") && !autoCompleteOverride )
     return NS_OK;
   
   //
@@ -1107,7 +1112,7 @@ FindUsernamePasswordFields(nsIDOMHTMLFormElement* inFormElement, nsIDOMHTMLInput
     bool isPassword = type.Equals(NS_LITERAL_STRING("password"), nsCaseInsensitiveStringComparator());
     inputElement->GetAttribute(NS_LITERAL_STRING("autocomplete"), autocomplete);
 
-    if((!isText && !isPassword) || autocomplete.EqualsIgnoreCase("off"))
+    if ((!isText && !isPassword) || (autocomplete.EqualsIgnoreCase("off")  && !autoCompleteOverride))
       continue;
 
     //
