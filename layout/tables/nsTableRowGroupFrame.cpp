@@ -788,12 +788,6 @@ nsTableRowGroupFrame::SplitRowGroup(nsIPresContext&          aPresContext,
         ((nsTableRowFrame *)rowFrame)->DidResize(aPresContext, aReflowState);
         aDesiredSize.height = desiredSize.height;
 
-        // XXX We expect it to not be complete; otherwise, we wouldn't even be
-        // calling this function?
-        // XXX I think the case where it is complete is when the row has cell
-        // frames that span across the row and into the rows that follow. That
-        // means its natural height is less than its actual height. Figure
-        // out what to do in that case...
         if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
 #ifdef NS_DEBUG
           // Verify it doesn't already have a next-in-flow. The reason it should
@@ -823,6 +817,19 @@ nsTableRowGroupFrame::SplitRowGroup(nsIPresContext&          aPresContext,
   
           // Push the continuing row frame and the frames that follow
           PushChildren(contRowFrame, rowFrame);
+          aStatus = NS_FRAME_NOT_COMPLETE;
+
+        } else {
+          // The row frame is complete. It may be the case that it's minimum
+          // height was greater than the available height we gave it
+          nsIFrame* nextRowFrame;
+
+          // Push the frame that follows
+          rowFrame->GetNextSibling(&nextRowFrame);
+          if (nextRowFrame) {
+            PushChildren(nextRowFrame, rowFrame);
+          }
+          aStatus = nextRowFrame ? NS_FRAME_NOT_COMPLETE : NS_FRAME_COMPLETE;
         }
 
       } else {
@@ -849,14 +856,6 @@ nsTableRowGroupFrame::SplitRowGroup(nsIPresContext&          aPresContext,
             // - add the continuing frame to the row frame we're pushing
             nsIFrame*         parentFrame;
             nsPoint           firstRowOrigin, lastRowOrigin;
-/*
-            nsSize            rowFrameSize;
-            nsSize            availSize(aReflowState.availableWidth,
-                                        aReflowState.availableHeight);
-            nsHTMLReflowState rowReflowState(aPresContext, aReflowState, rowFrame,
-                                             availSize, eReflowReason_Resize);
-
-*/
             nsReflowStatus    status;
 
             // Ask the cell frame's parent to reflow it to the height of all the
@@ -887,10 +886,10 @@ nsTableRowGroupFrame::SplitRowGroup(nsIPresContext&          aPresContext,
 
         // Push this row frame and those that follow to the next-in-flow
         PushChildren(rowFrame, prevRowFrame);
+        aStatus = NS_FRAME_NOT_COMPLETE;
         aDesiredSize.height = bounds.y;
       }
 
-      aStatus = NS_FRAME_NOT_COMPLETE;
       break;
     }
 
