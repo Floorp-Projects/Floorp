@@ -2436,7 +2436,6 @@ js_AllocTryNotes(JSContext *cx, JSCodeGenerator *cg)
     if (!cg->treeContext.tryCount)
 	return JS_TRUE;
 
-    PR_ASSERT(!cg->tryBase);
     size = (cg->treeContext.tryCount + 1) * sizeof(JSTryNote);
     PR_ARENA_ALLOCATE(cg->tryBase, &cx->tempPool, size);
     if (!cg->tryBase)
@@ -2451,7 +2450,7 @@ js_NewTryNote(JSContext *cx, JSCodeGenerator *cg, ptrdiff_t start,
 {
     JSTryNote *tn;
 
-    PR_ASSERT(cg->tryBase <= cg->tryNext && cg->tryNext < cg->tryLimit);
+    PR_ASSERT(cg->tryBase <= cg->tryNext);
     tn = cg->tryNext++;
     tn->start = start;
     tn->length = end - start;

@@ -96,7 +96,6 @@ struct JSCodeGenerator {
     uintN           noteCount;      /* number of source notes so far */
     ptrdiff_t       lastNoteOffset; /* code offset for last source note */
     JSTryNote       *tryBase;       /* first exception handling note */
-    JSTryNote       *tryLimit;      /* pointer to one-past-end note */
     JSTryNote       *tryNext;       /* next available note */
 };
 
@@ -341,7 +340,7 @@ js_FinishTakingSrcNotes(JSContext *cx, JSCodeGenerator *cg);
 
 /*
  * Allocate cg->treeContext.tryCount notes (plus one for the end sentinel)
- * from cx->tempPool and set cg->tryBase/tryNext/tryLimit for exactly tryCount
+ * from cx->tempPool and set cg->tryBase/tryNext for exactly tryCount
  * js_NewTryNote calls.  The storage is freed by js_ResetCodeGenerator.
  */
 extern JSBool
