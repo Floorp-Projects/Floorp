@@ -1912,26 +1912,12 @@ DocumentViewerImpl::MakeWindow(nsIWidget* aParentWidget,
   if (NS_FAILED(rv))
     return rv;
 
-  nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(mContainer));
-  NS_ENSURE_TRUE(treeItem, NS_ERROR_FAILURE);
-  PRInt32 itemType;
-  nsContentType contentType = eContentTypeUI;
-  treeItem->GetItemType(&itemType);
-  if (itemType == nsIDocShellTreeItem::typeContent ||
-      itemType == nsIDocShellTreeItem::typeContentWrapper) {
-#ifdef MOZ_XUL
-    nsCOMPtr<nsIXULDocument> xulDoc(do_QueryInterface(mDocument));
-    if (!xulDoc)
-#endif
-      contentType = eContentTypeContent;
-  }
-
   // pass in a native widget to be the parent widget ONLY if the view hierarchy will stand alone.
   // otherwise the view will find its own parent widget and "do the right thing" to
   // establish a parent/child widget relationship
   rv = view->CreateWidget(kWidgetCID, nsnull,
                           containerView != nsnull ? nsnull : aParentWidget->GetNativeData(NS_NATIVE_WIDGET),
-                          PR_TRUE, PR_FALSE, contentType);
+                          PR_TRUE, PR_FALSE);
   if (NS_FAILED(rv))
     return rv;
 

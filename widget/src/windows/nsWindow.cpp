@@ -4115,10 +4115,13 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         break;
 
       case WM_KILLFOCUS:
-        WCHAR className[19];
-        nsToolkit::mGetClassName((HWND)wParam, className, 19);
-        if(wcscmp(className, WindowClassW()))
+        WCHAR className[kMaxClassNameLength];
+        nsToolkit::mGetClassName((HWND)wParam, className, kMaxClassNameLength);
+        if(wcscmp(className, kWClassNameUI) &&
+           wcscmp(className, kWClassNameContent) &&
+           wcscmp(className, kWClassNameGeneral)) {
           isMozWindowTakingFocus = PR_FALSE;
+        }
         if(gJustGotDeactivate) {
           gJustGotDeactivate = PR_FALSE;
           result = DispatchFocus(NS_DEACTIVATE, isMozWindowTakingFocus);
@@ -4218,10 +4221,13 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 
               if (pl.showCmd == SW_SHOWMINIMIZED) {
                 // Deactivate
-				WCHAR className[19];
-				nsToolkit::mGetClassName((HWND)wParam, className, 19);
-				if(wcscmp(className, WindowClassW()))
-				  isMozWindowTakingFocus = PR_FALSE;
+                WCHAR className[kMaxClassNameLength];
+                nsToolkit::mGetClassName((HWND)wParam, className, kMaxClassNameLength);
+                if (wcscmp(className, kWClassNameUI) &&
+                    wcscmp(className, kWClassNameContent) &&
+                    wcscmp(className, kWClassNameGeneral)) {
+                  isMozWindowTakingFocus = PR_FALSE;
+                }
                 gJustGotDeactivate = PR_FALSE;
                 result = DispatchFocus(NS_DEACTIVATE, isMozWindowTakingFocus);
               } else if (pl.showCmd == SW_SHOWNORMAL){

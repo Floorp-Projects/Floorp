@@ -74,11 +74,17 @@ class nsIMenuBar;
 #define COLOREF_2_NSRGB(color) \
             NS_RGB(GetRValue(color), GetGValue(color), GetBValue(color))
 
+/*
+ * ::: IMPORTANT :::
+ * External apps and drivers depend on window class names.
+ * For example, changing the window classes 
+ * could break touchpad scrolling or screen readers.
+ */
+const PRUint32 kMaxClassNameLength = 40;
 const LPCWSTR kWClassNameHidden     = L"MozillaHiddenWindowClass";
 const LPCWSTR kWClassNameUI         = L"MozillaUIWindowClass";
 const LPCWSTR kWClassNameContent    = L"MozillaContentWindowClass";
 const LPCWSTR kWClassNameGeneral    = L"MozillaWindowClass";
-
 const LPCSTR kClassNameHidden     = "MozillaHiddenWindowClass";
 const LPCSTR kClassNameUI         = "MozillaUIWindowClass";
 const LPCSTR kClassNameContent    = "MozillaContentWindowClass";
