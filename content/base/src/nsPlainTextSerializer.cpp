@@ -1014,6 +1014,12 @@ nsPlainTextSerializer::DoAddLeaf(PRInt32 aTag,
       nsAutoString str(aText);
       PRInt32 entity;
       parserService->HTMLConvertEntityToUnicode(str, &entity);
+      if (entity == -1 && 
+          !str.IsEmpty() &&
+          str.First() == (PRUnichar) '#') {
+        PRInt32 err = 0;
+        entity = str.ToInteger(&err, kAutoDetect);  // NCR
+      }
       nsAutoString temp(entity);
       Write(temp);
     }
