@@ -516,13 +516,13 @@ NS_IMETHODIMP nsFilePicker::GetFileURL(nsIFileURL **aFileURL)
 // Get the file + path
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsFilePicker::SetDefaultString(const char *aString)
+NS_IMETHODIMP nsFilePicker::SetDefaultString(const PRUnichar *aString)
 {
-  mDefault.AssignWithConversion(aString);
+  mDefault = aString;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFilePicker::GetDefaultString(char **aString)
+NS_IMETHODIMP nsFilePicker::GetDefaultString(PRUnichar **aString)
 {
   return NS_ERROR_FAILURE;
 }
