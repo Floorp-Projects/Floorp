@@ -61,10 +61,11 @@ static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
 
 // display list elements
 struct DisplayListElement2 {
-	nsIView*			mView;
-	nsRect				mBounds;
-	nsRect				mDirty;
-	PRUint32			mFlags;
+  nsIView*      mView;
+  nsRect        mBounds;
+  nscoord       mAbsX, mAbsY;
+  nsRect        mDirty;
+  PRUint32      mFlags;
 };
 
 inline nscoord max(nscoord x, nscoord y) { return (x > y ? x : y); }
@@ -804,7 +805,7 @@ void nsViewManager2::RenderDisplayListElement(DisplayListElement2* element, nsIR
 	if (!isTranslucent) {
 		aRC.PushState();
 
-		nscoord x = element->mBounds.x, y = element->mBounds.y;
+		nscoord x = element->mAbsX, y = element->mAbsY;
 		aRC.Translate(x, y);
 
 		nsRect drect(element->mDirty.x - x, element->mDirty.y - y,
@@ -823,11 +824,12 @@ void nsViewManager2::RenderDisplayListElement(DisplayListElement2* element, nsIR
 		
 		// compute the origin of the view, relative to the offscreen buffer, which has the
 		// same dimensions as mTranslucentArea.
-		nscoord viewX = element->mBounds.x - mTranslucentArea.x, viewY = element->mBounds.y - mTranslucentArea.y;
+    nscoord x = element->mAbsX, y = element->mAbsY;
+    nscoord viewX = x - mTranslucentArea.x, viewY = y - mTranslucentArea.y;
 
 		nsRect damageRect(element->mDirty);
 		damageRect.IntersectRect(damageRect, mTranslucentArea);
-		damageRect.x -= element->mBounds.x, damageRect.y -= element->mBounds.y;
+    damageRect.x -= x, damageRect.y -= y;
 		
 		if (element->mFlags & VIEW_TRANSLUCENT) {
 			nsIView* view = element->mView;
@@ -2478,6 +2480,8 @@ PRBool nsViewManager2::AddToDisplayList(PRInt32 *aIndex, nsIView *aView, nsRect 
   aView->GetClippedRect(clipRect, clipped, empty);  
   clipRect.x += aAbsX;
   clipRect.y += aAbsY;
+  element->mAbsX = aClipRect.x;
+  element->mAbsY = aClipRect.y;
 
 	element->mView = aView;
 	element->mDirty = aDirtyRect;
