@@ -134,11 +134,17 @@ protected:
   static PRBool     RenderingToPrinter(nsIRenderingContext &aContext);
 
   // Recreate internal image structure from updated image bits.
-  void EnsureCachedImage();
+  nsresult          EnsureCachedImage();
 
-  // Return alpha bit at position 'x' in the row pointed to by 'rowptr'.
-  inline PRUint8 GetBit(PRUint8* rowptr, PRUint32 x) {
+  // Get/Set/Clear alpha bit at position 'x' in the row pointed to by 'rowptr'.
+  inline PRUint8 GetAlphaBit(PRUint8* rowptr, PRUint32 x) {
     return (rowptr[x >> 3] & (1 << (7 - x & 0x7)));
+  }
+  inline void SetAlphaBit(PRUint8* rowptr, PRUint32 x) {
+    rowptr[x >> 3] |= (1 << (7 - x & 0x7));
+  }
+  inline void ClearAlphaBit(PRUint8* rowptr, PRUint32 x) {
+    rowptr[x >> 3] &= ~(1 << (7 - x & 0x7));
   }
 
   // Takes ownership of the given image and bitmap.  The CGImageRef is retained.

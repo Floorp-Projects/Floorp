@@ -41,10 +41,6 @@
 #include "nsRegionPool.h"
 #include "prmem.h"
 
-// NOTE: Define this to premultiply the alpha info into the image.  May result
-// in a performance boost.
-#define PERF_PREMULT_ALPHA
-
 // Number of bits for each component in a pixel.
 #define BITS_PER_COMPONENT  8
 // Number of components per pixel (i.e. as in ARGB).
@@ -159,11 +155,18 @@ nsImageMac::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,
   // 24-bit images are 8 bits per component; the alpha component is ignored
   mRowBytes = CalculateRowBytes(aWidth, aDepth == 24 ? 32 : aDepth);
   mImageBits = (PRUint8*) PR_Malloc(mHeight * mRowBytes * sizeof(PRUint8));
+  if (!mImageBits)
+    return NS_ERROR_OUT_OF_MEMORY;
 
   if (mAlphaDepth)
   {
     mAlphaRowBytes = CalculateRowBytes(aWidth, mAlphaDepth);
     mAlphaBits = (PRUint8*) PR_Malloc(mHeight * mAlphaRowBytes * sizeof(PRUint8));
+    if (!mAlphaBits) {
+      PR_Free(mImageBits);
+      mImageBits = nsnull;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
   }
 
   return NS_OK;
@@ -191,45 +194,49 @@ nsImageMac::ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags,
 }
 
 
-#ifdef PERF_PREMULT_ALPHA
 void DataProviderReleaseFunc(void *info, const void *data, size_t size)
 {
   PR_Free(NS_CONST_CAST(void*, data));
 }
-#endif
 
 
 // Create CGImageRef from image bits. Merge alpha bit into mImageBits, which
 // contains "place holder" for the alpha information.  Then, create the
 // CGImageRef for use in drawing.
-void nsImageMac::EnsureCachedImage()
+nsresult
+nsImageMac::EnsureCachedImage()
 {
-    // Only create cached image if mPendingUpdate is set.
+  // Only create cached image if mPendingUpdate is set.
   if (!mPendingUpdate)
-    return;
+    return NS_OK;
 
   if (mImage) {
     ::CGImageRelease(mImage);
     mImage = NULL;
   }
 
-#ifdef PERF_PREMULT_ALPHA
-  PRUint8* imgPremultARGBData = NULL;
-  if (mAlphaDepth == 8)
-    imgPremultARGBData = (PRUint8*) PR_Malloc(mWidth * mHeight * COMPS_PER_PIXEL);
-  PRUint8* tmp = imgPremultARGBData;
-#endif
+  PRUint8* imageData = NULL;  // data from which to create CGImage
+  CGImageAlphaInfo alphaInfo; // alpha info for CGImage
+  void (*releaseFunc)(void *info, const void *data, size_t size) = NULL;
 
   switch (mAlphaDepth)
   {
     case 8:
+    {
+      // For 8-bit alpha, we create our own storage, since we premultiply the
+      // alpha info into the image bits, but we still want to keep the original
+      // image bits (mImageBits).
+      imageData = (PRUint8*) PR_Malloc(mWidth * mHeight * COMPS_PER_PIXEL);
+      if (!imageData)
+        return NS_ERROR_OUT_OF_MEMORY;
+      PRUint8* tmp = imageData;
+
       for (PRInt32 y = 0; y < mHeight; y++)
       {
         PRInt32 rowStart = mRowBytes * y;
         PRInt32 alphaRowStart = mAlphaRowBytes * y;
         for (PRInt32 x = 0; x < mWidth; x++)
         {
-#ifdef PERF_PREMULT_ALPHA
           // Here we combine the alpha information with each pixel component,
           // creating an image with 'premultiplied alpha'.
           PRUint8 alpha = mAlphaBits[alphaRowStart + x];
@@ -238,16 +245,20 @@ void nsImageMac::EnsureCachedImage()
           FAST_DIVIDE_BY_255(*tmp++, mImageBits[offset + 1] * alpha);
           FAST_DIVIDE_BY_255(*tmp++, mImageBits[offset + 2] * alpha);
           FAST_DIVIDE_BY_255(*tmp++, mImageBits[offset + 3] * alpha);
-#else
-          // Copy the alpha information into the place holder in the image data.
-          mImageBits[rowStart + COMPS_PER_PIXEL * x] =
-                                            mAlphaBits[alphaRowStart + x];
-#endif
         }
       }
+
+      // The memory that we pass to the CGDataProvider needs to stick around as
+      // long as the provider does, and the provider doesn't get destroyed until
+      // the CGImage is destroyed.  So we have this small function which is
+      // called when the provider is destroyed.
+      releaseFunc = DataProviderReleaseFunc;
+      alphaInfo = kCGImageAlphaPremultipliedFirst;
       break;
+    }
 
     case 1:
+    {
       for (PRInt32 y = 0; y < mHeight; y++)
       {
         PRInt32 rowStart = mRowBytes * y;
@@ -256,41 +267,23 @@ void nsImageMac::EnsureCachedImage()
         {
           // Copy the alpha information into the place holder in the image data.
           mImageBits[rowStart + COMPS_PER_PIXEL * x] =
-                                            GetBit(alphaRow, x) ? 255 : 0;
+                                            GetAlphaBit(alphaRow, x) ? 255 : 0;
         }
       }
+
+      alphaInfo = kCGImageAlphaPremultipliedFirst;
+      imageData = mImageBits;
       break;
+    }
 
     case 0:
     default:
-      for (PRInt32 y = 0; y < mHeight; y++)
-      {
-        PRInt32 rowStart = mRowBytes * y;
-        for (PRInt32 x = 0; x < mWidth; x++)
-        {
-          // No alpha information
-          mImageBits[rowStart + COMPS_PER_PIXEL * x] = 255;
-        }
-      }
+    {
+      alphaInfo = kCGImageAlphaNoneSkipFirst;
+      imageData = mImageBits;
       break;
+    }
   }
-
-  PRUint8* imageData = mImageBits;
-  CGImageAlphaInfo alphaInfo = kCGImageAlphaFirst;
-  void (*releaseFunc)(void *info, const void *data, size_t size) = NULL;
-#ifdef PERF_PREMULT_ALPHA
-  if (mAlphaDepth == 8)
-  {
-    imageData = imgPremultARGBData;
-    alphaInfo = kCGImageAlphaPremultipliedFirst;
-
-    // The memory that we pass to the CGDataProvider needs to stick around as
-    // long as the provider does, and the provider doesn't get destroyed until
-    // the CGImage is destroyed.  So we have this small function which is called
-    // when the provider is destroyed.
-    releaseFunc = DataProviderReleaseFunc;
-  }
-#endif
 
   CGColorSpaceRef cs = ::CGColorSpaceCreateDeviceRGB();
   StColorSpaceReleaser csReleaser(cs);
@@ -303,6 +296,7 @@ void nsImageMac::EnsureCachedImage()
   ::CGDataProviderRelease(prov);
 
   mPendingUpdate = PR_FALSE;
+  return NS_OK;
 }
 
 
@@ -314,7 +308,8 @@ nsImageMac::Draw(nsIRenderingContext &aContext, nsIDrawingSurface* aSurface,
   if (mDecodedX2 < mDecodedX1 || mDecodedY2 < mDecodedY1)
     return NS_OK;
 
-  EnsureCachedImage();
+  nsresult rv = EnsureCachedImage();
+  NS_ENSURE_SUCCESS(rv, rv);
 
   PRInt32 srcWidth = aSWidth;
   PRInt32 srcHeight = aSHeight;
@@ -391,11 +386,14 @@ NS_IMETHODIMP
 nsImageMac::DrawToImage(nsIImage* aDstImage, PRInt32 aDX, PRInt32 aDY,
                         PRInt32 aDWidth, PRInt32 aDHeight)
 {
-  nsresult rv = NS_ERROR_FAILURE;
   nsImageMac* dest = NS_STATIC_CAST(nsImageMac*, aDstImage);
 
-  EnsureCachedImage();
-  dest->EnsureCachedImage();
+  nsresult rv = EnsureCachedImage();
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = dest->EnsureCachedImage();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = NS_ERROR_FAILURE;
 
   // Create image storage.  The storage is 'owned' by the CGImageRef created
   // below as 'newImageRef'; that is, the storage cannot be deleted until the
@@ -405,6 +403,8 @@ nsImageMac::DrawToImage(nsIImage* aDstImage, PRInt32 aDX, PRInt32 aDY,
   PRInt32 bytesPerRow = dest->GetLineStride();
   PRInt32 totalBytes = height * bytesPerRow;
   PRUint8* bitmap = (PRUint8*) PR_Malloc(totalBytes);
+  if (!bitmap)
+    return NS_ERROR_OUT_OF_MEMORY;
 
   CGColorSpaceRef cs = ::CGColorSpaceCreateDeviceRGB();
   StColorSpaceReleaser csReleaser(cs);
@@ -427,11 +427,7 @@ nsImageMac::DrawToImage(nsIImage* aDstImage, PRInt32 aDX, PRInt32 aDY,
 
     ::CGContextRelease(bitmapContext);
 
-#ifdef PERF_PREMULT_ALPHA
     CGImageAlphaInfo alphaInfo = ::CGImageGetAlphaInfo(dest->mImage);
-#else
-    CGImageAlphaInfo alphaInfo = kCGImageAlphaFirst;
-#endif
 
     // create a new image from the combined bitmap
     CGDataProviderRef prov = ::CGDataProviderCreateWithData(NULL, bitmap,
@@ -480,9 +476,9 @@ nsImageMac::AdoptImage(CGImageRef aNewImage, PRUint8* aNewBitmap)
 nsresult
 nsImageMac::Optimize(nsIDeviceContext* aContext)
 {
-  EnsureCachedImage();
+  nsresult rv = EnsureCachedImage();
+  NS_ENSURE_SUCCESS(rv, rv);
 
-#ifdef PERF_PREMULT_ALPHA
   // We cannot delete the bitmap data from which mImage was created;  the data
   // needs to stick around at least as long as the mImage is valid.
   // mImageBits is used by all images, except those that have mAlphaDepth == 8
@@ -491,7 +487,6 @@ nsImageMac::Optimize(nsIDeviceContext* aContext)
     PR_Free(mImageBits);
     mImageBits = NULL;
   }
-#endif
 
   // mAlphaBits is not really used any more after EnsureCachedImage is called,
   // since it's data is merged into mImageBits.
@@ -512,31 +507,101 @@ nsImageMac::LockImagePixels(PRBool aMaskPixels)
   if (!mOptimized)
     return NS_OK;
 
-  // Regenerate mImageBits by drawing mImage into bitmap context.
-  // We only need do this if it was destroyed by Optimize().
-  if (!mImageBits)
-  {
-    mImageBits = (PRUint8*) PR_Malloc(mHeight * mRowBytes);
+  // Need to recreate mAlphaBits and/or mImageBits.  We do so by drawing the
+  // CGImage into a bitmap context.  Afterwards, 'imageBits' contains the
+  // image data with premultiplied alpha (if applicable).
+  PRUint8* imageBits = (PRUint8*) PR_Malloc(mHeight * mRowBytes);
+  if (!imageBits)
+    return NS_ERROR_OUT_OF_MEMORY;
+  CGColorSpaceRef cs = ::CGColorSpaceCreateDeviceRGB();
+  StColorSpaceReleaser csReleaser(cs);
+  CGContextRef bitmapContext =
+      ::CGBitmapContextCreate(imageBits, mWidth, mHeight, BITS_PER_COMPONENT,
+                              mRowBytes, cs, kCGImageAlphaPremultipliedFirst);
+  if (!bitmapContext) {
+    PR_Free(imageBits);
+    return NS_ERROR_FAILURE;
+  }
 
-    CGColorSpaceRef cs = ::CGColorSpaceCreateDeviceRGB();
-    StColorSpaceReleaser csReleaser(cs);
-    CGContextRef bitmapContext;
-    bitmapContext = ::CGBitmapContextCreate(mImageBits, mWidth, mHeight,
-                                            BITS_PER_COMPONENT, mRowBytes, cs,
-                                            kCGImageAlphaNoneSkipFirst);
+  // clear the bitmap context & draw mImage into it
+  CGRect drawRect = ::CGRectMake(0, 0, mWidth, mHeight);
+  ::CGContextClearRect(bitmapContext, drawRect);
+  ::CGContextDrawImage(bitmapContext, drawRect, mImage);
+  ::CGContextRelease(bitmapContext);
 
-    if (bitmapContext != NULL)
-    {
-      CGRect drawRect = ::CGRectMake(0, 0, mWidth, mHeight);
+  // 'imageBits' now contains the image and (possibly) alpha bits for image.
+  // Now we need to separate them out.
 
-      // clear the bitmap context
-      ::CGContextClearRect(bitmapContext, drawRect);
-
-      ::CGContextDrawImage(bitmapContext, drawRect, mImage);
-      ::CGContextRelease(bitmapContext);
+  if (mAlphaDepth) {
+    // Only need to worry about alpha for mAlphaDepth == 1 or 8.
+    mAlphaBits = (PRUint8*) PR_Malloc(mHeight * mAlphaRowBytes *
+                                      sizeof(PRUint8));
+    if (!mAlphaBits) {
+      PR_Free(imageBits);
+      return NS_ERROR_OUT_OF_MEMORY;
     }
   }
 
+  switch (mAlphaDepth)
+  {
+    case 8:
+    {
+      // Need to recreate mImageBits for mAlphaDepth == 8 only.
+      // See comments nsImageMac::Optimize().
+      PRUint8* tmp = imageBits;
+      mImageBits = (PRUint8*) PR_Malloc(mHeight * mRowBytes * sizeof(PRUint8));
+      if (!mImageBits) {
+        PR_Free(mAlphaBits);
+        mAlphaBits = nsnull;
+        PR_Free(imageBits);
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+
+      // split the alpha bits and image bits into their own structure
+      for (PRInt32 y = 0; y < mHeight; y++)
+      {
+        PRInt32 rowStart = mRowBytes * y;
+        PRInt32 alphaRowStart = mAlphaRowBytes * y;
+        for (PRInt32 x = 0; x < mWidth; x++)
+        {
+          PRUint8 alpha = *tmp++;
+          mAlphaBits[alphaRowStart + x] = alpha;
+          PRUint32 offset = rowStart + COMPS_PER_PIXEL * x;
+          mImageBits[offset + 1] = ((PRUint32) *tmp++) * 255 / alpha;
+          mImageBits[offset + 2] = ((PRUint32) *tmp++) * 255 / alpha;
+          mImageBits[offset + 3] = ((PRUint32) *tmp++) * 255 / alpha;
+        }
+      }
+      break;
+    }
+
+    // mImageBits still exists for mAlphaDepth == 1 or mAlphaDepth == 0,
+    // since the bits are owned by the CGImageRef.  So the only thing to
+    // do is to recreate the alpha bits for mAlphaDepth == 1.
+
+    case 1:
+    {
+      // recreate the alpha bits structure
+      for (PRInt32 y = 0; y < mHeight; y++)
+      {
+        PRInt32 rowStart = mRowBytes * y;
+        PRUint8* alphaRow = mAlphaBits + mAlphaRowBytes * y;
+        for (PRInt32 x = 0; x < mWidth; x++)
+        {
+          if (imageBits[rowStart + COMPS_PER_PIXEL * x])
+            SetAlphaBit(alphaRow, x);
+          else
+            ClearAlphaBit(alphaRow, x);
+        }
+      }
+    }
+
+    case 0:
+    default:
+      break;
+  }
+
+  PR_Free(imageBits);
   return NS_OK;
 }
 
@@ -782,6 +847,8 @@ nsImageMac::DrawTileQuickly(nsIRenderingContext &aContext,
   PRUint32 bitmapRowBytes = tiledCols * mRowBytes;
   PRUint32 totalBytes = bitmapHeight * bitmapRowBytes;
   PRUint8* bitmap = (PRUint8*) PR_Malloc(totalBytes);
+  if (!bitmap)
+    return NS_ERROR_OUT_OF_MEMORY;
 
   CGContextRef bitmapContext;
   bitmapContext = ::CGBitmapContextCreate(bitmap, bitmapWidth, bitmapHeight,
@@ -904,12 +971,12 @@ NS_IMETHODIMP nsImageMac::DrawTile(nsIRenderingContext &aContext,
                                    PRInt32 aPadX, PRInt32 aPadY,
                                    const nsRect &aTileRect)
 {
-  EnsureCachedImage();
+  nsresult rv = EnsureCachedImage();
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (mDecodedX2 < mDecodedX1 || mDecodedY2 < mDecodedY1)
     return NS_OK;
 
-  nsresult rv = NS_ERROR_FAILURE;
 #ifdef USE_CGPATTERN_TILING
   if (nsRenderingContextMac::OnJaguar())
   {
@@ -947,20 +1014,16 @@ NS_IMETHODIMP nsImageMac::DrawTile(nsIRenderingContext &aContext,
     ::CGContextFillRect(context, tileRect);
     surface->EndQuartzDrawing(context);
 
-    rv = NS_OK;
+    return NS_OK;
   }
-  else
 #endif /* USE_CGPATTERN_TILING */
-  {
-    // use the manual methods of tiling
 
-    if (!aPadX && !aPadY)
-      rv = DrawTileQuickly(aContext, aSurface, aSXOffset, aSYOffset, aTileRect);
+  // use the manual methods of tiling
 
-    if (NS_FAILED(rv))
-      rv = SlowTile(aContext, aSurface, aSXOffset, aSYOffset, aPadX, aPadY,
-                    aTileRect);
+  if (!aPadX && !aPadY) {
+    return DrawTileQuickly(aContext, aSurface, aSXOffset, aSYOffset, aTileRect);
   }
 
-  return rv;
+  return SlowTile(aContext, aSurface, aSXOffset, aSYOffset, aPadX, aPadY,
+                  aTileRect);
 }
