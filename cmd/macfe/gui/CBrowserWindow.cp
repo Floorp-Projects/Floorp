@@ -353,7 +353,9 @@ void CBrowserWindow::FindCommandStatus(
 				inCommand == cmd_ToggleLocationBar ||
 				inCommand == cmd_Reload ||
 				inCommand == cmd_LoadImages ||
-				inCommand == cmd_Stop
+				inCommand == cmd_Stop ||
+				inCommand == cmd_FontLarger ||
+				inCommand == cmd_FontSmaller
 #ifdef EDITOR
 				||
 				inCommand == cmd_EditFrameSet ||
@@ -403,6 +405,8 @@ void CBrowserWindow::FindCommandStatus(
 		case cmd_MailDocument:
 		case cmd_LoadImages:
 		case cmd_Reload:
+		case cmd_FontLarger:
+		case cmd_FontSmaller:
 		{
 			// Need to be very careful what gets delegated here, in order to aviod infinite
 			// recursion a la bug #313498.  Handling the command status in CBrowserView is not
@@ -570,6 +574,8 @@ Boolean	CBrowserWindow::ObeyCommand(
 			case cmd_MailDocument:
 			case cmd_LoadImages:
 			case cmd_FTPUpload:
+			case cmd_FontLarger:
+			case cmd_FontSmaller:
 				{
 					// Delegate this to the view.
 					GetHTMLView()->ObeyCommand(inCommand, ioParam);
@@ -1946,8 +1952,8 @@ CBrowserWindow :: ClosePopdownTreeView ( )
 void
 CBrowserWindow :: OpenDockedTreeView ( HT_Resource inTopNode )
 {
-	mNavCenterParent->BuildHTPane ( inTopNode );
 	mNavCenterParent->NavCenterShelf().SetShelfState(true, NULL);
+	mNavCenterParent->BuildHTPane ( inTopNode );
 
 } // OpenDockedTreeView
 
