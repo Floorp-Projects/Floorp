@@ -1414,3 +1414,4 @@ nsZipItem::GetModTime()
 
 	return nsprstr;
 }
+
