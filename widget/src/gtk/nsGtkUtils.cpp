@@ -28,6 +28,9 @@
 #include <gdk/gdkx.h>
 #include <gdk/gdkprivate.h>
 
+#ifdef NEED_USLEEP_PROTOTYPE
+extern int usleep(useconds_t);
+#endif
 #if defined(__osf__) && !defined(_XOPEN_SOURCE_EXTENDED)
 /*
 ** DEC's compiler requires _XOPEN_SOURCE_EXTENDED to be defined in
