@@ -32,8 +32,6 @@ ShowWelcomeWin(void)
 {
 	Str255 next;
 	Str255 back;
-	Rect sbRect;
-	int sbWidth;
 	
 	GrafPtr	oldPort;
 	GetPort(&oldPort);
@@ -43,85 +41,65 @@ ShowWelcomeWin(void)
 		SetPort(gWPtr);
 
 		gCurrWin = kWelcomeID; 
-		/* gControls->ww = (WelcWin *) NewPtrClear(sizeof(WelcWin)); */
 	
 		GetIndString(next, rStringList, sNextBtn);
 		GetIndString(back, rStringList, sBackBtn);
-	
-		gControls->ww->scrollBar = GetNewControl( rLicScrollBar, gWPtr);
-		gControls->ww->welcBox = GetNewControl( rLicBox, gWPtr);
 
-		if(gControls->ww->scrollBar && gControls->ww->welcBox)
-		{
-			HLock( (Handle) gControls->ww->scrollBar);
-			sbRect = (*(gControls->ww->welcBox))->contrlRect;
-				
-			sbWidth = (*(gControls->ww->scrollBar))->contrlRect.right -
-					  (*(gControls->ww->scrollBar))->contrlRect.left;
-		
-			(*(gControls->ww->scrollBar))->contrlRect.right = sbRect.right + kScrollBarPad;
-			(*(gControls->ww->scrollBar))->contrlRect.left = sbRect.right + kScrollBarPad - 
-														 sbWidth;
-			(*(gControls->ww->scrollBar))->contrlRect.top = sbRect.top - kScrollBarPad;
-			(*(gControls->ww->scrollBar))->contrlRect.bottom = sbRect.bottom + kScrollBarPad;
-			HUnlock( (Handle) gControls->ww->scrollBar);
-		}
-		InitWelcTxt();
-
-		ShowNavButtons( back, next);
+        ShowWelcomeMsg();
+		ShowNavButtons(back, next);
 		if (gControls->cfg->bReadme)
 			ShowReadmeButton();
-		ShowControl( gControls->ww->scrollBar);
-		ShowControl( gControls->ww->welcBox);
-		ShowTxt();
-		InitScrollBar( gControls->ww->scrollBar);
 	}
 	
 	SetPort(oldPort);
 }
 
 void
-InitWelcTxt(void)
-{
-	Rect 		viewRect, destRect;
-	long		welcStrLen;
-	int 		i;
-	
-	/* TE specific init */
-	HLock( (Handle) gControls->ww->welcBox);
-	viewRect = (*(gControls->ww->welcBox))->contrlRect;	
-	HUnlock( (Handle) gControls->ww->welcBox);
-
-	destRect.left = viewRect.left;
-		viewRect.right = (*(gControls->ww->scrollBar))->contrlRect.left; 
-	destRect.right = viewRect.right - 1;
-	destRect.top = viewRect.top;
-	destRect.bottom = viewRect.bottom * kNumWelcScrns; /* XXX: hack */
-
-	TextFont(applFont);
-	TextFace(normal);
-	TextSize(12);
-	
-	gControls->ww->welcTxt = TENew( &destRect, &viewRect);
-	if (!gControls->ww->welcTxt)
-	{
-		ErrorHandler(eMem);
-		return;
+ShowWelcomeMsg(void)
+{    
+    int welcStrLen, i;
+    
+    for (i = 0; i < kNumWelcMsgs; i++)
+    {
+        gControls->ww->welcMsgCntl[i] = GetNewControl(rWelcMsgTextbox+i, gWPtr);
+    	if (!gControls->ww->welcMsgCntl)
+    	{
+    		ErrorHandler(eMem);
+    		return;
+    	}
 	}
+    
+    ControlFontStyleRec fontStyle;
 
-	for (i=0; i<kNumWelcMsgs; i++)
-	{
-		HLock(gControls->cfg->welcMsg[i]);
-		welcStrLen = strlen( *gControls->cfg->welcMsg[i]);
-		TEInsert( *gControls->cfg->welcMsg[i], welcStrLen, gControls->ww->welcTxt);
-		HUnlock(gControls->cfg->welcMsg[i]);
-		TEInsert( "\r\r", 2, gControls->ww->welcTxt);
+    fontStyle.flags =  kControlUseSizeMask | kControlUseFaceMask;
+    fontStyle.size = 20;
+    fontStyle.style = bold;
+    SetControlFontStyle(gControls->ww->welcMsgCntl[0], &fontStyle);
+
+    HLock(gControls->cfg->welcMsg[0]);
+    welcStrLen = strlen(*gControls->cfg->welcMsg[0]);
+    HUnlock(gControls->cfg->welcMsg[0]);
+    SetControlData(gControls->ww->welcMsgCntl[0], kControlNoPart, 
+        kControlStaticTextTextTag, welcStrLen, (Ptr)*gControls->cfg->welcMsg[0]); 
+    
+    fontStyle.flags =  kControlUseSizeMask;
+    fontStyle.size = 12;
+
+    for (i = 1; i < kNumWelcMsgs; i++)
+    {
+        SetControlFontStyle(gControls->ww->welcMsgCntl[i], &fontStyle);
+
+        HLock(gControls->cfg->welcMsg[i]);
+        welcStrLen = strlen(*gControls->cfg->welcMsg[i]);
+        HUnlock(gControls->cfg->welcMsg[i]);
+        SetControlData(gControls->ww->welcMsgCntl[i], kControlNoPart, 
+            kControlStaticTextTextTag, welcStrLen, (Ptr)*gControls->cfg->welcMsg[i]); 
+    }  
+
+    for (i = 0; i < kNumWelcMsgs; i++)
+    {
+	    ShowControl(gControls->ww->welcMsgCntl[i]);
 	}
-	
-	TextFont(systemFont);
-	TextSize(12);
-	
-	TESetAlignment(teFlushDefault, gControls->ww->welcTxt);
 }
 
 void 
@@ -129,59 +107,14 @@ InWelcomeContent(EventRecord* evt, WindowPtr wCurrPtr)
 {	
 	Point 			localPt;
 	Rect			r;
-	short 			code, value;
 	ControlPartCode	part;
-	ControlHandle	scrollBar;
-	ControlActionUPP	scrollActionFunctionUPP;
 	GrafPtr			oldPort;
 	
 	GetPort(&oldPort);
 	SetPort(wCurrPtr);
 	localPt = evt->where;
 	GlobalToLocal( &localPt);
-	
-	code = FindControl(localPt, wCurrPtr, &scrollBar);
-	switch (code)
-	{
-		case kControlUpButtonPart:
-		case kControlDownButtonPart:
-		case kControlPageUpPart:
-		case kControlPageDownPart:
-			scrollActionFunctionUPP = NewControlActionProc((ProcPtr) DoScrollProc);
-			value = TrackControl(scrollBar, localPt, scrollActionFunctionUPP);
-			DisposeRoutineDescriptor(scrollActionFunctionUPP);
-			return;
 			
-		case kControlIndicatorPart:
-			value = GetControlValue(scrollBar);
-			code = TrackControl(scrollBar, localPt, nil);
-			if (code) 
-			{
-				value -= GetControlValue(scrollBar);
-				if (value) 
-				{
-					TEScroll(0, value * kScrollAmount, gControls->ww->welcTxt);
-				}
-			}
-			return;
-	}	
-			
-#if 0
-	HLock((Handle)gControls->backB);
-	r = (**(gControls->backB)).contrlRect;
-	HUnlock((Handle)gControls->backB);
-	if (PtInRect( localPt, &r))
-	{
-		part = TrackControl(gControls->backB, evt->where, NULL);
-		if (part)
-		{
-			KillControls(gWPtr);
-			ShowLicenseWin();
-			return;
-		}
-	}
-#endif
-	
 	HLock((Handle)gControls->nextB);			
 	r = (**(gControls->nextB)).contrlRect;
 	HUnlock((Handle)gControls->nextB);
@@ -191,7 +124,7 @@ InWelcomeContent(EventRecord* evt, WindowPtr wCurrPtr)
 		if (part)
 		{
 			KillControls(gWPtr);
-			ShowSetupTypeWin();
+			ShowLicenseWin();
 			return;
 		}
 	}
@@ -210,6 +143,20 @@ InWelcomeContent(EventRecord* evt, WindowPtr wCurrPtr)
 	}
 	
 	SetPort(oldPort);
+}
+
+void
+ShowCancelButton(void)
+{
+	Str255 cancelStr;
+	
+	GetIndString(cancelStr, rStringList, sCancel);
+	gControls->cancelB = GetNewControl(rCancelBtn, gWPtr);
+	if (gControls->cancelB != NULL)
+	{
+		SetControlTitle(gControls->cancelB, cancelStr);
+		ShowControl(gControls->cancelB);
+	}
 }
 
 void 
@@ -284,9 +231,6 @@ EnableWelcomeWin(void)
 	if (gControls->cfg->bReadme)
 		if (gControls->ww->readmeButton)
 			HiliteControl(gControls->ww->readmeButton, kEnableControl);
-
-	if(gControls->ww->scrollBar)
-		HiliteControl(gControls->ww->scrollBar, kEnableControl);
 }
 
 void
@@ -297,9 +241,6 @@ DisableWelcomeWin(void)
 	if (gControls->cfg->bReadme)
 		if (gControls->ww->readmeButton)
 			HiliteControl(gControls->ww->readmeButton, kDisableControl);
-			
-	if(gControls->ww->scrollBar)
-		HiliteControl(gControls->ww->scrollBar, kDisableControl);
 }
 
 OSErr LaunchAppOpeningDoc (Boolean running, FSSpec *appSpec, ProcessSerialNumber *psn,

@@ -27,38 +27,6 @@
  *   INI Parser
  *-----------------------------------------------------------*/
 
-pascal void *
-PullDownConfig(void *unused)
-{
-	short			vRefNum;
-	long			dirID;
-	OSErr 			err;
-	FSSpec			idiSpec;
-
-	SDISTRUCT		sdistruct;
-	Str255			pIDIfname;
-
-	ERR_CHECK_RET(GetCWD(&dirID, &vRefNum), (void*)0);
-	// XXX if we ever use this we need to pull down to "Installer Modules" now
-	
-	GetIndString(pIDIfname, rStringList, sConfigIDIName);
-	
-	/* get idi filepath */
-	ERR_CHECK_RET(FSMakeFSSpec(vRefNum, dirID, pIDIfname, &idiSpec), false);
-
-	/* populate SDI struct */
-	sdistruct.dwStructSize 	= sizeof(SDISTRUCT);
-	sdistruct.fsIDIFile 	= idiSpec;
-	sdistruct.dlDirVRefNum 	= vRefNum;
-	sdistruct.dlDirID 		= dirID;
-	sdistruct.hwndOwner    	= NULL;
-	
-	/* call SDI_NetInstall */
-	gInstFunc(&sdistruct);
-
-	return (void*)true;
-}
-
 void
 ParseConfig(void)
 { 	

@@ -125,11 +125,11 @@ void HandleKeyDown(EventRecord* evt)
 
 			switch(gCurrWin)
 			{
-				case kLicenseID:
+                case kWelcomeID:				
 					KillControls(gWPtr);
-					ShowWelcomeWin();
+					ShowLicenseWin();
 					return;
-				case kWelcomeID:				
+				case kLicenseID:
 					KillControls(gWPtr);
 					ShowSetupTypeWin();
 					return;
@@ -160,7 +160,7 @@ void HandleKeyDown(EventRecord* evt)
 					if (!gInstallStarted)
 					{	
 					    DisableNavButtons();
-					    ClearSiteSelector();
+					    ClearDownloadSettings();
 					    gInstallStarted = true;
 						SpawnSDThread(Install, &tid);
 					}
@@ -180,6 +180,7 @@ void HandleKeyDown(EventRecord* evt)
 		{
 			case 'Q':
 			case 'q':
+			case '.':
 				gDone = true;
 				break;
 				
@@ -230,8 +231,9 @@ void HandleUpdateEvt(EventRecord* evt)
 	
 		switch(gCurrWin)
 		{
-			case kLicenseID:
 			case kWelcomeID:
+			    break;
+            case kLicenseID:
 				ShowTxt();
 				break;
 			case kSetupTypeID:
@@ -333,18 +335,7 @@ void HandleOSEvt(EventRecord* evt)
 				
 				InvalRect(&gWPtr->portRect);
 			}	
-		case mouseMovedMessage:
-			switch(gCurrWin)
-			{
-				case kComponentsID:
-					MouseMovedInComponentsWin(evt);
-					break; 
-				case kAdditionsID:
-					MouseMovedInAdditionsWin(evt);
-					break;
-				default:
-					break;
-			}
+    	
 		default:
 			break;					
 	}
@@ -352,6 +343,9 @@ void HandleOSEvt(EventRecord* evt)
 
 void React2InContent(EventRecord* evt, WindowPtr wCurrPtr)
 {	
+    if (DidUserCancel(evt))
+        return;
+        
 	switch (gCurrWin)
 	{
 		case kLicenseID:
@@ -382,4 +376,35 @@ void React2InContent(EventRecord* evt, WindowPtr wCurrPtr)
 			gDone = true;
 			break;
 	}
+}
+
+Boolean
+DidUserCancel(EventRecord *evt)
+{
+    GrafPtr oldPort;
+    Boolean bUserCancelled = false;
+    Point localPt;
+    Rect r;
+    ControlPartCode	part;
+
+    GetPort(&oldPort);
+	SetPort(gWPtr);
+	localPt = evt->where;
+	GlobalToLocal(&localPt);
+	
+    HLock((Handle)gControls->cancelB);
+	r = (**(gControls->cancelB)).contrlRect;
+	HUnlock((Handle)gControls->cancelB);
+	if (PtInRect(localPt, &r))
+	{
+		part = TrackControl(gControls->cancelB, evt->where, NULL);
+		if (part)
+		{
+			gDone = true;  
+			bUserCancelled = true;
+	    }
+	}
+	
+    SetPort(oldPort);
+    return bUserCancelled;
 }

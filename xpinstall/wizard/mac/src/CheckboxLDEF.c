@@ -57,9 +57,7 @@ Draw(Boolean selected,Rect *cellRect,Cell theCell,SInt16 dataLen,
 	
 	if (dataLen > 0 && componentName)
 	{
-		EraseRect(cellRect);
 		Highlight(cellRect, selected);
-
 		SetRect(&nameRect, cellRect->left+20, cellRect->top,
 							cellRect->right, cellRect->bottom);
 		TETextBox((char*)componentName, dataLen, &nameRect, teFlushDefault);

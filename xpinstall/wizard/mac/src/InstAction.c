@@ -22,28 +22,34 @@
 
 #include "MacInstallWizard.h"
 
+#include "nsFTPConn.h"
+#include "nsHTTPConn.h"
 
 /*-----------------------------------------------------------*
  *   Install Action
  *-----------------------------------------------------------*/
 
 static Boolean bXPIsExisted = true;
+static long sCurrTotalDLSize = 0;
+
+// info for download progress callback
+static int sCurrComp = 0;
+static Handle sCurrFullPath = 0;
+static int sCurrFullPathLen = 0;
+static char *sCurrURL = 0;
+static time_t sCurrStartTime;  /* start of download of current file */
 
 pascal void* Install(void* unused)
 {	
 	short			vRefNum, srcVRefNum;
 	long			dirID, srcDirID, modulesDirID;
 	OSErr 			err;
-	FSSpec			idiSpec, coreFileSpec;
-#if MOZILLA == 0
-	FSSpec 			redirectSpec;
-	HRESULT			dlErr;
+	FSSpec			coreFileSpec;
+	short			dlErr;
 	short           siteIndex;
-#endif
 #ifdef MIW_DEBUG
 	FSSpec			tmpSpec;
 #endif /* MIW_DEBUG */
-	SDISTRUCT		sdistruct;
 	Str255			pIDIfname, pModulesDir;
 	StringPtr		coreFile = NULL;
 	THz				ourHZ = NULL;
@@ -97,71 +103,32 @@ pascal void* Install(void* unused)
 		GetIndString(pIDIfname, rStringList, sTempIDIName);
 	
 		/* preparing to download */
-		gSDDlg = true;
 		ourHZ = GetZone();
 		GetPort(&oldPort);
 
-#if MOZILLA == 0
-        HLock(gControls->cfg->redirect.subpath);
-		if (gControls->cfg->redirect.subpath && *(gControls->cfg->redirect.subpath))
-		{
-		    HUnlock(gControls->cfg->redirect.subpath);
-		    
-		    /* replace global URL from redirect.ini */
-		    if (DownloadRedirect(vRefNum, dirID, &redirectSpec))
-                ParseRedirect(&redirectSpec);
-		}
-		else
-		{
-	        HUnlock(gControls->cfg->redirect.subpath);
-	        
-		    /* otherwise if site selector exists, replace global URL with selected site */
-	        if (gControls->cfg->numSites > 0)
-	        {
-		        if (gControls->cfg->globalURL)
-		            DisposeHandle(gControls->cfg->globalURL);
-                gControls->cfg->globalURL = NewHandleClear(kValueMaxLen);
-                
-                siteIndex = gControls->opt->siteChoice - 1;
-	            HLock(gControls->cfg->globalURL);
-	            HLock(gControls->cfg->site[siteIndex].domain);
-	            strcpy(*(gControls->cfg->globalURL), *(gControls->cfg->site[siteIndex].domain));
-	            HUnlock(gControls->cfg->globalURL);
-	            HUnlock(gControls->cfg->site[siteIndex].domain);
-		    }
+	    /* otherwise if site selector exists, replace global URL with selected site */
+        if (gControls->cfg->numSites > 0)
+        {
+	        if (gControls->cfg->globalURL)
+	            DisposeHandle(gControls->cfg->globalURL);
+            gControls->cfg->globalURL = NewHandleClear(kValueMaxLen);
+            
+            siteIndex = gControls->opt->siteChoice - 1;
+            HLock(gControls->cfg->globalURL);
+            HLock(gControls->cfg->site[siteIndex].domain);
+            strcpy(*(gControls->cfg->globalURL), *(gControls->cfg->site[siteIndex].domain));
+            HUnlock(gControls->cfg->globalURL);
+            HUnlock(gControls->cfg->site[siteIndex].domain);
 	    }
-#endif /* MOZILLA == 0 */
 
-		/* generate idi */
-		if (!GenerateIDIFromOpt(pIDIfname, dirID, vRefNum, &idiSpec))
-		{
-			ErrorHandler(err);
-			return (void*) nil;
-		}		
-	
-		/* populate SDI struct */
-		sdistruct.dwStructSize 	= sizeof(SDISTRUCT);
-		sdistruct.fsIDIFile 	= idiSpec;
-		sdistruct.dlDirVRefNum 	= srcVRefNum;
-		sdistruct.dlDirID 		= srcDirID;
-		sdistruct.hwndOwner    	= NULL;
-	
-		/* call SDI_NetInstall */
-#if MOZILLA == 0	
-#if SDINST_IS_DLL == 1
-		dlErr = gInstFunc(&sdistruct);
-#else
-		dlErr = SDI_NetInstall(&sdistruct);
-#endif /* SDINST_IS_DLL */
+        InitDLProgControls();
+        dlErr = DownloadXPIs(srcVRefNum, srcDirID);
 		if (dlErr != 0)
 		{
-		    if (dlErr != 0x800704C7)
-			    ErrorHandler(dlErr);
-			else 
-			    gDone = true;
+		    ErrorHandler(dlErr);
 			return (void*) nil;
 		}
-#endif /* MOZILLA */
+        ClearDLProgControls();
 
 		SetPort(oldPort);
 	
@@ -179,10 +146,7 @@ pascal void* Install(void* unused)
 			SetPort(oldPort);
 		}
 		SetZone(ourHZ);
-		gSDDlg = false;
-	
-		FSpDelete(&idiSpec);
-	}
+    }
 	else
 		bCoreExists = true;
     /* otherwise core exists in cwd:InstallerModules, different from extraction location */
@@ -214,7 +178,7 @@ pascal void* Install(void* unused)
 					DisposePtr((Ptr)coreFile);
 				return (void*) nil;
 			}
-						
+		
 			/* run all .xpi's through XPInstall */
 			err = RunAllXPIs(srcVRefNum, srcDirID, vRefNum, dirID);
 			if (err!=noErr)
@@ -235,11 +199,9 @@ pascal void* Install(void* unused)
 	if (err == noErr && gControls->cfg->numRunApps > 0)
 		RunApps();
 	 
-#if MOZILLA == 0
-	/* cleanup downloaded .xpis */
+	// cleanup downloaded .xpis 
 	if (!gControls->opt->saveBits  && !bXPIsExisted)
-		DeleteXPIs(srcVRefNum, srcDirID);  /* "Installer Modules" folder location is supplied */
-#endif
+		DeleteXPIs(srcVRefNum, srcDirID);  // "Installer Modules" folder location is supplied 
 
 	/* wind down app */
 	gDone = true;
@@ -247,207 +209,397 @@ pascal void* Install(void* unused)
 	return (void*) 0;
 }
 
-#define GETRED_BUF_SIZE 512
-
-Boolean
-DownloadRedirect(short vRefNum, long dirID, FSSpecPtr redirectINI)
+long
+ComputeTotalDLSize(void)
 {
-	Boolean 	bSuccess = true;
-	char 		buf[GETRED_BUF_SIZE], *leaf = NULL;
-	FSSpec		getRedirectIDI;
-	short		refNum;
-	long		count;
-	SDISTRUCT	sdistruct;
-	StringPtr	pLeaf = NULL;
-	OSErr		err = noErr;
-		
-	/* generate IDI */
-	memset(buf, 0, GETRED_BUF_SIZE);
+    int i, compsDone, instChoice;
+    long totalDLSize = 0;
+    
+	compsDone = 0;
+	instChoice = gControls->opt->instChoice-1;
 	
-	/*
-	 [Netscape Install]
-	  no_ads=true
-	  silent=false
-	  confirm_install=true
-	  execution=false
-	*/
-	strcpy(buf, "[Netscape Install]\r");
-	strcat(buf, "no_ads=true\r");
-	strcat(buf, "silent=false\r");
-	strcat(buf, "confirm_install=true\r");
-	strcat(buf, "execution=false\r\r");
-	
-	/* [File0] */
-	strcat(buf, "[File0]\r");
-	strcat(buf, "desc=");
-	HLock(gControls->cfg->redirect.desc);
-	strcat(buf, *(gControls->cfg->redirect.desc));
-	HUnlock(gControls->cfg->redirect.desc);
-	strcat(buf, "\r");
-	
-	/* 1=URL */
-	strcat(buf, "1=");
+	// loop through 0 to kMaxComponents
+	for(i=0; i<kMaxComponents; i++)
+	{
+		// general test: if component in setup type
+		if ( (gControls->cfg->st[instChoice].comp[i] == kInSetupType) &&
+			 (compsDone < gControls->cfg->st[instChoice].numComps) )
+		{ 
+			// if custom and selected -or- not custom setup type
+			if ( ((instChoice == gControls->cfg->numSetupTypes-1) && 
+				  (gControls->cfg->comp[i].selected == true)) ||
+				 (instChoice < gControls->cfg->numSetupTypes-1) )
+			{    
+                totalDLSize += gControls->cfg->comp[i].size;
+                
+                compsDone++;
+            }
+        }
+		else if (compsDone >= gControls->cfg->st[instChoice].numComps)
+			break;  
+    }
+    
+    return totalDLSize;
+}
 
-    /* get domain of selected site */
-	HLock(gControls->cfg->site[gControls->opt->siteChoice-1].domain);
-	strcat(buf, *(gControls->cfg->site[gControls->opt->siteChoice-1].domain));
-    HUnlock(gControls->cfg->site[gControls->opt->siteChoice-1].domain);
+short
+DownloadXPIs(short destVRefNum, long destDirID)
+{
+    short rv = 0;
+    Handle dlPath;
+    short dlPathLen = 0;
+    int i, compsDone, instChoice;
+        
+    GetFullPath(destVRefNum, destDirID, "\p", &dlPathLen, &dlPath);
+    
+	compsDone = 0;
+	instChoice = gControls->opt->instChoice-1;
 	
-	/* tack on redirect subpath (usually just the file leaf name) */
-	HLock(gControls->cfg->redirect.subpath);
-	strcat(buf, *(gControls->cfg->redirect.subpath));
-	HUnlock(gControls->cfg->redirect.subpath);
-	strcat(buf, "\r");
-	
-	/* write out buffer to temp location */
-	err = FSMakeFSSpec(vRefNum, dirID, "\pGetRedirect.idi", &getRedirectIDI);
-	if (err == noErr)
-		FSpDelete(&getRedirectIDI);
-	err = FSpCreate(&getRedirectIDI, 'NSCP', 'TEXT', smSystemScript);
-	if ((err != noErr) && (err != dupFNErr))
+	// loop through 0 to kMaxComponents
+	for(i=0; i<kMaxComponents; i++)
 	{
-		ErrorHandler(err);
-		return false;
-	}
-	err = FSpOpenDF(&getRedirectIDI, fsRdWrPerm, &refNum);
-	if (err != noErr)
-	{
-		bSuccess = false;
-		goto BAIL;
-	}
-	count = strlen(buf);
-	if (count <= 0)
-	{
-		bSuccess = false;
-		goto BAIL;
-	}
-	err = FSWrite(refNum, &count, (void*) buf);
-	if (err != noErr)
-		bSuccess = false;
-	FSClose(refNum);
-	
-	if (!bSuccess)
-	    goto BAIL;
-	
-	/* populate SDI struct */
-	sdistruct.dwStructSize 	= sizeof(SDISTRUCT);
-	sdistruct.fsIDIFile 	= getRedirectIDI;
-	sdistruct.dlDirVRefNum 	= vRefNum;
-	sdistruct.dlDirID 		= dirID;
-	sdistruct.hwndOwner    	= NULL;
-	
-	/* call SDI_NetInstall */
-#if MOZILLA == 0	
-#if SDINST_IS_DLL == 1
-		gInstFunc(&sdistruct);
-#else
-		SDI_NetInstall(&sdistruct);
-#endif /* SDINST_IS_DLL */
-#endif /* MOZILLA */
-	
-	bSuccess = false; 
-	
-	/* verify redirect.ini existence */
-	HLock(gControls->cfg->redirect.subpath);
-	leaf = strrchr(*(gControls->cfg->redirect.subpath), '/');
-	if (!leaf)
-	    leaf = *(gControls->cfg->redirect.subpath);
-	else
-	    leaf++;
-	pLeaf = CToPascal(leaf);
-	HUnlock(gControls->cfg->redirect.subpath);
-	
-	err = FSMakeFSSpec(vRefNum, dirID, pLeaf, redirectINI);
-	if (err == noErr)
-		bSuccess = true;
-	
-BAIL:
-	if (!bSuccess)
-	    FSMakeFSSpec(0, 0, "\p", redirectINI);
+		// general test: if component in setup type
+		if ( (gControls->cfg->st[instChoice].comp[i] == kInSetupType) &&
+			 (compsDone < gControls->cfg->st[instChoice].numComps) )
+		{ 
+			// if custom and selected -or- not custom setup type
+			if ( ((instChoice == gControls->cfg->numSetupTypes-1) && 
+				  (gControls->cfg->comp[i].selected == true)) ||
+				 (instChoice < gControls->cfg->numSetupTypes-1) )
+			{    
+			    // set up vars for dl callback to use
+                sCurrComp = i;
+                sCurrFullPath = dlPath;
+                sCurrFullPathLen = dlPathLen;
+                
+                // download given full path and archive name
+                rv = DownloadFile(dlPath, dlPathLen, gControls->cfg->comp[i].archive);
+                if (rv != 0)
+                {
+                    ErrorHandler(rv);
+                    break;
+                }
+                
+                compsDone++;
+            }
+        }
+		else if (compsDone >= gControls->cfg->st[instChoice].numComps)
+			break;  
+    }
+        
+    return rv;
+}
 
-	if (pLeaf)
-		DisposePtr((Ptr)pLeaf);
-		
-	return bSuccess;
+const char kHTTP[8] = "http://";
+const char kFTP[7] = "ftp://";
+
+short
+DownloadFile(Handle destFolder, long destFolderLen, Handle archive)
+{
+    short rv = 0;
+    char *URL = 0, *proxyServerURL = 0, *destFile = 0, *destFolderCopy = 0;
+    int globalURLLen, archiveLen, proxyServerURLLen;
+    char *ftpHost = 0, *ftpPath = 0;
+    
+    // make URL using globalURL
+    HLock(archive);
+    HLock(gControls->cfg->globalURL);
+    globalURLLen = strlen(*gControls->cfg->globalURL);
+    archiveLen = strlen(*archive);
+    URL = (char *) malloc(globalURLLen + archiveLen + 1); // add 1 for NULL termination
+    sprintf(URL, "%s%s", *gControls->cfg->globalURL, *archive);
+    HUnlock(gControls->cfg->globalURL);
+    
+    // set up for dl progress callback
+    sCurrURL = URL;
+    
+    // make dest file using dest folder and archive name
+    HLock(destFolder);
+    destFolderCopy = (char *) malloc(destFolderLen + 1);  // GetFullPath doesn't NULL terminate
+    if (! destFolderCopy)
+    {    
+        HUnlock(destFolder);
+        return eMem;
+    }
+    strncpy(destFolderCopy, *destFolder, destFolderLen);
+    *(destFolderCopy + destFolderLen) = 0;
+    HUnlock(destFolder);
+    
+    destFile = (char *) malloc(destFolderLen + archiveLen + 1);
+    sprintf(destFile, "%s%s", destFolderCopy, *archive);
+    HUnlock(archive);
+        
+    // was proxy info specified?
+    if (gControls->opt->proxyHost && gControls->opt->proxyPort)
+    {
+        // make HTTP URL with "http://proxyHost:proxyPort"
+        proxyServerURLLen = strlen(kHTTP) + strlen(gControls->opt->proxyHost) + 1 + 
+                            strlen(gControls->opt->proxyPort) + 1;
+        proxyServerURL = (char *) malloc(proxyServerURLLen);
+        sprintf(proxyServerURL, "%s%s:%s", kHTTP, gControls->opt->proxyHost, gControls->opt->proxyPort);
+        
+        nsHTTPConn *conn = new nsHTTPConn(proxyServerURL);
+        
+        // set proxy info: proxied URL, username, password
+        conn->SetProxyInfo(URL, gControls->opt->proxyUsername, gControls->opt->proxyPassword);
+        
+        // open an HTTP connection
+        rv = conn->Open();
+        if (rv == nsHTTPConn::OK)
+        {
+            sCurrStartTime = time(NULL);
+            rv = conn->Get(DLProgressCB, destFile);
+            conn->Close();
+        }
+    }
+        
+    // else do we have an HTTP URL? 
+    else if (strncmp(URL, kHTTP, strlen(kHTTP)) == 0)
+    {
+        // open an HTTP connection
+        nsHTTPConn *conn = new nsHTTPConn(URL);
+        
+        rv = conn->Open();
+        if (rv == nsHTTPConn::OK)
+        {
+            sCurrStartTime = time(NULL);
+            rv = conn->Get(DLProgressCB, destFile);
+            conn->Close();
+        }
+    }
+    
+    // else do we have an FTP URL?
+    else if (strncmp(URL, kFTP, strlen(kFTP)) == 0)
+    {
+        rv = ParseFTPURL(URL, &ftpHost, &ftpPath);
+        if ((0 == strlen(ftpHost)) || (0 == strlen(ftpPath)))
+        {
+            rv = nsHTTPConn::E_MALFORMED_URL;
+        }
+        else
+        {
+            // open an FTP connection
+            nsFTPConn *conn = new nsFTPConn(ftpHost);
+            
+            rv = conn->Open();
+            if (rv == nsFTPConn::OK)
+            {
+                sCurrStartTime = time(NULL);
+                rv = conn->Get(ftpPath, destFile, nsFTPConn::BINARY, 1, DLProgressCB);
+                conn->Close();
+            }
+        }
+        if (ftpHost)
+            free(ftpHost);
+        if (ftpPath)
+            free(ftpPath);
+    }
+        
+    // else not supported so report an error
+    else
+        rv = nsHTTPConn::E_MALFORMED_URL;
+        
+    return rv;
+}
+
+int 
+ParseFTPURL(char *aURL, char **aHost, char **aPath)
+{
+    char *pos, *nextSlash, *nextColon, *end, *hostEnd;
+    int protoLen = strlen(kFTP);
+
+    if (!aURL || !aHost || !aPath)
+        return -1;
+
+    if (strncmp(aURL, kFTP, protoLen) != 0)
+        return nsHTTPConn::E_MALFORMED_URL;
+
+    pos = aURL + protoLen;
+    nextColon = strchr(pos, ':');
+    nextSlash = strchr(pos, '/');
+
+    // only host in URL, assume '/' for path
+    if (!nextSlash)
+    {
+        int copyLen;
+        if (nextColon)
+            copyLen = nextColon - pos;
+        else
+            copyLen = strlen(pos);
+
+        *aHost = (char *) malloc(copyLen + 1); // to NULL terminate
+        if (!aHost)
+            return eMem;
+        memset(*aHost, 0, copyLen + 1);
+        strncpy(*aHost, pos, copyLen);
+
+        *aPath = (char *) malloc(2);
+        strcpy(*aPath, "/");
+
+        return 0;
+    }
+    
+    // normal parsing: both host and path exist
+    if (nextColon)
+        hostEnd = nextColon;
+    else
+        hostEnd = nextSlash;
+    *aHost = (char *) malloc(hostEnd - pos + 1); // to NULL terminate
+    if (!*aHost)
+        return eMem;
+    memset(*aHost, 0, hostEnd - pos + 1);
+    strncpy(*aHost, pos, hostEnd - pos);
+    *(*aHost + (hostEnd - pos)) = 0; // NULL terminate
+
+    pos = nextSlash;
+    end = aURL + strlen(aURL);
+
+    *aPath = (char *) malloc(end - pos + 1);
+    if (!*aPath)
+    {
+        if (*aHost)
+            free(*aHost);
+        return eMem;
+    }
+    memset(*aPath, 0, end - pos + 1);
+    strncpy(*aPath, pos, end - pos);
+
+    return 0;
 }
 
 void
-ParseRedirect(FSSpecPtr redirectINI)
+CompressToFit(char *origStr, char *outStr, int outStrLen)
 {
-	short 		fileRefNum;
-	OSErr 		err = noErr;
-	long		dataSize;
-	char 		*text = NULL, *cId = NULL, *cSection = NULL;
-	Str255		pSection;
-	int			siteIndex;
-	Handle		domainH = NULL;
-	
-	/* read in text from downloaded site selector */
-	err = FSpOpenDF(redirectINI, fsRdPerm, &fileRefNum);
-    if (err != noErr)
+    int origStrLen;
+    int halfOutStrLen;
+    char *lastPart; // last origStr part start
+
+    if (!origStr || !outStr || outStrLen <= 0)
         return;
-	err = GetEOF(fileRefNum, &dataSize);        
-	if (err != noErr)
-		return;
-	if (dataSize > 0)
-	{
-		text = (char*) NewPtrClear(dataSize + 1);
-		if (!text)
-			return;
-			
-        err = FSRead(fileRefNum, &dataSize, text);
-        if (err != noErr)
+        
+    origStrLen = strlen(origStr);    
+    halfOutStrLen = outStrLen/2;
+    lastPart = origStr + origStrLen - halfOutStrLen;
+    
+    strncpy(outStr, origStr, halfOutStrLen);
+    *(outStr + halfOutStrLen) = 0;
+    strcat(outStr, "É");
+    strncat(outStr, lastPart, strlen(lastPart));
+    *(outStr + outStrLen + 1) = 0;
+}
+
+float
+ComputeRate(int bytes, time_t startTime, time_t endTime)
+{
+    double period = difftime(endTime, startTime);
+    float rate = bytes/period;
+    
+    rate /= 1024;  // convert from bytes/sec to KB/sec
+    
+    return rate;
+}
+
+#define kProgMsgLen 51
+
+int
+DLProgressCB(int aBytesSoFar, int aTotalFinalSize)
+{   
+    static int yielder = 0, yieldFrequency = 64;
+    int len;
+    char compressedStr[kProgMsgLen + 1];  // add one for NULL termination
+    char *fullPathCopy = 0; // GetFullPath doesn't null terminate
+    float rate = 0;
+    time_t now;
+    Rect teRect;
+      
+    if (aTotalFinalSize != sCurrTotalDLSize)
+    {
+        sCurrTotalDLSize = aTotalFinalSize;
+        if (gControls->tw->dlProgressBar)
+            SetControlMaximum(gControls->tw->dlProgressBar, (aTotalFinalSize/1024));
+        
+        // set short desc name of package being downloaded in Downloading field
+        if (gControls->cfg->comp[sCurrComp].shortDesc)
         {
-            FSClose(fileRefNum);
-        	goto BAIL;
+            HLock(gControls->cfg->comp[sCurrComp].shortDesc);
+            if (*(gControls->cfg->comp[sCurrComp].shortDesc) && gControls->tw->dlProgressMsgs[0])
+            {
+                HLock((Handle)gControls->tw->dlProgressMsgs[0]);
+                teRect = (**(gControls->tw->dlProgressMsgs[0])).viewRect;
+                HUnlock((Handle)gControls->tw->dlProgressMsgs[0]);                
+                
+                len = strlen(*(gControls->cfg->comp[sCurrComp].shortDesc));
+                TESetText(*(gControls->cfg->comp[sCurrComp].shortDesc), len, 
+                    gControls->tw->dlProgressMsgs[0]);
+                TEUpdate(&teRect, gControls->tw->dlProgressMsgs[0]);
+            }
+            HUnlock(gControls->cfg->comp[sCurrComp].shortDesc);
+        }
+
+        // compress URL string and insert in From field
+        if (sCurrURL && gControls->tw->dlProgressMsgs[1])
+        {
+            HLock((Handle)gControls->tw->dlProgressMsgs[1]);
+            teRect = (**(gControls->tw->dlProgressMsgs[1])).viewRect;
+            HUnlock((Handle)gControls->tw->dlProgressMsgs[1]);
+            
+            CompressToFit(sCurrURL, compressedStr, kProgMsgLen);
+            TESetText(compressedStr, kProgMsgLen, gControls->tw->dlProgressMsgs[1]);
+            TEUpdate(&teRect, gControls->tw->dlProgressMsgs[1]);
+        }
+                            
+        // compress fullpath string and insert in To field
+        if (sCurrFullPath)
+        {
+            HLock(sCurrFullPath);
+            if (*sCurrFullPath && gControls->tw->dlProgressMsgs[2])
+            {
+                fullPathCopy = (char *)malloc(sCurrFullPathLen + 1);               
+                if (fullPathCopy)
+                {
+                    strncpy(fullPathCopy, (*sCurrFullPath), sCurrFullPathLen);
+                    *(fullPathCopy + sCurrFullPathLen) = 0;
+                    
+                    HLock((Handle)gControls->tw->dlProgressMsgs[2]);
+                    teRect = (**(gControls->tw->dlProgressMsgs[2])).viewRect;
+                    HUnlock((Handle)gControls->tw->dlProgressMsgs[2]);
+                    
+                    CompressToFit(fullPathCopy, compressedStr, kProgMsgLen);
+                    TESetText(compressedStr, kProgMsgLen, gControls->tw->dlProgressMsgs[2]);
+                    TEUpdate(&teRect, gControls->tw->dlProgressMsgs[2]);
+                    
+                    free(fullPathCopy);
+                }                
+            }
+            HUnlock(sCurrFullPath);
         }
     }
-	FSClose(fileRefNum);
-		 
-	/* parse text for selected site replacing teh global URL 
-	 * with the identifed site's URL in the redirect.ini
-	 */
-	if (gControls->cfg->numSites > 0)
-	{
-		siteIndex = gControls->opt->siteChoice - 1;
-		if (!gControls->cfg->site[siteIndex].id)
-		    goto BAIL;
-		
-		HLock(gControls->cfg->site[siteIndex].id);
-		cId = NewPtrClear(strlen(*(gControls->cfg->site[siteIndex].id)) + 1); // add 1 for null termination
-		strcpy(cId, *(gControls->cfg->site[siteIndex].id));
-		HUnlock(gControls->cfg->site[siteIndex].id);
-				
-		GetIndString(pSection, rParseKeys, sSiteSelector);
-		cSection = PascalToC(pSection);
-		if (!cSection || !cId)
-			goto BAIL;
-		
-		domainH = NewHandleClear(kValueMaxLen);
-		if (!domainH ) 
-			goto BAIL;
-		if (FillKeyValueUsingName(cSection, cId, domainH, text))
-		{	
-			if (gControls->cfg->globalURL)
-				DisposeHandle(gControls->cfg->globalURL);
-			gControls->cfg->globalURL = NewHandleClear(kValueMaxLen);
-			HLock(domainH);     
-			HLock(gControls->cfg->globalURL);
-			strcpy(*(gControls->cfg->globalURL), *domainH);
-			HUnlock(domainH);   
-			HUnlock(gControls->cfg->globalURL);
-		}
-		if (domainH)
-			DisposeHandle(domainH);
-	}
-	
-BAIL:
-	if (text)
-		DisposePtr((Ptr) text);
-	if (cId)
-		DisposePtr((Ptr) cId);
-	if (cSection)
-		DisposePtr((Ptr) cSection);
+        
+    if (gControls->tw->dlProgressBar)
+    {                
+        if (++yielder == yieldFrequency)
+        {
+            SetControlValue(gControls->tw->dlProgressBar, (aBytesSoFar/1024));
+
+            // update rate info
+            now = time(NULL);
+            rate = ComputeRate(aBytesSoFar, sCurrStartTime, now);
+            
+            sprintf(compressedStr, "%d KB of %d KB  (%.2f KB/sec)", 
+                aBytesSoFar/1024, aTotalFinalSize/1024, rate);
+            HLock((Handle)gControls->tw->dlProgressMsgs[3]);
+            teRect = (**(gControls->tw->dlProgressMsgs[3])).viewRect;
+            HUnlock((Handle)gControls->tw->dlProgressMsgs[3]);
+            
+            TESetText(compressedStr, strlen(compressedStr), gControls->tw->dlProgressMsgs[3]);
+            TEUpdate(&teRect, gControls->tw->dlProgressMsgs[3]);
+            
+            yielder = 0;   
+            YieldToAnyThread();
+        }
+    }
+    
+    return 0;
 }
 
 void
@@ -878,6 +1030,90 @@ DeleteXPIs(short vRefNum, long dirID)
 	}
 }
 
+const int kNumDLFields = 4;
+
+void
+InitDLProgControls(void)
+{
+	Boolean	indeterminateFlag = false;
+	Rect r;
+	GrafPtr	oldPort;
+	GetPort(&oldPort);    
+	int i;
+		
+	if (gWPtr)
+	{
+	    SetPort(gWPtr);
+	    
+	    gControls->tw->dlProgressBar = GetNewControl(rDLProgBar, gWPtr);
+	    if (gControls->tw->dlProgressBar)
+	    {
+	        SetControlData(gControls->tw->dlProgressBar, kControlNoPart, kControlProgressBarIndeterminateTag, 
+	            sizeof(indeterminateFlag), (Ptr) &indeterminateFlag);
+            Draw1Control(gControls->tw->dlProgressBar);
+            
+            // draw labels
+            Str255 labelStr;
+            for (i = 0; i < kNumDLFields; ++i)
+            {
+                gControls->tw->dlLabels[i] = GetNewControl(rLabDloading + i, gWPtr);
+                if (gControls->tw->dlLabels[i])
+                {
+                    GetIndString(labelStr, rStringList, sLabDloading + i);
+                    SetControlData(gControls->tw->dlLabels[i], kControlNoPart, 
+                                kControlStaticTextTextTag, labelStr[0], (Ptr)&labelStr[1]); 
+                    ShowControl(gControls->tw->dlLabels[i]);
+                }
+            }
+            
+            TextFace(normal);
+            TextSize(9);
+            TextFont(applFont);
+            for (i = 0; i < kNumDLFields; ++i)
+            {          
+                SetRect(&r, (*gControls->tw->dlLabels[i])->contrlRect.right,
+                            (*gControls->tw->dlLabels[i])->contrlRect.top + 1,
+                            (*gControls->tw->dlLabels[i])->contrlRect.right + 310,
+                            (*gControls->tw->dlLabels[i])->contrlRect.bottom + 1 );
+             
+                            
+                gControls->tw->dlProgressMsgs[i] = TENew(&r, &r);
+            }
+            TextSize(12);
+            TextFont(systemFont);
+	    }
+	}
+	
+	SetPort(oldPort);
+}
+
+void
+ClearDLProgControls(void)
+{
+    Rect teRect;
+        
+    for (int i = 0; i < kNumDLFields; ++i)
+    {
+        if (gControls->tw->dlLabels[i])
+            DisposeControl(gControls->tw->dlLabels[i]);
+        if (gControls->tw->dlProgressMsgs[i])
+        {
+            HLock((Handle)gControls->tw->dlProgressMsgs[i]);
+            teRect = (**(gControls->tw->dlProgressMsgs[i])).viewRect;
+            HUnlock((Handle)gControls->tw->dlProgressMsgs[i]);
+            EraseRect(&teRect);
+                        
+            TEDispose(gControls->tw->dlProgressMsgs[i]);
+        }
+    }
+    
+    if (gControls->tw->dlProgressBar)
+    {
+        DisposeControl(gControls->tw->dlProgressBar);
+        gControls->tw->dlProgressBar = NULL;
+    }
+}
+
 void
 InitProgressBar(void)
 {
@@ -946,69 +1182,3 @@ InitProgressBar(void)
 	SetPort(oldPort);
 }
 
-Boolean
-InitSDLib(void)
-{
-	Str255			libName, pModulesDir;
-	FSSpec			libSpec;
-	short			vRefNum;
-	long			dirID, cwdDirID;
-	Boolean			isDir = false;
-	OSErr 			err;
-	
-	ERR_CHECK_RET(GetCWD(&cwdDirID, &vRefNum), false);
-	
-	/* get the "Installer Modules" relative subdir */
-	GetIndString(pModulesDir, rStringList, sInstModules);
-	GetDirectoryID(vRefNum, cwdDirID, pModulesDir, &dirID, &isDir);
-	if (!isDir)		/* bail if we can't find the "Installer Modules" dir */
-		return false;
-		
-	/* initialize SDI lib and struct */
-	GetIndString(libName, rStringList, sSDLib);
-	ERR_CHECK_RET(FSMakeFSSpec(vRefNum, dirID, libName, &libSpec), false);
-	if (!LoadSDLib(libSpec, &gInstFunc, &gSDIEvtHandler, &gConnID))
-	{
-		ErrorHandler(eLoadLib);
-		return false;
-	}
-
-	return true;
-}
-
-Boolean		
-LoadSDLib(FSSpec libSpec, SDI_NETINSTALL *outSDNFunc, EventProc *outEvtProc, CFragConnectionID *outConnID)
-{
-	OSErr		err;
-	Str255		errName;
-	Ptr			mainAddr;
-	Ptr			symAddr;
-	CFragSymbolClass	symClass;
-	
-	ERR_CHECK_RET(GetDiskFragment(&libSpec, 0, kCFragGoesToEOF, nil, kReferenceCFrag, outConnID, &mainAddr, errName), false);
-	
-	if (*outConnID != NULL)
-	{
-		ERR_CHECK_RET(FindSymbol(*outConnID, "\pSDI_NetInstall", &symAddr, &symClass), false);
-		*outSDNFunc = (SDI_NETINSTALL) symAddr;
-		
-		ERR_CHECK_RET(FindSymbol(*outConnID, "\pSDI_HandleEvent", &symAddr, &symClass), false);			
-		*outEvtProc = (EventProc) symAddr;
-	}
-	
-	return true;
-}
-
-Boolean		
-UnloadSDLib(CFragConnectionID *connID)
-{
-	if (*connID != NULL)
-	{
-		CloseConnection(connID);
-		*connID = NULL;
-	}
-	else
-		return false;
-	
-	return true;
-}

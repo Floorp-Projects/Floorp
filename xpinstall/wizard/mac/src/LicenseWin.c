@@ -185,21 +185,26 @@ InitLicTxt(void)
 
 void
 ShowTxt(void)
-{	
+{	    
 	switch (gCurrWin)
 	{
 		case kLicenseID:
 			if(gControls->lw->licTxt)
 			{
-				// InvalRect(&(**(gControls->lw->licTxt)).viewRect);
+			    RGBColor backColorOld;
+			    
+			    // get back color
+			    GetBackColor(&backColorOld);
+			    
+			    // set to white
+			    BackColor(whiteColor);
+			    
+			    // erase rect and update
+			    EraseRect(&(**(gControls->lw->licTxt)).viewRect);
 				TEUpdate( &(**(gControls->lw->licTxt)).viewRect, gControls->lw->licTxt);
-			}
-			break;
-		case kWelcomeID:
-			if(gControls->ww->welcTxt)
-			{
-				// InvalRect(&(**(gControls->lw->licTxt)).viewRect);
-				TEUpdate( &(**(gControls->ww->welcTxt)).viewRect, gControls->ww->welcTxt);
+				
+				// restore back color
+				RGBBackColor(&backColorOld);
 			}
 			break;
 		default:
@@ -214,7 +219,15 @@ ShowLogo(Boolean bEraseRect)
 	Rect 		derefd, logoRect;
 	PicHandle 	logoPicH;
 	Handle		logoRectH; 
-	
+
+	/* draw the image well */
+    ControlHandle imgWellH = GetNewControl(rLogoImgWell, gWPtr);
+    if (!imgWellH)
+    {
+        ErrorHandler(eMem);
+        return;
+	}
+
 	/* initialize Netscape logo */
 	logoPicH = GetPicture(rNSLogo);  
 	reserr = ResError();
@@ -230,7 +243,7 @@ ShowLogo(Boolean bEraseRect)
 			{
 				HLock(logoRectH);
 				derefd = (Rect) **((Rect**)logoRectH);
-				SetRect(&logoRect, derefd.left, derefd.top, derefd.bottom, derefd.right);
+				SetRect(&logoRect, derefd.left, derefd.top, derefd.right, derefd.bottom);
 				HUnlock(logoRectH);
 				reserr = ResError();
 				if (reserr == noErr)
@@ -278,8 +291,7 @@ InLicenseContent(EventRecord* evt, WindowPtr wCurrPtr)
 		case kControlPageDownPart:
 			scrollActionFunctionUPP = NewControlActionProc((ProcPtr) DoScrollProc);
 			value = TrackControl(scrollBar, localPt, scrollActionFunctionUPP);
-			return;
-			break; /* <--- what is this for? */
+ 			return;
 			
 		case kControlIndicatorPart:
 			value = GetControlValue(scrollBar);
@@ -290,6 +302,7 @@ InLicenseContent(EventRecord* evt, WindowPtr wCurrPtr)
 				if (value) 
 				{
 					TEScroll(0, value * kScrollAmount, gControls->lw->licTxt);
+                    ShowTxt();
 				}
 			}
 			return;
@@ -314,7 +327,7 @@ InLicenseContent(EventRecord* evt, WindowPtr wCurrPtr)
 		if (part)
 		{
 			KillControls(gWPtr);
-			ShowWelcomeWin();
+			ShowSetupTypeWin();
 			return;
 		}
 	}
@@ -348,8 +361,6 @@ EnableLicenseWin(void)
 void
 DisableLicenseWin(void)
 {
-	//SysBeep(10);
-	
 	DisableNavButtons();
 	
 	/*
@@ -374,9 +385,6 @@ InitScrollBar(ControlHandle sb)
 	{
 		case kLicenseID:
 			currTE = gControls->lw->licTxt;
-			break;
-		case kWelcomeID:
-			currTE = gControls->ww->welcTxt;
 			break;
 		default:
 			ErrorHandler(eUnknownDlgID);
@@ -406,9 +414,6 @@ DoScrollProc(ControlHandle theControl, short part)
 			case kLicenseID:				
 				te = *(gControls->lw->licTxt);
 				break;
-			case kWelcomeID:
-				te = *(gControls->ww->welcTxt);
-				break;
 			default:
 				ErrorHandler(eUnknownDlgID);
 				break;
@@ -429,6 +434,7 @@ DoScrollProc(ControlHandle theControl, short part)
 		CalcChange(theControl, &amount);
 		if (amount) {
 			TEScroll(0, amount * kScrollAmount, &te);
+            ShowTxt();
 		}
 	}
 }
@@ -461,8 +467,8 @@ ShowNavButtons(unsigned char* backTitle, unsigned char* nextTitle)
 	{
 		SetControlTitle( gControls->backB, backTitle); 
 		ShowControl( gControls->backB);
-		
-		if (gCurrWin==kWelcomeID)
+
+		if (gCurrWin==kWelcomeID || gCurrWin==kSetupTypeID)
 			HiliteControl(gControls->backB, kDisableControl);
 	}
 	
@@ -481,6 +487,8 @@ ShowNavButtons(unsigned char* backTitle, unsigned char* nextTitle)
 	
 		HUnlock( (Handle)gControls->nextB );
 	}
+	
+    ShowCancelButton();
 }
 
 void
@@ -491,7 +499,9 @@ EnableNavButtons(void)
 	if (gControls->nextB)
 		HiliteControl(gControls->nextB, kEnableControl);
 
-	// TO DO
+    if (gControls->cancelB)
+		HiliteControl(gControls->cancelB, kEnableControl);
+
 }
 
 void
@@ -502,5 +512,6 @@ DisableNavButtons(void)
 	if(gControls->nextB)
 		HiliteControl(gControls->nextB, kDisableControl);
 
-	// TO DO
+    if (gControls->cancelB)
+		HiliteControl(gControls->cancelB, kDisableControl);
 }

@@ -94,7 +94,7 @@ ShowAdditionsWin(void)
 	SetPt( &cSize, 0, 0);
 	gControls->aw->compList = LNew((const Rect*)&gControls->aw->compListBox, (const Rect*)&dataBounds,
 									cSize, rCheckboxLDEF, gWPtr, true, false, false, true);
-	(*gControls->aw->compList)->selFlags = 68; /* NOTE: 64 (aka lExtendDrag) + 4 (aka lUseSense) = 68 */
+	(*gControls->aw->compList)->selFlags = lExtendDrag + lUseSense + lDoVAutoscroll;
 	
 	HLock((Handle)gControls->aw->compDescBox);
 	SetRect(&viewRect, (*gControls->aw->compDescBox)->contrlRect.left,
@@ -139,7 +139,17 @@ ShowAdditionsWin(void)
 
 	// default highlight first row
 	AddInitRowHighlight(0);
-	
+
+#if 0	    
+	RGBColor backColorOld;
+    Rect adjustedRect, *clRect = &gControls->aw->compListBox;
+    SetRect(&adjustedRect, clRect->left, clRect->top+1, clRect->right, clRect->bottom-1);
+    GetBackColor(&backColorOld);
+    BackColor(whiteColor);
+    EraseRect(&adjustedRect);
+    RGBBackColor(&backColorOld);
+#endif
+    
 	SetPort(oldPort);
 }
 
@@ -197,7 +207,7 @@ InAdditionsContent(EventRecord* evt, WindowPtr wCurrPtr)
 	SetRect(&r, gControls->aw->compListBox.right, gControls->aw->compListBox.top, 
 	            gControls->aw->compListBox.right + kScrollBarWidth, gControls->aw->compListBox.bottom);
 	if ((evt->what == mouseUp) && (PtInRect( localPt, &r)))
-	{
+	{    	    
 	    LClick(localPt, evt->modifiers, gControls->aw->compList);
 	    
 	    SetRect(&r, gControls->aw->compListBox.left, gControls->aw->compListBox.top,
@@ -209,6 +219,7 @@ InAdditionsContent(EventRecord* evt, WindowPtr wCurrPtr)
 	if ((evt->what == mouseUp) && (PtInRect( localPt, &gControls->aw->compListBox)))
 	{
 		LClick(localPt, evt->modifiers, gControls->aw->compList);
+		AddUpdateRowHighlight(localPt);
 		
 		/* invert the checkbox rect */
 		for (i=0; i<numRows; i++)
@@ -310,6 +321,9 @@ InAdditionsContent(EventRecord* evt, WindowPtr wCurrPtr)
 		part = TrackControl(gControls->nextB, evt->where, NULL);
 		if (part)
 		{	
+			if (!VerifyDiskSpace())
+			    return;
+			    		
 			gControls->aw->compListBox.top = 0;
 			EraseRect(&gControls->aw->compListBox);
 			ClearDiskSpaceMsgs();
@@ -337,6 +351,17 @@ UpdateAdditionsWin(void)
 	HLock(gControls->cfg->selAddMsg);
 	DrawString( CToPascal(*gControls->cfg->selAddMsg));
 	HUnlock(gControls->cfg->selAddMsg);
+	
+#if 0
+	RGBColor backColorOld;
+    Rect adjustedRect, *clRect = &gControls->aw->compListBox;
+    SetRect(&adjustedRect, clRect->left, clRect->top+1, clRect->right, clRect->bottom-1);
+    GetBackColor(&backColorOld);
+    BackColor(whiteColor);
+    EraseRect(&adjustedRect);
+    RGBBackColor(&backColorOld);
+#endif
+   
 	LUpdate( (*gControls->aw->compList)->port->visRgn, gControls->aw->compList);
 	SetRect(&r, gControls->aw->compListBox.left, gControls->aw->compListBox.top,
 	            gControls->aw->compListBox.right + 1, gControls->aw->compListBox.bottom);
@@ -363,28 +388,6 @@ UpdateAdditionsWin(void)
 			AddInitRowHighlight(i);
 			break;
 		}
-	}
-	
-	SetPort(oldPort);
-}
-
-void		
-MouseMovedInAdditionsWin(EventRecord *evt)
-{
-	Point 			localPt;
-	GrafPtr			oldPort;
-	GetPort(&oldPort);
-	
-	if (gWPtr)
-		SetPort(gWPtr);
-	
-	localPt = evt->where;
-	GlobalToLocal( &localPt );
-	
-	/* if within list box rect */
-	if (PtInRect( localPt, &((*gControls->aw->compList)->rView) ))
-	{		
-		AddUpdateRowHighlight(localPt);
 	}
 	
 	SetPort(oldPort);

@@ -43,6 +43,7 @@
 #include <MacTypes.h>
 #include <PLStringFuncs.h>
 #include <Icons.h>
+#include <Appearance.h>
 #if TARGET_CARBON || (UNIVERSAL_INTERFACES_VERSION >= 0x0330)
 #include <ControlDefinitions.h>
 #endif
@@ -52,24 +53,6 @@
 #include "IterateDirectory.h"
 #include "Threads.h"
 
-
-
-/*-----------------------------------------------------------*
- *   SBI: SmartDownload administration 
- *-----------------------------------------------------------*/
-#define WANT_WINTYPES 1
-#define MACINTOSH 1
-#ifndef _sdinst_h
-#include "sdinst.h"
-#endif
-typedef HRESULT (_cdecl *SDI_NETINSTALL) (LPSDISTRUCT);
-typedef Boolean (*EventProc)(const EventRecord*);
-
-/*-----------------------------------------------------------*
- *   compile time switches [on=1; off=0]
- *-----------------------------------------------------------*/
-#define CFG_IS_REMOTE 		0	/* if on, download remote config.ini file */	
-#define SDINST_IS_DLL 		1	/* if on, load SDInstLib as code fragment */
  
 /*-----------------------------------------------------------*
  *   defines 
@@ -168,12 +151,15 @@ if (err) 								\
 #define rRootWin 		128		/* widget rsrc ids */
 #define rBackBtn 		129
 #define rNextBtn		130
+#define rCancelBtn      174
 #define rNSLogo			140
 #define rNSLogoBox		130
+#define rLogoImgWell    170
 
 #define	rLicBox			131
 #define rLicScrollBar	132
 
+#define rWelcMsgTextbox 171
 #define rReadmeBtn		133
 
 #define rInstType		140
@@ -190,14 +176,25 @@ if (err) 								\
 #define rAllProgBar		161
 #define rPerXPIProgBar	162
 #define rSiteSelector	163
+#define rSiteSelMsg     179
 #define rSaveCheckbox   164
 #define rSaveBitsMsgBox	165
+#define rProxySettgBtn  175
+#define rDLSettingsGB   178
+#define rDLProgBar      180
+#define rLabDloading     181
+#define rLabFrom        182
+#define rLabTo          183
+#define rLabRate        184
+#define rLabTimeLeft    185
 
 #define rGrayPixPattern 128
 
 #define rAlrtDelOldInst	150
 #define rAlrtOS85Reqd	160
 #define rAlrtError      170
+#define rWarnLessSpace  180
+#define rDlgProxySettg  140
 
 	
 #define rMBar			128		/* menu rsrc ids */	
@@ -242,6 +239,15 @@ if (err) 								\
 #define sProcessing		27		
 #define sReadme			28
 #define sInstModules	29
+#define sCancel         30
+#define sProxySettings  31
+#define sDLSettings     32
+#define sSiteSelMsg     33
+#define sLabDloading    34
+#define sLabFrom        35
+#define sLabTo          36
+#define sLabRate        37
+#define sTimeLeft       38
 
 #define rTitleStrList	170
 #define sNSInstTitle	1		/* end i18n strings */
@@ -334,6 +340,7 @@ if (err) 								\
 #define eSpawn          6
 #define eMenuHdl        7
 #define eCfgRead        8
+#define eDownload       9
                             /* end errors */
 
 
@@ -477,7 +484,10 @@ typedef struct Options {
 	/* from TerminalWin */
 	short			siteChoice;
 	Boolean			saveBits;
-	
+    char            *proxyHost;
+    char            *proxyPort;
+    char            *proxyUsername;
+    char            *proxyPassword;
 } Options;
 
 typedef struct LicWin {
@@ -487,9 +497,7 @@ typedef struct LicWin {
 } LicWin;
 
 typedef struct WelcWin {
-	ControlHandle	welcBox;
-	ControlHandle	scrollBar;
-	TEHandle		welcTxt;
+	ControlHandle   welcMsgCntl[kNumWelcMsgs];
 	ControlHandle	readmeButton;
 } WelcWin;
 
@@ -512,14 +520,25 @@ typedef struct CompWin {
 typedef struct TermWin {
 	TEHandle		startMsg;		
 	Rect			startMsgBox;
+	
+	ControlHandle   dlProgressBar;
 	ControlHandle	allProgressBar;
 	TEHandle 		allProgressMsg;
 	ControlHandle	xpiProgressBar;
 	TEHandle		xpiProgressMsg;
+	
+	ControlHandle   dlSettingsGB;
+	ControlHandle   dlLabels[5];
+    TEHandle        dlProgressMsgs[5];
+
 	ControlHandle	siteSelector;
+	ControlHandle   siteSelMsg;
+	
 	ControlHandle	saveBitsCheckbox;
 	TEHandle		saveBitsMsg;
 	Rect			saveBitsMsgBox;
+	
+	ControlHandle   proxySettingsBtn;
 } TermWin;
 
 typedef struct InstWiz {
@@ -541,7 +560,7 @@ typedef struct InstWiz {
 	/* General wizard controls */
 	ControlHandle backB;
 	ControlHandle nextB;
-	
+	ControlHandle cancelB;
 } InstWiz;
 
 
@@ -552,12 +571,7 @@ extern WindowPtr 	gWPtr;
 extern short 		gCurrWin;
 extern InstWiz		*gControls;
 extern Boolean 		gDone;
-extern Boolean		gSDDlg;
 extern Boolean      gInstallStarted;
-
-extern EventProc		 gSDIEvtHandler;
-extern SDI_NETINSTALL 	 gInstFunc;
-extern CFragConnectionID gConnID;
 
 
 /*-----------------------------------------------------------*
@@ -584,7 +598,6 @@ void		Shutdown(void);
 /*-----------------------------------------------------------*
  *   Parser 
  *-----------------------------------------------------------*/
-pascal void *PullDownConfig(void*);
 void		ParseConfig(void);
 Boolean		ReadConfigFile(char **);
 OSErr       PopulateGeneralKeys(char *);
@@ -621,6 +634,7 @@ void		HandleUpdateEvt(EventRecord *);
 void 		HandleActivateEvt(EventRecord *);
 void 		HandleOSEvt(EventRecord *);
 void		React2InContent(EventRecord *, WindowPtr);
+Boolean     DidUserCancel(EventRecord *);
 
 /*-----------------------------------------------------------*
  *   LicenseWin
@@ -643,8 +657,9 @@ void		DisableNavButtons(void);
  *   WelcomeWin
  *-----------------------------------------------------------*/
 void		ShowWelcomeWin(void);
-void		InitWelcTxt(void);
+void        ShowWelcomeMsg(void);
 void 		InWelcomeContent(EventRecord*, WindowPtr);
+void        ShowCancelButton(void);
 void		ShowReadmeButton(void);
 void		ShowReadme(void);
 void		EnableWelcomeWin(void);
@@ -680,6 +695,7 @@ unsigned char* pstrcat(unsigned char*, unsigned char*);
 void		InSetupTypeContent(EventRecord *, WindowPtr);
 Boolean		LegacyFileCheck(short, long);
 int			CompareVersion(Handle, FSSpecPtr);
+Boolean     VerifyDiskSpace(void);
 void		EnableSetupTypeWin(void);
 void		DisableSetupTypeWin(void);
 
@@ -690,7 +706,6 @@ void		ShowComponentsWin(void);
 Boolean		PopulateCompInfo(void);
 void		UpdateCompWin(void);
 void		InComponentsContent(EventRecord*, WindowPtr);
-void		MouseMovedInComponentsWin(EventRecord *);
 short		GetCompRow(int);
 void		SetOptInfo(Boolean);
 void		InitRowHighlight(int);
@@ -708,7 +723,6 @@ void		ShowAdditionsWin(void);
 Boolean		AddPopulateCompInfo(void);
 void		InAdditionsContent(EventRecord*, WindowPtr);
 void		UpdateAdditionsWin(void);
-void		MouseMovedInAdditionsWin(EventRecord *);
 short		AddGetCompRow(int);
 void		AddSetOptInfo(Boolean);
 void		AddInitRowHighlight(int);
@@ -721,10 +735,14 @@ void		DisableAdditionsWin(void);
  *   TerminalWin
  *-----------------------------------------------------------*/
 void		ShowTerminalWin(void);
+short       GetRectFromRes(Rect *, short);
+void        my_c2pstrcpy(const char *, Str255);
 void		InTerminalContent(EventRecord*, WindowPtr);
 void		UpdateTerminalWin(void);
+void        OpenProxySettings(void);
 Boolean		SpawnSDThread(ThreadEntryProcPtr, ThreadID *);
-void		ClearSiteSelector(void);
+void        ClearDownloadSettings(void);
+void        ClearSaveBitsMsg(void);
 void		EnableTerminalWin(void);
 void		DisableTerminalWin(void);
 
@@ -732,8 +750,13 @@ void		DisableTerminalWin(void);
  *   InstAction
  *-----------------------------------------------------------*/
 pascal void *Install(void*);
-Boolean		DownloadRedirect(short, long, FSSpecPtr);
-void		ParseRedirect(FSSpecPtr);
+long        ComputeTotalDLSize(void);
+short       DownloadXPIs(short, long);
+short       DownloadFile(Handle, long, Handle);
+int         ParseFTPURL(char *, char **, char **);
+void        CompressToFit(char *, char *, int);
+float       ComputeRate(int, time_t, time_t);
+int         DLProgressCB(int, int);
 void		IfRemoveOldCore(short, long);
 Boolean 	GenerateIDIFromOpt(Str255, long, short, FSSpec *);
 void		AddKeyToIDI(short, Handle, char *);
@@ -741,10 +764,9 @@ Boolean		ExistArchives(short, long);
 void		LaunchApps(short, long);
 void		RunApps(void);
 void		DeleteXPIs(short, long);
+void        InitDLProgControls(void);
+void        ClearDLProgControls(void);
 void		InitProgressBar(void);
-Boolean		InitSDLib(void);
-Boolean		LoadSDLib(FSSpec, SDI_NETINSTALL *, EventProc *, CFragConnectionID *);
-Boolean		UnloadSDLib(CFragConnectionID *);
 
 /*-----------------------------------------------------------*
  *   Inflation
