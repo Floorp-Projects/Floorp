@@ -49,6 +49,7 @@
 static char   *program;
 static int    sort_by_direct = 0;
 static int    do_tree_dump = 0;
+static char   *function_dump = NULL;
 static int32  min_subtotal = 0;
 
 static int accum_byte(uint32 *uip)
@@ -566,18 +567,24 @@ static void dump_graph(PLHashTable *hashtbl, const char *title, FILE *fp)
             title);
 
     for (i = 0; i < count; i++) {
-        graphnode *node = table[i];
+        graphnode *node;
+        char *name;
+        int namelen;
 
         /* Don't bother with truly puny nodes. */
+        node = table[i];
         if (node->total < min_subtotal)
             break;
 
+        name = graphnode_name(node);
+        namelen = strlen(name);
         fprintf(fp,
                 "<tr>"
-                  "<td valign=top><a name='%s'>%s</td>"
+                  "<td valign=top><a name='%s'>%.*s%s</td>"
                   "<td valign=top>%s/%s (%1.2f%%/%1.2f%%)</td>",
-                graphnode_name(node),
-                graphnode_name(node),
+                name,
+                (namelen > 60) ? 60 : namelen, name,
+                (namelen > 60) ? "<i>...</i>" : "",
                 prettybig(node->total, buf1, sizeof buf1),
                 prettybig(node->direct, buf2, sizeof buf2),
                 percent(node->total, calltree_root.total),
@@ -607,7 +614,7 @@ int main(int argc, char **argv)
 
     program = *argv;
 
-    while ((c = getopt(argc, argv, "dtm:")) != EOF) {
+    while ((c = getopt(argc, argv, "dtf:m:")) != EOF) {
         switch (c) {
           case 'd':
             sort_by_direct = 1;
@@ -615,11 +622,15 @@ int main(int argc, char **argv)
           case 't':
             do_tree_dump = 1;
             break;
+          case 'f':
+            function_dump = optarg;
+            break;
           case 'm':
             min_subtotal = atoi(optarg);
             break;
           default:
-            fprintf(stderr, "usage: %s [-dt] [-m min] [output.html]\n",
+            fprintf(stderr,
+        "usage: %s [-dt] [-f function-dump-filename] [-m min] [output.html]\n",
                     program);
             return 2;
         }
@@ -848,11 +859,17 @@ int main(int argc, char **argv)
 
     dump_graph(libraries, "Library", fp);
     fputs("<hr>\n", fp);
-    dump_graph(components, "Component", fp);
-#if 0
-    fputs("<hr>\n", fp);
-    dump_graph(methods, "Method", fp);
-#endif
+    dump_graph(components, "Class or Component", fp);
+    if (function_dump) {
+        fclose(fp);
+        fp = fopen(function_dump, "w");
+        if (!fp) {
+            fprintf(stderr, "%s: can't open %s: %s\n",
+                    program, function_dump, strerror(errno));
+            return 1;
+        }
+        dump_graph(methods, "Function or Method", fp);
+    }
 
     fclose(fp);
     return 0;
