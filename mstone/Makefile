@@ -23,7 +23,11 @@ PERL_REV	= 5.00503
 GDFILES		= gd.txt gd.html gd.h libgd.* demoin.gif gddemo giftogd webgif
 GNUPLOTFILES	= gnuplot gnuplot_x11 gnuplot.1 gnuplot.gih Copyright
 
-TARBALL		= mstone-4.2-$(NSARCH)$(OBJDIR_TAG).tar.gz
+VERSION		= 4.2
+TARBALL		= mstone-$(VERSION)-$(NSARCH)$(OBJDIR_TAG).tar.gz
+TARBALL_ALL	= mstone-$(VERSION)-all-$(OBJDIR_TAG).tar.gz
+
+NTFILES		= mstone.bat process.bat setup.bat
 
 all:: usage
 
@@ -158,9 +162,12 @@ all_DBG all_OPT::
 	@$(ECHO) "\n===== [`date`] unified packaging for $@...\n"
 	$(MAKE) NSARCH=$@ OBJDIR_TAG='' PKGDIR=$(topsrcdir)/build/package/$@.OBJ/mstone pkg-share-files
 	./ospkg.sh $@.OBJ $(notdir $(shell ls -d build/package/[A-Z]*$(subst all,,$@.OBJ)))
+	[ -d $(topsrcdir)/build/package/$@.OBJ/mstone/bin/WINNT4.0 ] \
+		&& cp -p $(NTFILES) $(topsrcdir)/build/package/$@.OBJ/mstone; :
 	@$(ECHO) "\n===== [`date`] making unified compressed tar file...\n"
-	-rm -f ./build/mstone-4.2-$@.tar.gz
-	(cd ./build/package/$@.OBJ && tar cf - . | gzip > ../../mstone-4.1-$@.tar.gz)
+	-rm -f ./build/mstone-$(VERSION)-$@.tar.gz
+	(cd ./build/package/$@.OBJ && tar cf - . \
+		| gzip > ../../mstone-$(VERSION)-$@.tar.gz)
 	@$(ECHO) "\n===== [`date`] making unified packaging for $@ done.\n"
 
 
