@@ -68,6 +68,8 @@ insert into components (value, program, initialowner, initialqacontact) values (
 insert into components (value, program, initialowner, initialqacontact) values ("Address Book", "MailNews", "putterman@netscape.com", "");
 insert into components (value, program, initialowner, initialqacontact) values ("Front End", "MailNews", "warren@netscape.com", "");
 insert into components (value, program, initialowner, initialqacontact) values ("Back End", "MailNews", "phil@netscape.com", "");
+insert into components (value, program, initialowner, initialqacontact) values ("Internationalization", "MailNews", "nhotta@netscape.com", "momoi@netscape.com");
+insert into components (value, program, initialowner, initialqacontact) values ("Localization", "MailNews", "rchen@netscape.com", "momoi@netscape.com");
 
 
 
@@ -115,6 +117,8 @@ insert into components (value, program, initialowner, initialqacontact) values (
 insert into components (value, program, initialowner, initialqacontact) values ("XP Miscellany", "Mozilla", "brendan@netscape.com", "");
 insert into components (value, program, initialowner, initialqacontact) values ("XP Utilities", "Mozilla", "rickg@netscape.com", "");
 insert into components (value, program, initialowner, initialqacontact) values ("Zlib", "Mozilla", "pnunn@netscape.com", "");
+insert into components (value, program, initialowner, initialqacontact) values ("Internationalization", "Mozilla", "ftang@netscape.com", "teruko@netscape.com");
+insert into components (value, program, initialowner, initialqacontact) values ("Localization", "Mozilla", "rchen@netscape.com", "teruko@netscape.com");
 
 
 
@@ -149,6 +153,8 @@ insert into components (value, program, initialowner, initialqacontact) values (
 insert into components (value, program, initialowner, initialqacontact) values ("Widget Set", "NGLayout", "kmcclusk@netscape.com", "");
 insert into components (value, program, initialowner, initialqacontact) values ("XPCOM", "NGLayout", "scullin@netscape.com", "");
 insert into components (value, program, initialowner, initialqacontact) values ("xpidl", "NGLayout", "shaver@netscape.com", "");
+insert into components (value, program, initialowner, initialqacontact) values ("Internationalization", "NGLayout", "ftang@netscape.com", "teruko@netscape.com");
+insert into components (value, program, initialowner, initialqacontact) values ("Localization", "NGLayout", "rchen@netscape.com", "teruko@netscape.com");
 
 
 insert into components (value, program, initialowner, initialqacontact) values ("Bonsai", "Webtools", "terry@mozilla.org", "");
