@@ -376,6 +376,13 @@ PluginViewerImpl::StartLoad(nsIRequest* request, nsIStreamListener*& aResult)
     nsRect r;
     mWindow->GetClientBounds(r);
     rv = CreatePlugin(request, host, nsRect(0, 0, r.width, r.height), aResult);
+
+#ifdef XP_MAC
+    // On Mac, we need to initiate the intial invalidate for full-page plugins to ensure
+    // the entire window gets cleared. Otherwise, Acrobat won't initially repaint on top 
+    // of our previous presentation and we may have garbage leftover
+    mWindow->Invalidate(PR_FALSE);
+#endif
   }
 
   return rv;
