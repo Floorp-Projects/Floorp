@@ -530,8 +530,9 @@ nsresult nsMsgFilterList::LoadTextFilters(nsIOFileStream *aStream)
             }
             break;
 		case nsIMsgFilterList::attribCondition:
-			err = ParseCondition(value);
-			break;
+            if (m_curFilter)
+              err = ParseCondition(value);
+            break;
 		}
 	} while (attrib != nsIMsgFilterList::attribNone);
 	return err;
