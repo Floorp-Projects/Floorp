@@ -20,7 +20,9 @@
  * Contributor(s): 
  */
 
+#ifdef NS_DEBUG
 #include <ctype.h>
+#endif
 #include "nsJSEnvironment.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptContextOwner.h"
@@ -46,7 +48,12 @@
 #include "nsIXPCSecurityManager.h"
 #include "nsIJSContextStack.h"
 #include "nsIJSRuntimeService.h"
+#include "nsIPref.h"
 #include "nsCOMPtr.h"
+
+// Force PR_LOGGING so we can get JS strict warnings even in release builds
+#define FORCE_PR_LOG 1
+#include "prlog.h"
 
 #include "nsIJVMManager.h"
 #include "nsILiveConnectManager.h"
@@ -54,6 +61,11 @@
 const size_t gStackSize = 8192;
 
 static NS_DEFINE_IID(kCScriptNameSetRegistryCID, NS_SCRIPT_NAMESET_REGISTRY_CID);
+static NS_DEFINE_IID(kPrefServiceCID, NS_PREF_CID);
+
+#ifdef PR_LOGGING
+static PRLogModuleInfo* gJSDiagnostics = nsnull;
+#endif
 
 void PR_CALLBACK
 NS_ScriptErrorReporter(JSContext *cx,
@@ -86,6 +98,25 @@ NS_ScriptErrorReporter(JSContext *cx,
     }
   }
 
+#ifdef PR_LOGGING
+  if (report) {
+    if (!gJSDiagnostics)
+      gJSDiagnostics = PR_NewLogModule("JSDiagnostics");
+
+    if (gJSDiagnostics) {
+      PR_LOG(gJSDiagnostics,
+             JSREPORT_IS_WARNING(report->flags) ? PR_LOG_WARNING : PR_LOG_ERROR,
+             ("file %s, line %u: %s\n%s%s",
+              report->filename, report->lineno, message,
+              report->linebuf ? report->linebuf : "",
+              (report->linebuf &&
+               report->linebuf[strlen(report->linebuf)-1] != '\n')
+              ? "\n"
+              : ""));
+    }
+  }
+#endif
+
   JS_ClearPendingException(cx);
 }
 
@@ -93,8 +124,33 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime)
 {
   mRefCnt = 0;
   mContext = JS_NewContext(aRuntime, gStackSize);
-  if (mContext)
+  if (mContext) {
     JS_SetContextPrivate(mContext, (void *)this);
+
+    // Check for the JS strict option, which enables extra error checks
+    nsresult rv;
+    PRBool strict, werror;
+    NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+      uint32 options = 0;
+#ifdef JSOPTION_STRICT
+      if (NS_SUCCEEDED(prefs->GetBoolPref("javascript.options.strict",
+                                          &strict)) &&
+          strict) {
+        options |= JSOPTION_STRICT;
+      }
+#endif
+#ifdef JSOPTION_WERROR
+      if (NS_SUCCEEDED(prefs->GetBoolPref("javascript.options.werror",
+                                          &werror)) &&
+          werror) {
+        options |= JSOPTION_WERROR;
+      }
+#endif
+      if (options)
+        JS_SetOptions(mContext, options);
+    }
+  }
   mIsInitialized = PR_FALSE;
   mNumEvaluations = 0;
   mSecurityManager = nsnull;
@@ -354,10 +410,10 @@ nsJSContext::ExecuteScript(void* aScriptObject,
   mRef = nsnull;
   mTerminationFunc = nsnull;
   ok = ::JS_ExecuteScript(mContext,
-			  (JSObject*) aScopeObject,
-			  (JSScript*) JS_GetPrivate(mContext,
-						    (JSObject*)aScriptObject),
-			  &val);
+                          (JSObject*) aScopeObject,
+                          (JSScript*) JS_GetPrivate(mContext,
+                                                    (JSObject*)aScriptObject),
+                          &val);
 
   if (ok) {
     // If all went well, convert val to a string (XXXbe unless undefined?).
@@ -388,8 +444,32 @@ nsJSContext::ExecuteScript(void* aScriptObject,
 
 const char *gEventArgv[] = {"event"};
 
+void
+AtomToEventHandlerName(nsIAtom *aName, char *charName, PRUint32 charNameSize)
+{
+  // optimized to avoid ns*Str*.h explicit/implicit copying and malloc'ing
+  // even nsCAutoString may call an Append that copy-constructs an nsStr from
+  // a const PRUnichar*
+  const PRUnichar *name;
+  aName->GetUnicode(&name);
+  char c;
+  PRUint32 i = 0;
+
+  do {
+    NS_ASSERTION(name[i] < 128, "non-ASCII event handler name");
+    c = char(name[i]);
+
+    // The HTML content sink must have folded to lowercase already.
+    NS_ASSERTION(c == '\0' || islower(c), "non-alphabetic event handler name");
+
+    NS_ASSERTION(i < charNameSize, "overlong event handler name");
+    charName[i++] = c;
+  } while (c != '\0');
+}
+
 NS_IMETHODIMP
-nsJSContext::CompileFunction(void *aObj, nsIAtom *aName, const nsString& aBody)
+nsJSContext::CompileEventHandler(void *aObj, nsIAtom *aName, const nsString& aBody,
+                                 void** aFunction)
 {
   JSPrincipals *jsprin = nsnull;
 
@@ -405,35 +485,24 @@ nsJSContext::CompileFunction(void *aObj, nsIAtom *aName, const nsString& aBody)
     }
   }
 
-  // optimized to avoid ns*Str*.h explicit/implicit copying and malloc'ing
-  // even nsCAutoString may call an Append that copy-constructs an nsStr from
-  // a const PRUnichar*
-  const PRUnichar *name;
-  aName->GetUnicode(&name);
-  char c, charName[64];
-  int i = 0;
+  char charName[64];
+  AtomToEventHandlerName(aName, charName, sizeof charName);
 
-  do {
-    NS_ASSERTION(name[i] < 128, "non-ASCII DOM function name");
-    c = char(name[i]);
-    NS_ASSERTION(c == '\0' || isalpha(c), "non-alphabetic DOM function name");
-
-    NS_ASSERTION(i < sizeof charName, "overlong DOM function name");
-    charName[i++] = tolower(c);
-  } while (c != '\0');
-
-  JSBool ok = JS_CompileUCFunctionForPrincipals(mContext,
-                                                (JSObject*)aObj, jsprin,
-                                                charName, 1, gEventArgv,
-                                                (jschar*)aBody.GetUnicode(),
-                                                aBody.Length(),
-                                                //XXXbe filename, lineno:
-                                                nsnull, 0)
-              != 0;
+  JSFunction* fun = JS_CompileUCFunctionForPrincipals(mContext,
+                                                      (JSObject*)aObj, jsprin,
+                                                      charName, 1, gEventArgv,
+                                                      (jschar*)aBody.GetUnicode(),
+                                                      aBody.Length(),
+                                                      //XXXbe filename, lineno:
+                                                      nsnull, 0);
 
   if (jsprin)
     JSPRINCIPALS_DROP(mContext, jsprin);
-  return ok ? NS_OK : NS_ERROR_FAILURE;
+  if (!fun)
+    return NS_ERROR_FAILURE;
+  if (aFunction)
+    *aFunction = (void*) fun;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -474,6 +543,24 @@ nsJSContext::CallFunction(void *aObj, void *aFunction, PRUint32 argc,
   if (NS_FAILED(stack->Pop(nsnull)))
     return NS_ERROR_FAILURE;
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsJSContext::BindCompiledEventHandler(void *aObj, nsIAtom *aName, void *aFunction)
+{
+  char charName[64];
+  AtomToEventHandlerName(aName, charName, sizeof charName);
+
+  JSObject *funobj = JS_GetFunctionObject((JSFunction *)aFunction);
+  if (!funobj)
+    return NS_ERROR_UNEXPECTED;
+
+  if (!::JS_DefineProperty(mContext, (JSObject *)aObj, charName,
+                           OBJECT_TO_JSVAL(funobj), nsnull, nsnull,
+                           JSPROP_ENUMERATE | JSPROP_PERMANENT)) {
+    return NS_ERROR_FAILURE;
+  }
   return NS_OK;
 }
 

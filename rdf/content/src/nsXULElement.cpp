@@ -124,14 +124,14 @@ static NS_DEFINE_IID(kIScriptObjectOwnerIID,      NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kISupportsIID,               NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIXMLContentIID,             NS_IXMLCONTENT_IID);
 
-static NS_DEFINE_CID(kEventListenerManagerCID, NS_EVENTLISTENERMANAGER_CID);
+static NS_DEFINE_CID(kEventListenerManagerCID,    NS_EVENTLISTENERMANAGER_CID);
 static NS_DEFINE_IID(kIDOMEventTargetIID,         NS_IDOMEVENTTARGET_IID);
-static NS_DEFINE_CID(kNameSpaceManagerCID,     NS_NAMESPACEMANAGER_CID);
-static NS_DEFINE_CID(kRDFServiceCID,           NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kXULContentUtilsCID,      NS_XULCONTENTUTILS_CID);
+static NS_DEFINE_CID(kNameSpaceManagerCID,        NS_NAMESPACEMANAGER_CID);
+static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
+static NS_DEFINE_CID(kXULContentUtilsCID,         NS_XULCONTENTUTILS_CID);
 
-static NS_DEFINE_IID(kIXULPopupListenerIID, NS_IXULPOPUPLISTENER_IID);
-static NS_DEFINE_CID(kXULPopupListenerCID, NS_XULPOPUPLISTENER_CID);
+static NS_DEFINE_IID(kIXULPopupListenerIID,       NS_IXULPOPUPLISTENER_IID);
+static NS_DEFINE_CID(kXULPopupListenerCID,        NS_XULPOPUPLISTENER_CID);
 
 static NS_DEFINE_CID(kXULControllersCID,          NS_XULCONTROLLERS_CID);
 
@@ -247,6 +247,13 @@ nsIAtom*             nsXULElement::kTreeRowAtom;
 nsIAtom*             nsXULElement::kEditorAtom;
 nsIAtom*             nsXULElement::kWindowAtom;
 nsIAtom*             nsXULElement::kNullAtom;
+
+#ifdef XUL_PROTOTYPE_ATTRIBUTE_METERING
+PRUint32             nsXULPrototypeAttribute::gNumElements;
+PRUint32             nsXULPrototypeAttribute::gNumAttributes;
+PRUint32             nsXULPrototypeAttribute::gNumEventHandlers;
+#endif
+
 //----------------------------------------------------------------------
 // nsXULElement
 
@@ -261,6 +268,9 @@ nsXULElement::nsXULElement()
       mSlots(nsnull)
 {
     NS_INIT_REFCNT();
+#ifdef XUL_PROTOTYPE_ATTRIBUTE_METERING
+    nsXULPrototypeAttribute::gNumElements++;
+#endif
 }
 
 
@@ -294,7 +304,7 @@ nsXULElement::Init()
         kTreeRowAtom        = NS_NewAtom("treerow");
         kEditorAtom         = NS_NewAtom("editor");
         kWindowAtom         = NS_NewAtom("window");
-		kNullAtom           = NS_NewAtom("");
+        kNullAtom           = NS_NewAtom("");
 
         rv = nsComponentManager::CreateInstance(kNameSpaceManagerCID,
                                                 nsnull,
@@ -365,7 +375,7 @@ nsXULElement::~nsXULElement()
         NS_IF_RELEASE(kTreeRowAtom);
         NS_IF_RELEASE(kEditorAtom);
         NS_IF_RELEASE(kWindowAtom);
-		NS_IF_RELEASE(kNullAtom);
+        NS_IF_RELEASE(kNullAtom);
 
         NS_IF_RELEASE(gNameSpaceManager);
 
@@ -426,6 +436,9 @@ nsXULElement::Create(nsXULPrototypeElement* aPrototype,
                 if (NS_FAILED(rv)) return rv;
 
                 if (found) {
+#ifdef XUL_PROTOTYPE_ATTRIBUTE_METERING
+                    nsXULPrototypeAttribute::gNumEventHandlers++;
+#endif
                     rv = element->AddScriptEventListener(attr->mName, attr->mValue, iid);
                     if (NS_FAILED(rv)) return rv;
                 }
@@ -509,6 +522,9 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
     }
     else if (iid.Equals(kIScriptObjectOwnerIID)) {
         *result = NS_STATIC_CAST(nsIScriptObjectOwner*, this);
+    }
+    else if (iid.Equals(NS_GET_IID(nsIScriptEventHandlerOwner))) {
+        *result = NS_STATIC_CAST(nsIScriptEventHandlerOwner*, this);
     }
     else if (iid.Equals(kIDOMEventReceiverIID)) {
         *result = NS_STATIC_CAST(nsIDOMEventReceiver*, this);
@@ -1484,6 +1500,45 @@ nsXULElement::SetScriptObject(void *aScriptObject)
 
 
 //----------------------------------------------------------------------
+// nsIScriptEventHandlerOwner interface
+
+NS_IMETHODIMP
+nsXULElement::GetCompiledEventHandler(nsIAtom *aName, void** aHandler)
+{
+    *aHandler = nsnull;
+    if (mPrototype) {
+        for (PRInt32 i = 0; i < mPrototype->mNumAttributes; ++i) {
+            nsXULPrototypeAttribute* attr = &(mPrototype->mAttributes[i]);
+
+            if ((attr->mNameSpaceID == kNameSpaceID_None) &&
+                (attr->mName == aName)) {
+                *aHandler = attr->mEventHandler;
+                break;
+            }
+        }
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULElement::SetCompiledEventHandler(nsIAtom *aName, void* aHandler)
+{
+    if (mPrototype) {
+        for (PRInt32 i = 0; i < mPrototype->mNumAttributes; ++i) {
+            nsXULPrototypeAttribute* attr = &(mPrototype->mAttributes[i]);
+
+            if ((attr->mNameSpaceID == kNameSpaceID_None) &&
+                (attr->mName == aName)) {
+                attr->mEventHandler = aHandler;
+                break;
+            }
+        }
+    }
+    return NS_OK;
+}
+
+
+//----------------------------------------------------------------------
 // nsIJSScriptObject interface
 
 PRBool
@@ -2136,8 +2191,8 @@ nsXULElement::SetAttribute(PRInt32 aNameSpaceID,
 
 NS_IMETHODIMP
 nsXULElement::GetAttribute(PRInt32 aNameSpaceID,
-                             nsIAtom* aName,
-                             nsString& aResult) const
+                           nsIAtom* aName,
+                           nsString& aResult) const
 {
     NS_ASSERTION(nsnull != aName, "must have attribute name");
     if (nsnull == aName) {
@@ -2199,18 +2254,21 @@ nsXULElement::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotif
     if (! Attributes())
         return NS_OK;
 
-    // Check to see if the CLASS attribute is being unset.  If so, we need to delete our
-    // class list.
-    if (mDocument && (aNameSpaceID == kNameSpaceID_None) && (aName == kClassAtom)) {
+    // Check to see if the CLASS attribute is being unset.  If so, we need to
+    // delete our class list.
+    // XXXbe fuse common (mDocument && aNameSpaceId == kNameSpaceID_None)
+    if (mDocument &&
+        (aNameSpaceID == kNameSpaceID_None) &&
+        (aName == kClassAtom)) {
         Attributes()->UpdateClassList("");
     }
     
-    if (mDocument && (aNameSpaceID == kNameSpaceID_None) && aName == kStyleAtom) {
+    if (mDocument &&
+        (aNameSpaceID == kNameSpaceID_None) &&
+        aName == kStyleAtom) {
 
         nsCOMPtr <nsIURI> docURL;
-        if (nsnull != mDocument) {
-            mDocument->GetBaseURL(*getter_AddRefs(docURL));
-        }
+        mDocument->GetBaseURL(*getter_AddRefs(docURL));
 
         Attributes()->UpdateStyleRule(docURL, "");
         // XXX Some kind of special document update might need to happen here.
@@ -2222,34 +2280,34 @@ nsXULElement::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotif
     nsCOMPtr<nsIAtom> tag;
     GetTag(*getter_AddRefs(tag));
     if (aNameSpaceID == kNameSpaceID_None) {
-      // See if we're a treeitem atom.
-      // XXX Forgive me father, for I know exactly what I do, and I'm
-      // doing it anyway.  Need to make an nsIRDFNodeList interface that
-      // I can QI to for additions and removals of nodes.  For now
-      // do an evil cast.
-      nsCOMPtr<nsIRDFNodeList> nodeList;
-      if (tag && (tag.get() == kTreeItemAtom) && (aName == kSelectedAtom)) {
-        nsCOMPtr<nsIDOMXULTreeElement> treeElement;
-        GetParentTree(getter_AddRefs(treeElement));
-        if (treeElement) {
-          nsCOMPtr<nsIDOMNodeList> nodes;
-          treeElement->GetSelectedItems(getter_AddRefs(nodes));
-          nodeList = do_QueryInterface(nodes);
+        // See if we're a treeitem atom.
+        // XXX Forgive me father, for I know exactly what I do, and I'm
+        // doing it anyway.  Need to make an nsIRDFNodeList interface that
+        // I can QI to for additions and removals of nodes.  For now
+        // do an evil cast.
+        nsCOMPtr<nsIRDFNodeList> nodeList;
+        if (tag && (tag.get() == kTreeItemAtom) && (aName == kSelectedAtom)) {
+            nsCOMPtr<nsIDOMXULTreeElement> treeElement;
+            GetParentTree(getter_AddRefs(treeElement));
+            if (treeElement) {
+                nsCOMPtr<nsIDOMNodeList> nodes;
+                treeElement->GetSelectedItems(getter_AddRefs(nodes));
+                nodeList = do_QueryInterface(nodes);
+            }
         }
-      }
-      else if (tag && (tag.get() == kTreeCellAtom) && (aName == kSelectedAtom)) {
-        nsCOMPtr<nsIDOMXULTreeElement> treeElement;
-        GetParentTree(getter_AddRefs(treeElement));
-        if (treeElement) {
-          nsCOMPtr<nsIDOMNodeList> nodes;
-          treeElement->GetSelectedCells(getter_AddRefs(nodes));
-          nodeList = do_QueryInterface(nodes);
+        else if (tag && (tag.get() == kTreeCellAtom) && (aName == kSelectedAtom)) {
+            nsCOMPtr<nsIDOMXULTreeElement> treeElement;
+            GetParentTree(getter_AddRefs(treeElement));
+            if (treeElement) {
+                nsCOMPtr<nsIDOMNodeList> nodes;
+                treeElement->GetSelectedCells(getter_AddRefs(nodes));
+                nodeList = do_QueryInterface(nodes);
+            }
         }
-      }
-      if (nodeList) {
-        // Remove this node from the list.
-        nodeList->RemoveNode(this);
-      }
+        if (nodeList) {
+            // Remove this node from the list.
+            nodeList->RemoveNode(this);
+        }
     }
 
     // XXX Know how to remove POPUP event listeners when an attribute is unset?
@@ -2263,7 +2321,8 @@ nsXULElement::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotif
         PRInt32 i;
         for (i = 0; i < count; i++) {
             nsXULAttribute* attr = NS_REINTERPRET_CAST(nsXULAttribute*, Attributes()->ElementAt(i));
-            if ((attr->GetNameSpaceID() == aNameSpaceID) && (attr->GetName() == aName)) {
+            if ((attr->GetNameSpaceID() == aNameSpaceID) &&
+                (attr->GetName() == aName)) {
                 attr->GetValue(oldValue);
                 Attributes()->RemoveElementAt(i);
                 NS_RELEASE(attr);
@@ -2275,50 +2334,50 @@ nsXULElement::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotif
 
     // XUL Only. Find out if we have a broadcast listener for this element.
     if (successful) {
-      // Check to see if the OBSERVES attribute is being unset.  If so, we need to remove
-      // ourselves completely.
-      if (mDocument && (aNameSpaceID == kNameSpaceID_None) && 
-          (aName == kObservesAtom))
-      {
-        // Do a getElementById to retrieve the broadcaster.
-        nsCOMPtr<nsIDOMElement> broadcaster;
-        nsCOMPtr<nsIDOMXULDocument> domDoc = do_QueryInterface(mDocument);
-        domDoc->GetElementById(oldValue, getter_AddRefs(broadcaster));
-        if (broadcaster) {
-          nsCOMPtr<nsIDOMXULElement> xulBroadcaster = do_QueryInterface(broadcaster);
-          if (xulBroadcaster) {
-            xulBroadcaster->RemoveBroadcastListener("*", this);
-          }
-        }
-      }
-
-      if (BroadcastListeners()) {
-        PRInt32 count = BroadcastListeners()->Count();
-        for (PRInt32 i = 0; i < count; i++)
+        // Check to see if the OBSERVES attribute is being unset.  If so, we
+        // need to remove ourselves completely.
+        if (mDocument &&
+            (aNameSpaceID == kNameSpaceID_None) && 
+            (aName == kObservesAtom))
         {
-            XULBroadcastListener* xulListener =
-                NS_REINTERPRET_CAST(XULBroadcastListener*, BroadcastListeners()->ElementAt(i));
-
-            nsAutoString str;
-            aName->ToString(str);
-            if (xulListener->ObservingAttribute(str) && 
-               (aName != kIdAtom)) {
-                // XXX Should have a function that knows which attributes are special.
-                // Unset the attribute in the broadcast listener.
-                nsCOMPtr<nsIDOMElement> element;
-                element = do_QueryInterface(xulListener->mListener);
-                if (element)
-                  element->RemoveAttribute(str);
+            // Do a getElementById to retrieve the broadcaster.
+            nsCOMPtr<nsIDOMElement> broadcaster;
+            nsCOMPtr<nsIDOMXULDocument> domDoc = do_QueryInterface(mDocument);
+            domDoc->GetElementById(oldValue, getter_AddRefs(broadcaster));
+            if (broadcaster) {
+                nsCOMPtr<nsIDOMXULElement> xulBroadcaster = do_QueryInterface(broadcaster);
+                if (xulBroadcaster) {
+                    xulBroadcaster->RemoveBroadcastListener("*", this);
+                }
             }
         }
-      }
-   
-      // Notify document
-      if (NS_SUCCEEDED(rv) && aNotify && (nsnull != mDocument)) {
-          mDocument->AttributeChanged(NS_STATIC_CAST(nsIStyledContent*, this),
-                                      aNameSpaceID, aName,
-                                      NS_STYLE_HINT_UNKNOWN);
-      }
+
+        if (BroadcastListeners()) {
+            PRInt32 count = BroadcastListeners()->Count();
+            for (PRInt32 i = 0; i < count; i++) {
+                XULBroadcastListener* xulListener =
+                    NS_REINTERPRET_CAST(XULBroadcastListener*, BroadcastListeners()->ElementAt(i));
+
+                nsAutoString str;
+                aName->ToString(str);
+                if (xulListener->ObservingAttribute(str) && 
+                   (aName != kIdAtom)) {
+                    // XXX Should have a function that knows which attributes are special.
+                    // Unset the attribute in the broadcast listener.
+                    nsCOMPtr<nsIDOMElement> element;
+                    element = do_QueryInterface(xulListener->mListener);
+                    if (element)
+                        element->RemoveAttribute(str);
+                }
+            }
+        }
+     
+        // Notify document
+        if (NS_SUCCEEDED(rv) && aNotify && (nsnull != mDocument)) {
+            mDocument->AttributeChanged(NS_STATIC_CAST(nsIStyledContent*, this),
+                                        aNameSpaceID, aName,
+                                        NS_STYLE_HINT_UNKNOWN);
+        }
     }
 
     // End XUL Only Code
@@ -3094,11 +3153,11 @@ nsXULElement::GetID(nsIAtom*& aResult) const
   GetAttribute(kNameSpaceID_None, kIdAtom, value);
 
   if (value.Length() > 0)
-	  aResult = NS_NewAtom(value); // The NewAtom call does the AddRef.
+      aResult = NS_NewAtom(value); // The NewAtom call does the AddRef.
   else
   {
-	  aResult = kNullAtom;
-	  NS_ADDREF(kNullAtom);
+      aResult = kNullAtom;
+      NS_ADDREF(kNullAtom);
   }
   return NS_OK;
 }

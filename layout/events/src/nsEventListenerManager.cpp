@@ -552,7 +552,7 @@ nsEventListenerManager::AddScriptEventListener(nsIScriptContext* aContext,
     rv = aScriptObjectOwner->GetScriptObject(aContext, (void**)&scriptObject);
     if (NS_FAILED(rv))
       return rv;
-    rv = aContext->CompileFunction(scriptObject, aName, aBody);
+    rv = aContext->CompileEventHandler(scriptObject, aName, aBody, nsnull);
     if (NS_FAILED(rv))
       return rv;
   }
@@ -587,24 +587,39 @@ nsEventListenerManager::HandleEventSubType(nsListenerStruct* aListenerStruct,
       if (NS_SUCCEEDED(result)) {
         JSObject* jsobj;
         result = owner->GetScriptObject(scriptCX, (void**)&jsobj);
-        // This should never happen for anything but content
-        // XXX I don't like that we have to reference content
-        // from here. The alternative is to store the event handler
-        // string on the JS object itself.
         if (NS_SUCCEEDED(result)) {
-          nsCOMPtr<nsIContent> content = do_QueryInterface(owner);
-          NS_ASSERTION(content, "only content should have event handler attributes");
-          if (content) {
-            nsAutoString eventString;
-            if (NS_SUCCEEDED(aDOMEvent->GetType(eventString))) {
+          nsAutoString eventString;
+          if (NS_SUCCEEDED(aDOMEvent->GetType(eventString))) {
+            eventString.Insert("on", 0, 2);
+            nsCOMPtr<nsIAtom> atom = getter_AddRefs(NS_NewAtom(eventString));
 
-              eventString.Insert("on", 0, 2);
-              nsCOMPtr<nsIAtom> atom = getter_AddRefs(NS_NewAtom(eventString));
-              nsAutoString handlerBody;
-              result = content->GetAttribute(kNameSpaceID_None, atom, handlerBody);
-              if (NS_SUCCEEDED(result)) {
-                result = scriptCX->CompileFunction(jsobj, atom, handlerBody);
+            nsCOMPtr<nsIScriptEventHandlerOwner> handlerOwner = do_QueryInterface(owner);
+            void* handler = nsnull;
+
+            if (handlerOwner) {
+              result = handlerOwner->GetCompiledEventHandler(atom, &handler);
+              if (NS_SUCCEEDED(result) && handler) {
+                result = scriptCX->BindCompiledEventHandler(jsobj, atom, handler);
                 aListenerStruct->mHandlerIsString &= ~aSubType;
+              }
+            }
+
+            if (aListenerStruct->mHandlerIsString & aSubType) {
+              // This should never happen for anything but content
+              // XXX I don't like that we have to reference content
+              // from here. The alternative is to store the event handler
+              // string on the JS object itself.
+              nsCOMPtr<nsIContent> content = do_QueryInterface(owner);
+              NS_ASSERTION(content, "only content should have event handler attributes");
+              if (content) {
+                nsAutoString handlerBody;
+                result = content->GetAttribute(kNameSpaceID_None, atom, handlerBody);
+                if (NS_SUCCEEDED(result)) {
+                  result = scriptCX->CompileEventHandler(jsobj, atom, handlerBody, &handler);
+                  aListenerStruct->mHandlerIsString &= ~aSubType;
+                  if (handlerOwner)
+                    handlerOwner->SetCompiledEventHandler(atom, handler);
+                }
               }
             }
           }

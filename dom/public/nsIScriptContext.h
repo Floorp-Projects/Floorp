@@ -17,7 +17,7 @@
  * Copyright (C) 1998-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  */
 
 #ifndef nsIScriptContext_h__
@@ -70,7 +70,7 @@ public:
    * @param aLineNo the starting line number for the script for error messages
    * @param aVersion the script language version to use when executing
    * @param aRetValue the result of executing the script
-   * @param aIsUndefined true if the result of executing the script is the 
+   * @param aIsUndefined true if the result of executing the script is the
    *                     undefined value
    *
    * @return NS_OK if the script was valid and got executed
@@ -120,24 +120,66 @@ public:
    *                     or nsnull to use a default scope
    * @param aRetValue the result of executing the script, may be null in
    *                  which case no result string is computed
-   * @param aIsUndefined true if the result of executing the script is the 
+   * @param aIsUndefined true if the result of executing the script is the
    *                     undefined value, may be null for "don't care"
    *
    * @return NS_OK if the script was valid and got executed
    *
-   */ 
+   */
   NS_IMETHOD ExecuteScript(void* aScriptObject,
                            void *aScopeObject,
                            nsString* aRetValue,
                            PRBool* aIsUndefined) = 0;
 
-  NS_IMETHOD CompileFunction(void *aObj, nsIAtom *aName,
-                             const nsString& aBody) = 0;
+  /**
+   * Compile the event handler named by atom aName, with function body aBody
+   * into a function returned on success via *aFunction.  Bind the lowercase
+   * ASCII name to the function in scope aObj, or in the context's global if
+   * aObj is null.
+   *
+   * @param aObj an object telling the scope in which to bind the compiled
+   *             event handler function, or nsnull to use a default scope
+   * @param aName an nsIAtom pointer naming the function; it must be lowercase
+   *        and ASCII, and should not be longer than 63 chars.  This bound on
+   *        length is enforced only by assertions, so caveat caller!
+   * @param aBody the event handler function's body
+   * @param aFunction the out parameter in which a void pointer to the compiled
+   *        function is returned on success; may be null, meaning "don't care"
+   *
+   * @return NS_OK if the function body was valid and got compiled
+   */
+  NS_IMETHOD CompileEventHandler(void *aObj,
+                                 nsIAtom *aName,
+                                 const nsString& aBody,
+                                 void** aFunction) = 0;
 
-  NS_IMETHOD CallFunction(void *aObj, void *aFunction, 
-                          PRUint32 argc, void *argv, 
+  NS_IMETHOD CallFunction(void *aObj, void *aFunction,
+                          PRUint32 argc, void *argv,
                           PRBool *aBoolResult) = 0;
 
+  /**
+   * Bind an already-compiled event handler function to a name in the given
+   * scope object.  The same restrictions on aName (lowercase ASCII, not too
+   * long) applies here as for CompileEventHandler.
+   *
+   * @param aObj an object telling the scope in which to bind the compiled
+   *             event handler function
+   * @param aName an nsIAtom pointer naming the function; it must be lowercase
+   *        and ASCII, and should not be longer than 63 chars.  This bound on
+   *        length is enforced only by assertions, so caveat caller!
+   * @param aFunction the function to name, created by an earlier call to
+   *        CompileEventHandler
+   * @return NS_OK if the function was successfully bound to the name
+   */
+  NS_IMETHOD BindCompiledEventHandler(void *aObj,
+                                      nsIAtom *aName,
+                                      void *aFunction) = 0;
+
+  /**
+   * Set the default scripting language version for this context, which must
+   * be a context specific to a particular scripting language.
+   *
+   **/
   NS_IMETHOD SetDefaultLanguageVersion(const char* aVersion) = 0;
 
   /**
@@ -172,7 +214,7 @@ public:
    * Check to see if context is as yet intialized. Used to prevent
    * reentrancy issues during the initialization process.
    *
-   * @return NS_OK if initialized, NS_COMFALSE if not 
+   * @return NS_OK if initialized, NS_COMFALSE if not
    *
    */
   NS_IMETHOD IsContextInitialized() = 0;
@@ -181,7 +223,7 @@ public:
    * Add a reference to a script object. For garbage collected systems
    * the address of a slot to be used as a root is also provided. For
    * reference counted systems, the object is provided.
-   * 
+   *
    * @param aSlot Slot to use as a root for garbage collected systems
    * @param aScriptObject Script object being referenced
    * @param aName Name of the reference (could be null)
@@ -192,7 +234,7 @@ public:
                                      const char *aName) = 0;
 
   /**
-   * Remove a reference to a script object. For garbage collected 
+   * Remove a reference to a script object. For garbage collected
    * systems, this is equivalent to removing a root.
    *
    * @param aSlot Slot corresponding to the removed root
@@ -209,7 +251,7 @@ public:
    * @return NS_OK if the method is successful
    */
   NS_IMETHOD GC() = 0;
-  
+
   /**
    * Get the name space manager for this context.
    * @return NS_OK if the method is successful
