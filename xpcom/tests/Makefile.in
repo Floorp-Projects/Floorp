@@ -23,30 +23,67 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS		= dynamic
 
-CPPSRCS		= RegFactory.cpp TestFactory.cpp TestCOMPtr.cpp
+CPPSRCS		= RegFactory.cpp TestFactory.cpp TestCOMPtr.cpp TestID.cpp
 
-include $(topsrcdir)/config/rules.mk
+include $(topsrcdir)/config/config.mk
 
 DEFINES		+= -DUSE_NSREG
-INCLUDES	+= -I$(srcdir)/../public -I$(DIST)/include
+INCLUDES	+= -I$(srcdir)/../public
 
-EX_LIBS		= $(DIST)/lib/libxpcom.$(LIB_SUFFIX) \
-		  $(DIST)/lib/libreg.$(LIB_SUFFIX) \
-		  $(NULL)
+NETLIB_LIBS =	      \
+	-labouturl    \
+	-lfileurl     \
+	-lftpurl      \
+	-lgophurl     \
+	-lhttpurl     \
+	-lremoturl    \
+	-lsockstuburl \
+	-lmimetype    \
+	-lnetcache    \
+	-lnetcnvts    \
+	-lnetlib      \
+	-lnetutil     \
+	-lnetwork     \
+	-lxp	      \
+	-ljsurl	      \
+	-lmozdbm      \
+	-lpwcac	      \
+	$(NULL)
 
-PROGS		= $(addprefix $(OBJDIR)/, $(CPPSRCS:.cpp=))
+LIBS		= \
+	-lpref \
+	-ljs \
+	-lsecfree \
+	-lxp \
+	-labouturl    \
+	-lfileurl     \
+	-lftpurl      \
+	-lgophurl     \
+	-lhttpurl     \
+	-lremoturl    \
+	-lsockstuburl \
+	-lmimetype    \
+	-lnetcache    \
+	-lnetcnvts    \
+	-lnetlib      \
+	-lnetutil     \
+	-lnetwork     \
+	-lraptorbase  \
+	-lxp	      \
+	-lxpcom       \
+	-ljsurl	      \
+	-lmozdbm      \
+	-lpwcac	      \
+	-lgmbase$(MOZ_TOOLKIT) \
+	$(TK_LIBS) \
+	-limg	     \
+	$(JPEG_LIBS) \
+	$(PNG_LIBS)  \
+	-lmozutil    \
+	$(ZLIB_LIBS) \
+	$(NSPR_LIBS) \
+	$(NULL)
 
-TARGETS		= $(PROGS)
+SIMPLE_PROGRAMS	= $(addprefix $(OBJDIR)/, $(CPPSRCS:.cpp=))
 
-ifeq ($(OS_ARCH),Rhapsody)
-$(PROGS):$(OBJDIR)/%: $(OBJDIR)/%.o $(EX_LIBS)
-	@$(MAKE_OBJDIR)
-	$(CC) -o $@ $@.o $(LDFLAGS) $(EX_LIBS) $(NSPR_LIBS) $(OS_LIBS)
-else
-$(PROGS):$(OBJDIR)/%: $(OBJDIR)/%.o $(EX_LIBS)
-	@$(MAKE_OBJDIR)
-	$(CCC) -o $@ $@.o $(LDFLAGS) $(EX_LIBS) $(NSPR_LIBS) $(OS_LIBS)
-endif
-
-install:: $(PROGS)
-	$(INSTALL) $(PROGS) $(DIST)/bin
+include $(topsrcdir)/config/rules.mk
