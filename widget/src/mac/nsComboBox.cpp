@@ -48,8 +48,8 @@ nsComboBox::~nsComboBox()
 {
 	if (mMenuHandle)
 	{
-		::DeleteMenu(mMenuID);
-		::DisposeMenu(mMenuHandle);
+//		::DeleteMenu(mMenuID);
+//		::DisposeMenu(mMenuHandle);
 		mMenuHandle = nsnull;
 	}
 }
