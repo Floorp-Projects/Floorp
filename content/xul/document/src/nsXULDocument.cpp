@@ -2948,9 +2948,9 @@ nsXULDocument::RemoveElementFromMap(nsIContent* aElement)
 
 
 PRIntn
-nsXULDocument::RemoveElementsFromMapByContent(const nsString& aID,
-                                                nsIContent* aElement,
-                                                void* aClosure)
+nsXULDocument::RemoveElementsFromMapByContent(const PRUnichar* aID,
+                                              nsIContent* aElement,
+                                              void* aClosure)
 {
     nsIContent* content = NS_REINTERPRET_CAST(nsIContent*, aClosure);
     return (aElement == content) ? HT_ENUMERATE_REMOVE : HT_ENUMERATE_NEXT;
