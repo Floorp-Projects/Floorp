@@ -272,27 +272,29 @@ nsHttpAuthNode::~nsHttpAuthNode()
 
 nsresult
 nsHttpAuthNode::GetAuthEntryForPath(const char *path,
-                                    nsHttpAuthEntry **entry)
+                                    nsHttpAuthEntry **result)
 {
-    *entry = nsnull;
-
-    // it's permissible to specify a null path, in which case we just treat
-    // this as an empty string.
-    if (!path)
-        path = "";
+    *result = nsnull;
 
     // look for an entry that either matches or contains this directory.
     // ie. we'll give out credentials if the given directory is a sub-
     // directory of an existing entry.
-    PRInt32 i;
-    for (i=0; i<mList.Count(); ++i) {
-        *entry = (nsHttpAuthEntry *) mList[i];
-        if (!nsCRT::strncmp(path, (*entry)->Path(), (PRUint32) strlen((*entry)->Path())))
+    for (PRInt32 i=0; i<mList.Count(); ++i) {
+        nsHttpAuthEntry *entry = (nsHttpAuthEntry *) mList[i];
+        // path's can be NULL
+        if (!path || !entry->Path()) {
+            if (path == entry->Path()) {
+                *result = entry;
+                break;
+            }
+        }
+        else if (!nsCRT::strncmp(path, entry->Path(), nsCRT::strlen(entry->Path()))) {
+            *result = entry;
             break;
-        *entry = nsnull;
+        }
     }
 
-    return *entry ? NS_OK : NS_ERROR_NOT_AVAILABLE;
+    return *result ? NS_OK : NS_ERROR_NOT_AVAILABLE;
 }
 
 nsresult
