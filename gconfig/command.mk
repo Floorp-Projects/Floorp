@@ -31,6 +31,9 @@ RANLIB        = echo
 JAR           = /bin/jar
 TAR           = /bin/tar
 
+ifdef NSPR20
+DEFINES     += -DNSPR20
+endif
 
 #
 # For purify
