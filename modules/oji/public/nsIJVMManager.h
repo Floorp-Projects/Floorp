@@ -31,6 +31,10 @@
 
 #include "nsISupports.h"
 
+#ifndef JNI_H
+#include "jni.h"
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 // Java VM Plugin Manager
 // This interface defines additional entry points that are available
