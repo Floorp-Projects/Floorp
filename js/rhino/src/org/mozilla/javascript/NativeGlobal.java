@@ -382,9 +382,9 @@ public class NativeGlobal {
                               Object[] args, Function funObj)
         throws JavaScriptException
     {
-        Object[] msgArgs = { "eval" };
-        throw Context.reportRuntimeError(
-            Context.getMessage("msg.cant.call.indirect", msgArgs));
+        Object[] a = { "eval" };
+        String m = ScriptRuntime.getMessage("msg.cant.call.indirect", a);
+        throw NativeGlobal.constructError(cx, "EvalError", m, funObj);
     }
     
     /**
