@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE html [
+  <!ENTITY % htmlDTD
+    PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+    "DTD/xhtml1-strict.dtd">
+  %htmlDTD;
+  <!ENTITY % netErrorDTD
+       SYSTEM "chrome://global/locale/netError.dtd">
+  %netErrorDTD;
+]>
+
+<!--
+   The contents of this file are subject to the Netscape Public License
+   Version 1.0 (the "NPL"); you may not use this file except in
+   compliance with the NPL.  You may obtain a copy of the NPL at
+   http://www.mozilla.org/NPL/
+  
+   Software distributed under the NPL is distributed on an "AS IS" basis,
+   WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+   for the specific language governing rights and limitations under the
+   NPL.
+  
+   The Initial Developer of this code under the NPL is Netscape
+   Communications Corporation.  Portions created by Netscape are
+   Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+   Reserved.
+   
+   Contributor(s):
+     Adam Lock <adamlock@netscape.com>
+ -->
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+  <title> </title>
+  <script src="chrome://global/content/netError.js"></script>
+</head>
+
+<body onload="fillIn();">
+  <div id="title">
+   <p> </p>
+  </div>
+  <!-- SHORT DESCRIPTION -->
+  <p id="shortDesc"> </p>
+  <!-- LONG DESCRIPTION -->
+  <div id="malformedURI" style="display:none;">
+    <p>&malformedURI.longDesc;</p>
+  </div>
+  <div id="fileNotFound" style="display:none;">
+    <p>&fileNotFound.longDesc;</p>
+  </div>
+  <div id="dnsNotFound" style="display:none;">
+    <p>&dnsNotFound.longDesc;</p>
+  </div>
+  <div id="dnsNotFound" style="display:none;">
+    <p>&dnsNotFound.longDesc;</p>
+  </div>
+  <div id="protocolNotFound" style="display:none;">
+    <p>&protocolNotFound.longDesc;</p>
+  </div>
+  <div id="connectionFailure" style="display:none;">
+    <p>&connectionFailure.longDesc;</p>
+  </div>
+  <div id="netTimeout" style="display:none;">
+    <p>&netTimeout.longDesc;</p>
+  </div>
+  <div id="redirectLoop" style="display:none;">
+    <p>&redirectLoop.longDesc;</p>
+  </div>
+  <div id="unknownSocketType" style="display:none;">
+    <p>&unknownSocketType.longDesc;</p>
+  </div>
+  <p><a id="retry" href="#" onclick="retryThis();">&retry.label;</a></p>
+  <p><a id="search" href="#" onclick="searchThis();">&search.label;</a></p>
+</body>
+
+</html>

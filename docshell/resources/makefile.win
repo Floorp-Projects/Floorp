@@ -16,11 +16,11 @@
 # Communications, Inc.  Portions created by Netscape are
 # Copyright (C) 1999, Mozilla.  All Rights Reserved.
 # 
-# Contributor(s):
-#   Travis Bogard <travis@netscape.com>
+# Contributor(s): 
+#  Adam Lock <adamlock@netscape.com>
 
-DEPTH=..
+DEPTH=..\..
 
-DIRS=base build resources
+DIRS=locale content
 
 include <$(DEPTH)\config\rules.mak>
