@@ -30,13 +30,13 @@
 #include "nsHTMLIIDs.h"
 #include "nsPageFrame.h"
 #include "nsIRenderingContext.h"
-#include "nsIDeviceContext.h"
 #include "nsGUIEvent.h"
 #include "nsDOMEvent.h"
 #include "nsStyleConsts.h"
 #include "nsIViewManager.h"
 #include "nsHTMLAtoms.h"
 #include "nsIEventStateManager.h"
+#include "nsIDeviceContext.h"
 
 class RootFrame : public nsContainerFrame {
 public:
