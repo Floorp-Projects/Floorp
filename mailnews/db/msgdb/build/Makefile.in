@@ -45,11 +45,12 @@ EXTRA_DSO_LDOPTS = 	\
 	$(NSPR_LIBS)			\
 	-L$(DIST)/bin			\
 	-L$(DIST)/lib			\
-	-lxpcom				\
+	-lxpcom					\
 	-lraptorbase			\
-	-lxp				\
-	-lrdfutil_s			\
+	-lxp					\
+	-lrdfutil_s				\
 	-lmsgbaseutil			\
+	-lmork					\
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
