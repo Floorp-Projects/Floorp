@@ -82,6 +82,96 @@ sub getArguments {
     $self->notImplemented();
 }
 
+# escape semicolons as #s and hashes as #h, etc.
+sub escapeString {
+    my $self = shift;
+    my($substring) = @_;
+    # this is a simple escaping mechanism which gets rid of all
+    # semicolons without introducing any ambiguities and without
+    # requiring much thought when unescaping. (If you try to escape
+    # the separator, say ';', by doubling it, e.g. ';;', then you lose
+    # the possibility of a blank value, and if you escape by using one
+    # escape for the separator and doubling for the escape character,
+    # e.g. '\;' and '\\', then you get all kinds of confusion when the
+    # string contains lots of '\' and ';' characters.
+    $substring =~ s/  \#  /  \#h  /gosx;
+    $substring =~ s/  \|  /  \#b  /gosx;
+    $substring =~ s/  \;  /  \#s  /gosx;
+    $substring =~ s/  \   /  \#w  /gosx;
+    $substring =~ s/  \n  /  \#n  /gosx;
+    $substring =~ s/  \r  /  \#r  /gosx;
+    $substring =~ s/  \t  /  \#t  /gosx;
+    return $substring;
+}
+
+# escape semicolons as #s and hashes as #h, etc.
+sub unescapeString {
+    my $self = shift;
+    my($substring) = @_;
+    $substring =~ s/  \#b  /  \|  /gosx;
+    $substring =~ s/  \#s  /  \;  /gosx;
+    $substring =~ s/  \#w  /  \   /gosx;
+    $substring =~ s/  \#n  /  \n  /gosx;
+    $substring =~ s/  \#r  /  \r  /gosx;
+    $substring =~ s/  \#t  /  \t  /gosx;
+    $substring =~ s/  \#h  /  \#  /gosx;
+    return $substring;
+}
+
+# returns all the arguments in a form of a string
+sub getArgumentsAsString {
+    my $self = shift;
+    my $hash = $self->getArguments();
+    my $string = '';
+    foreach my $key (keys %$hash) {
+        $key = $self->escapeString($key);
+        if (ref($hash->{$key}) eq 'ARRAY') {
+            $string .= "$key;";
+            foreach my $substring (@{$hash->{$key}}) {
+                $substring = $self->escapeString($substring);
+                $string .= "$substring|";
+            }
+            chop $string;
+            $string .= ";";
+        } else {
+            $string .= "$key;".($hash->{$key}).';';
+        }
+    }
+    chop $string;
+    return $string;
+}
+
+# turns a string from getArgumentsAsString() back into a hash
+# you can also pass an arrayref of strings
+sub getArgumentsFromString {
+    my $self = shift;
+    my($string) = @_;
+    if (ref($string) eq 'ARRAY') {
+        $string = join(';', @$string);
+    }
+    my @rawHash = split(/;/, $string);
+    if (not @rawHash or @rawHash % 2) {
+        # nope! Something in this data is screwed up, let's bail out.
+        return {};
+    } else {
+        my $isKey = 1;
+        my @hash;
+        foreach my $substring (@rawHash) {
+            if ($isKey) {
+                push(@hash, $self->unescapeString($substring));
+            } else {
+                my @values;
+                foreach my $value (split(/\|/, $substring)) {
+                    push(@values, $self->unescapeString($value));
+                }
+                push(@hash, \@values);
+            }
+            $isKey = not $isKey;
+        }
+        return { @hash };
+    }
+}
+
 # returns all the arguments present that begin with a specific string
 # followed by a dot (the keys in the hash returned do not start with
 # the prefix)
