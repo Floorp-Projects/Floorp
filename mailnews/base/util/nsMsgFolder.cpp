@@ -1236,8 +1236,9 @@ NS_IMETHODIMP nsMsgFolder::ReadDBFolderInfo(PRBool force)
 				if (db && !db->HasNew() && mNumPendingUnreadMessages <= 0)
 					ClearFlag(MSG_FOLDER_FLAG_GOT_NEW);
             }
+
             if (db)
-                db->Close(FALSE);
+                db->Close(PR_FALSE);
         }
     }
 
