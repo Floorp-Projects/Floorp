@@ -371,9 +371,8 @@ public class Codegen extends Interpreter {
             vars = fnNode.getVariableTable();
             this.name = fnNode.getClassName();
             classFile = new ClassFileWriter(name, superClassName, itsSourceFile);
-            Node args = tree.getFirstChild();
             String name = fnNode.getFunctionName();
-            generateInit(cx, "<init>", tree, name, args);
+            generateInit(cx, "<init>", tree, name);
             if (fnNode.isTargetOfDirectCall()) {
                 classFile.startMethod("call",
                                       "(Lorg/mozilla/javascript/Context;" +
@@ -462,7 +461,7 @@ public class Codegen extends Interpreter {
             classFile.addInterface("org/mozilla/javascript/Script");
             generateScriptCtor(cx, tree);
             generateMain(cx);
-            generateInit(cx, "initScript", tree, "", null);
+            generateInit(cx, "initScript", tree, "");
             generateExecute(cx);
             startNewMethod("call",
                            "(Lorg/mozilla/javascript/Context;" +
@@ -1071,7 +1070,7 @@ public class Codegen extends Interpreter {
     }
 
     private void generateInit(Context cx, String methodName,
-                              Node tree, String name, Node args)
+                              Node tree, String name)
     {
         trivialInit = true;
         boolean inCtor = false;
