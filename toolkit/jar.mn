@@ -5,6 +5,7 @@ toolkit.jar:
 +        content/global/widgets/toolbar.xml                 (content/widgets/toolbar.xml)
 *+       content/global/finddialog.xul                      (content/finddialog.xul)
 *+       content/global/finddialog.js                       (content/finddialog.js)
+*+       content/global/findUtils.js                        (content/findUtils.js)
 *        content/global/customizeToolbar.xul                (content/customizeToolbar.xul)
 *        content/global/customizeToolbar.js                 (content/customizeToolbar.js)
          content/global/customizeToolbar.css                (content/customizeToolbar.css)
