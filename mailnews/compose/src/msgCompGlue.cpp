@@ -209,6 +209,19 @@ char * INTL_EncodeMimePartIIStr(const char *header, const char *charset, PRBool 
   return NS_SUCCEEDED(res) ? encodedString : nsnull;
 }
 
+// MIME decoder
+nsresult INTL_DecodeMimePartIIStr(const nsString& header, nsString& charset, nsString& decodedString)
+{
+  nsIMimeConverter *converter;
+  nsresult res = nsComponentManager::CreateInstance(kCMimeConverterCID, nsnull, 
+                                                    nsIMimeConverter::GetIID(), (void **)&converter);
+  if (NS_SUCCEEDED(res) && nsnull != converter) {
+    res = converter->DecodeMimePartIIStr(header, charset, decodedString);
+    NS_RELEASE(converter);
+  }
+  return res;
+}
+
 // Get a default mail character set.
 char * INTL_GetDefaultMailCharset()
 {

@@ -93,6 +93,7 @@ extern nsresult ConvertToUnicode(const nsString aCharset,
                                  const char *inCString, 
                                  nsString &outString);
 extern const char *msgCompHeaderInternalCharset(void);
+extern nsresult INTL_DecodeMimePartIIStr(const nsString& header, nsString& charset, nsString& decodedString);
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
@@ -664,7 +665,12 @@ nsComposeAppCore::NewMessage(nsAutoString& aUrl,
 			if ((NS_SUCCEEDED(rv)) && message) {
 				nsString aString = "";
 				nsString bString = "";
+        nsString aCharset = "";
+        nsString decodedString;
+        nsString encodedCharset;  // we don't use this
+        char *aCString;
 
+        message->GetCharSet(aCharset);
 				message->GetSubject(aString);
                 switch (messageType)
                 {
@@ -672,12 +678,28 @@ nsComposeAppCore::NewMessage(nsAutoString& aUrl,
                 case 0:         // reply to sender
                 case 1:         // reply to all
                 {
+                    // get an original charset, used for a label, UTF-8 is used for the internal processing
+                    if (!aCharset.Equals("")) {
+                      mMsgCompFields->SetCharacterSet(nsAutoCString(aCharset), NULL);
+                    }
                     bString += "Re: ";
                     bString += aString;
 					mMsgCompFields->SetSubject(nsAutoCString(bString), NULL);
+                    if (NS_SUCCEEDED(INTL_DecodeMimePartIIStr(bString, encodedCharset, decodedString))) {
+                      if (NS_SUCCEEDED(ConvertFromUnicode(msgCompHeaderInternalCharset(), decodedString, &aCString))) {
+                        mMsgCompFields->SetSubject(aCString, NULL);
+                        PR_Free(aCString);
+                      }
+                    }
                     
 					message->GetAuthor(aString);		
 					mMsgCompFields->SetTo(nsAutoCString(aString), NULL);
+                    if (NS_SUCCEEDED(INTL_DecodeMimePartIIStr(aString, encodedCharset, decodedString))) {
+                      if (NS_SUCCEEDED(ConvertFromUnicode(msgCompHeaderInternalCharset(), decodedString, &aCString))) {
+                        mMsgCompFields->SetTo(aCString, NULL);
+                        PR_Free(aCString);
+                      }
+                    }
 
                     if (messageType == 1)
                     {
@@ -688,6 +710,12 @@ nsComposeAppCore::NewMessage(nsAutoString& aUrl,
                             cString = cString + ", ";
                         cString = cString + dString;
 						mMsgCompFields->SetCc(nsAutoCString(cString), NULL);
+                        if (NS_SUCCEEDED(INTL_DecodeMimePartIIStr(cString, encodedCharset, decodedString))) {
+                          if (NS_SUCCEEDED(ConvertFromUnicode(msgCompHeaderInternalCharset(), decodedString, &aCString))) {
+                            mMsgCompFields->SetTo(aCString, NULL);
+                            PR_Free(aCString);
+                          }
+                        }
                     }
                     HackToGetBody(1);
                     break;
@@ -696,11 +724,20 @@ nsComposeAppCore::NewMessage(nsAutoString& aUrl,
                 case 3:         // forward as inline
                 case 4:         // forward as quoted
                 {
+                    if (!aCharset.Equals("")) {
+                      mMsgCompFields->SetCharacterSet(nsAutoCString(aCharset), NULL);
+                    }
                     bString += "[Fwd: ";
                     bString += aString;
                     bString += "]";
 
 					mMsgCompFields->SetSubject(nsAutoCString(bString), NULL);
+                    if (NS_SUCCEEDED(INTL_DecodeMimePartIIStr(bString, encodedCharset, decodedString))) {
+                      if (NS_SUCCEEDED(ConvertFromUnicode(msgCompHeaderInternalCharset(), decodedString, &aCString))) {
+                        mMsgCompFields->SetSubject(aCString, NULL);
+                        PR_Free(aCString);
+                      }
+                    }
 
                     /* We need to get more information out from the message. */
                     nsCOMPtr<nsIRDFResource> rdfResource;
