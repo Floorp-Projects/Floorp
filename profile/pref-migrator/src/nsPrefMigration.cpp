@@ -1756,6 +1756,7 @@ nsPrefMigration::Rename4xFileAfterMigration(nsIFileSpec * profilePath, const cha
   return rv;
 }
 
+#ifdef NEED_TO_COPY_AND_RENAME_NEWSRC_FILES
 nsresult
 nsPrefMigration::GetPremigratedFilePref(const char *pref_name, nsIFileSpec **path)
 {
@@ -1771,6 +1772,8 @@ nsPrefMigration::GetPremigratedFilePref(const char *pref_name, nsIFileSpec **pat
         rv = m_prefs->GetFilePref((const char *)premigration_pref, path);
         return rv;
 }
+
+#endif /* NEED_TO_COPY_AND_RENAME_NEWSRC_FILES */
 
 nsresult 
 nsPrefMigration::SetPremigratedFilePref(const char *pref_name, nsIFileSpec *path)
