@@ -490,7 +490,7 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext& aPresContext,
       } else if (mComputedWidth < mComputedMinWidth) {
         mComputedWidth = mComputedMinWidth;
       } else {
-        // Note that we wait until after checkin minimum and maximum size
+        // Note that we wait until after checking minimum and maximum size
         // information, because if we use the minimum or maximum value instead
         // then the rules are applied again and that means margin recalculation
         leftIsAuto = PR_FALSE;
@@ -514,6 +514,16 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext& aPresContext,
       mComputedWidth = mComputedMaxWidth;
     } else if (mComputedWidth < mComputedMinWidth) {
       mComputedWidth = mComputedMinWidth;
+    }
+
+    // See what edge the width applies to (the default is the content
+    // edge)
+    if (mComputedWidth != NS_UNCONSTRAINEDSIZE) {
+      if (mStylePosition->mBoxSizing == NS_STYLE_BOX_SIZING_PADDING) {
+        mComputedWidth -= mComputedPadding.left + mComputedPadding.right;
+      } else if (mStylePosition->mBoxSizing == NS_STYLE_BOX_SIZING_BORDER) {
+        mComputedWidth -= mComputedBorderPadding.left + mComputedBorderPadding.right;
+      }
     }
   }
 
@@ -666,6 +676,16 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext& aPresContext,
     if (mComputedHeight < mComputedMinHeight) {
       mComputedHeight = mComputedMinHeight;
     }
+
+    // See what edge the height applies to (the default is the content
+    // edge)
+    if (mComputedHeight != NS_AUTOHEIGHT) {
+      if (mStylePosition->mBoxSizing == NS_STYLE_BOX_SIZING_PADDING) {
+        mComputedHeight -= mComputedPadding.top + mComputedPadding.bottom;
+      } else if (mStylePosition->mBoxSizing == NS_STYLE_BOX_SIZING_BORDER) {
+        mComputedHeight -= mComputedBorderPadding.top + mComputedBorderPadding.bottom;
+      }
+    }
   }
 
   // Calculate any remaining 'auto' values for the offsets and margins
@@ -811,11 +831,11 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
     nsFrame::ListTag(stdout, cbrs->frame); printf(" size=%d,%d\n", containingBlockWidth, containingBlockHeight);
 #endif
 
-    // See if the containing block height is based on the size of the
+    // See if the containing block height is based on the size of its
     // content
     if (NS_AUTOHEIGHT == containingBlockHeight) {
       // See if the containing block is a scrolled frame, i.e. its
-      // parent is a scroll frame. The prescence of the interveening
+      // parent is a scroll frame. The presence of the intervening
       // frame (that the scroll frame scrolls) needs to be hidden from
       // the containingBlockHeight calcuation.
       if (cbrs->parentReflowState) {
@@ -882,10 +902,22 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
                                mStylePosition->mWidth,
                                mComputedWidth);
       }
-      if (mComputedWidth > mComputedMaxWidth) {
-        mComputedWidth = mComputedMaxWidth;
-      } else if (mComputedWidth < mComputedMinWidth) {
-        mComputedWidth = mComputedMinWidth;
+
+      if (mComputedWidth != NS_INTRINSICSIZE) {
+        // Take into account minimum and maximum sizes
+        if (mComputedWidth > mComputedMaxWidth) {
+          mComputedWidth = mComputedMaxWidth;
+        } else if (mComputedWidth < mComputedMinWidth) {
+          mComputedWidth = mComputedMinWidth;
+        }
+  
+        // See what edge the width applies to (the default is the content
+        // edge)
+        if (mStylePosition->mBoxSizing == NS_STYLE_BOX_SIZING_PADDING) {
+          mComputedWidth -= mComputedPadding.left + mComputedPadding.right;
+        } else if (mStylePosition->mBoxSizing == NS_STYLE_BOX_SIZING_BORDER) {
+          mComputedWidth -= mComputedBorderPadding.left + mComputedBorderPadding.right;
+        }
       }
 
       // Now calculate the computed height
@@ -899,10 +931,22 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
                              mStylePosition->mHeight,
                              mComputedHeight);
       }
-      if (mComputedHeight > mComputedMaxHeight) {
-        mComputedHeight = mComputedMaxHeight;
-      } else if (mComputedHeight < mComputedMinHeight) {
-        mComputedHeight = mComputedMinHeight;
+
+      if (mComputedHeight != NS_INTRINSICSIZE) {
+        // Take into account minimum and maximum sizes
+        if (mComputedHeight > mComputedMaxHeight) {
+          mComputedHeight = mComputedMaxHeight;
+        } else if (mComputedHeight < mComputedMinHeight) {
+          mComputedHeight = mComputedMinHeight;
+        }
+  
+        // See what edge the height applies to (the default is the content
+        // edge)
+        if (mStylePosition->mBoxSizing == NS_STYLE_BOX_SIZING_PADDING) {
+          mComputedHeight -= mComputedPadding.top + mComputedPadding.bottom;
+        } else if (mStylePosition->mBoxSizing == NS_STYLE_BOX_SIZING_BORDER) {
+          mComputedHeight -= mComputedBorderPadding.top + mComputedBorderPadding.bottom;
+        }
       }
     
     } else if (NS_CSS_FRAME_TYPE_FLOATING == mFrameType) {
@@ -917,10 +961,22 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
                                mStylePosition->mWidth,
                                mComputedWidth);
       }
+
+      // Take into account minimum and maximum sizes
       if (mComputedWidth > mComputedMaxWidth) {
         mComputedWidth = mComputedMaxWidth;
       } else if (mComputedWidth < mComputedMinWidth) {
         mComputedWidth = mComputedMinWidth;
+      }
+
+      // See what edge the width applies to (the default is the content
+      // edge)
+      if ((mComputedWidth > 0) && (mComputedWidth != NS_UNCONSTRAINEDSIZE)) {
+        if (mStylePosition->mBoxSizing == NS_STYLE_BOX_SIZING_PADDING) {
+          mComputedWidth -= mComputedPadding.left + mComputedPadding.right;
+        } else if (mStylePosition->mBoxSizing == NS_STYLE_BOX_SIZING_BORDER) {
+          mComputedWidth -= mComputedBorderPadding.left + mComputedBorderPadding.right;
+        }
       }
 
       // Now calculate the computed height
@@ -933,10 +989,22 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
                              mStylePosition->mHeight,
                              mComputedHeight);
       }
+
+      // Take into account minimum and maximum sizes
       if (mComputedHeight > mComputedMaxHeight) {
         mComputedHeight = mComputedMaxHeight;
       } else if (mComputedHeight < mComputedMinHeight) {
         mComputedHeight = mComputedMinHeight;
+      }
+
+      // See what edge the height applies to (the default is the content
+      // edge)
+      if (mComputedHeight != NS_AUTOHEIGHT) {
+        if (mStylePosition->mBoxSizing == NS_STYLE_BOX_SIZING_PADDING) {
+          mComputedHeight -= mComputedPadding.top + mComputedPadding.bottom;
+        } else if (mStylePosition->mBoxSizing == NS_STYLE_BOX_SIZING_BORDER) {
+          mComputedHeight -= mComputedBorderPadding.top + mComputedBorderPadding.bottom;
+        }
       }
     
     } else if (NS_CSS_FRAME_TYPE_INTERNAL_TABLE == mFrameType) {
@@ -1031,7 +1099,7 @@ nsHTMLReflowState::ComputeBlockBoxData(nsIPresContext& aPresContext,
       mComputedWidth = NS_INTRINSICSIZE;
     } else {
       // Block-level non-replaced element in the flow. 'auto' values
-      // for margin-left and margin-right become 0 and the sum of the
+      // for margin-left and margin-right become 0, and the sum of the
       // areas must equal the width of the content-area of the parent
       // element.
       if (NS_UNCONSTRAINEDSIZE == availableWidth) {
@@ -1057,11 +1125,11 @@ nsHTMLReflowState::ComputeBlockBoxData(nsIPresContext& aPresContext,
     }
   } else {
     if (eStyleUnit_Inherit == aWidthUnit) {
-      // Use parent elements width. Note that if its width was
+      // Use parent element's width. Note that if its width was
       // 'inherit', then it already did this so we don't need to
       // recurse upwards.
       //
-      // We use the containing blocks width here for the "parent"
+      // We use the containing block's width here for the "parent"
       // elements width, because we want to skip over any intervening
       // inline elements (since width doesn't apply to them).
       if (NS_UNCONSTRAINEDSIZE != aContainingBlockWidth) {
@@ -1083,11 +1151,20 @@ nsHTMLReflowState::ComputeBlockBoxData(nsIPresContext& aPresContext,
       mComputedWidth = mComputedMinWidth;
     }
 
+    // See what edge the width applies to (the default is the content
+    // edge)
+    if (mComputedWidth != NS_UNCONSTRAINEDSIZE) {
+      if (mStylePosition->mBoxSizing == NS_STYLE_BOX_SIZING_PADDING) {
+        mComputedWidth -= mComputedPadding.left + mComputedPadding.right;
+      } else if (mStylePosition->mBoxSizing == NS_STYLE_BOX_SIZING_BORDER) {
+        mComputedWidth -= mComputedBorderPadding.left + mComputedBorderPadding.right;
+      }
+    }
+
     // Now that we have the computed-width, compute the side margins
     CalculateBlockSideMargins(cbrs, mComputedWidth);
   }
 
-  
   // Compute the content height
   if (eStyleUnit_Inherit == aHeightUnit) {
     // Use parent elements height (note that if its height was inherit
@@ -1114,10 +1191,20 @@ nsHTMLReflowState::ComputeBlockBoxData(nsIPresContext& aPresContext,
     ComputeVerticalValue(aContainingBlockHeight, aHeightUnit,
                          mStylePosition->mHeight, mComputedHeight);
   }
+  // Take into account any min and max values
   if (mComputedHeight > mComputedMaxHeight) {
     mComputedHeight = mComputedMaxHeight;
   } else if (mComputedHeight < mComputedMinHeight) {
     mComputedHeight = mComputedMinHeight;
+  }
+  // See what edge the height applies to (the default is the content
+  // edge)
+  if (mComputedHeight != NS_UNCONSTRAINEDSIZE) {
+    if (mStylePosition->mBoxSizing == NS_STYLE_BOX_SIZING_PADDING) {
+      mComputedHeight -= mComputedPadding.top + mComputedPadding.bottom;
+    } else if (mStylePosition->mBoxSizing == NS_STYLE_BOX_SIZING_BORDER) {
+      mComputedHeight -= mComputedBorderPadding.top + mComputedBorderPadding.bottom;
+    }
   }
 }
 
