@@ -141,6 +141,14 @@ nsEventStateManager::PreHandleEvent(nsIPresContext& aPresContext,
   case NS_LOSTFOCUS:
     //XXX Do we need window related focus change stuff here?
     break;
+  case NS_KEY_PRESS:
+    {
+      nsKeyEvent * keyEvent = (nsKeyEvent *)aEvent;
+      if (keyEvent->isControl) {
+        keyEvent->charCode += 64;
+      }
+    }
+    break;
   }
   return NS_OK;
 }
