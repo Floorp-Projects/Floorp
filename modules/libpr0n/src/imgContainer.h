@@ -42,6 +42,10 @@
 
 #include "nsWeakReference.h"
 
+#ifdef __GNUC__
+#define CANT_INLINE_GETTER
+#endif
+
 #define NS_IMGCONTAINER_CID \
 { /* 5e04ec5e-1dd2-11b2-8fda-c4db5fb666e0 */         \
      0x5e04ec5e,                                     \
@@ -73,11 +77,15 @@ private:
     return nframes;
   }
 
+#ifdef CANT_INLINE_GETTER
+  nsresult inlinedGetFrameAt(PRUint32 index, gfxIImageFrame **_retval);
+#else
   inline nsresult inlinedGetFrameAt(PRUint32 index, gfxIImageFrame **_retval) {
     *_retval = NS_STATIC_CAST(gfxIImageFrame*, mFrames.ElementAt(index));
     if (!*_retval) return NS_ERROR_FAILURE;
     return NS_OK;
   }
+#endif
 
   inline nsresult inlinedGetCurrentFrame(gfxIImageFrame **_retval) {
     if (mCompositingFrame) {

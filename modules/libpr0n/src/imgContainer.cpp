@@ -60,6 +60,18 @@ imgContainer::~imgContainer()
   mFrames.Clear();
 }
 
+#ifdef CANT_INLINE_GETTER
+// This should be inlined but inlining it breaks on recent versions of
+// gcc (2.96-85, 3.0.1) with -O2.
+nsresult imgContainer::inlinedGetFrameAt(PRUint32 index,
+                                         gfxIImageFrame **_retval)
+{
+  *_retval = NS_STATIC_CAST(gfxIImageFrame*, mFrames.ElementAt(index));
+  if (!*_retval) return NS_ERROR_FAILURE;
+  return NS_OK;
+}
+#endif
+
 //******************************************************************************
 /* void init (in nscoord aWidth, in nscoord aHeight, in imgIContainerObserver aObserver); */
 NS_IMETHODIMP imgContainer::Init(nscoord aWidth, nscoord aHeight, imgIContainerObserver *aObserver)
