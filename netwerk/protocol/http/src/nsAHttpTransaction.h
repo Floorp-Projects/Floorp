@@ -25,6 +25,10 @@ public:
     // socket transport.
     virtual void GetNotificationCallbacks(nsIInterfaceRequestor **) = 0;
 
+    // called by the pipelining code to determine how much memory to allocate
+    // for this transaction's request headers.
+    virtual PRUint32 GetRequestSize() = 0;
+
     // called by the connection to indicate that the socket can be written to.
     // the transaction returns NS_BASE_STREAM_CLOSED when it is finished
     // writing its request(s).

@@ -115,10 +115,22 @@ interface nsIHttpChannel : nsIChannel
 
     /**
      * This attribute controls whether or not content conversion should be
-     * done per the Content-Encoding response header.  Its value is true
-     * by default.
+     * done per the Content-Encoding response header.
+     *
+     * TRUE by default.
      */
     attribute boolean applyConversion;
+
+    /**
+     * This attribute is a hint to the channel to indicate whether or not
+     * the underlying HTTP transaction should be allowed to be pipelined
+     * with other transactions.  This should be set to FALSE, for example,
+     * if the application knows that the corresponding document is likely
+     * to be very large.
+     *
+     * TRUE by default, though other factors may prevent pipelining.
+     */
+    attribute boolean allowPipelining;
 
     /**
      * This attribute specifies the number of redirects this channel is allowed

@@ -77,6 +77,7 @@ public:
     // called to cause the underlying socket to start speaking SSL
     nsresult ProxyStepUp();
 
+    PRBool   SupportsPipelining() { return mServerVersion > NS_HTTP_VERSION_1_0; }
     PRBool   IsKeepAlive() { return mKeepAliveMask && mKeepAlive; }
     PRBool   CanReuse();   // can this connection be reused?
     void     DontReuse()   { mKeepAliveMask = PR_FALSE;
@@ -94,7 +95,7 @@ public:
     void     GetConnectionInfo(nsHttpConnectionInfo **ci) { NS_IF_ADDREF(*ci = mConnectionInfo); }
     void     DropTransaction(nsAHttpTransaction *);
     PRBool   IsPersistent() { return IsKeepAlive(); }
-    nsresult PushBack(char *data, PRUint32 length) { return NS_OK; }
+    nsresult PushBack(const char *data, PRUint32 length) { NS_NOTREACHED("PushBack"); return NS_ERROR_UNEXPECTED; }
 
 private:
     nsresult ActivateConnection();
@@ -120,6 +121,8 @@ private:
     PRUint32                        mLastActiveTime;
     PRUint16                        mMaxHangTime;    // max download time before dropping keep-alive status
     PRUint16                        mIdleTimeout;    // value of keep-alive: timeout=
+
+    PRUint8                         mServerVersion;
 
     PRPackedBool                    mKeepAlive;
     PRPackedBool                    mKeepAliveMask;

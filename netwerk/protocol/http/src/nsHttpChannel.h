@@ -185,6 +185,7 @@ private:
 
     PRPackedBool                      mIsPending;
     PRPackedBool                      mApplyConversion;
+    PRPackedBool                      mAllowPipelining;
     PRPackedBool                      mFromCacheOnly;
     PRPackedBool                      mCachedContentIsValid;
     PRPackedBool                      mCachedContentIsPartial;

@@ -78,6 +78,9 @@ typedef PRUint8 nsHttpVersion;
 #define NS_HTTP_ALLOW_KEEPALIVE  (1<<0)
 #define NS_HTTP_ALLOW_PIPELINING (1<<1)
 
+// hard upper limit on the number of requests that can be pipelined
+#define NS_HTTP_MAX_PIPELINED_REQUESTS 10 
+
 //-----------------------------------------------------------------------------
 // http atoms...
 //-----------------------------------------------------------------------------

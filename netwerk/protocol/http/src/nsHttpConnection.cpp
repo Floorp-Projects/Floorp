@@ -55,6 +55,7 @@ nsHttpConnection::nsHttpConnection()
     , mReadStartTime(0)
     , mLastActiveTime(0)
     , mIdleTimeout(0)
+    , mServerVersion(NS_HTTP_VERSION_1_0) // assume low-grade server
     , mKeepAlive(1) // assume to keep-alive by default
     , mKeepAliveMask(1)
     , mWriteDone(0)
@@ -97,7 +98,7 @@ nsHttpConnection::Init(nsHttpConnectionInfo *info, PRUint16 maxHangTime)
     return NS_OK;
 }
 
-// called from any thread, with the connection lock held
+// called from any thread, without the connection lock held
 nsresult
 nsHttpConnection::SetTransaction(nsAHttpTransaction *transaction,
                                  PRUint8 caps)
@@ -185,6 +186,8 @@ nsHttpConnection::OnHeadersAvailable(nsAHttpTransaction *trans,
     const char *val = responseHead->PeekHeader(nsHttp::Connection);
     if (!val)
         val = responseHead->PeekHeader(nsHttp::Proxy_Connection);
+
+    mServerVersion = responseHead->Version();
 
     if ((responseHead->Version() < NS_HTTP_VERSION_1_1) ||
         (requestHead->Version() < NS_HTTP_VERSION_1_1)) {

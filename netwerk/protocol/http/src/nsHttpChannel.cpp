@@ -69,6 +69,7 @@ nsHttpChannel::nsHttpChannel()
     , mRedirectionLimit(nsHttpHandler::get()->RedirectionLimit())
     , mIsPending(PR_FALSE)
     , mApplyConversion(PR_TRUE)
+    , mAllowPipelining(PR_TRUE)
     , mFromCacheOnly(PR_FALSE)
     , mCachedContentIsValid(PR_FALSE)
     , mCachedContentIsPartial(PR_FALSE)
@@ -378,8 +379,20 @@ nsHttpChannel::SetupTransaction()
                                             NS_HTTP_BUFFER_SIZE);
     if (NS_FAILED(rv)) return rv;
 
+    // figure out if we should disallow pipelining.  disallow if 
+    // the method is not GET or HEAD.  we also disallow pipelining
+    // if this channel corresponds to a toplevel document.
+    // XXX does the toplevel document check really belong here?
+    // XXX or, should we push it out entirely to necko consumers?
+    PRUint8 caps = mCapabilities;
+    if (!mAllowPipelining || (mURI == mDocumentURI) ||
+        !(mRequestHead.Method() == nsHttp::Get || mRequestHead.Method() == nsHttp::Head)) {
+        LOG(("nsHttpChannel::SetupTransaction [this=%x] pipelining disallowed\n", this));
+        caps &= ~NS_HTTP_ALLOW_PIPELINING;
+    }
+
     // create the transaction object
-    mTransaction = new nsHttpTransaction(listenerProxy, this, mCapabilities);
+    mTransaction = new nsHttpTransaction(listenerProxy, this, caps);
     if (!mTransaction)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(mTransaction);
@@ -1493,6 +1506,8 @@ nsHttpChannel::ProcessRedirection(PRUint32 redirectType)
             httpChannel->SetReferrer(mReferrer, mReferrerType);
         // convey the mApplyConversion flag (bug 91862)
         httpChannel->SetApplyConversion(mApplyConversion);
+        // convey the mAllowPipelining flag
+        httpChannel->SetAllowPipelining(mAllowPipelining);
         // convey the new redirection limit
         httpChannel->SetRedirectionLimit(mRedirectionLimit - 1);
     }
@@ -2701,6 +2716,23 @@ nsHttpChannel::SetApplyConversion(PRBool value)
 }
 
 NS_IMETHODIMP
+nsHttpChannel::GetAllowPipelining(PRBool *value)
+{
+    NS_ENSURE_ARG_POINTER(value);
+    *value = mAllowPipelining;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::SetAllowPipelining(PRBool value)
+{
+    if (mIsPending)
+        return NS_ERROR_FAILURE;
+    mAllowPipelining = value;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsHttpChannel::GetRedirectionLimit(PRUint32 *value)
 {
     NS_ENSURE_ARG_POINTER(value);
@@ -2777,6 +2809,10 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
     LOG(("nsHttpChannel::OnStopRequest [this=%x request=%x status=%x]\n",
         this, request, status));
 
+    // honor the cancelation status even if the underlying transaction completed.
+    if (mCanceled)
+        status = mStatus;
+
     // if the request is a previous transaction, then simply release it.
     if (request == mPrevTransaction) {
         NS_RELEASE(mPrevTransaction);
@@ -2810,8 +2846,19 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
 
     PRBool isPartial = PR_FALSE;
     if (mTransaction) {
-        // find out if the transaction ran to completion...
-        isPartial = !mTransaction->ResponseIsComplete();
+        if (mCacheEntry) {
+            // find out if the transaction ran to completion...
+            isPartial = !mTransaction->ResponseIsComplete();
+#if 0
+            if (!isPartial) {
+                // even if the transaction ran to completion, we might not
+                // have written all of the data into the cache.
+                PRUint32 entrySize = 0;
+                if (NS_SUCCEEDED(mCacheEntry->GetDataSize(&entrySize)))
+                    isPartial = (entrySize < mTransaction->GetContentRead());
+            }
+#endif
+        }
         // at this point, we're done with the transaction
         NS_RELEASE(mTransaction);
         mTransaction = nsnull;
@@ -2868,6 +2915,10 @@ nsHttpChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
 {
     LOG(("nsHttpChannel::OnDataAvailable [this=%x request=%x offset=%u count=%u]\n",
         this, request, offset, count));
+
+    // don't send out OnDataAvailable notifications if we've been canceled.
+    if (mCanceled)
+        return mStatus;
 
     if (mCachedContentIsPartial && (request == mTransaction)) {
         // XXX we can eliminate this buffer once bug 93055 is resolved.
