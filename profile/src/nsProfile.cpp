@@ -1866,12 +1866,12 @@ NS_IMETHODIMP nsProfile::MigrateProfile(const char* profileName)
 
     // Get current profile, make the new one a sibling...
 	nsIFileSpec* newSpec = NS_LocateFileOrDirectory(
-        nsSpecialFileSpec::App_UserProfileDirectory50);
+        nsSpecialFileSpec::App_DefaultUserProfileRoot50);
 	if (!newSpec)
 	     return NS_ERROR_FAILURE;
     newSpec->GetFileSpec(&newProfDir);
 	NS_RELEASE(newSpec);
-	newProfDir.SetLeafName(profileName);
+	newProfDir += profileName;
 
 
 	// Call migration service to do the work.
