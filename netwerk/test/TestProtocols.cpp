@@ -144,7 +144,7 @@ TestHTTPEventSink::OnHeadersAvailable(nsISupports* context)
         if (pHTTPCon) {
             char* type;
             //optimize later TODO allow atoms here...! intead of just the header strings
-            pHTTPCon->GetResponseHeader("Content-type", &type);
+            pHTTPCon->GetContentType(&type);
             if (type) {
                 printf("\nRecieving ... %s\n", type);
                 nsCRT::free(type);
