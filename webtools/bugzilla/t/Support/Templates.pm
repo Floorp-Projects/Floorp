@@ -24,7 +24,7 @@ package Support::Templates;
 
 use Support::Files;
 
-$include_path = "template/default";
+$include_path = "template/en/default";
 
 # Scan Bugzilla's code looking for templates used and put them
 # in the @testitems array to be used by the template.t test.
