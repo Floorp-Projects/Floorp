@@ -100,10 +100,10 @@ char *kServerWebPage2Column = "web_page";
 char *kServerBirthYearColumn = "OMIT:BirthYear";
 char *kServerBirthMonthColumn = "OMIT:BirthMonth";
 char *kServerBirthDayColumn = "OMIT:BirthDay";
-char *kServerCustom1Column = "OMIT:Custom1";
-char *kServerCustom2Column = "OMIT:Custom2";
-char *kServerCustom3Column = "OMIT:Custom3";
-char *kServerCustom4Column = "OMIT:Custom4";
+char *kServerCustom1Column = "Custom_1";
+char *kServerCustom2Column = "Custom_2";
+char *kServerCustom3Column = "Custom_3";
+char *kServerCustom4Column = "Custom_4";
 char *kServerNotesColumn = "addl_info";
 char *kServerLastModifiedDateColumn = "OMIT:LastModifiedDate";
 

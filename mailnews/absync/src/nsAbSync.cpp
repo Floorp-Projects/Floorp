@@ -2416,6 +2416,14 @@ nsAbSync::AddValueToNewCard(nsIAbCard *aCard, nsString *aTagName, nsString *aTag
     aCard->SetCompany(aTagValue->GetUnicode());
   else if (!aTagName->CompareWithConversion(kServerWebPage2Column))
     aCard->SetWebPage2(aTagValue->GetUnicode());
+  else if (!aTagName->CompareWithConversion(kServerCustom1Column))
+    aCard->SetCustom1(aTagValue->GetUnicode());
+  else if (!aTagName->CompareWithConversion(kServerCustom2Column))
+    aCard->SetCustom2(aTagValue->GetUnicode());
+  else if (!aTagName->CompareWithConversion(kServerCustom3Column))
+    aCard->SetCustom3(aTagValue->GetUnicode());
+  else if (!aTagName->CompareWithConversion(kServerCustom4Column))
+    aCard->SetCustom4(aTagValue->GetUnicode());
 
   return rv;
 }
@@ -2454,10 +2462,6 @@ aCard->SetDisplayName(aTagValue->GetUnicode());
 aCard->SetBirthYear(aTagValue->GetUnicode());
 aCard->SetBirthMonth(aTagValue->GetUnicode());
 aCard->SetBirthDay(aTagValue->GetUnicode());
-aCard->SetCustom1(aTagValue->GetUnicode());
-aCard->SetCustom2(aTagValue->GetUnicode());
-aCard->SetCustom3(aTagValue->GetUnicode());
-aCard->SetCustom4(aTagValue->GetUnicode());
 aCard->SetLastModifiedDate(aTagValue->GetUnicode());
 aCard->SetName(aTagValue->GetUnicode());
 aCard->SetSendPlainText(aTagValue->GetUnicode());
@@ -2477,10 +2481,6 @@ char *kServerPlainTextColumn = "OMIT:SendPlainText";
 char *kServerBirthYearColumn = "OMIT:BirthYear";
 char *kServerBirthMonthColumn = "OMIT:BirthMonth";
 char *kServerBirthDayColumn = "OMIT:BirthDay";
-char *kServerCustom1Column = "OMIT:Custom1";
-char *kServerCustom2Column = "OMIT:Custom2";
-char *kServerCustom3Column = "OMIT:Custom3";
-char *kServerCustom4Column = "OMIT:Custom4";
 char *kServerLastModifiedDateColumn = "OMIT:LastModifiedDate";
 **************/
 /* So far, we aren't really doing anything with these!
