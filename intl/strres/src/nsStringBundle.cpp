@@ -125,13 +125,13 @@ nsStringBundle::LoadProperties()
   rv = NS_NewChannel(getter_AddRefs(channel), uri);
   if (NS_FAILED(rv)) return rv;
 
+  // It's a string bundle.  We expect a text/plain type, so set that as hint
+  channel->SetContentType(NS_LITERAL_CSTRING("text/plain"));
+  
   nsCOMPtr<nsIInputStream> in;
   rv = channel->Open(getter_AddRefs(in));
   if (NS_FAILED(rv)) return rv;
 
-  // It's a string bundle.  We know what MIME type it is!
-  channel->SetContentType(NS_LITERAL_CSTRING("text/plain"));
-  
   NS_TIMELINE_MARK_FUNCTION("loading properties");
 
   NS_ASSERTION(NS_SUCCEEDED(rv) && in, "Error in OpenBlockingStream");
