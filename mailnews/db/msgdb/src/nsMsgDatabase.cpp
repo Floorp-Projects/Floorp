@@ -739,15 +739,41 @@ NS_IMETHODIMP nsMsgDatabase::GetMsgHdrForKey(nsMsgKey key, nsIMessage **pmsgHdr)
 	rowObjectId.mOid_Id = key;
 	rowObjectId.mOid_Scope = m_hdrRowScopeToken;
 	err = m_mdbAllMsgHeadersTable->HasOid(GetEnv(), &rowObjectId, &hasOid);
-	if (err == NS_OK && m_mdbStore)
+	if (err == NS_OK && m_mdbStore /* && hasOid */)
 	{
 		nsIMdbRow *hdrRow;
-
+        nsIMdbTableRowCursor* rowCursor;                                        
+        mdb_pos rowPos = -1;                                                            
+                                                                                                                                             
+        err = m_mdbAllMsgHeadersTable->GetTableRowCursor(GetEnv(), rowPos, &rowCursor);
+                                                                                                                                             
+        if (err == NS_OK && rowCursor /*rowPos >= 0*/) // ### is rowP os > 0 the right thing to check?
+        {                                                                       
+            do                                                                  
+            {                                                                   
+				nsIMdbRow   *hdrRow;                                            
+				err = rowCursor->NextRow(GetEnv(), &hdrRow, &rowPos);
+                if (!NS_SUCCEEDED(err) || rowPos < 0 || !hdrRow)             
+					break; 
+				mdbOid rowOid;
+				err = hdrRow->GetOid(GetEnv(), &rowOid);
+				if (NS_SUCCEEDED(err) && rowOid.mOid_Id == key)                                    
+                {                                                               
+                     err = CreateMsgHdr(hdrRow, m_dbName, key, pmsgHdr);         
+                     break;                                                      
+                 }                                                               
+             }                                                                   
+             while (TRUE);                                                       
+             NS_RELEASE(rowCursor);                                              
+		}
+#if 0
 		err = m_mdbStore->GetRow(GetEnv(), &rowObjectId, &hdrRow);
+
 		if (err == NS_OK && hdrRow)
 		{
 			err = CreateMsgHdr(hdrRow, m_dbName, key, pmsgHdr);
 		}
+#endif
 	}
 
 	return err;
@@ -855,7 +881,7 @@ nsresult nsMsgDatabase::IsRead(nsMsgKey key, PRBool *pRead)
 	nsIMessage *msgHdr;
 
 	rv = GetMsgHdrForKey(key, &msgHdr);
-    if (NS_FAILED(rv)) return NS_MSG_MESSAGE_NOT_FOUND; // XXX return rv?
+    if (NS_FAILED(rv) || !msgHdr) return NS_MSG_MESSAGE_NOT_FOUND; // XXX return rv?
     rv = IsHeaderRead(msgHdr, pRead);
     NS_RELEASE(msgHdr);
     return rv;
