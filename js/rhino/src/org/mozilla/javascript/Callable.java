@@ -53,11 +53,8 @@ public interface Callable
      * @param thisObj the JavaScript <code>this</code> object
      * @param args the array of arguments
      * @return the result of the call
-     * @exception JavaScriptException if an uncaught exception
-     *            occurred while executing the function
      */
     public Object call(Context cx, Scriptable scope, Scriptable thisObj,
-                       Object[] args)
-        throws JavaScriptException;
+                       Object[] args);
 }
 

@@ -253,7 +253,6 @@ final class QName extends IdScriptableObject
                              Scriptable scope,
                              Scriptable thisObj,
                              Object[] args)
-        throws JavaScriptException
     {
         if (!f.hasTag(QNAME_TAG)) {
             return super.execIdCall(f, cx, scope, thisObj, args);

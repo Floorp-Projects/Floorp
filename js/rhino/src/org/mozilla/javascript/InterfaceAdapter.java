@@ -168,7 +168,6 @@ public class InterfaceAdapter implements Cloneable, Callable
     }
 
     protected final Object doCall(Object[] args)
-        throws JavaScriptException
     {
         Scriptable scope = function.getParentScope();
         Scriptable thisObj = scope;
@@ -187,7 +186,6 @@ public class InterfaceAdapter implements Cloneable, Callable
 
     public Object call(Context cx, Scriptable scope, Scriptable thisObj,
                        Object[] args)
-        throws JavaScriptException
     {
         if (argsToConvert != null) {
             WrapFactory wf = cx.getWrapFactory();

@@ -128,11 +128,9 @@ public class File extends ScriptableObject {
      *
      * @exception IOException if an error occurred while accessing the file
      *            associated with this object
-     * @exception JavaScriptException if a JavaScript exception occurred
-     *            while creating the result array
      */
     public Object jsFunction_readLines()
-        throws IOException, JavaScriptException
+        throws IOException
     {
         Vector v = new Vector();
         String s;

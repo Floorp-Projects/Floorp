@@ -80,7 +80,6 @@ class NativeScript extends NativeFunction
 
     public Object call(Context cx, Scriptable scope, Scriptable thisObj,
                        Object[] args)
-        throws JavaScriptException
     {
         if (script != null) {
             return script.exec(cx, scope);
@@ -89,7 +88,6 @@ class NativeScript extends NativeFunction
     }
 
     public Scriptable construct(Context cx, Scriptable scope, Object[] args)
-        throws JavaScriptException
     {
         throw Context.reportRuntimeError0("msg.script.is.not.constructor");
     }

@@ -64,10 +64,7 @@ public interface Script {
      * @param scope the scope to execute relative to
      * @return the result of executing the script
      * @see org.mozilla.javascript.Context#initStandardObjects
-     * @exception JavaScriptException if an uncaught JavaScript exception
-     *            occurred while executing the script
      */
-    public Object exec(Context cx, Scriptable scope)
-        throws JavaScriptException;
+    public Object exec(Context cx, Scriptable scope);
 
 }

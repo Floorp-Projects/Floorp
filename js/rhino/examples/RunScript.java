@@ -44,7 +44,6 @@ import org.mozilla.javascript.*;
  */
 public class RunScript {
     public static void main(String args[])
-        throws JavaScriptException
     {
         // Creates and enters a Context. The Context stores information
         // about the execution environment of a script.

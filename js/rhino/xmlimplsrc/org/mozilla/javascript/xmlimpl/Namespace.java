@@ -267,7 +267,6 @@ class Namespace extends IdScriptableObject
                              Scriptable scope,
                              Scriptable thisObj,
                              Object[] args)
-        throws JavaScriptException
     {
         if (!f.hasTag(NAMESPACE_TAG)) {
             return super.execIdCall(f, cx, scope, thisObj, args);

@@ -196,7 +196,6 @@ public final class OptRuntime extends ScriptRuntime
                                      Scriptable scope,
                                      Scriptable callerThis, int callType,
                                      String fileName, int lineNumber)
-        throws JavaScriptException
     {
         return ScriptRuntime.callSpecial(cx, fun, thisObj, args, scope,
                                          callerThis, callType,
@@ -206,7 +205,6 @@ public final class OptRuntime extends ScriptRuntime
     public static Object newObjectSpecial(Context cx, Object fun,
                                           Object[] args, Scriptable scope,
                                           Scriptable callerThis, int callType)
-        throws JavaScriptException
     {
         return ScriptRuntime.newSpecial(cx, fun, args, scope, callType);
     }
@@ -267,14 +265,12 @@ public final class OptRuntime extends ScriptRuntime
                                              int skipCount,
                                              Context cx,
                                              Scriptable scope)
-        throws JavaScriptException
     {
         int[] skipIndexces = decodeIntArray(encodedInts, skipCount);
         return newArrayLiteral(objects, skipIndexces, cx, scope);
     }
 
     public static void main(final Script script, final String[] args)
-        throws JavaScriptException
     {
         Context.call(new ContextAction() {
             public Object run(Context cx)

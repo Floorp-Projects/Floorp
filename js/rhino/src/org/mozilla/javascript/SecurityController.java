@@ -172,12 +172,10 @@ public abstract class SecurityController
     public Object callWithDomain(Object securityDomain, Context cx,
                                  final Callable callable, Scriptable scope,
                                  final Scriptable thisObj, final Object[] args)
-        throws JavaScriptException
     {
         return execWithDomain(cx, scope, new Script()
         {
             public Object exec(Context cx, Scriptable scope)
-                throws JavaScriptException
             {
                 return callable.call(cx, scope, thisObj, args);
             }
@@ -192,7 +190,6 @@ public abstract class SecurityController
      */
     public Object execWithDomain(Context cx, Scriptable scope,
                                  Script script, Object securityDomain)
-        throws JavaScriptException
     {
         throw new IllegalStateException("callWithDomain should be overridden");
     }

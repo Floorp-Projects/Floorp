@@ -496,7 +496,6 @@ public class NativeGlobal implements Serializable, IdFunctionCall
     }
 
     private Object js_eval(Context cx, Scriptable scope, Object[] args)
-        throws JavaScriptException
     {
         String m = ScriptRuntime.getMessage1("msg.cant.call.indirect", "eval");
         throw NativeGlobal.constructError(cx, "EvalError", m, scope);

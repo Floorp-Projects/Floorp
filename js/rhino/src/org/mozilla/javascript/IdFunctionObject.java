@@ -117,7 +117,6 @@ public class IdFunctionObject extends BaseFunction
 
     public Object call(Context cx, Scriptable scope, Scriptable thisObj,
                        Object[] args)
-        throws JavaScriptException
     {
         return idcall.execIdCall(this, cx, scope, thisObj, args);
     }

@@ -704,7 +704,6 @@ public class ScriptRuntime {
     }
 
     static String uneval(Context cx, Scriptable scope, Object value)
-        throws JavaScriptException
     {
         if (value == null) {
             return "null";
@@ -868,7 +867,6 @@ public class ScriptRuntime {
 
     public static Object call(Context cx, Object fun, Object thisArg,
                               Object[] args, Scriptable scope)
-        throws JavaScriptException
     {
         if (!(fun instanceof Function)) {
             throw notFunctionError(toString(fun));
@@ -2024,7 +2022,6 @@ public class ScriptRuntime {
 
     private static Object call(Object fun, Context cx, Scriptable scope,
                                Object thisArg, Object[] args)
-        throws JavaScriptException
     {
         if (!(fun instanceof Function)) {
             throw notFunctionError(fun);
@@ -2070,7 +2067,6 @@ public class ScriptRuntime {
      */
     public static Scriptable newObject(Object fun, Context cx,
                                        Scriptable scope, Object[] args)
-        throws JavaScriptException
     {
         if (!(fun instanceof Function)) {
             throw notFunctionError(fun);
@@ -2084,7 +2080,6 @@ public class ScriptRuntime {
                                      Object[] args, Scriptable scope,
                                      Scriptable callerThis, int callType,
                                      String filename, int lineNumber)
-        throws JavaScriptException
     {
         if (callType == Node.SPECIALCALL_EVAL) {
             if (NativeGlobal.isEvalFunction(fun)) {
@@ -2106,7 +2101,6 @@ public class ScriptRuntime {
     public static Object newSpecial(Context cx, Object fun,
                                     Object[] args, Scriptable scope,
                                     int callType)
-        throws JavaScriptException
     {
         if (callType == Node.SPECIALCALL_EVAL) {
             if (NativeGlobal.isEvalFunction(fun)) {
@@ -2131,7 +2125,6 @@ public class ScriptRuntime {
     public static Object applyOrCall(boolean isApply,
                                      Context cx, Scriptable scope,
                                      Scriptable thisObj, Object[] args)
-        throws JavaScriptException
     {
         int L = args.length;
         Function function;
@@ -2190,7 +2183,6 @@ public class ScriptRuntime {
     public static Object evalSpecial(Context cx, Scriptable scope,
                                      Object thisArg, Object[] args,
                                      String filename, int lineNumber)
-        throws JavaScriptException
     {
         if (args.length < 1)
             return Undefined.instance;
@@ -3070,7 +3062,6 @@ public class ScriptRuntime {
     public static Scriptable newArrayLiteral(Object[] objects,
                                              int[] skipIndexces,
                                              Context cx, Scriptable scope)
-        throws JavaScriptException
     {
         int count = objects.length;
         int skipCount = 0;
@@ -3106,7 +3097,6 @@ public class ScriptRuntime {
     public static Scriptable newObjectLiteral(Object[] propertyIds,
                                               Object[] propertyValues,
                                               Context cx, Scriptable scope)
-        throws JavaScriptException
     {
         Scriptable object = cx.newObject(scope);
         for (int i = 0, end = propertyIds.length; i != end; ++i) {

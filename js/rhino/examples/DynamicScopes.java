@@ -188,11 +188,7 @@ public class DynamicScopes {
                 // 'x' and save a value for it.
                 threadScope.put("x", threadScope, x);
                 cx.evaluateString(threadScope, source, "threadScript", 1, null);
-            }
-            catch (JavaScriptException jse) {
-                // ignore
-            }
-            finally {
+            } finally {
                 Context.exit();
             }
         }

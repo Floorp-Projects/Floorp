@@ -293,13 +293,11 @@ public class BaseFunction extends IdScriptableObject implements Function
      */
     public Object call(Context cx, Scriptable scope, Scriptable thisObj,
                        Object[] args)
-        throws JavaScriptException
     {
         return Undefined.instance;
     }
 
     public Scriptable construct(Context cx, Scriptable scope, Object[] args)
-        throws JavaScriptException
     {
         Scriptable result = createObject(cx, scope);
         if (result != null) {

@@ -221,7 +221,7 @@ public class Delegator implements Function {
      */
     public Object call(Context cx, Scriptable scope, Scriptable thisObj,
                        Object[] args)
-        throws JavaScriptException {
+    {
         return ((Function)obj).call(cx,scope,thisObj,args);
     }
 
@@ -237,13 +237,11 @@ public class Delegator implements Function {
      *              when the function is called from a closure.
      * @param args the array of arguments
      * @return the allocated object
-     * @exception JavaScriptException if an uncaught exception
-     *            occurred while executing the constructor
      *
-     * @see org.mozilla.javascript.Function#construct
+     * @see Function#construct(Context, Scriptable, Object[])
      */
     public Scriptable construct(Context cx, Scriptable scope, Object[] args)
-        throws JavaScriptException {
+    {
         if (obj == null) {
             //this little trick allows us to declare prototype objects for
             //Delegators

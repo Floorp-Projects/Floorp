@@ -69,7 +69,6 @@ public class Synchronizer extends Delegator {
      */
     public Object call(Context cx, Scriptable scope, Scriptable thisObj,
                        Object[] args)
-        throws JavaScriptException
     {
         synchronized(thisObj) {
             return ((Function)obj).call(cx,scope,thisObj,args);

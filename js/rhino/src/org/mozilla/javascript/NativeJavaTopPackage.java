@@ -79,13 +79,11 @@ public class NativeJavaTopPackage
 
     public Object call(Context cx, Scriptable scope, Scriptable thisObj,
                        Object[] args)
-        throws JavaScriptException
     {
         return construct(cx, scope, args);
     }
 
     public Scriptable construct(Context cx, Scriptable scope, Object[] args)
-        throws JavaScriptException
     {
         ClassLoader loader = null;
         if (args.length != 0) {

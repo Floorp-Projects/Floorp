@@ -131,7 +131,6 @@ final class NativeError extends IdScriptableObject
 
     private static String js_toSource(Context cx, Scriptable scope,
                                       Scriptable thisObj)
-        throws JavaScriptException
     {
         // Emulation of SpiderMonkey behavior
         Object name = ScriptableObject.getProperty(thisObj, "name");

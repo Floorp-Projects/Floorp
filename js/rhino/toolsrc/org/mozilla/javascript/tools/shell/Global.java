@@ -200,14 +200,12 @@ public class Global extends ImporterTopLevel {
      *            the named class
      * @exception InvocationTargetException if an exception is thrown
      *            during execution of methods of the named class
-     * @exception JavaScriptException if a JavaScript exception is thrown
-     *            during execution of the compiled script
      * @see org.mozilla.javascript.ScriptableObject#defineClass
      */
     public static void loadClass(Context cx, Scriptable thisObj,
                                  Object[] args, Function funObj)
         throws IllegalAccessException, InstantiationException,
-               InvocationTargetException, JavaScriptException
+               InvocationTargetException
     {
         Class clazz = getClass(args);
         if (!Script.class.isAssignableFrom(clazz)) {

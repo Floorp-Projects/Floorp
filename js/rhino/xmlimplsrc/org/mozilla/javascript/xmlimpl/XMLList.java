@@ -1520,7 +1520,6 @@ class XMLList extends XMLObjectImpl implements Function
     private Object applyOrCall(boolean isApply,
                                Context cx, Scriptable scope,
                                Scriptable thisObj, Object[] args)
-        throws JavaScriptException
     {
         String methodName = isApply ? "apply" : "call";
         if(!(thisObj instanceof XMLList) ||
@@ -1548,7 +1547,6 @@ class XMLList extends XMLObjectImpl implements Function
 
     public Object call(Context cx, Scriptable scope, Scriptable thisObj,
                        Object[] args)
-        throws JavaScriptException
     {
         // This XMLList is being called as a Function.
         // Let's find the real Function object.
@@ -1582,7 +1580,6 @@ class XMLList extends XMLObjectImpl implements Function
     }
 
     public Scriptable construct(Context cx, Scriptable scope, Object[] args)
-        throws JavaScriptException
     {
         return Undefined.instance;
     }

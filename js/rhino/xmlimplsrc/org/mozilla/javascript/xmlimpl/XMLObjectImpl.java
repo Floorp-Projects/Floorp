@@ -485,11 +485,9 @@ abstract class XMLObjectImpl extends XMLObject
      * @param thisObj
      * @param args
      * @return
-     * @throws JavaScriptException
      */
     public Object execIdCall(IdFunctionObject f, Context cx, Scriptable scope,
                              Scriptable thisObj, Object[] args)
-        throws JavaScriptException
     {
         if (!f.hasTag(XMLOBJECT_TAG)) {
             return super.execIdCall(f, cx, scope, thisObj, args);

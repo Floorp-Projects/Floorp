@@ -189,7 +189,6 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
     }
 
     Object callConverter(Function converterFunction)
-        throws JavaScriptException
     {
         Function f = (Function) converterFunction;
         return f.call(Context.getContext(), f.getParentScope(),
@@ -197,7 +196,6 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
     }
 
     Object callConverter(String converterName)
-        throws JavaScriptException
     {
         Function converter = getConverter(converterName);
         if (converter == null) {

@@ -58,7 +58,6 @@ public class RegExpImpl implements RegExpProxy {
 
     public Object match(Context cx, Scriptable scope,
                         Scriptable thisObj, Object[] args)
-        throws JavaScriptException
     {
         GlobData mdata = new GlobData();
         mdata.optarg = 1;
@@ -70,7 +69,6 @@ public class RegExpImpl implements RegExpProxy {
 
     public Object search(Context cx, Scriptable scope,
                          Scriptable thisObj, Object[] args)
-        throws JavaScriptException
     {
         GlobData mdata = new GlobData();
         mdata.optarg = 1;
@@ -80,7 +78,6 @@ public class RegExpImpl implements RegExpProxy {
 
     public Object replace(Context cx, Scriptable scope,
                           Scriptable thisObj, Object[] args)
-        throws JavaScriptException
     {
         Object arg1 = args.length < 2 ? Undefined.instance : args[1];
         String repstr = null;
@@ -122,7 +119,6 @@ public class RegExpImpl implements RegExpProxy {
                                          Scriptable thisObj, Object[] args,
                                          RegExpImpl reImpl,
                                          GlobData data, boolean forceFlat)
-        throws JavaScriptException
     {
         NativeRegExp re;
 
@@ -302,7 +298,6 @@ public class RegExpImpl implements RegExpProxy {
     private static void replace_glob(GlobData rdata, Context cx,
                                      Scriptable scope, RegExpImpl reImpl,
                                      int leftIndex, int leftlen)
-        throws JavaScriptException
     {
         int replen;
         String lambdaStr;

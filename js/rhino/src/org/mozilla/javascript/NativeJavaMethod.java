@@ -143,7 +143,6 @@ public class NativeJavaMethod extends BaseFunction
 
     public Object call(Context cx, Scriptable scope, Scriptable thisObj,
                        Object[] args)
-        throws JavaScriptException
     {
         // Find a method that matches the types given.
         if (methods.length == 0) {

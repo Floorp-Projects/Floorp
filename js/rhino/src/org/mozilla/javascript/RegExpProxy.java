@@ -54,16 +54,13 @@ public interface RegExpProxy
                                  Object compiled);
 
     public Object match(Context cx, Scriptable scope,
-                        Scriptable thisObj, Object[] args)
-        throws JavaScriptException;
+                        Scriptable thisObj, Object[] args);
 
     public Object search(Context cx, Scriptable scope,
-                         Scriptable thisObj, Object[] args)
-        throws JavaScriptException;
+                         Scriptable thisObj, Object[] args);
 
     public Object replace(Context cx, Scriptable scope,
-                          Scriptable thisObj, Object[] args)
-        throws JavaScriptException;
+                          Scriptable thisObj, Object[] args);
 
     public int find_split(Context cx, Scriptable scope, String target,
                           String separator, Scriptable re,

@@ -65,7 +65,6 @@ public class NativeJavaConstructor extends BaseFunction
 
     public Object call(Context cx, Scriptable scope, Scriptable thisObj,
                        Object[] args)
-        throws JavaScriptException
     {
         return NativeJavaClass.constructSpecific(cx, scope, args, ctor);
     }

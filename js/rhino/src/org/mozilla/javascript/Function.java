@@ -45,7 +45,8 @@ package org.mozilla.javascript;
  * @author Norris Boyd
  */
 
-public interface Function extends Scriptable, Callable {
+public interface Function extends Scriptable, Callable
+{
     /**
      * Call the function.
      *
@@ -59,12 +60,9 @@ public interface Function extends Scriptable, Callable {
      * @param thisObj the JavaScript <code>this</code> object
      * @param args the array of arguments
      * @return the result of the call
-     * @exception JavaScriptException if an uncaught exception
-     *            occurred while executing the function
      */
     public Object call(Context cx, Scriptable scope, Scriptable thisObj,
-                       Object[] args)
-        throws JavaScriptException;
+                       Object[] args);
 
     /**
      * Call the function as a constructor.
@@ -78,9 +76,6 @@ public interface Function extends Scriptable, Callable {
      *              when the function is called from a closure.
      * @param args the array of arguments
      * @return the allocated object
-     * @exception JavaScriptException if an uncaught exception
-     *            occurred while executing the constructor
      */
-    public Scriptable construct(Context cx, Scriptable scope, Object[] args)
-        throws JavaScriptException;
+    public Scriptable construct(Context cx, Scriptable scope, Object[] args);
 }

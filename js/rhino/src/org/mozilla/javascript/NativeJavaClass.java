@@ -144,7 +144,6 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
 
     public Object call(Context cx, Scriptable scope, Scriptable thisObj,
                        Object[] args)
-        throws JavaScriptException
     {
         // If it looks like a "cast" of an object to this class type,
         // walk the prototype chain to see if there's a wrapper of a
@@ -165,7 +164,6 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
     }
 
     public Scriptable construct(Context cx, Scriptable scope, Object[] args)
-        throws JavaScriptException
     {
         Class classObject = getClassObject();
         int modifiers = classObject.getModifiers();
@@ -209,7 +207,6 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
 
     static Scriptable constructSpecific(Context cx, Scriptable scope,
                                         Object[] args, MemberBox ctor)
-        throws JavaScriptException
     {
         Scriptable topLevel = ScriptableObject.getTopLevelScope(scope);
         Class classObject = ctor.getDeclaringClass();

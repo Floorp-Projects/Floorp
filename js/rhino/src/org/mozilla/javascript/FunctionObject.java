@@ -386,13 +386,11 @@ public class FunctionObject extends BaseFunction
      * <p>
      * Implements Function.call.
      *
-     * @see org.mozilla.javascript.Function#call
-     * @exception JavaScriptException if the underlying Java method or
-     *            constructor threw an exception
+     * @see org.mozilla.javascript.Function#call(
+     *          Context, Scriptable, Scriptable, Object[])
      */
     public Object call(Context cx, Scriptable scope, Scriptable thisObj,
                        Object[] args)
-        throws JavaScriptException
     {
         if (parmsLength < 0) {
             return callVarargs(cx, thisObj, args);

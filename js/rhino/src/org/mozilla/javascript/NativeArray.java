@@ -348,7 +348,6 @@ public class NativeArray extends IdScriptableObject
      */
     private static Object jsConstructor(Context cx, Scriptable scope,
                                         Object[] args)
-        throws JavaScriptException
     {
         if (args.length == 0)
             return new NativeArray();
@@ -483,7 +482,6 @@ public class NativeArray extends IdScriptableObject
     private static String toStringHelper(Context cx, Scriptable scope,
                                          Scriptable thisObj,
                                          boolean toSource, boolean toLocale)
-        throws JavaScriptException
     {
         /* It's probably redundant to handle long lengths in this
          * function; StringBuffers are limited to 2^31 in java.
@@ -647,7 +645,6 @@ public class NativeArray extends IdScriptableObject
      */
     private static Scriptable js_sort(Context cx, Scriptable scope,
                                       Scriptable thisObj, Object[] args)
-        throws JavaScriptException
     {
         long length = getLengthProperty(cx, thisObj);
 
@@ -693,7 +690,6 @@ public class NativeArray extends IdScriptableObject
     private static boolean isBigger(Context cx, Scriptable scope,
                                     Object x, Object y,
                                     Object cmp, Object[] cmpBuf)
-        throws JavaScriptException
     {
         if (cmp == null) {
             if (cmpBuf != null) Kit.codeBug();
@@ -744,7 +740,6 @@ public class NativeArray extends IdScriptableObject
     private static void heapsort(Context cx, Scriptable scope,
                                  Object[] array, int length,
                                  Object cmp, Object[] cmpBuf)
-        throws JavaScriptException
     {
         if (length <= 1) Kit.codeBug();
 
@@ -770,7 +765,6 @@ public class NativeArray extends IdScriptableObject
     private static void heapify(Context cx, Scriptable scope,
                                 Object pivot, Object[] array, int i, int end,
                                 Object cmp, Object[] cmpBuf)
-        throws JavaScriptException
     {
         for (;;) {
             int child = i * 2 + 1;
@@ -799,7 +793,6 @@ public class NativeArray extends IdScriptableObject
     private static void heapsort_extended(Context cx, Scriptable scope,
                                           Scriptable target, long length,
                                           Object cmp, Object[] cmpBuf)
-        throws JavaScriptException
     {
         if (length <= 1) Kit.codeBug();
 
@@ -823,7 +816,6 @@ public class NativeArray extends IdScriptableObject
                                          Object pivot, Scriptable target,
                                          long i, long end,
                                          Object cmp, Object[] cmpBuf)
-        throws JavaScriptException
     {
         for (;;) {
             long child = i * 2 + 1;
@@ -1052,7 +1044,6 @@ public class NativeArray extends IdScriptableObject
      */
     private static Scriptable js_concat(Context cx, Scriptable scope,
                                         Scriptable thisObj, Object[] args)
-        throws JavaScriptException
     {
         // create an empty Array to return.
         scope = getTopLevelScope(scope);

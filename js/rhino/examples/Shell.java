@@ -70,12 +70,8 @@ public class Shell extends ScriptableObject
             // Define some global functions particular to the shell. Note
             // that these functions are not part of ECMA.
             String[] names = { "print", "quit", "version", "load", "help" };
-            try {
-                shell.defineFunctionProperties(names, Shell.class,
-                                               ScriptableObject.DONTENUM);
-            } catch (PropertyException e) {
-                throw new Error(e.getMessage());
-            }
+            shell.defineFunctionProperties(names, Shell.class,
+                                           ScriptableObject.DONTENUM);
 
             args = processOptions(cx, args);
 
