@@ -23,10 +23,13 @@
 class nsIEnumerator;
 
 // IID for the nsICollection interface
-#define NS_ICOLLECTION_IID      \
-{ 0xaeca730, 0x835b, 0x11d2, \
-  { 0x8f, 0x30, 0x0, 0x60, 0x8, 0x31, 0x1, 0x94 } }
-
+#define NS_ICOLLECTION_IID                           \
+{ /* 83b6019c-cbc4-11d2-8cca-0060b0fc14a3 */         \
+    0x83b6019c,                                      \
+    0xcbc4,                                          \
+    0x11d2,                                          \
+    {0x8c, 0xca, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
+}
 
 // IID for the nsICollection Factory interface
 #define NS_ICOLLECTIONFACTORY_IID      \
