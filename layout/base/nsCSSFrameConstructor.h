@@ -1005,6 +1005,28 @@ protected:
                             nsIPresShell*    aPresShell,
                             nsIFrameManager* aFrameManager);
 
+  // Find the ``rightmost'' frame for the content immediately preceding
+  // aIndexInContainer, following continuations if necessary. If aChild is
+  // not null, make sure it passes the call to IsValidSibling
+  nsIFrame* FindPreviousSibling(nsIPresShell*     aPresShell,
+                                nsIContent*       aContainer,
+                                PRInt32           aIndexInContainer,
+                                const nsIContent* aChild = nsnull);
+
+  // Find the frame for the content node immediately following aIndexInContainer.
+  // If aChild is not null, make sure it passes the call to IsValidSibling
+  nsIFrame* FindNextSibling(nsIPresShell*     aPresShell,
+                            nsIContent*       aContainer,
+                            PRInt32           aIndexInContainer,
+                            const nsIContent* aChild = nsnull);
+
+  // see if aContent and aSibling are legimiate siblings due to restrictions
+  // imposed by table columns
+  PRBool IsValidSibling(nsIPresShell&          aPresShell,
+                        const nsIFrame&        aSibling,
+                        PRUint8                aSiblingDisplay,
+                        nsIContent&            aContent,
+                        PRUint8&               aDisplay);
 protected:
   nsIDocument*        mDocument;
 
