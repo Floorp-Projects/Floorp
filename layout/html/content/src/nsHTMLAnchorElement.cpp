@@ -114,12 +114,14 @@ public:
   NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
 
   // nsIContent
-  NS_IMPL_ICONTENT_NO_FOCUS_USING_GENERIC(mInner)
+  //NS_IMPL_ICONTENT_NO_FOCUS_USING_GENERIC(mInner)
+  NS_IMPL_ICONTENT_NO_SETPARENT_NO_SETDOCUMENT_NO_FOCUS_USING_GENERIC(mInner);
 
   // nsIHTMLContent
   NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
 
 protected:
+  nsresult RegUnRegAccessKey(PRBool aDoReg);
   nsGenericHTMLContainerElement mInner;
 };
 
@@ -192,6 +194,64 @@ NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Shape, shape)
 NS_IMPL_INT_ATTR(nsHTMLAnchorElement, TabIndex, tabindex)
 NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Target, target)
 NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Type, type)
+
+NS_IMETHODIMP
+nsHTMLAnchorElement::SetParent(nsIContent* aParent)
+{
+  return mInner.SetParent(aParent);
+}
+
+// This goes and gets the proper PresContext in order
+// for it to get the EventStateManager so it can register 
+// the access key
+nsresult nsHTMLAnchorElement::RegUnRegAccessKey(PRBool aDoReg)
+{
+  // first check to see if it even has an acess key
+  nsAutoString accessKey;
+  PRInt32 nameSpaceID;
+  GetNameSpaceID(nameSpaceID);
+  nsresult rv = GetAttribute(nameSpaceID, nsHTMLAtoms::accesskey, accessKey);
+
+  if (NS_CONTENT_ATTR_NOT_THERE != rv) {
+    nsCOMPtr<nsIPresContext> presContext;
+    nsGenericHTMLElement::GetPresContext(this, getter_AddRefs(presContext));
+
+    // With a valid PresContext we can get the EVM 
+    // and register the access key
+    if (presContext) {
+      nsCOMPtr<nsIEventStateManager> stateManager;
+      if (NS_SUCCEEDED(presContext->GetEventStateManager(getter_AddRefs(stateManager)))) {
+        if (aDoReg) {
+          return stateManager->RegisterAccessKey(nsnull, (nsIContent*)this, (PRUint32)accessKey.First());
+        } else {
+          return stateManager->UnregisterAccessKey(nsnull, (nsIContent*)this, (PRUint32)accessKey.First());
+        }
+      }
+    }
+  }
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsHTMLAnchorElement::SetDocument(nsIDocument* aDocument, PRBool aDeep)
+{
+  // The document gets set to null before it is destroyed,
+  // so we unregister the the access key here (if it has one)
+  // before setting it to null
+  if (aDocument == nsnull) {
+    RegUnRegAccessKey(PR_FALSE);
+  }
+
+  nsresult res = mInner.SetDocument(aDocument, aDeep);
+
+  // Register the access key here (if it has one) 
+  // if the document isn't null
+  if (aDocument != nsnull) {
+    RegUnRegAccessKey(PR_TRUE);
+  }
+
+  return res;
+}
 
 NS_IMETHODIMP
 nsHTMLAnchorElement::Blur()
