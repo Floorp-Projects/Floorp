@@ -2141,10 +2141,10 @@ nsresult nsImapService::OfflineAppendFromFile(nsIFileSpec* aFileSpec,
 
       if (NS_SUCCEEDED(rv) && offlineStore)
       {
-        PRInt32 curOfflineStorePos = 0;
-        nsCOMPtr <nsIRandomAccessStore> randomStore = do_QueryInterface(offlineStore);
-        if (randomStore)
-          randomStore->Tell(&curOfflineStorePos);
+        PRUint32 curOfflineStorePos = 0;
+        nsCOMPtr <nsISeekableStream> seekable = do_QueryInterface(offlineStore);
+        if (seekable)
+          seekable->Tell(&curOfflineStorePos);
         else
         {
           NS_ASSERTION(PR_FALSE, "needs to be a random store!");
