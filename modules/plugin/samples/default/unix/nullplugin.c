@@ -467,7 +467,10 @@ xt_event_handler(Widget xt_w, PluginInstance *This, XEvent *xevent, Boolean *b)
             drawPixmap(This);
             break;
         case ButtonRelease:
-            makeWidget(This);
+            if (xevent->xbutton.button == Button1)
+            {
+                makeWidget(This);
+            } 
             break;
         default:
             break;
