@@ -43,11 +43,11 @@
 #include <TextUtils.h>
 #include <ControlDefinitions.h>
 
-#include "nsAppShellCIDs.h"
 #include "nsCOMPtr.h"
 #include "nsNativeAppSupportBase.h"
 
 #include "nsIAppShellService.h"
+#include "nsIAppStartup.h"
 #include "nsIBaseWindow.h"
 #include "nsICmdLineService.h"
 #include "nsIDOMWindowInternal.h"
@@ -60,7 +60,7 @@
 #include "nsIWidget.h"
 #include "nsIWindowMediator.h"
 
-static NS_DEFINE_CID(kAppShellServiceCID,   NS_APPSHELL_SERVICE_CID);
+#include "nsXPFEComponentsCID.h"
 
 static Boolean VersGreaterThan4(const FSSpec *fSpec);
 
@@ -258,13 +258,13 @@ nsNativeAppSupportMac::ReOpen()
       NS_WARNING("trying to open new window");
       //use the bootstrap helpers to make the right kind(s) of window open        
       nsresult rv = PR_FALSE;
-      nsCOMPtr<nsIAppShellService> appShell(do_GetService(kAppShellServiceCID, &rv));
-      if (!rv)
+      nsCOMPtr<nsIAppStartup> appStartup(do_GetService(NS_APPSTARTUP_CONTRACTID));
+      if (appStartup)
       {
         PRBool openedAWindow = PR_FALSE;
-        appShell->CreateStartupState(nsIAppShellService::SIZE_TO_CONTENT,
-                                        nsIAppShellService::SIZE_TO_CONTENT,
-                                        &openedAWindow);
+        appStartup->CreateStartupState(nsIAppShellService::SIZE_TO_CONTENT,
+                                       nsIAppShellService::SIZE_TO_CONTENT,
+                                       &openedAWindow);
       }
     }
     
