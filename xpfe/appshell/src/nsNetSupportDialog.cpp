@@ -57,6 +57,7 @@ static NS_DEFINE_IID(kIDOMEventReceiverIID,   NS_IDOMEVENTRECEIVER_IID);
 static NS_DEFINE_IID(kINetSupportDialogIID,   NS_INETSUPPORTDIALOGSERVICE_IID);
 #endif
 static NS_DEFINE_IID(kIFactoryIID,         NS_IFACTORY_IID);
+static NS_DEFINE_IID(kISupportsIID,         NS_ISUPPORTS_IID);
 
 static NS_DEFINE_CID( kCommonDialogsCID,          NS_CommonDialog_CID);
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
@@ -792,6 +793,12 @@ NS_IMETHODIMP nsNetSupportDialog::QueryInterface(REFNSIID aIID,void** aInstanceP
   {
     NS_ADDREF_THIS(); // Increase reference count for caller
     *aInstancePtr = (void *)((nsIDOMMouseListener*)this);
+    return NS_OK;
+  }
+  else if (aIID.Equals(kISupportsIID))
+  {
+    NS_ADDREF_THIS(); // Increase reference count for caller
+    *aInstancePtr = (void *)((nsISupports*)(nsIPrompt*)this);
     return NS_OK;
   }
   
