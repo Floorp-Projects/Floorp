@@ -232,8 +232,8 @@ static JSBool
 script_exec(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     JSScript *script;
+    JSObject *scopeobj, *parent;
     JSStackFrame *fp, *caller;
-    JSObject *scopeobj;
 
     if (!JS_InstanceOf(cx, obj, &js_ScriptClass, argv))
         return JS_FALSE;
@@ -248,11 +248,48 @@ script_exec(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         argv[0] = OBJECT_TO_JSVAL(scopeobj);
     }
 
-    /* Emulate eval() by using caller's this, scope chain, and sharp array. */
+    /*
+     * Emulate eval() by using caller's this, var object, sharp array, etc.,
+     * all propagated by js_Execute via a non-null fourth |down| argument to
+     * js_Execute.  If there is no scripted caller, js_Execute uses its second
+     * |obj| argument to set the exec frame's varobj, thisp, and scopeChain.
+     *
+     * Unlike eval, which the compiler detects, Script.prototype.exec may be
+     * called from a lightweight function, or even from native code (in which
+     * case fp->varobj and fp->scopeChain are null).
+     */
     fp = cx->fp;
     caller = JS_GetScriptedCaller(cx, fp);
-    if (caller && !scopeobj)
-        scopeobj = caller->scopeChain;
+    if (!scopeobj) {
+        /* No scope object passed in, use the caller's scope chain head. */
+        if (caller) {
+            /* Called from a scripted function. */
+            if (!caller->varobj) {
+                /* Called from a lightweight function. */
+                JS_ASSERT(caller->fun &&
+                          !(caller->fun->flags & JSFUN_HEAVYWEIGHT));
+
+                /* Scope chain links from Call object to callee's parent. */
+                parent = OBJ_GET_PARENT(cx, JSVAL_TO_OBJECT(caller->argv[-2]));
+                if (!js_GetCallObject(cx, caller, parent))
+                    return JS_FALSE;
+            }
+
+            /* Load caller->scopeChain after conditional js_GetCallObject. */
+            scopeobj = caller->scopeChain;
+        } else {
+            /*
+             * Called from native code, so we don't know what scope object to
+             * use.  We could use parent (see above), but Script.prototype.exec
+             * might be a shared/sealed "superglobal" method.  A more general
+             * approach would use cx->globalObject, which will be the same as
+             * exec.__parent__ in the non-superglobal case.  In the superglobal
+             * case it's the right object: the global, not the superglobal.
+             */
+            scopeobj = cx->globalObject;
+        }
+    }
+
     return js_Execute(cx, scopeobj, script, caller, JSFRAME_EVAL, rval);
 }
 
