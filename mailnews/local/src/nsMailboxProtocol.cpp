@@ -34,6 +34,8 @@
 #include "prerror.h"
 #include "prprf.h"
 
+#define ENABLE_SMOKETEST  1
+
 static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
 static NS_DEFINE_IID(kIWebShell, NS_IWEB_SHELL_IID);
 
@@ -205,10 +207,17 @@ NS_IMETHODIMP nsMailboxProtocol::OnStopBinding(nsIURL* aURL, nsresult aStatus, c
 	// is printed out to the console and determining if the mail app loaded up correctly...obviously
 	// this solution is not very good so we should look at something better, but don't remove this
 	// line before talking to me (mscott) and mailnews QA....
-	printf("Mailbox Done\n");
+#ifdef ENABLE_SMOKETEST
+	PRFileDesc * smokeTestFile = PR_Open("MailSmokeTest.txt", PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 00700);
+	if (smokeTestFile)
+	{
+		const char * smokeString = "Mailbox Done\n";
+		PR_Write(smokeTestFile,(void *) smokeString, PL_strlen(smokeString));
+		PR_Close(smokeTestFile);
+	}
+#endif
 
 	return NS_OK;
-
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
