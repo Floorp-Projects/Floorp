@@ -763,12 +763,6 @@ function refreshRemoteCalendarAndRunFunction( calendarEvent, Server, functionToR
 
 function deleteEventCommand( DoNotConfirm )
 {
-   if( unifinderToDoHasFocus() )
-   {
-      deleteToDoCommand( DoNotConfirm );
-      return;
-   }
-   
    var SelectedItems = gCalendarWindow.EventSelection.selectedEvents;
    
    if( SelectedItems.length == 1 )

@@ -133,8 +133,6 @@ CalendarEventSelection.prototype.isSelectedEvent = function calSel_isSelectedEve
 *
 *   onSelectionChanged.
 *
-*   Respond to adding a category.
-*
 */
 
 CalendarEventSelection.prototype.onSelectionChanged = function calSel_onSelectionChanged( )

@@ -342,7 +342,7 @@ CalendarEventDataSource.prototype.getEventsForMonth = function calEvent_getEvent
    {
       eventDisplays[ eventDisplays.length ] = eventList.getNext().QueryInterface(Components.interfaces.oeIICalEventDisplay);
    }
-
+   
    eventDisplays.sort( this.orderEventsByDisplayDate );
 
    return eventDisplays;
@@ -395,16 +395,7 @@ CalendarEventDataSource.prototype.getNextEvents = function calEvent_getNextEvent
    
    while( eventList.hasMoreElements() )
    {
-      var tmpevent = eventList.getNext().QueryInterface(Components.interfaces.oeIICalEventDisplay);
-      
-      var EventObject = new Object;
-      
-      EventObject.event = tmpevent.event;
-      
-      EventObject.displayDate = displayDate;
-      EventObject.displayEndDate = displayEndDate;
-      
-      eventDisplays[ eventDisplays.length ] = EventObject;
+      eventDisplays[ eventDisplays.length ] = eventList.getNext().QueryInterface(Components.interfaces.oeIICalEventDisplay);;
    }
    eventDisplays.sort( this.orderRawEventsByDate );
 
@@ -552,7 +543,21 @@ CalendarEventDataSource.prototype.orderToDosByDueDate = function calEvent_orderT
 
 CalendarEventDataSource.prototype.orderEventsByDisplayDate = function calEvent_orderEventsByDisplayDate( eventA, eventB )
 {
-    return( eventA.displayDate - eventB.displayDate );
+   var eventADisplayDate = new Date( eventA.displayDate );
+   var eventBDisplayDate = new Date( eventB.displayDate );
+
+   if( eventADisplayDate.getFullYear() == eventBDisplayDate.getFullYear() &&
+       eventADisplayDate.getMonth() == eventBDisplayDate.getMonth() &&
+       eventADisplayDate.getDay() == eventBDisplayDate.getDay() &&
+       eventADisplayDate.getHours() == eventBDisplayDate.getHours() && 
+       eventADisplayDate.getMinutes() == eventBDisplayDate.getMinutes() )
+   {
+      if ( eventA.title < eventB.title ) return -1;
+      if ( eventA.title > eventB.title ) return 1;
+      return 0;
+   }
+   
+   return( eventA.displayDate - eventB.displayDate );
 }
 
 
@@ -682,7 +687,7 @@ CalendarAlarmObserver.prototype.fireAlarm = function calAlarm_fireAlarm( calenda
    }
    
    addEventToDialog( calendarEvent );
-
+   
    if ( calendarEvent.alarmEmailAddress )
    {
       var EmailBody = "Calendar Event Alarm Went Off!\n----------------------------\n";

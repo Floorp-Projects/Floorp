@@ -95,7 +95,7 @@
    
    <command id="new_todo_command" oncommand="newToDoCommand()"/>
    <command id="modify_todo_command" oncommand="modifyToDoCommand( event )"/>
-   <command id="delete_todo_command" oncommand="deleteToDoCommand()"/>
+   <command id="delete_todo_command" oncommand="deleteToDoCommand()" disabled="true"/>
 
    <command id="new_server_command" oncommand="gCalendarWindow.calendarManager.launchAddCalendarDialog()"/>
    <command id="edit_server_command" oncommand="gCalendarWindow.calendarManager.launchEditCalendarDialog()"/>

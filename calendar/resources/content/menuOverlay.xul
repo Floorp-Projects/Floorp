@@ -119,6 +119,7 @@
          <menuitem id="calendar-copy-menu"    key="key_copy"   label="&calendar.copy.label;"  accesskey="&calendar.copy.accesskey;"  observes="copy_command" />
          <menuitem id="calendar-paste-menu"   key="key_paste"  label="&calendar.paste.label;" accesskey="&calendar.paste.accesskey;" observes="paste_command"/>
          <menuitem id="unifinder-remove-menu" key="delete_key" label="&event.delete.event;"                                          observes="delete_command" />
+			<menuitem id="unifinder-remove-menu"                  label="&event.delete.tasks;"                                          observes="delete_todo_command" />
          <menuseparator/>
          <menuitem id="calendar-selectall-menu" key="key_selectAll" label="&calendar.selectall.label;" accesskey="&calendar.selectall.accesskey;" observes="select_all_command"/>
          <menuseparator/>
