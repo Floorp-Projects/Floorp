@@ -57,9 +57,35 @@
 
     <implementation>
 
-      <constructor>
+      <constructor><![CDATA[
         this.toolbar.controllers.appendController(this.commandController);
-      </constructor>
+        var theToolbar = this;
+        var resizeFunc = function(event) { 
+          var buttons = (document.getAnonymousNodes(theToolbar))[0].firstChild;
+          var menu = buttons.nextSibling.childNodes[1];
+          var width = window.innerWidth;
+          var overflowed = false;
+          menu.collapsed = true;
+          for (var i=4; i<buttons.childNodes.length; i++) {
+            var button = buttons.childNodes[i];
+            if (!overflowed)
+              button.collapsed = false;
+            
+            if (button.boxObject.x + button.boxObject.width > width) {
+              overflowed = true;
+              // This button doesn't fit. Show it in the menu. Hide it in the toolbar.
+              if (!button.collapsed)
+                button.collapsed = true;
+              if (menu.collapsed) {
+                menu.collapsed = false;
+                var overflowPadder = document.getElementById("overflow-padder");
+                overflowPadder.width = width - menu.boxObject.width;
+              }
+            }
+          }
+        };
+        window.addEventListener("resize", resizeFunc, false);
+      ]]></constructor>
 
       <destructor>
         this.toolbar.controllers.removeController(this.commandController);
@@ -81,7 +107,7 @@
       <method name="createBTContextMenu">
         <parameter name="aEvent"/>
         <body><![CDATA[
-          var hbox = document.getElementById("NC:PersonalToolbarFolder")
+          var hbox = (document.getAnonymousNodes(theToolbar))[0].firstChild;
           hbox.focus() <!-- buttons in the pt have -moz-user-focus: ignore -->
           this._selection   = this.getBTSelection(document.popupNode);
           this._orientation = this.getBTOrientation(aEvent, document.popupNode);
@@ -308,6 +334,19 @@
         ]]></body>
       </method>
 
+      <method name="updateOverflowMenu">
+        <parameter name="menupopup"/>
+        <body><![CDATA[
+          var hbox = (document.getAnonymousNodes(this))[0].firstChild;
+          for (var i = 4; i < hbox.childNodes.length; i++) {
+            var button = hbox.childNodes[i];
+            var menu = menupopup.childNodes[i-4];
+            if (menu.collapsed == button.collapsed)
+              menu.collapsed = !menu.collapsed;
+          }
+        ]]></body>
+      </method>
+       
   <!--/////////////////////////////////////////////////////////////////////////////
       // Command controller -->
       <field name="commandController" readonly="true"><![CDATA[
@@ -355,9 +394,9 @@
     </implementation>
 
     <content>
-      <!-- Personal toolbar items -->
+      <xul:stack flex="1">
       <xul:hbox id="bookmarks-ptf" anonid="bookmarks-ptf" contextmenu="_child"
-                flex="1" style="margin-left: 3px;" 
+                flex="1" style="min-width:0px; margin-left: 3px;" 
                 datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch"
                 ref="NC:PersonalToolbarFolder" flags="dont-test-empty"
                 rdf:type="http://home.netscape.com/NC-rdf#Folder"
@@ -458,6 +497,59 @@
 
         </xul:template>
       </xul:hbox>
+      <xul:hbox>
+        <xul:hbox id="overflow-padder"/>
+        <xul:toolbarbutton collapsed="true" type="menu"
+              datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch" 
+              ref="NC:PersonalToolbarFolder" flags="dont-test-empty"
+              oncommand="BookmarksUtils.loadBookmarkBrowser(event, this.database)"
+              onclick="BookmarksUtils.loadBookmarkBrowserMiddleClick(event, this.database)"
+              ondraggesture="nsDragAndDrop.startDrag(event, personalToolbarDNDObserver)"
+              ondragdrop="nsDragAndDrop.drop(event, personalToolbarDNDObserver); event.preventBubble()"
+              ondragenter="nsDragAndDrop.dragEnter(event, personalToolbarDNDObserver); event.preventBubble()"
+              ondragexit="nsDragAndDrop.dragExit(event, personalToolbarDNDObserver); event.preventBubble()"
+              ondragover="nsDragAndDrop.dragOver(event, personalToolbarDNDObserver); event.preventBubble()">
+          <xul:template xmlns:nc="http://home.netscape.com/NC-rdf#">
+            <xul:rule iscontainer="true" isempty="true"
+                  rdf:type="http://home.netscape.com/NC-rdf#Folder">
+              <xul:menupopup>
+                <xul:menu class="menu-iconic bookmark-item" uri="rdf:*" 
+                      type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+                      label="rdf:http://home.netscape.com/NC-rdf#Name">
+                  <xul:menupopup>
+                    <xul:menuitem label="&emptyItem.label;" disabled="true"/>
+                  </xul:menupopup>
+                </xul:menu>
+              </xul:menupopup>
+            </xul:rule>
+            <xul:rule iscontainer="true">
+              <xul:menupopup>
+                <xul:menu class="menu-iconic bookmark-item" uri="rdf:*"
+                      label="rdf:http://home.netscape.com/NC-rdf#Name"
+                      type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
+                  <xul:menupopup />
+                </xul:menu>
+              </xul:menupopup>
+            </xul:rule>
+            <xul:rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
+              <xul:menupopup> 
+                <xul:menuseparator uri="rdf:*" />
+              </xul:menupopup>
+            </xul:rule>
+            <xul:rule>
+              <xul:menupopup>
+                <xul:menuitem class="menuitem-iconic bookmark-item" uri="rdf:*"
+                          label="rdf:http://home.netscape.com/NC-rdf#Name" 
+                          image="rdf:http://home.netscape.com/NC-rdf#Icon"
+                          status="rdf:http://home.netscape.com/WEB-rdf#status"/>
+              </xul:menupopup>
+            </xul:rule>
+          </xul:template>
+          <xul:menupopup onpopupshowing="if (event.target != this) return; 
+                                         this.parentNode.parentNode.parentNode.parentNode.updateOverflowMenu(this);"/>
+          </xul:toolbarbutton>
+        </xul:hbox>
+      </xul:stack>
     </content>
   </binding>
 
