@@ -46,6 +46,10 @@
 #include "nsPrintfCString.h"
 #include "nsCRT.h"
 
+#ifdef XP_WIN
+#include <string.h>
+#endif
+
 
 void NS_StartupLocalFile()
 {
@@ -195,9 +199,14 @@ nsLocalFile::GetRelativeDescriptor(nsILocalFile *fromFile, nsACString& _retval)
     if (thisNodeCnt < 0 || fromNodeCnt < 0)
       return NS_ERROR_FAILURE;
     
-    for (nodeIndex = 0; nodeIndex < thisNodeCnt && nodeIndex < fromNodeCnt; nodeIndex++) {
+    for (nodeIndex = 0; nodeIndex < thisNodeCnt && nodeIndex < fromNodeCnt; ++nodeIndex) {
+#ifdef XP_WIN
+      if (_wcsicmp(thisNodes[nodeIndex], fromNodes[nodeIndex]))
+        break;
+#else
       if (nsCRT::strcmp(thisNodes[nodeIndex], fromNodes[nodeIndex]))
         break;
+#endif
     }
     
     PRInt32 branchIndex = nodeIndex;
