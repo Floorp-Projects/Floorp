@@ -880,7 +880,7 @@ NS_IMETHODIMP nsEditor::CreateTxnForInsertText(const nsString & aStringToInsert,
         result = NS_ERROR_UNEXPECTED; 
         // XXX: we'll want to deleteRange if the selection isn't just an insertion point
         // for now, just insert text after the start of the first node
-        nsCOMPtr<nsIDOMRange> range(currentItem);
+        nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
         if (range)
         {
           nsCOMPtr<nsIDOMNode> node;
@@ -1116,7 +1116,7 @@ NS_IMETHODIMP nsEditor::CreateTxnForDeleteSelection(nsIEditor::Direction aDir,
         result = enumerator->CurrentItem(&currentItem);
         if ((NS_SUCCEEDED(result)) && (currentItem))
         {
-          nsCOMPtr<nsIDOMRange> range(currentItem);
+          nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
           PRBool isCollapsed;
           range->GetIsCollapsed(&isCollapsed);
           if (PR_FALSE==isCollapsed)
@@ -1482,8 +1482,8 @@ nsEditor::SplitNodeImpl(nsIDOMNode * aExistingRightNode,
       if (0<=aOffset) // don't bother unless we're going to move at least one child
       {
         // if it's a text node, just shuffle around some text
-        nsCOMPtr<nsIDOMCharacterData> rightNodeAsText(aExistingRightNode);
-        nsCOMPtr<nsIDOMCharacterData> leftNodeAsText(aNewLeftNode);
+        nsCOMPtr<nsIDOMCharacterData> rightNodeAsText( do_QueryInterface(aExistingRightNode) );
+        nsCOMPtr<nsIDOMCharacterData> leftNodeAsText( do_QueryInterface(aNewLeftNode) );
         if (leftNodeAsText && rightNodeAsText)
         {
           // fix right node
@@ -1540,8 +1540,8 @@ nsEditor::JoinNodesImpl(nsIDOMNode * aNodeToKeep,
       (nsnull!=aParent))
   {
     // if it's a text node, just shuffle around some text
-    nsCOMPtr<nsIDOMCharacterData> keepNodeAsText(aNodeToKeep);
-    nsCOMPtr<nsIDOMCharacterData> joinNodeAsText(aNodeToJoin);
+    nsCOMPtr<nsIDOMCharacterData> keepNodeAsText( do_QueryInterface(aNodeToKeep) );
+    nsCOMPtr<nsIDOMCharacterData> joinNodeAsText( do_QueryInterface(aNodeToJoin) );
     if (keepNodeAsText && joinNodeAsText)
     {
       nsString rightText;
@@ -1651,7 +1651,7 @@ NS_IMETHODIMP nsEditor::GetLayoutObject(nsIDOMNode *aNode, nsISupports **aLayout
   {
     if ((nsnull!=aNode))
     { // get the content interface
-      nsCOMPtr<nsIContent> nodeAsContent(aNode);
+      nsCOMPtr<nsIContent> nodeAsContent( do_QueryInterface(aNode) );
       if (nodeAsContent)
       { // get the frame from the content interface
         nsISupports *layoutObject=nsnull; // frames are not ref counted, so don't use an nsCOMPtr

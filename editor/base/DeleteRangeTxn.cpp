@@ -224,7 +224,7 @@ NS_IMETHODIMP DeleteRangeTxn::CreateTxnsToDeleteBetween(nsIDOMNode *aStartParent
   nsresult result;
   // see what kind of node we have
   nsCOMPtr<nsIDOMCharacterData> textNode;
-  textNode = aStartParent; // this uses implicit nsCOMPtr QI
+  textNode =  do_QueryInterface(aStartParent);
   if (textNode)
   { // if the node is a text node, then delete text content
     DeleteTextTxn *txn;
@@ -279,7 +279,7 @@ NS_IMETHODIMP DeleteRangeTxn::CreateTxnsToDeleteContent(nsIDOMNode *aParent,
   nsresult result;
   // see what kind of node we have
   nsCOMPtr<nsIDOMCharacterData> textNode;
-  textNode = aParent; // this uses implicit nsCOMPtr QI
+  textNode = do_QueryInterface(aParent);
   if (textNode)
   { // if the node is a text node, then delete text content
     PRUint32 start, numToDelete;

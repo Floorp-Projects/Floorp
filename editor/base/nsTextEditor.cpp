@@ -159,7 +159,7 @@ NS_IMETHODIMP nsTextEditor::SetTextProperty(nsIAtom *aProperty)
         result = enumerator->CurrentItem(&currentItem);
         if ((NS_SUCCEEDED(result)) && (nsnull!=currentItem))
         {
-          nsCOMPtr<nsIDOMRange> range(currentItem);
+          nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
           nsCOMPtr<nsIDOMNode>commonParent;
           result = range->GetCommonParent(getter_AddRefs(commonParent));
           if ((NS_SUCCEEDED(result)) && commonParent)
@@ -245,7 +245,7 @@ NS_IMETHODIMP nsTextEditor::GetTextProperty(nsIAtom *aProperty, PRBool &aAny, PR
         result = enumerator->CurrentItem(&currentItem);
         if ((NS_SUCCEEDED(result)) && currentItem)
         {
-          nsCOMPtr<nsIDOMRange> range(currentItem);
+          nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
           nsCOMPtr<nsIContentIterator> iter;
           result = nsRepository::CreateInstance(kCContentIteratorCID, nsnull,
                                                 kIContentIteratorIID, 
@@ -604,7 +604,7 @@ NS_IMETHODIMP nsTextEditor::SetTextPropertiesForNode(nsIDOMNode *aNode,
 {
   nsresult result=NS_OK;
   nsCOMPtr<nsIDOMCharacterData>nodeAsChar;
-  nodeAsChar =  aNode;
+  nodeAsChar =  do_QueryInterface(aNode);
   if (!nodeAsChar)
     return NS_ERROR_FAILURE;
   PRUint32 count;
@@ -667,7 +667,7 @@ nsTextEditor::SetTextPropertiesForNodesWithSameParent(nsIDOMNode *aStartNode,
   if (NS_SUCCEEDED(result))
   {
     nsCOMPtr<nsIDOMCharacterData>endNodeAsChar;
-    endNodeAsChar = aEndNode;
+    endNodeAsChar = do_QueryInterface(aEndNode);
     if (!endNodeAsChar)
       return NS_ERROR_FAILURE;
     PRUint32 count;
@@ -765,7 +765,7 @@ nsTextEditor::SetTextPropertiesForNodeWithDifferentParents(nsIDOMRange *aRange,
     return result;
   }
   nsCOMPtr<nsIDOMCharacterData>nodeAsChar;
-  nodeAsChar = aStartNode;
+  nodeAsChar = do_QueryInterface(aStartNode);
   if (!nodeAsChar)
     return NS_ERROR_FAILURE;
   PRUint32 count;
@@ -777,7 +777,7 @@ nsTextEditor::SetTextPropertiesForNodeWithDifferentParents(nsIDOMRange *aRange,
   if (NS_FAILED(result)) {
     return result;
   }
-  nodeAsChar = aEndNode;
+  nodeAsChar = do_QueryInterface(aEndNode);
   if (!nodeAsChar)
     return NS_ERROR_FAILURE;
   nodeAsChar->GetLength(&count);
