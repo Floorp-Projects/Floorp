@@ -185,6 +185,8 @@ bin/defaults/wallet/SchemaStrings.tbl
 bin/defaults/wallet/PositionalSchema.tbl
 bin/defaults/wallet/StateSchema.tbl
 bin/res/arrow.gif
+bin/res/loading-image.gif
+bin/res/broken-image.gif
 bin/res/charsetalias.properties
 bin/res/unixcharset.properties
 bin/res/charsetData.properties
