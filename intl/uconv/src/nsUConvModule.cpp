@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   IBM Corporation
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -225,6 +226,9 @@
 #include "nsCP862ToUnicode.h"
 #include "nsCP864ToUnicode.h"
 #include "nsCP864iToUnicode.h"
+#ifdef MOZ_EXTRA_X11CONVERTERS
+#include "nsCP1046ToUnicode.h"
+#endif
 #include "nsUnicodeToCP850.h"
 #include "nsUnicodeToCP852.h"
 #include "nsUnicodeToCP855.h"
@@ -232,6 +236,9 @@
 #include "nsUnicodeToCP862.h"
 #include "nsUnicodeToCP864.h"
 #include "nsUnicodeToCP864i.h"
+#ifdef MOZ_EXTRA_X11CONVERTERS
+#include "nsUnicodeToCP1046.h"
+#endif
 
 // ucvja
 #include "nsUCVJACID.h"
@@ -402,6 +409,9 @@ NS_UCONV_REG_UNREG("IBM857", NS_CP857TOUNICODE_CID, NS_UNICODETOCP857_CID)
 NS_UCONV_REG_UNREG("IBM862", NS_CP862TOUNICODE_CID, NS_UNICODETOCP862_CID)
 NS_UCONV_REG_UNREG("IBM864", NS_CP864TOUNICODE_CID, NS_UNICODETOCP864_CID)
 NS_UCONV_REG_UNREG("IBM864i", NS_CP864ITOUNICODE_CID, NS_UNICODETOCP864I_CID)
+#ifdef MOZ_EXTRA_X11CONVERTERS
+NS_UCONV_REG_UNREG("x-IBM1046", NS_CP1046TOUNICODE_CID, NS_UNICODETOCP1046_CID)
+#endif
 
     // ucvja
 NS_UCONV_REG_UNREG("Shift_JIS", NS_SJISTOUNICODE_CID, NS_UNICODETOSJIS_CID)
@@ -1489,6 +1499,13 @@ static const nsModuleComponentInfo components[] =
     NS_UNICODEDECODER_CONTRACTID_BASE "IBM864i",
     nsCP864iToUnicodeConstructor ,
   },
+#ifdef MOZ_EXTRA_X11CONVERTERS
+  {
+    DECODER_NAME_BASE "x-IBM1046" , NS_CP1046TOUNICODE_CID,
+    NS_UNICODEDECODER_CONTRACTID_BASE "x-IBM1046",
+    nsCP1046ToUnicodeConstructor ,
+  },
+#endif
   { 
     ENCODER_NAME_BASE "IBM850" , NS_UNICODETOCP850_CID, 
     NS_UNICODEENCODER_CONTRACTID_BASE "IBM850",
@@ -1524,6 +1541,13 @@ static const nsModuleComponentInfo components[] =
     NS_UNICODEENCODER_CONTRACTID_BASE "IBM864i",
     nsUnicodeToCP864iConstructor, 
   },
+#ifdef MOZ_EXTRA_X11CONVERTERS
+  {
+    ENCODER_NAME_BASE "x-IBM1046" , NS_UNICODETOCP1046_CID,
+    NS_UNICODEENCODER_CONTRACTID_BASE "x-IBM1046",
+    nsUnicodeToCP1046Constructor,
+  },
+#endif
     // ucvja
   { 
     DECODER_NAME_BASE "Shift_JIS" , NS_SJISTOUNICODE_CID, 

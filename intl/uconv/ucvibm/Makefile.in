@@ -52,6 +52,13 @@ CPPSRCS		= \
 		nsUnicodeToCP864i.cpp \
 		$(NULL)
 
+ifdef MOZ_EXTRA_X11CONVERTERS
+CPPSRCS		+= \
+		nsCP1046ToUnicode.cpp \
+		nsUnicodeToCP1046.cpp \
+		$(NULL)
+endif
+
 EXPORTS		= nsUCvIBMCID.h
 
 LOCAL_INCLUDES = -I$(srcdir)/../util
