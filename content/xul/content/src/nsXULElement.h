@@ -46,26 +46,4 @@ public:
     }
 };
 
-#define NS_IMPL_XULELEMENT_ISUPPORTS                            \
-    NS_IMETHOD_(nsrefcnt) AddRef() {                            \
-        return mOuter->AddRef();                                \
-    }                                                           \
-                                                                \
-    NS_IMETHOD_(nsrefcnt) Release() {                           \
-        return mOuter->Release();                               \
-    }                                                           \
-                                                                \
-    NS_IMETHOD QueryInterface(REFNSIID aIID, void** aResult) {  \
-        if (aIID.Equals(GetDOMIID())) {                         \
-            *aResult = this;                                    \
-            NS_ADDREF(this);                                    \
-            return NS_OK;                                       \
-        }                                                       \
-        else {                                                  \
-            return mOuter->QueryInterface(aIID, aResult);       \
-        }                                                       \
-    }
-
-
-
 #endif // nsXULElement_h__
