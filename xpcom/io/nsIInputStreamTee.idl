@@ -48,8 +48,8 @@ interface nsIOutputStream;
 [scriptable, uuid(44e8b2c8-1ecb-4a63-8b23-3e3500c34f32)]
 interface nsIInputStreamTee : nsIInputStream
 {
-    void init(in nsIInputStream source,
-              in nsIOutputStream sink);
+    attribute nsIInputStream source;
+    attribute nsIOutputStream sink;
 };
 
 %{C++

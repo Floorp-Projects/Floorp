@@ -76,15 +76,23 @@ nsInputStreamTee::~nsInputStreamTee()
 nsresult
 nsInputStreamTee::TeeSegment(const char *buf, PRUint32 count)
 {
-    nsresult rv = NS_OK;
+    if (!mSink)
+        return NS_OK; // nothing to do
+    nsresult rv;
     PRUint32 bytesWritten = 0;
     while (count) {
         rv = mSink->Write(buf + bytesWritten, count, &bytesWritten);
-        if (NS_FAILED(rv)) break;
+        if (NS_FAILED(rv)) {
+            // ok, this is not a fatal error... just drop our reference to mSink
+            // and continue on as if nothing happened.
+            NS_WARNING("Write failed (non-fatal)");
+            mSink = 0;
+            break;
+        }
         NS_ASSERTION(bytesWritten <= count, "wrote too much");
         count -= bytesWritten;
     }
-    return rv;
+    return NS_OK;
 }
 
 NS_METHOD
@@ -128,7 +136,6 @@ NS_IMETHODIMP
 nsInputStreamTee::Read(char *buf, PRUint32 count, PRUint32 *bytesRead)
 {
     NS_ENSURE_TRUE(mSource, NS_ERROR_NOT_INITIALIZED);
-    NS_ENSURE_TRUE(mSink, NS_ERROR_NOT_INITIALIZED);
 
     nsresult rv = mSource->Read(buf, count, bytesRead);
     if (NS_FAILED(rv) || (*bytesRead == 0))
@@ -144,7 +151,6 @@ nsInputStreamTee::ReadSegments(nsWriteSegmentFun writer,
                                PRUint32 *bytesRead)
 {
     NS_ENSURE_TRUE(mSource, NS_ERROR_NOT_INITIALIZED);
-    NS_ENSURE_TRUE(mSink, NS_ERROR_NOT_INITIALIZED);
 
     mWriter = writer;
     mClosure = closure;
@@ -159,22 +165,41 @@ nsInputStreamTee::IsNonBlocking(PRBool *result)
     return mSource->IsNonBlocking(result);
 }
 
-nsresult
-nsInputStreamTee::Init(nsIInputStream *source, nsIOutputStream *sink)
+NS_IMETHODIMP
+nsInputStreamTee::SetSource(nsIInputStream *source)
 {
-    NS_ENSURE_TRUE(source, NS_ERROR_NOT_INITIALIZED);
-    NS_ENSURE_TRUE(sink, NS_ERROR_NOT_INITIALIZED);
-
-    PRBool nonBlocking = PR_FALSE;
-    nsresult rv = sink->IsNonBlocking(&nonBlocking);
-    if (NS_FAILED(rv))
-        return rv;
-    if (nonBlocking) {
-        NS_NOTREACHED("Can only tee data to a blocking output stream"); 
-        return NS_ERROR_NOT_IMPLEMENTED;
-    }
     mSource = source;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsInputStreamTee::GetSource(nsIInputStream **source)
+{
+    NS_IF_ADDREF(*source = mSource);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsInputStreamTee::SetSink(nsIOutputStream *sink)
+{
+    if (sink) {
+        PRBool nonBlocking = PR_FALSE;
+        nsresult rv = sink->IsNonBlocking(&nonBlocking);
+        if (NS_FAILED(rv))
+            return rv;
+        if (nonBlocking) {
+            NS_NOTREACHED("Can only tee data to a blocking output stream"); 
+            return NS_ERROR_NOT_IMPLEMENTED;
+        }
+    }
     mSink = sink;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsInputStreamTee::GetSink(nsIOutputStream **sink)
+{
+    NS_IF_ADDREF(*sink = mSink);
     return NS_OK;
 }
 
@@ -185,13 +210,19 @@ NS_NewInputStreamTee(nsIInputStream **result,
                      nsIInputStream *source,
                      nsIOutputStream *sink)
 {
+    nsresult rv;
+    
     nsCOMPtr<nsIInputStreamTee> tee;
     NS_NEWXPCOM(tee, nsInputStreamTee);
     if (!tee)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    nsresult rv = tee->Init(source, sink);
-    if (NS_SUCCEEDED(rv))
-        NS_ADDREF(*result = tee);
+    rv = tee->SetSource(source);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = tee->SetSink(sink);
+    if (NS_FAILED(rv)) return rv;
+
+    NS_ADDREF(*result = tee);
     return rv;
 }
