@@ -33,8 +33,10 @@
 #include "nsVoidArray.h"
 #include "nsIEventQueueService.h"
 #include "nsIEventQueue.h"
+#include "nsProxiedService.h"
 
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 
 nsCacheService *   nsCacheService::gService = nsnull;
 
@@ -233,6 +235,92 @@ nsCacheService::CreateRequest(nsCacheSession *   session,
 
 
 nsresult
+nsCacheService::NotifyListener(nsCacheRequest *          request,
+                               nsICacheEntryDescriptor * descriptor,
+                               nsCacheAccessMode         accessGranted,
+                               nsresult                  error)
+{
+    nsresult rv;
+
+    // XXX can we hold onto the proxy object manager?
+    NS_WITH_SERVICE(nsIProxyObjectManager, proxyObjMgr, kProxyObjectManagerCID, &rv);
+    if (NS_FAILED(rv)) goto error_exit;
+
+    nsCOMPtr<nsICacheListener> listenerProxy;
+    NS_ASSERTION(request->mEventQ, "no event queue for async request!");
+    rv = proxyObjMgr->GetProxyForObject(request->mEventQ,
+                                        NS_GET_IID(nsICacheListener),
+                                        request->mListener,
+                                        PROXY_ASYNC|PROXY_ALWAYS,
+                                        getter_AddRefs(listenerProxy));
+    if (NS_FAILED(rv)) goto error_exit;
+
+    rv = listenerProxy->OnDescriptorAvailable(descriptor, accessGranted, error);
+    if (NS_FAILED(rv)) goto error_exit;
+
+    return NS_OK;
+
+ error_exit:
+        delete descriptor;
+        return rv;
+}
+
+
+nsresult
+nsCacheService::ProcessRequest(nsCacheRequest * request,
+                               nsICacheEntryDescriptor ** result)
+{
+    // !!! must be called with mCacheServiceLock held !!!
+    nsresult           rv;
+    nsCacheEntry *     entry = nsnull;
+    nsCacheAccessMode  accessGranted = nsICache::ACCESS_NONE;
+    if (result) *result = nsnull;
+
+    while(1) {  // Activate entry loop
+        rv = ActivateEntry(request, &entry);  // get the entry for this request
+        if (NS_FAILED(rv))  break;
+
+        while(1) { // Request Access loop
+            NS_ASSERTION(entry, "no entry in Request Access loop!");
+            // entry->RequestAccess queues request on entry
+            rv = entry->RequestAccess(request, &accessGranted);
+            if (rv != NS_ERROR_CACHE_WAIT_FOR_VALIDATION) break;
+            
+            if (request->mListener) // async exits - validate, doom, or close will resume
+                return rv; 
+            
+            PR_Unlock(mCacheServiceLock);
+            rv = request->WaitForValidation();
+            PR_Lock(mCacheServiceLock);
+
+            PR_REMOVE_AND_INIT_LINK(request);
+            if (NS_FAILED(rv)) break;
+            // okay, we're ready to process this request, request access again
+        }
+        if (rv != NS_ERROR_CACHE_ENTRY_DOOMED)  break;
+
+        if (entry->IsNotInUse()) {
+            // this request was the last one keeping it around, so get rid of it
+            DeactivateEntry(entry);
+        }
+        // loop back around to look for another entry
+    }
+
+    nsICacheEntryDescriptor * descriptor;
+
+    rv = entry->CreateDescriptor(request, accessGranted, &descriptor);
+
+    if (request->mListener) {  // Asynchronous
+        // call listener to report error or descriptor
+        rv = NotifyListener(request, descriptor, accessGranted, rv);
+    } else {        // Synchronous
+        *result = descriptor;
+    }
+    return rv;
+}
+
+
+nsresult
 nsCacheService::OpenCacheEntry(nsCacheSession *           session,
                                 const char *               key,
                                 nsCacheAccessMode          accessRequested,
@@ -243,45 +331,17 @@ nsCacheService::OpenCacheEntry(nsCacheSession *           session,
         *result = nsnull;
 
     nsCacheRequest * request = nsnull;
-    nsCacheEntry *   entry   = nsnull;
-    nsCacheAccessMode  accessGranted = nsICache::ACCESS_NONE;
 
     nsresult rv = CreateRequest(session, key, accessRequested, listener, &request);
     if (NS_FAILED(rv))  return rv;
 
     nsAutoLock cacheService(mCacheServiceLock);
+    rv = ProcessRequest(request, result);
 
-    while(1) {  // Activate entry loop
-        rv = ActivateEntry(request, &entry);  // get the entry for this request
-        if (NS_FAILED(rv))  break;
+    // delete requests that have completed
+    if (!listener || (rv == NS_ERROR_CACHE_WAIT_FOR_VALIDATION))
+        delete request;
 
-        while(1) { // Request Access loop
-            NS_ASSERTION(entry, "no entry in Request Access loop!");
-            rv = entry->RequestAccess(request, &accessGranted);
-            if (rv != NS_ERROR_CACHE_WAIT_FOR_VALIDATION) break;
-            
-            if (listener) // async exits - validate, doom, or close will resume
-                return rv; 
-            
-            cacheService.unlock();
-            rv = request->WaitForValidation();
-            cacheService.lock();
-            if (NS_FAILED(rv)) break;
-            // okay, we're ready to process this request, request access again
-        }
-        if (rv != NS_ERROR_CACHE_ENTRY_DOOMED) break;
-    }
-    nsICacheEntryDescriptor * descriptor;
-
-    rv = entry->CreateDescriptor(request, accessGranted, &descriptor);
-
-    if (listener) {
-        // XXX call listener to report error or descriptor 
-    } else {
-        *result = descriptor;
-    }
-
-    delete request;
     return rv;
 }
 
@@ -309,7 +369,6 @@ nsCacheService::OpenCacheEntry(nsCacheSession *           session,
 
         rv = entry->Open(request, result); // XXX release lock before waiting on request
         if (rv != NS_ERROR_CACHE_ENTRY_DOOMED) break;
-
     }
 
     delete request;
@@ -406,6 +465,7 @@ nsCacheService::ActivateEntry(nsCacheRequest * request,
     *result = nsnull;
     if (entry) {
         // XXX clean up
+        delete entry;
     }
     return rv;
 }
@@ -429,11 +489,11 @@ nsCacheService::SearchCacheDevices(nsCString * key, nsCacheStoragePolicy policy)
 }
 
 
-nsresult
-nsCacheService::BindEntry(nsCacheEntry * entry)
+nsCacheDevice *
+nsCacheService::EnsureEntryHasDevice(nsCacheEntry * entry)
 {
-    nsresult  rv = NS_OK;
-    nsCacheDevice * device;
+    nsCacheDevice * device = entry->CacheDevice();
+    if (device)  return device;
 
     if (entry->IsStreamData() && entry->IsAllowedOnDisk()) {
         // this is the default
@@ -443,20 +503,25 @@ nsCacheService::BindEntry(nsCacheEntry * entry)
         device = mMemoryDevice;
     }
 
-    rv = device->BindEntry(entry);
-    if (NS_SUCCEEDED(rv))
-        entry->SetCacheDevice(device);
+    nsresult  rv = device->BindEntry(entry);
+    if (NS_FAILED(rv)) return nsnull;
 
-    return rv;
+    entry->SetCacheDevice(device);
+    return device;
 }
 
 
 nsresult
 nsCacheService::ValidateEntry(nsCacheEntry * entry)
 {
-    // XXX bind if not bound
-    // XXX convert pending requests to descriptors, etc.
+    nsCacheDevice * device = EnsureEntryHasDevice(entry);
+    if (!device)  return  NS_ERROR_UNEXPECTED; // XXX need better error here
+
     entry->MarkValid();
+    nsresult rv = ProcessPendingRequests(entry);
+    NS_ASSERTION(rv = NS_OK, "ProcessPendingRequests failed.");
+    // XXX what else can be done?
+
     return NS_OK;
 }
 
@@ -491,6 +556,8 @@ nsCacheService::DoomEntry_Internal(nsCacheEntry * entry)
             // XXX what to do
         }
     }
+
+    // XXX check if there are descriptors still queued
     // put on doom list to wait for descriptors to close
     NS_ASSERTION(PR_CLIST_IS_EMPTY(entry),
                  "doomed entry still on device list");
@@ -498,7 +565,7 @@ nsCacheService::DoomEntry_Internal(nsCacheEntry * entry)
     PR_APPEND_LINK(entry, &mDoomedEntries);
 
     // XXX reprocess pending requests
-                 
+    rv = ProcessPendingRequests(entry);
     return rv;
 }
 
@@ -507,15 +574,10 @@ nsresult
 nsCacheService::OnDataSizeChange(nsCacheEntry * entry, PRInt32 deltaSize)
 {
     nsAutoLock lock(mCacheServiceLock);
-    nsresult   rv = NS_OK;
 
-    nsCacheDevice * device = entry->CacheDevice();
-    if (!device) {
-        rv = BindEntry(entry);
-        if (NS_FAILED(rv)) return rv;
+    nsCacheDevice * device = EnsureEntryHasDevice(entry);
+    if (!device)  return  NS_ERROR_UNEXPECTED; // XXX need better error here
 
-        device = entry->CacheDevice();
-    }
     return device->OnDataSizeChange(entry, deltaSize);
 }
 
@@ -526,15 +588,10 @@ nsCacheService::GetTransportForEntry(nsCacheEntry *     entry,
                                      nsITransport    ** result)
 {
     nsAutoLock lock(mCacheServiceLock);
-    nsresult   rv = NS_OK;
 
-    nsCacheDevice * device = entry->CacheDevice();
-    if (!device) {
-        rv = BindEntry(entry);
-        if (NS_FAILED(rv)) return rv;
+    nsCacheDevice * device = EnsureEntryHasDevice(entry);
+    if (!device)  return  NS_ERROR_UNEXPECTED; // XXX need better error here
 
-        device = entry->CacheDevice();
-    }
     return device->GetTransportForEntry(entry, mode, result);
 }
 
@@ -547,8 +604,13 @@ nsCacheService::CloseDescriptor(nsCacheEntryDescriptor * descriptor)
     // ask entry to remove descriptor
     nsCacheEntry * entry       = descriptor->CacheEntry();
     PRBool         stillActive = entry->RemoveDescriptor(descriptor);
+    nsresult       rv          = NS_OK;
 
-    // XXX if (!entry->IsValid())  process pending requests
+    if (!entry->IsValid()) {
+        if (PR_CLIST_IS_EMPTY(&entry->mRequestQ)) {
+            rv = ProcessPendingRequests(entry);
+        }
+    }
 
     if (!stillActive) {
         DeactivateEntry(entry);
@@ -571,6 +633,8 @@ nsCacheService::DeactivateEntry(nsCacheEntry * entry)
             rv = mActiveEntries.RemoveEntry(entry);
             entry->MarkInactive();
             NS_ASSERTION(NS_SUCCEEDED(rv),"failed to remove an active entry !?!");
+        } else {
+            // XXX bad state
         }
     }
 
@@ -587,6 +651,72 @@ nsCacheService::DeactivateEntry(nsCacheEntry * entry)
         delete entry; // because no one else will
     }
 }
+
+
+nsresult
+nsCacheService::ProcessPendingRequests(nsCacheEntry * entry)
+{
+    nsresult  rv = NS_OK;
+
+    if (!entry->IsDoomed() && entry->IsInvalid()) {
+        // 1st descriptor closed w/o MarkValid()
+        // XXX assert no open descriptors
+        // XXX find best requests to promote to 1st Writer
+        // XXX process ACCESS_WRITE (shouldn't have any of these)
+        // XXX ACCESS_READ_WRITE, ACCESS_READ
+        NS_ASSERTION(PR_TRUE,
+                     "closing descriptors w/o calling MarkValid is not supported yet.");
+    }
+
+    nsCacheRequest *   request = (nsCacheRequest *)PR_LIST_HEAD(&entry->mRequestQ);
+    nsCacheRequest *   nextRequest;
+    nsCacheAccessMode  accessGranted = nsICache::ACCESS_NONE;
+
+    while (request != &entry->mRequestQ) {
+        nextRequest = (nsCacheRequest *)PR_NEXT_LINK(request);
+
+        if (request->mListener) {
+
+            // Async request
+            PR_REMOVE_AND_INIT_LINK(request);
+
+            if (entry->IsDoomed()) {
+                rv = ProcessRequest(request, nsnull);
+                if (rv == NS_ERROR_CACHE_WAIT_FOR_VALIDATION)
+                    rv = NS_OK;
+
+                if (NS_FAILED(rv)) {
+                    // XXX what to do?
+                }
+            } else if (entry->IsValid()) {
+                rv = entry->RequestAccess(request, &accessGranted);
+                NS_ASSERTION(NS_SUCCEEDED(rv),
+                             "if entry is valid, RequestAccess must succeed.");
+
+                // entry->CreateDescriptor dequeues request, and queues descriptor
+                nsICacheEntryDescriptor * descriptor;
+                rv = entry->CreateDescriptor(request, accessGranted, &descriptor);
+                
+                // post call to listener to report error or descriptor
+                rv = NotifyListener(request, descriptor, accessGranted, rv);
+                if (NS_FAILED(rv)) {
+                    // XXX what to do?
+                }
+                
+            } else {
+                // XXX bad state
+            }
+        } else {
+
+            // Synchronous request
+            request->WakeUp();
+        }
+        request = nextRequest;
+    }
+
+    return NS_OK;
+}
+
 
 /**
  * Cache Service Utility Functions

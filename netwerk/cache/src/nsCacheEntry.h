@@ -129,6 +129,7 @@ public:
     PRBool IsActive()          { return (mFlags & eActiveMask) != 0; }
     PRBool IsInitialized()     { return (mFlags & eInitializedMask) != 0; }
     PRBool IsValid()           { return (mFlags & eValidMask) != 0; }
+    PRBool IsInvalid()         { return (mFlags & eValidMask) == 0; }
     PRBool IsAllowedInMemory() { return (mFlags & eAllowedInMemoryMask) != 0; }
     PRBool IsAllowedOnDisk()   { return (mFlags & eAllowedOnDiskMask) !=0; }
     PRBool IsInUse()           { return !(PR_CLIST_IS_EMPTY(&mRequestQ) &&
@@ -142,8 +143,8 @@ public:
                                nsCacheAccessMode          accessGranted,
                                nsICacheEntryDescriptor ** result);
 
-    nsresult Open(nsCacheRequest *request, nsICacheEntryDescriptor ** result);
-    nsresult AsyncOpen(nsCacheRequest *request);
+    //    nsresult Open(nsCacheRequest *request, nsICacheEntryDescriptor ** result);
+    //    nsresult AsyncOpen(nsCacheRequest *request);
     PRBool   RemoveRequest( nsCacheRequest * request);
     PRBool   RemoveDescriptor( nsCacheEntryDescriptor * descriptor);
     

@@ -57,11 +57,11 @@ public:
     /**
      * Methods called by nsCacheSession
      */
-    nsresult       OpenCacheEntry(nsCacheSession *           session,
-                                  const char *               key,
-                                  nsCacheAccessMode          accessRequested,
-                                  nsICacheListener *         listener,
-                                  nsICacheEntryDescriptor ** result);
+    nsresult         OpenCacheEntry(nsCacheSession *           session,
+                                    const char *               key,
+                                    nsCacheAccessMode          accessRequested,
+                                    nsICacheListener *         listener,
+                                    nsICacheEntryDescriptor ** result);
 
 #if 0
     nsresult       OpenCacheEntry(nsCacheSession *           session,
@@ -78,15 +78,15 @@ public:
      * Methods called by nsCacheEntryDescriptor
      */
 
-    nsresult       OnDataSizeChange(nsCacheEntry * entry, PRInt32 deltaSize);
+    nsresult         OnDataSizeChange(nsCacheEntry * entry, PRInt32 deltaSize);
 
-    nsresult       ValidateEntry(nsCacheEntry * entry);
+    nsresult         ValidateEntry(nsCacheEntry * entry);
 
-    nsresult       GetTransportForEntry(nsCacheEntry *     entry,
-                                        nsCacheAccessMode  mode,
-                                        nsITransport    ** result);
+    nsresult         GetTransportForEntry(nsCacheEntry *     entry,
+                                          nsCacheAccessMode  mode,
+                                          nsITransport    ** result);
 
-    void           CloseDescriptor(nsCacheEntryDescriptor * descriptor);
+    void             CloseDescriptor(nsCacheEntryDescriptor * descriptor);
 
 
     /**
@@ -103,21 +103,32 @@ private:
     /**
      * Internal Methods
      */
-    nsresult       CreateRequest(nsCacheSession *   session,
-                                 const char *       clientKey,
-                                 nsCacheAccessMode  accessRequested,
-                                 nsICacheListener * listener,
-                                 nsCacheRequest **  request);
+    nsresult         CreateRequest(nsCacheSession *   session,
+                                   const char *       clientKey,
+                                   nsCacheAccessMode  accessRequested,
+                                   nsICacheListener * listener,
+                                   nsCacheRequest **  request);
 
-    nsresult       ActivateEntry(nsCacheRequest * request, nsCacheEntry ** entry);
-    nsresult       BindEntry(nsCacheEntry * entry);
+    nsresult         NotifyListener(nsCacheRequest *          request,
+                                    nsICacheEntryDescriptor * descriptor,
+                                    nsCacheAccessMode         accessGranted,
+                                    nsresult                  error);
 
-    nsCacheEntry * SearchCacheDevices(nsCString * key, nsCacheStoragePolicy policy);
+    nsresult         ActivateEntry(nsCacheRequest * request, nsCacheEntry ** entry);
 
-    nsresult       DoomEntry_Internal(nsCacheEntry * entry);
+    nsCacheDevice *  EnsureEntryHasDevice(nsCacheEntry * entry);
+
+    nsCacheEntry *   SearchCacheDevices(nsCString * key, nsCacheStoragePolicy policy);
+
+    nsresult         DoomEntry_Internal(nsCacheEntry * entry);
 
 
-    void           DeactivateEntry(nsCacheEntry * entry);
+    void             DeactivateEntry(nsCacheEntry * entry);
+
+    nsresult         ProcessRequest(nsCacheRequest * request,
+                                    nsICacheEntryDescriptor ** result);
+
+    nsresult         ProcessPendingRequests(nsCacheEntry * entry);
 
     /**
      *  Data Members
