@@ -687,9 +687,7 @@ PRBool OnJaguarOrLater() // Return true if we are on Mac OS X 10.2 or later
     static PRBool gOnJaguarOrLater = PR_FALSE;
     if(!gInitVer)
     {
-        long version;
-        OSErr err = ::Gestalt(gestaltSystemVersion, &version);
-        gOnJaguarOrLater = (err == noErr && version >= 0x00001020);
+        gOnJaguarOrLater = (nsToolkit::OSXVersion() >= MAC_OS_X_VERSION_10_2);
         gInitVer = PR_TRUE;
     }
     return gOnJaguarOrLater;

@@ -101,13 +101,14 @@ public:
   static void AppInBackground ( ) ;
   static bool IsAppInForeground ( ) ;
 
-  // determine whether running on Mac OS X, or earlier version of the Mac OS
-  static bool OnMacOSX ( ) ;
-
   // utility routines for getting the toplevel widget and event sink
   // stashed in properties of the window.
   static void GetWindowEventSink ( WindowPtr aWindow, nsIEventSink** outSink ) ;
   static void GetTopWidget ( WindowPtr aWindow, nsIWidget** outWidget ) ;
+
+  // Returns the OS X version as returned from
+  // Gestalt(gestaltSystemVersion, ...)
+  static long OSXVersion ( ) ;
 
 protected:
 

@@ -258,20 +258,20 @@ nsToolkit :: IsAppInForeground ( )
 
 
 //
-// Return true if we are on Mac OS X, caching the result after the first call
+// Return the OS X version as returned from Gestalt(gestaltSystemVersion, ...)
 //
-bool
-nsToolkit :: OnMacOSX()
+long
+nsToolkit :: OSXVersion()
 {
-  static PRBool gInitVer = PR_FALSE;
-  static PRBool gOnMacOSX = PR_FALSE;
-  if(! gInitVer) {
-    long version;
-    OSErr err = ::Gestalt(gestaltSystemVersion, &version);
-    gOnMacOSX = (err == noErr && version >= 0x00001000);
-    gInitVer = PR_TRUE;
+  static long gOSXVersion = 0x0;
+  if (gOSXVersion == 0x0) {
+    OSErr err = ::Gestalt(gestaltSystemVersion, &gOSXVersion);
+    if (err != noErr) {
+      NS_ERROR("Couldn't determine OS X version, assume 10.0");
+      gOSXVersion = MAC_OS_X_VERSION_10_0;
+    }
   }
-  return gOnMacOSX;
+  return gOSXVersion;
 }
 
 
