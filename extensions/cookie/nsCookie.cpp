@@ -2226,13 +2226,11 @@ COOKIE_CookieViewerReturn(nsAutoString results) {
 
 PUBLIC void
 COOKIE_GetCookieListForViewer(nsString& aCookieList) {
-  PRUnichar *buffer = (PRUnichar*)PR_Malloc(BUFLEN2);
-  int g = 0, cookieNum;
+  PRUnichar *buffer = (PRUnichar*)PR_Malloc(2*BUFLEN2);
+  int g, cookieNum;
   cookie_CookieStruct * cookie;
 
   cookie_LockCookieList();
-  buffer[0] = '\0';
-  cookieNum = 0;
 
   /* Get rid of any expired cookies now so user doesn't
    * think/see that we're keeping cookies in memory.
@@ -2251,6 +2249,8 @@ COOKIE_GetCookieListForViewer(nsString& aCookieList) {
     PRUnichar * Yes = cookie_Localize("Yes");
     PRUnichar * No = cookie_Localize("No");
     PRUnichar * AtEnd = cookie_Localize("AtEndOfSession");
+    buffer[0] = '\0';
+    g = 0;
 
     g += nsTextFormater::snprintf(buffer+g, BUFLEN2-g,
       nsString("%c%d%c%s%c%s%c%S%c%s%c%s%c%S%c%S").GetUnicode(),
@@ -2263,7 +2263,6 @@ COOKIE_GetCookieListForViewer(nsString& aCookieList) {
       BREAK, cookie->xxx ? Yes : No,
       BREAK, cookie->expires ? (nsString(ctime(&(cookie->expires))).GetUnicode()) : AtEnd
     );
-    cookieNum++;
     PR_FREEIF(fixed_name);
     PR_FREEIF(fixed_value);
     PR_FREEIF(fixed_domain_or_host);
@@ -2273,8 +2272,8 @@ COOKIE_GetCookieListForViewer(nsString& aCookieList) {
     Recycle(Yes);
     Recycle(No);
     Recycle(AtEnd);
+    aCookieList += buffer;
   }
-  aCookieList = buffer;
   PR_FREEIF(buffer);
   cookie_UnlockCookieList();
 }
