@@ -134,6 +134,7 @@ HRESULT SmartUpdateJars(LPSTR szAppName, LPSTR szAppPath, LPSTR listArchive[])
         /* break out of the for loop */
         break;
       }
+      printf("\n");
     }
 
     pfnXpiExit();
@@ -158,9 +159,9 @@ void cbXPIProgress(const char* msg, PRInt32 val, PRInt32 max)
 
   ParsePath((char *)msg, szFilename, sizeof(szFilename), PP_FILENAME_ONLY);
   if(max == 0)
-    printf("Processing: %s", szFilename);
+    printf("Processing: %s\n", szFilename);
   else
-    printf("Installing: %d/%d %s", val, max, szFilename);
+    printf("Installing: %d/%d %s\n", val, max, szFilename);
 
   ProcessWindowsMessages();
 }
