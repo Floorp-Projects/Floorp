@@ -368,6 +368,11 @@ PrefResult PREF_DeleteBranch(const char *branch_name);
 PrefResult PREF_ClearUserPref(const char *pref_name);
 
 /*
+ * Clears all user prefs
+ */
+PrefResult PREF_ClearAllUserPrefs();
+
+/*
  * Creates an iterator over the children of a node.  Sample code:
  	char* children;
 	if ( PREF_CreateChildList("mime", &children) == 0 )

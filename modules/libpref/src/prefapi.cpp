@@ -1569,6 +1569,32 @@ PREF_ClearUserPref(const char *pref_name)
     return success;
 }
 
+PR_STATIC_CALLBACK(PRIntn)
+pref_ClearUserPref(PLHashEntry *he, int i, void *arg)
+{
+    PrefNode *pref = (PrefNode *) he->value;
+    PR_ASSERT(pref);
+
+    if (pref && PREF_HAS_USER_VALUE(pref))
+    {
+        pref->flags &= ~PREF_USERSET;
+        if (gCallbacksEnabled)
+            pref_DoCallback(he->key);
+        return HT_ENUMERATE_NEXT | HT_ENUMERATE_REMOVE;
+    }
+    return HT_ENUMERATE_NEXT;
+}
+
+PrefResult
+PREF_ClearAllUserPrefs()
+{
+    if (!gHashTable)
+        return PREF_NOT_INITIALIZED;
+    
+    PL_HashTableEnumerateEntries(gHashTable, pref_ClearUserPref, nsnull);
+    return PREF_OK;
+}
+
 /* Prototype Admin Kit support */
 PrefResult
 PREF_GetConfigString(const char *obj_name, char * return_buffer, int size,
