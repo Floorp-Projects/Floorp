@@ -79,6 +79,7 @@ END_COM_MAP()
     virtual HRESULT SubscribeToEvents(IUnknown *pControl);
     virtual void UnsubscribeFromEvents();
     virtual BOOL GetEventSinkIID(IUnknown *pControl, IID &iid, ITypeInfo **typeInfo);
+    virtual HRESULT InternalInvoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr);
 
 // IDispatch
     virtual HRESULT STDMETHODCALLTYPE GetTypeInfoCount(/* [out] */ UINT __RPC_FAR *pctinfo);

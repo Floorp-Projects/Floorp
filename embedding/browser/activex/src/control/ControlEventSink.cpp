@@ -180,6 +180,13 @@ HRESULT CControlEventSink::SubscribeToEvents(IUnknown *pControl)
     return S_OK;
 }
 
+HRESULT
+CControlEventSink::InternalInvoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
+{
+    // Override me!
+    return E_NOTIMPL;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // IDispatch implementation
 
@@ -204,28 +211,7 @@ HRESULT STDMETHODCALLTYPE CControlEventSink::GetIDsOfNames(/* [in] */ REFIID rii
 
 HRESULT STDMETHODCALLTYPE CControlEventSink::Invoke(/* [in] */ DISPID dispIdMember, /* [in] */ REFIID riid, /* [in] */ LCID lcid, /* [in] */ WORD wFlags, /* [out][in] */ DISPPARAMS __RPC_FAR *pDispParams, /* [out] */ VARIANT __RPC_FAR *pVarResult, /* [out] */ EXCEPINFO __RPC_FAR *pExcepInfo, /* [out] */ UINT __RPC_FAR *puArgErr)
 {
-    FUNCDESC *pFuncDesc = NULL;
-    if (m_spEventSinkTypeInfo)
-        m_spEventSinkTypeInfo->GetFuncDesc(dispIdMember, &pFuncDesc);
-
-#ifdef DEBUG
-    ATLTRACE(_T("Invoke(%d)\n"), (int) dispIdMember);
-    if (m_spEventSinkTypeInfo)
-    {
-        UINT cNames = 0;
-        CComBSTR bstrName;
-        m_spEventSinkTypeInfo->GetNames(dispIdMember, &bstrName, 1, &cNames);
-        ATLTRACE(_T("  %S\n"), bstrName.m_str);
-    }
-    if (pFuncDesc)
-    {
-    }
-#endif
-    if (m_spEventSinkTypeInfo)
-    {
-        m_spEventSinkTypeInfo->ReleaseFuncDesc(pFuncDesc);
-    }
-    return S_OK;
+    return InternalInvoke(dispIdMember, riid, lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
 }
 
 
