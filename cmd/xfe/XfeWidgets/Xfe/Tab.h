@@ -56,10 +56,14 @@ typedef struct _XfeTabRec *			XfeTabWidget;
 /*																		*/
 /*----------------------------------------------------------------------*/
 extern Widget
-XfeCreateTab				(Widget		parent,
+XfeCreateTab				(Widget		pw,
 							 String		name,
-							 Arg *		args,
-							 Cardinal	num_args);
+							 Arg *		av,
+							 Cardinal	ac);
+/*----------------------------------------------------------------------*/
+extern void
+XfeTabDrawRaised			(Widget		w,
+							 Boolean	raised);
 /*----------------------------------------------------------------------*/
 
 #ifdef __cplusplus								/* end C++				*/

@@ -880,9 +880,33 @@ FillTabHorizontal(Widget w,Pixmap pixmap,Dimension width,Dimension height)
 /* XfeTab Public Methods												*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-Widget
-XfeCreateTab(Widget parent,char *name,Arg *args,Cardinal count)
+/* extern */ Widget
+XfeCreateTab(Widget pw,char * name,Arg * av,Cardinal ac)
 {
-    return (XtCreateWidget(name,xfeTabWidgetClass,parent,args,count));
+    return XtCreateWidget(name,xfeTabWidgetClass,pw,av,ac);
+}
+/*----------------------------------------------------------------------*/
+/* extern */ void
+XfeTabDrawRaised(Widget w,Boolean raised)
+{
+	Boolean pointer_inside_save;
+
+    assert( _XfeIsAlive(w) );
+    assert( XfeIsTab(w) );
+
+	/* Make sure the widget is realized before drawing anything */
+	if (!_XfeIsRealized(w))
+	{
+		return;
+	}
+
+	/* Pretend the pointer is in/out according to 'raised' and expose */
+	pointer_inside_save = _XfePointerInside(w);
+
+	_XfePointerInside(w) = raised;
+
+	XfeExpose(w,NULL,NULL);
+
+	_XfePointerInside(w) = pointer_inside_save;
 }
 /*----------------------------------------------------------------------*/
