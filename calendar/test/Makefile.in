@@ -44,7 +44,13 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/rules.mk
 
+ifeq ($(OS_ARCH),WINNT)
+# need this because xpcshell built with readline won't work in cygwin shells
+RUN		= cmd /c start
+else
 RUN		= $(DIST)/bin/run-mozilla.sh
+endif
+
 XPCSHELL	= $(DIST)/bin/xpcshell
 
 # once we land the necessary changes in the canonical copy of jsDriver.pl,
@@ -55,16 +61,27 @@ XPCSHELL	= $(DIST)/bin/xpcshell
 #
 JSDRIVER	= $(srcdir)/jsDriver.pl 
 
+
+# send everything to the console
+OUTPUT		= --trace --confail
+#
+# send the output from any failed tests to the console
+#OUTPUT 		= --confail
+#
+# just output a summary of how many tests failed to the console
+#OUTPUT		= --confail 2>/dev/null
+
 PROVIDER_TESTS	= getEvents.js
 PROVIDERS	= memory caldav
-REDIRECTERR	= 2>/dev/null
 GARBAGE 	+= results*.html
 
 # for running xpcshell with the calshell objects loaded in
 #
 .PHONY: calshell
 calshell:
-	$(RUN) $(XPCSHELL) -f $(srcdir)/homegrown/shell.js -f -
+	$(CYGWIN_WRAPPER) $(RUN) $(XPCSHELL) \
+		-f $(srcdir)/homegrown/shell.js \
+		-f -
 
 .PHONY: test-providers
 test-providers:
@@ -76,7 +93,8 @@ test-misc:
 #
 .PHONY: test
 test: test-providers test-misc
+	echo $(CYGPATH)
 	env MOZILLA_FIVE_HOME=$(DIST)/bin LD_LIBRARY_PATH=$(DIST)/bin \
-		$(JSDRIVER) --confail --engine=xpcshell --testpath=$(srcdir) \
-		$(REDIRECTERR)
+		$(PERL)	$(JSDRIVER) --engine=xpcshell --testpath=$(srcdir) \
+		$(OUTPUT)
 
