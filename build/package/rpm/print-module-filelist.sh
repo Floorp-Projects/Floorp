@@ -25,6 +25,9 @@ list2=/tmp/list2-$$.txt
 
 rm -rf $dist $list $list2
 
+mkdir -p $dist
+mkdir -p $dist/include
+
 make -s DIST=$dist XPDIST=$dist PUBLIC=$dist/include EXTRA_DEPS= >/dev/null 2>&1
 
 cd $dist
@@ -49,10 +52,8 @@ do
 		# Dont output files in "lib/" that are duplicated in "bin/"
 		if [ -f "$bin_dup" ]
 		then
-			#echo "skipping $i"
 			skip="true"
 		fi
-
 
 		# Test for files that need to be skipped
 		file=`basename $i`
@@ -84,6 +85,8 @@ do
 	if [ "$skip" != "true" ]
 	then
 		echo $i >> $list2
+#	else
+#		echo "skipping $i"
 	fi
 done
 

@@ -72,6 +72,8 @@ do
 
 	rm -f $tmp_raw $file_list $file_list_devel $tmp_file_list $tmp_file_list_devel
 
+	touch $tmp_raw $file_list $file_list_devel $tmp_file_list $tmp_file_list_devel
+
 	print_cmd=$mozdir/build/package/rpm/print-module-filelist.sh
 
 	here=`pwd`
