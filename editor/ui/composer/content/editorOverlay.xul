@@ -913,6 +913,10 @@
            oncommand="DumpUndoStack()"/>
     <menuitem label="&dumpRedoStack.label;"
            oncommand="DumpRedoStack()"/>
+    <menuitem label="&executeJSTransactionViaTxmgr.label;"
+           oncommand="ExecuteJSTransactionViaTxmgr()"/>
+    <menuitem label="&executeJSTransactionViaEditor.label;"
+           oncommand="ExecuteJSTransactionViaEditor()"/>
     <menuseparator />
     <menuitem label="&startLogCmd.label;"
            oncommand="EditorStartLog()"/>

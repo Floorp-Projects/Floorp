@@ -768,7 +768,7 @@ nsHTMLEditor::SetDocumentTitle(const nsAString &aTitle)
       //Don't let Rules System change the selection
       nsAutoTxnsConserveSelection dontChangeSelection(this);
 
-      result = nsEditor::Do(txn);  
+      result = nsEditor::DoTransaction(txn);  
     }
     // The transaction system (if any) has taken ownwership of txn
     NS_IF_RELEASE(txn);
@@ -3614,7 +3614,7 @@ nsHTMLEditor::RemoveStyleSheet(const nsAString &aURL)
   if (!txn) rv = NS_ERROR_NULL_POINTER;
   if (NS_SUCCEEDED(rv))
   {
-    rv = Do(txn);
+    rv = DoTransaction(txn);
     if (NS_SUCCEEDED(rv))
       mLastStyleSheetURL.Truncate();        // forget it
 
@@ -4293,7 +4293,7 @@ nsHTMLEditor::StyleSheetLoaded(nsICSSStyleSheet* aSheet, PRBool aNotify)
   if (!txn) rv = NS_ERROR_NULL_POINTER;
   if (NS_SUCCEEDED(rv))
   {
-    rv = Do(txn);
+    rv = DoTransaction(txn);
     if (NS_SUCCEEDED(rv))
     {
       // Get the URI, then url spec from the sheet

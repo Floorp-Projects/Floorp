@@ -152,6 +152,14 @@ NS_IMETHODIMP PlaceholderTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMe
     return NS_ERROR_FAILURE;
   }
 
+  // check to see if aTransaction is one of the editor's
+  // private transactions. If not, we want to avoid merging
+  // the foreign transaction into our placeholder since we
+  // don't know what it does.
+
+  nsCOMPtr<nsPIEditorTransaction> pTxn = do_QueryInterface(aTransaction);
+  if (!pTxn) return NS_OK; // it's foreign so just bail!
+
   EditTxn *editTxn = (EditTxn*)aTransaction;  //XXX: hack, not safe!  need nsIEditTransaction!
   // determine if this incoming txn is a placeholder txn
   nsCOMPtr<nsIAbsorbingTransaction> plcTxn;// = do_QueryInterface(editTxn);
