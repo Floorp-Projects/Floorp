@@ -42,6 +42,7 @@
 #include "nsIWebShell.h"
 #include "nsIWebShellWindow.h"
 #include "nsCOMPtr.h"
+#include "nsXPIDLString.h"
 
 #include "nsIServiceManager.h"
 #include "nsIURL.h"
@@ -1582,98 +1583,76 @@ nsBrowserAppCore::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURI* aURL, 
 
 
 NS_IMETHODIMP
-#ifdef NECKO
 nsBrowserAppCore::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* channel, nsresult aStatus,
 									nsIDocumentLoaderObserver * aObserver)
-#else
-nsBrowserAppCore::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIURI *aUrl, PRInt32 aStatus,
-									nsIDocumentLoaderObserver * aObserver)
-#endif
 {
   NS_PRECONDITION(aLoader != nsnull, "null ptr");
   if (! aLoader)
     return NS_ERROR_NULL_POINTER;
 
-#ifdef NECKO
   NS_PRECONDITION(channel != nsnull, "null ptr");
   if (! channel)
     return NS_ERROR_NULL_POINTER;
-#else
-  NS_PRECONDITION(aUrl != nsnull, "null ptr");
-  if (! aUrl)
-    return NS_ERROR_NULL_POINTER;
-#endif
 
   nsresult rv;
 
-  nsIWebShell * aWebShell= nsnull, * parent = nsnull;
-
-  // Notify observers that a document load has started in the
-  // content window.
-  NS_WITH_SERVICE(nsIObserverService, observer, NS_OBSERVERSERVICE_PROGID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-#ifdef NECKO
   nsCOMPtr<nsIURI> aUrl;
   rv = channel->GetURI(getter_AddRefs(aUrl));
   if (NS_FAILED(rv)) return rv;
-  char* url;
-#else
-  const char* url;
-#endif
-  rv = aUrl->GetSpec(&url);
+
+  nsXPIDLCString url;
+  rv = aUrl->GetSpec(getter_Copies(url));
   if (NS_FAILED(rv)) return rv;
 
-  nsAutoString urlStr(url);
+  if (NS_SUCCEEDED(aStatus)) {
+    nsCOMPtr<nsIWebShell> webshell, parent;
 
-  nsAutoString kEndDocumentLoad("EndDocumentLoad");
-  nsAutoString kFailDocumentLoad("FailDocumentLoad");
+    // Is this a frame ?
+    webshell = do_QueryInterface(aObserver);
+    if (webshell) {
+      webshell->GetParent(*getter_AddRefs(parent));
+    }
 
-  rv = aObserver->QueryInterface(kIWebShellIID, (void **)&aWebShell);
+    /* If this is a frame, don't do any of the Global History
+     * & observer thingy 
+     */
+    if (!parent) {
+      nsAutoString urlStr(url);
+      nsAutoString kEndDocumentLoad("EndDocumentLoad");
+      nsAutoString kFailDocumentLoad("FailDocumentLoad");
 
-  if (aStatus != NS_OK) {
-		  goto done;
+      // Notify observers that a document load has started in the
+      // content window.
+      NS_WITH_SERVICE(nsIObserverService, observer, NS_OBSERVERSERVICE_PROGID, &rv);
+      if (NS_FAILED(rv)) return rv;
+
+      rv = observer->Notify(mContentWindow,
+                            NS_SUCCEEDED(aStatus) ? kEndDocumentLoad.GetUnicode() : kFailDocumentLoad.GetUnicode(),
+                            urlStr.GetUnicode());
+
+      // XXX Ignore rv for now. They are using nsIEnumerator instead of
+      // nsISimpleEnumerator.
+
+    }
   }
 
-  /* If this is a frame, don't do any of the Global History
-   * & observer thingy 
-   */
-  if (aWebShell)
-      aWebShell->GetParent(parent);
-
-  if (parent) {
-      /* This is a frame */
-          goto end;
-  }
-  rv = observer->Notify(mContentWindow,
-                        NS_SUCCEEDED(aStatus) ? kEndDocumentLoad.GetUnicode() : kFailDocumentLoad.GetUnicode(),
-                        urlStr.GetUnicode());
-
-  // XXX Ignore rv for now. They are using nsIEnumerator instead of
-  // nsISimpleEnumerator.
-
-done:
   // Stop the throbber and set the urlbar string
-	if (aStatus == NS_OK)
-      setAttribute( mWebShell, "urlbar", "value", url);  
+  if (aStatus == NS_OK)
+    setAttribute( mWebShell, "urlbar", "value", (const char*)url);  
 
-	/* To satisfy a request from the QA group */
-	if (aStatus == NS_OK) {
-      fprintf(stdout, "Document %s loaded successfully\n", url);
-      fflush(stdout);
-	}
-	else {
-      fprintf(stdout, "Error loading URL %s \n", url);
-      fflush(stdout);
-	}
-
-end:
+  /* To satisfy a request from the QA group */
+  if (aStatus == NS_OK) {
+    fprintf(stdout, "Document %s loaded successfully\n", (const char*)url);
+    fflush(stdout);
+  }
+  else {
+    fprintf(stdout, "Error loading URL %s \n", (const char*)url);
+    fflush(stdout);
+  }
 
 #ifdef DEBUG_warren
-  nsCOMPtr<nsIURI> aURL;
-  channel->GetURI(getter_AddRefs(aURL));
   char* urls;
-  aURL->GetSpec(&urls);
+  aUrl->GetSpec(&urls);
   if (gTimerLog == nsnull)
     gTimerLog = PR_NewLogModule("Timer");
   PRIntervalTime end = PR_IntervalNow();
@@ -1706,23 +1685,21 @@ end:
   setAttribute(mWebShell, "canReload", "disabled", "");
 
   //Set the protocol icon.
-
-  char* scheme;
-  aUrl->GetScheme(&scheme);
-  
   nsIFileSpec* chrome = NS_LocateFileOrDirectory( nsSpecialFileSpec::App_ChromeDirectory);
   
   if (chrome)
   {
+      PRBool exists;
+      nsXPIDLCString scheme;
+
+      aUrl->GetScheme(getter_Copies(scheme));
+
       chrome->AppendRelativeUnixPath("netwerk/content/default/");
       chrome->AppendRelativeUnixPath(scheme);
-      PRBool exists;
       chrome->Exists(&exists);
   
       if (exists)
       {
-        char* scheme;
-        aUrl->GetScheme(&scheme);
         nsAutoString iconURIString;
 
         iconURIString.SetString("chrome://netwerk/content/");
@@ -1743,9 +1720,7 @@ end:
   }
 	//Update the go menu with history entries. Not ready yet
 	UpdateGoMenu();
-#ifdef NECKO
-  nsCRT::free(url);
-#endif
+
   return NS_OK;
 }
 
