@@ -147,7 +147,7 @@ open (COMPLETE, ">" . $outdir . "/complete.html") ||
   die ("Couldn't open $outdir/complete.html.\n");
 open (COMPLETE_TOC, ">" . $outdir . "/complete-toc.html") ||
   die ("Couldn't open $outdir/complete-toc.html.\n");
-#_PH_
+
 open (COMPLETE_TOC_ABC, ">" . $outdir . "/complete-toc-abc.html") ||
   die ("Couldn't open $outdir/complete-toc-abc.html.\n");
 open (COMPLETE_TOC_GRP, ">" . $outdir . "/complete-toc-grp.html") ||
@@ -155,7 +155,7 @@ open (COMPLETE_TOC_GRP, ">" . $outdir . "/complete-toc-grp.html") ||
 
 open (SPARSE_TOC, ">" . $outdir . "/sparse-toc.html") ||
   die ("Couldn't open $outdir/sparse-toc.html.\n");
-#_PH_
+
 open (SPARSE_TOC_ABC, ">" . $outdir . "/sparse-toc-abc.html") ||
   die ("Couldn't open $outdir/sparse-toc-abc.html.\n");
 open (SPARSE_TOC_GRP, ">" . $outdir . "/sparse-toc-grp.html") ||
@@ -193,8 +193,8 @@ sub main {
         &add_entry_sparse($html);
         &add_toc_complete(*COMPLETE_TOC);
         &add_toc_complete(*COMPLETE_TOC_ABC);
-        &add_toc_sparse(*SPARSE_TOC); #_PH_
-        &add_toc_sparse(*SPARSE_TOC_ABC); #_PH_
+        &add_toc_sparse(*SPARSE_TOC);
+        &add_toc_sparse(*SPARSE_TOC_ABC);
         #&debug_write_entry();
     }
 
@@ -627,7 +627,7 @@ sub get_entry_html {
                     $html .= "<tr class='param-row-odd'>";
                 }
                 $param = $_;
-		#_PH_ 
+
 		$param = &get_param_links($param);
                 $even *= -1;
                 $html .= $param . "</tr>\n";
@@ -776,8 +776,8 @@ sub write_toc_groups {
 
     print COMPLETE_TOC $head;
     print COMPLETE_TOC_GRP $head;
-    print SPARSE_TOC $head; #_PH_
-    print SPARSE_TOC_GRP $head; #_PH_
+    print SPARSE_TOC $head;
+    print SPARSE_TOC_GRP $head;
 
     for $g (@groups) {
         $head = "<tr><td class='";
@@ -791,8 +791,8 @@ sub write_toc_groups {
         $head .= "<tr><th><a name='GROUP_$g'>$g</a></th><td>&nbsp;</td></tr>\n";
         print COMPLETE_TOC $head;
         print COMPLETE_TOC_GRP $head;
-        print SPARSE_TOC $head; #_PH_
-        print SPARSE_TOC_GRP $head; #_PH_
+        print SPARSE_TOC $head;
+        print SPARSE_TOC_GRP $head;
         my $e;
         for $e (sort(@{$groups{$g}})) {
             $c = $entries{$e};
@@ -804,22 +804,22 @@ sub write_toc_groups {
         $head = "</table></center><br></td></tr>\n";
         print COMPLETE_TOC $head;
         print COMPLETE_TOC_GRP $head;
-        print SPARSE_TOC $head; #_PH_
-        print SPARSE_TOC_GRP $head; #_PH_
+        print SPARSE_TOC $head;
+        print SPARSE_TOC_GRP $head;
         $even *= -1;
     }
 
 }
 
 sub add_toc_complete {
-    local (*G) = shift; #_PH_
+    local (*G) = shift;
     # add the current entry ($c) to the complete toc
     #print COMPLETE_TOC &add_toc(0);
     print G &add_toc(0);
 }
 
 sub add_toc_sparse {
-    local (*G) = shift; #_PH_
+    local (*G) = shift;
     # add the current entry ($c) to the sparse toc
     #print SPARSE_TOC &add_toc(1);
     print G &add_toc(1);
@@ -940,14 +940,14 @@ sub init_files {
     print SPARSE_TOC $tocstr2;
     print SPARSE_TOC $abcstr;
 
-    print SPARSE_TOC_ABC $tocstr1; #_PH_
+    print SPARSE_TOC_ABC $tocstr1;
     print SPARSE_TOC_ABC &get_menu("abc-sparse");
-    print SPARSE_TOC_ABC $tocstr2; #_PH_
-    print SPARSE_TOC_ABC $abcstr; #_PH_
+    print SPARSE_TOC_ABC $tocstr2;
+    print SPARSE_TOC_ABC $abcstr;
 
-    print SPARSE_TOC_GRP $tocstr1; #_PH_
+    print SPARSE_TOC_GRP $tocstr1;
     print SPARSE_TOC_GRP &get_menu("grp-sparse");
-    print SPARSE_TOC_GRP $tocstr2; #_PH_
+    print SPARSE_TOC_GRP $tocstr2;
 
 }
 
