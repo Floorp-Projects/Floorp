@@ -62,14 +62,15 @@ nsOEScanBoxes::nsOEScanBoxes()
 nsOEScanBoxes::~nsOEScanBoxes()
 {
 	int i, max;
+  MailboxEntry *pEntry;
 	for (i = 0, max = m_entryArray.Count(); i < max; i++) {
-		MailboxEntry *pEntry = (MailboxEntry *) m_entryArray.ElementAt( i);
+		pEntry = (MailboxEntry *) m_entryArray.ElementAt( i);
 		delete pEntry;
 	}
   // Now free the unprocessed child entries (ie, those without parents for some reason).
   for (i = 0, max = m_pendingChildArray.Count(); i < max; i++)
   {
-    MailboxEntry *pEntry = (MailboxEntry *) m_pendingChildArray.ElementAt(i);
+    pEntry = (MailboxEntry *) m_pendingChildArray.ElementAt(i);
     if (!pEntry->processed)
       delete pEntry;
   }
@@ -417,7 +418,13 @@ PRBool nsOEScanBoxes::Find50MailBoxes( nsIFileSpec* descFile)
 		// now build an entry if necessary!
 		if (pDataSource) {
 			if (!nsCRT::strcasecmp( pDataSource, "LocalStore"))
+      {
 				localStoreId = id;	
+        // See if we have any child folders that need to be added/processed for this top level parent.
+        ProcessPendingChildEntries(localStoreId, localStoreId, m_pendingChildArray);
+        // Clean up the pending list.
+        RemoveProcessedChildEntries();
+      }
 		}
 		else if (id && localStoreId && parent) {
 			// veryify that this mailbox is in the local store
@@ -438,8 +445,17 @@ PRBool nsOEScanBoxes::Find50MailBoxes( nsIFileSpec* descFile)
           pEntry->processed =  PR_TRUE;
           // See if we have any child folders that need to be added/processed.
           ProcessPendingChildEntries(id, localStoreId, m_pendingChildArray);
+          // Clean up the pending list.
+          RemoveProcessedChildEntries();
         }
 			}
+      else
+      {
+        // Put this folder into child array and process it when its parent shows up.
+        pEntry = NewMailboxEntry(id, parent, (const char *) (pBytes + strOffset), pFileName);
+        if (pEntry)
+          m_pendingChildArray.AppendElement(pEntry);
+      }
 		}
     else if (pFileName)
     {
@@ -452,8 +468,8 @@ PRBool nsOEScanBoxes::Find50MailBoxes( nsIFileSpec* descFile)
 
 		delete [] pBytes;
 	}
-
 	
+
 	delete [] pIndex;
 
 	if (m_entryArray.Count())
@@ -483,9 +499,10 @@ nsOEScanBoxes::MailboxEntry *nsOEScanBoxes::NewMailboxEntry(PRUint32 id, PRUint3
 void nsOEScanBoxes::ProcessPendingChildEntries(PRUint32 parent, PRUint32 rootIndex, nsVoidArray	&childArray)
 {
   PRInt32 i, max;
+  MailboxEntry *pEntry;
   for (i = 0, max = childArray.Count(); i < max; i++)
   {
-    MailboxEntry *pEntry = (MailboxEntry *) childArray.ElementAt(i);
+    pEntry = (MailboxEntry *) childArray.ElementAt(i);
     if ((!pEntry->processed) && (pEntry->parent == parent))
     {
       AddChildEntry(pEntry, rootIndex);
@@ -494,6 +511,20 @@ void nsOEScanBoxes::ProcessPendingChildEntries(PRUint32 parent, PRUint32 rootInd
       // array as well (ie, both child and grand-child are on the list).
       ProcessPendingChildEntries(pEntry->index, rootIndex, childArray);
     }
+  }
+}
+
+void nsOEScanBoxes::RemoveProcessedChildEntries()
+{
+  // Remove already processed entries from the pending list. Note that these entries are also
+  // on 'm_entryArray' list so we don't want to deallocate the space for the entries now.
+  MailboxEntry * pEntry;
+  PRInt32 i;
+  for (i = m_pendingChildArray.Count()-1; i >= 0; i--)
+  {
+    pEntry = (MailboxEntry *) m_pendingChildArray.ElementAt(i);
+    if (pEntry->processed)
+      m_pendingChildArray.RemoveElementAt(i);
   }
 }
 

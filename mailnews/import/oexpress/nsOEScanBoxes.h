@@ -82,6 +82,7 @@ private:
 	void			AddChildEntry( MailboxEntry *pEntry, PRUint32 rootIndex);
   MailboxEntry *  NewMailboxEntry(PRUint32 id, PRUint32 parent, const char *prettyName, char *pFileName);
   void        ProcessPendingChildEntries(PRUint32 parent, PRUint32 rootIndex, nsVoidArray &childArray);
+  void        RemoveProcessedChildEntries();
 
 
 	PRBool			ReadLong( nsIFileSpec * stream, PRInt32& val, PRUint32 offset);
