@@ -527,6 +527,7 @@ BookmarksTree.prototype = {
       case "cmd_newfolder":
       case "cmd_newseparator":
       case "cmd_find":
+      case "cmd_bm_copylink":
       case "cmd_properties":
       case "cmd_rename":
       case "cmd_setnewbookmarkfolder":
@@ -570,6 +571,7 @@ BookmarksTree.prototype = {
       case "cmd_import":
       case "cmd_export":
         return true;
+      case "cmd_bm_copylink":
       case "cmd_properties":
       case "cmd_rename":
         return numSelectedItems == 1;
@@ -612,6 +614,7 @@ BookmarksTree.prototype = {
       case "cmd_newbookmark":
       case "cmd_newfolder":
       case "cmd_newseparator":
+      case "cmd_bm_copylink":
       case "cmd_properties":
       case "cmd_rename":
       case "cmd_open":
@@ -645,7 +648,8 @@ BookmarksTree.prototype = {
     {
       var commands = ["cmd_properties", "cmd_rename", "cmd_bm_copy",
                       "cmd_bm_paste", "cmd_bm_cut", "cmd_bm_delete",
-                      "cmd_setpersonaltoolbarfolder", "cmd_setnewbookmarkfolder",
+                      "cmd_setpersonaltoolbarfolder", "cmd_bm_copylink",
+                      "cmd_setnewbookmarkfolder",
                       "cmd_setnewsearchfolder", "cmd_bm_fileBookmark", 
                       "cmd_openfolderinnewwindow", "cmd_openfolder"];
       for (var i = 0; i < commands.length; ++i)
