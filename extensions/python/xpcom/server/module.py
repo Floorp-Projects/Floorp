@@ -60,7 +60,7 @@ class Module:
             # See if this class nominates custom register_self
             extra_func = getattr(klass, "_reg_registrar_", (None,None))[0]
             if extra_func is not None:
-                extra_func(compMgr, location, registryLocation, componentType)
+                extra_func(klass, compMgr, location, registryLocation, componentType)
         print "Registered %d Python components in %s" % (len(self.components),os.path.basename(location.path))
 
     def unregisterSelf(self, compMgr, location, registryLocation):
@@ -75,7 +75,7 @@ class Module:
             extra_func = getattr(klass, "_reg_registrar_", (None,None))[1]
             if extra_func is not None:
                 try:
-                    extra_func(compMgr, location, registryLocation)
+                    extra_func(klass, compMgr, location, registryLocation)
                 except Exception:
                     ok = 0
             if ok:
