@@ -111,6 +111,7 @@ void HandleKeyDown(EventRecord* evt)
 	switch(keyPressed)                   //dougt: what about tab, esc, arrows, doublebyte?
 	{		
 		case '\r':
+		case '\3':
 			switch(gCurrWin)
 			{
 				case kLicenseID:
