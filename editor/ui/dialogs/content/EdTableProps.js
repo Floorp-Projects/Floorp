@@ -945,8 +945,12 @@ function ValidateCellData()
   }
 
   if (dialog.CellVAlignCheckbox.checked)
+  {
+    // Always set valign (no default in 2nd param) so 
+    //  the default "middle" is effective in a cell 
+    //  when parent row has valign set.
     SetAlign("CellVAlignList", "", globalCellElement, "valign");
-    // SetAlign("CellVAlignList", defVAlign, globalCellElement, "valign");
+  }
 
   if (dialog.TextWrapCheckbox.checked)
   {
