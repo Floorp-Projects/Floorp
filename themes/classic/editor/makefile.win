@@ -27,13 +27,6 @@ DIRS= images win
 include <$(DEPTH)\config\rules.mak>
 include <$(THEME_ROOT_DEPTH)\theme.mk>
 
-install:: 
-	$(MAKE_INSTALL) EdImageMap.css $(DIST)\bin\chrome\skins\$(THEME)\editor\skin
-	$(MAKE_INSTALL) EdImageMapPage.css $(DIST)\bin\chrome\skins\$(THEME)\editor\skin
-	$(MAKE_INSTALL) EditorDialog.css $(DIST)\bin\chrome\skins\$(THEME)\editor\skin
-	$(MAKE_INSTALL) EditorToolbars.css $(DIST)\bin\chrome\skins\$(THEME)\editor\skin
-	$(MAKE_INSTALL) editor.css $(DIST)\bin\chrome\skins\$(THEME)\editor\skin
-
 clobber::
 	rm -f $(DIST)\chrome\skins\$(THEME)\editor\skin\*.*
 

@@ -42,15 +42,15 @@
 
 #appcontent
   {
-    border-left           : 1px solid threedshadow;
-    border-top            : 1px solid threeddarkshadow;
-    border-right          : 1px solid threedhighlight;
+    border-left           : 1px solid #9D9D9D;
+    border-top            : 1px solid #000000;
+    border-right          : 1px solid #FFFFFF;
   }
 
 #ContentWindowDeck
   {
-    border-left           : 1px solid threeddarkshadow;
-    border-right          : 1px solid threedface;
+    border-left           : 1px solid #000000;
+    border-right          : 1px solid #DDDDDD;
   }
 
 #status-bar
@@ -62,9 +62,9 @@
 
 #EditModeToolbar 
   {
-    border-left           : 1px solid threeddarkshadow;
-    border-right          : 1px solid threedface;
-    border-bottom         : 1px solid threedface !important;
+    border-left           : 1px solid #000000;
+    border-right          : 1px solid #DDDDDD;
+    border-bottom         : 1px solid #DDDDDD !important;
   }
   
   
