@@ -20,197 +20,36 @@
  * Contributor(s): 
  */
 
-#include "nsIFactory.h"
-#include "nsISupports.h"
-#include "msgCore.h"
-#include "nsCOMPtr.h"
-#include "pratom.h"
+#include "nsIGenericFactory.h"
 
 /* Include all of the interfaces our factory can generate components for */
-#include "nsIMimeContentTypeHandler.h"
 #include "nsMimeContentTypeHandler.h"
 
-static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
-static NS_DEFINE_CID(kMimeContentTypeHandlerCID, NS_VCARD_CONTENT_TYPE_HANDLER_CID);
-
-////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+// Define the contructor function for the CID
 //
-////////////////////////////////////////////////////////////
-static PRInt32 g_InstanceCount = 0;
-static PRInt32 g_LockCount = 0;
+// What this does is defines a function nsMimeContentTypeHandlerConstructor
+// which we will specific in the nsModuleComponentInfo table. This function will
+// be used by the generic factory to create an instance.
+//
+// NOTE: This creates an instance by using the default constructor
+//
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMimeContentTypeHandler)
 
-class nsVCardFactory : public nsIFactory
-{   
-public:
-	// nsISupports methods
-	NS_DECL_ISUPPORTS 
-
-  nsVCardFactory(const nsCID &aClass,
-               const char* aClassName,
-               const char* aProgID,
-               nsISupports*);
-
-  // nsIFactory methods   
-  NS_IMETHOD CreateInstance(nsISupports *aOuter, const nsIID &aIID, void **aResult);   
-  NS_IMETHOD LockFactory(PRBool aLock);   
-
-protected:
-  virtual ~nsVCardFactory();   
-
-  nsCID mClassID;
-  char* mClassName;
-  char* mProgID;
-  nsIServiceManager* mServiceManager;
-};   
-
-nsVCardFactory::nsVCardFactory(const nsCID &aClass,
-                           const char* aClassName,
-                           const char* aProgID,
-                           nsISupports *compMgrSupports)
-  : mClassID(aClass),
-    mClassName(nsCRT::strdup(aClassName)),
-    mProgID(nsCRT::strdup(aProgID))
+////////////////////////////////////////////////////////////////////////
+// Define a table of CIDs implemented by this module along with other
+// information like the function to create an instance, progid, and
+// class name.
+//
+static nsModuleComponentInfo components[] =
 {
-	NS_INIT_REFCNT();
+  { "MIME VCard Handler", NS_VCARD_CONTENT_TYPE_HANDLER_CID, "mimecth:text/x-vcard",
+    nsMimeContentTypeHandlerConstructor, }
+};
 
-  // store a copy of the 
-  compMgrSupports->QueryInterface(nsIServiceManager::GetIID(),
-                                  (void **)&mServiceManager);
-}   
+////////////////////////////////////////////////////////////////////////
+// Implement the NSGetModule() exported function for your module
+// and the entire implementation of the module object.
+//
+NS_IMPL_NSGETMODULE("nsVCardModule", components)
 
-nsVCardFactory::~nsVCardFactory()   
-{
-  NS_IF_RELEASE(mServiceManager);
-  PL_strfree(mClassName);
-  PL_strfree(mProgID);
-}   
-
-nsresult
-nsVCardFactory::QueryInterface(const nsIID &aIID, void **aResult)   
-{   
-  if (aResult == NULL)  
-    return NS_ERROR_NULL_POINTER;  
-
-  // Always NULL result, in case of failure   
-  *aResult = NULL;   
-
-  // we support two interfaces....nsISupports and nsFactory.....
-  if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))    
-    *aResult = (void *)(nsISupports*)this;   
-  else if (aIID.Equals(nsIFactory::GetIID()))   
-    *aResult = (void *)(nsIFactory*)this;   
-
-  if (*aResult == NULL)
-    return NS_NOINTERFACE;
-
-  AddRef(); // Increase reference count for caller   
-  return NS_OK;   
-}   
-
-NS_IMPL_ADDREF(nsVCardFactory)
-NS_IMPL_RELEASE(nsVCardFactory)
-
-nsresult
-nsVCardFactory::CreateInstance(nsISupports *aOuter,
-                             const nsIID &aIID,
-                             void **aResult)  
-{  
-	nsresult res = NS_OK;
-
-	if (aResult == NULL)  
-		return NS_ERROR_NULL_POINTER;  
-
-	*aResult = NULL;  
-  
-	nsCOMPtr <nsIMimeContentTypeHandler> inst;
-
-	// ClassID check happens here
-	// Whenever you add a new class that supports an interface, plug it in here!!!
-	
-	// do they want a mime emitter interface ?
-	if (mClassID.Equals(kMimeContentTypeHandlerCID)) 
-	{
-		res = NS_NewMimeContentTypeHandler(getter_AddRefs(inst));
-		if (NS_FAILED(res))  // was there a problem creating the object ?
-		  return res;   
-	}
-
-	// End of checking the interface ID code....
-	if (inst) 
-	{
-		// so we now have the class that supports the desired interface...we need to turn around and
-		// query for our desired interface.....
-		res = inst->QueryInterface(aIID, aResult);
-	}
-	else
-		res = NS_ERROR_OUT_OF_MEMORY;
-
-  return res;  
-}  
-
-nsresult
-nsVCardFactory::LockFactory(PRBool aLock)  
-{  
-	if (aLock)
-		PR_AtomicIncrement(&g_LockCount); 
-	else
-		PR_AtomicDecrement(&g_LockCount);
-
-	return NS_OK;
-}  
-
-////////////////////////////////////////////////////////////////////////////////
-
-// return the proper factory to the caller. 
-extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* aServMgr,
-                                           const nsCID &aClass,
-                                           const char *aClassName,
-                                           const char *aProgID,
-                                           nsIFactory **aFactory)
-{
-	if (nsnull == aFactory)
-		return NS_ERROR_NULL_POINTER;
-
-  *aFactory = new nsVCardFactory(aClass, aClassName, aProgID, aServMgr);
-  if (aFactory)
-    return (*aFactory)->QueryInterface(nsIFactory::GetIID(),
-                                       (void**)aFactory);
-  else
-    return NS_ERROR_OUT_OF_MEMORY;
-}
-
-extern "C" NS_EXPORT PRBool NSCanUnload(nsISupports* aServMgr) 
-{
-	return PRBool(g_InstanceCount == 0 && g_LockCount == 0);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-extern "C" NS_EXPORT nsresult
-NSRegisterSelf(nsISupports* aServMgr, const char* path)
-{
-  nsresult rv = NS_OK;
-
-  NS_WITH_SERVICE1(nsIComponentManager, compMgr, aServMgr, kComponentManagerCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = compMgr->RegisterComponent(kMimeContentTypeHandlerCID,
-                                       "MIME VCard Handler",
-                                       "mimecth:text/x-vcard",
-                                       path, PR_TRUE, PR_TRUE);
-  return rv;
-}
-
-extern "C" NS_EXPORT nsresult
-NSUnregisterSelf(nsISupports* aServMgr, const char* path)
-{
-  nsresult rv = NS_OK;
-
-  NS_WITH_SERVICE1(nsIComponentManager, compMgr, aServMgr, kComponentManagerCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = compMgr->UnregisterComponent(kMimeContentTypeHandlerCID, path);
-  return rv;
-}
-
-////////////////////////////////////////////////////////////////////////////////
