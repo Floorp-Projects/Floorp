@@ -31,6 +31,7 @@
 #include <Files.h>
 #include <Memory.h>
 #include <Processes.h>
+#include "nsIInternetConfigService.h"
 #elif defined(XP_PC) && !defined (XP_OS2)
 #include <windows.h>
 #include <shlobj.h>
@@ -547,6 +548,10 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
         case Mac_InternetSearchDirectory:
             *this = kInternetSearchSitesFolderType;
             break;
+
+        case Mac_DefaultDownloadDirectory:
+            *this = kDefaultDownloadFolderType;
+            break;
 #endif
             
 #if defined (XP_PC) && !defined (XP_OS2)
@@ -897,6 +902,24 @@ void nsSpecialSystemDirectory::operator = (OSType folderType)
     CInfoPBRec cinfo;
     DirInfo *dipb=(DirInfo *)&cinfo;
     
+    // hack: first check for kDefaultDownloadFolderType
+    // if it is, get Internet Config Download folder, if that's
+    // not availble use desktop folder
+    if (folderType == kDefaultDownloadFolderType)
+    {
+      nsCOMPtr<nsIInternetConfigService> icService (do_GetService(NS_INTERNETCONFIGSERVICE_PROGID));
+      if (icService)
+      {
+        if (NS_SUCCEEDED(icService->GetDownloadFolder(&mSpec)))
+          return;
+        else
+          folderType = kDesktopFolderType;
+      }
+      else
+      {
+        folderType = kDesktopFolderType;
+      }
+    }
     // Call FindFolder to fill in the vrefnum and dirid
     for (int attempts = 0; attempts < 2; attempts++)
     {
