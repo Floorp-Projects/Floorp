@@ -23,18 +23,43 @@ your SGML before checking it in with something like:
 
   When you validate, please validate the master document (Bugzilla-Guide.sgml)
 as well as the document you edited to ensure there are no critical errors.
-The following errors are considered "normal" when validating with nsgmls
+The following errors are considered "normal" when validating with nsgmls:
+
  DTDDECL catalog entries are not supported
  "DOCTYPE" declaration not allowed in instance
+
   The reason these occur is that free sgml validators do not yet support
-the DTDDECL catalog entries, and we've included DOCTYPE declarations in
+the DTDDECL catalog entries, and I've included DOCTYPE declarations in
 entities referenced from Bugzilla-Guide.sgml so these entities can compile
 individually, if necessary.  I suppose I ought to comment them out at some
-point...
+point, but for now they are convenient and don't hurt anything.
 
   Thanks for taking the time to read these notes and consulting the
 documentation.  Please address comments and questions to the newsgroup:
 news://news.mozilla.org/netscape/public/mozilla/webtools .
+
+NOTES:
+
+  Here are the commands I use to maintain this documentation.
+  You MUST have DocBook 4.1 set up correctly in order for this to work,
+    but there's only a single REMARK tag that's incompatible with 3.1.
+    Maybe I'll downgrade to DocBook 3.1 to make your life easier...
+  Substitute your own path to "ldp.dsl" for "$LDP_HOME".
+
+
+To create HTML documentation:
+bash$ cd html
+bash$ jade -t sgml -i html -d $LDP_HOME/ldp.dsl\#html \
+../sgml/Bugzilla-Guide.sgml
+
+To create HTML documentation as a single big HTML file:
+bash$ cd html
+bash$ jade -V nochunks -t sgml -i html -d $LDP_HOME/ldp.dsl\#html \
+../sgml/Bugzilla-Guide.sgml >Bugzilla-Guide.html
+
+To create TXT documentation as a single big TXT file:
+bash$ cd txt
+bash$ lynx -dump -nolist ../html/Bugzilla-Guide.html >Bugzilla-Guide.txt
 
 Sincerely,
  Matthew P. Barnson
