@@ -22,6 +22,7 @@
 #include "pratom.h"
 #include "prmem.h"
 #include "plstr.h"
+#include "prenv.h"
 
 #include "nsIRegistry.h"
 #include "NSReg.h"
@@ -41,6 +42,11 @@
 #include "nsAppShellCIDs.h"
 #include "nsIBrowserWindow.h"
 #include "nsIWebShellWindow.h"
+#include "prprf.h"
+
+#ifndef XP_UNIX
+#define AUTOMATICALLY_MIGRATE_IF_ONLY_ONE_PROFILE 1
+#endif
 
 #ifndef NECKO
 #include "nsINetService.h"
@@ -82,6 +88,10 @@
 #define PREG_URL			"http://seaspace.mcom.com/"
 
 
+#if defined(DEBUG_sspitzer) || defined(DEBUG_seth)
+#define DEBUG_profile 1
+#endif
+
 // Globals to hold profile information
 #ifdef XP_PC
 static char *oldWinReg="nsreg.dat";
@@ -97,12 +107,9 @@ static int	g_Count = 0;
 static char gProfiles[_MAX_NUM_PROFILES][_MAX_LENGTH] = {{'\0'}};
 static int	g_numProfiles = 0;
 
-// we only migrate prefs on windows right now.
-#if defined(XP_PC) || defined(XP_MAC)
 static char gOldProfiles[_MAX_NUM_PROFILES][_MAX_LENGTH] = {{'\0'}};
 static char gOldProfLocations[_MAX_NUM_PROFILES][_MAX_LENGTH] = {{'\0'}};
 static int	g_numOldProfiles = 0;
-#endif 
 
 static PRBool renameCurrProfile = PR_FALSE;
 
@@ -511,10 +518,14 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
                 if (num4xProfiles == 0 && numProfiles == 0) {
                     *profstr = "resource:/res/profile/cpw.xul"; 
                 }
+#ifdef AUTOMATICALLY_MIGRATE_IF_ONLY_ONE_PROFILE
                 else if (num4xProfiles == 1) {
                     MigrateAllProfiles();
                 }
                 else if (num4xProfiles > 1) {
+#else
+		else {
+#endif /* AUTOMATICALLY_MIGRATE_IF_ONLY_ONE_PROFILE */
                     *profstr = "resource:/res/profile/pm.xul";
                 }
 #endif
@@ -1305,7 +1316,7 @@ NS_IMETHODIMP nsProfile::CreateNewProfile(const char* charData)
     return NS_OK;
 }
 
-// Create required user directories like Mial, News, Cache etc.
+// Create required user directories like ImapMail, Mail, News, Cache etc.
 void nsProfile::CreateUserDirectories(const nsFileSpec& profileDir)
 {
 
@@ -1322,6 +1333,15 @@ void nsProfile::CreateUserDirectories(const nsFileSpec& profileDir)
     {
 		tmpDir.CreateDirectory();
     }
+
+    tmpDir = profileDir;
+    tmpDir += "ImapMail";
+
+    if (!tmpDir.Exists())
+    {
+		tmpDir.CreateDirectory();
+    }
+
     
 	tmpDir = profileDir;
     tmpDir += "Mail";
@@ -1778,7 +1798,7 @@ void nsProfile::GetAllProfiles()
 											}
 
 #if defined(DEBUG_profile)
-												printf("proflie%d = %s\n", idx, gProfiles[idx]);
+												printf("profile%d = %s\n", idx, gProfiles[idx]);
 #endif
 										}
 									}
@@ -2048,7 +2068,25 @@ NS_IMETHODIMP nsProfile::MigrateProfileInfo()
 			}
 		}
 	}
+#else
+    char *unixProfileName = PR_GetEnv("USER");
+    char *unixProfileDirectory = PR_GetEnv("HOME");
+
+    if (unixProfileName && unixProfileDirectory) {
+	PL_strcpy(gOldProfiles[g_numOldProfiles], nsUnescape(unixProfileName));
+	PL_strcpy(gOldProfLocations[g_numOldProfiles], unixProfileDirectory);
+	PL_strcat(gOldProfLocations[g_numOldProfiles], "/.netscape");
+#ifdef DEBUG_profile
+	printf("unix profile is %s, unix profile dir is %s\n",gOldProfiles[g_numOldProfiles],gOldProfLocations[g_numOldProfiles]);
 #endif
+	g_numOldProfiles++;
+    }
+
+    if (g_numOldProfiles > 0) {
+        UpdateMozProfileRegistry();
+    }
+
+#endif /* XP_PC || XP_MAC */
 
 	return rv;
 }
@@ -2063,8 +2101,6 @@ NS_IMETHODIMP nsProfile::UpdateMozProfileRegistry()
 {
 
 	nsresult rv = NS_OK;
-
-#if defined(XP_PC) || defined(XP_MAC)
 
 #if defined(DEBUG_profile)
     printf("Entered UpdateMozProfileRegistry.\n");
@@ -2162,8 +2198,6 @@ NS_IMETHODIMP nsProfile::UpdateMozProfileRegistry()
 			}
 		}	
 	}
-
-#endif
 
 	return rv;
 }
@@ -2732,13 +2766,11 @@ NS_IMETHODIMP nsProfile::Get4xProfileCount(int *numProfiles)
 NS_IMETHODIMP nsProfile::MigrateAllProfiles()
 {
 
-#if defined(XP_PC) || defined(XP_MAC)
 	nsresult rv = NS_OK;
 	for (int i=0; i < g_numOldProfiles; i++)
 	{
 		rv = MigrateProfile(gOldProfiles[i]);
 	}
-#endif
 
 	return NS_OK;
 }
