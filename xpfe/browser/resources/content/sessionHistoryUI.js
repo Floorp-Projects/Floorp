@@ -134,7 +134,7 @@ function addToUrlbarHistory()
        
        try {
          var unused = { };
-         scheme = ioService.extractScheme(urlToAdd, unused, unused);
+         var scheme = ioService.extractScheme(urlToAdd, unused, unused);
        } catch(e) {
         urlToAdd = "http://" + urlToAdd;
        }
@@ -149,7 +149,7 @@ function addToUrlbarHistory()
 
              try {
                var unused = { };
-               scheme = ioService.extractScheme(rdfValue, unused, unused);
+               var scheme = ioService.extractScheme(rdfValue, unused, unused);
              } catch(e) {
                 rdfValue = "http://" + rdfValue;
             }
