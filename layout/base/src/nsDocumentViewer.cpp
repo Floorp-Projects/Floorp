@@ -952,7 +952,7 @@ DocumentViewerImpl::PrintContent(nsIWebShell *      aParent,
   // now complete printing the rest of the document
   // if it doesn't contain any framesets
   if (!doesContainFrameSet) {
-    aDContext->BeginDocument();
+    NS_ENSURE_SUCCESS( aDContext->BeginDocument(), NS_ERROR_FAILURE );
     aDContext->GetDeviceSurfaceDimensions(width, height);
 
     nsCOMPtr<nsIPresContext> cx;
