@@ -404,10 +404,6 @@
             if (updatePageReport)
               this.mCurrentBrowser.updatePageReport();
 
-            var event = document.createEvent("Events");
-            event.initEvent("DOMUpdatePageTheme", true, true);
-            this.dispatchEvent(event);
-            
             // Update the URL bar.
             var loc = this.mCurrentBrowser.currentURI;
             if (!loc)
