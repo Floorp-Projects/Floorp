@@ -773,13 +773,7 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
       return NS_OK;
     }  
 
-    // Create the fixup object if necessary
-    if (!mURIFixup)
-    {
-      mURIFixup = do_GetService(NS_URIFIXUP_CONTRACTID);
-    }
-
-    if (mURIFixup)
+    if (sURIFixup)
     {
       //
       // Try and make an alternative URI from the old one
@@ -870,7 +864,7 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
         if (doCreateAlternate)
         {
           newURI = nsnull;
-          mURIFixup->CreateFixupURI(oldSpec,
+          sURIFixup->CreateFixupURI(oldSpec,
               nsIURIFixup::FIXUP_FLAGS_MAKE_ALTERNATE_URI, getter_AddRefs(newURI));
         }
       }
