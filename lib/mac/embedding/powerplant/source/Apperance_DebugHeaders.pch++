@@ -1,0 +1,40 @@
+// ===============================================================================
+//	Appearance_DebugHeaders.pch++	©1995-1998 Metrowerks Inc. All rights reserved.
+// ===============================================================================
+//
+//	Source for precompiled header for PowerPlant headers
+//
+//	This file #includes most header files for the PowerPlant library,
+//	as well as most of the Toolbox headers used by the PowerPlant library
+//	with all debugging symbols defined.
+
+
+	// This same file works for PowerPC and 68K. We check the target
+	// at compile time and specify the appropriate output file name.
+	
+#if __POWERPC__
+	#pragma precompile_target "Appearance_DebugHeadersPPC++"
+	
+#else
+	#pragma precompile_target "Appearance_DebugHeaders68K++"
+#endif
+
+#pragma once on
+
+	// Option for using PowerPlant namespace
+
+#define PP_Uses_PowerPlant_Namespace		0	// off, don't use PowerPlant namespace
+
+	// establish some essential PowerPlant macros:
+	
+#define PP_StdDialogs_Option	PP_StdDialogs_ClassicOnly	// use classic standard dialog
+															// implementation
+
+#include <PP_DebugHeaders.cp>
+
+
+/* Read file of defines global to the Mac build */	//¥RAPTOR begin
+#include "DefinesMac.h"
+
+/* Read build-wide defines (e.g. MOZILLA_CLIENT) */
+#include "DefinesMozilla.h"													//¥RAPTOR end
