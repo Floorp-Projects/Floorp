@@ -1777,10 +1777,8 @@ NS_IMETHODIMP
 nsImageGTK::LockImagePixels(PRBool aMaskPixels)
 {
   if (mOptimized && mImagePixmap) {
-    Display *display = GDK_WINDOW_XDISPLAY(mImagePixmap);
-    Colormap colormap = GDK_COLORMAP_XCOLORMAP(gdk_rgb_get_cmap());
     XImage *ximage, *xmask=0;
-    XColor color;
+    unsigned pix;
 
     ximage = XGetImage(GDK_WINDOW_XDISPLAY(mImagePixmap),
                        GDK_WINDOW_XWINDOW(mImagePixmap),
@@ -1794,6 +1792,16 @@ nsImageGTK::LockImagePixels(PRBool aMaskPixels)
                         AllPlanes, XYPixmap);
 
     mImageBits = (PRUint8*) new PRUint8[mSizeImage];
+    GdkVisual *visual = gdk_rgb_get_visual();
+    GdkColormap *colormap = gdk_rgb_get_cmap();
+
+    unsigned redScale, greenScale, blueScale, redFill, greenFill, blueFill;
+    redScale   = 8 - visual->red_prec;
+    greenScale = 8 - visual->green_prec;
+    blueScale  = 8 - visual->blue_prec;
+    redFill    = 0xff >> visual->red_prec;
+    greenFill  = 0xff >> visual->green_prec;
+    blueFill   = 0xff >> visual->blue_prec;
 
     /* read back the image in the slowest (but simplest) way possible... */
     for (PRInt32 y=0; y<mHeight; y++) {
@@ -1804,11 +1812,35 @@ nsImageGTK::LockImagePixels(PRBool aMaskPixels)
           *target++ = 0xFF;
           *target++ = 0xFF;
         } else {
-          color.pixel = XGetPixel(ximage, x, y);
-          XQueryColor(display, colormap, &color);
-          *target++ = color.red>>8;
-          *target++ = color.green>>8;
-          *target++ = color.blue>>8;
+          pix = XGetPixel(ximage, x, y);
+          switch (visual->type) {
+          case GDK_VISUAL_STATIC_GRAY:
+          case GDK_VISUAL_GRAYSCALE:
+          case GDK_VISUAL_STATIC_COLOR:
+          case GDK_VISUAL_PSEUDO_COLOR:
+            *target++ = colormap->colors[pix].red   >>8;
+            *target++ = colormap->colors[pix].green >>8;
+            *target++ = colormap->colors[pix].blue  >>8;
+            break;
+        
+          case GDK_VISUAL_DIRECT_COLOR:
+            *target++ = 
+              colormap->colors[(pix&visual->red_mask)>>visual->red_shift].red       >> 8;
+            *target++ = 
+              colormap->colors[(pix&visual->green_mask)>>visual->green_shift].green >> 8;
+            *target++ =
+              colormap->colors[(pix&visual->blue_mask)>>visual->blue_shift].blue    >> 8;
+            break;
+            
+          case GDK_VISUAL_TRUE_COLOR:
+            *target++ = 
+              redFill|((pix&visual->red_mask)>>visual->red_shift)<<redScale;
+            *target++ = 
+              greenFill|((pix&visual->green_mask)>>visual->green_shift)<<greenScale;
+            *target++ = 
+              blueFill|((pix&visual->blue_mask)>>visual->blue_shift)<<blueScale;
+            break;
+          }
         }
       }
     }
