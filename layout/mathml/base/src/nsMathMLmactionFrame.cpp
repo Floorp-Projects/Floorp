@@ -261,27 +261,8 @@ nsMathMLmactionFrame::Paint(nsIPresContext*      aPresContext,
                             nsFramePaintLayer    aWhichLayer,
                             PRUint32             aFlags)
 {
-  const nsStyleVisibility* visib = NS_STATIC_CAST(const nsStyleVisibility*,
-    mStyleContext->GetStyleData(eStyleStruct_Visibility));
   if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
-    if (visib->IsVisible() && mRect.width && mRect.height) {
-      // Paint our background and border
-      PRIntn skipSides = GetSkipSides();
-      const nsStyleBorder* border = (const nsStyleBorder*)
-        mStyleContext->GetStyleData(eStyleStruct_Border);
-      const nsStylePadding* padding = (const nsStylePadding*)
-        mStyleContext->GetStyleData(eStyleStruct_Padding);
-      const nsStyleOutline* outline = (const nsStyleOutline*)
-        mStyleContext->GetStyleData(eStyleStruct_Outline);
-
-      nsRect  rect(0, 0, mRect.width, mRect.height);
-      nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                      aDirtyRect, rect, *border, *padding, 0, 0);
-      nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                  aDirtyRect, rect, *border, mStyleContext, skipSides);
-      nsCSSRendering::PaintOutline(aPresContext, aRenderingContext, this,
-                                   aDirtyRect, rect, *border, *outline, mStyleContext, 0);
-    }
+    PaintSelf(aPresContext, aRenderingContext, aDirtyRect);
   }
 
   nsIFrame* childFrame = GetSelectedFrame();

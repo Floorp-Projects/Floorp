@@ -1465,43 +1465,13 @@ nsBoxFrame::Paint(nsIPresContext*      aPresContext,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIAtom> frameType;
-  GetFrameType(getter_AddRefs(frameType));
-
   if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
-    if (vis->IsVisible() && mRect.width && mRect.height) {
-      // Paint our background and border
-      PRIntn skipSides = GetSkipSides();
-      const nsStyleBorder* border = (const nsStyleBorder*)
-        mStyleContext->GetStyleData(eStyleStruct_Border);
-      const nsStylePadding* padding = (const nsStylePadding*)
-        mStyleContext->GetStyleData(eStyleStruct_Padding);
-      const nsStyleOutline* outline = (const nsStyleOutline*)
-        mStyleContext->GetStyleData(eStyleStruct_Outline);
-
-      nsRect  rect(0, 0, mRect.width, mRect.height);
-      nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                      aDirtyRect, rect, *border, *padding,
-                                      0, 0);
-      nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                  aDirtyRect, rect, *border, mStyleContext, skipSides);
-      nsCSSRendering::PaintOutline(aPresContext, aRenderingContext, this,
-                                  aDirtyRect, rect, *border, *outline, mStyleContext, 0);
-      
-      // The sole purpose of this is to trigger display
-      //  of the selection window for Named Anchors,
-      //  which don't have any children and normally don't
-      //  have any size, but in Editor we use CSS to display
-      //  an image to represent this "hidden" element.
-      if (!mFrames.FirstChild())
-      {
-        nsFrame::Paint(aPresContext,
-                       aRenderingContext, aDirtyRect, aWhichLayer);
-      }
-    }
+    PaintSelf(aPresContext, aRenderingContext, aDirtyRect);
   }
 
-  if (frameType.get() == nsLayoutAtoms::rootFrame) {
+  nsCOMPtr<nsIAtom> frameType;
+  GetFrameType(getter_AddRefs(frameType));
+  if (frameType == nsLayoutAtoms::rootFrame) {
     // We are wrapping the root frame of a XUL document. We
     // need to check the pres shell to find out if painting is locked
     // down (because we're still in the early stages of document

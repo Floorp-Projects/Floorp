@@ -40,7 +40,6 @@
 #include "nsIPresShell.h"
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
-#include "nsCSSRendering.h"
 #include "nsIContent.h"
 #include "nsLayoutAtoms.h"
 #include "nsCSSAnonBoxes.h"
@@ -82,50 +81,11 @@ nsHTMLContainerFrame::Paint(nsIPresContext*      aPresContext,
   // others in the background (bug 36710).  (nsInlineFrame::Paint does
   // this differently.)
   if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
-    PaintSelf(aPresContext, aRenderingContext, aDirtyRect, aFlags);
+    PaintSelf(aPresContext, aRenderingContext, aDirtyRect);
   }
     
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer, aFlags);
   return NS_OK;
-}
-
-void
-nsHTMLContainerFrame::PaintSelf(nsIPresContext*      aPresContext,
-                                nsIRenderingContext& aRenderingContext,
-                                const nsRect&        aDirtyRect,
-                                PRUint32             aFlags)
-{
-  // The visibility check belongs here since child elements have the
-  // opportunity to override the visibility property and display even if
-  // their parent is hidden.
-
-  PRBool isVisible;
-  if (NS_FAILED(IsVisibleForPainting(aPresContext, aRenderingContext,
-                                     PR_TRUE, &isVisible)) ||
-      !isVisible ||
-      mRect.width == 0 || mRect.height == 0) {
-    return;
-  }
-
-  // Paint our background and border
-  PRIntn skipSides = GetSkipSides();
-  const nsStyleBorder* border;
-  ::GetStyleData(mStyleContext, &border);
-  const nsStylePadding* padding;
-  ::GetStyleData(mStyleContext, &padding);
-  const nsStyleOutline* outline;
-  ::GetStyleData(mStyleContext, &outline);
-
-  nsRect rect(0, 0, mRect.width, mRect.height);
-  nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                  aDirtyRect, rect, *border, *padding,
-                                  0, 0);
-  nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                              aDirtyRect, rect, *border, mStyleContext,
-                              skipSides);
-  nsCSSRendering::PaintOutline(aPresContext, aRenderingContext, this,
-                               aDirtyRect, rect, *border, *outline,
-                               mStyleContext, 0);
 }
 
 void

@@ -399,7 +399,7 @@ CanvasFrame::Paint(nsIPresContext*      aPresContext,
   shell->IsPaintingSuppressed(&paintingSuppressed);
   if (paintingSuppressed) {
     if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
-      PaintSelf(aPresContext, aRenderingContext, aDirtyRect, aFlags);
+      PaintSelf(aPresContext, aRenderingContext, aDirtyRect);
     }
     return NS_OK;
   }

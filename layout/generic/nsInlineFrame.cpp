@@ -337,7 +337,7 @@ nsInlineFrame::Paint(nsIPresContext*      aPresContext,
 
   // Paint inline element backgrounds in the foreground layer (bug 36710).
   if (aWhichLayer == NS_FRAME_PAINT_LAYER_FOREGROUND) {
-    PaintSelf(aPresContext, aRenderingContext, aDirtyRect, aFlags);
+    PaintSelf(aPresContext, aRenderingContext, aDirtyRect);
   }
     
   // The sole purpose of this is to trigger display of the selection
