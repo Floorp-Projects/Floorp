@@ -20,9 +20,6 @@
   var defaultStatus = "default status text";
   var explicitURL = false;
 
-/*
-// pinkerton 9/21/99
-// disabling d&d code for pre-alpha thang
   function BeginDragPersonalToolbar ( event )
   {
     //XXX we rely on a capturer to already have determined which item the mouse was over
@@ -34,6 +31,13 @@
     if ( event.target == toolbar )
       return true;  // continue propagating the event
     
+    // since the database is not on the toolbar, but on the innermost box, we need to 
+    // make sure we can find it before we go any further. If we can't find it, we're
+    // up the creek, but don't keep propagating the event.
+    var childWithDatabase = document.getElementById("innermostBox");
+    if ( ! childWithDatabase )
+      return false;
+    
     var dragStarted = false;
     var dragService = Components.classes["component://netscape/widget/dragservice"].getService();
     if ( dragService ) dragService = dragService.QueryInterface(Components.interfaces.nsIDragService);
@@ -43,16 +47,20 @@
       if ( trans ) {
         trans.addDataFlavor("moz/toolbaritem");
         var genData = Components.classes["component://netscape/supports-wstring"].createInstance();
-        var data = null;
-        if ( genData ) data = genData.QueryInterface(Components.interfaces.nsISupportsWString);
-        if ( data ) {
+        if ( genData ) genData = genData.QueryInterface(Components.interfaces.nsISupportsWString);
+        trans.addDataFlavor("text/plain");
+        var genTextData = Components.classes["component://netscape/supports-string"].createInstance();
+        if ( genTextData ) genTextData = genTextData.QueryInterface(Components.interfaces.nsISupportsString);
+        
+        if ( genData && genTextData ) {
         
 		var id = event.target.getAttribute("id");
-		data.data = id;
-
+		genData.data = id;
+        genTextData.data = id;
+        
 		dump("ID: " + id + "\n");
 
-		var database = toolbar.database;
+		var database = childWithDatabase.database;
 		var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
 		if (rdf)   rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
 		if ((!rdf) || (!database))	return(false);
@@ -61,17 +69,22 @@
 		var src = rdf.GetResource(id, true);
 		var prop = rdf.GetResource("http://www.w3.org/1999/02/22-rdf-syntax-ns#type", true);
 		var target = database.GetTarget(src, prop, true);
+/*
+pinkerton
+this doesn't work anymore (target is null), not sure why.
 		if (target)	target = target.QueryInterface(Components.interfaces.nsIRDFResource);
 		if (target)	target = target.Value;
-		if ((!target) || (target == ""))	return(false);
+		if ((!target) || (target == "")) {dump("BAD\n"); return(false);}
 
 		dump("Type: '" + target + "'\n");
 
 		if ((target != "http://home.netscape.com/NC-rdf#BookmarkSeparator") &&
 		   (target != "http://home.netscape.com/NC-rdf#Bookmark") &&
 		   (target != "http://home.netscape.com/NC-rdf#Folder"))	return(false);
+*/
 
-          trans.setTransferData ( "moz/toolbaritem", genData, id.length*2 );  // double byte data (19*2)
+          trans.setTransferData ( "moz/toolbaritem", genData, id.length*2 );  // double byte data (len*2)
+          trans.setTransferData ( "text/plain", genTextData, id.length );  // single byte data
           var transArray = Components.classes["component://netscape/supports-array"].createInstance();
           if ( transArray ) transArray = transArray.QueryInterface(Components.interfaces.nsISupportsArray);
           if ( transArray ) {
@@ -136,8 +149,8 @@
               dragSession.canDrop = true;
               var dropAccepted = true;
               
-		var toolbar = document.getElementById("PersonalToolbar");
-		var database = toolbar.database;
+		var boxWithDatabase = document.getElementById("innermostBox");
+		var database = boxWithDatabase.database;
 		if (database && rdf && rdfc && personalToolbarRes && objectRes)
 		{
 			
@@ -153,10 +166,10 @@
 			if (currentIndex > 0)
 			{
 				dump("Element '" + id + "' was at position # " + currentIndex + "\n");
-//				rdfc.RemoveElement(objectRes, true);
+				rdfc.RemoveElement(objectRes, true);
 				dump("Element '" + id + "' removed from position # " + currentIndex + "\n");
 			}
-//			rdfc.InsertElementAt(objectRes, newIndex, true);
+			rdfc.InsertElementAt(objectRes, newIndex, true);
 			dump("Element '" + id + "' re-inserted at new position # " + newIndex + ".\n");
 		}
 
@@ -198,7 +211,6 @@
     return true;
 
   } // DragOverPersonalToolbar
-*/
 
 function UpdateHistory(event)
 {

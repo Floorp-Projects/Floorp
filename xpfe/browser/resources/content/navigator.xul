@@ -211,7 +211,7 @@ Contributor(s): ______________________________________. -->
 <!-- Toolbox -->
 <toolbox id="main-toolbox">
   
-  <toolbar id="PersonalToolbar" chromeclass="toolbar" persist="collapsed"
+  <toolbar id="PersonalToolbar" chromeclass="toolbar" persist="collapsed" dragdroparea="innermostBox"
     ondraggesture="return BeginDragPersonalToolbar(event);"
     ondragdrop="return DropPersonalToolbar(event);"
     ondragover="return DragOverPersonalToolbar(event);">
@@ -222,7 +222,7 @@ Contributor(s): ______________________________________. -->
         flex="1"
         style="min-width: 1px; overflow: hidden"
         datasources="rdf:bookmarks"
-        ref="NC:PersonalToolbarFolder">
+        ref="NC:PersonalToolbarFolder" id="innermostBox">
 
         <menu datasources="rdf:bookmarks" ref="NC:BookmarksRoot">
           <titledbutton class="bookmarkbutton" align="left" 
