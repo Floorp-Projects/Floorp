@@ -221,8 +221,10 @@ compileOrLoadMethod(const CacheEntry* inCacheEntry, bool &shouldBackPatch)
 		NativeCodeCache::enter();
 		// maybe we slept while someone else was compiling, if so
 		// don't do any work.
-		if (inCacheEntry->start.getFunctionAddress() != NULL)
+		if (inCacheEntry->start.getFunctionAddress() != NULL) {
+            NativeCodeCache::exit();
 			goto ExitReturnFunc;
+        }
     
 		method = inCacheEntry->descriptor.method;
 
@@ -255,10 +257,11 @@ compileOrLoadMethod(const CacheEntry* inCacheEntry, bool &shouldBackPatch)
 		} 
 		else 
 			method->compile();
+
+        NativeCodeCache::exit();
 	}
 
 ExitReturnFunc:
-	NativeCodeCache::exit();
 	assert(inCacheEntry->start.getFunctionAddress());
 	shouldBackPatch = inCacheEntry->shouldBackPatch;
 	EventBroadcaster::broadcastEvent(gCompileOrLoadBroadcaster, kEndCompileOrLoad, inCacheEntry->descriptor.method);
