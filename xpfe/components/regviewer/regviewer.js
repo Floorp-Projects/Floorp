@@ -22,18 +22,90 @@
 
 */
 
+var RDF = Components.classes['component://netscape/rdf/rdf-service'].getService();
+RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
+
+var Registry;
+var REGISTRY_NAMESPACE_URI = 'urn:mozilla-registry:'
+var REGISTRY_VALUE_PREFIX = REGISTRY_NAMESPACE_URI + 'value:';
+var kRegistry_Subkeys = RDF.GetResource(REGISTRY_NAMESPACE_URI + 'subkeys');
+
+function debug(msg)
+{
+    //dump(msg + '\n');
+}
 
 function OnLoad()
 {
-    var registry = Components.classes['component://netscape/registry-viewer'].createInstance();
-    registry = registry.QueryInterface(Components.interfaces.nsIRegistryDataSource);
+    Registry = Components.classes['component://netscape/registry-viewer'].createInstance();
+    Registry = Registry.QueryInterface(Components.interfaces.nsIRegistryDataSource);
 
-    registry.openWellKnownRegistry(1); // application component registry
+    Registry.openWellKnownRegistry(1); // application component registry
 
-    var datasource = registry.QueryInterface(Components.interfaces.nsIRDFDataSource);
+    Registry = Registry.QueryInterface(Components.interfaces.nsIRDFDataSource);
 
     var tree = document.getElementById('tree');
-    tree.database.AddDataSource(datasource);
+    tree.database.AddDataSource(Registry);
 
     tree.setAttribute('ref', 'urn:mozilla-registry:key:/');
 }  
+
+function OnSelect(event)
+{
+  var tree = event.target;
+  var items = tree.selectedItems;
+
+  var properties = document.getElementById('properties');
+  if (properties.firstChild) {
+      properties.removeChild(properties.firstChild);
+  }
+
+  if (items.length == 1) {
+      // Exactly one item is selected. Show as much information as we
+      // can about it.
+      var table = document.createElement('html:table');
+
+      debug('selected item = ' + items[0].getAttribute('id'));
+      var uri = items[0].getAttribute('id');
+
+      var source = RDF.GetResource(uri);
+      var arcs = Registry.ArcLabelsOut(source);
+      while (arcs.HasMoreElements()) {
+          var property = arcs.GetNext().QueryInterface(Components.interfaces.nsIRDFResource);
+          if (property == kRegistry_Subkeys)
+              continue;
+
+          var propstr = property.Value.substr(REGISTRY_VALUE_PREFIX.length);
+          debug('propstr = ' + propstr);
+
+          var target = Registry.GetTarget(source, property, true);
+          var targetstr;
+
+          var literal;
+          if (literal = target.QueryInterface(Components.interfaces.nsIRDFLiteral)) {
+              targetstr = literal.Value;
+          }
+          else if (literal = target.QueryInterface(Components.interfaces.nsIRDFInt)) {
+              targetstr = literal.Value;
+          }
+          else {
+              // Hmm. Not sure!
+          }
+          
+          debug('targetstr = ' + targetstr);
+
+          var tr = document.createElement('html:tr');
+          table.appendChild(tr);
+
+          var td1 = document.createElement('html:td');
+          td1.appendChild(document.createTextNode(propstr));
+          tr.appendChild(td1);
+
+          var td2 = document.createElement('html:td');
+          td2.appendChild(document.createTextNode(targetstr));
+          tr.appendChild(td2);
+      }
+
+      properties.appendChild(table);
+  }
+}

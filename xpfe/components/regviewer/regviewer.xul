@@ -26,29 +26,36 @@
 <window title="&regviewerWindowTitle.label;"
         xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        align="vertical"
+        align="horizontal"
         onload="OnLoad();">
 
   <html:script src="regviewer.js" />
-
-  <html:div style="width:100px;height:100px;" flex="1*">
-    <tree id="tree" style="width:100%;height:100%" datasources="rdf:null" containment="urn:mozilla-registry:subkeys">
-      <template>
-        <treechildren>
-          <treeitem uri="rdf:*">
-            <treerow>
-              <treecell indent="true" value="rdf:*" />
-            </treerow>
-          </treeitem>
-        </treechildren>
-      </template>
-
-      <treehead>
-        <treerow>
-          <treecell value="&regviewerWindow.key.label;" />
-        </treerow>
-      </treehead>
-    </tree>
-  </html:div>
+  <box flex="1*">
+    <html:div style="width:100px;height:100px;" flex="1*">
+      <tree id="tree" style="width:100%;height:100%" datasources="rdf:null"
+            containment="urn:mozilla-registry:subkeys"
+            onselect="OnSelect(event);">
+        <template>
+          <treechildren>
+            <treeitem uri="rdf:*">
+              <treerow>
+                <treecell indent="true" value="rdf:*" />
+              </treerow>
+            </treeitem>
+          </treechildren>
+        </template>
+  
+        <treehead>
+          <treerow>
+            <treecell value="&regviewerWindow.key.label;" />
+          </treerow>
+        </treehead>
+      </tree>
+    </html:div>
+  </box>
+  <splitter collapse="before"/>
+  <box flex="1*">
+    <html:div id="properties" style="width:100%;height:100%" flex="1*" />
+  </box>
 </window>
 
