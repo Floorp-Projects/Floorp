@@ -45,23 +45,50 @@
 //#define ADD_GLYPH(map, g) (map)[(g) >> 3] |= (1 << ((g) & 7))
 #define ADD_GLYPH(map, g) SET_REPRESENTABLE(map, g)
 
+enum eFontType {
+ eFontType_UNKNOWN = -1,
+ eFontType_Unicode,
+ eFontType_NonUnicode,
+};
+
 struct nsCharacterMap {
   PRUint8* mData;
   PRInt32  mLength;
 };
 
+struct nsGlobalFont
+{
+  nsString      name;
+  LOGFONT       logFont;
+  PRUint32*     map;
+  FONTSIGNATURE signature;
+  eFontType     fonttype;
+  PRUint32      flags;
+};
+
+// Bits used for nsGlobalFont.flags
+// If this bit is set, then the font is to be ignored
+#define NS_GLOBALFONT_SKIP      0x80000000L
+// If this bit is set, then the font is a TrueType font
+#define NS_GLOBALFONT_TRUETYPE  0x40000000L
+// If this bit is set, then the font is a Symbol font (SYMBOL_CHARSET)
+#define NS_GLOBALFONT_SYMBOL    0x20000000L
+
 class nsFontWin
 {
 public:
+  NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
+
   nsFontWin(LOGFONT* aLogFont, HFONT aFont, PRUint32* aMap);
   virtual ~nsFontWin();
-  NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
   virtual PRInt32 GetWidth(HDC aDC, const PRUnichar* aString,
                            PRUint32 aLength) = 0;
+
   // XXX return width from DrawString
   virtual void DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
                           const PRUnichar* aString, PRUint32 aLength) = 0;
+
 #ifdef MOZ_MATHML
   virtual nsresult
   GetBoundingMetrics(HDC                aDC, 
@@ -73,41 +100,49 @@ public:
 #endif // NS_DEBUG
 #endif
 
-  char      mName[LF_FACESIZE];
-  HFONT     mFont;
-  PRUint32* mMap;
+  char            mName[LF_FACESIZE];
+  HFONT           mFont;
+  PRUint32*       mMap;
 #ifdef MOZ_MATHML
   nsCharacterMap* mCMAP;
 #endif
+
+  nscoord         mMaxAscent;
+  nscoord         mMaxDescent;
 };
 
-typedef struct nsGlobalFont
-{
-  nsString*     name;
-  LOGFONT       logFont;
-  PRUint32*     map;
-  FONTSIGNATURE signature;
-  int           fonttype;
-  PRUint32      flags;
-} nsGlobalFont;
+/**
+ * nsFontSwitchCallback
+ *
+ * Font-switching callback function. Used by ResolveForwards() and
+ * ResolveBackwards(). aFontSwitch points to a structure that gives
+ * details about the current font needed to represent the current
+ * substring. In particular, this struct contains a handler to the font
+ * and some metrics of the font. These metrics may be different from
+ * the metrics obtained via nsIFontMetrics.
+ * Return PR_FALSE to stop the resolution of the remaining substrings.
+ */
 
-// Bits used for nsGlobalFont.flags
-// If this bit is set, then the font is to be ignored
-#define NS_GLOBALFONT_SKIP      0x80000000L
-// If this bit is set, then the font is a TrueType font
-#define NS_GLOBALFONT_TRUETYPE  0x40000000L
-// If this bit is set, then the font is a Symbol font (SYMBOL_CHARSET)
-#define NS_GLOBALFONT_SYMBOL    0x20000000L
+struct nsFontSwitch {
+  // Simple wrapper on top of nsFontWin for the moment
+  // Could hold other attributes of the font
+  nsFontWin* mFontWin;
+};
+
+typedef PRBool (*PR_CALLBACK nsFontSwitchCallback)
+               (const nsFontSwitch* aFontSwitch,
+                const PRUnichar*    aSubstring,
+                PRUint32            aSubstringLength,
+                void*               aData);
 
 class nsFontMetricsWin : public nsIFontMetrics
 {
 public:
+  NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
+  NS_DECL_ISUPPORTS
+
   nsFontMetricsWin();
   virtual ~nsFontMetricsWin();
-
-  NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
-
-  NS_DECL_ISUPPORTS
 
   NS_IMETHOD  Init(const nsFont& aFont, nsIAtom* aLangGroup,
                    nsIDeviceContext* aContext);
@@ -118,7 +153,6 @@ public:
   NS_IMETHOD  GetSubscriptOffset(nscoord& aResult);
   NS_IMETHOD  GetStrikeout(nscoord& aOffset, nscoord& aSize);
   NS_IMETHOD  GetUnderline(nscoord& aOffset, nscoord& aSize);
-
   NS_IMETHOD  GetHeight(nscoord &aHeight);
   NS_IMETHOD  GetNormalLineHeight(nscoord &aHeight);
   NS_IMETHOD  GetLeading(nscoord &aLeading);
@@ -133,86 +167,102 @@ public:
   NS_IMETHOD  GetLangGroup(nsIAtom** aLangGroup);
   NS_IMETHOD  GetFontHandle(nsFontHandle &aHandle);
   NS_IMETHOD  GetAveCharWidth(nscoord &aAveCharWidth);
-
   virtual nsresult   GetSpaceWidth(nscoord &aSpaceWidth);
-  virtual nsFontWin* FindGlobalFont(HDC aDC, PRUnichar aChar);
-  virtual nsFontWin* FindGenericFont(HDC aDC, PRUnichar aChar);
-  virtual nsFontWin* FindLocalFont(HDC aDC, PRUnichar aChar);
-  virtual nsFontWin* FindUserDefinedFont(HDC aDC, PRUnichar aChar);
-  nsFontWin*         FindFont(HDC aDC, PRUnichar aChar);
-  virtual nsFontWin* LoadGenericFont(HDC aDC, PRUnichar aChar, char** aName);
-  virtual nsFontWin* LoadFont(HDC aDC, nsString* aName);
 
-  virtual nsFontWin* LoadSubstituteFont(HDC aDC, nsString* aName);
+  virtual nsresult
+  ResolveForwards(HDC                  aDC,
+                  const PRUnichar*     aString,
+                  PRUint32             aLength,
+                  nsFontSwitchCallback aFunc, 
+                  void*                aData);
+
+  virtual nsresult
+  ResolveBackwards(HDC                  aDC,
+                   const PRUnichar*     aString,
+                   PRUint32             aLength,
+                   nsFontSwitchCallback aFunc, 
+                   void*                aData);
+
+  nsFontWin*         FindFont(HDC aDC, PRUnichar aChar);
+  virtual nsFontWin* FindUserDefinedFont(HDC aDC, PRUnichar aChar);
+  virtual nsFontWin* FindLocalFont(HDC aDC, PRUnichar aChar);
+  virtual nsFontWin* FindGenericFont(HDC aDC, PRUnichar aChar);
+  virtual nsFontWin* FindGlobalFont(HDC aDC, PRUnichar aChar);
   virtual nsFontWin* FindSubstituteFont(HDC aDC, PRUnichar aChar);
 
+  virtual nsFontWin* LoadFont(HDC aDC, nsString* aName);
+  virtual nsFontWin* LoadGenericFont(HDC aDC, PRUnichar aChar, nsString* aName);
   virtual nsFontWin* LoadGlobalFont(HDC aDC, nsGlobalFont* aGlobalFontItem);
+  virtual nsFontWin* LoadSubstituteFont(HDC aDC, nsString* aName);
 
-  static int SameAsPreviousMap(int aIndex);
+  virtual nsFontWin* GetFontFor(HFONT aHFONT);
 
-  nsFontWin           **mLoadedFonts;
-  PRUint16            mLoadedFontsAlloc;
-  PRUint16            mLoadedFontsCount;
-
-  PRInt32             mIndexOfSubstituteFont;
-
+  nsCOMPtr<nsIAtom>   mLangGroup;
   nsStringArray       mFonts;
   PRUint16            mFontsIndex;
-  nsVoidArray         mFontIsGeneric;
+  nsVoidArray         mLoadedFonts;
+  nsFontWin          *mSubstituteFont;
 
-  nsAutoString        mDefaultFont;
-  nsString            *mGeneric;
-  nsCOMPtr<nsIAtom>   mLangGroup;
-  nsAutoString        mUserDefined;
+  PRUint16            mGenericIndex;
+  nsString            mGeneric;
 
-  PRUint8 mTriedAllGenerics;
-  PRUint8 mIsUserDefined;
+  nsString            mUserDefined;
 
-  nscoord             mSpaceWidth;
+  PRBool              mTriedAllGenerics;
+  PRBool              mIsUserDefined;
 
   static PRUint32*    gEmptyMap;
   static PLHashTable* gFontMaps;
-  static nsGlobalFont* gGlobalFonts;
-  static int gGlobalFontsCount;
   static PLHashTable* gFamilyNames;
   static PLHashTable* gFontWeights;
+  static nsVoidArray* gGlobalFonts;
 
-  static nsGlobalFont* InitializeGlobalFonts(HDC aDC);
+  static nsVoidArray* InitializeGlobalFonts(HDC aDC);
 
   static void SetFontWeight(PRInt32 aWeight, PRUint16* aWeightTable);
   static PRBool IsFontWeightAvailable(PRInt32 aWeight, PRUint16 aWeightTable);
 
-  static PRUint32* GetCMAP(HDC aDC, const char* aShortName, int* aFontType, PRUint8* aCharset);
+  static PRUint32* GetCMAP(HDC aDC, const char* aShortName, eFontType* aFontType, PRUint8* aCharset);
+
+  static int SameAsPreviousMap(int aIndex);
+
+  // This function creates a possibly adjusted font
+  HFONT CreateFontHandle(HDC aDC, LOGFONT* aLogFont);
+  void InitMetricsFor(HDC aDC, nsFontWin* aFontWin);
 
 protected:
   // @description Font Weights
-    // Each available font weight is stored as as single bit inside a PRUint16.
-    // e.g. The binary value 0000000000001000 indcates font weight 400 is available.
-    // while the binary value 0000000000001001 indicates both font weight 100 and 400 are available
-    // The font weights which will be represented include {100, 200, 300, 400, 500, 600, 700, 800, 900}
-    // The font weight specified in the mFont->weight may include values which are not an even multiple of 100.
-    // If so, the font weight mod 100 indicates the number steps to lighten are make bolder.
-    // This corresponds to the CSS lighter and bolder property values. If bolder is applied twice to the font which has
-    // a font weight of 400 then the mFont->weight will contain the value 402.
-    // If lighter is applied twice to a font of weight 400 then the mFont->weight will contain the value 398.
-    // Only nine steps of bolder or lighter are allowed by the CSS XPCODE.
-    // The font weight table is used in conjuction with the mFont->weight to determine
-    // what font weight to pass in the LOGFONT structure.
+  // Each available font weight is stored as as single bit inside a PRUint16.
+  // e.g. The binary value 0000000000001000 indcates font weight 400 is available.
+  // while the binary value 0000000000001001 indicates both font weight 100 and 400 are available
+  // The font weights which will be represented include {100, 200, 300, 400, 500, 600, 700, 800, 900}
+  // The font weight specified in the mFont->weight may include values which are not an even multiple of 100.
+  // If so, the font weight mod 100 indicates the number steps to lighten are make bolder.
+  // This corresponds to the CSS lighter and bolder property values. If bolder is applied twice to the font which has
+  // a font weight of 400 then the mFont->weight will contain the value 402.
+  // If lighter is applied twice to a font of weight 400 then the mFont->weight will contain the value 398.
+  // Only nine steps of bolder or lighter are allowed by the CSS XPCODE.
+  // The font weight table is used in conjuction with the mFont->weight to determine
+  // what font weight to pass in the LOGFONT structure.
 
-
-    // Utility methods for managing font weights.
+  // Utility methods for managing font weights.
   PRUint16 LookForFontWeightTable(HDC aDc, nsString* aName);
   PRInt32  GetBolderWeight(PRInt32 aWeight, PRInt32 aDistance, PRUint16 aWeightTable);
   PRInt32  GetLighterWeight(PRInt32 aWeight, PRInt32 aDistance, PRUint16 aWeightTable);
   PRInt32  GetFontWeight(PRInt32 aWeight, PRUint16 aWeightTable);
   PRInt32  GetClosestWeight(PRInt32 aWeight, PRUint16 aWeightTable);
   PRUint16 GetFontWeightTable(HDC aDC, nsString* aFontName);
-  
-  void FillLogFont(LOGFONT* aLogFont, PRInt32 aWeight);
-  nsresult RealizeFont();
 
-  nsDeviceContextWin  *mDeviceContext;
-  nsFont              *mFont;
+  nsresult RealizeFont();
+  void FillLogFont(LOGFONT* aLogFont, PRInt32 aWeight,
+                   PRBool aSizeOnly=PR_FALSE, PRBool aSkipZoom=PR_FALSE);
+  static PLHashTable* InitializeFamilyNames(void);
+
+  nsDeviceContextWin *mDeviceContext;
+  nsFont              mFont;
+
+  HFONT               mFontHandle;
+
   nscoord             mLeading;
   nscoord             mEmHeight;
   nscoord             mEmAscent;
@@ -229,9 +279,7 @@ protected:
   nscoord             mStrikeoutOffset;
   nscoord             mUnderlineSize;
   nscoord             mUnderlineOffset;
-  HFONT               mFontHandle;
-
-  static PLHashTable* InitializeFamilyNames(void);
+  nscoord             mSpaceWidth;
 };
 
 
@@ -247,12 +295,14 @@ public:
 // The following is a workaround for a Japanse Windows 95 problem.
 
 class nsFontWinA;
+class nsFontMetricsWinA;
 
 class nsFontSubset : public nsFontWin
 {
 public:
   nsFontSubset();
   virtual ~nsFontSubset();
+
   virtual PRInt32 GetWidth(HDC aDC, const PRUnichar* aString,
                            PRUint32 aLength);
   virtual void DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
@@ -268,9 +318,13 @@ public:
 #endif // NS_DEBUG
 #endif
 
-  int Load(nsFontWinA* aFont);
+  int Load(HDC aDC, nsFontMetricsWinA* aFontMetricsWin, nsFontWinA* aFont);
 
-  BYTE     mCharSet;
+  // convert a Unicode string to ANSI within our codepage
+  virtual void Convert(const PRUnichar* aString, PRUint32 aLength,
+                       char** aResult /*IN/OUT*/, int* aResultLength /*IN/OUT*/);
+
+  BYTE     mCharset;
   PRUint16 mCodePage;
 };
 
@@ -279,6 +333,7 @@ class nsFontWinA : public nsFontWin
 public:
   nsFontWinA(LOGFONT* aLogFont, HFONT aFont, PRUint32* aMap);
   virtual ~nsFontWinA();
+
   virtual PRInt32 GetWidth(HDC aDC, const PRUnichar* aString,
                            PRUint32 aLength);
   virtual void DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
@@ -305,14 +360,29 @@ class nsFontMetricsWinA : public nsFontMetricsWin
 {
 public:
   virtual nsFontWin* FindLocalFont(HDC aDC, PRUnichar aChar);
+  virtual nsFontWin* LoadGenericFont(HDC aDC, PRUnichar aChar, nsString* aName);
   virtual nsFontWin* FindGlobalFont(HDC aDC, PRUnichar aChar);
-  virtual nsFontWin* LoadGenericFont(HDC aDC, PRUnichar aChar, char** aName);
-  virtual nsFontWin* LoadFont(HDC aDC, nsString* aName);
-
-  virtual nsFontWin* LoadSubstituteFont(HDC aDC, nsString* aName);
   virtual nsFontWin* FindSubstituteFont(HDC aDC, PRUnichar aChar);
 
+  virtual nsFontWin* LoadFont(HDC aDC, nsString* aName);
   virtual nsFontWin* LoadGlobalFont(HDC aDC, nsGlobalFont* aGlobalFontItem);
+  virtual nsFontWin* LoadSubstituteFont(HDC aDC, nsString* aName);
+
+  virtual nsFontWin* GetFontFor(HFONT aHFONT);
+
+  virtual nsresult
+  ResolveForwards(HDC                  aDC,
+                  const PRUnichar*     aString,
+                  PRUint32             aLength,
+                  nsFontSwitchCallback aFunc, 
+                  void*                aData);
+
+  virtual nsresult
+  ResolveBackwards(HDC                  aDC,
+                   const PRUnichar*     aString,
+                   PRUint32             aLength,
+                   nsFontSwitchCallback aFunc, 
+                   void*                aData);
 };
 
 #endif /* nsFontMetricsWin_h__ */
