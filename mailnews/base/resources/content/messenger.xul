@@ -24,6 +24,8 @@ Rights Reserved.
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/tasksOverlay.xul"?>
 <?xul-overlay href="chrome://messenger/content/threadPane.xul"?>
+<?xul-overlay href="chrome://sidebar/content/sidebarOverlay.xul"?>
+<?xml-stylesheet href="chrome://sidebar/skin/sidebarOverlay.css" type="text/css"?> 
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/messenger.dtd">
                      
@@ -329,6 +331,7 @@ Rights Reserved.
       <menuseparator/>
       <menuitem value="&backCmd.label;" oncommand="MsgGoBack();"/>
       <menuitem value="&forwardCmd.label;" oncommand="MsgGoForward();"/>
+      <menuitem value="5000 message folder test" oncommand="FolderTest5000();"/>
 	  </menupopup>
     </menu>
     <menu value="&msgMenu.label;">
@@ -428,31 +431,31 @@ Rights Reserved.
 	<spring flex="100%"/>
   </menubar>
 
-	  <toolbar>
-	  <titledbutton src="&getMsgButton.img;" align="top" value="&getMsgButton.label;" onclick="MsgGetMessage()"/>
-	  <titledbutton src="&newMsgButton.img;" align="top" value="&newMsgButton.label;" onclick="MsgNewMessage()"/>
-	  <html:div class="separator" align="vertical"/> 
-	  <titledbutton src="&replyButton.img;" align="top" value="&replyButton.label;" onclick="MsgReplyMessage()"/>
-	  <titledbutton src="&replyAllButton.img;" align="top" value="&replyAllButton.label;" onclick="MsgReplyToAllMessage()"/>
-	  <titledbutton src="&forwardButton.img;" align="top" value="&forwardButton.label;" onclick="MsgForwardMessage()"/>
-	  <titledbutton src="&nextButton.img;" align="top" value="&nextButton.label;" onclick="MsgNextUnreadMessage()"/>
-	  <titledbutton src="&deleteButton.img;" align="top" value="&deleteButton.label;" onclick="MsgDeleteMessage(true)"/>
-      <spring flex="100%"/>
-      <titledbutton id="Throbber" onclick="window.content.location.href='&throbber.url;'">
-         <observes element="Messenger:Throbber" attribute="busy"/>
-      </titledbutton>
-
-      </toolbar>
     </toolbox>
 
     <!-- The main mail three pane frame -->
     <box align="horizontal" style="height:100px" flex="1">
-	  <box align="horizontal"
-	    style="background-color:white; border-right:solid black 1px">
-	    <html:iframe id="sidebarframe" class="sidebarframe" src="about:blank" />
-	  </box>
-      <titledbutton id="grippy" class="grippy" onclick="toggle_open_close();"/>
+      <box id="sidebarbox" />
+      <splitter id="sidebarsplitter" collapse="before" persist="hidden"/>
       <box align="vertical"  flex="1"  style="border-left:solid black 1px">
+	  <toolbox>
+		  <toolbar>
+		  <titledbutton src="&getMsgButton.img;" align="top" value="&getMsgButton.label;" onclick="MsgGetMessage()"/>
+		  <titledbutton src="&newMsgButton.img;" align="top" value="&newMsgButton.label;" onclick="MsgNewMessage()"/>
+		  <html:div class="separator" align="vertical"/> 
+		  <titledbutton src="&replyButton.img;" align="top" value="&replyButton.label;" onclick="MsgReplyMessage()"/>
+		  <titledbutton src="&replyAllButton.img;" align="top" value="&replyAllButton.label;" onclick="MsgReplyToAllMessage()"/>
+		  <titledbutton src="&forwardButton.img;" align="top" value="&forwardButton.label;" onclick="MsgForwardMessage()"/>
+		  <titledbutton src="&nextButton.img;" align="top" value="&nextButton.label;" onclick="MsgNextUnreadMessage()"/>
+		  <titledbutton src="&deleteButton.img;" align="top" value="&deleteButton.label;" onclick="MsgDeleteMessage(true)"/>
+		  <spring flex="100%"/>
+		  <titledbutton id="Throbber" onclick="window.content.location.href='&throbber.url;'">
+			 <observes element="Messenger:Throbber" attribute="busy"/>
+		  </titledbutton>
+
+		  </toolbar>
+		</toolbox>
+
 		<html:div style="width:100px;height:0px" flex="2" >
 		  <tree id="threadTree"/>
 		 </html:div>
@@ -462,25 +465,26 @@ Rights Reserved.
 			
     	<!-- message view -->
 		  <html:iframe flex="3" style="height:0px" name="messagepane" src="about:blank"/>
-      </box>
-    </box>
-    <!-- Ripped off from navigator.xul; this should be a XUL fragment! -->
-    <box align="horizontal" id="status-bar">
+		<!-- Ripped off from navigator.xul; this should be a XUL fragment! -->
+		<box align="horizontal" id="status-bar">
  
-      <titledbutton value="[Notification Component]" onclick="doTests()"/>
-	<box align="vertical" style="width:100px">
-		<spring flex="100%"/>
+          <titledbutton value="[Notification Component]" onclick="doTests()"/>
+		  <box align="vertical" style="width:100px">
+		    <spring flex="100%"/>
 			<progressmeter id="statusbar-icon" mode="normal" value="0" onclick="dumpProgress()">
 				<observes element="Messenger:LoadingProgress" attribute="mode"/>
 				<observes element="Messenger:LoadingProgress" attribute="value"/>
 				<observes element="Messenger:Throbber" attribute="busy" onchange="onProgress()"/>
 			</progressmeter>
-		<spring flex="100%"/>
-	</box>
+			<spring flex="100%"/>
+		  </box>
 
-	<titledbutton id="statusText" align="left" flex="100%" value="&statusText.label;" style="font-family:sans-serif;font-size:2.5mm">
+		  <titledbutton id="statusText" align="left" flex="100%" value="&statusText.label;" style="font-family:sans-serif;font-size:2.5mm">
                        <observes element="Messenger:Status" attribute="value" onchange="onStatus()"/>         
-	</titledbutton>
+		  </titledbutton>
+		 </box>
+
+      </box>
     </box>
 
 	<toolbox id="taskbox"/>
