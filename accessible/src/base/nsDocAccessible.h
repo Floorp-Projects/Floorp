@@ -117,7 +117,7 @@ class nsDocAccessible : public nsBlockAccessible,
     void GetEventShell(nsIDOMNode *aNode, nsIPresShell **aEventShell);
     void GetEventDocAccessible(nsIDOMNode *aNode, 
                                nsIAccessibleDocument **aAccessibleDoc);
-    void CheckForEditor();
+    virtual void CheckForEditor();
 
     nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode> *mAccessNodeCache;
     void *mWnd;

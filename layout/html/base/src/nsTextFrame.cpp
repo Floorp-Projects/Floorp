@@ -807,7 +807,6 @@ protected:
 #ifdef ACCESSIBILITY
 NS_IMETHODIMP nsTextFrame::GetAccessible(nsIAccessible** aAccessible)
 {
-#ifndef MOZ_ACCESSIBILITY_ATK
   if (mRect.width > 0 || mRect.height > 0) {
 
     nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
@@ -816,7 +815,6 @@ NS_IMETHODIMP nsTextFrame::GetAccessible(nsIAccessible** aAccessible)
       return accService->CreateHTMLTextAccessible(NS_STATIC_CAST(nsIFrame*, this), aAccessible);
     }
   }
-#endif
   return NS_ERROR_FAILURE;
 }
 #endif

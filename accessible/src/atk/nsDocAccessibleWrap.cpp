@@ -72,9 +72,11 @@ static char * sAtkPropertyNameArray[PROP_LAST] = {
 
 static  AtkStateType TranslateAState(PRUint32 aState);
 
+NS_IMPL_ISUPPORTS_INHERITED2(nsDocAccessibleWrap, nsDocAccessible, nsIAccessibleText, nsIAccessibleEditableText)
+
 nsDocAccessibleWrap::nsDocAccessibleWrap(nsIDOMNode *aDOMNode,
                                          nsIWeakReference *aShell): 
-  nsDocAccessible(aDOMNode, aShell)
+  nsDocAccessible(aDOMNode, aShell), nsAccessibleEditableText(aDOMNode)
 {
 }
 
@@ -340,7 +342,9 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent,
     case nsIAccessibleEvent::EVENT_ATK_LINK_SELECTED:
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_ATK_LINK_SELECTED\n"));
         g_signal_emit_by_name(accWrap->GetAtkObject(),
-                              "link_selected");
+                              "link_selected",
+                              // Selected link index 
+                              *(gint *)aEventData);
         rv = NS_OK;
         break;
 
@@ -474,4 +478,30 @@ TranslateAState(PRUint32 aState)
     default:
         return ATK_STATE_INVALID;
     }
+}
+
+NS_IMETHODIMP nsDocAccessibleWrap::Shutdown()
+{
+    nsAccessibleEditableText::ShutdownEditor();
+    return nsDocAccessible::Shutdown();
+}
+
+NS_IMETHODIMP nsDocAccessibleWrap::GetRole(PRUint32 *_retval)
+{
+    PRBool isEditable;
+    GetIsEditable(&isEditable);
+
+    if (isEditable) {
+        *_retval = ROLE_TEXT;
+        return NS_OK;
+    }
+
+    return nsDocAccessible::GetRole(_retval);
+}
+
+void nsDocAccessibleWrap::CheckForEditor()
+{
+    nsDocAccessible::CheckForEditor();
+    if (mEditor)
+        SetEditor(mEditor); // set editor for nsAccessibleEditableText
 }

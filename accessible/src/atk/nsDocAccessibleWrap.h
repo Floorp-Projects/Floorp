@@ -47,14 +47,24 @@
 #define _nsDocAccessibleWrap_H_
 
 #include "nsDocAccessible.h"
+#include "nsAccessibleText.h"
 
-class nsDocAccessibleWrap: public nsDocAccessible
+class nsDocAccessibleWrap: public nsDocAccessible,
+                           public nsAccessibleEditableText
 {
 public:
+  NS_DECL_ISUPPORTS_INHERITED
+
   nsDocAccessibleWrap(nsIDOMNode *aNode, nsIWeakReference *aShell);
   virtual ~nsDocAccessibleWrap();
   NS_IMETHOD FireToolkitEvent(PRUint32 aEvent, nsIAccessible* aAccessible,
                               void* aData);
+
+  NS_IMETHOD Shutdown();
+  NS_IMETHOD GetRole(PRUint32 *aAccRole);
+
+protected:
+  void CheckForEditor();
 };
 
 #endif

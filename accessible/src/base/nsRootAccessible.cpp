@@ -307,18 +307,18 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     optionTargetNode = do_QueryInterface(selectItem);
   }
 
+  nsCOMPtr<nsIPresShell> eventShell;
+  GetEventShell(targetNode, getter_AddRefs(eventShell));
+
 #ifdef MOZ_ACCESSIBILITY_ATK
   nsCOMPtr<nsIDOMHTMLAnchorElement> anchorElement(do_QueryInterface(targetNode));
   if (anchorElement) {
     nsCOMPtr<nsIDOMNode> blockNode;
     // For ATK, we don't create any individual object for hyperlink, use its parent who has block frame instead
-    nsAccessible::GetParentBlockNode(targetNode, getter_AddRefs(blockNode));
-    targetNode = blockNode;
+    if (NS_SUCCEEDED(nsAccessible::GetParentBlockNode(eventShell, targetNode, getter_AddRefs(blockNode))))
+      targetNode = blockNode;
   }
 #endif
-
-  nsCOMPtr<nsIPresShell> eventShell;
-  GetEventShell(targetNode, getter_AddRefs(eventShell));
 
   nsCOMPtr<nsIAccessible> accessible;
   if (!eventShell ||
@@ -483,10 +483,12 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
       FireAccessibleFocusEvent(accessible, targetNode);
     }
   }
-  else if (eventType.EqualsIgnoreCase("popupshowing")) 
+  else if (eventType.EqualsIgnoreCase("popupshowing")) {
     FireAccessibleFocusEvent(accessible, targetNode);
-  else if (eventType.EqualsIgnoreCase("popuphiding")) 
-    FireAccessibleFocusEvent(accessible, targetNode);
+  }
+  else if (eventType.EqualsIgnoreCase("popuphiding")) {
+    //FireAccessibleFocusEvent(accessible, targetNode);
+  }
 #endif
   return NS_OK;
 }

@@ -41,6 +41,7 @@
 
 #include "nsMai.h"
 #include "nsAccessibleWrap.h"
+#include "nsAppRootAccessible.h"
 #include "nsString.h"
 
 #include "nsMaiInterfaceComponent.h"
@@ -527,6 +528,12 @@ nsAccessibleWrap::TranslateStates(PRUint32 aState, void *aAtkStateSet)
 
 }
 
+PRBool nsAccessibleWrap::IsValidObject()
+{
+    // to ensure we are not shut down
+    return (mDOMNode != nsnull);
+}
+
 /* static functions for ATK callbacks */
 void
 classInitCB(AtkObjectClass *aClass)
@@ -790,12 +797,12 @@ getIndexInParentCB(AtkObject *aAtkObj)
 AtkStateSet *
 refStateSetCB(AtkObject *aAtkObj)
 {
-    NS_ENSURE_SUCCESS(CheckMaiAtkObject(aAtkObj), nsnull);
-    nsAccessibleWrap *accWrap =
-        NS_REINTERPRET_CAST(MaiAtkObject*, aAtkObj)->accWrap;
-
     AtkStateSet *state_set = nsnull;
     state_set = ATK_OBJECT_CLASS(parent_class)->ref_state_set(aAtkObj);
+
+    NS_ENSURE_SUCCESS(CheckMaiAtkObject(aAtkObj), state_set);
+    nsAccessibleWrap *accWrap =
+        NS_REINTERPRET_CAST(MaiAtkObject*, aAtkObj)->accWrap;
 
     PRUint32 accState = 0;
     nsresult rv = accWrap->GetState(&accState);
@@ -803,7 +810,7 @@ refStateSetCB(AtkObject *aAtkObj)
 
     if (accState == 0) {
         nsresult rv = accWrap->GetExtState(&accState);
-        NS_ENSURE_SUCCESS(rv, state_set);
+        //NS_ENSURE_SUCCESS(rv, state_set);
         if (accState == 0)
             return state_set;
     }
@@ -817,9 +824,12 @@ CheckMaiAtkObject(AtkObject *aAtkObj)
 {
     NS_ENSURE_ARG(MAI_IS_ATK_OBJECT(aAtkObj));
     nsAccessibleWrap * tmpAccWrap = MAI_ATK_OBJECT(aAtkObj)->accWrap;
-    NS_ENSURE_TRUE(tmpAccWrap != nsnull, NS_ERROR_INVALID_POINTER);
-    NS_ENSURE_TRUE(tmpAccWrap->GetAtkObject() == aAtkObj,
-                   NS_ERROR_FAILURE);
+    if (tmpAccWrap == nsnull)
+        return NS_ERROR_INVALID_POINTER;
+    if (tmpAccWrap != nsAppRootAccessible::Create() && !tmpAccWrap->IsValidObject())
+        return NS_ERROR_INVALID_POINTER;
+    if (tmpAccWrap->GetAtkObject() != aAtkObj)
+        return NS_ERROR_FAILURE;
     return NS_OK;
 }
 

@@ -764,6 +764,7 @@ nsAccessibilityService::CreateHTMLTextAccessible(nsISupports *aFrame, nsIAccessi
 
   *_retval = nsnull;
 
+#ifndef MOZ_ACCESSIBILITY_ATK
   nsCOMPtr<nsITextContent> textContent(do_QueryInterface(node));
   if (textContent) {
     // If empty text string, don't include in accessible tree
@@ -787,6 +788,29 @@ nsAccessibilityService::CreateHTMLTextAccessible(nsISupports *aFrame, nsIAccessi
   }
     
   *_retval = new nsHTMLTextAccessible(node, weakShell);
+#else
+  // In ATK, we are only creating the accessible object for the text frame that is the FIRST
+  //   text frame in its block.
+  // A depth-first traversal from its nearest parent block frame will produce a frame sequence like
+  //   TTTBTTBTT... (B for block frame, T for text frame), so every T frame which is the immediate 
+  //   sibiling of B frame will be the FIRST text frame.
+  nsIFrame* parentFrame = nsAccessible::GetParentBlockFrame(frame);
+  if (! parentFrame)
+    return NS_ERROR_FAILURE; 
+
+  nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(weakShell));
+  nsCOMPtr<nsIPresContext> presContext;
+  presShell->GetPresContext(getter_AddRefs(presContext));
+  nsIFrame* childFrame = nsnull;
+  parentFrame->FirstChild(presContext, nsnull, &childFrame);
+  PRInt32 index = 0;
+  nsIFrame* firstTextFrame = nsnull;
+  PRBool ret = nsAccessible::FindTextFrame(index, presContext, childFrame, &firstTextFrame, frame);
+  if (!ret || index != 0)
+    return NS_ERROR_FAILURE; 
+
+  *_retval = new nsHTMLBlockAccessible(node, weakShell);
+#endif //MOZ_ACCESSIBILITY_ATK
   if (! *_retval) 
     return NS_ERROR_OUT_OF_MEMORY;
 

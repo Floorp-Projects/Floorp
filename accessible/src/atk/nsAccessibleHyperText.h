@@ -57,6 +57,7 @@ public:
   nsAccessibleHyperText(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
   virtual ~nsAccessibleHyperText() {};
 
+  nsresult GetBounds(nsIWeakReference *aShell, PRInt32 *x, PRInt32 *y, PRInt32 *width, PRInt32 *height);
   void Shutdown();
   PRInt32 GetIndex();
 
@@ -64,7 +65,7 @@ protected:
   nsCOMPtr<nsISupportsArray> mTextChildren;
   PRInt32 mIndex;
 
-  void GetAllTextChildren(nsIPresShell* aShell, nsIDOMNode* aCurrentNode);
+  PRBool GetAllTextChildren(nsIPresContext *aPresContext, nsIFrame *aCurFrame, nsIDOMNode* aNode, PRBool &bSave);
   nsIDOMNode* FindTextNodeByOffset(PRInt32 aOffset, PRInt32& aBeforeLength);
   nsresult GetTextHelper(EGetTextType aType, nsAccessibleTextBoundary aBoundaryType,
                          PRInt32 aOffset, PRInt32 *aStartOffset, PRInt32 *aEndOffset, nsAString & aText);

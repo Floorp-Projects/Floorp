@@ -162,10 +162,6 @@ getTextCB(AtkText *aText, gint aStartOffset, gint aEndOffset)
                             getter_AddRefs(accText));
     NS_ENSURE_TRUE(accText, nsnull);
 
-    // currently nsIAccessibleText does not know the meaning of -1
-    // after fixing that, remove this
-    if (aEndOffset < 0 )
-        aEndOffset = 1024;
     nsAutoString autoStr;
     nsresult rv = accText->GetText(aStartOffset, aEndOffset, autoStr);
     NS_ENSURE_SUCCESS(rv, nsnull);

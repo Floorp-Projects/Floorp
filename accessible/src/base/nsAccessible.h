@@ -79,7 +79,10 @@ public:
   NS_IMETHOD Shutdown();
 
 #ifdef MOZ_ACCESSIBILITY_ATK
-  static nsresult GetParentBlockNode(nsIDOMNode *aCurrentNode, nsIDOMNode **aBlockNode);
+  static nsresult GetParentBlockNode(nsIPresShell *aPresShell, nsIDOMNode *aCurrentNode, nsIDOMNode **aBlockNode);
+  static nsIFrame* GetParentBlockFrame(nsIFrame *aFrame);
+  static PRBool FindTextFrame(PRInt32 &index, nsIPresContext *aPresContext, nsIFrame *aCurFrame, 
+                                   nsIFrame **aFirstTextFrame, const nsIFrame *aTextFrame);
 #endif
 
   static PRBool IsCorrectFrameType(nsIFrame* aFrame, nsIAtom* aAtom);

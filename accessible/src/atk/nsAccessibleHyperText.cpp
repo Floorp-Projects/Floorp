@@ -41,6 +41,7 @@
 #include "nsAccessibilityService.h"
 #include "nsAccessibleHyperText.h"
 #include "nsHTMLLinkAccessibleWrap.h"
+#include "nsHTMLTextAccessible.h"
 #include "nsPIAccessNode.h"
 #include "nsIFrame.h"
 #include "nsILink.h"
@@ -67,8 +68,18 @@ nsAccessibleHyperText::nsAccessibleHyperText(nsIDOMNode* aDomNode, nsIWeakRefere
   nsCOMPtr<nsIPresShell> shell(do_QueryReferent(aShell));
   if (shell) {
     NS_NewISupportsArray(getter_AddRefs(mTextChildren));
-    if (mTextChildren)
-      GetAllTextChildren(shell, aDomNode);
+    if (mTextChildren) {
+      nsIFrame *frame = nsnull;
+      nsCOMPtr<nsIContent> content(do_QueryInterface(aDomNode));
+      shell->GetPrimaryFrameFor(content, &frame);
+      nsIFrame *parentFrame = nsAccessible::GetParentBlockFrame(frame);
+      nsCOMPtr<nsIPresContext> presContext;
+      shell->GetPresContext(getter_AddRefs(presContext));
+      nsIFrame* childFrame = nsnull;
+      parentFrame->FirstChild(presContext, nsnull, &childFrame);
+      PRBool bSave = PR_FALSE;
+      GetAllTextChildren(presContext, childFrame, aDomNode, bSave);
+    }
   }
 }
 
@@ -77,41 +88,54 @@ void nsAccessibleHyperText::Shutdown()
   mTextChildren = nsnull;
 }
 
-void nsAccessibleHyperText::GetAllTextChildren(nsIPresShell* aShell, nsIDOMNode* aCurrentNode)
-// A recursive function to find out all text children under the current dom node
+PRBool nsAccessibleHyperText::GetAllTextChildren(nsIPresContext *aPresContext, nsIFrame *aCurFrame, nsIDOMNode* aNode, PRBool &bSave)
 {
-  nsCOMPtr<nsIDOMNodeList> childrenList;
-  aCurrentNode->GetChildNodes(getter_AddRefs(childrenList));
-  if (!childrenList)
-    return;
+  if (! aCurFrame)
+    return PR_FALSE;
 
-  PRUint32 index, length;
-  childrenList->GetLength(&length);
-  for (index = 0; index < length; index++) {
-    nsCOMPtr<nsIDOMNode> childNode;
-    childrenList->Item(index, getter_AddRefs(childNode));
-    nsIFrame *frame = nsnull;
-    nsCOMPtr<nsIContent> childContent(do_QueryInterface(childNode));
-    aShell->GetPrimaryFrameFor(childContent, &frame);
-    if (frame) {
-      nsCOMPtr<nsIAtom> fType;
-      frame->GetFrameType(getter_AddRefs(fType));
-      if (fType == nsAccessibilityAtoms::textFrame) {
-        nsRect frameRect;
-        frame->GetRect(frameRect);
-        // Skip the empty text frames that usually only consist of "\n"
-        if (! frameRect.IsEmpty())
-          mTextChildren->AppendElement(childNode);
-        continue;
-      }
-      else if (fType == nsAccessibilityAtoms::blockFrame) {
-        // we won't traverse the child blockframe that supposes to be another object
-        continue;
-      }
-
-      GetAllTextChildren(aShell, childNode);
-    }
+  nsCOMPtr<nsIAtom> frameType;
+  aCurFrame->GetFrameType(getter_AddRefs(frameType));
+  if (frameType == nsAccessibilityAtoms::blockFrame) {
+    if (bSave)
+      return PR_TRUE;
   }
+  else {
+    if (frameType == nsAccessibilityAtoms::textFrame) {
+      nsRect frameRect;
+      aCurFrame->GetRect(frameRect);
+      // Skip the empty text frames that usually only consist of "\n"
+      if (! frameRect.IsEmpty()) {
+        nsCOMPtr<nsIContent> content;
+        aCurFrame->GetContent(getter_AddRefs(content));
+        nsCOMPtr<nsIDOMNode> node(do_QueryInterface(content));
+        if (bSave || node == aNode) {
+#ifdef DEBUG
+          nsAutoString text;
+          node->GetNodeValue(text);
+          char buf[1024];
+          text.ToCString(buf, sizeof(buf));
+#endif
+          // some long text node may be divided into several frames, 
+          // so we must check whether this node is already in the array
+          PRInt32 index = -1;
+          mTextChildren->GetIndexOf(node, &index);
+          if (index < 0) {
+            mTextChildren->AppendElement(node);
+          }
+          bSave = PR_TRUE;
+        }
+      }
+    }
+
+    nsIFrame* childFrame = nsnull;
+    aCurFrame->FirstChild(aPresContext, nsnull, &childFrame);
+    if (GetAllTextChildren(aPresContext, childFrame, aNode, bSave))
+      return PR_TRUE;
+  }
+
+  nsIFrame* siblingFrame = nsnull;
+  aCurFrame->GetNextSibling(&siblingFrame);
+  return GetAllTextChildren(aPresContext, siblingFrame, aNode, bSave);
 }
 
 PRInt32 nsAccessibleHyperText::GetIndex()
@@ -457,17 +481,46 @@ NS_IMETHODIMP nsAccessibleHyperText::GetSelectedLinkIndex(PRInt32 *aSelectedLink
   for (index = 0; index < count; index++) {
     nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(mTextChildren->ElementAt(index)));
     nsCOMPtr<nsIDOMNode> parentNode;
-    // text node maybe a child of a link node
-    domNode->GetParentNode(getter_AddRefs(parentNode));
-    nsCOMPtr<nsILink> link(do_QueryInterface(parentNode));
+    nsCOMPtr<nsILink> link;
+    do {
+        // text node maybe a child of a link node
+        domNode->GetParentNode(getter_AddRefs(parentNode));
+        domNode = parentNode;
+        link = do_QueryInterface(parentNode);
+    } while (domNode && link == nsnull);
+
     if (link) {
-      linkCount++;
       if (parentNode == focusedNode) {
         *aSelectedLinkIndex = linkCount;
         return NS_OK;
       }
+      linkCount++;
     }
   }
 
   return NS_ERROR_FAILURE;
+}
+
+nsresult nsAccessibleHyperText::GetBounds(nsIWeakReference *aWeakShell, PRInt32 *x, PRInt32 *y, PRInt32 *width, PRInt32 *height)
+{
+  *x = *y = *width = *height = 0;
+
+  nsRect unionRectTwips;
+  PRUint32 index, count;
+  mTextChildren->Count(&count);
+  for (index = 0; index < count; index++) {
+    nsHTMLTextAccessible *accText = new nsHTMLTextAccessible(
+        (nsIDOMNode *)mTextChildren->ElementAt(index), aWeakShell);
+    nsRect frameRect;
+    accText->GetBounds(&frameRect.x, &frameRect.y, &frameRect.width, &frameRect.height);
+    unionRectTwips.UnionRect(unionRectTwips, frameRect);
+    delete accText;
+  }
+
+  *x      = unionRectTwips.x; 
+  *y      = unionRectTwips.y;
+  *width  = unionRectTwips.width;
+  *height = unionRectTwips.height;
+
+  return NS_OK;
 }

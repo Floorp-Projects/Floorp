@@ -1457,27 +1457,61 @@ NS_IMETHODIMP nsAccessible::GetNativeInterface(void **aOutAccessible)
 }
 
 #ifdef MOZ_ACCESSIBILITY_ATK
-// static helper function
-nsresult nsAccessible::GetParentBlockNode(nsIDOMNode *aCurrentNode, nsIDOMNode **aBlockNode)
+// static helper functions
+nsresult nsAccessible::GetParentBlockNode(nsIPresShell *aPresShell, nsIDOMNode *aCurrentNode, nsIDOMNode **aBlockNode)
 {
   *aBlockNode = nsnull;
 
   nsCOMPtr<nsIContent> content(do_QueryInterface(aCurrentNode));
-  if (!content)
+  if (! content)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIDocument> doc = content->GetDocument();
-  if (!doc)
+  nsIFrame *frame = nsnull;
+  aPresShell->GetPrimaryFrameFor(content, &frame);
+  if (! frame)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIPresShell> presShell;
-  doc->GetShellAt(0, getter_AddRefs(presShell));
+  nsIFrame *parentFrame = GetParentBlockFrame(frame);
+  if (! parentFrame)
+    return NS_ERROR_FAILURE;
 
-  nsIFrame* frame = nsnull;
+  nsCOMPtr<nsIPresContext> presContext;
+  aPresShell->GetPresContext(getter_AddRefs(presContext));
+  nsIFrame* childFrame = nsnull;
   nsCOMPtr<nsIAtom> frameType;
-  presShell->GetPrimaryFrameFor(content, &frame);
-  if (frame)
-    frame->GetFrameType(getter_AddRefs(frameType));
+  while (frame &&
+         NS_SUCCEEDED(frame->GetFrameType(getter_AddRefs(frameType))) &&
+         frameType != nsAccessibilityAtoms::textFrame) {
+    frame->FirstChild(presContext, nsnull, &childFrame);
+    frame = childFrame;
+  }
+  if (! frame || frameType != nsAccessibilityAtoms::textFrame)
+    return NS_ERROR_FAILURE;
+
+  parentFrame->FirstChild(presContext, nsnull, &childFrame);
+  PRInt32 index = 0;
+  nsIFrame *firstTextFrame = nsnull;
+  FindTextFrame(index, presContext, childFrame, &firstTextFrame, frame);
+  if (firstTextFrame) {
+    firstTextFrame->GetContent(getter_AddRefs(content));
+    nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(content));
+    NS_IF_ADDREF(*aBlockNode = domNode);
+    return NS_OK;
+  }
+  else {
+    //XXX, why?
+  }
+  return NS_ERROR_FAILURE;
+}
+
+nsIFrame* nsAccessible::GetParentBlockFrame(nsIFrame *aFrame)
+{
+  if (! aFrame)
+    return nsnull;
+
+  nsIFrame* frame = aFrame;
+  nsCOMPtr<nsIAtom> frameType;
+  frame->GetFrameType(getter_AddRefs(frameType));
   while (frame && frameType != nsAccessibilityAtoms::blockFrame) {
     nsIFrame* parentFrame = nsnull;
     frame->GetParent(&parentFrame);
@@ -1485,17 +1519,59 @@ nsresult nsAccessible::GetParentBlockNode(nsIDOMNode *aCurrentNode, nsIDOMNode *
       parentFrame->GetFrameType(getter_AddRefs(frameType));
     frame = parentFrame;
   }
-
-  if (! frame)
-    return NS_ERROR_FAILURE;
-
-  frame->GetContent(getter_AddRefs(content));
-  nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(content));
-  *aBlockNode = domNode;
-  NS_IF_ADDREF(*aBlockNode);
-  return NS_OK;
+  return frame;
 }
-#endif  //MOZ_ACCESSIBILITY_ATK
 
+PRBool nsAccessible::FindTextFrame(PRInt32 &index, nsIPresContext *aPresContext, nsIFrame *aCurFrame, 
+                                   nsIFrame **aFirstTextFrame, const nsIFrame *aTextFrame)
+// Do a depth-first traversal to find the given text frame(aTextFrame)'s index of the block frame(aCurFrame)
+//   it belongs to, also return the first text frame within the same block.
+// Parameters:
+//   index        [in/out] - the current index - finally, it will be the aTextFrame's index in its block;
+//   aCurFrame        [in] - the current frame - its initial value is the first child frame of the block frame;
+//   aFirstTextFrame [out] - the first text frame which is within the same block with aTextFrame;
+//   aTextFrame       [in] - the text frame we are looking for;
+// Return:
+//   PR_TRUE  - the aTextFrame was found in its block frame;
+//   PR_FALSE - the aTextFrame was NOT found in its block frame;
+{
+  if (! aCurFrame)
+    return PR_FALSE;
 
+  if (aCurFrame == aTextFrame) {
+    if (index == 0)
+      *aFirstTextFrame = aCurFrame;
+    // we got it, stop traversing
+    return PR_TRUE;
+  }
 
+  nsCOMPtr<nsIAtom> frameType;
+  aCurFrame->GetFrameType(getter_AddRefs(frameType));
+  if (frameType == nsAccessibilityAtoms::blockFrame) {
+    // every block frame will reset the index
+    index = 0;
+  }
+  else {
+    if (frameType == nsAccessibilityAtoms::textFrame) {
+      nsRect frameRect;
+      aCurFrame->GetRect(frameRect);
+      // skip the empty frame
+      if (! frameRect.IsEmpty()) {
+        if (index == 0)
+          *aFirstTextFrame = aCurFrame;
+        index++;
+      }
+    }
+
+    // we won't expand the tree under a block frame.
+    nsIFrame* childFrame = nsnull;
+    aCurFrame->FirstChild(aPresContext, nsnull, &childFrame);
+    if (FindTextFrame(index, aPresContext, childFrame, aFirstTextFrame, aTextFrame))
+      return PR_TRUE;
+  }
+
+  nsIFrame* siblingFrame = nsnull;
+  aCurFrame->GetNextSibling(&siblingFrame);
+  return FindTextFrame(index, aPresContext, siblingFrame, aFirstTextFrame, aTextFrame);
+}
+#endif //MOZ_ACCESSIBILITY_ATK
