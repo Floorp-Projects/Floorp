@@ -56,6 +56,10 @@
 #define NS_MATHML_SCRIPTSIZEMULTIPLIER             0.71f
 #define NS_MATHML_SCRIPTMINSIZE                    8
 
+// Options for the preferred size at which to stretch our stretchy children 
+#define STRETCH_CONSIDER_ACTUAL_SIZE    0x00000001 // just use our current size
+#define STRETCH_CONSIDER_EMBELLISHMENTS 0x00000002 // size calculations include embellishments
+
 class nsMathMLContainerFrame : public nsHTMLContainerFrame,
                                public nsMathMLFrame {
 public:
@@ -149,6 +153,15 @@ public:
 
   // --------------------------------------------------------------------------
   // Additional methods 
+
+  // helper to get the preferred size that a container frame should use to fire
+  // the stretch on its stretchy child frames.
+  virtual void
+  GetPreferredStretchSize(nsIPresContext*      aPresContext,
+                          nsIRenderingContext& aRenderingContext,
+                          PRUint32             aOptions,
+                          nsStretchDirection   aStretchDirection,
+                          nsBoundingMetrics&   aPreferredStretchSize);
 
   // error handlers to report than an error (typically invalid markup)
   // was encountered during reflow. By default the user will see the
