@@ -30,16 +30,6 @@ function retryThis()
   document.location.href = duffUrl;
 }
 
-function searchThis()
-{
-  searchForThis(getDuffUrl());
-}
-
-function searchForThis(url)
-{
-  document.location.href = "http://www.google.com/search?q=" + url;
-}
-
 function fillIn()
 {
   var err = getErrorCode();
@@ -47,10 +37,11 @@ function fillIn()
   var i;
 
   // Fill in the title
-  var titleText =  "&" + err + ".title;";
-  document.title = titleText;
+  var et = document.getElementById("et_" + err);
+  if (et) {
+    et.className = "et_visible";
+  }
 
-// document.getElementById("title").innerHTML = "<p>bbb</p>";
 
 //  for (i = 0; i < t.childNodes.length; i++)
 //  {
@@ -75,6 +66,8 @@ function fillIn()
   }
 
   // Long description
-  var d = document.getElementById(err);
-  d.setAttribute("style", "display: block;");
+  var ld = document.getElementById("ld_" + err);
+  if (ld) {
+    ld.className = "ld_visible";
+  }
 }
