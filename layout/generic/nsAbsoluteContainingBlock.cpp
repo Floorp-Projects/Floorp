@@ -456,15 +456,17 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
 
     if (NS_AUTOOFFSET == kidReflowState.mComputedOffsets.left) {
       kidReflowState.mComputedOffsets.left = aContainingBlockWidth -
-        kidReflowState.mComputedOffsets.right - kidReflowState.mComputedMargin.right -
-        kidReflowState.mComputedBorderPadding.right - kidDesiredSize.width -
-        kidReflowState.mComputedMargin.left - kidReflowState.mComputedBorderPadding.left;
+                                             kidReflowState.mComputedOffsets.right -
+                                             kidReflowState.mComputedMargin.right -
+                                             kidDesiredSize.width -
+                                             kidReflowState.mComputedMargin.left;
     }
     if (NS_AUTOOFFSET == kidReflowState.mComputedOffsets.top) {
       kidReflowState.mComputedOffsets.top = aContainingBlockHeight -
-        kidReflowState.mComputedOffsets.bottom - kidReflowState.mComputedMargin.bottom -
-        kidReflowState.mComputedBorderPadding.bottom - kidDesiredSize.height -
-        kidReflowState.mComputedMargin.top - kidReflowState.mComputedBorderPadding.top;
+                                            kidReflowState.mComputedOffsets.bottom -
+                                            kidReflowState.mComputedMargin.bottom -
+                                            kidDesiredSize.height -
+                                            kidReflowState.mComputedMargin.top;
     }
   }
     

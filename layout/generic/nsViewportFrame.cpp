@@ -375,31 +375,27 @@ ViewportFrame::ReflowFixedFrame(nsIPresContext*          aPresContext,
   // Do the reflow
   rv = aKidFrame->Reflow(aPresContext, kidDesiredSize, kidReflowState, aStatus);
 
-  if (NS_AUTOOFFSET == kidReflowState.mComputedOffsets.left)
-    kidReflowState.mComputedOffsets.left = aReflowState.mComputedWidth -
-        kidReflowState.mComputedOffsets.right -
-        kidReflowState.mComputedMargin.right -
-        kidReflowState.mComputedBorderPadding.right -
-        kidDesiredSize.width -
-        kidReflowState.mComputedBorderPadding.left -
-        kidReflowState.mComputedMargin.left;
-  if (NS_AUTOOFFSET == kidReflowState.mComputedOffsets.top)
-    kidReflowState.mComputedOffsets.top = aReflowState.mComputedHeight -
-        kidReflowState.mComputedOffsets.bottom -
-        kidReflowState.mComputedMargin.bottom -
-        kidReflowState.mComputedBorderPadding.bottom -
-        kidDesiredSize.height -
-        kidReflowState.mComputedBorderPadding.top -
-        kidReflowState.mComputedMargin.top;
-
   // XXX If the child had a fixed height, then make sure it respected it...
   if (NS_AUTOHEIGHT != kidReflowState.mComputedHeight) {
     if (kidDesiredSize.height < kidReflowState.mComputedHeight) {
-      kidDesiredSize.height = kidReflowState.mComputedHeight;
-      kidDesiredSize.height += kidReflowState.mComputedBorderPadding.top +
-                               kidReflowState.mComputedBorderPadding.bottom;
+      kidDesiredSize.height = kidReflowState.mComputedHeight +
+                              kidReflowState.mComputedBorderPadding.top +
+                              kidReflowState.mComputedBorderPadding.bottom;
     }
   }
+
+  if (NS_AUTOOFFSET == kidReflowState.mComputedOffsets.left)
+    kidReflowState.mComputedOffsets.left = aReflowState.mComputedWidth -
+                                           kidReflowState.mComputedOffsets.right -
+                                           kidReflowState.mComputedMargin.right -
+                                           kidDesiredSize.width -
+                                           kidReflowState.mComputedMargin.left;
+  if (NS_AUTOOFFSET == kidReflowState.mComputedOffsets.top)
+    kidReflowState.mComputedOffsets.top = aReflowState.mComputedHeight -
+                                          kidReflowState.mComputedOffsets.bottom -
+                                          kidReflowState.mComputedMargin.bottom -
+                                          kidDesiredSize.height -
+                                          kidReflowState.mComputedMargin.top;
 
   // Position the child
   nsRect  rect(kidReflowState.mComputedOffsets.left + kidReflowState.mComputedMargin.left,
