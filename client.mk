@@ -48,6 +48,14 @@ TARGETS		= export libs install
 MKDIR		= mkdir
 SH			= /bin/sh
 
+ifndef MOZ_TOOLKIT
+MOZ_TOOLKIT	= USE_DEFAULT
+endif
+
+ifndef WITH_NSPR
+WITH_NSPR	= /usr/local/nspr
+endif
+
 -include $(DEPTH)/config/config.mk
 
 all: checkout
@@ -70,8 +78,8 @@ checkout:
 build:
 	PWD=`pwd`
 	(cd mozilla; $(AUTOCONF))
-	mkdir mozilla/$(OBJDIR)
-	(cd mozilla/$(OBJDIR); ../configure --with-nspr=$(WITH_NSPR))
+	if test ! -d mozilla/$(OBJDIR); then rm -rf mozilla/$(@OBJDIR); mkdir -D mozilla/$(OBJDIR); else true; fi
+	(cd mozilla/$(OBJDIR); ../configure --with-nspr=$(WITH_NSPR) --enable-toolkit=$(MOZ_TOOLKIT))
 	(cd mozilla/$(OBJDIR); gmake depend)
 	(cd mozilla/$(OBJDIR); gmake)
 
