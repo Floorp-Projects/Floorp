@@ -176,10 +176,6 @@ nsEventStateManager::PreHandleEvent(nsIPresContext& aPresContext,
   case NS_DRAGDROP_OVER:
     GenerateDragDropEnterExit(aPresContext, aEvent);
     break;
-  case NS_DRAGDROP_DROP:
-  case NS_DRAGDROP_EXIT:
-    GenerateDragDropEnterExit(aPresContext, aEvent);
-    break;
   case NS_GOTFOCUS:
     {
       nsIContent* newFocus;
@@ -486,6 +482,12 @@ nsEventStateManager::PostHandleEvent(nsIPresContext& aPresContext,
         }
       }
     }
+    break;
+  case NS_DRAGDROP_DROP:
+  case NS_DRAGDROP_EXIT:
+    // clean up after ourselves. make sure we do this _after_ the event, else we'll
+    // clean up too early!
+    GenerateDragDropEnterExit(aPresContext, aEvent);
     break;
   case NS_KEY_PRESS:
     if (nsEventStatus_eConsumeNoDefault != aStatus) {
