@@ -20,6 +20,7 @@ DEPTH=..\..
 IGNORE_MANIFEST=1
 MODULE=nsprefm
 DLL=.\$(OBJDIR)\$(MODULE).dll
+EXPORTS=nsPrefMigration.h
 
 DEFINES=-D_IMPL_NS_DOM 
 #        -DXP_MAC
