@@ -140,9 +140,9 @@ function doLoadForSSLCert()
   var notrustssl = document.getElementById("dontTrustSSLCert");
   if (certdb.getCertTrust(cert, nsIX509Cert.SERVER_CERT, 
                           nsIX509CertDB.TRUSTED_SSL)) {
-    trustssl.setAttribute("checked", "true");
+    trustssl.radioGroup.selectedItem = trustssl;
   } else {
-    notrustssl.setAttribute("checked", "true");
+    trustssl.radioGroup.selectedItem = notrustssl;
   }
 
   var xulWindow = document.getElementById("editWebsiteCert");
@@ -159,8 +159,7 @@ function doSSLOK()
 {
   var ssl = document.getElementById("trustSSLCert");
   //var checked = ssl.getAttribute("value");
-  var checked = ssl.getAttribute("checked");
-  var trustssl = (checked == "true") ? nsIX509CertDB.TRUSTED_SSL : 0;
+  var trustssl = ssl.selected ? nsIX509CertDB.TRUSTED_SSL : 0;
   //
   //  Set the cert trust
   //

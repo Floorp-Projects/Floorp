@@ -27,7 +27,6 @@
 
 <window id="cacertexists" 
   title="&caCertExists.title;"
-  xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   onload="setWindowName();">
 
@@ -36,12 +35,12 @@
 
 
   <vbox flex="1">
-    <html>&caCertExists.message;</html>
+    <description>&caCertExists.message;</description>
     
     <separator/>
 
     <hbox align="center">
-      <button id="ok-button" class="dialog" label="&ok.label;"
+      <button id="ok-button" label="&ok.label;"
               oncommand="doOK();"/> 
     </hbox>
     

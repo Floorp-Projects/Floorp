@@ -29,12 +29,10 @@
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <window id="ssl_warning" title="&newserver.title;"
-  xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   style="width: 30em; height: 16em"
   class="dialog"
-  onload="onLoad();"
-  orient="vertical">
+  onload="onLoad();">
 
 <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
 <script type="application/x-javascript" src="chrome://pippki/content/pippki.js"/>
@@ -44,27 +42,27 @@
 <keyset id="dialogKeys"/>
 
 <vbox flex="1">
-  <hbox valign="top" autostretch="never">
+  <hbox valign="top" align="center">
 
     <image class="alert-icon" style="margin: 5px"/>
     <vbox flex="1" valign="middle">
 
-      <html id="message"/>
+      <description id="message"/>
       <separator class="thin"/>
-      <html id="notRecognized"/>
+      <description id="notRecognized"/>
       <separator/>
 
-      <vbox autostretch="never" flex="1" align="right">
+      <vbox flex="1" align="start">
         <button id="examineCert-button" label="&examineCert.label;"
                 oncommand="viewCert();"/> 
       </vbox>
 
-      <checkbox checked="false" id="alwaysAccept" label="&alwaysAccept.label;"/>
+      <checkbox id="alwaysAccept" label="&alwaysAccept.label;"/>
 
     </vbox>
   </hbox>
 
-  <hbox id="okCancelHelpButtonsRight" flex="1" autostretch="never"/>
+  <hbox id="okCancelHelpButtonsRight" flex="1"/>
 </vbox>
 
 </window>

@@ -32,10 +32,8 @@
   %prefSslDTD;
 ]>
 
-<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        class="color-dialog"
-        orient="vertical" title="Security Preferences"
-        onload="parent.initPanel('chrome://pippki/content/pref-ssl.xul');">
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      onload="parent.initPanel('chrome://pippki/content/pref-ssl.xul');">
 
   <!-- List elements to manage for prefs -->
   <script type="application/x-javascript">
@@ -54,48 +52,40 @@
     <caption label="&SSLProtocolVersions;"/>
 
     <!-- Prefs -->
-    <vbox flex="1" autostretch="never" >
+    <vbox flex="1" align="start">
       <checkbox id="enableSSL2" label="&enable.ssl2;"
-                pref="true" preftype="bool" prefstring="security.enable_ssl2"
-                prefattribute="checked"/>
+                prefstring="security.enable_ssl2"/>
       <checkbox id="enableSSL3" label="&enable.ssl3;"
-                pref="true" preftype="bool" prefstring="security.enable_ssl3"
-                prefattribute="checked"/>
+                prefstring="security.enable_ssl3"/>
       <checkbox id="enableTLS" label="&enable.tls;"
-                pref="true" preftype="bool" prefstring="security.enable_tls"
-                prefattribute="checked"/>
+                prefstring="security.enable_tls"/>
     </vbox>
 
     <vbox halign="right">
-      <button class="dialog" label="&edit.sslciphers;"
+      <button label="&edit.sslciphers;"
               oncommand="window.openDialog('chrome://pippki/content/pref-ciphers.xul', '',
                              'modal=yes,resizable,chrome');"
               id="editSSLCiphersButton"
-              pref="true" preftype="bool" prefattribute="disabled"
               prefstring="security.disable_button.editSSLCiphers"/>
     </vbox>
 
   </groupbox>
 
-  <groupbox orient="vertical" autostretch="never">
+  <groupbox align="start">
     <caption label="&SSLWarnings;"/>
-    <html>&warn.description;</html>
+    <description>&warn.description;</description>
     <!-- Prefs -->
     <checkbox id="warnEnteringSecure" label="&warn.enteringsecure;"
-              pref="true" preftype="bool" prefstring="security.warn_entering_secure"
-              prefattribute="checked"/>
+              prefstring="security.warn_entering_secure"/>
     <checkbox id="warnEnteringWeak" label="&warn.enteringweak;"
-              pref="true" preftype="bool" prefstring="security.warn_entering_weak"
-              prefattribute="checked"/>
+              prefstring="security.warn_entering_weak"/>
     <checkbox id="warnLeavingSecure" label="&warn.leavingsecure;"
-              pref="true" preftype="bool" prefstring="security.warn_leaving_secure"
-              prefattribute="checked"/>
+              prefstring="security.warn_leaving_secure"/>
     <checkbox id="warnInsecurePost" label="&warn.insecurepost;"
-              pref="true" preftype="bool" prefstring="security.warn_submit_insecure"
-              prefattribute="checked"/>
+              prefstring="security.warn_submit_insecure"/>
     <checkbox id="warnViewMixed" label="&warn.viewmixed;"
-              pref="true" preftype="bool" prefstring="security.warn_viewing_mixed"
-              prefattribute="checked" checked="true"/>
+              prefstring="security.warn_viewing_mixed"
+              checked="true"/>
   </groupbox>
 
-</window>
+</page>

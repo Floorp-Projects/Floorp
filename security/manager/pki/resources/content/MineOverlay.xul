@@ -27,13 +27,12 @@
 <!DOCTYPE window SYSTEM "chrome://pippki/locale/certManager.dtd">
 
 <overlay id="MineOverlay" 
-         xmlns:html="http://www.w3.org/1999/xhtml" 
          xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" 
          xmlns:cert="http://netscape.com/rdf-cert#" 
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <vbox id="myCerts">
-    <html>&certmgr.mine;</html>
+    <description>&certmgr.mine;</description>
     <separator class="thin"/>
     <outliner id="user-outliner" multiple="true" enableColumnDrag="true"
               onselect="mine_enableButtons()" flex="1">

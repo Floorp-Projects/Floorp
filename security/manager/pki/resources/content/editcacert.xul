@@ -28,7 +28,6 @@
 
 <window id="editCaCert" 
         title="&certmgr.editcacert.title;"
-        xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="setWindowName();"
 >
@@ -40,15 +39,15 @@
 
 
   <vbox flex="1">
-    <html id="certmsg"/>
+    <description id="certmsg"/>
     <separator />
-    <html flex="100%">&certmgr.editcert.edittrust;</html>
+    <description flex="100%">&certmgr.editcert.edittrust;</description>
     <vbox flex="100%">
-      <checkbox label="&certmgr.editcert.trustssl;" checked="false" 
+      <checkbox label="&certmgr.editcert.trustssl;"
                 id="trustSSL"/>
-      <checkbox label="&certmgr.editcert.trustemail;" checked="false" 
+      <checkbox label="&certmgr.editcert.trustemail;"
                 id="trustEmail"/>
-      <checkbox label="&certmgr.editcert.trustobjsign;" checked="false" 
+      <checkbox label="&certmgr.editcert.trustobjsign;"
                 id="trustObjSign"/>
     </vbox>
 
@@ -59,11 +58,11 @@
     </keyset>
 
     <hbox>
-      <button id="ok-button" class="dialog" label="&certmgr.ok.label;"
+      <button id="ok-button" label="&certmgr.ok.label;"
               oncommand="doOK();"/> 
-      <button id="cancel-button" class="dialog" label="&certmgr.cancel.label;"
+      <button id="cancel-button" label="&certmgr.cancel.label;"
               oncommand="window.close();"/> 
-      <button id="help-button" class="dialog" label="&certmgr.help.label;"
+      <button id="help-button" label="&certmgr.help.label;"
               oncommand="openHelp('chrome://help/content/help.xul?edit_ca_certs');"/>
     </hbox>
   </vbox>

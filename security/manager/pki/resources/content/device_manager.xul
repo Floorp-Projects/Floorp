@@ -96,7 +96,7 @@
                 oncommand="changePassword();" disabled="true"/> 
         <button id="load_button" 
                 label="&devmgr.button.load.label;"
-                oncommand="doLoad();" disabled="false"/> 
+                oncommand="doLoad();"/> 
         <button id="unload_button" 
                 label="&devmgr.button.unload.label;"
                 oncommand="doUnload();" disabled="true"/> 
@@ -109,11 +109,9 @@
       <hbox>
         <button id="help_button" 
                 label="&help.label;" 
-                class="normal"
                 oncommand="openHelp('chrome://help/content/help.xul?sec_devices');"/> 
         <button id="ok_button" 
                 label="&ok.label;" 
-                class="normal" 
                 oncommand="window.close();"/> 
       </hbox>
     </row>

@@ -29,7 +29,7 @@
 
 <window id="pref-ciphers" title="&cipher.title;"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"      
-  onload="onLoad();" orient="vertical">
+  onload="onLoad();">
 
   <script type="application/x-javascript"><![CDATA[
     var prefs = null;
@@ -43,7 +43,7 @@
       prefs = Components.classes["@mozilla.org/preferences;1"].getService(nsIPref);
 
       // Enumerate each checkbox on this page and set value
-      var prefElements = document.getElementsByAttribute("pref", "true");
+      var prefElements = document.getElementsByAttribute("prefstring", "*");
       for (var i = 0; i < prefElements.length; i++) {
         var element = prefElements[i];
         var prefString = element.getAttribute("prefstring");
@@ -65,7 +65,7 @@
      // Save the prefs
      try {
       // Enumerate each checkbox on this page and save the value
-      var prefElements = document.getElementsByAttribute("pref", "true");
+      var prefElements = document.getElementsByAttribute("prefstring", "true");
       for (var i = 0; i < prefElements.length; i++) {
         var element = prefElements[i];
         var prefString = element.getAttribute("prefstring");
@@ -90,46 +90,46 @@
 
   <vbox style="overflow: hidden;" flex="1">
 
-  <groupbox orient="vertical" autostretch="never">
+  <groupbox align="start">
     <caption label="&cipher.ssl2.label;"/>
 
-    <checkbox label="&cipher.ssl2.rc4_128;" pref="true"
+    <checkbox label="&cipher.ssl2.rc4_128;"
               prefstring="security.ssl2.rc4_128"/>
-    <checkbox label="&cipher.ssl2.rc2_128;" pref="true"
+    <checkbox label="&cipher.ssl2.rc2_128;"
               prefstring="security.ssl2.rc2_128"/>
-    <checkbox label="&cipher.ssl2.des_ede3_192;" pref="true"
+    <checkbox label="&cipher.ssl2.des_ede3_192;"
               prefstring="security.ssl2.des_ede3_192"/>
-    <checkbox label="&cipher.ssl2.des_64;" pref="true"
+    <checkbox label="&cipher.ssl2.des_64;"
               prefstring="security.ssl2.des_64"/>
-    <checkbox label="&cipher.ssl2.rc4_40;" pref="true"
+    <checkbox label="&cipher.ssl2.rc4_40;"
               prefstring="security.ssl2.rc4_40"/>
-    <checkbox label="&cipher.ssl2.rc2_40;" pref="true"
+    <checkbox label="&cipher.ssl2.rc2_40;"
               prefstring="security.ssl2.rc2_40"/>
 
   </groupbox>
 
-  <groupbox orient="vertical" autostretch="never">
+  <groupbox align="start">
     <caption label="&cipher.ssl3.label;"/>
 
-    <checkbox label="&cipher.ssl3.rsa_rc4_128_md5;" pref="true"
+    <checkbox label="&cipher.ssl3.rsa_rc4_128_md5;"
               prefstring="security.ssl3.rsa_rc4_128_md5"/>
-    <checkbox label="&cipher.ssl3.rsa_fips_des_ede3_sha;" pref="true"
+    <checkbox label="&cipher.ssl3.rsa_fips_des_ede3_sha;"
               prefstring="security.ssl3.rsa_fips_des_ede3_sha"/>
-    <checkbox label="&cipher.ssl3.rsa_des_ede3_sha;" pref="true"
+    <checkbox label="&cipher.ssl3.rsa_des_ede3_sha;"
               prefstring="security.ssl3.rsa_des_ede3_sha"/>
-    <checkbox label="&cipher.ssl3.rsa_fips_des_sha;" pref="true"
+    <checkbox label="&cipher.ssl3.rsa_fips_des_sha;"
               prefstring="security.ssl3.rsa_fips_des_sha"/>
-    <checkbox label="&cipher.ssl3.rsa_des_sha;" pref="true"
+    <checkbox label="&cipher.ssl3.rsa_des_sha;"
               prefstring="security.ssl3.rsa_des_sha"/>
-    <checkbox label="&cipher.ssl3.rsa_1024_rc4_56_sha;" pref="true"
+    <checkbox label="&cipher.ssl3.rsa_1024_rc4_56_sha;"
               prefstring="security.ssl3.rsa_1024_rc4_56_sha"/>
-    <checkbox label="&cipher.ssl3.rsa_1024_des_cbc_sha;" pref="true"
+    <checkbox label="&cipher.ssl3.rsa_1024_des_cbc_sha;"
               prefstring="security.ssl3.rsa_1024_des_cbc_sha"/>
-    <checkbox label="&cipher.ssl3.rsa_rc4_40_md5;" pref="true"
+    <checkbox label="&cipher.ssl3.rsa_rc4_40_md5;"
               prefstring="security.ssl3.rsa_rc4_40_md5"/>
-    <checkbox label="&cipher.ssl3.rsa_rc2_40_md5;" pref="true"
+    <checkbox label="&cipher.ssl3.rsa_rc2_40_md5;"
               prefstring="security.ssl3.rsa_rc2_40_md5"/>
-    <checkbox label="&cipher.ssl3.rsa_null_md5;" pref="true"
+    <checkbox label="&cipher.ssl3.rsa_null_md5;"
               prefstring="security.ssl3.rsa_null_md5"/>
   </groupbox>
 

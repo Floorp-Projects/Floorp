@@ -27,13 +27,12 @@
 <!DOCTYPE window SYSTEM "chrome://pippki/locale/certManager.dtd">
 
 <overlay id="WebSitesOverlay" 
-         xmlns:html="http://www.w3.org/1999/xhtml" 
          xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" 
          xmlns:cert="http://netscape.com/rdf-cert#" 
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <vbox id="webCerts">
-    <html>&certmgr.websites;</html>
+    <description>&certmgr.websites;</description>
     <separator class="thin"/>
     <outliner id="server-outliner" multiple="true" enableColumnDrag="true"
               onselect="websites_enableButtons()" flex="1">
@@ -48,18 +47,18 @@
       <outlinerbody flex="1" ondblclick="viewCerts();"/>
     </outliner>
     <hbox>
-      <button id="websites_viewButton" class="normal" 
+      <button id="websites_viewButton"
               label="&certmgr.view.label;"
               disabled="true" oncommand="viewCerts();"/>
-      <button id="websites_editButton" class="normal" 
+      <button id="websites_editButton"
               label="&certmgr.edit.label;"
               disabled="true" oncommand="editCerts();"/>
 <!-- future - import a DER cert?
-      <button id="websites_addButton" class="normal" 
+      <button id="websites_addButton"
               label="&certmgr.add.label;"
               oncommand="addCerts();"/>
 -->
-      <button id="websites_deleteButton" class="normal" 
+      <button id="websites_deleteButton"
               label="&certmgr.delete.label;"
               disabled="true" oncommand="deleteCerts();"/>
     </hbox>

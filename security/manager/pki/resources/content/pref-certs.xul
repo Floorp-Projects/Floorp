@@ -34,10 +34,8 @@
   %prefSslDTD;
 ]>
 
-<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        class="color-dialog"
-        orient="vertical" title="certs.title;"
-        onload="parent.initPanel('chrome://pippki/content/pref-certs.xul');">
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      onload="parent.initPanel('chrome://pippki/content/pref-certs.xul');">
 
   <!-- List elements to manage for prefs -->
   <script type="application/x-javascript" src="chrome://pippki/content/pref-security.js"/>
@@ -50,41 +48,39 @@
   <!-- Fancy panel header -->
   <hbox class="box-smallheader" title="&certs.label;"/>
 
-  <groupbox orient="vertical" autostretch="never">
+  <groupbox align="start">
     <caption label="&SSLClientAuthMethod;"/>
-    <html> &certselect.description; </html>
+    <description> &certselect.description; </description>
     <!-- Prefs -->
-    <radiogroup id="certSelection" orient="horizontal" pref="true" preftype="string" 
-	        prefstring="security.default_personal_cert" prefattribute="value">
-    <radio group="certSelection" label="&certselect.auto;" value="Select Automatically"/>
-    <radio group="certSelection" label="&certselect.ask;" value="Ask Every Time"/>
+    <radiogroup id="certSelection" orient="horizontal" preftype="string" 
+	        prefstring="security.default_personal_cert">
+    <radio label="&certselect.auto;" value="Select Automatically"/>
+    <radio label="&certselect.ask;" value="Ask Every Time"/>
     </radiogroup>
   </groupbox>
 
   <!-- Certificate manager -->
-  <groupbox orient="vertical">
+  <groupbox>
     <caption label="&managecerts.label;"/>
-    <html>&managecerts.text;</html>
-    <hbox autostretch="never">
-      <button class="dialog" label="&managecerts.button;" disabled="false"
+    <description>&managecerts.text;</description>
+    <hbox align="center">
+      <button label="&managecerts.button;"
               oncommand="openCertManager();" 
               id="openCertManagerButton"
-              pref="true" preftype="bool" prefattribute="disabled"
               prefstring="security.disable_button.openCertManager"/>
     </hbox>
   </groupbox>
 
   <!-- Device manager -->
-  <groupbox orient="vertical">
+  <groupbox>
     <caption label="&managedevices.label;"/>
-    <html>&managedevices.text;</html>
-    <hbox autostretch="never">
-      <button class="dialog" label="&managedevices.button;" disabled="false"
+    <description>&managedevices.text;</description>
+    <hbox align="center">
+      <button label="&managedevices.button;"
               oncommand="openDeviceManager();"
               id="openDeviceManagerButton"
-              pref="true" preftype="bool" prefattribute="disabled"
               prefstring="security.disable_button.openDeviceManager"/>
     </hbox>
   </groupbox>
 
-</window>
+</page>

@@ -39,31 +39,31 @@
 
 
   <vbox flex="1">
-    <html id="certmsg"/>
-    <html id="issuer"/>
+    <description id="certmsg"/>
+    <description id="issuer"/>
     <separator/>
-    <html id="explainations"/>
+    <description id="explainations"/>
     <separator />
-    <html>&certmgr.editsslcert.edittrust;</html>
+    <description>&certmgr.editsslcert.edittrust;</description>
     <vbox>
-      <radiogroup id="sslTrustGroup" orient="vertical" flex="1">
+      <radiogroup id="sslTrustGroup" flex="1">
         <radio label="&certmgr.editsslcert.dotrust;"
-               id="trustSSLCert" group="sslTrustGroup"/>
+               id="trustSSLCert"/>
         <radio label="&certmgr.editsslcert.donttrust;"
-               id="dontTrustSSLCert" group="sslTrustGroup"/>
+               id="dontTrustSSLCert"/>
       </radiogroup>
     </vbox>
     <hbox>
-      <button id="editca-button" class="dialog" label="&certmgr.editca.label;"
+      <button id="editca-button" label="&certmgr.editca.label;"
             oncommand="editCaTrust();"/> 
     </hbox>
 
     <hbox> 
-      <button id="ok-button" class="dialog" label="&certmgr.ok.label;"
+      <button id="ok-button" label="&certmgr.ok.label;"
               oncommand="doSSLOK();"/> 
-      <button id="cancel-button" class="dialog" label="&certmgr.cancel.label;"
+      <button id="cancel-button" label="&certmgr.cancel.label;"
               oncommand="window.close();"/> 
-      <button id="help-button" class="dialog" label="&certmgr.help.label;"
+      <button id="help-button" label="&certmgr.help.label;"
               oncommand="openHelp('chrome://help/content/help.xul?edit_web_certs');"/>
     </hbox>
   </vbox>

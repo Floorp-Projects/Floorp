@@ -44,7 +44,6 @@
 
 
 <window id="certPicker" title="&certPicker.defaultTitle;"
-  xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"      
   onload="onLoad();">
 
@@ -58,8 +57,8 @@
 </keyset>
 
 <vbox style="margin: 5px;">
-    <groupbox orient="vertical">
-    <html id="pickerInfo" style="font-weight: bold;">&certPicker.defaultInfo;</html>
+    <groupbox>
+    <description id="pickerInfo" style="font-weight: bold;">&certPicker.defaultInfo;</description>
     <broadcaster id="certSelected" oncommand="onCertSelected();"/>
     <!-- The items in this menulist must never be sorted,
          but remain in the order filled by the application
@@ -67,15 +66,15 @@
     <menulist id="nicknames" observes="certSelected">
         <menupopup/>
     </menulist>
-    <html>&certPicker.detailsLabel;</html>
+    <label value="certPicker.detailsLabel;"/>
     <textbox readonly="true" id="details" multiline="true"
       style="height: 11em; width=80em;"/>
     </groupbox>
   <separator class="thin"/>
   <hbox>
-  <button id="ok-button" class="dialog" label="&ok.label;"
-          oncommand="doOK();" disabled="false"/> 
-  <button id="cancel-button" class="dialog" label="&cancel.label;"
+  <button id="ok-button" label="&ok.label;"
+          oncommand="doOK();"/> 
+  <button id="cancel-button" label="&cancel.label;"
           oncommand="doCancel();"/> 
   </hbox>
 </vbox>

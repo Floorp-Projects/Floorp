@@ -17,9 +17,7 @@
 
 <window
   id="domainMismatch" title="&createCertInfo.title;"
-  xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"      
-  debug="false"
   onload="onLoad();"
   onclose="onClose();"
 >
@@ -28,11 +26,11 @@
 <script type="application/x-javascript" src="createCertInfo.js" />
 <script type="application/x-javascript" src="chrome://help/content/help.js" />
 
-<box orient="vertical" style="margin: 5px; max-width: 50em;">
+<vbox style="margin: 5px; max-width: 50em;">
 
-  <html>&createCertInfo.msg1;</html>
+  <description>&createCertInfo.msg1;</description>
   <separator/>
-  <html style="font-weight: bold; text-align: center; text-decoration: blink;">&createCertInfo.msg2;</html>
+  <description style="font-weight: bold; text-align: center; text-decoration: blink;">&createCertInfo.msg2;</description>
   <separator/>
 
 </box>
