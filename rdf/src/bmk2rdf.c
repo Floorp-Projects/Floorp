@@ -256,7 +256,7 @@ newFolderBkItem(RDFFile f, char* token)
 void
 newLeafBkItem (RDFFile f, char* token)
 {
-  char			buffer[128];
+  /*  char			buffer[128]; */
   struct tm		*time;
   uint32		dateVal;
   char* url = NULL;

@@ -60,11 +60,11 @@ public:
                       PRBool tv,
                       RDF_Resource *source /* out */);
 
-  NS_METHOD GetSources(RDF_Node target,
+  NS_METHOD GetSources(RDF_Resource target,
                        RDF_Resource arcLabel,
                        nsIRDFCursor **sources /* out */);
 
-  NS_METHOD GetSources(RDF_Node target,
+  NS_METHOD GetSources(RDF_Resource target,
                        RDF_Resource arcLabel,
                        PRBool tv,
                        nsIRDFCursor **sources /* out */);
@@ -160,8 +160,12 @@ public:
   rdfServiceWrapper();
   ~rdfServiceWrapper();
 
-  NS_METHOD CreateDatabase(const RDF_String* url,
+  NS_METHOD CreateDatabase(const char** url,
                            nsIRDFDataBase** db);
+
+  NS_IMETHOD ResourceIdentifier(RDF_Resource r,
+                            char**   url /* out */);
+
 
 };
 
@@ -292,7 +296,7 @@ rdfDatabaseWrapper::GetSource(RDF_Node target,
 }
 
 NS_METHOD
-rdfDatabaseWrapper::GetSources(RDF_Node target,
+rdfDatabaseWrapper::GetSources(RDF_Resource target,
                                RDF_Resource arcLabel,
                                nsIRDFCursor **sources /* out */)
 {
@@ -300,7 +304,7 @@ rdfDatabaseWrapper::GetSources(RDF_Node target,
 }
 
 NS_METHOD
-rdfDatabaseWrapper::GetSources(RDF_Node target,
+rdfDatabaseWrapper::GetSources(RDF_Resource target,
                                RDF_Resource arcLabel,
                                PRBool tv,
                                nsIRDFCursor **sources /* out */)
@@ -312,7 +316,7 @@ rdfDatabaseWrapper::GetSources(RDF_Node target,
   *sources = 0;
 
   RDF_Cursor c = RDF_GetSources( mRDF,
-                                 target->value.r,
+                                 target,
                                  arcLabel,
                                  RDF_RESOURCE_TYPE, // anything else makes no sense
                                  tv );
@@ -556,7 +560,7 @@ rdfServiceWrapper::~rdfServiceWrapper()
 }
 
 NS_METHOD
-rdfServiceWrapper::CreateDatabase(const RDF_String* url_ary,
+rdfServiceWrapper::CreateDatabase(const char** url_ary,
                                   nsIRDFDataBase **db)
 {
   PR_ASSERT( 0 != db );
@@ -576,6 +580,20 @@ rdfServiceWrapper::CreateDatabase(const RDF_String* url_ary,
 
   return result;
 }
+
+NS_METHOD
+rdfServiceWrapper::ResourceIdentifier(RDF_Resource r,
+                                      char** url)
+{
+  char* resourceID(RDF_Resource r);
+  PR_ASSERT( 0 != r );
+  if( 0 == r )
+    return NS_ERROR_NULL_POINTER;
+  *url = RDF_ResourceID(r);
+  return NS_OK;
+}
+  
+
 
 /*
 

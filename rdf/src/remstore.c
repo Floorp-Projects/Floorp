@@ -47,10 +47,10 @@ MakeRemoteStore (char* url)
 RDFT
 MakeFileDB (char* url)
 {
-  if (RDF_STRCHR(url, ':')) {
+  if (RDF_STRCHR(url, ':') || endsWith(".rdf", url)) {
     RDFT ntr = NewRemoteStore(url);
     ntr->possiblyAccessFile = RDFFilePossiblyAccessFile ;
-    if (RDF_STRCMP(gNavCntrUrl, url) == 0) 
+    if ((RDF_STRCMP(gNavCntrUrl, url) == 0) || 1) /* just for testing */
       readRDFFile(url, RDF_GetResource(NULL, url, 1), 0, ntr); 
     return ntr;
   } else return NULL;
@@ -643,7 +643,7 @@ readRDFFile (char* url, RDF_Resource top, PRBool localp, RDFT db)
 RDFFile 
 makeNewRDFFile (char* url, RDF_Resource top, PRBool localp, RDFT db)
 {
-  if ((!strstr(url, ":/")) ||
+  if ( /*(!strstr(url, ":/")) || */
       (fileReadp(db, url, true))) {
     return NULL;
   } else {

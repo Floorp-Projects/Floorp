@@ -429,7 +429,10 @@ resourceType (RDF_Resource r)
  return r->type;
 }
 
-
+PR_PUBLIC_API(char*) 
+RDF_ResourceID(RDF_Resource u) {
+  return u->url;
+}
 
 void
 setResourceType (RDF_Resource r, uint8 val)
