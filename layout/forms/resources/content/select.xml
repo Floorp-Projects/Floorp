@@ -66,6 +66,8 @@
 
            if (!b.selection.isSelected(row.value)) {
              b.selection.select(row.value);
+             if ("onchange" in this)
+               this.onchange();
            }
          }
       ]]>
@@ -92,6 +94,8 @@
            b.selection.toggleSelect(row.value);
            b.selection.currentIndex = row.value;
          }
+         if ("onchange" in this)
+           this.onchange();
          else {
           /* We want to deselect all the selected items except what was
             clicked, UNLESS it was a right-click.  We have to do this
@@ -101,8 +105,11 @@
            // if the last row has changed in between the time we 
            // mousedown and the time we click, don't fire the select handler.
            // see bug #92366
-           if (this._lastSelectedRow == row.value)
+           if (this._lastSelectedRow == row.value) {
              b.selection.select(row.value);  
+             if ("onchange" in this)
+               this.onchange(); 
+           }
          }
       ]]>
       </handler>
@@ -159,6 +166,8 @@
           this.selectionTail = -1;
           this.outlinerBoxObject.selection.timedSelect(c-1, 500);
           this.outlinerBoxObject.ensureRowIsVisible(c-1);
+          if ("onchange" in this)
+            this.onchange();
          ]]>
       </handler>
       <handler event="keypress" keycode="vk_down">
@@ -172,6 +181,8 @@
           this.selectionTail = -1;
           this.outlinerBoxObject.selection.timedSelect(c+1, 500);
           this.outlinerBoxObject.ensureRowIsVisible(c+1);
+          if ("onchange" in this)
+            this.onchange();
          ]]>
       </handler>
       <handler event="keypress" keycode="vk_up" modifiers="shift">
@@ -198,6 +209,8 @@
           }
           this.selectionTail = c - 1;
           this.outlinerBoxObject.ensureRowIsVisible(c - 1);
+          if ("onchange" in this)
+            this.onchange();
          ]]>
       </handler>
       <handler event="keypress" keycode="vk_down" modifiers="shift">
@@ -224,6 +237,8 @@
           }
           this.selectionTail = c + 1;
           this.outlinerBoxObject.ensureRowIsVisible(c + 1);
+          if ("onchange" in this)
+            this.onchange();
          ]]>
       </handler>
       <handler event="keypress" keycode="vk_up" modifiers="control">
@@ -266,6 +281,8 @@
             this.outlinerBoxObject.scrollByPages(-1);
           }
           this.outlinerBoxObject.selection.timedSelect(i, 500);
+          if ("onchange" in this)
+            this.onchange();
          ]]>
       </handler>
       <handler event="keypress" keycode="vk_page_down">
@@ -289,6 +306,8 @@
             this.outlinerBoxObject.scrollByPages(1);
           }
           this.outlinerBoxObject.selection.timedSelect(i, 500);
+          if ("onchange" in this)
+            this.onchange();
          ]]>
       </handler>
       <handler event="keypress" keycode="vk_page_up" modifiers="shift">
@@ -329,6 +348,8 @@
             this.outlinerBoxObject.selection.rangedSelect(c, i, true);
           }
           this.selectionTail = i;
+          if ("onchange" in this)
+            this.onchange();
          ]]>
       </handler>
       <handler event="keypress" keycode="vk_page_down" modifiers="shift">
@@ -371,6 +392,8 @@
             this.outlinerBoxObject.selection.rangedSelect(c, i, true);
           }
           this.selectionTail = i;
+          if ("onchange" in this)
+            this.onchange();
          ]]>
       </handler>
       <handler event="keypress" keycode="vk_page_up" modifiers="control">
@@ -422,6 +445,8 @@
           this.selectionTail = -1;
           this.outlinerBoxObject.selection.timedSelect(0, 500);
           this.outlinerBoxObject.ensureRowIsVisible(0);
+          if ("onchange" in this)
+            this.onchange();
          ]]>
       </handler>
       <handler event="keypress" keycode="vk_end">
@@ -434,6 +459,8 @@
           this.selectionTail = -1;
           this.outlinerBoxObject.selection.timedSelect(l, 500);
           this.outlinerBoxObject.ensureRowIsVisible(l);
+          if ("onchange" in this)
+            this.onchange();
          ]]>
       </handler>
       <handler event="keypress" keycode="vk_home" modifiers="shift">
@@ -451,6 +478,8 @@
           this.outlinerBoxObject.selection.rangedSelect(c, 0, true);
           this.selectionTail = 0;
           this.outlinerBoxObject.ensureRowIsVisible(0);
+          if ("onchange" in this)
+            this.onchange();
          ]]>
       </handler>
       <handler event="keypress" keycode="vk_end" modifiers="shift">
@@ -469,6 +498,8 @@
           this.outlinerBoxObject.selection.rangedSelect(c, l, true);
           this.selectionTail = l;
           this.outlinerBoxObject.ensureRowIsVisible(l);
+          if ("onchange" in this)
+            this.onchange();
          ]]>
       </handler>
       <handler event="keypress" keycode="vk_home" modifiers="control">
@@ -495,8 +526,11 @@
           event.preventDefault();
           if (event.keyCode == ' ') {
             var c = this.currentIndex;
-            if (!this.outlinerBoxObject.selection.isSelected(c))
+            if (!this.outlinerBoxObject.selection.isSelected(c)) {
               this.outlinerBoxObject.selection.toggleSelect(c);
+              if ("onchange" in this)
+                this.onchange();
+            }
           }
           ]]>
       </handler>
