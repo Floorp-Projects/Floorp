@@ -20,6 +20,7 @@
 
 package org.mozilla.javascript;
 
+import java.beans.*;
 import java.io.*;
 import java.util.Enumeration;
 import java.util.Hashtable;
@@ -58,7 +59,9 @@ import java.lang.reflect.*;
  */
 
 public final class Context {
-
+    public static String languageVersionProperty = "language version";
+    public static String errorReporterProperty   = "error reporter";
+    
     /**
      * Create a new Context.
      *
@@ -224,6 +227,11 @@ public final class Context {
      * @param version the version as specified by VERSION_1_0, VERSION_1_1, etc.
      */
     public void setLanguageVersion(int version) {
+        if (listeners != null && version != this.version) {
+            firePropertyChange(languageVersionProperty, 
+                               new Integer(this.version), 
+                               new Integer(version));
+        }
         this.version = version;
     }
 
@@ -253,10 +261,12 @@ public final class Context {
      * @see org.mozilla.javascript.ErrorReporter
      */
     public ErrorReporter getErrorReporter() {
-        if (null != debug_errorReporterHook)
+        if (debug_errorReporterHook != null) {
             return debug_errorReporterHook;
-        if (errorReporter == null)
+        }
+        if (errorReporter == null) {
             errorReporter = new DefaultErrorReporter();
+        }
         return errorReporter;
     }
 
@@ -270,6 +280,10 @@ public final class Context {
         if (null != debug_errorReporterHook)
             return debug_errorReporterHook.setErrorReporter(reporter);
         ErrorReporter result = errorReporter;
+        if (listeners != null && errorReporter != reporter) {
+            firePropertyChange(errorReporterProperty, errorReporter, 
+                               reporter);
+        }
         errorReporter = reporter;
         return result;
     }
@@ -298,6 +312,53 @@ public final class Context {
         return result;
     }
     
+    /**
+     * Register an object to receive notifications when a bound property
+     * has changed
+     * @see java.beans.PropertyChangeEvent
+     * @see #removePropertyChangeListener(java.beans.PropertyChangeListener)
+     * @param  listener  the listener
+     */
+    public void addPropertyChangeListener(PropertyChangeListener listener) {
+        if (listeners == null) {
+            listeners = new ListenerCollection();
+        }    
+        listeners.addListener(listener);
+    }
+    
+    /**
+     * Remove an object from the list of objects registered to receive 
+     * notification of changes to a bounded property
+     * @see java.beans.PropertyChangeEvent
+     * @see #addPropertyChangeListener(java.beans.PropertyChangeListener)
+     * @param listener  the listener
+     */
+    public void removePropertyChangeListener(PropertyChangeListener listener) {
+        listeners.removeListener(listener);
+    }
+    
+    /**
+     * Notify any registered listeners that a bounded property has changed
+     * @see #addPropertyChangeListener(java.beans.PropertyChangeListener)
+     * @see #removePropertyChangeListener(java.beans.PropertyChangeListener)
+     * @see java.beans.PropertyChangeListener
+     * @see java.beans.PropertyChangeEvent
+     * @param  property  the bound property
+     * @param  oldValue  the old value
+     * @param  newVale   the new value
+     */
+    protected void firePropertyChange(String property, Object oldValue,
+                                      Object newValue) {
+            Class listenerClass = java.beans.PropertyChangeListener.class;
+            Object[] listenerList = listeners.getListeners(listenerClass);
+            for(int i = 0; i < listenerList.length; i++) {
+                PropertyChangeListener l = 
+                    (PropertyChangeListener)listenerList[i];    
+                l.propertyChange(new PropertyChangeEvent(
+                    this, property, oldValue, newValue));
+            }
+    }
+                                    
     /**
      * Report a warning using the error reporter for the current thread.
      *
@@ -1389,7 +1450,7 @@ public final class Context {
             debugLevel = 0;
         else if (debugLevel > 9)
             debugLevel = 9;
-        if(debugLevel > 0)
+        if (debugLevel > 0)
             setOptimizationLevel(0);
         this.debugLevel = (byte) debugLevel;
         return result;
@@ -1698,5 +1759,6 @@ public final class Context {
     private DeepErrorReporterHook debug_errorReporterHook;
     private byte debugLevel;
     private int enterCount;
+    private ListenerCollection listeners;
 }
 
