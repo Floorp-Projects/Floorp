@@ -284,7 +284,7 @@ public class AddressBook extends JFrame {
     class NewCard extends UIAction {
         NewCard() {
             super(newCardTag);
-            setEnabled(true);
+            this.setEnabled(true);
         }
 
         public void actionPerformed(ActionEvent e) {
@@ -299,7 +299,7 @@ public class AddressBook extends JFrame {
     class SaveAs extends UIAction {
         SaveAs() {
             super(saveAsTag);
-            setEnabled(true);
+            this.setEnabled(true);
         }
         public void actionPerformed(ActionEvent ae) {
             NewCardDialog aDialog = new NewCardDialog(getParentFrame());
@@ -313,7 +313,7 @@ public class AddressBook extends JFrame {
     class CloseWindow extends UIAction {
         CloseWindow() {
             super(closeWindowTag);
-            setEnabled(true);
+            this.setEnabled(true);
         }
 
         public void actionPerformed(ActionEvent e) {
@@ -332,7 +332,7 @@ public class AddressBook extends JFrame {
     class Undo extends UIAction {
         Undo() {
             super(undoTag);
-            setEnabled(true);
+            this.setEnabled(true);
         }
         public void actionPerformed(ActionEvent e) {}
     }
@@ -343,7 +343,7 @@ public class AddressBook extends JFrame {
     class HideMessageToolbar extends UIAction {
         HideMessageToolbar() {
             super(hideMessageToolbarTag);
-            setEnabled(true);
+            this.setEnabled(true);
         }
 
         public void actionPerformed(ActionEvent e) {}
@@ -354,7 +354,7 @@ public class AddressBook extends JFrame {
     class Search extends UIAction {
         Search() {
             super(newListTag);
-            setEnabled(true);
+            this.setEnabled(true);
         }
 
         public void actionPerformed(ActionEvent e) {
@@ -583,7 +583,7 @@ System.out.println ("Done.");
     class StatusBar extends JPanel {
         public StatusBar() {
             super();
-                setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
+                this.setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
         }
 
         public void paint(Graphics g) {
@@ -600,7 +600,7 @@ System.out.println ("Done.");
                 //super(true);
 
             setBorder (new EmptyBorder(10,10,10,10));
-                setLayout (new BorderLayout(10, 5));
+                this.setLayout (new BorderLayout(10, 5));
 
             add(createSearchPane(aDataSourceList), BorderLayout.NORTH);
             add(createTable(),      BorderLayout.CENTER);

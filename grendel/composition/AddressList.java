@@ -137,7 +137,7 @@ public class AddressList extends JScrollPane implements Serializable {
 
         public AddressPanel () {
             super();
-            setLayout (null);
+            this.setLayout (null);
 
             //vector for holding addressee list.
             mAddressees = new Vector();
@@ -430,7 +430,7 @@ public class AddressList extends JScrollPane implements Serializable {
 
         public AddressLine (Addressee aAddressee) {
             super();
-            setLayout (null);   //see doLayout.
+            this.setLayout (null);   //see doLayout.
 
             //left side delivery button ("To:")
             mDeliveryButton = new DeliveryButton (aAddressee.getDelivery());

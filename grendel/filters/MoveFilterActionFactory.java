@@ -42,7 +42,7 @@ implements IFilterActionFactory {
         private Folder fTargetFolder;
 
         // constructors
-    private MoveFilterAction(Folder folder) {
+    protected MoveFilterAction(Folder folder) {
           fTargetFolder = folder;
         }
 

@@ -33,7 +33,7 @@ public final class Atom {
   /**
    * Private constructor used by static allocators.
    */
-  private Atom(String aString, int aHashCode) {
+  protected Atom(String aString, int aHashCode) {
     fString = aString;
     fHashCode = aHashCode;
   }

@@ -121,7 +121,7 @@ public class AttachmentsList extends JScrollPane implements Serializable {
             super ();
 
             //do your own layout.
-            setLayout (null);
+            this.setLayout (null);
 
             //Get your own mouse events.
             //  used to diaply file dialog when mouse down on background.
