@@ -78,6 +78,7 @@
 #include "nsIPref.h"
 #include "nsIPresShell.h"
 #include "nsIPrivateDOMEvent.h"
+#include "nsIProgrammingLanguage.h"
 #include "nsIAuthPrompt.h"
 #include "nsIServiceManager.h"
 #include "nsIScriptGlobalObjectOwner.h"
@@ -145,8 +146,8 @@ GlobalWindowImpl::GlobalWindowImpl() :
   mScrollbars(nsnull), mTimeouts(nsnull), mTimeoutInsertionPoint(&mTimeouts),
   mRunningTimeout(nsnull), mTimeoutPublicIdCounter(1), mTimeoutFiringDepth(0),
   mTimeoutsWereCleared(PR_FALSE), mFirstDocumentLoad(PR_TRUE),
-  mIsScopeClear(PR_TRUE), mGlobalObjectOwner(nsnull), mDocShell(nsnull),
-  mMutationBits(0), mChromeEventHandler(nsnull)
+  mIsScopeClear(PR_TRUE), mIsDocumentLoaded(PR_FALSE), mGlobalObjectOwner(nsnull),
+  mDocShell(nsnull), mMutationBits(0), mChromeEventHandler(nsnull)
 {
   NS_INIT_REFCNT();
   // We could have failed the first time through trying
@@ -578,6 +579,10 @@ NS_IMETHODIMP GlobalWindowImpl::HandleDOMEvent(nsIPresContext* aPresContext,
     }
   }
 
+  if (aEvent->message == NS_PAGE_UNLOAD) {
+    mIsDocumentLoaded = PR_FALSE;
+  }
+
   // Capturing stage
   if ((NS_EVENT_FLAG_BUBBLE != aFlags) && mChromeEventHandler) {
     // Check chrome document capture here.
@@ -599,6 +604,9 @@ NS_IMETHODIMP GlobalWindowImpl::HandleDOMEvent(nsIPresContext* aPresContext,
     aEvent->flags &= ~aFlags;
   }
 
+  if (aEvent->message == NS_PAGE_LOAD)
+    mIsDocumentLoaded = PR_TRUE;
+
   // Bubbling stage
   if ((NS_EVENT_FLAG_CAPTURE != aFlags) && mChromeEventHandler) {
     // Bubble to a chrome document if it exists
@@ -614,6 +622,7 @@ NS_IMETHODIMP GlobalWindowImpl::HandleDOMEvent(nsIPresContext* aPresContext,
                                              aEventStatus);
     }
   }
+
 
   if (NS_EVENT_FLAG_INIT & aFlags) {
     // We're leaving the DOM event loop so if we created an event,
@@ -2221,6 +2230,27 @@ NS_IMETHODIMP GlobalWindowImpl::SetCursor(const nsAReadableString& aCursor)
   return ret;
 }
 
+/*
+ * Examine the current document state to see if we're in a way that is typically
+ * abused by web designers.  This routine returns PR_TRUE if we're running a top
+ * level script, running an onload or onunload handler, or running a timeout.
+ * The window.open code uses this routine to determine wether or not to allow
+ * the new window.
+ */
+PRBool
+GlobalWindowImpl::CheckForAbusePoint ()
+{
+  if (!mIsDocumentLoaded || mRunningTimeout) {
+#ifdef DEBUG
+    printf ("*** Scripts executed during (un)load or as a result of "
+            "setTimeout() are potential javascript abuse points.\n");
+#endif
+    return PR_TRUE;
+  }
+  
+  return PR_FALSE;
+}
+
 NS_IMETHODIMP
 GlobalWindowImpl::Open(const nsAReadableString& aUrl,
                        const nsAReadableString& aName,
@@ -2235,8 +2265,30 @@ NS_IMETHODIMP
 GlobalWindowImpl::Open(nsIDOMWindow **_retval)
 {
   NS_ENSURE_STATE(sXPConnect);
-
   nsresult rv = NS_OK;
+
+  /* If we're in a commonly abused state (top level script, running a timeout,
+   * or onload/onunload), and the preference is enabled, block the window.open().
+   */
+  if (CheckForAbusePoint()) {
+    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID));
+
+    if (prefs) {
+      PRBool blockOpenOnLoad = PR_FALSE;
+      prefs->GetBoolPref("dom.disable_open_during_load", &blockOpenOnLoad);
+
+      if (blockOpenOnLoad) {
+#ifdef DEBUG
+        printf ("*** Blocking window.open.\n");
+#endif
+        *_retval = nsnull;
+        return NS_OK;
+      }
+    }
+  }
+
+
+    
   nsCOMPtr<nsIXPCNativeCallContext> ncc;
 
   rv = sXPConnect->GetCurrentNativeCallContext(getter_AddRefs(ncc));

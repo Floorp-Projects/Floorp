@@ -246,6 +246,8 @@ pref("capability.principal.codebase.foo.id", "http://www.netscape.com");
 pref("capability.principal.codebase.foo.granted", "UniversalFoo");
 //////////////////////////////////////////////////////////
 
+pref("dom.disable_open_during_load", false);
+
 pref("javascript.enabled",                  true);
 pref("javascript.allow.mailnews",           false);
 pref("javascript.options.strict",           false);
