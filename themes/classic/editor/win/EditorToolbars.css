@@ -143,15 +143,6 @@ button.edit-mode[selected="1"]:hover:active
   list-style-image:url("chrome://editor/skin/images/smile.gif"); 
 }
 
-#smileButtonMenu:hover {
-	list-style-image:url("chrome://editor/skin/images/smile_hover.gif");
-}
-
-#smileButtonMenu:hover:active,
-#smileButtonMenu[open="true"] {
-	list-style-image:url("chrome://editor/skin/images/smile_active.gif");
-}
-
 #smileButtonMenu[disabled="true"],
 #smileButtonMenu[disabled="true"]:hover,
 #smileButtonMenu[disabled="true"]:hover:active  {
