@@ -1,0 +1,17 @@
+#!/bin/sh
+#
+# Stupid wrapper to avoid win32 dospath/cygdrive issues
+#
+prog=$1
+shift
+if test -z "$prog"; then
+    exit 0
+fi
+if test "$prog" = "-up"; then
+   prog=$1
+   shift
+   args=`echo $* | sed -e 's|-I\(.\):|-I/cygdrive/\1|g;'`
+else
+   args=`echo $* | sed -e 's|/cygdrive/\(.\)/|\1:/|g;'`
+fi
+exec $prog $args
