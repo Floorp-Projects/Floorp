@@ -371,18 +371,9 @@ public class Block {
     int findExpressionType(Node n)
     {
         switch (n.getType()) {
-            case Token.NUMBER : {
-/* distinguish between integers & f.p.s ?
-                    Number num = ((NumberNode)n).getNumber();
-                    if ((num instanceof Byte)
-                            || (num instanceof Short)
-                                || (num instanceof Integer)) {
-                    }
-                    else {
-                    }
-*/
-                    return Optimizer.NumberType;
-                }
+            case Token.NUMBER :
+                return Optimizer.NumberType;
+
             case Token.NEW :
             case Token.CALL :
                 return Optimizer.NoType;
