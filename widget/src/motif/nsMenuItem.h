@@ -59,9 +59,33 @@ public:
   NS_IMETHOD GetNativeData(void*& aData);
 
   // nsIMenuListener interface
+  nsEventStatus MenuItemSelected(const nsMenuEvent & aMenuEvent);
   nsEventStatus MenuSelected(const nsMenuEvent & aMenuEvent);
-  
- 
+  nsEventStatus MenuDeselected(const nsMenuEvent & aMenuEvent);
+  nsEventStatus MenuConstruct(
+    const nsMenuEvent & aMenuEvent,
+    nsIWidget         * aParentWindow,
+    void              * menubarNode,
+    void              * aWebShell);
+  nsEventStatus MenuDestruct(const nsMenuEvent & aMenuEvent);
+
+  // nsIMenuItem interface (put here by ZuperDee)
+  NS_IMETHOD Create(nsISupports    * aParent,
+                    const nsString & aLabel,
+                    PRBool           isSeparator);
+  NS_IMETHOD SetEnabled(PRBool aIsEnabled);
+  NS_IMETHOD GetEnabled(PRBool *aIsEnabled);
+  NS_IMETHOD SetChecked(PRBool aIsEnabled);
+  NS_IMETHOD GetChecked(PRBool *aIsEnabled);
+  NS_IMETHOD AddMenuListener(nsIMenuListener * aMenuListener);
+  NS_IMETHOD RemoveMenuListener(nsIMenuListener * aMenuListener);
+  NS_IMETHOD IsSeparator(PRBool & aIsSep);
+  NS_IMETHOD SetCommand(const nsString & aStrCmd);
+  NS_IMETHOD DoCommand();
+  NS_IMETHOD SetDOMElement(nsIDOMElement * aDOMElement);
+  NS_IMETHOD GetDOMElement(nsIDOMElement ** aDOMElement);
+  NS_IMETHOD SetWebShell(nsIWebShell * aWebShell);
+
 protected:
   void Create(nsIWidget * aMBParent, Widget aParent,
               const nsString &aLabel, PRUint32 aCommand);

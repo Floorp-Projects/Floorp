@@ -69,12 +69,12 @@ TOOLKIT_CPPSRCS_gtk := \
 
 TOOLKIT_CPPSRCS_motif := \
 	nsMotifMenu.cpp \
-	nsUnixMain.cpp
+	nsMotifMain.cpp
 
 TOOLKIT_CPPSRCS_photon := \
 	nsPhMain.cpp \
 	nsPhMenu.cpp
-			
+
 TOOLKIT_CPPSRCS_xlib := \
 	nsXlibMain.cpp
 

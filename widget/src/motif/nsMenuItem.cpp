@@ -258,8 +258,118 @@ NS_METHOD nsMenuItem::GetNativeData(void *& aData)
 //-------------------------------------------------------------------------
 // nsIMenuListener interface
 //-------------------------------------------------------------------------
-nsEventStatus nsMenuItem::MenuSelected(const nsMenuEvent & aMenuEvent)
+nsEventStatus nsMenuItem::MenuItemSelected(const nsMenuEvent & aMenuEvent)
 {
-  	return nsEventStatus_eIgnore;
+// FIXME: This needs to be implemented.  --ZuperDee
+  return nsEventStatus_eIgnore;
 }
 
+nsEventStatus nsMenuItem::MenuSelected(const nsMenuEvent & aMenuEvent)
+{
+// FIXME: This was here before, and not created by me...  But still looks
+// like it needs to be implemented.  --ZuperDee
+  return nsEventStatus_eIgnore;
+}
+
+nsEventStatus nsMenuItem::MenuDeselected(const nsMenuEvent & aMenuEvent)
+{
+// FIXME: This needs to be implemented.  --ZuperDee
+  return nsEventStatus_eIgnore;
+}
+
+nsEventStatus nsMenuItem::MenuConstruct(
+  const nsMenuEvent & aMenuEvent,
+  nsIWidget         * aParentWindow,
+  void              * menubarNode,
+  void              * aWebShell)
+{
+// FIXME: This needs to be implemented.  --ZuperDee
+  return nsEventStatus_eIgnore;
+}
+
+nsEventStatus nsMenuItem::MenuDestruct(const nsMenuEvent & aMenuEvent)
+{
+//FIXME: This needs to be implemented.  --ZuperDee
+  return nsEventStatus_eIgnore;
+}
+
+//----------------------------------------------------
+NS_METHOD nsMenuItem::Create(nsISupports    * aParent,
+                  const nsString & aLabel,
+                  PRBool           isSeparator)
+{
+//FIXME: This needs to be implemented.  --ZuperDee
+  return nsEventStatus_eIgnore;
+}
+
+NS_METHOD nsMenuItem::SetEnabled(PRBool aIsEnabled)
+{
+//FIXME: This needs to be implemented.  --ZuperDee
+  return nsEventStatus_eIgnore;
+}
+
+NS_METHOD nsMenuItem::GetEnabled(PRBool *aIsEnabled)
+{
+//FIXME: This needs to be implemented.  --ZuperDee
+  return nsEventStatus_eIgnore;
+}
+
+NS_METHOD nsMenuItem::SetChecked(PRBool aIsEnabled)
+{
+//FIXME: This needs to be implemented.  --ZuperDee
+  return nsEventStatus_eIgnore;
+}
+
+NS_METHOD nsMenuItem::GetChecked(PRBool *aIsEnabled)
+{
+//FIXME: This needs to be implemented.  --ZuperDee
+  return nsEventStatus_eIgnore;
+}
+
+NS_METHOD nsMenuItem::AddMenuListener(nsIMenuListener * aMenuListener)
+{
+//FIXME: This needs to be implemented.  --ZuperDee
+  return nsEventStatus_eIgnore;
+}
+
+NS_METHOD nsMenuItem::RemoveMenuListener(nsIMenuListener * aMenuListener)
+{
+//FIXME: This needs to be implemented.  --ZuperDee
+  return nsEventStatus_eIgnore;
+}
+
+NS_METHOD nsMenuItem::IsSeparator(PRBool & aIsSep)
+{
+//FIXME: This needs to be implemented.  --ZuperDee
+  return nsEventStatus_eIgnore;
+}
+
+NS_METHOD nsMenuItem::SetCommand(const nsString & aStrCmd)
+{
+//FIXME: This needs to be implemented.  --ZuperDee
+  return nsEventStatus_eIgnore;
+}
+
+NS_METHOD nsMenuItem::DoCommand()
+{
+//FIXME: This needs to be implemented.  --ZuperDee
+  return nsEventStatus_eIgnore;
+}
+
+NS_METHOD nsMenuItem::SetDOMElement(nsIDOMElement * aDOMElement)
+{
+//FIXME: This needs to be implemented.  --ZuperDee
+  return nsEventStatus_eIgnore;
+}
+
+NS_METHOD nsMenuItem::GetDOMElement(nsIDOMElement ** aDOMElement)
+{
+//FIXME: This needs to be implemented.  --ZuperDee
+  return nsEventStatus_eIgnore;
+}
+
+NS_METHOD nsMenuItem::SetWebShell(nsIWebShell * aWebShell)
+{
+//FIXME: This needs to be implemented.  --ZuperDee
+  return nsEventStatus_eIgnore;
+}

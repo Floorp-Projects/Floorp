@@ -20,11 +20,10 @@
 #define nsMenu_h__
 
 #include "nsIMenu.h"
+#include "nsIMenuListener.h"
 #include "nsVoidArray.h"
 #include "Xm/Xm.h"
 #include "nsXtManageWidget.h"
-
-#include "nsIMenuListener.h"
 
 class nsIMenuBar;
 
@@ -40,29 +39,41 @@ public:
   virtual ~nsMenu();
 
   NS_DECL_ISUPPORTS
- 
+
   // nsIMenuListener methods
-  nsEventStatus MenuSelected(const nsMenuEvent & aMenuEvent); 
+  nsEventStatus MenuItemSelected(const nsMenuEvent & aMenuEvent);
+  nsEventStatus MenuSelected(const nsMenuEvent & aMenuEvent);
+  nsEventStatus MenuDeselected(const nsMenuEvent & aMenuEvent);
+  nsEventStatus MenuConstruct(
+    const nsMenuEvent & aMenuEvent,
+    nsIWidget         * aParentWindow,
+    void              * menuNode,
+        void              * aWebShell);
+  nsEventStatus MenuDestruct(const nsMenuEvent & aMenuEvent);
   
-  NS_IMETHOD Create(nsIMenuBar * aParent, const nsString &aLabel);
-  NS_IMETHOD Create(nsIMenu * aParent, const nsString &aLabel);
+//  NS_IMETHOD Create(nsIMenuBar * aParent, const nsString &aLabel);
 
   // nsIMenu Methods
+  NS_IMETHOD Create(nsISupports * aParent, const nsString &aLabel);
   NS_IMETHOD GetParent(nsISupports *&aParent);
   NS_IMETHOD GetLabel(nsString &aText);
-  NS_IMETHOD SetLabel(nsString &aText);
-  NS_IMETHOD AddItem(const nsString &aText);
+  NS_IMETHOD SetLabel(const nsString &aText);
+  NS_IMETHOD AddItem(nsISupports* aItem);
   NS_IMETHOD AddMenuItem(nsIMenuItem * aMenuItem);
   NS_IMETHOD AddMenu(nsIMenu * aMenu);
   NS_IMETHOD AddSeparator();
   NS_IMETHOD GetItemCount(PRUint32 &aCount);
-  NS_IMETHOD GetItemAt(const PRUint32 aCount, nsIMenuItem *& aMenuItem);
-  NS_IMETHOD InsertItemAt(const PRUint32 aCount, nsIMenuItem *& aMenuItem);
-  NS_IMETHOD InsertItemAt(const PRUint32 aCount, const nsString & aMenuItemName);
+  NS_IMETHOD GetItemAt(const PRUint32 aPos, nsISupports *& aMenuItem);
+  NS_IMETHOD InsertItemAt(const PRUint32 aPos, nsISupports * aMenuItem);
   NS_IMETHOD InsertSeparator(const PRUint32 aCount);
   NS_IMETHOD RemoveItem(const PRUint32 aCount);
   NS_IMETHOD RemoveAll();
-  NS_IMETHOD GetNativeData(void*& aData);
+  NS_IMETHOD GetNativeData(void** aData);
+  NS_IMETHOD AddMenuListener(nsIMenuListener * aMenuListener);
+  NS_IMETHOD RemoveMenuListener(nsIMenuListener * aMenuListener);
+  NS_IMETHOD SetDOMNode(nsIDOMNode * aMenuNode);
+  NS_IMETHOD SetDOMElement(nsIDOMElement * aMenuElement);
+  NS_IMETHOD SetWebShell(nsIWebShell * aWebShell);
 
 protected:
   void       Create(Widget aParent, const nsString &aLabel);
