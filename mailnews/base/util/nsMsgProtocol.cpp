@@ -491,13 +491,13 @@ nsresult nsMsgProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 
 nsresult nsMsgProtocol::SetUrl(nsIURI * aURL)
 {
-	m_url = dont_QueryInterface(aURL);
+	m_url = aURL;
 	return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgProtocol::SetLoadGroup(nsILoadGroup * aLoadGroup)
 {
-	m_loadGroup = dont_QueryInterface(aLoadGroup);
+	m_loadGroup = aLoadGroup;
 	return NS_OK;
 }
 

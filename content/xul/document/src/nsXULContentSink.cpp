@@ -1208,7 +1208,7 @@ XULContentSinkImpl::GetTopNameSpace(nsCOMPtr<nsINameSpace>* aNameSpace)
     if (count == 0)
         return NS_ERROR_UNEXPECTED;
 
-    *aNameSpace = dont_QueryInterface(NS_REINTERPRET_CAST(nsINameSpace*, mNameSpaceStack[count - 1]));
+    *aNameSpace = NS_REINTERPRET_CAST(nsINameSpace*, mNameSpaceStack[count - 1]);
     return NS_OK;
 }
 

@@ -478,7 +478,7 @@ nsresult nsImapProtocol::Initialize(nsIImapHostSessionList * aHostSessionList, n
 
    NS_ADDREF(m_flagState);
 
-    m_sinkEventQueue = dont_QueryInterface(aSinkEventQueue);
+    m_sinkEventQueue = aSinkEventQueue;
     m_hostSessionList = aHostSessionList; // no ref count...host session list has life time > connection
     m_parser.SetHostSessionList(aHostSessionList);
     m_parser.SetFlagState(m_flagState);
@@ -7666,7 +7666,7 @@ NS_IMETHODIMP  nsImapMockChannel::GetChannelContext(nsISupports **aChannelContex
 
 NS_IMETHODIMP nsImapMockChannel::SetLoadGroup(nsILoadGroup * aLoadGroup)
 {
-  m_loadGroup = dont_QueryInterface(aLoadGroup);
+  m_loadGroup = aLoadGroup;
   return NS_OK;
 }
 

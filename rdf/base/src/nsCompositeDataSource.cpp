@@ -466,8 +466,7 @@ CompositeArcsInOutEnumeratorImpl::Destroy()
 {
     // Keep the datasource alive for the duration of the stack
     // frame so its allocator stays valid.
-    nsCOMPtr<nsIRDFCompositeDataSource> kungFuDeathGrip =
-        dont_QueryInterface(mCompositeDataSource);
+    nsCOMPtr<nsIRDFCompositeDataSource> kungFuDeathGrip = mCompositeDataSource;
 
     nsFixedSizeAllocator& pool = mCompositeDataSource->mAllocator;
     this->~CompositeArcsInOutEnumeratorImpl();
@@ -597,8 +596,7 @@ CompositeAssertionEnumeratorImpl::Destroy()
 {
     // Keep the datasource alive for the duration of the stack
     // frame so its allocator stays valid.
-    nsCOMPtr<nsIRDFCompositeDataSource> kungFuDeathGrip =
-        dont_QueryInterface(mCompositeDataSource);
+    nsCOMPtr<nsIRDFCompositeDataSource> kungFuDeathGrip = mCompositeDataSource;
 
     nsFixedSizeAllocator& pool = mCompositeDataSource->mAllocator;
     this->~CompositeAssertionEnumeratorImpl();

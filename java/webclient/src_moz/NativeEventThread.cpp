@@ -481,7 +481,7 @@ nsresult InitializeWindowCreator(WebShellInitContext * initContext)
     gCreatorCallback = new WindowCreator(initContext);
     if (gCreatorCallback)
     {
-        nsCOMPtr<nsIWindowCreator> windowCreator(dont_QueryInterface(NS_STATIC_CAST(nsIWindowCreator *, gCreatorCallback)));
+        nsCOMPtr<nsIWindowCreator> windowCreator(NS_STATIC_CAST(nsIWindowCreator *, gCreatorCallback));
         if (windowCreator)
         {
             nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));

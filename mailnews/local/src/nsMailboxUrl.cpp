@@ -174,7 +174,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsMsgMailNewsUrl)
 nsresult nsMailboxUrl::SetMailboxParser(nsIStreamListener * aMailboxParser)
 {
 	if (aMailboxParser)
-		m_mailboxParser = dont_QueryInterface(aMailboxParser);
+		m_mailboxParser = aMailboxParser;
 	return NS_OK;
 }
 
@@ -190,7 +190,7 @@ nsresult nsMailboxUrl::GetMailboxParser(nsIStreamListener ** aConsumer)
 nsresult nsMailboxUrl::SetMailboxCopyHandler(nsIStreamListener * aMailboxCopyHandler)
 {
 	if (aMailboxCopyHandler)
-		m_mailboxCopyHandler = dont_QueryInterface(aMailboxCopyHandler);
+		m_mailboxCopyHandler = aMailboxCopyHandler;
 	return NS_OK;
 }
 
@@ -324,7 +324,7 @@ nsMailboxUrl::SetOriginalSpec(const char *aSpec)
 
 NS_IMETHODIMP nsMailboxUrl::SetMessageFile(nsIFileSpec * aFileSpec)
 {
-	m_messageFileSpec = dont_QueryInterface(aFileSpec);
+	m_messageFileSpec = aFileSpec;
 	return NS_OK;
 }
 

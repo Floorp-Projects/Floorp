@@ -571,7 +571,7 @@ NS_IMETHODIMP nsSmtpUrl::SetPostMessageFile(nsIFileSpec * aFileSpec)
 {
 	nsresult rv = NS_OK;
 	if (aFileSpec)
-		m_fileName = dont_QueryInterface(aFileSpec);
+		m_fileName = aFileSpec;
 	else
 		rv = NS_ERROR_NULL_POINTER;
 
@@ -607,7 +607,7 @@ nsSmtpUrl::SetSenderIdentity(nsIMsgIdentity * aSenderIdentity)
 {
 	NS_ENSURE_ARG_POINTER(aSenderIdentity);
 
-	m_senderIdentity = dont_QueryInterface(aSenderIdentity);
+	m_senderIdentity = aSenderIdentity;
 	return NS_OK;
 }
 

@@ -879,8 +879,8 @@ nsMsgAccountManagerDataSource::createServerResources(nsISupports *element,
   nsresult rv;
   // get parameters out of the data argument
   serverCreationParams *params = (serverCreationParams*)data;
-  nsCOMPtr<nsISupportsArray> servers = dont_QueryInterface(params->serverArray);
-  nsCOMPtr<nsIRDFService> rdf = dont_QueryInterface(params->rdfService);
+  nsCOMPtr<nsISupportsArray> servers = params->serverArray;
+  nsCOMPtr<nsIRDFService> rdf = params->rdfService;
 
   // the server itself is in the element argument
   nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(element, &rv);

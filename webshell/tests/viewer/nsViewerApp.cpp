@@ -340,7 +340,7 @@ nsViewerApp::InitializeWindowCreator()
   // create an nsWindowCreator and give it to the WindowWatcher service
   nsWindowCreator *creatorCallback = new nsWindowCreator(this);
   if (creatorCallback) {
-    nsCOMPtr<nsIWindowCreator> windowCreator(dont_QueryInterface(NS_STATIC_CAST(nsIWindowCreator *, creatorCallback)));
+    nsCOMPtr<nsIWindowCreator> windowCreator(NS_STATIC_CAST(nsIWindowCreator *, creatorCallback));
     if (windowCreator) {
       nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
       if (wwatch) {

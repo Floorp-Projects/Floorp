@@ -229,7 +229,7 @@ NS_IMPL_GETSET(nsNntpUrl, CanonicalLineEnding, PRBool, m_canonicalLineEnding);
 
 NS_IMETHODIMP nsNntpUrl::SetMessageFile(nsIFileSpec * aFileSpec)
 {
-	m_messageFileSpec = dont_QueryInterface(aFileSpec);
+	m_messageFileSpec = aFileSpec;
 	return NS_OK;
 }
 

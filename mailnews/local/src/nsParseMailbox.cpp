@@ -608,7 +608,7 @@ PRInt32 nsParseMailMessageState::ParseFolderLine(const char *line, PRUint32 line
 
 NS_IMETHODIMP nsParseMailMessageState::SetMailDB(nsIMsgDatabase *mailDB)
 {
-	m_mailDB = dont_QueryInterface(mailDB);
+	m_mailDB = mailDB;
 	return NS_OK;
 }
 

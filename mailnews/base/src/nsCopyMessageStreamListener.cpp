@@ -104,9 +104,9 @@ nsCopyMessageStreamListener::~nsCopyMessageStreamListener()
 
 NS_IMETHODIMP nsCopyMessageStreamListener::Init(nsIMsgFolder *srcFolder, nsICopyMessageListener *destination, nsISupports *listenerData)
 {
-	mSrcFolder = dont_QueryInterface(srcFolder);
-	mDestination = dont_QueryInterface(destination);
-	mListenerData = dont_QueryInterface(listenerData);
+	mSrcFolder = srcFolder;
+	mDestination = destination;
+	mListenerData = listenerData;
 	return NS_OK;
 }
 

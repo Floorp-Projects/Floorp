@@ -184,7 +184,7 @@ nsMsgAccount::SetIncomingServer(nsIMsgIncomingServer * aIncomingServer)
     m_prefs->SetCharPref(serverPrefName.get(), key);
   }
 
-  m_incomingServer = dont_QueryInterface(aIncomingServer);
+  m_incomingServer = aIncomingServer;
 
   nsCOMPtr<nsIMsgAccountManager> accountManager =
     do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
@@ -295,7 +295,7 @@ nsMsgAccount::SetDefaultIdentity(nsIMsgIdentity * aDefaultIdentity)
   if (m_identities->IndexOf(aDefaultIdentity) == -1)
     return NS_ERROR_UNEXPECTED;
   
-  m_defaultIdentity = dont_QueryInterface(aDefaultIdentity);
+  m_defaultIdentity = aDefaultIdentity;
   return NS_OK;
 }
 

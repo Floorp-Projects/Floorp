@@ -1231,7 +1231,7 @@ NS_IMETHODIMP nsImapUrl::GetMockChannel(nsIImapMockChannel ** aChannel)
 NS_IMETHODIMP nsImapUrl::SetMockChannel(nsIImapMockChannel * aChannel)
 {
   nsresult rv = NS_OK;
-  m_mockChannel = dont_QueryInterface(aChannel);
+  m_mockChannel = aChannel;
   return rv;
 }
 
@@ -1369,7 +1369,7 @@ NS_IMETHODIMP nsImapUrl::SetMsgLoadingFromCache(PRBool loadingFromCache)
 
 NS_IMETHODIMP nsImapUrl::SetMessageFile(nsIFileSpec * aFileSpec)
 {
-	m_messageFileSpec = dont_QueryInterface(aFileSpec);
+	m_messageFileSpec = aFileSpec;
 	return NS_OK;
 }
 

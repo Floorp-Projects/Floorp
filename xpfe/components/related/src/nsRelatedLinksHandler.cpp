@@ -176,7 +176,7 @@ NS_NewRelatedLinksStreamListener(nsIRDFDataSource* aDataSource,
 
 
 RelatedLinksStreamListener::RelatedLinksStreamListener(nsIRDFDataSource *aDataSource)
-	 : mDataSource(dont_QueryInterface(aDataSource))
+	 : mDataSource(aDataSource)
 {
 }
 

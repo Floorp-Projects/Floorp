@@ -311,7 +311,7 @@ nsresult InitializeWindowCreator()
     WindowCreator *creatorCallback = new WindowCreator();
     if (creatorCallback)
     {
-        nsCOMPtr<nsIWindowCreator> windowCreator(dont_QueryInterface(NS_STATIC_CAST(nsIWindowCreator *, creatorCallback)));
+        nsCOMPtr<nsIWindowCreator> windowCreator(NS_STATIC_CAST(nsIWindowCreator *, creatorCallback));
         if (windowCreator)
         {
             nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
