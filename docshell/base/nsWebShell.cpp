@@ -460,7 +460,7 @@ protected:
 
   eCharsetReloadState mCharsetReloadState;
 
-  nsWebShellType mWebShellType;
+  PRInt32        mItemType;
   nsIChromeEventHandler* mChromeEventHandler; //Weak Reference
 
   nsISupports* mHistoryState; // Weak reference.  Session history owns this.
@@ -635,7 +635,7 @@ nsWebShell::nsWebShell()
   mScriptContext = nsnull;
   mThreadEventQueue = nsnull;
   InitFrameData(PR_TRUE);
-  mWebShellType = nsWebShellContent;
+  mItemType = typeContent;
   mChromeEventHandler = nsnull;
   mSHist = nsnull;
   mIsInSHist = PR_FALSE;
@@ -1337,35 +1337,27 @@ nsWebShell::SetParent(nsIWebShell* aParent)
 NS_IMETHODIMP
 nsWebShell::GetParent(nsIWebShell*& aParent)
 {
-  nsCOMPtr<nsIWebShell> webShellParent(do_QueryInterface(mParent));
-  if (mWebShellType == nsWebShellContent)
-  {
-    // We cannot return our parent if it is a chrome webshell.
-    nsWebShellType parentType;
-    if (webShellParent)
-    {
-      webShellParent->GetWebShellType(parentType);
-      if (parentType == nsWebShellChrome)
-      {
-        aParent = nsnull; // Just return null.
-        return NS_OK;
-      }
-    }
-  }
+   nsCOMPtr<nsIDocShellTreeItem> parent;
+   NS_ENSURE_SUCCESS(GetSameTypeParent(getter_AddRefs(parent)), NS_ERROR_FAILURE);
 
-  aParent = webShellParent;
-  NS_IF_ADDREF(aParent);
-  return NS_OK;
+   if(parent)
+      parent->QueryInterface(NS_GET_IID(nsIWebShell), (void**)&aParent);
+   else
+      aParent = nsnull;
+   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsWebShell::GetParentEvenIfChrome(nsIWebShell*& aParent)
 {
-   if(mParent)
-      mParent->QueryInterface(NS_GET_IID(nsIWebShell), (void**)&aParent);
+   nsCOMPtr<nsIDocShellTreeItem> parent;
+   NS_ENSURE_SUCCESS(GetParent(getter_AddRefs(parent)), NS_ERROR_FAILURE);
+
+   if(parent)
+      parent->QueryInterface(NS_GET_IID(nsIWebShell), (void**)&aParent);
    else
       aParent = nsnull;
-  return NS_OK;
+   return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1465,20 +1457,46 @@ nsWebShell::FindChildWithName(const PRUnichar* aName1,
 NS_IMETHODIMP
 nsWebShell::GetWebShellType(nsWebShellType& aWebShellType)
 {
-  aWebShellType = mWebShellType;
+   PRInt32 treeItemType;
+   GetItemType(&treeItemType);
+
+   switch(treeItemType)
+      {
+      case typeContent:
+         aWebShellType = nsWebShellContent;
+         break;
+
+      case typeChrome:
+         aWebShellType = nsWebShellChrome;
+         break;
+
+      default:
+         NS_ERROR("Switch is out of date");
+      }
+
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsWebShell::SetWebShellType(nsWebShellType aWebShellType)
 {
-  if (aWebShellType != nsWebShellChrome && aWebShellType != nsWebShellContent)
-  {
-    NS_ERROR("Attempt to set bogus webshell type: values should be content or chrome.");
-    return NS_ERROR_FAILURE;
-  }
-  mWebShellType = aWebShellType;
-  return NS_OK;
+   PRInt32 treeItemType;
+
+   switch(aWebShellType)
+      {
+      case nsWebShellChrome:
+         treeItemType = typeChrome;
+         break;
+
+      case nsWebShellContent:
+         treeItemType = typeContent;
+         break;
+
+      default:
+         NS_ERROR("Attempt to set bogus webshell type: values should be content or chrome.");
+         return NS_ERROR_FAILURE;
+      }
+   return SetItemType(treeItemType);
 }
 
 NS_IMETHODIMP
@@ -4396,6 +4414,21 @@ NS_IMETHODIMP nsWebShell::SetName(const PRUnichar* aName)
    return NS_OK;
 }
 
+NS_IMETHODIMP nsWebShell::GetItemType(PRInt32* aItemType)
+{
+   NS_ENSURE_ARG_POINTER(aItemType);
+
+   *aItemType = mItemType;
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsWebShell::SetItemType(PRInt32 aItemType)
+{
+   NS_ENSURE_ARG((aItemType == typeChrome) || (typeContent == aItemType));
+   mItemType = aItemType;
+   return NS_OK;
+}
+
 NS_IMETHODIMP nsWebShell::GetParent(nsIDocShellTreeItem** parent)
 {
    NS_ENSURE_ARG_POINTER(parent);
@@ -4418,20 +4451,56 @@ NS_IMETHODIMP nsWebShell::SetParent(nsIDocShellTreeItem* aParent)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsWebShell::GetSameTypeParent(nsIDocShellTreeItem** aParent)
+{
+   NS_ENSURE_ARG_POINTER(aParent);
+   *aParent = nsnull;
+
+   if(!mParent)
+      return NS_OK;
+      
+   PRInt32  parentType;
+   NS_ENSURE_SUCCESS(mParent->GetItemType(&parentType), NS_ERROR_FAILURE);
+
+   if(parentType == mItemType)
+      {
+      *aParent = mParent;
+      NS_ADDREF(*aParent);
+      }
+   return NS_OK;
+}
+
 NS_IMETHODIMP nsWebShell::GetRootTreeItem(nsIDocShellTreeItem** aRootTreeItem)
 {
   NS_ENSURE_ARG_POINTER(aRootTreeItem);
   *aRootTreeItem = NS_STATIC_CAST(nsIDocShellTreeItem*, this);
 
   nsCOMPtr<nsIDocShellTreeItem> parent;
-  NS_ENSURE_TRUE(GetParent(getter_AddRefs(parent)), NS_ERROR_FAILURE);
+  NS_ENSURE_SUCCESS(GetParent(getter_AddRefs(parent)), NS_ERROR_FAILURE);
   while (parent)
   {
     *aRootTreeItem = parent;
-    NS_ENSURE_TRUE(parent->GetParent(getter_AddRefs(parent)), NS_ERROR_FAILURE);
+    NS_ENSURE_SUCCESS(parent->GetParent(getter_AddRefs(parent)), NS_ERROR_FAILURE);
   }
   NS_IF_ADDREF(*aRootTreeItem);
   return NS_OK;
+}
+
+NS_IMETHODIMP nsWebShell::GetSameTypeRootTreeItem(nsIDocShellTreeItem** aRootTreeItem)
+{
+   NS_ENSURE_ARG_POINTER(aRootTreeItem);
+   *aRootTreeItem = NS_STATIC_CAST(nsIDocShellTreeItem*, this);
+
+   nsCOMPtr<nsIDocShellTreeItem> parent;
+   NS_ENSURE_SUCCESS(GetSameTypeParent(getter_AddRefs(parent)), NS_ERROR_FAILURE);
+   while(parent)
+      {
+      *aRootTreeItem = parent;
+      NS_ENSURE_SUCCESS(parent->GetSameTypeParent(getter_AddRefs(parent)), 
+         NS_ERROR_FAILURE);
+      }
+   NS_IF_ADDREF(*aRootTreeItem);
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsWebShell::GetTreeOwner(nsIDocShellTreeOwner** aTreeOwner)
@@ -4550,12 +4619,17 @@ NS_IMETHODIMP nsWebShell::FindChildWithName(const PRUnichar *aName, nsIDocShellT
          NS_ADDREF(child);
          break;
          }
+      PRInt32 childType;
+      child->GetItemType(&childType);
 
-      // See if child contains the shell with the given name
-      nsCOMPtr<nsIDocShellTreeNode> childAsNode = do_QueryInterface(child);
-      if(child)
+      if(childType == mItemType) //Only ask it to check children if it is same type
          {
-         NS_ENSURE_SUCCESS(childAsNode->FindChildWithName(name.GetUnicode(), _retval), NS_ERROR_FAILURE);
+         // See if child contains the shell with the given name
+         nsCOMPtr<nsIDocShellTreeNode> childAsNode = do_QueryInterface(child);
+         if(child)
+            {
+            NS_ENSURE_SUCCESS(childAsNode->FindChildWithName(name.GetUnicode(), _retval), NS_ERROR_FAILURE);
+            }
          }
       if (*_retval)   // found it
          break;

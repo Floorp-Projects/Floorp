@@ -58,6 +58,7 @@
 nsDocShell::nsDocShell() : 
   mCreated(PR_FALSE), 
   mContentListener(nsnull),
+  mItemType(typeContent),
   mMarginWidth(0), 
   mMarginHeight(0)
 {
@@ -462,12 +463,27 @@ NS_IMETHODIMP nsDocShell::SetName(const PRUnichar* aName)
    return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShell::GetParent(nsIDocShellTreeItem** parent)
+NS_IMETHODIMP nsDocShell::GetItemType(PRInt32* aItemType)
 {
-   NS_ENSURE_ARG_POINTER(parent);
+   NS_ENSURE_ARG_POINTER(aItemType);
 
-   *parent = mParent;
-   NS_IF_ADDREF(*parent);
+   *aItemType = mItemType;
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShell::SetItemType(PRInt32 aItemType)
+{
+   NS_ENSURE_ARG((aItemType == typeChrome) || (typeContent == aItemType));
+   mItemType = aItemType;
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShell::GetParent(nsIDocShellTreeItem** aParent)
+{
+   NS_ENSURE_ARG_POINTER(aParent);
+
+   *aParent = mParent;
+   NS_IF_ADDREF(*aParent);
 
    return NS_OK;
 }
@@ -484,20 +500,56 @@ NS_IMETHODIMP nsDocShell::SetParent(nsIDocShellTreeItem* aParent)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsDocShell::GetSameTypeParent(nsIDocShellTreeItem** aParent)
+{
+   NS_ENSURE_ARG_POINTER(aParent);
+   *aParent = nsnull;
+
+   if(!mParent)
+      return NS_OK;
+      
+   PRInt32  parentType;
+   NS_ENSURE_SUCCESS(mParent->GetItemType(&parentType), NS_ERROR_FAILURE);
+
+   if(parentType == mItemType)
+      {
+      *aParent = mParent;
+      NS_ADDREF(*aParent);
+      }
+   return NS_OK;
+}
+
 NS_IMETHODIMP nsDocShell::GetRootTreeItem(nsIDocShellTreeItem** aRootTreeItem)
 {
-  NS_ENSURE_ARG_POINTER(aRootTreeItem);
-  *aRootTreeItem = NS_STATIC_CAST(nsIDocShellTreeItem*, this);
+   NS_ENSURE_ARG_POINTER(aRootTreeItem);
+   *aRootTreeItem = NS_STATIC_CAST(nsIDocShellTreeItem*, this);
 
-  nsCOMPtr<nsIDocShellTreeItem> parent;
-  NS_ENSURE_TRUE(GetParent(getter_AddRefs(parent)), NS_ERROR_FAILURE);
-  while (parent)
-  {
-    *aRootTreeItem = parent;
-    NS_ENSURE_TRUE(parent->GetParent(getter_AddRefs(parent)), NS_ERROR_FAILURE);
-  }
-  NS_IF_ADDREF(*aRootTreeItem);
-  return NS_OK;
+   nsCOMPtr<nsIDocShellTreeItem> parent;
+   NS_ENSURE_SUCCESS(GetParent(getter_AddRefs(parent)), NS_ERROR_FAILURE);
+   while(parent)
+      {
+      *aRootTreeItem = parent;
+      NS_ENSURE_SUCCESS(parent->GetParent(getter_AddRefs(parent)), NS_ERROR_FAILURE);
+      }
+   NS_IF_ADDREF(*aRootTreeItem);
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShell::GetSameTypeRootTreeItem(nsIDocShellTreeItem** aRootTreeItem)
+{
+   NS_ENSURE_ARG_POINTER(aRootTreeItem);
+   *aRootTreeItem = NS_STATIC_CAST(nsIDocShellTreeItem*, this);
+
+   nsCOMPtr<nsIDocShellTreeItem> parent;
+   NS_ENSURE_SUCCESS(GetSameTypeParent(getter_AddRefs(parent)), NS_ERROR_FAILURE);
+   while(parent)
+      {
+      *aRootTreeItem = parent;
+      NS_ENSURE_SUCCESS(parent->GetSameTypeParent(getter_AddRefs(parent)), 
+         NS_ERROR_FAILURE);
+      }
+   NS_IF_ADDREF(*aRootTreeItem);
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShell::GetTreeOwner(nsIDocShellTreeOwner** aTreeOwner)
@@ -616,12 +668,17 @@ NS_IMETHODIMP nsDocShell::FindChildWithName(const PRUnichar *aName, nsIDocShellT
          NS_ADDREF(child);
          break;
          }
+      PRInt32 childType;
+      child->GetItemType(&childType);
 
-      // See if child contains the shell with the given name
-      nsCOMPtr<nsIDocShellTreeNode> childAsNode = do_QueryInterface(child);
-      if(child)
+      if(childType == mItemType) //Only ask it to check children if it is same type
          {
-         NS_ENSURE_SUCCESS(childAsNode->FindChildWithName(name.GetUnicode(), _retval), NS_ERROR_FAILURE);
+         // See if child contains the shell with the given name
+         nsCOMPtr<nsIDocShellTreeNode> childAsNode = do_QueryInterface(child);
+         if(child)
+            {
+            NS_ENSURE_SUCCESS(childAsNode->FindChildWithName(name.GetUnicode(), _retval), NS_ERROR_FAILURE);
+            }
          }
       if (*_retval)   // found it
          break;
@@ -1603,7 +1660,7 @@ nsDocShell::FireStartDocumentLoad(nsIDocumentLoader* aLoader,
        * have a documentloaderObserver, get it from the rootWebShell
        */
       nsCOMPtr<nsIDocShellTreeItem> rootTreeItem;
-      NS_ENSURE_SUCCESS(GetRootTreeItem(getter_AddRefs(rootTreeItem)), 
+      NS_ENSURE_SUCCESS(GetSameTypeRootTreeItem(getter_AddRefs(rootTreeItem)), 
          NS_ERROR_FAILURE);
 
       nsCOMPtr<nsIDocShell> rootAsDocShell(do_QueryInterface(rootTreeItem));
@@ -1704,7 +1761,7 @@ nsDocShell::FireEndDocumentLoad(nsIDocumentLoader* aLoader,
       // If this is a frame (in which case it would have a parent && doesn't
       // have a documentloaderObserver, get it from the rootWebShell
       nsCOMPtr<nsIDocShellTreeItem> rootTreeItem;
-      NS_ENSURE_SUCCESS(GetRootTreeItem(getter_AddRefs(rootTreeItem)), 
+      NS_ENSURE_SUCCESS(GetSameTypeRootTreeItem(getter_AddRefs(rootTreeItem)), 
          NS_ERROR_FAILURE);
 
       nsCOMPtr<nsIDocShell> rootAsDocShell(do_QueryInterface(rootTreeItem));
