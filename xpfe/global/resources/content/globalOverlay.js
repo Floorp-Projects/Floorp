@@ -123,10 +123,8 @@ function goAboutDialog()
   }
   if( defaultAboutState )
   	window.openDialog("chrome:global/content/about.xul", "About", "modal,chrome,resizable=yes,height=450,width=550");
-  else if( appCore ) 
-    appCore.loadUrl( "chrome://global/content/about.html" );
-  else
-    window.open( "chrome://global/content/about.html", "_blank" );
+  else 
+    window.openDialog( "chrome://navigator/content/navigator.xul", "_blank", "chrome,all,dialog=no", 'chrome://global/content/about.html' );
 }
 
 
