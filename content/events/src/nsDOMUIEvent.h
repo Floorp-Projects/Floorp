@@ -82,26 +82,8 @@ protected:
   PRInt32 mDetail;
 };
 
-#define NS_FORWARD_NSIDOMNSUIEVENT_NO_WHICH(_to) \
-  NS_IMETHOD GetPreventDefault(PRBool *_retval) { return _to GetPreventDefault(_retval); } \
-  NS_IMETHOD GetLayerX(PRInt32 *aLayerX) { return _to GetLayerX(aLayerX); } \
-  NS_IMETHOD GetLayerY(PRInt32 *aLayerY) { return _to GetLayerY(aLayerY); } \
-  NS_IMETHOD GetPageX(PRInt32 *aPageX) { return _to GetPageX(aPageX); } \
-  NS_IMETHOD GetPageY(PRInt32 *aPageY) { return _to GetPageY(aPageY); } \
-  NS_IMETHOD GetRangeParent(nsIDOMNode * *aRangeParent) { return _to GetRangeParent(aRangeParent); } \
-  NS_IMETHOD GetRangeOffset(PRInt32 *aRangeOffset) { return _to GetRangeOffset(aRangeOffset); } \
-  NS_IMETHOD GetCancelBubble(PRBool *aCancelBubble) { return _to GetCancelBubble(aCancelBubble); } \
-  NS_IMETHOD SetCancelBubble(PRBool aCancelBubble) { return _to SetCancelBubble(aCancelBubble); } \
-  NS_IMETHOD GetIsChar(PRBool *aIsChar) { return _to GetIsChar(aIsChar); }
-
 #define NS_FORWARD_TO_NSDOMUIEVENT \
   NS_FORWARD_NSIDOMUIEVENT(nsDOMUIEvent::) \
-  NS_FORWARD_NSIDOMNSUIEVENT(nsDOMUIEvent::) \
-  NS_FORWARD_TO_NSDOMEVENT
-
-#define NS_FORWARD_TO_NSDOMUIEVENT_NO_WHICH \
-  NS_FORWARD_NSIDOMUIEVENT(nsDOMUIEvent::) \
-  NS_FORWARD_NSIDOMNSUIEVENT_NO_WHICH(nsDOMUIEvent::) \
   NS_FORWARD_TO_NSDOMEVENT
 
 #endif // nsDOMUIEvent_h__
