@@ -45,6 +45,7 @@
 #include "nsIXULSortService.h"
 #include "nsIXULDocumentInfo.h"
 #include "nsIXULPopupListener.h"
+#include "nsIXULFocusTracker.h"
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
 
@@ -77,6 +78,7 @@ static NS_DEFINE_CID(kXULDocumentCID,                     NS_XULDOCUMENT_CID);
 static NS_DEFINE_CID(kXULSortServiceCID,                  NS_XULSORTSERVICE_CID);
 static NS_DEFINE_CID(kXULDocumentInfoCID,                 NS_XULDOCUMENTINFO_CID);
 static NS_DEFINE_CID(kXULPopupListenerCID,                NS_XULPOPUPLISTENER_CID);
+static NS_DEFINE_CID(kXULFocusTrackerCID,                 NS_XULFOCUSTRACKER_CID);
 
 class RDFFactoryImpl : public nsIFactory
 {
@@ -170,6 +172,10 @@ RDFFactoryImpl::CreateInstance(nsISupports *aOuter,
     }
     else if (mClassID.Equals(kXULPopupListenerCID)) {
         if (NS_FAILED(rv = NS_NewXULPopupListener((nsIXULPopupListener**) &inst)))
+            return rv;
+    }
+    else if (mClassID.Equals(kXULFocusTrackerCID)) {
+        if (NS_FAILED(rv = NS_NewXULFocusTracker((nsIXULFocusTracker**) &inst)))
             return rv;
     }
     else if (mClassID.Equals(kRDFInMemoryDataSourceCID)) {
@@ -457,6 +463,13 @@ NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
                                          "XUL PopupListener",
                                          NS_RDF_PROGID "/xul-popup-listener",
                                          aPath, PR_TRUE, PR_TRUE);
+
+    if (NS_FAILED(rv)) goto done;
+    rv = compMgr->RegisterComponent(kXULFocusTrackerCID,
+                                         "XUL FocusTracker",
+                                         NS_RDF_PROGID "/xul-focus-tracker",
+                                         aPath, PR_TRUE, PR_TRUE);
+
   done:
     (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
     return rv;
@@ -524,6 +537,8 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* aPath)
     rv = compMgr->UnregisterComponent(kXULDocumentInfoCID,        aPath);
     if (NS_FAILED(rv)) goto done;
     rv = compMgr->UnregisterComponent(kXULPopupListenerCID,       aPath);
+    if (NS_FAILED(rv)) goto done;
+    rv = compMgr->UnregisterComponent(kXULFocusTrackerCID,        aPath);
 
   done:
     (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
