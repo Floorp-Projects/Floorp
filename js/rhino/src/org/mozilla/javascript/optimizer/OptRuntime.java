@@ -47,29 +47,28 @@ public final class OptRuntime extends ScriptRuntime {
     private OptRuntime() { 
     }
     
-    public static Object getElem(Object obj, double dblIndex, Scriptable scope) {
-        int index;
-        String s;
-        index = (int) dblIndex;
-        s = ((double) index) == dblIndex ? null : toString(new Double(dblIndex));
+    public static Object getElem(Object obj, double dblIndex, Scriptable scope)
+    {
+        int index = (int) dblIndex;
         Scriptable start = obj instanceof Scriptable
                            ? (Scriptable) obj
                            : toObject(scope, obj);
         Scriptable m = start;
-        if (s != null) {
+        if (((double) index) != dblIndex) {
+            String s = toString(dblIndex);
             while (m != null) {
                 Object result = m.get(s, start);
                 if (result != Scriptable.NOT_FOUND)
                     return result;
                 m = m.getPrototype();
             }
-            return Undefined.instance;
-        }
-        while (m != null) {
-            Object result = m.get(index, start);
-            if (result != Scriptable.NOT_FOUND)
-                return result;
-            m = m.getPrototype();
+        } else {
+            while (m != null) {
+                Object result = m.get(index, start);
+                if (result != Scriptable.NOT_FOUND)
+                    return result;
+                m = m.getPrototype();
+            }
         }
         return Undefined.instance;
     }
@@ -77,17 +76,13 @@ public final class OptRuntime extends ScriptRuntime {
     public static Object setElem(Object obj, double dblIndex, Object value,
                                  Scriptable scope)
     {
-        int index;
-        String s;
-        index = (int) dblIndex;
-        s = ((double) index) == dblIndex ?
-                    null : toString(new Double(dblIndex));
-
+        int index = (int) dblIndex;
         Scriptable start = obj instanceof Scriptable
                      ? (Scriptable) obj
                      : toObject(scope, obj);
         Scriptable m = start;
-        if (s != null) {
+        if (((double) index) != dblIndex) {
+            String s = toString(dblIndex);
             do {
                 if (m.has(s, start)) {
                     m.put(s, start, value);
@@ -96,17 +91,16 @@ public final class OptRuntime extends ScriptRuntime {
                 m = m.getPrototype();
             } while (m != null);
             start.put(s, start, value);
-            return value;
-       }
-
-        do {
-            if (m.has(index, start)) {
-                m.put(index, start, value);
-                return value;
-            }
-            m = m.getPrototype();
-        } while (m != null);
-        start.put(index, start, value);
+       } else {
+            do {
+                if (m.has(index, start)) {
+                    m.put(index, start, value);
+                    return value;
+                }
+                m = m.getPrototype();
+            } while (m != null);
+            start.put(index, start, value);
+        }
         return value;
     }
 
@@ -115,7 +109,7 @@ public final class OptRuntime extends ScriptRuntime {
             val1 = ((Scriptable) val1).getDefaultValue(null);
         if (!(val1 instanceof String))
             return new Double(toNumber(val1) + val2);
-        return toString(val1) + numberToString(val2, 10);
+        return toString(val1) + toString(val2);
     }
 
     public static Object add(double val1, Object val2) {
@@ -123,7 +117,7 @@ public final class OptRuntime extends ScriptRuntime {
             val2 = ((Scriptable) val2).getDefaultValue(null);
         if (!(val2 instanceof String))
             return new Double(toNumber(val2) + val1);
-        return numberToString(val1, 10) + toString(val2);
+        return toString(val1) + toString(val2);
     }
 
     public static boolean neq(Object x, Object y) {
@@ -152,7 +146,7 @@ public final class OptRuntime extends ScriptRuntime {
                 return 0;
             return d1 < d2 ? 1 : 0;
         }
-        return toString(new Double(d1)).compareTo(toString(val2)) < 0 ? 1 : 0;
+        return toString(d1).compareTo(toString(val2)) < 0 ? 1 : 0;
     }
 
     public static Boolean cmp_LTB(Object val1, double d2) {
@@ -173,7 +167,7 @@ public final class OptRuntime extends ScriptRuntime {
                 return 0;
             return d1 < d2 ? 1 : 0;
         }
-        return toString(val1).compareTo(toString(new Double(d2))) < 0 ? 1 : 0;
+        return toString(val1).compareTo(toString(d2)) < 0 ? 1 : 0;
     }
 
     public static Boolean cmp_LEB(double d1, Object val2) {
@@ -194,7 +188,7 @@ public final class OptRuntime extends ScriptRuntime {
                 return 0;
             return d1 <= d2 ? 1 : 0;
         }
-        return toString(new Double(d1)).compareTo(toString(val2)) <= 0 ? 1 : 0;
+        return toString(d1).compareTo(toString(val2)) <= 0 ? 1 : 0;
     }
 
     public static Boolean cmp_LEB(Object val1, double d2) {
@@ -215,7 +209,7 @@ public final class OptRuntime extends ScriptRuntime {
                 return 0;
             return d1 <= d2 ? 1 : 0;
         }
-        return toString(val1).compareTo(toString(new Double(d2))) <= 0 ? 1 : 0;
+        return toString(val1).compareTo(toString(d2)) <= 0 ? 1 : 0;
     }
 
     public static int cmp(Object val1, Object val2) {
