@@ -34,19 +34,25 @@
 
   <treebody rdf:containment="http://home.netscape.com/NC-rdf#child">
     <treeitem id="mailbox:/" open="true">
-      <treecell><treeindentation/><html:img hspace="2" style="vertical-align: bottom" src="&localMailHost.img;"/>&localMailHost.label;</treecell>
+      <treecell style="background-color: lightgrey"><treeindentation/><html:img hspace="2" style="vertical-align: bottom" src="&localMailHost.img;"/><b>&localMailHost.label;</b></treecell>
+	  <treecell style="background-color: lightgrey"/>
+	  <treecell style="background-color: lightgrey"/>
     </treeitem>
   </treebody>
 
   <treebody rdf:containment="http://home.netscape.com/NC-rdf#child">
     <treeitem id="imap:/" open="false">
-      <treecell><treeindentation/><html:img hspace="2" style="vertical-align: bottom" src="&imapHost.img;"/>&imapHost.label;</treecell>
+      <treecell style="background-color: lightgrey"><treeindentation/><html:img hspace="2" style="vertical-align: bottom" src="&imapHost.img;"/><b>&imapHost.label;</b></treecell>
+	  <treecell style="background-color: lightgrey"/>
+	  <treecell style="background-color: lightgrey"/>
     </treeitem>
   </treebody>
 
   <treebody rdf:containment="http://home.netscape.com/NC-rdf#child">
     <treeitem id="news://news.mozilla.org" open="false">
-      <treecell><treeindentation/><html:img hspace="2" style="vertical-align: bottom" src="&newsHost.img;"/>&newsHost.label;</treecell>
+      <treecell style="background-color: lightgrey"><treeindentation/><html:img hspace="2" style="vertical-align: bottom" src="&newsHost.img;"/><b>&newsHost.label;</b></treecell>
+	  <treecell style="background-color: lightgrey"/>
+	  <treecell style="background-color: lightgrey"/>
     </treeitem>
   </treebody>
 </tree>
