@@ -1,0 +1,10 @@
+prefix=%prefix%
+exec_prefix=%exec_prefix%
+libdir=%libdir%
+includedir=%includedir%
+
+Name: Mozilla Plug-In API
+Description: Mozilla Plug-In API
+Version: %MOZILLA_VERSION%
+Requires: mozilla-xpcom = %MOZILLA_VERSION%
+Cflags: -I${includedir}/java -I${includedir}/plugin
