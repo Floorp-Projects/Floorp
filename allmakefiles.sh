@@ -869,6 +869,9 @@ browser/components/prefwindow/locale/Makefile
 browser/components/search/Makefile
 browser/components/search/resources/Makefile
 browser/components/security/Makefile
+browser/components/sidebar/Makefile
+browser/components/sidebar/public/Makefile
+browser/components/sidebar/src/Makefile
 "
 
 MAKEFILES_xulapp="
