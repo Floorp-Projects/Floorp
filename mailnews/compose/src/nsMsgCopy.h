@@ -72,7 +72,8 @@ public:
   nsresult              StartCopyOperation(nsIMsgIdentity       *aUserIdentity,
                                            nsIFileSpec          *aFileSpec, 
                                            nsMsgDeliverMode     aMode,
-                                           nsMsgComposeAndSend  *aMsgSendObj);
+                                           nsMsgComposeAndSend  *aMsgSendObj,
+                                           const char           *aSavePref);
 
   nsresult              DoCopy(nsIFileSpec *aDiskFile, nsIMsgFolder *dstFolder,
                                nsIMessage *aMsgToReplace, PRBool aIsDraft,
@@ -90,9 +91,12 @@ public:
   nsMsgComposeAndSend   *mMsgSendObj;
   nsMsgDeliverMode      mMode;
   CopyListener          *mCopyListener;
+  char                  *mSavePref;
 };
 
 // Useful function for the back end...
-nsIMsgFolder      *LocateMessageFolder(nsIMsgIdentity   *userIdentity, nsMsgDeliverMode aFolderType);
+nsIMsgFolder      *LocateMessageFolder(nsIMsgIdentity   *userIdentity, 
+                                       nsMsgDeliverMode aFolderType,
+                                       const char       *aSavePref);
 
 #endif /* _nsMsgCopy_H_ */

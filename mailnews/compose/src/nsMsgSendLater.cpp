@@ -631,7 +631,7 @@ nsMsgSendLater::StartNextMailFileSend()
 nsIMsgFolder *
 nsMsgSendLater::GetUnsentMessagesFolder(nsIMsgIdentity *userIdentity)
 {
-  return LocateMessageFolder(userIdentity, nsMsgQueueForLater);
+  return LocateMessageFolder(userIdentity, nsMsgQueueForLater, nsnull);
 }
 
 //

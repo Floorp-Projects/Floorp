@@ -1115,15 +1115,19 @@ nsMsgComposeAndSend::InitCompositionFields(nsMsgCompFields *fields)
 		HJ41792
 	}
 
-  // RICHIE - HACK
-  // For now, we will just force copy operations to happen with this code, but
-  // this should really be hanging off of a pref or something. Also, the FCC field
-  // should probably change to boolean and let the message store figure out what 
-  // folder is the appropriate folder.
+  // Now, we will look for a URI defined as the default FCC pref. If this is set,
+  // then SetFcc will use this value. The FCC field is a URI for the server that 
+  // will hold the "Sent" folder...the 
   //
-  fields->SetFcc("Dummy", nsnull);
-  mCompFields->SetFcc("Dummy", nsnull);
-  // RICHIE - HACK END
+  char *uri = "mailbox://";
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+  if (NS_SUCCEEDED(rv) && prefs) 
+  {
+    rv = prefs->CopyCharPref("mail.default_fcc_server", &uri);
+  }
+
+  fields->SetFcc(uri, nsnull);
+  mCompFields->SetFcc(uri, nsnull);
 
 	mCompFields->SetNewspostUrl((char *) fields->GetNewspostUrl(), nsnull);
 	mCompFields->SetDefaultBody((char *) fields->GetDefaultBody(), nsnull);
@@ -2368,7 +2372,7 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
 	// one in so that it's marked as read already.
   //
   if (mode == nsMsgQueueForLater  || mode == nsMsgSaveAsDraft ||
-	    mode == nsMsgSaveAsTemplate)
+	    mode == nsMsgSaveAsTemplate || mode == nsMsgDeliverNow)
 	{
 	  char       *buf = 0;
 	  PRUint16   flags = 0;
@@ -2620,5 +2624,10 @@ nsMsgComposeAndSend::StartMessageCopyOperation(nsIFileSpec        *aFileSpec,
   if (!mCopyObj)
     return MK_OUT_OF_MEMORY;
 
-  return mCopyObj->StartCopyOperation(mUserIdentity, aFileSpec, mode, this);
+  if (!mCompFields->GetFcc() || !*mCompFields->GetFcc())
+    return mCopyObj->StartCopyOperation(mUserIdentity, aFileSpec, mode, 
+                                        this, nsnull);
+  else
+    return mCopyObj->StartCopyOperation(mUserIdentity, aFileSpec, mode, 
+                                        this, mCompFields->GetFcc());
 }

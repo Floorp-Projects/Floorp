@@ -114,6 +114,7 @@ nsMsgCopy::nsMsgCopy()
   mFileSpec = nsnull;
   mMsgSendObj = nsnull;
   mMode = nsMsgDeliverNow;
+  mSavePref = nsnull;
 }
 
 nsMsgCopy::~nsMsgCopy()
@@ -122,13 +123,16 @@ nsMsgCopy::~nsMsgCopy()
     NS_RELEASE(mMsgSendObj);
   if (mCopyListener)
     NS_RELEASE(mCopyListener);
+
+  PR_FREEIF(mSavePref);
 }
 
 nsresult
 nsMsgCopy::StartCopyOperation(nsIMsgIdentity       *aUserIdentity,
                               nsIFileSpec          *aFileSpec, 
                               nsMsgDeliverMode     aMode,
-                              nsMsgComposeAndSend  *aMsgSendObj)
+                              nsMsgComposeAndSend  *aMsgSendObj,
+                              const char           *aSavePref)
 {
   nsCOMPtr<nsIMsgFolder>  dstFolder;
   nsIMessage              *msgToReplace = nsnull;
@@ -136,6 +140,10 @@ nsMsgCopy::StartCopyOperation(nsIMsgIdentity       *aUserIdentity,
 
   if (!aMsgSendObj)
     return NS_ERROR_FAILURE;
+
+  // Store away the server location...
+  if (aSavePref)
+    mSavePref = PL_strdup(aSavePref);
 
   //
   // Vars for implementation...
@@ -204,13 +212,15 @@ nsMsgCopy::DoCopy(nsIFileSpec *aDiskFile, nsIMsgFolder *dstFolder,
 
 nsIMsgFolder *
 LocateMessageFolder(nsIMsgIdentity   *userIdentity, 
-                    nsMsgDeliverMode aFolderType)
+                    nsMsgDeliverMode aFolderType,
+                    const char       *aSavePref)
 {
   nsresult                  rv = NS_OK;
   nsIMsgFolder              *msgFolder= nsnull;
   PRUint32                  cnt = 0;
   PRUint32                  subCnt = 0;
   PRUint32                  i;
+  PRBool                    fixed = PR_FALSE;
 
   //
   // get the current mail session....
@@ -242,6 +252,47 @@ LocateMessageFolder(nsIMsgIdentity   *userIdentity,
     inServer = do_QueryInterface(retval->ElementAt(i));
     if(NS_FAILED(rv) || (!inServer))
       return nsnull;
+
+    //
+    // If aSavePref is passed in, then the user has chosen a specific
+    // mail folder to save the message, but if it is null, just find the
+    // first one and make that work. The folder is specified as a URI, like
+    // the following:
+    //
+    //                  mailbox://rhp@netscape.com 
+    //                  newsgroup://news.mozilla.org
+    //
+    if ( (aSavePref) && (*aSavePref) )
+    {
+      char *anyServer = "anyfolder://";
+      if (PL_strncasecmp(anyServer, aSavePref, PL_strlen(aSavePref)) != 0)
+      {
+        char *serverURI = nsnull;
+        nsresult res = inServer->GetServerURI(&serverURI);
+        if ( NS_FAILED(res) || (!serverURI) || !(*serverURI) )
+          continue;
+
+        // First, make sure that aSavePref is only the protocol://server
+        // for this comparison...not the file path if any...
+        //
+        if (!fixed)
+        {
+          char *ptr1 = PL_strstr(aSavePref, "//");
+          if ( (ptr1) && (*ptr1) )
+          {
+            ptr1 = ptr1 + 2;
+            char *ptr2 = PL_strchr(ptr1, '/');
+            if ( (ptr2) && (*ptr2) )
+              *ptr2 = '\0';
+          }
+          fixed = PR_TRUE;
+        }
+        // Now check to see if this URI is the same as the
+        // server pref
+        if (PL_strncasecmp(serverURI, aSavePref, PL_strlen(aSavePref)) != 0)
+          continue;
+      }
+    }
 
     nsIFolder *aFolder;
     rv = inServer->GetRootFolder(&aFolder);
@@ -284,23 +335,23 @@ LocateMessageFolder(nsIMsgIdentity   *userIdentity,
 nsIMsgFolder *
 nsMsgCopy::GetUnsentMessagesFolder(nsIMsgIdentity   *userIdentity)
 {
-  return LocateMessageFolder(userIdentity, nsMsgQueueForLater);
+  return LocateMessageFolder(userIdentity, nsMsgQueueForLater, mSavePref);
 }
  
 nsIMsgFolder *
 nsMsgCopy::GetDraftsFolder(nsIMsgIdentity *userIdentity)
 {
-  return LocateMessageFolder(userIdentity, nsMsgSaveAsDraft);
+  return LocateMessageFolder(userIdentity, nsMsgSaveAsDraft, mSavePref);
 }
 
 nsIMsgFolder *
 nsMsgCopy::GetTemplatesFolder(nsIMsgIdentity *userIdentity)
 {
-  return LocateMessageFolder(userIdentity, nsMsgSaveAsTemplate);
+  return LocateMessageFolder(userIdentity, nsMsgSaveAsTemplate, mSavePref);
 }
 
 nsIMsgFolder * 
 nsMsgCopy::GetSentFolder(nsIMsgIdentity *userIdentity)
 {
-  return LocateMessageFolder(userIdentity, nsMsgDeliverNow);
+  return LocateMessageFolder(userIdentity, nsMsgDeliverNow, mSavePref);
 }
