@@ -523,20 +523,16 @@ nsMsgAppCore::OpenURL(const char * url)
 			}
 			else
 			{
-				nsString folderURI;
-				nsParseLocalMessageURI(url, folderURI, &msgIndex);
-				nsURI2Path(kMessageRootURI, nsAutoCString(folderURI), folderPath);
 				displayNumber = PR_FALSE;
 			}
 			nsIMailboxService * mailboxService = nsnull;
 			nsresult rv = nsServiceManager::GetService(kCMailboxServiceCID, nsIMailboxService::GetIID(), (nsISupports **) &mailboxService);
 			if (NS_SUCCEEDED(rv) && mailboxService)
 			{
-				nsIURL * url = nsnull;
 				if(displayNumber)
 					mailboxService->DisplayMessageNumber(folderPath, msgIndex, mWebShell, nsnull, nsnull);
 				else
-					mailboxService->DisplayMessage(folderPath, msgIndex, nsnull, mWebShell, nsnull, nsnull);
+					mailboxService->DisplayMessage(url, mWebShell, nsnull, nsnull);
 
 				nsServiceManager::ReleaseService(kCMailboxServiceCID, mailboxService);
 			}
