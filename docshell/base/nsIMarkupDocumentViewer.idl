@@ -52,7 +52,7 @@
 interface nsIDOMNode;
 
 
-[scriptable, uuid(69E5DE03-7B8B-11d3-AF61-00A024FFC08C)]
+[scriptable, uuid(c33a616e-8020-4f01-a1eb-19a32370d566)]
 interface nsIMarkupDocumentViewer : nsISupports
 {
 
