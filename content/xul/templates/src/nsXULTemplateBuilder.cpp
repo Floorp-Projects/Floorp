@@ -122,6 +122,11 @@ static NS_DEFINE_CID(kXULSortServiceCID,         NS_XULSORTSERVICE_CID);
 
 #ifdef DEBUG
 
+/**
+ * A debug-only implementation that verifies that 1) aValue really
+ * is an nsISupports, and 2) that it really does support the IID
+ * that is being asked for.
+ */
 static nsISupports*
 value_to_isupports(const nsIID& aIID, const Value& aValue)
 {
@@ -148,6 +153,10 @@ value_to_isupports(const nsIID& aIID, const Value& aValue)
 #define VALUE_TO_ISUPPORTS(type, v) NS_STATIC_CAST(type*, NS_STATIC_CAST(nsISupports*, (v)))
 #endif
 
+// Convenience wrappers for |Value::operator nsISupports*()|. In a
+// debug build, they expand to versions that will call QI() and verify
+// that the types are kosher. In an optimized build, they'll just cast
+// n' go. Rock on!
 #define VALUE_TO_IRDFRESOURCE(v) VALUE_TO_ISUPPORTS(nsIRDFResource, (v))
 #define VALUE_TO_IRDFNODE(v)     VALUE_TO_ISUPPORTS(nsIRDFNode, (v))
 #define VALUE_TO_ICONTENT(v)     VALUE_TO_ISUPPORTS(nsIContent, (v))
@@ -373,12 +382,42 @@ public:
     PRBool operator!=(const Match& aMatch) const {
         return !(*this == aMatch); }
 
+    /**
+     * Get the assignment for the specified variable, computing the
+     * value using the rule's bindings, if necessary.
+     * @param aConflictSet
+     * @param aVariable the variable for which to determine the assignment
+     * @param aValue an out parameter that receives the value assigned to
+     *   aVariable.
+     * @return PR_TRUE if aVariable has an assignment, PR_FALSE otherwise.
+     */
     PRBool GetAssignmentFor(ConflictSet& aConflictSet, PRInt32 aVariable, Value* aValue);
 
-    const Rule*     mRule;
-    Instantiation   mInstantiation;
+    /**
+     * The rule that this match applies for.
+     */
+    const Rule* mRule;
+
+    /**
+     * The fully bound instantiation (variable-to-value assignments, with
+     * memory element support) that match the rule's conditions.
+     */
+    Instantiation mInstantiation;
+
+    /**
+     * Any additional assignments that apply because of the rule's
+     * bindings. These are computed lazily.
+     */
     nsAssignmentSet mAssignments;
-    ResourceSet     mBindingDependencies;
+
+    /**
+     * The set of resources that the Match's bindings depend on. Should the
+     * assertions relating to these resources change, then the rule will
+     * still match (i.e., this match object is still "good"); however, we
+     * may need to recompute the assignments that have been made using the
+     * rule's bindings.
+     */
+    ResourceSet mBindingDependencies;
 
     PRInt32 AddRef() { return ++mRefCnt; }
 
@@ -446,45 +485,153 @@ public:
 
     ~Rule();
 
+    /**
+     * Return the content node that this rule was constructed from.
+     * @param aResult an out parameter, which will contain the content node
+     *   that this rule was constructed from
+     * @return NS_OK if no errors occur.
+     */
     nsresult GetContent(nsIContent** aResult) const;
 
+    /**
+     * Set the variable which should be used as the "container
+     * variable" in this rule. The container variable will be bound to
+     * an RDF resource that is the parent of the member resources.
+     * @param aContainerVariable the variable that should be used as the
+     *    "container variable" in this rule
+     */
     void SetContainerVariable(PRInt32 aContainerVariable) {
         mContainerVariable = aContainerVariable; }
 
+    /**
+     * Retrieve the variable that this rule uses as its "container variable".
+     * @return the variable that this rule uses as its "container variable".
+     */
     PRInt32 GetContainerVariable() const {
         return mContainerVariable; }
 
+    /**
+     * Set the variable which should be used as the "member variable"
+     * in this rule. The member variable will be bound to an RDF
+     * resource that is the child of the container resource.
+     * @param aMemberVariable the variable that should be used as the
+     *   "member variable" in this rule.
+     */
     void SetMemberVariable(PRInt32 aMemberVariable) {
         mMemberVariable = aMemberVariable; }
 
+    /**
+     * Retrieve the variable that this rule uses as its "member variable".
+     * @return the variable that this rule uses as its "member variable"
+     */
     PRInt32 GetMemberVariable() const {
         return mMemberVariable; }
 
+    /**
+     * Retrieve the "priority" of the rule with respect to the
+     * other rules in the template
+     * @return the rule's priority, lower values mean "use this first".
+     */
     PRInt32 GetPriority() const {
         return mPriority; }
 
+    /**
+     * Add a symbolic name for a variable to the rule.
+     * @param aSymbol the symbolic name for the variable
+     * @param aVariable the variable to which the name is bound
+     * @return NS_OK if no errors occurred
+     */
     nsresult AddSymbol(const nsString& aSymbol, PRInt32 aVariable);
+
+    /**
+     * Retrieve the variable for a symbolic name
+     * @param aSymbol the symbolic name for the variable
+     * @return the variable that is associated with aSymbol, or zero
+     *   if no variable could be found.
+     */
     PRInt32  LookupSymbol(const nsString& aSymbol) const;
 
+    /**
+     * Add a binding to the rule. A binding consists of an already-bound
+     * source variable, and the RDF property that should be tested to
+     * generate a target value. The target value is bound to a target
+     * variable.
+     *
+     * @param aSourceVariable the source variable that will be used in
+     *   the RDF query.
+     * @param aProperty the RDF property that will be used in the RDF
+     *   query.
+     * @param aTargetVariable the variable whose value will be bound
+     *   to the RDF node that is returned when querying the binding
+     * @return NS_OK if no errors occur.
+     */
     nsresult AddBinding(PRInt32 aSourceVariable,
                         nsIRDFResource* aProperty,
                         PRInt32 aTargetVariable);
 
+    /**
+     * Initialize a match by adding necessary binding dependencies to
+     * the conflict set. This will allow us to properly update the
+     * match later if a value should change that the match's bindings
+     * depend on.
+     * @param aConflictSet the conflict set
+     * @param aMatch the match we to initialize
+     * @return NS_OK if no errors occur.
+     */
     nsresult InitBindings(ConflictSet& aConflictSet, Match* aMatch) const;
 
+    /**
+     * Compute the minimal set of changes to a match's bindings that
+     * must occur which the specified change is made to the RDF graph.
+     * @param aConflictSet the conflict set, which we may need to manipulate
+     *   to update the binding dependencies.
+     * @param aMatch the match for which we must recompute the bindings
+     * @param aSource the "source" resource in the RDF graph
+     * @param aProperty the "property" resource in the RDF graph
+     * @param aOldTarget the old "target" node in the RDF graph
+     * @param aNewTarget the new "target" node in the RDF graph.
+     * @param aModifiedVars a VariableSet, into which this routine
+     *   will assign each variable whose value has changed.
+     * @return NS_OK if no errors occurred.
+     */
     nsresult RecomputeBindings(ConflictSet& aConflictSet,
                                Match* aMatch,
                                nsIRDFResource* aSource,
                                nsIRDFResource* aProperty,
                                nsIRDFNode* aOldTarget,
                                nsIRDFNode* aNewTarget,
-                               nsAssignmentSet& aModifiedBindings) const;
+                               VariableSet& aModifiedVars) const;
 
+    /**
+     * Compute the value to assign to an arbitrary variable in a
+     * match.  This may require us to work out several dependancies,
+     * if there are bindings set up for this rule.
+     * @param aConflictSet the conflict set; if necessary, we may add
+     *   a "binding dependency" to the conflict set, which will allow us
+     *   to correctly recompute the bindings later if they should change.
+     * @param aMatch the match that provides the "seed" variable assignments,
+     *   which we may need to extend using the rule's bindings.
+     * @param aVariable the variable for which we are to compute the
+     *   assignment.
+     * @param aValue an out parameter that will receive the value that
+     *   was assigned to aVariable, if we could find one.
+     * @return PR_TRUE if an assignment was found for aVariable, PR_FALSE
+     *   otherwise.
+     */
     PRBool ComputeAssignmentFor(ConflictSet& aConflictSet,
                                 Match* aMatch,
                                 PRInt32 aVariable,
                                 Value* aValue) const;
 
+    /**
+     * Determine if one variable depends on another in the rule's
+     * bindings.
+     * @param aChild the dependent variable, whose value may
+     *   depend on the assignment of aParent.
+     * @param aParent the variable whose value aChild is depending on.
+     * @return PR_TRUE if aChild's assignment depends on the assignment
+     *   for aParent, PR_FALSE otherwise.
+     */
     PRBool DependsOn(PRInt32 aChild, PRInt32 aParent) const;
 
 protected:
@@ -1048,12 +1195,35 @@ MatchSet::Remove(Match* aMatch)
  * The matches in a cluster "compete" amongst each other;
  * specifically, the match that corresponds to the rule that is
  * declared first wins, and becomes active.
+ *
+ * The ClusterKey is a hashtable key into the set of matches that are
+ * currently competing: it consists of the container variable, its
+ * value, the member variable, and its value.
  */
 class ClusterKey {
 public:
     ClusterKey() { MOZ_COUNT_CTOR(ClusterKey); }
 
+    /**
+     * Construct a ClusterKey from an instantiation and a rule. This
+     * will use the rule to identify the container and member variables,
+     * and then pull out their assignments from the instantiation.
+     * @param aInstantiation the instantiation to use to determine
+     *   variable values
+     * @param aRule the rule to use to determine the member and container
+     *   variables.
+     */
     ClusterKey(const Instantiation& aInstantiation, const Rule* aRule);
+
+    ClusterKey(PRInt32 aContainerVariable,
+               const Value& aContainerValue,
+               PRInt32 aMemberVariable,
+               const Value& aMemberValue)
+        : mContainerVariable(aContainerVariable),
+          mContainerValue(aContainerValue),
+          mMemberVariable(aMemberVariable),
+          mMemberValue(aMemberValue) {
+        MOZ_COUNT_CTOR(ClusterKey); }
 
     ClusterKey(const ClusterKey& aKey)
         : mContainerVariable(aKey.mContainerVariable),
@@ -1140,7 +1310,7 @@ ClusterKey::CompareClusterKeys(const void* aLeft, const void* aRight)
 //----------------------------------------------------------------------
 
 /**
- * A collection of ClusterKey objects
+ * A collection of ClusterKey objects.
  */
 
 class ClusterKeySet {
@@ -1310,7 +1480,8 @@ ClusterKeySet::Add(const ClusterKey& aKey)
 //----------------------------------------------------------------------
 
 /**
- * Maintains the set of active matches.
+ * Maintains the set of active matches, and the stuff that the
+ * matches depend on.
  */
 class ConflictSet
 {
@@ -1322,10 +1493,32 @@ public:
 
     ~ConflictSet() { Destroy(); }
 
+    /**
+     * Add a match to the conflict set.
+     * @param aMatch the match to add to the conflict set
+     * @param aDidAddKey an out parameter, set to PR_TRUE if the addition
+     *   caused a new cluster key to be created in the conflict set
+     * @return NS_OK if no errors occurred
+     */
     nsresult Add(Match* aMatch, PRBool* aDidAddKey);
 
+    /**
+     * Given a cluster key, which is a container-member pair, return the
+     * set of matches that are currently "active" for that cluster. (The
+     * caller can the select among the active rules to determine which
+     * should actually be applied.)
+     * @param aKey the cluster key to search for
+     * @param aMatchSet the set of matches that are currently active
+     *   for the key.
+     */
     void GetMatchesForClusterKey(const ClusterKey& aKey, MatchSet** aMatchSet);
 
+    /**
+     * Given a "source" in the RDF graph, return the set of matches
+     * that currently depend on the source in some way.
+     * @param aSource an RDF resource that is a "source" in the graph.
+     * @param aMatchSet the set of matches that depend on aSource.
+     */
     void GetMatchesWithBindingDependency(nsIRDFResource* aSource, MatchSet** aMatchSet);
 
     void Remove(const MemoryElement& aMemoryElement,
@@ -1336,8 +1529,16 @@ public:
 
     nsresult RemoveBindingDependency(Match* aMatch, nsIRDFResource* aResource);
 
+    /**
+     * Remove all match support information currently stored in the conflict
+     * set, and re-initialize the set.
+     */
     void Clear();
 
+    /**
+     * Get the fixed-size arena allocator used by the conflict set
+     * @return the fixed-size arena allocator used by the conflict set
+     */
     nsFixedSizeAllocator& GetPool() { return mPool; }
 
 protected:
@@ -1346,10 +1547,12 @@ protected:
 
     nsresult ComputeNewMatches(MatchSet& aNewMatches, MatchSet& aRetractedMatches);
 
-    // "Clusters" of matched rules for the same <content, member>
-    // pair. This table makes it O(1) to lookup all of the matches
-    // that are active for a cluster, so determining which is active
-    // is efficient.
+    /**
+     * "Clusters" of matched rules for the same <content, member>
+     * pair. This table makes it O(1) to lookup all of the matches
+     * that are active for a cluster, so determining which is active
+     * is efficient.
+     */
     PLHashTable* mClusters;
 
     class ClusterEntry {
@@ -1390,9 +1593,11 @@ protected:
         if (aFlag == HT_FREE_ENTRY)
             delete NS_REINTERPRET_CAST(ClusterEntry*, aHashEntry); }
 
-    // Maps a MemoryElement to the Match objects that it
-    // supports. This map allows us to efficiently remove rules from
-    // the conflict set when a MemoryElement is removed.
+    /**
+     * Maps a MemoryElement to the Match objects that it
+     * supports. This map allows us to efficiently remove rules from
+     * the conflict set when a MemoryElement is removed.
+     */
     PLHashTable* mSupport;
 
     class SupportEntry {
@@ -1874,7 +2079,7 @@ Rule::RecomputeBindings(ConflictSet& aConflictSet,
                         nsIRDFResource* aProperty,
                         nsIRDFNode* aOldTarget,
                         nsIRDFNode* aNewTarget,
-                        nsAssignmentSet& aModifiedBindings) const
+                        VariableSet& aModifiedVars) const
 {
     // Given a match with a source, property, old target, and new
     // target, compute the minimal changes to the match's bindings.
@@ -1916,22 +2121,28 @@ Rule::RecomputeBindings(ConflictSet& aConflictSet,
                 // Found one. Now we iterate through the assignments,
                 // doing fixup.
                 for (PRInt32 j = 0; j < assignments.Count(); ++j) {
-                    nsAssignment* dependant = NS_STATIC_CAST(nsAssignment*, assignments[j]);
-                    if (dependant->mVariable == binding->mTargetVariable) {
+                    nsAssignment* dependent = NS_STATIC_CAST(nsAssignment*, assignments[j]);
+                    if (dependent->mVariable == binding->mTargetVariable) {
                         // The assignment's variable is the target
                         // varible for the binding: we can update it
                         // in-place.
-                        dependant->mValue = Value(aNewTarget);
-                        aModifiedBindings.Add(*dependant);
+                        dependent->mValue = Value(aNewTarget);
+                        aModifiedVars.Add(dependent->mVariable);
                     }
-                    else if (DependsOn(dependant->mVariable, binding->mTargetVariable)) {
+                    else if (DependsOn(dependent->mVariable, binding->mTargetVariable)) {
                         // The assignment's variable depends on the
                         // binding's target variable, which is
                         // changing. Rip it out.
-                        aConflictSet.RemoveBindingDependency(aMatch, VALUE_TO_IRDFRESOURCE(dependant->mValue));
+                        aConflictSet.RemoveBindingDependency(aMatch, VALUE_TO_IRDFRESOURCE(dependent->mValue));
 
-                        delete dependant;
+                        delete dependent;
                         assignments.RemoveElementAt(j--);
+
+                        aModifiedVars.Add(dependent->mVariable);
+                    }
+                    else {
+                        // The dependent variable is irrelevant. Leave
+                        // it alone.
                     }
                 }
             }
@@ -1945,6 +2156,9 @@ Rule::RecomputeBindings(ConflictSet& aConflictSet,
     //
     // Add these assignments *back* to the match (modulo the ones
     // already in the conditions).
+    //
+    // The values for any dependent assignments that we've ripped out
+    // will be computed the next time that somebody asks us for them.
     for (i = assignments.Count() - 1; i >= 0; --i) {
         nsAssignment* assignment = NS_STATIC_CAST(nsAssignment*, assignments[i]);
 
@@ -1954,66 +2168,6 @@ Rule::RecomputeBindings(ConflictSet& aConflictSet,
         }
 
         delete assignment;
-    }
-
-    // Now we need to recompute values for any bindings that we've
-    // ripped out because of dependencies. This loop does this using a
-    // shotgun: it recomputes *all* the values that need to be
-    // recomputed.
-    //
-    // The bindings are arranged such that any binding that is
-    // dependent on another variable's value will appear later in the
-    // list. That means we can iterate through the list, binding
-    // variables to values, and not worry about any dependencies.
-    //
-    // XXXwaterson of course, this isn't quite true: see
-    // InstantiationNode::AddBinding().
-    for (Binding* binding = mBindings; binding != nsnull; binding = binding->mNext) {
-        Value sourceValue;
-        PRBool hasSourceBinding =
-            aMatch->mAssignments.GetAssignmentFor(binding->mSourceVariable, &sourceValue);
-
-        Value targetValue;
-        PRBool hasTargetBinding =
-            aMatch->mAssignments.GetAssignmentFor(binding->mTargetVariable, &targetValue);
-
-        nsCOMPtr<nsIRDFResource> source;
-        nsCOMPtr<nsIRDFNode> target;
-
-        if (hasSourceBinding && hasTargetBinding) {
-            // This is a bit weird. Regardless, there's nothing for us
-            // to do. Both variables are bound, and we don't care if
-            // it's consistent or not.
-            continue;
-        }
-        else if (hasSourceBinding && (source = VALUE_TO_IRDFRESOURCE(sourceValue)) != nsnull) {
-            mDataSource->GetTarget(source,
-                                   binding->mProperty,
-                                   PR_TRUE,
-                                   getter_AddRefs(target));
-
-            nsAssignment assignment(binding->mTargetVariable, Value(target.get()));
-            aMatch->mAssignments.Add(assignment);
-            aModifiedBindings.Add(assignment);
-        }
-        else if (hasTargetBinding && (target = VALUE_TO_IRDFNODE(targetValue)) != nsnull) {
-            mDataSource->GetSource(binding->mProperty,
-                                   target,
-                                   PR_TRUE,
-                                   getter_AddRefs(source));
-
-            nsAssignment assignment(binding->mSourceVariable, Value(source.get()));
-            aMatch->mAssignments.Add(assignment);
-            aModifiedBindings.Add(assignment);
-        }
-        else {
-            // oh well, no big deal.
-            continue;
-        }
-
-        // If we get here, then we need to add a dependency on the
-        // `source' resource for this match.
-        aConflictSet.AddBindingDependency(aMatch, source);
     }
 
     return NS_OK;
@@ -2193,16 +2347,20 @@ public:
  */
 class ContentSupportMap {
 public:
-    ContentSupportMap();
-    ~ContentSupportMap();
+    ContentSupportMap() { Init(); }
+    ~ContentSupportMap() { Finish(); }
 
     nsresult Put(nsIContent* aElement, Match* aMatch);
     PRBool Get(nsIContent* aElement, Match** aMatch);
     nsresult Remove(nsIContent* aElement);
+    void Clear() { Finish(); Init(); }
 
 protected:
     PLHashTable* mMap;
     nsFixedSizeAllocator mPool;
+
+    void Init();
+    void Finish();
 
     struct Entry {
         PLHashEntry mHashEntry;
@@ -2248,7 +2406,8 @@ protected:
 PLHashAllocOps ContentSupportMap::gAllocOps = {
     AllocTable, FreeTable, AllocEntry, FreeEntry };
 
-ContentSupportMap::ContentSupportMap()
+void
+ContentSupportMap::Init()
 {
     static const size_t kBucketSizes[] = { sizeof(Entry) };
     static const PRInt32 kNumBuckets = sizeof(kBucketSizes) / sizeof(size_t);
@@ -2268,8 +2427,8 @@ ContentSupportMap::ContentSupportMap()
                            &mPool);
 }
 
-
-ContentSupportMap::~ContentSupportMap()
+void
+ContentSupportMap::Finish()
 {
     PL_HashTableDestroy(mMap);
 }
@@ -2369,6 +2528,9 @@ public:
 
     // Implementation methods
     nsresult
+    RebuildContainerInternal(nsIContent* aElement, PRBool aRecompileRules);
+
+    nsresult
     InitializeRuleNetwork(InnerNode** aChildNode);
 
     nsresult
@@ -2451,8 +2613,8 @@ public:
     nsresult
     SynchronizeUsingTemplate(nsIContent *aTemplateNode,
                              nsIContent* aRealNode,
-                             const Rule* aRule,
-                             const nsAssignmentSet& aModifiedBindings);
+                             Match& aMatch,
+                             const VariableSet& aModifiedVars);
 
     nsresult
     Propogate(nsIRDFResource* aSource,
@@ -4008,16 +4170,8 @@ NS_IMPL_ISUPPORTS3(nsXULTemplateBuilder,
 NS_IMETHODIMP
 nsXULTemplateBuilder::Rebuild()
 {
-    // Clear the conflict set *now*, so that cleaning out crufty
-    // content is cheap.
-    mConflictSet.Clear();
-
-    // Recompile the rules
-    CompileRules();
-
     // Remove the old content, and create the new content.
-    RebuildContainer(mRoot);
-
+    RebuildContainerInternal(mRoot, PR_TRUE);
     return NS_OK;
 }
 
@@ -4266,18 +4420,34 @@ nsXULTemplateBuilder::RebuildContainer(nsIContent* aElement)
             return NS_OK;
     }
 
+    return RebuildContainerInternal(aElement, PR_FALSE);
+}
+
+
+nsresult
+nsXULTemplateBuilder::RebuildContainerInternal(nsIContent* aElement, PRBool aRecompileRules)
+{
+    nsresult rv;
+
     // If we get here, then we've tried to generate content for this
     // element. Remove it.
     rv = RemoveGeneratedContent(aElement);
     if (NS_FAILED(rv)) return rv;
 
-    // Remove any instantiations involving this element from the
-    // conflict set.
-    MatchSet firings, retractions;
-    mConflictSet.Remove(ContentTestNode::Element(aElement), firings, retractions);
+    if (aElement == mRoot.get()) {
+        // Nuke the content support map and conflict set completely.
+        mContentSupportMap.Clear();
+        mConflictSet.Clear();
+
+        if (aRecompileRules) {
+            rv = CompileRules();
+            if (NS_FAILED(rv)) return rv;
+        }
+    }
 
     // Forces the XUL element to remember that it needs to
     // re-generate its children next time around.
+    nsCOMPtr<nsIXULContent> xulcontent = do_QueryInterface(aElement);
     if (xulcontent) {
         rv = xulcontent->SetLazyState(nsIXULContent::eChildrenMustBeRebuilt);
         if (NS_FAILED(rv)) return rv;
@@ -5366,13 +5536,13 @@ nsXULTemplateBuilder::SynchronizeAll(nsIRDFResource* aSource,
 
         // Recompute the assignments. This will replace aOldTarget with
         // aNewTarget, which will disrupt the match set.
-        nsAssignmentSet modified;
+        VariableSet modified;
         rule->RecomputeBindings(mConflictSet, match.operator->(),
                                 aSource, aProperty, aOldTarget, aNewTarget,
                                 modified);
 
         // If nothing changed, then continue on to the next match.
-        if (modified.IsEmpty())
+        if (0 == modified.GetCount())
             continue;
 
         Value memberValue;
@@ -5457,7 +5627,7 @@ nsXULTemplateBuilder::SynchronizeAll(nsIRDFResource* aSource,
                 return NS_ERROR_UNEXPECTED;
 
             // this node was created by a XUL template, so update it accordingly
-            rv = SynchronizeUsingTemplate(templateNode, element, rule, modified);
+            rv = SynchronizeUsingTemplate(templateNode, element, *match, modified);
             if (NS_FAILED(rv)) return rv;
         }
         
@@ -5478,8 +5648,8 @@ nsXULTemplateBuilder::SynchronizeAll(nsIRDFResource* aSource,
 nsresult
 nsXULTemplateBuilder::SynchronizeUsingTemplate(nsIContent* aTemplateNode,
                                                nsIContent* aRealElement,
-                                               const Rule* aRule,
-                                               const nsAssignmentSet& aModifiedBindings)
+                                               Match& aMatch,
+                                               const VariableSet& aModifiedVars)
 {
     nsresult rv;
 
@@ -5515,17 +5685,14 @@ nsXULTemplateBuilder::SynchronizeUsingTemplate(nsIContent* aTemplateNode,
             if (attribValue[0] != PRUnichar('?') && attribValue.Find("rdf:") != 0)
                 continue;
 
-            // See if its value has changed.
-            PRInt32 var = aRule->LookupSymbol(attribValue);
-
-            Value value;
-            PRBool hasassignment = aModifiedBindings.GetAssignmentFor(var, &value);
-
-            // Nope, the value didn't change: it's not one of the "modified assignments"
-            if (! hasassignment)
+            // See if this variable's value has changed.
+            PRInt32 var = aMatch.mRule->LookupSymbol(attribValue);
+            if (! aModifiedVars.Contains(var))
                 continue;
 
-            // Get the new text
+            // Yep. Get the new text
+            Value value;
+            aMatch.GetAssignmentFor(mConflictSet, var, &value);
             SubstituteTextForValue(value, attribValue);
 
             if (attribValue.Length() > 0) {
@@ -5575,7 +5742,7 @@ nsXULTemplateBuilder::SynchronizeUsingTemplate(nsIContent* aTemplateNode,
             if (! realKid)
                 break;
 
-            rv = SynchronizeUsingTemplate(tmplKid, realKid, aRule, aModifiedBindings);
+            rv = SynchronizeUsingTemplate(tmplKid, realKid, aMatch, aModifiedVars);
             if (NS_FAILED(rv)) return rv;
         }
     }
@@ -5625,7 +5792,7 @@ nsXULTemplateBuilder::RemoveMember(nsIContent* aContainerElement,
         NS_ASSERTION(pos >= 0, "parent doesn't think this child has an index");
         if (pos < 0) continue;
 
-        rv = parent->RemoveChildAt(pos, PR_TRUE);
+        rv = parent->RemoveChildAt(pos, aNotify);
         if (NS_FAILED(rv)) return rv;
 
         // Set its document to null so that it'll get knocked out of
@@ -6028,46 +6195,102 @@ nsXULTemplateBuilder::IsElementInWidget(nsIContent* aElement)
 nsresult
 nsXULTemplateBuilder::RemoveGeneratedContent(nsIContent* aElement)
 {
-    nsresult rv;
-
-    // Although we *could* iterate through all the retractions and
-    // pick them out one-by-one, it turns out that this is pretty
-    // inefficient. So do the dumb thing and nuke all the content from
-    // the back to the front.
+#define FAST_REMOVE_GENERATED_CONTENT
+#ifdef FAST_REMOVE_GENERATED_CONTENT
+    // Keep a queue of "ungenerated" elements that we have to probe
+    // for generated content.
+    nsAutoVoidArray ungenerated;
+    ungenerated.AppendElement(aElement);
 
     PRInt32 count;
-    rv = aElement->ChildCount(count);
-    if (NS_FAILED(rv)) return rv;
+    while (0 != (count = ungenerated.Count())) {
+        // Pull the next "ungenerated" element off the queue.
+        PRInt32 last = count - 1;
+        nsIContent* element = NS_STATIC_CAST(nsIContent*, ungenerated[last]);
+        ungenerated.RemoveElementAt(last);
 
-    while (--count >= 0) {
-        nsCOMPtr<nsIContent> child;
-        rv = aElement->ChildAt(count, *getter_AddRefs(child));
-        if (NS_FAILED(rv)) return rv;
+        PRInt32 i = 0;
+        element->ChildCount(i);
 
-        nsAutoString tmplID;
-        rv = child->GetAttribute(kNameSpaceID_None, nsXULAtoms::Template, tmplID);
-        if (NS_FAILED(rv)) return rv;
+        while (--i >= 0) {
+            nsCOMPtr<nsIContent> child;
+            element->ChildAt(i, *getter_AddRefs(child));
+            NS_ASSERTION(child != nsnull, "huh? no child?");
+            if (! child)
+                continue;
 
-        if (rv != NS_CONTENT_ATTR_HAS_VALUE)
-            continue;
+            // Optimize for the <template> element, because we *know*
+            // it won't have any generated content: there's no reason
+            // to even check this subtree.
+            nsCOMPtr<nsIAtom> tag;
+            element->GetTag(*getter_AddRefs(tag));
+            if (tag.get() == nsXULAtoms::Template)
+                continue;
 
-        // It's a generated element. Remove it, and set its document
-        // to null so that it'll get knocked out of the XUL doc's
-        // resource-to-element map.
-        rv = aElement->RemoveChildAt(count, PR_TRUE);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "error removing child");
+            // If the element has a 'template' attribute, then we
+            // assume it's been generated and nuke it.
+            nsAutoString tmplID;
+            child->GetAttribute(kNameSpaceID_None, nsXULAtoms::Template, tmplID);
 
-        rv = child->SetDocument(nsnull, PR_TRUE, PR_TRUE);
-        if (NS_FAILED(rv)) return rv;
+            if (tmplID.Length() == 0) {
+                // No 'template' attribute, so this must not have been
+                // generated. We'll need to examine its kids.
+                ungenerated.AppendElement(child);
+                continue;
+            }
 
-        // Remove element from the conflict set
-        MatchSet firings, retractions;
-        mConflictSet.Remove(ContentTestNode::Element(child), firings, retractions);
+            // If we get here, it's "generated". Bye bye! Remove it
+            // from the content model "quietly", because we'll remove
+            // and re-insert the top-level element into the document
+            // to minimze reflow.
+            element->RemoveChildAt(i, PR_FALSE);
+            child->SetDocument(nsnull, PR_TRUE, PR_TRUE);
 
-        // Remove this and any children from the content support map.
-        mContentSupportMap.Remove(child);
+            // Remove element from the conflict set.
+            // XXXwaterson should this be recursive?
+            MatchSet firings, retractions;
+            mConflictSet.Remove(ContentTestNode::Element(child), firings, retractions);
+
+            // Remove this and any children from the content support map.
+            mContentSupportMap.Remove(child);
+        }
     }
+#else
+    // Compute the retractions that'll occur when we remove the
+    // element from the conflict set.
+    MatchSet firings, retractions;
+    mConflictSet.Remove(ContentTestNode::Element(aElement), firings, retractions);
 
+    // Removing the generated content, quietly.
+    MatchSet::Iterator last = retractions.Last();
+    for (MatchSet::Iterator match = retractions.First(); match != last; ++match) {
+        Value memberval;
+        match->mAssignments.GetAssignmentFor(match->mRule->GetMemberVariable(), &memberval);
+
+        RemoveMember(aElement, VALUE_TO_IRDFRESOURCE(memberval), PR_FALSE);
+    }
+#endif
+
+    // Remove and re-insert the element into the document. This'll
+    // minimize the number of notifications that the layout engine has
+    // to deal with.
+    nsCOMPtr<nsIContent> parent;
+    aElement->GetParent(*getter_AddRefs(parent));
+
+    NS_ASSERTION(parent != nsnull, "huh? no parent!");
+    if (! parent)
+        return NS_ERROR_UNEXPECTED;
+
+    PRInt32 pos;
+    parent->IndexOf(aElement, pos);
+    parent->RemoveChildAt(pos, PR_TRUE);
+
+    nsCOMPtr<nsIDocument> doc = do_QueryInterface(mDocument);
+    if (! doc)
+        return NS_ERROR_UNEXPECTED;
+
+    aElement->SetDocument(doc, PR_TRUE, PR_TRUE);
+    parent->InsertChildAt(aElement, pos, PR_TRUE);
     return NS_OK;
 }
 

@@ -35,6 +35,14 @@
   TREAT is described in Daniel P. Miranker, "TREAT: A Better Match
   Algorithm for AI Production System Matching", AAAI 1987: pp. 42-47.
 
+  --
+
+  TO DO:
+
+  . nsAssignmentSet::List objects are allocated by the gallon. We
+    should make it so that these are always allocated from a pool,
+    maybe owned by the nsRuleNetwork?
+
  */
 
 #ifndef nsRuleNetwork_h__
@@ -93,9 +101,25 @@ public:
     PRBool operator!=(nsISupports* aISupports) const { return !Equals(aISupports); }
     PRBool operator!=(const PRUnichar* aString) const { return !Equals(aString); }
 
+    /**
+     * Get the value's type
+     * @return the value's type
+     */
     Type GetType() const { return mType; }
 
+    /**
+     * Treat the Value as an nsISupports. (Note that the result
+     * is _not_ addref'd.)
+     * @return the value as an nsISupports, or null if the value is
+     *   not an nsISupports.
+     */
     operator nsISupports*() const;
+
+    /**
+     * Treat the value as a Unicode string.
+     * @return the value as a Unicode string, or null if the value
+     *   is not a Unicode string.
+     */
     operator const PRUnichar*() const;
 
     PLHashNumber Hash() const;
@@ -112,11 +136,40 @@ public:
     VariableSet();
     ~VariableSet();
 
+    /**
+     * Add a variable to the set
+     * @param aVariable the variable to add
+     * @returns NS_OK, unless something went wrong.
+     */
     nsresult Add(PRInt32 aVariable);
+
+    /**
+     * Remove a variable from the set
+     * @param aVariable the variable to remove
+     * @returns NS_OK, unless something went wrong.
+     */
     nsresult Remove(PRInt32 aVariable);
-    PRBool Contains(PRInt32 aVariable);
-    PRInt32 GetCount() { return mCount; }
-    PRInt32 GetVariableAt(PRInt32 aIndex) { return mVariables[aIndex]; }
+
+    /**
+     * Determine if the set contains a variable
+     * @param aVariable the variable to test
+     * @return PR_TRUE if the set contains the variable, PR_FALSE otherwise.
+     */
+    PRBool Contains(PRInt32 aVariable) const;
+
+    /**
+     * Determine the number of variables in the set
+     * @return the number of variables in the set
+     */
+    PRInt32 GetCount() const { return mCount; }
+
+    /**
+     * Get the <i>i</i>th variable in the set
+     * @param aIndex the index to retrieve
+     * @return the <i>i</i>th variable in the set, or -1 if no such
+     *   variable exists.
+     */
+    PRInt32 GetVariableAt(PRInt32 aIndex) const { return mVariables[aIndex]; }
 
 protected:
     PRInt32* mVariables;
@@ -333,10 +386,12 @@ protected:
     List* mAssignments;
 
 public:
-    nsAssignmentSet() : mAssignments(nsnull) {
-        MOZ_COUNT_CTOR(nsAssignmentSet); }
+    nsAssignmentSet()
+        : mAssignments(nsnull)
+        { MOZ_COUNT_CTOR(nsAssignmentSet); }
 
-    nsAssignmentSet(const nsAssignmentSet& aSet) : mAssignments(aSet.mAssignments) {
+    nsAssignmentSet(const nsAssignmentSet& aSet)
+        : mAssignments(aSet.mAssignments) {
         MOZ_COUNT_CTOR(nsAssignmentSet);
         NS_IF_ADDREF(mAssignments); }
 
@@ -345,7 +400,7 @@ public:
         mAssignments = aSet.mAssignments;
         NS_IF_ADDREF(mAssignments);
         return *this; }
-        
+
     ~nsAssignmentSet() {
         MOZ_COUNT_DTOR(nsAssignmentSet);
         NS_IF_RELEASE(mAssignments); }
@@ -403,19 +458,60 @@ public:
     ConstIterator Last() const { return ConstIterator(nsnull); }
 
 public:
+    /**
+     * Add an assignment to the set
+     * @param aElement the assigment to add
+     * @return NS_OK if all is well, NS_ERROR_OUT_OF_MEMORY if memory
+     *   could not be allocated for the addition.
+     */
     nsresult Add(const nsAssignment& aElement);
 
+    /**
+     * Determine if the assignment set contains the specified variable
+     * to value assignment.
+     * @param aVariable the variable for which to lookup the binding
+     * @param aValue the value to query
+     * @return PR_TRUE if aVariable is bound to aValue; PR_FALSE otherwise.
+     */
     PRBool HasAssignment(PRInt32 aVariable, const Value& aValue) const;
 
+    /**
+     * Determine if the assignment set contains the specified assignment
+     * @param aAssignment the assignment to search for
+     * @return PR_TRUE if the set contains the assignment, PR_FALSE otherwise.
+     */
     PRBool HasAssignment(const nsAssignment& aAssignment) const {
         return HasAssignment(aAssignment.mVariable, aAssignment.mValue); }
 
+    /**
+     * Determine whether the assignment set has an assignment for the
+     * specified variable.
+     * @param aVariable the variable to query
+     * @return PR_TRUE if the assignment set has an assignment for the variable,
+     *   PR_FALSE otherwise.
+     */
     PRBool HasAssignmentFor(PRInt32 aVariable) const;
 
+    /**
+     * Retrieve the assignment for the specified variable
+     * @param aVariable the variable to query
+     * @param aValue an out parameter that will receive the value assigned
+     *   to the variable, if any.
+     * @return PR_TRUE if the variable has an assignment, PR_FALSE
+     *   if there was no assignment for the variable.
+     */
     PRBool GetAssignmentFor(PRInt32 aVariable, Value* aValue) const;
 
+    /**
+     * Count the number of assignments in the set
+     * @return the number of assignments in the set
+     */
     PRInt32 Count() const;
 
+    /**
+     * Determine if the set is empty
+     * @return PR_TRUE if the assignment set is empty, PR_FALSE otherwise.
+     */
     PRBool IsEmpty() const { return mAssignments == nsnull; }
 
     PRBool Equals(const nsAssignmentSet& aSet) const;
@@ -427,12 +523,24 @@ public:
 //----------------------------------------------------------------------
 
 /**
- * A set of bindings with associated memory element support.
+ * A collection of varible-to-value bindings, with the memory elements
+ * that support those bindings.
+ *
+ * An instantiation object is typically created by "extending" another
+ * instantiation object. That is, using the copy constructor, and
+ * adding bindings and support to the instantiation.
  */
 class Instantiation
 {
 public:
+    /**
+     * The variable-to-value bindings
+     */
     nsAssignmentSet  mAssignments;
+
+    /**
+     * The memory elements that support the bindings.
+     */
     MemoryElementSet mSupport;
 
     Instantiation() { MOZ_COUNT_CTOR(Instantiation); }
@@ -449,10 +557,26 @@ public:
 
     ~Instantiation() { MOZ_COUNT_DTOR(Instantiation); }
 
+    /**
+     * Add the specified variable-to-value assignment to the instantiation's
+     * set of assignments.
+     * @param aVariable the variable to which is being assigned
+     * @param aValue the value that is being assigned
+     * @return NS_OK if no errors, NS_ERROR_OUT_OF_MEMORY if there
+     *   is not enough memory to perform the operation
+     */
     nsresult AddAssignment(PRInt32 aVariable, const Value& aValue) {
         mAssignments.Add(nsAssignment(aVariable, aValue));
         return NS_OK; }
 
+    /**
+     * Add a memory element to the set of memory elements that are
+     * supporting the instantiation
+     * @param aMemoryElement the memory element to add to the
+     *   instantiation's set of support
+     * @return NS_OK if no errors occurred, NS_ERROR_OUT_OF_MEMORY
+     *   if there is not enough memory to perform the operation.
+     */
     nsresult AddSupportingElement(MemoryElement* aMemoryElement) {
         mSupport.Add(aMemoryElement);
         return NS_OK; }
@@ -622,7 +746,28 @@ public:
     ReteNode() {}
     virtual ~ReteNode() {}
 
-    // "downward" propogations
+    /**
+     * Propogate a set of instantiations "down" through the
+     * network. Each instantiation is a partial set of
+     * variable-to-value assignments, along with the memory elements
+     * that support it.
+     *
+     * The node must evaluate each instantiation, and either 1)
+     * extend it with additional assignments and memory-element
+     * support, or 2) remove it from the set because it is
+     * inconsistent with the constraints that this node applies.
+     *
+     * The node must then pass the resulting instantiation set along
+     * to any of its children in the network. (In other words, the
+     * node must recursively call Propogate() on its children. We
+     * should fix this to make the algorithm interruptable.)
+     *
+     * @param aInstantiations the set of instantiations to propogate
+     *   down through the network.
+     * @param aClosure any application-specific information that
+     *   needs to be passed through the network.
+     * @return NS_OK if no errors occurred.
+     */
     virtual nsresult Propogate(const InstantiationSet& aInstantiations, void* aClosure) = 0;
 };
 
@@ -726,14 +871,60 @@ protected:
 class InnerNode : public ReteNode
 {
 public:
-    // "upward" propogations
+    /**
+     * This is called by a child node on its parent to allow the
+     * parent's constraints to apply to the set of instantiations.
+     *
+     * A node must iterate through the set of instantiations, and for
+     * each instantiation, either 1) extend the instantiation by
+     * adding variable-to-value assignments and memory element support
+     * for those assignments, or 2) remove the instantiation because
+     * it is inconsistent.
+     *
+     * The node must then pass the resulting set of instantiations up
+     * to its parent (by recursive call; we should make this iterative
+     * & interruptable at some point.)
+     * 
+     * @param aInstantiations the set of instantiations that must
+     *   be constrained
+     * @param aClosure application-specific information that needs to
+     *   be passed through the network.
+     * @return NS_OK if no errors occurred
+     */
     virtual nsresult Constrain(InstantiationSet& aInstantiations, void* aClosure) = 0;
 
+    /**
+     * Retrieve the set of variables that are introduced by this node
+     * and any of its ancestors. To correctly implement this method, a
+     * node must add any variables that it introduces to the variable
+     * set, and then recursively call GetAncestorVariables() on its
+     * parent (or parents).
+     *
+     * @param aVariables The variable set to which the callee will add
+     *   its variables, and its ancestors variables.
+     * @return NS_OK if no errors occur.
+     */
     virtual nsresult GetAncestorVariables(VariableSet& aVariables) const = 0;
 
+    /**
+     * Determine if this node has another node as its direct ancestor.
+     * @param aNode the node to look for.
+     * @return PR_TRUE if aNode is a direct ancestor of this node, PR_FALSE
+     *   otherwise.
+     */
     virtual PRBool HasAncestor(const ReteNode* aNode) const = 0;
 
+    /**
+     * Add another node as a child of this node.
+     * @param aNode the node to add.
+     * @return NS_OK if no errors occur.
+     */
     nsresult AddChild(ReteNode* aNode) { return mKids.Add(aNode); }
+
+    /**
+     * Remove all the children of this node
+     * @return NS_OK if no errors occur.
+     */
     nsresult RemoveAllChildren() { return mKids.Clear(); }
 
 protected:
@@ -804,21 +995,50 @@ protected:
 
 /**
  * A node that applies a test condition to a set of instantiations.
+ *
+ * This class provides implementations of Propogate() and Constrain()
+ * in terms of one simple operation, FilterInstantiations(). A node
+ * that is a "simple test node" in a rule network should derive from
+ * this class, and need only implement FilterInstantiations() and
+ * GetAncestorVariables().
  */
 class TestNode : public InnerNode
 {
 public:
     TestNode(InnerNode* aParent);
 
+    /**
+     * Retrieve the test node's parent
+     * @return the test node's parent
+     */
     InnerNode* GetParent() const { return mParent; }
 
-    // "downward" propogations
+    /**
+     * Calls FilterInstantiations() on the instantiation set, and if
+     * the resulting set isn't empty, propogates the new set down to
+     * each of the test node's children.
+     */
     virtual nsresult Propogate(const InstantiationSet& aInstantiations, void* aClosure);
 
-    // "upward" propogations
+    /**
+     * Calls FilterInstantiations() on the instantiation set, and if
+     * the resulting set isn't empty, propogates the new set up to the
+     * test node's parent.
+     */
     virtual nsresult Constrain(InstantiationSet& aInstantiations, void* aClosure);
 
-    // instantiation filtering
+    /**
+     * Given a set of instantiations, filter out any that are
+     * inconsistent with the test node's test, and append
+     * variable-to-value assignments and memory element support for
+     * those which do pass the test node's test.
+     *
+     * @param aInstantiations the set of instantiations to be
+     *   filtered
+     * @param aClosure application-specific data that is to be passed
+     *   through the network.
+     * @return NS_OK if no errors occurred.
+     */
     virtual nsresult FilterInstantiations(InstantiationSet& aInstantiations, void* aClosure) const = 0; //XXX probably better named "ApplyConstraints" or "Discrminiate" or something
 
     virtual nsresult GetAncestorVariables(VariableSet& aVariables) const;
@@ -837,11 +1057,35 @@ public:
     nsRuleNetwork();
     ~nsRuleNetwork();
 
+    /**
+     * Remove all the nodes from the network. The nodes will be 
+     * destroyed
+     * @return NS_OK if no errors occur
+     */ 
     nsresult Clear();
+
+    /**
+     * Add a node to the network. The network assumes ownership of the
+     * node; it will be destroyed when the network is destroyed, or if
+     * Clear() is called.
+     *
+     * @param aNode the node to add to the network
+     * @return NS_OK if no errors occur
+     */
     nsresult AddNode(ReteNode* aNode) { return mNodes.Add(aNode); }
 
+    /**
+     * Create a new, unique variable.
+     * @param aVariable an out parameter that receives the new
+     *   variable.
+     * @return NS_OK if no errors occur
+     */
     nsresult CreateVariable(PRInt32* aVariable);
 
+    /**
+     * Retrieve the root node in the rule network
+     * @return the root node in the rule network
+     */
     RootNode* GetRoot() { return &mRoot; };
 
 protected:
