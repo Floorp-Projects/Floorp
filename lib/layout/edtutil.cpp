@@ -6042,9 +6042,33 @@ XP_Bool EDT_IsImageURL(char *pImageURL)
     return FALSE;
 }
 
+static int StrcmpModuloSlashes(const char* s1, const char* s2)
+{
+  if (!s1)
+    return -1;
+  if (!s2)
+    return 1;
+  while(1)
+  {
+    if (*s1 != *s2 || *s1 == 0)
+      return *s1 - *s2;
+    if (*s1 == '/')
+    {
+      while (*(++s1) == '/')
+        ;
+      while (*(++s2) == '/')
+        ;
+      continue;
+    }
+    ++s1;
+    ++s2;
+  }
+}
+
 // True if both urls are the same, ignores any username/password
 // information.  Does caseless comparison for file:// URLs 
 // on windows and mac.
+// On Unix, collapses consecutive multiple slashes.
 // url1 and url2 are relative to base1 and base2, respectively.
 // If url1 or url2 is already absolute, base1 or base2 can 
 // be passed in as NULL.
@@ -6086,7 +6110,7 @@ XP_Bool EDT_IsSameURL(char *url1,char *url2,char *base1,char *base2) {
     }
 #else
     // Use regular strcmp.
-    bRetVal = (XP_STRCMP( pUrl1, pUrl2 ) == 0 );
+    bRetVal = (StrcmpModuloSlashes( pUrl1, pUrl2 ) == 0 );
 #endif
   }
   
