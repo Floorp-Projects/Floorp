@@ -128,7 +128,7 @@ protected:
   nsToolboxFrame();
   virtual ~nsToolboxFrame();
 
-  virtual PRBool GetInitialAlignment();
+  virtual PRBool GetInitialOrientation(PRBool& aIsHorizontal); 
 
   virtual void UpdateStyles(nsIPresContext* aPresContext);
   virtual void CalculateGrippies(nsIPresContext* aPresContext);

@@ -1016,7 +1016,7 @@ NS_IMETHODIMP_(void) nsSliderFrame::Notify(nsITimer *timer)
             if (thumbRect.y < mClickPoint.y) 
                 stop = PR_TRUE;
         } else {
-            if (thumbRect.y + thumbRect.width > mClickPoint.y)
+            if (thumbRect.y + thumbRect.height > mClickPoint.y)
                 stop = PR_TRUE;
         }
     }

@@ -10,6 +10,7 @@
 <!ENTITY widgetRendering.label "Debug: Rendering">
 <!ENTITY gfxScrollbars.label "gfx scrollbars">
 <!ENTITY debugWindow.label "debug window">
+<!ENTITY debugXULBox.label "debug XUL boxes">
 <!ENTITY useViewManager2.label "use ViewManager2">
 
 <!-- Event Debugging -->

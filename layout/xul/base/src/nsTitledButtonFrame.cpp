@@ -626,7 +626,7 @@ nsTitledButtonFrame::LayoutTitleAndImage(nsIPresContext* aPresContext,
 
 void 
 nsTitledButtonFrame::GetTextSize(nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext,
-                                const nsString& aString, nsSize& aSize)
+                                const nsString& aString, nsSize& aSize, nscoord& aAscent)
 {
   const nsStyleFont* fontStyle = (const nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font);
 
@@ -638,6 +638,7 @@ nsTitledButtonFrame::GetTextSize(nsIPresContext* aPresContext, nsIRenderingConte
   fontMet->GetHeight(aSize.height);
   aRenderingContext.SetFont(fontMet);
   aRenderingContext.GetWidth(aString, aSize.width);
+  fontMet->GetMaxAscent(aAscent);
 }
 
 void 
@@ -987,16 +988,19 @@ nsTitledButtonFrame::GetDesiredSize(nsIPresContext* aPresContext,
 
   // if either the width or the height was not computed use our intrinsic size
   if (aReflowState.mComputedWidth != NS_INTRINSICSIZE)
-    //if (aReflowState.mComputedWidth > info.minSize.width)
        aDesiredSize.width = aReflowState.mComputedWidth;
-    //else 
-      // aDesiredSize.width = info.minSize.width;
 
-  if (aReflowState.mComputedHeight != NS_INTRINSICSIZE)
-    //if (aReflowState.mComputedHeight > info.minSize.height)
+  if (aReflowState.mComputedHeight != NS_INTRINSICSIZE) {
        aDesiredSize.height = aReflowState.mComputedHeight;
-    //else 
-//       aDesiredSize.height = info.minSize.height;
+       nscoord descent = info.prefSize.height - info.ascent;
+       aDesiredSize.ascent = aDesiredSize.height - descent;
+       if (aDesiredSize.ascent < 0)
+           aDesiredSize.ascent = 0;
+  } else {
+       aDesiredSize.ascent = info.ascent;
+  }
+
+
 }
 
 
@@ -1451,8 +1455,11 @@ nsTitledButtonFrame::GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflow
 
   // depending on the type of alignment add in the space for the text
   nsSize size;
+  nscoord ascent = 0;
   GetTextSize(aPresContext, *aReflowState.rendContext,
-              mTitle, size);
+              mTitle, size, ascent);
+
+  aSize.ascent = ascent;
  
    switch (mAlign) {
       case NS_SIDE_TOP:
@@ -1509,6 +1516,8 @@ nsTitledButtonFrame::GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflow
 
    aSize.minSize.width += focusBorder.left + focusBorder.right;
    aSize.minSize.height += focusBorder.top + focusBorder.bottom;
+
+   ascent += focusBorder.top;
 
    return NS_OK;
 }

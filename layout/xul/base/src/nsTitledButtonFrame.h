@@ -133,7 +133,7 @@ protected:
 
   virtual void CalculateTitleForWidth(nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext, nscoord aWidth);
 
-  virtual void GetTextSize(nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext, const nsString& aString, nsSize& aSize);
+  virtual void GetTextSize(nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext, const nsString& aString, nsSize& aSize, nscoord& aAscent);
 
   virtual void SetDisabled(nsAutoString aDisabled);
 

@@ -171,16 +171,11 @@ nsMenuPopupFrame::Init(nsIPresContext*  aPresContext,
 }
 
 PRBool
-nsMenuPopupFrame::GetInitialAlignment()
+nsMenuPopupFrame::GetInitialOrientation(PRBool& aIsHorizontal)
 {
- // by default we are vertical unless horizontal is specifically specified
-  nsString value;
-
-  mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::align, value);
-  if (value.EqualsIgnoreCase("horizontal"))
-    return PR_TRUE;
-  else 
-    return PR_FALSE;
+    // by default we are vertical
+    aIsHorizontal = PR_FALSE;
+    return nsBoxFrame::GetInitialOrientation(aIsHorizontal);
 }
 
 void

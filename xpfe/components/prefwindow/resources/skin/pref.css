@@ -80,6 +80,18 @@ select.font {
   padding-right: 15px;
 }
 
+.vspace-both {
+  padding-top: 7px;
+  padding-bottom: 7px;
+}
+
+spring.vgap {
+   height: 12px;
+}
+
+spring.hgap {
+   width: 12px;
+}
 
 
 /* obsolete styles - will be removed soon */

@@ -41,17 +41,21 @@ class nsBoxDebugInner;
 class nsHTMLReflowCommand;
 class nsHTMLInfo;
 
+#define NS_FRAME_BOX_SIZE_VALID    0x0001
+#define NS_FRAME_BOX_IS_COLLAPSED  0x0002
+#define NS_FRAME_BOX_NEEDS_RECALC  0x0004
+
 class nsCalculatedBoxInfo : public nsBoxInfo {
 public:
     nsSize calculatedSize;
+    /*
     PRBool sizeValid;
     PRBool collapsed;
     PRBool needsRecalc;
+    */
+    PRInt16 mFlags;
     nsCalculatedBoxInfo* next;
     nsIFrame* frame;
-    PRBool prefWidthIntrinsic;
-    PRBool prefHeightIntrinsic;
-    PRBool neverReflowed;
 };
 
 class nsInfoList 
@@ -154,17 +158,28 @@ public:
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr); 
   NS_IMETHOD InvalidateCache(nsIFrame* aChild);
 
+    enum Halignment {
+        hAlign_Left,
+        hAlign_Right,
+        hAlign_Center,
+    };
 
+    enum Valignment {
+        vAlign_Top,
+        vAlign_Middle,
+        vAlign_BaseLine,
+        vAlign_Bottom,
+    };
 protected:
     nsBoxFrame();
 
 
     virtual void GetRedefinedMinPrefMax(nsIPresContext* aPresContext, nsIFrame* aFrame, nsCalculatedBoxInfo& aSize);
     virtual nsresult GetChildBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsIFrame* aFrame, nsCalculatedBoxInfo& aSize);
-    virtual void ComputeChildsNextPosition( nsIFrame* aChild, nscoord& aCurX, nscoord& aCurY, nscoord& aNextX, nscoord& aNextY, const nsSize& aCurrentChildSize, const nsRect& aBoxRect);
+    virtual void ComputeChildsNextPosition( nsCalculatedBoxInfo* aInfo, nscoord& aCurX, nscoord& aCurY, nscoord& aNextX, nscoord& aNextY, const nsSize& aCurrentChildSize, const nsRect& aBoxRect, nscoord aMaxAscent);
     virtual nsresult PlaceChildren(nsIPresContext* aPresContext, nsRect& boxRect);
-    virtual void ChildResized(nsIFrame* aFrame, nsHTMLReflowMetrics& aDesiredSize, nsRect& aRect, nsCalculatedBoxInfo& aInfo, PRBool* aResized, nscoord& aChangedIndex, PRBool& aFinished, nscoord aIndex, nsString& aReason);
-    virtual void LayoutChildrenInRect(nsRect& size);
+    virtual void ChildResized(nsIFrame* aFrame, nsHTMLReflowMetrics& aDesiredSize, nsRect& aRect, nscoord& aMaxAscent, nsCalculatedBoxInfo& aInfo, PRBool* aResized, nscoord& aChangedIndex, PRBool& aFinished, nscoord aIndex, nsString& aReason);
+    virtual void LayoutChildrenInRect(nsRect& aSize, nscoord& aMaxAscent);
     virtual void AddChildSize(nsBoxInfo& aInfo, nsBoxInfo& aChildInfo);
     virtual void BoundsCheck(const nsBoxInfo& aBoxInfo, nsRect& aRect);
     virtual void InvalidateChildren();
@@ -178,10 +193,16 @@ protected:
     nsresult GenerateDirtyReflowCommand(nsIPresContext* aPresContext,
                                         nsIPresShell&   aPresShell);
 
-    // return true if the alignment is horizontal false if vertical
-    virtual PRBool GetInitialAlignment(); 
+
+
+    virtual PRBool GetInitialOrientation(PRBool& aIsHorizontal); 
+    virtual PRBool GetInitialHAlignment(Halignment& aHalign); 
+    virtual PRBool GetInitialVAlignment(Valignment& aValign); 
+    virtual PRBool GetInitialAutoStretch(PRBool& aStretch); 
+    virtual PRBool GetDefaultFlex(PRInt32& aFlex);
 
     virtual nsInfoList* GetInfoList();
+
 private: 
   
     friend class nsBoxFrameInner;

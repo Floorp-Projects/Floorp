@@ -25,7 +25,7 @@
 
 <!DOCTYPE window SYSTEM "chrome://pref/locale/pref-composer.dtd" >
 
-<window xmlns:html="http://www.w3.org/TR/REC-html40"
+<window debug="false" xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="dialog"
         align="vertical" title="&title2.label;"
@@ -42,7 +42,7 @@
 	</box>
 
 <!-- Take out Auto-Save; not supported at this time
-		<html:fieldset>
+		<titledbox orient="vertical">
 		<html:div>
 			<html:input name="autosave" type="checkbox" id="pref:0:int:editor.auto_save" />
 			<html:label for="pref:0:int:editor.auto_save" accesskey="a" tabindex="0">
@@ -53,14 +53,12 @@
 	  		&minText;	
 			</html:label>		
 		</html:div>
-	</html:fieldset>
+	</titledbox>
   -->
 
 <!-- External Editors are not supported at this time
-		<html:fieldset>
-					<html:legend align="left"> 
-			<html:div>&exterLegend.label;</html:div> 
-					</html:legend> 
+		<titledbox orient="vertical">
+					<title><text value="&exterLegend.label;"/></title> 
 		<html:input name="htmlSourceEditorCheckbox" type="checkbox" id="pref:0:int:editor.use_html_editor" />
 	 	<html:div>
 			&htmlSource;
@@ -78,40 +76,42 @@
 			<titledbutton class="dialog push" name=""  value="&chooseButton.label;" />
 		</html:div> 
 
-	</html:fieldset>
+	</titledbox>
   -->
-  <html:label>
-		<html:input name="maintainTable" type="checkbox" id="pref:0:int:editor.maintain_table_structure" />
-    &maintainTableStructure.label;
-  </html:label>
 
-  <html:fieldset>
-	  <html:legend align="left">Key Mappings</html:legend>
-	  <html:div class="hspace-both">
+  <html:div class="vspace-both">
+	  <html:label>
+			<html:input name="maintainTable" type="checkbox" id="pref:0:int:editor.maintain_table_structure" />
+		&maintainTableStructure.label;
+	  </html:label>
+  </html:div>
+  <titledbox  orient="vertical">
+	  <title><text value="Key Mappings"/></title>
+	  <html:div >
 	    &returnkey.label;
 	  </html:div>
-		<html:div class="hspace-both">
+		<html:div class="vertical-gap">
 			<html:input name="returnkey" type="radio" id="returnkey0"
                   pref="true" preftype="int" prefindex="0" prefstring="editor.returnkey_mapping"/>
 			<html:label for="returnkey0" accesskey="" tabindex="0">
 				&returnkeyradio0.label;
 			</html:label>
 		</html:div>
-		<html:div class="hspace-both">
+		<html:div >
 			<html:input name="returnkey" type="radio" id="returnkey1"
                   pref="true" preftype="int" prefindex="1" prefstring="editor.returnkey_mapping"/>
 			<html:label for="returnkey1" accesskey="" tabindex="0">
 				&returnkeyradio1.label;
 			</html:label>
 		</html:div>
-		<html:div class="hspace-both">
+		<html:div >
 			<html:input name="returnkey" type="radio" id="returnkey2"
                   pref="true" preftype="int" prefindex="2" prefstring="editor.returnkey_mapping"/>
 			<html:label for="returnkey2" accesskey="" tabindex="0">			
 				&returnkeyradio2.label;
 			</html:label>
 		</html:div>
-		<html:div class="hspace-both">
+		<html:div >
 			<html:input name="returnkey" type="radio" id="returnkey3"
                   pref="true" preftype="int" prefindex="3" prefstring="editor.returnkey_mapping"/>
 			<html:label for="returnkey3" accesskey="" tabindex="0">			
@@ -121,38 +121,38 @@
 
     <spring style="height: 10px;"/>
 
-	  <html:div class="hspace-both">
+	  <html:div >
 	    &enterkey.label;
 	  </html:div>
-		<html:div class="hspace-both">
+		<html:div  class="vertical-gap">
 			<html:input name="enterkey" type="radio" id="enterkey0"
                   pref="true" preftype="int" prefindex="0" prefstring="editor.enterkey_mapping"/>
 			<html:label for="enterkey0" accesskey="" tabindex="0">
 				&returnkeyradio0.label;
 			</html:label>
 		</html:div>
-		<html:div class="hspace-both">
+		<html:div >
 			<html:input name="enterkey" type="radio" id="enterkey1"
                   pref="true" preftype="int" prefindex="1" prefstring="editor.enterkey_mapping"/>
 			<html:label for="enterkey1" accesskey="" tabindex="0">
 				&returnkeyradio1.label;
 			</html:label>
 		</html:div>
-		<html:div class="hspace-both">
+		<html:div >
 			<html:input name="enterkey" type="radio" id="enterkey2"
                   pref="true" preftype="int" prefindex="2" prefstring="editor.enterkey_mapping"/>
 			<html:label for="enterkey2" accesskey="" tabindex="0">			
 				&returnkeyradio2.label;
 			</html:label>
 		</html:div>
-		<html:div class="hspace-both">
+		<html:div >
 			<html:input name="enterkey" type="radio" id="enterkey3"
                   pref="true" preftype="int" prefindex="3" prefstring="editor.enterkey_mapping"/>
 			<html:label for="enterkey3" accesskey="" tabindex="0">			
 				&returnkeyradio3.label;
 			</html:label>
 		</html:div>
-		</html:fieldset>  
+		</titledbox>  
 	
 
 </window>

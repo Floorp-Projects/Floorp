@@ -343,7 +343,9 @@ nsSplitterFrame::Init(nsIPresContext*  aPresContext,
   nsHTMLContainerFrame::CreateViewForFrame(aPresContext,this,aContext,PR_TRUE);
   nsIView* view;
   GetView(aPresContext, &view);
-#if 1
+
+// currently this only works on win32
+#ifndef WIN32
   view->SetContentTransparency(PR_TRUE);
   view->SetZIndex(kMaxZ);
 /*
@@ -375,7 +377,7 @@ nsSplitterFrame::Init(nsIPresContext*  aPresContext,
 }
 
 PRBool
-nsSplitterFrame::GetInitialAlignment()
+nsSplitterFrame::GetInitialOrientation(PRBool& aIsHorizontal)
 {
  // find the box we are in
   nsIFrame* box = nsnull;
@@ -385,15 +387,10 @@ nsSplitterFrame::GetInitialAlignment()
   if (box == nsnull)
       nsScrollbarButtonFrame::GetParentWithTag(nsXULAtoms::window, this, box);
 
-  // see if the box is horizontal or vertical
+  // see if the box is horizontal or vertical we are the opposite
   if (box) {
-    nsCOMPtr<nsIContent> content;  
-    box->GetContent(getter_AddRefs(content));
-
-    nsString value;
-    content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::align, value);
-    if (value.EqualsIgnoreCase("vertical"))
-      return PR_TRUE;
+     aIsHorizontal = !((nsBoxFrame*)box)->IsHorizontal();
+     return PR_TRUE;
   }
 
   return PR_FALSE;

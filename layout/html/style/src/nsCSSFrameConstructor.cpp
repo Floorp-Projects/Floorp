@@ -74,9 +74,15 @@
 #include "nsIAttributeContent.h"
 #include "nsIPref.h"
 #include "nsLegendFrame.h"
+#include "nsTitleFrame.h"
 
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
+#ifdef INCLUDE_XUL
+#include "nsIDOMXULCommandDispatcher.h"
+#include "nsIDOMXULDocument.h"
+#endif
+
 
 #include "nsInlineFrame.h"
 #include "nsBlockFrame.h"
@@ -143,6 +149,15 @@ NS_NewProgressMeterFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 
 nsresult
 NS_NewTitledButtonFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
+
+nsresult
+NS_NewTitledBoxFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
+
+nsresult
+NS_NewTitledBoxInnerFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
+
+nsresult
+NS_NewTitleFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 
 nsresult
 NS_NewBoxFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame);
@@ -2036,7 +2051,7 @@ nsCSSFrameConstructor::TableIsValidCellContent(nsIPresContext* aPresContext,
 #ifdef INCLUDE_XUL
   if (  (nsXULAtoms::button          == tag.get())  ||
 	    (nsXULAtoms::titledbutton      == tag.get())  ||
-      (nsXULAtoms::image == tag.get()) ||
+        (nsXULAtoms::image == tag.get()) ||
         (nsXULAtoms::grippy          == tag.get())  ||
         (nsXULAtoms::splitter        == tag.get())  ||
         (nsXULAtoms::slider == tag.get())  ||
@@ -3316,6 +3331,99 @@ nsCSSFrameConstructor::InitializeSelectFrame(nsIPresShell*        aPresShell,
   return NS_OK;
 }
 
+
+                                             /**
+ * Used to be InitializeScrollFrame but now its only used for the select tag
+ * But the select tag should really be fixed to use GFX scrollbars that can
+ * be create with BuildScrollFrame.
+ */
+nsresult
+nsCSSFrameConstructor::ConstructTitledBoxFrame(nsIPresShell*        aPresShell, 
+                                          nsIPresContext*          aPresContext,
+                                          nsFrameConstructorState& aState,
+                                          nsIContent*              aContent,
+                                          nsIFrame*                aParentFrame,
+                                          nsIAtom*                 aTag,
+                                          nsIStyleContext*         aStyleContext,
+                                          nsIFrame*&               aNewFrame)
+{
+  nsIFrame * newFrame;
+  nsresult rv = NS_NewTitledBoxFrame(aPresShell, &newFrame);
+  if (!NS_SUCCEEDED(rv)) {
+    return rv;
+  }
+
+  nsCOMPtr<nsIPresShell> shell;
+  aPresContext->GetShell(getter_AddRefs(shell));
+
+  // Initialize it
+  nsIFrame* geometricParent = aParentFrame;
+      
+  InitAndRestoreFrame(aPresContext, aState, aContent, 
+                      geometricParent, aStyleContext, nsnull, newFrame);
+
+    // cache our display type
+  const nsStyleDisplay* styleDisplay;
+  newFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) styleDisplay);
+
+  nsIFrame * boxFrame;
+  NS_NewTitledBoxInnerFrame(shell, &boxFrame);
+
+
+  // Resolve style and initialize the frame
+  nsIStyleContext* styleContext;
+  aPresContext->ResolvePseudoStyleContextFor(aContent, nsXULAtoms::titledboxContentPseudo,
+                                             aStyleContext, PR_FALSE, &styleContext);
+  InitAndRestoreFrame(aPresContext, aState, nsnull, 
+                      newFrame, styleContext, nsnull, boxFrame);
+
+  NS_RELEASE(styleContext);          
+  
+    nsFrameItems                childItems;
+
+    ProcessChildren(aPresShell, aPresContext, aState, aContent, boxFrame, PR_FALSE,
+                    childItems, PR_TRUE);
+
+    static NS_DEFINE_IID(kTitleFrameCID, NS_TITLE_FRAME_CID);
+    nsIFrame * child      = childItems.childList;
+    nsIFrame * previous   = nsnull;
+    nsIFrame* titleFrame = nsnull;
+    while (nsnull != child) {
+      nsresult result = child->QueryInterface(kTitleFrameCID, (void**)&titleFrame);
+      if (NS_SUCCEEDED(result) && titleFrame) {
+        if (nsnull != previous) {
+          nsIFrame * nxt;
+          titleFrame->GetNextSibling(&nxt);
+          previous->SetNextSibling(nxt);
+          titleFrame->SetNextSibling(boxFrame);
+          break;
+        } else {
+          nsIFrame * nxt;
+          titleFrame->GetNextSibling(&nxt);
+          childItems.childList = nxt;
+          titleFrame->SetNextSibling(boxFrame);
+          break;
+        }
+      }
+      previous = child;
+      child->GetNextSibling(&child);
+    }
+
+    // Set the scrolled frame's initial child lists
+    boxFrame->SetInitialChildList(aPresContext, nsnull, childItems.childList);
+    
+    if (titleFrame) 
+        newFrame->SetInitialChildList(aPresContext, nsnull, titleFrame);
+    else
+        newFrame->SetInitialChildList(aPresContext, nsnull, boxFrame);
+
+    // our new frame retured is the top frame which is the list frame. 
+    aNewFrame = newFrame; 
+
+  return NS_OK;
+}
+
+
 /**
  * Used to be InitializeScrollFrame but now its only used for the select tag
  * But the select tag should really be fixed to use GFX scrollbars that can
@@ -4292,14 +4400,65 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*        aPresShell,
 
         frameHasBeenInitialized = PR_TRUE;
 
-      }
+      } 
     } // End of BOX CONSTRUCTION logic
+
+    else if (aTag == nsXULAtoms::title) {
+      processChildren = PR_TRUE;
+      isReplaced = PR_TRUE;
+      rv = NS_NewTitleFrame(aPresShell, &newFrame);
+
+      const nsStyleDisplay* display = (const nsStyleDisplay*)
+           aStyleContext->GetStyleData(eStyleStruct_Display);
+
+      // Boxes can scroll.
+      if (IsScrollable(aPresContext, display)) {
+
+        // set the top to be the newly created scrollframe
+        BuildScrollFrame(aPresShell, aPresContext, aState, aContent, aStyleContext, newFrame, aParentFrame,
+                         topFrame, aStyleContext);
+
+        // we have a scrollframe so the parent becomes the scroll frame.
+        newFrame->GetParent(&aParentFrame);
+
+        primaryFrameSet = PR_TRUE;
+
+        frameHasBeenInitialized = PR_TRUE;
+
+      } 
+    } // End of BOX CONSTRUCTION logic
+
+    else if (aTag == nsXULAtoms::titledbox) {
+
+          ConstructTitledBoxFrame(aPresShell, aPresContext, aState, aContent, aParentFrame, aTag, aStyleContext, newFrame);
+          processChildren = PR_FALSE;
+          isReplaced = PR_TRUE;
+
+          const nsStyleDisplay* display = (const nsStyleDisplay*)
+               aStyleContext->GetStyleData(eStyleStruct_Display);
+
+          // Boxes can scroll.
+          if (IsScrollable(aPresContext, display)) {
+
+            // set the top to be the newly created scrollframe
+            BuildScrollFrame(aPresShell, aPresContext, aState, aContent, aStyleContext, newFrame, aParentFrame,
+                             topFrame, aStyleContext);
+
+            // we have a scrollframe so the parent becomes the scroll frame.
+            newFrame->GetParent(&aParentFrame);
+
+            primaryFrameSet = PR_TRUE;
+
+            frameHasBeenInitialized = PR_TRUE;
+          }
+    } 
 
     // TITLED BUTTON CONSTRUCTION
     else if (aTag == nsXULAtoms::titledbutton ||
              aTag == nsXULAtoms::image ||
              aTag == nsXULAtoms::text) {
-      processChildren = PR_TRUE;
+
+        processChildren = PR_TRUE;
       isReplaced = PR_TRUE;
       rv = NS_NewTitledButtonFrame(aPresShell, &newFrame);
     }

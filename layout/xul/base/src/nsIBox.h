@@ -45,6 +45,7 @@ public:
     nsSize minSize;
     nsSize maxSize; 
     PRInt32 flex;
+    nscoord ascent;
 
     nsBoxInfo();
     virtual void Clear();

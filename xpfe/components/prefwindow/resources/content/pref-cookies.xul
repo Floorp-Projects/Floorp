@@ -23,7 +23,7 @@
 
 <!DOCTYPE window SYSTEM "chrome://pref/locale/pref-cookies.dtd" >
 
-<window xmlns:html="http://www.w3.org/TR/REC-html40"
+<window debug="false" xmlns:html="http://www.w3.org/TR/REC-html40"
 	    	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="dialog"
         align="vertical" title="&window.title;"
@@ -42,67 +42,53 @@
 	  <titledbutton class="right-header-text" value="&rHeader;"/>
 	</box>
 
- 	<html:fieldset>
-  	<html:legend align="left">&cookies;</html:legend>  
-    <html:table width="100%" cellpadding="0" cellspacing="0" class="hspace-both">
-      <html:tr>
-        <html:td colspan="2">
-          <html:div>
-            &cookieDetails;
-          </html:div>
-          <html:br/>
-        </html:td>
-      </html:tr>
-      <html:tr>
-        <html:td>
-          <html:input name="cookies" type="radio" id="networkCookieBehaviour0"
-                      pref="true" preftype="int" prefindex="0" prefstring="network.cookie.cookieBehavior"/>
-        </html:td>
-        <html:td>
-      		<html:label for="networkCookieBehaviour0" accesskey="&accAllCookiesRadio.accesskey;" tabindex="0">
-   	        <html:div>&accAllCookiesRadio.label;</html:div>
-        	</html:label>
-        </html:td>
-      </html:tr>
-      <html:tr>
-        <html:td>
-          <html:input type="radio" name="cookies" id="networkCookieBehaviour1"
-                      pref="true" preftype="int" prefindex="1" prefstring="network.cookie.cookieBehavior"/>
-        </html:td>
-        <html:td>
-      		<html:label for="networkCookieBehaviour1" accesskey="&accpOrgCookiesRadio.accesskey;" tabindex="0">
-            <html:div>&accpOrgCookiesRadio.label;</html:div>
-      		</html:label>
-        </html:td>
-      </html:tr>
-      <html:tr>
-        <html:td>
-      		<html:input type="radio" name="cookies" id="networkCookieBehaviour2"
-                      pref="true" preftype="int" prefindex="2" prefstring="network.cookie.cookieBehavior"/>
-        </html:td>
-        <html:td>
-      		<html:label for="networkCookieBehaviour2" accesskey="&disCookRadio.accesskey;" tabindex="0">	
-  	    		<html:div>&disCookRadio.label;</html:div>
-      		</html:label>
-        </html:td>
-      </html:tr>
-      <html:tr>
-        <html:td/>
-        <html:td>
-      		<html:input type="checkbox" id="networkCookieWarnAboutCookies"
-                      pref="true" preftype="bool" prefstring="network.cookie.warnAboutCookies"/>
-      		<html:label for="networkCookieWarnAboutCookies" accesskey="&warnCookCheck.accesskey;" tabindex="0">
-  	    		<html:div>&warnCookCheck.label;</html:div>
-      		</html:label>
-        </html:td>
-      </html:tr>
-    </html:table>
-    <box align="horizontal" flex="100%" style="width: 93%" class="hspace-both">
-      <spring flex="100%"/>
+ 	<titledbox orient="vertical">
+  	<title><text value="&cookies;"/></title>  
+    <html:div>&cookieDetails;</html:div>
+	<spring class="vgap"/>
+    <html:div>
+	  <html:input name="cookies" type="radio" id="networkCookieBehaviour0"
+				  pref="true" preftype="int" prefindex="0" prefstring="network.cookie.cookieBehavior"/>
+
+	<html:label for="networkCookieBehaviour0" accesskey="&accAllCookiesRadio.accesskey;" tabindex="0">
+
+   	<html:div>&accAllCookiesRadio.label;</html:div>
+    </html:label>
+	</html:div>
+
+   <html:div>
+			  <html:input type="radio" name="cookies" id="networkCookieBehaviour1"
+						  pref="true" preftype="int" prefindex="1" prefstring="network.cookie.cookieBehavior"/>
+	      		<html:label for="networkCookieBehaviour1" accesskey="&accpOrgCookiesRadio.accesskey;" tabindex="0">
+
+				<html:div>&accpOrgCookiesRadio.label;</html:div>
+      			</html:label>
+	</html:div>
+
+   <html:div>
+      			<html:input type="radio" name="cookies" id="networkCookieBehaviour2"
+						  pref="true" preftype="int" prefindex="2" prefstring="network.cookie.cookieBehavior"/>
+	      		<html:label for="networkCookieBehaviour2" accesskey="&disCookRadio.accesskey;" tabindex="0">	
+	
+  	    			<html:div>&disCookRadio.label;</html:div>
+      			</html:label>
+	</html:div>
+
+
+  <html:div class="indent-second-label">
+      			<html:input type="checkbox" id="networkCookieWarnAboutCookies"
+						  pref="true" preftype="bool" prefstring="network.cookie.warnAboutCookies"/>
+	      		<html:label for="networkCookieWarnAboutCookies" accesskey="&warnCookCheck.accesskey;" tabindex="0">
+
+  	    			<html:div>&warnCookCheck.label;</html:div>
+      			</html:label>
+	</html:div>    
+
+    <box align="horizontal" flex="1">
+      <spring flex="1"/>
       <titledbutton value="&viewCookies.label;" class="dialog push" onclick="viewCookies();"/>
     </box>
-    <spring style="height: 40px;"/>
-	</html:fieldset> 
+	</titledbox> 
   
   
 </window>

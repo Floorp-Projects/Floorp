@@ -269,7 +269,7 @@ nsDeckFrame::AddChildSize(nsBoxInfo& aInfo, nsBoxInfo& aChildInfo)
 
 
 void
-nsDeckFrame::ComputeChildsNextPosition( nsIFrame* aChild, nscoord& aCurX, nscoord& aCurY, nscoord& aNextX, nscoord& aNextY, const nsSize& aCurrentChildSize, const nsRect& aBoxRect)
+nsDeckFrame::ComputeChildsNextPosition(nsCalculatedBoxInfo* aInfo, nscoord& aCurX, nscoord& aCurY, nscoord& aNextX, nscoord& aNextY, const nsSize& aCurrentChildSize, const nsRect& aBoxRect, nscoord aMaxAscent)
 {
    // let everything layout on top of each other.
     aCurX = aNextX = aBoxRect.x;
@@ -350,19 +350,19 @@ nsDeckFrame::DidReflow(nsIPresContext* aPresContext,
 
 
 void
-nsDeckFrame::ChildResized(nsIFrame* aFrame, nsHTMLReflowMetrics& aDesiredSize, nsRect& aRect, nsCalculatedBoxInfo& aInfo, PRBool* aResized, nscoord& aChangedIndex, PRBool& aFinished, nscoord aIndex, nsString& aReason)
+nsDeckFrame::ChildResized(nsIFrame* aFrame, nsHTMLReflowMetrics& aDesiredSize, nsRect& aRect, nscoord& aMaxAscent, nsCalculatedBoxInfo& aInfo, PRBool* aResized, nscoord& aChangedIndex, PRBool& aFinished, nscoord aIndex, nsString& aReason)
 {
   if (aDesiredSize.width > aRect.width) {
     aRect.width = aDesiredSize.width;
     InvalidateChildren();
-    LayoutChildrenInRect(aRect);
+    LayoutChildrenInRect(aRect, aMaxAscent);
     aReason = "child's width got bigger";
     aChangedIndex = aIndex;
     aFinished = PR_FALSE;
   } else if (aDesiredSize.height > aRect.height) {
     aRect.height = aDesiredSize.height;
     InvalidateChildren();
-    LayoutChildrenInRect(aRect);
+    LayoutChildrenInRect(aRect, aMaxAscent);
     aReason = "child's height got bigger";
     aChangedIndex = aIndex;
     aFinished = PR_FALSE;    
@@ -370,16 +370,18 @@ nsDeckFrame::ChildResized(nsIFrame* aFrame, nsHTMLReflowMetrics& aDesiredSize, n
 }
 
 void
-nsDeckFrame::LayoutChildrenInRect(nsRect& size)
+nsDeckFrame::LayoutChildrenInRect(nsRect& aGivenSize, nscoord& aMaxAscent)
 {
   nsInfoList* list = GetInfoList();
   nsCalculatedBoxInfo* info = list->GetFirst();
 
   while(info) {
-      info->calculatedSize.width = size.width;
-      info->calculatedSize.height = size.height;
-      info->sizeValid = PR_TRUE;
+      info->calculatedSize.width = aGivenSize.width;
+      info->calculatedSize.height = aGivenSize.height;
+      info->mFlags |= NS_FRAME_BOX_SIZE_VALID;
       info = info->next;
   }
+
+  aMaxAscent = 0;
 }
 

@@ -25,7 +25,7 @@
 
 <!DOCTYPE window SYSTEM "chrome://pref/locale/pref-composer.dtd" >
 
-<window xmlns:html="http://www.w3.org/TR/REC-html40"
+<window debug="false" xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="dialog"
         align="vertical" title="&title.label;"
@@ -40,19 +40,18 @@
     <titledbutton class="right-header-text" value="&rHeader;"/>
 	</box>
 
-		<html:fieldset>
-		<html:div class="hspace-both">
-			&authorName;
-			<html:input name="author" type="text" id="editorAuthor"
-                  pref="true" preftype="string" prefstring="editor.author"/>
-		</html:div>
-	</html:fieldset>
+		<titledbox orient="vertical">
+		<box autostretch="never" valign="middle">
+			<text value="&authorName;"/>
+			<html:input class="indent" name="author" type="text" id="editorAuthor"
+                  pref="true" preftype="string" prefstring="editor.author" flex="1"/>
+		</box>
+	</titledbox>
 
-    <html:fieldset>
-  		<html:legend align="left">&pageColorHeader;</html:legend> 
-    	<box class="hspace-both" align="horizontal">
-      <!-- need to do something BETTER here to accomodate indentation -->
-    	<box align="vertical" flex="100%">
+    <titledbox orient="vertical">
+  		<title><text value="&pageColorHeader;"/></title> 
+    	<box align="horizontal">
+    	<box align="vertical" flex="0">
     		<box flex="100%">
           <html:label>
             &NormalText.label;
@@ -134,7 +133,7 @@
     		</box>
     
     	</box>
-      <spring style="width: 7px;"/>
+        <spring style="width: 7px;"/>
     	<box align="vertical" flex="100%" id="colorpreview" basestyle="min-height:50px; width: 100%; border: 1px inset #CCCCCC; padding: 5px; " style="min-height:50px; width: 100%; border: 1px inset #CCCCCC; padding: 5px; ">
       	<html:div id="normaltext">  &NormalText.label;  </html:div>
         <spring style="height: 7px;"/>
@@ -146,14 +145,15 @@
     	</box>
   	</box>
 
-    <spring style="height: 7px;"/>
+    <spring/>
 
-  	<html:div class="hspace-both">
+  	<box>
+	   <spring/>
 		  <!-- clicking this button should reset the colors below to be same as navigator colors -->
 		  <titledbutton class="dialog push" name=""  value="&UseNavigatorColor.label;" />
-  	</html:div>
+  	</box>
 
-    <spring style="height: 10px;"/>
- 	</html:fieldset>
+    <spring/>
+ 	</titledbox>
 </window>
 

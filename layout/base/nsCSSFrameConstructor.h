@@ -511,6 +511,15 @@ protected:
                                   PRBool&                  aFrameHasBeenInitialized,
                                   PRBool                   aIsFixedPositioned);
 
+   nsresult ConstructTitledBoxFrame(nsIPresShell*        aPresShell, 
+                                  nsIPresContext*          aPresContext,
+                                  nsFrameConstructorState& aState,
+                                  nsIContent*              aContent,
+                                  nsIFrame*                aParentFrame,
+                                  nsIAtom*                 aTag,
+                                  nsIStyleContext*         aStyleContext,
+                                  nsIFrame*&               aNewFrame);
+
   nsresult ConstructFrameByTag(nsIPresShell*        aPresShell, 
                                nsIPresContext*          aPresContext,
                                nsFrameConstructorState& aState,

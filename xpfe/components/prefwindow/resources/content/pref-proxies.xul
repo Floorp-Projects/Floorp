@@ -40,32 +40,35 @@
 	</box>
 
   <box align="vertical" style="width: 100%;">
-		<html:fieldset style="width: 100%;">
-   		<!--	&networkHeader.label;  Bug in boxes-->
+		<titledbox orient="vertical">
+   		<html:div>&networkHeader.label;</html:div>
+		<spring class="vgap"/>
       <box>
   			<html:div>
           <html:input name="directManualOrAuto" type="radio" id="networkProxyType0"
                       onclick="DoEnabling();"
                       pref="true" preftype="int" prefindex="0" prefstring="network.proxy.type"/>
-  			</html:div>
    			<html:label for="networkProxyType0" accesskey="d" tabindex="0">
      			&directTypeRadio.label;
    			</html:label>
+ 			</html:div>
+
       </box>
-      <box align="horizontal" flex="100%" style="width: 100%">
+      <box align="horizontal" flex="1">
   			<html:div>
      			<html:input name="directManualOrAuto" type="radio" id="networkProxyType1"
                       onclick="DoEnabling();"
                       pref="true" preftype="int" prefindex="1" prefstring="network.proxy.type"/>
-  			</html:div>
    			<html:label for="networkProxyType1" accesskey="m" tabindex="0">
     			&manualTypeRadio.label;
    			</html:label>
-        <spring flex="100%"/>
+ 			</html:div>
+
+        <spring flex="1"/>
    			<!--<titledbutton id="viewhideManual" class="dialog push" value="&view.label;" onclick="showManualProxyConfig();"/>-->
       </box>
-      <html:div align="horizontal" id="manual-proxy" style="display: block; padding-left: 21px">
-       	<html:table width="100%">
+      <html:div align="horizontal" id="manual-proxy" style="width: 100px; height: 100px; padding-left: 21px">
+       	<html:table>
        		<html:tr>
        		  <html:td>&ftp.label;</html:td>
        		  <html:td>
@@ -133,14 +136,13 @@
           		<html:input name="socksport" type="text" id="pref:string:network.socks.port" size="5" />
           	</box>  
           -->
-      <box align="horizontal">
   			<html:div>
           <html:input name="directManualOrAuto" type="radio" id="networkProxyType2"
                       onclick="DoEnabling();"
                       pref="true" preftype="int" prefindex="2" prefstring="network.proxy.type"/>
-  			</html:div>
   			<html:label for="networkProxyType2" accesskey="a" tabindex="0">&autoTypeRadio.label;</html:label>
-      </box>
+
+  			</html:div>
       <box align="horizontal">
    			&configAutoconfigText.label;
       </box>
@@ -150,7 +152,7 @@
                     pref="true" preftype="string" prefstring="network.proxy.autoconfig_url"/>
         <titledbutton class="dialog push" id="autoReload" value="&reload.label;"/>
       </box>
-		</html:fieldset>
+		</titledbox>
 	</box>
 
 </window>
