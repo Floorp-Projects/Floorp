@@ -1887,9 +1887,9 @@ ULONG nsWindow::IsSpecialChar(UINT aVirtualKeyCode, WORD *aAsciiKey)
       keyType = SPECIAL_KEY;   
       break;
 
-    case VK_RETURN:*aAsciiKey = '\n';   
-      keyType = SPECIAL_KEY;   
-      break;
+    //case VK_RETURN:*aAsciiKey = '\n';   
+      //keyType = SPECIAL_KEY;   
+      //break;
 
     case VK_MENU:
       keyType = DONT_PROCESS_KEY;
