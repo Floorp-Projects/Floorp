@@ -207,12 +207,13 @@ public:
 
   virtual PRInt32 RulesMatching(nsIPresContext* aPresContext,
                                 nsIContent* aContent,
-                                nsIFrame* aParentFrame,
+                                nsIStyleContext* aParentContext,
                                 nsISupportsArray* aResults);
 
   virtual PRInt32 RulesMatching(nsIPresContext* aPresContext,
+                                nsIContent* aParentContent,
                                 nsIAtom* aPseudoTag,
-                                nsIFrame* aParentFrame,
+                                nsIStyleContext* aParentContext,
                                 nsISupportsArray* aResults);
 
   virtual nsIURL* GetURL(void);
@@ -441,189 +442,94 @@ nsresult HTMLStyleSheetImpl::QueryInterface(const nsIID& aIID,
   return NS_NOINTERFACE;
 }
 
-struct AppendData 
-{
-  AppendData(PRInt32 aBackstopCount, PRInt32 aInsertPoint, nsISupportsArray* aResults)
-    : mCount(0),
-      mBackstop(aBackstopCount),
-      mInsert(aInsertPoint),
-      mResults(aResults)
-  {}
-
-  PRInt32 mCount;
-  PRInt32 mBackstop;
-  PRInt32 mInsert;
-  nsISupportsArray* mResults;
-};
-
-PRBool AppendFunc(nsISupports* aElement, void *aData)
-{
-  AppendData* data = (AppendData*)aData;
-  if (data->mCount < data->mBackstop) {
-    data->mResults->InsertElementAt(aElement, data->mInsert++);
-  }
-  else {
-    data->mResults->AppendElement(aElement);
-  }
-  data->mCount++;
-  return PR_TRUE;
-}
-
-PRInt32 AppendRulesFrom(nsIFrame* aFrame, nsIPresContext* aPresContext, PRInt32& aInsertPoint, nsISupportsArray* aResults)
-{
-  PRInt32 count = 0;
-  nsIStyleContext*  context;
-  aFrame->GetStyleContext(aPresContext, context);
-  if (nsnull != context) {
-    count = context->GetStyleRuleCount();
-    if (0 < count) {
-      PRInt32 backstopCount = context->GetBackstopStyleRuleCount();
-      nsISupportsArray* rules = context->GetStyleRules();
-
-      AppendData  data(backstopCount, aInsertPoint, aResults);
-      rules->EnumerateForwards(AppendFunc, &data);
-      aInsertPoint = data.mInsert;
-      NS_RELEASE(rules);
-    }
-    NS_RELEASE(context);
-  }
-  return count;
-}
-
 PRInt32 HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
                                           nsIContent* aContent,
-                                          nsIFrame* aParentFrame,
+                                          nsIStyleContext* aParentContext,
                                           nsISupportsArray* aResults)
 {
   NS_PRECONDITION(nsnull != aPresContext, "null arg");
   NS_PRECONDITION(nsnull != aContent, "null arg");
-//  NS_PRECONDITION(nsnull != aParentFrame, "null arg");
   NS_PRECONDITION(nsnull != aResults, "null arg");
 
   PRInt32 matchCount = 0;
 
-  nsIContent* parentContent = nsnull;
-  if (nsnull != aParentFrame) {
-    aParentFrame->GetContent(parentContent);
-  }
+  nsIHTMLContent* htmlContent;
+  if (NS_OK == aContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent)) {
+    nsIAtom*  tag;
+    htmlContent->GetTag(tag);
+    // if we have anchor colors, check if this is an anchor with an href
+    if (tag == nsHTMLAtoms::a) {
+      if ((nsnull != mLinkRule) || (nsnull != mVisitedRule) || (nsnull != mActiveRule)) {
+        // test link state
+        nsILinkHandler* linkHandler;
 
-  if (aContent != parentContent) {  // if not a pseudo frame...
-    nsIHTMLContent* htmlContent;
-    if (NS_OK == aContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent)) {
-      nsIAtom*  tag;
-      htmlContent->GetTag(tag);
-      // if we have anchor colors, check if this is an anchor with an href
-      if (tag == nsHTMLAtoms::a) {
-        if ((nsnull != mLinkRule) || (nsnull != mVisitedRule) || (nsnull != mActiveRule)) {
-          // test link state
-          nsILinkHandler* linkHandler;
+        if ((NS_OK == aPresContext->GetLinkHandler(&linkHandler)) &&
+            (nsnull != linkHandler)) {
+          nsAutoString base, href;  // XXX base??
+          nsresult attrState = htmlContent->GetAttribute("href", href);
 
-          if ((NS_OK == aPresContext->GetLinkHandler(&linkHandler)) &&
-              (nsnull != linkHandler)) {
-            nsAutoString base, href;  // XXX base??
-            nsresult attrState = htmlContent->GetAttribute("href", href);
+          if (NS_CONTENT_ATTR_HAS_VALUE == attrState) {
+            nsIURL* docURL = nsnull;
+            nsIDocument* doc = nsnull;
+            aContent->GetDocument(doc);
+            if (nsnull != doc) {
+              docURL = doc->GetDocumentURL();
+              NS_RELEASE(doc);
+            }
 
-            if (NS_CONTENT_ATTR_HAS_VALUE == attrState) {
-              nsIURL* docURL = nsnull;
-              nsIDocument* doc = nsnull;
-              aContent->GetDocument(doc);
-              if (nsnull != doc) {
-                docURL = doc->GetDocumentURL();
-                NS_RELEASE(doc);
-              }
+            nsAutoString absURLSpec;
+            nsresult rv = NS_MakeAbsoluteURL(docURL, base, href, absURLSpec);
+            NS_IF_RELEASE(docURL);
 
-              nsAutoString absURLSpec;
-              nsresult rv = NS_MakeAbsoluteURL(docURL, base, href, absURLSpec);
-              NS_IF_RELEASE(docURL);
-
-              nsLinkState  state;
-              if (NS_OK == linkHandler->GetLinkState(absURLSpec, state)) {
-                switch (state) {
-                  case eLinkState_Unvisited:
-                    if (nsnull != mLinkRule) {
-                      aResults->AppendElement(mLinkRule);
-                      matchCount++;
-                    }
-                    break;
-                  case eLinkState_Visited:
-                    if (nsnull != mVisitedRule) {
-                      aResults->AppendElement(mVisitedRule);
-                      matchCount++;
-                    }
-                    break;
-                  case eLinkState_Active:
-                    if (nsnull != mActiveRule) {
-                      aResults->AppendElement(mActiveRule);
-                      matchCount++;
-                    }
-                    break;
-                }
+            nsLinkState  state;
+            if (NS_OK == linkHandler->GetLinkState(absURLSpec, state)) {
+              switch (state) {
+                case eLinkState_Unvisited:
+                  if (nsnull != mLinkRule) {
+                    aResults->AppendElement(mLinkRule);
+                    matchCount++;
+                  }
+                  break;
+                case eLinkState_Visited:
+                  if (nsnull != mVisitedRule) {
+                    aResults->AppendElement(mVisitedRule);
+                    matchCount++;
+                  }
+                  break;
+                case eLinkState_Active:
+                  if (nsnull != mActiveRule) {
+                    aResults->AppendElement(mActiveRule);
+                    matchCount++;
+                  }
+                  break;
               }
             }
-            NS_RELEASE(linkHandler);
           }
+          NS_RELEASE(linkHandler);
         }
-      } // end A tag
-      else if ((tag == nsHTMLAtoms::td) || (tag == nsHTMLAtoms::th)) {
-        // propogate row/col style rules
-        // XXX: this approach has a few caveats
-        //      behavior is bound to HTML content
-        //      makes table cells process attributes from other content
-        //      inherit based style (ie: font-size: 110%) can double on row & cell
-        PRInt32 backstopInsertPoint = 0;
-
-        nsIFrame* rowFrame = aParentFrame;
-        nsIFrame* rowGroupFrame;
-        nsIFrame* tableFrame;
-
-        rowFrame->GetContentParent(rowGroupFrame);
-        rowGroupFrame->GetContentParent(tableFrame);
-
-        nsIHTMLTableCellElement* cell=nsnull;  
-        nsresult rv = aContent->QueryInterface(kIHTMLTableCellElementIID, 
-                                       (void **)&cell);  // cell: REFCNT++
-        if (NS_SUCCEEDED(rv)) {
-          PRInt32 colIndex;
-          rv = cell->GetColIndex(&colIndex);
-          nsTableColFrame* colFrame;
-          nsIFrame* colGroupFrame;
-
-        // XXX CONSTRUCTION.
-        // Unfortunately the table's children haven't been added yet...
-#if 0
-          ((nsTableFrame*)tableFrame)->GetColumnFrame(colIndex, colFrame);
-          colFrame->GetContentParent(colGroupFrame);
-
-          matchCount += AppendRulesFrom(colGroupFrame, aPresContext, backstopInsertPoint, aResults);
-          matchCount += AppendRulesFrom(colFrame, aPresContext, backstopInsertPoint, aResults);
-#endif
-          NS_RELEASE(cell);                             // cell: REFCNT--
-        }
-        matchCount += AppendRulesFrom(rowGroupFrame, aPresContext, backstopInsertPoint, aResults);
-        matchCount += AppendRulesFrom(rowFrame, aPresContext, backstopInsertPoint, aResults);
-      } // end TD/TH tag
-
-      // just get the one and only style rule from the content
-      nsIStyleRule* rule;
-      htmlContent->GetStyleRule(rule);
-      if (nsnull != rule) {
-        aResults->AppendElement(rule);
-        NS_RELEASE(rule);
-        matchCount++;
       }
+    } // end A tag
 
-      NS_IF_RELEASE(tag);
-      NS_RELEASE(htmlContent);
+    // just get the one and only style rule from the content
+    nsIStyleRule* rule;
+    htmlContent->GetStyleRule(rule);
+    if (nsnull != rule) {
+      aResults->AppendElement(rule);
+      NS_RELEASE(rule);
+      matchCount++;
     }
+
+    NS_IF_RELEASE(tag);
+    NS_RELEASE(htmlContent);
   }
-  NS_IF_RELEASE(parentContent);
 
   return matchCount;
 }
 
 PRInt32 HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
+                                          nsIContent* aParentContent,
                                           nsIAtom* aPseudoTag,
-                                          nsIFrame* aParentFrame,
+                                          nsIStyleContext* aParentContext,
                                           nsISupportsArray* aResults)
 {
   // no pseudo frame style
@@ -1055,7 +961,7 @@ HTMLStyleSheetImpl::ConstructTableFrame(nsIPresContext*  aPresContext,
       nsIStyleContext*  childStyleContext;
 
       // Resolve the style context
-      childStyleContext = aPresContext->ResolveStyleContextFor(childContent, aNewFrame);
+      childStyleContext = aPresContext->ResolveStyleContextFor(childContent, aStyleContext);
 
       // See how it should be displayed
       const nsStyleDisplay* styleDisplay = (const nsStyleDisplay*)
@@ -1467,12 +1373,24 @@ HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
 
   // Resolve the style context.
   // XXX Cheesy hack for text
+  nsIStyleContext* parentStyleContext = nsnull;
+  if (nsnull != aParentFrame) {
+    aParentFrame->GetStyleContext(parentStyleContext);
+  }
   nsIStyleContext* styleContext;
   if (nsnull == tag) {
-    styleContext = aPresContext->ResolvePseudoStyleContextFor(nsHTMLAtoms::text, aParentFrame);
+    nsIContent* parentContent = nsnull;
+    if (nsnull != aParentFrame) {
+      aParentFrame->GetContent(parentContent);
+    }
+    styleContext = aPresContext->ResolvePseudoStyleContextFor(parentContent, 
+                                                              nsHTMLAtoms::text, 
+                                                              parentStyleContext);
+    NS_IF_RELEASE(parentContent);
   } else {
-    styleContext = aPresContext->ResolveStyleContextFor(aContent, aParentFrame);
+    styleContext = aPresContext->ResolveStyleContextFor(aContent, parentStyleContext);
   }
+  NS_IF_RELEASE(parentStyleContext);
   // XXX bad api - no nsresult returned!
   if (nsnull == styleContext) {
     rv = NS_ERROR_OUT_OF_MEMORY;
@@ -1522,8 +1440,9 @@ HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
               scrollFrame->SetStyleContext(aPresContext, styleContext);
 
               nsIStyleContext*  pseudoStyle;
-              pseudoStyle = aPresContext->ResolvePseudoStyleContextFor(nsHTMLAtoms::scrolledContentPseudo,
-                                                                       scrollFrame);
+              pseudoStyle = aPresContext->ResolvePseudoStyleContextFor(aContent,
+                                                                       nsHTMLAtoms::scrolledContentPseudo,
+                                                                       styleContext);
               aFrameSubTree->SetStyleContext(aPresContext, pseudoStyle);
               NS_RELEASE(pseudoStyle);
 
@@ -1824,45 +1743,6 @@ HTMLStyleSheetImpl::ContentRemoved(nsIPresContext* aPresContext,
   return rv;
 }
 
-static void
-ApplyStyleChangeToTree(nsIPresContext* aPresContext,
-                       nsIFrame* aFrame)
-{
-  nsIContent* content;
-  nsIFrame* geometricParent;
-  aFrame->GetGeometricParent(geometricParent);
-  aFrame->GetContent(content);
-
-  if (nsnull != content) {
-    PRBool  onlyRemap = PR_FALSE;
-    nsIStyleContext* oldSC;
-    aFrame->GetStyleContext(nsnull, oldSC);
-    nsIStyleContext* newSC =
-      aPresContext->ResolveStyleContextFor(content, geometricParent);
-    if (newSC == oldSC) {
-      // Force cached style data to be recomputed
-      newSC->RemapStyle(aPresContext);
-      onlyRemap = PR_TRUE;
-    }
-    else {
-      // Switch to new style context
-      aFrame->SetStyleContext(aPresContext, newSC);
-    }
-    NS_IF_RELEASE(oldSC);
-    NS_RELEASE(newSC);
-    NS_RELEASE(content);
-
-    // Update the children too...
-    nsIFrame* kid;
-    aFrame->FirstChild(kid);
-    if (PR_FALSE == onlyRemap) {  // remap already did children
-      while (nsnull != kid) {
-        ApplyStyleChangeToTree(aPresContext, kid);
-        kid->GetNextSibling(kid);
-      }
-    }
-  }
-}
 
 static void
 ApplyRenderingChangeToTree(nsIPresContext* aPresContext,
@@ -2089,7 +1969,7 @@ HTMLStyleSheetImpl::AttributeChanged(nsIPresContext* aPresContext,
 
     // apply changes
     if (PR_TRUE == restyle) {
-      ApplyStyleChangeToTree(aPresContext, frame);
+      frame->ReResolveStyleContext(aPresContext, nsnull);
     }
     if (PR_TRUE == reframe) {
       NS_NOTYETIMPLEMENTED("frame change reflow");
