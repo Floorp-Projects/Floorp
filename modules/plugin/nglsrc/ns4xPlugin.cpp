@@ -131,7 +131,7 @@ ns4xPlugin::ns4xPlugin(NPPluginFuncs* callbacks, PRLibrary* aLibrary, NP_PLUGINS
     "callback version is less than NP version");
 
   fShutdownEntry = (NP_PLUGINSHUTDOWN)PR_FindSymbol(aLibrary, "NP_Shutdown");
-#elif defined(XP_MAC) && !defined(TARGET_CARBON)
+#elif defined(XP_MAC) && !TARGET_CARBON
   // get the main entry point
   NP_MAIN pfnMain = (NP_MAIN) PR_FindSymbol(aLibrary, "mainRD");
 
