@@ -34,6 +34,7 @@ LD_LIBS += \
 	jsdom \
 	mimetype \
 	netlib \
+	smtpurl \
 	remoturl \
 	netcache \
 	netcnvts \
