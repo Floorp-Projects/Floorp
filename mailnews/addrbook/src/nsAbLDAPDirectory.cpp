@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Seth Spitzer <sspitzer@netscape.com>
+ *   Dan Mosedale <dmose@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -52,6 +53,7 @@
 #include "nsNetCID.h"
 #include "nsIIOService.h"
 #include "nsIPref.h"
+#include "nsISupportsPrimitives.h"
 
 nsAbLDAPDirectory::nsAbLDAPDirectory() :
     nsAbDirectoryRDFResource(),
@@ -144,7 +146,27 @@ nsresult nsAbLDAPDirectory::InitiateConnection ()
         rv = mURL->SetSpec(URI);
     }
     NS_ENSURE_SUCCESS(rv,rv);
-    
+
+    // get the login information, if there is any 
+    //
+    nsCOMPtr<nsISupportsWString> login;
+    rv = prefs->GetComplexValue(
+        PromiseFlatCString(
+            Substring(mURINoQuery, kLDAPDirectoryRootLen,
+                      mURINoQuery.Length() - kLDAPDirectoryRootLen)
+            + NS_LITERAL_CSTRING(".auth.dn")).get(),
+        NS_GET_IID(nsISupportsWString), getter_AddRefs(login));
+    if (NS_SUCCEEDED(rv)) {
+        rv = login->ToString(getter_Copies(mLogin));
+        if (NS_FAILED(rv)) {
+            NS_ERROR("nsAbLDAPDirectory::Initiate(): error converting login to"
+                     " wstring");
+            return rv;
+        }
+    } else {
+        mLogin.Truncate();  // zero out mLogin
+    }
+
     mConnection = do_CreateInstance(NS_LDAPCONNECTION_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 

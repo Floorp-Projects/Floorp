@@ -3908,16 +3908,14 @@ void DIR_SavePrefsForOneServer(DIR_Server *server)
 	/* Save authentication prefs */
 	DIR_SetBoolPref (prefstring, "auth.enabled", tempstring, server->enableAuth, kDefaultEnableAuth);
 	DIR_SetBoolPref (prefstring, "auth.savePassword", tempstring, server->savePassword, kDefaultSavePassword);
+    DIR_SetStringPref (prefstring, "auth.dn", tempstring, server->authDn, "");
 	if (server->savePassword && server->authDn && server->password)
 	{
-		DIR_SetStringPref (prefstring, "auth.dn", tempstring, server->authDn, "");
 		DIR_SetStringPref (prefstring, "auth.password", tempstring, server->password, "");
 	}
 	else
 	{
-		DIR_SetStringPref (prefstring, "auth.dn", tempstring, "", "");
 		DIR_SetStringPref (prefstring, "auth.password", tempstring, "", "");
-		PR_FREEIF (server->authDn);
 		PR_FREEIF (server->password);
 	}
 

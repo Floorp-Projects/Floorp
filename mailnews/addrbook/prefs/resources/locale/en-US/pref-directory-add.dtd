@@ -29,8 +29,8 @@ Rights Reserved.
 <!ENTITY findButton.accesskey              "f">
 <!ENTITY directorySecure.label             "Use secure connection (SSL)">
 <!ENTITY directorySecure.accesskey         "U">
-<!ENTITY directoryLogin.label              "Log in with user name and password">
-<!ENTITY directoryLogin.accesskey          "L">
+<!ENTITY directoryLogin.label              "Bind DN: ">
+<!ENTITY directoryLogin.accesskey          "i">
 <!ENTITY advancedOptionsButton.label       "Advanced Options">
 <!ENTITY advancedOptionsButton.accesskey   "a">
 <!ENTITY General.tab                       "General">

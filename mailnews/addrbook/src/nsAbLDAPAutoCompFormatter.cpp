@@ -185,12 +185,12 @@ nsAbLDAPAutoCompFormatter::FormatException(PRInt32 aState,
     nsCOMPtr<nsIStringBundle> ldapBundle, ldapACBundle;
 
     rv = stringBundleSvc->CreateBundle(
-        "chrome://mozldap/locale/ldapErrors.properties",
+        "chrome://mozldap/locale/ldap.properties",
         getter_AddRefs(ldapBundle));
     if (NS_FAILED(rv)) {
         NS_ERROR("nsAbLDAPAutoCompleteFormatter::FormatException():"
                  " error creating string bundle"
-                 " chrome://mozldap/locale/ldapErrors.properties");
+                 " chrome://mozldap/locale/ldap.properties");
         return rv;
     } 
 
@@ -222,7 +222,7 @@ nsAbLDAPAutoCompFormatter::FormatException(PRInt32 aState,
     if (NS_FAILED(rv)) {
         NS_ERROR("nsAbLDAPAutoCompleteFormatter::FormatException"
                    "(): error getting 'errCode' string from bundle "
-                   "chrome://mozldap/locale/ldapErrors.properties");
+                   "chrome://mozldap/locale/ldap.properties");
         return rv;
     }
 
@@ -243,7 +243,7 @@ nsAbLDAPAutoCompFormatter::FormatException(PRInt32 aState,
         if (NS_FAILED(rv)) {
             NS_ERROR("nsAbLDAPAutoCompleteFormatter::FormatException"
                      "(): error getting string 2 from bundle "
-                     "chrome://mozldap/locale/ldapErrors.properties");
+                     "chrome://mozldap/locale/ldap.properties");
             return rv;
         }
   
@@ -268,7 +268,7 @@ nsAbLDAPAutoCompFormatter::FormatException(PRInt32 aState,
             NS_ERROR("nsAbLDAPAutoCompleteFormatter::FormatException"
                      "(): error getting specific non LDAP error-string "
                      "from bundle "
-                     "chrome://mozldap/locale/ldapErrors.properties");
+                     "chrome://mozldap/locale/ldap.properties");
             return rv;
         }
     }
@@ -285,7 +285,7 @@ nsAbLDAPAutoCompFormatter::FormatException(PRInt32 aState,
         if (NS_FAILED(rv)) {
             NS_ERROR("nsAbLDAPAutoCompleteFormatter::FormatException()"
                      "(): error getting hint string from bundle "
-                     "chrome://mozldap/locale/ldapErrors.properties");
+                     "chrome://mozldap/locale/ldap.properties");
             return rv;
         }
     }

@@ -288,13 +288,13 @@ nsLDAPConnection::Init(const char *aHost, PRInt16 aPort, PRBool aSSL,
 
 // who we're binding as
 //
-// readonly attribute string bindName
+// readonly attribute wstring bindName
 //
 NS_IMETHODIMP
 nsLDAPConnection::GetBindName(PRUnichar **_retval)
 {
     NS_ENSURE_ARG_POINTER(_retval);
-    
+
     // check for NULL (meaning bind anonymously)
     //
     if (!mBindName) {

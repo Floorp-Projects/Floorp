@@ -47,10 +47,15 @@
 #include "nsILDAPOperation.h"
 #include "nsAbUtils.h"
 
+#include "nsIAuthPrompt.h"
+#include "nsIStringBundle.h"
 #include "nsXPIDLString.h"
 #include "nsAutoLock.h"
 #include "nsIProxyObjectManager.h"
 #include "prprf.h"
+#include "nsIWindowWatcher.h"
+#include "nsIDOMWindow.h"
+#include "nsICategoryManager.h"
 
 class nsAbQueryLDAPMessageListener : public nsILDAPMessageListener
 {
@@ -244,9 +249,134 @@ NS_IMETHODIMP nsAbQueryLDAPMessageListener::OnLDAPMessage(nsILDAPMessage *aMessa
 NS_IMETHODIMP nsAbQueryLDAPMessageListener::OnLDAPInit(nsresult aStatus)
 {
     nsresult rv;
+    nsXPIDLString passwd;
 
     // Make sure that the Init() worked properly
     NS_ENSURE_SUCCESS(aStatus, aStatus);
+
+    // If mLogin is set, we're expected to use it to get a password.
+    //
+    if (!mDirectoryQuery->mLogin.IsEmpty()) {
+// XXX hack until nsUTF8AutoString exists
+#define nsUTF8AutoString nsCAutoString
+        nsUTF8AutoString spec;
+        PRBool status;
+
+        // we're going to use the URL spec of the server as the "realm" for 
+        // wallet to remember the password by / for.
+        // 
+        rv = mDirectoryQuery->mDirectoryUrl->GetSpec(spec);
+        if (NS_FAILED(rv)) {
+            NS_ERROR("nsAbQueryLDAPMessageListener::OnLDAPInit(): GetSpec"
+                     " failed\n");
+            return NS_ERROR_FAILURE;
+        }
+
+        // get the string bundle service
+        //
+        nsCOMPtr<nsIStringBundleService> 
+            stringBundleSvc(do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv)); 
+        if (NS_FAILED(rv)) {
+            NS_ERROR("nsAbQueryLDAPMessageListener::OnLDAPInit():"
+                     " error getting string bundle service");
+            return rv;
+        }
+
+        // get the LDAP string bundle
+        //
+        nsCOMPtr<nsIStringBundle> ldapBundle;
+        rv = stringBundleSvc->CreateBundle(
+            "chrome://mozldap/locale/ldap.properties",
+            getter_AddRefs(ldapBundle));
+        if (NS_FAILED(rv)) {
+            NS_ERROR("nsAbQueryLDAPMessageListener::OnLDAPInit():"
+                     " error creating string bundle"
+                     " chrome://mozldap/locale/ldap.properties");
+            return rv;
+        } 
+
+        // get the title for the authentication prompt
+        //
+        nsXPIDLString authPromptTitle;
+        rv = ldapBundle->GetStringFromName(
+            NS_LITERAL_STRING("authPromptTitle").get(), 
+            getter_Copies(authPromptTitle));
+        if (NS_FAILED(rv)) {
+            NS_ERROR("nsAbQueryLDAPMessageListener::OnLDAPInit():"
+                     "error getting 'authPromptTitle' string from bundle "
+                     "chrome://mozldap/locale/ldap.properties");
+            return rv;
+        }
+
+        // get the host name for the auth prompt
+        //
+        nsCAutoString host;
+        rv = mUrl->GetAsciiHost(host);
+        if (NS_FAILED(rv)) {
+            return NS_ERROR_FAILURE;
+        }
+        const PRUnichar *hostArray[1] = { NS_ConvertASCIItoUCS2(host).get() };
+
+        // format the hostname into the authprompt text string
+        //
+        nsXPIDLString authPromptText;
+        rv = ldapBundle->FormatStringFromName(
+            NS_LITERAL_STRING("authPromptText").get(),
+            hostArray, sizeof(hostArray),
+            getter_Copies(authPromptText));
+        if (NS_FAILED(rv)) {
+            NS_ERROR("nsAbQueryLDAPMessageListener::OnLDAPInit():"
+                     "error getting 'authPromptText' string from bundle "
+                     "chrome://mozldap/locale/ldap.properties");
+            return rv;
+        }
+
+
+        // get the window watcher service, so we can get an auth prompter
+        //
+        nsCOMPtr<nsIWindowWatcher> windowWatcherSvc = 
+            do_GetService("@mozilla.org/embedcomp/window-watcher;1", &rv);
+        if (NS_FAILED(rv)) {
+            NS_ERROR("nsAbQueryLDAPMessageListener::OnLDAPInit():"
+                     " couldn't get window watcher service.");
+            return rv;
+        }
+
+        // get the addressbook window, as it will be used to parent the auth
+        // prompter dialog
+        //
+        nsCOMPtr<nsIDOMWindow> abDOMWindow;
+        rv = windowWatcherSvc->GetWindowByName(
+            NS_LITERAL_STRING("addressbookWindow").get(), nsnull,
+            getter_AddRefs(abDOMWindow));
+        if (NS_FAILED(rv)) {
+            NS_ERROR("nsAbQueryLDAPMessageListener::OnLDAPInit():"
+                     " error getting addressbook Window");
+            return rv;
+        }
+
+        // get the auth prompter itself
+        //
+        nsCOMPtr<nsIAuthPrompt> authPrompter;
+        rv = windowWatcherSvc->GetNewAuthPrompter(
+            abDOMWindow, getter_AddRefs(authPrompter));
+        if (NS_FAILED(rv)) {
+            NS_ERROR("nsAbQueryLDAPMessageListener::OnLDAPInit():"
+                     " error getting auth prompter");
+            return rv;
+        }
+
+        // get authentication password, prompting the user if necessary
+        //
+        rv = authPrompter->PromptPassword(
+            authPromptTitle.get(), authPromptText.get(),
+            NS_ConvertUTF8toUCS2(spec).get(),
+            nsIAuthPrompt::SAVE_PASSWORD_PERMANENTLY, getter_Copies(passwd),
+            &status);
+        if (NS_FAILED(rv) || status == PR_FALSE) {
+            return NS_ERROR_FAILURE;
+        }
+    }
 
     // Initiate the LDAP operation
     nsCOMPtr<nsILDAPOperation> ldapOperation =
@@ -264,7 +394,7 @@ NS_IMETHODIMP nsAbQueryLDAPMessageListener::OnLDAPInit(nsresult aStatus)
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Bind
-    rv = ldapOperation->SimpleBind(nsnull);
+    rv = ldapOperation->SimpleBind(passwd);
     NS_ENSURE_SUCCESS(rv, rv);
 
     return rv;
@@ -275,7 +405,41 @@ nsresult nsAbQueryLDAPMessageListener::OnLDAPMessageBind (nsILDAPMessage *aMessa
     if (mBound == PR_TRUE)
         return NS_OK;
 
-    nsresult rv;
+    // see whether the bind actually succeeded
+    //
+    PRInt32 errCode;
+    nsresult rv = aMessage->GetErrorCode(&errCode);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (errCode != nsILDAPErrors::SUCCESS) {
+
+        // if the login failed, tell the wallet to forget this password
+        //
+        if ( errCode == nsILDAPErrors::INAPPROPRIATE_AUTH ||
+             errCode == nsILDAPErrors::INVALID_CREDENTIALS ) {
+
+            // make sure the wallet service has been created, and in doing so,
+            // pass in a login-failed message to tell it to forget this passwd.
+            //
+            // apparently getting passwords stored in the wallet
+            // doesn't require the service to be running, which is why
+            // this might not exist yet.
+            //
+            rv = NS_CreateServicesFromCategory(
+                "passwordmanager", mDirectoryQuery->mDirectoryUrl,
+                "login-failed");
+            if (NS_FAILED(rv)) {
+                NS_ERROR("nsLDAPAutoCompleteSession::ForgetPassword(): error"
+                         " creating password manager service");
+                // not much to do at this point, though conceivably we could 
+                // pop up a dialog telling the user to go manually delete
+                // this password in the password manager.
+            }
+        } 
+
+        // XXX this error should be propagated back to the UI somehow
+        return NS_OK;
+    }
 
     mSearchOperation = do_CreateInstance(NS_LDAPOPERATION_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -521,24 +685,23 @@ NS_IMETHODIMP nsAbLDAPDirectoryQuery::DoQuery(nsIAbDirectoryQueryArguments* argu
 
 
     // Set up the search ldap url
-    nsCOMPtr<nsILDAPURL> directoryUrl;
-    rv = GetLDAPURL (getter_AddRefs (directoryUrl));
+    rv = GetLDAPURL (getter_AddRefs (mDirectoryUrl));
     NS_ENSURE_SUCCESS(rv, rv);
     
     nsCAutoString host;
-    rv = directoryUrl->GetAsciiHost(host);
+    rv = mDirectoryUrl->GetAsciiHost(host);
     NS_ENSURE_SUCCESS(rv, rv);
 
     PRInt32 port;
-    rv = directoryUrl->GetPort(&port);
+    rv = mDirectoryUrl->GetPort(&port);
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsXPIDLCString dn;
-    rv = directoryUrl->GetDn(getter_Copies (dn));
+    rv = mDirectoryUrl->GetDn(getter_Copies (dn));
     NS_ENSURE_SUCCESS(rv, rv);
 
     PRUint32 options;
-    rv = directoryUrl->GetOptions(&options);
+    rv = mDirectoryUrl->GetOptions(&options);
     NS_ENSURE_SUCCESS(rv,rv);
 
     nsCString ldapSearchUrlString;
@@ -606,7 +769,7 @@ NS_IMETHODIMP nsAbLDAPDirectoryQuery::DoQuery(nsIAbDirectoryQueryArguments* argu
 
     // Now lets initialize the LDAP connection properly. We'll kick
     // off the bind operation in the callback function, |OnLDAPInit()|.
-    rv = ldapConnection->Init(host.get(), port, options, nsnull,
+    rv = ldapConnection->Init(host.get(), port, options, mLogin.get(),
                               messageListener);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -640,12 +803,6 @@ NS_IMETHODIMP nsAbLDAPDirectoryQuery::StopQuery(PRInt32 contextID)
     rv = _messageListener->Cancel ();
 
     return rv;
-}
-
-
-void nsAbLDAPDirectoryQuery::setLdapUrl (const char* aLdapUrl)
-{
-    mLdapUrl = aLdapUrl;
 }
 
 nsresult nsAbLDAPDirectoryQuery::RemoveListener (PRInt32 contextID)

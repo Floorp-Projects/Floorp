@@ -125,6 +125,10 @@ nsLDAPOperation::SimpleBind(const PRUnichar *passwd)
     if (NS_FAILED(rv))
         return rv;
 
+    PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, 
+           ("nsLDAPOperation::SimpleBind(): called; bindName = '%s'; ",
+            NS_LossyConvertUCS2toASCII(bindName).get()));
+
     mMsgID = ldap_simple_bind(mConnectionHandle,
                               NS_ConvertUCS2toUTF8(bindName).get(),
                               NS_ConvertUCS2toUTF8(passwd).get());

@@ -21,6 +21,7 @@
    Contributor(s): 
      Srilatha Moturi <srilatha@netscape.com>, original implementor
      Hkan Waara <hwaara@chello.se>
+     Dan Mosedale <dmose@netscape.com>
   -->
 
 <?xml-stylesheet href="chrome://messenger/skin/prefPanels.css" type="text/css"?>
@@ -84,12 +85,18 @@
                                  accesskey="&findButton.accesskey;" disabled="true"/>
                      </row>
                      <row align="center">
-                         <label value="&portNumber.label;" 
+                         <label value="&portNumber.label;"
                                 accesskey="&portNumber.accesskey;"
                                 control="port"/>
                          <hbox>
                              <textbox id="port" size="6"/> 
                          </hbox>
+                     </row>
+                     <row align="center">
+                         <label value="&directoryLogin.label;"
+				accesskey="&directoryLogin.accesskey;"
+				control="login"/>
+                         <textbox id="login" flex="1"/>
                      </row>
                  </rows>
              </grid>
@@ -97,8 +104,6 @@
              <checkbox id="secure" label="&directorySecure.label;"
                        accesskey="&directorySecure.accesskey;"
                        oncommand="onSecure();"/>
-             <checkbox id="login" label="&directoryLogin.label;"
-                       accesskey="&directoryLogin.accesskey;" hidden="true"/> 
            </vbox>
            <vbox>
               <description>&offlineText.label;</description>

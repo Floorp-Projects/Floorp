@@ -41,7 +41,11 @@
 #include "nsReadableUtils.h"
 #include "nspr.h"
 #include "nsLDAP.h"
+#include "nsIStringBundle.h"
 #include "nsCRT.h"
+#include "nsIObserverService.h"
+#include "nsNetUtil.h"
+#include "nsICategoryManager.h"
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo *sLDAPAutoCompleteLogModule = 0;
@@ -434,6 +438,7 @@ nsLDAPAutoCompleteSession::OnLDAPInit(nsresult aStatus)
 {
     nsresult rv;        // temp for xpcom return values
     nsCOMPtr<nsILDAPMessageListener> selfProxy;
+    nsXPIDLString passwd;   // passwd to use to connect to server
 
     // Check the status from the initialization of the LDAP connection
     //
@@ -441,6 +446,110 @@ nsLDAPAutoCompleteSession::OnLDAPInit(nsresult aStatus)
         FinishAutoCompleteLookup(nsIAutoCompleteStatus::failureItems, aStatus,
                                  UNBOUND);
         return NS_ERROR_FAILURE;
+    }
+
+    // If mAuthPrompter is set, we're expected to use it to get a password.
+    //
+    if (mAuthPrompter) {
+        nsUTF8String spec;
+        PRBool status;
+
+        // we're going to use the URL spec of the server as the "realm" for 
+        // wallet to remember the password by / for.
+        //
+        rv = mServerURL->GetSpec(spec);
+        if (NS_FAILED(rv)) {
+            NS_ERROR("nsLDAPAutoCompleteSession::OnLDAPInit(): GetSpec"
+                     " failed\n");
+            FinishAutoCompleteLookup(nsIAutoCompleteStatus::failureItems,
+                                     rv, UNBOUND);
+            return NS_ERROR_FAILURE;
+        }
+
+        // get the string bundle service
+        //
+        nsCOMPtr<nsIStringBundleService> 
+            stringBundleSvc(do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv)); 
+        if (NS_FAILED(rv)) {
+            NS_ERROR("nsLDAPAutoCompleteSession::OnLDAPInit():"
+                     " error getting string bundle service");
+            FinishAutoCompleteLookup(nsIAutoCompleteStatus::failureItems,
+                                     rv, UNBOUND);
+            return rv;
+        }
+
+        // get the LDAP string bundle
+        //
+        nsCOMPtr<nsIStringBundle> ldapBundle;
+        rv = stringBundleSvc->CreateBundle(
+            "chrome://mozldap/locale/ldap.properties",
+            getter_AddRefs(ldapBundle));
+        if (NS_FAILED(rv)) {
+            NS_ERROR("nsLDAPAutoCompleteSession::OnLDAPInit():"
+                     " error creating string bundle"
+                     " chrome://mozldap/locale/ldap.properties");
+            FinishAutoCompleteLookup(nsIAutoCompleteStatus::failureItems,
+                                     rv, UNBOUND);
+            return rv;
+        } 
+
+        // get the title for the authentication prompt
+        //
+        nsXPIDLString authPromptTitle;
+        rv = ldapBundle->GetStringFromName(
+            NS_LITERAL_STRING("authPromptTitle").get(), 
+            getter_Copies(authPromptTitle));
+        if (NS_FAILED(rv)) {
+            NS_ERROR("nsLDAPAutoCompleteSession::OnLDAPInit():"
+                     "error getting 'authPromptTitle' string from bundle "
+                     "chrome://mozldap/locale/ldap.properties");
+            FinishAutoCompleteLookup(nsIAutoCompleteStatus::failureItems,
+                                     rv, UNBOUND);
+            return rv;
+        }
+
+        // get the host name for the auth prompt
+        //
+        nsCAutoString host;
+        rv = mServerURL->GetAsciiHost(host);
+        if (NS_FAILED(rv)) {
+            FinishAutoCompleteLookup(nsIAutoCompleteStatus::failureItems, rv, 
+                                     UNBOUND);
+            return rv;
+        }
+        const PRUnichar *hostArray[1] = { NS_ConvertASCIItoUCS2(host).get() };
+
+        // format the hostname into the authprompt text string
+        //
+        nsXPIDLString authPromptText;
+        rv = ldapBundle->FormatStringFromName(
+            NS_LITERAL_STRING("authPromptText").get(),
+            hostArray, sizeof(hostArray),
+            getter_Copies(authPromptText));
+        if (NS_FAILED(rv)) {
+            NS_ERROR("nsLDAPAutoCompleteSession::OnLDAPInit():"
+                     "error getting 'authPromptText' string from bundle "
+                     "chrome://mozldap/locale/ldap.properties");
+            FinishAutoCompleteLookup(nsIAutoCompleteStatus::failureItems,
+                                     rv, UNBOUND);
+            return rv;
+        }
+
+        // get authentication password, prompting the user if necessary
+        //
+        rv = mAuthPrompter->PromptPassword(
+            authPromptTitle.get(), authPromptText.get(),
+            NS_ConvertUTF8toUCS2(spec).get(),
+            nsIAuthPrompt::SAVE_PASSWORD_PERMANENTLY, getter_Copies(passwd),
+            &status);
+        if (NS_FAILED(rv) || status == PR_FALSE) {
+            PR_LOG(sLDAPAutoCompleteLogModule, PR_LOG_DEBUG, 
+                   ("nsLDAPAutoCompleteSession::OnLDAPInit(): PromptPassword"
+                    " encountered an error or was cancelled by the user"));
+            FinishAutoCompleteLookup(nsIAutoCompleteStatus::failureItems,
+                                     NS_ERROR_FAILURE, UNBOUND);
+            return NS_ERROR_FAILURE;
+        }
     }
 
     // create and initialize an LDAP operation (to be used for the bind)
@@ -482,7 +591,7 @@ nsLDAPAutoCompleteSession::OnLDAPInit(nsresult aStatus)
     PR_LOG(sLDAPAutoCompleteLogModule, PR_LOG_DEBUG, 
            ("nsLDAPAutoCompleteSession:OnLDAPInit(): initiating "
             "SimpleBind\n"));
-    rv = mOperation->SimpleBind(NULL); 
+    rv = mOperation->SimpleBind(passwd); 
     if (NS_FAILED(rv)) {
 
         switch (rv) {
@@ -519,7 +628,6 @@ nsLDAPAutoCompleteSession::OnLDAPInit(nsresult aStatus)
 nsresult
 nsLDAPAutoCompleteSession::OnLDAPBind(nsILDAPMessage *aMessage)
 {
-
     PRInt32 errCode;
 
     mOperation = 0;  // done with bind op; make nsCOMPtr release it
@@ -532,21 +640,46 @@ nsLDAPAutoCompleteSession::OnLDAPBind(nsILDAPMessage *aMessage)
         NS_ERROR("nsLDAPAutoCompleteSession::OnLDAPBind(): couldn't get "
                  "error code from aMessage");
 
-        // reset to the default state
+        // reset to the default state, and pass along the LDAP error code
+        // to the formatter
         //
-        FinishAutoCompleteLookup(nsIAutoCompleteStatus::failureItems,
-                                 NS_ERROR_FAILURE, UNBOUND);
+        FinishAutoCompleteLookup(
+            nsIAutoCompleteStatus::failureItems,
+            NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_LDAP, errCode), 
+            UNBOUND);
         return NS_ERROR_FAILURE;
     }
 
-
     // check to be sure the bind succeeded
     //
-    if ( errCode != nsILDAPErrors::SUCCESS) {
+    if (errCode != nsILDAPErrors::SUCCESS) {
 
         PR_LOG(sLDAPAutoCompleteLogModule, PR_LOG_WARNING, 
-               ("nsLDAPAutoCompleteSession::OnLDAPBind(): error binding to "
-                "LDAP server, errCode = %d", errCode));
+                ("nsLDAPAutoCompleteSession::OnLDAPBind(): error binding to "
+                "LDAP server, errCode = 0x%x", errCode));
+
+        // if the login failed, tell the wallet to forget this password
+        //
+        if ( errCode == nsILDAPErrors::INAPPROPRIATE_AUTH ||
+             errCode == nsILDAPErrors::INVALID_CREDENTIALS ) {
+
+            // make sure the wallet service has been created, and in doing so,
+            // pass in a login-failed message to tell it to forget this passwd.
+            //
+            // apparently getting passwords stored in the wallet
+            // doesn't require the service to be running, which is why
+            // this might not exist yet.
+            //
+            rv = NS_CreateServicesFromCategory("passwordmanager", mServerURL,
+                                               "login-failed");
+            if (NS_FAILED(rv)) {
+                NS_ERROR("nsLDAPAutoCompleteSession::ForgetPassword(): error"
+                         " creating password manager service");
+                // not much to do at this point, though conceivably we could 
+                // pop up a dialog telling the user to go manually delete
+                // this password in the password manager.
+            }
+        }
 
         // reset to the default state
         //
@@ -1007,7 +1140,8 @@ nsLDAPAutoCompleteSession::InitConnection()
     //
     rv = mConnection->Init(host.get(), port,
                            (options & nsILDAPURL::OPT_SECURE) ? PR_TRUE 
-                           : PR_FALSE, nsnull, selfProxy);
+                           : PR_FALSE, NS_ConvertUTF8toUCS2(mLogin).get(), 
+                           selfProxy);
     if NS_FAILED(rv) {
         switch (rv) {
 
@@ -1168,7 +1302,7 @@ nsLDAPAutoCompleteSession::FinishAutoCompleteLookup(
                    "error calling mListener->OnAutoComplete()");
     }
 
-    // set the state approrpiately
+    // set the state appropriately
     //
     mState = aEndState;
 
@@ -1358,7 +1492,7 @@ nsLDAPAutoCompleteSession::IsMessageCurrent(nsILDAPMessage *aMessage,
 }
 
 // attribute nsILDAPAutoCompFormatter formatter
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsLDAPAutoCompleteSession::GetFormatter(nsILDAPAutoCompFormatter* *aFormatter)
 {
     if (! aFormatter ) {
@@ -1394,4 +1528,29 @@ nsLDAPAutoCompleteSession::SetFormatter(nsILDAPAutoCompFormatter* aFormatter)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsLDAPAutoCompleteSession::SetLogin(const nsACString & aLogin)
+{
+    mLogin = aLogin;
+    return NS_OK;
+}
+NS_IMETHODIMP
+nsLDAPAutoCompleteSession::GetLogin(nsACString & aLogin) 
+{
+    aLogin = mLogin;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLDAPAutoCompleteSession::GetAuthPrompter(nsIAuthPrompt **aAuthPrompter)
+{
+    NS_IF_ADDREF(*aAuthPrompter = mAuthPrompter);
+    return NS_OK;
+}
+NS_IMETHODIMP
+nsLDAPAutoCompleteSession::SetAuthPrompter(nsIAuthPrompt *aAuthPrompter)
+{
+    mAuthPrompter = aAuthPrompter;
+    return NS_OK;
+}
 #endif

@@ -27,6 +27,7 @@
 //
 interface nsILDAPURL;   
 interface nsILDAPAutoCompFormatter;
+interface nsIAuthPrompt;
 
 /**
  * Extends nsIAutoCompleteSession to have various LDAP-specific parameters.
@@ -100,4 +101,16 @@ interface nsILDAPAutoCompleteSession : nsIAutoCompleteSession {
      * nsIAutoCompleteItem.  
      */
     attribute nsILDAPAutoCompFormatter formatter;
+
+    /**
+     * "Login as..." this ID.  Currently, this must be specified as a DN.
+     * In the future, we may support userid and/or email address as well.
+     * If unset, bind anonymously.
+     */
+    attribute AUTF8String login;
+
+    /**
+     * If set, use this object to get a password for logging in to the server.
+     */
+    attribute nsIAuthPrompt authPrompter;
 };

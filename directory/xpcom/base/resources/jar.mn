@@ -39,4 +39,4 @@ comm.jar:
 
 en-US.jar:
         locale/en-US/mozldap/contents.rdf (locale/en-US/contents.rdf)
-        locale/en-US/mozldap/ldapErrors.properties (locale/en-US/ldapErrors.properties)
+        locale/en-US/mozldap/ldap.properties (locale/en-US/ldap.properties)

@@ -91,7 +91,6 @@ protected:
     PRPackedBool mPerformingQuery;
     PRInt32 mContext;
     PRInt32 mMaxHits;
-
     nsCOMPtr<nsILDAPURL> mURL ;
     nsCOMPtr<nsILDAPConnection> mConnection;
 
