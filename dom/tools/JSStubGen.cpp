@@ -97,6 +97,7 @@ static const char kIncludeDefaultsStr[] = "\n"
 "#include \"nsJSUtils.h\"\n"
 "#include \"nsDOMError.h\"\n"
 "#include \"nscore.h\"\n"
+"#include \"nsIServiceManager.h\"\n"
 "#include \"nsIScriptContext.h\"\n"
 "#include \"nsIScriptSecurityManager.h\"\n"
 "#include \"nsIJSScriptObject.h\"\n"
@@ -320,27 +321,29 @@ static const char kPropFuncBeginStr[] = "\n"
 
 static const char kIntCaseStr[] =
 "  if (JSVAL_IS_INT(id)) {\n"
-"    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);\n"
-"    nsCOMPtr<nsIScriptSecurityManager> secMan;\n"
-"    if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {\n"
-"      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);\n"
+"    nsresult rv;\n"
+"    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,\n"
+"                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);\n"
+"    if (NS_FAILED(rv)) {\n"
+"      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);\n"
 "    }\n"
 "    switch(JSVAL_TO_INT(id)) {\n";
 
 static const char kIntCaseNamedItemStr[] =
 "  PRBool checkNamedItem = PR_TRUE;\n"
 "  if (JSVAL_IS_INT(id)) {\n"
-"    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);\n"
-"    nsCOMPtr<nsIScriptSecurityManager> secMan;\n"
-"    if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {\n"
-"      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);\n"
+"    nsresult rv;\n"
+"    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,\n"
+"                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);\n"
+"    if (NS_FAILED(rv)) {\n"
+"      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);\n"
 "    }\n"
 "    checkNamedItem = PR_FALSE;\n"
 "    switch(JSVAL_TO_INT(id)) {\n";
 
 static const char kPropFuncDefaultStr[] = 
 "      default:\n"
-"        return nsJSUtils::nsCallJSScriptObject%sProperty(a, cx, id, vp);\n"
+"        return nsJSUtils::nsCallJSScriptObject%sProperty(a, cx, obj, id, vp);\n"
 "    }\n"
 "  }\n";
 
@@ -360,7 +363,7 @@ static const char kPropFuncDefaultItemStr[] =
 "%s"
 "        }\n"
 "        else {\n"
-"          return nsJSUtils::nsReportError(cx, result);\n"
+"          return nsJSUtils::nsReportError(cx, obj, result);\n"
 "        }\n"
 "      }\n"
 "    }\n"
@@ -380,11 +383,11 @@ static const char kPropFuncDefaultItemNonPrimaryStr[] =
 "          }\n"
 "          else {\n"
 "            NS_RELEASE(b);\n"
-"            return nsJSUtils::nsReportError(cx, result);\n"
+"            return nsJSUtils::nsReportError(cx, obj, result);\n"
 "          }\n"
 "        }\n"
 "        else {\n"
-"          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_WRONG_TYPE_ERR);\n"
+"          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);\n"
 "        }\n"
 "      }\n"
 "    }\n"
@@ -392,7 +395,7 @@ static const char kPropFuncDefaultItemNonPrimaryStr[] =
 
 static const char kPropFuncEndStr[] = 
 "  else {\n"
-"    return nsJSUtils::nsCallJSScriptObject%sProperty(a, cx, id, vp);\n"
+"    return nsJSUtils::nsCallJSScriptObject%sProperty(a, cx, obj, id, vp);\n"
 "  }\n"
 "\n"
 "  return PR_TRUE;\n"
@@ -419,11 +422,11 @@ static const char kPropFuncNamedItemStr[] =
 "%s"
 "      }\n"
 "      else {\n"
-"        return nsJSUtils::nsCallJSScriptObject%sProperty(a, cx, id, vp);\n"
+"        return nsJSUtils::nsCallJSScriptObject%sProperty(a, cx, obj, id, vp);\n"
 "      }\n"
 "    }\n"
 "    else {\n"
-"      return nsJSUtils::nsReportError(cx, result);\n"
+"      return nsJSUtils::nsReportError(cx, obj, result);\n"
 "    }\n"
 "  }\n";
 
@@ -451,16 +454,16 @@ static const char kPropFuncNamedItemNonPrimaryStr[] =
 "%s"
 "        }\n"
 "        else {\n"
-"          return nsJSUtils::nsCallJSScriptObject%sProperty(a, cx, id, vp);\n"
+"          return nsJSUtils::nsCallJSScriptObject%sProperty(a, cx, obj, id, vp);\n"
 "        }\n"
 "      }\n"
 "      else {\n"
 "        NS_RELEASE(b);\n"
-"        return nsJSUtils::nsReportError(cx, result);\n"
+"        return nsJSUtils::nsReportError(cx, obj, result);\n"
 "      }\n"
 "    }\n"
 "    else {\n"
-"      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_WRONG_TYPE_ERR);\n"
+"      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);\n"
 "    }\n"
 "  }\n";
 
@@ -477,9 +480,9 @@ static const char kPropCaseBeginStr[] =
 "      case %s_%s:\n"
 "      {\n"
 "        PRBool ok = PR_FALSE;\n"
-"        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_%s_%s, %s, &ok);\n"
+"        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_%s_%s, %s, &ok);\n"
 "        if (!ok) {\n"
-"          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);\n"
+"          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);\n"
 "        }\n";
 
 static const char kPropCaseEndStr[] = 
@@ -629,7 +632,7 @@ static const char kGetCaseStr[] =
 "%s"
 "        }\n"
 "        else {\n"
-"          return nsJSUtils::nsReportError(cx, result);\n"
+"          return nsJSUtils::nsReportError(cx, obj, result);\n"
 "        }\n";
 
 static const char kGetCaseNonPrimaryStr[] =
@@ -644,20 +647,20 @@ static const char kGetCaseNonPrimaryStr[] =
 "          }\n"
 "          else {\n"
 "            NS_RELEASE(b);\n"
-"            return nsJSUtils::nsReportError(cx, result);\n"
+"            return nsJSUtils::nsReportError(cx, obj, result);\n"
 "          }\n"
 "        }\n"
 "        else {\n"
-"          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_WRONG_TYPE_ERR);\n"
+"          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);\n"
 "        }\n";
 
 static const char kObjectGetCaseStr[] = 
 "          // get the js object\n"
-"          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);\n";
+"          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);\n";
 
 static const char kXPIDLObjectGetCaseStr[] =
 "          // get the js object; n.b., this will do a release on 'prop'\n"
-"          nsJSUtils::nsConvertXPCObjectToJSVal(prop, %s::GetIID(), cx, vp);\n";
+"          nsJSUtils::nsConvertXPCObjectToJSVal(prop, %s::GetIID(), cx, obj, vp);\n";
 
 static const char kStringGetCaseStr[] = 
 "          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);\n";
@@ -774,7 +777,7 @@ static const char kSetCaseNonPrimaryStr[] =
 "        }\n"
 "        else {\n"
 "           %s\n"
-"          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_WRONG_TYPE_ERR);\n"
+"          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);\n"
 "        }\n"
 "        %s\n";
 
@@ -783,13 +786,13 @@ static const char kObjectSetCaseStr[] =
 "        if (PR_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&prop,\n"
 "                                                kI%sIID, \"%s\",\n"
 "                                                cx, *vp)) {\n"
-"          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_OBJECT_ERR);\n"
+"          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);\n"
 "        }\n";
 
 static const char kXPIDLObjectSetCaseStr[] = 
 "        if (PR_FALSE == nsJSUtils::nsConvertJSValToXPCObject((nsISupports **) &prop,\n"
 "                                                kI%sIID, cx, *vp)) {\n"
-"          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_XPC_OBJECT_ERR);\n"
+"          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_XPC_OBJECT_ERR);\n"
 "        }\n";
 
 static const char kObjectSetCaseEndStr[] = "NS_IF_RELEASE(prop);";
@@ -805,12 +808,12 @@ static const char kIntSetCaseStr[] =
 "          prop = (%s)temp;\n"
 "        }\n"
 "        else {\n"
-"          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_NUMBER_ERR);\n"
+"          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_NUMBER_ERR);\n"
 "        }\n";
 
 static const char kBoolSetCaseStr[] =
 "        if (PR_FALSE == nsJSUtils::nsConvertJSValToBool(&prop, cx, *vp)) {\n"
-"          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_BOOLEAN_ERR);\n"
+"          return nsJSUtils::nsReportError(cx, obj,  NS_ERROR_DOM_NOT_BOOLEAN_ERR);\n"
 "        }\n";
 
 static const char kJSValSetCaseStr[] =
@@ -997,8 +1000,8 @@ static const char kMethodBeginNonPrimaryStr[] = "\n\n"
 "  if (NS_OK != privateThis->QueryInterface(kI%sIID, getter_AddRefs(nativeThis))) {\n"
 #else
 "  if (NS_OK != privateThis->QueryInterface(kI%sIID, (void **)&nativeThis)) {\n"
-#endif"  nsIDOM%s *nativeThis = nsnull;\n"
-"    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_WRONG_TYPE_ERR);\n"
+#endif
+"    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);\n"
 "  }\n"
 "\n";
 
@@ -1010,21 +1013,36 @@ static const char kMethodParamStr[] =  "  %s b%d;\n";
 static const char kMethodBodyBeginStr[] = "\n"
 "  *rval = JSVAL_NULL;\n"
 "\n"
-"  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);\n"
-"  nsCOMPtr<nsIScriptSecurityManager> secMan;\n"
-"  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {\n"
-"    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);\n"
-"  }\n"
 "  {\n"
 "    PRBool ok;\n"
-"    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_%s_%s, PR_FALSE, &ok);\n"
+"    nsresult rv;\n"
+"    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,\n"
+"                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);\n"
+"    if (NS_FAILED(rv)) {\n"
+"      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);\n"
+"    }\n"
+"    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_%s_%s, PR_FALSE, &ok);\n"
 "    if (!ok) {\n"
-"      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);\n"
+"      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);\n"
 "    }\n"
 "  }\n"
-"\n"
+"\n";
+
+static const char kMethodCheckNullStr[] = 
 "  // If there's no private data, this must be the prototype, so ignore\n"
 "  if (nsnull == nativeThis) {\n"
+"    return JS_TRUE;\n"
+"  }\n"
+"\n"
+"  {\n";
+
+static const char kMethodCheckNullNonPrimaryStr[] =
+"  // If there's no private data, this must be the prototype, so ignore\n"
+#ifdef USE_COMPTR
+"  if (!nativeThis) {\n"
+#else
+"  if (nativeThis.IsNull()) {\n"
+#endif
 "    return JS_TRUE;\n"
 "  }\n"
 "\n"
@@ -1040,7 +1058,7 @@ static const char kMethodObjectParamStr[] =
 "                                           \"%s\",\n"
 "                                           cx,\n"
 "                                           argv[%d])) {\n"
-"      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_OBJECT_ERR);\n"
+"      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);\n"
 "    }\n";
 
 #define JSGEN_GENERATE_OBJECTPARAM(buffer, paramNum, paramType) \
@@ -1055,7 +1073,7 @@ static const char kMethodXPIDLObjectParamStr[] =
 "    if (JS_FALSE == nsJSUtils::nsConvertJSValToXPCObject((nsISupports**) &b%d,\n"
 #endif
 "                                           kI%sIID, cx, argv[%d])) {\n"
-"      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_XPC_OBJECT_ERR);\n"
+"      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_XPC_OBJECT_ERR);\n"
 "    }\n";
 
 #define JSGEN_GENERATE_XPIDL_OBJECTPARAM(buffer, paramNum, paramType) \
@@ -1072,7 +1090,7 @@ static const char kMethodStringParamStr[] =
 
 static const char kMethodBoolParamStr[] =
 "    if (!nsJSUtils::nsConvertJSValToBool(&b%d, cx, argv[%d])) {\n"
-"      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_BOOLEAN_ERR);\n"
+"      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_BOOLEAN_ERR);\n"
 "    }\n";
 
 #define JSGEN_GENERATE_BOOLPARAM(buffer, paramNum) \
@@ -1080,7 +1098,7 @@ static const char kMethodBoolParamStr[] =
 
 static const char kMethodIntParamStr[] =
 "    if (!JS_ValueToInt32(cx, argv[%d], (int32 *)&b%d)) {\n"
-"      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_NUMBER_ERR);\n"
+"      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_NUMBER_ERR);\n"
 "    }\n";
 
 #define JSGEN_GENERATE_INTPARAM(buffer, paramNum) \
@@ -1095,7 +1113,7 @@ static const char kMethodFuncParamStr[] =
 "                                         cx,\n"
 "                                         obj,\n"
 "                                         argv[%d])) {\n"
-"      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_FUNCTION_ERR);\n"
+"      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_FUNCTION_ERR);\n"
 "    }\n";
 
 #define JSGEN_GENERATE_FUNCPARAM(buffer, paramNum, paramType) \
@@ -1115,7 +1133,7 @@ static const char kMethodBodyMiddleStr[] =
 "\n"
 "    result = nativeThis->%s(%s%snativeRet);\n"
 "    if (NS_FAILED(result)) {\n"
-"      return nsJSUtils::nsReportError(cx, result);\n"
+"      return nsJSUtils::nsReportError(cx, obj, result);\n"
 "    }\n"
 "\n";
 
@@ -1123,16 +1141,16 @@ static const char kMethodBodyMiddleNoReturnStr[] =
 "\n"
 "    result = nativeThis->%s(%s);\n"
 "    if (NS_FAILED(result)) {\n"
-"      return nsJSUtils::nsReportError(cx, result);\n"
+"      return nsJSUtils::nsReportError(cx, obj, result);\n"
 "    }\n"
 "\n";
 
 static const char kMethodObjectRetStr[] = 
-"    nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);\n";
+"    nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, obj, rval);\n";
 
 static const char kMethodXPIDLObjectRetStr[] =
 "    // n.b., this will release nativeRet\n"
-"    nsJSUtils::nsConvertXPCObjectToJSVal(nativeRet, %s::GetIID(), cx, rval);\n";
+"    nsJSUtils::nsConvertXPCObjectToJSVal(nativeRet, %s::GetIID(), cx, obj, rval);\n";
 
 static const char kMethodStringRetStr[] = 
 "    nsJSUtils::nsConvertStringToJSVal(nativeRet, cx, rval);\n";
@@ -1151,7 +1169,7 @@ static const char kMethodJSValRetStr[] =
 
 static const char kMethodBadParamStr[] =
 "    if (argc < %d) {\n"
-"      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);\n"
+"      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);\n"
 "    }\n"
 "\n";
 
@@ -1227,11 +1245,17 @@ JSStubGen::GenerateMethods(IdlSpecification &aSpec)
 
       sprintf(buf, kMethodBodyBeginStr, upr_iface_name,
               upr_method_name);
+      if (i == 0) {
+        *file << kMethodCheckNullStr;
+      }
+      else {
+        *file << kMethodCheckNullNonPrimaryStr;
+      }
       *file << buf;
-      
+
       if (pcount > 0) {
-	sprintf(buf, kMethodBadParamStr, pcount);
-	*file << buf;
+        sprintf(buf, kMethodBadParamStr, pcount);
+        *file << buf;
       }
 
       for (p = 0; p < pcount; p++) {
@@ -1518,8 +1542,6 @@ static const char kConstructorBeginStr[] =
 "{\n"
 "  nsresult result;\n"
 "  nsIID classID;\n"
-"  nsIScriptContext* context = (nsIScriptContext*)JS_GetContextPrivate(cx);\n"
-"  nsIScriptNameSpaceManager* manager;\n"
 "  nsIDOM%s *nativeThis;\n"
 "  nsIScriptObjectOwner *owner = nsnull;\n"
 "  nsIJSNativeInitializer* initializer = nsnull;\n"
@@ -1527,13 +1549,19 @@ static const char kConstructorBeginStr[] =
 "  static NS_DEFINE_IID(kIDOM%sIID, NS_IDOM%s_IID);\n"
 "  static NS_DEFINE_IID(kIJSNativeInitializerIID, NS_IJSNATIVEINITIALIZER_IID);\n"
 "\n"
-"  result = context->GetNameSpaceManager(&manager);\n"
-"  if (NS_OK != result) {\n"
+"  nsCOMPtr<nsIScriptContext> scriptCX;\n"
+"  nsJSUtils::nsGetStaticScriptContext(cx, obj, getter_AddRefs(scriptCX));\n"
+"  if (!scriptCX) {\n"
+"    return JS_FALSE;\n"
+"  }\n"
+"\n"
+"  nsCOMPtr<nsIScriptNameSpaceManager> manager;\n"
+"  scriptCX->GetNameSpaceManager(getter_AddRefs(manager));\n"
+"  if (!manager) {\n"
 "    return JS_FALSE;\n"
 "  }\n"
 "\n"
 "  result = manager->LookupName(\"%s\", PR_TRUE, classID);\n"
-"  NS_RELEASE(manager);\n"
 "  if (NS_OK != result) {\n"
 "    return JS_FALSE;\n"
 "  }\n"
@@ -1548,7 +1576,7 @@ static const char kConstructorBeginStr[] =
 "\n"
 "  result = nativeThis->QueryInterface(kIJSNativeInitializerIID, (void **)&initializer);\n"
 "  if (NS_OK == result) {\n"
-"    result = initializer->Initialize(cx, argc, argv);\n"
+"    result = initializer->Initialize(cx, obj, argc, argv);\n"
 "    NS_RELEASE(initializer);\n"
 "\n"
 "    if (NS_OK != result) {\n"
@@ -1572,12 +1600,12 @@ static const char kConstructorBeginStr[] =
 
 #define JSGEN_GENERATE_CONSTRUCTOR(buf, className, caps)                    \
      sprintf(buf, kConstructorBeginStr, className, className, className,    \
-             className, caps, className, className);
+             className, caps, className, className)
 
 void     
 JSStubGen::GenerateConstructor(IdlSpecification &aSpec)
 {
-  char buf[2048];
+  char buf[4096];
   ofstream *file = GetFile();
   IdlInterface *primary_iface = aSpec.GetInterfaceAt(0);
   IdlFunction *constructor;

@@ -25,6 +25,7 @@
 #include "nsJSUtils.h"
 #include "nsDOMError.h"
 #include "nscore.h"
+#include "nsIServiceManager.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIJSScriptObject.h"
@@ -32,7 +33,6 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsCOMPtr.h"
 #include "nsDOMPropEnums.h"
-#include "nsIPtr.h"
 #include "nsString.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMCSSStyleDeclaration.h"
@@ -53,14 +53,6 @@ static NS_DEFINE_IID(kIXULElementIID, NS_IDOMXULELEMENT_IID);
 static NS_DEFINE_IID(kIRDFResourceIID, NS_IRDFRESOURCE_IID);
 static NS_DEFINE_IID(kIControllersIID, NS_ICONTROLLERS_IID);
 static NS_DEFINE_IID(kINodeListIID, NS_IDOMNODELIST_IID);
-
-NS_DEF_PTR(nsIDOMElement);
-NS_DEF_PTR(nsIDOMCSSStyleDeclaration);
-NS_DEF_PTR(nsIRDFCompositeDataSource);
-NS_DEF_PTR(nsIDOMXULElement);
-NS_DEF_PTR(nsIRDFResource);
-NS_DEF_PTR(nsIControllers);
-NS_DEF_PTR(nsIDOMNodeList);
 
 //
 // XULElement property ids
@@ -89,18 +81,19 @@ GetXULElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   if (JSVAL_IS_INT(id)) {
-    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-    nsCOMPtr<nsIScriptSecurityManager> secMan;
-    if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
+    nsresult rv;
+    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
+                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
     }
     switch(JSVAL_TO_INT(id)) {
       case XULELEMENT_ID:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_XULELEMENT_ID, PR_FALSE, &ok);
+        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULELEMENT_ID, PR_FALSE, &ok);
         if (!ok) {
-          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
+          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
         nsresult result = NS_OK;
@@ -109,16 +102,16 @@ GetXULElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
-          return nsJSUtils::nsReportError(cx, result);
+          return nsJSUtils::nsReportError(cx, obj, result);
         }
         break;
       }
       case XULELEMENT_CLASSNAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_XULELEMENT_CLASSNAME, PR_FALSE, &ok);
+        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULELEMENT_CLASSNAME, PR_FALSE, &ok);
         if (!ok) {
-          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
+          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
         nsresult result = NS_OK;
@@ -127,92 +120,92 @@ GetXULElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
-          return nsJSUtils::nsReportError(cx, result);
+          return nsJSUtils::nsReportError(cx, obj, result);
         }
         break;
       }
       case XULELEMENT_STYLE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_XULELEMENT_STYLE, PR_FALSE, &ok);
+        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULELEMENT_STYLE, PR_FALSE, &ok);
         if (!ok) {
-          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
+          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMCSSStyleDeclaration* prop;
         nsresult result = NS_OK;
         result = a->GetStyle(&prop);
         if (NS_SUCCEEDED(result)) {
           // get the js object
-          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
+          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
         }
         else {
-          return nsJSUtils::nsReportError(cx, result);
+          return nsJSUtils::nsReportError(cx, obj, result);
         }
         break;
       }
       case XULELEMENT_DATABASE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_XULELEMENT_DATABASE, PR_FALSE, &ok);
+        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULELEMENT_DATABASE, PR_FALSE, &ok);
         if (!ok) {
-          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
+          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIRDFCompositeDataSource* prop;
         nsresult result = NS_OK;
         result = a->GetDatabase(&prop);
         if (NS_SUCCEEDED(result)) {
           // get the js object; n.b., this will do a release on 'prop'
-          nsJSUtils::nsConvertXPCObjectToJSVal(prop, nsIRDFCompositeDataSource::GetIID(), cx, vp);
+          nsJSUtils::nsConvertXPCObjectToJSVal(prop, nsIRDFCompositeDataSource::GetIID(), cx, obj, vp);
         }
         else {
-          return nsJSUtils::nsReportError(cx, result);
+          return nsJSUtils::nsReportError(cx, obj, result);
         }
         break;
       }
       case XULELEMENT_RESOURCE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_XULELEMENT_RESOURCE, PR_FALSE, &ok);
+        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULELEMENT_RESOURCE, PR_FALSE, &ok);
         if (!ok) {
-          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
+          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIRDFResource* prop;
         nsresult result = NS_OK;
         result = a->GetResource(&prop);
         if (NS_SUCCEEDED(result)) {
           // get the js object; n.b., this will do a release on 'prop'
-          nsJSUtils::nsConvertXPCObjectToJSVal(prop, nsIRDFResource::GetIID(), cx, vp);
+          nsJSUtils::nsConvertXPCObjectToJSVal(prop, nsIRDFResource::GetIID(), cx, obj, vp);
         }
         else {
-          return nsJSUtils::nsReportError(cx, result);
+          return nsJSUtils::nsReportError(cx, obj, result);
         }
         break;
       }
       case XULELEMENT_CONTROLLERS:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_XULELEMENT_CONTROLLERS, PR_FALSE, &ok);
+        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULELEMENT_CONTROLLERS, PR_FALSE, &ok);
         if (!ok) {
-          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
+          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIControllers* prop;
         nsresult result = NS_OK;
         result = a->GetControllers(&prop);
         if (NS_SUCCEEDED(result)) {
           // get the js object; n.b., this will do a release on 'prop'
-          nsJSUtils::nsConvertXPCObjectToJSVal(prop, nsIControllers::GetIID(), cx, vp);
+          nsJSUtils::nsConvertXPCObjectToJSVal(prop, nsIControllers::GetIID(), cx, obj, vp);
         }
         else {
-          return nsJSUtils::nsReportError(cx, result);
+          return nsJSUtils::nsReportError(cx, obj, result);
         }
         break;
       }
       default:
-        return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
+        return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, obj, id, vp);
     }
   }
   else {
-    return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
+    return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, obj, id, vp);
   }
 
   return PR_TRUE;
@@ -233,18 +226,19 @@ SetXULElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   if (JSVAL_IS_INT(id)) {
-    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-    nsCOMPtr<nsIScriptSecurityManager> secMan;
-    if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
+    nsresult rv;
+    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
+                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
     }
     switch(JSVAL_TO_INT(id)) {
       case XULELEMENT_ID:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_XULELEMENT_ID, PR_TRUE, &ok);
+        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULELEMENT_ID, PR_TRUE, &ok);
         if (!ok) {
-          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
+          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -256,9 +250,9 @@ SetXULElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case XULELEMENT_CLASSNAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_XULELEMENT_CLASSNAME, PR_TRUE, &ok);
+        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULELEMENT_CLASSNAME, PR_TRUE, &ok);
         if (!ok) {
-          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
+          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -270,14 +264,14 @@ SetXULElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case XULELEMENT_DATABASE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_XULELEMENT_DATABASE, PR_TRUE, &ok);
+        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULELEMENT_DATABASE, PR_TRUE, &ok);
         if (!ok) {
-          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
+          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIRDFCompositeDataSource* prop;
         if (PR_FALSE == nsJSUtils::nsConvertJSValToXPCObject((nsISupports **) &prop,
                                                 kIRDFCompositeDataSourceIID, cx, *vp)) {
-          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_XPC_OBJECT_ERR);
+          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_XPC_OBJECT_ERR);
         }
       
         a->SetDatabase(prop);
@@ -285,11 +279,11 @@ SetXULElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         break;
       }
       default:
-        return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
+        return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, obj, id, vp);
     }
   }
   else {
-    return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
+    return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, obj, id, vp);
   }
 
   return PR_TRUE;
@@ -335,45 +329,46 @@ XULElementAddBroadcastListener(JSContext *cx, JSObject *obj, uintN argc, jsval *
   nsIDOMXULElement *nativeThis = (nsIDOMXULElement*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsresult result = NS_OK;
   nsAutoString b0;
-  nsIDOMElementPtr b1;
-
-  *rval = JSVAL_NULL;
-
-  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsCOMPtr<nsIScriptSecurityManager> secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
-  }
-  {
-    PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_XULELEMENT_ADDBROADCASTLISTENER, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
-    }
-  }
-
+  nsCOMPtr<nsIDOMElement> b1;
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
   {
+
+  *rval = JSVAL_NULL;
+
+  {
+    PRBool ok;
+    nsresult rv;
+    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
+                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    }
+    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULELEMENT_ADDBROADCASTLISTENER, PR_FALSE, &ok);
+    if (!ok) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    }
+  }
+
     if (argc < 2) {
-      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
-    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b1,
+    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b1),
                                            kIElementIID,
                                            "Element",
                                            cx,
                                            argv[1])) {
-      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_OBJECT_ERR);
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
     }
 
     result = nativeThis->AddBroadcastListener(b0, b1);
     if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, result);
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
 
     *rval = JSVAL_VOID;
@@ -392,45 +387,46 @@ XULElementRemoveBroadcastListener(JSContext *cx, JSObject *obj, uintN argc, jsva
   nsIDOMXULElement *nativeThis = (nsIDOMXULElement*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsresult result = NS_OK;
   nsAutoString b0;
-  nsIDOMElementPtr b1;
-
-  *rval = JSVAL_NULL;
-
-  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsCOMPtr<nsIScriptSecurityManager> secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
-  }
-  {
-    PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_XULELEMENT_REMOVEBROADCASTLISTENER, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
-    }
-  }
-
+  nsCOMPtr<nsIDOMElement> b1;
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
   {
+
+  *rval = JSVAL_NULL;
+
+  {
+    PRBool ok;
+    nsresult rv;
+    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
+                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    }
+    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULELEMENT_REMOVEBROADCASTLISTENER, PR_FALSE, &ok);
+    if (!ok) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    }
+  }
+
     if (argc < 2) {
-      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
-    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b1,
+    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b1),
                                            kIElementIID,
                                            "Element",
                                            cx,
                                            argv[1])) {
-      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_OBJECT_ERR);
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
     }
 
     result = nativeThis->RemoveBroadcastListener(b0, b1);
     if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, result);
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
 
     *rval = JSVAL_VOID;
@@ -448,22 +444,6 @@ XULElementDoCommand(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
 {
   nsIDOMXULElement *nativeThis = (nsIDOMXULElement*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsresult result = NS_OK;
-
-  *rval = JSVAL_NULL;
-
-  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsCOMPtr<nsIScriptSecurityManager> secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
-  }
-  {
-    PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_XULELEMENT_DOCOMMAND, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
-    }
-  }
-
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
@@ -471,9 +451,26 @@ XULElementDoCommand(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
 
   {
 
+  *rval = JSVAL_NULL;
+
+  {
+    PRBool ok;
+    nsresult rv;
+    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
+                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    }
+    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULELEMENT_DOCOMMAND, PR_FALSE, &ok);
+    if (!ok) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    }
+  }
+
+
     result = nativeThis->DoCommand();
     if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, result);
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
 
     *rval = JSVAL_VOID;
@@ -494,30 +491,31 @@ XULElementGetElementsByAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval
   nsIDOMNodeList* nativeRet;
   nsAutoString b0;
   nsAutoString b1;
-
-  *rval = JSVAL_NULL;
-
-  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsCOMPtr<nsIScriptSecurityManager> secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
-  }
-  {
-    PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_XULELEMENT_GETELEMENTSBYATTRIBUTE, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
-    }
-  }
-
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
   {
+
+  *rval = JSVAL_NULL;
+
+  {
+    PRBool ok;
+    nsresult rv;
+    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
+                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    }
+    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULELEMENT_GETELEMENTSBYATTRIBUTE, PR_FALSE, &ok);
+    if (!ok) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    }
+  }
+
     if (argc < 2) {
-      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
@@ -525,10 +523,10 @@ XULElementGetElementsByAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval
 
     result = nativeThis->GetElementsByAttribute(b0, b1, &nativeRet);
     if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, result);
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
 
-    nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
+    nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, obj, rval);
   }
 
   return JS_TRUE;

@@ -23,6 +23,8 @@
 #include "nsString.h"
 #include "nsIServiceManager.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsJSUtils.h"
 #include "jsapi.h"
 
 static NS_DEFINE_IID(kIScriptEventListenerIID, NS_ISCRIPTEVENTLISTENER_IID);
@@ -76,14 +78,20 @@ nsresult nsJSDOMEventListener::HandleEvent(nsIDOMEvent* aEvent)
   jsval argv[1];
   JSObject *eventObj;
 
-  nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(mContext);
-  if (NS_OK != NS_NewScriptKeyEvent(mScriptCX, aEvent, nsnull, (void**)&eventObj)) {
+  nsCOMPtr<nsIScriptContext> scriptCX;
+  nsJSUtils::nsGetStaticScriptContext(mContext, mTarget, 
+                                      getter_AddRefs(scriptCX));
+  if (!scriptCX) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (NS_OK != NS_NewScriptKeyEvent(scriptCX, aEvent, nsnull, (void**)&eventObj)) {
     return NS_ERROR_FAILURE;
   }
 
   argv[0] = OBJECT_TO_JSVAL(eventObj);
   PRBool jsBoolResult;
-  if (NS_FAILED(mScriptCX->CallEventHandler(mTarget, mHandler, 1, argv, &jsBoolResult))) {
+  if (NS_FAILED(scriptCX->CallEventHandler(mTarget, mHandler, 1, argv, &jsBoolResult))) {
     return NS_ERROR_FAILURE;
   }
   return jsBoolResult ? NS_OK : NS_ERROR_FAILURE;

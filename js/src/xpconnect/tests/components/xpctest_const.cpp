@@ -43,8 +43,7 @@ public:
   xpcTestConst();
 };
 
-static NS_DEFINE_IID( kxpcTestConstIID, NS_IXPCTESTCONST_IID );
-NS_IMPL_ISUPPORTS(xpcTestConst, kxpcTestConstIID);
+NS_IMPL_ISUPPORTS1(xpcTestConst, nsIXPCTestConst);
 
 xpcTestConst :: xpcTestConst() {
     NS_INIT_REFCNT();

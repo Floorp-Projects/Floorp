@@ -33,14 +33,5 @@ print("identity test       "+ (id1 == id2 ?         "passed" : "failed"));
 print("non-identity test   "+ (id1 != id3 ?         "passed" : "failed"));
 print("equality test       "+ (id1.equals(id2) ?    "passed" : "failed"));
 
-function nsID(str)
-{
-    var id = Components.classes.nsIID.createInstance();
-    id = id.QueryInterface(Components.interfaces.nsIJSID);
-    id.init(str);
-    return id;
-}    
-
- var NS_ISUPPORTS_IID    = new nsID("{00000000-0000-0000-c000-000000000046}");
-
- print("NS_ISUPPORTS_IID = " + NS_ISUPPORTS_IID);
+var NS_ISUPPORTS_IID = new Components.ID("{00000000-0000-0000-c000-000000000046}");
+print("NS_ISUPPORTS_IID = " + NS_ISUPPORTS_IID);

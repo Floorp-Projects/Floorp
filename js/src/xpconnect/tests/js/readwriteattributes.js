@@ -60,10 +60,10 @@
 
  AddTestCase( "o.booleanProperty", true, o.booleanProperty );
  AddTestCase( "o.shortProperty", 32767, o.shortProperty );
- AddTestCase( "o.longProperty", 9223372036854776000, o.longProperty );
+ AddTestCase( "o.longProperty", 2147483647, o.longProperty );
  AddTestCase( "o.charProperty", "X", o.charProperty );
 			  
- // read only means we can't overwrite.
+ // these we can overwrite
 
  o.booleanProperty = false;
  o.shortProperty = -12345;

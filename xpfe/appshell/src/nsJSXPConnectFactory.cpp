@@ -57,11 +57,11 @@ GetXPConnectFactoryProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     switch(JSVAL_TO_INT(id)) {
       case 0:
       default:
-        return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
+        return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, obj, id, vp);
     }
   }
   else {
-    return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
+    return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, obj, id, vp);
   }
 
   return PR_TRUE;
@@ -85,11 +85,11 @@ SetXPConnectFactoryProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     switch(JSVAL_TO_INT(id)) {
       case 0:
       default:
-        return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
+        return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, obj, id, vp);
     }
   }
   else {
-    return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
+    return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, obj, id, vp);
   }
 
   return PR_TRUE;
@@ -152,7 +152,7 @@ XPConnectFactoryCreateInstance(JSContext *cx, JSObject *obj, uintN argc, jsval *
       return JS_FALSE;
     }
 
-    nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
+    nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, obj, rval);
   }
   else {
     JS_ReportError(cx, "Function createInstance requires 1 parameters");

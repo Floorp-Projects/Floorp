@@ -458,14 +458,18 @@ public:
     NS_IMETHOD SetCompiledEventHandler(nsIAtom *aName, void* aHandler);
 
     // nsIJSScriptObject
-    virtual PRBool AddProperty(JSContext *aContext, jsval aID, jsval *aVp);
-    virtual PRBool DeleteProperty(JSContext *aContext, jsval aID, jsval *aVp);
-    virtual PRBool GetProperty(JSContext *aContext, jsval aID, jsval *aVp);
-    virtual PRBool SetProperty(JSContext *aContext, jsval aID, jsval *aVp);
-    virtual PRBool EnumerateProperty(JSContext *aContext);
-    virtual PRBool Resolve(JSContext *aContext, jsval aID);
-    virtual PRBool Convert(JSContext *aContext, jsval aID);
-    virtual void   Finalize(JSContext *aContext);
+    virtual PRBool AddProperty(JSContext *aContext, JSObject *aObj, 
+                            jsval aID, jsval *aVp);
+    virtual PRBool DeleteProperty(JSContext *aContext, JSObject *aObj, 
+                            jsval aID, jsval *aVp);
+    virtual PRBool GetProperty(JSContext *aContext, JSObject *aObj, 
+                            jsval aID, jsval *aVp);
+    virtual PRBool SetProperty(JSContext *aContext, JSObject *aObj, 
+                            jsval aID, jsval *aVp);
+    virtual PRBool EnumerateProperty(JSContext *aContext, JSObject *aObj);
+    virtual PRBool Resolve(JSContext *aContext, JSObject *aObj, jsval aID);
+    virtual PRBool Convert(JSContext *aContext, JSObject *aObj, jsval aID);
+    virtual void   Finalize(JSContext *aContext, JSObject *aObj);
 
     // nsIStyleRule interface. The node implements this to deal with attributes that
     // need to be mapped into style contexts (e.g., width in treecols).

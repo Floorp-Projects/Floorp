@@ -48,15 +48,18 @@ var NS_ITESTXPC_FOO_IID = new nsID("{159E36D0-991E-11d2-AC3F-00C09300144B}");
 print();
 print("Components = "+Components);
 print("Components properties:");
+
+print(Components.QueryInterface);
+print();
+
 for(i in Components)
     print("  Components."+i+" = "+Components[i]);
 
-print();
 /***************************************************************************/
 print(".......................................");
 print("echo tests...");
 
-var echo = new nsNativeEcho;
+var echo = new nsNativeEcho();
 
 var receiver = new Object();
 receiver.SetReceiver = function() {};
@@ -439,10 +442,12 @@ for(i in this)
 print();
 }
 
-echoJS.SetReceiver(null);
-echo.SetReceiver(null);
+
+if(echoJS)echoJS.SetReceiver(null);
+if(echo)echo.SetReceiver(null);
 
 // cleanup...
+nsNativeEcho = null;
 NS_ISUPPORTS_IID = null;
 NS_ITESTXPC_FOO_IID = null;
 echo = null;
@@ -464,8 +469,8 @@ send_params = null;
 start_time = null;
 test_string = null;
 test_string2 = null;
-
+nsNativeEcho = null;
 gc();
 gc();
-dumpXPC(6);
+//dumpXPC(4);
 

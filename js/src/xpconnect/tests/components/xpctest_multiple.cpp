@@ -45,8 +45,7 @@ private:
 	const char *name;
 };
 
-static NS_DEFINE_IID(kxpcTestParentOneIID, NS_IXPCTESTPARENTONE_IID);
-NS_IMPL_ISUPPORTS(xpcTestParentOne, kxpcTestParentOneIID);
+NS_IMPL_ISUPPORTS1(xpcTestParentOne, nsIXPCTestParentOne);
 
 xpcTestParentOne :: xpcTestParentOne() 
 {
@@ -110,8 +109,7 @@ private:
 	const char *name;
 };
 
-static NS_DEFINE_IID(kxpcTestParentTwoIID, NS_IXPCTESTPARENTTWO_IID);
-NS_IMPL_ISUPPORTS(xpcTestParentTwo, kxpcTestParentTwoIID);
+NS_IMPL_ISUPPORTS1(xpcTestParentTwo, nsIXPCTestParentTwo);
 
 xpcTestParentTwo :: xpcTestParentTwo()
 {

@@ -25,6 +25,7 @@
 #include "nsJSUtils.h"
 #include "nsDOMError.h"
 #include "nscore.h"
+#include "nsIServiceManager.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIJSScriptObject.h"
@@ -32,7 +33,6 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsCOMPtr.h"
 #include "nsDOMPropEnums.h"
-#include "nsIPtr.h"
 #include "nsString.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMStyleSheet.h"
@@ -47,11 +47,6 @@ static NS_DEFINE_IID(kINodeIID, NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kIStyleSheetIID, NS_IDOMSTYLESHEET_IID);
 static NS_DEFINE_IID(kICSSStyleRuleCollectionIID, NS_IDOMCSSSTYLERULECOLLECTION_IID);
 static NS_DEFINE_IID(kICSSStyleSheetIID, NS_IDOMCSSSTYLESHEET_IID);
-
-NS_DEF_PTR(nsIDOMNode);
-NS_DEF_PTR(nsIDOMStyleSheet);
-NS_DEF_PTR(nsIDOMCSSStyleRuleCollection);
-NS_DEF_PTR(nsIDOMCSSStyleSheet);
 
 //
 // CSSStyleSheet property ids
@@ -80,56 +75,57 @@ GetCSSStyleSheetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   if (JSVAL_IS_INT(id)) {
-    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-    nsCOMPtr<nsIScriptSecurityManager> secMan;
-    if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
+    nsresult rv;
+    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
+                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
     }
     switch(JSVAL_TO_INT(id)) {
       case CSSSTYLESHEET_OWNINGNODE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_CSSSTYLESHEET_OWNINGNODE, PR_FALSE, &ok);
+        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSSTYLESHEET_OWNINGNODE, PR_FALSE, &ok);
         if (!ok) {
-          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
+          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMNode* prop;
         nsresult result = NS_OK;
         result = a->GetOwningNode(&prop);
         if (NS_SUCCEEDED(result)) {
           // get the js object
-          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
+          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
         }
         else {
-          return nsJSUtils::nsReportError(cx, result);
+          return nsJSUtils::nsReportError(cx, obj, result);
         }
         break;
       }
       case CSSSTYLESHEET_PARENTSTYLESHEET:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_CSSSTYLESHEET_PARENTSTYLESHEET, PR_FALSE, &ok);
+        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSSTYLESHEET_PARENTSTYLESHEET, PR_FALSE, &ok);
         if (!ok) {
-          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
+          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMStyleSheet* prop;
         nsresult result = NS_OK;
         result = a->GetParentStyleSheet(&prop);
         if (NS_SUCCEEDED(result)) {
           // get the js object
-          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
+          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
         }
         else {
-          return nsJSUtils::nsReportError(cx, result);
+          return nsJSUtils::nsReportError(cx, obj, result);
         }
         break;
       }
       case CSSSTYLESHEET_HREF:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_CSSSTYLESHEET_HREF, PR_FALSE, &ok);
+        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSSTYLESHEET_HREF, PR_FALSE, &ok);
         if (!ok) {
-          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
+          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
         nsresult result = NS_OK;
@@ -138,16 +134,16 @@ GetCSSStyleSheetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
-          return nsJSUtils::nsReportError(cx, result);
+          return nsJSUtils::nsReportError(cx, obj, result);
         }
         break;
       }
       case CSSSTYLESHEET_TITLE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_CSSSTYLESHEET_TITLE, PR_FALSE, &ok);
+        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSSTYLESHEET_TITLE, PR_FALSE, &ok);
         if (!ok) {
-          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
+          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
         nsresult result = NS_OK;
@@ -156,16 +152,16 @@ GetCSSStyleSheetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
-          return nsJSUtils::nsReportError(cx, result);
+          return nsJSUtils::nsReportError(cx, obj, result);
         }
         break;
       }
       case CSSSTYLESHEET_MEDIA:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_CSSSTYLESHEET_MEDIA, PR_FALSE, &ok);
+        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSSTYLESHEET_MEDIA, PR_FALSE, &ok);
         if (!ok) {
-          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
+          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
         nsresult result = NS_OK;
@@ -174,35 +170,35 @@ GetCSSStyleSheetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
-          return nsJSUtils::nsReportError(cx, result);
+          return nsJSUtils::nsReportError(cx, obj, result);
         }
         break;
       }
       case CSSSTYLESHEET_CSSRULES:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_CSSSTYLESHEET_CSSRULES, PR_FALSE, &ok);
+        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSSTYLESHEET_CSSRULES, PR_FALSE, &ok);
         if (!ok) {
-          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
+          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMCSSStyleRuleCollection* prop;
         nsresult result = NS_OK;
         result = a->GetCssRules(&prop);
         if (NS_SUCCEEDED(result)) {
           // get the js object
-          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
+          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
         }
         else {
-          return nsJSUtils::nsReportError(cx, result);
+          return nsJSUtils::nsReportError(cx, obj, result);
         }
         break;
       }
       default:
-        return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
+        return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, obj, id, vp);
     }
   }
   else {
-    return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
+    return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, obj, id, vp);
   }
 
   return PR_TRUE;
@@ -223,19 +219,20 @@ SetCSSStyleSheetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   if (JSVAL_IS_INT(id)) {
-    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-    nsCOMPtr<nsIScriptSecurityManager> secMan;
-    if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
+    nsresult rv;
+    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
+                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
     }
     switch(JSVAL_TO_INT(id)) {
       case 0:
       default:
-        return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
+        return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, obj, id, vp);
     }
   }
   else {
-    return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
+    return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, obj, id, vp);
   }
 
   return PR_TRUE;
@@ -283,40 +280,41 @@ CSSStyleSheetInsertRule(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
   PRUint32 nativeRet;
   nsAutoString b0;
   PRUint32 b1;
-
-  *rval = JSVAL_NULL;
-
-  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsCOMPtr<nsIScriptSecurityManager> secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
-  }
-  {
-    PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_CSSSTYLESHEET_INSERTRULE, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
-    }
-  }
-
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
   {
+
+  *rval = JSVAL_NULL;
+
+  {
+    PRBool ok;
+    nsresult rv;
+    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
+                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    }
+    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSSTYLESHEET_INSERTRULE, PR_FALSE, &ok);
+    if (!ok) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    }
+  }
+
     if (argc < 2) {
-      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
     if (!JS_ValueToInt32(cx, argv[1], (int32 *)&b1)) {
-      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_NUMBER_ERR);
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_NUMBER_ERR);
     }
 
     result = nativeThis->InsertRule(b0, b1, &nativeRet);
     if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, result);
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
 
     *rval = INT_TO_JSVAL(nativeRet);
@@ -335,39 +333,40 @@ CSSStyleSheetDeleteRule(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
   nsIDOMCSSStyleSheet *nativeThis = (nsIDOMCSSStyleSheet*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsresult result = NS_OK;
   PRUint32 b0;
-
-  *rval = JSVAL_NULL;
-
-  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsCOMPtr<nsIScriptSecurityManager> secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
-  }
-  {
-    PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_CSSSTYLESHEET_DELETERULE, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
-    }
-  }
-
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
   {
+
+  *rval = JSVAL_NULL;
+
+  {
+    PRBool ok;
+    nsresult rv;
+    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
+                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    }
+    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSSTYLESHEET_DELETERULE, PR_FALSE, &ok);
+    if (!ok) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    }
+  }
+
     if (argc < 1) {
-      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
     if (!JS_ValueToInt32(cx, argv[0], (int32 *)&b0)) {
-      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_NUMBER_ERR);
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_NUMBER_ERR);
     }
 
     result = nativeThis->DeleteRule(b0);
     if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, result);
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
 
     *rval = JSVAL_VOID;

@@ -25,6 +25,7 @@
 #include "nsJSUtils.h"
 #include "nsDOMError.h"
 #include "nscore.h"
+#include "nsIServiceManager.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIJSScriptObject.h"
@@ -32,7 +33,6 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsCOMPtr.h"
 #include "nsDOMPropEnums.h"
-#include "nsIPtr.h"
 #include "nsString.h"
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMDocumentType.h"
@@ -43,9 +43,6 @@ static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
 static NS_DEFINE_IID(kINamedNodeMapIID, NS_IDOMNAMEDNODEMAP_IID);
 static NS_DEFINE_IID(kIDocumentTypeIID, NS_IDOMDOCUMENTTYPE_IID);
-
-NS_DEF_PTR(nsIDOMNamedNodeMap);
-NS_DEF_PTR(nsIDOMDocumentType);
 
 //
 // DocumentType property ids
@@ -71,18 +68,19 @@ GetDocumentTypeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   if (JSVAL_IS_INT(id)) {
-    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-    nsCOMPtr<nsIScriptSecurityManager> secMan;
-    if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
+    nsresult rv;
+    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
+                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
     }
     switch(JSVAL_TO_INT(id)) {
       case DOCUMENTTYPE_NAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_DOCUMENTTYPE_NAME, PR_FALSE, &ok);
+        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_DOCUMENTTYPE_NAME, PR_FALSE, &ok);
         if (!ok) {
-          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
+          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
         nsresult result = NS_OK;
@@ -91,54 +89,54 @@ GetDocumentTypeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
-          return nsJSUtils::nsReportError(cx, result);
+          return nsJSUtils::nsReportError(cx, obj, result);
         }
         break;
       }
       case DOCUMENTTYPE_ENTITIES:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_DOCUMENTTYPE_ENTITIES, PR_FALSE, &ok);
+        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_DOCUMENTTYPE_ENTITIES, PR_FALSE, &ok);
         if (!ok) {
-          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
+          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMNamedNodeMap* prop;
         nsresult result = NS_OK;
         result = a->GetEntities(&prop);
         if (NS_SUCCEEDED(result)) {
           // get the js object
-          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
+          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
         }
         else {
-          return nsJSUtils::nsReportError(cx, result);
+          return nsJSUtils::nsReportError(cx, obj, result);
         }
         break;
       }
       case DOCUMENTTYPE_NOTATIONS:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_DOCUMENTTYPE_NOTATIONS, PR_FALSE, &ok);
+        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_DOCUMENTTYPE_NOTATIONS, PR_FALSE, &ok);
         if (!ok) {
-          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
+          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMNamedNodeMap* prop;
         nsresult result = NS_OK;
         result = a->GetNotations(&prop);
         if (NS_SUCCEEDED(result)) {
           // get the js object
-          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
+          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
         }
         else {
-          return nsJSUtils::nsReportError(cx, result);
+          return nsJSUtils::nsReportError(cx, obj, result);
         }
         break;
       }
       default:
-        return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
+        return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, obj, id, vp);
     }
   }
   else {
-    return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
+    return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, obj, id, vp);
   }
 
   return PR_TRUE;
@@ -159,19 +157,20 @@ SetDocumentTypeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   if (JSVAL_IS_INT(id)) {
-    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-    nsCOMPtr<nsIScriptSecurityManager> secMan;
-    if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
+    nsresult rv;
+    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
+                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
     }
     switch(JSVAL_TO_INT(id)) {
       case 0:
       default:
-        return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
+        return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, obj, id, vp);
     }
   }
   else {
-    return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
+    return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, obj, id, vp);
   }
 
   return PR_TRUE;

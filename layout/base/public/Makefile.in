@@ -67,6 +67,7 @@ nsIStyleRuleProcessor.h \
 nsITextContent.h \
 nsLayoutAtoms.h \
 nsLayoutAtomList.h \
+nsLayoutUtils.h \
 nsFrameList.h \
 nsFrameTraversal.h \
 nsStyleChangeList.h \

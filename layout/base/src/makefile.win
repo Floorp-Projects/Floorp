@@ -60,6 +60,7 @@ CPPSRCS =				\
 	nsRangeList.cpp			\
 	nsLayoutAtoms.cpp		\
 	nsLayoutDebugger.cpp		\
+	nsLayoutUtils.cpp		\
 	nsCaret.cpp			\
 	nsRange.cpp			\
 	nsTextContentChangeData.cpp	\
@@ -104,6 +105,7 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsRangeList.obj		\
 	.\$(OBJDIR)\nsLayoutAtoms.obj		\
 	.\$(OBJDIR)\nsLayoutDebugger.obj	\
+	.\$(OBJDIR)\nsLayoutUtils.obj	\
 	.\$(OBJDIR)\nsCaret.obj			\
 	.\$(OBJDIR)\nsRange.obj			\
 	.\$(OBJDIR)\nsTextContentChangeData.obj	\

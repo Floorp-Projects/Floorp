@@ -1,0 +1,268 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express oqr
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ *
+ * Alternatively, the contents of this file may be used under the
+ * terms of the GNU Public License (the "GPL"), in which case the
+ * provisions of the GPL are applicable instead of those above.
+ * If you wish to allow use of your version of this file only
+ * under the terms of the GPL and not to allow others to use your
+ * version of this file under the NPL, indicate your decision by
+ * deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL.  If you do not delete
+ * the provisions above, a recipient may use your version of this
+ * file under either the NPL or the GPL.
+ */
+
+/* The core XPConnect public interfaces. */
+
+#include "nsISupports.idl"
+#include "xpccomponents.idl"
+#include "xpcjsid.idl"
+#include "xpcexception.idl"
+
+%{ C++
+#include "jspubtd.h"
+#include "nsIInterfaceInfo.h"
+#include "nsIInterfaceInfoManager.h"
+#include "xptinfo.h"
+%}
+
+/***************************************************************************/
+
+[ptr] native JSContextPtr(JSContext);
+[ptr] native JSObjectPtr(JSObject);
+[ptr] native JSValPtr(jsval);
+
+/***************************************************************************/
+
+%{ C++
+/***************************************************************************/
+#define GENERATE_XPC_FAILURE(x) \
+            (NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_XPCONNECT,x))
+
+#define NS_ERROR_XPC_NOT_ENOUGH_ARGS                   GENERATE_XPC_FAILURE( 1)
+#define NS_ERROR_XPC_NEED_OUT_OBJECT                   GENERATE_XPC_FAILURE( 2)
+#define NS_ERROR_XPC_CANT_SET_OUT_VAL                  GENERATE_XPC_FAILURE( 3)
+#define NS_ERROR_XPC_NATIVE_RETURNED_FAILURE           GENERATE_XPC_FAILURE( 4)
+#define NS_ERROR_XPC_CANT_GET_INTERFACE_INFO           GENERATE_XPC_FAILURE( 5)
+#define NS_ERROR_XPC_CANT_GET_PARAM_IFACE_INFO         GENERATE_XPC_FAILURE( 6)
+#define NS_ERROR_XPC_CANT_GET_METHOD_INFO              GENERATE_XPC_FAILURE( 7)
+#define NS_ERROR_XPC_UNEXPECTED                        GENERATE_XPC_FAILURE( 8)
+#define NS_ERROR_XPC_BAD_CONVERT_JS                    GENERATE_XPC_FAILURE( 9)
+#define NS_ERROR_XPC_BAD_CONVERT_NATIVE                GENERATE_XPC_FAILURE(10)
+#define NS_ERROR_XPC_BAD_CONVERT_JS_NULL_REF           GENERATE_XPC_FAILURE(11)
+#define NS_ERROR_XPC_BAD_OP_ON_WN_PROTO                GENERATE_XPC_FAILURE(12)
+#define NS_ERROR_XPC_CANT_CONVERT_WN_TO_FUN            GENERATE_XPC_FAILURE(13)
+#define NS_ERROR_XPC_CANT_DEFINE_PROP_ON_WN            GENERATE_XPC_FAILURE(14)
+#define NS_ERROR_XPC_CANT_WATCH_WN_STATIC              GENERATE_XPC_FAILURE(15)
+#define NS_ERROR_XPC_CANT_EXPORT_WN_STATIC             GENERATE_XPC_FAILURE(16)
+#define NS_ERROR_XPC_SCRIPTABLE_CALL_FAILED            GENERATE_XPC_FAILURE(17)
+#define NS_ERROR_XPC_SCRIPTABLE_CTOR_FAILED            GENERATE_XPC_FAILURE(18)
+#define NS_ERROR_XPC_CANT_CALL_WO_SCRIPTABLE           GENERATE_XPC_FAILURE(19)
+#define NS_ERROR_XPC_CANT_CTOR_WO_SCRIPTABLE           GENERATE_XPC_FAILURE(20)
+#define NS_ERROR_XPC_CI_RETURNED_FAILURE               GENERATE_XPC_FAILURE(21)
+#define NS_ERROR_XPC_GS_RETURNED_FAILURE               GENERATE_XPC_FAILURE(22)
+#define NS_ERROR_XPC_BAD_CID                           GENERATE_XPC_FAILURE(23)
+#define NS_ERROR_XPC_BAD_IID                           GENERATE_XPC_FAILURE(24)
+#define NS_ERROR_XPC_CANT_CREATE_WN                    GENERATE_XPC_FAILURE(25)
+#define NS_ERROR_XPC_JS_THREW_EXCEPTION                GENERATE_XPC_FAILURE(26)
+#define NS_ERROR_XPC_JS_THREW_NATIVE_OBJECT            GENERATE_XPC_FAILURE(27)
+#define NS_ERROR_XPC_JS_THREW_JS_OBJECT                GENERATE_XPC_FAILURE(28)
+#define NS_ERROR_XPC_JS_THREW_NULL                     GENERATE_XPC_FAILURE(29)
+#define NS_ERROR_XPC_JS_THREW_STRING                   GENERATE_XPC_FAILURE(30)
+#define NS_ERROR_XPC_JS_THREW_NUMBER                   GENERATE_XPC_FAILURE(31)
+#define NS_ERROR_XPC_JAVASCRIPT_ERROR                  GENERATE_XPC_FAILURE(32)
+#define NS_ERROR_XPC_JAVASCRIPT_ERROR_WITH_DETAILS     GENERATE_XPC_FAILURE(33)
+#define NS_ERROR_XPC_CANT_CONVERT_PRIMITIVE_TO_ARRAY   GENERATE_XPC_FAILURE(34)
+#define NS_ERROR_XPC_CANT_CONVERT_OBJECT_TO_ARRAY      GENERATE_XPC_FAILURE(35)
+#define NS_ERROR_XPC_NOT_ENOUGH_ELEMENTS_IN_ARRAY      GENERATE_XPC_FAILURE(36)
+#define NS_ERROR_XPC_CANT_GET_ARRAY_INFO               GENERATE_XPC_FAILURE(37)
+#define NS_ERROR_XPC_NOT_ENOUGH_CHARS_IN_STRING        GENERATE_XPC_FAILURE(38)
+#define NS_ERROR_XPC_SECURITY_MANAGER_VETO             GENERATE_XPC_FAILURE(39)
+#define NS_ERROR_XPC_INTERFACE_NOT_SCRIPTABLE          GENERATE_XPC_FAILURE(40)
+#define NS_ERROR_XPC_INTERFACE_NOT_FROM_NSISUPPORTS    GENERATE_XPC_FAILURE(41)
+
+// any new errors here should have an associated entry added in xpc.msg
+/***************************************************************************/
+%}
+
+/***************************************************************************/
+
+// forward declarations...
+interface nsIXPCScriptable;
+interface nsIXPConnectWrappedNative;
+interface nsIXPConnectFinalizeListener;
+interface nsIInterfaceInfo;
+interface nsIXPCSecurityManager;
+
+/***************************************************************************/
+
+[uuid(1B2DDB00-EEE8-11d2-BAA4-00805F8A5DD7)]
+interface nsIXPConnectFinalizeListener : nsISupports
+{
+    void aboutToRelease(in nsISupports aObj);
+};
+
+/***************************************************************************/
+
+[uuid(215DBE02-94A7-11d2-BA58-00805F8A5DD7)]
+interface nsIXPConnectWrappedNative : nsISupports
+{
+    readonly attribute nsIXPCScriptable DynamicScriptable;
+    readonly attribute nsIXPCScriptable ArbitraryScriptable;
+    readonly attribute JSObjectPtr      JSObject;
+    readonly attribute nsISupports      Native;
+    readonly attribute nsIInterfaceInfo InterfaceInfo;
+    readonly attribute nsIIDPtr         IID;
+    readonly attribute JSObjectPtr      JSObjectPrototype;
+
+    void setFinalizeListener(in nsIXPConnectFinalizeListener aListener);
+    void debugDump(in short depth);
+};
+
+/***************************************************************************/
+
+/*
+* Wrappers around JSObject are passed around as plain nsISupports pointers.
+* To manipulate such a wrapper (as opposed to manipulating the wrapped
+* JSObject via the wrapper) do a QueryInterface for the
+* nsIXPConnectWrappedJSMethods interface
+* i.e. 'GET_NS_IID(nsIXPConnectWrappedJSMethods)'
+* and use the methods on that interface. (see below)
+*
+* The nsIXPConnectWrappedJSMethods interface for any given wrapped JS object 
+* is implemented using a separate aggregated tearoff object.
+*/
+
+/***************************************************************************/
+
+[uuid(BED52030-BCA6-11d2-BA79-00805F8A5DD7)]
+interface nsIXPConnectWrappedJSMethods : nsISupports
+{
+    readonly attribute JSObjectPtr      JSObject;
+    readonly attribute nsIInterfaceInfo InterfaceInfo;
+    readonly attribute nsIIDPtr         IID;
+
+    void debugDump(in short depth);
+};
+
+/***************************************************************************/
+
+/**
+* This is a somewhat special interface. It is available from the global
+* nsIXPConnect object when native methods have been called. It is only relevent 
+* to the currently called native method on the given JSContext/thread. Holding
+* a reference past that time (or while other native methods are being called)
+* will not assure access to this data.
+*/
+
+[uuid(0FA68A60-8289-11d3-BB1A-00805F8A5DD7)]
+interface nsIXPCNativeCallContext : nsISupports
+{
+
+    readonly attribute nsISupports                  Callee;
+    readonly attribute PRUint16                     CalleeMethodIndex;
+    readonly attribute nsIXPConnectWrappedNative    CalleeWrapper;
+    readonly attribute JSContextPtr                 JSContext;
+    readonly attribute PRUint32                     Argc;
+    readonly attribute JSValPtr                     ArgvPtr;
+    /**
+    * This may be NULL if the JS caller is ignoring the result of the call.
+    */
+    readonly attribute JSValPtr                     RetValPtr;
+    /**
+    * Set this if JS_SetPendingException has been called. Return NS_OK or
+    * else this will be ignored and the native method's nsresult will be 
+    * converted into an exception and thrown into JS as is the normal case.
+    */
+    attribute PRBool                                ExceptionWasThrown;
+};
+
+/***************************************************************************/
+
+%{ C++
+// For use with the service manager
+// {CB6593E0-F9B2-11d2-BDD6-000064657374}
+#define NS_XPCONNECT_CID \
+{ 0xcb6593e0, 0xf9b2, 0x11d2, \
+    { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
+%}
+
+[uuid(EFAE37B0-946D-11d2-BA58-00805F8A5DD7)]
+interface nsIXPConnect : nsISupports
+{
+%{ C++
+  NS_DEFINE_STATIC_CID_ACCESSOR(NS_XPCONNECT_CID)
+%}
+
+    void 
+    initClasses(in JSContextPtr aJSContext,
+                in JSObjectPtr  aGlobalJSObj);
+                  
+    nsIXPConnectWrappedNative
+    initClassesWithNewWrappedGlobal(
+                  in JSContextPtr aJSContext,
+                  in nsISupports  aCOMObj,
+                  in nsIIDRef     aIID);
+
+    nsIXPConnectWrappedNative
+    wrapNative(in JSContextPtr aJSContext,
+               in JSObjectPtr  aScope,
+               in nsISupports  aCOMObj,
+               in nsIIDRef     aIID);
+
+    nsISupports
+    wrapJS(in JSContextPtr aJSContext,
+           in JSObjectPtr  aJSObj,
+           in nsIIDRef     aIID);
+
+    nsIXPConnectWrappedNative
+    getWrappedNativeOfJSObject(in JSContextPtr aJSContext,
+                               in JSObjectPtr  aJSObj);
+
+    void setSecurityManagerForJSContext(in JSContextPtr aJSContext,
+                                        in nsIXPCSecurityManager aManager,
+                                        in PRUint16 flags);
+
+    void getSecurityManagerForJSContext(in JSContextPtr aJSContext,
+                                        out nsIXPCSecurityManager aManager,
+                                        out PRUint16 flags);
+
+    nsIJSStackFrameLocation
+    createStackFrameLocation(in PRBool                   isJSFrame,
+                             in string                   aFilename,
+                             in string                   aFunctionName,
+                             in PRInt32                  aLineNumber,
+                             in nsIJSStackFrameLocation  aCaller);
+
+    void syncJSContexts();
+
+    readonly attribute nsIJSStackFrameLocation      CurrentJSStack;
+    readonly attribute nsIXPCNativeCallContext      CurrentNativeCallContext;
+    /* pass nsnull to clear pending exception */
+             attribute nsIXPCException              PendingException;
+
+    void debugDump(in short depth);
+    void debugDumpObject(in nsISupports aCOMObj, in short depth);
+    void debugDumpJSStack();
+};
+

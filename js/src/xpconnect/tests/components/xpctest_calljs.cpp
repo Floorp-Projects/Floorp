@@ -50,14 +50,7 @@ private:
 };
 
 
-//static NS_DEFINE_IID( kxpcTestCallJSIID, NS_IXPCTESTCALLJS_IID );
-//NS_IMPL_ISUPPORTS(xpcTestCallJS, kxpcTestCallJSIID);
-
-// these methods are here since we can't call NS_IMPL_ISUPPORTS
-NS_IMPL_ADDREF(xpcTestCallJS)
-NS_IMPL_RELEASE(xpcTestCallJS)
-// this macro is a simple way to expose nsIXPCScriptable implementation
-NS_IMPL_QUERY_INTERFACE_SCRIPTABLE(xpcTestCallJS, NS_GET_IID(nsIXPCTestCallJS), this)
+NS_IMPL_ISUPPORTS2(xpcTestCallJS, nsIXPCTestCallJS, nsIXPCScriptable);
 
 XPC_IMPLEMENT_FORWARD_IXPCSCRIPTABLE(xpcTestCallJS);
 

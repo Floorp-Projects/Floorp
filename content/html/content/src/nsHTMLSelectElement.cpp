@@ -78,18 +78,18 @@ public:
   NS_DECL_IDOMHTMLCOLLECTION
 
   // nsIJSScriptObject interface
-  virtual PRBool    AddProperty(JSContext *aContext, jsval aID, 
-                                jsval *aVp);
-  virtual PRBool    DeleteProperty(JSContext *aContext, jsval aID, 
-                                   jsval *aVp);
-  virtual PRBool    GetProperty(JSContext *aContext, jsval aID, 
-                                jsval *aVp);
-  virtual PRBool    SetProperty(JSContext *aContext, jsval aID, 
-                                jsval *aVp);
-  virtual PRBool    EnumerateProperty(JSContext *aContext);
-  virtual PRBool    Resolve(JSContext *aContext, jsval aID);
-  virtual PRBool    Convert(JSContext *aContext, jsval aID);
-  virtual void      Finalize(JSContext *aContext);
+  PRBool    AddProperty(JSContext *aContext, JSObject *aObj, 
+                        jsval aID, jsval *aVp);
+  PRBool    DeleteProperty(JSContext *aContext, JSObject *aObj, 
+                        jsval aID, jsval *aVp);
+  PRBool    GetProperty(JSContext *aContext, JSObject *aObj, 
+                        jsval aID, jsval *aVp);
+  PRBool    SetProperty(JSContext *aContext, JSObject *aObj, 
+                        jsval aID, jsval *aVp);
+  PRBool    EnumerateProperty(JSContext *aContext, JSObject *aObj);
+  PRBool    Resolve(JSContext *aContext, JSObject *aObj, jsval aID);
+  PRBool    Convert(JSContext *aContext, JSObject *aObj, jsval aID);
+  void      Finalize(JSContext *aContext, JSObject *aObj);
 
   void AddOption(nsIContent* aOption);
   void RemoveOption(nsIContent* aOption);
@@ -1064,6 +1064,7 @@ nsOptionList::IndexOf(nsIContent* aOption)
 
 PRBool    
 nsOptionList::AddProperty(JSContext *aContext, 
+                          JSObject *aObj, 
                           jsval aID, 
                           jsval *aVp)
 {
@@ -1072,6 +1073,7 @@ nsOptionList::AddProperty(JSContext *aContext,
  
 PRBool    
 nsOptionList::DeleteProperty(JSContext *aContext, 
+                             JSObject *aObj, 
                              jsval aID, 
                              jsval *aVp)
 {
@@ -1080,6 +1082,7 @@ nsOptionList::DeleteProperty(JSContext *aContext,
  
 PRBool    
 nsOptionList::GetProperty(JSContext *aContext, 
+                          JSObject *aObj, 
                           jsval aID, 
                           jsval *aVp)
 {
@@ -1088,6 +1091,7 @@ nsOptionList::GetProperty(JSContext *aContext,
 
 PRBool    
 nsOptionList::SetProperty(JSContext *aContext, 
+                          JSObject *aObj, 
                           jsval aID, 
                           jsval *aVp)
 {
@@ -1150,25 +1154,25 @@ nsOptionList::SetProperty(JSContext *aContext,
 }
 
 PRBool    
-nsOptionList::EnumerateProperty(JSContext *aContext)
+nsOptionList::EnumerateProperty(JSContext *aContext, JSObject *aObj)
 {
   return PR_TRUE;
 }
 
 PRBool    
-nsOptionList::Resolve(JSContext *aContext, jsval aID)
+nsOptionList::Resolve(JSContext *aContext, JSObject *aObj, jsval aID)
 {
   return PR_TRUE;
 }
 
 PRBool    
-nsOptionList::Convert(JSContext *aContext, jsval aID)
+nsOptionList::Convert(JSContext *aContext, JSObject *aObj, jsval aID)
 {
   return PR_TRUE;
 }
 
 void      
-nsOptionList::Finalize(JSContext *aContext)
+nsOptionList::Finalize(JSContext *aContext, JSObject *aObj)
 {
 }
 

@@ -80,6 +80,7 @@
 #include "nsDOMError.h"
 #include "nsIScrollableView.h"
 #include "nsIFrame.h"
+#include "nsLayoutUtils.h"
 
 #include "nsIScriptSecurityManager.h"
 
@@ -2473,17 +2474,17 @@ nsresult nsDocument::RemoveEventListener(const nsString& aType, nsIDOMEventListe
   return NS_ERROR_FAILURE;
 }
 
-PRBool    nsDocument::AddProperty(JSContext *aContext, jsval aID, jsval *aVp)
+PRBool    nsDocument::AddProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
 {
   return PR_TRUE;
 }
 
-PRBool    nsDocument::DeleteProperty(JSContext *aContext, jsval aID, jsval *aVp)
+PRBool    nsDocument::DeleteProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
 {
   return PR_TRUE;
 }
 
-PRBool    nsDocument::GetProperty(JSContext *aContext, jsval aID, jsval *aVp)
+PRBool    nsDocument::GetProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
 {
   PRBool result = PR_TRUE;
 
@@ -2492,7 +2493,7 @@ PRBool    nsDocument::GetProperty(JSContext *aContext, jsval aID, jsval *aVp)
     if (mScriptGlobalObject) {
       nsCOMPtr<nsIJSScriptObject> window(do_QueryInterface(mScriptGlobalObject));
       if(window) {
-        result = window->GetProperty(aContext, aID, aVp);
+        result = window->GetProperty(aContext, aObj, aID, aVp);
       }
       else {
         result = PR_FALSE;
@@ -2503,7 +2504,7 @@ PRBool    nsDocument::GetProperty(JSContext *aContext, jsval aID, jsval *aVp)
   return result;
 }
 
-PRBool    nsDocument::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
+PRBool    nsDocument::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
 {
   PRBool result = PR_TRUE;
 
@@ -2518,8 +2519,9 @@ PRBool    nsDocument::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
       if (atom.get() == nsLayoutAtoms::onmousedown || atom.get() == nsLayoutAtoms::onmouseup || atom.get() ==  nsLayoutAtoms::onclick ||
          atom.get() == nsLayoutAtoms::onmouseover || atom.get() == nsLayoutAtoms::onmouseout) {
         if (NS_OK == GetListenerManager(&mManager)) {
-          nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
-          if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, atom, kIDOMMouseListenerIID)) {
+          nsCOMPtr<nsIScriptContext> mScriptCX;
+          if(NS_FAILED(nsLayoutUtils::GetStaticScriptContext(aContext, (JSObject*)mScriptObject, getter_AddRefs(mScriptCX))) ||
+             NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, atom, kIDOMMouseListenerIID)) {
             NS_RELEASE(mManager);
             return PR_FALSE;
           }
@@ -2527,8 +2529,9 @@ PRBool    nsDocument::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
       }
       else if (atom.get() == nsLayoutAtoms::onkeydown || atom.get() == nsLayoutAtoms::onkeyup || atom.get() == nsLayoutAtoms::onkeypress) {
         if (NS_OK == GetListenerManager(&mManager)) {
-          nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
-          if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, atom, kIDOMKeyListenerIID)) {
+          nsCOMPtr<nsIScriptContext> mScriptCX;
+          if(NS_FAILED(nsLayoutUtils::GetStaticScriptContext(aContext, (JSObject*)mScriptObject, getter_AddRefs(mScriptCX))) ||
+             NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, atom, kIDOMKeyListenerIID)) {
             NS_RELEASE(mManager);
             return PR_FALSE;
           }
@@ -2536,8 +2539,9 @@ PRBool    nsDocument::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
       }
       else if (atom.get() == nsLayoutAtoms::onmousemove) {
         if (NS_OK == GetListenerManager(&mManager)) {
-          nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
-          if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, atom, kIDOMMouseMotionListenerIID)) {
+          nsCOMPtr<nsIScriptContext> mScriptCX;
+          if(NS_FAILED(nsLayoutUtils::GetStaticScriptContext(aContext, (JSObject*)mScriptObject, getter_AddRefs(mScriptCX))) ||
+             NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, atom, kIDOMMouseMotionListenerIID)) {
             NS_RELEASE(mManager);
             return PR_FALSE;
           }
@@ -2545,8 +2549,9 @@ PRBool    nsDocument::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
       }
       else if (atom.get() == nsLayoutAtoms::onfocus || atom.get() == nsLayoutAtoms::onblur) {
         if (NS_OK == GetListenerManager(&mManager)) {
-          nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
-          if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, atom, kIDOMFocusListenerIID)) {
+          nsCOMPtr<nsIScriptContext> mScriptCX;
+          if(NS_FAILED(nsLayoutUtils::GetStaticScriptContext(aContext, (JSObject*)mScriptObject, getter_AddRefs(mScriptCX))) ||
+             NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, atom, kIDOMFocusListenerIID)) {
             NS_RELEASE(mManager);
             return PR_FALSE;
           }
@@ -2555,8 +2560,9 @@ PRBool    nsDocument::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
       else if (atom.get() == nsLayoutAtoms::onsubmit || atom.get() == nsLayoutAtoms::onreset || atom.get() == nsLayoutAtoms::onchange ||
                atom.get() == nsLayoutAtoms::onselect) {
         if (NS_OK == GetListenerManager(&mManager)) {
-          nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
-          if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, atom, kIDOMFormListenerIID)) {
+          nsCOMPtr<nsIScriptContext> mScriptCX;
+          if(NS_FAILED(nsLayoutUtils::GetStaticScriptContext(aContext, (JSObject*)mScriptObject, getter_AddRefs(mScriptCX))) ||
+             NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, atom, kIDOMFormListenerIID)) {
             NS_RELEASE(mManager);
             return PR_FALSE;
           }
@@ -2565,8 +2571,9 @@ PRBool    nsDocument::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
       else if (atom.get() == nsLayoutAtoms::onload || atom.get() == nsLayoutAtoms::onunload || atom.get() == nsLayoutAtoms::onabort ||
                atom.get() == nsLayoutAtoms::onerror) {
         if (NS_OK == GetListenerManager(&mManager)) {
-          nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
-          if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, atom, kIDOMLoadListenerIID)) {
+          nsCOMPtr<nsIScriptContext> mScriptCX;
+          if(NS_FAILED(nsLayoutUtils::GetStaticScriptContext(aContext, (JSObject*)mScriptObject, getter_AddRefs(mScriptCX))) ||
+             NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, atom, kIDOMLoadListenerIID)) {
             NS_RELEASE(mManager);
             return PR_FALSE;
           }
@@ -2574,9 +2581,9 @@ PRBool    nsDocument::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
       }
       else if (atom.get() == nsLayoutAtoms::onpaint) {
         if (NS_OK == GetListenerManager(&mManager)) {
-          nsIScriptContext *mScriptCX = (nsIScriptContext *)
-            JS_GetContextPrivate(aContext);
-          if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this,
+          nsCOMPtr<nsIScriptContext> mScriptCX;
+          if(NS_FAILED(nsLayoutUtils::GetStaticScriptContext(aContext, (JSObject*)mScriptObject, getter_AddRefs(mScriptCX))) ||
+             NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this,
                                                              atom, kIDOMPaintListenerIID)) {
             NS_RELEASE(mManager);
             return PR_FALSE;
@@ -2591,7 +2598,7 @@ PRBool    nsDocument::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
     if (mScriptGlobalObject) {
       nsCOMPtr<nsIJSScriptObject> window(do_QueryInterface(mScriptGlobalObject));
       if(window) {
-        result = window->SetProperty(aContext, aID, aVp);
+        result = window->SetProperty(aContext, aObj, aID, aVp);
       }
       else {
         result = PR_FALSE;
@@ -2602,22 +2609,22 @@ PRBool    nsDocument::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
   return result;
 }
 
-PRBool    nsDocument::EnumerateProperty(JSContext *aContext)
+PRBool    nsDocument::EnumerateProperty(JSContext *aContext, JSObject *aObj)
 {
   return PR_TRUE;
 }
 
-PRBool    nsDocument::Resolve(JSContext *aContext, jsval aID)
+PRBool    nsDocument::Resolve(JSContext *aContext, JSObject *aObj, jsval aID)
 {
   return PR_TRUE;
 }
 
-PRBool    nsDocument::Convert(JSContext *aContext, jsval aID)
+PRBool    nsDocument::Convert(JSContext *aContext, JSObject *aObj, jsval aID)
 {
   return PR_TRUE;
 }
 
-void      nsDocument::Finalize(JSContext *aContext)
+void      nsDocument::Finalize(JSContext *aContext, JSObject *aObj)
 {
 }
 
@@ -3098,3 +3105,4 @@ PRBool nsDocument::GetDisplaySelection() const
 {
   return mDisplaySelection;
 }
+

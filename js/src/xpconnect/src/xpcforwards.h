@@ -39,8 +39,9 @@
 
 // forward declarations of interally used classes...
 
-class XPCContext;
 class nsXPConnect;
+class XPCJSRuntime;
+class XPCContext;
 class JSObject2WrappedJSMap;
 class Native2WrappedNativeMap;
 class IID2WrappedJSClassMap;
@@ -51,8 +52,16 @@ class nsXPCWrappedJS;
 class nsXPCWrappedNative;
 class nsXPCWrappedJSClass;
 class nsXPCWrappedNativeClass;
+class nsXPCWrappedNativeScope;
 class nsXPCWrappedJSMethods;
 class XPCJSThrower;
+class XPCJSStack;
 class XPCNativeMemberDescriptor;
+
+class nsXPCInterfaces;
+class nsXPCClasses;
+class nsXPCClassesByID;
+class nsXPCResults;
+
 
 #endif /* xpcforwards_h___ */

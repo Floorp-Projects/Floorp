@@ -126,6 +126,13 @@ interface nsIEcho : nsISupports {
     void throwArg(/* optional param */);
 
     void callReceiverSometimeLater();
+
+    readonly attribute short throwInGetter;
+
+    const short one = 1;
+    const short five = 5;
+    const short six = 6;
+
 };
 
 /***************************************************************************/

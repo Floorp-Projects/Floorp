@@ -42,18 +42,18 @@
 class nsIJSScriptObject : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IJSSCRIPTOBJECT_IID; return iid; }
-  virtual PRBool    AddProperty(JSContext *aContext, jsval aID, 
+  virtual PRBool    AddProperty(JSContext *aContext, JSObject *aObj, jsval aID, 
                                 jsval *aVp) = 0;
-  virtual PRBool    DeleteProperty(JSContext *aContext, jsval aID, 
-                                   jsval *aVp) = 0;
-  virtual PRBool    GetProperty(JSContext *aContext, jsval aID, 
+  virtual PRBool    DeleteProperty(JSContext *aContext, JSObject *aObj, 
+                                   jsval aID, jsval *aVp) = 0;
+  virtual PRBool    GetProperty(JSContext *aContext, JSObject *aObj, jsval aID, 
                                 jsval *aVp) = 0;
-  virtual PRBool    SetProperty(JSContext *aContext, jsval aID, 
+  virtual PRBool    SetProperty(JSContext *aContext, JSObject *aObj, jsval aID, 
                                 jsval *aVp) = 0;
-  virtual PRBool    EnumerateProperty(JSContext *aContext) = 0;
-  virtual PRBool    Resolve(JSContext *aContext, jsval aID) = 0;
-  virtual PRBool    Convert(JSContext *aContext, jsval aID) = 0;
-  virtual void      Finalize(JSContext *aContext) = 0;
+  virtual PRBool    EnumerateProperty(JSContext *aContext, JSObject *aObj) = 0;
+  virtual PRBool    Resolve(JSContext *aContext, JSObject *aObj, jsval aID) = 0;
+  virtual PRBool    Convert(JSContext *aContext, JSObject *aObj, jsval aID) = 0;
+  virtual void      Finalize(JSContext *aContext, JSObject *aObj) = 0;
 };
 
 #endif // nsIJSScriptObject_h__

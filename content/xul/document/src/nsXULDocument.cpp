@@ -3008,7 +3008,7 @@ nsXULDocument::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 //
 
 PRBool
-nsXULDocument::AddProperty(JSContext *aContext, jsval aID, jsval *aVp)
+nsXULDocument::AddProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
 {
     NS_NOTYETIMPLEMENTED("write me");
     return PR_TRUE;
@@ -3016,7 +3016,7 @@ nsXULDocument::AddProperty(JSContext *aContext, jsval aID, jsval *aVp)
 
 
 PRBool
-nsXULDocument::DeleteProperty(JSContext *aContext, jsval aID, jsval *aVp)
+nsXULDocument::DeleteProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
 {
     NS_NOTYETIMPLEMENTED("write me");
     return PR_TRUE;
@@ -3024,7 +3024,7 @@ nsXULDocument::DeleteProperty(JSContext *aContext, jsval aID, jsval *aVp)
 
 
 PRBool
-nsXULDocument::GetProperty(JSContext *aContext, jsval aID, jsval *aVp)
+nsXULDocument::GetProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
 {
     if (JSVAL_IS_STRING(aID)) {
         JSString *jsString = JS_ValueToString(aContext, aID);
@@ -3034,7 +3034,7 @@ nsXULDocument::GetProperty(JSContext *aContext, jsval aID, jsval *aVp)
         if (PL_strcmp("location", JS_GetStringBytes(jsString)) == 0) {
            nsCOMPtr<nsIJSScriptObject> window = do_QueryInterface(mScriptGlobalObject);
            if (nsnull != window) {
-               return window->GetProperty(aContext, aID, aVp);
+               return window->GetProperty(aContext, aObj, aID, aVp);
            }
         }
     }
@@ -3044,7 +3044,7 @@ nsXULDocument::GetProperty(JSContext *aContext, jsval aID, jsval *aVp)
 
 
 PRBool
-nsXULDocument::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
+nsXULDocument::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
 {
     nsresult rv;
 
@@ -3084,7 +3084,7 @@ nsXULDocument::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
 
 
 PRBool
-nsXULDocument::EnumerateProperty(JSContext *aContext)
+nsXULDocument::EnumerateProperty(JSContext *aContext, JSObject *aObj)
 {
     NS_NOTYETIMPLEMENTED("write me");
     return PR_TRUE;
@@ -3092,14 +3092,14 @@ nsXULDocument::EnumerateProperty(JSContext *aContext)
 
 
 PRBool
-nsXULDocument::Resolve(JSContext *aContext, jsval aID)
+nsXULDocument::Resolve(JSContext *aContext, JSObject *aObj, jsval aID)
 {
     return PR_TRUE;
 }
 
 
 PRBool
-nsXULDocument::Convert(JSContext *aContext, jsval aID)
+nsXULDocument::Convert(JSContext *aContext, JSObject *aObj, jsval aID)
 {
     NS_NOTYETIMPLEMENTED("write me");
     return PR_TRUE;
@@ -3107,7 +3107,7 @@ nsXULDocument::Convert(JSContext *aContext, jsval aID)
 
 
 void
-nsXULDocument::Finalize(JSContext *aContext)
+nsXULDocument::Finalize(JSContext *aContext, JSObject *aObj)
 {
     NS_NOTYETIMPLEMENTED("write me");
 }

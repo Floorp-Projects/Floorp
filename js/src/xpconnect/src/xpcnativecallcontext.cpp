@@ -36,7 +36,6 @@
 
 #include "xpcprivate.h"
 
-
 nsXPCNativeCallContext::nsXPCNativeCallContext()
     :   mData(nsnull)
 {
@@ -117,7 +116,7 @@ nsXPCNativeCallContext::GetArgc(PRUint32* argcp)
 }        
 
 NS_IMETHODIMP 
-nsXPCNativeCallContext::GetArgv(jsval** argvp)
+nsXPCNativeCallContext::GetArgvPtr(jsval** argvp)
 {
     NS_ENSURE_ARG_POINTER(argvp);
     if(NS_WARN_IF_FALSE(mData,"no active native call")) 
@@ -144,4 +143,15 @@ nsXPCNativeCallContext::SetExceptionWasThrown(JSBool threw)
     mData->threw = threw;
     return NS_OK;
 }        
+
+NS_IMETHODIMP 
+nsXPCNativeCallContext::GetExceptionWasThrown(JSBool* threwp)
+{
+    NS_ENSURE_ARG_POINTER(threwp);
+    if(NS_WARN_IF_FALSE(mData,"no active native call")) 
+        return NS_ERROR_FAILURE;
+    *threwp = mData->threw;
+    return NS_OK;
+}        
+
 

@@ -60,8 +60,7 @@ public:
     xpctestChild();
 };
 
-static NS_DEFINE_IID(kxpctestOtherIID, NS_IXPCTESTOTHER_IID);
-NS_IMPL_ISUPPORTS(xpctestOther, kxpctestOtherIID);
+NS_IMPL_ISUPPORTS1(xpctestOther, nsIXPCTestOther);
 
 xpctestOther::xpctestOther()
 {

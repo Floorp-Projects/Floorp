@@ -44,8 +44,7 @@ public:
   xpcTestInOut();
 };
 
-static NS_DEFINE_IID( kxpcTestInOutIID, NS_IXPCTESTINOUT_IID );
-NS_IMPL_ISUPPORTS(xpcTestInOut, kxpcTestInOutIID);
+NS_IMPL_ISUPPORTS1(xpcTestInOut, nsIXPCTestInOut);
 
 xpcTestInOut :: xpcTestInOut() {
     NS_INIT_REFCNT();

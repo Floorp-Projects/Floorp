@@ -64,7 +64,7 @@ function AddTestData() {
 	
 	AddTestCase(
 		"delete testObject.newProperty",
-		true,
+		false,
 		result );
 	
 	AddTestCase(
@@ -87,7 +87,7 @@ function AddTestData() {
 	result = delete testObject.newFunction;
 	AddTestCase(
 		"delete testObject.newFunction",
-		true,
+		false,
 		result);
 
 	AddTestCase(

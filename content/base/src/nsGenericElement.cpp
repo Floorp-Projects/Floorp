@@ -62,6 +62,7 @@
 
 #include "nsLayoutAtoms.h"
 #include "nsHTMLAtoms.h"
+#include "nsLayoutUtils.h"
 
 NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
 NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
@@ -1079,25 +1080,25 @@ nsGenericElement::RemoveEventListener(const nsString& aType, nsIDOMEventListener
 // nsIJSScriptObject implementation
 
 PRBool    
-nsGenericElement::AddProperty(JSContext *aContext, jsval aID, jsval *aVp)
+nsGenericElement::AddProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
 {
   return PR_TRUE;
 }
 
 PRBool    
-nsGenericElement::DeleteProperty(JSContext *aContext, jsval aID, jsval *aVp)
+nsGenericElement::DeleteProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
 {
   return PR_TRUE;
 }
 
 PRBool    
-nsGenericElement::GetProperty(JSContext *aContext, jsval aID, jsval *aVp)
+nsGenericElement::GetProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
 {
   return PR_TRUE;
 }
  
 PRBool    
-nsGenericElement::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
+nsGenericElement::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
 {
   nsIScriptObjectOwner *owner;
 
@@ -1116,8 +1117,9 @@ nsGenericElement::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
       if (atom.get() == nsLayoutAtoms::onmousedown || atom.get() == nsLayoutAtoms::onmouseup || atom.get() ==  nsLayoutAtoms::onclick ||
          atom.get() == nsLayoutAtoms::onmouseover || atom.get() == nsLayoutAtoms::onmouseout) {
         if (NS_OK == GetListenerManager(&manager)) {
-          nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
-          if (NS_OK != manager->RegisterScriptEventListener(mScriptCX, owner, atom, kIDOMMouseListenerIID)) {
+          nsCOMPtr<nsIScriptContext> mScriptCX;
+          if (NS_FAILED(nsLayoutUtils::GetStaticScriptContext(aContext, (JSObject*)GetDOMSlots()->mScriptObject, getter_AddRefs(mScriptCX))) ||
+              NS_OK != manager->RegisterScriptEventListener(mScriptCX, owner, atom, kIDOMMouseListenerIID)) {
             NS_RELEASE(manager);
             return PR_FALSE;
           }
@@ -1125,8 +1127,9 @@ nsGenericElement::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
       }
       else if (atom.get() == nsLayoutAtoms::onkeydown || atom.get() == nsLayoutAtoms::onkeyup || atom.get() == nsLayoutAtoms::onkeypress) {
         if (NS_OK == GetListenerManager(&manager)) {
-          nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
-          if (NS_OK != manager->RegisterScriptEventListener(mScriptCX, owner, atom, kIDOMKeyListenerIID)) {
+          nsCOMPtr<nsIScriptContext> mScriptCX;
+          if (NS_FAILED(nsLayoutUtils::GetStaticScriptContext(aContext, (JSObject*)GetDOMSlots()->mScriptObject, getter_AddRefs(mScriptCX))) ||
+              NS_OK != manager->RegisterScriptEventListener(mScriptCX, owner, atom, kIDOMKeyListenerIID)) {
             NS_RELEASE(manager);
             return PR_FALSE;
           }
@@ -1134,8 +1137,9 @@ nsGenericElement::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
       }
       else if (atom.get() == nsLayoutAtoms::onmousemove) {
         if (NS_OK == GetListenerManager(&manager)) {
-          nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
-          if (NS_OK != manager->RegisterScriptEventListener(mScriptCX, owner, atom, kIDOMMouseMotionListenerIID)) {
+          nsCOMPtr<nsIScriptContext> mScriptCX;
+          if (NS_FAILED(nsLayoutUtils::GetStaticScriptContext(aContext, (JSObject*)GetDOMSlots()->mScriptObject, getter_AddRefs(mScriptCX))) ||
+              NS_OK != manager->RegisterScriptEventListener(mScriptCX, owner, atom, kIDOMMouseMotionListenerIID)) {
             NS_RELEASE(manager);
             return PR_FALSE;
           }
@@ -1143,8 +1147,9 @@ nsGenericElement::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
       }
       else if (atom.get() == nsLayoutAtoms::onfocus || atom.get() == nsLayoutAtoms::onblur) {
         if (NS_OK == GetListenerManager(&manager)) {
-          nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
-          if (NS_OK != manager->RegisterScriptEventListener(mScriptCX, owner, atom, kIDOMFocusListenerIID)) {
+          nsCOMPtr<nsIScriptContext> mScriptCX;
+          if (NS_FAILED(nsLayoutUtils::GetStaticScriptContext(aContext, (JSObject*)GetDOMSlots()->mScriptObject, getter_AddRefs(mScriptCX))) ||
+              NS_OK != manager->RegisterScriptEventListener(mScriptCX, owner, atom, kIDOMFocusListenerIID)) {
             NS_RELEASE(manager);
             return PR_FALSE;
           }
@@ -1153,8 +1158,9 @@ nsGenericElement::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
       else if (atom.get() == nsLayoutAtoms::onsubmit || atom.get() == nsLayoutAtoms::onreset || atom.get() == nsLayoutAtoms::onchange ||
                atom.get() == nsLayoutAtoms::onselect) {
         if (NS_OK == GetListenerManager(&manager)) {
-          nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
-          if (NS_OK != manager->RegisterScriptEventListener(mScriptCX, owner, atom, kIDOMFormListenerIID)) {
+          nsCOMPtr<nsIScriptContext> mScriptCX;
+          if (NS_FAILED(nsLayoutUtils::GetStaticScriptContext(aContext, (JSObject*)GetDOMSlots()->mScriptObject, getter_AddRefs(mScriptCX))) ||
+              NS_OK != manager->RegisterScriptEventListener(mScriptCX, owner, atom, kIDOMFormListenerIID)) {
             NS_RELEASE(manager);
             return PR_FALSE;
           }
@@ -1163,8 +1169,9 @@ nsGenericElement::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
       else if (atom.get() == nsLayoutAtoms::onload || atom.get() == nsLayoutAtoms::onunload || atom.get() == nsLayoutAtoms::onabort ||
                atom.get() == nsLayoutAtoms::onerror) {
         if (NS_OK == GetListenerManager(&manager)) {
-          nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
-          if (NS_OK != manager->RegisterScriptEventListener(mScriptCX, owner, atom, kIDOMLoadListenerIID)) {
+          nsCOMPtr<nsIScriptContext> mScriptCX;
+          if (NS_FAILED(nsLayoutUtils::GetStaticScriptContext(aContext, (JSObject*)GetDOMSlots()->mScriptObject, getter_AddRefs(mScriptCX))) ||
+              NS_OK != manager->RegisterScriptEventListener(mScriptCX, owner, atom, kIDOMLoadListenerIID)) {
             NS_RELEASE(manager);
             return PR_FALSE;
           }
@@ -1172,9 +1179,9 @@ nsGenericElement::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
       }
       else if (atom.get() == nsLayoutAtoms::onpaint) {
         if (NS_OK == GetListenerManager(&manager)) {
-          nsIScriptContext *mScriptCX = (nsIScriptContext *)
-            JS_GetContextPrivate(aContext);
-          if (NS_OK != manager->RegisterScriptEventListener(mScriptCX, owner,
+          nsCOMPtr<nsIScriptContext> mScriptCX;
+          if (NS_FAILED(nsLayoutUtils::GetStaticScriptContext(aContext, (JSObject*)GetDOMSlots()->mScriptObject, getter_AddRefs(mScriptCX))) ||
+              NS_OK != manager->RegisterScriptEventListener(mScriptCX, owner,
                                                             atom, kIDOMPaintListenerIID)) {
             NS_RELEASE(manager);
             return PR_FALSE;
@@ -1191,25 +1198,25 @@ nsGenericElement::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
 }
  
 PRBool    
-nsGenericElement::EnumerateProperty(JSContext *aContext)
+nsGenericElement::EnumerateProperty(JSContext *aContext, JSObject *aObj)
 {
   return PR_TRUE;
 }
 
 PRBool    
-nsGenericElement::Resolve(JSContext *aContext, jsval aID)
+nsGenericElement::Resolve(JSContext *aContext, JSObject *aObj, jsval aID)
 {
   return PR_TRUE;
 }
 
 PRBool    
-nsGenericElement::Convert(JSContext *aContext, jsval aID)
+nsGenericElement::Convert(JSContext *aContext, JSObject *aObj, jsval aID)
 {
   return PR_TRUE;
 }
 
 void      
-nsGenericElement::Finalize(JSContext *aContext)
+nsGenericElement::Finalize(JSContext *aContext, JSObject *aObj)
 {
 }
  
@@ -2218,3 +2225,4 @@ nsGenericContainerElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult,
   *aResult = sum;
   return NS_OK;
 }
+

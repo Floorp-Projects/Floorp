@@ -44,12 +44,16 @@ nsrefcnt
 nsXPCWrappedNative::AddRef(void)
 {
     NS_PRECONDITION(mRoot, "bad root");
-    XPCContext* xpcc;
     ++mRefCnt;
     NS_LOG_ADDREF(this, mRefCnt, "nsXPCWrappedNative", sizeof(*this));
-    if(2 == mRefCnt && nsnull != (xpcc = mClass->GetXPCContext()))
-        JS_AddNamedRoot(xpcc->GetJSContext(), &mJSObj,
-                        "nsXPCWrappedNative::mJSObj");
+    if(2 == mRefCnt)
+    {
+        AutoPushCompatibleJSContext 
+                    autoContext(mClass->GetRuntime()->GetJSRuntime());
+        JSContext* cx = autoContext.GetJSContext();
+        if(cx)
+            JS_AddNamedRoot(cx, &mJSObj, "nsXPCWrappedNative::mJSObj");
+    }
     return mRefCnt;
 }
 
@@ -67,9 +71,9 @@ nsXPCWrappedNative::Release(void)
     }
     if(1 == mRefCnt)
     {
-        XPCContext* xpcc;
-        if(nsnull != (xpcc = mClass->GetXPCContext()))
-            JS_RemoveRoot(xpcc->GetJSContext(), &mJSObj);
+        XPCJSRuntime* rt = mClass->GetRuntime();
+        if(rt)
+            JS_RemoveRootRT(rt->GetJSRuntime(), &mJSObj);
     }
     return mRefCnt;
 }
@@ -94,13 +98,16 @@ nsXPCWrappedNative::JSObjectFinalized(JSContext *cx, JSObject *obj)
 // static
 nsXPCWrappedNative*
 nsXPCWrappedNative::GetNewOrUsedWrapper(XPCContext* xpcc,
-                                       nsISupports* aObj,
-                                       REFNSIID aIID,
-                                       nsresult* pErr)
+                                        nsXPCWrappedNativeScope* aScope,
+                                        JSObject* aGlobalObject,
+                                        nsISupports* aObj,
+                                        REFNSIID aIID,
+                                        nsresult* pErr)
 {
     Native2WrappedNativeMap* map;
     nsISupports* rootObj = nsnull;
     nsISupports* realObj = nsnull;
+    XPCJSRuntime* rt;
     nsXPCWrappedNative* root;
     nsXPCWrappedNative* wrapper = nsnull;
     nsXPCWrappedNativeClass* clazz = nsnull;
@@ -109,8 +116,14 @@ nsXPCWrappedNative::GetNewOrUsedWrapper(XPCContext* xpcc,
     NS_PRECONDITION(aObj, "bad param");
 
     SET_ERROR_CODE(NS_ERROR_FAILURE);
+    
+    if(!xpcc || !aScope || !(rt = xpcc->GetRuntime()) || !aObj)
+    {
+        NS_ASSERTION(0,"bad param");    
+        return nsnull;
+    }
 
-    map = xpcc->GetWrappedNativeMap();
+    map = aScope->GetWrappedNativeMap();
     if(!map)
     {
         NS_ASSERTION(map,"bad map");
@@ -125,7 +138,10 @@ nsXPCWrappedNative::GetNewOrUsedWrapper(XPCContext* xpcc,
 
     // look for the root wrapper
 
-    root = map->Find(rootObj);
+    {   // scoped lock
+        nsAutoLock lock(rt->GetMapLock());  
+        root = map->Find(rootObj);
+    }
     if(root)
     {
         // if we already have a wrapper for this interface then we're done.
@@ -173,7 +189,9 @@ nsXPCWrappedNative::GetNewOrUsedWrapper(XPCContext* xpcc,
         if(rootObj == realObj)
         {
             // the root will do double duty as the interface wrapper
-            wrapper = root = new nsXPCWrappedNative(realObj, clazz, nsnull);
+            wrapper = root = new nsXPCWrappedNative(xpcc, realObj, aScope, 
+                                                    aGlobalObject,
+                                                    clazz, nsnull);
             if(!wrapper)
                 goto return_wrapper;
             if(!wrapper->mJSObj)
@@ -182,7 +200,10 @@ nsXPCWrappedNative::GetNewOrUsedWrapper(XPCContext* xpcc,
                 goto return_wrapper;
             }
 
-            map->Add(root);
+            {   // scoped lock
+                nsAutoLock lock(rt->GetMapLock());  
+                map->Add(root);
+            }
             goto return_wrapper;
         }
         else
@@ -194,7 +215,8 @@ nsXPCWrappedNative::GetNewOrUsedWrapper(XPCContext* xpcc,
             if(!rootClazz)
                 goto return_wrapper;
 
-            root = new nsXPCWrappedNative(rootObj, rootClazz, nsnull);
+            root = new nsXPCWrappedNative(xpcc, realObj, aScope, 
+                                          aGlobalObject, clazz, nsnull);
             NS_RELEASE(rootClazz);
 
             if(!root)
@@ -204,7 +226,10 @@ nsXPCWrappedNative::GetNewOrUsedWrapper(XPCContext* xpcc,
                 NS_RELEASE(root);    // sets root to nsnull
                 goto return_wrapper;
             }
-            map->Add(root);
+            {   // scoped lock
+                nsAutoLock lock(rt->GetMapLock());  
+                map->Add(root);
+            }
         }
     }
 
@@ -214,7 +239,8 @@ nsXPCWrappedNative::GetNewOrUsedWrapper(XPCContext* xpcc,
 
     if(!wrapper)
     {
-        wrapper = new nsXPCWrappedNative(realObj, clazz, root);
+        wrapper = new nsXPCWrappedNative(xpcc, realObj, aScope, 
+                                         aGlobalObject, clazz, root);
         if(!wrapper)
             goto return_wrapper;
         if(!wrapper->mJSObj)
@@ -251,24 +277,32 @@ return_wrapper:
 #pragma warning(disable : 4355) // OK to pass "this" in member initializer
 #endif
 
-nsXPCWrappedNative::nsXPCWrappedNative(nsISupports* aObj,
-                                     nsXPCWrappedNativeClass* aClass,
-                                     nsXPCWrappedNative* root)
+nsXPCWrappedNative::nsXPCWrappedNative(XPCContext* xpcc,
+                                       nsISupports* aObj,
+                                       nsXPCWrappedNativeScope* aScope,
+                                       JSObject* aGlobalObject,
+                                       nsXPCWrappedNativeClass* aClass,
+                                       nsXPCWrappedNative* root)
     : mObj(aObj),
       mJSObj(nsnull),
       mClass(aClass),
+      mScope(aScope),
       mDynamicScriptable(nsnull),
       mDynamicScriptableFlags(0),
       mRoot(root ? root : this),
       mNext(nsnull),
       mFinalizeListener(nsnull)
 {
+    NS_PRECONDITION(xpcc, "bad object to wrap");
     NS_PRECONDITION(mObj, "bad object to wrap");
     NS_PRECONDITION(mClass, "bad class for wrapper");
+    NS_PRECONDITION(mScope, "bad scope for wrapper");
+    NS_PRECONDITION(aGlobalObject, "bad global object for wrapper");
     NS_INIT_REFCNT();
     NS_ADDREF_THIS();
-    NS_ADDREF(aClass);
-    NS_ADDREF(aObj);
+    NS_ADDREF(mClass);
+    NS_ADDREF(mObj);
+    NS_ADDREF(mScope);
 
 #ifdef DEBUG_stats_jband
     static int count = 0;
@@ -291,7 +325,7 @@ nsXPCWrappedNative::nsXPCWrappedNative(nsISupports* aObj,
         NS_ADDREF(mRoot);
     }
 
-    mJSObj = aClass->NewInstanceJSObject(this);
+    mJSObj = aClass->NewInstanceJSObject(xpcc, aGlobalObject, this);
     if(mJSObj)
     {
         // intentional second addref to be released when mJSObj is gc'd
@@ -299,11 +333,8 @@ nsXPCWrappedNative::nsXPCWrappedNative(nsISupports* aObj,
 
         nsIXPCScriptable* ds;
         nsIXPCScriptable* as;
-        XPCContext* xpcc;
-
         if(nsnull != (ds = GetDynamicScriptable()) &&
-           nsnull != (as = GetArbitraryScriptable()) &&
-           nsnull != (xpcc = GetClass()->GetXPCContext()))
+           nsnull != (as = GetArbitraryScriptable()))
         {
             ds->Create(xpcc->GetJSContext(), GetJSObject(), this, as);
             if(mRoot == this)
@@ -311,14 +342,6 @@ nsXPCWrappedNative::nsXPCWrappedNative(nsISupports* aObj,
                              &mDynamicScriptableFlags, as);
         }
     }
-}
-
-void
-nsXPCWrappedNative::XPCContextBeingDestroyed()
-{
-    XPCContext* xpcc;
-    if(mJSObj && mClass && nsnull != (xpcc = mClass->GetXPCContext()))
-        JS_RemoveRoot(xpcc->GetJSContext(), &mJSObj);
 }
 
 nsXPCWrappedNative::~nsXPCWrappedNative()
@@ -348,12 +371,12 @@ nsXPCWrappedNative::~nsXPCWrappedNative()
         // remove this root wrapper from the map
         NS_ASSERTION(!mNext, "root wrapper with non-empty chain being deleted");
         nsXPCWrappedNativeClass* clazz;
-        XPCContext* xpcc;
         Native2WrappedNativeMap* map;
         if(nsnull != (clazz = GetClass()) &&
-           nsnull != (xpcc = clazz->GetXPCContext()) &&
-           nsnull != (map = xpcc->GetWrappedNativeMap()))
+           nsnull != (map = mScope->GetWrappedNativeMap()))
         {
+           // scoped lock
+            nsAutoLock lock(mClass->GetRuntime()->GetMapLock());  
             map->Remove(this);
         }
     }
@@ -367,6 +390,7 @@ nsXPCWrappedNative::~nsXPCWrappedNative()
     }
     NS_IF_RELEASE(mObj);
     NS_IF_RELEASE(mClass);
+    NS_IF_RELEASE(mScope);
 }
 
 nsXPCWrappedNative*
@@ -484,7 +508,7 @@ nsXPCWrappedNative::GetJSObjectPrototype(JSObject** aJSObj)
 }
 
 NS_IMETHODIMP
-nsXPCWrappedNative::DebugDump(int depth)
+nsXPCWrappedNative::DebugDump(PRInt16 depth)
 {
 #ifdef DEBUG
     depth-- ;
@@ -498,6 +522,8 @@ nsXPCWrappedNative::DebugDump(int depth)
         XPC_LOG_ALWAYS(("IID number is %s", iid));
         delete iid;
         XPC_LOG_ALWAYS(("JSObject @ %x", mJSObj));
+        XPC_LOG_ALWAYS(("nsXPCWrappedNativeScope @ %x", mScope));
+        XPC_LOG_ALWAYS(("nsIXPConnectFinalizeListener @ %x", mFinalizeListener));
         XPC_LOG_ALWAYS(("nsXPCWrappedNativeClass @ %x", mClass));
         if(GetDynamicScriptable())
             XPC_LOG_ALWAYS(("DynamicScriptable @ %x", GetDynamicScriptable()));
@@ -522,4 +548,3 @@ nsXPCWrappedNative::DebugDump(int depth)
 #endif
     return NS_OK;
 }
-

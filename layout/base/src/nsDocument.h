@@ -401,14 +401,18 @@ public:
   virtual PRBool GetDisplaySelection() const;
 
   // nsIJSScriptObject interface
-  virtual PRBool    AddProperty(JSContext *aContext, jsval aID, jsval *aVp);
-  virtual PRBool    DeleteProperty(JSContext *aContext, jsval aID, jsval *aVp);
-  virtual PRBool    GetProperty(JSContext *aContext, jsval aID, jsval *aVp);
-  virtual PRBool    SetProperty(JSContext *aContext, jsval aID, jsval *aVp);
-  virtual PRBool    EnumerateProperty(JSContext *aContext);
-  virtual PRBool    Resolve(JSContext *aContext, jsval aID);
-  virtual PRBool    Convert(JSContext *aContext, jsval aID);
-  virtual void      Finalize(JSContext *aContext);
+  virtual PRBool    AddProperty(JSContext *aContext, JSObject *aObj, 
+                                jsval aID, jsval *aVp);
+  virtual PRBool    DeleteProperty(JSContext *aContext, 
+                                JSObject *aObj, jsval aID, jsval *aVp);
+  virtual PRBool    GetProperty(JSContext *aContext, JSObject *aObj, 
+                                jsval aID, jsval *aVp);
+  virtual PRBool    SetProperty(JSContext *aContext, JSObject *aObj, 
+                                jsval aID, jsval *aVp);
+  virtual PRBool    EnumerateProperty(JSContext *aContext, JSObject *aObj);
+  virtual PRBool    Resolve(JSContext *aContext, JSObject *aObj, jsval aID);
+  virtual PRBool    Convert(JSContext *aContext, JSObject *aObj, jsval aID);
+  virtual void      Finalize(JSContext *aContext, JSObject *aObj);
 
   /**
     * Methods to output the document contents as Text or HTML, outputting into

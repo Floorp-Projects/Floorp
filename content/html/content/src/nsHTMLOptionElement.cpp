@@ -115,7 +115,8 @@ public:
   NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
 
   // nsIJSNativeInitializer
-  NS_IMETHOD        Initialize(JSContext* aContext, PRUint32 argc, jsval *argv);
+  NS_IMETHOD Initialize(JSContext* aContext, JSObject *aObj, 
+                        PRUint32 argc, jsval *argv);
 
 protected:
   nsGenericHTMLContainerElement mInner;
@@ -556,6 +557,7 @@ nsresult nsHTMLOptionElement::GetSelect(nsIDOMHTMLSelectElement *&aSelectElement
 
 NS_IMETHODIMP    
 nsHTMLOptionElement::Initialize(JSContext* aContext, 
+                                JSObject *aObj,
                                 PRUint32 argc, 
                                 jsval *argv)
 {

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -345,7 +345,7 @@ SetBit(unsigned char *bitVector, PRInt32 index)
 ///////////////////////////////////////////////////
 
 NS_IMETHODIMP
-nsScriptSecurityManager::CheckScriptAccess(nsIScriptContext *aContext, 
+nsScriptSecurityManager::CheckScriptAccess(JSContext *cx, 
                                            void *aObj, PRInt32 domPropInt, 
                                            PRBool isWrite, PRBool *aResult)
 {
@@ -356,7 +356,6 @@ nsScriptSecurityManager::CheckScriptAccess(nsIScriptContext *aContext,
         *aResult = PR_TRUE;
         return NS_OK;
     }
-    JSContext *cx = (JSContext *)aContext->GetNativeContext();
     nsXPIDLCString capability;
     PRInt32 secLevel = GetSecurityLevel(cx, domProp, isWrite,
                                         getter_Copies(capability));
@@ -380,11 +379,10 @@ nsScriptSecurityManager::CheckScriptAccess(nsIScriptContext *aContext,
 }
 
 NS_IMETHODIMP
-nsScriptSecurityManager::CheckLoadURIFromScript(nsIScriptContext *aContext, 
+nsScriptSecurityManager::CheckLoadURIFromScript(JSContext *cx, 
                                                 nsIURI *aURI)
 {
     // Get principal of currently executing script.
-    JSContext *cx = (JSContext*) aContext->GetNativeContext();
     nsCOMPtr<nsIPrincipal> principal;
     if (NS_FAILED(GetSubjectPrincipal(cx, getter_AddRefs(principal)))) {
         return NS_ERROR_FAILURE;
@@ -1035,6 +1033,7 @@ nsScriptSecurityManager::CheckXPCPermissions(JSContext *aJSContext)
     return NS_OK;
 }
 
+/* THIS IS A SORTED LIST. IT MUST STAY THAT WAY */
 static char *domPropNames[NS_DOM_PROP_MAX] = {
     "appcoresmanager.add",
     "appcoresmanager.find",

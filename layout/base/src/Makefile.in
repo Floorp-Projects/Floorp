@@ -50,6 +50,7 @@ CPPSRCS		= \
 		nsGenericElement.cpp \
 		nsLayoutAtoms.cpp \
 		nsLayoutDebugger.cpp \
+		nsLayoutUtils.cpp \
 		nsNameSpaceManager.cpp \
 		nsPluginViewer.cpp \
 		nsPresContext.cpp \

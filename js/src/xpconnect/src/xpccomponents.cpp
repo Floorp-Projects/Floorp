@@ -87,7 +87,7 @@ XPC_IMPLEMENT_IGNORE_SETPROPERTY(nsXPCInterfaces)
 XPC_IMPLEMENT_IGNORE_GETATTRIBUTES(nsXPCInterfaces)
 XPC_IMPLEMENT_IGNORE_SETATTRIBUTES(nsXPCInterfaces)
 XPC_IMPLEMENT_IGNORE_DELETEPROPERTY(nsXPCInterfaces)
-XPC_IMPLEMENT_FORWARD_DEFAULTVALUE(nsXPCInterfaces)
+XPC_IMPLEMENT_FAIL_DEFAULTVALUE(nsXPCInterfaces, NS_ERROR_FAILURE)
 // XPC_IMPLEMENT_FORWARD_ENUMERATE(nsXPCInterfaces)
 XPC_IMPLEMENT_FORWARD_CHECKACCESS(nsXPCInterfaces)
 XPC_IMPLEMENT_IGNORE_CALL(nsXPCInterfaces)
@@ -262,7 +262,7 @@ nsXPCInterfaces::CacheDynaProp(JSContext *cx, JSObject *obj, jsid id,
             nsXPConnect* xpc = nsXPConnect::GetXPConnect();
             if(xpc)
             {
-                if(NS_SUCCEEDED(xpc->WrapNative(cx, 
+                if(NS_SUCCEEDED(xpc->WrapNative(cx, obj,
                                                 NS_STATIC_CAST(nsIJSID*,nsid),
                                                 NS_GET_IID(nsIJSIID),
                                                 &nsid_wrapper)))
@@ -336,7 +336,7 @@ XPC_IMPLEMENT_IGNORE_SETPROPERTY(nsXPCClasses)
 XPC_IMPLEMENT_IGNORE_GETATTRIBUTES(nsXPCClasses)
 XPC_IMPLEMENT_IGNORE_SETATTRIBUTES(nsXPCClasses)
 XPC_IMPLEMENT_IGNORE_DELETEPROPERTY(nsXPCClasses)
-XPC_IMPLEMENT_FORWARD_DEFAULTVALUE(nsXPCClasses)
+XPC_IMPLEMENT_FAIL_DEFAULTVALUE(nsXPCClasses, NS_ERROR_FAILURE)
 // XPC_IMPLEMENT_FORWARD_ENUMERATE(nsXPCClasses)
 XPC_IMPLEMENT_FORWARD_CHECKACCESS(nsXPCClasses)
 XPC_IMPLEMENT_IGNORE_CALL(nsXPCClasses)
@@ -499,7 +499,7 @@ nsXPCClasses::CacheDynaProp(JSContext *cx, JSObject *obj, jsid id,
             nsXPConnect* xpc = nsXPConnect::GetXPConnect();
             if(xpc)
             {
-                if(NS_SUCCEEDED(xpc->WrapNative(cx, 
+                if(NS_SUCCEEDED(xpc->WrapNative(cx, obj,
                                                 NS_STATIC_CAST(nsIJSID*,nsid),
                                                 nsIJSCID::GetIID(),
                                                 &nsid_wrapper)))
@@ -575,7 +575,7 @@ XPC_IMPLEMENT_IGNORE_SETPROPERTY(nsXPCClassesByID)
 XPC_IMPLEMENT_IGNORE_GETATTRIBUTES(nsXPCClassesByID)
 XPC_IMPLEMENT_IGNORE_SETATTRIBUTES(nsXPCClassesByID)
 XPC_IMPLEMENT_IGNORE_DELETEPROPERTY(nsXPCClassesByID)
-XPC_IMPLEMENT_FORWARD_DEFAULTVALUE(nsXPCClassesByID)
+XPC_IMPLEMENT_FAIL_DEFAULTVALUE(nsXPCClassesByID, NS_ERROR_FAILURE)
 // XPC_IMPLEMENT_FORWARD_ENUMERATE(nsXPCClassesByID)
 XPC_IMPLEMENT_FORWARD_CHECKACCESS(nsXPCClassesByID)
 XPC_IMPLEMENT_IGNORE_CALL(nsXPCClassesByID)
@@ -775,7 +775,7 @@ nsXPCClassesByID::CacheDynaProp(JSContext *cx, JSObject *obj, jsid id,
             nsXPConnect* xpc = nsXPConnect::GetXPConnect();
             if(xpc)
             {
-                if(NS_SUCCEEDED(xpc->WrapNative(cx, 
+                if(NS_SUCCEEDED(xpc->WrapNative(cx, obj,
                                                 NS_STATIC_CAST(nsIJSID*,nsid),
                                                 nsIJSCID::GetIID(),
                                                 &nsid_wrapper)))
@@ -876,7 +876,7 @@ XPC_IMPLEMENT_IGNORE_SETPROPERTY(nsXPCResults)
 XPC_IMPLEMENT_IGNORE_GETATTRIBUTES(nsXPCResults)
 XPC_IMPLEMENT_IGNORE_SETATTRIBUTES(nsXPCResults)
 XPC_IMPLEMENT_IGNORE_DELETEPROPERTY(nsXPCResults)
-XPC_IMPLEMENT_FORWARD_DEFAULTVALUE(nsXPCResults)
+XPC_IMPLEMENT_FAIL_DEFAULTVALUE(nsXPCResults, NS_ERROR_FAILURE)
 // XPC_IMPLEMENT_FORWARD_ENUMERATE(nsXPCResults)
 XPC_IMPLEMENT_FORWARD_CHECKACCESS(nsXPCResults)
 XPC_IMPLEMENT_IGNORE_CALL(nsXPCResults)
@@ -961,6 +961,7 @@ nsXPCComponents::~nsXPCComponents()
     NS_IF_RELEASE(mResults);
 }
 
+/*******************************************/
 #define XPC_IMPL_GET_OBJ_METHOD(_n) \
 NS_IMETHODIMP nsXPCComponents::Get##_n(nsIXPC##_n * *a##_n) { \
     NS_ENSURE_ARG_POINTER(a##_n); \
@@ -982,6 +983,7 @@ XPC_IMPL_GET_OBJ_METHOD(ClassesByID);
 XPC_IMPL_GET_OBJ_METHOD(Results);
 
 #undef XPC_IMPL_GET_OBJ_METHOD
+/*******************************************/
 
 NS_IMETHODIMP
 nsXPCComponents::GetStack(nsIJSStackFrameLocation * *aStack)
@@ -1023,7 +1025,7 @@ XPC_IMPLEMENT_IGNORE_DEFINEPROPERTY(nsXPCComponents)
 XPC_IMPLEMENT_FORWARD_GETATTRIBUTES(nsXPCComponents)
 XPC_IMPLEMENT_IGNORE_SETATTRIBUTES(nsXPCComponents)
 XPC_IMPLEMENT_IGNORE_DELETEPROPERTY(nsXPCComponents)
-XPC_IMPLEMENT_FORWARD_DEFAULTVALUE(nsXPCComponents)
+XPC_IMPLEMENT_FAIL_DEFAULTVALUE(nsXPCComponents, NS_ERROR_FAILURE)
 XPC_IMPLEMENT_FORWARD_ENUMERATE(nsXPCComponents)
 XPC_IMPLEMENT_FORWARD_CHECKACCESS(nsXPCComponents)
 XPC_IMPLEMENT_IGNORE_CALL(nsXPCComponents)
@@ -1113,12 +1115,13 @@ nsXPCComponents::GetProperty(JSContext *cx, JSObject *obj,
     {
         PRBool doResult = JS_FALSE;
         nsresult res;
-        if(xpcc->GetStringID(XPCContext::IDX_LAST_RESULT) == id)
+        XPCJSRuntime* rt = xpcc->GetRuntime();
+        if(rt->GetStringID(XPCJSRuntime::IDX_LAST_RESULT) == id)
         {
             res = xpcc->GetLastResult();
             doResult = JS_TRUE;
         }
-        else if(xpcc->GetStringID(XPCContext::IDX_RETURN_CODE) == id)
+        else if(rt->GetStringID(XPCJSRuntime::IDX_RETURN_CODE) == id)
         {
             res = xpcc->GetPendingResult();
             doResult = JS_TRUE;
@@ -1148,7 +1151,8 @@ nsXPCComponents::SetProperty(JSContext *cx, JSObject *obj,
     XPCContext* xpcc = nsXPConnect::GetContext(cx);
     if(xpcc)
     {
-        if(xpcc->GetStringID(XPCContext::IDX_RETURN_CODE) == id)
+        XPCJSRuntime* rt = xpcc->GetRuntime();
+        if(rt->GetStringID(XPCJSRuntime::IDX_RETURN_CODE) == id)
         {
             nsresult rv;
             if(JS_ValueToECMAUint32(cx, *vp, (uint32*)&rv))
@@ -1166,5 +1170,58 @@ nsXPCComponents::SetProperty(JSContext *cx, JSObject *obj,
         return arbitrary->SetProperty(cx, obj, id, vp, wrapper, nsnull, retval);
     *retval = JS_TRUE;
     return NS_OK;
+}
+
+// static 
+JSBool
+nsXPCComponents::AttachNewComponentsObject(XPCContext* xpcc, 
+                                           JSObject* aGlobal)
+{
+    if(!xpcc || !aGlobal)
+        return JS_FALSE;
+
+    JSBool success = JS_FALSE;
+    nsXPCComponents* components = nsnull;
+    nsXPCWrappedNativeScope* scope = nsnull;
+    nsXPCWrappedNative* wrapper = nsnull;
+
+    components = new nsXPCComponents();
+    if(components)
+        NS_ADDREF(components);
+    else
+        goto done;        
+    
+    scope = new nsXPCWrappedNativeScope(xpcc);
+    if(scope)
+        NS_ADDREF(scope);
+    else
+        goto done;        
+
+    if(!scope->IsValid())
+        goto done;        
+
+    // objects init'd OK. 
+
+    wrapper = nsXPCWrappedNative::GetNewOrUsedWrapper(xpcc, scope, aGlobal, 
+                                NS_STATIC_CAST(nsIXPCComponents*,components),
+                                NS_GET_IID(nsIXPCComponents), nsnull);
+    if(wrapper)
+    {
+        JSObject* obj;
+        jsid id = xpcc->GetRuntime()->GetStringID(XPCJSRuntime::IDX_COMPONENTS);
+        success = NS_SUCCEEDED(wrapper->GetJSObject(&obj)) &&
+                  OBJ_DEFINE_PROPERTY(xpcc->GetJSContext(),
+                                      aGlobal, id, OBJECT_TO_JSVAL(obj),
+                                      nsnull, nsnull,
+                                      JSPROP_PERMANENT |
+                                      JSPROP_READONLY |
+                                      JSPROP_ENUMERATE,
+                                      nsnull);
+    }            
+done:
+    NS_IF_RELEASE(components);
+    NS_IF_RELEASE(scope);
+    NS_IF_RELEASE(wrapper);
+    return success;
 }
 

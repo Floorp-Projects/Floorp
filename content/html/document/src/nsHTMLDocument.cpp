@@ -88,6 +88,8 @@
 #include "nsCharsetDetectionAdaptorCID.h"
 #include "nsICharsetAlias.h"
 #include "nsIPref.h"
+#include "nsLayoutUtils.h"
+
 #define DETECTOR_PROGID_MAX 127
 static char g_detector_progid[DETECTOR_PROGID_MAX + 1];
 static PRBool gInitDetector = PR_FALSE;
@@ -1679,33 +1681,34 @@ nsHTMLDocument::GetSourceDocumentURL(JSContext* cx,
   // whatever connections possible. The problem is that this
   // could break if any of the connections along the way change.
   // I wish there were a better way.
-  nsresult result = NS_OK;
   *sourceURL = nsnull;
 
-  nsIScriptContext* context = (nsIScriptContext*)JS_GetContextPrivate(cx);
-  
-  if (nsnull != context) {
-    nsCOMPtr<nsIScriptGlobalObject> global;
+  // XXX Question, why does this return NS_OK on failure?
+  nsresult result = NS_OK;
+      
+  // We need to use the dynamically scoped global and assume that the 
+  // current JSContext is a DOM context with a nsIScriptGlobalObject so
+  // that we can get the url of the caller.
+  // XXX This will fail on non-DOM contexts :(
 
-    global = dont_AddRef(context->GetGlobalObject());
-    if (global) {
-      nsCOMPtr<nsIDOMWindow> window(do_QueryInterface(global, &result));
+  nsCOMPtr<nsIScriptGlobalObject> global;
+  nsLayoutUtils::GetDynamicScriptGlobal(cx, getter_AddRefs(global));
+  if (global) {
+    nsCOMPtr<nsIDOMWindow> window(do_QueryInterface(global, &result));
 
-      if (window) {
-        nsCOMPtr<nsIDOMDocument> document;
-        
-        result = window->GetDocument(getter_AddRefs(document));
-        if (NS_SUCCEEDED(result)) {
-          nsCOMPtr<nsIDocument> doc(do_QueryInterface(document, &result));
-          if (doc) { 
-            *sourceURL = doc->GetDocumentURL(); 
-            result = sourceURL ? NS_OK : NS_ERROR_FAILURE; 
-          } 
-        }
+    if (window) {
+      nsCOMPtr<nsIDOMDocument> document;
+      
+      result = window->GetDocument(getter_AddRefs(document));
+      if (NS_SUCCEEDED(result)) {
+        nsCOMPtr<nsIDocument> doc(do_QueryInterface(document, &result));
+        if (doc) { 
+          *sourceURL = doc->GetDocumentURL(); 
+          result = sourceURL ? NS_OK : NS_ERROR_FAILURE; 
+        } 
       }
     }
   }
-
   return result;
 }
 
@@ -2570,7 +2573,7 @@ nsHTMLDocument::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject
 }
 
 PRBool    
-nsHTMLDocument::Resolve(JSContext *aContext, jsval aID)
+nsHTMLDocument::Resolve(JSContext *aContext, JSObject *aObj, jsval aID)
 {
   nsresult result;
   nsCOMPtr<nsIDOMElement> element;
@@ -2584,33 +2587,19 @@ nsHTMLDocument::Resolve(JSContext *aContext, jsval aID)
     
     if (owner) {
       nsCOMPtr<nsIScriptContext> scriptContext;
-      nsCOMPtr<nsIScriptGlobalObject> scriptGlobal;
-      GetScriptGlobalObject(getter_AddRefs(scriptGlobal));
-
-      if (scriptGlobal) {
-        result = scriptGlobal->GetContext(getter_AddRefs(scriptContext));
-      }
-
-      if (!scriptContext) {
-        scriptContext = NS_STATIC_CAST(nsIScriptContext*, JS_GetContextPrivate(aContext));
-      }
-
+      nsLayoutUtils::GetStaticScriptContext(aContext, aObj,
+                                            getter_AddRefs(scriptContext));
       if (scriptContext) {
         JSObject* obj;
         result = owner->GetScriptObject(scriptContext, (void**)&obj);
         if (NS_SUCCEEDED(result) && obj) {
-          JSObject* myObj;
-          result = GetScriptObject(scriptContext, (void**)&myObj);
-          if (NS_SUCCEEDED(result) && myObj) {
-            ret = ::JS_DefineProperty(aContext, myObj,
-                                      str, OBJECT_TO_JSVAL(obj),
-                                      nsnull, nsnull, 0);
-          }
+          ret = ::JS_DefineProperty(aContext, aObj,
+                                    str, OBJECT_TO_JSVAL(obj),
+                                    nsnull, nsnull, 0);
         }
       }
     }
   }
-
   if (NS_FAILED(result)) {
     ret = PR_FALSE;
   }

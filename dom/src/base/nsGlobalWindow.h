@@ -219,14 +219,18 @@ public:
                             nsEventStatus* aEventStatus);
 
   // nsIJSScriptObject interface
-  virtual PRBool    AddProperty(JSContext *aContext, jsval aID, jsval *aVp);
-  virtual PRBool    DeleteProperty(JSContext *aContext, jsval aID, jsval *aVp);
-  virtual PRBool    GetProperty(JSContext *aContext, jsval aID, jsval *aVp);
-  virtual PRBool    SetProperty(JSContext *aContext, jsval aID, jsval *aVp);
-  virtual PRBool    EnumerateProperty(JSContext *aContext);
-  virtual PRBool    Resolve(JSContext *aContext, jsval aID);
-  virtual PRBool    Convert(JSContext *aContext, jsval aID);
-  virtual void      Finalize(JSContext *aContext);
+  virtual PRBool    AddProperty(JSContext *aContext, JSObject *aObj, 
+                                jsval aID, jsval *aVp);
+  virtual PRBool    DeleteProperty(JSContext *aContext, JSObject *aObj, 
+                                jsval aID, jsval *aVp);
+  virtual PRBool    GetProperty(JSContext *aContext, JSObject *aObj, 
+                                jsval aID, jsval *aVp);
+  virtual PRBool    SetProperty(JSContext *aContext, JSObject *aObj, 
+                                jsval aID, jsval *aVp);
+  virtual PRBool    EnumerateProperty(JSContext *aContext, JSObject *aObj);
+  virtual PRBool    Resolve(JSContext *aContext, JSObject *aObj, jsval aID);
+  virtual PRBool    Convert(JSContext *aContext, JSObject *aObj, jsval aID);
+  virtual void      Finalize(JSContext *aContext, JSObject *aObj);
   
   // nsIScriptGlobalObjectData interface
   NS_IMETHOD        GetPrincipal(nsIPrincipal **prin);
@@ -413,14 +417,14 @@ public:
   NS_IMETHOD    Replace(JSContext *cx, jsval *argv, PRUint32 argc);
 
   // nsIJSScriptObject
-  virtual PRBool    AddProperty(JSContext *aContext, jsval aID, jsval *aVp);
-  virtual PRBool    DeleteProperty(JSContext *aContext, jsval aID, jsval *aVp);
-  virtual PRBool    GetProperty(JSContext *aContext, jsval aID, jsval *aVp);
-  virtual PRBool    SetProperty(JSContext *aContext, jsval aID, jsval *aVp);
-  virtual PRBool    EnumerateProperty(JSContext *aContext);
-  virtual PRBool    Resolve(JSContext *aContext, jsval aID);
-  virtual PRBool    Convert(JSContext *aContext, jsval aID);
-  virtual void      Finalize(JSContext *aContext);
+  virtual PRBool    AddProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp);
+  virtual PRBool    DeleteProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp);
+  virtual PRBool    GetProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp);
+  virtual PRBool    SetProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp);
+  virtual PRBool    EnumerateProperty(JSContext *aContext, JSObject *aObj);
+  virtual PRBool    Resolve(JSContext *aContext, JSObject *aObj, jsval aID);
+  virtual PRBool    Convert(JSContext *aContext, JSObject *aObj, jsval aID);
+  virtual void      Finalize(JSContext *aContext, JSObject *aObj);
 
 protected:
   nsresult SetURL(nsIURI* aURL);

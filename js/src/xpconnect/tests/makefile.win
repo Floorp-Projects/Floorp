@@ -35,20 +35,11 @@ DEPTH=..\..\..\..
 
 
 
-DIRS	= components
+DIRS	= idl components
 
 MAKE_OBJ_TYPE	= EXE
 PROG1 = .\$(OBJDIR)\TestXPC.exe
 PROGRAMS = $(PROG1)
-TESTCASES = \
-	testxpc.js \
-	simpletest.js \
-	xpctest_array.js \
-	xpctest_echo.js \
-	xpctest_ids.js \
-	xpctest_overloaded.js \
-	xpctest_enum_create.js \
-	xpctest_primitives.js 
 
 LCFLAGS=-DUSE_NSREG -DWIN32_LEAN_AND_MEAN -DJS_THREADSAFE -DJSFILE
 
@@ -67,7 +58,6 @@ include <$(DEPTH)\config\rules.mak>
 
 install:: $(PROGRAMS)
 	-for %p in ($(PROGRAMS)) do $(MAKE_INSTALL) %p $(DIST)\bin
-	-for %p in ($(TESTCASES)) do $(MAKE_INSTALL) %p $(DIST)\bin
 
 clobber::
 	-for %p in ($(PROGRAMS)) do $(RM) %p $(DIST)\bin\%p

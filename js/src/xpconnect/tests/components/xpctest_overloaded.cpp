@@ -109,11 +109,7 @@ xpcoverloaded::~xpcoverloaded()
     // empty
 }
 
-NS_IMPL_ADDREF(xpcoverloaded)
-NS_IMPL_RELEASE(xpcoverloaded)
-// this macro is a simple way to expose nsIXPCScriptable implementation
-NS_IMPL_QUERY_INTERFACE_SCRIPTABLE(xpcoverloaded, NS_GET_IID(nsIXPCTestOverloaded), this)
-
+NS_IMPL_ISUPPORTS2(xpcoverloaded, nsIXPCTestOverloaded, nsIXPCScriptable);
 
 /* void Foo1 (in PRInt32 p1); */
 NS_IMETHODIMP

@@ -48,8 +48,7 @@ public:
   xpcTestIn();
 };
 
-static NS_DEFINE_IID( kxpcTestInIID, NS_IXPCTESTIN_IID );
-NS_IMPL_ISUPPORTS(xpcTestIn, kxpcTestInIID);
+NS_IMPL_ISUPPORTS1(xpcTestIn, nsIXPCTestIn);
 
 xpcTestIn :: xpcTestIn() {
     NS_INIT_REFCNT();

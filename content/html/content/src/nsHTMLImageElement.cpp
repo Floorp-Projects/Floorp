@@ -45,7 +45,9 @@
 #include "nsIURL.h"
 #include "nsIServiceManager.h"
 #include "nsNetUtil.h"
+#include "nsLayoutUtils.h"
 #include "nsIWebShell.h"
+
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 // XXX nav attrs: suppress
@@ -119,18 +121,22 @@ public:
   NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
 
   // nsIJSScriptObject
-  virtual PRBool    AddProperty(JSContext *aContext, jsval aID, jsval *aVp);
-  virtual PRBool    DeleteProperty(JSContext *aContext, jsval aID, jsval *aVp);
-  virtual PRBool    GetProperty(JSContext *aContext, jsval aID, jsval *aVp);
-  virtual PRBool    SetProperty(JSContext *aContext, jsval aID, jsval *aVp);
-  virtual PRBool    EnumerateProperty(JSContext *aContext);
-  virtual PRBool    Resolve(JSContext *aContext, jsval aID);
-  virtual PRBool    Convert(JSContext *aContext, jsval aID);
-  virtual void      Finalize(JSContext *aContext);
+  PRBool    AddProperty(JSContext *aContext, JSObject *aObj, 
+                        jsval aID, jsval *aVp);
+  PRBool    DeleteProperty(JSContext *aContext, JSObject *aObj, 
+                        jsval aID, jsval *aVp);
+  PRBool    GetProperty(JSContext *aContext, JSObject *aObj, 
+                        jsval aID, jsval *aVp);
+  PRBool    SetProperty(JSContext *aContext, JSObject *aObj, 
+                        jsval aID, jsval *aVp);
+  PRBool    EnumerateProperty(JSContext *aContext, JSObject *aObj);
+  PRBool    Resolve(JSContext *aContext, JSObject *aObj, jsval aID);
+  PRBool    Convert(JSContext *aContext, JSObject *aObj, jsval aID);
+  void      Finalize(JSContext *aContext, JSObject *aObj);
 
   // nsIJSNativeInitializer
-  NS_IMETHOD        Initialize(JSContext* aContext, PRUint32 argc, jsval *argv);
-
+  NS_IMETHOD Initialize(JSContext* aContext, JSObject *aObj, 
+                        PRUint32 argc, jsval *argv);
   nsresult SetSrcInner(nsIURI* aBaseURL, const nsString& aSrc);
   nsresult GetCallerSourceURL(JSContext* cx, nsIURI** sourceURL);
 
@@ -338,19 +344,19 @@ nsHTMLImageElement::HandleDOMEvent(nsIPresContext* aPresContext,
 }
 
 PRBool    
-nsHTMLImageElement::AddProperty(JSContext *aContext, jsval aID, jsval *aVp)
+nsHTMLImageElement::AddProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
 {
-  return mInner.AddProperty(aContext, aID, aVp);
+  return mInner.AddProperty(aContext, aObj, aID, aVp);
 }
 
 PRBool    
-nsHTMLImageElement::DeleteProperty(JSContext *aContext, jsval aID, jsval *aVp)
+nsHTMLImageElement::DeleteProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
 {
-  return mInner.DeleteProperty(aContext, aID, aVp);
+  return mInner.DeleteProperty(aContext, aObj, aID, aVp);
 }
 
 PRBool    
-nsHTMLImageElement::GetProperty(JSContext *aContext, jsval aID, jsval *aVp)
+nsHTMLImageElement::GetProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
 {
   PRBool result = PR_TRUE;
 
@@ -376,7 +382,7 @@ nsHTMLImageElement::GetProperty(JSContext *aContext, jsval aID, jsval *aVp)
     }
   }
 
-  return mInner.GetProperty(aContext, aID, aVp);
+  return mInner.GetProperty(aContext, aObj, aID, aVp);
 }
 
 nsresult
@@ -384,24 +390,26 @@ nsHTMLImageElement::GetCallerSourceURL(JSContext* cx,
                                        nsIURI** sourceURL)
 {
   // XXX Code duplicated from nsHTMLDocument
+  // XXX Question, why does this return NS_OK on failure?
   nsresult result = NS_OK;
-  nsIScriptContext* context = (nsIScriptContext*)JS_GetContextPrivate(cx);
-  
-  if (nsnull != context) {
-    nsCOMPtr<nsIScriptGlobalObject> global;
 
-    global = dont_AddRef(context->GetGlobalObject());
-    if (global) {
-      nsCOMPtr<nsIWebShell> webShell;
-      
-      global->GetWebShell(getter_AddRefs(webShell));
-      if (webShell) {
-        const PRUnichar* url;
+  // We need to use the dynamically scoped global and assume that the 
+  // current JSContext is a DOM context with a nsIScriptGlobalObject so
+  // that we can get the url of the caller.
+  // XXX This will fail on non-DOM contexts :(
 
-        // XXX Ughh - incorrect ownership rules for url?
-        webShell->GetURL(&url);
-        result = NS_NewURI(sourceURL, url);
-      }
+  nsCOMPtr<nsIScriptGlobalObject> global;
+  nsLayoutUtils::GetDynamicScriptGlobal(cx, getter_AddRefs(global));
+  if (global) {
+    nsCOMPtr<nsIWebShell> webShell;
+    
+    global->GetWebShell(getter_AddRefs(webShell));
+    if (webShell) {
+      const PRUnichar* url;
+
+      // XXX Ughh - incorrect ownership rules for url?
+      webShell->GetURL(&url);
+      result = NS_NewURI(sourceURL, url);
     }
   }
 
@@ -409,7 +417,7 @@ nsHTMLImageElement::GetCallerSourceURL(JSContext* cx,
 }
 
 PRBool    
-nsHTMLImageElement::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
+nsHTMLImageElement::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
 {
   nsresult result = NS_OK;
 
@@ -442,39 +450,40 @@ nsHTMLImageElement::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
     }
   }
   else {
-    result = mInner.SetProperty(aContext, aID, aVp);
+    result = mInner.SetProperty(aContext, aObj, aID, aVp);
   }
   
   return (result == NS_OK);
 }
 
 PRBool    
-nsHTMLImageElement::EnumerateProperty(JSContext *aContext)
+nsHTMLImageElement::EnumerateProperty(JSContext *aContext, JSObject *aObj)
 {
-  return mInner.EnumerateProperty(aContext);
+  return mInner.EnumerateProperty(aContext, aObj);
 }
 
 PRBool    
-nsHTMLImageElement::Resolve(JSContext *aContext, jsval aID)
+nsHTMLImageElement::Resolve(JSContext *aContext, JSObject *aObj, jsval aID)
 {
-  return mInner.Resolve(aContext, aID);
+  return mInner.Resolve(aContext, aObj, aID);
 }
 
 PRBool    
-nsHTMLImageElement::Convert(JSContext *aContext, jsval aID)
+nsHTMLImageElement::Convert(JSContext *aContext, JSObject *aObj, jsval aID)
 {
-  return mInner.Convert(aContext, aID);
+  return mInner.Convert(aContext, aObj, aID);
 }
 
 void      
-nsHTMLImageElement::Finalize(JSContext *aContext)
+nsHTMLImageElement::Finalize(JSContext *aContext, JSObject *aObj)
 {
-  mInner.Finalize(aContext);
+  mInner.Finalize(aContext, aObj);
 }
 
 
 NS_IMETHODIMP    
-nsHTMLImageElement::Initialize(JSContext* aContext, 
+nsHTMLImageElement::Initialize(JSContext* aContext,
+                               JSObject *aObj,
                                PRUint32 argc, 
                                jsval *argv)
 {
@@ -483,30 +492,26 @@ nsHTMLImageElement::Initialize(JSContext* aContext,
   // XXX This element is created unattached to any document.  Later
   // on, it might be used to preload the image cache.  For that, we
   // need a document (actually a pres context).  The only way to get
-  // one is to associate the image with one at creation time, through
-  // the JSContext passed in.  This mechanism is **UGLY** and makes
-  // some hard assumptions about the relationship between JSContexts
-  // and documents.
+  // one is to associate the image with one at creation time.
+  // This is safer than it used to be since we get the global object
+  // from the static scope chain rather than through the JSCOntext.
 
-  nsIScriptContext* scriptContext;
-  scriptContext = (nsIScriptContext*)JS_GetContextPrivate(aContext);
-  if (nsnull != scriptContext) {
-    nsIScriptGlobalObject* globalObject = scriptContext->GetGlobalObject();
-    if (nsnull != globalObject) {
-      nsIDOMWindow* domWindow;
-      result = globalObject->QueryInterface(kIDOMWindowIID, (void**)&domWindow);
+  nsCOMPtr<nsIScriptGlobalObject> globalObject;
+  nsLayoutUtils::GetStaticScriptGlobal(aContext, aObj,
+                                       getter_AddRefs(globalObject));;
+  if (globalObject) {
+    nsIDOMWindow* domWindow;
+    result = globalObject->QueryInterface(kIDOMWindowIID, (void**)&domWindow);
+    if (NS_SUCCEEDED(result)) {
+      nsIDOMDocument* domDocument;
+      result = domWindow->GetDocument(&domDocument);
       if (NS_SUCCEEDED(result)) {
-        nsIDOMDocument* domDocument;
-        result = domWindow->GetDocument(&domDocument);
-        if (NS_SUCCEEDED(result)) {
-          // Maintain the reference
-          result = domDocument->QueryInterface(kIDocumentIID, 
-                                               (void**)&mOwnerDocument);
-          NS_RELEASE(domDocument);
-        }
-        NS_RELEASE(domWindow);
+        // Maintain the reference
+        result = domDocument->QueryInterface(kIDocumentIID, 
+                                             (void**)&mOwnerDocument);
+        NS_RELEASE(domDocument);
       }
-      NS_RELEASE(globalObject);
+      NS_RELEASE(domWindow);
     }
   }
 

@@ -51,19 +51,19 @@
 
  AddTestCase( "o.boolReadOnly", true, o.boolReadOnly );
  AddTestCase( "o.shortReadOnly", 32767, o.shortReadOnly );
- AddTestCase( "o.longReadOnly", 9223372036854776000, o.longReadOnly );
+ AddTestCase( "o.longReadOnly", 2147483647, o.longReadOnly );
  AddTestCase( "o.charReadOnly", "X", o.charReadOnly );
 			  
  // read only means we can't overwrite.
 
  o.boolReadOnly = false;
  o.shortReadOnly = -12345;
- o.longReadOnly = 1234567890;
+ o.longReadOnly = 12345;
  o.charReadOnly = "Z";
 
  AddTestCase( "o.boolReadOnly", true, o.boolReadOnly );
  AddTestCase( "o.shortReadOnly", 32767, o.shortReadOnly );
- AddTestCase( "o.longReadOnly", 9223372036854776000, o.longReadOnly );
+ AddTestCase( "o.longReadOnly", 2147483647, o.longReadOnly );
  AddTestCase( "o.charReadOnly", "X", o.charReadOnly );
 
  StopTest();

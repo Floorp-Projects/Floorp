@@ -136,13 +136,13 @@ LocationImpl::CheckURL(nsIURI* aURL)
     return NS_ERROR_FAILURE;
 
   // Get security manager.
-  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsCOMPtr<nsIScriptSecurityManager> secMan;
-  if (!scriptCX || NS_FAILED(scriptCX->GetSecurityManager(getter_AddRefs(secMan))))
+  NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
+                  NS_SCRIPTSECURITYMANAGER_PROGID, &result);
+  if (NS_FAILED(result)) 
     return NS_ERROR_FAILURE;
 
   // Check to see if URI is allowed.
-  if (NS_FAILED(result = secMan->CheckLoadURIFromScript(scriptCX, aURL))) 
+  if (NS_FAILED(result = secMan->CheckLoadURIFromScript(cx, aURL))) 
     return result;
 
   return NS_OK;
@@ -690,24 +690,26 @@ LocationImpl::GetSourceURL(JSContext* cx,
   // whatever connections possible. The problem is that this
   // could break if any of the connections along the way change.
   // I wish there were a better way.
-  nsresult result = NS_OK;
-  nsIScriptContext* context = (nsIScriptContext*)JS_GetContextPrivate(cx);
-  
-  if (nsnull != context) {
-    nsCOMPtr<nsIScriptGlobalObject> global;
 
-    global = dont_AddRef(context->GetGlobalObject());
-    if (global) {
-      nsCOMPtr<nsIWebShell> webShell;
+  nsresult result = NS_ERROR_FAILURE;
       
-      global->GetWebShell(getter_AddRefs(webShell));
-      if (webShell) {
-        const PRUnichar* url;
+  // We need to use the dynamically scoped global and assume that the 
+  // current JSContext is a DOM context with a nsIScriptGlobalObject so
+  // that we can get the url of the caller.
+  // XXX This will fail on non-DOM contexts :(
 
-        // XXX Ughh - incorrect ownership rules for url?
-        webShell->GetURL(&url);
-        result = NS_NewURI(sourceURL, url);
-      }
+  nsCOMPtr<nsIScriptGlobalObject> nativeGlob;
+  nsJSUtils::nsGetDynamicScriptGlobal(cx, getter_AddRefs(nativeGlob));
+  if (nativeGlob) {
+    nsCOMPtr<nsIWebShell> webShell;
+
+    nativeGlob->GetWebShell(getter_AddRefs(webShell));
+    if (webShell) {
+      const PRUnichar* url;
+
+      // XXX Ughh - incorrect ownership rules for url?
+      webShell->GetURL(&url);
+      result = NS_NewURI(sourceURL, url);
     }
   }
 
@@ -715,19 +717,19 @@ LocationImpl::GetSourceURL(JSContext* cx,
 }
 
 PRBool    
-LocationImpl::AddProperty(JSContext *aContext, jsval aID, jsval *aVp)
+LocationImpl::AddProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
 {
   return JS_TRUE;
 }
 
 PRBool    
-LocationImpl::DeleteProperty(JSContext *aContext, jsval aID, jsval *aVp)
+LocationImpl::DeleteProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
 {
   return JS_TRUE;
 }
 
 PRBool    
-LocationImpl::GetProperty(JSContext *aContext, jsval aID, jsval *aVp)
+LocationImpl::GetProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
 {
   PRBool result = PR_TRUE;
 
@@ -756,7 +758,7 @@ LocationImpl::GetProperty(JSContext *aContext, jsval aID, jsval *aVp)
 }
 
 PRBool    
-LocationImpl::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
+LocationImpl::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
 {
   nsresult result = NS_OK;
 
@@ -785,25 +787,25 @@ LocationImpl::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
 }
 
 PRBool    
-LocationImpl::EnumerateProperty(JSContext *aContext)
+LocationImpl::EnumerateProperty(JSContext *aContext, JSObject *aObj)
 {
   return JS_TRUE;
 }
 
 PRBool    
-LocationImpl::Resolve(JSContext *aContext, jsval aID)
+LocationImpl::Resolve(JSContext *aContext, JSObject *aObj, jsval aID)
 {
   return JS_TRUE;
 }
 
 PRBool    
-LocationImpl::Convert(JSContext *aContext, jsval aID)
+LocationImpl::Convert(JSContext *aContext, JSObject *aObj, jsval aID)
 {
   return JS_TRUE;
 }
 
 void      
-LocationImpl::Finalize(JSContext *aContext)
+LocationImpl::Finalize(JSContext *aContext, JSObject *aObj)
 {
 }
 

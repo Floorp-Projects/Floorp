@@ -1589,34 +1589,34 @@ nsXULElement::SetCompiledEventHandler(nsIAtom *aName, void* aHandler)
 // nsIJSScriptObject interface
 
 PRBool
-nsXULElement::AddProperty(JSContext *aContext, jsval aID, jsval *aVp)
+nsXULElement::AddProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
 {
     NS_NOTYETIMPLEMENTED("write me");
     return PR_FALSE;
 }
 
 PRBool
-nsXULElement::DeleteProperty(JSContext *aContext, jsval aID, jsval *aVp)
+nsXULElement::DeleteProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
 {
     NS_NOTYETIMPLEMENTED("write me");
     return PR_FALSE;
 }
 
 PRBool
-nsXULElement::GetProperty(JSContext *aContext, jsval aID, jsval *aVp)
+nsXULElement::GetProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
 {
     return PR_TRUE;
 }
 
 PRBool
-nsXULElement::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
+nsXULElement::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
 {
     NS_NOTYETIMPLEMENTED("write me");
     return PR_FALSE;
 }
 
 PRBool
-nsXULElement::EnumerateProperty(JSContext *aContext)
+nsXULElement::EnumerateProperty(JSContext *aContext, JSObject *aObj)
 {
     NS_NOTYETIMPLEMENTED("write me");
     return PR_FALSE;
@@ -1624,14 +1624,14 @@ nsXULElement::EnumerateProperty(JSContext *aContext)
 
 
 PRBool
-nsXULElement::Resolve(JSContext *aContext, jsval aID)
+nsXULElement::Resolve(JSContext *aContext, JSObject *aObj, jsval aID)
 {
     return PR_TRUE;
 }
 
 
 PRBool
-nsXULElement::Convert(JSContext *aContext, jsval aID)
+nsXULElement::Convert(JSContext *aContext, JSObject *aObj, jsval aID)
 {
     NS_NOTYETIMPLEMENTED("write me");
     return PR_FALSE;
@@ -1639,7 +1639,7 @@ nsXULElement::Convert(JSContext *aContext, jsval aID)
 
 
 void
-nsXULElement::Finalize(JSContext *aContext)
+nsXULElement::Finalize(JSContext *aContext, JSObject *aObj)
 {
     NS_NOTYETIMPLEMENTED("write me");
 }

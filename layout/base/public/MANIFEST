@@ -31,6 +31,7 @@ nsFrameList.h
 nsFrameTraversal.h
 nsLayoutAtoms.h
 nsLayoutAtomList.h
+nsLayoutUtils.h
 nsStyleChangeList.h
 nsStyleCoord.h
 nsStyleStruct.h
