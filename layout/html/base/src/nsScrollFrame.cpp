@@ -244,14 +244,23 @@ nsScrollingViewFrame::Reflow(nsIPresContext&          aPresContext,
                                                nsnull, 
                                                kIViewIID, 
                                                (void **)&view);
-    // XXX We want the scrolling view to have a widget to clip any child
-    // widgets that aren't visible, e.g. form elements, but there's currently
-    // a bug which is why it's commented out
+
+    // Get the native widget that should be used as the parent for
+    // the scrolling view's scrollbar child widgets. Note that we can't
+    // use the scrolling view's widget as the parent of the scrollbar
+    // widgets
+    nsIWidget*      window;
+    nsNativeWidget  nativeWidget;
+    GetWindow(window);
+    nativeWidget = window->GetNativeData(NS_NATIVE_WINDOW);
+    NS_RELEASE(window);
+
     if ((NS_OK != rv) || (NS_OK != view->Init(viewManager, 
                                               mRect,
                                               parentView,
-                                              nsnull))) {
-                                              // &kWidgetCID))) {
+                                              &kWidgetCID,
+                                              nsnull,
+                                              nativeWidget))) {
       NS_RELEASE(viewManager);
       return rv;
     }
