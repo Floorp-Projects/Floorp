@@ -126,7 +126,6 @@ protected:
   nsresult AddAttributes(const PRUnichar** aNode, nsIContent* aContent,PRBool aIsHTML);
   nsresult AddText(const PRUnichar* aString, PRInt32 aLength);
   nsresult ProcessStartSCRIPTTag(PRUint32 aLineNo);
-  nsresult ProcessSTYLETag();
   nsresult ProcessEndSCRIPTTag();
 
   virtual PRBool OnOpenContainer(const PRUnichar **aAtts, 
@@ -197,8 +196,6 @@ protected:
   nsSupportsArray mScriptElements;
   XMLContentSinkState mState;
 
-  nsString mStyleText;
-  nsString mPreferredStyle;
   nsString mRef; // ScrollTo #ref
   nsString mTitleText; 
   
@@ -214,7 +211,6 @@ protected:
   nsCOMPtr<nsISupportsArray>          mContentStack;
   nsCOMPtr<nsINodeInfoManager>        mNodeInfoManager;
   nsCOMPtr<nsITransformMediator>      mXSLTransformMediator;
-  nsCOMPtr<nsIHTMLContent>            mStyleElement;
   nsCOMPtr<nsIHTMLContent>            mBaseElement;
   nsCOMPtr<nsIHTMLContent>            mMetaElement;
   nsCOMPtr<nsIHTMLContent>            mLinkElement;

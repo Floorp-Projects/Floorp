@@ -48,16 +48,16 @@ public:
   NS_IMETHOD SetStyleSheet(nsIStyleSheet* aStyleSheet);
   NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aStyleSheet);
   NS_IMETHOD InitStyleLinkElement(nsIParser *aParser, PRBool aDontLoadStyle);
-  NS_IMETHOD UpdateStyleSheet(PRBool aNotify, nsIDocument *aOldDocument = nsnull, PRInt32 aDocIndex = -1);
+  NS_IMETHOD UpdateStyleSheet(nsIDocument *aOldDocument = nsnull, PRInt32 aDocIndex = -1);
   NS_IMETHOD SetEnableUpdates(PRBool aEnableUpdates);
   NS_IMETHOD GetCharset(nsAString& aCharset);
 
   static void ParseLinkTypes(const nsAString& aTypes, nsStringArray& aResult);
-  static void SplitMimeType(const nsString& aValue, nsString& aType, nsString& aParams);
 
 protected:
-  virtual void GetStyleSheetInfo(nsAString& aUrl,
-                                 nsAString& aTitle,
+  virtual void GetStyleSheetURL(PRBool* aIsInline,
+                                nsAString& aUrl) = 0;
+  virtual void GetStyleSheetInfo(nsAString& aTitle,
                                  nsAString& aType,
                                  nsAString& aMedia,
                                  PRBool* aIsAlternate) = 0;

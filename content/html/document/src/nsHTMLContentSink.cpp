@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Peter Annema <disttsc@bart.nl>
+ *   Daniel Glazman <glazman@netscape.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -4277,10 +4278,10 @@ HTMLContentSink::ProcessBASETag(const nsIParserNode& aNode)
         parent->AppendChildTo(element, PR_FALSE, PR_FALSE);
         if (!mInsideNoXXXTag) {
           nsAutoString value;
-          if (NS_CONTENT_ATTR_HAS_VALUE == element->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::href, value)) {
+          if (NS_CONTENT_ATTR_HAS_VALUE == element->GetAttr(kNameSpaceID_None, nsHTMLAtoms::href, value)) {
             ProcessBaseHref(value);
           }
-          if (NS_CONTENT_ATTR_HAS_VALUE == element->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::target, value)) {
+          if (NS_CONTENT_ATTR_HAS_VALUE == element->GetAttr(kNameSpaceID_None, nsHTMLAtoms::target, value)) {
             ProcessBaseTarget(value);
           }
         }
@@ -4468,7 +4469,7 @@ HTMLContentSink::ProcessStyleLink(nsIHTMLContent* aElement,
 
     nsAutoString  mimeType;
     nsAutoString  params;
-    nsStyleLinkElement::SplitMimeType(aType, mimeType, params);
+    nsParserUtils::SplitMimeType(aType, mimeType, params);
 
     nsDTDMode mode;
     mHTMLDocument->GetDTDMode(mode);
@@ -4588,7 +4589,7 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
 
       if (ssle) {
         ssle->SetEnableUpdates(PR_TRUE);
-        result = ssle->UpdateStyleSheet(PR_TRUE, mDocument, mStyleSheetCount);
+        result = ssle->UpdateStyleSheet(nsnull, mStyleSheetCount);
         if (NS_SUCCEEDED(result) || (result == NS_ERROR_HTMLPARSER_BLOCK)) {
           mStyleSheetCount++;
         }
@@ -4670,10 +4671,10 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
 
           // set any HTTP-EQUIV data into document's header data as well as url
           nsAutoString header;
-          it->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::httpEquiv, header);
+          it->GetAttr(kNameSpaceID_None, nsHTMLAtoms::httpEquiv, header);
           if (!header.IsEmpty()) {
             nsAutoString result;
-            it->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::content, result);
+            it->GetAttr(kNameSpaceID_None, nsHTMLAtoms::content, result);
             if (!result.IsEmpty()) {
               ToLowerCase(header);
               nsCOMPtr<nsIAtom> fieldAtom(dont_AddRef(NS_NewAtom(header)));
@@ -5190,20 +5191,19 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
 
   if (parent) {
     // Create content object
-    nsCOMPtr<nsIHTMLContent> element;
-    nsCOMPtr<nsIStyleSheetLinkingElement> ssle;
     nsCOMPtr<nsINodeInfo> nodeInfo;
     mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::style, nsnull,
                                   kNameSpaceID_None,
                                   *getter_AddRefs(nodeInfo));
 
+    nsCOMPtr<nsIHTMLContent> element;
     rv = NS_CreateHTMLElement(getter_AddRefs(element), nodeInfo, PR_FALSE);
     if (NS_SUCCEEDED(rv)) {
       PRInt32 id;
       mDocument->GetAndIncrementContentID(&id);    
       element->SetContentID(id);
 
-      ssle = do_QueryInterface(element);
+      nsCOMPtr<nsIStyleSheetLinkingElement> ssle = do_QueryInterface(element);
 
       if (ssle) {
         // XXX need prefs. check here.
@@ -5223,86 +5223,33 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
       if (NS_FAILED(rv)) {
         return rv;
       }
+
+      // The skipped content contains the inline style data
+      const nsString& content = aNode.GetSkippedContent();
+
+      if (!content.IsEmpty()) {
+        // Create a text node holding the content
+        nsCOMPtr<nsIContent> text;
+        rv = NS_NewTextNode(getter_AddRefs(text));
+        if (NS_SUCCEEDED(rv)) {
+          nsCOMPtr<nsIDOMText> tc = do_QueryInterface(text);
+          if (tc) {
+            tc->SetData(content);
+          }
+          element->AppendChildTo(text, PR_FALSE, PR_FALSE);
+        }
+      }
       parent->AppendChildTo(element, PR_FALSE, PR_FALSE);
 
       if (ssle) {
         ssle->SetEnableUpdates(PR_TRUE);
-        rv = ssle->UpdateStyleSheet(PR_TRUE, mDocument, mStyleSheetCount);
+        rv = ssle->UpdateStyleSheet(nsnull, mStyleSheetCount);
         if (NS_SUCCEEDED(rv) || (rv == NS_ERROR_HTMLPARSER_BLOCK)) {
           mStyleSheetCount++;
         }
       }
     }
-
-    nsAutoString src;
-    element->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::src, src);
-    src.StripWhitespace();
-
-    if (!mInsideNoXXXTag && NS_SUCCEEDED(rv) && src.IsEmpty()) {
-      nsAutoString title; 
-      nsAutoString type; 
-      nsAutoString media; 
-
-      element->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::title, title);
-      title.CompressWhitespace();
-
-      element->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::type, type);
-      element->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::media, media);
-      ToLowerCase(media); // HTML4.0 spec is inconsistent, make it case INSENSITIVE
-
-      nsAutoString mimeType;
-      nsAutoString params;
-      nsStyleLinkElement::SplitMimeType(type, mimeType, params);
-
-      PRBool blockParser = kBlockByDefault;
-
-      if (mimeType.IsEmpty() || mimeType.EqualsIgnoreCase("text/css")) { 
-        if (!title.IsEmpty()) {  // possibly preferred sheet
-          nsAutoString preferredStyle;
-          mDocument->GetHeaderData(nsHTMLAtoms::headerDefaultStyle, preferredStyle);
-          if (preferredStyle.IsEmpty()) {
-            mDocument->SetHeaderData(nsHTMLAtoms::headerDefaultStyle, title);
-          }
-        }
-
-        // The skipped content contains the inline style data
-        const nsString& content = aNode.GetSkippedContent();
-        PRBool doneLoading = PR_FALSE;
-
-        nsCOMPtr<nsIUnicharInputStream> uin;
-
-        // Create a text node holding the content
-        nsCOMPtr<nsIContent> text;
-        rv = NS_NewTextNode(getter_AddRefs(text));
-        if (NS_OK == rv) {
-          nsCOMPtr<nsIDOMText> tc = do_QueryInterface(text, &rv);
-          if (NS_OK == rv) {
-            tc->SetData(content);
-          }
-          element->AppendChildTo(text, PR_FALSE, PR_FALSE);
-          text->SetDocument(mDocument, PR_FALSE, PR_TRUE);
-        }
-
-        // Create a string to hold the data and wrap it up in a unicode
-        // input stream.
-        rv = NS_NewStringUnicharInputStream(getter_AddRefs(uin), new nsString(content));
-        if (NS_OK != rv) {
-          return rv;
-        }
-
-        // Now that we have a url and a unicode input stream, parse the
-        // style sheet.
-        rv = mCSSLoader->LoadInlineStyle(element, uin, title, media, kNameSpaceID_Unknown,
-                                         mStyleSheetCount++, 
-                                         ((blockParser) ? mParser : nsnull),
-                                         doneLoading, this);
-        if (NS_SUCCEEDED(rv) && blockParser && (!doneLoading)) {
-          rv = NS_ERROR_HTMLPARSER_BLOCK;
-        }
-      }//if (mimeType.IsEmpty() || mimeType.Equals(NS_LITERAL_STRING("text/css")))
-    }//if (!mInsideNoXXXTag && NS_SUCCEEDED(rv) && src.IsEmpty())
-  }//if (parent)
-
+  }
   return rv;
 }
 

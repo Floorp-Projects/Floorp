@@ -85,8 +85,6 @@ public:
   /**
    * Tells this element to update the stylesheet.
    *
-   * @param aNotify if true we notify the document of the
-   *                removal of the stylesheet.
    * @param aOldDocument the document that this element was part
    *                     of (nsnull if we're not moving the element
    *                     from one document to another).
@@ -94,8 +92,7 @@ public:
    *                  stylesheet list. -1 means we'll look up the
    *                  index from the position of the element.
    */
-  NS_IMETHOD UpdateStyleSheet(PRBool aNotify,
-                              nsIDocument *aOldDocument,
+  NS_IMETHOD UpdateStyleSheet(nsIDocument *aOldDocument,
                               PRInt32 aDocIndex) = 0;
 
   /**

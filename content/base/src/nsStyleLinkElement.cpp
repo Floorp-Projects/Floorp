@@ -23,16 +23,19 @@
 
 #include "nsStyleLinkElement.h"
 
+#include "nsHTMLAtoms.h"
 #include "nsIContent.h"
 #include "nsICSSLoader.h"
 #include "nsIDocument.h"
+#include "nsIDOMComment.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMStyleSheet.h"
+#include "nsIDOMText.h"
 #include "nsIHTMLContentContainer.h"
 #include "nsINameSpaceManager.h"
-#include "nsUnicharUtils.h"
-
+#include "nsIUnicharInputStream.h"
 #include "nsNetUtil.h"
+#include "nsUnicharUtils.h"
 #include "nsVoidArray.h"
 
 nsStyleLinkElement::nsStyleLinkElement() :
@@ -142,23 +145,6 @@ void nsStyleLinkElement::ParseLinkTypes(const nsAString& aTypes,
   }
 }
 
-void nsStyleLinkElement::SplitMimeType(const nsString& aValue, nsString& aType,
-                                       nsString& aParams)
-{
-  aType.Truncate();
-  aParams.Truncate();
-  PRInt32 semiIndex = aValue.FindChar(PRUnichar(';'));
-  if (-1 != semiIndex) {
-    aValue.Left(aType, semiIndex);
-    aValue.Right(aParams, (aValue.Length() - semiIndex) - 1);
-    aParams.StripWhitespace();
-  }
-  else {
-    aType = aValue;
-  }
-  aType.StripWhitespace();
-}
-
 #ifdef ALLOW_ASYNCH_STYLE_SHEETS
 const PRBool kBlockByDefault=PR_FALSE;
 #else
@@ -166,7 +152,7 @@ const PRBool kBlockByDefault=PR_TRUE;
 #endif
 
 NS_IMETHODIMP
-nsStyleLinkElement::UpdateStyleSheet(PRBool aNotify, nsIDocument *aOldDocument,
+nsStyleLinkElement::UpdateStyleSheet(nsIDocument *aOldDocument,
                                      PRInt32 aDocIndex)
 {
   if (mDontLoadStyle || !mUpdatesEnabled) {
@@ -188,45 +174,30 @@ nsStyleLinkElement::UpdateStyleSheet(PRBool aNotify, nsIDocument *aOldDocument,
   nsCOMPtr<nsIDocument> doc;
   thisContent->GetDocument(*getter_AddRefs(doc));
 
-  if (aNotify && mStyleSheet && !doc && aOldDocument) {
+  if (mStyleSheet && aOldDocument) {
     // We're removing the link element from the document, unload the
     // stylesheet.
     aOldDocument->RemoveStyleSheet(mStyleSheet);
     mStyleSheet = nsnull;
-
-    return NS_OK;
   }
 
   if (!doc) {
     return NS_OK;
   }
 
-  nsAutoString url, title, type, media;
-  PRBool isAlternate;
+  nsAutoString url;
+  PRBool isInline;
 
-  GetStyleSheetInfo(url, title, type, media, &isAlternate);
+  GetStyleSheetURL(&isInline, url);
 
   nsCOMPtr<nsIDOMStyleSheet> styleSheet(do_QueryInterface(mStyleSheet));
 
-  if (mStyleSheet && url.IsEmpty()) {
-    // Inline stylesheets have the document's URL as their URL internally
-    nsCOMPtr<nsIURI> docURL, styleSheetURL;
-    mStyleSheet->GetURL(*getter_AddRefs(styleSheetURL));
-    doc->GetBaseURL(*getter_AddRefs(docURL));
-    if (docURL && styleSheetURL) {
-      PRBool inlineStyle;
-      docURL->Equals(styleSheetURL, &inlineStyle);
-      if (inlineStyle) {
-        return NS_OK;
-      }
-    }
-  }
-  else if (styleSheet) {
+  if (styleSheet && !isInline) {
     nsAutoString oldHref;
 
     styleSheet->GetHref(oldHref);
     if (oldHref.Equals(url)) {
-      return NS_OK;
+      return NS_OK; // We already loaded this stylesheet
     }
   }
 
@@ -235,20 +206,28 @@ nsStyleLinkElement::UpdateStyleSheet(PRBool aNotify, nsIDocument *aOldDocument,
     mStyleSheet = nsnull;
   }
 
-  if (url.IsEmpty()) {
-    return NS_OK; // If href is empty then just bail
+  if (url.IsEmpty() && !isInline) {
+    return NS_OK; // If href is empty and this is not inline style then just bail
   }
+
+  nsAutoString title, type, media;
+  PRBool isAlternate;
+
+  GetStyleSheetInfo(title, type, media, &isAlternate);
 
   if (!type.EqualsIgnoreCase("text/css")) {
     return NS_OK;
   }
 
   nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_OK;
 
-  nsresult rv = NS_NewURI(getter_AddRefs(uri), url);
+  if (!isInline) {
+    rv = NS_NewURI(getter_AddRefs(uri), url);
 
-  if (NS_FAILED(rv)) {
-    return NS_OK; // The URL is bad, move along, don't propagate the error (for now)
+    if (NS_FAILED(rv)) {
+      return NS_OK; // The URL is bad, move along, don't propagate the error (for now)
+    }
   }
 
   nsCOMPtr<nsIHTMLContentContainer> htmlContainer(do_QueryInterface(doc));
@@ -276,8 +255,8 @@ nsStyleLinkElement::UpdateStyleSheet(PRBool aNotify, nsIDocument *aOldDocument,
   */
 
   // The way we determine the stylesheet's position in the cascade is by looking
-  // at the first of the previous siblings that are style linking elements, and
-  // insert just after that one. I'm not sure this is correct for every case for
+  // at the first of the next siblings that are style linking elements, and
+  // insert just before that one. I'm not sure this is correct for every case for
   // XML documents (it seems to be all right for HTML). The sink should disable
   // this search by directly specifying a position.
   PRInt32 insertionPoint;
@@ -288,9 +267,11 @@ nsStyleLinkElement::UpdateStyleSheet(PRBool aNotify, nsIDocument *aOldDocument,
   else {
     // We're not getting them in document order, look for where to insert.
     nsCOMPtr<nsIDOMNode> parentNode;
+    nsCOMPtr<nsIStyleSheet> nextSheet;
     PRUint16 nodeType = 0;
     nsCOMPtr<nsIDOMNode> thisNode(do_QueryInterface(thisContent));
-    nsCOMPtr<nsIStyleSheet> prevSheet;
+    nsCOMPtr<nsIContent> nextNode;
+    nsCOMPtr<nsIStyleSheetLinkingElement> nextLink;
 
     thisNode->GetParentNode(getter_AddRefs(parentNode));
     if (parentNode)
@@ -298,18 +279,17 @@ nsStyleLinkElement::UpdateStyleSheet(PRBool aNotify, nsIDocument *aOldDocument,
     if (nodeType == nsIDOMNode::DOCUMENT_NODE) {
       nsCOMPtr<nsIDocument> parent(do_QueryInterface(parentNode));
       if (parent) {
-        PRInt32 index;
-        nsCOMPtr<nsIContent> prevNode;
-        nsCOMPtr<nsIStyleSheetLinkingElement> previousLink;
+        PRInt32 index, count;
 
+        parent->GetChildCount(count);
         parent->IndexOf(thisContent, index);
-        while (index-- > 0) {
-          parent->ChildAt(index, *getter_AddRefs(prevNode));
-          previousLink = do_QueryInterface(prevNode);
-          if (previousLink) {
-            previousLink->GetStyleSheet(*getter_AddRefs(prevSheet));
-            if (prevSheet)
-              // Found the first previous sibling that is a style linking element.
+        while (++index < count) {
+          parent->ChildAt(index, *getter_AddRefs(nextNode));
+          nextLink = do_QueryInterface(nextNode);
+          if (nextLink) {
+            nextLink->GetStyleSheet(*getter_AddRefs(nextSheet));
+            if (nextSheet)
+              // Found the first following sibling that is a style linking element.
               break;
           }
         }
@@ -318,40 +298,90 @@ nsStyleLinkElement::UpdateStyleSheet(PRBool aNotify, nsIDocument *aOldDocument,
     else {
       nsCOMPtr<nsIContent> parent(do_QueryInterface(parentNode));
       if (parent) {
-        PRInt32 index;
-        nsCOMPtr<nsIContent> prevNode;
-        nsCOMPtr<nsIStyleSheetLinkingElement> previousLink;
+        PRInt32 index, count;
 
+        parent->ChildCount(count);
         parent->IndexOf(thisContent, index);
-        while (index-- > 0) {
-          parent->ChildAt(index, *getter_AddRefs(prevNode));
-          previousLink = do_QueryInterface(prevNode);
-          if (previousLink) {
-            previousLink->GetStyleSheet(*getter_AddRefs(prevSheet));
-            if (prevSheet)
-              // Found the first previous sibling that is a style linking element.
+        while (++index < count) {
+          parent->ChildAt(index, *getter_AddRefs(nextNode));
+          nextLink = do_QueryInterface(nextNode);
+          if (nextLink) {
+            nextLink->GetStyleSheet(*getter_AddRefs(nextSheet));
+            if (nextSheet)
+              // Found the first following sibling that is a style linking element.
               break;
           }
         }
       }
     }
-    if (prevSheet) {
+    if (nextSheet) {
       PRInt32 sheetIndex = 0;
-      doc->GetIndexOfStyleSheet(prevSheet, &sheetIndex);
-      insertionPoint = sheetIndex + 1;
+      doc->GetIndexOfStyleSheet(nextSheet, &sheetIndex);
+      insertionPoint = sheetIndex - 1;
     }
     else {
-      insertionPoint = 0;
+      doc->GetNumberOfStyleSheets(&insertionPoint);
+    }
+  }
+
+  if (!isAlternate && !title.IsEmpty()) {  // possibly preferred sheet
+    nsAutoString prefStyle;
+    doc->GetHeaderData(nsHTMLAtoms::headerDefaultStyle, prefStyle);
+
+    if (prefStyle.IsEmpty()) {
+      doc->SetHeaderData(nsHTMLAtoms::headerDefaultStyle, title);
     }
   }
 
   PRBool doneLoading;
-  rv = loader->LoadStyleLink(thisContent, uri, title, media,
-                             kNameSpaceID_Unknown,
-                             insertionPoint, 
-                             ((blockParser) ? parser.get() : nsnull),
-                             doneLoading, 
-                             nsnull);
+  if (isInline) {
+    PRInt32 count;
+    thisContent->ChildCount(count);
+    if (count < 0)
+      return NS_OK;
+
+    nsString *content = new nsString();
+    NS_ENSURE_TRUE(content, NS_ERROR_OUT_OF_MEMORY);
+
+    PRInt32 i;
+    nsCOMPtr<nsIContent> node;
+    for (i = 0; i < count; ++i) {
+      thisContent->ChildAt(i, *getter_AddRefs(node));
+      nsCOMPtr<nsIDOMText> tc = do_QueryInterface(node);
+      // Ignore nodes that are not DOMText.
+      if (!tc) {
+        nsCOMPtr<nsIDOMComment> comment = do_QueryInterface(node);
+        if (comment)
+          // Skip a comment
+          continue;
+        break;
+      }
+
+      nsAutoString tcString;
+      tc->GetData(tcString);
+      content->Append(tcString);
+    }
+
+    nsCOMPtr<nsIUnicharInputStream> uin;
+    rv = NS_NewStringUnicharInputStream(getter_AddRefs(uin), content);
+    if (NS_FAILED(rv)) {
+      delete content;
+      return rv;
+    }
+
+    // Now that we have a url and a unicode input stream, parse the
+    // style sheet.
+    rv = loader->LoadInlineStyle(thisContent, uin, title, media,
+                                 kNameSpaceID_Unknown, insertionPoint,
+                                 ((blockParser) ? parser.get() : nsnull),
+                                 doneLoading, nsnull);
+  }
+  else {
+    rv = loader->LoadStyleLink(thisContent, uri, title, media,
+                               kNameSpaceID_Unknown, insertionPoint, 
+                               ((blockParser) ? parser.get() : nsnull),
+                               doneLoading, nsnull);
+  }
 
   if (NS_SUCCEEDED(rv) && blockParser && !doneLoading) {
     rv = NS_ERROR_HTMLPARSER_BLOCK;

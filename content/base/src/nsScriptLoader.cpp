@@ -196,22 +196,6 @@ nsScriptLoader::RemoveObserver(nsIScriptLoaderObserver *aObserver)
   return NS_OK;
 }
 
-static void SplitMimeType(const nsString& aValue, nsString& aType, nsString& aParams)
-{
-  aType.Truncate();
-  aParams.Truncate();
-  PRInt32 semiIndex = aValue.FindChar(PRUnichar(';'));
-  if (-1 != semiIndex) {
-    aValue.Left(aType, semiIndex);
-    aValue.Right(aParams, (aValue.Length() - semiIndex) - 1);
-    aParams.StripWhitespace();
-  }
-  else {
-    aType = aValue;
-  }
-  aType.StripWhitespace();
-}
-
 PRBool
 nsScriptLoader::InNonScriptingContainer(nsIDOMHTMLScriptElement* aScriptElement)
 {
@@ -298,7 +282,7 @@ nsScriptLoader::ProcessScriptElement(nsIDOMHTMLScriptElement *aElement,
   if (!type.IsEmpty()) {
     nsAutoString  mimeType;
     nsAutoString  params;
-    SplitMimeType(type, mimeType, params);
+    nsParserUtils::SplitMimeType(type, mimeType, params);
 
     isJavaScript = mimeType.EqualsIgnoreCase("application/x-javascript") || 
                    mimeType.EqualsIgnoreCase("text/javascript");

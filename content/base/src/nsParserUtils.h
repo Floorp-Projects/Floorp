@@ -43,13 +43,17 @@
 
 class nsParserUtils {
 public:
-  static nsresult
-  GetQuotedAttributeValue(nsString& aSource,
-                          const nsAFlatString& aAttribute,
-                          nsString& aValue);
+  static PRBool
+  GetQuotedAttributeValue(const nsAString& aSource,
+                          const nsAString& aAttribute,
+                          nsAString& aValue);
 
   static PRBool
   IsJavaScriptLanguage(const nsString& aName, const char* *aVersion);
+
+  static void
+  SplitMimeType(const nsAString& aValue, nsString& aType,
+                nsString& aParams);
 };
 
 #endif // nsParserUtils_h__
