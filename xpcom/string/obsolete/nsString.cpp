@@ -40,7 +40,6 @@ static const char* kNullPointerError = "Error: unexpected null ptr";
 static const char* kWhitespace="\b\t\r\n ";
 
 
-
 static void CSubsume(nsStr& aDest,nsStr& aSource){
   if(aSource.mStr && aSource.mLength) {
     if(aSource.mOwnsBuffer){
@@ -126,6 +125,47 @@ nsCString::~nsCString() {
   nsStr::Destroy(*this);
 }
 
+#ifdef NEW_STRING_APIS
+const char* nsCString::GetConstFragment( ConstFragment& aFragment, FragmentRequest aRequest, PRUint32 aOffset ) const {
+  switch ( aRequest ) {
+    case kFirstFragment:
+    case kLastFragment:
+    case kFragmentAt:
+      aFragment.mEnd = (aFragment.mStart = mStr) + mLength;
+      return aFragment.mStart + aOffset;
+    
+    case kPrevFragment:
+    case kNextFragment:
+    default:
+      return 0;
+  }
+}
+
+char* nsCString::GetFragment( Fragment& aFragment, FragmentRequest aRequest, PRUint32 aOffset ) {
+  switch ( aRequest ) {
+    case kFirstFragment:
+    case kLastFragment:
+    case kFragmentAt:
+      aFragment.mEnd = (aFragment.mStart = mStr) + mLength;
+      return aFragment.mStart + aOffset;
+    
+    case kPrevFragment:
+    case kNextFragment:
+    default:
+      return 0;
+  }
+}
+
+nsCString::nsCString( const nsAReadableCString& aReadable ) {
+  nsStr::Initialize(*this,eOneByte);
+  Assign(aReadable);
+}
+#endif
+
+void nsCString::AppendChar( char aChar ) {
+  Append(aChar);
+}
+
 void nsCString::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const {
   if (aResult) {
     *aResult = sizeof(*this) + mCapacity * mCharSize;
@@ -139,7 +179,9 @@ void nsCString::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const {
  * @param   anIndex -- new length of string
  * @return  nada
  */
-void nsCString::Truncate(PRUint32 anIndex) {
+void nsCString::SetLength(PRUint32 anIndex) {
+  if ( anIndex > mCapacity )
+    SetCapacity(anIndex);
   nsStr::Truncate(*this,anIndex);
 }
 
@@ -160,7 +202,7 @@ void nsCString::SetCapacity(PRUint32 aLength) {
   Accessor methods...
  *********************************************************************/
 
-
+#ifndef NEW_STRING_APIS
 /**
  * Retrieves internal (1-byte) buffer ptr;
  * @update  gess1/4/99
@@ -197,6 +239,7 @@ PRUnichar nsCString::First(void) const{
 PRUnichar nsCString::Last(void) const{
   return (char)GetCharAt(*this,mLength-1);
 }
+#endif // !defined(NEW_STRING_APIS)
 
 /**
  * set a char inside this string at given index
@@ -217,7 +260,7 @@ PRBool nsCString::SetCharAt(PRUnichar aChar,PRUint32 anIndex){
 /*********************************************************
   append (operator+) METHODS....
  *********************************************************/
-
+#ifndef NEW_STRING_APIS
 /**
  * Create a new string by appending given string to this
  * @update  gess 01/04/99
@@ -267,7 +310,7 @@ nsSubsumeCStr nsCString::operator+(char aChar) {
   temp.Append(aChar);
   return nsSubsumeCStr(temp);
 }
-
+#endif // !defined(NEW_STRING_APIS)
 
 /**********************************************************************
   Lexomorphic transforms...
@@ -1173,12 +1216,14 @@ nsCString& nsCString::Insert(char aChar,PRUint32 anOffset){
  *  @param  aCount -- number of chars to be cut
  *  @return *this
  */
+#ifndef NEW_STRING_APIS
 nsCString& nsCString::Cut(PRUint32 anOffset, PRInt32 aCount) {
   if(0<aCount) {
     nsStr::Delete(*this,anOffset,aCount);
   }
   return *this;
 }
+#endif
 
 /**********************************************************************
   Searching methods...                
@@ -1495,7 +1540,7 @@ PRInt32 nsCString::Compare(const nsStr& aString,PRBool aIgnoreCase,PRInt32 aCoun
   return nsStr::Compare(*this,aString,aCount,aIgnoreCase);
 }
 
-
+#ifndef NEW_STRING_APIS
 /**
  *  Here come a whole bunch of operator functions that are self-explanatory...
  */
@@ -1522,7 +1567,7 @@ PRBool nsCString::operator<=(const PRUnichar* s) const {return PRBool(Compare(s)
 PRBool nsCString::operator>=(const nsStr& S) const {return PRBool(Compare(S)>=0);}
 PRBool nsCString::operator>=(const char* s) const {return PRBool(Compare(s)>=0);}
 PRBool nsCString::operator>=(const PRUnichar* s) const {return PRBool(Compare(s)>=0);}
-
+#endif
 
 PRBool nsCString::EqualsIgnoreCase(const nsStr& aString) const {
   return Equals(aString,PR_TRUE);

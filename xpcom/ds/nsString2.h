@@ -47,6 +47,10 @@
 #include "nsStr.h"
 #include "nsCRT.h"
 
+#ifdef NEW_STRING_APIS
+#include "nsAWritableString.h"
+#endif
+
 class nsISizeOfHandler;
 
 
@@ -55,7 +59,45 @@ class nsISizeOfHandler;
 
 
 class NS_COM nsSubsumeStr;
-class NS_COM nsString : public nsStr {
+class NS_COM nsString :
+#ifdef NEW_STRING_APIS
+  public nsAWritableString,
+#endif
+  public nsStr {
+
+#ifdef NEW_STRING_APIS
+protected:
+  typedef nsAReadableString::FragmentRequest  FragmentRequest;
+  typedef nsAReadableString::ConstFragment    ConstFragment;
+  typedef nsAWritableString::Fragment         Fragment;
+
+  virtual const PRUnichar* GetConstFragment( ConstFragment&, FragmentRequest, PRUint32 ) const;
+  virtual PRUnichar* GetFragment( Fragment&, FragmentRequest, PRUint32 );
+
+public:
+  nsString( const nsAReadableString& );
+
+#ifdef HAVE_CPP_USING
+  using nsAWritableString::Assign;
+  using nsAWritableString::Append;
+  using nsAWritableString::Insert;
+#else
+  virtual void Assign( const nsAReadableString& aReadable ) {
+    nsAWritableString::Assign(aReadable);
+  }
+
+  virtual void Append( const nsAReadableString& aReadable ) {
+    nsAWritableString::Append(aReadable);
+  }
+
+  virtual void Insert( const nsAReadableString& aReadable, PRUint32 atPosition ) {
+    nsAWritableString::Insert(aReadable, atPosition);
+  }
+#endif
+#endif
+
+public:
+  void AppendChar( PRUnichar );
 
 public: 
 
@@ -109,7 +151,7 @@ public:
    * Retrieve the length of this string
    * @return string length
    */
-  inline PRInt32 Length() const { return (PRInt32)mLength; }
+  virtual PRUint32 Length() const { return mLength; }
 
   /**
    * Retrieve the size of this string
@@ -124,9 +166,7 @@ public:
    * @param   aLength -- contains new length for mStr
    * @return
    */
-  void SetLength(PRUint32 aLength) { 
-    Truncate(aLength);
-  }
+  void SetLength(PRUint32 aLength);
 
   /**
    * Sets the new length of the string.
@@ -135,15 +175,21 @@ public:
    */
   void SetCapacity(PRUint32 aLength);
 
+
   /**
    * This method truncates this string to given length.
    *
    * @param   anIndex -- new length of string
    * @return  nada
    */
-  void Truncate(PRUint32 anIndex=0);
+  void Truncate(PRUint32 anIndex=0) {
+    NS_ASSERTION(anIndex<=mLength, "Can't use |Truncate()| to make a string longer.");
+    if ( anIndex < mLength )
+      SetLength(anIndex);
+  }
 
 
+#ifndef NEW_STRING_APIS
   /**
    *  Determine whether or not the characters in this
    *  string are in store as 1 or 2 byte (unicode) strings.
@@ -182,7 +228,7 @@ public:
   PRUnichar CharAt(PRUint32 anIndex) const;
   PRUnichar First(void) const;
   PRUnichar Last(void) const;
-
+#endif // !defined(NEW_STRING_APIS)
    /**
      * Set nth character.
      */
@@ -551,7 +597,9 @@ public:
    *  @param  aCount -- number of chars to be cut
    *  @return *this
    */
+#ifndef NEW_STRING_APIS
   nsString& Cut(PRUint32 anOffset,PRInt32 aCount);
+#endif
 
 
   /**********************************************************************
@@ -652,6 +700,7 @@ public:
   virtual PRInt32 Compare(const char* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
   virtual PRInt32 Compare(const PRUnichar* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
 
+#ifndef NEW_STRING_APIS
   /**
    * These methods compare a given string type to this one
    * @param aString is the string to be compared to this
@@ -711,7 +760,7 @@ public:
   PRBool  operator>=(const nsStr &S) const;
   PRBool  operator>=(const char* aString) const;
   PRBool  operator>=(const PRUnichar* aString) const;
-
+#endif // !defined(NEW_STRING_APIS)
   /**
    * Compare this to given string; note that we compare full strings here.
    * The optional length argument just lets us know how long the given string is.
@@ -772,6 +821,11 @@ public:
   static  nsString*  CreateString(void);
 
 };
+
+#ifdef NEW_STRING_APIS
+NS_DEF_NON_TEMPLATE_STRING_COMPARISON_OPERATORS(const nsString&, const PRUnichar*)
+NS_DEF_NON_TEMPLATE_STRING_COMPARISON_OPERATORS(const PRUnichar*, const nsString&)
+#endif
 
 extern NS_COM int fputs(const nsString& aString, FILE* out);
 //ostream& operator<<(ostream& aStream,const nsString& aString);
