@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -860,7 +860,7 @@ nsPermissionManager::Write()
   }
 
   nsCOMPtr<nsIOutputStream> fileOutputStream;
-  rv = NS_NewLocalFileOutputStream(getter_AddRefs(fileOutputStream), mPermissionsFile);
+  rv = NS_NewSafeLocalFileOutputStream(getter_AddRefs(fileOutputStream), mPermissionsFile);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // get a buffered output stream 4096 bytes big, to optimize writes
@@ -931,6 +931,12 @@ nsPermissionManager::Write()
 
   delete[] hostList;
   mChangedList = PR_FALSE;
+
+  // All went ok. Maybe except for problems in Write(), but the stream detects
+  // that for us
+  nsCOMPtr<nsISafeFileOutputStream> safeStream = do_QueryInterface(fileOutputStream);
+  if (safeStream)
+    safeStream->SetWriteSucceeded(PR_TRUE);
 
   return NS_OK;
 }
