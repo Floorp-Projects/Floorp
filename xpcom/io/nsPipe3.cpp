@@ -44,6 +44,7 @@
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
 #include "prlog.h"
+#include "nsInt64.h"
 
 #if defined(PR_LOGGING)
 //
@@ -146,7 +147,7 @@ private:
 
     // separate refcnt so that we know when to close the consumer
     nsrefcnt                       mReaderRefCnt;
-    PRUint32                       mLogicalOffset;
+    nsInt64                        mLogicalOffset;
     PRPackedBool                   mBlocking;
 
     // these variables can only be accessed while inside the pipe's monitor
@@ -200,7 +201,7 @@ private:
 
     // separate refcnt so that we know when to close the producer
     nsrefcnt                        mWriterRefCnt;
-    PRUint32                        mLogicalOffset;
+    nsInt64                         mLogicalOffset;
     PRPackedBool                    mBlocking;
 
     // these variables can only be accessed while inside the pipe's monitor
@@ -858,7 +859,7 @@ nsPipeInputStream::Seek(PRInt32 whence, PRInt64 offset)
 NS_IMETHODIMP
 nsPipeInputStream::Tell(PRInt64 *offset)
 {
-    LL_UI2L(*offset, mLogicalOffset);
+    *offset = mLogicalOffset;
     return NS_OK;
 }
 

@@ -53,7 +53,7 @@ class nsHttpResponseHead
 public:
     nsHttpResponseHead() : mVersion(NS_HTTP_VERSION_1_1)
                          , mStatus(200)
-                         , mContentLength(-1)
+                         , mContentLength(LL_MaxUint())
                          , mCacheControlNoStore(PR_FALSE)
                          , mCacheControlNoCache(PR_FALSE)
                          , mPragmaNoCache(PR_FALSE) {}
@@ -66,7 +66,7 @@ public:
     nsHttpVersion         Version()        { return mVersion; }
     PRUint16              Status()         { return mStatus; }
     const nsAFlatCString &StatusText()     { return mStatusText; }
-    PRInt32               ContentLength()  { return mContentLength; }
+    PRInt64               ContentLength()  { return mContentLength; }
     const nsAFlatCString &ContentType()    { return mContentType; }
     const nsAFlatCString &ContentCharset() { return mContentCharset; }
     PRBool                NoStore()        { return mCacheControlNoStore; }
@@ -76,7 +76,7 @@ public:
      * than ContentLength(), which will only represent the requested part of the
      * entity.
      */
-    PRInt32               TotalEntitySize();
+    PRInt64               TotalEntitySize();
 
     const char *PeekHeader(nsHttpAtom h)            { return mHeaders.PeekHeader(h); }
     nsresult SetHeader(nsHttpAtom h, const nsACString &v, PRBool m=PR_FALSE);
@@ -86,7 +86,7 @@ public:
 
     void     SetContentType(const nsACString &s)    { mContentType = s; }
     void     SetContentCharset(const nsACString &s) { mContentCharset = s; }
-    void     SetContentLength(PRInt32);
+    void     SetContentLength(PRInt64);
 
     // write out the response status line and headers as a single text block,
     // optionally pruning out transient headers (ie. headers that only make
@@ -141,7 +141,7 @@ private:
     nsHttpVersion     mVersion;
     PRUint16          mStatus;
     nsCString         mStatusText;
-    PRInt32           mContentLength;
+    PRInt64           mContentLength;
     nsCString         mContentType;
     nsCString         mContentCharset;
     PRPackedBool      mCacheControlNoStore;

@@ -48,6 +48,7 @@
 #include "nsIAsyncInputStream.h"
 #include "nsIEventQueue.h"
 #include "nsCOMPtr.h"
+#include "nsInt64.h"
 
 class nsInputStreamPump : public nsIInputStreamPump
                         , public nsIInputStreamCallback
@@ -82,8 +83,8 @@ protected:
     nsCOMPtr<nsIEventQueue>       mEventQ;
     nsCOMPtr<nsIInputStream>      mStream;
     nsCOMPtr<nsIAsyncInputStream> mAsyncStream;
-    PRUint32                      mStreamOffset;
-    PRUint32                      mStreamLength;
+    nsInt64                       mStreamOffset;
+    nsInt64                       mStreamLength;
     PRUint32                      mSegSize;
     PRUint32                      mSegCount;
     nsresult                      mStatus;

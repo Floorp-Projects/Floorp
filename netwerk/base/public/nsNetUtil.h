@@ -618,7 +618,7 @@ NS_GetURLSpecFromFile(nsIFile      *aFile,
 
 inline nsresult
 NS_NewResumableEntityID(nsIResumableEntityID **aRes,
-                        PRUint32               size,
+                        PRUint64               size,
                         const nsACString      &lastModified,
                         const nsACString      &entityTag)
 {

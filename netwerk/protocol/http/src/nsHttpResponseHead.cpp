@@ -69,13 +69,13 @@ nsHttpResponseHead::SetHeader(nsHttpAtom hdr,
 }
 
 void
-nsHttpResponseHead::SetContentLength(PRInt32 len)
+nsHttpResponseHead::SetContentLength(PRInt64 len)
 {
     mContentLength = len;
-    if (len < 0)
+    if (!LL_GE_ZERO(len)) // < 0
         mHeaders.ClearHeader(nsHttp::Content_Length);
     else
-        mHeaders.SetHeader(nsHttp::Content_Length, nsPrintfCString("%d", len));
+        mHeaders.SetHeader(nsHttp::Content_Length, nsPrintfCString(20, "%lld", len));
 }
 
 void
@@ -207,7 +207,7 @@ nsHttpResponseHead::ParseHeaderLine(char *line)
 
     // handle some special case headers...
     if (hdr == nsHttp::Content_Length)
-        mContentLength = atoi(val);
+        PR_sscanf(val, "%lld", &mContentLength);
     else if (hdr == nsHttp::Content_Type)
         ParseContentType(val);
     else if (hdr == nsHttp::Cache_Control)
@@ -440,7 +440,7 @@ nsHttpResponseHead::Reset()
 
     mVersion = NS_HTTP_VERSION_1_1;
     mStatus = 200;
-    mContentLength = -1;
+    mContentLength = LL_MaxUint();
     mCacheControlNoStore = PR_FALSE;
     mCacheControlNoCache = PR_FALSE;
     mPragmaNoCache = PR_FALSE;
@@ -520,7 +520,7 @@ nsHttpResponseHead::GetExpiresValue(PRUint32 *result)
     return NS_OK;
 }
 
-PRInt32
+PRInt64
 nsHttpResponseHead::TotalEntitySize()
 {
     const char* contentRange = PeekHeader(nsHttp::Content_Range);
@@ -536,7 +536,11 @@ nsHttpResponseHead::TotalEntitySize()
     if (*slash == '*') // Server doesn't know the length
         return -1;
 
-    return atoi(slash);
+    PRInt64 size;
+    PRInt32 items = PR_sscanf(slash, "%lld", &size);
+    if (items <= 0)
+        size = LL_MaxUint();
+    return size;
 }
 
 //-----------------------------------------------------------------------------

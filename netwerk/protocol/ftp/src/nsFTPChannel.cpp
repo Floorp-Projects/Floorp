@@ -86,7 +86,8 @@ nsFTPChannel::nsFTPChannel()
       mFTPState(nsnull),
       mLock(nsnull),
       mStatus(NS_OK),
-      mCanceled(PR_FALSE)
+      mCanceled(PR_FALSE),
+      mStartPos(LL_MaxUint())
 {
 }
 
@@ -275,7 +276,19 @@ nsFTPChannel::GenerateCacheKey(nsACString &cacheKey)
 NS_IMETHODIMP
 nsFTPChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
 {
-    return AsyncOpenAt(listener, ctxt, PRUint32(-1), nsnull);
+    nsresult rv = AsyncOpenAt(listener, ctxt, mStartPos, mEntityID);
+    // mEntityID no longer needed, clear it to avoid returning a wrong entity
+    // id when someone asks us
+    mEntityID = nsnull;
+    return rv;
+}
+
+NS_IMETHODIMP
+nsFTPChannel::ResumeAt(PRUint64 aStartPos, nsIResumableEntityID* aEntityID)
+{
+    mEntityID = aEntityID;
+    mStartPos = aStartPos;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -286,9 +299,9 @@ nsFTPChannel::GetEntityID(nsIResumableEntityID **entityID)
     return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsFTPChannel::AsyncOpenAt(nsIStreamListener *listener, nsISupports *ctxt,
-                          PRUint32 startPos, nsIResumableEntityID* entityID)
+                          PRUint64 startPos, nsIResumableEntityID* entityID)
 {
     PRInt32 port;
     nsresult rv = mURL->GetPort(&port);

@@ -65,7 +65,7 @@ static PRLogModuleInfo *gStreamPumpLog = nsnull;
 nsInputStreamPump::nsInputStreamPump()
     : mState(STATE_IDLE)
     , mStreamOffset(0)
-    , mStreamLength(PR_UINT32_MAX)
+    , mStreamLength(LL_MaxInt())
     , mStatus(NS_OK)
     , mSuspendCount(0)
     , mLoadFlags(LOAD_NORMAL)
@@ -220,8 +220,9 @@ nsInputStreamPump::Init(nsIInputStream *stream,
 {
     NS_ENSURE_TRUE(mState == STATE_IDLE, NS_ERROR_IN_PROGRESS);
 
-    mStreamOffset = (PRUint32) streamPos;
-    mStreamLength = (PRUint32) streamLen;
+    mStreamOffset = streamPos;
+    if (streamLen >= 0)
+        mStreamLength = streamLen;
     mStream = stream;
     mSegSize = segsize;
     mSegCount = segcount;
@@ -256,7 +257,7 @@ nsInputStreamPump::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt)
         // stream case, the stream transport service will take care of seeking
         // for us.
         // 
-        if (mAsyncStream && (mStreamOffset != PR_UINT32_MAX)) {
+        if (mAsyncStream && (mStreamOffset != nsInt64(-1))) {
             nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mStream);
             if (seekable)
                 seekable->Seek(nsISeekableStream::NS_SEEK_SET, mStreamOffset);
@@ -406,7 +407,7 @@ nsInputStreamPump::OnStateTransfer()
     }
     else if (NS_SUCCEEDED(rv) && avail) {
         // figure out how much data to report (XXX detect overflow??)
-        if (avail + mStreamOffset > mStreamLength)
+        if (nsInt64(avail) + mStreamOffset > mStreamLength)
             avail = mStreamLength - mStreamOffset;
 
         if (avail) {
@@ -430,7 +431,7 @@ nsInputStreamPump::OnStateTransfer()
             if (seekable)
                 seekable->Tell(&offsetBefore);
 
-            LOG(("  calling OnDataAvailable [offset=%u count=%u]\n", mStreamOffset, avail));
+            LOG(("  calling OnDataAvailable [offset=%lld count=%u]\n", PRInt64(mStreamOffset), avail));
             rv = mListener->OnDataAvailable(this, mListenerContext, mAsyncStream, mStreamOffset, avail);
 
             // don't enter this code if ODA failed or called Cancel
@@ -443,9 +444,7 @@ nsInputStreamPump::OnStateTransfer()
                     nsInt64 offsetAfter64 = offsetAfter;
                     if (offsetAfter64 > offsetBefore64) {
                         nsInt64 offsetDelta = offsetAfter64 - offsetBefore64;
-                        const nsInt64 maxUint32 = PR_UINT32_MAX;
-                        NS_ASSERTION(offsetDelta < maxUint32, "offset overflows PRUint32");
-                        mStreamOffset += (PRUint32) offsetDelta;
+                        mStreamOffset += offsetDelta;
                     }
                     else if (mSuspendCount == 0) {
                         //

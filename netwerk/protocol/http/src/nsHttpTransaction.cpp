@@ -762,7 +762,7 @@ nsHttpTransaction::HandleContentStart()
                 mContentLength = -1;
             }
 #if defined(PR_LOGGING)
-            else if (mContentLength == -1)
+            else if (mContentLength == nsInt64(-1))
                 LOG(("waiting for the server to close the connection.\n"));
 #endif
         }
@@ -799,20 +799,20 @@ nsHttpTransaction::HandleContent(char *buf,
         rv = mChunkedDecoder->HandleChunkedContent(buf, count, contentRead, contentRemaining);
         if (NS_FAILED(rv)) return rv;
     }
-    else if (mContentLength >= 0) {
+    else if (mContentLength >= nsInt64(0)) {
         // HTTP/1.0 servers have been known to send erroneous Content-Length
         // headers. So, unless the connection is persistent, we must make
         // allowances for a possibly invalid Content-Length header. Thus, if
         // NOT persistent, we simply accept everything in |buf|.
         if (mConnection->IsPersistent()) {
-            *contentRead = PRUint32(mContentLength) - mContentRead;
+            *contentRead = mContentLength - mContentRead;
             *contentRead = PR_MIN(count, *contentRead);
         }
         else {
             *contentRead = count;
             // mContentLength might need to be increased...
-            if (*contentRead + mContentRead > (PRUint32) mContentLength) {
-                mContentLength = *contentRead + mContentRead;
+            if (nsInt64(*contentRead) + mContentRead > mContentLength) {
+                mContentLength = nsInt64(*contentRead) + mContentRead;
                 //mResponseHead->SetContentLength(mContentLength);
             }
         }
@@ -832,11 +832,11 @@ nsHttpTransaction::HandleContent(char *buf,
         */
     }
 
-    LOG(("nsHttpTransaction [this=%x count=%u read=%u mContentRead=%u mContentLength=%d]\n",
-        this, count, *contentRead, mContentRead, mContentLength));
+    LOG(("nsHttpTransaction [this=%x count=%u read=%u mContentRead=%lld mContentLength=%lld]\n",
+        this, count, *contentRead, mContentRead.mValue, mContentLength.mValue));
 
     // check for end-of-file
-    if ((mContentRead == PRUint32(mContentLength)) ||
+    if ((mContentRead == mContentLength) ||
         (mChunkedDecoder && mChunkedDecoder->ReachedEOF())) {
         // the transaction is done with a complete response.
         mTransactionDone = PR_TRUE;

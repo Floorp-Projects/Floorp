@@ -194,7 +194,7 @@ private:
     nsCOMPtr<nsISocketTransport>    mDPipe;                   // the data transport
     nsCOMPtr<nsIRequest>            mDPipeRequest;
     DataRequestForwarder*           mDRequestForwarder;
-    PRUint32                        mFileSize;
+    PRUint64                        mFileSize;
     nsCString                       mModTime;
 
         // ****** consumer vars

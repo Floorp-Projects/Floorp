@@ -44,6 +44,7 @@
 #include "nsAHttpTransaction.h"
 #include "nsAHttpConnection.h"
 #include "nsCOMPtr.h"
+#include "nsInt64.h"
 
 #include "nsIPipe.h"
 #include "nsIInputStream.h"
@@ -170,8 +171,8 @@ private:
 
     nsCString                       mLineBuf;         // may contain a partial line
 
-    PRInt32                         mContentLength;   // equals -1 if unknown
-    PRUint32                        mContentRead;     // count of consumed content bytes
+    nsInt64                         mContentLength;   // equals -1 if unknown
+    nsInt64                         mContentRead;     // count of consumed content bytes
 
     nsHttpChunkedDecoder           *mChunkedDecoder;
 
