@@ -106,4 +106,12 @@ Rights Reserved.
 		</box>
 	</box>
 	<box id="okCancelButtons"/>
+	<box id="status-bar">
+		<box align="vertical" style="width:100px">
+			<spring flex="100%"/>
+			<progressmeter id="statusbar-icon" mode="normal" value="0" />
+			<spring flex="100%"/>
+		</box>
+		<text id="statusText" class="status-bar" align="left" flex="100%" value="Document: Done"/>
+	</box>	
 </window>
