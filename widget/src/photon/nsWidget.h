@@ -181,7 +181,7 @@ class nsWidget : public nsBaseWidget
     void              InitDamageQueue();
     static int        GotFocusCallback( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo );
     static int        LostFocusCallback( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo );
-//    virtual void      NativePaint( PhRect_t &extent );
+    static int        DestroyedCallback( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo );
 
 #ifdef NS_DEBUG
   nsCAutoString  debug_GetName(PtWidget_t * aPtWidget);
