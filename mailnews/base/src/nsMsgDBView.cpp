@@ -2261,6 +2261,8 @@ nsMsgDBView::ApplyCommandToIndices(nsMsgViewCommandTypeValue command, nsMsgViewI
         mOutstandingJunkBatches++;
     }
            
+    m_folder->EnableNotifications(nsIMsgFolder::allMessageCountNotifications, PR_FALSE, PR_TRUE /*dbBatching*/);
+
     for (int32 i = 0; i < numIndices; i++)
     {
       if (thisIsImapFolder && command != nsMsgViewCommandType::markThreadRead)
@@ -2309,6 +2311,7 @@ nsMsgDBView::ApplyCommandToIndices(nsMsgViewCommandTypeValue command, nsMsgViewI
         break;
       }
     }
+    m_folder->EnableNotifications(nsIMsgFolder::allMessageCountNotifications, PR_TRUE, PR_TRUE /*dbBatching*/);
 
     if (thisIsImapFolder)
     {
