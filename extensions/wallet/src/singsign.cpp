@@ -2046,9 +2046,10 @@ SINGSIGN_RememberSignonData
   nsCOMPtr<nsIIOService> ioService = do_GetService(NS_IOSERVICE_CONTRACTID);
   if (!ioService) return;
   ioService->ExtractUrlPart(passwordRealm, nsIIOService::url_Host, 0, 0, &strippedRealm);
-
-  si_RememberSignonData(dialog, strippedRealm, signonData, window);
-  PR_Free(strippedRealm);
+  if (strippedRealm) {
+    si_RememberSignonData(dialog, strippedRealm, signonData, window);
+    nsCRT::free(strippedRealm);
+  }
 }
 
 PRIVATE void
@@ -2161,9 +2162,10 @@ SINGSIGN_RestoreSignonData(nsIPrompt* dialog, const char* passwordRealm, const P
   nsCOMPtr<nsIIOService> ioService = do_GetService(NS_IOSERVICE_CONTRACTID);
   if (!ioService) return;
   ioService->ExtractUrlPart(passwordRealm, nsIIOService::url_Host, 0, 0, &strippedRealm);
-
-  si_RestoreSignonData(dialog, strippedRealm, name, value, elementNumber);
-  PR_Free(strippedRealm);
+  if (strippedRealm) {
+    si_RestoreSignonData(dialog, strippedRealm, name, value, elementNumber);
+    nsCRT::free(strippedRealm);
+  }
 }
 
 /*
