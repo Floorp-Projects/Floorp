@@ -48,7 +48,7 @@ function initPrefs()
 console.prefs.save =
 function pfs_save ()
 {
-    throw new Foo("Not Implemented.");
+    throw BadMojo(ERR_NOT_IMPLEMENTED);
 }
 
 console.addPref =
