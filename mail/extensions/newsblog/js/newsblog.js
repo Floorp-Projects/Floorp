@@ -52,8 +52,7 @@ var nsNewsBlogFeedDownloader =
         .getService(Components.interfaces.nsIRDFService);
 
     progressNotifier.init(aMsgWindow.statusFeedback, false);
-    
-    var index = 0; 
+
     for (url in feedUrlArray)
     {
       if (feedUrlArray[url])
@@ -82,6 +81,7 @@ var nsNewsBlogFeedDownloader =
       feed.folder = aFolder; // user must want us to add this subscription url to an existing RSS folder.
 
     progressNotifier.init(aMsgWindow.statusFeedback, true);
+    gNumPendingFeedDownloads++;
     feed.download(true, progressNotifier);
   },
 
@@ -275,6 +275,7 @@ var progressNotifier = {
       
     this.mStatusFeedback.stopMeteors();
     gNumPendingFeedDownloads--;
+
     if (!gNumPendingFeedDownloads)
     {
       this.mFeeds = new Array;
