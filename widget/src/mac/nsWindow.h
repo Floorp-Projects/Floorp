@@ -132,40 +132,40 @@ public:
     NS_IMETHOD            	EndResizingChildren(void);
 
     static  PRBool          ConvertStatus(nsEventStatus aStatus);
-    NS_IMETHOD          		DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus);
+    NS_IMETHOD          	DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus);
     virtual PRBool          DispatchMouseEvent(nsMouseEvent &aEvent);
 
-    virtual void         		StartDraw(nsIRenderingContext* aRenderingContext = nsnull);
-    virtual void         		EndDraw();
+    virtual void         	StartDraw(nsIRenderingContext* aRenderingContext = nsnull);
+    virtual void         	EndDraw();
     virtual PRBool          OnPaint(nsPaintEvent &event);
-		NS_IMETHOD							Update();
-		virtual void						UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext);
+	NS_IMETHOD				Update();
+	virtual void			UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext);
     
-    virtual void  					ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY);
-		void										LocalToWindowCoordinate(nsPoint& aPoint)						{ConvertToDeviceCoordinates(aPoint.x, aPoint.y);}
-		void										LocalToWindowCoordinate(nscoord& aX, nscoord& aY)		{ConvertToDeviceCoordinates(aX, aY);}
-    void										LocalToWindowCoordinate(nsRect& aRect)							{ConvertToDeviceCoordinates(aRect.x, aRect.y);}
+    virtual void			ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY);
+	void					LocalToWindowCoordinate(nsPoint& aPoint)						{ ConvertToDeviceCoordinates(aPoint.x, aPoint.y); }
+	void					LocalToWindowCoordinate(nscoord& aX, nscoord& aY)				{ ConvertToDeviceCoordinates(aX, aY); }
+    void					LocalToWindowCoordinate(nsRect& aRect)							{ ConvertToDeviceCoordinates(aRect.x, aRect.y); }
 
-    NS_IMETHOD 							SetMenuBar(nsIMenuBar * aMenuBar);
-    NS_IMETHOD							ShowMenuBar(PRBool aShow);
-    virtual nsIMenuBar* 		GetMenuBar();
-    NS_IMETHOD 							GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight);
-    NS_IMETHOD 							SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight);
+    NS_IMETHOD				SetMenuBar(nsIMenuBar * aMenuBar);
+    NS_IMETHOD				ShowMenuBar(PRBool aShow);
+    virtual nsIMenuBar*		GetMenuBar();
+    NS_IMETHOD 				GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight);
+    NS_IMETHOD 				SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight);
     
-    NS_IMETHOD  						SetCursor(nsCursor aCursor);
+    NS_IMETHOD  			SetCursor(nsCursor aCursor);
   
     // Mac specific methods
-    void 								nsRectToMacRect(const nsRect& aRect, Rect& aMacRect) const;
-    PRBool 							RgnIntersects(RgnHandle aTheRegion,RgnHandle aIntersectRgn);
-		virtual void				CalcWindowRegions();
+    void 					nsRectToMacRect(const nsRect& aRect, Rect& aMacRect) const;
+    PRBool 					RgnIntersects(RgnHandle aTheRegion,RgnHandle aIntersectRgn);
+	virtual void			CalcWindowRegions();
 
-		virtual PRBool 			PointInWidget(Point aThePoint);
-		virtual nsWindow*		FindWidgetHit(Point aThePoint);
+	virtual PRBool 			PointInWidget(Point aThePoint);
+	virtual nsWindow*		FindWidgetHit(Point aThePoint);
 
- 	 	virtual PRBool			DispatchWindowEvent(nsGUIEvent& event);
+ 	virtual PRBool			DispatchWindowEvent(nsGUIEvent& event);
   	virtual nsresult		HandleUpdateEvent();
-  	virtual void				AcceptFocusOnClick(PRBool aBool)	{ mAcceptFocusOnClick = aBool;};
-  	PRBool							AcceptFocusOnClick()							{ return mAcceptFocusOnClick;};
+  	virtual void			AcceptFocusOnClick(PRBool aBool) { mAcceptFocusOnClick = aBool;};
+  	PRBool					AcceptFocusOnClick() { return mAcceptFocusOnClick;};
 
 protected:
 
@@ -173,38 +173,38 @@ protected:
 	PRBool					ReportMoveEvent();
 	PRBool					ReportSizeEvent();
 
-  NS_IMETHOD			CalcOffset(PRInt32 &aX,PRInt32 &aY);
+	NS_IMETHOD				CalcOffset(PRInt32 &aX,PRInt32 &aY);
 
-		// our own impl of ::ScrollRect() that uses CopyBits so that it looks good
+	// our own impl of ::ScrollRect() that uses CopyBits so that it looks good
 	void					ScrollBits ( Rect & foo, PRInt32 inLeftDelta, PRInt32 inTopDelta ) ;
 
 protected:
-	char		gInstanceClassName[256];
+	char					gInstanceClassName[256];
 
 	nsIWidget*				mParent;
-	PRBool						mResizingChildren;
-	PRBool						mSaveVisible;
+	PRBool					mResizingChildren;
+	PRBool					mSaveVisible;
 	PRBool     	 			mVisible;
 	PRBool     	 			mEnabled;
-	PRInt32						mPreferredWidth;
-	PRInt32						mPreferredHeight;
-	nsIFontMetrics*		mFontMetrics;
+	PRInt32					mPreferredWidth;
+	PRInt32					mPreferredHeight;
+	nsIFontMetrics*			mFontMetrics;
 	nsIMenuBar* 			mMenuBar;
 
-	RgnHandle					mWindowRegion;
-	RgnHandle					mVisRegion;
-	WindowPtr					mWindowPtr;
+	RgnHandle				mWindowRegion;
+	RgnHandle				mVisRegion;
+	WindowPtr				mWindowPtr;
 
-	PRBool						mDestroyCalled;
-	PRBool						mDestructorCalled;
+	PRBool					mDestroyCalled;
+	PRBool					mDestructorCalled;
 
-	PRBool									mDrawing;
+	PRBool					mDrawing;
 	nsIRenderingContext*  	mTempRenderingContext;
-  PRBool									mTempRenderingContextMadeHere;
+	PRBool					mTempRenderingContextMadeHere;
   	
-  nsPluginPort*			mPluginPort;
+	nsPluginPort*			mPluginPort;
 
-	PRBool						mAcceptFocusOnClick;
+	PRBool					mAcceptFocusOnClick;
 };
 
 //-------------------------------------------------------------------------
