@@ -221,3 +221,34 @@ nsresult nsPluginFile::GetPluginInfo( nsPluginInfo &info)
 
    return rc;
 }
+
+nsresult nsPluginFile::FreePluginInfo(nsPluginInfo& info)
+{
+   if(info.fName != nsnull)
+     PL_strfree(info.fName);
+ 
+   if(info.fDescription != nsnull)
+     PL_strfree(info.fDescription);
+ 
+   if(info.fMimeType != nsnull)
+     PL_strfree(info.fMimeType);
+ 
+   if(info.fMimeDescription != nsnull)
+     PL_strfree(info.fMimeDescription);
+ 
+   if(info.fExtensions != nsnull)
+     PL_strfree(info.fExtensions);
+ 
+   if(info.fMimeTypeArray != nsnull)
+     PR_Free(info.fMimeTypeArray);
+ 
+   if(info.fMimeDescriptionArray != nsnull)
+     PR_Free(info.fMimeDescriptionArray);
+ 
+   if(info.fExtensionArray != nsnull)
+     PR_Free(info.fExtensionArray);
+ 
+   memset((void *)&info, 0, sizeof(info));
+ 
+   return NS_OK;
+}
