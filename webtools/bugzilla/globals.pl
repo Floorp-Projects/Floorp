@@ -1295,24 +1295,22 @@ sub Param ($) {
 sub DiffStrings {
     my ($oldstr, $newstr) = @_;
 
+    # Split the old and new strings into arrays containing their values.
+    $oldstr =~ s/[\s,]+/ /g;
+    $newstr =~ s/[\s,]+/ /g;
+    my @old = split(" ", $oldstr);
+    my @new = split(" ", $newstr);
+
     my (@remove, @add) = ();
-    my @old = split(/[ ,]/, $oldstr);
-    my @new = split(/[ ,]/, $newstr);
 
     # Find values that were removed
-    foreach my $value(@old) {
-        next if $value =~ /^\s*$/;
-        if (! grep /^$value$/, @new) {
-            push (@remove, $value);
-        }
+    foreach my $value (@old) {
+        push (@remove, $value) if !grep($_ eq $value, @new);
     }
 
     # Find values that were added
-    foreach my $value(@new) {
-        next if $value =~ /^\s*$/;
-        if (! grep /^$value$/, @old) {
-            push (@add, $value);
-        }
+    foreach my $value (@new) {
+        push (@add, $value) if !grep($_ eq $value, @old);
     }
 
     my $removed = join (", ", @remove);

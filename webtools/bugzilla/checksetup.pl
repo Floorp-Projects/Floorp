@@ -2405,25 +2405,27 @@ if (GetFieldDef('bugs_activity', 'oldvalue')) {
                             oldvalue, newvalue FROM bugs_activity");
     $sth->execute;
     while (my ($bug_id, $who, $bug_when, $fieldid, $oldvalue, $newvalue) = $sth->fetchrow_array()) {
-        # print a "." every 500 records so the user knows we didn't die
-        print "." if !($i++ % 500); 
+        # print the iteration count every 500 records so the user knows we didn't die
+        print "$i..." if !($i++ % 500); 
         # Make sure (old|new)value isn't null (to suppress warnings)
         $oldvalue ||= "";
         $newvalue ||= "";
         my ($added, $removed) = "";
-        if (grep /^$fieldid$/, @multi) {
+        if (grep ($_ eq $fieldid, @multi)) {
+            $oldvalue =~ s/[\s,]+/ /g;
+            $newvalue =~ s/[\s,]+/ /g;
+            my @old = split(" ", $oldvalue);
+            my @new = split(" ", $newvalue);
             my (@add, @remove) = ();
-            my @old = split(/[ ,]/, $oldvalue);
-            my @new = split(/[ ,]/, $newvalue);
             # Find values that were "added"
             foreach my $value(@new) {
-                if (! grep /^$value$/, @old) {
+                if (! grep ($_ eq $value, @old)) {
                     push (@add, $value);
                 }
             }
             # Find values that were removed
             foreach my $value(@old) {
-                if (! grep /^$value$/, @new) {
+                if (! grep ($_ eq $value, @new)) {
                     push (@remove, $value);
                 }
             }
