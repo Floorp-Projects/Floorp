@@ -406,7 +406,7 @@ protected String getPlatformCanvasClassName()
             platformCanvasClassName = "org.mozilla.webclient.impl.wrapper_native.Win32BrowserControlCanvas";
         }
         else {
-            platformCanvasClassName = "org.mozilla.webclient.impl.wrapper_native.gtk.GtkBrowserControlCanvas";
+            platformCanvasClassName = "org.mozilla.webclient.impl.wrapper_native.GtkBrowserControlCanvas";
         }
     }
     
