@@ -73,6 +73,7 @@ var gSelectedFolder = null;
 var gName  = null;
 var gGroup = null;
 var gList  = null;
+var gIndentation = null; // temporary hack to indent the folders
 const gNameArc = RDF.GetResource(NC_NS+"Name");
 
 function Startup()
@@ -85,6 +86,11 @@ function Startup()
   gName.focus();
   onFieldInput();
   setTimeout(fillSelectFolderMenupopup, 100);
+  gIndentation = Array(16);
+  gIndentation[0] = "";
+  for (var i=1; i<16; ++i)
+    gIndentation[i]=gIndentation[i-1]+"  "; 
+ 
 } 
 
 function onFieldInput()
@@ -155,7 +161,7 @@ function fillFolder(aPopup, aFolder, aDepth)
       curr = curr.QueryInterface(Components.interfaces.nsIRDFResource);
       var element = document.createElementNS(XUL_NS, "menuitem");
       var name = BMDS.GetTarget(curr, gNameArc, true).QueryInterface(kRDFLITIID).Value;
-      element.setAttribute("label", name);
+      element.setAttribute("label", gIndentation[aDepth]+name);
       element.setAttribute("id", curr.Value);
       aPopup.appendChild(element);
       if (curr.Value == gSelectedFolder)
@@ -182,7 +188,7 @@ function fillSelectFolderMenupopup ()
   popup.appendChild(element);
 
   var folder = RDF.GetResource("NC:BookmarksRoot");
-  fillFolder(popup, folder, 0);
+  fillFolder(popup, folder, 1);
   if (gList.selectedIndex == -1) {
     gList.selectedIndex = 0;
     gSelectedFolder = "NC:BookmarksRoot";
