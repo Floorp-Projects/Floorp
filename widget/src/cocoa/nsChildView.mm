@@ -162,6 +162,16 @@ nsChildView::nsChildView() : nsBaseWidget() , nsDeleteObserved(this)
 nsChildView::~nsChildView()
 {
   if ( mView ) {
+    NSWindow* win = [mView window];
+    NSResponder* responder = [win firstResponder];
+
+    // We're being unhooked from the view hierarchy, don't leave our view
+    // or a child view as the window first responder.
+
+    if (responder && [responder isKindOfClass:[NSView class]] &&
+        [(NSView*)responder isDescendantOf:mView])
+      [win makeFirstResponder: [mView superview]];
+
     [mView removeFromSuperviewWithoutNeedingDisplay];
     [mView release];
   }
