@@ -44,15 +44,15 @@
  *
  * For more information on this interface please see
  * XXX this will change
- * http://www.w3.org/TR/2002/WD-DOM-Level-3-ASLS-20020409/load-save.html
+ * http://www.w3.org/TR/2002/WD-DOM-Level-3-LS-20020725/load-save.html
  */
 
 [scriptable, uuid(3e031490-9cc7-4d26-9953-e0496deb9992)]
 interface nsIDOMDOMEntityResolver : nsISupports
 {
   nsIDOMDOMInputSource  resolveEntity(in DOMString publicId, 
-				      in DOMString systemId, 
-				      in DOMString baseURI)
+                                      in DOMString systemId, 
+                                      in DOMString baseURI)
                                           raises(DOMException);
 };
 

@@ -44,14 +44,16 @@
  *
  * For more information on this interface please see
  * XXX this will change
- * http://www.w3.org/TR/2002/WD-DOM-Level-3-ASLS-20020409/load-save.html
+ * http://www.w3.org/TR/2002/WD-DOM-Level-3-LS-20020725/load-save.html
  */
 
 [scriptable, uuid(981182d5-67f1-4c03-922e-f309b79c7918)]
 interface nsIDOMDOMInputSource : nsISupports
 {
-  attribute nsIDOMDOMInputStream byteStream;
-  attribute nsIDOMDOMReader      characterStream;
+  // XXX Should this be an nsIInputStream?
+  attribute nsISupports          byteStream;
+  // XXX Should this be an nsIUnicharInputStream?
+  attribute nsISupports          characterStream;
   attribute DOMString            stringData;
   attribute DOMString            encoding;
   attribute DOMString            publicId;

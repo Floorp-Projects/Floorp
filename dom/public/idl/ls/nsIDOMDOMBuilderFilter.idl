@@ -44,14 +44,19 @@
  *
  * For more information on this interface please see
  * XXX this will change
- * http://www.w3.org/TR/2002/WD-DOM-Level-3-ASLS-20020409/load-save.html
+ * http://www.w3.org/TR/2002/WD-DOM-Level-3-LS-20020725/load-save.html
  */
 
 [scriptable, uuid(ebd2f2cd-2b91-4378-8583-542756e41170)]
 interface nsIDOMDOMBuilderFilter : nsISupports
 {
-  const unsigned short      FILTER_INTERRUPT               = 4;
-  unsigned short     startContainer(in nsIDOMNode snode);
+  // Constants returned by startElement and acceptNode
+  const short               FILTER_ACCEPT                  = 1;
+  const short               FILTER_REJECT                  = 2;
+  const short               FILTER_SKIP                    = 3;
+  const short               FILTER_INTERRUPT               = 4;
+
+  unsigned short     startElement(in nsIDOMElement elt);
   unsigned short     acceptNode(in nsIDOMNode enode);
   readonly attribute unsigned long   whatToShow;
 };
