@@ -31,6 +31,8 @@ nsXIFConverter::nsXIFConverter(nsString& aBuffer)
 {
   MOZ_COUNT_CTOR(nsXIFConverter);
 
+  mInScript = PR_FALSE;
+
   char* prolog = "<?xml version=\"1.0\"?>\n";
   char* doctype = "<!DOCTYPE xif>\n";
 
@@ -245,6 +247,10 @@ void nsXIFConverter::AddEndTag(nsIAtom* aTag, PRBool aDoIndent, PRBool aDoReturn
 
 PRBool  nsXIFConverter::IsMarkupEntity(const PRUnichar aChar)
 {
+  // If we're in a script, pass entities straight through without conversion:
+  if (mInScript)
+    return PR_FALSE;
+
   PRBool result = PR_FALSE;
   switch (aChar)
   {
@@ -386,6 +392,10 @@ void nsXIFConverter::BeginContainer(const nsString& aTag)
   BeginStartTag(container);
     AddAttribute(mIsa,aTag);
   FinishStartTag(container,PR_FALSE,PR_FALSE);
+
+  // Remember if we're inside a script tag:
+  if (aTag.EqualsWithConversion("script") || aTag.EqualsWithConversion("style"))
+    mInScript = PR_TRUE;
 }
 
 void nsXIFConverter::EndContainer(const nsString& aTag)
@@ -395,6 +405,10 @@ void nsXIFConverter::EndContainer(const nsString& aTag)
   AddEndTag(container,PR_TRUE,PR_FALSE);
   AddComment(aTag);
   mBuffer.Append(mLF);
+
+  // Remember if we're exiting a script tag:
+  if (aTag.EqualsWithConversion("script") || aTag.EqualsWithConversion("style"))
+    mInScript = PR_FALSE;
 }
 
 

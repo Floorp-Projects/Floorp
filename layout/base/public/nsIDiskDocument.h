@@ -52,7 +52,6 @@ public:
 
   static const nsIID& GetIID() { static nsIID iid = NS_IDISKDOCUMENT_IID; return iid; }
 
-	typedef enum {eSaveFileText = 0, eSaveFileHTML = 1 } ESaveFileType;
 	//typedef enum {eFileDiskFile = 0, eFileRemote = 1 } ESaveFileLocation;
 
   /** Initialize the document output. This may be called on document
@@ -74,15 +73,17 @@ public:
     *    												If false and aFileSpec exists, SaveFile returns an error.
     * @param inSaveCopy					True to save a copy of the file, without changing the file
     *														referenced internally.
-    * @param inSaveFileType			File type to save (text or HTML)
+    * @param inSaveFileType			Mime type to save (text/plain or text/html)
     * @param inSaveCharset			Charset to save the document in. If this is an empty
     *    												string, or "UCS2", then the doc will be saved as Unicode.
+    * @param inSaveFlags        Flags (see nsIDocumentEncoder).  If unsure, use 0.
     */
   NS_IMETHOD SaveFile(			nsFileSpec*			inFileSpec,
   													PRBool 					inReplaceExisting,
   													PRBool					inSaveCopy,
-  													ESaveFileType 	inSaveFileType,
-  													const nsString&	inSaveCharset)=0;
+  													const nsString&	inSaveFileType,
+  													const nsString&	inSaveCharset,
+                            PRUint32        inSaveFlags)=0;
   
   /** Return a file spec for the file. If the file has not been saved yet,
     * and thus has no fileSpec, this will return NS_ERROR_NOT_INITIALIZED.

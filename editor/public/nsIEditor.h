@@ -143,8 +143,10 @@ public:
    *          without changing the disk file associated with the doc.
    *          This would correspond to a 'Save Copy As' menu command
    *          (currently not in our UI)
+   *  @param aFormat
+   *          Mime type to save (text/plain or text/html)
    */
-  NS_IMETHOD SaveFile(nsFileSpec *aFileSpec, PRBool aReplaceExisting, PRBool aSaveCopy, nsIDiskDocument::ESaveFileType aSaveFileType)=0;
+  NS_IMETHOD SaveFile(nsFileSpec *aFileSpec, PRBool aReplaceExisting, PRBool aSaveCopy, const nsString& aFormat)=0;
 
   /* ------------ Transaction methods -------------- */
 
