@@ -243,3 +243,4 @@ nsXMLElement::GetBaseTag(nsIAtom** aResult)
   else
     return NS_OK;
 }
+
