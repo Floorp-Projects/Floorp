@@ -1843,7 +1843,7 @@ dnl Does this platform require array notation to assign to a va_list?
 AC_MSG_CHECKING(whether va_list assignments need array notation)
 AC_CACHE_VAL(ac_cv_valistisarray,
 	[AC_TRY_COMPILE([#include <varargs.h>],
-			[va_list ap, foo;foo = "abcdef";ap = foo+3;],
+			[va_list ap, foo;foo = "abcdef";ap = foo;],
 			[ac_cv_valistisarray=false],
 			[ac_cv_valistisarray=true])])
 
