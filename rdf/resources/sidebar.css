@@ -5,6 +5,7 @@ window {
 } 
 
 iframe {
+  height: 125px;
   border: 0px;
 }
 box#sidebox {
