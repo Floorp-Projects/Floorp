@@ -5,10 +5,14 @@ For Solaris
   1)  open mozilla.csh
 
   2)  make changes to variables
-          BLACKWOOD_HOME 
-          MOZILLA_FIVE_HOME 
-          JAVA_HOME 
-          TEST_PATH 
+          MOZILLA_FIVE_HOME           - Absolute path where mozilla-bin 
+                                        executable is located.
+          JAVA_HOME                   - Absolute Path to JDK dir.
+          TEST_PATH                   - Absolute Directory Path where file 
+                                        BWTestClass.lst is located.
+          USE_APPLET_FOR_REGISTRATION - set this variable if you wish to use 
+                                        applet for running tests Otherwise 
+                                        hacked DOMAccessorImpl class is used.
 
   3)  source mozilla.csh 
       this will set up the environment
@@ -20,6 +24,10 @@ For Solaris
                          created)
           BW_THREADMODE (Execute tests in single thread [S] or 
                          multi-thread [M] mode. Takes values S/M.)
+          BW_HTMLTEST   (URL where test.html file are located. Used if you 
+                         run tests through TestLoader applet)
+          BW_XMLTEST    (URL where test.xml file are located. Used if you run 
+                         tests through TestLoader applet)
 
   5)  Copy test.html and test.xml files to your Web-Servers DOCUMENT_ROOT
       (By default it is assumed that they can be accessed as
@@ -57,37 +65,59 @@ Assumption:
 
 For WIN32
 ===========
-Assumes you have installed PERL
+Assumes you have installed PERL and the following variables are set in your environment:
+  MOZILLA_HOME - top directory in mozilla's tree
+  JAVA_HOME    - path to JDK
 
   1)  open mozilla.bat
 
   2)  make changes to variables
-          BLACKWOOD_HOME - the path to the parent directory of this one
-          MOZILLA_FIVE_HOME 
-          JAVA_HOME 
-          TEST_PATH
-          TEST_URL- as explained below
+          USE_APPLET_FOR_REGISTRATION - set this variable if you wish to use 
+                                        applet for running tests
+                                        (now available under Win32 only). 
+                                        Otherwise hacked DOMAccessorImpl class 
+                                        is used.
+          MOZILLA_BIN                 - Mozilla's executable file name 
+                                        (e.g. mozilla.exe or viewer.exe)
+          TEST_PATH                   - path to the current directory 
+                                        (where mozilla.bat is)
+          TEST_URL                    - URL where test.html and test.xml are 
+                                        located (complete URL looks like: 
+                                        $TEST_URL/test.html).Used if you run 
+                                        tests through hacked DOMAccessor only
 
   3)  execute mozilla.bat from command prompt
-      this will set up the environment for this command prompt
+      this will create new console and set up the environment for this 
+      command prompt 
 
   4)  Edit BWProperties file and change the locations for variables
-          BW_TESTDIR    (Absolute Directory Path where file BWTestClass.lst is 
-                         located)
-          BW_LOGDIR     (Absolute Directory Path where  log files need to be 
-                         created)
-          BW_THREADMODE (Execute tests in single thread [S] or 
-                         multi-thread [M] mode. Takes values S/M.)
+           BW_TESTDIR    (Absolute Directory Path where file BWTestClass.lst is 
+                          located)
+           BW_LOGDIR     (Absolute Directory Path where  log files need to be 
+                          created)
+           BW_THREADMODE (Execute tests in single thread [S] or 
+                          multi-thread [M] mode. Takes values S/M.)
+  
+           BW_HTMLTEST   (URL where test.html file are located. Used if you 
+                          run tests through TestLoader applet)
+           BW_XMLTEST    (URL where test.xml file are located. Used if you 
+                          run tests through TestLoader applet)
+     
+      NOTE: Since on Windows file separator is a `\`, it should be escaped 
+            by another '\'. So if a file is in c:\mozilla\tests then it
+            would be written as c:\\mozilla\\tests.
+      
 
-  5)  Copy files test.html and test.xml into 
-      some document directory of HTTP server. TEST_URL environment 
-      variable should contain the URL of this directory.
-      For example, if you placed the files in the root directory of
-      HTTP server "myserver", then value of TEST_URL should be 
-      "http://myserver".
+  5)  Invoke autorun.pl from command prompt.
+         perl autorun.pl
+      For quick testing say
+          if you use applet for registration  
+             mozilla.exe file:/TestLoaderHTML.html
+              (mozilla.exe file:/TestLoaderXML.html)
 
-  6)  Invoke autorun.pl from command prompt.
-       perl autorun.pl
+          if you use hacked DOMAcceessorImpl.
+             mozilla.exe file:/test.html
+             (mozilla.exe file:/test.xml)
 
   7)  The results are recorded in HTML file BWTest.html
       and in log file BWTest.log

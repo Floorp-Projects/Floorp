@@ -1,7 +1,24 @@
-/**
- * @version 1.00 06 Jul 1999
- * @author Raju Pallath
- */
+/*
+ The contents of this file are subject to the Mozilla Public
+ License Version 1.1 (the "License"); you may not use this file
+ except in compliance with the License. You may obtain a copy of
+ the License at http://www.mozilla.org/MPL/
+
+ Software distributed under the License is distributed on an "AS
+ IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ implied. See the License for the specific language governing
+ rights and limitations under the License.
+
+ The Original Code is mozilla.org code.
+
+ The Initial Developer of the Original Code is Sun Microsystems,
+ Inc. Portions created by Sun are
+ Copyright (C) 1999 Sun Microsystems, Inc. All
+ Rights Reserved.
+
+ Contributor(s):
+*/
+
 package org.mozilla.dom.test;
 
 import java.lang.*;
@@ -19,16 +36,23 @@ class BWJavaTemplate
    String packageName=null;
    String outputDir=null;
    Vector outputFiles=null;
+   private Method[] methods = null;
    private String currMethod=new String();
    private String currParamList=new String();
+   private Hashtable rules = null;
 
-   public BWJavaTemplate(String ajclass, String aoutDir)
+   public BWJavaTemplate(String ajclass, String aoutDir, String rulesFile)
    {
+	outputDir = aoutDir+System.getProperty("file.separator");
        fullclass = ajclass;
        if (fullclass == null) {
         System.out.println("Class Name cannot be NULL... ");
 	return;
        }
+
+	if (rulesFile != null) {
+		loadRules(rulesFile);
+	}	
        
        int idx = fullclass.lastIndexOf(".");
        if ( idx != -1)
@@ -48,13 +72,16 @@ System.out.println("class Name is  " + jclass);
        }
        outputFiles = new Vector();
 
-       if (!(parseClassConstructor())) return;
-       if (!(parseClassMethod())) return;
+System.out.println("Parsing constructors and methods ...");
+       if (!(parseClassConstructor()) && !(parseClassMethod())) {
+	        System.out.println("Can't parse neither COnstructors nor Methods !!!\n");
+		return;
+	}
 
        DataOutputStream dos = null;
        String txtFile = jclass + ".txt";
        try {
-        dos = new DataOutputStream( new FileOutputStream(txtFile));
+        dos = new DataOutputStream( new FileOutputStream(outputDir+txtFile));
        } catch (Exception e) {
          System.out.println("ERROR: Could not create File " + txtFile);
          return; 
@@ -81,6 +108,32 @@ System.out.println("class Name is  " + jclass);
 
    }
 
+
+	private void loadRules(String rulesFile) {
+		try {
+			/* Input stream routines*/
+			FileInputStream in = new FileInputStream(rulesFile);
+			LineNumberReader ln = new LineNumberReader((Reader)(new InputStreamReader((InputStream)in)));
+
+			/*Parsing rules file*/
+			rules = new Hashtable();
+			String str = null;
+			int pos = -1;
+			while((str = ln.readLine()) != null) {
+				if ((pos = str.indexOf(' ')) <= 0 || pos == str.length()) {
+					System.out.println("WARNIG: rules file format error at line "+ln.getLineNumber());
+				} else {
+					//System.out.println("Rules: "+str.substring(0, pos)+" <-> "+str.substring(pos+1));
+					rules.put((Object)str.substring(0, pos), (Object)str.substring(pos+1));
+				}
+			}
+		} catch (Exception e) {
+			System.out.println("WARNING: Can't read rules file "+rulesFile+": "+e.fillInStackTrace()+"\n");
+			rules = null;
+		}
+	}
+
+
    /**
    * Parses the class constructors and create class files
    *
@@ -95,7 +148,7 @@ System.out.println("class Name is  " + jclass);
          System.out.println("Could not find class file " + fullclass);
          return false;
        }
-       if (Modifier.isAbstract(cl.getModifiers()))
+       if (Modifier.isAbstract(cl.getModifiers())) 
                return false;
 
        if (Modifier.isInterface(cl.getModifiers()))
@@ -216,11 +269,12 @@ System.out.println("class Name is  " + jclass);
          System.out.println("Could not find class file " + fullclass);
          return false;
        }
-       Method methods[] = rt.getMethods(cl);
+       methods = rt.getMethods(cl);
        String paramString = null;
        int staticFlag=0;
        for (int i = 0; i < methods.length; i++)
        {  
+System.out.println("Parsing method: "+jclass+" -> "+methods[i].getName());
             staticFlag=0;
             Method m = methods[i];
             Class[] paramTypes = m.getParameterTypes();
@@ -236,6 +290,7 @@ System.out.println("class Name is  " + jclass);
 
 	    paramString = new String();
 	    ParamCombination pcomb = null;
+System.out.println("Number of parms: "+paramTypes.length);
             pcomb = new ParamCombination(paramTypes.length);
 	    if (pcomb == null)
 	    {
@@ -335,7 +390,7 @@ System.out.println("class Name is  " + jclass);
 
        if (param.compareTo("String") == 0)
        {
-           result.addElement("\"null\"");     
+           result.addElement("null");     
            result.addElement("\"DUMMY_STRING\"");     
        } else
        if (param.compareTo("int") == 0) 
@@ -425,7 +480,11 @@ System.out.println("class Name is  " + jclass);
        {
            result.addElement("null");
            result.addElement("new Byte(Byte.MIN_VALUE)");     
-           result.addElement("new Byte(Byte.MAX_VALUE)");     
+           result.addElement("new Byte(Byte.MAX_VALUE)");   
+	} else 
+	if (rules != null && rules.get(param) != null) {
+	   result.addElement((String)rules.get(param));
+	   result.addElement("null");  
        } else {
            result.addElement("null");
            result.addElement("NOTNULL");
@@ -477,7 +536,7 @@ System.out.println("class Name is  " + jclass);
 
      DataOutputStream raf = null;
      try {
-      raf = new DataOutputStream( new FileOutputStream(filename));
+      raf = new DataOutputStream( new FileOutputStream(outputDir+filename));
      } catch (Exception e) {
          System.out.println("ERROR: Could not create File " + filename);
          return; 
@@ -515,6 +574,8 @@ System.out.println("class Name is  " + jclass);
         fstr = fstr + "import org.mozilla.dom.*;";
         fstr = fstr + "\n";
         fstr = fstr + "import org.w3c.dom.*;";
+        fstr = fstr + "\n";
+        fstr = fstr + "import org.w3c.dom.html.*;";
         fstr = fstr + "\n";
         fstr = fstr + "\n";
         fstr = fstr + "public class " + cName;
@@ -608,10 +669,13 @@ System.out.println("class Name is  " + jclass);
         fstr = fstr + "      osRoutine(os);"; 
         fstr = fstr + "\n";
 
-        String pString=valueList;
+/*        String pString=valueList;
         if (valueList == null)
               pString= new String("");
-       
+*/
+
+	if (rules != null && rules.get(className) != null) 
+		fstr =fstr + makeTestRoutine(className, returnType, methodName, valueList);       
 
         fstr = fstr + "      return BWBaseTest.PASSED;";
         fstr = fstr + "\n";
@@ -678,7 +742,7 @@ System.out.println("class Name is  " + jclass);
      DataOutputStream dos = null;
      String txtFile = className + ".txt";
      try {
-      dos = new DataOutputStream( new FileOutputStream(txtFile));
+      dos = new DataOutputStream( new FileOutputStream(outputDir+txtFile));
      } catch (Exception e) {
          System.out.println("ERROR: Could not create File " + txtFile);
          return; 
@@ -701,9 +765,64 @@ System.out.println("class Name is  " + jclass);
      }
    }
 
+
+
+	private Method findMethod(String mn) {
+		if (methods == null)
+			return null;
+		for (int i=0; i < methods.length; i++) {
+			//System.out.println("Comparing: "+mn+" <-> "+methods[i].getName());
+			if (methods[i].getName().compareTo(mn) == 0)
+				return methods[i];
+		}
+		return null;
+	}
+
+
+	private String makeTestRoutine(String className, String returnType, String methodName, String valueList) {
+		String result = new String("");
+		String tab = "   ", tab1=tab+tab, tab2=tab1+tab, tab3=tab2+tab1;
+		String robj = "", check = "";
+		String valList = valueList;
+
+		if (valueList == null)
+			valList = "";
+		/*Weather method returns object ?*/
+		if (returnType.compareTo("void") != 0)  {
+			robj = returnType + " rc = ";	
+			if (returnType.indexOf('.') > 0)
+				check = tab3 + "if (rc == null) return BWBaseTest.FAILED;\n";
+		}
+		/*Let's try to find set<->get pair for methods with one argument ...*/
+		if (methodName.startsWith("set") && valueList.indexOf(',') < 0 && valueList.compareTo("null") != 0) {
+			String getMethod = "get" + methodName.substring(3);
+			//System.out.println("GET_METHOD "+getMethod);
+			Method m;
+			if ((m = findMethod(getMethod)) != null && m.getParameterTypes().length == 0) {
+				String equals = ".equals";
+				/* Weather return type is standard ?*/
+				if (m.getReturnType().getName().indexOf('.') < 0) 
+					equals = "==";
+				check = tab3+"if (!(obj."+getMethod+"()"+equals+"("+valueList+"))) return BWBaseTest.FAILED;\n";
+			}
+		}
+		result += tab1 + "Document d = (Document)tobj;\n";
+		result += tab1 + "if (d != null) {\n";
+		result += tab2 + "try {\n"; 
+		result += tab3 + className+" obj = " + rules.get(className)+";\n";
+		result += tab3 + robj + "obj." + methodName + "("+valList+");\n" + check; 
+		result += tab2 + "} catch (Exception e) {\n";
+		result += tab3 + "return BWBaseTest.FAILED;\n";
+		result += tab2 + "}\n";
+		result += tab1 + "} else {\n";
+		result += tab2 + "return BWBaseTest.FAILED;\n";
+		result += tab1 + "}\n";
+		return result;
+	}
+
    public static void usage()
    {
-        System.out.println("Usage: java JavaTestTemplate [-d <output dir>] <className>");
+        System.out.println("Usage: java JavaTestTemplate [-d <output dir>] [-r <rules_file>] <className>");
    }
 
    public static void main(String args[])
@@ -716,7 +835,47 @@ System.out.println("class Name is  " + jclass);
 
      String className = null;
      String outDirectory = null;
+     String rulesFile = null;
 
+	switch(args.length) {
+	case(0): 
+		BWJavaTemplate.usage(); 
+		return; 
+	case(1): 
+		if(args[0].charAt(0) == '-') {
+			BWJavaTemplate.usage(); 
+			return; 
+		}
+		className = args[0];
+		break;
+	default: 
+		for(int i=0; i<args.length;) {	
+			if(args[i].charAt(0) != '-') {
+				if (className != null) {	
+					BWJavaTemplate.usage();
+					return; 
+				}
+				className = args[i];
+				i++;
+			} else {
+				switch(args[i].charAt(1)) {
+				case('d'): 
+					outDirectory = args[i+1];
+					i+=2;
+					break;
+				case('r'):
+					rulesFile = args[i+1];
+					i+=2;
+					break;
+				default:
+					BWJavaTemplate.usage(); 
+					return; 
+				} //end of switch
+			}
+		}
+	} //end of switch
+
+/*
      if (args.length == 3) { 
        if (args[0].compareTo("-d") != 0) { 
           BWJavaTemplate.usage(); 
@@ -729,8 +888,8 @@ System.out.println("class Name is  " + jclass);
         outDirectory = new String(".");
         className = args[0];
      }
-
-     BWJavaTemplate jt = new BWJavaTemplate(className, outDirectory);
+*/
+     BWJavaTemplate jt = new BWJavaTemplate(className, outDirectory, rulesFile);
      
    }
 }

@@ -1,18 +1,31 @@
-# !/bin/perl
+#!/usr/bin/perl
 #
-# Created By:     Raju Pallath
-# Creation Date:  Aug 2nd 1999
+# The contents of this file are subject to the Mozilla Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/MPL/
 #
-# Ported by:	  Konstantin S. Ermakov
-# Ported date:	  Aug 24th 1999
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
 #
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is Sun Microsystems,
+# Inc. Portions created by Sun are
+# Copyright (C) 1999 Sun Microsystems, Inc. All
+# Rights Reserved.
+#
+# Contributor(s):
+
+###################################################################
 # This script is used to  invoke all test case for DOM API
-# through apprunner and to recored their results
+# through mozilla_bin and to recored their results
 #
 #
 
 # Attach Perl Libraries
-###################################################################
 use Cwd;
 use File::Copy;
 use Win32::Process;
@@ -20,14 +33,15 @@ use Win32::Process;
 ###################################################################
 
 
-# time in seconds after which the apprunner has to be killed.
-# by default the apprunner will be up for so much time regardless of
+# time in seconds after which the mozilla has to be killed.
+# by default the mozilla will be up for so much time regardless of
 # whether over or not. User can either decrease it or increase it.
 #
-$DELAY_FACTOR = 25;
-# time period in seconds of periodically checking: is the apprunner still alive
+$DELAY_FACTOR = 15;
+# time period in seconds of periodically checking: is the mozilla still alive
 $DELAY_OF_CYCLE = 5;
 
+$TESTROOT = $ENV{"TEST_PATH"};
 $DOCROOT = $ENV{"TEST_URL"};
 
 # delimiter for logfile
@@ -280,14 +294,22 @@ if ( $mozhome eq "" ) {
     die;
 }
 
-if ( ! -f "$mozhome/apprunner.exe" ) {
-    print "Could not find 'apprunner.exe' in MOZILLA_FIVE_HOME.\n";
+$mozilla_bin=@ENV{"MOZILLA_BIN"};
+
+if ( ! -f "$mozhome/$mozilla_bin" ) {
+    print "Could not find $mozilla_bin in MOZILLA_FIVE_HOME ($mozhome).\n";
     print "Please check your setting...\n";
     die;
 }
 
+
+if ( ! -d $TESTROOT) {
+	print "TEST_PATH directory doesn't exist ($TESTROOT)\n";
+	print "Please check your setting...\n";
+	die;
+}
 # Here must come a piece of code, that determinates 
-# apprunner instance, removes core, but there's no
+# mozilla instance, removes core, but there's no
 # core under win32
 
 # Backup existing .lst file
@@ -330,30 +352,46 @@ if ( -f "$LOGHTML" ) {
 }
 
 # construct DOCFILE
-$DOCFILE = "$DOCROOT/test.html";
+if (@ENV{"USE_APPLET_FOR_REGISTRATION"}) {
+	$DOCFILE = "$DOCROOT/TestLoaderHTML.html";
+} else {
+	$DOCFILE = "$DOCROOT/test.html";
+}
 $runcnt = 1;
 $filename = "$curdir/BWTestClass.lst.ORIG";
 
 if ($runtype == 1) {
-    $DOCFILE = "$DOCROOT/test.html";
+    if (@ENV{"USE_APPLET_FOR_REGISTRATION"}) {
+      $DOCFILE = "$DOCROOT/TestLoaderHTML.html";
+    } else {
+      $DOCFILE = "$DOCROOT/test.html";
+    }
     $filename = "$curdir/BWTestClass.lst.html.ORIG";
     $runcnt = 1;
 }
 
 if ($runtype == 2) {
-    $DOCFILE = "$DOCROOT/test.xml";
+    if (@ENV{"USE_APPLET_FOR_REGISTRATION"}) {
+      $DOCFILE = "$DOCROOT/TestLoaderXML.html";
+    } else {
+      $DOCFILE = "$DOCROOT/test.xml";
+    }
     $filename = "$curdir/BWTestClass.lst.xml.ORIG";
     $runcnt = 1;
 }
 
 if ($runtype == 3) {
-    $DOCFILE = "$DOCROOT/test.html";
+    if (@ENV{"USE_APPLET_FOR_REGISTRATION"}) {
+      $DOCFILE = "$DOCROOT/TestLoaderHTML.html";
+    } else {
+      $DOCFILE = "$DOCROOT/test.xml";
+    }
     $filename = "$curdir/BWTestClass.lst.html.ORIG";
     $runcnt = 2;
 }
 
 # Prepare log streams
-open( LOGFILE, ">>$LOGFILE" ) or die("Can't open LOG file...\n");
+open( LOGFILE, ">>$LOGFILE" ) or die("Can't open LOG file ($LOGFILE)...\n");
 select LOGFILE; $| = 1; select STDOUT;
 open( LOGHTML, ">$LOGHTML" ) or die("Can't open HTML file...\n");
 
@@ -393,16 +431,17 @@ while (true) {
 	($nom) = ($testcase =~ /([^\.]*)$/);
 	$testlog = "$curdir/log/$nom.$id.log";
 	
+	print("Loading $DOCFILE ...\n");
 	open( SAVEOUT, ">&STDOUT" );
 	open( SAVEERR, ">&STDERR" );
 	open( STDOUT, ">$testlog" ) or die "Can't redirect stdout";
 	open( STDERR, ">&STDOUT" );
         Win32::Process::Create($ProcessObj,
-			       "$mozhome/apprunner.exe",
-			       "$mozhome/apprunner.exe $DOCFILE ",
+			       "$mozhome/$mozilla_bin",
+			       "$mozhome/$mozilla_bin $DOCFILE",
 			       1,
 			       NORMAL_PRIORITY_CLASS,
-			       "$mozhome" ) || die "cann't start apprunner";
+			       "$TESTROOT" ) || die "cann't start $moilla_bin";
 	close( STDOUT );
 	close( STDERR );
 	open( STDOUT, ">&SAVEOUT" );

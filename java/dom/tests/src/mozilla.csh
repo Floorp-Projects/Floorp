@@ -1,7 +1,6 @@
-setenv BLACKWOOD_HOME `pwd`/..
+setenv TEST_PATH `pwd`/..
 setenv MOZILLA_FIVE_HOME `pwd`/../../../../dist/bin
 setenv JAVA_HOME /usr/local/java/jdk1.2/solaris 
-setenv TEST_PATH  ${BLACKWOOD_HOME}
 setenv PREFIX /workspace
 
 setenv LD_LIBRARY_PATH ${JAVA_HOME}/jre/lib/sparc

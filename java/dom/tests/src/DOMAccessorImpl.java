@@ -25,17 +25,31 @@ import java.util.Vector;
 import java.util.Enumeration;
 
 import org.w3c.dom.Document;
-import org.mozilla.dom.test.TestLoader;
+
+import org.mozilla.dom.test.*;
 
 public class DOMAccessorImpl implements DOMAccessor, DocumentLoadListener {
 
-    private DOMAccessor instance = null;
+    private static DOMAccessor instance = null;
     private Vector documentLoadListeners = new Vector();
 
     public static native void register();
     public static native void unregister();
 
-    public synchronized DOMAccessor getInstance() {
+    static {
+	System.err.println("\n\nDOMAccessor: autoregestring ...\n\n");
+	try {
+		//at this moment library is not loaded yet - tet's do it
+		System.loadLibrary("javadomjni");
+		DocumentImpl.initialize();
+	} catch (Exception e) {
+		System.out.println("Can't load javadomjni.dll: "+e);
+		System.exit(-1);
+	}
+	getInstance().addDocumentLoadListener(new TestListener());
+    }
+
+    public static synchronized DOMAccessor getInstance() {
 	if (instance == null) {
 	    instance = new DOMAccessorImpl();
 	}
@@ -63,6 +77,8 @@ public class DOMAccessorImpl implements DOMAccessor, DocumentLoadListener {
     public synchronized void 
         startURLLoad(String url, String contentType, Document doc) {
 
+	System.err.println("############## DOMAccessor: startURLLoad "+url);
+
 	for (Enumeration e = documentLoadListeners.elements();
 	     e.hasMoreElements();) {
 	    DocumentLoadListener listener = 
@@ -74,44 +90,23 @@ public class DOMAccessorImpl implements DOMAccessor, DocumentLoadListener {
     public synchronized void 
 	endURLLoad(String url, int status, Document doc) {
 
+	System.err.println("############ DOMAccessor: endURLLoad "+url);
+
+
 	for (Enumeration e = documentLoadListeners.elements();
 	     e.hasMoreElements();) {
 	    DocumentLoadListener listener = 
 		(DocumentLoadListener) e.nextElement();
 	    listener.endURLLoad(url, status, doc);
 	}
-
-        if ((!(url.endsWith(".html"))) && (!(url.endsWith(".xml"))))
-          return;
-
-        if (url.endsWith(".html"))
-        {
-          if (url.indexOf("test.html") == -1) {
-            System.out.println("TestCases Tuned to run with test.html...");
-            return;
-          }
-        }
-
-        if (url.endsWith(".xml"))
-        {
-          if (url.indexOf("test.xml") == -1) {
-            System.out.println("TestCases Tuned to run with test.xml...");
-            return;
-          }
-        }
-
-         Object obj = (Object) doc;
-
-         TestLoader tl = new TestLoader(obj, 0);
-         if (tl != null) {
-            Object retobj = tl.loadTest();
-         }
-
     }
 
     public synchronized void 
 	progressURLLoad(String url, int progress, int progressMax, 
 			Document doc) {
+
+
+	System.err.println("############ DOMAccessor: progressURLLoad "+url);
 
 	for (Enumeration e = documentLoadListeners.elements();
 	     e.hasMoreElements();) {
@@ -123,6 +118,9 @@ public class DOMAccessorImpl implements DOMAccessor, DocumentLoadListener {
 
     public synchronized void 
         statusURLLoad(String url, String message, Document doc) {
+
+
+	System.err.println("############ DOMAccessor: statusURLLoad "+url);
 
 	for (Enumeration e = documentLoadListeners.elements();
 	     e.hasMoreElements();) {
@@ -136,6 +134,9 @@ public class DOMAccessorImpl implements DOMAccessor, DocumentLoadListener {
     public synchronized void 
         startDocumentLoad(String url) {
 
+
+	System.err.println("############ DOMAccessor: startDocLoad "+url);
+
 	for (Enumeration e = documentLoadListeners.elements();
 	     e.hasMoreElements();) {
 	    DocumentLoadListener listener = 
@@ -147,6 +148,9 @@ public class DOMAccessorImpl implements DOMAccessor, DocumentLoadListener {
     public synchronized void 
         endDocumentLoad(String url, int status, Document doc) {
 
+
+	System.err.println("############ DOMAccessor: endDocLoad "+url);
+
 	for (Enumeration e = documentLoadListeners.elements();
 	     e.hasMoreElements();) {
 	    DocumentLoadListener listener = 
@@ -154,4 +158,58 @@ public class DOMAccessorImpl implements DOMAccessor, DocumentLoadListener {
 	    listener.endDocumentLoad(url, status, doc);
 	}
     }
-}
+} //end of class
+
+
+
+class TestListener implements DocumentLoadListener {
+
+    public void endDocumentLoad(String url, int status, Document doc) {
+
+      if (url.endsWith(".xul")
+  	|| url.endsWith(".js")
+	|| url.endsWith(".css") 
+	//|| url.startsWith("file:")
+	) 
+	return;
+
+   if ((!(url.endsWith(".html"))) && (!(url.endsWith(".xml"))))
+     return;
+
+   if (url.endsWith(".html"))
+   {
+     if (url.indexOf("test.html") == -1) {
+       System.err.println("TestCases Tuned to run with test.html...");
+       return;
+     }
+   }
+
+   if (url.endsWith(".xml"))
+   {
+     if (url.indexOf("test.xml") == -1) {
+       System.err.println("TestCases Tuned to run with test.xml...");
+       return;
+     }
+   }
+
+    Object obj = (Object) doc;
+
+    TestLoader tl = new TestLoader(obj, 0);
+    if (tl != null) {
+       Object retobj = tl.loadTest();
+    }
+
+    //doc = null;
+
+
+    }
+
+    public void startURLLoad(String url, String contentType, Document doc) {}
+    public void progressURLLoad(String url, int progress, int progressMax, 
+				Document doc) {}
+    public void statusURLLoad(String url, String message, Document doc) {}
+
+    public void startDocumentLoad(String url) {}
+    public void endURLLoad(String url, int status, Document doc) {}
+
+} //end of class

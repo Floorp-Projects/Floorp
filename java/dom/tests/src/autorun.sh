@@ -1,16 +1,32 @@
 #!/bin/sh -x
 #
-# Created By:     Raju Pallath
-# Creation Date:  Aug 2nd 1999
+# The contents of this file are subject to the Mozilla Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/MPL/
 #
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is Sun Microsystems,
+# Inc. Portions created by Sun are
+# Copyright (C) 1999 Sun Microsystems, Inc. All
+# Rights Reserved.
+#
+# Contributor(s):
+
+##################################################################
 # This script is used to  invoke all test case for DOM API
-#  thru' apprunner and to recored their results
+#  thru' mozilla-bin and to record their results
 #
+##################################################################
 #
-
-
-# time in seconds after which the apprunner has to be killed.
-# by default the apprunner will be up for so much time regardless of
+# time in seconds after which the mozilla-bin has to be killed.
+# by default the mozilla-bin will be up for so much time regardless of
 # whether over or not. User can either decrease it or increase it.
 #
 DELAY_FACTOR=50
@@ -216,13 +232,13 @@ constructHTMLBody()
    sort -u $LOGTXT > $LOGTXT.tmp
    /bin/mv $LOGTXT.tmp $LOGTXT
 
-   for i in `cat $LOGTXT`
+   while read i
    do
      
      class=`echo $i | cut -d"=" -f1`
      status=`echo $i | cut -d"=" -f2`
      echo "<tr><td>$class</td><td>$status</td></tr>\n" >> $LOGHTML
-   done
+   done < $LOGTXT
 
 }
 
@@ -355,20 +371,20 @@ then
   exit 1;
 fi
 
-if [ !  -x "$mozhome/apprunner"  ]
+if [ !  -x "$mozhome/mozilla-bin"  ]
 then
-  echo "Could not find executable 'apprunner' in MOZILLA_FIVE_HOME."
+  echo "Could not find executable 'mozilla-bin' in MOZILLA_FIVE_HOME."
   echo "Please check your setting..."
   echo
   exit 1;
 fi
 
 
-chkpid=`ps -aef | grep apprunner | grep -v grep | awk '{ print $2 }'` 
+chkpid=`ps -aef | grep mozilla-bin | grep -v grep | awk '{ print $2 }'` 
 if [ ! -z "$chkpid" ]
 then
-   echo "Detected an instance of apprunner...";
-   echo "Exit out from apprunner and restart this script..."
+   echo "Detected an instance of mozilla-bin...";
+   echo "Exit out from mozilla-bin and restart this script..."
    exit 1
 fi
 
@@ -444,15 +460,26 @@ then
 fi
 /bin/touch $LOGHTML
 
-
 # construct DOCFILE
-DOCFILE="$DOCROOT/test.html"
+appreg=${USE_APPLET_FOR_REGISTRATION}
+if [ -z "$appreg" ]
+then
+	DOCFILE="$DOCROOT/test.html";
+else
+	DOCFILE="$DOCROOT/TestLoaderHTML.html";
+fi
+
 runcnt=1
 filename="$curdir/BWTestClass.lst.ORIG"
 
 if [ "$runtype" = "1" ]
 then
-  DOCFILE="$DOCROOT/test.html"
+  if [ -z "$appreg" ]
+  then
+	DOCFILE="$DOCROOT/test.html";
+  else
+	DOCFILE="$DOCROOT/TestLoaderHTML.html";
+  fi
   runcnt=1
   filename="$curdir/BWTestClass.lst.html.ORIG"
 fi
@@ -460,28 +487,33 @@ fi
 if [ "$runtype" = "2" ]
 then
   DOCFILE="$DOCROOT/test.xml"
+  if [ -z "$appreg" ]
+  then
+	DOCFILE="$DOCROOT/test.xml";
+  else
+	DOCFILE="$DOCROOT/TestLoaderXML.html";
+  fi
   filename="$curdir/BWTestClass.lst.xml.ORIG"
   runcnt=1
 fi
 
 if [ "$runtype" = "3" ]
 then
-  DOCFILE="$DOCROOT/test.html"
+  if [ -z "$appreg" ]
+  then
+	DOCFILE="$DOCROOT/test.html";
+  else
+	DOCFILE="$DOCROOT/TestLoaderHTML.html";
+  fi
   filename="$curdir/BWTestClass.lst.html.ORIG"
   runcnt=2
 fi
 
 
-echo "Runtype is $runtype"
 constructLogHeader
 
 CLASSPATH="$curdir/../classes:${CLASSPATH}"
 
-
-if [ "$executionMode" = "M" ]
-then
-   DELAY_FACTOR=`expr $DELAY_FACTOR \* 10`
-fi
 
 currcnt=0
 while true
@@ -527,11 +559,11 @@ do
    format=`echo $testcase | sed 's/\./\//g'`
    nom=`basename $format`
    testlog="$curdir/log/$nom.$id.log"
-   ./apprunner $DOCFILE 2>$testlog 1>&2 &
+   ./mozilla-bin $DOCFILE 2>$testlog 1>&2 &
 
-   # dummy sleep to allow apprunner to show up on process table
+   # dummy sleep to allow mozilla-bin to show up on process table
    sleep 3
-   curpid=`ps -aef | grep apprunner | grep -v grep | awk '{ print $2 }'`
+   curpid=`ps -aef | grep mozilla-bin | grep -v grep | awk '{ print $2 }'`
 
    flag=0
    cnt=0
@@ -556,7 +588,7 @@ do
          break
       fi
 
-      chkpid=`ps -aef | grep apprunner | grep -v grep | awk '{ print $2 }'` 
+      chkpid=`ps -aef | grep mozilla-bin | grep -v grep | awk '{ print $2 }'` 
       if [ -z "$chkpid" ]
       then
            flag=1
@@ -570,7 +602,6 @@ do
       fi
 
       cnt=`expr $cnt + 10`
-
       if [ $cnt -eq $DELAY_FACTOR ]
       then
          flag=0
@@ -596,7 +627,6 @@ do
  done
 
  currcnt=`expr $currcnt + 1`
-
 
  if [ $currcnt -eq $runcnt ]
  then

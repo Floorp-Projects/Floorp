@@ -1,5 +1,7 @@
-BW_TESTDIR=/home/user/Blackwood/src/JavaDOM/CoreLevel1/src
+BW_TESTDIR=
 BW_TESTFILE=BWTestClass.lst
-BW_LOGDIR=/home/user/Blackwood/src/JavaDOM/CoreLevel1/src/log
+BW_LOGDIR=
 BW_LOGFILE=BWTest.log
 BW_THREADMODE=S
+BW_HTMLTEST=file:
+BW_XMLTEST=file:
