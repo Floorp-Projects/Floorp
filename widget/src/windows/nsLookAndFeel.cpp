@@ -249,7 +249,7 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
           DWORD length, type;
           LONG result;
 
-          sSubmenuDelay = 200;
+          sSubmenuDelay = 300;
 
           result = ::RegOpenKeyEx(HKEY_CURRENT_USER, 
                    "Control Panel\\Desktop", 0, KEY_READ, &key);
