@@ -44,6 +44,11 @@
 #include "nsIPref.h"
 #include "nsXPIDLString.h"
 
+#ifdef IBMBIDI
+#include "nsIUBidiUtils.h"
+#include "nsBidiPresUtils.h"
+#endif // IBMBIDI
+
 #define ELLIPSIS "..."
 
 #define CROP_LEFT   "left"
@@ -270,6 +275,84 @@ nsTextBoxFrame::PaintTitle(nsIPresContext*      aPresContext,
     const nsStyleColor* colorStyle = (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
     aRenderingContext.SetColor(colorStyle->mColor);
 
+#ifdef IBMBIDI
+    nsresult rv = NS_ERROR_FAILURE;
+
+    if (mState & NS_FRAME_IS_BIDI) {
+      nsBidiPresUtils* bidiUtils;
+      aPresContext->GetBidiUtils(&bidiUtils);
+
+      if (bidiUtils) {
+        nsCOMPtr<nsIBidi> bidiEngine;
+        bidiUtils->GetBidiEngine(getter_AddRefs(bidiEngine));
+        
+        if (bidiEngine) {
+          const nsStyleDisplay* display;
+          GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) display);
+          PRUnichar* buffer = (PRUnichar*) mCroppedTitle.GetUnicode();
+          PRInt32 runCount;
+          nsBidiDirection direction =
+                                    (NS_STYLE_DIRECTION_RTL == display->mDirection)
+                                    ? NSBIDI_RTL : NSBIDI_LTR;
+
+          rv = bidiEngine->SetPara(buffer, mCroppedTitle.Length(), direction, nsnull);
+
+          if (NS_SUCCEEDED(rv) ) {
+            rv = bidiEngine->CountRuns(&runCount);
+
+            if (NS_SUCCEEDED(rv) ) {
+              nscoord width;
+              PRBool isRTL = PR_FALSE;
+              PRInt32 i, start, limit, length;
+              nsCharType charType;
+              nsBidiLevel level;
+
+              PRBool isBidiSystem;
+              PRUint32 hints = 0;
+              aRenderingContext.GetHints(hints);
+              isBidiSystem = (hints & NS_RENDERING_HINT_BIDI_REORDERING);
+
+              for (i = 0; i < runCount; i++) {
+                rv = bidiEngine->GetVisualRun(i, &start, &length, &direction);
+                if (NS_FAILED(rv) ) {
+                  break;
+                }
+                bidiEngine->GetCharTypeAt(start, &charType);
+
+                rv = bidiEngine->GetLogicalRun(start, &limit, &level);
+                if (NS_FAILED(rv) ) {
+                  break;
+                }
+                if (eCharType_RightToLeftArabic == charType) {
+                  isBidiSystem = (hints & NS_RENDERING_HINT_ARABIC_SHAPING);
+                }
+                if (isBidiSystem && (CHARTYPE_IS_RTL(charType) ^ isRTL) ) {
+                  // set reading order into DC
+                  isRTL = !isRTL;
+                  aRenderingContext.SetRightToLeftText(isRTL);
+                }
+                bidiUtils->FormatUnicodeText(aPresContext, buffer + start, length,
+                                             charType, level & 1,
+                                             isBidiSystem);
+
+                aRenderingContext.GetWidth(buffer + start, length, width, nsnull);
+                aRenderingContext.DrawString(buffer + start, length, textRect.x,
+                                             textRect.y, width);
+                textRect.x += width;
+              } // for
+              // Restore original x (for aRenderingContext.FillRect below),
+              // as well as reading order
+              textRect.x = aRect.x;
+              if (isRTL) {
+                aRenderingContext.SetRightToLeftText(PR_FALSE);
+              }
+            }
+          }
+        } // bidiEngine
+      } // bidiUtils
+    } // frame is bidi
+    if (NS_FAILED(rv) )
+#endif // IBMBIDI
     aRenderingContext.DrawString(mCroppedTitle, textRect.x, textRect.y);
 
     if (mAccessKeyInfo && mAccessKeyInfo->mAccesskeyIndex != kNotFound) {
@@ -351,6 +434,15 @@ nsTextBoxFrame::CalculateTitleForWidth(nsIPresContext*      aPresContext,
 
     if (mTitleWidth <= aWidth) {
         mCroppedTitle = mTitle;
+#ifdef IBMBIDI
+        PRInt32 length = mTitle.Length();
+        for (PRInt32 i = 0; i < length; i++) {
+          if (CHAR_IS_BIDI(mTitle.CharAt(i) ) ) {
+            mState |= NS_FRAME_IS_BIDI;
+            break;
+          }
+        }
+#endif // IBMBIDI
         return;  // fits, done.
     }
 
@@ -393,6 +485,11 @@ nsTextBoxFrame::CalculateTitleForWidth(nsIPresContext*      aPresContext,
                     break;
 
                 twidth += cwidth;
+#ifdef IBMBIDI
+                if (CHAR_IS_BIDI(ch) ) {
+                  mState |= NS_FRAME_IS_BIDI;
+                }
+#endif // IBMBIDI
             }
 
             if (i == 0)
@@ -418,6 +515,11 @@ nsTextBoxFrame::CalculateTitleForWidth(nsIPresContext*      aPresContext,
                     break;
 
                 twidth += cwidth;
+#ifdef IBMBIDI
+                if (CHAR_IS_BIDI(ch) ) {
+                  mState |= NS_FRAME_IS_BIDI;
+                }
+#endif // IBMBIDI
             }
 
             if (i == length-1)
@@ -456,6 +558,11 @@ nsTextBoxFrame::CalculateTitleForWidth(nsIPresContext*      aPresContext,
                 if (twidth <= aWidth)
                     break;
 
+#ifdef IBMBIDI
+                if (CHAR_IS_BIDI(ch) ) {
+                  mState |= NS_FRAME_IS_BIDI;
+                }
+#endif // IBMBIDI
                 ch = mTitle.CharAt(i2);
                 aRenderingContext.GetWidth(ch,cwidth);
                 twidth -= cwidth;
@@ -464,6 +571,11 @@ nsTextBoxFrame::CalculateTitleForWidth(nsIPresContext*      aPresContext,
                 if (twidth <= aWidth)
                     break;
 
+#ifdef IBMBIDI
+                if (CHAR_IS_BIDI(ch) ) {
+                  mState |= NS_FRAME_IS_BIDI;
+                }
+#endif // IBMBIDI
             }
 
             nsAutoString copy;
