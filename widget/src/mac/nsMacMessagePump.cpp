@@ -53,6 +53,7 @@
 #include <ToolUtils.h>
 #include <DiskInit.h>
 #include <LowMem.h>
+#include <Devices.h>
 
 #ifndef topLeft
 #define topLeft(r)	(((Point *) &(r))[0])
@@ -736,6 +737,30 @@ void  nsMacMessagePump::DoMenu(EventRecord &anEvent, long menuResult)
 {
 	// The app can handle its menu commands here or
 	// in the nsNativeBrowserWindow and nsNativeViewerApp
+	
+extern const PRInt16 kAppleMenuID;	// Danger Will Robinson!!! - this currently requires
+									// APPLE_MENU_HACK to be defined in nsMenu.h
+									// One of these days it'll become a non-hack
+									// and things will be less convoluted
+
+	// See if it was the Apple Menu
+	if (HiWord(menuResult) == kAppleMenuID)
+	{
+		short	theItem = LoWord(menuResult);
+		if (theItem > 2)
+		{
+			Str255	daName;
+			GrafPtr	savePort;
+			
+			::GetMenuItemText(::GetMenuHandle(kAppleMenuID), theItem, daName);
+			::GetPort(&savePort);
+			::OpenDeskAcc(daName);
+			::SetPort(savePort);
+		}
+	}
+	// Note that we still give Raptor a shot at the event as it will eventually
+	// handle the About... selection
+	
 	if (mMessageSink->IsRaptorWindow(::FrontWindow()))
 	{
 		DispatchMenuCommandToRaptor(anEvent, menuResult);
