@@ -45,16 +45,20 @@ public:
      *
      * @param ptr - the block of memory to reallocate
      * @param size - the new size
+     * @param oldSize - the current size of the block. If -1 (the default),
+     * the implementation must be able to determine the block size by 
+     * examining the block pointer. 
      * @result the rellocated block of memory
      */
-    NS_IMETHOD_(void*) Realloc(void* ptr, PRUint32 size);
+    NS_IMETHOD_(void*) Realloc(void* ptr, PRUint32 size,
+                               PRInt32 oldSize = -1);
 
     /**
      * Frees a block of memory. 
      *
      * @param ptr - the block of memory to free
      */
-    NS_IMETHOD Free(void* ptr);
+    NS_IMETHOD Free(void* ptr, PRInt32 size = -1);
 
     /**
      * Attempts to shrink the heap.
