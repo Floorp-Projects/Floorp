@@ -7,7 +7,7 @@ exec_prefix_set=no
 usage()
 {
 	cat <<EOF
-Usage: mozilla-config [OPTIONS] [LIBRARIES]
+Usage: $0 [OPTIONS] [LIBRARIES]
 Options:
 	[--prefix[=DIR]]
 	[--exec-prefix[=DIR]]
@@ -15,6 +15,7 @@ Options:
 	[--defines]
 	[--libs] [libraries]
 	[--cflags] [components]
+        [--idlflags]
 Components:
     *
 Libraries:
@@ -70,6 +71,9 @@ while test $# -gt 0; do
     --libs)
       echo_libs=yes
       ;;
+    --idlflags)
+      echo_idlflags=yes
+      ;;
     xpcom|js|nspr|gfx|jsj)
       echo_components="$echo_components $1"
       echo_libraries="$echo_libraries $1"
@@ -104,6 +108,10 @@ if test "$echo_cflags" = "yes"; then
 	component_includes="$component_includes -I%includedir%/$n"
     done
     echo $component_includes $includes $nspr_cflags
+fi
+
+if test "$echo_idlflags" = "yes"; then
+    echo "-I%{idldir}"
 fi
 
 _nspr_libs="%FULL_NSPR_LIBS%"

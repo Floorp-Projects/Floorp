@@ -359,14 +359,14 @@ CXXFLAGS	+= $(MOZ_TOOLKIT_REGISTRY_CFLAGS)
 LOCAL_INCLUDES	= -I$(srcdir) -I.
 
 ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
-mozilla.1: mozilla.man.in Makefile.in Makefile $(DEPTH)/config/autoconf.mk
+$(MOZ_APP_NAME).1: mozilla.man.in Makefile.in Makefile $(DEPTH)/config/autoconf.mk
 	@sed -e "s|\@bindir\@|${bindir}|" -e "s|\@libdir\@|${libdir}|" \
-		-e "s|\@mozilla_version\@|${MOZILLA_VERSION}|" < $< > $@
+		-e "s|\@mozilla_version\@|${MOZ_APP_VERSION}|" < $< > $@
 
-libs:: mozilla.1
+libs:: $(MOZ_APP_NAME).1
 	$(INSTALL) $< $(DIST)/man/man1
 
-install:: mozilla.1
+install:: $(MOZ_APP_NAME).1
 	$(SYSINSTALL) $(IFLAGS1) $< $(DESTDIR)$(mandir)/man1
 
 MOZILLA_SCRIPT=mozilla
@@ -384,7 +384,7 @@ libs:: $(MOZILLA_SCRIPT)
 install:: $(MOZILLA_SCRIPT)
 	$(SYSINSTALL) $(IFLAGS2) $< $(DESTDIR)$(bindir)
 
-GARBAGE += mozilla.1 $(MOZILLA_SCRIPT)
+GARBAGE += $(MOZ_APP_NAME).1 $(MOZILLA_SCRIPT)
 
 endif
 

@@ -558,6 +558,12 @@ TARGET_MD_ARCH=unix
 DIRENT_INO=d_ino
 CYGWIN_WRAPPER=
 MOZ_USER_DIR=".mozilla"
+MOZ_APP_NAME=mozilla
+
+dnl Get mozilla version from central milestone file
+MOZILLA_VERSION=`$PERL $srcdir/config/milestone.pl -topsrcdir $srcdir`
+AC_DEFINE_UNQUOTED(MOZILLA_VERSION,"$MOZILLA_VERSION")
+MOZ_APP_VERSION=$MOZILLA_VERSION
 
 MOZ_JPEG_CFLAGS=
 MOZ_JPEG_LIBS='-L$(DIST)/lib -lmozjpeg'
@@ -3331,6 +3337,8 @@ if test "$MOZ_PHOENIX"; then
    AC_DEFINE(MOZ_PHOENIX)
    MOZ_XUL_APP=1
    AC_DEFINE(MOZ_XUL_APP)
+   MOZ_APP_NAME=firefox
+   MOZ_APP_VERSION=`cat $topsrcdir/browser/config/version.txt`
 fi
 
 AC_SUBST(MOZ_PHOENIX)
@@ -3340,12 +3348,14 @@ dnl = Thunderbird
 dnl ========================================================
 if test "$MOZ_THUNDERBIRD"; then
    AC_DEFINE(MOZ_THUNDERBIRD)
-   
+
    MOZ_STATIC_MAIL_BUILD=1
    AC_DEFINE(MOZ_STATIC_MAIL_BUILD)
    
    MOZ_XUL_APP=1
    AC_DEFINE(MOZ_XUL_APP)
+   MOZ_APP_NAME=thunderbird
+   MOZ_APP_VERSION=`cat $topsrcdir/mail/config/version.txt`
 fi
 
 AC_SUBST(MOZ_THUNDERBIRD)
@@ -3359,6 +3369,8 @@ if test "$MOZ_STANDALONE_COMPOSER"; then
    
    MOZ_XUL_APP=1
    AC_DEFINE(MOZ_XUL_APP)
+   MOZ_APP_NAME=nvu
+   MOZ_APP_VERSION=0.17+
 fi
 
 AC_SUBST(MOZ_STANDALONE_COMPOSER)
@@ -4410,7 +4422,7 @@ dnl ========================================================
 dnl = Define default location for MOZILLA_FIVE_HOME
 dnl ========================================================
 MOZ_ARG_WITH_STRING(default-mozilla-five-home,
-[  --enable-default-mozilla-five-home
+[  --with-default-mozilla-five-home
                           Set the default value for MOZILLA_FIVE_HOME],
 [ val=`echo $withval`
   AC_DEFINE_UNQUOTED(MOZ_DEFAULT_MOZILLA_FIVE_HOME,"$val") ])
@@ -5200,6 +5212,9 @@ AC_SUBST(MOZ_POST_PROGRAM_COMMAND)
 AC_SUBST(MOZ_REORDER)
 AC_SUBST(MOZ_TIMELINE)
 
+AC_SUBST(MOZ_APP_NAME)
+AC_SUBST(MOZ_APP_VERSION)
+
 dnl win32 options
 AC_SUBST(MOZ_PROFILE)
 AC_SUBST(MOZ_COVERAGE)
@@ -5407,9 +5422,6 @@ esac
 
 AC_SUBST(CYGDRIVE_MOUNT)
 
-dnl Get mozilla version from central milestone file
-MOZILLA_VERSION=`$PERL $srcdir/config/milestone.pl -topsrcdir $srcdir`
-AC_DEFINE_UNQUOTED(MOZILLA_VERSION,"$MOZILLA_VERSION")
 AC_SUBST(MOZILLA_VERSION)
 
 . ${srcdir}/config/chrome-versions.sh

@@ -46,7 +46,7 @@ endif
 endif
 endif # MOZ_PKG_FORMAT
 ifndef MOZ_PKG_APPNAME
-MOZ_PKG_APPNAME = mozilla
+MOZ_PKG_APPNAME = $(MOZ_APP_NAME)
 endif
 ifndef SDK_PKG_APPNAME
 SDK_PKG_APPNAME = gecko

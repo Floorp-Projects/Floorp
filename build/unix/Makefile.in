@@ -47,36 +47,37 @@ endif
 
 _DEFS = $(subst \,\\\\\,$(ACDEFINES))
 
-pkg_config_files=mozilla-nspr.pc mozilla-xpcom.pc mozilla-js.pc \
-	mozilla-gtkmozembed.pc mozilla-nss.pc \
-	mozilla-plugin.pc
+pkg_config_files=$(MOZ_APP_NAME)-nspr.pc $(MOZ_APP_NAME)-xpcom.pc \
+	$(MOZ_APP_NAME)-js.pc $(MOZ_APP_NAME)-gtkmozembed.pc \
+	$(MOZ_APP_NAME)-nss.pc $(MOZ_APP_NAME)-plugin.pc
 
 GARBAGE	= $(pkg_config_files) mozilla-config
 
-mozilla-config:: mozilla-config.in Makefile.in Makefile $(DEPTH)/config/autoconf.mk
+$(MOZ_APP_NAME)-config:: mozilla-config.in Makefile.in Makefile $(DEPTH)/config/autoconf.mk
 	cat $< | sed \
 	-e "s|%prefix%|$(prefix)|" \
 	-e "s|%exec_prefix%|$(exec_prefix)|" \
 	-e "s|%includedir%|$(includedir)|" \
 	-e "s|%libdir%|$(mozappdir)|" \
-	-e "s|%MOZILLA_VERSION%|$(MOZILLA_VERSION)|" \
+	-e "s|%idldir%|$(idldir)|" \
+	-e "s|%MOZILLA_VERSION%|$(MOZ_APP_VERSION)|" \
 	-e "s|%DEFS%|$(_DEFS)|" \
 	-e "s|%FULL_NSPR_LIBS%|$(FULL_NSPR_LIBS)|" \
 	-e "s|%FULL_NSPR_CFLAGS%|$(FULL_NSPR_CFLAGS)|" > $@
 
-%.pc : %.pc.in Makefile.in Makefile $(DEPTH)/config/autoconf.mk
+$(MOZ_APP_NAME)-%.pc : mozilla-%.pc.in Makefile.in Makefile $(DEPTH)/config/autoconf.mk
 	cat $< | sed \
 	-e "s|%prefix%|$(prefix)|" \
 	-e "s|%exec_prefix%|$(exec_prefix)|" \
 	-e "s|%includedir%|$(includedir)|" \
 	-e "s|%libdir%|$(mozappdir)|" \
-	-e "s|%MOZILLA_VERSION%|$(MOZILLA_VERSION)|" \
+	-e "s|%MOZILLA_VERSION%|$(MOZ_APP_VERSION)|" \
 	-e "s|%SUPERWIN_LIBS%|$(SUPERWIN_LIBS)|" \
 	-e "s|%DEFS%|$(_DEFS)|" \
 	-e "s|%FULL_NSPR_LIBS%|$(FULL_NSPR_LIBS)|" \
 	-e "s|%FULL_NSPR_CFLAGS%|$(FULL_NSPR_CFLAGS)|" > $@
 
-libs:: mozilla-config
+libs:: $(MOZ_APP_NAME)-config
 	chmod 755 $<
 	$(INSTALL) -m 755 $< $(DIST)/bin
 
@@ -91,7 +92,7 @@ endif
 install:: run-mozilla.sh
 	$(SYSINSTALL) $(IFLAGS2) $< $(DESTDIR)$(mozappdir)
 
-install:: mozilla-config
+install:: $(MOZ_APP_NAME)-config
 	$(SYSINSTALL) $(IFLAGS2) $< $(DESTDIR)$(bindir)
 
 install:: $(pkg_config_files)
