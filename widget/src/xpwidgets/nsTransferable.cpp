@@ -434,9 +434,9 @@ nsTransferable::SetTransferData(const char *aFlavor, nsISupports *aData, PRUint3
     }
   }
 
-  // Can't set data neither directly or through converter. Just add this flavor and try again
+  // Can't set data neither directly nor through converter. Just add this flavor and try again
   nsresult result = NS_ERROR_FAILURE;
-  if ( NS_SUCCEEDED(AddDataFlavor(aFlavor)) );
+  if ( NS_SUCCEEDED(AddDataFlavor(aFlavor)) )
     result = SetTransferData (aFlavor, aData, aDataLen);
     
   return result;
