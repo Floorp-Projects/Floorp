@@ -40,11 +40,15 @@ LOCAL_INCLUDES	= -I$(srcdir)/../src
 
 SHARED_LIBRARY_LIBS = \
     $(DIST)/lib/libaccessibility_s.$(LIB_SUFFIX) \
-    $(DIST)/lib/libgkconshared_s.$(LIB_SUFFIX) \
+    $(NULL)
+
+EXTRA_DSO_LIBS = \
+    gkconshared_s \
     $(NULL)
 
 EXTRA_DSO_LDOPTS =           \
     $(MOZ_COMPONENT_LIBS)    \
+    $(EXTRA_DSO_LIBS)        \
     -lgkgfx                  \
     $(NULL)
 
