@@ -2126,6 +2126,7 @@ function goUpdateTableMenuItems(commandset)
       // Directly set with the values calculated here
       else if (commandID == "cmd_DeleteTable" ||
                commandID == "cmd_NormalizeTable" ||
+               commandID == "cmd_editTable" ||
                commandID == "cmd_TableOrCellColor")
       {
         goSetCommandEnabled(commandID, enabledIfTable);
@@ -2177,12 +2178,7 @@ function IsSelectionInOneCell()
 function EditorInsertOrEditTable(insertAllowed)
 {
   if (IsInTable()) {
-    // Edit properties of existing table
-    if (IsInTableCell())
-      window.openDialog("chrome://editor/content/EdTableProps.xul", "_blank", "chrome,close,titlebar,modal", "","CellPanel");
-    else  
-      window.openDialog("chrome://editor/content/EdTableProps.xul", "_blank", "chrome,close,titlebar,modal", "","TablePanel");
-
+    window.openDialog("chrome://editor/content/EdTableProps.xul", "_blank", "chrome,close,titlebar,modal", "","TablePanel");
     window._content.focus();
   } else if(insertAllowed) {
     EditorInsertTable();
