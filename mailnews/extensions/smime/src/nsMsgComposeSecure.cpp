@@ -855,6 +855,9 @@ nsresult nsMsgComposeSecure::MimeCryptoHackCerts(const char *aRecipients,
   /* If the message is to be encrypted, then get the recipient certs */
   if (aEncrypt) {
 	  mailbox = mailbox_list;
+
+    PRBool already_added_self_cert = PR_FALSE;
+
 	  for (; count > 0; count--) {
       nsCOMPtr<nsIX509Cert> cert;
 		  certdb->GetCertByEmailAddress(nsnull, mailbox, getter_AddRefs(cert));
@@ -884,9 +887,20 @@ nsresult nsMsgComposeSecure::MimeCryptoHackCerts(const char *aRecipients,
 		 of the recipients if we're sending a signed-but-not-encrypted
 		 message.)
 	   */
+
+      PRBool isSame;
+      if (NS_SUCCEEDED(cert->IsSameCert(mSelfEncryptionCert, &isSame))
+          && isSame) {
+        already_added_self_cert = PR_TRUE;
+      }
+
       mCerts->AppendElement(cert);
 		  mailbox += nsCRT::strlen(mailbox) + 1;
 	  }
+    
+    if (!already_added_self_cert) {
+      mCerts->AppendElement(mSelfEncryptionCert);
+    }
 	}
 FAIL:
   PR_FREEIF(mailbox_list);
