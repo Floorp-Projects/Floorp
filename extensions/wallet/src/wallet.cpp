@@ -39,6 +39,7 @@
 #include "nsIDOMHTMLSelectElement.h"
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsIURL.h"
+#include "nsIDOMWindowCollection.h"
 
 #include "nsFileStream.h"
 #include "nsAppDirectoryServiceDefs.h"
@@ -3177,104 +3178,85 @@ WLLT_PrefillReturn(const nsString& results)
 /*
  * get the form elements on the current page and prefill them if possible
  */
-PUBLIC nsresult
-WLLT_Prefill(nsIPresShell* shell, PRBool quick, nsIDOMWindowInternal* win)
-{
-  nsAutoString urlName;
+PRIVATE void
+wallet_TraversalForPrefill
+    (nsIDOMWindow* win, nsVoidArray* wallet_PrefillElement_list, nsAutoString& urlName) {
 
-  /* create list of elements that can be prefilled */
-  nsVoidArray *wallet_PrefillElement_list=new nsVoidArray();
-  if (!wallet_PrefillElement_list) {
-    return NS_ERROR_FAILURE;
-  }
-
-  /* starting with the present shell, get each form element and put them on a list */
   nsresult result;
-  if (nsnull != shell)
-  {
-    nsCOMPtr<nsIDocument> doc;
-    shell->GetDocument(getter_AddRefs(doc));
-    if (doc)
-    {
-      nsCOMPtr<nsIURI> url = getter_AddRefs(doc->GetDocumentURL());
-      if (url) {
-        wallet_GetHostFile(url, urlName);
-      }
-      wallet_Initialize(PR_TRUE);
-      gEncryptionFailure = PR_FALSE;
-      wallet_InitializeCurrentURL(doc);
-      
-      nsCOMPtr<nsIDOMHTMLDocument> htmldoc = do_QueryInterface(doc);
-      if (htmldoc)
-      {
-        nsCOMPtr<nsIDOMHTMLCollection> forms;
-        htmldoc->GetForms(getter_AddRefs(forms));
-        if (forms)
-        {
-          PRUint32 numForms;
-          forms->GetLength(&numForms);
-          for (PRUint32 formX = 0; (formX < numForms) && !gEncryptionFailure; formX++)
-          {
-            nsCOMPtr<nsIDOMNode> formNode;
-            forms->Item(formX, getter_AddRefs(formNode));
-            if (formNode)
-            {
-              nsCOMPtr<nsIDOMHTMLFormElement> formElement = do_QueryInterface(formNode);
-              if (formElement)
-              {
-                nsCOMPtr<nsIDOMHTMLCollection> elements;
-                result = formElement->GetElements(getter_AddRefs(elements));
-                if (elements)
-                {
-                  /* got to the form elements at long last */
-                  PRUint32 numElements;
-                  elements->GetLength(&numElements);
-                  for (PRUint32 elementX = 0; (elementX < numElements) && !gEncryptionFailure; elementX++)
-                  {
-                    nsCOMPtr<nsIDOMNode> elementNode;
-                    elements->Item(elementX, getter_AddRefs(elementNode));
-                    if (elementNode)
-                    {
-                      wallet_PrefillElement * prefillElement;
-                      PRInt32 index = 0;
-                      wallet_PrefillElement * firstElement = nsnull;
-                      PRUint32 numberOfElements = 0;
-                      for (; !gEncryptionFailure;) {
-                        /* loop to allow for multiple values */
-                        /* first element in multiple-value group will have its count
-                         * field set to the number of elements in group.  All other
-                         * elements in group will have count field set to 0
-                         */
-                        prefillElement = PR_NEW(wallet_PrefillElement);
-                        if (wallet_GetPrefills
-                            (elementNode,
-                            prefillElement->inputElement,
-                            prefillElement->selectElement,
-                            prefillElement->schema,
-                            prefillElement->value,
-                            prefillElement->selectIndex,
-                            index) != -1) {
-                          /* another value found */
-                          if (nsnull == firstElement) {
-                            firstElement = prefillElement;
+  if (nsnull != win) {
+    nsCOMPtr<nsIDOMDocument> domdoc;
+    result = win->GetDocument(getter_AddRefs(domdoc));
+    if (NS_SUCCEEDED(result)) {
+      nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
+      if (doc) {
+        nsCOMPtr<nsIURI> url = getter_AddRefs(doc->GetDocumentURL());
+        if (url) {
+          wallet_GetHostFile(url, urlName);
+        }
+        wallet_Initialize(PR_TRUE);
+        wallet_InitializeCurrentURL(doc);
+
+        nsCOMPtr<nsIDOMHTMLDocument> htmldoc = do_QueryInterface(doc);
+        if (htmldoc) {
+          nsCOMPtr<nsIDOMHTMLCollection> forms;
+          htmldoc->GetForms(getter_AddRefs(forms));
+          if (forms) {
+            PRUint32 numForms;
+            forms->GetLength(&numForms);
+            for (PRUint32 formX = 0; (formX < numForms) && !gEncryptionFailure; formX++) {
+              nsCOMPtr<nsIDOMNode> formNode;
+              forms->Item(formX, getter_AddRefs(formNode));
+              if (formNode) {
+                nsCOMPtr<nsIDOMHTMLFormElement> formElement = do_QueryInterface(formNode);
+                if (formElement) {
+                  nsCOMPtr<nsIDOMHTMLCollection> elements;
+                  result = formElement->GetElements(getter_AddRefs(elements));
+                  if (elements) {
+                    /* got to the form elements at long last */
+                    PRUint32 numElements;
+                    elements->GetLength(&numElements);
+                    for (PRUint32 elementX = 0; (elementX < numElements) && !gEncryptionFailure; elementX++) {
+                      nsCOMPtr<nsIDOMNode> elementNode;
+                      elements->Item(elementX, getter_AddRefs(elementNode));
+                      if (elementNode) {
+                        wallet_PrefillElement * prefillElement;
+                        PRInt32 index = 0;
+                        wallet_PrefillElement * firstElement = nsnull;
+                        PRUint32 numberOfElements = 0;
+                        for (; !gEncryptionFailure;) {
+                          /* loop to allow for multiple values */
+                          /* first element in multiple-value group will have its count
+                           * field set to the number of elements in group.  All other
+                           * elements in group will have count field set to 0
+                           */
+                          prefillElement = PR_NEW(wallet_PrefillElement);
+                          if (wallet_GetPrefills
+                              (elementNode,
+                              prefillElement->inputElement,
+                              prefillElement->selectElement,
+                              prefillElement->schema,
+                              prefillElement->value,
+                              prefillElement->selectIndex,
+                              index) != -1) {
+                            /* another value found */
+                            if (nsnull == firstElement) {
+                              firstElement = prefillElement;
+                            }
+                            numberOfElements++;
+                            prefillElement->count = 0;
+                            wallet_PrefillElement_list->AppendElement(prefillElement);
+                          } else {
+                            /* value not found, stop looking for more values */
+                            delete prefillElement;
+                            break;
                           }
-                          numberOfElements++;
-                          prefillElement->count = 0;
-                          wallet_PrefillElement_list->AppendElement(prefillElement);
-                        } else {
-                          /* value not found, stop looking for more values */
-                          delete prefillElement;
-                          break;
+                        } // for
+                        if (numberOfElements>0) {
+                          firstElement->count = numberOfElements;
                         }
-                      } // for
-                      
-                      if (numberOfElements>0) {
-                        firstElement->count = numberOfElements;
                       }
-                    }
-                    
-                  } // for
-                  
+                    } // for
+                  }
                 }
               }
             }
@@ -3283,6 +3265,35 @@ WLLT_Prefill(nsIPresShell* shell, PRBool quick, nsIDOMWindowInternal* win)
       }
     }
   }
+
+  nsCOMPtr<nsIDOMWindowCollection> frames;
+  win->GetFrames(getter_AddRefs(frames));
+  if (frames) {
+    PRUint32 numFrames;
+    frames->GetLength(&numFrames);
+    for (PRUint32 frameX = 0; (frameX < numFrames) && !gEncryptionFailure; frameX++) {
+      nsCOMPtr<nsIDOMWindow> frameNode;
+      frames->Item(frameX, getter_AddRefs(frameNode));
+      if (frameNode) {
+        wallet_TraversalForPrefill(frameNode, wallet_PrefillElement_list, urlName);
+      }
+    }
+  }
+}
+
+PUBLIC nsresult
+WLLT_Prefill(nsIPresShell* shell, PRBool quick, nsIDOMWindowInternal* win)
+{
+
+  /* create list of elements that can be prefilled */
+  nsVoidArray *wallet_PrefillElement_list=new nsVoidArray();
+  if (!wallet_PrefillElement_list) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsAutoString urlName;
+  gEncryptionFailure = PR_FALSE;
+  wallet_TraversalForPrefill(win, wallet_PrefillElement_list, urlName);
 
   /* return if no elements were put into the list */
   if (LIST_COUNT(wallet_PrefillElement_list) == 0) {
@@ -3340,78 +3351,65 @@ WLLT_Prefill(nsIPresShell* shell, PRBool quick, nsIDOMWindowInternal* win)
   }
 }
 
-PUBLIC void
-WLLT_RequestToCapture(nsIPresShell* shell, nsIDOMWindowInternal* win, PRUint32* status) {
+PRIVATE void
+wallet_TraversalForRequestToCapture(nsIDOMWindow* win, PRInt32& captureCount) {
 
-  /* starting with the present shell, get each form element and put them on a list */
   nsresult result;
-  PRInt32 captureCount = 0;
-  gEncryptionFailure = PR_FALSE;
-  if (nsnull != shell)
-  {
-    nsCOMPtr<nsIDocument> doc;
-    result = shell->GetDocument(getter_AddRefs(doc));
-    if (NS_SUCCEEDED(result))
-    {
-      wallet_Initialize(PR_TRUE);
-      wallet_InitializeCurrentURL(doc);
-      nsCOMPtr<nsIDOMHTMLDocument> htmldoc = do_QueryInterface(doc);
-      if (htmldoc)
-      {
-        nsCOMPtr<nsIDOMHTMLCollection> forms;
-        htmldoc->GetForms(getter_AddRefs(forms));
-        if (forms)
-        {
-          PRUint32 numForms;
-          forms->GetLength(&numForms);
-          for (PRUint32 formX = 0; (formX < numForms) && !gEncryptionFailure; formX++)
-          {
-            nsCOMPtr<nsIDOMNode> formNode;
-            forms->Item(formX, getter_AddRefs(formNode));
-            if (formNode)
-            {
-              nsCOMPtr<nsIDOMHTMLFormElement> formElement = do_QueryInterface(formNode);
-              if (formElement)
-              {
-                nsCOMPtr<nsIDOMHTMLCollection> elements;
-                result = formElement->GetElements(getter_AddRefs(elements));
-                if (elements)
-                {
-                  /* got to the form elements at long last */
-                  /* now find out how many text fields are on the form */
-                  PRUint32 numElements;
-                  elements->GetLength(&numElements);
-                  for (PRUint32 elementY = 0; (elementY < numElements) && !gEncryptionFailure; elementY++)
-                  {
-                    nsCOMPtr<nsIDOMNode> elementNode;
-                    elements->Item(elementY, getter_AddRefs(elementNode));
-                    if (elementNode)
-                    {
-                      nsCOMPtr<nsIDOMHTMLInputElement> inputElement = do_QueryInterface(elementNode);  
-                      if (inputElement)
-                      {
-                        /* it's an input element */
-                        nsAutoString type;
-                        result = inputElement->GetType(type);
-                        if ((NS_SUCCEEDED(result)) &&
-                            (type.IsEmpty() || (type.CompareWithConversion("text", PR_TRUE) == 0))) {
-                          nsAutoString field;
-                          result = inputElement->GetName(field);
-                          if (NS_SUCCEEDED(result)) {
-                            nsAutoString value;
-                            result = inputElement->GetValue(value);
+  if (nsnull != win) {
+    nsCOMPtr<nsIDOMDocument> domdoc;
+    result = win->GetDocument(getter_AddRefs(domdoc));
+    if (NS_SUCCEEDED(result)) {
+      nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
+      if (doc) {
+        wallet_Initialize(PR_TRUE);
+        wallet_InitializeCurrentURL(doc);
+        nsCOMPtr<nsIDOMHTMLDocument> htmldoc = do_QueryInterface(doc);
+        if (htmldoc) {
+          nsCOMPtr<nsIDOMHTMLCollection> forms;
+          htmldoc->GetForms(getter_AddRefs(forms));
+          if (forms) {
+            PRUint32 numForms;
+            forms->GetLength(&numForms);
+            for (PRUint32 formX = 0; (formX < numForms) && !gEncryptionFailure; formX++) {
+              nsCOMPtr<nsIDOMNode> formNode;
+              forms->Item(formX, getter_AddRefs(formNode));
+              if (formNode) {
+                nsCOMPtr<nsIDOMHTMLFormElement> formElement = do_QueryInterface(formNode);
+                if (formElement) {
+                  nsCOMPtr<nsIDOMHTMLCollection> elements;
+                  result = formElement->GetElements(getter_AddRefs(elements));
+                  if (elements) {
+                    /* got to the form elements at long last */
+                    /* now find out how many text fields are on the form */
+                    PRUint32 numElements;
+                    elements->GetLength(&numElements);
+                    for (PRUint32 elementY = 0; (elementY < numElements) && !gEncryptionFailure; elementY++) {
+                      nsCOMPtr<nsIDOMNode> elementNode;
+                      elements->Item(elementY, getter_AddRefs(elementNode));
+                      if (elementNode) {
+                        nsCOMPtr<nsIDOMHTMLInputElement> inputElement = do_QueryInterface(elementNode);  
+                        if (inputElement) {
+                          /* it's an input element */
+                          nsAutoString type;
+                          result = inputElement->GetType(type);
+                          if ((NS_SUCCEEDED(result)) &&
+                              (type.IsEmpty() || (type.CompareWithConversion("text", PR_TRUE) == 0))) {
+                            nsAutoString field;
+                            result = inputElement->GetName(field);
                             if (NS_SUCCEEDED(result)) {
-
-                              /* get schema name from vcard attribute if it exists */
-                              nsAutoString vcardValue;
-                              nsCOMPtr<nsIDOMElement> element = do_QueryInterface(elementNode);
-                              if (element)
-                              {
-                                nsAutoString vcardName; vcardName.AssignWithConversion("VCARD_NAME");
-                                result = element->GetAttribute(vcardName, vcardValue);
-                              }
-                              if (wallet_Capture(doc, field, value, vcardValue)) {
-                                captureCount++;
+                              nsAutoString value;
+                              result = inputElement->GetValue(value);
+                              if (NS_SUCCEEDED(result)) {
+                                /* get schema name from vcard attribute if it exists */
+                                nsAutoString vcardValue;
+                                nsCOMPtr<nsIDOMElement> element = do_QueryInterface(elementNode);
+                                if (element) {
+                                  nsAutoString vcardName; vcardName.AssignWithConversion("VCARD_NAME");
+                                  result = element->GetAttribute(vcardName, vcardValue);
+                                }
+                                if (wallet_Capture(doc, field, value, vcardValue)) {
+                                  captureCount++;
+                                }
                               }
                             }
                           }
@@ -3428,8 +3426,30 @@ WLLT_RequestToCapture(nsIPresShell* shell, nsIDOMWindowInternal* win, PRUint32* 
     }
   }
 
-  PRUnichar * message;
+  nsCOMPtr<nsIDOMWindowCollection> frames;
+  win->GetFrames(getter_AddRefs(frames));
+  if (frames) {
+    PRUint32 numFrames;
+    frames->GetLength(&numFrames);
+    for (PRUint32 frameX = 0; (frameX < numFrames) && !gEncryptionFailure; frameX++)
+    {
+      nsCOMPtr<nsIDOMWindow> frameNode;
+      frames->Item(frameX, getter_AddRefs(frameNode));
+      if (frameNode) {
+        wallet_TraversalForRequestToCapture(frameNode, captureCount);
+      }
+    }
+  }
+}
 
+PUBLIC void
+WLLT_RequestToCapture(nsIPresShell* shell, nsIDOMWindowInternal* win, PRUint32* status) {
+
+  PRInt32 captureCount = 0;
+  gEncryptionFailure = PR_FALSE;
+  wallet_TraversalForRequestToCapture(win, captureCount);
+
+  PRUnichar * message;
   if (gEncryptionFailure) {
     message = Wallet_Localize("UnableToCapture");
     *status = 0;

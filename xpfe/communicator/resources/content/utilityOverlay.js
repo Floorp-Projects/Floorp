@@ -66,6 +66,44 @@ function goEditCardDialog(abURI, card, okCallback)
 }
 
 
+function okToCapture2(formsArray) {
+  if (!formsArray) {
+    return false;
+  }
+  var form;
+  for (form=0; form<formsArray.length; form++) {
+    var elementsArray = formsArray[form].elements;
+    var element;
+    for (element=0; element<elementsArray.length; element++) {
+      var type = elementsArray[element].type;
+      var value = elementsArray[element].value;
+      if ((type=="" || type=="text") && value!="") {
+        return true;
+      } 
+    }
+  }
+  return false;
+}
+
+function okToPrefill2(formsArray) {
+  if (!formsArray) {
+    return false;
+  }
+  var form;
+  for (form=0; form<formsArray.length; form++) {
+    var elementsArray = formsArray[form].elements;
+    var element;
+    for (element=0; element<elementsArray.length; element++) {
+      var type = elementsArray[element].type;
+      var value = elementsArray[element].value;
+      if (type=="" || type=="text" || type=="select-one") {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 function goPreferences(id, paneURL, paneID)
 {
   var prefWindowModalityPref;
@@ -93,25 +131,29 @@ function okToCapture() {
     capture.setAttribute("disabled", "true");
     return;
   }
-  var formsArray = window._content.document.forms;
-  if (!formsArray) {
-    capture.setAttribute("disabled", "true");
-    return;
-  }
-  var form;
-  for (form=0; form<formsArray.length; form++) {
-    var elementsArray = formsArray[form].elements;
-    var element;
-    for (element=0; element<elementsArray.length; element++) {
-      var type = elementsArray[element].type;
-      var value = elementsArray[element].value;
-      if ((type=="" || type=="text") && value!="") {
+
+  // process frames if any
+  var formsArray;
+  var framesArray = window._content.frames;
+  if (framesArray.length != 0) {
+    var frame;
+    for (frame=0; frame<framesArray.length; frame++) {
+      formsArray = framesArray[frame].document.forms;
+      if (okToCapture2(formsArray)) {
         capture.setAttribute("disabled", "false");
         return;
-      } 
+      }
     }
   }
-  capture.setAttribute("disabled", "true");
+
+  // process top-level document
+  formsArray = window._content.document.forms;
+  if (okToCapture2(formsArray)) {
+    capture.setAttribute("disabled", "false");
+  } else {
+    capture.setAttribute("disabled", "true");
+  }
+  return;
 }
 
 function okToPrefill() {
@@ -123,25 +165,29 @@ function okToPrefill() {
     prefill.setAttribute("disabled", "true");
     return;
   }
-  var formsArray = window._content.document.forms;
-  if (!formsArray) {
-    prefill.setAttribute("disabled", "true");
-    return;
-  }
-  var form;
-  for (form=0; form<formsArray.length; form++) {
-    var elementsArray = formsArray[form].elements;
-    var element;
-    for (element=0; element<elementsArray.length; element++) {
-      var type = elementsArray[element].type;
-      var value = elementsArray[element].value;
-      if (type=="" || type=="text" || type=="select-one") {
+
+  // process frames if any
+  var formsArray;
+  var framesArray = window._content.frames;
+  if (framesArray.length != 0) {
+    var frame;
+    for (frame=0; frame<framesArray.length; frame++) {
+      formsArray = framesArray[frame].document.forms;
+      if (okToPrefill2(formsArray)) {
         prefill.setAttribute("disabled", "false");
         return;
       }
     }
   }
-  prefill.setAttribute("disabled", "true");
+
+  // process top-level document
+  formsArray = window._content.document.forms;
+  if (okToPrefill2(formsArray)) {
+    prefill.setAttribute("disabled", "false");
+  } else {
+    prefill.setAttribute("disabled", "true");
+  }
+  return;
 }
 
 function capture()
