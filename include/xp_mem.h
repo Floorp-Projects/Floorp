@@ -25,10 +25,6 @@
 
 #include "xp_core.h"
 
-#ifdef XP_MAC
-#include "FlushAllocator.h"
-#endif
-
 #ifdef XP_WIN16
 #include <malloc.h>
 #endif
