@@ -21,6 +21,7 @@
    Contributor(s): 
   -->
 <?xml-stylesheet href="chrome://pref/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://pref/skin/pref.css" type="text/css"?>
 <?xul-overlay href="chrome://pref/content/fontScalingOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://pref/locale/pref-fonts.dtd" >
@@ -45,12 +46,13 @@
 	      <html:tr>
 			    <html:td>&fontsFor.select;</html:td>
 				  <html:td>
-		  			<html:select id="selectLangs" onchange = "selectLang();">
+		  			<html:select class="Font" id="selectLangs" onchange = "selectLang();" width = "10">
   					</html:select>						
 				  </html:td>
 				   <html:td>&varFont.select;</html:td>
 				  <html:td>
-	  			<html:select id="size" pref="true" preftype="int">
+				  
+	  			<html:select class="FontSize" id="size" pref="true" preftype="int">
   					<html:option value="&font8.option;" >&font8.option;</html:option>
 					<html:option value="&font9.option;" >&font9.option;</html:option>
 					<html:option value="&font10.option;" >&font10.option;</html:option>
@@ -74,21 +76,21 @@
 		  <html:tr>
           <html:td>&serif.select;</html:td>
   			  <html:td>
-	  				<html:select id="serif" pref="true" preftype="string">			   
+	  				<html:select class="Font" id="serif" pref="true" preftype="string">			   
 			    	</html:select>
 				  </html:td>
 				 
 			  </html:tr>
 			 
-		 <html:tr>
-          <html:td>&sans-serif.select;</html:td>
+	<!--	 <html:tr>
+           <html:td>&sans-serif.select;</html:td>
   			  <html:td>
 	  				<html:select id="sans-serif" pref="true" preftype="string" prefstring="">			   
 			    	</html:select>
 				  </html:td>
 			  </html:tr>
 
-		  <html:tr>
+		 <html:tr>
           <html:td>&cursive.select;</html:td>
   			  <html:td>
 	  				<html:select id="cursive" pref="true" preftype="string" prefstring="">			   
@@ -103,17 +105,17 @@
 			    	</html:select>
 				  </html:td>
 
-			  </html:tr>
+			  </html:tr>  -->
 
 			   <html:tr>
           <html:td>&monospace.select;</html:td>
   			  <html:td>
-	  				<html:select id="monospace" pref="true" preftype="string" prefstring="">			   
+	  				<html:select class="Font" id="monospace" pref="true" preftype="string" prefstring="">			   
 			    	</html:select>
 				  </html:td>
 	            <html:td>&fixedFont.Select;</html:td>
 				  <html:td>
-	  			<html:select id="sizeFixed" pref="true" preftype="int">
+	  			<html:select class="FontSize" id="sizeFixed" pref="true" preftype="int">
   					<html:option value="&font8.option;" >&font8.option;</html:option>
 					<html:option value="&font9.option;" >&font9.option;</html:option>
 					<html:option value="&font10.option;" >&font10.option;</html:option>
@@ -134,18 +136,10 @@
 				  </html:td>
 			  </html:tr> 
 			</html:table>  
-    </html:fieldset>	
-    
+    </html:fieldset>	  
     <!-- fonts with webpages -->
     <html:fieldset>
       <html:legend>&header2;</html:legend>
-    	<html:div>
-      	<html:input name="fonts" type="radio" id="browserUseDocumentFonts2"
-                    pref="true" preftype="int" prefindex="2"  prefstring="browser.use_document_fonts"/>
-    		<html:label for="browserUseDocumentFonts2" accesskey="t" tabindex="0">
-		    	&useDocFontDynamic;
-    		</html:label>
-    	</html:div>	
     	<html:div>
       	<html:input name="fonts" type="radio" id="browserUseDocumentFonts1"
                     pref="true" preftype="int" prefindex="1"  prefstring="browser.use_document_fonts"/>
