@@ -236,7 +236,8 @@ nsCacheEntryDescriptor::SetCacheElement(nsISupports * cacheElement)
 
     mCacheEntry->SetData(cacheElement);
     mCacheEntry->TouchData();
-    return NS_OK;
+
+    return nsCacheService::GlobalInstance()->SetCacheElement(mCacheEntry, cacheElement);
 }
 
 
