@@ -1038,15 +1038,21 @@ NS_IMETHODIMP nsProfile::CreateNewProfile(char* charData)
     printf("after SetProfileDir\n");
 #endif
 
-    if (NS_FAILED(rv))
+	if (NS_FAILED(rv))
+	{
+		nsCRT::free(profileName);
 		return rv;
+	}
 
     // Get profile defaults folder..
     nsIFileSpec* profDefaultsDir;
     rv = locator->GetFileLocation(nsSpecialFileSpec::App_ProfileDefaultsFolder50, &profDefaultsDir);
         
 	if (NS_FAILED(rv) || !profDefaultsDir)
+	{
+		nsCRT::free(profileName);
 		return NS_ERROR_FAILURE;
+	}
 
 	nsFileSpec defaultsDirSpec;
 
@@ -1065,7 +1071,7 @@ NS_IMETHODIMP nsProfile::CreateNewProfile(char* charData)
 	{
 		PR_DELETE(dirName);
 	}
-	delete [] profileName;
+	nsCRT::free(profileName);
 
     return NS_OK;
 }
@@ -1132,7 +1138,7 @@ void nsProfile::SetDataArray(nsString data)
 	printf("SetDataArray data : %s\n", data.ToNewCString());
 #endif
 
-	int index = 0;
+	int idx = 0;
 	char *newStr=nsnull;
 	char *tokstr = data.ToNewCString();
 	char *token = nsCRT::strtok(tokstr, "%", &newStr);
@@ -1148,9 +1154,9 @@ void nsProfile::SetDataArray(nsString data)
 	printf("subTok : %s\n", token);
 #endif
     
-		PL_strcpy(gNewProfileData[index], token);
-		index++;
-		g_Count = index;
+		PL_strcpy(gNewProfileData[idx], token);
+		idx++;
+		g_Count = idx;
       
 		token = nsCRT::strtok(newStr, "%", &newStr);
     }
@@ -1473,7 +1479,7 @@ void nsProfile::GetAllProfiles()
     printf("ProfileManager : GetAllProfiles\n");
 #endif
 	
-	int index = 0;
+	int idx = 0;
 
     // Check result.
     if ( m_reg != nsnull ) 
@@ -1534,16 +1540,16 @@ void nsProfile::GetAllProfiles()
 										{
 											if (PL_strcmp(isMigrated, "no") == 0)
 											{
-												PL_strcpy(gProfiles[index], profile);
-												PL_strcat(gProfiles[index], " - migrate");
+												PL_strcpy(gProfiles[idx], profile);
+												PL_strcat(gProfiles[idx], " - migrate");
 											}
 											else
 											{
-												PL_strcpy(gProfiles[index], profile);
+												PL_strcpy(gProfiles[idx], profile);
 											}
 
 											#if defined(DEBUG_profile)
-												printf("proflie%d = %s\n", index, gProfiles[index]);
+												printf("proflie%d = %s\n", idx, gProfiles[idx]);
 											#endif
 										}
 									}
@@ -1560,9 +1566,9 @@ void nsProfile::GetAllProfiles()
 								printf( "Error advancing enumerator, rv=0x%08X\n", (int)rv );
 							#endif
 						}
-						index++;
+						idx++;
 					}
-					g_numProfiles = index;
+					g_numProfiles = idx;
 					NS_RELEASE(enumKeys);
 				}
             }
@@ -1848,7 +1854,7 @@ NS_IMETHODIMP nsProfile::UpdateMozProfileRegistry()
     printf("Entered UpdateMozProfileRegistry.\n");
 #endif
 
-	for (int index = 0; index < g_numOldProfiles; index++)
+	for (int idx = 0; idx < g_numOldProfiles; idx++)
 	{
 		// Check result.
 		if (m_reg != nsnull)
@@ -1867,15 +1873,15 @@ NS_IMETHODIMP nsProfile::UpdateMozProfileRegistry()
 
 					rv = m_reg->SetString(key, "NeedMigration", "true");
 
-					rv = m_reg->GetSubtree(key, gOldProfiles[index], &newKey);
+					rv = m_reg->GetSubtree(key, gOldProfiles[idx], &newKey);
 			
 					if (NS_FAILED(rv))
 					{
-						rv = m_reg->AddSubtree(key, gOldProfiles[index], &newKey);
+						rv = m_reg->AddSubtree(key, gOldProfiles[idx], &newKey);
 		
 						if (NS_SUCCEEDED(rv))
 						{
-							nsFileSpec profileDir(gOldProfLocations[index]);
+							nsFileSpec profileDir(gOldProfLocations[idx]);
 						
 							nsPersistentFileDescriptor descriptor(profileDir);
 							char* profileDirString = nsnull;
@@ -2510,9 +2516,8 @@ NS_IMETHODIMP nsProfile::Get4xProfileCount(int *numProfiles)
 NS_IMETHODIMP nsProfile::MigrateAllProfiles()
 {
 
-    nsresult rv = NS_OK;
-
 #if defined(XP_PC) || defined(XP_MAC)
+	nsresult rv = NS_OK;
 	for (int i=0; i < g_numOldProfiles; i++)
 	{
 		rv = MigrateProfile(gOldProfiles[i]);
