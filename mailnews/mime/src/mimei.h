@@ -218,7 +218,7 @@ typedef struct MimeObjectClass MimeObjectClass;
 /* Creates a new (subclass of) MimeObject of the given class, with the
    given headers (which are copied.)
  */
-extern MimeObject *mime_new (MimeObjectClass *class, MimeHeaders *hdrs,
+extern MimeObject *mime_new (MimeObjectClass *clazz, MimeHeaders *hdrs,
 							 const char *override_content_type);
 
 
@@ -248,7 +248,7 @@ extern MimeObject *mime_create (const char *content_type, MimeHeaders *hdrs,
 /* Querying the type hierarchy */
 extern PRBool mime_subclass_p(MimeObjectClass *child,
 							   MimeObjectClass *parent);
-extern PRBool mime_typep(MimeObject *obj, MimeObjectClass *class);
+extern PRBool mime_typep(MimeObject *obj, MimeObjectClass *clazz);
 
 /* Returns a string describing the location of the part (like "2.5.3").
    This is not a full URL, just a part-number.
