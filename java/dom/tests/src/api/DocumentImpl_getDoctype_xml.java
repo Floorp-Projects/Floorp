@@ -28,7 +28,7 @@ import org.mozilla.dom.test.*;
 import org.mozilla.dom.*;
 import org.w3c.dom.*;
 
-public class DocumentImpl_getDoctype extends BWBaseTest implements Execution
+public class DocumentImpl_getDoctype_xml extends BWBaseTest implements Execution
 {
 
    /**
@@ -38,7 +38,7 @@ public class DocumentImpl_getDoctype extends BWBaseTest implements Execution
     ***********************************************************
     *
     */
-   public DocumentImpl_getDoctype()
+   public DocumentImpl_getDoctype_xml()
    {
    }
 
@@ -81,8 +81,8 @@ public class DocumentImpl_getDoctype extends BWBaseTest implements Execution
       {
        try {
              DocumentType dt = d.getDoctype();
-	     if (dt != null) {
-                TestLoader.logErrPrint("Document Type for HTML is NULL..");
+	     if (dt == null) {
+                TestLoader.logErrPrint("Document Type is  NULL..");
                 return BWBaseTest.FAILED;
              } else {
                 TestLoader.logErrPrint("Document Type is  " + dt.getName());

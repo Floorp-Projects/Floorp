@@ -118,6 +118,7 @@ JAVAFILES= AttrImpl_getName.java \
 	DocumentImpl_createTextNode_String_0.java \
 	DocumentImpl_createTextNode_String_1.java \
 	DocumentImpl_getDoctype.java \
+	DocumentImpl_getDoctype_xml.java \
 	DocumentImpl_getDocumentElement.java \
 	DocumentImpl_getElementById_String_0.java \
 	DocumentImpl_getElementById_String_1.java \
