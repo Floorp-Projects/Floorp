@@ -82,6 +82,8 @@ nsBaseWidget::~nsBaseWidget()
 #ifdef LOSER
 	NS_IF_RELEASE(mVScrollbar);
 #endif
+	NS_IF_RELEASE(mToolkit);
+	NS_IF_RELEASE(mContext);
 }
 
 //-------------------------------------------------------------------------
