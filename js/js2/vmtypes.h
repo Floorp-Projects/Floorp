@@ -58,9 +58,10 @@ namespace VM {
         COMPARE_LT, /* dest, source */
         COMPARE_NE, /* dest, source */
         DIVIDE, /* dest, source1, source2 */
-        ENDTRY, /* there is no try, only do */
+        ENDTRY, /* mmm, there is no try, only do */
         GET_ELEMENT, /* dest, array, index */
         GET_PROP, /* dest, object, prop name */
+        JSR, /* target */
         LOAD_IMMEDIATE, /* dest, immediate value (double) */
         LOAD_NAME, /* dest, name */
         MOVE, /* dest, source */
@@ -71,14 +72,14 @@ namespace VM {
         NOT, /* dest, source */
         RETURN, /* return value */
         RETURN_VOID, /* Return without a value */
+        RTS, /* Return to sender */
         SAVE_NAME, /* name, source */
         SET_ELEMENT, /* base, source1, source2 */
         SET_PROP, /* object, name, source */
         SUBTRACT, /* dest, source1, source2 */
-        THROW,    /* exception object */
-        TRY      /* catch */
+        THROW, /* exception value */
+        TRY, /* catch target, finally target */
     };
-
     
     /********************************************************************/
    
@@ -102,6 +103,7 @@ namespace VM {
         "ENDTRY        ",
         "GET_ELEMENT   ",
         "GET_PROP      ",
+        "JSR           ",
         "LOAD_IMMEDIATE",
         "LOAD_NAME     ",
         "MOVE          ",
@@ -112,6 +114,7 @@ namespace VM {
         "NOT           ",
         "RETURN        ",
         "RETURN_VOID   ",
+        "RTS           ",
         "SAVE_NAME     ",
         "SET_ELEMENT   ",
         "SET_PROP      ",
@@ -148,6 +151,7 @@ namespace VM {
     enum { NotARegister = 0xFFFFFFFF };
     enum { NotALabel = 0xFFFFFFFF };
     enum { NotAnOffset = 0xFFFFFFFF };
+    enum { NotABanana = 0xFFFFFFFF };
     
     /********************************************************************/
     
@@ -418,10 +422,16 @@ namespace VM {
         /* print() inherited from Arithmetic */
     };
 
-    class EndTry : public Instruction {
+    class Endtry : public Instruction {
     public:
-        EndTry () :
-            Instruction(ENDTRY) {};
+        /* mmm, there is no try, only do */
+        Endtry () :
+            Instruction
+            (ENDTRY) {};
+        virtual Formatter& print (Formatter& f) {
+            f << opcodeNames[ENDTRY];
+            return f;
+        }
     };
 
     class GetElement : public Instruction_3<Register, Register, Register> {
@@ -444,6 +454,18 @@ namespace VM {
             (GET_PROP, aOp1, aOp2, aOp3) {};
         virtual Formatter& print (Formatter& f) {
             f << opcodeNames[GET_PROP] << "\t" << "R" << mOp1 << ", " << "R" << mOp2 << ", " << "'" << *mOp3 << "'";
+            return f;
+        }
+    };
+
+    class Jsr : public GenericBranch {
+    public:
+        /* target */
+        Jsr (Label* aOp1) :
+            GenericBranch
+            (JSR, aOp1) {};
+        virtual Formatter& print (Formatter& f) {
+            f << opcodeNames[JSR] << "\t" << "Offset " << mOp1->mOffset;
             return f;
         }
     };
@@ -565,6 +587,18 @@ namespace VM {
         }
     };
 
+    class Rts : public Instruction {
+    public:
+        /* Return to sender */
+        Rts () :
+            Instruction
+            (RTS) {};
+        virtual Formatter& print (Formatter& f) {
+            f << opcodeNames[RTS];
+            return f;
+        }
+    };
+
     class SaveName : public Instruction_2<StringAtom*, Register> {
     public:
         /* name, source */
@@ -612,6 +646,7 @@ namespace VM {
 
     class Throw : public Instruction_1<Register> {
     public:
+        /* exception value */
         Throw (Register aOp1) :
             Instruction_1<Register>
             (THROW, aOp1) {};
@@ -621,10 +656,16 @@ namespace VM {
         }
     };
 
-    class Try : public GenericBranch {
+    class Try : public Instruction_2<Label*, Label*> {
     public:
-        Try (Label *catchStart) :
-            GenericBranch(TRY, catchStart) {};
+        /* catch target, finally target */
+        Try (Label* aOp1, Label* aOp2) :
+            Instruction_2<Label*, Label*>
+            (TRY, aOp1, aOp2) {};
+        virtual Formatter& print (Formatter& f) {
+            f << opcodeNames[TRY] << "\t" << "Offset " << mOp1->mOffset << ", " << "Offset " << mOp2->mOffset;
+            return f;
+        }
     };
 
 } /* namespace VM */

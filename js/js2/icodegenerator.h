@@ -111,28 +111,34 @@ namespace ICG {
             stitcher.back()->registerBase; }
         
         void addStitcher(ICodeState *ics) \
-	{ stitcher.push_back(ics); statementLabelBase = statementLabels.size(); }
+	    { stitcher.push_back(ics); statementLabelBase = statementLabels.size(); }
 	
-	ICodeOp getBranchOp() \
+	    ICodeOp getBranchOp() \
         { return (iCode->empty()) ? NOP : iCode->back()->getBranchOp(); }
 
         Register topRegister;
         Register registerBase;        
         uint32   maxRegister;
 	    uint32   statementLabelBase;
+        Register exceptionRegister;     // reserved to carry the exception object
         
         void setLabel(Label *label);
         void setLabel(InstructionStream *stream, Label *label);
         
+        void jsr(Label *label)  { iCode->push_back(new Jsr(label)); }
+        void rts()              { iCode->push_back(new Rts()); }
         void branch(Label *label);
         void branchConditional(Label *label, Register condition);
         void branchNotConditional(Label *label, Register condition);
         
-        void beginTry(Label *catchLabel);
+        void beginTry(Label *catchLabel, Label *finallyLabel)
+            { iCode->push_back(new Try(catchLabel, finallyLabel)); }
+        void endTry()
+            { iCode->push_back(new Endtry()); }
 
     public:
-        ICodeGenerator() : topRegister(0), registerBase(0), maxRegister(0), statementLabelBase(0)
-        { iCode = new InstructionStream(); }
+        ICodeGenerator()        { ICodeGenerator(NULL, false, 0); }
+        ICodeGenerator(World *world, bool hasTryStatement, uint32 switchStatementNesting);
         
         virtual ~ICodeGenerator() { if (iCode) delete iCode; }
         
@@ -141,6 +147,8 @@ namespace ICG {
         ICodeModule *complete();
 
         Register allocateVariable(StringAtom& /*name*/) 
+        { Register result = getRegister(); registerBase = topRegister; return result; }
+        Register allocateVariable(char * /*name*/) 
         { Register result = getRegister(); registerBase = topRegister; return result; }
         
         Formatter& print(Formatter& f);
@@ -241,7 +249,7 @@ namespace ICG {
         void endTryStatement();
 
         void beginCatchStatement(uint32 pos);
-        void endCatchExpression(Register expression);
+        void endCatchExpression(Register exceptionId);
         void endCatchStatement();
 
         void beginFinallyStatement(uint32 pos);
@@ -337,14 +345,10 @@ namespace ICG {
 
     class TryCodeState : public ICodeState {
     public:
-        TryCodeState(Label *catchLabel, Label *finallyLabel, ICodeGenerator *icg) 
-            : ICodeState(Try_state, icg), 
-                    catchHandler(catchLabel), 
-                    finallyHandler(finallyLabel),
-                    beyondCatch(NULL) 
-                { if (catchHandler != NULL) beyondCatch = icg->getLabel(); }
+        TryCodeState(Label *catchLabel, Label *finallyLabel, ICodeGenerator *icg);
         Label *catchHandler;
         Label *finallyHandler;
+        Label *finallyInvoker;
         Label *beyondCatch;
     };
 
