@@ -124,6 +124,13 @@ nsFilePicker.prototype = {
     this.mFilters.push(extentions);
   },
 
+  QueryInterface: function(iid) {
+    if (!iid.equals(nsIFilePicker) &&
+        !iid.equals(nsISupports))
+        throw Components.results.NS_ERROR_NO_INTERFACE;
+    return this;
+  },
+
   show: function() {
     var o = new Object();
     o.title = this.mTitle;
@@ -212,10 +219,7 @@ function (outer, iid) {
     if (outer != null)
         throw Components.results.NS_ERROR_NO_AGGREGATION;
 
-    if (!iid.equals(nsIFilePicker) && !iid.equals(nsISupports))
-        throw Components.results.NS_ERROR_INVALID_ARG;
-
-    return new nsFilePicker();
+    return (new nsFilePicker()).QueryInterface(iid);
 }
 
 /* entrypoint */
