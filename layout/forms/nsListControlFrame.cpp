@@ -1280,6 +1280,7 @@ nsListControlFrame::GetMaxNumValues()
     nsIDOMHTMLCollection* options = GetOptions(mContent);
     if (options) {
       options->GetLength(&length);
+      NS_RELEASE(options);
     }
     return (PRInt32)length; // XXX fix return on GetMaxNumValues
   } else {
