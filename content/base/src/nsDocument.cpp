@@ -587,6 +587,7 @@ nsDocument::~nsDocument()
     mCSSLoader->DropDocumentReference();
   }
 
+  // XXX Ideally we'd do this cleanup in the nsIDocument destructor.
   if (mNodeInfoManager) {
     mNodeInfoManager->DropDocumentReference();
     NS_RELEASE(mNodeInfoManager);
