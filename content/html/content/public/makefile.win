@@ -21,12 +21,15 @@
 
 DEPTH=..\..\..\.. 
 
+XPIDLSRCS = \
+	.\nsISelectElement.idl \
+	$(NULL)
+
 EXPORTS= \
 	nsIFormControl.h \
 	nsIForm.h \
 	nsILink.h \
 	nsIOptionElement.h \
-	nsISelectElement.h \
 	nsIScriptElement.h \
 	nsITextControlElement.h \
 	$(NULL)

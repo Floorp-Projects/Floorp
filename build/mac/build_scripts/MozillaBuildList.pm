@@ -686,6 +686,7 @@ sub BuildClientDist()
     InstallFromManifest(":mozilla:content:events:public:MANIFEST",                 "$distdirectory:content:");
     InstallFromManifest(":mozilla:content:events:src:MANIFEST",                    "$distdirectory:content:");
     InstallFromManifest(":mozilla:content:html:content:public:MANIFEST",           "$distdirectory:content:");
+    InstallFromManifest(":mozilla:content:html:content:public:MANIFEST_IDL",       "$distdirectory:idl:");
     InstallFromManifest(":mozilla:content:html:content:src:MANIFEST",              "$distdirectory:content:");
     InstallFromManifest(":mozilla:content:html:document:public:MANIFEST",          "$distdirectory:content:");
     InstallFromManifest(":mozilla:content:html:document:src:MANIFEST",             "$distdirectory:content:");

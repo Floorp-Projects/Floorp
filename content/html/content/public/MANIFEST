@@ -5,6 +5,5 @@ nsIForm.h
 nsIFormControl.h
 nsILink.h
 nsIOptionElement.h
-nsISelectElement.h
 nsIScriptElement.h
 nsITextControlElement.h
