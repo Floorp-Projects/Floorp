@@ -127,7 +127,6 @@ static ICodeModule* genCode(Context &cx, StmtNode *p, const String &fileName)
 {
     ICodeGenerator icg(&cx.getWorld(), cx.getGlobalObject());
     
-    icg.isScript();
     TypedRegister ret(NotARegister, &None_Type);
     while (p) {
         icg.preprocess(p);
@@ -339,7 +338,6 @@ static void testCompile()
         Parser p(world, a, testScript, widenCString("testCompile"));
         StmtNode *parsedStatements = p.parseProgram();
         ICodeGenerator icg(&world, &glob);
-        icg.isScript();
         StmtNode *s = parsedStatements;
         while (s) {
             icg.preprocess(s);

@@ -43,10 +43,10 @@ namespace JSTypes {
 
 // the canonical undefined value, etc.
 const JSValue kUndefinedValue;
-const JSValue kNaN = JSValue(nan);
-const JSValue kTrue = JSValue(true);
-const JSValue kFalse = JSValue(false);
-const JSValue kNull = JSValue((JSObject*)NULL);
+const JSValue kNaNValue = JSValue(nan);
+const JSValue kTrueValue = JSValue(true);
+const JSValue kFalseValue = JSValue(false);
+const JSValue kNullValue = JSValue((JSObject*)NULL);
 
 JSType Any_Type = JSType(widenCString("any"), NULL);
 JSType Integer_Type = JSType(widenCString("Integer"), &Any_Type);
@@ -323,7 +323,7 @@ JSValue JSValue::valueToNumber(const JSValue& value) // can assume value is not 
     case boolean_tag:
         return JSValue((value.boolean) ? 1.0 : 0.0);
     case undefined_tag:
-        return kNaN;
+        return kNaNValue;
     default:
         NOT_REACHED("Bad tag");
         return kUndefinedValue;
@@ -359,9 +359,9 @@ JSValue JSValue::valueToBoolean(const JSValue& value)
     case object_tag:
     case array_tag:
     case function_tag:
-        return kTrue;
+        return kTrueValue;
     case undefined_tag:
-        return kFalse;
+        return kFalseValue;
     default:
         NOT_REACHED("Bad tag");
         return kUndefinedValue;

@@ -187,10 +187,6 @@ SOURCE=..\jsclasses.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\JSScope.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\jstypes.h
 # End Source File
 # Begin Source File

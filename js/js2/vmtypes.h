@@ -36,6 +36,7 @@
 
 #include "numerics.h" /* needed for formatter << double */
 #include "jstypes.h"
+#include "jsclasses.h"
 #include "world.h"
 #include <vector>
 
@@ -50,6 +51,7 @@ namespace JavaScript {
 namespace VM {
 
     using namespace JSTypes;
+    using namespace JSClasses;
 
     enum ICodeOp {
         ADD, /* dest, source1, source2 */
@@ -72,6 +74,7 @@ namespace VM {
         GET_ELEMENT, /* dest, base, index */
         GET_PROP, /* dest, object, prop name */
         GET_SLOT, /* dest, object, slot number */
+        GET_STATIC, /* dest, class, name */
         INSTANCEOF, /* dest, source1, source2 */
         JSR, /* target */
         LOAD_BOOLEAN, /* dest, immediate value (boolean) */
@@ -100,9 +103,11 @@ namespace VM {
         SET_ELEMENT, /* base, index, value */
         SET_PROP, /* object, name, source */
         SET_SLOT, /* object, slot number, source */
+        SET_STATIC, /* class, name, source */
         SHIFTLEFT, /* dest, source1, source2 */
         SHIFTRIGHT, /* dest, source1, source2 */
         SLOT_XCR, /* dest, source, slot number, value */
+        STATIC_XCR, /* dest, class, name, value */
         STRICT_EQ, /* dest, source1, source2 */
         STRICT_NE, /* dest, source1, source2 */
         SUBTRACT, /* dest, source1, source2 */
@@ -116,6 +121,7 @@ namespace VM {
         WITHOUT, /* without this object */
         XOR, /* dest, source1, source2 */
     };
+
 
     /********************************************************************/
 
@@ -140,6 +146,7 @@ namespace VM {
         "GET_ELEMENT   ",
         "GET_PROP      ",
         "GET_SLOT      ",
+        "GET_STATIC    ",
         "INSTANCEOF    ",
         "JSR           ",
         "LOAD_BOOLEAN  ",
@@ -168,9 +175,11 @@ namespace VM {
         "SET_ELEMENT   ",
         "SET_PROP      ",
         "SET_SLOT      ",
+        "SET_STATIC    ",
         "SHIFTLEFT     ",
         "SHIFTRIGHT    ",
         "SLOT_XCR      ",
+        "STATIC_XCR    ",
         "STRICT_EQ     ",
         "STRICT_NE     ",
         "SUBTRACT      ",
@@ -634,6 +643,22 @@ namespace VM {
         }
     };
 
+    class GetStatic : public Instruction_3<TypedRegister, JSClass*, const StringAtom*> {
+    public:
+        /* dest, class, name */
+        GetStatic (TypedRegister aOp1, JSClass* aOp2, const StringAtom* aOp3) :
+            Instruction_3<TypedRegister, JSClass*, const StringAtom*>
+            (GET_STATIC, aOp1, aOp2, aOp3) {};
+        virtual Formatter& print(Formatter& f) {
+            f << opcodeNames[GET_STATIC] << "\t" << "R" << mOp1.first << ", " << *mOp2 << ", " << "'" << *mOp3 << "'";
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << "R" << mOp1.first << '=' << registers[mOp1.first];
+            return f;
+        }
+    };
+
     class Instanceof : public Instruction_3<TypedRegister, TypedRegister, TypedRegister> {
     public:
         /* dest, source1, source2 */
@@ -1050,6 +1075,22 @@ namespace VM {
         }
     };
 
+    class SetStatic : public Instruction_3<JSClass*, const StringAtom*, TypedRegister> {
+    public:
+        /* class, name, source */
+        SetStatic (JSClass* aOp1, const StringAtom* aOp2, TypedRegister aOp3) :
+            Instruction_3<JSClass*, const StringAtom*, TypedRegister>
+            (SET_STATIC, aOp1, aOp2, aOp3) {};
+        virtual Formatter& print(Formatter& f) {
+            f << opcodeNames[SET_STATIC] << "\t" << *mOp1 << ", " << "'" << *mOp2 << "'" << ", " << "R" << mOp3.first;
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << "R" << mOp3.first << '=' << registers[mOp3.first];
+            return f;
+        }
+    };
+
     class Shiftleft : public Arithmetic {
     public:
         /* dest, source1, source2 */
@@ -1080,6 +1121,22 @@ namespace VM {
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
             f << "R" << mOp1.first << '=' << registers[mOp1.first] << ", " << "R" << mOp2.first << '=' << registers[mOp2.first];
+            return f;
+        }
+    };
+
+    class StaticXcr : public Instruction_4<TypedRegister, JSClass*, const StringAtom*, double> {
+    public:
+        /* dest, class, name, value */
+        StaticXcr (TypedRegister aOp1, JSClass* aOp2, const StringAtom* aOp3, double aOp4) :
+            Instruction_4<TypedRegister, JSClass*, const StringAtom*, double>
+            (STATIC_XCR, aOp1, aOp2, aOp3, aOp4) {};
+        virtual Formatter& print(Formatter& f) {
+            f << opcodeNames[STATIC_XCR] << "\t" << "R" << mOp1.first << ", " << *mOp2 << ", " << "'" << *mOp3 << "'" << ", " << mOp4;
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << "R" << mOp1.first << '=' << registers[mOp1.first];
             return f;
         }
     };

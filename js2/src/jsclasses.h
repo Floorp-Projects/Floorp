@@ -141,6 +141,11 @@ namespace JSClasses {
             return mSlotCount;
         }
     };
+
+    inline Formatter& operator<<(Formatter &f, JSClass &c)
+    {
+        return f << c.getName();
+    }
     
     /**
      * Represents an instance of a JSClass.
@@ -157,7 +162,7 @@ namespace JSClasses {
         JSInstance(JSClass* thisClass)
         {
             // slot 0 is always the class.
-            mSlots[0] = thisClass;
+            mSlots[0] = mType = thisClass;           
             // initialize rest of slots with undefined.
             std::uninitialized_fill(&mSlots[1], &mSlots[1] + thisClass->getSlotCount(), JSValue());
             // for grins, use the prototype link to access methods.
