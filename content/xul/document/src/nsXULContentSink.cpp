@@ -1386,12 +1386,6 @@ XULContentSinkImpl::OpenTag(const PRUnichar** aAttributes,
 {
     nsresult rv;
 
-    if (aNodeInfo->Equals(kScriptAtom, kNameSpaceID_HTML) || 
-        aNodeInfo->Equals(kScriptAtom, kNameSpaceID_XUL)) {
-        // Oops, it's a script!
-        return OpenScript(aAttributes, aLineNumber);
-    }
-
     // Create the element
     nsXULPrototypeElement* element;
     rv = CreateElement(aNodeInfo, &element);
@@ -1417,15 +1411,22 @@ XULContentSinkImpl::OpenTag(const PRUnichar** aAttributes,
         return rv;
     }
 
+    // Add the attributes
+    rv = AddAttributes(aAttributes, aAttrLen, element);
+    if (NS_FAILED(rv)) return rv;
+
     children->AppendElement(element);
+
+    if (aNodeInfo->Equals(kScriptAtom, kNameSpaceID_HTML) || 
+        aNodeInfo->Equals(kScriptAtom, kNameSpaceID_XUL)) {
+        // Do scripty things now.  OpenScript will push the
+        // nsPrototypeScriptElement onto the stack, so we're done after this.
+        return OpenScript(aAttributes, aLineNumber);
+    }
 
     // Push the element onto the context stack, so that child
     // containers will hook up to us as their parent.
     rv = mContextStack.Push(element, mState);
-    if (NS_FAILED(rv)) return rv;
-
-    // Add the attributes
-    rv = AddAttributes(aAttributes, aAttrLen, element);
     if (NS_FAILED(rv)) return rv;
 
     mState = eInDocumentElement;
