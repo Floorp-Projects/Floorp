@@ -216,16 +216,15 @@ morkRowSpace::CutAllRows(morkEnv* ev, morkPool* ioPool)
   if ( this->IsRowSpaceClean() )
     this->MaybeDirtyStoreAndSpace();
   
-  morkZone* zone = &mSpace_Store->mStore_Zone;
   mork_num outSlots = mRowSpace_Rows.MapFill();
-  morkRow* r = 0; // old key row in the map
-  
-  mork_change* c = 0;
 
 #ifdef MORK_ENABLE_ZONE_ARENAS
   MORK_USED_2(ev, ioPool);
   return 0;
 #else /*MORK_ENABLE_ZONE_ARENAS*/
+  morkZone* zone = &mSpace_Store->mStore_Zone;
+  morkRow* r = 0; // old key row in the map
+  mork_change* c = 0;
 
 #ifdef MORK_ENABLE_PROBE_MAPS
   morkRowProbeMapIter i(ev, &mRowSpace_Rows);
