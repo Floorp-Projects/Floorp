@@ -101,7 +101,7 @@ nsDOMWindowUtils::GetDocumentMetadata(const nsAString& aName,
                                       nsAString& aValue)
 {
   if (mWindow) {
-    nsCOMPtr<nsIDocument> doc(do_QueryInterface(mWindow->mDocument));
+    nsCOMPtr<nsIDocument> doc(do_QueryInterface(mWindow->GetExtantDocument()));
     if (doc) {
       nsCOMPtr<nsIAtom> name = do_GetAtom(aName);
       doc->GetHeaderData(name, aValue);
