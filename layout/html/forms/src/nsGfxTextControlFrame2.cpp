@@ -2906,7 +2906,10 @@ nsGfxTextControlFrame2::SetTextControlFrameState(const nsAReadableString& aValue
 			flags &= ~(nsIHTMLEditor::eEditorDisabledMask);
 			flags &= ~(nsIHTMLEditor::eEditorReadonlyMask);
 			mEditor->SetFlags(flags);
-      htmlEditor->InsertText(currentValue);
+      if (currentValue.Length() < 1)
+        mEditor->DeleteSelection(nsIEditor::eNone);
+      else
+        htmlEditor->InsertText(currentValue);
       mEditor->SetFlags(savedFlags);
       if (domSel)
         domSel->EndBatchChanges();
