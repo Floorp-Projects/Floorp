@@ -70,33 +70,36 @@ class URLKey: public nsHashKey {
 public:
   URLKey(nsIURI* aURL)
     : nsHashKey(),
-      mURL(aURL)
+      mURL(aURL),
+      mSpec(nsnull)
   {
     MOZ_COUNT_CTOR(URLKey);
     NS_ADDREF(mURL);
     mHashValue = 0;
 
-    char* urlStr;
-    mURL->GetSpec(&urlStr);
-    if (urlStr) {
-      mHashValue = nsCRT::HashCode(urlStr);
-      nsCRT::free(urlStr);
+    mURL->GetSpec((char **)&mSpec);
+    if (mSpec) {
+      mHashValue = nsCRT::HashCode(mSpec);
     }
   }
 
   URLKey(const URLKey& aKey)
     : nsHashKey(),
       mURL(aKey.mURL),
-      mHashValue(aKey.mHashValue)
+      mHashValue(aKey.mHashValue),
+      mSpec(nsnull)
   {
     MOZ_COUNT_CTOR(URLKey);
     NS_ADDREF(mURL);
+    if (aKey.mSpec)
+      mSpec = nsCRT::strdup(aKey.mSpec);
   }
 
   virtual ~URLKey(void)
   {
     MOZ_COUNT_DTOR(URLKey);
     NS_RELEASE(mURL);
+    CRTFREEIF((char *)mSpec);
   }
 
   virtual PRUint32 HashCode(void) const
@@ -112,11 +115,7 @@ public:
     nsresult result = mURL->Equals(key->mURL, &equals);
     return (NS_SUCCEEDED(result) && equals);
 #else
-    nsXPIDLCString str1;
-    nsXPIDLCString str2;
-    mURL->GetSpec(getter_Copies(str1));
-    key->mURL->GetSpec(getter_Copies(str2));
-    return ((nsCRT::strcasecmp(str1, str2) == 0) ? PR_TRUE : PR_FALSE);
+    return (nsCRT::strcasecmp(mSpec, key->mSpec) == 0);
 #endif
   }
 
@@ -127,6 +126,7 @@ public:
 
   nsIURI*   mURL;
   PRUint32  mHashValue;
+  const char* mSpec;
 };
 
 class SheetLoadData : public nsIStreamLoaderObserver
@@ -769,14 +769,6 @@ static PRBool IsChromeURI(nsIURI* aURI)
   return isChrome;
 }
 #endif
-
-static PRBool IsFileURI(nsIURI* aURI)
-{
-  NS_ASSERTION(aURI, "bad caller");
-  PRBool isFile = PR_FALSE;
-  aURI->SchemeIs("file", &isFile);
-  return isFile;
-}
 
 nsresult
 CSSLoaderImpl::SheetComplete(nsICSSStyleSheet* aSheet, SheetLoadData* aLoadData)
@@ -1654,9 +1646,9 @@ nsresult CSSLoaderImpl::SetCharset(/*in*/ const nsString &aHTTPHeader,
   nsString str;
   PRBool setCharset = PR_FALSE;
 
+  PRInt32 charsetOffset;
   if (aHTTPHeader.Length() > 0) {
     // check if it has the charset= parameter
-    PRInt32 charsetOffset;
     static const char charsetStr[] = "charset=";
     if ((charsetOffset = aHTTPHeader.Find(charsetStr,PR_TRUE)) > 0) {
       aHTTPHeader.Right(str, aHTTPHeader.Length() -
@@ -1665,7 +1657,7 @@ nsresult CSSLoaderImpl::SetCharset(/*in*/ const nsString &aHTTPHeader,
     }
   } else if (aStyleSheetData.Length() > 0) {
     static const char atCharsetStr[] = "@charset";
-    if (aStyleSheetData.Find(atCharsetStr) > -1) {
+    if ((charsetOffset = aStyleSheetData.Find(atCharsetStr)) > -1) {
       nsString strValue;
       // skip past the ident
       aStyleSheetData.Right(str, aStyleSheetData.Length() -
