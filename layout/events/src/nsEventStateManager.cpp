@@ -887,6 +887,11 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
 
         SetContentState(newFocus, NS_EVENT_STATE_ACTIVE);
       }
+      else {
+        // if we're here, the event handler returned false, so stop
+        // any of our own processing of a drag. Workaround for bug 43258.
+        StopTrackingDragGesture();      
+      }
     }
     break;
   case NS_MOUSE_LEFT_BUTTON_UP:
