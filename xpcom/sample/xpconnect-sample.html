@@ -1,0 +1,44 @@
+<html>
+<head>
+<title>XPConnect Example</title>
+</head>
+
+<body>
+<script>
+var sample = Components.classes["component://netscape/sample/sample-world"].createInstance();
+sample = sample.QueryInterface(Components.interfaces.nsISample);
+dump("sample = " + sample + "\n");
+
+function get()
+{
+  var field = document.getElementById('Value');
+  field.value = sample.Value;
+}
+
+function set()
+{
+  var field = document.getElementById('Value');
+  sample.Value = field.value;
+}
+
+function poke()
+{
+  var field = document.getElementById('Value');
+  sample.Poke(field.value);
+}
+
+function write()
+{
+  sample.WriteValue("here is what I'm writing!");
+}
+</script>
+
+<form name="form">
+<input type="button" value="Get" onclick="get();">
+<input type="button" value="Set" onclick="set();">
+<input type="button" value="Poke" onclick="poke();">
+<input type="text" id="Value">
+<input type="button" value="Write" onclick="write();">
+<form>
+</body>
+</html>
