@@ -53,11 +53,10 @@ typedef PRIntn intn;
 #include <sys/types.h>
 #else
 typedef PRUintn uint;
-#define HAVE_UINT
 #endif
 
 typedef PRUint64 uint64;
-#if !defined(XP_MAC) && !defined(_WIN32) && !defined(XP_OS2) 
+#if !defined(XP_MAC) && !defined(_WIN32) && !defined(XP_OS2)
 typedef PRUint32 uint32;
 #else
 typedef unsigned long uint32;
