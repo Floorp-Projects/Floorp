@@ -196,6 +196,7 @@ my %users = ('admin' => &newPassword('password')); # default password for admin
 my %userFlags = ('admin' => 3); # bitmask; 0x1 = admin, 0x2 = delete user a soon as other admin authenticates
 my $helpline = 'http://www.mozilla.org/projects/mozbot/'; # used in IRC name and in help
 my $serverRestrictsIRCNames = '';
+my $username = 0; # makes the username default to the pid ($USERNAME)
 my @modulenames = ('General', 'Greeting', 'Infobot', 'Parrot');
 
 # - which variables can be saved.
@@ -219,6 +220,7 @@ my @modulenames = ('General', 'Greeting', 'Infobot', 'Parrot');
     [\%userFlags, 'userFlags'], # usernames => bits
     [\$variablepattern, 'variablepattern'],
     [\$helpline, 'helpline'],
+    [\$username, 'username'],
     [\$serverRestrictsIRCNames, 'simpleIRCNameServer'],
     [\$Mails::smtphost, 'smtphost'],
 );
@@ -306,7 +308,7 @@ sub connect {
              Password => $password,
              Nick => $nicks[$nick],
              Ircname => $ircname,
-             Username => $USERNAME,
+             Username => $username || $USERNAME,
              LocalAddr => $localAddr,
            )) {
         &debug("Could not connect. Are you sure '$server:$port' is a valid host?");
