@@ -34,6 +34,7 @@ var msgWindowContractID      = "@mozilla.org/messenger/msgwindow;1";
 
 var messenger;
 var pref;
+var prefServices;
 var statusFeedback;
 var messagePaneController;
 var msgWindow;
@@ -118,7 +119,8 @@ function CreateMailWindowGlobals()
   messenger = Components.classes[messengerContractID].createInstance();
   messenger = messenger.QueryInterface(Components.interfaces.nsIMessenger);
 
-  pref = Components.classes[prefContractID].getService(Components.interfaces.nsIPrefBranch);
+  prefServices = Components.classes[prefContractID].getService(Components.interfaces.nsIPrefService);
+  pref = prefServices.getBranch(null);
 
   //Create windows status feedback
   // set the JS implementation of status feedback before creating the c++ one..
@@ -614,4 +616,58 @@ function SetKeywords(aKeywords)
 
   // cache the keywords 
   gLastKeywords = aKeywords;
+}
+
+function ShowHideToolBarButtons()
+{
+  var prefBase = "mail.toolbars.showbutton.";
+  var prefBranch = prefServices.getBranch(prefBase);
+  var prefCount = {value:0};
+  var prefArray = prefBranch.getChildList("" , prefCount);
+
+  if (prefArray && (prefCount.value > 0)) {
+    for (var i=0;i < prefCount.value;i++) {
+      hideButton(prefArray[i],prefBranch.getBoolPref(prefArray[i]));
+    }
+  }
+}
+  
+function AddToolBarPrefListener()
+{
+  try {
+    var pbi = pref.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+    pbi.addObserver(gMailToolBarPrefListener.domain, gMailToolBarPrefListener, false);
+  } catch(ex) {
+    dump("Failed to observe prefs: " + ex + "\n");
+  }
+}
+
+function RemoveToolBarPrefListener()
+{
+  try {
+    var pbi = pref.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+    pbi.removeObserver(gMailToolBarPrefListener.domain, gMailToolBarPrefListener);
+  } catch(ex) {
+    dump("Failed to remove pref observer: " + ex + "\n");
+  }
+}
+
+// Pref listener constants
+const gMailToolBarPrefListener =
+{
+  domain: "mail.toolbars.showbutton",
+  observe: function(subject, topic, prefName)
+  {
+    // verify that we're changing a button pref
+    if (topic != "nsPref:changed")
+      return;
+    var buttonName = prefName.substr(this.domain.length+1);
+
+    hideButton(buttonName,pref.getBoolPref(prefName))
+  }
+};
+
+function hideButton(name,show)
+{
+  document.getElementById("button-" + name).setAttribute("hidden", show ? "false":"true");
 }

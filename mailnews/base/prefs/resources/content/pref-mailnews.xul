@@ -39,9 +39,9 @@ Contributor(s):
   <![CDATA[
     var _elementIDs = ["mailnewsConfirmMoveFoldersToTrash", 
                        "mailnewsStartPageEnabled", "mailnewsStartPageUrl", 
-                       "mailnewsSoundFileUrl", "newMailNotification", 
-                       "newMailNotificationType",
-                       "newMailNotificationAlert", "mailWarnOnSendAccelKey" ];
+                       "mailRememberLastMsg", "fileButton", "nextButton",
+                       "printButton", "stopButton"];
+                       //"junkMailButton" - to be added when implemented
   ]]>
   </script>
   
@@ -54,43 +54,16 @@ Contributor(s):
                 accesskey="&confirmMove.accesskey;"/>
     </hbox>
 
-    <hbox align="center">
-      <checkbox id="mailWarnOnSendAccelKey" label="&warnOnSendAccelKey.label;"
-                prefstring="mail.warn_on_send_accel_key"
-                accesskey="&warnOnSendAccelKey.accesskey;" />
-    </hbox>
-    
     <hbox align="start" id="mapi"/>
 
+    <hbox align="center">
+      <checkbox id="mailRememberLastMsg" label="&rememberLastMsg.label;"
+                prefstring="mailnews.remember_selected_message"
+                accesskey="&rememberLastMsg.accesskey;" />
+    </hbox>
+    
     <separator class="thin"/>
     
-    <description>&newMessagesArrive.label;</description>
-
-    <checkbox id="newMailNotification" accesskey="&playSound.accesskey;"
-         prefstring="mail.biff.play_sound" label="&playSound.label;"
-         oncommand="PlaySoundCheck()"/>
-
-    <hbox align="center" class="indent">
-      <radiogroup id="newMailNotificationType" prefstring="mail.biff.play_sound.type" orient="vertical">
-        <radio class="iconic" value="0" oncommand="PlaySoundCheck()" label="&systemsound.label;" id="system"/>
-        <radio class="iconic" value="1" oncommand="PlaySoundCheck()" label="&customsound.label;" id="custom"/>
-      </radiogroup>
-    </hbox>
-
-    <hbox align="center" class="indent">
-      <textbox flex="1" oninput="onCustomWavInput()" id="mailnewsSoundFileUrl" preftype="string"
-           prefstring="mail.biff.play_sound.url"/>
-      <hbox autostretch="never">
-        <button id="browse" label="&browse.label;" filepickertitle="&browse.title;" oncommand="Browse()"/>
-        <button id="preview" label="&preview.label;" 
-              oncommand="PreviewSound()"/>
-      </hbox>
-    </hbox>
-    <hbox align="center">
-      <checkbox id="newMailNotificationAlert" label="&showAnimatedAlert.label;"
-                prefstring="mail.biff.show_alert"
-                accesskey="&showAnimatedAlert.accesskey;" />
-    </hbox>
   </groupbox>
 
   <groupbox>
@@ -117,5 +90,29 @@ Contributor(s):
      </hbox>
 
   </groupbox>
-  
+
+  <!-- toolbar buttons customization -->
+  <groupbox id="showButtons">
+    <caption label="&toolbarIntro.label;"/>
+    <hbox id="showButtonsBox">
+      <checkbox id="fileButton"
+                label="&fileButton.label;"
+                prefstring="mail.toolbars.showbutton.file"/>
+      <checkbox id="nextButton"
+                label="&nextButton.label;"
+                prefstring="mail.toolbars.showbutton.next"/>
+<!-- not ready yet
+      <checkbox id="junkMailButton"
+                label="&junkMailButton.label;"
+                prefstring="mail.toolbars.showbutton.junk"/>
+-->
+      <checkbox id="printButton"
+                label="&printButton.label;"
+                prefstring="mail.toolbars.showbutton.print"/>
+      <checkbox id="stopButton"
+                label="&stopButton.label;"
+                prefstring="mail.toolbars.showbutton.stop"/>
+    </hbox>
+  </groupbox>
+ 
 </page>

@@ -529,6 +529,8 @@ function OnLoadMessenger()
   AddMailOfflineObserver();
   CreateMailWindowGlobals();
   Create3PaneGlobals();
+  AddToolBarPrefListener();
+  ShowHideToolBarButtons();
   verifyAccounts(null);
     
   HideAccountCentral();
@@ -587,7 +589,7 @@ function OnLoadMessenger()
 function OnUnloadMessenger()
 {
   accountManager.removeIncomingServerListener(gThreePaneIncomingServerListener);
-
+  RemoveToolBarPrefListener();
   // FIX ME - later we will be able to use onload from the overlay
   OnUnloadMsgHeaderPane();
 

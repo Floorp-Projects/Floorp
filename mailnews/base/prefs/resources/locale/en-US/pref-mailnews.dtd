@@ -20,13 +20,6 @@ Rights Reserved.
 
 <!ENTITY pane.title                       "Mail &amp; Newsgroups">
 <!ENTITY generalSettings.label            "General Settings">
-<!ENTITY warnOnSendAccelKey.label         "Confirm when using keyboard shortcut to send message">
-<!ENTITY warnOnSendAccelKey.accesskey     "o">
-<!ENTITY newMessagesArrive.label          "When new messages arrive:">
-<!ENTITY playSound.label                  "Play a sound">
-<!ENTITY playSound.accesskey              "P">
-<!ENTITY showAnimatedAlert.label          "Show an alert">
-<!ENTITY showAnimatedAlert.accesskey      "S">
 <!ENTITY confirmMove.label                "Confirm when moving folders to the Trash">
 <!ENTITY confirmMove.accesskey            "C">
 <!ENTITY useMessenger.label               "Use Mail from MAPI-based applications">
@@ -38,9 +31,11 @@ Rights Reserved.
 <!ENTITY location.accesskey               "L">
 <!ENTITY useDefault.label                 "Restore Default">
 <!ENTITY useDefault.accesskey             "R">
-<!ENTITY preview.label                    "Preview">
-<!ENTITY systemsound.label                "System New Mail Sound">
-<!ENTITY customsound.label                "Custom wav file">
-<!ENTITY browse.label                     "Browse...">
-<!ENTITY browse.accesskey                 "B">
-<!ENTITY browse.title                     "Choose file">
+<!ENTITY rememberLastMsg.label            "Remember the last selected message">
+<!ENTITY rememberLastMsg.accesskey        "e">
+<!ENTITY toolbarIntro.label               "Display the following toolbar buttons">
+<!ENTITY fileButton.label                 "File">
+<!ENTITY nextButton.label                 "Next">
+<!ENTITY junkMailButton.label             "Junk Mail">
+<!ENTITY printButton.label                "Print">
+<!ENTITY stopButton.label                 "Stop">

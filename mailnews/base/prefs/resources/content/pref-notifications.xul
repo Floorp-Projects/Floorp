@@ -1,0 +1,77 @@
+<?xml version="1.0"?>
+
+<!--
+The contents of this file are subject to the Netscape Public
+License Version 1.1 (the "License"); you may not use this file
+except in compliance with the License. You may obtain a copy of
+the License at http://www.mozilla.org/NPL/
+
+Software distributed under the License is distributed on an "AS
+IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+implied. See the License for the specific language governing
+rights and limitations under the License.
+
+The Original Code is Mozilla Communicator client code, released
+March 31, 1998.
+
+The Initial Developer of the Original Code is Netscape
+Communications Corporation. Portions created by Netscape are
+ Copyright (C) 1998-2001 Netscape Communications Corporation. All
+Rights Reserved.
+
+Contributor(s):
+    rcassin@supernova.org
+    Seth Spitzer <sspitzer@netscape.com>
+-->
+
+<?xml-stylesheet href="chrome://messenger/skin/prefPanels.css" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
+
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/pref-notifications.dtd">
+
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      onload="parent.initPanel('chrome://messenger/content/pref-notifications.xul');"
+      headertitle="&pane.title;">
+
+  <script type="application/x-javascript" src="chrome://messenger/content/pref-notifications.js"/>
+
+  <script type="application/x-javascript">
+  <![CDATA[
+    var _elementIDs = ["mailnewsSoundFileUrl", "newMailNotification", 
+                       "newMailNotificationType",
+                       "newMailNotificationAlert"];
+  ]]>
+  </script>
+  
+  <groupbox>
+    <caption label="&newMessagesArrive.label;"/>
+
+    <hbox align="center">
+      <checkbox id="newMailNotificationAlert" label="&showAnimatedAlert.label;"
+                prefstring="mail.biff.show_alert"
+                accesskey="&showAnimatedAlert.accesskey;" />
+    </hbox>
+    
+    <checkbox id="newMailNotification" accesskey="&playSound.accesskey;"
+         prefstring="mail.biff.play_sound" label="&playSound.label;"
+         oncommand="PlaySoundCheck()"/>
+
+    <hbox align="center" class="indent">
+      <radiogroup id="newMailNotificationType" prefstring="mail.biff.play_sound.type" orient="vertical">
+        <radio class="iconic" value="0" oncommand="PlaySoundCheck()" label="&systemsound.label;" id="system"/>
+        <radio class="iconic" value="1" oncommand="PlaySoundCheck()" label="&customsound.label;" id="custom"/>
+      </radiogroup>
+    </hbox>
+
+    <hbox align="center" class="indent">
+      <textbox flex="1" oninput="onCustomWavInput()" id="mailnewsSoundFileUrl" preftype="string"
+           prefstring="mail.biff.play_sound.url"/>
+      <hbox autostretch="never">
+        <button id="browse" label="&browse.label;" filepickertitle="&browse.title;" oncommand="Browse()"/>
+        <button id="preview" label="&preview.label;" 
+              oncommand="PreviewSound()"/>
+      </hbox>
+    </hbox>
+  </groupbox>
+
+</page>
