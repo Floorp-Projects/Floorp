@@ -29,7 +29,7 @@
 
 #include "nsIChannel.h"
 #include "nsIIOService.h"
-#include "nsIRunnable.h"
+#include "nsILoadGroup.h"
 #include "nsIStreamListener.h"
 #include "nsIURI.h"
 
@@ -74,8 +74,8 @@ imgLoader::~imgLoader()
 #endif
 }
 
-/* imgIRequest loadImage (in nsIURI uri, in imgIDecoderObserver aObserver, in nsISupports cx); */
-NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, imgIDecoderObserver *aObserver, nsISupports *cx, imgIRequest **_retval)
+/* imgIRequest loadImage (in nsIURI uri, in nsILoadGroup aLoadGroup, in imgIDecoderObserver aObserver, in nsISupports cx); */
+NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, nsILoadGroup *aLoadGroup, imgIDecoderObserver *aObserver, nsISupports *cx, imgIRequest **_retval)
 {
 #if defined(PR_LOGGING)
   nsXPIDLCString spec;
@@ -101,8 +101,9 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, imgIDecoderObserver *aObserver,
     ioserv->NewChannelFromURI(aURI, getter_AddRefs(newChannel));
     if (!newChannel) return NS_ERROR_FAILURE;
 
-    // XXX do we need to SetOwner here?
-    newChannel->SetOwner(this); // the channel is now holding a strong ref to 'this'
+    // XXX this only handles the first load of the image... ugh
+    if (aLoadGroup)
+      newChannel->SetLoadGroup(aLoadGroup);
 
     nsCOMPtr<imgIRequest> req(do_CreateInstance(kImageRequestCID));
     request = NS_REINTERPRET_CAST(imgRequest*, req.get());

@@ -26,6 +26,7 @@
 #include "nsXPIDLString.h"
 
 #include "nsIChannel.h"
+#include "nsIHTTPChannel.h"
 #include "nsIInputStream.h"
 #include "imgILoader.h"
 #include "nsIComponentManager.h"
@@ -378,7 +379,7 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
   LOG_SCOPE("imgRequest::OnStartRequest");
 
   NS_ASSERTION(!mDecoder, "imgRequest::OnStartRequest -- we already have a decoder");
-
+  
   nsCOMPtr<nsIChannel> chan(do_QueryInterface(aRequest));
 
   if (mChannel && (mChannel != chan)) {
@@ -390,6 +391,21 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
            (" `->  Channel already canceled.\n"));
 
     return NS_ERROR_FAILURE;
+  }
+
+
+  nsCOMPtr<nsIHTTPChannel> httpChannel(do_QueryInterface(chan));
+  if (httpChannel) {
+    PRUint32 httpStatus;
+    httpChannel->GetResponseStatus(&httpStatus);
+    if (httpStatus == 404) {
+      PR_LOG(gImgLog, PR_LOG_DEBUG,
+             ("[this=%p] imgRequest::OnStartRequest -- http status = 404. canceling.\n", this));
+
+      mStatus = imgIRequest::STATUS_ERROR;
+      this->Cancel(NS_BINDING_ABORTED);
+      return NS_ERROR_FAILURE;
+    }
   }
 
   nsXPIDLCString contentType;
