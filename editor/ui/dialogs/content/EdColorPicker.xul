@@ -66,21 +66,12 @@
 -->
   <spacer class="spacer"/>
   <vbox flex="1">
-    <stack valign="middle" autostretch="never">
-      <button id="LastPickedButton" class="dialog" label="&lastPickedColor.label;" 
-        style="margin-left:0px; margin-right: 0px;"
-        oncommand="SelectLastPickedColor();"/>
-      <hbox style="margin-left: 5px"  mousethrough="always">
-        <vbox autostretch="never">
-          <spacer flex="1"/>
-          <spacer id="LastPickedColor"
-                      LastTextColor="" LastBackgroundColor=""
-                      persist="LastTextColor LastBackgroundColor"/>
-          <spacer flex="1"/>
-        </vbox>
-        <spacer flex="1"/>
-      </hbox>
-    </stack>
+    <button id="LastPickedButton" crop="right" oncommand="SelectLastPickedColor();">
+      <spacer id="LastPickedColor"
+                  LastTextColor="" LastBackgroundColor=""
+                  persist="LastTextColor LastBackgroundColor"/>
+      <label value="&lastPickedColor.label;" flex="1" style="text-align: center;"/>
+    </button>
     <text class="label" value="&setColor1.label;"/>
     <text class="label" value="&setColor2.label;"/>
     <text class="label" value="&setColorExample.label;"/>

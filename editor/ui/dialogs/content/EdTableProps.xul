@@ -127,14 +127,9 @@
         <separator class="groove"/>
         <hbox valign="middle" autostretch="never">
           <text class="label" value="&backgroundColor.label;"/>
-          <stack>
-            <button class="dialog color-button" oncommand="GetColorAndUpdate('tableBackgroundCW');"/>
-            <hbox autostretch="never" valign="middle" mousethrough="always">
-              <spacer flex="1"/>
-              <spacer id="tableBackgroundCW" class="color-well"/>
-              <spacer flex="1"/>
-            </hbox>
-          </stack>
+          <button class="color-button" oncommand="GetColorAndUpdate('tableBackgroundCW');">
+            <spacer id="tableBackgroundCW" class="color-well"/>
+          </button>
           <spacer class="spacer"/>
           <text class="label" id="TableInheritColor" value="&tableInheritColor.label;" collapsed="true"/>
         </hbox>
@@ -244,14 +239,9 @@
         <separator class="groove"/>
         <hbox valign="middle" autostretch="never">
           <checkbox id="CellColorCheckbox" label="&backgroundColor.label;"/>
-          <stack>
-            <button class="dialog color-button" oncommand="GetColorAndUpdate('cellBackgroundCW');" flex="1"/>
-            <hbox autostretch="never" valign="middle" mousethrough="always">
-              <spacer flex="1"/>
-              <spacer id="cellBackgroundCW" class="color-well"/>
-              <spacer flex="1"/>
-            </hbox>
-          </stack>
+          <button class="color-button" oncommand="GetColorAndUpdate('cellBackgroundCW');">
+            <spacer id="cellBackgroundCW" class="color-well"/>
+          </button>
           <spacer class="spacer"/>
           <text class="label" id="CellInheritColor" value="&cellInheritColor.label;" collapsed="true"/>
         </hbox>
