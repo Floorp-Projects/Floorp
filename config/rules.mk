@@ -585,6 +585,12 @@ $(LIBRARY): $(OBJS)
 endif
 endif
 
+ifdef MOZ_STRIP_NOT_EXPORTED
+ifndef INHIBIT_STRIP_NOT_EXPORTED
+EXTRA_DSO_LDOPTS += -Wl,--version-exports-section -Wl,Mozilla
+endif
+endif
+
 ifneq ($(OS_ARCH),OS2)
 $(SHARED_LIBRARY): $(OBJS) $(LOBJS)
 	rm -f $@
