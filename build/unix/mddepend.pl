@@ -51,9 +51,9 @@
 $outfile = shift @ARGV;
 my $silent = $ENV{MAKEFLAGS} =~ /^\w*s|\s-s/;
 
-@alldeps=();
+%alldeps={};
 # Parse dependency files
-while ($line = <STDIN>) {
+while ($line = <>) {
   chomp $line;
   # Remove extra ^M caused by using dos-mode line-endings
   chop $line if (substr($line, -1, 1) eq "\r");
@@ -66,9 +66,10 @@ while ($line = <STDIN>) {
   } else {
     $hasSlash = 0;
   }
-  $deps = [ $obj, split /\s+/, $rest ];
+  push @{$alldeps{$obj}}, split /\s+/, $rest;
+  print "add $obj $rest\n" if $debug;
 
-  while ($hasSlash and $line = <STDIN>) {
+  while ($hasSlash and $line = <>) {
     chomp $line;
     if ($line =~ /\\$/) {
       chop $line;
@@ -76,15 +77,14 @@ while ($line = <STDIN>) {
       $hasSlash = 0;
     }
     $line =~ s/^\s+//;
-    push @{$deps}, split /\s+/, $line;
+    push @{$alldeps{$obj}}, split /\s+/, $line;
+    print "add $obj $line\n" if $debug;
   }
-  warn "add @{$deps}\n" if $debug;
-  push @alldeps, $deps;
 }
 
 # Test dependencies
-foreach $deps (@alldeps) {
-  $obj = shift @{$deps};
+foreach $obj (keys %alldeps) {
+  $deps = $alldeps{$obj};
 
   $mtime = (stat $obj)[9] or next;
 
@@ -113,7 +113,7 @@ if (@objs) {
 
   # Only write out the dependencies if they are different.
   if ($new_output ne $old_output) {
-    open(OUT, ">$outfile") and binmode(OUT) and print OUT "$new_output";
+    open(OUT, ">$outfile") and print OUT "$new_output";
     print "Updating dependencies file, $outfile\n" unless $silent;
     if ($debug) {
       print "new: $new_output\n";
