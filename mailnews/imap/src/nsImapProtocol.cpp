@@ -2670,6 +2670,9 @@ void nsImapProtocol::FetchTryChunking(const char * messageIds,
              startByte, sizeToFetch,
              part);
       startByte += sizeToFetch;
+      PRUint32 newMsgSize = GetServerStateParser().SizeOfMostRecentMessage();
+      if (newMsgSize > 0 && newMsgSize != downloadSize)
+        downloadSize = newMsgSize;
     }
 
     // Only abort the stream if this is a normal message download
