@@ -223,16 +223,6 @@ public class ScriptRuntime {
 
     public static Number wrapNumber(double x)
     {
-        int i = (int)x;
-        if ((double)i == x) {
-            if (i == 0) {
-                if (1.0 / x < 0) {
-                    // x is -0.0
-                    return new Double(x);
-                }
-            }
-            return wrapInt(i);
-        }
         if (x != x) {
             return ScriptRuntime.NaNobj;
         }
