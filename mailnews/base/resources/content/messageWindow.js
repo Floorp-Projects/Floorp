@@ -730,7 +730,7 @@ var MessageWindowController =
       case "cmd_previousMsg": 
       case "cmd_previousUnreadMsg": 
       case "cmd_previousFlaggedMsg":
-        return !(gDBView.keyForFirstSelectedMessage == nsMsgKey_None);
+        return (gDBView.keyForFirstSelectedMessage != nsMsgKey_None);
       case "cmd_getNextNMessages":
       case "cmd_find":
       case "cmd_findAgain":
@@ -759,19 +759,20 @@ var MessageWindowController =
 
 	isCommandEnabled: function(command)
 	{
+    var loadedFolder;
+
 		switch (command)
 		{
       case "cmd_createFilterFromPopup":
       case "cmd_createFilterFromMenu":
-        var loadedFolder = GetLoadedMsgFolder();
-        if (!(loadedFolder && loadedFolder.server.canHaveFilters))
-          return false;
+        loadedFolder = GetLoadedMsgFolder();
+        return (loadedFolder && loadedFolder.server.canHaveFilters);
 			case "cmd_delete":
         UpdateDeleteCommand();
         // fall through
 			case "button_delete":
 			case "cmd_shiftDelete":
-        var loadedFolder = GetLoadedMsgFolder();
+        loadedFolder = GetLoadedMsgFolder();
         return gCurrentMessageUri && loadedFolder && (loadedFolder.canDeleteMessages || isNewsURI(gCurrentFolderUri));
       case "button_junk":
         UpdateJunkToolbarButton();
@@ -811,11 +812,11 @@ var MessageWindowController =
       case "cmd_label3":
       case "cmd_label4":
       case "cmd_label5":
-        return(true);
+        return true;
 			case "cmd_markAsFlagged":
       case "button_file":
 			case "cmd_file":
-				return ( gCurrentMessageUri != null);
+        return (gCurrentMessageUri != null);
 			case "cmd_printSetup":
 			  return true;
 			case "cmd_getNewMessages":
@@ -842,10 +843,8 @@ var MessageWindowController =
 			case "cmd_findPrev":
 				return MsgCanFindAgain();
       case "cmd_search":
-        var loadedFolder = GetLoadedMsgFolder();
-        if (!loadedFolder)
-          return false;
-        return loadedFolder.server.canSearchMessages; 
+        loadedFolder = GetLoadedMsgFolder();
+        return (loadedFolder && loadedFolder.server.canSearchMessages);
       case "cmd_undo":
       case "cmd_redo":
         return SetupUndoRedoCommand(command);
