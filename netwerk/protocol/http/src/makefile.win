@@ -26,10 +26,10 @@
 #------------------------------------------------------------------------
 
 DEPTH=..\..\..\..
+include <$(DEPTH)/config/config.mak>
 
 // temporary, until we land:
 !ifndef NECKO
-include <$(DEPTH)/config/config.mak>
 PUBLIC = $(DEPTH)\netwerk\dist\include
 !endif
 
