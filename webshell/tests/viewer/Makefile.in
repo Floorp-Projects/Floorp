@@ -35,7 +35,8 @@ CPPSRCS = \
 	$(NULL)
 
 ifeq ($(USE_NGLAYOUT_GTK),1)
-CPPSRCS += nsGTKMain.cpp
+CPPSRCS += nsGTKMain.cpp	\
+	   nsGTKMenu.cpp
 CFLAGS += -DWIDGET_DLL=\"libwidgetgtk.so\" -DGFXWIN_DLL=\"libgfxgtk.so\"
 else
 CPPSRCS += nsMotifMenu.cpp         \
