@@ -313,7 +313,8 @@ NS_METHOD nsContainerFrame::HandleEvent(nsIPresContext& aPresContext,
 {
   aEventStatus = nsEventStatus_eIgnore;
 
-  nsIFrame* kid = mFirstChild;
+  nsIFrame* kid;
+  FirstChild(kid);
   while (nsnull != kid) {
     nsRect kidRect;
     kid->GetRect(kidRect);
