@@ -24,7 +24,7 @@ Contributor(s):
 
 
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?> 
-<?xml-stylesheet href="chrome://navigator/content/navigator.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/content/browser.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/content/bookmarks/bookmarks.css" type="text/css"?>
 
 <?xul-overlay href="chrome://navigator/content/platformNavigationBindings.xul"?>
@@ -227,6 +227,8 @@ Contributor(s):
   <popup id="backMenu" position="after_start" onpopupshowing="return BrowserBackMenu(event);" oncommand="gotoHistoryIndex(event);"/>
   <popup id="forwardMenu" position="after_start" onpopupshowing="return BrowserForwardMenu(event);" oncommand="gotoHistoryIndex(event);"/>
   <tooltip id="aHTMLTooltip" onpopupshowing="return FillInHTMLTooltip(document.tooltipNode);"/>
+  
+  <popup type="autocomplete" id="PopupAutoComplete"/>
 
   <popup id="toolbar-context-menu">
     <menuitem command="cmd_CustomizeToolbars"
@@ -683,7 +685,7 @@ Contributor(s):
       </menu>
     </menubar>
   
-    <toolbarpalette>
+    <toolbarpalette id="BrowserToolbarPalette">
       <toolbarbutton id="back-button" type="menu-button" class="toolbarbutton-1"
                       label="&backCmd.label;"
 					command="Browser:Back"
@@ -722,15 +724,16 @@ Contributor(s):
       <toolbaritem id="urlbar-container" align="center" flex="1"
                     class="chromeclass-location">
         <textbox id="urlbar" flex="1"
-                  type="autocomplete" searchSessions="history" 
-                  timeout="50" maxrows="6" alwaysopenpopup="true"
-                  disablehistory="false"
-                  defaultSearchEngine="true" tabScrolling="true"
-                  showCommentColumn="true"
+                  type="autocomplete"
+                  autocompletesearch="history" 
+                  autocompletepopup="PopupAutoComplete"
+                  tabscrolling="true"
+                  showcommentcolumn="true"
+                  enablehistory="true"
                   inputtooltiptext="&locationBar.tooltip;"
                   oninput="window.XULBrowserWindow.userTyped.value=true;"
-                  ontextcommand="return handleURLBarCommand(eventParam, domEvent);"
-                  ontextrevert="return handleURLBarRevert();"
+                  ontextentered="return handleURLBarCommand(param);"
+                  ontextreverted="return handleURLBarRevert();"
                   onfocus="URLBarFocusHandler(event);"
                   onmousedown="URLBarMouseDownHandler(event);"
                   onclick="URLBarClickHandler(event);">
@@ -747,11 +750,6 @@ Contributor(s):
                     onerror="gBrowser.addToMissedIconCache(this.src); HandleBookmarkIcon(this.src, false);"
                     tooltiptext="&proxyIcon.tooltip;"/>
           </deck>
-
-          <menupopup class="autocomplete-history-popup"
-                      popupalign="topleft" popupanchor="bottomleft"
-                      onpopupshowing="createUBHistoryMenu(event.target);" 
-                      oncommand="executeUrlBarHistoryCommand(event.target);"/>
         </textbox>
       </toolbaritem>
 
@@ -816,6 +814,7 @@ Contributor(s):
   <tabbrowser id="content"
               flex="1" contenttooltip="aHTMLTooltip"
               contentcontextmenu="contentAreaContextMenu"
+              autocompletepopup="PopupAutoComplete"
               onnewtab="BrowserOpenTab();"
               ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);"
               onclick="return contentAreaClick(event);"/>

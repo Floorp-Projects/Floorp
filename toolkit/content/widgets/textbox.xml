@@ -18,6 +18,7 @@
     
     <content>
       <xul:hbox class="textbox-input-box" flex="1">
+        <children/>
         <html:input class="textbox-input" flex="1" anonid="input"
                     xbl:inherits="onfocus,onblur,value,type,maxlength,disabled,size,readonly,tabindex"/>
       </xul:hbox>

@@ -1,0 +1,692 @@
+<?xml version="1.0"?>
+
+<bindings id="autocompleteBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:html="http://www.w3.org/1999/xhtml"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:xbl="http://www.mozilla.org/xbl">
+
+  <binding id="autocomplete"
+           extends="chrome://global/content/bindings/textbox.xml#textbox">
+    <resources>
+      <stylesheet src="chrome://global/skin/autocomplete.css"/>
+    </resources>
+
+    <content sizetopopup="pref">
+      <xul:hbox class="autocomplete-textbox-container" flex="1">
+        <children includes="image|deck">
+          <xul:image class="autocomplete-icon" allowevents="true"/>
+        </children>
+
+        <xul:hbox class="textbox-input-box" flex="1" xbl:inherits="tooltiptext=inputtooltiptext">
+          <children/>
+          <html:input anonid="input" class="autocomplete-textbox textbox-input"
+                      flex="1" allowevents="true"
+                      xbl:inherits="tooltiptext=inputtooltiptext,onfocus,onblur,value,type,maxlength,disabled,size,readonly,userAction"/>
+        </xul:hbox>
+      </xul:hbox>
+                          
+      <xul:dropmarker anonid="historydropmarker" class="autocomplete-history-dropmarker"
+                      allowevents="true"
+                      xbl:inherits="open,enablehistory"/>
+
+      <xul:popupset anonid="popupset" class="autocomplete-result-popupset"/>
+    </content>
+
+    <implementation implements="nsIAccessibleProvider, nsIAutoCompleteInput, nsIDOMXULMenuListElement">
+      <field name="mController">null</field>
+      <field name="mSearchNames">null</field>
+      <field name="mIgnoreInput">false</field>
+      <field name="mEnterEvent">null</field>
+      
+      <field name="mInputElt">
+        document.getAnonymousElementByAttribute(this, "anonid", "input");
+      </field>
+
+      <constructor><![CDATA[
+        // set default property values
+        this.ifSetAttribute("disablehistory", true);
+
+        mController = Components.classes["@mozilla.org/autocomplete/controller;1"].
+                        getService(Components.interfaces.nsIAutoCompleteController);
+      ]]></constructor>
+
+      <!-- =================== nsIAccessibleProvider =================== -->
+
+      <property name="accessible">
+        <getter>
+          <![CDATA[
+            var accService = Components.classes["@mozilla.org/accessibilityService;1"].
+                              getService(Components.interfaces.nsIAccessibilityService);
+            return accService.createXULComboboxAccessible(this);
+          ]]>
+        </getter>
+      </property>
+
+      <!-- =================== nsIAutoCompleteInput =================== -->
+
+      <field name="popup"><![CDATA[
+        var popup = null;
+        var popupId = this.getAttribute("autocompletepopup");
+        if (popupId)
+          popup = document.getElementById(popupId);
+        if (!popup) {
+          popup = document.createElement("popup");
+          popup.setAttribute("type", "autocomplete");
+          popup.setAttribute("hidden", "true");
+          
+          var popupset = document.getAnonymousElementByAttribute(this, "anonid", "popupset");
+          popupset.appendChild(popup);
+        }
+        popup.mParentTextbox = this;
+        popup;
+      ]]></field>
+      
+      <property name="popupOpen"
+                onget="return this.popup.popupOpen;"
+                onset="if (val) this.openPopup(); else this.closePopup();"/>
+
+      <property name="disableAutoComplete"
+                onset="this.setAttribute('disableautocomplete', val); return val;"
+                onget="return this.getAttribute('disableautocomplete') == 'true';"/>
+
+      <property name="completeDefaultIndex"
+                onset="this.setAttribute('completedefaultindex', val); return val;"
+                onget="return this.getAttribute('completedefaultindex') == 'true';"/>
+
+      <property name="forceComplete"
+                onset="this.setAttribute('forcecomplete', val); return val;"
+                onget="return this.getAttribute('forcecomplete') == 'true';"/>
+
+      <property name="minResultsForPopup"
+                onset="this.setAttribute('minresultsforpopup', val); return val;"
+                onget="var t = parseInt(this.getAttribute('minresultsforpopup')); return t ? t : 0;"/>
+
+      <property name="showCommentColumn"
+                onset="this.setAttribute('showcommentcolumn', val); return val;"
+                onget="return this.getAttribute('showcommentcolumn') == 'true';"/>
+
+      <property name="timeout"
+                onset="this.setAttribute('timeout', val); return val;"
+                onget="var t = parseInt(this.getAttribute('timeout')); return t ? t : 50;"/>
+
+      <property name="searchParam"
+                onget="return this.getAttribute('searchparam');"
+                onset="this.setAttribute('searchparam', val); return val;"/>
+
+      <property name="searchCount" readonly="true"
+                onget="this.initSearchNames(); return this.mSearchNames.length;"/>
+    
+      <method name="getSearchAt">
+        <parameter name="aIndex"/>
+        <body><![CDATA[
+          this.initSearchNames();
+          return this.mSearchNames[aIndex];
+        ]]></body>
+      </method>
+
+      <property name="textValue"
+                onget="return this.value;"
+                onset="return this.value = val;"/>
+
+      <property name="selectionStart"
+                onget="return this.mInputElt.selectionStart;"/>
+
+      <property name="selectionEnd"
+                onget="return this.mInputElt.selectionEnd;"/>
+
+      <method name="selectTextRange">
+        <parameter name="aStartIndex"/>
+        <parameter name="aEndIndex"/>
+        <body><![CDATA[
+          this.mInputElt.setSelectionRange(aStartIndex, aEndIndex);
+        ]]></body>
+      </method>
+
+      <method name="onSearchComplete">
+        <body><![CDATA[
+          if (this.mController.matchCount == 0)
+            this.popup.setAttribute("nomatch", "true");
+          else
+            this.popup.removeAttribute("nomatch");
+
+          this.fireEvent("searchcomplete");
+        ]]></body>
+      </method>
+
+      <method name="onTextEntered">
+        <body><![CDATA[
+          return this.fireEvent("textentered", this.mEnterEvent);
+        ]]></body>
+      </method>
+
+      <method name="onTextReverted">
+        <body><![CDATA[
+          return this.fireEvent("textreverted");
+        ]]></body>
+      </method>
+
+      <!-- =================== nsIDOMXULMenuListElement =================== -->
+
+      <property name="editable" readonly="true"
+                onget="return true;" />  
+
+      <property name="crop"
+                onset="this.setAttribute('crop',val); return val;"
+                onget="return this.getAttribute('crop');"/>
+
+      <property name="label"
+                onset="this.setAttribute('label',val); return val;"
+                onget="return this.getAttribute('label');"/>
+
+      <property name="open"
+                onget="return this.getAttribute('open') == 'true';">
+        <setter><![CDATA[
+            var historyPopup = document.getAnonymousElementByAttribute(this, "anonid", "historydropmarker");
+            if (val) {
+              this.setAttribute("open", "true"); 
+              historyPopup.showPopup();
+            }
+            else {
+              this.removeAttribute("open");
+              historyPopup.hidePopup();
+            }
+        ]]></setter>
+      </property>
+
+      <!-- =================== PUBLIC MEMBERS =================== -->
+
+      <property name="value"
+                onget="return this.mInputElt.value;"
+                onset="this.mIgnoreInput = true; this.mInputElt.value = val; this.mIgnoreInput = false; return val;"/>
+
+      <property name="focused" readonly="true"
+                onget="return this.getAttribute('focused') == 'true';"/>
+
+      <!-- maximum number of rows to display at a time -->
+      <property name="maxRows"
+                onset="this.setAttribute('maxrows', val); return val;"
+                onget="var t = parseInt(this.getAttribute('maxrows')); return t ? t : 0;"/>
+
+      <!-- option to allow scrolling through the list via the tab key, rather than
+           tab moving focus out of the textbox -->
+      <property name="tabScrolling"
+                onset="return this.setAttribute('tabscrolling', val); return val;"
+                onget="return this.getAttribute('tabscrolling') == 'true';"/>
+
+      <!-- disable key navigation handling in the popup results -->
+      <property name="disableKeyNavigation"
+                onset="this.setAttribute('disablekeynavigation', val); return val;"
+                onget="return this.getAttribute('disablekeynavigation') == 'true';"/>
+
+      <!-- option to completely ignore any blur events while  
+           searches are still going on.  This is useful so that nothing
+           gets autopicked if the window is required to lose focus for
+           some reason (eg in LDAP autocomplete, another window may be
+           brought up so that the user can enter a password to authenticate
+           to an LDAP server).  -->
+      <property name="ignoreBlurWhileSearching"
+                onset="this.setAttribute('ignoreblurwhilesearching', val); return val;"
+                onget="return this.getAttribute('ignoreblurwhilesearching') == 'true';"/>
+      
+      <!-- =================== PRIVATE MEMBERS =================== -->
+
+      <!-- ::::::::::::: autocomplete controller ::::::::::::: -->
+
+      <method name="attachController">
+        <body><![CDATA[
+          if (this.mController.input != this)
+            this.mController.input = this;
+        ]]></body>
+      </method>
+
+      <method name="detachController">
+        <body><![CDATA[
+          if (this.mController.input == this)
+            this.mController.input = null;
+        ]]></body>
+      </method>
+
+      <!-- ::::::::::::: popup opening ::::::::::::: -->
+
+      <method name="openPopup">
+        <body><![CDATA[
+          this.popup.openPopup(this, this.boxObject.screenX, this.boxObject.screenY+this.boxObject.height, this.boxObject.width);
+        ]]></body>
+      </method>
+
+      <method name="closePopup">
+        <body><![CDATA[
+          this.popup.closePopup();
+        ]]></body>
+      </method>
+
+      <method name="showHistoryPopup">
+        <body><![CDATA[
+          this.attachController();
+          this.mController.startSearch("");
+        ]]></body>
+      </method>
+      
+      <!-- ::::::::::::: event dispatching ::::::::::::: -->
+
+      <method name="fireEvent">
+        <parameter name="aEventType"/>
+        <body><![CDATA[
+          var cancel = false;
+          // handle any xml attribute event handlers
+          var handler = this.getAttribute("on"+aEventType);
+          if (handler) {
+            var fn = new Function("eventType", "param", handler);
+            cancel = fn.apply(this, arguments);
+          }
+          
+          return cancel;
+        ]]></body>
+      </method>
+
+      <!-- ::::::::::::: key handling ::::::::::::: -->
+
+      <method name="onKeyPress">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          var cancel = false;
+          
+          const IController = Components.interfaces.nsIAutoCompleteController;
+          
+          if (!this.disableKeyNavigation) {
+            switch (aEvent.keyCode) {
+              case KeyEvent.DOM_VK_TAB:
+                if (this.tabScrolling && this.mPopupOpen)
+                  cancel = this.mController.handleKeyNavigation(aEvent.shiftKey ? IController.KEY_UP : IController.KEY_DOWN);
+                break;
+              case KeyEvent.DOM_VK_UP:
+                cancel = this.mController.handleKeyNavigation(IController.KEY_UP);
+                break;
+              case KeyEvent.DOM_VK_DOWN:
+                cancel = this.mController.handleKeyNavigation(IController.KEY_DOWN);
+                break;
+              case KeyEvent.DOM_VK_LEFT:
+                cancel = this.mController.handleKeyNavigation(IController.KEY_LEFT);
+                break;
+              case KeyEvent.DOM_VK_RIGHT:
+                cancel = this.mController.handleKeyNavigation(IController.KEY_RIGHT);
+                break;
+              case KeyEvent.DOM_VK_PAGE_UP:
+                cancel = this.mController.handleKeyNavigation(IController.KEY_PAGE_UP);
+                break;
+              case KeyEvent.DOM_VK_PAGE_DOWN:
+                cancel = this.mController.handleKeyNavigation(IController.KEY_PAGE_DOWN);
+                break;
+            }
+          }
+          
+          switch (aEvent.keyCode) {
+            case KeyEvent.DOM_VK_ESCAPE:
+              cancel = this.mController.handleEscape();
+              break;
+            case KeyEvent.DOM_VK_RETURN:
+              this.mEnterEvent = aEvent;
+              cancel = this.mController.handleEnter();
+              break;
+          }
+          
+          if (cancel) {
+            aEvent.stopPropagation();
+            aEvent.preventDefault();
+          }
+          
+          return true;
+        ]]></body>
+      </method>
+
+      <!-- ::::::::::::: miscellaneous ::::::::::::: -->
+
+      <method name="initSearchNames">
+        <body><![CDATA[
+          if (!this.mSearchNames) {
+            var names = this.getAttribute("autocompletesearch");
+            if (!names)
+              this.mSearchNames = [];
+            else
+              this.mSearchNames = names.split(" ");
+          }
+        ]]></body>
+      </method>
+
+      <method name="ifSetAttribute">
+        <parameter name="aAttr"/>
+        <parameter name="aVal"/>
+        <body><![CDATA[
+          if (!this.hasAttribute(aAttr))
+            this.setAttribute(aAttr, aVal);
+        ]]></body>
+      </method>
+
+    </implementation>
+
+    <handlers>
+      <handler event="input"
+               action="if (!this.mIgnoreInput) this.mController.handleText();"/>
+
+      <handler event="keypress" phase="capturing"
+               action="return this.onKeyPress(event);"/>
+
+      <handler event="focus" phase="capturing"
+               action="this.attachController();"/>
+
+      <handler event="blur" phase="capturing"
+               action="this.detachController();"/>
+    </handlers>
+  </binding> 
+
+  <binding id="autocomplete-result-popup" extends="chrome://global/content/bindings/popup.xml#popup">
+    <resources>
+      <stylesheet src="chrome://global/skin/autocomplete.css"/>
+    </resources>
+
+    <content>
+      <xul:tree anonid="tree" class="autocomplete-tree plain" hidecolumnpicker="true" flex="1">
+        <xul:treecols anonid="treecols">
+          <xul:treecol id="treecolAutoCompleteValue" class="autocomplete-treecol" flex="1"/>
+        </xul:treecols>
+        <xul:treechildren class="autocomplete-treebody"/>
+      </xul:tree>
+    </content>
+    
+    <implementation implements="nsIAutoCompletePopup">
+      <field name="mInput">null</field>
+      <field name="mPopupOpen">false</field>
+      <field name="mShowCommentCol">false</field>
+      
+      <constructor><![CDATA[
+        this.setAttribute("ignorekeys", "true");
+
+        this.view = Components.classes["@mozilla.org/autocomplete/controller;1"].
+                        getService(Components.interfaces.nsITreeView);
+      ]]></constructor>
+
+      <!-- =================== nsIAutoCompletePopup =================== -->
+
+      <property name="input"
+                onget="return this.mInput"/>
+
+      <property name="overrideValue" readonly="true"
+                onget="return null;"/>
+
+      <property name="selectedIndex"
+                onget="return this.tree.currentIndex;">
+        <setter><![CDATA[
+          this.tree.currentIndex = val;
+          this.tree.treeBoxObject.ensureRowIsVisible(val < 0 ? 0 : val);
+          return val;
+        ]]></setter>
+      </property>
+
+      <property name="popupOpen" readonly="true"
+                onget="return this.mPopupOpen;"/>
+
+      <method name="openPopup">
+        <parameter name="aInput"/>
+        <parameter name="aX"/>
+        <parameter name="aY"/>
+        <parameter name="aWidth"/>
+        <body><![CDATA[
+          if (!this.mPopupOpen) {
+            this.mInput = aInput;
+            
+            this.showCommentColumn = this.mInput.showCommentColumn;
+            
+            this.removeAttribute("hidden");
+            this.setAttribute("width", aWidth < 100 ? 100 : aWidth);
+
+            document.popupNode = null;
+            this.showPopup(document.documentElement, aX, aY, "popup", null, null);
+          }
+        ]]></body>
+      </method>
+
+      <method name="closePopup">
+        <body><![CDATA[
+          if (this.mPopupOpen) {
+            this.hidePopup();
+            document.popupNode = null;
+
+            this.setAttribute("hidden", "true");
+          }
+        ]]></body>
+      </method>
+
+      <method name="invalidate">
+        <body><![CDATA[
+          this.adjustHeight();
+          this.tree.treeBoxObject.invalidate();
+        ]]></body>
+      </method>
+
+      <method name="selectBy">
+        <parameter name="aReverse"/>
+        <parameter name="aPage"/>
+        <body><![CDATA[
+          try {
+            var amount = aPage ? 5 : 1;
+            this.selectedIndex = this.getNextIndex(aReverse, amount, this.selectedIndex, this.tree.view.rowCount-1);
+          } catch (ex) {
+            // do nothing - occasionally timer-related js errors happen here
+            // e.g. "this.selectedIndex has no properties", when you type fast and hit a
+            // navigation key before this popup has opened
+          }
+        ]]></body>
+      </method>
+
+      <!-- =================== PUBLIC MEMBERS =================== -->
+
+      <field name="tree">
+        document.getAnonymousElementByAttribute(this, "anonid", "tree");
+      </field>
+
+      <field name="treecols">
+        document.getAnonymousElementByAttribute(this, "anonid", "treecols");
+      </field>
+
+      <property name="view" 
+                onget="return this.mView;">
+        <setter><![CDATA[
+          // We must do this by hand because the tree binding may not be ready yet
+          this.mView = val;
+          var bx = this.tree.boxObject;
+          bx = bx.QueryInterface(Components.interfaces.nsITreeBoxObject);
+          bx.view = val;
+        ]]></setter>
+      </property>
+
+      <property name="maxRows" readonly="true"
+                onget="var t = parseInt(this.getAttribute('maxrows')); return t ? t : 6;"/>
+
+      <property name="showCommentColumn"
+                onget="return this.mShowCommentColumn;">
+        <setter><![CDATA[
+          if (!val && this.mShowCommentColumn) {
+            // reset the flex on the value column and add the comment column
+            document.getElementById("treecolAutoCompleteValue").setAttribute("flex", 1);
+            this.removeColumn("treecolAutoCompleteComment");
+          } else if (val && !this.mShowCommentColumn) {
+            // reset the flex on the value column and add the comment column
+            document.getElementById("treecolAutoCompleteValue").setAttribute("flex", 2);
+            this.addColumn({id: "treecolAutoCompleteComment", flex: 1});
+          }
+          this.mShowCommentColumn = val;
+          return val;
+        ]]></setter>
+      </property>
+
+      <method name="addColumn">
+        <parameter name="aAttrs"/>
+        <body><![CDATA[
+          var col = document.createElement("treecol");
+          col.setAttribute("class", "autocomplete-treecol");
+          for (var name in aAttrs)
+            col.setAttribute(name, aAttrs[name]);
+          this.treecols.appendChild(col);
+          return col;
+        ]]></body>
+      </method>
+
+      <method name="removeColumn">
+        <parameter name="aColId"/>
+        <body><![CDATA[
+          return this.treecols.removeChild(document.getElementById(aColId));
+        ]]></body>
+      </method>
+
+      <method name="adjustHeight">
+        <body><![CDATA[
+          // detect the desired height of the tree
+          var bx = this.tree.treeBoxObject;
+          var view = this.tree.view;
+          var rows = this.maxRows;
+          if (!view.rowCount || (rows && view.rowCount < rows))
+            rows = view.rowCount;
+          
+          var height = rows * bx.rowHeight;
+          
+          if (height == 0)
+            this.tree.setAttribute("collapsed", "true");
+          else {
+            if (this.tree.hasAttribute("collapsed"))
+              this.tree.removeAttribute("collapsed");
+            this.tree.setAttribute("height", height);
+          }
+          this.tree.setAttribute("hidescrollbar", view.rowCount <= rows);
+        ]]></body>
+      </method>
+
+      <method name="getNextIndex">
+        <parameter name="aReverse"/>
+        <parameter name="aAmount"/>
+        <parameter name="aIndex"/>
+        <parameter name="aMaxRow"/>
+        <body><![CDATA[
+          if (aMaxRow < 0)
+            return -1;
+          
+          var newIdx = aIndex + (aReverse?-1:1)*aAmount;
+          if (aReverse && aIndex == -1 || newIdx > aMaxRow && aIndex != aMaxRow)
+            newIdx = aMaxRow;
+          else if (!aReverse && aIndex == -1 || newIdx < 0 && aIndex != 0)
+            newIdx = 0;
+          
+          if (newIdx < 0 && aIndex == 0 || newIdx > aMaxRow && aIndex == aMaxRow)
+            aIndex = -1;
+          else
+            aIndex = newIdx;
+          
+          return aIndex;
+        ]]></body>
+      </method>
+
+      <method name="onPopupClick">
+        <body><![CDATA[
+          var controller = Components.classes["@mozilla.org/autocomplete/controller;1"].
+                             getService(Components.interfaces.nsIAutoCompleteController);
+          controller.handleEnter();
+        ]]></body>
+      </method>
+      
+    </implementation>
+
+    <handlers>
+      <handler event="popupshowing">
+        this.mPopupOpen = true;
+      </handler>
+
+      <handler event="popuphiding">
+        this.mPopupOpen = false;
+      </handler>
+    </handlers>
+  </binding>
+
+  <binding id="autocomplete-tree" extends="chrome://global/content/bindings/tree.xml#tree">
+    <content>
+      <children includes="treecols"/>
+      <xul:treerows class="autocomplete-treerows tree-rows" xbl:inherits="hidescrollbar" flex="1">
+        <children/>
+      </xul:treerows>
+    </content>
+  </binding>
+
+  <binding id="autocomplete-treebody">
+    <implementation>
+      <field name="mLastMoveTime">new Date()</field>
+
+      <method name="getHoverCell">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+           var row = {}; var col = {}; var obj = {};
+           var x = aEvent.screenX - this.boxObject.screenX + this.boxObject.x;
+           var y = aEvent.screenY - this.boxObject.screenY + this.boxObject.y;
+           this.parentNode.treeBoxObject.getCellAt(x, y, row, col, obj);
+           if (row.value >= 0)
+             return {row: row.value, column: col.value};
+           else
+            return null;
+        ]]></body>
+      </method>
+    </implementation>
+    
+    <handlers>
+      <handler event="mouseout" action="this.parentNode.currentIndex = -1;"/>
+      <handler event="mouseup" action="this.parentNode.parentNode.onPopupClick();"/>
+
+      <handler event="mousemove"><![CDATA[
+        if (new Date() - this.mLastMoveTime > 30) {
+         var rc = this.getHoverCell(event);
+         if (rc && rc.row != this.parentNode.currentIndex) 
+            this.parentNode.currentIndex = rc.row;
+          this.mLastMoveTime = new Date();
+        }
+      ]]></handler>
+    </handlers>
+  </binding>
+
+  <binding id="autocomplete-treerows">
+    <content onmousedown="event.preventDefault()">
+      <xul:hbox flex="1" class="tree-bodybox">
+        <children/>
+      </xul:hbox>
+      <xul:scrollbar xbl:inherits="collapsed=hidescrollbar" orient="vertical" class="tree-scrollbar"/>
+    </content>
+  </binding>
+
+  <binding id="history-dropmarker" extends="xul:button">
+    <content>
+      <xul:image class="dropmarker-image"/>
+    </content>
+      
+    <implementation implements="nsIAccessibleProvider">
+      <property name="accessible">
+        <getter>
+          <![CDATA[
+            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
+            return accService.createXULDropmarkerAccessible(this);
+          ]]>
+        </getter>
+      </property>
+
+      <method name="showPopup">
+        <body><![CDATA[
+          var textbox = document.getBindingParent(this);
+          textbox.showHistoryPopup();
+        ]]></body>
+      </method>
+    </implementation>
+    
+    <handlers>
+      <handler event="mousedown"><![CDATA[
+        this.showPopup();
+      ]]></handler>
+    </handlers>
+  </binding>
+
+</bindings>
+

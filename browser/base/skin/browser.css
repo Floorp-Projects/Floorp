@@ -518,7 +518,7 @@ toolbar[iconsize="small"] #print-button[disabled="true"] {
 
 /* ::::: autocomplete ::::: */
 
-.autocomplete-treebody:-moz-outliner-cell-text(treecolAutoCompleteComment) {
+.autocomplete-treebody:-moz-tree-cell-text(treecolAutoCompleteComment) {
   color: #555566;
 }
 

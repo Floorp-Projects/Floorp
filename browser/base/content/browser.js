@@ -1060,7 +1060,7 @@ function handleURLBarRevert()
   var url = getWebNavigation().currentURI.spec;
   var throbberElement = document.getElementById("navigator-throbber");
 
-  var isScrolling = gURLBar.userAction == "scrolling";
+  var isScrolling = gURLBar.popupOpen;
   
   // don't revert to last valid url unless page is NOT loading
   // and user is NOT key-scrolling through autocomplete list
@@ -1076,10 +1076,10 @@ function handleURLBarRevert()
 
   // tell widget to revert to last typed text only if the user
   // was scrolling when they hit escape
-  return isScrolling; 
+  return !isScrolling; 
 }
 
-function handleURLBarCommand(aUserAction, aTriggeringEvent)
+function handleURLBarCommand(aTriggeringEvent)
 {
   try { 
     addToUrlbarHistory();
@@ -2255,67 +2255,6 @@ function FillHistoryMenu(aParent, aMenu)
           break;
       }
     return true;
-  }
-
-function executeUrlBarHistoryCommand( aTarget )
-  {
-    var index = aTarget.getAttribute("index");
-    var label = aTarget.getAttribute("label");
-    if (index != "nothing_available" && label)
-      {
-        var uri = getShortcutOrURI(label);
-        if (gURLBar) {
-          gURLBar.value = uri;
-          addToUrlbarHistory();
-          BrowserLoadURL();
-        }
-        else
-          loadURI(uri);
-      }
-  }
-
-function createUBHistoryMenu( aParent )
-  {
-    if (!gRDF)
-      gRDF = Components.classes["@mozilla.org/rdf/rdf-service;1"]
-                       .getService(Components.interfaces.nsIRDFService);
-
-    if (!gLocalStore)
-      gLocalStore = gRDF.GetDataSource("rdf:local-store");
-
-    if (gLocalStore) {
-      if (!gRDFC)
-        gRDFC = Components.classes["@mozilla.org/rdf/container-utils;1"]
-                          .getService(Components.interfaces.nsIRDFContainerUtils);
-
-      var entries = gRDFC.MakeSeq(gLocalStore, gRDF.GetResource("nc:urlbar-history")).GetElements();
-      var i= MAX_HISTORY_MENU_ITEMS;
-
-      // Delete any old menu items only if there are legitimate
-      // urls to display, otherwise we want to display the
-      // '(Nothing Available)' item.
-      deleteHistoryItems(aParent);
-      if (!entries.hasMoreElements()) {
-        //Create the "Nothing Available" Menu item and disable it.
-        var na = gNavigatorBundle.getString("nothingAvailable");
-        createMenuItem(aParent, "nothing_available", na);
-        aParent.firstChild.setAttribute("disabled", "true");
-      }
-
-      while (entries.hasMoreElements() && (i-- > 0)) {
-        var entry = entries.getNext();
-        if (entry) {
-          try {
-            entry = entry.QueryInterface(Components.interfaces.nsIRDFLiteral);
-          } catch(ex) {
-            // XXXbar not an nsIRDFLiteral for some reason. see 90337.
-            continue;
-          }
-          var url = entry.Value;
-          createMenuItem(aParent, i, url);
-        }
-      }
-    }
   }
 
 function addToUrlbarHistory()

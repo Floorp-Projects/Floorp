@@ -137,7 +137,7 @@ iframe {
 }
 
 browser {
-  -moz-binding: url("chrome://global/content/bindings/browser.xml#browser");
+  -moz-binding: url("chrome://global/content/widgets/browser.xml#browser");
 }
 
 tabbrowser {
@@ -623,32 +623,51 @@ textbox[type="timed"] {
 
 /********** autocomplete textbox **********/
 
+
 textbox[type="autocomplete"] {
-  -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete");
+  -moz-binding: url("chrome://global/content/widgets/autocomplete.xml#autocomplete");
 }
 
-.autocomplete-result-popup {
-  -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete-result-popup");
-}
-
-.autocomplete-history-popup {
-  -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete-history-popup");
+popup[type="autocomplete"] {
+  -moz-binding: url("chrome://global/content/widgets/autocomplete.xml#autocomplete-result-popup");
+  display: -moz-popup !important;
 }
 
 .autocomplete-tree {
-  -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete-tree");
+  -moz-binding: url("chrome://global/content/widgets/autocomplete.xml#autocomplete-tree");
 }
 
 .autocomplete-treebody {
-  -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete-treebody");
+  -moz-binding: url("chrome://global/content/widgets/autocomplete.xml#autocomplete-treebody");
 }
 
 .autocomplete-treerows {
-  -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete-treerows");
+  -moz-binding: url("chrome://global/content/widgets/autocomplete.xml#autocomplete-treerows");
 }
 
 .autocomplete-history-dropmarker {
-  -moz-binding: url("chrome://global/content/autocomplete.xml#history-dropmarker");
+  display: none;
+}
+
+.autocomplete-history-dropmarker[enablehistory="true"] {
+  display: -moz-box;
+  -moz-binding: url("chrome://global/content/widgets/autocomplete.xml#history-dropmarker");
+}
+
+/* the C++ implementation of widgets is too eager to make popups visible.
+   this causes problems (bug 120155 and others), thus this workaround: */
+popup[type="autocomplete"][hidden="true"] {
+  visibility: hidden;
+}
+
+/* The following rule is here to fix bug 96899 (and now 117952).  
+   Somehow trees create a situation
+   in which a popupset flows itself as if its popup child is directly within it
+   instead of the placeholder child that should actually be inside the popupset.
+   This is a stopgap measure, and it does not address the real bug.  */
+.autocomplete-result-popupset {
+  max-width: 0px;
+  width: 0 !important;
 }
 
 /********** colorpicker **********/

@@ -614,7 +614,7 @@ nsFormFillController::StartControllingInput(nsIDOMHTMLInputElement *aInput)
   AddKeyListener(aInput);
 
   // Now we are the autocomplete controller's bitch
-  mController->AttachToInput(this, NS_LITERAL_STRING(""));
+  mController->SetInput(this);
 }
 
 void
@@ -622,7 +622,13 @@ nsFormFillController::StopControllingInput()
 {
   RemoveKeyListener();
 
-  mController->DetachFromInput();
+  // Reset the controller's input, but not if it has been switched
+  // to another input already, which might happen if the user switches
+  // focus by clicking another autocomplete textbox
+  nsCOMPtr<nsIAutoCompleteInput> input;
+  mController->GetInput(getter_AddRefs(input));
+  if (input == this)
+    mController->SetInput(nsnull);
 
   mFocusedInput = nsnull;
   mFocusedPopup = nsnull;
