@@ -680,7 +680,7 @@ sub MyFmtClock {
      my ($time) = @_;
 
      $time = 1 * 365 * 24 * 60 * 60 + 1 if ($time <= 0);
-     return time2str("%D %T", $time);
+     return time2str("%m/%d/%Y %T", $time);
 }
 
 
