@@ -22,6 +22,11 @@
 #include "nsString.h"
 #include "nsFileSpec.h"
 
+class nsIWidget;
+class nsIDeviceContext;
+class nsIAppShell;
+class nsIToolkit;
+
 // {F8030015-C342-11d1-97F0-00609703C14E}
 #define NS_IFILEWIDGET_IID \
 { 0xf8030015, 0xc342, 0x11d1, { 0x97, 0xf0, 0x0, 0x60, 0x97, 0x3, 0xc1, 0x4e } }
