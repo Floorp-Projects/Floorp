@@ -1939,6 +1939,27 @@ public class ScriptRuntime {
         fn.setParentScope(scope);
     }
 
+    public static void putFunction(Scriptable scope, String name,
+                                   Function function, int type,
+                                   boolean fromEvalCode)
+    {
+        if (type == FunctionNode.FUNCTION_STATEMENT
+            || type == FunctionNode.FUNCTION_EXPRESSION_STATEMENT)
+        {
+            if (name != null && name.length() != 0) {
+                if (type == FunctionNode.FUNCTION_STATEMENT && !fromEvalCode) {
+                    // ECMA specifies that functions defined in global and
+                    // function scope outside eval should have DONTDELETE set.
+                    ScriptableObject.defineProperty
+                        (scope, name, function, ScriptableObject.PERMANENT);
+                } else {
+                    scope.put(name, scope, function);
+                }
+            }
+        }
+    }
+
+
     static void checkDeprecated(Context cx, String name) {
         int version = cx.getLanguageVersion();
         if (version >= Context.VERSION_1_4 || version == Context.VERSION_DEFAULT) {

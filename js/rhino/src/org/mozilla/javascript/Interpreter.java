@@ -1542,22 +1542,8 @@ public class Interpreter {
              }
         }
         ScriptRuntime.initFunction(scope, fn);
-        String fnName = idata.itsName;
-        if (fnName.length() != 0) {
-            int type = idata.itsFunctionType;
-            if (type == FunctionNode.FUNCTION_STATEMENT) {
-                if (fromEvalCode) {
-                    scope.put(fnName, scope, fn);
-                } else {
-                    // ECMA specifies that functions defined in global and
-                    // function scope should have DONTDELETE set.
-                    ScriptableObject.defineProperty(scope,
-                            fnName, fn, ScriptableObject.PERMANENT);
-                }
-            } else if (type == FunctionNode.FUNCTION_EXPRESSION_STATEMENT) {
-                scope.put(fnName, scope, fn);
-            }
-        }
+        ScriptRuntime.putFunction(scope, idata.itsName, fn,
+                                  idata.itsFunctionType, fromEvalCode);
         return fn;
     }
 
