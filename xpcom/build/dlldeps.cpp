@@ -43,7 +43,6 @@
 #include "nsSupportsArray.h"
 #include "nsProxyEventPrivate.h"
 #include "xpt_xdr.h"
-#include "nsInterfaceInfo.h"
 #include "xptcall.h"
 #include "nsIFileSpec.h"
 #include "nsILocalFile.h"
@@ -108,10 +107,7 @@ void XXXNeverCalled()
     nsProxyObject(NULL, 0, NULL);
     XPT_DoString(NULL, NULL, NULL);
     XPT_DoHeader(NULL, NULL, NULL);
-    nsInterfaceInfo* info = NULL;
-    info->GetName(NULL);
 #ifdef DEBUG
-//    info->print(NULL);
     PurePrintf(0);
 #endif
     XPTC_InvokeByIndex(NULL, 0, 0, NULL);
