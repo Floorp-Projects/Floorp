@@ -1122,10 +1122,11 @@ nsObjectFrame::Reflow(nsPresContext*           aPresContext,
     }
 
     // if we have a clsid, we're either an internal widget, an ActiveX control, or an applet
-    if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::classid, classid)) {
+    if (mContent->Tag() == nsHTMLAtoms::object &&
+        NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::classid, classid)) {
       PRBool bJavaObject;
 
-      bJavaObject = !nsCRT::strncmp(classid.get(), NS_LITERAL_STRING("java:").get(), 5);
+      bJavaObject = StringBeginsWith(classid, NS_LITERAL_STRING("java:"));
 
       // if we find "java:" in the class id, we have a java applet
       if (bJavaObject) {
