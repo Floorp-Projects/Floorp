@@ -267,7 +267,7 @@ protected:
 
 
   // Style post processing hook
-  virtual NS_METHOD DidSetStyleContext(nsIPresContext* aPresContext);
+  NS_IMETHOD DidSetStyleContext(nsIPresContext* aPresContext);
 
 
 
