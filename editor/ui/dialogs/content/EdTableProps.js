@@ -62,6 +62,7 @@ var SELECT_COLUMN = 3;
 var RESET_SELECTION = 0;
 var cellData = new Object;
 var AdvancedEditUsed;
+var alignWasChar = false;
 
 /*
 From C++:
@@ -124,7 +125,6 @@ function Startup()
   dialog.RowSpanInput = document.getElementById("RowSpanInput");
   dialog.ColSpanInput = document.getElementById("ColSpanInput");
   dialog.CellHAlignList = document.getElementById("CellHAlignList");
-  dialog.CellAlignCharInput = document.getElementById("CellAlignCharInput");
   dialog.CellVAlignList = document.getElementById("CellVAlignList");
   dialog.CellInheritColor = document.getElementById("CellInheritColor");
   dialog.CellStyleList = document.getElementById("CellStyleList");
@@ -336,10 +336,8 @@ function InitCellPanel()
 
     
     previousIndex = dialog.CellHAlignList.selectedIndex;
-    previousValue = dialog.CellAlignCharInput.value;
 
-    // Clear in case alignment type isn't "char"
-    dialog.CellAlignCharInput.value = "";
+    alignWasChar = false;
 
     var halign = globalCellElement.align.toLowerCase();
     switch (halign)
@@ -354,18 +352,20 @@ function InitCellPanel()
         dialog.CellHAlignList.selectedIndex = 3;
         break;
       case charStr:
-        dialog.CellHAlignList.selectedIndex = 4;
-        dialog.CellAlignCharInput.value = alignChar;
-        break;
+        // We don't support UI for this because layout doesn't work: bug 2212.
+        // Remember that's what they had so we don't change it
+        //  unless they change the alignment by using the menulist
+        alignWasChar = true;
+        // Fall through to use show default alignment in menu
       default:  
         // Default depends on cell type (TH is "center", TD is "left")
         dialog.CellHAlignList.selectedIndex = 
           (globalCellElement.nodeName.toLowerCase() == "th") ? 1 : 0;
         break;
     }
+
     dialog.CellHAlignCheckbox.checked = AdvancedEditUsed && 
-      previousIndex != dialog.CellHAlignList.selectedIndex ||
-      previousValue != dialog.CellAlignCharInput.value;
+      previousIndex != dialog.CellHAlignList.selectedIndex;
 
     previousIndex = dialog.CellStyleList.selectedIndex;
     dialog.CellStyleList.selectedIndex = (globalCellElement.nodeName.toLowerCase() == "th") ? 1 : 0;
@@ -436,16 +436,10 @@ function SelectCellTab()
 
 function SelectCellHAlign()
 {
-  if (dialog.CellHAlignList.selectedIndex == 4)
-  {
-    // Activate the textfield for the alignment character
-    dialog.CellAlignCharInput.removeAttribute("collapsed");
-    SetTextfieldFocus(dialog.CellAlignCharInput);
-  }
-  else
-    dialog.CellAlignCharInput.setAttribute("collapsed","true");
-
   SetCheckbox("CellHAlignCheckbox");
+  // Once user changes the alignment,
+  //  we loose their original "CharAt" alignment"
+  alignWasChar = false;
 }
 
 function GetColorAndUpdate(ColorWellID)
@@ -910,36 +904,17 @@ function ValidateCellData()
 
   if (dialog.CellHAlignCheckbox.checked)
   {
-    // Vertical alignment is complicated by "char" type
     var hAlign = dialog.CellHAlignList.selectedItem.data;
 
-    if (hAlign != charStr)
+    // Horizontal alignment is complicated by "char" type
+    // We don't change current values if user didn't edit alignment
+    if (!alignWasChar)
+    {
       globalCellElement.removeAttribute(charStr);
-  
-    // Don't write attribute for default case,
-    //  which is "left" for TD, "center" for TH
-    var isTH = globalCellElement.nodeName.toLowerCase() == "th";
 
-    if ((isTH && hAlign ==  "center") ||
-        (!isTH && hAlign == "left"))
-    {
-      globalCellElement.removeAttribute("align");
-    }
-    else
-    {
-      if (hAlign == charStr)
-      {
-        //Note: Is space a valid align character?
-        // Assume yes and don't use "trimString()"
-        var alignChar = dialog.CellAlignCharInput.value.charAt(0);
-        globalCellElement.setAttribute(charStr, alignChar);
-        if (!alignChar)
-        {
-          ShowInputErrorMessage(GetString("NoAlignChar"));
-          SetTextfieldFocus(dialog.CellAlignCharInput);
-          return false;
-        }
-      }
+      // Always set "align" attribute,
+      //  so the default "left" is effective in a cell 
+      //  when parent row has align set.
       globalCellElement.setAttribute("align", hAlign);
     }
   }

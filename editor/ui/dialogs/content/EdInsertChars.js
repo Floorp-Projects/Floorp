@@ -55,7 +55,7 @@ function Startup()
     cancelButton.setAttribute("value", GetString("Close"));
 
   // Set a variable on the opener window so we
-  //  always close this window with it
+  //  can track ownership of close this window with it
   window.opener.InsertCharWindow = window;
   window.sizeToContent();
 
@@ -89,6 +89,8 @@ function Cancel()
 //------------------------------------------------------------------
 var LatinL;
 var LatinM;
+var LatinL_Label;
+var LatinM_Label;
 var LatinChar;
 var indexL=0;
 var indexM=0;
@@ -199,16 +201,17 @@ function UpdateLatinL()
   if (category == "AccentUpper" || category == "AccentLower")
   {
     DisableLatinL(false);
+    var basic;
 
     // Fill the list
     if (category == "AccentUpper")   // Uppercase Diacritical
     {
-      for(var basic=0; basic < 26; basic++)
+      for(basic=0; basic < 26; basic++)
         AppendStringToMenulist(LatinL , String.fromCharCode(0x41 + basic));
     }
     else  // Lowercase Diacritical
     {
-      for(var basic=0; basic < 26; basic++)
+      for(basic=0; basic < 26; basic++)
        AppendStringToMenulist(LatinL , String.fromCharCode(0x61 + basic));
     }    
     // Set the selected item
@@ -227,11 +230,11 @@ function UpdateLatinL()
 function UpdateLatinM()
 {
   ClearMenulist(LatinM);
-
+  var i, basic;
   switch(category)
   {
     case "AccentUpper": // Uppercase Diacritical
-      for(var basic=0; basic < upper[indexL].length; basic++)
+      for(basic=0; basic < upper[indexL].length; basic++)
         AppendStringToMenulist(LatinM , 
              String.fromCharCode(upper[indexL][basic]));
 
@@ -243,7 +246,7 @@ function UpdateLatinM()
       break;
 
     case "AccentLower": // Lowercase Diacritical
-      for(var basic=0; basic < lower[indexL].length; basic++)
+      for(basic=0; basic < lower[indexL].length; basic++)
         AppendStringToMenulist(LatinM , 
              String.fromCharCode(lower[indexL][basic]));
 
@@ -255,7 +258,7 @@ function UpdateLatinM()
       break;
 
     case "Upper": // Uppercase w/o Diacritical
-      for(var i=0; i < otherupper.length; i++)
+      for(i=0; i < otherupper.length; i++)
         AppendStringToMenulist(LatinM, String.fromCharCode(otherupper[i]));
 
       if(indexM_U < otherupper.length)
@@ -266,7 +269,7 @@ function UpdateLatinM()
       break;
 
     case "Lower": // Lowercase w/o Diacritical
-      for(var i=0; i < otherlower.length; i++)
+      for(i=0; i < otherlower.length; i++)
         AppendStringToMenulist(LatinM , String.fromCharCode(otherlower[i]));
 
       if(indexM_L < otherlower.length)
@@ -277,7 +280,7 @@ function UpdateLatinM()
       break;
 
     case "Symbol": // Symbol
-      for(var i=0; i < symbol.length; i++)
+      for(i=0; i < symbol.length; i++)
         AppendStringToMenulist(LatinM , String.fromCharCode(symbol[i]));
 
       if(indexM_S < symbol.length)
@@ -539,7 +542,7 @@ var lower=[
 ] ];
 
 
-symbol = [ 
+var symbol = [ 
         0x00a1, 0x00a2, 0x00a3, 0x00a4, 0x00a5, 0x00a6, 0x00a7, 
 0x00a8, 0x00a9, 0x00aa, 0x00ab, 0x00ac,         0x00ae, 0x00af,
 0x00b0, 0x00b1, 0x00b2, 0x00b3, 0x00b4, 0x00b5, 0x00b6, 0x00b7, 
@@ -547,7 +550,7 @@ symbol = [
 0x00d7, 0x00f7
 ];
 
-otherupper = [
+var otherupper = [
 0x00c6, 0x00d0, 0x00d8, 0x00de,
 0x0132,
 0x0152,
@@ -557,7 +560,7 @@ otherupper = [
 0x01ca, 0x01cb,
 0x01F1, 0x01f2
 ];
-otherlower = [
+var otherlower = [
 0x00e6, 0x00f0, 0x00f8, 0x00fe, 0x00df,
 0x0133,
 0x0153,
