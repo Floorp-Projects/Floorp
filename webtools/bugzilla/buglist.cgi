@@ -173,7 +173,7 @@ DefCol("version", "substring(bugs.version, 1, 5)", "Vers", "bugs.version");
 DefCol("os", "substring(bugs.op_sys, 1, 4)", "OS", "bugs.op_sys");
 DefCol("target_milestone", "bugs.target_milestone", "TargetM",
        "bugs.target_milestone");
-DefCol("votes", "bugs.votes", "Votes", "bugs.votes");
+DefCol("votes", "bugs.votes", "Votes", "bugs.votes desc");
 
 my @collist;
 if (defined $::COOKIE{'COLUMNLIST'}) {
@@ -530,7 +530,7 @@ foreach my $c (@collist) {
             $tablestart .= "<TH valign=left>";
         }
         if (defined $::sortkey{$c}) {
-            $tablestart .= "<A HREF=\"buglist.cgi?$fields&order=$::sortkey{$c}$oldorder\">$::title{$c}</A>";
+            $tablestart .= "<A HREF=\"buglist.cgi?$fields&order=" . url_quote($::sortkey{$c}) . "$oldorder\">$::title{$c}</A>";
         } else {
             $tablestart .= $::title{$c};
         }
@@ -636,6 +636,7 @@ print "
 
 if (defined $::FORM{'debug'}) {
     print "<PRE>$query</PRE>\n";
+    print "::FORM{'order'} is <pre>$::FORM{'order'}</pre>\n";
 }
 
 if ($toolong) {
