@@ -90,7 +90,7 @@ void nsBodyFrame::CreateColumnFrame(nsIPresContext* aPresContext)
     // Resolve style and set the style context
     nsIStyleContext* styleContext =
       aPresContext->ResolveStyleContextFor(mContent, this);
-    mFirstChild->SetStyleContext(styleContext);
+    mFirstChild->SetStyleContext(aPresContext,styleContext);
     NS_RELEASE(styleContext);
   } else {
     nsBodyFrame*  prevBody = (nsBodyFrame*)mPrevInFlow;

@@ -78,7 +78,7 @@ NS_METHOD PlaceholderFrame::ResizeReflow(nsIPresContext*  aPresContext,
     NS_RELEASE(delegate);
 
     // Set the style context for the frame
-    mAnchoredItem->SetStyleContext(mStyleContext);
+    mAnchoredItem->SetStyleContext(aPresContext,mStyleContext);
 
     // Resize reflow the anchored item into the available space
     // XXX Check for complete?

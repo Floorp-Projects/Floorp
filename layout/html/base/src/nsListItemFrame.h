@@ -60,7 +60,7 @@ protected:
 
   virtual ~nsListItemFrame();
 
-  nsIFrame* CreateBullet();
+  nsIFrame* CreateBullet(nsIPresContext* aCX);
 
   virtual void PaintChildren(nsIPresContext& aCX,
                              nsIRenderingContext& aRenderingContext,

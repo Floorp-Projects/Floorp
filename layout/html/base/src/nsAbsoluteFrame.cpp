@@ -242,7 +242,7 @@ NS_METHOD AbsoluteFrame::ResizeReflow(nsIPresContext*  aPresContext,
 
       // Resolve style for the pseudo-frame. We can't use our style context
       nsIStyleContextPtr styleContext = aPresContext->ResolveStyleContextFor(mContent, this);
-      mFrame->SetStyleContext(styleContext);
+      mFrame->SetStyleContext(aPresContext,styleContext);
 
     } else {
       // Create the absolutely positioned item as a pseudo-frame child. We'll
@@ -253,7 +253,7 @@ NS_METHOD AbsoluteFrame::ResizeReflow(nsIPresContext*  aPresContext,
       NS_RELEASE(delegate);
   
       // Set the style context for the frame
-      mFrame->SetStyleContext(mStyleContext);
+      mFrame->SetStyleContext(aPresContext,mStyleContext);
     }
 
     // Get the containing block, and its associated view

@@ -437,12 +437,12 @@ nsListItemFrame::~nsListItemFrame()
 {
 }
 
-nsIFrame* nsListItemFrame::CreateBullet()
+nsIFrame* nsListItemFrame::CreateBullet(nsIPresContext *aCX)
 {
   // Create bullet.  The bullet shares the same style context as
   // ourselves.
   nsIFrame* bullet = new BulletFrame(mContent, mIndexInParent, this);
-  bullet->SetStyleContext(mStyleContext);
+  bullet->SetStyleContext(aCX,mStyleContext);
   return bullet;
 }
 
@@ -578,7 +578,7 @@ NS_METHOD nsListItemFrame::ResizeReflow(nsIPresContext* aCX,
       if (nsnull == mFirstChild) {
         // Inside bullets get placed on the list immediately so that
         // the regular reflow logic can place them.
-        bullet = CreateBullet();
+        bullet = CreateBullet(aCX);
         mFirstChild = bullet;
         mChildCount++;
       } else {
@@ -588,7 +588,7 @@ NS_METHOD nsListItemFrame::ResizeReflow(nsIPresContext* aCX,
     } else {
       if (nsnull == mFirstChild) {
         // Create outside bullet the first time through
-        bullet = CreateBullet();
+        bullet = CreateBullet(aCX);
       } else {
         // Pull bullet off list (we'll put it back later)
         bullet = mFirstChild;
