@@ -490,8 +490,20 @@ nsFileChannel::OnDataAvailable(nsIChannel* transportChannel, nsISupports* contex
                                nsIInputStream *aIStream, PRUint32 aSourceOffset,
                                PRUint32 aLength)
 {
-    return mRealListener->OnDataAvailable(this, context, aIStream,
-                                          aSourceOffset, aLength);
+    nsresult rv;
+
+    rv = mRealListener->OnDataAvailable(this, context, aIStream,
+                                        aSourceOffset, aLength);
+
+    //
+    // If the connection is being aborted cancel the transport.  This will
+    // insure that the transport will go away even if it is blocked waiting
+    // for the consumer to empty the pipe...
+    //
+    if (NS_FAILED(rv)) {
+        mFileTransport->Cancel();
+    }
+    return rv;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
