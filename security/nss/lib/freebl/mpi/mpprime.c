@@ -270,7 +270,7 @@ mp_err  mpp_fermat(mp_int *a, mp_digit w)
 	    MP_NO  if fermat test reveals it is composite
 	    Some MP error code if some other error occurs.
  */
-mp_err mpp_fermat_list(mp_int *a, const mp_digit *primes, unsigned int nPrimes)
+mp_err mpp_fermat_list(mp_int *a, const mp_digit *primes, mp_size nPrimes)
 {
   mp_err rv = MP_YES;
 
@@ -393,19 +393,19 @@ X:
 ** alone!)  Each value left in the search space costs 1 or more modular 
 ** exponentations.  So, these divisions are a bargain!
 */
-mp_err mpp_sieve(mp_int *trial, const mp_digit *primes, unsigned int nPrimes, 
-		 unsigned char *sieve, unsigned int nSieve)
+mp_err mpp_sieve(mp_int *trial, const mp_digit *primes, mp_size nPrimes, 
+		 unsigned char *sieve, mp_size nSieve)
 {
   mp_err       res;
   mp_digit     rem;
-  unsigned int ix;
+  mp_size      ix;
   unsigned long offset;
 
   memset(sieve, 0, nSieve);
 
   for(ix = 0; ix < nPrimes; ix++) {
     mp_digit prime = primes[ix];
-    unsigned int i;
+    mp_size  i;
     if((res = mp_mod_d(trial, prime, &rem)) != MP_OKAY) 
       return res;
 
@@ -422,7 +422,7 @@ mp_err mpp_sieve(mp_int *trial, const mp_digit *primes, unsigned int nPrimes,
   return MP_OKAY;
 }
 
-mp_err mpp_make_prime(mp_int *start, unsigned int nBits, unsigned int strong,
+mp_err mpp_make_prime(mp_int *start, mp_size nBits, mp_size strong,
 		      unsigned long * nTries)
 {
   mp_digit      np;
@@ -430,7 +430,7 @@ mp_err mpp_make_prime(mp_int *start, unsigned int nBits, unsigned int strong,
   int           i;
   mp_int        trial;
   mp_int        q;
-  unsigned int  num_tests;
+  mp_size       num_tests;
   unsigned char sieve[32*1024];
 
   ARGCHK(start != 0, MP_BADARG);
