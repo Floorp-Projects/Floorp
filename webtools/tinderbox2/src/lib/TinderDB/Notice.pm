@@ -30,6 +30,12 @@
 #	 kestes@walrus.com Home.
 # Contributor(s): 
 
+# $Revision: 1.20 $ 
+# $Date: 2002/05/02 23:54:26 $ 
+# $Author: kestes%walrus.com $ 
+# $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Notice.pm,v $ 
+# $Name:  $ 
+
 
 
 
@@ -78,7 +84,7 @@ use Utils;
 use HTMLPopUp;
 use TinderDB::BasicTxtDB;
 
-$VERSION = ( qw $Revision: 1.19 $ )[1];
+$VERSION = ( qw $Revision: 1.20 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
