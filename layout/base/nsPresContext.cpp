@@ -96,7 +96,7 @@ IsVisualCharset(const nsAutoString& aCharset)
 #endif // IBMBIDI
 
 
-static PRBool destroy_loads(nsHashKey *aKey, void *aData, void* closure)
+PR_STATIC_CALLBACK(PRBool) destroy_loads(nsHashKey *aKey, void *aData, void* closure)
 {
   nsISupports *sup = NS_REINTERPRET_CAST(nsISupports*, aData);
   nsImageLoader *loader = NS_REINTERPRET_CAST(nsImageLoader*, sup);
