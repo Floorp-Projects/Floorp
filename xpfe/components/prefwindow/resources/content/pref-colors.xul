@@ -19,10 +19,12 @@
    Rights Reserved.
    
    Contributor(s): 
+     Ben Goodger <ben@netscape.com>
   -->
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+<?xul-overlay href="chrome://communicator/content/pref/platformPrefOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-colors.dtd" >
 
@@ -35,7 +37,7 @@
 
   <script language="JavaScript">
   <![CDATA[
-    _elementIDs = ["foregroundText", "background", "browserUseWindowsColors", "unvisitedLinks", "visitedLinks", "browserUnderlineAnchors", "browserUseDocumentColors"];
+    _elementIDs = ["foregroundText", "background", "unvisitedLinks", "visitedLinks", "browserUnderlineAnchors", "browserUseDocumentColors"];
   ]]>
   </script>
   
@@ -44,7 +46,7 @@
   <box class="box-smallheader" title="&lHeader;"/>
 
   <box>
-		<titledbox orient="vertical" flex="1">
+		<titledbox orient="vertical" flex="1" id="pageColours">
 			<title><text value="&color;"/></title>
       <box>
         <text class="label" value="&textColor.label;" accesskey="&textColor.accesskey;" for="foregroundtextmenu"/>
@@ -70,8 +72,8 @@
         </menu>
         <data id="background" pref="true" preftype="color" prefstring="browser.display.background_color" prefattribute="value" wsm_attributes="value"/>
       </box>
-      <checkbox id="browserUseWindowsColors" value="&useWindowsColors.label;" accesskey="&useWindowsColors.accesskey;"
-                pref="true" preftype="bool" prefstring="browser.display.wfe.use_windows_colors" prefattribute="checked"/>
+      <separator class="thin"/>
+      <box autostretch="never" id="useWindowsColoursBox"/>
     </titledbox>
       
     <titledbox orient="vertical" flex="1">
@@ -100,8 +102,11 @@
         </menu>
         <data id="visitedLinks" pref="true" preftype="string" prefstring="browser.visited_color" prefattribute="value" wsm_attributes="value"/>
       </box>
-  		<checkbox id="browserUnderlineAnchors" value="&underlineLinks.label;" accesskey="&underlineLinks.accesskey;"
-                pref="true" preftype="bool" prefstring="browser.underline_anchors" prefattribute="checked"/>
+      <separator class="thin"/>
+      <box autostretch="never">
+    		<checkbox id="browserUnderlineAnchors" value="&underlineLinks.label;" accesskey="&underlineLinks.accesskey;"
+                  pref="true" preftype="bool" prefstring="browser.underline_anchors" prefattribute="checked"/>
+      </box>
     </titledbox>
   </box>
   

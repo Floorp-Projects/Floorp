@@ -19,47 +19,13 @@
 #
 # Contributor(s): 
 
-DEPTH=..\..\..\..\..\..
-
-DIRS = win
+DEPTH=..\..\..\..\..\..\..
 
 CHROME_DIR = locales\en-US
 CHROME_L10N_DIR = communicator\locale\pref
 
 CHROME_L10N = \
-	.\pref-advanced.dtd \
-	.\pref-imageblocking.dtd \
-	.\pref-appearance.dtd \
-	.\pref-applications.dtd \
-	.\pref-applications.properties \
-	.\pref-applications-edit.dtd \
-	.\pref-cache.dtd \
-	.\pref-charset.dtd \
-	.\pref-colors.dtd \
-	.\pref-themes.dtd \
-	.\pref-composer.dtd \
-	.\pref-cookies.dtd \
-	.\pref-download.dtd \
-	.\pref-debug.dtd \
-	.\pref-editing.dtd \
-	.\pref-fonts.dtd \
-	.\pref-history.dtd \
-	.\pref-languages.dtd \
-	.\pref-navigator.dtd \
-	.\pref-offline.dtd \
-	.\pref-policies.dtd \
-	.\pref-proxies.dtd \
-	.\pref-proxy-manual.dtd \
-	.\pref-publish.dtd \
-	.\pref-search.dtd \
-	.\pref-smart_browsing.dtd \
-	.\pref-smartupdate.dtd \
-	.\prefutilities.properties \
-	.\preftree.dtd \
-	.\pref.dtd \
-	.\pref-wallet.dtd \
-	.\pref-mousewheel.dtd \
-	.\pref-winhooks.dtd \
+	.\platformPrefOverlay.dtd \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

@@ -21,6 +21,8 @@
 
 DEPTH=..\..\..\..\..
 
+DIRS= win
+
 CHROME_DIR = packages\core
 CHROME_CONTENT_DIR = communicator\content\pref
 
