@@ -49,9 +49,9 @@
   {0xa39c6bff, 0x15f0, 0x11d2, \
   {0x80, 0x41, 0x0, 0x10, 0x4b, 0x98, 0x3f, 0xd4}}
 
-
-
-#include <iosfwd.h>
+#ifndef XP_MAC
+class ostream;
+#endif
 
 class nsHTMLContentSinkStream : public nsIHTMLContentSink {
   public:
