@@ -109,6 +109,32 @@ nsUpdateService.prototype = {
   
   checkForUpdates: function (aItems, aItemCount, aUpdateTypes, aSourceEvent, aParentWindow)
   {
+    if (aSourceEvent == nsIUpdateService.SOURCE_EVENT_USER) {
+      if (aUpdateTypes & nsIUpdateItem.TYPE_APP) 
+        shouldShowMessage = !this._appUpdatesEnabled;
+      else if (aUpdateTypes & nsIUpdateItem.TYPE_ADDON || 
+               aUpdateTypes & nsIUpdateItem.TYPE_EXTENSION ||
+               aUpdateTypes & nsIUpdateItem.TYPE_THEME) 
+        shouldShowMessage = !this._extUpdatesEnabled;
+      else if (aUpdateTypes & nsIUpdateItem.TYPE_ANY) 
+        shouldShowMessage = !this._appUpdatesEnabled && !this._extUpdatesEnabled;
+    
+      if (shouldShowMessage) {
+        var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                            .getService(Components.interfaces.nsIStringBundleService);
+        var bundle = sbs.createBundle("chrome://mozapps/locale/update/update.properties");
+        var brandBundle = sbs.createBundle("chrome://global/locale/brand.properties");
+        var title = bundle.GetStringFromName("updateDisabledTitle");
+        var brandShortName = brandBundle.GetStringFromName("brandShortName");
+        var params = [brandShortName];
+        var message = bundle.formatStringFromName("updateDisabledMessage", params, params.length);
+        var ps = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                          .getService(Components.interfaces.nsIPromptService);
+        ps.alert(aParentWindow, title, message);
+        return;
+      }
+    }
+    
     switch (aSourceEvent) {
     case nsIUpdateService.SOURCE_EVENT_MISMATCH:
     case nsIUpdateService.SOURCE_EVENT_USER:
@@ -345,37 +371,47 @@ nsUpdateService.prototype = {
   {
     switch (aTopic) {
     case "nsPref:changed":
-      // User changed update prefs in Tools->Options
-      var noUpdatingGoingOn = !this._appUpdatesEnabled && !this._extUpdatesEnabled;
-      this._appUpdatesEnabled = this._pref.getBoolPref(PREF_UPDATE_APP_ENABLED);
-      this._extUpdatesEnabled = this._pref.getBoolPref(PREF_UPDATE_EXTENSIONS_ENABLED);
-
       var needsNotification = false;
-      if (!this._appUpdatesEnabled) {
-        this._clearAppUpdatePrefs();
-        needsNotification = true;
+      switch (aData) {
+      case PREF_UPDATE_APP_ENABLED:
+        this._appUpdatesEnabled = this._pref.getBoolPref(PREF_UPDATE_APP_ENABLED);
+        if (!this._appUpdatesEnabled) {
+          this._clearAppUpdatePrefs();
+          needsNotification = true;
+        }
+        else {
+          // Do an initial check NOW to update any FE components and kick off the
+          // timer. 
+          this.checkForUpdatesInternal([], 0, nsIUpdateItem.TYPE_APP, 
+                                       nsIUpdateService.SOURCE_EVENT_BACKGROUND);
+        }
+        break;
+      case PREF_UPDATE_EXTENSIONS_ENABLED:
+        this._extUpdatesEnabled = this._pref.getBoolPref(PREF_UPDATE_EXTENSIONS_ENABLED);
+        if (!this._extUpdatesEnabled) {
+          // Unset prefs used by the update service to signify extension updates
+          if (this._pref.prefHasUserValue(PREF_UPDATE_EXTENSIONS_COUNT))
+            this._pref.clearUserPref(PREF_UPDATE_EXTENSIONS_COUNT);
+          needsNotification = true;
+        }
+        else {
+          // Do an initial check NOW to update any FE components and kick off the
+          // timer. 
+          this.checkForUpdatesInternal([], 0, nsIUpdateItem.TYPE_ADDON, 
+                                       nsIUpdateService.SOURCE_EVENT_BACKGROUND);
+        }
+        break;
+      case PREF_UPDATE_INTERVAL:
+        this._makeTimer(this._pref.getIntPref(PREF_UPDATE_INTERVAL));
+        break;
       }
-      if (!this._extUpdatesEnabled) {
-        // Unset prefs used by the update service to signify extension updates
-        if (this._pref.prefHasUserValue(PREF_UPDATE_EXTENSIONS_COUNT))
-          this._pref.clearUserPref(PREF_UPDATE_EXTENSIONS_COUNT);
-        needsNotification = true;
-      }
-
+    
       if (needsNotification) {
         var os = Components.classes["@mozilla.org/observer-service;1"]
                            .getService(Components.interfaces.nsIObserverService);
         var backgroundEvt = Components.interfaces.nsIUpdateService.SOURCE_EVENT_BACKGROUND;
         os.notifyObservers(null, "Update:Ended", backgroundEvt.toString());
       }
-      
-      var needsToStartTimer = (noUpdatingGoingOn && this._appUpdatesEnabled) ||
-                              (noUpdatingGoingOn && this._extUpdatesEnabled);
-      // If the update interval changed or we went from a state in which there was
-      // no updating going on into one in which there is, we need to start the 
-      // update timer
-      if (aData == PREF_UPDATE_INTERVAL || needsToStartTimer)
-        this._makeTimer(this._pref.getIntPref(PREF_UPDATE_INTERVAL));
       break;
     case "xpcom-shutdown":
       // Clean up held observers etc to avoid leaks. 
