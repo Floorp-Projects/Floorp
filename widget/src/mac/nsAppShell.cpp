@@ -81,10 +81,10 @@ NS_IMETHODIMP nsAppShell::Create(int* argc, char ** argv)
 	rv = NS_GetCurrentToolkit(getter_AddRefs(mToolkit));
 	if (NS_FAILED(rv))
 		return rv;
-	mMacSink = auto_ptr<nsMacMessageSink>( new nsMacMessageSink() );
+	mMacSink.reset(new nsMacMessageSink());
 	nsIToolkit* toolkit = mToolkit.get();
-	mMacPump = auto_ptr<nsMacMessagePump>( new nsMacMessagePump(static_cast<nsToolkit*>(toolkit), mMacSink.get()) );
-  mMacMemoryCushion = auto_ptr<nsMacMemoryCushion>( new nsMacMemoryCushion() );  
+	mMacPump.reset(new nsMacMessagePump(static_cast<nsToolkit*>(toolkit), mMacSink.get()));
+  mMacMemoryCushion.reset(new nsMacMemoryCushion());
 
   if (!mMacSink.get() || !mMacPump.get() || !mMacMemoryCushion.get())
     return NS_ERROR_OUT_OF_MEMORY;
