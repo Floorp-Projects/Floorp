@@ -16,7 +16,7 @@
 # Reserved.
 #
 
-## $Id: mozilla,v 1.5 2000/02/08 02:40:19 sspitzer%netscape.com Exp $
+## $Id: mozilla,v 1.6 2000/03/16 03:39:46 gagan%netscape.com Exp $
 ## 
 ## Usage:
 ##
@@ -73,14 +73,6 @@ do
       ;;
   esac
 done
-
-# if you are debugging, you can't have moreargs
-# for example, "./mozilla -g -mail" makes no sense.
-if [ $debugging -eq 1 -a "x$moreargs" != "x" ]
-then
-	echo "You can't have -g and $moreargs at the same time"
-	exit 1
-fi
 
 echo $dist_bin/run-mozilla.sh $script_args $MOZILLA_BIN $moreargs ${1+"$@"}	
 $dist_bin/run-mozilla.sh $script_args $MOZILLA_BIN $moreargs ${1+"$@"}
