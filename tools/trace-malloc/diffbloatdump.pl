@@ -85,7 +85,7 @@ sub add_file($$) {
         my @stack;
 
         # read the data at the memory location
-        while ( ($line = <$infile>) && substr($line,0,1) eq "\t" ) {
+        while ( defined($infile) && ($line = <$infile>) && substr($line,0,1) eq "\t" ) {
             # do nothing
         }
 
@@ -97,7 +97,7 @@ sub add_file($$) {
                 $line = $1;
             }
             $stack[$#stack+1] = $line;
-        } while ( ($line = <$infile>) && $line ne "\n" );
+        } while ( defined($infile) && ($line = <$infile>) && $line ne "\n" && $line ne "\r\n" );
 
         return \@stack;
     }
@@ -131,8 +131,8 @@ sub add_file($$) {
     while ( ! eof(INFILE) ) {
         # read the type and address
         my $line = <INFILE>;
-        unless ($line =~ /.*\((\d*)\)\n/) {
-            die "badly formed allocation header";
+        unless ($line =~ /.*\((\d*)\)[\r|\n]/) {
+            die "badly formed allocation header in $infile";
         }
         my $size;
         if ($::opt_allocation_count) {
@@ -145,6 +145,8 @@ sub add_file($$) {
     }
     close INFILE;
 }
+
+sub print_node_indent($$$);
 
 sub print_calltree() {
     sub print_indent($) {

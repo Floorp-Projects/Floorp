@@ -45,7 +45,7 @@ include $(topsrcdir)/config/config.mk
 LIBS		+= \
 		$(LIBS_DIR) \
 		tmreader.$(OBJ_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)xpcomds_s.$(LIB_SUFFIX) \
+		$(XPCOM_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
 
