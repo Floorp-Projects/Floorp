@@ -2195,6 +2195,8 @@ PRInt32 _MD_open(const char *name, PRIntn flags, PRIntn mode)
         osflags = O_RDONLY;
     }
 
+    if (flags & PR_EXCL)
+        osflags |= O_EXCL;
     if (flags & PR_APPEND)
         osflags |= O_APPEND;
     if (flags & PR_TRUNCATE)
