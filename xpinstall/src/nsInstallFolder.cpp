@@ -617,9 +617,10 @@ nsInstallFolder::ToString(nsAutoString* outString)
   mFileSpec->IsFile(&flagIsFile);
   if (!flagIsFile)
   {
-      nsString tempString(temp);
+        // STRING USE WARNING: perhaps |tempString| should be a |nsCString|
+      nsString tempString; tempString.AssignWithConversion(temp);
 
-      tempString += FILESEP;
+      tempString.AppendWithConversion(FILESEP);
       outString->AssignWithConversion(tempString.ToNewCString());
   }
   else
