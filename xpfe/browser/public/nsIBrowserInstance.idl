@@ -32,27 +32,14 @@ interface nsIInputStream;
 [scriptable, uuid(8AF0FA40-598D-11d3-806A-00600811A9C3)]
 interface nsIBrowserInstance : nsISupports {
 
-    // History.
-    void back();
-    void forward();
-	 readonly attribute boolean canGoBack;
-	 readonly attribute boolean canGoForward;
-	 
-    void reload(in PRUint32 reloadType);
-    void stop();
     void loadUrl(in wstring url);
     void loadInitialPage();
-    void backButtonPopup(in nsIDOMNode backMenu);
-    void forwardButtonPopup(in nsIDOMNode forwardMenu);
-    void gotoHistoryIndex(in PRInt32 index);
-	void updateGoMenu(in nsIDOMNode goMenu);
     
     // Infrastructure.
     void init();
     void setContentWindow( in nsIDOMWindowInternal aWindow );
 	 void getContentDocShell(out nsIDocShell aDocShell);
     void setWebShellWindow( in nsIDOMWindowInternal aWindow );
-    void setTextZoom( in float aTextZoom );
     void SetDocumentCharset(in wstring charset);
     wstring GetDocumentCharset();
     void SetForcedCharset(in wstring charset);
@@ -62,12 +49,9 @@ interface nsIBrowserInstance : nsISupports {
     
     // File.
 
-    void printPreview();
-	void print();
     void close();
     // Edit.
     void copy();
-    void selectAll();
     
     // Search.
     void find();
