@@ -11,8 +11,8 @@
 
 <interpret
 	skiplocal = true
-	bannerStart = "<td width=470>"
-	bannerEnd = "</table>"
+	bannerStart = "<!-- sherlock:ad -->"
+	bannerEnd = "<!-- sherlock:/ad -->"
 	resultListStart = "</table><br>"
 	resultListEnd = "<table width=635"
 	>
