@@ -76,6 +76,8 @@ class nsWindow : public nsBaseWidget,
    nsWindow();
    virtual ~nsWindow();
 
+  static void ReleaseGlobals();
+
    // nsIWidget
 
    // Creation from native (eh?) or widget parent, destroy
@@ -246,8 +248,8 @@ protected:
    HWND      mHackDestroyWnd; // access GetMainWindow() window from destructor
    QMSG      mQmsg;
    PRBool    mIsTopWidgetWindow;
-   BOOL    mIsScrollBar;
-   BOOL    mInSetFocus;
+   BOOL      mIsScrollBar;
+   BOOL      mInSetFocus;
 
    HWND      GetParentHWND() const;
    HWND      GetHWND() const   { return mWnd; }
@@ -274,6 +276,9 @@ protected:
                               nsIAppShell *aAppShell,
                               nsWidgetInitData *aInitData,
                               HWND hwndOwner = 0);
+
+   // hook so dialog can be created looking like a dialog
+   virtual ULONG GetFCFlags();
 
    virtual void SubclassWindow(BOOL bState);
 

@@ -248,58 +248,6 @@ void nsFrameWindow::RealDoCreate( HWND hwndP, nsWindow *aParent,
    mHackDestroyWnd = mFrameWnd;
 }
 
-ULONG nsFrameWindow::GetFCFlags()
-{
-  ULONG style = FCF_TITLEBAR | FCF_SYSMENU | FCF_TASKLIST |
-                FCF_CLOSEBUTTON | FCF_NOBYTEALIGN |
-                (gWidgetModuleData->bIsDBCS ? FCF_DBE_APPSTAT : 0);
-
-  if (mWindowType == eWindowType_dialog) {
-    style |= FCF_DIALOGBOX;
-    if (mBorderStyle == eBorderStyle_default) {
-      style |= FCF_DLGBORDER;
-    } else {
-      style |= FCF_SIZEBORDER | FCF_MINMAX;
-    }
-  }
-  else {
-    style |= FCF_SIZEBORDER | FCF_MINMAX;
-  }
-
-
-  if (mBorderStyle != eBorderStyle_default && mBorderStyle != eBorderStyle_all) {
-    if (mBorderStyle == eBorderStyle_none || !(mBorderStyle & eBorderStyle_resizeh)) {
-      style &= ~FCF_SIZEBORDER;
-      style |= FCF_DLGBORDER;
-    }
-    
-    if (mBorderStyle == eBorderStyle_none || !(mBorderStyle & eBorderStyle_border))
-      style &= ~(FCF_DLGBORDER | FCF_SIZEBORDER);
-    
-    if (mBorderStyle == eBorderStyle_none || !(mBorderStyle & eBorderStyle_title)) {
-      style &= ~(FCF_TITLEBAR | FCF_TASKLIST);
-    }
-
-    if (mBorderStyle == eBorderStyle_none || !(mBorderStyle & eBorderStyle_close))
-      style &= ~FCF_CLOSEBUTTON;
-
-    if (mBorderStyle == eBorderStyle_none ||
-      !(mBorderStyle & (eBorderStyle_menu | eBorderStyle_close)))
-      style &= ~FCF_SYSMENU;
-    // Looks like getting rid of the system menu also does away with the
-    // close box. So, we only get rid of the system menu if you want neither it
-    // nor the close box. How does the Windows "Dialog" window class get just
-    // closebox and no sysmenu? Who knows.
-    
-    if (mBorderStyle == eBorderStyle_none || !(mBorderStyle & eBorderStyle_minimize))
-      style &= ~FCF_MINBUTTON;
-    
-    if (mBorderStyle == eBorderStyle_none || !(mBorderStyle & eBorderStyle_maximize))
-      style &= ~FCF_MAXBUTTON;
-  }
-
-  return style;
-}
 
 void nsFrameWindow::UpdateClientSize()
 {
@@ -404,7 +352,7 @@ MRESULT nsFrameWindow::FrameMessage( ULONG msg, MPARAM mp1, MPARAM mp2)
          {
             // These commented-out `-1's cancel each other out.
             POINTL ptl = { pSwp->x, pSwp->y + pSwp->cy /* - 1 */ };
-            ptl.y = gWidgetModuleData->szScreen.cy - ptl.y /* - 1*/ ;
+            ptl.y = WinQuerySysValue(HWND_DESKTOP, SV_CYSCREEN) - ptl.y /* - 1*/ ;
             mBounds.x = ptl.x;
             mBounds.y = ptl.y;
             OnMove( ptl.x, ptl.y);

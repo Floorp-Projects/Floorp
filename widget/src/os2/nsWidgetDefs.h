@@ -36,8 +36,6 @@
 #include <uconv.h>  // Rather not have to include these two, but need types...
 #include <unikbd.h> // 
 
-#include "nsModule.h"
-
 #ifndef MAX_PATH
 #define MAX_PATH CCHMAXPATH
 #endif
@@ -96,8 +94,6 @@ extern "C" BOOL APIENTRY DaxOpenSave(BOOL, LONG *, LPOPENFILENAME, PFNWP);
 
 class nsDragService;
 class nsIAppShell;
-
-extern nsWidgetModuleData *gWidgetModuleData;
 
 // messages - here to avoid duplication
 #define WMU_CALLMETHOD   (WM_USER + 1)

@@ -48,6 +48,7 @@
 #include "nsIRollupListener.h"
 #include "nsIMenuRollup.h"
 #include "nsIRegion.h"
+#include "nsIPref.h"
 
 //~~~ windowless plugin support
 #include "nsplugindefs.h"
@@ -74,10 +75,6 @@ static int WINDOWCOUNT = 0;
 
 static const char *sScreenManagerContractID = "@mozilla.org/gfx/screenmanager;1";
 
-// HWNDs are mapped to nsWindow objects using a custom presentation parameter,
-// which is registered in nsModule -- thanks to Cindy Ross for explaining how
-// to do this.
-//
 // The subclass proc (fnwpNSWindow) calls ProcessMessage() in the object.
 // Decisions are taken here about what to do - the purpose of the OnFoo()
 // methods is to generate an NS event to the various people who are
@@ -125,6 +122,21 @@ static LONG   gLastClickCount = 0;
 static LONG   gLastButtonDown = 0;
 ////////////////////////////////////////////////////
 
+static PRBool gGlobalsInitialized = PR_FALSE;
+static HPOINTER gPtrArray[17];
+static PRBool gIsTrackPoint = PR_FALSE;
+static PRBool gIsDBCS = PR_FALSE;
+
+/* Older versions of the toolkit, as well as GCC do not have this - from bsedos.h */
+extern "C" {
+   APIRET APIENTRY  DosQueryModFromEIP(HMODULE *phMod,
+                                        ULONG *pObjNum,
+                                        ULONG BuffLen,
+                                        PCHAR pBuff,
+                                        ULONG *pOffset,
+                                        ULONG Address);
+}
+
 #ifdef DEBUG_FOCUS
 static int currentWindowIdentifier = 0;
 #endif
@@ -163,7 +175,32 @@ nsWindow::nsWindow() : nsBaseWidget()
     mIsScrollBar         = FALSE;
     mInSetFocus         = FALSE;
 
-  mIsTopWidgetWindow = PR_FALSE;
+    mIsTopWidgetWindow = PR_FALSE;
+
+    if (!gGlobalsInitialized) {
+      gGlobalsInitialized = PR_TRUE;
+      HMODULE hModResources = NULLHANDLE;
+      DosQueryModFromEIP(&hModResources, NULL, 0, NULL, NULL, (ULONG) &gGlobalsInitialized);
+      for (int i=0;i<=16;i++ ) {
+        gPtrArray[i] = ::WinLoadPointer(HWND_DESKTOP, hModResources, IDC_BASE+i);
+      }
+
+      // Work out if the system is DBCS
+      char buffer[CCHMAXPATH];
+      COUNTRYCODE cc = { 0 };
+      DosQueryDBCSEnv( CCHMAXPATH, &cc, buffer);
+      gIsDBCS = buffer[0] || buffer[1];
+
+      // This is ugly. The Thinkpad TrackPoint driver checks to see whether or not a window
+      // actually has a scroll bar as a child before sending it scroll messages. Needless to
+      // say, no Mozilla window has real scroll bars. So if you have the "os2.trackpoint"
+      // preference set, we put an invisible scroll bar on every child window so we can
+      // scroll. Woohoo!
+      nsresult rv;
+      nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
+      if (NS_SUCCEEDED(rv) && prefs)
+         prefs->GetBoolPref("os2.trackpoint", &gIsTrackPoint);
+    }
 }
 
 //-------------------------------------------------------------------------
@@ -199,6 +236,15 @@ nsWindow::~nsWindow()
                       nsWindowState_eInCreate);
 //    if( mWnd)
       Destroy();
+  }
+
+}
+
+/* static */ void
+nsWindow::ReleaseGlobals()
+{
+  for (int i=0;i<=16;i++ ) {
+    WinDestroyPointer(gPtrArray[i]);
   }
 }
 
@@ -845,12 +891,7 @@ void nsWindow::RealDoCreate( HWND              hwndP,
 
    NS_ASSERTION( mWnd, "Couldn't create window");
 
-   // This is ugly. The Thinkpad TrackPoint driver checks to see whether or not a window
-   // actually has a scroll bar as a child before sending it scroll messages. Needless to
-   // say, no Mozilla window has real scroll bars. So if you have the "os2.trackpoint"
-   // preference set, we put an invisible scroll bar on every child window so we can
-   // scroll. Woohoo!
-   if (gWidgetModuleData->bIsTrackPoint && mWindowType == eWindowType_child && !mIsScrollBar) {
+   if (gIsTrackPoint && mWindowType == eWindowType_child && !mIsScrollBar) {
      WinCreateWindow(mWnd, WC_SCROLLBAR, 0, SBS_VERT,
                      0, 0, 0, 0, mWnd, HWND_TOP,
                      FID_VERTSCROLL, NULL, NULL);
@@ -1430,7 +1471,7 @@ NS_METHOD nsWindow::GetBounds(nsRect &aRect)
     aRect.width = swp.cx;
     aRect.height = swp.cy;
     aRect.x = swp.x;
-    aRect.y = gWidgetModuleData->szScreen.cy - (swp.y+swp.cy);
+    aRect.y = WinQuerySysValue(HWND_DESKTOP, SV_CYSCREEN) - (swp.y+swp.cy);
   } else {
     aRect = mBounds;
   }
@@ -1573,7 +1614,7 @@ NS_METHOD nsWindow::SetFont(const nsFont &aFont)
 NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
 {
   HPOINTER newPointer = NULLHANDLE;
- 
+
   switch(aCursor) {
   case eCursor_select:
     newPointer = ::WinQuerySysPointer(HWND_DESKTOP, SPTR_TEXT, FALSE);
@@ -1584,7 +1625,7 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
     break;
 
   case eCursor_hyperlink:
-    newPointer = gWidgetModuleData->hptrArray[IDC_SELECTANCHOR-IDC_BASE];
+    newPointer = gPtrArray[IDC_SELECTANCHOR-IDC_BASE];
     break;
 
   case eCursor_standard:
@@ -1610,39 +1651,39 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
     break;
 
   case eCursor_arrow_north:
-    newPointer = gWidgetModuleData->hptrArray[IDC_ARROWNORTH-IDC_BASE];
+    newPointer = gPtrArray[IDC_ARROWNORTH-IDC_BASE];
     break;
 
   case eCursor_arrow_north_plus:
-    newPointer = gWidgetModuleData->hptrArray[IDC_ARROWNORTHPLUS-IDC_BASE];
+    newPointer = gPtrArray[IDC_ARROWNORTHPLUS-IDC_BASE];
     break;
 
   case eCursor_arrow_south:
-    newPointer = gWidgetModuleData->hptrArray[IDC_ARROWSOUTH-IDC_BASE];
+    newPointer = gPtrArray[IDC_ARROWSOUTH-IDC_BASE];
     break;
 
   case eCursor_arrow_south_plus:
-    newPointer = gWidgetModuleData->hptrArray[IDC_ARROWSOUTHPLUS-IDC_BASE];
+    newPointer = gPtrArray[IDC_ARROWSOUTHPLUS-IDC_BASE];
     break;
 
   case eCursor_arrow_east:
-    newPointer = gWidgetModuleData->hptrArray[IDC_ARROWEAST-IDC_BASE];
+    newPointer = gPtrArray[IDC_ARROWEAST-IDC_BASE];
     break;
 
   case eCursor_arrow_east_plus:
-    newPointer = gWidgetModuleData->hptrArray[IDC_ARROWEASTPLUS-IDC_BASE];
+    newPointer = gPtrArray[IDC_ARROWEASTPLUS-IDC_BASE];
     break;
 
   case eCursor_arrow_west:
-    newPointer = gWidgetModuleData->hptrArray[IDC_ARROWWEST-IDC_BASE];
+    newPointer = gPtrArray[IDC_ARROWWEST-IDC_BASE];
     break;
 
   case eCursor_arrow_west_plus:
-    newPointer = gWidgetModuleData->hptrArray[IDC_ARROWWESTPLUS-IDC_BASE];
+    newPointer = gPtrArray[IDC_ARROWWESTPLUS-IDC_BASE];
     break;
 
   case eCursor_crosshair:
-    newPointer = gWidgetModuleData->hptrArray[IDC_CROSS-IDC_BASE];
+    newPointer = gPtrArray[IDC_CROSS-IDC_BASE];
     break;
              
   case eCursor_move:
@@ -1650,31 +1691,31 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
     break;
 
   case eCursor_help:
-    newPointer = gWidgetModuleData->hptrArray[IDC_HELP-IDC_BASE];
+    newPointer = gPtrArray[IDC_HELP-IDC_BASE];
     break;
 
   case eCursor_copy: // CSS3
-    newPointer = gWidgetModuleData->hptrArray[IDC_COPY-IDC_BASE];
+    newPointer = gPtrArray[IDC_COPY-IDC_BASE];
     break;
 
   case eCursor_alias:
-    newPointer = gWidgetModuleData->hptrArray[IDC_ALIAS-IDC_BASE];
+    newPointer = gPtrArray[IDC_ALIAS-IDC_BASE];
     break;
 
   case eCursor_cell:
-    newPointer = gWidgetModuleData->hptrArray[IDC_CELL-IDC_BASE];
+    newPointer = gPtrArray[IDC_CELL-IDC_BASE];
     break;
 
   case eCursor_grab:
-    newPointer = gWidgetModuleData->hptrArray[IDC_GRAB-IDC_BASE];
+    newPointer = gPtrArray[IDC_GRAB-IDC_BASE];
     break;
 
   case eCursor_grabbing:
-    newPointer = gWidgetModuleData->hptrArray[IDC_GRABBING-IDC_BASE];
+    newPointer = gPtrArray[IDC_GRABBING-IDC_BASE];
     break;
 
   case eCursor_spinning:
-    newPointer = gWidgetModuleData->hptrArray[IDC_ARROWWAIT-IDC_BASE];
+    newPointer = gPtrArray[IDC_ARROWWAIT-IDC_BASE];
     break;
 
   case eCursor_context_menu:
@@ -2130,10 +2171,10 @@ PRBool nsWindow::OnKey( MPARAM mp1, MPARAM mp2)
    if( usChar)
    {
       USHORT inbuf[2];
-      UniChar outbuf[4];
+      PRUnichar outbuf[4];
       inbuf[0] = usChar;
       inbuf[1] = '\0';
-      outbuf[0] = (UniChar)0;
+      outbuf[0] = (PRUnichar)0;
 
       MultiByteToWideChar(0, (const char*)inbuf, 2, outbuf, 4);
 
@@ -3526,4 +3567,57 @@ PCSZ nsWindow::WindowClass()
 ULONG nsWindow::WindowStyle()
 {
    return BASE_CONTROL_STYLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
+}
+
+ULONG nsWindow::GetFCFlags()
+{
+  ULONG style = FCF_TITLEBAR | FCF_SYSMENU | FCF_TASKLIST |
+                FCF_CLOSEBUTTON | FCF_NOBYTEALIGN |
+                (gIsDBCS ? FCF_DBE_APPSTAT : 0);
+
+  if (mWindowType == eWindowType_dialog) {
+    style |= FCF_DIALOGBOX;
+    if (mBorderStyle == eBorderStyle_default) {
+      style |= FCF_DLGBORDER;
+    } else {
+      style |= FCF_SIZEBORDER | FCF_MINMAX;
+    }
+  }
+  else {
+    style |= FCF_SIZEBORDER | FCF_MINMAX;
+  }
+
+
+  if (mBorderStyle != eBorderStyle_default && mBorderStyle != eBorderStyle_all) {
+    if (mBorderStyle == eBorderStyle_none || !(mBorderStyle & eBorderStyle_resizeh)) {
+      style &= ~FCF_SIZEBORDER;
+      style |= FCF_DLGBORDER;
+    }
+    
+    if (mBorderStyle == eBorderStyle_none || !(mBorderStyle & eBorderStyle_border))
+      style &= ~(FCF_DLGBORDER | FCF_SIZEBORDER);
+    
+    if (mBorderStyle == eBorderStyle_none || !(mBorderStyle & eBorderStyle_title)) {
+      style &= ~(FCF_TITLEBAR | FCF_TASKLIST);
+    }
+
+    if (mBorderStyle == eBorderStyle_none || !(mBorderStyle & eBorderStyle_close))
+      style &= ~FCF_CLOSEBUTTON;
+
+    if (mBorderStyle == eBorderStyle_none ||
+      !(mBorderStyle & (eBorderStyle_menu | eBorderStyle_close)))
+      style &= ~FCF_SYSMENU;
+    // Looks like getting rid of the system menu also does away with the
+    // close box. So, we only get rid of the system menu if you want neither it
+    // nor the close box. How does the Windows "Dialog" window class get just
+    // closebox and no sysmenu? Who knows.
+    
+    if (mBorderStyle == eBorderStyle_none || !(mBorderStyle & eBorderStyle_minimize))
+      style &= ~FCF_MINBUTTON;
+    
+    if (mBorderStyle == eBorderStyle_none || !(mBorderStyle & eBorderStyle_maximize))
+      style &= ~FCF_MAXBUTTON;
+  }
+
+  return style;
 }

@@ -47,13 +47,17 @@
 #endif
 
 #ifdef _DEBUG
+ #ifdef XP_OS2_VACPP
   #define BREAK_TO_DEBUGGER           _interrupt(3)
+ #else
+  #define BREAK_TO_DEBUGGER           asm("int $3")
+ #endif
 #else   
   #define BREAK_TO_DEBUGGER
 #endif  
 
 #ifdef _DEBUG
-  #define VERIFY(exp)                 ((exp) ? (void)0: (WinGetLastError((HAB)0), BREAK_TO_DEBUGGER))
+  #define VERIFY(exp)                 if (!(exp)) { WinGetLastError((HAB)0); BREAK_TO_DEBUGGER; }
 #else   // !_DEBUG
   #define VERIFY(exp)                 (exp)
 #endif  // !_DEBUG
