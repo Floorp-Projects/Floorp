@@ -1158,15 +1158,22 @@ js_Interpret(JSContext *cx, jsval *result)
     }                                                                         \
 }
 
+#ifdef JS_HAS_IN_OPERATOR
 	  case JSOP_IN:
 	    rval = POP();
-	    VALUE_TO_OBJECT(cx, rval, obj);
+            if (!JSVAL_IS_OBJECT(rval) || rval == JSVAL_NULL) {
+                JS_ReportError(cx, "target of 'in' operator must be an object");
+                ok = JS_FALSE;
+                goto out;
+            }
+            obj = JSVAL_TO_OBJECT(rval);
 	    POP_ELEMENT_ID(id);
 	    ok = OBJ_LOOKUP_PROPERTY(cx, obj, id, &obj2, &prop);
 	    if (!ok)
 		goto out;
 	    PUSH_OPND(BOOLEAN_TO_JSVAL(prop != NULL));
 	    break;
+#endif /* JS_HAS_IN_OPERATOR */
 
 	  case JSOP_FORNAME:
 	    rval = POP();
