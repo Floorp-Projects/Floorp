@@ -26,13 +26,7 @@
 #define MAX_BUF 4096
 #endif
 
-#include "nsWindowsHooks.h"
-#include <windows.h>
-#include <shlobj.h>
-#include <shlguid.h>
-
 // Implementation utilities.
-#include "nsWindowsHooksUtil.cpp"
 #include "nsIDOMWindowInternal.h"
 #include "nsIServiceManager.h"
 #include "nsIPromptService.h"
@@ -42,6 +36,15 @@
 #include "nsXPIDLString.h"
 #include "nsString.h"
 #include "nsMemory.h"
+
+// The order of these headers is important on Win2K because CreateDirectory
+// is |#undef|-ed in nsFileSpec.h, so we need to pull in windows.h for the
+// first time after nsFileSpec.h.
+#include "nsWindowsHooksUtil.cpp"
+#include "nsWindowsHooks.h"
+#include <windows.h>
+#include <shlobj.h>
+#include <shlguid.h>
 
 // Objects that describe the Windows registry entries that we need to tweak.
 static ProtocolRegistryEntry
