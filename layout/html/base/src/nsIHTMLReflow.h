@@ -127,8 +127,8 @@ struct nsHTMLReflowState : nsReflowState {
   // LineLayout object (only for inline reflow; set to NULL otherwise)
   nsLineLayout*    lineLayout;
 
-  // Computed width and margins. The computed width specifies the frame's
-  // content width, and it does not apply to inline non-replaced elements
+  // The computed width specifies the frame's content width, and it does not
+  // apply to inline non-replaced elements
   //
   // For replaced inline frames, a value of NS_INTRINSICSIZE means you should
   // use your intrinsic width as the computed width
@@ -137,10 +137,9 @@ struct nsHTMLReflowState : nsReflowState {
   // containing block and the margin/border/padding areas and the min/max
   // width
   nscoord          computedWidth; 
-  nscoord          computedLeftMargin, computedRightMargin; 
 
-  // Computed height and margins. The computed height specifies the frame's
-  // content height, and it does not apply to inline non-replaced elements
+  // The computed height specifies the frame's content height, and it does
+  // not apply to inline non-replaced elements
   //
   // For replaced inline frames, a value of NS_INTRINSICSIZE means you should
   // use your intrinsic height as the computed height
@@ -153,7 +152,9 @@ struct nsHTMLReflowState : nsReflowState {
   // For replaced block-level frames, a value of NS_INTRINSICSIZE
   // means you use your intrinsic height as the computed height
   nscoord          computedHeight;
-  nscoord          computedTopMargin, computedBottomMargin;
+
+  // Computed margin values
+  nsMargin         computedMargin;
 
   // Computed values for 'left/top/right/bottom' offsets. Only applies to
   // 'positioned' elements
@@ -169,7 +170,7 @@ struct nsHTMLReflowState : nsReflowState {
   // line-height value then this field will be "-1".
   nscoord          mLineHeight;
 
-  // the following data members are relevant if nsStyleText.mTextAlign == NS_STYLE_TEXT_ALIGN_CHAR
+  // The following data members are relevant if nsStyleText.mTextAlign == NS_STYLE_TEXT_ALIGN_CHAR
   nscoord          mAlignCharOffset;   // distance from reference edge (as specified in nsStyleDisplay.mDirection) 
                                        // to the align character (which will be specified in nsStyleTable)
   PRPackedBool     mUseAlignCharOffset;// if true, the reflow honors alignCharOffset and does not

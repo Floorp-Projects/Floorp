@@ -181,7 +181,7 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
     // minus and top and bottom margins
     if (NS_AUTOHEIGHT == kidReflowState.computedHeight) {
       kidReflowState.computedHeight = aReflowState.availableHeight -
-        kidReflowState.computedTopMargin - kidReflowState.computedTopMargin;
+        kidReflowState.computedMargin.top - kidReflowState.computedMargin.bottom;
 
       // Computed height is for the content area so reduce it by the amount of
       // space taken up by border and padding
@@ -196,7 +196,7 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
       ReflowChild(myOnlyChild, aPresContext, desiredSize, kidReflowState,
                   aStatus);
     
-      nsRect  rect(kidReflowState.computedLeftMargin, kidReflowState.computedTopMargin,
+      nsRect  rect(kidReflowState.computedMargin.left, kidReflowState.computedMargin.top,
                    desiredSize.width, desiredSize.height);
       myOnlyChild->SetRect(rect);
 

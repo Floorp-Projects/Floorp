@@ -374,8 +374,8 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext& aPresContext,
     // Any remaining 'auto' values for 'left', 'right', 'margin-left', or
     // 'margin-right' are replaced with 0 (their default value)
     computedWidth = containingBlockWidth - computedOffsets.left -
-      computedLeftMargin - borderPadding.left - borderPadding.right -
-      computedRightMargin - computedOffsets.right;
+      computedMargin.left - borderPadding.left - borderPadding.right -
+      computedMargin.right - computedOffsets.right;
 
   } else {
     // Use the specified value for the computed width
@@ -385,16 +385,16 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext& aPresContext,
     if (leftIsAuto) {
       // Any 'auto' on 'margin-left' or 'margin-right' are replaced with 0
       // (their default value)
-      computedOffsets.left = containingBlockWidth - computedLeftMargin -
+      computedOffsets.left = containingBlockWidth - computedMargin.left -
         borderPadding.left - computedWidth - borderPadding.right -
-        computedRightMargin - computedOffsets.right;
+        computedMargin.right - computedOffsets.right;
 
     } else if (rightIsAuto) {
       // Any 'auto' on 'margin-left' or 'margin-right' are replaced with 0
       // (their default value)
       computedOffsets.right = containingBlockWidth - computedOffsets.left -
-        computedLeftMargin - borderPadding.left - computedWidth -
-        borderPadding.right - computedRightMargin;
+        computedMargin.left - borderPadding.left - computedWidth -
+        borderPadding.right - computedMargin.right;
 
     } else {
       // All that's left to solve for are 'auto' values for 'margin-left' and
@@ -411,13 +411,13 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext& aPresContext,
             if (eStyleUnit_Auto == spacing->mMargin.GetRightUnit()) {
               // Both 'margin-left' and 'margin-right' are 'auto', so they get
               // equal values
-              computedLeftMargin = availMarginSpace / 2;
-              computedRightMargin = availMarginSpace - computedLeftMargin;
+              computedMargin.left = availMarginSpace / 2;
+              computedMargin.right = availMarginSpace - computedMargin.left;
             } else {
-              computedLeftMargin = availMarginSpace;
+              computedMargin.left = availMarginSpace;
             }
           } else {
-            computedRightMargin = availMarginSpace;
+            computedMargin.right = availMarginSpace;
           }
         }
       }
@@ -477,8 +477,8 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext& aPresContext,
 
       } else {
         computedHeight = containingBlockHeight - computedOffsets.top - 
-          computedTopMargin - borderPadding.top - borderPadding.bottom -
-          computedBottomMargin - computedOffsets.bottom;
+          computedMargin.top - borderPadding.top - borderPadding.bottom -
+          computedMargin.bottom - computedOffsets.bottom;
       }
     }
   } else {
@@ -490,8 +490,8 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext& aPresContext,
       if (bottomIsAuto) {
         // Any 'auto' on 'margin-top' or 'margin-bottom' are replaced with 0
         computedOffsets.bottom = containingBlockHeight - computedOffsets.top -
-          computedTopMargin - borderPadding.top - computedHeight -
-          borderPadding.bottom - computedBottomMargin;
+          computedMargin.top - borderPadding.top - computedHeight -
+          borderPadding.bottom - computedMargin.bottom;
   
       } else {
         // All that's left to solve for are 'auto' values for 'margin-top' and
@@ -508,13 +508,13 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext& aPresContext,
               if (eStyleUnit_Auto == spacing->mMargin.GetBottomUnit()) {
                 // Both 'margin-top' and 'margin-bottom' are 'auto', so they get
                 // equal values
-                computedTopMargin = availMarginSpace / 2;
-                computedBottomMargin = availMarginSpace - computedTopMargin;
+                computedMargin.top = availMarginSpace / 2;
+                computedMargin.bottom = availMarginSpace - computedMargin.top;
               } else {
-                computedTopMargin = availMarginSpace;
+                computedMargin.top = availMarginSpace;
               }
             } else {
-              computedBottomMargin = availMarginSpace;
+              computedMargin.bottom = availMarginSpace;
             }
           }
         }
@@ -535,7 +535,7 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
   if (nsnull == parentReflowState) {
     computedWidth = availableWidth;
     computedHeight = availableHeight;
-    computedLeftMargin = computedRightMargin = computedTopMargin = computedBottomMargin = 0;
+    computedMargin.SizeTo(0, 0, 0, 0);
 
   } else {
     // Get the containing block reflow state
@@ -551,15 +551,9 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
       computedOffsets.SizeTo(0, 0, 0, 0);
     }
 
-    // Compute margins from the specified margin style information
-    nsMargin  margin;
-    ComputeMarginFor(frame, parentReflowState, margin);
-  
-    // These become the default computed values, and may be adjusted below
-    computedLeftMargin = margin.left;
-    computedRightMargin = margin.right;
-    computedTopMargin = margin.top;
-    computedBottomMargin = margin.bottom;
+    // Compute margins from the specified margin style information. These
+    // become the default computed values, and may be adjusted below
+    ComputeMarginFor(frame, parentReflowState, computedMargin);
   
     // Calculate the line height.
     // XXX Do we need to do this for all elements or just inline non-replaced
@@ -716,8 +710,8 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
             // Block-level non-replaced element in the flow. 'auto' values for
             // margin-left and margin-right become 0 and the sum of the areas must
             // equal the width of the containing block
-            computedWidth = containingBlockWidth - computedLeftMargin - computedRightMargin -
-                            borderPadding.left - borderPadding.right;
+            computedWidth = containingBlockWidth - computedMargin.left -
+              computedMargin.right - borderPadding.left - borderPadding.right;
           }
         }
         
@@ -729,7 +723,7 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
         // account the computed width, border/padding, and width of the
         // containing block
         CalculateLeftRightMargin(cbrs, spacing, computedWidth, borderPadding,
-                                 computedLeftMargin, computedRightMargin);
+                                 computedMargin.left, computedMargin.right);
       }
   
       // Compute the content height

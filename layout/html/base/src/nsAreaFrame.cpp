@@ -563,8 +563,8 @@ nsAreaFrame::ReflowAbsoluteItems(nsIPresContext& aPresContext,
             rect.height = desiredSize.height;
           }
 #else
-          nsRect  rect(kidReflowState.computedOffsets.left + kidReflowState.computedLeftMargin,
-                       kidReflowState.computedOffsets.top + kidReflowState.computedTopMargin,
+          nsRect  rect(kidReflowState.computedOffsets.left + kidReflowState.computedMargin.left,
+                       kidReflowState.computedOffsets.top + kidReflowState.computedMargin.top,
                        kidDesiredSize.width, kidDesiredSize.height);
 #endif
           absoluteFrame->SetRect(rect);
