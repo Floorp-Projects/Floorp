@@ -3306,20 +3306,38 @@ SINGSIGN_DisplaySignonInfoAsHTML()
 #include "prtypes.h"
 extern "C" {
 void
-SI_RestoreSignonData
+SINGSIGN_RestoreSignonData
     (char* URLName, char* name, char** value)
 {
 }
 
 void
-SI_RememberSignonData
+SINGSIGN_RememberSignonData
        (char* URLName, char** name_array, char** value_array, char** type_array, PRInt32 value_cnt)
 {
 }
 
 void
-SI_DisplaySignonInfoAsHTML()
+SINGSIGN_DisplaySignonInfoAsHTML()
 {
 }
+
+int
+SINGSIGN_PromptUsernameAndPassword
+    (char *prompt, char **username, char **password, char *URLName)
+{
+}
+
+PUBLIC char *
+SINGSIGN_PromptPassword
+    (char *prompt, char *URLName, PRBool pickFirstUser)
+{
+}
+
+PUBLIC char *
+SINGSIGN_Prompt (char *prompt, char* defaultUsername, char *URLName)
+{
+}
+
 }
 #endif

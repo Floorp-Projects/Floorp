@@ -78,49 +78,37 @@ NS_IMETHODIMP nsWalletlibService::WALLET_Capture(
 }
 
 NS_IMETHODIMP nsWalletlibService::SI_DisplaySignonInfoAsHTML(){
-#ifndef XP_MAC
     ::SINGSIGN_DisplaySignonInfoAsHTML();
-#endif
     return NS_OK;
 }
 
 NS_IMETHODIMP nsWalletlibService::SI_RememberSignonData
         (char* URLName, char** name_array, char** value_array, char** type_array, PRInt32 value_cnt) {
-#ifndef XP_MAC
     ::SINGSIGN_RememberSignonData(URLName, name_array, value_array, type_array, value_cnt);
-#endif
     return NS_OK;
 }
 
 NS_IMETHODIMP nsWalletlibService::SI_RestoreSignonData
         (char* URLName, char* name, char** value) {
-#ifndef XP_MAC
     ::SINGSIGN_RestoreSignonData(URLName, name, value);
-#endif
     return NS_OK;
 }
 
 NS_IMETHODIMP nsWalletlibService::SI_PromptUsernameAndPassword
         (char *prompt, char **username, char **password, char *URLName) {
-#ifndef XP_MAC
     ::SINGSIGN_PromptUsernameAndPassword(prompt, username, password, URLName);
-#endif
     return NS_OK;
 }
 
 NS_IMETHODIMP nsWalletlibService::SI_PromptPassword
         (char *prompt, char **password, char *URLName, PRBool pickFirstUser) {
-#ifndef XP_MAC
     *password = ::SINGSIGN_PromptPassword(prompt, URLName, pickFirstUser);
-#endif
     return NS_OK;
 }
 
 NS_IMETHODIMP nsWalletlibService::SI_Prompt 
         (char *prompt, char **username, char *URLName) {
-#ifndef XP_MAC
     *username = ::SINGSIGN_Prompt(prompt, *username, URLName);
-#endif
     return NS_OK;
 }
 
