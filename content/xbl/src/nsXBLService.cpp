@@ -933,6 +933,10 @@ NS_IMETHODIMP nsXBLService::GetBindingInternal(nsIContent* aBoundElement,
   // XXX Obtain the # marker and remove it from the URL.
   nsCAutoString uri(aURLStr);
   PRInt32 indx = uri.RFindChar('#');
+  NS_ASSERTION(indx >= 0, "Incorrect syntax for an XBL binding.");
+  if (indx < 0)
+    return NS_ERROR_FAILURE;
+
   nsCAutoString ref; 
   uri.Right(ref, uri.Length() - (indx + 1));
   uri.Truncate(indx);
@@ -1147,12 +1151,11 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement, nsIDocument* aB
         nsCOMPtr<nsIBindingManager> xblDocBindingManager;
         document->GetBindingManager(getter_AddRefs(xblDocBindingManager));
         xblDocBindingManager->GetXBLDocumentInfo(aURLStr, getter_AddRefs(info));
-        xblDocBindingManager->RemoveXBLDocumentInfo(info); // Break the self-imposed cycle.
-
         if (!info) {
           NS_ERROR("An XBL file is malformed.  Did you forget the XBL namespace on the bindings tag?");
           return NS_ERROR_FAILURE;
         }
+        xblDocBindingManager->RemoveXBLDocumentInfo(info); // Break the self-imposed cycle.
 
         // If the doc is a chrome URI, then we put it into the XUL cache.
         PRBool cached = PR_FALSE;
