@@ -6,8 +6,8 @@
 # portable to all browsers.
 
 
-# $Revision: 1.1 $ 
-# $Date: 2003/01/19 17:41:34 $ 
+# $Revision: 1.2 $ 
+# $Date: 2003/02/03 13:43:31 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/HTMLPopUp/MozillaClick.pm,v $ 
 # $Name:  $ 
@@ -72,17 +72,20 @@ sub page_header {
   
 $header .=<<EOF;
 <HTML>
+<HEAD>
+	$refresh
+
         <!-- This file was automatically created by $main::0  -->
         <!-- version: $main::VERSION -->
         <!-- at $main::LOCALTIME -->
-<HEAD>
-	$refresh
+
         <SCRIPT LANGUAGE="JavaScript">
 
 
 		var tipRef=null;
 		var fixedLayer=null;
-  		var tipColor="white";
+  		// var tipColor="white";
+  		var tipColor="#FFFF80\";
 
 		function tip(w,h,c) {
 	
@@ -252,8 +255,8 @@ $header .=<<EOF;
 
         </SCRIPT>
         <TITLE>$title</TITLE>
-        </HEAD>
-        <BODY ONLOAD="start()" TEXT="#000000" BGCOLOR="#ffffff">
+</HEAD>
+<BODY ONLOAD="start()" TEXT="#000000" BGCOLOR="#ffffff">
 
 
 <TABLE BORDER=0 CELLPADDING=12 CELLSPACING=0 WIDTH=\"100%\">
@@ -297,48 +300,29 @@ sub Link {
 #	  "windowwidth"=>"",
 #	 );
 
-  my $self = shift @_;
-  my (%args) = @_;
-  my $out = '';
-
-  my $name ="";
-
-  if ($args{'name'}) {
-    $name = "name=\"$args{'name'}\"";
-  }
-
-
-  my $href = '';
-  if ($args{'href'}) {
-      $href = "HREF=\"$args{'href'}\"";
-  }
-
-  my $linktxt =  $args{'linktxt'} || '';
-
-  if (!($args{'windowtxt'})) {
-      $out .= "<A $name $href >$linktxt</a>";
-  }
-  
-  if ($args{'windowtxt'}) {
-
-    # set the defaults
-
-    $args{'windowtitle'} = $args{'windowtitle'} || 
-      $DEFAULT_POPUP_TITLE;
-
-
-    # These characters inside the popupwindow will confuse my popup
-    # window software into thinking the arguments are over.
-
-    if ($args{'windowtxt'}) {
-      $args{'windowtxt'} =~ s/[\n\'\"]//g;
-      $args{'windowtxt'} =~ s/[\n\t]+/ /g;
-      $args{'windowtxt'} =~ s/\s+/ /g;
-
-#    push @POPUPTXT, $args{'windowtxt'};
-
+    my $self = shift @_;
+    my (%args) = @_;
+    my $out = '';
+    
+    my $name ="";
+    
+    if ($args{'name'}) {
+        $name = "name=\"$args{'name'}\"";
     }
 
+
+    my $href = '';
+    if ($args{'href'}) {
+        $href .= "HREF=\"$args{'href'}\"";
+    } elsif ($args{'windowtxt'}) {
+        $href .= "HREF=\"javascript:void(0);\"";
+    }
+
+    my $linktxt =  $args{'linktxt'} || '';
+    
+    $args{'windowtitle'} = $args{'windowtitle'} || 
+        $DEFAULT_POPUP_TITLE;
+    
     # perhaps we should not allow the interface to determine the width
     # but we should determine it ourselves based on longest_line2width
     # number_of_lines2hight conversion factors, but it is hard to
@@ -350,58 +334,57 @@ sub Link {
     $args{'windowwidth'} = ($args{'windowwidth'} ||
                             $HTMLPopUp::DEFAULT_POPUP_WIDTH);
 
-    #
+    my $popup = '';
 
 
-    my  $onclick = (
-		   "onClick=\" ".
-		   "tip(".(
-			   "$args{'windowwidth'},".
-			   "$args{'windowheight'},".
-			   "\'$args{'windowtxt'}\'".
-			   "").
-		   "); ".
-		   "return false\" ".
-		   "");
+    if ($args{'windowtxt'}) {
+
+        # These characters inside the popupwindow will confuse my
+        # popup window software into thinking the arguments are
+        # over. I believe this is a ntescape specific problem.
+
+        $args{'windowtxt'} =~ s/[\n\'\"]//g;
+        $args{'windowtxt'} =~ s/[\n\t]+/ /g;
+        $args{'windowtxt'} =~ s/\s+/ /g;
+        
+        push @POPUPTXT, $args{'windowtxt'};
+        
+        $popup .= (
+                   "onClick=\" ".
+                   "tip(".(
+                           "$args{'windowwidth'},".
+                           "$args{'windowheight'},".
+                           "popuptxt[$#POPUPTXT]".
+                           "").
+                   "); ".
+                   "return false\" ".
+                   "");
+    }
     
-    $out .= (
-	     "<script language=\"JavaScript\">".
-	     "<A $name HREF=\"javascript:\" $onclick>$linktxt</a>".
-	     "</script>".
-	     "<noscript>".
-             "<A $name $href>$linktxt</a>".
-	     "</noscript>".
-	     "");
-  }
-
-
-  return $out;
+    $out .= "<A $name $href $popup>$linktxt</a>";
+    
+    return $out;
 }
 
 
 # After all the links have been rendered we may need to dump some
-# static data structures into the top of the HTML file. 
+# static data structures into the top of the HTML file.
 
-# ( Passing indexes to static structures should allow us to embed
-#    quotes and new lines in our strings.
-#    not yet used, attempts at utilization caused netscape to exit, 
-#    don't forget that tip() is recursive )
-
-sub test_define_structures {
+sub define_structures {
   my $self = shift @_;
   my (@out) =();
 
+  push @out, "<script language=\"JavaScript\">\n";
+  push @out, "// Separate out the popup window string table\n";
+  push @out, "// in order to make the structure of the HTML easier to read.\n";
   push @out, "popuptxt = new Array();\n";
   foreach $i (0 .. $#POPUPTXT) {
     push @out, "popuptxt[$i] = \"$POPUPTXT[$i]\"\;\n";
   }
   push @out, "\n";
+  push @out, "</script>\n";
 
   return @out;
-}
-
-sub define_structures {
-  return '';
 }
 
 1;
