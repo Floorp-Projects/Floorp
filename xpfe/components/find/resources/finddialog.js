@@ -112,7 +112,7 @@
             loadData();
 
             // Search.
-            finder.FindNext( data );
+            finder.findNext( data );
 
             // don't close the window
             return false;

@@ -23,12 +23,6 @@
 #include "nsISupports.idl"
 #include "domstubs.idl"
 
-[ptr] native nsIWebShell( nsIWebShell );
-
-%{C++
-class nsIWebShell;
-%}
-
 /*----------------------------- nsISearchContext -------------------------------
 | This file defines the internal, non-public interface between the default     |
 | implementation of the browser's "find component" and it's JavaScript         |
