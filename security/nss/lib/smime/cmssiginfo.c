@@ -34,7 +34,7 @@
 /*
  * CMS signerInfo methods.
  *
- * $Id: cmssiginfo.c,v 1.19 2003/11/15 00:09:51 nelsonb%netscape.com Exp $
+ * $Id: cmssiginfo.c,v 1.20 2003/12/03 00:09:05 wchang0222%aol.com Exp $
  */
 
 #include "cmslocal.h"
@@ -620,7 +620,7 @@ NSS_CMSSignerInfo_GetSigningCertificate(NSSCMSSignerInfo *signerinfo, CERTCertDB
  *
  * sinfo - signerInfo data for this signer
  *
- * Returns a pointer to allocated memory, which must be freed.
+ * Returns a pointer to allocated memory, which must be freed with PORT_Free.
  * A return value of NULL is an error.
  */
 char *

@@ -34,7 +34,7 @@
 /*
  * Interfaces of the CMS implementation.
  *
- * $Id: cms.h,v 1.18 2003/11/26 23:50:02 wchang0222%aol.com Exp $
+ * $Id: cms.h,v 1.19 2003/12/03 00:09:05 wchang0222%aol.com Exp $
  */
 
 #ifndef _CMS_H_
@@ -670,7 +670,7 @@ NSS_CMSSignerInfo_GetSigningCertificate(NSSCMSSignerInfo *signerinfo, CERTCertDB
  *
  * sinfo - signerInfo data for this signer
  *
- * Returns a pointer to allocated memory, which must be freed.
+ * Returns a pointer to allocated memory, which must be freed with PORT_Free.
  * A return value of NULL is an error.
  */
 extern char *
