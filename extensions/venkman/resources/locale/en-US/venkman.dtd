@@ -48,6 +48,16 @@
 <!ENTITY Cont.aKey "C">
 <!ENTITY StepIn.label "Step In">
 <!ENTITY StepIn.aKey "I">
+<!ENTITY TModeMenu.label "Exceptions">
+<!ENTITY TModeMenu.aKey "E">
+<!ENTITY TModeIgnore.label "Ignore">
+<!ENTITY TModeIgnore.aKey "I">
+<!ENTITY TModeTrace.label "Trace">
+<!ENTITY TModeTrace.aKey "T">
+<!ENTITY TModeBreak.label "Break">
+<!ENTITY TModeBreak.aKey "B">
+<!ENTITY TModeCycle.label "Cycle">
+<!ENTITY TModeCycle.aKey "C">
 
 <!ENTITY CallStack.header "Call Stack">
 <!ENTITY FunctionName.header "Function">
