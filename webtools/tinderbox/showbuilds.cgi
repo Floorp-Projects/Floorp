@@ -69,16 +69,20 @@ if ($form{'quickparse'}) {
     &do_quickparse;
     exit();
 }
-
 if ($form{'rdf'}) {
     print "Content-type: text/plain\n\n";
     &do_rdf;
     exit();
 }
-
-if($form{'flash'}) {
+if ($form{'flash'}) {
     print "Content-type: text/rdf\n\n";
     &do_flash;
+    exit();
+}
+if ($form{'panel'}) {
+    # Refresh the tinderbox sidebar panel every minute.
+    print "Content-type: text/html\nRefresh: 60\n\n<HTML>\n";
+    &do_panel;
     exit();
 }
 
@@ -94,9 +98,6 @@ if( $form{'tree'} eq '' ){
 else {
     if( $form{'express'} ) {
         &do_express;
-    }
-    elsif( $form{'panel'} ) {
-        &do_panel;
     }
     else {
         &load_data;
