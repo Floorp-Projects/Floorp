@@ -150,9 +150,11 @@ NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
       prefs->RegisterCallback("browser.display.screen_resolution", prefChanged,
                               (void *)this);
     }
-  }
 
-  SetDPI(prefVal);
+    SetDPI(prefVal);
+  } else {
+    SetDPI(mDpi); // to setup p2t and t2p
+  }
 
   sb = gtk_vscrollbar_new(NULL);
   gtk_widget_ref(sb);
