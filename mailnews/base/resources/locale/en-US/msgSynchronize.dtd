@@ -3,7 +3,7 @@
 <!ENTITY MsgSynchronize.label "Download and Sync Messages">
 <!ENTITY MsgSelect.label "Select Items for Offline Usage">
 <!ENTITY MsgSyncDesc.label "If you have already selected mail folders or newsgroups for offline use, you can download and/or sync them now. Otherwise, use the &quot;Select&quot; button to choose mail folders and newsgroups for offline use.">
-<!ENTITY MsgSyncDirections.label "Download and /or sync the following:">
+<!ENTITY MsgSyncDirections.label "Download and/or sync the following:">
 <!ENTITY syncTypeMail.label "Mail messages">
 <!ENTITY syncTypeNews.label "Newsgroup messages">
 <!ENTITY sendMessage.label "Send Unsent messages">

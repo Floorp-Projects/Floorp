@@ -21,6 +21,7 @@ Rights Reserved.
 
 Contributors:
     dianesun@netscape.com
+    Håkan Waara <hwaara@chello.se>
 
 -->
 
@@ -34,7 +35,7 @@ Contributors:
         title="&MsgSynchronize.label;"
         orient="vertical"
         class="dialog"
-        width="380" height="300"
+        width="380" height="295"
         onload="OnLoad();">
 
 <script src="chrome://global/content/strres.js"/>
@@ -46,23 +47,23 @@ Contributors:
     <text hidden="true" wsm_persist="true" id="server.type"/>
 
     <html class="desc">&MsgSyncDesc.label;</html>
-    <separator/>
-    <html class="desc">&MsgSyncDirections.label;</html>
+    <separator class="thin"/>
+    <text class="label" value="&MsgSyncDirections.label;"/>
 
     <vbox class="indent">
         <checkbox id="syncMail" hidable="true" hidefor="pop3" label="&syncTypeMail.label;"/>
         <checkbox id="syncNews" label="&syncTypeNews.label;"/>
     </vbox>
-
     <vbox>
         <checkbox id="sendMessage" label="&sendMessage.label;"/>
         <checkbox id="workOffline" label="&workOffline.label;"/>
     </vbox>
-    <separator/>
+    <separator class="thin"/>
     <hbox align="right">
         <button id="select" class="dialog" label="&selectButton.label;"  oncommand="OnSelect();"/>
     </hbox>
 
     <separator/>
-    <hbox id="okCancelButtonsRight"/>
+    <hbox id="okCancelButtonsRight" flex="1" autostretch="never"/>
+
 </window>
