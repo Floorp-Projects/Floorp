@@ -45,6 +45,7 @@
 #include "nsIDocument.h"
 #include "nsIHTMLContent.h"
 #include "nsIHTMLElementFactory.h"
+#include "nsINameSpace.h"
 #include "nsINameSpaceManager.h"
 #include "nsIRDFCompositeDataSource.h"
 #include "nsIRDFContainerUtils.h" 
@@ -59,6 +60,7 @@
 #include "nsITextContent.h"
 #include "nsITimer.h"
 #include "nsIURL.h"
+#include "nsIXMLContent.h"
 #include "nsIXULSortService.h"
 #include "nsLayoutCID.h"
 #include "nsRDFCID.h"
@@ -165,6 +167,9 @@ public:
                         nsIRDFResource* aChild,
                         nsIContent *aRule,
                         PRBool *isMatch);
+
+    nsresult
+    TagMatches(nsIContent* aElement, nsString& aTag, PRBool* aResult);
 
     PRBool
     IsIgnoreableAttribute(PRInt32 aNameSpaceID, nsIAtom* aAtom);
@@ -288,6 +293,7 @@ protected:
     static nsIAtom* kMenuPopupAtom;
     static nsIAtom* kNaturalOrderPosAtom;
     static nsIAtom* kOpenAtom;
+    static nsIAtom* kParentAtom;
     static nsIAtom* kPersistAtom;
     static nsIAtom* kPropertyAtom;
     static nsIAtom* kRefAtom;
@@ -333,6 +339,7 @@ nsIAtom* RDFGenericBuilderImpl::kMenuAtom;
 nsIAtom* RDFGenericBuilderImpl::kMenuPopupAtom;
 nsIAtom* RDFGenericBuilderImpl::kNaturalOrderPosAtom;
 nsIAtom* RDFGenericBuilderImpl::kOpenAtom;
+nsIAtom* RDFGenericBuilderImpl::kParentAtom;
 nsIAtom* RDFGenericBuilderImpl::kPersistAtom;
 nsIAtom* RDFGenericBuilderImpl::kPropertyAtom;
 nsIAtom* RDFGenericBuilderImpl::kRefAtom;
@@ -415,6 +422,7 @@ RDFGenericBuilderImpl::~RDFGenericBuilderImpl(void)
         NS_IF_RELEASE(kMenuPopupAtom);
         NS_IF_RELEASE(kNaturalOrderPosAtom);
         NS_IF_RELEASE(kOpenAtom);
+        NS_IF_RELEASE(kParentAtom);
         NS_IF_RELEASE(kPersistAtom);
         NS_IF_RELEASE(kPropertyAtom);
         NS_IF_RELEASE(kRefAtom);
@@ -479,6 +487,7 @@ RDFGenericBuilderImpl::Init()
         kMenuPopupAtom                  = NS_NewAtom("menupopup");
         kNaturalOrderPosAtom            = NS_NewAtom("pos");
         kOpenAtom                       = NS_NewAtom("open");
+        kParentAtom                     = NS_NewAtom("parent");
         kPersistAtom                    = NS_NewAtom("persist");
         kPropertyAtom                   = NS_NewAtom("property");
         kRefAtom                        = NS_NewAtom("ref");
@@ -1377,7 +1386,17 @@ RDFGenericBuilderImpl::IsTemplateRuleMatch(nsIContent* aElement,
         rv = aRule->GetAttribute(attrNameSpaceID, attr, value);
         if (NS_FAILED(rv)) return rv;
 
-		if ((attrNameSpaceID == kNameSpaceID_None) && (attr.get() == kIsContainerAtom)) {
+        if ((attrNameSpaceID == kNameSpaceID_None) && (attr.get() == kParentAtom)) {
+            PRBool match;
+            rv = TagMatches(aElement, value, &match);
+            if (NS_FAILED(rv)) return rv;
+
+            if (! match) {
+                *aIsMatch = PR_FALSE;
+                return NS_OK;
+            }
+        }
+		else if ((attrNameSpaceID == kNameSpaceID_None) && (attr.get() == kIsContainerAtom)) {
 			// check and see if aChild is a container
 			PRBool isContainer = IsContainer(aRule, aChild);
 			if (isContainer && (!value.Equals("true"))) {
@@ -1425,6 +1444,86 @@ RDFGenericBuilderImpl::IsTemplateRuleMatch(nsIContent* aElement,
     *aIsMatch = PR_TRUE;
 	return NS_OK;
 }
+
+
+nsresult
+RDFGenericBuilderImpl::TagMatches(nsIContent* aElement, nsString& aTag, PRBool* aMatch)
+{
+    // See if the tag string 'aTag' matches the tag of the
+    // element. Does the necessary magic to make sure namespaces are
+    // equivalent. Note that this may mangle 'aTag' if it needs to
+    // strip out the namespace prefix.
+    nsresult rv;
+
+    // Pessimist!
+    *aMatch = PR_FALSE;
+
+    // Deal with namespaces
+    PRInt32 indx;
+    if ((indx = aTag.FindChar(':')) != -1) {
+        nsAutoString nsprefixstr;
+        aTag.Left(nsprefixstr, indx - 1);
+
+        nsCOMPtr<nsIAtom> nsprefix = dont_AddRef(NS_NewAtom(nsprefixstr));
+        if (! nsprefix)
+            return NS_ERROR_OUT_OF_MEMORY;
+
+        // Walk up from aElement until we find an XML content node so
+        // we can figure out what namespace this prefix is supposed to
+        // represent.
+        nsCOMPtr<nsIContent> element = dont_QueryInterface(aElement);
+        while (element) {
+            nsCOMPtr<nsIXMLContent> xml = do_QueryInterface(element);
+            if (xml) {
+                nsCOMPtr<nsINameSpace> ns;
+                rv = xml->GetContainingNameSpace(*getter_AddRefs(ns));
+                if (NS_FAILED(rv)) return PR_FALSE;
+
+                PRInt32 targetNameSpaceID;
+                rv = ns->FindNameSpaceID(nsprefix, targetNameSpaceID);
+                if (NS_FAILED(rv)) {
+                    // Not a match.
+                    return NS_OK;
+                }
+
+                PRInt32 elementNameSpaceID;
+                rv = aElement->GetNameSpaceID(elementNameSpaceID);
+                if (NS_FAILED(rv)) return rv;
+
+                if (elementNameSpaceID != targetNameSpaceID) {
+                    // Not a match.
+                    return NS_OK;
+                }
+
+                // Ok, it _is_ a match. Now we have to compare the tags...
+                break;
+            }
+
+            nsCOMPtr<nsIContent> parent;
+            rv = element->GetParent(*getter_AddRefs(parent));
+            if (NS_FAILED(rv)) return rv;
+
+            element = parent;
+        }
+
+        // strip namespace from tag
+        aTag.Cut(0, indx);
+    }
+
+    nsCOMPtr<nsIAtom> tag;
+    rv = aElement->GetTag(*getter_AddRefs(tag));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get element tag");
+    if (NS_FAILED(rv)) return rv;
+
+    nsAutoString tagStr;
+    rv = tag->ToString(tagStr);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to convert tag atom to string");
+    if (NS_FAILED(rv)) return rv;
+
+    *aMatch = tagStr.Equals(aTag);
+    return NS_OK;
+}
+
 
 
 nsresult
@@ -2746,3 +2845,5 @@ RDFGenericBuilderImpl::ForceTreeReflow(nsITimer* aTimer, void* aClosure)
     builder->mTimer = nsnull;
     NS_RELEASE(builder);
 }
+
+
