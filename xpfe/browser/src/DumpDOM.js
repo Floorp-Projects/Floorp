@@ -57,14 +57,10 @@ function DumpNodeAndChildren(node, prefix)
 		}
 	}
 	// children of nodes (other than frames)
-	else
+	else if ( node.childNodes )
 	{
-		var child = 0;
-		while ( node.childNodes && child < node.childNodes.length )
-		{
+		for ( var child = 0; child < node.childNodes.length; child++ )
 			DumpNodeAndChildren(node.childNodes[child], prefix + "  ");
-			child++;
-		} 
 	} 
 }
 
