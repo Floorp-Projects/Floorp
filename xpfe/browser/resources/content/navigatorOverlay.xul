@@ -194,8 +194,8 @@ Contributor(s): ______________________________________. -->
     </menupopup>
   </menu>
 
-  <menu accesskey="v" value="&viewMenu.label;">
-    <menupopup>
+  <menu id="menu_View" accesskey="v" value="&viewMenu.label;">
+    <menupopup id="menu_View_Popup">
     	 <menu value="&toolbarsCmd.label;"  >
 		  	<menupopup> 
 		  		<menuitem value="&navbarCmd.label;" observes="cmd_viewnavbar"  />
@@ -204,9 +204,6 @@ Contributor(s): ______________________________________. -->
 		  	</menupopup>
 		  </menu>
    
-      <!-- shaver asks: shouldn't this be in sidebarOverlay? -->
-      <menuitem id="menu_sidebar" type="checkbox" value="&sidebarCmd.label;"
-                oncommand="sidebarShowHide();"/>
       <menuseparator />
       <menuitem value="&enlargeTextSizeCmd.label;" 
         oncommand="BrowserReload();"/>

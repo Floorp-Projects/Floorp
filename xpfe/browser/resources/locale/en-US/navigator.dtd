@@ -57,8 +57,6 @@
 <!ENTITY navbarCmd.label "Navigation ToolBar">
 <!ENTITY personalbarCmd.label "Personal Toolbar">
 <!ENTITY taskbarCmd.label "Taskbar">
-<!-- LOCALIZATION NOTE (sidebarCmd.label): DONT_TRANSLATE -->
-<!ENTITY sidebarCmd.label "Sidebar">
 <!ENTITY enlargeTextSizeCmd.label "Enlarge Text Size">
 <!ENTITY reduceTextSizeCmd.label "Reduce Text Size">
 <!ENTITY useStyleSheetMenu.label "Use Stylesheet">

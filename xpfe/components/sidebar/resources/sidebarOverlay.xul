@@ -73,6 +73,12 @@
     </box>
   </splitter>
 
+  <!-- View->Sidebar toggle -->
+  <menupopup id="menu_View_Popup">
+      <menuitem id="menu_sidebar" type="checkbox" value="&sidebarCmd.label;"
+                oncommand="sidebarShowHide();" position="2"/>
+  </menupopup>
+
   <!-- Scripts go last, because they peek at state to tweak menus -->
   <html:script language="JavaScript"
                src="chrome://sidebar/content/sidebarOverlay.js"/>
