@@ -1,7 +1,7 @@
 TemplateToolkit
 1
 
-HTTP/1.1 [% IF response %][% response %][% ELSE %]200 OK[% END %]
+Status: [% IF response %][% response %][% ELSE %]200 OK[% END %]
 [% IF headers != '' %][% headers %][% END -%]
 Content-Type: text/html; charset=ISO-8859-1
 
