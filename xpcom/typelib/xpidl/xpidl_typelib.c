@@ -960,7 +960,7 @@ fill_pd_from_param(TreeState *state, XPTParamDescriptor *pd, IDL_tree tree)
 
     if (IDL_tree_property_get(IDL_PARAM_DCL(tree).simple_declarator,
                               "shared")) {
-        if (flags == XPT_PD_IN) {
+        if (flags & XPT_PD_IN) {
             IDL_tree_error(tree, "can't have [shared] with in%s param "
                            "(only out)\n",
                            flags & XPT_PD_OUT ? "out" : "");
