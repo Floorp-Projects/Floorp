@@ -31,7 +31,7 @@ static ModeData modes[] = {
     {"typelib", "Generate XPConnect typelib",  "xpt",  xpidl_typelib_dispatch},
     {"doc",     "Generate HTML documentation", "html", xpidl_doc_dispatch},
     {"java",    "Generate Java interface",     "java", xpidl_java_dispatch},
-    {0}
+    {0,         0,                             0,      0}
 };
 
 static ModeData *
@@ -70,42 +70,6 @@ xpidl_usage(int argc, char *argv[])
     }
 }
 
-/* XXXbe static */ char OOM[] = "ERROR: out of memory\n";
-
-void *
-xpidl_malloc(size_t nbytes)
-{
-    void *p = malloc(nbytes);
-    if (!p) {
-        fputs(OOM, stderr);
-        exit(1);
-    }
-    return p;
-}
-
-#ifdef XP_MAC
-static char *strdup(const char *c)
-{
-	char	*newStr = malloc(strlen(c) + 1);
-	if (newStr)
-	{
-		strcpy(newStr, c);
-	}
-	return newStr;
-}
-#endif
-
-char *
-xpidl_strdup(const char *s)
-{
-    char *ns = strdup(s);
-    if (!ns) {
-        fputs(OOM, stderr);
-        exit(1);
-    }
-    return ns;
-}
-
 #if defined(XP_MAC) && defined(XPIDL_PLUGIN)
 #define main xpidl_main
 int xpidl_main(int argc, char *argv[]);
@@ -113,7 +77,7 @@ int xpidl_main(int argc, char *argv[]);
 
 int main(int argc, char *argv[])
 {
-    int i, idlfiles;
+    int i;
     IncludePathEntry *inc, *inc_head, **inc_tail;
     char *file_basename = NULL;
     ModeData *mode = NULL;
@@ -212,12 +176,16 @@ int main(int argc, char *argv[])
         xpidl_usage(argc, argv);
         return 1;
     }
+    if (argc != i + 1) {
+        fprintf(stderr, "ERROR: extra arguments after input file\n");
+    }
 
-    for (idlfiles = 0; i < argc; i++)
-        idlfiles += xpidl_process_idl(argv[i], inc_head, file_basename, mode);
+    /*
+     * Don't try to process multiple files, given that we don't handle -o
+     * multiply.
+     */
+    if (xpidl_process_idl(argv[i], inc_head, file_basename, mode))
+        return 0;
 
-    if (!idlfiles)
-        return 1;
-
-    return 0;
+    return 1;
 }

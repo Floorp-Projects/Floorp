@@ -76,24 +76,28 @@ typedef struct TreeState TreeState;
  */
 typedef gboolean (*nodeHandler)(TreeState *);
 
-/* Function that produces a table of nodeHandlers for a given mode */
-typedef nodeHandler *(*nodeHandlerFactory)();
-
-extern nodeHandler *xpidl_header_dispatch(void);
-extern nodeHandler *xpidl_typelib_dispatch(void);
-extern nodeHandler *xpidl_doc_dispatch(void);
-extern nodeHandler *xpidl_java_dispatch(void);
-
 /*
- * nodeHandler that reports an error.
+ * Struct containing functions to define the behavior of a given output mode.
  */
-gboolean node_is_error(TreeState *state);
+typedef struct backend {
+    nodeHandler *dispatch_table; /* nodeHandlers table, indexed by node type. */
+    nodeHandler emit_prolog;     /* called at beginning of output generation. */
+    nodeHandler emit_epilog;     /* called at end. */
+} backend;
+
+/* Function that produces a struct of output-generation functions */
+typedef backend *(*backendFactory)();
+ 
+extern backend *xpidl_header_dispatch(void);
+extern backend *xpidl_typelib_dispatch(void);
+extern backend *xpidl_doc_dispatch(void);
+extern backend *xpidl_java_dispatch(void);
 
 typedef struct ModeData {
     char               *mode;
     char               *modeInfo;
     char               *suffix;
-    nodeHandlerFactory factory;
+    backendFactory     factory;
 } ModeData;
 
 typedef struct IncludePathEntry {
@@ -107,16 +111,14 @@ struct TreeState {
     char             *basename;
     IDL_ns           ns;
     IDL_tree         tree;
-    GHashTable       *includes;
-    IncludePathEntry *include_path;
+    GSList           *base_includes;
     nodeHandler      *dispatch;
     void             *priv;     /* mode-private data */
 };
 
 /*
  * Process an IDL file, generating InterfaceInfo, documentation and headers as
- * appropriate.  Use file_basename instead of basename to avoid conflict
- * warnings with basename from some versions of string.h.
+ * appropriate.
  */
 int
 xpidl_process_idl(char *filename, IncludePathEntry *include_path,
@@ -167,7 +169,7 @@ xpidl_write_comment(TreeState *state, int indent);
  * UUID_LENGTH bytes.
  */
 gboolean
-xpidl_sprint_iid(struct nsID *iid, char iidbuf[]);
+xpidl_sprint_iid(nsID *iid, char iidbuf[]);
 
 /*
  * Parse a uuid string into an nsID struct.  We cannot link against libxpcom,

@@ -339,139 +339,121 @@ typelib_list(TreeState *state)
 }
 
 static gboolean
-pass_1(TreeState *state)
+typelib_prolog(TreeState *state)
 {
-    gboolean ok = FALSE;
+    state->priv = calloc(1, sizeof(struct priv_data));
+    if (!state->priv)
+        return FALSE;
+    IFACES(state) = 0;
+    IFACE_MAP(state) = g_hash_table_new(g_str_hash, g_str_equal);
+    if (!IFACE_MAP(state)) {
+        /* XXX report error */
+        free(state->priv);
+        return FALSE;
+    }
+    /* find all interfaces, top-level and referenced by others */
+    IDL_tree_walk_in_order(state->tree, find_interfaces, state);
+    HEADER(state) = XPT_NewHeader(IFACES(state));
 
-    if (state->tree) {
-        state->priv = calloc(1, sizeof(struct priv_data));
-        if (!state->priv)
-            return FALSE;
-        IFACES(state) = 0;
-        IFACE_MAP(state) = g_hash_table_new(g_str_hash, g_str_equal);
-        if (!IFACE_MAP(state)) {
-            /* XXX report error */
-            free(state->priv);
-            return FALSE;
+    /* fill IDEs from hash table */
+    IFACES(state) = 0;
+    g_hash_table_foreach_remove(IFACE_MAP(state), fill_ide_table, state);
+
+    /* if any are left then we must have failed in fill_ide_table */
+    if (g_hash_table_size(IFACE_MAP(state)))
+        return FALSE;
+
+    /* sort the IDEs by IID order and store indices in the interface map */
+    sort_ide_block(state);
+
+    return TRUE;
+}
+
+static gboolean
+typelib_epilog(TreeState *state)
+{
+    XPTState *xstate = XPT_NewXDRState(XPT_ENCODE, NULL, 0);
+    XPTCursor curs, *cursor = &curs;
+    PRUint32 i, len, header_sz;
+    char *data;
+
+    /* Write any annotations */
+    if (emit_typelib_annotations) {
+        PRUint32 annotation_len, written_so_far;
+        char *annotate_val, *timestr;
+        time_t now;
+        static char *annotation_format = 
+            "Created from %s.idl\nCreation date: %sInterfaces:";
+
+        /* fill in the annotations, listing resolved interfaces in order */
+
+        (void)time(&now);
+        timestr = ctime(&now);
+
+        /* Avoid dependence on nspr; no PR_smprintf and friends. */
+
+        /* How large should the annotation string be? */
+        annotation_len = strlen(annotation_format) + strlen(state->basename) +
+            strlen(timestr);
+        for (i = 0; i < HEADER(state)->num_interfaces; i++) {
+            XPTInterfaceDirectoryEntry *ide;
+            ide = &HEADER(state)->interface_directory[i];
+            if (ide->interface_descriptor) {
+                annotation_len += strlen(ide->name) + 1;
+            }
         }
 
-        /* find all interfaces, top-level and referenced by others */
-#ifdef DEBUG_shaver_ifaces
-        fprintf(stderr, "finding interfaces\n");
-#endif
-        IDL_tree_walk_in_order(state->tree, find_interfaces, state);
-#ifdef DEBUG_shaver_faces
-        fprintf(stderr, "found %d interfaces\n", IFACES(state));
-#endif
-        HEADER(state) = XPT_NewHeader(IFACES(state));
+        annotate_val = (char *) malloc(annotation_len);
+        written_so_far = sprintf(annotate_val, annotation_format,
+                                 state->basename, timestr);
+        
+        for (i = 0; i < HEADER(state)->num_interfaces; i++) {
+            XPTInterfaceDirectoryEntry *ide;
+            ide = &HEADER(state)->interface_directory[i];
+            if (ide->interface_descriptor) {
+                written_so_far += sprintf(annotate_val + written_so_far, " %s",
+                                          ide->name);
+            }
+        }
 
-
-        /* fill IDEs from hash table */
-        IFACES(state) = 0;
-#ifdef DEBUG_shaver_ifaces
-        fprintf(stderr, "filling IDE table\n");
-#endif
-        g_hash_table_foreach_remove(IFACE_MAP(state), fill_ide_table, state);
-
-        /* if any are left then we must have failed in fill_ide_table */
-        if (g_hash_table_size(IFACE_MAP(state)))
-            return FALSE;
-
-        /* sort the IDEs by IID order and store indices in the interface map */
-        sort_ide_block(state);
-
-        ok = TRUE;
+        HEADER(state)->annotations =
+            XPT_NewAnnotation(XPT_ANN_LAST | XPT_ANN_PRIVATE,
+                              XPT_NewStringZ("xpidl 0.99.9"),
+                              XPT_NewStringZ(annotate_val));
+        free(annotate_val);
     } else {
-        /* write the typelib */
-        XPTState *xstate = XPT_NewXDRState(XPT_ENCODE, NULL, 0);
-        XPTCursor curs, *cursor = &curs;
-        PRUint32 i, len, header_sz;
-        char *data;
-
-        if(emit_typelib_annotations) {
-            PRUint32 annotation_len, written_so_far;
-            char *annotate_val, *timestr;
-            time_t now;
-            static char *annotation_format = 
-                "Created from %s.idl\nCreation date: %sInterfaces:";
-
-            /* fill in the annotations, listing resolved interfaces in order */
-
-            (void)time(&now);
-            timestr = ctime(&now);
-
-            /* Avoid dependence on nspr; no PR_smprintf and friends. */
-
-            /* How large should the annotation string be? */
-            annotation_len = strlen(annotation_format) + 
-                             strlen(state->basename) +
-                             strlen(timestr);
-            for (i = 0; i < HEADER(state)->num_interfaces; i++) {
-                XPTInterfaceDirectoryEntry *ide;
-                ide = &HEADER(state)->interface_directory[i];
-                if (ide->interface_descriptor) {
-                    annotation_len += strlen(ide->name) + 1;
-                }
-            }
-
-            annotate_val = (char *) malloc(annotation_len);
-            written_so_far = sprintf(annotate_val, annotation_format,
-                                     state->basename, timestr);
-
-            for (i = 0; i < HEADER(state)->num_interfaces; i++) {
-                XPTInterfaceDirectoryEntry *ide;
-                ide = &HEADER(state)->interface_directory[i];
-                if (ide->interface_descriptor) {
-                    written_so_far += sprintf(annotate_val + written_so_far, 
-                                              " %s", ide->name);
-                }
-            }
-
-            HEADER(state)->annotations =
-                XPT_NewAnnotation(XPT_ANN_LAST | XPT_ANN_PRIVATE,
-                                  XPT_NewStringZ("xpidl 0.99.9"),
-                                  XPT_NewStringZ(annotate_val));
-            free(annotate_val);
-        } else {
-            HEADER(state)->annotations =
-                XPT_NewAnnotation(XPT_ANN_LAST, NULL, NULL);
-        }
-
-        if (!HEADER(state)->annotations) {
-            /* XXX report out of memory error */
-            return FALSE;
-        }
-
-#ifdef DEBUG_shaver_misc
-        fprintf(stderr, "writing the typelib\n");
-#endif
-
-        header_sz = XPT_SizeOfHeaderBlock(HEADER(state));
-
-        if (!xstate ||
-            !XPT_MakeCursor(xstate, XPT_HEADER, header_sz, cursor))
-            goto destroy_header;
-
-        if (!XPT_DoHeader(cursor, &HEADER(state)))
-            goto destroy;
-
-        XPT_GetXDRData(xstate, XPT_HEADER, &data, &len);
-        fwrite(data, len, 1, state->file);
-        XPT_GetXDRData(xstate, XPT_DATA, &data, &len);
-        fwrite(data, len, 1, state->file);
-
-        ok = TRUE;
-
-    destroy:
-        XPT_DestroyXDRState(xstate);
-    destroy_header:
-        /* XXX XPT_DestroyHeader(HEADER(state)) */
-
-        ;   /* msvc would like a statement here */
+        HEADER(state)->annotations =
+            XPT_NewAnnotation(XPT_ANN_LAST, NULL, NULL);
     }
 
-    return ok;
+    if (!HEADER(state)->annotations) {
+        /* XXX report out of memory error */
+        return FALSE;
+    }
 
+    /* Write the typelib */
+    header_sz = XPT_SizeOfHeaderBlock(HEADER(state));
+
+    if (!xstate ||
+        !XPT_MakeCursor(xstate, XPT_HEADER, header_sz, cursor))
+        goto destroy_header;
+
+    if (!XPT_DoHeader(cursor, &HEADER(state)))
+        goto destroy;
+
+    XPT_GetXDRData(xstate, XPT_HEADER, &data, &len);
+    fwrite(data, len, 1, state->file);
+    XPT_GetXDRData(xstate, XPT_DATA, &data, &len);
+    fwrite(data, len, 1, state->file);
+
+ destroy:
+    XPT_DestroyXDRState(xstate);
+ destroy_header:
+    /* XXX XPT_DestroyHeader(HEADER(state)) */
+
+    /* XXX should destroy priv_data here */
+
+    return TRUE;
 }
 
 static XPTInterfaceDirectoryEntry *
@@ -1171,8 +1153,10 @@ typelib_const_dcl(TreeState *state)
         }
         NEXT_CONST(state)++;
     } else {
-        XPIDL_WARNING((state->tree, IDL_WARNING1,
-            "const decl \'%s\' was not of type short or long, ignored", name));
+        IDL_tree_error(state->tree,
+                       "const declaration \'%s\' must be of type short or long",
+                       name);
+        return FALSE;
     }
     return TRUE;
 
@@ -1278,24 +1262,31 @@ typelib_enum(TreeState *state)
     return TRUE;
 }
 
-nodeHandler *
+backend *
 xpidl_typelib_dispatch(void)
 {
-  static nodeHandler table[IDLN_LAST];
-  static gboolean initialized = FALSE;
+    static backend result;
+    static nodeHandler table[IDLN_LAST];
+    static gboolean initialized = FALSE;
 
-  if (!initialized) {
-      /* Initialize non-NULL elements */
-      table[IDLN_NONE] = pass_1;
-      table[IDLN_LIST] = typelib_list;
-      table[IDLN_ATTR_DCL] = typelib_attr_dcl;
-      table[IDLN_OP_DCL] = typelib_op_dcl;
-      table[IDLN_INTERFACE] = typelib_interface;
-      table[IDLN_CONST_DCL] = typelib_const_dcl;
-      table[IDLN_TYPE_ENUM] = typelib_enum;
-      table[IDLN_NATIVE] = check_native;
-      initialized = TRUE;
-  }
+    result.emit_prolog = typelib_prolog;
+    result.emit_epilog = typelib_epilog;
 
-  return table;
+    if (!initialized) {
+        /* Initialize non-NULL elements */
+        table[IDLN_LIST] = typelib_list;
+        table[IDLN_ATTR_DCL] = typelib_attr_dcl;
+        table[IDLN_OP_DCL] = typelib_op_dcl;
+        table[IDLN_INTERFACE] = typelib_interface;
+        table[IDLN_CONST_DCL] = typelib_const_dcl;
+        table[IDLN_TYPE_ENUM] = typelib_enum;
+        table[IDLN_NATIVE] = check_native;
+        initialized = TRUE;
+    }
+
+    result.dispatch_table = table;
+    return &result;
 }
+
+
+
