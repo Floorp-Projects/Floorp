@@ -24,11 +24,28 @@ my $t = $total * $percent / 100;
 foreach (@lines) {
     /^([0-9\.]*):/;
     $cur = $1;
-    # if significant time elapsed print it
-    $diff = $cur - $prev;
-    if ($diff > $t && (!$ignoreDllLoads || ! /PR_LoadLibrary/)) {
-        printf "%4.2f%% %5.3f\n", $diff/$total*100, $diff;
-    }
+    printdiff($cur, $prev, $_);
     print "\t$_";
     $prev = $cur;
+}
+
+
+sub printdiff() {
+    my $cur = shift;
+    my $prev = shift;
+    my $line = shift;
+    my $diff = $cur - $prev;
+
+    # Make sure we have a considerable difference
+    if ($diff < $t) {
+        return 0;
+    }
+
+    # If we are ignoring dlls and this is a dll line, return
+    if ($ignoreDllLoads && $line =~ /PR_LoadLibrary/) {
+        return;
+    }
+
+    # if significant time elapsed print it
+    printf "%4.2f%% %5.3f\n", $diff/$total*100, $diff;
 }
