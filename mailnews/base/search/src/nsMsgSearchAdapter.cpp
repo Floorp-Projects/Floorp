@@ -145,6 +145,13 @@ nsMsgSearchAdapter::TryToConvertCharset(const PRUnichar *sourceStr,
 
 	if (sourceStr == nsnull) 
 		return nsnull;
+
+  // Convert from unicode to a destination charset.
+  if (NS_FAILED(ConvertFromUnicode(destCharset, sourceStr, &result))) {
+    PR_FREEIF(result);
+    result = nsnull;
+  }
+
 #ifdef DO_I18N  // I have no idea what we should do here.
 	if ((src_csid != dest_csid) || (useMime2))
 	{
@@ -201,9 +208,11 @@ nsMsgSearchAdapter::GetImapCharsetParam(const PRUnichar *destCharset)
 {
 	char *result = nsnull;
 
+  nsCAutoString charset;
+  charset.AssignWithConversion(destCharset);
 	// Specify a character set unless we happen to be US-ASCII.
   if (nsCRT::strcmp(destCharset, "us-ascii"))
-	    result = PR_smprintf("%s%s", nsMsgSearchAdapter::m_kImapCharset, destCharset);
+	    result = PR_smprintf("%s%s", nsMsgSearchAdapter::m_kImapCharset, (const char *) charset);
 
 	return result;
 }

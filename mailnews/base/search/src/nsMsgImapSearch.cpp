@@ -149,7 +149,11 @@ nsresult nsMsgSearchOnlineMail::Encode (nsCString& pEncoding,
 	// Get the optional CHARSET parameter, in case we need it.
   char *csname = GetImapCharsetParam(asciiOnly ? usAsciiCharSet.GetUnicode() : destCharset);
 
-  nsresult err = nsMsgSearchAdapter::EncodeImap (getter_Copies(imapTerms), searchTerms, asciiOnly ?  usAsciiCharSet.GetUnicode(): destCharset, PR_FALSE);
+  // We do not need "srcCharset" since the search term in always unicode.
+  // I just pass destCharset for both src and dest charset instead of removing srcCharst from the arguemnt.
+  nsresult err = nsMsgSearchAdapter::EncodeImap (getter_Copies(imapTerms), searchTerms, 
+                                                 asciiOnly ?  usAsciiCharSet.GetUnicode(): destCharset, 
+                                                 asciiOnly ?  usAsciiCharSet.GetUnicode(): destCharset, PR_FALSE);
   if (NS_SUCCEEDED(err))
   {
     pEncoding.Append("SEARCH");
