@@ -24,6 +24,9 @@
 #include "nsIFtpEventSink.h"
 #include "nsISocketTransportService.h"
 #include "nsIServiceManager.h"
+#include "nsIByteBufferInputStream.h"
+
+#include "prprf.h" // PR_sscanf
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
@@ -38,12 +41,17 @@ static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 
 nsFtpProtocolConnection::nsFtpProtocolConnection()
     : mUrl(nsnull), mEventSink(nsnull), mPasv(TRUE),
-    mServerType(FTP_GENERIC_TYPE), mConnected(FALSE) {
+    mServerType(FTP_GENERIC_TYPE), mConnected(FALSE),
+    mResponseCode(0) {
+
+    mEventQueue = PL_CreateEventQueue("FTP Event Queue", PR_CurrentThread());
 }
 
 nsFtpProtocolConnection::~nsFtpProtocolConnection() {
     NS_IF_RELEASE(mUrl);
     NS_IF_RELEASE(mEventSink);
+    NS_IF_RELEASE(mCPipe);
+    NS_IF_RELEASE(mDPipe);
 }
 
 NS_IMPL_ADDREF(nsFtpProtocolConnection);
@@ -69,20 +77,18 @@ nsFtpProtocolConnection::QueryInterface(const nsIID& aIID, void** aInstancePtr) 
 }
 
 nsresult 
-nsFtpProtocolConnection::Init(nsIUrl* url, nsISupports* eventSink,
-                              PLEventQueue* eventQueue)
-{
+nsFtpProtocolConnection::Init(nsIUrl* aUrl, nsISupports* aEventSink, PLEventQueue* aEventQueue) {
     nsresult rv;
 
     if (mConnected)
         return NS_ERROR_NOT_IMPLEMENTED;
 
-    mUrl = url;
+    mUrl = aUrl;
     NS_ADDREF(mUrl);
 
-    rv = eventSink->QueryInterface(nsIFtpEventSink::GetIID(), (void**)&mEventSink);
+    rv = aEventSink->QueryInterface(nsIFtpEventSink::GetIID(), (void**)&mEventSink);
 
-    mEventQueue = eventQueue;
+    mEventQueue = aEventQueue;
 
     return rv;
 }
@@ -120,17 +126,22 @@ nsFtpProtocolConnection::Open(void) {
     if(NS_FAILED(rv)) return rv;
 
     // Create the command channel transport
+    const char *host;
+    const PRInt32 port = 0;
+    rv = mUrl->GetHost(&host);
+    if (NS_FAILED(rv)) return rv;
+    rv = mUrl->GetPort(port);
+	if (NS_FAILED(rv)) return rv;
+    rv = sts->CreateTransport(host, port, &mCPipe); // the command channel
+    if (NS_FAILED(rv)) return rv;
 
-    // const char *host;
-    // const PRInt32 port;
-    // rv = url->GetHost(&host);
-    // if (NS_FAILED(rv)) return rv;
-    // port = url->GetPort();
-    // nsITransport *cPipe; // the command channel
-    // rv = sts->CreateTransport(host, port, *cPipe);
-    // if(NS_FAILED(rv)) return rv;
+    // XXX the underlying PR_Connect() has not occured, but we
+    // XXX don't know when the transport does that so, we're going to
+    // XXX consider ourselves conencted.
+	mConnected = TRUE;
+	mState = FTP_S_USER;
 
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -186,6 +197,64 @@ NS_IMETHODIMP
 nsFtpProtocolConnection::OnStopBinding(nsISupports* context,
                                         nsresult aStatus,
                                         nsIString* aMsg) {
+    nsresult rv;
+    char *buffer = nsnull;                          // the buffer to be sent to the server
+    nsIByteBufferInputStream* stream = nsnull;      // stream to be filled, with buffer, then written to the server
+    PRUint32 bytesWritten = 0;
+
+    // each hunk of data that comes in is evaluated, appropriate action 
+    // is taken and the state is incremented.
+    switch(mState) {
+        case FTP_CONNECT:
+
+        case FTP_S_USER:
+            rv = NS_NewByteBufferInputStream(&stream);
+            if (NS_FAILED(rv)) return rv;
+
+            buffer = "USER anonymous";
+            stream->Fill(buffer, strlen(buffer), &bytesWritten);
+
+            // Send off the command
+            mCPipe->AsyncWrite(stream, nsnull, mEventQueue, NS_STATIC_CAST(nsIStreamObserver*, this));
+            mState = FTP_R_USER;
+            break;
+
+        case FTP_R_USER:
+            // start the async read.
+            mCPipe->AsyncRead(nsnull, mEventQueue, NS_STATIC_CAST(nsIStreamListener*, this));
+            break;
+
+        case FTP_S_PASV:
+            if (!mPassword) {
+                // XXX we need to prompt the user to enter a password.
+
+                // sendEventToUIThreadToPostADialog(&mPassword);
+            }
+            rv = NS_NewByteBufferInputStream(&stream);
+            if (NS_FAILED(rv)) return rv;
+
+            buffer = "PASS guest\r\n";
+            // PR_smprintf(buffer, "PASS %.256s\r\n", mPassword);
+            stream->Fill(buffer, strlen(buffer), &bytesWritten);
+            
+            // send off the command
+            mCPipe->AsyncWrite(stream, nsnull, mEventQueue, NS_STATIC_CAST(nsIStreamListener*, this));
+            mState = FTP_R_PASV;
+            break;
+
+        case FTP_R_PASV:
+            // start the async read
+            mCPipe->AsyncRead(nsnull, mEventQueue, NS_STATIC_CAST(nsIStreamListener*, this));
+            break;
+
+        case FTP_S_PORT:
+        case FTP_R_PORT:
+        case FTP_COMPLETE:
+        default:
+            ;
+    }    
+
+
     // up call OnStopBinding
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -193,24 +262,54 @@ nsFtpProtocolConnection::OnStopBinding(nsISupports* context,
 ////////////////////////////////////////////////////////////////////////////////
 // nsIStreamListener methods:
 
-// state machine
+// this is the command channel's OnDataAvailable(). It's job is to processes AsyncReads.
+// It absorbs the data from the stream, parses it, and passes the data onto the appropriate
+// routine/logic for handling.
 NS_IMETHODIMP
 nsFtpProtocolConnection::OnDataAvailable(nsISupports* context,
                                           nsIInputStream *aIStream, 
                                           PRUint32 aLength) {
-    // each hunk of data that comes in is evaluated, appropriate action 
-    // is taken and the state is incremented.
+    nsresult rv;
+
+    // we've got some data. suck it out of the inputSteam.
+    char *buffer = new char[aLength+1];
+    // XXX maybe use an nsString
+    PRUint32 read = 0;
+    rv = aIStream->Read(buffer, aLength, &read);
+    if (NS_FAILED(rv)) return rv;
+
+    PR_sscanf(buffer, "%d", &mResponseCode);
+
+    // these are states in which data is coming back to us. read states.
+    // This switch is a state incrementor using the server response to
+    // determine what the next state shall be.
     switch(mState) {
-        case FTP_CONNECT:
-        case FTP_S_PASV:
+        case FTP_R_USER:
+            if (mResponseCode == 3) {
+                // send off the password
+                mState = FTP_S_PASV;
+                OnStopBinding(nsnull, rv, nsnull);
+            } else if (mResponseCode == 2) {
+                // no password required, we're already logged in
+            }
+            break;
+
         case FTP_R_PASV:
-        case FTP_S_PORT:
+            if (mResponseCode == 3) {
+                // send account info
+                mState = FTP_S_ACCT;
+            } else if (mResponseCode == 2) {
+                // logged in
+                // XXX next state?
+            }
+            OnStopBinding(nsnull, rv, nsnull);
         case FTP_R_PORT:
         case FTP_COMPLETE:
         default:
             ;
     }
 
-    return NS_ERROR_NOT_IMPLEMENTED;
+    delete [] buffer;
+    return NS_OK;
 }
 ////////////////////////////////////////////////////////////////////////////////
