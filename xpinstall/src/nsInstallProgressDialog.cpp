@@ -161,7 +161,7 @@ nsInstallProgressDialog::Open(nsIDialogParamBlock* ioParamBlock)
                                             "sss%ip%ip",
                                             "chrome://communicator/content/xpinstall/xpistatus.xul",
                                             "_blank",
-                                            "chrome,centered,titlebar,resizeable",
+                                            "chrome,centered,titlebar,resizable",
                                             (const nsIID*)&NS_GET_IID(nsIDialogParamBlock),
                                             (nsISupports*)ioParamBlock,
                                             (const nsIID*)&NS_GET_IID(nsPIXPIManagerCallbacks),
@@ -203,19 +203,24 @@ nsInstallProgressDialog::SetHeading(const PRUnichar * aHeading)
 NS_IMETHODIMP
 nsInstallProgressDialog::SetActionText(const PRUnichar * aActionText)
 {
-    const PRInt32 maxChars = 50;
+  nsresult rv = NS_OK;  
+  const PRInt32 maxChars = 50;
 
     nsString theMessage(aActionText);
     PRInt32 len = theMessage.Length();
-    if (len > maxChars)
+    if (len > 0)  // don't write message unless there's something to write
     {
-        PRInt32 offset = (len/2) - ((len - maxChars)/2);
-        PRInt32 count  = (len - maxChars);
-        theMessage.Cut(offset, count);  
-        theMessage.Insert(NS_ConvertASCIItoUCS2("..."), offset);
+        if (len > maxChars)
+        {
+            PRInt32 offset = (len/2) - ((len - maxChars)/2);
+            PRInt32 count  = (len - maxChars);
+            theMessage.Cut(offset, count);  
+            theMessage.Insert(NS_ConvertASCIItoUCS2("..."), offset);
+        }
+        rv = setDlgAttribute( "dialog.currentAction", "value", theMessage );
     }
 
-    return setDlgAttribute( "dialog.currentAction", "value", theMessage );
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -223,21 +228,8 @@ nsInstallProgressDialog::SetProgress(PRInt32 aValue, PRInt32 aMax, char mode)
 {
     char buf[16];
     static char modeFlag = 'n';
-    nsresult rv;
-    static PRInt32 previousMax;
+    nsresult rv = NS_OK;
 
-    //First check to see if the max value changed so we don't
-    //have to send a max value across the proxy every time.
-    if ( aMax != previousMax)
-    {
-        previousMax = aMax;
-
-        PR_snprintf( buf, sizeof buf, "%lu", aMax );
-        rv = setDlgAttribute( "dialog.progress", "max", NS_ConvertASCIItoUCS2(buf) );
-    }
-    
-    //I use this modeFlag business so I don't have to send
-    //progressmeter mode information across the proxy every time.
     if ( mode != modeFlag )
     {
         modeFlag = mode;
@@ -247,14 +239,14 @@ nsInstallProgressDialog::SetProgress(PRInt32 aValue, PRInt32 aMax, char mode)
             rv = setDlgAttribute( "dialog.progress", "mode", NS_ConvertASCIItoUCS2("undetermined"));
     }
 
-    if ( NS_SUCCEEDED(rv))
+    if ( (NS_SUCCEEDED(rv)) && (modeFlag == 'n'))
     {
         if (aMax != 0)
             PR_snprintf( buf, sizeof buf, "%lu", 100 * aValue/aMax );
         else
             PR_snprintf( buf, sizeof buf, "%lu", 0 );
 
-        rv = setDlgAttribute( "dialog.progress", "value", NS_ConvertASCIItoUCS2(buf) );
+        rv = setDlgAttribute( "dialog.progress", "value", NS_ConvertASCIItoUCS2(buf));
     }
     return rv;
 }
