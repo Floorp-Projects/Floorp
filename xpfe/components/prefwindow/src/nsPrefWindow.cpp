@@ -63,9 +63,6 @@ static NS_DEFINE_IID(kIFileLocatorIID, NS_IFILELOCATOR_IID);
 
 static NS_DEFINE_IID(kAppShellServiceCID,       NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
-#ifdef NS_DEBUG
-    static PRBool firstTime = PR_TRUE;
-#endif
 
 nsPrefWindow* nsPrefWindow::sPrefWindow = nsnull;
 
