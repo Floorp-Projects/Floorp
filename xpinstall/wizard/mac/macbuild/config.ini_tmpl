@@ -82,6 +82,15 @@ Server Path0=products/client/seamonkey/macos/8.x/ppc/(#buildID)/
 Attributes=SELECTED|INVISIBLE
 
 [Component5]
+Description Short=English US Language Pack
+Description Long=English US Language Pack
+Archive=langenus.xpi
+Install Size=(#langenus_size)
+Domain0=http://sweetlou.mcom.com/
+Server Path0=products/client/seamonkey/macos/8.x/ppc/(#buildID)/
+Attributes=SELECTED|INVISIBLE
+
+[Component6]
 Description Short=English German Language Pack
 Description Long=English German Language Pack
 Archive=langende.xpi

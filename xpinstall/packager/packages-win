@@ -13,6 +13,7 @@
 ; en-US 
 bin\defaults\profile\en-US\*
 bin\chrome\locales\en-US\*
+bin\searchplugins\*
 
 [langende]
 ;
@@ -218,7 +219,6 @@ bin\chrome\skins\classic\*
 ; all the pref files must be part of base
 ; to prevent migration bugs
 bin\defaults\pref\*
-bin\searchplugins\*
 bin\res\html.css
 bin\res\ua.css
 bin\res\quirk.css

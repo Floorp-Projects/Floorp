@@ -14,6 +14,13 @@
 bin/defaults/profile/en-DE/*
 bin/chrome/locales/en-DE/*
 
+[langenus]
+;
+; en-US
+bin/defaults/profile/en-US/*
+bin/chrome/locales/en-US/*
+bin/searchplugins/*
+
 [deflenus]
 ;
 ; default files for en-US
@@ -212,7 +219,6 @@ bin/defaults/pref/*
 bin/defaults/profile/*
 ; this is only here if you have plugins -blizzard
 ; bin/plugins/*
-bin/searchplugins/*
 bin/res/entityTables/*
 bin/defaults/wallet/FieldSchema.tbl
 bin/defaults/wallet/SchemaConcat.tbl
