@@ -139,13 +139,13 @@ $treename = $tree . ($tree2 ne "" ? " and $tree2" : "" );
     print "</td></tr></table>";
     print "</table>";
 
-    if( $form{'tree'} eq 'MercuryTip' || $form{'tree'} eq 'FreeSource'){
+    if($bonsai_tree){
         print "<p>The tree is currently <font size=+2>";
         if( &tree_open ){
             print "OPEN";
         }
         else {
-            print "CLOSED";
+            print "<FONT COLOR=\"#FF0000\">CLOSED</FONT>";
         }
         print "</font>\n";
     }
@@ -381,12 +381,13 @@ sub who_menu {
 
 
 sub tree_open {
-    open( BID, "<../bonsai/data/batchid") || print "can't open batchid<br>";
+    local($done, $line, $a, $b);
+    open( BID, "<../bonsai/data/$bonsai_tree/batchid") || print "can't open batchid<br>";
     ($a,$b,$bid) = split(/ /,<BID>);
     close( BID );
-    open( BATCH, "<../bonsai/data/batch-${bid}") || print "can't open batch-${bid}<br>";;
+    open( BATCH, "<../bonsai/data/$bonsai_tree/batch-${bid}") || print "can't open batch-${bid}<br>";;
     $done = 0;
-    while( ($line = <BATCH>) && !$done ){
+    while( ($line = <BATCH>) && !$done ){ 
         if($line =~ /^set treeopen/) {
             chop( $line );
             ($a,$b,$treestate) = split(/ /, $line );
