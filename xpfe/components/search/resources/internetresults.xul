@@ -16,7 +16,6 @@
   </popupset>
 
   <script type="application/x-javascript" src="chrome://global/content/nsUserSettings.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/nsJSComponentManager.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/search/internetresults.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/search/shared.js"/>
 

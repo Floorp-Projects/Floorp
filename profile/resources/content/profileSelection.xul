@@ -52,7 +52,6 @@
   <stringbundle id="bundle_brand"
                 src="chrome://global/locale/brand.properties"/>
   
-  <script type="application/x-javascript" src="chrome://global/content/nsJSComponentManager.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/profile/profileSelection.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/profile/profileManager.js"/>
   
