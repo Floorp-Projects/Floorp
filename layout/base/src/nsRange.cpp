@@ -393,7 +393,7 @@ nsresult nsRange::ComparePointToRange(nsIDOMNode* aParent, PRInt32 aOffset, PRIn
   // no trivial cases please
   if (!aParent) return NS_ERROR_NULL_POINTER;
   
-  // our rnage is in a good state?
+  // our range is in a good state?
   if (!mIsPositioned) return NS_ERROR_NOT_INITIALIZED;
   
   // check common case first
@@ -409,6 +409,18 @@ nsresult nsRange::ComparePointToRange(nsIDOMNode* aParent, PRInt32 aOffset, PRIn
       *aResult = 1;
       return NS_OK;
     }
+    *aResult = 0;
+    return NS_OK;
+  }
+  
+  // more common cases
+  if ((aParent == mStartParent) && (aOffset == mStartOffset)) 
+  {
+    *aResult = 0;
+    return NS_OK;
+  }
+  if ((aParent == mEndParent) && (aOffset == mEndOffset)) 
+  {
     *aResult = 0;
     return NS_OK;
   }
