@@ -391,6 +391,12 @@ extern JS_PUBLIC_API(JSVersion)
 JS_SetVersion(JSContext *cx, JSVersion version);
 
 extern JS_PUBLIC_API(const char *)
+JS_VersionToString(JSVersion version);
+
+extern JS_PUBLIC_API(JSVersion)
+JS_StringToVersion(const char *string);
+
+extern JS_PUBLIC_API(const char *)
 JS_GetImplementationVersion(void);
 
 extern JS_PUBLIC_API(JSObject *)
