@@ -333,7 +333,10 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL)
     if (NS_FAILED(rv = GetChromeResource(chromeBase, chromeResource, kCHROME_base))) {
         // No base entry was found. Default to our cache.
         chromeBase = "resource:/chrome/";
-        chromeBase += hostStr + "/";
+        chromeBase += hostStr;
+#ifndef NECKO
+		chromeBase += "/";
+#endif
         chromeBase += packageType + "/";
         if (chromeName != "")
           chromeBase += chromeName + "/";
@@ -371,7 +374,7 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL)
     }
     else
     {
-#if 0
+#ifdef NECKO
         // if path starts in a slash, remove it.
         if (path[0] == '/')
           path.Cut(0, 1);
