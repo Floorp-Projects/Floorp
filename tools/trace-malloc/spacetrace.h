@@ -465,25 +465,46 @@ typedef struct __struct_STContext
 **  A reader/writer lock ensures that the data is properly initialized before
 **      readers of the data begin their work.
 **
-**  mRWLock         reader/writer lock.
-**                  writer lock is held to ensure initialization, though
-**                      others can be attempting to acquire read locks
-**                      at that time.
-**                  writer lock is also used in destruction to make sure
-**                      there are no more readers of data contained herein.
-**                  reader lock is to allow multiple clients to read the
-**                      data at the same time; implies is they must not
-**                      write anything.
-**  mIndex          Consider this much like thread private data or thread
-**                      local storage in a few places.
-**                  The index is specifically reserved for this context's
-**                      usage in other data structure array's provided
-**                      for the particular thread/client/context.
-**                  This should not be modified after initialization.
+**  mRWLock             reader/writer lock.
+**                      writer lock is held to ensure initialization, though
+**                          others can be attempting to acquire read locks
+**                          at that time.
+**                      writer lock is also used in destruction to make sure
+**                          there are no more readers of data contained herein.
+**                      reader lock is to allow multiple clients to read the
+**                          data at the same time; implies is they must not
+**                          write anything.
+**  mIndex              Consider this much like thread private data or thread
+**                          local storage in a few places.
+**                      The index is specifically reserved for this context's
+**                          usage in other data structure array's provided
+**                          for the particular thread/client/context.
+**                      This should not be modified after initialization.
+**  mSortedRun          A pre sorted run taken from the global run, with our
+**                          options applied.
+**  mFootprintCached    Wether or not YData contains something useful.
+**  mFootprintYData     Precomputed cached graph data.
+**  mTimevalCached      Wether or not YData contains something useful.
+**  mTimevalYData       Precomputed cached graph data.
+**  mLifespanCached     Wether or not YData contains something useful.
+**  mLifespanYData      Precomputed cached graph data.
+**  mWeightCached       Wether or not YData contains something useful.
+**  mWeightYData        Precomputed cached graph data.
 */
 {
     PRRWLock* mRWLock;
     PRUint32 mIndex;
+    STRun* mSortedRun;
+#if ST_WANT_GRAPHS
+    PRBool mFootprintCached;
+    PRUint32 mFootprintYData[STGD_SPACE_X];
+    PRBool mTimevalCached;
+    PRUint32 mTimevalYData[STGD_SPACE_X];
+    PRBool mLifespanCached;
+    PRUint32 mLifespanYData[STGD_SPACE_X];
+    PRBool mWeightCached;
+    PRUint64 mWeightYData64[STGD_SPACE_X];
+#endif
 }
 STContext;
 
@@ -578,52 +599,6 @@ typedef struct __struct_STRequest
 
 
 /*
-** STGlobalCache
-**
-** Things we cache when the options get set.
-** We can avoid some heavy duty processing should the options remain
-**  constant by caching them here.
-*/
-typedef struct __struct_STGlobalCache
-{
-    /*
-    ** Pre sorted run.
-    */
-    STRun* mSortedRun;
-    
-    /*
-    ** Category the mSortedRun belongs to. NULL/empty if not to any category.
-    */
-    char mCategoryName[ST_OPTION_STRING_MAX];
-    
-    /*
-    ** Footprint graph cache.
-    */
-    int mFootprintCached;
-    PRUint32 mFootprintYData[STGD_SPACE_X];
-    
-    /*
-    ** Timeval graph cache.
-    */
-    int mTimevalCached;
-    PRUint32 mTimevalYData[STGD_SPACE_X];
-    
-    /*
-    ** Lifespan graph cache.
-    */
-    int mLifespanCached;
-    PRUint32 mLifespanYData[STGD_SPACE_X];
-    
-    /*
-    ** Weight graph cache.
-    */
-    int mWeightCached;
-    PRUint64 mWeightYData64[STGD_SPACE_X];
-}
-STGlobalCache;
-
-
-/*
 ** STGlobals
 **
 ** Various globals we keep around.
@@ -640,7 +615,7 @@ typedef struct __struct_STGlobals
         **  These are used as defaults, and should remain static during
         **      the run of the application.
         */
-        STOptions mOptions;
+        STOptions mCommandLineOptions;
 
         /*
         **  Context cache.
@@ -648,11 +623,6 @@ typedef struct __struct_STGlobals
         **      will be used to service them.
         */
         STContextCache mContextCache;
-
-        /*
-        ** Cached data, generally reset by the options.
-        */
-        STGlobalCache mGlobalCache;
 
         /*
         ** Various counters for different types of events.
@@ -718,12 +688,12 @@ typedef struct __struct_STGlobals
 extern STRun* createRun(PRUint32 aStamp);
 extern void freeRun(STRun* aRun);
 extern int initCategories(STGlobals* g);
-extern int categorizeRun(const STRun* aRun, STGlobals* g);
+extern int categorizeRun(STOptions* inOptions, const STRun* aRun, STGlobals* g);
 extern STCategoryNode* findCategoryNode(const char *catName, STGlobals *g);
 extern int freeCategories(STGlobals* g);
 extern int displayCategoryReport(STRequest* inRequest, STCategoryNode *root, int depth);
 
-extern int recalculateAllocationCost(STRun* aRun, STAllocation* aAllocation, PRBool updateParent);
+extern int recalculateAllocationCost(STOptions* inOptions, STRun* aRun, STAllocation* aAllocation, PRBool updateParent);
 extern void htmlHeader(STRequest* inRequest, const char* aTitle);
 extern void htmlFooter(STRequest* inRequest);
 extern void htmlAnchor(STRequest* inRequest, const char* aHref, const char* aText, const char* aTarget, STOptions* inOptions);
