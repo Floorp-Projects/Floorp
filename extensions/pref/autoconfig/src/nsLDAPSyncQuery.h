@@ -39,6 +39,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsILDAPConnection.h"
+#include "nsILDAPOperation.h"
 #include "nsILDAPMessageListener.h"
 #include "nsILDAPURL.h"
 #include "nsString.h"
