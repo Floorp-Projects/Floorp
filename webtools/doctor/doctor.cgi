@@ -102,6 +102,7 @@ my $READ_CVS_USERNAME = $config->get('READ_CVS_USERNAME');
 my $READ_CVS_PASSWORD = $config->get('READ_CVS_PASSWORD');
 my $WRITE_CVS_SERVER = $config->get('WRITE_CVS_SERVER');
 my $WEB_BASE_URI = $config->get('WEB_BASE_URI');
+my $WEB_BASE_URI_PATTERN = $config->get('WEB_BASE_URI_PATTERN');
 my $WEB_BASE_PATH = $config->get('WEB_BASE_PATH');
 
 # Store the home directory so we can get back to it after changing directories
@@ -189,33 +190,53 @@ exit;
 
 sub ValidateFile
 {
-  $request->param("file")
+  # Make sure a path was entered.
+  my $file = $request->param("file");
+  $file
     || DisplayError("You must include the name of the file.")
     && exit;
   
-  my $file = $request->param("file");
 
-  # If the file name starts with the base URI for files on the web site, it is
-  # a URL and needs to be converted into a file path, which we do by removing
-  # the base URI and adding the base path.
-  if ($file =~ s/^\Q$WEB_BASE_URI\E(.*)$/$1/i) { $file = $WEB_BASE_PATH . $file }
+  # URL -> Path Conversion
 
-  # Collapse multiple consecutive slashes (i.e. dir//file.txt) 
-  # into a single slash.
+  # Remove the absolute URI for files on the web site (if any)
+  # from the beginning of the path.
+  if ($WEB_BASE_URI_PATTERN) { $file =~ s/^$WEB_BASE_URI_PATTERN//i }
+  else                       { $file =~ s/^\Q$WEB_BASE_URI\E//i     }
+
+
+  # Entire Path Issues
+
+  # Collapse multiple consecutive slashes (i.e. dir//file.txt) into a single slash.
   $file =~ s:/{2,}:/:;
 
-  # If the filename (the last name in the path) contains no period, it is
-  # probably a directory, so add a slash.
+
+  # Beginning of Path Issues
+
+  # Remove a preceding slash.
+  $file =~ s:^/::;
+
+  # Add the base path of the file in the cvs repository if necessary.
+  # (i.e. if the user entered a URL or a path based on the URL).
+  if ($file !~ /^\Q$WEB_BASE_PATH\E/) { $file = $WEB_BASE_PATH . $file }
+
+
+  # End of Path Issues
+
+  # If the filename (the last name in the path) contains no period,
+  # it is probably a directory, so add a slash.
   if ($file =~ m:^[^\./]+$: || $file =~ m:/[^\./]+$:) { $file .= "/" }
 
-  # If the file ends with a forward slash, it is a directory, so add
-  # the name of the default file.
+  # If the file ends with a forward slash, it is a directory,
+  # so add the name of the default file.
   if ($file =~ m:/$:) { $file .= "index.html" }
 
+
+  # Set the file path.
   $request->param("file", $file);
   
-  # Note: we don't need to validate further because CVS will tell us
-  # whether or not the filename is valid.
+  # Note: we don't need to make sure the file exists at this point
+  # because CVS will tell us that.
 
   # Construct a URL to the file if possible.
   my $url = $file;
