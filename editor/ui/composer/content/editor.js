@@ -174,6 +174,13 @@ function TextEditorOnLoad()
     EditorStartup('text', document.getElementById("content-frame"));
 }
 
+// This should be called by all editor users when they close their window
+//  or other similar "done with editor" actions, like recycling a Mail Composer window.
+function EditorCleanup()
+{
+  SwitchInsertCharToAnotherEditorOrClose();
+}
+
 function PageIsEmptyAndUntouched()
 {
   return (editorShell != null) && editorShell.documentIsEmpty && 
