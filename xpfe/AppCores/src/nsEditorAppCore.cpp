@@ -113,11 +113,11 @@ static NS_DEFINE_IID(kIStreamObserverIID,        NS_ISTREAMOBSERVER_IID);
 static NS_DEFINE_IID(kIWebShellWindowIID,        NS_IWEBSHELL_WINDOW_IID);
 static NS_DEFINE_IID(kIDocumentViewerIID,        NS_IDOCUMENT_VIEWER_IID);
 
-static NS_DEFINE_IID(kITextEditorIID, NS_ITEXTEDITOR_IID);
-static NS_DEFINE_CID(kTextEditorCID, NS_TEXTEDITOR_CID);
-
 static NS_DEFINE_IID(kIHTMLEditorIID, NS_IHTMLEDITOR_IID);
 static NS_DEFINE_CID(kHTMLEditorCID, NS_HTMLEDITOR_CID);
+
+static NS_DEFINE_IID(kITextEditorIID, NS_ITEXTEDITOR_IID);
+static NS_DEFINE_CID(kTextEditorCID, NS_TEXTEDITOR_CID);
 
 #define APP_DEBUG 0 
 
@@ -138,8 +138,8 @@ nsEditorAppCore::nsEditorAppCore()
   mContentScriptContext = nsnull;
   mWebShellWin          = nsnull;
   mWebShell             = nsnull;
-  mCurrentNode          = nsnull;
-  mDomDoc               = nsnull;
+  //mCurrentNode          = nsnull;
+  //mDomDoc               = nsnull;
   mEditor               = nsnull;
 
   IncInstanceCount();
@@ -158,9 +158,8 @@ nsEditorAppCore::~nsEditorAppCore()
 }
 
 
-NS_IMPL_ADDREF(nsEditorAppCore)
-NS_IMPL_RELEASE(nsEditorAppCore)
-
+NS_IMPL_ADDREF_INHERITED(nsEditorAppCore, nsBaseAppCore)
+NS_IMPL_RELEASE_INHERITED(nsEditorAppCore, nsBaseAppCore)
 
 NS_IMETHODIMP 
 nsEditorAppCore::QueryInterface(REFNSIID aIID,void** aInstancePtr)
@@ -212,9 +211,25 @@ nsEditorAppCore::GetScriptObject(nsIScriptContext *aContext, void** aScriptObjec
 
 NS_IMETHODIMP    
 nsEditorAppCore::Init(const nsString& aId)
-{
-   
-  return nsBaseAppCore::Init(aId);
+{  
+  nsBaseAppCore::Init(aId);
+
+	nsAutoString		editorType = "html";			// default to creating HTML editor
+	mEditorTypeString = editorType;
+	mEditorTypeString.ToLowerCase();
+
+  // register object into Service Manager
+  static NS_DEFINE_IID(kIDOMAppCoresManagerIID, NS_IDOMAPPCORESMANAGER_IID);
+  static NS_DEFINE_IID(kAppCoresManagerCID,  NS_APPCORESMANAGER_CID);
+
+  nsIDOMAppCoresManager * appCoreManager;
+  nsresult rv = nsServiceManager::GetService(kAppCoresManagerCID,
+                                             kIDOMAppCoresManagerIID,
+                                             (nsISupports**)&appCoreManager);
+  if (NS_OK == rv) {
+	  appCoreManager->Add((nsIDOMBaseAppCore *)(nsBaseAppCore *)this);
+  }
+	return rv;
 }
 
 nsIPresShell*
@@ -242,61 +257,131 @@ nsEditorAppCore::GetPresShellFor(nsIWebShell* aWebShell)
   return shell;
 }
 
-void
+
+// tell the appcore what type of editor to instantiate
+// this must be called before the editor has been instantiated,
+// otherwise, an error is returned.
+NS_METHOD
+nsEditorAppCore::SetEditorType(const nsString& aEditorType)
+{	
+	if (mEditor != nsnull)
+		return NS_ERROR_ALREADY_INITIALIZED;
+		
+	nsAutoString	theType = aEditorType;
+	theType.ToLowerCase();
+	if (theType == "text")
+	{
+		mEditorTypeString = theType;
+		return NS_OK;
+	}
+	else if (theType == "html" || theType == "")
+	{
+		mEditorTypeString = theType;
+		return NS_OK;
+	}
+	else
+	{
+		NS_WARNING("Editor type not recognized");
+		return NS_ERROR_UNEXPECTED;
+	}
+}
+
+
+NS_METHOD
+nsEditorAppCore::InstantiateEditor(nsIDOMDocument *aDoc, nsIPresShell *aPresShell)
+{
+	NS_PRECONDITION(aDoc && aPresShell, "null ptr");
+	if (!aDoc || !aPresShell)
+	    return NS_ERROR_NULL_POINTER;
+
+	nsresult err = NS_OK;
+	
+	if (mEditorTypeString == "text")
+	{
+		nsITextEditor *editor = nsnull;
+		err = nsComponentManager::CreateInstance(kTextEditorCID, nsnull, kITextEditorIID, (void **)&editor);
+		if(!editor)
+			err = NS_ERROR_OUT_OF_MEMORY;
+			
+		if (NS_SUCCEEDED(err))
+		{
+			err = editor->Init(aDoc, aPresShell);
+			if (NS_SUCCEEDED(err) && editor)
+			{
+				// The EditorAppCore "owns" the editor
+				mEditor = editor;
+				mEditorType = ePlainTextEditorType;
+			}
+		}
+	}
+	else if (mEditorTypeString == "html" || mEditorTypeString == "")	// empty string default to HTML editor
+	{
+		nsIHTMLEditor *editor = nsnull;
+		err = nsComponentManager::CreateInstance(kHTMLEditorCID, nsnull, kIHTMLEditorIID, (void **)&editor);
+		if(!editor)
+			err = NS_ERROR_OUT_OF_MEMORY;
+			
+		if (NS_SUCCEEDED(err))
+		{
+			err = editor->Init(aDoc, aPresShell);
+			if (NS_SUCCEEDED(err) && editor)
+			{
+				// The EditorAppCore "owns" the editor
+				mEditor = editor;
+				mEditorType = eHTMLTextEditorType;
+			}
+		}
+	}
+	else
+	{
+		err = NS_ERROR_INVALID_ARG;		// this is not an editor we know about
+#if DEBUG
+		nsString	errorMsg = "Failed to init editor. Unknown editor type \"";
+		errorMsg += mEditorTypeString;
+		errorMsg += "\"\n";
+		char	*errorMsgCString = errorMsg.ToNewCString();
+     	NS_WARNING(errorMsgCString);
+     	delete [] errorMsgCString;
+#endif
+	}
+	
+	return err;
+}
+
+
+NS_METHOD
 nsEditorAppCore::DoEditorMode(nsIWebShell *aWebShell)
 {
-  if (nsnull != aWebShell) {
-    nsIContentViewer* mCViewer;
-    aWebShell->GetContentViewer(&mCViewer);
-    if (nsnull != mCViewer) {
-      nsIDocumentViewer* mDViewer;
-      if (NS_OK == mCViewer->QueryInterface(kIDocumentViewerIID, (void**) &mDViewer)) 
-      {
-	      nsIDocument* mDoc;
-	      mDViewer->GetDocument(mDoc);
-	      if (nsnull != mDoc) {
-	        nsIDOMDocument* mDOMDoc;
-	        if (NS_OK == mDoc->QueryInterface(kIDOMDocumentIID, (void**) &mDOMDoc)) 
-          {
-            nsIPresShell* presShell = GetPresShellFor(aWebShell);
-            if( presShell )
-            {
-#ifdef TEXT_EDITOR
-              nsITextEditor *editor = nsnull;
-              nsresult result = nsComponentManager::CreateInstance(kTextEditorCID, nsnull,
-                                                    kITextEditorIID, (void **)&editor);
-#else
-              nsIHTMLEditor *editor = nsnull;
-              nsresult result = nsComponentManager::CreateInstance(kHTMLEditorCID, nsnull,
-                                                    kIHTMLEditorIID, (void **)&editor);
-#endif // TEXT_EDITOR
-              if(!editor)
-                result = NS_ERROR_OUT_OF_MEMORY;
-              if (NS_SUCCEEDED(result))
-              {
-                result = editor->Init(mDOMDoc, presShell);
-                if (NS_SUCCEEDED(result) && editor)
-                {
-                  // The EditorAppCore "owns" the editor
-                  mEditor = editor;
-                }
-#ifdef DEBUG
-                else
-                {
-                  printf("Failed to init editor\n");
-                }
-#endif
-              }
-            }
-	          NS_RELEASE(mDOMDoc);
-            NS_IF_RELEASE(presShell);
-	        }
-	        NS_RELEASE(mDoc);
-	      }
-	      NS_RELEASE(mDViewer);
-      }
-      NS_RELEASE(mCViewer);
-    }
+	nsresult	err = NS_OK;
+	
+	NS_PRECONDITION(aWebShell, "null ptr");
+	if (!aWebShell)
+	    return NS_ERROR_NULL_POINTER;
+
+	nsCOMPtr<nsIContentViewer> contViewer;
+	aWebShell->GetContentViewer(getter_AddRefs(contViewer));
+	if (contViewer)
+	{
+		nsCOMPtr<nsIDocumentViewer> docViewer;
+		if (NS_SUCCEEDED(contViewer->QueryInterface(kIDocumentViewerIID, (void**)getter_AddRefs(docViewer))))
+		{
+			nsCOMPtr<nsIDocument> aDoc;
+			docViewer->GetDocument(*getter_AddRefs(aDoc));
+			if (aDoc)
+			{
+				nsCOMPtr<nsIDOMDocument> aDOMDoc;
+				if (NS_SUCCEEDED(aDoc->QueryInterface(kIDOMDocumentIID, (void**)getter_AddRefs(aDOMDoc))))
+				{
+					nsIPresShell* presShell = GetPresShellFor(aWebShell);
+					if( presShell )
+					{
+						err = InstantiateEditor(aDOMDoc, presShell);
+					}
+					NS_IF_RELEASE(presShell);
+				}
+			}
+		}
+
 #if 0    
 // Not sure if this makes sense any more
     PRInt32 i, n;
@@ -309,14 +394,47 @@ nsEditorAppCore::DoEditorMode(nsIWebShell *aWebShell)
     }
 #endif
   }
+  
+  return err;
 }
 
 
 NS_IMETHODIMP    
 nsEditorAppCore::SetAttribute(const nsString& aAttr, const nsString& aValue)
 {
+	nsIAtom		*styleAtom = nsnull;
+	nsresult	err = NS_OK;
 
-	return NS_ERROR_NOT_IMPLEMENTED;
+	styleAtom = NS_NewAtom(aAttr);			/// XXX Hack alert! Look in nsIEditProperty.h for this
+
+	if (! styleAtom)
+	return NS_ERROR_OUT_OF_MEMORY;
+
+	// addref it while we're using it
+	NS_ADDREF(styleAtom);
+
+	switch (mEditorType)
+	{
+		case ePlainTextEditorType:
+			{
+				nsCOMPtr<nsITextEditor>	textEditor = do_QueryInterface(mEditor);
+				if (textEditor)
+					err = textEditor->SetTextProperty(styleAtom);
+			}
+			break;
+		case eHTMLTextEditorType:
+			{
+				nsCOMPtr<nsIHTMLEditor>	htmlEditor = do_QueryInterface(mEditor);
+				if (htmlEditor)
+					err = htmlEditor->SetTextProperty(styleAtom);
+			}
+			break;
+		default:
+			err = NS_ERROR_NOT_IMPLEMENTED;
+	}
+
+	NS_RELEASE(styleAtom);
+	return err;
 }
 
 NS_IMETHODIMP    
@@ -360,6 +478,10 @@ nsEditorAppCore::LoadUrl(const nsString& aUrl)
 NS_IMETHODIMP    
 nsEditorAppCore::SetToolbarWindow(nsIDOMWindow* aWin)
 {
+	NS_PRECONDITION(aWin != nsnull, "null ptr");
+	if (!aWin)
+	    return NS_ERROR_NULL_POINTER;
+
   mToolbarWindow = aWin;
   NS_ADDREF(aWin);
   mToolbarScriptContext = GetScriptContext(aWin);
@@ -370,6 +492,10 @@ nsEditorAppCore::SetToolbarWindow(nsIDOMWindow* aWin)
 NS_IMETHODIMP    
 nsEditorAppCore::SetContentWindow(nsIDOMWindow* aWin)
 {
+	NS_PRECONDITION(aWin != nsnull, "null ptr");
+	if (!aWin)
+	    return NS_ERROR_NULL_POINTER;
+
   mContentWindow = aWin;
   NS_ADDREF(aWin);
   mContentScriptContext = GetScriptContext(aWin);
@@ -392,6 +518,10 @@ nsEditorAppCore::SetContentWindow(nsIDOMWindow* aWin)
 NS_IMETHODIMP    
 nsEditorAppCore::SetWebShellWindow(nsIDOMWindow* aWin)
 {
+	NS_PRECONDITION(aWin != nsnull, "null ptr");
+	if (!aWin)
+	    return NS_ERROR_NULL_POINTER;
+
   if (!mContentWindow) {
     return NS_ERROR_FAILURE;
   }
@@ -435,57 +565,306 @@ nsEditorAppCore::NewWindow()
 
 NS_IMETHODIMP    
 nsEditorAppCore::Undo()
-{  
-  if (mEditor) {
-    mEditor->Undo(1);
-  }
+{ 
+	nsresult	err = NS_OK;
+	
+	switch (mEditorType)
+	{
+		case ePlainTextEditorType:
+			{
+				nsCOMPtr<nsITextEditor>	textEditor = do_QueryInterface(mEditor);
+				if (textEditor)
+					err = textEditor->Undo(1);
+			}
+			break;
+		case eHTMLTextEditorType:
+			{
+				nsCOMPtr<nsIHTMLEditor>	htmlEditor = do_QueryInterface(mEditor);
+				if (htmlEditor)
+					err = htmlEditor->Undo(1);
+			}
+		default:
+			err = NS_ERROR_NOT_IMPLEMENTED;
+	}
 
-  return NS_OK;
+  return err;
 }
 
 NS_IMETHODIMP    
 nsEditorAppCore::Redo()
 {  
-  if (mEditor) {
-    mEditor->Redo(1);
-  }
+	nsresult	err = NS_OK;
+	
+	switch (mEditorType)
+	{
+		case ePlainTextEditorType:
+			{
+				nsCOMPtr<nsITextEditor>	textEditor = do_QueryInterface(mEditor);
+				if (textEditor)
+					err = textEditor->Redo(1);
+			}
+			break;
+		case eHTMLTextEditorType:
+			{
+				nsCOMPtr<nsIHTMLEditor>	htmlEditor = do_QueryInterface(mEditor);
+				if (htmlEditor)
+					err = htmlEditor->Redo(1);
+			}
+		default:
+			err = NS_ERROR_NOT_IMPLEMENTED;
+	}
 
-  return NS_OK;
+  return err;
 }
 
 NS_IMETHODIMP    
 nsEditorAppCore::Cut()
 {  
-  if (mEditor) {
-    mEditor->Cut();
-  }
+	nsresult	err = NS_OK;
+	
+	switch (mEditorType)
+	{
+		case ePlainTextEditorType:
+			{
+				nsCOMPtr<nsITextEditor>	textEditor = do_QueryInterface(mEditor);
+				if (textEditor)
+					err = textEditor->Cut();
+			}
+			break;
+		case eHTMLTextEditorType:
+			{
+				nsCOMPtr<nsIHTMLEditor>	htmlEditor = do_QueryInterface(mEditor);
+				if (htmlEditor)
+					err = htmlEditor->Cut();
+			}
+		default:
+			err = NS_ERROR_NOT_IMPLEMENTED;
+	}
 
-  return NS_OK;
+  return err;
 }
 
 NS_IMETHODIMP    
 nsEditorAppCore::Copy()
 {  
-  if (mEditor) {
-    mEditor->Copy();
-  }
+	nsresult	err = NS_OK;
+	
+	switch (mEditorType)
+	{
+		case ePlainTextEditorType:
+			{
+				nsCOMPtr<nsITextEditor>	textEditor = do_QueryInterface(mEditor);
+				if (textEditor)
+					err = textEditor->Copy();
+			}
+			break;
+		case eHTMLTextEditorType:
+			{
+				nsCOMPtr<nsIHTMLEditor>	htmlEditor = do_QueryInterface(mEditor);
+				if (htmlEditor)
+					err = htmlEditor->Copy();
+			}
+		default:
+			err = NS_ERROR_NOT_IMPLEMENTED;
+	}
 
-  return NS_OK;
+  return err;
 }
 
 NS_IMETHODIMP    
 nsEditorAppCore::Paste()
 {  
-  if (mEditor) {
-    mEditor->Paste();
-  }
+	nsresult	err = NS_OK;
+	
+	switch (mEditorType)
+	{
+		case ePlainTextEditorType:
+			{
+				nsCOMPtr<nsITextEditor>	textEditor = do_QueryInterface(mEditor);
+				if (textEditor)
+					err = textEditor->Paste();
+			}
+			break;
+		case eHTMLTextEditorType:
+			{
+				nsCOMPtr<nsIHTMLEditor>	htmlEditor = do_QueryInterface(mEditor);
+				if (htmlEditor)
+					err = htmlEditor->Paste();
+			}
+		default:
+			err = NS_ERROR_NOT_IMPLEMENTED;
+	}
 
-  return NS_OK;
+  return err;
+}
+
+NS_IMETHODIMP    
+nsEditorAppCore::SelectAll()
+{  
+	nsresult	err = NS_OK;
+	
+	switch (mEditorType)
+	{
+		case ePlainTextEditorType:
+			{
+				nsCOMPtr<nsITextEditor>	textEditor = do_QueryInterface(mEditor);
+				if (textEditor)
+					err = textEditor->SelectAll();
+			}
+			break;
+		case eHTMLTextEditorType:
+			{
+				nsCOMPtr<nsIHTMLEditor>	htmlEditor = do_QueryInterface(mEditor);
+				if (htmlEditor)
+					err = htmlEditor->SelectAll();
+			}
+		default:
+			err = NS_ERROR_NOT_IMPLEMENTED;
+	}
+
+  return err;
 }
 
 
-PRInt32
-newWindow(char* urlName) {
+NS_IMETHODIMP
+nsEditorAppCore::InsertText(const nsString& textToInsert)
+{
+	nsresult	err = NS_OK;
+	
+	switch (mEditorType)
+	{
+		case ePlainTextEditorType:
+			{
+				nsCOMPtr<nsITextEditor>	textEditor = do_QueryInterface(mEditor);
+				if (textEditor)
+					err = textEditor->InsertText(textToInsert);
+			}
+			break;
+		case eHTMLTextEditorType:
+			{
+				nsCOMPtr<nsIHTMLEditor>	htmlEditor = do_QueryInterface(mEditor);
+				if (htmlEditor)
+					err = htmlEditor->InsertText(textToInsert);
+			}
+		default:
+			err = NS_ERROR_NOT_IMPLEMENTED;
+	}
+
+  return err;
+}
+
+
+NS_IMETHODIMP
+nsEditorAppCore::GetContentsAsText(nsString& aContentsAsText)
+{
+	nsresult	err = NS_OK;
+	
+	switch (mEditorType)
+	{
+		case ePlainTextEditorType:
+			{
+				nsCOMPtr<nsITextEditor>	textEditor = do_QueryInterface(mEditor);
+				if (textEditor)
+					err = textEditor->OutputText(aContentsAsText);
+			}
+			break;
+		case eHTMLTextEditorType:
+			{
+				nsCOMPtr<nsIHTMLEditor>	htmlEditor = do_QueryInterface(mEditor);
+				if (htmlEditor)
+					err = htmlEditor->OutputText(aContentsAsText);
+			}
+		default:
+			err = NS_ERROR_NOT_IMPLEMENTED;
+	}
+
+  return err;
+}
+
+NS_IMETHODIMP
+nsEditorAppCore::GetContentsAsHTML(nsString& aContentsAsHTML)
+{
+	nsresult	err = NS_OK;
+	
+	switch (mEditorType)
+	{
+		case ePlainTextEditorType:
+			{
+				nsCOMPtr<nsITextEditor>	textEditor = do_QueryInterface(mEditor);
+				if (textEditor)
+					err = textEditor->OutputHTML(aContentsAsHTML);
+			}
+			break;
+		case eHTMLTextEditorType:
+			{
+				nsCOMPtr<nsIHTMLEditor>	htmlEditor = do_QueryInterface(mEditor);
+				if (htmlEditor)
+					err = htmlEditor->OutputHTML(aContentsAsHTML);
+			}
+		default:
+			err = NS_ERROR_NOT_IMPLEMENTED;
+	}
+
+  return err;
+}
+
+
+// Pop up the link dialog once we have dialogs ...  for now, hardwire it
+NS_IMETHODIMP
+nsEditorAppCore::InsertLink()
+{
+	nsresult	err = NS_OK;
+  nsString tmpString ("http://www.mozilla.org/editor/");
+
+	switch (mEditorType)
+	{
+		case eHTMLTextEditorType:
+			{
+				nsCOMPtr<nsIHTMLEditor>	htmlEditor = do_QueryInterface(mEditor);
+				if (htmlEditor)
+					err = htmlEditor->InsertLink(tmpString);
+			}
+		case ePlainTextEditorType:
+		default:
+			err = NS_ERROR_NOT_IMPLEMENTED;
+	}
+
+  return err;
+}
+
+// Pop up the image dialog once we have dialogs ...  for now, hardwire it
+NS_IMETHODIMP
+nsEditorAppCore::InsertImage()
+{
+	nsresult	err = NS_OK;
+	
+  nsString url ("http://www.mozilla.org/editor/images/pensplat.gif");
+  nsString width("100");
+  nsString height("138");
+  nsString hspace("0");
+  nsString border("1");
+  nsString alt ("[pen splat]");
+  nsString align ("left");
+  
+ 	switch (mEditorType)
+	{
+		case eHTMLTextEditorType:
+			{
+				nsCOMPtr<nsIHTMLEditor>	htmlEditor = do_QueryInterface(mEditor);
+				if (htmlEditor)
+					err = htmlEditor->InsertImage(url, width, height, hspace, hspace, border, alt, align);
+			}
+		case ePlainTextEditorType:
+		default:
+			err = NS_ERROR_NOT_IMPLEMENTED;
+	}
+
+  return err;
+}
+
+
+static PRInt32 MakeNewWindow(char* urlName)
+{
   nsresult rv;
   nsString controllerCID;
 
@@ -547,7 +926,7 @@ done:
   * 
   * 
  */
-void GenerateBarItem(FILE * fd, char * aFileName, const nsString & aDesc, void * aData, PRUint32 aLen) 
+static void GenerateBarItem(FILE * fd, char * aFileName, const nsString & aDesc, void * aData, PRUint32 aLen) 
 {
 	fprintf(fd, "<titledbutton src=\"resource:/res/toolbar/TB_PersonalIcon.gif\" align=\"right\" value=");
   char* desc_str= aDesc.ToNewCString();
@@ -568,15 +947,6 @@ void GenerateBarItem(FILE * fd, char * aFileName, const nsString & aDesc, void *
     fclose(clipFD);
   }
 
-}
-
-NS_IMETHODIMP    
-nsEditorAppCore::SelectAll()
-{  
-  if (mEditor) {
-    mEditor->SelectAll();
-  }
-  return NS_OK;
 }
 
 NS_IMETHODIMP    
@@ -693,81 +1063,13 @@ nsEditorAppCore::ShowClipboard()
   fprintf(fd, "</window>\n");
   fclose(fd);
 
-  newWindow("resource:/res/samples/ClipboardViewer.xul");
+  MakeNewWindow("resource:/res/samples/ClipboardViewer.xul");
 
 #endif
 
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsEditorAppCore::InsertText(const nsString& textToInsert)
-{
-	 nsresult	err = NS_OK;
-	 
-  if (mEditor)
-  {
-   	err = mEditor->InsertText(textToInsert);
-  }
-
-  return err;
-}
-
-
-NS_IMETHODIMP
-nsEditorAppCore::GetContentsAsText(nsString& aContentsAsText)
-{
-	 nsresult	err = NS_OK;
-	 
-  if (mEditor)
-  {
-   	err = mEditor->OutputText(aContentsAsText);
-  }
-
-  return err;
-}
-
-NS_IMETHODIMP
-nsEditorAppCore::GetContentsAsHTML(nsString& aContentsAsHTML)
-{
-	 nsresult	err = NS_OK;
-	 
-  if (mEditor)
-  {
-   	err = mEditor->OutputHTML(aContentsAsHTML);
-  }
-
-  return err;
-}
-
-// Pop up the link dialog once we have dialogs ...  for now, hardwire it
-NS_IMETHODIMP
-nsEditorAppCore::InsertLink()
-{
-  if (!mEditor)
-    return NS_ERROR_FAILURE;
-
-  nsString tmpString ("http://www.mozilla.org/editor/");
-  return mEditor->InsertLink(tmpString);
-}
-
-// Pop up the image dialog once we have dialogs ...  for now, hardwire it
-NS_IMETHODIMP
-nsEditorAppCore::InsertImage()
-{
-  if (!mEditor)
-    return NS_ERROR_FAILURE;
-
-  nsString url ("http://www.mozilla.org/editor/images/pensplat.gif");
-  nsString width("100");
-  nsString height("138");
-  nsString hspace("0");
-  nsString border("1");
-  nsString alt ("[pen splat]");
-  nsString align ("left");
-  return mEditor->InsertImage(url, width, height, hspace, hspace, border,
-                              alt, align);
-}
 
 //----------------------------------------
 void nsEditorAppCore::SetButtonImage(nsIDOMNode * aParentNode, PRInt32 aBtnNum, const nsString &aResName)

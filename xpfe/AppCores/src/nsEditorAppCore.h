@@ -52,14 +52,15 @@ class nsEditorAppCore : public nsBaseAppCore,
 
     nsEditorAppCore();
     virtual ~nsEditorAppCore();
-                 
 
-    NS_DECL_ISUPPORTS
+    NS_DECL_ISUPPORTS_INHERITED
+    
     NS_IMETHOD    GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
     NS_IMETHOD    Init(const nsString& aId);
     NS_IMETHOD    GetId(nsString& aId) { return nsBaseAppCore::GetId(aId); } 
     NS_IMETHOD    SetDocumentCharset(const nsString& aCharset)  { return nsBaseAppCore::SetDocumentCharset(aCharset); } 
 
+	  NS_IMETHOD    SetEditorType(const nsString& aEditorType);
     NS_IMETHOD    SetAttribute(const nsString& aAttr, const nsString& aValue);
     NS_IMETHOD    Undo();
     NS_IMETHOD    Redo();
@@ -93,11 +94,18 @@ class nsEditorAppCore : public nsBaseAppCore,
 
 
   protected:
-    nsIPresShell* GetPresShellFor(nsIWebShell* aWebShell);
-    void DoEditorMode(nsIWebShell *aWebShell);
-    NS_IMETHOD ExecuteScript(nsIScriptContext * aContext, const nsString& aScript);
-    void SetButtonImage(nsIDOMNode * aParentNode, PRInt32 aBtnNum, const nsString &aResName);
-
+  
+  	typedef enum {
+  		ePlainTextEditorType = 1,
+  		eHTMLTextEditorType = 2
+  	} EEditorType;
+  	
+    nsIPresShell* 	GetPresShellFor(nsIWebShell* aWebShell);
+    NS_IMETHOD 			DoEditorMode(nsIWebShell *aWebShell);
+    NS_IMETHOD	 		ExecuteScript(nsIScriptContext * aContext, const nsString& aScript);
+    NS_IMETHOD			InstantiateEditor(nsIDOMDocument *aDoc, nsIPresShell *aPresShell);
+    void 						SetButtonImage(nsIDOMNode * aParentNode, PRInt32 aBtnNum, const nsString &aResName);
+		
     nsString            mEnableScript;     
     nsString            mDisableScript;     
 
@@ -110,14 +118,11 @@ class nsEditorAppCore : public nsBaseAppCore,
     nsIWebShellWindow  *mWebShellWin;
     nsIWebShell *       mWebShell;
 
-#ifdef TEXT_EDITOR
-    nsITextEditor * mEditor;
-#else
-    nsIHTMLEditor * mEditor;
-#endif  // TEXT_EDITOR
-    nsIDOMDocument* mDomDoc;
-    nsIDOMNode* mCurrentNode;
-
+		EEditorType					mEditorType;
+		nsString						mEditorTypeString;	// string which describes which editor type will be instantiated (lowercased)
+    nsISupports*	 			mEditor;						// this can be either an HTML or plain text (or other?) editor
+    //nsIDOMDocument* 		mDomDoc;
+    //nsIDOMNode* 				mCurrentNode;
 
 };
 
