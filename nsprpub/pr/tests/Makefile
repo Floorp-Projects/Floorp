@@ -94,28 +94,30 @@ CSRCS =             \
 	poll_nm.c		\
 	poll_to.c		\
 	pollable.c		\
-	prftest1.c		\
 	prftest.c		\
+	prftest1.c		\
 	prftest2.c		\
 	priotest.c		\
 	provider.c		\
-	ranfile.c       \
 	prpoll.c		\
+	ranfile.c       \
 	sel_spd.c  		\
 	selct_er.c	    \
 	selct_nm.c	    \
 	selct_to.c	    \
 	select2.c  		\
 	sem.c 	  		\
-	servr_kk.c		\
 	server_test.c	\
+	servr_kk.c		\
 	servr_ku.c		\
 	servr_uk.c		\
-	short_thread.c	\
 	servr_uu.c		\
+	short_thread.c	\
 	sigpipe.c		\
 	socket.c		\
 	sockopt.c		\
+	sockping.c		\
+	sockpong.c		\
 	sprintf.c		\
 	sproc_ch.c	    \
 	sproc_p.c	    \
