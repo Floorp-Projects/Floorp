@@ -1,0 +1,50 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is the Mozilla browser.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications, Inc.  Portions created by Netscape are
+ * Copyright (C) 1999, Mozilla.  All Rights Reserved.
+ * 
+ * Contributor(s):
+ *   Travis Bogard <travis@netscape.com>
+ *   Steve Clark <buster@netscape.com>
+ */
+
+#include "nsISupports.idl"
+
+/**
+ * The nsITextScroll is an interface that can be implemented by a control that
+ * supports text scrolling. 
+ */
+
+[scriptable, uuid(067B28A0-877F-11d3-AF7E-00A024FFC08C)]
+interface nsITextScroll : nsISupports
+{
+  /**
+   * Scroll the view up or down by aNumLines lines. positive
+   * values move down in the view. Prevents scrolling off the
+   * end of the view.
+   * @param numLines number of lines to scroll the view by
+   */
+	void scrollByLines(in long numLines);
+
+	/**
+   * Scroll the view up or down by numPages pages. a page
+   * is considered to be the amount displayed by the clip view.
+   * positive values move down in the view. Prevents scrolling
+   * off the end of the view.
+   * @param numPages number of pages to scroll the view by
+   */
+	void scrollByPages(in long numPages);
+};
