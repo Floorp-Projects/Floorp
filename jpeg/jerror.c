@@ -31,11 +31,6 @@
 #include "jversion.h"
 #include "jerror.h"
 
-/* Mozilla addition */
-#if defined(DEBUG) && defined(__MWERKS__)
-#       include "xp_trace.h"
-#endif
-
 #ifdef USE_WINDOWS_MESSAGEBOX
 #include <windows.h>
 #endif
@@ -121,10 +116,6 @@ output_message (j_common_ptr cinfo)
 
   /* Create the message */
   (*cinfo->err->format_message) (cinfo, buffer);
-
-  /* Mozilla mod: send JPEG library messages to XP_TRACE */
-
- /* XP_TRACE(("JPEG library: %s", buffer));*/
 }
 
 
