@@ -26,15 +26,17 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-PROGRAM		= nsinstall$(BIN_SUFFIX)
 ifdef CROSS_COMPILE
-HOST_PROGRAM	= host_nsinstall
+HOST_PROGRAM	= nsinstall$(BIN_SUFFIX)
+else
+PROGRAM		= nsinstall$(BIN_SUFFIX)
 endif
 
-CSRCS		= nsinstall.c pathsub.c
 PLSRCS		= nfspwd.pl revdepth.pl
 ifdef CROSS_COMPILE
-HOST_CSRCS	= $(CSRCS)
+HOST_CSRCS	= nsinstall.c pathsub.c
+else
+CSRCS		= nsinstall.c pathsub.c
 endif
 
 TARGETS		= $(HOST_PROGRAM) $(PROGRAM) $(PLSRCS:.pl=)
