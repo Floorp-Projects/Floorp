@@ -2699,10 +2699,11 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
 				// load the plugin's library so we can ask it some questions but not for Windows for now
         if (pluginFile.LoadPlugin(pluginLibrary) == NS_OK && pluginLibrary != NULL) {
 #endif
-					// create a tag describing this plugin.
-	        nsPluginInfo info = { sizeof(info) };
-	        if (pluginFile.GetPluginInfo(info) != NS_OK)
-        	  return NS_ERROR_FAILURE;
+          // create a tag describing this plugin.
+          nsPluginInfo info = { sizeof(info) };
+          nsresult res = pluginFile.GetPluginInfo(info);
+          if(NS_FAILED(res))
+        	  continue;
 
           nsPluginTag* pluginTag = new nsPluginTag(&info);
 
@@ -2826,10 +2827,11 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
       if (pluginFile.LoadPlugin(pluginLibrary) == NS_OK && pluginLibrary != NULL) 
       {
 #endif
-				// create a tag describing this plugin.
-	      nsPluginInfo info = { sizeof(info) };
-	      if (pluginFile.GetPluginInfo(info) != NS_OK)
-        	return NS_ERROR_FAILURE;
+        // create a tag describing this plugin.
+        nsPluginInfo info = { sizeof(info) };
+        nsresult res = pluginFile.GetPluginInfo(info);
+        if(NS_FAILED(res))
+          continue;
 
         nsPluginTag* pluginTag = new nsPluginTag(&info);
 
@@ -2866,10 +2868,11 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
       if (pluginFile.LoadPlugin(pluginLibrary) == NS_OK && pluginLibrary != NULL) 
       {
 #endif
-				// create a tag describing this plugin.
-	      nsPluginInfo info = { sizeof(info) };
-	      if (pluginFile.GetPluginInfo(info) != NS_OK)
-        	return NS_ERROR_FAILURE;
+        // create a tag describing this plugin.
+ 	      nsPluginInfo info = { sizeof(info) };
+        nsresult res = pluginFile.GetPluginInfo(info);
+        if(NS_FAILED(res))
+          continue;
 
 				nsPluginTag* pluginTag = new nsPluginTag(&info);
 
