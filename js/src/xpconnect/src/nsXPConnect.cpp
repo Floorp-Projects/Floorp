@@ -1086,7 +1086,7 @@ nsXPConnect::DebugDump(PRInt16 depth)
 {
 #ifdef DEBUG
     depth-- ;
-    XPC_LOG_ALWAYS(("nsXPConnect @ %x with mRefCnt = %d", this, mRefCnt));
+    XPC_LOG_ALWAYS(("nsXPConnect @ %x with mRefCnt = %d", this, mRefCnt.get()));
     XPC_LOG_INDENT();
         XPC_LOG_ALWAYS(("gSelf @ %x", gSelf));
         XPC_LOG_ALWAYS(("gOnceAliveNowDead is %d", (int)gOnceAliveNowDead));

@@ -146,7 +146,7 @@ nsLDAPOperation::SimpleBind(const nsACString& passwd)
 
     PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, 
            ("nsLDAPOperation::SimpleBind(): called; bindName = '%s'; ",
-            bindName));
+            bindName.get()));
 
     mMsgID = ldap_simple_bind(mConnectionHandle, bindName.get(),
                               PromiseFlatCString(passwd).get());
@@ -255,7 +255,9 @@ nsLDAPOperation::SearchExt(const nsACString& aBaseDn, PRInt32 aScope,
     PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, 
            ("nsLDAPOperation::SearchExt(): called with aBaseDn = '%s'; "
             "aFilter = '%s', aAttrCounts = %u, aSizeLimit = %d", 
-            aBaseDn, aFilter, aAttrCount, aSizeLimit));
+            PromiseFlatCString(aBaseDn).get(),
+            PromiseFlatCString(aFilter).get(),
+            aAttrCount, aSizeLimit));
 
     char **attrs = 0;
 

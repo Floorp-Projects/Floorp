@@ -4498,7 +4498,7 @@ fi
 
 if test "$GNU_CXX"; then
     # Turn on GNU specific features
-    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wall -Wconversion -Wpointer-arith -Wbad-function-cast -Wcast-align -Woverloaded-virtual -Wsynth -Wno-ctor-dtor-privacy"
+    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wall -Wconversion -Wpointer-arith -Wcast-align -Woverloaded-virtual -Wsynth -Wno-ctor-dtor-privacy"
 
 		if test ! "$QTDIR"; then
     	_WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS}"

@@ -497,7 +497,7 @@ NS_IMETHODIMP
 nsXPCWrappedJS::DebugDump(PRInt16 depth)
 {
 #ifdef DEBUG
-    XPC_LOG_ALWAYS(("nsXPCWrappedJS @ %x with mRefCnt = %d", this, mRefCnt));
+    XPC_LOG_ALWAYS(("nsXPCWrappedJS @ %x with mRefCnt = %d", this, mRefCnt.get()));
         XPC_LOG_INDENT();
 
         PRBool isRoot = mRoot == this;

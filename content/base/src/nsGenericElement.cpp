@@ -3777,7 +3777,7 @@ nsGenericContainerElement::List(FILE* out, PRInt32 aIndent) const
 
   ListAttributes(out);
 
-  fprintf(out, " refcount=%d<", mRefCnt);
+  fprintf(out, " refcount=%d<", mRefCnt.get());
 
   PRBool canHaveKids;
   CanContainChildren(canHaveKids);

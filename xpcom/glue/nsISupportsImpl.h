@@ -97,6 +97,7 @@ class nsAutoRefCnt {
     
     nsrefcnt operator=(nsrefcnt aValue) { return (mValue = aValue); }
     operator nsrefcnt() const { return mValue; }
+    nsrefcnt get() const { return mValue; }
  private:
     // do not define these to enforce the faster prefix notation
     nsrefcnt operator++(int);
