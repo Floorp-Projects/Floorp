@@ -78,7 +78,7 @@ class nsIXULPrototypeDocument;
 class nsIXULDocument : public nsIXMLDocument
 {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IRDFDOCUMENT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IRDFDOCUMENT_IID)
 
   // The resource-to-element map is a one-to-many mapping of RDF
   // resources to content elements.
@@ -165,6 +165,11 @@ public:
    * Callback from the content sink upon resumption from the parser.
    */
   NS_IMETHOD OnResumeContentSink() = 0;
+
+  /**
+   * Clear the box object hash
+   */
+  NS_IMETHOD ClearBoxObjectTable() = 0;
 };
 
 // factory functions

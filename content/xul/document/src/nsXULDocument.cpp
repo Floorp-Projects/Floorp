@@ -1843,6 +1843,15 @@ nsXULDocument::OnResumeContentSink()
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXULDocument::ClearBoxObjectTable()
+{
+    delete mBoxObjectTable;
+    mBoxObjectTable = nsnull;
+
+    return NS_OK;
+}
+
 static void PR_CALLBACK
 ClearBroadcasterMapEntry(PLDHashTable* aTable, PLDHashEntryHdr* aEntry)
 {
