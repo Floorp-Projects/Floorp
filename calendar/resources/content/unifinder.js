@@ -241,6 +241,9 @@ function formatUnifinderEventTime( time )
 
 function unifinderDoubleClickEvent( event )
 {
+   // we only care about button 0 (left click) events
+   if (event.button != 0) return;
+        
    // find event by id
    
    var calendarEvent = getCalendarEventFromEvent( event );

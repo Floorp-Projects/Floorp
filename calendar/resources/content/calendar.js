@@ -228,6 +228,9 @@ function dayEventItemClick( eventBox, event )
 
 function dayEventItemDoubleClick( eventBox, event )
 {
+   // we only care about button 0 (left click) events
+   if (event.button != 0) return;
+   
    editEvent( eventBox.calendarEventDisplay.event );
 
    if ( event ) 
@@ -278,6 +281,9 @@ function dayViewHourContextClick( event )
 
 function dayViewHourDoubleClick( event )
 {
+   // we only care about button 0 (left click) events
+   if (event.button != 0) return;
+   
    var startDate = gCalendarWindow.dayView.getNewEventDate();
    
    newEvent( startDate );
@@ -324,6 +330,9 @@ function weekEventItemClick( eventBox, event )
 
 function weekEventItemDoubleClick( eventBox, event )
 {
+   // we only care about button 0 (left click) events
+   if (event.button != 0) return;
+   
    editEvent( eventBox.calendarEventDisplay.event );
 
    if ( event ) 
@@ -379,6 +388,9 @@ function weekViewContextClick( event )
 
 function weekViewHourDoubleClick( event )
 {
+   // we only care about button 0 (left click) events
+   if (event.button != 0) return;
+        
    var startDate = gCalendarWindow.weekView.getNewEventDate();
    
    newEvent( startDate );
@@ -424,6 +436,9 @@ function monthEventBoxClickEvent( eventBox, event )
 
 function monthEventBoxDoubleClickEvent( eventBox, event )
 {
+   // we only care about button 0 (left click) events
+   if (event.button != 0) return;
+   
    gCalendarWindow.monthView.clearSelectedDate();
    
    editEvent( eventBox.calendarEventDisplay.event );

@@ -163,6 +163,9 @@ function getSelectedToDo()
 
 function modifyToDoCommand( event )
 {
+   // we only care about button 0 (left click) events
+   if (event.button != 0) return;
+
    //open the edit todo dialog box
    var ThisToDo = getToDoFromEvent( event );
    
