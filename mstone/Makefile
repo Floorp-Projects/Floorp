@@ -1,36 +1,91 @@
-# Makefile for mailstone
+# Makefile for mstone
 # use gmake
+# Builds each of the components and then packages everything
 
-OS_CONFIG := $(shell ./nsarch)
-OBJDIR=$(OS_CONFIG)$(OBJDIR_TAG).OBJ
-BUILDDIR=build/$(OBJDIR)
-PKGDIR=build/package/$(OBJDIR)/mailstone
+topsrcdir	= .
+
+ifndef INCLUDED_CONFIG_MK
+include $(topsrcdir)/config/config.mk
+endif
+
 CP := cp -p
-STRIP := strip
 ECHO := /bin/echo
+
+# dynamically find the optional directories names
+LIBGD_DIR	= $(wildcard gd?.*)
+GNUPLOT_DIR	= $(wildcard gnuplot-?.*)
+PERL_DIR	= $(wildcard perl5.*)
+
+# HACK, should figure out dynamically from PERL_DIR
+PERL_REV	= 5.00503
+
+# file that we package
+GDFILES		= gd.txt gd.html gd.h libgd.* demoin.gif gddemo giftogd webgif
+GNUPLOTFILES	= gnuplot gnuplot_x11 gnuplot.1 gnuplot.gih Copyright
+
+TARBALL		= mstone-4.2-$(NSARCH)$(OBJDIR_TAG).tar.gz
 
 all:: usage
 
 usage::
 	@$(ECHO) "gmake [ release | rpackage | debug | dpackage ]"
 	@$(ECHO) "      [ DIST=/m/dist/mailstone/1999xxxx dist ]"
-	@$(ECHO) "      [ unix_DBG | unix_OPT ]"
+	@$(ECHO) "      [ all_DBG | all_OPT ]"
+	@$(ECHO) "perl is" $(PERL_DIR) ". gd is" $(LIBGD_DIR) ". gnuplot is" $(GNUPLOT_DIR) "."
 
-targets:: mailclient
+targets::	$(OBJDIR) mailclient
+
+ifneq (,$(LIBGD_DIR))
+targets::	libgd
+endif
+
+ifneq (,$(GNUPLOT_DIR))
+targets::	gnuplot
+endif
+
+ifneq (,$(PERL_DIR))
+targets::	perl
+endif
+
+$(OBJDIR):
+	-mkdir -p $(OBJDIR)
 
 mailclient::
-	@$(ECHO) "\n===== [`date`] making OS_CONFIG=$(OS_CONFIG) BUILD_VARIANT=$(BUILD_VARIANT)\n"
-	(cd src; $(MAKE) BUILD_VARIANT=$(BUILD_VARIANT) OBJDIR=../$(BUILDDIR) PKGDIR=../$(PKGDIR) all)
+	@$(ECHO) "\n===== [`date`] making OS_CONFIG=$(NSARCH) BUILD_VARIANT=$(BUILD_VARIANT)\n"
+	cd src; $(MAKE) BUILD_VARIANT=$(BUILD_VARIANT) OBJDIR=../$(OBJDIR) PKGDIR=../$(PKGDIR) all
 
-GDFILES		= gd.txt gd.html gd.h libgd.* demoin.gif gddemo giftogd webgif
-GNUPLOTFILES	= gnuplot gnuplot_x11 gnuplot.1 gnuplot.gih Copyright
+# Use our top level makefiles to drive the component builds
+libgd::
+	$(MAKE) -f gd.mk LIBGD_DIR=$(LIBGD_DIR) libgd
+
+gnuplot::
+	$(MAKE) -f gnuplot.mk LIBGD_DIR=$(LIBGD_DIR) GNUPLOT_DIR=$(GNUPLOT_DIR) gnuplot
+
+perl::
+	$(MAKE) -f perl.mk PERL_DIR=$(PERL_DIR) PERL_REV=$(PERL_REV) perl
 
 # Create packaging binary directories
 # Note: dont make gd or gnuplot here.  For multi-OS, they are links
-mkpkgdirs::
-	[ -d $(PKGDIR)/bin ] || mkdir -p $(PKGDIR)/bin
-	[ -d $(PKGDIR)/conf ] || mkdir -p $(PKGDIR)/conf
-	[ -d $(PKGDIR)/data ] || mkdir -p $(PKGDIR)/data
+mkpkgdirs::	$(PKGDIR)/bin $(PKGDIR)/conf $(PKGDIR)/data $(PKGDIR)/doc
+
+$(PKGDIR)/bin:
+	mkdir -p $(PKGDIR)/bin
+
+$(PKGDIR)/conf:
+	mkdir -p $(PKGDIR)/conf
+
+$(PKGDIR)/data:
+	mkdir -p $(PKGDIR)/data
+
+$(PKGDIR)/doc:
+	mkdir -p $(PKGDIR)/doc
+
+$(PKGDIR)/gd:
+	mkdir -p $(PKGDIR)/gd
+
+$(PKGDIR)/gnuplot:
+	mkdir -p $(PKGDIR)/gnuplot
+
 
 # operating system independent share-files (at least for Unix)
 pkg-share-files:: mkpkgdirs
@@ -42,7 +97,7 @@ pkg-share-files:: mkpkgdirs
 	$(CP) nsarch bin/*.pl $(PKGDIR)/bin
 	$(CP) conf/*.wld conf/*.html $(PKGDIR)/conf
 	$(CP) data/*.msg $(PKGDIR)/data
-	#$(CP) doc/MailStone.html $(PKGDIR)/doc
+	$(CP) doc/*.html doc/*.gif $(PKGDIR)/doc
 	$(CP) INSTALL $(PKGDIR)
 	$(CP) README $(PKGDIR)
 	$(CP) ChangeLog $(PKGDIR)
@@ -50,41 +105,66 @@ pkg-share-files:: mkpkgdirs
 	@$(ECHO) "\n===== [`date`] making package share-files done.\n"
 
 # split out OS specific file so that combined packaging possible (set PKGDIR)
-###pkg-arch-files:: mkpkgdirs $(BUILDDIR)/mailclient $(BUILDDIR)/gd/libgd.a \
-###	  $(BUILDDIR)/gnuplot/gnuplot
-pkg-arch-files:: mkpkgdirs $(BUILDDIR)/mailclient
-	@$(ECHO) "\n===== [`date`] making package arch-files...\n"
-	[ -d $(PKGDIR)/gd ] || mkdir -p $(PKGDIR)/gd
-###	[ -d $(PKGDIR)/gnuplot ] || mkdir -p $(PKGDIR)/gnuplot
-	$(CP) $(BUILDDIR)/mailclient $(PKGDIR)/bin
-###	$(CP) $(addprefix $(BUILDDIR)/gd/, $(GDFILES)) $(PKGDIR)/gd
-###	$(CP) $(addprefix $(BUILDDIR)/gnuplot/, $(GNUPLOTFILES)) $(PKGDIR)/gnuplot
-ifeq ($(BUILD_VARIANT),release)
-	-$(STRIP) $(PKGDIR)/bin/mailclient
-###	-$(STRIP) $(PKGDIR)/gd/webgif $(PKGDIR)/gd/giftogd $(PKGDIR)/gd/gddemo
-###	-$(STRIP) $(PKGDIR)/gnuplot/gnuplot $(PKGDIR)/gnuplot/gnuplot_x11
+pkg-arch-files-gd::	 $(PKGDIR)/gd $(OBJDIR)/gd/libgd.a
+	$(CP) $(addprefix $(OBJDIR)/gd/, $(GDFILES)) $(PKGDIR)/gd
+	-$(STRIP) $(PKGDIR)/gd/webgif $(PKGDIR)/gd/giftogd $(PKGDIR)/gd/gddemo
+
+pkg-arch-files-gnuplot::	$(PKGDIR)/gnuplot $(OBJDIR)/gnuplot/gnuplot
+	$(CP) $(addprefix $(OBJDIR)/gnuplot/, $(GNUPLOTFILES)) $(PKGDIR)/gnuplot
+	-$(STRIP) $(PKGDIR)/gnuplot/gnuplot $(PKGDIR)/gnuplot/gnuplot_x11
+
+ifneq (,$(LIBGD_DIR))
+pkg-arch-files::	pkg-arch-files-gd
 endif
+
+ifneq (,$(GNUPLOT_DIR))
+pkg-arch-files::	pkg-arch-files-gnuplot
+endif
+
+pkg-arch-files::	$(PKGDIR)/bin $(OBJDIR)/mailclient
+	$(CP) $(OBJDIR)/mailclient $(PKGDIR)/bin
+	-$(STRIP) $(PKGDIR)/bin/mailclient
 	@$(ECHO) "\n===== [`date`] making package arch-files done.\n"
 
-pkg-perl-files:: $(BUILDDIR)/perl/perl
+pkg-perl-files:: $(OBJDIR)/perl/perl
 	@$(ECHO) "\n===== [`date`] making package perl-files...\n"
 	@[ -d $(PKGDIR)/perl ] || mkdir -p $(PKGDIR)/perl
-	(cd src; $(MAKE) BUILD_VARIANT=$(BUILD_VARIANT) OBJDIR=../$(BUILDDIR) PKGDIR=../$(PKGDIR) package-perl)
+	$(MAKE) -f perl.mk PERL_DIR=$(PERL_DIR) PERL_REV=$(PERL_REV) BUILD_VARIANT=$(BUILD_VARIANT) OBJDIR=$(OBJDIR) PKGDIR=$(PKGDIR) package-perl
 	find $(PKGDIR)/perl/lib -name .packlist -exec rm {} \; -print
-ifeq ($(BUILD_VARIANT),release)
 	-$(STRIP) $(PKGDIR)/perl/bin/perl
 	-$(STRIP) $(PKGDIR)/perl/bin/a2p
-endif
 	@$(ECHO) "\n===== [`date`] making package perl-files done.\n"
 
-###pkg:: targets pkg-share-files pkg-arch-files pkg-perl-files
-pkg:: targets pkg-share-files pkg-arch-files
+# for combined packaging, this shouldnt be part of pkg-arch-files (special case)
+ifneq (,$(PERL_DIR))
+pkg::	pkg-perl-files
+endif
+
+pkg::	targets build/$(TARBALL)
+
+build/$(TARBALL):	 pkg-share-files pkg-arch-files
 	@$(ECHO) "\n===== [`date`] making os package file...\n"
-	-rm -f ./build/mailstone-4.1-$(OS_CONFIG)$(OBJDIR_TAG).tar.gz
-	(cd $(dir $(PKGDIR)) && \
-	  tar cf - . | gzip > ../../mailstone-4.1-$(OS_CONFIG)$(OBJDIR_TAG).tar.gz)
+	-rm -f build/$(TARBALL)
+	cd $(dir $(PKGDIR)) && \
+	  tar cf - . | gzip > ../../$(TARBALL)
 	@$(ECHO) "\n===== [`date`] making os package file done.\n"
 
+########################################################################
+# Generate a combined build for every Unix OS that is already packaged
+# NT has to be done seperately because it has different file names
+# We have to nuke some old parts, because permissions wont allow overwrites
+# Finally, dont ship perl development headers and libraries
+all_DBG all_OPT::
+	@$(ECHO) "\n===== [`date`] unified packaging for $@...\n"
+	$(MAKE) NSARCH=$@ OBJDIR_TAG='' PKGDIR=$(topsrcdir)/build/package/$@.OBJ/mstone pkg-share-files
+	./ospkg.sh $@.OBJ $(notdir $(shell ls -d build/package/[A-Z]*$(subst all,,$@.OBJ)))
+	@$(ECHO) "\n===== [`date`] making unified compressed tar file...\n"
+	-rm -f ./build/mstone-4.2-$@.tar.gz
+	(cd ./build/package/$@.OBJ && tar cf - . | gzip > ../../mstone-4.1-$@.tar.gz)
+	@$(ECHO) "\n===== [`date`] making unified packaging for $@ done.\n"
+
+
+########################################################################
 # Install and re-map short Linux name to standard Netscape convention
 dist::
 	@[ "$(DIST)" != "" ] || ($(MAKE) usage && /bin/false)
@@ -96,37 +176,6 @@ dist::
 		nn=`echo $$l | sed -e 's/_OPT/_glibc_PTH_OPT/' | sed -e 's/_DBG/_glibc_PTH_DBG/'`; \
 		ln -s $$l $$nn; done
 
-# Generate a combined build for every Unix OS that is already built and packaged
-# NT has to be done seperately because it has different file names
-# We have to nuke some old parts, because permissions wont allow overwrites
-# Finally, dont ship perl development headers and libraries
-unix_DBG unix_OPT::
-	@$(ECHO) "\n===== [`date`] making unified packaging for $@...\n"
-	$(MAKE) OBJDIR=$@.OBJ pkg-share-files
-	(\
-	pkgdir=./build/package/$@.OBJ/mailstone; export pkgdir; \
-	oslist="$(notdir $(shell ls -d build/[A-V]*$(subst unix,,$@.OBJ)))"; \
-	goodperl=`ls -d ./build/package/*/mailstone/perl/man/man1 | head -1 | sed -e 's:perl/man/man1::'`; \
-	rm -rf $${pkgdir}/perl/lib/*; \
-	$(ECHO) "\n===== [`date`] making shared perl packaging from $$goodperl...\n"; \
-	(cd $${goodperl} && tar cf - perl/man) | (cd $${pkgdir} && tar xf -); \
-	cp $${goodperl}/perl/Artistic $${pkgdir}/perl; \
-	for obj in $$oslist ; do \
-	    arch=`echo $${obj} | sed -e 's/_OPT.OBJ//' | sed -e 's/_DBG.OBJ//'` ;\
-	    perlarchdir=$${pkgdir}/perl/arch/$${arch}; export perlarchdir; \
-	    $(MAKE) PKGDIR=$${pkgdir}/bin/$${arch} BUILDDIR=./build/$${obj} pkg-arch-files ; \
-	    $(ECHO) "\n===== [`date`] making arch perl packaging $${perlarchdir}...\n"; \
-	    (cd ./build/package/$${obj}/mailstone && tar cf - perl/lib) | (cd $${pkgdir} && tar xf -); \
-	    [ -d $${perlarchdir} ] || mkdir -p $${perlarchdir}; \
-	    (cd ./build/package/$${obj}/mailstone/perl/bin && tar cf - .) | (cd $${perlarchdir} && tar xf -); \
-	done; \
-	rm -rf $${pkgdir}/perl/lib/5.00503/*/CORE/; \
-	: )
-	@$(ECHO) "\n===== [`date`] making unified compressed tar file...\n"
-	-rm -f ./build/mailstone-4.1-$@.tar.gz
-	(cd ./build/package/$@.OBJ && tar cf - . | gzip > ../../mailstone-4.1-$@.tar.gz)
-	@$(ECHO) "\n===== [`date`] making unified packaging for $@ done.\n"
-
 release::
 	@$(ECHO) "\n===== [`date`] making release build...\n"
 	$(MAKE) BUILD_VARIANT=release OBJDIR_TAG=_OPT targets
@@ -137,18 +186,19 @@ rpackage:: release
 	$(MAKE) BUILD_VARIANT=release OBJDIR_TAG=_OPT pkg
 	@$(ECHO) "\n===== [`date`] making release package done.\n"
 
-debug::
-	@$(ECHO) "\n===== [`date`] making debug build...\n"
-	$(MAKE) BUILD_VARIANT=debug OBJDIR_TAG=_DBG targets
-	@$(ECHO) "\n===== [`date`] making debug build done.\n"
+debug::	targets
+#	@$(ECHO) "\n===== [`date`] making debug build...\n"
+#	$(MAKE) BUILD_VARIANT=debug OBJDIR_TAG=_DBG targets
+#	@$(ECHO) "\n===== [`date`] making debug build done.\n"
 
-dpackage:: debug
-	@$(ECHO) "\n===== [`date`] making debug package...\n"
-	$(MAKE) BUILD_VARIANT=debug OBJDIR_TAG=_DBG pkg
-	@$(ECHO) "\n===== [`date`] making debug package done.\n"
+dpackage:: pkg
+#dpackage:: debug
+#	@$(ECHO) "\n===== [`date`] making debug package...\n"
+#	$(MAKE) BUILD_VARIANT=debug OBJDIR_TAG=_DBG pkg
+#	@$(ECHO) "\n===== [`date`] making debug package done.\n"
 
 cleanvariant::
-	(cd src; $(MAKE) OBJDIR=../build/$(OBJDIR) clean)
+	(cd src; $(MAKE) OBJDIR=../$(OBJDIR) clean)
 	rm -rf $(PKGDIR)
 
 clean::
@@ -156,8 +206,8 @@ clean::
 	$(MAKE) BUILD_VARIANT=debug OBJDIR_TAG=_DBG cleanvariant
 
 distcleanvariant::
-	(cd src; $(MAKE) OBJDIR=../build/$(OBJDIR) distclean)
-	rm -rf $(BUILDDIR) $(PKGDIR)
+	(cd src; $(MAKE) OBJDIR=../$(OBJDIR) distclean)
+	rm -rf $(OBJDIR) $(PKGDIR)
 
 distclean:: clean
 	$(MAKE) BUILD_VARIANT=release OBJDIR_TAG=_OPT distcleanvariant
