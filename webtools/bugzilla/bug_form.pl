@@ -21,6 +21,8 @@
 use diagnostics;
 use strict;
 
+use HTML::FromText;
+
 quietly_check_login();
 
 my $query = "
@@ -306,7 +308,9 @@ print "
 <td align=right>Opened:&nbsp;$bug{'creation_ts'}</td></tr></table>
 <HR>
 <PRE>
-" . html_quote($bug{'long_desc'}) . "
+";
+print text2html($bug{'long_desc'}, email=>1, urls=>1);
+print "
 </PRE>
 <HR>\n";
 

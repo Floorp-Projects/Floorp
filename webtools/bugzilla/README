@@ -161,7 +161,12 @@ It can be installed in the usual fashion after it has been fetched from
 CPAN where it is found as the Chart-x.x... tarball in a directory to be
 listed in Appendix A.
 
-1.9. HTTP server
+1.9.  HTML::FromText Perl module (1.001 or greater)
+
+This module does conversion from plaintext to html, doing the right
+things with URLs and stuff.  You can find it on CPAN (link in Appendix A).
+
+1.10. HTTP server
 
    You have a freedom of choice here - Apache, Netscape or any other server on
 UNIX would do. The only thing - to make configuration easier you'd better run
@@ -370,6 +375,8 @@ GD Perl module: ftp://ftp.cpan.org/pub/perl/CPAN/modules/by-module/GD/
 Chart::Base module:
 	ftp://ftp.cpan.org/pub/perl/CPAN/modules/by-module/Chart/
 
+HTML::FromText module:
+	ftp://ftp.cpan.org/pub/perl/CPAN/modules/by-module/HTML/
 
 Appendix B. Modifying Your Running System
 
