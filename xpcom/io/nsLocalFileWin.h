@@ -70,6 +70,7 @@ private:
 
     // this is the flag which indicates if I can used cached information about the file
     PRBool mDirty;
+    PRBool mLastResolution;
 
     // this string will alway be in native format!
     nsCString mWorkingPath;
@@ -80,10 +81,7 @@ private:
     IPersistFile* mPersistFile; 
     IShellLink*   mShellLink;
 
-
     WIN32_FILE_ATTRIBUTE_DATA mFileAttrData;    
-    
-    
     
     void MakeDirty();
     nsresult ResolveAndStat(PRBool resolveTerminal);

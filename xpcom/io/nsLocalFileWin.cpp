@@ -116,6 +116,70 @@ myLL_L2II(PRInt64 result, PRInt32 *hi, PRInt32 *lo )
 }
 
 
+nsresult 
+MyGetFileAttributesEx(const char* file, WIN32_FILE_ATTRIBUTE_DATA* data)
+{
+    BOOL okay;
+	if (!data || !file)
+		return NS_ERROR_FAILURE;
+    
+#ifdef WIN95
+    okay = PR_FALSE;
+	
+	memset(data, 0, sizeof(WIN32_FILE_ATTRIBUTE_DATA));
+    data->dwFileAttributes =  GetFileAttributes(file);
+    
+	if(! (data->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+	{
+		HANDLE hFile = CreateFile(file,
+								  GENERIC_READ, 
+								  FILE_SHARE_READ, 
+								  NULL, 
+								  OPEN_EXISTING, 
+								  FILE_ATTRIBUTE_NORMAL, 
+								  NULL); 
+
+		if (hFile != INVALID_HANDLE_VALUE)
+		{
+			okay = GetFileTime(hFile,
+							   &data->ftCreationTime,
+							   &data->ftLastAccessTime,
+							   &data->ftLastWriteTime);
+			if (okay)
+			{
+			   // Try to obtain hFile's huge size. 
+			   data->nFileSizeLow = GetFileSize (hFile, 
+												 &data->nFileSizeHigh);
+
+			   if (data->nFileSizeLow == 0xFFFFFFFF && 
+				   GetLastError() != NO_ERROR )
+			   { 
+				   //error in getting filesize
+				   okay = PR_FALSE;      
+			   } 
+			   else
+			   {
+				   okay = PR_TRUE;
+			   }
+			}
+			CloseHandle(hFile);
+		}
+	}
+	else
+	{
+		// it is a directory, 
+		okay = PR_TRUE;
+	}
+#else
+    okay =  GetFileAttributesEx(file,GetFileExInforStandard,data);
+#endif
+    if (!okay)
+       return ConvertWinError(GetLastError());
+    
+    return NS_OK;
+}
+
+
 class nsDirEnumerator : public nsISimpleEnumerator
 {
     public:
@@ -228,7 +292,7 @@ nsLocalFile::nsLocalFile()
         
     mPersistFile = nsnull;
     mShellLink   = nsnull;
-
+    mLastResolution = PR_FALSE;
     MakeDirty();
 }
 
@@ -279,6 +343,7 @@ nsLocalFile::MakeDirty()
 {
     mDirty       = PR_TRUE;
 }
+
 
 //----------------------------------------------------------------------------------------
 //
@@ -487,64 +552,56 @@ nsLocalFile::ResolvePath(const char* workingPath, PRBool resolveTerminal, char**
 nsresult
 nsLocalFile::ResolveAndStat(PRBool resolveTerminal)
 {
-    if (!mDirty)
+    if (!mDirty && mLastResolution == resolveTerminal)
     {
         return NS_OK;
     }
-    
+    mLastResolution = resolveTerminal;
+
     const char *workingFilePath = mWorkingPath.GetBuffer();
-    BOOL result;
+    nsresult result;
     
 
     // First we will see if the workingPath exists.  If it does, then we
     // can simply use that as the resolved path.  This simplification can
     // be done on windows cause its symlinks (shortcuts) use the .lnk
     // file extension.
-
-    // We are going to be checking the last error.
-    // Lets make sure that we clear it first.
-
-    SetLastError(0);
-        
-    result = GetFileAttributesEx( workingFilePath, GetFileExInfoStandard, &mFileAttrData);
     
-    if ( 0 !=  result )
+    result = MyGetFileAttributesEx( workingFilePath, &mFileAttrData);
+    
+    if ( NS_SUCCEEDED(result) )
     {
         mResolvedPath.SetString(workingFilePath);
+		mDirty = PR_FALSE;
+		return NS_OK;
     }
-    else
-    {
-        // okay, something is wrong with the working path.  We will try to resolve it.
 
-        char *resolvePath;
-        nsresult rv = ResolvePath(workingFilePath, resolveTerminal, &resolvePath);
-        if (NS_FAILED(rv))
-           return rv;
-        mResolvedPath.SetString(resolvePath);
-        nsAllocator::Free(resolvePath);
+    // okay, something is wrong with the working path.  We will try to resolve it.
+
+    char *resolvePath;
     
-        // if we are not resolving the terminal node, we have to "fake" windows
-        // out and append the ".lnk" file extension before getting any information
-        // about the shortcut.  If resoveTerminal was TRUE, than it the shortcut was
-        // resolved by the call to ResolvePath above.
+	result = ResolvePath(workingFilePath, resolveTerminal, &resolvePath);
+    if (NS_FAILED(result))
+       return result;
+    
+	mResolvedPath.SetString(resolvePath);
+    nsAllocator::Free(resolvePath);
 
-        if (resolveTerminal == false)
-        {
-            char linkStr[MAX_PATH];
-            strcpy(linkStr, mResolvedPath.GetBuffer());
-            strcat(linkStr, ".lnk");
-            result = GetFileAttributesEx( linkStr, GetFileExInfoStandard, &mFileAttrData);
+    // if we are not resolving the terminal node, we have to "fake" windows
+    // out and append the ".lnk" file extension before getting any information
+    // about the shortcut.  If resoveTerminal was TRUE, than it the shortcut was
+    // resolved by the call to ResolvePath above.
 
-            if ( 0 == result)
-            {
-                return ConvertWinError(GetLastError());
-            }
-        }
-        return ConvertWinError(GetLastError());
-    }
+    
+    char linkStr[MAX_PATH];
+    strcpy(linkStr, mResolvedPath.GetBuffer());
+    strcat(linkStr, ".lnk");
+    result = MyGetFileAttributesEx(linkStr, &mFileAttrData);
+    
+    if (NS_SUCCEEDED(result))
+		mDirty = PR_FALSE;
 
-    mDirty = PR_FALSE;
-    return NS_OK;
+	return result;
 }
 
 NS_IMETHODIMP  
@@ -795,11 +852,6 @@ nsLocalFile::CopySingleFile(nsIFile *sourceFile, nsIFile *destParent, const char
         return rv;
 
     int copyOK;
-    
-    // We are going to be checking the last error.
-    // Lets make sure that we clear it first.
-
-    SetLastError(0);
 
     if (!move)
         copyOK = CopyFile(filePath, destPath, PR_TRUE);
@@ -1319,7 +1371,7 @@ nsLocalFile::SetFileSize(PRInt64 aFileSize)
         MakeDirty();
         return NS_ERROR_FAILURE;
     }
-
+    
     // Seek to new, desired end of file
     PRInt32 hi, lo;
     myLL_L2II(aFileSize, &hi, &lo );

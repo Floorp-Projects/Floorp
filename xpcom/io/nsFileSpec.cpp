@@ -1023,7 +1023,11 @@ PRBool nsFileSpec::operator == (const nsFileSpec& inOther) const
 #define DIR_STRCMP    _stricmp
 #else
 #define DIR_SEPARATOR '/'
+#if defined(VMS)
+#define DIR_STRCMP     strcasecmp
+#else
 #define DIR_STRCMP     strcmp
+#endif
 #endif
     
     if(str[strLast] == DIR_SEPARATOR)
