@@ -82,7 +82,8 @@ function EditorOnLoad()
     }
     
     WebCompose = true;
-    
+    window.tryToClose = EditorCanClose;
+
     // Continue with normal startup.
     EditorStartup('html', document.getElementById("content-frame"));
 }
