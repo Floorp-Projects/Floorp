@@ -1341,10 +1341,12 @@ DeleteXPIs(short vRefNum, long dirID)
 				
 				if (pArchiveName)
 					DisposePtr((Ptr)pArchiveName);
+					
+                compsDone++;
 			}
 		}
-		
-		compsDone++;
+        else if (compsDone >= gControls->cfg->st[instChoice].numComps)
+            break;  
 	}
 }
 

@@ -298,7 +298,8 @@ if (err) 								\
 #define	sSELECTED		28
 #define sINVISIBLE		29
 #define	sLAUNCHAPP		30	
-#define sADDITIONAL		47	/* end parse keys */
+#define sADDITIONAL		47	
+#define sDOWNLOAD_ONLY  52  /* end parse keys */
 
 #define rErrorList      144 /* errors */
 #define eErrorMessage	1
@@ -413,6 +414,7 @@ typedef struct InstComp {
 	Boolean invisible;
 	Boolean launchapp;
 	Boolean	additional;
+	Boolean download_only;
 	
 	/* dependees */
 	Handle	depName[kMaxComponents];
