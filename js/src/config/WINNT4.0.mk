@@ -43,7 +43,7 @@ WIN_CFLAGS = /nologo /W3 /Gm /Zi /Fp$(OBJDIR)/js.pch /Fd$(OBJDIR)/js32.pdb
 WIN_DEBUG_CFLAGS = /MDd /Od
 
 # MSVC compiler options for release (optimized) builds
-# /MD      - link with MSVCRT.LIB (Dynamically-linked, multi-threaded, debug C-runtime)
+# /MD      - link with MSVCRT.LIB (Dynamically-linked, multi-threaded, C-runtime)
 # /O2      - Optimize for speed
 # /G5      - Optimize for Pentium
 WIN_OPT_CFLAGS = /MD /O2
