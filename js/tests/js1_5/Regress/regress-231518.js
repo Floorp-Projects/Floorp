@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s): Adrian Klein <dragosan@dragosan.net>
- *                 Martin Honnen <Martin.Honnen@arcor.de>
+ *                 Martin Honnen <martin.honnen@gmx.de>
  *                 Bob Clary <bob@bclary.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
