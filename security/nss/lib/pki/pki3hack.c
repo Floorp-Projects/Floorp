@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.77 $ $Date: 2003/11/11 21:46:53 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.78 $ $Date: 2003/11/13 03:41:32 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -88,6 +88,7 @@ STAN_GetDefaultCryptoContext()
 }
 
 extern const NSSError NSS_ERROR_ALREADY_INITIALIZED;
+extern const NSSError NSS_ERROR_INTERNAL_ERROR;
 
 NSS_IMPLEMENT PRStatus
 STAN_LoadDefaultNSS3TrustDomain (
@@ -730,21 +731,38 @@ stan_GetCERTCertificate(NSSCertificate *c, PRBool forceUpdate)
     nssDecodedCert *dc = c->decoding;
     CERTCertificate *cc;
 
+    /* There is a race in assigning c->decoding.  
+    ** This is a workaround.  Bugzilla bug 225525.
+    */
     if (!dc) {
 	dc = nssDecodedPKIXCertificate_Create(NULL, &c->encoding);
 	if (!dc) 
 	    return NULL;
 	cc = (CERTCertificate *)dc->data;
-	PORT_Assert(cc);
+	PORT_Assert(cc); /* software error */
 	if (!cc) {
 	    nssDecodedPKIXCertificate_Destroy(dc);
+	    nss_SetError(NSS_ERROR_INTERNAL_ERROR);
 	    return NULL;
 	}
-	PORT_Assert(!c->decoding); /* Feeble attempt at race detection. */
-	c->decoding = dc;
+	/* Once this race is fixed, an assertion should be put 
+	** here to detect any regressions. 
+    	PORT_Assert(!c->decoding); 
+	*/
+	if (!c->decoding) {
+	    c->decoding = dc;
+	} else { 
+	    /* Reduce the leaks here, until the race is fixed.  */
+	    nssDecodedPKIXCertificate_Destroy(dc);
+	    dc = c->decoding;
+	}
     }
     cc = (CERTCertificate *)dc->data;
     PORT_Assert(cc);
+    /* When c->decoding is non-NULL on input, but dc->data is
+     * NULL, we don't destroy dc because some other errant 
+     * code allocated it .
+     */
     if (cc) {
 	if (!cc->nssCertificate || forceUpdate) {
 	    fill_CERTCertificateFields(c, cc, forceUpdate);
