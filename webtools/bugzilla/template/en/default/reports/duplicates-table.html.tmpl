@@ -44,100 +44,104 @@
   
 [%# *** Column Headers *** %]
 
-<table border>
-  <tr bgcolor="#CCCCCC">
-    [% FOREACH column = [ { name => "id", description => "Bug #" },
-                          { name => "count", description => "Dupe<br>Count" },
-                          { name => "delta", 
-                      description => "Change in last<br>$changedsince day(s)" },
-                          { name => "component", description => "Component" },
-                          { name => "bug_severity", description => "Severity" },
-                          { name => "op_sys", description => "Op Sys" }, 
-                          { name => "target_milestone", 
-                            description => "Target<br>Milestone" },
-                          { name => "short_desc", description => "Summary" } ] 
-     %]
-                          
-      [%# Small hack to keep delta column out if we don't need it %]
-      [% NEXT IF column.name == "delta" AND NOT dobefore %]                     
+[% IF bug_ids.size > 0 %]
+  <table border>
+    <tr bgcolor="#CCCCCC">
+      [% FOREACH column = [ { name => "id", description => "Bug #" },
+                            { name => "count", description => "Dupe<br>Count" },
+                            { name => "delta", 
+                        description => "Change in last<br>$changedsince day(s)" },
+                            { name => "component", description => "Component" },
+                            { name => "bug_severity", description => "Severity" },
+                            { name => "op_sys", description => "Op Sys" }, 
+                            { name => "target_milestone", 
+                              description => "Target<br>Milestone" },
+                            { name => "short_desc", description => "Summary" } ] 
+       %]
+
+        [%# Small hack to keep delta column out if we don't need it %]
+        [% NEXT IF column.name == "delta" AND NOT dobefore %]                     
+
+        <td>
+          <center>
+            <b>
+              [% bug_ids_string = bug_ids.join(',') %]
+              <a href="duplicates.cgi?sortby=[% column.name %]
+                [% IF sortby == column.name %]
+                  [% "&reverse=1" IF NOT reverse %]
+                [% ELSE %]
+                  [%-# Some columns start off reversed %]
+                  [% "&reverse=1" IF column.name.match('delta|count') %]
+                [% END %]
+                [% "&maxrows=$maxrows" IF maxrows %]
+                [% "&changedsince=$changedsince" IF changedsince %]
+                [% "&openonly=1" IF openonly %]
+                [% "&product=$product" IF product %]
+                [% "&format=$format" IF format %]
+                [% "&bug_id=$bug_ids_string&sortvisible=1" IF sortvisible %]">
+                [% column.description %]</a>
+            </b>
+          </center>
+        </td>
+      [% END %]
+    </tr>
+
+  [% IF NOT sortby %]
+    [% sortby = "count"; reverse = "1" %]
+  [% END %]
+
+  [% IF sortby == "id" OR sortby == "count" OR sortby == "delta" %]
+    [%# Numeric sort %]
+    [% sortedbugs = bugs.nsort(sortby) %]
+  [% ELSE %]
+    [% sortedbugs = bugs.sort(sortby) %]
+  [% END %]
+
+  [% IF reverse %]
+    [% bugs = sortedbugs.reverse %]
+  [% ELSE %]
+    [% bugs = sortedbugs %]
+  [% END %]
+
+  [%# *** Buglist *** %]
+
+  [%# We need to keep track of the bug IDs we are actually displaying, because
+    # if the user decides to sort the visible list, we need to know what that
+    # list actually is. %]
+  [% vis_bug_ids = [] %]
+
+  [% FOREACH bug = bugs %]
+    [% LAST IF loop.index() >= maxrows %]
+    [% vis_bug_ids.push(bug.id) %]      
+
+    <tr>
+      <td>
+        <center>
+          [% "<strike>" IF bug.resolution != "" %]
+          <a href="show_bug.cgi?id=[% bug.id %]">[% bug.id %]</a>
+          [% "</strike>" IF bug.resolution != "" %]
+        </center>
+      </td>
 
       <td>
         <center>
-          <b>
-            [% bug_ids_string = bug_ids.join(',') %]
-            <a href="duplicates.cgi?sortby=[% column.name %]
-              [% IF sortby == column.name %]
-                [% "&reverse=1" IF NOT reverse %]
-              [% ELSE %]
-                [%-# Some columns start off reversed %]
-                [% "&reverse=1" IF column.name.match('delta|count') %]
-              [% END %]
-              [% "&maxrows=$maxrows" IF maxrows %]
-              [% "&changedsince=$changedsince" IF changedsince %]
-              [% "&openonly=1" IF openonly %]
-              [% "&product=$product" IF product %]
-              [% "&format=$format" IF format %]
-              [% "&bug_id=$bug_ids_string&sortvisible=1" IF sortvisible %]">
-              [% column.description %]</a>
-          </b>
+          [% bug.count %]
         </center>
       </td>
-    [% END %]
-  </tr>
-  
-[% IF NOT sortby %]
-  [% sortby = "count"; reverse = "1" %]
-[% END %]
 
-[% IF sortby == "id" OR sortby == "count" OR sortby == "delta" %]
-  [%# Numeric sort %]
-  [% sortedbugs = bugs.nsort(sortby) %]
+      [% IF dobefore %]
+        <td><center>[% bug.delta %]</center></td>
+      [% END %]
+
+      <td>[% bug.component %]</td>
+      <td><center>[% bug.bug_severity %]</center></td>
+      <td><center>[% bug.op_sys %]</center></td>
+      <td><center>[% bug.target_milestone %]</center></td>
+      <td>[% bug.short_desc FILTER html %]</td>
+    </tr>
+  [% END %]
+
+  </table>
 [% ELSE %]
-  [% sortedbugs = bugs.sort(sortby) %]
+  <h3>No duplicate bugs found.</h3>
 [% END %]
-
-[% IF reverse %]
-  [% bugs = sortedbugs.reverse %]
-[% ELSE %]
-  [% bugs = sortedbugs %]
-[% END %]
-
-[%# *** Buglist *** %]
-
-[%# We need to keep track of the bug IDs we are actually displaying, because
-  # if the user decides to sort the visible list, we need to know what that
-  # list actually is. %]
-[% vis_bug_ids = [] %]
-
-[% FOREACH bug = bugs %]
-  [% LAST IF loop.index() >= maxrows %]
-  [% vis_bug_ids.push(bug.id) %]      
-
-  <tr>
-    <td>
-      <center>
-        [% "<strike>" IF bug.resolution != "" %]
-        <a href="show_bug.cgi?id=[% bug.id %]">[% bug.id %]</a>
-        [% "</strike>" IF bug.resolution != "" %]
-      </center>
-    </td>
-
-    <td>
-      <center>
-        [% bug.count %]
-      </center>
-    </td>
-
-    [% IF dobefore %]
-      <td><center>[% bug.delta %]</center></td>
-    [% END %]
-
-    <td>[% bug.component %]</td>
-    <td><center>[% bug.bug_severity %]</center></td>
-    <td><center>[% bug.op_sys %]</center></td>
-    <td><center>[% bug.target_milestone %]</center></td>
-    <td>[% bug.short_desc FILTER html %]</td>
-  </tr>
-[% END %]
-
-</table>

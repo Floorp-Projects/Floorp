@@ -135,48 +135,50 @@ if (!tie(%before, 'AnyDBM_File', "data/duplicates/dupes$whenever",
     $dobefore = 1;
 }
 
-# Don't add CLOSED, and don't add VERIFIED unless they are INVALID or 
-# WONTFIX. We want to see VERIFIED INVALID and WONTFIX because common 
-# "bugs" which aren't bugs end up in this state.
-my $query = "
-  SELECT bugs.bug_id, component, bug_severity, op_sys, target_milestone,
-         short_desc, bug_status, resolution
-  FROM bugs 
-  WHERE (bug_status != 'CLOSED') 
-  AND   ((bug_status = 'VERIFIED' AND resolution IN ('INVALID', 'WONTFIX')) 
-         OR (bug_status != 'VERIFIED'))
-  AND bugs.bug_id IN (" . join(", ", keys %count) . ")";
-
-# Limit to a single product if requested             
-$query .= (" AND product = " . SqlQuote($product)) if $product;
- 
-SendSQL(SelectVisible($query, 
-                      $userid, 
-                      $usergroupset));
-                       
 my @bugs;
 my @bug_ids; 
 
-while (MoreSQLData()) {
-    # Note: maximum row count is dealt with in the template.
+if (scalar(%count)) {
+    # Don't add CLOSED, and don't add VERIFIED unless they are INVALID or 
+    # WONTFIX. We want to see VERIFIED INVALID and WONTFIX because common 
+    # "bugs" which aren't bugs end up in this state.
+    my $query = "
+      SELECT bugs.bug_id, component, bug_severity, op_sys, target_milestone,
+             short_desc, bug_status, resolution
+      FROM bugs 
+      WHERE (bug_status != 'CLOSED') 
+      AND   ((bug_status = 'VERIFIED' AND resolution IN ('INVALID', 'WONTFIX')) 
+             OR (bug_status != 'VERIFIED'))
+      AND bugs.bug_id IN (" . join(", ", keys %count) . ")";
 
-    my ($id, $component, $bug_severity, $op_sys, $target_milestone, 
-        $short_desc, $bug_status, $resolution) = FetchSQLData();
+    # Limit to a single product if requested             
+    $query .= (" AND product = " . SqlQuote($product)) if $product;
 
-    # Limit to open bugs only if requested
-    next if $openonly && ($resolution ne "");
+    SendSQL(SelectVisible($query, 
+                          $userid, 
+                          $usergroupset));
 
-    push (@bugs, { id => $id,
-                   count => $count{$id},
-                   delta => $delta{$id}, 
-                   component => $component,
-                   bug_severity => $bug_severity,
-                   op_sys => $op_sys,
-                   target_milestone => $target_milestone,
-                   short_desc => $short_desc,
-                   bug_status => $bug_status, 
-                   resolution => $resolution });
-    push (@bug_ids, $id); 
+    while (MoreSQLData()) {
+        # Note: maximum row count is dealt with in the template.
+
+        my ($id, $component, $bug_severity, $op_sys, $target_milestone, 
+            $short_desc, $bug_status, $resolution) = FetchSQLData();
+
+        # Limit to open bugs only if requested
+        next if $openonly && ($resolution ne "");
+
+        push (@bugs, { id => $id,
+                       count => $count{$id},
+                       delta => $delta{$id}, 
+                       component => $component,
+                       bug_severity => $bug_severity,
+                       op_sys => $op_sys,
+                       target_milestone => $target_milestone,
+                       short_desc => $short_desc,
+                       bug_status => $bug_status, 
+                       resolution => $resolution });
+        push (@bug_ids, $id); 
+    }
 }
 
 $vars->{'bugs'} = \@bugs;
