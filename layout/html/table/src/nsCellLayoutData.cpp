@@ -33,6 +33,7 @@ nsCellLayoutData::nsCellLayoutData(nsTableCellFrame *aCellFrame,
   : mDesiredSize(nsnull)
 {
   // IMPORTANT: Always intialize instance variables to null
+  mColLayoutData = nsnull;
   mCellFrame = nsnull;
   mMargin.top = mMargin.bottom = mMargin.left = mMargin.right = 0;
   
