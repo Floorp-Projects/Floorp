@@ -1023,7 +1023,7 @@ NS_METHOD nsMacWindow::SetSizeMode(PRInt32 aMode)
 			mZoomOnShow = PR_TRUE;
 	} else {
 		Rect macRect;
-		WindowPtr w = ::FrontWindow();
+		CalculateAndSetZoomedSize();
 		::ZoomWindow(mWindowPtr, aMode == nsSizeMode_Normal ? inZoomIn : inZoomOut , ::FrontWindow() == mWindowPtr);
 		::GetWindowPortBounds(mWindowPtr, &macRect);
 		Resize(macRect.right - macRect.left, macRect.bottom - macRect.top, PR_FALSE);
@@ -1031,6 +1031,68 @@ NS_METHOD nsMacWindow::SetSizeMode(PRInt32 aMode)
 
 	return rv;
 }
+
+void nsMacWindow::CalculateAndSetZoomedSize()
+{
+	GDHandle	gdZoomDevice;
+	short		rightVal;
+	short		wTitleHeight;
+	
+	StPortSetter setOurPort(mWindowPtr);
+
+	// calculate current window portbounds
+	Rect windRect;
+	::GetWindowPortBounds(mWindowPtr, &windRect);
+	::LocalToGlobal((Point *)&windRect.top);
+	::LocalToGlobal((Point *)&windRect.bottom);
+
+	// calculate window's titlebar height
+	RgnHandle structRgn = ::NewRgn();
+	::GetWindowRegion(mWindowPtr, kWindowStructureRgn, structRgn);
+	Rect structRgnBounds;
+	::GetRegionBounds(structRgn, &structRgnBounds);
+	wTitleHeight = windRect.top - 1 - structRgnBounds.top;
+	::DisposeRgn(structRgn);
+
+	windRect.top -= wTitleHeight;
+
+	// find the screen to which the window mostly belongs
+	GDHandle gdNthDevice = ::GetDeviceList();
+	long greatestArea = 0;
+	while (gdNthDevice) {
+		if (::TestDeviceAttribute(gdNthDevice, screenDevice) &&
+		    ::TestDeviceAttribute(gdNthDevice, screenActive)) {
+
+			Rect theSect;
+			long sectArea;
+
+			::SectRect(&windRect, &(**gdNthDevice).gdRect, &theSect);
+			sectArea = (theSect.right - theSect.left) * (theSect.bottom - theSect.top);
+			if (sectArea > greatestArea) {
+				greatestArea = sectArea;
+				gdZoomDevice = gdNthDevice;
+			}
+		}
+		gdNthDevice = ::GetNextDevice(gdNthDevice);
+	}
+
+	// set the window's maximized state to fill most of the screen
+	Rect tempRect = (**gdZoomDevice).gdRect;
+	rightVal = tempRect.right;
+	if (gdZoomDevice == ::GetMainDevice()) {
+		rightVal -= 64; // make room for finder desktop icons
+		wTitleHeight += ::GetMBarHeight();
+	}
+
+	Rect zoomRect;
+	::SetRect(&zoomRect,
+		tempRect.left + 7,
+		tempRect.top + wTitleHeight + 3,
+		rightVal - 12,
+		tempRect.bottom - 8);
+	::SetWindowStandardState ( mWindowPtr, &zoomRect );
+}
+
 
 //-------------------------------------------------------------------------
 //
