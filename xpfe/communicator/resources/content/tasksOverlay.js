@@ -101,7 +101,6 @@ function toOpenWindowByType( inType, uri )
 
 function OpenBrowserWindow()
 {
-  dump("In OpenBrowserWindw()...\n");
   var charsetArg = new String();
   var handler = Components.classes['@mozilla.org/commandlinehandler/general-startup;1?type=browser'];
   handler = handler.getService();
@@ -117,7 +116,6 @@ function OpenBrowserWindow()
   {
     var DocCharset = window._content.document.characterSet;
     charsetArg = "charset="+DocCharset;
-    dump("*** Current document charset: " + DocCharset + "\n");
 
     //we should "inherit" the charset menu setting in a new window
     window.openDialog(url, "_blank", "chrome,all,dialog=no", startpage, charsetArg);
@@ -138,7 +136,6 @@ function newWindowOfType( aType )
     NewEditorWindow();
     break;
   default:
-    dump( "Unsupported type of window: " + aType + "\n");
     break;
   }
 }
@@ -180,25 +177,19 @@ function toEditor()
 function ShowWindowFromResource( node )
 {
 	var windowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
-	dump("got window Manager \n");
 	var	windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
-    dump("got interface \n");
     
     var desiredWindow = null;
     var url = node.getAttribute('id');
-    dump( url +" finding \n" );
 	desiredWindow = windowManagerInterface.getWindowForResource( url );
-	dump( "got window \n");
 	if ( desiredWindow )
 	{
-		dump("focusing \n");
 		desiredWindow.focus();
 	}
 }
 
 function OpenTaskURL( inURL )
 {
-	dump("loading "+inURL+"\n");
 	
 	window.open( inURL );
 }
@@ -206,7 +197,6 @@ function OpenTaskURL( inURL )
 function ShowUpdateFromResource( node )
 {
 	var url = node.getAttribute('url');
-    dump( url +" finding \n" );
         // hack until I get a new interface on xpiflash to do a 
         // look up on the name/url pair.
 	OpenTaskURL( "http://www.mozilla.org/binaries.html");

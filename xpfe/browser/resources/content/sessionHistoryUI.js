@@ -130,7 +130,6 @@ function addToUrlbarHistory()
        var uriToAdd = Components.classes["@mozilla.org/network/standard-url;1"]
                             .createInstance(Components.interfaces.nsIURI);
        uriToAdd.spec = urlToAdd;
-       //dump("** URL entered = " + urlToAdd + "\n");
        var rdfUri = Components.classes["@mozilla.org/network/standard-url;1"]
                           .createInstance(Components.interfaces.nsIURI); 
        while(elements.hasMoreElements()) {
@@ -138,14 +137,12 @@ function addToUrlbarHistory()
           if (entry) {
              index ++;
              entry= entry.QueryInterface(Components.interfaces.nsIRDFLiteral);
-             var rdfValue = entry.Value;             
-             //dump("**** value obtained from RDF " + rdfValue + "\n");
+             var rdfValue = entry.Value;
              rdfUri.spec = rdfValue;
              if (rdfUri.equals(uriToAdd)) {
                  // URI already present in the database
                  // Remove it from its current position.
                  // It is inserted to the top after the while loop.
-                 //dump("*** URL are the same \n");
                  entries.RemoveElementAt(index, true);
                  break;                 
              }             

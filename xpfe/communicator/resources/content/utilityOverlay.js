@@ -242,24 +242,20 @@ function walletPreview(aForm) {
 
 function goToggleToolbar( id, elementID )
 {
-	dump( "toggling toolbar "+id+"\n");
 	var toolbar = document.getElementById( id );
 	var element = document.getElementById( elementID );
 	if ( toolbar )
 	{
 	 	var attribValue = toolbar.getAttribute("hidden") ;
 	
-		//dump("set hidden to "+!attribValue+"\n");
 		if ( attribValue == "true" )
 		{
-		//	dump( "Show \n");
 			toolbar.setAttribute("hidden", "false" );
 			if ( element )
 				element.setAttribute("checked","true")
 		}
 		else
 		{
-		//	dump("hide \n");
 			toolbar.setAttribute("hidden", true );
 			if ( element )
 				element.setAttribute("checked","false")
@@ -304,7 +300,6 @@ function openTopWin( url )
      but if we do this we need to have the option for chrome controls because goClickThrobber()
      needs to use this function with chrome controls */
   /* also, do we want to limit the number of help windows that can be spawned? */
-    // dump("SetPrefToCurrentPage("+ url +")\n");
     if ((url == null) || (url == "")) return;
     
     // xlate the URL if necessary
@@ -315,7 +310,6 @@ function openTopWin( url )
     
     // avoid loading "", since this loads a directory listing
     if (url == "") {
-        dump("openTopWin told to load an empty URL, so loading about:blank instead\n");
         url = "about:blank";
     }
     
@@ -355,7 +349,6 @@ function goAboutDialog()
 
 function goUpdateGlobalEditMenuItems()
 {
-	//dump("Updating edit menu items\n");
 	goUpdateCommand('cmd_undo');
 	goUpdateCommand('cmd_redo');
 	goUpdateCommand('cmd_cut');
@@ -373,7 +366,6 @@ function goUpdateFormsEditMenuItems() {
 // update menu items that rely on the current selection
 function goUpdateSelectEditMenuItems()
 {
-	//dump("Updating select menu items\n");
 	goUpdateCommand('cmd_cut');
 	goUpdateCommand('cmd_copy');
 	goUpdateCommand('cmd_delete');
@@ -382,7 +374,6 @@ function goUpdateSelectEditMenuItems()
 // update menu items that relate to undo/redo
 function goUpdateUndoEditMenuItems()
 {
-	//dump("Updating undo/redo menu items\n");
 	goUpdateCommand('cmd_undo');
 	goUpdateCommand('cmd_redo');
 }
@@ -390,14 +381,12 @@ function goUpdateUndoEditMenuItems()
 // update menu items that depend on clipboard contents
 function goUpdatePasteMenuItems()
 {
-	//dump("Updating clipboard menu items\n");
 	goUpdateCommand('cmd_paste');
 }
 
 // This used to be BrowserNewEditorWindow in navigator.js
 function NewEditorWindow()
 {
-  dump("In NewEditorWindow()...\n");
   // Open editor window with blank page
   // Kludge to leverage openDialog non-modal!
   window.openDialog( "chrome://editor/content", "_blank", "chrome,all,dialog=no", "about:blank");
@@ -405,12 +394,12 @@ function NewEditorWindow()
 
 function NewEditorFromTemplate()
 {
-  dump("NOT IMPLEMENTED: Write NewEditorFromTemplate()!\n")
+  // XXX not implemented
 }
 
 function NewEditorFromDraft()
 {
-  dump("NOT IMPLEMENTED: Write NewEditorFromDraft()!\n")
+  // XXX not implemented
 }
 
 
