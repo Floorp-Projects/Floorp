@@ -1,4 +1,4 @@
-#!/usr/local/bin/perl
+#!/usr/bin/env perl
 
 use Getopt::Std;
 getopts('chspi:');

@@ -70,7 +70,7 @@ LINCS = -I$(XPDIST)\include -I..\libical
 LIBICAL_OBJS=   .\$(OBJDIR)\icalvcal.obj \
 		.\$(OBJDIR)\vcaltest.obj \
 		.\$(OBJDIR)\vcaltmp.obj \
-		.\$(OBJDIR)\vcc.obj \
+                .\$(OBJDIR)\vcc.obj \
 		.\$(OBJDIR)\vobject.obj \
 		  $(NULL)
 

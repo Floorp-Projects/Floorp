@@ -86,6 +86,8 @@ struct icaltriggertype
 
 struct icaltriggertype icaltriggertype_from_string(const char* str);
 
+int icaltriggertype_is_null_trigger(struct icaltriggertype tr);
+
 /* struct icalreqstattype. This struct contains two string pointers,
 but don't try to free either of them. The "desc" string is a pointer
 to a static table inside the library.  Don't try to free it. The
@@ -104,8 +106,8 @@ struct icalreqstattype {
 	const char* debug;
 };
 
-struct icalreqstattype icalreqstattype_from_string(char* str);
-char* icalreqstattype_as_string(struct icalreqstattype);
+struct icalreqstattype icalreqstattype_from_string(const char* str);
+const char* icalreqstattype_as_string(struct icalreqstattype);
 
 
 

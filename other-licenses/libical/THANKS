@@ -40,7 +40,7 @@ Tom Leitner <tom@radar.tu-graz.ac.at> For several bug fixes in
 compiling on Tru64 UNIX.
 
 Patrick Lewis <plewis@inetarena.com> for several bug reports and
-contributions to the Python bindings
+substantial ( co-authorship) contributions to the Python bindings
 
 Larry W. Virden <lvirden@cas.org> for several bug reports in compiling
 on Solaris.
@@ -52,3 +52,9 @@ Hubert V <hubertv@bigfoot.com> for checking and analyzing the output
 of the recurrence rule system.
 
 Jonathan Yue <jonathan.yue@cp.net> for  icalproperty_get_name()
+
+Jeff Mace <jhm18@psu.edu> for finding bugs in gauges. 
+
+John Gray <gray@agora-net.com> for routing memory leaks, porting to
+WIN32, and taking over leadership of the project.
+

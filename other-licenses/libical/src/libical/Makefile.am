@@ -2,7 +2,7 @@
 #  FILE: Makefile.am
 #  CREATOR: eric 
 #  
-#  $Id: Makefile.am,v 1.1 2001/11/15 19:26:49 mikep%oeone.com Exp $
+#  $Id: Makefile.am,v 1.2 2001/12/21 18:56:11 mikep%oeone.com Exp $
 #
 #
 # (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org
@@ -18,7 +18,7 @@
 #    The Mozilla Public License Version 1.0. You may obtain a copy of
 #    the License at http://www.mozilla.org/MPL/
 #
-#  The original code is icalcomponent.c
+#  
 #
 #======================================================================
 
@@ -28,9 +28,19 @@ ICALSCRIPTS = $(top_srcdir)/scripts
 
 lib_LTLIBRARIES = libical.la
 
+noinst_LTLIBRARIES = libical-static.la
+libical_static_la_SOURCES = $(libical_la_SOURCES)
+libical_static_la_LDFLAGS = --all-static
+
 YFLAGS = -d -v -t -pical_yy
 LFLAGS = -Pical_yy
 LEX_OUTPUT_ROOT = lex.ical_yy
+
+CPPFLAGS = -DPACKAGE_DATA_DIR=\""$(datadir)/$(PACKAGE)"\"
+
+# CFLAGS = -g
+
+all: ical.h
 
 INCLUDES =			\
 	-I$(top_builddir)	\
@@ -41,6 +51,9 @@ INCLUDES =			\
 libical_la_LDFLAGS = -version-info 0:0:0
 
 libical_la_SOURCES =		\
+	$(BUILT_SOURCES)	\
+	icalarray.c		\
+	icalarray.h		\
 	icalattendee.h		\
 	icalattendee.c		\
 	icalcomponent.c		\
@@ -57,20 +70,17 @@ libical_la_SOURCES =		\
 	icalparameter.c		\
 	icalparameter.h		\
 	icalparameterimpl.h	\
-	icalderivedparameter.c	\
-	icalderivedparameter.h	\
 	icalparser.c		\
 	icalparser.h		\
-	icalderivedproperty.c	\
-	icalderivedproperty.h	\
 	icalproperty.c		\
 	icalproperty.h		\
 	icalrecur.c		\
 	icalrecur.h		\
-	icalrestriction.c	\
 	icalrestriction.h	\
 	icaltime.c		\
 	icaltime.h		\
+	icaltimezone.c		\
+	icaltimezone.h		\
 	icalduration.h		\
 	icalduration.c		\
 	icalperiod.h		\
@@ -80,8 +90,6 @@ libical_la_SOURCES =		\
 	icalvalue.c		\
 	icalvalue.h		\
 	icalvalueimpl.h		\
-	icalderivedvalue.c	\
-	icalderivedvalue.h	\
 	icalyacc.h		\
 	icalyacc.y		\
 	pvl.c			\
@@ -99,6 +107,7 @@ libicalinclude_HEADERS =  ical.h
 # ORDERING OF HEADERS IS SIGNIFICANT. Don't change this ordering. It
 # is required to make the combined header ical.h properly
 COMBINEDHEADERS =					\
+        $(top_builddir)/config.h                        \
 	$(top_builddir)/src/libical/icalversion.h	\
 	$(top_srcdir)/src/libical/icaltime.h		\
 	$(top_srcdir)/src/libical/icalduration.h	\
@@ -108,13 +117,15 @@ COMBINEDHEADERS =					\
 	$(top_srcdir)/src/libical/icalrecur.h		\
 	icalderivedvalue.h				\
 	icalderivedparameter.h				\
-	icalvalue.h					\
-	icalparameter.h					\
+	$(top_srcdir)/src/libical/icalvalue.h		\
+	$(top_srcdir)/src/libical/icalparameter.h	\
 	icalderivedproperty.h				\
-	icalproperty.h					\
+	$(top_srcdir)/src/libical/icalproperty.h	\
 	$(top_srcdir)/src/libical/icalattendee.h	\
 	$(top_srcdir)/src/libical/pvl.h			\
+	$(top_srcdir)/src/libical/icalarray.h		\
 	$(top_srcdir)/src/libical/icalcomponent.h	\
+	$(top_srcdir)/src/libical/icaltimezone.h	\
 	$(top_srcdir)/src/libical/icalparser.h		\
 	$(top_srcdir)/src/libical/icalmemory.h		\
 	$(top_srcdir)/src/libical/icalerror.h		\
@@ -123,19 +134,22 @@ COMBINEDHEADERS =					\
 	$(top_srcdir)/src/libical/icalmime.h 		\
 	$(top_srcdir)/src/libical/icallangbind.h	
 
-BUILT_SOURCES =			\
-	ical.h			\
-	icalderivedparameter.c	\
+BUILT_COMBINEDHEADERS = 	\
 	icalderivedparameter.h	\
-	icalderivedproperty.c	\
 	icalderivedproperty.h	\
-	icalrestriction.c	\
-	icalderivedvalue.c	\
 	icalderivedvalue.h
+
+BUILT_SOURCES =			\
+	$(BUILT_COMBINEDHEADERS)\
+	icalderivedparameter.c	\
+	icalderivedproperty.c	\
+	icalrestriction.c	\
+	icalderivedvalue.c
 
 ical.h: $(COMBINEDHEADERS)
 	cat $(COMBINEDHEADERS)				\
 	| egrep -v "#include.*\"ical"			\
+	| egrep -v "#include.*\"config"			\
 	| egrep -v "#include.*\"pvl\.h\"" > ical.h
 
 icallexer.c : icalyacc.h
@@ -152,9 +166,8 @@ PARAMETERDEPS =	\
 icalderivedparameter.h: $(PARAMETERDEPS) 
 	$(PERL) -I $(ICALSCRIPTS) $(ICALSCRIPTS)/mkderivedparameters.pl -i $(srcdir)/icalderivedparameter.h.in -h $(DESIGNDATA)/parameters.csv > icalderivedparameter.h 
 
-icalderivedparameter.c: $(PARAMETERDEPS) icalparameter.h
+icalderivedparameter.c: $(PARAMETERDEPS) $(BUILT_COMBINEDHEADERS)
 	$(PERL) -I $(ICALSCRIPTS) $(ICALSCRIPTS)/mkderivedparameters.pl -i $(srcdir)/icalderivedparameter.c.in -c $(DESIGNDATA)/parameters.csv > icalderivedparameter.c
-
 
 # properties
 
@@ -171,7 +184,7 @@ icalderivedproperty.h: $(PROPERTYDEPS)
 		-i $(srcdir)/icalderivedproperty.h.in -h $(DESIGNDATA)/properties.csv\
 		${DESIGNDATA}/value-types.csv > icalderivedproperty.h 
 
-icalderivedproperty.c: $(PROPERTYDEPS) icalproperty.h 
+icalderivedproperty.c: $(PROPERTYDEPS) $(BUILT_COMBINEDHEADERS)
 	$(PERL)  -I$(ICALSCRIPTS) $(ICALSCRIPTS)/mkderivedproperties.pl \
 		-i $(srcdir)/icalderivedproperty.c.in -c $(DESIGNDATA)/properties.csv \
 		${DESIGNDATA}/value-types.csv > icalderivedproperty.c
@@ -199,7 +212,7 @@ icalderivedvalue.h: $(VALUEDEPS)
 	$(PERL) -I$(ICALSCRIPTS)  $(ICALSCRIPTS)/mkderivedvalues.pl \
 	         -i $(srcdir)/icalderivedvalue.h.in -h $(DESIGNDATA)/value-types.csv > icalderivedvalue.h
 
-icalderivedvalue.c: $(VALUEDEPS) icalderivedvalue.h
+icalderivedvalue.c: $(VALUEDEPS) $(BUILT_COMBINEDHEADERS)
 	$(PERL)  -I$(ICALSCRIPTS) $(ICALSCRIPTS)/mkderivedvalues.pl \
 		-i $(srcdir)/icalderivedvalue.c.in -c $(DESIGNDATA)/value-types.csv > icalderivedvalue.c
 
@@ -208,7 +221,11 @@ icalderivedvalue.c: $(VALUEDEPS) icalderivedvalue.h
 # housekeeping
 CONFIG_CLEAN_FILES = y.output
 
-CLEANFILES += $(BUILT_SOURCES)
+CLEANFILES += $(BUILT_SOURCES) $(BUILT_COMBINEDHEADERS)
+
+dist-hook:
+	cd $(distdir); rm -f $(BUILT_SOURCES)
+	cd $(distdir); rm -f ical.h icalversion.h icalyacc.c icalyacc.h icallexer.c
 
 EXTRA_DIST =			\
 	icalderivedparameter.c.in \

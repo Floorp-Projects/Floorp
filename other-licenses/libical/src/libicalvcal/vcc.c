@@ -23,6 +23,11 @@
 #define	ID	273
 #define	STRING	274
 
+#ifdef WIN32
+#define snprintf	_snprintf
+#define strcasecmp	stricmp
+#endif
+
 #line 1 "vcc.y"
 
 

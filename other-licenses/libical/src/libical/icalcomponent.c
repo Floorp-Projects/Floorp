@@ -2,7 +2,7 @@
   FILE: icalcomponent.c
   CREATOR: eric 28 April 1999
   
-  $Id: icalcomponent.c,v 1.2 2001/11/22 19:21:47 mikep%oeone.com Exp $
+  $Id: icalcomponent.c,v 1.3 2001/12/21 18:56:13 mikep%oeone.com Exp $
 
 
  (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org
@@ -33,19 +33,19 @@
 #include "icalmemory.h"
 #include "icalenums.h"
 #include "icaltime.h"
+#include "icalarray.h"
+#include "icaltimezone.h"
 #include "icalduration.h"
 #include "icalperiod.h"
 #include "icalparser.h"
+#include "icalrestriction.h"
 
 #include <stdlib.h>  /* for malloc */
 #include <stdarg.h> /* for va_list, etc */
 #include <errno.h>
 #include <assert.h>
 #include <stdio.h> /* for fprintf */
-
-#ifndef win32
-#include <string.h>
-#endif
+#include <string.h> /* for strdup */
 
 #define MAX_TMP 1024
 
@@ -59,6 +59,13 @@ struct icalcomponent_impl
 	pvl_list components;
 	pvl_elem component_iterator;
 	icalcomponent* parent;
+
+	/* An array of icaltimezone structs. We use this so we can do fast
+	   lookup of timezones using binary searches. timezones_sorted is
+	   set to 0 whenever we add a timezone, so we remember to sort the
+	   array before doing a binary search. */
+	icalarray* timezones;
+	int timezones_sorted;
 };
 
 /* icalproperty functions that only components get to use */
@@ -68,6 +75,24 @@ icalcomponent* icalproperty_get_parent(icalproperty* property);
 void icalcomponent_add_children(struct icalcomponent_impl *impl,va_list args);
 icalcomponent* icalcomponent_new_impl (icalcomponent_kind kind);
 int icalcomponent_property_sorter(void *a, void *b);
+
+static void icalcomponent_merge_vtimezone (icalcomponent *comp,
+					   icalcomponent *vtimezone,
+					   icalarray *tzids_to_rename);
+static void icalcomponent_handle_conflicting_vtimezones (icalcomponent *comp,
+							 icalcomponent *vtimezone,
+							 icalproperty *tzid_prop,
+							 const char *tzid,
+							 icalarray *tzids_to_rename);
+static int icalcomponent_get_tzid_prefix_len (const char *tzid);
+static void icalcomponent_rename_tzids(icalcomponent* comp,
+				       icalarray* rename_table);
+static void icalcomponent_rename_tzids_callback(icalparameter *param,
+						void *data);
+static int icalcomponent_compare_vtimezones (icalcomponent	*vtimezone1,
+					     icalcomponent	*vtimezone2);
+static int icalcomponent_compare_timezone_fn	(const void	*elem1,
+						 const void	*elem2);
 
 
 void icalcomponent_add_children(struct icalcomponent_impl *impl,va_list args)
@@ -112,6 +137,8 @@ icalcomponent_new_impl (icalcomponent_kind kind)
     comp->component_iterator = 0;
     comp->x_name = 0;
     comp->parent = 0;
+    comp->timezones = NULL;
+    comp->timezones_sorted = 1;
 
     return comp;
 }
@@ -203,13 +230,16 @@ icalcomponent_free (icalcomponent* component)
 
     if(component != 0 ){
        
-       while( (prop=pvl_pop(c->properties)) != 0){
-	   assert(prop != 0);
-           icalproperty_set_parent(prop,0);
-	   icalproperty_free(prop);
-       }
-       
-       pvl_free(c->properties);
+		if ( c->properties != 0 )
+		{
+		   while( (prop=pvl_pop(c->properties)) != 0){
+		   assert(prop != 0);
+			   icalproperty_set_parent(prop,0);
+		   icalproperty_free(prop);
+		   }
+	        pvl_free(c->properties);
+		}
+      
 
        while( (comp=pvl_data(pvl_head(c->components))) != 0){
 	   assert(comp!=0);
@@ -223,6 +253,9 @@ icalcomponent_free (icalcomponent* component)
 	    free(c->x_name);
 	}
 
+	if (c->timezones)
+	    icaltimezone_array_free (c->timezones);
+
 	c->kind = ICAL_NO_COMPONENT;
 	c->properties = 0;
 	c->property_iterator = 0;
@@ -230,6 +263,7 @@ icalcomponent_free (icalcomponent* component)
 	c->component_iterator = 0;
 	c->x_name = 0;	
 	c->id[0] = 'X';
+	c->timezones = NULL;
 
 	free(c);
     }
@@ -263,7 +297,7 @@ icalcomponent_as_ical_string (icalcomponent* component)
    icalerror_check_arg_rz( (component!=0), "component");
    icalerror_check_arg_rz( (kind!=ICAL_NO_COMPONENT), "component kind is ICAL_NO_COMPONENT");
    
-   kind_string  = icalenum_component_kind_to_string(kind);
+   kind_string  = icalcomponent_kind_to_string(kind);
 
    icalerror_check_arg_rz( (kind_string!=0),"Unknown kind of component");
 
@@ -300,7 +334,7 @@ icalcomponent_as_ical_string (icalcomponent* component)
    
    icalmemory_append_string(&buf, &buf_ptr, &buf_size, "END:");
    icalmemory_append_string(&buf, &buf_ptr, &buf_size, 
-			    icalenum_component_kind_to_string(kind));
+			    icalcomponent_kind_to_string(kind));
    icalmemory_append_string(&buf, &buf_ptr, &buf_size, newline);
 
    out_buf = icalmemory_tmp_copy(buf);
@@ -364,8 +398,8 @@ int icalcomponent_property_sorter(void *a, void *b)
     kinda = icalproperty_isa((icalproperty*)a);
     kindb = icalproperty_isa((icalproperty*)b);
 
-    ksa = icalenum_property_kind_to_string(kinda);
-    ksb = icalenum_property_kind_to_string(kindb);
+    ksa = icalproperty_kind_to_string(kinda);
+    ksb = icalproperty_kind_to_string(kindb);
 
     return strcmp(ksa,ksb);
 }
@@ -530,11 +564,26 @@ icalcomponent_add_component (icalcomponent* parent, icalcomponent* child)
     impl = (struct icalcomponent_impl*)parent;
     cimpl = (struct icalcomponent_impl*)child;
 
-    icalerror_assert( (cimpl->parent ==0),"The child component has already been added to a parent component. Remove the component with icalcomponent_remove_component before calling icalcomponent_add_component");
+    if (cimpl->parent !=0) {
+        icalerror_set_errno(ICAL_USAGE_ERROR);
+    }
 
     cimpl->parent = parent;
 
     pvl_push(impl->components,child);
+
+    /* If the new component is a VTIMEZONE, add it to our array. */
+    if (cimpl->kind == ICAL_VTIMEZONE_COMPONENT) {
+	/* FIXME: Currently we are also creating this array when loading in
+	   a builtin VTIMEZONE, when we don't need it. */
+	if (!impl->timezones)
+	    impl->timezones = icaltimezone_array_new ();
+
+	icaltimezone_array_append_from_vtimezone (impl->timezones, child);
+
+	/* Flag that we need to sort it before doing any binary searches. */
+	impl->timezones_sorted = 0;
+    }
 }
 
 
@@ -550,6 +599,22 @@ icalcomponent_remove_component (icalcomponent* parent, icalcomponent* child)
    impl = (struct icalcomponent_impl*)parent;
    cimpl = (struct icalcomponent_impl*)child;
    
+    /* If the component is a VTIMEZONE, remove it from our array as well. */
+    if (cimpl->kind == ICAL_VTIMEZONE_COMPONENT) {
+	icaltimezone *zone;
+	int i, num_elements;
+
+	num_elements = impl->timezones ? impl->timezones->num_elements : 0;
+        for (i = 0; i < num_elements; i++) {
+	    zone = icalarray_element_at (impl->timezones, i);
+	    if (icaltimezone_get_component (zone) == child) {
+		icaltimezone_free (zone, 0);
+	        icalarray_remove_element_at (impl->timezones, i);
+		break;
+	    }
+	}
+    }
+
    for( itr = pvl_head(impl->components);
 	itr != 0;
 	itr = next_itr)
@@ -673,12 +738,19 @@ icalcomponent* icalcomponent_get_first_real_component(icalcomponent *c)
 
 	if(kind == ICAL_VEVENT_COMPONENT ||
 	   kind == ICAL_VTODO_COMPONENT ||
-	   kind == ICAL_VJOURNAL_COMPONENT ){
+	   kind == ICAL_VJOURNAL_COMPONENT ||
+           kind == ICAL_VFREEBUSY_COMPONENT ){
 	    return comp;
 	}
     }
     return 0;
 }
+
+#ifndef WIN32
+#define BEN
+#endif
+
+#ifdef BEN
 
 time_t icalcomponent_convert_time(icalproperty *p)
 {
@@ -707,12 +779,25 @@ time_t icalcomponent_convert_time(icalproperty *p)
 	       icalproperty_as_ical_string(p), ctime(&convt));
 #endif
 
-    } else if (sict.is_utc == 0 && tzp == 0 ) {
+    } else if (sict.is_utc == 0 && tzp == 0 ) { 	/* not utc and no zone info */
 	time_t offset;
 
 	/* _as_timet will use localtime() to do the conversion */
 	convt = icaltime_as_timet(sict);
-	offset = icaltime_utc_offset(sict,0);
+	
+	/* offset = icaltime_utc_offset(sict,0); */
+	
+	/* benjaminlee: this replaces the line above
+	maybe it can be changed to something better? */
+	
+	{
+		struct tm *tmp_tm;
+		time_t t;
+
+		t = time(NULL);
+	 	offset = localtime(&t)->tm_gmtoff;
+	}
+
 	convt += offset;
 
 #ifdef TEST_CONVERT_TIME
@@ -720,9 +805,17 @@ time_t icalcomponent_convert_time(icalproperty *p)
 	       icalproperty_as_ical_string(p), ctime(&convt));
 #endif
     } else {
-	/* Convert the time to UTC for the named timezone*/
-	const char* timezone = icalparameter_get_tzid(tzp);
-	convt = icaltime_as_timet(icaltime_as_utc(sict,timezone));
+	/* Convert the local time in the timezone (from tzp) to UTC*/
+	const char* mytimezone = icalparameter_get_tzid(tzp);
+	
+	icaltimezone_convert_time (&sict, 
+			icaltimezone_get_builtin_timezone(mytimezone),
+			icaltimezone_get_utc_timezone()
+			);
+	
+	sict.is_utc = 1;
+
+	convt = icaltime_as_timet(sict);
 
 #ifdef TEST_CONVERT_TIME
 	printf("convert time: use _as_utc:\n %s\n %s",
@@ -732,6 +825,9 @@ time_t icalcomponent_convert_time(icalproperty *p)
 
     return convt;
 }
+
+#endif
+
 struct icaltime_span icalcomponent_get_span(icalcomponent* comp)
 {
     icalcomponent *inner;
@@ -798,7 +894,10 @@ struct icaltime_span icalcomponent_get_span(icalcomponent* comp)
 
     icalerror_clear_errno();
 
+    /* FIXME: Needs updating to new icaltimezone functions. */
+#ifdef BEN
     span.start = icalcomponent_convert_time(p);
+#endif
 
 #ifdef TEST_CONVERT_TIME
     printf("convert time:\n %s %s",
@@ -806,8 +905,15 @@ struct icaltime_span icalcomponent_get_span(icalcomponent* comp)
 #endif
 
     if(icalerrno != ICAL_NO_ERROR){
+
+		if ( icalerrno != ICAL_MALFORMEDDATA_ERROR ) {
 	span.start = 0;
 	return span;
+    }
+#ifndef NO_WARN_ICAL_MALFORMEDDATA_ERROR_HACK
+		fprintf(stderr, "** WARNING ** %s: %d %s\n", __FILE__, __LINE__, icalerror_strerror(icalerrno));
+		fprintf(stderr, "** WARNING ** %s: %d %s\n", __FILE__, __LINE__, "HACK around ICAL_MALFORMEDDATA_ERROR");
+#endif
     }
 
     /* The end time could be specified as either a DTEND or a DURATION */
@@ -822,7 +928,10 @@ struct icaltime_span icalcomponent_get_span(icalcomponent* comp)
     } 
 
     if (p!=0){
+    /* FIXME: Needs updating to new icaltimezone functions. */
+#ifdef BEN
 	span.end = icalcomponent_convert_time(p);
+#endif
     } else if (start.is_date == 1) {
 	/* Duration is all day */
 	span.end = span.start + 60*60*24;
@@ -842,6 +951,10 @@ struct icaltime_span icalcomponent_get_span(icalcomponent* comp)
 
 }
 
+int icalcomponent_check_restrictions(icalcomponent* comp){
+    icalerror_check_arg_rz(comp!=0,"comp");
+    return icalrestriction_check(comp);
+}
 
 int icalcomponent_count_errors(icalcomponent* component)
 {
@@ -958,10 +1071,7 @@ void icalcomponent_convert_errors(icalcomponent* component)
 		
 		rst.debug = icalproperty_get_xlicerror(p);
 		icalcomponent_add_property(component,
-					   icalproperty_new_requeststatus(
-					       icalreqstattype_as_string(rst)
-					       )
-		    );
+					   icalproperty_new_requeststatus(rst));
 		
 		icalcomponent_remove_property(component,p);
 	    }
@@ -1076,7 +1186,8 @@ icalcomponent_begin_component(icalcomponent* component,icalcomponent_kind kind)
 
     icalerror_check_arg_re( (component!=0),"component",icalcompiter_null);
 
-    for( i = pvl_head(impl->components); i != 0; i = pvl_next(itr.iter)) {
+//    for( i = pvl_head(impl->components); i != 0; i = pvl_next(itr.iter)) {
+    for( i = pvl_head(impl->components); i != 0; i = pvl_next(i)) {
 	
 	icalcomponent *c =  (icalcomponent*) pvl_data(i);
 	
@@ -1183,14 +1294,49 @@ icalcomponent* icalcomponent_get_inner(icalcomponent* comp)
     }
 }
 
+void icalcomponent_set_method(icalcomponent* comp, icalproperty_method method)
+{
+    icalproperty *prop 
+	= icalcomponent_get_first_property(comp, ICAL_METHOD_PROPERTY);
+
+
+    if (prop == 0){
+	prop = icalproperty_new_method(method);
+	icalcomponent_add_property(comp, prop);
+    }
+    
+    icalproperty_set_method(prop,method);
+
+}
+
+icalproperty_method icalcomponent_get_method(icalcomponent* comp)
+{
+    icalproperty *prop 
+	= icalcomponent_get_first_property(comp,ICAL_METHOD_PROPERTY);
+
+    if (prop == 0){
+	return ICAL_METHOD_NONE;
+    }
+    
+    return icalproperty_get_method(prop);
+}
+
+#define ICALSETUPSET(p_kind) \
+    icalcomponent *inner; \
+    icalproperty *prop; \
+    icalerror_check_arg_rv(comp!=0,"comp");\
+    inner = icalcomponent_get_inner(comp); \
+    if(inner == 0){\
+        icalerror_set_errno(ICAL_MALFORMEDDATA_ERROR);\
+        return;\
+    }\
+    prop = icalcomponent_get_first_property(inner, p_kind);
+ 
+
 
 void icalcomponent_set_dtstart(icalcomponent* comp, struct icaltimetype v)
 {
-
-    icalcomponent *inner = icalcomponent_get_inner(comp); 
-    icalproperty *prop 
-	= icalcomponent_get_first_property(inner, ICAL_DTSTART_PROPERTY);
-
+    ICALSETUPSET(ICAL_DTSTART_PROPERTY);
 
     if (prop == 0){
 	prop = icalproperty_new_dtstart(v);
@@ -1352,40 +1498,10 @@ struct icaldurationtype icalcomponent_get_duration(icalcomponent* comp)
     }
 }
 
-void icalcomponent_set_method(icalcomponent* comp, icalproperty_method method)
-{
-    icalproperty *prop 
-	= icalcomponent_get_first_property(comp, ICAL_METHOD_PROPERTY);
-
-
-    if (prop == 0){
-	prop = icalproperty_new_method(method);
-	icalcomponent_add_property(comp, prop);
-    }
-    
-    icalproperty_set_method(prop,method);
-
-}
-
-icalproperty_method icalcomponent_get_method(icalcomponent* comp)
-{
-    icalproperty *prop 
-	= icalcomponent_get_first_property(comp,ICAL_METHOD_PROPERTY);
-
-    if (prop == 0){
-	return ICAL_METHOD_NONE;
-    }
-    
-    return icalproperty_get_method(prop);
-}
-
 void icalcomponent_set_dtstamp(icalcomponent* comp, struct icaltimetype v)
 {
 
-    icalcomponent *inner = icalcomponent_get_inner(comp); 
-    icalproperty *prop 
-	= icalcomponent_get_first_property(inner, ICAL_DTSTAMP_PROPERTY);
-
+    ICALSETUPSET(ICAL_DTSTAMP_PROPERTY);
 
     if (prop == 0){
 	prop = icalproperty_new_dtstamp(v);
@@ -1413,10 +1529,8 @@ struct icaltimetype icalcomponent_get_dtstamp(icalcomponent* comp)
 
 void icalcomponent_set_summary(icalcomponent* comp, const char* v)
 {
-    icalcomponent *inner = icalcomponent_get_inner(comp); 
-    icalproperty *prop 
-	= icalcomponent_get_first_property(inner, ICAL_SUMMARY_PROPERTY);
-
+    ICALSETUPSET(ICAL_SUMMARY_PROPERTY)
+ 
     if (prop == 0){
 	prop = icalproperty_new_summary(v);
 	icalcomponent_add_property(inner, prop);
@@ -1428,9 +1542,18 @@ void icalcomponent_set_summary(icalcomponent* comp, const char* v)
 
 const char* icalcomponent_get_summary(icalcomponent* comp)
 {
-    icalcomponent *inner = icalcomponent_get_inner(comp); 
-    icalproperty *prop 
-	= icalcomponent_get_first_property(inner,ICAL_SUMMARY_PROPERTY);
+    icalcomponent *inner;
+    icalproperty *prop;
+    icalerror_check_arg_rz(comp!=0,"comp");
+
+    inner = icalcomponent_get_inner(comp); 
+
+    if(inner == 0){
+        icalerror_set_errno(ICAL_MALFORMEDDATA_ERROR);
+        return 0;
+    }
+
+    prop= icalcomponent_get_first_property(inner,ICAL_SUMMARY_PROPERTY);
 
     if (prop == 0){
 	return 0;
@@ -1440,11 +1563,72 @@ const char* icalcomponent_get_summary(icalcomponent* comp)
 
 }
 
-void icalcomponent_set_comment(icalcomponent* comp, const char* v);
-const char* icalcomponent_get_comment(icalcomponent* comp);
+void icalcomponent_set_comment(icalcomponent* comp, const char* v)
+{
+    ICALSETUPSET(ICAL_COMMENT_PROPERTY);
 
-void icalcomponent_set_uid(icalcomponent* comp, const char* v);
-const char* icalcomponent_get_uid(icalcomponent* comp);
+    if (prop == 0){
+	prop = icalproperty_new_comment(v);
+	icalcomponent_add_property(inner, prop);
+    }
+
+    icalproperty_set_summary(prop,v);
+
+}
+const char* icalcomponent_get_comment(icalcomponent* comp){
+    icalcomponent *inner;
+    icalproperty *prop;
+    icalerror_check_arg_rz(comp!=0,"comp");
+
+    inner = icalcomponent_get_inner(comp); 
+
+    if(inner == 0){
+        icalerror_set_errno(ICAL_MALFORMEDDATA_ERROR);
+        return 0;
+    }
+
+    prop= icalcomponent_get_first_property(inner,ICAL_COMMENT_PROPERTY);
+
+    if (prop == 0){
+	return 0;
+    }
+    
+    return icalproperty_get_comment(prop);
+}
+
+void icalcomponent_set_uid(icalcomponent* comp, const char* v)
+{
+    ICALSETUPSET(ICAL_UID_PROPERTY);
+
+    if (prop == 0){
+	prop = icalproperty_new_comment(v);
+	icalcomponent_add_property(inner, prop);
+    }
+
+    icalproperty_set_summary(prop,v);
+
+}
+const char* icalcomponent_get_uid(icalcomponent* comp){
+    icalcomponent *inner;
+    icalproperty *prop;
+    icalerror_check_arg_rz(comp!=0,"comp");
+
+    inner = icalcomponent_get_inner(comp); 
+
+    if(inner == 0){
+        icalerror_set_errno(ICAL_MALFORMEDDATA_ERROR);
+        return 0;
+    }
+
+    prop= icalcomponent_get_first_property(inner,ICAL_UID_PROPERTY);
+
+    if (prop == 0){
+	return 0;
+    }
+    
+    return icalproperty_get_uid(prop);
+}
+
 
 void icalcomponent_set_recurrenceid(icalcomponent* comp, 
 				    struct icaltimetype v);
@@ -1488,4 +1672,416 @@ icalcomponent* icalcomponent_new_xstandard()
 icalcomponent* icalcomponent_new_xdaylight()
 {
     return icalcomponent_new(ICAL_XDAYLIGHT_COMPONENT);
+}
+
+
+/*
+ * Timezone stuff.
+ */
+
+/* This takes 2 VCALENDAR components and merges the second one into the first,
+   resolving any problems with conflicting TZIDs. comp_to_merge will no
+   longer exist after calling this function. */
+void icalcomponent_merge_component(icalcomponent* comp,
+				   icalcomponent* comp_to_merge)
+{
+  icalcomponent *subcomp, *next_subcomp;
+  icalarray *tzids_to_rename;
+  int i;
+
+  /* Check that both components are VCALENDAR components. */
+  assert (icalcomponent_isa(comp) == ICAL_VCALENDAR_COMPONENT);
+  assert (icalcomponent_isa(comp_to_merge) == ICAL_VCALENDAR_COMPONENT);
+
+  /* Step through each subcomponent of comp_to_merge, looking for VTIMEZONEs.
+     For each VTIMEZONE found, check if we need to add it to comp and if we
+     need to rename it and all TZID references to it. */
+  tzids_to_rename = icalarray_new (sizeof (char*), 16);
+  subcomp = icalcomponent_get_first_component (comp_to_merge,
+					       ICAL_VTIMEZONE_COMPONENT);
+  while (subcomp) {
+    next_subcomp = icalcomponent_get_next_component (comp_to_merge,
+						     ICAL_VTIMEZONE_COMPONENT);
+    /* This will add the VTIMEZONE to comp, if necessary, and also update
+       the array of TZIDs we need to rename. */
+    icalcomponent_merge_vtimezone (comp, subcomp, tzids_to_rename);
+    /* FIXME: Handle possible NEWFAILED error. */
+
+    subcomp = next_subcomp;
+  }
+
+  /* If we need to do any renaming of TZIDs, do it now. */
+  if (tzids_to_rename->num_elements != 0) {
+    icalcomponent_rename_tzids (comp_to_merge, tzids_to_rename);
+      
+    /* Now free the tzids_to_rename array. */
+    for (i = 0; i < tzids_to_rename->num_elements; i++) {
+      free (icalarray_element_at (tzids_to_rename, i));
+    }
+    icalarray_free (tzids_to_rename);
+  }
+
+  /* Now move all the components from comp_to_merge to comp, excluding
+     VTIMEZONE components. */
+  subcomp = icalcomponent_get_first_component (comp_to_merge,
+					       ICAL_ANY_COMPONENT);
+  while (subcomp) {
+    next_subcomp = icalcomponent_get_next_component (comp_to_merge,
+						     ICAL_ANY_COMPONENT);
+    if (icalcomponent_isa(subcomp) != ICAL_VTIMEZONE_COMPONENT) {
+      icalcomponent_remove_component (comp_to_merge, subcomp);
+      icalcomponent_add_component (comp, subcomp);
+    }
+    subcomp = next_subcomp;
+  }
+
+  /* Free comp_to_merge. We have moved most of the subcomponents over to
+     comp now. */
+  icalcomponent_free (comp_to_merge);
+}
+
+
+static void icalcomponent_merge_vtimezone (icalcomponent *comp,
+					   icalcomponent *vtimezone,
+					   icalarray *tzids_to_rename)
+{
+  icalproperty *tzid_prop;
+  const char *tzid;
+  char *tzid_copy;
+  icaltimezone *existing_vtimezone;
+
+  /* Get the TZID of the VTIMEZONE. */
+  tzid_prop = icalcomponent_get_first_property (vtimezone, ICAL_TZID_PROPERTY);
+  if (!tzid_prop)
+    return;
+
+  tzid = icalproperty_get_tzid (tzid_prop);
+  if (!tzid)
+    return;
+
+  /* See if there is already a VTIMEZONE in comp with the same TZID. */
+  existing_vtimezone = icalcomponent_get_timezone (comp, tzid);
+
+  /* If there is no existing VTIMEZONE with the same TZID, we can just move
+     the VTIMEZONE to comp and return. */
+  if (!existing_vtimezone) {
+    icalcomponent_remove_component (icalcomponent_get_parent (vtimezone),
+				    vtimezone);
+    icalcomponent_add_component (comp, vtimezone);
+    return;
+  }
+
+  /* If the TZID has a '/' prefix, then we don't have to worry about the
+     clashing TZIDs, as they are supposed to be exactly the same VTIMEZONE. */
+  if (tzid[0] == '/')
+    return;
+
+  /* Now we have two VTIMEZONEs with the same TZID (which isn't a globally
+     unique one), so we compare the VTIMEZONE components to see if they are
+     the same. If they are, we don't need to do anything. We make a copy of
+     the tzid, since the parameter may get modified in these calls. */
+  tzid_copy = strdup (tzid);
+  if (!tzid_copy) {
+    icalerror_set_errno(ICAL_NEWFAILED_ERROR);
+    return;
+  }
+
+  if (!icalcomponent_compare_vtimezones (existing_vtimezone, vtimezone)) {
+    /* FIXME: Handle possible NEWFAILED error. */
+
+    /* Now we have two different VTIMEZONEs with the same TZID. */
+    icalcomponent_handle_conflicting_vtimezones (comp, vtimezone, tzid_prop,
+						 tzid_copy, tzids_to_rename);
+  }
+  free (tzid_copy);
+}
+
+
+static void
+icalcomponent_handle_conflicting_vtimezones (icalcomponent *comp,
+					     icalcomponent *vtimezone,
+					     icalproperty *tzid_prop,
+					     const char *tzid,
+					     icalarray *tzids_to_rename)
+{
+  struct icalcomponent_impl *impl = (struct icalcomponent_impl*)comp;
+  int tzid_len, i, suffix, max_suffix = 0, num_elements;
+  char *tzid_copy, *new_tzid, suffix_buf[32];
+
+  /* Find the length of the TZID without any trailing digits. */
+  tzid_len = icalcomponent_get_tzid_prefix_len (tzid);
+
+  /* Step through each of the VTIMEZONEs in comp. We may already have the
+     clashing VTIMEZONE in the calendar, but it may have been renamed
+     (i.e. a unique number added on the end of the TZID, e.g. 'London2').
+     So we compare the new VTIMEZONE with any VTIMEZONEs that have the
+     same prefix (e.g. 'London'). If it matches any of those, we have to
+     rename the TZIDs to that TZID, else we rename to a new TZID, using
+     the biggest numeric suffix found + 1. */
+  num_elements = impl->timezones ? impl->timezones->num_elements : 0;
+  for (i = 0; i < num_elements; i++) {
+    icaltimezone *zone;
+    char *existing_tzid, *existing_tzid_copy;
+    int existing_tzid_len;
+
+    zone = icalarray_element_at (impl->timezones, i);
+    existing_tzid = icaltimezone_get_tzid (zone);
+
+    /* Find the length of the TZID without any trailing digits. */
+    existing_tzid_len = icalcomponent_get_tzid_prefix_len (existing_tzid);
+
+    /* Check if we have the same prefix. */
+    if (tzid_len == existing_tzid_len
+	&& !strncmp (tzid, existing_tzid, tzid_len)) {
+      /* Compare the VTIMEZONEs. */
+      if (icalcomponent_compare_vtimezones (icaltimezone_get_component (zone),
+					    vtimezone)) {
+	/* The VTIMEZONEs match, so we can use the existing VTIMEZONE. But
+	   we have to rename TZIDs to this TZID. */
+	tzid_copy = strdup (tzid);
+	existing_tzid_copy = strdup (existing_tzid);
+	if (!tzid_copy || !existing_tzid_copy) {
+	  icalerror_set_errno(ICAL_NEWFAILED_ERROR);
+	} else {
+	  icalarray_append (tzids_to_rename, tzid_copy);
+	  icalarray_append (tzids_to_rename, existing_tzid_copy);
+	}
+	return;
+      } else {
+	/* FIXME: Handle possible NEWFAILED error. */
+
+	/* Convert the suffix to an integer and remember the maximum numeric
+	   suffix found. */
+	suffix = atoi (existing_tzid + existing_tzid_len);
+	if (max_suffix < suffix)
+	  max_suffix = suffix;
+      }
+    }
+  }
+
+  /* We didn't find a VTIMEZONE that matched, so we have to rename the TZID,
+     using the maximum numerical suffix found + 1. */
+  tzid_copy = strdup (tzid);
+  sprintf (suffix_buf, "%i", max_suffix + 1);
+  new_tzid = malloc (tzid_len + strlen (suffix_buf) + 1);
+  if (!new_tzid || !tzid_copy) {
+    icalerror_set_errno(ICAL_NEWFAILED_ERROR);
+    return;
+  }
+
+  strncpy (new_tzid, tzid, tzid_len);
+  strcpy (new_tzid + tzid_len, suffix_buf);
+  icalarray_append (tzids_to_rename, tzid_copy);
+  icalarray_append (tzids_to_rename, new_tzid);
+}
+
+
+/* Returns the length of the TZID, without any trailing digits. */
+static int icalcomponent_get_tzid_prefix_len (const char *tzid)
+{
+  int len;
+  const char *p;
+
+  len = strlen (tzid);
+  p = tzid + len - 1;
+  while (len > 0 && *p >= '0' && *p <= '9') {
+    p--;
+    len--;
+  }
+
+  return len;
+}
+
+
+/* Renames all references to the given TZIDs to a new name. rename_table
+   contains pairs of strings - a current TZID, and the new TZID to rename it
+   to. */
+static void icalcomponent_rename_tzids(icalcomponent* comp,
+				       icalarray* rename_table)
+{
+    icalcomponent_foreach_tzid (comp, icalcomponent_rename_tzids_callback,
+				rename_table);
+}
+
+
+static void icalcomponent_rename_tzids_callback(icalparameter *param, void *data)
+{
+    icalarray *rename_table = data;
+    const char *tzid;
+    int i;
+
+    tzid = icalparameter_get_tzid (param);
+    if (!tzid)
+        return;
+
+    /* Step through the rename table to see if the current TZID matches
+       any of the ones we want to rename. */
+    for (i = 0; i < rename_table->num_elements - 1; i += 2) {
+        if (!strcmp (tzid, icalarray_element_at (rename_table, i))) {
+	    icalparameter_set_tzid (param, icalarray_element_at (rename_table, i + 1));
+	    break;
+	}
+    }
+}
+
+
+/* Calls the given function for each TZID parameter found in the component. */
+void icalcomponent_foreach_tzid(icalcomponent* comp,
+				void (*callback)(icalparameter *param, void *data),
+				void *callback_data)
+{
+    icalproperty *prop;
+    icalproperty_kind kind;
+    icalparameter *param;
+    icalcomponent *subcomp;
+
+    /* First look for any TZID parameters used in this component itself. */
+    prop = icalcomponent_get_first_property (comp, ICAL_ANY_PROPERTY);
+    while (prop) {
+      kind = icalproperty_isa (prop);
+
+      /* These are the only properties that can have a TZID. Note that
+	 COMPLETED, CREATED, DTSTAMP & LASTMODIFIED must be in UTC. */
+      if (kind == ICAL_DTSTART_PROPERTY || kind == ICAL_DTEND_PROPERTY
+	  || kind == ICAL_DUE_PROPERTY || kind == ICAL_EXDATE_PROPERTY
+	  || kind == ICAL_RDATE_PROPERTY) {
+	param = icalproperty_get_first_parameter (prop, ICAL_TZID_PARAMETER);
+	if (param)
+	    (*callback) (param, callback_data);
+      }
+
+      prop = icalcomponent_get_next_property (comp, ICAL_ANY_PROPERTY);
+    }
+
+    /* Now recursively check child components. */
+    subcomp = icalcomponent_get_first_component (comp, ICAL_ANY_COMPONENT);
+    while (subcomp) {
+        icalcomponent_foreach_tzid (subcomp, callback, callback_data);
+        subcomp = icalcomponent_get_next_component (comp, ICAL_ANY_COMPONENT);
+    }
+}
+
+
+
+/* Returns the icaltimezone from the component corresponding to the given
+   TZID, or NULL if the component does not have a corresponding VTIMEZONE. */
+icaltimezone* icalcomponent_get_timezone(icalcomponent* comp, const char *tzid)
+{
+    struct icalcomponent_impl *impl;
+    icaltimezone *zone;
+    int lower, upper, middle, cmp;
+    char *zone_tzid;
+
+    impl = (struct icalcomponent_impl*)comp;
+
+    if (!impl->timezones)
+	return NULL;
+
+    /* Sort the array if necessary (by the TZID string). */
+    if (!impl->timezones_sorted) {
+	icalarray_sort (impl->timezones, icalcomponent_compare_timezone_fn);
+	impl->timezones_sorted = 1;
+    }
+
+    /* Do a simple binary search. */
+    lower = middle = 0;
+    upper = impl->timezones->num_elements;
+
+    while (lower < upper) {
+	middle = (lower + upper) >> 1;
+	zone = icalarray_element_at (impl->timezones, middle);
+	zone_tzid = icaltimezone_get_tzid (zone);
+	cmp = strcmp (tzid, zone_tzid);
+	if (cmp == 0)
+	    return zone;
+	else if (cmp < 0)
+	    upper = middle;
+	else
+	    lower = middle + 1;
+    }
+
+    return NULL;
+}
+
+
+/* A function to compare 2 icaltimezone elements, used for qsort(). */
+static int icalcomponent_compare_timezone_fn	(const void	*elem1,
+						 const void	*elem2)
+{
+    icaltimezone *zone1, *zone2;
+    const char *zone1_tzid, *zone2_tzid;
+    int retval;
+
+    zone1 = (icaltimezone*) elem1;
+    zone2 = (icaltimezone*) elem2;
+
+    zone1_tzid = icaltimezone_get_tzid (zone1);
+    zone2_tzid = icaltimezone_get_tzid (zone2);
+
+    return strcmp (zone1_tzid, zone2_tzid);
+}
+
+
+/* Compares 2 VTIMEZONE components to see if they match, ignoring their TZIDs.
+   It returns 1 if they match, 0 if they don't, or -1 on error. */
+static int icalcomponent_compare_vtimezones (icalcomponent	*vtimezone1,
+					     icalcomponent	*vtimezone2)
+{
+    icalproperty *prop1, *prop2;
+    const char *tzid1, *tzid2;
+    char *tzid2_copy, *string1, *string2;
+    int cmp;
+
+    /* Get the TZID property of the first VTIMEZONE. */
+    prop1 = icalcomponent_get_first_property (vtimezone1, ICAL_TZID_PROPERTY);
+    if (!prop1)
+	return -1;
+
+    tzid1 = icalproperty_get_tzid (prop1);
+    if (!tzid1)
+	return -1;
+
+    /* Get the TZID property of the second VTIMEZONE. */
+    prop2 = icalcomponent_get_first_property (vtimezone2, ICAL_TZID_PROPERTY);
+    if (!prop2)
+	return -1;
+
+    tzid2 = icalproperty_get_tzid (prop2);
+    if (!tzid2)
+	return -1;
+
+    /* Copy the second TZID, and set the property to the same as the first
+       TZID, since we don't care if these match of not. */
+    tzid2_copy = strdup (tzid2);
+    if (!tzid2_copy) {
+      icalerror_set_errno (ICAL_NEWFAILED_ERROR);
+      return 0;
+    }
+
+    icalproperty_set_tzid (prop2, tzid1);
+
+    /* Now convert both VTIMEZONEs to strings and compare them. */
+    string1 = icalcomponent_as_ical_string (vtimezone1);
+    if (!string1) {
+	free (tzid2_copy);
+	return -1;
+    }
+
+    string2 = icalcomponent_as_ical_string (vtimezone2);
+    if (!string2) {
+	free (string1);
+	free (tzid2_copy);
+	return -1;
+    }
+
+    cmp = strcmp (string1, string2);
+
+    free (string1);
+    free (string2);
+
+    /* Now reset the second TZID. */
+    icalproperty_set_tzid (prop2, tzid2_copy);
+    free (tzid2_copy);
+
+    return (cmp == 0) ? 1 : 0;
 }

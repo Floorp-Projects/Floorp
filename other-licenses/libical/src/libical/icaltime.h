@@ -4,7 +4,7 @@
  CREATOR: eric 02 June 2000
 
 
- $Id: icaltime.h,v 1.1 2001/11/15 19:27:10 mikep%oeone.com Exp $
+ $Id: icaltime.h,v 1.2 2001/12/21 18:56:27 mikep%oeone.com Exp $
  $Locker:  $
 
  (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org
@@ -31,6 +31,13 @@
 
 #include <time.h>
 
+/* An opaque struct representing a timezone. We declare this here to avoid
+   a circular dependancy. */
+#ifndef ICALTIMEONE_DEFINED
+#define ICALTIMEONE_DEFINED
+typedef struct _icaltimezone		icaltimezone;
+#endif
+
 /* icaltime_span is returned by icalcomponent_get_span() */
 struct icaltime_span {
 	time_t start; /* in UTC */
@@ -41,8 +48,8 @@ struct icaltime_span {
 
 struct icaltimetype
 {
-	int year;
-	int month;
+	int year;	/* Actual year, e.g. 2001. */
+	int month;	/* 1 (Jan) to 12 (Dec). */
 	int day;
 	int hour;
 	int minute;
@@ -52,14 +59,29 @@ struct icaltimetype
 
 	int is_date; /* 1 -> interpret this as date. */
    
+	int is_daylight; /* 1 -> time is in daylight savings time. */
+   
 	const char* zone; /*Ptr to Olsen placename. Libical does not own mem*/
 };	
 
 /* Convert seconds past UNIX epoch to a timetype*/
 struct icaltimetype icaltime_from_timet(time_t v, int is_date);
 
+/* Newer version of above, using timezones. */
+struct icaltimetype icaltime_from_timet_with_zone(time_t tm, int is_date,
+						  icaltimezone *zone);
+
+/* Returns the current time in the given timezone, as an icaltimetype. */
+struct icaltimetype icaltime_current_time_with_zone(icaltimezone *zone);
+
+/* Returns the current day as an icaltimetype, with is_date set. */
+struct icaltimetype icaltime_today(void);
+
 /* Return the time as seconds past the UNIX epoch */
 time_t icaltime_as_timet(struct icaltimetype);
+
+/* Newer version of above, using timezones. */
+time_t icaltime_as_timet_with_zone(struct icaltimetype tt, icaltimezone *zone);
 
 /* Return a string represention of the time, in RFC2445 format. The
    string is owned by libical */
@@ -75,6 +97,11 @@ int icaltime_as_int(struct icaltimetype);
 /* create a time from an ISO format string */
 struct icaltimetype icaltime_from_string(const char* str);
 
+
+/* begin WARNING !! DEPRECATED !! functions *****
+use new icaltimezone functions, see icaltimezone.h
+ */
+
 /* Routines for handling timezones */
 /* Return the offset of the named zone as seconds. tt is a time
    indicating the date for which you want the offset */
@@ -88,6 +115,11 @@ struct icaltimetype icaltime_as_utc(struct icaltimetype tt,
 /* convert tt, a time in UTC, into a time in timezone tzid */
 struct icaltimetype icaltime_as_zone(struct icaltimetype tt,
 				     const char* tzid);
+
+/* end WARNING !! DEPRECATED !! functions *****
+ */
+
+
 
 /* Return a null time, which indicates no time has been set. This time represent the beginning of the epoch */
 struct icaltimetype icaltime_null_time(void);
@@ -138,6 +170,9 @@ int icaltime_compare_date_only(struct icaltimetype a, struct icaltimetype b);
 /* Return the number of days in the given month */
 short icaltime_days_in_month(short month,short year);
 
+/* Adds or subtracts a number of days, hours, minutes and seconds. */
+void  icaltime_adjust(struct icaltimetype *tt, int days, int hours,
+		      int minutes, int seconds);
 
 #endif /* !ICALTIME_H */
 

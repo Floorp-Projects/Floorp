@@ -32,6 +32,14 @@
 
 typedef void icalcomponent;
 
+/* An opaque struct representing a timezone. We declare this here to avoid
+   a circular dependancy. */
+#ifndef ICALTIMEONE_DEFINED
+#define ICALTIMEONE_DEFINED
+typedef struct _icaltimezone		icaltimezone;
+#endif
+
+
 /* This is exposed so that callers will not have to allocate and
    deallocate iterators. Pretend that you can't see it. */
 typedef struct icalcompiter
@@ -97,6 +105,13 @@ void icalcomponent_remove_component(icalcomponent* parent,
 int icalcomponent_count_components(icalcomponent* component,
 				   icalcomponent_kind kind);
 
+/* This takes 2 VCALENDAR components and merges the second one into the first,
+   resolving any problems with conflicting TZIDs. comp_to_merge will no
+   longer exist after calling this function. */
+void icalcomponent_merge_component(icalcomponent* comp,
+				   icalcomponent* comp_to_merge);
+
+
 /* Iteration Routines. There are two forms of iterators, internal and
 external. The internal ones came first, and are almost completely
 sufficient, but they fail badly when you want to construct a loop that
@@ -121,10 +136,14 @@ icalcomponent* icalcompiter_prior(icalcompiter* i);
 icalcomponent* icalcompiter_deref(icalcompiter* i);
 
 
-
-
 /* Working with embedded error properties */
 
+
+/* Check the component against itip rules and insert error properties*/
+/* Working with embedded error properties */
+int icalcomponent_check_restrictions(icalcomponent* comp);
+
+/*Count embedded errors*/
 int icalcomponent_count_errors(icalcomponent* component);
 
 /* Remove all X-LIC-ERROR properties*/
@@ -217,7 +236,16 @@ int icalcomponent_remove_attendee(icalcomponent *comp, char* cuid);
 struct icalattendeetype icalcomponent_get_attendee(icalcomponent *comp,
   int index);
 
+/* Calls the given function for each TZID parameter found in the component,
+   and any subcomponents. */
+void icalcomponent_foreach_tzid(icalcomponent* comp,
+				void (*callback)(icalparameter *param, void *data),
+				void *callback_data);
 
+/* Returns the icaltimezone in the component corresponding to the TZID, or NULL
+   if it can't be found. */
+icaltimezone* icalcomponent_get_timezone(icalcomponent* comp,
+					 const char *tzid);
 
 
 /*************** Type Specific routines ***************/

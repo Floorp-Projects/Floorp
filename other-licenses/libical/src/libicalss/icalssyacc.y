@@ -6,7 +6,7 @@
   
   DESCRIPTION:
   
-  $Id: icalssyacc.y,v 1.1 2001/11/15 19:27:32 mikep%oeone.com Exp $
+  $Id: icalssyacc.y,v 1.2 2001/12/21 18:56:40 mikep%oeone.com Exp $
   $Locker:  $
 
 (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org
@@ -45,7 +45,7 @@ void ssyacc_add_from(struct icalgauge_impl* impl, char* str1);
 void set_logic(struct icalgauge_impl* impl,icalgaugelogic l);
 void sserror(char *s); /* Don't know why I need this.... */
 
-
+extern char* sstext;
 
 %}
 
@@ -241,5 +241,5 @@ void ssyacc_add_from(struct icalgauge_impl* impl, char* str1)
 
 
 void sserror(char *s){
-    fprintf(stderr,"Parse error \'%s\'\n", s);
+    icalerror_set_errno(ICAL_MALFORMEDDATA_ERROR);
 }

@@ -7,7 +7,7 @@
 # DESCRIPTION:
 #   
 #
-#  $Id: Component.py,v 1.1 2001/11/15 19:27:40 mikep%oeone.com Exp $
+#  $Id: Component.py,v 1.2 2001/12/21 18:56:50 mikep%oeone.com Exp $
 #  $Locker:  $
 #
 # (C) COPYRIGHT 2001, Eric Busboom <eric@softwarestudio.org>
@@ -26,29 +26,39 @@
 #======================================================================
 
 from LibicalWrap import *
-from types import *
-from Property import *
+from types import DictType, StringType, IntType
+from Property import Property
 from Collection import *
+from Attendee import Attendee, Organizer
+from Time import Time
+from Duration import Duration
+from Period import Period
+import string
+
+WrapperNULL = None
 
 class Component:
 
-    def __init__(self,str=None, component_kind="ANY", ref=None):
+    def __init__(self,ref=None,kind=None):
 
-        if ref != None: 
+        if ref != None:
             self._ref = ref
+        elif kind != None:
+            self._ref = icalcomponent_new(
+                icalcomponent_string_to_kind("VCALENDAR"))
+            _kind = icalcomponent_string_to_kind(kind)
+            inner = icalcomponent_new(_kind)
+            
+            icalcomponent_add_component(self._ref,inner);
+
         else:
-            self._ref = None
-            if str != None:
-                self._ref = icalparser_parse_string(str)
-            else:
-                kind = icalenum_string_to_component_kind(component_kind)
-                self._ref = icalcomponent_new(kind)
-       
+            raise "Could not construct component of kind" + kind
+
         self.cached_props = {}
+        self.cached_comps = {}
 
     def __del__(self):
-        if self._ref != None and \
-           icalcomponent_get_parent(self._ref) != None:
+        if self._ref != None and icalcomponent_get_parent(self._ref) != WrapperNULL:
 
             for k in self.cached_props.keys():
                 del self.cached_props[k]
@@ -58,7 +68,11 @@ class Component:
 
     def _prop_from_ref(self,p):
 
+        if(p == None or p== WrapperNULL):
+            return None;
+
         d_string = icallangbind_property_eval_string(p,":")
+
         d = eval(d_string)
         d['ref'] = p
         
@@ -85,7 +99,7 @@ class Component:
 
        p = icallangbind_get_first_property(self._ref,type) 
 
-       if p !='NULL':
+       if p !=WrapperNULL:
            self._prop_from_ref(p)
            prop =  self.cached_props[p]
            return prop
@@ -102,8 +116,9 @@ class Component:
 
         p = icallangbind_get_first_property(self._ref,type)
 
-        while p !='NULL':
-            self._prop_from_ref(p)
+        while p !=WrapperNULL and p != None:
+
+            self._prop_from_ref(p) # Puts property in self.cached_props
             prop =  self.cached_props[p]
             props.append(prop)
             p = icallangbind_get_next_property(self._ref,type)
@@ -122,12 +137,12 @@ class Component:
             s = str(prop)
             prop_p = icalproperty_new_from_string(s)
 
-            if prop_p == 'NULL':
+            if prop_p == WrapperNULL:
                 raise "Bad property string: " + s
 
             prop.ref(prop_p)
 
-        if icalproperty_get_parent(prop_p)=='NULL':
+        if icalproperty_get_parent(prop_p)==WrapperNULL:
             icalcomponent_add_property(self._ref, prop_p)
         elif  icalproperty_get_parent(prop_p) != self._ref:
             raise "Property is already a child of another component"
@@ -143,16 +158,48 @@ class Component:
     def components(self,type='ANY'):        
         comps = []
 
+        kind = icalcomponent_string_to_kind(type)
+        c = icalcomponent_get_first_component(self._ref,kind);
+
+        while c != WrapperNULL and c != None:
+
+            if not self.cached_comps.has_key(c):              
+
+                self.cached_comps[c] = Component(c)
+
+            comp = self.cached_comps[c]
+            comps.append(comp)
+            c = icalcomponent_get_next_component(self._ref,kind);
+
         return comps
 
-    def add_component(self, componentObj):
-        "Adds a child component."
-        pass
+    def inner_component(self):
         
+        inner = icalcomponent_get_inner(self._ref)
 
-    def remove_component(self, component):
+        if inner == WrapperNULL and inner != None:
+            return None
+
+        return NewComponent(inner)
+
+    def add_component(self, comp):
+        "Adds a child component."
+
+        if not isinstance(comp,Component):
+            raise ValueError("Expected a Component")
+
+        if icalcomponent_get_parent(comp._ref) != WrapperNULL:
+           raise "Failed to add child component. Child already has a parent"; 
+
+        icalcomponent_add_component(self._ref,comp._ref)
+
+    def remove_component(self, comp):
         "Removes a child component"
-        pass
+
+        if not isinstance(comp,Component):
+            raise ValueError("Expected a Component")
+
+        icalcomponent_remove_component(self._ref,comp._ref)
 
     def as_ical_string(self):
         return self.__str__()
@@ -163,30 +210,30 @@ class Component:
 
 
 
-def NewComponent(comp):
+def NewComponent(c):
     "Converts a string or C icalcomponent into the right component object."
 
     wasStr=0 # Were we passed a string or an icalcomponent?
 
-    if isinstance (comp, StringType):
-        compStr = comp
-        comp = icalparser_parse_string(comp)
-        wasStr=1
+    if isinstance (c, StringType) and  string.find(c,"icalcomponent") == -1:
+        comp = icalparser_parse_string(c)
     else:
-        compStr = icalcomponent_as_ical_string(comp)
+        comp = c
+
+    if comp == None or comp == WrapperNULL:
+        raise ValueError("Expected a libical reference or an iCal string")
 
     kind = icalcomponent_isa(comp)
-    kindStr = icalenum_component_kind_to_string(kind)
-    # Do I need to free kind? (I think not).
+    kindStr = icalcomponent_kind_to_string(kind)
 
     if kindStr == 'VEVENT':
-        newComp = Event(compStr)
+        newComp = Event(comp)
     elif kindStr == 'VTODO':
-        newComp = Todo(compStr)
+        newComp = Todo(comp)
     elif kindStr == 'VJOURNAL':
-        newComp = Journal(compstr)
+        newComp = Journal(comp)
     else:
-        newComp = Component(compStr)
+        newComp = Component(comp)
 
     # I don't think I need to free the component created when passed a string,
     # as it wasn't created with a _new function.
@@ -196,9 +243,16 @@ def NewComponent(comp):
 
 class GenericComponent(Component):
 
-    def __init__(self):
-                
-        # Component.__init__(self, str) # Call from subclasses
+    def __init__(self,ref=None,kind=None):
+        
+        if ref != None:
+            Component.__init__(self, ref=ref) # Call from subclasses
+        elif type != None:
+            Component.__init__(self, kind=kind) # Call from subclasses
+        else:
+            raise ValueError("Expected either a icalcomponent reference or a kind string")
+     
+        
         self._recurrence_set=None
 
     def _singular_property(self, name, value_type, value=None,
@@ -208,14 +262,23 @@ class GenericComponent(Component):
         This is a constructor method for properties without a strictly defined
         object."""
 
-        curr_properties = self.properties(name)
+        # Depending on the property name, this routine will either
+        # operate on the VCALENDAR container or on the inner VEVENT,
+        # VTODO, or VJOURNAL
+
+        if name in ['METHOD','PRODID','CALSCALE','VERSION']:
+            comp = self
+        else:
+            comp = self.inner_component()
+
+        curr_properties = comp.properties(name)
 
         # Get the value
         if value==None:
             if len(curr_properties) == 0:
                 return None
             elif len(curr_properties) == 1:
-                return curr_properties[0].value()
+                return curr_properties[0]
             else:
                 raise ValueError, "too many properties of type %s" % propType
 
@@ -223,7 +286,7 @@ class GenericComponent(Component):
         else:
             # Check if value is in enumerated_values
             if enumerated_values:
-                value = upper(value)
+                value = string.upper(value)
                 if value not in enumerated_values:
                     raise ValueError, "%s is not one of %s" \
                           % (value, enumerated_values)
@@ -248,12 +311,15 @@ class GenericComponent(Component):
                 p.value(value)
 
             if len(curr_properties) == 1:
-                self.remove_property(curr_properties[0])
+                comp.remove_property(curr_properties[0])
             elif len(curr_properties) > 1:
                 raise ValueError, "too many properties of type %s" % propType
 
-            self.add_property(p)
-            
+            comp.add_property(p)
+
+    # METHOD, PRODID, CALSCALE and VERSION are properties of the
+    # VCALENDAR, not the inner component
+
     def method(self, v=None):
         "Sets or returns the value of the METHOD property."
         return self._singular_property("METHOD", "TEXT", v)
@@ -265,6 +331,12 @@ class GenericComponent(Component):
     def calscale(self, v=None):
         "Sets or returns the value of the CALSCALE property."
         return self._singular_property("CALSCALE", "TEXT", v)
+
+    def version(self, v=None):
+        "Sets or returns the value of the Version property."
+        return self._singular_property("VERSION", "TEXT", v)
+
+    # The remaining properties are all in the inner component
 
     def class_prop(self, v=None):  # Class is a reserved word
         "Sets or returns the value of the CLASS property."
@@ -389,7 +461,7 @@ class GenericComponent(Component):
         """
         if values!=None:
             for alarm in values:
-                self.addComponent(alarm)
+                self.add_component(alarm)
         else:
             return ComponentCollection(self, self.components('VALARM'))
 
@@ -401,6 +473,8 @@ class GenericComponent(Component):
                              property_obj=None):
         "Processes set/get for Properties that can have multiple instances."
 
+        comp = self.inner_component()
+
         # Set value
         if values!=None:
             if not isinstance(values, TupleType) \
@@ -408,8 +482,8 @@ class GenericComponent(Component):
                 raise TypeError, "%s is not a tuple or list."
 
             # Delete old properties
-            for p in self.properties(name):
-                self.remove_property(p)
+            for p in comp.properties(name):
+                comp.remove_property(p)
                 
             for v in values:
                 if property_obj:   # Specialized properties
@@ -424,7 +498,7 @@ class GenericComponent(Component):
                     # new_prop.value_type(value_type)
                     new_prop.value(v)
                     
-                self.add_property(new_prop)
+                comp.add_property(new_prop)
         
         # Get value
         else:
@@ -494,12 +568,15 @@ class GenericComponent(Component):
         return self._multiple_properties('RELATED-TO', 'TEXT', value)
 
 
+
 class Event(GenericComponent):
     "The iCalendar Event object."
 
-    def __init__(self, str=None):
-        Component.__init__(self, str, "VEVENT")
-        GenericComponent.__init__(self)
+    def __init__(self,ref=None):
+        if ref != None:
+            GenericComponent.__init__(self, ref=ref)
+        else: 
+            GenericComponent.__init__(self, kind='VEVENT')
         
     def component_type(self):
         "Returns the type of component for the object."
@@ -601,6 +678,13 @@ class Event(GenericComponent):
 class Todo(GenericComponent):
     "The iCalendar TODO component."
 
+    def __init__(self,ref=None):
+        if ref != None:
+            GenericComponent.__init__(self, ref=ref)
+        else: 
+            GenericComponent.__init__(self, kind='VTODO')
+
+
     def component_type(self):
         "Returns the type of component for the object."
         return "VTODO"
@@ -652,6 +736,12 @@ class Todo(GenericComponent):
 
 class Journal(GenericComponent):
     "The iCalendar JOURNAL component."
+
+    def __init__(self):
+        if ref != None:
+            GenericComponent.__init__(self, ref=ref)
+        else: 
+            GenericComponent.__init__(self, kind='VJOURNAL')
 
     def component_type(self):
         "Returns the type of component for the object."

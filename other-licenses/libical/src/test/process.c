@@ -3,7 +3,7 @@
   FILE: process.c
   CREATOR: eric 11 February 2000
   
-  $Id: process.c,v 1.1 2001/11/15 19:27:48 mikep%oeone.com Exp $
+  $Id: process.c,v 1.2 2001/12/21 18:56:56 mikep%oeone.com Exp $
   $Locker:  $
     
  (C) COPYRIGHT 2000 Eric Busboom
@@ -28,49 +28,6 @@
 #include <string.h> /* For strerror */
 #include <stdlib.h> /* for free */
 
-struct class_map {
-	ical_class class;
-	char *str;
-} class_map[] = {
-    {ICAL_NO_CLASS,"No class"},
-    {ICAL_PUBLISH_NEW_CLASS,"New Publish"},
-    {ICAL_PUBLISH_UPDATE_CLASS,"New Publish"},
-    {ICAL_REQUEST_NEW_CLASS,"New request"},
-    {ICAL_REQUEST_UPDATE_CLASS,"Update"},
-    {ICAL_REQUEST_RESCHEDULE_CLASS,"Reschedule"},
-    {ICAL_REQUEST_DELEGATE_CLASS,"Delegate"},
-    {ICAL_REQUEST_NEW_ORGANIZER_CLASS,"New Organizer"},
-    {ICAL_REQUEST_FORWARD_CLASS,"Forward"},
-    {ICAL_REQUEST_STATUS_CLASS,"Status request"},
-    {ICAL_REPLY_ACCEPT_CLASS,"Accept reply"},
-    {ICAL_REPLY_DECLINE_CLASS,"Decline reply"},
-    {ICAL_REPLY_CRASHER_ACCEPT_CLASS,"Crasher's accept reply"},
-    {ICAL_REPLY_CRASHER_DECLINE_CLASS,"Crasher's decline reply"},
-    {ICAL_ADD_INSTANCE_CLASS,"Add instance"},
-    {ICAL_CANCEL_EVENT_CLASS,"Cancel event"},
-    {ICAL_CANCEL_INSTANCE_CLASS,"Cancel instance"},
-    {ICAL_CANCEL_ALL_CLASS,"Cancel all instances"},
-    {ICAL_REFRESH_CLASS,"Refresh"},
-    {ICAL_COUNTER_CLASS,"Counter"},
-    {ICAL_DECLINECOUNTER_CLASS,"Decline counter"},
-    {ICAL_MALFORMED_CLASS,"Malformed"}, 
-    {ICAL_OBSOLETE_CLASS,"Obsolete"},
-    {ICAL_MISSEQUENCED_CLASS,"Missequenced"},
-    {ICAL_UNKNOWN_CLASS,"Unknown"}
-};
-
-char* find_class_string(ical_class class)
-{
-    int i; 
-
-    for (i = 0;class_map[i].class != ICAL_UNKNOWN_CLASS;i++){
-	if (class_map[i].class == class){
-	    return class_map[i].str;
-	}
-    }
-
-    return "Unknown";
-}
 
 void send_message(icalcomponent *reply,const char* this_user)
 {
@@ -103,7 +60,7 @@ int main(int argc, char* argv[])
     /* Foreach incoming message */
     for(c=icalset_get_first_component(f);c!=0;c = next_c){
 	
-	ical_class class;
+	icalproperty_xlicclass class;
 	icalcomponent *match;
 	icalcomponent *inner; 
 	icalcomponent *reply = 0;
@@ -130,7 +87,7 @@ int main(int argc, char* argv[])
 
 	class = icalclassify(c,match,this_user);
 
-	class_string = find_class_string(class);
+	class_string = icalproperty_enum_to_string(class);
 
 	/* Print out the notes associated with the incoming component
            and the matched component in the */
@@ -171,7 +128,7 @@ int main(int argc, char* argv[])
 	/* Main processing structure */
 
 	switch (class){
-	    case ICAL_NO_CLASS: { 
+	    case ICAL_XLICCLASS_NONE: { 
 		char temp[1024];
 		/* Huh? Return an error to sender */
 		icalrestriction_check(c);
@@ -191,15 +148,15 @@ int main(int argc, char* argv[])
 
 		break; 
 	    }
-	    case ICAL_PUBLISH_NEW_CLASS: { 
+	    case ICAL_XLICCLASS_PUBLISHNEW: { 
 		
 		/* Don't accept published events from anyone but
-		   self. If self, fall through to ICAL_REQUEST_NEW_CLASS */
+		   self. If self, fall through to ICAL_XLICCLASS_REQUESTNEW */
 
 		
 
 	    }
-	    case ICAL_REQUEST_NEW_CLASS: { 
+	    case ICAL_XLICCLASS_REQUESTNEW: { 
 		
 		/* Book the new component if it does not overlap
 		   anything. If the time is busy and the start time is
@@ -283,110 +240,114 @@ conflicts with this meeting. I am proposing a time that works better for me.");
 		}
 		break; 
 	    }
-	    case ICAL_PUBLISH_FREEBUSY_CLASS: {
+	    case ICAL_XLICCLASS_PUBLISHFREEBUSY: {
 		/* Store the busy time information in a file named after
 		   the sender */
 		break;
 	    }
 	    
-	    case ICAL_PUBLISH_UPDATE_CLASS: { 
+	    case ICAL_XLICCLASS_PUBLISHUPDATE: { 
 		/* Only accept publish updates from self. If self, fall
-		   throught to ICAL_REQUEST_UPDATE_CLASS */
+		   throught to ICAL_XLICCLASS_REQUESTUPDATE */
 	    }
 
-	    case ICAL_REQUEST_UPDATE_CLASS: { 
+	    case ICAL_XLICCLASS_REQUESTUPDATE: { 
 		/* always accept the changes */
 		break; 
 	    }
 	  
-	    case ICAL_REQUEST_RESCHEDULE_CLASS: { 
+	    case ICAL_XLICCLASS_REQUESTRESCHEDULE: { 
 		/* Use same rules as REQUEST_NEW */
 		icalcomponent *overlaps;
 		overlaps = icalclassify_find_overlaps(cal,c);
 
 		break; 
 	    }
-	    case ICAL_REQUEST_DELEGATE_CLASS: { 
+	    case ICAL_XLICCLASS_REQUESTDELEGATE: { 
 	      
 		break; 
 	    }
-	    case ICAL_REQUEST_NEW_ORGANIZER_CLASS: { 
+	    case ICAL_XLICCLASS_REQUESTNEWORGANIZER: { 
 		break; 
 	    }
-	    case ICAL_REQUEST_FORWARD_CLASS: { 
+	    case ICAL_XLICCLASS_REQUESTFORWARD: { 
 		break; 
 	    }
-	    case ICAL_REQUEST_STATUS_CLASS: { 
+	    case ICAL_XLICCLASS_REQUESTSTATUS: { 
 		break; 
 	    }
 
-	    case ICAL_REQUEST_FREEBUSY_CLASS: { 
+	    case ICAL_XLICCLASS_REQUESTFREEBUSY: { 
 		break; 
 	    }
-	    case ICAL_REPLY_ACCEPT_CLASS: { 
+	    case ICAL_XLICCLASS_REPLYACCEPT: { 
 		/* Change the PARTSTAT of the sender */
 		break; 
 	    }
-	    case ICAL_REPLY_DECLINE_CLASS: { 
+	    case ICAL_XLICCLASS_REPLYDECLINE: { 
 		/* Change the PARTSTAT of the sender */
 		break; 
 	    }
-	    case ICAL_REPLY_CRASHER_ACCEPT_CLASS: { 
+	    case ICAL_XLICCLASS_REPLYCRASHERACCEPT: { 
 		/* Add the crasher to the ATTENDEE list with the
 		   appropriate PARTSTAT */
 		break; 
 	    }
-	    case ICAL_REPLY_CRASHER_DECLINE_CLASS: { 
+	    case ICAL_XLICCLASS_REPLYCRASHERDECLINE: { 
 		/* Add the crasher to the ATTENDEE list with the
 		   appropriate PARTSTAT */
 		break; 
 	    }
-	    case ICAL_ADD_INSTANCE_CLASS: { 
+	    case ICAL_XLICCLASS_ADDINSTANCE: { 
 		break; 
 	    }
-	    case ICAL_CANCEL_EVENT_CLASS: { 
+	    case ICAL_XLICCLASS_CANCELEVENT: { 
 		/* Remove the component */
 		break; 
 	    }
-	    case ICAL_CANCEL_INSTANCE_CLASS: { 
+	    case ICAL_XLICCLASS_CANCELINSTANCE: { 
 		break; 
 	    }
-	    case ICAL_CANCEL_ALL_CLASS: { 
+	    case ICAL_XLICCLASS_CANCELALL: { 
 		/* Remove the component */	      
 		break; 
 	    }
-	    case ICAL_REFRESH_CLASS: { 
+	    case ICAL_XLICCLASS_REFRESH: { 
 		/* Resend the latest copy of the request */
 		break; 
 	    }
-	    case ICAL_COUNTER_CLASS: { 
+	    case ICAL_XLICCLASS_COUNTER: { 
 		break; 
 	    }
-	    case ICAL_DECLINECOUNTER_CLASS: { 
+	    case ICAL_XLICCLASS_DECLINECOUNTER: { 
 		break; 
 	    }
-	    case ICAL_MALFORMED_CLASS: { 
+	    case ICAL_XLICCLASS_MALFORMED: { 
 		/* Send back an error */
 		break; 
 	    } 
-	    case ICAL_OBSOLETE_CLASS: { 
+	    case ICAL_XLICCLASS_OBSOLETE: { 
 		printf(" ** Got an obsolete component:\n%s",
 		       icalcomponent_as_ical_string(c));
 		/* Send back an error */
 		break; 
 	    } 
-	    case ICAL_MISSEQUENCED_CLASS: { 
+	    case ICAL_XLICCLASS_MISSEQUENCED: { 
 		printf(" ** Got a missequenced component:\n%s",
 		       icalcomponent_as_ical_string(c));
 		/* Send back an error */
 		break; 
 	    }
-	    case ICAL_UNKNOWN_CLASS: { 
+	    case ICAL_XLICCLASS_UNKNOWN: { 
 		printf(" ** Don't know what to do with this component:\n%s",
 		       icalcomponent_as_ical_string(c));
 		/* Send back an error */
 		break; 
 	    }
+            case ICAL_XLICCLASS_X:
+            case ICAL_XLICCLASS_REPLYDELEGATE:
+            default: {
+            }
 	}
 
 #if(0)

@@ -1,4 +1,4 @@
-#!/usr/bin/perl 
+#!/usr/bin/env perl
 
 # Version: 1.0
 # Script last updated: 30May1999 GMD

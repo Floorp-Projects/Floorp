@@ -13,14 +13,14 @@ improvements made by programmers in both realms. I will only accept
 changes into my version of the library if they are similarly
 dual-licensed.
 
-The code in this distribution implements the iCal protocols as
-described in RFC2445 and RFC2446. The code is in very early stages of
-development.
-
 Portions of this distribution are (C) Copyright 1996 Apple Computer,
 Inc., AT&T Corp., International Business Machines Corporation and
 Siemens Rolm Communications Inc. See src/libicalvcal/README.TXT for
 details.
+
+Portions of this distribution are Copyright (c) 1997 Theo de
+Raadt. See the header for src/libical/vsnprintf.c for the full
+copyright statement.
 
 This code is under active development. If you would like to contribute
 to the project, you can contact me, Eric Busboom, at
@@ -44,11 +44,14 @@ compiles on SunOS 5.6 and FreeBSD 2.27. I have reports of success of
 previous version on MacOS ( with CodeWarrior ) and on UnixWare, but I
 don't know about any other systems.
 
-The library is configured with automake. From the root directory, run 
+The library is configured with automake. IF YOU ARE BUILDING THE
+SOURCE FROM A TARBALL, From the root directory, run
 
 	./configure
 
-To build all of the Makefiles for your system. If you will be installing the library, you may want to use the --prefix flag to set the directory where the library and header files will be installed. 
+To build all of the Makefiles for your system. If you will be
+installing the library, you may want to use the --prefix flag to set
+the directory where the library and header files will be installed.
 
 	./configure --prefix=/proj/local/
 
@@ -60,6 +63,11 @@ shared libraries turned off by default. To create and install shared
 libraries use:
 
 	./configure --enable-shared
+
+
+IF YOU ARE BUILDING FROM CVS, there will be no configure file until
+you create one with autogen.sh. YOu can pass configure parameters to
+autogen.sh on the command line.
 
 The current version of libical focuses on creating and
 manipulating iCal objects. With it, you can parse text representations
@@ -88,12 +96,6 @@ Using the Library
 There is rudimentary, unfinished documentation in the /doc directory,
 and annotated examples in /examples.
 
-
-Perl Library
-------------
-
-There is a perl language binding of this library, LIBICAL. 
-It is  available from http://www.softwarestudio.org/libical
 
 
 Eric Busboom

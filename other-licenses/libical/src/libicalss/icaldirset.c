@@ -3,7 +3,7 @@
     FILE: icaldirset.c
     CREATOR: eric 28 November 1999
   
-    $Id: icaldirset.c,v 1.2 2001/11/22 19:21:54 mikep%oeone.com Exp $
+    $Id: icaldirset.c,v 1.3 2001/12/21 18:56:36 mikep%oeone.com Exp $
     $Locker:  $
     
  (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org
@@ -72,6 +72,7 @@
 #include <sys/utsname.h> /* for uname */
 #else
 #include <io.h>
+#include <process.h>
 #endif
 #include <errno.h>
 #include <sys/types.h> /* for opendir() */
@@ -80,6 +81,7 @@
 #include <stdlib.h> /* for rand(), srand() */
 #include <string.h> /* for strdup */
 #include "icaldirsetimpl.h"
+
 
 #ifdef WIN32
 #define snprintf	_snprintf
@@ -90,7 +92,6 @@
 #define S_ISDIR(mode)    _S_ISTYPE((mode), _S_IFDIR)
 #define S_ISREG(mode)    _S_ISTYPE((mode), _S_IFREG)
 #endif
-
 
 struct icaldirset_impl* icaldirset_new_impl()
 {
@@ -385,20 +386,22 @@ void icaldirset_add_uid(icaldirset* store, icaldirset* comp)
 #ifndef WIN32
     struct utsname unamebuf;
 #endif
+
     icalerror_check_arg_rv( (store!=0), "store");
     icalerror_check_arg_rv( (comp!=0), "comp");
 
     uid = icalcomponent_get_first_property(comp,ICAL_UID_PROPERTY);
     
     if (uid == 0) {
-#ifndef WIN32	
+	
+#ifndef WIN32
 	uname(&unamebuf);
 	
 	sprintf(uidstring,"%d-%s",(int)getpid(),unamebuf.nodename);
-	
 #else
 	sprintf(uidstring,"%d-%s",(int)getpid(),"WINDOWS");  /* FIX: There must be an easy get the system name */
 #endif
+	
 	uid = icalproperty_new_uid(uidstring);
 	icalcomponent_add_property(comp,uid);
     } else {

@@ -3,7 +3,7 @@
   FILE: stow.c
   CREATOR: eric 29 April 2000
   
-  $Id: stow.c,v 1.1 2001/11/15 19:27:51 mikep%oeone.com Exp $
+  $Id: stow.c,v 1.2 2001/12/21 18:56:57 mikep%oeone.com Exp $
   $Locker:  $
     
  (C) COPYRIGHT 2000 Eric Busboom
@@ -250,13 +250,20 @@ void return_failure(icalcomponent* comp,  char* message,
 {
     char* local_attendee = opt->calid;
     FILE* p;
+    const char *org_addr;
 
     icalcomponent  *inner = get_first_real_component(comp);
 
     icalproperty *organizer_prop = icalcomponent_get_first_property(inner,ICAL_ORGANIZER_PROPERTY);
     const char *organizer = icalproperty_get_organizer(organizer_prop);
 
-    organizer += 7;
+    org_addr = strchr(organizer,':');
+
+    if(org_addr != 0){
+        org_addr++; /* Skip the ';' */
+    } else {
+        org_addr = organizer;
+    }
 
     if (opt->errors == ERRORS_TO_ORGANIZER){
 	p = popen(SENDMAIL,"w");
@@ -271,7 +278,7 @@ void return_failure(icalcomponent* comp,  char* message,
 	exit(1);
      }
    
-    fputs(make_mime(organizer, local_attendee, "iMIP error", 
+    fputs(make_mime(org_addr, local_attendee, "iMIP error", 
 		    message, "reply",
 		    icalcomponent_as_ical_string(comp)),p);
     
@@ -380,6 +387,17 @@ char* check_component(icalcomponent* comp,  icalproperty **return_status,
     int errors = 0;
     icalproperty *p;
     int found_attendee = 0;
+    struct icalreqstattype rs;
+
+    rs.code =  ICAL_UNKNOWN_STATUS;
+    rs.desc = 0;
+    rs.debug = 0;
+
+    /*{
+	icalrequeststatus code;
+	const char* desc;
+	const char* debug;
+        };*/
 
     *return_status = 0;
 
@@ -401,6 +419,8 @@ char* check_component(icalcomponent* comp,  icalproperty **return_status,
 	    strcpy(static_component_error_str,
 		   "Root component is not a VCALENDAR");
 	    component_error_str = static_component_error_str;
+            rs.code = ICAL_3_11_MISSREQCOMP_STATUS;
+
 	    break;
 	}
 
@@ -410,8 +430,9 @@ char* check_component(icalcomponent* comp,  icalproperty **return_status,
 	if (icalcomponent_get_first_property(comp,ICAL_METHOD_PROPERTY) == 0)
 	{
 	    strcpy(static_component_error_str,
-		   "Component does not have a METHOD property");
+		   "The component you sent did not have a METHOD property");
 	    component_error_str = static_component_error_str;
+            rs.code = ICAL_3_11_MISSREQCOMP_STATUS;
 	    break;
 	}
 	
@@ -421,8 +442,8 @@ char* check_component(icalcomponent* comp,  icalproperty **return_status,
 	/* Check that the compopnent has an organizer */
 	if(icalcomponent_get_first_property(inner,ICAL_ORGANIZER_PROPERTY) == 0){
 	    fprintf(stderr,"%s: fatal. Component does not have an ORGANIZER property\n",program_name);
-
-	    exit(1);
+            rs.code = ICAL_3_11_MISSREQCOMP_STATUS;
+            break;
 	}
 
 
@@ -444,7 +465,6 @@ char* check_component(icalcomponent* comp,  icalproperty **return_status,
 		
 	if (found_attendee == 0){
 	    struct icalreqstattype rs;
-	    char* rs_string;
 	    memset(static_component_error_str,0,PATH_MAX);
 
 	    snprintf(static_component_error_str,PATH_MAX,
@@ -453,11 +473,6 @@ char* check_component(icalcomponent* comp,  icalproperty **return_status,
 	    component_error_str = static_component_error_str;
 
 	    rs.code = ICAL_3_7_INVCU_STATUS;
-	    rs.desc = 0;
-	    rs.debug  = component_error_str;    
-	    rs_string = icalreqstattype_as_string(rs);
-
-	    *return_status = icalproperty_new_requeststatus(rs_string);
 
 	    break;
 	}
@@ -479,6 +494,10 @@ char* check_component(icalcomponent* comp,  icalproperty **return_status,
 
 
     } while(0);
+
+    if(rs.code != ICAL_UNKNOWN_STATUS){
+        *return_status = icalproperty_new_requeststatus(rs);
+    }
 
     return component_error_str;
 }
@@ -638,35 +657,32 @@ void get_options(int argc, char* argv[], struct options_struct *opt)
 
 	p = strrchr(facspath,'/');
 
-	if (p == 0){
-	   fprintf(stderr,"%s: Invalid calendar filename \"%s\"", 
-		    program_name,facspath);
-	   exit(1);
-	}   
-	
-	*p='\0';
-
-	type = test_file(facspath);
-
-	errno = 0;
-	if (type == NO_FILE){
-	    
-	    if(mkdir(facspath,0775) != 0){
-		fprintf(stderr,
-			"%s: Failed to create calendar directory %s: %s\n",
-			program_name,facspath, strerror(errno));
-		exit(1);
-	    } else {
-		fprintf(stderr,"%s: Creating calendar directory %s\n",
-			program_name,facspath);
-	    }
-	    
-	} else if(type==REGULAR || type == ERROR){
-	    fprintf(stderr,"%s: Cannot create calendar directory %s\n",
-		    program_name,facspath);
-	    exit(1);
-	} 		    
-    }
+        if (p != 0){
+            /* Use some other directory */
+            *p='\0';
+            
+            type = test_file(facspath);
+            
+            errno = 0;
+            if (type == NO_FILE){
+                
+                if(mkdir(facspath,0775) != 0){
+                    fprintf(stderr,
+                            "%s: Failed to create calendar directory %s: %s\n",
+                            program_name,facspath, strerror(errno));
+                    exit(1);
+                } else {
+                    fprintf(stderr,"%s: Creating calendar directory %s\n",
+                            program_name,facspath);
+                }
+                
+            } else if(type==REGULAR || type == ERROR){
+                fprintf(stderr,"%s: Cannot create calendar directory %s\n",
+                        program_name,facspath);
+                exit(1);
+            } 		    
+        }
+     }
 }
 
 char* check_options(struct options_struct *opt)
@@ -726,6 +742,7 @@ icalcomponent* read_nonmime_component(struct options_struct *opt)
     FILE *stream;
     icalcomponent *comp;
     icalparser* parser = icalparser_new();
+    icalerrorstate es = icalerror_get_error_state(ICAL_MALFORMEDDATA_ERROR);
     char* line;
 
     if(opt->input_source == INPUT_FROM_FILE){
@@ -746,7 +763,9 @@ icalcomponent* read_nonmime_component(struct options_struct *opt)
     do {	
 	line = icalparser_get_line(parser,read_stream);
 	
+        icalerror_set_error_state(ICAL_MALFORMEDDATA_ERROR,ICAL_ERROR_NONFATAL);
 	comp = icalparser_add_line(parser,line);
+        icalerror_set_error_state(ICAL_MALFORMEDDATA_ERROR,es);
 	
 	if (comp != 0){
 	    return comp;
@@ -847,12 +866,17 @@ int main(int argc, char* argv[] )
 
     comp = read_component(&opt);
 
+    /* If the component had any fatal errors, return an error message
+       to the organizer */
     if ( (component_error_str = 
 	  check_component(comp,&return_status,&opt)) != 0){
+
 	reply = make_reply(comp,return_status,&opt);
+
 	return_failure(reply, component_error_str, &opt);
 	icalcomponent_free(reply);
 	exit(0);
+
     }
 
     store_component(comp,&opt);

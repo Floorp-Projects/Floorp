@@ -8,9 +8,8 @@ INCLUDES =				\
 	-I$(top_srcdir)/src		\
 	-I$(top_builddir)/src		\
 	-I$(top_srcdir)/src/libical	\
-	-I$(srcdir)/libical     	\
+	-I$(top_builddir)/src/libical	\
 	-I$(top_srcdir)/src/libicalss	\
-	-I$(srcdir)/libicalss     	\
 	$(PY_CFLAGS) 	
 
 LDADD =  ../libical/libical.la ../libicalss/libicalss.la

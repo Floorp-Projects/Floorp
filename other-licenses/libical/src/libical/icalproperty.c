@@ -4,7 +4,7 @@
   FILE: icalproperty.c
   CREATOR: eric 28 April 1999
   
-  $Id: icalproperty.c,v 1.2 2001/11/22 19:21:49 mikep%oeone.com Exp $
+  $Id: icalproperty.c,v 1.3 2001/12/21 18:56:23 mikep%oeone.com Exp $
 
 
  (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org
@@ -45,12 +45,12 @@
 #include <stdio.h> /* for printf */
 #include <stdarg.h> /* for va_list, va_start, etc. */
                                                
-#ifdef WIN32
-#define snprintf	_snprintf
-#define strcasecmp	stricmp
-#endif
-                                              
 #define TMP_BUF_SIZE 1024
+
+#ifdef WIN32
+#define snprintf      _snprintf
+#define strcasecmp    stricmp
+#endif
 
 /* Private routines for icalproperty */
 void icalvalue_set_parent(icalvalue* value,
@@ -62,7 +62,7 @@ void icalparameter_set_parent(icalparameter* param,
 icalproperty* icalparameter_get_parent(icalparameter* value);
 
 
-void icalproperty_set_x_name(icalproperty* prop, char* name);
+void icalproperty_set_x_name(icalproperty* prop, const char* name);
 
 struct icalproperty_impl 
 {
@@ -90,7 +90,7 @@ void icalproperty_add_parameters(struct icalproperty_impl *prop,va_list args)
 	    icalproperty_add_parameter((icalproperty*)impl,
 				       (icalparameter*)vp);
 	} else {
-	    assert(0);
+	    icalerror_set_errno(ICAL_BADARG_ERROR);
 	}
 
     }
@@ -177,7 +177,7 @@ icalproperty_new_clone(icalproperty* prop)
 
 }
 
-icalproperty* icalproperty_new_from_string(char* str)
+icalproperty* icalproperty_new_from_string(const char* str)
 {
 
     size_t buf_size = 1024;
@@ -268,7 +268,7 @@ icalproperty_free (icalproperty* prop)
 }
 
 
-char*
+const char*
 icalproperty_as_ical_string (icalproperty* prop)
 {   
     icalparameter *param;
@@ -717,7 +717,7 @@ const char* icalproperty_get_value_as_string(icalproperty* prop)
 }
 
 
-void icalproperty_set_x_name(icalproperty* prop, char* name)
+void icalproperty_set_x_name(icalproperty* prop, const char* name)
 {
     struct icalproperty_impl *impl = (struct icalproperty_impl*)prop;
 
@@ -736,7 +736,7 @@ void icalproperty_set_x_name(icalproperty* prop, char* name)
 
 }
                               
-char* icalproperty_get_x_name(icalproperty* prop){
+const char* icalproperty_get_x_name(icalproperty* prop){
 
     struct icalproperty_impl *impl = (struct icalproperty_impl*)prop;
 
@@ -747,7 +747,7 @@ char* icalproperty_get_x_name(icalproperty* prop){
 
 
 /* From Jonathan Yue <jonathan.yue@cp.net>    */
-char* icalproperty_get_name (icalproperty* prop)
+const char* icalproperty_get_name (icalproperty* prop)
 {
 
     const char* property_name = 0;

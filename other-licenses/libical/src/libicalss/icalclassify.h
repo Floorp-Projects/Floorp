@@ -4,7 +4,7 @@
  CREATOR: eric 21 Aug 2000
 
 
- $Id: icalclassify.h,v 1.1 2001/11/15 19:27:19 mikep%oeone.com Exp $
+ $Id: icalclassify.h,v 1.2 2001/12/21 18:56:34 mikep%oeone.com Exp $
  $Locker:  $
 
  (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org
@@ -29,41 +29,13 @@
 #include "ical.h"
 #include "icalset.h"
 
-
-typedef enum icalclass {
-    ICAL_NO_CLASS,
-    ICAL_PUBLISH_NEW_CLASS,
-    ICAL_PUBLISH_UPDATE_CLASS,
-    ICAL_PUBLISH_FREEBUSY_CLASS,
-    ICAL_REQUEST_NEW_CLASS,
-    ICAL_REQUEST_UPDATE_CLASS,
-    ICAL_REQUEST_RESCHEDULE_CLASS,
-    ICAL_REQUEST_DELEGATE_CLASS,
-    ICAL_REQUEST_NEW_ORGANIZER_CLASS,
-    ICAL_REQUEST_FORWARD_CLASS,
-    ICAL_REQUEST_STATUS_CLASS,
-    ICAL_REQUEST_FREEBUSY_CLASS,
-    ICAL_REPLY_ACCEPT_CLASS,
-    ICAL_REPLY_DECLINE_CLASS,
-    ICAL_REPLY_CRASHER_ACCEPT_CLASS,
-    ICAL_REPLY_CRASHER_DECLINE_CLASS,
-    ICAL_ADD_INSTANCE_CLASS,
-    ICAL_CANCEL_EVENT_CLASS,
-    ICAL_CANCEL_INSTANCE_CLASS,
-    ICAL_CANCEL_ALL_CLASS,
-    ICAL_REFRESH_CLASS,
-    ICAL_COUNTER_CLASS,
-    ICAL_DECLINECOUNTER_CLASS,
-    ICAL_MALFORMED_CLASS, 
-    ICAL_OBSOLETE_CLASS, /* 21 */
-    ICAL_MISSEQUENCED_CLASS, /* 22 */
-    ICAL_UNKNOWN_CLASS /* 23 */
-} ical_class;
-
-ical_class icalclassify(icalcomponent* c,icalcomponent* match, 
+icalproperty_xlicclass icalclassify(icalcomponent* c,icalcomponent* match, 
 			      const char* user);
 
 icalcomponent* icalclassify_find_overlaps(icalset* set, icalcomponent* comp);
+
+char* icalclassify_class_to_string(icalproperty_xlicclass c);
+
 
 #endif /* ICALCLASSIFY_H*/
 

@@ -1,3 +1,23 @@
+2001-04-04  Eric Busboom  <eric@softwarestudio.org>
+
+	* Component.py Added Calendar class. 
+
+	* Componeny.py Changed all component constructor so they cannot
+ 	take string arguments. Now, only NewComponent() can turn an iCal
+ 	string into a component.
+
+	
+2001-04-02  Eric Busboom  <eric@softwarestudio.org>
+
+	* Component.py removed arguments from the Event constructor, since
+ 	I presume that the Component derived classes will always be
+ 	constructed with no arguments.
+
+	* Property.py Split out Attendee, Organizer, Time, Duration and
+ 	Period into their own files. Moved remaining classes to Derived
+ 	Properties.pm
+
+	
 2001-03-13  Eric Busboom  <eric@softwarestudio.org>
 
 	* Component.py Added Component.property()

@@ -7,48 +7,56 @@ LEX_OUTPUT_ROOT = lex.ss
 all: icalss.h
 
 INCLUDES =			\
-	-I$(top_builddir)	\
 	-I$(top_srcdir)/src	\
 	-I$(top_builddir)/src	\
 	-I$(top_srcdir)/src/libical	\
-	-I$(srcdir)/libical
+	-I$(top_builddir)/src/libical
 
 libicalss_la_LDFLAGS = -version-info 0:0:0
 
 libicalss_la_SOURCES =		\
+	icalcalendar.h		\
 	icalclassify.c		\
+	icalclassify.h		\
 	icalgauge.c		\
+	icalgauge.h		\
 	icalgaugeimpl.h		\
 	icaldirset.c		\
+	icaldirset.h		\
 	icaldirsetimpl.h	\
 	icalfileset.c		\
+	icalfileset.h		\
 	icalfilesetimpl.h	\
 	icalset.c		\
+	icalset.h		\
 	icalsslexer.l		\
 	icalssyacc.h		\
 	icalssyacc.y		\
 	icalspanlist.c		\
+	icalspanlist.h		\
 	icalmessage.c		\
+	icalmessage.h		\
 	icalcstpclient.c        \
 	icalcstpclient.h        \
 	icalcstpserver.c        \
 	icalcstpserver.h 	\
-	icalcstp.c
+	icalcstp.c		\
+	icalcstp.h
 
 libicalssincludedir = $(includedir)
 
 COMBINEDHEADERS = \
-        icalgauge.h \
-        icalset.h \
-        icalfileset.h \
-        icaldirset.h \
-        icalcalendar.h  \
-        icalclassify.h \
-	icalspanlist.h	\
-	icalmessage.h \
-	icalcstp.h \
-	icalcstpclient.h \
-	icalcstpserver.h
+        $(srcdir)/icalgauge.h \
+        $(srcdir)/icalset.h \
+        $(srcdir)/icalfileset.h \
+        $(srcdir)/icaldirset.h \
+        $(srcdir)/icalcalendar.h  \
+        $(srcdir)/icalclassify.h \
+	$(srcdir)/icalspanlist.h	\
+	$(srcdir)/icalmessage.h \
+	$(srcdir)/icalcstp.h \
+	$(srcdir)/icalcstpclient.h \
+	$(srcdir)/icalcstpserver.h
 
 
 icalss.h: $(COMBINEDHEADERS)
@@ -60,5 +68,3 @@ libicalssinclude_HEADERS = icalss.h
 
 CONFIG_CLEAN_FILES = y.output
 
-EXTRA_DIST =			\
-	$(COMBINEDHEADERS)	\

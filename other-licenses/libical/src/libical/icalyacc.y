@@ -6,7 +6,7 @@
   
   DESCRIPTION:
   
-  $Id: icalyacc.y,v 1.1 2001/11/15 19:27:13 mikep%oeone.com Exp $
+  $Id: icalyacc.y,v 1.2 2001/12/21 18:56:30 mikep%oeone.com Exp $
   $Locker:  $
 
   (C) COPYRIGHT 1999 Eric Busboom 
@@ -367,12 +367,12 @@ plusminus: '+' { utcsign = 1; }
 utcoffset_value: 
 	plusminus INTNUMBER INTNUMBER
 	{
-	    icalparser_yy_value = icalvalue_new_utcoffset( utcsign * ($2*3600) + ($3*60) );
+	    icalparser_yy_value = icalvalue_new_utcoffset( utcsign * (($2*3600) + ($3*60)) );
   	}
 
 	| plusminus INTNUMBER INTNUMBER INTNUMBER
 	{
-	    icalparser_yy_value = icalvalue_new_utcoffset(utcsign * ($2*3600) + ($3*60) +($4));
+	    icalparser_yy_value = icalvalue_new_utcoffset(utcsign * (($2*3600) + ($3*60) +($4)));
   	}
 
 %%

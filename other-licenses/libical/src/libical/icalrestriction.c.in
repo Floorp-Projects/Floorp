@@ -19,6 +19,11 @@
 
 #define TMP_BUF_SIZE 1024
 
+#ifdef WIN32
+#define snprintf	_snprintf
+#define strcasecmp	stricmp
+#endif
+
 
 /* Define the structs for the restrictions. these data are filled out
 in machine generated code below */

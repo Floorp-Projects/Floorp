@@ -128,7 +128,7 @@ src/test
  
 \layout Section
 
-Building nas Installing the Library
+Building and Installing the Library
 \layout Standard
 
 Libical uses autoconf to generate makefiles.

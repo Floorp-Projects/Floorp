@@ -5,7 +5,7 @@
   
   DESCRIPTION:
   
-  $Id: icallangbind.c,v 1.2 2001/11/22 19:21:48 mikep%oeone.com Exp $
+  $Id: icallangbind.c,v 1.3 2001/12/21 18:56:21 mikep%oeone.com Exp $
   $Locker:  $
 
   (C) COPYRIGHT 1999 Eric Busboom 
@@ -26,9 +26,10 @@
 #include <string.h>
 
 #ifdef WIN32
-#define snprintf	_snprintf
-#define strcasecmp	stricmp
+#define snprintf      _snprintf
+#define strcasecmp    stricmp
 #endif
+
 int* icallangbind_new_array(int size){
     int* p = (int*)malloc(size*sizeof(int));
     return p; /* Caller handles failures */
@@ -133,6 +134,7 @@ icalcomponent* icallangbind_get_next_component(icalcomponent *c,
 
 #define APPENDC(x) icalmemory_append_char(&buf, &buf_ptr, &buf_size, x);
 
+
 const char* icallangbind_property_eval_string(icalproperty* prop, char* sep)
 {
     char tmp[25];
@@ -154,14 +156,14 @@ const char* icallangbind_property_eval_string(icalproperty* prop, char* sep)
     APPENDS(" 'name' ");
     APPENDS(sep);
     APPENDC('\'');
-    APPENDS(icalenum_property_kind_to_string(icalproperty_isa(prop)));
+    APPENDS(icalproperty_kind_to_string(icalproperty_isa(prop)));
     APPENDC('\'');
 
     if(value){
         APPENDS(", 'value_type' ");
         APPENDS(sep);
         APPENDC('\'');
-        APPENDS(icalenum_value_kind_to_string(icalvalue_isa(value)));
+        APPENDS(icalvalue_kind_to_string(icalvalue_isa(value)));
         APPENDC('\'');
     }
 

@@ -3,7 +3,7 @@
   FILE: icalfileset.c
   CREATOR: eric 23 December 1999
   
-  $Id: icalfileset.c,v 1.2 2001/11/22 19:21:54 mikep%oeone.com Exp $
+  $Id: icalfileset.c,v 1.3 2001/12/21 18:56:36 mikep%oeone.com Exp $
   $Locker:  $
     
  (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org
@@ -113,20 +113,21 @@ icalfileset* icalfileset_new_open(const char* path, int flags, mode_t mode)
     } 
 
 #ifndef WIN32
-    impl->fd = open(impl->path,flags, mode);   
+    impl->fd = open(impl->path,flags, mode);
 #else
 	impl->fd = sopen(impl->path,flags, _SH_DENYWR, _S_IREAD | _S_IWRITE);
 #endif
+    
     if (impl->fd < 0){
 	icalerror_set_errno(ICAL_FILE_ERROR);
 	icalfileset_free(impl);
 	return 0;
     }
 
-#ifndef WIN32  // We need this under win32, we'd open'd and lock'd in one operation
+#ifndef WIN32
     icalfileset_lock(impl);
-    
 #endif
+    
     if(cluster_file_size > 0 ){
 	icalerrorenum error;
 	if((error = icalfileset_read_file(impl,mode))!= ICAL_NO_ERROR){
@@ -303,7 +304,6 @@ int icalfileset_unlock(icalfileset *cluster)
     lock.l_len = 0;       /* #bytes (0 means to EOF) */
 
     return (fcntl(impl->fd, F_UNLCK, &lock)); 
-
 #else
 	return 0;
 #endif

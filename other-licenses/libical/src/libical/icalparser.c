@@ -1,9 +1,9 @@
-/* -*- Mode: C -*-
+/* -*- Mode: C; tab-width: 4; c-basic-offset: 8; -*-
   ======================================================================
   FILE: icalparser.c
   CREATOR: eric 04 August 1999
   
-  $Id: icalparser.c,v 1.2 2001/11/22 19:21:49 mikep%oeone.com Exp $
+  $Id: icalparser.c,v 1.3 2001/12/21 18:56:23 mikep%oeone.com Exp $
   $Locker:  $
     
  The contents of this file are subject to the Mozilla Public License
@@ -51,17 +51,19 @@
 #include <string.h> /* For strncpy & size_t */
 #include <stdio.h> /* For FILE and fgets and sprintf */
 #include <stdlib.h> /* for free */
+#include <wctype.h>
 
 #ifdef WIN32
-#define snprintf	_snprintf
-#define strcasecmp	stricmp
+#define snprintf      _snprintf
+#define strcasecmp    stricmp
 #endif
+
 
 extern icalvalue* icalparser_yy_value;
 void set_parser_value_state(icalvalue_kind kind);
 int ical_yyparse(void);
 
-char* icalparser_get_next_char(char c, char *str);
+char* icalparser_get_next_char(char c, char *str, int qm);
 char* icalparser_get_next_parameter(char* line,char** end);
 char* icalparser_get_next_value(char* line, char **end, icalvalue_kind kind);
 char* icalparser_get_prop_name(char* line, char** end);
@@ -101,11 +103,10 @@ icalparser* icalparser_new(void)
     impl->components  = pvl_newlist();  
     impl->level = 0;
     impl->state = ICALPARSER_SUCCESS;
-
     impl->tmp_buf_size = TMP_BUF_SIZE;
     impl->buffer_full = 0;
     impl->lineno = 0;
-
+    impl->continuation_line = 0;
     memset(impl->temp,0, TMP_BUF_SIZE);
 
     return (icalparser*)impl;
@@ -144,14 +145,14 @@ icalvalue* icalvalue_new_From_string_with_error(icalvalue_kind kind,
 
 
 
-char* icalparser_get_next_char(char c, char *str)
+char* icalparser_get_next_char(char c, char *str, int qm)
 {
     int quote_mode = 0;
     char* p;
     
 
     for(p=str; *p!=0; p++){
-	
+	    if (qm == 1) {
 	if ( quote_mode == 0 && *p=='"' && *(p-1) != '\\' ){
 	    quote_mode =1;
 	    continue;
@@ -161,6 +162,7 @@ char* icalparser_get_next_char(char c, char *str)
 	    quote_mode =0;
 	    continue;
 	}
+	    }
 
 	if (quote_mode == 0 &&  *p== c  && *(p-1) != '\\' ){
 	    return p;
@@ -174,7 +176,7 @@ char* icalparser_get_next_char(char c, char *str)
 /* make a new tmp buffer out of a substring */
 char* make_segment(char* start, char* end)
 {
-    char *buf;
+    char *buf, *tmp;
     size_t size = (size_t)end - (size_t)start;
     
     buf = icalmemory_tmp_buffer(size+1);
@@ -182,6 +184,13 @@ char* make_segment(char* start, char* end)
 
     strncpy(buf,start,size);
     *(buf+size) = 0;
+
+	tmp = (buf+size);
+	while ( *tmp == '\0' || iswspace(*tmp) )
+	{
+		*tmp = 0;
+		tmp--;
+	}
     
     return buf;
     
@@ -189,9 +198,7 @@ char* make_segment(char* start, char* end)
 
 const char* input_buffer;
 const char* input_buffer_p;
-#ifndef WIN32
 #define min(a,b) ((a) < (b) ? (a) : (b))   
-#endif
 
 int icalparser_flex_input(char* buf, int max_size)
 {
@@ -248,8 +255,8 @@ char* icalparser_get_prop_name(char* line, char** end)
     char* v;
     char *str;
 
-    p = icalparser_get_next_char(';',line); 
-    v = icalparser_get_next_char(':',line); 
+    p = icalparser_get_next_char(';',line,1); 
+    v = icalparser_get_next_char(':',line,1); 
     if (p== 0 && v == 0) {
 	return 0;
     }
@@ -271,9 +278,10 @@ char* icalparser_get_param_name(char* line, char **end)
 {
     
     char* next; 
+    char* quote; 
     char *str;
 
-    next = icalparser_get_next_char('=',line);
+    next = icalparser_get_next_char('=',line,1);
 
     if (next == 0) {
 	return 0;
@@ -281,6 +289,16 @@ char* icalparser_get_param_name(char* line, char **end)
 
     str = make_segment(line,next);
     *end = next+1;
+    if (**end == '"') {
+        *end = *end+1;
+	    next = icalparser_get_next_char('"',*end,0);
+	    if (next == 0) {
+		    return 0;
+	    }
+
+	    *end = make_segment(*end,next);
+    }
+
     return str;
    
 }
@@ -291,7 +309,7 @@ char* icalparser_get_next_paramvalue(char* line, char **end)
     char* next; 
     char *str;
 
-    next = icalparser_get_next_char(',',line);
+    next = icalparser_get_next_char(',',line,1);
 
     if (next == 0){
 	next = (char*)(size_t)line+(size_t)strlen(line);\
@@ -323,7 +341,7 @@ char* icalparser_get_next_value(char* line, char **end, icalvalue_kind kind)
     p = line;
     while(1){
 
-	next = icalparser_get_next_char(',',p);
+	next = icalparser_get_next_char(',',p,1);
 
 	/* Unforunately, RFC2445 says that for the RECUR value, COMMA
 	   can both seperate digits in a list, and it can seperate
@@ -384,14 +402,14 @@ char* icalparser_get_next_parameter(char* line,char** end)
     char *v;
     char *str;
 
-    v = icalparser_get_next_char(':',line); 
-    next = icalparser_get_next_char(';', line);
+    v = icalparser_get_next_char(':',line,1); 
+    next = icalparser_get_next_char(';', line,1);
     
     /* There is no ';' or, it is after the ':' that marks the beginning of
        the value */
 
     if (next == 0 || next > v) {
-	next = icalparser_get_next_char(':', line);
+	next = icalparser_get_next_char(':', line,1);
     }
 
     if (next != 0) {
@@ -523,6 +541,12 @@ char* icalparser_get_line(icalparser *parser,
 	*(line_p) = '\0';
     }
 
+	while ( *line_p == '\0' || iswspace(*line_p) )
+	{
+		*line_p = '\0';
+		line_p--;
+	}
+
     return line;
 
 }
@@ -570,6 +594,7 @@ icalcomponent* icalparser_parse(icalparser *parser,
     icalcomponent *root=0;
     struct icalparser_impl *impl = (struct icalparser_impl*)parser;
     icalerrorstate es = icalerror_get_error_state(ICAL_MALFORMEDDATA_ERROR);
+	int cont;
 
     icalerror_check_arg_rz((parser !=0),"parser");
 
@@ -610,10 +635,12 @@ icalcomponent* icalparser_parse(icalparser *parser,
 	    c = 0;
 
         }
+	cont = 0;
 	if(line != 0){
 	    free(line);
+		cont = 1;
 	}
-    } while ( line != 0);
+    } while ( cont );
 
     icalerror_set_error_state(ICAL_MALFORMEDDATA_ERROR,es);
 
@@ -1094,7 +1121,7 @@ icalcomponent* icalparser_parse_string(const char* str)
     struct slg_data d;
     icalparser *p;
 
-    icalerrorstate es = icalerror_get_error_state(ICAL_PARSE_ERROR);
+    icalerrorstate es = icalerror_get_error_state(ICAL_MALFORMEDDATA_ERROR);
 
     d.pos = 0;
     d.str = str;
@@ -1102,11 +1129,11 @@ icalcomponent* icalparser_parse_string(const char* str)
     p = icalparser_new();
     icalparser_set_gen_data(p,&d);
 
-    icalerror_set_error_state(ICAL_PARSE_ERROR,ICAL_ERROR_NONFATAL);
+    icalerror_set_error_state(ICAL_MALFORMEDDATA_ERROR,ICAL_ERROR_NONFATAL);
 
     c = icalparser_parse(p,string_line_generator);
 
-    icalerror_set_error_state(ICAL_PARSE_ERROR,es);
+    icalerror_set_error_state(ICAL_MALFORMEDDATA_ERROR,es);
 
     icalparser_free(p);
 

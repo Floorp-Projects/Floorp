@@ -1,4 +1,4 @@
-#!/usr/local/bin/perl
+#!/usr/bin/env perl
 
 require "readvaluesfile.pl";
 
@@ -11,6 +11,8 @@ getopts('chspmi:');
 # ARG 1 is value-types.txt
 %valuemap  = read_values_file($ARGV[1]);
 
+
+$include_vanew = 1;
 
 # Write the file inline by copying everything before a demarcation
 # line, and putting the generated data after the demarcation
@@ -163,13 +165,9 @@ foreach $prop (sort keys %propmap) {
   my $set_pointer_check = "icalerror_check_arg_rv( (v!=0),\"v\");\n" if $type =~ /\*/;
 
   if($opt_c) { # Generate C source
- print<<EOM;
-/* $prop */
-icalproperty* icalproperty_new_${lc}($type v) {
-   struct icalproperty_impl *impl = icalproperty_new_impl(ICAL_${uc}_PROPERTY);   $pointer_check
-   icalproperty_set_${lc}((icalproperty*)impl,v);
-   return (icalproperty*)impl;
-}
+
+   if ($include_vanew) {
+     print<<EOM;
 icalproperty* icalproperty_vanew_${lc}($type v, ...){
    va_list args;
    struct icalproperty_impl *impl = icalproperty_new_impl(ICAL_${uc}_PROPERTY);   $pointer_check
@@ -179,30 +177,57 @@ icalproperty* icalproperty_vanew_${lc}($type v, ...){
    va_end(args);
    return (icalproperty*)impl;
 }
+EOM
+}
+    # Allow EXDATEs to take DATE values easily.
+    if ($lc eq "exdate") {
+ print<<EOM;
 void icalproperty_set_${lc}(icalproperty* prop, $type v){
     icalvalue *value;
     $set_pointer_check
     icalerror_check_arg_rv( (prop!=0),"prop");
-    value = icalvalue_new_${lcvalue}(v);
+    if (v.is_date)
+        value = icalvalue_new_date(v);
+    else
+        value = icalvalue_new_datetime(v);
     icalproperty_set_value(prop,value);
 }
+EOM
+    } else {
+	print<<EOM;
+
+/* $prop */
+icalproperty* icalproperty_new_${lc}($type v) {
+   struct icalproperty_impl *impl = icalproperty_new_impl(ICAL_${uc}_PROPERTY);   $pointer_check
+   icalproperty_set_${lc}((icalproperty*)impl,v);
+   return (icalproperty*)impl;
+}
+
+void icalproperty_set_${lc}(icalproperty* prop, $type v){
+    $set_pointer_check
+    icalerror_check_arg_rv( (prop!=0),"prop");
+    icalproperty_set_value(prop,icalvalue_new_${lcvalue}(v));
+}
 $type icalproperty_get_${lc}(icalproperty* prop){
-    icalvalue *value;
     icalerror_check_arg( (prop!=0),"prop");
-    value = icalproperty_get_value(prop);
-    return icalvalue_get_${lcvalue}(value);
+    return icalvalue_get_${lcvalue}(icalproperty_get_value(prop));
 }
 EOM
-
-
+}
   } elsif ($opt_h) { # Generate C Header file
+
+
  print "\
 /* $prop */\
 icalproperty* icalproperty_new_${lc}($type v);\
-icalproperty* icalproperty_vanew_${lc}($type v, ...);\
 void icalproperty_set_${lc}(icalproperty* prop, $type v);\
 $type icalproperty_get_${lc}(icalproperty* prop);";
   
+
+if ($include_vanew){
+  print "icalproperty* icalproperty_vanew_${lc}($type v, ...);\n";
+}
+
 } 
 
 

@@ -3,7 +3,7 @@
   FILE: icaltypes.c
   CREATOR: eric 16 May 1999
   
-  $Id: icaltypes.c,v 1.2 2001/11/22 19:21:50 mikep%oeone.com Exp $
+  $Id: icaltypes.c,v 1.3 2001/12/21 18:56:27 mikep%oeone.com Exp $
   $Locker:  $
     
 
@@ -34,9 +34,10 @@
 #include <errno.h> /* for errno */
 #include <string.h> /* for icalmemory_strdup */
 #include <assert.h>
+
 #ifdef WIN32
-#define snprintf	_snprintf
-#define strcasecmp	stricmp
+#define snprintf      _snprintf
+#define strcasecmp    stricmp
 #endif
 
 #define TEMP_MAX 1024
@@ -152,13 +153,23 @@ void* icalattachtype_get_binary(struct icalattachtype* v)
     return v->binary;
 }
 
+int icaltriggertype_is_null_trigger(struct icaltriggertype tr)
+{
+    if(icaltime_is_null_time(tr.time) && 
+       icaldurationtype_is_null_duration(tr.duration)){
+        return 1;
+    }
 
+    return 0;
+}
+    
 struct icaltriggertype icaltriggertype_from_string(const char* str)
 {
 
     
     struct icaltriggertype tr, null_tr;
-    int old_ieaf = icalerror_errors_are_fatal;
+    icalerrorstate es;
+    icalerrorenum e;
 
     tr.time= icaltime_null_time();
     tr.duration = icaldurationtype_from_int(0);
@@ -167,12 +178,13 @@ struct icaltriggertype icaltriggertype_from_string(const char* str)
 
     if(str == 0) goto error;
 
-
-    icalerror_errors_are_fatal = 0;
+    /* Surpress errors so a failure in icaltime_from_string() does not cause an abort */
+    es = icalerror_get_error_state(ICAL_MALFORMEDDATA_ERROR);
+    icalerror_set_error_state(ICAL_MALFORMEDDATA_ERROR,ICAL_ERROR_NONFATAL);
+    e = icalerrno;
+    icalerror_set_errno(ICAL_NO_ERROR);
 
     tr.time = icaltime_from_string(str);
-
-    icalerror_errors_are_fatal = old_ieaf;
 
     if (icaltime_is_null_time(tr.time)){
 
@@ -181,18 +193,21 @@ struct icaltriggertype icaltriggertype_from_string(const char* str)
 	if(icaldurationtype_as_int(tr.duration) == 0) goto error;
     } 
 
+    icalerror_set_error_state(ICAL_MALFORMEDDATA_ERROR,es);
+    icalerror_set_errno(e);
     return tr;
 
  error:
+    icalerror_set_error_state(ICAL_MALFORMEDDATA_ERROR,es);
     icalerror_set_errno(ICAL_MALFORMEDDATA_ERROR);
     return null_tr;
 
 }
 
 
-struct icalreqstattype icalreqstattype_from_string(char* str)
+struct icalreqstattype icalreqstattype_from_string(const char* str)
 {
-  char *p1,*p2;
+  const char *p1,*p2;
   struct icalreqstattype stat;
   int major, minor;
 
@@ -207,14 +222,14 @@ struct icalreqstattype icalreqstattype_from_string(char* str)
   sscanf(str, "%d.%d",&major, &minor);
 
   if (major <= 0 || minor < 0){
-    icalerror_set_errno(ICAL_BADARG_ERROR);
+    icalerror_set_errno(ICAL_MALFORMEDDATA_ERROR);
     return stat;
   }
 
   stat.code = icalenum_num_to_reqstat(major, minor);
 
   if (stat.code == ICAL_UNKNOWN_STATUS){
-    icalerror_set_errno(ICAL_BADARG_ERROR);
+    icalerror_set_errno(ICAL_MALFORMEDDATA_ERROR);
     return stat;
   }
   
@@ -240,7 +255,7 @@ struct icalreqstattype icalreqstattype_from_string(char* str)
   
 }
 
-char* icalreqstattype_as_string(struct icalreqstattype stat)
+const char* icalreqstattype_as_string(struct icalreqstattype stat)
 {
   char *temp;
 

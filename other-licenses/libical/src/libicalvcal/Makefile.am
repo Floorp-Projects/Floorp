@@ -3,8 +3,8 @@ lib_LTLIBRARIES = libicalvcal.la
 INCLUDES =			\
 	-I$(top_builddir)	\
 	-I$(top_srcdir)/src/libical	\
-	-I$(top_srcdir)/src/libicalss	\
-	-I$(srcdir)
+	-I$(top_builddir)/src/libical	\
+	-I$(top_srcdir)/src/libicalss
 
 libicalvcal_la_LDFLAGS = -version-info 0:0:0
 

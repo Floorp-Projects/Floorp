@@ -7,7 +7,7 @@
 # DESCRIPTION:
 #   
 #
-#  $Id: test.py,v 1.1 2001/11/15 19:27:43 mikep%oeone.com Exp $
+#  $Id: test.py,v 1.2 2001/12/21 18:56:52 mikep%oeone.com Exp $
 #  $Locker:  $
 #
 # (C) COPYRIGHT 2001, Eric Busboom <eric@softwarestudio.org>
@@ -25,6 +25,7 @@
 #    the License at http://www.mozilla.org/MPL/
 #======================================================================
 
+import LibicalWrap
 from Libical import *
 
 def error_type():
@@ -32,6 +33,10 @@ def error_type():
     return error[:index(error,':')]
 
 comp_str = """
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//ABC Corporation//NONSGML My Product//EN
+METHOD:REQUEST
 BEGIN:VEVENT
 ATTENDEE;RSVP=TRUE;ROLE=REQ-PARTICIPANT;CUTYPE=GROUP:MAILTO:employee-A@host.com
 COMMENT: When in the course of writting comments and nonsense text\, it 
@@ -43,13 +48,15 @@ DURATION:P3DT4H25M
 FREEBUSY:19970101T120000/19970101T120000
 FREEBUSY:19970101T120000/PT3H
 FREEBUSY:19970101T120000/PT3H
-END:VEVENT"""
+END:VEVENT
+END:VCALENDAR"""
 
 
 def test_property():
 
     print "--------------------------- Test Property ----------------------"
-    
+
+
     liw = LibicalWrap
     icalprop = liw.icalproperty_new_from_string("ATTENDEE;RSVP=TRUE;ROLE=REQ-PARTICIPANT;CUTYPE=GROUP:MAILTO:employee-A@host.com")
 
@@ -62,6 +69,10 @@ def test_property():
     print p['ROLE']
     
     p['ROLE'] = 'INDIVIDUAL'
+
+    print p['ROLE']
+
+    p['ROLE'] = 'GROFROMBLATZ'
 
     print p['ROLE']
 
@@ -78,6 +89,13 @@ def test_property():
         pass
     else:
         assert(0)
+
+
+    assert(test_enum('METHOD','PUBLISH'))
+    assert(not test_enum('METHOD','FOO'))
+
+    assert(test_enum('ACTION','AUDIO'))
+    assert(not test_enum('ACTION','OPAQUE'))
 
 def test_time():
     "Test routine"
@@ -221,14 +239,25 @@ def test_component():
     print "------------------- Test Component ----------------------"
 
 
-    c = Component(comp_str);
-    
+    c = NewComponent(comp_str);
+
     props = c.properties()
     
     for p in props: 
         print p.as_ical_string()
+    
+    inner = c.components()[0]
+
+    print inner
+    print type(inner)
+
+
+    props = inner.properties()
+    
+    for p in props: 
+        print p.as_ical_string()
         
-    dtstart = c.properties('DTSTART')[0]
+    dtstart = inner.properties('DTSTART')[0]
         
     print dtstart
     
@@ -240,21 +269,21 @@ def test_component():
     print "\n New hour: ", dtstart.hour()
     assert(dtstart.hour() == 17)
 
-    attendee = c.properties('ATTENDEE')[0]
+    attendee = inner.properties('ATTENDEE')[0]
     
     print attendee
 
     t = Time("20011111T123030")
     t.name('DTEND')
 
-    c.add_property(t)
+    inner.add_property(t)
 
 
     print c
 
-    dtstart1 = c.properties('DTSTART')[0]
-    dtstart2 = c.properties('DTSTART')[0]
-    dtstart3 = c.property('DTSTART')
+    dtstart1 = inner.properties('DTSTART')[0]
+    dtstart2 = inner.properties('DTSTART')[0]
+    dtstart3 = inner.property('DTSTART')
 
     assert(dtstart1 is dtstart2)
     assert(dtstart1 == dtstart2)
@@ -266,53 +295,60 @@ def test_component():
     p = Property(type="SUMMARY");
     p.value("This is a summary")
 
-    c.properties().append(p)
+    inner.properties().append(p)
 
-    print c.as_ical_string()
+    print inner.as_ical_string()
 
-    p = c.properties("SUMMARY")[0]
+    p = inner.properties("SUMMARY")[0]
     assert(p!=None);
     print str(p)
     assert(str(p) == "SUMMARY:This is a summary")
 
-    c.properties()[:] = [p]
+    inner.properties()[:] = [p]
 
-    print c.as_ical_string()
+    print inner.as_ical_string()
+
+    
 
 
 def test_event():
     print "------------ Event Class ----------------------"
+
     event = Event()
+
+    event.method('REQUEST')
+    event.version('2.0')
+
     event.created("20010313T123000Z")
-    #print "created =", event.created()
-    assert (event.created() == "20010313T123000Z")
+    print "created =", event.created()
+    assert (event.created() == Time("20010313T123000Z"))
 
     event.organizer("MAILTO:j_doe@nowhere.com")
-    org = event.properties('ORGANIZER')[0]
-    #print org.cn()
+    org = event.organizer()
+    print org.cn()
     org.cn('Jane Doe')
     assert (isinstance(org, Organizer))
-    #print "organizer =", event.organizer()
-    assert (event.organizer() == "MAILTO:j_doe@nowhere.com")
+    print "organizer =", event.organizer()
+    assert (event.organizer().value() == "MAILTO:j_doe@nowhere.com")
 
     event.dtstart("20010401T183000Z")
-    #print "dtstart =", event.dtstart()
-    assert (event.dtstart()=="20010401T183000Z")
+    print "dtstart =", event.dtstart()
+    assert (event.dtstart()== Time("20010401T183000Z"))
 
     dtend = Time('20010401T190000Z', 'DTEND')
     event.dtend(dtend)
-    assert (event.dtend()==dtend.value())
-    assert (event.dtend() == '20010401T190000Z')
+    assert (event.dtend() ==dtend )
+    assert (event.dtend() == Time('20010401T190000Z'))
     
     att = Attendee()
     att.value('jsmith@nothere.com')
     event.attendees(('ef_hutton@listenup.com', att))
 
-    event.description("A short description.  Longer ones break things.")
+    event.description("A short description.  Longer ones break things. Really. What does it break. The code is supposed to handle realy long lines, longer, in fact, than any sane person would create except by writting a random text generator or by excerpting text from a less sane person. Actually, it did \"break\" and I had to remove an \n assert to fix it.")
     event.status('TeNtAtIvE')
     
     print event.as_ical_string()
-    
+
     
 def test_derivedprop():
     

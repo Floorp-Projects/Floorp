@@ -6,7 +6,7 @@
   
   DESCRIPTION:
   
-  $Id: icalsslexer.l,v 1.1 2001/11/15 19:27:31 mikep%oeone.com Exp $
+  $Id: icalsslexer.l,v 1.2 2001/12/21 18:56:39 mikep%oeone.com Exp $
   $Locker:  $
 
 (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org
@@ -77,6 +77,7 @@ FROM			{ return FROM; }
 WHERE			{ return WHERE; }
 ,			{ return COMMA; }
 "="  			{ return EQUALS; }
+"=="  			{ return EQUALS; }
 "!=" 			{ return NOTEQUALS; }
 "<"  			{ return LESS; }
 ">"  			{ return GREATER; }
@@ -87,7 +88,8 @@ OR			{ return OR; }
 \'                      { return QUOTE; }
 [ \t\n\r]+ ;			
 ;			{ return EOL; }
-\'[\*A-Za-z0-9\-\.]+\' {
+
+\'[\*A-Za-z0-9\-\. ]+\' {
 	int c = input();
 	unput(c);
 	if(c!='\''){
@@ -98,8 +100,11 @@ OR			{ return OR; }
 	}
 }
 
-[\*A-Za-z0-9\-\.]+		{ sslval.v_string= icalmemory_tmp_copy(sstext);
-			  return STRING; }
+[\*A-Za-z0-9\-\.]+  { 
+
+        sslval.v_string= icalmemory_tmp_copy(sstext); 
+        return STRING; 
+}
 
 
 .			{ return yytext[0]; }

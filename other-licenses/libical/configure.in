@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
 AC_INIT(src)
-AM_INIT_AUTOMAKE(libical,0.23) 
+AM_INIT_AUTOMAKE(libical,0.23a) 
 AM_CONFIG_HEADER(config.h)
 
 dnl  Initialize maintainer mode
@@ -21,7 +21,13 @@ AC_SUBST(AR)
 AC_CHECK_PROGS(AR, ar aal, ar)
 AC_CHECK_PROGS(PERL, perl5 perl)  
 
+dnl **************************************************
+dnl test/regression.c (and maybe others) needs this defined
+dnl **************************************************
 AC_DEFINE(ICAL_ERRORS_ARE_FATAL,1)
+AC_DEFINE(NO_WARN_DEPRECATED,1)
+AC_DEFINE(NO_WARN_ICAL_MALFORMEDDATA_ERROR_HACK,1)
+
 AC_DEFINE(ICAL_SAFESAVES,1)
 AC_DEFINE(ICAL_UNIX_NEWLINE,1)
 dnl AC_DEFINE(ICAL_NO_EMPTY_ARRAY_DECL)
@@ -100,5 +106,6 @@ src/libicalvcal/Makefile
 src/python/Makefile
 src/test/Makefile
 test-data/Makefile
+zoneinfo/Makefile
 ])
 

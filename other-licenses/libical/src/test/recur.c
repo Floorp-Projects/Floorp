@@ -32,10 +32,17 @@
 #include <stdio.h> /* for printf */
 #include <time.h> /* for time() */
 #include <signal.h> /* for signal */
+#ifndef WIN32
 #include <unistd.h> /* for alarm */
+#endif
 #include "icalmemory.h"
 #include "icaldirset.h"
 #include "icalfileset.h"
+
+#ifdef WIN32
+#define snprintf	_snprintf
+#define strcasecmp	stricmp
+#endif
 
 static void sig_alrm(int i){
     fprintf(stderr,"Could not get lock on file\n");
@@ -55,8 +62,9 @@ int main(int argc, char *argv[])
 
     icalerror_set_error_state(ICAL_PARSE_ERROR, ICAL_ERROR_NONFATAL);
 
+#ifndef WIN32
     signal(SIGALRM,sig_alrm);
-
+#endif
 
     if (argc <= 1){
 	file = "../../test-data/recur.txt";
@@ -67,10 +75,14 @@ int main(int argc, char *argv[])
 	exit(1);
     }
 
+#ifndef WIN32
     alarm(300); /* to get file lock */
+#endif
     cin = icalfileset_new(file);
+#ifndef WIN32
     alarm(0);
-    
+#endif
+	
     if(cin == 0){
 	fprintf(stderr,"recur: can't open file %s\n",file);
 	exit(1);

@@ -3,7 +3,7 @@
   FILE: icalvalue.c
   CREATOR: eric 02 May 1999
   
-  $Id: icalvalueimpl.h,v 1.1 2001/11/15 19:27:11 mikep%oeone.com Exp $
+  $Id: icalvalueimpl.h,v 1.2 2001/12/21 18:56:28 mikep%oeone.com Exp $
 
 
  (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org
@@ -68,6 +68,8 @@ struct icalvalue_impl {
 	/*struct icaltimetype v_datetime;*/
 	/*struct icaltimetype v_datetimedate;*/
 	
+        struct icalreqstattype v_requeststatus;
+
 	/* struct icalrecurrencetype was once included
 	   directly ( not referenced ) in this union, but it
 	   contributes 2000 bytes to every value, so now it is
