@@ -281,11 +281,12 @@ nsXMLContentSerializer::AppendDoctype(nsIDOMDocumentType *aDoctype,
   }
   
   if (!internalSubset.IsEmpty()) {
-    AppendToString(PRUnichar(' '), aStr);
+    AppendToString(NS_LITERAL_STRING(" ["), aStr);
     AppendToString(internalSubset, aStr);
+    AppendToString(PRUnichar(']'), aStr);
   }
     
-  AppendToString(NS_LITERAL_STRING(">"), aStr);
+  AppendToString(PRUnichar('>'), aStr);
 
   return NS_OK;
 }
