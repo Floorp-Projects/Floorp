@@ -491,6 +491,11 @@ jsj_ReflectJavaMethods(JSContext *cx, JNIEnv *jEnv,
         method_name_jstr = (*jEnv)->CallObjectMethod(jEnv, java_method, jlrMethod_getName);
         ok = add_java_method_to_class_descriptor(cx, jEnv, class_descriptor, method_name_jstr, java_method,
                                                  reflect_only_static_methods, JS_FALSE);
+        /*
+        ** Try to prevent overflow of local ref table via proxy JNI.
+        */
+        (*jEnv)->DeleteLocalRef(jEnv, method_name_jstr);
+        (*jEnv)->DeleteLocalRef(jEnv, java_method);
         if (!ok)
             return JS_FALSE;
     }

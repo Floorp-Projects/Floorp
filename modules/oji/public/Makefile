@@ -28,6 +28,9 @@ EXPORTS	=			  \
 	nsIJVMPluginInstance.h	  \
 	nsIJVMPluginTagInfo.h	  \
 	nsISymantecDebugManager.h \
-	nsISymantecDebugger.h
+	nsISymantecDebugger.h \
+ nsISecureJNI2.h \
+ ProxyJNI.h \
+ nsIThreadManager.h
 
 include $(DEPTH)/config/rules.mk

@@ -102,7 +102,11 @@ typedef struct JSJCallbacks {
        browser embedding, these are used to maintain the run-to-completion
        semantics of JavaScript.  It is acceptable for either function pointer
        to be NULL. */
+#ifdef OJI
+    JSBool	        (*enter_js_from_java)(JNIEnv *jEnv, char **errp,  void **pNSIPrincipaArray, int numPrincipals, void *pNSISecurityContext);
+#else
     JSBool	        (*enter_js_from_java)(JNIEnv *jEnv, char **errp);
+#endif
     void	        (*exit_js)(JNIEnv *jEnv);
 
     /* Most LiveConnect errors are signaled by calling JS_ReportError(), but in
@@ -259,12 +263,5 @@ JSJ_DisconnectFromJavaVM(JSJavaVM *);
  */
 PR_IMPLEMENT(JSBool)
 JSJ_ConvertJavaObjectToJSValue(JSContext *cx, jobject java_obj, jsval *vp);
-
-
-#ifdef OJI
-PR_IMPLEMENT(PRBool)
-JSJ_NSISecurityContextImplies(void *pNSISecurityContextIN, const char* target, const char* action);
-#endif
-
 PR_END_EXTERN_C
 #endif  /* _JSJAVA_H */
