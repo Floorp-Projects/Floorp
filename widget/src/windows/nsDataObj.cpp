@@ -463,9 +463,17 @@ nsDataObj :: GetFileDescriptorInternetShortcut ( FORMATETC& aFE, STGMEDIUM& aSTG
     nsAutoString title;
     if ( NS_FAILED(ExtractShortcutTitle(title)) )
       return E_OUTOFMEMORY;
-    char* titleStr = ToNewCString(title);         // XXX what about unicode urls?!?!
-    if ( !titleStr )
-      return E_OUTOFMEMORY;
+
+    char titleStr[MAX_PATH+1];
+    int lenTitleStr = WideCharToMultiByte(CP_ACP, 0, title.get(), title.Length(), titleStr, MAX_PATH, NULL, NULL);
+    if (!lenTitleStr && (GetLastError() == ERROR_INSUFFICIENT_BUFFER)) {
+      // this is a very rare situation
+      int len = title.Length() - 1;
+      while ((len > 0) && (GetLastError() == ERROR_INSUFFICIENT_BUFFER)) {
+        lenTitleStr = WideCharToMultiByte(CP_ACP, 0, title.get(), len--, titleStr, MAX_PATH, NULL, NULL);  
+      } 
+    }
+    titleStr[lenTitleStr] = '\0';
 
     // one file in the file descriptor block
     fileGroupDesc->cItems = 1;
@@ -479,10 +487,9 @@ nsDataObj :: GetFileDescriptorInternetShortcut ( FORMATETC& aFE, STGMEDIUM& aSTG
     static int suffixLen = strlen(shortcutSuffix);
     int titleLen = strlen(titleStr);
     int trimmedLen = titleLen > MAX_PATH - (suffixLen + 1) ? MAX_PATH - (suffixLen + 1) : titleLen;
-    titleStr[trimmedLen] = nsnull;
+    titleStr[trimmedLen] = '\0';
     sprintf(fileGroupDesc->fgd[0].cFileName, "%s%s", titleStr, shortcutSuffix);
 
-    nsMemory::Free(titleStr);
     ::GlobalUnlock ( fileGroupDescHand );
     aSTG.hGlobal = fileGroupDescHand;
     aSTG.tymed = TYMED_HGLOBAL;
@@ -509,7 +516,7 @@ nsDataObj :: GetFileContentsInternetShortcut ( FORMATETC& aFE, STGMEDIUM& aSTG )
   nsAutoString url;
   if ( NS_FAILED(ExtractShortcutURL(url)) )
     return E_OUTOFMEMORY;
-  char* urlStr = ToNewCString(url);         // XXX what about unicode urls?!?!
+  char* urlStr = ToNewCString(url);         // need to revisit here once we implement iDNS?!?!
   if ( !urlStr )
     return E_OUTOFMEMORY;
     
