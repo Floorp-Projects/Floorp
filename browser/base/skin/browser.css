@@ -737,4 +737,7 @@ toolbar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-text {
    display: none;
 }
 
-
+resizer[dir="bottomright"] {
+  -moz-appearance: resizer;
+  cursor: se-resize;
+}
