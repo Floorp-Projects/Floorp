@@ -1675,6 +1675,9 @@ nsTextControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
   if (!divContent)
     return NS_ERROR_FAILURE;
 
+  // Set the div native anonymous, so CSS will be its style language
+  // no matter what.
+  divContent->SetNativeAnonymous(PR_TRUE);
 
   // Set the neccessary style attributes on the text control.
 
