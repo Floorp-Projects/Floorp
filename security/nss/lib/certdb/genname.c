@@ -433,12 +433,12 @@ cert_DecodeGeneralNames (PRArenaPool  *arena,
 	}
 	currentName->l.next = head;
 	currentName->l.prev = tail;
-	tail = &(currentName->l);
-	(cert_get_prev_general_name(currentName))->l.next = tail;
+	tail = head->prev = tail->next = &(currentName->l);
 	encodedGenName++;
     }
-    (cert_get_next_general_name(currentName))->l.prev = tail;
-    return cert_get_next_general_name(currentName);
+    if (currentName) {
+	return cert_get_next_general_name(currentName);
+    }
 loser:
     return NULL;
 }
