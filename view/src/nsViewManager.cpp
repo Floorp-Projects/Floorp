@@ -2018,7 +2018,9 @@ NS_IMETHODIMP nsViewManager::InsertZPlaceholder(nsIView *aParent, nsIView *aChil
           kid = kid->GetNextSibling();
         }
 
-      nsZPlaceholderView* placeholder = new nsZPlaceholderView(parent);
+      nsZPlaceholderView* placeholder = new nsZPlaceholderView();
+      nsRect bounds(0, 0, 0, 0);
+      placeholder->Init(this, bounds, parent, nsViewVisibility_kHide);
       placeholder->SetReparentedView(child);
       child->SetZParent(placeholder);
 

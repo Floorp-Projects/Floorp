@@ -97,10 +97,7 @@ class nsView;
 class nsZPlaceholderView : public nsView
 {
 public:
-  nsZPlaceholderView(nsView* aParent) : nsView() {
-    SetParent(aParent);
-    SetVisibility(nsViewVisibility_kHide);
-  }
+  nsZPlaceholderView() : nsView() {}
 
   void RemoveReparentedView() { mReparentedView = nsnull; }
   void SetReparentedView(nsView* aView) { mReparentedView = aView; }
