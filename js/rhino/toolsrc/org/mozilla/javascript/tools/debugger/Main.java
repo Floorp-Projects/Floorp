@@ -1658,10 +1658,11 @@ class SetFilePosition implements Runnable {
             if (w.isIcon()) {
                 db.desk.getDesktopManager().deiconifyFrame(w);
             }
-            //db.desk.getDesktopManager().activateFrame(w);
+            db.desk.getDesktopManager().activateFrame(w);
             try {
                 w.show();
-                //w.setSelected(true);
+                w.toFront();  // required for correct frame layering (JDK 1.4.1)
+                w.setSelected(true);
             } catch (Exception exc) {
             }
         }
@@ -3561,7 +3562,6 @@ public class Main extends JFrame implements Debugger, ContextListener {
      * be used as the scope for loading scripts from files
      * when the user selects "Open..." or "Run..."
      */
-
     public void setScopeProvider(ScopeProvider p) {
         scopeProvider = p;
     }
@@ -3570,7 +3570,6 @@ public class Main extends JFrame implements Debugger, ContextListener {
      * Assign a Runnable object that will be invoked when the user
      * selects "Exit..." or closes the Debugger main window
      */
-
     public void setExitAction(Runnable r) {
         exitAction = r;
     }
