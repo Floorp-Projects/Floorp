@@ -49,6 +49,7 @@
 #include "jsdbgapi.h"
 #include "nsISecurityContext.h"
 #include "nsIPrincipal.h"
+#include "nsCOMPtr.h"
 
 struct JSContext;
 
@@ -108,7 +109,7 @@ protected:
     JSStackFrame *m_pJStoJavaFrame;
     JSContext    *m_pJSCX;
 private:
-    nsIPrincipal *m_pPrincipal;
+    nsCOMPtr<nsIPrincipal> m_pPrincipal;
     PRBool        m_HasUniversalJavaCapability;
     PRBool        m_HasUniversalBrowserReadCapability;
 };
