@@ -58,6 +58,9 @@
 #include "nsIPrompt.h"
 
 #include "nsIDOMHTMLBodyElement.h"
+#include "nsIDOMHTMLTableElement.h"
+#include "nsIDOMHTMLTableRowElement.h"
+#include "nsIDOMHTMLTableCellElement.h"
 #include "nsIDOMHTMLAnchorElement.h"
 #include "nsIDOMHTMLAreaElement.h"
 #include "nsIDOMHTMLImageElement.h"
@@ -116,9 +119,9 @@ struct OutputData
     OutputData(nsIURI *aFile, nsIURI *aOriginalLocation, PRBool aCalcFileExt) :
         mFile(aFile),
         mOriginalLocation(aOriginalLocation),
-        mCalcFileExt(aCalcFileExt),
         mSelfProgress(0),
-        mSelfProgressMax(10000)
+        mSelfProgressMax(10000),
+        mCalcFileExt(aCalcFileExt)
     {
     }
     ~OutputData()
@@ -150,9 +153,9 @@ struct UploadData
 // modern systems should able to cope with.
 
 #ifdef XP_MAC
-const PRInt32 kDefaultMaxFilenameLength = 31;
+const PRUint32 kDefaultMaxFilenameLength = 31;
 #else
-const PRInt32 kDefaultMaxFilenameLength = 64;
+const PRUint32 kDefaultMaxFilenameLength = 64;
 #endif
 
 // Default flags for persistence
@@ -165,6 +168,7 @@ const char *kWebBrowserPersistStringBundle =
     "chrome://global/locale/nsWebBrowserPersist.properties";
 
 nsWebBrowserPersist::nsWebBrowserPersist() :
+    mCurrentThingsToPersist(0),
     mFirstAndOnlyUse(PR_TRUE),
     mCancel(PR_FALSE),
     mJustStartedLoading(PR_TRUE),
@@ -173,9 +177,8 @@ nsWebBrowserPersist::nsWebBrowserPersist() :
     mReplaceExisting(PR_TRUE),
     mPersistFlags(kDefaultPersistFlags),
     mPersistResult(NS_OK),
-    mEncodingFlags(0),
     mWrapColumn(72),
-    mCurrentThingsToPersist(0)
+    mEncodingFlags(0)
 {
     NS_INIT_REFCNT();
 }
@@ -1815,7 +1818,7 @@ nsWebBrowserPersist::CalculateAndAppendFileExt(nsIURI *aURI, nsIChannel *aChanne
 
                 if (!fileExt.IsEmpty())
                 {
-                    PRInt32 newLength = newFileName.Length() + fileExt.Length() + 1;
+                    PRUint32 newLength = newFileName.Length() + fileExt.Length() + 1;
                     if (newLength > kDefaultMaxFilenameLength)
                     {
                         newFileName.Truncate(newFileName.Length() - (newLength - kDefaultMaxFilenameLength));
@@ -2165,7 +2168,28 @@ nsWebBrowserPersist::OnWalkDOMNode(nsIDOMNode *aNode, PRBool *aAbort)
         StoreURIAttribute(aNode, "background");
         return NS_OK;
     }
-    
+
+    nsCOMPtr<nsIDOMHTMLTableElement> nodeAsTable = do_QueryInterface(aNode);
+    if (nodeAsTable)
+    {
+        StoreURIAttribute(aNode, "background");
+        return NS_OK;
+    }
+
+    nsCOMPtr<nsIDOMHTMLTableRowElement> nodeAsTableRow = do_QueryInterface(aNode);
+    if (nodeAsTableRow)
+    {
+        StoreURIAttribute(aNode, "background");
+        return NS_OK;
+    }
+
+    nsCOMPtr<nsIDOMHTMLTableCellElement> nodeAsTableCell = do_QueryInterface(aNode);
+    if (nodeAsTableCell)
+    {
+        StoreURIAttribute(aNode, "background");
+        return NS_OK;
+    }
+
     nsCOMPtr<nsIDOMHTMLScriptElement> nodeAsScript = do_QueryInterface(aNode);
     if (nodeAsScript)
     {
@@ -2296,6 +2320,39 @@ nsWebBrowserPersist::CloneNodeWithFixedUpURIAttributes(
 
     nsCOMPtr<nsIDOMHTMLBodyElement> nodeAsBody = do_QueryInterface(aNodeIn);
     if (nodeAsBody)
+    {
+        rv = GetNodeToFixup(aNodeIn, aNodeOut);
+        if (NS_SUCCEEDED(rv) && *aNodeOut)
+        {
+            FixupNodeAttribute(*aNodeOut, "background");
+        }
+        return rv;
+    }
+
+    nsCOMPtr<nsIDOMHTMLTableElement> nodeAsTable = do_QueryInterface(aNodeIn);
+    if (nodeAsTable)
+    {
+        rv = GetNodeToFixup(aNodeIn, aNodeOut);
+        if (NS_SUCCEEDED(rv) && *aNodeOut)
+        {
+            FixupNodeAttribute(*aNodeOut, "background");
+        }
+        return rv;
+    }
+
+    nsCOMPtr<nsIDOMHTMLTableRowElement> nodeAsTableRow = do_QueryInterface(aNodeIn);
+    if (nodeAsTableRow)
+    {
+        rv = GetNodeToFixup(aNodeIn, aNodeOut);
+        if (NS_SUCCEEDED(rv) && *aNodeOut)
+        {
+            FixupNodeAttribute(*aNodeOut, "background");
+        }
+        return rv;
+    }
+
+    nsCOMPtr<nsIDOMHTMLTableCellElement> nodeAsTableCell = do_QueryInterface(aNodeIn);
+    if (nodeAsTableCell)
     {
         rv = GetNodeToFixup(aNodeIn, aNodeOut);
         if (NS_SUCCEEDED(rv) && *aNodeOut)
