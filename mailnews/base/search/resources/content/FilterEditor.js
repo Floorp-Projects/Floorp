@@ -238,12 +238,12 @@ function saveFilter() {
     if (!gFilter) {
         gFilter = gFilterList.createFilter(gFilterNameElement.value);
         isNewFilter = true;
+        gFilter.enabled=true;
     } else {
         gFilter.filterName = gFilterNameElement.value;
         isNewFilter = false;
     }
 
-    gFilter.enabled=true;
     gFilter.action = action;
     if (action == nsMsgFilterAction.MoveToFolder)
         gFilter.actionTargetFolderUri = targetUri;
