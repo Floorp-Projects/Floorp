@@ -29,7 +29,7 @@
    onload="init_sidebar('messenger', 'chrome://messenger/content/sidebar-messenger.xul',
                         275);" align="horizontal"> 
 
-<html:script src="resource:/res/samples/contentframe.js" />
+<html:script src="chrome://navigator/content/contentframe.js" />
 
   <html:iframe id="sidebarframe" class="sidebarframe" src="about:blank" />
   <titledbutton id="grippy" class="grippy" onclick="toggle_open_close();"/>
