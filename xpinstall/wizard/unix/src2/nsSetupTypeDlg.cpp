@@ -393,7 +393,7 @@ nsSetupTypeDlg::Show(int aDirection)
         gtk_table_attach(GTK_TABLE(mTable), destTable, 0, 1, 3, 4,
             static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_FILL),
             static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_FILL),
-			20, 20);
+			20, 5);
         frame = gtk_frame_new(gCtx->Res("DEST_DIR"));
         gtk_table_attach_defaults(GTK_TABLE(destTable), frame, 0, 2, 0, 1);
         gtk_widget_show(frame);
@@ -412,7 +412,7 @@ nsSetupTypeDlg::Show(int aDirection)
         gtk_widget_show(sBrowseBtn);
         gtk_table_attach(GTK_TABLE(destTable), sBrowseBtn, 1, 2, 0, 1,
             static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_FILL),
-			GTK_SHRINK, 10, 0);
+			GTK_SHRINK, 10, 10);
 
         mWidgetsInit = TRUE;
     }
