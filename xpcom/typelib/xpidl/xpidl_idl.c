@@ -26,6 +26,8 @@
 
 #include "xpidl.h"
 
+static gboolean parsed_empty_file;
+
 /*
  * The bulk of the generation happens here.
  */
@@ -52,6 +54,15 @@ msg_callback(int level, int num, int line, const char *file,
              const char *message)
 {
     char *warning_message;
+
+    /*
+     * Egregious hack to permit empty files.
+     * XXX libIDL needs an API to detect this case robustly.
+     */
+    if (0 == strcmp(message, "File empty after optimization")) {
+        parsed_empty_file = TRUE;
+        return 1;
+    }
 
     if (!file)
         file = "<unknown file>";
@@ -637,6 +648,8 @@ xpidl_process_idl(char *filename, IncludePathEntry *include_path,
     g_hash_table_insert(callback_state.already_included,
                         xpidl_strdup(filename), (void *)TRUE);
 
+    parsed_empty_file = FALSE;
+
     rv = IDL_parse_filename_with_input(filename, input_callback, &callback_state,
                                        msg_callback, &top,
                                        &state.ns,
@@ -644,7 +657,16 @@ xpidl_process_idl(char *filename, IncludePathEntry *include_path,
                                        IDLF_XPIDL,
                                        enable_warnings ? IDL_WARNING1 :
                                        IDL_ERROR);
-    if (rv != IDL_SUCCESS) {
+    if (parsed_empty_file) {
+        /*
+         * If we've detected (via hack in msg_callback) that libIDL returned
+         * failure because it found a file with no IDL, set the parse tree to
+         * null and proceed.  Allowing this is useful to permit .idl files that
+         * collect #includes.
+         */
+        top = NULL;
+        state.ns = NULL;
+    } else if (rv != IDL_SUCCESS) {
         if (rv == -1) {
             g_warning("Parse of %s failed: %s", filename, g_strerror(errno));
         } else {
@@ -652,6 +674,7 @@ xpidl_process_idl(char *filename, IncludePathEntry *include_path,
         }
         return 0;
     }
+
 
     state.basename = xpidl_strdup(filename);
     tmp = strrchr(state.basename, '.');
@@ -682,7 +705,8 @@ xpidl_process_idl(char *filename, IncludePathEntry *include_path,
 
     if (emitter->emit_prolog)
         emitter->emit_prolog(&state);
-    ok = xpidl_process_node(&state);
+    if (state.tree) /* Only if we have a tree to process. */
+        ok = xpidl_process_node(&state);
     if (emitter->emit_epilog)
         emitter->emit_epilog(&state);
 
@@ -694,8 +718,10 @@ xpidl_process_idl(char *filename, IncludePathEntry *include_path,
     g_hash_table_destroy(callback_state.already_included);
     g_slist_foreach(callback_state.base_includes, free_gslist_data, NULL);
 
-    IDL_ns_free(state.ns);
-    IDL_tree_free(top);
+    if (state.ns)
+        IDL_ns_free(state.ns);
+    if (top)
+        IDL_tree_free(top);
 
     if (mode_outname != NULL) {
         /*

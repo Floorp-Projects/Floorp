@@ -586,7 +586,7 @@ get_size_and_length(TreeState *state, IDL_tree type,
             return TRUE;
 
         if (!find_arg_with_name(state, size_is, size_is_argnum)) {
-            IDL_tree_error(type, "can't find matching argument for "
+            IDL_tree_error(state->tree, "can't find matching argument for "
                            "[size_is(%s)]\n", size_is);
             return FALSE;
         }
@@ -597,7 +597,7 @@ get_size_and_length(TreeState *state, IDL_tree type,
         if (length_is) {
             *has_length_is = TRUE;
             if (!find_arg_with_name(state, length_is, length_is_argnum)) {
-                IDL_tree_error(type, "can't find matching argument for "
+                IDL_tree_error(state->tree, "can't find matching argument for "
                                "[length_is(%s)]\n", length_is);
                 return FALSE;
             }
@@ -635,7 +635,7 @@ fill_td_from_type(TreeState *state, XPTTypeDescriptor *td, IDL_tree type)
                 }
 
                 if (!has_size_is) {
-                   IDL_tree_error(type, "[array] requires [size_is()]\n");
+                   IDL_tree_error(state->tree, "[array] requires [size_is()]\n");
                     return FALSE;
                 }
 
@@ -753,7 +753,7 @@ handle_typedef:
             break;
           case IDLN_IDENT:
             if (!(up = IDL_NODE_UP(type))) {
-                IDL_tree_error(type,
+                IDL_tree_error(state->tree,
                                "ERROR: orphan ident %s in param list\n",
                                IDL_IDENT(type).str);
                 return FALSE;
@@ -786,7 +786,8 @@ handle_iid_is:
                 if (iid_is) {
                     int16 argnum;
                     if (!find_arg_with_name(state, iid_is, &argnum)) {
-                        IDL_tree_error(type, "can't find matching argument for "
+                        IDL_tree_error(state->tree,
+                                       "can't find matching argument for "
                                        "[iid_is(%s)]\n", iid_is);
                         return FALSE;
                     }
@@ -796,7 +797,8 @@ handle_iid_is:
                     td->prefix.flags = TD_INTERFACE_TYPE | XPT_TDP_POINTER;
                     ide = FindInterfaceByName(ides, num_ifaces, className);
                     if (!ide || ide < ides || ide > ides + num_ifaces) {
-                        IDL_tree_error(type, "unknown iface %s in param\n",
+                        IDL_tree_error(state->tree,
+                                       "unknown iface %s in param\n",
                                        className);
                         return FALSE;
                     }
@@ -874,7 +876,8 @@ handle_iid_is:
                         return TRUE;
                     }
                 }
-                IDL_tree_error(type, "can't handle %s ident in param list\n",
+                IDL_tree_error(state->tree,
+                               "can't handle %s ident in param list\n",
 #ifdef DEBUG_shaver
                                /* XXX is this safe to use on Win now? */
                                IDL_NODE_TYPE_NAME(IDL_NODE_UP(type))
@@ -889,7 +892,7 @@ handle_iid_is:
             }
             break;
           default:
-            IDL_tree_error(type, "can't handle %s in param list\n",
+            IDL_tree_error(state->tree, "can't handle %s in param list\n",
 #ifdef DEBUG_shaver
                            /* XXX is this safe to use on Win now? */
                            IDL_NODE_TYPE_NAME(IDL_NODE_UP(type))

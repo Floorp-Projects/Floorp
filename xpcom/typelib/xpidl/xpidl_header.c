@@ -70,12 +70,30 @@ header_prolog(TreeState *state)
             if (dot != NULL)
                 *dot = '\0';
             
+
+            /* begin include guard */            
+            fprintf(state->file,
+                    "\n#ifndef __gen_%s_h__\n",
+                     ident);
+
             fprintf(state->file, "#include \"%s.h\"\n",
                     (char *)g_slist_nth_data(state->base_includes, i));
+
+            fprintf(state->file, "#endif\n");
+            
         }
         if (i > 0)
             fputc('\n', state->file);
     }
+    /*
+     * Support IDL files that don't include a root IDL file that defines
+     * NS_NO_VTABLE.
+     */
+    fprintf(state->file,
+            "/* For IDL files that don't want to to include root IDL files. */\n"
+            "#ifndef NS_NO_VTABLE\n"
+            "#define NS_NO_VTABLE\n"
+            "#endif\n");
     
     return TRUE;
 }
@@ -171,6 +189,10 @@ interface(TreeState *state)
                 id.m3[0], id.m3[1], id.m3[2], id.m3[3],
                 id.m3[4], id.m3[5], id.m3[6], id.m3[7]);
         fputc('\n', state->file);
+    } else {
+        XPIDL_WARNING((iface, IDL_WARNING1,
+                       "interface %s lacks a uuid attribute",
+                       className));
     }
 
     if (doc_comments != NULL)
