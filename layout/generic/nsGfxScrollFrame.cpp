@@ -171,6 +171,16 @@ nsMargin nsHTMLScrollFrame::GetDesiredScrollbarSizes(nsBoxLayoutState* aState) {
 }
 
 NS_IMETHODIMP
+nsHTMLScrollFrame::SetScrollbarVisibility(nsPresContext* aPresContext,
+                                    PRBool aVerticalVisible,
+                                    PRBool aHorizontalVisible)
+{
+  mInner.mNeverHasVerticalScrollbar = !aVerticalVisible;
+  mInner.mNeverHasHorizontalScrollbar = !aHorizontalVisible;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsHTMLScrollFrame::GetScrollbarBox(PRBool aVertical, nsIBox** aResult)
 {
   *aResult = aVertical ? mInner.mVScrollbarBox : mInner.mHScrollbarBox;
@@ -702,6 +712,16 @@ nsMargin nsXULScrollFrame::GetDesiredScrollbarSizes(nsBoxLayoutState* aState) {
   }
 
   return result;
+}
+
+NS_IMETHODIMP
+nsXULScrollFrame::SetScrollbarVisibility(nsPresContext* aPresContext,
+                                    PRBool aVerticalVisible,
+                                    PRBool aHorizontalVisible)
+{
+  mInner.mNeverHasVerticalScrollbar = !aVerticalVisible;
+  mInner.mNeverHasHorizontalScrollbar = !aHorizontalVisible;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
