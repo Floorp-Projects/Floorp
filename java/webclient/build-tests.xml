@@ -1,1 +1,164 @@
-<!-- Copyright 2002 Sun Microsystems, Inc. All rights reserved. SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.--><project name="Webclient Unit Tests" default="run.test" basedir="."><!--        This is a generic build.xml file for Ant that is used to run the        Webclient unit tests. This build file *must* be called from the        build.xml file in order to inherit most of it's needed properties        (See below for the list of these properties).--><!-- ========== Prerequisite Properties =================================== --><!--        These properties MUST be set on the "ant" command line, the "antrc"        properties file in your home directory, or from settings in a superior        build.xml script.        build.home                    Base directory into which we are building                                      the Struts components.        servlet.jar                   The servlet jar (either 2.2 or 2.3)        cactus.jar                    The Cactus jar (either for Servlet API                                      2.2 or 2.3)        cactus.ant.jar                The Cactus custom Ant tasks jar        httpclient.jar                The Cactus httpclient jar        junit.jar                     The JUnit jar        tomcat.home                   The home directory of where Tomcat 4.0                                      is installed        compile.debug                 The debug mode for compilation        compile.deprecation           The deprecation mode for compilation        compile.optimize              The optimization mode for compilation        src.dir                       The location of the source directory        app.name                      The name of the Struts jar (without the                                      '.jar' suffix--><!-- ========== Initialization Properties ================================= --><!-- ========== Derived Properties ======================================== --><!--        These property values are derived from values defined above, and        generally should NOT be overridden by command line settings-->    <!-- Default value for debugging arguments is no.  Override in         build.properties -->    <property name="debug.jvm.args" value=""/>    <!-- Source directory for tests -->    <property name="src.test.dir" value="${basedir}/test/automated/src/classes"/>    <!-- Output directory for tests -->    <property name="out.test.dir" value="${build.home}/test"/>    <!-- Output directory for test data files -->    <property name="build.test" value="${basedir}/build.test"/>    <property name="native.waitForDebugger" value=""/>    <path id="test.classpath">      <pathelement location="${junit.jar}"/>      <pathelement location="${build.home}"/>      <pathelement location="${out.test.dir}/classes"/>    </path><!-- ========== Executable Targets ======================================== --><!--         Compile unit tests-->    <target name="compile.test">        <echo message="${build.home}"/>        <mkdir  dir="${out.test.dir}/classes"/>        <javac destdir="${out.test.dir}/classes"            debug="${compile.debug}"            optimize="${compile.optimize}"            deprecation="${compile.deprecation}">              <classpath refid="test.classpath"/>	      <src path="${src.test.dir}"/>	      <patternset>		    <exclude name="**/*Win32*.java" if="build.unix.classes"/>	      </patternset>	      <patternset>		    <exclude name="**/*Gtk*.java" if="build.win32.classes"/>	      </patternset>        </javac>    </target>    <target name="copy-test-data-files">        <!-- Copy Unit test static files. -->        <mkdir  dir="${build.test}"/>        <copy todir="${build.test}">            <fileset dir="${basedir}/test/automated/src/test"/>        </copy>   </target>    <target name="clean">      <delete dir="${out.test.dir}/classes"/>      <delete dir="${build.test}"/>    </target>    <target name="run.test" depends="compile.test,copy-test-data-files">        <junit printsummary="yes" haltonfailure="yes" haltonerror="yes" fork="yes">            <jvmarg value="-Djava.library.path=${myenv.MOZILLA_FIVE_HOME}${PATH_SEP}${myenv.MOZILLA_FIVE_HOME}/components"/>            <jvmarg value="-DNSPR_LOG_MODULES=${myenv.NSPR_LOG_MODULES}"/>            <jvmarg value="-DNSPR_LOG_FILE=${myenv.NSPR_LOG_FILE}"/>            <jvmarg value="-DBROWSER_BIN_DIR=${myenv.MOZILLA_FIVE_HOME}"/>            <sysproperty key="native.waitForDebugger"                          value="${native.waitForDebugger}"/>            <jvmarg line="${debug.jvm.args}"/>            <classpath refid="test.classpath"/>            <formatter type="plain" usefile="false"/>            <test name="org.mozilla.webclient.BrowserControlFactoryTest"/>            <test name="org.mozilla.webclient.ProfileManagerTest"/>            <test name="org.mozilla.webclient.BookmarksTest"/>            <test name="org.mozilla.webclient.PreferencesTest"/>            <test name="org.mozilla.webclient.impl.wrapper_native.WrapperFactoryImplTest"/>            <test name="org.mozilla.webclient.impl.WebclientFactoryImplTest"/>            <test name="org.mozilla.webclient.NavigationTest"/><!-- non running            <test name="org.mozilla.webclient.wrapper_native.gtk.TestGtkBrowserControlCanvas"/>-->        </junit>    </target></project>
+<!--
+ Copyright 2002 Sun Microsystems, Inc. All rights reserved.
+ SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+-->
+
+<project name="Webclient Unit Tests" default="run.test" basedir=".">
+
+<!--
+        This is a generic build.xml file for Ant that is used to run the
+        Webclient unit tests. This build file *must* be called from the
+        build.xml file in order to inherit most of it's needed properties
+        (See below for the list of these properties).
+-->
+
+<!-- ========== Prerequisite Properties =================================== -->
+
+
+<!--
+        These properties MUST be set on the "ant" command line, the "antrc"
+        properties file in your home directory, or from settings in a superior
+        build.xml script.
+
+        build.home                    Base directory into which we are building
+                                      the Struts components.
+
+        servlet.jar                   The servlet jar (either 2.2 or 2.3)
+
+        cactus.jar                    The Cactus jar (either for Servlet API
+                                      2.2 or 2.3)
+
+        cactus.ant.jar                The Cactus custom Ant tasks jar
+
+        httpclient.jar                The Cactus httpclient jar
+
+        junit.jar                     The JUnit jar
+
+        tomcat.home                   The home directory of where Tomcat 4.0
+                                      is installed
+
+        compile.debug                 The debug mode for compilation
+
+        compile.deprecation           The deprecation mode for compilation
+
+        compile.optimize              The optimization mode for compilation
+
+        src.dir                       The location of the source directory
+
+        app.name                      The name of the Struts jar (without the
+                                      '.jar' suffix
+
+-->
+
+<!-- ========== Initialization Properties ================================= -->
+
+<!-- ========== Derived Properties ======================================== -->
+
+<!--
+        These property values are derived from values defined above, and
+        generally should NOT be overridden by command line settings
+-->
+
+    <!-- Default value for debugging arguments is no.  Override in
+         build.properties -->
+    <property name="debug.jvm.args" value=""/>
+
+    <!-- Source directory for tests -->
+    <property name="src.test.dir" value="${basedir}/test/automated/src/classes"/>
+
+    <!-- Output directory for tests -->
+    <property name="out.test.dir" value="${build.home}/test"/>
+
+    <!-- Output directory for test data files -->
+    <property name="build.test" value="${basedir}/build.test"/>
+
+    <property name="native.waitForDebugger" value=""/>
+
+    <path id="test.classpath">
+      <pathelement location="${junit.jar}"/>
+      <pathelement location="${build.home}"/>
+      <pathelement location="${out.test.dir}/classes"/>
+    </path>
+
+
+<!-- ========== Executable Targets ======================================== -->
+
+<!-- 
+        Compile unit tests
+-->
+    <target name="compile.test">
+
+        <echo message="${build.home}"/>
+
+        <mkdir  dir="${out.test.dir}/classes"/>
+
+        <javac destdir="${out.test.dir}/classes"
+            debug="${compile.debug}"
+            optimize="${compile.optimize}"
+            deprecation="${compile.deprecation}">
+
+              <classpath refid="test.classpath"/>
+
+	      <src path="${src.test.dir}"/>
+	      <patternset>
+		    <exclude name="**/*Win32*.java" if="build.unix.classes"/>
+	      </patternset>
+
+	      <patternset>
+		    <exclude name="**/*Gtk*.java" if="build.win32.classes"/>
+	      </patternset>
+
+        </javac>
+
+    </target>
+
+    <target name="copy-test-data-files">
+        <!-- Copy Unit test static files. -->
+
+        <mkdir  dir="${build.test}"/>
+
+        <copy todir="${build.test}">
+            <fileset dir="${basedir}/test/automated/src/test"/>
+        </copy>
+   </target>
+
+
+    <target name="clean">
+
+      <delete dir="${out.test.dir}/classes"/>
+      <delete dir="${build.test}"/>
+
+    </target>
+
+    <target name="run.test" depends="compile.test,copy-test-data-files">
+
+        <junit printsummary="yes" haltonfailure="yes" haltonerror="yes" fork="yes">
+            <jvmarg value="-Djava.library.path=${myenv.MOZILLA_FIVE_HOME}${PATH_SEP}${myenv.MOZILLA_FIVE_HOME}/components"/>
+            <jvmarg value="-DNSPR_LOG_MODULES=${myenv.NSPR_LOG_MODULES}"/>
+            <jvmarg value="-DNSPR_LOG_FILE=${myenv.NSPR_LOG_FILE}"/>
+            <jvmarg value="-DBROWSER_BIN_DIR=${myenv.MOZILLA_FIVE_HOME}"/>
+            <sysproperty key="native.waitForDebugger" 
+                         value="${native.waitForDebugger}"/>
+            <jvmarg line="${debug.jvm.args}"/>
+
+            <classpath refid="test.classpath"/>
+
+            <formatter type="plain" usefile="false"/>
+            <test name="org.mozilla.webclient.BrowserControlFactoryTest"/>
+            <test name="org.mozilla.webclient.ProfileManagerTest"/>
+            <test name="org.mozilla.webclient.BookmarksTest"/>
+            <test name="org.mozilla.webclient.PreferencesTest"/>
+            <test name="org.mozilla.webclient.impl.wrapper_native.WrapperFactoryImplTest"/>
+            <test name="org.mozilla.webclient.impl.WebclientFactoryImplTest"/>
+            <test name="org.mozilla.webclient.NavigationTest"/>
+<!-- non running
+            <test name="org.mozilla.webclient.wrapper_native.gtk.TestGtkBrowserControlCanvas"/>
+-->
+
+        </junit>
+
+    </target>
+
+
+</project>
+
