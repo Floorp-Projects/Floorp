@@ -685,7 +685,7 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext* aPresContext,
 
   // center child horizontally
   nscoord xoff = 0;
-  if (aReflowState.mComputedHeight != NS_INTRINSICSIZE) {
+  if (aReflowState.mComputedWidth != NS_INTRINSICSIZE) {
     xoff = (aReflowState.mComputedWidth - aDesiredSize.width)/2;
     if (xoff < 0) {
       xoff = 0;
