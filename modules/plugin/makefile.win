@@ -32,8 +32,14 @@ DIRS= public nglsrc
 #//------------------------------------------------------------------------
 include <$(DEPTH)\config\rules.mak>
 
-export::
-	mkdir $(DIST)\bin\plugins
+PLUGIN_DIR=\
+        $(DIST)\bin\plugins              \
+        $(NULL)
+
+$(PLUGIN_DIR):
+        mkdir $@
+
+export:: $(PLUGIN_DIR)
 
 clobber::
 	rmdir $(DIST)\bin\plugins
