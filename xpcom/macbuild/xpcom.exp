@@ -20,6 +20,7 @@ FindFactory__12nsRepositoryFRC4nsIDPP10nsIFactory		# nsRepository::FindFactory(c
 #__vt__9nsHashKey		# nsHashKey::__vt
 Enumerate__11nsHashtableFPFP9nsHashKeyPvPv_iPv  # nsHashtable::Enumerate(int (*)(nsHashKey*, void*))
 Clone__11nsHashtableFv		# nsHashtable::Clone()
+Reset__11nsHashtableFv		# nsHashtable::Reset()
 Remove__11nsHashtableFP9nsHashKey		# nsHashtable::Remove(nsHashKey*)
 Get__11nsHashtableFP9nsHashKey		# nsHashtable::Get(nsHashKey*)
 Put__11nsHashtableFP9nsHashKeyPv		# nsHashtable::Put(nsHashKey*,void*)
