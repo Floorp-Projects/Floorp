@@ -705,23 +705,26 @@ nsIWidget* nsWindow::GetParent(void)
 //-------------------------------------------------------------------------
 nsIEnumerator* nsWindow::GetChildren()
 {
-    if (mChildren) {
-        mChildren->Reset();
+  if (mChildren) {
+    // Reset the current position to 0
+    mChildren->Reset();
 
-        Enumerator * children = new Enumerator();
-        NS_ADDREF(children);
-        nsISupports   * next = mChildren->Next();
-        if (next) {
-          nsIWidget *widget;
-          if (NS_OK == next->QueryInterface(kIWidgetIID, (void**)&widget)) {
-            children->Append(widget);
-          }
-        }
-
-        return (nsIEnumerator*)children;
+    // XXX Does this copy of our enumerator work? It looks like only
+    // the first widget in the list is added...
+    Enumerator * children = new Enumerator;
+    NS_ADDREF(children);
+    nsISupports   * next = mChildren->Next();
+    if (next) {
+      nsIWidget *widget;
+      if (NS_OK == next->QueryInterface(kIWidgetIID, (void**)&widget)) {
+        children->Append(widget);
+      }
     }
 
-    return NULL;
+    return (nsIEnumerator*)children;
+  }
+
+  return NULL;
 }
 
 
@@ -732,11 +735,11 @@ nsIEnumerator* nsWindow::GetChildren()
 //-------------------------------------------------------------------------
 void nsWindow::AddChild(nsIWidget* aChild)
 {
-    if (!mChildren) {
-        mChildren = new Enumerator();
-    }
+  if (!mChildren) {
+    mChildren = new Enumerator;
+  }
 
-    mChildren->Append(aChild);
+  mChildren->Append(aChild);
 }
 
 
@@ -747,9 +750,9 @@ void nsWindow::AddChild(nsIWidget* aChild)
 //-------------------------------------------------------------------------
 void nsWindow::RemoveChild(nsIWidget* aChild)
 {
-    if (mChildren) {
-        mChildren->Remove(aChild);
-    }
+  if (mChildren) {
+    mChildren->Remove(aChild);
+  }
 }
 
 
@@ -2040,15 +2043,11 @@ HBRUSH nsWindow::OnControlColor()
 // Constructor
 //
 //-------------------------------------------------------------------------
-#define INITIAL_SIZE        2
 
 nsWindow::Enumerator::Enumerator()
 {
-    mRefCnt = 1;
-    mArraySize = INITIAL_SIZE;
-    mChildrens = (nsIWidget**) new(nsIWidget*[mArraySize]);
-    memset(mChildrens, 0, sizeof(nsIWidget*) * mArraySize);
-    mCurrentPosition = 0;
+  mRefCnt = 1;
+  mCurrentPosition = 0;
 }
 
 
@@ -2059,14 +2058,13 @@ nsWindow::Enumerator::Enumerator()
 //-------------------------------------------------------------------------
 nsWindow::Enumerator::~Enumerator()
 {   
-  if (mChildrens) {
-    // We add ref'd when adding the child widgets, so we need to release
-    // the references now
-    for (int i = 0; (i < mArraySize) && (nsnull != mChildrens[i]); i++) {
-      NS_RELEASE(mChildrens[i]);
-    }
+  // We add ref'd when adding the child widgets, so we need to release
+  // the references now
+  for (PRInt32 i = 0; i < mChildren.Count(); i++) {
+    nsIWidget*  widget = (nsIWidget*)mChildren.ElementAt(i);
 
-    delete[] mChildrens;
+    NS_ASSERTION(nsnull != widget, "null widget pointer");
+    NS_IF_RELEASE(widget);
   }
 }
 
@@ -2082,12 +2080,15 @@ NS_IMPL_ISUPPORTS(nsWindow::Enumerator, NS_IENUMERATOR_IID);
 //-------------------------------------------------------------------------
 nsISupports* nsWindow::Enumerator::Next()
 {
-    if (mCurrentPosition < mArraySize && mChildrens[mCurrentPosition]) {
-        NS_ADDREF(mChildrens[mCurrentPosition]);
-        return mChildrens[mCurrentPosition++];
-    }
+  if (mCurrentPosition < mChildren.Count()) {
+    nsIWidget*  widget = (nsIWidget*)mChildren.ElementAt(mCurrentPosition);
 
-    return NULL;
+    mCurrentPosition++;
+    NS_IF_ADDREF(widget);
+    return widget;
+  }
+
+  return NULL;
 }
 
 
@@ -2098,7 +2099,7 @@ nsISupports* nsWindow::Enumerator::Next()
 //-------------------------------------------------------------------------
 void nsWindow::Enumerator::Reset()
 {
-    mCurrentPosition = 0;
+  mCurrentPosition = 0;
 }
 
 
@@ -2109,16 +2110,11 @@ void nsWindow::Enumerator::Reset()
 //-------------------------------------------------------------------------
 void nsWindow::Enumerator::Append(nsIWidget* aWidget)
 {
-    NS_PRECONDITION(aWidget, "Null widget");
-    if (aWidget) {
-        int pos;
-        for (pos = 0; pos < mArraySize && mChildrens[pos]; pos++);
-        if (pos == mArraySize) {
-            GrowArray();
-        }
-        mChildrens[pos] = aWidget;
-        NS_ADDREF(aWidget);
-    }
+  NS_PRECONDITION(aWidget, "Null widget");
+  if (nsnull != aWidget) {
+    mChildren.AppendElement(aWidget);
+    NS_ADDREF(aWidget);
+  }
 }
 
 
@@ -2129,32 +2125,10 @@ void nsWindow::Enumerator::Append(nsIWidget* aWidget)
 //-------------------------------------------------------------------------
 void nsWindow::Enumerator::Remove(nsIWidget* aWidget)
 {
-    int pos;
-    for(pos = 0; mChildrens[pos] && (mChildrens[pos] != aWidget); pos++);
-    if (mChildrens[pos] == aWidget) {
-        NS_RELEASE(aWidget);
-        memcpy(mChildrens + pos, mChildrens + pos + 1, mArraySize - pos - 1);
-    }
-
+  if (mChildren.RemoveElement(aWidget)) {
+    NS_RELEASE(aWidget);
+  }
 }
-
-
-//-------------------------------------------------------------------------
-//
-// Grow the size of the children array
-//
-//-------------------------------------------------------------------------
-void nsWindow::Enumerator::GrowArray()
-{
-    mArraySize <<= 1;
-    nsIWidget **newArray = (nsIWidget**) new(nsIWidget*[mArraySize]);
-    // XXX We really only need to zero out the new part of the space...
-    memset(newArray, 0, sizeof(nsIWidget*) * mArraySize);
-    memcpy(newArray, mChildrens, (mArraySize>>1) * sizeof(nsIWidget*));
-    delete[] mChildrens;
-    mChildrens = newArray;
-}
-
 
 //-------------------------------------------------------------------------
 //

@@ -31,6 +31,8 @@
 #include "nsStringUtil.h"
 #include "nsString.h"
 
+#include "nsVoidArray.h"
+
 
 #define NSRGB_2_COLOREF(color) \
             RGB(NS_GET_R(color),NS_GET_G(color),NS_GET_B(color))
@@ -201,25 +203,21 @@ protected:
 
     // keep the list of children
     class Enumerator : public nsIEnumerator {
-        nsIWidget   **mChildrens;
-        int         mCurrentPosition;
-        int         mArraySize;
-
     public:
-        NS_DECL_ISUPPORTS
+      NS_DECL_ISUPPORTS
 
-        Enumerator();
-        ~Enumerator();
+      Enumerator();
+      ~Enumerator();
 
-        NS_IMETHOD_(nsISupports*) Next();
-        NS_IMETHOD_(void) Reset();
+      NS_IMETHOD_(nsISupports*) Next();
+      NS_IMETHOD_(void) Reset();
 
-        void Append(nsIWidget* aWidget);
-        void Remove(nsIWidget* aWidget);
+      void Append(nsIWidget* aWidget);
+      void Remove(nsIWidget* aWidget);
 
     private:
-        void GrowArray();
-
+      nsVoidArray   mChildren;
+      PRInt32       mCurrentPosition;
     } *mChildren;
 
     // Enumeration of the methods which are accessable on the "main GUI thread"
