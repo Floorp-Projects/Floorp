@@ -25,8 +25,8 @@ IDLSRCS =  \
 	Selection.idl	\
 	SelectionListener.idl	\
 
-XPCOM_DESTDIR=$(DEPTH)\dom\public\coreDOM
-JSSTUB_DESTDIR=$(DEPTH)\dom\src\coreDOM
+XPCOM_DESTDIR=$(DEPTH)\dom\public\range
+JSSTUB_DESTDIR=$(DEPTH)\dom\src\range
 
 GENXDIR=genx
 GENJSDIR=genjs
