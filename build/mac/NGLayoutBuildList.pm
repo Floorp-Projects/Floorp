@@ -402,6 +402,17 @@ sub BuildLayoutProjects()
 
 	BuildProject(":mozilla:webshell:tests:viewer:mac:viewer.mcp",	"viewer$D");
 	
+	my($samples_dir) = "$dist_dir" . "res:samples:";
+	MakeAlias(":mozilla:webshell:tests:viewer:samples:test0.html", "$samples_dir");
+	MakeAlias(":mozilla:webshell:tests:viewer:samples:test1.html", "$samples_dir");
+	MakeAlias(":mozilla:webshell:tests:viewer:samples:test2.html", "$samples_dir");
+	MakeAlias(":mozilla:webshell:tests:viewer:samples:test3.html", "$samples_dir");
+	MakeAlias(":mozilla:webshell:tests:viewer:samples:test4.html", "$samples_dir");
+	MakeAlias(":mozilla:webshell:tests:viewer:samples:test5.html", "$samples_dir");
+	MakeAlias(":mozilla:webshell:tests:viewer:samples:test6.html", "$samples_dir");
+	MakeAlias(":mozilla:webshell:tests:viewer:samples:test7.html", "$samples_dir");
+	MakeAlias(":mozilla:webshell:tests:viewer:samples:test8.html", "$samples_dir");
+	MakeAlias(":mozilla:webshell:tests:viewer:samples:test9.html", "$samples_dir");
 	
 }
 
