@@ -1,0 +1,11 @@
+<?xml version="1.0"?> <!-- -*- Mode: HTML -*- --> 
+
+<!DOCTYPE window>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Minimal Navigator">
+    <browser id="content" 
+             type="content-primary"
+             style="-moz-binding:none;"
+             src="chrome://navigator/content/quit.html"/>
+</window>
