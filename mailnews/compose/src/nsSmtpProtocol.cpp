@@ -48,6 +48,8 @@
 #include "plbase64.h"
 #include "nsEscape.h"
 
+#include "nsIPSMSocketInfo.h"
+
 #ifndef XP_UNIX
 #include <stdarg.h>
 #endif /* !XP_UNIX */
@@ -308,7 +310,7 @@ void nsSmtpProtocol::Initialize(nsIURI * aURL)
 	m_responseCode = 0;
 	m_previousResponseCode = 0;
 	m_continuationResponse = -1; 
-  m_tlsEnabled = PR_FALSE;
+    m_tlsEnabled = PR_FALSE;
 	m_addressCopy = nsnull;
 	m_addresses = nsnull;
 	m_addressesLeft = nsnull;
@@ -333,8 +335,12 @@ void nsSmtpProtocol::Initialize(nsIURI * aURL)
     nsXPIDLCString hostName;
     aURL->GetHost(getter_Copies(hostName));
     PR_LOG(SMTPLogModule, PR_LOG_ALWAYS, ("SMTP Connecting to: %s", (const char *) hostName));
-      // pass in "ssl" for the last arg if you want this to be over SSL
-	  rv = OpenNetworkSocket(aURL, nsnull);
+
+    // pass in "ssl" for the last arg if you want this to be over SSL
+    if (m_prefAuthMethod == PREF_AUTH_TLS_ONLY)
+        rv = OpenNetworkSocket(aURL, "tls");
+    else
+        rv = OpenNetworkSocket(aURL, nsnull);
   }
 }
 
@@ -511,7 +517,7 @@ PRInt32 nsSmtpProtocol::SmtpResponse(nsIInputStream * inputStream, PRUint32 leng
 			m_responseText += line+4;
   }
 
-  if (m_responseCode == 220 && nsCRT::strlen(m_responseText))
+  if (m_responseCode == 220 && nsCRT::strlen(m_responseText) && !m_tlsInitiated)
   { // check for the greeting if it is a ESMTP server set capability accordingly
     if (m_responseText.Find("ESMTP", PR_TRUE) != -1)
     {
@@ -745,18 +751,29 @@ PRInt32 nsSmtpProtocol::SendTLSResponse()
   // only tear down our existing connection and open a new one if we received a 220 response
   // from the smtp server after we issued the STARTTLS 
   nsresult rv = NS_OK;
-  if (m_responseCode == 220 ) 
+  if (m_responseCode == 220) 
   {
-    CloseSocket();
-    // now clear a bunch of internal state data...
-    
-    // now re-open the connection
-    rv = OpenNetworkSocket(m_url, "ssl-forcehandshake");
-    m_nextState = SMTP_RESPONSE; 
-    m_nextStateAfterResponse = SMTP_START_CONNECT;
-    m_tlsInitiated = PR_TRUE;
+
+      nsCOMPtr<nsISupports> secInfo;
+      rv = m_channel->GetSecurityInfo(getter_AddRefs(secInfo));
+
+      if (NS_SUCCEEDED(rv) && secInfo) {
+          nsCOMPtr<nsIPSMSocketInfo> securityInfo = do_QueryInterface(secInfo, &rv);
+
+          if (NS_SUCCEEDED(rv) && securityInfo) {
+              rv = securityInfo->TLSStepUp();
+          }
+      }
+
+    if (NS_FAILED(rv)) {
+        // if we fail, should we close the connection?
+        return rv;
+    }
+
+    m_nextState = SMTP_EXTN_LOGIN_RESPONSE;
+    m_nextStateAfterResponse = SMTP_EXTN_LOGIN_RESPONSE;
+    m_tlsEnabled = PR_TRUE;
     m_flags = 0;
-    SetFlag(SMTP_PAUSE_FOR_READ);
   }
 
   return rv;
@@ -812,7 +829,7 @@ PRInt32 nsSmtpProtocol::ProcessAuth()
     {
         if (TestFlag(SMTP_AUTH_EXTERNAL_ENABLED))
         {
-            buffer = "AUTH EXTERNAL";
+            buffer = "AUTH EXTERNAL =";
             buffer += CRLF;
             SendData(url, buffer);
             m_nextState = SMTP_RESPONSE;
@@ -1319,8 +1336,8 @@ nsresult nsSmtpProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer )
 		{
 			char *addrs1 = 0;
 			char *addrs2 = 0;
-   		m_nextState = SMTP_RESPONSE;
-      m_nextStateAfterResponse = SMTP_EXTN_LOGIN_RESPONSE;
+            m_nextState = SMTP_RESPONSE;
+            m_nextStateAfterResponse = SMTP_EXTN_LOGIN_RESPONSE;
 
 			/* Remove duplicates from the list, to prevent people from getting
 				more than one copy (the SMTP host may do this too, or it may not.)
@@ -1395,17 +1412,18 @@ nsresult nsSmtpProtocol::ProcessProtocolState(nsIURI * url, nsIInputStream * inp
 			case SMTP_START_CONNECT:
 				SetFlag(SMTP_PAUSE_FOR_READ);
 				m_nextState = SMTP_RESPONSE;
-        m_nextStateAfterResponse = SMTP_EXTN_LOGIN_RESPONSE;
-				break;
+                m_nextStateAfterResponse = SMTP_EXTN_LOGIN_RESPONSE;
+                break;
 			case SMTP_FINISH_CONNECT:
 	            SetFlag(SMTP_PAUSE_FOR_READ);
 		        break;
-      case SMTP_LOGIN_RESPONSE:
+            case SMTP_LOGIN_RESPONSE:
 				if (inputStream == nsnull)
 					SetFlag(SMTP_PAUSE_FOR_READ);
 				else
 					status = LoginResponse(inputStream, length);
-			case SMTP_TLS_RESPONSE:
+                break;
+            case SMTP_TLS_RESPONSE:
 				if (inputStream == nsnull)
 					SetFlag(SMTP_PAUSE_FOR_READ);
 				else
@@ -1430,15 +1448,18 @@ nsresult nsSmtpProtocol::ProcessProtocolState(nsIURI * url, nsIInputStream * inp
 				else
 					status = SendEhloResponse(inputStream, length);
 				break;
-       case SMTP_AUTH_PROCESS_STATE:
-          status = ProcessAuth();
-          break;
+            case SMTP_AUTH_PROCESS_STATE:
+                status = ProcessAuth();
+                break;
+
+            case SMTP_AUTH_EXTERNAL_RESPONSE:
 			case SMTP_AUTH_LOGIN_RESPONSE:
 				if (inputStream == nsnull)
 					SetFlag(SMTP_PAUSE_FOR_READ);
 				else
 					status = AuthLoginResponse(inputStream, length);
 				break;
+
             case SMTP_SEND_AUTH_LOGIN_USERNAME:
 				 status = AuthLoginUsername();
 				 break;
@@ -1446,7 +1467,7 @@ nsresult nsSmtpProtocol::ProcessProtocolState(nsIURI * url, nsIInputStream * inp
 			case SMTP_SEND_AUTH_LOGIN_PASSWORD:
 				status = AuthLoginPassword(); 
 				break;
-			
+
 			case SMTP_SEND_VRFY_RESPONSE:
 				if (inputStream == nsnull)
 					SetFlag(SMTP_PAUSE_FOR_READ);
@@ -1494,20 +1515,20 @@ nsresult nsSmtpProtocol::ProcessProtocolState(nsIURI * url, nsIInputStream * inp
 				break;
         
 			case SMTP_ERROR_DONE:
-        {
+                {
 					nsCOMPtr <nsIMsgMailNewsUrl> mailNewsUrl = do_QueryInterface(m_runningURL);
 					// propagate the right error code
 					mailNewsUrl->SetUrlState(PR_FALSE, m_urlErrorState);
 					m_nextState = SMTP_FREE;
 				}
 	      
-        m_nextState = SMTP_FREE;
-		    break;
+                m_nextState = SMTP_FREE;
+                break;
         
 			case SMTP_FREE:
 				// smtp is a one time use connection so kill it if we get here...
 				CloseSocket(); 
-	      return NS_OK; /* final end */
+                return NS_OK; /* final end */
        
 			default: /* should never happen !!! */
 				m_nextState = SMTP_ERROR_DONE;

@@ -56,6 +56,9 @@ public:
     nsresult SetHostPort(PRInt32 aPort);
     nsresult SetProxyPort(PRInt32 aPort);
     nsresult SetPickledStatus();
+
+    nsresult SetUseTLS(PRBool useTLS);
+    nsresult GetUseTLS(PRBool *useTLS);
     
 protected:
     CMT_CONTROL* mControl;
@@ -69,6 +72,7 @@ protected:
     PRInt32      mProxyPort;
 
     PRBool       mForceHandshake;
+    PRBool       mUseTLS;
     
     unsigned char* mPickledStatus;
 };
@@ -124,26 +128,15 @@ nsSSLIOLayerConnect(PRFileDesc *fd, const PRNetAddr *addr, PRIntervalTime timeou
     PRInt32 proxyPort;
     PRInt32 hostPort;
     PRBool forceHandshake;
+    PRBool useTLS;
     infoObject->GetProxyName(&proxyName);
     infoObject->GetHostName(&hostName);
     infoObject->GetProxyPort(&proxyPort);
     infoObject->GetHostPort(&hostPort);
     infoObject->GetForceHandshake(&forceHandshake);
-    
-    if (!proxyName)
-    {
-        CMBool handshake = forceHandshake ? CM_TRUE : CM_FALSE;
-        // Direct connection
-        status = CMT_OpenSSLConnection(control,
-                                       cmsock,
-                                       SSM_REQUEST_SSL_DATA_SSL,
-                                       PR_ntohs(addr->inet.port),
-                                       ipBuffer,
-                                       (hostName ? hostName : ipBuffer),
-                                       handshake,
-                                       nsnull);
-    }
-    else
+    infoObject->GetUseTLS(&useTLS);
+
+    if (proxyName)
     {
         PRInt32 destPort;
         
@@ -156,6 +149,27 @@ nsSSLIOLayerConnect(PRFileDesc *fd, const PRNetAddr *addr, PRIntervalTime timeou
                                             // with the addr of the proxy host
                                             ipBuffer,
                                             proxyName);
+    }
+    else if (useTLS)
+    {
+        status = CMT_OpenTLSConnection(control,
+                                       cmsock,
+                                       PR_ntohs(addr->inet.port),
+                                       ipBuffer,
+                                       (hostName ? hostName : ipBuffer));
+    }
+    else
+    {
+        CMBool handshake = forceHandshake ? CM_TRUE : CM_FALSE;
+        // Direct connection
+        status = CMT_OpenSSLConnection(control,
+                                       cmsock,
+                                       SSM_REQUEST_SSL_DATA_SSL,
+                                       PR_ntohs(addr->inet.port),
+                                       ipBuffer,
+                                       (hostName ? hostName : ipBuffer),
+                                       handshake,
+                                       nsnull);
     }
     
     if (hostName)  Recycle(hostName);
@@ -318,6 +332,7 @@ nsPSMSocketInfo::nsPSMSocketInfo()
     mSocket = nsnull;
     mPickledStatus = nsnull;
     mForceHandshake = PR_FALSE;
+    mUseTLS = PR_FALSE;
 }
 
 nsPSMSocketInfo::~nsPSMSocketInfo()
@@ -336,6 +351,12 @@ nsPSMSocketInfo::ProxyStepUp()
     hostName.AssignWithConversion(mHostName);
     
     return CMT_ProxyStepUp(mControl, mSocket, nsnull, hostName);
+}
+
+NS_IMETHODIMP
+nsPSMSocketInfo::TLSStepUp()
+{
+    return CMT_TLSStepUp(mControl, mSocket, nsnull);
 }
 
 NS_IMETHODIMP
@@ -413,7 +434,6 @@ nsPSMSocketInfo::SetHostPort(PRInt32 aPort)
     return NS_OK;
 }
 
-
 NS_IMETHODIMP 
 nsPSMSocketInfo::GetProxyName(char * *aName)
 {
@@ -458,6 +478,20 @@ NS_IMETHODIMP
 nsPSMSocketInfo::SetForceHandshake(PRBool forceHandshake)
 {
     mForceHandshake = forceHandshake;
+    return NS_OK;
+}
+
+nsresult
+nsPSMSocketInfo::GetUseTLS(PRBool *aResult)
+{
+    *aResult = mUseTLS;
+    return NS_OK;
+}
+
+nsresult 
+nsPSMSocketInfo::SetUseTLS(PRBool useTLS)
+{
+    mUseTLS = useTLS;
     return NS_OK;
 }
 
@@ -511,7 +545,8 @@ nsSSLIOLayerNewSocket( const char *host,
                        const char *proxyHost, 
                        PRInt32 proxyPort,
                        PRFileDesc **fd, 
-                       nsISupports** info)
+                       nsISupports** info,
+                       PRBool useTLS)
 {
     if (firstTime)
     {
@@ -572,6 +607,7 @@ nsSSLIOLayerNewSocket( const char *host,
     infoObject->SetHostPort(port);
     infoObject->SetProxyName(proxyHost);
     infoObject->SetProxyPort(proxyPort);
+    infoObject->SetUseTLS(useTLS);
     
     layer->secret = (PRFilePrivate*) infoObject;
     rv = PR_PushIOLayer(sock, PR_GetLayersIdentity(sock), layer);
@@ -596,7 +632,8 @@ nsSSLIOLayerAddToSocket( const char *host,
                          const char *proxyHost, 
                          PRInt32 proxyPort,
                          PRFileDesc *fd, 
-                         nsISupports** info)
+                         nsISupports** info,
+                         PRBool useTLS)
 {
     if (firstTime)
     {
@@ -650,6 +687,7 @@ nsSSLIOLayerAddToSocket( const char *host,
     infoObject->SetHostPort(port);
     infoObject->SetProxyName(proxyHost);
     infoObject->SetProxyPort(proxyPort);
+    infoObject->SetUseTLS(useTLS);
     
     layer->secret = (PRFilePrivate*) infoObject;
     rv = PR_PushIOLayer(fd, PR_GetLayersIdentity(fd), layer);

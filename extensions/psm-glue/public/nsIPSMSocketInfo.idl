@@ -50,5 +50,6 @@ interface nsIPSMSocketInfo : nsISupports {
     void getPickledStatus(out charPtr pickledStatus);
     
     void proxyStepUp();
+    void TLSStepUp();
 };
 

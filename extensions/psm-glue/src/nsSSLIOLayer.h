@@ -35,12 +35,14 @@ nsresult nsSSLIOLayerNewSocket(const char *host,
                                const char *proxyHost, 
                                PRInt32 proxyPort, 
                                PRFileDesc **fd, 
-                               nsISupports **securityInfo);
+                               nsISupports **securityInfo,
+                               PRBool useTLS);
 
 nsresult nsSSLIOLayerAddToSocket(const char *host, 
-				 PRInt32 port, 
-				 const char *proxyHost, 
-				 PRInt32 proxyPort, 
-				 PRFileDesc *fd, 
-				 nsISupports **securityInfo);
+                                 PRInt32 port, 
+                                 const char *proxyHost, 
+                                 PRInt32 proxyPort, 
+                                 PRFileDesc *fd, 
+                                 nsISupports **securityInfo,
+                                 PRBool useTLS);
 #endif /* _NSSSLIOLAYER_H */

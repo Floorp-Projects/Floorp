@@ -41,6 +41,7 @@ CPPSRCS	= \
 	nsPSMComponent.cpp \
 	nsPSMUICallbacks.cpp \
 	nsSSLSocketProvider.cpp \
+	nsTLSSocketProvider.cpp \
 	nsPSMModule.cpp \
 	nsSSLIOLayer.cpp \
 	nsSecureBrowserUIImpl.cpp \

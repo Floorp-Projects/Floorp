@@ -204,7 +204,7 @@ private:
 	PRInt32 AuthLoginPassword();
 	PRInt32 AuthLoginResponse(nsIInputStream * stream, PRUint32 length);
 
-  PRInt32 SendTLSResponse();
+    PRInt32 SendTLSResponse();
 	PRInt32 SendVerifyResponse(); // mscott: this one is apparently unimplemented...
 	PRInt32 SendMailResponse();
 	PRInt32 SendRecipientResponse();
