@@ -114,14 +114,6 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_pluglet_mozilla_PlugletPeerImpl_newSt
  */
 JNIEXPORT void JNICALL Java_org_mozilla_pluglet_mozilla_PlugletPeerImpl_showStatus
 (JNIEnv *env, jobject jthis, jstring _msg) {
-    if(1) { //work around for bug 24194
-	PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
-	       ("PlugletPeerImpl.showStatus:  nsIPluginInstancePeer.ShowStatus crashes browser \n"
-		"So we skeep calling this method. See bug 24194.\n"
-		"msg=%s\n", _msg));
-	return;
-	
-    }
     nsIPluginInstancePeer * instancePeer = (nsIPluginInstancePeer*)env->GetLongField(jthis, peerFID);
     if (!instancePeer
         || !_msg) {

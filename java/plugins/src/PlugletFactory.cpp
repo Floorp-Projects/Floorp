@@ -22,7 +22,7 @@
 #include "PlugletEngine.h"
 #include "PlugletLoader.h"
 #include "Pluglet.h"
-#include "string.h"
+#include "plstr.h"
 #include "PlugletLog.h"
 
 jmethodID PlugletFactory::createPlugletMID = NULL;
