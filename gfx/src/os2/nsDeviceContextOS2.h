@@ -98,6 +98,7 @@ protected:
   nsRect                mClientRect;
   nsIDeviceContextSpec  *mSpec;
   PRBool                mSupportsRasterFonts;
+  PRUint32              mPelsPerMeter;
 
   nsCOMPtr<nsIScreenManager> mScreenManager;
   static PRUint32 sNumberOfScreens;
