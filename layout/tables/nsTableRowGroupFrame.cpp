@@ -1099,6 +1099,11 @@ nsTableRowGroupFrame::Reflow(nsIPresContext*      aPresContext,
     kidFrame->WillReflow(*aPresContext);
     aStatus = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState);
 
+    // Resize the row frame
+    nsRect  rect;
+    kidFrame->GetRect(rect);
+    kidFrame->SizeTo(desiredSize.width, desiredSize.height);
+
     // XXX Compute desired size...
 
   } else {
