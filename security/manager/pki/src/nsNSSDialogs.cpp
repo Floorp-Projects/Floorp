@@ -101,7 +101,6 @@ nsNSSDialogHelper::openDialog(
 }
 
 /* ==== */
-static NS_DEFINE_CID(kDialogParamBlockCID, NS_DialogParamBlock_CID);
 static NS_DEFINE_CID(kPKIParamBlockCID, NS_PKIPARAMBLOCK_CID);
 
 nsNSSDialogs::nsNSSDialogs()
@@ -150,7 +149,7 @@ nsNSSDialogs::SetPassword(nsIInterfaceRequestor *ctx,
   // Get the parent window for the dialog
   nsCOMPtr<nsIDOMWindowInternal> parent = do_GetInterface(ctx);
 
-  nsCOMPtr<nsIDialogParamBlock> block = do_CreateInstance(kDialogParamBlockCID);
+  nsCOMPtr<nsIDialogParamBlock> block(do_CreateInstance("@mozilla.org/embedcomp/dialogparam;1"));
   if (!block) return NS_ERROR_FAILURE;
 
   // void ChangePassword(in wstring tokenName, out int status);
@@ -183,7 +182,7 @@ nsNSSDialogs::GetPassword(nsIInterfaceRequestor *ctx,
   *_canceled = PR_FALSE;
   // Get the parent window for the dialog
   nsCOMPtr<nsIDOMWindowInternal> parent = do_GetInterface(ctx);
-  nsCOMPtr<nsIDialogParamBlock> block = do_CreateInstance(kDialogParamBlockCID);
+  nsCOMPtr<nsIDialogParamBlock> block(do_CreateInstance("@mozilla.org/embedcomp/dialogparam;1"));
   if (!block) return NS_ERROR_FAILURE;
   // Set the token name in the window
   rv = block->SetString(1, tokenName);
@@ -561,7 +560,7 @@ nsNSSDialogs::DownloadCACert(nsIInterfaceRequestor *ctx,
   // Get the parent window for the dialog
   nsCOMPtr<nsIDOMWindowInternal> parent = do_GetInterface(ctx);
 
-  nsCOMPtr<nsIDialogParamBlock> block = do_CreateInstance(kDialogParamBlockCID);
+  nsCOMPtr<nsIDialogParamBlock> block(do_CreateInstance("@mozilla.org/embedcomp/dialogparam;1"));
   if (!block) return NS_ERROR_FAILURE;
 
   nsXPIDLString commonName;
@@ -610,7 +609,7 @@ nsNSSDialogs::ChooseCertificate(nsIInterfaceRequestor *ctx, const PRUnichar *cn,
   // Get the parent window for the dialog
   nsCOMPtr<nsIDOMWindowInternal> parent = do_GetInterface(ctx);
 
-  nsCOMPtr<nsIDialogParamBlock> block = do_CreateInstance(kDialogParamBlockCID);
+  nsCOMPtr<nsIDialogParamBlock> block(do_CreateInstance("@mozilla.org/embedcomp/dialogparam;1"));
   if (!block) return NS_ERROR_FAILURE;
 
   // void ChangePassword(in wstring tokenName, out int status);
@@ -665,7 +664,7 @@ nsNSSDialogs::SetPKCS12FilePassword(nsIInterfaceRequestor *ctx,
   *_canceled = PR_FALSE;
   // Get the parent window for the dialog
   nsCOMPtr<nsIDOMWindowInternal> parent = do_GetInterface(ctx);
-  nsCOMPtr<nsIDialogParamBlock> block = do_CreateInstance(kDialogParamBlockCID);
+  nsCOMPtr<nsIDialogParamBlock> block(do_CreateInstance("@mozilla.org/embedcomp/dialogparam;1"));
   if (!block) return NS_ERROR_FAILURE;
   // open up the window
   rv = nsNSSDialogHelper::openDialog(parent,
@@ -698,7 +697,7 @@ nsNSSDialogs::GetPKCS12FilePassword(nsIInterfaceRequestor *ctx,
   *_canceled = PR_FALSE;
   // Get the parent window for the dialog
   nsCOMPtr<nsIDOMWindowInternal> parent = do_GetInterface(ctx);
-  nsCOMPtr<nsIDialogParamBlock> block = do_CreateInstance(kDialogParamBlockCID);
+  nsCOMPtr<nsIDialogParamBlock> block(do_CreateInstance("@mozilla.org/embedcomp/dialogparam;1"));
   if (!block) return NS_ERROR_FAILURE;
   // open up the window
   rv = nsNSSDialogHelper::openDialog(parent,
