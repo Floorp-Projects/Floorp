@@ -757,12 +757,7 @@ nsresult nsCharsetMenu::FreeResources()
       pbi->RemoveObserver(kBrowserStaticPrefKey, mCharsetMenuObserver);
       pbi->RemoveObserver(kMaileditPrefKey, mCharsetMenuObserver);
     }
-    nsCOMPtr<nsIObserverService> observerService = 
-         do_GetService("@mozilla.org/observer-service;1", &res);
-
-    if (NS_SUCCEEDED(res))
-      res = observerService->RemoveObserver(mCharsetMenuObserver, 
-                                            "charsetmenu-selected");
+    /* nsIObserverService has to have released nsCharsetMenu already */
   }
 
   mRDFService = NULL;
