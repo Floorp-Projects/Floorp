@@ -40,14 +40,8 @@
 
 #define DEBUG_pavlov 1
 
-GtkWidget *gFirstTopLevelWindow = 0; //XXX: REMOVE Kludge should not be needed.
-
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 
-NS_IMPL_ADDREF(nsWindow)
-NS_IMPL_RELEASE(nsWindow)
-
-//extern XtAppContext gAppContext;
 extern GtkWidget *gAppContext;
 
 //-------------------------------------------------------------------------
@@ -56,32 +50,17 @@ extern GtkWidget *gAppContext;
 //
 //-------------------------------------------------------------------------
 nsWindow::nsWindow():
-  mEventListener(nsnull),
-  mMouseListener(nsnull),
-  mToolkit(nsnull),
   mFontMetrics(nsnull),
-  mContext(nsnull),
-  mWidget(nsnull),
   mVBox(nsnull),
-  mGC(nsnull),
-  mEventCallback(nsnull),
+  mAppShell(nsnull),
   mIgnoreResize(PR_FALSE)
 {
   NS_INIT_REFCNT();
   strcpy(gInstanceClassName, "nsWindow");
-  mBounds.x = 0;
-  mBounds.y = 0;
-  mBounds.width = 0;
-  mBounds.height = 0;
   mResized = PR_FALSE;
-  mShown = PR_FALSE;
   mVisible = PR_FALSE;
   mDisplayed = PR_FALSE;
   mLowerLeft = PR_FALSE;
-  mCursor = eCursor_standard;
-  mClientData = nsnull;
-  mPreferredWidth  = 0;
-  mPreferredHeight = 0;
   mFont = nsnull;
 }
 
@@ -106,18 +85,6 @@ nsWindow::~nsWindow()
 void nsWindow::ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY)
 {
 
-}
-
-//-------------------------------------------------------------------------
-NS_METHOD nsWindow::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
-{
-  return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-NS_METHOD nsWindow::ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect)
-{
-  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -150,62 +117,6 @@ NS_METHOD nsWindow::UpdateTooltips(nsRect* aNewTips[])
 NS_METHOD nsWindow::RemoveTooltips()
 {
   return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-//
-//
-//
-//-------------------------------------------------------------------------
-void nsWindow::InitToolkit(nsIToolkit *aToolkit,
-                           nsIWidget  *aWidgetParent)
-{
-  if (nsnull == mToolkit) {
-    if (nsnull != aToolkit) {
-      mToolkit = (nsToolkit*)aToolkit;
-      mToolkit->AddRef();
-    }
-    else {
-      if (nsnull != aWidgetParent) {
-        mToolkit = (nsToolkit*)(aWidgetParent->GetToolkit()); // the call AddRef's, we don't have to
-      }
-      // it's some top level window with no toolkit passed in.
-      // Create a default toolkit with the current thread
-      else {
-        mToolkit = new nsToolkit();
-        mToolkit->AddRef();
-        mToolkit->Init(PR_GetCurrentThread());
-
-        // Create a shared GC for all widgets
-        ((nsToolkit *)mToolkit)->SetSharedGC((GdkGC*)GetNativeData(NS_NATIVE_GRAPHIC));
-      }
-    }
-  }
-}
-
-void nsWindow::InitDeviceContext(nsIDeviceContext *aContext,
-                                 GtkWidget *aParentWidget)
-{
-  // keep a reference to the toolkit object
-  if (aContext) {
-    mContext = aContext;
-    mContext->AddRef();
-  }
-  else {
-    nsresult  res;
-
-    static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
-    static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
-
-    //res = !NS_OK;
-    res = nsRepository::CreateInstance(kDeviceContextCID,
-                                       nsnull,
-                                       kDeviceContextIID,
-                                       (void **)&mContext);
-    if (NS_OK == res) {
-      mContext->Init(aParentWidget);
-    }
-  }
 }
 
 void nsWindow::CreateGC()
@@ -280,9 +191,11 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
     mainWindow = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 // VBox for the menu, etc.
     mVBox = gtk_vbox_new(FALSE, 3);
+    gtk_widget_show (mVBox);
     gtk_container_add(GTK_CONTAINER(mainWindow), mVBox);
 
     mWidget = gtk_layout_new(FALSE, FALSE);
+    gtk_widget_show (mWidget);
     gtk_box_pack_end(GTK_BOX(mVBox), mWidget, TRUE, TRUE, 0);
   } else {
 #ifdef DEBUG_shaver
@@ -310,6 +223,43 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
   CreateGC();
   
   return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+//
+// create with nsIWidget parent
+//
+//-------------------------------------------------------------------------
+
+NS_METHOD nsWindow::Create(nsIWidget *aParent,
+                      const nsRect &aRect,
+                      EVENT_CALLBACK aHandleEventFunction,
+                      nsIDeviceContext *aContext,
+                      nsIAppShell *aAppShell,
+                      nsIToolkit *aToolkit,
+                      nsWidgetInitData *aInitData)
+{
+    return(StandardWindowCreate(aParent, aRect, aHandleEventFunction,
+                           aContext, aAppShell, aToolkit, aInitData,
+			   nsnull));
+}
+
+//-------------------------------------------------------------------------
+//
+// create with a native parent
+//
+//-------------------------------------------------------------------------
+NS_METHOD nsWindow::Create(nsNativeWidget aParent,
+                      const nsRect &aRect,
+                      EVENT_CALLBACK aHandleEventFunction,
+                      nsIDeviceContext *aContext,
+                      nsIAppShell *aAppShell,
+                      nsIToolkit *aToolkit,
+                      nsWidgetInitData *aInitData)
+{
+    return(StandardWindowCreate(nsnull, aRect, aHandleEventFunction,
+                           aContext, aAppShell, aToolkit, aInitData,
+			   aParent));
 }
 
 //-------------------------------------------------------------------------
@@ -374,114 +324,6 @@ void nsWindow::InitCallbacks(char * aName)
 
 //-------------------------------------------------------------------------
 //
-// Query interface implementation
-//
-//-------------------------------------------------------------------------
-nsresult nsWindow::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-    if (NULL == aInstancePtr) {
-        return NS_ERROR_NULL_POINTER;
-    }
-    nsresult result = NS_NOINTERFACE;
-    static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-    if (aIID.Equals(kISupportsIID)) {
-        *aInstancePtr = (void*) ((nsISupports*)this);
-        AddRef();
-        return NS_OK;
-    }
-
-    static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
-    if (aIID.Equals(kIWidgetIID)) {
-        *aInstancePtr = (void*) ((nsIWidget*)this);
-        AddRef();
-        result = NS_OK;
-    }
-
-    return result;
-}
-
-//-------------------------------------------------------------------------
-//
-// create with nsIWidget parent
-//
-//-------------------------------------------------------------------------
-
-NS_METHOD nsWindow::Create(nsIWidget *aParent,
-                      const nsRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData)
-{
-    return(StandardWindowCreate(aParent, aRect, aHandleEventFunction,
-                           aContext, aAppShell, aToolkit, aInitData,
-			   nsnull));
-}
-
-//-------------------------------------------------------------------------
-//
-// create with a native parent
-//
-//-------------------------------------------------------------------------
-NS_METHOD nsWindow::Create(nsNativeWidget aParent,
-                      const nsRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData)
-{
-    return(StandardWindowCreate(nsnull, aRect, aHandleEventFunction,
-                           aContext, aAppShell, aToolkit, aInitData,
-			   aParent));
-}
-
-
-//-------------------------------------------------------------------------
-//
-// Close this nsWindow
-//
-//-------------------------------------------------------------------------
-NS_METHOD nsWindow::Destroy()
-{
-  return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-//
-// Accessor functions to get/set the client data
-//
-//-------------------------------------------------------------------------
-
-NS_IMETHODIMP nsWindow::GetClientData(void*& aClientData)
-{
-  aClientData = mClientData;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsWindow::SetClientData(void* aClientData)
-{
-  mClientData = aClientData;
-  return NS_OK;
-}
-
-
-//-------------------------------------------------------------------------
-//
-// Get this nsWindow parent
-//
-//-------------------------------------------------------------------------
-nsIWidget* nsWindow::GetParent(void)
-{
-  NS_NOTYETIMPLEMENTED("nsWindow::GetParent");
-  // XXX: Implement this
-  return nsnull;
-}
-
-
-//-------------------------------------------------------------------------
-//
 // Get this nsWindow's list of children
 //
 //-------------------------------------------------------------------------
@@ -516,7 +358,6 @@ void nsWindow::RemoveChild(nsIWidget* aChild)
   // XXX:Implement this
 }
 
-
 //-------------------------------------------------------------------------
 //
 // Hide or show this component
@@ -529,17 +370,13 @@ NS_METHOD nsWindow::Show(PRBool bState)
 #endif
   mShown = bState;
   if (bState) {
-    //gtk_widget_show(mWidget);
-    if (mWidget)
-    {
-//    gtk_widget_show(mWidget);
-
-      GtkWidget *toplevel;
-      toplevel = gtk_widget_get_toplevel(mWidget);
-      if (toplevel)
-        gtk_widget_show_all(toplevel);
-
-    } else {
+    if (mVBox) {                  // Toplevel
+      gtk_widget_show (mVBox->parent);
+    }
+    else if (mWidget) {
+      gtk_widget_show (mWidget);
+    } 
+    else {
 #ifdef DEBUG_shaver
       g_print("showing a NULL-be-widgeted nsWindow: %p\n", this);
 #endif
@@ -556,31 +393,6 @@ NS_METHOD nsWindow::Show(PRBool bState)
   else
     XtUnmanageChild(mWidget);
 */
-  return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-NS_METHOD nsWindow::IsVisible(PRBool & aState)
-{
-  aState = mShown;
-  return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-//
-// Move this component
-//
-//-------------------------------------------------------------------------
-NS_METHOD nsWindow::Move(PRUint32 aX, PRUint32 aY)
-{
-  NS_NOTYETIMPLEMENTED("nsWindow::Move");
-#if 0
-  mBounds.x = aX;
-  mBounds.y = aY;
-  // TODO
-  // gtk_layout_move(GTK_LAYOUT(layout), mWidget, aX, aY);
-  XtVaSetValues(mWidget, XmNx, aX, XmNy, GetYCoord(aY), nsnull);
-#endif
   return NS_OK;
 }
 
@@ -624,42 +436,6 @@ NS_METHOD nsWindow::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth, PRUint32 a
   return NS_OK;
 }
 
-
-//-------------------------------------------------------------------------
-//
-// Enable/disable this component
-//
-//-------------------------------------------------------------------------
-NS_METHOD nsWindow::Enable(PRBool bState)
-{
-  gtk_widget_set_sensitive(mWidget, bState);
-  return NS_OK;
-}
-
-
-//-------------------------------------------------------------------------
-//
-// Give the focus to this component
-//
-//-------------------------------------------------------------------------
-NS_METHOD nsWindow::SetFocus(void)
-{
-#if 0
-   // Go get the parent of all widget's to determine which widget
-   // tree to use to set the focus.
-  Widget w = mWidget;
-  while (NULL != XtParent(w)) {
-    w = XtParent(w);
-  }
-
-  XtSetKeyboardFocus(w, mWidget);
-#endif
-// TODO
-  gtk_widget_grab_focus(mWidget);
-  return NS_OK;
-}
-
-
 //-------------------------------------------------------------------------
 //
 // Set this component dimension
@@ -683,203 +459,6 @@ NS_METHOD nsWindow::GetBounds(nsRect &aRect)
 {
   aRect = mBounds;
   return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-//
-// Get the foreground color
-//
-//-------------------------------------------------------------------------
-nscolor nsWindow::GetForegroundColor(void)
-{
-  return (mForeground);
-  return NS_OK;
-}
-
-
-//-------------------------------------------------------------------------
-//
-// Set the foreground color
-//
-//-------------------------------------------------------------------------
-NS_METHOD nsWindow::SetForegroundColor(const nscolor &aColor)
-{
-#if 0
-  PRUint32 pixel;
-  mForeground = aColor;
-  mContext->ConvertPixel(aColor, pixel);
-  XtVaSetValues(mWidget, XtNforeground, pixel, nsnull);
-#endif
-  return NS_OK;
-}
-
-
-//-------------------------------------------------------------------------
-//
-// Get the background color
-//
-//-------------------------------------------------------------------------
-nscolor nsWindow::GetBackgroundColor(void)
-{
-  return (mBackground);
-  return NS_OK;
-}
-
-
-//-------------------------------------------------------------------------
-//
-// Set the background color
-//
-//-------------------------------------------------------------------------
-NS_METHOD nsWindow::SetBackgroundColor(const nscolor &aColor)
-{
-#if 0
-  mBackground = aColor ;
-  PRUint32 pixel;
-  mContext->ConvertPixel(aColor, pixel);
-  XtVaSetValues(mWidget, XtNbackground, pixel, nsnull);
-#endif
-  return NS_OK;
-}
-
-
-//-------------------------------------------------------------------------
-//
-// Get this component font
-//
-//-------------------------------------------------------------------------
-nsIFontMetrics* nsWindow::GetFont(void)
-{
-  //XXX: Implement this
-  NS_NOTYETIMPLEMENTED("GetFont not yet implemented"); // to be implemented
-  return nsnull;
-}
-
-
-//-------------------------------------------------------------------------
-//
-// Set this component font
-//
-//-------------------------------------------------------------------------
-NS_METHOD nsWindow::SetFont(const nsFont &aFont)
-{
-  NS_NOTYETIMPLEMENTED("nsWindow::SetFont");
-#if 0
-    if (mContext == nsnull) {
-      return NS_ERROR_FAILURE;
-    }
-    nsIFontMetrics* metrics;
-    mContext->GetMetricsFor(aFont, metrics);
-    if (metrics != nsnull) {
-
-      XmFontList      fontList = NULL;
-      XmFontListEntry entry    = NULL;
-      nsFontHandle    fontHandle;
-      metrics->GetFontHandle(fontHandle);
-      XFontStruct * fontStruct = XQueryFont(XtDisplay(mWidget), (XID)fontHandle);
-
-      if (fontStruct != NULL) {
-        entry = XmFontListEntryCreate(XmFONTLIST_DEFAULT_TAG,
-                                      XmFONT_IS_FONT, fontStruct);
-        fontList = XmFontListAppendEntry(NULL, entry);
-
-        XtVaSetValues(mWidget, XmNfontList, fontList, NULL);
-
-        XmFontListEntryFree(&entry);
-        XmFontListFree(fontList);
-      }
-
-      NS_RELEASE(metrics);
-    } else {
-      printf("****** Error: Metrics is NULL!\n");
-      return NS_ERROR_FAILURE;
-    }
-
-     // XXX Temporary, should not be caching the font
-    if (mFont == nsnull) {
-      mFont = new nsFont(aFont);
-    } else {
-      *mFont  = aFont;
-    }
-#endif
-  return NS_OK;
-}
-
-
-//-------------------------------------------------------------------------
-//
-// Get this component cursor
-//
-//-------------------------------------------------------------------------
-nsCursor nsWindow::GetCursor()
-{
-  return eCursor_standard;
-}
-
-
-//-------------------------------------------------------------------------
-//
-// Set this component cursor
-//
-//-------------------------------------------------------------------------
-
-NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
-{
-  if (!mWidget || !mWidget->window)
-    return NS_ERROR_FAILURE;
-
-  // Only change cursor if it's changing
-  if (aCursor != mCursor) {
-    GdkCursor *newCursor = 0;
-
-    switch(aCursor) {
-      case eCursor_select:
-        newCursor = gdk_cursor_new(GDK_XTERM);
-      break;
-
-      case eCursor_wait:
-        newCursor = gdk_cursor_new(GDK_WATCH);
-      break;
-
-      case eCursor_hyperlink:
-        newCursor = gdk_cursor_new(GDK_HAND2);
-      break;
-
-      case eCursor_standard:
-        newCursor = gdk_cursor_new(GDK_LEFT_PTR);
-      break;
-
-      case eCursor_arrow_south:
-      case eCursor_arrow_south_plus:
-        newCursor = gdk_cursor_new(GDK_BOTTOM_SIDE);
-      break;
-
-      case eCursor_arrow_north:
-      case eCursor_arrow_north_plus:
-        newCursor = gdk_cursor_new(GDK_TOP_SIDE);
-      break;
-
-      case eCursor_arrow_east:
-      case eCursor_arrow_east_plus:
-        newCursor = gdk_cursor_new(GDK_RIGHT_SIDE);
-      break;
-
-      case eCursor_arrow_west:
-      case eCursor_arrow_west_plus:
-        newCursor = gdk_cursor_new(GDK_LEFT_SIDE);
-      break;
-
-      default:
-        NS_ASSERTION(PR_FALSE, "Invalid cursor type");
-      break;
-    }
-
-    if (nsnull != newCursor) {
-      mCursor = aCursor;
-      gdk_window_set_cursor(mWidget->window, newCursor);
-    }
- }
- return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -967,47 +546,6 @@ NS_IMETHODIMP nsWindow::Update()
 
 //-------------------------------------------------------------------------
 //
-// Return some native data according to aDataType
-//
-//-------------------------------------------------------------------------
-void* nsWindow::GetNativeData(PRUint32 aDataType)
-{
-  switch(aDataType) {
-
-    case NS_NATIVE_WINDOW:
- //     return (void*)XtWindow(mWidget);
-      return (void*)mWidget->window;
-    case NS_NATIVE_DISPLAY:
- //     return (void*)XtDisplay(mWidget);
-      return (void*)GDK_DISPLAY();
-    case NS_NATIVE_WIDGET:
-      return (void*)(mWidget);
-    case NS_NATIVE_GRAPHIC:
-      {
-        void *res = NULL;
-        // We Cache a Read-Only Shared GC in the Toolkit.  If we don't
-        // have one ourselves (because it needs to be writeable) grab the
-        // the shared GC
-        if (nsnull == mGC) {
-           NS_ASSERTION(mToolkit, "Unable to return GC, toolkit is null");
-          res = (void *)((nsToolkit *)mToolkit)->GetSharedGC();
-        }
-        else {
-          res = (void *)mGC;
-        }
-        NS_ASSERTION(res, "Unable to return GC");
-        return res;
-      }
-    case NS_NATIVE_COLORMAP:
-    default:
-      break;
-  }
-  return NULL;
-}
-
-
-//-------------------------------------------------------------------------
-//
 // Create a rendering context from this nsWindow
 //
 //-------------------------------------------------------------------------
@@ -1032,17 +570,6 @@ nsIRenderingContext* nsWindow::GetRenderingContext()
 
   return ctx;
 }
-
-//-------------------------------------------------------------------------
-//
-// Return the toolkit this widget was created on
-//
-//-------------------------------------------------------------------------
-nsIToolkit* nsWindow::GetToolkit()
-{
-  return nsnull;
-}
-
 
 //-------------------------------------------------------------------------
 //
@@ -1144,132 +671,13 @@ NS_METHOD nsWindow::SetBorderStyle(nsBorderStyle aBorderStyle)
 
 NS_METHOD nsWindow::SetTitle(const nsString& aTitle)
 {
-// mWidget is *probibly* not the window... we will see
-  char * titleStr = aTitle.ToNewCString();
-  gtk_window_set_title(GTK_WINDOW(mWidget), titleStr);
-  delete[] titleStr;
+  if (mVBox) // Top level widget (has correct parent)
+  {
+    char * titleStr = aTitle.ToNewCString();
+    gtk_window_set_title(GTK_WINDOW(mVBox->parent), titleStr);
+    delete[] titleStr;
+  }
   return NS_OK;
-}
-
-
-/**
- * Processes a mouse pressed event
- *
- **/
-NS_METHOD nsWindow::AddMouseListener(nsIMouseListener * aListener)
-{
-  return NS_OK;
-}
-
-/**
- * Processes a mouse pressed event
- *
- **/
-NS_METHOD nsWindow::AddEventListener(nsIEventListener * aListener)
-{
-  return NS_OK;
-}
-
-PRBool nsWindow::ConvertStatus(nsEventStatus aStatus)
-{
-  switch(aStatus) {
-    case nsEventStatus_eIgnore:
-      return(PR_FALSE);
-    case nsEventStatus_eConsumeNoDefault:
-      return(PR_TRUE);
-    case nsEventStatus_eConsumeDoDefault:
-      return(PR_FALSE);
-    default:
-      NS_ASSERTION(0, "Illegal nsEventStatus enumeration value");
-      break;
-  }
-  return(PR_FALSE);
-}
-
-//-------------------------------------------------------------------------
-//
-// Invokes callback and  ProcessEvent method on Event Listener object
-//
-//-------------------------------------------------------------------------
-
-NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus)
-{
-  NS_ADDREF(event->widget);
-
-  aStatus = nsEventStatus_eIgnore;
-  if (nsnull != mEventCallback) {
-    aStatus = (*mEventCallback)(event);
-  }
-
-  // Dispatch to event listener if event was not consumed
-  if ((aStatus != nsEventStatus_eIgnore) && (nsnull != mEventListener)) {
-    aStatus = mEventListener->ProcessEvent(*event);
-  }
-  NS_RELEASE(event->widget);
-  return NS_OK;
-
-}
-
-PRBool nsWindow::DispatchWindowEvent(nsGUIEvent* event)
-{
-  nsEventStatus status;
-  DispatchEvent(event, status);
-  return ConvertStatus(status);
-}
-
-
-//-------------------------------------------------------------------------
-//
-// Deal with all sort of mouse event
-//
-//-------------------------------------------------------------------------
-PRBool nsWindow::DispatchMouseEvent(nsMouseEvent& aEvent)
-{
-  PRBool result = PR_FALSE;
-  if (nsnull == mEventCallback && nsnull == mMouseListener) {
-    return result;
-  }
-
-
-  // call the event callback
-  if (nsnull != mEventCallback) {
-    result = DispatchWindowEvent(&aEvent);
-
-    return result;
-  }
-
-  if (nsnull != mMouseListener) {
-    switch (aEvent.message) {
-      case NS_MOUSE_MOVE: {
-        /*result = ConvertStatus(mMouseListener->MouseMoved(event));
-        nsRect rect;
-        GetBounds(rect);
-        if (rect.Contains(event.point.x, event.point.y)) {
-          if (mCurrentWindow == NULL || mCurrentWindow != this) {
-            //printf("Mouse enter");
-            mCurrentWindow = this;
-          }
-        } else {
-          //printf("Mouse exit");
-        }*/
-
-      } break;
-
-      case NS_MOUSE_LEFT_BUTTON_DOWN:
-      case NS_MOUSE_MIDDLE_BUTTON_DOWN:
-      case NS_MOUSE_RIGHT_BUTTON_DOWN:
-        result = ConvertStatus(mMouseListener->MousePressed(aEvent));
-        break;
-
-      case NS_MOUSE_LEFT_BUTTON_UP:
-      case NS_MOUSE_MIDDLE_BUTTON_UP:
-      case NS_MOUSE_RIGHT_BUTTON_UP:
-        result = ConvertStatus(mMouseListener->MouseReleased(aEvent));
-        result = ConvertStatus(mMouseListener->MouseClicked(aEvent));
-        break;
-    } // switch
-  }
-  return result;
 }
 
 
