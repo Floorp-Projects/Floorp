@@ -362,81 +362,51 @@ PUBLIC Bool
 NET_ParseUploadURL( char *full_location, char **location, 
                     char **user_name, char **password )
 {
-    char *start;
-    char *skip_dest;
-    char *at_ptr;
-    char *colon_ptr;
-    char at;
-    char colon = 0;
+    char *unamePwd;
+    char *username = NULL;
+    char *password_ = NULL;
+    char *colon;
 
-    if( !full_location || !location ) return FALSE;
+    if( full_location == NULL || location == NULL )
+        return FALSE;
 
     /* Empty exitisting strings... */   
     if(*location) PR_Free(*location);
     if( user_name && *user_name) PR_Free(*user_name);
     if( password && *password) PR_Free(*password);
 
-    /* Find start just past http:// or ftp://  */
-    start = PL_strstr(full_location, "//");
-    if( !start ) return FALSE;
+    /* Separate the username and password from the full URL */    
+    *location = NET_ParseURL(full_location,	GET_PROTOCOL_PART | GET_HOST_PART | GET_PATH_PART);
+    unamePwd = NET_ParseURL(full_location, GET_USERNAME_PART | GET_PASSWORD_PART);
 
-    /* Point to just past the host part */
-    start += 2;
+	/* get the username & password out of the combo string */
+	if( (colon = PL_strchr(unamePwd, ':')) != NULL )
+    {
+		*colon='\0';
+		username = PL_strdup(unamePwd);
+        password_ = PL_strdup(colon+1);
+
+		*colon=':';
+		PR_Free(unamePwd);
+	} else {
+		username=unamePwd;
+	}
+    if( user_name )
+        *user_name = username;
+    else
+        PR_Free(username);
     
-    /* Start by simply copying full location
-     * (may waste some bytes, but much simpler!)
-    */
-    *location = PL_strdup(full_location);
-    if( !*location ) return FALSE;
-
-    /* Destination to append location without
-     *  user:password is same place copied string
-    */
-    skip_dest = *location + (start - full_location);
-
-    /* Skip over any user:password in supplied location
-     *  while copying those to other strings
-    */
-    at_ptr = PL_strchr(start, '@');
-    colon_ptr = PL_strchr(start, ':');
-
-    if( at_ptr ){
-        /* save character */
-        at = *at_ptr;
-
-        /* Copy part past the @ over previously-copied full string */
-        PL_strcpy(skip_dest, (at_ptr + 1));
-        
-        /* Terminate for the password (or user) string */
-        *at_ptr = '\0';
-        if( colon_ptr ){
-            /* save character */
-            colon = *colon_ptr;
-
-            if( password ){
-                *password = PL_strdup((colon_ptr+1));
-            }
-            /* terminate for the user string */
-            *colon_ptr = '\0';
-        } else if( password ) {
+    if( password )
+    {
+        /* we always return at least an empty string */
+        if( password_ )
+            *password = password_;
+        else
             *password = PL_strdup("");
-        }
-        if( user_name ){
-            *user_name = PL_strdup(start);
-        }
-        /* restore characters */
-        *at_ptr = at;
-        if( colon_ptr ) *colon_ptr = colon;
-
-    } else {
-        /* Supply empty strings for these */
-        if( user_name ){
-            *user_name = PL_strdup("");
-        }
-        if( password ){
-            *password = PL_strdup("");
-        }
     }
+    else if( password_ )
+        PR_Free(password_);
+            
     return TRUE;
 }
 
