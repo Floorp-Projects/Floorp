@@ -28,7 +28,7 @@ NS_IMPL_ADDREF(nsEditProperty)
 NS_IMPL_RELEASE(nsEditProperty)
 
 // XXX: remove when html atoms are exported from layout
-// tags
+// inline tags
 nsIAtom * nsIEditProperty::a;
 nsIAtom * nsIEditProperty::b;
 nsIAtom * nsIEditProperty::big;
@@ -41,6 +41,9 @@ nsIAtom * nsIEditProperty::sub;
 nsIAtom * nsIEditProperty::sup;
 nsIAtom * nsIEditProperty::tt;
 nsIAtom * nsIEditProperty::u;
+// block tags
+nsIAtom * nsIEditProperty::h1;
+nsIAtom * nsIEditProperty::h2;
 // properties
 nsIAtom * nsIEditProperty::color;
 nsIAtom * nsIEditProperty::face;
@@ -64,6 +67,9 @@ nsEditProperty::InstanceInit()
   nsIEditProperty::sup =  NS_NewAtom("SUP");
   nsIEditProperty::tt =   NS_NewAtom("TT");
   nsIEditProperty::u =    NS_NewAtom("U");
+  // tags
+  nsIEditProperty::h1 =    NS_NewAtom("H1");
+  nsIEditProperty::h2 =    NS_NewAtom("H2");
   // properties
   nsIEditProperty::color= NS_NewAtom("COLOR");
   nsIEditProperty::face = NS_NewAtom("FACE");
@@ -88,6 +94,9 @@ nsEditProperty::InstanceShutdown()
   NS_IF_RELEASE(nsIEditProperty::sup);
   NS_IF_RELEASE(nsIEditProperty::tt);
   NS_IF_RELEASE(nsIEditProperty::u);
+  // tags
+  NS_IF_RELEASE(nsIEditProperty::h1);
+  NS_IF_RELEASE(nsIEditProperty::h2);
   // properties
   NS_IF_RELEASE(nsIEditProperty::color);
   NS_IF_RELEASE(nsIEditProperty::face);
