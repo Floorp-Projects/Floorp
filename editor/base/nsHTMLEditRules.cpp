@@ -1740,9 +1740,6 @@ nsHTMLEditRules::WillMakeList(nsIDOMSelection *aSelection,
   else
     itemType.AssignWithConversion("li");
     
-  // ok, we aren't creating a new empty list.  Instead we are converting
-  // the set of blocks implied by the selection into a list.
-  
   // convert the selection ranges into "promoted" selection ranges:
   // this basically just expands the range to include the immediate
   // block parent, and then further expands to include any ancestors
@@ -1759,11 +1756,38 @@ nsHTMLEditRules::WillMakeList(nsIDOMSelection *aSelection,
   PRUint32 listCount;
   arrayOfNodes->Count(&listCount);
   
-  // if no nodes, we make empty list.
-  if (!listCount) 
+  // check if al our nodes are <br>s
+  PRBool bOnlyBreaks = PR_TRUE;
+  PRInt32 j;
+  for (j=0; j<(PRInt32)listCount; j++)
+  {
+    nsCOMPtr<nsISupports> isupports  = (dont_AddRef)(arrayOfNodes->ElementAt(j));
+    nsCOMPtr<nsIDOMNode> curNode( do_QueryInterface(isupports ) );
+    // if curNode is not a Break, we're done
+    if (!nsHTMLEditUtils::IsBreak(curNode)) 
+    {
+      bOnlyBreaks = PR_FALSE;
+      break;
+    }
+  }
+  
+  // if no nodes, we make empty list.  Ditto if the user tried to make a list of some # of breaks.
+  if (!listCount || bOnlyBreaks) 
   {
     nsCOMPtr<nsIDOMNode> parent, theList, theListItem;
     PRInt32 offset;
+
+    // if only breaks, delete them
+    if (bOnlyBreaks)
+    {
+      for (j=0; j<(PRInt32)listCount; j++)
+      {
+        nsCOMPtr<nsISupports> isupports  = (dont_AddRef)(arrayOfNodes->ElementAt(j));
+        nsCOMPtr<nsIDOMNode> curNode( do_QueryInterface(isupports ) );
+        res = mEditor->DeleteNode(curNode);
+        if (NS_FAILED(res)) return res;
+      }
+    }
     
     // get selection location
     res = mEditor->GetStartNodeAndOffset(aSelection, &parent, &offset);
