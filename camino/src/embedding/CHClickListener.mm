@@ -164,7 +164,8 @@ CHClickListener::MouseDown(nsIDOMEvent* aEvent)
         [menuItem setEnabled: NO];
       CHOptionSelector* optSelector = [[[CHOptionSelector alloc] initWithSelect: sel] autorelease];
       [menuItem setTarget: optSelector];									// retains
-      [menuItem setAction: @selector(selectOption:)];
+      if (!selected)
+        [menuItem setAction:@selector(selectOption:)];
     }
 
     nsCOMPtr<nsIDOMNSHTMLElement> nsSel(do_QueryInterface(sel));
