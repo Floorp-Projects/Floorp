@@ -42,7 +42,7 @@ function BeginDragTree ( event )
   // if the click is on the tree proper, ignore it. We only care about clicks on items.
 
   var tree = document.getElementById("bookmarksTree");
-  if ( event.target == tree )
+  if ( event.target == tree || event.target.localName == "treechildren" )
     return(true);         // continue propagating the event
     
   var childWithDatabase = tree;
