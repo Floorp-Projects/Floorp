@@ -298,6 +298,7 @@ TextRangeListItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
     return JS_FALSE;
   }
 
+  JSBool rBool = JS_FALSE;
   nsIDOMTextRange* nativeRet;
   PRUint32 b0;
 
@@ -431,6 +432,9 @@ extern "C" NS_DOM nsresult NS_InitTextRangeClass(nsIScriptContext *aContext, voi
     if ((PR_TRUE == JS_LookupProperty(jscontext, global, "TextRange", &vp)) &&
         JSVAL_IS_OBJECT(vp) &&
         ((constructor = JSVAL_TO_OBJECT(vp)) != nsnull)) {
+      vp = INT_TO_JSVAL(nsIDOMTextRange::TEXTRANGE_CARETPOSITION);
+      JS_SetProperty(jscontext, constructor, "TEXTRANGE_CARETPOSITION", &vp);
+
       vp = INT_TO_JSVAL(nsIDOMTextRange::TEXTRANGE_RAWINPUT);
       JS_SetProperty(jscontext, constructor, "TEXTRANGE_RAWINPUT", &vp);
 
