@@ -134,7 +134,6 @@ function commonDialogOnLoad()
   // initialize the checkbox
   setCheckbox(gCommonDialogParam.GetString(1), gCommonDialogParam.GetInt(1));
 
-  focus();
   GetAttention();
 }
 
