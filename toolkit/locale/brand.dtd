@@ -1,6 +1,6 @@
 <!-- XXXBlake This should be in mozilla/browser -->
 
-<!ENTITY  lang.version          ".1">
+<!ENTITY  lang.version          "1.2a">
 <!ENTITY  brandShortName        "Phoenix">
 <!ENTITY  version               "0.1">
 <!ENTITY  vendorShortName       "Phoenix">
