@@ -49,6 +49,12 @@
 #include "plhash.h"
 #include "nsCRT.h"
 
+
+struct nsHttpAuthPath {
+    struct nsHttpAuthPath *mNext;
+    char                   mPath[1];
+};
+
 //-----------------------------------------------------------------------------
 // nsHttpAuthIdentity
 //-----------------------------------------------------------------------------
@@ -101,15 +107,17 @@ private:
 class nsHttpAuthEntry
 {
 public:
-    const char *Path()        const { return mPath; }
     const char *Realm()       const { return mRealm; }
     const char *Creds()       const { return mCreds; }
     const char *Challenge()   const { return mChallenge; }
     const PRUnichar *Domain() const { return mIdent.Domain(); }
     const PRUnichar *User()   const { return mIdent.User(); }
     const PRUnichar *Pass()   const { return mIdent.Password(); }
+    nsHttpAuthPath *RootPath()      { return mRoot; }
 
     const nsHttpAuthIdentity &Identity() const { return mIdent; }
+            
+    nsresult AddPath(const char *aPath);
             
     nsCOMPtr<nsISupports> mMetaData;
 
@@ -120,7 +128,9 @@ private:
                     const char *challenge,
                     const nsHttpAuthIdentity &ident,
                     nsISupports *metadata)
-        : mPath(nsnull)
+        : mRealm(nsnull)
+        , mRoot(nsnull)
+        , mTail(nsnull)
     {
         Set(path, realm, creds, challenge, ident, metadata);
     }
@@ -135,8 +145,10 @@ private:
 
     nsHttpAuthIdentity mIdent;
 
-    // allocated together in one blob, starting with mPath.
-    char *mPath;
+    nsHttpAuthPath *mRoot; //root pointer
+    nsHttpAuthPath *mTail; //tail pointer
+
+    // allocated together in one blob, starting with mRealm.
     char *mRealm;
     char *mCreds;
     char *mChallenge;
