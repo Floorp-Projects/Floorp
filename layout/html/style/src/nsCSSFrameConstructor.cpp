@@ -930,9 +930,6 @@ AdjustOutOfFlowFrameParentPtrs(nsIPresContext*          aPresContext,
 
     // Update the parent pointer for outOfFlowFrame if it's
     // containing block has changed as the result of reparenting,
-    //
-    // XXX_kin: I don't think we have to worry about
-    // XXX_kin: NS_STYLE_POSITION_FIXED or NS_STYLE_POSITION_RELATIVE.
 
     if (NS_STYLE_POSITION_ABSOLUTE == display->mPosition) {
       // XXX_kin: I think we'll need to add code here to handle the
@@ -950,7 +947,15 @@ AdjustOutOfFlowFrameParentPtrs(nsIPresContext*          aPresContext,
       // XXX_kin: and is also parented to it.
     }
     else if (NS_STYLE_FLOAT_NONE != display->mFloats) {
-      outOfFlowFrame->SetParent(aState->mFloatedItems.containingBlock);
+      nsIFrame *parent = aState->mFloatedItems.containingBlock;
+      outOfFlowFrame->SetParent(parent);
+      if (outOfFlowFrame->GetStateBits() &
+          (NS_FRAME_HAS_VIEW | NS_FRAME_HAS_CHILD_WITH_VIEW)) {
+        // We don't need to walk up the tree, since each level of
+        // recursion of the SplitToContainingBlock will propagate the
+        // bit.
+        parent->AddStateBits(NS_FRAME_HAS_CHILD_WITH_VIEW);
+      }
     }
 
     // XXX_kin: We'll need to remove the return below when we support
