@@ -341,7 +341,17 @@ CNavDTD::CanParse(CParserContext& aParserContext,
     } 
     else if(PR_TRUE==aParserContext.mMimeType.Equals(NS_LITERAL_CSTRING(kTextJSContentType))) {
       result=ePrimaryDetect;
-    } 
+    }
+    // do this for XML-based content-types so that we don't fall back
+    // to BufferContainsHTML() for known content types
+    // see bug 132681
+    // this will be cleaned up after moz 1.0 -alecf
+    else if (aParserContext.mMimeType.Equals(NS_LITERAL_CSTRING(kRDFTextContentType)) ||
+             aParserContext.mMimeType.Equals(NS_LITERAL_CSTRING(kXULTextContentType)) ||
+             aParserContext.mMimeType.Equals(NS_LITERAL_CSTRING(kXMLTextContentType)) ||
+             aParserContext.mMimeType.Equals(NS_LITERAL_CSTRING(kXMLApplicationContentType))) {
+      result=eUnknownDetect;
+    }
     else {
       //otherwise, look into the buffer to see if you recognize anything...
       PRBool theBufHasXML=PR_FALSE;
