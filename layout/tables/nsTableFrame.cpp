@@ -2784,7 +2784,7 @@ NS_METHOD nsTableFrame::AdjustForCollapsingCols(nsIPresContext& aPresContext,
 {
   // determine which col groups and cols are collapsed
   nsIFrame* childFrame = mColGroups.FirstChild();
-  PRInt32 colX = 0;
+  PRInt32 numCols = 0;
   while (nsnull != childFrame) { 
     const nsStyleDisplay* groupDisplay;
     GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)groupDisplay));
@@ -2797,11 +2797,11 @@ NS_METHOD nsTableFrame::AdjustForCollapsingCols(nsIPresContext& aPresContext,
       colFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)colDisplay));
       if (NS_STYLE_DISPLAY_TABLE_COLUMN == colDisplay->mDisplay) {
         if (groupIsCollapsed || (NS_STYLE_VISIBILITY_COLLAPSE == colDisplay->mVisible)) {
-          mCellMap->SetColCollapsedAt(colX, PR_TRUE);
+          mCellMap->SetColCollapsedAt(numCols, PR_TRUE);
         }
+        numCols++;
       }
       colFrame->GetNextSibling((nsIFrame**)&colFrame);
-      colX++;
     }
     childFrame->GetNextSibling(&childFrame);
   }
@@ -2810,15 +2810,13 @@ NS_METHOD nsTableFrame::AdjustForCollapsingCols(nsIPresContext& aPresContext,
     return NS_OK; // no collapsed cols, we're done
   }
 
-  PRInt32 numCols = colX;
-
   // collapse the cols and/or col groups
   PRInt32 numRows = mCellMap->GetRowCount();
   nsTableIterator groupIter(mColGroups, eTableDIR);
   nsIFrame* groupFrame = groupIter.First(); 
   nscoord cellSpacingX = GetCellSpacingX();
   nscoord xOffset = 0;
-  colX = (groupIter.IsLeftToRight()) ? 0 : numCols - 1; 
+  PRInt32 colX = (groupIter.IsLeftToRight()) ? 0 : numCols - 1; 
   PRInt32 direction = (groupIter.IsLeftToRight()) ? 1 : -1; 
   while (nsnull != groupFrame) {
     const nsStyleDisplay* groupDisplay;
