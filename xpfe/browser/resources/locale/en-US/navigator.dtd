@@ -16,12 +16,11 @@
 <!ENTITY browserCmd.label					"New Navigator Window">
 <!ENTITY browserCmd.accesskey				"n">
 <!ENTITY openCmd.label "Open Web Location...">
-<!ENTITY openCmd.accesskey "o">
-<!ENTITY openCmd.commandkey "o">
+<!ENTITY openCmd.accesskey "l">
+<!ENTITY openCmd.commandkey "l">
 <!ENTITY openFileCmd.label "Open File...">
-<!ENTITY openFileCmd.accesskey "l">
-<!ENTITY openFileCmd.commandkey "l">
-<!ENTITY sendLinkCmd.label "Send Link">
+<!ENTITY openFileCmd.accesskey "o">
+<!ENTITY openFileCmd.commandkey "o">
 <!ENTITY sendPageCmd.label "Send Page">
 <!ENTITY sendPageCmd.accesskey "s">
 <!ENTITY editPageCmd.label					"Edit Page">
@@ -289,7 +288,7 @@
 
 <!-- Statusbar -->
 <!ENTITY  statusText.label "Document: Done">
-<!ENTITY  buildId.label "Build ID: 1999082316">
+<!ENTITY  buildId.label "Build ID: 1999122808">
 
 <!-- Context Menu -->                 
 <!ENTITY openLinkCmd.label            "Open link in new window">
