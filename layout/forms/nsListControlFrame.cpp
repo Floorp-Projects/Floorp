@@ -806,8 +806,8 @@ nsListControlFrame::GetMaxLength(PRInt32* aSize)
 }
 
 //----------------------------------------------------------------------
-NS_IMETHODIMP
-nsListControlFrame::GetSize(PRInt32* aSize) const
+nsresult
+nsListControlFrame::GetSizeFromContent(PRInt32* aSize) const
 {
   *aSize = -1;
   nsresult result = NS_CONTENT_ATTR_NOT_THERE;

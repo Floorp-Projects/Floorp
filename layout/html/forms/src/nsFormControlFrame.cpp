@@ -556,8 +556,8 @@ nsFormControlFrame::GetMaxLength(PRInt32* aSize)
   return result;
 }
 
-NS_IMETHODIMP
-nsFormControlFrame::GetSize(PRInt32* aSize) const
+nsresult
+nsFormControlFrame::GetSizeFromContent(PRInt32* aSize) const
 {
   *aSize = -1;
   nsresult result = NS_CONTENT_ATTR_NOT_THERE;
@@ -649,15 +649,17 @@ NS_METHOD nsFormControlFrame::HandleEvent(nsIPresContext& aPresContext,
     return NS_OK;
   }
 
-  // make sure that the widget in the event is this input
-  // XXX if there is no view, it could be an image button. Unfortunately,
-  // every image button will get every event.
-  nsIView* view;
-  GetView(view);
-  if (view) {
-    if (mWidget != aEvent->widget) {
-      aEventStatus = nsEventStatus_eIgnore;
-      return NS_OK;
+  if (nsnull != mWidget) {
+    // make sure that the widget in the event is this input
+    // XXX if there is no view, it could be an image button. Unfortunately,
+    // every image button will get every event.
+    nsIView* view;
+    GetView(view);
+    if (view) {
+      if (mWidget != aEvent->widget) {
+        aEventStatus = nsEventStatus_eIgnore;
+        return NS_OK;
+      }
     }
   }
 
