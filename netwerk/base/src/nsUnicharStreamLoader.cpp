@@ -184,6 +184,10 @@ nsUnicharStreamLoader::OnStopRequest(nsIRequest *request,
     
     mObserver->OnStreamComplete(this, mContext, aStatus, uin);
 
+  } else {
+    // We never got any data, so just tell our observer that we are
+    // done and give them no stream
+    mObserver->OnStreamComplete(this, mContext, aStatus, nsnull);
   }
   
   // Clean up.
