@@ -3854,8 +3854,6 @@ VR_INTERFACE(void) NR_ShutdownRegistry(void)
     if ( regStartCount == 0 )
     {
         /* shutdown for real. */
-        /* Close version registry first if open */
-        VR_Close();
 
         /* close any forgotten open registries */
         while ( RegList != NULL ) 
