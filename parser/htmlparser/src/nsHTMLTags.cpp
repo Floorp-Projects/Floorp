@@ -40,6 +40,7 @@
 #include "nsCRT.h"
 #include "nsReadableUtils.h"
 #include "plhash.h"
+#include "nsString.h"
 
 // C++ sucks! There's no way to do this with a macro, at least not
 // that I know, if you know how to do this with a macro then please do
