@@ -283,6 +283,10 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument *aDocument)
   
   ClearAllTimeouts();
   
+  if (mListenerManager) {
+    mListenerManager->RemoveAllListeners();
+  }
+
   if (mPrincipals && mContext) {
     JSPRINCIPALS_DROP((JSContext *)mContext->GetNativeContext(), mPrincipals);
     mPrincipals = nsnull;
@@ -2651,6 +2655,7 @@ GlobalWindowImpl::HandleDOMEvent(nsIPresContext& aPresContext,
 
   if (NS_EVENT_FLAG_INIT == aFlags) {
     aDOMEvent = &mDOMEvent;
+    aEvent->flags = NS_EVENT_FLAG_NONE;
   }
   
   //Capturing stage
@@ -2660,7 +2665,8 @@ GlobalWindowImpl::HandleDOMEvent(nsIPresContext& aPresContext,
   }
 
   //Local handling stage
-  if (nsnull != mListenerManager) {
+  if (mListenerManager && !(aEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH)) {
+    aEvent->flags = aFlags;
     mListenerManager->HandleEvent(aPresContext, aEvent, aDOMEvent, aFlags, aEventStatus);
   }
 
@@ -2719,13 +2725,12 @@ GlobalWindowImpl::RemoveEventListenerByIID(nsIDOMEventListener *aListener, const
 
 nsresult
 GlobalWindowImpl::AddEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
-                                   PRBool aPostProcess, PRBool aUseCapture)
+                                   PRBool aUseCapture)
 {
   nsIEventListenerManager *manager;
 
   if (NS_OK == GetListenerManager(&manager)) {
-    PRInt32 flags = (aPostProcess ? NS_EVENT_FLAG_POST_PROCESS : NS_EVENT_FLAG_NONE) |
-                    (aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE);
+    PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
 
     manager->AddEventListenerByType(aListener, aType, flags);
     NS_RELEASE(manager);
@@ -2736,11 +2741,10 @@ GlobalWindowImpl::AddEventListener(const nsString& aType, nsIDOMEventListener* a
 
 nsresult
 GlobalWindowImpl::RemoveEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
-                                      PRBool aPostProcess, PRBool aUseCapture)
+                                      PRBool aUseCapture)
 {
   if (nsnull != mListenerManager) {
-    PRInt32 flags = (aPostProcess ? NS_EVENT_FLAG_POST_PROCESS : NS_EVENT_FLAG_NONE) |
-                    (aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE);
+    PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
 
     mListenerManager->RemoveEventListenerByType(aListener, aType, flags);
     return NS_OK;

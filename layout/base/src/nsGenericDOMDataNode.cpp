@@ -461,13 +461,12 @@ nsGenericDOMDataNode::RemoveEventListenerByIID(nsIDOMEventListener* aListener,
 
 nsresult
 nsGenericDOMDataNode::AddEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
-                                       PRBool aPostProcess, PRBool aUseCapture)
+                                       PRBool aUseCapture)
 {
   nsIEventListenerManager *manager;
 
   if (NS_OK == GetListenerManager(&manager)) {
-    PRInt32 flags = (aPostProcess ? NS_EVENT_FLAG_POST_PROCESS : NS_EVENT_FLAG_NONE) |
-                    (aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE);
+    PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
 
     manager->AddEventListenerByType(aListener, aType, flags);
     NS_RELEASE(manager);
@@ -478,11 +477,10 @@ nsGenericDOMDataNode::AddEventListener(const nsString& aType, nsIDOMEventListene
 
 nsresult
 nsGenericDOMDataNode::RemoveEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
-                                          PRBool aPostProcess, PRBool aUseCapture)
+                                          PRBool aUseCapture)
 {
   if (nsnull != mListenerManager) {
-    PRInt32 flags = (aPostProcess ? NS_EVENT_FLAG_POST_PROCESS : NS_EVENT_FLAG_NONE) |
-                    (aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE);
+    PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
 
     mListenerManager->RemoveEventListenerByType(aListener, aType, flags);
     return NS_OK;
@@ -694,6 +692,7 @@ nsGenericDOMDataNode::HandleDOMEvent(nsIPresContext& aPresContext,
 
   if (NS_EVENT_FLAG_INIT == aFlags) {
     aDOMEvent = &domEvent;
+    aEvent->flags = NS_EVENT_FLAG_NONE;
 
     //Initiate capturing phase.  Special case first call to document
     if (nsnull != mDocument) {
@@ -708,7 +707,7 @@ nsGenericDOMDataNode::HandleDOMEvent(nsIPresContext& aPresContext,
   }
   
   //Local handling stage
-  if (nsnull != mListenerManager) {
+  if (!(aEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH) && nsnull != mListenerManager) {
     mListenerManager->HandleEvent(aPresContext, aEvent, aDOMEvent, aFlags, aEventStatus);
   }
 

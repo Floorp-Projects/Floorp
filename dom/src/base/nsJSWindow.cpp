@@ -2364,7 +2364,6 @@ EventTargetAddEventListener(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
   nsAutoString b0;
   nsIDOMEventListener* b1;
   PRBool b2;
-  PRBool b3;
 
   *rval = JSVAL_NULL;
 
@@ -2388,7 +2387,7 @@ EventTargetAddEventListener(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
     return JS_TRUE;
   }
 
-  if (argc >= 4) {
+  if (argc >= 3) {
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
@@ -2403,18 +2402,14 @@ EventTargetAddEventListener(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
       return JS_FALSE;
     }
 
-    if (!nsJSUtils::nsConvertJSValToBool(&b3, cx, argv[3])) {
-      return JS_FALSE;
-    }
-
-    if (NS_OK != nativeThis->AddEventListener(b0, b1, b2, b3)) {
+    if (NS_OK != nativeThis->AddEventListener(b0, b1, b2)) {
       return JS_FALSE;
     }
 
     *rval = JSVAL_VOID;
   }
   else {
-    JS_ReportError(cx, "Function addEventListener requires 4 parameters");
+    JS_ReportError(cx, "Function addEventListener requires 3 parameters");
     return JS_FALSE;
   }
 
@@ -2438,7 +2433,6 @@ EventTargetRemoveEventListener(JSContext *cx, JSObject *obj, uintN argc, jsval *
   nsAutoString b0;
   nsIDOMEventListener* b1;
   PRBool b2;
-  PRBool b3;
 
   *rval = JSVAL_NULL;
 
@@ -2462,7 +2456,7 @@ EventTargetRemoveEventListener(JSContext *cx, JSObject *obj, uintN argc, jsval *
     return JS_TRUE;
   }
 
-  if (argc >= 4) {
+  if (argc >= 3) {
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
@@ -2477,18 +2471,14 @@ EventTargetRemoveEventListener(JSContext *cx, JSObject *obj, uintN argc, jsval *
       return JS_FALSE;
     }
 
-    if (!nsJSUtils::nsConvertJSValToBool(&b3, cx, argv[3])) {
-      return JS_FALSE;
-    }
-
-    if (NS_OK != nativeThis->RemoveEventListener(b0, b1, b2, b3)) {
+    if (NS_OK != nativeThis->RemoveEventListener(b0, b1, b2)) {
       return JS_FALSE;
     }
 
     *rval = JSVAL_VOID;
   }
   else {
-    JS_ReportError(cx, "Function removeEventListener requires 4 parameters");
+    JS_ReportError(cx, "Function removeEventListener requires 3 parameters");
     return JS_FALSE;
   }
 
@@ -2585,8 +2575,8 @@ static JSFunctionSpec WindowMethods[] =
   {"openDialog",          WindowOpenDialog,     0},
   {"captureEvent",          EventCapturerCaptureEvent,     1},
   {"releaseEvent",          EventCapturerReleaseEvent,     1},
-  {"addEventListener",          EventTargetAddEventListener,     4},
-  {"removeEventListener",          EventTargetRemoveEventListener,     4},
+  {"addEventListener",          EventTargetAddEventListener,     3},
+  {"removeEventListener",          EventTargetRemoveEventListener,     3},
   {0}
 };
 

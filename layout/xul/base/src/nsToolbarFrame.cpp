@@ -114,7 +114,7 @@ nsToolbarFrame::Init(nsIPresContext&  aPresContext,
   }
 
   //      nsCOMPtr<nsIDOMEventListener> eventListener = do_QueryInterface(popupListener);
-  //      AddEventListener("mousedown", eventListener, PR_FALSE, PR_FALSE);  
+  //      AddEventListener("mousedown", eventListener, PR_FALSE);  
 #endif
 
   return rv;

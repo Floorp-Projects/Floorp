@@ -81,7 +81,7 @@ public:
 
   NS_IMETHOD    PreventDefault();
 
-  NS_IMETHOD	GetText(nsString& aText);
+  NS_IMETHOD	  GetText(nsString& aText);
 
   NS_IMETHOD    GetInputRange(nsIDOMTextRangeList** aInputRange);
 
@@ -107,8 +107,10 @@ public:
 
   NS_IMETHOD    GetKeyCode(PRUint32* aKeyCode);
 
-  NS_IMETHOD    GetButton(PRUint32* aButton);
+  NS_IMETHOD    GetButton(PRUint16* aButton);
 
+  NS_IMETHOD    GetClickcount(PRUint16* aClickcount);  
+    
   // nsIDOMNSEvent interface
   NS_IMETHOD    GetLayerX(PRInt32* aLayerX);
 

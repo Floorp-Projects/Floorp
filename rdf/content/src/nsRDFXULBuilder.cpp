@@ -2683,9 +2683,9 @@ RDFXULBuilderImpl::CreateXULElement(nsINameSpace* aContainingNameSpace,
             nsIDOMEventTarget* target;
             document->QueryInterface(kIDOMEventReceiverIID, (void**) &target);
             if(target) {
-				target->AddEventListener("keypress", domEventListener, PR_FALSE, PR_TRUE); 
-				target->AddEventListener("keydown", domEventListener, PR_FALSE, PR_TRUE);  
-				target->AddEventListener("keyup", domEventListener, PR_FALSE, PR_TRUE);   
+				target->AddEventListener("keypress", domEventListener, PR_TRUE); 
+				target->AddEventListener("keydown", domEventListener, PR_TRUE);  
+				target->AddEventListener("keyup", domEventListener, PR_TRUE);   
 			}
 			NS_RELEASE(target);
         }

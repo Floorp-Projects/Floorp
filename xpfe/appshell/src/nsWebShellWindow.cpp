@@ -1336,7 +1336,7 @@ nsWebShellWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupCont
   NS_IF_RELEASE(popupRoot);
   nsCOMPtr<nsIDOMFocusListener> blurListener = do_QueryInterface(popupListener);
   nsCOMPtr<nsIDOMEventTarget> targetWindow = do_QueryInterface(domWindow);
-  targetWindow->AddEventListener("blur", blurListener, PR_FALSE, PR_FALSE);  
+  targetWindow->AddEventListener("blur", blurListener, PR_FALSE);  
        
   // (8) Set up the opener property
   domWindow->SetOpener(aWindow);

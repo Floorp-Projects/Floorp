@@ -86,9 +86,9 @@ nsMenuBarFrame::Init(nsIPresContext&  aPresContext,
   nsCOMPtr<nsIDOMEventReceiver> target = do_QueryInterface(doc);
   nsIDOMEventListener* domEventListener = (nsIDOMKeyListener*)mMenuBarListener;
 
-  target->AddEventListener("keypress", domEventListener, PR_FALSE, PR_TRUE); 
-	target->AddEventListener("keydown", domEventListener, PR_FALSE, PR_TRUE);  
-  target->AddEventListener("keyup", domEventListener, PR_FALSE, PR_TRUE);   
+  target->AddEventListener("keypress", domEventListener, PR_TRUE); 
+	target->AddEventListener("keydown", domEventListener, PR_TRUE);  
+  target->AddEventListener("keyup", domEventListener, PR_TRUE);   
   
   // The menu bar should also observe all mouse events that happen within it
   // (which it can do using bubbling).

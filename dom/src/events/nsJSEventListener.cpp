@@ -97,7 +97,7 @@ nsresult nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
   if (PR_TRUE == JS_CallFunctionValue(mContext, mJSObj, funval, 1, argv, &result)) {
     mScriptCX->ScriptEvaluated();
 	  if (JSVAL_IS_BOOLEAN(result) && JSVAL_TO_BOOLEAN(result) == JS_FALSE) {
-      return NS_ERROR_FAILURE;
+      aEvent->PreventDefault();
     }
     return NS_OK;
   }

@@ -66,14 +66,15 @@ enum UIEvent_slots {
   UIEVENT_CHARCODE = -11,
   UIEVENT_KEYCODE = -12,
   UIEVENT_BUTTON = -13,
-  NSUIEVENT_LAYERX = -14,
-  NSUIEVENT_LAYERY = -15,
-  NSUIEVENT_PAGEX = -16,
-  NSUIEVENT_PAGEY = -17,
-  NSUIEVENT_WHICH = -18,
-  NSUIEVENT_RANGEPARENT = -19,
-  NSUIEVENT_RANGEOFFSET = -20,
-  NSUIEVENT_RC = -21
+  UIEVENT_CLICKCOUNT = -14,
+  NSUIEVENT_LAYERX = -15,
+  NSUIEVENT_LAYERY = -16,
+  NSUIEVENT_PAGEX = -17,
+  NSUIEVENT_PAGEY = -18,
+  NSUIEVENT_WHICH = -19,
+  NSUIEVENT_RANGEPARENT = -20,
+  NSUIEVENT_RANGEOFFSET = -21,
+  NSUIEVENT_RC = -22
 };
 
 /***********************************************************************/
@@ -298,8 +299,24 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           //Need to throw error here
           return JS_FALSE;
         }
-        PRUint32 prop;
+        PRUint16 prop;
         if (NS_OK == a->GetButton(&prop)) {
+          *vp = INT_TO_JSVAL(prop);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case UIEVENT_CLICKCOUNT:
+      {
+        secMan->CheckScriptAccess(scriptCX, obj, "uievent.clickcount", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
+        PRUint16 prop;
+        if (NS_OK == a->GetClickcount(&prop)) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {
@@ -640,6 +657,7 @@ static JSPropertySpec UIEventProperties[] =
   {"charCode",    UIEVENT_CHARCODE,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"keyCode",    UIEVENT_KEYCODE,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"button",    UIEVENT_BUTTON,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"clickcount",    UIEVENT_CLICKCOUNT,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"layerX",    NSUIEVENT_LAYERX,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"layerY",    NSUIEVENT_LAYERY,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"pageX",    NSUIEVENT_PAGEX,    JSPROP_ENUMERATE | JSPROP_READONLY},

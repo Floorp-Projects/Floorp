@@ -140,7 +140,8 @@
 
 		  readonly	  attribute   unsigned long   charCode;
 		  readonly	  attribute   unsigned long   keyCode;
-		  readonly	  attribute   unsigned long   button;
+		  readonly	  attribute   unsigned short  button;
+      readonly    attribute   unsigned short  clickcount;
       };
 
       interface NSUIEvent {

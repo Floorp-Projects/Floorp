@@ -34,21 +34,21 @@ class nsIDOMEventTarget : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMEVENTTARGET_IID; return iid; }
 
-  NS_IMETHOD    AddEventListener(const nsString& aType, nsIDOMEventListener* aListener, PRBool aPostProcess, PRBool aUseCapture)=0;
+  NS_IMETHOD    AddEventListener(const nsString& aType, nsIDOMEventListener* aListener, PRBool aUseCapture)=0;
 
-  NS_IMETHOD    RemoveEventListener(const nsString& aType, nsIDOMEventListener* aListener, PRBool aPostProcess, PRBool aUseCapture)=0;
+  NS_IMETHOD    RemoveEventListener(const nsString& aType, nsIDOMEventListener* aListener, PRBool aUseCapture)=0;
 };
 
 
 #define NS_DECL_IDOMEVENTTARGET   \
-  NS_IMETHOD    AddEventListener(const nsString& aType, nsIDOMEventListener* aListener, PRBool aPostProcess, PRBool aUseCapture);  \
-  NS_IMETHOD    RemoveEventListener(const nsString& aType, nsIDOMEventListener* aListener, PRBool aPostProcess, PRBool aUseCapture);  \
+  NS_IMETHOD    AddEventListener(const nsString& aType, nsIDOMEventListener* aListener, PRBool aUseCapture);  \
+  NS_IMETHOD    RemoveEventListener(const nsString& aType, nsIDOMEventListener* aListener, PRBool aUseCapture);  \
 
 
 
 #define NS_FORWARD_IDOMEVENTTARGET(_to)  \
-  NS_IMETHOD    AddEventListener(const nsString& aType, nsIDOMEventListener* aListener, PRBool aPostProcess, PRBool aUseCapture) { return _to AddEventListener(aType, aListener, aPostProcess, aUseCapture); }  \
-  NS_IMETHOD    RemoveEventListener(const nsString& aType, nsIDOMEventListener* aListener, PRBool aPostProcess, PRBool aUseCapture) { return _to RemoveEventListener(aType, aListener, aPostProcess, aUseCapture); }  \
+  NS_IMETHOD    AddEventListener(const nsString& aType, nsIDOMEventListener* aListener, PRBool aUseCapture) { return _to AddEventListener(aType, aListener, aUseCapture); }  \
+  NS_IMETHOD    RemoveEventListener(const nsString& aType, nsIDOMEventListener* aListener, PRBool aUseCapture) { return _to RemoveEventListener(aType, aListener, aUseCapture); }  \
 
 
 #endif // nsIDOMEventTarget_h__

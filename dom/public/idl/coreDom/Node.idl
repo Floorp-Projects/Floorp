@@ -46,6 +46,6 @@
  /* IID: { 0x1c773b30, 0xd1cf, 0x11d2, \
   { 0xbd, 0x95, 0x00, 0x80, 0x5f, 0x8a, 0xe3, 0xf4 } } */
 
-	void	addEventListener(in DOMString type, in function EventListener listener, in boolean postProcess, in boolean useCapture);
-	void	removeEventListener(in DOMString type, in function EventListener listener, in boolean postProcess, in boolean useCapture);
+	void	addEventListener(in DOMString type, in function EventListener listener, in boolean useCapture);
+	void	removeEventListener(in DOMString type, in function EventListener listener, in boolean useCapture);
  };

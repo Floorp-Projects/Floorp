@@ -619,9 +619,9 @@ public:
 
     // nsIDOMEventTarget interface
     NS_IMETHOD AddEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
-                              PRBool aPostProcess, PRBool aUseCapture);
+                                PRBool aUseCapture);
     NS_IMETHOD RemoveEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
-                                 PRBool aPostProcess, PRBool aUseCapture);
+                                   PRBool aUseCapture);
 
     // nsIDOMDocument interface
     NS_IMETHOD    GetDoctype(nsIDOMDocumentType** aDoctype);
@@ -2325,6 +2325,7 @@ XULDocumentImpl::HandleDOMEvent(nsIPresContext& aPresContext,
 
   if (NS_EVENT_FLAG_INIT == aFlags) {
     aDOMEvent = &domEvent;
+    aEvent->flags = NS_EVENT_FLAG_NONE;
   }
   
   //Capturing stage
@@ -2337,7 +2338,8 @@ XULDocumentImpl::HandleDOMEvent(nsIPresContext& aPresContext,
   }
   
   //Local handling stage
-  if (mListenerManager) {
+  if (mListenerManager && !(aEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH)) {
+    aEvent->flags = aFlags;
     mListenerManager->HandleEvent(aPresContext, aEvent, aDOMEvent, aFlags, aEventStatus);
   }
 
@@ -3933,8 +3935,8 @@ XULDocumentImpl::Init(void)
     nsCOMPtr<nsIDOMEventListener> focusTracker = do_QueryInterface(mFocusTracker);
     if (focusTracker) {
       // Take the focus tracker and add it as an event listener for focus and blur events.
-        AddEventListener("focus", focusTracker, PR_FALSE, PR_TRUE);
-        AddEventListener("blur", focusTracker, PR_FALSE, PR_TRUE);
+        AddEventListener("focus", focusTracker, PR_TRUE);
+        AddEventListener("blur", focusTracker, PR_TRUE);
     }
 
     return NS_OK;
@@ -4273,13 +4275,12 @@ XULDocumentImpl::RemoveEventListenerByIID(nsIDOMEventListener *aListener, const 
 
 NS_IMETHODIMP
 XULDocumentImpl::AddEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
-                                 PRBool aPostProcess, PRBool aUseCapture)
+                                 PRBool aUseCapture)
 {
   nsIEventListenerManager *manager;
 
   if (NS_OK == GetListenerManager(&manager)) {
-    PRInt32 flags = (aPostProcess ? NS_EVENT_FLAG_POST_PROCESS : NS_EVENT_FLAG_NONE) |
-                    (aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE);
+    PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
 
     manager->AddEventListenerByType(aListener, aType, flags);
     NS_RELEASE(manager);
@@ -4290,11 +4291,10 @@ XULDocumentImpl::AddEventListener(const nsString& aType, nsIDOMEventListener* aL
 
 NS_IMETHODIMP
 XULDocumentImpl::RemoveEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
-                                    PRBool aPostProcess, PRBool aUseCapture)
+                                    PRBool aUseCapture)
 {
   if (mListenerManager) {
-    PRInt32 flags = (aPostProcess ? NS_EVENT_FLAG_POST_PROCESS : NS_EVENT_FLAG_NONE) |
-                    (aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE);
+    PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
 
     mListenerManager->RemoveEventListenerByType(aListener, aType, flags);
     return NS_OK;
