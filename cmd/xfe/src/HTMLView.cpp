@@ -88,10 +88,10 @@ extern "C" {
   int fe_GetURL(MWContext *context, URL_Struct *url, Boolean skip_get_url);
   CL_Compositor *fe_create_compositor(MWContext *context);
   MWContext *fe_GetFocusGridOfContext (MWContext *context);
-  fe_back_cb (Widget widget, XtPointer closure, XtPointer call_data);
-  fe_forward_cb (Widget widget, XtPointer closure, XtPointer call_data);
-  fe_home_cb (Widget widget, XtPointer closure, XtPointer call_data);
-  fe_abort_cb (Widget widget, XtPointer closure, XtPointer call_data);
+  void fe_back_cb (Widget widget, XtPointer closure, XtPointer call_data);
+  void fe_forward_cb (Widget widget, XtPointer closure, XtPointer call_data);
+  void fe_home_cb (Widget widget, XtPointer closure, XtPointer call_data);
+  void fe_abort_cb (Widget widget, XtPointer closure, XtPointer call_data);
   void fe_save_as_cb (Widget widget, XtPointer closure, XtPointer call_data);
   void fe_save_top_frame_as_cb (Widget widget, XtPointer closure,
                                 XtPointer call_data);
@@ -115,7 +115,7 @@ extern "C" {
   void fe_map_notify_eh (Widget w, XtPointer closure, XEvent *ev, Boolean *cont);
   void fe_sec_logo_cb (Widget widget, XtPointer closure, XtPointer call_data);
 #ifdef EDITOR
-  fe_editor_edit_cb(Widget widget, XtPointer closure, XtPointer call_data);
+  void fe_editor_edit_cb(Widget widget, XtPointer closure, XtPointer call_data);
 #endif
   void fe_doc_enc_cb(Widget widget, XtPointer closure, XtPointer call_data);
 
