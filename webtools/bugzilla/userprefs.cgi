@@ -141,28 +141,33 @@ sub DoEmail {
     # warnings. Any suitably large number would do.
     my %emailflags = split(/~/, $flagstring, 255);
 
-    $vars->{'excludeself'} = 0;
-
+    # Determine the value of the "excludeself" global email preference.
+    # Note that the value of "excludeself" is assumed to be off if the
+    # preference does not exist in the user's list, unlike other 
+    # preferences whose value is assumed to be on if they do not exist.
+    if (exists($emailflags{'excludeself'}) 
+        && $emailflags{'excludeself'} eq 'on')
+    {
+        $vars->{'excludeself'} = 1;
+    }
+    else {
+        $vars->{'excludeself'} = 0;
+    }
+    
     # Parse the info into a hash of hashes; the first hash keyed by role,
-    # the second by reason, and the value being 1 or 0 (undef).
-    foreach my $key (keys %emailflags) {
-        # ExcludeSelf is special.
-        if ($key eq 'ExcludeSelf' && $emailflags{$key} eq 'on') {
-            $vars->{'excludeself'} = 1;
-            next;
+    # the second by reason, and the value being 1 or 0 for (on or off).
+    # Preferences not existing in the user's list are assumed to be on.
+    foreach my $role (@roles) {
+        $vars->{$role} = {};
+        foreach my $reason (@reasons) {
+            my $key = "email$role$reason";
+            if (!exists($emailflags{$key}) || $emailflags{$key} eq 'on') {
+                $vars->{$role}{$reason} = 1;
+            }
+            else {
+                $vars->{$role}{$reason} = 0;
+            }
         }
-
-        # All other keys match this regexp.
-        $key =~ /email([A-Z]+[a-z]+)([A-Z]+[a-z]*)/;
-        
-        # Create a new hash if we don't have one...
-        if (!defined($vars->{$1})) {
-            $vars->{$1} = {};
-        }
-        
-        if ($emailflags{$key} eq "on") {
-            $vars->{$1}{$2} = 1;
-        }            
     }
 }
 
