@@ -2,45 +2,43 @@
   menulist 
     {
       -moz-binding        : url("chrome://global/skin/menulistBindings.xml#menulist");
-      border-left         : 1px solid threedshadow;
-      border-top          : 1px solid threedshadow;
-      border-right        : 1px solid threedhighlight;
-      border-bottom       : 1px solid threedhighlight;
-      background-color    : window;
-      color               : menutext;
-      font                : pull-down-menu;
+      border-left         : 1px solid ThreeDShadow;
+      border-top          : 1px solid ThreeDShadow;
+      border-right        : 1px solid ThreeDHighlight;
+      border-bottom       : 1px solid ThreeDHighlight;
+      background-color    : -moz-field;
+      color               : WindowText;
       margin              : 1px 5px 2px 5px;
     }
     
   menulist[disabled="true"]
     {
-      background-color    : threedface;
+      background-color    : ThreeDFace;
+      color               : GrayText;
     }
     
 /* icon display frame */
   .menulist-internal-box
     {
-      border-left         : 1px solid threeddarkshadow;
-      border-top          : 1px solid threeddarkshadow;
-      border-right        : 1px solid threedface;
-      border-bottom       : 1px solid threedface;
+      border-left         : 1px solid ThreeDDarkShadow;
+      border-top          : 1px solid ThreeDDarkShadow;
+      border-right        : 1px solid ThreeDLightShadow;
+      border-bottom       : 1px solid ThreeDLightShadow;
       -moz-user-focus     : ignore;
     }  
 
   .menulist-display-box,
   menulist[open="true"]:focus > .menulist-internal-box > .menulist-display-box
     {
-      border              : 1px solid window;
+      border              : 1px solid transparent;
       margin              : 1px;
-      background-color    : window;
-      color               : menutext;
     }     
     
   menulist:focus > .menulist-internal-box > .menulist-display-box
     {
-      border              : 1px dotted #F5DB95;
-      background-color    : highlight;
-      color               : highlighttext;
+      border              : 1px dotted HighlightText;
+      background-color    : Highlight;
+      color               : HighlightText;
     }
       
 /* text display frame */
@@ -53,19 +51,19 @@
 /* drop marker display frame */
   .menulist-dropmarker-box-1
     {
-      border-top          : 1px solid threedface;
-      border-left         : 1px solid threedface;
-      border-bottom       : 1px solid threeddarkshadow;
-      border-right        : 1px solid threeddarkshadow;
-      background-color    : threedface;
+      border-top          : 1px solid ThreeDFace;
+      border-right        : 1px solid ThreeDDarkShadow;
+      border-bottom       : 1px solid ThreeDDarkShadow;
+      border-left         : 1px solid ThreeDFace;
+      background-color    : ThreeDFace;
     }
   
   .menulist-dropmarker-box-2
     {
-      border-top          : 1px solid threedhighlight;
-      border-left         : 1px solid threedhighlight;
-      border-bottom       : 1px solid threedshadow;
-      border-right        : 1px solid threedshadow;
+      border-top          : 1px solid ThreeDHighlight;
+      border-right        : 1px solid ThreeDShadow;
+      border-bottom       : 1px solid ThreeDShadow;
+      border-left         : 1px solid ThreeDHighlight;
       padding             : 2px 1px 2px 1px;
     }
 
@@ -77,35 +75,51 @@
   .menulist-dropmarker[disabled="true"]
     {
       list-style-image    : url("chrome://global/skin/scroll-down-disabled.gif");
-      padding             : 2px;
     }
 
   menulist:hover:active > .menulist-internal-box > .menulist-dropmarker-box-1[open="true"]
     { 
-      border              : 1px solid threedshadow;
+      border              : 1px solid ThreeDShadow;
     }
     
   menulist:hover:active > .menulist-internal-box > .menulist-dropmarker-box-1 > .menulist-dropmarker-box-2[open="true"]
     {
-      border              : 1px solid threedface;
+      border              : 1px solid ThreeDFace;
       padding             : 3px 0px 1px 2px;
     }
 
 /* rules for popups and separators associated with menulists */
+
   menulist > menupopup 
     {
       -moz-binding        : url("chrome://global/skin/menulistBindings.xml#menulistpopup");
-      background-color    : window;
-      border              : 1px solid #000000;
+      border              : 1px solid WindowText;
       min-width           : 0px;
+      background-color    : -moz-field;
     }
 
-  menulist > menupopup > menuitem 
+  menulist > menupopup > menuitem,
+  menulist > menupopup > menu
     {
+      border              : 1px solid transparent;
       padding             : 0px 7px !important;
       min-width           : 0px;  /* should be in content*/
       max-width           : none; /* should be in content*/
-      border              : 1px solid window;
+      font                : message-box;
+      color               : WindowText;
+    }
+
+  menulist > menupopup > menuitem > .menu-iconic-accel,
+  menulist > menupopup > menuitem > .menu-accel,
+  menulist > menupopup > menuitem > .menu-text,
+  menulist > menupopup > menuitem > .menu-iconic-text,
+  menulist > menupopup > menu > .menu-text,
+  menulist > menupopup > menu > .menu-accel,
+  menulist > menupopup > menu > .menu-iconic-text,
+  menulist > menupopup > menu > .menu-iconic-accel
+    {
+      margin-top          : 0px;
+      margin-bottom       : 0px;
     }
 
   menulist > menupopup > menuitem[menuactive="true"],
@@ -122,29 +136,34 @@
       border              : none;
     }
 
+  menulist > menupopup > menuseparator
+    {
+      border-top: none;
+      border-bottom: 1px solid WindowText;
+    }
+    
 /**
  * <menulist>s for things like mailnews addressing widget
- **/    
+ **/
+ 
   .menulist-compact
     {
       -moz-binding        : url("chrome://global/skin/menulistBindings.xml#menulist-compact");
-      -moz-user-focus     : ignore;  /* we don't take focus */
-      border-left         : 1px solid threedhighlight;
-      border-top          : 1px solid threedhighlight;
-      border-right        : 1px solid threeddarkshadow;
-      border-bottom       : 1px solid threeddarkshadow;
+      margin              : 0px;
+      border-top          : 1px solid ThreeDHighlight;
+      border-right        : 1px solid ThreeDDarkShadow;
+      border-bottom       : 1px solid ThreeDDarkShadow;
+      border-left         : 1px solid ThreeDHighlight;
+      background-color    : ThreeDFace;
+      -moz-user-focus     : ignore;  
     }    
-    
-  .menulist-compact-text
-    {
-      margin-right        : 3px;
-    }  
     
   .menulist-compact-internal-box
     {
-      border-right        : 1px solid threedshadow;
-      border-bottom       : 1px solid threedshadow;
-      background-color    : threedface;
+      border-top          : 1px solid ThreeDLightShadow;
+      border-right        : 1px solid ThreeDShadow;
+      border-bottom       : 1px solid ThreeDShadow;
+      border-left         : 1px solid ThreeDLightShadow;
     }
     
   .menulist-compact-dropmarker
@@ -153,28 +172,28 @@
       margin-left         : 2px;
     }
     
+  .menulist-compact-text
+    {
+      margin-right        : 3px;
+    }  
+
+  .menulist-compact:hover:active,
+  .menulist-compact[open="true"]
+    {
+      border              : 1px solid ThreeDDarkShadow;
+      background-color    : ThreeDShadow;
+      color               : ThreeDHighlight;
+    }
+
+  .menulist-compact:hover:active > .menulist-compact-internal-box,
+  .menulist-compact[open="true"] > .menulist-compact-internal-box 
+    {
+      border              : 1px solid transparent;
+    }
     
 /**
- * Editable menulitss (comboboxes) 
+ * Editable menulists (comboboxes) 
  */
- /*
-menulist[editable="true"]
-  {
-    border-left           : 1px solid threedshadow;
-    border-top            : 1px solid threedshadow;
-    border-right          : 1px solid threedhighlight;
-    border-bottom         : 1px solid threedhighlight;
-  }  
-  
-.menulist-editable-box
-  {
-    border-left           : 1px solid threeddarkshadow;
-    border-top            : 1px solid threeddarkshadow;
-    border-right          : 1px solid threedface;
-    border-bottom         : 1px solid threedface;
-  }  
- */
-
   
 menulist[editable="true"] 
   {

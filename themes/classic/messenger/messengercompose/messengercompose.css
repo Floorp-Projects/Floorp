@@ -24,43 +24,56 @@
 @namespace html url("http://www.w3.org/1999/xhtml"); /* namespace for HTML elements */
 
 /* addressing widget */
+  
+#addressingWidgetTree
+  {
+    height                : 80px;
+    width                 : 0px;
+    -moz-user-focus       : none;
+  }  
+  
+#addressingWidgetTree > .tree-container-treerows
+  {
+    border-left: none;
+  }
+
+#listcol-addressingWidget 
+  {
+    width                 : 9em;
+    border-left           : 1px solid ThreeDDarkShadow;
+    border-right          : 1px solid #CACAFF;
+  }
+  
+#addressingWidgetTree > treechildren > treeitem > treerow,
+#addressingWidgetTree > treechildren > treeitem[selected="true"] > treerow {
+  border                  : none;
+  background-color        : inherit;
+  color                   : inherit;
+}
+
 .treecell-addressingWidget
   {
+  	vertical-align        : middle;
     border-bottom         : 1px solid #CACAFF;
     padding               : 0px !important;
   }
-
-#addressingWidgetTree > treechildren > treeitem > treerow,
-#addressingWidgetTree > treechildren > treeitem[selected="true"] > treerow {
-  border: none;
-  background-color: #ffffff;
-  color: #000000;
-}
-
-.treecell-addressingWidget {
-	vertical-align: middle;
-}
-
-#listcol-addressingWidget {
-  width: 100px;
-}
-
-.aw-menulist
-  {
-    margin                : 0px;
-  }  
   
+.treecell-addressingWidget:first-child 
+  {
+    border-bottom         : none;
+  }
+
+.dummy-row-cell:first-child
+  {
+    border-bottom         : 1px solid #CACAFF;
+  }
+
 .person-icon 
   {
     list-style-image      : url("chrome://messenger/skin/abcard.gif");
     margin                : 0px 3px 0px 3px;
   }
   
-.textfield-addressingWidget
-  {
-    margin                : 0px;
-  }
-
 #msgheaderstoolbar-box
   {
     margin-top            : 2px;
@@ -68,7 +81,7 @@
   
 #button-send 
   {
-          list-style-image    : url("chrome://messenger/skin/messengercompose/send.gif");
+    list-style-image      : url("chrome://messenger/skin/messengercompose/send.gif");
   }
 
 #button-send[disabled="true"],
@@ -223,22 +236,22 @@
 #compose-toolbar-sizer
   {
     height                : 3px;
-    border-top            : 1px solid threedhighlight;
+    border-top            : 1px solid ThreeDHighlight;
   }    
   
 #content-frame
   {
-    border-left           : 1px solid threeddarkshadow;
-    border-top            : 1px solid threeddarkshadow;
-    border-right          : 1px solid threedface;
-    border-bottom         : 1px solid threedface;
+    border-left           : 1px solid ThreeDDarkShadow;
+    border-top            : 1px solid ThreeDDarkShadow;
+    border-right          : 1px solid ThreeDFace;
+    border-bottom         : 1px solid ThreeDFace;
   }
 
 #appcontent
   {
-    border-left           : 1px solid threeddarkshadow;
-    border-right          : 1px solid threedhighlight;
-    border-top            : 1px solid threedshadow;
+    border-left           : 1px solid ThreeDDarkShadow;
+    border-right          : 1px solid ThreeDHighlight;
+    border-top            : 1px solid ThreeDShadow;
   }  
 
 #attachmentbucket-sizer
@@ -250,14 +263,7 @@
   {
     margin-right          : 0px;
   }  
-  
-#addressingWidgetTree
-  {
-    height: 61px;
-    width: 0px;
-    -moz-user-focus       : none;
-  }  
-  
+
 #attachmentBucket
   {
     margin-left           : 0px;
