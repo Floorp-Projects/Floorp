@@ -52,7 +52,7 @@ include $(topsrcdir)/config/rules.mk
 
 #### NEXT FEW LINES ARE ONLY FOR TESTING -- full build!
 #MOZ_MAIL_NEWS	= 1
-#EDITOR		= 1
+#MOZ_EDITOR	= 1
 #MOZ_OFFLINE	= 1
 #MOZ_LOC_INDEP	= 1
 #MOZ_TASKBAR	= 1
@@ -108,7 +108,7 @@ NICONS += \
 	images/Desk_MsgCompose.gif \
 	images/Desk_NewMail.gif
 
-ifdef EDITOR
+ifdef MOZ_EDITOR
 ICONS += $(wildcard $(srcdir)/images/e*.gif $(srcdir)/images/Desk_Composer.gif)
 endif
 

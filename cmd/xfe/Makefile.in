@@ -477,7 +477,7 @@ BASIC_LIBS	+= \
 		  $(DIST)/lib/libjmd.a \
 		  $(NULL)
 
-ifdef EDITOR
+ifdef MOZ_EDITOR
 BASIC_LIBS	+= $(DIST)/lib/libedtplug.a
 endif
 
@@ -516,7 +516,7 @@ BASIC_LIBS      += $(DIST)/lib/liboji.a
 
 ifdef NSJVM
 
-ifdef EDITOR
+ifdef MOZ_EDITOR
 BASIC_LIBS	+= $(DIST)/lib/libedtplug.a
 endif
 BASIC_LIBS      += $(DIST)/lib/libsoftupdate.a
