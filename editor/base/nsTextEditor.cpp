@@ -523,6 +523,21 @@ NS_IMETHODIMP nsTextEditor::ScrollIntoView(PRBool aScrollToBegin)
   return Inherited::ScrollIntoView(aScrollToBegin);
 }
 
+NS_IMETHODIMP nsTextEditor::Cut()
+{
+  return Inherited::Cut();
+}
+
+NS_IMETHODIMP nsTextEditor::Copy()
+{
+  return Inherited::Copy();
+}
+
+NS_IMETHODIMP nsTextEditor::Paste()
+{
+  return Inherited::Paste();
+}
+
 NS_IMETHODIMP nsTextEditor::Insert(nsIInputStream *aInputStream)
 {
   return NS_ERROR_NOT_IMPLEMENTED;

@@ -215,6 +215,25 @@ public:
   /** select the entire contents of the document */
   NS_IMETHOD SelectAll()=0;
 
+  /** cut the currently selected text, putting it into the OS clipboard
+    * What if no text is selected?
+    * What about mixed selections?
+    * What are the clipboard formats?
+   */
+  NS_IMETHOD Cut()=0;
+
+  /** copy the currently selected text, putting it into the OS clipboard
+    * What if no text is selected?
+    * What about mixed selections?
+    * What are the clipboard formats?
+   */
+  NS_IMETHOD Copy()=0;
+  
+  /** paste the text in the OS clipboard at the cursor position, replacing
+    * the selected text (if any)
+   */
+  NS_IMETHOD Paste()=0;
+  
   /** scroll the viewport up (towards the beginning of the document.)
     * @param aIncrement  the amount to scroll
     *                    legal values are nsIEditor::Line, nsIEditor::Page

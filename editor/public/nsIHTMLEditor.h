@@ -71,6 +71,9 @@ public:
   NS_IMETHOD ScrollUp(nsIAtom *aIncrement)=0;
   NS_IMETHOD ScrollDown(nsIAtom *aIncrement)=0;
   NS_IMETHOD ScrollIntoView(PRBool aScrollToBegin)=0;
+  NS_IMETHOD Cut()=0;
+  NS_IMETHOD Copy()=0;
+  NS_IMETHOD Paste()=0;
 
   NS_IMETHOD Insert(nsIInputStream *aInputStream)=0;
   NS_IMETHOD OutputText(nsString& aOutputString)=0;
