@@ -603,7 +603,7 @@ InstallAddSubcomponent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
 
     if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, argv))
     {
-      JS_ReportError(cx, "GetFolder:Invalid Parameter");
+      JS_ReportError(cx, "AddSubcomponent:Invalid Parameter");
       return JS_FALSE; 
     }
 
@@ -931,16 +931,14 @@ InstallGetComponentFolder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   {
     //  public int GetComponentFolder ( String registryName,
     //                                  String subDirectory);
+    ConvertJSValToStr(b0, cx, argv[0]);
     ConvertJSValToStr(b1, cx, argv[1]);
-    if(JSVAL_IS_STRING(argv[0])) // check if the first argument is a string 
-    {
-      ConvertJSValToStr(b0, cx, argv[0]);
-      if(NS_OK != nativeThis->GetComponentFolder(b0, b1, &folder))
-        return JS_FALSE;
-    }
 
-    if(nsnull != folder)
+    if(NS_OK != nativeThis->GetComponentFolder(b0, b1, &folder))
+    {
+      // error!
       return JS_FALSE;
+    }
   }
   else if(argc >= 1)
   {
@@ -950,11 +948,9 @@ InstallGetComponentFolder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     if(NS_OK != nativeThis->GetComponentFolder(b0, &folder))
     {
+      // error!
       return JS_FALSE;
     }
-
-    if(nsnull != folder)
-      return JS_FALSE;
   }
   else
   {
@@ -962,6 +958,10 @@ InstallGetComponentFolder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     return JS_FALSE;
   }
 
+  // if we couldn't find one return null rval from here
+  if(nsnull == folder)
+    return JS_TRUE;
+  
   /* Now create the new JSObject */
   JSObject* fileSpecObject;
 
