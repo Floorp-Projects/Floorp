@@ -141,7 +141,7 @@ public:
    *   percent         (n%),
    *   or proportional (n*)
    */
-  static void nsHTMLTagContent::ParseValueOrPercentOrProportional(const nsString& aString,
+  static void ParseValueOrPercentOrProportional(const nsString& aString,
     																										          nsHTMLValue& aResult, 
 																												          nsHTMLUnit aValueUnit);
 
