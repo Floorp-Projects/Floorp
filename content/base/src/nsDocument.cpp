@@ -758,7 +758,7 @@ nsresult nsDocument::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     return NS_OK;
   }
   if (aIID.Equals(NS_GET_IID(nsIDOMDocumentXBL))) {
-    nsIDOMDocumentView* tmp = this;
+    nsIDOMDocumentXBL* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
     return NS_OK;
