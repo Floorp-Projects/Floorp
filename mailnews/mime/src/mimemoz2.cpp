@@ -1942,9 +1942,6 @@ mimeSetNewURL(nsMIMESession *stream, char *url)
   return NS_OK;
 }
 
-/* This is the next generation string retrieval call */
-static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
-
 #define     MIME_URL "chrome://messenger/locale/mime.properties"
 
 extern "C" 
@@ -1962,7 +1959,7 @@ MimeGetStringByID(PRInt32 stringID)
     propertyURL = MIME_URL;
 
     nsCOMPtr<nsIStringBundleService> sBundleService = 
-             do_GetService(kStringBundleServiceCID, &res); 
+             do_GetService(NS_STRINGBUNDLE_CONTRACTID, &res); 
     if (NS_SUCCEEDED(res) && (nsnull != sBundleService)) 
     {
       res = sBundleService->CreateBundle(propertyURL, getter_AddRefs(stringBundle));

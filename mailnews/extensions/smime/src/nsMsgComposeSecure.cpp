@@ -70,8 +70,6 @@ static char *mime_make_separator(const char *prefix);
 #include "nsMsgMimeCID.h"
 #include "nsIMimeConverter.h"
 
-/* This is the next generation string retrieval call */
-
 MimeEncoderData *
 MIME_B64EncoderInit(nsresult (*PR_CALLBACK output_fn) (const char *buf, PRInt32 size, void *closure), void *closure) 
 {

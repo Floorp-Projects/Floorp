@@ -207,7 +207,6 @@ nsresult
 HTMLSanitize(const nsString& inString, nsString& outString,
              PRUint32 flags, const nsAString& allowedTags);
 
-/* This is the next generation string retrieval call */
 extern "C" char             *MimeGetStringByID(PRInt32 stringID);
 
 // Utility to create a nsIURI object...
