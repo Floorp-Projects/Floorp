@@ -27,8 +27,26 @@ function SubscribeOnLoad()
 		var folder = GetMsgFolderFromUri(window.arguments[0].preselectedURI);
 		var server = folder.server;
 		
-		gSubscribetree.setAttribute('ref',server.serverURI);
+		gSubscribetree.setAttribute('ref','urn:' + server.hostName);
 		gCurrentServer.value = server.hostName;	// use gServer.prettyName?
+
+		dump("for each child of news://" + server.hostName + " set subscribed to true in the datasource\n");
+
+		var folders = folder.GetSubFolders();
+		
+		if (folders) {
+			try {
+				while (true) {
+					var i = folders.currentItem();
+					var f = i.QueryInterface(Components.interfaces.nsIMsgFolder);
+					dump(f.URI+ "\n");
+					folders.next();
+				}
+			}
+			catch (ex) {
+				dump("no more subfolders\n");
+			}
+		}
 	}
 }
 
@@ -38,8 +56,8 @@ function subscribeOK()
 	if (top.okCallback) {
 		// we stored the uri as the ref, now get it back
     	var tree = document.getElementById('subscribetree');
-		var uri = tree.getAttribute('ref');
-		top.okCallback(uri);
+		//var uri = tree.getAttribute('ref');
+		//top.okCallback(uri);
 	}
 	return true;
 }
