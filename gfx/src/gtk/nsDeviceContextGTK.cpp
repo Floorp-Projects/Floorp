@@ -35,11 +35,19 @@
 #include "nsGfxPSCID.h"
 #include "nsIDeviceContextPS.h"
 
+#ifdef USE_XPRINT
+#include "nsGfxXPrintCID.h"
+#include "nsIDeviceContextXPrint.h"
+#endif
+
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
 
 #include "nsIScreenManager.h"
 
+#ifdef USE_XPRINT
+#include "nsDeviceContextSpecG.h"
+#endif
 
 #define NS_TO_GDK_RGB(ns) (ns & 0xff) << 16 | (ns & 0xff00) | ((ns >> 16) & 0xff)
 
@@ -412,6 +420,36 @@ NS_IMETHODIMP nsDeviceContextGTK::GetClientRect(nsRect &aRect)
 NS_IMETHODIMP nsDeviceContextGTK::GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
                                                       nsIDeviceContext *&aContext)
 {
+#ifdef USE_XPRINT
+  int method=-1;
+  nsDeviceContextSpecGTK* spec=(nsDeviceContextSpecGTK*)aDevice;
+  spec->GetPrintMethod(method);
+
+  if (method == 1) { // XPRINT
+    static NS_DEFINE_CID(kCDeviceContextXP, NS_DEVICECONTEXTXP_CID);
+    nsresult rv;
+    nsIDeviceContextXP *dcxp;
+  
+    rv = nsComponentManager::CreateInstance(kCDeviceContextXP,
+                                            nsnull,
+                                            NS_GET_IID(nsIDeviceContextXP),
+                                            (void **)&dcxp);
+
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't create XP Device context");
+  
+    dcxp->SetSpec(aDevice);
+    dcxp->InitDeviceContextXP((nsIDeviceContext*)aContext,
+                              (nsIDeviceContext*)this);
+
+    rv = dcxp->QueryInterface(NS_GET_IID(nsIDeviceContext),
+                              (void **)&aContext);
+
+    NS_RELEASE(dcxp);
+  
+    return rv;
+  }
+  // default/PS
+#endif
   static NS_DEFINE_CID(kCDeviceContextPS, NS_DEVICECONTEXTPS_CID);
   
   // Create a Postscript device context 
