@@ -403,6 +403,7 @@ nsMathMLmmultiscriptsFrame::Place(nsIPresContext*      aPresContext,
     PR_MAX(aDesiredSize.descent+maxSubScriptShift,baseSize.descent);
   aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
   aDesiredSize.width = mBoundingMetrics.width;
+  aDesiredSize.mBoundingMetrics = mBoundingMetrics;
 
   mReference.x = 0;
   mReference.y = aDesiredSize.ascent;

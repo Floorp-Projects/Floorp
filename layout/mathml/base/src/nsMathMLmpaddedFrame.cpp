@@ -428,6 +428,7 @@ nsMathMLmpaddedFrame::Reflow(nsIPresContext*          aPresContext,
   aDesiredSize.descent += depth - mBoundingMetrics.descent;
   aDesiredSize.width = mBoundingMetrics.width;
   aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
+  aDesiredSize.mBoundingMetrics = mBoundingMetrics;
 
   if (0 != dx || 0 != dy) {
     nsRect rect;

@@ -374,6 +374,7 @@ nsMathMLmfracFrame::Place(nsIPresContext*      aPresContext,
   aDesiredSize.descent = sizeDen.descent + denShift;
   aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
   aDesiredSize.width = mBoundingMetrics.width;
+  aDesiredSize.mBoundingMetrics = mBoundingMetrics;
 
   mReference.x = 0;
   mReference.y = aDesiredSize.ascent;

@@ -409,6 +409,7 @@ nsMathMLmoverFrame::Place(nsIPresContext*      aPresContext,
     PR_MIN(dxBase + bmBase.leftBearing, dxOver + bmOver.leftBearing);
   mBoundingMetrics.rightBearing = 
     PR_MAX(dxBase + bmBase.rightBearing, dxOver + bmOver.rightBearing);
+  aDesiredSize.mBoundingMetrics = mBoundingMetrics;
 
   if (aPlaceOrigin) {
     // place base

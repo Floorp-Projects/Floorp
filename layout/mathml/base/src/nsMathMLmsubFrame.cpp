@@ -245,6 +245,7 @@ nsMathMLmsubFrame::PlaceSubScript (nsIPresContext*      aPresContext,
     PR_MAX(baseSize.descent, subScriptSize.descent + actualSubScriptShift);
   aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
   aDesiredSize.width = bmBase.width + aScriptSpace + subScriptSize.width;
+  aDesiredSize.mBoundingMetrics = boundingMetrics;
 
   mathMLFrame->SetReference(nsPoint(0, aDesiredSize.ascent));
 
