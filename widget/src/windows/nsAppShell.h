@@ -50,7 +50,6 @@ class nsAppShell : public nsIAppShell
 
     NS_IMETHOD            SetDispatchListener(nsDispatchListener* aDispatchListener);
     NS_IMETHOD            Exit();
-    virtual void *        GetNativeData(PRUint32 aDataType);
 
   private:
     nsDispatchListener*     mDispatchListener;

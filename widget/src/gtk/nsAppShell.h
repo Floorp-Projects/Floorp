@@ -51,7 +51,6 @@ public:
                                       nsIWidget *aWidget, PRBool *aForWindow);
   NS_IMETHOD		Exit();
   NS_IMETHOD		SetDispatchListener(nsDispatchListener* aDispatchListener);
-  virtual void*	GetNativeData(PRUint32 aDataType);
 
 private:
   nsDispatchListener   *mDispatchListener;

@@ -227,17 +227,3 @@ nsAppShell::~nsAppShell()
 {
 }
 
-//-------------------------------------------------------------------------
-//
-// GetNativeData
-//
-//-------------------------------------------------------------------------
-void* nsAppShell::GetNativeData(PRUint32 aDataType)
-{
-  if (aDataType == NS_NATIVE_SHELL) {
-    return NULL;
-  }
-  return nsnull;
-}
-
-
