@@ -271,7 +271,7 @@ nsMsgComposeAndSend::Clear()
 	if (m_plaintext) 
   {
 		if (m_plaintext->mOutFile)
-			m_plaintext->mOutFile->close();
+			m_plaintext->mOutFile->Close();
 
 		if (m_plaintext->mFileSpec)
     {
@@ -357,8 +357,8 @@ nsMsgComposeAndSend::Clear()
 			PR_FREEIF (m_attachments [i].m_real_name);
 			PR_FREEIF (m_attachments [i].m_encoding);
 			PR_FREEIF (m_attachments [i].m_content_id);
-			if ( (m_attachments[i].mOutFile) && (m_attachments[i].mOutFile->is_open()) )
-          m_attachments[i].mOutFile->close();
+			if (m_attachments[i].mOutFile)
+          m_attachments[i].mOutFile->Close();
 			if (m_attachments[i].mFileSpec) 
       {
         // Only Delete the file if this variable is set!

@@ -42,9 +42,9 @@
 #include "nsIWebProgress.h"
 #include "nsMsgAttachmentHandler.h"
 #include "nsMsgSend.h"
+#include "nsIStreamConverterService.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-
 
 NS_IMPL_ISUPPORTS6(nsURLFetcher, nsIURLFetcher, nsIStreamListener, nsIURIContentListener, nsIInterfaceRequestor, nsIWebProgressListener, nsISupportsWeakReference)
 
@@ -61,13 +61,15 @@ nsURLFetcher::nsURLFetcher()
   NS_INIT_REFCNT();
 
   // Init member variables...
-  mOutStream = nsnull;
   mTotalWritten = 0;
+  mBuffer = nsnull;
+  mBufferSize = 0;
   mStillRunning = PR_TRUE;
   mCallback = nsnull;
-  mContentType = nsnull;
-  mCharset = nsnull;
   mOnStopRequestProcessed = PR_FALSE;
+
+  nsURLFetcherStreamConsumer *consumer = new nsURLFetcherStreamConsumer(this);
+  mConverter = do_QueryInterface(consumer);
 }
 
 nsURLFetcher::~nsURLFetcher()
@@ -77,8 +79,7 @@ nsURLFetcher::~nsURLFetcher()
 #endif
   mStillRunning = PR_FALSE;
   
-  PR_FREEIF(mContentType);
-  PR_FREEIF(mCharset);
+  PR_FREEIF(mBuffer);
   // Remove the DocShell as a listener of the old WebProgress...
   if (mLoadCookie) 
   {
@@ -127,18 +128,11 @@ nsURLFetcher::CanHandleContent(const char * aContentType,
                                 PRBool * aCanHandleContent)
 
 {
-  // if the content type is unknown, we should let the unknown decoder take care of it.
-  // we will be called back again with a better content type!
-  if (nsCRT::strcasecmp(aContentType, UNKNOWN_CONTENT_TYPE) == 0)
-    *aCanHandleContent = PR_FALSE;
-  else
-  {
     if (nsCRT::strcasecmp(aContentType, MESSAGE_RFC822) == 0)
       *aDesiredContentType = nsCRT::strdup("text/html");
 
     // since we explicilty loaded the url, we always want to handle it!
     *aCanHandleContent = PR_TRUE;
-  }
   return NS_OK;
 } 
 
@@ -150,9 +144,24 @@ nsURLFetcher::DoContent(const char * aContentType,
                       PRBool * aAbortProcess)
 {
   nsresult rv = NS_OK;
+
   if (aAbortProcess)
     *aAbortProcess = PR_FALSE;
   QueryInterface(NS_GET_IID(nsIStreamListener), (void **) aContentHandler);
+
+  /*
+    Check the content-type to see if we need to insert a converter
+  */
+  if (nsCRT::strcasecmp(aContentType, UNKNOWN_CONTENT_TYPE) == 0 ||
+        nsCRT::strcasecmp(aContentType, MULTIPART_MIXED_REPLACE) == 0 ||
+        nsCRT::strcasecmp(aContentType, MULTIPART_MIXED) == 0 ||
+        nsCRT::strcasecmp(aContentType, MULTIPART_BYTERANGES) == 0)
+  {
+    rv = InsertConverter(aContentType);
+    if (NS_SUCCEEDED(rv))
+      mConverterContentType = aContentType;
+  }
+
   return rv;
 }
 
@@ -216,31 +225,11 @@ nsresult
 nsURLFetcher::OnDataAvailable(nsIRequest *request, nsISupports * ctxt, nsIInputStream *aIStream, 
                               PRUint32 sourceOffset, PRUint32 aLength)
 {
-  PRUint32        readLen = aLength;
-  PRUint32        wroteIt;
-
-  if (!mOutStream)
-    return NS_ERROR_INVALID_ARG;
-
-  char *buf = (char *)PR_Malloc(aLength);
-  if (!buf)
-    return NS_ERROR_OUT_OF_MEMORY; /* we couldn't allocate the object */
-
-  // read the data from the input stram...
-  nsresult rv = aIStream->Read(buf, aLength, &readLen);
-  if (NS_FAILED(rv)) return rv;
-
-  // write to the output file...
-  wroteIt = mOutStream->write(buf, readLen);
-  PR_FREEIF(buf);
-
-  if (wroteIt != readLen)
+  /* let our converter or consumer process the data */
+  if (!mConverter)
     return NS_ERROR_FAILURE;
-  else
-  {
-    mTotalWritten += wroteIt;
-    return NS_OK;
-  }
+
+  return mConverter->OnDataAvailable(request, ctxt, aIStream, sourceOffset, aLength);
 }
 
 
@@ -248,6 +237,7 @@ nsURLFetcher::OnDataAvailable(nsIRequest *request, nsISupports * ctxt, nsIInputS
 nsresult
 nsURLFetcher::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 {
+  /* check if the user has canceld the operation */
   nsMsgAttachmentHandler *attachmentHdl = (nsMsgAttachmentHandler *)mTagData;
   if (attachmentHdl)
   {
@@ -268,23 +258,34 @@ nsURLFetcher::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
     attachmentHdl->mRequest = request;
   }
 
+  /* call our converter or consumer */
+  if (mConverter)
+    return mConverter->OnStartRequest(request, ctxt);
+
   return NS_OK;
 }
 
 nsresult
-nsURLFetcher::OnStopRequest(nsIRequest *request, nsISupports * /* ctxt */, nsresult aStatus)
+nsURLFetcher::OnStopRequest(nsIRequest *request, nsISupports * ctxt, nsresult aStatus)
 {
 #if defined(DEBUG_ducarroz)
   printf("nsURLFetcher::OnStopRequest()\n");
 #endif
 
+  nsresult rv = NS_OK;
+
   // it's possible we could get in here from the channel calling us with an OnStopRequest and from our
   // onStatusChange method (in the case of an error). So we should protect against this to make sure we
   // don't process the on stop request twice...
 
-  if (mOnStopRequestProcessed) return NS_OK;
+  if (mOnStopRequestProcessed)
+    return NS_OK;
   mOnStopRequestProcessed = PR_TRUE;
   
+  /* first, call our converter or consumer */
+  if (mConverter)
+    rv = mConverter->OnStopRequest(request, ctxt, aStatus);
+
   nsMsgAttachmentHandler *attachmentHdl = (nsMsgAttachmentHandler *)mTagData;
   if (attachmentHdl)
     attachmentHdl->mRequest = nsnull;
@@ -294,70 +295,52 @@ nsURLFetcher::OnStopRequest(nsIRequest *request, nsISupports * /* ctxt */, nsres
   //
   mStillRunning = PR_FALSE;
 
-  // First close the output stream...
+  // time to close the output stream...
   if (mOutStream)
   {
-    mOutStream->close();
+    mOutStream->Close();
     mOutStream = nsnull;
-  }
-
   
-  // Check the content type!
-  char    *contentType = nsnull;
-  char    *charset = nsnull;
-
-  nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(request);
-  if(!aChannel) return NS_ERROR_FAILURE;
-
-  if (NS_SUCCEEDED(aChannel->GetContentType(&contentType)) && contentType)
+    /* In case of multipart/x-mixed-replace, we need to truncate the file to the current part size */
+    if (PL_strcasecmp(mConverterContentType, MULTIPART_MIXED_REPLACE) == 0)
   {
-    if (PL_strcasecmp(contentType, UNKNOWN_CONTENT_TYPE))
-    {
-      mContentType = contentType;
-    }
-  }
-
-  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
-  if (httpChannel)
-  {
-    if (NS_SUCCEEDED(httpChannel->GetCharset(&charset)) && charset)
-    {
-      mCharset = charset;
+      PRInt64 fileSize;
+      LL_I2L(fileSize, mTotalWritten);
+      mLocalFile->SetFileSize(fileSize);
     }
   }
 
   // Now if there is a callback, we need to call it...
   if (mCallback)
-    mCallback (aStatus, mContentType, mCharset, mTotalWritten, nsnull, mTagData);
+    mCallback (aStatus, (const char *)mContentType, (const char *)mCharset, mTotalWritten, nsnull, mTagData);
 
   // Time to return...
   return NS_OK;
 }
 
 nsresult 
-nsURLFetcher::Initialize(nsOutputFileStream *fOut,
+nsURLFetcher::Initialize(nsILocalFile *localFile, 
+                         nsIFileOutputStream *outputStream,
                          nsAttachSaveCompletionCallback cb, 
                          void *tagData)
 {
-  if (!fOut)
+  if (!outputStream || !localFile)
     return NS_ERROR_INVALID_ARG;
 
-  if (!fOut->is_open())
-    return NS_ERROR_FAILURE;
-
-  mOutStream = fOut;
+  mOutStream = outputStream;
+  mLocalFile = localFile;
   mCallback = cb;     //JFD: Please, no more callback, use a listener...
   mTagData = tagData; //JFD: TODO, WE SHOULD USE A NSCOMPTR to hold this stuff!!!
   return NS_OK;
 }
 
 nsresult
-nsURLFetcher::FireURLRequest(nsIURI *aURL, nsOutputFileStream *fOut, 
+nsURLFetcher::FireURLRequest(nsIURI *aURL, nsILocalFile *localFile, nsIFileOutputStream *outputStream, 
                              nsAttachSaveCompletionCallback cb, void *tagData)
 {
   nsresult rv;
 
-  rv = Initialize(fOut, cb, tagData);
+  rv = Initialize(localFile, outputStream, cb, tagData);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // we're about to fire a new url request so make sure the on stop request flag is cleared...
@@ -378,6 +361,30 @@ nsURLFetcher::FireURLRequest(nsIURI *aURL, nsOutputFileStream *fOut,
   return NS_OK;
 }
 
+nsresult
+nsURLFetcher::InsertConverter(const char * aContentType)
+{
+  nsresult rv;
+
+  nsCOMPtr<nsIStreamConverterService> convServ(do_GetService("@mozilla.org/streamConverters;1", &rv));
+  if (NS_SUCCEEDED(rv))
+  {
+    nsCOMPtr<nsIStreamListener> toListener(mConverter);
+    nsCOMPtr<nsIStreamListener> fromListener;
+    nsAutoString contentType;
+    
+    contentType.AssignWithConversion(aContentType);
+    rv = convServ->AsyncConvertData(contentType.get(),
+                                    NS_LITERAL_STRING("*/*").get(),
+                                    toListener,
+                                    nsnull,
+                                    getter_AddRefs(fromListener));
+    if (NS_SUCCEEDED(rv))
+      mConverter = fromListener;
+  }
+
+  return rv;
+}
 
 // web progress listener implementation
 
@@ -431,4 +438,123 @@ nsURLFetcher::OnSecurityChange(nsIWebProgress *aWebProgress,
                                PRInt32 state)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+/**
+ * Stream consumer used for handling special content type like multipart/x-mixed-replace
+ */
+
+NS_IMPL_ISUPPORTS2(nsURLFetcherStreamConsumer, nsIStreamListener, nsIRequestObserver)
+
+nsURLFetcherStreamConsumer::nsURLFetcherStreamConsumer(nsURLFetcher* urlFetcher) :
+  mURLFetcher(urlFetcher)
+{
+#if defined(DEBUG_ducarroz)
+  printf("CREATE nsURLFetcherStreamConsumer: %x\n", this);
+#endif
+  NS_INIT_ISUPPORTS();
+}
+
+nsURLFetcherStreamConsumer::~nsURLFetcherStreamConsumer()
+{
+#if defined(DEBUG_ducarroz)
+  printf("DISPOSE nsURLFetcherStreamConsumer: %x\n", this);
+#endif
+}
+
+/** nsIRequestObserver methods **/
+
+/* void onStartRequest (in nsIRequest request, in nsISupports ctxt); */
+NS_IMETHODIMP nsURLFetcherStreamConsumer::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt)
+{
+  if (!mURLFetcher || !mURLFetcher->mOutStream)
+    return NS_ERROR_FAILURE;
+
+  /* In case of multipart/x-mixed-replace, we need to erase the output file content */
+  if (PL_strcasecmp(mURLFetcher->mConverterContentType, MULTIPART_MIXED_REPLACE) == 0)
+  {
+    nsCOMPtr<nsISeekableStream> seekStream = do_QueryInterface(mURLFetcher->mOutStream);
+    if (seekStream)
+      seekStream->Seek(nsISeekableStream::NS_SEEK_SET, 0);
+    mURLFetcher->mTotalWritten = 0;
+  }
+
+  return NS_OK;
+}
+
+/* void onStopRequest (in nsIRequest request, in nsISupports ctxt, in nsresult status); */
+NS_IMETHODIMP nsURLFetcherStreamConsumer::OnStopRequest(nsIRequest *aRequest, nsISupports *ctxt, nsresult status)
+{
+  if (!mURLFetcher)
+    return NS_ERROR_FAILURE;
+
+  // Check the content type!
+  char    *contentType = nsnull;
+  char    *charset = nsnull;
+
+  nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(aRequest);
+  if(!aChannel) return NS_ERROR_FAILURE;
+
+  if (NS_SUCCEEDED(aChannel->GetContentType(&contentType)) && contentType)
+    if (PL_strcasecmp(contentType, UNKNOWN_CONTENT_TYPE) != 0)
+      mURLFetcher->mContentType = contentType;
+
+  if (contentType)
+    nsCRT::free(contentType);
+
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
+  if (httpChannel)
+    if (NS_SUCCEEDED(httpChannel->GetCharset(&charset)) && charset)
+      mURLFetcher->mCharset = charset;
+
+  if (charset)
+    nsCRT::free(charset);
+
+  return NS_OK;
+}
+
+/** nsIStreamListener methods **/
+
+/* void onDataAvailable (in nsIRequest request, in nsISupports ctxt, in nsIInputStream inStr, in unsigned long sourceOffset, in unsigned long count); */
+NS_IMETHODIMP nsURLFetcherStreamConsumer::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctxt, nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count)
+{
+  PRUint32        readLen = count;
+  PRUint32        wroteIt;
+
+  if (!mURLFetcher)
+    return NS_ERROR_FAILURE;
+
+  if (!mURLFetcher->mOutStream)
+    return NS_ERROR_INVALID_ARG;
+
+  if (mURLFetcher->mBufferSize < count)
+  {
+    PR_FREEIF(mURLFetcher->mBuffer);
+
+    if (count > 0x1000)
+      mURLFetcher->mBufferSize = count;
+    else
+      mURLFetcher->mBufferSize = 0x1000;
+
+    mURLFetcher->mBuffer = (char *)PR_Malloc(mURLFetcher->mBufferSize);
+    if (!mURLFetcher->mBuffer)
+      return NS_ERROR_OUT_OF_MEMORY; /* we couldn't allocate the object */
+  }
+
+  // read the data from the input stram...
+  nsresult rv = inStr->Read(mURLFetcher->mBuffer, count, &readLen);
+  if (NS_FAILED(rv))
+    return rv;
+
+  // write to the output file...
+  mURLFetcher->mOutStream->Write(mURLFetcher->mBuffer, readLen, &wroteIt);
+
+  if (wroteIt != readLen)
+    return NS_ERROR_FAILURE;
+  else
+  {
+    mURLFetcher->mTotalWritten += wroteIt;
+    return NS_OK;
+  }
 }

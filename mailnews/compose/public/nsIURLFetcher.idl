@@ -22,10 +22,10 @@
 
 #include "nsISupports.idl"
 #include "nsIURI.idl"
+#include "nsIFileStreams.idl"
+#include "nsILocalFile.idl"
 
 %{ C++
-
-#include "nsFileStream.h"
 
 //
 // Callback declarations for URL completion
@@ -39,7 +39,6 @@ typedef nsresult (*nsAttachSaveCompletionCallback) (nsresult aStatus,
 
 %}
 
-[ptr] native nsOutputFileStream(nsOutputFileStream);
 native nsAttachSaveCompletionCallback(nsAttachSaveCompletionCallback);
 
 
@@ -48,7 +47,7 @@ interface nsIURLFetcher : nsISupports
 {
   boolean stillRunning();
 
-  void fireURLRequest(in nsIURI aURL, in nsOutputFileStream fOut, in nsAttachSaveCompletionCallback cb, in voidPtr tagData);
+  void fireURLRequest(in nsIURI aURL, in nsILocalFile localFile, in nsIFileOutputStream fileStream, in nsAttachSaveCompletionCallback cb, in voidPtr tagData);
 
-  void initialize(in nsOutputFileStream fOut, in nsAttachSaveCompletionCallback cb, in voidPtr tagData);
+  void initialize(in nsILocalFile localFile, in nsIFileOutputStream fileStream, in nsAttachSaveCompletionCallback cb, in voidPtr tagData);
 };

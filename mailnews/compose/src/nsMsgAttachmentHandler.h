@@ -29,6 +29,7 @@
 #include "nsIMsgStatusFeedback.h"
 #include "nsIRequest.h"
 #include "nsIMsgSend.h"
+#include "nsIFileStreams.h"
 
 #ifdef XP_MAC
 
@@ -81,7 +82,7 @@ private:
 public:
   nsIURI                *mURL;
   nsFileSpec            *mFileSpec;					// The temp file to which we save it 
-  nsOutputFileStream    *mOutFile;          // The temp file stream pointer
+  nsCOMPtr<nsIFileOutputStream>  mOutFile;          
   nsIRequest            *mRequest;          // The live request used while fetching an attachment
   nsMsgCompFields       *mCompFields;       // Message composition fields for the sender
   PRBool                m_bogus_attachment; // This is to catch problem children...

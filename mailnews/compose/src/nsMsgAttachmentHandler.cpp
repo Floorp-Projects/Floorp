@@ -100,7 +100,6 @@ nsMsgAttachmentHandler::nsMsgAttachmentHandler()
 
   mCompFields = nsnull;   // Message composition fields for the sender
   mFileSpec = nsnull;
-  mOutFile = nsnull;
   mURL = nsnull;
   mRequest = nsnull;
 
@@ -465,12 +464,17 @@ nsMsgAttachmentHandler::SnarfMsgAttachment(nsMsgCompFields *compFields)
         rv = NS_ERROR_FAILURE;
         goto done;
     }
-    mOutFile = new nsOutputFileStream(*mFileSpec, PR_WRONLY | PR_CREATE_FILE, 00600);
-    if (!mOutFile)
+
+    nsCOMPtr<nsILocalFile> localFile;
+    nsCOMPtr<nsIOutputStream> outputStream;
+    NS_FileSpecToIFile(mFileSpec, getter_AddRefs(localFile));
+    rv = NS_NewLocalFileOutputStream(getter_AddRefs(outputStream), localFile, -1, 00600);
+    if (NS_FAILED(rv) || !outputStream)
     {
         rv =  NS_MSG_UNABLE_TO_OPEN_TMP_FILE;
         goto done;
     }
+    mOutFile = do_QueryInterface(outputStream);
     
     nsCOMPtr<nsIURLFetcher> fetcher = do_CreateInstance(NS_URLFETCHER_CONTRACTID, &rv);
     if (NS_FAILED(rv) || !fetcher)
@@ -480,7 +484,7 @@ nsMsgAttachmentHandler::SnarfMsgAttachment(nsMsgCompFields *compFields)
       goto done;
     }
 
-    rv = fetcher->Initialize(mOutFile, FetcherURLDoneCallback, this);
+    rv = fetcher->Initialize(localFile, mOutFile, FetcherURLDoneCallback, this);
     rv = GetMessageServiceFromURI(m_uri, &messageService);
     if (NS_SUCCEEDED(rv) && messageService)
     {
@@ -496,8 +500,7 @@ done:
   {
       if (mOutFile)
       {
-        mOutFile->close();
-        delete mOutFile;
+        mOutFile->Close();
         mOutFile = nsnull;
       }
 
@@ -550,13 +553,17 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
   if (! mFileSpec )
   	return (NS_ERROR_FAILURE);
 
-  mOutFile = new nsOutputFileStream(*mFileSpec, PR_WRONLY | PR_CREATE_FILE, 00600);
-  if (!mOutFile)
+  nsCOMPtr<nsILocalFile> localFile;
+  nsCOMPtr<nsIOutputStream> outputStream;
+  NS_FileSpecToIFile(mFileSpec, getter_AddRefs(localFile));
+  status = NS_NewLocalFileOutputStream(getter_AddRefs(outputStream), localFile, -1, 00600);
+  if (NS_FAILED(status) || !outputStream)
   {
     delete mFileSpec;
     mFileSpec = nsnull;
     return NS_MSG_UNABLE_TO_OPEN_TMP_FILE; 
   }
+  mOutFile = do_QueryInterface(outputStream);
 
   mURL->GetSpec(getter_Copies(url_string));
 
@@ -616,25 +623,25 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
       // then, if we have a resource fork, check the filename extension, maybe we don't need the resource fork!
       if (sendResourceFork)
       {
-      nsAutoString urlStr; urlStr.AssignWithConversion(url_string);
-      char  *ext = nsMsgGetExtensionFromFileURL(urlStr);
-      if (ext && *ext)
-      {
-       sendResourceFork = 
-           PL_strcasecmp(ext, "TXT") &&
-           PL_strcasecmp(ext, "JPG") &&
-           PL_strcasecmp(ext, "GIF") &&
-           PL_strcasecmp(ext, "TIF") &&
-           PL_strcasecmp(ext, "HTM") &&
-           PL_strcasecmp(ext, "HTML") &&
-           PL_strcasecmp(ext, "ART") &&
-           PL_strcasecmp(ext, "XUL") &&
-           PL_strcasecmp(ext, "XML") &&
-           PL_strcasecmp(ext, "CSS") &&
-           PL_strcasecmp(ext, "JS");
+        nsAutoString urlStr; urlStr.AssignWithConversion(url_string);
+        char  *ext = nsMsgGetExtensionFromFileURL(urlStr);
+        if (ext && *ext)
+        {
+          sendResourceFork = 
+             PL_strcasecmp(ext, "TXT") &&
+             PL_strcasecmp(ext, "JPG") &&
+             PL_strcasecmp(ext, "GIF") &&
+             PL_strcasecmp(ext, "TIF") &&
+             PL_strcasecmp(ext, "HTM") &&
+             PL_strcasecmp(ext, "HTML") &&
+             PL_strcasecmp(ext, "ART") &&
+             PL_strcasecmp(ext, "XUL") &&
+             PL_strcasecmp(ext, "XML") &&
+             PL_strcasecmp(ext, "CSS") &&
+             PL_strcasecmp(ext, "JS");
+        }
+        PR_FREEIF(ext);
       }
-      PR_FREEIF(ext);
-    }
     }
 
 		// Only use appledouble if we aren't uuencoding.
@@ -825,7 +832,7 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
       return rv;
   }
 
-  status = fetcher->FireURLRequest(mURL, mOutFile, FetcherURLDoneCallback, this);
+  status = fetcher->FireURLRequest(mURL, localFile, mOutFile, FetcherURLDoneCallback, this);
   if (NS_FAILED(status)) 
     return NS_ERROR_UNEXPECTED;
 
@@ -892,9 +899,7 @@ nsMsgAttachmentHandler::UrlExit(nsresult status, const PRUnichar* aMsg)
   // Close the file, but don't delete the disk file (or the file spec.) 
   if (mOutFile)
   {
-    mOutFile->close();
-
-    delete mOutFile;
+    mOutFile->Close();
     mOutFile = nsnull;
   }
   

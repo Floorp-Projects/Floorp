@@ -33,7 +33,7 @@
 #include "nsIURIContentListener.h"
 #include "nsIWebProgressListener.h"
 #include "nsWeakReference.h"
-
+#include "nsXPIDLString.h"
 
 class nsURLFetcher : public nsIURLFetcher,
                      public nsIStreamListener,
@@ -67,16 +67,47 @@ public:
   // Methods for nsIWebProgressListener
   NS_DECL_NSIWEBPROGRESSLISTENER
 
+protected:
+  nsresult InsertConverter(const char * aContentType);
+
 private:
-  nsOutputFileStream              *mOutStream;    // the output file stream
+  nsCOMPtr<nsIFileOutputStream>   mOutStream;               // the output file stream
+  nsCOMPtr<nsILocalFile>          mLocalFile;               // the output file itself
+  nsCOMPtr<nsIStreamListener>     mConverter;               // the stream converter, if needed
+  nsXPIDLCString                  mConverterContentType;    // The content type of the converter
   PRBool                          mStillRunning;  // Are we still running?
   PRInt32                         mTotalWritten;  // Size counter variable
-  char                            *mContentType;  // The content type retrieved from the server
-  char                            *mCharset;      // The charset retrieved from the server
+  char                            *mBuffer;                 // Buffer used for reading the data
+  PRUint32                        mBufferSize;              // Buffer size;
+  nsXPIDLCString                  mContentType;             // The content type retrieved from the server
+  nsXPIDLCString                  mCharset;                 // The charset retrieved from the server
   void                            *mTagData;      // Tag data for callback...
   nsAttachSaveCompletionCallback  mCallback;      // Callback to call once the file is saved...
   nsCOMPtr<nsISupports>           mLoadCookie;    // load cookie used by the uri loader when we fetch the url
   PRBool                          mOnStopRequestProcessed; // used to prevent calling OnStopRequest multiple times
+
+  friend class nsURLFetcherStreamConsumer;
 }; 
+
+
+/**
+ * Stream consumer used for handling special content type like multipart/x-mixed-replace
+ */
+
+class nsURLFetcherStreamConsumer : public nsIStreamListener
+{
+public:
+  nsURLFetcherStreamConsumer(nsURLFetcher* urlFetcher);
+  virtual ~nsURLFetcherStreamConsumer();
+
+  /* additional members */
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSISTREAMLISTENER
+  NS_DECL_NSIREQUESTOBSERVER
+
+private:
+  nsURLFetcher* mURLFetcher;
+}; 
+
 
 #endif /* nsURLFetcher_h_ */
