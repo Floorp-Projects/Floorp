@@ -6,7 +6,7 @@ exec_prefix_set=no
 
 major_version=@MOD_MAJOR_VERSION@
 minor_version=@MOD_MINOR_VERSION@
-revision_version=@MOD_REVISION_VERSION@
+patch_version=@MOD_PATCH_VERSION@
 
 usage()
 {
@@ -58,7 +58,7 @@ while test $# -gt 0; do
       echo_exec_prefix=yes
       ;;
     --version)
-      echo ${major_version}.${minor_version}.${revision_version}
+      echo ${major_version}.${minor_version}.${patch_version}
       ;;
     --cflags)
       echo_cflags=yes
