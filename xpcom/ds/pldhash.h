@@ -14,13 +14,11 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1999,2000 Netscape Communications Corporation.
+ * Copyright (C) 1999-2001 Netscape Communications Corporation.
  * All Rights Reserved.
  *
- * Original Contributor: 
- *   Brendan Eich <brendan@mozilla.org>
- *
  * Contributor(s):
+ *   Brendan Eich <brendan@mozilla.org> (Original Author)
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -79,6 +77,11 @@ typedef struct PLDHashTableOps  PLDHashTableOps;
  * by PL_DHASH_GOLDEN_RATIO.  Its value is table size invariant.  keyHash is
  * maintained automatically by PL_DHashTableOperate -- users should never set
  * it, and its only uses should be via the entry macros below.
+ *
+ * The PL_DHASH_ENTRY_IS_LIVE macro tests whether entry is neither free nor
+ * removed.  An entry may be either busy or free; if busy, it may be live or
+ * removed.  Consumers of this API should not access members of entries that
+ * are not live.
  */
 struct PLDHashEntryHdr {
     PLDHashNumber       keyHash;        /* every entry must begin like this */
@@ -86,6 +89,7 @@ struct PLDHashEntryHdr {
 
 #define PL_DHASH_ENTRY_IS_FREE(entry)   ((entry)->keyHash == 0)
 #define PL_DHASH_ENTRY_IS_BUSY(entry)   (!PL_DHASH_ENTRY_IS_FREE(entry))
+#define PL_DHASH_ENTRY_IS_LIVE(entry)   ((entry)->keyHash >= 2)
 
 /*
  * A PLDHashTable is currently 8 words (without the PL_DHASHMETER overhead)
@@ -190,7 +194,7 @@ struct PLDHashTable {
 /*
  * Table space at entryStore is allocated and freed using these callbacks.
  * The allocator should return null on error only (not if called with nbytes
- * equal to 0; but note that jsdhash.c code will never call with 0 nbytes).
+ * equal to 0; but note that pldhash.c code will never call with 0 nbytes).
  */
 typedef void *
 (* PR_CALLBACK PLDHashAllocTable)(PLDHashTable *table, PRUint32 nbytes);
@@ -220,8 +224,8 @@ typedef PLDHashNumber
  */
 typedef PRBool
 (* PR_CALLBACK PLDHashMatchEntry)(PLDHashTable *table,
-                                  const PLDHashEntryHdr *entry,
-                                  const void *key);
+                                      const PLDHashEntryHdr *entry,
+                                      const void *key);
 
 /*
  * Copy the data starting at from to the new entry storage at to.  Do not add
@@ -231,8 +235,8 @@ typedef PRBool
  */
 typedef void
 (* PR_CALLBACK PLDHashMoveEntry)(PLDHashTable *table,
-                                 const PLDHashEntryHdr *from,
-                                 PLDHashEntryHdr *to);
+                                     const PLDHashEntryHdr *from,
+                                     PLDHashEntryHdr *to);
 
 /*
  * Clear the entry and drop any strong references it holds.  This callback is
@@ -240,7 +244,8 @@ typedef void
  * but only if the given key is found in the table.
  */
 typedef void
-(* PR_CALLBACK PLDHashClearEntry)(PLDHashTable *table, PLDHashEntryHdr *entry);
+(* PR_CALLBACK PLDHashClearEntry)(PLDHashTable *table,
+                                      PLDHashEntryHdr *entry);
 
 /*
  * Called when a table (whether allocated dynamically by itself, or nested in
@@ -250,8 +255,44 @@ typedef void
 typedef void
 (* PR_CALLBACK PLDHashFinalize)  (PLDHashTable *table);
 
-/* Finally, the "vtable" structure for PLDHashTable. */
+/*
+ * Initialize a new entry, apart from keyHash.  This function is called when
+ * PL_DHashTableOperate's PL_DHASH_ADD case finds no existing entry for the
+ * given key, and must add a new one.  At that point, entry->keyHash is not
+ * set yet, to avoid claiming the last free entry in a severely overloaded
+ * table.
+ */
+typedef void
+(* PR_CALLBACK PLDHashInitEntry)(PLDHashTable *table,
+                                     const PLDHashEntryHdr *entry,
+                                     const void *key);
+
+/*
+ * Finally, the "vtable" structure for PLDHashTable.  The first eight hooks
+ * must be provided by implementations; they're called unconditionally by the
+ * generic pldhash.c code.  Hooks after these may be null.
+ *
+ * Summary of allocation-related hook usage with C++ placement new emphasis:
+ *  allocTable          Allocate raw bytes with malloc, no ctors run.
+ *  freeTable           Free raw bytes with free, no dtors run.
+ *  initEntry           Call placement new using default key-based ctor.
+ *  moveEntry           Call placement new using copy ctor, run dtor on old
+ *                      entry storage.
+ *  clearEntry          Run dtor on entry.
+ *  finalize            Stub unless table->data was initialized and needs to
+ *                      be finalized.
+ *
+ * Note the reason why initEntry is optional: the default hooks (stubs) clear
+ * entry storage:  On successful PL_DHashTableOperate(tbl, key, PL_DHASH_ADD),
+ * the returned entry pointer addresses an entry struct whose keyHash member
+ * has been set non-zero, but all other entry members are still clear (null).
+ * PL_DHASH_ADD callers can test such members to see whether the entry was
+ * newly created by the PL_DHASH_ADD call that just succeeded.  If placement
+ * new or similar initialization is required, define an initEntry hook.  Of
+ * course, the clearEntry hook must zero or null appropriately.
+ */
 struct PLDHashTableOps {
+    /* Mandatory hooks.  All implementations must provide these. */
     PLDHashAllocTable   allocTable;
     PLDHashFreeTable    freeTable;
     PLDHashGetKey       getKey;
@@ -260,6 +301,9 @@ struct PLDHashTableOps {
     PLDHashMoveEntry    moveEntry;
     PLDHashClearEntry   clearEntry;
     PLDHashFinalize     finalize;
+
+    /* Optional hooks start here.  If null, these are not called. */
+    PLDHashInitEntry    initEntry;
 };
 
 /*
@@ -317,7 +361,7 @@ PL_DHashGetStubOps(void);
  * the ops->allocTable callback.
  */
 PR_EXTERN(PLDHashTable *)
-PR_NewDHashTable(PLDHashTableOps *ops, void *data, PRUint32 entrySize,
+PL_NewDHashTable(PLDHashTableOps *ops, void *data, PRUint32 entrySize,
                  PRUint32 capacity);
 
 /*
@@ -426,7 +470,7 @@ PL_DHashTableRawRemove(PLDHashTable *table, PLDHashEntryHdr *entry);
  */
 typedef PLDHashOperator
 (* PR_CALLBACK PLDHashEnumerator)(PLDHashTable *table, PLDHashEntryHdr *hdr,
-                                  PRUint32 number, void *arg);
+                                      PRUint32 number, void *arg);
 
 PR_EXTERN(PRUint32)
 PL_DHashTableEnumerate(PLDHashTable *table, PLDHashEnumerator etor, void *arg);

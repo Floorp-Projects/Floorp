@@ -14,13 +14,11 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1999,2000 Netscape Communications Corporation.
+ * Copyright (C) 1999-2001 Netscape Communications Corporation.
  * All Rights Reserved.
  *
- * Original Contributor: 
- *   Brendan Eich <brendan@mozilla.org>
- *
  * Contributor(s):
+ *   Brendan Eich <brendan@mozilla.org> (Original Author)
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -78,6 +76,11 @@ typedef struct JSDHashTableOps  JSDHashTableOps;
  * by JS_DHASH_GOLDEN_RATIO.  Its value is table size invariant.  keyHash is
  * maintained automatically by JS_DHashTableOperate -- users should never set
  * it, and its only uses should be via the entry macros below.
+ *
+ * The JS_DHASH_ENTRY_IS_LIVE macro tests whether entry is neither free nor
+ * removed.  An entry may be either busy or free; if busy, it may be live or
+ * removed.  Consumers of this API should not access members of entries that
+ * are not live.
  */
 struct JSDHashEntryHdr {
     JSDHashNumber       keyHash;        /* every entry must begin like this */
@@ -85,6 +88,7 @@ struct JSDHashEntryHdr {
 
 #define JS_DHASH_ENTRY_IS_FREE(entry)   ((entry)->keyHash == 0)
 #define JS_DHASH_ENTRY_IS_BUSY(entry)   (!JS_DHASH_ENTRY_IS_FREE(entry))
+#define JS_DHASH_ENTRY_IS_LIVE(entry)   ((entry)->keyHash >= 2)
 
 /*
  * A JSDHashTable is currently 8 words (without the JS_DHASHMETER overhead)
@@ -239,7 +243,8 @@ typedef void
  * but only if the given key is found in the table.
  */
 typedef void
-(* JS_DLL_CALLBACK JSDHashClearEntry)(JSDHashTable *table, JSDHashEntryHdr *entry);
+(* JS_DLL_CALLBACK JSDHashClearEntry)(JSDHashTable *table,
+                                      JSDHashEntryHdr *entry);
 
 /*
  * Called when a table (whether allocated dynamically by itself, or nested in
@@ -249,8 +254,44 @@ typedef void
 typedef void
 (* JS_DLL_CALLBACK JSDHashFinalize)  (JSDHashTable *table);
 
-/* Finally, the "vtable" structure for JSDHashTable. */
+/*
+ * Initialize a new entry, apart from keyHash.  This function is called when
+ * JS_DHashTableOperate's JS_DHASH_ADD case finds no existing entry for the
+ * given key, and must add a new one.  At that point, entry->keyHash is not
+ * set yet, to avoid claiming the last free entry in a severely overloaded
+ * table.
+ */
+typedef void
+(* JS_DLL_CALLBACK JSDHashInitEntry)(JSDHashTable *table,
+                                     const JSDHashEntryHdr *entry,
+                                     const void *key);
+
+/*
+ * Finally, the "vtable" structure for JSDHashTable.  The first eight hooks
+ * must be provided by implementations; they're called unconditionally by the
+ * generic jsdhash.c code.  Hooks after these may be null.
+ *
+ * Summary of allocation-related hook usage with C++ placement new emphasis:
+ *  allocTable          Allocate raw bytes with malloc, no ctors run.
+ *  freeTable           Free raw bytes with free, no dtors run.
+ *  initEntry           Call placement new using default key-based ctor.
+ *  moveEntry           Call placement new using copy ctor, run dtor on old
+ *                      entry storage.
+ *  clearEntry          Run dtor on entry.
+ *  finalize            Stub unless table->data was initialized and needs to
+ *                      be finalized.
+ *
+ * Note the reason why initEntry is optional: the default hooks (stubs) clear
+ * entry storage:  On successful JS_DHashTableOperate(tbl, key, JS_DHASH_ADD),
+ * the returned entry pointer addresses an entry struct whose keyHash member
+ * has been set non-zero, but all other entry members are still clear (null).
+ * JS_DHASH_ADD callers can test such members to see whether the entry was
+ * newly created by the JS_DHASH_ADD call that just succeeded.  If placement
+ * new or similar initialization is required, define an initEntry hook.  Of
+ * course, the clearEntry hook must zero or null appropriately.
+ */
 struct JSDHashTableOps {
+    /* Mandatory hooks.  All implementations must provide these. */
     JSDHashAllocTable   allocTable;
     JSDHashFreeTable    freeTable;
     JSDHashGetKey       getKey;
@@ -259,6 +300,9 @@ struct JSDHashTableOps {
     JSDHashMoveEntry    moveEntry;
     JSDHashClearEntry   clearEntry;
     JSDHashFinalize     finalize;
+
+    /* Optional hooks start here.  If null, these are not called. */
+    JSDHashInitEntry    initEntry;
 };
 
 /*

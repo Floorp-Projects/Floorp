@@ -107,7 +107,7 @@ nsresult nsMsgDatabase::AddHdrToCache(nsIMsgDBHdr *hdr, nsMsgKey key) // do we w
 	if (m_bCacheHeaders)
 	{
 		if (!m_cachedHeaders)
-    m_cachedHeaders = PR_NewDHashTable(&gMsgDBHashTableOps, (void *) nsnull, sizeof(struct MsgHdrHashElement), kMaxHdrsInCache );
+    m_cachedHeaders = PL_NewDHashTable(&gMsgDBHashTableOps, (void *) nsnull, sizeof(struct MsgHdrHashElement), kMaxHdrsInCache );
     if (m_cachedHeaders)
     {
 		  if (key == nsMsgKey_None)
@@ -217,7 +217,8 @@ PLDHashTableOps nsMsgDatabase::gMsgDBHashTableOps =
   MatchEntry,
   MoveEntry,
   ClearEntry,
-  PL_DHashFinalizeStub
+  PL_DHashFinalizeStub,
+  nsnull
 };
 
 const void* PR_CALLBACK
@@ -276,7 +277,7 @@ nsresult nsMsgDatabase::AddHdrToUseCache(nsIMsgDBHdr *hdr, nsMsgKey key)
     mdb_count numHdrs = MSG_HASH_SIZE;
     if (m_mdbAllMsgHeadersTable)
       m_mdbAllMsgHeadersTable->GetCount(GetEnv(), &numHdrs);
-    m_headersInUse = PR_NewDHashTable(&gMsgDBHashTableOps, (void *) nsnull, sizeof(struct MsgHdrHashElement), PR_MAX(MSG_HASH_SIZE, numHdrs));
+    m_headersInUse = PL_NewDHashTable(&gMsgDBHashTableOps, (void *) nsnull, sizeof(struct MsgHdrHashElement), PR_MAX(MSG_HASH_SIZE, numHdrs));
   }
   if (m_headersInUse)
   {
