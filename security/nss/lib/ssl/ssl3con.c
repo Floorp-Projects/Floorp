@@ -37,7 +37,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssl3con.c,v 1.49 2003/02/27 01:31:29 nelsonb%netscape.com Exp $
+ * $Id: ssl3con.c,v 1.50 2003/03/12 19:22:32 relyea%netscape.com Exp $
  */
 
 #include "nssrenam.h"
@@ -1631,7 +1631,7 @@ ssl3_ClientAuthTokenPresent(sslSessionID *sid) {
 	sid->u.ssl3.clAuthSeries     != PK11_GetSlotSeries(slot) ||
 	sid->u.ssl3.clAuthSlotID     != PK11_GetSlotID(slot)     ||
 	sid->u.ssl3.clAuthModuleID   != PK11_GetModuleID(slot)   ||
-               !PK11_IsLoggedIn(slot, NULL)) {
+	     (PK11_NeedLogin(slot) && !PK11_IsLoggedIn(slot, NULL))){
 	isPresent = PR_FALSE;
     } 
     if (slot) {
