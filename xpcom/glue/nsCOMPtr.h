@@ -327,24 +327,46 @@ class nsCOMPtr_helper
         - its constructor provides an optional |nsresult*| that |operator()| can fill
           in with an error when it is executed
           
-      See |class nsQueryInterface| for an example.
+      See |class nsGetInterface| for an example.
     */
   {
     public:
       virtual nsresult operator()( const nsIID&, void** ) const = 0;
   };
 
-class NS_COM nsQueryInterface : public nsCOMPtr_helper
+/*
+  |nsQueryInterface| could have been implemented as an |nsCOMPtr_helper| to
+  avoid adding specialized machinery in |nsCOMPtr|, But |do_QueryInterface|
+  is called often enough that the codesize savings are big enough to
+  warrant the specialcasing.
+*/
+
+class NS_COM nsQueryInterface
   {
     public:
-      nsQueryInterface( nsISupports* aRawPtr, nsresult* error )
+      nsQueryInterface( nsISupports* aRawPtr )
+          : mRawPtr(aRawPtr)
+        {
+          // nothing else to do here
+        }
+
+      nsresult operator()( const nsIID& aIID, void** ) const;
+
+    private:
+      nsISupports*  mRawPtr;
+  };
+
+class NS_COM nsQueryInterfaceWithError
+  {
+    public:
+      nsQueryInterfaceWithError( nsISupports* aRawPtr, nsresult* error )
           : mRawPtr(aRawPtr),
             mErrorPtr(error)
         {
           // nothing else to do here
         }
 
-      virtual nsresult operator()( const nsIID& aIID, void** ) const;
+      nsresult operator()( const nsIID& aIID, void** ) const;
 
     private:
       nsISupports*  mRawPtr;
@@ -352,10 +374,17 @@ class NS_COM nsQueryInterface : public nsCOMPtr_helper
   };
 
 inline
-const nsQueryInterface
-do_QueryInterface( nsISupports* aRawPtr, nsresult* error = 0 )
+nsQueryInterface
+do_QueryInterface( nsISupports* aRawPtr )
   {
-    return nsQueryInterface(aRawPtr, error);
+    return nsQueryInterface(aRawPtr);
+  }
+
+inline
+nsQueryInterfaceWithError
+do_QueryInterface( nsISupports* aRawPtr, nsresult* error )
+  {
+    return nsQueryInterfaceWithError(aRawPtr, error);
   }
 
 template <class T>
@@ -405,6 +434,8 @@ class nsCOMPtr_base
       NS_COM ~nsCOMPtr_base();
 
       NS_COM void    assign_with_AddRef( nsISupports* );
+      NS_COM void    assign_from_qi( const nsQueryInterface, const nsIID& );
+      NS_COM void    assign_from_qi_with_error( const nsQueryInterfaceWithError&, const nsIID& );
       NS_COM void    assign_from_helper( const nsCOMPtr_helper&, const nsIID& );
       NS_COM void**  begin_assignment();
 
@@ -447,6 +478,8 @@ class nsCOMPtr
 
     private:
       void    assign_with_AddRef( nsISupports* );
+      void    assign_from_qi( const nsQueryInterface, const nsIID& );
+      void    assign_from_qi_with_error( const nsQueryInterfaceWithError&, const nsIID& );
       void    assign_from_helper( const nsCOMPtr_helper&, const nsIID& );
       void**  begin_assignment();
 
@@ -530,6 +563,22 @@ class nsCOMPtr
           NSCAP_ASSERT_NO_QUERY_NEEDED();
         }
 
+      nsCOMPtr( const nsQueryInterface qi )
+            : NSCAP_CTOR_BASE(0)
+          // construct from |do_QueryInterface(expr)|
+        {
+          NSCAP_LOG_ASSIGNMENT(this, 0);
+          assign_from_qi(qi, NS_GET_IID(T));
+        }
+
+      nsCOMPtr( const nsQueryInterfaceWithError& qi )
+            : NSCAP_CTOR_BASE(0)
+          // construct from |do_QueryInterface(expr, &rv)|
+        {
+          NSCAP_LOG_ASSIGNMENT(this, 0);
+          assign_from_qi_with_error(qi, NS_GET_IID(T));
+        }
+
       nsCOMPtr( const nsCOMPtr_helper& helper )
             : NSCAP_CTOR_BASE(0)
           // ...and finally, anything else we might need to construct from
@@ -539,18 +588,6 @@ class nsCOMPtr
           assign_from_helper(helper, NS_GET_IID(T));
           NSCAP_ASSERT_NO_QUERY_NEEDED();
         }
-
-#ifdef NSCAP_FEATURE_TEST_DONTQUERY_CASES
-        // For debug only --- this particular helper doesn't need to do the
-        //  |NSCAP_ASSERT_NO_QUERY_NEEDED()| test.  In fact, with the logging
-        //  changes, skipping the query test prevents infinite recursion.
-      nsCOMPtr( const nsQueryInterface& helper )
-            : NSCAP_CTOR_BASE(0)
-        {
-          NSCAP_LOG_ASSIGNMENT(this, 0);
-          assign_from_helper(helper, NS_GET_IID(T));
-        }
-#endif
 
 
         // Assignment operators
@@ -582,6 +619,22 @@ class nsCOMPtr
         }
 
       nsCOMPtr<T>&
+      operator=( const nsQueryInterface rhs )
+          // assign from |do_QueryInterface(expr)|
+        {
+          assign_from_qi(rhs, NS_GET_IID(T));
+          return *this;
+        }
+
+      nsCOMPtr<T>&
+      operator=( const nsQueryInterfaceWithError& rhs )
+          // assign from |do_QueryInterface(expr, &rv)|
+        {
+          assign_from_qi_with_error(rhs, NS_GET_IID(T));
+          return *this;
+        }
+
+      nsCOMPtr<T>&
       operator=( const nsCOMPtr_helper& rhs )
           // ...and finally, anything else we might need to assign from
           //  can exploit the |nsCOMPtr_helper| facility.
@@ -590,18 +643,6 @@ class nsCOMPtr
           NSCAP_ASSERT_NO_QUERY_NEEDED();
           return *this;
         }
-
-#ifdef NSCAP_FEATURE_TEST_DONTQUERY_CASES
-        // For debug only --- this particular helper doesn't need to do the
-        //  |NSCAP_ASSERT_NO_QUERY_NEEDED()| test.  In fact, with the logging
-        //  changes, skipping the query test prevents infinite recursion.
-      nsCOMPtr<T>&
-      operator=( const nsQueryInterface& rhs )
-        {
-          assign_from_helper(rhs, NS_GET_IID(T));
-          return *this;
-        }
-#endif
 
       void
       swap( nsCOMPtr<T>& rhs )
@@ -779,6 +820,22 @@ class nsCOMPtr<nsISupports>
           NSCAP_LOG_ASSIGNMENT(this, aSmartPtr.mRawPtr);
         }
 
+      nsCOMPtr( const nsQueryInterface qi )
+            : nsCOMPtr_base(0)
+          // assign from |do_QueryInterface(expr)|
+        {
+          NSCAP_LOG_ASSIGNMENT(this, 0);
+          assign_from_qi(qi, NS_GET_IID(nsISupports));
+        }
+
+      nsCOMPtr( const nsQueryInterfaceWithError& qi )
+            : nsCOMPtr_base(0)
+          // assign from |do_QueryInterface(expr, &rv)|
+        {
+          NSCAP_LOG_ASSIGNMENT(this, 0);
+          assign_from_qi_with_error(qi, NS_GET_IID(nsISupports));
+        }
+
       nsCOMPtr( const nsCOMPtr_helper& helper )
             : nsCOMPtr_base(0)
           // ...and finally, anything else we might need to construct from
@@ -812,6 +869,22 @@ class nsCOMPtr<nsISupports>
           // assign from |dont_AddRef(expr)|
         {
           assign_assuming_AddRef(rhs.mRawPtr);
+          return *this;
+        }
+
+      nsCOMPtr<nsISupports>&
+      operator=( const nsQueryInterface rhs )
+          // assign from |do_QueryInterface(expr)|
+        {
+          assign_from_qi(rhs, NS_GET_IID(nsISupports));
+          return *this;
+        }
+
+      nsCOMPtr<nsISupports>&
+      operator=( const nsQueryInterfaceWithError& rhs )
+          // assign from |do_QueryInterface(expr, &rv)|
+        {
+          assign_from_qi_with_error(rhs, NS_GET_IID(nsISupports));
           return *this;
         }
 
@@ -947,6 +1020,26 @@ nsCOMPtr<T>::assign_with_AddRef( nsISupports* rawPtr )
     if ( rawPtr )
       NSCAP_ADDREF(this, rawPtr);
     assign_assuming_AddRef(NS_REINTERPRET_CAST(T*, rawPtr));
+  }
+
+template <class T>
+void
+nsCOMPtr<T>::assign_from_qi( const nsQueryInterface qi, const nsIID& aIID )
+  {
+    T* newRawPtr;
+    if ( NS_FAILED( qi(aIID, NS_REINTERPRET_CAST(void**, &newRawPtr)) ) )
+      newRawPtr = 0;
+    assign_assuming_AddRef(newRawPtr);
+  }
+
+template <class T>
+void
+nsCOMPtr<T>::assign_from_qi_with_error( const nsQueryInterfaceWithError& qi, const nsIID& aIID )
+  {
+    T* newRawPtr;
+    if ( NS_FAILED( qi(aIID, NS_REINTERPRET_CAST(void**, &newRawPtr)) ) )
+      newRawPtr = 0;
+    assign_assuming_AddRef(newRawPtr);
   }
 
 template <class T>
