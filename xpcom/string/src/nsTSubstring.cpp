@@ -38,6 +38,16 @@
 
 
   /**
+   * helper function for down-casting a nsTSubstring to a nsTFixedString.
+   */
+inline const nsTFixedString_CharT*
+AsFixedString( const nsTSubstring_CharT* s )
+  {
+    return NS_STATIC_CAST(const nsTFixedString_CharT*, s);
+  }
+
+
+  /**
    * this function is called to prepare mData for writing.  the given capacity
    * indicates the required minimum storage size for mData, in sizeof(char_type)
    * increments.  this function returns true if the operation succeeds.  it also
@@ -102,29 +112,41 @@ nsTSubstring_CharT::MutatePrep( size_type capacity, char_type** oldData, PRUint3
             // out of memory!!  put us in a consistent state at least.
             mData = NS_CONST_CAST(char_type*, char_traits::sEmptyBuffer);
             mLength = 0;
-            mFlags = F_TERMINATED;
+            SetDataFlags(F_TERMINATED);
             return PR_FALSE;
           }
       }
 
-    // if we reach here then, we must allocate a new buffer.  we cannot make
-    // use of our F_OWNED or F_FIXED buffers because they are not large enough
-    // (based on the initial capacity check).  we need to allocate a new
-    // buffer, and possibly copy over the old one, and then we can release the
-    // old buffer, and set our member vars.
+    char_type* newData;
+    PRUint32 newDataFlags;
 
-    nsStringHeader* newHdr = nsStringHeader::Alloc(storageSize);
-    if (!newHdr)
-      return PR_FALSE; // we are still in a consistent state
+      // if we have a fixed buffer of sufficient size, then use it.  this helps
+      // avoid heap allocations.
+    if ((mFlags & F_CLASS_FIXED) && (capacity < AsFixedString(this)->mFixedCapacity))
+      {
+        newData = AsFixedString(this)->mFixedBuf;
+        newDataFlags = F_TERMINATED | F_FIXED;
+      }
+    else
+      {
+        // if we reach here then, we must allocate a new buffer.  we cannot
+        // make use of our F_OWNED or F_FIXED buffers because they are not
+        // large enough.
 
-    char_type* newData = (char_type*) newHdr->Data();
+        nsStringHeader* newHdr = nsStringHeader::Alloc(storageSize);
+        if (!newHdr)
+          return PR_FALSE; // we are still in a consistent state
+
+        newData = (char_type*) newHdr->Data();
+        newDataFlags = F_TERMINATED | F_SHARED;
+      }
 
     // save old data and flags
     *oldData = mData;
     *oldFlags = mFlags;
 
     mData = newData;
-    mFlags = F_TERMINATED | F_SHARED;
+    SetDataFlags(newDataFlags);
 
     // mLength does not change
 
@@ -214,7 +236,7 @@ nsTSubstring_CharT::Capacity() const
       }
     else if (mFlags & F_FIXED)
       {
-        capacity = NS_STATIC_CAST(const nsTAutoString_CharT*, this)->mFixedCapacity;
+        capacity = AsFixedString(this)->mFixedCapacity;
       }
     else if (mFlags & F_OWNED)
       {
@@ -290,7 +312,7 @@ nsTSubstring_CharT::Assign( const self_type& str )
 
         mData = str.mData;
         mLength = str.mLength;
-        mFlags = F_TERMINATED | F_SHARED;
+        SetDataFlags(F_TERMINATED | F_SHARED);
 
         // get an owning reference to the mData
         nsStringHeader::FromData(mData)->AddRef();
@@ -348,7 +370,7 @@ nsTSubstring_CharT::Adopt( char_type* data, size_type length )
 
         mData = data;
         mLength = length;
-        mFlags = F_TERMINATED | F_OWNED;
+        SetDataFlags(F_TERMINATED | F_OWNED);
 
         STRING_STAT_INCREMENT(Adopt);
       }
@@ -421,7 +443,7 @@ nsTSubstring_CharT::SetCapacity( size_type capacity )
         ::ReleaseData(mData, mFlags);
         mData = NS_CONST_CAST(char_type*, char_traits::sEmptyBuffer);
         mLength = 0;
-        mFlags = F_TERMINATED;
+        SetDataFlags(F_TERMINATED);
       }
     else
       {
@@ -457,36 +479,6 @@ nsTSubstring_CharT::SetLength( size_type length )
   {
     SetCapacity(length);
     mLength = length;
-
-#if 0
-    // if our length is reduced to zero, then free our buffer.
-    if (length == 0)
-      {
-        ::ReleaseData(mData, mFlags);
-        mData = NS_CONST_CAST(char_type*, char_traits::sEmptyBuffer);
-        mLength = 0;
-        mFlags = F_TERMINATED;
-      }
-    else
-      {
-        char_type* oldData;
-        PRUint32 oldFlags;
-        if (!MutatePrep(length, &oldData, &oldFlags))
-          return; // XXX out-of-memory error occured!
-
-        if (oldData)
-          {
-            // preserve old data
-            if (mLength > 0)
-              char_traits::copy(mData, oldData, NS_MIN(mLength, length));
-
-            ::ReleaseData(oldData, oldFlags);
-          }
-
-        mLength = length;
-        mData[mLength] = char_type(0);
-      }
-#endif
   }
 
 void

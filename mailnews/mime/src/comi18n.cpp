@@ -756,8 +756,7 @@ MIME_detect_charset(const char *aBuf, PRInt32 aLength, const char** aCharset)
 {
   nsresult res;
   char theBuffer[128];
-  CBufDescriptor theBufDecriptor( theBuffer, PR_TRUE, sizeof(theBuffer), 0);
-  nsCAutoString detector_contractid(theBufDecriptor);
+  nsFixedCString detector_contractid(theBuffer, sizeof(theBuffer), 0);
   nsXPIDLString detector_name;
   nsCOMPtr<nsIStringCharsetDetector> detector;
   *aCharset = nsnull;
@@ -767,7 +766,7 @@ MIME_detect_charset(const char *aBuf, PRInt32 aLength, const char** aCharset)
   nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &res)); 
   if (NS_SUCCEEDED(res)) {
     if (NS_SUCCEEDED(prefs->GetLocalizedUnicharPref("intl.charset.detector", getter_Copies(detector_name)))) {
-      detector_contractid.Append(NS_ConvertUCS2toUTF8(detector_name).get());
+      AppendUTF16toUTF8(detector_name, detector_contractid);
     }
   }
 

@@ -69,6 +69,12 @@ class nsStringStats
 
       ~nsStringStats()
         {
+          // this is a hack to suppress duplicate string stats printing
+          // in seamonkey as a result of the string code being linked
+          // into seamonkey and libxpcom! :-(
+          if (!mAllocCount && !mAdoptCount)
+            return;
+
           printf("nsStringStats\n");
           printf(" => mAllocCount: %d\n", mAllocCount);
           printf(" => mReallocCount: %d\n", mReallocCount);

@@ -43,6 +43,7 @@
 #define nsTAString_CharT                    nsAString
 #define nsTAString_IncompatibleCharT        nsACString
 #define nsTString_CharT                     nsString
+#define nsTFixedString_CharT                nsFixedString
 #define nsTAutoString_CharT                 nsAutoString
 #define nsTSubstring_CharT                  nsSubstring
 #define nsTSubstringTuple_CharT             nsSubstringTuple

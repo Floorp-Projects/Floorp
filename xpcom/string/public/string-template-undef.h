@@ -44,6 +44,7 @@
 #undef nsTAString_CharT
 #undef nsTAString_IncompatibleCharT
 #undef nsTString_CharT
+#undef nsTFixedString_CharT
 #undef nsTAutoString_CharT
 #undef nsTSubstring_CharT
 #undef nsTSubstringTuple_CharT

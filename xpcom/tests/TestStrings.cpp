@@ -215,16 +215,23 @@ PRBool test_equals_ic()
     return !r;
   }
 
-PRBool test_cbufdesc()
+PRBool test_fixed_string()
   {
-    const char text[] = "hello world";
-    CBufDescriptor bufdesc(text, PR_TRUE, sizeof(text)-1);
-    nsCAutoString s(bufdesc);
-    if (strcmp(s.get(), text) == 0)
-      return PR_TRUE;
+    char buf[256] = "hello world";
+
+    nsFixedCString s(buf, sizeof(buf));
+
+    if (s.Length() != strlen(buf))
+      return PR_FALSE;
+
+    if (strcmp(s.get(), buf) != 0)
+      return PR_FALSE;
+
+    s.Assign("foopy doopy doo");
+    if (s.get() != buf)
+      return PR_FALSE;
     
-    printf("[s=%s]\n", s.get());
-    return PR_FALSE;
+    return PR_TRUE;
   }
 
 PRBool test_concat()
@@ -371,7 +378,7 @@ tests[] =
     { "test_replace_substr", test_replace_substr },
     { "test_strip_ws", test_strip_ws },
     { "test_equals_ic", test_equals_ic },
-    { "test_cbufdesc", test_cbufdesc },
+    { "test_fixed_string", test_fixed_string },
     { "test_concat", test_concat },
     { "test_concat_2", test_concat_2 },
     { "test_xpidl_string", test_xpidl_string },
