@@ -34,6 +34,8 @@ CPPSRCS =                                 \
         nsCCapsManagerFactory.cpp         \
         nsCertificatePrincipal.cpp        \
         nsCodebasePrincipal.cpp           \
+        nsPrincipalArray.cpp              \
+        nsPrincipalManager.cpp            \
         nsPrivilege.cpp                   \
         nsPrivilegeManager.cpp            \
         nsPrivilegeTable.cpp              \

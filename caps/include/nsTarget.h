@@ -22,6 +22,7 @@
 #include "nsHashtable.h"
 #include "nsVector.h"
 #include "nsIPrincipal.h"
+#include "nsIPrincipalArray.h"
 #include "nsIPrivilege.h"
 #include "nsITarget.h"
 #include "nsUserDialogHelper.h"
@@ -81,7 +82,7 @@ public:
 
 	nsIPrivilege * CheckPrivilegeEnabled(nsTargetArray * targetArray);
 
-	nsIPrivilege * CheckPrivilegeEnabled(nsIPrincipal *p, void * data);
+	nsIPrivilege * CheckPrivilegeEnabled(nsIPrincipal * p, void * data);
 
 	NS_IMETHOD RegisterTarget(void * context, nsITarget * * target);
 

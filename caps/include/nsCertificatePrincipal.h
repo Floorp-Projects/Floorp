@@ -26,7 +26,7 @@ public:
 	NS_DECL_ISUPPORTS
 
 	NS_IMETHOD
-	GetPublicKey(char ** pk, PRUint32 * pkSize);
+	GetPublicKey(char ** pk);
 
 	NS_IMETHOD
 	GetCompanyName(char ** cn);
@@ -58,14 +58,13 @@ public:
 	NS_IMETHOD
 	Equals(nsIPrincipal * other, PRBool * result);
 
-	nsCertificatePrincipal(PRInt16 * type, const unsigned char ** certChain,
-					 PRUint32 * certChainLengths, PRUint32 noOfCerts, nsresult * result);
+	nsCertificatePrincipal(PRInt16 type, const char * key);
+	nsCertificatePrincipal(PRInt16 type, const unsigned char ** certChain, PRUint32 * certChainLengths, PRUint32 noOfCerts);
 	virtual ~nsCertificatePrincipal(void);
 
 protected:
 	PRInt16 itsType;
-	char * itsKey;
-	PRUint32 itsKeyLength;
+	const char * itsKey;
 	nsVector * itsCertificateArray;
 	char * itsCompanyName;
 	char * itsCertificateAuthority;

@@ -20,7 +20,7 @@
 
 [uuid(ff9313d0-25e1-11d2-8160-006008119d7a)]
 interface nsIPrincipal : nsISupports {
-	const short PrincipalType_Unknown=-1;
+	const short PrincipalType_Unknown=0;
 	const short PrincipalType_CodebaseExact=1;
 	const short PrincipalType_CodebaseRegex=2;
 	const short PrincipalType_Certificate=3;
@@ -44,7 +44,7 @@ interface nsICodebasePrincipal : nsIPrincipal {
 
 [uuid(ebfefcd0-25e1-11d2-8160-006008119d7a)]
 interface nsICertificatePrincipal : nsIPrincipal {
-	void GetPublicKey(out string publicKey, out unsigned long publicKeySize);
+	void GetPublicKey(out string publicKey);
 	void GetCompanyName(out string ppCompanyName);
 	void GetCertificateAuthority(out string ppCertAuthority);
 	void GetSerialNumber(out string ppSerialNumber);

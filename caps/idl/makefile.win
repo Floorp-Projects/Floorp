@@ -23,7 +23,11 @@ XPIDLSRCS=                                \
            .\nsIScriptSecurityManager.idl \
            .\nsICapsSecurityCallbacks.idl \
            .\nsIPrincipal.idl             \
+           .\nsIPrincipalArray.idl        \
+           .\nsIPrincipalManager.idl      \
            .\nsIPrivilege.idl             \
+           .\nsIPrivilegeManager.idl      \
+           .\nsICapsManager.idl           \
            .\nsITarget.idl                \
             $(NULL)
 

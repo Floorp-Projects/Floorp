@@ -26,28 +26,28 @@ NS_IMPL_ISUPPORTS(nsCodebasePrincipal, kICodebasePrincipalIID);
 NS_IMETHODIMP
 nsCodebasePrincipal::GetURL(char **cburl)
 {
-	cburl = (char **)&codeBaseURL;
+	* cburl = (char *)itsCodeBaseURL;
 	return NS_OK;
 }
 
 NS_IMETHODIMP
 nsCodebasePrincipal::IsCodebaseExact(PRBool * result)
 {
-	* result = (this->itsType == (PRInt16 *)nsIPrincipal::PrincipalType_CodebaseExact) ? PR_TRUE : PR_FALSE;
+	* result = (this->itsType == nsIPrincipal::PrincipalType_CodebaseExact) ? PR_TRUE : PR_FALSE;
 	return NS_OK;
 }
 
 NS_IMETHODIMP
 nsCodebasePrincipal::IsCodebaseRegex(PRBool * result)
 {
-	* result = (itsType == (PRInt16 *)nsIPrincipal::PrincipalType_CodebaseRegex) ? PR_TRUE : PR_FALSE;
+	* result = (itsType == nsIPrincipal::PrincipalType_CodebaseRegex) ? PR_TRUE : PR_FALSE;
 	return NS_OK;
 }
 
 NS_IMETHODIMP
 nsCodebasePrincipal::GetType(PRInt16 * type)
 {
-	type = itsType;
+	* type = itsType;
 	return NS_OK;
 }
 
@@ -63,7 +63,7 @@ nsCodebasePrincipal::IsSecure(PRBool * result)
 }
 
 NS_IMETHODIMP
-nsCodebasePrincipal::ToString(char **result)
+nsCodebasePrincipal::ToString(char * * result)
 {
 	return NS_OK;
 }
@@ -78,15 +78,23 @@ nsCodebasePrincipal::HashCode(PRUint32 * code)
 NS_IMETHODIMP
 nsCodebasePrincipal::Equals(nsIPrincipal * other, PRBool * result)
 {
-	PRInt16 * oType = 0;
-	other->GetType(oType);
-	*result = (itsType == oType) ? PR_TRUE : PR_FALSE;	
+	PRInt16 oType = 0;
+//	char ** oCodeBase;
+	other->GetType(& oType);
+	* result = (itsType == oType) ? PR_TRUE : PR_FALSE;	
+//XXXariel fix this
+//	if (* result) {
+//		nsICodebasePrincipal * cbother = (nsCodebasePrincipal)other;
+//		cbother->GetURL(& oCodeBase);
+//	}
+//	* result = (itsCodebase == oCodeBase) ? PR_TRUE : PR_FALSE;	
 	return NS_OK;
 }
-nsCodebasePrincipal::nsCodebasePrincipal(PRInt16 * type, const char * codeBaseURL)
+
+nsCodebasePrincipal::nsCodebasePrincipal(PRInt16 type, const char * codeBaseURL)
 {
-	this->itsType=type;
-	this->codeBaseURL=codeBaseURL;
+	this->itsType = type;
+	this->itsCodeBaseURL = codeBaseURL;
 }
 
 nsCodebasePrincipal::~nsCodebasePrincipal(void)

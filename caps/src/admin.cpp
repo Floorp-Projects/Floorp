@@ -23,6 +23,7 @@
 #include "prlog.h"
 #include "admin.h"
 #include "nsPrivilegeManager.h"
+#include "nsPrincipalManager.h"
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
@@ -37,8 +38,7 @@ extern "C" {
 PR_PUBLIC_API(const char *)
 java_netscape_security_getPrincipals(const char *charSetName)
 {
-    nsPrivilegeManager *nsPrivManager = nsPrivilegeManager::GetPrivilegeManager();
-    const char *prins = nsPrivManager->GetAllPrincipalsString();
+    const char * prins = nsPrincipalManager::GetPrincipalManager()->GetAllPrincipalsString();
     PRBool test_admin_api = PR_FALSE;
     if (test_admin_api) {
       char *a1;
@@ -52,26 +52,24 @@ java_netscape_security_getPrincipals(const char *charSetName)
 }
 
 PR_PUBLIC_API(PRBool)
-java_netscape_security_removePrincipal(const char *charSetName, char *prinName)
+java_netscape_security_removePrincipal(const char * charSetName, char * prinName)
 {
-    nsPrivilegeManager *nsPrivManager = nsPrivilegeManager::GetPrivilegeManager();
-    return nsPrivManager->RemovePrincipal(prinName);
+	return nsPrivilegeManager::GetPrivilegeManager()->RemovePrincipal(prinName);
 }
 
 PR_PUBLIC_API(void)
-java_netscape_security_getPrivilegeDescs(const char *charSetName, char *prinName,
-                                         char** forever, char** session, char **denied)
+java_netscape_security_getPrivilegeDescs(const char * charSetName, char * prinName, char * * forever, char * * session, char * * denied)
 {
-    nsPrivilegeManager *nsPrivManager = nsPrivilegeManager::GetPrivilegeManager();
-    nsPrivManager->GetTargetsWithPrivileges(prinName, forever, session, denied);
+	nsPrivilegeManager::GetPrivilegeManager()->GetTargetsWithPrivileges(prinName, forever, session, denied);
 }
 
 PR_PUBLIC_API(PRBool)
-java_netscape_security_removePrivilege(const char *charSetName, char *prinName, 
-                                       char *targetName)
+java_netscape_security_removePrivilege(const char * charSetName, char * prinName, char * targetName)
 {
-    nsPrivilegeManager *nsPrivManager = nsPrivilegeManager::GetPrivilegeManager();
-    return nsPrivManager->RemovePrincipalsPrivilege(prinName, targetName);
+	PRBool result;
+	nsPrivilegeManager::GetPrivilegeManager()->RemovePrincipalsPrivilege(prinName, targetName,& result);
+	return result;
+
 }
 
 

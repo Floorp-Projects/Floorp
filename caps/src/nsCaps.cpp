@@ -22,6 +22,7 @@
 #include "prmon.h"
 #include "prlog.h"
 #include "nsCaps.h"
+#include "nsPrincipalManager.h"
 #include "nsPrivilegeManager.h"
 #include "nsIPrincipal.h"
 #include "nsCertificatePrincipal.h"
@@ -66,11 +67,11 @@ nsCapsInitialize()
 //	sysPrin = CreateSystemPrincipal("java40.jar", "java/lang/Object.class");
 #endif
 */
-	if (sysPrin == NULL) {
-		nsresult res;
-		sysPrin = new nsCertificatePrincipal((PRInt16 *)nsIPrincipal::PrincipalType_Certificate,(const unsigned char **) "52:54:45:4e:4e:45:54:49", 
-									(unsigned int *)strlen("52:54:45:4e:4e:45:54:49"),1,& res);
-  }
+//	if (sysPrin == NULL) {
+//		nsresult res;
+//		sysPrin = new nsCertificatePrincipal((PRInt16 *)nsIPrincipal::PrincipalType_Certificate,(const unsigned char **) "52:54:45:4e:4e:45:54:49", 
+//									(unsigned int *)strlen("52:54:45:4e:4e:45:54:49"),1,& res);
+//  }
   nsPrivilegeManager *nsPrivManager = nsPrivilegeManager::GetPrivilegeManager();
   if (nsPrivManager == NULL) {
     nsPrivilegeManagerInitialize();
@@ -107,61 +108,78 @@ nsCapsRegisterPrincipal(class nsIPrincipal *principal)
 PR_IMPLEMENT(PRBool) 
 nsCapsEnablePrivilege(void * context, class nsITarget * target, PRInt32 callerDepth)
 {
-	nsPrivilegeManager * nsPrivManager = nsPrivilegeManager::GetPrivilegeManager();
-	return (nsPrivManager == NULL) ? PR_FALSE : nsPrivManager->EnablePrivilege(context, target, callerDepth);
+	if (nsPrivilegeManager::GetPrivilegeManager() == NULL) return PR_FALSE;
+	else {
+		PRBool result;
+		nsPrivilegeManager::GetPrivilegeManager()->EnablePrivilege((nsIScriptContext *)context, target, NULL, callerDepth,& result);
+		return result;
+	}
 }
 
 PR_IMPLEMENT(PRBool) 
 nsCapsIsPrivilegeEnabled(void* context, class nsITarget *target, PRInt32 callerDepth)
 {
-	nsPrivilegeManager *nsPrivManager = nsPrivilegeManager::GetPrivilegeManager();
-	return (nsPrivManager == NULL) ? PR_FALSE : nsPrivManager->IsPrivilegeEnabled(context, target, callerDepth);
+	if (nsPrivilegeManager::GetPrivilegeManager() == NULL) return PR_FALSE;
+	else {
+		PRBool result;
+		nsPrivilegeManager::GetPrivilegeManager()->IsPrivilegeEnabled((nsIScriptContext *)context, target, callerDepth,& result);
+		return result;
+	}
 }
 
 PR_IMPLEMENT(PRBool) 
 nsCapsRevertPrivilege(void* context, class nsITarget * target, PRInt32 callerDepth)
 {
-	nsPrivilegeManager *nsPrivManager = nsPrivilegeManager::GetPrivilegeManager();
-	return (nsPrivManager == NULL ) ? PR_FALSE : nsPrivManager->RevertPrivilege(context, target, callerDepth);
+	if (nsPrivilegeManager::GetPrivilegeManager() == NULL ) return PR_FALSE;
+	else {
+		PRBool result;
+		nsPrivilegeManager::GetPrivilegeManager()->RevertPrivilege((nsIScriptContext *)context, target, callerDepth,& result);
+		return result;
+	}
 }
 
 PR_IMPLEMENT(PRBool) 
 nsCapsDisablePrivilege(void* context, class nsITarget * target, PRInt32 callerDepth)
 {
-	nsPrivilegeManager *nsPrivManager = nsPrivilegeManager::GetPrivilegeManager();
-	return (nsPrivManager == NULL) ? PR_FALSE : nsPrivManager->DisablePrivilege(context, target, callerDepth);
+	if (nsPrivilegeManager::GetPrivilegeManager() == NULL) return PR_FALSE;
+	else {
+		PRBool result;
+		nsPrivilegeManager::GetPrivilegeManager()->DisablePrivilege((nsIScriptContext *)context, target, callerDepth,& result);
+		return result;
+	}
 }
 
 PR_IMPLEMENT(void*) 
 nsCapsGetClassPrincipalsFromStack(void* context, PRInt32 callerDepth)
 {
-	nsPrivilegeManager *nsPrivManager = nsPrivilegeManager::GetPrivilegeManager();
-	return (nsPrivManager == NULL) ? NULL 
-	: (void *)nsPrivManager->GetClassPrincipalsFromStack(context, callerDepth);
+	nsPrincipalManager * nsPrinManager = nsPrincipalManager::GetPrincipalManager();
+	return (nsPrinManager == NULL) ? NULL 
+	: (void *)nsPrinManager->GetClassPrincipalsFromStack((nsIScriptContext *)context, callerDepth);
 }
 
-PR_IMPLEMENT(PRInt16) 
-nsCapsComparePrincipalArray(void * prin1Array, void * prin2Array)
-{
-	nsPrivilegeManager * nsPrivManager = nsPrivilegeManager::GetPrivilegeManager();
-	return (nsPrivManager == NULL) ? nsPrivilegeManager::SetComparisonType_NoSubset 
-	: nsPrivManager->ComparePrincipalArray((nsPrincipalArray*)prin1Array, (nsPrincipalArray*)prin2Array);
-}
+//PR_IMPLEMENT(PRInt16) 
+//nsCapsComparePrincipalArray(void * prin1Array, void * prin2Array)
+//{
+//	nsPrivilegeManager * nsPrivManager = nsPrivilegeManager::GetPrivilegeManager();
+//	return (nsPrivManager == NULL) ? nsPrivilegeManager::SetComparisonType_NoSubset 
+//	: nsPrivManager->ComparePrincipalArray((nsPrincipalArray*)prin1Array, (nsPrincipalArray*)prin2Array);
+//}
 
-PR_IMPLEMENT(void*) 
-nsCapsIntersectPrincipalArray(void* prin1Array, void* prin2Array)
-{
-	nsPrivilegeManager *nsPrivManager = nsPrivilegeManager::GetPrivilegeManager();
-	return (nsPrivManager == NULL) ? NULL 
-	: nsPrivManager->IntersectPrincipalArray((nsPrincipalArray*)prin1Array, (nsPrincipalArray*)prin2Array);
-}
+//PR_IMPLEMENT(void*) 
+//nsCapsIntersectPrincipalArray(void* prin1Array, void* prin2Array)
+//{
+//	nsPrivilegeManager *nsPrivManager = nsPrivilegeManager::GetPrivilegeManager();
+//	return (nsPrivManager == NULL) ? NULL 
+//	: nsPrivManager->IntersectPrincipalArray((nsPrincipalArray*)prin1Array, (nsPrincipalArray*)prin2Array);
+//}
 
 PR_IMPLEMENT(PRBool) 
 nsCapsCanExtendTrust(void* from, void* to)
 {
-	nsPrivilegeManager *nsPrivManager = nsPrivilegeManager::GetPrivilegeManager();
-	return (nsPrivManager == NULL) ? PR_FALSE
-	: nsPrivManager->CanExtendTrust((nsPrincipalArray *)from, (nsPrincipalArray *)to);
+	nsPrincipalManager * nsPrinManager = nsPrincipalManager::GetPrincipalManager();
+	PRBool result = PR_FALSE;
+	if (nsPrinManager != NULL) nsPrinManager->CanExtendTrust((nsIPrincipalArray *)from, (nsIPrincipalArray *)to,& result);
+	return result;
 }
 
 /* wrappers for nsPrincipal object */
@@ -200,46 +218,6 @@ nsCapsPrincipalGetVendor(class nsIPrincipal *principal)
 	return NULL;
 }
 */
-PR_EXTERN(void *) 
-nsCapsNewPrincipalArray(PRUint32 count)
-{
-	nsPrincipalArray *prinArray = new nsPrincipalArray();
-	prinArray->SetSize(count, 1);
-	return prinArray;
-}
-
-PR_EXTERN(void) 
-nsCapsFreePrincipalArray(void *prinArrayArg)
-{
-	nsPrincipalArray *prinArray = (nsPrincipalArray *)prinArrayArg;
-	if (prinArray) {
-		prinArray->RemoveAll();
-		delete prinArray;
-	}
-}
-
-PR_EXTERN(void *) 
-nsCapsGetPrincipalArrayElement(void *prinArrayArg, PRUint32 index)
-{
-	nsPrincipalArray *prinArray = (nsPrincipalArray *)prinArrayArg;
-	return (prinArray == NULL) ? NULL : prinArray->Get(index);
-}
-
-PR_EXTERN(void) 
-nsCapsSetPrincipalArrayElement(void *prinArrayArg, PRUint32 index, void *element)
-{
-	nsPrincipalArray *prinArray = (nsPrincipalArray *)prinArrayArg;
-	if (prinArray == NULL) return;
-	prinArray->Set(index, element);
-}
-
-PR_EXTERN(PRUint32) 
-nsCapsGetPrincipalArraySize(void *prinArrayArg) 
-{
-  nsPrincipalArray *prinArray = (nsPrincipalArray *)prinArrayArg;
-  return (prinArray == NULL) ? 0 : prinArray->GetSize();
-}
-
 /* wrappers for nsTarget object */
 PR_IMPLEMENT(class nsITarget *) 
 nsCapsFindTarget(char * name)

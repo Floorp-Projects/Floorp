@@ -61,6 +61,8 @@ CPP_OBJS=                                   \
     .\$(OBJDIR)\nsCCapsManagerFactory.obj   \
     .\$(OBJDIR)\nsCertificatePrincipal.obj  \
     .\$(OBJDIR)\nsCodebasePrincipal.obj     \
+    .\$(OBJDIR)\nsPrincipalArray.obj        \
+    .\$(OBJDIR)\nsPrincipalManager.obj      \
     .\$(OBJDIR)\nsPrivilege.obj             \
     .\$(OBJDIR)\nsPrivilegeManager.obj      \
     .\$(OBJDIR)\nsPrivilegeTable.obj        \

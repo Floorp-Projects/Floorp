@@ -6,7 +6,8 @@ nsCCapsManagerFactory.h
 nsCertificatePrincipal.h
 nsCodebasePrincipal.h
 nsLoadZig.h
-nsPrincipalTools.h
+nsPrincipalArray.h
+nsPrincipalManager.h
 nsPrivilege.h
 nsPrivilegeManager.h
 nsPrivilegeTable.h

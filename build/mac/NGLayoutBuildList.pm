@@ -397,7 +397,6 @@ sub BuildClientDist()
 	_InstallFromManifest(":mozilla:js:src:xpconnect:public:MANIFEST",				"$distdirectory:xpconnect:");
 
 	#CAPS
-	_InstallFromManifest(":mozilla:caps:public:MANIFEST",							"$distdirectory:caps:");
 	_InstallFromManifest(":mozilla:caps:include:MANIFEST",							"$distdirectory:caps:");
 	_InstallFromManifest(":mozilla:caps:idl:MANIFEST",							"$distdirectory:idl:");
 

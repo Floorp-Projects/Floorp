@@ -37,7 +37,7 @@ DEPTH=..
 #// DIRS          - There are subdirectories to process
 #//
 #//------------------------------------------------------------------------
-DIRS= idl public include src
+DIRS= idl include src
 
 #//------------------------------------------------------------------------
 #//
