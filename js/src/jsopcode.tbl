@@ -205,7 +205,7 @@ OPDEF(JSOP_FORELEM,   106,"forelem",    NULL,         1,  2,  4,  0,  JOF_BYTE |
 OPDEF(JSOP_POP2,      107,"pop2",       NULL,         1,  2,  0,  0,  JOF_BYTE)
 
 /* ECMA-compliant assignment ops. */
-OPDEF(JSOP_BINDNAME,  108,"bindname",   NULL,         3,  0,  1,  0,  JOF_CONST|JOF_NAME)
+OPDEF(JSOP_BINDNAME,  108,"bindname",   NULL,         3,  0,  1,  0,  JOF_CONST|JOF_NAME|JOF_SET)
 OPDEF(JSOP_SETNAME,   109,"setname",    NULL,         3,  2,  1,  1,  JOF_CONST|JOF_NAME|JOF_SET)
 
 /* Exception handling ops. */
