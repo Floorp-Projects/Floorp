@@ -6,6 +6,9 @@ housecleaning
 ------------- 
 * sort out nsldap.h vs. nsLDAP.h.  can the former go away?
 
+* why do searches that return lots of entries to the nsLDAPChannel
+  (eg (sn=Smith) at netcenter) mostly stall out the UI?
+
 * I have a sneaking suspicion that the thread might be getting killed
   but not cleaned up when the last nsILDAPConnection::Release is
   called.  But I don't know if that's really the case.  Need to check
@@ -33,13 +36,18 @@ housecleaning
   since nsLDAPConnection will soon go back to being callable from the UI 
   thread, and ldap_unbind() is actually synchronous.  
 
+* come up with a strategy for removing completed nsILDAPOperations from
+  the connection's pending request queue
+
 * switch all old-style casts to use either QI or NS_CAST_* macros
 
 * some (many?) destructors don't clean up completely or correctly.  
   audit for this and fix.
 
 * many of the instance vars in the various class are probably not 
-  initialized correctly.  audit for this and fix.
+  initialized correctly.  audit for this (especially member
+  initializers, which may have the potential to break XPCOM compliance
+  on errors) and fix.
 
 * implement nsIPipeObserver in nsLDAPChannel in case pipe fills up?
 
@@ -93,6 +101,8 @@ housecleaning
 * verify that ldap_parse_result() isn't required to be called from the same
   thread as ldap_result() and before the threads-specific ldaperrno has a 
   chance to change.
+
+* get rid of inappropriate use of nsVoidKey by implementing an nsPRInt32Key
 
 misc
 ----
