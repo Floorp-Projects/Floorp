@@ -988,7 +988,6 @@ net_build_http_request (URL_Struct * URL_s,
     size_t csize;        /* size of command */
     const char *tempURL=NULL;
     char *proxyServer=NULL;
-    *line_buffer='\0';
         
     /* begin the request */
     switch(URL_s->method) {
@@ -1153,6 +1152,8 @@ net_build_http_request (URL_Struct * URL_s,
                 LL_I2L(timeInSec, URL_s->last_modified);
                 LL_I2L(secToUSec, PR_USEC_PER_SEC);
                 LL_MUL(timeInUSec, timeInSec, secToUSec);
+
+                PR_ExplodeTime(timeInUSec, PR_GMTParameters, &expandedTime);
 
                 PR_FormatTimeUSEnglish(line_buffer, 400,
                                       "If-Modified-Since: %a, %d %b %Y %H:%M:%S GMT",
