@@ -305,3 +305,6 @@ pref("li.sync.time", 30);
 pref("mime.table.allow_add", true);
 pref("mime.table.allow_edit", true);
 pref("mime.table.allow_remove", true);
+
+pref("netcenter.register", false);
+
