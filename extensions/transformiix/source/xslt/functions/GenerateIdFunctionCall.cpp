@@ -20,7 +20,7 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: GenerateIdFunctionCall.cpp,v 1.2 2000/04/19 11:06:09 kvisco%ziplink.net Exp $
+ * $Id: GenerateIdFunctionCall.cpp,v 1.3 2000/04/19 23:07:31 nisheeth%netscape.com Exp $
  */
 
 #include "XSLTFunctions.h"
@@ -55,7 +55,7 @@ ExprResult* GenerateIdFunctionCall::evaluate(Node* context, ContextState* cs) {
 
     if (argc > 0) {
         ListIterator* iter = params.iterator();
-        Expr* param = iter->next();
+        Expr* param = (Expr*) iter->next();
         delete iter;
         ExprResult* exprResult = param->evaluate(context, cs);
         if (!exprResult) return new StringResult("");
