@@ -150,7 +150,11 @@ $(PROGS): $(OBJS) # $(EX_LIBS)
 ifeq ($(OS_ARCH),Linux)
 	$(CCC) -rdynamic -o $@ $(OBJS) $(LDFLAGS) $(EX_LIBS) $(OS_LIBS) -L/usr/X11R6/lib -lXm -lXt -lX11 -lXp -lXext
 else
+ifdef NS_USE_GCC
+	$(CCC) -o $@ $(OBJS) $(LDFLAGS) $(EX_LIBS) $(OS_LIBS) $(DSO_LDOPTS) -L/usr/X11R6/lib -lXm -lXt -lX11 -lXext
+else
 	$(CCC) -o $@ -woff 84,85 $(LDFLAGS) $(OBJS) $(EX_LIBS) $(OS_LIBS) -lXm -lXt -lX11 
+endif
 endif
 
 export::
