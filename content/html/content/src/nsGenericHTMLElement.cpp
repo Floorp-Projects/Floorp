@@ -1419,7 +1419,7 @@ nsGenericHTMLElement::GetPrimaryFrame(nsIHTMLContent* aContent,
                                       nsIFormControlFrame *&aFormControlFrame)
 {
   nsIDocument* doc = nsnull;
-  nsresult res = NS_OK;
+  nsresult res = NS_NOINTERFACE;
    // Get the document
   if (NS_OK == aContent->GetDocument(doc)) {
     if (nsnull != doc) {
