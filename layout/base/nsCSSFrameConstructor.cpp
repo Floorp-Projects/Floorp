@@ -10732,12 +10732,6 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
       shell->GetFrameManager(getter_AddRefs(frameManager));
 
       PRBool affects;
-#ifdef MOZ_SVG
-      // XXX should check we're in SVG NS here
-      if (aAttribute == nsHTMLAtoms::style)
-        affects = PR_TRUE;
-      else
-#endif
       frameManager->AttributeAffectsStyle(aAttribute, aContent, affects);
       if (affects) {
 #ifdef DEBUG_shaver
