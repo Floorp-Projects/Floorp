@@ -19,7 +19,7 @@
 #include "nsICharsetAlias.h"
 #undef NS_IMPL_IDS
 
-#define DONT_INFORM_WEBSHELL
+//#define DONT_INFORM_WEBSHELL
 
 #include "nsMetaCharsetObserver.h"
 #include "nsIMetaCharsetService.h"
@@ -34,7 +34,6 @@
 #include "nsIServiceManager.h"
 #include "nsIDocumentLoader.h"
 #include "nsIWebShellServices.h"
-#include "nsIWebShell.h"
 #include "nsIContentViewerContainer.h"
 
 static NS_DEFINE_IID(kIElementObserverIID, NS_IELEMENTOBSERVER_IID);
@@ -46,7 +45,6 @@ static NS_DEFINE_IID(kIMetaCharsetServiceIID, NS_IMETA_CHARSET_SERVICE_IID);
 static NS_DEFINE_IID(kDocLoaderServiceCID, NS_DOCUMENTLOADER_SERVICE_CID);
 static NS_DEFINE_IID(kIDocumentLoaderIID, NS_IDOCUMENTLOADER_IID);
 static NS_DEFINE_IID(kIWebShellServicesIID, NS_IWEB_SHELL_SERVICES_IID);
-static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 //========================================================================== 
 //
 // Class declaration for the class 
@@ -285,12 +283,7 @@ NS_IMETHODIMP nsMetaCharsetObserver::NotifyWebShell(
    nsIDocumentLoader * docLoader = nsnull;
    nsIContentViewerContainer * cvc  = nsnull;
    nsIWebShellServices* wss = nsnull;
-   nsIWebShell* iws = nsnull;
-   const PRUnichar* theURL = nsnull;
-   PRInt32 historyIdx = -1;
-   nsAutoString urlStr;
-   const char* urlCStr = nsnull;
-   
+
    if(NS_FAILED(res =nsServiceManager::GetService(kDocLoaderServiceCID,
                                                    kIDocumentLoaderIID,
                                                    (nsISupports**)&docLoader)))
@@ -302,23 +295,6 @@ NS_IMETHODIMP nsMetaCharsetObserver::NotifyWebShell(
    if(NS_FAILED( res = cvc->QueryInterface(kIWebShellServicesIID, (void**)&wss)))
      goto done;
 
-   if(NS_FAILED( res = wss->QueryInterface(kIWebShellIID, (void**)&iws)))
-     goto done;
-    
-
-   if(NS_FAILED( res = iws->GetHistoryIndex(historyIdx) ))
-     goto done;
-
-   // ask the webshelle about the current URL
-   if(NS_FAILED( res = iws->GetURL(historyIdx, &theURL) ))
-     goto done;
-   
-   // convert the PRUnichar* to const char*
-   urlStr = theURL;
-   urlCStr = urlStr.ToNewCString();
-   if(nsnull == urlCStr) 
-     goto done;
-
 #ifndef DONT_INFORM_WEBSHELL
    // ask the webshellservice to load the URL
    if(NS_FAILED( res = wss->SetRendering(PR_TRUE) ))
@@ -327,18 +303,14 @@ NS_IMETHODIMP nsMetaCharsetObserver::NotifyWebShell(
    if(NS_FAILED(res = wss->StopDocumentLoad()))
      goto done;
 
-   if(NS_FAILED(res = wss->LoadDocument(urlCStr, charset, source)))
+   if(NS_FAILED(res = wss->ReloadDocument(charset, source)))
      goto done;
  
 #endif
 done:
-   if(urlCStr) {
-      delete [] (char*) urlCStr;
-   }
    if(docLoader) {
       nsServiceManager::ReleaseService(kDocLoaderServiceCID,docLoader);
    }
-   NS_IF_RELEASE(iws);
    NS_IF_RELEASE(cvc);
    NS_IF_RELEASE(wss);
    return res;
