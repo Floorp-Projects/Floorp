@@ -114,6 +114,7 @@ void nsLabel::PreCreateWidget(nsWidgetInitData *aInitData)
 NS_METHOD nsLabel::SetAlignment(nsLabelAlignment aAlignment)
 {
   mAlignment = aAlignment;
+  return NS_OK;
 }
 
 
@@ -176,6 +177,7 @@ NS_METHOD nsLabel::SetLabel(const nsString& aText)
   XtVaSetValues(mWidget, XmNlabelString, str, nsnull);
   NS_FREE_STR_BUF(label);
   XmStringFree(str);
+  return NS_OK;
 
 }
 
@@ -196,6 +198,7 @@ NS_METHOD nsLabel::GetLabel(nsString& aBuffer)
   }
 
   XmStringFree(str);
+  return NS_OK;
 
 }
 
