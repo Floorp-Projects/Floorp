@@ -26,7 +26,7 @@
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
 
-#define NS_TO_X_COMPONENT(a) (a << 8)
+#define NS_TO_X_COMPONENT(a) ((a << 8) | (a))
 
 nsDeviceContextUnix :: nsDeviceContextUnix()
 {
