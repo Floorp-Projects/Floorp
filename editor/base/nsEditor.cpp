@@ -339,6 +339,7 @@ nsEditor::nsEditor()
 
 nsEditor::~nsEditor()
 {
+
   if (mActionListeners)
   {
     PRInt32 i;
@@ -363,6 +364,7 @@ nsEditor::~nsEditor()
   // Release service pointers
   if (mPrefs)
     nsServiceManager::ReleaseService(kPrefCID, mPrefs);
+
 }
 
 
@@ -1902,9 +1904,9 @@ NS_IMETHODIMP nsEditor::CreateTxnForInsertText(const nsString & aStringToInsert,
       if (NS_SUCCEEDED(result) && enumerator)
       {
         enumerator->First(); 
-        nsISupports *currentItem;
-        result = enumerator->CurrentItem(&currentItem);
-        if ((NS_SUCCEEDED(result)) && (nsnull!=currentItem))
+        nsCOMPtr<nsISupports> currentItem;
+        result = enumerator->CurrentItem(getter_AddRefs(currentItem));
+        if ((NS_SUCCEEDED(result)) && (currentItem))
         {
           result = NS_ERROR_UNEXPECTED; 
           nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
@@ -2260,8 +2262,8 @@ NS_IMETHODIMP nsEditor::CreateTxnForDeleteSelection(nsIEditor::ECollapsedSelecti
     {
       for (enumerator->First(); NS_OK!=enumerator->IsDone(); enumerator->Next())
       {
-        nsISupports *currentItem=nsnull;
-        result = enumerator->CurrentItem(&currentItem);
+        nsCOMPtr<nsISupports> currentItem;
+        result = enumerator->CurrentItem(getter_AddRefs(currentItem));
         if ((NS_SUCCEEDED(result)) && (currentItem))
         {
           nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
@@ -3546,9 +3548,9 @@ nsEditor::BeginComposition(void)
     if (NS_SUCCEEDED(result) && enumerator)
 		{
 			enumerator->First(); 
-			nsISupports *currentItem;
-			result = enumerator->CurrentItem(&currentItem);
-			if ((NS_SUCCEEDED(result)) && (nsnull!=currentItem))
+			nsCOMPtr<nsISupports> currentItem;
+      result = enumerator->CurrentItem(getter_AddRefs(currentItem));
+			if ((NS_SUCCEEDED(result)) && (currentItem))
 			{
 				result = NS_ERROR_UNEXPECTED; 
 				nsCOMPtr<nsIDOMRange> range(do_QueryInterface(currentItem));
@@ -4250,8 +4252,8 @@ nsEditor::GetStartNodeAndOffset(nsIDOMSelection *aSelection,
     return NS_ERROR_FAILURE;
     
   enumerator->First(); 
-  nsISupports *currentItem;
-  if ((NS_FAILED(enumerator->CurrentItem(&currentItem))) || !currentItem)
+  nsCOMPtr<nsISupports> currentItem;
+  if ((NS_FAILED(enumerator->CurrentItem(getter_AddRefs(currentItem)))) || !currentItem)
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
@@ -4285,8 +4287,8 @@ nsEditor::GetEndNodeAndOffset(nsIDOMSelection *aSelection,
     return NS_ERROR_FAILURE;
     
   enumerator->First(); 
-  nsISupports *currentItem;
-  if ((NS_FAILED(enumerator->CurrentItem(&currentItem))) || !currentItem)
+  nsCOMPtr<nsISupports> currentItem;
+  if ((NS_FAILED(enumerator->CurrentItem(getter_AddRefs(currentItem)))) || !currentItem)
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );

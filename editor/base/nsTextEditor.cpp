@@ -414,9 +414,9 @@ NS_IMETHODIMP nsTextEditor::SetTextProperty(nsIAtom        *aProperty,
         if (NS_SUCCEEDED(result) && enumerator)
         {
           enumerator->First(); 
-          nsISupports *currentItem;
-          result = enumerator->CurrentItem(&currentItem);
-          if ((NS_SUCCEEDED(result)) && (nsnull!=currentItem))
+          nsCOMPtr<nsISupports> currentItem;
+          result = enumerator->CurrentItem(getter_AddRefs(currentItem));
+          if ((NS_SUCCEEDED(result)) && (currentItem))
           {
             nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
             nsCOMPtr<nsIDOMNode>commonParent;
@@ -531,8 +531,8 @@ NS_IMETHODIMP nsTextEditor::GetTextProperty(nsIAtom *aProperty,
     if (NS_SUCCEEDED(result) && enumerator)
     {
       enumerator->First(); 
-      nsISupports *currentItem;
-      result = enumerator->CurrentItem(&currentItem);
+      nsCOMPtr<nsISupports> currentItem;
+      result = enumerator->CurrentItem(getter_AddRefs(currentItem));
       // XXX: should be a while loop, to get each separate range
       if ((NS_SUCCEEDED(result)) && currentItem)
       {
@@ -758,9 +758,9 @@ NS_IMETHODIMP nsTextEditor::RemoveTextProperty(nsIAtom *aProperty, const nsStrin
         if (NS_SUCCEEDED(result) && enumerator)
         {
           enumerator->First(); 
-          nsISupports *currentItem;
-          result = enumerator->CurrentItem(&currentItem);
-          if ((NS_SUCCEEDED(result)) && (nsnull!=currentItem))
+          nsCOMPtr<nsISupports>currentItem;
+          result = enumerator->CurrentItem(getter_AddRefs(currentItem));
+          if ((NS_SUCCEEDED(result)) && (currentItem))
           {
             nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
             nsCOMPtr<nsIDOMNode>commonParent;
@@ -857,9 +857,9 @@ void nsTextEditor::GetTextSelectionOffsetsForRange(nsIDOMSelection *aSelection,
   if (NS_SUCCEEDED(result) && enumerator)
   {
     enumerator->First(); 
-    nsISupports *currentItem;
-    result = enumerator->CurrentItem(&currentItem);
-    if ((NS_SUCCEEDED(result)) && (nsnull!=currentItem))
+    nsCOMPtr<nsISupports> currentItem;
+    result = enumerator->CurrentItem(getter_AddRefs(currentItem));
+    if ((NS_SUCCEEDED(result)) && currentItem)
     {
       nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
       range->GetCommonParent(aParent);
@@ -1508,7 +1508,8 @@ NS_IMETHODIMP nsTextEditor::OutputToString(nsString& aOutputString,
   nsTextRulesInfo ruleInfo(nsTextEditRules::kOutputText);
   ruleInfo.outString = &resultString;
   nsresult rv = mRules->WillDoAction(nsnull, &ruleInfo, &cancel);
-  if ((PR_TRUE==cancel) && (NS_SUCCEEDED(rv)))
+  if (NS_FAILED(rv)) { return rv; }
+  if (PR_TRUE==cancel)
   { // this case will get triggered by password fields
     aOutputString = *(ruleInfo.outString);
   }
@@ -2984,9 +2985,9 @@ nsresult nsTextEditor::GetTextSelectionOffsets(nsIDOMSelection *aSelection,
   {
     // don't use "result" in this block
     enumerator->First(); 
-    nsISupports *currentItem;
-    nsresult findParentResult = enumerator->CurrentItem(&currentItem);
-    if ((NS_SUCCEEDED(findParentResult)) && (nsnull!=currentItem))
+    nsCOMPtr<nsISupports> currentItem;
+    nsresult findParentResult = enumerator->CurrentItem(getter_AddRefs(currentItem));
+    if ((NS_SUCCEEDED(findParentResult)) && (currentItem))
     {
       nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
       range->GetCommonParent(getter_AddRefs(parentNode));

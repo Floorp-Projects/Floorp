@@ -115,7 +115,8 @@ NS_IMETHODIMP
 nsTextEditRules::WillDoAction(nsIDOMSelection *aSelection, 
                               nsRulesInfo *aInfo, PRBool *aCancel)
 {
-  if (!aSelection || !aInfo || !aCancel) { return NS_ERROR_NULL_POINTER; }
+  // null selection is legal
+  if (!aInfo || !aCancel) { return NS_ERROR_NULL_POINTER; }
 
   *aCancel = PR_FALSE;
 

@@ -820,9 +820,9 @@ nsHTMLEditor::GetParagraphStyle(nsStringArray *aTagList)
     if (NS_SUCCEEDED(res) && enumerator)
     {
       enumerator->First(); 
-      nsISupports *currentItem;
-      res = enumerator->CurrentItem(&currentItem);
-      if ((NS_SUCCEEDED(res)) && (nsnull!=currentItem))
+      nsCOMPtr<nsISupports> currentItem;
+      res = enumerator->CurrentItem(getter_AddRefs(currentItem));
+      if ((NS_SUCCEEDED(res)) && (currentItem))
       {
         nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
         // scan the range for all the independent block content blockSections
@@ -900,9 +900,9 @@ nsHTMLEditor::AddBlockParent(nsString& aParentTag)
     if (enumerator)
     {
       enumerator->First(); 
-      nsISupports *currentItem;
-      res = enumerator->CurrentItem(&currentItem);
-      if ((NS_SUCCEEDED(res)) && (nsnull!=currentItem))
+      nsCOMPtr<nsISupports> currentItem;
+      res = enumerator->CurrentItem(getter_AddRefs(currentItem));
+      if ((NS_SUCCEEDED(res)) && (currentItem))
       {
         nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
         // scan the range for all the independent block content blockSections
@@ -951,9 +951,9 @@ nsHTMLEditor::ReplaceBlockParent(nsString& aParentTag)
     if (NS_SUCCEEDED(res) && enumerator)
     {
       enumerator->First(); 
-      nsISupports *currentItem;
-      res = enumerator->CurrentItem(&currentItem);
-      if ((NS_SUCCEEDED(res)) && (nsnull!=currentItem))
+      nsCOMPtr<nsISupports> currentItem;
+      res = enumerator->CurrentItem(getter_AddRefs(currentItem));
+      if ((NS_SUCCEEDED(res)) && (currentItem))
       {
         nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
         // scan the range for all the independent block content blockSections
@@ -1342,9 +1342,9 @@ nsHTMLEditor::RemoveParagraphStyle()
     if (NS_SUCCEEDED(res) && enumerator)
     {
       enumerator->First(); 
-      nsISupports *currentItem;
-      res = enumerator->CurrentItem(&currentItem);
-      if ((NS_SUCCEEDED(res)) && (nsnull!=currentItem))
+      nsCOMPtr<nsISupports> currentItem;
+      res = enumerator->CurrentItem(getter_AddRefs(currentItem));
+      if ((NS_SUCCEEDED(res)) && (currentItem))
       {
         nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
         res = RemoveParagraphStyleFromRange(range);
@@ -1462,9 +1462,9 @@ nsHTMLEditor::RemoveParent(const nsString &aParentTag)
     if (NS_SUCCEEDED(res) && enumerator)
     {
       enumerator->First(); 
-      nsISupports *currentItem;
-      res = enumerator->CurrentItem(&currentItem);
-      if ((NS_SUCCEEDED(res)) && (nsnull!=currentItem))
+      nsCOMPtr<nsISupports> currentItem;
+      res = enumerator->CurrentItem(getter_AddRefs(currentItem));
+      if ((NS_SUCCEEDED(res)) && (currentItem))
       {
         nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
         res = RemoveParentFromRange(aParentTag, range);
@@ -2106,8 +2106,8 @@ nsHTMLEditor::GetSelectedElement(const nsString& aTagName, nsIDOMElement** aRetu
     if (NS_SUCCEEDED(res) && enumerator)
     {
       enumerator->First(); 
-      nsISupports *currentItem;
-      res = enumerator->CurrentItem(&currentItem);
+      nsCOMPtr<nsISupports> currentItem;
+      res = enumerator->CurrentItem(getter_AddRefs(currentItem));
       if ((NS_SUCCEEDED(res)) && currentItem)
       {
         nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );

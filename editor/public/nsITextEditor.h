@@ -40,11 +40,6 @@ class nsIFileSpec;
 #define TEXT_EDITOR_FLAG_DISABLED    0x10   // all events are disabled (like scrolling).  Editor will not accept focus.
 #define TEXT_EDITOR_FLAG_FILTER      0x20   // text input is limited to certain character types, use mFilter
 
-// XXX Text filters are extremely preliminary and should not yet be used!
-//     Need to work with international group to rationalize restricted input
-#define TEXT_EDITOR_FILTER_NUMBERS          0x01 // ignore numbers
-#define TEXT_EDITOR_FILTER_LETTERS          0x02 // ignore a-z,A-Z
-#define TEXT_EDITOR_FILTER_NONALPHANUMBERIC 0x04 // accept only numbers and letters
 
 
 /**
