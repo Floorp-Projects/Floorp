@@ -83,6 +83,9 @@
 #include "nsIDOMNodeList.h" //for selection settting helper func
 #include "nsIDOMRange.h" //for selection settting helper func
 #include "nsRange.h" //for selection settting helper func (i cant believe this is exported!?)
+#include "nsIScriptGlobalObject.h" //needed for notify selection changed to update the menus ect.
+#include "nsIDOMWindow.h" //needed for notify selection changed to update the menus ect.
+
 
 #define DEFAULT_COLUMN_WIDTH 20
 
@@ -100,15 +103,15 @@ static void RemoveNewlines(nsString &aString)
 
 
 //listen for the return key. kinda lame.
-class nsTextAreaKeyListener : public nsIDOMKeyListener, public nsSupportsWeakReference
+class nsTextInputListener : public nsIDOMKeyListener, public nsSupportsWeakReference, public nsIDOMSelectionListener
 {
 public:
   /** the default constructor
    */ 
-  nsTextAreaKeyListener();
+  nsTextInputListener();
   /** the default destructor. virtual due to the possibility of derivation.
    */
-  virtual ~nsTextAreaKeyListener();
+  virtual ~nsTextInputListener();
 
   /** SetEditor gives an address to the editor that will be accessed
    *  @param aEditor the editor this listener calls for editing operations
@@ -126,6 +129,9 @@ public:
   virtual nsresult KeyUp(nsIDOMEvent* aKeyEvent);
   virtual nsresult KeyPress(nsIDOMEvent* aKeyEvent);
 /*END interfaces from nsIDOMKeyListener*/
+/*BEGIN nsIDOMSelectionListener Interface*/
+  NS_IMETHOD    NotifySelectionChanged(nsIDOMDocument* aDoc, nsIDOMSelection* aSel, PRInt16 aReason);
+/*END nsIDOMSelectionListener*/
 
 protected:
   nsGfxTextControlFrame2* mFrame;  // weak reference
@@ -133,31 +139,31 @@ protected:
 
 
 /*
- * nsTextEditorKeyListener implementation
+ * nsTextEditorListener implementation
  */
 
-NS_IMPL_ADDREF(nsTextAreaKeyListener)
+NS_IMPL_ADDREF(nsTextInputListener)
 
-NS_IMPL_RELEASE(nsTextAreaKeyListener)
+NS_IMPL_RELEASE(nsTextInputListener)
 
 
-nsTextAreaKeyListener::nsTextAreaKeyListener()
+nsTextInputListener::nsTextInputListener()
 {
   NS_INIT_REFCNT();
 }
 
 
 
-nsTextAreaKeyListener::~nsTextAreaKeyListener() 
+nsTextInputListener::~nsTextInputListener() 
 {
 }
 
 
-NS_IMPL_QUERY_INTERFACE3(nsTextAreaKeyListener, nsIDOMEventListener, nsIDOMKeyListener, nsISupportsWeakReference)
+NS_IMPL_QUERY_INTERFACE4(nsTextInputListener, nsIDOMEventListener, nsIDOMKeyListener, nsISupportsWeakReference, nsIDOMSelectionListener)
 
 
 nsresult
-nsTextAreaKeyListener::HandleEvent(nsIDOMEvent* aEvent)
+nsTextInputListener::HandleEvent(nsIDOMEvent* aEvent)
 {
   return NS_OK;
 }
@@ -166,21 +172,21 @@ nsTextAreaKeyListener::HandleEvent(nsIDOMEvent* aEvent)
 // by default, an error is returned indicating event is consumed
 // joki is fixing this interface.
 nsresult
-nsTextAreaKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
+nsTextInputListener::KeyDown(nsIDOMEvent* aKeyEvent)
 {
   return NS_OK;
 }
 
 
 nsresult
-nsTextAreaKeyListener::KeyUp(nsIDOMEvent* aKeyEvent)
+nsTextInputListener::KeyUp(nsIDOMEvent* aKeyEvent)
 {
   return NS_OK;
 }
 
 
 nsresult
-nsTextAreaKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
+nsTextInputListener::KeyPress(nsIDOMEvent* aKeyEvent)
 {
   if (!mFrame)
     return NS_OK;
@@ -210,17 +216,52 @@ nsTextAreaKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
   return NS_OK;
 }
 
-//END KEYLISTENER
+//END KeyListener
+
+//BEGIN NS_IDOMSELECITONLISTENER
 
 
+NS_IMETHODIMP
+nsTextInputListener::NotifySelectionChanged(nsIDOMDocument* aDoc, nsIDOMSelection* aSel, PRInt16 aReason)
+{
+  PRBool collapsed;
+  if (!mFrame || !aDoc || !aSel || NS_FAILED(aSel->GetIsCollapsed(&collapsed)) || collapsed)
+    return NS_OK;//no update if collapsed
+  nsCOMPtr<nsIContent> content;
+  nsresult rv = mFrame->GetContent(getter_AddRefs(content));
+  if (NS_FAILED(rv) || !content ) 
+    return rv?rv:NS_ERROR_FAILURE;
+  
+  nsCOMPtr<nsIDocument> doc;
+  rv = content->GetDocument(*getter_AddRefs(doc));
+  if (NS_FAILED(rv) || !doc ) 
+    return rv?rv:NS_ERROR_FAILURE;
 
-class nsTextAreaSelectionImpl : public nsSupportsWeakReference, public nsISelectionController, public nsIFrameSelection
+  nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject;
+  rv = doc->GetScriptGlobalObject(getter_AddRefs(scriptGlobalObject));
+  if (NS_FAILED(rv) || !scriptGlobalObject ) 
+    return rv?rv:NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(scriptGlobalObject, &rv);
+  if (NS_FAILED(rv) || !domWindow ) 
+    return rv?rv:NS_ERROR_FAILURE;
+
+  return domWindow->UpdateCommands(NS_ConvertASCIItoUCS2("select"));
+
+}
+
+
+//END NS_IDOMSELECTIONLISTENER
+//END NSTEXTINPUTLISTENER
+
+  
+class nsTextInputSelectionImpl : public nsSupportsWeakReference, public nsISelectionController, public nsIFrameSelection
 {
 public:
   NS_DECL_ISUPPORTS
 
-  nsTextAreaSelectionImpl(nsIFrameSelection *aSel, nsIPresShell *aShell, nsIContent *aLimiter);
-  ~nsTextAreaSelectionImpl(){}
+  nsTextInputSelectionImpl(nsIFrameSelection *aSel, nsIPresShell *aShell, nsIContent *aLimiter);
+  ~nsTextInputSelectionImpl(){}
 
   
   //NSISELECTIONCONTROLLER INTERFACES
@@ -280,12 +321,12 @@ private:
 };
 
 // Implement our nsISupports methods
-NS_IMPL_ISUPPORTS3(nsTextAreaSelectionImpl, nsISelectionController, nsISupportsWeakReference, nsIFrameSelection)
+NS_IMPL_ISUPPORTS3(nsTextInputSelectionImpl, nsISelectionController, nsISupportsWeakReference, nsIFrameSelection)
 
 
-// BEGIN nsTextAreaSelectionImpl
+// BEGIN nsTextInputSelectionImpl
 
-nsTextAreaSelectionImpl::nsTextAreaSelectionImpl(nsIFrameSelection *aSel, nsIPresShell *aShell, nsIContent *aLimiter)
+nsTextInputSelectionImpl::nsTextInputSelectionImpl(nsIFrameSelection *aSel, nsIPresShell *aShell, nsIContent *aLimiter)
 {
   NS_INIT_REFCNT();
   if (aSel && aShell)
@@ -299,7 +340,7 @@ nsTextAreaSelectionImpl::nsTextAreaSelectionImpl(nsIFrameSelection *aSel, nsIPre
 }
 
 NS_IMETHODIMP
-nsTextAreaSelectionImpl::SetDisplaySelection(PRInt16 aToggle)
+nsTextInputSelectionImpl::SetDisplaySelection(PRInt16 aToggle)
 {
   if (mFrameSelection)
     return mFrameSelection->SetDisplaySelection(aToggle);
@@ -307,7 +348,7 @@ nsTextAreaSelectionImpl::SetDisplaySelection(PRInt16 aToggle)
 }
 
 NS_IMETHODIMP
-nsTextAreaSelectionImpl::GetDisplaySelection(PRInt16 *aToggle)
+nsTextInputSelectionImpl::GetDisplaySelection(PRInt16 *aToggle)
 {
   if (mFrameSelection)
     return mFrameSelection->GetDisplaySelection(aToggle);
@@ -315,7 +356,7 @@ nsTextAreaSelectionImpl::GetDisplaySelection(PRInt16 *aToggle)
 }
 
 NS_IMETHODIMP
-nsTextAreaSelectionImpl::GetSelection(PRInt16 type, nsIDOMSelection **_retval)
+nsTextInputSelectionImpl::GetSelection(PRInt16 type, nsIDOMSelection **_retval)
 {
   if (mFrameSelection)
     return mFrameSelection->GetSelection(type, _retval);
@@ -323,7 +364,7 @@ nsTextAreaSelectionImpl::GetSelection(PRInt16 type, nsIDOMSelection **_retval)
 }
 
 NS_IMETHODIMP
-nsTextAreaSelectionImpl::ScrollSelectionIntoView(PRInt16 type, PRInt16 region)
+nsTextInputSelectionImpl::ScrollSelectionIntoView(PRInt16 type, PRInt16 region)
 {
   if (mFrameSelection)
     return mFrameSelection->ScrollSelectionIntoView(type, region);
@@ -331,7 +372,7 @@ nsTextAreaSelectionImpl::ScrollSelectionIntoView(PRInt16 type, PRInt16 region)
 }
 
 NS_IMETHODIMP
-nsTextAreaSelectionImpl::RepaintSelection(PRInt16 type)
+nsTextInputSelectionImpl::RepaintSelection(PRInt16 type)
 {
   if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
   nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShellWeak);
@@ -347,13 +388,13 @@ nsTextAreaSelectionImpl::RepaintSelection(PRInt16 type)
 }
 
 NS_IMETHODIMP
-nsTextAreaSelectionImpl::RepaintSelection(nsIPresContext* aPresContext, SelectionType aSelectionType)
+nsTextInputSelectionImpl::RepaintSelection(nsIPresContext* aPresContext, SelectionType aSelectionType)
 {
   return RepaintSelection(aSelectionType);
 }
 
 NS_IMETHODIMP
-nsTextAreaSelectionImpl::SetCaretEnabled(PRBool enabled)
+nsTextInputSelectionImpl::SetCaretEnabled(PRBool enabled)
 {
   if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
   nsresult result;
@@ -378,7 +419,7 @@ nsTextAreaSelectionImpl::SetCaretEnabled(PRBool enabled)
 }
 
 NS_IMETHODIMP
-nsTextAreaSelectionImpl::SetCaretReadOnly(PRBool aReadOnly)
+nsTextInputSelectionImpl::SetCaretReadOnly(PRBool aReadOnly)
 {
   if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
   nsresult result;
@@ -400,7 +441,7 @@ nsTextAreaSelectionImpl::SetCaretReadOnly(PRBool aReadOnly)
 }
 
 NS_IMETHODIMP
-nsTextAreaSelectionImpl::GetCaretEnabled(PRBool *_retval)
+nsTextInputSelectionImpl::GetCaretEnabled(PRBool *_retval)
 {
   if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
   nsresult result;
@@ -423,7 +464,7 @@ nsTextAreaSelectionImpl::GetCaretEnabled(PRBool *_retval)
 
 
 NS_IMETHODIMP
-nsTextAreaSelectionImpl::CharacterMove(PRBool aForward, PRBool aExtend)
+nsTextInputSelectionImpl::CharacterMove(PRBool aForward, PRBool aExtend)
 {
   if (mFrameSelection)
     return mFrameSelection->CharacterMove(aForward, aExtend);
@@ -432,7 +473,7 @@ nsTextAreaSelectionImpl::CharacterMove(PRBool aForward, PRBool aExtend)
 
 
 NS_IMETHODIMP
-nsTextAreaSelectionImpl::WordMove(PRBool aForward, PRBool aExtend)
+nsTextInputSelectionImpl::WordMove(PRBool aForward, PRBool aExtend)
 {
   if (mFrameSelection)
     return mFrameSelection->WordMove(aForward, aExtend);
@@ -441,7 +482,7 @@ nsTextAreaSelectionImpl::WordMove(PRBool aForward, PRBool aExtend)
 
 
 NS_IMETHODIMP
-nsTextAreaSelectionImpl::LineMove(PRBool aForward, PRBool aExtend)
+nsTextInputSelectionImpl::LineMove(PRBool aForward, PRBool aExtend)
 {
   if (mFrameSelection)
     return mFrameSelection->LineMove(aForward, aExtend);
@@ -450,7 +491,7 @@ nsTextAreaSelectionImpl::LineMove(PRBool aForward, PRBool aExtend)
 
 
 NS_IMETHODIMP
-nsTextAreaSelectionImpl::IntraLineMove(PRBool aForward, PRBool aExtend)
+nsTextInputSelectionImpl::IntraLineMove(PRBool aForward, PRBool aExtend)
 {
   if (mFrameSelection)
     return mFrameSelection->IntraLineMove(aForward, aExtend);
@@ -459,7 +500,7 @@ nsTextAreaSelectionImpl::IntraLineMove(PRBool aForward, PRBool aExtend)
 
 
 NS_IMETHODIMP
-nsTextAreaSelectionImpl::SelectAll()
+nsTextInputSelectionImpl::SelectAll()
 {
   if (mFrameSelection)
     return mFrameSelection->SelectAll();
@@ -467,38 +508,38 @@ nsTextAreaSelectionImpl::SelectAll()
 }
 
 
-//nsTextAreaSelectionImpl::FRAMESELECTIONAPIS
+//nsTextInputSelectionImpl::FRAMESELECTIONAPIS
 
 NS_IMETHODIMP
-nsTextAreaSelectionImpl::Init(nsIFocusTracker *aTracker, nsIContent *aLimiter)
+nsTextInputSelectionImpl::Init(nsIFocusTracker *aTracker, nsIContent *aLimiter)
 {
   return mFrameSelection->Init(aTracker, aLimiter);
 }
 
 
 NS_IMETHODIMP
-nsTextAreaSelectionImpl::ShutDown()
+nsTextInputSelectionImpl::ShutDown()
 {
   return mFrameSelection->ShutDown();
 }
 
 
 NS_IMETHODIMP
-nsTextAreaSelectionImpl::HandleTextEvent(nsGUIEvent *aGuiEvent)
+nsTextInputSelectionImpl::HandleTextEvent(nsGUIEvent *aGuiEvent)
 {
   return mFrameSelection->HandleTextEvent(aGuiEvent);
 }
 
 
 NS_IMETHODIMP
-nsTextAreaSelectionImpl::HandleKeyEvent(nsIPresContext* aPresContext, nsGUIEvent *aGuiEvent)
+nsTextInputSelectionImpl::HandleKeyEvent(nsIPresContext* aPresContext, nsGUIEvent *aGuiEvent)
 {
   return mFrameSelection->HandleKeyEvent(aPresContext, aGuiEvent);
 }
 
 
 NS_IMETHODIMP
-nsTextAreaSelectionImpl::HandleClick(nsIContent *aNewFocus, PRUint32 aContentOffset, PRUint32 aContentEndOffset , 
+nsTextInputSelectionImpl::HandleClick(nsIContent *aNewFocus, PRUint32 aContentOffset, PRUint32 aContentEndOffset , 
                      PRBool aContinueSelection, PRBool aMultipleSelection, PRBool aHint)
 {
   return mFrameSelection->HandleClick(aNewFocus, aContentOffset, aContentEndOffset , 
@@ -507,42 +548,42 @@ nsTextAreaSelectionImpl::HandleClick(nsIContent *aNewFocus, PRUint32 aContentOff
 
 
 NS_IMETHODIMP
-nsTextAreaSelectionImpl::HandleDrag(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint)
+nsTextInputSelectionImpl::HandleDrag(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint)
 {
   return mFrameSelection->HandleDrag(aPresContext, aFrame, aPoint);
 }
 
 
 NS_IMETHODIMP
-nsTextAreaSelectionImpl::HandleTableSelection(nsIContent *aParentContent, PRInt32 aContentOffset, PRUint32 aTarget, nsMouseEvent *aMouseEvent)
+nsTextInputSelectionImpl::HandleTableSelection(nsIContent *aParentContent, PRInt32 aContentOffset, PRUint32 aTarget, nsMouseEvent *aMouseEvent)
 {
   return mFrameSelection->HandleTableSelection(aParentContent, aContentOffset, aTarget, aMouseEvent);
 }
 
 
 NS_IMETHODIMP
-nsTextAreaSelectionImpl::StartAutoScrollTimer(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint, PRUint32 aDelay)
+nsTextInputSelectionImpl::StartAutoScrollTimer(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint, PRUint32 aDelay)
 {
   return mFrameSelection->StartAutoScrollTimer(aPresContext, aFrame, aPoint, aDelay);
 }
 
 
 NS_IMETHODIMP
-nsTextAreaSelectionImpl::StopAutoScrollTimer()
+nsTextInputSelectionImpl::StopAutoScrollTimer()
 {
   return mFrameSelection->StopAutoScrollTimer();
 }
 
 
 NS_IMETHODIMP
-nsTextAreaSelectionImpl::EnableFrameNotification(PRBool aEnable)
+nsTextInputSelectionImpl::EnableFrameNotification(PRBool aEnable)
 {
   return mFrameSelection->EnableFrameNotification(aEnable);
 }
 
 
 NS_IMETHODIMP
-nsTextAreaSelectionImpl::LookUpSelection(nsIContent *aContent, PRInt32 aContentOffset, PRInt32 aContentLength,
+nsTextInputSelectionImpl::LookUpSelection(nsIContent *aContent, PRInt32 aContentOffset, PRInt32 aContentLength,
                            SelectionDetails **aReturnDetails, PRBool aSlowCheck)
 {
   return mFrameSelection->LookUpSelection(aContent, aContentOffset, aContentLength, aReturnDetails, aSlowCheck);
@@ -550,63 +591,63 @@ nsTextAreaSelectionImpl::LookUpSelection(nsIContent *aContent, PRInt32 aContentO
 
 
 NS_IMETHODIMP
-nsTextAreaSelectionImpl::SetMouseDownState(PRBool aState)
+nsTextInputSelectionImpl::SetMouseDownState(PRBool aState)
 {
   return mFrameSelection->SetMouseDownState(aState);
 }
 
 
 NS_IMETHODIMP
-nsTextAreaSelectionImpl::GetMouseDownState(PRBool *aState)
+nsTextInputSelectionImpl::GetMouseDownState(PRBool *aState)
 {
   return mFrameSelection->GetMouseDownState(aState);
 }
 
 NS_IMETHODIMP
-nsTextAreaSelectionImpl::SetDelayCaretOverExistingSelection(PRBool aDelay)
+nsTextInputSelectionImpl::SetDelayCaretOverExistingSelection(PRBool aDelay)
 {
   return mFrameSelection->SetDelayCaretOverExistingSelection(aDelay);
 }
 
 NS_IMETHODIMP
-nsTextAreaSelectionImpl::GetDelayCaretOverExistingSelection(PRBool *aDelay)
+nsTextInputSelectionImpl::GetDelayCaretOverExistingSelection(PRBool *aDelay)
 {
   return mFrameSelection->GetDelayCaretOverExistingSelection(aDelay);
 }
 
 NS_IMETHODIMP
-nsTextAreaSelectionImpl::SetDelayedCaretData(nsMouseEvent *aMouseEvent)
+nsTextInputSelectionImpl::SetDelayedCaretData(nsMouseEvent *aMouseEvent)
 {
   return mFrameSelection->SetDelayedCaretData(aMouseEvent);
 }
 
 NS_IMETHODIMP
-nsTextAreaSelectionImpl::GetDelayedCaretData(nsMouseEvent **aMouseEvent)
+nsTextInputSelectionImpl::GetDelayedCaretData(nsMouseEvent **aMouseEvent)
 {
   return mFrameSelection->GetDelayedCaretData(aMouseEvent);
 }
 
 NS_IMETHODIMP
-nsTextAreaSelectionImpl::GetTableCellSelection(PRBool *aState)
+nsTextInputSelectionImpl::GetTableCellSelection(PRBool *aState)
 {
   return mFrameSelection->GetTableCellSelection(aState);
 }
 
 
 NS_IMETHODIMP
-nsTextAreaSelectionImpl::GetTableCellSelectionStyleColor(const nsStyleColor **aStyleColor)
+nsTextInputSelectionImpl::GetTableCellSelectionStyleColor(const nsStyleColor **aStyleColor)
 {
   return mFrameSelection->GetTableCellSelectionStyleColor(aStyleColor);
 }
 
 
 NS_IMETHODIMP
-nsTextAreaSelectionImpl::GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, nsIFrame **aReturnFrame, PRInt32 *aReturnOffset)
+nsTextInputSelectionImpl::GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, nsIFrame **aReturnFrame, PRInt32 *aReturnOffset)
 {
   return mFrameSelection->GetFrameForNodeOffset(aNode, aOffset,aReturnFrame,aReturnOffset);
 }
 
-NS_IMETHODIMP nsTextAreaSelectionImpl::SetScrollableView(nsIScrollableView *aScrollableView)
+NS_IMETHODIMP nsTextInputSelectionImpl::SetScrollableView(nsIScrollableView *aScrollableView)
 {
   if(mFrameSelection) 
     return mFrameSelection->SetScrollableView(aScrollableView);
@@ -615,7 +656,7 @@ NS_IMETHODIMP nsTextAreaSelectionImpl::SetScrollableView(nsIScrollableView *aScr
 
 
 
-// END   nsTextAreaSelectionImpl
+// END   nsTextInputSelectionImpl
 
 
 
@@ -1230,13 +1271,13 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
                                                    NS_GET_IID(nsIFrameSelection),
                                                    getter_AddRefs(frameSel));
 //create selection controller
-    mTextSelImpl = new nsTextAreaSelectionImpl(frameSel,shell,content);
+    mTextSelImpl = new nsTextInputSelectionImpl(frameSel,shell,content);
     if (!mTextSelImpl)
       return NS_ERROR_OUT_OF_MEMORY;
-    mTextKeyListener = new nsTextAreaKeyListener();
-    if (!mTextKeyListener)
+    mTextListener = new nsTextInputListener();
+    if (!mTextListener)
       return NS_ERROR_OUT_OF_MEMORY;
-    mTextKeyListener->SetFrame(this);
+    mTextListener->SetFrame(this);
     mSelCon =  do_QueryInterface((nsISupports *)(nsISelectionController *)mTextSelImpl);//this will addref it once
     mSelCon->SetDisplaySelection(nsISelectionController::SELECTION_ON);
 //get the flags 
@@ -1326,16 +1367,22 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
 
 
 //get the caret
-    nsCOMPtr<nsICaret> caret;
-    if (NS_SUCCEEDED(shell->GetCaret(getter_AddRefs(caret))) && caret)
+    nsCOMPtr<nsIDOMSelection> domSelection;
+    if (NS_SUCCEEDED(mSelCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domSelection))) && domSelection)
     {
-      nsCOMPtr<nsIDOMSelectionListener> listener = do_QueryInterface(caret);
-      nsCOMPtr<nsIDOMSelection> domSelection;
-      if (listener)
+      nsCOMPtr<nsICaret> caret;
+      nsCOMPtr<nsIDOMSelectionListener> listener;
+      if (NS_SUCCEEDED(shell->GetCaret(getter_AddRefs(caret))) && caret)
       {
-        if (NS_SUCCEEDED(mSelCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domSelection))) && domSelection)
+        listener = do_QueryInterface(caret);
+        if (listener)
+        {
           domSelection->AddSelectionListener(listener);
+        }
       }
+      listener = do_QueryInterface(NS_REINTERPRET_CAST(nsISupports *,mTextListener));//ambiguous
+      if (listener)
+        domSelection->AddSelectionListener(listener);
     }
 
   }
@@ -2486,7 +2533,7 @@ nsGfxTextControlFrame2::SetInitialChildList(nsIPresContext* aPresContext,
     if (NS_SUCCEEDED(mContent->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), getter_AddRefs(erP))) && erP)
     {
       // register the event listeners with the DOM event reveiver
-      rv = erP->AddEventListenerByIID(mTextKeyListener, NS_GET_IID(nsIDOMKeyListener));
+      rv = erP->AddEventListenerByIID(mTextListener, NS_GET_IID(nsIDOMKeyListener));
       NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register key listener");
     }
 
