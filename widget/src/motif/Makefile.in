@@ -74,7 +74,7 @@ EXTRA_DSO_LDOPTS+=	       \
 	$(MKSHLIB_UNFORCE_ALL) \
 	$(NULL)
 
-EXTRA_DSO_LDOPTS += $(TK_LIBS)
+EXTRA_DSO_LDOPTS += -L$(DIST)/bin -lxlibrgb $(TK_LIBS)
 
 include $(topsrcdir)/config/rules.mk
 

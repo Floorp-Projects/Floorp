@@ -91,9 +91,11 @@ class nsFileWidget : public nsWindow, public nsIFileWidget
      const nsString*        mTitles;
      const nsString*        mFilters;
      nsString               mDefault;
+     XtAppContext           mAppContext;
 
      void GetFilterListArray(nsString& aFilterList);
 
+  
 };
 
 #endif // nsFileWidget_h__
