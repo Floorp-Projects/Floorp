@@ -99,7 +99,9 @@
 #include "nsIDOMElement.h"
 #include "nsITheme.h"
 #include "nsTransform2D.h"
-
+#include "nsIEventListenerManager.h"
+#include "nsIEventStateManager.h"
+#include "nsIDOMEvent.h"
 
 // Needed for Print Preview
 #include "nsIDocument.h"
@@ -2879,4 +2881,24 @@ nsBoxFrame::RegUnregAccessKey(nsIPresContext* aPresContext,
   return rv;
 }
 
+
+void
+nsBoxFrame::FireDOMEvent(nsIPresContext *aPresContext, const nsAString& aDOMEventName)
+{
+  if (mContent) {
+    // Fire a DOM event for the title change.
+    nsCOMPtr<nsIDOMEvent> event;
+    nsCOMPtr<nsIEventListenerManager> manager;
+    mContent->GetListenerManager(getter_AddRefs(manager));
+    if (manager &&
+        NS_SUCCEEDED(manager->CreateEvent(aPresContext, nsnull, NS_LITERAL_STRING("Events"), getter_AddRefs(event)))) {
+      event->InitEvent(aDOMEventName, PR_TRUE, PR_TRUE);
+      PRBool noDefault;
+      nsCOMPtr<nsIEventStateManager> esm;
+      aPresContext->GetEventStateManager(getter_AddRefs(esm));
+      if (esm)
+        esm->DispatchNewEvent(mContent, event, &noDefault);
+    }
+  }
+}
 

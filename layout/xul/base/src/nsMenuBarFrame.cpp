@@ -58,6 +58,10 @@
 #include "nsMenuPopupFrame.h"
 #include "nsGUIEvent.h"
 #include "nsUnicharUtils.h"
+#include "nsICaret.h"
+#include "nsIFocusController.h"
+#include "nsIDOMWindowInternal.h"
+#include "nsIDOMDocument.h"
 #ifdef XP_WIN
 #include "nsISound.h"
 #include "nsWidgetsCID.h"
@@ -109,7 +113,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
 //
 nsMenuBarFrame::nsMenuBarFrame(nsIPresShell* aShell):nsBoxFrame(aShell),
 mMenuBarListener(nsnull), mKeyboardNavigator(nsnull),
-mIsActive(PR_FALSE), mTarget(nsnull)
+mIsActive(PR_FALSE), mTarget(nsnull), mCaretWasVisible(PR_FALSE)
 {
 
 } // cntr
@@ -192,6 +196,44 @@ nsMenuBarFrame::SetActive(PRBool aActiveFlag)
   
     NS_IF_RELEASE(mKeyboardNavigator);
   }
+  
+  // We don't want the caret to blink while the menus are active
+  // The caret distracts screen readers and other assistive technologies from the menu selection
+  // There is 1 caret per document, we need to find the focused document and toggle its caret 
+  nsCOMPtr<nsIDocument> document;
+  nsCOMPtr<nsIFocusController> focusController;
+  nsCOMPtr<nsIPresShell> presShell;
+  mPresContext->GetShell(getter_AddRefs(presShell));
+  if (presShell) {
+    presShell->GetDocument(getter_AddRefs(document));
+    if (document)
+      document->GetFocusController(getter_AddRefs(focusController));
+  }
+  nsCOMPtr<nsIDOMWindow> window;
+  if (focusController) {
+    nsCOMPtr<nsIDOMWindowInternal> windowInternal;
+    focusController->GetFocusedWindow(getter_AddRefs(windowInternal));
+    window = do_QueryInterface(windowInternal);
+  }
+  nsCOMPtr<nsICaret> caret;
+  if (window) {
+    nsCOMPtr<nsIDOMDocument> domDoc;
+    window->GetDocument(getter_AddRefs(domDoc));
+    document = do_QueryInterface(domDoc);
+    if (document) {
+      document->GetShellAt(0, getter_AddRefs(presShell));
+      if (presShell)
+        presShell->GetCaret(getter_AddRefs(caret));
+    }
+  }
+  if (caret) {
+    if (mIsActive)  // store whether caret was visible so that we can restore that state when menu is closed
+      caret->GetCaretVisible(&mCaretWasVisible);
+    if (mCaretWasVisible)
+      caret->SetCaretVisible(!mIsActive);
+  }
+  
+  FireDOMEvent(mPresContext, mIsActive? NS_LITERAL_STRING("DOMMenuBarActive"): NS_LITERAL_STRING("DOMMenuBarInactive"));
 
   return NS_OK;
 }

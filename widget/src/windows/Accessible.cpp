@@ -1008,6 +1008,10 @@ void RootAccessible::GetNSAccessibleFor(VARIANT varChild, nsCOMPtr<nsIAccessible
 
 NS_IMETHODIMP RootAccessible::HandleEvent(PRUint32 aEvent, nsIAccessible* aAccessible, AccessibleEventData* aData)
 {
+#ifdef SWALLOW_DOC_FOCUS_EVENTS
+  // Remove this until we can figure out which focus events are coming at
+  // the same time as native window focus events, although
+  // perhaps 2 duplicate focus events on the window isn't really a problem
   if (aEvent == EVENT_FOCUS) {
     // Don't fire accessible focus event for documents, 
     // Microsoft Windows will generate those from native window focus events
@@ -1015,6 +1019,7 @@ NS_IMETHODIMP RootAccessible::HandleEvent(PRUint32 aEvent, nsIAccessible* aAcces
     if (accessibleDoc)
       return NS_OK;
   }
+#endif
   PRInt32 childID, worldID = OBJID_CLIENT;
   PRUint32 role;
 
