@@ -700,6 +700,10 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
       if (!keyEvent->isAlt) {
         switch(keyEvent->keyCode) {
           case NS_VK_TAB:
+            if (mConsumeFocusEvents) {
+              mConsumeFocusEvents = PR_FALSE;
+              break;
+            }
             //Shift focus forward or back depending on shift key
             ShiftFocus(!((nsInputEvent*)aEvent)->isShift);
             *aStatus = nsEventStatus_eConsumeNoDefault;
@@ -1490,6 +1494,17 @@ nsEventStateManager::ShiftFocus(PRBool forward)
     return;
   }
 
+  // Now we need to get the content node's frame and reset 
+  // the mCurrentTarget target.  Otherwise the focus
+  // code will be slightly out of sync (with regards to
+  // focusing widgets within the current target).
+  nsCOMPtr<nsIPresShell> shell;
+  if (mPresContext) {
+    nsresult rv = mPresContext->GetShell(getter_AddRefs(shell));
+    if (NS_SUCCEEDED(rv) && shell){
+      shell->GetPrimaryFrameFor(next, &mCurrentTarget);
+    }
+  }
   ChangeFocus(next, mCurrentTarget, PR_TRUE);
 
   NS_IF_RELEASE(mCurrentFocus);
@@ -1917,6 +1932,9 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
 	  }
   }
 
+  nsCOMPtr<nsIPresShell> presShell;
+  aPresContext->GetShell(getter_AddRefs(presShell));
+    
   if (nsnull != gLastFocusedPresContext) {
     
     if (gLastFocusedContent) { 
@@ -1925,7 +1943,7 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
       // the Ender widget case.
       nsCOMPtr<nsIDocument> doc;
       gLastFocusedContent->GetDocument(*getter_AddRefs(doc));
-      if(doc) {
+      if (doc) {
         nsCOMPtr<nsIPresShell> shell = getter_AddRefs(doc->GetShellAt(0));
         nsCOMPtr<nsIPresContext> oldPresContext;
         shell->GetPresContext(getter_AddRefs(oldPresContext));
@@ -1947,10 +1965,7 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
     // Go ahead and fire a blur on the window.
     nsCOMPtr<nsIScriptGlobalObject> globalObject;
     gLastFocusedDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
-
-    nsCOMPtr<nsIPresShell> presShell;
-    aPresContext->GetShell(getter_AddRefs(presShell));
-      
+  
     if (!mDocument) {  
       if (presShell) {
         presShell->GetDocument(&mDocument);
@@ -2001,32 +2016,19 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
     }
   }
 
+  // XXx The following line could be bad in the case where a
+  // parent element is really the one with the focus.
   nsIFrame * currentFocusFrame = mCurrentTarget;
-
-  // Check to see if the newly focused content's frame has a view with a widget
-  // i.e TextField or TextArea, if so, don't set the focus on their window
-  PRBool shouldSetFocusOnWindow = PR_TRUE;
-  if (nsnull != currentFocusFrame) {
-    nsIView * view = nsnull;
-    currentFocusFrame->GetView(aPresContext, &view);
-    if (view != nsnull) {
-      nsIWidget *window = nsnull;
-      view->GetWidget(window);
-      if (window != nsnull) { // addrefs
-        shouldSetFocusOnWindow = PR_FALSE;
-        NS_RELEASE(window);
-      }
-    }
-  }
 
   // Find the window that this frame is in and
   // make sure it has focus
-  // XXX Note: mLastWindowToHaveFocus this does not track when ANY focus
-  // event comes through, the only place this gets set is here
-  // so some windows may get multiple focus events
-  // For example, if you clicked in the window (generates focus event)
-  // then click on a gfx control (generates another focus event)
-  if (shouldSetFocusOnWindow && nsnull != currentFocusFrame) {
+  // GFX Text Control frames handle their own focus
+  // and must be special-cased.
+  nsCOMPtr<nsIGfxTextControlFrame> gfxFrame = do_QueryInterface(currentFocusFrame);
+  if (gfxFrame) {
+    gfxFrame->SetInnerFocus();
+  } 
+  else if (currentFocusFrame) {
     nsIFrame * parentFrame;
     currentFocusFrame->GetParentWithView(aPresContext, &parentFrame);
     if (nsnull != parentFrame) {
