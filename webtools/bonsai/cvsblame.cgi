@@ -349,8 +349,8 @@ foreach $revision (@revision_map)
 
     print $output;
 }
-if ($useAlternateColor) {
-    print "</td></tr></TABLE>$font_tag" unless $inMark;
+if ($useAlternateColor && !$inMark) {
+    print "</td></tr></TABLE>$font_tag";
 }
 print "</FONT></PRE>\n";
 
