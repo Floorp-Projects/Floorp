@@ -304,11 +304,13 @@ nsWebShellWindow::QueryInterface(REFNSIID aIID, void** aInstancePtr)
      NS_ADDREF_THIS();
      return NS_OK;
   }	
+#ifndef NECKO
   if (aIID.Equals(kINetSupportIID )) {
     *aInstancePtr = (void*)(nsINetSupport*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
+#endif
   if (aIID.Equals(kISupportsIID)) {
     *aInstancePtr = (void*)(nsISupports*)(nsIWebShellContainer*)this;
     NS_ADDREF_THIS();
