@@ -140,7 +140,10 @@ static PRBool gInitialized = PR_FALSE;
 static nsresult
 Initialize(nsIModule* aSelf)
 {
-  NS_PRECONDITION(! gInitialized, "module already initialized");
+  // XXXwaterson turns out we initialize the module twice, because
+  // nsXULAtoms::AddRefAtoms() creates a namespace manager using the
+  // component manager. We should probably fix that.
+  //NS_PRECONDITION(! gInitialized, "module already initialized");
   if (gInitialized)
     return NS_OK;
 
