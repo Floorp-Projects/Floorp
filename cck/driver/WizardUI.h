@@ -37,7 +37,7 @@ public:
 
 	// WizardMachine needs this
 	static CString GetScreenValue(WIDGET *curWidget);
-	static BOOL NewConfig(WIDGET *curWidget);
+	static BOOL NewConfig(WIDGET *curWidget, CString globalsName);
 	static BOOL BrowseFile(WIDGET *curWidget);
 	static BOOL BrowseDir(WIDGET *curWidget);
 
