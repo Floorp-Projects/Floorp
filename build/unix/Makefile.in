@@ -29,6 +29,9 @@ RUN_MOZILLA_SCRIPT = $(srcdir)/run-mozilla.sh
 
 include $(topsrcdir)/config/rules.mk
 
+export:: 
+	chmod 755 mozilla-config
+	$(INSTALL) -m 755 mozilla-config $(DIST)/bin
+
 install:: $(RUN_MOZILLA_SCRIPT)
 	$(INSTALL) $(RUN_MOZILLA_SCRIPT) $(DIST)/bin
-

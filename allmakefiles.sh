@@ -42,6 +42,7 @@ add_makefiles <<END_NGMAKEFILES
 Makefile
 build/Makefile
 build/unix/Makefile
+build/unix/mozilla-config
 build/unix/nspr_my_config.mk
 build/unix/nspr_my_overrides.mk
 build/package/rpm/mozilla.spec
