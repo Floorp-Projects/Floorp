@@ -1131,6 +1131,7 @@ nsresult testAll()
 
 nsresult testFromArgs(int argc, char **argv)
 {
+  nsresult res = NS_OK;
   if ((argc == 5) && (!strcmp(argv[1], "-tdec"))) {
     res = testDecoderFromFiles(argv[2], argv[3], argv[4]);
   } else if ((argc == 5) && (!strcmp(argv[1], "-tenc"))) {
