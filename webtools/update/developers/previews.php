@@ -15,8 +15,7 @@ $id = $_GET["id"];
 $sql = "SELECT  TM.ID, TM.Type, TM.Name, TM.Description, TM.downloadcount, TM.TotalDownloads, TM.Rating, TU.UserEmail FROM  `t_main`  TM 
 LEFT JOIN t_authorxref TAX ON TM.ID = TAX.ID
 INNER JOIN t_userprofiles TU ON TAX.UserID = TU.UserID
-WHERE TM.ID = '$id' AND TM.Type ='E'
-ORDER  BY  `Type` , `Name` ";
+WHERE TM.ID = '$id' ORDER  BY  `Type` , `Name` ";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   $numresults = mysql_num_rows($sql_result);
   $row = mysql_fetch_array($sql_result);
@@ -156,8 +155,8 @@ $name = str_replace(" ","_",$name);
 $previewpath = strtolower("images/previews/$name-$i.jpg");
 
 if ($preview=="YES") {
-$width = "180";
-$height = "75";
+$width = "200";
+$height = "120";
 } else {
 $preview="NO";
 }
