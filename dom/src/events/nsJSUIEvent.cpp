@@ -30,7 +30,6 @@
 #include "nsIDOMNSUIEvent.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMUIEvent.h"
-#include "nsIDOMTextRangeList.h"
 #include "nsIDOMRenderingContext.h"
 
 
@@ -40,41 +39,37 @@ static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
 static NS_DEFINE_IID(kINSUIEventIID, NS_IDOMNSUIEVENT_IID);
 static NS_DEFINE_IID(kINodeIID, NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kIUIEventIID, NS_IDOMUIEVENT_IID);
-static NS_DEFINE_IID(kITextRangeListIID, NS_IDOMTEXTRANGELIST_IID);
 static NS_DEFINE_IID(kIRenderingContextIID, NS_IDOMRENDERINGCONTEXT_IID);
 
 NS_DEF_PTR(nsIDOMNSUIEvent);
 NS_DEF_PTR(nsIDOMNode);
 NS_DEF_PTR(nsIDOMUIEvent);
-NS_DEF_PTR(nsIDOMTextRangeList);
 NS_DEF_PTR(nsIDOMRenderingContext);
 
 //
 // UIEvent property ids
 //
 enum UIEvent_slots {
-  UIEVENT_TEXT = -1,
-  UIEVENT_INPUTRANGE = -2,
-  UIEVENT_SCREENX = -3,
-  UIEVENT_SCREENY = -4,
-  UIEVENT_CLIENTX = -5,
-  UIEVENT_CLIENTY = -6,
-  UIEVENT_ALTKEY = -7,
-  UIEVENT_CTRLKEY = -8,
-  UIEVENT_SHIFTKEY = -9,
-  UIEVENT_METAKEY = -10,
-  UIEVENT_CHARCODE = -11,
-  UIEVENT_KEYCODE = -12,
-  UIEVENT_BUTTON = -13,
-  UIEVENT_CLICKCOUNT = -14,
-  NSUIEVENT_LAYERX = -15,
-  NSUIEVENT_LAYERY = -16,
-  NSUIEVENT_PAGEX = -17,
-  NSUIEVENT_PAGEY = -18,
-  NSUIEVENT_WHICH = -19,
-  NSUIEVENT_RANGEPARENT = -20,
-  NSUIEVENT_RANGEOFFSET = -21,
-  NSUIEVENT_RC = -22
+  UIEVENT_SCREENX = -1,
+  UIEVENT_SCREENY = -2,
+  UIEVENT_CLIENTX = -3,
+  UIEVENT_CLIENTY = -4,
+  UIEVENT_ALTKEY = -5,
+  UIEVENT_CTRLKEY = -6,
+  UIEVENT_SHIFTKEY = -7,
+  UIEVENT_METAKEY = -8,
+  UIEVENT_CHARCODE = -9,
+  UIEVENT_KEYCODE = -10,
+  UIEVENT_BUTTON = -11,
+  UIEVENT_CLICKCOUNT = -12,
+  NSUIEVENT_LAYERX = -13,
+  NSUIEVENT_LAYERY = -14,
+  NSUIEVENT_PAGEX = -15,
+  NSUIEVENT_PAGEY = -16,
+  NSUIEVENT_WHICH = -17,
+  NSUIEVENT_RANGEPARENT = -18,
+  NSUIEVENT_RANGEOFFSET = -19,
+  NSUIEVENT_RC = -20
 };
 
 /***********************************************************************/
@@ -99,39 +94,6 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       return JS_FALSE;
     }
     switch(JSVAL_TO_INT(id)) {
-      case UIEVENT_TEXT:
-      {
-        secMan->CheckScriptAccess(scriptCX, obj, "uievent.text", &ok);
-        if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
-        }
-        nsAutoString prop;
-        if (NS_OK == a->GetText(prop)) {
-          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
-        }
-        else {
-          return JS_FALSE;
-        }
-        break;
-      }
-      case UIEVENT_INPUTRANGE:
-      {
-        secMan->CheckScriptAccess(scriptCX, obj, "uievent.inputrange", &ok);
-        if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
-        }
-        nsIDOMTextRangeList* prop;
-        if (NS_OK == a->GetInputRange(&prop)) {
-          // get the js object
-          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
-        }
-        else {
-          return JS_FALSE;
-        }
-        break;
-      }
       case UIEVENT_SCREENX:
       {
         secMan->CheckScriptAccess(scriptCX, obj, "uievent.screenx", &ok);
@@ -560,24 +522,7 @@ SetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       return JS_FALSE;
     }
     switch(JSVAL_TO_INT(id)) {
-      case UIEVENT_INPUTRANGE:
-      {
-        secMan->CheckScriptAccess(scriptCX, obj, "uievent.inputrange", &ok);
-        if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
-        }
-        nsIDOMTextRangeList* prop;
-        if (PR_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&prop,
-                                                kITextRangeListIID, "TextRangeList",
-                                                cx, *vp)) {
-          return JS_FALSE;
-        }
-      
-        a->SetInputRange(prop);
-        NS_IF_RELEASE(prop);
-        break;
-      }
+      case 0:
       default:
         return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
@@ -644,8 +589,6 @@ JSClass UIEventClass = {
 //
 static JSPropertySpec UIEventProperties[] =
 {
-  {"text",    UIEVENT_TEXT,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"inputRange",    UIEVENT_INPUTRANGE,    JSPROP_ENUMERATE},
   {"screenX",    UIEVENT_SCREENX,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"screenY",    UIEVENT_SCREENY,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"clientX",    UIEVENT_CLIENTX,    JSPROP_ENUMERATE | JSPROP_READONLY},
