@@ -97,7 +97,7 @@ var cookiesOutlinerView = {
     var rv;
     if (column=="domainCol") {
       rv = cookies[row].rawHost;
-    } else { // must be "nameCol"
+    } else if (column=="nameCol") {
       rv = cookies[row].name;
     }
     return rv;
@@ -107,7 +107,7 @@ var cookiesOutlinerView = {
   cycleHeader : function(aColId, aElt) {},
   getRowProperties : function(row,column,prop){},
   getColumnProperties : function(column,columnElement,prop){},
-  getCellProperties : function(row,prop){},
+  getCellProperties : function(row,prop){}
  };
 var cookiesOutliner;
 
@@ -247,7 +247,7 @@ var permissionsOutlinerView = {
     var rv;
     if (column=="siteCol") {
       rv = permissions[row].rawHost;
-    } else { // must be "statusCol"
+    } else if (column=="statusCol") {
       rv = permissions[row].capability;
     }
     return rv;
@@ -257,7 +257,7 @@ var permissionsOutlinerView = {
   cycleHeader : function(aColId, aElt) {},
   getRowProperties : function(row,column,prop){},
   getColumnProperties : function(column,columnElement,prop){},
-  getCellProperties : function(row,prop){},
+  getCellProperties : function(row,prop){}
  };
 var permissionsOutliner;
 

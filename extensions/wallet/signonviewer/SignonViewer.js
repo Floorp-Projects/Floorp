@@ -132,7 +132,7 @@ var signonsOutlinerView = {
     var rv;
     if (column=="siteCol") {
       rv = signons[row].host;
-    } else { // must be "userCol"
+    } else if (column=="userCol") {
       rv = signons[row].user;
     }
     return rv;
@@ -142,7 +142,7 @@ var signonsOutlinerView = {
   cycleHeader : function(aColId, aElt) {},
   getRowProperties : function(row,column,prop){},
   getColumnProperties : function(column,columnElement,prop){},
-  getCellProperties : function(row,prop){},
+  getCellProperties : function(row,prop){}
  };
 var signonsOutliner;
 
@@ -251,14 +251,18 @@ var rejectsOutlinerView = {
   rowCount : 0,
   setOutliner : function(outliner){},
   getCellText : function(row,column){
-    return rejects[row].host;
+    var rv;
+    if (column=="rejectCol") {
+      rv = rejects[row].host;
+    }
+    return rv;
   },
   isSeparator : function(index) {return false;},
   isContainer : function(index) {return false;},
   cycleHeader : function(aColId, aElt) {},
   getRowProperties : function(row,column,prop){},
   getColumnProperties : function(column,columnElement,prop){},
-  getCellProperties : function(row,prop){},
+  getCellProperties : function(row,prop){}
  };
 var rejectsOutliner;
 
@@ -328,14 +332,18 @@ var nopreviewsOutlinerView = {
   rowCount : 0,
   setOutliner : function(outliner){},
   getCellText : function(row,column){
-    return nopreviews[row].host;
+    var rv;
+    if (column=="nopreviewCol") {
+      rv = nopreviews[row].host;
+    }
+    return rv;
   },
   isSeparator : function(index) {return false;},
   isContainer : function(index) {return false;},
   cycleHeader : function(aColId, aElt) {},
   getRowProperties : function(row,column,prop){},
   getColumnProperties : function(column,columnElement,prop){},
-  getCellProperties : function(row,prop){},
+  getCellProperties : function(row,prop){}
  };
 var nopreviewsOutliner;
 
@@ -408,14 +416,18 @@ var nocapturesOutlinerView = {
   rowCount : 0,
   setOutliner : function(outliner){},
   getCellText : function(row,column){
-    return nocaptures[row].host;
+    var rv;
+    if (column=="nocaptureCol") {
+      rv = nocaptures[row].host;
+    }
+    return rv;
   },
   isSeparator : function(index) {return false;},
   isContainer : function(index) {return false;},
   cycleHeader : function(aColId, aElt) {},
   getRowProperties : function(row,column,prop){},
   getColumnProperties : function(column,columnElement,prop){},
-  getCellProperties : function(row,prop){},
+  getCellProperties : function(row,prop){}
  };
 var nocapturesOutliner;
 
