@@ -103,6 +103,13 @@ nsLoggingProgressListener::BeforeJavascriptEvaluation(const PRUnichar *URL)
         rv = iFile->Create(nsIFile::NORMAL_FILE_TYPE, 0644);
         if (NS_FAILED(rv))
             bTryProfileDir = PR_TRUE;
+#ifdef XP_MAC
+        else
+        {
+            nsCOMPtr<nsILocalFileMac> iMacFile = do_QueryInterface(iFile);
+            iMacFile->SetFileTypeAndCreator('TEXT', 'R*ch');  
+        }
+#endif
     }
             
     if (!bTryProfileDir)
@@ -137,6 +144,11 @@ nsLoggingProgressListener::BeforeJavascriptEvaluation(const PRUnichar *URL)
         {
             rv = iFile->Create(nsIFile::NORMAL_FILE_TYPE, 0644);
             if (NS_FAILED(rv)) return rv;
+            
+#ifdef XP_MAC            
+            nsCOMPtr<nsILocalFileMac> iMacFile = do_QueryInterface(iFile);
+            iMacFile->SetFileTypeAndCreator('TEXT', 'R*ch');  
+#endif            
         }
          
         rv = iFile->IsWritable(&bWritable);

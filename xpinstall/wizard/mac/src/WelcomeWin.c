@@ -72,7 +72,7 @@ ShowWelcomeMsg(void)
     ControlFontStyleRec fontStyle;
 
     fontStyle.flags =  kControlUseSizeMask | kControlUseFaceMask;
-    fontStyle.size = 20;
+    fontStyle.size = 18;
     fontStyle.style = bold;
     SetControlFontStyle(gControls->ww->welcMsgCntl[0], &fontStyle);
 

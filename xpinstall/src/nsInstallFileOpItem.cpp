@@ -478,6 +478,7 @@ PRInt32 nsInstallFileOpItem::Prepare()
       ret = NativeFileOpWindowsShortcutPrepare();
       break;
     case NS_FOP_MAC_ALIAS:
+      ret = NativeFileOpMacAliasPrepare();
       break;
     case NS_FOP_UNIX_LINK:
       break;
@@ -1318,6 +1319,62 @@ nsInstallFileOpItem::NativeFileOpWindowsShortcutAbort()
 }
 
 PRInt32
+nsInstallFileOpItem::NativeFileOpMacAliasPrepare()
+{
+
+#ifdef XP_MAC
+  nsCOMPtr<nsILocalFileMac> targetFile = do_QueryInterface(mTarget);
+  nsCOMPtr<nsILocalFileMac> sourceFile = do_QueryInterface(mSrc);
+
+  FSSpec        fsSource, fsAlias, fsAliasParent, fsCheckSource;
+  nsresult      rv;
+  OSErr         err;  
+  long          aliasDirID;
+  Boolean       isDir;
+  char          *aliasLeaf;  
+   
+  rv = sourceFile->GetResolvedFSSpec(&fsSource);
+  if (!NS_SUCCEEDED(rv)) return rv;
+  rv = targetFile->GetFSSpec(&fsAliasParent); 
+  if (!NS_SUCCEEDED(rv)) return rv;
+  rv = targetFile->GetAppendedPath(&aliasLeaf);
+  if (!NS_SUCCEEDED(rv)) return rv;
+
+  // check if source file exists
+  err = FSMakeFSSpec(fsSource.vRefNum, fsSource.parID, fsSource.name, &fsCheckSource);
+  if (err != noErr)
+    return err;
+    
+  // construct target alias FSSpec using parent and leaf path
+  err = FSpGetDirectoryID(&fsAliasParent, &aliasDirID, &isDir);
+  if (err != noErr) 
+  {
+    if (aliasLeaf)
+      nsMemory::Free(aliasLeaf);
+    return err;
+  }
+  c2pstr(aliasLeaf);
+  
+  // check if file/folder already exists at target
+  err = FSMakeFSSpec(fsAliasParent.vRefNum, aliasDirID, (unsigned char *) aliasLeaf, &fsAlias);
+  p2cstr((unsigned char *)aliasLeaf);
+  if (aliasLeaf)
+    nsMemory::Free(aliasLeaf);
+  
+  // file already exists: delete it before creating an updated alias
+  if (err == noErr)
+  {
+    err = FSpDelete(&fsAlias);
+    if (err != noErr)
+        return err;
+  }      
+    
+#endif /* XP_MAC */
+
+    return nsInstall::SUCCESS;
+}
+
+PRInt32
 nsInstallFileOpItem::NativeFileOpMacAliasComplete()
 {
 
@@ -1327,7 +1384,7 @@ nsInstallFileOpItem::NativeFileOpMacAliasComplete()
   nsCOMPtr<nsILocalFileMac> localFileMacTarget = do_QueryInterface(mTarget);
   nsCOMPtr<nsILocalFileMac> localFileMacSrc = do_QueryInterface(mSrc);
   
-  FSSpec        fsSource, fsAliasParent, fsAlias;
+  FSSpec        fsSource, fsAliasParent, fsAlias, fsCheckSource;
   AliasHandle   aliasH;
   FInfo         info;
   OSErr         err = noErr;
@@ -1343,7 +1400,12 @@ nsInstallFileOpItem::NativeFileOpMacAliasComplete()
   if (!NS_SUCCEEDED(rv)) return rv;
   rv = localFileMacTarget->GetAppendedPath(&aliasLeaf);
   if (!NS_SUCCEEDED(rv)) return rv;
-
+  
+  // check if source file exists
+  err = FSMakeFSSpec(fsSource.vRefNum, fsSource.parID, fsSource.name, &fsCheckSource);
+  if (err != noErr)
+    return err;
+    
   // construct target alias FSSpec using parent and leaf path
   err = FSpGetDirectoryID(&fsAliasParent, &aliasDirID, &isDir);
   if (err != noErr) 

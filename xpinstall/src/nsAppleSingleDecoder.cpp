@@ -76,6 +76,7 @@ nsAppleSingleDecoder::~nsAppleSingleDecoder()
 #endif
 }
 
+#pragma mark -
 
 /*----------------------------------------------------------------------*
  *   Public methods
@@ -162,6 +163,16 @@ nsAppleSingleDecoder::Decode()
 		nsAppleSingleDecoder::PLstrncpy( mOutSpec->name, mInSpec->name, mInSpec->name[0] );
 		mOutSpec->name[0] = mInSpec->name[0];
 		mRenameReqd = false; // XXX redundant reinit?
+	}
+	
+	if (mType == 'APPL')
+	{
+        // need to register in desktop database
+        DTSetAPPL( NULL, 
+                   mOutSpec->vRefNum,
+                   mCreator,
+                   mOutSpec->parID,
+                   mOutSpec->name );
 	}
 	
  	return err;
@@ -289,6 +300,7 @@ nsAppleSingleDecoder::IsAppleSingleFile(FSSpec *inSpec)
 	return bAppleSingle;
 }
 
+#pragma mark -
 
 /*----------------------------------------------------------------------*
  *   Private methods
@@ -491,20 +503,9 @@ nsAppleSingleDecoder::ProcessFinderInfo(ASEntry inEntry)
 	pb.hFileInfo.ioFlXFndrInfo = info.ioFlXFndrInfo;
 	err = PBSetCatInfo(&pb, false);
     
-    
-
-    if (info.ioFlFndrInfo.fdType == 'APPL')
-    {
-        // need to register in desktop database or bad things will happen
-
-        DTSetAPPL(  NULL, 
-                    mOutSpec->vRefNum,
-                    info.ioFlFndrInfo.fdCreator,
-                    mOutSpec->parID,
-                    mOutSpec->name );
-
-    }
-
+    // save the creator and file type so we can set it on the renamed spec
+    mCreator = info.ioFlFndrInfo.fdCreator;
+    mType = info.ioFlFndrInfo.fdType;
 
 	return err;
 }
@@ -577,17 +578,18 @@ nsAppleSingleDecoder::EntryToMacFile(ASEntry inEntry, UInt16 inTargetSpecRefNum)
 	return err;
 }
 
-OSErr DTSetAPPL(Str255 volName,
-                short vRefNum,
-                OSType creator,
-                long applParID,
-                Str255 applName)
+#pragma mark -
+
+OSErr 
+nsAppleSingleDecoder::DTSetAPPL(Str255 volName, short vRefNum, OSType creator, 
+                                long applParID, Str255 applName)
 {
     OSErr err;
     DTPBRec *pb = NULL;
     short dtRefNum;
     short realVRefNum;
     Boolean newDTDatabase;
+    
     /* get the real vRefnum */
     err = DetermineVRefNum(volName, vRefNum, &realVRefNum);
     if (err == noErr)
@@ -609,6 +611,7 @@ OSErr DTSetAPPL(Str255 volName,
             if (pb) DisposePtr((Ptr)pb);
         }        
     }
+    
     return err;
 }
 

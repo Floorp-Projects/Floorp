@@ -458,8 +458,8 @@ CalcChange(ControlHandle theControl,	short *amount)
 void
 ShowNavButtons(unsigned char* backTitle, unsigned char* nextTitle)
 {
-	Rect	bounds;
-	
+    Boolean bDefault = true;
+    	
 	gControls->backB = GetNewControl( rBackBtn, gWPtr);
 	gControls->nextB = GetNewControl( rNextBtn, gWPtr);
 
@@ -477,15 +477,8 @@ ShowNavButtons(unsigned char* backTitle, unsigned char* nextTitle)
 		SetControlTitle( gControls->nextB, nextTitle);
 		ShowControl( gControls->nextB);
 
-		HLock( (Handle) gControls->nextB);
-	
-		bounds = (*(gControls->nextB))->contrlRect;
-		PenMode(patCopy);
-		ForeColor(blackColor);
-		InsetRect( &bounds, -4, -4 );
-		FrameGreyButton( &bounds );
-	
-		HUnlock( (Handle)gControls->nextB );
+        SetControlData(gControls->nextB, kControlNoPart, 
+            kControlPushButtonDefaultTag, sizeof(bDefault),(Ptr) &bDefault);
 	}
 	
     ShowCancelButton();

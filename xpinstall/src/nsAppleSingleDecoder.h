@@ -192,6 +192,8 @@ private:
 	FSSpec	*mOutSpec;
 	short	mInRefNum;	// cache since it's used through the life of one Decode cycle
 	Boolean	mRenameReqd;
+	OSType  mCreator;
+	OSType  mType;
 	
 	OSErr	ProcessASEntry(ASEntry inEntry);	
 	OSErr	ProcessDataFork(ASEntry inEntry);
@@ -201,7 +203,9 @@ private:
 	OSErr	ProcessFinderInfo(ASEntry inEntry);
 	OSErr	ProcessMacInfo(ASEntry inEntry);
 	OSErr	EntryToMacFile(ASEntry inEntry, UInt16 inTargetSpecRefNum);
-	
+	OSErr	DTSetAPPL(Str255 volName, short vRefNum, OSType creator,
+					  long applParID, Str255 applName);
+
 	OSErr	FSMakeUnique(FSSpec *ioSpec);
 };
 
@@ -209,7 +213,6 @@ private:
 extern "C" {
 #endif
 
-OSErr DTSetAPPL(Str255 volName,short vRefNum,OSType creator,long applParID,Str255 applName);
 pascal void
 DecodeDirIterateFilter(const CInfoPBRec * const cpbPtr, Boolean *quitFlag, void *yourDataPtr);
 
