@@ -115,6 +115,7 @@
 #include "nscore.h"
 #include "nsError.h"
 #include "nsString.h"
+#include "nsCRT.h"
 
 //========================================================================================
 //                          Compiler-specific macros, as needed
@@ -383,7 +384,7 @@ class NS_BASE nsFileSpec
         // Queries and path algebra.  These do not modify the disk.
         //--------------------------------------------------
 
-        char*                   GetLeafName() const; // Allocated.  Use delete [].
+        char*                   GetLeafName() const; // Allocated.  Use nsCRT::free().
         void                    SetLeafName(const char* inLeafName);
                                     // inLeafName can be a relative path, so this allows
                                     // one kind of concatenation of "paths".
