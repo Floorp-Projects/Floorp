@@ -1,36 +1,76 @@
 Name:      mozilla
 Summary:   Mozilla
 Version:   5.0
-Release:   M12
+Release:   M13
 Serial:    0
 Copyright: MPL/NPL
-Source0:   mozilla-m12.tar.gz
+Source0:   ftp://ftp.mozilla.org/pub/mozilla/nightly/latest/mozilla-source.tar.gz
+#Source0:   ftp://ftp.mozilla.org/pub/mozilla/releases/m13/src/mozilla-source-M13.tar.gz
+Source1:   mozilla.sh
 Buildroot: /var/tmp/mozilla-root
 Prefix:    /usr
 Group:     Mozilla
 
 %description
-This is Mozilla.
 
+Mozilla is an open-source web browser, designed for standards
+compliance, performance and portability.
 
 PACKAGE_LISTING
 
 %prep
 
 %setup -n mozilla
+#./configure --enable-optimize --disable-debug
 ./configure
 
 %install
 export NSDISTMODE=copy
-make
+
+if [ -x /usr/bin/getconf ] ; then
+    NRPROC=$(/usr/bin/getconf _NPROCESSORS_ONLN)
+    if [ $NRPROC -eq 0 ] ; then
+        NRPROC=1
+    fi
+else
+    NRPROC=1
+fi
+
+make export
+make libs MAKE="make -j $NRPROC"
+make install
 
 PACKAGE_INSTALL
+
+# Make sure that we overwrite the mozilla installed with ours.
+cp %{SOURCE1} $RPM_BUILD_ROOT/%{prefix}/bin/mozilla
 
 %clean
 rm -rf $RPM_BUILD_ROOT
 
-FILE_LISTING
+%post install
+/sbin/ldconfig
 
+%postun install
+/sbin/ldconfig
+
+%post browser
+/sbin/ldconfig
+MOZILLA_FIVE_HOME=/usr/lib/mozilla %{prefix}/bin/regxpcom
+
+%postun browser
+/sbin/ldconfig
+rm -f %{prefix}/lib/mozilla/component.reg
+
+%post mail
+/sbin/ldconfig
+MOZILLA_FIVE_HOME=/usr/lib/mozilla %{prefix}/bin/regxpcom
+
+%postun mail
+/sbin/ldconfig
+MOZILLA_FIVE_HOME=/usr/lib/mozilla %{prefix}/bin/regxpcom
+
+FILE_LISTING
 
 
 
