@@ -142,13 +142,19 @@ interface nsIEditorShell : nsISupports
    *          true if we are saving off a copy of the document
    *          without changing the disk file associated with the doc.
    *          This would correspond to a 'Save Copy As' menu command
-   *          (currently not in our UI)
+   *  @param mimeType
+   *          Currently must be "text/html" or "text/plain"
+   *          Also, we don't turn into a "plain text editor",
+   *          after saving as a text file, where subsequent "Save" 
+   *          would also save as  text.
+   *          Thus saveCopy should always be true when using "text/plain"
+   *
    *  return value
    *          true if file was really saved.
    *          false if there is some problem with saving or user
    *          executed "Cancel" when prompted for a filename to save
    */  
-  boolean saveDocument(in boolean saveAs, in boolean saveCopy);
+  boolean saveDocument(in boolean saveAs, in boolean saveCopy, in wstring mimeType);
   
   void Print();
   
@@ -445,15 +451,14 @@ interface nsIEditorShell : nsISupports
                               out PRInt32 actualRowSpan, out PRInt32 actualColSpan, 
                               out boolean isSelected);
   
-  /** Get the first row element in a table 
+  /** Get the first row in a table 
     * tableElement may be a table or any child element a table
     */
-  nsIDOMElement GetFirstRow(in nsIDOMElement tableElement);
+  nsIDOMNode GetFirstRow(in nsIDOMElement tableElement);
 
-  /** Get the next row element in a table after currentRow 
-    * currentRow may be a row or any child element of a row
+  /** Get the next row in a table after currentRow 
     */
-  nsIDOMElement GetNextRow(in nsIDOMElement currentRow);
+  nsIDOMNode GetNextRow(in nsIDOMNode currentRow);
 
   /** Examine the current selection and find
     *   a selected TABLE, TD or TH, or TR element.
