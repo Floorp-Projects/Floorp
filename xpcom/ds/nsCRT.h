@@ -127,6 +127,14 @@ public:
    ***
    ***/
 
+  /** Compute the string length of s
+   @param s the string in question
+   @return the length of s
+   */
+  static PRUint32 strlen(const char* s) {                                       
+    return PRUint32(::strlen(s));                                               
+  }                                                                             
+
   /// Compare s1 and s2.
   static PRInt32 strcmp(const char* s1, const char* s2) {
     return PRInt32(PL_strcmp(s1, s2));
