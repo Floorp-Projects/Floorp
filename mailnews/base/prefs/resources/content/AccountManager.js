@@ -1129,6 +1129,13 @@ function setFormElementValue(formElement, value) {
 // with a given pageId, serverId, etc
 //
 
+// helper routine for account manager panels to get the current account for the selected server
+function getCurrentAccount()
+{
+  var result = getServerIdAndPageIdFromTree(accounttree);
+  return getAccountFromServerId(result.serverId);
+}
+
 //
 // get the account associated with this serverId
 //

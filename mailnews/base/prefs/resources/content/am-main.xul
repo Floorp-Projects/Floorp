@@ -8,6 +8,7 @@
       onload="parent.onPanelLoaded('am-main.xul');">
 
     <stringbundle id="bundle_prefutilities" src="chrome://communicator/locale/pref/prefutilities.properties"/>
+    <script type="application/x-javascript" src="chrome://messenger/content/am-identity-edit.js"/>
     <script type="application/x-javascript" src="chrome://messenger/content/am-main.js"/>
     <script type="application/x-javascript" src="chrome://messenger/content/am-prefs.js"/>
 
@@ -96,8 +97,15 @@
                   pref="true" preftype="string" prefattribute="value"
                   prefstring="mail.identity.%identitykey%.escapedVCard"/>
       </hbox>
+    </groupbox>
 
       <separator class="thin"/>
-    </groupbox>
+
+    <hbox align="center">
+      <spacer flex="1"/>
+      <button label="&manageIdentities.label;" oncommand="manageIdentities(event);"
+              accesskey="&manageIdentities.accesskey;"
+              wsm_persist="true" id="identity.manageIdentitiesbutton"/>
+    </hbox>
 
 </page>

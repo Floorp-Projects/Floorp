@@ -36,8 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const nsIFilePicker = Components.interfaces.nsIFilePicker;
-
 function onInit() 
 {
   var accountName = document.getElementById("server.prettyName");
@@ -55,92 +53,31 @@ function onInit()
   setupSignatureItems();
 }
 
-function selectFile()
+function manageIdentities()
 {
-    var fp = Components.classes["@mozilla.org/filepicker;1"]
-                       .createInstance(nsIFilePicker);
-  
-    var prefutilitiesBundle = document.getElementById("bundle_prefutilities");
-    var title = prefutilitiesBundle.getString("choosefile");
-    fp.init(window, title, nsIFilePicker.modeOpen);
-    fp.appendFilters(nsIFilePicker.filterAll);
+  // We want to save the current identity information before bringing up the multiple identities
+  // UI. This ensures that the changes are reflected in the identity list dialog
+  // onSave();
 
-    // Get current signature folder, if there is one.
-    // We can set that to be the initial folder so that users 
-    // can maintain their signatures better.
-    var sigFolder = GetSigFolder();
-    if (sigFolder)
-        fp.displayDirectory = sigFolder;
-  
-    var ret = fp.show();
-    if (ret == nsIFilePicker.returnOK) {
-        var folderField = document.getElementById("identity.signature");
-        folderField.value = fp.file.path;
-    }
+  var accountName = document.getElementById("server.prettyName").value;
+  var account = parent.getCurrentAccount();
+
+  if (!account)
+    return;
+
+  var args = { account: account, accountName: accountName, result: false };
+
+  // save the current identity settings so they show up correctly
+  // if the user just changed them in the manage identities dialog
+  var account = parent.getCurrentAccount();
+  var identity = account.defaultIdentity;
+  saveIdentitySettings(identity);
+
+  window.openDialog('am-identities-list.xul', 'identity', 'modal,titlebar,chrome', args);
+
+  if (args.result) {
+    // now re-initialize the default identity settings in case they changed
+    identity = account.defaultIdentity; // refetch the default identity in case it changed
+    initIdentityValues(identity);
 }
-
-function GetSigFolder()
-{
-    var sigFolder = null;
-    try {
-        var result = parent.getServerIdAndPageIdFromTree(parent.accounttree);
-        var account = parent.getAccountFromServerId(result.serverId);
-        var identity = account.defaultIdentity;
-        var signatureFile = identity.signature;
-
-        if (signatureFile) {
-            signatureFile = signatureFile.QueryInterface( Components.interfaces.nsILocalFile );
-            sigFolder = signatureFile.parent;
-
-            if (!sigFolder.exists) 
-                sigFolder = null;
-        }
-    }
-    catch (ex) {
-        dump("failed to get signature folder..\n");
-    }
-    return sigFolder;
 }
-
-// If a signature is need to be attached, the associated items which
-// displays the absolute path to the signature (in a textbox) and the way
-// to select a new signature file (a button) are enabled. Otherwise, they
-// are disabled. Check to see if the attachSignature is locked to block
-// broadcasting events.
-function setupSignatureItems()
-{ 
-   var signature = document.getElementById("identity.signature");
-   var browse = document.getElementById("identity.sigbrowsebutton");
-
-   var attachSignature = document.getElementById("identity.attachSignature");
-   var checked = attachSignature.checked;
-
-   if (checked && !getAccountValueIsLocked(signature))
-     signature.removeAttribute("disabled");
-   else
-     signature.setAttribute("disabled", "true");
-
-   if (checked && !getAccountValueIsLocked(browse))
-     browse.removeAttribute("disabled");
-   else
-     browse.setAttribute("disabled", "true");
-}
-
-function editVCardCallback(escapedVCardStr)
-{
-  var escapedVCard = document.getElementById("identity.escapedVCard");
-  escapedVCard.value = escapedVCardStr;
-}
-
-function editVCard()
-{
-  var escapedVCard = document.getElementById("identity.escapedVCard");
-
-  // read vCard hidden value from UI
-  window.openDialog("chrome://messenger/content/addressbook/abNewCardDialog.xul",
-                    "",
-                    "chrome,resizable=no,titlebar,modal",
-                    {escapedVCardStr:escapedVCard.value, okCallback:editVCardCallback,
-                     titleProperty:"editVCardTitle", hideABPicker:true});
-}
-
