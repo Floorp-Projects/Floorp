@@ -1206,8 +1206,8 @@ void nsImapProtocol::HandleIdleResponses()
   //  We might check that something actually changed, but for now we can
   // just assume it. OnNewIdleMessages must run a url, so that
   // we'll go back into asyncwait mode.
-  m_imapMailFolderSink->OnNewIdleMessages();
-
+  if (GetServerStateParser().Connected())
+    m_imapMailFolderSink->OnNewIdleMessages();
 }
 
 void nsImapProtocol::EstablishServerConnection()
