@@ -109,7 +109,9 @@ static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
 #include "nsIURI.h"
 
 static NS_DEFINE_CID(kEventQueueServiceCID,      NS_EVENTQUEUESERVICE_CID);
-//static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
+#ifdef ReallyInNecko
+static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
+#endif
 
 static int gKeepRunning = 0;
 static nsIEventQueue* gEventQ = nsnull;
@@ -210,7 +212,11 @@ InputConsumer::Init(nsFileSpec dirSpec, const char *out)
   return NS_OK;
 }
 
-nsresult //NECKO_EXPORT(nsresult)
+#ifdef ReallyInNecko
+NECKO_EXPORT(nsresult)
+#else
+nsresult
+#endif
 NS_NewURItoFile(const char *in, nsFileSpec dirSpec, const char *out)
 {
     nsresult rv;
@@ -275,8 +281,8 @@ NS_NewURItoFile(const char *in, nsFileSpec dirSpec, const char *out)
 #ifdef XP_MAC
      	  PRBool				haveEvent;
 	      EventRecord			theEvent;
-		    haveEvent = GetEvent(theEvent);
-   		  DispatchEvent(haveEvent, &theEvent);
+//		    haveEvent = GetEvent(theEvent);
+//   		  DispatchEvent(haveEvent, &theEvent);
 #else
         PLEvent *gEvent;
         rv = gEventQ->GetEvent(&gEvent);
