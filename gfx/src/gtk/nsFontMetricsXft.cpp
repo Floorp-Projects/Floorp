@@ -51,6 +51,7 @@
 #include "nsIDeviceContext.h"
 #include "nsRenderingContextGTK.h"
 #include "nsDeviceContextGTK.h"
+#include "nsReadableUtils.h"
 
 #include <gdk/gdkx.h>
 #include <freetype/tttables.h>
@@ -1409,8 +1410,6 @@ nsFontEnumeratorXft::EnumerateAllFonts(PRUint32 *aCount, PRUnichar ***aResult)
     *aCount = 0;
 
     return EnumFontsXft(nsnull, nsnull, aCount, aResult);
-
-    return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -1425,7 +1424,7 @@ nsFontEnumeratorXft::EnumerateFonts(const char *aLangGroup,
     NS_ENSURE_ARG_POINTER(aGeneric);
     NS_ENSURE_ARG_POINTER(aLangGroup);
 
-    nsCOMPtr<nsIAtom> langGroup = getter_AddRefs(NS_NewAtom(aLangGroup));
+    nsCOMPtr<nsIAtom> langGroup = do_GetAtom(aLangGroup);
 
     return EnumFontsXft(langGroup, aGeneric, aCount, aResult);
 }
@@ -1748,7 +1747,8 @@ EnumFontsXft(nsIAtom* aLangGroup, const char* aGeneric,
     nsresult     rv  = NS_ERROR_FAILURE;
 
     PRUnichar **array = NULL;
-    PRUint32    narray;
+    PRUint32    narray = 0;
+    PRInt32     serif = 0, sansSerif = 0, monospace = 0, nGenerics;
 
     *aCount = 0;
     *aResult = nsnull;
@@ -1775,12 +1775,47 @@ EnumFontsXft(nsIAtom* aLangGroup, const char* aGeneric,
         goto end;
     }
 
+    // Fontconfig supports 3 generic fonts, "serif", "sans-serif", and
+    // "monospace", slightly different from CSS's 5.
+    if (!aGeneric)
+        serif = sansSerif = monospace = 1;
+    else if (!strcmp(aGeneric, "serif"))
+        serif = 1;
+    else if (!strcmp(aGeneric, "sans-serif"))
+        sansSerif = 1;
+    else if (!strcmp(aGeneric, "monospace"))
+        monospace = 1;
+    else if (!strcmp(aGeneric, "cursive") || !strcmp(aGeneric, "fantasy"))
+        serif = sansSerif =  1;
+    else
+        NS_NOTREACHED("unexpected generic family");
+    nGenerics = serif + sansSerif + monospace;
+
     array = NS_STATIC_CAST(PRUnichar **,
-                           nsMemory::Alloc(fs->nfont * sizeof(PRUnichar *)));
+               nsMemory::Alloc((fs->nfont + nGenerics) * sizeof(PRUnichar *)));
     if (!array)
         goto end;
 
-    narray = 0;
+    if (serif) {
+        PRUnichar *name = ToNewUnicode(NS_LITERAL_STRING("serif"));
+        if (!name)
+            goto end;
+        array[narray++] = name;
+    }
+
+    if (sansSerif) {
+        PRUnichar *name = ToNewUnicode(NS_LITERAL_STRING("sans-serif"));
+        if (!name)
+            goto end;
+        array[narray++] = name;
+    }
+
+    if (monospace) {
+        PRUnichar *name = ToNewUnicode(NS_LITERAL_STRING("monospace"));
+        if (!name)
+            goto end;
+        array[narray++] = name;
+    }
 
     for (int i=0; i < fs->nfont; ++i) {
         char *family;
@@ -1796,12 +1831,8 @@ EnumFontsXft(nsIAtom* aLangGroup, const char* aGeneric,
                               nsMemory::Alloc ((strlen (family) + 1)
                                                * sizeof (PRUnichar)));
 
-        if (!name) {
-            for (PRUint32 j = 0; j < narray; ++j)
-                nsMemory::Free (array[j]);
-            nsMemory::Free (array);
+        if (!name)
             goto end;
-        }
 
         PRUnichar *r = name;
         for (char *f = family; *f; ++f)
@@ -1811,7 +1842,7 @@ EnumFontsXft(nsIAtom* aLangGroup, const char* aGeneric,
         array[narray++] = name;
     }
 
-    NS_QuickSort(array, narray, sizeof (PRUnichar*),
+    NS_QuickSort(array + nGenerics, narray - nGenerics, sizeof (PRUnichar*),
                  CompareFontNames, nsnull);
 
     *aCount = narray;
@@ -1823,6 +1854,11 @@ EnumFontsXft(nsIAtom* aLangGroup, const char* aGeneric,
     rv = NS_OK;
 
  end:
+    if (NS_FAILED(rv) && array) {
+        while (narray)
+            nsMemory::Free (array[--narray]);
+        nsMemory::Free (array);
+    }
     if (pat)
         FcPatternDestroy(pat);
     if (os)
