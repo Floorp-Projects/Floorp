@@ -312,6 +312,7 @@
         <menuitem value="&paragraphDfnDescCmd.label;"   onaction="EditorSetParagraphFormat('dd')"/>
         </menupopup>
 	  </menu>
+	  </menupopup>
     </menu>
     <menu value="&toolsMenu.label;">
       <menupopup>
