@@ -199,6 +199,9 @@ nsKeygenFormProcessor::Init()
   nsresult rv;
   nsAutoString str;
 
+  if (SECKeySizeChoiceList[0].name != NULL)
+    return NS_OK;
+
   // Get the key strings //
   nsCOMPtr<nsINSSComponent> nssComponent;
   nssComponent = do_GetService(kNSSComponentCID, &rv);
