@@ -30,7 +30,6 @@ EXPORTS =                           \
         netCore.h                   \
         nsIFileTransportService.h   \
         nsISocketTransportService.h \
-        nsIHeader.h                 \
         nsIProxy.h                  \
         $(NULL)
 
