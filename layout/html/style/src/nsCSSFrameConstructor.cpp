@@ -7890,14 +7890,60 @@ FindNextAnonymousSibling(nsIPresShell* aPresShell,
   return nsnull;
 }
 
+#define UNSET_DISPLAY 255
+// if the sibling is a col group, col or (row group, caption), then aContent 
+// must be the same type, otherwise aContent may get the wrong parent.
+PRBool
+nsCSSFrameConstructor::IsValidSibling(nsIPresShell&          aPresShell,
+                                      const nsIFrame&        aSibling,
+                                      PRUint8                aSiblingDisplay,
+                                      nsIContent&            aContent,
+                                      PRUint8&               aDisplay)
+{
+  if ((NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == aSiblingDisplay) ||
+      (NS_STYLE_DISPLAY_TABLE_COLUMN       == aSiblingDisplay) ||
+      (NS_STYLE_DISPLAY_TABLE_HEADER_GROUP == aSiblingDisplay) ||
+      (NS_STYLE_DISPLAY_TABLE_ROW_GROUP    == aSiblingDisplay) ||
+      (NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP == aSiblingDisplay)) {
+    // if we haven't already, construct a style context to find the display type of aContent
+    if (UNSET_DISPLAY == aDisplay) {
+      nsCOMPtr<nsIPresContext> context;
+      aPresShell.GetPresContext(getter_AddRefs(context));
+
+      nsIFrame* parent;
+      aSibling.GetParent(&parent);
+      nsCOMPtr<nsIStyleContext> styleContext;
+      ResolveStyleContext(context, parent, &aContent, getter_AddRefs(styleContext));
+      if (!styleContext) return PR_FALSE;
+      const nsStyleDisplay* display = 
+        (const nsStyleDisplay*) styleContext->GetStyleData(eStyleStruct_Display);
+      if (!display) return PR_FALSE;
+      aDisplay = display->mDisplay;
+    }
+    switch (aSiblingDisplay) {
+    case NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP:
+      return (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == aDisplay);
+    case NS_STYLE_DISPLAY_TABLE_COLUMN:
+      return (NS_STYLE_DISPLAY_TABLE_COLUMN == aDisplay);
+    default: // all of the row group types
+      return (NS_STYLE_DISPLAY_TABLE_HEADER_GROUP == aDisplay) ||
+             (NS_STYLE_DISPLAY_TABLE_ROW_GROUP    == aDisplay) ||
+             (NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP == aDisplay) ||
+             (NS_STYLE_DISPLAY_TABLE_CAPTION      == aDisplay);
+    }
+  }
+  return PR_TRUE;
+}
+
 /**
  * Find the ``rightmost'' frame for the content immediately preceding
  * aIndexInContainer, following continuations if necessary.
  */
-static nsIFrame*
-FindPreviousSibling(nsIPresShell* aPresShell,
-                    nsIContent*   aContainer,
-                    PRInt32       aIndexInContainer)
+nsIFrame*
+nsCSSFrameConstructor::FindPreviousSibling(nsIPresShell*     aPresShell,
+                                           nsIContent*       aContainer,
+                                           PRInt32           aIndexInContainer,
+                                           const nsIContent* aChild)
 {
   NS_ASSERTION(aPresShell && aContainer, "null arguments");
 
@@ -7905,6 +7951,7 @@ FindPreviousSibling(nsIPresShell* aPresShell,
   ChildIterator::Init(aContainer, &first, &iter);
   iter.seek(aIndexInContainer);
 
+  PRUint8 childDisplay = UNSET_DISPLAY;
   // Note: not all content objects are associated with a frame (e.g., if it's
   // `display: hidden') so keep looking until we find a previous frame
   while (iter-- != first) {
@@ -7926,6 +7973,9 @@ FindPreviousSibling(nsIPresShell* aPresShell,
       const nsStyleDisplay* display;
       prevSibling->GetStyleData(eStyleStruct_Display,
                                 (const nsStyleStruct*&)display);
+  
+      if (aChild && !IsValidSibling(*aPresShell, *prevSibling, display->mDisplay, (nsIContent&)*aChild, childDisplay))
+        continue;
 
       if (display->mDisplay == NS_STYLE_DISPLAY_POPUP) {
         nsIFrame* placeholderFrame;
@@ -7957,10 +8007,11 @@ FindPreviousSibling(nsIPresShell* aPresShell,
  * Find the frame for the content node immediately following
  * aIndexInContainer.
  */
-static nsIFrame*
-FindNextSibling(nsIPresShell* aPresShell,
-                nsIContent*   aContainer,
-                PRInt32       aIndexInContainer)
+nsIFrame*
+nsCSSFrameConstructor::FindNextSibling(nsIPresShell*     aPresShell,
+                                       nsIContent*       aContainer,
+                                       PRInt32           aIndexInContainer,
+                                       const nsIContent* aChild)
 {
   ChildIterator iter, last;
   ChildIterator::Init(aContainer, &iter, &last);
@@ -7969,6 +8020,8 @@ FindNextSibling(nsIPresShell* aPresShell,
   // Catch the case where someone tries to append
   if (iter == last)
     return nsnull;
+
+  PRUint8 childDisplay = UNSET_DISPLAY;
 
   while (++iter != last) {
     nsIFrame* nextSibling = nsnull;
@@ -7987,6 +8040,9 @@ FindNextSibling(nsIPresShell* aPresShell,
       const nsStyleDisplay* display;
       nextSibling->GetStyleData(eStyleStruct_Display,
                                 (const nsStyleStruct*&)display);
+
+      if (aChild && !IsValidSibling(*aPresShell, *nextSibling, display->mDisplay, (nsIContent&)*aChild, childDisplay))
+        continue;
 
       if (display->IsFloating() || display->IsAbsolutelyPositioned()) {
         // Nope. Get the place-holder instead
@@ -8723,7 +8779,7 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext*        aPresContext,
   // with a lower index, and before any siblings with a higher
   // index. Same with FindNextSibling(), below.
   nsIFrame* prevSibling = (aIndexInContainer >= 0)
-    ? FindPreviousSibling(shell, container, aIndexInContainer)
+    ? FindPreviousSibling(shell, container, aIndexInContainer, aChild)
     : FindPreviousAnonymousSibling(shell, mDocument, aContainer, aChild);
 
   PRBool    isAppend = PR_FALSE;
@@ -8732,7 +8788,7 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext*        aPresContext,
   // If there is no previous sibling, then find the frame that follows
   if (! prevSibling) {
     nextSibling = (aIndexInContainer >= 0)
-      ? FindNextSibling(shell, container, aIndexInContainer)
+      ? FindNextSibling(shell, container, aIndexInContainer, aChild)
       : FindNextAnonymousSibling(shell, mDocument, aContainer, aChild);
   }
 
