@@ -1315,25 +1315,33 @@ PRBool nsHTMLParser::CreateContextStackFor(PRInt32 aChildTag){
     cnt=theVector.Length()-1;
     result=PRBool(mContextStack[mContextStackPos-1]==theVector[cnt]);
   }
-  else if(PR_TRUE==mDTD->BackwardPropagate(theVector,theTop,aChildTag)) {
-    if(theTop!=eHTMLTag_html)
-      mDTD->BackwardPropagate(theVector,eHTMLTag_html,theTop);
+  else {
+    PRBool tempResult;
+    if(eHTMLTag_unknown!=theTop) {
+      tempResult=mDTD->BackwardPropagate(theVector,theTop,aChildTag);
+      if(eHTMLTag_html!=theTop)
+        mDTD->BackwardPropagate(theVector,eHTMLTag_html,theTop);
+    }
+    else tempResult=mDTD->BackwardPropagate(theVector,eHTMLTag_html,aChildTag);
 
-    //propagation worked, so pop unwanted containers, push new ones, then exit...
-    pos=0;
-    cnt=theVector.Length();
-    result=PR_TRUE;
-    while(pos<mContextStackPos) {
-      if(mContextStack[pos]==theVector[cnt-1-pos]) {
-        pos++;
-      }
-      else {
-        //if you're here, you have something on the stack
-        //that doesn't match your needed tags order.
-        result=CloseContainersTo(pos);
-        break;
-      }
-    } //while
+    if(PR_TRUE==tempResult) {
+
+      //propagation worked, so pop unwanted containers, push new ones, then exit...
+      pos=0;
+      cnt=theVector.Length();
+      result=PR_TRUE;
+      while(pos<mContextStackPos) {
+        if(mContextStack[pos]==theVector[cnt-1-pos]) {
+          pos++;
+        }
+        else {
+          //if you're here, you have something on the stack
+          //that doesn't match your needed tags order.
+          result=CloseContainersTo(pos);
+          break;
+        }
+      } //while
+    } //elseif
   } //elseif
 
     //now, build up the stack according to the tags 
