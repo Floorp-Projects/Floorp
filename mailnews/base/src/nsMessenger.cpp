@@ -228,9 +228,8 @@ nsMessenger::~nsMessenger()
     NS_IF_RELEASE(mWindow);
 }
 
-NS_IMPL_THREADSAFE_ADDREF(nsMessenger);
-NS_IMPL_THREADSAFE_RELEASE(nsMessenger);
-NS_IMPL_QUERY_INTERFACE2(nsMessenger, nsIMessenger, nsICmdLineHandler);
+
+NS_IMPL_ISUPPORTS(nsMessenger, NS_GET_IID(nsIMessenger))
 
 nsresult
 nsMessenger::GetNewMessages(nsIRDFCompositeDataSource *db,
@@ -1500,5 +1499,3 @@ nsSaveAsListener::OnDataAvailable(nsIChannel* aChannel,
   }
   return rv;
 }
-
-CMDLINEHANDLER_IMPL(nsMessenger,"-mail","general.startup.mail","chrome://messenger/content/","Start with mail.",NS_MESSENGER_PROGID,"Mail Cmd Line Handler",PR_FALSE,"", PR_TRUE)

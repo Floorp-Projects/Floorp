@@ -31,14 +31,15 @@
 
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
 static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
-
-NS_IMPL_ISUPPORTS(nsMessengerBootstrap, NS_GET_IID(nsIAppShellComponent))
+NS_IMPL_THREADSAFE_ADDREF(nsMessengerBootstrap);
+NS_IMPL_THREADSAFE_RELEASE(nsMessengerBootstrap);
+NS_IMPL_QUERY_INTERFACE2(nsMessengerBootstrap, nsIAppShellComponent, nsICmdLineHandler);
 
 nsMessengerBootstrap::nsMessengerBootstrap()
 {
   NS_INIT_REFCNT();
-  
 }
 
 nsMessengerBootstrap::~nsMessengerBootstrap()
@@ -50,8 +51,12 @@ nsMessengerBootstrap::Initialize(nsIAppShellService*,
                                  nsICmdLineService*)
 {
 	nsresult rv;
-    rv = nsServiceManager::RegisterService( "component://netscape/appshell/component/messenger", this );
 
+    nsCOMPtr<nsISupports> bootstrapper;
+    rv = this->QueryInterface(kISupportsIID, getter_AddRefs(bootstrapper));
+    if (NS_SUCCEEDED(rv) && bootstrapper) {
+      rv = nsServiceManager::RegisterService( "component://netscape/appshell/component/messenger", bootstrapper);
+    }
 	return rv;
 }
 
@@ -63,3 +68,4 @@ nsMessengerBootstrap::Shutdown()
 }
 
 
+CMDLINEHANDLER_IMPL(nsMessengerBootstrap,"-mail","general.startup.mail","chrome://messenger/content/","Start with mail.",NS_MESSENGERBOOTSTRAP_PROGID,"Mail Cmd Line Handler",PR_FALSE,"", PR_TRUE)
