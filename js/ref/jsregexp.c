@@ -1476,7 +1476,8 @@ OptimizeRegExp(CompilerState *state, RENode *ren)
 		    len = 1;
 		}
 		cx = state->context;
-		PR_ARENA_ALLOCATE(cp, &cx->tempPool, len + 2);
+		PR_ARENA_ALLOCATE(cp, &cx->tempPool,
+                                            (len + 1) * sizeof(jschar));
 		if (!cp) {
 		    JS_ReportOutOfMemory(cx);
 		    return JS_FALSE;
@@ -1971,6 +1972,7 @@ js_NewRegExp(JSContext *cx, JSString *str, uintN flags)
     end = NewRENode(&state, REOP_END, NULL);
     if (!end || !SetNext(&state, ren, end))
 	goto out;
+
 
     if (!AnchorRegExp(&state, ren))
 	goto out;
