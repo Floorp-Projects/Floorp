@@ -109,8 +109,11 @@ nsDownloadManager::~nsDownloadManager()
   NS_IF_RELEASE(gNC_DownloadState);
   NS_IF_RELEASE(gNC_StatusText);
 
-  nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);                
+  nsServiceManager::ReleaseService(kRDFServiceCID, gObserverService);                
   gRDFService = nsnull;                                                         
+
+  nsServiceManager::ReleaseService("@mozilla.org/observer-service;1", gObserverService);                
+  gObserverService = nsnull;                                                         
 
 }
 
