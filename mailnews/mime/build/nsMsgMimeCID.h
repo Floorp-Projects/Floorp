@@ -23,6 +23,9 @@
 #ifndef nsMessageMimeCID_h__
 #define nsMessageMimeCID_h__
 
+#define NS_MAILNEWS_MIME_HEADER_PARSER_PROGID \
+  "component://netscape/messenger/headerparser"
+
 #define NS_MAILNEWS_MIME_STREAM_CONVERTER_PROGID \
 	NS_ISTREAMCONVERTER_KEY "?from=message/rfc822?to=text/xul"
 
