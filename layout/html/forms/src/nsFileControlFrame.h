@@ -42,6 +42,16 @@ public:
   nsFileControlFrame();
   virtual ~nsFileControlFrame();
 
+  // XXX Hack so we can squirrel away the pres context pointer
+  NS_IMETHOD Init(nsIPresContext&  aPresContext,
+                  nsIContent*      aContent,
+                  nsIFrame*        aParent,
+                  nsIStyleContext* aContext,
+                  nsIFrame*        aPrevInFlow) {
+    mPresContext = &aPresContext;
+    return nsAreaFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+  }
+
   virtual void MouseClicked(nsIPresContext* aPresContext) {}
   virtual void SetFormFrame(nsFormFrame* aFormFrame) { mFormFrame = aFormFrame; }
   virtual nsFormFrame* GetFromFrame() { return mFormFrame; }
@@ -52,7 +62,7 @@ public:
                    nsFramePaintLayer aWhichLayer);
 
       // nsIFormControlFrame
-  NS_IMETHOD SetProperty(nsIAtom* aName, const nsString& aValue);
+  NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsString& aValue);
   NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue); 
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
@@ -63,7 +73,7 @@ public:
 
   NS_IMETHOD GetFrameName(nsString& aResult) const;
   NS_IMETHOD SetSuggestedSize(nscoord aWidth, nscoord aHeight) { return NS_OK; };
-  NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame);
+  NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext, const nsPoint& aPoint, nsIFrame** aFrame);
   NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
                               nsIContent*     aChild,
                               PRInt32         aNameSpaceID,
@@ -77,7 +87,7 @@ public:
 
   NS_IMETHOD     GetName(nsString* aName);
   virtual PRBool IsSuccessful(nsIFormControlFrame* aSubmitter);
-  virtual void   Reset();
+  virtual void   Reset(nsIPresContext* aPresContext);
   NS_IMETHOD     GetType(PRInt32* aType) const;
   void           SetFocus(PRBool aOn, PRBool aRepaint);
   void           ScrollIntoView(nsIPresContext* aPresContext);
@@ -149,9 +159,9 @@ public:
   virtual nsresult HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; }
 
   //nsIStatefulFrame
-  NS_IMETHOD GetStateType(StateType* aStateType);
-  NS_IMETHOD SaveState(nsISupports** aState);
-  NS_IMETHOD RestoreState(nsISupports* aState);
+  NS_IMETHOD GetStateType(nsIPresContext* aPresContext, StateType* aStateType);
+  NS_IMETHOD SaveState(nsIPresContext* aPresContext, nsISupports** aState);
+  NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsISupports* aState);
 
 protected:
   nsIWidget* GetWindowTemp(nsIView *aView); // XXX temporary
@@ -162,6 +172,8 @@ protected:
   nsFormFrame*        mFormFrame;
   nsIHTMLContent*     mTextContent;
   nsString*           mCachedState;
+  // XXX Hack: pres context needed by function MouseClick()
+  nsIPresContext*     mPresContext;  // weak reference
 
 private:
   nsTextControlFrame* GetTextControlFrame(nsIFrame* aStart);

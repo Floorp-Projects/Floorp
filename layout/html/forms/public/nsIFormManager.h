@@ -38,7 +38,7 @@ public:
     * Reset the values of all of this manager's controls back to their
     * initial values. This is in response to a reset button being pushed.
     */
-  NS_IMETHOD OnReset() = 0;
+  NS_IMETHOD OnReset(nsIPresContext* aPresContext) = 0;
 
   /**
     * Submit the values of this manager's controls depending on its action,

@@ -291,7 +291,10 @@ nsHTMLTextAreaElement::Select()
   nsresult rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
   if (NS_SUCCEEDED(rv)) {
     if (nsnull != formControlFrame ) { 
-      formControlFrame->SetProperty(nsHTMLAtoms::select, "");
+      nsIPresContext* presContext;
+      nsGenericHTMLElement::GetPresContext(this, &presContext);
+      formControlFrame->SetProperty(presContext, nsHTMLAtoms::select, "");
+      NS_IF_RELEASE(presContext);
       return NS_OK;
     }
   }
@@ -332,7 +335,10 @@ nsHTMLTextAreaElement::SetValue(const nsString& aValue)
 {
   nsIFormControlFrame* formControlFrame = nsnull;
   if (NS_OK == nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame)) {
-    formControlFrame->SetProperty(nsHTMLAtoms::value, aValue);
+    nsIPresContext* presContext;
+    nsGenericHTMLElement::GetPresContext(this, &presContext);
+    formControlFrame->SetProperty(presContext, nsHTMLAtoms::value, aValue);
+    NS_IF_RELEASE(presContext);
   }                         
   return NS_OK;
 }

@@ -53,7 +53,7 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  void AddFrame(nsProgressMeterFrame* aFrame);
+  void AddFrame(nsIPresContext* aPresContext, nsProgressMeterFrame* aFrame);
 
   PRBool RemoveFrame(nsProgressMeterFrame* aFrame);
 
@@ -64,6 +64,18 @@ public:
   void Stop();
 
   virtual void Notify(nsITimer *timer);
+
+  PRInt32 GetFrameData(nsProgressMeterFrame* aFrame);
+
+  struct FrameData {
+    nsIPresContext*       mPresContext;  // pres context associated with the frame
+    nsProgressMeterFrame* mFrame;
+
+
+    FrameData(nsIPresContext*       aPresContext,
+              nsProgressMeterFrame* aFrame)
+      : mPresContext(aPresContext), mFrame(aFrame) {}
+  };
 
   nsITimer* mTimer;
   nsVoidArray mFrames;
@@ -101,21 +113,44 @@ void StripeTimer::Stop()
 static NS_DEFINE_IID(kITimerCallbackIID, NS_ITIMERCALLBACK_IID);
 NS_IMPL_ISUPPORTS(StripeTimer, kITimerCallbackIID);
 
-void StripeTimer::AddFrame(nsProgressMeterFrame* aFrame) {
+PRInt32 StripeTimer::GetFrameData(nsProgressMeterFrame* aFrame)
+{
+  PRInt32 i, n = mFrames.Count();
+  PRBool rv = PR_FALSE;
+  for (i = 0; i < n; i++) {
+    FrameData* frameData = (FrameData*) mFrames.ElementAt(i);
+
+    if (frameData->mFrame == aFrame) {
+      return i;
+    }
+  }
+
+  return -1;
+}
+
+void StripeTimer::AddFrame(nsIPresContext* aPresContext, nsProgressMeterFrame* aFrame) {
 
   // see if the frame is already here.
-  if (mFrames.IndexOf(aFrame) > -1)
+  if (GetFrameData(aFrame) > -1)
 	  return;
 
   // if not add it.
-  mFrames.AppendElement(aFrame);
+  FrameData* frameData = new FrameData(aPresContext, aFrame);
+  mFrames.AppendElement(frameData);
   if (1 == mFrames.Count()) {
     Start();
   }
 }
 
 PRBool StripeTimer::RemoveFrame(nsProgressMeterFrame* aFrame) {
-  PRBool rv = mFrames.RemoveElement(aFrame);
+  PRBool  rv = PR_FALSE;
+  PRInt32 i = GetFrameData(aFrame);
+
+  if (i > -1) {
+    FrameData*  frameData = (FrameData*)mFrames.ElementAt(i);
+    rv = mFrames.RemoveElementAt(i);
+    delete frameData;
+  }
   if (0 == mFrames.Count()) {
     Stop();
   }
@@ -135,15 +170,15 @@ void StripeTimer::Notify(nsITimer *timer)
 
   PRInt32 i, n = mFrames.Count();
   for (i = 0; i < n; i++) {
-    nsProgressMeterFrame* frame = (nsProgressMeterFrame*) mFrames.ElementAt(i);
-    frame->animate();
+    FrameData*  frameData = (FrameData*) mFrames.ElementAt(i);
+    frameData->mFrame->animate();
 
     // Determine damaged area and tell view manager to redraw it
     nsPoint offset;
     nsRect bounds;
-    frame->GetRect(bounds);
+    frameData->mFrame->GetRect(bounds);
     nsIView* view;
-    frame->GetOffsetFromView(offset, &view);
+    frameData->mFrame->GetOffsetFromView(frameData->mPresContext, offset, &view);
     nsIViewManager* vm;
     view->GetViewManager(vm);
     bounds.x = offset.x;
@@ -619,12 +654,12 @@ nsProgressMeterFrame :: Reflow ( nsIPresContext&          aPresContext,
     // See if it's targeted at us
     aReflowState.reflowCommand->GetTarget(targetFrame);
     if (this == targetFrame) {
-      Invalidate(nsRect(0,0,mRect.width,mRect.height), PR_FALSE);
+      Invalidate(&aPresContext, nsRect(0,0,mRect.width,mRect.height), PR_FALSE);
     }
   }
 
   if (mUndetermined)
-     gStripeAnimator->AddFrame(this);
+     gStripeAnimator->AddFrame(&aPresContext, this);
   else 
 	 gStripeAnimator->RemoveFrame(this);
 
@@ -733,7 +768,7 @@ nsProgressMeterFrame::Redraw(nsIPresContext* aPresContext)
    	nsRect frameRect;
 	  GetRect(frameRect);
 	  nsRect rect(0, 0, frameRect.width, frameRect.height);
-    Invalidate(rect, PR_TRUE);
+    Invalidate(aPresContext, rect, PR_TRUE);
 }
 
 

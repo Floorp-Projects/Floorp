@@ -80,7 +80,7 @@ nsContainerFrame::Destroy(nsIPresContext& aPresContext)
 {
   // Prevent event dispatch during destruction
   nsIView* view;
-  GetView(&view);
+  GetView(&aPresContext, &view);
   if (nsnull != view) {
     view->SetClientData(nsnull);
   }
@@ -205,7 +205,7 @@ nsContainerFrame::PaintChild(nsIPresContext&      aPresContext,
                              nsFramePaintLayer    aWhichLayer)
 {
   nsIView *pView;
-  aFrame->GetView(&pView);
+  aFrame->GetView(&aPresContext, &pView);
   if (nsnull == pView) {
     nsRect kidRect;
     aFrame->GetRect(kidRect);
@@ -263,14 +263,16 @@ nsContainerFrame::PaintChild(nsIPresContext&      aPresContext,
 }
 
 NS_IMETHODIMP
-nsContainerFrame::GetFrameForPoint(const nsPoint& aPoint, 
+nsContainerFrame::GetFrameForPoint(nsIPresContext* aPresContext,
+                                   const nsPoint& aPoint, 
                                    nsIFrame**     aFrame)
 {
-  return GetFrameForPointUsing(aPoint, nsnull, aFrame);
+  return GetFrameForPointUsing(aPresContext, aPoint, nsnull, aFrame);
 }
 
 nsresult
-nsContainerFrame::GetFrameForPointUsing(const nsPoint& aPoint,
+nsContainerFrame::GetFrameForPointUsing(nsIPresContext* aPresContext,
+                                        const nsPoint& aPoint,
                                         nsIAtom*       aList,
                                         nsIFrame**     aFrame)
 {
@@ -284,7 +286,7 @@ nsContainerFrame::GetFrameForPointUsing(const nsPoint& aPoint,
     kid->GetRect(kidRect);
     if (kidRect.Contains(aPoint)) {
       tmp.MoveTo(aPoint.x - kidRect.x, aPoint.y - kidRect.y);
-      return kid->GetFrameForPoint(tmp, aFrame);
+      return kid->GetFrameForPoint(aPresContext, tmp, aFrame);
     }
     kid->GetNextSibling(&kid);
   }
@@ -296,7 +298,7 @@ nsContainerFrame::GetFrameForPointUsing(const nsPoint& aPoint,
     if (NS_FRAME_OUTSIDE_CHILDREN & state) {
       kid->GetRect(kidRect);
       tmp.MoveTo(aPoint.x - kidRect.x, aPoint.y - kidRect.y);
-      if (NS_OK == kid->GetFrameForPoint(tmp, aFrame)) {
+      if (NS_OK == kid->GetFrameForPoint(aPresContext, tmp, aFrame)) {
         return NS_OK;
       }
       else {
@@ -561,7 +563,7 @@ nsContainerFrame::PushChildren(nsIPresContext* aPresContext,
     // When pushing and pulling frames we need to check for whether any
     // views need to be reparented.
     for (nsIFrame* f = aFromChild; f; f->GetNextSibling(&f)) {
-      nsHTMLContainerFrame::ReparentFrameView(f, this, mNextInFlow);
+      nsHTMLContainerFrame::ReparentFrameView(aPresContext, f, this, mNextInFlow);
     }
     nextInFlow->mFrames.InsertFrames(mNextInFlow, nsnull, aFromChild);
   }
@@ -594,7 +596,7 @@ nsContainerFrame::MoveOverflowToChildList(nsIPresContext* aPresContext)
       // When pushing and pulling frames we need to check for whether any
       // views need to be reparented.
       for (nsIFrame* f = prevOverflowFrames; f; f->GetNextSibling(&f)) {
-        nsHTMLContainerFrame::ReparentFrameView(f, prevInFlow, this);
+        nsHTMLContainerFrame::ReparentFrameView(aPresContext, f, prevInFlow, this);
       }
       mFrames.InsertFrames(this, nsnull, prevOverflowFrames);
       result = PR_TRUE;
@@ -615,12 +617,12 @@ nsContainerFrame::MoveOverflowToChildList(nsIPresContext* aPresContext)
 // Debugging
 
 NS_IMETHODIMP
-nsContainerFrame::List(FILE* out, PRInt32 aIndent) const
+nsContainerFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const
 {
   IndentBy(out, aIndent);
   ListTag(out);
   nsIView* view;
-  GetView(&view);
+  GetView(aPresContext, &view);
   if (nsnull != view) {
     fprintf(out, " [view=%p]", view);
   }
@@ -658,7 +660,7 @@ nsContainerFrame::List(FILE* out, PRInt32 aIndent) const
       }
       fputs("<\n", out);
       while (nsnull != kid) {
-        kid->List(out, aIndent + 1);
+        kid->List(aPresContext, out, aIndent + 1);
         kid->GetNextSibling(&kid);
       }
       IndentBy(out, aIndent);

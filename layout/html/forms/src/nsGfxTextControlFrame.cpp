@@ -696,7 +696,7 @@ void nsGfxTextControlFrame::SetTextControlFrameState(const nsString& aValue)
   }
 }
 
-NS_IMETHODIMP nsGfxTextControlFrame::SetProperty(nsIAtom* aName, const nsString& aValue)
+NS_IMETHODIMP nsGfxTextControlFrame::SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsString& aValue)
 {
   if (PR_FALSE==mIsProcessing)
   {
@@ -708,7 +708,7 @@ NS_IMETHODIMP nsGfxTextControlFrame::SetProperty(nsIAtom* aName, const nsString&
       mEditor->EnableUndo(PR_TRUE);       // fire up a new txn stack
     }
     else {
-      return Inherited::SetProperty(aName, aValue);
+      return Inherited::SetProperty(aPresContext, aName, aValue);
     }
     mIsProcessing = PR_FALSE;
   }
@@ -832,7 +832,7 @@ nsGfxTextControlFrame::CreateWebShell(nsIPresContext& aPresContext,
 
   nsIView* parView;
   nsPoint origin;
-  GetOffsetFromView(origin, &parView);  
+  GetOffsetFromView(&aPresContext, origin, &parView);  
   nsRect viewBounds(origin.x, origin.y, aSize.width, aSize.height);
 
   nsCOMPtr<nsIViewManager> viewMan;
@@ -840,7 +840,7 @@ nsGfxTextControlFrame::CreateWebShell(nsIPresContext& aPresContext,
   rv = view->Init(viewMan, viewBounds, parView);
   viewMan->InsertChild(parView, view, 0);
   rv = view->CreateWidget(kCChildCID);
-  SetView(view);
+  SetView(&aPresContext, view);
 
   // if the visibility is hidden, reflect that in the view
   const nsStyleDisplay* display;
@@ -1981,12 +1981,12 @@ void nsGfxTextControlFrame::RemoveNewlines(nsString &aString)
 }
 
 NS_IMETHODIMP
-nsGfxTextControlFrame::List(FILE* out, PRInt32 aIndent) const
+nsGfxTextControlFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const
 {
   IndentBy(out, aIndent);
   ListTag(out);
   nsIView* view;
-  GetView(&view);
+  GetView(aPresContext, &view);
   if (nsnull != view) {
     fprintf(out, " [view=%p]", view);
   }
@@ -2012,7 +2012,7 @@ nsGfxTextControlFrame::List(FILE* out, PRInt32 aIndent) const
             nsIFrame* rootFrame;
             shell->GetRootFrame(&rootFrame);
             if (rootFrame) {
-              rootFrame->List(out, aIndent + 1);
+              rootFrame->List(aPresContext, out, aIndent + 1);
               nsCOMPtr<nsIDocument> doc;
               docv->GetDocument(*getter_AddRefs(doc));
               if (doc) {

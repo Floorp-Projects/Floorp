@@ -62,7 +62,7 @@ public:
    * Initiates mouse capture for the listbox
    *
    */
-  NS_IMETHOD CaptureMouseEvents(PRBool aGrabMouseEvents) = 0;
+  NS_IMETHOD CaptureMouseEvents(nsIPresContext* aPresContext, PRBool aGrabMouseEvents) = 0;
 
   /**
    * Returns the maximum width and height of an item in the listbox
@@ -79,7 +79,7 @@ public:
   /**
    * 
    */
-  NS_IMETHOD SyncViewWithFrame() = 0;
+  NS_IMETHOD SyncViewWithFrame(nsIPresContext* aPresContext) = 0;
 
   /**
    * 

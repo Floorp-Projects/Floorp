@@ -70,7 +70,7 @@ public:
 protected:
 
 	virtual PRBool	GetRadioState();
-	virtual void 		SetRadioState(PRBool aValue);
+	virtual void 		SetRadioState(nsIPresContext* aPresContext, PRBool aValue);
 
     //GFX-rendered state variables
   PRBool							mChecked;

@@ -150,16 +150,17 @@ NS_METHOD nsTreeCellFrame::Reflow(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsTreeCellFrame::GetFrameForPoint(const nsPoint& aPoint, 
+nsTreeCellFrame::GetFrameForPoint(nsIPresContext* aPresContext,
+                                  const nsPoint& aPoint, 
                                   nsIFrame**     aFrame)
 {
   if (mAllowEvents)
   {
-	  return nsTableCellFrame::GetFrameForPoint(aPoint, aFrame);
+	  return nsTableCellFrame::GetFrameForPoint(aPresContext, aPoint, aFrame);
   }
   else
   {
-    nsresult result = nsTableCellFrame::GetFrameForPoint(aPoint, aFrame);
+    nsresult result = nsTableCellFrame::GetFrameForPoint(aPresContext, aPoint, aFrame);
     nsCOMPtr<nsIContent> content;
     if (*aFrame) {
       (*aFrame)->GetContent(getter_AddRefs(content));
@@ -212,7 +213,7 @@ nsTreeCellFrame::HandleMouseDownEvent(nsIPresContext& aPresContext,
       nsIFrame* frame;
       GetParent(&frame);
       nsTreeRowFrame* treeRow = (nsTreeRowFrame*)frame;
-      treeRow->HeaderDrag(PR_TRUE);
+      treeRow->HeaderDrag(&aPresContext, PR_TRUE);
 
       // Inform the tree row of the flexing column
       treeRow->SetFlexingColumn(leftFlex);

@@ -95,12 +95,12 @@ nsPlaceholderFrame::GetFrameName(nsString& aResult) const
 }
 
 NS_IMETHODIMP
-nsPlaceholderFrame::List(FILE* out, PRInt32 aIndent) const
+nsPlaceholderFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const
 {
   IndentBy(out, aIndent);
   ListTag(out);
   nsIView* view;
-  GetView(&view);
+  GetView(aPresContext, &view);
   if (nsnull != view) {
     fprintf(out, " [view=%p]", view);
   }

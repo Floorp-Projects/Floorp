@@ -419,7 +419,7 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
     // Empty blocks do not have anything special done to them and they
     // always fit. Note: don't force the width to 0
     nsRect r(x, y, mMetrics.width, 0);
-    mFrame->SetRect(r);
+    mFrame->SetRect(mPresContext, r);
     aInFlowBounds = r;
 
     // Retain combined area information in case we contain a floater
@@ -547,7 +547,7 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
       aCombinedRect.height = mMetrics.mCombinedArea.height;
 
       // Now place the frame
-      mFrame->SetRect(nsRect(x, y, mMetrics.width, mMetrics.height));
+      mFrame->SetRect(mPresContext, nsRect(x, y, mMetrics.width, mMetrics.height));
 
 // XXX obsolete, i believe...
 #if 0

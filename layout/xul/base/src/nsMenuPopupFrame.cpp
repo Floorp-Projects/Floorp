@@ -102,6 +102,9 @@ nsMenuPopupFrame::Init(nsIPresContext&  aPresContext,
 {
   nsresult rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
+  // XXX Hack
+  mPresContext = &aPresContext;
+
   // We default to being vertical.
   nsString value;
   mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::align, value);
@@ -117,12 +120,12 @@ nsMenuPopupFrame::Init(nsIPresContext&  aPresContext,
   // position in the view hierarchy (as the root view).  We do this so that we
   // can draw the menus outside the confines of the window.
   nsIView* ourView;
-  GetView(&ourView);
+  GetView(&aPresContext, &ourView);
 
   nsIFrame* parent;
-  aParent->GetParentWithView(&parent);
+  aParent->GetParentWithView(&aPresContext, &parent);
   nsIView* parentView;
-  parent->GetView(&parentView);
+  parent->GetView(&aPresContext, &parentView);
 
   nsCOMPtr<nsIViewManager> viewManager;
   parentView->GetViewManager(*getter_AddRefs(viewManager));
@@ -180,15 +183,15 @@ nsMenuPopupFrame::GetViewOffset(nsIViewManager* aManager, nsIView* aView,
 }
 
 void
-nsMenuPopupFrame::GetNearestEnclosingView(nsIFrame* aStartFrame, nsIView** aResult)
+nsMenuPopupFrame::GetNearestEnclosingView(nsIPresContext* aPresContext, nsIFrame* aStartFrame, nsIView** aResult)
 {
   *aResult = nsnull;
-  aStartFrame->GetView(aResult);
+  aStartFrame->GetView(aPresContext, aResult);
   if (!*aResult) {
     nsIFrame* parent;
-    aStartFrame->GetParentWithView(&parent);
+    aStartFrame->GetParentWithView(aPresContext, &parent);
     if (parent)
-      parent->GetView(aResult);
+      parent->GetView(aPresContext, aResult);
   }
 }
 
@@ -203,18 +206,18 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext& aPresContext,
 
   //Get the nearest enclosing parent view to aFrame.
   nsIView* parentView = nsnull;
-  GetNearestEnclosingView(aFrame, &parentView);
+  GetNearestEnclosingView(&aPresContext, aFrame, &parentView);
   if (!parentView)
     return NS_OK;
 
   parentView->GetViewManager(*getter_AddRefs(viewManager));
   GetViewOffset(viewManager, parentView, parentPos);
   nsIView* view = nsnull;
-  GetView(&view);
+  GetView(&aPresContext, &view);
 
   nsIView* containingView = nsnull;
   nsPoint offset;
-  aFrame->GetOffsetFromView(offset, &containingView);
+  aFrame->GetOffsetFromView(&aPresContext, offset, &containingView);
   
   nsRect parentRect;
   aFrame->GetRect(parentRect);
@@ -414,11 +417,11 @@ NS_IMETHODIMP nsMenuPopupFrame::SetCurrentMenuItem(nsIMenuFrame* aMenuItem)
 }
 
 NS_IMETHODIMP
-nsMenuPopupFrame::CaptureMouseEvents(PRBool aGrabMouseEvents)
+nsMenuPopupFrame::CaptureMouseEvents(nsIPresContext* aPresContext, PRBool aGrabMouseEvents)
 {
   // get its view
   nsIView* view = nsnull;
-  GetView(&view);
+  GetView(aPresContext, &view);
   nsCOMPtr<nsIViewManager> viewMan;
   PRBool result;
 
@@ -687,7 +690,7 @@ nsMenuPopupFrame::GetWidget(nsIWidget **aWidget)
 {
   // Get parent view
   nsIView * view = nsnull;
-  nsMenuPopupFrame::GetNearestEnclosingView(this, &view);
+  nsMenuPopupFrame::GetNearestEnclosingView(mPresContext, this, &view);
   if (!view)
     return NS_OK;
 
@@ -745,12 +748,14 @@ nsMenuPopupFrame::Destroy(nsIPresContext& aPresContext)
 }
 
 NS_IMETHODIMP
-nsMenuPopupFrame::GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame)
+nsMenuPopupFrame::GetFrameForPoint(nsIPresContext* aPresContext,
+                                   const nsPoint& aPoint,
+                                   nsIFrame** aFrame)
 {
   nsRect rect;
   GetRect(rect);
   if (rect.Contains(aPoint)) {
-    return nsBoxFrame::GetFrameForPoint(aPoint, aFrame);
+    return nsBoxFrame::GetFrameForPoint(aPresContext, aPoint, aFrame);
   }
   
   *aFrame = this;

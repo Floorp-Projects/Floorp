@@ -72,7 +72,7 @@ protected:
   void ShiftFocus(PRBool foward);
   nsIContent* GetNextTabbableContent(nsIContent* aParent, nsIContent* aChild, nsIContent* aTop, PRBool foward);
   PRInt32 GetNextTabIndex(nsIContent* aParent, PRBool foward);
-  NS_IMETHOD SendFocusBlur(nsIContent *aContent);
+  NS_IMETHOD SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aContent);
   nsIScrollableView* GetNearestScrollingView(nsIView* aView);
 
   // routines for the d&d gesture tracking state machine

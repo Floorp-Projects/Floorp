@@ -206,7 +206,10 @@ public:
                             nsIContent*     aChild,
                             nsISupports*    aSubContent);
   //local methods
-  nsresult CreateWidget(nscoord aWidth, nscoord aHeight, PRBool aViewOnly);
+  nsresult CreateWidget(nsIPresContext* aPresContext,
+                        nscoord aWidth,
+                        nscoord aHeight,
+                        PRBool aViewOnly);
   nsresult GetFullURL(nsIURI*& aFullURL);
 
   nsresult GetPluginInstance(nsIPluginInstance*& aPluginInstance);
@@ -406,7 +409,10 @@ nsObjectFrame::GetFrameName(nsString& aResult) const
 }
 
 nsresult
-nsObjectFrame::CreateWidget(nscoord aWidth, nscoord aHeight, PRBool aViewOnly)
+nsObjectFrame::CreateWidget(nsIPresContext* aPresContext,
+                            nscoord aWidth,
+                            nscoord aHeight,
+                            PRBool aViewOnly)
 {
   nsIView* view;
 
@@ -425,8 +431,8 @@ nsObjectFrame::CreateWidget(nscoord aWidth, nscoord aHeight, PRBool aViewOnly)
   nsIFrame* parWithView;
   nsIView *parView;
 
-  GetParentWithView(&parWithView);
-  parWithView->GetView(&parView);
+  GetParentWithView(aPresContext, &parWithView);
+  parWithView->GetView(aPresContext, &parView);
 
   if (NS_OK == parView->GetViewManager(viewMan))
   {
@@ -474,12 +480,12 @@ nsObjectFrame::CreateWidget(nscoord aWidth, nscoord aHeight, PRBool aViewOnly)
     nsIView* parentWithView;
     nsPoint origin;
     view->SetVisibility(nsViewVisibility_kShow);
-    GetOffsetFromView(origin, &parentWithView);
+    GetOffsetFromView(aPresContext, origin, &parentWithView);
     viewMan->ResizeView(view, mRect.width, mRect.height);
     viewMan->MoveViewTo(view, origin.x, origin.y);
   }
 
-  SetView(view);
+  SetView(aPresContext, view);
 
 exit:
   NS_IF_RELEASE(viewMan);  
@@ -953,7 +959,7 @@ nsObjectFrame::InstantiateWidget(nsIPresContext&          aPresContext,
   GetDesiredSize(&aPresContext, aReflowState, aMetrics);
   nsIView *parentWithView;
   nsPoint origin;
-  GetOffsetFromView(origin, &parentWithView);
+  GetOffsetFromView(&aPresContext, origin, &parentWithView);
   // Just make the frigging widget
 
   float           t2p;
@@ -1004,7 +1010,7 @@ nsObjectFrame::InstantiatePlugin(nsIPresContext&          aPresContext,
 
   mInstanceOwner->GetWindow(window);
 
-  GetOffsetFromView(origin, &parentWithView);
+  GetOffsetFromView(&aPresContext, origin, &parentWithView);
   window->x = NSTwipsToIntPixels(origin.x, t2p);
   window->y = NSTwipsToIntPixels(origin.y, t2p);
   window->width = NSTwipsToIntPixels(aMetrics.width, t2p);
@@ -1044,7 +1050,7 @@ nsObjectFrame::ReinstantiatePlugin(nsIPresContext& aPresContext, nsHTMLReflowMet
 
   mInstanceOwner->GetWindow(window);
 
-  GetOffsetFromView(origin, &parentWithView);
+  GetOffsetFromView(&aPresContext, origin, &parentWithView);
   window->x = NSTwipsToIntPixels(origin.x, t2p);
   window->y = NSTwipsToIntPixels(origin.y, t2p);
   window->width = NSTwipsToIntPixels(aMetrics.width, t2p);
@@ -1122,7 +1128,7 @@ nsObjectFrame::HandleImage(nsIPresContext&          aPresContext,
 	ReflowChild(child, aPresContext, kidDesiredSize, kidReflowState, status);
 
 	nsRect rect(0, 0, kidDesiredSize.width, kidDesiredSize.height);
-	child->SetRect(rect);
+	child->SetRect(&aPresContext, rect);
 
 	aMetrics.width = kidDesiredSize.width;
 	aMetrics.height = kidDesiredSize.height;
@@ -1187,7 +1193,7 @@ nsObjectFrame::DidReflow(nsIPresContext& aPresContext,
   // positioned then we show it.
   if (NS_FRAME_REFLOW_FINISHED == aStatus) {
     nsIView* view = nsnull;
-    GetView(&view);
+    GetView(&aPresContext, &view);
     if (nsnull != view) {
       view->SetVisibility(nsViewVisibility_kShow);
     }
@@ -1203,7 +1209,7 @@ nsObjectFrame::DidReflow(nsIPresContext& aPresContext,
         aPresContext.GetTwipsToPixels(&t2p);
         nscoord           offx, offy;
 
-        GetOffsetFromView(origin, &parentWithView);
+        GetOffsetFromView(&aPresContext, origin, &parentWithView);
 
 #if 0
         // beard:  how do we get this?
@@ -1759,7 +1765,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL, const char *aTarge
 
   if ((nsnull != mOwner) && (nsnull != mContext))
   {
-    rv = mOwner->GetOffsetFromView(origin, &view);
+    rv = mOwner->GetOffsetFromView(mContext, origin, &view);
 
     if (NS_OK == rv)
     {
@@ -2433,7 +2439,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
   {
     // Create view if necessary
 
-    mOwner->GetView(&view);
+    mOwner->GetView(mContext, &view);
 
     if (nsnull == view)
     {
@@ -2441,12 +2447,13 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
 
       mInstance->GetValue(nsPluginInstanceVariable_WindowlessBool, (void *)&windowless);
 
-      rv = mOwner->CreateWidget(mPluginWindow.width,
+      rv = mOwner->CreateWidget(mContext,
+                                mPluginWindow.width,
                                 mPluginWindow.height,
                                 windowless);
       if (NS_OK == rv)
       {
-        mOwner->GetView(&view);
+        mOwner->GetView(mContext, &view);
         view->GetWidget(mWidget);
 
         if (PR_TRUE == windowless)

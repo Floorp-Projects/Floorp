@@ -38,7 +38,7 @@ public:
 
 protected:
 	virtual CheckState	GetCheckboxState();
-	virtual void 		SetCheckboxState(CheckState aValue);
+	virtual void 		SetCheckboxState(nsIPresContext* aPresContext, CheckState aValue);
 
   virtual nscoord GetCheckboxSize(nsIPresContext* aPresContext, float aPixToTwip) const;
   virtual void GetDesiredSize(nsIPresContext* aPresContext,

@@ -697,7 +697,9 @@ PRBool nsTreeRowGroupFrame::RowGroupReceivesExcessSpace()
 }
 
 NS_IMETHODIMP
-nsTreeRowGroupFrame::GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame)
+nsTreeRowGroupFrame::GetFrameForPoint(nsIPresContext* aPresContext,
+                                      const nsPoint& aPoint,
+                                      nsIFrame** aFrame)
 {
   nsPoint tmp;
   nsRect kidRect;
@@ -705,11 +707,11 @@ nsTreeRowGroupFrame::GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame)
     mScrollbar->GetRect(kidRect);
     if (kidRect.Contains(aPoint)) {
       tmp.MoveTo(aPoint.x - kidRect.x, aPoint.y - kidRect.y);
-      return mScrollbar->GetFrameForPoint(tmp, aFrame);
+      return mScrollbar->GetFrameForPoint(aPresContext, tmp, aFrame);
     }
   }
 
-  return nsTableRowGroupFrame::GetFrameForPoint(aPoint, aFrame);
+  return nsTableRowGroupFrame::GetFrameForPoint(aPresContext, aPoint, aFrame);
 }
 
 NS_IMETHODIMP
@@ -748,7 +750,7 @@ void nsTreeRowGroupFrame::PaintChildren(nsIPresContext&      aPresContext,
   if (mScrollbar) {
     nsIView *pView;
      
-    mScrollbar->GetView(&pView);
+    mScrollbar->GetView(&aPresContext, &pView);
     if (nsnull == pView) {
       PRBool clipState;
       nsRect kidRect;
@@ -806,7 +808,7 @@ nsTreeRowGroupFrame::IR_TargetIsChild(nsIPresContext&      aPresContext,
 
     // Place the child
     nsRect kidRect (xpos, 0, desiredSize.width, mRowGroupHeight);
-    mScrollbar->SetRect(kidRect);
+    mScrollbar->SetRect(&aPresContext, kidRect);
 
     // Return our desired width
     aDesiredSize.width = aReflowState.reflowState.availableWidth;
@@ -930,7 +932,7 @@ nsTreeRowGroupFrame::ReflowAfterRowLayout(nsIPresContext&       aPresContext,
 
     // Place the child
     nsRect kidRect (xpos, 0, desiredSize.width, mRowGroupHeight);
-    mScrollbar->SetRect(kidRect);
+    mScrollbar->SetRect(&aPresContext, kidRect);
   }
   return rv;
 }

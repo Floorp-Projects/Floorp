@@ -108,7 +108,8 @@ public:
                          nsGUIEvent* aEvent,
                          nsEventStatus& aEventStatus);
 
-  NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, 
+  NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
+                              const nsPoint& aPoint, 
                               nsIFrame**     aFrame);
 
   NS_IMETHOD GetCursor(nsIPresContext& aPresContext,
@@ -152,7 +153,7 @@ protected:
 class nsHTMLFramesetBlankFrame : public nsLeafFrame {
 
 public:
-  NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+  NS_IMETHOD List(nsIPresContext* aPresContext, FILE* out = stdout, PRInt32 aIndent = 0) const;
 
   NS_IMETHOD Paint(nsIPresContext&      aPresContext,
                    nsIRenderingContext& aRenderingContext,
@@ -546,7 +547,7 @@ NS_METHOD nsHTMLFramesetFrame::HandleEvent(nsIPresContext& aPresContext,
         MouseDrag(aPresContext, aEvent);
 	      break;
       case NS_MOUSE_LEFT_BUTTON_UP:
-        EndMouseDrag();
+        EndMouseDrag(&aPresContext);
 	      break;
     }
     aEventStatus = nsEventStatus_eConsumeNoDefault;
@@ -594,7 +595,8 @@ nsHTMLFramesetFrame::GetCursor(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP 
-nsHTMLFramesetFrame::GetFrameForPoint(const nsPoint& aPoint, 
+nsHTMLFramesetFrame::GetFrameForPoint(nsIPresContext* aPresContext,
+                                      const nsPoint& aPoint, 
                                       nsIFrame**     aFrame)
 {
   //XXX Temporary to deal with event handling in both this and FramsetBorderFrame
@@ -602,7 +604,7 @@ nsHTMLFramesetFrame::GetFrameForPoint(const nsPoint& aPoint,
     *aFrame = this;
     return NS_OK;
   } else {
-    return nsContainerFrame::GetFrameForPoint(aPoint, aFrame);
+    return nsContainerFrame::GetFrameForPoint(aPresContext, aPoint, aFrame);
   }
 }
 
@@ -782,7 +784,7 @@ nsHTMLFramesetFrame::ReflowPlaceChild(nsIFrame*                aChild,
   
     // Place and size the child
     nsRect rect(aOffset.x, aOffset.y, aSize.width, aSize.height);
-    aChild->SetRect(rect);
+    aChild->SetRect(&aPresContext, rect);
     htmlReflow->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED); // this call is needed
   }
 }
@@ -923,12 +925,12 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&          aPresContext,
 
     nsIFrame* parWithView;
 	  nsIView *parView;
-    GetParentWithView(&parWithView);
-	  parWithView->GetView(&parView);
+    GetParentWithView(&aPresContext, &parWithView);
+	  parWithView->GetView(&aPresContext, &parView);
     nsRect boundBox(0, 0, aDesiredSize.width, aDesiredSize.height); 
     result = view->Init(viewMan, boundBox, parView, nsnull);
     viewMan->InsertChild(parView, view, 0);
-    SetView(view);
+    SetView(&aPresContext, view);
 
     // parse the rows= cols= data
     ParseRowCol(nsHTMLAtoms::rows, mNumRows, &mRowSpecs);
@@ -1417,7 +1419,7 @@ nsHTMLFramesetFrame::StartMouseDrag(nsIPresContext&            aPresContext,
   NS_ASSERTION((nsnull != aBorder) && (index >= 0), "invalid dragger");
 #endif
   nsIView* view;
-  GetView(&view);
+  GetView(&aPresContext, &view);
   if (view) {
     nsIViewManager* viewMan;
     view->GetViewManager(viewMan);
@@ -1491,10 +1493,10 @@ nsHTMLFramesetFrame::MouseDrag(nsIPresContext& aPresContext,
 }  
 
 void
-nsHTMLFramesetFrame::EndMouseDrag()
+nsHTMLFramesetFrame::EndMouseDrag(nsIPresContext* aPresContext)
 {
   nsIView* view;
-  GetView(&view);
+  GetView(aPresContext, &view);
   if (view) {
     nsIViewManager* viewMan;
     view->GetViewManager(viewMan);
@@ -1693,7 +1695,8 @@ nsHTMLFramesetBorderFrame::HandleEvent(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP 
-nsHTMLFramesetBorderFrame::GetFrameForPoint(const nsPoint& aPoint, 
+nsHTMLFramesetBorderFrame::GetFrameForPoint(nsIPresContext* aPresContext,
+                                            const nsPoint& aPoint, 
                                             nsIFrame**     aFrame)
 {
   *aFrame = this;
@@ -1781,11 +1784,12 @@ nsHTMLFramesetBlankFrame::Paint(nsIPresContext&      aPresContext,
 }
 
 
-NS_IMETHODIMP nsHTMLFramesetBlankFrame::List(FILE*   out, 
+NS_IMETHODIMP nsHTMLFramesetBlankFrame::List(nsIPresContext* aPresContext,
+                                             FILE*   out, 
                                              PRInt32 aIndent) const
 {
   for (PRInt32 i = aIndent; --i >= 0; ) fputs("  ", out);   // Indent
   fprintf(out, "%p BLANK \n", this);
-  return nsLeafFrame::List(out, aIndent);
+  return nsLeafFrame::List(aPresContext, out, aIndent);
 }
 

@@ -346,12 +346,12 @@ nsFrameList::VerifyParent(nsIFrame* aParent) const
 }
 
 void
-nsFrameList::List(FILE* out) const
+nsFrameList::List(nsIPresContext* aPresContext, FILE* out) const
 {
   fputs("<\n", out);
   nsIFrame* frame = mFirstChild;
   while (nsnull != frame) {
-    frame->List(out, 1);
+    frame->List(aPresContext, out, 1);
     frame->GetNextSibling(&frame);
   }
   fputs(">\n", out);

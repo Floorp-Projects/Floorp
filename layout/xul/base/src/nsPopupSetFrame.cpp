@@ -228,7 +228,7 @@ nsPopupSetFrame::Reflow(nsIPresContext&   aPresContext,
   frame->GetRect(rect);
   rect.width = aDesiredSize.width;
   rect.height = aDesiredSize.height;
-  frame->SetRect(rect);
+  frame->SetRect(&aPresContext, rect);
 
   // Don't let it affect our size.
   aDesiredSize.width = w;

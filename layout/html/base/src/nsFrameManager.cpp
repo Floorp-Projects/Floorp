@@ -222,8 +222,12 @@ public:
                                    PRInt32 aMinChange,
                                    PRInt32& aTopLevelChange);
 
-  NS_IMETHOD CaptureFrameState(nsIFrame* aFrame, nsILayoutHistoryState* aState);
-  NS_IMETHOD RestoreFrameState(nsIFrame* aFrame, nsILayoutHistoryState* aState);
+  NS_IMETHOD CaptureFrameState(nsIPresContext*        aPresContext,
+                               nsIFrame*              aFrame,
+                               nsILayoutHistoryState* aState);
+  NS_IMETHOD RestoreFrameState(nsIPresContext*        aPresContext,
+                               nsIFrame*              aFrame,
+                               nsILayoutHistoryState* aState);
 
   // Gets and sets properties on a given frame
   NS_IMETHOD GetFrameProperty(nsIFrame* aFrame,
@@ -1350,7 +1354,7 @@ FrameManager::ComputeStyleChangeFor(nsIPresContext& aPresContext,
 
 
 static nsresult
-CaptureFrameStateFor(nsIFrame* aFrame, nsILayoutHistoryState* aState)
+CaptureFrameStateFor(nsIPresContext* aPresContext, nsIFrame* aFrame, nsILayoutHistoryState* aState)
 {
   nsresult rv = NS_OK;
   NS_PRECONDITION(nsnull != aFrame && nsnull != aState, "null parameters passed in");
@@ -1370,10 +1374,10 @@ CaptureFrameStateFor(nsIFrame* aFrame, nsILayoutHistoryState* aState)
       rv = content->GetContentID(&ID);
       if (NS_SUCCEEDED(rv) && ID) { // Must have ID (don't do anonymous content)
         nsIStatefulFrame::StateType type = nsIStatefulFrame::eNoType;
-        rv = statefulFrame->GetStateType(&type);
+        rv = statefulFrame->GetStateType(aPresContext, &type);
         if (NS_SUCCEEDED(rv)) {
           nsISupports* frameState;
-          rv = statefulFrame->SaveState(&frameState);
+          rv = statefulFrame->SaveState(aPresContext, &frameState);
           if (NS_SUCCEEDED(rv)) {
             rv = aState->AddState(ID, frameState, type);
           }
@@ -1386,12 +1390,12 @@ CaptureFrameStateFor(nsIFrame* aFrame, nsILayoutHistoryState* aState)
 }
 
 NS_IMETHODIMP
-FrameManager::CaptureFrameState(nsIFrame* aFrame, nsILayoutHistoryState* aState)
+FrameManager::CaptureFrameState(nsIPresContext* aPresContext, nsIFrame* aFrame, nsILayoutHistoryState* aState)
 {
   nsresult rv = NS_OK;
   NS_PRECONDITION(nsnull != aFrame && nsnull != aState, "null parameters passed in");
 
-  rv = CaptureFrameStateFor(aFrame, aState);
+  rv = CaptureFrameStateFor(aPresContext, aFrame, aState);
 
   // Now capture state recursively for the frame hierarchy rooted at aFrame
   nsIAtom*  childListName = nsnull;
@@ -1400,7 +1404,7 @@ FrameManager::CaptureFrameState(nsIFrame* aFrame, nsILayoutHistoryState* aState)
     nsIFrame* childFrame;
     aFrame->FirstChild(childListName, &childFrame);
     while (childFrame) {             
-      rv = CaptureFrameState(childFrame, aState);
+      rv = CaptureFrameState(aPresContext, childFrame, aState);
       // Get the next sibling child frame
       childFrame->GetNextSibling(&childFrame);
     }
@@ -1412,7 +1416,7 @@ FrameManager::CaptureFrameState(nsIFrame* aFrame, nsILayoutHistoryState* aState)
 }
 
 static nsresult
-RestoreFrameStateFor(nsIFrame* aFrame, nsILayoutHistoryState* aState)
+RestoreFrameStateFor(nsIPresContext* aPresContext, nsIFrame* aFrame, nsILayoutHistoryState* aState)
 {
   nsresult rv = NS_OK;
   NS_PRECONDITION(nsnull != aFrame && nsnull != aState, "null parameters passed in");
@@ -1431,12 +1435,12 @@ RestoreFrameStateFor(nsIFrame* aFrame, nsILayoutHistoryState* aState)
       rv = content->GetContentID(&ID);
       if (NS_SUCCEEDED(rv) && ID) { // Must have ID (don't do anonymous content)
         nsIStatefulFrame::StateType type = nsIStatefulFrame::eNoType;
-        rv = statefulFrame->GetStateType(&type);
+        rv = statefulFrame->GetStateType(aPresContext, &type);
         if (NS_SUCCEEDED(rv)) {
           nsISupports* frameState = nsnull;
           rv = aState->GetState(ID, &frameState, type);          
           if (NS_SUCCEEDED(rv) && nsnull != frameState) {
-            rv = statefulFrame->RestoreState(frameState);  
+            rv = statefulFrame->RestoreState(aPresContext, frameState);  
           }
         }
       }
@@ -1447,12 +1451,12 @@ RestoreFrameStateFor(nsIFrame* aFrame, nsILayoutHistoryState* aState)
 }
 
 NS_IMETHODIMP
-FrameManager::RestoreFrameState(nsIFrame* aFrame, nsILayoutHistoryState* aState)
+FrameManager::RestoreFrameState(nsIPresContext* aPresContext, nsIFrame* aFrame, nsILayoutHistoryState* aState)
 {
   nsresult rv = NS_OK;
   NS_PRECONDITION(nsnull != aFrame && nsnull != aState, "null parameters passed in");
   
-  rv = RestoreFrameStateFor(aFrame, aState);
+  rv = RestoreFrameStateFor(aPresContext, aFrame, aState);
 
   // Now restore state recursively for the frame hierarchy rooted at aFrame
   nsIAtom*  childListName = nsnull;
@@ -1461,7 +1465,7 @@ FrameManager::RestoreFrameState(nsIFrame* aFrame, nsILayoutHistoryState* aState)
     nsIFrame* childFrame;
     aFrame->FirstChild(childListName, &childFrame);
     while (childFrame) {             
-      rv = RestoreFrameState(childFrame, aState);
+      rv = RestoreFrameState(aPresContext, childFrame, aState);
       // Get the next sibling child frame
       childFrame->GetNextSibling(&childFrame);
     }

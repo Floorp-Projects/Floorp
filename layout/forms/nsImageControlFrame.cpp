@@ -97,7 +97,7 @@ public:
 
   NS_IMETHOD GetName(nsString* aName);
 
-  virtual void Reset() {};
+  virtual void Reset(nsIPresContext*) {};
 
   void SetFocus(PRBool aOn, PRBool aRepaint);
   void ScrollIntoView(nsIPresContext* aPresContext);
@@ -117,12 +117,12 @@ public:
 
 
         // nsIFormControlFrame
-  NS_IMETHOD SetProperty(nsIAtom* aName, const nsString& aValue);
+  NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsString& aValue);
   NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue); 
   NS_IMETHOD SetSuggestedSize(nscoord aWidth, nscoord aHeight);
 
 protected:
-  void GetTranslatedRect(nsRect& aRect); // XXX this implementation is a copy of nsHTMLButtonControlFrame
+  void GetTranslatedRect(nsIPresContext* aPresContext, nsRect& aRect); // XXX this implementation is a copy of nsHTMLButtonControlFrame
   NS_IMETHOD_(nsrefcnt) AddRef(void);
   NS_IMETHOD_(nsrefcnt) Release(void);
 
@@ -198,7 +198,7 @@ nsImageControlFrame::Reflow(nsIPresContext&         aPresContext,
 
     // create our view, we need a view to grab the mouse 
     nsIView* view;
-    GetView(&view);
+    GetView(&aPresContext, &view);
     if (!view) {
       nsresult result = nsComponentManager::CreateInstance(kViewCID, nsnull, kIViewIID, (void **)&view);
 	    nsCOMPtr<nsIPresShell> presShell;
@@ -208,14 +208,14 @@ nsImageControlFrame::Reflow(nsIPresContext&         aPresContext,
 
       nsIFrame* parWithView;
 	    nsIView *parView;
-      GetParentWithView(&parWithView);
-	    parWithView->GetView(&parView);
+      GetParentWithView(&aPresContext, &parWithView);
+	    parWithView->GetView(&aPresContext, &parView);
       // the view's size is not know yet, but its size will be kept in synch with our frame.
       nsRect boundBox(0, 0, 500, 500); 
       result = view->Init(viewMan, boundBox, parView, nsnull);
       view->SetContentTransparency(PR_TRUE);
       viewMan->InsertChild(parView, view, 0);
-      SetView(view);
+      SetView(&aPresContext, view);
 
       const nsStyleColor* color = (const nsStyleColor*) mStyleContext->GetStyleData(eStyleStruct_Color);
       // set the opacity
@@ -291,11 +291,11 @@ nsImageControlFrame::ScrollIntoView(nsIPresContext* aPresContext)
 }
 
 void
-nsImageControlFrame::GetTranslatedRect(nsRect& aRect)
+nsImageControlFrame::GetTranslatedRect(nsIPresContext* aPresContext, nsRect& aRect)
 {
   nsIView* view;
   nsPoint viewOffset(0,0);
-  GetOffsetFromView(viewOffset, &view);
+  GetOffsetFromView(aPresContext, viewOffset, &view);
   while (nsnull != view) {
     nsPoint tempOffset;
     view->GetPosition(&tempOffset.x, &tempOffset.y);
@@ -460,7 +460,8 @@ nsresult nsImageControlFrame::RequiresWidget(PRBool& aRequiresWidget)
 }
 
 
-NS_IMETHODIMP nsImageControlFrame::SetProperty(nsIAtom* aName, const nsString& aValue)
+NS_IMETHODIMP nsImageControlFrame::SetProperty(nsIPresContext* aPresContext,
+                                               nsIAtom* aName, const nsString& aValue)
 {
   return NS_OK;
 }

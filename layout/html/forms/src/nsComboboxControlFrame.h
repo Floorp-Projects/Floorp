@@ -88,13 +88,13 @@ public:
   NS_IMETHOD GetAdditionalChildListName(PRInt32   aIndex,
                                         nsIAtom** aListName) const;
 
-  NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame);
+  NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext, const nsPoint& aPoint, nsIFrame** aFrame);
 
      // nsIFormControlFrame
   NS_IMETHOD SetSuggestedSize(nscoord aWidth, nscoord aHeight);
   NS_IMETHOD GetName(nsString* aName);
   NS_IMETHOD GetType(PRInt32* aType) const;
-  NS_IMETHOD SetProperty(nsIAtom* aName, const nsString& aValue);
+  NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsString& aValue);
   NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue); 
   void       SetFocus(PRBool aOn, PRBool aRepaint);
   void       ScrollIntoView(nsIPresContext* aPresContext);
@@ -103,7 +103,7 @@ public:
                                 nscoord& aHeight);
   virtual PRBool IsSuccessful(nsIFormControlFrame* aSubmitter);
   virtual void   SetFormFrame(nsFormFrame* aFormFrame) { mFormFrame = aFormFrame; }
-  virtual void   Reset();
+  virtual void   Reset(nsIPresContext* aPresContext);
   virtual PRInt32 GetMaxNumValues();
   virtual PRBool GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
                                 nsString* aValues, nsString* aNames);
@@ -139,8 +139,8 @@ public:
   NS_IMETHOD GetAbsoluteRect(nsRect* aRect);
 
   // nsISelectControlFrame
-  NS_IMETHOD AddOption(PRInt32 index);
-  NS_IMETHOD RemoveOption(PRInt32 index);
+  NS_IMETHOD AddOption(nsIPresContext* aPresContext, PRInt32 index);
+  NS_IMETHOD RemoveOption(nsIPresContext* aPresContext, PRInt32 index);
   NS_IMETHOD SetOptionSelected(PRInt32 aIndex, PRBool aValue);
   NS_IMETHOD GetOptionSelected(PRInt32 aIndex, PRBool* aValue);
 
@@ -154,9 +154,9 @@ public:
   virtual nsresult HandleEvent(nsIDOMEvent* aEvent)        { return NS_OK; }
 
   //nsIStatefulFrame
-  NS_IMETHOD GetStateType(StateType* aStateType);
-  NS_IMETHOD SaveState(nsISupports** aState);
-  NS_IMETHOD RestoreState(nsISupports* aState);
+  NS_IMETHOD GetStateType(nsIPresContext* aPresContext, StateType* aStateType);
+  NS_IMETHOD SaveState(nsIPresContext* aPresContext, nsISupports** aState);
+  NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsISupports* aState);
 
   //nsIRollupListener
   NS_IMETHOD Rollup();
@@ -191,12 +191,12 @@ protected:
   void ShowPopup(PRBool aShowPopup);
   void ShowList(nsIPresContext* aPresContext, PRBool aShowList);
   void SetChildFrameSize(nsIFrame* aFrame, nscoord aWidth, nscoord aHeight);
-  void InitTextStr(PRBool aUpdate);
+  void InitTextStr(nsIPresContext* aPresContext, PRBool aUpdate);
   nsresult GetPrimaryComboFrame(nsIPresContext& aPresContext, nsIContent* aContent, nsIFrame** aFrame);
   nsIFrame* GetButtonFrame(nsIPresContext& aPresContext);
   nsIFrame* GetDropdownFrame();
   NS_IMETHOD ToggleList(nsIPresContext* aPresContext);
-  nsresult MakeSureSomethingIsSelected();         // Default to option 0
+  nsresult MakeSureSomethingIsSelected(nsIPresContext* aPresContext); // Default to option 0
 
   nsFrameList mPopupFrames;                       // additional named child list
   nsIPresContext*       mPresContext;             // XXX: Remove the need to cache the pres context.

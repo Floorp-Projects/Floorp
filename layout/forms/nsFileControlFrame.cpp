@@ -161,7 +161,7 @@ nsFileControlFrame::IsSuccessful(nsIFormControlFrame* aSubmitter)
 }
 
 void 
-nsFileControlFrame::Reset()
+nsFileControlFrame::Reset(nsIPresContext* aPresContext)
 {
   if (mTextFrame) {
     mTextFrame->Reset();
@@ -221,7 +221,7 @@ nsresult
 nsFileControlFrame::MouseClick(nsIDOMEvent* aMouseEvent)
 {
   nsIView* textView;
-  mTextFrame->GetView(&textView);
+  mTextFrame->GetView(mPresContext, &textView);
   if (nsnull == textView) {
     return NS_OK;
   }
@@ -249,7 +249,7 @@ nsFileControlFrame::MouseClick(nsIDOMEvent* aMouseEvent)
       fileWidget->GetFile(fileSpec);
       char* leafName = fileSpec.GetLeafName();
       if (leafName) {
-        mTextFrame->SetProperty(nsHTMLAtoms::value,leafName);
+        mTextFrame->SetProperty(mPresContext, nsHTMLAtoms::value,leafName);
         nsCRT::free(leafName);
       }
     }
@@ -272,7 +272,7 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsIPresContext&          aPresContext,
     mTextFrame = GetTextControlFrame(this);
     if (!mTextFrame) return NS_ERROR_UNEXPECTED;
     if (mCachedState) {
-      mTextFrame->SetProperty(nsHTMLAtoms::value, *mCachedState);
+      mTextFrame->SetProperty(&aPresContext, nsHTMLAtoms::value, *mCachedState);
       delete mCachedState;
       mCachedState = nsnull;
     }
@@ -414,13 +414,15 @@ nsFileControlFrame::AttributeChanged(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsFileControlFrame::GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame)
+nsFileControlFrame::GetFrameForPoint(nsIPresContext* aPresContext,
+                                     const nsPoint& aPoint,
+                                     nsIFrame** aFrame)
 {
   if (nsFormFrame::GetDisabled(this)) {
     *aFrame = this;
     return NS_OK;
   } else {
-    return nsAreaFrame::GetFrameForPoint(aPoint, aFrame);
+    return nsAreaFrame::GetFrameForPoint(aPresContext, aPoint, aFrame);
   }
   return NS_OK;
 }
@@ -473,7 +475,9 @@ nsresult nsFileControlFrame::RequiresWidget(PRBool& aRequiresWidget)
 }
 
 
-NS_IMETHODIMP nsFileControlFrame::SetProperty(nsIAtom* aName, const nsString& aValue)
+NS_IMETHODIMP nsFileControlFrame::SetProperty(nsIPresContext* aPresContext,
+                                              nsIAtom* aName,
+                                              const nsString& aValue)
 {
   nsresult rv = NS_OK;
   if (nsHTMLAtoms::value == aName) {
@@ -516,14 +520,14 @@ nsFileControlFrame::Paint(nsIPresContext& aPresContext,
 // nsIStatefulFrame
 //----------------------------------------------------------------------
 NS_IMETHODIMP
-nsFileControlFrame::GetStateType(nsIStatefulFrame::StateType* aStateType)
+nsFileControlFrame::GetStateType(nsIPresContext* aPresContext, nsIStatefulFrame::StateType* aStateType)
 {
   *aStateType = nsIStatefulFrame::eFileType;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFileControlFrame::SaveState(nsISupports** aState)
+nsFileControlFrame::SaveState(nsIPresContext* aPresContext, nsISupports** aState)
 {
   nsISupportsString* value = nsnull;
   nsAutoString string;
@@ -546,13 +550,13 @@ nsFileControlFrame::SaveState(nsISupports** aState)
 }
 
 NS_IMETHODIMP
-nsFileControlFrame::RestoreState(nsISupports* aState)
+nsFileControlFrame::RestoreState(nsIPresContext* aPresContext, nsISupports* aState)
 {
   char* chars = nsnull;
   nsresult res = ((nsISupportsString*)aState)->GetData(&chars);
   if (NS_SUCCEEDED(res) && chars) {
     nsAutoString value(chars);
-    SetProperty(nsHTMLAtoms::value, value);
+    SetProperty(aPresContext, nsHTMLAtoms::value, value);
     nsCRT::free(chars);
   }
   return res;

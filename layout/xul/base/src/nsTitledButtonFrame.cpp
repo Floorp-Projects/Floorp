@@ -196,11 +196,11 @@ nsTitledButtonFrame::AttributeChanged(nsIPresContext* aPresContext,
       aAttribute == nsHTMLAtoms::value ||
       aAttribute == nsXULAtoms::crop) {
       UpdateAccessUnderline();
-      nsFrame::Invalidate(nsRect(0, 0, mRect.width, mRect.height), PR_FALSE);
+      nsFrame::Invalidate(aPresContext, nsRect(0, 0, mRect.width, mRect.height), PR_FALSE);
   }
 
   // redraw
-  mRenderer->Redraw();
+  mRenderer->Redraw(aPresContext);
 
 #if !ONLOAD_CALLED_TOO_EARLY
   // onload handlers are called to early, so we have to do this code
@@ -906,7 +906,7 @@ nsTitledButtonFrame::Reflow(nsIPresContext&   aPresContext,
     // See if it's targeted at us
     aReflowState.reflowCommand->GetTarget(targetFrame);
     if (this == targetFrame) {
-      Invalidate(nsRect(0,0,mRect.width,mRect.height), PR_FALSE);
+      Invalidate(&aPresContext, nsRect(0,0,mRect.width,mRect.height), PR_FALSE);
     }
   }
 

@@ -63,7 +63,8 @@ public:
   // call this method to get the rect so you don't draw on the debug border or outer border.
   virtual void GetInnerRect(nsRect& aInner);
 
-  NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, 
+  NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
+                              const nsPoint& aPoint, 
                              nsIFrame**     aFrame);
 
   NS_IMETHOD GetCursor(nsIPresContext& aPresContext,
@@ -170,7 +171,7 @@ protected:
     virtual PRIntn GetSkipSides() const { return 0; }
 
     virtual void GetInset(nsMargin& margin); 
-    virtual void CollapseChild(nsIFrame* frame);
+    virtual void CollapseChild(nsIPresContext* aPresContext, nsIFrame* frame);
 
     nsresult GenerateDirtyReflowCommand(nsIPresContext& aPresContext,
                                         nsIPresShell&   aPresShell);

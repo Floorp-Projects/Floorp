@@ -114,7 +114,7 @@ nsScrollPortFrame::SetInitialChildList(nsIPresContext& aPresContext,
 #ifdef NS_DEBUG
   // Verify that the scrolled frame has a view
   nsIView*  scrolledView;
-  frame->GetView(&scrolledView);
+  frame->GetView(&aPresContext, &scrolledView);
   NS_ASSERTION(nsnull != scrolledView, "no view");
 #endif
 
@@ -184,7 +184,7 @@ nsScrollPortFrame::DidReflow(nsIPresContext&   aPresContext,
     nsIView*        scrolledView;
 
     frame->GetSize(size);
-    frame->GetView(&scrolledView);
+    frame->GetView(&aPresContext, &scrolledView);
     scrolledView->GetBounds(bounds);
 
     // only resize the view if things changed.
@@ -197,7 +197,7 @@ nsScrollPortFrame::DidReflow(nsIPresContext&   aPresContext,
       // Have the scrolling view layout
       nsIScrollableView* scrollingView;
       nsIView*           view;
-      GetView(&view);
+      GetView(&aPresContext, &view);
       if (NS_SUCCEEDED(view->QueryInterface(kScrollViewIID, (void**)&scrollingView))) {
         scrollingView->ComputeScrollOffsets(PR_TRUE);
       }
@@ -221,9 +221,11 @@ nsScrollPortFrame::CreateScrollingViewWidget(nsIView* aView, const nsStylePositi
 }
 
 nsresult
-nsScrollPortFrame::GetScrollingParentView(nsIFrame* aParent, nsIView** aParentView)
+nsScrollPortFrame::GetScrollingParentView(nsIPresContext* aPresContext,
+                                          nsIFrame* aParent,
+                                          nsIView** aParentView)
 {
-  nsresult rv = aParent->GetView(aParentView);
+  nsresult rv = aParent->GetView(aPresContext, aParentView);
   NS_ASSERTION(aParentView, "GetParentWithView failed");
   return(rv);
 }
@@ -235,12 +237,12 @@ nsScrollPortFrame::CreateScrollingView(nsIPresContext& aPresContext)
 
    //Get parent frame
   nsIFrame* parent;
-  GetParentWithView(&parent);
+  GetParentWithView(&aPresContext, &parent);
   NS_ASSERTION(parent, "GetParentWithView failed");
 
   // Get parent view
   nsIView* parentView = nsnull;
-  GetScrollingParentView(parent, &parentView);
+  GetScrollingParentView(&aPresContext, parent, &parentView);
  
   // Get the view manager
   nsIViewManager* viewManager;
@@ -310,7 +312,7 @@ nsScrollPortFrame::CreateScrollingView(nsIPresContext& aPresContext)
     scrollingView->SetControlInsets(border);
 
     // Remember our view
-    SetView(view);
+    SetView(&aPresContext, view);
   }
 
   NS_RELEASE(viewManager);
@@ -468,7 +470,7 @@ nsScrollPortFrame::Reflow(nsIPresContext&          aPresContext,
   aDesiredSize.height += border.top + border.bottom;
 
   nsRect rect(x, y, kidDesiredSize.width, kidDesiredSize.height);
-  kidFrame->SetRect(rect);
+  kidFrame->SetRect(&aPresContext, rect);
   //printf("width=%d, height=%d\n", kidDesiredSize.width, kidDesiredSize.height);
 
 

@@ -37,7 +37,7 @@ public:
   nsresult RequiresWidget(PRBool &aHasWidget);
 
        // nsIFormControlFrame
-  NS_IMETHOD SetProperty(nsIAtom* aName, const nsString& aValue);
+  NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsString& aValue);
   NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue); 
 
 
@@ -52,7 +52,7 @@ public:
   NS_IMETHOD SetRadioButtonFaceStyleContext(nsIStyleContext *aRadioButtonFaceStyleContext);
 
   virtual PRBool GetChecked(PRBool aGetInitialValue);
-  virtual void   SetChecked(PRBool aValue, PRBool aSetInitialValue);
+  virtual void   SetChecked(nsIPresContext* aPresContext, PRBool aValue, PRBool aSetInitialValue);
 
   virtual PRInt32 GetMaxNumValues() { return 1; }
   
@@ -78,19 +78,19 @@ public:
   ///XXX: End o the temporary methods
 
   //nsIStatefulFrame
-  NS_IMETHOD GetStateType(StateType* aStateType);
-  NS_IMETHOD SaveState(nsISupports** aState);
-  NS_IMETHOD RestoreState(nsISupports* aState);
+  NS_IMETHOD GetStateType(nsIPresContext* aPresContext, StateType* aStateType);
+  NS_IMETHOD SaveState(nsIPresContext* aPresContext, nsISupports** aState);
+  NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsISupports* aState);
 
 protected:
 
    // Utility methods for implementing SetProperty/GetProperty
-  void SetRadioControlFrameState(const nsString& aValue);
+  void SetRadioControlFrameState(nsIPresContext* aPresContext, const nsString& aValue);
   void GetRadioControlFrameState(nsString& aValue);             
 
 protected:
 	virtual PRBool	GetRadioState() = 0;
-	virtual void 		SetRadioState(PRBool aValue) = 0;
+	virtual void 		SetRadioState(nsIPresContext* aPresContext, PRBool aValue) = 0;
 
 private:
   NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }

@@ -508,14 +508,14 @@ nsListControlFrame::GetSelectableFrame(nsIFrame *aFrame)
 
 //---------------------------------------------------------
 void 
-nsListControlFrame::ForceRedraw() 
+nsListControlFrame::ForceRedraw(nsIPresContext* aPresContext) 
 {
   //XXX: Hack. This should not be needed. The problem is DisplaySelected
   //and DisplayDeselected set and unset an attribute on generic HTML content
   //which does not know that it should repaint as the result of the attribute
   //being set. This should not be needed once the event state manager handles
   //selection.
-  nsFormControlHelper::ForceDrawFrame(this);
+  nsFormControlHelper::ForceDrawFrame(aPresContext, this);
 }
 
 
@@ -803,12 +803,12 @@ nsListControlFrame::HasSameContent(nsIFrame* aFrame1, nsIFrame* aFrame2)
 
 //---------------------------------------------------------
 NS_IMETHODIMP
-nsListControlFrame::CaptureMouseEvents(PRBool aGrabMouseEvents)
+nsListControlFrame::CaptureMouseEvents(nsIPresContext* aPresContext, PRBool aGrabMouseEvents)
 {
 
     // get its view
   nsIView* view = nsnull;
-  GetView(&view);
+  GetView(aPresContext, &view);
   nsCOMPtr<nsIViewManager> viewMan;
   PRBool result;
 
@@ -974,7 +974,7 @@ nsListControlFrame::Init(nsIPresContext&  aPresContext,
    // get the proper style based on attribute selectors which refer to the
    // selected attribute.
   if (!mIsInitializedFromContent) {
-    Reset();
+    Reset(&aPresContext);
   } else {
     InitSelectionCache(-1);
   }
@@ -1320,7 +1320,7 @@ nsListControlFrame::GetMaxNumValues()
 // those values as determined by the original HTML
 //---------------------------------------------------------
 void 
-nsListControlFrame::Reset() 
+nsListControlFrame::Reset(nsIPresContext* aPresContext)
 {
   nsIDOMHTMLCollection* options = GetOptions(mContent);
   if (!options) {
@@ -1604,7 +1604,7 @@ nsListControlFrame::ToggleSelected(PRInt32 aIndex)
 // nsISelectControlFrame
 //----------------------------------------------------------------------
 NS_IMETHODIMP
-nsListControlFrame::AddOption(PRInt32 aIndex)
+nsListControlFrame::AddOption(nsIPresContext* aPresContext, PRInt32 aIndex)
 {
   PRInt32 numOptions;
   GetNumberOfOptions(&numOptions);
@@ -1623,7 +1623,7 @@ nsListControlFrame::AddOption(PRInt32 aIndex)
 }
 
 NS_IMETHODIMP
-nsListControlFrame::RemoveOption(PRInt32 aIndex)
+nsListControlFrame::RemoveOption(nsIPresContext* aPresContext, PRInt32 aIndex)
 {
   PRInt32 numOptions;
   GetNumberOfOptions(&numOptions);
@@ -1815,7 +1815,7 @@ nsListControlFrame::GetOptionSelected(PRInt32 aIndex, PRBool* aValue)
 
 //---------------------------------------------------------
 NS_IMETHODIMP 
-nsListControlFrame::SetProperty(nsIAtom* aName, const nsString& aValue)
+nsListControlFrame::SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsString& aValue)
 {
   if (nsHTMLAtoms::selected == aName) {
     return NS_ERROR_INVALID_ARG; // Selected is readonly according to spec.
@@ -1919,7 +1919,7 @@ nsListControlFrame::GetViewOffset(nsIViewManager* aManager, nsIView* aView,
  
 //---------------------------------------------------------
 NS_IMETHODIMP 
-nsListControlFrame::SyncViewWithFrame()
+nsListControlFrame::SyncViewWithFrame(nsIPresContext* aPresContext)
 {
     // Resync the view's position with the frame.
     // The problem is the dropdown's view is attached directly under
@@ -1932,21 +1932,21 @@ nsListControlFrame::SyncViewWithFrame()
 
      //Get parent frame
   nsIFrame* parent;
-  GetParentWithView(&parent);
+  GetParentWithView(aPresContext, &parent);
   NS_ASSERTION(parent, "GetParentWithView failed");
 
   // Get parent view
   nsIView* parentView = nsnull;
-  parent->GetView(&parentView);
+  parent->GetView(aPresContext, &parentView);
 
   parentView->GetViewManager(*getter_AddRefs(viewManager));
   GetViewOffset(viewManager, parentView, parentPos);
   nsIView* view = nsnull;
-  GetView(&view);
+  GetView(aPresContext, &view);
 
   nsIView* containingView = nsnull;
   nsPoint offset;
-  GetOffsetFromView(offset, &containingView);
+  GetOffsetFromView(aPresContext, offset, &containingView);
   //nsSize size;
   //GetSize(size);
 
@@ -2001,12 +2001,14 @@ nsListControlFrame::AboutToRollup()
 
 //---------------------------------------------------------
 nsresult
-nsListControlFrame::GetScrollingParentView(nsIFrame* aParent, nsIView** aParentView)
+nsListControlFrame::GetScrollingParentView(nsIPresContext* aPresContext,
+                                           nsIFrame* aParent,
+                                           nsIView** aParentView)
 {
   if (IsInDropDownMode() == PR_TRUE) {
      // Use the parent frame to get the view manager
     nsIView* parentView = nsnull;
-    nsresult rv = aParent->GetView(&parentView);
+    nsresult rv = aParent->GetView(aPresContext, &parentView);
     NS_ASSERTION(parentView, "GetView failed");
     nsCOMPtr<nsIViewManager> viewManager;
     parentView->GetViewManager(*getter_AddRefs(viewManager));
@@ -2022,7 +2024,7 @@ nsListControlFrame::GetScrollingParentView(nsIFrame* aParent, nsIView** aParentV
     NS_ASSERTION(aParentView, "GetRootView failed");  
     return rv;
    } else {
-     return nsScrollFrame::GetScrollingParentView(aParent, aParentView);
+     return nsScrollFrame::GetScrollingParentView(aPresContext, aParent, aParentView);
    }
 }
 
@@ -2037,25 +2039,25 @@ nsListControlFrame::DidReflow(nsIPresContext& aPresContext,
     mState &= ~NS_FRAME_SYNC_FRAME_AND_VIEW;
     nsresult rv = nsScrollFrame::DidReflow(aPresContext, aStatus);
     mState |= NS_FRAME_SYNC_FRAME_AND_VIEW;
-    SyncViewWithFrame();
+    SyncViewWithFrame(&aPresContext);
     return rv;
   } else {
     return nsScrollFrame::DidReflow(aPresContext, aStatus);
   }
 }
 
-NS_IMETHODIMP nsListControlFrame::MoveTo(nscoord aX, nscoord aY)
+NS_IMETHODIMP nsListControlFrame::MoveTo(nsIPresContext* aPresContext, nscoord aX, nscoord aY)
 {
   if (PR_TRUE == IsInDropDownMode()) 
   {
     //SyncViewWithFrame();
     mState &= ~NS_FRAME_SYNC_FRAME_AND_VIEW;
-    nsresult rv = nsScrollFrame::MoveTo(aX, aY);
+    nsresult rv = nsScrollFrame::MoveTo(aPresContext, aX, aY);
     mState |= NS_FRAME_SYNC_FRAME_AND_VIEW;
     //SyncViewWithFrame();
     return rv;
   } else {
-    return nsScrollFrame::MoveTo(aX, aY);
+    return nsScrollFrame::MoveTo(aPresContext, aX, aY);
   }
 }
 
@@ -2150,7 +2152,7 @@ nsListControlFrame::MouseUp(nsIDOMEvent* aMouseEvent)
     }
   } else {
     mButtonDown = PR_FALSE;
-    CaptureMouseEvents(PR_FALSE);
+    CaptureMouseEvents(mPresContext, PR_FALSE);
     UpdateSelection(PR_TRUE, PR_FALSE, mContent);
   }
 
@@ -2227,10 +2229,10 @@ nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
       // the pop up stole focus away from the webshell
       // now I am giving it back
       nsIFrame * parentFrame;
-      GetParentWithView(&parentFrame);
+      GetParentWithView(mPresContext, &parentFrame);
       if (nsnull != parentFrame) {
         nsIView * pView;
-        parentFrame->GetView(&pView);
+        parentFrame->GetView(mPresContext, &pView);
         if (nsnull != pView) {
           nsIWidget *window = nsnull;
 
@@ -2257,7 +2259,7 @@ nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
       mOldSelectedIndex = oldIndex;
       // Handle Like List
       mButtonDown = PR_TRUE;
-      CaptureMouseEvents(PR_TRUE);
+      CaptureMouseEvents(mPresContext, PR_TRUE);
       HandleListSelection(aMouseEvent);
     }
   } else {
@@ -2291,7 +2293,7 @@ nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
         //stateManager->SetContentState(mContent, NS_EVENT_STATE_FOCUS);
 
         if (isDroppedDown) {
-          CaptureMouseEvents(PR_FALSE);
+          CaptureMouseEvents(mPresContext, PR_FALSE);
         }
 
         NS_RELEASE(stateManager);
@@ -2438,14 +2440,16 @@ nsListControlFrame::KeyDown(nsIDOMEvent* aKeyEvent)
 // nsIStatefulFrame
 //----------------------------------------------------------------------
 NS_IMETHODIMP
-nsListControlFrame::GetStateType(nsIStatefulFrame::StateType* aStateType)
+nsListControlFrame::GetStateType(nsIPresContext* aPresContext,
+                                 nsIStatefulFrame::StateType* aStateType)
 {
   *aStateType = nsIStatefulFrame::eSelectType;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsListControlFrame::SaveState(nsISupports** aState)
+nsListControlFrame::SaveState(nsIPresContext* aPresContext,
+                              nsISupports** aState)
 {
   nsISupportsArray* value = nsnull;
   nsresult res = NS_NewISupportsArray(&value);
@@ -2480,7 +2484,8 @@ nsListControlFrame::SaveState(nsISupports** aState)
 }
 
 NS_IMETHODIMP
-nsListControlFrame::RestoreState(nsISupports* aState)
+nsListControlFrame::RestoreState(nsIPresContext* aPresContext,
+                                 nsISupports* aState)
 {
   nsISupportsArray* value = (nsISupportsArray *)aState;
   nsresult res = NS_ERROR_NULL_POINTER;

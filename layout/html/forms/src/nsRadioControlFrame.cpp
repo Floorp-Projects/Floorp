@@ -75,22 +75,22 @@ nsRadioControlFrame::PostCreateWidget(nsIPresContext* aPresContext, nscoord& aWi
   nsresult result = GetDefaultCheckState(&checked);
   if (NS_CONTENT_ATTR_HAS_VALUE == result) {
     if (PR_TRUE == checked)
-      SetRadioControlFrameState(NS_STRING_TRUE);
+      SetRadioControlFrameState(aPresContext, NS_STRING_TRUE);
     else
-      SetRadioControlFrameState(NS_STRING_FALSE);
+      SetRadioControlFrameState(aPresContext, NS_STRING_FALSE);
   }
 }
 
 void 
 nsRadioControlFrame::MouseUp(nsIPresContext* aPresContext) 
 {
-  SetRadioControlFrameState(NS_STRING_TRUE);
+  SetRadioControlFrameState(aPresContext, NS_STRING_TRUE);
   
   if (mFormFrame) {
      // The form frame will determine which radio button needs
      // to be turned off and will call SetChecked on the
      // nsRadioControlFrame to unset the checked state
-    mFormFrame->OnRadioChecked(*this);
+    mFormFrame->OnRadioChecked(aPresContext, *this);
   }         
 }
 
@@ -108,7 +108,7 @@ nsRadioControlFrame::GetChecked(PRBool aGetInitialValue)
 }
 
 void
-nsRadioControlFrame::SetChecked(PRBool aValue, PRBool aSetInitialValue)
+nsRadioControlFrame::SetChecked(nsIPresContext* aPresContext, PRBool aValue, PRBool aSetInitialValue)
 {
   if (aSetInitialValue) {
     if (aValue) {
@@ -119,9 +119,9 @@ nsRadioControlFrame::SetChecked(PRBool aValue, PRBool aSetInitialValue)
   }
 
   if (PR_TRUE == aValue) {
-    SetRadioControlFrameState(NS_STRING_TRUE);
+    SetRadioControlFrameState(aPresContext, NS_STRING_TRUE);
   } else {
-    SetRadioControlFrameState(NS_STRING_FALSE);
+    SetRadioControlFrameState(aPresContext, NS_STRING_FALSE);
   }
 }
 
@@ -218,25 +218,26 @@ void nsRadioControlFrame::GetRadioControlFrameState(nsString& aValue)
 	nsFormControlHelper::GetBoolString(GetRadioState(), aValue);
 }         
 
-void nsRadioControlFrame::SetRadioControlFrameState(const nsString& aValue)
+void nsRadioControlFrame::SetRadioControlFrameState(nsIPresContext* aPresContext,
+                                                    const nsString& aValue)
 {
   PRBool state = nsFormControlHelper::GetBool(aValue);
-  SetRadioState(state);
+  SetRadioState(aPresContext, state);
 }         
 
-NS_IMETHODIMP nsRadioControlFrame::SetProperty(nsIAtom* aName, const nsString& aValue)
+NS_IMETHODIMP nsRadioControlFrame::SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsString& aValue)
 {
   if (nsHTMLAtoms::checked == aName) {
       // Set the current state for the radio button because
       // the mFormFrame->OnRadioChecked will not set it. 
-    SetRadioControlFrameState(aValue);
+    SetRadioControlFrameState(aPresContext, aValue);
     if (mFormFrame) {
       PRBool state = (aValue == NS_STRING_TRUE) ? PR_TRUE : PR_FALSE;
-      mFormFrame->OnRadioChecked(*this, state);
+      mFormFrame->OnRadioChecked(aPresContext, *this, state);
     }
   }
   else {
-    return nsNativeFormControlFrame::SetProperty(aName, aValue);
+    return nsNativeFormControlFrame::SetProperty(aPresContext, aName, aValue);
   }
 
   return NS_OK;    
@@ -268,14 +269,14 @@ nsresult nsRadioControlFrame::RequiresWidget(PRBool& aRequiresWidget)
 // nsIStatefulFrame
 //----------------------------------------------------------------------
 NS_IMETHODIMP
-nsRadioControlFrame::GetStateType(nsIStatefulFrame::StateType* aStateType)
+nsRadioControlFrame::GetStateType(nsIPresContext* aPresContext, nsIStatefulFrame::StateType* aStateType)
 {
   *aStateType = nsIStatefulFrame::eRadioType;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsRadioControlFrame::SaveState(nsISupports** aState)
+nsRadioControlFrame::SaveState(nsIPresContext* aPresContext, nsISupports** aState)
 {
   nsISupportsString* value = nsnull;
   nsresult res = NS_OK;
@@ -297,13 +298,13 @@ nsRadioControlFrame::SaveState(nsISupports** aState)
 }
 
 NS_IMETHODIMP
-nsRadioControlFrame::RestoreState(nsISupports* aState)
+nsRadioControlFrame::RestoreState(nsIPresContext* aPresContext, nsISupports* aState)
 {
   char* chars = nsnull;
   nsresult res = ((nsISupportsString*)aState)->GetData(&chars);
   if (NS_SUCCEEDED(res) && chars) {
     nsAutoString string(chars);
-    SetRadioControlFrameState(string);
+    SetRadioControlFrameState(aPresContext, string);
     nsCRT::free(chars);
   }
   return res;

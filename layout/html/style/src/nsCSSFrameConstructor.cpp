@@ -2258,12 +2258,12 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresContext*          aPresCo
       nsIView*  view;
 
       if (IsScrollable(aPresContext, display)) {
-        contentFrame->GetView(&view);
+        contentFrame->GetView(aPresContext, &view);
       } else {
         nsIFrame* parentFrame;
 
         contentFrame->GetParent(&parentFrame);
-        parentFrame->GetView(&view);
+        parentFrame->GetView(aPresContext, &view);
       }
 
       NS_ASSERTION(view, "expected a view");
@@ -2635,7 +2635,7 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresContext* aPresContext,
   nsIView*        rootView;
 
   viewManager->GetRootView(rootView);
-  viewportFrame->SetView(rootView);
+  viewportFrame->SetView(aPresContext, rootView);
 
   // The viewport is the containing block for 'fixed' elements
   mFixedContainingBlock = viewportFrame;
@@ -2751,7 +2751,7 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresContext* aPresContext,
       // Inform the view manager about the root scrollable view
       // get the scrolling view
       nsIView* view = nsnull;
-      newScrollableFrame->GetView(&view);
+      newScrollableFrame->GetView(aPresContext, &view);
       nsIScrollableView* scrollableView;
       view->QueryInterface(kScrollViewIID, (void**)&scrollableView);
       viewManager->SetRootScrollableView(scrollableView);
@@ -3410,7 +3410,7 @@ nsresult rv = NS_OK;
             // XXX: We should replace this with a real widget manager similar
             // to how the nsFormControlFrame works. Re-directing events is a temporary Kludge.
           nsIView *listView; 
-          listFrame->GetView(&listView);
+          listFrame->GetView(aPresContext, &listView);
           NS_ASSERTION(nsnull != listView,"ListFrame's view is nsnull");
           //listView->SetViewFlags(NS_VIEW_PUBLIC_FLAG_DONT_CHECK_CHILDREN);
 
@@ -3458,7 +3458,7 @@ nsresult rv = NS_OK;
           // to how the nsFormControlFrame works.
           // Re-directing events is a temporary Kludge.
         nsIView *listView; 
-        listFrame->GetView(&listView);
+        listFrame->GetView(aPresContext, &listView);
         NS_ASSERTION(nsnull != listView,"ListFrame's view is nsnull");
         //listView->SetViewFlags(NS_VIEW_PUBLIC_FLAG_DONT_CHECK_CHILDREN);
         aFrameHasBeenInitialized = PR_TRUE;
@@ -7197,7 +7197,7 @@ UpdateViewsForTree(nsIPresContext& aPresContext, nsIFrame* aFrame,
                    nsIViewManager* aViewManager, nsRect& aBoundsRect)
 {
   nsIView* view;
-  aFrame->GetView(&view);
+  aFrame->GetView(&aPresContext, &view);
 
   if (view) {
     SyncAndInvalidateView(view, aFrame, aViewManager);
@@ -7273,10 +7273,10 @@ ApplyRenderingChangeToTree(nsIPresContext& aPresContext,
     // (adjusting r's coordinate system to reflect the nesting) and
     // update there.
     nsIView* view = nsnull;
-    aFrame->GetView(&view);
+    aFrame->GetView(&aPresContext, &view);
     nsIView* parentView;
     if (! view) { // XXX can view have children outside it?
-      aFrame->GetOffsetFromView(viewOffset, &parentView);
+      aFrame->GetOffsetFromView(&aPresContext, viewOffset, &parentView);
       NS_ASSERTION(nsnull != parentView, "no view");
       if (! viewManager) {
         parentView->GetViewManager(viewManager);

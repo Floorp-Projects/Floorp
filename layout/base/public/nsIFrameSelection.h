@@ -124,7 +124,7 @@ public:
    *  @param aGuiEvent is the event that should be dealt with by aFocusFrame
    *  @param aFrame is the frame that MAY handle the event
    */
-  NS_IMETHOD HandleKeyEvent(nsGUIEvent *aGuiEvent) = 0;
+  NS_IMETHOD HandleKeyEvent(nsIPresContext* aPresContext, nsGUIEvent *aGuiEvent) = 0;
 
   /** HandleClick will take the focus to the new frame at the new offset and 
    *  will either extend the selection from the old anchor, or replace the old anchor.
@@ -210,7 +210,7 @@ public:
    *  specified by aSelectionType.
    * @param aSelectionType enum value defined in nsIDOMSelection for the domseleciton you want.
    */
-  NS_IMETHOD RepaintSelection(SelectionType aSelectionType)=0;
+  NS_IMETHOD RepaintSelection(nsIPresContext* aPresContext, SelectionType aSelectionType)=0;
 
   /** GetFrameForNodeOffset given a node and its child offset, return the nsIFrame and
    *  the offset into that frame. 

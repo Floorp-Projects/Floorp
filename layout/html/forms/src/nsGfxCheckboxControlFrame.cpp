@@ -179,10 +179,11 @@ nsGfxCheckboxControlFrame :: GetCheckboxState ( )
 }
 
 void 
-nsGfxCheckboxControlFrame :: SetCheckboxState ( nsCheckboxControlFrame::CheckState aValue )
+nsGfxCheckboxControlFrame :: SetCheckboxState (nsIPresContext* aPresContext,
+                                               nsCheckboxControlFrame::CheckState aValue )
 {
   mChecked = aValue;
-  nsFormControlHelper::ForceDrawFrame(this);
+  nsFormControlHelper::ForceDrawFrame(aPresContext, this);
 }
 
 #ifdef DEBUG_rods

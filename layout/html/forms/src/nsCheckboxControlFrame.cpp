@@ -144,7 +144,7 @@ nsCheckboxControlFrame::PostCreateWidget(nsIPresContext* aPresContext, nscoord& 
   PRBool checked = PR_FALSE;
   nsresult result = GetDefaultCheckState(&checked);
   if (NS_CONTENT_ATTR_HAS_VALUE == result)
-    SetCheckboxState ( checked ? eOn : eOff );
+    SetCheckboxState (aPresContext, checked ? eOn : eOff );
 }
 
 
@@ -171,7 +171,7 @@ nsCheckboxControlFrame::AttributeChanged(nsIPresContext* aPresContext,
     nsresult res = mContent->GetAttribute ( kNameSpaceID_None, GetTristateAtom(), value );
     PRBool isNowTristate = (res == NS_CONTENT_ATTR_HAS_VALUE);
     if ( isNowTristate != mIsTristate )
-      SwitchModesWithEmergencyBrake(isNowTristate);
+      SwitchModesWithEmergencyBrake(aPresContext, isNowTristate);
   }
   else if ( aAttribute == GetTristateValueAtom() ) {
     // ignore this change if we're not a tri-state checkbox
@@ -179,7 +179,7 @@ nsCheckboxControlFrame::AttributeChanged(nsIPresContext* aPresContext,
       nsAutoString value;
       nsresult res = mContent->GetAttribute ( kNameSpaceID_None, GetTristateValueAtom(), value );
       if ( res == NS_CONTENT_ATTR_HAS_VALUE )
-        SetCheckboxControlFrameState(value);
+        SetCheckboxControlFrameState(aPresContext, value);
     }
   }
   else
@@ -207,7 +207,7 @@ nsCheckboxControlFrame::MouseUp(nsIPresContext* aPresContext)
         newState = eMixed;
         break;
     }
-    SetCheckboxState(newState);
+    SetCheckboxState(aPresContext, newState);
     
     // Keep the tri-state stuff on the content node current. No need to force an
     // attribute changed event since we just set the state of the checkbox ourselves.
@@ -217,7 +217,7 @@ nsCheckboxControlFrame::MouseUp(nsIPresContext* aPresContext)
   }
   else {
     CheckState newState = GetCheckboxState() == eOn ? eOff : eOn;
-    SetCheckboxState(newState);
+    SetCheckboxState(aPresContext, newState);
   }
 }
 
@@ -260,11 +260,11 @@ nsCheckboxControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValue
 }
 
 void 
-nsCheckboxControlFrame::Reset() 
+nsCheckboxControlFrame::Reset(nsIPresContext* aPresContext) 
 {
   PRBool checked;
   GetDefaultCheckState(&checked);
-  SetCheckboxState ( checked ? eOn : eOff );
+  SetCheckboxState (aPresContext, checked ? eOn : eOff );
 }  
 
 NS_METHOD nsCheckboxControlFrame::HandleEvent(nsIPresContext& aPresContext, 
@@ -291,18 +291,21 @@ void nsCheckboxControlFrame::GetCheckboxControlFrameState(nsString& aValue)
 }       
 
 
-void nsCheckboxControlFrame::SetCheckboxControlFrameState(const nsString& aValue)
+void nsCheckboxControlFrame::SetCheckboxControlFrameState(nsIPresContext* aPresContext,
+                                                          const nsString& aValue)
 {
   CheckState state = StringToCheckState(aValue);
-  SetCheckboxState(state);
+  SetCheckboxState(aPresContext, state);
 }         
 
-NS_IMETHODIMP nsCheckboxControlFrame::SetProperty(nsIAtom* aName, const nsString& aValue)
+NS_IMETHODIMP nsCheckboxControlFrame::SetProperty(nsIPresContext* aPresContext,
+                                                  nsIAtom* aName,
+                                                  const nsString& aValue)
 {
   if (nsHTMLAtoms::checked == aName)
-    SetCheckboxControlFrameState(aValue);
+    SetCheckboxControlFrameState(aPresContext, aValue);
   else
-    return nsNativeFormControlFrame::SetProperty(aName, aValue);
+    return nsNativeFormControlFrame::SetProperty(aPresContext, aName, aValue);
 
   return NS_OK;     
 }
@@ -376,7 +379,8 @@ nsCheckboxControlFrame :: StringToCheckState ( const nsString & aStateAsString )
 // on the mode, we have to convert from one to the other.
 //
 void
-nsCheckboxControlFrame :: SwitchModesWithEmergencyBrake ( PRBool inIsNowTristate )
+nsCheckboxControlFrame :: SwitchModesWithEmergencyBrake ( nsIPresContext* aPresContext,
+                                                          PRBool inIsNowTristate )
 {
   if ( inIsNowTristate ) {
     // we were a normal checkbox, and now we're a tristate. That means that the
@@ -392,7 +396,7 @@ nsCheckboxControlFrame :: SwitchModesWithEmergencyBrake ( PRBool inIsNowTristate
     // to make sure it's not mixed. If it is, just set it to checked. Remove our
     // parallel attribute so that we're nice and HTML4 compliant.
     if ( GetCheckboxState() == eMixed )
-      SetCheckboxState(eOn);
+      SetCheckboxState(aPresContext, eOn);
     mContent->UnsetAttribute ( kNameSpaceID_None, GetTristateValueAtom(), PR_FALSE );
   }
 
@@ -404,13 +408,15 @@ nsCheckboxControlFrame :: SwitchModesWithEmergencyBrake ( PRBool inIsNowTristate
 //----------------------------------------------------------------------
 // nsIStatefulFrame
 //----------------------------------------------------------------------
-NS_IMETHODIMP nsCheckboxControlFrame::GetStateType(nsIStatefulFrame::StateType* aStateType)
+NS_IMETHODIMP nsCheckboxControlFrame::GetStateType(nsIPresContext* aPresContext,
+                                                   nsIStatefulFrame::StateType* aStateType)
 {
   *aStateType=nsIStatefulFrame::eCheckboxType;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsCheckboxControlFrame::SaveState(nsISupports** aState)
+NS_IMETHODIMP nsCheckboxControlFrame::SaveState(nsIPresContext* aPresContext,
+                                                nsISupports** aState)
 {
   nsISupportsString* value = nsnull;
   nsresult res = NS_OK;
@@ -431,13 +437,14 @@ NS_IMETHODIMP nsCheckboxControlFrame::SaveState(nsISupports** aState)
   return res;
 }
 
-NS_IMETHODIMP nsCheckboxControlFrame::RestoreState(nsISupports* aState)
+NS_IMETHODIMP nsCheckboxControlFrame::RestoreState(nsIPresContext* aPresContext,
+                                                   nsISupports* aState)
 {
   char* chars = nsnull;
   nsresult res = ((nsISupportsString*)aState)->GetData(&chars);
   if (NS_SUCCEEDED(res) && chars) {
     nsAutoString string(chars);
-    SetCheckboxControlFrameState(string);
+    SetCheckboxControlFrameState(aPresContext, string);
     nsCRT::free(chars);
   }
   return res;

@@ -37,14 +37,15 @@ public:
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect,
                    nsFramePaintLayer    aWhichLayer);
-  NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, 
-                             nsIFrame**     aFrame);
+  NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
+                              const nsPoint& aPoint, 
+                              nsIFrame**     aFrame);
   NS_IMETHOD ReplaceFrame(nsIPresContext& aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aOldFrame,
                           nsIFrame*       aNewFrame);
-  NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
+  NS_IMETHOD List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const;
 #ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
 #endif
@@ -66,7 +67,8 @@ protected:
   nsContainerFrame();
   ~nsContainerFrame();
 
-  nsresult GetFrameForPointUsing(const nsPoint& aPoint,
+  nsresult GetFrameForPointUsing(nsIPresContext* aPresContext,
+                                 const nsPoint& aPoint,
                                  nsIAtom*       aList,
                                  nsIFrame**     aFrame);
 

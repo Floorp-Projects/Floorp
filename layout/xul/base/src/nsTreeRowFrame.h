@@ -47,7 +47,8 @@ public:
                   nsIStyleContext* aContext,
                   nsIFrame*        aPrevInFlow); // Overridden to set whether we're a column header 
 
-  NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, // Overridden to capture events
+  NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
+                              const nsPoint& aPoint, // Overridden to capture events
                               nsIFrame**     aFrame);
 
   NS_IMETHOD HandleEvent(nsIPresContext& aPresContext,
@@ -66,7 +67,7 @@ public:
                                      nsPoint&        aPoint,
                                      PRInt32&        aCursor);
 
-  NS_IMETHOD HeaderDrag(PRBool aGrabber);
+  NS_IMETHOD HeaderDrag(nsIPresContext* aPresContext, PRBool aGrabber);
   PRBool DraggingHeader() { return mDraggingHeader; };
 
   void SetFlexingColumn(nsTableColFrame* aTableColFrame) { mFlexingCol = aTableColFrame; };

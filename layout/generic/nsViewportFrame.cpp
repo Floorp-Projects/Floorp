@@ -292,7 +292,7 @@ ViewportFrame::CalculateFixedContainingBlockSize(nsIPresContext&          aPresC
   nsIFrame* kidFrame = mFrames.FirstChild();
   nsIView*  kidView;
 
-  kidFrame->GetView(&kidView);
+  kidFrame->GetView(&aPresContext, &kidView);
   if (nsnull != kidView) {
     nsIScrollableView* scrollingView;
     
@@ -359,7 +359,7 @@ ViewportFrame::ReflowFixedFrame(nsIPresContext&          aPresContext,
     nsRect  rect(kidReflowState.mComputedOffsets.left + kidReflowState.mComputedMargin.left,
                  kidReflowState.mComputedOffsets.top + kidReflowState.mComputedMargin.top,
                  kidDesiredSize.width, kidDesiredSize.height);
-    aKidFrame->SetRect(rect);
+    aKidFrame->SetRect(&aPresContext, rect);
     htmlReflow->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
   }
 
@@ -514,7 +514,7 @@ ViewportFrame::Reflow(nsIPresContext&          aPresContext,
                       aStatus);
 
           nsRect  rect(0, 0, kidDesiredSize.width, kidDesiredSize.height);
-          kidFrame->SetRect(rect);
+          kidFrame->SetRect(&aPresContext, rect);
           kidRect = rect;
 
           // XXX We should resolve the details of who/when DidReflow()
@@ -554,7 +554,7 @@ ViewportFrame::Reflow(nsIPresContext&          aPresContext,
   if ((eReflowReason_Initial == aReflowState.reason) ||
       (eReflowReason_Resize == aReflowState.reason)) {
     nsRect  damageRect(0, 0, aDesiredSize.width, aDesiredSize.height);
-    Invalidate(damageRect, PR_FALSE);
+    Invalidate(&aPresContext, damageRect, PR_FALSE);
   }
 
   NS_FRAME_TRACE_REFLOW_OUT("ViewportFrame::Reflow", aStatus);

@@ -76,7 +76,7 @@ protected:
 
 
   
-  virtual void Redraw();
+  virtual void Redraw(nsIPresContext* aPresContext);
   virtual void SetFocus(PRBool aOn, PRBool aRepaint);
 
 

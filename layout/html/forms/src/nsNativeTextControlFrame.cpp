@@ -569,7 +569,9 @@ void nsNativeTextControlFrame::SetTextControlFrameState(const nsString& aValue)
   }
 }
 
-NS_IMETHODIMP nsNativeTextControlFrame::SetProperty(nsIAtom* aName, const nsString& aValue)
+NS_IMETHODIMP nsNativeTextControlFrame::SetProperty(nsIPresContext* aPresContext,
+                                                    nsIAtom* aName,
+                                                    const nsString& aValue)
 {
   nsresult rv = NS_OK;
   if (nsHTMLAtoms::value == aName) {
@@ -592,7 +594,7 @@ NS_IMETHODIMP nsNativeTextControlFrame::SetProperty(nsIAtom* aName, const nsStri
     }
   }
   else {
-    return nsNativeFormControlFrame::SetProperty(aName, aValue);
+    return nsNativeFormControlFrame::SetProperty(aPresContext, aName, aValue);
   }
   return rv;
 }      

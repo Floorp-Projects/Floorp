@@ -648,7 +648,7 @@ nsEventStateManager::UpdateCursor(nsIPresContext& aPresContext, nsPoint& aPoint,
   }
 
   nsIWidget* window;
-  aTargetFrame->GetWindow(&window);
+  aTargetFrame->GetWindow(&aPresContext, &window);
   window->SetCursor(c);
   NS_RELEASE(window);
 }
@@ -1378,7 +1378,7 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
   }
 
   if ((aState & NS_EVENT_STATE_FOCUS) && (aContent != mCurrentFocus)) {
-    SendFocusBlur(aContent);
+    SendFocusBlur(mPresContext, aContent);
 
     //transferring ref to notifyContent from mCurrentFocus
     notifyContent[3] = mCurrentFocus;
@@ -1468,7 +1468,7 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
 }
 
 NS_IMETHODIMP
-nsEventStateManager::SendFocusBlur(nsIContent *aContent)
+nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aContent)
 {
   if (mCurrentFocus == aContent) {
     return NS_OK;
@@ -1543,7 +1543,7 @@ nsEventStateManager::SendFocusBlur(nsIContent *aContent)
     PRBool shouldSetFocusOnWindow = PR_TRUE;
     if (nsnull != currentFocusFrame) {
       nsIView * view = nsnull;
-      currentFocusFrame->GetView(&view);
+      currentFocusFrame->GetView(aPresContext, &view);
       if (view != nsnull) {
         nsIWidget *window = nsnull;
         view->GetWidget(window);
@@ -1563,10 +1563,10 @@ nsEventStateManager::SendFocusBlur(nsIContent *aContent)
     // then click on a gfx control (generates another focus event)
     if (shouldSetFocusOnWindow && nsnull != currentFocusFrame) {
       nsIFrame * parentFrame;
-      currentFocusFrame->GetParentWithView(&parentFrame);
+      currentFocusFrame->GetParentWithView(aPresContext, &parentFrame);
       if (nsnull != parentFrame) {
         nsIView * pView;
-        parentFrame->GetView(&pView);
+        parentFrame->GetView(aPresContext, &pView);
         if (nsnull != pView) {
           nsIWidget *window = nsnull;
 

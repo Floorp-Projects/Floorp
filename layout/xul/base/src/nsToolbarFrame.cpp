@@ -309,9 +309,11 @@ nsToolbarFrame :: Paint ( nsIPresContext& aPresContext,
 // Override to process events in our own frame
 //
 NS_IMETHODIMP
-nsToolbarFrame :: GetFrameForPoint ( const nsPoint& aPoint, nsIFrame** aFrame)
+nsToolbarFrame :: GetFrameForPoint ( nsIPresContext* aPresContext,
+                                     const nsPoint& aPoint,
+                                     nsIFrame** aFrame)
 {
-  nsresult retVal = nsHTMLContainerFrame::GetFrameForPoint(aPoint, aFrame);
+  nsresult retVal = nsHTMLContainerFrame::GetFrameForPoint(aPresContext, aPoint, aFrame);
 
   // returning NS_OK means that we tell the frame finding code that we have something
   // and to stop looking elsewhere for a frame.
@@ -392,8 +394,8 @@ nsToolbarFrame::ReResolveStyles(nsIPresContext& aPresContext,
 ////////////////////////////////////////////////////////////////////////
 // This is temporary until the bubling of event for CSS actions work
 ////////////////////////////////////////////////////////////////////////
-static void ForceDrawFrame(nsIFrame * aFrame);
-static void ForceDrawFrame(nsIFrame * aFrame)
+static void ForceDrawFrame(nsIPresContext* aPresContext, nsIFrame * aFrame);
+static void ForceDrawFrame(nsIPresContext* aPresContext, nsIFrame * aFrame)
 {
   if (aFrame == nsnull) {
     return;
@@ -401,7 +403,7 @@ static void ForceDrawFrame(nsIFrame * aFrame)
   nsRect    rect;
   nsIView * view;
   nsPoint   pnt;
-  aFrame->GetOffsetFromView(pnt, &view);
+  aFrame->GetOffsetFromView(aPresContext, pnt, &view);
   aFrame->GetRect(rect);
   rect.x = pnt.x;
   rect.y = pnt.y;
@@ -430,7 +432,7 @@ nsToolbarFrame :: AttributeChanged ( nsIPresContext* aPresContext, nsIContent* a
   nsresult rv = NS_OK;
   
   if ( aAttribute == nsXULAtoms::tbTriggerRepaint )
-    ForceDrawFrame ( this );
+    ForceDrawFrame ( aPresContext, this );
   else if ( aAttribute == nsXULAtoms::tbDropLocationCoord ) {
     nsAutoString attribute;
     aChild->GetAttribute ( kNameSpaceID_None, aAttribute, attribute );

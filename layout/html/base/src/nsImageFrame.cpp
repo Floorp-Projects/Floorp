@@ -646,10 +646,10 @@ nsImageFrame::TranslateEventCoords(nsIPresContext& aPresContext,
   // to this frame; otherwise we have to adjust the coordinates
   // appropriately.
   nsIView* view;
-  GetView(&view);
+  GetView(&aPresContext, &view);
   if (nsnull == view) {
     nsPoint offset;
-    GetOffsetFromView(offset, &view);
+    GetOffsetFromView(&aPresContext, offset, &view);
     if (nsnull != view) {
       x -= offset.x;
       y -= offset.y;
@@ -855,7 +855,7 @@ nsImageFrame::AttributeChanged(nsIPresContext* aPresContext,
         if (loadStatus & NS_IMAGE_LOAD_STATUS_IMAGE_READY) {
           // Trigger a paint now because image-loader won't if the
           // image is already loaded and ready to go.
-          Invalidate(nsRect(0, 0, mRect.width, mRect.height), PR_FALSE);
+          Invalidate(aPresContext, nsRect(0, 0, mRect.width, mRect.height), PR_FALSE);
         }
       }
       else {

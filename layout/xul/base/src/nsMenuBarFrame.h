@@ -100,6 +100,9 @@ protected:
 
   nsIDOMEventReceiver* mTarget;
 
+  // XXX Hack
+  nsIPresContext* mPresContext;  // weak reference
+
 }; // class nsMenuBarFrame
 
 #endif

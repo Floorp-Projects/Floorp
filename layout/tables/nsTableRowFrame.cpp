@@ -330,7 +330,7 @@ nsTableRowFrame::DidResize(nsIPresContext& aPresContext,
       cellFrame->GetSize(cellFrameSize);
       //if (cellFrameSize.height!=cellHeight)
       {
-        cellFrame->SizeTo(cellFrameSize.width, cellHeight);
+        cellFrame->SizeTo(&aPresContext, cellFrameSize.width, cellHeight);
         // realign cell content based on the new height
         /*nsHTMLReflowMetrics desiredSize(nsnull);
         nsHTMLReflowState kidReflowState(aPresContext, aReflowState,
@@ -342,7 +342,7 @@ nsTableRowFrame::DidResize(nsIPresContext& aPresContext,
         //     But some content crashes when this reflow is issued, to be investigated
         //XXX nsReflowStatus status;
         //ReflowChild(cellFrame, aPresContext, desiredSize, kidReflowState, status);
-        ((nsTableCellFrame *)cellFrame)->VerticallyAlignChild();
+        ((nsTableCellFrame *)cellFrame)->VerticallyAlignChild(&aPresContext);
         /* if we're collapsing borders, notify the cell that the border edge length has changed */
         if (NS_STYLE_BORDER_COLLAPSE == tableFrame->GetBorderCollapseStyle()) {
           ((nsTableCellFrame *)(cellFrame))->SetBorderEdgeLength(NS_SIDE_LEFT,
@@ -486,7 +486,7 @@ void nsTableRowFrame::PaintChildren(nsIPresContext&      aPresContext,
   while (nsnull != kid) {
     nsIView *pView;
      
-    kid->GetView(&pView);
+    kid->GetView(&aPresContext, &pView);
     if (nsnull == pView) {
       nsRect kidRect;
       kid->GetRect(kidRect);
@@ -604,7 +604,7 @@ void nsTableRowFrame::PlaceChild(nsIPresContext&    aPresContext,
 																 nsSize*            aKidMaxElementSize)
 {
   // Place and size the child
-  aKidFrame->SetRect(aKidRect);
+  aKidFrame->SetRect(&aPresContext, aKidRect);
 
   // update the running total for the row width
   aReflowState.x += aKidRect.width;
@@ -1553,8 +1553,8 @@ void nsTableRowFrame::ReflowCellFrame(nsIPresContext&          aPresContext,
   nsHTMLReflowMetrics desiredSize(nsnull);
 
   ReflowChild(aCellFrame, aPresContext, desiredSize, cellReflowState, aStatus);
-  aCellFrame->SizeTo(cellSize.width, aAvailableHeight);
-  aCellFrame->VerticallyAlignChild();
+  aCellFrame->SizeTo(&aPresContext, cellSize.width, aAvailableHeight);
+  aCellFrame->VerticallyAlignChild(&aPresContext);
 }
 
 /**

@@ -94,7 +94,7 @@ public:
 #endif
 
   // XXX Temporary hack...
-  NS_IMETHOD SetRect(const nsRect& aRect);
+  NS_IMETHOD SetRect(nsIPresContext* aPresContext, const nsRect& aRect);
 
 protected:
   virtual PRIntn GetSkipSides() const;
@@ -124,9 +124,9 @@ NS_NewRootFrame(nsIFrame** aNewFrame)
 // 'min-height', and 'max-height' properties. Then we can do this in a top-down
 // fashion
 NS_IMETHODIMP
-RootFrame::SetRect(const nsRect& aRect)
+RootFrame::SetRect(nsIPresContext* aPresContext, const nsRect& aRect)
 {
-  nsresult  rv = nsHTMLContainerFrame::SetRect(aRect);
+  nsresult  rv = nsHTMLContainerFrame::SetRect(aPresContext, aRect);
 
   // If our height is larger than our natural height (the height we returned
   // as our desired height), then make sure the document element's frame is
@@ -143,7 +143,7 @@ RootFrame::SetRect(const nsRect& aRect)
       nsSize    kidSize;
 
       kidFrame->GetSize(kidSize);
-      kidFrame->SizeTo(kidSize.width, kidSize.height + yDelta);
+      kidFrame->SizeTo(aPresContext, kidSize.width, kidSize.height + yDelta);
     }
   }
 
@@ -226,7 +226,7 @@ RootFrame::RemoveFrame(nsIPresContext& aPresContext,
     // Damage the area occupied by the deleted frame
     nsRect  damageRect;
     aOldFrame->GetRect(damageRect);
-    Invalidate(damageRect, PR_FALSE);
+    Invalidate(&aPresContext, damageRect, PR_FALSE);
 
     // Remove the frame and destroy it
     mFrames.DestroyFrame(aPresContext, aOldFrame);
@@ -386,13 +386,13 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
       // Position and size the child frame
       nsRect  rect(kidReflowState.mComputedMargin.left, kidReflowState.mComputedMargin.top,
                    kidDesiredSize.width, kidDesiredSize.height);
-      kidFrame->SetRect(rect);
+      kidFrame->SetRect(&aPresContext, rect);
 
       // If the child frame was just inserted, then we're responsible for making sure
       // it repaints
       if (isDirtyChildReflow) {
         // Damage the area occupied by the deleted frame
-        Invalidate(rect, PR_FALSE);
+        Invalidate(&aPresContext, rect, PR_FALSE);
       }
     }
 

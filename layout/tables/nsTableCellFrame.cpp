@@ -304,7 +304,10 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext& aPresContext,
 
 //null range means the whole thing
 NS_IMETHODIMP
-nsTableCellFrame::SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread)
+nsTableCellFrame::SetSelected(nsIPresContext* aPresContext,
+                              nsIDOMRange *aRange,
+                              PRBool aSelected,
+                              nsSpread aSpread)
 {
   //traverse through children unselect tables
 #if 0
@@ -409,7 +412,7 @@ void nsTableCellFrame::SetBorderEdge(PRUint8       aSide,
   * Align the cell's child frame within the cell
   *
   */
-void  nsTableCellFrame::VerticallyAlignChild()
+void  nsTableCellFrame::VerticallyAlignChild(nsIPresContext* aPresContext)
 {
   const nsStyleSpacing* spacing =
       (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
@@ -461,7 +464,7 @@ void  nsTableCellFrame::VerticallyAlignChild()
       // Align the middle of the child frame with the middle of the content area, 
       kidYTop = (height - childHeight - bottomInset + topInset) / 2;
   }
-  firstKid->MoveTo(kidRect.x, kidYTop);
+  firstKid->MoveTo(aPresContext, kidRect.x, kidYTop);
 }
 
 PRInt32 nsTableCellFrame::GetRowSpan()
@@ -720,8 +723,8 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext&          aPresContext,
   //////////////////////////////// HACK //////////////////////////////
   kidSize.width = PR_MIN(kidSize.width, availSize.width);
   ///////////////////////////// END HACK /////////////////////////////
-  firstKid->SetRect(nsRect(leftInset, topInset,
-                           kidSize.width, kidSize.height));  
+  firstKid->SetRect(&aPresContext, nsRect(leftInset, topInset,
+                                          kidSize.width, kidSize.height));  
     
   // Return our size and our result
 

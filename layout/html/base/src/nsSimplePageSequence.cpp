@@ -127,7 +127,7 @@ nsSimplePageSequenceFrame::IncrementalReflow(nsIPresContext&          aPresConte
   // Place and size the page. If the page is narrower than our max width, then
   // center it horizontally
   nsRect  rect(aX, aY, kidSize.width, kidSize.height);
-  nextFrame->SetRect(rect);
+  nextFrame->SetRect(&aPresContext, rect);
   aY += kidSize.height + PAGE_SPACING_TWIPS;
 
   // Check if the page is complete...
@@ -166,7 +166,7 @@ nsSimplePageSequenceFrame::IncrementalReflow(nsIPresContext&          aPresConte
       // max width then center it horizontally
       ReflowChild(kidFrame, aPresContext, childSize, childReflowState,
                   status);
-      kidFrame->SetRect(nsRect(aX, aY, childSize.width, childSize.height));
+      kidFrame->SetRect(&aPresContext, nsRect(aX, aY, childSize.width, childSize.height));
       aY += childSize.height;
 
       // Leave a slight gap between the pages
@@ -239,7 +239,7 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext&          aPresContext,
       // Place and size the page. If the page is narrower than our
       // max width then center it horizontally
       ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState, status);
-      kidFrame->SetRect(nsRect(x, y, kidSize.width, kidSize.height));
+      kidFrame->SetRect(&aPresContext, nsRect(x, y, kidSize.width, kidSize.height));
       y += kidSize.height;
 
       // Leave a slight gap between the pages
@@ -419,7 +419,7 @@ nsSimplePageSequenceFrame::Print(nsIPresContext&         aPresContext,
   
       // Print the page
       nsIView*  view;
-      page->GetView(&view);
+      page->GetView(&aPresContext, &view);
       NS_ASSERTION(nsnull != view, "no page view");
       vm->Display(view);
 

@@ -459,7 +459,9 @@ void nsCaret::GetViewForRendering(nsIFrame *caretFrame, EViewCoordinates coordTy
 		
 	nsIView* theView = nsnull;
 	NS_ASSERTION(caretFrame, "Should have frame here");
-	caretFrame->GetOffsetFromView(viewOffset, &theView);
+  nsCOMPtr<nsIPresContext>  presContext;
+  mPresShell->GetPresContext(getter_AddRefs(presContext));
+	caretFrame->GetOffsetFromView(presContext, viewOffset, &theView);
 	if (theView == nsnull) return;
 	
 	nsIView* returnView = nsnull;

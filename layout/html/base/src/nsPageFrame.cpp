@@ -85,7 +85,7 @@ NS_METHOD nsPageFrame::Reflow(nsIPresContext&          aPresContext,
     }
 
     nsRect  rect(0, 0, aDesiredSize.width, aDesiredSize.height);
-    mFrames.FirstChild()->SetRect(rect);
+    mFrames.FirstChild()->SetRect(&aPresContext, rect);
 
   } else {
     // Do we have any children?
@@ -129,7 +129,7 @@ NS_METHOD nsPageFrame::Reflow(nsIPresContext&          aPresContext,
   
         // Place and size the child
         nsRect  rect(0, 0, aDesiredSize.width, aDesiredSize.height);
-        frame->SetRect(rect);
+        frame->SetRect(&aPresContext, rect);
         // XXX Should we be sending the DidReflow?
         htmlReflow->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
   

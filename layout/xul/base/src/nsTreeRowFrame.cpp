@@ -123,7 +123,7 @@ nsTreeRowFrame::Init(nsIPresContext&  aPresContext,
         // headers get their own views, so that they can capture events
         CreateViewForFrame(aPresContext,this,aContext,PR_TRUE);
         nsIView* view;
-        GetView(&view);
+        GetView(&aPresContext, &view);
         view->SetContentTransparency(PR_TRUE);
 			}
 			else 
@@ -143,11 +143,11 @@ nsTreeRowFrame::Init(nsIPresContext&  aPresContext,
 }
 
 NS_IMETHODIMP
-nsTreeRowFrame::HeaderDrag(PRBool aGrabMouseEvents)
+nsTreeRowFrame::HeaderDrag(nsIPresContext* aPresContext, PRBool aGrabMouseEvents)
 {
     // get its view
   nsIView* view = nsnull;
-  GetView(&view);
+  GetView(aPresContext, &view);
   nsCOMPtr<nsIViewManager> viewMan;
   PRBool result;
 
@@ -207,7 +207,7 @@ nsTreeRowFrame::HandleMouseUpEvent(nsIPresContext& aPresContext,
 									                  nsEventStatus&  aEventStatus)
 {
   if (DraggingHeader()) {
-    HeaderDrag(PR_FALSE);
+    HeaderDrag(&aPresContext, PR_FALSE);
   }
   return NS_OK;
 }
@@ -226,10 +226,11 @@ nsTreeRowFrame::HandleEvent(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsTreeRowFrame::GetFrameForPoint(const nsPoint& aPoint, // Overridden to capture events
+nsTreeRowFrame::GetFrameForPoint(nsIPresContext* aPresContext,
+                                 const nsPoint& aPoint, // Overridden to capture events
                                  nsIFrame**     aFrame)
 {
-  nsresult rv = nsTableRowFrame::GetFrameForPoint(aPoint, aFrame);
+  nsresult rv = nsTableRowFrame::GetFrameForPoint(aPresContext, aPoint, aFrame);
   if (mDraggingHeader) {
     mHitFrame = *aFrame;
     *aFrame = this;

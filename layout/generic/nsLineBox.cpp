@@ -135,7 +135,7 @@ nsLineBox::StateToString(char* aBuf, PRInt32 aBufSize) const
 }
 
 void
-nsLineBox::List(FILE* out, PRInt32 aIndent) const
+nsLineBox::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const
 {
   PRInt32 i;
 
@@ -161,7 +161,7 @@ nsLineBox::List(FILE* out, PRInt32 aIndent) const
   nsIFrame* frame = mFirstChild;
   PRInt32 n = GetChildCount();
   while (--n >= 0) {
-    frame->List(out, aIndent + 1);
+    frame->List(aPresContext, out, aIndent + 1);
     frame->GetNextSibling(&frame);
   }
 

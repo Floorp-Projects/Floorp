@@ -233,11 +233,14 @@ NS_METHOD nsTableOuterFrame::Paint(nsIPresContext&      aPresContext,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsTableOuterFrame::SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread)
+NS_IMETHODIMP nsTableOuterFrame::SetSelected(nsIPresContext* aPresContext,
+                                             nsIDOMRange *aRange,
+                                             PRBool aSelected,
+                                             nsSpread aSpread)
 {
-  nsresult result = nsFrame::SetSelected(aRange,aSelected, aSpread);
+  nsresult result = nsFrame::SetSelected(aPresContext, aRange,aSelected, aSpread);
   if (NS_SUCCEEDED(result) && mInnerTableFrame)
-    return mInnerTableFrame->SetSelected(aRange,aSelected, aSpread);
+    return mInnerTableFrame->SetSelected(aPresContext, aRange,aSelected, aSpread);
   return result;
 }
 
@@ -451,7 +454,7 @@ nsresult nsTableOuterFrame::IR_TargetIsCaptionFrame(nsIPresContext&        aPres
   }
 
   // regardless of what we've done up to this point, place the caption and inner table
-  rv = SizeAndPlaceChildren(innerTableSize, 
+  rv = SizeAndPlaceChildren(&aPresContext, innerTableSize, 
                             nsSize (captionSize.width, captionSize.height), 
                             aReflowState);
 
@@ -476,7 +479,7 @@ nsTableOuterFrame::IR_ReflowDirty(nsIPresContext&        aPresContext,
 
       // Repaint our entire bounds
       // XXX Improve this...
-      Invalidate(nsRect(0, 0, mRect.width, mRect.height));
+      Invalidate(&aPresContext, nsRect(0, 0, mRect.width, mRect.height));
     }
   }
 
@@ -498,13 +501,13 @@ nsTableOuterFrame::IR_ReflowDirty(nsIPresContext&        aPresContext,
 
     // Repaint the inner table frame's entire visible area
     dirtyRect.x = dirtyRect.y = 0;
-    Invalidate(dirtyRect);
+    Invalidate(&aPresContext, dirtyRect);
 
   } else if (!mCaptionFrame) {
     // The inner table isn't dirty so we don't need to reflow it, but make
     // sure it's placed correctly. It could be that we're dirty because the
     // caption was removed
-    mInnerTableFrame->MoveTo(0,0);
+    mInnerTableFrame->MoveTo(&aPresContext, 0,0);
 
     // Update our state so we calculate our desired size correctly
     nsRect  innerRect;
@@ -514,7 +517,7 @@ nsTableOuterFrame::IR_ReflowDirty(nsIPresContext&        aPresContext,
     
     // Repaint our entire bounds
     // XXX Improve this...
-    Invalidate(nsRect(0, 0, mRect.width, mRect.height));
+    Invalidate(&aPresContext, nsRect(0, 0, mRect.width, mRect.height));
   }
 
   return rv;
@@ -618,7 +621,7 @@ nsresult nsTableOuterFrame::IR_InnerTableReflow(nsIPresContext&        aPresCont
       else {
         captionRect.SizeTo(oldCaptionRect.width, oldCaptionRect.height);
       }
-      mCaptionFrame->SetRect(captionRect);
+      mCaptionFrame->SetRect(&aPresContext, captionRect);
     }
   }
 
@@ -652,7 +655,7 @@ nsresult nsTableOuterFrame::IR_InnerTableReflow(nsIPresContext&        aPresCont
     aReflowState.y = innerSize.height;
   }
   nsRect innerRect(0, innerY, innerSize.width, innerSize.height);
-  mInnerTableFrame->SetRect(innerRect);
+  mInnerTableFrame->SetRect(&aPresContext, innerRect);
 
   aReflowState.innerTableMaxSize.width = innerSize.width;
   return rv;
@@ -708,7 +711,8 @@ nsresult nsTableOuterFrame::IR_CaptionInserted(nsIPresContext&        aPresConte
       }
     }
 
-    rv = SizeAndPlaceChildren(nsSize (innerSize.width, innerSize.height), 
+    rv = SizeAndPlaceChildren(&aPresContext,
+                              nsSize (innerSize.width, innerSize.height), 
                               nsSize (captionSize.width, captionSize.height), 
                               aReflowState);
   }
@@ -723,7 +727,8 @@ PRBool nsTableOuterFrame::IR_CaptionChangedAxis(const nsStyleTable* aOldStyle,
   return result;
 }
 
-nsresult nsTableOuterFrame::SizeAndPlaceChildren(const nsSize&          aInnerSize, 
+nsresult nsTableOuterFrame::SizeAndPlaceChildren(nsIPresContext*        aPresContext,
+                                                 const nsSize&          aInnerSize, 
                                                  const nsSize&          aCaptionSize,
                                                  OuterTableReflowState& aReflowState)
 {
@@ -743,7 +748,7 @@ nsresult nsTableOuterFrame::SizeAndPlaceChildren(const nsSize&          aInnerSi
   // Place the caption
   nsRect captionRect(captionMargin.left, captionY, 0, 0);
   captionRect.SizeTo(aCaptionSize.width, aCaptionSize.height);
-  mCaptionFrame->SetRect(captionRect);
+  mCaptionFrame->SetRect(aPresContext, captionRect);
 
   // Place the inner table
   nscoord innerY;
@@ -757,7 +762,7 @@ nsresult nsTableOuterFrame::SizeAndPlaceChildren(const nsSize&          aInnerSi
     aReflowState.y = innerY + aInnerSize.height;
   }
   nsRect innerRect(0, innerY, aInnerSize.width, aInnerSize.height);
-  mInnerTableFrame->SetRect(innerRect);
+  mInnerTableFrame->SetRect(aPresContext, innerRect);
   aReflowState.innerTableMaxSize.width = aInnerSize.width;
   return rv;
 }
@@ -948,7 +953,7 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext&          aPresContext,
 
         // Place the caption
         captionRect.SizeTo(captionSize.width, captionSize.height);
-        mCaptionFrame->SetRect(captionRect);
+        mCaptionFrame->SetRect(&aPresContext, captionRect);
       }
 
       // Place the inner table
@@ -964,13 +969,13 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext&          aPresContext,
         state.y = captionRect.YMost() + captionMargin.bottom;
       }
       nsRect innerRect(0, innerY, innerSize.width, innerSize.height);
-      mInnerTableFrame->SetRect(innerRect);
+      mInnerTableFrame->SetRect(&aPresContext, innerRect);
 
     } 
     else {
       // Place the inner table
       nsRect innerRect(0, 0, innerSize.width, innerSize.height);
-      mInnerTableFrame->SetRect(innerRect);
+      mInnerTableFrame->SetRect(&aPresContext, innerRect);
       state.y = innerSize.height;
     }
   }
@@ -995,7 +1000,7 @@ void nsTableOuterFrame::PlaceChild(OuterTableReflowState& aReflowState,
                                    nsSize&                aKidMaxElementSize)
 {
   // Place and size the child
-  aKidFrame->SetRect(aKidRect);
+  aKidFrame->SetRect(aReflowState.pc, aKidRect);
 
   // Adjust the running y-offset
   aReflowState.y += aKidRect.height;

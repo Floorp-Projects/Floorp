@@ -163,10 +163,10 @@ PRBool nsGfxRadioControlFrame::GetRadioState()
   return mChecked;
 }
 
-void nsGfxRadioControlFrame::SetRadioState(PRBool aValue)
+void nsGfxRadioControlFrame::SetRadioState(nsIPresContext* aPresContext, PRBool aValue)
 {
   mChecked = aValue;
-	nsFormControlHelper::ForceDrawFrame(this);
+	nsFormControlHelper::ForceDrawFrame(aPresContext, this);
 }
 
 #ifdef DEBUG_rods

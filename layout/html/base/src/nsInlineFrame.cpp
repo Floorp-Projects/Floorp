@@ -1357,7 +1357,7 @@ nsInlineFrame::DrainOverflow(nsIPresContext* aPresContext)
       // change InsertFrames() to do this, but that's a general purpose
       // function and it doesn't seem like this functionality belongs there...
       for (nsIFrame* f = prevOverflowFrames; f; f->GetNextSibling(&f)) {
-        nsHTMLContainerFrame::ReparentFrameView(f, prevInFlow, this);
+        nsHTMLContainerFrame::ReparentFrameView(aPresContext, f, prevInFlow, this);
       }
       mFrames.InsertFrames(this, nsnull, prevOverflowFrames);
     }
@@ -1637,7 +1637,7 @@ nsInlineFrame::PullInlineFrame(nsIPresContext* aPresContext,
     frame = mFrames.PullFrame(this, irs.mPrevFrame, nextInFlow->mFrames);
     if (nsnull != frame) {
       isComplete = PR_FALSE;
-      nsHTMLContainerFrame::ReparentFrameView(frame, nextInFlow, this);
+      nsHTMLContainerFrame::ReparentFrameView(aPresContext, frame, nextInFlow, this);
       break;
     }
     nextInFlow = (nsInlineFrame*) nextInFlow->mNextInFlow;
@@ -1657,7 +1657,7 @@ nsInlineFrame::PullAnyFrame(nsIPresContext* aPresContext,
   while (nsnull != nextInFlow) {
     frame = mFrames.PullFrame(this, irs.mPrevFrame, nextInFlow->mFrames);
     if (nsnull != frame) {
-      nsHTMLContainerFrame::ReparentFrameView(frame, nextInFlow, this);
+      nsHTMLContainerFrame::ReparentFrameView(aPresContext, frame, nextInFlow, this);
       break;
     }
 

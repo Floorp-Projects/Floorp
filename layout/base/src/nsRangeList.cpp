@@ -123,6 +123,7 @@ public:
 /*END nsIScriptObjectOwner interface implementations*/
 
   // utility methods for scrolling the selection into view
+  nsresult      GetPresContext(nsIPresContext **aPresContext);
   nsresult      GetPresShell(nsIPresShell **aPresShell);
   nsresult      GetRootScrollableView(nsIScrollableView **aScrollableView);
   nsresult      GetFrameToRootViewOffset(nsIFrame *aFrame, nscoord *aXOffset, nscoord *aYOffset);
@@ -134,7 +135,7 @@ public:
   nsresult      AddItem(nsIDOMRange *aRange);
   nsresult      RemoveItem(nsIDOMRange *aRange);
 
-  nsresult      Clear();
+  nsresult      Clear(nsIPresContext* aPresContext);
 	// methods for convenience. Note, these don't addref
   nsIDOMNode*  FetchAnchorNode();  //where did the selection begin
   PRInt32      FetchAnchorOffset();
@@ -159,7 +160,7 @@ public:
   NS_IMETHOD   GetOriginalAnchorPoint(nsIDOMNode **aNode, PRInt32 *aOffset);
   NS_IMETHOD   LookUpSelection(nsIContent *aContent, PRInt32 aContentOffset, PRInt32 aContentLength,
                              SelectionDetails **aReturnDetails, SelectionType aType);
-  NS_IMETHOD   Repaint();
+  NS_IMETHOD   Repaint(nsIPresContext* aPresContext);
 
   nsresult     StartAutoScrollTimer(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint, PRUint32 aDelay);
   nsresult     StopAutoScrollTimer();
@@ -171,8 +172,8 @@ private:
   
 
   void         setAnchorFocusRange(PRInt32 aIndex); //pass in index into rangelist
-  NS_IMETHOD   selectFrames(nsIContentIterator *aInnerIter, nsIContent *aContent, nsIDOMRange *aRange, PRBool aFlags);
-  NS_IMETHOD   selectFrames(nsIDOMRange *aRange, PRBool aSelect);
+  NS_IMETHOD   selectFrames(nsIPresContext* aPresContext, nsIContentIterator *aInnerIter, nsIContent *aContent, nsIDOMRange *aRange, PRBool aFlags);
+  NS_IMETHOD   selectFrames(nsIPresContext* aPresContext, nsIDOMRange *aRange, PRBool aSelect);
   
 #if OLD_SELECTION
   NS_IMETHOD   FixupSelectionPoints(nsIDOMRange *aRange, nsDirection *aDir, PRBool *aFixupState);
@@ -206,7 +207,7 @@ public:
   NS_IMETHOD Init(nsIFocusTracker *aTracker);
   NS_IMETHOD ShutDown();
   NS_IMETHOD HandleTextEvent(nsGUIEvent *aGUIEvent);
-  NS_IMETHOD HandleKeyEvent(nsGUIEvent *aGuiEvent);
+  NS_IMETHOD HandleKeyEvent(nsIPresContext* aPresContext, nsGUIEvent *aGuiEvent);
   NS_IMETHOD HandleClick(nsIContent *aNewFocus, PRUint32 aContentOffset, PRUint32 aContentEndOffset, 
                        PRBool aContinueSelection, PRBool aMultipleSelection,PRBool aHint);
   NS_IMETHOD HandleDrag(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint);
@@ -219,7 +220,7 @@ public:
   NS_IMETHOD GetMouseDownState(PRBool *aState);
   NS_IMETHOD GetSelection(SelectionType aType, nsIDOMSelection **aDomSelection);
   NS_IMETHOD ScrollSelectionIntoView(SelectionType aType, SelectionRegion aRegion);
-  NS_IMETHOD RepaintSelection(SelectionType aType);
+  NS_IMETHOD RepaintSelection(nsIPresContext* aPresContext, SelectionType aType);
   NS_IMETHOD GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, nsIFrame **aReturnFrame);
 /*END nsIFrameSelection interfacse*/
 
@@ -845,7 +846,7 @@ nsRangeList::HandleTextEvent(nsGUIEvent *aGUIEvent)
  *  focus  DomNode, it is invalid?  The answer now is yes.
  */
 NS_IMETHODIMP
-nsRangeList::HandleKeyEvent(nsGUIEvent *aGuiEvent)
+nsRangeList::HandleKeyEvent(nsIPresContext* aPresContext, nsGUIEvent *aGuiEvent)
 {
   if (!aGuiEvent)
     return NS_ERROR_NULL_POINTER;
@@ -959,7 +960,7 @@ nsRangeList::HandleKeyEvent(nsGUIEvent *aGuiEvent)
     default :return NS_ERROR_FAILURE;
     }
     pos.mPreferLeft = mHint;
-    if (NS_SUCCEEDED(result) && NS_SUCCEEDED(frame->PeekOffset(&pos)) && pos.mResultContent)
+    if (NS_SUCCEEDED(result) && NS_SUCCEEDED(frame->PeekOffset(aPresContext, &pos)) && pos.mResultContent)
     {
       mHint = (HINT)pos.mPreferLeft;
       result = TakeFocus(pos.mResultContent, pos.mContentOffset, pos.mContentOffset, keyEvent->isShift, PR_FALSE);
@@ -1202,7 +1203,7 @@ nsRangeList::ScrollSelectionIntoView(SelectionType aType, SelectionRegion aRegio
 }
 
 NS_IMETHODIMP
-nsRangeList::RepaintSelection(SelectionType aType)
+nsRangeList::RepaintSelection(nsIPresContext* aPresContext, SelectionType aType)
 {
   if (aType < SELECTION_NORMAL || aType >= NUM_SELECTIONTYPES)
     return NS_ERROR_FAILURE;
@@ -1210,7 +1211,7 @@ nsRangeList::RepaintSelection(SelectionType aType)
   if (!mDomSelections[aType])
     return NS_ERROR_NULL_POINTER;
 
-  return mDomSelections[aType]->Repaint();
+  return mDomSelections[aType]->Repaint(aPresContext);
 }
  
 NS_IMETHODIMP
@@ -1734,7 +1735,7 @@ nsDOMSelection::RemoveItem(nsIDOMRange *aItem)
 
 
 nsresult
-nsDOMSelection::Clear()
+nsDOMSelection::Clear(nsIPresContext* aPresContext)
 {
   setAnchorFocusRange(-1);
   if (!mRangeArray)
@@ -1750,7 +1751,7 @@ nsDOMSelection::Clear()
     nsCOMPtr<nsISupports> isupportsindex = dont_AddRef(mRangeArray->ElementAt(0));
     nsCOMPtr<nsIDOMRange> range = do_QueryInterface(isupportsindex);
     mRangeArray->RemoveElementAt(0);
-    selectFrames(range, 0);
+    selectFrames(aPresContext, range, 0);
     // Does RemoveElementAt also delete the elements?
   }
 
@@ -1843,7 +1844,11 @@ nsDOMSelection::GetPrimaryFrameForFocusNode(nsIFrame **aReturnFrame)
 
 //select all content children of aContent
 NS_IMETHODIMP
-nsDOMSelection::selectFrames(nsIContentIterator *aInnerIter, nsIContent *aContent, nsIDOMRange *aRange, PRBool aFlags)
+nsDOMSelection::selectFrames(nsIPresContext* aPresContext,
+                             nsIContentIterator *aInnerIter,
+                             nsIContent *aContent,
+                             nsIDOMRange *aRange,
+                             PRBool aFlags)
 {
   nsresult result = aInnerIter->Init(aContent);
   nsIFrame *frame;
@@ -1857,7 +1862,7 @@ nsDOMSelection::selectFrames(nsIContentIterator *aInnerIter, nsIContent *aConten
         continue;
       result = mRangeList->GetTracker()->GetPrimaryFrameFor(innercontent, &frame);
       if (NS_SUCCEEDED(result) && frame)
-        frame->SetSelected(aRange,aFlags,eSpreadDown);//spread from here to hit all frames in flow
+        frame->SetSelected(aPresContext, aRange,aFlags,eSpreadDown);//spread from here to hit all frames in flow
       result = aInnerIter->Next();
       if (NS_FAILED(result))
         return result;
@@ -1876,7 +1881,7 @@ nsDOMSelection::selectFrames(nsIContentIterator *aInnerIter, nsIContent *aConten
 
 //the idea of this helper method is to select, deselect "top to bottom" traversing through the frames
 NS_IMETHODIMP
-nsDOMSelection::selectFrames(nsIDOMRange *aRange, PRBool aFlags)
+nsDOMSelection::selectFrames(nsIPresContext* aPresContext, nsIDOMRange *aRange, PRBool aFlags)
 {
   if (!aRange) 
     return NS_ERROR_NULL_POINTER;
@@ -1909,7 +1914,7 @@ nsDOMSelection::selectFrames(nsIDOMRange *aRange, PRBool aFlags)
     {
       result = mRangeList->GetTracker()->GetPrimaryFrameFor(content, &frame);
       if (NS_SUCCEEDED(result) && frame)
-        frame->SetSelected(aRange,aFlags,eSpreadDown);//spread from here to hit all frames in flow
+        frame->SetSelected(aPresContext, aRange,aFlags,eSpreadDown);//spread from here to hit all frames in flow
     }
 //end start content
     result = iter->First();
@@ -1918,7 +1923,7 @@ nsDOMSelection::selectFrames(nsIDOMRange *aRange, PRBool aFlags)
       result = iter->CurrentNode(getter_AddRefs(content));
       if (NS_FAILED(result) || !content)
         return result;
-      selectFrames(inneriter, content, aRange, aFlags);
+      selectFrames(aPresContext, inneriter, content, aRange, aFlags);
       result = iter->Next();
     }
 //we must now do the last one  if it is not the same as the first
@@ -1933,7 +1938,7 @@ nsDOMSelection::selectFrames(nsIDOMRange *aRange, PRBool aFlags)
       {
         result = mRangeList->GetTracker()->GetPrimaryFrameFor(content, &frame);
         if (NS_SUCCEEDED(result) && frame)
-           frame->SetSelected(aRange,aFlags,eSpreadDown);//spread from here to hit all frames in flow
+           frame->SetSelected(aPresContext, aRange,aFlags,eSpreadDown);//spread from here to hit all frames in flow
       }
     }
 //end end parent
@@ -2068,7 +2073,7 @@ nsDOMSelection::LookUpSelection(nsIContent *aContent, PRInt32 aContentOffset, PR
 }
 
 NS_IMETHODIMP
-nsDOMSelection::Repaint()
+nsDOMSelection::Repaint(nsIPresContext* aPresContext)
 {
   PRUint32 arrCount = 0;
 
@@ -2103,7 +2108,7 @@ nsDOMSelection::Repaint()
     if (!range)
       return NS_ERROR_NULL_POINTER;
 
-    result = selectFrames(range, PR_TRUE);
+    result = selectFrames(aPresContext, range, PR_TRUE);
 
     if (NS_FAILED(result))
       return result;
@@ -2211,7 +2216,7 @@ nsDOMSelection::DoAutoScroll(nsIPresContext *aPresContext, nsIFrame *aFrame, nsP
 
       while (NS_SUCCEEDED(result) && parentFrame && !frameView)
       {
-        result = parentFrame->GetView(&frameView);
+        result = parentFrame->GetView(aPresContext, &frameView);
         if (NS_SUCCEEDED(result) && !frameView)
           result = parentFrame->GetParent(&parentFrame);
       }
@@ -2369,7 +2374,10 @@ nsDOMSelection::GetEnumerator(nsIEnumerator **aIterator)
 NS_IMETHODIMP
 nsDOMSelection::ClearSelection()
 {
-  nsresult	result = Clear();
+  nsCOMPtr<nsIPresContext>  presContext;
+  GetPresContext(getter_AddRefs(presContext));
+
+  nsresult	result = Clear(presContext);
   if (NS_FAILED(result))
   	return result;
   	
@@ -2398,7 +2406,9 @@ nsDOMSelection::AddRange(nsIDOMRange* aRange)
     return NS_ERROR_FAILURE;
   }
   setAnchorFocusRange(count -1);
-  selectFrames(aRange, PR_TRUE);        
+  nsCOMPtr<nsIPresContext>  presContext;
+  GetPresContext(getter_AddRefs(presContext));
+  selectFrames(presContext, aRange, PR_TRUE);        
   ScrollIntoView();
 
   return mRangeList->NotifySelectionListeners();
@@ -2418,7 +2428,9 @@ nsDOMSelection::Collapse(nsIDOMNode* aParentNode, PRInt32 aOffset)
   // Delete all of the current ranges
   if (NS_FAILED(SetOriginalAnchorPoint(aParentNode,aOffset)))
     return NS_ERROR_FAILURE; //???
-  Clear();
+  nsCOMPtr<nsIPresContext>  presContext;
+  GetPresContext(getter_AddRefs(presContext));
+  Clear(presContext);
 
   nsCOMPtr<nsIDOMRange> range;
   result = nsComponentManager::CreateInstance(kRangeCID, nsnull,
@@ -2464,7 +2476,7 @@ nsDOMSelection::Collapse(nsIDOMNode* aParentNode, PRInt32 aOffset)
 
   result = AddItem(range);
   setAnchorFocusRange(0);
-  selectFrames(range,PR_TRUE);
+  selectFrames(presContext, range,PR_TRUE);
   if (NS_FAILED(result))
     return result;
     
@@ -2996,6 +3008,8 @@ nsDOMSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
   if (result2 == 0) //not selecting anywhere
     return NS_OK;
 
+  nsCOMPtr<nsIPresContext>  presContext;
+  GetPresContext(getter_AddRefs(presContext));
   if ((result1 == 0 && result3 < 0) || (result1 <= 0 && result2 < 0)){//a1,2  a,1,2
     //select from 1 to 2 unless they are collapsed
     res = range->SetEnd(aParentNode,aOffset);
@@ -3019,7 +3033,7 @@ nsDOMSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
 #endif
     }
     else{
-      selectFrames(difRange , PR_TRUE);
+      selectFrames(presContext, difRange , PR_TRUE);
     }
   }
   else if (result1 == 0 && result3 > 0){//2, a1
@@ -3039,7 +3053,7 @@ nsDOMSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
     }
     else
 #endif
-      selectFrames(range, PR_TRUE);
+      selectFrames(presContext, range, PR_TRUE);
   }
   else if (result3 <= 0 && result2 >= 0) {//a,2,1 or a2,1 or a,21 or a21
     //deselect from 2 to 1
@@ -3066,9 +3080,9 @@ nsDOMSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
     }
     else 
     {
-      selectFrames(difRange, 0);//deselect now if fixup succeeded
+      selectFrames(presContext, difRange, 0);//deselect now if fixup succeeded
       difRange->SetEnd(FetchEndParent(range),FetchEndOffset(range));
-      selectFrames(difRange, PR_TRUE);//must reselect last node maybe more if fixup did something
+      selectFrames(presContext, difRange, PR_TRUE);//must reselect last node maybe more if fixup did something
     }
   }
   else if (result1 >= 0 && result3 <= 0) {//1,a,2 or 1a,2 or 1,a2 or 1a2
@@ -3100,10 +3114,10 @@ nsDOMSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
         if (NS_FAILED(res))
           return res;
         //deselect from 1 to a
-        selectFrames(difRange , PR_FALSE);
+        selectFrames(presContext, difRange , PR_FALSE);
       }
       //select from a to 2
-      selectFrames(range , PR_TRUE);
+      selectFrames(presContext, range , PR_TRUE);
     }
   }
   else if (result2 <= 0 && result3 >= 0) {//1,2,a or 12,a or 1,2a or 12a
@@ -3131,9 +3145,9 @@ nsDOMSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
     }
     else 
     {
-      selectFrames(difRange , PR_FALSE);
+      selectFrames(presContext, difRange , PR_FALSE);
       difRange->SetStart(FetchStartParent(range),FetchStartOffset(range));
-      selectFrames(difRange, PR_TRUE);//must reselect last node
+      selectFrames(presContext, difRange, PR_TRUE);//must reselect last node
     }
   }
   else if (result3 >= 0 && result1 <= 0) {//2,a,1 or 2a,1 or 2,a1 or 2a1
@@ -3160,10 +3174,10 @@ nsDOMSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
       if (FetchFocusNode() != FetchAnchorNode() || FetchFocusOffset() != FetchAnchorOffset() ){//if collapsed diff dont do anything
         res = difRange->SetStart(FetchAnchorNode(), FetchAnchorOffset());
         res |= difRange->SetEnd(FetchFocusNode(), FetchFocusOffset());
-        selectFrames(difRange, 0);
+        selectFrames(presContext, difRange, 0);
       }
       //select from 2 to a
-      selectFrames(range , PR_TRUE);
+      selectFrames(presContext, range , PR_TRUE);
     }
   }
   else if (result2 >= 0 && result1 >= 0) {//2,1,a or 21,a or 2,1a or 21a
@@ -3190,7 +3204,7 @@ nsDOMSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
 #endif
     }
     else {
-      selectFrames(difRange, PR_TRUE);
+      selectFrames(presContext, difRange, PR_TRUE);
     }
   }
 
@@ -3304,6 +3318,19 @@ nsDOMSelection::ContainsNode(nsIDOMNode* aNode, PRBool aRecursive, PRBool* aYes)
 }
 
 nsresult
+nsDOMSelection::GetPresContext(nsIPresContext **aPresContext)
+{
+  nsresult rv = NS_OK;
+
+  nsIFocusTracker *tracker = mRangeList->GetTracker();
+
+  if (!tracker)
+    return NS_ERROR_NULL_POINTER;
+
+  return tracker->GetPresContext(aPresContext);
+}
+
+nsresult
 nsDOMSelection::GetPresShell(nsIPresShell **aPresShell)
 {
   nsresult rv = NS_OK;
@@ -3396,7 +3423,14 @@ nsDOMSelection::GetFrameToRootViewOffset(nsIFrame *aFrame, nscoord *aX, nscoord 
   // Determine the offset from aFrame to the scrolled view. We do that by
   // getting the offset from its closest view and then walking up
   scrollingView->GetScrolledView(scrolledView);
-  aFrame->GetOffsetFromView(offset, &closestView);
+  nsIFocusTracker *tracker = mRangeList->GetTracker();
+
+  if (!tracker)
+    return NS_ERROR_NULL_POINTER;
+
+  nsCOMPtr<nsIPresContext> presContext;
+  tracker->GetPresContext(getter_AddRefs(presContext));
+  aFrame->GetOffsetFromView(presContext, offset, &closestView);
 
   // XXX Deal with the case where there is a scrolled element, e.g., a
   // DIV in the middle...
@@ -3466,7 +3500,7 @@ nsDOMSelection::GetPointFromOffset(nsIFrame *aFrame, PRInt32 aContentOffset, nsP
   nsIView *closestView = 0;
   nsPoint offset(0, 0);
 
-  rv = aFrame->GetOffsetFromView(offset, &closestView);
+  rv = aFrame->GetOffsetFromView(presContext, offset, &closestView);
 
   while (!widget && closestView)
   {

@@ -133,7 +133,7 @@ nsNativeRadioControlFrame::AttributeChanged(nsIPresContext* aPresContext,
         button->GetState(checkedPrevState);
         if (checkedAttr != checkedPrevState) {
           button->SetState(checkedAttr);
-          mFormFrame->OnRadioChecked(*this, checkedAttr);
+          mFormFrame->OnRadioChecked(aPresContext, *this, checkedAttr);
         }
         NS_RELEASE(button);
       }
@@ -162,7 +162,7 @@ PRBool nsNativeRadioControlFrame::GetRadioState()
 }
 
 
-void nsNativeRadioControlFrame::SetRadioState(PRBool aValue)
+void nsNativeRadioControlFrame::SetRadioState(nsIPresContext* aPresContext, PRBool aValue)
 {
   if (nsnull != mWidget) {
     nsIRadioButton* radio = nsnull;

@@ -251,12 +251,12 @@ nsFormFrame::GetEnctype(PRInt32* aEnctype)
 }
 
 NS_IMETHODIMP 
-nsFormFrame::OnReset()
+nsFormFrame::OnReset(nsIPresContext* aPresContext)
 {
   PRInt32 numControls = mFormControls.Count();
   for (int i = 0; i < numControls; i++) {
     nsIFormControlFrame* fcFrame = (nsIFormControlFrame*) mFormControls.ElementAt(i);
-    fcFrame->Reset();
+    fcFrame->Reset(aPresContext);
   }
   return NS_OK;
 }
@@ -297,7 +297,7 @@ void nsFormFrame::AddFormControlFrame(nsIPresContext& aPresContext, nsIFrame& aF
             nsFormFrame* formFrame = nsnull;
             result = presShell->GetPrimaryFrameFor(formContent, (nsIFrame**)&formFrame);
             if (NS_SUCCEEDED(result) && formFrame) {
-              formFrame->AddFormControlFrame(*fcFrame);
+              formFrame->AddFormControlFrame(&aPresContext, *fcFrame);
               fcFrame->SetFormFrame(formFrame);
             }
             NS_RELEASE(formContent);
@@ -308,7 +308,7 @@ void nsFormFrame::AddFormControlFrame(nsIPresContext& aPresContext, nsIFrame& aF
   }
 }
 
-void nsFormFrame::AddFormControlFrame(nsIFormControlFrame& aFrame)
+void nsFormFrame::AddFormControlFrame(nsIPresContext* aPresContext, nsIFormControlFrame& aFrame)
 {
   mFormControls.AppendElement(&aFrame);
 
@@ -354,14 +354,14 @@ void nsFormFrame::AddFormControlFrame(nsIFormControlFrame& aFrame)
 	    if (nsnull == group->GetCheckedRadio()) {
 	      group->SetCheckedRadio(radioFrame);
 	    } else {
-	      radioFrame->SetChecked(PR_FALSE, PR_TRUE);
+	      radioFrame->SetChecked(aPresContext, PR_FALSE, PR_TRUE);
 	    }
     }
   }
 }
   
 void
-nsFormFrame::OnRadioChecked(nsRadioControlFrame& aControl, PRBool aChecked)
+nsFormFrame::OnRadioChecked(nsIPresContext* aPresContext, nsRadioControlFrame& aControl, PRBool aChecked)
 {
   nsString radioName;
   aControl.GetName(&radioName);
@@ -380,12 +380,12 @@ nsFormFrame::OnRadioChecked(nsRadioControlFrame& aControl, PRBool aChecked)
       if (aChecked) {
         if (&aControl != checkedRadio) {
           if (checkedRadio) {
-            checkedRadio->SetChecked(PR_FALSE, PR_FALSE);
+            checkedRadio->SetChecked(aPresContext, PR_FALSE, PR_FALSE);
           }
           group->SetCheckedRadio(&aControl);
         }
       } else if (&aControl == checkedRadio) {
-        checkedRadio->SetChecked(PR_FALSE, PR_FALSE);
+        checkedRadio->SetChecked(aPresContext, PR_FALSE, PR_FALSE);
       }
     }
   }

@@ -75,12 +75,12 @@ public:
                    nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD DidReflow(nsIPresContext& aPresContext, nsDidReflowStatus aStatus);
-  NS_IMETHOD MoveTo(nscoord aX, nscoord aY);
+  NS_IMETHOD MoveTo(nsIPresContext* aPresContext, nscoord aX, nscoord aY);
 
     // nsIFormControlFrame
   NS_IMETHOD GetType(PRInt32* aType) const;
   NS_IMETHOD GetName(nsString* aName);
-  NS_IMETHOD SetProperty(nsIAtom* aName, const nsString& aValue);
+  NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsString& aValue);
   NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue); 
   NS_IMETHOD GetMultiple(PRBool* aResult, nsIDOMHTMLSelectElement* aSelect = nsnull);
   NS_IMETHOD GetFont(nsIPresContext* aPresContext, 
@@ -90,7 +90,7 @@ public:
   virtual void SetFocus(PRBool aOn = PR_TRUE, PRBool aRepaint = PR_FALSE);
   virtual void ScrollIntoView(nsIPresContext* aPresContext);
   virtual void MouseClicked(nsIPresContext* aPresContext);
-  virtual void Reset();
+  virtual void Reset(nsIPresContext* aPresContext);
   virtual PRBool IsSuccessful(nsIFormControlFrame* aSubmitter);
   virtual PRInt32 GetMaxNumValues();
   virtual PRBool  GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
@@ -112,25 +112,25 @@ public:
   NS_IMETHOD SetComboboxFrame(nsIFrame* aComboboxFrame);
   NS_IMETHOD GetSelectedIndex(PRInt32* aIndex); 
   NS_IMETHOD GetSelectedItem(nsString & aStr);
-  NS_IMETHOD CaptureMouseEvents(PRBool aGrabMouseEvents);
+  NS_IMETHOD CaptureMouseEvents(nsIPresContext* aPresContext, PRBool aGrabMouseEvents);
   NS_IMETHOD GetMaximumSize(nsSize &aSize);
   NS_IMETHOD SetSuggestedSize(nscoord aWidth, nscoord aHeight);
   NS_IMETHOD GetNumberOfOptions(PRInt32* aNumOptions);  
-  NS_IMETHOD SyncViewWithFrame();
+  NS_IMETHOD SyncViewWithFrame(nsIPresContext* aPresContext);
   NS_IMETHOD AboutToDropDown();
   NS_IMETHOD AboutToRollup();
   NS_IMETHOD UpdateSelection(PRBool aDoDispatchEvent, PRBool aForceUpdate, nsIContent* aContent);
 
   // nsISelectControlFrame
-  NS_IMETHOD AddOption(PRInt32 index);
-  NS_IMETHOD RemoveOption(PRInt32 index);
+  NS_IMETHOD AddOption(nsIPresContext* aPresContext, PRInt32 index);
+  NS_IMETHOD RemoveOption(nsIPresContext* aPresContext, PRInt32 index);
   NS_IMETHOD SetOptionSelected(PRInt32 aIndex, PRBool aValue);
   NS_IMETHOD GetOptionSelected(PRInt32 aIndex, PRBool* aValue);
 
   //nsIStatefulFrame
-  NS_IMETHOD GetStateType(StateType* aStateType);
-  NS_IMETHOD SaveState(nsISupports** aState);
-  NS_IMETHOD RestoreState(nsISupports* aState);
+  NS_IMETHOD GetStateType(nsIPresContext* aPresContext, StateType* aStateType);
+  NS_IMETHOD SaveState(nsIPresContext* aPresContext, nsISupports** aState);
+  NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsISupports* aState);
 
   //nsIDOMEventListener
   virtual nsresult MouseDown(nsIDOMEvent* aMouseEvent);
@@ -168,7 +168,9 @@ protected:
    // Override the widget created for the list box so a Borderless top level widget is created
    // for drop-down lists.
   virtual  nsresult CreateScrollingViewWidget(nsIView* aView,const nsStylePosition* aPosition);
-  virtual  nsresult GetScrollingParentView(nsIFrame* aParent, nsIView** aParentView);
+  virtual  nsresult GetScrollingParentView(nsIPresContext* aPresContext,
+                                           nsIFrame* aParent,
+                                           nsIView** aParentView);
   PRInt32  GetNumberOfOptions();
 
     // Utility methods
@@ -192,7 +194,7 @@ protected:
   nsIFrame *GetSelectableFrame(nsIFrame *aFrame);
   void     DisplaySelected(nsIContent* aContent); 
   void     DisplayDeselected(nsIContent* aContent); 
-  void     ForceRedraw();
+  void     ForceRedraw(nsIPresContext* aPresContext);
   PRBool   IsOptionGroup(nsIFrame* aFrame);
   void     SingleSelection();
   void     MultipleSelection(PRBool aIsShift, PRBool aIsControl);

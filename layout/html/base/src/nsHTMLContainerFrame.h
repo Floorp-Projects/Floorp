@@ -65,9 +65,10 @@ public:
                                      nsIStyleContext* aStyleContext,
                                      PRBool aForce);
 
-  static nsresult ReparentFrameView(nsIFrame* aChildFrame,
-                                    nsIFrame* aOldParentFrame,
-                                    nsIFrame* aNewParentFrame);
+  static nsresult ReparentFrameView(nsIPresContext* aPresContext,
+                                    nsIFrame*       aChildFrame,
+                                    nsIFrame*       aOldParentFrame,
+                                    nsIFrame*       aNewParentFrame);
 
 protected:
   virtual PRIntn GetSkipSides() const = 0;

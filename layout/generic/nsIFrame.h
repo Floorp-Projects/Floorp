@@ -389,9 +389,14 @@ public:
   NS_IMETHOD  GetRect(nsRect& aRect) const = 0;
   NS_IMETHOD  GetOrigin(nsPoint& aPoint) const = 0;
   NS_IMETHOD  GetSize(nsSize& aSize) const = 0;
-  NS_IMETHOD  SetRect(const nsRect& aRect) = 0;
-  NS_IMETHOD  MoveTo(nscoord aX, nscoord aY) = 0;
-  NS_IMETHOD  SizeTo(nscoord aWidth, nscoord aHeight) = 0;
+  NS_IMETHOD  SetRect(nsIPresContext* aPresContext,
+                      const nsRect&   aRect) = 0;
+  NS_IMETHOD  MoveTo(nsIPresContext* aPresContext,
+                     nscoord         aX,
+                     nscoord         aY) = 0;
+  NS_IMETHOD  SizeTo(nsIPresContext* aPresContext,
+                     nscoord         aWidth,
+                     nscoord         aHeight) = 0;
 
   /**
    * Used to iterate the list of additional child list names. Returns the atom
@@ -466,7 +471,8 @@ public:
                         nsPoint&        aPoint,
                         PRInt32&        aCursor) = 0;
 
-  NS_IMETHOD  GetFrameForPoint(const nsPoint& aPoint, 
+  NS_IMETHOD  GetFrameForPoint(nsIPresContext* aPresContext,
+                               const nsPoint& aPoint, 
                                nsIFrame**     aFrame) = 0;
   
   
@@ -563,19 +569,24 @@ public:
   /**
    * Accessor functions to get/set the associated view object
    */
-  NS_IMETHOD  GetView(nsIView** aView) const = 0;  // may be null
-  NS_IMETHOD  SetView(nsIView* aView) = 0;
+  NS_IMETHOD  GetView(nsIPresContext* aPresContext,
+                      nsIView**       aView) const = 0;  // may be null
+  NS_IMETHOD  SetView(nsIPresContext* aPresContext,
+                      nsIView*        aView) = 0;
 
   /**
    * Find the first geometric parent that has a view
    */
-  NS_IMETHOD  GetParentWithView(nsIFrame** aParent) const = 0;
+  NS_IMETHOD  GetParentWithView(nsIPresContext* aPresContext,
+                                nsIFrame**      aParent) const = 0;
 
   /**
    * Returns the offset from this frame to the closest geometric parent that
    * has a view. Also returns the containing view or null in case of error
    */
-  NS_IMETHOD  GetOffsetFromView(nsPoint& aOffset, nsIView** aView) const = 0;
+  NS_IMETHOD  GetOffsetFromView(nsIPresContext* aPresContext,
+                                nsPoint&        aOffset,
+                                nsIView**       aView) const = 0;
 
   /**
    * Returns the window that contains this frame. If this frame has a
@@ -583,7 +594,8 @@ public:
    * returned, otherwise this frame's geometric parent is checked
    * recursively upwards.
    */
-  NS_IMETHOD  GetWindow(nsIWidget**) const = 0;
+  NS_IMETHOD  GetWindow(nsIPresContext* aPresContext,
+                        nsIWidget**     aWidget) const = 0;
 
   /**
    * Get the "type" of the frame. May return a NULL atom pointer
@@ -604,7 +616,7 @@ public:
   NS_IMETHOD  Scrolled(nsIView *aView) = 0;
 
   // Debugging
-  NS_IMETHOD  List(FILE* out, PRInt32 aIndent) const = 0;
+  NS_IMETHOD  List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const = 0;
 
   /**
    * Get a printable from of the name of the frame type.
@@ -650,7 +662,10 @@ public:
    *  @param aSelected is it selected
    *  @param aSpread should is spread selection to flow elements around it? or go down to its children?
    */
-  NS_IMETHOD  SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread) = 0;
+  NS_IMETHOD  SetSelected(nsIPresContext* aPresContext,
+                          nsIDOMRange*    aRange,
+                          PRBool          aSelected,
+                          nsSpread        aSpread) = 0;
 
   NS_IMETHOD  GetSelected(PRBool *aSelected) const = 0;
 
@@ -664,7 +679,7 @@ public:
    *  return NS_ERROR_FAILURE
    *  @param aPOS is defined in nsIFrameSelection
    */
-  NS_IMETHOD  PeekOffset(nsPeekOffsetStruct *aPos) = 0;
+  NS_IMETHOD  PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos) = 0;
 
   /**
    * See if tree verification is enabled. To enable tree verification add

@@ -48,7 +48,7 @@ public:
 
 protected:
 	virtual PRBool	GetRadioState();
-	virtual void 		SetRadioState(PRBool aValue);
+	virtual void 		SetRadioState(nsIPresContext* aPresContetx, PRBool aValue);
 
   virtual nscoord GetRadioboxSize(nsIPresContext* aPresContext, float aPixToTwip) const;
   virtual void GetDesiredSize(nsIPresContext* aPresContext,

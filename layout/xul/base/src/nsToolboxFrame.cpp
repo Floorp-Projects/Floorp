@@ -593,10 +593,11 @@ nsToolboxFrame::GetInset(nsMargin& margin)
 // Override to process events in our own frame
 //
 NS_IMETHODIMP
-nsToolboxFrame :: GetFrameForPoint(const nsPoint& aPoint, 
-                                  nsIFrame**     aFrame)
+nsToolboxFrame :: GetFrameForPoint(nsIPresContext* aPresContext,
+                                   const nsPoint& aPoint, 
+                                   nsIFrame**     aFrame)
 {
-  nsresult retVal = nsHTMLContainerFrame::GetFrameForPoint(aPoint, aFrame);
+  nsresult retVal = nsHTMLContainerFrame::GetFrameForPoint(aPresContext, aPoint, aFrame);
 
   // returning NS_OK means that we tell the frame finding code that we have something
   // and to stop looking elsewhere for a frame.
@@ -631,15 +632,15 @@ nsToolboxFrame :: HandleEvent ( nsIPresContext& aPresContext,
       break;
 
     case NS_MOUSE_LEFT_BUTTON_UP:
-      OnMouseLeftClick ( aEvent->point );
+      OnMouseLeftClick ( &aPresContext, aEvent->point );
       break;
     
     case NS_MOUSE_MOVE:
-      OnMouseMove ( aEvent->point );
+      OnMouseMove ( &aPresContext, aEvent->point );
       break;
       
     case NS_MOUSE_EXIT:
-      OnMouseExit ( );
+      OnMouseExit ( &aPresContext);
       break;
 
     default:
@@ -659,11 +660,11 @@ nsToolboxFrame :: HandleEvent ( nsIPresContext& aPresContext,
 // frame's local coordinate system.
 // 
 void
-nsToolboxFrame :: ConvertToLocalPoint ( nsPoint & ioPoint )
+nsToolboxFrame :: ConvertToLocalPoint ( nsIPresContext* aPresContext, nsPoint & ioPoint )
 {
   nsIView* view = nsnull;             // note: |view| not AddRef'd
   nsPoint offset; 
-  if ( GetOffsetFromView(offset, &view) == NS_OK )
+  if ( GetOffsetFromView(aPresContext, offset, &view) == NS_OK )
     ioPoint -= offset;
 
 } // ConvertToLocalPoint
@@ -676,10 +677,10 @@ nsToolboxFrame :: ConvertToLocalPoint ( nsPoint & ioPoint )
 // is not in local frame coordinates.
 //
 void
-nsToolboxFrame :: OnMouseMove ( nsPoint & aMouseLoc )
+nsToolboxFrame :: OnMouseMove ( nsIPresContext* aPresContext, nsPoint & aMouseLoc )
 {
   nsPoint localMouseLoc = aMouseLoc;
-  ConvertToLocalPoint ( localMouseLoc );
+  ConvertToLocalPoint ( aPresContext, localMouseLoc );
     
   for ( int i = 0; i < mGrippies.Count(); ++i ) {
     TabInfo* currGrippy = NS_STATIC_CAST(TabInfo*, mGrippies[i]);
@@ -688,12 +689,12 @@ nsToolboxFrame :: OnMouseMove ( nsPoint & aMouseLoc )
         // unhilight the old one
         if ( mGrippyHilighted != kNoGrippyHilighted ) {
           TabInfo* hilightedGrippy = NS_STATIC_CAST(TabInfo*, mGrippies[mGrippyHilighted]);
-          Invalidate ( hilightedGrippy->mBoundingRect, PR_FALSE );
+          Invalidate ( aPresContext, hilightedGrippy->mBoundingRect, PR_FALSE );
 	    }
 	    		
         // hilight the new one and remember it
         mGrippyHilighted = i;
-        Invalidate ( currGrippy->mBoundingRect, PR_FALSE );
+        Invalidate ( aPresContext, currGrippy->mBoundingRect, PR_FALSE );
       } // if in a new tab
     }
   } // for each toolbar
@@ -708,10 +709,10 @@ nsToolboxFrame :: OnMouseMove ( nsPoint & aMouseLoc )
 // is not in local frame coordinates.
 //
 void
-nsToolboxFrame :: OnMouseLeftClick ( nsPoint & aMouseLoc )
+nsToolboxFrame :: OnMouseLeftClick ( nsIPresContext* aPresContext, nsPoint & aMouseLoc )
 {
   nsPoint localMouseLoc = aMouseLoc;
-  ConvertToLocalPoint ( localMouseLoc );
+  ConvertToLocalPoint ( aPresContext, localMouseLoc );
   
   for ( int i = 0; i < mGrippies.Count(); ++i ) {
     TabInfo* currGrippy = NS_STATIC_CAST(TabInfo*, mGrippies[i]);			
@@ -738,11 +739,11 @@ nsToolboxFrame :: OnMouseLeftClick ( nsPoint & aMouseLoc )
 // manager.
 //
 void
-nsToolboxFrame :: OnMouseExit ( )
+nsToolboxFrame :: OnMouseExit (nsIPresContext* aPresContext)
 {
 	if ( mGrippyHilighted != kNoGrippyHilighted ) {
 	    TabInfo* hilightedGrippy = NS_STATIC_CAST(TabInfo*, mGrippies[mGrippyHilighted]);
-		Invalidate ( hilightedGrippy->mBoundingRect, PR_FALSE );
+		Invalidate ( aPresContext, hilightedGrippy->mBoundingRect, PR_FALSE );
 		mGrippyHilighted = kNoGrippyHilighted;
 	}
 

@@ -106,6 +106,9 @@ nsMenuBarFrame::Init(nsIPresContext&  aPresContext,
 {
   nsresult  rv = nsToolbarFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
+  // XXX hack
+  mPresContext = &aPresContext;
+
   // Create the menu bar listener.
   mMenuBarListener = new nsMenuBarListener(this);
 
@@ -482,7 +485,7 @@ nsMenuBarFrame::GetWidget(nsIWidget **aWidget)
 {
   // Get parent view
   nsIView * view = nsnull;
-  nsMenuPopupFrame::GetNearestEnclosingView(this, &view);
+  nsMenuPopupFrame::GetNearestEnclosingView(mPresContext, this, &view);
   if (!view)
     return NS_OK;
 
