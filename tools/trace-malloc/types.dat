@@ -88,6 +88,10 @@ JS_Init
 <JSRuntime>
 JS_Init
 
+<js_AllocRawStack>
+JS_ArenaAllocate
+js_AllocRawStack
+
 <JSRuntime.gcRootsHash>
 ~.*
 JS_NewHashTable
@@ -104,6 +108,10 @@ js_AllocGCThing
 
 <JS-unclassified-arena>
 JS_ArenaAllocate
+
+<js_MatchToken>
+JS_malloc
+js_MatchToken
 
 <JSScope>
 JS_malloc
@@ -129,7 +137,11 @@ JS_malloc
 js_NewScopeProperty
 
 <JS-slots>
-~JS_(m|re)alloc
+JS_malloc
+js_AllocSlot
+
+<JS-slots>
+JS_realloc
 js_AllocSlot
 
 <JS-unclassified>
@@ -202,6 +214,13 @@ nsCRT::strdup(unsigned short const *)
 
 #----------------------------------------------------------------------
 
+<nsStringRecycler>
+__builtin_new
+__builtin_vec_new
+nsDeque::GrowCapacity(void)
+nsDeque::Push(void *)
+nsStringRecycler::Recycle(nsString *)
+
 # Give nsString objects the memory they allocate for storage
 <nsString>
 PR_Malloc
@@ -220,6 +239,35 @@ PR_Malloc
 PL_ArenaFinish
 PL_HashTableRawAdd
 NS_NewAtom(basic_nsAReadableString<unsigned short> const &)
+
+<nsCSSSelector>
+PR_Malloc
+nsMemoryImpl::Alloc(unsigned int)
+nsMemory::Alloc(unsigned int)
+nsStr::Alloc(nsStr &, unsigned int)
+nsStr::Realloc(nsStr &, unsigned int)
+nsStr::EnsureCapacity(nsStr &, unsigned int)
+nsStr::GrowCapacity(nsStr &, unsigned int)
+nsStr::StrAppend(nsStr &, nsStr const &, unsigned int, int)
+nsStr::StrAssign(nsStr &, nsStr const &, unsigned int, int)
+nsString::nsString(nsString const &)
+nsAttrSelector::nsAttrSelector(nsAttrSelector const &)
+nsCSSSelector::nsCSSSelector(nsCSSSelector const &)
+
+<nsCSSSelector>
+PR_Malloc
+nsMemoryImpl::Alloc(unsigned int)
+nsMemory::Alloc(unsigned int)
+nsStr::Alloc(nsStr &, unsigned int)
+nsStr::Realloc(nsStr &, unsigned int)
+nsStr::EnsureCapacity(nsStr &, unsigned int)
+nsStr::GrowCapacity(nsStr &, unsigned int)
+nsStr::StrAppend(nsStr &, nsStr const &, unsigned int, int)
+nsStr::StrAssign(nsStr &, nsStr const &, unsigned int, int)
+nsString::nsString(nsString const &)
+nsAttrSelector::nsAttrSelector(nsAttrSelector const &)
+nsAttrSelector::nsAttrSelector(nsAttrSelector const &)
+nsCSSSelector::nsCSSSelector(nsCSSSelector const &)
 
 <nsCSSRule>
 __builtin_new
@@ -249,6 +297,70 @@ PL_HashTableFinalize(PLHashTable *)
 PL_HashTableInit__FP11PLHashTableUiPFPCv_UiPFPCvPCv_iT3PC14PLHashAllocOpsPv
 nsHashtable::nsHashtable(unsigned int, int)
 CSSLoaderImpl::CSSLoaderImpl(void)
+
+<CSSNameSpaceRuleImpl>
+PR_Malloc
+nsMemoryImpl::Alloc(unsigned int)
+nsMemory::Alloc(unsigned int)
+nsStr::Alloc(nsStr &, unsigned int)
+nsStr::Realloc(nsStr &, unsigned int)
+nsStr::EnsureCapacity(nsStr &, unsigned int)
+nsStr::GrowCapacity(nsStr &, unsigned int)
+nsString::SetCapacity(unsigned int)
+nsString::SetLength(unsigned int)
+~.*
+~.*
+basic_nsAWritableString<unsigned short>::Assign(basic_nsAReadableString<unsigned short> const &)
+nsString::operator=(nsString const &)
+CSSNameSpaceRuleImpl::SetURLSpec(nsString const &)
+
+<nsFont>
+PR_Malloc
+nsMemoryImpl::Alloc(unsigned int)
+nsMemory::Alloc(unsigned int)
+nsStr::Alloc(nsStr &, unsigned int)
+nsStr::Realloc(nsStr &, unsigned int)
+nsStr::EnsureCapacity(nsStr &, unsigned int)
+nsStr::GrowCapacity(nsStr &, unsigned int)
+nsStr::StrAppend(nsStr &, nsStr const &, unsigned int, int)
+nsStr::StrAssign(nsStr &, nsStr const &, unsigned int, int)
+nsString::nsString(nsString const &)
+nsFont::nsFont(nsFont const &)
+
+<StyleContextImpl>
+PR_Malloc
+nsMemoryImpl::Alloc(unsigned int)
+nsMemory::Alloc(unsigned int)
+nsStr::Alloc(nsStr &, unsigned int)
+nsStr::Realloc(nsStr &, unsigned int)
+nsStr::EnsureCapacity(nsStr &, unsigned int)
+nsStr::GrowCapacity(nsStr &, unsigned int)
+nsString::SetCapacity(unsigned int)
+nsString::SetLength(unsigned int)
+~.*
+~.*
+basic_nsAWritableString<unsigned short>::Append(unsigned short const *)
+nsCSSValue::GetStringValue(basic_nsAWritableString<unsigned short> &) const
+Unquote(nsString &)
+Unquote(nsString &)
+CSSStyleRuleImpl::MapStyleInto(nsIMutableStyleContext *, nsIPresContext *)
+StyleContextImpl::SetStyle(nsStyleStructID, nsStyleStruct const &)
+
+<CSSImportantRule>
+PR_Malloc
+nsMemoryImpl::Alloc(unsigned int)
+nsMemory::Alloc(unsigned int)
+nsStr::Alloc(nsStr &, unsigned int)
+nsStr::Realloc(nsStr &, unsigned int)
+nsStr::EnsureCapacity(nsStr &, unsigned int)
+nsStr::GrowCapacity(nsStr &, unsigned int)
+nsString::SetCapacity(unsigned int)
+nsString::SetLength(unsigned int)
+~.*
+~.*
+basic_nsAWritableString<unsigned short>::Assign(basic_nsAReadableString<unsigned short> const &)
+nsString::operator=(nsString const &)
+CSSImportRuleImpl::SetURLSpec(nsString const &)
 
 <nsClassList>
 __builtin_new
@@ -348,6 +460,22 @@ nsCheapVoidArray::SwitchToVector(void)
 nsCheapVoidArray::AppendElement(void *)
 nsGenericHTMLContainerElement::AppendChildTo(nsIContent *, int)
 
+<nsGenericAttribute>
+PR_Malloc
+nsMemoryImpl::Alloc(unsigned int)
+nsMemory::Alloc(unsigned int)
+nsStr::Alloc(nsStr &, unsigned int)
+nsStr::Realloc(nsStr &, unsigned int)
+nsStr::EnsureCapacity(nsStr &, unsigned int)
+nsStr::GrowCapacity(nsStr &, unsigned int)
+nsString::SetCapacity(unsigned int)
+nsString::SetLength(unsigned int)
+~.*
+~.*
+basic_nsAWritableString<unsigned short>::Assign(basic_nsAReadableString<unsigned short> const &)
+nsString::nsString(basic_nsAReadableString<unsigned short> const &)
+nsGenericAttribute::nsGenericAttribute(nsINodeInfo *, basic_nsAReadableString<unsigned short> const &)
+
 <nsSupportsArray>
 __builtin_new
 __builtin_vec_new
@@ -403,6 +531,22 @@ InMemoryDataSource::AllocEntry(void *, void const *)
 PL_HashTableRawAdd
 PL_HashTableAdd
 InMemoryDataSource::SetForwardArcs(nsIRDFResource *, Assertion *)
+
+<RDFXMLDataSource>
+PR_Malloc
+nsMemoryImpl::Alloc(unsigned int)
+nsMemory::Alloc(unsigned int)
+nsStr::Alloc(nsStr &, unsigned int)
+nsStr::Realloc(nsStr &, unsigned int)
+nsStr::EnsureCapacity(nsStr &, unsigned int)
+nsStr::GrowCapacity(nsStr &, unsigned int)
+nsString::SetCapacity(unsigned int)
+nsString::SetLength(unsigned int)
+~.*
+~.*
+basic_nsAWritableString<unsigned short>::Assign(basic_nsAReadableString<unsigned short> const &)
+nsString::operator=(nsString const &)
+RDFXMLDataSourceImpl::AddNameSpace(nsIAtom *, nsString const &)
 
 <xptiTypelibGuts>
 __builtin_new
@@ -659,6 +803,12 @@ UndisplayedMap::AppendNodeFor(UndisplayedNode *, nsIContent *)
 __builtin_new
 UndisplayedMap::AddNodeFor(nsIContent *, nsIContent *, nsIStyleContext *)
 
+<UndisplayedMap>
+PR_Malloc
+PL_ArenaFinish
+PL_NewHashTable
+UndisplayedMap::UndisplayedMap(unsigned int)
+
 <PRLock>
 PR_Calloc
 PR_NewLock
@@ -699,11 +849,33 @@ PL_HashTableRawAdd
 PL_HashTableAdd
 RDFServiceImpl::RegisterDataSource(nsIRDFDataSource *, int)
 
+<RDFServiceImpl>
+PR_Malloc
+PL_ArenaFinish
+PL_HashTableRawRemove
+RDFServiceImpl::UnregisterResource(nsIRDFResource *)
+
 <nsRDFResource>
 PR_Malloc
 nsMemoryImpl::Alloc(unsigned int)
 nsMemory::Alloc(unsigned int)
 nsRDFResource::Init(char const *)
+
+<nsHTMLImageLoader>
+PR_Malloc
+nsMemoryImpl::Alloc(unsigned int)
+nsMemory::Alloc(unsigned int)
+nsStr::Alloc(nsStr &, unsigned int)
+nsStr::Realloc(nsStr &, unsigned int)
+nsStr::EnsureCapacity(nsStr &, unsigned int)
+nsStr::GrowCapacity(nsStr &, unsigned int)
+nsString::SetCapacity(unsigned int)
+nsString::SetLength(unsigned int)
+~.*
+~.*
+basic_nsAWritableString<unsigned short>::Assign(basic_nsAReadableString<unsigned short> const &)
+nsString::operator=(nsString const &)
+nsHTMLImageLoader::SetURL(nsString const &)
 
 <nsHTMLEntities>
 __builtin_new
@@ -742,6 +914,55 @@ CNavDTD::CloseContainersTo(int, nsHTMLTag, int)
 __builtin_new
 COtherDTD::COtherDTD(void)
 
+<nsScanner>
+PR_Malloc
+nsMemoryImpl::Alloc(unsigned int)
+nsMemory::Alloc(unsigned int)
+nsScanner::Append(char const *, unsigned int)
+
+<nsScanner>
+__builtin_new
+nsSlidingString::AppendBuffer(unsigned short *, unsigned short *, unsigned short *)
+nsScanner::AppendToBuffer(unsigned short *, unsigned short *, unsigned short *)
+
+<nsScanner>
+__builtin_new
+nsScanner::AppendToBuffer(unsigned short *, unsigned short *, unsigned short *)
+
+<nsScanner>
+PR_Malloc
+nsMemoryImpl::Alloc(unsigned int)
+nsMemory::Alloc(unsigned int)
+unsigned short * AllocateStringCopy<unsigned short, unsigned short>(basic_nsAReadableString<unsigned short> const &, unsigned short *)
+ToNewUnicode(basic_nsAReadableString<unsigned short> const &)
+nsScanner::Append(basic_nsAReadableString<unsigned short> const &)
+
+<nsScanner>
+PR_Malloc
+nsMemoryImpl::Alloc(unsigned int)
+nsMemory::Alloc(unsigned int)
+nsStr::Alloc(nsStr &, unsigned int)
+nsStr::Realloc(nsStr &, unsigned int)
+nsStr::EnsureCapacity(nsStr &, unsigned int)
+nsStr::GrowCapacity(nsStr &, unsigned int)
+nsString::SetCapacity(unsigned int)
+nsString::SetLength(unsigned int)
+CopyUnicodeTo(nsReadingIterator<unsigned short> const &, nsReadingIterator<unsigned short> const &, basic_nsAWritableString<unsigned short> &)
+nsScanner::CopyUnusedData(nsString &)
+
+<nsScanner>
+PR_Malloc
+nsMemoryImpl::Alloc(unsigned int)
+nsMemory::Alloc(unsigned int)
+nsStr::Alloc(nsStr &, unsigned int)
+nsStr::Realloc(nsStr &, unsigned int)
+nsStr::EnsureCapacity(nsStr &, unsigned int)
+nsStr::GrowCapacity(nsStr &, unsigned int)
+nsStr::StrAppend(nsStr &, nsStr const &, unsigned int, int)
+nsStr::StrAssign(nsStr &, nsStr const &, unsigned int, int)
+nsString::nsString(nsString const &)
+nsScanner::nsScanner(nsString &, int, nsString const &, nsCharsetSource)
+
 <nsHTMLTokenizer>
 __builtin_new
 __builtin_vec_new
@@ -756,10 +977,48 @@ nsDeque::GrowCapacity(void)
 nsDeque::Push(void *)
 nsHTMLTokenizer::AddToken(CToken *&, unsigned int, nsDeque *, nsTokenAllocator *)
 
+<nsTokenAllocator>
+PR_Malloc
+PL_ArenaAllocate
+nsFixedSizeAllocator::Alloc(unsigned int)
+CToken::operator new(unsigned int, nsFixedSizeAllocator &)
+nsTokenAllocator::CreateTokenOfType(eHTMLTokenTypes, nsHTMLTag)
+
+<nsNodeAllocator>
+PR_Malloc
+PL_ArenaAllocate
+nsFixedSizeAllocator::AddBucket(unsigned int)
+nsFixedSizeAllocator::Init(char const *, unsigned int const *, int, int, int)
+nsNodeAllocator::nsNodeAllocator(void)
+
 <xptiWorkingSet>
 __builtin_new
 __builtin_vec_new
 xptiWorkingSet::NewFileArray(unsigned int)
+
+<HTMLContentSink>
+PR_Malloc
+nsMemoryImpl::Alloc(unsigned int)
+nsMemory::Alloc(unsigned int)
+nsStr::Alloc(nsStr &, unsigned int)
+nsStr::Realloc(nsStr &, unsigned int)
+nsStr::EnsureCapacity(nsStr &, unsigned int)
+nsStr::GrowCapacity(nsStr &, unsigned int)
+nsString::SetCapacity(unsigned int)
+HTMLContentSink::OnStreamComplete(nsIStreamLoader *, nsISupports *, unsigned int, unsigned int, char const *)
+
+<HTMLContentSink>
+PR_Malloc
+nsMemoryImpl::Alloc(unsigned int)
+nsMemory::Alloc(unsigned int)
+nsStr::Alloc(nsStr &, unsigned int)
+nsStr::Realloc(nsStr &, unsigned int)
+nsStr::EnsureCapacity(nsStr &, unsigned int)
+nsStr::GrowCapacity(nsStr &, unsigned int)
+nsStr::StrAppend(nsStr &, nsStr const &, unsigned int, int)
+nsStr::StrAssign(nsStr &, nsStr const &, unsigned int, int)
+nsString::nsString(nsString const &)
+HTMLContentSink::SetTitle(nsString const &)
 
 <DeviceContextImpl>
 __builtin_new
@@ -788,6 +1047,70 @@ nsCompressedMap::nsCompressedMap(unsigned short *, unsigned int)
 __builtin_new
 __builtin_vec_new
 nsHTMLDocument::nsHTMLDocument(void)
+
+<nsHTMLDocument.mReferrer>
+PR_Malloc
+nsMemoryImpl::Alloc(unsigned int)
+nsMemory::Alloc(unsigned int)
+nsStr::Alloc(nsStr &, unsigned int)
+nsStr::Realloc(nsStr &, unsigned int)
+nsStr::EnsureCapacity(nsStr &, unsigned int)
+nsStr::GrowCapacity(nsStr &, unsigned int)
+nsString::SetCapacity(unsigned int)
+nsString::SetLength(unsigned int)
+~.*
+~.*
+basic_nsAWritableString<unsigned short>::Assign(basic_nsAReadableString<unsigned short> const &)
+nsString::nsString(basic_nsAReadableString<unsigned short> const &)
+nsHTMLDocument::SetReferrer(basic_nsAReadableString<unsigned short> const &)
+
+<nsHTMLDocument.mLastModified>
+PR_Malloc
+nsMemoryImpl::Alloc(unsigned int)
+nsMemory::Alloc(unsigned int)
+nsStr::Alloc(nsStr &, unsigned int)
+nsStr::Realloc(nsStr &, unsigned int)
+nsStr::EnsureCapacity(nsStr &, unsigned int)
+nsStr::GrowCapacity(nsStr &, unsigned int)
+nsString::SetCapacity(unsigned int)
+nsString::SetLength(unsigned int)
+~.*
+~.*
+basic_nsAWritableString<unsigned short>::Assign(basic_nsAReadableString<unsigned short> const &)
+nsString::nsString(basic_nsAReadableString<unsigned short> const &)
+nsHTMLDocument::SetLastModified(basic_nsAReadableString<unsigned short> const &)
+
+<nsHTMLDocument.mTitle>
+PR_Malloc
+nsMemoryImpl::Alloc(unsigned int)
+nsMemory::Alloc(unsigned int)
+nsStr::Alloc(nsStr &, unsigned int)
+nsStr::Realloc(nsStr &, unsigned int)
+nsStr::EnsureCapacity(nsStr &, unsigned int)
+nsStr::GrowCapacity(nsStr &, unsigned int)
+nsString::SetCapacity(unsigned int)
+nsString::SetLength(unsigned int)
+~.*
+~.*
+basic_nsAWritableString<unsigned short>::Assign(basic_nsAReadableString<unsigned short> const &)
+nsString::nsString(basic_nsAReadableString<unsigned short> const &)
+nsHTMLDocument::SetTitle(basic_nsAReadableString<unsigned short> const &)
+
+<nsDOMDocumentType>
+PR_Malloc
+nsMemoryImpl::Alloc(unsigned int)
+nsMemory::Alloc(unsigned int)
+nsStr::Alloc(nsStr &, unsigned int)
+nsStr::Realloc(nsStr &, unsigned int)
+nsStr::EnsureCapacity(nsStr &, unsigned int)
+nsStr::GrowCapacity(nsStr &, unsigned int)
+nsString::SetCapacity(unsigned int)
+nsString::SetLength(unsigned int)
+~.*
+~.*
+basic_nsAWritableString<unsigned short>::Assign(basic_nsAReadableString<unsigned short> const &)
+nsString::nsString(basic_nsAReadableString<unsigned short> const &)
+nsDOMDocumentType::nsDOMDocumentType(basic_nsAReadableString<unsigned short> const &, nsIDOMNamedNodeMap *, nsIDOMNamedNodeMap *, basic_nsAReadableString<unsigned short> const &, basic_nsAReadableString<unsigned short> const &, basic_nsAReadableString<unsigned short> const &)
 
 <nsXPCWrappedNativeClass>
 __builtin_new
@@ -1070,6 +1393,14 @@ nsHashtable::nsHashtable(unsigned int, int)
 nsSupportsHashtable::nsSupportsHashtable(unsigned int, int)
 nsDirectoryService::Init(char const *)
 
+<nsDirectoryService>
+PR_Malloc
+PL_HashTableFinalize(PLHashTable *)
+PL_HashTableInit__FP11PLHashTableUiPFPCv_UiPFPCvPCv_iT3PC14PLHashAllocOpsPv
+nsHashtable::nsHashtable(unsigned int, int)
+nsSupportsHashtable::nsSupportsHashtable(unsigned int, int)
+nsDirectoryService::Init(void)
+
 <nsResProtocolHandler>
 __builtin_new
 nsCStringKey::Clone(void) const
@@ -1177,6 +1508,26 @@ PL_HashTableInit__FP11PLHashTableUiPFPCv_UiPFPCvPCv_iT3PC14PLHashAllocOpsPv
 nsHashtable::nsHashtable(unsigned int, int)
 nsSupportsHashtable::nsSupportsHashtable(unsigned int, int)
 nsXBLDocumentInfo::SetPrototypeBinding(basic_nsAReadableString<char> const &, nsIXBLPrototypeBinding *)
+
+<nsXBLDocumentInfo>
+__builtin_new
+nsXBLDocumentInfo::SetPrototypeBinding(basic_nsAReadableString<char> const &, nsIXBLPrototypeBinding *)
+
+<nsXBLDocumentInfo>
+PR_Malloc
+nsMemoryImpl::Alloc(unsigned int)
+nsMemory::Alloc(unsigned int)
+nsStr::Alloc(nsStr &, unsigned int)
+nsStr::Realloc(nsStr &, unsigned int)
+nsStr::EnsureCapacity(nsStr &, unsigned int)
+nsStr::GrowCapacity(nsStr &, unsigned int)
+nsCString::SetCapacity(unsigned int)
+nsCString::SetLength(unsigned int)
+~.*
+~.*
+basic_nsAWritableString<char>::Assign(char const *)
+nsCString::operator=(char const *)
+nsXBLDocumentInfo::nsXBLDocumentInfo(char const *, nsIDocument *)
 
 <nsXULPrototypeCache>
 __builtin_new
@@ -1485,6 +1836,33 @@ nsSupportsArray::Create(nsISupports *, nsID const &, void **)
 NS_NewISupportsArray(nsISupportsArray **)
 StyleSetImpl::EnsureArray(nsISupportsArray **)
 
+<StyleListImpl>
+PR_Malloc
+nsMemoryImpl::Alloc(unsigned int)
+nsMemory::Alloc(unsigned int)
+nsStr::Alloc(nsStr &, unsigned int)
+nsStr::Realloc(nsStr &, unsigned int)
+nsStr::EnsureCapacity(nsStr &, unsigned int)
+nsStr::GrowCapacity(nsStr &, unsigned int)
+nsString::SetCapacity(unsigned int)
+nsString::SetLength(unsigned int)
+~.*
+~.*
+basic_nsAWritableString<unsigned short>::Assign(basic_nsAReadableString<unsigned short> const &)
+nsString::operator=(nsString const &)
+StyleListImpl::ResetFrom(nsStyleList const *, nsIPresContext *)
+
+<StyleContextCache>
+PR_Malloc
+PL_HashTableFinalize(PLHashTable *)
+PL_HashTableRawAdd
+nsHashtable::Put(nsHashKey *, void *)
+StyleContextCache::VerifyList(unsigned int)
+
+<StyleContextCache>
+__builtin_new
+StyleContextCache::AllocateList(void)
+
 <nsPersistentProperties>
 __builtin_new
 nsPersistentProperties::Create(nsISupports *, nsID const &, void **)
@@ -1568,6 +1946,13 @@ PR_Malloc
 PL_ArenaFinish
 PL_NewHashTable
 nsNodeInfoManager::nsNodeInfoManager(void)
+
+<nsNodeInfoManager>
+PR_Malloc
+PL_ArenaFinish
+PL_HashTableRawRemove
+PL_HashTableRemove
+nsNodeInfoManager::RemoveNodeInfo(nsNodeInfo *)
 
 <xptiInterfaceInfo>
 XPT_ArenaMalloc
@@ -1691,6 +2076,14 @@ g_realloc
 
 <gtk-unclassified>
 g_malloc0
+
+<gdk_imlib_load_image>
+loader_png
+gdk_imlib_load_image
+
+<gdk_imlib_save_image>
+loader_png
+gdk_imlib_save_image
 
 <dl-unclassified>
 _dl_lookup_versioned_symbol_skip
@@ -1830,6 +2223,11 @@ __builtin_new
 nsGenericContainerElement::SetAttribute(nsINodeInfo *, basic_nsAReadableString<unsigned short> const &, int)
 nsGenericXMLElement::SetAttribute(nsINodeInfo *, basic_nsAReadableString<unsigned short> const &, int)
 
+<nsXMLElement>
+__builtin_new
+nsGenericContainerElement::SetAttribute(nsINodeInfo *, basic_nsAReadableString<unsigned short> const &, int)
+nsXMLElement::SetAttribute(nsINodeInfo *, basic_nsAReadableString<unsigned short> const &, int)
+
 <nsGCCache>
 __builtin_new
 nsGCCache::nsGCCache(void)
@@ -1923,6 +2321,10 @@ __builtin_new
 nsBindingManager::SetBinding(nsIContent *, nsIXBLBinding *)
 
 <nsBindingManager>
+__builtin_new
+nsBindingManager::SetInsertionParent(nsIContent *, nsIContent *)
+
+<nsBindingManager>
 PR_Malloc
 PL_HashTableFinalize(PLHashTable *)
 PL_HashTableRawAdd
@@ -1938,6 +2340,38 @@ nsHashtable::nsHashtable(unsigned int, int)
 nsSupportsHashtable::nsSupportsHashtable(unsigned int, int)
 nsBindingManager::SetBinding(nsIContent *, nsIXBLBinding *)
 
+<nsBindingManager>
+PR_Malloc
+PL_HashTableFinalize(PLHashTable *)
+PL_HashTableInit__FP11PLHashTableUiPFPCv_UiPFPCvPCv_iT3PC14PLHashAllocOpsPv
+nsHashtable::nsHashtable(unsigned int, int)
+nsSupportsHashtable::nsSupportsHashtable(unsigned int, int)
+nsBindingManager::SetInsertionParent(nsIContent *, nsIContent *)
+
+<nsBindingManager>
+PR_Malloc
+PL_HashTableFinalize(PLHashTable *)
+PL_HashTableInit__FP11PLHashTableUiPFPCv_UiPFPCvPCv_iT3PC14PLHashAllocOpsPv
+nsHashtable::nsHashtable(unsigned int, int)
+nsSupportsHashtable::nsSupportsHashtable(unsigned int, int)
+nsBindingManager::SetWrappedJS(nsIContent *, nsIXPConnectWrappedJS *)
+
+<NameSpaceManagerImpl>
+PR_Malloc
+nsMemoryImpl::Alloc(unsigned int)
+nsMemory::Alloc(unsigned int)
+nsStr::Alloc(nsStr &, unsigned int)
+nsStr::Realloc(nsStr &, unsigned int)
+nsStr::EnsureCapacity(nsStr &, unsigned int)
+nsStr::GrowCapacity(nsStr &, unsigned int)
+nsString::SetCapacity(unsigned int)
+nsString::SetLength(unsigned int)
+~.*
+~.*
+basic_nsAWritableString<unsigned short>::Assign(basic_nsAReadableString<unsigned short> const &)
+nsString::nsString(basic_nsAReadableString<unsigned short> const &)
+NameSpaceManagerImpl::RegisterNameSpace(basic_nsAReadableString<unsigned short> const &, int &)
+
 <NameSpaceManagerImpl>
 __builtin_new
 nsStringKey::Clone(void) const
@@ -1950,6 +2384,20 @@ __builtin_new
 nsStringKey::Clone(void) const
 nsHashtable::Put(nsHashKey *, void *)
 NameSpaceManagerImpl::RegisterNameSpace(basic_nsAReadableString<unsigned short> const &, int &)
+
+<NameSpaceManagerImpl>
+PR_Malloc
+nsMemoryImpl::Alloc(unsigned int)
+nsMemory::Alloc(unsigned int)
+nsStr::Alloc(nsStr &, unsigned int)
+nsStr::Realloc(nsStr &, unsigned int)
+nsStr::EnsureCapacity(nsStr &, unsigned int)
+nsStr::GrowCapacity(nsStr &, unsigned int)
+nsStr::StrAppend(nsStr &, nsStr const &, unsigned int, int)
+nsStr::StrAssign(nsStr &, nsStr const &, unsigned int, int)
+nsString::nsString(nsString const &)
+nsLayoutUtils::CopyNewlineNormalizedUnicodeTo(nsReadingIterator<unsigned short> &, nsReadingIterator<unsigned short> const &, basic_nsAWritableString<unsigned short> &)
+NameSpaceManagerImpl::NameSpaceManagerImpl(void)
 
 <nsErrorService>
 __builtin_new
@@ -1979,6 +2427,21 @@ nsDocument::Init(void)
 <nsDocument>
 __builtin_new
 nsDocument::SetHeaderData(nsIAtom *, basic_nsAReadableString<unsigned short> const &)
+
+<nsDocHeaderData>
+PR_Malloc
+nsMemoryImpl::Alloc(unsigned int)
+nsMemory::Alloc(unsigned int)
+nsStr::Alloc(nsStr &, unsigned int)
+nsStr::Realloc(nsStr &, unsigned int)
+nsStr::EnsureCapacity(nsStr &, unsigned int)
+nsStr::GrowCapacity(nsStr &, unsigned int)
+nsString::SetCapacity(unsigned int)
+nsString::SetLength(unsigned int)
+~.*
+~.*
+basic_nsAWritableString<unsigned short>::Assign(basic_nsAReadableString<unsigned short> const &)
+nsDocHeaderData::nsDocHeaderData(nsIAtom *, basic_nsAReadableString<unsigned short> const &)
 
 <XPCContext>
 __builtin_new
@@ -2323,6 +2786,42 @@ nsMemoryImpl::Alloc(unsigned int)
 nsMemory::Alloc(unsigned int)
 nsReplacementPolicy::Init(unsigned int)
 
+<nsHTTPRequest>
+PR_Malloc
+nsMemoryImpl::Alloc(unsigned int)
+nsMemory::Alloc(unsigned int)
+nsStr::Alloc(nsStr &, unsigned int)
+nsStr::Realloc(nsStr &, unsigned int)
+nsStr::EnsureCapacity(nsStr &, unsigned int)
+nsStr::GrowCapacity(nsStr &, unsigned int)
+nsCString::SetCapacity(unsigned int)
+nsCString::SetLength(unsigned int)
+~.*
+~.*
+basic_nsAWritableString<char>::Assign(char const *)
+nsCString::operator=(char const *)
+nsHeaderEntry::nsHeaderEntry(nsIAtom *, char const *)
+nsHTTPHeaderArray::SetHeader(nsIAtom *, char const *)
+nsHTTPRequest::SetHeader(nsIAtom *, char const *)
+
+<nsHTTPResponse>
+PR_Malloc
+nsMemoryImpl::Alloc(unsigned int)
+nsMemory::Alloc(unsigned int)
+nsStr::Alloc(nsStr &, unsigned int)
+nsStr::Realloc(nsStr &, unsigned int)
+nsStr::EnsureCapacity(nsStr &, unsigned int)
+nsStr::GrowCapacity(nsStr &, unsigned int)
+nsCString::SetCapacity(unsigned int)
+nsCString::SetLength(unsigned int)
+~.*
+~.*
+basic_nsAWritableString<char>::Assign(char const *)
+nsCString::operator=(char const *)
+nsHeaderEntry::nsHeaderEntry(nsIAtom *, char const *)
+nsHTTPHeaderArray::SetHeader(nsIAtom *, char const *)
+nsHTTPResponse::SetHeader(nsIAtom *, char const *)
+
 <nsHTTPHandler>
 PR_Malloc
 PL_HashTableFinalize(PLHashTable *)
@@ -2460,6 +2959,14 @@ nsHashtable::Put(nsHashKey *, void *)
 nsSupportsHashtable::Put(nsHashKey *, nsISupports *, nsISupports **)
 nsControllerCommandManager::RegisterCommand(unsigned short const *, nsIControllerCommand *)
 
+<nsControllerCommandManager>
+PR_Malloc
+PL_HashTableFinalize(PLHashTable *)
+PL_HashTableInit__FP11PLHashTableUiPFPCv_UiPFPCvPCv_iT3PC14PLHashAllocOpsPv
+nsHashtable::nsHashtable(unsigned int, int)
+nsSupportsHashtable::nsSupportsHashtable(unsigned int, int)
+nsControllerCommandManager::nsControllerCommandManager(void)
+
 <nsConsoleService>
 PR_Malloc
 nsMemoryImpl::Alloc(unsigned int)
@@ -2467,7 +2974,7 @@ nsMemory::Alloc(unsigned int)
 nsConsoleService::nsConsoleService(void)
 
 <nsGenericElement>
-PR_Malloc
+__builtin_new
 nsGenericElement::GetDOMSlots(void)
 
 <HTMLAttribute>
@@ -2572,7 +3079,7 @@ nsTokenAllocator::nsTokenAllocator(void)
 <SinkContext>
 __builtin_new
 __builtin_vec_new
-SinkContext::AddText(nsString const &)
+SinkContext::AddText(basic_nsAReadableString<unsigned short> const &)
 
 <SinkContext>
 __builtin_new
@@ -2585,8 +3092,17 @@ nsParser::Parse(nsIURI *, nsIStreamObserver *, int, void *, nsDTDMode)
 
 <nsParser>
 __builtin_new
+nsParser::Parse(basic_nsAReadableString<unsigned short> const &, void *, nsString const &, int, int, nsDTDMode)
+
+<nsParser>
+__builtin_new
 __builtin_vec_new
 nsParser::OnDataAvailable(nsIChannel *, nsISupports *, nsIInputStream *, unsigned int, unsigned int)
+
+<nsParserModule>
+__builtin_new
+__builtin_vec_new
+InitializeElementTable(void)
 
 <nsStorageStream>
 __builtin_new
@@ -2596,3 +3112,37 @@ nsStorageStream::Init(unsigned int, unsigned int, nsIMemory *)
 __builtin_new
 __builtin_vec_new
 nsEntryStack::EnsureCapacityFor(int, int)
+
+<nsCacheManager>
+__builtin_new
+nsCacheManager::Init(void)
+
+<nsScriptError>
+PR_Malloc
+nsMemoryImpl::Alloc(unsigned int)
+nsMemory::Alloc(unsigned int)
+nsStr::Alloc(nsStr &, unsigned int)
+nsStr::Realloc(nsStr &, unsigned int)
+nsStr::EnsureCapacity(nsStr &, unsigned int)
+nsStr::GrowCapacity(nsStr &, unsigned int)
+nsString::SetCapacity(unsigned int)
+nsString::SetLength(unsigned int)
+~.*
+~.*
+basic_nsAWritableString<unsigned short>::Assign(unsigned short const *)
+nsScriptError::Init(unsigned short const *, unsigned short const *, unsigned short const *, unsigned int, unsigned int, unsigned int, char const *)
+
+<nsScriptError>
+PR_Malloc
+nsMemoryImpl::Alloc(unsigned int)
+nsMemory::Alloc(unsigned int)
+nsStr::Alloc(nsStr &, unsigned int)
+nsStr::Realloc(nsStr &, unsigned int)
+nsStr::EnsureCapacity(nsStr &, unsigned int)
+nsStr::GrowCapacity(nsStr &, unsigned int)
+nsCString::SetCapacity(unsigned int)
+nsCString::SetLength(unsigned int)
+~.*
+~.*
+basic_nsAWritableString<char>::Assign(char const *)
+nsScriptError::Init(unsigned short const *, unsigned short const *, unsigned short const *, unsigned int, unsigned int, unsigned int, char const *)
