@@ -87,6 +87,8 @@ nsIContent * fTrackerContentArrayAddList[1024];
 PRInt32      fTrackerAddListMax = 0;
 
 
+#include "nsICaret.h"
+#include "nsILineIterator.h"
 // [HACK] Foward Declarations
 void ForceDrawFrame(nsFrame * aFrame);
 #if 0
@@ -922,7 +924,7 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsIPresContext& aPresContext,
   if (!DisplaySelection(aPresContext)) {
     return NS_OK;
   }
-
+  printf("handledrag %x\n",this);
   nsCOMPtr<nsIPresShell> shell;
   nsresult rv = aPresContext.GetShell(getter_AddRefs(shell));
   if (NS_SUCCEEDED(rv) && shell) {
@@ -1631,7 +1633,8 @@ nsFrame::GetChildFrameContainingOffset(PRInt32 inContentOffset, PRInt32* outFram
 }
 
 NS_IMETHODIMP
-nsFrame::PeekOffset(nsICaret *aCaret,
+nsFrame::PeekOffset(nsIFocusTracker *aTracker,
+                        nscoord aDesiredX,
                         nsSelectionAmount aAmount,
                         nsDirection aDirection,
                         PRInt32 aStartOffset,
@@ -1639,35 +1642,140 @@ nsFrame::PeekOffset(nsICaret *aCaret,
                         PRInt32 *aContentOffset,
                         PRBool aEatingWS)
 {
-  //this will use the nsFrameTraversal as the default peek method.
-  //this should change to use geometry and also look to ALL the child lists
-  nsCOMPtr<nsIBidirectionalEnumerator> frameTraversal;
-  nsresult result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal),LEAF,this);
-  if (NS_FAILED(result))
-    return result;
-  nsISupports *isupports = nsnull;
-  if (aDirection == eDirNext)
-    result = frameTraversal->Next();
-  else 
-    result = frameTraversal->Prev();
-
-  if (NS_FAILED(result))
-    return result;
-  result = frameTraversal->CurrentItem(&isupports);
-  if (NS_FAILED(result))
-    return result;
-  if (!isupports)
+  if (!aResultContent || !aContentOffset ||!aTracker)
     return NS_ERROR_NULL_POINTER;
-  //we must CAST here to an nsIFrame. nsIFrame doesnt really follow the rules
-  //for speed reasons
-  nsIFrame *newFrame = (nsIFrame *)isupports;
-  if (aDirection == eDirNext)
-    return newFrame->PeekOffset(aCaret, aAmount, aDirection, 0, aResultContent,
-                            aContentOffset, aEatingWS);
-  else
-    return newFrame->PeekOffset(aCaret, aAmount, aDirection, -1, aResultContent,
-                            aContentOffset, aEatingWS);
-                          
+  nsresult result;
+  switch (aAmount){
+    case eSelectLine :
+    {
+      if (!aTracker)
+        return NS_ERROR_NULL_POINTER;
+
+      nscoord coord = aDesiredX;
+      nsCOMPtr<nsILineIterator> it; 
+      nsIFrame *blockFrame = this;
+      nsIFrame *thisBlock = this;
+      result = blockFrame->GetParent(&blockFrame);
+      if (NS_FAILED(result)) //if at line 0 then nothing to do
+        return result;
+      result = blockFrame->QueryInterface(nsILineIterator::GetIID(),getter_AddRefs(it));
+      while (NS_FAILED(result) && blockFrame)
+      {
+        thisBlock = blockFrame;
+        result = blockFrame->GetParent(&blockFrame);
+        if (NS_SUCCEEDED(result) && blockFrame){
+          result = blockFrame->QueryInterface(nsILineIterator::GetIID(),getter_AddRefs(it));
+        }
+      }
+      if (NS_FAILED(result) || !it || !blockFrame)
+        return result;
+      nsIFrame *resultFrame = nsnull;
+      PRInt32 thisLine = 0;
+
+      result = it->FindLineContaining(thisBlock, &thisLine);
+      if (NS_FAILED(result)) //if at line 0 then nothing to do
+        return result;
+      PRInt32 searchingLine = thisLine;
+      PRBool isBeforeFirstFrame, isAfterLastFrame;
+
+      PRBool found = PR_FALSE;
+      while (!found)
+      {
+        if (aDirection == eDirPrevious)
+          searchingLine --;
+        else
+          searchingLine ++;
+        result = it->FindFrameAt(searchingLine, coord, &resultFrame, &isBeforeFirstFrame, &isAfterLastFrame);
+        if (NS_SUCCEEDED(result) && resultFrame)
+        {
+          nsIFrame *child;
+          PRBool exhaustedAllSiblings = PR_FALSE;
+          while ( !found && !exhaustedAllSiblings)
+          {
+            while (NS_SUCCEEDED(resultFrame->FirstChild(nsnull, &child)) && child){
+              resultFrame = child;
+              if (aDirection == eDirPrevious) //go to last child now.
+              {
+                while (NS_SUCCEEDED(result) && child)
+                {
+                  resultFrame = child;
+                  result = resultFrame->GetNextSibling(&child);
+                }
+              }
+            }
+            if (!resultFrame)
+              return NS_ERROR_FAILURE;
+            //now we need to get the local frame coordinates
+            coord = PR_MAX(0, coord);
+            nsCOMPtr<nsIPresContext> context;
+            result = aTracker->GetPresContext(getter_AddRefs(context));
+
+            result = resultFrame->GetPosition(*(context.get()),coord,
+              aResultContent,*aContentOffset, *aContentOffset);
+            //if (isAfterLastFrame) //get previous frame.
+            if (NS_SUCCEEDED(result))
+              found = PR_TRUE;
+            else{
+              if (aDirection == eDirNext)
+#if 0              {
+
+                result = resultFrame->GetPrevSibling(&child);
+              }
+              else
+#endif
+                result = resultFrame->GetNextSibling(&child);
+              if (NS_FAILED(result) || !child)
+                exhaustedAllSiblings = PR_TRUE;
+              else
+                resultFrame = child;
+            }
+          }
+        }
+        else {
+            //we need to jump to new block frame.
+          if (aDirection == eDirNext)
+            return blockFrame->PeekOffset(aTracker, aDesiredX, aAmount, aDirection, 0, aResultContent,
+                                    aContentOffset, aEatingWS);
+          else
+            return blockFrame->PeekOffset(aTracker, aDesiredX, aAmount, aDirection, -1, aResultContent,
+                                    aContentOffset, aEatingWS);
+        }
+      }
+      break;
+    }
+    default: 
+    {
+      //this will use the nsFrameTraversal as the default peek method.
+      //this should change to use geometry and also look to ALL the child lists
+
+      nsCOMPtr<nsIBidirectionalEnumerator> frameTraversal;
+      result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal),LEAF,this);
+      if (NS_FAILED(result))
+        return result;
+      nsISupports *isupports = nsnull;
+      if (aDirection == eDirNext)
+        result = frameTraversal->Next();
+      else 
+        result = frameTraversal->Prev();
+
+      if (NS_FAILED(result))
+        return result;
+      result = frameTraversal->CurrentItem(&isupports);
+      if (NS_FAILED(result))
+        return result;
+      if (!isupports)
+        return NS_ERROR_NULL_POINTER;
+      //we must CAST here to an nsIFrame. nsIFrame doesnt really follow the rules
+      //for speed reasons
+      nsIFrame *newFrame = (nsIFrame *)isupports;
+      if (aDirection == eDirNext)
+        return newFrame->PeekOffset(aTracker, aDesiredX, aAmount, aDirection, 0, aResultContent,
+                                aContentOffset, aEatingWS);
+      else
+        return newFrame->PeekOffset(aTracker, aDesiredX, aAmount, aDirection, -1, aResultContent,
+                                aContentOffset, aEatingWS);
+    }
+  }                          
   return NS_OK;
 }
 

@@ -39,6 +39,11 @@ public:
                     nsHTMLReflowMetrics& aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus& aStatus);
+  NS_IMETHOD GetPosition(nsIPresContext& aCX,
+                         nscoord         aXCoord,
+                         nsIContent **   aNewContent,
+                         PRInt32&        aContentOffset,
+                         PRInt32&        aContentOffsetEnd);
 
 protected:
   virtual ~BRFrame();
@@ -129,4 +134,15 @@ BRFrame::Reflow(nsIPresContext& aPresContext,
     aStatus = NS_FRAME_COMPLETE;
   }
   return NS_OK;
+}
+
+
+
+NS_IMETHODIMP BRFrame::GetPosition(nsIPresContext&,
+                         nscoord         ,
+                         nsIContent **   ,
+                         PRInt32&        ,
+                         PRInt32&        )
+{
+  return NS_ERROR_FAILURE;
 }

@@ -56,6 +56,8 @@
 #include "nsIDOMSelection.h"
 #include "nsIDOMRange.h"
 
+#include "nsILineIterator.h"
+
 static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
 
 #ifdef NS_DEBUG
@@ -238,7 +240,8 @@ public:
 
   NS_IMETHOD SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread);
 
-  NS_IMETHOD PeekOffset(nsICaret *aCaret,
+  NS_IMETHOD PeekOffset(nsIFocusTracker *aTracker, 
+                        nscoord aDesiredX,
                         nsSelectionAmount aAmount,
                         nsDirection aDirection,
                         PRInt32 aStartOffset,
@@ -1007,7 +1010,8 @@ nsTextFrame::GetPositionSlowly(nsIPresContext& aPresContext,
   doc->GetWordBreaker(getter_AddRefs(wb));
   nsTextTransformer tx(wordBufMem, WORD_BUF_SIZE, lb,wb);
   PrepareUnicodeText(tx, ip, paintBuf, &textLength);
-
+  if (textLength <= 0)
+    return NS_ERROR_FAILURE;
   nsPoint origin;
   nsIView * view;
   GetView(&view);
@@ -1750,6 +1754,8 @@ nsTextFrame::GetPosition(nsIPresContext& aCX,
       doc->GetWordBreaker(getter_AddRefs(wb));
       nsTextTransformer tx(wordBufMem, WORD_BUF_SIZE,lb,wb);
       PrepareUnicodeText(tx, ip, paintBuf, &textLength);
+      if (textLength <=0) //invalid frame to get position on
+        return NS_ERROR_FAILURE;
       ip[mContentLength] = ip[mContentLength-1];
       if ((ip[mContentLength]-mContentOffset) < textLength) {
         //must set up last one for selection beyond edge if in boundary
@@ -2010,7 +2016,8 @@ nsTextFrame::GetChildFrameContainingOffset(PRInt32 inContentOffset,
 
 
 NS_IMETHODIMP
-nsTextFrame::PeekOffset(nsICaret *aCaret,
+nsTextFrame::PeekOffset(nsIFocusTracker *aTracker, 
+                        nscoord aDesiredX,
                         nsSelectionAmount aAmount,
                         nsDirection aDirection,
                         PRInt32 aStartOffset,
@@ -2034,7 +2041,7 @@ nsTextFrame::PeekOffset(nsICaret *aCaret,
       NS_ASSERTION(PR_FALSE,"nsTextFrame::PeekOffset no more flow \n");
       return NS_ERROR_INVALID_ARG;
     }
-    return nextInFlow->PeekOffset(aCaret, aAmount,aDirection,aStartOffset,
+    return nextInFlow->PeekOffset(aTracker, aDesiredX, aAmount,aDirection,aStartOffset,
                         aResultContent,aContentOffset,aEatingWS);
   }
 
@@ -2112,11 +2119,11 @@ nsTextFrame::PeekOffset(nsICaret *aCaret,
     }
     if (!found){
       if (frameUsed){
-        result = frameUsed->PeekOffset(aCaret, eSelectCharacter, aDirection,  start, aResultContent, 
+        result = frameUsed->PeekOffset(aTracker, aDesiredX, eSelectCharacter, aDirection,  start, aResultContent, 
               aContentOffset, aEatingWS);
       }
       else {//reached end ask the frame for help
-        result = nsFrame::PeekOffset(aCaret, eSelectCharacter, aDirection, start, aResultContent,
+        result = nsFrame::PeekOffset(aTracker, aDesiredX, eSelectCharacter, aDirection, start, aResultContent,
                   aContentOffset, aEatingWS);
       }
     }
@@ -2193,11 +2200,11 @@ nsTextFrame::PeekOffset(nsICaret *aCaret,
     }
     if (!found || (*aContentOffset > (mContentOffset + mContentLength)) || (*aContentOffset < mContentOffset)){ //gone too far
       if (frameUsed){
-        result = frameUsed->PeekOffset(aCaret, aAmount, aDirection,  start, aResultContent, 
+        result = frameUsed->PeekOffset(aTracker, aDesiredX, aAmount, aDirection,  start, aResultContent, 
               aContentOffset, aEatingWS);
       }
       else {//reached end ask the frame for help
-        result = nsFrame::PeekOffset(aCaret, aAmount, aDirection, start, aResultContent,
+        result = nsFrame::PeekOffset(aTracker, aDesiredX, aAmount, aDirection, start, aResultContent,
                   aContentOffset, aEatingWS);
       }
     }
@@ -2210,30 +2217,15 @@ nsTextFrame::PeekOffset(nsICaret *aCaret,
     break;
   case eSelectLine : 
     {
-#if 0
-      nsPoint   origin;
-      nsIView*  view;
-
-      nsPoint coord;
-      PRBool  collapsed;
-      result = aCaret->GetWindowRelativeCoordinates(coord,collapsed);
-      if (NS_FAILED(result))
-        return result;
-      nsIFrame *frame = GetPrevInFlow();
-      while(frame){
-        result  = NS_OK;
-        nsPoint futurecoord;
-        do {
-          result = frame->GetOffsetFromView(futurecoord, &view);
-        }
-        while (NS_SUCCEEDED(result) && view);
-        if (coord.y < futurecoord.y)
-        {
-          lineup = PR_TRUE;
-          GetPosition
-        }
+      // Cleanup
+      if (paintBuf != paintBufMem) {
+        delete [] paintBuf;
       }
-#endif
+      if (ip != indicies) {
+        delete [] ip;
+      }
+      return nsFrame::PeekOffset(aTracker, aDesiredX, aAmount, aDirection, aStartOffset,
+                        aResultContent, aContentOffset, aEatingWS);
     }
     break;
   default: result = NS_ERROR_FAILURE; break;
@@ -2269,9 +2261,9 @@ nsTextFrame::HandleMultiplePress(nsIPresContext& aPresContext,
   nsInputEvent *inputEvent = (nsInputEvent *)aEvent;
   if (NS_SUCCEEDED(rv) && shell) {
     nsCOMPtr<nsIRenderingContext> acx;      
-    nsCOMPtr<nsICaret> caret;
-    rv = shell->GetCaret(getter_AddRefs(caret));
-    if (NS_FAILED(rv))
+    nsCOMPtr<nsIFocusTracker> tracker;
+    tracker = do_QueryInterface(shell, &rv);
+    if (NS_FAILED(rv) || !tracker)
       return rv;
     rv = shell->CreateRenderingContext(this, getter_AddRefs(acx));
     if (NS_SUCCEEDED(rv)){
@@ -2289,7 +2281,8 @@ nsTextFrame::HandleMultiplePress(nsIPresContext& aPresContext,
         PRInt32 startOffset;
         PRInt32 endOffset;
         //peeks{}
-        rv = PeekOffset(caret, 
+        rv = PeekOffset(tracker, 
+                        0, 
                         eSelectWord,
                         eDirPrevious,
                         startPos,
@@ -2298,7 +2291,8 @@ nsTextFrame::HandleMultiplePress(nsIPresContext& aPresContext,
                         PR_FALSE);
         if (NS_FAILED(rv))
           return rv;
-        rv = PeekOffset(caret, 
+        rv = PeekOffset(tracker, 
+                        0, 
                         eSelectWord,
                         eDirNext,
                         startPos,
@@ -3100,3 +3094,49 @@ nsTextFrame::List(FILE* out, PRInt32 aIndent) const
 
   return NS_OK;
 }
+
+
+
+//STORAGE FOR LATER MAYBE
+#if 0
+      nsTextFrame *frame = this;
+      while(frame = (nsTextFrame *)frame->GetPrevInFlow()){
+        result  = NS_OK;
+        nsPoint futurecoord;
+	      frame->GetOffsetFromView(futurecoord, &view);
+	      if (view == nsnull) return NS_ERROR_UNEXPECTED;
+        nscoord x,y;
+	      do {
+		      view->GetPosition(&x, &y);
+		      futurecoord.x += x;
+		      futurecoord.y += y;
+		      view->GetParent(view);
+	      } while (view);
+        if (coord.y > futurecoord.y)
+        {
+          if (coord.x < futurecoord.x)
+          {//keep going back until y is up again or coord.x is greater than future coord.x
+            nsTextFrame *lookahead = nsnull;
+            while(lookahead = (nsTextFrame *)frame->GetPrevInFlow()){
+              result  = NS_OK;
+              nsPoint futurecoord2;
+	            lookahead->GetOffsetFromView(futurecoord2, &view);
+	            if (view == nsnull) return NS_ERROR_UNEXPECTED;
+	            do {
+		            view->GetPosition(&x, &y);
+		            futurecoord2.x += x;
+		            futurecoord2.y += y;
+		            view->GetParent(view);
+	            } while (view);
+              if (futurecoord.y > futurecoord2.y)//gone too far
+                break;
+              frame = lookahead;
+              futurecoord = futurecoord2;
+              if (coord.x >=futurecoord2.x)
+                break;
+            }
+          }
+          //definately this one then
+          nscoord newcoord;
+          newcoord = coord.x ;//- futurecoord.x;
+#endif
