@@ -156,21 +156,21 @@ private:
  * means that you cannot perform logging before then.
  */
 static PRLogModuleInfo* gLogModule = PR_NewLogModule("webwidget");
+#ifndef prlog_h___
+vc++ is buggy;
+#endif
 #endif
 
 #define WEB_TRACE_CALLS        0x1
-#define WEB_TRACE_PUSH_PULL    0x2
-#define WEB_TRACE_CHILD_REFLOW 0x4
-#define WEB_TRACE_NEW_FRAMES   0x8
 
 #define WEB_LOG_TEST(_lm,_bit) (PRIntn((_lm)->level) & (_bit))
 
 #ifdef NS_DEBUG
-#define WEB_TRACE(_bit,_args)                              \
-  PR_BEGIN_MACRO                                           \
-    if (WEB_LOG_TEST(nsIFrame::GetLogModuleInfo(),_bit)) { \
-      PR_LogPrint _args;                                   \
-    }                                                      \
+#define WEB_TRACE(_bit,_args)            \
+  PR_BEGIN_MACRO                         \
+    if (WEB_LOG_TEST(gLogModule,_bit)) { \
+      PR_LogPrint _args;                 \
+    }                                    \
   PR_END_MACRO
 #else
 #define WEB_TRACE(_bit,_args)
