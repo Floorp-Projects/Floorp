@@ -130,6 +130,7 @@ XPIDLSRCS	= \
 		nsIFastLoadFileControl.idl \
 		nsIFastLoadService.idl \
 		nsIInputStreamTee.idl \
+		nsILocalFileWin.idl \
 		nsILineInputStream.idl \
 		nsIMultiplexInputStream.idl \
 		nsIObjectInputStream.idl \

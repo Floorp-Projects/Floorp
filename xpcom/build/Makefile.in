@@ -170,7 +170,7 @@ EXTRA_DSO_LDOPTS += -lbe
 endif
 
 ifeq ($(OS_ARCH),WINNT)
-EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME,shell32 ole32 uuid)
+EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME,shell32 ole32 uuid version)
 ifneq (,$(MOZ_DEBUG)$(NS_TRACE_MALLOC))
 EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME,imagehlp)
 endif
