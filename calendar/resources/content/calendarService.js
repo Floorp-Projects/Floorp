@@ -59,8 +59,6 @@ const WINDOWWATCHER_CONTRACTID =
 
 /* interafces used in this file */
 const nsIWindowMediator  = Components.interfaces.nsIWindowMediator;
-const nsICommandLineHandler =
-                           Components.interfaces.nsICommandLineHandler;
 const nsICmdLineHandler  = Components.interfaces.nsICmdLineHandler;
 const nsICategoryManager = Components.interfaces.nsICategoryManager;
 const nsIContentHandler  = Components.interfaces.nsIContentHandler;
@@ -73,6 +71,9 @@ const nsIRequest         = Components.interfaces.nsIRequest;
 const nsIAppShellService = Components.interfaces.nsIAppShellService;
 const nsISupports        = Components.interfaces.nsISupports;
 const nsIWindowWatcher   = Components.interfaces.nsIWindowWatcher;
+
+if ("nsICommandLineHandler" in Components.interfaces)
+     const nsICommandLineHandler = Components.interfaces.nsICommandLineHandler;
 
 /* Command Line handler service */
 function CLineService()
@@ -120,25 +121,11 @@ CLineService.prototype = {
 
 /* factory for command line handler service (CLineService) */
 var CLineFactory = {
-    /* nsISupports */
-    QueryInterface : function (iid) {
-        if (iid.equals(nsISupports) ||
-            iid.equals(nsIFactory))
-            return this;
-
-        throw Components.results.NS_ERROR_NO_INTERFACE;
-    },
-
-    /* nsIFactory */
-
     createInstance : function (outer, iid) {
         if (outer != null)
             throw Components.results.NS_ERROR_NO_AGGREGATION;
 
-        return new CLineService.QueryInterface(iid);
-    },
-
-    lockFactory : function(lock) {
+        return new CLineService().QueryInterface(iid);
     }
 }
 
@@ -351,8 +338,8 @@ function (compMgr, fileSpec, location, type)
                                     location,
                                     type);
 
-    catman = Components.classes["@mozilla.org/categorymanager;1"]
-                       .getService(nsICategoryManager);
+    var catman = Components.classes["@mozilla.org/categorymanager;1"]
+                           .getService(nsICategoryManager);
     catman.addCategoryEntry("command-line-argument-handlers",
                             "calendar command line handler",
                             CLINE_SERVICE_CONTRACTID, true, true);
@@ -396,7 +383,7 @@ function(compMgr, fileSpec, location)
 CalendarModule.getClassObject =
 function (compMgr, cid, iid) {
     if (cid.equals(CLINE_SERVICE_CID))
-        return CLineFactory.QueryInterface(iid);
+        return CLineFactory;
 
     if (cid.equals(ICALCNT_HANDLER_CID))
         return ICALContentHandlerFactory;
