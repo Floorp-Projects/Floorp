@@ -69,6 +69,24 @@
 #include "nsIViewManager.h"
 #include "nsIView.h"
 // END
+
+//#define NEW_CLIPBOARD_SUPPORT
+
+#ifdef NEW_CLIPBOARD_SUPPORT
+// Drag & Drop, Clipboard
+#include "nsWidgetsCID.h"
+#include "nsIClipboard.h"
+#include "nsITransferable.h"
+#include "nsIDataFlavor.h"
+
+// Drag & Drop, Clipboard Support
+static NS_DEFINE_IID(kIClipboardIID,    NS_ICLIPBOARD_IID);
+static NS_DEFINE_CID(kCClipboardCID,    NS_CLIPBOARD_CID);
+
+static NS_DEFINE_IID(kITransferableIID, NS_ITRANSFERABLE_IID);
+static NS_DEFINE_CID(kCTransferableCID, NS_TRANSFERABLE_CID);
+#endif
+
 #endif
 static NS_DEFINE_IID(kIContentIID,          NS_ICONTENT_IID);
 static NS_DEFINE_IID(kIDOMTextIID,          NS_IDOMTEXT_IID);
@@ -826,6 +844,29 @@ NS_IMETHODIMP nsEditor::Copy()
 NS_IMETHODIMP nsEditor::Paste()
 {
   //printf("nsEditor::Paste\n");
+  nsString stuffToPaste;
+
+#ifdef NEW_CLIPBOARD_SUPPORT
+  nsIClipboard* clipboard;
+  nsresult rv = nsServiceManager::GetService(kCClipboardCID,
+                                             kIClipboardIID,
+                                             (nsISupports **)&clipboard);
+  nsITransferable * trans;
+  rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, kITransferableIID, (void**) &trans);
+  if (nsnull != trans) {
+    //trans->AddDataFlavor("text/xif", "XIF Format");
+    trans->AddDataFlavor(kTextMime, "Text Format");
+  }
+
+  clipboard->SetTransferable(trans, nsnull);
+  clipboard->GetClipboard();
+  trans->GetTransferString(stuffToPaste);
+
+  NS_IF_RELEASE(clipboard);
+  NS_IF_RELEASE(trans);
+
+
+#else 
 
   // Get the nsSelectionMgr:
   // XXX BWEEP BWEEP TEMPORARY!
@@ -841,10 +882,9 @@ NS_IMETHODIMP nsEditor::Paste()
   }
   //NS_ADD_REF(theSelectionMgr);
 
-  nsString stuffToPaste;
   // Now we have the selection mgr.  Get its contents as text (for now):
   selectionMgr->PasteTextBlocking(&stuffToPaste);
-
+#endif
   //printf("Trying to insert '%s'\n", stuffToPaste.ToNewCString());
 
   // Now let InsertText handle the hard stuff:
