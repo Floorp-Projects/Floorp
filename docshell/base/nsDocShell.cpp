@@ -3955,6 +3955,8 @@ nsresult nsDocShell::DoURILoad(nsIURI * aURI,
                     nsnull,
                     loadGroup,
                     NS_STATIC_CAST(nsIInterfaceRequestor *, this));
+    if (NS_FAILED(rv))
+        return rv;
 
     channel->SetOriginalURI(aURI);
 
