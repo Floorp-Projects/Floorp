@@ -28,9 +28,11 @@
 #ifdef NS_DEBUG
 #undef  NOISY_SPECULATIVE_TOP_MARGIN
 #undef  NOISY_MAX_ELEMENT_SIZE
+#undef   REALLY_NOISY_MAX_ELEMENT_SIZE
 #else
 #undef  NOISY_SPECULATIVE_TOP_MARGIN
 #undef  NOISY_MAX_ELEMENT_SIZE
+#undef   REALLY_NOISY_MAX_ELEMENT_SIZE
 #endif
 
 nsBlockReflowContext::nsBlockReflowContext(nsIPresContext& aPresContext,
@@ -153,48 +155,58 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
   mOuterReflowState.spaceManager->Translate(-tx, -ty);
 
 #ifdef DEBUG
-  if (CRAZY_WIDTH(mMetrics.width) || CRAZY_HEIGHT(mMetrics.height)) {
-    printf("nsBlockReflowContext: ");
-    nsFrame::ListTag(stdout, aFrame);
-    printf(" metrics=%d,%d!\n", mMetrics.width, mMetrics.height);
-  }
-  if ((nsnull != mMetrics.maxElementSize) &&
-      ((nscoord(0xdeadbeef) == mMetrics.maxElementSize->width) ||
-       (nscoord(0xdeadbeef) == mMetrics.maxElementSize->height))) {
-    printf("nsBlockReflowContext: ");
-    nsFrame::ListTag(stdout, aFrame);
-    printf(" didn't set max-element-size!\n");
-    mMetrics.maxElementSize->width = 0;
-    mMetrics.maxElementSize->height = 0;
-  }
-  if ((nsnull != mMetrics.maxElementSize) &&
-      ((mMetrics.maxElementSize->width > mMetrics.width) ||
-       (mMetrics.maxElementSize->height > mMetrics.height))) {
-    printf("nsBlockReflowContext: ");
-    nsFrame::ListTag(stdout, aFrame);
-    printf(": WARNING: maxElementSize=%d,%d > metrics=%d,%d\n",
-           mMetrics.maxElementSize->width,
-           mMetrics.maxElementSize->height,
-           mMetrics.width, mMetrics.height);
-  }
-  if ((mMetrics.width == nscoord(0xdeadbeef)) ||
-      (mMetrics.height == nscoord(0xdeadbeef)) ||
-      (mMetrics.ascent == nscoord(0xdeadbeef)) ||
-      (mMetrics.descent == nscoord(0xdeadbeef))) {
-    printf("nsBlockReflowContext: ");
-    nsFrame::ListTag(stdout, aFrame);
-    printf(" didn't set whad %d,%d,%d,%d!\n", mMetrics.width, mMetrics.height,
-           mMetrics.ascent, mMetrics.descent);
+  if (!NS_INLINE_IS_BREAK_BEFORE(aFrameReflowStatus)) {
+    if (CRAZY_WIDTH(mMetrics.width) || CRAZY_HEIGHT(mMetrics.height)) {
+      printf("nsBlockReflowContext: ");
+      nsFrame::ListTag(stdout, aFrame);
+      printf(" metrics=%d,%d!\n", mMetrics.width, mMetrics.height);
+    }
+    if ((nsnull != mMetrics.maxElementSize) &&
+        ((nscoord(0xdeadbeef) == mMetrics.maxElementSize->width) ||
+         (nscoord(0xdeadbeef) == mMetrics.maxElementSize->height))) {
+      printf("nsBlockReflowContext: ");
+      nsFrame::ListTag(stdout, aFrame);
+      printf(" didn't set max-element-size!\n");
+      mMetrics.maxElementSize->width = 0;
+      mMetrics.maxElementSize->height = 0;
+    }
+#ifdef REALLY_NOISY_MAX_ELEMENT_SIZE
+    // Note: there are common reflow situations where this *correctly*
+    // occurs; so only enable this debug noise when you really need to
+    // analyze in detail.
+    if ((nsnull != mMetrics.maxElementSize) &&
+        ((mMetrics.maxElementSize->width > mMetrics.width) ||
+         (mMetrics.maxElementSize->height > mMetrics.height))) {
+      printf("nsBlockReflowContext: ");
+      nsFrame::ListTag(stdout, aFrame);
+      printf(": WARNING: maxElementSize=%d,%d > metrics=%d,%d\n",
+             mMetrics.maxElementSize->width,
+             mMetrics.maxElementSize->height,
+             mMetrics.width, mMetrics.height);
+    }
+#endif
+    if ((mMetrics.width == nscoord(0xdeadbeef)) ||
+        (mMetrics.height == nscoord(0xdeadbeef)) ||
+        (mMetrics.ascent == nscoord(0xdeadbeef)) ||
+        (mMetrics.descent == nscoord(0xdeadbeef))) {
+      printf("nsBlockReflowContext: ");
+      nsFrame::ListTag(stdout, aFrame);
+      printf(" didn't set whad %d,%d,%d,%d!\n",
+             mMetrics.width, mMetrics.height,
+             mMetrics.ascent, mMetrics.descent);
+    }
   }
 #endif
 #ifdef NOISY_MAX_ELEMENT_SIZE
-  if (nsnull != mMetrics.maxElementSize) {
-    printf("  ");
-    nsFrame::ListTag(stdout, aFrame);
-    printf(": maxElementSize=%d,%d wh=%d,%d\n",
-           mMetrics.maxElementSize->width,
-           mMetrics.maxElementSize->height,
-           mMetrics.width, mMetrics.height);
+  if (!NS_INLINE_IS_BREAK_BEFORE(aFrameReflowStatus)) {
+    if (nsnull != mMetrics.maxElementSize) {
+      printf("  ");
+      nsFrame::ListTag(stdout, aFrame);
+      printf(": maxElementSize=%d,%d wh=%d,%d\n",
+             mMetrics.maxElementSize->width,
+             mMetrics.maxElementSize->height,
+             mMetrics.width, mMetrics.height);
+    }
   }
 #endif
 
