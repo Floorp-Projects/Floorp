@@ -50,6 +50,8 @@
   BOOL            mTruncateLabel;
   BOOL            mIsDraggable;
   BOOL						mLastClickHoldTimedOut;
+  
+  SEL             mClickHoldAction;
 }
 
 - (id)initTextCell:(NSString*)aString;
@@ -69,6 +71,8 @@
 
 - (void)setClickHoldTimeout:(float)timeoutSeconds;
 - (BOOL)lastClickHoldTimedOut;
+
+- (void)setClickHoldAction:(SEL)inAltAction;
 
 @end
 

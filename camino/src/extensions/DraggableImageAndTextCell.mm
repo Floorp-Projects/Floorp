@@ -206,6 +206,10 @@
   return mLastClickHoldTimedOut;
 }
 
+- (void)setClickHoldAction:(SEL)inAltAction
+{
+  mClickHoldAction = inAltAction;
+}
 
 #pragma mark -
 
@@ -294,12 +298,16 @@
   }  
 
   if (lastEvent == NSLeftMouseUp)
-    [controlView sendAction:[self action] to:[self target]];
+    [(NSControl*)controlView sendAction:[self action] to:[self target]];
+  else if (mLastClickHoldTimedOut && mClickHoldAction) {
+    [self stopTracking:lastWindowLocation at:curWindowLocation inView:controlView mouseIsUp:NO];
+    [(NSControl*)controlView sendAction:mClickHoldAction to:[self target]];
+    return YES;
+  }
   
   [self stopTracking:lastWindowLocation at:curWindowLocation inView:controlView mouseIsUp:(lastEvent == NSLeftMouseUp)];
   return YES;		// XXX fix me
 }
-
 
 @end
 

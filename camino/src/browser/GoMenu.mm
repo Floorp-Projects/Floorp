@@ -58,22 +58,13 @@ static const unsigned int kMaxTitleLength = 80;
   // get controller for current window
   BrowserWindowController *controller = [(MainController *)[NSApp delegate] getMainWindowBrowserController];
   if (!controller) return nsnull;
-  
-  // get web navigation for current browser
-  BrowserWrapper* wrapper = [controller getBrowserWrapper];
-  if (!wrapper) return nsnull;
-  CHBrowserView* view = [wrapper getBrowserView];
-  if (!view) return nsnull;
-  nsCOMPtr<nsIWebBrowser> webBrowser = getter_AddRefs([view getWebBrowser]);
-  if (!webBrowser) return nsnull;
-  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(webBrowser));
-  return webNav.get();
+  return [controller currentWebNavigation];
 }
 
 - (void) historyItemAction:(id)sender
 {
   // get web navigation for current browser
-  nsCOMPtr<nsIWebNavigation> webNav = [self currentWebNavigation];
+  nsIWebNavigation* webNav = [self currentWebNavigation];
   if (!webNav) return;
   
   // browse to the history entry for the menuitem that was selected
@@ -93,7 +84,7 @@ static const unsigned int kMaxTitleLength = 80;
 - (void) addHistoryItems
 {
   // get session history for current browser
-  nsCOMPtr<nsIWebNavigation> webNav = [self currentWebNavigation];
+  nsIWebNavigation* webNav = [self currentWebNavigation];
   if (!webNav) return;
   nsCOMPtr<nsISHistory> sessionHistory;
   webNav->GetSessionHistory(getter_AddRefs(sessionHistory));

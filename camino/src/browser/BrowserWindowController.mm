@@ -56,8 +56,11 @@
 #import "SearchTextFieldCell.h"
 #import "STFPopUpButtonCell.h"
 #import "MainController.h"
+#import "DraggableImageAndTextCell.h"
 
 #include "nsIWebNavigation.h"
+#include "nsISHistory.h"
+#include "nsIHistoryEntry.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMNSDocument.h"
 #include "nsIDOMLocation.h"
@@ -235,6 +238,104 @@ static NSArray* sToolbarDefaults = nil;
 
 #pragma mark -
 
+//
+// interface ToolbarViewItem
+//
+// NSToolbarItem, by default, doesn't do validation for view items. Override
+// that behavior to call |-validateToolbarItem:| on the item's target.
+//
+@interface ToolbarViewItem : NSToolbarItem
+{
+}
+@end
+
+@implementation ToolbarViewItem
+
+//
+// -validate
+//
+// Override default behavior (which does nothing at all for a view item) to
+// ask the target to handle it. The target must perform all the appropriate
+// enabling/disabling within |-validateToolbarItem:| because we can't know
+// all the details. The return value is ignored.
+//
+- (void)validate
+{
+  id target = [self target];
+  if ([target respondsToSelector:@selector(validateToolbarItem:)])
+    [target validateToolbarItem:self];
+}
+
+@end
+
+#pragma mark -
+
+//
+// interface ToolbarButton
+//
+// A subclass of NSButton that responds to |-setControlSize:| which
+// comes from the toolbar when it changes sizes. Adjust the size
+// of our associated NSToolbarItem when the call comes.
+//
+// Note that |-setControlSize:| is not part of NSView's api, but the
+// toolbar code calls it anyway, without any documentation to that
+// effect.
+//
+@interface ToolbarButton : NSButton
+{
+  NSToolbarItem* mToolbarItem;
+}
+-(id)initWithFrame:(NSRect)inFrame item:(NSToolbarItem*)inItem;
+@end
+
+@implementation ToolbarButton
+
+-(id)initWithFrame:(NSRect)inFrame item:(NSToolbarItem*)inItem
+{
+  if ((self = [super initWithFrame:inFrame])) {
+    mToolbarItem = inItem;
+  }
+  return self;
+}
+
+//
+// -setControlSize:
+//
+// Called by the toolbar when the toolbar changes icon size. Adjust our
+// toolbar item so that it can adjust larger or smaller.
+//
+- (void)setControlSize:(NSControlSize)size
+{
+  NSSize s;
+  if (size == NSRegularControlSize) {
+    s = NSMakeSize(32., 32.);
+    [mToolbarItem setMinSize:s];
+    [mToolbarItem setMaxSize:s];
+  }
+  else {
+    s = NSMakeSize(24., 24.);
+    [mToolbarItem setMinSize:s];
+    [mToolbarItem setMaxSize:s];
+  }
+  [[self image] setSize:s];
+  [[self cell] setControlSize:size];
+}
+
+//
+// -controlSize
+//
+// The toolbar assumes this implemented whenever |-setControlSize:| is implemented,
+// though I'm not sure why. 
+//
+- (NSControlSize)controlSize
+{
+  return [[self cell] controlSize];
+}
+
+@end
+
+#pragma mark -
+
 @interface BrowserWindowController(Private)
   // open a new window or tab, but doesn't load anything into them. Must be matched
   // with a call to do that.
@@ -249,6 +350,10 @@ static NSArray* sToolbarDefaults = nil;
 -(void)openNewWindowWithDescriptor:(nsISupports*)aDesc displayType:(PRUint32)aDisplayType loadInBackground:(BOOL)aLoadInBG;
 -(void)openNewTabWithDescriptor:(nsISupports*)aDesc displayType:(PRUint32)aDisplayType loadInBackground:(BOOL)aLoadInBG;
 - (BOOL)isPageTextFieldFocused;
+
+// create back/forward session history menus on toolbar button
+- (IBAction)backMenu:(id)inSender;
+- (IBAction)forwardMenu:(id)inSender;
 @end
 
 @implementation BrowserWindowController
@@ -715,6 +820,32 @@ static NSArray* sToolbarDefaults = nil;
 }
 #endif
 
+#pragma mark -
+
+//
+// -createToolbarPopupButton:
+//
+// Create a new instance of one of our special click-hold popup buttons that knows
+// how to display a menu on click-hold. Associate it with the toolbar item |inItem|.
+//
+- (NSButton*)createToolbarPopupButton:(NSToolbarItem*)inItem
+{
+  NSRect frame = NSMakeRect(0.,0.,32.,32.);
+  NSButton* button = [[[ToolbarButton alloc] initWithFrame:frame item:inItem] autorelease];
+  if (button) {
+    DraggableImageAndTextCell* newCell = [[[DraggableImageAndTextCell alloc] init] autorelease];
+    [newCell setDraggable:YES];
+    [newCell setClickHoldTimeout:0.75];
+    [button setCell:newCell];
+
+    [button setBezelStyle: NSRegularSquareBezelStyle];
+    [button setButtonType: NSMomentaryChangeButton];
+    [button setBordered: NO];
+    [button setImagePosition: NSImageOnly];
+  }
+  return button;
+}
+
 - (void)setupToolbar
 {
   if ( !mChromeMask || (mChromeMask & nsIWebBrowserChrome::CHROME_TOOLBAR) ) {  
@@ -848,21 +979,67 @@ static NSArray* sToolbarDefaults = nil;
   NSToolbarItem *toolbarItem = [[[NSToolbarItem alloc] initWithItemIdentifier:itemIdent] autorelease];
   if ( [itemIdent isEqual:BackToolbarItemIdentifier] )
   {
+    // create a new toolbar item that knows how to do validation
+    toolbarItem = [[[ToolbarViewItem alloc] initWithItemIdentifier:itemIdent] autorelease];
+    
+    NSButton* button = [self createToolbarPopupButton:toolbarItem];
     [toolbarItem setLabel:NSLocalizedString(@"Back", @"Back")];
     [toolbarItem setPaletteLabel:NSLocalizedString(@"Go Back", @"Go Back")];
     [toolbarItem setToolTip:NSLocalizedString(@"BackToolTip", @"Go back one page")];
-    [toolbarItem setImage:[NSImage imageNamed:@"back"]];
+
+    NSSize size = NSMakeSize(32., 32.);
+    NSImage* icon = [NSImage imageNamed:@"back"];
+    [icon setScalesWhenResized:YES];
+    [button setImage:icon];
+    
+    [toolbarItem setView:button];
+    [toolbarItem setMinSize:size];
+    [toolbarItem setMaxSize:size];
+    
+    [button setTarget:self];
+    [button setAction:@selector(back:)];
     [toolbarItem setTarget:self];
-    [toolbarItem setAction:@selector(back:)];
+    [toolbarItem setAction:@selector(back:)];      // so validateToolbarItem: works correctly
+    [[button cell] setClickHoldAction:@selector(backMenu:)];
+
+    NSMenuItem *menuFormRep = [[[NSMenuItem alloc] init] autorelease];
+    [menuFormRep setTarget:self];
+    [menuFormRep setAction:@selector(back:)];
+    [menuFormRep setTitle:[toolbarItem label]];
+
+    [toolbarItem setMenuFormRepresentation:menuFormRep];
   }
   else if ( [itemIdent isEqual:ForwardToolbarItemIdentifier] )
   {
+    // create a new toolbar item that knows how to do validation
+    toolbarItem = [[[ToolbarViewItem alloc] initWithItemIdentifier:itemIdent] autorelease];
+    
+    NSButton* button = [self createToolbarPopupButton:toolbarItem];
     [toolbarItem setLabel:NSLocalizedString(@"Forward", @"Forward")];
     [toolbarItem setPaletteLabel:NSLocalizedString(@"Go Forward", @"Go Forward")];
     [toolbarItem setToolTip:NSLocalizedString(@"ForwardToolTip", @"Go forward one page")];
-    [toolbarItem setImage:[NSImage imageNamed:@"forward"]];
+
+    NSSize size = NSMakeSize(32., 32.);
+    NSImage* icon = [NSImage imageNamed:@"forward"];
+    [icon setScalesWhenResized:YES];
+    [button setImage:icon];
+
+    [toolbarItem setView:button];
+    [toolbarItem setMinSize:size];
+    [toolbarItem setMaxSize:size];
+    
+    [button setTarget:self];
+    [button setAction:@selector(forward:)];
     [toolbarItem setTarget:self];
-    [toolbarItem setAction:@selector(forward:)];
+    [toolbarItem setAction:@selector(forward:)];      // so validateToolbarItem: works correctly
+    [[button cell] setClickHoldAction:@selector(forwardMenu:)];
+
+    NSMenuItem *menuFormRep = [[[NSMenuItem alloc] init] autorelease];
+    [menuFormRep setTarget:self];
+    [menuFormRep setAction:@selector(forward:)];
+    [menuFormRep setTitle:[toolbarItem label]];
+
+    [toolbarItem setMenuFormRepresentation:menuFormRep];
   }
   else if ( [itemIdent isEqual:ReloadToolbarItemIdentifier] )
   {
@@ -1034,13 +1211,24 @@ static NSArray* sToolbarDefaults = nil;
   if (action == @selector(back:)) {
     // if the bookmark manager is showing, we enable the back button so that
     // they can click back to return to the webpage they were viewing.
+    BOOL enable = NO;
     if ( [mContentView isBookmarkManagerVisible] )
-      return YES;
+      enable = YES;
     else
-      return [[mBrowserView getBrowserView] canGoBack];
+      enable = [[mBrowserView getBrowserView] canGoBack];
+
+    // we have to handle all the enabling/disabling ourselves because this
+    // toolbar button is a view item. Note the return value is ignored.
+    [(NSButton*)[theItem view] setEnabled:enable];
+    return enable;
   }
-  else if (action == @selector(forward:))
-    return [[mBrowserView getBrowserView] canGoForward];
+  else if (action == @selector(forward:)) {
+    // we have to handle all the enabling/disabling ourselves because this
+    // toolbar button is a view item. Note the return value is ignored.
+    BOOL enable = [[mBrowserView getBrowserView] canGoForward];
+    [(NSButton*)[theItem view] setEnabled:enable];
+    return enable;
+  }
   else if (action == @selector(reload:))
     return [mBrowserView isBusy] == NO;
   else if (action == @selector(stop:))
@@ -1063,6 +1251,8 @@ static NSArray* sToolbarDefaults = nil;
   else
     return YES;
 }
+
+#pragma mark -
 
 - (void)loadingStarted
 {
@@ -1602,6 +1792,144 @@ static NSArray* sToolbarDefaults = nil;
   NSString* urlStr = [NSString stringWith_nsAString:href];
   NSString* titleStr = [NSString stringWith_nsAString:linkText];
   [self addBookmarkExtended:NO URL:urlStr title:titleStr];
+}
+
+//
+// -currentWebNavigation
+//
+// return a weak reference to the current web navigation object. Callers should
+// not hold onto this for longer than the current call unless they addref it.
+//
+- (nsIWebNavigation*) currentWebNavigation
+{
+  BrowserWrapper* wrapper = [self getBrowserWrapper];
+  if (!wrapper) return nsnull;
+  CHBrowserView* view = [wrapper getBrowserView];
+  if (!view) return nsnull;
+  nsCOMPtr<nsIWebBrowser> webBrowser = getter_AddRefs([view getWebBrowser]);
+  if (!webBrowser) return nsnull;
+  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(webBrowser));
+  return webNav.get();
+}
+
+//
+// -sessionHistory
+//
+// Return a weak reference to the current session history object. Callers
+// should not hold onto this for longer than the current call unless they addref.
+//
+- (nsISHistory*) sessionHistory
+{
+  nsIWebNavigation* webNav = [self currentWebNavigation];
+  if (!webNav) return nil;
+  nsCOMPtr<nsISHistory> sessionHistory;
+  webNav->GetSessionHistory(getter_AddRefs(sessionHistory));
+  return sessionHistory.get();
+}
+
+- (void)historyItemAction:(id)inSender
+{
+  // get web navigation for current browser
+  nsIWebNavigation* webNav = [self currentWebNavigation];
+  if (!webNav) return;
+  
+  // browse to the history entry for the menuitem that was selected
+  PRInt32 historyIndex = [inSender tag];
+  webNav->GotoIndex(historyIndex);
+}
+
+//
+// -populateSessionHistoryMenu:shist:from:to:
+//
+// Adds to the given popup menu the items of the session history from index |inFrom| to
+// |inTo|. Sets the tag on the item to the index in the session history. When an item
+// is selected, calls |-historyItemAction:|. Correctly handles iterating in the 
+// correct direction based on relative indices of from/to.
+//
+- (void)populateSessionHistoryMenu:(NSMenu*)inPopup shist:(nsISHistory*)inHistory from:(unsigned long)inFrom to:(unsigned long)inTo
+{
+  // max number of characters in a menu title before cropping it
+  const unsigned int kMaxTitleLength = 80;
+
+  // go forwards if |inFrom| < |inTo| and backwards if |inFrom| > |inTo|
+  int direction = -1;
+  if (inFrom <= inTo)
+    direction = 1;
+
+  // create a menu item for each item in the session history. Instead of simply going
+  // from |inFrom| to |inTo|, we use |count| to take the directionality out of the loop
+  // control so we can go fwd or backwards with the same loop control.
+  const int numIterations = abs(inFrom - inTo) + 1;    
+  for (PRInt32 i = inFrom, count = 0; count < numIterations; i += direction, ++count) {
+    nsCOMPtr<nsIHistoryEntry> entry;
+    inHistory->GetEntryAtIndex(i, PR_FALSE, getter_AddRefs(entry));
+    if (entry) {
+      nsXPIDLString textStr;
+      entry->GetTitle(getter_Copies(textStr));
+      NSString* title = [[NSString stringWith_nsAString: textStr] stringByTruncatingTo:kMaxTitleLength at:kTruncateAtMiddle];    
+      NSMenuItem *newItem = [inPopup addItemWithTitle:title action:@selector(historyItemAction:) keyEquivalent:@""];
+      [newItem setTarget:self];
+      [newItem setTag:i];
+    }
+  }
+}
+
+//
+// -forwardMenu:
+//
+// Create a menu off the fwd button (the sender) that contains the session history
+// from the current position forward to the most recent in the session history.
+//
+- (IBAction)forwardMenu:(id)inSender
+{
+  NSMenu* popupMenu = [[[NSMenu alloc] init] autorelease];
+  [popupMenu addItemWithTitle:@"" action:NULL keyEquivalent:@""];  // dummy first item
+
+  // figure out what indices of the history to build in the menu. Item 0
+  // in the shared history is the least recent (beginning of history) page.
+  nsISHistory* sessionHistory = [self sessionHistory];
+  PRInt32 currentIndex;
+  sessionHistory->GetIndex(&currentIndex);
+  PRInt32 count;
+  sessionHistory->GetCount(&count);
+
+  // builds forwards from the item after the current to the end (|count|)
+  [self populateSessionHistoryMenu:popupMenu shist:sessionHistory from:currentIndex+1 to:count-1];
+
+  // use a temporary NSPopUpButtonCell to display the menu.
+  NSPopUpButtonCell *popupCell = [[[NSPopUpButtonCell alloc] initTextCell:@"" pullsDown:YES] autorelease];
+  [popupCell setMenu: popupMenu];
+  [popupCell trackMouse:[NSApp currentEvent] inRect:[inSender bounds] ofView:inSender untilMouseUp:YES];
+}
+
+//
+// -backMenu:
+//
+// Create a menu off the back button (the sender) that contains the session history
+// from the current position backward to the first item in the session history.
+//
+- (IBAction)backMenu:(id)inSender
+{
+  // do nothing on click-hold if the bm manager is visible
+  if ( [mContentView isBookmarkManagerVisible] )
+    return;
+
+  NSMenu* popupMenu = [[[NSMenu alloc] init] autorelease];
+  [popupMenu addItemWithTitle:@"" action:NULL keyEquivalent:@""];  // dummy first item
+
+  // figure out what indices of the history to build in the menu. Item 0
+  // in the shared history is the least recent (beginning of history) page.
+  nsISHistory* sessionHistory = [self sessionHistory];
+  PRInt32 currentIndex;
+  sessionHistory->GetIndex(&currentIndex);
+
+  // builds backwards from the item before the current item to 0, the first item in the list
+  [self populateSessionHistoryMenu:popupMenu shist:sessionHistory from:currentIndex-1 to:0];
+
+  // use a temporary NSPopUpButtonCell to display the menu.
+  NSPopUpButtonCell *popupCell = [[[NSPopUpButtonCell alloc] initTextCell:@"" pullsDown:YES] autorelease];
+  [popupCell setMenu: popupMenu];
+  [popupCell trackMouse:[NSApp currentEvent] inRect:[inSender bounds] ofView:inSender untilMouseUp:YES];
 }
 
 - (IBAction)back:(id)aSender
