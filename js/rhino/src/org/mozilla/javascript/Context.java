@@ -616,7 +616,7 @@ public final class Context {
             if (scope == null)
                 scope = new NativeObject();
             ScriptableObject.defineClass(scope, NativeFunction.class, sealed);
-            ScriptableObject.defineClass(scope, NativeObject.class, sealed);
+            (new NativeObject()).scopeInit(this, scope, sealed);
 
             Scriptable objectProto = ScriptableObject.
                                       getObjectPrototype(scope);
@@ -631,16 +631,17 @@ public final class Context {
                 scope.setPrototype(objectProto);
             
             // must precede NativeGlobal since it's needed therein
-            ScriptableObject.defineClass(scope, NativeError.class, sealed);
-            ScriptableObject.defineClass(scope, NativeGlobal.class, sealed);                                     
+            (new NativeError()).scopeInit(this, scope, sealed);
+            (new NativeGlobal()).scopeInit(this, scope, sealed);
 
-            String[] classes = { "NativeArray",         "Array",
-                                 "NativeString",        "String",
-                                 "NativeBoolean",       "Boolean",
-                                 "NativeNumber",        "Number",
-                                 "NativeDate",          "Date",
-                                 "NativeMath",          "Math",
-                                 "NativeCall",          "Call",
+            (new NativeArray()).scopeInit(this, scope, sealed);
+            (new NativeString()).scopeInit(this, scope, sealed);
+            (new NativeBoolean()).scopeInit(this, scope, sealed);
+            (new NativeNumber()).scopeInit(this, scope, sealed);
+            (new NativeDate()).scopeInit(this, scope, sealed);
+            (new NativeMath()).scopeInit(this, scope, sealed);
+                                
+            String[] classes = { "NativeCall",          "Call",
                                  "NativeWith",          "With",
                                  "regexp.NativeRegExp", "RegExp",
                                  "NativeScript",        "Script",

@@ -148,6 +148,7 @@ public class NativeDate extends IdScriptable {
         case Id_toLocaleDateString: return realThis(thisObj, f, true).
             jsFunction_toLocaleDateString();
 
+        case Id_toGMTString:
         case Id_toUTCString: return realThis(thisObj, f, true).
             jsFunction_toUTCString();
 
@@ -1566,6 +1567,7 @@ public class NativeDate extends IdScriptable {
         case Id_toLocaleString:     return "toLocaleString";
         case Id_toLocaleTimeString: return "toLocaleTimeString";
         case Id_toLocaleDateString: return "toLocaleDateString";
+        case Id_toGMTString:        return "toGMTString";
         case Id_toUTCString:        return "toUTCString";
         case Id_valueOf:            return "valueOf";
         case Id_getTime:            return "getTime";
@@ -1737,48 +1739,46 @@ public class NativeDate extends IdScriptable {
         Id_toLocaleString       =  5,
         Id_toLocaleTimeString   =  6,
         Id_toLocaleDateString   =  7,
-        Id_toUTCString          =  8,
-        Id_valueOf              =  9,
-        Id_getTime              = 10,
-        Id_getYear              = 11,
-        Id_getFullYear          = 12,
-        Id_getUTCFullYear       = 13,
-        Id_getMonth             = 14,
-        Id_getUTCMonth          = 15,
-        Id_getDate              = 16,
-        Id_getUTCDate           = 17,
-        Id_getDay               = 18,
-        Id_getUTCDay            = 19,
-        Id_getHours             = 20,
-        Id_getUTCHours          = 21,
-        Id_getMinutes           = 22,
-        Id_getUTCMinutes        = 23,
-        Id_getSeconds           = 24,
-        Id_getUTCSeconds        = 25,
-        Id_getMilliseconds      = 26,
-        Id_getUTCMilliseconds   = 27,
-        Id_getTimezoneOffset    = 28,
-        Id_setTime              = 29,
-        Id_setMilliseconds      = 30,
-        Id_setUTCMilliseconds   = 31,
-        Id_setSeconds           = 32,
-        Id_setUTCSeconds        = 33,
-        Id_setMinutes           = 34,
-        Id_setUTCMinutes        = 35,
-        Id_setHours             = 36,
-        Id_setUTCHours          = 37,
-        Id_setDate              = 38,
-        Id_setUTCDate           = 39,
-        Id_setMonth             = 40,
-        Id_setUTCMonth          = 41,
-        Id_setFullYear          = 42,
-        Id_setUTCFullYear       = 43,
-        Id_setYear              = 44,
+        Id_toGMTString          =  8,
+        Id_toUTCString          =  9,
+        Id_valueOf              = 10,
+        Id_getTime              = 11,
+        Id_getYear              = 12,
+        Id_getFullYear          = 13,
+        Id_getUTCFullYear       = 14,
+        Id_getMonth             = 15,
+        Id_getUTCMonth          = 16,
+        Id_getDate              = 17,
+        Id_getUTCDate           = 18,
+        Id_getDay               = 19,
+        Id_getUTCDay            = 20,
+        Id_getHours             = 21,
+        Id_getUTCHours          = 22,
+        Id_getMinutes           = 23,
+        Id_getUTCMinutes        = 24,
+        Id_getSeconds           = 25,
+        Id_getUTCSeconds        = 26,
+        Id_getMilliseconds      = 27,
+        Id_getUTCMilliseconds   = 28,
+        Id_getTimezoneOffset    = 29,
+        Id_setTime              = 30,
+        Id_setMilliseconds      = 31,
+        Id_setUTCMilliseconds   = 32,
+        Id_setSeconds           = 33,
+        Id_setUTCSeconds        = 34,
+        Id_setMinutes           = 35,
+        Id_setUTCMinutes        = 36,
+        Id_setHours             = 37,
+        Id_setUTCHours          = 38,
+        Id_setDate              = 39,
+        Id_setUTCDate           = 40,
+        Id_setMonth             = 41,
+        Id_setUTCMonth          = 42,
+        Id_setFullYear          = 43,
+        Id_setUTCFullYear       = 44,
+        Id_setYear              = 45,
 
-        MAX_ID                  = 44;
-
-    private static final int // Aliases
-        Id_toGMTString          =  Id_toUTCString;
+        MAX_ID                  = 45;
 
 // #/string_id_map#
 

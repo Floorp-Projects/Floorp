@@ -18,7 +18,7 @@
  * Copyright (C) 1997-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  * Norris Boyd
  * Mike McCabe
  *
@@ -43,21 +43,49 @@ import java.util.Hashtable;
  * See ECMA 15.2.
  * @author Norris Boyd
  */
-public class NativeObject extends ScriptableObject {
-
-    public static void finishInit(Scriptable scope, FunctionObject ctor,
-                                  Scriptable proto)
-    {
-        Object obj = proto.get("valueOf", proto);
-        ((FunctionObject) obj).setLength((short) 0);
-    }
+public class NativeObject extends IdScriptable {
 
     public String getClassName() {
         return "Object";
     }
 
-    public static Object jsConstructor(Context cx, Object[] args, 
-                                       Function ctorObj, boolean inNewExpr)
+    public int methodArity(int methodId, IdFunction function) {
+        switch (methodId) {
+        case Id_constructor:
+        case Id_hasOwnProperty:
+        case Id_propertyIsEnumerable:
+        case Id_isPrototypeOf:
+            return 1;
+        }
+        return 0;
+    }
+
+    public Object execMethod
+        (int methodId, IdFunction f,
+         Context cx, Scriptable scope, Scriptable thisObj, Object[] args)
+        throws JavaScriptException
+    {
+        switch (methodId) {
+        case Id_constructor:
+            return jsConstructor(cx, args, f, thisObj == null);
+        case Id_toString:
+            return jsFunction_toString(cx, thisObj);
+        case Id_toLocaleString:
+            return jsFunction_toLocaleString(cx, thisObj);
+        case Id_valueOf:
+            return jsFunction_valueOf(thisObj);
+        case Id_hasOwnProperty:
+            return jsFunction_hasOwnProperty(thisObj, args);
+        case Id_propertyIsEnumerable:
+            return jsFunction_propertyIsEnumerable(cx, thisObj, args);
+        case Id_isPrototypeOf:
+            return jsFunction_isPrototypeOf(cx, thisObj, args);
+        }
+        return Scriptable.NOT_FOUND;
+    }
+
+    private static Object jsConstructor(Context cx, Object[] args,
+                                        Function ctorObj, boolean inNewExpr)
         throws JavaScriptException
     {
         if (!inNewExpr) {
@@ -75,33 +103,29 @@ public class NativeObject extends ScriptableObject {
     public String toString() {
         Context cx = Context.getCurrentContext();
         if (cx != null)
-            return jsFunction_toString(cx, this, null, null);
+            return jsFunction_toString(cx, this);
         else
             return "[object " + getClassName() + "]";
     }
 
-    public static String jsFunction_toString(Context cx, Scriptable thisObj,
-                                             Object[] args, Function funObj)
+    private static String jsFunction_toString(Context cx, Scriptable thisObj)
     {
-        if (cx.getLanguageVersion() != cx.VERSION_1_2) 
+        if (cx.getLanguageVersion() != cx.VERSION_1_2)
             return "[object " + thisObj.getClassName() + "]";
-        
-        return toSource(cx, thisObj, args, funObj);
+
+        return toSource(cx, thisObj);
     }
-    
-    public static String jsFunction_toLocaleString(Context cx, 
-                                                   Scriptable thisObj, 
-                                                   Object[] args, 
-                                                   Function funObj)
+
+    private static String jsFunction_toLocaleString(Context cx,
+                                                    Scriptable thisObj)
     {
-        return jsFunction_toString(cx, thisObj, args, funObj);
+        return jsFunction_toString(cx, thisObj);
     }
-    
-    public static String toSource(Context cx, Scriptable thisObj,
-                                  Object[] args, Function funObj)
+
+    private static String toSource(Context cx, Scriptable thisObj)
     {
         Scriptable m = thisObj;
-        
+
         if (cx.iterating == null)
             cx.iterating = new Hashtable(31);
 
@@ -144,27 +168,23 @@ public class NativeObject extends ScriptableObject {
         }
     }
 
-    public static Object jsFunction_valueOf(Context cx, Scriptable thisObj,
-                                            Object[] args, Function funObj)
-    {
+    private static Object jsFunction_valueOf(Scriptable thisObj) {
         return thisObj;
     }
 
-    public static Object jsFunction_hasOwnProperty(Context cx, 
-                                                   Scriptable thisObj,
-                                                   Object[] args,
-                                                   Function funObj)
+    private static Object jsFunction_hasOwnProperty(Scriptable thisObj,
+                                                    Object[] args)
     {
-        if (args.length != 0)
+        if (args.length != 0) {
             if (thisObj.has(ScriptRuntime.toString(args[0]), thisObj))
                 return Boolean.TRUE;
+        }
         return Boolean.FALSE;
     }
 
-    public static Object jsFunction_propertyIsEnumerable(Context cx,
-                                                         Scriptable thisObj,
-                                                         Object[] args,
-                                                         Function funObj)
+    private static Object jsFunction_propertyIsEnumerable(Context cx,
+                                                          Scriptable thisObj,
+                                                          Object[] args)
     {
         try {
             if (args.length != 0) {
@@ -183,8 +203,9 @@ public class NativeObject extends ScriptableObject {
         return Boolean.FALSE;
     }
 
-    public static Object jsFunction_isPrototypeOf(Context cx, Scriptable thisObj,
-                                                   Object[] args, Function funObj)
+    private static Object jsFunction_isPrototypeOf(Context cx,
+                                                   Scriptable thisObj,
+                                                   Object[] args)
     {
         if (args.length != 0 && args[0] instanceof Scriptable) {
             Scriptable v = (Scriptable) args[0];
@@ -196,6 +217,55 @@ public class NativeObject extends ScriptableObject {
         }
         return Boolean.FALSE;
     }
+
+    protected int getMaximumId() { return MAX_ID; }
+
+    protected String getIdName(int id) {
+        switch (id) {
+        case Id_constructor:           return "constructor";
+        case Id_toString:              return "toString";
+        case Id_toLocaleString:        return "toLocaleString";
+        case Id_valueOf:               return "valueOf";
+        case Id_hasOwnProperty:        return "hasOwnProperty";
+        case Id_propertyIsEnumerable:  return "propertyIsEnumerable";
+        case Id_isPrototypeOf:         return "isPrototypeOf";
+        }
+        return null;
+    }
+
+// #string_id_map#
+
+    protected int mapNameToId(String s) {
+        int id;
+// #generated# Last update: 2001-04-24 12:37:03 GMT+02:00
+        L0: { id = 0; String X = null; int c;
+            L: switch (s.length()) {
+            case 7: X="valueOf";id=Id_valueOf; break L;
+            case 8: X="toString";id=Id_toString; break L;
+            case 11: X="constructor";id=Id_constructor; break L;
+            case 13: X="isPrototypeOf";id=Id_isPrototypeOf; break L;
+            case 14: c=s.charAt(0);
+                if (c=='h') { X="hasOwnProperty";id=Id_hasOwnProperty; }
+                else if (c=='t') { X="toLocaleString";id=Id_toLocaleString; }
+                break L;
+            case 20: X="propertyIsEnumerable";id=Id_propertyIsEnumerable; break L;
+            }
+            if (X!=null && X!=s && !X.equals(s)) id = 0;
+        }
+// #/generated#
+        return id;
+    }
+
+    private static final int
+        Id_constructor           = 1,
+        Id_toString              = 2,
+        Id_toLocaleString        = 3,
+        Id_valueOf               = 4,
+        Id_hasOwnProperty        = 5,
+        Id_propertyIsEnumerable  = 6,
+        Id_isPrototypeOf         = 7,
+        MAX_ID                   = 7;
+
+// #/string_id_map#
+
 }
-
-
