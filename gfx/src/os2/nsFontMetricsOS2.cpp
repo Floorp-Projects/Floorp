@@ -688,7 +688,7 @@ HDC   ps = NULL;
      char name[128];
     const PRUnichar* langGroup = nsnull;
     mLangGroup->GetUnicode(&langGroup);
-    nsAutoString langName = langGroup;
+    nsAutoString langName(langGroup);
     langName.ToCString(name, sizeof(name));
      for (int j=0; j < eCharSet_COUNT; j++ ) {
         if (name[0] == gCharSetInfo[j].mLangGroup[0]) {
