@@ -311,6 +311,15 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr) \
   NS_IMPL_QUERY_BODY(_i5)                                                \
   NS_IMPL_QUERY_TAIL(_i1)
 
+#define NS_IMPL_QUERY_INTERFACE6(_class, _i1, _i2, _i3, _i4, _i5, _i6)   \
+  NS_IMPL_QUERY_HEAD(_class)                                             \
+  NS_IMPL_QUERY_BODY(_i1)                                                \
+  NS_IMPL_QUERY_BODY(_i2)                                                \
+  NS_IMPL_QUERY_BODY(_i3)                                                \
+  NS_IMPL_QUERY_BODY(_i4)                                                \
+  NS_IMPL_QUERY_BODY(_i5)                                                \
+  NS_IMPL_QUERY_BODY(_i6)                                                \
+  NS_IMPL_QUERY_TAIL(_i1)
 
 /*
  The following macro is deprecated.  We need to switch all instances
@@ -383,6 +392,11 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr) \
   NS_IMPL_ADDREF(_class)                                      \
   NS_IMPL_RELEASE(_class)                                     \
   NS_IMPL_QUERY_INTERFACE5(_class, _i1, _i2, _i3, _i4, _i5)
+
+#define NS_IMPL_ISUPPORTS6(_class, _i1, _i2, _i3, _i4, _i5, _i6)   \
+  NS_IMPL_ADDREF(_class)                                      \
+  NS_IMPL_RELEASE(_class)                                     \
+  NS_IMPL_QUERY_INTERFACE6(_class, _i1, _i2, _i3, _i4, _i5, _i6)
 
 ////////////////////////////////////////////////////////////////////////////////
 
