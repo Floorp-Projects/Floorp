@@ -6,22 +6,22 @@
 
   <binding id="fieldset" extends="xul:groupbox">
     <content>
-      <xul:vbox class="fieldset-title" autostretch="never">
+      <xul:vbox class="fieldset-title" align="start">
         <children includes="legend"/>
       </xul:vbox>
       <xul:box flex="1" class="fieldset-body">
-        <xul:html flex="1">
+        <xul:description flex="1">
           <children/>
-        </xul:html>
+        </xul:description>
       </xul:box>
     </content>    
   </binding>
   
   <binding id="legend" extends="xul:box">
     <content>
-      <xul:html flex="1">
+      <xul:description flex="1">
         <children/>
-      </xul:html>
+      </xul:description>
     </content>
   </binding>
   

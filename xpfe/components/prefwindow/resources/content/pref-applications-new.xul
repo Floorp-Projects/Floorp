@@ -30,7 +30,6 @@
 
 <window id="newFileType"
         class="dialog" style="width: 30em; -moz-user-focus: ignore;"
-        orient="vertical"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&newTypeTitle.label;"
         onload="Startup();">
@@ -50,23 +49,23 @@
     
     <rows>
       <row>
-        <text class="label" value="&newDescription.label;" accesskey="&newDescription.accesskey;"
-              for="description"/>
+        <label value="&newDescription.label;" accesskey="&newDescription.accesskey;"
+               control="description"/>
         <textbox id="description" flex="1"/>
       </row>
       <row>
-        <text class="label" value="&newExtensions.label;" accesskey="&newExtensions.accesskey;"
-              for="extensions"/>
+        <label value="&newExtensions.label;" accesskey="&newExtensions.accesskey;"
+               control="extensions"/>
         <textbox id="extensions" flex="1"/>
       </row>
       <row>
-        <text class="label" value="&newMIME.label;" accesskey="&newMIME.accesskey;"
-              for="mimeType"/>
+        <label value="&newMIME.label;" accesskey="&newMIME.accesskey;"
+               control="mimeType"/>
         <textbox id="mimeType" flex="1"/>
       </row>
       <row>
-        <text class="label" value="&newAppPath.label;" accesskey="&newAppPath.accesskey;"
-              for="appPath"/>
+        <label value="&newAppPath.label;" accesskey="&newAppPath.accesskey;"
+               control="appPath"/>
         <textbox id="appPath" flex="1"/>
         
       </row>

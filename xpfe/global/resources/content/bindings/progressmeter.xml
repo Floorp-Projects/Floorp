@@ -18,7 +18,7 @@
           </xul:progressbar>
           <xul:hbox>
             <xul:spacer flex="1"/>
-            <xul:text class="progress-text" inherits="value=label"/>
+            <xul:label class="progress-text" inherits="value=label"/>
             <xul:spacer flex="1"/>
           </xul:hbox>
         </xul:stack>

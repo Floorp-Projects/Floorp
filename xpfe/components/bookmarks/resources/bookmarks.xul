@@ -48,7 +48,7 @@
         xmlns:web="http://home.netscape.com/WEB-rdf#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         width="630" height="400" screenX="20" screenY="20"
-        persist="width height screenX screenY sizemode" orient="vertical"
+        persist="width height screenX screenY sizemode"
         onload="Startup();" onunload="Shutdown();">
 
   <!-- The order of loading of these script files is IMPORTANT -->

@@ -2,7 +2,6 @@
 
 <bindings id="textBindings"
    xmlns="http://www.mozilla.org/xbl"
-   xmlns:html="http://www.w3.org/1999/xhtml"
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
   <!-- bound to <description>s -->
@@ -48,7 +47,7 @@
     </handlers>
   </binding>
 
-  <binding id="text-for" extends="chrome://global/content/bindings/text.xml#text-base">
+  <binding id="label-for" extends="chrome://global/content/bindings/text.xml#text-base">
     <handlers>
       <handler event="click" action="var forElementID = this.getAttribute('for');
                                      if (forElementID)

@@ -3,12 +3,7 @@
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/sidebar/sidebarOverlay.dtd">
 
-<page xmlns ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        xmlns:html="http://www.w3.org/1999/xhtml">
-
-
-        <html class="header">&sidebar.pagenotfound.label;</html>
- 
-
+<page xmlns ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <description class="header">&sidebar.pagenotfound.label;</description>
 </page>
 

@@ -10,12 +10,12 @@
   <!-- Wizard Buttons -->
    <hbox id="wizardButtons">
     <spacer flex="100%"/>
-    <button class="dialog" id="wiz-cancel-button" label="&cancelButton.label;" oncommand="wizardManager.onCancel();" />
+    <button id="wiz-cancel-button" label="&cancelButton.label;" oncommand="wizardManager.onCancel();" />
     <spacer flex="20%"/>
-    <button class="dialog" id="wiz-back-button" label="&backButton.label;" oncommand="wizardManager.onBack();"/>
-    <button class="dialog right" id="wiz-next-button" label="&nextButton.label;" oncommand="wizardManager.onNext();"/>
+    <button id="wiz-back-button" label="&backButton.label;" oncommand="wizardManager.onBack();"/>
+    <button class="right" id="wiz-next-button" label="&nextButton.label;" oncommand="wizardManager.onNext();"/>
     <spacer flex="5%"/>
-    <button class="dialog" id="wiz-finish-button" label="&finishButton.label;" oncommand="wizardManager.onFinish();" />
+    <button id="wiz-finish-button" label="&finishButton.label;" oncommand="wizardManager.onFinish();" />
     <spacer flex="5%"/>
   </hbox>
   

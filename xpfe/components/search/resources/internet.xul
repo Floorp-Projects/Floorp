@@ -5,7 +5,7 @@
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/search/internet.dtd">
 
-<window class="dialog" orient="vertical"
+<window class="dialog"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" onload="loadPage()" onunload="unloadPage()">
 
@@ -15,7 +15,7 @@
   <hbox>
     <spacer flex="100%" />
 
-    <html>&search.label;</html>
+    <description>&search.label;</description>
 
     <template id="categoryTemplate">
       <rule iscontainer="true">
@@ -36,7 +36,7 @@
 
     </menulist>
 
-    <html>&for.label;</html>
+    <description>&for.label;</description>
     <textfield id="searchtext" size="20" onkeypress="if (event.keyCode == 13) { doSearch(); }" />
     <button id="searchbutton" oncommand="return doSearch();" label="&search.button.label;"/>
     <button id="stopbutton" oncommand="return doStop();" style="display: none;" label="&stop.button.label;"/>

@@ -12,8 +12,8 @@
 
   <binding id="menu" extends="chrome://global/content/bindings/menu.xml#menuitem-base">
     <content>
-      <xul:text class="menu-text" flex="1" inherits="value=label,accesskey,crop" crop="right"/>
-      <xul:text class="menu-accel" inherits="value=acceltext"/>
+      <xul:label class="menu-text" flex="1" inherits="value=label,accesskey,crop" crop="right"/>
+      <xul:label class="menu-accel" inherits="value=acceltext"/>
       <xul:hbox align="center" class="menu-right" inherits="menuactive,disabled">
         <xul:image/>
       </xul:hbox>
@@ -28,8 +28,8 @@
 
   <binding id="menuitem" extends="chrome://global/content/bindings/menu.xml#menuitem-base">
     <content>
-      <xul:text class="menu-text" flex="1" inherits="value=label,accesskey,crop" crop="right"/>
-      <xul:text class="menu-accel" inherits="value=acceltext"/>
+      <xul:label class="menu-text" flex="1" inherits="value=label,accesskey,crop" crop="right"/>
+      <xul:label class="menu-accel" inherits="value=acceltext"/>
     </content>
     
     <implementation>
@@ -40,7 +40,7 @@
 
   <binding id="menu-menubar" extends="chrome://global/content/bindings/menu.xml#menuitem-base">
     <content>
-      <xul:text class="menubar-text" inherits="value=label,accesskey,crop" crop="right"/>
+      <xul:label class="menubar-text" inherits="value=label,accesskey,crop" crop="right"/>
       <children includes="menupopup"/>
     </content>
   </binding>
@@ -48,7 +48,7 @@
   <binding id="menu-menubar-iconic" extends="chrome://global/content/bindings/menu.xml#menuitem-base">
     <content>
       <xul:image class="menubar-left"/>
-      <xul:text class="menubar-text" inherits="value=label,accesskey,crop" crop="right"/>
+      <xul:label class="menubar-text" inherits="value=label,accesskey,crop" crop="right"/>
       <children includes="menupopup"/>
     </content>
   </binding>
@@ -59,8 +59,8 @@
                inherits="selected,menuactive,disabled,checked">
         <xul:image inherits="src"/>
       </xul:hbox>
-      <xul:text class="menu-iconic-text" flex="1" inherits="value=label,accesskey,crop" crop="right"/>
-      <xul:text class="menu-iconic-accel" inherits="value=acceltext"/>
+      <xul:label class="menu-iconic-text" flex="1" inherits="value=label,accesskey,crop" crop="right"/>
+      <xul:label class="menu-iconic-accel" inherits="value=acceltext"/>
     </content>
     
     <implementation>
@@ -74,8 +74,8 @@
       <xul:hbox class="menu-iconic-left" align="center" pack="center">
         <xul:image inherits="src"/>
       </xul:hbox>
-      <xul:text class="menu-iconic-text" flex="1" inherits="value=label,accesskey,crop" crop="right"/>
-      <xul:text class="menu-iconic-accel" inherits="value=acceltext"/>
+      <xul:label class="menu-iconic-text" flex="1" inherits="value=label,accesskey,crop" crop="right"/>
+      <xul:label class="menu-iconic-accel" inherits="value=acceltext"/>
       <xul:hbox class="menu-right" inherits="menuactive,disabled" align="center" pack="center">
         <xul:image/>
       </xul:hbox>
@@ -90,7 +90,7 @@
   
   <binding id="menubutton-item" extends="chrome://global/content/bindings/menu.xml#menuitem-base">
     <content>
-      <xul:text class="menubutton-text" flex="1" inherits="value=label,accesskey,crop" crop="right"/>
+      <xul:label class="menubutton-text" flex="1" inherits="value=label,accesskey,crop" crop="right"/>
       <children includes="menupopup"/>
     </content>
   </binding>  

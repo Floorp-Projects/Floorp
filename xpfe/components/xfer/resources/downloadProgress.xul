@@ -33,10 +33,8 @@ Contributor(s):
 
 <!DOCTYPE window SYSTEM "chrome://global/locale/downloadProgress.dtd">
 
-<window xmlns:html="http://www.w3.org/1999/xhtml"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="dialog"
-        orient="vertical"
         title="&downloadWindow.title;"
         onload="onLoad()"
         style="width: 36em;"
@@ -69,37 +67,37 @@ Contributor(s):
       <rows>
         <row>
           <hbox align="center" pack="end">
-            <text class="label" value="&location;"/>
+            <label value="&location;"/>
           </hbox>
           <textbox id="dialog.location" class="scrollfield" readonly="" flex="1"/>
         </row>
         <separator class="thin"/>
         <row>
           <hbox align="center" pack="end">
-            <text class="label" value="&saving;"/>
+            <label value="&saving;"/>
           </hbox>
           <textbox id="dialog.fileName" class="scrollfield" readonly="" flex="1"/>
         </row>
         <separator class="thin"/>
         <row>
           <hbox align="center" pack="end">
-            <text class="label" value="&status;"/>
+            <label value="&status;"/>
           </hbox>
-          <text class="label" id="dialog.status" value="&#160;" flex="1"/>
+          <label id="dialog.status" value="&#160;" flex="1"/>
         </row>
         <separator class="thin"/>
         <row>
           <hbox align="center" pack="end">
-            <text class="label" value="&timeLeft;"/>
+            <label value="&timeLeft;"/>
           </hbox>
-          <text class="label" id="dialog.timeLeft" value="&#160;"/>
+          <label id="dialog.timeLeft" value="&#160;"/>
         </row>
         <separator class="thin"/>
         <row>
           <hbox align="center" pack="end">
-            <text class="label" value="&timeElapsed;"/>
+            <label value="&timeElapsed;"/>
           </hbox>
-          <text class="label" id="dialog.timeElapsed" value="&#160;"/>
+          <label id="dialog.timeElapsed" value="&#160;"/>
         </row>
         <separator class="thin"/>
         <row>
@@ -113,7 +111,7 @@ Contributor(s):
     
     <hbox id="CancelButton">
       <spacer flex="1"/>
-      <button class="dialog" id="cancel" label="&dialogCancel.label;" onclick="doCancelButton()"/>
+      <button id="cancel" label="&dialogCancel.label;" onclick="doCancelButton()"/>
       <spacer flex="1"/>
     </hbox>
 

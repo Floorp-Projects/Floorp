@@ -25,10 +25,8 @@
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-debug2.dtd" >
 
-<page xmlns:html="http://www.w3.org/1999/xhtml"
-      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      onload="parent.initPanel('chrome://communicator/content/pref/pref-debug2.xul');"
-      orient="vertical">
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      onload="parent.initPanel('chrome://communicator/content/pref/pref-debug2.xul');">
 
   <script type="application/x-javascript">
   <![CDATA[
@@ -43,41 +41,33 @@
   <!-- nothing on this page has accesskeys because this is a temporary debug
        panel and you can damn well click the widgets! -->
 
-  <groupbox orient="vertical">
+  <groupbox>
     <caption label="&debugNetworking.label;"/>
     <vbox align="start">
       <checkbox id="browserEnableKeepAlive" label="&debugEnableKeepAlive.label;"
-                pref="true" preftype="bool" prefstring="network.http.keep-alive"
-                prefattribute="checked"/>
+                prefstring="network.http.keep-alive"/>
       <checkbox id="browserEnablePipelining" label="&debugEnablePipelining.label;"
-                pref="true" preftype="bool" prefstring="network.http.pipelining"
-                prefattribute="checked"/>
+                prefstring="network.http.pipelining"/>
       <checkbox id="dirGenerateHtml" label="&debugEnableHTML.label;"
-                pref="true" preftype="bool" prefstring="network.dir.generate_html"
-                prefattribute="checked"/>
+                prefstring="network.dir.generate_html"/>
     </vbox>
-    <text class="label" value="&httpVersion.label;"  for="httpVersionString"/>
-    <textbox id="httpVersionString" wsm_persist="true"  maxlength="3" flex="0"
-              pref="true" preftype="string" prefstring="network.http.version"
-              prefattribute="value"/> 
-    <text class="label" value="&acceptEncoding.label;" for="acceptEncodingString"/>
-    <textbox id="acceptEncodingString" flex="1" wsm_persist="true"
-              pref="true" preftype="string" prefstring="network.http.accept-encoding"
-              prefattribute="value"/> 
+    <label value="&httpVersion.label;"  control="httpVersionString"/>
+    <textbox id="httpVersionString" maxlength="3"
+             prefstring="network.http.version"/> 
+    <label value="&acceptEncoding.label;" control="acceptEncodingString"/>
+    <textbox id="acceptEncodingString"
+             prefstring="network.http.accept-encoding"/> 
   </groupbox>
 
-  <groupbox orient="vertical">
+  <groupbox>
     <caption label="&debugCache.label;"/>
     <vbox align="start">
     <checkbox id="nglayoutDebugDisableXULCache" label="&debugDisableXULCache.label;"
-              pref="true" preftype="bool" prefstring="nglayout.debug.disable_xul_cache"
-              prefattribute="checked"/>
+              prefstring="nglayout.debug.disable_xul_cache"/>
     <checkbox id="browserEnableDiskCache" label="&debugEnableDiskCache.label;"
-              pref="true" preftype="bool" prefstring="browser.cache.disk.enable"
-              prefattribute="checked"/>
+              prefstring="browser.cache.disk.enable"/>
     <checkbox id="browserEnableCache" label="&debugEnableMemCache.label;"
-              pref="true" preftype="bool" prefstring="browser.cache.memory.enable"
-              prefattribute="checked"/>
+              prefstring="browser.cache.memory.enable"/>
 
     </vbox>
   </groupbox>

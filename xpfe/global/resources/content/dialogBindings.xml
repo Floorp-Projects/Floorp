@@ -2,15 +2,14 @@
 
 <bindings id="dialogBindings"
    xmlns="http://www.mozilla.org/xbl"
-   xmlns:html="http://www.w3.org/1999/xhtml"
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <binding id="smallheader">
     <content>
       <xul:hbox class="toolbar-primary" align="center" flex="1">
-        <xul:text class="box-smallheader-left" inherits="value=title"/>
+        <xul:label class="box-smallheader-left" inherits="value=title"/>
         <xul:spacer flex="1"/>
-        <xul:text class="box-smallheader-right" inherits="value=description"/>
+        <xul:label class="box-smallheader-right" inherits="value=description"/>
       </xul:hbox>
     </content>
     <implementation>
@@ -26,7 +25,7 @@
       <xul:hbox class="box-header-header toolbar-primary" flex="1" align="center">
         <xul:image inherits="src" class="box-header-circle"/>
         <xul:hbox align="center" class="box-header-text-box">
-          <xul:text class="box-header-text" inherits="value"/>
+          <xul:label class="box-header-text" inherits="value"/>
         </xul:hbox>
         <xul:spacer flex="1"/>
       </xul:hbox>
@@ -36,9 +35,9 @@
   <binding id="status">
     <content>
       <xul:hbox class="box-status-bg toolbar-standard" flex="1" align="center">
-        <xul:text class="box-status-text" inherits="label"/>
+        <xul:label class="box-status-text" inherits="label"/>
         <xul:spacer flex="1"/>
-        <xul:text class="box-status-progress" inherits="value=progress"/>
+        <xul:label class="box-status-progress" inherits="value=progress"/>
       </xul:hbox>  
     </content>
   </binding>

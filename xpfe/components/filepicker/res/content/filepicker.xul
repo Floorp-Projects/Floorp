@@ -27,27 +27,24 @@
 
 <?xml-stylesheet href="chrome://global/skin/filepicker.css" type="text/css"?>
 
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
-
 <!DOCTYPE window SYSTEM "chrome://global/locale/filepicker.dtd" >
 
-<window id="main-window"
+<dialog id="main-window"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns:nc="http://home.netscape.com/NC-rdf#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  orient="vertical"
   onload="filepickerLoad();"
   width="426" height="300"
-  class="dialog"
+  ondialogaccept="return selectOnOK();"
+  ondialogcancel="return onCancel();"
   persist="screenX screenY">
 
 <stringbundle id="bundle_filepicker" src="chrome://global/locale/filepicker.properties"/>
 <script type="application/x-javascript" src="chrome://global/content/nsFileView.js"/>
 <script type="application/x-javascript" src="chrome://global/content/filepicker.js"/>
-<keyset id="dialogKeys"/>
 
 <hbox align="center">
-  <text value="&lookInMenuList.label;"/>
+  <label value="&lookInMenuList.label;"/>
   <menulist id="lookInMenuList" flex="1" oncommand="onDirectoryChanged(event.target);" crop="left">
     <menupopup id="lookInMenu"/>
   </menulist>
@@ -81,17 +78,14 @@
 
   <rows>
     <row align="center">
-      <text value="&textInput.label;"/>
+      <label value="&textInput.label;"/>
       <textbox id="textInput" flex="1" oninput="doEnabling()" 
                onfocus="onTextFieldFocus();"/>
     </row>
     <row id="filterBox" hidden="true" align="center">
-      <text value="&filterMenuList.label;"/>
+      <label value="&filterMenuList.label;"/>
       <menulist id="filterMenuList" flex="1" oncommand="onFilterChanged(event.target);"/>
     </row>
   </rows>
 </grid>
-
-<hbox id="okCancelButtons"/>
-
-</window>
+</dialog>

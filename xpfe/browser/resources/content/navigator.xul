@@ -44,7 +44,7 @@ Contributor(s): ______________________________________. -->
 %navigatorDTD;
 ]>
 
-<window id="main-window" xmlns:html="http://www.w3.org/1999/xhtml"
+<window id="main-window"
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="Startup()" onunload="Shutdown()"
@@ -52,7 +52,7 @@ Contributor(s): ______________________________________. -->
         title="&mainWindow.title;" 
         titlemodifier="&mainWindow.titlemodifier;" 
         titlemenuseparator="&mainWindow.titlemodifiermenuseparator;"
-        windowtype="navigator:browser" orient="vertical"
+        windowtype="navigator:browser"
         width="640" height="480"
         screenX="10" screenY="10"
         persist="screenX screenY width height sizemode"> 
@@ -183,6 +183,7 @@ Contributor(s): ______________________________________. -->
                      onblur="URLBarBlurHandler(event);">
               <image id="page-proxy-button" allowevents="true"
                      ondraggesture="PageProxyDragGesture(event);"/>
+  
               <menupopup id="ubhist-popup" class="autocomplete-history-popup"
                          popupalign="topleft" popupanchor="bottomleft"
                          onpopupshowing="createUBHistoryMenu(event.target);" 

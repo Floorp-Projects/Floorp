@@ -803,7 +803,7 @@
     <content>
       <xul:hbox class="outlinercol-box" flex="1" align="center">
         <xul:image class="outliner-image" inherits="src"/>
-        <xul:text class="outlinercol-text" inherits="crop,value=label" flex="1" crop="right"/>
+        <xul:label class="outlinercol-text" inherits="crop,value=label" flex="1" crop="right"/>
         <xul:image class="outlinercol-sortdirection"/>
       </xul:hbox>
     </content>

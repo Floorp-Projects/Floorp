@@ -33,9 +33,9 @@
 
 <window xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    		title="&window.title;"
-		    class="dialog" orient="vertical"
-  		  onload="if( parent.handle ) parent.handle.onpageload( 'pref-proxy-manual' ); else parent.queuedTag = 'pref-proxy-manual';">
+        title="&window.title;"
+        class="dialog"
+        onload="if( parent.handle ) parent.handle.onpageload( 'pref-proxy-manual' ); else parent.queuedTag = 'pref-proxy-manual';">
 
 <keyset id="dialogKeys"/>
 

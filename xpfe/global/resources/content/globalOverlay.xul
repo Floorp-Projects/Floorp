@@ -7,7 +7,7 @@
 
   <popupset id="aTooltipSet">
     <popup id="aTooltip" class="tooltip" onpopupshowing="return FillInTooltip(document.tooltipNode);" > 
-      <html id="TOOLTIP-tooltipText" class="tooltip-label" flex="1"/>
+      <label id="TOOLTIP-tooltipText" class="tooltip-label" flex="1"/>
     </popup>
   </popupset>
 

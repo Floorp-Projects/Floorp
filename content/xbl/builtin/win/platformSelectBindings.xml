@@ -34,7 +34,7 @@
       <xul:treerow>
         <xul:treecell style="-moz-binding: none;">
           <!--xul:treeindentation/-->
-          <xul:text inherits="value=label" flex="1" crop="right"/>
+          <xul:label inherits="value=label" flex="1" crop="right"/>
         </xul:treecell>
       </xul:treerow>
       <xul:treechildren>
@@ -46,12 +46,12 @@
   <binding id="select" extends="resource:///res/builtin/selectBindings.xml#select">
     <content sizetopopup="true">
       <xul:box class="select-menulist-internal-box" flex="1">
-        <xul:box class="select-menulist-display-box" flex="1" valign="middle" autostretch="never">
-          <xul:text value="[[[[[MENULIST!]]]]]" class="select-menulist-text" 
+        <xul:box class="select-menulist-display-box" flex="1" valign="middle" align="center">
+          <xul:label value="[[[[[MENULIST!]]]]]" class="select-menulist-text" 
                     selectattr="text" inherits="accesskey" crop="right" flex="1"/>
         </xul:box>
         <xul:box class="select-menulist-dropmarker-box-1" valign="middle" inherits="open">
-          <xul:box class="select-menulist-dropmarker-box-2" flex="1" autostretch="never" valign="middle" inherits="open">
+          <xul:box class="select-menulist-dropmarker-box-2" flex="1" align="center" valign="middle" inherits="open">
             <xul:image class="select-menulist-dropmarker" inherits="disabled"/>
           </xul:box>
         </xul:box>
@@ -66,14 +66,14 @@
  
   <binding id="option" extends="resource:///res/builtin/selectBindings.xml#option">
     <content includes="*">
-      <xul:text inherits="value=xbl:text,value=label" crop="right"/>
+      <xul:label inherits="value=xbl:text,value=label" crop="right"/>
     </content>
   </binding>
   
   <binding id="optgroup" extends="xul:menu">
     <!-- extends="resource:///res/builtin/selectBindings.xml#optgroup-size"> -->
     <content includes="*">
-      <xul:text inherits="value=label" crop="right"/>
+      <xul:label inherits="value=label" crop="right"/>
       <xul:menupopup style="overflow:auto; -moz-binding: none;" menugenerated="true">
         <children/>
       </xul:menupopup>

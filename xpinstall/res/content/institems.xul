@@ -29,21 +29,19 @@ Contributor(s):
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/xpinstall/institems.dtd">
 
-<window xmlns:html="http://www.w3.org/1999/xhtml"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="onLoad()"
         title="&dialog.title;"
         class="dialog"
         width="450"
-        height="260"
-        orient="vertical">
+        height="260">
 
     <script src="chrome://communicator/content/xpinstall/institems.js"/>
     <keyset id="dialogKeys"/>
     <stringbundle id="xpinstallBundle" src="chrome://communicator/locale/xpinstall/xpinstall.properties"/>
 
-    <hbox flex="1" autostretch="never">
-        <hbox autostretch="never" flex="1">
+    <hbox flex="1" align="center">
+        <hbox align="center">
             <image class="alert-icon" style="margin: 5px"/>
         </hbox>
 
@@ -52,7 +50,7 @@ Contributor(s):
             <label value="&areYouSure.label;" id="sureText"/>
             <separator class="thin"/>
 
-            <tree id="modulesTree" class="inset">
+            <tree id="modulesTree">
                 <treecolgroup>
                     <treecol flex="35%"/>
                     <splitter class="tree-splitter"/>
@@ -74,5 +72,5 @@ Contributor(s):
     </hbox>
     <separator class="thin"/>
 
-    <hbox id="okCancelButtonsRight" autostretch="never"/>
+    <hbox id="okCancelButtonsRight"/>
 </window>

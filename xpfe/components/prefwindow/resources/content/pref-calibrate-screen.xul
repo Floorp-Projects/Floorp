@@ -32,7 +32,6 @@
         title="&calibrateDialog.title;"
         class="dialog" 
         onload="Init();"
-        orient="vertical" 
         persist="screenX screenY">
 
   <script type="application/x-javascript" 
@@ -46,7 +45,7 @@
     </vbox>
 
     <hbox align="center">
-      <text value="&calibrate.instructions;"/>
+      <label value="&calibrate.instructions;"/>
     </hbox>
       
     <separator class="thin"/>

@@ -22,10 +22,17 @@
                                   onget="return this.getAttribute('accesskey');"/>
     </implementation>      
   </binding>
-  
+
+  <binding id="control-item" extends="chrome://global/content/bindings/general.xml#basetext">
+    <implementation>
+      <property name="value"      onset="return this.setAttribute('value', val);"
+                                  onget="return this.getAttribute('value');"/>
+    </implementation>
+  </binding>
+
   <binding id="text-label">
     <handlers>
-      <handler event="click" action="var forElementID = this.getAttribute('for');
+      <handler event="click" action="var forElementID = this.getAttribute('control');
                                      if (forElementID)
                                        var forElement = document.getElementById(forElementID);
                                      if(forElement)
@@ -174,7 +181,7 @@
       <xul:hbox class="button-internal-box" align="center" flex="1">
         <xul:image class="button-icon" inherits="src"/>
         <xul:hbox class="button-text-container" flex="1" ileattr="text-container">
-          <xul:text class="button-text" inherits="value=label,accesskey,crop,dragover-top" ileattr="text" rootcontent="button" flex="1"/>
+          <xul:label class="button-text" inherits="value=label,accesskey,crop,dragover-top" ileattr="text" rootcontent="button" flex="1"/>
         </xul:hbox>
       </xul:hbox>
       <children includes="menupopup"/>
@@ -211,7 +218,7 @@
     <content>
       <xul:hbox class="statusbar-panel-box" align="center" flex="1">
         <xul:image class="statusbar-panel-icon" inherits="src"/>
-        <xul:text class="statusbar-panel-text" inherits="value=label,crop" crop="right" flex="1"/>
+        <xul:label class="statusbar-panel-text" inherits="value=label,crop" crop="right" flex="1"/>
       </xul:hbox>
     </content>
 

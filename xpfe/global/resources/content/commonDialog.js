@@ -52,11 +52,11 @@ function commonDialogOnLoad()
   var i;
 
   for (i = 0; i < messageParagraphs.length; i++) {
-    var htmlNode = document.createElement("html");
-    //htmlNode.setAttribute("style", "max-width: 45em;");
+    var descriptionNode = document.createElement("description");
+    //descriptionNode.setAttribute("style", "max-width: 45em;");
     var text = document.createTextNode(messageParagraphs[i]);
-    htmlNode.appendChild(text);
-    messageParent.appendChild(htmlNode);
+    descriptionNode.appendChild(text);
+    messageParent.appendChild(descriptionNode);
   }
 
   setElementText("info.header", gCommonDialogParam.GetString(3), true);

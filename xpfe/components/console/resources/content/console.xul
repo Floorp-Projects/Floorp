@@ -35,11 +35,10 @@ Contributor(s): Joe Hewitt <hewitt@netscape.com>
   <!ENTITY % util SYSTEM "chrome://communicator/locale/utilityOverlay.dtd"> %util;
 ]>
 
-<window id="JSConsoleWindow" xmlns:html="http://www.w3.org/1999/xhtml"
+<window id="JSConsoleWindow"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&console.title;"
         windowtype="global:console"
-        orient="vertical"
         width="640" height="480"
         screenX="10" screenY="10"
         persist="screenX screenY width height"> 

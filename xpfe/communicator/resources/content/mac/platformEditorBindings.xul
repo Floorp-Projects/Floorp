@@ -2,7 +2,6 @@
 <!-- mac version of platformEditorBindings.xul -->
 
 <keybinding id="platformEditorBindings"
-	 xmlns:html="http://www.w3.org/1999/xhtml"
 	 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <!-- Mac-specific key bindings -->

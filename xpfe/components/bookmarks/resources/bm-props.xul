@@ -25,8 +25,6 @@
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/bookmarks/bookmarks.css" type="text/css"?>
 
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
-
 <!DOCTYPE window [
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
 %brandDTD;
@@ -34,18 +32,15 @@
 %bmpropsDTD;
 ]>
 
-<window id="bmPropsWindow" xmlns:html="http://www.w3.org/1999/xhtml"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+<dialog id="bmPropsWindow" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&bookmarks.windowtitle.label;"
         onload="Init()" style="width: 30em;"
-        class="dialog" orient="vertical">
+        ondialogaccept="Commit();">
  
   <stringbundle id="bundle_bookmark" src="chrome://communicator/locale/bookmarks/bookmark.properties"/>
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bm-props.js"/>
-
-  <keyset id="dialogKeys"/>  
-  
+ 
   <keyset id="keyset"/>  
     
   <tabbox>
@@ -60,7 +55,7 @@
         <hbox align="start">
           <image class="message-icon"/>
           <separator class="thin" orient="vertical"/>
-          <html flex="1">&generaldesc.label;</html>
+          <description flex="1">&generaldesc.label;</description>
         </hbox>
    
         <separator class="thin"/>
@@ -73,19 +68,19 @@
             </columns>
             <rows>
               <row>
-                <text class="label" value="&bookmarks.name.label;" for="name"/>
+                <label value="&bookmarks.name.label;" control="name"/>
                 <textbox id="name"/>
               </row>
               <row id="locationrow">
-                <text class="label" value="&bookmarks.location.label;" for="url"/>
+                <label value="&bookmarks.location.label;" control="url"/>
           			<textbox id="url" />
               </row>
               <row id="shortcutrow">
-                <text class="label" value="&bookmarks.shortcut.label;" for="shortcut"/>
+                <label value="&bookmarks.shortcut.label;" control="shortcut"/>
     		      	<textbox id="shortcut" />
               </row>
               <row>
-                <text class="label" value="&bookmarks.description.label;" for="description"/>
+                <label value="&bookmarks.description.label;" control="description"/>
                 <textbox multiline="true" wrap="virtual" id="description" flex="1"/>
               </row>
             </rows>
@@ -99,13 +94,13 @@
         <hbox align="center">
           <image id="schedule-icon"/>
           <separator class="thin" orient="vertical"/>
-          <html flex="1">&schedule.description;</html>
+          <description flex="1">&schedule.description;</description>
         </hbox>
         <separator class="thin"/>
         <hbox class="box-padded">
           <spacer flex="1"/>
-          <groupbox orient="vertical">
-            <caption class="label" label="&checkforupdates.legend.label;"/>
+          <groupbox>
+            <caption label="&checkforupdates.legend.label;"/>
             <grid flex="1">
               <columns>
                 <column/>
@@ -113,7 +108,7 @@
               </columns>
               <rows>
                 <row align="center">
-                  <text class="label" value="&when.label;" for="dayRange"/>
+                  <label value="&when.label;" control="dayRange"/>
                   <hbox>
                     <menulist id="dayRange" oncommand="dayRangeChange(this);">
                       <menupopup>
@@ -134,8 +129,8 @@
                   </hbox>
                 </row>
                 <row align="center">
-                  <text id="startHourRangeLabel" class="label" 
-                        value="&from.label;" for="startHourRange"/>
+                  <label id="startHourRangeLabel" 
+                        value="&from.label;" control="startHourRange"/>
                   <hbox align="center">
                     <menulist id="startHourRange" oncommand="setEndHourRange()">
                       <menupopup>
@@ -165,8 +160,8 @@
                         <menuitem value="23" label="&PMeleven.label;"/>
                       </menupopup>
                     </menulist>
-                    <text id="endHourRangeLabel" class="label" 
-                          value="&to.label;" for="endHourRange"/>
+                    <label id="endHourRangeLabel" 
+                          value="&to.label;" control="endHourRange"/>
                     <menulist id="endHourRange">
                       <menupopup onpopupshowing="setEndHourRange()">
                         <menuitem value="1" label="&AMone.label;"/>
@@ -198,11 +193,11 @@
                   </hbox>
                 </row>
                 <row align="center">
-                  <text id="durationLabel" class="label" 
-                        value="&every.label;" for="duration"/>
+                  <label id="durationLabel" 
+                        value="&every.label;" control="duration"/>
                   <hbox align="center">
               	    <textbox id="duration" size="4" value="60" />
-      	            <text id="durationSubLabel" class="label" value="&minutes.label;" />
+                    <label id="durationSubLabel" value="&minutes.label;" />
                   </hbox>
                 </row>
               </rows>
@@ -218,7 +213,7 @@
         <hbox align="start">
           <image id="notification-icon"/>
           <separator class="thin" orient="vertical"/>
-          <html flex="1">&notification.description;</html>
+          <description flex="1">&notification.description;</description>
         </hbox>
         <separator class="thin"/>
         <hbox class="box-padded">
@@ -236,10 +231,5 @@
         </hbox>
       </vbox>
     </tabpanels>
-  </tabbox>
-  
-  <separator/>
-    
-  <hbox id="okCancelButtonsRight"/>
-
-</window>
+  </tabbox> 
+</dialog>

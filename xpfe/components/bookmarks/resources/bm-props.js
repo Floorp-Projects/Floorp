@@ -66,9 +66,6 @@ function Init()
   var x;
   gBookmarkURL = window.arguments[0];
 
-  // set up action buttons
-  doSetOKCancel(Commit);
-
   // Initialize the properties panel by copying the values from the
   // RDF graph into the fields on screen.
 

@@ -46,6 +46,7 @@ var gDeleteByHostname;
 var gDeleteByDomain;
 var gHistoryBundle;
 var gHistoryStatus;
+var gHistoryGrouping;
 var gWindowManager = null;
 
 function HistoryInit()
@@ -79,11 +80,11 @@ function HistoryInit()
             var grouping = gPrefService.getCharPref("browser.history.grouping");
         }
         catch(e) {
-            grouping = "";
+            gHistoryGrouping = "";
         }
-        GroupBy(grouping);
+        GroupBy(gHistoryGrouping);
         if (gHistoryStatus) {  // must be the window
-            switch(grouping) {
+            switch(gHistoryGrouping) {
             case "site":
                 document.getElementById("groupBySite").setAttribute("checked", "true");
                 break;
@@ -318,14 +319,16 @@ function updateItems()
   var openItemInNewWindow = document.getElementById("miOpenInNewWindow");
   if (count > 1) {
     document.getElementById("miAddBookmark").setAttribute("label", document.getElementById('multipleBookmarks').getAttribute("label"));
-    var min = new Object(); 
-    var max = new Object();
-    var rangeCount = gHistoryOutliner.outlinerBoxObject.view.selection.getRangeCount();
-    for (var i = 0; i < rangeCount; ++i) {
-      gHistoryOutliner.outlinerBoxObject.view.selection.getRangeAt(i, min, max);
-      for (var k = max.value; k >= min.value; --k) {
-        if (isContainer(gHistoryOutliner, k))          
-          return false;
+    if (gHistoryGrouping == "day") {
+      var min = new Object(); 
+      var max = new Object();
+      var rangeCount = gHistoryOutliner.outlinerBoxObject.view.selection.getRangeCount();
+      for (var i = 0; i < rangeCount; ++i) {
+        gHistoryOutliner.outlinerBoxObject.view.selection.getRangeAt(i, min, max);
+        for (var k = max.value; k >= min.value; --k) {
+          if (isContainer(gHistoryOutliner, k))          
+            return false;
+        }
       }
     }
     openItem.setAttribute("hidden", "true");

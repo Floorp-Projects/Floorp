@@ -162,7 +162,6 @@ function openOnOK()
     gotoDirectory(dir);
   retvals.file = dir;
   retvals.buttonStatus = nsIFilePicker.returnCancel;
-  doSetOKCancel(selectOnOK, onCancel);
   return false;
 }
 

@@ -1,26 +1,26 @@
 <?xml version="1.0"?> 
-<!-- windows version of platformBrowserBindings.xul -->
+<!-- ps2 version of platformBrowserBindings.xul -->
 
 <keybinding id="platformBrowserBindings"
 	 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<!-- xul key for Windows -->
+<!-- xul key for OS/2 -->
 <keyset id="globalKeySet" xulkey="ctrl">
 
 <!-- other keybindings for cut/copy/paste -->
-<key id="winAlternativeCutKey" keycode="VK_DELETE"   
+<key id="os2AlternativeCutKey" keycode="VK_DELETE"   
   oncommand="
     var controller = document.commandDispatcher.getControllerForCommand('cmd_cut');
     controller.doCommand('cmd_cut');" modifiers="shift"/>
-<key id="winAlternateCopy2Key" keycode="VK_DELETE"   
+<key id="os2AlternateCopy2Key" keycode="VK_DELETE"   
   oncommand="
     var controller = document.commandDispatcher.getControllerForCommand('cmd_copy');
     controller.doCommand('cmd_copy');" modifiers="control"/>
-<key id="winAlternativeCopyKey" keycode="VK_INSERT" 
+<key id="os2AlternativeCopyKey" keycode="VK_INSERT" 
   oncommand="
     var controller = document.commandDispatcher.getControllerForCommand('cmd_copy');
     controller.doCommand('cmd_copy');" modifiers="control"/>
-<key id="winAlternativePasteKey" keycode="VK_INSERT" 
+<key id="os2AlternativePasteKey" keycode="VK_INSERT" 
   oncommand="
     var controller = document.commandDispatcher.getControllerForCommand('cmd_paste');
     controller.doCommand('cmd_paste');" modifiers="shift"/>
@@ -37,7 +37,7 @@
         controller.doCommand('cmd_selectBottom');" modifiers="shift, control"/>
 </keyset>
 
-<!-- End Windows-specific keybindings -->
+<!-- End OS/2-specific keybindings -->
 
 </keybinding>
 

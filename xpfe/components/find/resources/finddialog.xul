@@ -33,10 +33,9 @@ Contributor(s):
 <!DOCTYPE window SYSTEM "chrome://global/locale/finddialog.dtd">
 
 <dialog id="findDialog"
-  xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  buttons="accept,cancel" buttonpack="center"
-  ondialogaccept="return onAccept(event);"
+  buttonpack="center"
+  ondialogaccept="return onAccept();"
   windowtype="findInPage"
   onload="onLoad();"
   onunload="onUnload();"
@@ -55,7 +54,7 @@ Contributor(s):
     <rows>
       <row>
         <hbox align="center">
-          <text class="label" value="&findField.label;"/>
+          <label value="&findField.label;"/>
         </hbox>
         <hbox align="center">
           <textbox id="dialog.findKey" flex="1" oninput="doEnabling();"/>
@@ -73,6 +72,6 @@ Contributor(s):
   </grid>
 
   <!-- used to store the find text -->
-  <foo style="display:none;" id="fBLT" label="&findButton.label;"/>
+  <data style="display:none;" id="fBLT" label="&findButton.label;"/>
 
 </dialog>

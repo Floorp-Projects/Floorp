@@ -61,7 +61,7 @@ public:
   }
 #endif
 
-  // make sure we our kids get our orient, align, and autostretch instead of us.
+  // make sure we our kids get our orient and align instead of us.
   // our child box has no content node so it will search for a parent with one.
   // that will be us.
   virtual void GetInitialOrientation(PRBool& aHorizontal) { aHorizontal = PR_FALSE; }

@@ -36,10 +36,8 @@
 <dialog id="downloadItemProperties" 
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-        orient="vertical"
         style="width: 30em;"
         title="&downloadItemProperties.title;"
-        buttons="accept,cancel" buttonpack="right"                                   
         ondialogaccept="return onAccept(event);"                                      
         onload="Startup();" onunload="Shutdown();">
 
@@ -72,21 +70,21 @@
     
     <rows>
       <row>
-        <text class="label" value="&type.label;"/>
+        <label value="&type.label;"/>
         <textbox id="fileType" class="readonly-label"/>
       </row>
       <row>
-        <text class="label" value="&remotepath.label;"/>
+        <label value="&remotepath.label;"/>
         <textbox id="remotePath" class="readonly-label"/>
       </row>
       <row>
-        <text class="label" value="&localPath.label;"/>
+        <label value="&localPath.label;"/>
         <textbox id="localPath" class="readonly-label"/>
         <!-- XXX RFE - allow user to change this on the fly -->
       </row>
       <row>
-        <text class="label" value="&downloadStatus.label;"/>
-        <text class="label" id="downloadStatus"/>
+        <label value="&downloadStatus.label;"/>
+        <label id="downloadStatus"/>
       </row>
     </rows>
   </grid>  

@@ -24,9 +24,7 @@
 <?xml-stylesheet href="chrome://communicator/skin/dialogOverlay.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-search.dtd" >
-<page xmlns:html="http://www.w3.org/1999/xhtml"
-      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      orient="vertical"
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.initPanel('chrome://communicator/content/pref/pref-search.xul');checkEngine()">
 
   <script type="application/x-javascript">
@@ -42,11 +40,10 @@
     <caption label="&legendHeader;"/>
 
     <hbox align="center">
-      <text class="label" value="&defaultSearchEngine.label;" accesskey="&defaultSearchEngine.accesskey;" for="engineList"/>
+      <label value="&defaultSearchEngine.label;" accesskey="&defaultSearchEngine.accesskey;" control="engineList"/>
       <menulist id="engineList" ref="NC:SearchEngineRoot" datasources="rdf:internetsearch"
               sortResource="http://home.netscape.com/NC-rdf#Name" sortDirection="ascending"
-              pref="true" preftype="string" prefstring="browser.search.defaultengine"
-              prefattribute="value">
+              preftype="string" prefstring="browser.search.defaultengine">
               
         <template>
           <menupopup>
@@ -57,28 +54,23 @@
     </hbox>                      
   </groupbox>
 
-  <groupbox orient="vertical">
+  <groupbox>
     <caption label="&searchResults.label;"/>
     <!-- XXX - unfortunately we can't have an autostretch never box here
                because it causes the text not to wrap and the panel content
                to go offscreen. We need to come up with a better solution
                to allow wrapping and even focusrings - ben@netscape.com -->
     <checkbox id="openSidebarPanel" label="&openSidebarSearchPanel.label;" accesskey="&openSidebarSearchPanel.accesskey;"
-              pref="true" preftype="bool" prefstring="browser.search.opensidebarsearchpanel"
-              prefattribute="checked"/>
+              prefstring="browser.search.opensidebarsearchpanel"/>
   </groupbox>
 
-  <groupbox orient="vertical">
+  <groupbox>
     <caption label="&sidebarSearchTabPref.label;"/>
-    <radiogroup orient="vertical" align="start"
-        id="sidebarSearchMode"
-        pref="true"
-        preftype="int"
-        prefdefval="0"
-        prefstring="browser.search.mode"
-        prefattribute="value">
-      <radio group="sidebarSearchMode" value="0" label="&searchModeBasic.label;" accesskey="&searchModeBasic.accesskey;"/>
-      <radio group="sidebarSearchMode" value="1" label="&searchModeAdvanced.label;" accesskey="&searchModeAdvanced.accesskey;"/>
+    <radiogroup id="sidebarSearchMode"
+                prefdefval="0"
+                prefstring="browser.search.mode">
+      <radio value="0" label="&searchModeBasic.label;" accesskey="&searchModeBasic.accesskey;"/>
+      <radio value="1" label="&searchModeAdvanced.label;" accesskey="&searchModeAdvanced.accesskey;"/>
     </radiogroup>
   </groupbox>
 

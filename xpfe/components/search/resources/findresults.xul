@@ -4,8 +4,7 @@
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/search/findresults.dtd">
 
-<window class="dialog" title="&window.title.label;" style="width:100%; height:100%; background-color:white" orient="vertical"
-  xmlns:html="http://www.w3.org/1999/xhtml"
+<window class="dialog" title="&window.title.label;" style="width:100%; height:100%; background-color:white"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 

@@ -306,8 +306,8 @@ function checkForTitle(elem, htmllocalname)
  * Set text of node id to value
  * if value="" the node with specified id is hidden.
  * Node should be have one of these forms
- * <xul:text id="id-text" value=""/>
- * <xul:html id="id-text"/>
+ * <xul:label id="id-text" value=""/>
+ * <xul:description id="id-text"/>
  */
 function setInfo(id, value)
 {
@@ -318,10 +318,10 @@ function setInfo(id, value)
 
     var node = document.getElementById(id+"-text");
 
-    if (node.namespaceURI == XULNS && node.localName == "text") {
+    if (node.namespaceURI == XULNS && node.localName == "label") {
         node.setAttribute("value",value);
 
-    } else if (node.namespaceURI == XULNS && node.localName == "html") {
+    } else if (node.namespaceURI == XULNS && node.localName == "description") {
         while (node.hasChildNodes())
             node.removeChild(node.firstChild);
         node.appendChild(node.ownerDocument.createTextNode(value));

@@ -22,6 +22,5 @@ Contributor(s): ______________________________________. -->
 <!-- DO NOT REMOVE OR ADD TO THIS FILE! -->
 
 <overlay id="navExtraOverlay"
-         xmlns:html="http://www.w3.org/1999/xhtml"
 	 xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"/>

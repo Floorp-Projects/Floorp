@@ -27,9 +27,7 @@
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-navigator.dtd" >
 
-<page xmlns:html="http://www.w3.org/1999/xhtml"
-      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      orient="vertical"
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.initPanel('chrome://communicator/content/pref/pref-navigator.xul');">
 
   <stringbundle id="bundle_prefutilities" src="chrome://communicator/locale/pref/prefutilities.properties"/>
@@ -49,13 +47,10 @@
   <!-- navigator starts with -->  
   <groupbox>
     <caption label="&navRadio;"/>
-    
-    <radiogroup id="startupPage" align="start" orient="vertical"
-                pref="true" preftype="int" prefstring="browser.startup.page"
-                prefattribute="value">
-      <radio group="startupPage" value="0" label="&blankPageRadio.label;" accesskey="&blankPageRadio.accesskey;"/>
-      <radio group="startupPage" value="1" label="&homePageRadio.label;" accesskey="&homePageRadio.accesskey;"/>
-      <radio group="startupPage" value="2" label="&lastPageRadio.label;" accesskey="&lastPageRadio.accesskey;"/>
+    <radiogroup id="startupPage" prefstring="browser.startup.page">
+      <radio value="0" label="&blankPageRadio.label;" accesskey="&blankPageRadio.accesskey;"/>
+      <radio value="1" label="&homePageRadio.label;" accesskey="&homePageRadio.accesskey;"/>
+      <radio value="2" label="&lastPageRadio.label;" accesskey="&lastPageRadio.accesskey;"/>
     </radiogroup>
 
   </groupbox>
@@ -64,71 +59,50 @@
   <groupbox>
     <caption label="&header2.label;"/>
     <vbox flex="1">
-      <html>&homePageIntro.label;</html>
+      <description>&homePageIntro.label;</description>
       <hbox align="center">
-        <text class="label" value="&location.label;" accesskey="&location.accesskey;" for="browserStartupHomepage"/>
-        <textbox id="browserStartupHomepage" type="autocomplete" flex="1" wsm_persist="true" 
-                   searchSessions="history" timeout="50" maxrows="6"
-                   pref="true" preftype="localizedstring" prefstring="browser.startup.homepage"
-                   prefattribute="value"/>  <!-- we may wish to change this to data
+        <label value="&location.label;" accesskey="&location.accesskey;" control="browserStartupHomepage"/>
+        <textbox id="browserStartupHomepage" type="autocomplete" flex="1" 
+                 searchSessions="history" timeout="50" maxrows="6" preftype="localizedstring"
+                 prefstring="browser.startup.homepage"/>  <!-- we may wish to change this to data
                                                  when we support fancy formatted local filenames -->
       </hbox>
       <hbox align="center" pack="end">
-        <button class="dialog" label="&useCurrent.label;" accesskey="&useCurrent.accesskey;"
+        <button label="&useCurrent.label;" accesskey="&useCurrent.accesskey;"
                 oncommand="setHomePageToCurrentPage();"
-                id="browserUseCurrent" pref="true" preftype="bool"
-                prefstring="pref.browser.homepage.disable_button.current_page" prefattribute="disabled"/>
-        <button class="dialog" label="&browseFile.label;" accesskey="&browseFile.accesskey;"
+                id="browserUseCurrent"
+                prefstring="pref.browser.homepage.disable_button.current_page"/>
+        <button label="&browseFile.label;" accesskey="&browseFile.accesskey;"
                 oncommand="selectFile();"
-                id="browserChooseFile" pref="true" preftype="bool"
-                prefstring="pref.browser.homepage.disable_button.select_file" prefattribute="disabled"/>
+                id="browserChooseFile"
+                prefstring="pref.browser.homepage.disable_button.select_file"/>
       </hbox>
     </vbox>
   </groupbox>
   
   <!-- toolbar buttons customization -->
-  <groupbox flex="1" id="prefShowButtons">
+  <groupbox flex="1" id="prefShowButtons" orient="horizontal">
     <caption label="&toolbarIntro.label;"/>
     <vbox>
 
-              <checkbox allowevents="true"
-                        id="bookmarksButton"
+              <checkbox id="bookmarksButton"
                         label="&bookmarksButton.label;"
-                        pref="true"
-                        preftype="bool"
-                        prefstring="browser.toolbars.showbutton.bookmarks"
-                        prefattribute = "checked"/>
-              <checkbox allowevents="true"
-                        id="goButton"
+                        prefstring="browser.toolbars.showbutton.bookmarks"/>
+              <checkbox id="goButton"
                         label="&goButton.label;"
-                        pref="true"
-                        preftype="bool"
-                        prefstring="browser.toolbars.showbutton.go"
-                        prefattribute = "checked"/>
-              <checkbox allowevents="true"
-                        id="homeButton"
+                        prefstring="browser.toolbars.showbutton.go"/>
+              <checkbox id="homeButton"
                         label="&homeButton.label;"
-                        pref="true"
-                        preftype="bool"
-                        prefstring="browser.toolbars.showbutton.home"
-                        prefattribute = "checked"/>
+                        prefstring="browser.toolbars.showbutton.home"/>
      </vbox>
      <vbox id="prefShowButtonsbox">
 
-              <checkbox allowevents="true"
-                        id="searchButton"
+              <checkbox id="searchButton"
                         label="&searchButton.label;"
-                        pref="true"
-                        preftype="bool"
-                        prefstring="browser.toolbars.showbutton.search"
-                        prefattribute = "checked"/>
-      	       <checkbox allowevents="true"
-                        id="printButton"
+                        prefstring="browser.toolbars.showbutton.search"/>
+      	      <checkbox id="printButton"
                         label="&printButton.label;"
-                        pref="true"
-                        preftype="bool"
-                        prefstring="browser.toolbars.showbutton.print"
-                        prefattribute = "checked"/>
+                        prefstring="browser.toolbars.showbutton.print"/>
       </vbox>
       <vbox id="prefShowButtonBox">
 

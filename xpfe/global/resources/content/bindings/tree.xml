@@ -412,7 +412,7 @@
   <binding id="treecell"
            extends="chrome://global/content/bindings/tree.xml#tree-base">
     <content>
-       <xul:text class="tree-cell-text" inherits="crop,value=label,align" flex="1" crop="right"/>
+       <xul:label class="tree-cell-text" inherits="crop,value=label,align" flex="1" crop="right"/>
     </content>
   </binding>
 
@@ -420,7 +420,7 @@
            extends="chrome://global/content/bindings/tree.xml#tree-base">
     <content>
       <xul:spacer flex="5"/>
-      <xul:text class="tree-cell-text" inherits="crop,value=label,align" flex="1" crop="right"/>
+      <xul:label class="tree-cell-text" inherits="crop,value=label,align" flex="1" crop="right"/>
     </content>
   </binding>
 
@@ -428,7 +428,7 @@
            extends="chrome://global/content/bindings/tree.xml#tree-base">
     <content>
       <xul:image class="tree-cell-icon" inherits="src"/>
-      <xul:text class="tree-cell-text" inherits="crop,value=label,align" flex="1" crop="right"/>
+      <xul:label class="tree-cell-text" inherits="crop,value=label,align" flex="1" crop="right"/>
     </content>
   </binding>
 
@@ -445,7 +445,7 @@
       <xul:treeindentation/>
       <xul:image class="tree-cell-twisty" twisty="true" inherits="hidden=notwisty" allowevents="true"/>
       <xul:image class="tree-cell-primary-icon" inherits="src"/>
-      <xul:text class="tree-cell-text" inherits="crop,value=label,align" flex="1" crop="right"/>
+      <xul:label class="tree-cell-text" inherits="crop,value=label,align" flex="1" crop="right"/>
     </content>
   </binding>
 
@@ -461,7 +461,7 @@
       <xul:image class="tree-cell-twisty" twisty="true" inherits="hidden=notwisty" allowevents="true"/>
       <xul:image class="tree-cell-primary-icon-inline-edit-folder" inherits="src"/>
       <xul:hbox class="inline-edit-cell-box" flex="1" ileattr="text-container">
-        <xul:text class="inline-edit-cell-text" ileattr="text" rootcontent="treecell"
+        <xul:label class="inline-edit-cell-text" ileattr="text" rootcontent="treecell"
                   inherits="crop,value=label,align,mode" flex="1" crop="right"/>
       </xul:hbox>
     </content>
@@ -478,7 +478,7 @@
       <xul:treeindentation/>
       <xul:image class="tree-cell-primary-icon" inherits="src"/>
       <xul:hbox class="inline-edit-cell-box" flex="1" ileattr="text-container">
-        <xul:text class="tree-cell-text" ileattr="text" rootcontent="treecell"
+        <xul:label class="tree-cell-text" ileattr="text" rootcontent="treecell"
                   inherits="crop,value=label,align,mode" flex="1" crop="right"/>
       </xul:hbox>
     </content>
@@ -493,7 +493,7 @@
 
     <content>
       <xul:hbox class="inline-edit-cell-box" flex="1" ileattr="text-container">
-        <xul:text class="tree-cell-text" ileattr="text" rootcontent="treecell" 
+        <xul:label class="tree-cell-text" ileattr="text" rootcontent="treecell" 
                   inherits="crop,value=label,align,mode" flex="1" crop="right"/>
       </xul:hbox>
     </content>
@@ -504,7 +504,7 @@
     <content>
       <xul:treeindentation/>
       <xul:image class="tree-cell-primary-icon" inherits="src"/>
-      <xul:text class="tree-cell-text" inherits="crop,value=label,align" flex="1" crop="right"/>
+      <xul:label class="tree-cell-text" inherits="crop,value=label,align" flex="1" crop="right"/>
     </content>
   </binding>
 
@@ -517,7 +517,7 @@
     <content>
       <xul:hbox class="treecell-header-box" flex="1" align="center">
         <xul:image class="tree-header-image" inherits="src"/>
-        <xul:text class="tree-header-text" inherits="crop,value=label,disabled" flex="1" crop="right"/>
+        <xul:label class="tree-header-text" inherits="crop,value=label,disabled" flex="1" crop="right"/>
         <xul:image class="tree-header-sortdirection"/>
       </xul:hbox>
     </content>

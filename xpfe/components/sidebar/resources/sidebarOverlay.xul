@@ -30,7 +30,6 @@
 ]>
 
 <overlay id="sidebarOverlay"
-  xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 
@@ -134,10 +133,10 @@
                 <vbox flex="1" class="iframe-panel loadarea">
                   <hbox flex="1" align="center">
                     <image class="image-panel-loading"/>
-                    <text class="text-panel-loading"
+                    <label class="text-panel-loading"
                       value="&sidebar.loading.label;"/>
                     <button label="&sidebar.loading.stop.label;" hidden="true"
-                      onclick="SidebarStopPanelLoad(this.parentNode.parentNode.parentNode.previousSibling);"/>
+                            oncommand="SidebarStopPanelLoad(this.parentNode.parentNode.parentNode.previousSibling);"/>
                   </hbox>
                   <spacer flex="100%"/>
                 </vbox>
@@ -151,9 +150,9 @@
         </template>
         <vbox id="sidebar-iframe-no-panels" class="iframe-panel" flex="1"
           hidden="true">
-          <html>&sidebar.no-panels.state;</html>
-          <html>&sidebar.no-panels.add;</html>
-          <html>&sidebar.no-panels.hide;</html>
+          <description>&sidebar.no-panels.state;</description>
+          <description>&sidebar.no-panels.add;</description>
+          <description>&sidebar.no-panels.hide;</description>
         </vbox>
       </vbox>
     </vbox>

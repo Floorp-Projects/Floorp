@@ -235,6 +235,7 @@
           if (!this._fireEvent(this, "wizardcancel"))
             return true;
 
+          window.close();
           window.setTimeout(function() {window.close();}, 1);
         ]]></body>
       </method>

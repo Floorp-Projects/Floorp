@@ -11,26 +11,24 @@
 
     <implementation implements="nsIDOMXULSelectControlElement">
       <property name="value" onset="this.setAttribute('value',val); return val;"
-                            onget="return this.getAttribute('value');"/>
+                             onget="return this.getAttribute('value');"/>
       <property name="disabled">
         <getter>
         <![CDATA[
-            var v = this.getAttribute('disabled');
-            return v=='true';
+            return this.getAttribute('disabled') == 'true';
         ]]>
         </getter>
         <setter>
         <![CDATA[
-          this.setAttribute('disabled', 'true');
-          var groupElements = this.getElementsByAttribute( "group", this.id );
-          for( var i = 0; i < groupElements.length; i++ ) {
-            if (val)
-              groupElements[i].setAttribute("disabled","true");
-            else
-              groupElements[i].removeAttribute("disabled");
-          }
-          if (!val)
+          if (val)
+            this.setAttribute('disabled', 'true');
+          else
             this.removeAttribute('disabled');
+          var children = this._getRadioChildren();
+          for (var i = 0; i < children.length; ++i) {
+            children[i].disabled = val;
+            }
+          }
           return val;
         ]]>
         </setter>
@@ -39,13 +37,10 @@
       <property name="selectedItem">
         <getter>
         <![CDATA[
-          this.disabled = this.disabled; // this strange line is to fire the setter for the disabled property
-          var groupElements = this.getElementsByAttribute( "group", this.id );
-          for( var i = 0; i < groupElements.length; i++ ) {
-            if( groupElements[i].checked || 
-                groupElements[i].getAttribute( "checked" ) == "true" ) {
-              return groupElements[i];
-            }
+          var children = this._getRadioChildren();
+          for (var i = 0; i < children.length; i++) {
+            if (children[i].selected)
+              return children[i];
           }
           return null;
         ]]>
@@ -54,18 +49,22 @@
         <![CDATA[
           if (this.getAttribute("focused") == "true") 
             val.setAttribute("focused", "true");
-          this.value = val.value;
 
-          val.checked = true;
+          val.setAttribute("selected", "true");
+          this.value = val.value;
           
           // uncheck all other group nodes
-          var groupElements = this.getElementsByAttribute( "group", this.id );
-          for( var i = 0; i < groupElements.length; i++ ) {
-            if( groupElements[i] != val ) {
-              groupElements[i].checked = false;
-              groupElements[i].removeAttribute("focused");
+          var children = this._getRadioChildren();
+          for (var i = 0; i < children.length; ++i) {
+            if (children[i] != val) {
+              children[i].removeAttribute("selected");
+              children[i].removeAttribute("focused");
             }
           }
+          var event = document.createEvent("Events");
+          event.initEvent("select", false, true);
+          this.dispatchEvent(event);
+
           return val;
         ]]>
         </setter>        
@@ -74,11 +73,10 @@
       <property name="focusedItem">
         <getter>
         <![CDATA[
-          var groupElements = this.getElementsByAttribute( "group", this.id );
-          for( var i = 0; i < groupElements.length; i++ ) {
-            if( groupElements[i].getAttribute( "focused" ) == "true" ) {
-              return groupElements[i];
-            }
+          var children = this._getRadioChildren();
+          for (var i = 0; i < children.length; i++) {
+            if (children[i].getAttribute("focused") == "true")
+              return children[i];
           }
           return null;
         ]]>
@@ -88,11 +86,10 @@
           if (val) val.setAttribute("focused", "true");
           
           // unfocus all other group nodes
-          var groupElements = this.getElementsByAttribute( "group", this.id );
-          for( var i = 0; i < groupElements.length; i++ ) {
-            if( groupElements[i] != val ) {
-                groupElements[i].removeAttribute("focused");
-            }
+          var children = this._getRadioChildren();
+          for (var i = 0; i < children.length; i++) {
+            if (children[i] != val)
+              children[i].removeAttribute("focused");
           }
           return val;
         ]]>
@@ -104,23 +101,45 @@
         <body>
         <![CDATA[
           var currentElement = this.focusedItem;
-          var groupElements = this.getElementsByAttribute( "group", this.id );
           var index;
-          for (var i = 0; i < groupElements.length; i++ ) {
-            if (groupElements[i] != currentElement) 
+          var children = this._getRadioChildren();
+          for (var i = 0; i < children.length; ++i ) {
+            if (children[i] != currentElement) 
               continue;
             if (aNextFlag) {
-              index = (i + 1) % groupElements.length;
-              this.selectedItem = groupElements[index];
+              index = (i + 1) % children.length;
+              this.selectedItem = children[index];
+              children[index].doCommand();
               break;
             }
             else {              
-              index = i > 0 ? i - 1 : groupElements.length - 1;
-              this.selectedItem = groupElements[index];
+              index = i > 0 ? i - 1 : children.length - 1;
+              this.selectedItem = children[index];
+              children[index].doCommand();
               break;
             }
           }
-          this.selectedItem.doCommand();
+        ]]>
+        </body>
+      </method>
+      <property name="mRadioChildren">[]</property>
+      <method name="_getRadioChildren">
+        <parameter name="aNode">this</parameter>
+        <body>
+        <![CDATA[
+          if (aNode) {
+            if (aNode == this && this.mRadioChildren)
+              return this.mRadioChildren;
+            else if (aNode.localName == "radio") {
+              this.mRadioChildren[this.mRadioChildren.length++] = aNode;
+              return this.mRadioChildren;
+            }
+            else if (aNode.localName == "radiogroup" && aNode != this)
+              return this.mRadioChildren;
+            for (var i = 0; i < aNode.childNodes.length; ++i)
+              this._getRadioChildren(aNode.childNodes[i]);
+          }
+          return this.mRadioChildren;
         ]]>
         </body>
       </method>
@@ -173,20 +192,23 @@
     <handlers>
       <handler event="click" button="0">
         <![CDATA[
-            
-              if (event.target.localName == "radio" && 
-                  event.target.getAttribute("group") == this.id && // nested radiogroups?
-                  !event.target.disabled) 
-                this.selectedItem = event.target;
-
+          if (event.target.localName == "radio" && !event.target.disabled) 
+            this.selectedItem = event.target;
+          event.preventBubble();
          ]]>
       </handler>
-
+      <handler event="select">
+        <![CDATA[
+          //XXXblake this should not be necessary
+          //         initEvent was supposed to prevent this from bubbling
+          event.preventBubble();
+        ]]>
+      </handler>
       <handler event="mousedown" button="0">
         <![CDATA[
-            if (event.target.localName == "radio" && !event.target.disabled)
-              this.focusedItem = event.target;
-
+          if (event.target.localName == "radio" && !event.target.disabled)
+            this.focusedItem = event.target;
+          event.preventBubble();
          ]]>
       </handler>
      
@@ -199,17 +221,18 @@
            takes you to the next widget in the tab order -->
       <handler event="keypress" key=" ">
          this.selectedItem = this.focusedItem;
+         this.selectedItem.doCommand();
       </handler>
-      <handler event="keypress" keycode="VK_UP">
+      <handler event="keypress" keycode="VK_UP" phase="target">
         this.checkAdjacentElement(false);
       </handler>
-      <handler event="keypress" keycode="VK_LEFT">
+      <handler event="keypress" keycode="VK_LEFT" phase="target">
         this.checkAdjacentElement(false);
       </handler>
-      <handler event="keypress" keycode="VK_DOWN">
+      <handler event="keypress" keycode="VK_DOWN" phase="target">
         this.checkAdjacentElement(true);
       </handler>
-      <handler event="keypress" keycode="VK_RIGHT">
+      <handler event="keypress" keycode="VK_RIGHT" phase="target">
         this.checkAdjacentElement(true);
       </handler>
 
@@ -217,31 +240,87 @@
            receives focus so that we can style it as if it were focused even though
            it is not (Windows platform behaviour is for the group to receive focus,
            not the item -->
-      <handler event="focus">
+      <handler event="focus" phase="target">
         if (event.target == this) {
           this.setAttribute("focused", "true");
-          if (this.focusedItem == null) this.focusedItem = this.selectedItem;
+          if (!this.focusedItem)
+            this.focusedItem = this.selectedItem;
         }
       </handler>
-      <handler event="blur">
+      <handler event="blur" phase="target">
         this.removeAttribute("focused");
         this.focusedItem = null;
       </handler>
     </handlers>
   </binding>
 
-  <binding id="radio" extends="chrome://global/content/bindings/checkbox.xml#checkbox-baseline">
+  <binding id="radio" extends="chrome://global/content/bindings/general.xml#control-item">
+    <content>
+      <xul:hbox flex="1" class="internal-box" align="center">
+        <xul:hbox class="checkmark-box" align="center">
+          <xul:image class="checkbox-check"/>
+        </xul:hbox>
+        <xul:image class="checkbox-icon" inherits="src"/>
+        <xul:label class="checkbox-label" inherits="xbl:text=label,accesskey,crop" flex="1"/>
+      </xul:hbox>
+    </content>
     <resources>
       <stylesheet src="chrome://global/skin/radio.css"/>
     </resources>
-
+ 
     <implementation>
-      <property name="value" onset="this.setAttribute('value',val); return val;"
-                            onget="return this.getAttribute('value');"/>
-      <property name="group" onset="this.setAttribute('group',val); return val;"
-                            onget="return this.getAttribute('group');"/>
+      <constructor>
+        <![CDATA[
+          var parent = this.radioGroup;
+          this.radioGroup.mRadioChildren[parent.mRadioChildren.length++] = this;
+        ]]>
+      </constructor>
+      <destructor>
+        <![CDATA[
+          var parent = this.radioGroup;
+          for (var i = 0; i < parent.mRadioChildren.length; ++i) {
+            if (parent.mRadioChildren[i] == this) {
+              parent.mRadioChildren.slice(i, i);
+              return;
+            }
+          }
+        ]]>
+      </destructor>
+      <property name="selected" readonly="true">
+        <getter>
+          <![CDATA[
+            return this.getAttribute('selected') == 'true';
+          ]]>
+        </getter>
+      </property>
+      <property name="radioGroup">
+        <getter>
+        <![CDATA[
+          var parent = this.parentNode;
+          while (parent) {
+            if (parent.localName == "radiogroup")
+              return parent;
+            parent = parent.parentNode;
+          }
+          return null;
+        ]]>
+        </getter>
+      </property>
     </implementation>
-  </binding>
-  
+    <handlers>
+      <handler event="click" button="0">
+        <![CDATA[
+          if (!this.disabled)
+            this.radioGroup.selectedItem = this;
+         ]]>
+      </handler>
 
+      <handler event="mousedown" button="0">
+        <![CDATA[
+          if (!this.disabled)
+            this.radioGroup.focusedItem = this;
+         ]]>
+      </handler>
+    </handlers>
+  </binding>
 </bindings>

@@ -6,7 +6,6 @@
 
 <window id="commonDialog"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
-        orient="vertical"
         onload="commonDialogOnLoad();"
         style="min-width: 29em; min-height: 8.5em; -moz-user-focus: ignore;"
         class="dialog"> 
@@ -22,22 +21,22 @@
     <separator orient="vertical" class="thin"/>
     <vbox flex="1">
       <!-- text -->
-      <html id="info.header" class="header" flex="1"/>
+      <description id="info.header" class="header" flex="1"/>
       <vbox id="info.box" flex="1" style="max-width: 45em;"/>
 
       <!-- edit fields -->
       <vbox id="loginEditField" collapsed="true">
-        <text class="label" id="login.text" value="&editfield0.label;" for="dialog.loginname"/>
+        <label id="login.text" value="&editfield0.label;" control="dialog.loginname"/>
         <textbox tabindex="0" id="dialog.loginname" flex="1"/>
         <separator class="thin"/>
       </vbox>
       <vbox id ="password1EditField" collapsed="true">
-        <text class="label" id="password1.text" value="&editfield1.label;" for="dialog.password1"/>
+        <label id="password1.text" value="&editfield1.label;" control="dialog.password1"/>
         <textbox tabindex="1" type="password" id="dialog.password1" flex="1"/>
         <separator class="thin"/>
       </vbox>
       <vbox id="password2EditField" collapsed="true">
-        <text class="label" id="password2.text" value="&editfield2.label;" for="dialog.password2"/>
+        <label id="password2.text" value="&editfield2.label;" control="dialog.password2"/>
         <textbox tabindex="1" type="password" id="dialog.password2" flex="1"/>
         <separator class="thin"/>
       </vbox>
@@ -45,7 +44,7 @@
       <spacer flex="1"/>
       
       <!-- checkbox -->
-      <hbox id="checkboxContainer" collapsed="true" align="middle">
+      <hbox id="checkboxContainer" collapsed="true" align="center">
         <checkbox id="checkbox" oncommand="onCheckboxClick(this);" style="max-width: 40em;"/>
       </hbox>
     </vbox>

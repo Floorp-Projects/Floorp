@@ -342,7 +342,7 @@
     <content>
       <xul:hbox class="tab-box" flex="1" align="center">
         <xul:image class="tab-image" inherits="src"/>
-        <xul:text flex="1" class="tab-text" inherits="value=label,accesskey,crop,disabled"/>
+        <xul:label flex="1" class="tab-text" inherits="value=label,accesskey,crop,disabled"/>
       </xul:hbox>
     </content>
     

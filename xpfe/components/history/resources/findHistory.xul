@@ -27,24 +27,19 @@
   -->
 
 <?xml-stylesheet href="chrome://communicator/skin/"?>
-
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
-
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/history/findHistory.dtd">
 
-<window id="findHistoryWindow" style="width: 36em;"
+<dialog id="findHistoryWindow" style="width: 36em;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&findHistory.title;" 
-        orient="vertical" class="dialog"
-        onload="Startup();">
-
-  <keyset id="dialogKeys"/>
+        onload="Startup();"
+        ondialogaccept="return find();">
 
   <stringbundle id="historyBundle" src="chrome://communicator/locale/history/history.properties"/>
 
   <script type="application/x-javascript" src="chrome://communicator/content/history/findHistory.js"/>
 
-  <text class="label" value="&search.for.label;"/>
+  <label value="&search.for.label;"/>
   <hbox align="center">
     <menulist id="matchList">
       <menupopup>
@@ -65,10 +60,5 @@
     <textbox id="searchField" onkeypress="if (event.keyCode == 13) find();" flex="1"
              oninput="doEnabling();"/>
   </hbox>
-
-  <separator/>
-
-  <hbox id="okCancelButtonsRight"/>
-
-</window>
+</dialog>
 

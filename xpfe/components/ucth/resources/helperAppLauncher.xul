@@ -25,8 +25,6 @@
 
 <?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?> 
 
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
-
 <!DOCTYPE window [
   <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
   %brandDTD;
@@ -34,14 +32,11 @@
   %helperAppLauncherDTD;
 ]>            
  
-<window id="helperAppLaunchConfirmation"
-        xmlns:html="http://www.w3.org/1999/xhtml"
+<dialog id="helperAppLaunchConfirmation"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&caption.label;"
         onload="window.dialog = new nsHelperAppLauncherDialog()"
         style="width: 40em;"
-        class="dialog"
-        orient="vertical"
         persist="screenX screenY"
         screenX="24" screenY="24">
               
@@ -49,9 +44,7 @@
     <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>  
     <script type="application/x-javascript" src="chrome://global/content/helperAppLauncher.js"/>
     <script type="application/x-javascript" src="chrome://communicator/content/utilityOverlay.js"/>
-                   
-    <keyset id="dialogKeys"/>
-           
+                            
     <hbox>
         <vbox>
             <image class="question-icon"/>
@@ -59,20 +52,18 @@
         </vbox>
         <separator orient="vertical" class="thin"/>
         <vbox flex="1">
-            <html id="intro">&intro.label;</html>
-            <separator orient="horizontal" class="thin"/>
-            <radiogroup id="mode" orient="vertical" oncommand="window.dialog.toggleChoice()">
+            <description id="intro">&intro.label;</description>
+            <separator class="thin"/>
+            <radiogroup id="mode" oncommand="window.dialog.toggleChoice()">
                 <vbox>
                     <hbox align="center">
                         <radio id="runApp"
-                               group="mode"
                                label="&runApp.label;"
                                accesskey="&runApp.accesskey;"/>
                     </hbox>
                     <hbox class="indent">
                         <textbox id="appName" readonly="true" flex="1"/>
                         <button id="chooseApp"
-                                class="dialog"
                                 label="&chooseApp.label;"
                                 accesskey="&chooseApp.accesskey;"
                                 oncommand="dialog.chooseApp()"/>
@@ -81,13 +72,12 @@
                 <vbox>
                     <hbox align="center">
                         <radio id="saveToDisk"
-                               group="mode"
                                label="&saveToDisk.label;"
                                accesskey="&saveToDisk.accesskey;"/>
                     </hbox>
                  </vbox>
             </radiogroup>
-            <separator orient="horizontal" class="thin"/>
+            <separator class="thin"/>
             <hbox align="center">
                 <checkbox id="alwaysAskMe" label="&alwaysAskMe.label;" accesskey="&alwaysAskMe.accesskey;"/>
             </hbox>
@@ -95,7 +85,5 @@
     </hbox>
 
     <separator class="groove"/>
-
-    <hbox id="okCancelButtonsRight"/>
            
-</window>
+</dialog>

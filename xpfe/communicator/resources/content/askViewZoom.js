@@ -51,10 +51,9 @@ function onLoad() {
   sizeToContent();
   moveToAlertPosition();
   doEnabling();
-  doSetOKCancel(onOK);
 }
 
-function onOK() {
+function onAccept() {
   var zoom = parseInt(dialog.input.value);
   if (!isNaN(zoom) && zoom >= args.zoomMin && zoom <= args.zoomMax) {
     args.value = zoom;

@@ -6,8 +6,8 @@
 
   <binding id="checkbox" extends="resource:///res/builtin/checkboxBindings.xml#checkbox">
     <content>
-      <xul:box class="input-checkbox-checkmark-box-1" autostretch="never" inherits="disabled">
-        <xul:box class="input-checkbox-checkmark-box-2" autostretch="never" flex="1">
+      <xul:box class="input-checkbox-checkmark-box-1" align="center" inherits="disabled">
+        <xul:box class="input-checkbox-checkmark-box-2" align="center" flex="1">
           <xul:image class="input-checkbox-check" cbattr="image" inherits="checked,disabled"/>
         </xul:box>
       </xul:box>
