@@ -34,7 +34,7 @@
 /*
  * CMS envelopedData methods.
  *
- * $Id: cmsenvdata.c,v 1.6 2001/12/07 01:36:12 relyea%netscape.com Exp $
+ * $Id: cmsenvdata.c,v 1.7 2002/01/25 19:08:18 relyea%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -102,7 +102,8 @@ NSS_CMSEnvelopedData_Destroy(NSSCMSEnvelopedData *edp)
     while ((ri = *recipientinfos++) != NULL)
 	NSS_CMSRecipientInfo_Destroy(ri);
 
-    /* XXX storage ??? */
+   NSS_CMSContentInfo_Destroy(&(edp->contentInfo));
+
 }
 
 /*

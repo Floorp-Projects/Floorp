@@ -34,7 +34,7 @@
 /*
  * CMS encryptedData methods.
  *
- * $Id: cmsencdata.c,v 1.3 2001/12/07 01:36:12 relyea%netscape.com Exp $
+ * $Id: cmsencdata.c,v 1.4 2002/01/25 19:08:17 relyea%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -114,6 +114,7 @@ void
 NSS_CMSEncryptedData_Destroy(NSSCMSEncryptedData *encd)
 {
     /* everything's in a pool, so don't worry about the storage */
+    NSS_CMSContentInfo_Destroy(&(encd->contentInfo));
     return;
 }
 
