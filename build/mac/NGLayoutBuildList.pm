@@ -261,7 +261,6 @@ sub Checkout()
 	{
 		$session->checkout("mozilla/nsprpub",	$nsprpub_tag)				|| print "checkout of nsprpub failed\n";		
 		$session->checkout("mozilla/security",	"SeaMonkey_M14_BRANCH")		|| print "checkout of security failed\n";		
-		$session->checkout("mozilla/themes")	                            || print "checkout of themes failed\n";		
 		$session->checkout("SeaMonkeyAll")									|| 
 			print "MacCVS reported some errors checking out SeaMonkeyAll, but these are probably not serious.\n";
 	}
