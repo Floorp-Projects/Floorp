@@ -456,7 +456,7 @@ AtalkAssert (RDFT rdf, RDF_Resource u, RDF_Resource s, void *v, RDF_ValueType ty
 						sprintf(msg, "\'%s\':", server);
 					}
 				}
-				response = FE_PromptUsernameAndPassword(((MWContext *)gRDFMWContext(NULL)),
+				response = FE_PromptUsernameAndPassword(((MWContext *)gRDFMWContext(rdf)),
 						(msg) ? msg : server, &user, &password);
 				/* hmmm... don't free 'msg' as FE_PromptUsernameAndPassword does ??? */
 				if (response == false)

@@ -504,7 +504,7 @@ getPSNbyTypeSig(ProcessSerialNumber *thePSN, OSType pType, OSType pSignature)
 
 
 PRBool
-fsRemoveFile(char *filePathname, PRBool justCheckWriteAccess)
+fsRemoveFile(RDFT rdf, char *filePathname, PRBool justCheckWriteAccess)
 {
 	PRBool		errFlag = true;
 
@@ -523,7 +523,7 @@ fsRemoveFile(char *filePathname, PRBool justCheckWriteAccess)
 		}
 		if (errFlag == true)
 		{
-			FE_Alert(((MWContext *)gRDFMWContext(NULL)),
+			FE_Alert(((MWContext *)gRDFMWContext(rdf)),
 				PR_smprintf(XP_GetString(RDF_UNABLETODELETEFILE),
 				filePathname));
 		}
@@ -534,7 +534,7 @@ fsRemoveFile(char *filePathname, PRBool justCheckWriteAccess)
 
 
 PRBool
-fsRemoveDir(char *filePathname, PRBool justCheckWriteAccess)
+fsRemoveDir(RDFT rdf, char *filePathname, PRBool justCheckWriteAccess)
 {
 	PRBool		dirFlag, errFlag = false;
 	PRDir		*d, *tempD;
@@ -563,12 +563,12 @@ fsRemoveDir(char *filePathname, PRBool justCheckWriteAccess)
 		if (dirFlag)
 		{
 			dirStr = append2Strings(fileStr, "/");
-			errFlag = fsRemoveDir(dirStr, justCheckWriteAccess);
+			errFlag = fsRemoveDir(rdf, dirStr, justCheckWriteAccess);
 			if (dirStr != NULL)	freeMem(dirStr);
 		}
 		else
 		{
-			errFlag = fsRemoveFile(fileStr, justCheckWriteAccess);
+			errFlag = fsRemoveFile(rdf, fileStr, justCheckWriteAccess);
 		}
 
 		freeMem(fileStr);
@@ -589,7 +589,7 @@ fsRemoveDir(char *filePathname, PRBool justCheckWriteAccess)
 			}
 			if (justCheckWriteAccess == true)
 			{
-				errFlag = fsRemoveFile(dirStr, justCheckWriteAccess);
+				errFlag = fsRemoveFile(rdf, dirStr, justCheckWriteAccess);
 			}
 			else
 			{
@@ -597,7 +597,7 @@ fsRemoveDir(char *filePathname, PRBool justCheckWriteAccess)
 
 				if (errFlag == true)
 				{
-					FE_Alert(((MWContext *)gRDFMWContext(NULL)),
+					FE_Alert(((MWContext *)gRDFMWContext(rdf)),
 						PR_smprintf(XP_GetString(RDF_UNABLETODELETEFOLDER),
 						filePathname));
 				}
@@ -625,9 +625,9 @@ fsUnassert (RDFT mcf, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType typ
 		filePathname =  resourceID((RDF_Resource)u);
 		if (filePathname[strlen(filePathname)-1] == '/')
 		{
-			if (!fsRemoveDir(filePathname, true))
+			if (!fsRemoveDir(mcf, filePathname, true))
 			{
-				if (!fsRemoveDir(filePathname, false))
+				if (!fsRemoveDir(mcf, filePathname, false))
 				{
 					retVal = true;
 				}
@@ -635,9 +635,9 @@ fsUnassert (RDFT mcf, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType typ
 		}
 		else
 		{
-			if (!fsRemoveFile(filePathname, true))
+			if (!fsRemoveFile(mcf, filePathname, true))
 			{
-				if (!fsRemoveFile(filePathname, false))
+				if (!fsRemoveFile(mcf, filePathname, false))
 				{
 					retVal = true;
 				}

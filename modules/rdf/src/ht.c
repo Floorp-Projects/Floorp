@@ -8605,7 +8605,7 @@ htRemoveChild(HT_Resource parent, HT_Resource child, PRBool moveToTrash)
 				if (!FE_Confirm(((MWContext *)gRDFMWContext(NULL)),
 					PR_smprintf(XP_GetString(RDF_DELETEFOLDER),
 					resourceID(child->node))))	return(true);
-				if (fsRemoveDir( resourceID(child->node), true) == true)
+				if (fsRemoveDir(NULL, resourceID(child->node), true) == true)
 				{
 					FE_Alert(((MWContext *)gRDFMWContext(NULL)),
 						PR_smprintf(XP_GetString(RDF_UNABLETODELETEFOLDER),

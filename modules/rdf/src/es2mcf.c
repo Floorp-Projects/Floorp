@@ -68,7 +68,7 @@ ESAssert (RDFT rdf, RDF_Resource u, RDF_Resource s, void* v,
   if ((s == gCoreVocab->RDF_parent) && (type == RDF_RESOURCE_TYPE)  &&
       (ESFTPRT((RDF_Resource)v)) &&
       (tv) && (containerp((RDF_Resource)v))) {
-    ESAddChild((RDF_Resource)v, u);
+    ESAddChild(rdf, (RDF_Resource)v, u);
     retVal = PR_TRUE;
   } else {
     retVal = PR_FALSE;
@@ -88,7 +88,7 @@ ESUnassert (RDFT rdf, RDF_Resource u, RDF_Resource s, void* v,
   if ((s == gCoreVocab->RDF_parent) && (type == RDF_RESOURCE_TYPE)  &&
       (ESFTPRT((RDF_Resource)v)) &&
       (containerp((RDF_Resource)v))) {
-    ESRemoveChild((RDF_Resource)v, u);
+    ESRemoveChild(rdf, (RDF_Resource)v, u);
     retVal = PR_TRUE;
   } else {
     retVal = PR_FALSE;
@@ -223,7 +223,7 @@ esFreeFEData(_esFEData *feData)
 
 /** go tell the directory that child got added to parent **/
 void
-ESAddChild (RDF_Resource parent, RDF_Resource child)
+ESAddChild (RDFT rdf, RDF_Resource parent, RDF_Resource child)
 {
 	URL_Struct		*urls;
 	void			*feData, **files_to_post = NULL;
@@ -243,7 +243,7 @@ ESAddChild (RDF_Resource parent, RDF_Resource child)
 			urls->method = URL_POST_METHOD;
 			urls->fe_data = (void *)feData;
 			NET_GetURL(urls, FO_PRESENT,
-				(MWContext *)gRDFMWContext(NULL),
+				(MWContext *)gRDFMWContext(rdf),
 				es_GetUrlExitFunc);
 		}
 		else
@@ -266,7 +266,7 @@ ESAddChild (RDF_Resource parent, RDF_Resource child)
 
   /** remove the child from the directory **/
 void
-ESRemoveChild (RDF_Resource parent, RDF_Resource child)
+ESRemoveChild (RDFT rdf, RDF_Resource parent, RDF_Resource child)
 {
 	URL_Struct		*urls;
 	void			*feData;
@@ -279,7 +279,7 @@ ESRemoveChild (RDF_Resource parent, RDF_Resource child)
 			urls->method = URL_DELETE_METHOD;
 			urls->fe_data = (void *)feData;
 			NET_GetURL(urls, FO_PRESENT,
-				(MWContext *)gRDFMWContext(NULL),
+				(MWContext *)gRDFMWContext(rdf),
 				es_GetUrlExitFunc);
 		}
 		else
