@@ -216,6 +216,19 @@ nsImgManager::TestPermission(nsIURI *aCurrentURI,
     return NS_OK;
   }
 
+  // check the permission list first; if we find an entry, it overrides
+  // default prefs. this is new behavior, see bug 184059.
+  if (mPermissionManager) {
+    PRUint32 temp;
+    mPermissionManager->TestPermission(aCurrentURI, "image", &temp);
+
+    // if we found an entry, use it
+    if (temp != nsIPermissionManager::UNKNOWN_ACTION) {
+      *aPermission = (temp != nsIPermissionManager::DENY_ACTION);
+      return NS_OK;
+    }
+  }
+
   if (mBehaviorPref == IMAGE_DENY) {
     *aPermission = PR_FALSE;
     return NS_OK;
@@ -263,20 +276,9 @@ nsImgManager::TestPermission(nsIURI *aCurrentURI,
          firstHost.CharAt(firstHost.Length() - tail.Length() - 1) != '.') || 
         !tail.Equals(firstTail)) {
       *aPermission = PR_FALSE;
-      return NS_OK;
     }
   }
   
-  if (mPermissionManager) {
-    PRUint32 temp;
-    mPermissionManager->TestPermission(aCurrentURI, "image", &temp);
-    // Blacklist for now
-    *aPermission = (temp != nsIPermissionManager::DENY_ACTION);
-  } else {
-    // no permission manager, return ok
-    *aPermission = PR_TRUE;
-  }
-
   return NS_OK;
 }
 

@@ -48,21 +48,25 @@ interface nsIDOMWindow;
 interface nsICookiePermission : nsISupports
 {
   /**
-   * Test if a cookie from the given host should be accepted or denied
+   * Test if a cookie from the given host should be accepted or denied,
+   * only by prompting the user (does not perform a permissionlist lookup)
    * @param uri             the website to be tested
    * @param cookie          the cookie that wants to be set
    * @param parent          the parant window
    * @param cookiesFromHost number of cookies this host already has set
    * @param changingCookie  are we changing this cookie?
    * @param showDialog      show a prompt to the user?
-   * @return                 whether the cookie has permission to be loaded
+   * @param listPermission  previous result from nsIPermissionManager::
+                            TestPermission() (use UNKNOWN_ACTION if none)
+   * @return                whether the cookie has permission to be loaded
    */
   boolean testPermission(in nsIURI uri,
                          in nsICookie cookie,
                          in nsIDOMWindow parent,
                          in long cookiesFromHost,
                          in boolean changingCookie,
-                         in boolean showDialog);
+                         in boolean showDialog,
+                         in PRUint32 listPermission);
 };
 
 %{ C++
