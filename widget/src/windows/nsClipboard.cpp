@@ -619,7 +619,6 @@ nsresult nsClipboard::GetDataFromDataObject(IDataObject     * aDataObject,
           nsLinebreakHelpers::ConvertPlatformToDOMLinebreaks ( flavorStr, &data, &signedLen );
           dataLen = signedLen;
 
-          nsCOMPtr<nsISupports> genericDataWrapper;
           nsPrimitiveHelpers::CreatePrimitiveForData ( flavorStr, data, dataLen, getter_AddRefs(genericDataWrapper) );
         }
         
