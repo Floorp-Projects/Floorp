@@ -1239,6 +1239,15 @@ nsGenericElement::TriggerLink(nsIPresContext& aPresContext,
       absURLSpec = aURLSpec;
     }
 
+	// HACK HACK HACK. If the link clicked is a mailto: url just
+    // pass the aURLSpec. This is because, netlib doesn't recognize
+    // mailto: protocol. Note: This s'd go away after  NECKO lands
+  
+    PRInt32 offset = -1;
+    offset = aURLSpec.Find("mailto");
+    if (offset >= 0)
+      absURLSpec = aURLSpec;
+
     // Now pass on absolute url to the click handler
     if (aClick) {
       handler->OnLinkClick(mContent, aVerb, absURLSpec.GetUnicode(), aTargetSpec.GetUnicode());
