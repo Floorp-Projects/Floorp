@@ -47,6 +47,7 @@ CPPSRCS =				\
 	nsXIFConverter.cpp		\
 	nsRange.cpp			\
 	nsRangeList.cpp			\
+	nsContentIterator.cpp		\
 	nsLayoutAtoms.cpp		\
 	$(NULL)
 
