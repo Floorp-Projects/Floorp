@@ -50,7 +50,7 @@ pref("general.fullcircle_collect_ns_data",  false);
 pref("browser.enable_style_sheets",         true);
 // 0 = blank, 1 = home (browser.startup.homepage), 2 = last
 pref("browser.startup.page",                1);     
-pref("browser.startup.homepage",	   "http://www.mozilla.org/");
+pref("browser.startup.homepage",	   "http://www.mozilla.org/projects/seamonkey/release-notes/m14.html");
 // "browser.startup.homepage_override" was for 4.x
 pref("browser.startup.homepage_override.1", true);
 pref("browser.startup.autoload_homepage",   true);
