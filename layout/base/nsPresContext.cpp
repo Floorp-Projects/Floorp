@@ -1779,7 +1779,7 @@ nsPresContext::ThemeChanged()
   if (!mShell)
     return NS_OK;
 
-  return mShell->ReconstructStyleData();
+  return mShell->ReconstructStyleData(PR_TRUE);
 }
 
 
