@@ -45,7 +45,7 @@ interface nsIProxyInfo;
  * using any feature exposed by this interface, be aware that this interface 
  * will change and you will be broken.  You have been warned.
  */
-[scriptable, uuid(f3764874-ed7e-4873-883c-11d67a4e3638)]
+[scriptable, uuid(ae9dce68-c27c-44f1-b41d-462f5e470945)]
 interface nsIHttpChannelInternal : nsISupports
 {
     /**
@@ -77,4 +77,11 @@ interface nsIHttpChannelInternal : nsISupports
      * Get the proxy info in use by the channel.
      */
     readonly attribute nsIProxyInfo proxyInfo;
+
+    /**
+     * Get or set the relative priority for this HTTP channel.  Smaller values
+     * have higher priority.  Negative values are allowed, and the default
+     * priority is 0.
+     */
+    attribute short priority;
 };

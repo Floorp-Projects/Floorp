@@ -124,6 +124,7 @@ nsHttpTransaction::nsHttpTransaction()
     , mContentLength(-1)
     , mContentRead(0)
     , mChunkedDecoder(nsnull)
+    , mPriority(0)
     , mStatus(NS_OK)
     , mRestartCount(0)
     , mCaps(0)
@@ -565,7 +566,7 @@ nsHttpTransaction::Restart()
     mSecurityInfo = 0;
     NS_IF_RELEASE(mConnection);
 
-    return gHttpHandler->InitiateTransaction(this);
+    return gHttpHandler->InitiateTransaction(this, mPriority);
 }
 
 void

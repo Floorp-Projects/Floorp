@@ -130,9 +130,16 @@ public:
     // Called to kick-off a new transaction, by default the transaction
     // will be put on the pending transaction queue if it cannot be 
     // initiated at this time.  Callable from any thread.
-    nsresult InitiateTransaction(nsHttpTransaction *trans)
+    nsresult InitiateTransaction(nsHttpTransaction *trans, PRInt32 priority)
     {
-        return mConnMgr->AddTransaction(trans);
+        return mConnMgr->AddTransaction(trans, priority);
+    }
+
+    // Called to change the priority of an existing transaction that has
+    // already been initiated.
+    nsresult RescheduleTransaction(nsHttpTransaction *trans, PRInt32 priority)
+    {
+        return mConnMgr->RescheduleTransaction(trans, priority);
     }
 
     // Called to cancel a transaction, which may or may not be assigned to
