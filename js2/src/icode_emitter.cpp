@@ -41,6 +41,7 @@
 #include "exception.h"
 #include "icodeasm.h"
 
+#include <algorithm>
 #include <stdexcept>
 #include <stdio.h>
 
@@ -1397,18 +1398,23 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
                             }
                         }
                         break;
-                    case StmtNode::Constructor:
+                    // XXX no more StmtNode::Constructor
+                    // case StmtNode::Constructor:
                     case StmtNode::Function:
                         {
                             FunctionStmtNode *f = static_cast<FunctionStmtNode *>(s);
                             bool isStatic = hasAttribute(f->attributes, Token::Static);
-                            bool isConstructor = (s->getKind() == StmtNode::Constructor);
+                            // XXX no more StmtNode::Constructor
+                            bool isConstructor = false; // (s->getKind() == StmtNode::Constructor);
+                            // XXX oh, and no more FunctionName::Operator
+#if 0
                             if (f->function.prefix == FunctionName::Operator) {
                                 thisClass->defineOperator(f->function.op, 
                                                             mContext->getParameterType(f->function, 0), 
                                                             mContext->getParameterType(f->function, 1), NULL);
                             }
                             else
+#endif
                                 if (f->function.name->getKind() == ExprNode::identifier) {
                                     const StringAtom& name = (static_cast<IdentifierExprNode *>(f->function.name))->name;
                                     if (isConstructor)
@@ -1492,22 +1498,27 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
                             }
                         }
                         break;
-                    case StmtNode::Constructor:
+                    // XXX no more StmtNode::Constructor
+                    // case StmtNode::Constructor:
                     case StmtNode::Function:
                         {
                             FunctionStmtNode *f = static_cast<FunctionStmtNode *>(s);
                             bool isStatic = hasAttribute(f->attributes, Token::Static);
-                            bool isConstructor = (s->getKind() == StmtNode::Constructor);
+                            // XXX no more StmtNode::Constructor
+                            bool isConstructor = false; //(s->getKind() == StmtNode::Constructor);
                             ICodeGeneratorFlags flags = (isStatic) ? kIsStaticMethod : kNoFlags;
 
                             ICodeGenerator mcg(classContext, NULL, thisClass, flags);   // method code generator.
                             ICodeModule *icm = mcg.genFunction(f->function, isStatic, isConstructor, superclass);
+                            // XXX oh, and no more FunctionName::Operator
+#if 0
                             if (f->function.prefix == FunctionName::Operator) {
                                 thisClass->defineOperator(f->function.op, 
                                                             mContext->getParameterType(f->function, 0), 
                                                             mContext->getParameterType(f->function, 1),  new JSFunction(icm));
                             }
                             else
+#endif
                                 if (f->function.name->getKind() == ExprNode::identifier) {
                                     const StringAtom& name = (static_cast<IdentifierExprNode *>(f->function.name))->name;
                                     if (isConstructor) {

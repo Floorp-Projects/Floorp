@@ -41,6 +41,7 @@
 #include "exception.h"
 #include "icodeasm.h"
 
+#include <algorithm>
 #include <stdexcept>
 #include <stdio.h>
 

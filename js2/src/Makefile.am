@@ -12,6 +12,8 @@ libjs2_a_DEPENDENCIES = $(gc_dir)/gc.a
 libjs2_a_SOURCES = \
 	algo.h \
 	cpucfg.h \
+	debugger.cpp \
+	debugger.h \
 	ds.h \
 	exception.cpp \
 	exception.h \
@@ -21,6 +23,16 @@ libjs2_a_SOURCES = \
 	gc_container.h \
 	hash.cpp \
 	hash.h \
+	icode_emitter.cpp \
+	icode_emitter.h \
+	icodegenerator.cpp \
+    icodegenerator.h \
+	interpreter.cpp \
+	interpreter.h \
+	jsmath.cpp \
+	jsmath.h \
+	jstypes.cpp \
+	jstypes.h \
 	lexer.cpp \
 	lexer.h \
 	mem.cpp \
@@ -40,5 +52,7 @@ libjs2_a_SOURCES = \
 	token.h \
 	utilities.cpp \
 	utilities.h \
+	vmtypes.cpp \
+	vmtypes.h \
 	world.cpp \
 	world.h

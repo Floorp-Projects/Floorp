@@ -37,6 +37,7 @@
 #include "parser.h"
 #include "jsmath.h"
 
+#include <algorithm>
 #include <assert.h>
 
 namespace JavaScript {

@@ -31,6 +31,8 @@
  * file under either the NPL or the GPL.
  */
 
+#include <algorithm>
+
 #include "jstypes.h"
 #include "jsclasses.h"
 #include "numerics.h"
