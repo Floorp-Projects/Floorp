@@ -147,7 +147,10 @@ function restorePage(serverId, pageId) {
 //
 function getFormElementValue(formElement) {
   dump("Getting " + formElement.name + " value = " + formElement.value + "\n");
-  return formElement.value;
+  if (formElement.type=="checkbox")
+    return formElement.checked;
+  else
+    return formElement.value;
 }
 
 //
@@ -156,9 +159,15 @@ function getFormElementValue(formElement) {
 function setFormElementValue(formElement, value) {
   dump("Setting " + formElement.name + " to " + value + "\n");
   if (value) {
-    formElement.value = value;
+    if (formElement.type=="checkbox")
+      formElement.checked = value;
+    else
+      formElement.value = value;
   } else {
-    formElement.value = formElement.defaultValue;
+    if (formElement.type=="checkbox")
+      formElement.checked = formElement.defaultChecked;
+    else
+      formElement.value = formElement.defaultValue;
   }
 }
 
