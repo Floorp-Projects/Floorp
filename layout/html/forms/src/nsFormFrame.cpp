@@ -118,24 +118,13 @@ static NS_DEFINE_CID(kPlatformCharsetCID, NS_PLATFORMCHARSET_CID);
 
 //----------------------------------------------------------------------
 
-static NS_DEFINE_IID(kIFormManagerIID, NS_IFORMMANAGER_IID);
-static NS_DEFINE_IID(kIFormIID, NS_IFORM_IID);
-static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
-static NS_DEFINE_IID(kIFormControlFrameIID, NS_IFORMCONTROLFRAME_IID);
-static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
-static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
-static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
-static NS_DEFINE_IID(kIDOMNSHTMLFormElementIID, NS_IDOMNSHTMLFORMELEMENT_IID);
-static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
 static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
-static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
-static NS_DEFINE_IID(kIDOMHTMLElementIID, NS_IDOMHTMLELEMENT_IID);
 static NS_DEFINE_CID(kFormProcessorCID, NS_FORMPROCESSOR_CID);
 
 NS_IMETHODIMP
 nsFormFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
-  if (aIID.Equals(kIFormManagerIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIFormManager))) {
     *aInstancePtr = (void*)(nsIFormManager*)this;
     return NS_OK;
   }
@@ -196,7 +185,7 @@ nsFormFrame::GetAction(nsString* aAction)
   nsresult result = NS_OK;
   if (mContent) {
     nsIDOMHTMLFormElement* form = nsnull;
-    result = mContent->QueryInterface(kIDOMHTMLFormElementIID, (void**)&form);
+    result = mContent->QueryInterface(NS_GET_IID(nsIDOMHTMLFormElement), (void**)&form);
     if ((NS_OK == result) && form) {
       form->GetAction(*aAction);
       NS_RELEASE(form);
@@ -211,7 +200,7 @@ nsFormFrame::GetTarget(nsString* aTarget)
   nsresult result = NS_OK;
   if (mContent) {
     nsIDOMHTMLFormElement* form = nsnull;
-    result = mContent->QueryInterface(kIDOMHTMLFormElementIID, (void**)&form);
+    result = mContent->QueryInterface(NS_GET_IID(nsIDOMHTMLFormElement), (void**)&form);
     if ((NS_OK == result) && form) {
       form->GetTarget(*aTarget);
       if ((*aTarget).Length() == 0) {
@@ -299,7 +288,7 @@ void nsFormFrame::AddFormControlFrame(nsIPresContext* aPresContext, nsIFrame& aF
 {
   // Make sure we have a form control
   nsIFormControlFrame* fcFrame = nsnull;
-  nsresult result = aFrame.QueryInterface(kIFormControlFrameIID, (void**)&fcFrame);
+  nsresult result = aFrame.QueryInterface(NS_GET_IID(nsIFormControlFrame), (void**)&fcFrame);
   if ((NS_OK != result) || (nsnull == fcFrame)) {
     return;
   }
@@ -309,7 +298,7 @@ void nsFormFrame::AddFormControlFrame(nsIPresContext* aPresContext, nsIFrame& aF
   result = aFrame.GetContent(getter_AddRefs(iContent));
   if (NS_SUCCEEDED(result) && iContent) {
     nsCOMPtr<nsIFormControl> formControl;
-    result = iContent->QueryInterface(kIFormControlIID, getter_AddRefs(formControl));
+    result = iContent->QueryInterface(NS_GET_IID(nsIFormControl), getter_AddRefs(formControl));
     if (NS_SUCCEEDED(result) && formControl) {
       nsCOMPtr<nsIDOMHTMLFormElement> formElem;
       result = formControl->GetForm(getter_AddRefs(formElem));
@@ -318,7 +307,7 @@ void nsFormFrame::AddFormControlFrame(nsIPresContext* aPresContext, nsIFrame& aF
         result = aPresContext->GetShell(getter_AddRefs(presShell));
         if (NS_SUCCEEDED(result) && presShell) {
           nsIContent* formContent;
-          result = formElem->QueryInterface(kIContentIID, (void**)&formContent);
+          result = formElem->QueryInterface(NS_GET_IID(nsIContent), (void**)&formContent);
           if (NS_SUCCEEDED(result) && formContent) {
             nsFormFrame* formFrame = nsnull;
             result = presShell->GetPrimaryFrameFor(formContent, (nsIFrame**)&formFrame);
@@ -370,7 +359,7 @@ nsFormFrame::RemoveFrame(nsIPresContext* aPresContext,
                          nsIFrame*       aOldFrame)
 {
   nsIFormControlFrame* fcFrame = nsnull;
-  nsresult result = aOldFrame->QueryInterface(kIFormControlFrameIID, (void**)&fcFrame);
+  nsresult result = aOldFrame->QueryInterface(NS_GET_IID(nsIFormControlFrame), (void**)&fcFrame);
   if ((NS_OK == result) || (nsnull != fcFrame)) {
     PRInt32 type;
     fcFrame->GetType(&type);
@@ -571,7 +560,41 @@ void nsFormFrame::RemoveRadioControlFrame(nsIFormControlFrame * aFrame)
     }
   }
 }
+
   
+//--------------------------------------------------------
+// Return the content of the currently selected item in
+// the radio group of the incoming radiobutton.
+//--------------------------------------------------------
+nsresult
+nsFormFrame::GetRadioGroupSelectedContent(nsGfxRadioControlFrame* aControl,
+                                          nsIContent **           aRadiobtn)
+{
+  NS_ASSERTION(aControl, "nsGfxRadioControlFrame can't be null");
+
+  // first get correct interface
+  nsIFormControlFrame* fcFrame = nsnull;
+  nsresult result = aControl->QueryInterface(NS_GET_IID(nsIFormControlFrame), (void**)&fcFrame);
+  if (NS_SUCCEEDED(result)) {
+    // get the form frame for the radio btn
+    nsFormFrame * formFrame = ((nsFormControlFrame *)aControl)->GetFormFrame();
+    if (formFrame != nsnull) {
+      // now get the radio group by name
+      nsAutoString groupName;
+      nsRadioControlGroup * group = nsnull;
+      result = formFrame->GetRadioInfo(fcFrame, groupName, group);
+      if (NS_SUCCEEDED(result) && nsnull != group) {
+        // get the currently checked radio button
+        nsGfxRadioControlFrame* currentCheckBtn = group->GetCheckedRadio();
+        if (currentCheckBtn != nsnull) {
+          currentCheckBtn->GetContent(aRadiobtn);
+        }
+      }
+    }
+  }
+  return NS_OK;
+}
+
 //--------------------------------------------------------
 // returns NS_ERROR_FAILURE if the radiobtn doesn't have a group
 // returns NS_OK is it did have a radio group 
@@ -581,21 +604,17 @@ nsFormFrame::OnRadioChecked(nsIPresContext*         aPresContext,
                             nsGfxRadioControlFrame& aControl, 
                             PRBool                  aNewCheckedVal)
 {
-  nsString radioName;
-  aControl.GetName(&radioName);
-  if (0 == radioName.Length()) { // don't consider a radio without a name 
-    return NS_ERROR_FAILURE;
-  }
- 
-  // locate the radio group with the name of aRadio
-  int numGroups = mRadioGroups.Count();
-  for (int j = 0; j < numGroups; j++) {
-    nsRadioControlGroup* group = (nsRadioControlGroup *) mRadioGroups.ElementAt(j);
-    nsString groupName;
-    group->GetName(groupName);
-    // get the currently checked radio button
-    nsGfxRadioControlFrame* currentCheckBtn = group->GetCheckedRadio();
-    if (groupName.Equals(radioName)) {
+  // first get correct interface
+  nsIFormControlFrame* fcFrame = nsnull;
+  nsresult result = aControl.QueryInterface(NS_GET_IID(nsIFormControlFrame), (void**)&fcFrame);
+  if (NS_SUCCEEDED(result)) {
+    // now get the radio group by name
+    nsAutoString groupName;
+    nsRadioControlGroup * group = nsnull;
+    result = GetRadioInfo(fcFrame, groupName, group);
+    if (NS_SUCCEEDED(result) && nsnull != group) {
+      // get the currently checked radio button
+      nsGfxRadioControlFrame* currentCheckBtn = group->GetCheckedRadio();
       // is the new checked btn different than the current button?
       if (&aControl != currentCheckBtn) {
         // if the new button is being set to false
@@ -612,11 +631,13 @@ nsFormFrame::OnRadioChecked(nsIPresContext*         aPresContext,
         // here we are setting the same radio button 
         // as the one that is currently checked 
         //
-        currentCheckBtn->SetChecked(aPresContext, aNewCheckedVal, PR_FALSE);
-        // So if we are setting the current btn to be 0 or off 
-        // then we must set a default selction
-        if (!aNewCheckedVal) {
-          DoDefaultSelection(aPresContext, group, currentCheckBtn);
+        if (currentCheckBtn != nsnull) {
+          currentCheckBtn->SetChecked(aPresContext, aNewCheckedVal, PR_FALSE);
+          // So if we are setting the current btn to be 0 or off 
+          // then we must set a default selction
+          if (!aNewCheckedVal) {
+            DoDefaultSelection(aPresContext, group, currentCheckBtn);
+          }
         }
       }
     }
@@ -666,7 +687,7 @@ nsFormFrame::ProcessValue(nsIFormProcessor& aFormProcessor, nsIFormControlFrame*
     nsresult rv = frame->GetContent(getter_AddRefs(content));
     if (NS_SUCCEEDED(rv) && content) {
       nsCOMPtr<nsIDOMHTMLElement> formElement;
-      res = content->QueryInterface(kIDOMHTMLElementIID, getter_AddRefs(formElement));
+      res = content->QueryInterface(NS_GET_IID(nsIDOMHTMLElement), getter_AddRefs(formElement));
       if (NS_SUCCEEDED(res) && formElement) {
 	 	    res = aFormProcessor.ProcessValue(formElement, aName, aValue);
 		    NS_ASSERTION(NS_SUCCEEDED(res), "unable Notify form process observer"); 
@@ -709,7 +730,7 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
   // Since JS Submit() calls are not linked to an element, aFrame is null.
   // fcframe will remain null, but IsSuccess will return succes in this case.
   if (aFrame != nsnull) {
-    aFrame->QueryInterface(kIFormControlFrameIID, (void**)&fcFrame);
+    aFrame->QueryInterface(NS_GET_IID(nsIFormControlFrame), (void**)&fcFrame);
   }
 
   nsIFileSpec* multipartDataFile = nsnull;
@@ -754,7 +775,7 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
 
     if (href.IsEmpty()) {
       nsCOMPtr<nsIHTMLDocument> htmlDoc;
-      if (PR_FALSE == NS_SUCCEEDED(document->QueryInterface(kIHTMLDocumentIID,
+      if (PR_FALSE == NS_SUCCEEDED(document->QueryInterface(NS_GET_IID(nsIHTMLDocument),
                                              getter_AddRefs(htmlDoc)))) {   
         // Must be a XML, XUL or other non-HTML document type
         // so do nothing.
@@ -912,6 +933,23 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
       /* The postBuffer is now owned by the IPostData instance */
     }    
     if (handler) {
+#if defined(DEBUG_rods) || defined(DEBUG_pollmann)
+      {
+        printf("******\n");
+        char * str = data.ToNewCString();
+        printf("postBuffer[%s]\n", str);
+        Recycle(str);
+
+        str = absURLSpec.ToNewCString();
+        printf("absURLSpec[%s]\n", str);
+        Recycle(str);
+
+        str = target.ToNewCString();
+        printf("target    [%s]\n", str);
+        Recycle(str);
+        printf("******\n");
+      }
+#endif
       handler->OnLinkClick(mContent, eLinkVerb_Replace,
                            absURLSpec.GetUnicode(),
                            target.GetUnicode(), postDataStream);

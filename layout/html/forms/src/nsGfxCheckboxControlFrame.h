@@ -65,7 +65,6 @@ public:
 
    //nsICheckboxControlFrame methods
   NS_IMETHOD SetCheckboxFaceStyleContext(nsIStyleContext *aCheckboxFaceStyleContext);
-  NS_IMETHOD SetIsInClickEvent(PRBool aVal);
 
   void InitializeControl(nsIPresContext* aPresContext);
 

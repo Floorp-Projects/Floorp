@@ -92,6 +92,8 @@ public:
   static nsresult GetValue(nsIFrame* aChildFrame, nsString& aValue, nsIContent* aContent = 0);
   static void StyleChangeReflow(nsIPresContext* aPresContext,
                                 nsIFrame* aFrame);
+  static nsresult GetRadioGroupSelectedContent(nsGfxRadioControlFrame* aControl,
+                                               nsIContent **           aRadiobtn);
   void SetFlags(PRUint32 aFlags) {
     mState &= ~NS_BLOCK_FLAGS_MASK;
     mState |= aFlags;

@@ -205,9 +205,10 @@ nsGfxRadioControlFrame::SetRadioButtonFaceStyleContext(nsIStyleContext *aRadioBu
 
 //--------------------------------------------------------------
 NS_IMETHODIMP
-nsGfxRadioControlFrame::SetIsInClickEvent(PRBool aVal)
+nsGfxRadioControlFrame::GetRadioGroupSelectedContent(nsIContent ** aRadioBtn)
 {
-  mInClickEvent = aVal;
+  NS_ENSURE_ARG_POINTER(aRadioBtn);
+  nsFormFrame::GetRadioGroupSelectedContent(this, aRadioBtn);
   return NS_OK;
 }
 
@@ -333,12 +334,6 @@ nsGfxRadioControlFrame::Paint(nsIPresContext* aPresContext,
 //--------------------------------------------------------------
 PRBool nsGfxRadioControlFrame::GetRadioState()
 {
-  // If we are processing an onclick event then
-  // always return the opposite value
-  // additional explanantion is in nsIRadioControlFrame or nsHTMLInputElement.cpp
-  if (mInClickEvent) {
-    return !mChecked;
-  }
   return mChecked;
 }
 
