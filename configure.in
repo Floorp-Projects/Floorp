@@ -565,20 +565,24 @@ AC_ARG_WITH(nspr,
 [  --with-nspr=\$dir        location of nspr headers and libraries],
 	NSPR_DIR=$withval)
 
-if test -d "$NSPR_DIR" ; then
-    _SAVE_LDFLAGS=$LDFLAGS
-    LDFLAGS="$LDFLAGS -L${NSPR_DIR}/lib"
-    AC_CHECK_LIB(nspr21, PR_GetUniqueIdentity, NSPR_LIBS="-lnspr21 $NSPR_LIBS",
-		, $NSPR_LIBS)
-    AC_CHECK_LIB(plc21, PL_CreateOptState, NSPR_LIBS="-lplc21 $NSPR_LIBS",
-		, $NSPR_LIBS)
-    AC_CHECK_LIB(plds21, PL_VectorAdd, NSPR_LIBS="-lplds21 $NSPR_LIBS",
-		, $NSPR_LIBS)
-    LDFLAGS=$_SAVE_LDFLAGS
-else
-    NSPR_DIR='$(DIST)'
-    NSPR_LIBS='$(DIST)/lib/libplds21.a $(DIST)/lib/libplc21.a $(DIST)/lib/libnspr21.a';
-fi
+_SAVE_CFLAGS=$CFLAGS
+CFLAGS="$CFLAGS -I${NSPR_DIR}/include"
+AC_MSG_CHECKING("for nspr.h")
+AC_TRY_COMPILE([#include "nspr.h"], [], 
+    [result="yes"],
+    [MISSING_NSPR="$MISSING_NSPR nspr.h" result="no"])
+AC_MSG_RESULT("$result")
+CFLAGS=$_SAVE_CFLAGS
+
+_SAVE_LDFLAGS=$LDFLAGS
+LDFLAGS="$LDFLAGS -L${NSPR_DIR}/lib"
+AC_CHECK_LIB(nspr21, PR_GetUniqueIdentity, NSPR_LIBS="-lnspr21 $NSPR_LIBS",
+	[MISSING_NSPR="$MISSING_NSPR -lnspr21"], $NSPR_LIBS)
+AC_CHECK_LIB(plc21, PL_CreateOptState, NSPR_LIBS="-lplc21 $NSPR_LIBS",
+	[MISSING_NSPR="$MISSING_NSPR -lplc21"], $NSPR_LIBS)
+AC_CHECK_LIB(plds21, PL_VectorAdd, NSPR_LIBS="-lplds21 $NSPR_LIBS",
+	[MISSING_NSPR="$MISSING_NSPR -lplds21"], $NSPR_LIBS)
+LDFLAGS=$_SAVE_LDFLAGS
 
 AC_SUBST(SYSTEM_JPEG)
 AC_SUBST(SYSTEM_PNG)
@@ -665,6 +669,9 @@ cmd/gnomefe/gnome-widgets/Makefile"
     fi
 fi
 
+if [ test "$MISSING_NSPR" != "" ]; then
+    AC_MSG_ERROR([Could not find standard nspr headers or libraries.]);
+fi
 
 AC_OUTPUT(
 Makefile
