@@ -73,12 +73,15 @@ struct JSStmtInfo {
     ptrdiff_t       update;         /* loop update offset (top if none) */
     ptrdiff_t       breaks;         /* offset of last break in loop */
     ptrdiff_t       continues;      /* offset of last continue in loop */
+    ptrdiff_t       gosub;          /* offset of last GOSUB for this finally */
+    ptrdiff_t       catchJump;      /* offset of last end-of-catch jump */
     JSAtom          *label;         /* name of LABEL or CATCH var */
     JSStmtInfo      *down;          /* info for enclosing statement */
 };
 
-#define SET_STATEMENT_TOP(stmt, top) \
-    ((stmt)->top = (stmt)->update = (top), (stmt)->breaks = (stmt)->continues = (-1))
+#define SET_STATEMENT_TOP(stmt, top)                                         \
+    ((stmt)->top = (stmt)->update = (top), (stmt)->breaks =                  \
+     (stmt)->continues = (stmt)->catchJump = (stmt)->gosub = (-1))
 
 struct JSTreeContext {              /* tree context for semantic checks */
     uint32          flags;          /* statement state flags, see below */
