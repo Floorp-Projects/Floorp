@@ -59,7 +59,7 @@
 #include <osreldate.h>
 #if __FreeBSD_version >= 400015
 #define CFRONT_STYLE_THIS_ADJUST
-#elif __FreeBSD_version == 340000
+#elif (__FreeBSD_version == 340000) && (__GNUC__ == 2) && (__GNUC_MINOR__ == 7)
 /* "FreeBSD 3.4 ships with gcc version 2.7.2.3" -- 
  *     Joerg Brunsmann <joerg.brunsmann@FernUni-Hagen.de>
  */
