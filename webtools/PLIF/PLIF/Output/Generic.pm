@@ -55,10 +55,10 @@ use PLIF::Output;
 #
 # It calls the generic output module's 'HelloWorld' method, which in
 # this case doesn't exist and ends up going through core PLIF and then
-# back to methodMissing implemented in this module and the ancestor
+# back to implyMethod implemented in this module and the ancestor
 # Output module.
 #
-# The methodMissing methods first call every output dispatcher service
+# The implyMethod methods first call every output dispatcher service
 # for the actual protocol (HTTP in this case) and then every output
 # dispatcher service for the generic protocol until one of them
 # handles the HelloWorld method.
@@ -122,7 +122,7 @@ sub serviceInstanceInit {
     my($app, $session, $protocol) = @_;
     $self->propertySet('actualSession', $session);
     $self->propertySet('actualProtocol', $protocol);
-    $self->propertySet('outputter', $self->app->getService("output.generic.$protocol"));
+    $self->propertySet('outputter', $self->{app}->getService("output.generic.$protocol"));
 }
 
 # output.generic service instance method
@@ -130,18 +130,18 @@ sub output {
     my $self = shift;
     my($string, $data, $session) = @_;
     if (not defined($session)) {
-        $session = $self->actualSession;
+        $session = $self->{actualSession};
     }
-    $self->dump(9, "outputting string '$string' on protocol '". ($self->actualProtocol) .'\'');
+    $self->dump(9, "outputting string '$string' on protocol '". ($self->{actualProtocol}) .'\'');
     $self->fillData($data);
     # it's not that anyone would override dataSource.strings, it's just that
     # people might call it without calling output(), so the right thing here
     # is also to call it through getService():
-    $string = $self->app->getService('dataSource.strings')->getExpandedString($self->app, $session, $self->actualProtocol, $string, $data);
-    foreach my $filter ($self->app->getObjectList('output.filter')) {
-        $string = $filter->filterOutput($self->app, $session, $string);
+    $string = $self->{app}->getService('dataSource.strings')->getExpandedString($self->{app}, $session, $self->{actualProtocol}, $string, $data);
+    foreach my $filter ($self->{app}->getObjectList('output.filter')) {
+        $string = $filter->filterOutput($self->{app}, $session, $string);
     }
-    $self->outputter->output($self->app, $session, $string);
+    $self->{outputter}->output($self->{app}, $session, $string);
 }
 
 # output.generic service instance method
@@ -151,12 +151,12 @@ sub output {
 # even though this is actually the generic output handler, because
 # there _is_ no 'output object for this protocol' since if there was
 # the generic output module wouldn't get called!
-sub methodMissing {
+sub implyMethod {
     my $self = shift;
     my($method, @arguments) = @_;
-    if (not $self->app->dispatchMethod('dispatcher.output.'.$self->actualProtocol, 'output', $method, $self, @arguments)) {
+    if (not $self->{app}->dispatchMethod('dispatcher.output.'.$self->{actualProtocol}, 'output', $method, $self, @arguments)) {
         # ok, no generic output dispatcher for the actual protocol, let's try the generic protocol
-        if (not $self->app->dispatchMethod('dispatcher.output.'.$self->protocol, 'output', $method, $self, @arguments)) {
+        if (not $self->{app}->dispatchMethod('dispatcher.output.'.$self->protocol, 'output', $method, $self, @arguments)) {
             # nope, so let's do our own.
             # this assumes the string will be the same as the output
             # method and that the arguments will be all in 'data'.
@@ -169,12 +169,12 @@ sub methodMissing {
 sub fillData {
     my $self = shift;
     my($data) = @_;
-    $data->{'app'} = $self->app->hash;
-    if (defined($self->actualSession)) {
-        $data->{'session'} = $self->actualSession->hash;
+    $data->{'app'} = $self->{app}->hash;
+    if (defined($self->{actualSession})) {
+        $data->{'session'} = $self->{actualSession}->hash;
     }
-    $data->{'input'} = $self->app->input->hash;
-    $data->{'output'} = $self->outputter->hash;
+    $data->{'input'} = $self->{app}->input->hash;
+    $data->{'output'} = $self->{outputter}->hash;
 }
 
 # dataSource.strings default implementation

@@ -67,13 +67,13 @@ sub init {
     my($app, $user, $fieldID, $fieldCategory, $fieldName, $fieldTypeData, $fieldMode, $fieldData) = @_;
     $self->SUPER::init($app);
     # do not hold on to $user!
-    $self->app($app);
-    $self->userID($user->userID); # only change this if it started as undef
-    $self->fieldID($fieldID); # change this at your peril
-    $self->category($fieldCategory); # change this at your peril
-    $self->name($fieldName); # change this at your peril
-    $self->typeData($fieldTypeData); # change this at your peril
-    $self->mode($fieldMode); # change this at your peril
+    $self->{app} = $app;
+    $self->{userID} = $user->{userID}; # only change this if it started as undef
+    $self->{fieldID} = $fieldID; # change this at your peril
+    $self->{category} = $fieldCategory; # change this at your peril
+    $self->{name} = $fieldName; # change this at your peril
+    $self->{typeData} = $fieldTypeData; # change this at your peril
+    $self->{mode} = $fieldMode; # change this at your peril
     $self->{'data'} = $fieldData; # read this via $field->data and write via $field->data($foo)
     # don't forget to update the 'hash' function if you add more member variables here
     $self->{'_DATAFIELD'} = 'data';
@@ -111,7 +111,7 @@ sub data {
 
 sub hash {
     my $self = shift;
-    return $self->data;
+    return $self->{data};
 }
 
 # Methods specifically for 'contact' category fields
@@ -120,21 +120,21 @@ sub hash {
 # followed by the field data itself
 sub username {
     my $self = shift;
-    $self->assert($self->category eq 'contact', 0, 'Tried to get the username from the non-contact field \''.($self->fieldID).'\'');
-    return $self->typeData.$self->data;
+    $self->assert($self->{category} eq 'contact', 0, 'Tried to get the username from the non-contact field \''.($self->{fieldID}).'\'');
+    return $self->{typeData} . $self->{data};
 }
 
 sub address {
     my $self = shift;
-    $self->assert($self->category eq 'contact', 0, 'Tried to get the address of the non-contact field \''.($self->fieldID).'\'');
-    return $self->data;
+    $self->assert($self->{category} eq 'contact', 0, 'Tried to get the address of the non-contact field \''.($self->{fieldID}).'\'');
+    return $self->{data};
 }
 
 sub prepareChange {
     my $self = shift;
     my($newData) = @_;
     $self->assert($self->validate($newData), 0, 'tried to prepare change to invalid value'); # XXX might want to provide more debugging data
-    $self->newData($newData);
+    $self->{newData} = $newData;
 }
 
 # sets a flag so that calls to ->data and ->address will return the
@@ -168,8 +168,8 @@ sub DESTROY {
 sub write {
     my $self = shift;
     if ($self->{'_DELETE'}) {
-        $self->app->getService('dataSource.user')->removeUserField($self->app, $self->userID, $self->fieldID);
+        $self->{app}->getService('dataSource.user')->removeUserField($self->{app}, $self->{userID}, $self->{fieldID});
     } else {
-        $self->app->getService('dataSource.user')->setUserField($self->app, $self->userID, $self->fieldID, $self->data);
+        $self->{app}->getService('dataSource.user')->setUserField($self->{app}, $self->{userID}, $self->{fieldID}, $self->{data});
     }
 }

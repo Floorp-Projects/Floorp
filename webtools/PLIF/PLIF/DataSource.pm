@@ -63,7 +63,7 @@ sub database {
             }
         }
     }
-    $self->error(1, 'There is no suitable \''.$self->databaseName.'\' database installed.');
+    $self->error(1, 'There is no suitable \''.$self->databaseName.'\' database installed');
 }
 
 sub helper {
@@ -86,5 +86,5 @@ sub helper {
             }
         }
     }
-    $self->error(1, 'Configuration Error: There is no database helper suitable for the \''.$self->databaseName.'\' database installed.');
+    $self->error(1, 'Configuration Error: There is no database helper suitable for the \''.$self->databaseName.'\' database installed');
 }

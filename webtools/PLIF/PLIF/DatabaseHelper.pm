@@ -43,3 +43,5 @@ sub databaseType {
     my $self = shift;
     $self->notImplemented();
 }
+
+__DATA__

@@ -50,25 +50,17 @@ sub serviceInstanceInit {
     my $self = shift;
     my($app) = @_;
     $self->SUPER::init(@_);
-    $self->propertySet('app', $app); 
+    $self->{app} = $app;
     # output classes disable implied property creation, so we use
-    # propertySet() here instead of just $self->app($app).
-}
-
-# disable implied property access so that calls to unimplemented
-# output methods will always be caught and can be handled by generic
-# output handlers.
-sub propertyImpliedAccessAllowed {
-    my $self = shift;
-    return $self->propertyExists(@_);
+    # propertySet() here instead of just $self->{app} = $app.
 }
 
 # if we don't implement the output handler directly, let's see if some
 # output dispatcher service for this protocol does
-sub methodMissing {
+sub implyMethod {
     my $self = shift;
     my($method, @arguments) = @_;
-    if (not $self->app->dispatchMethod('dispatcher.output.'.$self->protocol, 'output', $method, $self, @arguments)) {
-        $self->SUPER::methodMissing(@_);
+    if (not $self->{app}->dispatchMethod('dispatcher.output.'.$self->protocol, 'output', $method, $self, @arguments)) {
+        $self->SUPER::implyMethod(@_);
     }
 }

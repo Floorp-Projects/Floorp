@@ -63,11 +63,11 @@ sub run {
             if ($self->verifyInput()) {
                 if ($self->input->command) {
                     $self->dump(8, 'Command: ' . ($self->input->command));
-                    $self->command($self->input->command);
+                    $self->{command} = $self->input->command;
                     $self->dispatch($self->input->command);
                 } else {
                     $self->dump(8, 'Command: (none)');
-                    $self->command('');
+                    $self->{command} = '';
                     $self->noCommand();
                 }
             } # verifyInput should deal with the errors
@@ -76,20 +76,20 @@ sub run {
             $self->output->reportFatalError(@_);
         };
         # command has been completed, reset it
-        $self->command(undef);
+        $self->{command} = undef;
         # In case we used a progressive output device, let it shut
         # down.  It's important to do this, because it holds a
         # reference to us and we wouldn't want a memory leak...
-        $self->defaultOutput(undef);
+        $self->{defaultOutput} = undef;
         # empty the session objects list
-        $self->objects([]);
+        $self->{objects} = [];
     } while ($self->input->next());
     # clear the objects hash here, so that objects are removed before
     # us, otherwise they can't refer back to us during shutdown.
     # don't need to do the same to services as services should never
     # use the application object during shutdown. (They shouldn't be
     # able to. If they can, there is a circular reference.)
-    $self->objects([]);
+    $self->{objects} = [];
     $self->input(undef); # shutdown the input service instance
     $self->dump(5, 'PLIF application completed normally.');
 }
@@ -103,6 +103,15 @@ sub initInput {
         $self->input($input);
     } else {
         $self->noInput();
+    }
+}
+
+sub input {
+    my $self = shift;
+    if (@_) {
+        return $self->{'_input'} = shift;
+    } else {
+        return $self->{'_input'};
     }
 }
 
@@ -121,8 +130,8 @@ sub output {
     my($protocol, $session) = @_;
     my $default = 0;
     if (not defined($protocol)) {
-        if (defined($self->defaultOutput)) {
-            return $self->defaultOutput;
+        if (defined($self->{defaultOutput})) {
+            return $self->{defaultOutput};
         }
         if ($session) {
             $self->warn(3, 'Tried to use default output method for a specific session object');
@@ -161,11 +170,7 @@ sub output {
         #   which returns a reference which will be treated just as a
         #   normal output service. In particular, this means that any
         #   method could be called. So most output hooks should use
-        #   methodMissing much like PLIF::Output::Generic. (Don't
-        #   forget to implement a strict propertyImpliedAccessAllowed
-        #   method -- see the PLIF::Output module for an example. If
-        #   you don't, then outputs with zero or just one arguments
-        #   will be treated as properties, not methods.)
+        #   implyMethod much like PLIF::Output::Generic.
         # * passthrough hooks should then call the original method
         #   again on the argument of the getOutputHook method (which
         #   is the next object). Override hooks (like the XML RPC one)
@@ -177,7 +182,7 @@ sub output {
         foreach my $hook (@hooks) {
             $output = $hook->getOutputHook($output);
         }
-        $self->defaultOutput($output);
+        $self->{defaultOutput} = $output;
     }
     return $output;
 }
@@ -203,6 +208,12 @@ sub selectOutputProtocol {
 sub hash {
     my $self = shift;
     return { 'name' => $self->name };
+}
+
+sub command {
+    my $self = shift;
+    syntaxError 'command() called with arguments' if @_;
+    return $self->{command};
 }
 
 

@@ -68,7 +68,7 @@ sub init {
         $app->getService('dataSource.configuration')->getSettings($app, $self, 'protocol.aim');
     } except {
         $self->dump(9, "failed to get the AIM configuration, not going to bother to connect: @_");
-        $self->handle(undef);
+        $self->{handle} = undef;
     } otherwise {
         $self->open();
     }
@@ -78,19 +78,19 @@ sub open {
     my $self = shift;
     # try to connect
     $self->dump(9, 'opening AIM connection');
-    $self->handle(undef);
+    $self->{handle} = undef;
     eval {
         # The Net::AIM code sprouts warning like there's no tomorrow
         # Let's mute them. :-)
         local $^W = 0;
         my $aim = Net::AIM->new();
         # $aim->debug(${$self->getDebugLevel} > 4);
-        if ($aim->newconn('Screenname' => $self->address,
-                          'Password' => $self->password,
+        if ($aim->newconn('Screenname' => $self->{address},
+                          'Password' => $self->{password},
                           'AutoReconnect' => 1)) {
             # wow, we did it
             # add a buddy first of all (seem to need this, not sure why)
-            $aim->add_buddy(0, 'Buddies', $self->address);
+            $aim->add_buddy(0, 'Buddies', $self->{address});
 
             # this is dodgy; protocol specs don't guarentee that this
             # message will arrive
@@ -98,7 +98,7 @@ sub open {
                                            my $conn = shift;
                                            my($evt, $from, $to) = @_;
                                            my $nick = $evt->args()->[0];
-                                           $self->handle($aim);
+                                           $self->{handle} = $aim;
                                            $self->dump(9, "opened AIM connection to $from as $nick");
                                        });
 
@@ -112,11 +112,11 @@ sub open {
                                            $self->warn(4, "error occured while opening AIM connection: $errstr");
                                        });
 
-            while (not defined($self->handle) and $aim->do_one_loop()) { }
+            while (not defined($self->{handle}) and $aim->do_one_loop()) { }
         }
     };
 
-    if (not defined($self->handle)) {
+    if (not defined($self->{handle})) {
         if ($@) {
             $self->warn(4, "Could not create the AIM handle: $@");
         } else {
@@ -127,8 +127,8 @@ sub open {
 
 sub close {
     my $self = shift;
-    if (defined($self->handle)) {
-        my $conn = $self->handle->getconn;
+    if (defined($self->{handle})) {
+        my $conn = $self->{handle}->getconn;
         if (defined($conn)) {
             $conn->disconnect();
         }
@@ -139,16 +139,16 @@ sub close {
 sub output {
     my $self = shift;
     my($app, $session, $string) = @_;
-    $self->assert(defined($self->handle), 1, 'No AIM handle, can\'t send IM');
-    $self->handle->send_im($session->getAddress('aim'), $string);
+    $self->assert(defined($self->{handle}), 1, 'No AIM handle, can\'t send IM');
+    $self->{handle}->send_im($session->getAddress('aim'), $string);
 }
 
 # protocol.aim
 sub checkAddress {
     my $self = shift;
     my($app, $username) = @_;
-    $self->assert(defined($self->handle), 1, 'No AIM handle, can\'t check address');
-    # my $result = $self->handle->XXX;
+    $self->assert(defined($self->{handle}), 1, 'No AIM handle, can\'t check address');
+    # my $result = $self->{handle}->XXX;
     # return $result;
     return 1;
 }
@@ -196,6 +196,6 @@ sub setupConfigure {
 sub hash {
     my $self = shift;
     return {
-            'address' => $self->address,
+            'address' => $self->{address},
            };
 }

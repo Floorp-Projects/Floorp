@@ -80,22 +80,22 @@ sub splitArguments {
         if ($self->HTTP_AUTHORIZATION =~ /^Basic +(.*)$/os) {
             # HTTP Basic Authentication
             my($username, $password) = split(/:/, decode_base64($1), 2);
-            $self->username($username);
-            $self->password($password);
+            $self->{username} = $username;
+            $self->{password} = $password;
         } else {
             # Some other authentication scheme
         }
     }
     # hook in cookies
-    $self->cookies({}); # empty the list of cookies first
+    $self->{cookies} = {}; # empty the list of cookies first
     if (defined($ENV{'HTTP_COOKIE'})) {
         foreach my $cookie (split(/; /os, $ENV{'HTTP_COOKIE'})) {
             my($field, $value) = split(/=/os, $cookie);
-            $self->cookies->{$field} = $value;
+            $self->{cookies}->{$field} = $value;
         }
     }
     # decode the arguments
-    $self->decodeHTTPArguments;
+    $self->decodeHTTPArguments();
 }
 
 sub decodeHTTPArguments {
@@ -150,7 +150,7 @@ sub setCommandArgument {
 sub getMetaData {
     my $self = shift;
     my($field) = @_;
-    return $self->metaData->{$field};
+    return $self->{metaData}->{$field};
 }
 
 sub registerPropertyAsMetaData {
@@ -159,7 +159,7 @@ sub registerPropertyAsMetaData {
     foreach my $property (@propertys) {
         my $value = $self->propertyGet($property);
         if (defined($value)) {
-            $self->metaData->{$field} = $value;
+            $self->{metaData}->{$field} = $value;
             last;
         }
     }
@@ -169,5 +169,5 @@ sub registerPropertyAsMetaData {
 sub getSessionData {
     my $self = shift;
     my($field) = @_;
-    return $self->cookies->{$field};
+    return $self->{cookies}->{$field};
 }

@@ -43,9 +43,9 @@ sub init {
     my $self = shift;
     $self->SUPER::init(@_);
     # prepare the services array for the registration system
-    $self->services([]);
-    $self->objects([]);
-    $self->servicesHash({});
+    $self->{services} = [];
+    $self->{objects} = [];
+    $self->{servicesHash} = {};
     # perform the registration
     $self->registerServices();
 }
@@ -56,7 +56,7 @@ sub init {
 sub register {
     my $self = shift;
     foreach my $service (@_) {
-        push(@{$self->services}, $service);
+        push(@{$self->{services}}, $service);
         my $file = $service;
         # XXX THIS IS PLATFORM SPECIFIC CODE XXX
         if ($^O eq 'linux') {
@@ -87,7 +87,7 @@ sub addObject {
     my $self = shift;
     foreach my $object (@_) {
         $self->assert(defined($object), 1, 'Internal error: Tried to add undefined object to object list.');
-        push(@{$self->objects}, $object);
+        push(@{$self->{objects}}, $object);
     }
 }
 
@@ -95,15 +95,15 @@ sub removeObject {
     my $self = shift;
     # XXX for 5.6.1, use this:
     # foreach my $object (@_) {
-    #     foreach my $index (0..$#{$self->objects}) {
-    #         if ($self->objects->[$index] == $object) {
-    #             delete($self->objects->[$index]);
+    #     foreach my $index (0..$#{$self->{objects}}) {
+    #         if ($self->{objects}->[$index] == $object) {
+    #             delete($self->{objects}->[$index]);
     #         }
     #     }
     # }
     # won't work in early perls though, so instead:
     my $objects = [];
-    object: foreach my $object (@{$self->objects}) {
+    object: foreach my $object (@{$self->{objects}}) {
         foreach my $removee (@_) {
             if ($object == $removee) {
                 next object;
@@ -111,16 +111,16 @@ sub removeObject {
         }
         push(@$objects, $objects);
     }
-    $self->objects($objects);
+    $self->{objects} = $objects;
 }
 
 sub getService {
     my $self = shift;
     my($name) = @_;
-    if (defined($self->servicesHash->{$name})) {
-        return $self->servicesHash->{$name};
+    if (defined($self->{servicesHash}->{$name})) {
+        return $self->{servicesHash}->{$name};
     }
-    foreach my $service (@{$self->services}) {
+    foreach my $service (@{$self->{services}}) {
         if ($service->provides($name)) {
             # Create the service. If it is already created, this will
             # just return the object reference, so no harm done.
@@ -129,7 +129,7 @@ sub getService {
             # Doing so would create a circular dependency, resulting
             # in a memory leak.
             $service = $service->create($self);
-            $self->servicesHash->{$name} = $service;
+            $self->{servicesHash}->{$name} = $service;
             return $service;
         }
     }
@@ -141,7 +141,7 @@ sub getObject {
     # constructor call
     my $self = shift;
     my($name) = @_;
-    foreach my $object (@{$self->objects}) {
+    foreach my $object (@{$self->{objects}}) {
         if ($object->objectProvides($name)) {
             return $object;
         }
@@ -153,7 +153,7 @@ sub getServiceList {
     my $self = shift;
     my($name) = @_;
     my @services = ();
-    foreach my $service (@{$self->services}) {
+    foreach my $service (@{$self->{services}}) {
         if ($service->provides($name)) {
             # Create the service. If it is already created, this will
             # just return the object reference, so no harm done.
@@ -174,7 +174,7 @@ sub getObjectList {
     my $self = shift;
     my($name) = @_;
     my @objects = ();
-    foreach my $object (@{$self->objects}) {
+    foreach my $object (@{$self->{objects}}) {
         if ($object->objectProvides($name)) {
             push(@objects, $object);
         }
@@ -215,7 +215,7 @@ sub getSelectingObjectList {
 sub getServiceInstance {
     my $self = shift;
     my($name, @data) = @_;
-    foreach my $service (@{$self->services}) {
+    foreach my $service (@{$self->{services}}) {
         if ($service->provides($name)) {
             # Create and return the service instance, without storing
             # a copy.
@@ -258,9 +258,9 @@ sub DESTROY {
     my $self = shift;
     $self->dump(10, 'At controller shutdown, there were ' .
                 # I assume there will always be > 1 and so haven't bothered to special case the singular grammar
-                scalar(@{$self->services}) . 
+                scalar(@{$self->{services}}) . 
                 ' services registered, of which ' .
-                scalar(keys(%{$self->servicesHash})) .
+                scalar(keys(%{$self->{servicesHash}})) .
                 ' had been placed in the services hash.');
     $self->SUPER::DESTROY(@_);
 }

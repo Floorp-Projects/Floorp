@@ -15,3 +15,8 @@ Make getSettings return a boolean instead of raising an exception.
 
 
 Stylesheet should be a template
+
+
+
+refactor the |die|, |warn|, |PLIF::warn|, |PLIF::error|, |PLIF::dump|
+call sites and functions so that they all go through the same system.

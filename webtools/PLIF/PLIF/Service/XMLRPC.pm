@@ -104,7 +104,7 @@ sub reportFatalError {
 }
 
 # output.hook
-sub methodMissing {
+sub implyMethod {
     my $self = shift;
     my($method, @arguments) = @_;
     # We drop 'method' on the floor, since it is assumed that an XML
@@ -123,14 +123,6 @@ sub methodMissing {
         $response = RPC::XML::response->new(RPC::XML::boolean->new(1)); # XXX
     }
     $self->output->XMLRPC($response->as_string);
-}
-
-# disable implied property access so that all method calls are routed
-# through methodMissing() above.
-sub propertyImpliedAccessAllowed {
-    my $self = shift;
-    my($name) = @_;
-    return ($name eq 'output');
 }
 
 # This is commented out because the default generic output module

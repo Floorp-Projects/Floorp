@@ -56,7 +56,7 @@ sub init {
     my $self = shift;
     my($app) = @_;
     $self->SUPER::init(@_);
-    $self->app($app); # only safe because input services are created as service instances not pure services!!!
+    $self->{app} = $app; # only safe because input services are created as service instances not pure services!!!
     $self->fetchArguments();
 }
 

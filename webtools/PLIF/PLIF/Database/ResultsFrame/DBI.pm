@@ -41,8 +41,8 @@ sub init {
     my $self = shift;
     $self->SUPER::init(@_);
     my($handle, $database, $execute, @values) = @_;
-    $self->handle($handle);
-    $self->database($database);
+    $self->{handle} = $handle;
+    $self->{database} = $database;
     if (defined($execute)) {
         $self->execute($execute, @values);
     }
@@ -52,23 +52,23 @@ __DATA__
 
 sub lastError {
     my $self = shift;
-    return $self->handle->err;
+    return $self->{handle}->err;
 }
 
 sub rowsAffected {
     my $self = shift;
-    return $self->handle->rows;
+    return $self->{handle}->rows;
 }
 
 sub row {
     my $self = shift;
-    $self->assert($self->executed, 1, 'Tried to fetch data from an unexecuted statement');
+    $self->assert($self->{executed}, 1, 'Tried to fetch data from an unexecuted statement');
     my $wantarray = wantarray; # to propagate it into the try block below
     my @result = try {
         if ($wantarray) {
-            return $self->handle->fetchrow_array();
+            return $self->{handle}->fetchrow_array();
         } else {
-            my $array = $self->handle->fetchrow_arrayref();
+            my $array = $self->{handle}->fetchrow_arrayref();
             if ((not defined($array)) or @$array == 0) {
                 # no data
                 return undef;
@@ -94,9 +94,9 @@ sub row {
 
 sub rows {
     my $self = shift;
-    $self->assert($self->executed, 1, 'Tried to fetch data from an unexecuted statement');
+    $self->assert($self->{executed}, 1, 'Tried to fetch data from an unexecuted statement');
     my $result = try {
-        $self->handle->fetchall_arrayref();
+        $self->{handle}->fetchall_arrayref();
     } except {
         my($exception) = @_;
         if (my $error = $self->lastError) {
@@ -128,14 +128,14 @@ sub execute {
         }
     }
     my $result = try {
-        $self->handle->execute(@values);
+        $self->{handle}->execute(@values);
     } except {
         raise PLIF::Exception::Database (
             'message' => $_[0],
         );
     };
     if ($result) {
-        $self->executed(1);
+        $self->{executed} = 1;
         return $self;
     } elsif (not $raise) {
         return $self;
@@ -154,12 +154,12 @@ sub raiseError {
         # This should only be used by MySQL-specific DBI data sources
         raise PLIF::Exception::Database::Duplicate (
             'code' => $self->lastError,
-            'message' => $self->handle->errstr,
+            'message' => $self->{handle}->errstr,
         );
     } else {
         raise PLIF::Exception::Database (
             'code' => $self->lastError,
-            'message' => $self->handle->errstr,
+            'message' => $self->{handle}->errstr,
         );
     }
 }
@@ -167,7 +167,7 @@ sub raiseError {
 # This should only be used by MySQL-specific DBI data sources
 sub MySQLID {
     my $self = shift;
-    return $self->handle->{'mysql_insertid'};
+    return $self->{handle}->{'mysql_insertid'};
 }
 
 # other possible APIs:

@@ -118,22 +118,17 @@ sub write {
 
 sub propertySet {
     my $self = shift;
+    my($name, $value) = @_;
     $self->ensureRead();
-    my $result = $self->SUPER::propertySet(@_);
     $self->{'_DIRTY'} = 1;
-    return $result;
-}
-
-sub propertyExists {
-    my $self = shift;
-    $self->ensureRead();
-    return $self->SUPER::propertyExists(@_);
+    return $self->{$name} = $value;
 }
 
 sub propertyGet {
     my $self = shift;
+    my($name) = @_;
     $self->ensureRead();
-    return $self->SUPER::propertyGet(@_);
+    return $self->{$name};
 }
 
 sub DESTROY {

@@ -70,8 +70,8 @@ sub decodeHTTPArguments {
 
     # parse the MIME body
     local $/ = undef;
-    my $data = 'Content-Type: '   . $self->CONTENT_TYPE   . "\n" .
-               'Content-Length: ' . $self->CONTENT_LENGTH . "\n" .
+    my $data = 'Content-Type: '   . $self->{CONTENT_TYPE}   . "\n" .
+               'Content-Length: ' . $self->{CONTENT_LENGTH} . "\n" .
                "\n" . <STDIN>;
     $self->dump(9, "Data was:\n==============================\n$data\n==============================");
     my $entity = $parser->parse_data($data);
@@ -111,11 +111,11 @@ sub decodeHTTPArguments {
     }
 
     # store the entity so that we can purge the files later
-    $self->entity($entity);
+    $self->{entity} = $entity;
 }
 
 sub DESTROY {
     my $self = shift;
-    $self->entity->purge();
+    $self->{entity}->purge();
     $self->SUPER::destroy();
 }

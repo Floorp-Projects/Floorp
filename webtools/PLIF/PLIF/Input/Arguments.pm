@@ -163,8 +163,17 @@ sub createArgument {
     $self->{"argument $argument"} = [];
 }
 
-sub propertyExists {
-    return 1;
+sub implyMethod {
+    my $self = shift;
+    my($name, @data) = @_;
+    if (@data > 1) {
+        return $self->SUPER::implyMethod(@_);
+    }
+    if (@data) {
+        return $self->propertySet($name, @data);
+    } else {
+        return $self->propertyGet($name);
+    }
 }
 
 sub propertyGet {

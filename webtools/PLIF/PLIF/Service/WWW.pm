@@ -55,19 +55,19 @@ sub get {
     if (defined($referrer)) {
         $request->referer($referrer);
     }
-    if (not exists $self->{'ua'}) {
+    if (not exists $self->{ua}) {
         require LWP::UserAgent; import LWP::UserAgent; # DEPENDENCY
         my $ua = LWP::UserAgent->new();
         $ua->agent($ua->agent . ' (' . $app->name . ')');
         $ua->timeout(5); # XXX HARDCODED CONSTANT ALERT
         $ua->env_proxy();
-        $self->ua($ua);
+        $self->{ua} = $ua;
     }
-    my $response = $self->ua->request($request);
+    my $response = $self->{ua}->request($request);
     if (wantarray) {
-        return ($response->content, $response);
+        return ($response->{content}, $response);
     } else {
-        return $response->content;
+        return $response->{content};
     }
 }
 

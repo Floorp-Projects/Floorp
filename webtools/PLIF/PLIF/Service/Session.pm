@@ -45,7 +45,7 @@ sub objectInit {
     my $self = shift;
     my($app) = @_;
     $self->SUPER::objectInit(@_);
-    $self->app($app);
+    $self->{app} = $app;
 }
 
 # expected by dataSource.strings

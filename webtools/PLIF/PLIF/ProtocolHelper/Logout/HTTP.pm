@@ -56,7 +56,7 @@ sub objectInit {
     my $self = shift;
     my($app, $user) = @_;
     $self->SUPER::objectInit(@_);
-    $self->user($user);
+    $self->{user} = $user;
 }
 
 # user.login.canLogin.<protocol>
@@ -77,7 +77,7 @@ sub loginRequired {
     my($app) = @_;
     my $userHandle = $app->getObject('user.login.loggedOutUserHandle.http');
     if (defined($userHandle)) {
-        my $state = $userHandle->user->hasField('state', 'http.logout');
+        my $state = $userHandle->{user}->hasField('state', 'http.logout');
         if (defined($state)) {
             my $value = $state->data - 1;
             if ($value > 0) {

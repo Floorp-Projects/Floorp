@@ -57,34 +57,40 @@ sub init {
     $self->openDB(@_);
 }
 
+sub type {
+    my $self = shift;
+    syntaxError "type() called with arguments" if @_;
+    return $self->{type};
+}
+
 sub openDB {
     my $self = shift;
     my($app) = @_;
     try {
         $self->getConfig($app);
     } except {
-        $self->handle(undef);
-        $self->errstr(@_);
+        $self->{handle} = undef;
+        $self->{errstr} = @_;
         $self->dump(9, "failed to get the database configuration, not going to bother to connect: @_");
     } otherwise {
         try {
-            $self->handle(DBI->connect($self->connectString, $self->username, $self->password,
-                                       {RaiseError => 0, PrintError => 0, AutoCommit => 1, Taint => 1}));
-            $self->errstr($DBI::errstr);
+            $self->{handle} = DBI->connect($self->connectString, $self->{username}, $self->{password},
+                                           {RaiseError => 0, PrintError => 0, AutoCommit => 1, Taint => 1});
+            $self->{errstr} = $DBI::errstr;
             $self->dump(9, 'created a database object without raising an exception');
         } except {
-            $self->handle(undef);
-            $self->errstr(@_);
-            $self->error(1, "failed to connect to the database because of @_");
+            $self->{handle} = undef;
+            $self->{errstr} = @_;
+            $self->error(1, "failed to connect to the database: @_");
         }
     }
 }
 
 sub closeDB {
     my $self = shift;
-    if ($self->handle) {
-        $self->handle->disconnect();
-        $self->handle(undef);
+    if ($self->{handle}) {
+        $self->{handle}->disconnect();
+        $self->{handle} = undef;
     }
 }
 
@@ -92,14 +98,14 @@ sub connectString {
     my $self = shift;
     my($name) = @_;
     if (not defined($name)) {
-        $name = $self->name;
+        $name = $self->{name};
     }
-    return 'DBI:'.($self->type).':'.($name).':'.($self->host).':'.($self->port);
+    return 'DBI:'.($self->{type}).':'.($name).':'.($self->{host}).':'.($self->{port});
 }
 
 sub lastError {
     my $self = shift;
-    return $self->handle->err;
+    return $self->{handle}->err;
 }
 
 sub prepare {
@@ -123,9 +129,9 @@ sub attempt {
 sub createResultsFrame {
     my $self = shift;
     my($statement, $execute, @values) = @_;
-    $self->assert($self->handle, 1, 'No database handle: '.(defined($self->errstr) ? $self->errstr : 'unknown error'));
+    $self->assert($self->{handle}, 1, 'No database handle: '.(defined($self->{errstr}) ? $self->{errstr} : 'unknown error'));
     $statement =~ /^(.*)$/os; # untaint # (XXX?)
-    my $handle = $self->handle->prepare($1);
+    my $handle = $self->{handle}->prepare($1);
     if ($handle) {
         return PLIF::Database::ResultsFrame::DBI->create($handle, $self, $execute, @values);
     } else {
@@ -204,7 +210,7 @@ sub setupConfigure {
     my $return;
     $app->output->setupProgress("$prefix.admin.checking");
     try {
-        DBI->connect($self->connectString, $self->username, $self->password,
+        DBI->connect($self->connectString, $self->{username}, $self->{password},
                      {RaiseError => 1, PrintError => 0, AutoCommit => 1, Taint => 1})->disconnect();
     } except {
         $return = $self->setupConfigureDatabase($app, $prefix);
@@ -273,31 +279,31 @@ sub setupConfigureDatabase {
     my @helpers = $app->getServiceList('database.helper');
     helper: foreach my $helperInstance (@helpers) {
         foreach my $helperType ($helperInstance->databaseType) {
-            if ($helperType eq $self->type) {
+            if ($helperType eq $self->{type}) {
                 $helper = $helperInstance;
                 last helper;
             }
         }
     }
-    $self->assert(defined($helper), 1, 'No database helper installed for database type \''.$self->type.'\'');
+    $self->assert(defined($helper), 1, 'No database helper installed for database type \''.$self->{type}.'\'');
 
     # connect
     eval {
-        $self->handle(DBI->connect($self->connectString($helper->setupDatabaseName), $adminUsername, $adminPassword,
-                                   {RaiseError => 0, PrintError => 1, AutoCommit => 1, Taint => 1}));
+        $self->{handle} = DBI->connect($self->connectString($helper->setupDatabaseName), $adminUsername, $adminPassword,
+                                       {RaiseError => 0, PrintError => 1, AutoCommit => 1, Taint => 1});
     };
     $self->assert((not $@), 1, "Could not connect to database: $@");
-    $self->assert($self->handle, 1, 'Failed to connect to database: '.(defined($DBI::errstr) ? $DBI::errstr : 'unknown error'));
+    $self->assert($self->{handle}, 1, 'Failed to connect to database: '.(defined($DBI::errstr) ? $DBI::errstr : 'unknown error'));
 
     # get the helper to do its stuff
     $helper->setupVerifyVersion($app, $self);
-    $helper->setupCreateUser($app, $self, $self->username, $self->password, $localHostname, $self->name);
-    $helper->setupCreateDatabase($app, $self, $self->name);
-    $helper->setupSetRights($app, $self, $self->username, $self->password, $localHostname, $self->name);
+    $helper->setupCreateUser($app, $self, $self->{username}, $self->{password}, $localHostname, $self->{name});
+    $helper->setupCreateDatabase($app, $self, $self->{name});
+    $helper->setupSetRights($app, $self, $self->{username}, $self->{password}, $localHostname, $self->{name});
 
     # disconnect
-    $self->handle->disconnect();
-    $self->handle(undef);
+    $self->{handle}->disconnect();
+    $self->{handle} = undef;
 }
 
 sub DESTROY {

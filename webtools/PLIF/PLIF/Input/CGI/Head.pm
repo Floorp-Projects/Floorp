@@ -50,7 +50,7 @@ sub decodeHTTPArguments {
     } else {
         $self->dump(9, 'HTTP HEAD. No input.');
     }
-    $self->app->addObject($self);
+    $self->{app}->addObject($self);
 }
 
 sub objectProvides {

@@ -60,7 +60,7 @@ sub verifyInput {
     my $self = shift;
     my($app) = @_;
     # clear internal flags
-    $self->userAdminMessage('');
+    $self->{userAdminMessage} = '';
     # let's see if there are any protocol-specific user authenticators
     my @result = $app->getSelectingServiceList('input.verify.user.'.$app->input->defaultOutputProtocol)->authenticateUser($app);
     if (not @result) {
@@ -84,7 +84,7 @@ sub verifyInput {
             } else {
                 # hmm, so apparently user is not allowed to log in
                 $self->dump(2, 'user '.($result[0]->userID).' tried logging in but their account is disabled');
-                $self->userAdminMessage($result[0]->adminMessage);
+                $self->{userAdminMessage} = $result[0]->{adminMessage};
                 return $self; # supports user.login (reportInputVerificationError)
             }
         }
@@ -108,7 +108,7 @@ sub authenticateUser {
 sub reportInputVerificationError {
     my $self = shift;
     my($app) = @_;
-    $app->output->loginFailed(1, $self->userAdminMessage); # 1 means 'unknown username/password'
+    $app->output->loginFailed(1, $self->{userAdminMessage}); # 1 means 'unknown username/password'
 }
 
 # dispatcher.commands

@@ -32,7 +32,17 @@ use vars qw(@ISA @EXPORT);
 use overload '""' => 'stringify', 'cmp' => 'comparison';
 require Exporter;
 @ISA = qw(Exporter);
-@EXPORT = qw(try catch with fallthrough except otherwise finally syntaxError);
+@EXPORT = qw(try catch with fallthrough except otherwise finally syntaxError evalString);
+my %EVALS = ();
+
+# Make warnings 
+$SIG{__WARN__} = sub {
+    my $message = shift;
+    $message =~ s/\(eval ([0-9]+)\)/ exists $EVALS{$1} ? $EVALS{$1} : $1 /gose;
+    $message =~ s/, <DATA> line [0-9]+//gos; # clean up irrelevant useless junk...
+    warn $message; # reraise the updated message
+};
+
 
 # To use this package, you first have to define your own exceptions:
 #
@@ -70,6 +80,23 @@ require Exporter;
 #
 # The report method also returns a valid exception, should you wish to
 # later raise it for real.
+#
+# If you want to evaluate a string, call evalString($string,
+# $filename). This will take a note of the eval number for stack
+# traces and warnings. All warnings in blocks evaluated by this will
+# be updated automatically.
+
+sub evalString($$) {
+    my($string, $filename) = @_;
+    my $evalID;
+    my $test = eval "sub { (undef eq 0) }";
+    local $^W = 1;
+    local $SIG{__WARN__} = sub { $_[0] =~ m/^Use of uninitialized value in string eq at \(eval ([0-9]+)\) line 1/os; $evalID = $1; };
+    &$test();
+    $EVALS{++$evalID} = $filename;
+    # print STDERR "evaluating eval $evalID = $EVALS{$evalID}\n";
+    eval $string;
+}
 
 # constants for stringifying exceptions
 sub seMaxLength() { 80 }
@@ -90,6 +117,9 @@ sub getFrames() {
     my @frames;
     my $index = 0;
     while (my @data = caller($index++)) {
+        # expand knows eval numbers
+        $data[1] =~ s/\(eval ([0-9]+)\)/ exists $EVALS{$1} ? $EVALS{$1} : $1 /ose;
+        # push frame onto stack
         push(@frames, {
             'package' => $data[0],
             'filename' => $data[1],
@@ -142,6 +172,10 @@ sub init {
         $exception->{'line'} = $line;
         $exception->{'stacktrace'} = $stacktrace;
     }
+    if (defined($exception->{'message'})) {
+        $exception->{'message'} =~ s/\(eval ([0-9]+)\)/ exists $EVALS{$1} ? $EVALS{$1} : $1 /ose;
+        $exception->{'message'} =~ s/\.?\n$/, reraised/os;
+    }
     return $exception;
 }
 
@@ -156,6 +190,7 @@ sub report {
     my($exception, @data) = @_;
     syntaxError "Syntax error in \"report\": \"$exception\" is not a PLIF::Exception class", 1 unless UNIVERSAL::isa($exception, __PACKAGE__);
     $exception = $exception->init(@data);
+    local $SIG{__WARN__} = undef; # don't want this warning going through our processor
     warn $exception;
     return $exception;
 }
@@ -273,8 +308,8 @@ sub stringify {
     $value .= "\nStack Trace:\n";
     foreach my $frame (@{$self->{'stacktrace'}}) {
         my $where;
-        if ($frame->{'filename'} =~ m/^\(eval [0-9]+\)$/os) {
-            $where = "line $frame->{'line'} of eval '...' created in $frame->{'package'} context";
+        if ($frame->{'filename'} =~ m/^\(eval ([0-9]+)\)$/os) {
+            $where = "line $frame->{'line'} of eval '...' $1 created in $frame->{'package'} context";
         } else {
             $where = "$frame->{'filename'} line $frame->{'line'}";
         }
@@ -308,7 +343,6 @@ sub stringify {
     foreach my $key (sort keys %ENV) {
         $value .= "  $key = $ENV{$key}\n";
     }
-    $value .= "\n";
     return $value;
 }
 
@@ -392,6 +426,9 @@ sub wrap($) {
         if (not ref($exception) or
             not $exception->isa('PLIF::Exception')) {
             # an unexpected exception
+            $exception =~ s/\(eval ([0-9]+)\)/ exists $EVALS{$1} ? $EVALS{$1} : $1 /gose;
+            $exception =~ s/, <DATA> line [0-9]+//gos; # clean up irrelevant useless junk...
+            $exception =~ s/\.?\n$/, reraised/os;
             $exception = PLIF::Exception->create('message' => $exception);
         }
         if (not exists $exception->{'stacktrace'}) {

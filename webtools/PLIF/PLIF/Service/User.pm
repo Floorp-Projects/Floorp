@@ -113,7 +113,7 @@ sub objectProvides {
     my $self = shift;
     my($service) = @_;
     return ($service eq 'user' or
-            $service eq 'user.'.($self->userID) or
+            $service eq 'user.'.($self->{userID}) or
             $self->SUPER::objectProvides($service));
 }
 
@@ -139,12 +139,12 @@ sub objectInit {
     my($app, $userID, $mode, $password, $adminMessage, $fields, $groups, $rights) = @_;
     $self->{'_DIRTY'} = {}; # make sure propertySet is happy
     $self->SUPER::objectInit(@_);
-    $self->userID($userID);
-    $self->mode($mode); # 0=active, 1=disabled   XXX need a way to make this extensible
-    $self->password($password);
-    $self->adminMessage($adminMessage);
-    $self->fields({});
-    $self->fieldsByID({});
+    $self->{userID} = $userID;
+    $self->{mode} = $mode; # 0=active, 1=disabled   XXX need a way to make this extensible
+    $self->{password} = $password;
+    $self->{adminMessage} = $adminMessage;
+    $self->{fields} = {};
+    $self->{fieldsByID} = {};
     # don't forget to update the 'hash' function if you add more properties/field whatever you want to call them
     my $fieldFactory = $app->getService('user.fieldFactory');
     foreach my $fieldID (keys(%$fields)) {
@@ -157,25 +157,25 @@ sub objectInit {
         $groupsByID->{$group->[0]} = {'name' => $group->[1], 'level' => $group->[2], }; # id => name, level
         $groupsByName->{$group->[1]} = {'groupID' => $group->[0], 'level' => $group->[2], }; # name => id, level
     }
-    $self->groupsByID($groupsByID); # authoritative version
-    $self->originalGroupsByID({%{$groupsByID}}); # a backup used to make a comparison when saving the groups
-    $self->groupsByName($groupsByName); # helpful version for output purposes only
+    $self->{groupsByID} = $groupsByID; # authoritative version
+    $self->{originalGroupsByID} = {%{$groupsByID}}; # a backup used to make a comparison when saving the groups
+    $self->{groupsByName} = $groupsByName; # helpful version for output purposes only
     # rights
-    $self->rights({ map {$_ => 1} @$rights }); # map a list of strings into a hash for easy access
+    $self->{rights} = { map {$_ => 1} @$rights }; # map a list of strings into a hash for easy access
     $self->{'_DIRTY'}->{'properties'} = not(defined($userID));
 }
 
 sub hasRight {
     my $self = shift;
     my($right) = @_;
-    return (defined($self->rights->{$right}) or $self->levelInGroup(1)); # group 1 is a magical group
+    return (defined($self->{rights}->{$right}) or $self->levelInGroup(1)); # group 1 is a magical group
 }
 
 sub hasField {
     my $self = shift;
     my($category, $name) = @_;
-    if (defined($self->fields->{$category})) {
-        return $self->fields->{$category}->{$name};
+    if (defined($self->{fields}->{$category})) {
+        return $self->{fields}->{$category}->{$name};
     }
     return undef;
 }
@@ -188,7 +188,7 @@ sub getField {
     my($category, $name) = @_;
     my $field = $self->hasField($category, $name);
     if (not defined($field)) {
-        $field = $self->insertField($self->app->getService('user.fieldFactory')->createFieldByName($self->app, $self, $category, $name));
+        $field = $self->insertField($self->{app}->getService('user.fieldFactory')->createFieldByName($self->{app}, $self, $category, $name));
     }
     return $field;
 }
@@ -199,9 +199,9 @@ sub getField {
 sub getFieldByID {
     my $self = shift;
     my($ID) = @_;
-    my $field = $self->fieldsByID->{$ID};
+    my $field = $self->{fieldsByID}->{$ID};
     if (not defined($field)) {
-        $field = $self->insertField($self->app->getService('user.fieldFactory')->createFieldByID($self->app, $self, $ID));
+        $field = $self->insertField($self->{app}->getService('user.fieldFactory')->createFieldByID($self->{app}, $self, $ID));
     }
     return $field;
 }
@@ -211,7 +211,7 @@ sub getAddress {
     my($protocol) = @_;
     my $field = $self->hasField('contact', $protocol);
     if (defined($field)) {
-        return $field->address;
+        return $field->{address};
     } else {
         return undef;
     }
@@ -221,18 +221,18 @@ sub addFieldChange {
     my $self = shift;
     my($field, $newData, $password, $type) = @_;
     $field->prepareChange($newData);
-    return $self->app->getService('dataSource.user')->setUserFieldChange($self->app, $self->userID, $field->fieldID, $newData, $password, $type);
+    return $self->{app}->getService('dataSource.user')->setUserFieldChange($self->{app}, $self->{userID}, $field->{fieldID}, $newData, $password, $type);
 }
 
 sub performFieldChange {
     my $self = shift;
     my($changeID, $candidatePassword, $minTime) = @_;
-    my $dataSource = $self->app->getService('dataSource.user');
-    my($userID, $fieldID, $newData, $password, $createTime, $type) = $dataSource->getUserFieldChangeFromChangeID($self->app, $changeID);
+    my $dataSource = $self->{app}->getService('dataSource.user');
+    my($userID, $fieldID, $newData, $password, $createTime, $type) = $dataSource->getUserFieldChangeFromChangeID($self->{app}, $changeID);
     # check for valid change
     if ((not defined($userID)) or # invalid change ID
-        ($userID != $self->userID) or # wrong change ID
-        (not $self->app->getService('service.password')->checkPassword($candidatePassword, $password)) or # wrong password
+        ($userID != $self->{userID}) or # wrong change ID
+        (not $self->{app}->getService('service.password')->checkPassword($candidatePassword, $password)) or # wrong password
         ($createTime < $minTime)) { # expired change
         return 0;
     }
@@ -242,11 +242,11 @@ sub performFieldChange {
     if ($type == 1) { # XXX HARDCODED CONSTANT ALERT
         # this is an override change
         # remove all pending changes for this field (including this one)
-        $dataSource->removeUserFieldChangesByUserIDAndFieldID($self->app, $userID, $fieldID);
+        $dataSource->removeUserFieldChangesByUserIDAndFieldID($self->{app}, $userID, $fieldID);
     } else {
         # this is a normal change
         # remove just this change
-        $dataSource->removeUserFieldChangesByChangeID($self->app, $changeID);
+        $dataSource->removeUserFieldChangesByChangeID($self->{app}, $changeID);
     }
     return 1;
 }
@@ -262,7 +262,7 @@ sub setting {
     } else {
         my $field = $self->hasField('settings', $setting);
         if (defined($field)) {
-            $$variable = $field->data;
+            $$variable = $field->{data};
         }
     }
 }
@@ -270,26 +270,26 @@ sub setting {
 sub hash {
     my $self = shift;
     my $result = $self->SUPER::hash();
-    $result->{'userID'} = $self->userID,
-    $result->{'mode'} = $self->mode,
-    $result->{'adminMessage'} = $self->adminMessage,
-    $result->{'groupsByID'} = $self->groupsByID;
-    $result->{'groupsByName'} = $self->groupsByName;
-    $result->{'rights'} = [keys(%{$self->rights})];
+    $result->{'userID'} = $self->{userID},
+    $result->{'mode'} = $self->{mode},
+    $result->{'adminMessage'} = $self->{adminMessage},
+    $result->{'groupsByID'} = $self->{groupsByID};
+    $result->{'groupsByName'} = $self->{groupsByName};
+    $result->{'rights'} = [keys(%{$self->{rights}})];
     if ($self->levelInGroup(1)) {
         # has all rights
         $result->{'right'} = {};
-        foreach my $right (@{$self->app->getService('dataSource.user')->getAllRights($self->app)}) {
+        foreach my $right (@{$self->{app}->getService('dataSource.user')->getAllRights($self->{app})}) {
             $result->{'right'}->{$right} = 1;
         }
     } else {
-        $result->{'right'} = $self->rights;
+        $result->{'right'} = $self->{rights};
     }
     $result->{'fields'} = {};
-    foreach my $field (values(%{$self->fieldsByID})) {
+    foreach my $field (values(%{$self->{fieldsByID}})) {
         # XXX should we also pass the field metadata on? (e.g. typeData)
-        $result->{'fields'}->{$field->fieldID} = $field->hash; # (not an array btw: could have holes)
-        $result->{'fields'}->{$field->category.'.'.$field->name} = $field->hash;
+        $result->{'fields'}->{$field->{fieldID}} = $field->hash; # (not an array btw: could have holes)
+        $result->{'fields'}->{$field->{category} . '.' . $field->{name}} = $field->hash;
     }
     return $result;
 }
@@ -297,19 +297,19 @@ sub hash {
 sub checkPassword {
     my $self = shift;
     my($password) = @_;
-    return $self->app->getService('service.passwords')->checkPassword($self->password, $password);
+    return $self->{app}->getService('service.passwords')->checkPassword($self->{password}, $password);
 }
 
 sub checkLogin {
     my $self = shift;
-    return ($self->mode == 0);
+    return ($self->{mode} == 0);
 }
 
 sub joinGroup {
     my $self = shift;
     my($groupID, $level) = @_;
     if ($level > 0) {
-        my $groupName = $self->app->getService('dataSource.user')->getGroupName($self->app, $groupID);
+        my $groupName = $self->{app}->getService('dataSource.user')->getGroupName($self->{app}, $groupID);
         $self->{'groupsByID'}->{$groupID} = {'name' => $groupName, 'level' => $level, };
         $self->{'groupsByName'}->{$groupName} = {'groupID' => $groupID, 'level' => $level, };
         $self->invalidateRights();
@@ -347,14 +347,14 @@ sub insertField {
     my $self = shift;
     my($field) = @_;
     $self->assert(ref($field) and $field->provides('user.field'), 1, 'Tried to insert something that wasn\'t a field object into a user\'s field hash');
-    $self->fields->{$field->category}->{$field->name} = $field;
-    $self->fieldsByID->{$field->fieldID} = $field;
+    $self->{fields}->{$field->{category}}->{$field->{name}} = $field;
+    $self->{fieldsByID}->{$field->{fieldID}} = $field;
     return $field;
 }
 
 sub invalidateRights {
     my $self = shift;
-    my $rights = $self->app->getService('dataSource.user')->getRightsForGroups($self->app, keys(%{$self->{'groupsByID'}}));
+    my $rights = $self->{app}->getService('dataSource.user')->getRightsForGroups($self->{app}, keys(%{$self->{'groupsByID'}}));
     $self->rights({ map {$_ => 1} @$rights }); # map a list of strings into a hash for easy access
     # don't set a dirty flag, because rights are merely a convenient
     # cached expansion of the rights data. Changing this externally
@@ -373,8 +373,8 @@ sub propertySet {
     my $result = $self->SUPER::propertySet(@_);
     if (($hadUndefinedID) and (defined($value))) {
         # we've just aquired an ID, so propagate the change to all fields
-        foreach my $field (values(%{$self->fieldsByID})) {
-            $field->userID($value);
+        foreach my $field (values(%{$self->{fieldsByID}})) {
+            $field->{userID} = $value;
         }
         # and mark the groups as dirty too
         $self->{'_DIRTY'}->{'groups'} = 1;
@@ -391,10 +391,10 @@ sub propertyGet {
         # Create new hash so that they can't edit ours. This ensures
         # that they can't inadvertently bypass the DIRTY flagging by
         # propertySet(), above. This does mean that internally we have
-        # to access $self->{'groupsByID'} instead of $self->groupsByID.
+        # to access $self->{'groupsByID'} instead of $self->{groupsByID}.
     } else {
         # we don't bother looking at $self->rights or
-        # $self->groupsByName, but any changes made to those won't be
+        # $self->{groupsByName}, but any changes made to those won't be
         # saved anyway.
         return $self->SUPER::propertyGet(@_);
     }
@@ -413,24 +413,24 @@ sub DESTROY {
 
 sub writeProperties {
     my $self = shift;
-    $self->userID($self->app->getService('dataSource.user')->setUser($self->app, $self->userID, $self->mode,
-                                                                     $self->password, $self->adminMessage,
-                                                                     $self->newFieldID, $self->newFieldValue, $self->newFieldKey));
+    $self->{userID} = $self->{app}->getService('dataSource.user')->setUser($self->{app}, $self->{userID}, $self->{mode},
+                                                                           $self->{password}, $self->{adminMessage},
+                                                                           $self->newFieldID, $self->{newFieldValue}, $self->{newFieldKey});
 }
 
 sub writeGroups {
     my $self = shift;
     # compare the group lists before and after and see which got added or changed and which got removed
-    my $dataSource = $self->app->getService('dataSource.user');
+    my $dataSource = $self->{app}->getService('dataSource.user');
     foreach my $group (keys(%{$self->{'groupsByID'}})) {
         if ((not defined($self->{'originalGroupsByID'}->{$group})) or
             ($self->{'groupsByID'}->{$group}->{'level'} != $self->{'originalGroupsByID'}->{$group}->{'level'})) {
-            $dataSource->addUserGroup($self->app, $self->userID, $group, $self->{'groupsByID'}->{$group}->{'level'});
+            $dataSource->addUserGroup($self->{app}, $self->{userID}, $group, $self->{'groupsByID'}->{$group}->{'level'});
         }
     }
     foreach my $group (keys(%{$self->{'originalGroupsByID'}})) {
         if (not defined($self->{'groupsByID'}->{$group})) {
-            $dataSource->removeUserGroup($self->app, $self->userID, $group);
+            $dataSource->removeUserGroup($self->{app}, $self->{userID}, $group);
         }
     }
 }

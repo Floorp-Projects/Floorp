@@ -59,9 +59,9 @@ sub init {
     $self->SUPER::init(@_);
     require HTTP::Negotiate; import HTTP::Negotiate; # DEPENDENCY
     require HTTP::Headers; import HTTP::Headers; # DEPENDENCY
-    $self->variantsCache({});
-    $self->stringsCache({});
-    $self->enabled(1);
+    $self->{variantsCache} = {};
+    $self->{stringsCache} = {};
+    $self->{enabled} = 1;
 }
 
 # returns ($type, $version, $string)
@@ -69,7 +69,7 @@ sub getCustomisedString {
     my $self = shift;
     my($app, $session, $protocol, $string) = @_;
     # error handling makes code ugly :-)
-    if ($self->enabled) {
+    if ($self->{enabled}) {
         my $variant;
         if (defined($session)) {
             $variant = $session->selectVariant($protocol);
@@ -79,10 +79,10 @@ sub getCustomisedString {
             # $app->input instead
             $variant = $self->selectVariant($app, $protocol);
         }
-        if (not defined($self->stringsCache->{$variant})) {
-            $self->stringsCache->{$variant} = {};
+        if (not defined($self->{stringsCache}->{$variant})) {
+            $self->{stringsCache}->{$variant} = {};
         }
-        if (not defined($self->stringsCache->{$variant}->{$string})) {
+        if (not defined($self->{stringsCache}->{$variant}->{$string})) {
             my @results;
             try {
                 @results = $self->getString($app, $variant, $string);
@@ -92,13 +92,13 @@ sub getCustomisedString {
                 $self->warn(4, "While I was looking for the string '$string' in protocol '$protocol' using variant '$variant', I failed with: @_");
             };
             if (@results) {
-                $self->stringsCache->{$variant}->{$string} = \@results;
+                $self->{stringsCache}->{$variant}->{$string} = \@results;
                 return @results;
             } else {
                 return;
             }
         } else {
-            return @{$self->stringsCache->{$variant}->{$string}};
+            return @{$self->{stringsCache}->{$variant}->{$string}};
         }
     } else {
         $self->dump(9, "String datasource is disabled, skipping");
@@ -144,31 +144,31 @@ sub selectVariant {
 sub variants {
     my $self = shift;
     my($app, $protocol) = @_;
-    if (not defined($self->variantsCache->{$protocol})) {
+    if (not defined($self->{variantsCache}->{$protocol})) {
         try {
-            $self->variantsCache->{$protocol} = $self->getVariants($app, $protocol);
+            $self->{variantsCache}->{$protocol} = $self->getVariants($app, $protocol);
         } except {
             # ok, so, er, it seems that didn't go to well
             # XXX do we want to do an error here or something?
             $self->warn(4, "While I was looking for the variants, I failed with: @_");
-            $self->variantsCache->{$protocol} = []; # no variants here, no sir!
+            $self->{variantsCache}->{$protocol} = []; # no variants here, no sir!
         };
     }
-    return $self->variantsCache->{$protocol};
+    return $self->{variantsCache}->{$protocol};
 }
 
 # setup.events.start
 sub setupStarting {
     my $self = shift;
     my($app) = @_;
-    $self->enabled(0);
+    $self->{enabled} = 0;
 }
 
 # setup.events.end
 sub setupEnding {
     my $self = shift;
     my($app) = @_;
-    $self->enabled(1);
+    $self->{enabled} = 1;
 }
 
 # setup.install

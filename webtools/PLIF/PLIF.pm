@@ -40,7 +40,7 @@ my %MODULES = ('PLIF' => 1);
 # Levels are assumed to be something along the following:
 #  0 = debugging remarks for the section currently under test
 #  1 =
-#  2 =
+#  2 = perl warnings
 #  3 =
 #  4 = important warnings (e.g. unexpected but possibly legitimate lack of data)
 #  5 = important events (e.g. application started)
@@ -124,9 +124,9 @@ sub load {
     }
     $MODULES{$package} = 1;
     local $/ = undef;
-    my $data = "package $package;\nuse strict;\n" . eval "<$package\::DATA>";
+    my $data = "package $package;use strict;" . eval "<$package\::DATA>";
     #print STDERR "================================================================================\n$data\n================================================================================\n";
-    eval $data;
+    evalString $data, "${package}::DATA block";
     if ($@) {
         $self->error(1, "Error while loading '$package': $@");
     }
@@ -138,18 +138,9 @@ sub AUTOLOAD {
     my $name = $AUTOLOAD;
     syntaxError "Use of inherited AUTOLOAD for non-method $name is deprecated" if not defined($self);
     $name =~ s/^.*://o; # strip fully-qualified portion
-    if ($self->propertyImpliedAccessAllowed($name)) {
-        if (scalar(@_) == 1) {
-            return $self->propertySet($name, @_);
-        } elsif (scalar(@_) == 0) {
-            if ($self->propertyExists($name)) {
-                return $self->propertyGet($name);
-            } else {
-                return $self->propertyGetUndefined($name);
-            }
-        }
-    }
-    $self->methodMissing($name, @_);
+    my $method = $self->can('implyMethod'); # get a function pointer
+    @_ = ($self, $name, @_); # set the arguments
+    goto &$method; # invoke the method using deep magic
 }
 
 sub propertySet {
@@ -159,22 +150,6 @@ sub propertySet {
     return $self->{$name} = $value;
 }
 
-sub propertyExists {
-    # this is not a class method
-    my $self = shift;
-    my($name) = @_;
-    $self->assert($name, 0, 'propertyExists() cannot be called without arguments');
-    return exists($self->{$name});
-}
-
-sub propertyImpliedAccessAllowed {
-    # this is not (supposed to be) a class method
-    # my $self = shift;
-    # my($name) = @_;
-    # $self->assert($name, 0, 'propertyImpliedAccessAllowed() cannot be called without arguments');
-    return 1;
-}
-
 sub propertyGet {
     # this is not a class method
     my $self = shift;
@@ -182,11 +157,7 @@ sub propertyGet {
     return $self->{$name};
 }
 
-sub propertyGetUndefined {
-    return undef;
-}
-
-sub methodMissing {
+sub implyMethod {
     my $self = shift;
     my($method) = @_;
     syntaxError "Tried to access non-existent method '$method' in object '$self'";
@@ -225,9 +196,9 @@ sub error {
     # the next three lines are a highly magical incantation to remove
     # this call from the stack so that the stack trace looks like the
     # previous function raised the exception itself
-    my $raise = PLIF::Exception->can('raise');
-    @_ = ('PLIF::Exception', 'message', join("\n", @data));
-    goto &$raise;
+    my $raise = PLIF::Exception->can('raise'); # get a function pointer
+    @_ = ('PLIF::Exception', 'message', join("\n", @data)); # set the arguments
+    goto &$raise; # and invoke the call using deep call stack magic
 }
 
 # this should not be called with the @data containing a trailing dot

@@ -54,15 +54,15 @@ sub decodeHTTPArguments {
     $self->dump(9, 'XML-RPC call. Input was:', '=' x 72 . "\n$input", '=' x 72);
 
     # find someone who understands XML RPC
-    my $service = $self->app->getService('service.xmlrpc');
+    my $service = $self->{app}->getService('service.xmlrpc');
 
     # decode the XML stream and stuff the arguments from it
-    my($method, $arguments) = $service->decodeXMLRPC($self->app, $input);
+    my($method, $arguments) = $service->decodeXMLRPC($self->{app}, $input);
     $self->addArgument('command', $method);
     foreach my $argument (keys(%$arguments)) {
         $self->addArgument($argument, $arguments->{$argument});        
     }
 
     # tell the XML RPC expert to that our input is being used
-    $service->registerHook($self->app);
+    $service->registerHook($self->{app});
 }

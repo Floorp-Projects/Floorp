@@ -55,7 +55,7 @@ sub init {
         $app->getService('dataSource.configuration')->getSettings($app, $self, 'protocol.email');
     } except {
         $self->dump(9, "failed to get the SMTP configuration, not going to bother to connect: $@");
-        $self->handle(undef);
+        $self->{handle} = undef;
     } otherwise {
         $self->open();
     }
@@ -67,20 +67,20 @@ sub open {
     try {
         local $SIG{ALRM} = sub { raise PLIF::Exception::Alarm };
         local $^W = 0; # XXX shut up warnings in Net::SMTP
-        $self->handle(Net::SMTP->new($self->host, 'Timeout' => $self->timeout));
+        $self->{handle} = Net::SMTP->new($self->{host}, 'Timeout' => $self->{timeout});
         alarm(0);
     } catch PLIF::Exception::Alarm with {
         # timed out -- ignore
     };
-    if (not defined($self->handle)) {
+    if (not defined($self->{handle})) {
         $self->warn(4, 'Could not create the SMTP handle');
     }
 }
 
 sub close {
     my $self = shift;
-    if (defined($self->handle)) {
-        $self->handle->quit();
+    if (defined($self->{handle})) {
+        $self->{handle}->quit();
     }
 }
 
@@ -88,12 +88,12 @@ sub close {
 sub output {
     my $self = shift;
     my($app, $session, $string) = @_;
-    $self->assert(defined($self->handle), 1, 'No SMTP handle, can\'t send mail');
+    $self->assert(defined($self->{handle}), 1, 'No SMTP handle, can\'t send mail');
     try {
         local $SIG{ALRM} = sub { raise PLIF::Exception::Alarm };
-        $self->assert($self->handle->mail($self->from), 1, 'Could not start sending mail');
-        $self->assert($self->handle->to($session->getAddress('email')), 1, 'Could not set mail recipient (was going to send to '.($session->getAddress('email')).')');
-        $self->assert($self->handle->data($string), 1, 'Could not send mail body');
+        $self->assert($self->{handle}->mail($self->from), 1, 'Could not start sending mail');
+        $self->assert($self->{handle}->to($session->getAddress('email')), 1, 'Could not set mail recipient (was going to send to '.($session->getAddress('email')).')');
+        $self->assert($self->{handle}->data($string), 1, 'Could not send mail body');
         alarm(0);
     } catch PLIF::Exception::Alarm with {
         $self->error(1, 'Timed out while trying to send e-mail');
@@ -106,9 +106,9 @@ sub checkAddress {
     my($app, $username) = @_;
     return (defined($username) and $username =~ m/^[^@\s]+@[^@\s]+\.[^@.\s]+$/os);
     # XXX this doesn't seem to be working:
-    # $self->assert(defined($self->handle), 1, 'No SMTP handle, can\'t check address');
+    # $self->assert(defined($self->{handle}), 1, 'No SMTP handle, can\'t check address');
     # $self->assert(defined($username), 1, 'Internal error: no username passed to checkAddress');
-    # my $result = $self->handle->verify($username);
+    # my $result = $self->{handle}->verify($username);
     # return $result;
 }
 
@@ -133,7 +133,7 @@ sub setupConfigure {
 
     my $value;
 
-    $value = $self->host;
+    $value = $self->{host};
     if (not defined($value)) {
         $value = 'localhost';
     }
@@ -141,9 +141,9 @@ sub setupConfigure {
     if (not defined($value)) {
         return 'protocol.email.host';
     }
-    $self->host($value);
+    $self->{host} = $value;
 
-    $value = $self->address;
+    $value = $self->{address};
     if (defined($value)) {
         # default to existing value
         $value = $app->input->getArgument('protocol.email.address', $value);
@@ -155,9 +155,9 @@ sub setupConfigure {
     if (not defined($value)) {
         return 'protocol.email.address';
     }
-    $self->address($value);
+    $self->{address} = $value;
 
-    $value = $self->timeout;
+    $value = $self->{timeout};
     if (not defined($value)) {
         $value = 5;
     }
@@ -165,7 +165,7 @@ sub setupConfigure {
     if (not defined($value)) {
         return 'protocol.email.timeout';
     }
-    $self->timeout($value);
+    $self->{timeout} = $value;
 
     $self->open();
     $app->getService('dataSource.configuration')->setSettings($app, $self, 'protocol.email');
@@ -176,7 +176,7 @@ sub setupConfigure {
 sub hash {
     my $self = shift;
     return {
-        'address' => $self->address,
+        'address' => $self->{address},
         # XXX RFC822 date -- need to provide this WITHOUT duplicating code in StdOut outputter
     };
 }

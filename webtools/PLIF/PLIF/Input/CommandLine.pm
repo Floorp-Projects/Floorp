@@ -102,7 +102,7 @@ sub createArgument {
             # defer to superclass
             $self->SUPER::createArgument(@_);
         } else {
-            $self->app->output->request(@_);
+            $self->{app}->output->request(@_);
             # get input from user
             my $term = $self->term();
             my $value = $term->readline(''); # (the parameter passed is the prompt, if any)
@@ -127,7 +127,7 @@ sub createArgument {
 sub term {
     my $self = shift;
     if (not defined($self->{'term'})) {
-        $self->{'term'} = Term::ReadLine->new($self->app->name);
+        $self->{'term'} = Term::ReadLine->new($self->{app}->name);
     }
     return $self->{'term'};
 }
