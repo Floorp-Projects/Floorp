@@ -208,7 +208,12 @@
      I was unable to retrieve your old password from the database.
 
   [% ELSIF error == "undefined_field" %]
-    [% field FILTER html %] was not defined; [% Param('browserbugmessage') %]
+    [% field FILTER html %] was not defined; 
+    [% IF info %]
+      [% info FILTER html %]
+    [% ELSE %]
+      [% Param('browserbugmessage') %]
+    [% END %]
 
   [% ELSIF error == "unknown_action" %]
     [% IF action %]

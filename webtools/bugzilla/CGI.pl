@@ -111,10 +111,11 @@ sub CheckFormField (\%$;\@) {
 sub CheckFormFieldDefined (\%$) {
     my ($formRef,                # a reference to the form to check (a hash)
         $fieldname,              # the fieldname to check
+        $info,                   # (optional) error message to give
        ) = @_;
 
     if (!defined $formRef->{$fieldname}) {
-        ThrowCodeError("undefined_field", { field => $fieldname });
+        ThrowCodeError("undefined_field", { field => $fieldname, info => $info });
     }
 }
 

@@ -858,7 +858,7 @@ if (defined $::FORM{newcc} || defined $::FORM{removecc} || defined $::FORM{massc
 }
 
 
-CheckFormFieldDefined(\%::FORM, 'knob');
+CheckFormFieldDefined(\%::FORM, 'knob', "check that \"Leave as...\" was selected.");
 SWITCH: for ($::FORM{'knob'}) {
     /^none$/ && do {
         last SWITCH;
