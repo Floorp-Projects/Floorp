@@ -25,7 +25,7 @@
 
 #include "nsUnitConverters.h"
 
-NS_IMPL_ISUPPORTS1(nsImage, nsIImage)
+NS_IMPL_ISUPPORTS1(nsImage, nsIImage2)
 
 nsImage::nsImage() :
   mBits(nsnull)
@@ -41,103 +41,7 @@ nsImage::~nsImage()
   mBits = nsnull;
 }
 
-/* void init (in gfx_dimension aWidth, in gfx_dimension aHeight, in gfx_format aFormat); */
-NS_IMETHODIMP nsImage::Init(gfx_dimension aWidth, gfx_dimension aHeight, gfx_format aFormat)
-{
-  if (aWidth <= 0 || aHeight <= 0) {
-    printf("error - negative image size\n");
-    return NS_ERROR_FAILURE;
-  }
 
-  delete[] mBits;
-
-  mSize.SizeTo(aWidth, aHeight);
-  mFormat = aFormat;
-
-  switch (aFormat) {
-  case nsIGFXFormat::RGB:
-  case nsIGFXFormat::RGB_A1:
-  case nsIGFXFormat::RGB_A8:
-    mDepth = 24;
-    break;
-  case nsIGFXFormat::RGBA:
-    mDepth = 32;
-    break;
-  default:
-    printf("unsupposed gfx_format\n");
-    break;
-  }
-
-  PRInt32 ceilWidth(GFXCoordToIntCeil(mSize.width));
-
-  mBytesPerRow = (ceilWidth * mDepth) >> 5;
-
-  if ((ceilWidth * mDepth) & 0x1F)
-    mBytesPerRow++;
-  mBytesPerRow <<= 2;
-
-  mBitsLength = mBytesPerRow * GFXCoordToIntCeil(mSize.height);
-
-  mBits = new PRUint8[mBitsLength];
-
-  return NS_OK;
-}
-
-/* void initFromDrawable (in nsIDrawable aDrawable, in gfx_coord aX, in gfx_coord aY, in gfx_dimension aWidth, in gfx_dimension aHeight); */
-NS_IMETHODIMP nsImage::InitFromDrawable(nsIDrawable *aDrawable, gfx_coord aX, gfx_coord aY, gfx_dimension aWidth, gfx_dimension aHeight)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* readonly attribute gfx_dimension width; */
-NS_IMETHODIMP nsImage::GetWidth(gfx_dimension *aWidth)
-{
-  if (!mBits)
-    return NS_ERROR_NOT_INITIALIZED;
-
-  *aWidth = mSize.width;
-  return NS_OK;
-}
-
-/* readonly attribute gfx_dimension height; */
-NS_IMETHODIMP nsImage::GetHeight(gfx_dimension *aHeight)
-{
-  if (!mBits)
-    return NS_ERROR_NOT_INITIALIZED;
-
-  *aHeight = mSize.height;
-  return NS_OK;
-}
-
-/* readonly attribute gfx_format format; */
-NS_IMETHODIMP nsImage::GetFormat(gfx_format *aFormat)
-{
-  if (!mBits)
-    return NS_ERROR_NOT_INITIALIZED;
-
-  *aFormat = mFormat;
-  return NS_OK;
-}
-
-/* readonly attribute unsigned long bytesPerRow; */
-NS_IMETHODIMP nsImage::GetBytesPerRow(PRUint32 *aBytesPerRow)
-{
-  if (!mBits)
-    return NS_ERROR_NOT_INITIALIZED;
-
-  *aBytesPerRow = mBytesPerRow;
-  return NS_OK;
-}
-
-/* readonly attribute unsigned long bitsLength; */
-NS_IMETHODIMP nsImage::GetBitsLength(PRUint32 *aBitsLength)
-{
-  if (!mBits)
-    return NS_ERROR_NOT_INITIALIZED;
-
-  *aBitsLength = mBitsLength;
-  return NS_OK;
-}
 
 #include <windows.h>
 
@@ -223,14 +127,82 @@ void CreateBMPFile(HWND hwnd, LPTSTR pszFile, PBITMAPINFO pbi,
 }
 
 
-/* void getBits([array, size_is(length)] out PRUint8 bits, out unsigned long length); */
-NS_IMETHODIMP nsImage::GetBits(PRUint8 **aBits, PRUint32 *length)
+
+
+/* void init (in gfx_dimension aWidth, in gfx_dimension aHeight, in gfx_format aFormat); */
+NS_IMETHODIMP nsImage::Init(gfx_dimension aWidth, gfx_dimension aHeight, gfx_format aFormat)
+{
+  if (aWidth <= 0 || aHeight <= 0) {
+    printf("error - negative image size\n");
+    return NS_ERROR_FAILURE;
+  }
+
+  delete[] mBits;
+
+  mSize.SizeTo(aWidth, aHeight);
+  mFormat = aFormat;
+
+  switch (aFormat) {
+  case nsIGFXFormat::RGB:
+  case nsIGFXFormat::RGB_A1:
+  case nsIGFXFormat::RGB_A8:
+    mDepth = 24;
+    break;
+  case nsIGFXFormat::RGBA:
+    mDepth = 32;
+    break;
+  default:
+    printf("unsupposed gfx_format\n");
+    break;
+  }
+
+  PRInt32 ceilWidth(GFXCoordToIntCeil(mSize.width));
+
+  mBytesPerRow = (ceilWidth * mDepth) >> 5;
+
+  if ((ceilWidth * mDepth) & 0x1F)
+    mBytesPerRow++;
+  mBytesPerRow <<= 2;
+
+  mBitsLength = mBytesPerRow * GFXCoordToIntCeil(mSize.height);
+
+  mBits = new PRUint8[mBitsLength];
+
+  return NS_OK;
+}
+
+/* void initFromDrawable (in nsIDrawable aDrawable, in gfx_coord aX, in gfx_coord aY, in gfx_dimension aWidth, in gfx_dimension aHeight); */
+NS_IMETHODIMP nsImage::InitFromDrawable(nsIDrawable *aDrawable, gfx_coord aX, gfx_coord aY, gfx_dimension aWidth, gfx_dimension aHeight)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* readonly attribute gfx_dimension width; */
+NS_IMETHODIMP nsImage::GetWidth(gfx_dimension *aWidth)
 {
   if (!mBits)
     return NS_ERROR_NOT_INITIALIZED;
 
-  *aBits = mBits;
-  *length = mBitsLength;
+  *aWidth = mSize.width;
+  return NS_OK;
+}
+
+/* readonly attribute gfx_dimension height; */
+NS_IMETHODIMP nsImage::GetHeight(gfx_dimension *aHeight)
+{
+  if (!mBits)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  *aHeight = mSize.height;
+  return NS_OK;
+}
+
+/* readonly attribute gfx_format format; */
+NS_IMETHODIMP nsImage::GetFormat(gfx_format *aFormat)
+{
+  if (!mBits)
+    return NS_ERROR_NOT_INITIALIZED;
+
 
 
   HWND bg = GetDesktopWindow();
@@ -267,6 +239,40 @@ NS_IMETHODIMP nsImage::GetBits(PRUint8 **aBits, PRUint32 *length)
   ReleaseDC(NULL, memDC);
 
   DeleteObject(memBM);
+
+
+  *aFormat = mFormat;
+  return NS_OK;
+}
+
+/* readonly attribute unsigned long bytesPerRow; */
+NS_IMETHODIMP nsImage::GetBytesPerRow(PRUint32 *aBytesPerRow)
+{
+  if (!mBits)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  *aBytesPerRow = mBytesPerRow;
+  return NS_OK;
+}
+
+/* readonly attribute unsigned long bitsLength; */
+NS_IMETHODIMP nsImage::GetBitsLength(PRUint32 *aBitsLength)
+{
+  if (!mBits)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  *aBitsLength = mBitsLength;
+  return NS_OK;
+}
+
+/* void getBits([array, size_is(length)] out PRUint8 bits, out unsigned long length); */
+NS_IMETHODIMP nsImage::GetBits(PRUint8 **aBits, PRUint32 *length)
+{
+  if (!mBits)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  *aBits = mBits;
+  *length = mBitsLength;
 
   return NS_OK;
 }

@@ -35,7 +35,7 @@ interface nsIDrawable;
  * @see "gfx2"
  */
 [scriptable, uuid(5e8405a4-1dd2-11b2-8385-bc8e3446cad3)]
-interface nsIImage : nsISupports
+interface nsIImage2 : nsISupports
 {
   /**
    * Create a new \a aWidth x \a aHeight sized image.
