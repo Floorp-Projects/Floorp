@@ -56,8 +56,8 @@
                 onset="this.setAttribute('seltype', val); return val;"/>
 
       <property name="currentIndex"
-                onget="return this.treeBoxObject.view.selection.currentIndex;"
-                onset="return this.treeBoxObject.view.selection.currentIndex = val;"/>
+                onget="return this.view.selection.currentIndex;"
+                onset="return this.view.selection.currentIndex = val;"/>
 
       <!-- ///////////////// nsIAccessibleProvider ///////////////// -->
 
@@ -75,11 +75,11 @@
                 readonly="true"/>
 # contentView is obsolete (see bug 202391)
       <property name="contentView"
-                onget="return this.treeBoxObject.view; /*.QueryInterface(Components.interfaces.nsITreeContentView)*/"
+                onget="return this.view; /*.QueryInterface(Components.interfaces.nsITreeContentView)*/"
                 readonly="true"/>
 # builderView is obsolete (see bug 202393)
       <property name="builderView"
-                onget="return this.treeBoxObject.view; /*.QueryInterface(Components.interfaces.nsIXULTreeBuilder)*/"
+                onget="return this.view; /*.QueryInterface(Components.interfaces.nsIXULTreeBuilder)*/"
                 readonly="true"/>
       <field name="pageUpOrDownMovesSelection">
 #ifdef XP_MACOSX
@@ -220,11 +220,11 @@
              No openState param == toggle -->
         <parameter name="openState"/>
         <body><![CDATA[
-          if (row < 0 || !this.treeBoxObject.view.isContainer(row)) {
+          if (row < 0 || !this.view.isContainer(row)) {
             return false;
           }
-          if (this.treeBoxObject.view.isContainerOpen(row) != openState) {
-            this.treeBoxObject.view.toggleOpenState(row);
+          if (this.view.isContainerOpen(row) != openState) {
+            this.view.toggleOpenState(row);
             if (row == this.currentIndex) {
               // Only fire event when current row is expanded or collapsed
               // because that's all the assistive technology really cares about.
@@ -260,7 +260,7 @@
       <handler event="keypress" keycode="vk_left">
         <![CDATA[
          if (!changeOpenState(this.currentIndex, false)) {
-           var parentIndex = this.treeBoxObject.view.getParentIndex(this.currentIndex);
+            var parentIndex = this.view.getParentIndex(this.currentIndex);
            if (parentIndex >= 0) {
              this.view.selection.select(parentIndex);
              this.treeBoxObject.ensureRowIsVisible(parentIndex);
@@ -272,7 +272,7 @@
         <![CDATA[
           var row = this.currentIndex;
           if (row >= 0 && !this.changeOpenState(row, true)) {
-            var view = this.treeBoxObject.view;
+            var view = this.view;
             if (row + 1 < view.rowCount &&
                 view.getParentIndex(row + 1) == row) {
               // If already opened, select the first child.
@@ -296,8 +296,9 @@
       <handler event="keypress" keycode="vk_down">
         <![CDATA[
          var c = this.currentIndex;
-         try { if (c+1 == this.treeBoxObject.view.rowCount)
-           return;
+          try {
+            if (c+1 == this.view.rowCount)
+              return;
          } catch (e) {}
          this.view.selection.timedSelect(c+1, this._selectDelay);
          this.treeBoxObject.ensureRowIsVisible(c+1);
@@ -320,8 +321,9 @@
          if (this.view.selection.single)
            return;
          var c = this.currentIndex;
-         try { if (c+1 == this.treeBoxObject.view.rowCount)
-           return;
+          try {
+            if (c+1 == this.view.rowCount)
+              return;
          } catch (e) {}
          // Extend the selection from the existing pivot, if any
          this.view.selection.rangedSelect(-1, c + 1, false);
@@ -340,8 +342,9 @@
       <handler event="keypress" keycode="vk_down" modifiers="control">
         <![CDATA[
          var c = this.currentIndex;
-         try { if (c+1 == this.treeBoxObject.view.rowCount)
-           return;
+          try {
+            if (c+1 == this.view.rowCount)
+              return;
          } catch (e) {}
          this.currentIndex = c+1;
          this.treeBoxObject.ensureRowIsVisible(c+1);
@@ -376,7 +379,7 @@
            return;
          }
          var c = this.currentIndex;
-         var l = this.treeBoxObject.view.rowCount - 1;
+          var l = this.view.rowCount - 1;
          if (c == l)
            return;
          var f = this.treeBoxObject.getFirstVisibleRow();
@@ -419,7 +422,7 @@
          if (this.view.selection.single)
            return;
          var c = this.currentIndex;
-         var l = this.treeBoxObject.view.rowCount - 1;
+          var l = this.view.rowCount - 1;
          if (c == l)
            return;
          var f = this.treeBoxObject.getFirstVisibleRow();
@@ -458,7 +461,7 @@
       <handler event="keypress" keycode="vk_page_down" modifiers="control">
         <![CDATA[
          var c = this.currentIndex;
-         var l = this.treeBoxObject.view.rowCount - 1;
+          var l = this.view.rowCount - 1;
          if (c == l)
            return;
          var f = this.treeBoxObject.getFirstVisibleRow();
@@ -483,7 +486,7 @@
       </handler>
       <handler event="keypress" keycode="vk_end">
         <![CDATA[
-         var l = this.treeBoxObject.view.rowCount - 1;
+          var l = this.view.rowCount - 1;
          this.view.selection.timedSelect(l, this._selectDelay);
          this.treeBoxObject.ensureRowIsVisible(l);
         ]]>
@@ -501,7 +504,7 @@
         <![CDATA[
          if (this.view.selection.single)
            return;
-         var l = this.treeBoxObject.view.rowCount - 1;
+          var l = this.view.rowCount - 1;
          // Extend the selection from the existing pivot, if any
          this.view.selection.rangedSelect(-1, l, false);
          this.treeBoxObject.ensureRowIsVisible(l);
@@ -515,7 +518,7 @@
       </handler>
       <handler event="keypress" keycode="vk_end" modifiers="control">
         <![CDATA[
-         var l = this.treeBoxObject.view.rowCount - 1;
+          var l = this.view.rowCount - 1;
          this.currentIndex = l;
          this.treeBoxObject.ensureRowIsVisible(l);
         ]]>
@@ -918,7 +921,7 @@
         <![CDATA[
           var tree = this.parentNode.parentNode;
           var column = tree.columns.getColumnFor(this);
-          tree.treeBoxObject.view.cycleHeader(column);
+          tree.view.cycleHeader(column);
         ]]>
       </handler>
     </handlers>
