@@ -16,5 +16,34 @@
  * Reserved.
  */
 
+#include <Types.h>
+#include <stdlib.h>
+
 #include "IDE_Options.h"
 #include "DefinesMac.h"
+
+#ifdef DEBUG
+
+/* Debug macros and switches */
+
+#define DEBUG_HEAP_INTEGRITY	1
+#define STATS_MAC_MEMORY		0
+
+#define MEM_ASSERT(condition, message)		((condition) ? ((void)0) : DebugStr("\p"message))
+
+
+
+
+#else
+
+/* Non-debug macros and switches */
+#define DEBUG_HEAP_INTEGRITY	0
+#define STATS_MAC_MEMORY		0
+
+
+
+#define MEM_ASSERT(condition, message)		((void)0)
+
+#endif
+
+

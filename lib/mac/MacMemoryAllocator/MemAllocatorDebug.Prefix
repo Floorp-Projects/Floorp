@@ -17,10 +17,10 @@
  */
 
 //
-//	Debug specific defines for the JavaRuntime
+//	Debug specific defines for the Memory allocators
 //
 
 #define DEBUG 1
-#define TRACING 1
 
 #include "MemAllocatorConfig.h"
+
