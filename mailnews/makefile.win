@@ -17,6 +17,6 @@
 
 DEPTH=..
 
-DIRS=base news
+DIRS=public base
 
 include <$(DEPTH)\config\rules.mak>
