@@ -30,8 +30,6 @@
 #include "prthread.h" /* XXX: only used for the NSPR initialization hack (rick) */
 #include "nsAutoLock.h"
 
-static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
-
 nsIServiceManager* gServiceManager = NULL;
 PRBool gShuttingDown = PR_FALSE;
 
