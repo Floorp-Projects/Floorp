@@ -294,7 +294,7 @@ function createSearchTerms()
     // if the term is empty, skip it
     if (termList[i] == "")
       continue;
- 
+
     // create, fill, and append the subject term
     var term = gSearchSession.createTerm();
     var value = term.value;

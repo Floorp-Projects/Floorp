@@ -964,10 +964,8 @@ function MsgNewFolder(callBackFunctionName)
             dump ("Exception: dualUseFolders = true\n");
         }
     }
-
     CreateNewSubfolder("chrome://messenger/content/newFolderDialog.xul", destinationFolder, dualUseFolders, callBackFunctionName);
 }
-
 
 function getDestinationFolder(preselectedFolder, server)
 {
@@ -987,10 +985,7 @@ function getDestinationFolder(preselectedFolder, server)
         if (!verifyCreateSubfolders)
         {
             try {
-                var account = accountManager.defaultAccount;
-                var defaultServer = account.incomingServer;
-                var defaultFolder = defaultServer.rootMsgFolder;
-
+                var defaultFolder = GetDefaultAccountRootFolder();
                 var checkCreateSubfolders = null;
                 if (defaultFolder)
                     checkCreateSubfolders = defaultFolder.canCreateSubfolders;
@@ -1483,25 +1478,13 @@ function IsMailFolderSelected()
 
 function IsGetNewMessagesEnabled()
 {
-    var selectedFolders = GetSelectedMsgFolders();
-    var numFolders = selectedFolders.length;
-    if(numFolders !=1)
-        return false;
-
-    var folder = selectedFolders[0];
-    if (!folder)
-        return false;
-
-    var server = folder.server;
-    var isServer = folder.isServer;
-    var serverType = server.type;
-
-    if(isServer && (serverType == "nntp"))
-        return false;
-    else if(serverType == "none")
-        return false;
-    else
-        return true;
+  // users don't like it when the "Get Msgs" button is enabled
+  // so let's never do that
+  // we'll just handle it as best we can in GetFolderMessages()
+  // when they click "Get Msgs" and
+  // Local Folders or a news server is selected
+  // see bugs #xxxxxx and #xxxxxx
+  return true;
 }
 
 function IsGetNextNMessagesEnabled()
@@ -1712,23 +1695,65 @@ function PromptSendMessagesOffline()
   return buttonPressed;
 }
 
+function GetDefaultAccountRootFolder()
+{
+  try {
+    var account = accountManager.defaultAccount;
+    var defaultServer = account.incomingServer;
+    var defaultFolder = defaultServer.rootMsgFolder;
+    return defaultFolder;
+  }
+  catch (ex) {
+  }
+  return null;
+}
+
 function GetFolderMessages()
 {
-  var folders = GetSelectedMsgFolders();
+  var selectedFolders = GetSelectedMsgFolders();
+  var defaultAccountRootFolder = GetDefaultAccountRootFolder();
+  
+  // if no default account, get msg isn't going do anything anyways
+  // so bail out
+  if (!defaultAccountRootFolder)
+    return;
+
+  // if nothing selected, use the default
+  var folder = selectedFolders.length ? selectedFolders[0] : defaultAccountRootFolder;
+
+  var serverType = folder.server.type;
+
+  if (folder.isServer && (serverType == "nntp")) {
+    // if we're doing "get msgs" on a news server
+    // update unread counts on this server
+    folder.server.performExpand(msgWindow);
+    return;
+  }
+  else if (serverType == "none") {
+    // if "Local Folders" is selected
+    // and the user does "Get Msgs"
+    // get new mail for the default account
+    //
+    // XXX TODO, shift click makes this get mail for all (authenticated) accounts?
+    // maybe, see bug #xxxxxx
+    folder = defaultAccountRootFolder;
+  }
+
+  var folders = new Array(1);
+  folders[0] = folder;
+
   var compositeDataSource = GetCompositeDataSource("GetNewMessages");
   GetNewMessages(folders, compositeDataSource);
 }
 
 function SendUnsentMessages()
 {
-  var am = Components.classes["@mozilla.org/messenger/account-manager;1"]
-               .getService(Components.interfaces.nsIMsgAccountManager);
   var msgSendlater = Components.classes["@mozilla.org/messengercompose/sendlater;1"]
                .getService(Components.interfaces.nsIMsgSendLater);
   var identitiesCount, allIdentities, currentIdentity, numMessages, msgFolder;
 
-  if(am) { 
-    allIdentities = am.allIdentities;
+  if (accountManager) { 
+    allIdentities = accountManager.allIdentities;
     identitiesCount = allIdentities.Count();
     for (var i = 0; i < identitiesCount; i++) {
       currentIdentity = allIdentities.QueryElementAt(i, Components.interfaces.nsIMsgIdentity);
