@@ -123,22 +123,25 @@ NS_IMETHODIMP nsNoIncomingServer::CopyDefaultMessages(const char *folderNameOnDi
       rv = chromeRegistry->GetSelectedLocale(tmpstr.GetUnicode(), getter_Copies(lc_name));
       if (NS_SUCCEEDED(rv)) {
         nsAutoString localeStr(lc_name);
+        if (!localeStr.IsEmpty())
+        {
+          nsCOMPtr<nsIFileSpec> tmpdataFilesDir;
+          rv = NS_NewFileSpec(getter_AddRefs(tmpdataFilesDir));
+          NS_ENSURE_SUCCESS(rv,rv);
+          rv = tmpdataFilesDir->FromFileSpec(defaultMessagesFile);
+          NS_ENSURE_SUCCESS(rv,rv);
 
-        nsCOMPtr<nsIFileSpec> tmpdataFilesDir;
-        rv = NS_NewFileSpec(getter_AddRefs(tmpdataFilesDir));
-        NS_ENSURE_SUCCESS(rv,rv);
-        rv = tmpdataFilesDir->FromFileSpec(defaultMessagesFile);
-        NS_ENSURE_SUCCESS(rv,rv);
-
-        tmpdataFilesDir->AppendRelativeUnixPath(NS_ConvertUCS2toUTF8(lc_name));
-        NS_ENSURE_SUCCESS(rv,rv);
-        rv = tmpdataFilesDir->Exists(&exists);
-        NS_ENSURE_SUCCESS(rv,rv);
-        if (exists) {
-            // use locale provider instead
-            rv = defaultMessagesFile->AppendRelativeUnixPath(NS_ConvertUCS2toUTF8(lc_name));            
-			NS_ENSURE_SUCCESS(rv,rv);
+          tmpdataFilesDir->AppendRelativeUnixPath(NS_ConvertUCS2toUTF8(lc_name));
+          NS_ENSURE_SUCCESS(rv,rv);
+          rv = tmpdataFilesDir->Exists(&exists);
+          NS_ENSURE_SUCCESS(rv,rv);
+          if (exists) {
+              // use locale provider instead
+              rv = defaultMessagesFile->AppendRelativeUnixPath(NS_ConvertUCS2toUTF8(lc_name));            
+			        NS_ENSURE_SUCCESS(rv,rv);
+          }
         }
+        else return rv;
       }
     }
 
