@@ -191,8 +191,8 @@
  * allocating scope->table, we leave it null while initializing all the other
  * scope members as if it were non-null and minimal-length.  Until a property
  * is added that crosses the threshold of 6 or more entries for hashing, or
- * until a delete occurs, we use scope->lastProp to search for a given id and
- * save on the space overhead of a hash table.
+ * until a "middle delete" occurs, we use linear search from scope->lastProp
+ * to find a given id, and save on the space overhead of a hash table.
  */
 
 struct JSScope {
