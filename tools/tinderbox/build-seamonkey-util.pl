@@ -23,7 +23,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 
 
-$::UtilsVersion = '$Revision: 1.161 $ ';
+$::UtilsVersion = '$Revision: 1.162 $ ';
 
 package TinderUtils;
 
@@ -211,6 +211,8 @@ sub GetSystemInfo {
     $Settings::DirName = "${Settings::OS}_${os_ver}_$build_type";
     $Settings::BuildName = "$Settings::OS ${os_ver} $host $build_type";
 
+    $Settings::DistBin = "dist/bin";
+
     # Make the build names reflect architecture/OS
 
     if ($Settings::OS eq 'AIX') {
@@ -297,20 +299,23 @@ sub SetupEnv {
     my $topsrcdir = "$Settings::BaseDir/$Settings::DirName/mozilla";
 
     if ($Settings::ObjDir ne '') {
-        $ENV{LD_LIBRARY_PATH} = "$topsrcdir/${Settings::ObjDir}/dist/bin:"
-            . "$ENV{LD_LIBRARY_PATH}";
+        $ENV{LD_LIBRARY_PATH} = "$topsrcdir/${Settings::ObjDir}/$Settings::DistBin`:" . "$ENV{LD_LIBRARY_PATH}";
     } else {
-        $ENV{LD_LIBRARY_PATH} = "$topsrcdir/dist/bin:"
-            . "$ENV{LD_LIBRARY_PATH}";
+        $ENV{LD_LIBRARY_PATH} = "$topsrcdir/$Settings::DistBin:" . "$ENV{LD_LIBRARY_PATH}";
     }
 
-    $ENV{LIBPATH} = "$topsrcdir/${Settings::ObjDir}/dist/bin:"
+    # MacOSX needs this set.
+    if ($Settings::OS eq 'Darwin') {
+        $ENV{DYLD_LIBRARY_PATH} = "$ENV{LD_LIBRARY_PATH}";
+    }
+
+    $ENV{LIBPATH} = "$topsrcdir/${Settings::ObjDir}/$Settings::DistBin:"
         . "$ENV{LIBPATH}";
-    $ENV{LIBRARY_PATH} = "$topsrcdir/${Settings::ObjDir}/dist/bin:"
+    $ENV{LIBRARY_PATH} = "$topsrcdir/${Settings::ObjDir}/$Settings::DistBin:"
         . "$ENV{LIBRARY_PATH}";
-    $ENV{ADDON_PATH} = "$topsrcdir/${Settings::ObjDir}/dist/bin:"
+    $ENV{ADDON_PATH} = "$topsrcdir/${Settings::ObjDir}/$Settings::DistBin:"
         . "$ENV{ADDON_PATH}";
-    $ENV{MOZILLA_FIVE_HOME} = "$topsrcdir/${Settings::ObjDir}/dist/bin";
+    $ENV{MOZILLA_FIVE_HOME} = "$topsrcdir/${Settings::ObjDir}/$Settings::DistBin";
     $ENV{DISPLAY} = $Settings::DisplayServer;
     $ENV{MOZCONFIG} = "$Settings::BaseDir/$Settings::MozConfigFileName"
         if $Settings::MozConfigFileName ne '' and -e $Settings::MozConfigFileName;
@@ -323,7 +328,7 @@ sub SetupEnv {
 
 sub SetupPath {
     #print "Path before: $ENV{PATH}\n";
-    $ENV{PATH} .= ":$Settings::BaseDir/$Settings::DirName/mozilla/${Settings::ObjDir}/dist/bin";
+    $ENV{PATH} .= ":$Settings::BaseDir/$Settings::DirName/mozilla/${Settings::ObjDir}/$Settings::DistBin";
     if ($Settings::OS eq 'AIX') {
         $ENV{PATH} = "/builds/local/bin:$ENV{PATH}:/usr/lpp/xlC/bin";
         $Settings::ConfigureArgs   .= '--x-includes=/usr/include/X11 '
@@ -350,6 +355,7 @@ sub SetupPath {
         $Settings::Compiler = 'cc';
         $Settings::mail = '/usr/bin/mail';
         $Settings::Make = '/usr/bin/make';
+        $Settings::DistBin = "dist/Mozilla.app/Contents/MacOS";
     }
 
     if ($Settings::OS eq 'FreeBSD') {
@@ -600,7 +606,10 @@ sub BuildIt {
     }
 
     my $binary_basename = "$Settings::BinaryName";
-    my $binary_dir = "$build_dir/$Settings::Topsrcdir/${Settings::ObjDir}/dist/bin";
+
+    my $binary_dir;
+    $binary_dir = "$build_dir/$Settings::Topsrcdir/${Settings::ObjDir}/$Settings::DistBin";
+
     my $dist_dir = "$build_dir/$Settings::Topsrcdir/${Settings::ObjDir}/dist";
     my $full_binary_name = "$binary_dir/$binary_basename";
 
@@ -1779,7 +1788,7 @@ sub AliveTestReturnToken {
 # file, parse the file looking for failure token and report status based
 # on that.  A hack, but should be useful for many tests.
 #
-# test_name = Name of test we're gonna run, in dist/bin.
+# test_name = Name of test we're gonna run, in $Settings::DistBin.
 # testExecString = How to run the test
 # testTimeoutSec = Timeout for hung tests, minimum test time.
 # statusToken = What string to look for in test output to
