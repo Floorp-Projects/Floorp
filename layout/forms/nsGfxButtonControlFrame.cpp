@@ -17,15 +17,70 @@
  */
 
 #include "nsGfxButtonControlFrame.h"
-#include "nsHTMLAtoms.h"
-#include "nsFormFrame.h"
-#include "nsIFormControl.h"
-#include "nsIContent.h"
 #include "nsIButton.h"
-#include "nsINameSpaceManager.h"
+#include "nsWidgetsCID.h"
 
-
+static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 static NS_DEFINE_IID(kIButtonIID,      NS_IBUTTON_IID);
+
+const nscoord kSuggestedNotSet = -1;
+
+nsGfxButtonControlFrame::nsGfxButtonControlFrame()
+{
+  mRenderer.SetNameSpace(kNameSpaceID_None);
+  mSuggestedWidth  = kSuggestedNotSet;
+  mSuggestedHeight = kSuggestedNotSet;
+}
+
+PRBool
+nsGfxButtonControlFrame::IsSuccessful(nsIFormControlFrame* aSubmitter)
+{
+  PRInt32 type;
+  GetType(&type);
+  if ((NS_FORM_INPUT_HIDDEN == type) || (this == aSubmitter)) {
+    return nsHTMLButtonControlFrame::IsSuccessful(aSubmitter);
+  } else {
+    return PR_FALSE;
+  }
+}
+
+PRInt32
+nsGfxButtonControlFrame::GetMaxNumValues() 
+{
+  PRInt32 type;
+  GetType(&type);
+  if ((NS_FORM_INPUT_SUBMIT == type) || (NS_FORM_INPUT_HIDDEN == type)) {
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
+PRBool
+nsGfxButtonControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
+                                     nsString* aValues, nsString* aNames)
+{
+  nsAutoString name;
+  nsresult result = GetName(&name);
+  if ((aMaxNumValues <= 0) || (NS_CONTENT_ATTR_HAS_VALUE != result)) {
+    return PR_FALSE;
+  }
+
+  PRInt32 type;
+  GetType(&type);
+
+  if (NS_FORM_INPUT_RESET == type) {
+    aNumValues = 0;
+    return PR_FALSE;
+  } else {
+    nsAutoString value;
+    GetValue(&value);
+    aValues[0] = value;
+    aNames[0]  = name;
+    aNumValues = 1;
+    return PR_TRUE;
+  }
+}
 
 nsresult
 NS_NewGfxButtonControlFrame(nsIFrame** aNewFrame)
@@ -41,193 +96,128 @@ NS_NewGfxButtonControlFrame(nsIFrame** aNewFrame)
   *aNewFrame = it;
   return NS_OK;
 }
-
-
-nsGfxButtonControlFrame::nsGfxButtonControlFrame()
+                                    
+void
+nsGfxButtonControlFrame::MouseClicked(nsIPresContext* aPresContext) 
 {
-  mRenderer.SetNameSpace(kNameSpaceID_None);
-}
+  PRInt32 type;
+  GetType(&type);
 
-NS_IMETHODIMP
-nsGfxButtonControlFrame::Init(nsIPresContext&  aPresContext,
-              nsIContent*      aContent,
-              nsIFrame*        aParent,
-              nsIStyleContext* aContext,
-              nsIFrame*        aPrevInFlow)
-{
-  nsresult  rv = Inherited::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
-  mRenderer.SetFrame(this,aPresContext);
-  return rv;
-}
+  if ((nsnull != mFormFrame) && !nsFormFrame::GetDisabled(this)) {
+    nsEventStatus status = nsEventStatus_eIgnore;
+    nsEvent event;
+    event.eventStructType = NS_EVENT;
+    nsIContent *formContent = nsnull;
+    mFormFrame->GetContent(&formContent);
 
-
-//
-// ReResolveStyleContext
-//
-// When the style context changes, make sure that all of our styles are still up to date.
-//
-NS_IMETHODIMP
-nsGfxButtonControlFrame::ReResolveStyleContext ( nsIPresContext* aPresContext, nsIStyleContext* aParentContext,
-                                              PRInt32 aParentChange, 
-                                              nsStyleChangeList* aChangeList, PRInt32* aLocalChange)
-{
-  // this re-resolves |mStyleContext|, so it may change
-  nsresult rv = Inherited::ReResolveStyleContext(aPresContext, aParentContext, 
-                                                          aParentChange, aChangeList, aLocalChange); 
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  if (NS_COMFALSE != rv) {  // frame style changed
-    if (aLocalChange) {
-      aParentChange = *aLocalChange;  // tell children about or change
+    switch(type) {
+    case NS_FORM_INPUT_RESET:
+      event.message = NS_FORM_RESET;
+      if (nsnull != formContent) {
+        formContent->HandleDOMEvent(*aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
+      }
+      if (nsEventStatus_eConsumeNoDefault != status) {
+        mFormFrame->OnReset();
+      }
+      break;
+    case NS_FORM_INPUT_SUBMIT:
+      event.message = NS_FORM_SUBMIT;
+      if (nsnull != formContent) {
+        formContent->HandleDOMEvent(*aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
+      }
+      if (nsEventStatus_eConsumeNoDefault != status) {
+        mFormFrame->OnSubmit(aPresContext, this);
+      }
     }
-  }
-  mRenderer.ReResolveStyles(*aPresContext, aParentChange, aChangeList, aLocalChange);
-  
-  return rv;
-  
-} // ReResolveStyleContext
+    NS_IF_RELEASE(formContent);
+  } 
+}
 
-
-                                     
-
-NS_METHOD 
-nsGfxButtonControlFrame::Paint(nsIPresContext& aPresContext,
-                            nsIRenderingContext& aRenderingContext,
-                            const nsRect& aDirtyRect,
-                            nsFramePaintLayer aWhichLayer)
+const nsIID&
+nsGfxButtonControlFrame::GetIID()
 {
-  const nsStyleDisplay* disp = (const nsStyleDisplay*)
-	mStyleContext->GetStyleData(eStyleStruct_Display);
-	if (!disp->mVisible)
-     return NS_OK;
-
-    nsRect rect(0, 0, mRect.width, mRect.height);
-    mRenderer.PaintButton(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer, rect);
-
-    if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
-	    nsString label;
-	    nsresult result = GetValue(&label);
-
-	    if (NS_CONTENT_ATTR_HAS_VALUE != result) {  
-        GetDefaultLabel(label);
-	    }
+  static NS_DEFINE_IID(kButtonIID, NS_IBUTTON_IID);
+  return kButtonIID;
+}
   
-     nsRect content;
-     mRenderer.GetButtonContentRect(rect,content);
-
-   // paint the title 
-	   const nsStyleFont* fontStyle = (const nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font);
-	   const nsStyleColor* colorStyle = (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
-
-	   aRenderingContext.SetFont(fontStyle->mFont);
-	   
-     PRBool clipState;
-     aRenderingContext.PushState();
-     aRenderingContext.SetClipRect(rect, nsClipCombine_kIntersect, clipState);
-	   // if disabled paint 
-	   if (PR_TRUE == mRenderer.isDisabled())
-	   {
-   		 float p2t;
-		   aPresContext.GetScaledPixelsToTwips(&p2t);
-		   nscoord pixel = NSIntPixelsToTwips(1, p2t);
-
-		   aRenderingContext.SetColor(NS_RGB(255,255,255));
-		   aRenderingContext.DrawString(label, content.x + pixel, content.y+ pixel);
-	   }
-
-	   aRenderingContext.SetColor(colorStyle->mColor);
-	   aRenderingContext.DrawString(label, content.x, content.y);
-	   aRenderingContext.PopState(clipState);
-    }
-
-  return NS_OK;
+const nsIID&
+nsGfxButtonControlFrame::GetCID()
+{
+  static NS_DEFINE_IID(kButtonCID, NS_BUTTON_CID);
+  return kButtonCID;
 }
 
 NS_IMETHODIMP
-nsGfxButtonControlFrame::AttributeChanged(nsIPresContext* aPresContext,
-                                       nsIContent*     aChild,
-                                       nsIAtom*        aAttribute,
-                                       PRInt32         aHint)
+nsGfxButtonControlFrame::GetFrameName(nsString& aResult) const
 {
-  if (nsHTMLAtoms::value == aAttribute) {
-   // redraw button with the changed value
-    Invalidate(mRect, PR_FALSE);
-  }
-  return NS_OK;
+  return MakeFrameName("ButtonControl", aResult);
 }
 
-NS_METHOD
-nsGfxButtonControlFrame::Reflow(nsIPresContext&          aPresContext,
+
+
+NS_IMETHODIMP 
+nsGfxButtonControlFrame::Reflow(nsIPresContext&          aPresContext, 
                              nsHTMLReflowMetrics&     aDesiredSize,
-                             const nsHTMLReflowState& aReflowState,
+                             const nsHTMLReflowState& aReflowState, 
                              nsReflowStatus&          aStatus)
 {
-
-  // add ourself as an nsIFormControlFrame
   if (!mFormFrame && (eReflowReason_Initial == aReflowState.reason)) {
-       nsFormFrame::AddFormControlFrame(aPresContext, *this);
+    nsFormFrame::AddFormControlFrame(aPresContext, *this);
   }
 
-	if ((NS_FORMSIZE_NOTSET != mSuggestedWidth) && (
-	  NS_FORMSIZE_NOTSET != mSuggestedHeight)) 
-	{ 
-		aDesiredSize.width   = mSuggestedWidth;
-		aDesiredSize.height  = mSuggestedHeight;
-		aDesiredSize.ascent  = mSuggestedHeight;
-		aDesiredSize.descent = 0;
-		if (aDesiredSize.maxElementSize) {
-		  aDesiredSize.maxElementSize->width  = mSuggestedWidth;
-		  aDesiredSize.maxElementSize->height = mSuggestedWidth;
-	}
+  if ((kSuggestedNotSet != mSuggestedWidth) || 
+      (kSuggestedNotSet != mSuggestedHeight))
+  {
+    nsHTMLReflowState suggestedReflowState(aReflowState);
+   
+      // Honor the suggested width and/or height.
+    if (kSuggestedNotSet != mSuggestedWidth) {
+      suggestedReflowState.mComputedWidth = mSuggestedWidth;
+    }
 
-	if (nsnull != aDesiredSize.maxElementSize) {
-	  aDesiredSize.maxElementSize->width = aDesiredSize.width;
-	  aDesiredSize.maxElementSize->height = aDesiredSize.height;
-	}
+    if (kSuggestedNotSet != mSuggestedHeight) {
+      suggestedReflowState.mComputedHeight = mSuggestedHeight;
+    }
 
-	aStatus = NS_FRAME_COMPLETE;
-	return NS_OK;
+    return nsHTMLButtonControlFrame::Reflow(aPresContext, aDesiredSize, suggestedReflowState, aStatus);
 
-	}
-
-	nsSize ignore;
-	GetDesiredSize(&aPresContext, aReflowState, aDesiredSize, ignore);
-
-	// if our size is intrinsic. Then we need to return the size we really need
-	// so include our inner borders we use for focus.
-	nsMargin added = mRenderer.GetAddedButtonBorderAndPadding();
-	if (aReflowState.mComputedWidth == NS_INTRINSICSIZE)
-	   aDesiredSize.width += added.left + added.right;
-
-	if (aReflowState.mComputedHeight == NS_INTRINSICSIZE)
-	   aDesiredSize.height += added.top + added.bottom;
-
-	nsMargin bp(0,0,0,0);
-	AddBordersAndPadding(&aPresContext, aReflowState, aDesiredSize, bp);
-	   
-
-	if (nsnull != aDesiredSize.maxElementSize) {
-	  aDesiredSize.AddBorderPaddingToMaxElementSize(bp);
-	  aDesiredSize.maxElementSize->width += added.left + added.right;
-	  aDesiredSize.maxElementSize->height += added.top + added.bottom;
-
-	}
-	aStatus = NS_FRAME_COMPLETE;
-	return NS_OK;
+  } else {
+      // Normal reflow.
+    return nsHTMLButtonControlFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+  }
 }
 
+NS_IMETHODIMP 
+nsGfxButtonControlFrame::SetSuggestedSize(nscoord aWidth, nscoord aHeight)
+{
+  mSuggestedWidth = aWidth;
+  mSuggestedHeight = aHeight;
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsGfxButtonControlFrame::HandleEvent(nsIPresContext& aPresContext, 
-                                  nsGUIEvent*     aEvent,
-                                  nsEventStatus&  aEventStatus)
+                                      nsGUIEvent*     aEvent,
+                                      nsEventStatus&  aEventStatus)
 {
+  // Override the HandleEvent to prevent the nsFrame::HandleEvent
+  // from being called. The nsFrame::HandleEvent causes the button label
+  // to be selected (Drawn with an XOR rectangle over the label)
+ 
   // if disabled do nothing
   if (mRenderer.isDisabled()) {
     return NS_OK;
   }
 
-  return Inherited::HandleEvent(aPresContext, aEvent, aEventStatus);
+   // lets see if the button was clicked
+  switch (aEvent->message) {
+     case NS_MOUSE_LEFT_CLICK:
+        MouseClicked(&aPresContext);
+     break;
+  }
+
+  return NS_OK;
+
 }
+
+
