@@ -96,6 +96,8 @@
   <key id="page_down_key" keycode="VK_PAGE_DOWN" oncommand="gCalendarWindow.currentView.goToNext( )"/>
 </keyset>
 
+<keyset id="tasksKeys"/>
+
 <!-- Javascript DTD To Variable -->
 <script type="application/x-javascript">
   var confirmDeleteEvent = "&calendar.confirm.deleteevent;";
