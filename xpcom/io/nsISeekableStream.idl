@@ -90,7 +90,7 @@ interface nsISeekableStream : nsISupports
      *  This method reports the current offset, in bytes, from the start of the 
      *  stream. 
      */
-    long tell();
+    unsigned long tell();
 
 
     /**
