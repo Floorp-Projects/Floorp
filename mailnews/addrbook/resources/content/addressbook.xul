@@ -164,7 +164,7 @@ Rights Reserved.
 			<splitter collapse="after"/>
 			
 			<!-- card view -->
-			<box style="height:170px; border-left:solid black 1px; border-top:solid black 1px">
+			<box style="height:170px; border-top:solid black 1px">
 				<box id="CardViewBox"/>
 			</box>
 		</box>

@@ -163,6 +163,7 @@ function ClearCardViewPane()
 	// Work section
 	cvSetVisible(data.cvhWork, false);
 	cvSetVisible(data.cvJobTitle, false);
+	cvSetVisible(data.cvDepartment, false);
 	cvSetVisible(data.cvCompany, false);
 	cvSetVisible(data.cvWorkAddress, false);
 	cvSetVisible(data.cvWorkCityStZip, false);
