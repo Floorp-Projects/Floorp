@@ -69,7 +69,6 @@ struct RowReflowState {
   nscoord maxCellHeight;
   nscoord maxCellVertSpace; // the maximum MAX(cellheight+top+bottom)
   nscoord maxCellHorzSpace; // the maximum MAX(cellheight+top+bottom)
-
   
   nsTableFrame *tableFrame;
    
@@ -105,7 +104,8 @@ nsTableRowFrame::nsTableRowFrame(nsIContent* aContent,
   : nsContainerFrame(aContent, aParentFrame),
     mTallestCell(0),
     mCellMaxTopMargin(0),
-    mCellMaxBottomMargin(0)
+    mCellMaxBottomMargin(0),
+    mMinRowSpan(1)
 {
 }
 
@@ -221,6 +221,42 @@ PRInt32 nsTableRowFrame::GetMaxColumns() const
   return sum;
 }
 
+/* GetMinRowSpan is needed for deviant cases where every cell in a row has a rowspan > 1.
+ * It sets mMinRowSpan, which is used in FixMinCellHeight and PlaceChild
+ */
+void nsTableRowFrame::GetMinRowSpan()
+{
+  PRInt32 minRowSpan=-1;
+  nsIFrame *frame=mFirstChild;
+  while (nsnull!=frame)
+  {
+    PRInt32 rowSpan = ((nsTableCellFrame *)frame)->GetRowSpan();
+    if (-1==minRowSpan)
+      minRowSpan = rowSpan;
+    else if (minRowSpan>rowSpan)
+      minRowSpan = rowSpan;
+    frame->GetNextSibling(frame);
+  }
+  mMinRowSpan = minRowSpan;
+}
+
+void nsTableRowFrame::FixMinCellHeight()
+{
+  nsIFrame *frame=mFirstChild;
+  while (nsnull!=frame)
+  {
+    PRInt32 rowSpan = ((nsTableCellFrame *)frame)->GetRowSpan();
+    if (mMinRowSpan==rowSpan)
+    {
+      nsRect rect;
+      frame->GetRect(rect);
+      if (rect.height > mTallestCell)
+        mTallestCell = rect.height;
+    }
+    frame->GetNextSibling(frame);
+  }
+}
+
 
 // Collapse child's top margin with previous bottom margin
 nscoord nsTableRowFrame::GetTopMarginFor( nsIPresContext*  aCX,
@@ -269,16 +305,16 @@ void nsTableRowFrame::PlaceChild(nsIPresContext*    aPresContext,
   if (nsnull != aMaxElementSize) 
   {
     aMaxElementSize->width += aKidMaxElementSize.width;
-    if ((1==rowSpan) && (aKidMaxElementSize.height>aMaxElementSize->height))
+    if ((mMinRowSpan==rowSpan) && (aKidMaxElementSize.height>aMaxElementSize->height))
     {
       aMaxElementSize->height = aKidMaxElementSize.height;
     }
   }
-  if ((1==rowSpan) && (aState.maxCellHeight<aKidRect.height))
+  if ((mMinRowSpan==rowSpan) && (aState.maxCellHeight<aKidRect.height))
   {
     aState.maxCellHeight = aKidRect.height;
   }
-  if ((1==rowSpan))
+  if ((mMinRowSpan==rowSpan))
   {
     nsMargin margin(0,0,0,0);
 
@@ -1171,6 +1207,8 @@ nsTableRowFrame::Reflow(nsIPresContext*      aPresContext,
           // If we still have unmapped children then create some new frames
           if (NextChildOffset() < mContent->ChildCount()) {
             aStatus = ReflowUnmappedChildren(aPresContext, state, aDesiredSize.maxElementSize);
+            GetMinRowSpan();
+            FixMinCellHeight();
           }
         } else {
           // We were unable to pull-up all the existing frames from the

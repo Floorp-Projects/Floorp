@@ -133,6 +133,16 @@ protected:
   /** destructor */
   virtual ~nsTableRowFrame();
 
+  // row-specific methods
+
+  void nsTableRowFrame::GetMinRowSpan();
+
+  void nsTableRowFrame::FixMinCellHeight();
+
+
+
+  //overrides 
+
   nscoord GetTopMarginFor(nsIPresContext*   aCX,
                           RowReflowState&   aState,
                           const nsMargin&   aKidMargin);
@@ -185,6 +195,7 @@ private:
   nscoord  mTallestCell;          // not my height, but the height of my tallest child
   nscoord  mCellMaxTopMargin;
   nscoord  mCellMaxBottomMargin;
+  PRInt32  mMinRowSpan;           // the smallest row span among all my child cells
 
 };
 
