@@ -48,6 +48,7 @@
 #include "nsEditor.h"
 #include "nsTextEditUtils.h"
 #include "nsHTMLEditUtils.h"
+#include "nsHTMLCSSUtils.h"
 #include "nsHTMLEditor.h"
 
 #include "nsIServiceManager.h"
@@ -195,26 +196,27 @@ mDocChangeRange(nsnull)
 ,mUtilRange(nsnull)
 ,mJoinOffset(0)
 {
+  nsString emptyString;
   // populate mCachedStyles
-  mCachedStyles[0] = StyleCache(nsEditProperty::b, nsString(), nsString());
-  mCachedStyles[1] = StyleCache(nsEditProperty::i, nsString(), nsString());
-  mCachedStyles[2] = StyleCache(nsEditProperty::u, nsString(), nsString());
-  mCachedStyles[3] = StyleCache(nsEditProperty::font, NS_LITERAL_STRING("face"), nsString());
-  mCachedStyles[4] = StyleCache(nsEditProperty::font, NS_LITERAL_STRING("size"), nsString());
-  mCachedStyles[5] = StyleCache(nsEditProperty::font, NS_LITERAL_STRING("color"), nsString());
-  mCachedStyles[6] = StyleCache(nsEditProperty::tt, nsString(), nsString());
-  mCachedStyles[7] = StyleCache(nsEditProperty::em, nsString(), nsString());
-  mCachedStyles[8] = StyleCache(nsEditProperty::strong, nsString(), nsString());
-  mCachedStyles[9] = StyleCache(nsEditProperty::dfn, nsString(), nsString());
-  mCachedStyles[10] = StyleCache(nsEditProperty::code, nsString(), nsString());
-  mCachedStyles[11] = StyleCache(nsEditProperty::samp, nsString(), nsString());
-  mCachedStyles[12] = StyleCache(nsEditProperty::var, nsString(), nsString());
-  mCachedStyles[13] = StyleCache(nsEditProperty::cite, nsString(), nsString());
-  mCachedStyles[14] = StyleCache(nsEditProperty::abbr, nsString(), nsString());
-  mCachedStyles[15] = StyleCache(nsEditProperty::acronym, nsString(), nsString());
-  mCachedStyles[16] = StyleCache(nsEditProperty::cssBackgroundColor, nsString(), nsString());
-  mCachedStyles[17] = StyleCache(nsEditProperty::sub, nsString(), nsString());
-  mCachedStyles[18] = StyleCache(nsEditProperty::sup, nsString(), nsString());
+  mCachedStyles[0] = StyleCache(nsEditProperty::b, emptyString, emptyString);
+  mCachedStyles[1] = StyleCache(nsEditProperty::i, emptyString, emptyString);
+  mCachedStyles[2] = StyleCache(nsEditProperty::u, emptyString, emptyString);
+  mCachedStyles[3] = StyleCache(nsEditProperty::font, NS_LITERAL_STRING("face"), emptyString);
+  mCachedStyles[4] = StyleCache(nsEditProperty::font, NS_LITERAL_STRING("size"), emptyString);
+  mCachedStyles[5] = StyleCache(nsEditProperty::font, NS_LITERAL_STRING("color"), emptyString);
+  mCachedStyles[6] = StyleCache(nsEditProperty::tt, emptyString, emptyString);
+  mCachedStyles[7] = StyleCache(nsEditProperty::em, emptyString, emptyString);
+  mCachedStyles[8] = StyleCache(nsEditProperty::strong, emptyString, emptyString);
+  mCachedStyles[9] = StyleCache(nsEditProperty::dfn, emptyString, emptyString);
+  mCachedStyles[10] = StyleCache(nsEditProperty::code, emptyString, emptyString);
+  mCachedStyles[11] = StyleCache(nsEditProperty::samp, emptyString, emptyString);
+  mCachedStyles[12] = StyleCache(nsEditProperty::var, emptyString, emptyString);
+  mCachedStyles[13] = StyleCache(nsEditProperty::cite, emptyString, emptyString);
+  mCachedStyles[14] = StyleCache(nsEditProperty::abbr, emptyString, emptyString);
+  mCachedStyles[15] = StyleCache(nsEditProperty::acronym, emptyString, emptyString);
+  mCachedStyles[16] = StyleCache(nsEditProperty::cssBackgroundColor, emptyString, emptyString);
+  mCachedStyles[17] = StyleCache(nsEditProperty::sub, emptyString, emptyString);
+  mCachedStyles[18] = StyleCache(nsEditProperty::sup, emptyString, emptyString);
 }
 
 nsHTMLEditRules::~nsHTMLEditRules()
@@ -553,7 +555,7 @@ nsHTMLEditRules::AfterEditInner(PRInt32 action, nsIEditor::EDirection aDirection
         (action == nsEditor::kOpDeleteSelection) ||
         (action == nsEditor::kOpInsertBreak))
     {
-      mHTMLEditor->mTypeInState->mIgnoreSelNotificationHACK = PR_TRUE;
+      mHTMLEditor->mTypeInState->UpdateSelState(selection);
       res = ReapplyCachedStyles();
       if (NS_FAILED(res)) return res;
       res = ClearCachedStyles();
@@ -571,6 +573,7 @@ nsHTMLEditRules::AfterEditInner(PRInt32 action, nsIEditor::EDirection aDirection
   {
     res = CheckInterlinePosition(selection);
   }
+  
   return res;
 }
 
@@ -2126,10 +2129,13 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
       }
       
       // dont cross table boundaries
-      PRBool bInDifTblElems;
-      res = InDifferentTableElements(leftNode, rightNode, &bInDifTblElems);
-      if (NS_FAILED(res) || bInDifTblElems) return res;
-
+      if (leftNode && rightNode)
+      {
+	      PRBool bInDifTblElems;
+	      res = InDifferentTableElements(leftNode, rightNode, &bInDifTblElems);
+	      if (NS_FAILED(res) || bInDifTblElems) return res;
+      }
+      
       if (bDeletedBR)
       {
         // put selection at edge of block and we are done.
@@ -4115,7 +4121,7 @@ nsHTMLEditRules::CreateStyleForInsertText(nsISelection *aSelection, nsIDOMDocume
   if (NS_FAILED(res)) return res;
   PropItem *item = nsnull;
   
-  // if we deleted selection then also for cached styles
+  // if we deleted selection then also apply cached styles
   if (mDidDeleteSelection && 
       ((mTheAction == nsEditor::kOpInsertText ) ||
        (mTheAction == nsEditor::kOpInsertIMEText) ||
@@ -7057,14 +7063,25 @@ nsHTMLEditRules::CacheInlineStyles(nsIDOMNode *aNode)
 {
   if (!aNode) return NS_ERROR_NULL_POINTER;
 
+  PRBool useCSS;
+  mHTMLEditor->GetIsCSSEnabled(&useCSS);
+
   PRInt32 j;
   for (j=0; j<SIZE_STYLE_TABLE; j++)
   {
     PRBool isSet = PR_FALSE;
     nsAutoString outValue;
     nsCOMPtr<nsIDOMNode> resultNode;
-    mHTMLEditor->IsTextPropertySetByContent(aNode, mCachedStyles[j].tag, &(mCachedStyles[j].attr), nsnull,
+    if (!useCSS)
+    {
+      mHTMLEditor->IsTextPropertySetByContent(aNode, mCachedStyles[j].tag, &(mCachedStyles[j].attr), nsnull,
                                isSet, getter_AddRefs(resultNode), &outValue);
+    }
+    else
+    {
+      mHTMLEditor->mHTMLCSSUtils->IsCSSEquivalentToHTMLInlineStyleSet(aNode, mCachedStyles[j].tag, &(mCachedStyles[j].attr),
+                                                    isSet, outValue, COMPUTED_STYLE_TYPE);
+    }
     if (isSet)
     {
       mCachedStyles[j].mPresent = PR_TRUE;
@@ -7082,7 +7099,19 @@ nsHTMLEditRules::ReapplyCachedStyles()
   // and see if any have been removed.  If so, add typeinstate
   // for them, so that they will be reinserted when new 
   // content is added.
-  nsresult res = NS_OK;
+  PRBool useCSS;
+  mHTMLEditor->GetIsCSSEnabled(&useCSS);
+
+  // get selection point
+  nsCOMPtr<nsISelection>selection;
+  nsresult res = mHTMLEditor->GetSelection(getter_AddRefs(selection));
+  if (NS_FAILED(res)) return res;
+  nsCOMPtr<nsIDOMNode> selNode;
+  PRInt32 selOffset;
+  res = mHTMLEditor->GetStartNodeAndOffset(selection, address_of(selNode), &selOffset);
+  if (NS_FAILED(res)) return res;
+
+  res = NS_OK;
   PRInt32 j;
   for (j=0; j<SIZE_STYLE_TABLE; j++)
   {
@@ -7090,10 +7119,17 @@ nsHTMLEditRules::ReapplyCachedStyles()
     {
       PRBool bFirst, bAny, bAll;
       nsAutoString curValue;
-      res = mHTMLEditor->GetInlinePropertyBase(mCachedStyles[j].tag, &(mCachedStyles[j].attr), &(mCachedStyles[j].value), 
+      if (useCSS) // check computed style first in css case
+      {
+        mHTMLEditor->mHTMLCSSUtils->IsCSSEquivalentToHTMLInlineStyleSet(selNode, mCachedStyles[j].tag, &(mCachedStyles[j].attr),
+                                                    bAny, curValue, COMPUTED_STYLE_TYPE);
+      }
+      if (!bAny) // then check typeinstate and html style
+      {
+        res = mHTMLEditor->GetInlinePropertyBase(mCachedStyles[j].tag, &(mCachedStyles[j].attr), &(mCachedStyles[j].value), 
                                                         &bFirst, &bAny, &bAll, &curValue, PR_FALSE);
-      if (NS_FAILED(res)) return res;
-      
+        if (NS_FAILED(res)) return res;
+      }
       // this style has disappeared through deletion.  Add it onto our typeinstate:
       if (!bAny) 
       {
@@ -7602,6 +7638,7 @@ nsHTMLEditRules::RemoveEmptyNodes()
               nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("u"))      || 
               nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("tt"))     || 
               nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("s"))      || 
+              nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("span"))   || 
               nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("strike")) || 
               nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("big"))    || 
               nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("small"))  || 
