@@ -183,3 +183,4 @@ protected:
   // The windows where type ahead find does not start automatically as the user types
   nsCOMPtr<nsISupportsArray> mManualFindWindows; // List of windows where automatic typeahead find is disabled
 };
+

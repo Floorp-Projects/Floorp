@@ -1397,3 +1397,4 @@ void nsTypeAheadFind::DisplayStatus(PRBool aSuccess, PRBool aClearStatus)
   }
   browserChrome->SetStatus(nsIWebBrowserChrome::STATUS_LINK, PromiseFlatString(statusString).get());
 }
+
