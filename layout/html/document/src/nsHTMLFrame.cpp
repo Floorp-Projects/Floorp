@@ -113,6 +113,7 @@ public:
                     nsReflowMetrics&     aDesiredSize,
                     const nsReflowState& aReflowState,
                     nsReflowStatus&      aStatus);
+  NS_IMETHOD  VerifyTree() const;
   nscoord GetBorderWidth(nsIPresContext& aPresContext);
   PRBool IsInline();
 
@@ -352,6 +353,14 @@ nsHTMLFrameOuterFrame::Reflow(nsIPresContext&      aPresContext,
      ("exit nsHTMLFrameOuterFrame::Reflow: size=%d,%d status=%x",
       aDesiredSize.width, aDesiredSize.height, aStatus));
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLFrameOuterFrame::VerifyTree() const
+{
+  // XXX Completely disabled for now; once pseud-frames are reworked
+  // then we can turn it back on.
   return NS_OK;
 }
 
