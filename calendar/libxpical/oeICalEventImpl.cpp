@@ -228,11 +228,16 @@ oeICalEventImpl::oeICalEventImpl()
         m_recurend = nsnull;
 	}
     if( m_stamp ) {
-        PRTime nowinms = PR_Now();
-        PRInt64 usecpermsec;
-        LL_I2L( usecpermsec, PR_USEC_PER_MSEC );
-        LL_DIV( nowinms, nowinms, usecpermsec );
-        m_stamp->m_datetime = ConvertFromPrtime( nowinms );
+        PRInt64 nowinusec = PR_Now();
+        PRExplodedTime ext;
+        PR_ExplodeTime( nowinusec, PR_GMTParameters, &ext);
+        m_stamp->m_datetime.year = ext.tm_year;
+        m_stamp->m_datetime.month = ext.tm_month + 1;
+        m_stamp->m_datetime.day = ext.tm_mday;
+        m_stamp->m_datetime.hour = ext.tm_hour;
+        m_stamp->m_datetime.minute = ext.tm_min;
+        m_stamp->m_datetime.second = ext.tm_sec;
+        m_stamp->m_datetime.is_utc = true;
     }
     m_id = nsnull;
     m_title.SetIsVoid(true);
@@ -270,36 +275,36 @@ oeICalEventImpl::~oeICalEventImpl()
 #ifdef ICAL_DEBUG
     printf( "oeICalEventImpl::~oeICalEventImpl(): %d\n", --gEventCount );
 #endif
-  /* destructor code */
-  if( m_id )
+    /* destructor code */
+    if( m_id )
         nsMemory::Free( m_id );
-  if( m_description )
-      nsMemory::Free( m_description );
-  if( m_location )
-      nsMemory::Free( m_location );
-  if( m_category )
-      nsMemory::Free( m_category );
-  if( m_url )
-      nsMemory::Free( m_url );
-  if( m_alarmunits )
-      nsMemory::Free( m_alarmunits );
-  if( m_alarmemail  )
-      nsMemory::Free( m_alarmemail );
-  if( m_inviteemail  )
-      nsMemory::Free( m_inviteemail );
-  if( m_recurunits  )
-      nsMemory::Free( m_recurunits );
-  if( m_syncid )
-      nsMemory::Free( m_syncid );
+    if( m_description )
+        nsMemory::Free( m_description );
+    if( m_location )
+        nsMemory::Free( m_location );
+    if( m_category )
+        nsMemory::Free( m_category );
+    if( m_url )
+        nsMemory::Free( m_url );
+    if( m_alarmunits )
+        nsMemory::Free( m_alarmunits );
+    if( m_alarmemail  )
+        nsMemory::Free( m_alarmemail );
+    if( m_inviteemail  )
+        nsMemory::Free( m_inviteemail );
+    if( m_recurunits  )
+        nsMemory::Free( m_recurunits );
+    if( m_syncid )
+        nsMemory::Free( m_syncid );
   
-  if( m_start )
-      m_start->Release();
-  if( m_end )
-      m_end->Release();
-  if( m_stamp )
-      m_stamp->Release();
-  if( m_recurend )
-    m_recurend->Release();
+    if( m_start )
+        m_start->Release();
+    if( m_end )
+        m_end->Release();
+    if( m_stamp )
+        m_stamp->Release();
+    if( m_recurend )
+        m_recurend->Release();
 }
 
 /* attribute string Id; */
@@ -1341,10 +1346,10 @@ NS_IMETHODIMP oeICalEventImpl::Clone( oeIICalEvent **ev )
 
 NS_IMETHODIMP oeICalEventImpl::GetAttachmentsArray(nsISupportsArray * *aAttachmentsArray)
 {
-  NS_ENSURE_ARG_POINTER(aAttachmentsArray);
-  *aAttachmentsArray = m_attachments;
-  NS_IF_ADDREF(*aAttachmentsArray);
-  return NS_OK;
+    NS_ENSURE_ARG_POINTER(aAttachmentsArray);
+    *aAttachmentsArray = m_attachments;
+    NS_IF_ADDREF(*aAttachmentsArray);
+    return NS_OK;
 }
 
 NS_IMETHODIMP oeICalEventImpl::AddAttachment(nsIMsgAttachment *attachment)
@@ -1352,25 +1357,25 @@ NS_IMETHODIMP oeICalEventImpl::AddAttachment(nsIMsgAttachment *attachment)
 #ifdef ICAL_DEBUG
     printf( "oeICalEventImpl::AddAttachment()\n" );
 #endif
-  PRUint32 i;
-  PRUint32 attachmentCount = 0;
-  m_attachments->Count(&attachmentCount);
+    PRUint32 i;
+    PRUint32 attachmentCount = 0;
+    m_attachments->Count(&attachmentCount);
 
-  //Don't add twice the same attachment.
-  nsCOMPtr<nsIMsgAttachment> element;
-  PRBool sameUrl;
-  for (i = 0; i < attachmentCount; i ++)
-  {
-    m_attachments->QueryElementAt(i, NS_GET_IID(nsIMsgAttachment), getter_AddRefs(element));
-    if (element)
+    //Don't add twice the same attachment.
+    nsCOMPtr<nsIMsgAttachment> element;
+    PRBool sameUrl;
+    for (i = 0; i < attachmentCount; i ++)
     {
-      element->EqualsUrl(attachment, &sameUrl);
-      if (sameUrl)
-        return NS_OK;
+        m_attachments->QueryElementAt(i, NS_GET_IID(nsIMsgAttachment), getter_AddRefs(element));
+        if (element)
+        {
+            element->EqualsUrl(attachment, &sameUrl);
+            if (sameUrl)
+                return NS_OK;
+        }
     }
-  }
 
-  return m_attachments->InsertElementAt(attachment, attachmentCount);
+    return m_attachments->InsertElementAt(attachment, attachmentCount);
 }
 
 NS_IMETHODIMP oeICalEventImpl::RemoveAttachment(nsIMsgAttachment *attachment)
@@ -1378,27 +1383,27 @@ NS_IMETHODIMP oeICalEventImpl::RemoveAttachment(nsIMsgAttachment *attachment)
 #ifdef ICAL_DEBUG
     printf( "oeICalEventImpl::RemoveAttachment()\n" );
 #endif
-  PRUint32 i;
-  PRUint32 attachmentCount = 0;
-  m_attachments->Count(&attachmentCount);
+    PRUint32 i;
+    PRUint32 attachmentCount = 0;
+    m_attachments->Count(&attachmentCount);
 
-  nsCOMPtr<nsIMsgAttachment> element;
-  PRBool sameUrl;
-  for (i = 0; i < attachmentCount; i ++)
-  {
-    m_attachments->QueryElementAt(i, NS_GET_IID(nsIMsgAttachment), getter_AddRefs(element));
-    if (element)
+    nsCOMPtr<nsIMsgAttachment> element;
+    PRBool sameUrl;
+    for (i = 0; i < attachmentCount; i ++)
     {
-      element->EqualsUrl(attachment, &sameUrl);
-      if (sameUrl)
-      {
-        m_attachments->DeleteElementAt(i);
-        break;
-      }
+        m_attachments->QueryElementAt(i, NS_GET_IID(nsIMsgAttachment), getter_AddRefs(element));
+        if (element)
+        {
+            element->EqualsUrl(attachment, &sameUrl);
+            if (sameUrl)
+            {
+                m_attachments->DeleteElementAt(i);
+                break;
+            }
+        }
     }
-  }
 
-  return NS_OK;
+    return NS_OK;
 }
 
 NS_IMETHODIMP oeICalEventImpl::RemoveAttachments()
@@ -1406,22 +1411,22 @@ NS_IMETHODIMP oeICalEventImpl::RemoveAttachments()
 #ifdef ICAL_DEBUG
     printf( "oeICalEventImpl::RemoveAttachments()\n" );
 #endif
-  PRUint32 i;
-  PRUint32 attachmentCount = 0;
-  m_attachments->Count(&attachmentCount);
+    PRUint32 i;
+    PRUint32 attachmentCount = 0;
+    m_attachments->Count(&attachmentCount);
 
-  for (i = 0; i < attachmentCount; i ++)
-    m_attachments->DeleteElementAt(0);
+    for (i = 0; i < attachmentCount; i ++)
+        m_attachments->DeleteElementAt(0);
 
-  return NS_OK;
+    return NS_OK;
 }
 
 NS_IMETHODIMP oeICalEventImpl::GetContactsArray(nsISupportsArray * *aContactsArray)
 {
-  NS_ENSURE_ARG_POINTER(aContactsArray);
-  *aContactsArray = m_contacts;
-  NS_IF_ADDREF(*aContactsArray);
-  return NS_OK;
+    NS_ENSURE_ARG_POINTER(aContactsArray);
+    *aContactsArray = m_contacts;
+    NS_IF_ADDREF(*aContactsArray);
+    return NS_OK;
 }
 
 NS_IMETHODIMP oeICalEventImpl::AddContact(nsIAbCard *contact)
@@ -1429,25 +1434,25 @@ NS_IMETHODIMP oeICalEventImpl::AddContact(nsIAbCard *contact)
 #ifdef ICAL_DEBUG
     printf( "oeICalEventImpl::AddContact()\n" );
 #endif
-  PRUint32 i;
-  PRUint32 contactCount = 0;
-  m_contacts->Count(&contactCount);
+    PRUint32 i;
+    PRUint32 contactCount = 0;
+    m_contacts->Count(&contactCount);
 
-  //Don't add twice the same contact.
-  nsCOMPtr<nsIAbCard> element;
-  PRBool samecontact;
-  for (i = 0; i < contactCount; i ++)
-  {
-    m_contacts->QueryElementAt(i, NS_GET_IID(nsIAbCard), getter_AddRefs(element));
-    if (element)
+    //Don't add twice the same contact.
+    nsCOMPtr<nsIAbCard> element;
+    PRBool samecontact;
+    for (i = 0; i < contactCount; i ++)
     {
-      element->Equals(contact, &samecontact);
-      if (samecontact)
-        return NS_OK;
+        m_contacts->QueryElementAt(i, NS_GET_IID(nsIAbCard), getter_AddRefs(element));
+        if (element)
+        {
+            element->Equals(contact, &samecontact);
+            if (samecontact)
+                return NS_OK;
+        }
     }
-  }
 
-  return m_contacts->InsertElementAt(contact, contactCount);
+    return m_contacts->InsertElementAt(contact, contactCount);
 }
 
 NS_IMETHODIMP oeICalEventImpl::RemoveContact(nsIAbCard *contact)
@@ -1455,27 +1460,27 @@ NS_IMETHODIMP oeICalEventImpl::RemoveContact(nsIAbCard *contact)
 #ifdef ICAL_DEBUG
     printf( "oeICalEventImpl::RemoveContact()\n" );
 #endif
-  PRUint32 i;
-  PRUint32 contactCount = 0;
-  m_contacts->Count(&contactCount);
+    PRUint32 i;
+    PRUint32 contactCount = 0;
+    m_contacts->Count(&contactCount);
 
-  nsCOMPtr<nsIAbCard> element;
-  PRBool samecontact;
-  for (i = 0; i < contactCount; i ++)
-  {
-    m_contacts->QueryElementAt(i, NS_GET_IID(nsIAbCard), getter_AddRefs(element));
-    if (element)
+    nsCOMPtr<nsIAbCard> element;
+    PRBool samecontact;
+    for (i = 0; i < contactCount; i ++)
     {
-      element->Equals(contact, &samecontact);
-      if (samecontact)
-      {
-        m_contacts->DeleteElementAt(i);
-        break;
-      }
+        m_contacts->QueryElementAt(i, NS_GET_IID(nsIAbCard), getter_AddRefs(element));
+        if (element)
+        {
+            element->Equals(contact, &samecontact);
+            if (samecontact)
+            {
+                m_contacts->DeleteElementAt(i);
+                break;
+            }
+        }
     }
-  }
 
-  return NS_OK;
+    return NS_OK;
 }
 
 NS_IMETHODIMP oeICalEventImpl::RemoveContacts()
@@ -1483,14 +1488,14 @@ NS_IMETHODIMP oeICalEventImpl::RemoveContacts()
 #ifdef ICAL_DEBUG
     printf( "oeICalEventImpl::RemoveContacts()\n" );
 #endif
-  PRUint32 i;
-  PRUint32 contactCount = 0;
-  m_contacts->Count(&contactCount);
+    PRUint32 i;
+    PRUint32 contactCount = 0;
+    m_contacts->Count(&contactCount);
 
-  for (i = 0; i < contactCount; i ++)
-    m_contacts->DeleteElementAt(0);
+    for (i = 0; i < contactCount; i ++)
+        m_contacts->DeleteElementAt(0);
 
-  return NS_OK;
+    return NS_OK;
 }
 
 bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
@@ -1521,7 +1526,7 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
     }
 
     const char *tmpstr;
-//id    
+    //id    
     icalproperty *prop = icalcomponent_get_first_property( vevent, ICAL_UID_PROPERTY );
     if ( prop ) {
         tmpstr = icalproperty_get_uid( prop );
@@ -1533,7 +1538,7 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
         return false;
     }
 
-//method
+    //method
     if( kind == ICAL_VCALENDAR_COMPONENT ) {
        prop = icalcomponent_get_first_property( comp, ICAL_METHOD_PROPERTY );
        if ( prop != 0) {
@@ -1545,7 +1550,7 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
        }	    
     }
 
-//status
+    //status
    prop = icalcomponent_get_first_property( vevent, ICAL_STATUS_PROPERTY );
    if ( prop != 0) {
        eventStatusProperty tmpStatusProp;
@@ -1555,7 +1560,7 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
        m_status = 0;
    }	    
 
-//title
+    //title
     prop = icalcomponent_get_first_property( vevent, ICAL_SUMMARY_PROPERTY );
     if ( prop != 0) {
         tmpstr = icalproperty_get_summary( prop );
@@ -1564,7 +1569,7 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
 	    m_title.Truncate();
     }
 
-//description
+    //description
     prop = icalcomponent_get_first_property( vevent, ICAL_DESCRIPTION_PROPERTY );
     if ( prop != 0) {
         tmpstr = icalproperty_get_description( prop );
@@ -1574,7 +1579,7 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
         m_description = nsnull;
     }
 
-//location
+    //location
     prop = icalcomponent_get_first_property( vevent, ICAL_LOCATION_PROPERTY );
     if ( prop != 0) {
         tmpstr = icalproperty_get_location( prop );
@@ -1584,7 +1589,7 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
         m_location = nsnull;
     }
 
-//category
+    //category
     prop = icalcomponent_get_first_property( vevent, ICAL_CATEGORIES_PROPERTY );
     if ( prop != 0) {
         tmpstr = (char *)icalproperty_get_categories( prop );
@@ -1594,7 +1599,7 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
         m_category= nsnull;
     }
 
-//url
+    //url
     prop = icalcomponent_get_first_property( vevent, ICAL_URL_PROPERTY );
     if ( prop != 0) {
         tmpstr = (char *)icalproperty_get_url( prop );
@@ -1604,7 +1609,7 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
         m_url= nsnull;
     }
 
-//priority
+    //priority
     prop = icalcomponent_get_first_property( vevent, ICAL_PRIORITY_PROPERTY );
     if ( prop != 0) {
         m_priority = icalproperty_get_priority( prop );
@@ -1612,7 +1617,7 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
         m_priority = 0;
     }                             
 
-//isprivate
+    //isprivate
     prop = icalcomponent_get_first_property( vevent, ICAL_CLASS_PROPERTY );
     if ( prop != 0) {
         icalproperty_class tmpcls = icalproperty_get_class( prop );
@@ -1623,16 +1628,16 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
     } else
         m_isprivate= false;
 
-//syncid
+    //syncid
     for( prop = icalcomponent_get_first_property( vevent, ICAL_X_PROPERTY );
-            prop != 0 ;
-            prop = icalcomponent_get_next_property( vevent, ICAL_X_PROPERTY ) ) {
-            icalparameter *tmppar = icalproperty_get_first_parameter( prop, ICAL_MEMBER_PARAMETER );
-            if ( tmppar != 0 ) {
-                tmpstr = icalparameter_get_member( tmppar );
-                if( strcmp( tmpstr, "SyncId" ) == 0 )
-                    break;
-            }
+        prop != 0 ;
+        prop = icalcomponent_get_next_property( vevent, ICAL_X_PROPERTY ) ) {
+        icalparameter *tmppar = icalproperty_get_first_parameter( prop, ICAL_MEMBER_PARAMETER );
+        if ( tmppar != 0 ) {
+            tmpstr = icalparameter_get_member( tmppar );
+            if( strcmp( tmpstr, "SyncId" ) == 0 )
+                break;
+        }
     }
     
     if ( prop != 0) {
@@ -1641,10 +1646,10 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
     } else
         SetSyncId( "" );
 
- //allday
+    //allday
     for( prop = icalcomponent_get_first_property( vevent, ICAL_X_PROPERTY );
-         prop != 0 ;
-         prop = icalcomponent_get_next_property( vevent, ICAL_X_PROPERTY ) ) {
+        prop != 0 ;
+        prop = icalcomponent_get_next_property( vevent, ICAL_X_PROPERTY ) ) {
         icalparameter *tmppar = icalproperty_get_first_parameter( prop, ICAL_MEMBER_PARAMETER );
         if ( tmppar != 0 ) {
             tmpstr = icalparameter_get_member( tmppar );
@@ -1662,7 +1667,7 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
     } else
         m_allday= false;
 
-//alarm
+    //alarm
     icalcomponent *valarm = icalcomponent_get_first_component( vevent, ICAL_VALARM_COMPONENT );
     
     if ( valarm != 0)
@@ -1670,16 +1675,16 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
     else
         m_hasalarm= false;
 
-//alarmunits
+    //alarmunits
     for( prop = icalcomponent_get_first_property( vevent, ICAL_X_PROPERTY );
-            prop != 0 ;
-            prop = icalcomponent_get_next_property( vevent, ICAL_X_PROPERTY ) ) {
-            icalparameter *tmppar = icalproperty_get_first_parameter( prop, ICAL_MEMBER_PARAMETER );
-            if ( tmppar != 0 ) {
-                tmpstr = icalparameter_get_member( tmppar );
-                if( strcmp( tmpstr, "AlarmUnits" ) == 0 )
-                    break;
-            }
+        prop != 0 ;
+        prop = icalcomponent_get_next_property( vevent, ICAL_X_PROPERTY ) ) {
+        icalparameter *tmppar = icalproperty_get_first_parameter( prop, ICAL_MEMBER_PARAMETER );
+        if ( tmppar != 0 ) {
+            tmpstr = icalparameter_get_member( tmppar );
+            if( strcmp( tmpstr, "AlarmUnits" ) == 0 )
+                break;
+        }
     }
     
     if ( prop != 0) {
@@ -1687,16 +1692,16 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
         SetAlarmUnits( tmpstr );
     } else
         SetAlarmUnits( "minutes" );
-//alarmlength
+    //alarmlength
     for( prop = icalcomponent_get_first_property( vevent, ICAL_X_PROPERTY );
-            prop != 0 ;
-            prop = icalcomponent_get_next_property( vevent, ICAL_X_PROPERTY ) ) {
-            icalparameter *tmppar = icalproperty_get_first_parameter( prop, ICAL_MEMBER_PARAMETER );
-            if ( tmppar != 0 ) {
-                tmpstr = (char *)icalparameter_get_member( tmppar );
-                if( strcmp( tmpstr, "AlarmLength" ) == 0 )
-                    break;
-            }
+        prop != 0 ;
+        prop = icalcomponent_get_next_property( vevent, ICAL_X_PROPERTY ) ) {
+        icalparameter *tmppar = icalproperty_get_first_parameter( prop, ICAL_MEMBER_PARAMETER );
+        if ( tmppar != 0 ) {
+            tmpstr = (char *)icalparameter_get_member( tmppar );
+            if( strcmp( tmpstr, "AlarmLength" ) == 0 )
+                break;
+        }
     }
     
     if ( prop != 0) {
@@ -1705,16 +1710,16 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
     } else
         m_alarmlength = 0;
 
-//alarmemail
+    //alarmemail
     for( prop = icalcomponent_get_first_property( vevent, ICAL_X_PROPERTY );
-            prop != 0 ;
-            prop = icalcomponent_get_next_property( vevent, ICAL_X_PROPERTY ) ) {
-            icalparameter *tmppar = icalproperty_get_first_parameter( prop, ICAL_MEMBER_PARAMETER );
-            if ( tmppar != 0 ) {
-                tmpstr = (char *)icalparameter_get_member( tmppar );
-                if( strcmp( tmpstr, "AlarmEmailAddress" ) == 0 )
-                    break;
-            }
+        prop != 0 ;
+        prop = icalcomponent_get_next_property( vevent, ICAL_X_PROPERTY ) ) {
+        icalparameter *tmppar = icalproperty_get_first_parameter( prop, ICAL_MEMBER_PARAMETER );
+        if ( tmppar != 0 ) {
+            tmpstr = (char *)icalparameter_get_member( tmppar );
+            if( strcmp( tmpstr, "AlarmEmailAddress" ) == 0 )
+                break;
+        }
     }
     
     if ( prop != 0) {
@@ -1725,16 +1730,16 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
         m_alarmemail= nsnull;
     }
 
-//inviteemail
+    //inviteemail
     for( prop = icalcomponent_get_first_property( vevent, ICAL_X_PROPERTY );
-            prop != 0 ;
-            prop = icalcomponent_get_next_property( vevent, ICAL_X_PROPERTY ) ) {
-            icalparameter *tmppar = icalproperty_get_first_parameter( prop, ICAL_MEMBER_PARAMETER );
-            if ( tmppar != 0 ) {
-                tmpstr = icalparameter_get_member( tmppar );
-                if( strcmp( tmpstr, "InviteEmailAddress" ) == 0 )
-                    break;
-            }
+        prop != 0 ;
+        prop = icalcomponent_get_next_property( vevent, ICAL_X_PROPERTY ) ) {
+        icalparameter *tmppar = icalproperty_get_first_parameter( prop, ICAL_MEMBER_PARAMETER );
+        if ( tmppar != 0 ) {
+            tmpstr = icalparameter_get_member( tmppar );
+            if( strcmp( tmpstr, "InviteEmailAddress" ) == 0 )
+                break;
+        }
     }
     
     if ( prop != 0) {
@@ -1745,16 +1750,16 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
         m_inviteemail= nsnull;
     }
 
-//recurinterval
+    //recurinterval
     for( prop = icalcomponent_get_first_property( vevent, ICAL_X_PROPERTY );
-            prop != 0 ;
-            prop = icalcomponent_get_next_property( vevent, ICAL_X_PROPERTY ) ) {
-            icalparameter *tmppar = icalproperty_get_first_parameter( prop, ICAL_MEMBER_PARAMETER );
-            if ( tmppar != 0 ) {
-                tmpstr = icalparameter_get_member( tmppar );
-                if( strcmp( tmpstr, "RecurInterval" ) == 0 )
-                    break;
-            }
+        prop != 0 ;
+        prop = icalcomponent_get_next_property( vevent, ICAL_X_PROPERTY ) ) {
+        icalparameter *tmppar = icalproperty_get_first_parameter( prop, ICAL_MEMBER_PARAMETER );
+        if ( tmppar != 0 ) {
+            tmpstr = icalparameter_get_member( tmppar );
+            if( strcmp( tmpstr, "RecurInterval" ) == 0 )
+                break;
+        }
     }
     
     if ( prop != 0) {
@@ -1763,16 +1768,16 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
     } else
         m_recurinterval= 0;
 
-//recurunits
+    //recurunits
     for( prop = icalcomponent_get_first_property( vevent, ICAL_X_PROPERTY );
-            prop != 0 ;
-            prop = icalcomponent_get_next_property( vevent, ICAL_X_PROPERTY ) ) {
-            icalparameter *tmppar = icalproperty_get_first_parameter( prop, ICAL_MEMBER_PARAMETER );
-            if ( tmppar != 0 ) {
-                tmpstr = icalparameter_get_member( tmppar );
-                if( strcmp( tmpstr, "RecurUnits" ) == 0 )
-                    break;
-            }
+        prop != 0 ;
+        prop = icalcomponent_get_next_property( vevent, ICAL_X_PROPERTY ) ) {
+        icalparameter *tmppar = icalproperty_get_first_parameter( prop, ICAL_MEMBER_PARAMETER );
+        if ( tmppar != 0 ) {
+            tmpstr = icalparameter_get_member( tmppar );
+            if( strcmp( tmpstr, "RecurUnits" ) == 0 )
+                break;
+        }
     }
 
     if ( prop != 0) {
@@ -1781,7 +1786,7 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
     } else
         SetRecurUnits( "weeks" );
 
-//startdate
+    //startdate
     prop = icalcomponent_get_first_property( vevent, ICAL_DTSTART_PROPERTY );
     if ( prop != 0) {
         m_start->m_datetime = icalproperty_get_dtstart( prop );
@@ -1795,7 +1800,7 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
         m_start->m_datetime = icaltime_null_time();
     }
     
-//enddate
+    //enddate
     prop = icalcomponent_get_first_property( vevent, ICAL_DTEND_PROPERTY );
     if ( prop != 0) {
         icaltimetype end;
@@ -1807,7 +1812,7 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
         m_end->m_datetime = icaltime_null_time();
     }
     
-//stampdate
+    //stampdate
     prop = icalcomponent_get_first_property( vevent, ICAL_DTSTAMP_PROPERTY );
     if ( prop != 0) {
         m_stamp->m_datetime = icalproperty_get_dtstamp( prop );
@@ -1816,7 +1821,7 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
     }
 
 
-// scan for X- properties
+    // scan for X- properties
 
     // first set the defaults
     m_lastalarmack = icaltime_null_time();
@@ -1857,7 +1862,7 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
     }
 
 
-//recurend & recurforever & recur & recurweekday & recurweeknumber
+    //recurend & recurforever & recur & recurweekday & recurweeknumber
     m_recur = false;
     m_recurforever = true;
     m_recurweekdays = 0;
@@ -1876,8 +1881,8 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
         if( recur.freq == ICAL_DAILY_RECURRENCE ) {
 	        SetRecurUnits( "days" );
 	    } else if( recur.freq == ICAL_WEEKLY_RECURRENCE ) {
-	        SetRecurUnits( "weeks" );
             int k=0;
+	        SetRecurUnits( "weeks" );
             while( recur.by_day[k] != ICAL_RECURRENCE_ARRAY_MAX ) {
                 m_recurweekdays += 1 << (recur.by_day[k]-1);
                 k++;
@@ -1897,8 +1902,8 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
     //recur exceptions
     m_exceptiondates.clear();
     for( prop = icalcomponent_get_first_property( vevent, ICAL_EXDATE_PROPERTY );
-            prop != 0 ;
-            prop = icalcomponent_get_next_property( vevent, ICAL_EXDATE_PROPERTY ) ) {
+        prop != 0 ;
+        prop = icalcomponent_get_next_property( vevent, ICAL_EXDATE_PROPERTY ) ) {
         icaltimetype exdate = icalproperty_get_exdate( prop );
         PRTime exdateinms = ConvertToPrtime( exdate );
         m_exceptiondates.push_back( exdateinms );
@@ -1909,8 +1914,8 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
     icalcomponent *tmpcomp = icalcomponent_get_first_component( vevent, ICAL_X_COMPONENT );
     if ( tmpcomp != 0) {
         for( prop = icalcomponent_get_first_property( tmpcomp, ICAL_DTSTAMP_PROPERTY );
-                prop != 0 ;
-                prop = icalcomponent_get_next_property( tmpcomp, ICAL_DTSTAMP_PROPERTY ) ) {
+            prop != 0 ;
+            prop = icalcomponent_get_next_property( tmpcomp, ICAL_DTSTAMP_PROPERTY ) ) {
             icaltimetype snoozetime = icalproperty_get_dtstamp( prop );
             if( !icaltime_is_null_time( m_lastalarmack ) && icaltime_compare( m_lastalarmack, snoozetime ) >= 0 )
                 continue;
@@ -1922,21 +1927,21 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
 
     //attachments
     for( prop = icalcomponent_get_first_property( vevent, ICAL_X_PROPERTY );
-            prop != 0 ;
-            prop = icalcomponent_get_next_property( vevent, ICAL_X_PROPERTY ) ) {
-            icalparameter *tmppar = icalproperty_get_first_parameter( prop, ICAL_MEMBER_PARAMETER );
-            if ( tmppar != 0 ) {
-                tmpstr = icalparameter_get_member( tmppar );
-                if( strcmp( tmpstr, "Attachment" ) == 0 ) {
-                    nsresult rv;
-                    tmpstr = (char *)icalproperty_get_value_as_string( prop );
-                    nsCOMPtr<nsIMsgAttachment> attachment = do_CreateInstance(NS_MSGATTACHMENT_CONTRACTID, &rv);
-                    if ( NS_SUCCEEDED(rv) && attachment ) {
-                        attachment->SetUrl( tmpstr );
-                        AddAttachment( attachment );
-                    }
+        prop != 0 ;
+        prop = icalcomponent_get_next_property( vevent, ICAL_X_PROPERTY ) ) {
+        icalparameter *tmppar = icalproperty_get_first_parameter( prop, ICAL_MEMBER_PARAMETER );
+        if ( tmppar != 0 ) {
+            tmpstr = icalparameter_get_member( tmppar );
+            if( strcmp( tmpstr, "Attachment" ) == 0 ) {
+                nsresult rv;
+                tmpstr = (char *)icalproperty_get_value_as_string( prop );
+                nsCOMPtr<nsIMsgAttachment> attachment = do_CreateInstance(NS_MSGATTACHMENT_CONTRACTID, &rv);
+                if ( NS_SUCCEEDED(rv) && attachment ) {
+                    attachment->SetUrl( tmpstr );
+                    AddAttachment( attachment );
                 }
             }
+        }
     }
 
     //contacts
