@@ -294,7 +294,7 @@ nsIOService::NewAsyncStreamListener(nsIStreamListener *receiver, nsIEventQueue *
 }
 
 NS_IMETHODIMP
-nsIOService::NewSyncStreamListener(nsIBufferInputStream **inStream, 
+nsIOService::NewSyncStreamListener(nsIInputStream **inStream, 
                                    nsIBufferOutputStream **outStream,
                                    nsIStreamListener **listener)
 {

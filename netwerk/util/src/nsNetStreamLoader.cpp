@@ -51,7 +51,7 @@ public:
   NS_IMETHOD OnStopRequest(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg);
 
   // nsIStreamListener methods
-  NS_IMETHOD OnDataAvailable(nsISupports *ctxt, nsIBufferInputStream *inStr, PRUint32 sourceOffset, PRUint32 count);
+  NS_IMETHOD OnDataAvailable(nsISupports *ctxt, nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count);
 
 #if 0
   NS_IMETHOD GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo);
@@ -177,7 +177,7 @@ nsUnicharStreamLoader::GetBindInfo(nsIURI* aURL,
 
 NS_IMETHODIMP 
 nsUnicharStreamLoader::OnDataAvailable(nsISupports *ctxt, 
-                                       nsIBufferInputStream *inStr, 
+                                       nsIInputStream *inStr, 
                                        PRUint32 sourceOffset, PRUint32 count)
 {
   nsresult rv = NS_OK;

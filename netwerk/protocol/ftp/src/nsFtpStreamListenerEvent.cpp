@@ -115,7 +115,7 @@ nsFtpOnDataAvailableEvent::~nsFtpOnDataAvailableEvent()
 }
 
 nsresult
-nsFtpOnDataAvailableEvent::Init(nsIBufferInputStream* aIStream, 
+nsFtpOnDataAvailableEvent::Init(nsIInputStream* aIStream, 
                                 PRUint32 aSourceOffset, PRUint32 aLength)
 {
     mLength = aLength;

@@ -28,6 +28,7 @@ class nsIInputStream;
 class nsIURL;
 class nsVoidArray;
 class nsIBufferInputStream;
+class nsIInputStream;
 class nsIChannel;
 class nsHTTPChannel;
 

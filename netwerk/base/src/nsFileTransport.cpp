@@ -216,7 +216,7 @@ nsFileTransport::OpenInputStream(PRUint32 startPosition, PRInt32 readCount,
     NS_ASSERTION(startPosition == 0, "fix me");
 
     nsIStreamListener* syncListener;
-    nsIBufferInputStream* inStr;
+    nsIInputStream* inStr;
     rv = NS_NewSyncStreamListener(&syncListener, &inStr);
     if (NS_FAILED(rv)) return rv;
 

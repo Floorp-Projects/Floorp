@@ -97,7 +97,7 @@ public:
     }
 
     NS_IMETHOD OnDataAvailable(nsISupports* context,
-                               nsIBufferInputStream *aIStream, 
+                               nsIInputStream *aIStream, 
                                PRUint32 aSourceOffset,
                                PRUint32 aLength);
 
@@ -447,12 +447,12 @@ public:
           mIStream(nsnull), mLength(0) {}
     virtual ~nsOnDataAvailableEvent();
 
-    nsresult Init(nsIBufferInputStream* aIStream, PRUint32 aSourceOffset,
+    nsresult Init(nsIInputStream* aIStream, PRUint32 aSourceOffset,
                   PRUint32 aLength);
     NS_IMETHOD HandleEvent();
 
 protected:
-    nsIBufferInputStream*       mIStream;
+    nsIInputStream*       mIStream;
     PRUint32                    mSourceOffset;
     PRUint32                    mLength;
 };
@@ -463,7 +463,7 @@ nsOnDataAvailableEvent::~nsOnDataAvailableEvent()
 }
 
 nsresult
-nsOnDataAvailableEvent::Init(nsIBufferInputStream* aIStream, PRUint32 aSourceOffset,
+nsOnDataAvailableEvent::Init(nsIInputStream* aIStream, PRUint32 aSourceOffset,
                              PRUint32 aLength)
 {
     mSourceOffset = aSourceOffset;
@@ -482,7 +482,7 @@ nsOnDataAvailableEvent::HandleEvent()
 
 NS_IMETHODIMP 
 nsAsyncStreamListener::OnDataAvailable(nsISupports* context,
-                                       nsIBufferInputStream *aIStream, 
+                                       nsIInputStream *aIStream, 
                                        PRUint32 aSourceOffset,
                                        PRUint32 aLength)
 {

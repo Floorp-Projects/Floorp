@@ -125,7 +125,7 @@ public:
   NS_IMETHOD OnStartBinding(nsISupports* context);
 
   NS_IMETHOD OnDataAvailable(nsISupports* context,
-                             nsIBufferInputStream *aIStream, 
+                             nsIInputStream *aIStream, 
                              PRUint32 aSourceOffset,
                              PRUint32 aLength);
 
@@ -177,7 +177,7 @@ InputConsumer::OnStartBinding(nsISupports* context)
 
 NS_IMETHODIMP
 InputConsumer::OnDataAvailable(nsISupports* context,
-                               nsIBufferInputStream *aIStream, 
+                               nsIInputStream *aIStream, 
                                PRUint32 aSourceOffset,
                                PRUint32 aLength)
 {
