@@ -521,7 +521,7 @@ protected:
                                              nsIFrame*                aNewFrame,
                                              nsFrameItems&            aChildItems);
 
-  nsresult CreateAnonymousTreeCellFrames(nsIPresShell*        aPresShell, 
+  nsresult CreateAnonymousTableCellFrames(nsIPresShell*        aPresShell, 
                                              nsIPresContext*          aPresContext,
                                              nsIAtom*                 aTag,
                                              nsFrameConstructorState& aState,

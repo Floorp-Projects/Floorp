@@ -21,7 +21,6 @@
  */
 
 #include "nsTreeItemDragCapturer.h"
-#include "nsTreeRowGroupFrame.h"
 
 #include "nsCOMPtr.h"
 #include "nsIDOMMouseEvent.h"
@@ -37,7 +36,7 @@
 #include "nsIPresShell.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIView.h"
-
+#include "nsIFrame.h"
 
 NS_IMPL_ADDREF(nsTreeItemDragCapturer)
 NS_IMPL_RELEASE(nsTreeItemDragCapturer)

@@ -52,6 +52,7 @@
 #include "nsIDOMText.h"
 #include "nsBoxLayoutState.h"
 #include "nsIScrollableFrame.h"
+#include "nsCSSFrameConstructor.h"
 
 #define NS_MENU_POPUP_LIST_INDEX   0
 
@@ -101,7 +102,8 @@ nsPopupSetFrame::nsPopupSetFrame(nsIPresShell* aShell):nsBoxFrame(aShell),
 mPresContext(nsnull), 
 mElementContent(nsnull), 
 mCreateHandlerSucceeded(PR_FALSE),
-mLastPref(-1,-1)
+mLastPref(-1,-1),
+mFrameConstructor(nsnull)
 {
 
 } // cntr
@@ -188,10 +190,14 @@ nsPopupSetFrame::GetAdditionalChildListName(PRInt32   aIndex,
   NS_PRECONDITION(nsnull != aListName, "null OUT parameter pointer");
   
   *aListName = nsnull;
+
+  // don't expose the child frame list, it slows things down
+#if 0
   if (NS_MENU_POPUP_LIST_INDEX == aIndex) {
     *aListName = nsLayoutAtoms::popupList;
     NS_ADDREF(*aListName);
   }
+#endif
 
   return NS_OK;
 }
@@ -199,6 +205,15 @@ nsPopupSetFrame::GetAdditionalChildListName(PRInt32   aIndex,
 NS_IMETHODIMP
 nsPopupSetFrame::Destroy(nsIPresContext* aPresContext)
 {
+  // Remove our frame mappings
+  if (mFrameConstructor) {
+    nsIFrame* curFrame = mPopupFrames.FirstChild();
+    while (curFrame) {
+      mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, curFrame, nsnull);
+      curFrame->GetNextSibling(&curFrame);
+    }
+  }
+
    // Cleanup frames in popup child list
   mPopupFrames.DestroyFrames(aPresContext);
   return nsBoxFrame::Destroy(aPresContext);

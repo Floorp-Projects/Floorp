@@ -42,6 +42,8 @@
 
 nsresult NS_NewPopupSetFrame(nsIPresShell* aPresShell, nsIFrame** aResult) ;
 
+class nsCSSFrameConstructor;
+
 class nsPopupSetFrame : public nsBoxFrame, public nsIPopupSetFrame
 {
 public:
@@ -114,6 +116,9 @@ public:
       return NS_OK;
   }
 
+  void SetFrameConstructor(nsCSSFrameConstructor* aFC) {
+    mFrameConstructor = aFC;
+  }
 
 protected:
 
@@ -133,6 +138,8 @@ protected:
   nsAutoString mPopupType;
   PRBool mCreateHandlerSucceeded;  // Did the create handler succeed?
   nsSize mLastPref;
+private:
+  nsCSSFrameConstructor* mFrameConstructor;
 }; // class nsPopupSetFrame
 
 #endif

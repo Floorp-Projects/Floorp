@@ -33,11 +33,6 @@
 #include "nsIPresContext.h"
 #include "nsIFrame.h"
 
-#define XULTREE
-
-// XXX Hack
-#include "nsTreeOuterFrame.h"
-
 class nsTreeBoxObject : public nsITreeBoxObject, public nsBoxObject
 {
 public:
@@ -47,9 +42,6 @@ public:
   nsTreeBoxObject();
   virtual ~nsTreeBoxObject();
   
-  // XXX Will go away as soon as I get off tables.
-  nsIFrame* GetFrame();
-
 protected:
 };
 
@@ -80,29 +72,6 @@ nsTreeBoxObject::nsTreeBoxObject()
 nsTreeBoxObject::~nsTreeBoxObject()
 {
   /* destructor code */
-}
-
-// XXX Whole function is a hack that will go away.
-nsIFrame*
-nsTreeBoxObject::GetFrame()
-{
-#ifdef XULTREE
-  return nsBoxObject::GetFrame();
-#else
-  nsIFrame* frame = nsBoxObject::GetFrame();
-  if (!frame)
-    return nsnull;
-
-  nsTreeOuterFrame* outerFrame = (nsTreeOuterFrame*)frame;
-  nsCOMPtr<nsIPresContext> presContext;
-  mPresShell->GetPresContext(getter_AddRefs(presContext));
-  
-  nsITreeFrame* treeFrame = outerFrame->FindTreeFrame(presContext);
-  if (!treeFrame)
-    return nsnull;
-
-  return (nsIFrame*)treeFrame;
-#endif
 }
 
 /* void ensureIndexIsVisible (in long rowIndex); */

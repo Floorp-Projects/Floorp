@@ -49,6 +49,7 @@ nsresult NS_NewMenuFrame(nsIPresShell* aPresShell, nsIFrame** aResult, PRUint32 
 
 class nsMenuBarFrame;
 class nsMenuPopupFrame;
+class nsCSSFrameConstructor;
 
 class nsMenuFrame : public nsBoxFrame, 
                     public nsIMenuFrame,
@@ -160,6 +161,9 @@ public:
       return NS_OK;
   }
 
+  void SetFrameConstructor(nsCSSFrameConstructor* aFC) {
+    mFrameConstructor = aFC;
+  }
 
 protected:
 
@@ -209,6 +213,8 @@ protected:
   nsSize mLastPref;
 public:
   static nsMenuDismissalListener* mDismissalListener; // The listener that dismisses menus.
+private:
+  nsCSSFrameConstructor* mFrameConstructor;
 }; // class nsMenuFrame
 
 #endif

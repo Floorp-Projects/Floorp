@@ -77,12 +77,7 @@ CPPSRCS		= \
 		nsToolbarFrame.cpp \
 		nsToolbarDragListener.cpp \
 		nsToolboxFrame.cpp \
-		nsTreeOuterFrame.cpp \
-		nsTreeFrame.cpp \
-		nsTreeRowGroupFrame.cpp \
 		nsTreeIndentationFrame.cpp \
-		nsTreeCellFrame.cpp \
-		nsTreeRowFrame.cpp \
                 nsTreeItemDragCapturer.cpp \
                 nsSpinnerFrame.cpp \
 		nsScrollbarFrame.cpp \
@@ -114,7 +109,6 @@ DEFINES		+= -D_IMPL_NS_HTML
 
 LOCAL_INCLUDES	= \
 		-I$(srcdir)/../../../base/src \
-		-I$(srcdir)/../../../html/table/src \
 		-I$(srcdir)/../../../html/style/src \
 		-I$(srcdir)/../../../html/base/src \
 		-I$(srcdir)/../../../html/forms/src \

@@ -71,12 +71,7 @@ CPPSRCS=					\
         nsDeckFrame.cpp        \
 	nsToolboxFrame.cpp		\
 	nsToolbarFrame.cpp		\
-	nsTreeOuterFrame.cpp \
-	nsTreeFrame.cpp			\
-	nsTreeRowGroupFrame.cpp \
-	nsTreeRowFrame.cpp \
 	nsTreeIndentationFrame.cpp \
-	nsTreeCellFrame.cpp \
         nsTreeItemDragCapturer.cpp \
   nsXULTreeFrame.cpp \
   nsXULTreeGroupFrame.cpp \
@@ -147,12 +142,7 @@ CPP_OBJS=					\
         .\$(OBJDIR)\nsTabFrame.obj    \
         .\$(OBJDIR)\nsDeckFrame.obj    \
         .\$(OBJDIR)\nsStackFrame.obj    \
-	.\$(OBJDIR)\nsTreeOuterFrame.obj \
-	.\$(OBJDIR)\nsTreeFrame.obj	\
-	.\$(OBJDIR)\nsTreeRowFrame.obj \
-	.\$(OBJDIR)\nsTreeRowGroupFrame.obj \
 	.\$(OBJDIR)\nsTreeIndentationFrame.obj \
-	.\$(OBJDIR)\nsTreeCellFrame.obj \
         .\$(OBJDIR)\nsTreeItemDragCapturer.obj \
   .\$(OBJDIR)\nsXULTreeFrame.obj \
   .\$(OBJDIR)\nsXULTreeGroupFrame.obj \
@@ -179,7 +169,6 @@ LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js \
   -I..\..\..\html\style\src -I..\..\..\html\base\src -I$(PUBLIC)\dom \
    -I..\..\..\html\document\src \
    -I..\..\..\html\content\src \
-   -I..\..\..\html\table\src \
    -I..\..\content\src \
    -I..\..\..\html\forms\src \
   -I$(PUBLIC)\netlib -I..\..\..\base\src -I$(PUBLIC)\pref \
