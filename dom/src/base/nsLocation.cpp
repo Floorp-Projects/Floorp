@@ -242,7 +242,7 @@ LocationImpl::GetHost(nsString& aHost)
         (void)url->GetPort(&port);
         if (-1 != port) {
           aHost.AppendWithConversion(":");
-          aHost.AppendWithConversion(port, 10);
+          aHost.AppendInt(port, 10);
         }
       }
       NS_RELEASE(url);
@@ -451,7 +451,7 @@ LocationImpl::GetPort(nsString& aPort)
       PRInt32 port;
       (void)url->GetPort(&port);
       if (-1 != port) {
-        aPort.AppendWithConversion(port, 10);
+        aPort.AppendInt(port, 10);
       }
       NS_RELEASE(url);
     }
