@@ -49,7 +49,7 @@
 #include "prlog.h"
 
 //#define DEBUG_REFS
-#define DEBUG_RULES
+//#define DEBUG_RULES
 
 static NS_DEFINE_IID(kICSSStyleSheetIID, NS_ICSS_STYLE_SHEET_IID);
 static NS_DEFINE_IID(kIStyleSheetIID, NS_ISTYLE_SHEET_IID);
