@@ -149,7 +149,7 @@ nsHttpChannel::Init(nsIURI *uri,
         if (url)
             url->SetHost(hostACE.get());
         // overwrite |host|
-        host = hostACE;
+        host.Assign(hostACE);
     }
     rv = mURI->GetSpec(getter_Copies(mSpec));
     if (NS_FAILED(rv)) return rv;
@@ -1012,7 +1012,9 @@ nsHttpChannel::CloseCacheEntry(nsresult status)
     if (mCacheEntry) {
         LOG(("nsHttpChannel::CloseCacheEntry [this=%x status=%x]", this, status));
 
-        if (NS_FAILED(status) && (mCacheAccess & nsICache::ACCESS_WRITE)) {
+        // don't doom the cache entry if only reading from it...
+        if (NS_FAILED(status)
+                && (mCacheAccess & nsICache::ACCESS_WRITE) && !mCacheReadRequest) {
             LOG(("dooming cache entry!!"));
             rv = mCacheEntry->Doom();
         }
