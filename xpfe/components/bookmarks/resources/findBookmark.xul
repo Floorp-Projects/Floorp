@@ -64,5 +64,6 @@
     </menulist>
     <textbox id="searchField" flex="1" oninput="doEnabling();"/>
   </hbox>
+  <checkbox id="saveQuery" label="&save.query.label;" />
 </dialog>
 

@@ -36,6 +36,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+const BMARKS_CONTRACTID        = "@mozilla.org/browser/bookmarks-service;1";
+const nsIBookmarksService      = Components.interfaces.nsIBookmarksService;
+
 var gOKButton;
 var gSearchField;
 function Startup()
@@ -65,6 +68,16 @@ function find()
     bmWindow.document.getElementById("bookmarks-view").outliner.setAttribute("ref", searchURI);
  
   bmWindow.focus();
+
+  if (document.getElementById("saveQuery").checked == true)
+  {
+    var bundle = document.getElementById("bookmarksBundle");
+    var findTitle = bundle.stringBundle.formatStringFromName(
+                      "ShortFindTitle", [gSearchField.value], 1);
+    var bmks = Components.classes[BMARKS_CONTRACTID].getService(nsIBookmarksService);
+    bmks.AddBookmark(searchURI, findTitle, bmks.BOOKMARK_FIND_TYPE, null);
+  }
+
   return true;
 }
 
