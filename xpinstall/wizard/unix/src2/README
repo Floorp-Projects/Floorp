@@ -1,166 +1,77 @@
-==============================================================
+====================================================
 
-= = = = = = = = = =   Mozilla Read Me    = = = = = = = = = = =
+                 Mozilla Read Me
 
-==============================================================
+====================================================
 
 Mozilla is subject to the terms detailed in the license agreement accompanying it.
 
-This Read Me file contains information about system requirements and installation instructions for the Windows, Mac OS, and Linux builds of Mozilla. 
+This Read Me file contains information about system requirements and installation instructions for the Linux builds of Mozilla. 
 
-For more info on Mozilla, see www.mozilla.org. To submit bugs or other feedback, see the Navigator QA menu and check out Bugzilla at http://bugzilla.mozilla.org for links to known bugs, bug-writing guidelines, and more. You can also get help with Bugzilla by pointing your IRC client to #mozillazine at irc.mozilla.org.
+For more info on Mozilla, see www.mozilla.org. To submit bugs or other feedback, see the Navigator QA menu and check out Bugzilla at http://bugzilla.mozilla.org/ for links to known bugs, bug-writing guidelines, and more. You can also get help with Bugzilla by pointing your IRC client to #mozillazine at irc.mozilla.org.
 
 
-==============================================================
+====================================================
 
-                      Getting Mozilla
+                 Getting Mozilla
 
-==============================================================
+====================================================
 
 You can download nightly builds of Mozilla from the Mozilla.org FTP site at
 
-  ftp://ftp.mozilla.org/pub/mozilla/nightly/
+  http://ftp.mozilla.org/pub/mozilla.org/mozilla/nightly/
 
 For the very latest builds, see
 
-  ftp://ftp.mozilla.org/pub/mozilla/nightly/latest
+  http://ftp.mozilla.org/pub/mozilla.org/mozilla/nightly/latest/
 
 Keep in mind that nightly builds, which are used by Mozilla.org developers for testing, may be buggy. If you are looking for a more polished version of Mozilla, Mozilla.org releases Milestone builds of Mozilla every six weeks or so that you can download from
 
-  http://www.mozilla.org/releases
+  http://www.mozilla.org/releases/
  
 Be sure to read the Mozilla release notes for information on known problems and installation issues with Mozilla.  The release notes can be found at the preceding URL along with the milestone releases themselves.
 
 Note: Please use Talkback builds whenever possible. These builds allow transmission of crash data back to Mozilla developers, improved crash analysis, and posting of crash information to our crash-data newsgroup.
 
 
-==============================================================
+====================================================
 
-                    System Requirements
+               System Requirements
 
-==============================================================
+====================================================
 
-*All Platforms
-
-	To view and use the new streamlined "Modern" theme, your display monitor should be set to display thousands of colors. For users who cannot set their displays to use more than 256 colors, Mozilla.org recommends using the "Classic" theme for Mozilla.
-
-	To select the Modern theme after you have installed Mozilla, from the Navigator browser, open the View menu, and then open then open the Apply Theme submenu and choose Modern.
-
-*Mac OS
-
--Mac OS 8.6 or later
--PowerPC 604e 266 MHz or faster processor, or G3/G4
--64 MB RAM
--36 MB of free hard disk space
-
-*Windows
-
--Windows 9x/Me or Windows NT 4/2000/XP
--Intel Pentium-class 233 MHz (or faster) processor
--64 MB RAM
--26 MB free hard disk space
-
-*Linux
-
--Red Hat Linux 6.x or 7 with X11 R6
-[Note: Mozilla is certified and fully supported on Red Hat Linux, but will run on other Linux distributions, such as Debian 2.1 (or later) or SuSE 6.2 (or later). The libraries glibc 2.1 (or higher) and libjpeg.so.62 (or higher) are required.]
+-The following library versions (or compatible) are required: glibc 2.2.4, XFree86 3.3.x, GTK 1.2.x, Glib 1.2.x, Libstdc++ 2.9.0. Red Hat Linux 7.0, Debian 3.0, and SuSE 7.3 (or later) installations should work.
 -Intel Pentium-class 233 MHz (or faster) processor
 -64MB RAM
 -26MB free hard disk space
 
 
-==============================================================
+====================================================
 
-                 Installation Instructions
+            Installation Instructions
 
-==============================================================
+====================================================
 
-For Mac OS and Windows users, it is strongly recommended that you exit all programs before running the setup program. Also, you should temporarily disable virus-detection software.
+Note that the installation instructions use the bash shell. If you're not using bash, adjust the commands accordingly.
 
-For Linux users, note that the installation instructions use the bash shell. If you're not using bash, adjust the commands accordingly.
-
-For all platforms, install into a clean (new) directory.  Installing on top of previously released builds may cause problems.
+Install into a clean (new) directory.  Installing on top of previously released builds may cause problems.
 
 Note: These instructions do not tell you how to build Mozilla.  For info on building the Mozilla source, see
 
   http://www.mozilla.org/source.html
 
 
-Windows Installation Instructions
----------------------------------
-
-Note: For Windows NT/2000/XP systems, you need Administrator privileges to install Mozilla. If you see an "Error 5" message during installation, make sure you're running the installation with Administrator privileges.
-
-
-To install Mozilla by downloading the Mozilla installer, follow these steps:
-	
-1. Click the the mozilla-win32-installer.exe link on the site you're downloading Mozilla from to download the installer file to your machine.
-	
-2. Navigate to where you downloaded the file and double-click the Mozilla program icon on your machine to begin the Setup program.
-	
-3. Follow the on-screen instructions in the setup program. The program starts automatically the first time.
-
-
-To install Mozilla by downloading the .zip file and installing manually, follow these steps:
-
-1. Click the mozilla-win32-talkback.zip link or the mozilla-win32.zip link on the site you're down- loading Mozilla from to download the .zip file to your machine.
-
-2. Navigate to where you downloaded the file and double-click the compressed file.
-
-Note: This step assumes you already have a recent version of WinZip installed, and that you know how to use it. If not, you can get WinZip and information about the program at www.winzip.com.
-
-3. Extract the .zip file to a directory such as C:\Program Files\mozilla.org\Mozilla.
-
-4. To start Mozilla, navigate to the directory you extracted Mozilla to and double-click the Mozilla.exe icon.
-
-	
-Mac OS Installation Instructions
---------------------------------
-
-Note: If the downloaded file does not expand automatically you must expand the file using a program such as StuffIt Expander. Expander ships with all new Macs and comes with the default system install, so you may want to do a find in Sherlock for "StuffIt" to make sure that you don't already have it installed.
-
-If you don't have Expander, you can get a copy at the following Web site:
-
-  http://www.aladdinsys.com/expander/expander_mac_login.html
-
-If you do already have Expander, you need to set it to start by default. See the above URL for info on using Expander.
-
-
-To install Mozilla by downloading the Mozilla installer, (recommended) follow these steps:
-
-1. Click the MacMozillaInstaller.sea.bin link on the site you're downloading Mozilla from to download the file to your Mac's desktop. A MozillaInstaller folder is created.
-	
-2. Double-click the MozillaInstaller folder in the Finder.
-
-3. Double-click the Mozilla Installer icon.
-
-4. Follow the on-screen instructions to complete the installation process.
-
-5. To start Mozilla, open the folder where you installed Mozilla and double-click the Mozilla icon.
-
-
-To install Mozilla by downloading the .bin file and installing manually, follow these steps:
-
-1. Click the mozilla-mac-*.sea.bin link on the site you're downloading Mozilla from to download the Mozilla binary to your Mac's desktop.
-
-2. Double-click the mozilla-mac-*.sea.sit.bin icon on your desktop.
-
-3. Choose the directory where you want to install Mozilla.
-
-4. To start Mozilla, open the folder where you installed Mozilla and double-click the Mozilla icon.
-
-
-Linux Installation Instructions
+Installation Instructions
 -------------------------------
 
-Note: If you install in the default directory (which is usually /usr/local/mozilla), or any other directory where only the root user normally has write-access, you must start Mozilla first as root before other users can start the program. Doing so generates a set of files required for later use by other users.
+Note: If you install in the default directory (which is usually /usr/local/mozilla), or any other directory where only the root user normally has write-access, you must start Mozilla first as root before other users can start the program. Doing so generates a set of files required for later use by other users.  However, do not use sudo to run the installer as root because that can damage your profile.
 
 
 To install Mozilla by downloading the Mozilla installer, follow these steps:
 
 1. Create a directory named mozilla (mkdir mozilla) and change to that directory (cd mozilla).
 	
-2. Click the link on the site you're downloading Mozilla from to download the installer file (called mozilla-1686-pc-linux-gnu-installer.tar.gz) to your machine.
+2. Click the link on the site you're downloading Mozilla from to download the installer file (called mozilla-i686-pc-linux-gnu-installer.tar.gz) to your machine.
 
 3. Change to the mozilla directory (cd mozilla) and decompress the archive with the following command:
 
