@@ -750,6 +750,8 @@ DOMMediaListImpl::DOMMediaListImpl(nsISupportsArray *aArray,
                                    CSSStyleSheetImpl *aStyleSheet)
   : mArray(aArray), mStyleSheet(aStyleSheet), mScriptObject(nsnull)
 {
+  NS_INIT_REFCNT();
+
   NS_ABORT_IF_FALSE(mArray, "This can't be used without an array!!");
 }
 
