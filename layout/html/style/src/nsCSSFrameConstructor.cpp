@@ -7976,55 +7976,72 @@ nsCSSFrameConstructor::StyleRuleRemoved(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
+static void
+GetAlternateTextFor(nsIContent* aContent,
+                    nsIAtom*    aTag,  // content object's tag
+                    nsString&   aAltText)
+{
+  nsresult  rv;
+
+  // The "alt" attribute specifies alternate text that is rendered
+  // when the image can not be displayed
+  rv = aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::alt, aAltText);
+  if (NS_CONTENT_ATTR_NOT_THERE == rv) {
+    // If there's no "alt" attribute, then use the value of the "title"
+    // attribute. Note that this is not the same as a value of ""
+    rv = aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::title, aAltText);
+  }
+  if (NS_CONTENT_ATTR_NOT_THERE == rv) {
+    // If there's no "title" attribute, then what we do depends on the type
+    // of element
+    if (nsHTMLAtoms::img == aTag) {
+      // Use the filename minus the extension
+      aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::src, aAltText);
+      if (aAltText.Length() > 0) {
+        // The path is a hierarchical structure of segments. Get the last substring
+        // in the path
+        PRInt32 offset = aAltText.RFindChar('/');
+        if (offset >= 0) {
+          aAltText.Cut(0, offset + 1);
+        }
+
+        // Ignore fragment identifiers ('#' delimiter), query strings ('?'
+        // delimiter), and anything beginning with ';'
+        offset = aAltText.FindCharInSet("#?;");
+        if (offset >= 0) {
+          aAltText.Truncate(offset);
+        }
+
+        // Trim off any extension (including the '.')
+        offset = aAltText.RFindChar('.');
+        if (offset >= 0) {
+          aAltText.Truncate(offset);
+        }
+      }
+
+    } else if (nsHTMLAtoms::input == aTag) {
+      // Use the valuf of the "name" attribute
+      aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::name, aAltText);
+    }
+  }
+}
+
 // Construct an alternate frame to use when the image can't be rendered
 nsresult
-nsCSSFrameConstructor::ConstructAlternateImageFrame(nsIPresShell* aPresShell, 
+nsCSSFrameConstructor::ConstructAlternateImageFrame(nsIPresShell*    aPresShell, 
                                                     nsIPresContext*  aPresContext,
                                                     nsIContent*      aContent,
                                                     nsIStyleContext* aStyleContext,
                                                     nsIFrame*        aParentFrame,
                                                     nsIFrame*&       aFrame)
 {
-  nsresult      rv;
   nsAutoString  altText;
 
   // Initialize OUT parameter
   aFrame = nsnull;
 
-  // The "alt" attribute specifies alternate text that is rendered
-  // when the image can not be displayed
-  rv = aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::alt, altText);
-  if (NS_CONTENT_ATTR_NOT_THERE == rv) {
-    // If there's no "alt" attribute, then use the value of the "title"
-    // attribute. Note that this is not the same as a value of ""
-    rv = aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::title, altText);
-  }
-  if (NS_CONTENT_ATTR_NOT_THERE == rv) {
-    // If there's no "title" attribute, then use the filename minus the
-    // extension
-    aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::src, altText);
-    if (altText.Length() > 0) {
-      // The path is a hierarchical structure of segments. Get the last substring
-      // in the path
-      PRInt32 offset = altText.RFindChar('/');
-      if (offset >= 0) {
-        altText.Cut(0, offset + 1);
-      }
-
-      // Ignore fragment identifiers ('#' delimiter), query strings ('?'
-      // delimiter), and anything beginning with ';'
-      offset = altText.FindCharInSet("#?;");
-      if (offset >= 0) {
-        altText.Truncate(offset);
-      }
-
-      // Trim off any extension (including the '.')
-      offset = altText.RFindChar('.');
-      if (offset >= 0) {
-        altText.Truncate(offset);
-      }
-    }
-  }
+  // Get the alternate text to use
+  GetAlternateTextFor(aContent, nsHTMLAtoms::img, altText);
 
   // Create a text content element for the alternate text
   nsCOMPtr<nsIContent> altTextContent;
@@ -8088,7 +8105,7 @@ nsCSSFrameConstructor::ConstructAlternateImageFrame(nsIPresShell* aPresShell,
   // Return the container frame
   aFrame = containerFrame;
 
-  return rv;
+  return NS_OK;
 }
 
 #ifdef NS_DEBUG
