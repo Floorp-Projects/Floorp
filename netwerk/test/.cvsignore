@@ -4,4 +4,5 @@ TestSocketInput
 TestSocketTransport
 TestProtocols
 TestFileInput
-nettest
+TestFileInput2
+urltest
