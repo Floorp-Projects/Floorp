@@ -143,7 +143,7 @@ ac_help="$ac_help
 ac_help="$ac_help
   --enable-xterm-updates  Update XTERM titles with current command."
 ac_help="$ac_help
-  --enable-incremental-makefiles Create Makefile's on the fly"
+  --disable-incremental-makefiles Create Makefile's on the fly"
 ac_help="$ac_help
   --disable-verbose-config-defs
                           Do not output the contents of config-defs.h"
@@ -9134,12 +9134,13 @@ if test "${enable_xterm_updates+set}" = set; then
 fi
 
 
+_INCREMENTAL_MAKEFILES=1
 # Check whether --enable-incremental-makefiles or --disable-incremental-makefiles was given.
 if test "${enable_incremental_makefiles+set}" = set; then
   enableval="$enable_incremental_makefiles"
-  if test "$enableval" = "yes"; then
-    MOZ_INCREMENTAL_MAKEFILES=1
-  elif test "$enableval" = "no"; then
+  if test "$enableval" = "no"; then
+    _INCREMENTAL_MAKEFILES=
+  elif test "$enableval" = "yes"; then
     :
   else
     { echo "configure: error: Option, incremental-makefiles, does not take an argument ($enableval)." 1>&2; exit 1; }
@@ -9228,7 +9229,7 @@ case "$target" in
 	    # Extract the first word of "makeC++SharedLib_r", so it can be a program name with args.
 set dummy makeC++SharedLib_r; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:9232: checking for $ac_word" >&5
+echo "configure:9233: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_AIX_SHLIB_BIN'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -9284,7 +9285,6 @@ esac
 
 
 
- 
 
 
 
@@ -9968,7 +9968,7 @@ EOF
   fi
 fi
 
-if test "$MOZ_INCREMENTAL_MAKEFILES"; then
+if test "$_INCREMENTAL_MAKEFILES"; then
   MAKEFILES="
     Makefile
     build/unix/nspr_my_config.mk
@@ -10234,7 +10234,6 @@ s%@NS_USE_NATIVE@%$NS_USE_NATIVE%g
 s%@MOZ_WIDGET_TOOLKIT@%$MOZ_WIDGET_TOOLKIT%g
 s%@MOZ_GFX_TOOLKIT@%$MOZ_GFX_TOOLKIT%g
 s%@MOZ_UPDATE_XTERM@%$MOZ_UPDATE_XTERM%g
-s%@MOZ_INCREMENTAL_MAKEFILES@%$MOZ_INCREMENTAL_MAKEFILES%g
 s%@NECKO@%$NECKO%g
 s%@MOZ_MONOLITHIC_TOOLKIT@%$MOZ_MONOLITHIC_TOOLKIT%g
 s%@MOZ_TIMER_LIBS@%$MOZ_TIMER_LIBS%g
