@@ -627,6 +627,8 @@ NS_METHOD nsWidget::Invalidate(PRBool aIsSynchronous)
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Invalidate %p\n", this ));
 
+//printf( "Invalidate whole widget (%p)\n", this );
+
   if( mWidget )
   {
     PtArg_t  arg;
@@ -675,6 +677,8 @@ NS_METHOD nsWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Invalidate %p (%ld,%ld,%ld,%ld)\n", this, aRect.x, aRect.y, aRect.width, aRect.height ));
 
+//printf( "Invalidate widget (%p) rect\n", this );
+
   if( mWidget )
   {
     PtArg_t  arg;
@@ -694,8 +698,8 @@ NS_METHOD nsWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
 
 
 //printf( "Invalidate w/ rect: %d,%d,%d,%d\n", rect.x, rect.y, rect.width, rect.height );
-//    rect.x += mBounds.x;
-//    rect.y += mBounds.y;
+    rect.x += mBounds.x;
+    rect.y += mBounds.y;
 //printf( "  new origin: %d,%d\n", rect.x, rect.y );
 
     GetParentClippedArea( rect );
