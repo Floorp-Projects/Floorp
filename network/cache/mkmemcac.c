@@ -42,6 +42,8 @@
 #include "mkmemcac.h"
 #ifndef MODULAR_NETLIB
 #include "libimg.h"             /* Image Lib public API. */
+#else
+extern void IL_SetCacheSize(uint32 new_size);
 #endif
 #include "prclist.h"
 #include "prmem.h"
