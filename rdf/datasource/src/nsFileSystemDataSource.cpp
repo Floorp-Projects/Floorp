@@ -408,7 +408,7 @@ FileSystemDataSource::ArcLabelsOut(nsIRDFResource *source,
 			return NS_ERROR_OUT_OF_MEMORY;
 
 		temp->AppendElement(kNC_Child);
-		temp->AppendElement(kRDF_type);
+//		temp->AppendElement(kRDF_type);
 		*labels = new FileSystemCursor(source, kNC_Child, temp);
 		if (nsnull != *labels)
 		{
@@ -423,7 +423,7 @@ FileSystemDataSource::ArcLabelsOut(nsIRDFResource *source,
 			return NS_ERROR_OUT_OF_MEMORY;
 
 		temp->AppendElement(kNC_Child);
-		temp->AppendElement(kRDF_type);
+//		temp->AppendElement(kRDF_type);
 //		temp->AppendElement(kNC_Name);
 //		temp->AppendElement(kNC_URL);
 //		temp->AppendElement(kNC_Columns);
@@ -623,7 +623,7 @@ FileSystemCursor::FileSystemCursor(nsIRDFResource *source,
 	  mTarget(nsnull),
 	  mValue(nsnull)
 {
-	NS_INIT_REFCNT();
+//	NS_INIT_REFCNT();
 	NS_ADDREF(mSource);
 	NS_ADDREF(mProperty);
 }
