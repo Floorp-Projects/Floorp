@@ -18,6 +18,7 @@
  * 
  * Contributor(s):
  *   Adam Lock <adamlock@netscape.com>
+ *   Kathleen Brade <brade@netscape.com>
  */
 
 #include "nspr.h"
@@ -510,7 +511,7 @@ NS_IMETHODIMP nsWebBrowserPersist::OnStartRequest(
         if (data->mCalcFileExt)
         {
             // this is the first point at which the server can tell us the mimetype
-            CalculateAndAppendFileExt(data->mFile, channel);
+            CalculateAndAppendFileExt(data->mFile, channel, data->mOriginalLocation);
         }
 
         // compare uris and bail before we add to output map if they are equal
@@ -1395,7 +1396,7 @@ void nsWebBrowserPersist::CleanUp()
 
 
 nsresult
-nsWebBrowserPersist::CalculateAndAppendFileExt(nsIURI *aURI, nsIChannel *aChannel)
+nsWebBrowserPersist::CalculateAndAppendFileExt(nsIURI *aURI, nsIChannel *aChannel, nsIURI *aOriginalURIWithExtension)
 {
     nsresult rv;
 
@@ -1449,11 +1450,29 @@ nsWebBrowserPersist::CalculateAndAppendFileExt(nsIURI *aURI, nsIChannel *aChanne
 
             // Append the mime file extension
             nsXPIDLCString fileExt;
-            if (!hasExtension &&
-                NS_SUCCEEDED(mimeInfo->GetPrimaryExtension(getter_Copies(fileExt))))
+            if (!hasExtension)
             {
-                newFileName.Append(".");
-                newFileName.Append(fileExt.get());
+                // Test if previous extension is acceptable
+                nsCOMPtr<nsIURL> oldurl(do_QueryInterface(aOriginalURIWithExtension));
+                NS_ENSURE_TRUE(oldurl, NS_ERROR_FAILURE);
+                oldurl->GetFileExtension(getter_Copies(fileExt));
+                PRBool useOldExt = PR_FALSE;
+                if (!fileExt.IsEmpty())
+                {
+                    mimeInfo->ExtensionExists(fileExt, &useOldExt);
+                }
+
+                // can't use old extension so use primary extension
+                if (!useOldExt)
+                {
+                    mimeInfo->GetPrimaryExtension(getter_Copies(fileExt));
+                } 
+
+                if (!fileExt.IsEmpty())
+                {
+                    newFileName.Append(".");
+                    newFileName.Append(fileExt.get());
+                }
 
                 if (localFile)
                 {
@@ -2387,6 +2406,11 @@ nsresult
 nsWebBrowserPersist::SetDocumentBase(
     nsIDOMDocument *aDocument, nsIURI *aBaseURI)
 {
+    if (mPersistFlags & PERSIST_FLAGS_NO_BASE_TAG_MODIFICATIONS)
+    {
+        return NS_OK;
+    }
+
     nsCOMPtr<nsIDOMHTMLDocument> htmlDoc = do_QueryInterface(aDocument);
     if (!htmlDoc)
     {
