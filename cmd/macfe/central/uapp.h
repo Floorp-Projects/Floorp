@@ -156,7 +156,9 @@ public:
 	static void			DoHelpMenuItem( short itemNum );
 
 	// ее Command handling
-	static void 		DoGetURL (const cstring& url); // DoGetURL loads the given url into the frontmost window, or new one if there is no frontmost
+	static void 		DoGetURL (const cstring& url, const char* inTarget = NULL);
+							// loads the given url into the frontmost window, or new one if there
+							// is no frontmost
 	static void			DoOpenDirectoryURL( CommandT menuCommand );
 	static void			DoOpenLogoURL( CommandT menuCommand );
 	void				OpenLocalURL( FSSpec* inFileSpec, 

@@ -2619,6 +2619,7 @@ Boolean CFrontApp::ObeyCommand(CommandT inCommand, void* ioParam)
 		
 			CNavCenterWindow* navCenter = dynamic_cast<CNavCenterWindow*>(URobustCreateWindow::CreateWindow(CNavCenterWindow::res_ID, this));
 			navCenter->BringPaneToFront ( HT_VIEW_HISTORY );
+			navCenter->Show();
 		}
 			break;
 			
@@ -2626,6 +2627,7 @@ Boolean CFrontApp::ObeyCommand(CommandT inCommand, void* ioParam)
 		{
 			CNavCenterWindow* navCenter = dynamic_cast<CNavCenterWindow*>(URobustCreateWindow::CreateWindow(CNavCenterWindow::res_ID, this));
 			navCenter->BringPaneToFront ( HT_VIEW_BOOKMARK );
+			navCenter->Show();
 		}
 			break;
 			
@@ -2945,7 +2947,7 @@ void CFrontApp::DoWindowsMenu(CommandT inCommand)
 
 // DoGetURL loads the given url into the frontmost window, or new one if there is no frontmost
 // Provides a bottleneck for UI generated requests to load a URL
-void CFrontApp::DoGetURL( const cstring& url )
+void CFrontApp::DoGetURL( const cstring & url, const char* inTarget )
 {
 	// Check for kiosk mode and bail if it's set so that the user can't manually
 	// go to a different URL.  Note that this does NOT prevent dispatching to a different
@@ -2959,6 +2961,7 @@ void CFrontApp::DoGetURL( const cstring& url )
 		// URDFUtilities::LaunchNode(). Both are quick. (pinkerton)
 		if ( !URDFUtilities::LaunchURL(url) ) {
 			URL_Struct* theURL = NET_CreateURLStruct(url, NET_DONT_RELOAD);
+			theURL->window_target = const_cast<char*>(inTarget);
 			if (theURL)
 				CURLDispatcher::DispatchURL(theURL, NULL);
 		}
