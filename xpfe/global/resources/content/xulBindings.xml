@@ -106,7 +106,7 @@
       <xul:box orient="vertical" autostretch="never" class="menu-right" inherits="menuactive,disabled">
         <xul:image/>
       </xul:box>
-      <children includes="menupopup,template"/>
+      <children includes="menupopup|template"/>
     </content>
     <implementation>
       <property name="data" onset="this.setAttribute('data',val); return val;"
