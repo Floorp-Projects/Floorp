@@ -172,7 +172,7 @@ protected:
 	virtual PRBool		GetNextLineForParser(char **nextLine);
 	virtual void    end_of_line();
 
-	nsIMAPHostSessionList *GetHostSessionList() {return fHostSessionList;}
+	nsIMAPHostSessionList *GetHostSessionList();
 private:
     PRBool                   fProcessingTaggedResponse;
     PRBool                   fCurrentCommandFailed;

@@ -29,6 +29,14 @@
 
 extern PRLogModuleInfo* IMAP;
 
+// **************?????***********????*************????***********************
+// ***** IMPORTANT **** jefft -- this is a temporary implementation for the
+// testing purpose. Eventually, we will have a host service object in
+// controlling the host session list.
+// Remove the following when the host service object is in place.
+// **************************************************************************
+extern nsIMAPHostSessionList*gImapHostSessionList;
+
 nsImapServerResponseParser::nsImapServerResponseParser(nsImapProtocol &imapProtocolConnection) :
 	nsIMAPGenericParser(),
 	fServerConnection(imapProtocolConnection),
@@ -75,6 +83,8 @@ nsImapServerResponseParser::~nsImapServerResponseParser()
 	PR_FREEIF( fManageListsUrl );
 	PR_FREEIF( fManageFiltersUrl );
 	PR_FREEIF( fSelectedMailboxName );
+
+    NS_IF_RELEASE (fHostSessionList);
 }
 
 PRBool nsImapServerResponseParser::LastCommandSuccessful()
@@ -263,7 +273,10 @@ void nsImapServerResponseParser::PreProcessCommandToken(const char *commandToken
 		// the mailbox name must be quoted, so strip the quotes
 		const char *openQuote = PL_strstr(currentCommand, "\"");
 		NS_ASSERTION(openQuote, "expected open quote in imap server response");
-		
+		if (!openQuote)
+        { // ill formed select command
+            openQuote = PL_strstr(currentCommand, " ");
+        }
 		PR_FREEIF( fSelectedMailboxName);
 		fSelectedMailboxName = PL_strdup(openQuote + 1);
 		if (fSelectedMailboxName)
@@ -410,7 +423,7 @@ void nsImapServerResponseParser::ProcessOkCommand(const char *commandToken)
 				if (!m_shell->IsShellCached())	// cache is responsible for destroying it
 				{
 					PR_LOG(IMAP, PR_LOG_ALWAYS, ("BODYSHELL:  Adding shell to cache."));
-					GetHostSessionList()->AddShellToCacheForHost(fServerConnection.GetHostName(), nsnull /* userName */, m_shell);
+					GetHostSessionList()->AddShellToCacheForHost(fServerConnection.GetImapHostName(), fServerConnection.GetImapUserName(), m_shell);
 				}
 			}
 			else
@@ -800,11 +813,11 @@ void nsImapServerResponseParser::mailbox(mailbox_spec *boxSpec)
     if (boxname)
     {
 		// should the namespace check go before or after the Utf7 conversion?
-		GetHostSessionList()->SetNamespaceHierarchyDelimiterFromMailboxForHost(fServerConnection.GetHostName(), nsnull /* userName */, boxname, boxSpec->hierarchySeparator);
+		GetHostSessionList()->SetNamespaceHierarchyDelimiterFromMailboxForHost(fServerConnection.GetImapHostName(), fServerConnection.GetImapUserName(), boxname, boxSpec->hierarchySeparator);
 
 		
 		nsIMAPNamespace *ns = nsnull;
-		GetHostSessionList()->GetNamespaceForMailboxForHost(fServerConnection.GetHostName(), nsnull /* userName */,boxname, ns);
+		GetHostSessionList()->GetNamespaceForMailboxForHost(fServerConnection.GetImapHostName(), fServerConnection.GetImapUserName(),boxname, ns);
 		if (ns)
 		{
 			switch (ns->GetType())
@@ -1632,7 +1645,10 @@ void nsImapServerResponseParser::capability_data()
 			 !at_end_of_line() &&
 			 ContinueParse());
 
-	GetHostSessionList()->SetCapabilityForHost(fServerConnection.GetHostName(), nsnull /* userName */, fCapabilityFlag);
+	GetHostSessionList()->SetCapabilityForHost(
+        fServerConnection.GetImapHostName(), 
+        fServerConnection.GetImapUserName(),
+        fCapabilityFlag);
 	nsImapProtocol *navCon = &fServerConnection;
 	NS_ASSERTION(navCon, "null imap protocol connection while parsing capability response");	// we should always have this
 	if (navCon)
@@ -1750,7 +1766,7 @@ void nsImapServerResponseParser::namespace_data()
 						nsIMAPNamespace *newNamespace = new nsIMAPNamespace(namespaceType, namespacePrefix, namespaceDelimiter, PR_FALSE);
 						// add it to a temporary list in the host
 						if (newNamespace)
-							GetHostSessionList()->AddNewNamespaceForHost(fServerConnection.GetHostName(), nsnull /* userName */, newNamespace);
+							GetHostSessionList()->AddNewNamespaceForHost(fServerConnection.GetImapHostName(), fServerConnection.GetImapUserName(), newNamespace);
 
 						skip_to_close_paren();	// Ignore any extension data
 	
@@ -1796,7 +1812,7 @@ void nsImapServerResponseParser::namespace_data()
 	if (!namespacesCommitted)
 	{
 		PRBool success;
-		GetHostSessionList()->FlushUncommittedNamespacesForHost(fServerConnection.GetHostName(), nsnull /* userName */, success);
+		GetHostSessionList()->FlushUncommittedNamespacesForHost(fServerConnection.GetImapHostName(), fServerConnection.GetImapUserName(), success);
 	}
 
 }
@@ -2017,7 +2033,7 @@ void	nsImapServerResponseParser::UseCachedShell(nsIMAPBodyShell *cachedShell)
 
 void nsImapServerResponseParser::ResetCapabilityFlag() 
 {
-	GetHostSessionList()->SetCapabilityForHost(fServerConnection.GetHostName(), nsnull /* userName */, kCapabilityUndefined); 
+	GetHostSessionList()->SetCapabilityForHost(fServerConnection.GetImapHostName(), fServerConnection.GetImapUserName(), kCapabilityUndefined); 
 }
 
 /*
@@ -2178,13 +2194,12 @@ struct mailbox_spec *nsImapServerResponseParser::CreateCurrentMailboxSpec(const 
 		const char *mailboxNameToConvert = (mailboxName) ? mailboxName : fSelectedMailboxName;
 	    if (mailboxNameToConvert)
 	    {
-			const char *host = nsnull;
-				
-			fServerConnection.GetCurrentUrl()->GetHost(&host);
+			const char *host = 				
+                fServerConnection.GetImapHostName();
 			nsIMAPNamespace *ns = nsnull;
 			if (host != nsnull)
 			{
-				GetHostSessionList()->GetNamespaceForMailboxForHost(host, nsnull /* userName */, mailboxNameToConvert, ns);	// for delimiter
+				GetHostSessionList()->GetNamespaceForMailboxForHost(host, fServerConnection.GetImapUserName(), mailboxNameToConvert, ns);	// for delimiter
 			}
 
 			if (ns)
@@ -2244,4 +2259,21 @@ void nsImapServerResponseParser::ClearLastFetchChunkReceived()
 	fLastChunk = PR_FALSE;
 }
 
+nsIMAPHostSessionList*
+nsImapServerResponseParser::GetHostSessionList()
+{
+    if (!fHostSessionList)
+    {
+        if (!gImapHostSessionList)
+        {
+            gImapHostSessionList = new nsIMAPHostSessionList();
+            // It's a global. Addref to it to make sure it won't get deleted
+            NS_IF_ADDREF (gImapHostSessionList);
+        }
+        fHostSessionList = gImapHostSessionList;
+        NS_IF_ADDREF (fHostSessionList);
+    }
+    return fHostSessionList;
+}
 
+        

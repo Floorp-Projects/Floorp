@@ -27,20 +27,17 @@
 
 #include "nsIOutputStream.h"
 #include "nsImapCore.h"
+#include "nsString2.h"
+
+#include "nsImapServerResponseParser.h"
+#include "nsIMsgIdentity.h"
+#include "nsImapProxyEvent.h"
 
 class nsIMAPMessagePartIDArray;
 
 class nsImapProtocol : public nsIImapProtocol
 {
 public:
-	
-    enum ImapState { 
-        NOT_CONNECTED,
-        NON_AUTHENTICATED_STATE, 
-        AUTHENTICATED_STATE, 
-        SELECTED_STATE,
-        LOGOUT_STATE 
-    };
 
 	NS_DECL_ISUPPORTS
 
@@ -57,7 +54,6 @@ public:
     NS_IMETHOD SetMessageDownloadOutputStream(nsIOutputStream* aOutputStream);
     // Notify FE Event has been completed
     NS_IMETHOD NotifyFEEventCompletion();
-
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	// we suppport the nsIStreamListener interface 
@@ -127,30 +123,37 @@ public:
 	PRBool	GetShouldFetchAllParts();
 
 	// Generic accessors required by the imap parser
-	char * CreateNewLineFromSocket() { return nsnull; }
-	PRUint32 GetConnectionStatus() { return NS_OK;} // mscott - could we make this an nsresult and subclass imap error values?
-	const char * GetHostName() { return nsnull;} // return the host name from the url for the current connection
+	char * CreateNewLineFromSocket();
+	PRInt32 GetConnectionStatus();
+    void SetConnectionStatus(PRInt32 status);
+    
+	const char* GetImapHostName(); // return the host name from the url for the
+                                   // current connection
+    const char* GetImapUserName(); // return the user name from the identity
 	
 	// state set by the imap parser...
-	void NotifyMessageFlags(imapMessageFlagsType flags, nsMsgKey key) {}
-	void NotifySearchHit(const char * hitLine) {}
+	void NotifyMessageFlags(imapMessageFlagsType flags, nsMsgKey key);
+	void NotifySearchHit(const char * hitLine);
 
 	// Event handlers for the imap parser. 
-	void DiscoverMailboxSpec(mailbox_spec * adoptedBoxSpec) {} // mscott: need mailbox_spec type..
-	void AlertUserEventUsingId(PRUint32 aMessageId) {}
-	void AlertUserEvent(char * message) {} // mscott --> can this be a const char * ? 
-	void AlertUserEventFromServer(char * aServerEvent) {} // mscott --> const????
-	void ShowProgress() {}
-	void ProgressEventFunctionUsingId(PRUint32 aMsgId) {}
-	void ProgressEventFunctionUsingIdWithString(PRUint32 aMsgId, const char * aExtraInfo) {}
-	void PercentProgressUpdateEvent(char *message, PRInt32 percent) {};
+	void DiscoverMailboxSpec(mailbox_spec * adoptedBoxSpec);
+	void AlertUserEventUsingId(PRUint32 aMessageId);
+	void AlertUserEvent(const char * message);
+	void AlertUserEventFromServer(const char * aServerEvent);
+	void ShowProgress();
+	void ProgressEventFunctionUsingId(PRUint32 aMsgId);
+	void ProgressEventFunctionUsingIdWithString(PRUint32 aMsgId, const char *
+                                                aExtraInfo);
+	void PercentProgressUpdateEvent(char *message, PRInt32 percent);
 
 	// utility function calls made by the server
-	char * CreateUtf7ConvertedString(const char * aSourceString, PRBool aConvertToUtf7Imap) { return nsnull;}
+	char * CreateUtf7ConvertedString(const char * aSourceString, PRBool
+                                     aConvertToUtf7Imap);
 
 	// imap commands issued by the parser
-	void Store(const char * aMessageList, const char * aMessageData, PRBool aIdsAreUid) {}
-	void Expunge() {}
+	void Store(const char * aMessageList, const char * aMessageData, PRBool
+               aIdsAreUid);
+	void Expunge();
 
 	nsIImapUrl		*GetCurrentUrl() {return m_runningUrl;}
 	// Tunnels
@@ -172,6 +175,7 @@ public:
 	void ClearAllFolderRights(const char *mailboxName);
 
     void WaitForFEEventCompletion();
+    void HandleMemoryFailure();
 
 private:
 	// the following flag is used to determine when a url is currently being run. It is cleared on calls
@@ -183,7 +187,9 @@ private:
 	nsIImapUrl::nsImapAction	m_imapAction;  // current imap action associated with this connnection...
 
 	char			*m_dataBuf;
-    PRUint32		m_dataBufSize;
+    PRUint32		m_allocatedSize; // allocated size
+    PRUint32        m_totalDataSize; // total data size
+    PRUint32        m_curReadIndex;  // current read index
 
 	// Ouput stream for writing commands to the socket
 	nsITransport			* m_transport; 
@@ -205,12 +211,22 @@ private:
     void ImapThreadMainLoop(void);
     PRBool ImapThreadIsRunning();
     nsISupports* m_consumer;
+    PRInt32 m_connectionStatus;
+    nsIMsgIdentity *m_identity;
+    nsImapLogProxy *m_imapLog;
+    nsImapMailfolderProxy *m_imapMailfolder;
+    nsImapMessageProxy *m_imapMessage;
+    nsImapExtensionProxy *m_imapExtension;
+    nsImapMiscellaneousProxy *m_imapMiscellaneous;
+    // helper function to setup imap sink interface proxies
+    void SetupSinkProxy();
 
     nsIOutputStream *m_messageDownloadOutputStream;
     
     PRMonitor *GetDataMemberMonitor();
-    // **** current protocol instance state ****
-    ImapState m_imapState;
+    nsString2 m_currentCommand;
+    nsImapServerResponseParser m_parser;
+    nsImapServerResponseParser& GetServerStateParser() { return m_parser; };
 
     virtual void ProcessCurrentURL();
 

@@ -26,6 +26,7 @@
 #include "nsIMAPBodyShell.h"
 #include "nsImapServerResponseParser.h"
 #include "nspr.h"
+#include "nsIMsgIdentity.h"
 
 PRLogModuleInfo *IMAP;
 
@@ -46,6 +47,14 @@ PRLogModuleInfo *IMAP;
 static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
 
 #define OUTPUT_BUFFER_SIZE (4096*2) // mscott - i should be able to remove this if I can use nsMsgLineBuffer???
+
+// **************?????***********????*************????***********************
+// ***** IMPORTANT **** jefft -- this is a temporary implementation for the
+// testing purpose. Eventually, we will have a host service object in
+// controlling the host session list.
+// Remove the following when the host service object is in place.
+// **************************************************************************
+extern nsIMAPHostSessionList*gImapHostSessionList;
 
 /* the following macros actually implement addref, release and query interface for our component. */
 NS_IMPL_THREADSAFE_ADDREF(nsImapProtocol)
@@ -87,7 +96,8 @@ NS_IMETHODIMP nsImapProtocol::QueryInterface(const nsIID &aIID, void** aInstance
   return NS_NOINTERFACE;
 }
 
-nsImapProtocol::nsImapProtocol()
+nsImapProtocol::nsImapProtocol() : 
+    m_parser(*this), m_currentCommand(eOneByte, 0)
 {
 	NS_INIT_REFCNT();
 	m_runningUrl = nsnull; // initialize to NULL
@@ -97,6 +107,7 @@ nsImapProtocol::nsImapProtocol()
 	m_urlInProgress = PR_FALSE;
 	m_socketIsOpen = PR_FALSE;
 	m_dataBuf = nsnull;
+    m_connectionStatus = 0;
     
     // ***** Thread support *****
     m_sinkEventQueue = nsnull;
@@ -109,14 +120,19 @@ nsImapProtocol::nsImapProtocol()
     m_eventCompletionMonitor = nsnull;
     m_imapThreadIsRunning = PR_FALSE;
     m_consumer = nsnull;
-	// not right, I'm just putting this in to find undefined symbols
-	// there should be just one of these 
-	nsImapServerResponseParser *parser = new nsImapServerResponseParser(*this);
-    m_imapState = nsImapProtocol::NOT_CONNECTED;
 	m_currentServerCommandTagNumber = 0;
 	m_active = PR_FALSE;
 	m_threadShouldDie = PR_FALSE;
 	m_pseudoInterrupted = PR_FALSE;
+
+    // imap protocol sink interfaces
+    m_identity = nsnull;
+    m_imapLog = nsnull;
+    m_imapMailfolder = nsnull;
+    m_imapMessage = nsnull;
+    m_imapExtension = nsnull;
+    m_imapMiscellaneous = nsnull;
+
 	// where should we do this? Perhaps in the factory object?
 	if (!IMAP)
 		IMAP = PR_NewLogModule("IMAP");
@@ -138,6 +154,13 @@ nsImapProtocol::~nsImapProtocol()
 	NS_IF_RELEASE(m_outputStream); 
 	NS_IF_RELEASE(m_outputConsumer);
 	NS_IF_RELEASE(m_transport);
+    NS_IF_RELEASE(m_identity);
+    NS_IF_RELEASE(m_imapLog);
+    NS_IF_RELEASE(m_imapMailfolder);
+    NS_IF_RELEASE(m_imapMessage);
+    NS_IF_RELEASE(m_imapExtension);
+    NS_IF_RELEASE(m_imapMiscellaneous);
+
 	PR_FREEIF(m_dataBuf);
 
     // **** We must be out of the thread main loop function
@@ -173,6 +196,108 @@ nsImapProtocol::~nsImapProtocol()
     {
         PR_DestroyMonitor(m_eventCompletionMonitor);
         m_eventCompletionMonitor = nsnull;
+    }
+}
+
+const char*
+nsImapProtocol::GetImapHostName()
+{
+    const char* hostName = nsnull;
+    if (m_runningUrl)
+        m_runningUrl->GetHost(&hostName);
+    return hostName;
+}
+
+const char*
+nsImapProtocol::GetImapUserName()
+{
+    const char* userName = nsnull;
+    if (m_identity)
+        m_identity->GetImapName(&userName);
+    return userName;
+}
+
+void
+nsImapProtocol::SetupSinkProxy()
+{
+    if (m_runningUrl)
+    {
+        NS_ASSERTION(m_sinkEventQueue && m_thread, 
+                     "fatal... null sink event queue or thread");
+        nsresult res;
+
+        if (!m_identity)
+            m_runningUrl->GetIdentity(&m_identity);
+        if (!m_imapLog)
+        {
+            nsIImapLog *aImapLog;
+            res = m_runningUrl->GetImapLog(&aImapLog);
+            if (NS_SUCCEEDED(res) && aImapLog)
+            {
+                m_imapLog = new nsImapLogProxy (aImapLog, this,
+                                                m_sinkEventQueue, m_thread);
+                NS_IF_ADDREF (m_imapLog);
+                NS_RELEASE (aImapLog);
+            }
+        }
+                
+        if (!m_imapMailfolder)
+        {
+            nsIImapMailfolder *aImapMailfolder;
+            res = m_runningUrl->GetImapMailfolder(&aImapMailfolder);
+            if (NS_SUCCEEDED(res) && aImapMailfolder)
+            {
+                m_imapMailfolder = new nsImapMailfolderProxy(aImapMailfolder,
+                                                             this,
+                                                             m_sinkEventQueue,
+                                                             m_thread);
+                NS_IF_ADDREF(m_imapMailfolder);
+                NS_RELEASE(aImapMailfolder);
+            }
+        }
+        if (!m_imapMessage)
+        {
+            nsIImapMessage *aImapMessage;
+            res = m_runningUrl->GetImapMessage(&aImapMessage);
+            if (NS_SUCCEEDED(res) && aImapMessage)
+            {
+                m_imapMessage = new nsImapMessageProxy(aImapMessage,
+                                                       this,
+                                                       m_sinkEventQueue,
+                                                       m_thread);
+                NS_IF_ADDREF (m_imapMessage);
+                NS_RELEASE(aImapMessage);
+            }
+        }
+        if (!m_imapExtension)
+        {
+            nsIImapExtension *aImapExtension;
+            res = m_runningUrl->GetImapExtension(&aImapExtension);
+            if(NS_SUCCEEDED(res) && aImapExtension)
+            {
+                m_imapExtension = new nsImapExtensionProxy(aImapExtension,
+                                                           this,
+                                                           m_sinkEventQueue,
+                                                           m_thread);
+                NS_IF_ADDREF(m_imapExtension);
+                NS_RELEASE(aImapExtension);
+            }
+        }
+        if (!m_imapMiscellaneous)
+        {
+            nsIImapMiscellaneous *aImapMiscellaneous;
+            res = m_runningUrl->GetImapMiscellaneous(&aImapMiscellaneous);
+            if (NS_SUCCEEDED(res) && aImapMiscellaneous)
+            {
+                m_imapMiscellaneous = new
+                    nsImapMiscellaneousProxy(aImapMiscellaneous,
+                                             this,
+                                             m_sinkEventQueue,
+                                             m_thread);
+                NS_IF_ADDREF(m_imapMiscellaneous);
+                NS_RELEASE(aImapMiscellaneous);
+            }
+        }
     }
 }
 
@@ -230,7 +355,7 @@ void nsImapProtocol::SetupWithUrl(nsIURL * aURL)
 
 	// m_dataBuf is used by ReadLine and SendData
 	m_dataBuf = (char *) PR_Malloc(sizeof(char) * OUTPUT_BUFFER_SIZE);
-	m_dataBufSize = OUTPUT_BUFFER_SIZE;
+	m_allocatedSize = OUTPUT_BUFFER_SIZE;
 
     // ******* Thread support *******
     if (m_thread == nsnull)
@@ -246,6 +371,9 @@ void nsImapProtocol::SetupWithUrl(nsIURL * aURL)
                                    PR_UNJOINABLE_THREAD, 0);
         NS_ASSERTION(m_thread, "Unable to create imap thread.\n");
     }
+
+    // *** setting up the sink proxy if needed
+    SetupSinkProxy();
 }
 
 void
@@ -312,6 +440,8 @@ NS_IMETHODIMP
 nsImapProtocol::SetMessageDownloadOutputStream(nsIOutputStream *aOutputStream)
 {
     NS_PRECONDITION(aOutputStream, "Yuk, null output stream");
+    if (!aOutputStream)
+        return NS_ERROR_NULL_POINTER;
     PR_CEnterMonitor(this);
     if(m_messageDownloadOutputStream)
         NS_RELEASE(m_messageDownloadOutputStream);
@@ -369,18 +499,13 @@ nsImapProtocol::ProcessCurrentURL()
     }
     else 
     {
+        GetServerStateParser().ParseIMAPServerResponse(m_currentCommand.GetBuffer());
         // **** temporary for now
-        nsIImapLog* aImapLog = nsnull;
-        res = m_runningUrl->GetImapLog(&aImapLog);
-        if (NS_SUCCEEDED(res) && aImapLog)
+        if (m_imapLog)
         {
-            nsImapLogProxy *aProxy = 
-                new nsImapLogProxy(aImapLog, this, m_sinkEventQueue, m_thread);
-            NS_ADDREF(aProxy);
-            aProxy->HandleImapLogData(m_dataBuf);
-            WaitForFEEventCompletion();
-            NS_RELEASE(aImapLog);
-            NS_RELEASE(aProxy);
+            m_imapLog->HandleImapLogData(m_dataBuf);
+            // WaitForFEEventCompletion();
+
             // we are done running the imap log url so mark the url as done...
             // set change in url state...
             m_runningUrl->SetUrlState(PR_FALSE, NS_OK); 
@@ -402,22 +527,25 @@ NS_IMETHODIMP nsImapProtocol::OnDataAvailable(nsIURL* aURL, nsIInputStream *aISt
     nsIImapUrl *aImapUrl;
     nsresult res = aURL->QueryInterface(nsIImapUrl::GetIID(),
                                         (void**)&aImapUrl);
-    PRUint32 len = aLength > OUTPUT_BUFFER_SIZE-1 ? OUTPUT_BUFFER_SIZE-1 : aLength;
+    if (aLength >= m_allocatedSize)
+    {
+        m_dataBuf = (char*) PR_Realloc(m_dataBuf, aLength+1);
+        if (m_dataBuf)
+            m_allocatedSize = aLength+1;
+        else
+            m_allocatedSize = 0;
+    }
 
     if(NS_SUCCEEDED(res))
     {
         NS_PRECONDITION( m_runningUrl->Equals(aImapUrl), 
                          "Oops... running a different imap url. Hmmm...");
             
-        if (m_imapState == NOT_CONNECTED)
-        {
-            m_imapState = NON_AUTHENTICATED_STATE;
-        }
-        
-        res = aIStream->Read(m_dataBuf, len, &len);
+        res = aIStream->Read(m_dataBuf, aLength, &m_totalDataSize);
         if (NS_SUCCEEDED(res))
         {
-            m_dataBuf[len] = 0;
+            m_dataBuf[m_totalDataSize] = 0;
+            m_curReadIndex = 0;
 			PR_EnterMonitor(m_dataAvailableMonitor);
             PR_Notify(m_dataAvailableMonitor);
 			PR_ExitMonitor(m_dataAvailableMonitor);
@@ -512,6 +640,7 @@ PRInt32 nsImapProtocol::SendData(const char * dataBuffer)
 	NS_PRECONDITION(m_outputStream && m_outputConsumer, "no registered consumer for our output");
 	if (dataBuffer && m_outputStream)
 	{
+        m_currentCommand = dataBuffer;
 		nsresult rv = m_outputStream->Write(dataBuffer, PL_strlen(dataBuffer), &writeCount);
 		if (NS_SUCCEEDED(rv) && writeCount == PL_strlen(dataBuffer))
 		{
@@ -829,7 +958,7 @@ void nsImapProtocol::HandleMessageDownLoadLine(const char *line, PRBool chunkEnd
 			}
 #endif
 	}
-#if 0    
+#if 0
 	const char *xSenderInfo = GetServerStateParser().GetXSenderInfo();
 
 	if (xSenderInfo && *xSenderInfo && !fFromHeaderSeen)
@@ -878,7 +1007,7 @@ void nsImapProtocol::HandleMessageDownLoadLine(const char *line, PRBool chunkEnd
 	}
     else
 		fDownLoadLineCache.CacheLine(localMessageLine, GetServerStateParser().CurrentResponseUID());
-#endif // 0
+#endif // 1
 	PR_FREEIF( localMessageLine);
 }
 
@@ -1096,3 +1225,162 @@ void nsImapProtocol::ClearAllFolderRights(const char *mailboxName)
 {
 }
 
+char* 
+nsImapProtocol::CreateNewLineFromSocket()
+{
+    NS_PRECONDITION(m_curReadIndex < m_totalDataSize && m_dataBuf, 
+                    "Oops ... excceeding total data size");
+    if (!m_dataBuf || m_curReadIndex >= m_totalDataSize)
+        return nsnull;
+
+    char* startOfLine = m_dataBuf + m_curReadIndex;
+    char* endOfLine = PL_strstr(startOfLine, CRLF);
+    
+    // *** must have a canonical line format from the imap server ***
+    if (!endOfLine)
+        return nsnull;
+    endOfLine += 2; // count for CRLF
+    // PR_CALLOC zeros out the allocated line
+    char* newLine = (char*) PR_CALLOC(endOfLine-startOfLine+1);
+    if (!newLine)
+        return nsnull;
+
+    memcpy(newLine, startOfLine, endOfLine-startOfLine);
+    // set the current read index
+    m_curReadIndex = endOfLine - m_dataBuf;
+
+    SetConnectionStatus(endOfLine-startOfLine);
+
+    return newLine;
+}
+
+PRInt32
+nsImapProtocol::GetConnectionStatus()
+{
+    // ***?? I am not sure we really to guard with monitor for 5.0 ***
+    PRInt32 status;
+    PR_CEnterMonitor(this);
+    status = m_connectionStatus;
+    PR_CExitMonitor(this);
+    return status;
+}
+
+void
+nsImapProtocol::SetConnectionStatus(PRInt32 status)
+{
+    PR_CEnterMonitor(this);
+    m_connectionStatus = status;
+    PR_CExitMonitor(this);
+}
+
+void
+nsImapProtocol::NotifyMessageFlags(imapMessageFlagsType flags, nsMsgKey key)
+{
+    FlagsKeyStruct aKeyStruct;
+    aKeyStruct.flags = flags;
+    aKeyStruct.key = key;
+    if (m_imapMessage)
+        m_imapMessage->NotifyMessageFlags(this, &aKeyStruct);
+}
+
+void
+nsImapProtocol::NotifySearchHit(const char * hitLine)
+{
+    if (m_imapMiscellaneous)
+        m_imapMiscellaneous->AddSearchResult(this, hitLine);
+}
+
+	// Event handlers for the imap parser. 
+void
+nsImapProtocol::DiscoverMailboxSpec(mailbox_spec * adoptedBoxSpec)
+{
+}
+
+void
+nsImapProtocol::AlertUserEventUsingId(PRUint32 aMessageId)
+{
+    if (m_imapMiscellaneous)
+        m_imapMiscellaneous->FEAlert(this, 
+                          "**** Fix me with real string ****\r\n");
+}
+
+void
+nsImapProtocol::AlertUserEvent(const char * message)
+{
+    if (m_imapMiscellaneous)
+        m_imapMiscellaneous->FEAlert(this, message);
+}
+
+void
+nsImapProtocol::AlertUserEventFromServer(const char * aServerEvent)
+{
+    if (m_imapMiscellaneous)
+        m_imapMiscellaneous->FEAlertFromServer(this, aServerEvent);
+}
+
+void
+nsImapProtocol::ShowProgress()
+{
+    ProgressInfo aProgressInfo;
+
+    aProgressInfo.message = "*** Fix me!! ***\r\n";
+    aProgressInfo.percent = 0;
+
+    if (m_imapMiscellaneous)
+        m_imapMiscellaneous->PercentProgress(this, &aProgressInfo);
+}
+
+void
+nsImapProtocol::ProgressEventFunctionUsingId(PRUint32 aMsgId)
+{
+    if (m_imapMiscellaneous)
+        m_imapMiscellaneous->ProgressStatus(this, "*** Fix me!! ***\r\n");
+}
+
+void
+nsImapProtocol::ProgressEventFunctionUsingIdWithString(PRUint32 aMsgId, const
+                                                       char * aExtraInfo)
+{
+    if (m_imapMiscellaneous)
+        m_imapMiscellaneous->ProgressStatus(this, "*** Fix me!! ***\r\n");
+}
+
+void
+nsImapProtocol::PercentProgressUpdateEvent(char *message, PRInt32 percent)
+{
+    ProgressInfo aProgressInfo;
+    aProgressInfo.message = message;
+    aProgressInfo.percent = percent;
+    if (m_imapMiscellaneous)
+        m_imapMiscellaneous->PercentProgress(this, &aProgressInfo);
+}
+
+	// utility function calls made by the server
+char*
+nsImapProtocol::CreateUtf7ConvertedString(const char * aSourceString, PRBool
+                                          aConvertToUtf7Imap)
+{
+    return nsnull;
+}
+
+	// imap commands issued by the parser
+void
+nsImapProtocol::Store(const char * aMessageList, const char * aMessageData,
+                      PRBool aIdsAreUid)
+{
+}
+
+void
+nsImapProtocol::Expunge()
+{
+}
+
+void
+nsImapProtocol::HandleMemoryFailure()
+{
+    PR_CEnterMonitor(this);
+    // **** jefft fix me!!!!!! ******
+    // m_imapThreadIsRunning = PR_FALSE;
+    // SetConnectionStatus(-1);
+    PR_CExitMonitor(this);
+}
