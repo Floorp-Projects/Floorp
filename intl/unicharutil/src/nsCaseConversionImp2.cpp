@@ -342,7 +342,7 @@ nsresult nsCaseConversionImp2::ToTitle(
 NS_IMETHODIMP nsCaseConversionImp2::ToUpper
   (const PRUnichar* anIn, PRUint32 aLen, nsString& anOut, const PRUnichar* aLocale) 
 {
-  anOut.SetString(anIn,aLen);
+  anOut.Assign(anIn,aLen);
 
   // Special casing - Turkish dotless I
   if((nsnull != aLocale ) && (PRUnichar('t')==aLocale[0]) && (PRUnichar('r') == aLocale[1]))
@@ -373,7 +373,7 @@ NS_IMETHODIMP nsCaseConversionImp2::ToUpper
 NS_IMETHODIMP nsCaseConversionImp2::ToLower
   (const PRUnichar* anIn, PRUint32 aLen, nsString& anOut, const PRUnichar* aLocale) 
 {
-  anOut.SetString(anIn,aLen);
+  anOut.Assign(anIn,aLen);
 
   // Special casing - Turkish dotless I
   if((nsnull != aLocale ) && (PRUnichar('t')==aLocale[0]) && (PRUnichar('r') == aLocale[1]))
@@ -393,7 +393,7 @@ NS_IMETHODIMP nsCaseConversionImp2::ToTitle
   (const PRUnichar* anIn, PRUint32 aLen, nsString& anOut, const PRUnichar* aLocale,
               PRBool aStartInWordBoundary)
 {
-  anOut.SetString(anIn,aLen);
+  anOut.Assign(anIn,aLen);
 
   // Special casing - Turkish dotless I
   if((nsnull != aLocale ) && (PRUnichar('t')==aLocale[0]) && (PRUnichar('r') == aLocale[1]))
