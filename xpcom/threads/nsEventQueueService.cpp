@@ -536,33 +536,3 @@ nsEventQueueServiceImpl::ResolveEventQueue(nsIEventQueue* queueOrConstant, nsIEv
     NS_ADDREF(*resultQueue);
     return NS_OK;
 }
-
-#ifdef XP_MAC
-// MAC specific. Will go away someday
-// Bwah ha ha h ha ah aha ha ha
-NS_IMETHODIMP nsEventQueueServiceImpl::ProcessEvents() 
-{
-  if (mEventQTable) {
-    EventQueueEntry *entry;
-    nsIEventQueue   *queue;
-
-    // never use the hashtable enumerator if there's a chance (there is) that an
-    // event queue entry could be destroyed while inside. this enumerator can
-    // handle that.
-    PR_EnterMonitor(mEventQMonitor);
-    mEnumerator.Reset(mBaseEntry);
-    while ((entry = mEnumerator.Get()) != 0) {
-      PR_ExitMonitor(mEventQMonitor);
-      queue = entry->GetEventQueue();
-	  if (queue) {
-	    queue->ProcessPendingEvents();
-	    NS_RELEASE(queue);
-      }
-      PR_EnterMonitor(mEventQMonitor);
-    }
-    PR_ExitMonitor(mEventQMonitor);
-  }
-  return NS_OK;
-}
-
-#endif 
