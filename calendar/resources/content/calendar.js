@@ -78,7 +78,7 @@
 */
 
 //the next line needs XX-DATE-XY but last X instead of Y
-var gDateMade = "2002050710-cal"
+var gDateMade = "2002051315-cal"
 
 // turn on debuging
 
@@ -717,4 +717,9 @@ function doExportEvents( FilePath )
    //write to the file.
       
    alert( "I should export files to "+FilePath );
+}
+
+function selectAllEvents()
+{
+   gCalendarWindow.EventSelection.setArrayToSelection( gCalendarWindow.eventSource.getCurrentEvents() );
 }

@@ -110,6 +110,8 @@
          <menuitem id="calendar-copy-menu" observes="copy_command" label="Copy" accesskey="c" oncommand="copyToClipboard()"/>
          <menuitem id="calendar-paste-menu" label="Paste" accesskey="p" oncommand="pasteFromClipboard()"/>
          <menuseparator/>
+         <menuitem id="calendar-selectall-menu" label="Select All" accesskey="a" oncommand="selectAllEvents()"/>
+         <menuseparator/>
          <menuitem id="calendar-edit-preferences" label="Preferences..." oncommand="launchPreferences()"/>
       </menupopup>
    </menu>
