@@ -54,6 +54,7 @@
 #include "nsTextEditUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsHTMLCSSUtils.h"
+#include "nsColor.h"
 
 static
 void ProcessBValue(const nsAString * aInputString, nsAString & aOutputString,
@@ -1194,9 +1195,40 @@ nsHTMLCSSUtils::IsCSSEquivalentToHTMLInlineStyleSet(nsIDOMNode * aNode,
       aIsSet = PRBool(ChangeCSSInlineStyleTxn::ValueIncludes(valueString, val, PR_FALSE));
     }
 
-    else if ((nsIEditProperty::font == aHTMLProperty) && aHTMLAttribute
-             && aHTMLAttribute->Equals(NS_LITERAL_STRING("color"))) {
-      aIsSet = PR_TRUE;
+    else if (aHTMLAttribute &&
+             ( (nsIEditProperty::font == aHTMLProperty && 
+                aHTMLAttribute->Equals(NS_LITERAL_STRING("color"))) ||
+               aHTMLAttribute->Equals(NS_LITERAL_STRING("bgcolor")))) {
+      if (htmlValueString.IsEmpty())
+        aIsSet = PR_TRUE;
+      else {
+        nscolor rgba;
+        nsAutoString subStr;
+        htmlValueString.Right(subStr, htmlValueString.Length()-1);
+        if (NS_ColorNameToRGB(htmlValueString, &rgba) ||
+            NS_HexToRGB(subStr, &rgba)) {
+          nsAutoString htmlColor, tmpStr;
+          htmlColor.Append(NS_LITERAL_STRING("rgb("));
+
+          NS_NAMED_LITERAL_STRING(comma, ", ");
+
+          tmpStr.AppendInt(NS_GET_R(rgba), 10);
+          htmlColor.Append(tmpStr + comma);
+
+          tmpStr.Truncate();
+          tmpStr.AppendInt(NS_GET_G(rgba), 10);
+          htmlColor.Append(tmpStr + comma);
+
+          tmpStr.Truncate();
+          tmpStr.AppendInt(NS_GET_B(rgba), 10);
+          htmlColor.Append(tmpStr);
+
+          htmlColor.Append(PRUnichar(')'));
+          aIsSet = htmlColor.EqualsIgnoreCase(valueString);
+        }
+        else
+          aIsSet = htmlValueString.EqualsIgnoreCase(valueString);
+      }
     }
 
     else if (nsIEditProperty::tt == aHTMLProperty) {
@@ -1220,10 +1252,6 @@ nsHTMLCSSUtils::IsCSSEquivalentToHTMLInlineStyleSet(nsIDOMNode * aNode,
                   leftCSSValue.Equals(NS_LITERAL_STRING("couri")));
       }
       return NS_OK;
-    }
-    else if (aHTMLAttribute && aHTMLAttribute
-             && aHTMLAttribute->Equals(NS_LITERAL_STRING("bgcolor"))) {
-      aIsSet = PR_TRUE;
     }
     else if (aHTMLAttribute && aHTMLAttribute
              && aHTMLAttribute->Equals(NS_LITERAL_STRING("align"))) {
