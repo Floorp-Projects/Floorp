@@ -42,7 +42,7 @@
 // 
 // Header file for nsiHistory interface test cases
 
-#include nsIHistoryEntry.h
+#include "nsIHistoryEntry.h"
 
 /////////////////////////////////////////////////////////////////////////////
 // CNsIHistory window

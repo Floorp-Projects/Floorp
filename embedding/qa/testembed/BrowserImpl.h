@@ -44,6 +44,7 @@
 #include "nsIWebBrowserChromeFocus.h"
 #include "nsIContextMenuListener.h"
 #include "nsIDOMNode.h"
+#include "nsISHistoryListener.h"
 
 
 class CBrowserImpl : 
