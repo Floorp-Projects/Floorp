@@ -86,6 +86,11 @@ use File::Spec;
 # Some environment variables are not taint safe
 delete @::ENV{'PATH', 'IFS', 'CDPATH', 'ENV', 'BASH_ENV'};
 
+# Cwd.pm in perl 5.6.1 gives a warning if $::ENV{'PATH'} isn't defined
+# Set this to '' so that we don't get warnings cluttering the logs on every
+# system call
+$::ENV{'PATH'} = '';
+
 # Contains the version string for the current running Bugzilla.
 $::param{'version'} = '2.15';
 
