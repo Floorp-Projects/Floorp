@@ -244,6 +244,7 @@ void StyleColorImpl::ResetFrom(const nsStyleColor* aParent, nsIPresContext* aPre
   if (nsnull != aParent) {
     mColor = aParent->mColor;
     mOpacity = aParent->mOpacity;
+    mCursor = aParent->mCursor; // fix for bugzilla bug 51113
   }
   else {
     if (nsnull != aPresContext) {
@@ -253,6 +254,7 @@ void StyleColorImpl::ResetFrom(const nsStyleColor* aParent, nsIPresContext* aPre
       mColor = NS_RGB(0x00, 0x00, 0x00);
     }
     mOpacity = 1.0f;
+    mCursor = NS_STYLE_CURSOR_AUTO; // fix for bugzilla bug 51113
   }
 
   mBackgroundFlags = NS_STYLE_BG_COLOR_TRANSPARENT | NS_STYLE_BG_IMAGE_NONE;
@@ -270,8 +272,6 @@ void StyleColorImpl::ResetFrom(const nsStyleColor* aParent, nsIPresContext* aPre
     mBackgroundXPosition = 0;
     mBackgroundYPosition = 0;
   }
-
-  mCursor = NS_STYLE_CURSOR_AUTO;
 }
 
 void StyleColorImpl::SetFrom(const nsStyleColor& aSource)
