@@ -52,7 +52,7 @@ interface nsILocalFile : nsIFile
      *   @param filePath       
      *          A string which specifies a full file path to a 
      *          location.  Relative paths will be treated as an
-     *          error (NS_ERROR_FILE_UNRECONGNIZED_PATH).  This
+     *          error (NS_ERROR_FILE_UNRECOGNIZED_PATH).  This
      *          path must in native.
      */
     void initWithPath([const] in string filePath);

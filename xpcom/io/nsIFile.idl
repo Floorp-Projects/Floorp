@@ -102,14 +102,15 @@ interface nsIFile : nsISupports
      *
      *   @param newParentDir
      *       This param is the destination directory. If the
-     *       newParentDir is nsnull, copyTo() will simply
-     *       rename the file. If the newParentDir is not
-     *       null and does not exists, an error will be
+     *       newParentDir is null, copyTo() will use the parent
+     *       directory of this file. If the newParentDir is not
+     *       null and is not a directory, an error will be
      *       returned (NS_ERROR_FILE_DESTINATION_NOT_DIR)
      *
      *   @param newName
-     *       This param allows you to specify a new name
-     *       for the file to be copied.  This can be nsnull.
+     *       This param allows you to specify a new name for
+     *       the file to be copied. This param may be null, in
+     *       which case the current leaf name will be used.
      *
      */
     void copyTo(in nsIFile newParentDir, [const] in string newName);
@@ -119,7 +120,9 @@ interface nsIFile : nsISupports
      *  copyToFollowingLinks
      *
      *  This function is identical to copyTo except it, as
-     *  the name implies, follows symbolic links.
+     *  the name implies, follows symbolic links.  Some OSes
+     *  such as Unix and Linux always follow symbolic links
+     *  when copying.
      */
     void copyToFollowingLinks(in nsIFile newParentDir, [const] in string newName);
     void copyToFollowingLinksUnicode(in nsIFile newParentDir, [const] in wstring newName);
@@ -138,14 +141,15 @@ interface nsIFile : nsISupports
      *
      *   @param newParentDir
      *       This param is the destination directory. If the
-     *       newParentDir is nsnull, moveTo() will simply
-     *       rename the file. If the newParentDir is not
-     *       null and does not exists, an error will be
-     *       returned (NS_ERROR_FILE_DESTINATION_NOT_DIR)
+     *       newParentDir is null, moveTo() will rename the file
+     *       within its current directory. If the newParentDir is
+     *       not null and does not name a directory, an error will
+     *       be returned (NS_ERROR_FILE_DESTINATION_NOT_DIR)
      *
      *   @param newName
-     *       This param allows you to specify a new name
-     *       for the file to be moved.  This can be nsnull.
+     *       This param allows you to specify a new name for
+     *       the file to be moved. This param may be null, in
+     *       which case the current leaf name will be used.
      *
      */
     void moveTo(in nsIFile newParentDir, [const] in string newName);
@@ -277,13 +281,13 @@ interface nsIFile : nsISupports
     boolean equals(in nsIFile inFile);
 
     /**
-     * Will determine if the inFile is a descendant
-     * If |recur| is true, it will descend subdirectories looking for
+     * Will determine if inFile is a descendant of this file
+     * If |recur| is true, look in subdirectories too
      */
     boolean contains(in nsIFile inFile, in boolean recur);
 
     /**
-     * Parent will be nsnull when this is at the top of the volume.
+     * Parent will be null when this is at the top of the volume.
      */
     readonly attribute nsIFile parent;
     
