@@ -54,7 +54,6 @@
 #include "nsIPref.h"
 
 #include "nsIMsgFilter.h"
-#include "nsIMsgFilterService.h"
 #include "nsImapMoveCoalescer.h"
 #include "nsIPrompt.h"
 #include "nsIWebShell.h"
@@ -69,7 +68,6 @@
 #include "nsIProgressEventSink.h"
 
 static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
-static NS_DEFINE_CID(kMsgFilterServiceCID, NS_MSGFILTERSERVICE_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
 static NS_DEFINE_CID(kImapProtocolCID, NS_IMAPPROTOCOL_CID);
@@ -1841,32 +1839,10 @@ NS_IMETHODIMP nsImapMailFolder::SetupHeaderParseStream(
 
   if (mFlags & MSG_FOLDER_FLAG_INBOX && !m_filterList)
   {
-    NS_WITH_SERVICE(nsIMsgFilterService, filterService, kMsgFilterServiceCID, &rv);
-    if (NS_SUCCEEDED(rv))
-    {
-
-      nsCOMPtr <nsIMsgFolder> rootFolder;
-      rv = GetRootFolder(getter_AddRefs(rootFolder));
-
-      if (NS_SUCCEEDED(rv))
-      {
-
-        nsCOMPtr <nsIFileSpec> rootDir;
-
-        rv = rootFolder->GetPath(getter_AddRefs(rootDir));
-
-        if (NS_SUCCEEDED(rv))
-        {
-          nsFileSpec    filterFile;
-
-          rootDir->GetFileSpec(&filterFile);
-          // need a file spec for filters...
-          filterFile += "rules.dat";
-          nsresult res = filterService->OpenFilterList(&filterFile, rootFolder, getter_AddRefs(m_filterList));
-        }
-      }
-    }
-
+      nsCOMPtr<nsIMsgIncomingServer> server;
+      rv = GetServer(getter_AddRefs(server));
+      if (NS_SUCCEEDED(rv) && server)
+          server->GetFilterList(getter_AddRefs(m_filterList));
   }
   m_nextMessageByteLength = aSize;
   if (!m_msgParser)
