@@ -3965,10 +3965,12 @@ void nsTableFrame::BalanceColumnWidths(nsIPresContext& aPresContext,
   // based on the compatibility mode, create a table layout strategy
   if (nsnull==mTableLayoutStrategy)
   {
+    nsCompatibility mode;
+    aPresContext.GetCompatibilityMode(&mode);
     if (PR_FALSE==RequiresPass1Layout())
       mTableLayoutStrategy = new FixedTableLayoutStrategy(this);
     else
-      mTableLayoutStrategy = new BasicTableLayoutStrategy(this);
+      mTableLayoutStrategy = new BasicTableLayoutStrategy(this, eCompatibility_NavQuirks == mode);
     mTableLayoutStrategy->Initialize(aMaxElementSize, GetColCount());
     mColumnWidthsValid=PR_TRUE;
   }

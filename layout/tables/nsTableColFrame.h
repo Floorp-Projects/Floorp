@@ -79,8 +79,16 @@ public:
   nscoord GetEffectiveMinColWidth();
   void SetEffectiveMinColWidth(nscoord aMinColWidth);
 
+  // return the min width for this column after provisions for col spans have
+  // been included. The adj min width is >= the min width.
   nscoord GetAdjustedMinColWidth();
   void SetAdjustedMinColWidth(nscoord aMinColWidth);
+
+  // Return true if the column has a width either from HTML width attribute,
+  // from a style rule on the column, from a width attr/style on a cell 
+  // that has colspan==1.
+  PRBool HasConstrainedWidth();
+  void SetHasConstrainedWidth(PRBool aIsConstrained);
 
   PRInt32 GetWidthSource();
   void SetWidthSource(PRInt32 aMinColWidth);
@@ -105,6 +113,8 @@ protected:
   nscoord mMinEffectiveColWidth;
 
   nscoord mMinAdjustedColWidth;
+
+  PRBool  mHasConstrainedWidth;
 
   PRInt32 mWidthSource;
 
@@ -149,6 +159,12 @@ inline void nsTableColFrame::SetEffectiveMinColWidth(nscoord aMinEffectiveColWid
 
 inline nscoord nsTableColFrame::GetAdjustedMinColWidth()
 { return mMinAdjustedColWidth; }
+
+inline PRBool nsTableColFrame::HasConstrainedWidth()
+{ return mHasConstrainedWidth; }
+
+inline void nsTableColFrame::SetHasConstrainedWidth(PRBool aIsConstrained)
+{ mHasConstrainedWidth = aIsConstrained; }
 
 inline void nsTableColFrame::SetAdjustedMinColWidth(nscoord aMinAdjustedColWidth)
 { mMinAdjustedColWidth = aMinAdjustedColWidth; }

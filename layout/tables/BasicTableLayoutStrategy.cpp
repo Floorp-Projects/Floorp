@@ -217,14 +217,15 @@ PRBool BasicTableLayoutStrategy::IsFixedWidth(const nsStylePosition* aStylePosit
 }
 
 
-BasicTableLayoutStrategy::BasicTableLayoutStrategy(nsTableFrame *aFrame)
+BasicTableLayoutStrategy::BasicTableLayoutStrategy(nsTableFrame *aFrame, PRBool aIsNavQuirks)
 {
   NS_ASSERTION(nsnull != aFrame, "bad frame arg");
 
-  mTableFrame      = aFrame;
-  mMinTableWidth   = 0;
-  mMaxTableWidth   = 0;
-  mFixedTableWidth = 0;
+  mTableFrame        = aFrame;
+  mMinTableWidth     = 0;
+  mMaxTableWidth     = 0;
+  mFixedTableWidth   = 0;
+  mIsNavQuirksMode   = aIsNavQuirks;
 }
 
 BasicTableLayoutStrategy::~BasicTableLayoutStrategy()
@@ -416,9 +417,7 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
     nscoord effectiveMaxColumnWidth = 0;  // max col width ignoring cells with colspans
     nscoord specifiedFixedColWidth  = 0;  // the width of the column if given stylistically (or via cell Width attribute)
                                           // only applicable if haveColWidth==PR_TRUE                                           
-    PRBool haveColWidth = PR_FALSE;       // if true, the column has a width either from HTML width attribute,
-                                          //   from a style rule on the column, 
-                                          //   or from a width attr/style on a cell that has colspan==1 
+
     horPadding[colIndex] = 0;                                     
     // Get column information
     nsTableColFrame* colFrame = mTableFrame->GetColFrame(colIndex);
@@ -433,7 +432,7 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
 
     // Get fixed column width if it has one
     if (eStyleUnit_Coord == colPosition->mWidth.GetUnit()) {
-      haveColWidth = PR_TRUE;
+      colFrame->SetHasConstrainedWidth(PR_TRUE);
       specifiedFixedColWidth = colPosition->mWidth.GetCoordValue();
       horPadding[colIndex] = CalcHorizontalPadding(colIndex);
       specifiedFixedColWidth += horPadding[colIndex];
@@ -489,7 +488,7 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
                     rowIndex, colSpan, cellMinSize.width, cellMinSize.height,
                     cellDesiredSize.width, cellDesiredSize.height);
 
-      if (PR_TRUE == haveColWidth) {
+      if (colFrame->HasConstrainedWidth()) {
         // This col has a specified coord fixed width, so set the min and max width to the larger of 
         //   (specified width, largest max_element_size of the cells in the column)
         //   factoring in the min width of the prior cells (stored in minColWidth) 
@@ -594,13 +593,13 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
     } // end for (rowIndex = 0; rowIndex < numRows; rowIndex++)
 
     // adjust the "fixed" width for content that is too wide
-    if (haveColWidth && (effectiveMinColumnWidth > specifiedFixedColWidth)) {
+    if (colFrame->HasConstrainedWidth() && (effectiveMinColumnWidth > specifiedFixedColWidth)) {
       specifiedFixedColWidth = effectiveMinColumnWidth;
     }
     // do all the global bookkeeping, factoring in margins
     nscoord colInset = mTableFrame->GetCellSpacingX();
     // keep a running total of the amount of space taken up by all fixed-width columns
-    if ((PR_TRUE == haveColWidth) && 
+    if ((colFrame->HasConstrainedWidth()) && 
         (nsTableColFrame::eWIDTH_SOURCE_CELL == colFrame->GetWidthSource())) {
       mFixedTableWidth += specifiedFixedColWidth + colInset;
       if (0 == colIndex) {
@@ -616,7 +615,7 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
     colFrame->SetEffectiveMaxColWidth(effectiveMaxColumnWidth);
     // this is the default, the real adjustment happens below where we deal with colspans
     colFrame->SetAdjustedMinColWidth(effectiveMinColumnWidth);  
-    if ((PR_TRUE == haveColWidth) && 
+    if ((colFrame->HasConstrainedWidth()) && 
       (nsTableColFrame::eWIDTH_SOURCE_CELL_WITH_SPAN!=colFrame->GetWidthSource())) {
       mTableFrame->SetColumnWidth(colIndex, specifiedFixedColWidth);
     }
@@ -1740,9 +1739,7 @@ PRBool BasicTableLayoutStrategy::
         if (PR_FALSE == IsFixedWidth(colPosition, colTableStyle)) {
           // compute the spanning cell's contribution to the column min width
           nscoord spanCellMinWidth;
-          PRBool needsExtraMinWidth = PR_FALSE;
-          //if (spanInfo->effectiveMinWidthOfSpannedCols<spanInfo->cellMinWidth)
-          //  needsExtraMinWidth = PR_TRUE;
+          PRBool needsExtraMinWidth = (spanInfo->effectiveMinWidthOfSpannedCols < spanInfo->cellMinWidth);
           if (PR_TRUE == needsExtraMinWidth) {
             if (0 != spanInfo->effectiveMinWidthOfSpannedCols) {
               spanCellMinWidth = (spanInfo->cellMinWidth * colFrame->GetEffectiveMinColWidth()) /
@@ -1951,7 +1948,7 @@ PRBool BasicTableLayoutStrategy::
                    colIndex, mTableFrame->GetColumnWidth(colIndex), aAvailWidth, colInset);
       }
       else if (PR_TRUE==isAutoWidth) { // column's width is determined by its content, done in post-processing
-        mTableFrame->SetColumnWidth(colIndex, minColWidth); // reserve the column's min width
+        mTableFrame->SetColumnWidth(colIndex, minColWidth); // reserve the column's min width 
         atLeastOneAutoWidthColumn = PR_TRUE;
       }
       else if (-1 != specifiedProportionColumnWidth) {
@@ -2080,36 +2077,200 @@ PRBool BasicTableLayoutStrategy::
 }
 
 struct nsColInfo {
-  nsColInfo(nsTableColFrame* aColFrame,
-            PRInt32          aColIndex,
-            PRInt32          aColWidth,
-            float            aMaximizeFactor)
-    : mColFrame(aColFrame), mColIndex(aColIndex), mColWidth(aColWidth), 
-      mMaximizeFactor(aMaximizeFactor)
-    {}
-  nsTableColFrame* mColFrame;
-  PRInt32          mColIndex;
-  PRInt32          mColWidth;
-  float            mMaximizeFactor;
+  nsColInfo(nsTableColFrame* aFrame,
+            PRInt32          aIndex,
+            PRInt32          aMinWidth,
+            PRInt32          aWidth,
+            PRInt32          aMaxEffWidth,
+            PRInt32          aMaxWidth)
+    : mFrame(aFrame), mIndex(aIndex), mMinWidth(aMinWidth), 
+      mWidth(aWidth), mMaxEffWidth(aMaxEffWidth), mMaxWidth(aMaxWidth), mWeight(0)
+  {}
+  nsTableColFrame* mFrame;
+  PRInt32          mIndex;
+  PRInt32          mMinWidth;
+  PRInt32          mWidth;
+  PRInt32          mMaxEffWidth;
+  PRInt32          mMaxWidth;
+  float            mWeight;
 };
 
 void
-DistributeRemainingSpaceCleanup(PRInt32 aNumItems, nsColInfo** aInfoArray)
+DRS_Wrapup(nsTableFrame* aTableFrame,
+           PRInt32       aNumItems, 
+           nsColInfo**   aColInfo)
 {
   for (int i = 0; i < aNumItems; i++) {
-    delete aInfoArray[i];
+    aTableFrame->SetColumnWidth(aColInfo[i]->mIndex, aColInfo[i]->mWidth);
+    delete aColInfo[i];
   }
-  delete [] aInfoArray;
+  delete [] aColInfo;
+}
+
+void
+DRS_Increase(PRInt32     aNumAutoCols,
+             nsColInfo** aColInfo,
+             PRInt32     aDivisor,
+             PRBool      aDontGoOverMax,
+             PRInt32&    aAvailWidth)
+{
+  for (PRInt32 i = 0; i < aNumAutoCols; i++) {
+    if ((aAvailWidth <= 0) || (aDivisor <= 0)) {
+      break;
+    }
+    //float percent = ((float)aColInfo[i]->mMaxEffWidth) / (float)aDivisor;
+    float percent = ((float)aColInfo[i]->mMaxWidth) / (float)aDivisor;
+    //aDivisor -= aColInfo[i]->mWidth;
+    aDivisor -= aColInfo[i]->mMaxWidth;
+    nscoord addition = PR_MIN(aAvailWidth, NSToCoordRound(((float)(aAvailWidth)) * percent));
+    if (aDontGoOverMax) {
+      addition = PR_MIN(addition, aColInfo[i]->mMaxWidth - aColInfo[i]->mWidth);
+    }
+    // don't let the total additions exceed what is available
+    if (i == aNumAutoCols - 1) {
+      addition = PR_MIN(addition, aAvailWidth);
+    }
+    aColInfo[i]->mWidth += addition;
+    aAvailWidth -= addition;
+  }
+}
+
+void
+DRS_Decrease(PRInt32     aNumAutoCols,
+             nsColInfo** aColInfo,
+             PRInt32     aDivisor,
+             PRInt32&    aExcess)
+{
+  for (PRInt32 i = 0; i < aNumAutoCols; i++) {
+    if ((aExcess <= 0) || (aDivisor <= 0)) {
+      break;
+    }
+    //float percent = ((float)aColInfo[i]->mMaxEffWidth) / (float)aDivisor;
+    float percent = ((float)aColInfo[i]->mMaxWidth) / (float)aDivisor;
+    //aDivisor -= aColInfo[i]->mWidth;
+    aDivisor -= aColInfo[i]->mMaxWidth;
+    nscoord reduction = PR_MIN(aExcess, NSToCoordRound(((float)(aExcess)) * percent));
+    // don't go over the col min
+    reduction = PR_MIN(reduction, aColInfo[i]->mWidth - aColInfo[i]->mMinWidth);
+    // don't let the total reductions exceed what is available
+    if (i == aNumAutoCols - 1) {
+      reduction = PR_MIN(reduction, aExcess);
+    }
+    aColInfo[i]->mWidth -= reduction;
+    aExcess -= reduction;
+  }
+}
+
+
+void 
+DSR_Sort(nsColInfo** aColInfo, PRInt32 aNumCols)
+{
+  // sort the cols based on the Weight 
+  for (PRInt32 j = aNumCols - 1; j > 0; j--) {
+    for (PRInt32 i = 0; i < j; i++) { 
+      if (aColInfo[i]->mWeight < aColInfo[i+1]->mWeight) { // swap them
+        nsColInfo* save = aColInfo[i];
+        aColInfo[i]     = aColInfo[i+1];
+        aColInfo[i+1]   = save;
+      }
+    }
+  }
 }
 
 // Take the remaining space in the table and distribute it to the auto-width cols
-// in the table. If a col reaches its desired width, stop at that width unless all
-// other cols have reached their desired widths.
+// in the table. 
+void BasicTableLayoutStrategy::DistributeRemainingSpace(nscoord  aTableSpecifiedWidth,
+                                                        nscoord& aComputedTableWidth, 
+                                                        PRBool   aTableIsAutoWidth)
+{
+  // availWidth is the difference between the total available width and the 
+  // amount of space already assigned.
+  nscoord availWidth = PR_MAX(aTableSpecifiedWidth - aComputedTableWidth, 0);
+  TDBG_SDD("  aTableSpecifiedWidth specified as %d, availWidth is = %d\n", aTableSpecifiedWidth, availWidth);
+  if ((0 == availWidth) || (aTableSpecifiedWidth <= 0)) {
+    return;
+  }
 
-// This algorithm has been reworked from the orignal to fix bugs (e.g. bug 6184) 
-// and remove the recursion. For auto width tables it uses colFrame->GetMaxColSize() 
-// instead of GetMaxEffectiveColSize, so for some auto width tables with colspans 
-// it claculates more like IE5 than Nav4.5, which appears to be more reasonable.
+  // Get the auto width cols. Only they get adjusted.
+  PRInt32 numAutoCols = 0;
+  PRInt32* autoCols = nsnull;
+  mTableFrame->GetColumnsByType(eStyleUnit_Auto, numAutoCols, autoCols);
+  if (0 == numAutoCols) {
+    return;
+  }
+  nsColInfo** colInfo = new nsColInfo*[numAutoCols];
+
+  nscoord totalDivisor        = 0;
+  nscoord totalAutoWidthGiven = 0;
+  PRInt32 i;
+
+  // start out by giving each col its max effective width (or adj width if it is greater)
+  // for standard mode and its min width for nav quirks mode
+  for (i = 0; i < numAutoCols; i++) {
+    PRInt32 colIndex = autoCols[i];
+    nsTableColFrame* colFrame = mTableFrame->GetColFrame(autoCols[i]);
+    nscoord origWidth    = mTableFrame->GetColumnWidth(autoCols[i]);
+    nscoord minWidth     = PR_MAX(colFrame->GetAdjustedMinColWidth(), origWidth);
+    nscoord maxEffWidth  = PR_MAX(colFrame->GetEffectiveMaxColWidth(), minWidth);
+    nscoord maxWidth     = colFrame->GetMaxColWidth();
+    nscoord startWidth   = (mIsNavQuirksMode) ? minWidth : maxWidth;
+    colInfo[i] = new nsColInfo(colFrame, autoCols[i], minWidth, startWidth, maxEffWidth, maxWidth);
+//    totalDivisor += maxEffWidth;
+    totalDivisor += maxWidth;
+    totalAutoWidthGiven += startWidth - origWidth;
+  }
+
+  availWidth = aTableSpecifiedWidth - aComputedTableWidth - totalAutoWidthGiven; 
+
+  if (availWidth >= 0) { // have more space to allocate
+    for (i = 0; i < numAutoCols; i++) {
+      // the weight here is a relative metric for determining when cols reach their max. 
+      // A col with a larger weight will reach its max before one with a smaller value.
+      nscoord delta = colInfo[i]->mMaxWidth - colInfo[i]->mWidth;
+      colInfo[i]->mWeight = (delta <= 0) 
+        ? 1000000 // cols which have already reached their max get a large value
+        : ((float)colInfo[i]->mMaxWidth) / ((float)delta);
+    }
+      
+    // sort the cols based on the weight so that in one pass cols with higher 
+    // weights will get their max earlier than ones with lower weights
+    // This is an innefficient bubble sort, but unless there are an unlikely 
+    // large number of cols, it is not an issue.
+    DSR_Sort(colInfo, numAutoCols);
+   
+    // compute the proportion to be added to each column, don't go beyond the col's
+    // max. This algorithm assumes that the Weight works as stated above
+    DRS_Increase(numAutoCols, colInfo, totalDivisor, PR_TRUE, availWidth);
+    // if every col got its max and there is more to go, allocate a 2nd time
+    if (!aTableIsAutoWidth && (availWidth > 0)) {
+      DRS_Increase(numAutoCols, colInfo, totalDivisor, PR_FALSE, availWidth);
+    }
+    aComputedTableWidth = aTableSpecifiedWidth - availWidth;
+  }
+  else { // reduce each col width if appropriate
+    for (i = 0; i < numAutoCols; i++) {
+      // the weight here is a relative metric for determining when cols reach their min. 
+      // A col with a larger weight will reach its min before one with a smaller value.
+      nscoord delta = colInfo[i]->mWidth - colInfo[i]->mMinWidth;
+      colInfo[i]->mWeight = (delta <= 0) 
+        ? 1000000 // cols which have already reached their min get a large value
+        : ((float)colInfo[i]->mWidth) / ((float)delta);
+    }
+      
+    // sort the cols based on the Weight 
+    DSR_Sort(colInfo, numAutoCols);
+   
+    // compute the proportion to be subtracted from each column, don't go beyond 
+    // the col's min. This algorithm assumes that the Weight works as stated above
+    PRInt32 totalExcessGiven = -availWidth;
+    DRS_Decrease(numAutoCols, colInfo, totalDivisor, totalExcessGiven);
+    aComputedTableWidth = aTableSpecifiedWidth + totalExcessGiven;
+  }
+  DRS_Wrapup(mTableFrame, numAutoCols, colInfo);
+  TDBG_WIDTHS4("at end of DistributeRemainingSpace: ",PR_FALSE,PR_FALSE);
+}
+
+#if 0
 void BasicTableLayoutStrategy::DistributeRemainingSpace(nscoord  aTableSpecifiedWidth,
                                                         nscoord& aComputedTableWidth, 
                                                         PRBool   aTableIsAutoWidth)
@@ -2141,21 +2302,19 @@ void BasicTableLayoutStrategy::DistributeRemainingSpace(nscoord  aTableSpecified
     PRInt32 colIndex = autoColumns[i];
     nsTableColFrame* colFrame = mTableFrame->GetColFrame(autoColumns[i]);
     nscoord startingColWidth = mTableFrame->GetColumnWidth(colIndex);
-    nscoord maxColWidth = (PR_FALSE == aTableIsAutoWidth) 
-      ? colFrame->GetEffectiveMaxColWidth() : colFrame->GetMaxColWidth();
-    if ((PR_FALSE == aTableIsAutoWidth) || (startingColWidth < maxColWidth)) {
-      if (0 == maxColWidth) 
-        maxColWidth = startingColWidth;
-      totalResizeColWidth += maxColWidth;
-      // the maximizeFactor is a relative metric for determining when cols reach their max. 
-      // A col with a smaller value will reach its max before one with a larger value.
-      nscoord delta = maxColWidth - startingColWidth;
-      float maximizeFactor = (0 == delta) 
-        ? 1000000 : ((float)maxColWidth) / ((float)(maxColWidth - startingColWidth));
-      resizeCols[numResizeCols] = new nsColInfo(colFrame, colIndex, startingColWidth, 
-                                                maximizeFactor);
-      numResizeCols++;
-    }
+    nscoord maxColWidth = colFrame->GetMaxColWidth();
+    if (0 == maxColWidth) 
+      maxColWidth = startingColWidth;
+    totalResizeColWidth += maxColWidth;
+    // the maximizeFactor is a relative metric for determining when cols reach their max. 
+    // A col with a smaller value will reach its max before one with a larger value.
+    nscoord delta = maxColWidth - startingColWidth;
+    float maximizeFactor = (0 >= delta) 
+       ? 1000000 // cols which have already reached their max get a large value
+       : ((float)maxColWidth) / ((float)(maxColWidth - startingColWidth));
+    resizeCols[numResizeCols] = new nsColInfo(colFrame, colIndex, startingColWidth, 
+                                              maximizeFactor);
+    numResizeCols++;
   }
   if (totalResizeColWidth <= 0) { 
     NS_ASSERTION(PR_TRUE, "need to handle this case");
@@ -2187,10 +2346,7 @@ void BasicTableLayoutStrategy::DistributeRemainingSpace(nscoord  aTableSpecified
     }
     nsTableColFrame* colFrame    = resizeCols[i]->mColFrame;
     nscoord startingColWidth     = resizeCols[i]->mColWidth;
-    nscoord maxColWidth = (PR_FALSE == aTableIsAutoWidth) 
-      ? colFrame->GetEffectiveMaxColWidth() : colFrame->GetMaxColWidth();
-    // if we actually have room to distribute, do it here
-    // otherwise, the auto columns already are set to their minimum
+    nscoord maxColWidth = colFrame->GetMaxColWidth();
     float percent = ((float)maxColWidth) / (float)totalResizeColWidthRemaining;
     nscoord delta = PR_MIN(availWidth, NSToCoordRound(((float)(availWidth)) * percent));
     // don't go over the col max right now
@@ -2214,7 +2370,7 @@ void BasicTableLayoutStrategy::DistributeRemainingSpace(nscoord  aTableSpecified
       }
       nsTableColFrame* colFrame    = resizeCols[i]->mColFrame;
       nscoord startingColWidth     = resizeCols[i]->mColWidth;
-      nscoord maxColWidth          = colFrame->GetEffectiveMaxColWidth();
+      nscoord maxColWidth          = colFrame->GetMaxColWidth();
       // if we actually have room to distribute, do it here
       float percent = ((float)maxColWidth) / (float)totalResizeColWidth;
       nscoord delta = PR_MIN(availWidth, NSToCoordRound(((float)(availWidth)) * percent));
@@ -2229,6 +2385,7 @@ void BasicTableLayoutStrategy::DistributeRemainingSpace(nscoord  aTableSpecified
   DistributeRemainingSpaceCleanup(numResizeCols, resizeCols);
   TDBG_WIDTHS4("at end of DistributeRemainingSpace: ",PR_FALSE,PR_FALSE);
 }
+#endif
 
 void BasicTableLayoutStrategy::AdjustTableThatIsTooWide(nscoord aComputedWidth, 
                                                         nscoord aTableWidth, 
