@@ -1,0 +1,77 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/*
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is Mozilla.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications.  Portions created by Netscape Communications are
+ * Copyright (C) 2001 by Netscape Communications.  All
+ * Rights Reserved.
+ * 
+ * Contributor(s): 
+ *   Vidur Apparao <vidur@netscape.com> (original author)
+ */
+
+#include "nsISupports.idl"
+
+interface nsIDOMHTMLScriptElement;
+interface nsIURI;
+
+[scriptable, uuid(501209d3-7edf-437d-9948-3c6d1c08ef7f)]
+interface nsIScriptLoaderObserver : nsISupports {
+  
+  /**
+   * The script is available for evaluation. For inline scripts, this
+   * method will be called synchronously. For externally loaded scripts,
+   * this method will be called when the load completes.
+   *
+   * @param aResult A result code representing the result of loading
+   *        a script. If this is a failure code, script evaluation
+   *        will not occur.
+   * @param aElement The element being processed.
+   * @param aIsInline Is this an inline script or externally loaded?
+   * @param aWasPending Did script processing have to be delayed,
+   *                    either for loading of an external script or
+   *                    because processing of an earlier scheduled
+   *                    script was delayed?
+   * @param aURI What is the URI of the script (the document URI if
+   *        it is inline).
+   * @param aLineNo At what line does the script appear (generally 1
+   *        if it is a loaded script).
+   * @param aScript String representation of the string to be evaluated.
+   */
+  void scriptAvailable(in nsresult aResult, 
+                       in nsIDOMHTMLScriptElement aElement,
+                       in boolean aIsInline,
+                       in boolean aWasPending,
+                       in nsIURI aURI,
+                       in PRInt32 aLineNo,
+                       in AString aScript);
+
+  /**
+   * The script has been evaluated.
+   *
+   * @param aResult A result code representing the success or failure of
+   *        the script evaluation.
+   * @param aElement The element being processed.
+   * @param aIsInline Is this an inline script or externally loaded?
+   * @param aWasPending Did script processing have to be delayed,
+   *                    either for loading of an external script or
+   *                    because processing of an earlier scheduled
+   *                    script was delayed?
+   */
+  void scriptEvaluated(in nsresult aResult, 
+                       in nsIDOMHTMLScriptElement aElement,
+                       in boolean aIsInline,
+                       in boolean aWasPending);
+		       
+};

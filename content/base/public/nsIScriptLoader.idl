@@ -1,0 +1,76 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/*
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is Mozilla.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications.  Portions created by Netscape Communications are
+ * Copyright (C) 2001 by Netscape Communications.  All
+ * Rights Reserved.
+ * 
+ * Contributor(s): 
+ *   Vidur Apparao <vidur@netscape.com> (original author)
+ */
+
+#include "nsISupports.idl"
+
+interface nsIDocument;
+interface nsIDOMHTMLScriptElement;
+interface nsIScriptLoaderObserver;
+
+[scriptable, uuid(501209d3-7edf-437d-9948-3c6d1c08ef7a)]
+interface nsIScriptLoader : nsISupports {
+  /**
+   * Initialize loader with a document. The container of this document
+   * will be used for getting script evaluation information, including
+   * the context in which to do the evaluation. The loader maintains a 
+   * strong reference to the document.
+   *
+   * @param aDocument The document to use as the basis for script
+   *        processing.
+   */
+  void init(in nsIDocument aDocument);
+
+  /**
+   * The loader maintains a strong reference to the document with
+   * which it is initialized. This call forces the reference to
+   * be dropped.
+   */
+  void dropDocumentReference();
+
+  /**
+   * Add an observer for all scripts loaded through this loader.
+   *
+   * @param aObserver observer for all script processing.
+   */
+  void addObserver(in nsIScriptLoaderObserver aObserver);
+
+  /**
+   * Remove an observer.
+   *
+   * @param aObserver observer to be removed
+   */
+  void removeObserver(in nsIScriptLoaderObserver aObserver);
+  
+  /**
+   * Process a script element. This will include both loading the 
+   * source of the element if it is not inline and evaluating
+   * the script itself.
+   *
+   * @param aElement The element representing the script to be loaded and
+   *        evaluated.
+   * @param aObserver An observer for this script load only
+   *
+   */
+  void processScriptElement(in nsIDOMHTMLScriptElement aElement,
+                            in nsIScriptLoaderObserver aObserver);
+};
