@@ -18,6 +18,7 @@
 
 /*
  */
+#include "privacy.h"
 #include "glhist.h"
 #include "xp_hash.h"
 #include "net.h"
@@ -206,6 +207,10 @@ gh_open_database(void)
 {
 #ifndef NO_DBM
 	static Bool have_tried_open=FALSE;
+
+	if (PRVCY_IsAnonymous()) {
+	    return;
+	}
 
 	if(gh_database)
 	  {
