@@ -27,6 +27,7 @@ class nsIContent;
 class nsIDocument;
 class nsIHTMLContent;
 class nsIHTMLContentSink;
+class nsIHTMLFragmentContentSink;
 class nsITextContent;
 class nsIURL;
 class nsString;
@@ -343,6 +344,7 @@ extern nsresult NS_NewHTMLContentSink(nsIHTMLContentSink** aInstancePtrResult,
                                       nsIDocument* aDoc,
                                       nsIURL* aURL,
                                       nsIWebShell* aWebShell);
+extern nsresult NS_NewHTMLFragmentContentSink(nsIHTMLFragmentContentSink** aInstancePtrResult);
 
 /** Create a new HTML reflow command */
 extern nsresult
