@@ -368,6 +368,9 @@ nsWidgetStateManager.prototype =
         {
           var element = wsm.contentArea.document.getElementById( aElementID );
           wsm.generic_Set( element, aDataObject );
+          // Handle reversed boolean values.
+          if ( "checked" in aDataObject && element.hasAttribute( "reversed" ) )
+            element.checked = !aDataObject.checked; 
         },
 
     get_Listitem:
@@ -379,7 +382,8 @@ nsWidgetStateManager.prototype =
             {
               if( element.getAttribute("type") == "checkbox" )
                 {
-                  dataObject.checked = element.checked;
+                  var checked = element.checked;
+                  dataObject.checked = element.getAttribute("reversed") == "true" ? !checked : checked;
                 }
               return dataObject;
             }
