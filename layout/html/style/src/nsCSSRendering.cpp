@@ -2585,7 +2585,10 @@ nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
   // if we are printing, bail for now
   PRBool  canDrawBackground;
   aPresContext->GetBackgroundDraw(canDrawBackground);
-  if(!canDrawBackground){
+  nsCOMPtr<nsIPrintContext> thePrinterContext = do_QueryInterface(aPresContext);
+
+  // only turn off background printing if we are currently printing.
+  if(!canDrawBackground && thePrinterContext){
     return;
   }
 
