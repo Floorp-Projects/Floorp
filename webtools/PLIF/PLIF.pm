@@ -30,7 +30,7 @@ package PLIF;
 use strict; # require strict adherence to perl standards
 use vars qw($AUTOLOAD);  # it's a package global
 use Carp qw(cluck confess); # stack trace versions of warn and die
-my $DEBUG = 9; # level of warnings and dumps to print to STDERR (none go to user)
+my $DEBUG = 4; # level of warnings and dumps to print to STDERR (none go to user)
 my $USER = 1; # level of errors to report to user (all go to STDERR)
 my @FATAL = (); # a list of pointers to functions that want to report errors to the user
 my $LOCKED = 0; # set to '1' while we are calling the error reporting code
@@ -48,11 +48,14 @@ my $LOCKED = 0; # set to '1' while we are calling the error reporting code
 #
 # Useful debugging information:
 #  5 = important events (e.g. application started)
-#  6 =
+#  6 = debugging remarks for the section currently under test
 #  7 = typical checkpoints (e.g. someone tried to do some output)
-#  8 =
+#  8 = frequently hit typical checkpoints
 #  9 = verbose debugging information
 # 10 = ridiculously verbose debugging spam
+#
+# No code in CVS should do anything at level 6, it is reserved for
+# personal debugging.
 
 # Note. All of the methods described in this class except for the
 # propertyGet, propertySet and propertyExists methods are class
@@ -300,4 +303,7 @@ sub disableErrorReporting {
 
 sub fatalError {} # stub
 
-sub DESTROY {} # stub
+sub DESTROY {
+    my $self = shift;
+    $self->dump(10, "Called destructor of object $self...");
+}
