@@ -4661,6 +4661,14 @@ void CWinCX::AllConnectionsComplete(MWContext *pContext)
 		int usePassInType = 1;
 		NiceReload(usePassInType, NET_RESIZE_RELOAD );
 	}
+    else if (pContext->requires_reflow) {
+        /* This will get tripped if we've blasted over an image with
+           no width or height info in the page. Now we've got to pay
+           our dues and reflow the document. */
+        pContext->requires_reflow = PR_FALSE;
+        LO_RelayoutFromElement(pContext, NULL);
+    }
+
 #endif /* MOZ_NGLAYOUT */
 }
 
