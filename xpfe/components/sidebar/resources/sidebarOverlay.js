@@ -28,7 +28,7 @@ var NC = "http://home.netscape.com/NC-rdf#";
 
 // The magic number to find panels.rdf
 var PANELS_RDF_FILE = 66626;
-var SIDEBAR_VERSION = "0.0";
+var SIDEBAR_VERSION = "0.1";
 
 // The default sidebar:
 var sidebarObj = new Object;
@@ -124,9 +124,7 @@ function sidebar_overlay_init() {
   sidebarObj.resource = 'urn:sidebar:current-panel-list';
   
   sidebarObj.master_datasources = "";
-  //sidebarObj.master_datasources = get_remote_datasource_url();
-  //sidebarObj.master_datasources = "http://dunk/hoang.rdf";
-  sidebarObj.master_datasources = "http://dunk/all-panels.rdf";
+  sidebarObj.master_datasources = get_remote_datasource_url();
   sidebarObj.master_datasources += " chrome://communicator/content/sidebar/local-panels.rdf";
   sidebarObj.master_resource = 'urn:sidebar:master-panel-list';
   sidebarObj.component = document.firstChild.getAttribute('windowtype');
