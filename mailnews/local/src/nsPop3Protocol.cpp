@@ -39,7 +39,29 @@
 #endif
 
 #endif
+// begin temporary hard coded functions until we have a home for these 
+char * NET_SACopy (char **destination, const char *source)
+{
+	if(*destination)
+	  {
+	    XP_FREE(*destination);
+		*destination = 0;
+	  }
+    if (! source)
+	  {
+        *destination = NULL;
+	  }
+    else 
+	  {
+        *destination = (char *) PR_Malloc (PL_strlen(source) + 1);
+        if (*destination == NULL) 
+ 	        return(NULL);
 
+        PL_strcpy (*destination, source);
+      }
+    return *destination;
+}
+// end
 /* km
  *
  *
