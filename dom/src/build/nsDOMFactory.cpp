@@ -143,7 +143,7 @@ nsDOMNativeObjectRegistry::RemoveStrings(PLHashEntry *he, PRIntn i, void *arg)
 {
   char *str = (char *)he->key;
 
-  delete [] str;
+  nsCRT::free(str);
   return HT_ENUMERATE_REMOVE;
 }
 
@@ -183,7 +183,7 @@ nsDOMNativeObjectRegistry::GetFactoryCID(const nsString& aClassName,
   
   char *name = aClassName.ToNewCString();
   nsIID *classId = (nsIID *)PL_HashTableLookup(mFactories, name);
-  delete[] name;
+  nsCRT::free(name);
 
   aCID = *classId;
 
@@ -378,7 +378,7 @@ nsDOMScriptObjectFactory::NewScriptElement(const nsString &aTagName,
   nsDOMHTMLTag tag = NS_DOMTagToEnum(str);
 
   if (str) {
-    delete[] str;
+    nsCRT::free(str);
   }
 
   switch (tag) {
