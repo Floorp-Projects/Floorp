@@ -2357,6 +2357,41 @@ PUBLIC nsresult
 SINGSIGN_PromptUsernameAndPassword
     (const PRUnichar *text, PRUnichar **user, PRUnichar **pwd,
      PRBool *returnValue, char* urlname) {
+
+  nsresult res;
+  NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
+  if (NS_FAILED(res)) {
+    return res;
+  }
+
+  /* do only the dialog if signon preference is not enabled */
+  if (!si_GetSignonRememberingPref()){
+    return dialog->PromptUsernameAndPassword(text, user, pwd, returnValue);
+  }
+
+  /* prefill with previous username/password if any */
+  char *password=0, *username=0;
+  si_RestoreOldSignonDataFromBrowser(urlname, PR_FALSE, &username, &password);
+  *user = nsAutoString(username).ToNewUnicode();
+  *pwd = nsAutoString(password).ToNewUnicode();
+
+  /* get new username/password from user */
+  res = dialog->PromptUsernameAndPassword(text, user, pwd, returnValue);
+  if (NS_FAILED(res) || !(*returnValue)) {
+    /* user pressed Cancel */
+    return res;
+  }
+
+  /* remember these values for next time */
+  username = nsString(*user).ToNewCString();
+  password = nsString(*pwd).ToNewCString();
+  if (si_OkToSave(urlname, username)) {
+    si_RememberSignonDataFromBrowser (urlname, username, password);
+  }
+
+  /* cleanup and return */
+  PR_FREEIF(username);
+  PR_FREEIF(password);
   return NS_OK;
 }
 
