@@ -329,6 +329,8 @@ sub MakeResourceAliases()
 	_MakeAlias(":mozilla:webshell:tests:viewer:resources:viewer.properties",			"$resource_dir");
 	_MakeAlias(":mozilla:intl:uconv:src:charsetalias.properties",						"$resource_dir");
 	_MakeAlias(":mozilla:intl:uconv:src:maccharset.properties",							"$resource_dir");
+	_MakeAlias(":mozilla:intl:uconv:src:charsetData.properties",						"$resource_dir");
+	_MakeAlias(":mozilla:intl:uconv:src:charsetTitles.properties",						"$resource_dir");
 
 	_InstallResources(":mozilla:extensions:wallet:src:MANIFEST",						"$resource_dir");
 	my($entitytab_dir) = "$resource_dir" . "entityTables";
