@@ -828,13 +828,16 @@ nsTableRowFrame::ReflowChildren(nsIPresContext*          aPresContext,
         prevColIndex = (iter.IsLeftToRight()) ? cellColIndex + (cellColSpan - 1) : cellColIndex;
         nsHTMLReflowMetrics desiredSize(nsnull);
   
-        // If the available width is the same as last time we reflowed the cell,then 
-        // use the previous desired size and max element size (else clause). We can't 
-        // do this in paganated mode or for a style change reflow.
+        // If the avail width is not the same as last time we reflowed the cell or
+        // the cell wants to be bigger than what was available last time or
+        // it is a style change reflow or we are printing, then we must reflow the
+        // cell. Otherwise we can skip the reflow.
         nsIFrame* kidNextInFlow;
         kidFrame->GetNextInFlow(&kidNextInFlow);
-        if ((availWidth != cellFrame->GetPriorAvailWidth())    ||
-            (eReflowReason_StyleChange == aReflowState.reason) ||
+        nsSize cellDesiredSize = cellFrame->GetDesiredSize();
+        if ((availWidth != cellFrame->GetPriorAvailWidth())           ||
+            (cellDesiredSize.width > cellFrame->GetPriorAvailWidth()) ||
+            (eReflowReason_StyleChange == aReflowState.reason)        ||
             isPaginated) {
           // Reflow the cell to fit the available width, height
           nsSize  kidAvailSize(availWidth, aReflowState.availableHeight);
