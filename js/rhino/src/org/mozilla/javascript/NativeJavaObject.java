@@ -231,15 +231,15 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
         return (weight < CONVERSION_NONE);
     }
 
-    static final int JSTYPE_UNDEFINED   = 0; // undefined type
-    static final int JSTYPE_NULL        = 1; // null
-    static final int JSTYPE_BOOLEAN     = 2; // boolean
-    static final int JSTYPE_NUMBER      = 3; // number
-    static final int JSTYPE_STRING      = 4; // string
-    static final int JSTYPE_JAVA_CLASS  = 5; // JavaClass
-    static final int JSTYPE_JAVA_OBJECT = 6; // JavaObject
-    static final int JSTYPE_JAVA_ARRAY  = 7; // JavaArray
-    static final int JSTYPE_OBJECT      = 8; // Scriptable
+    private static final int JSTYPE_UNDEFINED   = 0; // undefined type
+    private static final int JSTYPE_NULL        = 1; // null
+    private static final int JSTYPE_BOOLEAN     = 2; // boolean
+    private static final int JSTYPE_NUMBER      = 3; // number
+    private static final int JSTYPE_STRING      = 4; // string
+    private static final int JSTYPE_JAVA_CLASS  = 5; // JavaClass
+    private static final int JSTYPE_JAVA_OBJECT = 6; // JavaObject
+    private static final int JSTYPE_JAVA_ARRAY  = 7; // JavaArray
+    private static final int JSTYPE_OBJECT      = 8; // Scriptable
 
     public static final byte CONVERSION_TRIVIAL      = 1;
     public static final byte CONVERSION_NONTRIVIAL   = 0;
@@ -362,6 +362,10 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
 
         case JSTYPE_OBJECT:
             // Other objects takes #1-#3 spots
+			if (to == fromObj.getClass()) {
+				// No conversion required
+				return 1;
+			}
             if (to.isArray()) {
                 if (fromObj instanceof NativeArray) {
                     // This is a native array conversion to a java array
@@ -391,7 +395,7 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
                 }
                 return 11;
             }
-            else if (to.isPrimitive() || to != Boolean.TYPE) {
+            else if (to.isPrimitive() && to != Boolean.TYPE) {
                 return 3 + getSizeRank(to);
             }
             break;
@@ -431,7 +435,7 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
         }
     }
 
-    static int getJSTypeCode(Object value) {
+    private static int getJSTypeCode(Object value) {
         if (value == null) {
             return JSTYPE_NULL;
         }
