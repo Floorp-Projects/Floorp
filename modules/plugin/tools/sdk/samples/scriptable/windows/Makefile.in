@@ -43,6 +43,8 @@ RESFILE = npscriptable.res
 
 include $(topsrcdir)/config/rules.mk
 
+DEFINES += -DMOZILLA_STRICT_API
+
 LOCAL_INCLUDES = -I$(srcdir)/$(XPIDL_GEN_DIR) \
                  -I$(srcdir)/../../include \
                  -I$(srcdir)/../../../include \

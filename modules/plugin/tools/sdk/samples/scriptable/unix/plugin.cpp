@@ -42,6 +42,7 @@
 
 #include "plugin.h"
 #include "nsIServiceManager.h"
+#include "nsISupportsUtils.h" // some usefule macros are defined here
 
 #define MIME_TYPES_HANDLED  "application/scriptable-plugin"
 #define PLUGIN_NAME         "Scriptable Example Plugin for Mozilla"

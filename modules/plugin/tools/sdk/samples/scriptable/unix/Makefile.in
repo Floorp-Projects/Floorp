@@ -44,6 +44,8 @@ SHARED_LIBRARY_LIBS = $(DIST)/lib/libplugingate_s.$(LIB_SUFFIX)
 
 include $(topsrcdir)/config/rules.mk
 
+DEFINES += -DMOZILLA_STRICT_API
+
 EXTRA_DSO_LDOPTS +=  -L/usr/lib -L/usr/X11R6/lib  -rdynamic  -lXi -lXext -lX11 -lm -lXt
 
 INSTALL_PLUGIN	= $(CONFIG_TOOLS)/nsinstall -R 

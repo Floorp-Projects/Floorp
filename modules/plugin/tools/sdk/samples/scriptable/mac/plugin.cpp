@@ -36,13 +36,13 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "plugin.h"
+#include "nsISupportsUtils.h" // some usefule macros are defined here
 
 #include <string.h>
 
 #if !TARGET_API_MAC_CARBON
 extern QDGlobals*	gQDPtr;
 #endif
-
 
 //////////////////////////////////////
 //

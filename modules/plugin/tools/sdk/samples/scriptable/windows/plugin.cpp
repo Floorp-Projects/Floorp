@@ -40,6 +40,7 @@
 
 #include "plugin.h"
 #include "nsIServiceManager.h"
+#include "nsISupportsUtils.h" // some usefule macros are defined here
 
 //////////////////////////////////////
 //
