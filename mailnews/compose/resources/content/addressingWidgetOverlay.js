@@ -76,7 +76,9 @@ function Recipients2CompFields(msgCompFields)
 	    while ((inputField = awGetInputElement(i)))
 	    {
 	    	fieldValue = inputField.value;
-	    	fieldValue2 = inputField.getAttribute("value");
+	    	if (fieldValue == null)
+	    	  fieldValue = inputField.getAttribute("value");
+
 	    	if (fieldValue != "")
 	    	{
 			    switch (awGetPopupElement(i).selectedItem.getAttribute("data"))
@@ -154,10 +156,7 @@ function _awSetInputAndPopup(inputValue, popupValue, parentNode, templateNode)
     var input = newNode.getElementsByTagName(awInputElementName());
     if ( input && input.length == 1 )
     {
-		//We need to set the value using both setAttribute and .value else we will
-		// loose the content when the field is not visible. See bug 37435
 	    input[0].setAttribute("value", inputValue);
-	    input[0].value = inputValue;
 	    input[0].setAttribute("id", "msgRecipient#" + top.MAX_RECIPIENTS);
 	}
     var select = newNode.getElementsByTagName(awSelectElementName());
@@ -255,12 +254,9 @@ function awAppendNewRow(setFocus)
         var input = newNode.getElementsByTagName(awInputElementName());
         if ( input && input.length == 1 )
         {
-			//We need to set the value using both setAttribute and .value else we will
-			// loose the content when the field is not visible. See bug 37435
-   			input[0].setAttribute("value", "");
-   			input[0].value = "";
+   			  input[0].setAttribute("value", "");
     	    input[0].setAttribute("id", "msgRecipient#" + top.MAX_RECIPIENTS);
-    	}
+    	  }
         var select = newNode.getElementsByTagName(awSelectElementName());
         if ( select && select.length == 1 )
         {
@@ -419,10 +415,9 @@ function awFinishCopyNode(node)
 
 function awFinishCopyNodes()
 {
-	var treeChildren = document.getElementById('addressWidgetBody');
-    awFinishCopyNode(treeChildren);
+  var treeChildren = document.getElementById('addressWidgetBody');
+  awFinishCopyNode(treeChildren);
 }
-
 
 function awTabFromRecipient(element, event)
 {
