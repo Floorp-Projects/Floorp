@@ -50,11 +50,11 @@ public:
 
 
 
-#define NS_FORWARD_IDOMHTMLISINDEXELEMENT(superClass)  \
-  NS_IMETHOD    GetForm(nsIDOMHTMLFormElement** aForm) { return superClass::GetForm(aForm); } \
-  NS_IMETHOD    SetForm(nsIDOMHTMLFormElement* aForm) { return superClass::SetForm(aForm); } \
-  NS_IMETHOD    GetPrompt(nsString& aPrompt) { return superClass::GetPrompt(aPrompt); } \
-  NS_IMETHOD    SetPrompt(const nsString& aPrompt) { return superClass::SetPrompt(aPrompt); } \
+#define NS_FORWARD_IDOMHTMLISINDEXELEMENT(_to)  \
+  NS_IMETHOD    GetForm(nsIDOMHTMLFormElement** aForm) { return _to##GetForm(aForm); } \
+  NS_IMETHOD    SetForm(nsIDOMHTMLFormElement* aForm) { return _to##SetForm(aForm); } \
+  NS_IMETHOD    GetPrompt(nsString& aPrompt) { return _to##GetPrompt(aPrompt); } \
+  NS_IMETHOD    SetPrompt(const nsString& aPrompt) { return _to##SetPrompt(aPrompt); } \
 
 
 extern nsresult NS_InitHTMLIsIndexElementClass(nsIScriptContext *aContext, void **aPrototype);

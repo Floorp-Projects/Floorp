@@ -103,24 +103,24 @@ public:
 
 
 
-#define NS_FORWARD_IDOMNODE(superClass)  \
-  NS_IMETHOD    GetNodeName(nsString& aNodeName) { return superClass::GetNodeName(aNodeName); } \
-  NS_IMETHOD    GetNodeValue(nsString& aNodeValue) { return superClass::GetNodeValue(aNodeValue); } \
-  NS_IMETHOD    SetNodeValue(const nsString& aNodeValue) { return superClass::SetNodeValue(aNodeValue); } \
-  NS_IMETHOD    GetNodeType(PRInt32* aNodeType) { return superClass::GetNodeType(aNodeType); } \
-  NS_IMETHOD    GetParentNode(nsIDOMNode** aParentNode) { return superClass::GetParentNode(aParentNode); } \
-  NS_IMETHOD    GetChildNodes(nsIDOMNodeList** aChildNodes) { return superClass::GetChildNodes(aChildNodes); } \
-  NS_IMETHOD    GetHasChildNodes(PRBool* aHasChildNodes) { return superClass::GetHasChildNodes(aHasChildNodes); } \
-  NS_IMETHOD    GetFirstChild(nsIDOMNode** aFirstChild) { return superClass::GetFirstChild(aFirstChild); } \
-  NS_IMETHOD    GetLastChild(nsIDOMNode** aLastChild) { return superClass::GetLastChild(aLastChild); } \
-  NS_IMETHOD    GetPreviousSibling(nsIDOMNode** aPreviousSibling) { return superClass::GetPreviousSibling(aPreviousSibling); } \
-  NS_IMETHOD    GetNextSibling(nsIDOMNode** aNextSibling) { return superClass::GetNextSibling(aNextSibling); } \
-  NS_IMETHOD    GetAttributes(nsIDOMNamedNodeMap** aAttributes) { return superClass::GetAttributes(aAttributes); } \
-  NS_IMETHOD    InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMNode** aReturn) { return superClass::InsertBefore(aNewChild, aRefChild, aReturn); }  \
-  NS_IMETHOD    ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNode** aReturn) { return superClass::ReplaceChild(aNewChild, aOldChild, aReturn); }  \
-  NS_IMETHOD    RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn) { return superClass::RemoveChild(aOldChild, aReturn); }  \
-  NS_IMETHOD    CloneNode(nsIDOMNode** aReturn) { return superClass::CloneNode(aReturn); }  \
-  NS_IMETHOD    Equals(nsIDOMNode* aNode, PRBool aDeep, PRBool* aReturn) { return superClass::Equals(aNode, aDeep, aReturn); }  \
+#define NS_FORWARD_IDOMNODE(_to)  \
+  NS_IMETHOD    GetNodeName(nsString& aNodeName) { return _to##GetNodeName(aNodeName); } \
+  NS_IMETHOD    GetNodeValue(nsString& aNodeValue) { return _to##GetNodeValue(aNodeValue); } \
+  NS_IMETHOD    SetNodeValue(const nsString& aNodeValue) { return _to##SetNodeValue(aNodeValue); } \
+  NS_IMETHOD    GetNodeType(PRInt32* aNodeType) { return _to##GetNodeType(aNodeType); } \
+  NS_IMETHOD    GetParentNode(nsIDOMNode** aParentNode) { return _to##GetParentNode(aParentNode); } \
+  NS_IMETHOD    GetChildNodes(nsIDOMNodeList** aChildNodes) { return _to##GetChildNodes(aChildNodes); } \
+  NS_IMETHOD    GetHasChildNodes(PRBool* aHasChildNodes) { return _to##GetHasChildNodes(aHasChildNodes); } \
+  NS_IMETHOD    GetFirstChild(nsIDOMNode** aFirstChild) { return _to##GetFirstChild(aFirstChild); } \
+  NS_IMETHOD    GetLastChild(nsIDOMNode** aLastChild) { return _to##GetLastChild(aLastChild); } \
+  NS_IMETHOD    GetPreviousSibling(nsIDOMNode** aPreviousSibling) { return _to##GetPreviousSibling(aPreviousSibling); } \
+  NS_IMETHOD    GetNextSibling(nsIDOMNode** aNextSibling) { return _to##GetNextSibling(aNextSibling); } \
+  NS_IMETHOD    GetAttributes(nsIDOMNamedNodeMap** aAttributes) { return _to##GetAttributes(aAttributes); } \
+  NS_IMETHOD    InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMNode** aReturn) { return _to##InsertBefore(aNewChild, aRefChild, aReturn); }  \
+  NS_IMETHOD    ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNode** aReturn) { return _to##ReplaceChild(aNewChild, aOldChild, aReturn); }  \
+  NS_IMETHOD    RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn) { return _to##RemoveChild(aOldChild, aReturn); }  \
+  NS_IMETHOD    CloneNode(nsIDOMNode** aReturn) { return _to##CloneNode(aReturn); }  \
+  NS_IMETHOD    Equals(nsIDOMNode* aNode, PRBool aDeep, PRBool* aReturn) { return _to##Equals(aNode, aDeep, aReturn); }  \
 
 
 extern nsresult NS_InitNodeClass(nsIScriptContext *aContext, void **aPrototype);

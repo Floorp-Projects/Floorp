@@ -62,15 +62,15 @@ public:
 
 
 
-#define NS_FORWARD_IDOMHTMLTABLESECTIONELEMENT(superClass)  \
-  NS_IMETHOD    GetAlign(nsString& aAlign) { return superClass::GetAlign(aAlign); } \
-  NS_IMETHOD    SetAlign(const nsString& aAlign) { return superClass::SetAlign(aAlign); } \
-  NS_IMETHOD    GetVAlign(nsString& aVAlign) { return superClass::GetVAlign(aVAlign); } \
-  NS_IMETHOD    SetVAlign(const nsString& aVAlign) { return superClass::SetVAlign(aVAlign); } \
-  NS_IMETHOD    GetRows(nsIDOMHTMLCollection** aRows) { return superClass::GetRows(aRows); } \
-  NS_IMETHOD    SetRows(nsIDOMHTMLCollection* aRows) { return superClass::SetRows(aRows); } \
-  NS_IMETHOD    InsertRow(PRInt32 aIndex, nsIDOMHTMLElement** aReturn) { return superClass::InsertRow(aIndex, aReturn); }  \
-  NS_IMETHOD    DeleteRow(PRInt32 aIndex) { return superClass::DeleteRow(aIndex); }  \
+#define NS_FORWARD_IDOMHTMLTABLESECTIONELEMENT(_to)  \
+  NS_IMETHOD    GetAlign(nsString& aAlign) { return _to##GetAlign(aAlign); } \
+  NS_IMETHOD    SetAlign(const nsString& aAlign) { return _to##SetAlign(aAlign); } \
+  NS_IMETHOD    GetVAlign(nsString& aVAlign) { return _to##GetVAlign(aVAlign); } \
+  NS_IMETHOD    SetVAlign(const nsString& aVAlign) { return _to##SetVAlign(aVAlign); } \
+  NS_IMETHOD    GetRows(nsIDOMHTMLCollection** aRows) { return _to##GetRows(aRows); } \
+  NS_IMETHOD    SetRows(nsIDOMHTMLCollection* aRows) { return _to##SetRows(aRows); } \
+  NS_IMETHOD    InsertRow(PRInt32 aIndex, nsIDOMHTMLElement** aReturn) { return _to##InsertRow(aIndex, aReturn); }  \
+  NS_IMETHOD    DeleteRow(PRInt32 aIndex) { return _to##DeleteRow(aIndex); }  \
 
 
 extern nsresult NS_InitHTMLTableSectionElementClass(nsIScriptContext *aContext, void **aPrototype);

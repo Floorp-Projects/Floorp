@@ -94,28 +94,28 @@ public:
 
 
 
-#define NS_FORWARD_IDOMHTMLTEXTAREAELEMENT(superClass)  \
-  NS_IMETHOD    GetDefaultValue(nsString& aDefaultValue) { return superClass::GetDefaultValue(aDefaultValue); } \
-  NS_IMETHOD    SetDefaultValue(const nsString& aDefaultValue) { return superClass::SetDefaultValue(aDefaultValue); } \
-  NS_IMETHOD    GetForm(nsIDOMHTMLFormElement** aForm) { return superClass::GetForm(aForm); } \
-  NS_IMETHOD    SetForm(nsIDOMHTMLFormElement* aForm) { return superClass::SetForm(aForm); } \
-  NS_IMETHOD    GetAccessKey(nsString& aAccessKey) { return superClass::GetAccessKey(aAccessKey); } \
-  NS_IMETHOD    SetAccessKey(const nsString& aAccessKey) { return superClass::SetAccessKey(aAccessKey); } \
-  NS_IMETHOD    GetCols(PRInt32* aCols) { return superClass::GetCols(aCols); } \
-  NS_IMETHOD    SetCols(PRInt32 aCols) { return superClass::SetCols(aCols); } \
-  NS_IMETHOD    GetDisabled(PRBool* aDisabled) { return superClass::GetDisabled(aDisabled); } \
-  NS_IMETHOD    SetDisabled(PRBool aDisabled) { return superClass::SetDisabled(aDisabled); } \
-  NS_IMETHOD    GetName(nsString& aName) { return superClass::GetName(aName); } \
-  NS_IMETHOD    SetName(const nsString& aName) { return superClass::SetName(aName); } \
-  NS_IMETHOD    GetReadOnly(PRBool* aReadOnly) { return superClass::GetReadOnly(aReadOnly); } \
-  NS_IMETHOD    SetReadOnly(PRBool aReadOnly) { return superClass::SetReadOnly(aReadOnly); } \
-  NS_IMETHOD    GetRows(PRInt32* aRows) { return superClass::GetRows(aRows); } \
-  NS_IMETHOD    SetRows(PRInt32 aRows) { return superClass::SetRows(aRows); } \
-  NS_IMETHOD    GetTabIndex(PRInt32* aTabIndex) { return superClass::GetTabIndex(aTabIndex); } \
-  NS_IMETHOD    SetTabIndex(PRInt32 aTabIndex) { return superClass::SetTabIndex(aTabIndex); } \
-  NS_IMETHOD    Blur() { return superClass::Blur(); }  \
-  NS_IMETHOD    Focus() { return superClass::Focus(); }  \
-  NS_IMETHOD    Select() { return superClass::Select(); }  \
+#define NS_FORWARD_IDOMHTMLTEXTAREAELEMENT(_to)  \
+  NS_IMETHOD    GetDefaultValue(nsString& aDefaultValue) { return _to##GetDefaultValue(aDefaultValue); } \
+  NS_IMETHOD    SetDefaultValue(const nsString& aDefaultValue) { return _to##SetDefaultValue(aDefaultValue); } \
+  NS_IMETHOD    GetForm(nsIDOMHTMLFormElement** aForm) { return _to##GetForm(aForm); } \
+  NS_IMETHOD    SetForm(nsIDOMHTMLFormElement* aForm) { return _to##SetForm(aForm); } \
+  NS_IMETHOD    GetAccessKey(nsString& aAccessKey) { return _to##GetAccessKey(aAccessKey); } \
+  NS_IMETHOD    SetAccessKey(const nsString& aAccessKey) { return _to##SetAccessKey(aAccessKey); } \
+  NS_IMETHOD    GetCols(PRInt32* aCols) { return _to##GetCols(aCols); } \
+  NS_IMETHOD    SetCols(PRInt32 aCols) { return _to##SetCols(aCols); } \
+  NS_IMETHOD    GetDisabled(PRBool* aDisabled) { return _to##GetDisabled(aDisabled); } \
+  NS_IMETHOD    SetDisabled(PRBool aDisabled) { return _to##SetDisabled(aDisabled); } \
+  NS_IMETHOD    GetName(nsString& aName) { return _to##GetName(aName); } \
+  NS_IMETHOD    SetName(const nsString& aName) { return _to##SetName(aName); } \
+  NS_IMETHOD    GetReadOnly(PRBool* aReadOnly) { return _to##GetReadOnly(aReadOnly); } \
+  NS_IMETHOD    SetReadOnly(PRBool aReadOnly) { return _to##SetReadOnly(aReadOnly); } \
+  NS_IMETHOD    GetRows(PRInt32* aRows) { return _to##GetRows(aRows); } \
+  NS_IMETHOD    SetRows(PRInt32 aRows) { return _to##SetRows(aRows); } \
+  NS_IMETHOD    GetTabIndex(PRInt32* aTabIndex) { return _to##GetTabIndex(aTabIndex); } \
+  NS_IMETHOD    SetTabIndex(PRInt32 aTabIndex) { return _to##SetTabIndex(aTabIndex); } \
+  NS_IMETHOD    Blur() { return _to##Blur(); }  \
+  NS_IMETHOD    Focus() { return _to##Focus(); }  \
+  NS_IMETHOD    Select() { return _to##Select(); }  \
 
 
 extern nsresult NS_InitHTMLTextAreaElementClass(nsIScriptContext *aContext, void **aPrototype);

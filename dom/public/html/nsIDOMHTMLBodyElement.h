@@ -69,19 +69,19 @@ public:
 
 
 
-#define NS_FORWARD_IDOMHTMLBODYELEMENT(superClass)  \
-  NS_IMETHOD    GetALink(nsString& aALink) { return superClass::GetALink(aALink); } \
-  NS_IMETHOD    SetALink(const nsString& aALink) { return superClass::SetALink(aALink); } \
-  NS_IMETHOD    GetBackground(nsString& aBackground) { return superClass::GetBackground(aBackground); } \
-  NS_IMETHOD    SetBackground(const nsString& aBackground) { return superClass::SetBackground(aBackground); } \
-  NS_IMETHOD    GetBgColor(nsString& aBgColor) { return superClass::GetBgColor(aBgColor); } \
-  NS_IMETHOD    SetBgColor(const nsString& aBgColor) { return superClass::SetBgColor(aBgColor); } \
-  NS_IMETHOD    GetLink(nsString& aLink) { return superClass::GetLink(aLink); } \
-  NS_IMETHOD    SetLink(const nsString& aLink) { return superClass::SetLink(aLink); } \
-  NS_IMETHOD    GetText(nsString& aText) { return superClass::GetText(aText); } \
-  NS_IMETHOD    SetText(const nsString& aText) { return superClass::SetText(aText); } \
-  NS_IMETHOD    GetVLink(nsString& aVLink) { return superClass::GetVLink(aVLink); } \
-  NS_IMETHOD    SetVLink(const nsString& aVLink) { return superClass::SetVLink(aVLink); } \
+#define NS_FORWARD_IDOMHTMLBODYELEMENT(_to)  \
+  NS_IMETHOD    GetALink(nsString& aALink) { return _to##GetALink(aALink); } \
+  NS_IMETHOD    SetALink(const nsString& aALink) { return _to##SetALink(aALink); } \
+  NS_IMETHOD    GetBackground(nsString& aBackground) { return _to##GetBackground(aBackground); } \
+  NS_IMETHOD    SetBackground(const nsString& aBackground) { return _to##SetBackground(aBackground); } \
+  NS_IMETHOD    GetBgColor(nsString& aBgColor) { return _to##GetBgColor(aBgColor); } \
+  NS_IMETHOD    SetBgColor(const nsString& aBgColor) { return _to##SetBgColor(aBgColor); } \
+  NS_IMETHOD    GetLink(nsString& aLink) { return _to##GetLink(aLink); } \
+  NS_IMETHOD    SetLink(const nsString& aLink) { return _to##SetLink(aLink); } \
+  NS_IMETHOD    GetText(nsString& aText) { return _to##GetText(aText); } \
+  NS_IMETHOD    SetText(const nsString& aText) { return _to##SetText(aText); } \
+  NS_IMETHOD    GetVLink(nsString& aVLink) { return _to##GetVLink(aVLink); } \
+  NS_IMETHOD    SetVLink(const nsString& aVLink) { return _to##SetVLink(aVLink); } \
 
 
 extern nsresult NS_InitHTMLBodyElementClass(nsIScriptContext *aContext, void **aPrototype);

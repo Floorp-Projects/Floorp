@@ -44,9 +44,9 @@ public:
 
 
 
-#define NS_FORWARD_IDOMHTMLHTMLELEMENT(superClass)  \
-  NS_IMETHOD    GetVersion(nsString& aVersion) { return superClass::GetVersion(aVersion); } \
-  NS_IMETHOD    SetVersion(const nsString& aVersion) { return superClass::SetVersion(aVersion); } \
+#define NS_FORWARD_IDOMHTMLHTMLELEMENT(_to)  \
+  NS_IMETHOD    GetVersion(nsString& aVersion) { return _to##GetVersion(aVersion); } \
+  NS_IMETHOD    SetVersion(const nsString& aVersion) { return _to##SetVersion(aVersion); } \
 
 
 extern nsresult NS_InitHTMLHtmlElementClass(nsIScriptContext *aContext, void **aPrototype);

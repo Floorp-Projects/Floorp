@@ -59,15 +59,15 @@ public:
 
 
 
-#define NS_FORWARD_IDOMHTMLPARAMELEMENT(superClass)  \
-  NS_IMETHOD    GetName(nsString& aName) { return superClass::GetName(aName); } \
-  NS_IMETHOD    SetName(const nsString& aName) { return superClass::SetName(aName); } \
-  NS_IMETHOD    GetType(nsString& aType) { return superClass::GetType(aType); } \
-  NS_IMETHOD    SetType(const nsString& aType) { return superClass::SetType(aType); } \
-  NS_IMETHOD    GetValue(nsString& aValue) { return superClass::GetValue(aValue); } \
-  NS_IMETHOD    SetValue(const nsString& aValue) { return superClass::SetValue(aValue); } \
-  NS_IMETHOD    GetValueType(nsString& aValueType) { return superClass::GetValueType(aValueType); } \
-  NS_IMETHOD    SetValueType(const nsString& aValueType) { return superClass::SetValueType(aValueType); } \
+#define NS_FORWARD_IDOMHTMLPARAMELEMENT(_to)  \
+  NS_IMETHOD    GetName(nsString& aName) { return _to##GetName(aName); } \
+  NS_IMETHOD    SetName(const nsString& aName) { return _to##SetName(aName); } \
+  NS_IMETHOD    GetType(nsString& aType) { return _to##GetType(aType); } \
+  NS_IMETHOD    SetType(const nsString& aType) { return _to##SetType(aType); } \
+  NS_IMETHOD    GetValue(nsString& aValue) { return _to##GetValue(aValue); } \
+  NS_IMETHOD    SetValue(const nsString& aValue) { return _to##SetValue(aValue); } \
+  NS_IMETHOD    GetValueType(nsString& aValueType) { return _to##GetValueType(aValueType); } \
+  NS_IMETHOD    SetValueType(const nsString& aValueType) { return _to##SetValueType(aValueType); } \
 
 
 extern nsresult NS_InitHTMLParamElementClass(nsIScriptContext *aContext, void **aPrototype);

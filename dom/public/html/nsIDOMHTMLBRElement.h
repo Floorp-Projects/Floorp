@@ -44,9 +44,9 @@ public:
 
 
 
-#define NS_FORWARD_IDOMHTMLBRELEMENT(superClass)  \
-  NS_IMETHOD    GetClear(nsString& aClear) { return superClass::GetClear(aClear); } \
-  NS_IMETHOD    SetClear(const nsString& aClear) { return superClass::SetClear(aClear); } \
+#define NS_FORWARD_IDOMHTMLBRELEMENT(_to)  \
+  NS_IMETHOD    GetClear(nsString& aClear) { return _to##GetClear(aClear); } \
+  NS_IMETHOD    SetClear(const nsString& aClear) { return _to##SetClear(aClear); } \
 
 
 extern nsresult NS_InitHTMLBRElementClass(nsIScriptContext *aContext, void **aPrototype);

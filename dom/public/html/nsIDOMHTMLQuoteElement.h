@@ -44,9 +44,9 @@ public:
 
 
 
-#define NS_FORWARD_IDOMHTMLQUOTEELEMENT(superClass)  \
-  NS_IMETHOD    GetCite(nsString& aCite) { return superClass::GetCite(aCite); } \
-  NS_IMETHOD    SetCite(const nsString& aCite) { return superClass::SetCite(aCite); } \
+#define NS_FORWARD_IDOMHTMLQUOTEELEMENT(_to)  \
+  NS_IMETHOD    GetCite(nsString& aCite) { return _to##GetCite(aCite); } \
+  NS_IMETHOD    SetCite(const nsString& aCite) { return _to##SetCite(aCite); } \
 
 
 extern nsresult NS_InitHTMLQuoteElementClass(nsIScriptContext *aContext, void **aPrototype);

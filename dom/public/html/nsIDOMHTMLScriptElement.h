@@ -74,21 +74,21 @@ public:
 
 
 
-#define NS_FORWARD_IDOMHTMLSCRIPTELEMENT(superClass)  \
-  NS_IMETHOD    GetText(nsString& aText) { return superClass::GetText(aText); } \
-  NS_IMETHOD    SetText(const nsString& aText) { return superClass::SetText(aText); } \
-  NS_IMETHOD    GetHtmlFor(nsString& aHtmlFor) { return superClass::GetHtmlFor(aHtmlFor); } \
-  NS_IMETHOD    SetHtmlFor(const nsString& aHtmlFor) { return superClass::SetHtmlFor(aHtmlFor); } \
-  NS_IMETHOD    GetEvent(nsString& aEvent) { return superClass::GetEvent(aEvent); } \
-  NS_IMETHOD    SetEvent(const nsString& aEvent) { return superClass::SetEvent(aEvent); } \
-  NS_IMETHOD    GetCharset(nsString& aCharset) { return superClass::GetCharset(aCharset); } \
-  NS_IMETHOD    SetCharset(const nsString& aCharset) { return superClass::SetCharset(aCharset); } \
-  NS_IMETHOD    GetDefer(PRBool* aDefer) { return superClass::GetDefer(aDefer); } \
-  NS_IMETHOD    SetDefer(PRBool aDefer) { return superClass::SetDefer(aDefer); } \
-  NS_IMETHOD    GetSrc(nsString& aSrc) { return superClass::GetSrc(aSrc); } \
-  NS_IMETHOD    SetSrc(const nsString& aSrc) { return superClass::SetSrc(aSrc); } \
-  NS_IMETHOD    GetType(nsString& aType) { return superClass::GetType(aType); } \
-  NS_IMETHOD    SetType(const nsString& aType) { return superClass::SetType(aType); } \
+#define NS_FORWARD_IDOMHTMLSCRIPTELEMENT(_to)  \
+  NS_IMETHOD    GetText(nsString& aText) { return _to##GetText(aText); } \
+  NS_IMETHOD    SetText(const nsString& aText) { return _to##SetText(aText); } \
+  NS_IMETHOD    GetHtmlFor(nsString& aHtmlFor) { return _to##GetHtmlFor(aHtmlFor); } \
+  NS_IMETHOD    SetHtmlFor(const nsString& aHtmlFor) { return _to##SetHtmlFor(aHtmlFor); } \
+  NS_IMETHOD    GetEvent(nsString& aEvent) { return _to##GetEvent(aEvent); } \
+  NS_IMETHOD    SetEvent(const nsString& aEvent) { return _to##SetEvent(aEvent); } \
+  NS_IMETHOD    GetCharset(nsString& aCharset) { return _to##GetCharset(aCharset); } \
+  NS_IMETHOD    SetCharset(const nsString& aCharset) { return _to##SetCharset(aCharset); } \
+  NS_IMETHOD    GetDefer(PRBool* aDefer) { return _to##GetDefer(aDefer); } \
+  NS_IMETHOD    SetDefer(PRBool aDefer) { return _to##SetDefer(aDefer); } \
+  NS_IMETHOD    GetSrc(nsString& aSrc) { return _to##GetSrc(aSrc); } \
+  NS_IMETHOD    SetSrc(const nsString& aSrc) { return _to##SetSrc(aSrc); } \
+  NS_IMETHOD    GetType(nsString& aType) { return _to##GetType(aType); } \
+  NS_IMETHOD    SetType(const nsString& aType) { return _to##SetType(aType); } \
 
 
 extern nsresult NS_InitHTMLScriptElementClass(nsIScriptContext *aContext, void **aPrototype);

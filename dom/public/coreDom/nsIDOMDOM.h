@@ -45,9 +45,9 @@ public:
 
 
 
-#define NS_FORWARD_IDOMDOM(superClass)  \
-  NS_IMETHOD    CreateDocument(const nsString& aType, nsIDOMDocument** aReturn) { return superClass::CreateDocument(aType, aReturn); }  \
-  NS_IMETHOD    HasFeature(const nsString& aFeature, PRBool* aReturn) { return superClass::HasFeature(aFeature, aReturn); }  \
+#define NS_FORWARD_IDOMDOM(_to)  \
+  NS_IMETHOD    CreateDocument(const nsString& aType, nsIDOMDocument** aReturn) { return _to##CreateDocument(aType, aReturn); }  \
+  NS_IMETHOD    HasFeature(const nsString& aFeature, PRBool* aReturn) { return _to##HasFeature(aFeature, aReturn); }  \
 
 
 extern nsresult NS_InitDOMClass(nsIScriptContext *aContext, void **aPrototype);

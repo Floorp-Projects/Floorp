@@ -50,11 +50,11 @@ public:
 
 
 
-#define NS_FORWARD_IDOMHTMLMAPELEMENT(superClass)  \
-  NS_IMETHOD    GetAreas(nsIDOMHTMLCollection** aAreas) { return superClass::GetAreas(aAreas); } \
-  NS_IMETHOD    SetAreas(nsIDOMHTMLCollection* aAreas) { return superClass::SetAreas(aAreas); } \
-  NS_IMETHOD    GetName(nsString& aName) { return superClass::GetName(aName); } \
-  NS_IMETHOD    SetName(const nsString& aName) { return superClass::SetName(aName); } \
+#define NS_FORWARD_IDOMHTMLMAPELEMENT(_to)  \
+  NS_IMETHOD    GetAreas(nsIDOMHTMLCollection** aAreas) { return _to##GetAreas(aAreas); } \
+  NS_IMETHOD    SetAreas(nsIDOMHTMLCollection* aAreas) { return _to##SetAreas(aAreas); } \
+  NS_IMETHOD    GetName(nsString& aName) { return _to##GetName(aName); } \
+  NS_IMETHOD    SetName(const nsString& aName) { return _to##SetName(aName); } \
 
 
 extern nsresult NS_InitHTMLMapElementClass(nsIScriptContext *aContext, void **aPrototype);

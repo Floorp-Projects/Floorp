@@ -49,11 +49,11 @@ public:
 
 
 
-#define NS_FORWARD_IDOMHTMLOPTGROUPELEMENT(superClass)  \
-  NS_IMETHOD    GetDisabled(PRBool* aDisabled) { return superClass::GetDisabled(aDisabled); } \
-  NS_IMETHOD    SetDisabled(PRBool aDisabled) { return superClass::SetDisabled(aDisabled); } \
-  NS_IMETHOD    GetLabel(nsString& aLabel) { return superClass::GetLabel(aLabel); } \
-  NS_IMETHOD    SetLabel(const nsString& aLabel) { return superClass::SetLabel(aLabel); } \
+#define NS_FORWARD_IDOMHTMLOPTGROUPELEMENT(_to)  \
+  NS_IMETHOD    GetDisabled(PRBool* aDisabled) { return _to##GetDisabled(aDisabled); } \
+  NS_IMETHOD    SetDisabled(PRBool aDisabled) { return _to##SetDisabled(aDisabled); } \
+  NS_IMETHOD    GetLabel(nsString& aLabel) { return _to##GetLabel(aLabel); } \
+  NS_IMETHOD    SetLabel(const nsString& aLabel) { return _to##SetLabel(aLabel); } \
 
 
 extern nsresult NS_InitHTMLOptGroupElementClass(nsIScriptContext *aContext, void **aPrototype);

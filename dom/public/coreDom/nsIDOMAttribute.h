@@ -50,11 +50,11 @@ public:
 
 
 
-#define NS_FORWARD_IDOMATTRIBUTE(superClass)  \
-  NS_IMETHOD    GetName(nsString& aName) { return superClass::GetName(aName); } \
-  NS_IMETHOD    GetSpecified(PRBool* aSpecified) { return superClass::GetSpecified(aSpecified); } \
-  NS_IMETHOD    SetSpecified(PRBool aSpecified) { return superClass::SetSpecified(aSpecified); } \
-  NS_IMETHOD    GetValue(nsString& aValue) { return superClass::GetValue(aValue); } \
+#define NS_FORWARD_IDOMATTRIBUTE(_to)  \
+  NS_IMETHOD    GetName(nsString& aName) { return _to##GetName(aName); } \
+  NS_IMETHOD    GetSpecified(PRBool* aSpecified) { return _to##GetSpecified(aSpecified); } \
+  NS_IMETHOD    SetSpecified(PRBool aSpecified) { return _to##SetSpecified(aSpecified); } \
+  NS_IMETHOD    GetValue(nsString& aValue) { return _to##GetValue(aValue); } \
 
 
 extern nsresult NS_InitAttributeClass(nsIScriptContext *aContext, void **aPrototype);

@@ -44,9 +44,9 @@ public:
 
 
 
-#define NS_FORWARD_IDOMHTMLDIRECTORYELEMENT(superClass)  \
-  NS_IMETHOD    GetCompact(PRBool* aCompact) { return superClass::GetCompact(aCompact); } \
-  NS_IMETHOD    SetCompact(PRBool aCompact) { return superClass::SetCompact(aCompact); } \
+#define NS_FORWARD_IDOMHTMLDIRECTORYELEMENT(_to)  \
+  NS_IMETHOD    GetCompact(PRBool* aCompact) { return _to##GetCompact(aCompact); } \
+  NS_IMETHOD    SetCompact(PRBool aCompact) { return _to##SetCompact(aCompact); } \
 
 
 extern nsresult NS_InitHTMLDirectoryElementClass(nsIScriptContext *aContext, void **aPrototype);

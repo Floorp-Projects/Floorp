@@ -43,8 +43,8 @@ public:
 
 
 
-#define NS_FORWARD_IDOMDOCUMENTFRAGMENT(superClass)  \
-  NS_IMETHOD    GetMasterDoc(nsIDOMDocument** aMasterDoc) { return superClass::GetMasterDoc(aMasterDoc); } \
+#define NS_FORWARD_IDOMDOCUMENTFRAGMENT(_to)  \
+  NS_IMETHOD    GetMasterDoc(nsIDOMDocument** aMasterDoc) { return _to##GetMasterDoc(aMasterDoc); } \
 
 
 extern nsresult NS_InitDocumentFragmentClass(nsIScriptContext *aContext, void **aPrototype);

@@ -44,9 +44,9 @@ public:
 
 
 
-#define NS_FORWARD_IDOMHTMLTITLEELEMENT(superClass)  \
-  NS_IMETHOD    GetText(nsString& aText) { return superClass::GetText(aText); } \
-  NS_IMETHOD    SetText(const nsString& aText) { return superClass::SetText(aText); } \
+#define NS_FORWARD_IDOMHTMLTITLEELEMENT(_to)  \
+  NS_IMETHOD    GetText(nsString& aText) { return _to##GetText(aText); } \
+  NS_IMETHOD    SetText(const nsString& aText) { return _to##SetText(aText); } \
 
 
 extern nsresult NS_InitHTMLTitleElementClass(nsIScriptContext *aContext, void **aPrototype);

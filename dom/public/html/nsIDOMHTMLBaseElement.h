@@ -49,11 +49,11 @@ public:
 
 
 
-#define NS_FORWARD_IDOMHTMLBASEELEMENT(superClass)  \
-  NS_IMETHOD    GetHref(nsString& aHref) { return superClass::GetHref(aHref); } \
-  NS_IMETHOD    SetHref(const nsString& aHref) { return superClass::SetHref(aHref); } \
-  NS_IMETHOD    GetTarget(nsString& aTarget) { return superClass::GetTarget(aTarget); } \
-  NS_IMETHOD    SetTarget(const nsString& aTarget) { return superClass::SetTarget(aTarget); } \
+#define NS_FORWARD_IDOMHTMLBASEELEMENT(_to)  \
+  NS_IMETHOD    GetHref(nsString& aHref) { return _to##GetHref(aHref); } \
+  NS_IMETHOD    SetHref(const nsString& aHref) { return _to##SetHref(aHref); } \
+  NS_IMETHOD    GetTarget(nsString& aTarget) { return _to##GetTarget(aTarget); } \
+  NS_IMETHOD    SetTarget(const nsString& aTarget) { return _to##SetTarget(aTarget); } \
 
 
 extern nsresult NS_InitHTMLBaseElementClass(nsIScriptContext *aContext, void **aPrototype);

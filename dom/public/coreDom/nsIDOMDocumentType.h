@@ -49,11 +49,11 @@ public:
 
 
 
-#define NS_FORWARD_IDOMDOCUMENTTYPE(superClass)  \
-  NS_IMETHOD    GetName(nsString& aName) { return superClass::GetName(aName); } \
-  NS_IMETHOD    SetName(const nsString& aName) { return superClass::SetName(aName); } \
-  NS_IMETHOD    GetEntities(nsIDOMNamedNodeMap** aEntities) { return superClass::GetEntities(aEntities); } \
-  NS_IMETHOD    SetEntities(nsIDOMNamedNodeMap* aEntities) { return superClass::SetEntities(aEntities); } \
+#define NS_FORWARD_IDOMDOCUMENTTYPE(_to)  \
+  NS_IMETHOD    GetName(nsString& aName) { return _to##GetName(aName); } \
+  NS_IMETHOD    SetName(const nsString& aName) { return _to##SetName(aName); } \
+  NS_IMETHOD    GetEntities(nsIDOMNamedNodeMap** aEntities) { return _to##GetEntities(aEntities); } \
+  NS_IMETHOD    SetEntities(nsIDOMNamedNodeMap* aEntities) { return _to##SetEntities(aEntities); } \
 
 
 extern nsresult NS_InitDocumentTypeClass(nsIScriptContext *aContext, void **aPrototype);

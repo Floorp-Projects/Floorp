@@ -55,13 +55,13 @@ public:
 
 
 
-#define NS_FORWARD_IDOMHTMLLABELELEMENT(superClass)  \
-  NS_IMETHOD    GetForm(nsIDOMHTMLFormElement** aForm) { return superClass::GetForm(aForm); } \
-  NS_IMETHOD    SetForm(nsIDOMHTMLFormElement* aForm) { return superClass::SetForm(aForm); } \
-  NS_IMETHOD    GetAccessKey(nsString& aAccessKey) { return superClass::GetAccessKey(aAccessKey); } \
-  NS_IMETHOD    SetAccessKey(const nsString& aAccessKey) { return superClass::SetAccessKey(aAccessKey); } \
-  NS_IMETHOD    GetHtmlFor(nsString& aHtmlFor) { return superClass::GetHtmlFor(aHtmlFor); } \
-  NS_IMETHOD    SetHtmlFor(const nsString& aHtmlFor) { return superClass::SetHtmlFor(aHtmlFor); } \
+#define NS_FORWARD_IDOMHTMLLABELELEMENT(_to)  \
+  NS_IMETHOD    GetForm(nsIDOMHTMLFormElement** aForm) { return _to##GetForm(aForm); } \
+  NS_IMETHOD    SetForm(nsIDOMHTMLFormElement* aForm) { return _to##SetForm(aForm); } \
+  NS_IMETHOD    GetAccessKey(nsString& aAccessKey) { return _to##GetAccessKey(aAccessKey); } \
+  NS_IMETHOD    SetAccessKey(const nsString& aAccessKey) { return _to##SetAccessKey(aAccessKey); } \
+  NS_IMETHOD    GetHtmlFor(nsString& aHtmlFor) { return _to##GetHtmlFor(aHtmlFor); } \
+  NS_IMETHOD    SetHtmlFor(const nsString& aHtmlFor) { return _to##SetHtmlFor(aHtmlFor); } \
 
 
 extern nsresult NS_InitHTMLLabelElementClass(nsIScriptContext *aContext, void **aPrototype);

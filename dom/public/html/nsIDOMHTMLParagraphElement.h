@@ -44,9 +44,9 @@ public:
 
 
 
-#define NS_FORWARD_IDOMHTMLPARAGRAPHELEMENT(superClass)  \
-  NS_IMETHOD    GetAlign(nsString& aAlign) { return superClass::GetAlign(aAlign); } \
-  NS_IMETHOD    SetAlign(const nsString& aAlign) { return superClass::SetAlign(aAlign); } \
+#define NS_FORWARD_IDOMHTMLPARAGRAPHELEMENT(_to)  \
+  NS_IMETHOD    GetAlign(nsString& aAlign) { return _to##GetAlign(aAlign); } \
+  NS_IMETHOD    SetAlign(const nsString& aAlign) { return _to##SetAlign(aAlign); } \
 
 
 extern nsresult NS_InitHTMLParagraphElementClass(nsIScriptContext *aContext, void **aPrototype);

@@ -78,19 +78,19 @@ public:
 
 
 
-#define NS_FORWARD_IDOMWINDOW(superClass)  \
-  NS_IMETHOD    GetWindow(nsIDOMWindow** aWindow) { return superClass::GetWindow(aWindow); } \
-  NS_IMETHOD    GetSelf(nsIDOMWindow** aSelf) { return superClass::GetSelf(aSelf); } \
-  NS_IMETHOD    GetDocument(nsIDOMDocument** aDocument) { return superClass::GetDocument(aDocument); } \
-  NS_IMETHOD    GetNavigator(nsIDOMNavigator** aNavigator) { return superClass::GetNavigator(aNavigator); } \
-  NS_IMETHOD    GetOpener(nsIDOMWindow** aOpener) { return superClass::GetOpener(aOpener); } \
-  NS_IMETHOD    Dump(const nsString& aStr) { return superClass::Dump(aStr); }  \
-  NS_IMETHOD    Alert(const nsString& aStr) { return superClass::Alert(aStr); }  \
-  NS_IMETHOD    ClearTimeout(PRInt32 aTimerID) { return superClass::ClearTimeout(aTimerID); }  \
-  NS_IMETHOD    ClearInterval(PRInt32 aTimerID) { return superClass::ClearInterval(aTimerID); }  \
-  NS_IMETHOD    SetTimeout(JSContext *cx, jsval *argv, PRUint32 argc, PRInt32* aReturn) { return superClass::SetTimeout(cx, argv, argc, aReturn); }  \
-  NS_IMETHOD    SetInterval(JSContext *cx, jsval *argv, PRUint32 argc, PRInt32* aReturn) { return superClass::SetInterval(cx, argv, argc, aReturn); }  \
-  NS_IMETHOD    Open(JSContext *cx, jsval *argv, PRUint32 argc, PRInt32* aReturn) { return superClass::Open(cx, argv, argc, aReturn); }  \
+#define NS_FORWARD_IDOMWINDOW(_to)  \
+  NS_IMETHOD    GetWindow(nsIDOMWindow** aWindow) { return _to##GetWindow(aWindow); } \
+  NS_IMETHOD    GetSelf(nsIDOMWindow** aSelf) { return _to##GetSelf(aSelf); } \
+  NS_IMETHOD    GetDocument(nsIDOMDocument** aDocument) { return _to##GetDocument(aDocument); } \
+  NS_IMETHOD    GetNavigator(nsIDOMNavigator** aNavigator) { return _to##GetNavigator(aNavigator); } \
+  NS_IMETHOD    GetOpener(nsIDOMWindow** aOpener) { return _to##GetOpener(aOpener); } \
+  NS_IMETHOD    Dump(const nsString& aStr) { return _to##Dump(aStr); }  \
+  NS_IMETHOD    Alert(const nsString& aStr) { return _to##Alert(aStr); }  \
+  NS_IMETHOD    ClearTimeout(PRInt32 aTimerID) { return _to##ClearTimeout(aTimerID); }  \
+  NS_IMETHOD    ClearInterval(PRInt32 aTimerID) { return _to##ClearInterval(aTimerID); }  \
+  NS_IMETHOD    SetTimeout(JSContext *cx, jsval *argv, PRUint32 argc, PRInt32* aReturn) { return _to##SetTimeout(cx, argv, argc, aReturn); }  \
+  NS_IMETHOD    SetInterval(JSContext *cx, jsval *argv, PRUint32 argc, PRInt32* aReturn) { return _to##SetInterval(cx, argv, argc, aReturn); }  \
+  NS_IMETHOD    Open(JSContext *cx, jsval *argv, PRUint32 argc, PRInt32* aReturn) { return _to##Open(cx, argv, argc, aReturn); }  \
 
 
 extern nsresult NS_InitWindowClass(nsIScriptContext *aContext, nsIScriptGlobalObject *aGlobal);

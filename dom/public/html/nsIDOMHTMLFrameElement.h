@@ -79,23 +79,23 @@ public:
 
 
 
-#define NS_FORWARD_IDOMHTMLFRAMEELEMENT(superClass)  \
-  NS_IMETHOD    GetFrameBorder(nsString& aFrameBorder) { return superClass::GetFrameBorder(aFrameBorder); } \
-  NS_IMETHOD    SetFrameBorder(const nsString& aFrameBorder) { return superClass::SetFrameBorder(aFrameBorder); } \
-  NS_IMETHOD    GetLongDesc(nsString& aLongDesc) { return superClass::GetLongDesc(aLongDesc); } \
-  NS_IMETHOD    SetLongDesc(const nsString& aLongDesc) { return superClass::SetLongDesc(aLongDesc); } \
-  NS_IMETHOD    GetMarginHeight(nsString& aMarginHeight) { return superClass::GetMarginHeight(aMarginHeight); } \
-  NS_IMETHOD    SetMarginHeight(const nsString& aMarginHeight) { return superClass::SetMarginHeight(aMarginHeight); } \
-  NS_IMETHOD    GetMarginWidth(nsString& aMarginWidth) { return superClass::GetMarginWidth(aMarginWidth); } \
-  NS_IMETHOD    SetMarginWidth(const nsString& aMarginWidth) { return superClass::SetMarginWidth(aMarginWidth); } \
-  NS_IMETHOD    GetName(nsString& aName) { return superClass::GetName(aName); } \
-  NS_IMETHOD    SetName(const nsString& aName) { return superClass::SetName(aName); } \
-  NS_IMETHOD    GetNoResize(PRBool* aNoResize) { return superClass::GetNoResize(aNoResize); } \
-  NS_IMETHOD    SetNoResize(PRBool aNoResize) { return superClass::SetNoResize(aNoResize); } \
-  NS_IMETHOD    GetScrolling(nsString& aScrolling) { return superClass::GetScrolling(aScrolling); } \
-  NS_IMETHOD    SetScrolling(const nsString& aScrolling) { return superClass::SetScrolling(aScrolling); } \
-  NS_IMETHOD    GetSrc(nsString& aSrc) { return superClass::GetSrc(aSrc); } \
-  NS_IMETHOD    SetSrc(const nsString& aSrc) { return superClass::SetSrc(aSrc); } \
+#define NS_FORWARD_IDOMHTMLFRAMEELEMENT(_to)  \
+  NS_IMETHOD    GetFrameBorder(nsString& aFrameBorder) { return _to##GetFrameBorder(aFrameBorder); } \
+  NS_IMETHOD    SetFrameBorder(const nsString& aFrameBorder) { return _to##SetFrameBorder(aFrameBorder); } \
+  NS_IMETHOD    GetLongDesc(nsString& aLongDesc) { return _to##GetLongDesc(aLongDesc); } \
+  NS_IMETHOD    SetLongDesc(const nsString& aLongDesc) { return _to##SetLongDesc(aLongDesc); } \
+  NS_IMETHOD    GetMarginHeight(nsString& aMarginHeight) { return _to##GetMarginHeight(aMarginHeight); } \
+  NS_IMETHOD    SetMarginHeight(const nsString& aMarginHeight) { return _to##SetMarginHeight(aMarginHeight); } \
+  NS_IMETHOD    GetMarginWidth(nsString& aMarginWidth) { return _to##GetMarginWidth(aMarginWidth); } \
+  NS_IMETHOD    SetMarginWidth(const nsString& aMarginWidth) { return _to##SetMarginWidth(aMarginWidth); } \
+  NS_IMETHOD    GetName(nsString& aName) { return _to##GetName(aName); } \
+  NS_IMETHOD    SetName(const nsString& aName) { return _to##SetName(aName); } \
+  NS_IMETHOD    GetNoResize(PRBool* aNoResize) { return _to##GetNoResize(aNoResize); } \
+  NS_IMETHOD    SetNoResize(PRBool aNoResize) { return _to##SetNoResize(aNoResize); } \
+  NS_IMETHOD    GetScrolling(nsString& aScrolling) { return _to##GetScrolling(aScrolling); } \
+  NS_IMETHOD    SetScrolling(const nsString& aScrolling) { return _to##SetScrolling(aScrolling); } \
+  NS_IMETHOD    GetSrc(nsString& aSrc) { return _to##GetSrc(aSrc); } \
+  NS_IMETHOD    SetSrc(const nsString& aSrc) { return _to##SetSrc(aSrc); } \
 
 
 extern nsresult NS_InitHTMLFrameElementClass(nsIScriptContext *aContext, void **aPrototype);

@@ -62,15 +62,15 @@ public:
 
 
 
-#define NS_FORWARD_IDOMNAVIGATOR(superClass)  \
-  NS_IMETHOD    GetUserAgent(nsString& aUserAgent) { return superClass::GetUserAgent(aUserAgent); } \
-  NS_IMETHOD    GetAppCodeName(nsString& aAppCodeName) { return superClass::GetAppCodeName(aAppCodeName); } \
-  NS_IMETHOD    GetAppVersion(nsString& aAppVersion) { return superClass::GetAppVersion(aAppVersion); } \
-  NS_IMETHOD    GetAppName(nsString& aAppName) { return superClass::GetAppName(aAppName); } \
-  NS_IMETHOD    GetLanguage(nsString& aLanguage) { return superClass::GetLanguage(aLanguage); } \
-  NS_IMETHOD    GetPlatform(nsString& aPlatform) { return superClass::GetPlatform(aPlatform); } \
-  NS_IMETHOD    GetSecurityPolicy(nsString& aSecurityPolicy) { return superClass::GetSecurityPolicy(aSecurityPolicy); } \
-  NS_IMETHOD    JavaEnabled(PRBool* aReturn) { return superClass::JavaEnabled(aReturn); }  \
+#define NS_FORWARD_IDOMNAVIGATOR(_to)  \
+  NS_IMETHOD    GetUserAgent(nsString& aUserAgent) { return _to##GetUserAgent(aUserAgent); } \
+  NS_IMETHOD    GetAppCodeName(nsString& aAppCodeName) { return _to##GetAppCodeName(aAppCodeName); } \
+  NS_IMETHOD    GetAppVersion(nsString& aAppVersion) { return _to##GetAppVersion(aAppVersion); } \
+  NS_IMETHOD    GetAppName(nsString& aAppName) { return _to##GetAppName(aAppName); } \
+  NS_IMETHOD    GetLanguage(nsString& aLanguage) { return _to##GetLanguage(aLanguage); } \
+  NS_IMETHOD    GetPlatform(nsString& aPlatform) { return _to##GetPlatform(aPlatform); } \
+  NS_IMETHOD    GetSecurityPolicy(nsString& aSecurityPolicy) { return _to##GetSecurityPolicy(aSecurityPolicy); } \
+  NS_IMETHOD    JavaEnabled(PRBool* aReturn) { return _to##JavaEnabled(aReturn); }  \
 
 
 extern nsresult NS_InitNavigatorClass(nsIScriptContext *aContext, void **aPrototype);

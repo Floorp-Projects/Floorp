@@ -48,10 +48,10 @@ public:
 
 
 
-#define NS_FORWARD_IDOMNSHTMLFORMELEMENT(superClass)  \
-  NS_IMETHOD    GetEncoding(nsString& aEncoding) { return superClass::GetEncoding(aEncoding); } \
-  NS_IMETHOD    GetLength(PRUint32* aLength) { return superClass::GetLength(aLength); } \
-  NS_IMETHOD    NamedItem(const nsString& aName, nsIDOMElement** aReturn) { return superClass::NamedItem(aName, aReturn); }  \
+#define NS_FORWARD_IDOMNSHTMLFORMELEMENT(_to)  \
+  NS_IMETHOD    GetEncoding(nsString& aEncoding) { return _to##GetEncoding(aEncoding); } \
+  NS_IMETHOD    GetLength(PRUint32* aLength) { return _to##GetLength(aLength); } \
+  NS_IMETHOD    NamedItem(const nsString& aName, nsIDOMElement** aReturn) { return _to##NamedItem(aName, aReturn); }  \
 
 
 #endif // nsIDOMNSHTMLFormElement_h__

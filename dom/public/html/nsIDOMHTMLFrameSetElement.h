@@ -49,11 +49,11 @@ public:
 
 
 
-#define NS_FORWARD_IDOMHTMLFRAMESETELEMENT(superClass)  \
-  NS_IMETHOD    GetCols(nsString& aCols) { return superClass::GetCols(aCols); } \
-  NS_IMETHOD    SetCols(const nsString& aCols) { return superClass::SetCols(aCols); } \
-  NS_IMETHOD    GetRows(nsString& aRows) { return superClass::GetRows(aRows); } \
-  NS_IMETHOD    SetRows(const nsString& aRows) { return superClass::SetRows(aRows); } \
+#define NS_FORWARD_IDOMHTMLFRAMESETELEMENT(_to)  \
+  NS_IMETHOD    GetCols(nsString& aCols) { return _to##GetCols(aCols); } \
+  NS_IMETHOD    SetCols(const nsString& aCols) { return _to##SetCols(aCols); } \
+  NS_IMETHOD    GetRows(nsString& aRows) { return _to##GetRows(aRows); } \
+  NS_IMETHOD    SetRows(const nsString& aRows) { return _to##SetRows(aRows); } \
 
 
 extern nsresult NS_InitHTMLFrameSetElementClass(nsIScriptContext *aContext, void **aPrototype);

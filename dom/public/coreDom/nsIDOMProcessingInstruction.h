@@ -49,11 +49,11 @@ public:
 
 
 
-#define NS_FORWARD_IDOMPROCESSINGINSTRUCTION(superClass)  \
-  NS_IMETHOD    GetTarget(nsString& aTarget) { return superClass::GetTarget(aTarget); } \
-  NS_IMETHOD    SetTarget(const nsString& aTarget) { return superClass::SetTarget(aTarget); } \
-  NS_IMETHOD    GetData(nsString& aData) { return superClass::GetData(aData); } \
-  NS_IMETHOD    SetData(const nsString& aData) { return superClass::SetData(aData); } \
+#define NS_FORWARD_IDOMPROCESSINGINSTRUCTION(_to)  \
+  NS_IMETHOD    GetTarget(nsString& aTarget) { return _to##GetTarget(aTarget); } \
+  NS_IMETHOD    SetTarget(const nsString& aTarget) { return _to##SetTarget(aTarget); } \
+  NS_IMETHOD    GetData(nsString& aData) { return _to##GetData(aData); } \
+  NS_IMETHOD    SetData(const nsString& aData) { return _to##SetData(aData); } \
 
 
 extern nsresult NS_InitProcessingInstructionClass(nsIScriptContext *aContext, void **aPrototype);

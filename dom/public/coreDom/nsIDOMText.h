@@ -46,9 +46,9 @@ public:
 
 
 
-#define NS_FORWARD_IDOMTEXT(superClass)  \
-  NS_IMETHOD    SplitText(PRUint32 aOffset, nsIDOMText** aReturn) { return superClass::SplitText(aOffset, aReturn); }  \
-  NS_IMETHOD    JoinText(nsIDOMText* aNode1, nsIDOMText* aNode2, nsIDOMText** aReturn) { return superClass::JoinText(aNode1, aNode2, aReturn); }  \
+#define NS_FORWARD_IDOMTEXT(_to)  \
+  NS_IMETHOD    SplitText(PRUint32 aOffset, nsIDOMText** aReturn) { return _to##SplitText(aOffset, aReturn); }  \
+  NS_IMETHOD    JoinText(nsIDOMText* aNode1, nsIDOMText* aNode2, nsIDOMText** aReturn) { return _to##JoinText(aNode1, aNode2, aReturn); }  \
 
 
 extern nsresult NS_InitTextClass(nsIScriptContext *aContext, void **aPrototype);
