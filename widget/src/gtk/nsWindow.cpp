@@ -2628,6 +2628,11 @@ NS_IMETHODIMP nsWindow::ConstrainPosition(PRInt32 *aX, PRInt32 *aY)
 
 NS_IMETHODIMP nsWindow::Move(PRInt32 aX, PRInt32 aY)
 {
+  // check if we are at right place already
+  if((aX == mBounds.x) && (aY == mBounds.y) && !mIsToplevel) {
+     return NS_OK;
+  }
+
   mBounds.x = aX;
   mBounds.y = aY;
 
