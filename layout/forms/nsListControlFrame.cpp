@@ -269,6 +269,11 @@ nsListControlFrame::Reflow(nsIPresContext&          aPresContext,
   aDesiredSize.width  = 0;
   aDesiredSize.height = 0;
 
+  // Add the list frame as a child of the form
+  if (IsInDropDownMode() == PR_FALSE && !mFormFrame && (eReflowReason_Initial == aReflowState.reason)) {
+    nsFormFrame::AddFormControlFrame(aPresContext, *this);
+  }
+
   //--Calculate a width just big enough for the scrollframe to shrink around the
   //longest element in the list
   nsHTMLReflowState secondPassState(aReflowState);
@@ -1005,6 +1010,10 @@ nsListControlFrame::HandleEvent(nsIPresContext& aPresContext,
     return NS_OK;
   }
 
+  if (nsFormFrame::GetDisabled(this)) { 
+    return NS_OK;
+  }
+
   const nsStyleDisplay* disp = (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
   if (!disp->mVisible) {
     return NS_OK;
@@ -1032,11 +1041,6 @@ nsListControlFrame::SetInitialChildList(nsIPresContext& aPresContext,
                                         nsIFrame*       aChildList)
 {
   mContentFrame = aChildList;
-
-  if (IsInDropDownMode() == PR_FALSE) {
-    nsFormFrame::AddFormControlFrame(aPresContext, *this);
-  }
-
   return nsScrollFrame::SetInitialChildList(aPresContext, aListName, aChildList);
 }
 
@@ -1071,7 +1075,7 @@ nsListControlFrame::Init(nsIPresContext&  aPresContext,
    // get the proper style based on attribute selectors which refer to the
    // selected attribute.
   if (!mIsInitializedFromContent) {
-    InitializeFromContent();
+    Reset();
   }
   
   return result;
@@ -1200,34 +1204,6 @@ nsListControlFrame::SetFrameSelected(PRUint32 aIndex, PRBool aSelected)
   }
   NS_IF_RELEASE(content);
 }
-
-//---------------------------------------------------------
-void 
-nsListControlFrame::InitializeFromContent()
-{
-  PRInt32 length = 0;
-  GetNumberOfOptions(&length);
-  nsIDOMHTMLCollection* options = GetOptions(mContent);
-  nsresult result = NS_OK;
-  if (nsnull != options) {
-    for (PRInt32 i = 0; i < length; i++) {
-      nsIDOMHTMLOptionElement* optionElement = nsnull;
-      optionElement = GetOption(*options, i);
-      if (nsnull != optionElement) {
-        PRBool selected;
-        optionElement->GetDefaultSelected(&selected);
-          // Set the selected index for single selection list boxes.
-        if (selected) {
-          ToggleSelected(i); 
-        }
-        NS_RELEASE(optionElement);
-     }
-   }
-   NS_RELEASE(options);
-  }
-
-}
-
 
 //---------------------------------------------------------
 nsIDOMHTMLCollection* 
@@ -1378,8 +1354,9 @@ nsListControlFrame::Reset()
     nsIDOMHTMLOptionElement* option = GetOption(*options, i);
     if (option) {
       PRBool selected = PR_FALSE;
-      option->GetSelected(&selected);
+      option->GetDefaultSelected(&selected);
       if (selected) {
+        mSelectedIndex = i;
         SetFrameSelected(i, PR_TRUE);
       }
       NS_RELEASE(option);
@@ -1753,7 +1730,7 @@ nsListControlFrame::DidReflow(nsIPresContext& aPresContext,
 {
   if (PR_TRUE == IsInDropDownMode()) 
   {
-    //SyncViewWithFrame();
+    SyncViewWithFrame();
     //mState &= ~NS_FRAME_SYNC_FRAME_AND_VIEW;
     nsresult rv = nsScrollFrame::DidReflow(aPresContext, aStatus);
     //mState |= NS_FRAME_SYNC_FRAME_AND_VIEW;
