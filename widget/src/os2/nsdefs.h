@@ -40,6 +40,8 @@
   #define VERIFY(exp)                 (exp)
 #endif  // !_DEBUG
 
+#define WC_SCROLLBAR_STRING    "#8"  //string equivalent to WC_SCROLLBAR
+
 #endif  // NSDEFS_H
 
 
