@@ -16,18 +16,15 @@
  * Reserved.
  */
 
-#include "nsFileSpecImpl.h"
+#include "nsFileSpecImpl.h"// Always first, to ensure that it compiles alone.
+
 #include "nsIFileStream.h"
 #include "nsFileStream.h"
 
-#include "nsIFileWidget.h"
-#include "nsWidgetsCID.h"
-
-static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
-
-#include "nsIComponentManager.h"
-
 #include "prmem.h"
+
+//static NS_DEFINE_IID(kIFileSpecIID, NS_IFILESPEC_IID);
+NS_IMPL_ISUPPORTS(nsFileSpecImpl, nsIFileSpec::GetIID())
 
 #ifdef NS_DEBUG
 #define TEST_OUT_PTR(p) \
@@ -37,8 +34,23 @@ static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
 #define TEST_OUT_PTR(p)
 #endif
 
-//static NS_DEFINE_IID(kIFileSpecIID, NS_IFILESPEC_IID);
-NS_IMPL_ISUPPORTS(nsFileSpecImpl, nsIFileSpec::GetIID())
+#if 0
+// dp crud
+//----------------------------------------------------------------------------------------
+NS_IMETHODIMP nsFileSpecImpl::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
+//----------------------------------------------------------------------------------------
+{
+    if (aInstancePtr == nsnull)
+        return NS_ERROR_NULL_POINTER;
+    if (aIID.Equals(nsIFileSpec::GetIID()) ||
+        aIID.Equals(nsISupports::GetIID())) {
+        *aInstancePtr = (nsIFileSpec*)this;
+        NS_ADDREF_THIS();
+        return NS_OK;
+    }
+    return NS_NOINTERFACE;
+}
+#endif
 
 //----------------------------------------------------------------------------------------
 nsFileSpecImpl::nsFileSpecImpl()
@@ -86,122 +98,6 @@ NS_IMETHODIMP nsFileSpecImpl::fromFileSpec(const nsIFileSpec *original)
 	mFileSpec = FILESPEC(original);
 	return mFileSpec.Error();
 }
-
-//----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsFileSpecImpl::chooseOutputFile(
-	const char *windowTitle,
-	const char *suggestedLeafName)
-//----------------------------------------------------------------------------------------
-{
-    nsCOMPtr<nsIFileWidget> fileWidget; 
-    nsresult rv = nsComponentManager::CreateInstance(
-    	kCFileWidgetCID,
-        nsnull,
-        nsIFileWidget::GetIID(),
-        (void**)getter_AddRefs(fileWidget));
-    if (NS_FAILED(rv))
-    	return rv;
-    
-    fileWidget->SetDefaultString(suggestedLeafName);
-    nsFileDlgResults result = fileWidget->PutFile(nsnull, windowTitle, mFileSpec);
-    if ( result != nsFileDlgResults_OK)
-    	return NS_FILE_FAILURE;
-    if (mFileSpec.Exists() && result != nsFileDlgResults_Replace)
-    	return NS_FILE_FAILURE;
-    return NS_OK;
-} // nsFileSpecImpl::chooseOutputFile
-
-//----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsFileSpecImpl::chooseInputFile(
-		const char *inTitle,
-		nsIFileSpec::StandardFilterMask inMask,
-		const char *inExtraFilterTitle, const char *inExtraFilter)
-//----------------------------------------------------------------------------------------
-{
-	nsresult rv = NS_OK;
-	nsString* nextTitle;
-	nsString* nextFilter;
-    nsCOMPtr<nsIFileWidget> fileWidget; 
-    rv = nsComponentManager::CreateInstance(
-    	kCFileWidgetCID,
-        nsnull,
-        nsIFileWidget::GetIID(),
-        (void**)getter_AddRefs(fileWidget));
-	if (NS_FAILED(rv))
-		return rv;
-	nsString* titles = nsnull;
-	nsString* filters = nsnull;
-	titles = new nsString[1 + kNumStandardFilters];
-	if (!titles)
-	{
-		rv = NS_ERROR_OUT_OF_MEMORY;
-		goto Clean;
-	}
-	filters = new nsString[1 + kNumStandardFilters];
-	if (!filters)
-	{
-		rv = NS_ERROR_OUT_OF_MEMORY;
-		goto Clean;
-	}
-	nextTitle = titles;
-	nextFilter = filters;
-	if (inMask & eAllReadable)
-	{
-		*nextTitle++ = "All Readable Files";
-		*nextFilter++ = "*.htm; *.html; *.xml; *.gif; *.jpg; *.jpeg; *.png";
-	}
-	if (inMask & eHTMLFiles)
-	{
-		*nextTitle++ = "HTML Files";
-		*nextFilter++ = "*.htm; *.html";
-	}
-	if (inMask & eXMLFiles)
-	{
-		*nextTitle++ = "XML Files";
-		*nextFilter++ =  "*.xml";
-	}
-	if (inMask & eImageFiles)
-	{
-		*nextTitle++ = "Image Files";
-		*nextFilter++ = "*.gif; *.jpg; *.jpeg; *.png";
-	}
-	if (inMask & eExtraFilter)
-	{
-		*nextTitle++ = inExtraFilterTitle;
-		*nextFilter++ = inExtraFilter;
-	}
-	if (inMask & eAllFiles)
-	{
-		*nextTitle++ = "All Files";
-		*nextFilter++ = "*.*";
-	}
-
-	fileWidget->SetFilterList(nextFilter - filters, titles, filters);
-	if (fileWidget->GetFile(nsnull, inTitle, mFileSpec) != nsFileDlgResults_OK)
-		rv = NS_FILE_FAILURE;
-
-Clean:
-	delete [] titles;
-	delete [] filters;
-	return rv;
-} // nsFileSpecImpl::chooseInputFile
-
-//----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsFileSpecImpl::chooseDirectory(const char *title)
-//----------------------------------------------------------------------------------------
-{
-    nsCOMPtr<nsIFileWidget> fileWidget;
-    nsresult rv = nsComponentManager::CreateInstance(
-    	kCFileWidgetCID,
-        nsnull,
-        nsIFileWidget::GetIID(),
-        (void**)getter_AddRefs(fileWidget));
-	if (NS_FAILED(rv))
-		return rv;
-	if (fileWidget->GetFolder(nsnull, title, mFileSpec) != nsFileDlgResults_OK)
-		rv = NS_FILE_FAILURE;
-	return NS_OK;
-} // nsFileSpecImpl::chooseDirectory
 
 //----------------------------------------------------------------------------------------
 NS_IMETHODIMP nsFileSpecImpl::GetURLString(char * *aURLString)
@@ -723,8 +619,13 @@ NS_IMETHODIMP nsDirectoryIteratorImpl::GetCurrentSpec(nsIFileSpec * *aCurrentSpe
 	return nsFileSpecImpl::MakeInterface(mDirectoryIterator->Spec(), aCurrentSpec);
 }
 
+//----------------------------------------------------------------------------------------
 NS_METHOD nsFileSpecImpl::Create(nsISupports* outer, const nsIID& aIID, void* *aIFileSpec)
+//----------------------------------------------------------------------------------------
 {
+#if 1
+	NS_NOTYETIMPLEMENTED("dp checked in all this stuff in the middle of my checkin");
+#else
   if (aIFileSpec == NULL)
     return NS_ERROR_NULL_POINTER;
 
@@ -738,12 +639,13 @@ NS_METHOD nsFileSpecImpl::Create(nsISupports* outer, const nsIID& aIID, void* *a
     return rv;
   }
   return rv;
+#endif
 }
 
-// This function should go away. Object creation should be through the
-// Component Manager.
 //----------------------------------------------------------------------------------------
 nsresult NS_NewFileSpec(nsIFileSpec** result)
+// dp should go away. Code creation should be done through people who have real
+// features to implement.
 //----------------------------------------------------------------------------------------
 {
 	if (!result)
