@@ -1019,43 +1019,50 @@ nsresult nsMsgSearchTerm::MatchDate (PRTime dateToMatch, PRBool *pResult)
 
 nsresult nsMsgSearchTerm::MatchAge (PRTime msgDate, PRBool *pResult)
 {
-	if (!pResult)
-		return NS_ERROR_NULL_POINTER;
+  if (!pResult)
+    return NS_ERROR_NULL_POINTER;
 
-	PRBool result = PR_FALSE;
-	nsresult err = NS_OK;
+  PRBool result = PR_FALSE;
+  nsresult err = NS_OK;
 
+  PRTime now = PR_Now();
+  PRTime cutOffDay;
 
-	PRTime now = PR_Now();
-	PRTime cutOffDay;
-
-	PRInt64 microSecondsPerSecond, secondsInDays, microSecondsInDays;
+  PRInt64 microSecondsPerSecond, secondsInDays, microSecondsInDays;
 	
-	LL_I2L(microSecondsPerSecond, PR_USEC_PER_SEC);
+  LL_I2L(microSecondsPerSecond, PR_USEC_PER_SEC);
   LL_UI2L(secondsInDays, 60 * 60 * 24 * m_value.u.age);
-	LL_MUL(microSecondsInDays, secondsInDays, microSecondsPerSecond);
+  LL_MUL(microSecondsInDays, secondsInDays, microSecondsPerSecond);
 
-	LL_SUB(cutOffDay, now, microSecondsInDays); // = now - term->m_value.u.age * 60 * 60 * 24; 
+  LL_SUB(cutOffDay, now, microSecondsInDays); // = now - term->m_value.u.age * 60 * 60 * 24; 
   // so now cutOffDay is the PRTime cut-off point. Any msg with a time less than that will be past the age .
 
-	switch (m_operator)
-	{
-	case nsMsgSearchOp::IsGreaterThan: // is older than 
-    if (LL_CMP(msgDate, <, cutOffDay))
-			result = PR_TRUE;
-		break;
-	case nsMsgSearchOp::IsLessThan: // is younger than 
-		if (LL_CMP(msgDate, >, cutOffDay))
-			result = PR_TRUE;
-		break;
-	case nsMsgSearchOp::Is:
-    NS_ASSERTION(PR_FALSE, "not supported yet");
-		break;
-	default:
-		NS_ASSERTION(PR_FALSE, "invalid compare op comparing msg age");
-	}
-	*pResult = result;
-	return err;
+  switch (m_operator)
+  {
+    case nsMsgSearchOp::IsGreaterThan: // is older than 
+      if (LL_CMP(msgDate, <, cutOffDay))
+        result = PR_TRUE;
+      break;
+    case nsMsgSearchOp::IsLessThan: // is younger than 
+      if (LL_CMP(msgDate, >, cutOffDay))
+        result = PR_TRUE;
+      break;
+    case nsMsgSearchOp::Is:
+      PRExplodedTime msgDateExploded;
+      PRExplodedTime cutOffDayExploded;
+      if (NS_SUCCEEDED(GetLocalTimes(msgDate, cutOffDay, msgDateExploded, cutOffDayExploded)))
+      {
+        if ((msgDateExploded.tm_mday == cutOffDayExploded.tm_mday) &&
+            (msgDateExploded.tm_month == cutOffDayExploded.tm_month) &&
+            (msgDateExploded.tm_year == cutOffDayExploded.tm_year))
+          result = PR_TRUE;
+      }
+      break;
+    default:
+      NS_ASSERTION(PR_FALSE, "invalid compare op comparing msg age");
+  }
+  *pResult = result;
+  return err;
 }
 
 
