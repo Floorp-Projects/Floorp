@@ -565,7 +565,6 @@ function HandleDeleteOrMoveMessageCompleted(folder)
             // as the last index we had selected, the outliner isn't generating a new
             // selectionChanged notification for the outliner view. So we aren't loading the 
             // next message. to fix this, force the selection changed update.
-            var outlinerView = gSearchView.QueryInterface(Components.interfaces.nsIOutlinerView);
             if (outlinerView)
                 outlinerView.selectionChanged();
 
