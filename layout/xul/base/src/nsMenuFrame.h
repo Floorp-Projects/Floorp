@@ -146,6 +146,8 @@ public:
 
 protected:
   static void UpdateDismissalListener(nsIMenuParent* aMenuParent);
+  void UpdateMenuType();
+  void UpdateMenuChecked();
 
   void OpenMenuInternal(PRBool aActivateFlag);
   void GetMenuChildrenElement(nsIContent** aResult);
@@ -172,9 +174,11 @@ protected:
 
 protected:
   nsFrameList mPopupFrames;
-  PRBool mIsMenu; // Whether or not we can even have children or not.
-  PRBool mMenuOpen;
-  PRBool mHasAnonymousContent;  // Do we have anonymous content frames?
+  PRPackedBool mIsMenu; // Whether or not we can even have children or not.
+  PRPackedBool mMenuOpen;
+  PRPackedBool mHasAnonymousContent;  // Do we have anonymous content frames?
+  PRPackedBool mIsCheckbox;           // Are we a checkbox?
+  PRPackedBool mChecked;              // if so, are we checked?
   nsCOMPtr<nsIContent> mMenuText;
   nsCOMPtr<nsIContent> mAccelText;
   nsIMenuParent* mMenuParent; // Our parent menu.

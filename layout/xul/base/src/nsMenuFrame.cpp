@@ -113,6 +113,8 @@ nsMenuFrame::nsMenuFrame()
   : mIsMenu(PR_FALSE),
     mMenuOpen(PR_FALSE),
     mHasAnonymousContent(PR_FALSE),
+    mIsCheckbox(PR_FALSE),
+    mChecked(PR_FALSE),
     mMenuParent(nsnull),
     mPresContext(nsnull)
 {
@@ -254,6 +256,18 @@ nsMenuFrame::HandleEvent(nsIPresContext& aPresContext,
   }
   else if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP && !IsMenu() &&
            mMenuParent) {
+    // First, flip "checked" state if we're a checkbox menu
+    if (mIsCheckbox) {
+      nsAutoString checked;
+
+      if (mChecked)
+        checked = "false";
+      else
+        checked = "true";
+      mContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::checked, checked,
+                             PR_TRUE);
+    }
+
     // Execute the execute event handler.
     Execute();
   }
@@ -404,6 +418,10 @@ nsMenuFrame::AttributeChanged(nsIPresContext* aPresContext,
       OpenMenuInternal(PR_TRUE);
     else
       OpenMenuInternal(PR_FALSE);
+  } else if (mIsCheckbox && aAttribute == nsHTMLAtoms::checked) {
+    UpdateMenuChecked();
+  } else if (aAttribute == nsHTMLAtoms::type) {
+    UpdateMenuType();
   }
 
   if (mHasAnonymousContent) {
@@ -421,7 +439,9 @@ nsMenuFrame::AttributeChanged(nsIPresContext* aPresContext,
 
     /* we need to reflow, if these change */
     if (aAttribute == nsHTMLAtoms::value ||
-        aAttribute == nsXULAtoms::acceltext) {
+        aAttribute == nsXULAtoms::acceltext ||
+        aAttribute == nsHTMLAtoms::type ||
+        aAttribute == nsHTMLAtoms::checked) {
 
       nsCOMPtr<nsIPresShell> shell;
       nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
@@ -777,6 +797,33 @@ nsMenuFrame::IsDisabled()
   return PR_FALSE;
 }
 
+void
+nsMenuFrame::UpdateMenuType()
+{
+  nsAutoString value;
+  mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, value);
+  if (value != "checkbox") {
+    if (mIsCheckbox)
+      mContent->UnsetAttribute(kNameSpaceID_None, nsHTMLAtoms::checked,
+                               PR_TRUE);
+    mIsCheckbox = PR_FALSE;
+  } else {
+    mIsCheckbox = PR_TRUE;
+    UpdateMenuChecked();
+  }
+}
+
+void
+nsMenuFrame::UpdateMenuChecked() {
+  nsAutoString value;
+  mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::checked,
+                         value);
+  if (value == "true")
+    mChecked = PR_TRUE;
+  else
+    mChecked = PR_FALSE;
+}
+
 NS_IMETHODIMP
 nsMenuFrame::CreateAnonymousContent(nsISupportsArray& aAnonymousChildren)
 {
@@ -860,6 +907,9 @@ nsMenuFrame::CreateAnonymousContent(nsISupportsArray& aAnonymousChildren)
 
   // append now, after we've set all the attributes
   aAnonymousChildren.AppendElement(content);
+
+  // Do the type="checkbox" magic
+  UpdateMenuType();
 
   // Create a spring that serves as padding between the text and the
   // accelerator.
