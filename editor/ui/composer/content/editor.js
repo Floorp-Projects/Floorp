@@ -375,6 +375,10 @@ function CheckAndSaveDocument(reasonToSave, allowDontSave)
   if (!editorShell.documentModified)
     return true;
 
+  // call window.focus, since we need to pop up a dialog
+  // and therefore need to be visible (to prevent user confusion)
+  window.focus();  
+
   var title = window.editorShell.editorDocument.title;
   if (!title)
     title = GetString("untitled");
