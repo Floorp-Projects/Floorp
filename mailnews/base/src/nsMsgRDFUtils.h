@@ -46,9 +46,15 @@ typedef struct _nsMsgRDFNotification {
 #define NC_RDF_TOTALMESSAGES		"http://home.netscape.com/NC-rdf#TotalMessages"
 #define NC_RDF_TOTALUNREADMESSAGES	"http://home.netscape.com/NC-rdf#TotalUnreadMessages"
 
+//Folder Commands
 #define NC_RDF_DELETE				"http://home.netscape.com/NC-rdf#Delete"
 #define NC_RDF_NEWFOLDER			"http://home.netscape.com/NC-rdf#NewFolder"
 #define NC_RDF_GETNEWMESSAGES		"http://home.netscape.com/NC-rdf#GetNewMessages"
+
+//Message Commands
+#define NC_RDF_MARKREAD				"http://home.netscape.com/NC-rdf#MarkRead"
+#define NC_RDF_MARKUNREAD			"http://home.netscape.com/NC-rdf#MarkUnread"
+#define NC_RDF_TOGGLEREAD			"http://home.netscape.com/NC-rdf#ToggleRead"
 
 
 //Returns PR_TRUE if r1 is equal to r2
