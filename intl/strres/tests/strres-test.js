@@ -80,7 +80,7 @@ function open() {
 		browser.loadUrl( url );
 	} else {
 		/* User wants new window. */
-        window.openDialog( "chrome:/navigator/content/", "_blank", "chrome,dialog=no,all", url );
+        window.openDialog( "chrome://navigator/content/", "_blank", "chrome,dialog=no,all", url );
 	}
 
 	/* Close dialog. */
