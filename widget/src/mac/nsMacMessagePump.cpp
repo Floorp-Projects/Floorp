@@ -832,7 +832,7 @@ nsRefData		*theRefData;
 	{
 		theEvent.eventStructType = NS_MENU_EVENT;
 		theEvent.message  = NS_MENU_SELECTED;
-		theEvent.menuItem = menuResult;
+		theEvent.mCommand = menuResult;
 		theEvent.widget   = raptorWindow;
 		theEvent.nativeMsg = aTheEvent;
 		raptorWindow->DispatchEvent(&theEvent);
