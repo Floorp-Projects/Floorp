@@ -26,9 +26,9 @@
 #include "nsCOMPtr.h"
 #include "nsVoidArray.h"
 #include "nsIDOMNode.h"
+#include "nsIDOMRange.h"
 
 class nsIDOMCharacterData;
-class nsIDOMRange;
 class nsISelection;
 
 /***************************************************************************
