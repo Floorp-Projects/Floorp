@@ -249,7 +249,8 @@ void addListener(WebclientEventListener newListener)
 
  */
 
-void nativeEventOccurred(WebclientEventListener target, long eventType)
+void nativeEventOccurred(WebclientEventListener target, long eventType, 
+                         Object eventData)
 {
     ParameterCheck.nonNull(target);
 
@@ -260,7 +261,7 @@ void nativeEventOccurred(WebclientEventListener target, long eventType)
         WebclientEvent event = null;
         
         if (target instanceof DocumentLoadListener) {
-            event = new DocumentLoadEvent(this, eventType);
+            event = new DocumentLoadEvent(this, eventType, eventData);
         }
         // else...
         

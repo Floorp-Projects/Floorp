@@ -33,19 +33,28 @@ public class WebclientEvent extends EventObject
 
 private long type;
 
+private Object eventData;
+
 //
 // Constructors
 //
 
-public WebclientEvent(Object source, long newType)
+public WebclientEvent(Object source, long newType, 
+                      Object newEventData)
 {
     super(source);
     type = newType;
+    eventData = newEventData;
 }
 
 public long getType()
 {
     return type;
+}
+
+public Object getEventData()
+{
+    return eventData;
 }
 
 } // end of class WebclientLoadEvent

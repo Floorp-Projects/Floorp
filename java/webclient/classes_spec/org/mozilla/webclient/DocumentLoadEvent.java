@@ -38,9 +38,10 @@ public static long FETCH_INTERRUPT_EVENT_MASK = 1 << 8;
 // Constructors
 //
 
-public DocumentLoadEvent(Object source, long newType)
+public DocumentLoadEvent(Object source, long newType, 
+                         Object newEventData)
 {
-    super(source, newType);
+    super(source, newType, newEventData);
 }
 
 } // end of class DocumentLoadEvent
