@@ -90,7 +90,7 @@ public:
   virtual void  SuppressHeadersAndFooters(PRBool aDoSup) { mSupressHF = aDoSup; }
   virtual void  SetClipRect(nsRect* aClipRect)           { mClipRect = *aClipRect; }
 
-  virtual SetSharedPageData(nsSharedPageData* aPD) { mPD = aPD; }
+  virtual void SetSharedPageData(nsSharedPageData* aPD) { mPD = aPD; }
 
 protected:
   nsPageFrame();
