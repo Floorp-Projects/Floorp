@@ -411,7 +411,8 @@ eAutoDetectResult CViewSourceHTML::CanParse(CParserContext& aParserContext,nsStr
        aParserContext.mMimeType.EqualsWithConversion(kXHTMLApplicationContentType) ||
        aParserContext.mMimeType.EqualsWithConversion(kRDFTextContentType) ||
        aParserContext.mMimeType.EqualsWithConversion(kHTMLTextContentType) ||
-       aParserContext.mMimeType.EqualsWithConversion(kXULTextContentType)) {
+       aParserContext.mMimeType.EqualsWithConversion(kXULTextContentType) ||
+       aParserContext.mMimeType.EqualsWithConversion(kSGMLTextContentType)) {
       result=ePrimaryDetect;
     }
   }
