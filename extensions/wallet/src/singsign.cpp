@@ -1655,12 +1655,16 @@ si_ReadLine
   lineBuffer = nsAutoString("");
 
   /* read the line */
-  PRUnichar c;
+  PRUnichar c, c2;
   for (;;) {
     if (inHeader) {
       c = Wallet_UTF8Get(strmu);
       if (obscure) {
-        c = Wallet_UTF8Get(strmp);
+        c2 = Wallet_UTF8Get(strmp);
+        if (c != c2) {
+          NS_ASSERTION(0, ".p and .u files differ in header");
+          return -1;
+        }
       }
     } else if (obscure) {
       c = Wallet_UTF8Get(strmu); /* get past the asterisk */
@@ -2031,7 +2035,9 @@ si_SaveSignonDataLocked(PRBool fullSave) {
 
   nsAutoString buffer;
   buffer = "";
-  saveCountP += 16; /* preserve low order four bits which designate the file type */
+  if (fullSave) {
+    saveCountP += 16; /* preserve low order four bits which designate the file type */
+  }
   buffer.Append(PRInt32(saveCountP),10);
   si_WriteLine(strmu, strmp, buffer, PR_FALSE, fullSave, 0, 0, PR_TRUE);
   si_WriteLine(strmu, strmp, buffer, PR_FALSE, fullSave, 0, 0, PR_TRUE);
