@@ -282,10 +282,12 @@ ifdef CPPSRCS
 CPP_PROG_LINK		= 1
 endif
 
+#
+# This will strip out symbols that the component shouldnt be 
+# exporting from the .dynsym section.
+#
 ifdef IS_COMPONENT
-ifdef MOZ_LOW_FAT
-EXTRA_DSO_LDOPTS += $(MOZ_COMPONENTS_LOW_FAT_LDFLAGS)
-endif # MOZ_LOW_FAT
+EXTRA_DSO_LDOPTS += $(MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS)
 endif # IS_COMPONENT
 
 #
