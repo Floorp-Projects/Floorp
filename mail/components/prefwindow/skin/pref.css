@@ -162,22 +162,24 @@
 
 /* :::::: layout preference icons ::::: */
 
+.mailPaneConfigIcon 
+{
+  list-style-image : url("chrome://messenger/skin/icons/mailPaneConfig.png");
+}
+
 #classic 
 {
-  min-height       : 32px;
-  list-style-image : url("chrome://messenger/skin/icons/winclassic.gif");
+  -moz-image-region: rect(0px, 26px, 32px, 0px)
 }
 
 #wide 
 {
-  min-height       : 32px;
-  list-style-image : url("chrome://messenger/skin/icons/winwide.gif");
+  -moz-image-region: rect(0px, 52px, 32px, 26px)
 }
 
 #vertical
 {
-  min-height       : 32px;
-  list-style-image : url("chrome://messenger/skin/icons/winvertical.gif");
+  -moz-image-region: rect(0px, 78px, 32px, 52px)
 }
 
 /** advanced panel settings **/

@@ -64,9 +64,9 @@
     <label value="&selectWindowLayout.label;" accesskey="&selectWindowLayout.accesskey;" control="mailPaneConfig"/>
     <hbox align="center" class="indent">
       <radiogroup id="mailPaneConfig" prefstring="mail.pane_config.dynamic" orient="horizontal">
-        <radio class="iconic" value="0" id="classic"/>
-        <radio class="iconic" value="1" id="wide"/>
-        <radio class="iconic" value="2" id="vertical"/>
+        <radio class="mailPaneConfigIcon" value="0" id="classic"/>
+        <radio class="mailPaneConfigIcon" value="1" id="wide"/>
+        <radio class="mailPaneConfigIcon" value="2" id="vertical"/>
       </radiogroup>
     </hbox> 
   </groupbox>
@@ -118,8 +118,8 @@
 
     <hbox>
       <radiogroup id="newMailNotificationType" prefstring="mail.biff.play_sound.type" orient="vertical">
-        <radio class="iconic" value="0" oncommand="PlaySoundCheck()" label="&systemsound.label;" id="system"/>
-        <radio class="iconic" value="1" oncommand="PlaySoundCheck()" label="&customsound.label;" id="custom"/>
+        <radio value="0" oncommand="PlaySoundCheck()" label="&systemsound.label;" id="system"/>
+        <radio value="1" oncommand="PlaySoundCheck()" label="&customsound.label;" id="custom"/>
       </radiogroup>
 
       <vbox>

@@ -95,7 +95,7 @@
       <checkbox id="wrapLongLines" label="&wrapInMsg.label;"
                 prefstring="mail.wrap_long_lines" accesskey="&wrapInMsg.accesskey;"/>
 
-      <checkbox class="iconic" id="displayGlyph" label="&convertEmoticons.label;"
+      <checkbox id="displayGlyph" label="&convertEmoticons.label;"
                 prefstring="mail.display_glyph" accesskey="&convertEmoticons.accesskey;"/>
     </vbox>
     
