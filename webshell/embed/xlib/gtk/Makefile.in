@@ -32,7 +32,6 @@ CPPSRCS		= \
 BASE_LIBS	= \
 			-lmozjs \
 			-lxpcom \
-			-lmozutil \
 			$(NULL)
 
 GECKO_LIBS		= \
@@ -40,14 +39,9 @@ GECKO_LIBS		= \
 			$(MOZ_TIMER_LIBS) \
 			$(NULL)
 
-IMGLIB_LIBS		= \
-			-limg \
-			$(NULL)
-
 LIBS		= \
 			$(GECKO_LIBS) \
 			$(NETLIB_LIBS) \
-			$(IMGLIB_LIBS) \
 			$(BASE_LIBS) \
 			$(JSJ_LIB) \
 			$(NSPR_LIBS) \

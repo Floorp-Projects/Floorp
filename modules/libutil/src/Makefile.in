@@ -23,13 +23,17 @@ srcdir		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= util
-LIBRARY_NAME	= mozutil
+LIBRARY_NAME	= mozutil_s
 
 INHIBIT_STRIP_NOT_EXPORTED = 1
 
 CSRCS		= obs.c
 
 REQUIRES	= util
+
+MKSHLIB :=
+override NO_SHARED_LIB=1
+override NO_STATIC_LIB=
 
 include $(topsrcdir)/config/rules.mk
 

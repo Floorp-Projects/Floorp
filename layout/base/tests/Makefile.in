@@ -30,32 +30,11 @@ LOCAL_INCLUDES	= -I$(srcdir)/../src
 
 
 LIBS		+= \
-		-lnetlib \
-		-labouturl \
-		-lfileurl \
-		-lftpurl \
-		-lgophurl \
-		-lsockstuburl \
-		-lremoturl \
-		-lnetcnvts \
-		-lhttpurl \
-		-lmimetype \
-		-lpwcac \
-		-lnetcache \
-		-lnetwork \
-		$(DIST)/bin/components/libraptorhtml.$(DLL_SUFFIX) \
+		 $(DIST)/lib/libraptorlayout_s.a \
 		-lraptorgfx \
-		-limg \
-		-lmozutil \
-		$(PNG_LIBS) \
-		$(JPEG_LIBS) \
 		-lmozjs \
 		$(MOZ_TIMER_LIBS) \
 		-lxpcom \
-		-lxp \
-		-ljsurl \
-		-ljsdom \
-		$(ZLIB_LIBS) \
 		$(NSPR_LIBS) \
 		$(TK_LIBS) \
 		$(NULL)

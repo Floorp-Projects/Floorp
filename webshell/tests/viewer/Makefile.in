@@ -92,16 +92,11 @@ endif
 BASE_LIBS		= \
 			-lmozjs \
 			-lxpcom \
-			-lmozutil \
 			$(NULL)
 
 GECKO_LIBS		= \
 			-lwidgetsupport_s \
 			-lraptorgfx \
-			$(NULL)
-
-IMGLIB_LIBS		= \
-			-limg \
 			$(NULL)
 
 ifndef NECKO
@@ -132,7 +127,6 @@ endif
 XP_DIST_LIBS = \
 			$(GECKO_LIBS) \
 			$(NETLIB_LIBS) \
-			$(IMGLIB_LIBS) \
 			$(MOZ_TIMER_LIBS) \
 			$(BASE_LIBS) \
 			$(JSJ_LIB) \

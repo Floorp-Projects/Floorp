@@ -28,10 +28,7 @@ SIMPLE_PROGRAMS	= TestXPTCInvoke
 CPPSRCS		= TestXPTCInvoke.cpp
 
 LIBS		= \
-		-L$(DIST)/bin \
-		-L$(DIST)/lib \
 		-lxpcom \
-		-lmozutil \
 		$(NSPR_LIBS) \
 		$(NULL)
 

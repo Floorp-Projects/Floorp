@@ -50,24 +50,15 @@ NET_LIBS	= \
 		-lnetcache \
 		-lpwcac \
 		$(NULL)
-else
-NET_LIBS	= -lneckoutil_s
 endif
 
 LIBS		= \
 		-lraptorgfx \
 		-lxpcom \
 		-lmozjs \
-		-limg \
-		$(JPEG_LIBS) \
-		$(PNG_LIBS) \
-		-lmozutil \
-		-lxp \
 		$(MOZ_TIMER_LIBS) \
 		$(TK_LIBS) \
 		$(NSPR_LIBS) \
-		$(NET_LIBS) \
-		$(ZLIB_LIBS) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

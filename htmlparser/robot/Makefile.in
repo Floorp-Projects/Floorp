@@ -49,8 +49,6 @@ LIBS		= \
 		-lhttpurl \
 		-lpwcac \
 		-lmozjs \
-		-limg \
-		-lmozutil \
 		-lxpcom \
 		$(MOZ_TIMER_LIBS) \
 		$(TK_LIBS) \

@@ -21,23 +21,17 @@ NSPR_LIBS       = -lplds3 -lplc3 -lnspr3 -lpthread
 BASE_LIBS =          \
         -lmozjs \
         -lxpcom      \
-        -lmozutil \
         $(NULL)
 
 GECKO_LIBS =\
 		-lraptorgfx \
 		$(NULL)
 
-IMGLIB_LIBS =        \
-        -limg        \
-        $(NULL)
-
 JSJ_LIB =
 TK_LIBS = 
 
 ALL_MOZ_LIBS =                 \
         $(GECKO_LIBS)  \
-        $(IMGLIB_LIBS) \
         $(BASE_LIBS)   \
         $(JSJ_LIB)     \
         $(NSPR_LIBS)   \
