@@ -49,6 +49,7 @@
 #include "nsIContent.h"
 #include "nsIHTMLContentContainer.h"
 #include "nsIURI.h"
+#include "nsCURILoader.h"
 #include "nsNetUtil.h"
 
 #include "nsIScriptGlobalObject.h"
@@ -273,42 +274,7 @@ nsEditorShell::~nsEditorShell()
   // care of themselves.
 }
 
-NS_IMPL_ADDREF(nsEditorShell)
-NS_IMPL_RELEASE(nsEditorShell)
-
-NS_IMETHODIMP 
-nsEditorShell::QueryInterface(REFNSIID aIID,void** aInstancePtr)
-{
-  if (aInstancePtr == NULL) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  // Always NULL result, in case of failure
-  *aInstancePtr = NULL;
-
-  if ( aIID.Equals(kISupportsIID)) {
-    *aInstancePtr = (void*) ((nsISupports*)((nsIEditorShell *)this));
-    AddRef();
-    return NS_OK;
-  }
-  else if ( aIID.Equals(NS_GET_IID(nsIEditorShell)) ) {
-    *aInstancePtr = (void*) ((nsIEditorShell*)this);
-    AddRef();
-    return NS_OK;
-  }
-  else if ( aIID.Equals(NS_GET_IID(nsIEditorSpellCheck)) ) {
-    *aInstancePtr = (void*) ((nsIEditorSpellCheck*)this);
-    AddRef();
-    return NS_OK;
-  }
-  else if (aIID.Equals(NS_GET_IID(nsIDocumentLoaderObserver))) {
-    *aInstancePtr = (void*) ((nsIDocumentLoaderObserver*)this);
-     AddRef();
-    return NS_OK;
-  }
- 
-  return NS_ERROR_NO_INTERFACE;
-}
+NS_IMPL_ISUPPORTS4(nsEditorShell, nsIEditorShell, nsIDocumentLoaderObserver, nsIURIContentListener, nsIEditorSpellCheck);
 
 NS_IMETHODIMP    
 nsEditorShell::Init()
@@ -348,7 +314,10 @@ nsEditorShell::Shutdown()
   {
     editor->PreDestroy();
   }
-  
+
+  if (mDocShell)
+    mDocShell->SetParentURIContentListener(nsnull);
+
   // Remove our document mouse event listener
   if (mMouseListenerP)
   {
@@ -825,6 +794,10 @@ nsEditorShell::SetWebShellWindow(nsIDOMWindowInternal* aWin)
     return NS_ERROR_NOT_INITIALIZED;
 
   mDocShell = docShell;
+
+  // register as a content listener, so that we can fend off URL
+  // loads from sidebar
+  rv = mDocShell->SetParentURIContentListener(this);
 
 /*
 #ifdef APP_DEBUG
@@ -4918,6 +4891,79 @@ nsEditorShell::DeleteSuggestedWordList()
 #ifdef XP_MAC
 #pragma mark -
 #endif
+
+/* void onStartURIOpen (in nsIURI aURI, in string aWindowTarget, out boolean aAbortOpen); */
+NS_IMETHODIMP nsEditorShell::OnStartURIOpen(nsIURI *aURI, const char *aWindowTarget, PRBool *aAbortOpen)
+{
+  return NS_OK;
+}
+
+/* void getProtocolHandler (in nsIURI aURI, out nsIProtocolHandler aProtocolHandler); */
+NS_IMETHODIMP nsEditorShell::GetProtocolHandler(nsIURI *aURI, nsIProtocolHandler **aProtocolHandler)
+{
+  NS_ENSURE_ARG_POINTER(aProtocolHandler);
+  *aProtocolHandler = nsnull;
+  return NS_OK;
+}
+
+/* void doContent (in string aContentType, in nsURILoadCommand aCommand, in string aWindowTarget, in nsIChannel aOpenedChannel, out nsIStreamListener aContentHandler, out boolean aAbortProcess); */
+NS_IMETHODIMP nsEditorShell::DoContent(const char *aContentType, nsURILoadCommand aCommand, const char *aWindowTarget, nsIChannel *aOpenedChannel, nsIStreamListener **aContentHandler, PRBool *aAbortProcess)
+{
+  NS_ENSURE_ARG_POINTER(aContentHandler);
+  NS_ENSURE_ARG_POINTER(aAbortProcess);
+  *aContentHandler = nsnull;
+  *aAbortProcess = PR_FALSE;
+  return NS_OK;
+}
+
+/* boolean isPreferred (in string aContentType, in nsURILoadCommand aCommand, in string aWindowTarget, out string aDesiredContentType); */
+NS_IMETHODIMP nsEditorShell::IsPreferred(const char *aContentType, nsURILoadCommand aCommand, const char *aWindowTarget, char **aDesiredContentType, PRBool *_retval)
+{
+  NS_ENSURE_ARG_POINTER(aDesiredContentType);
+  NS_ENSURE_ARG_POINTER(_retval);
+  *aDesiredContentType = nsnull;
+  *_retval = PR_FALSE;
+  return NS_OK;
+}
+
+/* boolean canHandleContent (in string aContentType, in nsURILoadCommand aCommand, in string aWindowTarget, out string aDesiredContentType); */
+NS_IMETHODIMP nsEditorShell::CanHandleContent(const char *aContentType, nsURILoadCommand aCommand, const char *aWindowTarget, char **aDesiredContentType, PRBool *_retval)
+{
+  NS_ENSURE_ARG_POINTER(aDesiredContentType);
+  NS_ENSURE_ARG_POINTER(_retval);
+  *aDesiredContentType = nsnull;
+  *_retval = PR_FALSE;
+  return NS_OK;
+}
+
+/* attribute nsISupports loadCookie; */
+NS_IMETHODIMP nsEditorShell::GetLoadCookie(nsISupports * *aLoadCookie)
+{
+  NS_ENSURE_ARG_POINTER(aLoadCookie);
+  *aLoadCookie = nsnull;
+  return NS_OK;
+}
+NS_IMETHODIMP nsEditorShell::SetLoadCookie(nsISupports * aLoadCookie)
+{
+  return NS_OK;
+}
+
+/* attribute nsIURIContentListener parentContentListener; */
+NS_IMETHODIMP nsEditorShell::GetParentContentListener(nsIURIContentListener * *aParentContentListener)
+{
+  NS_ENSURE_ARG_POINTER(aParentContentListener);
+  *aParentContentListener = nsnull;
+  return NS_OK;
+}
+NS_IMETHODIMP nsEditorShell::SetParentContentListener(nsIURIContentListener * aParentContentListener)
+{
+  return NS_OK;
+}
+
+#ifdef XP_MAC
+#pragma mark -
+#endif
+
 
 NS_IMETHODIMP
 nsEditorShell::BeginBatchChanges()
