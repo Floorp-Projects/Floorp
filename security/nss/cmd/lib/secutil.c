@@ -1371,7 +1371,7 @@ secu_PrintValidity(FILE *out, CERTValidity *v, char *m, int level)
 }
 
 /* This function does NOT expect a DER type and length. */
-void
+SECOidTag
 SECU_PrintObjectID(FILE *out, SECItem *oid, char *m, int level)
 {
     SECOidData *oiddata;
@@ -1384,7 +1384,7 @@ SECU_PrintObjectID(FILE *out, SECItem *oid, char *m, int level)
 	if (m != NULL)
 	    fprintf(out, "%s: ", m);
 	fprintf(out, "%s\n", name);
-	return;
+	return oiddata->offset;
     } 
     oidString = CERT_GetOidString(oid);
     if (oidString) {
@@ -1393,9 +1393,10 @@ SECU_PrintObjectID(FILE *out, SECItem *oid, char *m, int level)
 	    fprintf(out, "%s: ", m);
 	fprintf(out, "%s\n", oidString);
 	PR_smprintf_free(oidString);
-	return;
+	return SEC_OID_UNKNOWN;
     }
     SECU_PrintAsHex(out, oid, m, level);
+    return SEC_OID_UNKNOWN;
 }
 
 
@@ -1980,17 +1981,19 @@ SECU_PrintExtensions(FILE *out, CERTCertExtension **extensions,
     SECOidTag oidTag;
     
     if ( extensions ) {
-	SECU_Indent(out, level); fprintf(out, "%s:\n", msg);
+	if (msg && *msg) {
+	    SECU_Indent(out, level++); fprintf(out, "%s:\n", msg);
+	}
 	
 	while ( *extensions ) {
 	    SECItem *tmpitem;
 
 	    tmpitem = &(*extensions)->id;
-	    SECU_PrintObjectID(out, tmpitem, "Name", level+1);
+	    SECU_PrintObjectID(out, tmpitem, "Name", level);
 
 	    tmpitem = &(*extensions)->critical;
 	    if ( tmpitem->len ) {
-		secu_PrintBoolean(out, tmpitem, "Critical", level+1);
+		secu_PrintBoolean(out, tmpitem, "Critical", level);
 	    }
 
 	    oidTag = SECOID_FindOIDTag (&((*extensions)->id));
@@ -1999,10 +2002,10 @@ SECU_PrintExtensions(FILE *out, CERTCertExtension **extensions,
 	    switch (oidTag) {
 	      	case SEC_OID_X509_INVALID_DATE:
 		case SEC_OID_NS_CERT_EXT_CERT_RENEWAL_TIME:
-		   secu_PrintX509InvalidDate(out, tmpitem, "Date", level + 1);
+		   secu_PrintX509InvalidDate(out, tmpitem, "Date", level );
 		   break;
 		case SEC_OID_X509_CERTIFICATE_POLICIES:
-		   SECU_PrintPolicy(out, tmpitem, "Data", level +1);
+		   SECU_PrintPolicy(out, tmpitem, "Data", level );
 		   break;
 		case SEC_OID_NS_CERT_EXT_BASE_URL:
 		case SEC_OID_NS_CERT_EXT_REVOCATION_URL:
@@ -2014,45 +2017,45 @@ SECU_PrintExtensions(FILE *out, CERTCertExtension **extensions,
 		case SEC_OID_NS_CERT_EXT_HOMEPAGE_URL:
 		case SEC_OID_NS_CERT_EXT_LOST_PASSWORD_URL:
 		case SEC_OID_OCSP_RESPONDER:
-		    SECU_PrintString(out,tmpitem, "URL", level+1);
+		    SECU_PrintString(out,tmpitem, "URL", level);
 		    break;
 		case SEC_OID_NS_CERT_EXT_COMMENT:
-		    SECU_PrintString(out,tmpitem, "Comment", level+1);
+		    SECU_PrintString(out,tmpitem, "Comment", level);
 		    break;
 		case SEC_OID_NS_CERT_EXT_SSL_SERVER_NAME:
-		    SECU_PrintString(out,tmpitem, "ServerName", level+1);
+		    SECU_PrintString(out,tmpitem, "ServerName", level);
 		    break;
 		case SEC_OID_NS_CERT_EXT_CERT_TYPE:
-		    secu_PrintNSCertType(out,tmpitem,"Data",level+1);
+		    secu_PrintNSCertType(out,tmpitem,"Data",level);
 		    break;
 		case SEC_OID_X509_BASIC_CONSTRAINTS:
-		    secu_PrintBasicConstraints(out,tmpitem,"Data",level+1);
+		    secu_PrintBasicConstraints(out,tmpitem,"Data",level);
 		    break;
 		case SEC_OID_X509_EXT_KEY_USAGE:
-		    PrintExtKeyUsageExtension(out, tmpitem, NULL, level+1);
+		    PrintExtKeyUsageExtension(out, tmpitem, NULL, level);
 		    break;
 		case SEC_OID_X509_KEY_USAGE:
-		    secu_PrintX509KeyUsage(out, tmpitem, NULL, level + 1);
+		    secu_PrintX509KeyUsage(out, tmpitem, NULL, level );
 		    break;
 		case SEC_OID_X509_AUTH_KEY_ID:
-		    secu_PrintAuthKeyIDExtension(out, tmpitem, NULL, level + 1);
+		    secu_PrintAuthKeyIDExtension(out, tmpitem, NULL, level );
 		    break;
 		case SEC_OID_X509_SUBJECT_ALT_NAME:
 		case SEC_OID_X509_ISSUER_ALT_NAME:
-		    secu_PrintAltNameExtension(out, tmpitem, NULL, level + 1);
+		    secu_PrintAltNameExtension(out, tmpitem, NULL, level );
 		    break;
 		case SEC_OID_X509_CRL_DIST_POINTS:
-		    secu_PrintCRLDistPtsExtension(out, tmpitem, NULL, level + 1);
+		    secu_PrintCRLDistPtsExtension(out, tmpitem, NULL, level );
 		    break;
 		case SEC_OID_X509_PRIVATE_KEY_USAGE_PERIOD:
 		    SECU_PrintPrivKeyUsagePeriodExtension(out, tmpitem, NULL, 
-							level +1);
+							level );
 		    break;
 		case SEC_OID_X509_NAME_CONSTRAINTS:
-		    secu_PrintNameConstraintsExtension(out, tmpitem, NULL, level+1);
+		    secu_PrintNameConstraintsExtension(out, tmpitem, NULL, level);
 		    break;
 		case SEC_OID_X509_AUTH_INFO_ACCESS:
-		    secu_PrintAuthorityInfoAcess(out, tmpitem, NULL, level+1);
+		    secu_PrintAuthorityInfoAcess(out, tmpitem, NULL, level);
 		    break;
 
 		case SEC_OID_X509_CRL_NUMBER:
@@ -2091,7 +2094,7 @@ SECU_PrintExtensions(FILE *out, CERTCertExtension **extensions,
 
 
 	        default:
-		    SECU_PrintAny(out, tmpitem, "Data", level+1);
+		    SECU_PrintAny(out, tmpitem, "Data", level);
 		break;
 	    }
 
@@ -2193,6 +2196,81 @@ SECU_PrintCertNickname(CERTCertListNode *node, void *data)
     return (SECSuccess);
 }
 
+int
+SECU_DecodeAndPrintExtensions(FILE *out, SECItem *any, char *m, int level)
+{
+    CERTCertExtension **extensions = NULL;
+    PRArenaPool *arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+    int rv = 0;
+
+    if (!arena) 
+	return SEC_ERROR_NO_MEMORY;
+
+    rv = SEC_QuickDERDecodeItem(arena, &extensions, 
+		   SEC_ASN1_GET(CERT_SequenceOfCertExtensionTemplate), any);
+    if (!rv)
+	SECU_PrintExtensions(out, extensions, m, level);
+    else 
+    	SECU_PrintAny(out, any, m, level);
+    PORT_FreeArena(arena, PR_FALSE);
+    return rv;
+}
+
+/* print a decoded SET OF or SEQUENCE OF Extensions */
+int
+SECU_PrintSetOfExtensions(FILE *out, SECItem **any, char *m, int level)
+{
+    int rv = 0;
+    if (m && *m) {
+	SECU_Indent(out, level++); fprintf(out, "%s:\n", m);
+    }
+    while (any && any[0]) {
+    	rv |= SECU_DecodeAndPrintExtensions(out, any[0], "", level);
+	any++;
+    }
+    return rv;
+}
+
+/* print a decoded SET OF or SEQUENCE OF "ANY" */
+int
+SECU_PrintSetOfAny(FILE *out, SECItem **any, char *m, int level)
+{
+    int rv = 0;
+    if (m && *m) {
+	SECU_Indent(out, level++); fprintf(out, "%s:\n", m);
+    }
+    while (any && any[0]) {
+    	SECU_PrintAny(out, any[0], "", level);
+	any++;
+    }
+    return rv;
+}
+
+int
+SECU_PrintCertAttribute(FILE *out, CERTAttribute *attr, char *m, int level)
+{
+    int rv = 0;
+    SECOidTag tag;
+    tag = SECU_PrintObjectID(out, &attr->attrType, "Attribute Type", level);
+    if (tag == SEC_OID_PKCS9_EXTENSION_REQUEST) {
+	rv = SECU_PrintSetOfExtensions(out, attr->attrValue, "Extensions", level);
+    } else {
+	rv = SECU_PrintSetOfAny(out, attr->attrValue, "Attribute Values", level);
+    }
+    return rv;
+}
+
+int
+SECU_PrintCertAttributes(FILE *out, CERTAttribute **attrs, char *m, int level)
+{
+    int rv = 0;
+    while (attrs[0]) {
+	rv |= SECU_PrintCertAttribute(out, attrs[0], m, level+1);
+    	attrs++;
+    }
+    return rv;
+}
+
 int  /* sometimes a PRErrorCode, other times a SECStatus.  Sigh. */
 SECU_PrintCertificateRequest(FILE *out, SECItem *der, char *m, int level)
 {
@@ -2220,7 +2298,7 @@ SECU_PrintCertificateRequest(FILE *out, SECItem *der, char *m, int level)
     secu_PrintSubjectPublicKeyInfo(out, arena, &cr->subjectPublicKeyInfo,
 			      "Subject Public Key Info", level+1);
     if (cr->attributes)
-	SECU_PrintAny(out, cr->attributes[0], "Attributes", level+1);
+	SECU_PrintCertAttributes(out, cr->attributes, "Attributes", level+1);
     rv = 0;
 loser:
     PORT_FreeArena(arena, PR_FALSE);

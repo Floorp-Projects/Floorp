@@ -186,7 +186,7 @@ extern void SECU_Indent(FILE *out, int level);
 extern void SECU_PrintInteger(FILE *out, SECItem *i, char *m, int level);
 
 /* Print ObjectIdentifier symbolically */
-extern void SECU_PrintObjectID(FILE *out, SECItem *oid, char *m, int level);
+extern SECOidTag SECU_PrintObjectID(FILE *out, SECItem *oid, char *m, int level);
 
 /* Print AlgorithmIdentifier symbolically */
 extern void SECU_PrintAlgorithmID(FILE *out, SECAlgorithmID *a, char *m,
