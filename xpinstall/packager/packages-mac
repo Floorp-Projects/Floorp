@@ -168,8 +168,6 @@ viewer:Components:profile.shlb
 viewer:Components:profileservices.xpt 
 viewer:Components:rdf.xpt 
 viewer:Components:RDFLibrary.shlb 
-viewer:Components:RegViewer.shlb 
-viewer:Components:RegViewer.xpt 
 viewer:Components:related.xpt 
 viewer:Components:search.xpt 
 viewer:Components:shistory.shlb 

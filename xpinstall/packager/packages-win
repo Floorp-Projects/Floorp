@@ -118,8 +118,6 @@ bin\components\nsprefm.dll
 bin\components\nsSidebar.js
 bin\components\prefmigr.xpt
 bin\components\proxyObject.xpt
-bin\components\regviewer.xpt
-bin\components\regviewr.dll
 bin\components\sidebar.xpt
 bin\components\signonviewer.xpt
 bin\components\tridentprofile.dll

@@ -1122,8 +1122,6 @@ sub BuildClientDist()
 
     # directory
     InstallFromManifest(":mozilla:xpfe:components:directory:MANIFEST_IDL",         "$distdirectory:idl:");
-    # regviewer
-    InstallFromManifest(":mozilla:xpfe:components:regviewer:MANIFEST_IDL",     "$distdirectory:idl:");
 
     InstallFromManifest(":mozilla:xpfe:components:intl:MANIFEST",                  "$distdirectory:xpfe:");
 
@@ -1497,7 +1495,6 @@ sub BuildIDLProjects()
     BuildIDLProject(":mozilla:extensions:xml-rpc:macbuild:xml-rpcIDL.xml","xml-rpc");
     BuildIDLProject(":mozilla:xpfe:components:bookmarks:macbuild:BookmarksIDL.xml", "bookmarks");
     BuildIDLProject(":mozilla:xpfe:components:directory:DirectoryIDL.xml",          "Directory");
-    BuildIDLProject(":mozilla:xpfe:components:regviewer:RegViewerIDL.xml",          "RegViewer");
     BuildIDLProject(":mozilla:xpfe:components:history:macbuild:historyIDL.xml",     "history");
     BuildIDLProject(":mozilla:xpfe:components:shistory:macbuild:shistoryIDL.xml",   "shistory");
     BuildIDLProject(":mozilla:xpfe:components:related:macbuild:RelatedIDL.xml",     "related");
@@ -2254,7 +2251,6 @@ sub BuildXPAppProjects()
 
     # Components
     BuildOneProject(":mozilla:xpfe:components:find:macbuild:FindComponent.xml", "FindComponent$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:xpfe:components:regviewer:RegViewer.xml", "RegViewer$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:xpfe:components:shistory:macbuild:shistory.xml", "shistory$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:xpfe:components:macbuild:appcomps.xml", "appcomps$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
     InstallFromManifest(":mozilla:xpfe:appshell:src:MANIFEST_COMPONENTS", "${dist_dir}Components:");
