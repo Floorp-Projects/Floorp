@@ -687,8 +687,7 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 						(ispPrettyName.IsEmpty()) && 
 						(ispLongName.IsEmpty()) && 
 						(ispInServer.IsEmpty())	&& 
-						(ispOutServer.IsEmpty()) && 
-						(ispPortNumber.IsEmpty())))
+						(ispOutServer.IsEmpty())))
 					{
 						AfxMessageBox("All fields must be filled to create a customized mail account", MB_OK);
 						return FALSE;
@@ -711,8 +710,7 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 					if (!((newsDomainName.IsEmpty()) && 
 						(newsPrettyName.IsEmpty()) && 
 						(newsLongName.IsEmpty()) && 
-						(newsServer.IsEmpty())	&& 
-						(newsPortNumber.IsEmpty())))
+						(newsServer.IsEmpty())))
 					{
 						AfxMessageBox("All fields must be filled to create a customized news account", MB_OK);
 						return FALSE;
