@@ -121,6 +121,10 @@ my @checklist;
 
 PutHeader("Bugzilla Sanity Check");
 
+###########################################################################
+# Fix vote cache
+###########################################################################
+
 if (exists $::FORM{'rebuildvotecache'}) {
     Status("OK, now rebuilding vote cache.");
     SendSQL("lock tables bugs write, votes read");
@@ -157,6 +161,10 @@ foreach my $field (("bug_severity", "bug_status", "op_sys",
         Alert("Bug(s) found with invalid $field value: ".join(', ',@invalid));
     }
 }
+
+###########################################################################
+# Perform referential (cross) checks
+###########################################################################
 
 CrossCheck("keyworddefs", "id",
            ["keywords", "keywordid"]);
@@ -207,6 +215,9 @@ CrossCheck("products", "product",
            ["versions", "program", "value"],
            ["attachstatusdefs", "product", "name"]);
 
+###########################################################################
+# Perform group checks
+###########################################################################
 
 Status("Checking groups");
 SendSQL("select bit from groups where bit != pow(2, round(log(bit) / log(2)))");
@@ -224,8 +235,9 @@ while (@row = FetchSQLData()) {
     Alert("Bad groupset $row[1] found in bug " . BugLink($row[0]));
 }
 
-
-
+###########################################################################
+# Perform product specific field checks
+###########################################################################
 
 Status("Checking version/products");
 
@@ -299,7 +311,10 @@ foreach my $ref (@checklist) {
     }
 }
 
-
+###########################################################################
+# Perform login checks
+###########################################################################
+ 
 Status("Checking profile logins");
 
 my $emailregexp = Param("emailregexp");
@@ -312,6 +327,9 @@ while (my ($id,$email) = (FetchSQLData())) {
     Alert "Bad profile email address, id=$id,  &lt;$email&gt;."
 }
 
+###########################################################################
+# Perform vote/keyword cache checks
+###########################################################################
 
 SendSQL("SELECT bug_id,votes,keywords FROM bugs " .
         "WHERE votes != 0 OR keywords != ''");
