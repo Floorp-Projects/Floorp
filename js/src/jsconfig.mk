@@ -141,10 +141,10 @@ endif
 endif
 
 ship:
-	mkdir -p $(SHIP_DIR)/lib
+	mkdir -p $(SHIP_DIR)/$(LIB)
 	mkdir -p $(SHIP_DIR)/include
 	mkdir -p $(SHIP_DIR)/bin
-	cp $(SHIP_LIBS) $(SHIP_DIR)/lib
+	cp $(SHIP_LIBS) $(SHIP_DIR)/$(LIB)
 	cp $(SHIP_INCS) $(SHIP_DIR)/include
 	cp $(SHIP_BINS) $(SHIP_DIR)/bin
 	cd $(SHIP_DIR); \

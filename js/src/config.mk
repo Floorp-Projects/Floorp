@@ -152,3 +152,10 @@ VPATH           = $(OBJDIR)
 DEPENDENCIES    = $(OBJDIR)/.md
 
 LCJAR = js15lc30.jar
+
+# Library name
+LIB := lib
+ifeq ($(CPU_ARCH), x86_64)
+LIB := lib64
+endif
+
