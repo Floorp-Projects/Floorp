@@ -820,7 +820,8 @@ nsPop3Protocol::Error(PRInt32 err_code)
         nsCOMPtr<nsIMsgWindow> msgWindow;
         nsCOMPtr<nsIPrompt> dialog;
         rv = mailnewsUrl->GetMsgWindow(getter_AddRefs(msgWindow));
-        if (NS_SUCCEEDED(rv))
+	    NS_ASSERTION(NS_SUCCEEDED(rv) && msgWindow, "no msg window");
+        if (NS_SUCCEEDED(rv) && msgWindow)
         {
             rv = msgWindow->GetPromptDialog(getter_AddRefs(dialog));
             if (NS_SUCCEEDED(rv))
