@@ -7,4 +7,3 @@
 #include "_stubs/MozAxPlugin.c"
 #include "_stubs/netscape_plugin_Plugin.c"
 #include "_stubs/java_lang_String.c"
-// #include "_stubs/java_lang_Object.c"

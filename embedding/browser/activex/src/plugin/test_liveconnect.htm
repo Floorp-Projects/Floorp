@@ -30,14 +30,14 @@ installed to see anything</p>
   </p>
   <form action="#" method="post">
     <input type="button" value="<< Last Month" onclick="prevMonth()"></input>
-	<input type="button" value="Next Month >>" onclick="nextMonth()"></input>
+	<input type="button" value="Next Month >>" onclick="nextMonth()"></input><br>
+	<input type="button" value="Sanity test" onclick="document.cal.x(1)"></input>
   </form>
   <p>
   <script>
-    cal = document.embeds[0];
     document.write("<p>Number of embeds in page = " + document.embeds.length + "</p>");
-	document.write("<p>Plugin isActive = " + cal.isActive() + "</p>");
-	document.write("<p>Plugin window =" + cal.getWindow() + "</p>");
+	document.write("<p>Plugin isActive = " + document.cal.isActive() + "</p>");
+	document.write("<p>Plugin window =" + document.cal.getWindow() + "</p>");
 	function prevMonth()
 	{
 	  // document.cal.x(1);
