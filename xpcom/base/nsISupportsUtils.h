@@ -321,6 +321,60 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr) \
   NS_IMPL_QUERY_BODY(_i6)                                                \
   NS_IMPL_QUERY_TAIL(_i1)
 
+#define NS_IMPL_QUERY_INTERFACE7(_class, _i1, _i2, _i3, _i4, _i5, _i6,   \
+    _i7)                                                                 \
+  NS_IMPL_QUERY_HEAD(_class)                                             \
+  NS_IMPL_QUERY_BODY(_i1)                                                \
+  NS_IMPL_QUERY_BODY(_i2)                                                \
+  NS_IMPL_QUERY_BODY(_i3)                                                \
+  NS_IMPL_QUERY_BODY(_i4)                                                \
+  NS_IMPL_QUERY_BODY(_i5)                                                \
+  NS_IMPL_QUERY_BODY(_i6)                                                \
+  NS_IMPL_QUERY_BODY(_i7)                                                \
+  NS_IMPL_QUERY_TAIL(_i1)
+
+#define NS_IMPL_QUERY_INTERFACE8(_class, _i1, _i2, _i3, _i4, _i5, _i6,   \
+    _i7, _i8)                                                            \
+  NS_IMPL_QUERY_HEAD(_class)                                             \
+  NS_IMPL_QUERY_BODY(_i1)                                                \
+  NS_IMPL_QUERY_BODY(_i2)                                                \
+  NS_IMPL_QUERY_BODY(_i3)                                                \
+  NS_IMPL_QUERY_BODY(_i4)                                                \
+  NS_IMPL_QUERY_BODY(_i5)                                                \
+  NS_IMPL_QUERY_BODY(_i6)                                                \
+  NS_IMPL_QUERY_BODY(_i7)                                                \
+  NS_IMPL_QUERY_BODY(_i8)                                                \
+  NS_IMPL_QUERY_TAIL(_i1)
+
+#define NS_IMPL_QUERY_INTERFACE9(_class, _i1, _i2, _i3, _i4, _i5, _i6,   \
+   _i7, _i8, _i9)                                                        \
+  NS_IMPL_QUERY_HEAD(_class)                                             \
+  NS_IMPL_QUERY_BODY(_i1)                                                \
+  NS_IMPL_QUERY_BODY(_i2)                                                \
+  NS_IMPL_QUERY_BODY(_i3)                                                \
+  NS_IMPL_QUERY_BODY(_i4)                                                \
+  NS_IMPL_QUERY_BODY(_i5)                                                \
+  NS_IMPL_QUERY_BODY(_i6)                                                \
+  NS_IMPL_QUERY_BODY(_i7)                                                \
+  NS_IMPL_QUERY_BODY(_i8)                                                \
+  NS_IMPL_QUERY_BODY(_i9)                                                \
+  NS_IMPL_QUERY_TAIL(_i1)
+
+#define NS_IMPL_QUERY_INTERFACE10(_class, _i1, _i2, _i3, _i4, _i5, _i6,  \
+   _i7, _i8, _i9, i10)                                                   \
+  NS_IMPL_QUERY_HEAD(_class)                                             \
+  NS_IMPL_QUERY_BODY(_i1)                                                \
+  NS_IMPL_QUERY_BODY(_i2)                                                \
+  NS_IMPL_QUERY_BODY(_i3)                                                \
+  NS_IMPL_QUERY_BODY(_i4)                                                \
+  NS_IMPL_QUERY_BODY(_i5)                                                \
+  NS_IMPL_QUERY_BODY(_i6)                                                \
+  NS_IMPL_QUERY_BODY(_i7)                                                \
+  NS_IMPL_QUERY_BODY(_i8)                                                \
+  NS_IMPL_QUERY_BODY(_i9)                                                \
+  NS_IMPL_QUERY_BODY(_i10)                                               \
+  NS_IMPL_QUERY_TAIL(_i1)
+
 /*
  The following macro is deprecated.  We need to switch all instances
  to |NS_IMPL_QUERY_INTERFACE1|, or |NS_IMPL_QUERY_INTERFACE0| depending
@@ -397,6 +451,29 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr) \
   NS_IMPL_ADDREF(_class)                                      \
   NS_IMPL_RELEASE(_class)                                     \
   NS_IMPL_QUERY_INTERFACE6(_class, _i1, _i2, _i3, _i4, _i5, _i6)
+
+#define NS_IMPL_ISUPPORTS7(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7)   \
+  NS_IMPL_ADDREF(_class)                                      \
+  NS_IMPL_RELEASE(_class)                                     \
+  NS_IMPL_QUERY_INTERFACE7(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7)
+
+#define NS_IMPL_ISUPPORTS8(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8)   \
+  NS_IMPL_ADDREF(_class)                                      \
+  NS_IMPL_RELEASE(_class)                                     \
+  NS_IMPL_QUERY_INTERFACE8(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8)
+
+#define NS_IMPL_ISUPPORTS9(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8, \
+   _i9)   \
+  NS_IMPL_ADDREF(_class)                                      \
+  NS_IMPL_RELEASE(_class)                                     \
+  NS_IMPL_QUERY_INTERFACE9(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8, _i9)
+
+#define NS_IMPL_ISUPPORTS10(_class, _i1, _i2, _i3, _i4, _i5, _i6, \
+   _i7, _i8, _i9, _i10)   \
+  NS_IMPL_ADDREF(_class)                                      \
+  NS_IMPL_RELEASE(_class)                                     \
+  NS_IMPL_QUERY_INTERFACE10(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8, \
+   _i9, _i10)
 
 ////////////////////////////////////////////////////////////////////////////////
 
