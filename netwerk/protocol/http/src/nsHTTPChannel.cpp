@@ -25,6 +25,7 @@
 #include "nsIChannel.h"
 #include "nsIInputStream.h"
 #include "nsIStreamListener.h"
+#include "prmem.h" // XXX can be removed when we start doing real content-type discovery
 
 #include "nsIHttpNotify.h"
 #include "nsINetModRegEntry.h"
@@ -210,10 +211,21 @@ nsHTTPChannel::SetLoadAttributes(PRUint32 aLoadAttributes)
     return NS_OK;
 }
 
+
+#define DUMMY_TYPE "text/html"
+
 NS_IMETHODIMP
 nsHTTPChannel::GetContentType(char * *aContentType)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    // XXX temporary hack until we have a contenttype strategy
+    *aContentType = new char[PL_strlen(DUMMY_TYPE) + 1];
+    if (!*aContentType)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    PL_strcpy(*aContentType, DUMMY_TYPE);
+    return NS_OK;
+
+    //return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
