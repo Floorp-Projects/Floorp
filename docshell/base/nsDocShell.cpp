@@ -2167,14 +2167,19 @@ nsDocShell::LoadURI(const PRUnichar * aURI, PRUint32 aLoadFlags)
 NS_IMETHODIMP
 nsDocShell::Reload(PRUint32 aReloadFlags)
 {
-    NS_ASSERTION(((aReloadFlags & 0xf) == 0),
-                 "Reload command not updated to use load flags!");
-
     // XXXTAB Convert reload type to our type
-    LoadType type = LOAD_RELOAD_NORMAL;
+    LoadType type;
     if (aReloadFlags & LOAD_FLAGS_BYPASS_CACHE &&
-        aReloadFlags & LOAD_FLAGS_BYPASS_PROXY)
+        aReloadFlags & LOAD_FLAGS_BYPASS_PROXY) {
         type = LOAD_RELOAD_BYPASS_PROXY_AND_CACHE;
+    }
+    else if (aReloadFlags & LOAD_HISTORY) {
+        // XXX: LOAD_HISTORY really means load from cache...
+        type = LOAD_HISTORY;
+    } 
+    else {
+        type = LOAD_RELOAD_NORMAL;
+    }
 
     nsresult rv;
     /* If you change this part of code, make sure bug 45297 does not re-occur */
