@@ -35,8 +35,10 @@ class nsNewsSet;
 class nsMsgThread;
 class nsIMsgThread;
 class nsIDBFolderInfo;
+class nsIMsgRFC822Parser;
 
-class nsMsgDatabase : public nsIMsgDatabase {
+class nsMsgDatabase : public nsIMsgDatabase 
+{
 public:
   NS_DECL_ISUPPORTS
 
@@ -183,6 +185,7 @@ public:
 	nsIMdbEnv				*GetEnv() {return m_mdbEnv;}
 	nsIMdbStore				*GetStore() {return m_mdbStore;}
 	virtual PRUint32		GetCurVersion();
+	nsIMsgRFC822Parser		*GetRFC822Parser();
 
 	static nsMsgDatabase* FindInCache(nsFileSpec &dbName);
 
@@ -221,7 +224,7 @@ protected:
 	nsIMdbStore		*m_mdbStore;
 	nsIMdbTable		*m_mdbAllMsgHeadersTable;
 	nsFileSpec		m_dbName;
-
+	nsIMsgRFC822Parser	*m_rfc822Parser;
 	nsNewsSet		*m_newSet;		// new messages since last open.
 
     nsresult CreateMsgHdr(nsIMdbRow* hdrRow, nsFileSpec& path, nsMsgKey key, nsIMessage* *result,

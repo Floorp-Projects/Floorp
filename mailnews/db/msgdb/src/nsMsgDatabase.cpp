@@ -29,6 +29,8 @@
 #include "nsMsgThread.h"
 #include "nsFileStream.h"
 #include "nsString2.h"
+#include "nsIMsgRFC822Parser.h"
+#include "nsMsgBaseCID.h"
 
 #include "nsIMimeConverter.h"
 
@@ -58,6 +60,8 @@ static NS_DEFINE_IID(kILocaleIID, NS_ILOCALE_IID);
 static NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
 static NS_DEFINE_IID(kICollationIID, NS_ICOLLATION_IID);
 static NS_DEFINE_IID(kICollationFactoryIID, NS_ICOLLATIONFACTORY_IID);
+static NS_DEFINE_CID(kMsgRFC822ParserCID,			NS_MSGRFC822PARSER_CID); 
+
 
 #ifdef WE_HAVE_MDBINTERFACES
 static NS_DEFINE_CID(kIMBBCID, NS_IMBB_IID);
@@ -348,7 +352,8 @@ nsMsgDatabase::nsMsgDatabase()
 	  m_threadChildrenColumnToken(0),
 	  m_threadUnreadChildrenColumnToken(0),
 	  m_messageThreadIdColumnToken(0),
-	  m_numReferencesColumnToken(0)
+	  m_numReferencesColumnToken(0),
+	  m_rfc822Parser(nsnull)
 {
 	NS_INIT_REFCNT();
 }
@@ -356,7 +361,13 @@ nsMsgDatabase::nsMsgDatabase()
 nsMsgDatabase::~nsMsgDatabase()
 {
 //	Close(FALSE);	// better have already been closed.
-    if (m_ChangeListeners) {
+	if (m_rfc822Parser)
+	{
+		NS_RELEASE(m_rfc822Parser);
+		m_rfc822Parser = nsnull;
+	}
+    if (m_ChangeListeners) 
+	{
         // better not be any listeners, because we're going away.
         NS_ASSERTION(m_ChangeListeners->Count() == 0, "shouldn't have any listeners");
         NS_RELEASE(m_ChangeListeners);
@@ -2133,6 +2144,22 @@ nsresult nsMsgDatabase::RowCellColumnToCollationKey(nsIMdbRow *row, mdb_token co
 	return err;
 }
 
+nsIMsgRFC822Parser *nsMsgDatabase::GetRFC822Parser()
+{
+
+	if (!m_rfc822Parser)
+	{
+		nsresult rv = nsComponentManager::CreateInstance(kMsgRFC822ParserCID, 
+													NULL, 
+													nsIMsgRFC822Parser::GetIID(), 
+													(void **) &m_rfc822Parser);
+		if (!NS_SUCCEEDED(rv))
+			m_rfc822Parser = nsnull;
+	}
+	return m_rfc822Parser;
+}
+
+
 nsresult nsMsgDatabase::RowCellColumnToUInt32(nsIMdbRow *hdrRow, mdb_token columnToken, PRUint32 &uint32Result)
 {
 	return RowCellColumnToUInt32(hdrRow, columnToken, &uint32Result);
@@ -2292,7 +2319,6 @@ nsresult nsMsgDatabase::ThreadNewHdr(nsMsgHdr* newHdr, PRBool &newThread)
 #define SUBJ_THREADING 1// try reference threading first
 	for (PRInt32 i = 0; i < numReferences; i++)
 	{
-		nsMsgThread *thread = nsnull;
 		nsString2 reference;
 
 		newHdr->GetStringReference(i, reference);
