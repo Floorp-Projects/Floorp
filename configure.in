@@ -544,7 +544,10 @@ case "$target" in
     alpha*)
 	CFLAGS="$CFLAGS -mieee"
 	CXXFLAGS="$CXXFLAGS -mieee"
-        ;;
+    ;;
+    i*86*)
+    AC_DEFINE(MOZ_LEAKY)
+    ;;
     esac
     ;;
 
