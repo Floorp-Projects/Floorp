@@ -560,11 +560,11 @@ clean clobber realclean clobber_all:: $(SUBMAKEFILES)
 distclean:: $(SUBMAKEFILES)
 	+$(LOOP_OVER_DIRS)
 	rm -f $(ALL_TRASH) ; \
-	rm -rf $(ALL_TRASH_DIRS) \
-	$(wildcard *.map) \
+	rm -rf $(ALL_TRASH_DIRS) ;
+	echo $(wildcard *.map) \
 	Makefile .HSancillary $(DIST_GARBAGE) \
 	$(wildcard *.$(OBJ_SUFFIX)) $(wildcard *.ho) \
-	$(wildcard *.$(LIB_SUFFIX)) $(wildcard *$(DLL_SUFFIX))
+	$(wildcard *.$(LIB_SUFFIX)) $(wildcard *$(DLL_SUFFIX)) | $(XARGS) rm -f
 
 alltags:
 	rm -f TAGS
