@@ -22,6 +22,12 @@
  */
 
 #include "nsMessageView.h"
+#include "nsCOMPtr.h"
+#include "nsIMessage.h"
+#include "nsIMsgFolder.h"
+#include "nsMsgUtils.h"
+#include "nsMessageViewDataSource.h"
+#include "nsEnumeratorUtils.h"
 
 
 
@@ -73,5 +79,96 @@ NS_IMETHODIMP nsMessageView::SetShowThreads(PRBool aShowThreads)
 {
 	mShowThreads = aShowThreads;
 	return NS_OK;
+}
+
+NS_IMETHODIMP nsMessageView::GetMessages(nsIRDFResource *parentResource, nsIMsgWindow* msgWindow, nsISimpleEnumerator **messages)
+{
+	nsresult rv = NS_OK;
+	*messages = nsnull;
+	nsCOMPtr<nsIMessage> message(do_QueryInterface(parentResource, &rv));
+	if (NS_SUCCEEDED(rv)) {
+    
+		if(mShowThreads)
+		{
+			nsCOMPtr<nsIMsgFolder> msgfolder;
+			rv = message->GetMsgFolder(getter_AddRefs(msgfolder));
+			if(NS_SUCCEEDED(rv))
+			{
+				nsCOMPtr<nsIMsgThread> thread;
+				rv = msgfolder->GetThreadForMessage(message, getter_AddRefs(thread));
+				if(NS_SUCCEEDED(rv))
+				{
+					nsCOMPtr<nsISimpleEnumerator> threadMessages;
+					nsMsgKey msgKey;
+					message->GetMessageKey(&msgKey);
+					thread->EnumerateMessages(msgKey, getter_AddRefs(threadMessages));
+					nsCOMPtr<nsMessageFromMsgHdrEnumerator> converter;
+					NS_NewMessageFromMsgHdrEnumerator(threadMessages, msgfolder, getter_AddRefs(converter));
+					PRUint32 viewType;
+					rv = GetViewType(&viewType);
+					if(NS_FAILED(rv)) return rv;
+
+					nsMessageViewMessageEnumerator * messageEnumerator = 
+						new nsMessageViewMessageEnumerator(converter, viewType);
+					if(!messageEnumerator)
+						return NS_ERROR_OUT_OF_MEMORY;
+					NS_ADDREF(messageEnumerator);
+					*messages = messageEnumerator;
+					rv = NS_OK;
+
+				}
+			}
+		}
+	}
+	nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(parentResource));
+
+	if(folder)
+	{
+		if(mShowThreads)
+		{
+			nsCOMPtr<nsISimpleEnumerator> threads;
+			rv = folder->GetThreads(msgWindow, getter_AddRefs(threads));
+			if (NS_FAILED(rv)) return rv;
+			nsMessageViewThreadEnumerator * threadEnumerator = 
+				new nsMessageViewThreadEnumerator(threads, folder);
+			if(!threadEnumerator)
+				return NS_ERROR_OUT_OF_MEMORY;
+			NS_ADDREF(threadEnumerator);
+			*messages = threadEnumerator;
+			rv = NS_OK;
+		}
+		else
+		{
+			nsCOMPtr<nsISimpleEnumerator> folderMessages;
+			rv = folder->GetMessages(msgWindow, getter_AddRefs(folderMessages));
+			if (NS_SUCCEEDED(rv))
+			{
+				PRUint32 viewType;
+				rv = GetViewType(&viewType);
+				if(NS_FAILED(rv))
+					return rv;
+
+				nsMessageViewMessageEnumerator * messageEnumerator = 
+					new nsMessageViewMessageEnumerator(folderMessages, viewType);
+				if(!messageEnumerator)
+					return NS_ERROR_OUT_OF_MEMORY;
+				NS_ADDREF(messageEnumerator);
+				*messages = messageEnumerator;
+				rv = NS_OK;
+			}
+		}
+
+	}
+	if(!*messages)
+	{
+		  //return empty array
+		  nsCOMPtr<nsISupportsArray> assertions;
+		  rv = NS_NewISupportsArray(getter_AddRefs(assertions));
+			if(NS_FAILED(rv))
+				return rv;
+
+		  rv = NS_NewArrayEnumerator(messages, assertions);
+	}
+	return rv;
 }
 

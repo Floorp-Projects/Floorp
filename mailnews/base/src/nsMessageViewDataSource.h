@@ -37,7 +37,7 @@
 /**
  * The mail data source.
  */
-class nsMessageViewDataSource : public nsIRDFCompositeDataSource, public nsIMessageView,
+class nsMessageViewDataSource : public nsIRDFCompositeDataSource,
 								public nsIRDFObserver
 {
 private:
@@ -51,7 +51,6 @@ public:
   NS_DECL_NSIRDFDATASOURCE
   NS_DECL_NSIRDFCOMPOSITEDATASOURCE
   NS_DECL_NSIRDFOBSERVER
-  NS_DECL_NSIMESSAGEVIEW
 	nsMessageViewDataSource(void);
 	virtual ~nsMessageViewDataSource (void);
   virtual nsresult Init();

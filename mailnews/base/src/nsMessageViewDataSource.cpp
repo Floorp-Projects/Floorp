@@ -83,12 +83,6 @@ nsMessageViewDataSource::QueryInterface(REFNSIID iid, void** result)
 		*result = NS_STATIC_CAST(nsIRDFCompositeDataSource*, this);
 		NS_ADDREF_THIS();
 	}
-	else if(iid.Equals(NS_GET_IID(nsIMessageView)))
-	{
-		*result = NS_STATIC_CAST(nsIMessageView*, this);
-		NS_ADDREF_THIS();
-	}
-
 	if(*result)
 	{
 	    return NS_OK;
@@ -526,37 +520,6 @@ NS_IMETHODIMP nsMessageViewDataSource::OnMove(nsIRDFResource* aOldSource,
 }
 
 
-NS_IMETHODIMP nsMessageViewDataSource::GetViewType(PRUint32 *aViewType)
-{
-	if(!aViewType)
-		return NS_ERROR_NULL_POINTER;
-
-	*aViewType = mViewType;
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsMessageViewDataSource::SetViewType(PRUint32 aViewType)
-{
-	mViewType = aViewType;
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsMessageViewDataSource::GetShowThreads(PRBool *aShowThreads)
-{
-	if(!aShowThreads)
-		return NS_ERROR_NULL_POINTER;
-
-	*aShowThreads = mShowThreads;
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsMessageViewDataSource::SetShowThreads(PRBool aShowThreads)
-{
-	mShowThreads = aShowThreads;
-	return NS_OK;
-}
-
-
 nsresult
 nsMessageViewDataSource::createMessageNode(nsIMessage *message,
                                          nsIRDFResource *property,
@@ -592,14 +555,14 @@ NS_IMETHODIMP nsMessageViewMessageEnumerator::GetNext(nsISupports **aItem)
 {
 	if (!aItem)
 		return NS_ERROR_NULL_POINTER;
-	nsresult rv = SetAtNextItem();
-	if (NS_SUCCEEDED(rv) && mCurMsg)
-	{
-		*aItem = mCurMsg;
-		NS_ADDREF(*aItem);
-	}
-	NS_ASSERTION(NS_SUCCEEDED(rv),"getnext shouldn't fail");
-	return rv;
+
+	if(!mCurMsg)
+		return NS_ERROR_FAILURE;
+
+	*aItem = mCurMsg;
+	NS_ADDREF(*aItem);
+
+	return NS_OK;
 }
 
 /** GetNext will return the next item it will fail if the list is empty
@@ -611,7 +574,12 @@ NS_IMETHODIMP nsMessageViewMessageEnumerator::GetNext(nsISupports **aItem)
 */
 NS_IMETHODIMP nsMessageViewMessageEnumerator::HasMoreElements(PRBool *aResult)
 {
-	return mSrcEnumerator->HasMoreElements(aResult);
+	if(!aResult)
+		return NS_ERROR_NULL_POINTER;
+
+	nsresult rv = SetAtNextItem();
+	*aResult = NS_SUCCEEDED(rv);
+	return NS_OK;
 }
 
 //This function sets mSrcEnumerator at the next item that fits

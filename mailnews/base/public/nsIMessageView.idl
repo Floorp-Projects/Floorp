@@ -21,6 +21,9 @@
  */
 
 #include "nsISupports.idl"
+#include "nsIRDFResource.idl"
+#include "nsIEnumerator.idl"
+#include "nsIMsgWindow.idl"
 
 [scriptable, uuid(14495572-E945-11d2-8A52-0060B0FC04D2)]
 
@@ -33,4 +36,6 @@ interface nsIMessageView :  nsISupports
 %}
 	attribute unsigned long viewType;
 	attribute boolean showThreads;
+
+	void GetMessages(in nsIRDFResource parentResource, in nsIMsgWindow msgWindow, out nsISimpleEnumerator messages);
 };

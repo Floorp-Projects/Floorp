@@ -376,45 +376,6 @@ NS_IMETHODIMP nsMsgFolderDataSource::GetTargets(nsIRDFResource* source,
 				rv = NS_OK;
 			}
     }
-    else if ((kNC_MessageChild == property))
-    {
-		PRBool showThreads;
-		GetIsThreaded(&showThreads);
-
-		if(showThreads)
-		{
-			nsCOMPtr<nsISimpleEnumerator> threads;
-			rv = folder->GetThreads(mWindow, getter_AddRefs(threads));
-			if (NS_FAILED(rv)) return rv;
-			nsMessageViewThreadEnumerator * threadEnumerator = 
-				new nsMessageViewThreadEnumerator(threads, folder);
-			if(!threadEnumerator)
-				return NS_ERROR_OUT_OF_MEMORY;
-			NS_ADDREF(threadEnumerator);
-			*targets = threadEnumerator;
-			rv = NS_OK;
-		}
-		else
-		{
-			nsCOMPtr<nsISimpleEnumerator> messages;
-			rv = folder->GetMessages(mWindow, getter_AddRefs(messages));
-			if (NS_SUCCEEDED(rv))
-			{
-				PRUint32 viewType;
-				rv = GetViewType(&viewType);
-				if(NS_FAILED(rv))
-					return rv;
-
-				nsMessageViewMessageEnumerator * messageEnumerator = 
-					new nsMessageViewMessageEnumerator(messages, viewType);
-				if(!messageEnumerator)
-					return NS_ERROR_OUT_OF_MEMORY;
-				NS_ADDREF(messageEnumerator);
-				*targets = messageEnumerator;
-				rv = NS_OK;
-			}
-		}
-    }
     else if ((kNC_Name == property) ||
 		     (kNC_FolderTreeName == property) ||
              (kNC_SpecialFolder == property) ||
@@ -542,7 +503,6 @@ nsMsgFolderDataSource::getFolderArcLabelsOut(nsISupportsArray **arcs)
   (*arcs)->AppendElement(kNC_Charset);
   (*arcs)->AppendElement(kNC_BiffState);
   (*arcs)->AppendElement(kNC_Child);
-  (*arcs)->AppendElement(kNC_MessageChild);
   (*arcs)->AppendElement(kNC_NoSelect);
   
   return NS_OK;
@@ -723,10 +683,9 @@ NS_IMETHODIMP nsMsgFolderDataSource::OnItemRemoved(nsISupports *parentItem, nsIS
 nsresult nsMsgFolderDataSource::OnItemAddedOrRemoved(nsISupports *parentItem, nsISupports *item, const char* viewString, PRBool added)
 {
 	nsresult rv;
-	nsCOMPtr<nsIMessage> message;
-	nsCOMPtr<nsIMsgFolder> folder;
 	nsCOMPtr<nsIRDFResource> parentResource;
 	nsCOMPtr<nsIMsgFolder> parentFolder;
+	nsCOMPtr<nsIMsgFolder> folder;
 
 	parentFolder = do_QueryInterface(parentItem);
 	//If the parent isn't a folder then we don't handle it.
@@ -738,29 +697,8 @@ nsresult nsMsgFolderDataSource::OnItemAddedOrRemoved(nsISupports *parentItem, ns
 	if(!parentResource)
 		return NS_OK;
 
-	//If it is a message
-	if(NS_SUCCEEDED(item->QueryInterface(NS_GET_IID(nsIMessage), getter_AddRefs(message))))
-	{
-		//If we're in a threaded view only do this if the view passed in is the thread view. Or if we're in 
-		//a non threaded view only do this if the view passed in is the flat view.
-
-		PRBool isThreaded, isThreadNotification;
-		GetIsThreaded(&isThreaded);
-		isThreadNotification = PL_strcmp(viewString, "threadMessageView") == 0;
-		
-		if((isThreaded && isThreadNotification) ||
-			(!isThreaded && !isThreadNotification))
-		{
-			nsCOMPtr<nsIRDFNode> itemNode(do_QueryInterface(item, &rv));
-			if(NS_SUCCEEDED(rv))
-			{
-				//Notify folders that a message was added or deleted.
-				NotifyObservers(parentResource, kNC_MessageChild, itemNode, added, PR_FALSE);
-			}
-		}
-	}
 	//If we are doing this to a folder
-	else if(NS_SUCCEEDED(item->QueryInterface(NS_GET_IID(nsIMsgFolder), getter_AddRefs(folder))))
+	if(NS_SUCCEEDED(item->QueryInterface(NS_GET_IID(nsIMsgFolder), getter_AddRefs(folder))))
 	{
 		nsCOMPtr<nsIRDFNode> itemNode(do_QueryInterface(item, &rv));
 		if(NS_SUCCEEDED(rv))
@@ -769,7 +707,9 @@ nsresult nsMsgFolderDataSource::OnItemAddedOrRemoved(nsISupports *parentItem, ns
 			NotifyObservers(parentResource, kNC_Child, itemNode, added, PR_FALSE);
 		}
 	}
-  return NS_OK;
+
+	return NS_OK;
+
 }
 
 NS_IMETHODIMP
@@ -918,9 +858,7 @@ nsresult nsMsgFolderDataSource::createFolderNode(nsIMsgFolder* folder,
 		rv = createSubfoldersHaveUnreadMessagesNode(folder, target);
 	else if ((kNC_Child == property))
 		rv = createFolderChildNode(folder, target);
-	else if ((kNC_MessageChild == property))
-		rv = createFolderMessageNode(folder, target);
-  else if ((kNC_NoSelect == property))
+    else if ((kNC_NoSelect == property))
     rv = createFolderNoSelectNode(folder, target);
 
   if (NS_FAILED(rv)) return NS_RDF_NO_VALUE;
@@ -1426,28 +1364,6 @@ nsMsgFolderDataSource::createFolderChildNode(nsIMsgFolder *folder,
 }
 
 
-nsresult
-nsMsgFolderDataSource::createFolderMessageNode(nsIMsgFolder *folder,
-                                               nsIRDFNode **target)
-{
-  nsCOMPtr<nsISimpleEnumerator> messages;
-  nsresult rv = folder->GetMessages(mWindow, getter_AddRefs(messages));
-  if (NS_SUCCEEDED(rv) && rv != NS_RDF_CURSOR_EMPTY) {
-	PRBool hasMore = PR_FALSE;
-	rv = messages->HasMoreElements(&hasMore);
-	if (NS_SUCCEEDED(rv) && hasMore)
-	{
-		nsCOMPtr<nsISupports> firstMessage;
-		rv = messages->GetNext(getter_AddRefs(firstMessage));
-		if (NS_SUCCEEDED(rv)) 
-		{
-			rv = firstMessage->QueryInterface(NS_GET_IID(nsIRDFNode), (void**)target);
-		}
-    }
-  }
-  return rv == NS_OK ? NS_OK : NS_RDF_NO_VALUE;
-}
-
 nsresult nsMsgFolderDataSource::DoCopyToFolder(nsIMsgFolder *dstFolder, nsISupportsArray *arguments,
 											   nsIMsgWindow *msgWindow, PRBool isMove)
 {
@@ -1618,12 +1534,6 @@ nsresult nsMsgFolderDataSource::DoFolderHasAssertion(nsIMsgFolder *folder,
 			*hasAssertion = (NS_SUCCEEDED(rv) && childsParent && folderasFolder
 							&& (childsParent.get() == folderasFolder.get()));
 		}
-	}
-	else if((kNC_MessageChild == property))
-	{
-		nsCOMPtr<nsIMessage> message(do_QueryInterface(target, &rv));
-		if(NS_SUCCEEDED(rv))
-			rv = folder->HasMessage(message, hasAssertion);
 	}
 	else if ((kNC_Name == property) ||
 			(kNC_FolderTreeName == property) ||

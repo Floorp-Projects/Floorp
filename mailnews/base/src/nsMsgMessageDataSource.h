@@ -117,6 +117,9 @@ protected:
 	nsresult createMessageNode(nsIMessage *message, nsIRDFResource *property,
 							 nsIRDFNode **target);
 
+	nsresult createFolderNode(nsIMsgFolder *folder, nsIRDFResource *property,
+							 nsIRDFNode **target);
+
 	nsresult createMessageNameNode(nsIMessage *message,
 								 PRBool sort,
 								 nsIRDFNode **target);
@@ -154,7 +157,9 @@ protected:
 
 	nsresult createMessageUnreadNode(nsIMessage *message, nsIRDFNode **target);
 	nsresult createMessageTotalNode(nsIMessage *message, nsIRDFNode **target);
-  nsresult createMessageMessageChildNode(nsIMessage* message, nsIRDFNode **target);
+	nsresult createMessageMessageChildNode(nsIMessage* message, nsIRDFNode **target);
+	nsresult createFolderMessageChildNode(nsIMsgFolder *folder, nsIRDFNode **target);
+	nsresult createMessageChildNode(nsIRDFResource *resource, nsIRDFNode **target);
 	nsresult GetMessageFolderAndThread(nsIMessage *message, nsIMsgFolder **folder,
 										nsIMsgThread **thread);
 	PRBool IsThreadsFirstMessage(nsIMsgThread *thread, nsIMessage *message);
@@ -166,16 +171,27 @@ protected:
 	nsresult DoMessageHasAssertion(nsIMessage *message, nsIRDFResource *property, nsIRDFNode *target,
 													 PRBool tv, PRBool *hasAssertion);
 
+	nsresult DoFolderHasAssertion(nsIMsgFolder *folder, nsIRDFResource *property, nsIRDFNode *target,
+													 PRBool tv, PRBool *hasAssertion);
+
 	nsresult GetMessagesAndFirstFolder(nsISupportsArray *messages, nsIMsgFolder **folder,
 														   nsISupportsArray **messageArray);
 
 	nsresult getMessageArcLabelsOut(PRBool showThreads,
                                          nsISupportsArray **arcs);
-  
+
+	nsresult getFolderArcLabelsOut(nsISupportsArray **arcs);
+
 	nsresult CreateLiterals(nsIRDFService *rdf);
 	nsresult CreateArcsOutEnumerators();
 
 	nsresult OnItemAddedOrRemoved(nsISupports *parentItem, nsISupports *item, const char *viewString,
+								  PRBool added);
+
+	nsresult OnItemAddedOrRemovedFromMessage(nsIMessage *parentMessage, nsISupports *item, const char *viewString,
+								  PRBool added);
+
+	nsresult OnItemAddedOrRemovedFromFolder(nsIMsgFolder *parentFolder, nsISupports *item, const char *viewString,
 								  PRBool added);
 
 	nsresult OnChangeStatus(nsIRDFResource *resource, PRUint32 oldFlag, PRUint32 newFlag);
@@ -247,6 +263,7 @@ protected:
   
 	nsCOMPtr<nsISupportsArray> kThreadsArcsOutArray;
 	nsCOMPtr<nsISupportsArray> kNoThreadsArcsOutArray;
+	nsCOMPtr<nsISupportsArray> kFolderArcsOutArray;
 
 	static nsrefcnt gMessageResourceRefCnt;
 

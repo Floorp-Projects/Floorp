@@ -140,10 +140,6 @@ protected:
                                     nsIRDFNode **target);
 
 	nsresult createFolderChildNode(nsIMsgFolder *folder, nsIRDFNode **target);
-	nsresult createFolderMessageNode(nsIMsgFolder *folder, nsIRDFNode **target);
-
-	nsresult createMessageNode(nsIMessage *message, nsIRDFResource *property,
-                             nsIRDFNode **target);
 
   nsresult getFolderArcLabelsOut(nsISupportsArray **arcs);
   

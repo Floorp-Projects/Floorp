@@ -261,8 +261,6 @@ nsresult nsMsgMessageDataSource::CreateLiterals(nsIRDFService *rdf)
 
 nsresult nsMsgMessageDataSource::CreateArcsOutEnumerators()
 {
-	nsCOMPtr<nsISupportsArray> threadsArcsOut;
-	nsCOMPtr<nsISupportsArray> noThreadsArcsOut;
 
 	nsresult rv;
 
@@ -272,6 +270,7 @@ nsresult nsMsgMessageDataSource::CreateArcsOutEnumerators()
 	rv = getMessageArcLabelsOut(PR_FALSE, getter_AddRefs(kNoThreadsArcsOutArray));
 	if(NS_FAILED(rv)) return rv;
 
+	rv = getFolderArcLabelsOut(getter_AddRefs(kFolderArcsOutArray));
   
 	return rv;
 }
@@ -329,11 +328,17 @@ NS_IMETHODIMP nsMsgMessageDataSource::GetTarget(nsIRDFResource* source,
 	nsCOMPtr<nsIMessage> message(do_QueryInterface(source, &rv));
 	if (NS_SUCCEEDED(rv)) {
 		rv = createMessageNode(message, property,target);
+		return rv;
 	}
-	else
-		return NS_RDF_NO_VALUE;
+
+	nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(source));
+	if(folder)
+	{
+		rv = createFolderNode(folder, property, target);
+		return rv;
+	}
+	return NS_RDF_NO_VALUE;
   
-  return rv;
 }
 
 //sender is the string we need to parse.  senderuserName is the parsed user name we get back.
@@ -390,43 +395,25 @@ NS_IMETHODIMP nsMsgMessageDataSource::GetTargets(nsIRDFResource* source,
 		return NS_ERROR_NULL_POINTER;
 
 	*targets = nsnull;
+	if(kNC_MessageChild == property)
+	{
+		nsCOMPtr<nsIMessageView> messageView;
+		rv = GetMessageView(getter_AddRefs(messageView));
+		if(NS_FAILED(rv))
+			return rv;
+
+		rv = messageView->GetMessages(source, mWindow, targets);
+		if(NS_FAILED(rv))
+			return rv;
+		//if we don't have any targets, we will have to continue.
+		if(NS_SUCCEEDED(rv) && *targets)
+			return rv;
+	}
+
 	nsCOMPtr<nsIMessage> message(do_QueryInterface(source, &rv));
 	if (NS_SUCCEEDED(rv)) {
-		PRBool showThreads;
-    GetIsThreaded(&showThreads);
-    
-		if(showThreads && property == kNC_MessageChild)
-		{
-			nsCOMPtr<nsIMsgFolder> msgfolder;
-			rv = message->GetMsgFolder(getter_AddRefs(msgfolder));
-			if(NS_SUCCEEDED(rv))
-			{
-				nsCOMPtr<nsIMsgThread> thread;
-				rv = msgfolder->GetThreadForMessage(message, getter_AddRefs(thread));
-				if(NS_SUCCEEDED(rv))
-				{
-					nsCOMPtr<nsISimpleEnumerator> messages;
-					nsMsgKey msgKey;
-					message->GetMessageKey(&msgKey);
-					thread->EnumerateMessages(msgKey, getter_AddRefs(messages));
-					nsCOMPtr<nsMessageFromMsgHdrEnumerator> converter;
-					NS_NewMessageFromMsgHdrEnumerator(messages, msgfolder, getter_AddRefs(converter));
-					PRUint32 viewType;
-					rv = GetViewType(&viewType);
-					if(NS_FAILED(rv)) return rv;
 
-					nsMessageViewMessageEnumerator * messageEnumerator = 
-						new nsMessageViewMessageEnumerator(converter, viewType);
-					if(!messageEnumerator)
-						return NS_ERROR_OUT_OF_MEMORY;
-					NS_ADDREF(messageEnumerator);
-					*targets = messageEnumerator;
-					rv = NS_OK;
-
-				}
-			}
-		}
-		else if((kNC_Subject == property) || (kNC_Date == property) ||
+		if((kNC_Subject == property) || (kNC_Date == property) ||
 				(kNC_Status == property) || (kNC_Flagged == property) ||
 				(kNC_Priority == property) || (kNC_Size == property) ||
 				(kNC_IsUnread == property) || (kNC_IsImapDeleted == property) || 
@@ -442,6 +429,8 @@ NS_IMETHODIMP nsMsgMessageDataSource::GetTargets(nsIRDFResource* source,
 			rv = NS_OK;
 		}
 	}
+
+
 	if(!*targets) {
 	  //create empty cursor
 	  nsCOMPtr<nsISupportsArray> assertions;
@@ -479,8 +468,11 @@ NS_IMETHODIMP nsMsgMessageDataSource::HasAssertion(nsIRDFResource* source,
 	nsCOMPtr<nsIMessage> message(do_QueryInterface(source));
 	if(message)
 		return DoMessageHasAssertion(message, property, target, tv, hasAssertion);
-	else
-		*hasAssertion = PR_FALSE;
+	nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(source));
+	if(folder)
+		return DoFolderHasAssertion(folder, property, target, tv, hasAssertion);
+
+	*hasAssertion = PR_FALSE;
 	return NS_OK;
 }
 
@@ -524,6 +516,21 @@ NS_IMETHODIMP nsMsgMessageDataSource::ArcLabelsOut(nsIRDFResource* source,
 	if(NS_FAILED(rv)) return rv;
   
 	return NS_OK;
+}
+
+nsresult
+nsMsgMessageDataSource::getFolderArcLabelsOut(nsISupportsArray **arcs)
+{
+
+	nsresult rv;
+	rv = NS_NewISupportsArray(arcs);
+	if(NS_FAILED(rv))
+		return rv;
+
+	(*arcs)->AppendElement(kNC_MessageChild);
+
+	return NS_OK;
+
 }
 
 nsresult
@@ -654,17 +661,34 @@ NS_IMETHODIMP nsMsgMessageDataSource::OnItemRemoved(nsISupports *parentItem, nsI
 nsresult nsMsgMessageDataSource::OnItemAddedOrRemoved(nsISupports *parentItem, nsISupports *item, const char *viewString, PRBool added)
 {
 
-	nsresult rv;
-	nsCOMPtr<nsIMessage> message;
-	nsCOMPtr<nsIRDFResource> parentResource;
 	nsCOMPtr<nsIMessage> parentMessage;
 
 	parentMessage = do_QueryInterface(parentItem);
 	//If the parent isn't a message then we don't handle it.
-	if(!parentMessage)
-		return NS_OK;
+	if(parentMessage)
+	{
+		return OnItemAddedOrRemovedFromMessage(parentMessage, item, viewString, added);
+	}
 
-	parentResource = do_QueryInterface(parentItem);
+	nsCOMPtr<nsIMsgFolder> parentFolder;
+
+	parentFolder = do_QueryInterface(parentItem);
+	//If the parent isn't a message then we don't handle it.
+	if(parentFolder)
+	{
+		return OnItemAddedOrRemovedFromFolder(parentFolder, item, viewString, added);
+	}
+
+	return NS_OK;
+}
+
+
+nsresult nsMsgMessageDataSource::OnItemAddedOrRemovedFromMessage(nsIMessage *parentMessage, nsISupports *item, const char *viewString, PRBool added)
+{
+	nsresult rv;
+	nsCOMPtr<nsIMessage> message;
+	nsCOMPtr<nsIRDFResource> parentResource;
+	parentResource = do_QueryInterface(parentMessage);
 	//If it's not a resource, we don't handle it either
 	if(!parentResource)
 		return NS_OK;
@@ -701,6 +725,42 @@ nsresult nsMsgMessageDataSource::OnItemAddedOrRemoved(nsISupports *parentItem, n
 		}
 	}
 	return NS_OK;
+}
+
+nsresult nsMsgMessageDataSource::OnItemAddedOrRemovedFromFolder(nsIMsgFolder *parentFolder, nsISupports *item, const char *viewString, PRBool added)
+{
+
+	nsresult rv;
+	nsCOMPtr<nsIMessage> message;
+	nsCOMPtr<nsIRDFResource> parentResource;
+
+	parentResource = do_QueryInterface(parentFolder);
+	//If it's not a resource, we don't handle it either
+	if(!parentResource)
+		return NS_OK;
+
+	//If it is a message
+	if(NS_SUCCEEDED(item->QueryInterface(NS_GET_IID(nsIMessage), getter_AddRefs(message))))
+	{
+		//If we're in a threaded view only do this if the view passed in is the thread view. Or if we're in 
+		//a non threaded view only do this if the view passed in is the flat view.
+
+		PRBool isThreaded, isThreadNotification;
+		GetIsThreaded(&isThreaded);
+		isThreadNotification = PL_strcmp(viewString, "threadMessageView") == 0;
+		
+		if((isThreaded && isThreadNotification) ||
+			(!isThreaded && !isThreadNotification))
+		{
+			nsCOMPtr<nsIRDFNode> itemNode(do_QueryInterface(item, &rv));
+			if(NS_SUCCEEDED(rv))
+			{
+				//Notify folders that a message was added or deleted.
+				NotifyObservers(parentResource, kNC_MessageChild, itemNode, added, PR_FALSE);
+			}
+		}
+	}
+  return NS_OK;
 
 }
 
@@ -963,6 +1023,22 @@ nsMsgMessageDataSource::createMessageNode(nsIMessage *message,
     return NS_RDF_NO_VALUE;
 
   return rv;
+}
+
+nsresult
+nsMsgMessageDataSource::createFolderNode(nsIMsgFolder *folder,
+                                         nsIRDFResource *property,
+                                         nsIRDFNode **target)
+{
+	nsresult rv = NS_RDF_NO_VALUE;
+
+	if ((kNC_MessageChild == property))
+		rv = createFolderMessageChildNode(folder, target);
+
+	if(NS_FAILED(rv))
+		return NS_RDF_NO_VALUE;
+
+	return rv;
 }
 
 nsresult
@@ -1462,12 +1538,26 @@ nsresult
 nsMsgMessageDataSource::createMessageMessageChildNode(nsIMessage *message,
                                                  nsIRDFNode **target)
 {
-  nsresult rv;
   // this is slow, but for now, call GetTargets and then create
   // a node out of the first message, if any
   nsCOMPtr<nsIRDFResource> messageResource(do_QueryInterface(message));
+  return createMessageChildNode(messageResource, target);
+}
+
+nsresult
+nsMsgMessageDataSource::createFolderMessageChildNode(nsIMsgFolder *folder,
+                                                 nsIRDFNode **target)
+{
+  nsCOMPtr<nsIRDFResource> folderResource(do_QueryInterface(folder));
+  return createMessageChildNode(folderResource, target);
+}
+
+nsresult
+nsMsgMessageDataSource::createMessageChildNode(nsIRDFResource *resource, nsIRDFNode** target)
+{
+  nsresult rv;
   nsCOMPtr<nsISimpleEnumerator> messages;
-  rv = GetTargets(messageResource, kNC_MessageChild, PR_TRUE,
+  rv = GetTargets(resource, kNC_MessageChild, PR_TRUE,
                   getter_AddRefs(messages));
 
   PRBool hasMessages;
@@ -1477,9 +1567,8 @@ nsMsgMessageDataSource::createMessageMessageChildNode(nsIMessage *message,
     return createNode("has messages", target, getRDFService());
 
   return NS_RDF_NO_VALUE;
+
 }
-
-
 nsresult nsMsgMessageDataSource::GetMessageFolderAndThread(nsIMessage *message,
 															nsIMsgFolder **folder,
 															nsIMsgThread **thread)
@@ -1656,6 +1745,34 @@ nsresult nsMsgMessageDataSource::DoMessageHasAssertion(nsIMessage *message, nsIR
 
 
 	return rv;
+
+
+}
+
+nsresult nsMsgMessageDataSource::DoFolderHasAssertion(nsIMsgFolder *folder, nsIRDFResource *property, nsIRDFNode *target,
+													 PRBool tv, PRBool *hasAssertion)
+{
+	nsresult rv = NS_OK;
+	if(!hasAssertion)
+		return NS_ERROR_NULL_POINTER;
+
+	*hasAssertion = PR_FALSE;
+
+	//We're not keeping track of negative assertions on messages.
+	if(!tv)
+	{
+		return NS_OK;
+	}
+
+	//first check to see if message child property
+	if(kNC_MessageChild == property)
+	{
+		nsCOMPtr<nsIMessage> message(do_QueryInterface(target, &rv));
+		if(NS_SUCCEEDED(rv))
+			rv = folder->HasMessage(message, hasAssertion);
+	}
+
+	return NS_OK;
 
 
 }
