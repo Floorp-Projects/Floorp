@@ -230,7 +230,8 @@ static void UnhideAction(Widget w, XEvent *event, String *, Cardinal *);
 static void setHideUnhideSensitivity(Widget w);
 static void MenuArm(Widget w, XEvent *event, String *, Cardinal *);
 static void MenuDisarm(Widget w, XEvent *event, String *, Cardinal *);
-static int SizeColumnsToFit(XmLGridWidget g, int start_at);
+static void ResizeColumnToFit(XmLGridWidget g, int x);
+static int  SizeColumnsToFit(XmLGridWidget g, int start_at);
 static void GridCrossingEH(Widget w, XtPointer closure, XEvent *event,
 						   Boolean *ctd);
 static void	GridInvokeCellCrossingCallbacks(Widget w,XtCallbackList list,
@@ -2149,6 +2150,8 @@ DrawResizeLine(XmLGridWidget g,
 	{
 	if (g->grid.inMode != InResize)
 		return;
+    if (g->grid.hsPolicy == XmRESIZE_IF_POSSIBLE && !g->grid.resizeIsVert)
+        return;
 	DrawXORRect(g, xy, 2, g->grid.resizeIsVert, erase);
 	}
 
@@ -6967,7 +6970,11 @@ ButtonMotion(Widget w,
 		if (g->grid.resizeIsVert)
 			DrawResizeLine(g, me->y, 0);
 		else
+            {
 			DrawResizeLine(g, me->x, 0);
+            if (g->grid.hsPolicy == XmRESIZE_IF_POSSIBLE)
+                ResizeColumnToFit(g, me->x);
+            }
 		}
 
 	/* drag scrolling */
@@ -7750,17 +7757,6 @@ Select(Widget w,
 						(rect.width - GetColWidth(g, c));
 				if (width < 6 && g->grid.allowColHide == False)
 					width = 6;
-                if (g->grid.hsPolicy == XmRESIZE_IF_POSSIBLE)
-                    {
-                    /* Resize all columns to the right */
-                    XmLGridColumn colp;
-                    colp = (XmLGridColumn)XmLArrayGet(g->grid.colArray,
-                                                      cbs.column);
-                    colp->grid.width = width;
-                    SizeColumnsToFit(g, cbs.column + 1);
-                    HorizLayout(g, 0);
-                    DrawArea(g, DrawAll, 0, 0);
-                    }
 				XtVaSetValues((Widget)g,
 					XmNcolumnType, cbs.columnType,
 					XmNcolumn, cbs.column,
@@ -11095,6 +11091,33 @@ MenuDisarm(Widget w,
     g->grid.inMode = InNormal;
 }
 
+static void
+ResizeColumnToFit(XmLGridWidget g, int new_x)
+{
+    XmLGridColumn colp;
+    int width = 0;
+    XRectangle rect;
+    if (!RowColToXY(g, 0, g->grid.resizeCol, False, &rect))
+    {
+        if (new_x > rect.x)
+            width = (new_x - rect.x) -
+                (rect.width - GetColWidth(g, g->grid.resizeCol));
+        if (width < g->grid.minColWidth)
+            width = g->grid.minColWidth;
+        
+        /*printf("col(%d) resize_xy(%3d) colx(%3d) colw(%3d) column_width(%3d) new_width(%3d)\n", g->grid.resizeCol, g->grid.resizeLineXY, rect.x, rect.width, GetColWidth(g, g->grid.resizeCol), width);*/
+        
+        /* Resize all columns to the right */
+        colp = (XmLGridColumn)XmLArrayGet(g->grid.colArray,
+                                          g->grid.resizeCol);
+        colp->grid.width = width;
+        SizeColumnsToFit(g, g->grid.resizeCol + 1);
+        HorizLayout(g, 0);
+        DrawArea(g, DrawAll, 0, 0);
+        g->grid.resizeLineXY = rect.x + width;
+    }
+}
+
 
 static int
 SizeColumnsToFit(XmLGridWidget g, int starting_at)
@@ -11156,7 +11179,7 @@ SizeColumnsToFit(XmLGridWidget g, int starting_at)
 		{
 			int col_width;
 			int col_delta;
-			Dimension new_col_width;
+			int new_col_width;
 
             colp = (XmLGridColumn)XmLArrayGet(g->grid.colArray, ii);
             col_width = colp->grid.width;
