@@ -307,6 +307,9 @@ nsImageFrame::Init(nsIPresContext*  aPresContext,
 
   nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(aContent);
   NS_ENSURE_TRUE(imageLoader, NS_ERROR_UNEXPECTED);
+  // XXXbz this call _has_ to happen before we decide we won't be rendering the
+  // image, just in case -- this lets the image loading content know someone
+  // cares.
   imageLoader->AddObserver(mListener);
 
   LoadIcons(aPresContext);

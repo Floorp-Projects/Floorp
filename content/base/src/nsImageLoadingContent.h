@@ -177,6 +177,7 @@ private:
 
   PRPackedBool mLoadingEnabled;
   PRPackedBool mImageIsBlocked;
+  PRPackedBool mHaveHadObserver;
 };
 
 #endif // nsImageLoadingContent_h__
