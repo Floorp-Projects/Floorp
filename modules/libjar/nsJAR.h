@@ -50,6 +50,7 @@
 #include "nsHashtable.h"
 #include "nsAutoLock.h"
 #include "nsIZipReader.h"
+#include "nsIJAR.h"
 #include "nsZipArchive.h"
 #include "zipfile.h"
 #include "nsIPrincipal.h"
@@ -66,7 +67,7 @@ class nsZipReaderCache;
  * nsJAR serves as an XPCOM wrapper for nsZipArchive with the addition of 
  * JAR manifest file parsing. 
  *------------------------------------------------------------------------*/
-class nsJAR : public nsIZipReader
+class nsJAR : public nsIZipReader, public nsIJAR
 {
   // Allows nsJARInputStream to call the verification functions
   friend class nsJARInputStream;
@@ -81,6 +82,8 @@ class nsJAR : public nsIZipReader
     NS_DECL_ISUPPORTS
 
     NS_DECL_NSIZIPREADER
+
+    NS_DECL_NSIJAR
 
     static NS_METHOD
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);

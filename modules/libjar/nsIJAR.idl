@@ -22,9 +22,10 @@
  *     Daniel Veditz <dveditz@netscape.com>
  *     Don Bragg <dbragg@netscape.com>
  *     Samir Gehani <sgehani@netscape.com>
+ *     Mitch Stoltz <mstoltz@netscape.com>
  */
 
-#include "nsIZip.idl"
+#include "nsISupports.idl"
 
 %{C++
 #define NS_JAR_CID                    \
@@ -55,20 +56,29 @@
 }
 %}
 
+interface nsIPrincipal;
+
 [uuid(04501DB2-0409-11d3-BCF8-00805F0E1353)]
-interface nsIJAR : nsIZip
+interface nsIJAR : nsISupports
 {
-  /* This interface will be filled with other "JAR"-related functions. */
-  /* The term "JAR" is in reference to security as opposed to "Zip" 
-   * which is a non-secure archive format.                             */
+
+    const short NOT_SIGNED         = 0;
+    const short VALID              = 1;
+    const short INVALID_SIG        = 2;
+    const short INVALID_UNKNOWN_CA = 3;
+    const short INVALID_MANIFEST   = 4;
+    const short INVALID_ENTRY      = 5;
+    const short NO_MANIFEST        = 6;
+
+     /**
+     * Returns an object describing the entity which signed 
+     * an entry. parseManifest must be called first. If aEntryName is an
+     * entry in the jar, getInputStream must be called after parseManifest.
+     * If aEntryName is an external file which has meta-information 
+     * stored in the jar, verifyExternalFile (not yet implemented) must 
+     * be called before getPrincipal.
+     */
+    void getCertificatePrincipal(in string aEntryName, out nsIPrincipal aPrincipal);   
+
 };
 
-[uuid(70993CAD-2922-11d3-A431-0060B0EB5963)]
-interface nsIJARItem : nsISupports
-{
-    readonly attribute string name;
-    readonly attribute PRUint16 compression;
-    readonly attribute PRUint32 size;
-    readonly attribute PRUint32 realsize;
-    readonly attribute PRUint32 crc32;
-};

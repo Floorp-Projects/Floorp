@@ -138,7 +138,7 @@ public:
    *
    * @param   aFilename Name of file in the archive
    * @return  status code
-   */
+   */  
   PRInt32 GetItem(const char * aFilename, nsZipItem** result);
   
   /** 

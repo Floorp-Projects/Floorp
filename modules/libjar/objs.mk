@@ -34,6 +34,7 @@ MODULES_LIBJAR_LEXPORTS = \
 
 MODULES_LIBJAR_LXPIDLSRCS = \
 		nsIZipReader.idl \
+		nsIJAR.idl \
 		$(NULL)
 
 MODULES_LIBJAR_CPPSRCS := $(addprefix $(topsrcdir)/modules/libjar/, $(MODULES_LIBJAR_LCPPSRCS))
