@@ -144,6 +144,9 @@ nsHTMLFragmentContentSink::nsHTMLFragmentContentSink()
 
 nsHTMLFragmentContentSink::~nsHTMLFragmentContentSink()
 {
+  // Should probably flush the text buffer here, just to make sure:
+  //FlushText();
+
   NS_IF_RELEASE(mRoot);
   NS_IF_RELEASE(mParser);
   NS_IF_RELEASE(mCurrentForm);
@@ -565,6 +568,8 @@ nsHTMLFragmentContentSink::AddText(const nsString& aString)
     offset += amount;
     addLen -= amount;
   }
+
+  FlushText();
 
   return NS_OK;
 }
