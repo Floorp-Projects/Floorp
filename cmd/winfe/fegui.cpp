@@ -2339,20 +2339,29 @@ PUBLIC void *FE_AboutData (const char *which, char **data_ret, int32 *length_ret
 		    if (tmpversionBuf) XP_FREE(tmpversionBuf);
 			csVersion+=csBuildNumber;
 
-
-            char *pSSLVersion;
-            char *pSSLCapability = SECNAV_SSLCapabilities();
-		    pSSLVersion = strdup(SECNAV_SecurityVersion(PR_TRUE));
-            char *pSSLString = (char *)malloc(strlen(pSSLVersion) + strlen(pSSLCapability) + 48*2);
-            sprintf(pSSLString, szLoadString(IDS_ABOUT_SECURITY), pSSLVersion, pSSLCapability);
-            free(pSSLCapability);
+            char *pSSLVersion = NULL;
+			char *pSSLString = NULL;
+			char *pSSLCapability = SECNAV_SSLCapabilities();
+            pSSLVersion = strdup(SECNAV_SecurityVersion(PR_TRUE));
+            /* NULL pointer check. strlen fires a page fault if passed a NULL pointer */
+            if (pSSLVersion && pSSLCapability) 
+			{
+				pSSLString = (char *)malloc(strlen(pSSLVersion) + strlen(pSSLCapability) + 48*2);
+                sprintf(pSSLString, szLoadString(IDS_ABOUT_SECURITY), pSSLVersion, pSSLCapability);
+            }
+			if (pSSLCapability) free(pSSLCapability);
 
             char *pSp = szLoadString(IDS_ABOUT_0);
-            a = (char *)malloc(strlen(pSp) + strlen(pSSLString) + strlen(csVersion) * 2 + 48);
-            sprintf(a, pSp, (const char *)csVersion, (const char *)csVersion, pSSLString);
+            /* Null pointer check */
+            if (pSp && pSSLString ) 
+			{
+				a = (char *)malloc(strlen(pSp) + strlen(pSSLString) + strlen(csVersion) * 2 + 48);
+                sprintf(a, pSp, (const char *)csVersion, (const char *)csVersion, pSSLString);
+            }
         
-            free(pSSLString);
-		    free(pSSLVersion);
+            /* Free string space if allocated */
+			if (pSSLString) free(pSSLString);
+			if (pSSLVersion) free(pSSLVersion);
         }
         else if (!strcmp (which, "mailintro"))
           a = strdup(szLoadString(IDS_MAIL_0)); 
