@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: ProcessorState.h,v 1.6 2000/09/04 16:25:27 axel%pike.org Exp $
+ * $Id: ProcessorState.h,v 1.7 2000/11/07 10:46:03 kvisco%ziplink.net Exp $
  */
 
 
@@ -50,11 +50,9 @@
 /**
  * Class used for keeping the current state of the XSL Processor
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.6 $ $Date: 2000/09/04 16:25:27 $
+ * @version $Revision: 1.7 $ $Date: 2000/11/07 10:46:03 $
 **/
-class ProcessorState : public ContextState,
-                       public NamespaceResolver
-{
+class ProcessorState : public ContextState {
 
 public:
 
@@ -292,6 +290,11 @@ public:
      * Returns the namespace URI for the given name
     **/ 
     void getNameSpaceURI(const String& name, String& nameSpaceURI);
+
+    /**
+     * Returns the namespace URI for the given namespace prefix
+    **/
+    void getNameSpaceURIFromPrefix(const String& prefix, String& nameSpaceURI);
 
 private:
 
