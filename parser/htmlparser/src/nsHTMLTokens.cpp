@@ -182,7 +182,7 @@ nsresult CStartToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aFlag
   nsresult result=NS_OK;
   if (aFlag & NS_IPARSER_FLAG_HTML) {
     nsAutoString theSubstr;
-    result=aScanner.GetIdentifier(theSubstr,PR_TRUE);
+    result=aScanner.ReadTagIdentifier(theSubstr);
     mTypeID = (PRInt32)nsHTMLTags::LookupTag(theSubstr);
     // Save the original tag string if this is user-defined or if we
     // are viewing source
@@ -195,7 +195,7 @@ nsresult CStartToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aFlag
     //was written <title_> but since we didn't respect the '_', we only saw <title>. Then 
     //we searched for end title, which never comes (they give </title_>). 
 
-    result=aScanner.ReadIdentifier(mTextValue,PR_TRUE);  
+    result=aScanner.ReadTagIdentifier(mTextValue);  
     mTypeID = nsHTMLTags::LookupTag(mTextValue);
   }
 
@@ -284,7 +284,7 @@ nsresult CEndToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aFlag)
   nsresult result = NS_OK;
   if (aFlag & NS_IPARSER_FLAG_HTML) {
     nsAutoString theSubstr;
-    result=aScanner.GetIdentifier(theSubstr,PR_TRUE);
+    result=aScanner.ReadTagIdentifier(theSubstr);
     NS_ENSURE_SUCCESS(result, result);
     
     mTypeID = (PRInt32)nsHTMLTags::LookupTag(theSubstr);
@@ -296,7 +296,7 @@ nsresult CEndToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aFlag)
     }
   }
   else {
-    result = aScanner.ReadIdentifier(mTextValue,PR_TRUE);
+    result = aScanner.ReadTagIdentifier(mTextValue);
     NS_ENSURE_SUCCESS(result, result);
 
     mTypeID = nsHTMLTags::LookupTag(mTextValue);
@@ -1939,7 +1939,7 @@ CEntityToken::ConsumeEntity(PRUnichar aChar,
         theChar == '_' ||
         theChar == ':') {
         aScanner.GetChar(aChar); // Consume &
-        result=aScanner.ReadIdentifier(aString,PR_TRUE); // Ref. Bug# 23791 - For setting aIgnore to PR_TRUE.
+        result=aScanner.ReadEntityIdentifier(aString);
       }
       else {
         return NS_HTMLTOKENS_NOT_AN_ENTITY;
