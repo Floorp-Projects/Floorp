@@ -34,7 +34,6 @@
 #include "nsIDialogParamBlock.h" 
  
 static NS_DEFINE_IID( kAppShellServiceCID, NS_APPSHELL_SERVICE_CID ); 
-static NS_DEFINE_CID(kDialogParamBlockCID, NS_DialogParamBlock_CID); 
  
 //#include "prmem.h"
 //#include "plstr.h"
@@ -123,7 +122,7 @@ NS_IMETHODIMP nsDeviceContextSpecBeOS :: Init(PRBool	aQuiet)
   nsresult rv = NS_OK; 
   nsCOMPtr<nsIDialogParamBlock> ioParamBlock; 
  
-  rv = nsComponentManager::CreateInstance(kDialogParamBlockCID, 
+  rv = nsComponentManager::CreateInstance("@mozilla.org/embedcomp/dialogparam;1", 
                                           nsnull, 
                                           NS_GET_IID(nsIDialogParamBlock), 
                                           getter_AddRefs(ioParamBlock)); 
