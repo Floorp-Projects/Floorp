@@ -28,6 +28,7 @@
 #include <stdlib.h>
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
+#include <math.h>
 
 #if defined(_WIN32)
 #include <windows.h>
@@ -58,9 +59,31 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static const char* kRefcountPref = "nglayout.debug.enable_xpcom_refcnt_log";
 static PRBool gRefcountPrefEnabled = PR_FALSE;
 
+////////////////////////////////////////////////////////////////////////////////
+
+NS_COM void 
+NS_MeanAndStdDev(double n, double sumOfValues, double sumOfSquaredValues,
+                 double *meanResult, double *stdDevResult)
+{
+  double mean = 0.0, var = 0.0, stdDev = 0.0;
+  if (n > 0.0 && sumOfValues >= 0) {
+    mean = sumOfValues / n;
+    double temp = (n * sumOfSquaredValues) - (sumOfValues * sumOfValues);
+    if (temp < 0.0 || n <= 1)
+      var = 0.0;
+    else
+      var = temp / (n * (n - 1));
+    // for some reason, Windows says sqrt(0.0) is "-1.#J" (?!) so do this:
+    stdDev = var != 0.0 ? sqrt(var) : 0.0;
+  }
+  *meanResult = mean;
+  *stdDevResult = stdDev;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 #ifdef NS_BUILD_REFCNT_LOGGING
 #include "plhash.h"
-#include <math.h>
 
 #if defined(NS_MT_SUPPORTED)
 #include "prlock.h"
@@ -102,27 +125,6 @@ static FILE *gLeakyLog = nsnull;
 // Should only use this on NS_LOSING_ARCHITECTURE...
 #define XPCOM_REFCNT_LOG_CALLS    0x10
 #define XPCOM_REFCNT_LOG_NEW      0x20
-
-////////////////////////////////////////////////////////////////////////////////
-
-NS_COM void 
-NS_MeanAndStdDev(double n, double sumOfValues, double sumOfSquaredValues,
-                 double *meanResult, double *stdDevResult)
-{
-  double mean = 0.0, var = 0.0, stdDev = 0.0;
-  if (n > 0.0 && sumOfValues >= 0) {
-    mean = sumOfValues / n;
-    double temp = (n * sumOfSquaredValues) - (sumOfValues * sumOfValues);
-    if (temp < 0.0 || n <= 1)
-      var = 0.0;
-    else
-      var = temp / (n * (n - 1));
-    // for some reason, Windows says sqrt(0.0) is "-1.#J" (?!) so do this:
-    stdDev = var != 0.0 ? sqrt(var) : 0.0;
-  }
-  *meanResult = mean;
-  *stdDevResult = stdDev;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -244,9 +246,9 @@ public:
     total->mAllStats.mObjsOutstandingSquared += mNewStats.mObjsOutstandingSquared + mAllStats.mObjsOutstandingSquared;
     PRInt32 count = (mNewStats.mCreates + mAllStats.mCreates);
     total->mClassSize += mClassSize * count;    // adjust for average in DumpTotal
-    total->mTotalLeaked += mClassSize *
-                          ((mNewStats.mCreates + mAllStats.mCreates)
-                          -(mNewStats.mDestroys + mAllStats.mDestroys));
+    total->mTotalLeaked += (PRInt32)(mClassSize *
+                                     ((mNewStats.mCreates + mAllStats.mCreates)
+                                      -(mNewStats.mDestroys + mAllStats.mDestroys)));
   }
 
   nsresult DumpTotal(PRUint32 nClasses, FILE* out) {
