@@ -1128,6 +1128,12 @@ nsBrowserWindow::GetStatus(PRUnichar** aResult)
 }
 
 NS_IMETHODIMP
+nsBrowserWindow::SetProgress(PRInt32 aProgress, PRInt32 aProgressMax)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsBrowserWindow::WillLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, nsLoadType aReason)
 {
   if (mStatus) {

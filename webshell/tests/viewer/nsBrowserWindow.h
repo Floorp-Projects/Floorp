@@ -78,6 +78,7 @@ public:
   NS_IMETHOD GetTitle(PRUnichar** aResult);
   NS_IMETHOD SetStatus(const PRUnichar* aStatus);
   NS_IMETHOD GetStatus(PRUnichar** aResult);
+  NS_IMETHOD SetProgress(PRInt32 aProgress, PRInt32 aProgressMax);
   NS_IMETHOD GetWebShell(nsIWebShell*& aResult);
 
   // nsIStreamObserver
