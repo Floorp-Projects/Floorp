@@ -570,7 +570,7 @@ input[type="checkbox"] {
   margin-top:    3px; 
   margin-bottom: 3px;
   border: 2px inset rgb(153, 153, 153);
-  background-color:rgb(204, 204, 204);
+  background-color:rgb(255, 255, 255);
   width:9px;
   height:9px;
   color:black;
@@ -588,7 +588,7 @@ input[type="checkbox"]:hover {
 }
 
 input[type="checkbox"]:active {
-  background-color: white;
+  background-color: lightgray;
 }
 
 input[type="checkbox"][disabled] {
