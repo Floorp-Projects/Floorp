@@ -638,9 +638,20 @@ nsHTMLTextAreaElement::HandleDOMEvent(nsIPresContext* aPresContext,
     }
   }
 
+  // If NS_EVENT_FLAG_NO_CONTENT_DISPATCH is set we will not allow content to handle
+  // this event.  But to allow middle mouse button paste to work we must allow 
+  // middle clicks to go to text fields anyway.
+  PRBool noContentDispatch = aEvent->flags & NS_EVENT_FLAG_NO_CONTENT_DISPATCH;
+  if (aEvent->message == NS_MOUSE_MIDDLE_CLICK) {
+    aEvent->flags &= ~NS_EVENT_FLAG_NO_CONTENT_DISPATCH;
+  }
+
   rv = nsGenericHTMLContainerFormElement::HandleDOMEvent(aPresContext, aEvent,
                                                          aDOMEvent,
                                                          aFlags, aEventStatus);
+
+  // Reset the flag for other content besides this text field
+  aEvent->flags |= noContentDispatch ? NS_EVENT_FLAG_NO_CONTENT_DISPATCH : NS_EVENT_FLAG_NONE;
 
   // Finish the special anonymous content processing...
   // If the event is starting here that's fine.  If it's not

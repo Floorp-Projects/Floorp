@@ -179,6 +179,9 @@ pref("nglayout.view.useViewManager2", true);
 // css2 hover pref
 pref("nglayout.events.showHierarchicalHover", false);
 
+// dispatch left clicks only to content in browser (still allows clicks to chrome/xul)
+pref("nglayout.events.dispatchLeftClickOnly", true);
+
 // whether or not to use xbl form controls
 pref("nglayout.debug.enable_xbl_forms", false);
 
