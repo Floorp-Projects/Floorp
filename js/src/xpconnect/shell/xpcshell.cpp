@@ -758,6 +758,7 @@ main(int argc, char **argv)
     JSContext *oldcx;
     cxstack->Pop(&oldcx);
     NS_ASSERTION(oldcx == jscontext, "JS thread context push/pop mismatch");
+    cxstack = nsnull;
     js_ForceGC(jscontext);
     JS_DestroyContext(jscontext);
     xpc->SyncJSContexts();
