@@ -33,7 +33,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssl3con.c,v 1.45 2003/01/23 17:27:34 relyea%netscape.com Exp $
+ * $Id: ssl3con.c,v 1.46 2003/01/23 22:02:36 relyea%netscape.com Exp $
  */
 
 #include "nssrenam.h"
@@ -1329,7 +1329,6 @@ ssl_ClientAuthTokenPresent(sslSocket *ss) {
     PRIntervalTime thisTime;
     static PRIntervalTime timeout = 0;
     PK11SlotInfo *slot = NULL;
-    PRBool rv = PR_TRUE;
 
 
     if (timeout == 0) {
@@ -1345,7 +1344,7 @@ ssl_ClientAuthTokenPresent(sslSocket *ss) {
     /* Limit how often we really check the token */
     thisTime = PR_IntervalNow();
     if (thisTime - ss->sec.lastTime < timeout) {
-	return PR_TRUE;
+	return ss->sec.lastState;
     }
 
     /* get the slot */
@@ -1358,12 +1357,14 @@ ssl_ClientAuthTokenPresent(sslSocket *ss) {
 	sid->u.ssl3.clAuthSlotID     != PK11_GetSlotID(slot)     ||
 	sid->u.ssl3.clAuthModuleID   != PK11_GetModuleID(slot)   ||
                !PK11_IsLoggedIn(slot, NULL)) {
-	rv = PR_FALSE;
+	ss->sec.lastState = PR_FALSE;
+    } else {
+	ss->sec.lastState = PR_TRUE;
     }
     if (slot) {
 	PK11_FreeSlot(slot);
     }
-    return rv;
+    return ss->sec.lastState;
 }
 
 /* Process the plain text before sending it.
@@ -1410,9 +1411,9 @@ ssl3_SendRecord(   sslSocket *        ss,
     	}
     }
 
-/* check for Token Presence */
+    /* check for Token Presence */
     if (!ssl_ClientAuthTokenPresent(ss)) {
-	/* PORT_SetError() */
+	PORT_SetError(SSL_ERROR_TOKEN_INSERTION_REMOVAL);
 	return SECFailure;
     }
 
@@ -7461,7 +7462,11 @@ const ssl3BulkCipherDef *cipher_def;
 
     ssl3 = ss->ssl3;
 
-/* Check for TOKEN presence */
+    /* check for Token Presence */
+    if (!ssl_ClientAuthTokenPresent(ss)) {
+	PORT_SetError(SSL_ERROR_TOKEN_INSERTION_REMOVAL);
+	return SECFailure;
+    }
 
     /* cText is NULL when we're called from ssl3_RestartHandshakeAfterXXX().
      * This implies that databuf holds a previously deciphered SSL Handshake
