@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Henry Jia <Henry.Jia@sun.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -4154,9 +4155,7 @@ nsImapProtocol::DiscoverMailboxSpec(nsImapMailboxSpec * adoptedBoxSpec)
           kImapTrashFolderName))
         {
           PRBool trashExists = PR_FALSE;
-          nsCString trashMatch;
-          trashMatch = nsPrefix;
-          trashMatch += kImapTrashFolderName;
+          nsCString trashMatch(CreatePossibleTrashName(nsPrefix));
           {
             char *serverTrashName = nsnull;
             m_runningUrl->AllocateCanonicalPath(
@@ -4164,16 +4163,10 @@ nsImapProtocol::DiscoverMailboxSpec(nsImapMailboxSpec * adoptedBoxSpec)
               ns->GetDelimiter(), &serverTrashName); 
             if (serverTrashName)
             {
-              if (!PL_strcasecmp(nsPrefix, "INBOX.")) // need to special-case this because it should be case-insensitive
+              if (!PL_strncasecmp(serverTrashName, "INBOX/", 6)) // case-insensitive
               {
-#ifdef DEBUG
-                NS_ASSERTION (PL_strlen(serverTrashName) > 6,
-                  "Oops.. less that 6");
-#endif
-                trashExists = ((PL_strlen(serverTrashName) > 6 /* nsCRT::strlen("INBOX.") */) &&
-                  (PL_strlen(adoptedBoxSpec->allocatedPathName) > 6 /* nsCRT::strlen("INBOX.") */) &&
-                  !PL_strncasecmp(adoptedBoxSpec->allocatedPathName, serverTrashName, 6) && /* "INBOX." */
-                  !PL_strcmp(adoptedBoxSpec->allocatedPathName + 6, serverTrashName + 6));
+                trashExists = !PL_strncasecmp(adoptedBoxSpec->allocatedPathName, serverTrashName, 6) && /* "INBOX/" */
+                              !PL_strcmp(adoptedBoxSpec->allocatedPathName + 6, serverTrashName + 6);
               }
               else
               {
