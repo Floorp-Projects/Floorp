@@ -195,7 +195,10 @@ nsMathMLmfencedFrame::CreateFencesAndSeparators(nsIPresContext* aPresContext)
       if (!mSeparatorsChar) return NS_ERROR_OUT_OF_MEMORY;
       nsAutoString sepChar;
       for (PRInt32 i = 0; i < sepCount; i++) {
-        sepChar = (i < mSeparatorsCount) ? data[i] : data[mSeparatorsCount-1]; 
+        if (i < mSeparatorsCount)
+          sepChar = data[i];
+        else
+          sepChar = data[mSeparatorsCount-1];
         mSeparatorsChar[i].SetData(aPresContext, sepChar);
         ResolveMathMLCharStyle(aPresContext, mContent, mStyleContext, &mSeparatorsChar[i]);
       }
