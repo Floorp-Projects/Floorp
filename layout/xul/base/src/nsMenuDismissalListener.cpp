@@ -97,7 +97,9 @@ nsMenuDismissalListener::SetCurrentMenuParent(nsIMenuParent* aMenuParent)
   if (!widget)
     return;
 
-  widget->CaptureRollupEvents(this, PR_TRUE, PR_TRUE);
+  PRBool consumeOutsideClicks = PR_FALSE;
+  aMenuParent->ConsumeOutsideClicks(consumeOutsideClicks);
+  widget->CaptureRollupEvents(this, PR_TRUE, consumeOutsideClicks);
   mWidget = widget;
 
   NS_ADDREF(nsMenuFrame::sDismissalListener = this);

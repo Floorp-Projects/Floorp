@@ -150,6 +150,7 @@ public:
   NS_IMETHOD GetWidget(nsIWidget **aWidget) = 0;
   
   NS_IMETHOD IsMenuBar(PRBool& isMenuBar) = 0;
+  NS_IMETHOD ConsumeOutsideClicks(PRBool& aConsumeOutsideClicks) = 0;
 
   NS_IMETHOD DismissChain() = 0;
   NS_IMETHOD HideChain() = 0;
