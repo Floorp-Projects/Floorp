@@ -5690,7 +5690,7 @@ nsBlockFrame::HandleEvent(nsIPresContext* aPresContext,
       pos.mTracker = tracker;
       pos.mDirection = eDirNext;
       pos.mDesiredX = aEvent->point.x;
-      
+      pos.mScrollViewStop = PR_FALSE;
       result = nsFrame::GetNextPrevLineFromeBlockFrame(aPresContext,
                                           &pos,
                                           mainframe, 

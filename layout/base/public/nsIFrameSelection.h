@@ -85,6 +85,7 @@ struct SelectionDetails
    *  @param mEatingWS boolean to tell us the state of our search for Next/Prev
    *  @param mPreferLeft true = prev line end, false = next line begin
    *  @param mJumpLines if this is true then its ok to cross lines while peeking
+   *  @param mScrollViewStop if this is true then stop peeking across scroll view boundary
 */
 struct nsPeekOffsetStruct
 {
@@ -95,11 +96,18 @@ struct nsPeekOffsetStruct
                PRInt32 aStartOffset, 
                PRBool aEatingWS,
                PRBool aPreferLeft,
-               PRBool aJumpLines)
+               PRBool aJumpLines,
+               PRBool aScrollViewStop)
       {
-       mTracker=aTracker;mDesiredX=aDesiredX;mAmount=aAmount;
-       mDirection=aDirection;mStartOffset=aStartOffset;mEatingWS=aEatingWS;
-       mPreferLeft=aPreferLeft;mJumpLines = aJumpLines;
+       mTracker=aTracker;
+       mDesiredX=aDesiredX;
+       mAmount=aAmount;
+       mDirection=aDirection;
+       mStartOffset=aStartOffset;
+       mEatingWS=aEatingWS;
+       mPreferLeft=aPreferLeft;
+       mJumpLines = aJumpLines;
+       mScrollViewStop = aScrollViewStop;
       }
   nsIFocusTracker *mTracker;
   nscoord mDesiredX;
@@ -113,6 +121,7 @@ struct nsPeekOffsetStruct
   PRBool mEatingWS;
   PRBool mPreferLeft;
   PRBool mJumpLines;
+  PRBool mScrollViewStop;
 };
 
 class nsIScrollableView;

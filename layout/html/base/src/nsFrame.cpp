@@ -1130,7 +1130,7 @@ nsFrame::HandlePress(nsIPresContext* aPresContext,
   if (me->clickCount >1 )
   {
     rv = frameselection->SetMouseDownState( PR_TRUE );
-    return HandleMultiplePress(aPresContext,aEvent,aEventStatus);
+    return HandleMultiplePress(aPresContext, aEvent, aEventStatus);
   }
 
   nsCOMPtr<nsIContent> content;
@@ -1331,7 +1331,8 @@ nsFrame::PeekBackwardAndForward(nsSelectionAmount aAmountBack,
                    aStartPos,
                    PR_FALSE,
                    PR_TRUE,
-                   aJumpLines);
+                   aJumpLines,
+                   PR_TRUE);//limit on scrolled views
   rv = PeekOffset(aPresContext, &startpos);
   if (NS_FAILED(rv))
     return rv;
@@ -1343,7 +1344,8 @@ nsFrame::PeekBackwardAndForward(nsSelectionAmount aAmountBack,
                  aStartPos,
                  PR_FALSE,
                  PR_FALSE,
-                 aJumpLines);
+                 aJumpLines,
+                 PR_TRUE);//limit on scrolled views
   rv = PeekOffset(aPresContext, &endpos);
   if (NS_FAILED(rv))
     return rv;
@@ -3017,7 +3019,7 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsIPresContext* aPresContext,
 
       nsCOMPtr<nsIBidirectionalEnumerator> frameTraversal;
       result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal), LEAF,
-                                    aPresContext, resultFrame);
+                                    aPresContext, resultFrame, aPos->mScrollViewStop);
       if (NS_FAILED(result))
         return result;
       nsISupports *isupports = nsnull;
@@ -3117,7 +3119,7 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsIPresContext* aPresContext,
       if (!found){
         resultFrame = storeOldResultFrame;
         result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal), LEAF,
-                                      aPresContext, resultFrame);
+                                      aPresContext, resultFrame, aPos->mScrollViewStop);
       }
       while ( !found ){
         nsCOMPtr<nsIPresContext> context;
@@ -3836,11 +3838,11 @@ nsFrame::GetFrameFromDirection(nsIPresContext* aPresContext, nsPeekOffsetStruct 
                                 aPresContext, 
                                 (lineJump && lineIsRTL)
                                 ? (aPos->mDirection == eDirNext) ? lastFrame : firstFrame
-                                : traversedFrame);
+                                : traversedFrame, aPos->mScrollViewStop);
 #else
   //if we are a container frame we MUST init with last leaf for eDirNext
   //
-  result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal),LEAF, aPresContext, traversedFrame);
+  result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal), LEAF, aPresContext, traversedFrame, pos->mScrollViewStop);
 #endif
   if (NS_FAILED(result))
     return result;
@@ -3891,7 +3893,7 @@ nsFrame::GetFrameFromDirection(nsIPresContext* aPresContext, nsPeekOffsetStruct 
       thisBlock = blockFrame;
       result = blockFrame->GetParent(&blockFrame);
       if (NS_SUCCEEDED(result) && blockFrame){
-        result = blockFrame->QueryInterface(NS_GET_IID(nsILineIteratorNavigator),getter_AddRefs(it));
+        result = blockFrame->QueryInterface(NS_GET_IID(nsILineIteratorNavigator), getter_AddRefs(it));
       }
       else
         blockFrame = nsnull;
@@ -3914,7 +3916,7 @@ nsFrame::GetFrameFromDirection(nsIPresContext* aPresContext, nsPeekOffsetStruct 
     }
     else
     {
-      result = it->GetLine(thisLine, &firstFrame, &lineFrameCount,nonUsedRect,
+      result = it->GetLine(thisLine, &firstFrame, &lineFrameCount, nonUsedRect,
                            &lineFlags);
       if (NS_FAILED(result))
         return result;
@@ -3958,9 +3960,9 @@ nsFrame::GetFrameFromDirection(nsIPresContext* aPresContext, nsPeekOffsetStruct 
     aPos->mStartOffset = -1;
 #ifdef IBMBIDI
   PRUint8 oldLevel, newLevel, baseLevel;
-  GetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel, (void**)&oldLevel,sizeof(oldLevel));
-  newFrame->GetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel, (void**)&newLevel,sizeof(newLevel));
-  newFrame->GetBidiProperty(aPresContext, nsLayoutAtoms::baseLevel, (void**)&baseLevel,sizeof(baseLevel));
+  GetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel, (void**)&oldLevel, sizeof(oldLevel));
+  newFrame->GetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel, (void**)&newLevel, sizeof(newLevel));
+  newFrame->GetBidiProperty(aPresContext, nsLayoutAtoms::baseLevel, (void**)&baseLevel, sizeof(baseLevel));
   if (newLevel & 1) // The new frame is RTL, go to the other end
     aPos->mStartOffset = -1 - aPos->mStartOffset;
 
@@ -4246,7 +4248,7 @@ nsFrame::CaptureMouse(nsIPresContext* aPresContext, PRBool aGrabMouseEvents)
       return rv;
     if (!parent)
       return NS_ERROR_FAILURE;
-    parent->GetView(aPresContext,&view);
+    parent->GetView(aPresContext, &view);
   }
 
   nsCOMPtr<nsIViewManager> viewMan;
@@ -4256,9 +4258,9 @@ nsFrame::CaptureMouse(nsIPresContext* aPresContext, PRBool aGrabMouseEvents)
     view->GetViewManager(*getter_AddRefs(viewMan));
     if (viewMan) {
       if (aGrabMouseEvents) {
-        viewMan->GrabMouseEvents(view,result);
+        viewMan->GrabMouseEvents(view, result);
       } else {
-        viewMan->GrabMouseEvents(nsnull,result);
+        viewMan->GrabMouseEvents(nsnull, result);
       }
     }
   }
@@ -4271,7 +4273,7 @@ nsFrame::IsMouseCaptured(nsIPresContext* aPresContext)
 {
     // get its view
   nsIView* view = nsnull;
-  GetView(aPresContext, & view);
+  GetView(aPresContext, &view);
   if (!view)
   {
     nsIFrame *parent;//might be THIS frame thats ok
@@ -4281,7 +4283,7 @@ nsFrame::IsMouseCaptured(nsIPresContext* aPresContext)
     if (!parent)
       return NS_ERROR_FAILURE;
 
-    parent->GetView(aPresContext,&view);
+    parent->GetView(aPresContext, &view);
   }
   nsCOMPtr<nsIViewManager> viewMan;
   
@@ -4771,7 +4773,7 @@ void DR_State::AddFrameTypeInfo(nsIAtom* aFrameType,
 DR_FrameTypeInfo* DR_State::GetFrameTypeInfo(nsIAtom* aFrameType)
 {
   PRInt32 numEntries = mFrameTypeTable.Count();
-  NS_ASSERTION(numEntries != 0,"empty FrameTypeTable");
+  NS_ASSERTION(numEntries != 0, "empty FrameTypeTable");
   for (PRInt32 i = 0; i < numEntries; i++) {
     DR_FrameTypeInfo* info = (DR_FrameTypeInfo*)mFrameTypeTable.ElementAt(i);
     if (info && (info->mType == aFrameType)) {
@@ -4784,7 +4786,7 @@ DR_FrameTypeInfo* DR_State::GetFrameTypeInfo(nsIAtom* aFrameType)
 DR_FrameTypeInfo* DR_State::GetFrameTypeInfo(char* aFrameName)
 {
   PRInt32 numEntries = mFrameTypeTable.Count();
-  NS_ASSERTION(numEntries != 0,"empty FrameTypeTable");
+  NS_ASSERTION(numEntries != 0, "empty FrameTypeTable");
   for (PRInt32 i = 0; i < numEntries; i++) {
     DR_FrameTypeInfo* info = (DR_FrameTypeInfo*)mFrameTypeTable.ElementAt(i);
     if (info && ((strcmp(aFrameName, info->mName) == 0) || (strcmp(aFrameName, info->mNameAbbrev) == 0))) {
@@ -4843,7 +4845,7 @@ void DR_State::DisplayFrameTypeInfo(nsIFrame* aFrame,
     for (PRInt32 i = 0; i < aIndent; i++) {
       printf(" ");
     }
-    if(!strcmp(frameTypeInfo->mNameAbbrev,"unknown")) {
+    if(!strcmp(frameTypeInfo->mNameAbbrev, "unknown")) {
       nsAutoString  name;
       nsIFrameDebug*  frameDebug;
       if (NS_SUCCEEDED(aFrame->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&frameDebug))) {

@@ -97,7 +97,7 @@ public:
   nsLeafIterator(nsIPresContext* aPresContext, nsIFrame *start);
   void SetExtensive(PRBool aExtensive) {mExtensive = aExtensive;}
   PRBool GetExtensive(){return mExtensive;}
-
+  void   SetLockInScrollView(PRBool aLockScroll){mLockScroll = aLockScroll;}
 private :
   
   NS_IMETHOD Next();
@@ -106,6 +106,7 @@ private :
 
   nsIPresContext* mPresContext;
   PRPackedBool mExtensive;
+  PRBool mLockScroll;
 };
 
 class nsFocusIterator : public nsFrameIterator
@@ -184,7 +185,8 @@ nsresult
 NS_NewFrameTraversal(nsIBidirectionalEnumerator **aEnumerator,
                      nsTraversalType aType,
                      nsIPresContext* aPresContext,
-                     nsIFrame *aStart)
+                     nsIFrame *aStart,
+                     PRBool aLockInScrollView)
 {
   if (!aEnumerator || !aStart)
     return NS_ERROR_NULL_POINTER;
@@ -194,6 +196,7 @@ NS_NewFrameTraversal(nsIBidirectionalEnumerator **aEnumerator,
     nsLeafIterator *trav = new nsLeafIterator(aPresContext, aStart);
     if (!trav)
       return NS_ERROR_OUT_OF_MEMORY;
+    trav->SetLockInScrollView(aLockInScrollView);
     *aEnumerator = NS_STATIC_CAST(nsIBidirectionalEnumerator*, trav);
     NS_ADDREF(trav);
     trav->SetExtensive(PR_FALSE);
@@ -262,7 +265,7 @@ nsFrameTraversal::NewFrameTraversal(nsIBidirectionalEnumerator **aEnumerator,
 {
   return NS_NewFrameTraversal(aEnumerator, NS_STATIC_CAST(nsTraversalType,
                                                           aType),
-                              aPresContext, aStart);  
+                              aPresContext, aStart,PR_FALSE);  
 }
 
 /*********nsFrameIterator************/
@@ -328,6 +331,7 @@ nsLeafIterator::nsLeafIterator(nsIPresContext* aPresContext, nsIFrame *aStart)
   setStart(aStart);
   setCurrent(aStart);
   setLast(aStart);
+  SetLockInScrollView(PR_FALSE);
 }
 
 static PRBool
@@ -380,9 +384,18 @@ nsLeafIterator::Next()
         else 
         {
           parent = result;
+          // check if  FrameType of result is TextInputFrame
+          if (mLockScroll) //lock the traversal when we hit a scroll frame
+          {
+            nsCOMPtr<nsIAtom> atom;
+            nsresult res = result->GetFrameType(getter_AddRefs(atom));
+            if ( NS_SUCCEEDED(res) && atom ) {
+              if ( atom.get() == nsLayoutAtoms::scrollFrame ) return NS_ERROR_FAILURE;
+            }
+          }
           if (mExtensive)
             break;
-        }
+        }  
       }
     }
   }
@@ -403,35 +416,66 @@ nsLeafIterator::Prev()
   nsIFrame *parent = getCurrent();
   if (!parent)
     parent = getLast();
+
   while(parent){
     nsIFrame *grandParent;
-    if (NS_SUCCEEDED(parent->GetParent(&grandParent)) && grandParent &&
-      NS_SUCCEEDED(grandParent->FirstChild(mPresContext, nsnull,&result))){
-      nsFrameList list(result);
-      result = list.GetPrevSiblingFor(parent);
-      if (result){
-        parent = result;
-        while(NS_SUCCEEDED(parent->FirstChild(mPresContext, nsnull,&result)) && result){
-          parent = result;
-          while(NS_SUCCEEDED(parent->GetNextSibling(&result)) && result){
-            parent = result;
+    if (NS_SUCCEEDED(parent->GetParent(&grandParent)) && grandParent ) 
+    {
+      // check if  FrameType of grandParent is TextInputFrame
+      if (mLockScroll) //lock the traversal when we hit a scroll frame
+      {
+        nsCOMPtr<nsIAtom> atom;
+        nsresult res = grandParent->GetFrameType(getter_AddRefs(atom));
+        if ( NS_SUCCEEDED(res) && atom ) 
+        {
+  #ifdef DEBUG_skamio
+          nsAutoString aString;
+          res = atom->ToString(aString);
+          if ( NS_SUCCEEDED(res) ) {
+            printf("%s:%d\n", __FILE__, __LINE__);
+            printf("FrameType: %s\n", NS_ConvertUCS2toUTF8(aString).get());
           }
+  #endif
+          if ( atom.get() == nsLayoutAtoms::scrollFrame ) 
+            return NS_ERROR_FAILURE;
+
         }
-        result = parent;
-        break;
       }
-      else if (NS_FAILED(parent->GetParent(&result)) || !result){
+      if (NS_SUCCEEDED(grandParent->FirstChild(mPresContext, nsnull,&result)))
+      {
+
+        nsFrameList list(result);
+        result = list.GetPrevSiblingFor(parent);
+        if (result)
+        {
+          parent = result;
+          while(NS_SUCCEEDED(parent->FirstChild(mPresContext, nsnull,&result)) && result)
+          {
+            parent = result;
+            while(NS_SUCCEEDED(parent->GetNextSibling(&result)) && result)
+            {
+              parent = result;
+            }
+          }
+          result = parent;
+          break;
+        }
+        else if (NS_FAILED(parent->GetParent(&result)) || !result)
+        {
           result = nsnull;
           break;
-      }
-      else 
-      {
-        parent = result;
-        if (mExtensive)
-          break;
+        
+        }
+        else 
+        {
+          parent = result;
+          if (mExtensive)
+            break;
+        }
       }
     }
-    else{
+    else
+    {
       setLast(parent);
       result = nsnull;
       break;
