@@ -639,22 +639,14 @@ function prepareForStartup()
   // initialize observers and listeners
   // and give C++ access to gBrowser
   window.XULBrowserWindow = new nsBrowserStatusHandler();
-  window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-        .getInterface(Components.interfaces.nsIWebNavigation)
-        .QueryInterface(Components.interfaces.nsIDocShellTreeItem).treeOwner
-        .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-        .getInterface(Components.interfaces.nsIXULWindow)
+  window.QueryInterface(nsCI.nsIInterfaceRequestor)
+        .getInterface(nsIWebNavigation)
+        .QueryInterface(nsCI.nsIDocShellTreeItem).treeOwner
+        .QueryInterface(nsCI.nsIInterfaceRequestor)
+        .getInterface(nsCI.nsIXULWindow)
         .XULBrowserWindow = window.XULBrowserWindow;
-/* XXXben branch landing
-  gBrowser.docShell
-          .QueryInterface(nsCI.nsIDocShellTreeItem)
-          .rootTreeItem
-          .QueryInterface(nsCI.nsIInterfaceRequestor)
-          .getInterface(nsCI.nsIDOMWindow)
-          .QueryInterface(nsCI.nsIInterfaceRequestor)
-          .getInterface(nsCI.nsIDOMWindowUtils)
-          .browserDOMWindow = new nsBrowserAccess();
-*/
+  window.QueryInterface(nsCI.nsIDOMChromeWindow).browserDOMWindow =
+    new nsBrowserAccess();
 
   window.browserContentListener =
     new nsBrowserContentListener(window, gBrowser);
@@ -959,14 +951,7 @@ function Shutdown()
         .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
         .getInterface(Components.interfaces.nsIXULWindow)
         .XULBrowserWindow = null;
-  gBrowser.docShell
-          .QueryInterface(nsCI.nsIDocShellTreeItem)
-          .rootTreeItem
-          .QueryInterface(nsCI.nsIInterfaceRequestor)
-          .getInterface(nsCI.nsIDOMWindow)
-          .QueryInterface(nsCI.nsIInterfaceRequestor)
-          .getInterface(nsCI.nsIDOMWindowUtils)
-          .browserDOMWindow = null;
+  window.QueryInterface(nsCI.nsIDOMChromeWindow).browserDOMWindow = null;
 
   window.browserContentListener.close();
   // Close the app core.
@@ -3258,6 +3243,15 @@ nsBrowserAccess.prototype =
         }
     }
     return newWindow;
+  },
+
+  isTabContentWindow : function(aWindow)
+  {
+    var browsers = gBrowser.browsers;
+    for (var ctr = 0; ctr < browsers.length; ctr++)
+      if (browsers.item(ctr).contentWindow == aWindow)
+        return true;
+    return false;
   }
 }
 
