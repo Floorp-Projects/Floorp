@@ -1598,6 +1598,29 @@ nsHTMLEditRules::StandardBreakImpl(nsIDOMNode *aNode, PRInt32 aOffset, nsISelect
   }
   else
   {
+     nsWSRunObject wsObj(mHTMLEditor, node, aOffset+1);
+     nsCOMPtr<nsIDOMNode> secondBR;
+     PRInt32 visOffset=0;
+     PRInt16 wsType;
+     res = wsObj.NextVisibleNode(node, aOffset+1, address_of(secondBR), &visOffset, &wsType);
+     if (NS_FAILED(res)) return res;
+     if (wsType==nsWSRunObject::eBreak)
+     {
+       // the next thing after the break we inserted is another break.  Move the 2nd 
+       // break to be the first breaks sibling.  This will prevent them from being
+       // in different inline nodes, which would break SetInterlinePosition().  It will
+       // also assure that if the user clicks away and then clicks back on their new
+       // blank line, they will still get the style from the line above.  
+       nsCOMPtr<nsIDOMNode> brParent;
+       PRInt32 brOffset;
+       res = nsEditor::GetNodeLocation(secondBR, address_of(brParent), &brOffset);
+       if (NS_FAILED(res)) return res;
+       if ((brParent != node) || (brOffset != (aOffset+1)))
+       {
+         res = mHTMLEditor->MoveNode(secondBR, node, aOffset+1);
+         if (NS_FAILED(res)) return res;
+       }
+     }
     // SetInterlinePosition(PR_TRUE) means we want the caret to stick to the content on the "right".
     // We want the caret to stick to whatever is past the break.  This is
     // because the break is on the same line we were on, but the next content
