@@ -73,7 +73,7 @@ public class Token
         // Interpreter reuses the following as bytecodes
         FIRST_BYTECODE_TOKEN = 2,
 
-        POPV        = 2,
+// XXX removed unused POPV
         ENTERWITH   = 3,
         LEAVEWITH   = 4,
         RETURN      = 5,
@@ -122,7 +122,7 @@ public class Token
         SHEQ        = 48,   // shallow equality (===)
         SHNE        = 49,   // shallow inequality (!==)
         REGEXP      = 50,
-        POP         = 51,
+// XXX removed unused POP
         BINDNAME    = 52,
         THROW       = 53,
         IN          = 54,
@@ -137,7 +137,7 @@ public class Token
         ENUM_NEXT   = 63,
         ENUM_ID     = 64,
         THISFN      = 65,
-        RETURN_POPV = 66, // to return result stored as popv in functions
+        RETURN_RESULT = 66, // to return result stored as popv in functions
         ARRAYLIT    = 67, // array literal
         OBJECTLIT   = 68, // object literal
         GET_REF     = 69, // *reference
@@ -197,18 +197,19 @@ public class Token
         LABEL       = 113, // label
         TARGET      = 114,
         LOOP        = 115,
-        EXPRSTMT    = 116,
-        JSR         = 117,
-        SCRIPT      = 118,   // top-level node for entire script
-        TYPEOFNAME  = 119,  // for typeof(simple-name)
-        USE_STACK   = 120,
-        SETPROP_OP  = 121, // x.y op= something
-        SETELEM_OP  = 122, // x[y] op= something
-        INIT_LIST   = 123,
-        LOCAL_BLOCK = 124,
-        SET_REF_OP  = 125, // *reference op= something
+        EXPR_VOID   = 116,
+        EXPR_RESULT = 117,
+        JSR         = 118,
+        SCRIPT      = 119,   // top-level node for entire script
+        TYPEOFNAME  = 120,  // for typeof(simple-name)
+        USE_STACK   = 121,
+        SETPROP_OP  = 122, // x.y op= something
+        SETELEM_OP  = 123, // x[y] op= something
+        INIT_LIST   = 124,
+        LOCAL_BLOCK = 125,
+        SET_REF_OP  = 126, // *reference op= something
 
-        LAST_TOKEN  = 125;
+        LAST_TOKEN  = 126;
 
     public static String name(int token)
     {
@@ -224,7 +225,6 @@ public class Token
           case ERROR:           return "ERROR";
           case EOF:             return "EOF";
           case EOL:             return "EOL";
-          case POPV:            return "POPV";
           case ENTERWITH:       return "ENTERWITH";
           case LEAVEWITH:       return "LEAVEWITH";
           case RETURN:          return "RETURN";
@@ -273,7 +273,6 @@ public class Token
           case SHEQ:            return "SHEQ";
           case SHNE:            return "SHNE";
           case REGEXP:          return "OBJECT";
-          case POP:             return "POP";
           case BINDNAME:        return "BINDNAME";
           case THROW:           return "THROW";
           case IN:              return "IN";
@@ -287,7 +286,7 @@ public class Token
           case ENUM_NEXT:       return "ENUM_NEXT";
           case ENUM_ID:         return "ENUM_ID";
           case THISFN:          return "THISFN";
-          case RETURN_POPV:     return "RETURN_POPV";
+          case RETURN_RESULT:   return "RETURN_RESULT";
           case ARRAYLIT:        return "ARRAYLIT";
           case OBJECTLIT:       return "OBJECTLIT";
           case GET_REF:         return "GET_REF";
@@ -336,7 +335,8 @@ public class Token
           case LABEL:           return "LABEL";
           case TARGET:          return "TARGET";
           case LOOP:            return "LOOP";
-          case EXPRSTMT:        return "EXPRSTMT";
+          case EXPR_VOID:       return "EXPR_VOID";
+          case EXPR_RESULT:     return "EXPR_RESULT";
           case JSR:             return "JSR";
           case SCRIPT:          return "SCRIPT";
           case TYPEOFNAME:      return "TYPEOFNAME";

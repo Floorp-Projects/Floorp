@@ -93,12 +93,18 @@ final class IRFactory
 
     Node createExprStatement(Node expr, int lineno)
     {
-        return new Node(Token.EXPRSTMT, expr, lineno);
+        int type;
+        if (parser.insideFunction()) {
+            type = Token.EXPR_VOID;
+        } else {
+            type = Token.EXPR_RESULT;
+        }
+        return new Node(type, expr, lineno);
     }
 
     Node createExprStatementNoReturn(Node expr, int lineno)
     {
-        return new Node(Token.POP, expr, lineno);
+        return new Node(Token.EXPR_VOID, expr, lineno);
     }
 
     /**
@@ -245,7 +251,7 @@ final class IRFactory
                 // function to initialize a local variable of the
                 // function's name to the function value.
                 fnNode.addVar(name);
-                Node setFn = new Node(Token.POP,
+                Node setFn = new Node(Token.EXPR_VOID,
                                 new Node(Token.SETVAR, Node.newString(name),
                                          new Node(Token.THISFN)));
                 statements.addChildrenToFront(setFn);
@@ -333,14 +339,14 @@ final class IRFactory
             if (loopType == LOOP_FOR) {
                 if (init.getType() != Token.EMPTY) {
                     if (init.getType() != Token.VAR) {
-                        init = new Node(Token.POP, init);
+                        init = new Node(Token.EXPR_VOID, init);
                     }
                     result.addChildToFront(init);
                 }
                 Node.Target incrTarget = new Node.Target();
                 result.addChildAfter(incrTarget, body);
                 if (incr.getType() != Token.EMPTY) {
-                    incr = createUnary(Token.POP, incr);
+                    incr = new Node(Token.EXPR_VOID, incr);
                     result.addChildAfter(incr, incrTarget);
                 }
                 continueTarget = incrTarget;
@@ -400,7 +406,7 @@ final class IRFactory
 
         Node newBody = new Node(Token.BLOCK);
         Node assign = createAssignment(lvalue, id);
-        newBody.addChildToBack(new Node(Token.POP, assign));
+        newBody.addChildToBack(new Node(Token.EXPR_VOID, assign));
         newBody.addChildToBack(body);
 
         Node loop = createWhile(cond, newBody, lineno);

@@ -152,7 +152,7 @@ class Optimizer
     private int rewriteForNumberVariables(Node n)
     {
         switch (n.getType()) {
-            case Token.POP : {
+            case Token.EXPR_VOID : {
                     Node child = n.getFirstChild();
                     int type = rewriteForNumberVariables(child);
                     if (type == NumberType)

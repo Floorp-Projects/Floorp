@@ -131,8 +131,11 @@ public class Interpreter
 
         Icode_UNDEF                     = -45,
 
+        Icode_POP                       = -46,
+        Icode_POP_RESULT                = -47,
+
     // Last icode
-        MIN_ICODE                       = -45;
+        MIN_ICODE                       = -47;
 
     static {
         // Checks for byte code consistencies, good compiler can eliminate them
@@ -147,6 +150,74 @@ public class Interpreter
             System.err.println(str);
             throw new IllegalStateException(str);
         }
+    }
+
+    private static String bytecodeName(int bytecode)
+    {
+        if (!validBytecode(bytecode)) {
+            throw new IllegalArgumentException(String.valueOf(bytecode));
+        }
+
+        if (!Token.printICode) {
+            return String.valueOf(bytecode);
+        }
+
+        if (validTokenCode(bytecode)) {
+            return Token.name(bytecode);
+        }
+
+        switch (bytecode) {
+          case Icode_DUP:              return "DUP";
+          case Icode_DUP2:             return "DUP2";
+          case Icode_SWAP:             return "SWAP";
+          case Icode_IFEQ_POP:         return "IFEQ_POP";
+          case Icode_VAR_INC_DEC:      return "VAR_INC_DEC";
+          case Icode_NAME_INC_DEC:     return "NAME_INC_DEC";
+          case Icode_PROP_INC_DEC:     return "PROP_INC_DEC";
+          case Icode_ELEM_INC_DEC:     return "ELEM_INC_DEC";
+          case Icode_REF_INC_DEC:      return "REF_INC_DEC";
+          case Icode_SCOPE:            return "SCOPE";
+          case Icode_TYPEOFNAME:       return "TYPEOFNAME";
+          case Icode_NAME_FAST_THIS:   return "NAME_FAST_THIS";
+          case Icode_NAME_SLOW_THIS:   return "NAME_SLOW_THIS";
+          case Icode_PUSH_PARENT:      return "PUSH_PARENT";
+          case Icode_CLOSURE:          return "CLOSURE";
+          case Icode_CALLSPECIAL:      return "CALLSPECIAL";
+          case Icode_RETUNDEF:         return "RETUNDEF";
+          case Icode_CATCH:            return "CATCH";
+          case Icode_GOSUB:            return "GOSUB";
+          case Icode_RETSUB:           return "RETSUB";
+          case Icode_LINE:             return "LINE";
+          case Icode_SHORTNUMBER:      return "SHORTNUMBER";
+          case Icode_INTNUMBER:        return "INTNUMBER";
+          case Icode_LITERAL_NEW:      return "LITERAL_NEW";
+          case Icode_LITERAL_SET:      return "LITERAL_SET";
+          case Icode_SPARE_ARRAYLIT:   return "SPARE_ARRAYLIT";
+          case Icode_REG_IND_C0:       return "REG_IND_C0";
+          case Icode_REG_IND_C1:       return "REG_IND_C1";
+          case Icode_REG_IND_C2:       return "REG_IND_C2";
+          case Icode_REG_IND_C3:       return "REG_IND_C3";
+          case Icode_REG_IND_C4:       return "REG_IND_C4";
+          case Icode_REG_IND_C5:       return "REG_IND_C5";
+          case Icode_REG_IND1:         return "LOAD_IND1";
+          case Icode_REG_IND2:         return "LOAD_IND2";
+          case Icode_REG_IND4:         return "LOAD_IND4";
+          case Icode_REG_STR_C0:       return "REG_STR_C0";
+          case Icode_REG_STR_C1:       return "REG_STR_C1";
+          case Icode_REG_STR_C2:       return "REG_STR_C2";
+          case Icode_REG_STR_C3:       return "REG_STR_C3";
+          case Icode_REG_STR1:         return "LOAD_STR1";
+          case Icode_REG_STR2:         return "LOAD_STR2";
+          case Icode_REG_STR4:         return "LOAD_STR4";
+          case Icode_GETVAR1:          return "GETVAR1";
+          case Icode_SETVAR1:          return "SETVAR1";
+          case Icode_UNDEF:            return "UNDEF";
+          case Icode_POP:              return "POP";
+          case Icode_POP_RESULT:       return "POP_RESULT";
+        }
+
+        // icode without name
+        throw new IllegalStateException(String.valueOf(bytecode));
     }
 
     private static boolean validIcode(int icode)
@@ -263,9 +334,9 @@ public class Interpreter
         int theICodeTop = 0;
         theICodeTop = generateICode(tree, theICodeTop);
         fixLabelGotos();
-        // add RETURN_POPV only to scripts as function always ends with RETURN
+        // add RETURN_RESULT only to scripts as function always ends with RETURN
         if (itsData.itsFunctionType == 0) {
-            theICodeTop = addToken(Token.RETURN_POPV, theICodeTop);
+            theICodeTop = addToken(Token.RETURN_RESULT, theICodeTop);
         }
         // Add special CATCH to simplify Interpreter.interpret logic
         // and workaround lack of goto in Java
@@ -476,7 +547,7 @@ public class Interpreter
                 iCodeTop = generateICode(child, iCodeTop);
                 while (null != (child = child.getNext())) {
                     if (1 != itsStackDepth - savedStackDepth) Kit.codeBug();
-                    iCodeTop = addToken(Token.POP, iCodeTop);
+                    iCodeTop = addIcode(Icode_POP, iCodeTop);
                     itsStackDepth--;
                     iCodeTop = generateICode(child, iCodeTop);
                 }
@@ -490,7 +561,7 @@ public class Interpreter
                     iCodeTop = addIcode(Icode_DUP, iCodeTop);
                     // No stack adjusting: USE_STACK in subtree will do it
                     iCodeTop = generateICode(child, iCodeTop);
-                    iCodeTop = addToken(Token.POP, iCodeTop);
+                    iCodeTop = addIcode(Icode_POP, iCodeTop);
                     itsStackDepth--;
                 }
                 break;
@@ -530,7 +601,7 @@ public class Interpreter
                     iCodeTop = addGoto(target, Icode_IFEQ_POP, iCodeTop);
                     stackChange(-1);
                 }
-                iCodeTop = addToken(Token.POP, iCodeTop);
+                iCodeTop = addIcode(Icode_POP, iCodeTop);
                 stackChange(-1);
 
                 Node defaultNode = (Node) switchNode.getProp(Node.DEFAULT_PROP);
@@ -648,7 +719,7 @@ public class Interpreter
                 int jump = (type == Token.AND) ? Token.IFNE : Token.IFEQ;
                 iCodeTop = addForwardGoto(jump, iCodeTop);
                 itsStackDepth--;
-                iCodeTop = addToken(Token.POP, iCodeTop);
+                iCodeTop = addIcode(Icode_POP, iCodeTop);
                 itsStackDepth--;
                 child = child.getNext();
                 iCodeTop = generateICode(child, iCodeTop);
@@ -728,7 +799,7 @@ public class Interpreter
                 stackDelta = 1;
                 iCodeTop = generateICode(child, iCodeTop);
                 if (type == Token.VOID) {
-                    iCodeTop = addToken(Token.POP, iCodeTop);
+                    iCodeTop = addIcode(Icode_POP, iCodeTop);
                     iCodeTop = addIcode(Icode_UNDEF, iCodeTop);
                 } else {
                     iCodeTop = addToken(type, iCodeTop);
@@ -862,13 +933,13 @@ public class Interpreter
                 break;
             }
 
-            case Token.POPV :
+            case Token.EXPR_VOID :
+            case Token.EXPR_RESULT :
                 stackShouldBeZero = true;
-                // fallthrough
-            case Token.POP :
                 iCodeTop = updateLineNumber(node, iCodeTop);
                 iCodeTop = generateICode(child, iCodeTop);
-                iCodeTop = addToken(type, iCodeTop);
+                iCodeTop = addIcode((type == Token.EXPR_VOID)
+                                    ? Icode_POP : Icode_POP_RESULT, iCodeTop);
                 itsStackDepth--;
                 break;
 
@@ -964,10 +1035,10 @@ public class Interpreter
                 }
                 break;
 
-            case Token.RETURN_POPV :
+            case Token.RETURN_RESULT :
                 stackShouldBeZero = true;
                 iCodeTop = updateLineNumber(node, iCodeTop);
-                iCodeTop = addToken(Token.RETURN_POPV, iCodeTop);
+                iCodeTop = addToken(Token.RETURN_RESULT, iCodeTop);
                 break;
 
             case Token.GETVAR : {
@@ -1580,72 +1651,6 @@ public class Interpreter
             }
         }
         return best;
-    }
-
-    private static String bytecodeName(int bytecode)
-    {
-        if (!validBytecode(bytecode)) {
-            throw new IllegalArgumentException(String.valueOf(bytecode));
-        }
-
-        if (!Token.printICode) {
-            return String.valueOf(bytecode);
-        }
-
-        if (validTokenCode(bytecode)) {
-            return Token.name(bytecode);
-        }
-
-        switch (bytecode) {
-          case Icode_DUP:              return "DUP";
-          case Icode_DUP2:             return "DUP2";
-          case Icode_SWAP:             return "SWAP";
-          case Icode_IFEQ_POP:         return "IFEQ_POP";
-          case Icode_VAR_INC_DEC:      return "VAR_INC_DEC";
-          case Icode_NAME_INC_DEC:     return "NAME_INC_DEC";
-          case Icode_PROP_INC_DEC:     return "PROP_INC_DEC";
-          case Icode_ELEM_INC_DEC:     return "ELEM_INC_DEC";
-          case Icode_REF_INC_DEC:      return "REF_INC_DEC";
-          case Icode_SCOPE:            return "SCOPE";
-          case Icode_TYPEOFNAME:       return "TYPEOFNAME";
-          case Icode_NAME_FAST_THIS:   return "NAME_FAST_THIS";
-          case Icode_NAME_SLOW_THIS:   return "NAME_SLOW_THIS";
-          case Icode_PUSH_PARENT:      return "PUSH_PARENT";
-          case Icode_CLOSURE:          return "CLOSURE";
-          case Icode_CALLSPECIAL:      return "CALLSPECIAL";
-          case Icode_RETUNDEF:         return "RETUNDEF";
-          case Icode_CATCH:            return "CATCH";
-          case Icode_GOSUB:            return "GOSUB";
-          case Icode_RETSUB:           return "RETSUB";
-          case Icode_LINE:             return "LINE";
-          case Icode_SHORTNUMBER:      return "SHORTNUMBER";
-          case Icode_INTNUMBER:        return "INTNUMBER";
-          case Icode_LITERAL_NEW:      return "LITERAL_NEW";
-          case Icode_LITERAL_SET:      return "LITERAL_SET";
-          case Icode_SPARE_ARRAYLIT:   return "SPARE_ARRAYLIT";
-          case Icode_REG_IND_C0:       return "REG_IND_C0";
-          case Icode_REG_IND_C1:       return "REG_IND_C1";
-          case Icode_REG_IND_C2:       return "REG_IND_C2";
-          case Icode_REG_IND_C3:       return "REG_IND_C3";
-          case Icode_REG_IND_C4:       return "REG_IND_C4";
-          case Icode_REG_IND_C5:       return "REG_IND_C5";
-          case Icode_REG_IND1:         return "LOAD_IND1";
-          case Icode_REG_IND2:         return "LOAD_IND2";
-          case Icode_REG_IND4:         return "LOAD_IND4";
-          case Icode_REG_STR_C0:       return "REG_STR_C0";
-          case Icode_REG_STR_C1:       return "REG_STR_C1";
-          case Icode_REG_STR_C2:       return "REG_STR_C2";
-          case Icode_REG_STR_C3:       return "REG_STR_C3";
-          case Icode_REG_STR1:         return "LOAD_STR1";
-          case Icode_REG_STR2:         return "LOAD_STR2";
-          case Icode_REG_STR4:         return "LOAD_STR4";
-          case Icode_GETVAR1:          return "GETVAR1";
-          case Icode_SETVAR1:          return "SETVAR1";
-          case Icode_UNDEF:            return "UNDEF";
-        }
-
-        // icode without name
-        throw new IllegalStateException(String.valueOf(bytecode));
     }
 
     private static void dumpICode(InterpreterData idata)
@@ -2296,9 +2301,15 @@ switch (op) {
         }
         continue Loop;
     }
-    case Token.POP :
+    case Icode_POP :
         stack[stackTop] = null;
         stackTop--;
+        continue Loop;
+    case Icode_POP_RESULT :
+        result = stack[stackTop];
+        if (result == DBL_MRK) result = doubleWrap(sDbl[stackTop]);
+        stack[stackTop] = null;
+        --stackTop;
         continue Loop;
     case Icode_DUP :
         stack[stackTop + 1] = stack[stackTop];
@@ -2321,18 +2332,12 @@ switch (op) {
         sDbl[stackTop - 1] = d;
         continue Loop;
     }
-    case Token.POPV :
-        result = stack[stackTop];
-        if (result == DBL_MRK) result = doubleWrap(sDbl[stackTop]);
-        stack[stackTop] = null;
-        --stackTop;
-        continue Loop;
     case Token.RETURN :
         result = stack[stackTop];
         if (result == DBL_MRK) result = doubleWrap(sDbl[stackTop]);
         --stackTop;
         break Loop;
-    case Token.RETURN_POPV :
+    case Token.RETURN_RESULT :
         break Loop;
     case Icode_RETUNDEF :
         result = undefined;

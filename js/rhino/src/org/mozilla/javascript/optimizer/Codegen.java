@@ -1461,7 +1461,7 @@ class BodyCodegen
                 visitThrow(node, child);
                 break;
 
-              case Token.RETURN_POPV:
+              case Token.RETURN_RESULT:
                 if (fnCurrent == null) throw Codegen.badTree();
                 // fallthrough
               case Token.RETURN:
@@ -1540,7 +1540,7 @@ class BodyCodegen
                 break;
               }
 
-              case Token.POP:
+              case Token.EXPR_VOID:
                 visitStatement(node);
                 if (child.getType() == Token.SETVAR) {
                     /* special case this so as to avoid unnecessary
@@ -1548,10 +1548,7 @@ class BodyCodegen
                     visitSetVar(child, child.getFirstChild(), false);
                 }
                 else {
-                    while (child != null) {
-                        generateCodeFromNode(child, node);
-                        child = child.getNext();
-                    }
+                    generateCodeFromNode(child, node);
                     if (node.getIntProp(Node.ISNUMBER_PROP, -1) != -1)
                         cfw.add(ByteCode.POP2);
                     else
@@ -1559,7 +1556,7 @@ class BodyCodegen
                 }
                 break;
 
-              case Token.POPV:
+              case Token.EXPR_RESULT:
                 visitStatement(node);
                 generateCodeFromNode(child, node);
                 if (popvLocal < 0) {

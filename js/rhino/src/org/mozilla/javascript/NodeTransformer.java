@@ -225,25 +225,11 @@ public class NodeTransformer
                  */
                 if (!hasFinally)
                     break;     // skip the whole mess.
-                Node child = node.getFirstChild();
-                boolean inserted = false;
+                Node unwindBlock = null;
                 for (int i=loops.size()-1; i >= 0; i--) {
                     Node n = (Node) loops.get(i);
                     int elemtype = n.getType();
                     if (elemtype == Token.TRY || elemtype == Token.WITH) {
-                        if (!inserted) {
-                            inserted = true;
-                            if (child != null) {
-                                node.setType(Token.POPV);
-                                // process children now as node will be
-                                // changed to point to inserted RETURN_POPV
-                                transformCompilationUnit_r(tree, node);
-                                Node retPopv = new Node(Token.RETURN_POPV);
-                                parent.addChildAfter(retPopv, node);
-                                previous = node;
-                                node = retPopv;
-                            }
-                        }
                         Node unwind;
                         if (elemtype == Token.TRY) {
                             Node.Jump jsrnode = new Node.Jump(Token.JSR);
@@ -253,9 +239,29 @@ public class NodeTransformer
                         } else {
                             unwind = new Node(Token.LEAVEWITH);
                         }
-                        previous = addBeforeCurrent(parent, previous, node,
-                                                    unwind);
+                        if (unwindBlock == null) {
+                            unwindBlock = new Node(Token.BLOCK,
+                                                   node.getLineno());
+                        }
+                        unwindBlock.addChildToBack(unwind);
                     }
+                }
+                if (unwindBlock != null) {
+                    Node returnNode = node;
+                    Node returnExpr = returnNode.getFirstChild();
+                    node = replaceCurrent(parent, previous, node, unwindBlock);
+                    if (returnExpr == null) {
+                        unwindBlock.addChildToBack(returnNode);
+                    } else {
+                        Node store = new Node(Token.EXPR_RESULT, returnExpr);
+                        unwindBlock.addChildToFront(store);
+                        returnNode = new Node(Token.RETURN_RESULT);
+                        unwindBlock.addChildToBack(returnNode);
+                        // transform return expression
+                        transformCompilationUnit_r(tree, store);
+                    }
+                    // skip transformCompilationUnit_r to avoid infinite loop
+                    continue siblingLoop;
                 }
                 break;
               }
@@ -347,10 +353,6 @@ public class NodeTransformer
                 break;
               }
 
-              case Token.EXPRSTMT:
-                node.setType(inFunction ? Token.POP : Token.POPV);
-                break;
-
               case Token.VAR:
               {
                 Node result = new Node(Token.BLOCK);
@@ -366,7 +368,7 @@ public class NodeTransformer
                     n.removeChild(init);
                     n.setType(Token.BINDNAME);
                     n = new Node(Token.SETNAME, n, init);
-                    Node pop = new Node(Token.POP, n, node.getLineno());
+                    Node pop = new Node(Token.EXPR_VOID, n, node.getLineno());
                     result.addChildToBack(pop);
                 }
                 node = replaceCurrent(parent, previous, node, result);
