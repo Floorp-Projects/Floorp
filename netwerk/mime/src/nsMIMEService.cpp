@@ -209,7 +209,11 @@ nsMIMEService::InitFromHack() {
 // nsIMIMEService methods
 NS_IMETHODIMP
 nsMIMEService::GetFromExtension(const char *aFileExt, nsIMIMEInfo **_retval) {
-    nsStringKey key(aFileExt);
+    // for now we're assuming file extensions are case insensitive.
+    nsCAutoString fileExt(aFileExt);
+    fileExt.ToLowerCase();
+
+    nsStringKey key(fileExt.GetBuffer());
 
     nsMIMEInfoImpl *entry = (nsMIMEInfoImpl*)mInfoHashtable->Get(&key);
     if (!entry) return NS_ERROR_FAILURE;
