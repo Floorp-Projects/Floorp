@@ -144,6 +144,8 @@ var progressListener = {
 var currentMailSendCharset = null;
 var g_send_default_charset = null;
 var g_charsetTitle = null;
+var g_charsetConvertManager = Components.classes['@mozilla.org/charset-converter-manager;1'].getService();
+g_charsetConvertManager = g_charsetConvertManager.QueryInterface(Components.interfaces.nsICharsetConverterManager2);
 
 
 var defaultController =
@@ -941,37 +943,8 @@ function SetDocumentCharacterSet(aCharset)
     dump("Compose has not been created!\n");
 }
 
-function SetDefaultMailSendCharacterSet()
-{
-  // Set the current menu selection as the default
-  if (currentMailSendCharset != null) {
-    // try to get preferences service
-    var prefs = null;
-    try {
-      prefs = Components.classes['@mozilla.org/preferences;1'];
-      prefs = prefs.getService();
-      prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
-    }
-    catch (ex) {
-      dump("failed to get prefs service!\n");
-      prefs = null;
-    }
-
-	  if (msgCompose) {
-      // write to the pref file
-      prefs.SetCharPref("mailnews.send_default_charset", currentMailSendCharset);
-      // update the global
-      g_send_default_charset = currentMailSendCharset;
-      dump("Set send_default_charset to" + currentMailSendCharset + "\n");
-    }
-	  else
-		  dump("Compose has not been created!\n");
-  }
-}
-
 function InitCharsetMenuCheckMark()
 {
-  // dump("msgCompose.compFields is " + msgCompose.compFields.characterSet + "\n");
   // return if the charset is already set explitily
   if (currentMailSendCharset != null) {
     dump("already set to " + currentMailSendCharset + "\n");
@@ -980,23 +953,10 @@ function InitCharsetMenuCheckMark()
 
   var menuitem;
 
-  // try to get preferences service
-  var prefs = null;
-  try {
-    prefs = Components.classes['@mozilla.org/preferences;1'];
-    prefs = prefs.getService();
-    prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
-  }
-  catch (ex) {
-    dump("failed to get prefs service!\n");
-    prefs = null;
-  }
   var send_default_charset = prefs.getLocalizedUnicharPref("mailnews.send_default_charset");
-//  send_default_charset = send_default_charset.toUpperCase();
   dump("send_default_charset is " + send_default_charset + "\n");
 
   var compFieldsCharset = msgCompose.compFields.characterSet;
-//  compFieldsCharset = compFieldsCharset.toUpperCase();
   dump("msgCompose.compFields is " + compFieldsCharset + "\n");
 
   if (compFieldsCharset == "us-ascii")
@@ -1005,7 +965,8 @@ function InitCharsetMenuCheckMark()
 
   // charset may have been set implicitly in case of reply/forward
   if (send_default_charset != compFieldsCharset) {
-    menuitem.setAttribute('checked', 'true');
+    if (menuitem)
+      menuitem.setAttribute('checked', 'true');
     return;
   }
 
@@ -1022,17 +983,7 @@ function GetCharsetUIString()
 {
   var charset = msgCompose.compFields.characterSet;
   if (g_send_default_charset == null) {
-    try {
-      prefs = Components.classes['@mozilla.org/preferences;1'];
-      prefs = prefs.getService();
-      prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
-      g_send_default_charset = prefs.getLocalizedUnicharPref("mailnews.send_default_charset");
-    }
-    catch (ex) {
-      dump("failed to get prefs service!\n");
-      prefs = null;
-      g_send_default_charset = charset; // set to the current charset
-    }
+    g_send_default_charset = prefs.getLocalizedUnicharPref("mailnews.send_default_charset");
   }
 
   charset = charset.toUpperCase();
@@ -1043,12 +994,29 @@ function GetCharsetUIString()
 
     if (g_charsetTitle == null) {
       try {
-        var ccm = Components.classes['@mozilla.org/charset-converter-manager;1'];
-        ccm = ccm.getService();
-        ccm = ccm.QueryInterface(Components.interfaces.nsICharsetConverterManager2);
+        // check if we have a converter for this charset
+        var charsetAtom = g_charsetConvertManager.GetCharsetAtom(charset);
+        var encoderList = g_charsetConvertManager.GetEncoderList();
+        var n = encoderList.Count();
+        var found = false;
+        for (var i = 0; i < n; i++)
+        {
+          if (charsetAtom == encoderList.GetElementAt(i))
+          {
+            found = true;
+            break;
+          }
+        }
+        if (!found)
+        {
+          dump("no charset converter available for " +  charset + " default charset is used instead\n");
+          // set to default charset, no need to show it in the window title
+          msgCompose.compFields.characterSet = g_send_default_charset;
+          return "";
+        }
+
         // get a localized string
-        var charsetAtom = ccm.GetCharsetAtom(charset);
-        g_charsetTitle = ccm.GetCharsetTitle(charsetAtom);
+        g_charsetTitle = g_charsetConvertManager.GetCharsetTitle(charsetAtom);
       }
       catch (ex) {
         dump("failed to get a charset title of " + charset + "!\n");
