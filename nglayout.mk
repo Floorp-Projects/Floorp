@@ -78,6 +78,7 @@ DIRS =				\
   view				\
   widget			\
   layout			\
+  editor                \
   webshell
 
 #-include $(DEPTH)/config/config.mk
