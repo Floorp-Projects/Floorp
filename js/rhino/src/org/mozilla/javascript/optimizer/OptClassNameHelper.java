@@ -42,6 +42,10 @@ import java.io.*;
 import java.util.Hashtable;
 
 public class OptClassNameHelper implements ClassNameHelper {
+  
+    public OptClassNameHelper() {
+        setTargetClassFileName(null);
+    }
 
     public String getGeneratingDirectory() {
         return generatingDirectory;
@@ -92,9 +96,12 @@ public class OptClassNameHelper implements ClassNameHelper {
     }
 
     public void setTargetClassFileName(String classFileName) {
-        int lastSeparator = classFileName == null 
-                            ? -1
-                            : classFileName.lastIndexOf(File.separatorChar);
+        if (classFileName == null) {
+            packageName = "org.mozilla.javascript.gen";
+            initialName = "c";
+            return;
+        }
+        int lastSeparator = classFileName.lastIndexOf(File.separatorChar);
         String initialName;
         if (lastSeparator == -1) {
             generatingDirectory = "";
@@ -163,8 +170,8 @@ public class OptClassNameHelper implements ClassNameHelper {
     }
 
     private String generatingDirectory;
-    private String packageName = "org.mozilla.javascript.gen";
-    private String initialName = "c";
+    private String packageName;
+    private String initialName;
     private static int globalSerial=1;
     private int serial=1;
     private Class targetExtends;
