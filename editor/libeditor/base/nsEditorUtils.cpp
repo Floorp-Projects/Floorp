@@ -138,14 +138,6 @@ nsDOMIterator::ForEach(nsDomIterFunctor& functor) const
   }
 }
 
-inline nsresult
-nsDOMIterator::MakeList(nsBoolDomIterFunctor& functor,
-                        nsCOMArray<nsIDOMNode>& outArrayOfNodes) const
-{
-  NS_PRECONDITION(outArrayOfNodes.Count() == 0, "Calling MakeList on non-empty list!");
-  return AppendList(functor, outArrayOfNodes);
-}
-
 nsresult
 nsDOMIterator::AppendList(nsBoolDomIterFunctor& functor,
                           nsCOMArray<nsIDOMNode>& arrayOfNodes) const
