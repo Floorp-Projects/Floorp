@@ -40,7 +40,8 @@
 #include "nsCairoDeviceContext.h"
 
 #if defined(MOZ_ENABLE_GTK2)
-#include <gdk/gdkx.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
 #endif
 
 #include "nsMemory.h"
@@ -52,19 +53,27 @@ nsCairoDrawingSurface::nsCairoDrawingSurface()
 {
 #if defined(MOZ_ENABLE_GTK2) || defined(MOZ_ENABLE_XLIB)
     mPixmap = 0;
+    mShmInfo.shmid = -1;
 #endif
 }
 
 nsCairoDrawingSurface::~nsCairoDrawingSurface()
 {
+    fprintf (stderr, "++++ [%p] DESTROY\n", this);
+
     if (mSurface)
         cairo_surface_destroy (mSurface);
     if (mImageSurface && !mFastAccess) // otherwise, mImageSurface == mSurface
         cairo_surface_destroy (mImageSurface);
-    
+
 #if defined(MOZ_ENABLE_GTK2) || defined(MOZ_ENABLE_XLIB)
     if (mPixmap != 0)
         XFreePixmap(mXDisplay, mPixmap);
+
+    if (mShmInfo.shmid != -1 && mShmInfo.shmaddr != 0) {
+        XShmDetach (mXDisplay, &mShmInfo);
+        shmdt (mShmInfo.shmaddr);
+    }
 #endif
 }
 
@@ -78,16 +87,47 @@ nsCairoDrawingSurface::Init(nsCairoDeviceContext *aDC, PRUint32 aWidth, PRUint32
     mHeight = aHeight;
 
     if (aFastAccess) {
+        fprintf (stderr, "++++ [%p] Creating IMAGE surface: %dx%d\n", this, aWidth, aHeight);
         mSurface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, aWidth, aHeight);
         mFastAccess = PR_TRUE;
     } else {
+        fprintf (stderr, "++++ [%p] Creating PIXMAP surface: %dx%d\n", this, aWidth, aHeight);
         // otherwise, we need to do toolkit-specific stuff
 #if defined(MOZ_ENABLE_GTK2) || defined(MOZ_ENABLE_XLIB)
         mXDisplay = aDC->GetXDisplay();
-        mPixmap = XCreatePixmap(mXDisplay,
-                                aDC->GetXPixmapParentDrawable(),
-                                aWidth, aHeight, DefaultDepth(mXDisplay,DefaultScreen(mXDisplay)));
+#if 0
+        mShmInfo.shmaddr = 0;
+        mShmInfo.shmid = shmget (IPC_PRIVATE,
+                                 aWidth * 4 * aHeight,
+                                 IPC_CREAT | 0600);
+        if (mShmInfo.shmid != -1) {
+            mShmInfo.shmaddr = (char*) shmat (mShmInfo.shmid, 0, 0);
+            mShmInfo.readOnly = False;
+        }
 
+        if (mShmInfo.shmid != -1 && mShmInfo.shmaddr != 0) {
+            XShmAttach (mXDisplay, &mShmInfo);
+            mPixmap = XShmCreatePixmap (mXDisplay, aDC->GetXPixmapParentDrawable(),
+                                        mShmInfo.shmaddr, &mShmInfo,
+                                        aWidth, aHeight, DefaultDepth(mXDisplay,DefaultScreen(mXDisplay)));
+        } else {
+#endif
+            mPixmap = XCreatePixmap(mXDisplay,
+                                    aDC->GetXPixmapParentDrawable(),
+                                    aWidth, aHeight, DefaultDepth(mXDisplay,DefaultScreen(mXDisplay)));
+#if 0
+        }
+#endif
+
+        // clear the pixmap
+        XGCValues gcv;
+        gcv.foreground = WhitePixel(mXDisplay,DefaultScreen(mXDisplay));
+        gcv.background = 0;
+        GC gc = XCreateGC (mXDisplay, mPixmap, GCForeground | GCBackground, &gcv);
+        XFillRectangle (mXDisplay, mPixmap, gc, 0, 0, aWidth, aHeight);
+        XFreeGC (mXDisplay, gc);
+
+        // create the surface
         mSurface = cairo_xlib_surface_create (mXDisplay,
                                               mPixmap,
                                               aDC->GetXVisual(),
@@ -109,6 +149,8 @@ nsresult
 nsCairoDrawingSurface::Init (nsCairoDeviceContext *aDC, nsIWidget *aWidget)
 {
     nsNativeWidget nativeWidget = aWidget->GetNativeData(NS_NATIVE_WIDGET);
+
+    fprintf (stderr, "++++ [%p] Creating DRAWABLE (0x%08x) surface\n", this, nativeWidget);
 
 #ifdef MOZ_ENABLE_GTK2
     NS_ASSERTION (GDK_IS_WINDOW(nativeWidget), "unsupported native widget type!");

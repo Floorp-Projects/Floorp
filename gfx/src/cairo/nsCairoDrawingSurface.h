@@ -43,6 +43,11 @@
 
 #include <cairo.h>
 
+#if defined(MOZ_ENABLE_GTK2)
+#include <gdk/gdkx.h>
+#include <X11/extensions/XShm.h>
+#endif
+
 class nsIWidget;
 class nsCairoDeviceContext;
 
@@ -82,11 +87,13 @@ private:
 #if defined(MOZ_ENABLE_GTK2) || defined(MOZ_ENABLE_XLIB)
     Display *mXDisplay;
     Pixmap mPixmap;
+    XShmSegmentInfo mShmInfo;
 #endif
 
     PRUint32 mLockFlags;
     PRBool mFastAccess;
     PRUint32 mWidth, mHeight;
+
 };
 
 #endif /* NSCAIRODRAWINGSURFACE__H__ */
