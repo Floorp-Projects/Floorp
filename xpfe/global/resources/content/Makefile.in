@@ -83,6 +83,7 @@ CHROME_CONTENT= \
 		nsJSComponentManager.js\
 		nsUserSettings.js \
 		xul.css \
+		toolbarBindings.xml \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
