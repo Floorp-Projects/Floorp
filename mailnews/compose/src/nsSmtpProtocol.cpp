@@ -569,13 +569,8 @@ PRInt32 nsSmtpProtocol::SendHeloResponse(nsIInputStream * inputStream, PRUint32 
 	else
 	{
 		/* else send the MAIL FROM: command */
-		nsCOMPtr<nsIMsgHeaderParser> parser;
-         nsComponentManager::CreateInstance(kHeaderParserCID,
-                                            nsnull,
-                                            nsCOMTypeInfo<nsIMsgHeaderParser>::GetIID(),
-                                            getter_AddRefs(parser));
-
-		 char *fullAddress = nsnull;
+		nsCOMPtr<nsIMsgHeaderParser> parser = do_GetService(kHeaderParserCID);
+    char *fullAddress = nsnull;
 		 if (parser) {
 			 // pass nsnull for the name, since we just want the email.
 			 //
@@ -1217,11 +1212,7 @@ nsresult nsSmtpProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer )
 			*/
 
 			nsXPIDLCString addresses;
-			nsCOMPtr<nsIMsgHeaderParser> parser;
-            rv = nsComponentManager::CreateInstance(kHeaderParserCID,
-                                               nsnull,
-                                               nsCOMTypeInfo<nsIMsgHeaderParser>::GetIID(),
-                                               getter_AddRefs(parser));
+			nsCOMPtr<nsIMsgHeaderParser> parser = do_GetService(kHeaderParserCID);
 
 			m_runningURL->GetAllRecipients(getter_Copies(addresses));
 

@@ -1118,10 +1118,7 @@ nsresult nsMsgSearchTerm::InitHeaderAddressParser()
     
 	if (!m_headerAddressParser)
 	{
-		res = nsComponentManager::CreateInstance(kMsgHeaderParserCID,
-                                       nsnull,
-                                       nsIMsgHeaderParser::GetIID(),
-                                       (void **) getter_AddRefs(m_headerAddressParser));
+    m_headerAddressParser = do_GetService(kMsgHeaderParserCID, &res);
 	}
 	return res;
 }
