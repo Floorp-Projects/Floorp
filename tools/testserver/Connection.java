@@ -61,30 +61,39 @@ class Connection extends Thread {
 		request = new StringBuffer();
 
 		int len = 0;
+        int extralen= 0;
 		try {
-			int onechar;
-			boolean readyForEnd = false;
 			while(true) {
 				if (!in.ready()) {
-					if (readyForEnd)
-						break;
 					continue;
 			    }
-				try {
-					line = in.readLine();
-				}
-				catch (EOFException e) {
-					System.out.println("End reached!");
-					System.out.println(e.toString());
-					break;
-			    }
+                line = in.readLine();
 				if (line == null)
 					break;
 				if (firstline == null)
 				    firstline = new String(line);
 				len = line.length();
+                if (line.regionMatches(true, 0,
+                        "Content-length: ", 0, 16)) {
+                    extralen = Integer.valueOf(line.substring(16,
+                        line.length())).intValue();
+                }
 				if (len == 0)
-				   readyForEnd = true; 
+                {
+                    // Now read only the extralen if any-
+                    if (extralen > 0)
+                    {
+                        char[] postbuffer = new char[extralen];
+                        in.read(postbuffer);
+                        request.append("\n");
+                        request.append(postbuffer);
+                        if (DEBUG) {
+                            System.out.println();
+                            System.out.println(postbuffer);
+                        }
+                    }
+                    break;
+                }
                 request.append(line);
 				request.append("\n");
 				if (DEBUG)
