@@ -399,7 +399,7 @@ int StartIB(CString parms, WIDGET *curWidget)
 	rootPath	= GetGlobal("Root");
 	configName	= GetGlobal("CustomizationList");
 	configPath  = rootPath + "Configs\\" + configName;
-	cdPath 		= configPath + "\\CD";
+	cdPath 		= configPath + "\\Output";
 	networkPath = configPath + "\\Network";
 	tempPath 	= configPath + "\\Temp";
 	iniDstPath	= cdPath + "\\config.ini";
