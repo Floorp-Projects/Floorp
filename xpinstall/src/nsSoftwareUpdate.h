@@ -23,17 +23,12 @@ class nsInstallInfo;
 #include "nsPIXPIStubHook.h"
 #include "nsTopProgressNotifier.h"
 
-#if NOTIFICATION_ENABLE
-#include "nsIUpdateNotification.h"
-#endif
-
 
 #define XPI_ROOT_KEY    "software/mozilla/xpinstall"
 #define XPI_AUTOREG_VAL "Autoreg"
 #define XPCOM_KEY       "software/mozilla/XPCOM"
 
-class nsSoftwareUpdate: public nsIAppShellComponent, 
-                        public nsISoftwareUpdate, 
+class nsSoftwareUpdate: public nsISoftwareUpdate, 
                         public nsPIXPIStubHook
 {
     public:
@@ -54,7 +49,7 @@ class nsSoftwareUpdate: public nsIAppShellComponent,
         static char*    GetLogName() { return mLogName; }
 
         NS_DECL_ISUPPORTS
-        NS_DECL_NSIAPPSHELLCOMPONENT
+        NS_DECL_NSPIXPISTUBHOOK
         
         NS_IMETHOD InstallJar( nsIFile* localFile,
                                const PRUnichar* URL,
@@ -77,13 +72,6 @@ class nsSoftwareUpdate: public nsIAppShellComponent,
         NS_IMETHOD SetActiveListener(nsIXPIListener *aListener);
         NS_IMETHOD StartupTasks( PRBool* needAutoreg );
 
-        /** StubInitialize() is private for the Install Wizard.
-         *  The mStubLockout property makes sure this is only called
-         *  once, and is also set by the AppShellComponent initialize
-         *  so it can't be called during a normal Mozilla run
-         */
-        NS_IMETHOD StubInitialize(nsIFile *dir, const char* logName);
-
         nsSoftwareUpdate();
         virtual ~nsSoftwareUpdate();
 
@@ -93,16 +81,12 @@ class nsSoftwareUpdate: public nsIAppShellComponent,
         static   nsCOMPtr<nsIFile>  mProgramDir;
         static   char*              mLogName;
 
-#if NOTIFICATION_ENABLE
-        static   nsIUpdateNotification *mUpdateNotifier;
-#endif
-        
         nsresult RunNextInstall();
         nsresult RegisterNameset();
+        void     CreateMasterListener();
         
         PRLock*               mLock;
         PRBool                mInstalling;
-        PRBool                mStubLockout;
         nsVoidArray           mJarInstallQueue;
         nsTopProgressListener *mMasterListener;
 
