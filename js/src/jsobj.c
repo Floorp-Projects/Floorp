@@ -2331,14 +2331,15 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
     if (!sprop)
         goto bad;
 
+    /* Store value before calling addProperty, in case the latter GC's. */
+    if (SPROP_HAS_VALID_SLOT(sprop, scope))
+        LOCKED_OBJ_SET_SLOT(obj, sprop->slot, value);
+
     /* XXXbe called with lock held */
     if (!clasp->addProperty(cx, obj, SPROP_USERID(sprop), &value)) {
         (void) js_RemoveScopeProperty(cx, scope, id);
         goto bad;
     }
-
-    if (SPROP_HAS_VALID_SLOT(sprop, scope))
-        LOCKED_OBJ_SET_SLOT(obj, sprop->slot, value);
 
 #if JS_HAS_GETTER_SETTER
 out:
@@ -2909,16 +2910,20 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
             return JS_FALSE;
         }
 
+        /*
+         * Initialize the new property value (passed to setter) to undefined.
+         * Note that we store before calling addProperty, to match the order
+         * in js_DefineNativeProperty.
+         */
+        if (SPROP_HAS_VALID_SLOT(sprop, scope))
+            LOCKED_OBJ_SET_SLOT(obj, sprop->slot, JSVAL_VOID);
+
         /* XXXbe called with obj locked */
         if (!clasp->addProperty(cx, obj, SPROP_USERID(sprop), vp)) {
             (void) js_RemoveScopeProperty(cx, scope, id);
             JS_UNLOCK_SCOPE(cx, scope);
             return JS_FALSE;
         }
-
-        /* Initialize new property value (passed to setter) to undefined. */
-        if (SPROP_HAS_VALID_SLOT(sprop, scope))
-            LOCKED_OBJ_SET_SLOT(obj, sprop->slot, JSVAL_VOID);
 
         PROPERTY_CACHE_FILL(&cx->runtime->propertyCache, obj, id, sprop);
     }
