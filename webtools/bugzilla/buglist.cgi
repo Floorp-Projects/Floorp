@@ -47,6 +47,7 @@ sub sillyness {
     $zz = @::legal_severity;
     $zz = @::versions;
     $zz = @::target_milestone;
+    $zz = %::proddesc;
 };
 
 my $serverpush = 0;
