@@ -7,3 +7,5 @@ nsprincl.mk
 nsprincl.sh
 now
 Makefile
+nsinstall
+nspr-config
