@@ -2944,9 +2944,6 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
     geckoEvent.charCode  = bufPtr[0]; // gecko expects OS-translated unicode
     geckoEvent.isChar    = PR_TRUE;
     geckoEvent.isShift   = ([mCurEvent modifierFlags] & NSShiftKeyMask) != 0;
-    geckoEvent.isControl = ([mCurEvent modifierFlags] & NSControlKeyMask) != 0;
-    geckoEvent.isAlt     = ([mCurEvent modifierFlags] & NSAlternateKeyMask) != 0;
-    geckoEvent.isMeta    = ([mCurEvent modifierFlags] & NSCommandKeyMask) != 0;
 
     // plugins need a native autokey event here, but only if this is a repeat event
     EventRecord macEvent;
