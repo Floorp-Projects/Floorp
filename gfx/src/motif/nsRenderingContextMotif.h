@@ -16,8 +16,8 @@
  * Reserved.
  */
 
-#ifndef nsRenderingContextUnix_h___
-#define nsRenderingContextUnix_h___
+#ifndef nsRenderingContextMotif_h___
+#define nsRenderingContextMotif_h___
 
 #include "nsIRenderingContext.h"
 #include "nsUnitConversion.h"
@@ -30,11 +30,11 @@
 #include "nsIViewManager.h"
 #include "nsIWidget.h"
 #include "nsRect.h"
-#include "nsImageUnix.h"
+#include "nsImageMotif.h"
 #include "nsIDeviceContext.h"
 #include "nsVoidArray.h"
 #include "nsIRegion.h"
-#include "nsDeviceContextUnix.h"
+#include "nsDeviceContextMotif.h"
 
 #include "X11/Xlib.h"
 #include "X11/Xutil.h"
@@ -47,11 +47,11 @@
 
 class GraphicsState;
 
-class nsRenderingContextUnix : public nsIRenderingContext
+class nsRenderingContextMotif : public nsIRenderingContext
 {
 public:
-  nsRenderingContextUnix();
-  ~nsRenderingContextUnix();
+  nsRenderingContextMotif();
+  ~nsRenderingContextMotif();
 
   void* operator new(size_t sz) {
     void* rv = new char[sz];
@@ -162,8 +162,8 @@ protected:
   nsTransform2D		  *mTMatrix;		// transform that all the graphics drawn here will obey
   float             mP2T;
 
-  nsDrawingSurfaceUnix   *mRenderingSurface;  // Can be a BackBuffer if Selected in
-  nsDrawingSurfaceUnix   *mFrontBuffer;
+  nsDrawingSurfaceMotif   *mRenderingSurface;  // Can be a BackBuffer if Selected in
+  nsDrawingSurfaceMotif   *mFrontBuffer;
   nsIDeviceContext       *mContext;
   nsIFontMetrics         *mFontMetrics;
   Region                 mRegion;
@@ -183,4 +183,4 @@ private:
 
 };
 
-#endif /* nsRenderingContextUnix_h___ */
+#endif /* nsRenderingContextMotif_h___ */

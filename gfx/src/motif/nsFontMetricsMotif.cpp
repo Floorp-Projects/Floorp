@@ -17,8 +17,8 @@
  */
 
 #include "xp_core.h"			//this is a hack to get it to build. MMP
-#include "nsFontMetricsUnix.h"
-#include "nsDeviceContextUnix.h"
+#include "nsFontMetricsMotif.h"
+#include "nsDeviceContextMotif.h"
 
 #include "nspr.h"
 #include "nsCRT.h"
@@ -27,7 +27,7 @@ static NS_DEFINE_IID(kIFontMetricsIID, NS_IFONT_METRICS_IID);
 
 //#define NOISY_FONTS
 
-nsFontMetricsUnix :: nsFontMetricsUnix()
+nsFontMetricsMotif :: nsFontMetricsMotif()
 {
   NS_INIT_REFCNT();
   mFont = nsnull;
@@ -35,7 +35,7 @@ nsFontMetricsUnix :: nsFontMetricsUnix()
   mFontInfo = nsnull;
 }
   
-nsFontMetricsUnix :: ~nsFontMetricsUnix()
+nsFontMetricsMotif :: ~nsFontMetricsMotif()
 {
   if (nsnull != mFont) {    
     delete mFont;
@@ -49,9 +49,9 @@ nsFontMetricsUnix :: ~nsFontMetricsUnix()
   }
 }
 
-NS_IMPL_ISUPPORTS(nsFontMetricsUnix, kIFontMetricsIID)
+NS_IMPL_ISUPPORTS(nsFontMetricsMotif, kIFontMetricsIID)
 
-NS_IMETHODIMP nsFontMetricsUnix :: Init(const nsFont& aFont, nsIDeviceContext* aCX)
+NS_IMETHODIMP nsFontMetricsMotif :: Init(const nsFont& aFont, nsIDeviceContext* aCX)
 {
   NS_ASSERTION(!(nsnull == aCX), "attempt to init fontmetrics with null device context");
 
@@ -183,13 +183,13 @@ NS_IMETHODIMP nsFontMetricsUnix :: Init(const nsFont& aFont, nsIDeviceContext* a
 }
 
 NS_IMETHODIMP
-nsFontMetricsUnix :: Destroy()
+nsFontMetricsMotif :: Destroy()
 {
 //  NS_IF_RELEASE(mDeviceContext);
   return NS_OK;
 }
 
-char * nsFontMetricsUnix::PickAppropriateSize(char **names, XFontStruct *fonts, int cnt, nscoord desired)
+char * nsFontMetricsMotif::PickAppropriateSize(char **names, XFontStruct *fonts, int cnt, nscoord desired)
 {
   int         idx;
   float       app2dev;
@@ -237,7 +237,7 @@ char * nsFontMetricsUnix::PickAppropriateSize(char **names, XFontStruct *fonts, 
   }
 }
 
-void nsFontMetricsUnix::RealizeFont()
+void nsFontMetricsMotif::RealizeFont()
 {
   nsNativeWidget  widget;
   mContext->GetNativeWidget(widget);
@@ -268,28 +268,28 @@ void nsFontMetricsUnix::RealizeFont()
 }
 
 NS_IMETHODIMP
-nsFontMetricsUnix :: GetXHeight(nscoord& aResult)
+nsFontMetricsMotif :: GetXHeight(nscoord& aResult)
 {
   aResult = mMaxAscent / 2;     // XXX temporary code!
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFontMetricsUnix :: GetSuperscriptOffset(nscoord& aResult)
+nsFontMetricsMotif :: GetSuperscriptOffset(nscoord& aResult)
 {
   aResult = mMaxAscent / 2;     // XXX temporary code!
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFontMetricsUnix :: GetSubscriptOffset(nscoord& aResult)
+nsFontMetricsMotif :: GetSubscriptOffset(nscoord& aResult)
 {
   aResult = mMaxAscent / 2;     // XXX temporary code!
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFontMetricsUnix :: GetStrikeout(nscoord& aOffset, nscoord& aSize)
+nsFontMetricsMotif :: GetStrikeout(nscoord& aOffset, nscoord& aSize)
 {
   aOffset = 0; /* XXX */
   aSize = 0;  /* XXX */
@@ -297,50 +297,50 @@ nsFontMetricsUnix :: GetStrikeout(nscoord& aOffset, nscoord& aSize)
 }
 
 NS_IMETHODIMP
-nsFontMetricsUnix :: GetUnderline(nscoord& aOffset, nscoord& aSize)
+nsFontMetricsMotif :: GetUnderline(nscoord& aOffset, nscoord& aSize)
 {
   aOffset = 0; /* XXX */
   aSize = 0;  /* XXX */
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFontMetricsUnix :: GetHeight(nscoord &aHeight)
+NS_IMETHODIMP nsFontMetricsMotif :: GetHeight(nscoord &aHeight)
 {
   aHeight = mHeight;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFontMetricsUnix :: GetLeading(nscoord &aLeading)
+NS_IMETHODIMP nsFontMetricsMotif :: GetLeading(nscoord &aLeading)
 {
   aLeading = mLeading;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFontMetricsUnix :: GetMaxAscent(nscoord &aAscent)
+NS_IMETHODIMP nsFontMetricsMotif :: GetMaxAscent(nscoord &aAscent)
 {
   aAscent = mMaxAscent;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFontMetricsUnix :: GetMaxDescent(nscoord &aDescent)
+NS_IMETHODIMP nsFontMetricsMotif :: GetMaxDescent(nscoord &aDescent)
 {
   aDescent = mMaxDescent;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFontMetricsUnix :: GetMaxAdvance(nscoord &aAdvance)
+NS_IMETHODIMP nsFontMetricsMotif :: GetMaxAdvance(nscoord &aAdvance)
 {
   aAdvance = mMaxAdvance;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFontMetricsUnix :: GetFont(const nsFont*& aFont)
+NS_IMETHODIMP nsFontMetricsMotif :: GetFont(const nsFont*& aFont)
 {
   aFont = mFont;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFontMetricsUnix :: GetFontHandle(nsFontHandle &aHandle)
+NS_IMETHODIMP nsFontMetricsMotif :: GetFontHandle(nsFontHandle &aHandle)
 {
   aHandle = (nsFontHandle)mFontHandle;
   return NS_OK;

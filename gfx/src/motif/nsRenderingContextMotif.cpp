@@ -18,13 +18,13 @@
 
 
 #include "xp_core.h"			//this is a hack to get it to build. MMP
-#include "nsRenderingContextUnix.h"
-#include "nsDeviceContextUnix.h"
+#include "nsRenderingContextMotif.h"
+#include "nsDeviceContextMotif.h"
 
 #include <math.h>
 #include "nspr.h"
 
-#include "nsRegionUnix.h"
+#include "nsRegionMotif.h"
 #include "nsGfxCIID.h"
 
 #include "X11/Xlib.h"
@@ -76,7 +76,7 @@ GraphicsState :: ~GraphicsState()
 
 static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
 
-nsRenderingContextUnix :: nsRenderingContextUnix()
+nsRenderingContextMotif :: nsRenderingContextMotif()
 {
   NS_INIT_REFCNT();
 
@@ -100,7 +100,7 @@ nsRenderingContextUnix :: nsRenderingContextUnix()
 
 }
 
-nsRenderingContextUnix :: ~nsRenderingContextUnix()
+nsRenderingContextMotif :: ~nsRenderingContextMotif()
 {
   if (mRegion) {
     ::XDestroyRegion(mRegion);
@@ -141,12 +141,12 @@ nsRenderingContextUnix :: ~nsRenderingContextUnix()
 
 }
 
-NS_IMPL_QUERY_INTERFACE(nsRenderingContextUnix, kRenderingContextIID)
-NS_IMPL_ADDREF(nsRenderingContextUnix)
-NS_IMPL_RELEASE(nsRenderingContextUnix)
+NS_IMPL_QUERY_INTERFACE(nsRenderingContextMotif, kRenderingContextIID)
+NS_IMPL_ADDREF(nsRenderingContextMotif)
+NS_IMPL_RELEASE(nsRenderingContextMotif)
 
 NS_IMETHODIMP
-nsRenderingContextUnix :: Init(nsIDeviceContext* aContext,
+nsRenderingContextMotif :: Init(nsIDeviceContext* aContext,
                                nsIWidget *aWindow)
 {
 
@@ -156,7 +156,7 @@ nsRenderingContextUnix :: Init(nsIDeviceContext* aContext,
   mContext = aContext;
   NS_IF_ADDREF(mContext);
 
-  mRenderingSurface = new nsDrawingSurfaceUnix();
+  mRenderingSurface = new nsDrawingSurfaceMotif();
 
 #ifdef MITSHM
   mRenderingSurface->shmImage = nsnull;
@@ -181,27 +181,27 @@ nsRenderingContextUnix :: Init(nsIDeviceContext* aContext,
 }
 
 NS_IMETHODIMP
-nsRenderingContextUnix :: Init(nsIDeviceContext* aContext,
+nsRenderingContextMotif :: Init(nsIDeviceContext* aContext,
                                nsDrawingSurface aSurface)
 {
 
   mContext = aContext;
   NS_IF_ADDREF(mContext);
 
-  mRenderingSurface = (nsDrawingSurfaceUnix *) aSurface;
+  mRenderingSurface = (nsDrawingSurfaceMotif *) aSurface;
 
   return (CommonInit());
 }
 
-NS_IMETHODIMP nsRenderingContextUnix :: CommonInit()
+NS_IMETHODIMP nsRenderingContextMotif :: CommonInit()
 {
 
 #ifdef MITSHM
   PRInt32 shmMajor, shmMinor ;
 #endif
 
-  ((nsDeviceContextUnix *)mContext)->SetDrawingSurface(mRenderingSurface);
-  ((nsDeviceContextUnix *)mContext)->InstallColormap();
+  ((nsDeviceContextMotif *)mContext)->SetDrawingSurface(mRenderingSurface);
+  ((nsDeviceContextMotif *)mContext)->InstallColormap();
 
   mContext->GetDevUnitsToAppUnits(mP2T);
   float app2dev;
@@ -235,18 +235,18 @@ NS_IMETHODIMP nsRenderingContextUnix :: CommonInit()
 }
 
 NS_IMETHODIMP
-nsRenderingContextUnix :: SelectOffScreenDrawingSurface(nsDrawingSurface aSurface)
+nsRenderingContextMotif :: SelectOffScreenDrawingSurface(nsDrawingSurface aSurface)
 {  
   if (nsnull == aSurface)
     mRenderingSurface = mFrontBuffer;
   else
-    mRenderingSurface = (nsDrawingSurfaceUnix *)aSurface;
+    mRenderingSurface = (nsDrawingSurfaceMotif *)aSurface;
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsRenderingContextUnix::GetHints(PRUint32& aResult)
+nsRenderingContextMotif::GetHints(PRUint32& aResult)
 {
   PRUint32 result = 0;
 
@@ -262,19 +262,19 @@ nsRenderingContextUnix::GetHints(PRUint32& aResult)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextUnix :: Reset(void)
+NS_IMETHODIMP nsRenderingContextMotif :: Reset(void)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextUnix :: GetDeviceContext(nsIDeviceContext *&aContext)
+NS_IMETHODIMP nsRenderingContextMotif :: GetDeviceContext(nsIDeviceContext *&aContext)
 {
   NS_IF_ADDREF(mContext);
   aContext = mContext;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextUnix :: PushState(void)
+NS_IMETHODIMP nsRenderingContextMotif :: PushState(void)
 {
   nsRect rect;
 
@@ -314,7 +314,7 @@ NS_IMETHODIMP nsRenderingContextUnix :: PushState(void)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextUnix :: PopState(PRBool &aClipEmpty)
+NS_IMETHODIMP nsRenderingContextMotif :: PopState(PRBool &aClipEmpty)
 {
   PRBool bEmpty = PR_FALSE;
 
@@ -364,13 +364,13 @@ NS_IMETHODIMP nsRenderingContextUnix :: PopState(PRBool &aClipEmpty)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextUnix :: IsVisibleRect(const nsRect& aRect, PRBool &aVisible)
+NS_IMETHODIMP nsRenderingContextMotif :: IsVisibleRect(const nsRect& aRect, PRBool &aVisible)
 {
   aVisible = PR_TRUE;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextUnix :: SetClipRectInPixels(const nsRect& aRect, nsClipCombine aCombine, PRBool &aClipEmpty)
+NS_IMETHODIMP nsRenderingContextMotif :: SetClipRectInPixels(const nsRect& aRect, nsClipCombine aCombine, PRBool &aClipEmpty)
 {
   PRBool bEmpty = PR_FALSE;
 
@@ -462,7 +462,7 @@ NS_IMETHODIMP nsRenderingContextUnix :: SetClipRectInPixels(const nsRect& aRect,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextUnix :: SetClipRect(const nsRect& aRect, nsClipCombine aCombine, PRBool &aClipEmpty)
+NS_IMETHODIMP nsRenderingContextMotif :: SetClipRect(const nsRect& aRect, nsClipCombine aCombine, PRBool &aClipEmpty)
 {
   nsRect  trect = aRect;
 
@@ -471,7 +471,7 @@ NS_IMETHODIMP nsRenderingContextUnix :: SetClipRect(const nsRect& aRect, nsClipC
   return SetClipRectInPixels(trect, aCombine, aClipEmpty);
 }
 
-NS_IMETHODIMP nsRenderingContextUnix :: GetClipRect(nsRect &aRect, PRBool &aClipValid)
+NS_IMETHODIMP nsRenderingContextMotif :: GetClipRect(nsRect &aRect, PRBool &aClipValid)
 {
   if (mRegion != nsnull) {
     XRectangle xrect;
@@ -491,12 +491,12 @@ NS_IMETHODIMP nsRenderingContextUnix :: GetClipRect(nsRect &aRect, PRBool &aClip
   return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextUnix :: SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine, PRBool &aClipEmpty)
+NS_IMETHODIMP nsRenderingContextMotif :: SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine, PRBool &aClipEmpty)
 {
   nsRect rect;
   XRectangle xrect;
 
-  nsRegionUnix *pRegion = (nsRegionUnix *)&aRegion;
+  nsRegionMotif *pRegion = (nsRegionMotif *)&aRegion;
   Region xregion = pRegion->GetXRegion();
   
   ::XClipBox(xregion, &xrect);
@@ -516,7 +516,7 @@ NS_IMETHODIMP nsRenderingContextUnix :: SetClipRegion(const nsIRegion& aRegion, 
   return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextUnix :: GetClipRegion(nsIRegion **aRegion)
+NS_IMETHODIMP nsRenderingContextMotif :: GetClipRegion(nsIRegion **aRegion)
 {
   nsIRegion * pRegion ;
 
@@ -540,7 +540,7 @@ NS_IMETHODIMP nsRenderingContextUnix :: GetClipRegion(nsIRegion **aRegion)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextUnix :: SetColor(nscolor aColor)
+NS_IMETHODIMP nsRenderingContextMotif :: SetColor(nscolor aColor)
 {
   if (nsnull == mContext) 
     return NS_ERROR_FAILURE;
@@ -561,13 +561,13 @@ NS_IMETHODIMP nsRenderingContextUnix :: SetColor(nscolor aColor)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextUnix :: GetColor(nscolor &aColor) const
+NS_IMETHODIMP nsRenderingContextMotif :: GetColor(nscolor &aColor) const
 {
   aColor = mCurrentColor;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextUnix :: SetLineStyle(nsLineStyle aLineStyle)
+NS_IMETHODIMP nsRenderingContextMotif :: SetLineStyle(nsLineStyle aLineStyle)
 {
   if (aLineStyle != mCurrentLineStyle)
   {
@@ -610,13 +610,13 @@ NS_IMETHODIMP nsRenderingContextUnix :: SetLineStyle(nsLineStyle aLineStyle)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextUnix :: GetLineStyle(nsLineStyle &aLineStyle)
+NS_IMETHODIMP nsRenderingContextMotif :: GetLineStyle(nsLineStyle &aLineStyle)
 {
   aLineStyle = mCurrentLineStyle;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextUnix :: SetFont(const nsFont& aFont)
+NS_IMETHODIMP nsRenderingContextMotif :: SetFont(const nsFont& aFont)
 {
   NS_IF_RELEASE(mFontMetrics);
   mContext->GetMetricsFor(aFont, mFontMetrics);
@@ -639,7 +639,7 @@ NS_IMETHODIMP nsRenderingContextUnix :: SetFont(const nsFont& aFont)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextUnix :: SetFont(nsIFontMetrics *aFontMetrics)
+NS_IMETHODIMP nsRenderingContextMotif :: SetFont(nsIFontMetrics *aFontMetrics)
 {
   NS_IF_RELEASE(mFontMetrics);
   mFontMetrics = aFontMetrics;
@@ -666,7 +666,7 @@ NS_IMETHODIMP nsRenderingContextUnix :: SetFont(nsIFontMetrics *aFontMetrics)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextUnix :: GetFontMetrics(nsIFontMetrics *&aFontMetrics)
+NS_IMETHODIMP nsRenderingContextMotif :: GetFontMetrics(nsIFontMetrics *&aFontMetrics)
 {
   NS_IF_ADDREF(mFontMetrics);
   aFontMetrics = mFontMetrics;
@@ -675,26 +675,26 @@ NS_IMETHODIMP nsRenderingContextUnix :: GetFontMetrics(nsIFontMetrics *&aFontMet
 }
 
 // add the passed in translation to the current translation
-NS_IMETHODIMP nsRenderingContextUnix :: Translate(nscoord aX, nscoord aY)
+NS_IMETHODIMP nsRenderingContextMotif :: Translate(nscoord aX, nscoord aY)
 {
   mTMatrix->AddTranslation((float)aX,(float)aY);
   return NS_OK;
 }
 
 // add the passed in scale to the current scale
-NS_IMETHODIMP nsRenderingContextUnix :: Scale(float aSx, float aSy)
+NS_IMETHODIMP nsRenderingContextMotif :: Scale(float aSx, float aSy)
 {
   mTMatrix->AddScale(aSx, aSy);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextUnix :: GetCurrentTransform(nsTransform2D *&aTransform)
+NS_IMETHODIMP nsRenderingContextMotif :: GetCurrentTransform(nsTransform2D *&aTransform)
 {
   aTransform = mTMatrix;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextUnix :: CreateDrawingSurface(nsRect *aBounds, PRUint32 aSurfFlags, nsDrawingSurface &aSurface)
+NS_IMETHODIMP nsRenderingContextMotif :: CreateDrawingSurface(nsRect *aBounds, PRUint32 aSurfFlags, nsDrawingSurface &aSurface)
 {
   if (nsnull == mRenderingSurface) {
     aSurface = nsnull;
@@ -790,7 +790,7 @@ NS_IMETHODIMP nsRenderingContextUnix :: CreateDrawingSurface(nsRect *aBounds, PR
 			 w, h, depth);
 
 
-  nsDrawingSurfaceUnix * surface = new nsDrawingSurfaceUnix();
+  nsDrawingSurfaceMotif * surface = new nsDrawingSurfaceMotif();
 
   surface->drawable = p ;
   surface->display  = mRenderingSurface->display;
@@ -812,9 +812,9 @@ NS_IMETHODIMP nsRenderingContextUnix :: CreateDrawingSurface(nsRect *aBounds, PR
   return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextUnix :: DestroyDrawingSurface(nsDrawingSurface aDS)
+NS_IMETHODIMP nsRenderingContextMotif :: DestroyDrawingSurface(nsDrawingSurface aDS)
 {
-  nsDrawingSurfaceUnix * surface = (nsDrawingSurfaceUnix *) aDS;
+  nsDrawingSurfaceMotif * surface = (nsDrawingSurfaceMotif *) aDS;
 
 #ifdef MITSHM
   if (surface->shmImage != nsnull) {
@@ -839,7 +839,7 @@ NS_IMETHODIMP nsRenderingContextUnix :: DestroyDrawingSurface(nsDrawingSurface a
   return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextUnix :: DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1)
+NS_IMETHODIMP nsRenderingContextMotif :: DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1)
 {
   if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
     return NS_ERROR_FAILURE;
@@ -855,7 +855,7 @@ NS_IMETHODIMP nsRenderingContextUnix :: DrawLine(nscoord aX0, nscoord aY0, nscoo
   return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextUnix :: DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints)
+NS_IMETHODIMP nsRenderingContextMotif :: DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
   if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
     return NS_ERROR_FAILURE;
@@ -883,12 +883,12 @@ NS_IMETHODIMP nsRenderingContextUnix :: DrawPolyline(const nsPoint aPoints[], PR
   return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextUnix :: DrawRect(const nsRect& aRect)
+NS_IMETHODIMP nsRenderingContextMotif :: DrawRect(const nsRect& aRect)
 {
   return DrawRect(aRect.x, aRect.y, aRect.width, aRect.height);
 }
 
-NS_IMETHODIMP nsRenderingContextUnix :: DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
+NS_IMETHODIMP nsRenderingContextMotif :: DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
   if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
     return NS_ERROR_FAILURE;
@@ -911,12 +911,12 @@ NS_IMETHODIMP nsRenderingContextUnix :: DrawRect(nscoord aX, nscoord aY, nscoord
   return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextUnix :: FillRect(const nsRect& aRect)
+NS_IMETHODIMP nsRenderingContextMotif :: FillRect(const nsRect& aRect)
 {
   return FillRect(aRect.x, aRect.y, aRect.width, aRect.height);
 }
 
-NS_IMETHODIMP nsRenderingContextUnix :: FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
+NS_IMETHODIMP nsRenderingContextMotif :: FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
   if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
     return NS_ERROR_FAILURE;
@@ -937,7 +937,7 @@ NS_IMETHODIMP nsRenderingContextUnix :: FillRect(nscoord aX, nscoord aY, nscoord
 }
 
 
-NS_IMETHODIMP nsRenderingContextUnix::DrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
+NS_IMETHODIMP nsRenderingContextMotif::DrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
   if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
     return NS_ERROR_FAILURE;
@@ -965,7 +965,7 @@ NS_IMETHODIMP nsRenderingContextUnix::DrawPolygon(const nsPoint aPoints[], PRInt
   return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextUnix::FillPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
+NS_IMETHODIMP nsRenderingContextMotif::FillPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
   if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
     return NS_ERROR_FAILURE;
@@ -996,12 +996,12 @@ NS_IMETHODIMP nsRenderingContextUnix::FillPolygon(const nsPoint aPoints[], PRInt
   return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextUnix :: DrawEllipse(const nsRect& aRect)
+NS_IMETHODIMP nsRenderingContextMotif :: DrawEllipse(const nsRect& aRect)
 {
   return DrawEllipse(aRect.x, aRect.y, aRect.width, aRect.height);
 }
 
-NS_IMETHODIMP nsRenderingContextUnix :: DrawEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
+NS_IMETHODIMP nsRenderingContextMotif :: DrawEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
   if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
     return NS_ERROR_FAILURE;
@@ -1023,12 +1023,12 @@ NS_IMETHODIMP nsRenderingContextUnix :: DrawEllipse(nscoord aX, nscoord aY, nsco
   return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextUnix :: FillEllipse(const nsRect& aRect)
+NS_IMETHODIMP nsRenderingContextMotif :: FillEllipse(const nsRect& aRect)
 {
   return FillEllipse(aRect.x, aRect.y, aRect.width, aRect.height);
 }
 
-NS_IMETHODIMP nsRenderingContextUnix :: FillEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
+NS_IMETHODIMP nsRenderingContextMotif :: FillEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
   if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
     return NS_ERROR_FAILURE;
@@ -1050,13 +1050,13 @@ NS_IMETHODIMP nsRenderingContextUnix :: FillEllipse(nscoord aX, nscoord aY, nsco
   return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextUnix :: DrawArc(const nsRect& aRect,
+NS_IMETHODIMP nsRenderingContextMotif :: DrawArc(const nsRect& aRect,
                                  float aStartAngle, float aEndAngle)
 {
   return DrawArc(aRect.x,aRect.y,aRect.width,aRect.height,aStartAngle,aEndAngle);
 }
 
-NS_IMETHODIMP nsRenderingContextUnix :: DrawArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
+NS_IMETHODIMP nsRenderingContextMotif :: DrawArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
                                  float aStartAngle, float aEndAngle)
 {
   if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
@@ -1080,13 +1080,13 @@ NS_IMETHODIMP nsRenderingContextUnix :: DrawArc(nscoord aX, nscoord aY, nscoord 
   return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextUnix :: FillArc(const nsRect& aRect,
+NS_IMETHODIMP nsRenderingContextMotif :: FillArc(const nsRect& aRect,
                                  float aStartAngle, float aEndAngle)
 {
   return FillArc(aRect.x, aRect.y, aRect.width, aRect.height, aStartAngle, aEndAngle);
 }
 
-NS_IMETHODIMP nsRenderingContextUnix :: FillArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
+NS_IMETHODIMP nsRenderingContextMotif :: FillArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
                                  float aStartAngle, float aEndAngle)
 {
   if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
@@ -1110,31 +1110,31 @@ NS_IMETHODIMP nsRenderingContextUnix :: FillArc(nscoord aX, nscoord aY, nscoord 
   return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextUnix :: GetWidth(char ch, nscoord &aWidth)
+NS_IMETHODIMP nsRenderingContextMotif :: GetWidth(char ch, nscoord &aWidth)
 {
   char buf[1];
   buf[0] = ch;
   return GetWidth(buf, 1, aWidth);
 }
 
-NS_IMETHODIMP nsRenderingContextUnix :: GetWidth(PRUnichar ch, nscoord &aWidth)
+NS_IMETHODIMP nsRenderingContextMotif :: GetWidth(PRUnichar ch, nscoord &aWidth)
 {
   PRUnichar buf[1];
   buf[0] = ch;
   return GetWidth(buf, 1, aWidth);
 }
 
-NS_IMETHODIMP nsRenderingContextUnix :: GetWidth(const nsString& aString, nscoord &aWidth)
+NS_IMETHODIMP nsRenderingContextMotif :: GetWidth(const nsString& aString, nscoord &aWidth)
 {
   return GetWidth(aString.GetUnicode(), aString.Length(), aWidth);
 }
 
-NS_IMETHODIMP nsRenderingContextUnix :: GetWidth(const char *aString, nscoord &aWidth)
+NS_IMETHODIMP nsRenderingContextMotif :: GetWidth(const char *aString, nscoord &aWidth)
 {
   return GetWidth(aString, strlen(aString), aWidth);
 }
 
-NS_IMETHODIMP nsRenderingContextUnix :: GetWidth(const char *aString,
+NS_IMETHODIMP nsRenderingContextMotif :: GetWidth(const char *aString,
                                             PRUint32 aLength, nscoord &aWidth)
 {
   PRInt32     rc;
@@ -1147,7 +1147,7 @@ NS_IMETHODIMP nsRenderingContextUnix :: GetWidth(const char *aString,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextUnix :: GetWidth(const PRUnichar *aString,
+NS_IMETHODIMP nsRenderingContextMotif :: GetWidth(const PRUnichar *aString,
                                             PRUint32 aLength,
                                             nscoord &aWidth)
 {
@@ -1188,7 +1188,7 @@ NS_IMETHODIMP nsRenderingContextUnix :: GetWidth(const PRUnichar *aString,
 }
 
 NS_IMETHODIMP
-nsRenderingContextUnix :: DrawString(const char *aString, PRUint32 aLength,
+nsRenderingContextMotif :: DrawString(const char *aString, PRUint32 aLength,
                                      nscoord aX, nscoord aY,
                                      nscoord aWidth,
                                      const nscoord* aSpacing)
@@ -1243,7 +1243,7 @@ nsRenderingContextUnix :: DrawString(const char *aString, PRUint32 aLength,
 }
 
 NS_IMETHODIMP
-nsRenderingContextUnix :: DrawString(const PRUnichar *aString, PRUint32 aLength,
+nsRenderingContextMotif :: DrawString(const PRUnichar *aString, PRUint32 aLength,
                                      nscoord aX, nscoord aY, nscoord aWidth,
                                      const nscoord* aSpacing)
 {
@@ -1320,14 +1320,14 @@ nsRenderingContextUnix :: DrawString(const PRUnichar *aString, PRUint32 aLength,
 }
 
 NS_IMETHODIMP
-nsRenderingContextUnix :: DrawString(const nsString& aString,
+nsRenderingContextMotif :: DrawString(const nsString& aString,
                                      nscoord aX, nscoord aY, nscoord aWidth,
                                      const nscoord* aSpacing)
 {
   return DrawString(aString.GetUnicode(), aString.Length(), aX, aY, aWidth, aSpacing);
 }
 
-NS_IMETHODIMP nsRenderingContextUnix :: DrawImage(nsIImage *aImage, nscoord aX, nscoord aY)
+NS_IMETHODIMP nsRenderingContextMotif :: DrawImage(nsIImage *aImage, nscoord aX, nscoord aY)
 {
   nscoord width,height;
   width = NSToCoordRound(mP2T * aImage->GetWidth());
@@ -1336,7 +1336,7 @@ NS_IMETHODIMP nsRenderingContextUnix :: DrawImage(nsIImage *aImage, nscoord aX, 
   return DrawImage(aImage,aX,aY,width,height);
 }
 
-NS_IMETHODIMP nsRenderingContextUnix :: DrawImage(nsIImage *aImage, nscoord aX, nscoord aY,
+NS_IMETHODIMP nsRenderingContextMotif :: DrawImage(nsIImage *aImage, nscoord aX, nscoord aY,
                                         nscoord aWidth, nscoord aHeight) 
 {
   nsRect	tr;
@@ -1349,7 +1349,7 @@ NS_IMETHODIMP nsRenderingContextUnix :: DrawImage(nsIImage *aImage, nscoord aX, 
   return DrawImage(aImage,tr);
 }
 
-NS_IMETHODIMP nsRenderingContextUnix :: DrawImage(nsIImage *aImage, const nsRect& aSRect, const nsRect& aDRect)
+NS_IMETHODIMP nsRenderingContextMotif :: DrawImage(nsIImage *aImage, const nsRect& aSRect, const nsRect& aDRect)
 {
   nsRect	sr,dr;
   
@@ -1363,7 +1363,7 @@ NS_IMETHODIMP nsRenderingContextUnix :: DrawImage(nsIImage *aImage, const nsRect
                       dr.x,dr.y,dr.width,dr.height);
 }
 
-NS_IMETHODIMP nsRenderingContextUnix :: DrawImage(nsIImage *aImage, const nsRect& aRect)
+NS_IMETHODIMP nsRenderingContextMotif :: DrawImage(nsIImage *aImage, const nsRect& aRect)
 {
   nsRect	tr;
 
@@ -1374,7 +1374,7 @@ NS_IMETHODIMP nsRenderingContextUnix :: DrawImage(nsIImage *aImage, const nsRect
 }
 
 NS_IMETHODIMP
-nsRenderingContextUnix :: CopyOffScreenBits(nsDrawingSurface aSrcSurf,
+nsRenderingContextMotif :: CopyOffScreenBits(nsDrawingSurface aSrcSurf,
                                             PRInt32 aSrcX, PRInt32 aSrcY,
                                             const nsRect &aDestBounds,
                                             PRUint32 aCopyFlags)
@@ -1382,7 +1382,7 @@ nsRenderingContextUnix :: CopyOffScreenBits(nsDrawingSurface aSrcSurf,
   PRInt32               x = aSrcX;
   PRInt32               y = aSrcY;
   nsRect                drect = aDestBounds;
-  nsDrawingSurfaceUnix  *destsurf;
+  nsDrawingSurfaceMotif  *destsurf;
 
   if (aCopyFlags & NS_COPYBITS_TO_BACK_BUFFER)
   {
@@ -1401,10 +1401,10 @@ nsRenderingContextUnix :: CopyOffScreenBits(nsDrawingSurface aSrcSurf,
   //XXX flags are unused. that would seem to mean that there is
   //inefficiency somewhere... MMP
 
-  ::XCopyArea(((nsDrawingSurfaceUnix *)aSrcSurf)->display, 
-	            ((nsDrawingSurfaceUnix *)aSrcSurf)->drawable,
+  ::XCopyArea(((nsDrawingSurfaceMotif *)aSrcSurf)->display, 
+	            ((nsDrawingSurfaceMotif *)aSrcSurf)->drawable,
 	            destsurf->drawable,
-	            ((nsDrawingSurfaceUnix *)aSrcSurf)->gc,
+	            ((nsDrawingSurfaceMotif *)aSrcSurf)->gc,
 	            x, y, drect.width, drect.height,
               drect.x, drect.y);
 

@@ -17,9 +17,9 @@
  */
 
 #include "xp_core.h"			//this is a hack to get it to build. MMP
-#include "nsImageUnix.h"
-#include "nsRenderingContextUnix.h"
-#include "nsDeviceContextUnix.h"
+#include "nsImageMotif.h"
+#include "nsRenderingContextMotif.h"
+#include "nsDeviceContextMotif.h"
 
 #include "nspr.h"
 
@@ -29,7 +29,7 @@ static NS_DEFINE_IID(kIImageIID, NS_IIMAGE_IID);
 
 //------------------------------------------------------------
 
-nsImageUnix :: nsImageUnix()
+nsImageMotif :: nsImageMotif()
 {
   NS_INIT_REFCNT();
   mImage = nsnull ;
@@ -47,7 +47,7 @@ nsImageUnix :: nsImageUnix()
 
 //------------------------------------------------------------
 
-nsImageUnix :: ~nsImageUnix()
+nsImageMotif :: ~nsImageMotif()
 {
   if (nsnull != mImage) {
     XDestroyImage(mImage);
@@ -73,11 +73,11 @@ nsImageUnix :: ~nsImageUnix()
   
 }
 
-NS_IMPL_ISUPPORTS(nsImageUnix, kIImageIID);
+NS_IMPL_ISUPPORTS(nsImageMotif, kIImageIID);
 
 //------------------------------------------------------------
 
-nsresult nsImageUnix :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMaskRequirements aMaskRequirements)
+nsresult nsImageMotif :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMaskRequirements aMaskRequirements)
 {
   if(nsnull != mImageBits)
    delete[] (PRUint8*)mImageBits;
@@ -117,7 +117,7 @@ nsresult nsImageUnix :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsM
 
 //------------------------------------------------------------
 
-void nsImageUnix::ComputMetrics()
+void nsImageMotif::ComputMetrics()
 {
 
   mRowBytes = CalcBytesSpan(mWidth);
@@ -128,7 +128,7 @@ void nsImageUnix::ComputMetrics()
 //------------------------------------------------------------
 
 // figure out how big our palette needs to be
-void nsImageUnix :: ComputePaletteSize(PRIntn nBitCount)
+void nsImageMotif :: ComputePaletteSize(PRIntn nBitCount)
 {
   switch (nBitCount)
     {
@@ -153,7 +153,7 @@ void nsImageUnix :: ComputePaletteSize(PRIntn nBitCount)
 
 //------------------------------------------------------------
 
-PRInt32  nsImageUnix :: CalcBytesSpan(PRUint32  aWidth)
+PRInt32  nsImageMotif :: CalcBytesSpan(PRUint32  aWidth)
 {
 PRInt32 spanbytes;
 
@@ -168,7 +168,7 @@ PRInt32 spanbytes;
 //------------------------------------------------------------
 
 // set up the pallete to the passed in color array, RGB only in this array
-void nsImageUnix :: ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRect *aUpdateRect)
+void nsImageMotif :: ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRect *aUpdateRect)
 {
 
   if (nsnull == mImage)
@@ -183,10 +183,10 @@ void nsImageUnix :: ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsR
 //------------------------------------------------------------
 
 // Draw the bitmap, this method has a source and destination coordinates
-NS_IMETHODIMP nsImageUnix :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
+NS_IMETHODIMP nsImageMotif :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
                                   PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
 {
-  nsDrawingSurfaceUnix	*unixdrawing =(nsDrawingSurfaceUnix*) aSurface;
+  nsDrawingSurfaceMotif	*unixdrawing =(nsDrawingSurfaceMotif*) aSurface;
 
   if ((PR_FALSE==mStaticImage) || (nsnull == mImage)) {
     BuildImage(aSurface);
@@ -204,12 +204,12 @@ NS_IMETHODIMP nsImageUnix :: Draw(nsIRenderingContext &aContext, nsDrawingSurfac
 //------------------------------------------------------------
 
 // Draw the bitmap, this draw just has destination coordinates
-NS_IMETHODIMP nsImageUnix :: Draw(nsIRenderingContext &aContext, 
+NS_IMETHODIMP nsImageMotif :: Draw(nsIRenderingContext &aContext, 
                                   nsDrawingSurface aSurface,
                                   PRInt32 aX, PRInt32 aY, 
                                   PRInt32 aWidth, PRInt32 aHeight)
 {
-  nsDrawingSurfaceUnix	*unixdrawing =(nsDrawingSurfaceUnix*) aSurface;
+  nsDrawingSurfaceMotif	*unixdrawing =(nsDrawingSurfaceMotif*) aSurface;
 
   BuildImage(aSurface);
 
@@ -228,20 +228,20 @@ NS_IMETHODIMP nsImageUnix :: Draw(nsIRenderingContext &aContext,
 
 //------------------------------------------------------------
 
-void nsImageUnix::CompositeImage(nsIImage *aTheImage, nsPoint *aULLocation,nsBlendQuality aBlendQuality)
+void nsImageMotif::CompositeImage(nsIImage *aTheImage, nsPoint *aULLocation,nsBlendQuality aBlendQuality)
 {
 }
 
 //------------------------------------------------------------
 
 // lets build an alpha mask from this image
-PRBool nsImageUnix::SetAlphaMask(nsIImage *aTheMask)
+PRBool nsImageMotif::SetAlphaMask(nsIImage *aTheMask)
 {
 PRInt32   num;
 PRUint8   *srcbits;
 
   if (aTheMask && 
-       (((nsImageUnix*)aTheMask)->mNumBytesPixel == 1)) {
+       (((nsImageMotif*)aTheMask)->mNumBytesPixel == 1)) {
     mLocation.x = 0;
     mLocation.y = 0;
     mAlphaDepth = 8;
@@ -261,7 +261,7 @@ PRUint8   *srcbits;
 }
 
 
-void nsImageUnix::AllocConvertedBits(PRUint32 aSize)
+void nsImageMotif::AllocConvertedBits(PRUint32 aSize)
 {
   if (nsnull == mConvertedBits)
     mConvertedBits = (PRUint8*) new PRUint8[aSize]; 
@@ -269,9 +269,9 @@ void nsImageUnix::AllocConvertedBits(PRUint32 aSize)
 
 //------------------------------------------------------------
 
-void nsImageUnix::ConvertImage(nsDrawingSurface aDrawingSurface)
+void nsImageMotif::ConvertImage(nsDrawingSurface aDrawingSurface)
 {
-nsDrawingSurfaceUnix	*unixdrawing =(nsDrawingSurfaceUnix*) aDrawingSurface;
+nsDrawingSurfaceMotif	*unixdrawing =(nsDrawingSurfaceMotif*) aDrawingSurface;
 PRUint8                 *tempbuffer,*cursrc,*curdest;
 PRInt32                 x,y;
 PRUint16                red,green,blue,*cur16;
@@ -359,7 +359,7 @@ PRUint16                red,green,blue,*cur16;
 #endif
 }
 
-nsresult nsImageUnix::BuildImage(nsDrawingSurface aDrawingSurface)
+nsresult nsImageMotif::BuildImage(nsDrawingSurface aDrawingSurface)
 {
   if (nsnull != mImage) {
 //  XDestroyImage(mImage);
@@ -374,7 +374,7 @@ nsresult nsImageUnix::BuildImage(nsDrawingSurface aDrawingSurface)
 
 //------------------------------------------------------------
 
-nsresult nsImageUnix::Optimize(nsIDeviceContext* aContext)
+nsresult nsImageMotif::Optimize(nsIDeviceContext* aContext)
 {
   mStaticImage = PR_TRUE;
 #if 0
@@ -385,12 +385,12 @@ nsresult nsImageUnix::Optimize(nsIDeviceContext* aContext)
 
 //------------------------------------------------------------
 
-void nsImageUnix::CreateImage(nsDrawingSurface aSurface)
+void nsImageMotif::CreateImage(nsDrawingSurface aSurface)
 {
   PRUint32 wdepth;
   Visual * visual ;
   PRUint32 format ;
-  nsDrawingSurfaceUnix	*unixdrawing =(nsDrawingSurfaceUnix*) aSurface;
+  nsDrawingSurfaceMotif	*unixdrawing =(nsDrawingSurfaceMotif*) aSurface;
   
   if(mImageBits) {
     format = ZPixmap;

@@ -45,8 +45,8 @@ EXTRA_DSO_LDOPTS+= -lXt -lX11 -lXext -lm
 endif
 
 
-CPPSRCS=nsDeviceContextUnix.cpp nsFontMetricsUnix.cpp nsGfxFactoryUnix.cpp \
-	nsRenderingContextUnix.cpp nsRegionUnix.cpp nsImageUnix.cpp
+CPPSRCS=nsDeviceContextMotif.cpp nsFontMetricsMotif.cpp nsGfxFactoryMotif.cpp \
+	nsRenderingContextMotif.cpp nsRegionMotif.cpp nsImageMotif.cpp
 
 include $(DEPTH)/config/rules.mk
 

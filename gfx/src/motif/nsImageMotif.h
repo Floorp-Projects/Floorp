@@ -16,19 +16,19 @@
  * Reserved.
  */
 
-#ifndef nsImageUnix_h___
-#define nsImageUnix_h___
+#ifndef nsImageMotif_h___
+#define nsImageMotif_h___
 
 #include "nsIImage.h"
 
 #include "X11/Xlib.h"
 #include "X11/Xutil.h"
 
-class nsImageUnix : public nsIImage
+class nsImageMotif : public nsIImage
 {
 public:
-  nsImageUnix();
-  ~nsImageUnix();
+  nsImageMotif();
+  ~nsImageMotif();
 
   NS_DECL_ISUPPORTS
 
