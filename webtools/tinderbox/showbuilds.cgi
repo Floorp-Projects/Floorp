@@ -53,6 +53,11 @@ $colormap = {
 #$form{'tree'} = DogbertTip;
 $tree = $form{'tree'};
 
+if (exists $form{'rebuildguilty'}) {
+    system ("./buildwho.pl $tree > /dev/null");
+    undef $form{'rebuildguilty'};
+}
+
 if ($form{'quickparse'}) {
     print "Content-type: text/plain\n\n";
     &do_quickparse;
@@ -327,6 +332,8 @@ sub display_build_table_header {
     print "<td rowspan=1><font size=-1>Click time to <br>see changes <br>since time</font>";
     $nspan = ( $tree2 ne "" ? 4 : 1);
     print "<td colspan=$nspan><font size=-1>Click name to see what they did</font>";
+    print "<br><font size=-2><a href=showbuilds.cgi" . make_cgi_args() .
+        "&rebuildguilty=1>Rebuild guilty list</a>";
     #print "<td colspan=$name_count><font size=-1>Burning builds are busted</font>";
     #print "</tr>\n";
 
