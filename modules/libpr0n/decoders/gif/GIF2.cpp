@@ -344,8 +344,12 @@ static int do_lzw(gif_struct *gs, const PRUint8 *q)
       }
 
       /* Check for explicit end-of-stream code */
-      if (code == (clear_code + 1))
+      if (code == (clear_code + 1)) {
+        /* end-of-stream should only appear after all image data */
+        if (rows_remaining != 0)
+          return -1;
         return 0;
+      }
 
       if (oldcode == -1) {
         *rowp++ = suffix[code];
