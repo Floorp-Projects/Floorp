@@ -68,6 +68,8 @@ PRIVATE cs_csid_map_t	cs_mime_csidmap_tbl[] = {
 			{CS_KOI8_R,			CS_KOI8_R	},
 			{CS_MAC_CYRILLIC,	CS_KOI8_R	},
 			{CS_CP_1251,		CS_KOI8_R	},
+
+			{CS_KOI8_U,			CS_KOI8_U	},
 			
 			{CS_8859_7,		CS_8859_7	},
 			{CS_CP_1253,		CS_8859_7	},

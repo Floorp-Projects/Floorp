@@ -537,7 +537,16 @@ MODULE_PRIVATE cscvt_t		cscvt_tbl[] = {
 		{CS_KOI8_R,		CS_CP_1251,		0, (CCCFunc)One2OneCCC, 0},	
 
 		/* UKRAINIAN */
-		{CS_KOI8_U, 		CS_KOI8_U,		0, (CCCFunc)0, 0},
+		{CS_KOI8_U, 	CS_KOI8_U,		0, (CCCFunc)0, 0},
+		{CS_KOI8_U,		CS_KOI8_R,		0, (CCCFunc)One2OneCCC, 0},
+        {CS_KOI8_R,		CS_KOI8_U,		0, (CCCFunc)One2OneCCC, 0},	
+        {CS_KOI8_U,		CS_8859_5,		0, (CCCFunc)One2OneCCC, 0},	
+		{CS_8859_5,		CS_KOI8_U,		0, (CCCFunc)One2OneCCC, 0},	
+		{CS_KOI8_U,	    CS_MAC_CYRILLIC,	0, (CCCFunc)One2OneCCC, 0},	
+		{CS_MAC_CYRILLIC,	CS_KOI8_U,		0, (CCCFunc)One2OneCCC, 0},	
+		{CS_KOI8_U,		CS_CP_1251,		0, (CCCFunc)One2OneCCC, 0},	
+		{CS_CP_1251,	CS_KOI8_U,		0, (CCCFunc)One2OneCCC, 0},	
+
 
 		/* ARMENIAN */
 		{CS_ARMSCII8, CS_ARMSCII8,		0, (CCCFunc)0, 0},
