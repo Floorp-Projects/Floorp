@@ -13,7 +13,7 @@
 
   <script language="javascript">
   <![CDATA[
-    _elementIDs = ["requestReturnReceipt", "mdnReportEnabled", "incorporateReturnReceipt"];
+    _elementIDs = ["requestReturnReceipt", "incorporateReturnReceipt"];
     
     function doCustomize() 
     {
@@ -50,7 +50,8 @@
 
 	</titledbox>
 
-  <titledbox orient="vertical">
+<!--
+   <titledbox orient="vertical">
     <title><text value="&requestMDN.label;"/></title>
 	
     <radiogroup id="mdnReportEnabled" orient="vertical"
@@ -65,5 +66,5 @@
       </box>
     </radiogroup>
   </titledbox>
-
+-->
 </window>
