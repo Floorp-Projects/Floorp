@@ -85,6 +85,7 @@ DIRS += \
 		download-manager \
 		history \
 		sidebar \
+		alerts
 		$(NULL)
 endif
 endif
@@ -98,7 +99,7 @@ endif
 ifeq ($(OS_ARCH),WINNT)
 ifndef MOZ_PHOENIX
 ifndef MOZ_XULRUNNER
-DIRS    += urlwidget winhooks alerts
+DIRS    += urlwidget winhooks
 endif
 endif
 endif
@@ -118,6 +119,7 @@ DIRS    = \
           history/public \
           shistory/public \
           bookmarks/public \
+	  alerts \
           $(NULL)
 
 ifeq ($(OS_ARCH),WINNT) 

@@ -42,7 +42,11 @@ VPATH   = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS    = public src 
+DIRS    = public
+
+ifeq ($(OS_ARCH),WINNT)
+DIRS    += src 
+endif
 
 include $(topsrcdir)/config/rules.mk
 
