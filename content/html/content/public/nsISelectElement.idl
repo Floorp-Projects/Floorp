@@ -50,7 +50,7 @@ interface nsIPresState;
  * OPTIONs within a SELECT element.
  */
 
-[scriptable, uuid(a6cf90f6-15b3-11d2-932e-00805f8add32)]
+[scriptable, uuid(35bd8ed5-5f34-4126-8c4f-38ba01681836)]
 interface nsISelectElement : nsISupports
 {
 
@@ -78,20 +78,6 @@ interface nsISelectElement : nsISupports
    */
   [noscript] void willRemoveOptions(in nsIContent aParent,
                                     in long aContentIndex);
-
-  /**
-   * Called when the parser is done adding child content
-   * to the select during document loading.
-   */
-  void doneAddingChildren();
-
-  /**
-   * Returns whether the parser is done adding child content
-   * to the select during document loading.
-   *
-   * @return whether the parser is done adding children
-   */
-  boolean isDoneAddingChildren();
 
   /**
    * Checks whether an option is disabled (even if it's part of an optgroup)

@@ -52,7 +52,7 @@ class nsHTMLObjectElement : public nsGenericHTMLFormElement,
                             public nsIDOMHTMLObjectElement
 {
 public:
-  nsHTMLObjectElement(nsINodeInfo *aNodeInfo);
+  nsHTMLObjectElement(nsINodeInfo *aNodeInfo, PRBool aFromParser = PR_FALSE);
   virtual ~nsHTMLObjectElement();
 
   // nsISupports
@@ -78,6 +78,9 @@ public:
   NS_IMETHOD SaveState();
   NS_IMETHOD RestoreState(nsIPresState* aState);
 
+  virtual void DoneAddingChildren();
+  virtual PRBool IsDoneAddingChildren();
+
   virtual PRBool ParseAttribute(nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
@@ -86,14 +89,18 @@ public:
                                nsAString& aResult) const;
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
+
+ protected:
+  PRPackedBool mIsDoneAddingChildren;
 };
 
 
-NS_IMPL_NS_NEW_HTML_ELEMENT(Object)
+NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Object)
 
 
-nsHTMLObjectElement::nsHTMLObjectElement(nsINodeInfo *aNodeInfo)
-  : nsGenericHTMLFormElement(aNodeInfo)
+nsHTMLObjectElement::nsHTMLObjectElement(nsINodeInfo *aNodeInfo,
+                                         PRBool aFromParser)
+  : nsGenericHTMLFormElement(aNodeInfo), mIsDoneAddingChildren(!aFromParser)
 {
 }
 
@@ -101,6 +108,18 @@ nsHTMLObjectElement::~nsHTMLObjectElement()
 {
 }
 
+PRBool
+nsHTMLObjectElement::IsDoneAddingChildren()
+{
+  return mIsDoneAddingChildren;
+}
+
+void
+nsHTMLObjectElement::DoneAddingChildren()
+{
+  mIsDoneAddingChildren = PR_TRUE;
+  RecreateFrames();
+}
 
 NS_IMPL_ADDREF_INHERITED(nsHTMLObjectElement, nsGenericElement) 
 NS_IMPL_RELEASE_INHERITED(nsHTMLObjectElement, nsGenericElement) 

@@ -341,20 +341,7 @@ protected:
 // construction, destruction
 //
 
-nsresult
-NS_NewHTMLInputElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo,
-                       PRBool aFromParser)
-{
-  nsHTMLInputElement* it = new nsHTMLInputElement(aNodeInfo, aFromParser);
-
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  NS_ADDREF(*aResult = it);
-
-  return NS_OK;
-}
+NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Input)
 
 nsHTMLInputElement::nsHTMLInputElement(nsINodeInfo *aNodeInfo,
                                        PRBool aFromParser)
