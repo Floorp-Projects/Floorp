@@ -367,7 +367,7 @@ nsresult nsPluginNativeWindowWin::SubclassAndAssociateWindow()
 
 nsresult nsPluginNativeWindowWin::UndoSubclassAndAssociateWindow()
 {
-  // undo association and release plugin instance
+  // release plugin instance
   SetPluginInstance(nsnull);
 
   // remove window property
@@ -376,8 +376,12 @@ nsresult nsPluginNativeWindowWin::UndoSubclassAndAssociateWindow()
     ::RemoveProp(hWnd, NS_PLUGIN_WINDOW_PROPERTY_ASSOCIATION);
 
   // restore the original win proc
-  if (mPluginWinProc)
-    SubclassWindow(hWnd, (LONG)mPluginWinProc);
+  // but only do this if this were us last time
+  if (mPluginWinProc) {
+    WNDPROC currentWndProc = (WNDPROC)::GetWindowLong(hWnd, GWL_WNDPROC);
+    if (currentWndProc == PluginWndProc)
+      SubclassWindow(hWnd, (LONG)mPluginWinProc);
+  }
 
   return NS_OK;
 }
