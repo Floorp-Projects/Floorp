@@ -196,7 +196,8 @@
           // add the label and oncommand handler to each button
           for (dlgtype in buttons) {
             var button = buttons[dlgtype];
-            buttons[dlgtype].addEventListener("command", this._handleButtonCommand, true);
+            button.addEventListener("command", this._handleButtonCommand, true);
+
             // don't override custom labels with pre-defined labels on explicit buttons
             if (!button.hasAttribute("label")) {
               button.setAttribute("label", this.mStrBundle.GetStringFromName("button-"+dlgtype));
@@ -206,15 +207,15 @@
               }
             }
           }
-          
+
           // ensure that hitting enter triggers ondialogaccept
           buttons["accept"].setAttribute("default", "true");
           
           // if there is a special button configuration, use it
           if (aButtons) {
-            // expect a comma delimitd list of dlgtype values
+            // expect a comma delimited list of dlgtype values
             var list = aButtons.split(",");
-  
+
             // mark shown dlgtypes as true
             var shown = { accept: false, cancel: false, help: false,
                           disclosure: false, extra1: false, extra2: false };
@@ -222,12 +223,9 @@
               shown[list[i].replace(/ /g, "")] = true;
             
             // hide/show the buttons we want
-            for (dlgtype in shown) {
-              if (shown[dlgtype])
-                buttons[dlgtype].hidden = false;
-              else
-                buttons[dlgtype].hidden = true;
-            }
+            for (dlgtype in buttons) 
+              buttons[dlgtype].hidden = !shown[dlgtype];
+
           }
         ]]>
         </body>

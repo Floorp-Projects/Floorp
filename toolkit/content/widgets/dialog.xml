@@ -215,7 +215,6 @@
           for (dlgtype in buttons) {
             var button = buttons[dlgtype];
             button.addEventListener("command", this._handleButtonCommand, true);
-            
 
             // don't override custom labels with pre-defined labels on explicit buttons
             if (!button.hasAttribute("label")) {

@@ -106,7 +106,7 @@ var view = {
   isContainerOpen : function(index) { return false; },
   isContainerEmpty : function(index) { return false; },
   isSorted : function() { return true; },
-  canDrop : function(index, orienation) { return false; },
+  canDrop : function(index, orientation) { return false; },
   drop : function(row, orientation) {},
   setTree : function(out) { this.treebox = out; },
   getParentIndex: function(rowIndex) { return -1; },

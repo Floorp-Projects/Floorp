@@ -80,7 +80,7 @@ var nsTransferable = {
             {
               // non-string data.
               supports = currData.supports;
-              length = 0; // kFlavorHasDataProvider 
+              length = 0; // kFlavorHasDataProvider
             }
           trans.setTransferData(currFlavour, supports, length * 2);
         }

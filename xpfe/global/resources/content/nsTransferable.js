@@ -78,7 +78,7 @@ var nsTransferable = {
             }
           else 
             {
-              // non-string data. 
+              // non-string data.
               supports = currData.supports;
               length = 0; // kFlavorHasDataProvider
             }

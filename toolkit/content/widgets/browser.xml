@@ -411,7 +411,7 @@
       <field name="securityUI">
         null
       </field>
-      
+
       <field name="userTypedClear">
         true
       </field>
@@ -434,7 +434,7 @@
 
       <field name="focusedElement">
         null
-      </field>      
+      </field>
 
       <constructor>
         <![CDATA[

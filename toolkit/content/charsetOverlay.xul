@@ -1,6 +1,6 @@
 <?xml version="1.0"?> 
 
-<!DOCTYPE  window SYSTEM "chrome://global/locale/charsetOverlay.dtd">
+<!DOCTYPE  overlay SYSTEM "chrome://global/locale/charsetOverlay.dtd">
 
 <overlay id="charsetOverlay"
     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
@@ -144,7 +144,7 @@
             <menupopup>
             </menupopup>
         </menu>
-        <menu label="&charsetMenuMore.label;"  accesskey="&charsetMenuMore.accesskey;" datasources="rdf:charset-menu" ref="NC:BrowserMoreCharsetMenuRoot">
+        <menu label="&charsetMenuMore.label;" accesskey="&charsetMenuMore.accesskey;" datasources="rdf:charset-menu" ref="NC:BrowserMoreCharsetMenuRoot">
             <template>
                 <rule>
                     <menupopup>
