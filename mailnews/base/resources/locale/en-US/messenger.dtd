@@ -337,6 +337,8 @@ Rights Reserved.
 <!ENTITY watchThreadMenu.key "w">
 <!ENTITY fileHereMenu.label "File Here">
 <!ENTITY fileHereMenu.accesskey "F">
+<!ENTITY copyHereMenu.label "Copy Here">
+<!ENTITY copyHereMenu.accesskey "C">
 <!ENTITY addSenderToAddressBookCmd.label ".Add Sender to Address Book">
 <!ENTITY addSenderToAddressBookCmd.accesskey "S">
 <!ENTITY addAllToAddressBookCmd.label ".Add All to Address Book">
