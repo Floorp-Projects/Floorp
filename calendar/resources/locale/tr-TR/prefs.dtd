@@ -38,14 +38,14 @@
 
 <!ENTITY calendar.label             "Takvim" >
 <!ENTITY calendarPanel.label        "Takvim" >
-<!ENTITY calendar.accesskey         "t" >
+<!ENTITY calendar.accesskey         "T" >
 <!ENTITY calendar.publish.label     "Yayınlama">
 <!ENTITY calendar.general.label     "Genel">
 <!ENTITY calendar.alarms.label      "Uyarılar">
 <!ENTITY calendar.views.label       "Görünüm">
 <!ENTITY calendar.timezone.label    "Zaman dilimim">
 
-<!ENTITY prefWindow.title            "Kalender-Optionen">
+<!ENTITY prefWindow.title            "Takvim Seçenekleri">
 <!ENTITY prefWindow.size             "width: 52.3em; height: 41em;">
 <!ENTITY prefWindow.category         "Kategori">
 

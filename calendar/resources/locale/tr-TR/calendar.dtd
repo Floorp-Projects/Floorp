@@ -44,7 +44,7 @@
 <!-- Alarm -->
 <!ENTITY alarm.units.minutes  "Dakika" >
 <!ENTITY alarm.units.hours    "Saat" >
-<!ENTITY alarm.units.days     "Gücalendar.dtdn" >
+<!ENTITY alarm.units.days     "Gün" >
 
 <!ENTITY alarm.units.minutes.singular  "Dakika" >
 <!ENTITY alarm.units.hours.singular    "Saat" >
@@ -66,9 +66,9 @@
 <!ENTITY priority.level.low               "Yavaş">
 <!ENTITY priority.level.low.accesskey     "N">
 <!ENTITY priority.level.medium            "Orta">
-<!ENTITY priority.level.medium.accesskey  "m">
+<!ENTITY priority.level.medium.accesskey  "R">
 <!ENTITY priority.level.high              "Hızlı">
-<!ENTITY priority.level.high.accesskey    "k">
+<!ENTITY priority.level.high.accesskey    "Z">
 
 <!ENTITY newevent.title.label        "Başlık" >
 <!ENTITY newevent.location.label     "Konum" >
@@ -153,7 +153,7 @@
 <!ENTITY newtodo.duedate.warning    "Başlangıç tarihi bitiş tarihinden sonra.">
 <!ENTITY newtodo.repeatstart.warning "Tekrarlama için başlangıç zamanı gerekli.">
 
-<!ENTITY calendar.confirm.deleteallevents  "Are you sure you want to delete all the selected events?" >
+<!ENTITY calendar.confirm.deleteallevents  "Bütün olayları silmek istediğinizden emin misiniz??" >
 <!ENTITY calendar.confirm.deleteevent "Bu başlıkdaki olaylar silinsin mi : " >
 <!ENTITY calendar.confirm.deleteuntitledevent "Başlıksız olayları silinsin mi ?" >
 
@@ -281,10 +281,10 @@
 <!ENTITY calendar.subscribe.button.label           "Kaydol" >
 <!ENTITY calendar.publish.button.label             "Yayınla" >
 
-<!ENTITY calendar.localreload.button.label   "Local Reload" >
-<!ENTITY calendar.localreload.button.tooltip  "Reload all local calendars" >
-<!ENTITY calendar.remotereload.button.label   "Reload" >
-<!ENTITY calendar.remotereload.button.tooltip   "Reload all remote calendars" >
+<!ENTITY calendar.localreload.button.label   "Yerel takvimleri tekrar yükle" >
+<!ENTITY calendar.localreload.button.tooltip  "Bütün yerel takvimleri tekrar yükle" >
+<!ENTITY calendar.remotereload.button.label   "Tekrar Yükle" >
+<!ENTITY calendar.remotereload.button.tooltip   "Uzaktaki takvimleri tekrar yükle" >
 
 <!ENTITY calendar.dayview.button.label          "Günlük göster" >
 <!ENTITY calendar.weekview.button.label         "Haftalık göster" >
@@ -298,7 +298,7 @@
 <!ENTITY calendar.menu.options.modify           "Düzenle" >
 <!ENTITY calendar.menu.options.remove           "Sil" >
 <!ENTITY calendar.menu.options.close            "Pencereyi kapat" >
-<!ENTITY calendar.menu.options.close.key        "w">
+<!ENTITY calendar.menu.options.close.key        "K">
 <!ENTITY calendar.menu.options.close.accesskey  "c" >
 
 <!ENTITY calendar.main.tab.label        "Olaylar" >
@@ -350,7 +350,7 @@
 <!ENTITY calendar.context.deleteevent.label           "İşaretli olayı sil">
 <!ENTITY calendar.context.deleteevent.accesskey       "o">
 <!ENTITY calendar.context.deletetask.label            "Görevi sil">
-<!ENTITY calendar.context.deletetask.accesskey        "L">
+<!ENTITY calendar.context.deletetask.accesskey        "l">
 <!ENTITY calendar.context.cutevent.label              "Kes">
 <!ENTITY calendar.context.cutevent.accesskey          "s">
 <!ENTITY calendar.context.copyevent.label             "Kopyala">
@@ -374,7 +374,7 @@
 <!ENTITY calendar.context.emailevent.label            "Seçili olay(lar)ı postala">
 <!ENTITY calendar.context.emailevent.accesskey        "i">
 <!ENTITY calendar.context.emailtask.label             "Görevi postala">
-<!ENTITY calendar.context.emailtask.accesskey         "P">
+<!ENTITY calendar.context.emailtask.accesskey         "p">
 
 <!-- Task Context Menu -->
 <!ENTITY calendar.context.progress.label              "İlerleme">
@@ -397,7 +397,7 @@
                                                                  
 <!-- Server Context Menu -->
 <!ENTITY calendar.context.newserver.label              "Yeni takvim">
-<!ENTITY calendar.context.newserver.accesskey          "Y">
+<!ENTITY calendar.context.newserver.accesskey          "m">
 <!ENTITY calendar.context.editserver.label             "Takvim düzenle">
 <!ENTITY calendar.context.editserver.accesskey         "e">
 <!ENTITY calendar.context.deleteserver.label           "Takvimleri silr">
@@ -425,7 +425,7 @@
 
 <!-- Calendar Server Dialog -->
 <!ENTITY calendar.server.dialog.title.new           "Yeni takvim ekle">
-<!ENTITY calendar.server.dialog.title.open          "Takvim Dosyasını Aç">
+<!ENTITY calendar.server.dialog.title.open          "Takvim dosyasını aç">
 <!ENTITY calendar.server.dialog.title.edit          "Takvim düzenle">
 <!ENTITY calendar.server.dialog.name.label          "İsim">
 <!ENTITY calendar.server.dialog.publish.label       "Değişiklikler otomatik olarak yayınlansın mı? Bu, uzaktaki takvimler için, olayları eklemeden, düzenlemeden ve silmeden önce yeni sürümünü indirir. İşlemlerinizi performansını artırır ve sunucuya yenı dosyayı yükler.">
@@ -452,10 +452,10 @@
 <!ENTITY allDayEvents.label "Bütün gön olayları">
 
 <!-- Calendar Wizard Dialog -->
-<!ENTITY calendar.wizard.import.label              "Import: Olayları mevcut bir takvimdeki yerel bir dosyanın içinden aktar.">
-<!ENTITY calendar.wizard.export.label              "Export: Olayları mevcut dosyadan yerel bir dosyaya aktar.">
+<!ENTITY calendar.wizard.import.label              "İçe aktarma: Olayları mevcut bir takvimdeki yerel bir dosyanın içinden aktar.">
+<!ENTITY calendar.wizard.export.label              "Dışa aktarma: Olayları mevcut dosyadan yerel bir dosyaya aktar.">
 <!ENTITY calendar.wizard.subscribe.label           "Üye ol:  Uzaktaki bir makinadaki takvim dosyasına üye ol (örn:. İnternet)">
-<!ENTITY calendar.wizard.publish.label             "Publish: Diğerlerinin üye olabilmesi için, olayları uzaktaki bir makinada yayınla.">
+<!ENTITY calendar.wizard.publish.label             "Yayınlama: Diğerlerinin üye olabilmesi için, olayları uzaktaki bir makinada yayınla.">
 
 <!-- Calendar Import Outlook CSV Dialog -->
 <!-- TRANSLATORS: all outlook*.label -fields should be translated word to word (or if possible

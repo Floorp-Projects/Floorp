@@ -42,24 +42,24 @@
 <!ENTITY eventMenuCmd.accesskey                 "o">
 
 <!ENTITY event.new.event                        "Yeni olay">
-<!ENTITY event.new.event.key                    "n">
+<!ENTITY event.new.event.key                    "y">
 <!ENTITY event.new.event.accesskey              "y">
 
 <!ENTITY event.new.todo                         "Yeni görev">
-<!ENTITY event.new.todo.key                     "t">
+<!ENTITY event.new.todo.key                     "g">
 <!ENTITY event.new.todo.accesskey               "g">
 
-<!ENTITY calendar.new.server.label              "Yeni Takvim">
-<!ENTITY calendar.new.server.key                "l">
+<!ENTITY calendar.new.server.label              "Yeni takvim">
+<!ENTITY calendar.new.server.key                "v">
 <!ENTITY calendar.new.server.accesskey          "v">
 
 <!ENTITY calendar.open.file.label               "Takvim dosyası aç...">
-<!ENTITY calendar.open.file.key                 "0">
+<!ENTITY calendar.open.file.key                 "T">
 <!ENTITY calendar.open.file.accesskey           "T">
 
 <!ENTITY event.edit.event                       "Düzenle">
-<!ENTITY event.edit.event.key                   "e">
-<!ENTITY event.edit.event.accesskey             "d">
+<!ENTITY event.edit.event.key                   "D">
+<!ENTITY event.edit.event.accesskey             "D">
 
 <!ENTITY event.delete.event                     "Sil">
 <!ENTITY event.delete.event.accesskey           "s">
@@ -67,12 +67,12 @@
 <!ENTITY event.delete.tasks                     "Seçili Görev(ler)i sil">
 <!ENTITY event.delete.tasks.accesskey           "A">
 
-<!ENTITY event.mail.event                       "İşaretlenmiş olayı(ları) postala">
-<!ENTITY event.mail.event.key                   "m">
-<!ENTITY event.mail.event.accesskey             "m">
+<!ENTITY event.mail.event                       "İşaretlenmiş olay(lar)ı postala">
+<!ENTITY event.mail.event.key                   "s">
+<!ENTITY event.mail.event.accesskey             "s">
 
 <!ENTITY calendar.print.label                   "Olayları yazdır...">
-<!ENTITY calendar.print.key                     "p">
+<!ENTITY calendar.print.key                     "r">
 <!ENTITY calendar.print.accesskey               "r">
 
 <!ENTITY calendar.printpreview.label            "Yazdırma önizleme">
@@ -82,7 +82,7 @@
 <!ENTITY calendar.pagesetup.accesskey           "S">
 
 <!ENTITY calendar.import.label                  "Dosyadan içe aktar...">
-<!ENTITY calendar.import.key                    "L">
+<!ENTITY calendar.import.key                    "i">
 <!ENTITY calendar.import.accesskey              "i">
 
 <!ENTITY calendar.wizard.label                  "Sihirbazı çalıştır">
@@ -94,7 +94,7 @@
 <!ENTITY calendar.subscribe.label               "Uzaktaki takvime kaydol...">
 <!ENTITY calendar.subscribe.accesskey           "u">
 
-<!ENTITY calendar.reloadserver.label            "Reload Remote Calendars">
+<!ENTITY calendar.reloadserver.label            "Uzaktaki Takvimleri Tekrar Yükle">
 <!ENTITY calendar.reloadserver.key              "R">
 <!ENTITY calendar.reloadserver.accesskey        "R">
 
