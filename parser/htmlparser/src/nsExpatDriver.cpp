@@ -813,6 +813,7 @@ nsExpatDriver::WillBuildModel(const CParserContext& aParserContext,
   XML_SetCdataSectionHandler(mExpatParser, Driver_HandleStartCdataSection,
                              Driver_HandleEndCdataSection);
 
+  XML_SetParamEntityParsing(mExpatParser, XML_PARAM_ENTITY_PARSING_UNLESS_STANDALONE);
   XML_SetDoctypeDeclHandler(mExpatParser, Driver_HandleStartDoctypeDecl, Driver_HandleEndDoctypeDecl);
 
   // Set up the user data.
