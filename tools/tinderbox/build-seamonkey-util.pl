@@ -10,7 +10,7 @@
 #         version can re-use this script.
 #
 
-require 5.005;
+require 5.003;
 
 use Sys::Hostname;
 use strict;
@@ -18,7 +18,7 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
-$::UtilsVersion = '$Revision: 1.22 $ ';
+$::UtilsVersion = '$Revision: 1.23 $ ';
 
 package TinderUtils;
 
@@ -32,9 +32,9 @@ package TinderUtils;
 sub Setup {
   InitVars();
   my $args = ParseArgs();
-  GetSystemInfo();
   LoadConfig();
   ApplyArgs($args); # Apply command-line arguments after the config file.
+  GetSystemInfo();
   SetupEnv();
   SetupPath();
 }
@@ -76,9 +76,10 @@ sub ParseArgs {
     PrintUsage() if $#ARGV == -1;
 
     my $args = {};
-    while (my $arg = shift @ARGV) {
-        $Settings::BuildDepend = 0, next if $arg eq '--clobber';
-        $Settings::BuildDepend = 1, next if $arg eq '--depend';
+    my $arg;
+    while ($arg = shift @ARGV) {
+        $args->{BuildDepend} = 0, next if $arg eq '--clobber';
+        $args->{BuildDepend} = 1, next if $arg eq '--depend';
         TinderUtils::PrintExampleConfig(), exit if $arg eq '--example-config';
         PrintUsage(), exit if $arg eq '--help' or $arg eq '-h';
         $args->{ReportStatus} = 0, next if $arg eq '--noreport';
@@ -120,7 +121,7 @@ sub ApplyArgs {
     my ($variable_name, $value);
     while (($variable_name, $value) = each %{$args}) {
         eval "\$Settings::$variable_name = \"$value\";";
-    }
+	}
 }
 
 
@@ -194,7 +195,7 @@ sub GetSystemInfo {
         $os_ver = '5.0';
     }
     
-    $Settings::BuildName = "$host $Settings::OS $build_type";
+    $Settings::BuildName = "$host $Settings::OS ${os_ver} $build_type";
     $Settings::DirName = "${Settings::OS}_${os_ver}_$build_type";
     
     # Make the build names reflect architecture/OS
@@ -273,6 +274,8 @@ sub SetupEnv {
     my $topsrcdir = "$Settings::BaseDir/$Settings::DirName/mozilla";
     $ENV{LD_LIBRARY_PATH} = "$topsrcdir/${Settings::ObjDir}/dist/bin:"
                           . "$ENV{LD_LIBRARY_PATH}";
+    $ENV{LIBPATH} = "$topsrcdir/${Settings::ObjDir}/dist/bin:"
+                          . "$ENV{LIBPATH}";
     $ENV{MOZILLA_FIVE_HOME} = "$topsrcdir/${Settings::ObjDir}/dist/bin";
     $ENV{DISPLAY} = $Settings::DisplayServer;
     $ENV{MOZCONFIG} = "$Settings::BaseDir/$Settings::MozConfigFileName" 
@@ -485,7 +488,8 @@ sub mail_build_finished_message {
     open LOG, "$logfile" or die "Couldn't open logfile, $logfile: $!";
     while (<LOG>) {
         my $length = length($_);
-        for (my $offset = 0; $offset < $length ; $offset += 1000) {
+	my $offset;
+        for ($offset = 0; $offset < $length ; $offset += 1000) {
             my $chars_left = $length - $offset;
             my $output_length = $chars_left < 1000 ? $chars_left : 1000;
             my $output = substr $_, $offset, $output_length;
@@ -717,7 +721,8 @@ sub DeleteBinary {
 sub PrintEnv {
     local $_;
 
-    foreach my $key (sort keys %ENV) {
+    my $key;
+    foreach $key (sort keys %ENV) {
         print_log "$key=$ENV{$key}\n";
     }
     if (defined $ENV{MOZCONFIG} and -e $ENV{MOZCONFIG}) {
@@ -761,7 +766,8 @@ sub kill_process {
     my $start_time = time;
 
     # Try to kill and wait 10 seconds, then try a kill -9
-    for my $sig ('TERM', 'KILL') {
+    my $sig;
+    for $sig ('TERM', 'KILL') {
         kill $sig => $target_pid;
         my $interval_start = time;
         while (time - $interval_start < 10) {
@@ -824,6 +830,7 @@ sub wait_for_pid {
     # Wait for a process to exit or kill it if it takes too long.
     my ($pid, $timeout_secs) = @_;
     my ($exit_value, $signal_num, $dumped_core, $timed_out) = (0,0,0,0);
+    my $sig_name;
 
     $SIG{ALRM} = sub { die "timeout" };
     eval {
@@ -847,11 +854,11 @@ sub wait_for_pid {
             die; # Propagate the error up.
         }
     }
-    my $signal_name = $signal_num ? signal_name($signal_num) : '';
+    $sig_name = $signal_num ? signal_name($signal_num) : '';
 
     return { timed_out=>$timed_out, 
              exit_value=>$exit_value,
-             signal_name=>$signal_name,
+             sig_name=>$sig_name,
              dumped_core=>$dumped_core };
 }
 
@@ -875,8 +882,8 @@ sub print_test_errors {
     my ($result, $name) = @_;
 
     if (not $result->{timed_out} and $result->{exit_value} != 0) {
-        if ($result->{signal_name} ne '') {
-            print_log "Error: $name: received SIG$result->{signal_name}\n";
+        if ($result->{sig_name} ne '') {
+            print_log "Error: $name: received SIG$result->{sig_name}\n";
         }
         print_log "Error: $name: exited with status $result->{exit_value}\n";
         if ($result->{dumped_core}) {
