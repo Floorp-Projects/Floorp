@@ -73,12 +73,9 @@ ifdef BUILD_OFFICIAL
 TARGETS		= $(PACKAGE)
 endif
 
-NSPR_DIR	= $(DIST)/bin
-ifndef EXCLUDE_NSPR_LIBS
 NSPR_LDIR	= $(findstring -L,$(NSPR_LIBS))
 ifneq ($(NSPR_LDIR),)
-NSPR_DIR	= $(subst -L,,$(word 1,$(NSPR_LIBS)))
-endif
+NSPR_LDIR	= $(subst -L,,$(word 1,$(NSPR_LIBS)))
 endif
 
 EXCLUDE_LIST	= \
@@ -104,20 +101,19 @@ endif
 
 all export libs install:: $(TARGETS)
 
-_FULL_NSPR_DIR := $(shell cd $(NSPR_DIR); pwd)
-_FULL_DIST_DIR := $(shell cd $(DIST)/bin; pwd)
-
 $(PACKAGE): $(DIST)/bin/mozilla-bin
-ifneq ($(_FULL_NSPR_DIR),$(_FULL_DIST_DIR))
-	@chmod 755 $(NSPR_DIR)/*$(DLL_SUFFIX)
-	@echo "Copying NSPR libs..."
-	@cp -p $(NSPR_DIR)/*$(DLL_SUFFIX) $(DIST)/bin/.
-endif
 	@rm -rf $(DIST)/$(MOZ_PKG_APPNAME) $(DIST)/$(PKG_BASENAME).tar $@ $(EXCLUDE_LIST)
 # NOTE: this must be a cp now that dist links into the tree so that we
 # do not strip the binaries actually in the tree.
 	@echo "Creating package directory..."
 	@cp -rp ${DIST}/bin $(DIST)/$(MOZ_PKG_APPNAME)
+ifdef MOZ_NATIVE_NSPR
+ifndef EXCLUDE_NSPR_LIBS
+	@echo "Copying NSPR libs..."
+	@cp -p $(NSPR_LDIR)/*$(DLL_SUFFIX) $(DIST)/$(MOZ_PKG_APPNAME)
+	@chmod 755 $(DIST)/$(MOZ_PKG_APPNAME)/*$(DLL_SUFFIX)
+endif
+endif
 	@echo "Stripping package directory..."
 	@cd $(DIST)/$(MOZ_PKG_APPNAME); find . ! -type d \
 			! -name "*.js" \
