@@ -629,9 +629,17 @@ const int kReuseWindowOnAE = 2;
   [mAddBookmarkMenuItem setEnabled:inBrowserWindowFrontmost];
   [mCreateBookmarksFolderMenuItem setEnabled:inBrowserWindowFrontmost];
   [mCreateBookmarksSeparatorMenuItem setEnabled:YES];
-
-  [mToggleSidebarMenuItem setEnabled:YES];     // always enabled. 
-  BrowserWindowController* browserController = (BrowserWindowController*)[[self getFrontmostBrowserWindow] windowController];
+  [mToggleSidebarMenuItem setEnabled:YES];     // always enabled.
+  
+  // We need the frontmost browser for the case of the dl/about window
+  // is the main so we can ensure the "show/hide all bookmarks" has the correct
+  // state for that window. Unfortunately, we can't rely on |-getFrontmostBrowserWindow| in all
+  // cases, such as when a window has just been opened. As a result, first
+  // try |-getMainWindowBrowserController| and if that fails use fFBW as a fallback.   
+  BrowserWindowController* browserController = [self getMainWindowBrowserController];
+  if (!browserController)
+    browserController = (BrowserWindowController*)[[self getFrontmostBrowserWindow] windowController];
+    
   if (browserController) {
     if ([browserController bookmarksAreVisible:NO])
       [mToggleSidebarMenuItem setTitle:NSLocalizedString(@"Hide All Bookmarks", @"")];
