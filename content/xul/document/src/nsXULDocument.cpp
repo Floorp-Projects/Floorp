@@ -90,6 +90,7 @@
 #include "nsIDocumentObserver.h"
 #include "nsIFormControl.h"
 #include "nsIHTMLContent.h"
+#include "nsHTMLAtoms.h"
 #include "nsIElementFactory.h"
 #include "nsIEventStateManager.h"
 #include "nsIInputStream.h"
@@ -6303,6 +6304,12 @@ nsXULDocument::CreateOverlayElement(nsXULPrototypeElement* aPrototype, nsIConten
     rv = nsXULElement::Create(aPrototype, this, PR_FALSE, getter_AddRefs(element));
     if (NS_FAILED(rv)) return rv;
 
+    if (aPrototype->mNodeInfo->Equals(nsHTMLAtoms::script, kNameSpaceID_XUL) || 
+        aPrototype->mNodeInfo->Equals(nsHTMLAtoms::script, kNameSpaceID_HTML)) {
+        // <script> tags in an overlay don't need a forward reference.
+        return NS_OK;
+    }
+    
     OverlayForwardReference* fwdref = new OverlayForwardReference(this, element);
     if (! fwdref)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -6315,7 +6322,6 @@ nsXULDocument::CreateOverlayElement(nsXULPrototypeElement* aPrototype, nsIConten
     NS_ADDREF(*aResult);
     return NS_OK;
 }
-
 
 nsresult
 nsXULDocument::AddAttributes(nsXULPrototypeElement* aPrototype, nsIContent* aElement)
