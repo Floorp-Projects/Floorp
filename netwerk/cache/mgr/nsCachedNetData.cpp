@@ -35,6 +35,7 @@
 #include "nsIBinaryOutputStream.h"
 #include "nsISupportsArray.h"
 #include "nsIArena.h"
+#include "nsITransport.h"
 #include "nsCRT.h"
 #include "nsString.h"
 
@@ -1178,19 +1179,18 @@ public:
         rv = mCacheEntry->NewChannel(0, getter_AddRefs(mChannel));
         if (NS_FAILED(rv)) return rv;
 
-        rv = mChannel->SetTransferOffset(aStartingOffset);
-        if (NS_FAILED(rv)) return rv;
-
-        return mChannel->OpenOutputStream(getter_AddRefs(mCacheStream));
+        nsCOMPtr<nsITransport> transport = do_QueryInterface(mChannel);
+        return transport->OpenOutputStream(aStartingOffset, -1, 0,
+                                           getter_AddRefs(mCacheStream));
     }
 
     NS_DECL_ISUPPORTS
 
-    NS_IMETHOD OnStartRequest(nsIChannel *channel, nsISupports *ctxt) {
-        return mOriginalListener->OnStartRequest(channel, ctxt);
+    NS_IMETHOD OnStartRequest(nsIRequest *request, nsISupports *ctxt) {
+        return mOriginalListener->OnStartRequest(request, ctxt);
     }
 
-    NS_IMETHOD OnStopRequest(nsIChannel *channel, nsISupports *ctxt,
+    NS_IMETHOD OnStopRequest(nsIRequest *request, nsISupports *ctxt,
                              nsresult aStatus, const PRUnichar* aStatusArg) {
         if (NS_FAILED(aStatus)) {
             mCacheEntry->SetFlag(nsCachedNetData::TRUNCATED_CONTENT);
@@ -1208,14 +1208,14 @@ public:
         // Tell any stream-as-file observers that the file has been completely written
         mCacheEntry->Notify(nsIStreamAsFileObserver::NOTIFY_AVAILABLE, NS_OK);
 
-        return mOriginalListener->OnStopRequest(channel, ctxt, aStatus, aStatusArg);
+        return mOriginalListener->OnStopRequest(request, ctxt, aStatus, aStatusArg);
     }
 
-    NS_IMETHOD OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
+    NS_IMETHOD OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
                                nsIInputStream *inStr, PRUint32 sourceOffset,
                                PRUint32 count) {
         mOriginalStream = inStr;
-        return mOriginalListener->OnDataAvailable(channel, ctxt, 
+        return mOriginalListener->OnDataAvailable(request, ctxt, 
                                                   NS_STATIC_CAST(nsIInputStream*, this),
                                                   sourceOffset, count);
     }

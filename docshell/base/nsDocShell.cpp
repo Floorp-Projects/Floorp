@@ -2752,7 +2752,7 @@ NS_IMETHODIMP nsDocShell::CreateAboutBlankContentViewer()
 }
 
 NS_IMETHODIMP nsDocShell::CreateContentViewer(const char* aContentType, 
-   nsIChannel* aOpenedChannel, nsIStreamListener** aContentHandler)
+   nsIRequest *request, nsIStreamListener** aContentHandler)
 {
    // Can we check the content type of the current content viewer
    // and reuse it without destroying it and re-creating it?
@@ -2762,12 +2762,17 @@ NS_IMETHODIMP nsDocShell::CreateContentViewer(const char* aContentType,
 
    // Instantiate the content viewer object
    nsCOMPtr<nsIContentViewer> viewer;
-   if(NS_FAILED(NewContentViewerObj(aContentType, aOpenedChannel, loadGroup, 
-      aContentHandler, getter_AddRefs(viewer))))
+   nsresult rv = NewContentViewerObj(aContentType, request, loadGroup, 
+                                     aContentHandler, getter_AddRefs(viewer));
+   
+   if(NS_FAILED(rv))
       return NS_ERROR_FAILURE;
 
    // we've created a new document so go ahead and call OnLoadingSite
    mURIResultedInDocument = PR_TRUE;
+   
+   nsCOMPtr<nsIChannel> aOpenedChannel = do_QueryInterface(request);
+
    OnLoadingSite(aOpenedChannel);
 
    // let's try resetting the load group if we need to...
@@ -2798,9 +2803,9 @@ NS_IMETHODIMP nsDocShell::CreateContentViewer(const char* aContentType,
 
       aOpenedChannel->SetLoadAttributes(loadAttribs);
 
-      loadGroup->AddChannel(aOpenedChannel, nsnull);
+      loadGroup->AddRequest(request, nsnull);
       if(currentLoadGroup)
-         currentLoadGroup->RemoveChannel(aOpenedChannel, nsnull, nsnull, nsnull);
+         currentLoadGroup->RemoveRequest(request, nsnull, nsnull, nsnull);
       
       }
 #ifdef SH_IN_FRAMES
@@ -2814,7 +2819,7 @@ NS_IMETHODIMP nsDocShell::CreateContentViewer(const char* aContentType,
 }
 
 nsresult nsDocShell::NewContentViewerObj(const char* aContentType,
-   nsIChannel* aOpenedChannel, nsILoadGroup* aLoadGroup, 
+   nsIRequest *request, nsILoadGroup* aLoadGroup, 
    nsIStreamListener** aContentHandler, nsIContentViewer** aViewer)
 {
   //XXX This should probably be some category thing....
@@ -2841,6 +2846,8 @@ nsresult nsDocShell::NewContentViewerObj(const char* aContentType,
     if(!docLoaderFactory)
       return NS_ERROR_FAILURE;
   }
+   
+  nsCOMPtr<nsIChannel> aOpenedChannel = do_QueryInterface(request);
 
   // Now create an instance of the content viewer
   NS_ENSURE_SUCCESS(docLoaderFactory->CreateInstance(

@@ -30,7 +30,6 @@
 #include "nsIInputStream.h"
 #include "nsCOMPtr.h"
 #include "nsIStringBundle.h"
-#include "nsIEventQueueService.h"
 
 #if defined(XP_PC) || defined(XP_UNIX) || defined(XP_BEOS)
 //
@@ -95,7 +94,6 @@ protected:
     PRPollDesc*           mSelectFDSet;
     nsSocketTransport**   mActiveTransportList;
 	nsCOMPtr<nsIStringBundle>   m_stringBundle;
-    nsCOMPtr<nsIEventQueueService> mEventQueueService;
 };
 
 

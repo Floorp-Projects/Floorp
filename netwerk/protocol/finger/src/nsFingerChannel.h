@@ -33,9 +33,12 @@
 #include "nsIURI.h"
 #include "nsFingerHandler.h"
 #include "nsIStreamListener.h"
+#include "nsITransport.h"
 
+class nsFingerChannel 
+: public nsIChannel, 
+  public nsIStreamListener {
 
-class nsFingerChannel : public nsIChannel, public nsIStreamListener {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIREQUEST
@@ -74,11 +77,12 @@ protected:
     nsXPIDLCString                      mRequest;
 
     nsCOMPtr<nsISupports>               mResponseContext;
-    nsCOMPtr<nsIChannel>                mTransport;
+    nsCOMPtr<nsITransport>              mTransport;
+    nsCOMPtr<nsIRequest>                mTransportRequest;
     nsresult                            mStatus;
 
 protected:
-    nsresult SendRequest(nsIChannel* aChannel);
+    nsresult SendRequest(nsITransport* aTransport);
 };
 
 #endif /* nsFingerChannel_h___ */

@@ -28,7 +28,7 @@
 #include "nsHashtable.h"
 #include "nsMimeTypes.h"
 #include "nsIPref.h"
-
+#include "nsITransport.h"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 

@@ -28,7 +28,7 @@
  * it's ui. 
  */
 
-interface nsIChannel;
+interface nsIRequest;
 
 [scriptable, uuid(46B4015C-0121-11d4-9877-00C04FA0D27A)]
 interface nsIXULBrowserWindow : nsISupports
@@ -57,7 +57,7 @@ interface nsIXULBrowserWindow : nsISupports
 	 Tells the browser window that there is a state change with the window.
 	 These state flags are specified in nsIWebProgress.
 	*/
-	void onStateChange(in nsIChannel aChannel, in unsigned long aProgressStateFlags);
+	void onStateChange(in nsIRequest aRequest, in unsigned long aProgressStateFlags);
 
 	/*
 	 Tells the browser window that the location of the window has changed.
@@ -67,12 +67,12 @@ interface nsIXULBrowserWindow : nsISupports
 	/*
 	  Tells the browser window that the progress for the current load has changed.
 	*/
-	void onProgress (in nsIChannel aChannel, in long aCurrentProgress, in long aMaxProgress);
+	void onProgress (in nsIRequest aRequest, in long aCurrentProgress, in long aMaxProgress);
 
 	/*
 	  Tells the browser window that a new status message is available.
 	*/
-	void onStatus(in nsIChannel aChannel, in nsresult aStatus, in wstring aMsg);
+	void onStatus(in nsIRequest aRequest, in nsresult aStatus, in wstring aMsg);
 	
 };
 

@@ -34,10 +34,11 @@
 #include "pprio.h"	// PR_Init_Log
 #endif
 
+#include "nsITransport.h"
+#include "nsIRequest.h"
 #include "nsISocketTransportService.h"
 #include "nsIEventQueueService.h"
 #include "nsIServiceManager.h"
-#include "nsIChannel.h"
 #include "nsIStreamObserver.h"
 #include "nsIStreamListener.h"
 #include "nsIPipe.h"
@@ -148,13 +149,13 @@ public:
     return NS_NOINTERFACE;
   }
 
-  NS_IMETHOD OnProgress(nsIChannel *channel, nsISupports *ctxt, 
+  NS_IMETHOD OnProgress(nsIRequest *request, nsISupports *ctxt, 
                         PRUint32 aProgress, PRUint32 aProgressMax) {
     putc('+', stderr);
     return NS_OK;
   }
 
-  NS_IMETHOD OnStatus(nsIChannel *channel, nsISupports *ctxt, 
+  NS_IMETHOD OnStatus(nsIRequest *request, nsISupports *ctxt, 
                       nsresult aStatus, const PRUnichar* aStatusArg) {
     putc('?', stderr);
     return NS_OK;
@@ -167,7 +168,9 @@ protected:
   nsIInputStream*  mInStream;
   nsIOutputStream* mOutStream;
 
-  nsIChannel*   mTransport;
+  nsITransport*   mTransport;
+  nsCOMPtr<nsIRequest> mReadRequest;
+  nsCOMPtr<nsIRequest> mWriteRequest;
 
   PRBool  mIsAsync;
   PRInt32 mBufferLength;
@@ -199,38 +202,38 @@ protected:
 NS_IMPL_ISUPPORTS1(TestConnectionOpenObserver, nsIStreamObserver);
 
 NS_IMETHODIMP
-TestConnectionOpenObserver::OnStartRequest(nsIChannel* channel, nsISupports* context)
+TestConnectionOpenObserver::OnStartRequest(nsIRequest *request, nsISupports* context)
 {
   if (gVerbose)
-    printf("\n+++ TestConnectionOpenObserver::OnStartRequest +++. Context = %p\n", context);
+    printf("\n+++ TestConnectionOpenObserver::OnStartRequest +++. Context = %p\n", (void*)context);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TestConnectionOpenObserver::OnStopRequest(nsIChannel* channel, nsISupports* context,
+TestConnectionOpenObserver::OnStopRequest(nsIRequest *request, nsISupports* context,
                                           nsresult aStatus, const PRUnichar* aStatusArg)
 {
   if (gVerbose || NS_FAILED(aStatus))
     printf("\n+++ TestConnectionOpenObserver::OnStopRequest (status = %x) +++."
            "\tContext = %p\n", 
-           aStatus, context);
+           aStatus, (void*)context);
   return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP
-TestConnection::OnStartRequest(nsIChannel* channel, nsISupports* context)
+TestConnection::OnStartRequest(nsIRequest *request, nsISupports* context)
 {
   if (gVerbose)
-    printf("\n+++ TestConnection::OnStartRequest +++. Context = %p\n", context);
+    printf("\n+++ TestConnection::OnStartRequest +++. Context = %p\n", (void*)context);
   return NS_OK;
 }
 
 
 NS_IMETHODIMP
-TestConnection::OnDataAvailable(nsIChannel* channel, nsISupports* context,
+TestConnection::OnDataAvailable(nsIRequest *request, nsISupports* context,
                                 nsIInputStream *aIStream, 
                                 PRUint32 aSourceOffset,
                                 PRUint32 aLength)
@@ -243,7 +246,7 @@ TestConnection::OnDataAvailable(nsIChannel* channel, nsISupports* context,
   if (gVerbose)
     printf("\n+++ TestConnection::OnDavaAvailable +++."
            "\tContext = %p length = %d\n", 
-           context, aLength);
+           (void*)context, aLength);
 
   while (aLength > 0) {
     PRInt32 cnt = PR_MIN(TRANSFER_AMOUNT, aLength);
@@ -266,13 +269,13 @@ TestConnection::OnDataAvailable(nsIChannel* channel, nsISupports* context,
 
 
 NS_IMETHODIMP
-TestConnection::OnStopRequest(nsIChannel* channel, nsISupports* context,
+TestConnection::OnStopRequest(nsIRequest *request, nsISupports* context,
                               nsresult aStatus, const PRUnichar* aStatusArg)
 {
   if (gVerbose || NS_FAILED(aStatus))
     printf("\n+++ TestConnection::OnStopRequest (status = %x) +++."
            "\tContext = %p\n", 
-           aStatus, context);
+           aStatus, (void*)context);
   return NS_OK;
 }
 
@@ -304,7 +307,8 @@ TestConnection::TestConnection(const char* aHostName, PRInt32 aPort,
     if (NS_SUCCEEDED(rv)) {
       // Set up the notification callbacks to provide a progress event sink.
       // That way we exercise the progress notification proxy code.
-      rv = mTransport->SetNotificationCallbacks(this);
+      nsCOMPtr<nsIProgressEventSink> sink = do_GetInterface((nsIInterfaceRequestor*)this);
+      rv = mTransport->SetProgressEventSink(sink);
     }
   }
 
@@ -318,8 +322,8 @@ TestConnection::TestConnection(const char* aHostName, PRInt32 aPort,
     } 
     // Synchronous transport...
     else {
-      rv = mTransport->OpenInputStream(&mInStream);
-      rv = mTransport->OpenOutputStream(&mOutStream);
+      rv = mTransport->OpenInputStream(0, -1, 0, &mInStream);
+      rv = mTransport->OpenOutputStream(0, -1, 0, &mOutStream);
     }
   }
 }
@@ -369,7 +373,7 @@ TestConnection::Run(void)
       //
       // Initiate an async read...
       //
-      rv = mTransport->AsyncRead(this, mTransport);
+      rv = mTransport->AsyncRead(this, mTransport, 0, -1, 0, getter_AddRefs(mReadRequest));
 
       if (NS_FAILED(rv)) {
         printf("Error: AsyncRead failed...");
@@ -409,7 +413,7 @@ nsresult TestConnection::WriteBuffer(void)
   }
 
   if (gVerbose)
-    printf("\n+++ Request is: %c.  Context = %p\n", mBufferChar, mTransport);
+    printf("\n+++ Request is: %c.  Context = %p\n", mBufferChar, (void*)mTransport);
 
   // Create and fill a test buffer of data...
   buffer = (char*)PR_Malloc(mBufferLength + 4);
@@ -430,10 +434,10 @@ nsresult TestConnection::WriteBuffer(void)
 
       // Write the buffer to the server...
       if (NS_SUCCEEDED(rv)) {
-        rv = mTransport->SetTransferCount(bytesWritten);
-        if (NS_SUCCEEDED(rv)) {
-          rv = NS_AsyncWriteFromStream(mTransport, mStream, nsnull, mTransport);
-        }
+          rv = NS_AsyncWriteFromStream(
+                  getter_AddRefs(mWriteRequest),
+                  mTransport, mStream, 0, bytesWritten, 0,
+                  nsnull, mTransport);
       } 
       // Wait for the write to complete...
       if (NS_FAILED(rv)) {
@@ -495,8 +499,8 @@ nsresult TestConnection::Suspend(void)
 {
   nsresult rv;
 
-  if (mTransport) {
-    rv = mTransport->Suspend();
+  if (mReadRequest) {
+    rv = mReadRequest->Suspend();
   } else {
     rv = NS_ERROR_FAILURE;
   }
@@ -508,8 +512,8 @@ nsresult TestConnection::Resume(void)
 {
   nsresult rv;
 
-  if (mTransport) {
-    rv = mTransport->Resume();
+  if (mReadRequest) {
+    rv = mReadRequest->Resume();
   } else {
     rv = NS_ERROR_FAILURE;
   }

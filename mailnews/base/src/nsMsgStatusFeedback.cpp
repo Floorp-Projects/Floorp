@@ -245,15 +245,15 @@ NS_IMETHODIMP nsMsgStatusFeedback::SetDocShell(nsIDocShell *shell, nsIDOMWindowI
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgStatusFeedback::OnProgress(nsIChannel* channel, nsISupports* ctxt, 
+NS_IMETHODIMP nsMsgStatusFeedback::OnProgress(nsIRequest *request, nsISupports* ctxt, 
                                           PRUint32 aProgress, PRUint32 aProgressMax)
 {
   // XXX: What should the nsIWebProgress be?
-  return OnProgressChange(nsnull, channel, aProgress, aProgressMax, 
+  return OnProgressChange(nsnull, request, aProgress, aProgressMax, 
                           aProgress /* current total progress */, aProgressMax /* max total progress */);
 }
 
-NS_IMETHODIMP nsMsgStatusFeedback::OnStatus(nsIChannel* channel, nsISupports* ctxt, 
+NS_IMETHODIMP nsMsgStatusFeedback::OnStatus(nsIRequest *request, nsISupports* ctxt, 
                                             nsresult aStatus, const PRUnichar* aStatusArg)
 {
   nsresult rv;

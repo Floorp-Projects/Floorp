@@ -268,7 +268,10 @@ NS_IMETHODIMP nsMimeBaseEmitter::OnFull(nsIOutputStream* out)
       PRUint32 bytesAvailable = 0;
       rv = mInputStream->Available(&bytesAvailable);
       NS_ASSERTION(NS_SUCCEEDED(rv), "Available failed");
-      rv = mOutListener->OnDataAvailable(mChannel, mURL, mInputStream, 0, bytesAvailable);
+      
+      nsCOMPtr<nsIRequest> request = do_QueryInterface(mChannel);
+      rv = mOutListener->OnDataAvailable(request, mURL, mInputStream, 0, bytesAvailable);
+
   }
   else 
     rv = NS_ERROR_NULL_POINTER;
@@ -283,7 +286,7 @@ NS_IMETHODIMP nsMimeBaseEmitter::OnClose(nsIInputStream* in)
 
 ///////////////////////////////////////////////////////////////////////////
 // nsMimeBaseEmitter Interface
-///////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////// 
 NS_IMETHODIMP
 nsMimeBaseEmitter::SetPipe(nsIInputStream * aInputStream, nsIOutputStream *outStream)
 {
@@ -862,7 +865,8 @@ nsMimeBaseEmitter::Complete()
     PRUint32 bytesInStream;
     nsresult rv2 = mInputStream->Available(&bytesInStream);
 	NS_ASSERTION(NS_SUCCEEDED(rv2), "Available failed");
-    rv2 = mOutListener->OnDataAvailable(mChannel, mURL, mInputStream, 0, bytesInStream);
+    nsCOMPtr<nsIRequest> request = do_QueryInterface(mChannel);
+    rv2 = mOutListener->OnDataAvailable(request, mURL, mInputStream, 0, bytesInStream);
 	NS_ASSERTION(NS_SUCCEEDED(rv2), "OnDataAvailable failed");
   }
 

@@ -24,6 +24,7 @@
 #include "nsIEventQueue.h"
 #include "nsIEventQueueService.h"
 #include "nsIChannel.h"
+#include "nsITransport.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include <stdio.h>
@@ -203,13 +204,13 @@ public:
         return NS_OK;
     }
 
-    NS_IMETHOD OnStartRequest(nsIChannel* channel,
+    NS_IMETHOD OnStartRequest(nsIRequest *request,
                               nsISupports* context) {
         mStartTime = PR_IntervalNow();
         return NS_OK;
     }
 
-    NS_IMETHOD OnDataAvailable(nsIChannel* channel, 
+    NS_IMETHOD OnDataAvailable(nsIRequest *request, 
                                nsISupports* context,
                                nsIInputStream *aIStream, 
                                PRUint32 aSourceOffset,
@@ -228,7 +229,7 @@ public:
         return NS_OK;
     }
 
-    NS_IMETHOD OnStopRequest(nsIChannel* channel, nsISupports* context,
+    NS_IMETHOD OnStopRequest(nsIRequest *request, nsISupports* context,
                              nsresult aStatus, const PRUnichar* aStatusArg) {
         PRIntervalTime endTime;
         PRIntervalTime duration;
@@ -305,7 +306,7 @@ TestReadStream(nsINetDataCacheRecord *record, nsITestDataStream *testDataStream,
     rv = reader->Init(testDataStream, expectedStreamLength);
     NS_ASSERTION(NS_SUCCEEDED(rv), " ");
     
-    rv = channel->AsyncRead(0, reader);
+    rv = channel->AsyncOpen(0, reader);
     NS_ASSERTION(NS_SUCCEEDED(rv), " ");
     reader->Release();
 
@@ -547,9 +548,8 @@ TestOffsetWrites(nsINetDataCache *cache)
         NS_ASSERTION(NS_SUCCEEDED(rv), " ");
 
         startingOffset = streamLength ? streamLength - (randomStream->Next() % sizeof buf): 0;
-        rv = channel->SetTransferOffset(startingOffset);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "SetTransferOffset failed");
-        rv = channel->OpenOutputStream(getter_AddRefs(outStream));
+        nsCOMPtr<nsITransport> trans(do_QueryInterface(channel));
+        rv = trans->OpenOutputStream(startingOffset, -1, 0, getter_AddRefs(outStream));
         NS_ASSERTION(NS_SUCCEEDED(rv), "OpenOutputStream failed");
         
         counterStream = new CounterStream(startingOffset);
@@ -631,7 +631,8 @@ FillCache(nsINetDataCache *cache)
         rv = record->NewChannel(0, getter_AddRefs(channel));
         NS_ASSERTION(NS_SUCCEEDED(rv), " ");
 
-        rv = channel->OpenOutputStream(getter_AddRefs(outStream));
+        nsCOMPtr<nsITransport> trans(do_QueryInterface(channel));
+        rv = trans->OpenOutputStream(0, -1, 0, getter_AddRefs(outStream));
         NS_ASSERTION(NS_SUCCEEDED(rv), " ");
         
         PRUint32 beforeOccupancy;

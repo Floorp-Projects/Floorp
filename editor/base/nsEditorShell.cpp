@@ -4904,7 +4904,7 @@ NS_IMETHODIMP nsEditorShell::GetProtocolHandler(nsIURI *aURI, nsIProtocolHandler
 }
 
 /* void doContent (in string aContentType, in nsURILoadCommand aCommand, in string aWindowTarget, in nsIChannel aOpenedChannel, out nsIStreamListener aContentHandler, out boolean aAbortProcess); */
-NS_IMETHODIMP nsEditorShell::DoContent(const char *aContentType, nsURILoadCommand aCommand, const char *aWindowTarget, nsIChannel *aOpenedChannel, nsIStreamListener **aContentHandler, PRBool *aAbortProcess)
+NS_IMETHODIMP nsEditorShell::DoContent(const char *aContentType, nsURILoadCommand aCommand, const char *aWindowTarget, nsIRequest* request, nsIStreamListener **aContentHandler, PRBool *aAbortProcess)
 {
   NS_ENSURE_ARG_POINTER(aContentHandler);
   NS_ENSURE_ARG_POINTER(aAbortProcess);

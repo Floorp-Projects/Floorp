@@ -119,7 +119,7 @@ public:
     NS_IMETHOD GetContentType(nsAWritableString& aContentType) const;
 
     NS_IMETHOD StartDocumentLoad(const char* aCommand,
-                                 nsIChannel* aChannel,
+                                 nsIChannel *channel,
                                  nsILoadGroup* aLoadGroup,
                                  nsISupports* aContainer,
                                  nsIStreamListener **aDocListener,
@@ -644,7 +644,7 @@ protected:
 	 * A "dummy" channel that is used as a placeholder to signal document load
 	 * completion.
 	 */
-	nsCOMPtr<nsIChannel> mPlaceholderChannel;
+	nsCOMPtr<nsIRequest> mPlaceHolderRequest;
 	
     /**
      * Create a XUL template builder on the specified node if a 'datasources'

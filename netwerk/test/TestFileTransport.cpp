@@ -21,7 +21,8 @@
  */
 
 #include "nsIFileTransportService.h"
-#include "nsIChannel.h"
+#include "nsITransport.h"
+#include "nsIRequest.h"
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
 #include "nsCOMPtr.h"
@@ -58,12 +59,12 @@ class MyListener : public nsIStreamListener {
 public:
     NS_DECL_ISUPPORTS
 
-    NS_IMETHOD OnStartRequest(nsIChannel *channel, nsISupports *ctxt) {
+    NS_IMETHOD OnStartRequest(nsIRequest *request, nsISupports *ctxt) {
         PRINTF(("starting\n"));
         return NS_OK;
     }
 
-    NS_IMETHOD OnStopRequest(nsIChannel *channel, nsISupports *ctxt, 
+    NS_IMETHOD OnStopRequest(nsIRequest *request, nsISupports *ctxt, 
                              nsresult aStatus, const PRUnichar* aStatusArg) {
         PRINTF(("ending status=%0x total=%d\n", aStatus, mTotal));
         if (--mStopCount == 0)
@@ -71,7 +72,7 @@ public:
         return NS_OK;
     }
 
-    NS_IMETHOD OnDataAvailable(nsIChannel *channel, nsISupports *ctxt, 
+    NS_IMETHOD OnDataAvailable(nsIRequest *request, nsISupports *ctxt, 
                                nsIInputStream *inStr, PRUint32 sourceOffset, 
                                PRUint32 count) {
         PRINTF(("receiving %d bytes\n", count));
@@ -145,7 +146,7 @@ TestAsyncRead(const char* fileName, PRUint32 offset, PRInt32 length)
     NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    nsIChannel* fileTrans;
+    nsITransport* fileTrans;
     nsCOMPtr<nsILocalFile> file;
     rv = NS_NewLocalFile(fileName, PR_FALSE, getter_AddRefs(file));
     if (NS_FAILED(rv)) return rv;
@@ -160,11 +161,8 @@ TestAsyncRead(const char* fileName, PRUint32 offset, PRInt32 length)
     if (NS_FAILED(rv)) return rv;
 
     gDone = PR_FALSE;
-    rv = fileTrans->SetTransferOffset(offset);
-    if (NS_FAILED(rv)) return rv;
-    rv = fileTrans->SetTransferCount(length);
-    if (NS_FAILED(rv)) return rv;
-    rv = fileTrans->AsyncRead(listener, nsnull);
+    nsCOMPtr<nsIRequest> request;
+    rv = fileTrans->AsyncRead(listener, nsnull, offset, length, 0, getter_AddRefs(request));
     if (NS_FAILED(rv)) return rv;
 
     while (!gDone) {
@@ -194,7 +192,7 @@ TestAsyncWrite(const char* fileName, PRUint32 offset, PRInt32 length)
 
     nsCAutoString outFile(fileName);
     outFile.Append(".out");
-    nsIChannel* fileTrans;
+    nsITransport* fileTrans;
     nsCOMPtr<nsILocalFile> file;
     rv = NS_NewLocalFile(outFile, PR_FALSE, getter_AddRefs(file));
     if (NS_FAILED(rv)) return rv;
@@ -218,11 +216,8 @@ TestAsyncWrite(const char* fileName, PRUint32 offset, PRInt32 length)
     if (NS_FAILED(rv)) return rv;
 
     gDone = PR_FALSE;
-    rv = fileTrans->SetTransferOffset(offset);
-    if (NS_FAILED(rv)) return rv;
-    rv = fileTrans->SetTransferCount(length);
-    if (NS_FAILED(rv)) return rv;
-    rv = NS_AsyncWriteFromStream(fileTrans, inStr, listener, nsnull);
+    nsCOMPtr<nsIRequest> request;
+    rv = NS_AsyncWriteFromStream(getter_AddRefs(request), fileTrans, inStr, offset, length, 0, listener);
     if (NS_FAILED(rv)) return rv;
 
     while (!gDone) {
@@ -240,18 +235,20 @@ TestAsyncWrite(const char* fileName, PRUint32 offset, PRInt32 length)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#if 0
 class MyOpenObserver : public nsIStreamObserver
 {
 public:
     NS_DECL_ISUPPORTS
 
-    NS_IMETHOD OnStartRequest(nsIChannel *channel, nsISupports *ctxt) {
+    NS_IMETHOD OnStartRequest(nsIRequest *request, nsISupports *ctxt) {
         nsresult rv;
         char* contentType;
+        nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
         rv = channel->GetContentType(&contentType);
         if (NS_FAILED(rv)) return rv;
         PRInt32 length;
-        rv = channel->GetContentLength(&length);
+        rv = cr->GetContentLength(&length);
         if (NS_FAILED(rv)) return rv;
         PRINTF(("stream opened: content type = %s, length = %d\n",
                 contentType, length));
@@ -259,7 +256,7 @@ public:
         return NS_OK;
     }
 
-    NS_IMETHOD OnStopRequest(nsIChannel *channel, nsISupports *ctxt,
+    NS_IMETHOD OnStopRequest(nsIRequest *request, nsISupports *ctxt,
                              nsresult aStatus, const PRUnichar* aStatusArg) {
         PRINTF(("stream closed: status %x\n", aStatus));
         return NS_OK;
@@ -270,6 +267,7 @@ public:
 };
 
 NS_IMPL_ISUPPORTS1(MyOpenObserver, nsIStreamObserver);
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 

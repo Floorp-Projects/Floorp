@@ -254,7 +254,7 @@ nsWalletlibService::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURI* aURL
 #include "prmem.h"
 
 NS_IMETHODIMP
-nsWalletlibService::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* channel, nsresult aStatus)
+nsWalletlibService::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIRequest *request, nsresult aStatus)
 {
   nsresult rv = NS_OK;
 
@@ -374,6 +374,7 @@ nsWalletlibService::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* ch
                           nsCOMPtr<nsIInterfaceRequestor> interfaces;
                           nsCOMPtr<nsIPrompt> prompter;
 
+                          nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
                           if (channel)
                             channel->GetNotificationCallbacks(getter_AddRefs(interfaces));
                           if (interfaces)
@@ -408,21 +409,21 @@ nsWalletlibService::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* ch
 
 NS_IMETHODIMP
 nsWalletlibService::OnStartURLLoad
-  (nsIDocumentLoader* loader, nsIChannel* channel)
+  (nsIDocumentLoader* loader, nsIRequest *request)
 {
  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsWalletlibService::OnProgressURLLoad
-  (nsIDocumentLoader* loader, nsIChannel* channel, PRUint32 aProgress, PRUint32 aProgressMax)
+  (nsIDocumentLoader* loader, nsIRequest *request, PRUint32 aProgress, PRUint32 aProgressMax)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsWalletlibService::OnStatusURLLoad
-  (nsIDocumentLoader* loader, nsIChannel* channel, nsString& aMsg)
+  (nsIDocumentLoader* loader, nsIRequest *request, nsString& aMsg)
 {
   return NS_OK;
 }
@@ -430,7 +431,7 @@ nsWalletlibService::OnStatusURLLoad
 
 NS_IMETHODIMP
 nsWalletlibService::OnEndURLLoad
-  (nsIDocumentLoader* loader, nsIChannel* channel, nsresult aStatus)
+  (nsIDocumentLoader* loader, nsIRequest *request, nsresult aStatus)
 {
   return NS_OK;
 }

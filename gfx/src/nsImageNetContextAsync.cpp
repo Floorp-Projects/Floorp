@@ -98,8 +98,8 @@ public:
   virtual int GetContentLength(ilIURL * aURL);
 
   nsresult RemoveRequest(ImageConsumer *aConsumer);
-  nsresult RequestDone(ImageConsumer *aConsumer, nsIChannel* channel,
-                       nsISupports* ctxt, nsresult status, const PRUnichar* aMsg);
+  nsresult RequestDone(ImageConsumer *aConsumer, nsIRequest* request,
+                   nsISupports* ctxt, nsresult status, const PRUnichar* aMsg);
 
   nsVoidArray *mRequests; // WEAK references to |ImageConsumer|s
   ImgCachePolicy mReloadPolicy;
@@ -121,10 +121,10 @@ public:
   NS_DECL_NSIURICONTENTLISTENER
   NS_DECL_NSIINTERFACEREQUESTOR
 
-  void SetKeepPumpingData(nsIChannel* channel, nsISupports* context) {
-    NS_ADDREF(channel);
-    NS_IF_RELEASE(mChannel);
-    mChannel = channel;
+  void SetKeepPumpingData(nsIRequest* request, nsISupports* context) {
+    NS_ADDREF(request);
+    NS_IF_RELEASE(mRequest);
+    mRequest = request;
 
     NS_IF_ADDREF(context);
     NS_IF_RELEASE(mUserContext);
@@ -145,7 +145,7 @@ protected:
   PRBool mFirstRead;
   char *mBuffer;
   PRInt32 mStatus;
-  nsIChannel* mChannel;
+  nsIRequest* mRequest;
   nsISupports* mUserContext;
   PRBool mIsMulti;
 };
@@ -162,7 +162,7 @@ ImageConsumer::ImageConsumer(ilIURL *aURL, ImageNetContextImpl *aContext)
   mStream = nsnull;
   mBuffer = nsnull;
   mStatus = 0;
-  mChannel = nsnull;
+  mRequest = nsnull;
   mUserContext = nsnull;
   mIsMulti = PR_FALSE;
 }
@@ -262,7 +262,7 @@ NS_IMETHODIMP
 ImageConsumer::DoContent(const char * aContentType,
                       nsURILoadCommand aCommand,
                       const char * aWindowTarget,
-                      nsIChannel * aOpenedChannel,
+                      nsIRequest * aOpenedChannel,
                       nsIStreamListener ** aContentHandler,
                       PRBool * aAbortProcess)
 {
@@ -294,8 +294,10 @@ ImageConsumer::DoContent(const char * aContentType,
 
 
 NS_IMETHODIMP
-ImageConsumer::OnStartRequest(nsIChannel* channel, nsISupports* aContext)
+ImageConsumer::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
 {
+    nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
+
   PRUint32 httpStatus;
   if (mInterrupted) {
     mStatus = MK_INTERRUPTED;
@@ -318,7 +320,7 @@ ImageConsumer::OnStartRequest(nsIChannel* channel, nsISupports* aContext)
   }
 
   ilINetReader *reader = mURL->GetReader(); //ptn test: nsCOMPtr??
-  nsresult err= reader->FlushImgBuffer(); //flush current data in buffer before starting 
+  /*nsresult err=*/ reader->FlushImgBuffer(); //flush current data in buffer before starting 
 
   nsresult rv = NS_OK;
   char* aContentType = NULL;
@@ -353,12 +355,14 @@ ImageConsumer::OnStartRequest(nsIChannel* channel, nsISupports* aContext)
 
 
 NS_IMETHODIMP
-ImageConsumer::OnDataAvailable(nsIChannel* channel, nsISupports* aContext, nsIInputStream *pIStream,
-                               PRUint32 offset, PRUint32 length)
+ImageConsumer::OnDataAvailable(nsIRequest* request, nsISupports* aContext,
+        nsIInputStream *pIStream, PRUint32 offset, PRUint32 length)
 {
   PRUint32 max_read=0;
   PRUint32 bytes_read = 0;
   ilINetReader *reader = mURL->GetReader();
+
+    nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
 
   if (mInterrupted || mStatus != 0) {
     mStatus = MK_INTERRUPTED;
@@ -482,12 +486,12 @@ ImageConsumer::KeepPumpingStream(nsITimer *aTimer, void *aClosure)
   ImageConsumer *consumer = (ImageConsumer *)aClosure;
   nsAutoString status;
 
-  consumer->OnStopRequest(consumer->mChannel, consumer->mUserContext,
+  consumer->OnStopRequest(consumer->mRequest, consumer->mUserContext,
                           NS_BINDING_SUCCEEDED, status.GetUnicode());
 }
 
 NS_IMETHODIMP
-ImageConsumer::OnStopRequest(nsIChannel* channel, nsISupports* aContext, nsresult status, const PRUnichar* aMsg)
+ImageConsumer::OnStopRequest(nsIRequest* request, nsISupports* aContext, nsresult status, const PRUnichar* aMsg)
 {
   if (mTimer) {
     mTimer->Cancel();
@@ -506,12 +510,12 @@ ImageConsumer::OnStopRequest(nsIChannel* channel, nsISupports* aContext, nsresul
     nsresult err = mStream->Available(&str_length);
     if (NS_SUCCEEDED(err)) {
       NS_ASSERTION((str_length > 0), "No data left in the stream!");
-      err = OnDataAvailable(channel, aContext, mStream, 0, str_length);  // XXX fix offset
+      err = OnDataAvailable(request, aContext, mStream, 0, str_length);  // XXX fix offset
       if (NS_SUCCEEDED(err)) {
         // If we still have the stream, there's still data to be 
         // pumped, so we set a timer to call us back again.
         if (mStream) {
-          SetKeepPumpingData(channel, aContext);
+          SetKeepPumpingData(request, aContext);
 
           nsresult rv;
           mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
@@ -550,7 +554,7 @@ ImageConsumer::OnStopRequest(nsIChannel* channel, nsISupports* aContext, nsresul
   reader->NetRequestDone(mURL, mStatus);
   NS_RELEASE(reader);
   
-  return mContext->RequestDone(this, channel, aContext, status, aMsg);
+  return mContext->RequestDone(this, request, aContext, status, aMsg);
 }
 
 void
@@ -583,7 +587,7 @@ ImageConsumer::~ImageConsumer()
   if (mBuffer != nsnull) {
     PR_DELETE(mBuffer);
   }
-  NS_IF_RELEASE(mChannel);
+  NS_IF_RELEASE(mRequest);
   NS_IF_RELEASE(mUserContext);
 }
 
@@ -708,24 +712,7 @@ ImageNetContextImpl::IsURLInDiskCache(ilIURL *aUrl)
 int 
 ImageNetContextImpl::GetContentLength (ilIURL * aURL)
 {
-    nsresult rv;
-    int content_length=0;
-
-    nsCOMPtr<nsIURI> nsurl = do_QueryInterface(aURL, &rv);
-    if (NS_FAILED(rv)) return 0;
-
-
-    nsCOMPtr<nsIChannel> channel;
-    nsCOMPtr<nsISupports> loadContext (do_QueryReferent(mLoadContext)); 
-    nsCOMPtr<nsILoadGroup> group (do_GetInterface(loadContext));
-    nsCOMPtr<nsIInterfaceRequestor> sink(do_QueryInterface(loadContext));
-
-    rv = NS_OpenURI(getter_AddRefs(channel), nsurl, nsnull, group, sink);
-    if (NS_FAILED(rv)) return 0;
-
-    rv = channel->GetContentLength(&content_length);
-    return content_length;
-
+    return -1;
 }
 
 
@@ -785,14 +772,16 @@ ImageNetContextImpl::GetURL (ilIURL * aURL,
     nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface(channel);
     if (httpChannel)
     {
-        // Get the defloadchannel from the loadgroup-
-        nsCOMPtr<nsIChannel> defLoadChannel;
-        if (NS_SUCCEEDED(group->GetDefaultLoadChannel(
-                        getter_AddRefs(defLoadChannel))) && defLoadChannel)
+        // Get the defloadRequest from the loadgroup-
+        nsCOMPtr<nsIRequest> defLoadRequest;
+        if (NS_SUCCEEDED(group->GetDefaultLoadRequest(
+                        getter_AddRefs(defLoadRequest))) && defLoadRequest)
         {
+            nsCOMPtr<nsIChannel> reqchannel = do_QueryInterface(defLoadRequest);
+
             // Get the referrer from the loadchannel-
             nsCOMPtr<nsIURI> referrer;
-            if (NS_SUCCEEDED(defLoadChannel->GetURI(getter_AddRefs(referrer))))
+            if (NS_SUCCEEDED(reqchannel->GetURI(getter_AddRefs(referrer))))
             {
                 // Set the referrer-
                 httpChannel->SetReferrer(referrer, 
@@ -826,7 +815,7 @@ ImageNetContextImpl::GetURL (ilIURL * aURL,
       rv = pURILoader->OpenURI(channel, loadCmd, nsnull /* window target */, 
                                window);
     }
-    // rv = channel->AsyncRead(ic, nsnull);
+    // rv = channel->AsyncOpen(ic, nsnull);
     if (NS_FAILED(rv)) goto error;
   }
 
@@ -851,8 +840,8 @@ ImageNetContextImpl::RemoveRequest(ImageConsumer *aConsumer)
 }
 
 nsresult
-ImageNetContextImpl::RequestDone(ImageConsumer *aConsumer, nsIChannel* channel,
-                                 nsISupports* ctxt, nsresult status, const PRUnichar* aMsg)
+ImageNetContextImpl::RequestDone(ImageConsumer *aConsumer, nsIRequest* request,
+                 nsISupports* ctxt, nsresult status, const PRUnichar* aMsg)
 {
   RemoveRequest(aConsumer);
 ///  if (mLoadGroup)
@@ -879,14 +868,18 @@ NS_NewImageNetContext(ilINetContext **aInstancePtrResult,
 
   if(aLoadContext){
      nsCOMPtr<nsILoadGroup> group (do_GetInterface(aLoadContext));
-     nsresult rv = group->GetDefaultLoadAttributes(&necko_attribs);
+     /*nsresult rv = */group->GetDefaultLoadAttributes(&necko_attribs);
 /*
 Need code to check freshness of necko cache.
 */
-     nsCOMPtr<nsIChannel> defLoadChannel; 
-     if (NS_SUCCEEDED(group->GetDefaultLoadChannel(
-                        getter_AddRefs(defLoadChannel))) && defLoadChannel)
-     defLoadChannel->GetLoadAttributes(&defchan_attribs);
+     nsCOMPtr<nsIRequest> defLoadRequest; 
+     nsCOMPtr<nsIChannel> channel;
+     if (NS_SUCCEEDED(group->GetDefaultLoadRequest(
+                        getter_AddRefs(defLoadRequest))) && defLoadRequest)
+     {
+         channel = do_QueryInterface(defLoadRequest);
+         if (channel) channel->GetLoadAttributes(&defchan_attribs);
+     }
 
 #if defined( DEBUG )
      if (image_net_context_async_log_module == NULL) {

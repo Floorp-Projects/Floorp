@@ -25,7 +25,7 @@
 
 #include "nsIFileTransportService.h"
 #include "nsIThreadPool.h"
-#include "nsISupportsArray.h"
+#include "nsSupportsArray.h"
 
 #define NS_FILE_TRANSPORT_WORKER_COUNT_MIN  1
 #define NS_FILE_TRANSPORT_WORKER_COUNT_MAX  4//16
@@ -48,6 +48,11 @@ public:
     PRInt32   mConnectedTransports;
     PRInt32   mTotalTransports;
     PRInt32   mInUseTransports;
+    
+    nsresult  AddSuspendedTransport(nsITransport* trans);
+    nsresult  RemoveSuspendedTransport(nsITransport* trans);
+
+    nsSupportsArray mSuspendedTransportList;
     
 protected:
     nsCOMPtr<nsIThreadPool>     mPool;

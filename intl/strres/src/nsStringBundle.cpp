@@ -238,8 +238,10 @@ nsStringBundle::OnStreamComplete(nsIStreamLoader* aLoader,
   nsXPIDLCString uriSpec;
   if (NS_FAILED(aStatus)) {
     if (aLoader) {
-      nsCOMPtr<nsIChannel> channel;
-      aLoader->GetChannel(getter_AddRefs(channel));
+      nsCOMPtr<nsIRequest> request;
+      aLoader->GetRequest(getter_AddRefs(request));
+      nsCOMPtr<nsIChannel> channel(do_QueryInterface(request));
+
       if (channel) {
         nsCOMPtr<nsIURI> uri;
         channel->GetURI(getter_AddRefs(uri));

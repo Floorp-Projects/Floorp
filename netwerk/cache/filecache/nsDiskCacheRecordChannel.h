@@ -25,6 +25,7 @@
 #define _ns_DiskCacheRecordChannel_h_
 
 #include "nsIChannel.h"
+#include "nsITransport.h"
 #include "nsCOMPtr.h"
 #include "nsDiskCacheRecord.h"
 #include "nsIStreamListener.h"
@@ -34,6 +35,7 @@
  */
 
 class nsDiskCacheRecordChannel : public nsIChannel,
+                                 public nsITransport,
                                  public nsIStreamListener 
 {
   public:
@@ -49,6 +51,14 @@ class nsDiskCacheRecordChannel : public nsIChannel,
 
   // Declare nsIChannel methods
   NS_DECL_NSICHANNEL
+
+  // Declare nsITransport methods
+  NS_IMETHOD GetProgressEventSink(nsIProgressEventSink **);
+  NS_IMETHOD SetProgressEventSink(nsIProgressEventSink *);
+  NS_IMETHOD OpenInputStream(PRUint32, PRUint32, PRUint32, nsIInputStream **);
+  NS_IMETHOD OpenOutputStream(PRUint32, PRUint32, PRUint32, nsIOutputStream **);
+  NS_IMETHOD AsyncRead(nsIStreamListener *, nsISupports *, PRUint32, PRUint32, PRUint32, nsIRequest **);
+  NS_IMETHOD AsyncWrite(nsIStreamProvider *, nsISupports *, PRUint32, PRUint32, PRUint32, nsIRequest **);
 
   // Declare nsIStreamObserver methods
   NS_DECL_NSISTREAMOBSERVER
@@ -66,7 +76,8 @@ class nsDiskCacheRecordChannel : public nsIChannel,
   nsCOMPtr<nsILoadGroup>                mLoadGroup ;
   nsLoadFlags                           mLoadAttributes;
   nsCOMPtr<nsISupports>                 mOwner ;
-  nsCOMPtr<nsIChannel>                  mFileTransport ;
+  nsCOMPtr<nsITransport>                mFileTransport ;
+  nsCOMPtr<nsIRequest>                  mFileRequest;
   nsCOMPtr< nsIFile >                   mSpec ;
   nsCOMPtr<nsIStreamListener>           mRealListener;
   nsresult                              mStatus;

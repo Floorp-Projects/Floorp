@@ -80,7 +80,7 @@ public:
     EndListener() {NS_INIT_ISUPPORTS();};
 
     // nsIStreamListener method
-    NS_IMETHOD OnDataAvailable(nsIChannel *channel, nsISupports *ctxt, nsIInputStream *inStr, 
+    NS_IMETHOD OnDataAvailable(nsIRequest* request, nsISupports *ctxt, nsIInputStream *inStr, 
                                PRUint32 sourceOffset, PRUint32 count)
     {
         nsresult rv;
@@ -102,12 +102,12 @@ public:
     }
 
     // nsIStreamObserver methods
-    NS_IMETHOD OnStartRequest(nsIChannel *channel, nsISupports *ctxt) 
+    NS_IMETHOD OnStartRequest(nsIRequest* request, nsISupports *ctxt) 
     {
         return NS_OK;
     }
 
-    NS_IMETHOD OnStopRequest(nsIChannel *channel, nsISupports *ctxt, 
+    NS_IMETHOD OnStopRequest(nsIRequest* request, nsISupports *ctxt, 
                              nsresult aStatus, const PRUnichar* aStatusArg)
     {
         return NS_OK;
@@ -120,7 +120,7 @@ NS_IMPL_ISUPPORTS1(EndListener, nsIStreamListener);
 ////////////////////////////////////////////////////////////////////////
 
 
-nsresult SendData(const char * aData, nsIStreamListener* aListener, nsIChannel* aChannel) {
+nsresult SendData(const char * aData, nsIStreamListener* aListener, nsIRequest* request) {
     nsString data;
     data.AssignWithConversion(aData);
     nsCOMPtr<nsIInputStream> dataStream;
@@ -129,9 +129,9 @@ nsresult SendData(const char * aData, nsIStreamListener* aListener, nsIChannel* 
     if (NS_FAILED(rv)) return rv;
     dataStream = do_QueryInterface(sup, &rv);
     if (NS_FAILED(rv)) return rv;
-    return aListener->OnDataAvailable(aChannel, nsnull, dataStream, 0, -1);
+    return aListener->OnDataAvailable(request, nsnull, dataStream, 0, -1);
 }
-#define SEND_DATA(x) SendData(x, converterListener, dummyChannel)
+#define SEND_DATA(x) SendData(x, converterListener, nsnull)
 
 int
 main(int argc, char* argv[])
@@ -272,11 +272,11 @@ main(int argc, char* argv[])
     if (NS_FAILED(rv)) return rv;
 
     // we need a dummy channel for the async calls.
-    nsCOMPtr<nsIChannel> dummyChannel;
+    nsCOMPtr<nsIChannel> channel;
     nsCOMPtr<nsIURI> dummyURI;
     rv = serv->NewURI("http://neverneverland.com", nsnull, getter_AddRefs(dummyURI));
     if (NS_FAILED(rv)) return rv;
-    rv = NS_NewInputStreamChannel(getter_AddRefs(dummyChannel),
+    rv = NS_NewInputStreamChannel(getter_AddRefs(channel),
                                   dummyURI,
                                   nsnull,   // inStr
                                   "multipart/x-mixed-replacE;boundary=thisrandomstring",
@@ -300,8 +300,9 @@ main(int argc, char* argv[])
     // that will receive the converted data. Let's mimic On*() calls and get the conversion
     // going. Typically these On*() calls would be made inside their respective wrappers On*()
     // methods.
-    rv = converterListener->OnStartRequest(dummyChannel, nsnull);
+    rv = converterListener->OnStartRequest(nsnull, nsnull);
     if (NS_FAILED(rv)) return rv;
+
 
     rv = SEND_DATA("--thisrandomstring\r\nContent-type: text/html\r\n\r\n<p>Please stand by... <p>\r\n");
     if (NS_FAILED(rv)) return rv;
@@ -325,7 +326,7 @@ main(int argc, char* argv[])
     if (NS_FAILED(rv)) return rv;    
 
     // Finish the request.
-    rv = converterListener->OnStopRequest(dummyChannel, nsnull, rv, nsnull);
+    rv = converterListener->OnStopRequest(nsnull, nsnull, rv, nsnull);
     if (NS_FAILED(rv)) return rv;
 
 

@@ -22,8 +22,9 @@
 
 #include "nsISupports.idl"
 
-interface nsIChannel;
+interface nsITransport;
 interface nsIEventSinkGetter;
+interface nsIChannel;
 
 [scriptable, uuid(05331390-6884-11d3-9382-00104ba0fd40)]
 interface nsISocketTransportService : nsISupports 
@@ -36,29 +37,29 @@ interface nsISocketTransportService : nsISupports
      * etc. The printHost contains the actual hostname (and not the 
      * proxy) for displaying in status messages. 
      */
-    nsIChannel createTransport(in string host,
-                               in long port,
-                               in string proxyHost,
-                               in long proxyPort,
-                               in unsigned long bufferSegmentSize,
-                               in unsigned long bufferMaxSize);
+    nsITransport createTransport(in string host,
+                                 in long port,
+                                 in string proxyHost,
+                                 in long proxyPort,
+                                 in unsigned long bufferSegmentSize,
+                                 in unsigned long bufferMaxSize);
     
-    nsIChannel createTransportOfType(in string socketType,
-                                     in string host, 
-                                     in long port,
-                                     in string proxyHost,
-                                     in long proxyPort,
-                                     in unsigned long bufferSegmentSize,
-                                     in unsigned long bufferMaxSize);
+    nsITransport createTransportOfType(in string socketType,
+                                       in string host, 
+                                       in long port,
+                                       in string proxyHost,
+                                       in long proxyPort,
+                                       in unsigned long bufferSegmentSize,
+                                       in unsigned long bufferMaxSize);
 
-    nsIChannel createTransportOfTypes(in unsigned long typeCount,
+    nsITransport createTransportOfTypes(in unsigned long typeCount,
 				      [array, size_is(typeCount)] in string socketTypes,
-                                      in string host, 
-                                      in long port,
-                                      in string proxyHost,
-                                      in long proxyPort,
-                                      in unsigned long bufferSegmentSize,
-                                      in unsigned long bufferMaxSize);
+                                        in string host, 
+                                        in long port,
+                                        in string proxyHost,
+                                        in long proxyPort,
+                                        in unsigned long bufferSegmentSize,
+                                        in unsigned long bufferMaxSize);
 
     /**
      * Returns true if the specified transport is good enough for 
@@ -66,11 +67,11 @@ interface nsISocketTransportService : nsISupports
      * include- an error including server resets, an explicit 
      * Connection: close header (for HTTP) and timeouts! 
      */
-    boolean reuseTransport(in nsIChannel i_Transport);
+    boolean reuseTransport(in nsITransport i_Transport);
 
     void init	 ();
     void shutdown();
-    void wakeup  (in nsIChannel i_Transport);
+    void wakeup  (in nsITransport i_Transport);
 
 	/**
 	 * Total number of nsSocketTransport objects currently alive

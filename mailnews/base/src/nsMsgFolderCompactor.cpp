@@ -356,7 +356,7 @@ nsFolderCompactState::GetMessage(nsIMessage **message)
 
 
 NS_IMETHODIMP
-nsFolderCompactState::OnStartRequest(nsIChannel *channel, nsISupports *ctxt)
+nsFolderCompactState::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 {
   nsresult rv = NS_ERROR_FAILURE;
   NS_ASSERTION(m_fileStream, "Fatal, null m_fileStream...\n");
@@ -371,7 +371,7 @@ nsFolderCompactState::OnStartRequest(nsIChannel *channel, nsISupports *ctxt)
 }
 
 NS_IMETHODIMP
-nsFolderCompactState::OnStopRequest(nsIChannel *channel, nsISupports *ctxt,
+nsFolderCompactState::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
                                     nsresult status, 
                                     const PRUnichar *errorMsg)
 {
@@ -430,7 +430,7 @@ done:
 }
 
 NS_IMETHODIMP
-nsFolderCompactState::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
+nsFolderCompactState::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
                                       nsIInputStream *inStr, 
                                       PRUint32 sourceOffset, PRUint32 count)
 {
@@ -472,7 +472,7 @@ nsOfflineStoreCompactState::InitDB(nsIMsgDatabase *db)
 }
 
 NS_IMETHODIMP
-nsOfflineStoreCompactState::OnStopRequest(nsIChannel *channel, nsISupports *ctxt,
+nsOfflineStoreCompactState::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
                                     nsresult status, 
                                     const PRUnichar *errorMsg)
 {

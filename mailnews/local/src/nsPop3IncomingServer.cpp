@@ -286,7 +286,7 @@ NS_IMETHODIMP nsPop3IncomingServer::GetNewMail(nsIMsgWindow *aMsgWindow, nsIUrlL
 {
 	nsresult rv;
 
-	NS_WITH_SERVICE(nsIPop3Service, pop3Service, kCPop3ServiceCID, &rv);
+	nsCOMPtr<nsIPop3Service> pop3Service = do_GetService(kCPop3ServiceCID, &rv);
     NS_ENSURE_SUCCESS(rv,rv);
 
     rv = pop3Service->GetNewMail(aMsgWindow, aUrlListener, inbox, this, aResult);

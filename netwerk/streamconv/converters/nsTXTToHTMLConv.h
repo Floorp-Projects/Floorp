@@ -36,7 +36,6 @@
     0x11b2, \
     {0x9d, 0x65, 0xd7, 0x2d, 0x6d, 0x1f, 0x02, 0x5e} \
 }
-static NS_DEFINE_CID(kNSTXTTOHTMLCONVCID, NS_NSTXTTOHTMLCONVERTER_CID);
 
 // Internal representation of a "token"
 typedef struct convToken {

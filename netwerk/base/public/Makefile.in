@@ -48,6 +48,7 @@ XPIDLSRCS	= \
 		nsIProxyAutoConfig.idl \
 		nsIProxyAutoConfigUtils.idl \
 		nsIRequest.idl \
+		nsITransport.idl \
 		nsISocketTransport.idl \
 		nsISocketTransportService.idl \
 		nsIStreamIO.idl \
@@ -55,7 +56,6 @@ XPIDLSRCS	= \
 		nsIStreamListener.idl \
 		nsIStreamProvider.idl \
 		nsIStreamLoader.idl \
-		nsISocketTransport.idl \
 		nsIURI.idl \
 		nsIURL.idl \
 		nsIURLParser.idl \

@@ -31,6 +31,7 @@
 #include "nsCOMPtr.h"
 #include "nsURLHelper.h"
 #include "nsWeakPtr.h"
+#include "nsIEventQueueService.h"
 
 #define NS_N(x) (sizeof(x)/sizeof(*x))
 
@@ -66,6 +67,7 @@ protected:
     nsCOMPtr<nsISocketTransportService> mSocketTransportService;
     nsCOMPtr<nsIFileTransportService>   mFileTransportService;
     nsCOMPtr<nsIDNSService>             mDNSService;
+    nsCOMPtr<nsIEventQueueService> mEventQueueService;
 
     // Cached protocol handlers
     nsWeakPtr                  mWeakHandler[NS_N(gScheme)];

@@ -239,7 +239,7 @@ NS_IMPL_ISUPPORTS1(RelatedLinksStreamListener, nsIStreamListener)
 
 
 NS_IMETHODIMP
-RelatedLinksStreamListener::OnStartRequest(nsIChannel* channel, nsISupports *ctxt)
+RelatedLinksStreamListener::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 {
 	 nsAutoString		trueStr; trueStr.AssignWithConversion("true");
 	 nsIRDFLiteral		*literal = nsnull;
@@ -255,7 +255,7 @@ RelatedLinksStreamListener::OnStartRequest(nsIChannel* channel, nsISupports *ctx
 
 
 NS_IMETHODIMP
-RelatedLinksStreamListener::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
+RelatedLinksStreamListener::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
 					nsresult status, const PRUnichar *errorMsg) 
 {
 	 nsAutoString		trueStr; trueStr.AssignWithConversion("true");
@@ -276,7 +276,7 @@ RelatedLinksStreamListener::OnStopRequest(nsIChannel* channel, nsISupports *ctxt
 
 
 NS_IMETHODIMP
-RelatedLinksStreamListener::OnDataAvailable(nsIChannel* channel, nsISupports *ctxt,
+RelatedLinksStreamListener::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
 		nsIInputStream *aIStream, PRUint32 sourceOffset, PRUint32 aLength)
 {
 	nsresult	rv = NS_OK;

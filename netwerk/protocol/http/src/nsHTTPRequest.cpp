@@ -57,12 +57,8 @@ static NS_DEFINE_CID(kHTTPHandlerCID,   NS_IHTTPHANDLER_CID);
 extern nsresult DupString(char* *o_Dest, const char* i_Src);
 
 nsHTTPRequest::nsHTTPRequest(nsIURI* i_URL, 
-        nsHTTPHandler* i_Handler, 
-        PRUint32 bufferSegmentSize, 
-        PRUint32 bufferMaxSize)
+        nsHTTPHandler* i_Handler)
     :
-    mBufferSegmentSize(bufferSegmentSize),
-    mBufferMaxSize(bufferMaxSize),
     mPipelinedRequest(nsnull),
     mDoingProxySSLConnect(PR_FALSE),
     mSSLConnected(PR_FALSE),
@@ -186,10 +182,12 @@ nsHTTPRequest::Resume()
     return rv;
 }
 
+
 nsresult nsHTTPRequest::Clone(const nsHTTPRequest* *o_Request) const
 {
     return NS_ERROR_FAILURE;
 }
+
                         
 nsresult nsHTTPRequest::SetMethod(nsIAtom * i_Method)
 {
@@ -204,6 +202,7 @@ nsIAtom * nsHTTPRequest::GetMethod(void) const
 
     return mMethod;
 }
+
                         
 nsresult nsHTTPRequest::SetPriority()
 {
@@ -258,12 +257,13 @@ nsresult nsHTTPRequest::GetConnection(nsHTTPChannel** o_Connection)
     return rv;
 }
 
-nsresult nsHTTPRequest::SetTransport(nsIChannel * aTransport)
+
+nsresult nsHTTPRequest::SetTransport(nsITransport * aTransport)
 {
     return NS_OK;
 }
 
-nsresult nsHTTPRequest::GetTransport(nsIChannel **aTransport)
+nsresult nsHTTPRequest::GetTransport(nsITransport **aTransport)
 {
     if (mPipelinedRequest)
         return mPipelinedRequest->GetTransport(aTransport);
@@ -272,6 +272,7 @@ nsresult nsHTTPRequest::GetTransport(nsIChannel **aTransport)
 
     return NS_OK;
 }
+
 
 nsresult nsHTTPRequest::GetHeaderEnumerator(nsISimpleEnumerator** aResult)
 {
@@ -418,7 +419,7 @@ nsHTTPRequest::formBuffer(nsCString * requestBuffer, PRUint32 capabilities)
     
     if (mDoingProxySSLConnect) 
     { 
-            nsCOMPtr<nsIChannel> trans;
+            nsCOMPtr<nsITransport> trans;
             PRUint32 reuse = 0;
             GetTransport(getter_AddRefs(trans));
             nsCOMPtr<nsISocketTransport> sockTrans = 
@@ -554,8 +555,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsHTTPPipelinedRequest, nsIStreamObserver)
 nsHTTPPipelinedRequest::nsHTTPPipelinedRequest(nsHTTPHandler* i_Handler, const char *host, PRInt32 port, PRUint32 capabilities)
     :   mCapabilities(capabilities),
         mAttempts(0),
-        mBufferSegmentSize(0),
-        mBufferMaxSize(0),
         mMustCommit(PR_FALSE),
         mTotalProcessed(0),
         mTotalWritten(0),
@@ -604,21 +603,17 @@ nsHTTPPipelinedRequest::~nsHTTPPipelinedRequest()
 }
 
 nsresult
-nsHTTPPipelinedRequest::SetTransport(nsIChannel * aTransport)
+nsHTTPPipelinedRequest::SetTransport(nsITransport * aTransport)
 {
     mTransport = aTransport;
     return NS_OK;
 }
 
 nsresult
-nsHTTPPipelinedRequest::GetTransport(nsIChannel **aTransport)
+nsHTTPPipelinedRequest::GetTransport(nsITransport **aTransport)
 {
-    if (aTransport == NULL)
-        return NS_ERROR_NULL_POINTER;
-
-    *aTransport = mTransport;
-    NS_IF_ADDREF(*aTransport);
-
+    NS_ENSURE_ARG_POINTER(aTransport);
+    NS_IF_ADDREF(*aTransport = mTransport);
     return NS_OK;
 }
 
@@ -661,7 +656,7 @@ nsHTTPPipelinedRequest::WriteRequest(nsIInputStream* iRequestStream)
         if (mInputStream)
             tMode &= ~(TRANSPORT_REUSE_ALIVE);
 
-        rv = mHandler->RequestTransport(req->mURI, req->mConnection, mBufferSegmentSize, mBufferMaxSize, 
+        rv = mHandler->RequestTransport(req->mURI, req->mConnection,  
                                            getter_AddRefs(mTransport), tMode);
 
         if (NS_FAILED(rv))
@@ -686,9 +681,6 @@ nsHTTPPipelinedRequest::WriteRequest(nsIInputStream* iRequestStream)
     {
         req =(nsHTTPRequest *) mRequests->ElementAt(index);
         req->formBuffer(&mRequestBuffer, mCapabilities);
-        if (index == 0)
-            mTransport->SetNotificationCallbacks(req->mConnection);
-
         NS_RELEASE(req);
         mTotalWritten++;
     }
@@ -715,13 +707,9 @@ nsHTTPPipelinedRequest::WriteRequest(nsIInputStream* iRequestStream)
     stream = do_QueryInterface(result, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    //
-    // Write the request to the server.  
-    //
-    rv = mTransport->SetTransferCount(mRequestBuffer.Length());
-    
-    if (NS_FAILED(rv)) return rv;
     req =(nsHTTPRequest *) mRequests->ElementAt(0);
+    if (!req)
+        return NS_ERROR_NULL_POINTER;
 
     //
     // Propagate the load attributes from the HTTPChannel into the
@@ -731,11 +719,26 @@ nsHTTPPipelinedRequest::WriteRequest(nsIInputStream* iRequestStream)
       nsLoadFlags loadAttributes = nsIChannel::LOAD_NORMAL;
       req->mConnection->GetLoadAttributes(&loadAttributes);
 
-      mTransport->SetLoadAttributes(loadAttributes);
+      if (loadAttributes & nsIChannel::LOAD_BACKGROUND)
+          mTransport->SetProgressEventSink(nsnull);
+      else {
+          //
+          // configure transport with the progress event sink from the first request.
+          //
+          nsCOMPtr<nsIProgressEventSink> sink =
+              do_GetInterface(NS_STATIC_CAST(nsIInterfaceRequestor*, req->mConnection));
+          if (sink)
+              mTransport->SetProgressEventSink(sink);
+      }
     }
 
     mOnStopDone = PR_FALSE;
-    rv = NS_AsyncWriteFromStream(mTransport, stream, this, (nsISupports*)(nsIRequest*)req->mConnection);
+
+    rv = NS_AsyncWriteFromStream(
+            getter_AddRefs(mCurrentWriteRequest),
+            mTransport, stream, 0, mRequestBuffer.Length(), 0, 
+            this, NS_STATIC_CAST(nsIRequest*, req->mConnection));
+
     NS_RELEASE(req);
 
     return rv;
@@ -745,7 +748,7 @@ nsHTTPPipelinedRequest::WriteRequest(nsIInputStream* iRequestStream)
 // nsIStreamObserver methods:
 
 NS_IMETHODIMP
-nsHTTPPipelinedRequest::OnStartRequest(nsIChannel* channel, nsISupports* i_Context)
+nsHTTPPipelinedRequest::OnStartRequest(nsIRequest *request, nsISupports* i_Context)
 {
     PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
 ("nsHTTPRequest [this=%x]. Starting to write data to the server.\n",
@@ -755,7 +758,7 @@ nsHTTPPipelinedRequest::OnStartRequest(nsIChannel* channel, nsISupports* i_Conte
 }
 
 NS_IMETHODIMP
-nsHTTPPipelinedRequest::OnStopRequest(nsIChannel* channel, nsISupports* i_Context,
+nsHTTPPipelinedRequest::OnStopRequest(nsIRequest *request, nsISupports* i_Context,
                                       nsresult aStatus, const PRUnichar* aStatusArg)
 {
     nsresult rv;
@@ -785,8 +788,10 @@ nsHTTPPipelinedRequest::OnStopRequest(nsIChannel* channel, nsISupports* i_Contex
                        ("nsHTTPRequest [this=%x]. "
                         "Writing PUT/POST data to the server.\n", this));
 
-                rv = NS_AsyncWriteFromStream(mTransport, mInputStream, this, 
-                                            (nsISupports*)(nsIRequest*)req->mConnection);
+                rv = NS_AsyncWriteFromStream(
+                        getter_AddRefs(mCurrentWriteRequest),
+                        mTransport, mInputStream, 0, 0, 0,
+                        this, NS_STATIC_CAST(nsIRequest*, req->mConnection));
 
                 /* the mInputStream is released below... */
             }
@@ -810,7 +815,8 @@ nsHTTPPipelinedRequest::OnStopRequest(nsIChannel* channel, nsISupports* i_Contex
                     if (pListener)
                     {
                         NS_ADDREF(pListener);
-                        rv = mTransport->AsyncRead(pListener, i_Context);
+                        rv = mTransport->AsyncRead(pListener, i_Context, 0, -1, 0,
+                                                   getter_AddRefs(mCurrentReadRequest));
                         mListener  = pListener;
                         NS_RELEASE(pListener);
                     }
@@ -868,6 +874,9 @@ nsHTTPPipelinedRequest::OnStopRequest(nsIChannel* channel, nsISupports* i_Contex
                 mHandler->ReleaseTransport(mTransport, 
                         nsIHTTPProtocolHandler::DONTRECORD_CAPABILITIES, PR_TRUE);
                 mTransport = null_nsCOMPtr();
+                mCurrentWriteRequest = 0;
+                mCurrentReadRequest = 0;
+
                 mOnStopDone = PR_TRUE;
                 rv = WriteRequest(mInputStream);
 
@@ -890,8 +899,10 @@ nsHTTPPipelinedRequest::OnStopRequest(nsIChannel* channel, nsISupports* i_Contex
 
             if (mTransport)
             {
-                nsIChannel *p = mTransport;
-                mTransport = null_nsCOMPtr();
+                nsITransport *p = mTransport;
+                mTransport = 0;
+                mCurrentWriteRequest = 0;
+                mCurrentReadRequest = 0;
 
                 mHandler->ReleaseTransport(p, nsIHTTPProtocolHandler::DONTRECORD_CAPABILITIES);
             }
@@ -994,6 +1005,8 @@ nsHTTPPipelinedRequest::RestartRequest(PRUint32 aType)
                 mHandler->ReleaseTransport(mTransport, 
                         nsIHTTPProtocolHandler::DONTRECORD_CAPABILITIES, PR_TRUE);
                 mTransport = null_nsCOMPtr();
+                mCurrentWriteRequest = 0;
+                mCurrentReadRequest = 0;
 
                 rval = WriteRequest(mInputStream);
             }
@@ -1005,10 +1018,9 @@ nsHTTPPipelinedRequest::RestartRequest(PRUint32 aType)
 nsresult
 nsHTTPPipelinedRequest::GetName(PRUnichar* *result)
 {
-    if (mTransport)
-        return mTransport->GetName(result);
+    if (mCurrentReadRequest)
+        return mCurrentReadRequest->GetName(result);
 
-    NS_NOTREACHED("nsHTTPPipelinedRequest::GetName");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -1017,8 +1029,8 @@ nsHTTPPipelinedRequest::IsPending(PRBool *result)
 {
     nsresult rv = NS_OK;
 
-    if (mTransport)
-        rv = mTransport->IsPending(result);
+    if (mCurrentReadRequest)
+        rv = mCurrentReadRequest->IsPending(result);
     else
         *result = PR_FALSE; 
 
@@ -1030,8 +1042,11 @@ nsHTTPPipelinedRequest::Cancel(nsresult status)
 {
     nsresult rv = NS_OK;
 
-    if (mTransport)
-        rv = mTransport->Cancel(status);
+    if (mCurrentReadRequest)
+        rv = mCurrentReadRequest->Cancel(status);
+
+    if (mCurrentWriteRequest)
+        (void) mCurrentWriteRequest->Cancel(status);
 
     return rv;
 }
@@ -1041,8 +1056,12 @@ nsHTTPPipelinedRequest::Suspend(void)
 {
     nsresult rv = NS_ERROR_FAILURE;
 
-    if (mTransport)
-        rv = mTransport->Suspend();
+    if (mCurrentReadRequest)
+        rv = mCurrentReadRequest->Suspend();
+
+    if (mCurrentWriteRequest)
+        (void) mCurrentWriteRequest->Suspend();
+
     return rv;
 }
 
@@ -1051,8 +1070,12 @@ nsHTTPPipelinedRequest::Resume()
 {
     nsresult rv = NS_ERROR_FAILURE;
 
-    if (mTransport)
-        rv = mTransport->Resume();
+    if (mCurrentReadRequest)
+        rv = mCurrentReadRequest->Resume();
+
+    if (mCurrentWriteRequest)
+        (void) mCurrentWriteRequest->Resume();
+
     return rv;
 }
 
@@ -1096,12 +1119,6 @@ nsHTTPPipelinedRequest::AddToPipeline(nsHTTPRequest *aRequest)
 
     aRequest->mPipelinedRequest  = this;
     mRequests->AppendElement(aRequest);
-
-    if (mBufferSegmentSize < aRequest->mBufferSegmentSize)
-        mBufferSegmentSize = aRequest->mBufferSegmentSize;
-
-    if (mBufferMaxSize < aRequest->mBufferMaxSize)
-        mBufferMaxSize = aRequest->mBufferMaxSize;
 
     if (sLongestPipeline < count + 1)
         sLongestPipeline = count + 1;
@@ -1197,8 +1214,12 @@ nsHTTPPipelinedRequest::AdvanceToNextRequest()
         // on some machines, but not on others.  Check for null to avoid
         // topcrash, although we really shouldn't need this.
         NS_ASSERTION(mTransport, "mTransport null in AdvanceToNextRequest");
-        if (mTransport)
-          mTransport->SetNotificationCallbacks(req->mConnection);
+        if (mTransport) {
+            nsCOMPtr<nsIProgressEventSink> sink =
+                do_GetInterface(NS_STATIC_CAST(nsIInterfaceRequestor*, req->mConnection));
+            if (sink)
+                mTransport->SetProgressEventSink(sink);
+        }
         NS_RELEASE(req);
     }
 

@@ -83,7 +83,7 @@ public:
     Consumer();
     virtual ~Consumer();
     nsresult Init(nsIURI *aURI, nsIChannel *aChannel, nsISupports *aContext);
-    nsresult Validate(nsIChannel *aChannel, nsISupports *aContext);
+    nsresult Validate(nsIRequest *request, nsISupports *aContext);
 
     // member data
     PRBool  mOnStart; // have we received an OnStart?
@@ -100,7 +100,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(Consumer, nsIStreamListener, nsIStreamObserver);
 
 // nsIStreamObserver implementation
 NS_IMETHODIMP
-Consumer::OnStartRequest(nsIChannel *aChannel, nsISupports* aContext) {
+Consumer::OnStartRequest(nsIRequest *request, nsISupports* aContext) {
     fprintf(stderr, "Consumer::OnStart() -> in\n\n");
 
     if (mOnStart) {
@@ -108,7 +108,7 @@ Consumer::OnStartRequest(nsIChannel *aChannel, nsISupports* aContext) {
     }
     mOnStart = PR_TRUE;
 
-    nsresult rv = Validate(aChannel, aContext);
+    nsresult rv = Validate(request, aContext);
     if (NS_FAILED(rv)) return rv;
 
     fprintf(stderr, "Consumer::OnStart() -> out\n\n");
@@ -116,7 +116,7 @@ Consumer::OnStartRequest(nsIChannel *aChannel, nsISupports* aContext) {
 }
 
 NS_IMETHODIMP
-Consumer::OnStopRequest(nsIChannel *aChannel, nsISupports *aContext,
+Consumer::OnStopRequest(nsIRequest *request, nsISupports *aContext,
                         nsresult aStatus, const PRUnichar* aStatusArg) {
     fprintf(stderr, "Consumer::OnStop() -> in\n\n");
 
@@ -133,7 +133,7 @@ Consumer::OnStopRequest(nsIChannel *aChannel, nsISupports *aContext,
 
     mOnStop = PR_TRUE;
 
-    nsresult rv = Validate(aChannel, aContext);
+    nsresult rv = Validate(request, aContext);
     if (NS_FAILED(rv)) return rv;
 
     fprintf(stderr, "Consumer::OnStop() -> out\n\n");
@@ -143,7 +143,7 @@ Consumer::OnStopRequest(nsIChannel *aChannel, nsISupports *aContext,
 
 // nsIStreamListener implementation
 NS_IMETHODIMP
-Consumer::OnDataAvailable(nsIChannel *aChannel, nsISupports *aContext,
+Consumer::OnDataAvailable(nsIRequest *request, nsISupports *aContext,
                           nsIInputStream *aIStream,
                           PRUint32 aOffset, PRUint32 aLength) {
     fprintf(stderr, "Consumer::OnData() -> in\n\n");
@@ -155,7 +155,7 @@ Consumer::OnDataAvailable(nsIChannel *aChannel, nsISupports *aContext,
 
     mOnDataCount += 1;
 
-    nsresult rv = Validate(aChannel, aContext);
+    nsresult rv = Validate(request, aContext);
     if (NS_FAILED(rv)) return rv;
 
     fprintf(stderr, "Consumer::OnData() -> out\n\n");
@@ -188,7 +188,7 @@ Consumer::~Consumer() {
 }
 
 nsresult
-Consumer::Init(nsIURI *aURI, nsIChannel *aChannel, nsISupports *aContext) {
+Consumer::Init(nsIURI *aURI, nsIChannel* aChannel, nsISupports *aContext) {
     mURI     = aURI;
     mChannel = aChannel;
     mContext = do_QueryInterface(aContext);
@@ -196,9 +196,11 @@ Consumer::Init(nsIURI *aURI, nsIChannel *aChannel, nsISupports *aContext) {
 }
 
 nsresult
-Consumer::Validate(nsIChannel *aChannel, nsISupports *aContext) {
+Consumer::Validate(nsIRequest* request, nsISupports *aContext) {
     nsresult rv = NS_OK;
     nsCOMPtr<nsIURI> uri;
+    nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(request);
+
     rv = aChannel->GetURI(getter_AddRefs(uri));
     if (NS_FAILED(rv)) return rv;
 
@@ -310,6 +312,6 @@ nsresult StartLoad(char *aURISpec) {
     if (NS_FAILED(rv)) return rv;
 
     // kick off the load
-    return channel->AsyncRead(NS_STATIC_CAST(nsIStreamListener*, consumer),
-                              contextSup);
+    nsCOMPtr<nsIRequest> request;
+    return channel->AsyncOpen(NS_STATIC_CAST(nsIStreamListener*, consumer), contextSup);
 }

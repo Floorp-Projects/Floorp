@@ -2473,6 +2473,7 @@ NS_IMETHODIMP nsMsgFolder::EnableNotifications(PRInt32 notificationType, PRBool 
     // we're probably doing something that should be batched.
     nsCOMPtr <nsIMsgDatabase> database;
 
+
     nsresult rv = GetMsgDatabase(nsnull, getter_AddRefs(database));
 		if(enable)
     {

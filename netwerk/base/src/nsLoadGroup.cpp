@@ -56,7 +56,7 @@ PRLogModuleInfo* gLoadGroupLog = nsnull;
 nsLoadGroup::nsLoadGroup(nsISupports* outer)
     : mDefaultLoadAttributes(nsIChannel::LOAD_NORMAL),
       mForegroundCount(0),
-      mChannels(nsnull),
+      mRequests(nsnull),
       mStatus(NS_OK)
 {
     NS_INIT_AGGREGATED(outer);
@@ -82,8 +82,8 @@ nsLoadGroup::~nsLoadGroup()
     rv = Cancel(NS_BINDING_ABORTED);
     NS_ASSERTION(NS_SUCCEEDED(rv), "Cancel failed");
 
-    NS_IF_RELEASE(mChannels);
-    mDefaultLoadChannel = null_nsCOMPtr();
+    NS_IF_RELEASE(mRequests);
+    mDefaultLoadRequest = null_nsCOMPtr();
 
     PR_LOG(gLoadGroupLog, PR_LOG_DEBUG,
            ("LOADGROUP [%x]: Destroyed.\n", this));
@@ -92,7 +92,7 @@ nsLoadGroup::~nsLoadGroup()
 
 nsresult nsLoadGroup::Init()
 {
-    return NS_NewISupportsArray(&mChannels);
+    return NS_NewISupportsArray(&mRequests);
 }
 
 
@@ -157,19 +157,20 @@ NS_IMETHODIMP
 nsLoadGroup::GetName(PRUnichar* *result)
 {
     // XXX is this the right "name" for a load group?
-    nsresult rv;
-    nsXPIDLCString urlStr;
-    if (mDefaultLoadChannel) {
-        nsCOMPtr<nsIURI> url;
-        rv = mDefaultLoadChannel->GetURI(getter_AddRefs(url));
-        if (NS_FAILED(rv)) return rv;
-        rv = url->GetSpec(getter_Copies(urlStr));
-        if (NS_FAILED(rv)) return rv;
+    *result = nsnull;
+    
+    if (mDefaultLoadRequest) {
+        nsXPIDLString nameStr;
+        nsresult rv = mDefaultLoadRequest->GetName(getter_Copies(nameStr));
+        if (NS_SUCCEEDED(rv)) {
+            nsString name;
+            name.Assign(nameStr);
+            *result = name.ToNewUnicode();
+            return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+        }
     }
-    nsString name;
-    name.AppendWithConversion(urlStr);
-    *result = name.ToNewUnicode();
-    return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -187,9 +188,9 @@ nsLoadGroup::IsPending(PRBool *aResult)
 NS_IMETHODIMP
 nsLoadGroup::GetStatus(nsresult *status)
 {
-    if (NS_SUCCEEDED(mStatus) && mDefaultLoadChannel)
-      return mDefaultLoadChannel->GetStatus(status);
-
+    if (NS_SUCCEEDED(mStatus) && mDefaultLoadRequest)
+        return mDefaultLoadRequest->GetStatus(status);
+    
     *status = mStatus;
     return NS_OK; 
 }
@@ -206,67 +207,57 @@ nsLoadGroup::Cancel(nsresult status)
 
     mStatus = status;
 
-    rv = mChannels->Count(&count);
+    rv = mRequests->Count(&count);
     if (NS_FAILED(rv)) return rv;
 
     firstError = NS_OK;
 
     if (count) {
-        nsIChannel* channel;
+        nsIRequest* request;
 
         //
         // Operate the elements from back to front so that if items get
         // get removed from the list it won't affect our iteration
         //
         while (count > 0) {
-            channel = NS_STATIC_CAST(nsIChannel*, mChannels->ElementAt(--count));
+            request = NS_STATIC_CAST(nsIRequest*, mRequests->ElementAt(--count));
 
-            NS_ASSERTION(channel, "NULL channel found in list.");
-            if (!channel) {
+            NS_ASSERTION(request, "NULL request found in list.");
+            if (!request) {
                 continue;
             }
 
 #if defined(PR_LOGGING)
-            char* uriStr;
-            nsCOMPtr<nsIURI> uri;
-
-            rv = channel->GetURI(getter_AddRefs(uri));
-            if (NS_SUCCEEDED(rv)) {
-                rv = uri->GetSpec(&uriStr);
-            }
-            if (NS_FAILED(rv)) {
-                uriStr = nsCRT::strdup("?");
-            }
-
+            nsXPIDLString nameStr;
+            request->GetName(getter_Copies(nameStr));
             PR_LOG(gLoadGroupLog, PR_LOG_DEBUG,
-                   ("LOADGROUP [%x]: Canceling channel %x %s.\n",
-                   this, channel, uriStr));
-            nsCRT::free(uriStr);
+                   ("LOADGROUP [%x]: Canceling request %x %s.\n",
+                   this, request, NS_ConvertUCS2toUTF8(nameStr).get()));
 #endif /* PR_LOGGING */
 
             //
-            // Remove the channel from the load group...  This may cause
+            // Remove the request from the load group...  This may cause
             // the OnStopRequest notification to fire...
             //
             // XXX: What should the context and error message be?
             //
-            (void)RemoveChannel(channel, nsnull, status, nsnull);
+            (void)RemoveRequest(request, nsnull, status, nsnull);
 
-            // Cancel the channel...
-            rv = channel->Cancel(status);
+            // Cancel the request...
+            rv = request->Cancel(status);
 
             // Remember the first failure and return it...
             if (NS_FAILED(rv) && NS_SUCCEEDED(firstError)) {
               firstError = rv;
             }
 
-            NS_RELEASE(channel);
+            NS_RELEASE(request);
         }
 
 #if defined(DEBUG)
-        (void)mChannels->Count(&count);
+        (void)mRequests->Count(&count);
 
-        NS_ASSERTION(count == 0,            "Channel list is not empty.");
+        NS_ASSERTION(count == 0,            "Request list is not empty.");
         NS_ASSERTION(mForegroundCount == 0, "Foreground URLs are active.");
 #endif /* DEBUG */
     }
@@ -282,7 +273,7 @@ nsLoadGroup::Suspend()
     nsresult rv, firstError;
     PRUint32 count;
 
-    rv = mChannels->Count(&count);
+    rv = mRequests->Count(&count);
     if (NS_FAILED(rv)) return rv;
 
     firstError = NS_OK;
@@ -291,42 +282,30 @@ nsLoadGroup::Suspend()
     // get removed from the list it won't affect our iteration
     //
     while (count > 0) {
-        nsIChannel* channel;
+        nsIRequest* request = NS_STATIC_CAST(nsIRequest*, mRequests->ElementAt(--count));
 
-        channel = NS_STATIC_CAST(nsIChannel*, mChannels->ElementAt(--count));
-
-        NS_ASSERTION(channel, "NULL channel found in list.");
-        if (!channel) {
+        NS_ASSERTION(request, "NULL request found in list.");
+        if (!request) {
             continue;
         }
 
 #if defined(PR_LOGGING)
-        char* uriStr;
-        nsCOMPtr<nsIURI> uri;
-
-        rv = channel->GetURI(getter_AddRefs(uri));
-        if (NS_SUCCEEDED(rv)) {
-            rv = uri->GetSpec(&uriStr);
-        }
-        if (NS_FAILED(rv)) {
-            uriStr = nsCRT::strdup("?");
-        }
-
-        PR_LOG(gLoadGroupLog, PR_LOG_DEBUG,
-               ("LOADGROUP [%x]: Suspending channel %x %s.\n",
-               this, channel, uriStr));
-        nsCRT::free(uriStr);
+            nsXPIDLString nameStr;
+            request->GetName(getter_Copies(nameStr));
+            PR_LOG(gLoadGroupLog, PR_LOG_DEBUG,
+                   ("LOADGROUP [%x]: Suspending request %x %s.\n",
+                   this, request, NS_ConvertUCS2toUTF8(nameStr).get()));
 #endif /* PR_LOGGING */
 
-        // Suspend the channel...
-        rv = channel->Suspend();
+        // Suspend the request...
+        rv = request->Suspend();
 
         // Remember the first failure and return it...
         if (NS_FAILED(rv) && NS_SUCCEEDED(firstError)) {
           firstError = rv;
         }
 
-        NS_RELEASE(channel);
+        NS_RELEASE(request);
     }
 
     return firstError;
@@ -339,7 +318,7 @@ nsLoadGroup::Resume()
     nsresult rv, firstError;
     PRUint32 count;
 
-    rv = mChannels->Count(&count);
+    rv = mRequests->Count(&count);
     if (NS_FAILED(rv)) return rv;
 
     firstError = NS_OK;
@@ -348,42 +327,30 @@ nsLoadGroup::Resume()
     // get removed from the list it won't affect our iteration
     //
     while (count > 0) {
-        nsIChannel* channel;
+        nsIRequest* request = NS_STATIC_CAST(nsIRequest*, mRequests->ElementAt(--count));
 
-        channel = NS_STATIC_CAST(nsIChannel*, mChannels->ElementAt(--count));
-
-        NS_ASSERTION(channel, "NULL channel found in list.");
-        if (!channel) {
+        NS_ASSERTION(request, "NULL request found in list.");
+        if (!request) {
             continue;
         }
 
 #if defined(PR_LOGGING)
-        char* uriStr;
-        nsCOMPtr<nsIURI> uri;
-
-        rv = channel->GetURI(getter_AddRefs(uri));
-        if (NS_SUCCEEDED(rv)) {
-            rv = uri->GetSpec(&uriStr);
-        }
-        if (NS_FAILED(rv)) {
-            uriStr = nsCRT::strdup("?");
-        }
-
+        nsXPIDLString nameStr;
+        request->GetName(getter_Copies(nameStr));
         PR_LOG(gLoadGroupLog, PR_LOG_DEBUG,
-               ("LOADGROUP [%x]: Resuming channel %x %s.\n",
-               this, channel, uriStr));
-        nsCRT::free(uriStr);
+              ("LOADGROUP [%x]: Resuming request %x %s.\n",
+              this, request, NS_ConvertUCS2toUTF8(nameStr).get()));
 #endif /* PR_LOGGING */
 
-        // Resume the channel...
-        rv = channel->Resume();
+        // Resume the request...
+        rv = request->Resume();
 
         // Remember the first failure and return it...
         if (NS_FAILED(rv) && NS_SUCCEEDED(firstError)) {
           firstError = rv;
         }
 
-        NS_RELEASE(channel);
+        NS_RELEASE(request);
     }
 
     return firstError;
@@ -417,58 +384,46 @@ nsLoadGroup::SetDefaultLoadAttributes(PRUint32 aDefaultLoadAttributes)
 }
 
 NS_IMETHODIMP
-nsLoadGroup::GetDefaultLoadChannel(nsIChannel * *aChannel)
+nsLoadGroup::GetDefaultLoadRequest(nsIRequest * *aRequest)
 {
-    *aChannel = mDefaultLoadChannel;
-    NS_IF_ADDREF(*aChannel);
+    *aRequest = mDefaultLoadRequest;
+    NS_IF_ADDREF(*aRequest);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsLoadGroup::SetDefaultLoadChannel(nsIChannel *aChannel)
+nsLoadGroup::SetDefaultLoadRequest(nsIRequest *aRequest)
 {
-    mDefaultLoadChannel = aChannel;
+    mDefaultLoadRequest = aRequest;
     return NS_OK;
 }
 
 
 NS_IMETHODIMP
-nsLoadGroup::AddChannel(nsIChannel *channel, nsISupports* ctxt)
+nsLoadGroup::AddRequest(nsIRequest *request, nsISupports* ctxt)
 {
     nsresult rv;
 
 #if defined(PR_LOGGING)
-  {
-    PRUint32 count;
-    char* uriStr;
-    nsCOMPtr<nsIURI> uri;
-    rv = channel->GetURI(getter_AddRefs(uri));
-    if (NS_SUCCEEDED(rv))
-        rv = uri->GetSpec(&uriStr);
-    if (NS_FAILED(rv))
-        uriStr = nsCRT::strdup("?");
-
-    (void)mChannels->Count(&count);
+    PRUint32 count = 0;
+    (void)mRequests->Count(&count);
+    nsXPIDLString nameStr;
+    request->GetName(getter_Copies(nameStr));
     PR_LOG(gLoadGroupLog, PR_LOG_DEBUG,
-           ("LOADGROUP [%x]: Adding channel %x %s (count=%d).\n",
-            this, channel, uriStr, count));
-    nsCRT::free(uriStr);
-  }
+              ("LOADGROUP [%x]: Adding request %x %s (count=%d).\n",
+              this, request, NS_ConvertUCS2toUTF8(nameStr).get(), count));
 #endif /* PR_LOGGING */
 
     nsLoadFlags flags;
-
-    MergeLoadAttributes(channel);
-
-    rv = channel->GetLoadAttributes(&flags);
+    rv = MergeLoadAttributes(request, flags);
     if (NS_FAILED(rv)) return rv;
-
+    
     //
-    // Add the channel to the list of active channels...
+    // Add the request to the list of active requests...
     //
     // XXX this method incorrectly returns a bool
     //
-    rv = mChannels->AppendElement(channel) ? NS_OK : NS_ERROR_FAILURE;
+    rv = mRequests->AppendElement(request) ? NS_OK : NS_ERROR_FAILURE;
     if (NS_FAILED(rv)) return rv;
 
     if (!(flags & nsIChannel::LOAD_BACKGROUND)) {
@@ -478,28 +433,28 @@ nsLoadGroup::AddChannel(nsIChannel *channel, nsISupports* ctxt)
         //
         // Fire the OnStartRequest notification out to the observer...
         //
-        // If the notification fails then DO NOT add the channel to
+        // If the notification fails then DO NOT add the request to
         // the load group.
         //
         nsCOMPtr<nsIStreamObserver> observer (do_QueryReferent(mObserver));
         if (observer) {
             PR_LOG(gLoadGroupLog, PR_LOG_DEBUG,
-                   ("LOADGROUP [%x]: Firing OnStartRequest for channel %x."
+                   ("LOADGROUP [%x]: Firing OnStartRequest for request %x."
                    "(foreground count=%d).\n",
-                   this, channel, mForegroundCount));
+                   this, request, mForegroundCount));
 
-            rv = observer->OnStartRequest(channel, ctxt);
+            rv = observer->OnStartRequest(request, ctxt);
             if (NS_FAILED(rv)) {
                 PR_LOG(gLoadGroupLog, PR_LOG_ERROR,
-                       ("LOADGROUP [%x]: OnStartRequest for channel %x FAILED.\n",
-                       this, channel));
+                       ("LOADGROUP [%x]: OnStartRequest for request %x FAILED.\n",
+                       this, request));
                 //
                 // The URI load has been canceled by the observer.  Clean up
                 // the damage...
                 //
                 // XXX this method incorrectly returns a bool
                 //
-                rv = mChannels->RemoveElement(channel) ? NS_OK : NS_ERROR_FAILURE;
+                rv = mRequests->RemoveElement(request) ? NS_OK : NS_ERROR_FAILURE;
                 mForegroundCount -= 1;
             }
         }
@@ -509,56 +464,43 @@ nsLoadGroup::AddChannel(nsIChannel *channel, nsISupports* ctxt)
 }
 
 NS_IMETHODIMP
-nsLoadGroup::RemoveChannel(nsIChannel *channel, nsISupports* ctxt, 
+nsLoadGroup::RemoveRequest(nsIRequest *request, nsISupports* ctxt, 
                            nsresult aStatus, const PRUnichar* aStatusArg)
 {
     nsresult rv;
 
 #if defined(PR_LOGGING)
-  {
-    PRUint32 count = 0;
-    char* uriStr;
-    nsCOMPtr<nsIURI> uri;
-
-    if (channel) {
-        rv = channel->GetURI(getter_AddRefs(uri));
-    }
-    else {
-        rv = NS_ERROR_NULL_POINTER;
-    }
-
-    if (NS_SUCCEEDED(rv))
-        rv = uri->GetSpec(&uriStr);
-    if (NS_FAILED(rv))
-        uriStr = nsCRT::strdup("?");
-
-    (void)mChannels->Count(&count);
-
-    PR_LOG(gLoadGroupLog, PR_LOG_DEBUG,
-           ("LOADGROUP [%x]: Removing channel %x %s status %x (count=%d).\n",
-            this, channel, uriStr, aStatus, count-1));
-    nsCRT::free(uriStr);
-  }
+        PRUint32 count = 0;
+        (void)mRequests->Count(&count);
+        nsXPIDLString nameStr;
+        request->GetName(getter_Copies(nameStr));
+        PR_LOG(gLoadGroupLog, PR_LOG_DEBUG,
+              ("LOADGROUP [%x]: Removing request %x %s status %x (count=%d).\n",
+              this, request, NS_ConvertUCS2toUTF8(nameStr).get(), aStatus, count-1));
 #endif /* PR_LOGGING */
 
     //
-    // Remove the channel from the group.  If this fails, it means that
-    // the channel was *not* in the group so do not update the foreground
+    // Remove the request from the group.  If this fails, it means that
+    // the request was *not* in the group so do not update the foreground
     // count or it will get messed up...
     //
     //
     // XXX this method incorrectly returns a bool
     //
-    rv = mChannels->RemoveElement(channel) ? NS_OK : NS_ERROR_FAILURE;
+    rv = mRequests->RemoveElement(request) ? NS_OK : NS_ERROR_FAILURE;
     if (NS_FAILED(rv)) {
         PR_LOG(gLoadGroupLog, PR_LOG_ERROR,
-               ("LOADGROUP [%x]: Unable to remove channel %x. Not in group!\n",
-                this, channel));
+               ("LOADGROUP [%x]: Unable to remove request %x. Not in group!\n",
+                this, request));
         return rv;
     }
 
     nsLoadFlags flags;
-    rv = channel->GetLoadAttributes(&flags);
+    nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(request, &rv);
+    if (NS_FAILED(rv)) 
+      return NS_ERROR_FAILURE;
+
+    rv = aChannel->GetLoadAttributes(&flags);
     if (NS_FAILED(rv)) return rv;
 
     if (!(flags & nsIChannel::LOAD_BACKGROUND)) {
@@ -569,15 +511,15 @@ nsLoadGroup::RemoveChannel(nsIChannel *channel, nsISupports* ctxt,
         nsCOMPtr<nsIStreamObserver> observer (do_QueryReferent(mObserver));
         if (observer) {
             PR_LOG(gLoadGroupLog, PR_LOG_DEBUG,
-                   ("LOADGROUP [%x]: Firing OnStopRequest for channel %x."
+                   ("LOADGROUP [%x]: Firing OnStopRequest for request %x."
                     "(foreground count=%d).\n",
-                    this, channel, mForegroundCount));
+                    this, request, mForegroundCount));
 
-            rv = observer->OnStopRequest(channel, ctxt, aStatus, aStatusArg);
+            rv = observer->OnStopRequest(request, ctxt, aStatus, aStatusArg);
             if (NS_FAILED(rv)) {
                 PR_LOG(gLoadGroupLog, PR_LOG_ERROR,
-                       ("LOADGROUP [%x]: OnStopRequest for channel %x FAILED.\n",
-                       this, channel));
+                       ("LOADGROUP [%x]: OnStopRequest for request %x FAILED.\n",
+                       this, request));
             }
         }
     }
@@ -588,9 +530,9 @@ nsLoadGroup::RemoveChannel(nsIChannel *channel, nsISupports* ctxt,
 
 
 NS_IMETHODIMP
-nsLoadGroup::GetChannels(nsISimpleEnumerator * *aChannels)
+nsLoadGroup::GetRequests(nsISimpleEnumerator * *aRequests)
 {
-    return NS_NewArrayEnumerator(aChannels, mChannels);
+    return NS_NewArrayEnumerator(aRequests, mRequests);
 }
 
 
@@ -659,13 +601,18 @@ nsLoadGroup::GetActiveCount(PRUint32* aResult)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-nsresult nsLoadGroup::MergeLoadAttributes(nsIChannel *aChannel)
+nsresult nsLoadGroup::MergeLoadAttributes(nsIRequest *aRequest, nsLoadFlags& outFlags)
 {
   nsresult rv;
   nsLoadFlags flags, oldFlags;
 
+  nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(aRequest, &rv);
+  if (NS_FAILED(rv)) 
+      return NS_ERROR_FAILURE;
+
   rv = aChannel->GetLoadAttributes(&flags);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) 
+    return rv;
 
   oldFlags = flags;
   //
@@ -707,6 +654,7 @@ nsresult nsLoadGroup::MergeLoadAttributes(nsIChannel *aChannel)
     rv = aChannel->SetLoadAttributes(flags);
   }
 
+  outFlags = flags;
+
   return rv;
 }
-

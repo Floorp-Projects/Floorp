@@ -34,7 +34,8 @@
 #include "nsISocketTransportService.h"
 #include "nsIEventQueueService.h"
 #include "nsIServiceManager.h"
-#include "nsIChannel.h"
+#include "nsITransport.h"
+#include "nsIRequest.h"
 #include "nsIStreamProvider.h"
 #include "nsIStreamListener.h"
 #include "nsIPipe.h"
@@ -68,54 +69,53 @@ static nsIEventQueue* gEventQ = nsnull;
 class TestListener : public nsIStreamListener
 {
 public:
+    TestListener() { NS_INIT_ISUPPORTS(); }
+    virtual ~TestListener() {}
 
-  TestListener() { NS_INIT_ISUPPORTS(); }
-  virtual ~TestListener() {}
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSISTREAMOBSERVER
-  NS_DECL_NSISTREAMLISTENER
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSISTREAMOBSERVER
+    NS_DECL_NSISTREAMLISTENER
 };
 
 NS_IMPL_ISUPPORTS2(TestListener,
-                         nsIStreamObserver,
-                         nsIStreamListener);
+                   nsIStreamObserver,
+                   nsIStreamListener);
 
 NS_IMETHODIMP
-TestListener::OnStartRequest(nsIChannel* channel, nsISupports* context)
+TestListener::OnStartRequest(nsIRequest* request, nsISupports* context)
 {
-  LOG(("TestListener::OnStartRequest\n"));
-  return NS_OK;
+    LOG(("TestListener::OnStartRequest\n"));
+    return NS_OK;
 }
 
 NS_IMETHODIMP
-TestListener::OnDataAvailable(nsIChannel* channel,
-                                   nsISupports* context,
-                                   nsIInputStream *aIStream, 
-                                   PRUint32 aSourceOffset,
-                                   PRUint32 aLength)
+TestListener::OnDataAvailable(nsIRequest* request,
+                              nsISupports* context,
+                              nsIInputStream *aIStream, 
+                              PRUint32 aSourceOffset,
+                              PRUint32 aLength)
 {
     LOG(("TestListener::OnDataAvailable [offset=%u length=%u]\n",
         aSourceOffset, aLength));
-  char buf[1025];
-  PRUint32 amt;
+    char buf[1025];
+    PRUint32 amt;
     while (1) {
-    aIStream->Read(buf, 1024, &amt);
+        aIStream->Read(buf, 1024, &amt);
         if (amt == 0)
             break;
-    buf[amt] = '\0';
-    puts(buf);
+        buf[amt] = '\0';
+        puts(buf);
     }
-  return NS_OK;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
-TestListener::OnStopRequest(nsIChannel* channel, nsISupports* context,
-                                 nsresult aStatus, const PRUnichar* aStatusArg)
+TestListener::OnStopRequest(nsIRequest* request, nsISupports* context,
+                            nsresult aStatus, const PRUnichar* aStatusArg)
 {
     LOG(("TestListener::OnStopRequest [aStatus=%x]\n", aStatus));
-  gKeepRunning = 0;
-  return NS_OK;
+    gKeepRunning = 0;
+    return NS_OK;
 }
 
 //
@@ -127,16 +127,15 @@ TestListener::OnStopRequest(nsIChannel* channel, nsISupports* context,
 class TestProvider : public nsIStreamProvider
 {
 public:
+    TestProvider(char *data);
+    virtual ~TestProvider();
 
-  TestProvider(char *data);
-  virtual ~TestProvider();
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSISTREAMOBSERVER
-  NS_DECL_NSISTREAMPROVIDER
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSISTREAMOBSERVER
+    NS_DECL_NSISTREAMPROVIDER
 
 protected:
-  nsCOMPtr<nsIByteArrayInputStream> mData;
+    nsCOMPtr<nsIByteArrayInputStream> mData;
 };
 
 NS_IMPL_ISUPPORTS2(TestProvider,
@@ -145,42 +144,48 @@ NS_IMPL_ISUPPORTS2(TestProvider,
 
 TestProvider::TestProvider(char *data)
 {
-  NS_INIT_ISUPPORTS();
-  NS_NewByteArrayInputStream(getter_AddRefs(mData), data, strlen(data));
-  LOG(("Constructing TestProvider [this=%x]\n", this));
+    NS_INIT_ISUPPORTS();
+    NS_NewByteArrayInputStream(getter_AddRefs(mData), data, strlen(data));
+    LOG(("Constructing TestProvider [this=%x]\n", this));
 }
 
 TestProvider::~TestProvider()
 {
-  LOG(("Destroying TestProvider [this=%x]\n", this));
+    LOG(("Destroying TestProvider [this=%x]\n", this));
 }
 
 NS_IMETHODIMP
-TestProvider::OnStartRequest(nsIChannel* channel, nsISupports* context)
+TestProvider::OnStartRequest(nsIRequest* request, nsISupports* context)
 {
-  LOG(("TestProvider::OnStartRequest [this=%x]\n", this));
-  return NS_OK;
+    LOG(("TestProvider::OnStartRequest [this=%x]\n", this));
+    return NS_OK;
 }
 
 NS_IMETHODIMP
-TestProvider::OnStopRequest(nsIChannel* channel, nsISupports* context,
-                                 nsresult aStatus, const PRUnichar* aStatusArg)
+TestProvider::OnStopRequest(nsIRequest* request, nsISupports* context,
+                            nsresult aStatus, const PRUnichar* aStatusArg)
 {
     LOG(("TestProvider::OnStopRequest [status=%x]\n", aStatus));
 
     nsCOMPtr<nsIStreamListener> listener = do_QueryInterface(new TestListener());
 
-    if (NS_SUCCEEDED(aStatus))
-        channel->AsyncRead(listener, nsnull);
-    else
-    gKeepRunning = 0;
+    if (NS_SUCCEEDED(aStatus)) {
+        nsCOMPtr<nsITransportRequest> treq = do_QueryInterface(request);
+        nsCOMPtr<nsITransport> transport;
+        treq->GetTransport(getter_AddRefs(transport));
+        if (transport) {
+            nsCOMPtr<nsIRequest> readRequest;
+            transport->AsyncRead(listener, nsnull, 0, 0, 0, getter_AddRefs(readRequest));
+        }
+    } else
+        gKeepRunning = 0;
 
-  return NS_OK;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
-TestProvider::OnDataWritable(nsIChannel *channel, nsISupports *context,
-                            nsIOutputStream *output, PRUint32 offset, PRUint32 count)
+TestProvider::OnDataWritable(nsIRequest *request, nsISupports *context,
+                             nsIOutputStream *output, PRUint32 offset, PRUint32 count)
 {
     LOG(("TestProvider::OnDataWritable [offset=%u, count=%u]\n", offset, count));
     PRUint32 writeCount;
@@ -188,7 +193,7 @@ TestProvider::OnDataWritable(nsIChannel *channel, nsISupports *context,
     // Zero bytes written on success indicates EOF
     if (NS_SUCCEEDED(rv) && (writeCount == 0))
         return NS_BASE_STREAM_CLOSED;
-  return rv;
+    return rv;
 }
 
 //
@@ -199,6 +204,7 @@ TestProvider::OnDataWritable(nsIChannel *channel, nsISupports *context,
 nsresult
 WriteRequest(nsIOutputStream *os, const char *request)
 {
+    LOG(("WriteRequest [request=%s]\n", request));
     PRUint32 n;
     return os->Write(request, strlen(request), &n);
 }
@@ -239,7 +245,7 @@ usage(char **argv)
 int
 main(int argc, char* argv[])
 {
-  nsresult rv;
+    nsresult rv;
 
 #ifdef XP_OS2_VACPP
     signal(SIGSEGV, (_SigFunc)sighandler);
@@ -267,8 +273,8 @@ main(int argc, char* argv[])
     char *fileName = argv[2+i];
     int port = 80;
 
-  // Create the Event Queue for this thread...
-  NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
+    // Create the Event Queue for this thread...
+    NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
     if (NS_FAILED(rv)) {
         NS_WARNING("failed to create: event queue service!");
         return rv;
@@ -280,10 +286,10 @@ main(int argc, char* argv[])
         return rv;
     }
 
-  eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &gEventQ);
+    eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &gEventQ);
 
-  // Create the Socket transport service...
-  NS_WITH_SERVICE(nsISocketTransportService, sts, kSocketTransportServiceCID, &rv);
+    // Create the Socket transport service...
+    NS_WITH_SERVICE(nsISocketTransportService, sts, kSocketTransportServiceCID, &rv);
     if (NS_FAILED(rv)) {
         NS_WARNING("failed to create: socket transport service!");
         return rv;
@@ -301,74 +307,85 @@ main(int argc, char* argv[])
                                 fileName, hostName);
     LOG(("Request [\n%s]\n", buffer));
 
-  // Create the socket transport...
-    nsCOMPtr<nsIChannel> transport;
+    // Create the socket transport...
+    nsCOMPtr<nsITransport> transport;
     rv = sts->CreateTransport(hostName, port, nsnull, -1, 0, 0, getter_AddRefs(transport));
     if (NS_FAILED(rv)) {
         NS_WARNING("failed to create: socket transport!");
         return rv;
-  }
+    }
 
     gElapsedTime = PR_Now();
 
     if (!sync) {
-        rv = transport->AsyncWrite(new TestProvider(buffer), nsnull);
+        nsCOMPtr<nsIRequest> request;
+        rv = transport->AsyncWrite(new TestProvider(buffer), nsnull, 0, 0, 0, getter_AddRefs(request));
         if (NS_FAILED(rv)) {
             NS_WARNING("failed calling: AsyncWrite!");
             return rv;
-  }
+        }
 
-  // Enter the message pump to allow the URL load to proceed.
-  while ( gKeepRunning ) {
+        // Enter the message pump to allow the URL load to proceed.
+        while ( gKeepRunning ) {
 #ifdef WIN32
-    MSG msg;
-    if (GetMessage(&msg, NULL, 0, 0)) {
-      TranslateMessage(&msg);
-      DispatchMessage(&msg);
-            } else
-      gKeepRunning = FALSE;
+            MSG msg;
+            if (GetMessage(&msg, NULL, 0, 0)) {
+                TranslateMessage(&msg);
+                DispatchMessage(&msg);
+            }
+            else
+                gKeepRunning = FALSE;
+#elif XP_MAC
+            /* Mac stuff is missing here! */
+#elif XP_OS2
+            QMSG qmsg;
+            if (WinGetMsg(0, &qmsg, 0, 0, 0))
+                WinDispatchMsg(0, &qmsg);
+            else
+                gKeepRunning = FALSE;
 #else
-#ifdef XP_MAC
-    /* Mac stuff is missing here! */
-#else
-#ifdef XP_OS2
-    QMSG qmsg;
-    if (WinGetMsg(0, &qmsg, 0, 0, 0))
-      WinDispatchMsg(0, &qmsg);
-    else
-      gKeepRunning = FALSE;
-#else
-    PLEvent *gEvent;
+            PLEvent *gEvent;
             rv = gEventQ->WaitForEvent(&gEvent);
-    rv = gEventQ->HandleEvent(gEvent);
+            rv = gEventQ->HandleEvent(gEvent);
 #endif
-#endif
-#endif
-  }
+        }
     }
     else {
         // synchronous write
         {
             nsCOMPtr<nsIOutputStream> os;
-            rv = transport->OpenOutputStream(getter_AddRefs(os));
-            if (NS_FAILED(rv)) return rv;
+            rv = transport->OpenOutputStream(0, 0, 0, getter_AddRefs(os));
+            if (NS_FAILED(rv)) {
+                LOG(("OpenOutputStream failed [rv=%x]\n", rv));
+                return rv;
+            }
             rv = WriteRequest(os, buffer);
-            if (NS_FAILED(rv)) return rv;
+            if (NS_FAILED(rv)) {
+                LOG(("WriteRequest failed [rv=%x]\n", rv));
+                return rv;
+            }
         }
         // synchronous read
         {
             nsCOMPtr<nsIInputStream> is;
-            rv = transport->OpenInputStream(getter_AddRefs(is));
-            if (NS_FAILED(rv)) return rv;
+            rv = transport->OpenInputStream(0, 0, 0, getter_AddRefs(is));
+            if (NS_FAILED(rv)) {
+                LOG(("OpenInputStream failed [rv=%x]\n", rv));
+                return rv;
+            }
             rv = ReadResponse(is);
-            if (NS_FAILED(rv)) return rv;
+            if (NS_FAILED(rv)) {
+                LOG(("ReadResponse failed [rv=%x]\n", rv));
+                return rv;
+            }
         }
     }
 
-  PRTime endTime; 
- endTime = PR_Now();
+    PRTime endTime; 
+    endTime = PR_Now();
     LOG(("Elapsed time: %d\n", (PRInt32)(endTime/1000UL - gElapsedTime/1000UL)));
 
-  sts->Shutdown();
-  return 0;
+    sts->Shutdown();
+    return 0;
 }
+

@@ -36,10 +36,10 @@ CPPSRCS		= \
 		TestSocketInput.cpp \
 		TestSocketTransport.cpp \
 		TestFileInput.cpp \
+		TestFileTransport.cpp \
 		TestProtocols.cpp \
 		urltest.cpp \
 		TestFileInput2.cpp \
-		TestFileTransport.cpp \
 		TestRes.cpp \
 		TestCallbacks.cpp \
         TestSyncHTTP.cpp \

@@ -232,11 +232,12 @@ nsDiskCacheRecordChannel::NotifyStorageInUse(PRInt32 aBytesUsed)
 }
 
 // implement nsISupports
-NS_IMPL_THREADSAFE_ISUPPORTS4(nsDiskCacheRecordChannel, 
-                   nsIChannel, 
-                   nsIRequest,
-                   nsIStreamListener,
-                   nsIStreamObserver)
+NS_IMPL_THREADSAFE_ISUPPORTS5(nsDiskCacheRecordChannel, 
+                              nsITransport,
+                              nsIChannel, 
+                              nsIRequest,
+                              nsIStreamListener,
+                              nsIStreamObserver)
 
 // implement nsIRequest
 NS_IMETHODIMP
@@ -250,10 +251,10 @@ NS_IMETHODIMP
 nsDiskCacheRecordChannel::IsPending(PRBool *aIsPending) 
 {
   *aIsPending = PR_FALSE;
-  if(!mFileTransport)
+  if(!mFileRequest)
     return NS_OK;
 
-  return mFileTransport->IsPending(aIsPending);
+  return mFileRequest->IsPending(aIsPending);
 }
 
 NS_IMETHODIMP
@@ -268,28 +269,28 @@ nsDiskCacheRecordChannel::Cancel(nsresult status)
 {
   NS_ASSERTION(NS_FAILED(status), "shouldn't cancel with a success code");
   mStatus = status;
-  if(!mFileTransport)
+  if(!mFileRequest)
     return NS_ERROR_FAILURE;
 
-  return mFileTransport->Cancel(status);
+  return mFileRequest->Cancel(status);
 }
 
 NS_IMETHODIMP
 nsDiskCacheRecordChannel::Suspend(void)
 {
-  if(!mFileTransport)
+  if(!mFileRequest)
     return NS_ERROR_FAILURE;
 
-  return mFileTransport->Suspend();
+  return mFileRequest->Suspend();
 }
 
 NS_IMETHODIMP
 nsDiskCacheRecordChannel::Resume(void)
 {
-  if(!mFileTransport)
+  if(!mFileRequest)
     return NS_ERROR_FAILURE;
 
-  return mFileTransport->Resume();
+  return mFileRequest->Resume();
 }
 
 // implement nsIChannel
@@ -313,23 +314,33 @@ nsDiskCacheRecordChannel::SetOriginalURI(nsIURI* aURI)
 NS_IMETHODIMP
 nsDiskCacheRecordChannel::GetURI(nsIURI* *aURI)
 {
-  if(!mFileTransport)
-    return NS_ERROR_FAILURE;
-
-  return mFileTransport->GetURI(aURI);
+  NS_NOTREACHED("nsDiskCacheRecordChannel::GetURI");
+  return NS_ERROR_NOT_IMPLEMENTED ;
 }
 
 NS_IMETHODIMP
 nsDiskCacheRecordChannel::SetURI(nsIURI* aURI)
 {
-  if(!mFileTransport)
-    return NS_ERROR_FAILURE;
-
-  return mFileTransport->SetURI(aURI);
+  NS_NOTREACHED("nsDiskCacheRecordChannel::SetURI");
+  return NS_ERROR_NOT_IMPLEMENTED ;
 }
 
 NS_IMETHODIMP
-nsDiskCacheRecordChannel::OpenInputStream(nsIInputStream* *aResult)
+nsDiskCacheRecordChannel::Open(nsIInputStream **aResult)
+{
+    return OpenInputStream(0, -1, 0, aResult);
+}
+
+NS_IMETHODIMP
+nsDiskCacheRecordChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *aContext)
+{
+    nsCOMPtr<nsIRequest> req;
+    return AsyncRead(aListener, aContext, 0, -1, 0, getter_AddRefs(req));
+}
+
+NS_IMETHODIMP
+nsDiskCacheRecordChannel::OpenInputStream(PRUint32 offset, PRUint32 count, PRUint32 flags,
+                                          nsIInputStream* *aResult)
 {
   nsresult rv;
 
@@ -346,7 +357,7 @@ nsDiskCacheRecordChannel::OpenInputStream(nsIInputStream* *aResult)
   
   // we don't need to worry about notification callbacks
   
-  rv = mFileTransport->OpenInputStream(aResult);
+  rv = mFileTransport->OpenInputStream(offset, count, 0, aResult);
   if(NS_FAILED(rv)) 
     mFileTransport = nsnull;
 
@@ -354,7 +365,8 @@ nsDiskCacheRecordChannel::OpenInputStream(nsIInputStream* *aResult)
 }
 
 NS_IMETHODIMP
-nsDiskCacheRecordChannel::OpenOutputStream(nsIOutputStream* *aResult)
+nsDiskCacheRecordChannel::OpenOutputStream(PRUint32 offset, PRUint32 count, PRUint32 flags,
+                                           nsIOutputStream* *aResult)
 {
   nsresult rv;
   NS_ENSURE_ARG(aResult);
@@ -374,7 +386,7 @@ nsDiskCacheRecordChannel::OpenOutputStream(nsIOutputStream* *aResult)
  
   // we don't need to worry about notification callbacks
   
-  rv = mFileTransport->OpenOutputStream(getter_AddRefs(outputStream));
+  rv = mFileTransport->OpenOutputStream(offset, count, 0, getter_AddRefs(outputStream));
   if(NS_FAILED(rv)) {
     mFileTransport = nsnull;
     return rv;
@@ -384,9 +396,11 @@ nsDiskCacheRecordChannel::OpenOutputStream(nsIOutputStream* *aResult)
 }
 
 NS_IMETHODIMP
-nsDiskCacheRecordChannel::AsyncRead(nsIStreamListener *aListener,
-                                    nsISupports *aContext)
+nsDiskCacheRecordChannel::AsyncRead(nsIStreamListener *aListener, nsISupports *aContext,
+                                    PRUint32 offset, PRUint32 count, PRUint32 flags,
+                                    nsIRequest **aResult)
 {
+  NS_ENSURE_ARG_POINTER(aResult);
   nsresult rv;
 
   if(mFileTransport)
@@ -410,7 +424,7 @@ nsDiskCacheRecordChannel::AsyncRead(nsIStreamListener *aListener,
         }
       }
 
-      rv = mLoadGroup->AddChannel(this, nsnull);
+      rv = mLoadGroup->AddRequest(this, nsnull);
       if (NS_FAILED(rv)) return rv;
   }
 
@@ -424,18 +438,21 @@ nsDiskCacheRecordChannel::AsyncRead(nsIStreamListener *aListener,
 
   // no callbacks
 
-  rv = mFileTransport->AsyncRead(tempListener, aContext);
+  rv = mFileTransport->AsyncRead(tempListener, aContext, offset, count, 0,
+                                 getter_AddRefs(mFileRequest));
 
   if (NS_FAILED(rv)) {
     // release the transport so that we don't think we're in progress
     mFileTransport = nsnull;
   }
+  NS_ADDREF(*aResult = this);
   return rv;
 }
 
 NS_IMETHODIMP
-nsDiskCacheRecordChannel::AsyncWrite(nsIStreamProvider *provider, 
-                                     nsISupports *ctxt)
+nsDiskCacheRecordChannel::AsyncWrite(nsIStreamProvider *provider, nsISupports *ctxt,
+                                     PRUint32 offset, PRUint32 count, PRUint32 flags,
+                                     nsIRequest **aResult)
 
 {
   /*
@@ -556,88 +573,6 @@ nsDiskCacheRecordChannel::SetContentLength(PRInt32 aContentLength)
 }
 
 NS_IMETHODIMP
-nsDiskCacheRecordChannel::GetTransferOffset(PRUint32 *aTransferOffset)
-{
- nsresult rv = NS_ERROR_FAILURE;
- if ( mFileTransport )
- 	 rv = mFileTransport->GetTransferOffset( aTransferOffset );
- return rv;
-}
-
-NS_IMETHODIMP
-nsDiskCacheRecordChannel::SetTransferOffset(PRUint32 aTransferOffset)
-{
-   nsresult rv = NS_OK;
- if ( mFileTransport )
- 	 rv = mFileTransport->SetTransferOffset( aTransferOffset );
- return rv;
-}
-
-NS_IMETHODIMP
-nsDiskCacheRecordChannel::GetTransferCount(PRInt32 *aTransferCount)
-{
-  NS_NOTREACHED("nsDiskCacheRecordChannel::GetTransferCount");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsDiskCacheRecordChannel::SetTransferCount(PRInt32 aTransferCount)
-{
-  NS_NOTREACHED("nsDiskCacheRecordChannel::SetTransferCount");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsDiskCacheRecordChannel::GetBufferSegmentSize(PRUint32 *aBufferSegmentSize)
-{
-  NS_NOTREACHED("nsDiskCacheRecordChannel::GetBufferSegmentSize");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsDiskCacheRecordChannel::SetBufferSegmentSize(PRUint32 aBufferSegmentSize)
-{
-  NS_NOTREACHED("nsDiskCacheRecordChannel::SetBufferSegmentSize");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsDiskCacheRecordChannel::GetBufferMaxSize(PRUint32 *aBufferMaxSize)
-{
-  NS_NOTREACHED("nsDiskCacheRecordChannel::GetBufferMaxSize");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsDiskCacheRecordChannel::SetBufferMaxSize(PRUint32 aBufferMaxSize)
-{
-  NS_NOTREACHED("nsDiskCacheRecordChannel::SetBufferMaxSize");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsDiskCacheRecordChannel::GetLocalFile(nsIFile* *file)
-{
-    *file = mSpec;
-    NS_ADDREF(*file);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDiskCacheRecordChannel::GetPipeliningAllowed(PRBool *aPipeliningAllowed)
-{
-    *aPipeliningAllowed = PR_FALSE;
-    return NS_OK;
-}
- 
-NS_IMETHODIMP
-nsDiskCacheRecordChannel::SetPipeliningAllowed(PRBool aPipeliningAllowed)
-{
-    NS_NOTREACHED("SetPipeliningAllowed");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 nsDiskCacheRecordChannel::GetOwner(nsISupports* *aOwner)
 {
   *aOwner = mOwner.get();
@@ -691,39 +626,49 @@ nsDiskCacheRecordChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDiskCacheRecordChannel::GetProgressEventSink(nsIProgressEventSink **aSink)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDiskCacheRecordChannel::SetProgressEventSink(nsIProgressEventSink *aSink)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsIStreamListener methods:
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP
-nsDiskCacheRecordChannel::OnStartRequest(nsIChannel* transportChannel, nsISupports* context)
+nsDiskCacheRecordChannel::OnStartRequest(nsIRequest* transportRequest, nsISupports* context)
 {
   NS_ASSERTION(mRealListener, "No listener...");
   return mRealListener->OnStartRequest(this, context);
 }
 
 NS_IMETHODIMP
-nsDiskCacheRecordChannel::OnStopRequest(nsIChannel* transportChannel, nsISupports* context,
+nsDiskCacheRecordChannel::OnStopRequest(nsIRequest* transportRequest, nsISupports* context,
                                         nsresult aStatus, const PRUnichar* aStatusArg)
 {
   nsresult rv;
 
   rv = mRealListener->OnStopRequest(this, context, aStatus, aStatusArg);
 
-  if (mLoadGroup) {
-    if (NS_SUCCEEDED(rv)) {
-      mLoadGroup->RemoveChannel(this, context, aStatus, aStatusArg);
-    }
-  }
+  if (mLoadGroup)
+      mLoadGroup->RemoveRequest(this, context, aStatus, aStatusArg);
 
   // Release the reference to the consumer stream listener...
   mRealListener = null_nsCOMPtr();
   mFileTransport = null_nsCOMPtr();
+  mFileRequest = null_nsCOMPtr();
   return rv;
 }
 
 NS_IMETHODIMP
-nsDiskCacheRecordChannel::OnDataAvailable(nsIChannel* transportChannel, nsISupports* context,
+nsDiskCacheRecordChannel::OnDataAvailable(nsIRequest* transportRequest, nsISupports* context,
                                nsIInputStream *aIStream, PRUint32 aSourceOffset,
                                PRUint32 aLength)
 {
@@ -737,8 +682,8 @@ nsDiskCacheRecordChannel::OnDataAvailable(nsIChannel* transportChannel, nsISuppo
   // insure that the transport will go away even if it is blocked waiting
   // for the consumer to empty the pipe...
   //
-  if (NS_FAILED(rv) && mFileTransport) {
-    mFileTransport->Cancel(rv);
+  if (NS_FAILED(rv) && mFileRequest) {
+    mFileRequest->Cancel(rv);
   }
   return rv;
 }

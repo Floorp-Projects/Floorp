@@ -20,11 +20,14 @@
  * Contributor(s): 
  */
 
-#include "nsISupports.idl"
+#include "nsITransport.idl"
 
 [scriptable, uuid(785CA0F0-C39E-11d3-9ED6-0010A4053FD0)]
-interface nsISocketTransport : nsISupports 
+interface nsISocketTransport : nsITransport 
 {
+    readonly attribute string host;
+    readonly attribute long port;
+
     /**
      *
      */
