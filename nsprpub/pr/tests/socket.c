@@ -34,6 +34,13 @@
 #ifdef XP_UNIX
 #include <sys/mman.h>
 #endif
+#if defined(_PR_PTHREADS)
+#include <pthread.h>
+#endif
+
+#ifdef WINNT
+#include <process.h>
+#endif
 
 static int _debug_on = 0;
 
@@ -244,6 +251,62 @@ exit:
     }
 }
 
+PRThread* create_new_thread(PRThreadType type,
+							void (*start)(void *arg),
+							void *arg,
+							PRThreadPriority priority,
+							PRThreadScope scope,
+							PRThreadState state,
+							PRUint32 stackSize, PRInt32 index)
+{
+PRInt32 native_thread = 0;
+
+	PR_ASSERT(state == PR_UNJOINABLE_THREAD);
+#if defined(_PR_PTHREADS) || defined(WINNT)
+	switch(index %  4) {
+		case 0:
+			scope = (PR_LOCAL_THREAD);
+			break;
+		case 1:
+			scope = (PR_GLOBAL_THREAD);
+			break;
+		case 2:
+			scope = (PR_GLOBAL_BOUND_THREAD);
+			break;
+		case 3:
+			native_thread = 1;
+			break;
+		default:
+			PR_ASSERT(!"Invalid scope");
+			break;
+	}
+	if (native_thread) {
+#ifdef _PR_PTHREADS
+		pthread_t tid;
+		if (!pthread_create(&tid, NULL, start, arg))
+			return((PRThread *) tid);
+		else
+			return (NULL);
+#else
+		HANDLE thandle;
+		
+		thandle = (HANDLE) _beginthreadex(
+						NULL,
+						stackSize,
+						(unsigned (__stdcall *)(void *))start,
+						arg,
+						0,
+						NULL);		
+		return((PRThread *) thandle);
+#endif
+	} else {
+		return(PR_CreateThread(type,start,arg,priority,scope,state,stackSize));
+	}
+#else
+	return(PR_CreateThread(type,start,arg,priority,scope,state,stackSize));
+#endif
+}
+
 /*
  * TCP Server
  *    Server Thread
@@ -330,12 +393,12 @@ TCP_Server(void *arg)
         scp->sockfd = newsockfd;
         scp->datalen = sp->datalen;
 
-        t = PR_CreateThread(PR_USER_THREAD,
+        t = create_new_thread(PR_USER_THREAD,
             Serve_Client, (void *)scp, 
             PR_PRIORITY_NORMAL,
             PR_LOCAL_THREAD,
             PR_UNJOINABLE_THREAD,
-            0);
+            0, i);
         if (t == NULL) {
             fprintf(stderr,"prsocket_test: PR_CreateThread failed\n");
             failed_already=1;
@@ -729,7 +792,6 @@ TCP_Socket_Client_Server_Test(void)
 {
     int i;
     PRThread *t;
-    PRThreadScope scope;
     PRSemaphore *server_sem;
     Server_Param *sparamp;
     Client_Param *cparamp;
@@ -801,19 +863,12 @@ TCP_Socket_Client_Server_Test(void)
     cparamp->exit_counter = &thread_count;
     cparamp->datalen = datalen;
     for (i = 0; i < num_tcp_clients; i++) {
-        /*
-         * Every other thread is a LOCAL/GLOBAL thread
-         */
-        if (i & 1)
-            scope = PR_LOCAL_THREAD;
-        else
-            scope = PR_GLOBAL_THREAD;
-        t = PR_CreateThread(PR_USER_THREAD,
+        t = create_new_thread(PR_USER_THREAD,
             TCP_Client, (void *) cparamp,
             PR_PRIORITY_NORMAL,
-            scope,
+            PR_LOCAL_THREAD,
             PR_UNJOINABLE_THREAD,
-            0);
+            0, i);
         if (t == NULL) {
             fprintf(stderr,"prsocket_test: PR_CreateThread failed\n");
             failed_already=1;
@@ -1134,7 +1189,6 @@ TransmitFile_Server(void *arg)
     PRFileDesc *sockfd = NULL, *newsockfd;
     PRNetAddr netaddr;
     PRInt32 i;
-    PRThreadScope scope;
 
     t = (PRThread**)PR_MALLOC(num_transmitfile_clients * sizeof(PRThread *));
     if (t == NULL) {
@@ -1218,17 +1272,10 @@ TransmitFile_Server(void *arg)
         scp->sockfd = newsockfd;
         scp->datalen = sp->datalen;
 
-        /*
-         * create LOCAL and GLOBAL threads alternately
-         */
-        if (i & 1)
-            scope = PR_LOCAL_THREAD;
-        else
-            scope = PR_GLOBAL_THREAD;
         t[i] = PR_CreateThread(PR_USER_THREAD,
             Serve_TransmitFile_Client, (void *)scp, 
             PR_PRIORITY_NORMAL,
-            scope,
+            PR_LOCAL_THREAD,
             PR_JOINABLE_THREAD,
             0);
         if (t[i] == NULL) {
@@ -1277,7 +1324,6 @@ Socket_Misc_Test(void)
 {
     PRIntn i, rv = 0, bytes, count, len;
     PRThread *t;
-    PRThreadScope scope;
     PRSemaphore *server_sem;
     Server_Param *sparamp;
     Client_Param *cparamp;
@@ -1484,19 +1530,12 @@ Socket_Misc_Test(void)
     cparamp->exit_counter = &thread_count;
     cparamp->datalen = datalen;
     for (i = 0; i < num_transmitfile_clients; i++) {
-        /*
-         * Every other thread is a LOCAL/GLOBAL thread
-         */
-        if (i & 1)
-            scope = PR_GLOBAL_THREAD;
-        else
-            scope = PR_LOCAL_THREAD;
-        t = PR_CreateThread(PR_USER_THREAD,
+        t = create_new_thread(PR_USER_THREAD,
             TransmitFile_Client, (void *) cparamp,
             PR_PRIORITY_NORMAL,
-            scope,
+            PR_LOCAL_THREAD,
             PR_UNJOINABLE_THREAD,
-            0);
+            0, i);
         if (t == NULL) {
             fprintf(stderr,"prsocket_test: PR_CreateThread failed\n");
             rv = -1;

@@ -100,7 +100,7 @@ while ($_ = <INPUT>) {
     }
 }
 
-print H "extern void pr_init_error_table_", $table_name, "(void);\n";
+print H "extern void ", $table_name, "_InitializePRErrorTable","(void);\n";
 printf H "#define ERROR_TABLE_BASE_%s (%dL)\n", $table_name, $table_base;
 
 print C "\t{0, 0}\n";
@@ -108,7 +108,7 @@ print C "};\n\n";
 printf C "static const struct PRErrorTable et = { text, \"%s\", %dL, %d };\n",
     $base, $table_base, $table_item_count;
 print C "\n";
-print C "void pr_init_error_table_", $table_name, "() {\n";
+print C "void ", $table_name, "_InitializePRErrorTable", "() {\n";
 print C "    PR_ErrorInstallTable(&et);\n";
 print C "}\n";
 

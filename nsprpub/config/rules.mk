@@ -321,7 +321,11 @@ $(RES): $(RESNAME)
 ifeq ($(OS_TARGET),OS2)
 	$(RC) -DOS2 -r $(RESNAME) $(RES)
 else
+ifeq ($(OS_TARGET),WINNT)
+	$(RC) -dWINNT -Fo$(RES) $(RESNAME)
+else
 	$(RC) -Fo$(RES) $(RESNAME)
+endif
 endif
 	@echo $(RES) finished
 endif

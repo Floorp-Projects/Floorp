@@ -51,6 +51,7 @@ CSRCS =             \
 	dceemu.c		\
 	dlltest.c		\
 	dtoa.c			\
+	errcodes.c		\
 	exit.c  		\
 	fileio.c		\
 	foreign.c	    \
@@ -138,6 +139,7 @@ CSRCS =             \
 	tmoacc.c        \
 	tmocon.c        \
 	tpd.c			\
+	vercheck.c		\
 	version.c	    \
 	udpsrv.c	    \
 	writev.c        \
@@ -471,6 +473,10 @@ ifeq ($(USE_PTHREADS), 1)
 $(OBJDIR)/foreign: $(OBJDIR)/foreign.o
 	$(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPLC) $(LIBPR) $(LIBPTHREAD) $(EXTRA_LIBS) -o $@
 $(OBJDIR)/provider: $(OBJDIR)/provider.o
+	$(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPLC) $(LIBPR) $(LIBPTHREAD) $(EXTRA_LIBS) -o $@
+$(OBJDIR)/socket: $(OBJDIR)/socket.o
+	$(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPLC) $(LIBPR) $(LIBPTHREAD) $(EXTRA_LIBS) -o $@
+$(OBJDIR)/testfile: $(OBJDIR)/testfile.o
 	$(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPLC) $(LIBPR) $(LIBPTHREAD) $(EXTRA_LIBS) -o $@
 endif
 

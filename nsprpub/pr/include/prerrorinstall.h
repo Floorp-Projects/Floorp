@@ -15,8 +15,8 @@
  * Reserved.
  */
 
-#ifndef prerrorplugin_h___
-#define prerrorplugin_h___
+#ifndef prerrorinstall_h___
+#define prerrorinstall_h___
 
 #include "prerror.h"
 
@@ -27,15 +27,22 @@ PR_BEGIN_EXTERN_C
 /**********************************************************************/
 
 /*
+ * struct PRErrorMessage --
+ *
+ *    An error message in an error table.
+ */
+struct PRErrorMessage {
+    const char * name;    /* Macro name for error */
+    const char * en_text; /* Default English text */
+};
+
+/*
  * struct PRErrorTable --
  *
  *    An error table, provided by a library.
  */
 struct PRErrorTable {
-    struct PRErrorMessage {
-	const char * const name;    /* Macro name for error */
-	const char * const en_text; /* default english text */
-    } const * msgs; /* Array of error information */
+    const struct PRErrorMessage * msgs; /* Array of error information */
 
     const char *name; /* Name of error table source */
     PRErrorCode base; /* Error code for first error in table */
@@ -43,50 +50,49 @@ struct PRErrorTable {
 };
 
 /*
- * struct PRErrorPluginRock --
+ * struct PRErrorCallbackPrivate --
  *
- *    A rock, under which the localization plugin may store information
- *    that is private to itself.
+ *    A private structure for the localization plugin 
  */
-struct PRErrorPluginRock;
+struct PRErrorCallbackPrivate;
 
 /*
- * struct PRErrorPluginTableRock --
+ * struct PRErrorCallbackTablePrivate --
  *
- *    A rock, under which the localization plugin may store information,
+ *    A data structure under which the localization plugin may store information,
  *    associated with an error table, that is private to itself.
  */
-struct PRErrorPluginTableRock;
+struct PRErrorCallbackTablePrivate;
 
 /*
- * PRErrorPluginLookupFn --
+ * PRErrorCallbackLookupFn --
  *
- *    A function of PRErrorPluginLookupFn type is a localization
+ *    A function of PRErrorCallbackLookupFn type is a localization
  *    plugin callback which converts an error code into a description
  *    in the requested language.  The callback is provided the
- *    appropriate error table, rock, and table rock.  The callback
- *    returns the appropriate UTF-8 encoded description, or NULL if no
- *    description can be found.
+ *    appropriate error table, private data for the plugin and the table.
+ *    The callback returns the appropriate UTF-8 encoded description, or NULL
+ *    if no description can be found.
  */
 typedef const char *
-PRErrorPluginLookupFn(PRErrorCode code, PRLanguageCode language, 
+PRErrorCallbackLookupFn(PRErrorCode code, PRLanguageCode language, 
 		   const struct PRErrorTable *table,
-		   struct PRErrorPluginRock *rock,
-		   struct PRErrorPluginTableRock *table_rock);
+		   struct PRErrorCallbackPrivate *cb_private,
+		   struct PRErrorCallbackTablePrivate *table_private);
 
 /*
- * PRErrorPluginNewtableFn --
+ * PRErrorCallbackNewtableFn --
  *
- *    A function PRErrorPluginNewtableFn type is a localization plugin
+ *    A function PRErrorCallbackNewtableFn type is a localization plugin
  *    callback which is called once with each error table registered
  *    with NSPR.  The callback is provided with the error table and
- *    the plugin rock.  The callback returns any table rock it wishes
- *    to associate with the error table.  Does not need to be thread
+ *    the plugin's private structure.  The callback returns any table private
+ *    data it wishes to associate with the error table.  Does not need to be thread
  *    safe.
  */
-typedef struct PRErrorPluginTableRock *
-PRErrorPluginNewtableFn(const struct PRErrorTable *table,
-			struct PRErrorPluginRock *rock);
+typedef struct PRErrorCallbackTablePrivate *
+PRErrorCallbackNewtableFn(const struct PRErrorTable *table,
+			struct PRErrorCallbackPrivate *cb_private);
 
 /**********************************************************************/
 /****************************** FUNCTIONS *****************************/
@@ -96,7 +102,9 @@ PRErrorPluginNewtableFn(const struct PRErrorTable *table,
 ** FUNCTION:    PR_ErrorInstallTable
 ** DESCRIPTION:
 **  Registers an error table with NSPR.  Must be done exactly once per
-**  table.
+**  table.  Memory pointed to by `table' must remain valid for the life
+**  of the process.
+**
 **  NOT THREAD SAFE!
 **  
 ***********************************************************************/
@@ -104,21 +112,23 @@ PR_EXTERN(PRErrorCode) PR_ErrorInstallTable(const struct PRErrorTable *table);
 
 
 /***********************************************************************
-** FUNCTION:    PR_ErrorInstallPlugin
+** FUNCTION:    PR_ErrorInstallCallback
 ** DESCRIPTION:
 **  Registers an error localization plugin with NSPR.  May be called
 **  at most one time.  `languages' contains the language codes supported
 **  by this plugin.  Languages 0 and 1 must be "i-default" and "en"
 **  respectively.  `lookup' and `newtable' contain pointers to
-**  the plugin callback functions.  `rock' contains any information
+**  the plugin callback functions.  `cb_private' contains any information
 **  private to the plugin functions.
+**
 **  NOT THREAD SAFE!
+**
 ***********************************************************************/
-PR_EXTERN(void) PR_ErrorInstallPlugin(const char * const * languages,
-			      PRErrorPluginLookupFn *lookup, 
-			      PRErrorPluginNewtableFn *newtable,
-			      struct PRErrorPluginRock *rock);
+PR_EXTERN(void) PR_ErrorInstallCallback(const char * const * languages,
+			      PRErrorCallbackLookupFn *lookup, 
+			      PRErrorCallbackNewtableFn *newtable,
+			      struct PRErrorCallbackPrivate *cb_private);
 
 PR_END_EXTERN_C
 
-#endif /* prerrorplugin_h___ */
+#endif /* prerrorinstall_h___ */

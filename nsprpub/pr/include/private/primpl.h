@@ -1482,6 +1482,7 @@ extern void _PR_InitAtomic(void);
 extern void _PR_InitCPUs(void);
 extern void _PR_InitDtoa(void);
 extern void _PR_InitMW(void);
+extern void _PR_InitRWLocks(void);
 extern void _PR_NotifyCondVar(PRCondVar *cvar, PRThread *me);
 extern void _PR_CleanupThread(PRThread *thread);
 extern void _PR_CleanupTPD(void);

@@ -24,6 +24,10 @@
 #include <string.h>
 #ifdef WIN32
 #include <windows.h>
+#include <process.h>
+#endif
+#if defined(_PR_PTHREADS)
+#include <pthread.h>
 #endif
 
 #if defined(XP_OS2)
@@ -61,7 +65,8 @@ int thread_count;
 #define	BUF_DATA_SIZE	256 * 1024
 #endif
 
-#define NUM_RDWR_THREADS 10
+#define NUM_RDWR_THREADS	10
+#define NUM_DIRTEST_THREADS	4
 #define CHUNK_SIZE 512
 
 typedef struct buffer {
@@ -90,6 +95,68 @@ char *HIDDEN_FILE_NAME = ".hidden_pr_testfile";
 #endif
 buffer *in_buf, *out_buf;
 char pathname[256], renamename[256];
+#define TMPDIR_LEN	64
+char testdir[TMPDIR_LEN];
+static PRInt32 PR_CALLBACK DirTest(void *argunused);
+PRInt32 dirtest_failed = 0;
+
+PRThread* create_new_thread(PRThreadType type,
+							void (*start)(void *arg),
+							void *arg,
+							PRThreadPriority priority,
+							PRThreadScope scope,
+							PRThreadState state,
+							PRUint32 stackSize, PRInt32 index)
+{
+PRInt32 native_thread = 0;
+
+	PR_ASSERT(state == PR_UNJOINABLE_THREAD);
+#if defined(_PR_PTHREADS) || defined(WINNT)
+	switch(index %  4) {
+		case 0:
+			scope = (PR_LOCAL_THREAD);
+			break;
+		case 1:
+			scope = (PR_GLOBAL_THREAD);
+			break;
+		case 2:
+			scope = (PR_GLOBAL_BOUND_THREAD);
+			break;
+		case 3:
+			native_thread = 1;
+			break;
+		default:
+			PR_ASSERT(!"Invalid scope");
+			break;
+	}
+	if (native_thread) {
+#ifdef _PR_PTHREADS
+		pthread_t tid;
+		printf("creating pthread\n");
+		if (!pthread_create(&tid, NULL, start, arg))
+			return((PRThread *) tid);
+		else
+			return (NULL);
+#else
+		HANDLE thandle;
+		
+		printf("creating Windows thread\n");
+		thandle = (HANDLE) _beginthreadex(
+						NULL,
+						stackSize,
+						(unsigned (__stdcall *)(void *))start,
+						arg,
+						0,
+						NULL);		
+		return((PRThread *) thandle);
+#endif
+	} else {
+		return(PR_CreateThread(type,start,arg,priority,scope,state,stackSize));
+	}
+#else
+	return(PR_CreateThread(type,start,arg,priority,scope,state,stackSize));
+#endif
+}
 
 static void PR_CALLBACK File_Write(void *arg)
 {
@@ -164,10 +231,10 @@ int offset, len;
 }
 
 
-static void Misc_File_Tests(char *pathname)
+static PRInt32 Misc_File_Tests(char *pathname)
 {
 PRFileDesc *fd_file;
-int len;
+int len, rv = 0;
 PRFileInfo file_info, file_info1;
 char tmpname[1024];
 
@@ -180,40 +247,47 @@ char tmpname[1024];
 
 	if (fd_file == NULL) {
 		printf("testfile failed to create/open file %s\n",pathname);
-		return;
+		return -1;
 	}
 	if (PR_GetOpenFileInfo(fd_file, &file_info) < 0) {
 		printf("testfile PR_GetFileInfo failed on file %s\n",pathname);
+		rv = -1;
 		goto cleanup;
 	}
 	if (PR_Access(pathname, PR_ACCESS_EXISTS) != 0) {
 		printf("testfile PR_Access failed on file %s\n",pathname);
+		rv = -1;
 		goto cleanup;
 	}
 	if (PR_Access(pathname, PR_ACCESS_WRITE_OK) != 0) {
 		printf("testfile PR_Access failed on file %s\n",pathname);
+		rv = -1;
 		goto cleanup;
 	}
 	if (PR_Access(pathname, PR_ACCESS_READ_OK) != 0) {
 		printf("testfile PR_Access failed on file %s\n",pathname);
+		rv = -1;
 		goto cleanup;
 	}
 
 
 	if (PR_GetFileInfo(pathname, &file_info) < 0) {
 		printf("testfile PR_GetFileInfo failed on file %s\n",pathname);
-		return;
+		rv = -1;
+		goto cleanup;
 	}
 	if (file_info.type != PR_FILE_FILE) {
-		printf(
-		"testfile PR_GetFileInfo returned incorrect type for file %s\n",
+	printf(
+	"testfile: Error - PR_GetFileInfo returned incorrect type for file %s\n",
 		pathname);
+		rv = -1;
 		goto cleanup;
 	}
 	if (file_info.size != 0) {
 		printf(
 		"testfile PR_GetFileInfo returned incorrect size (%d should be 0) for file %s\n",
 		file_info.size, pathname);
+		rv = -1;
 		goto cleanup;
 	}
 	file_info1 = file_info;
@@ -221,16 +295,19 @@ char tmpname[1024];
 	len = PR_Available(fd_file);
 	if (len < 0) {
 		printf("testfile PR_Available failed on file %s\n",pathname);
+		rv = -1;
 		goto cleanup;
 	} else if (len != 0) {
 		printf(
 		"testfile PR_Available failed: expected/returned = %d/%d bytes\n",
 			0, len);
+		rv = -1;
 		goto cleanup;
 	}
 	len = PR_Write(fd_file, out_buf->data, CHUNK_SIZE);
 	if (len < 0) {
 		printf("testfile failed to write to file %s\n",pathname);
+		rv = -1;
 		goto cleanup;
 	}
 	if (PR_GetOpenFileInfo(fd_file, &file_info) < 0) {
@@ -241,29 +318,36 @@ char tmpname[1024];
 		printf(
 		"testfile PR_GetFileInfo returned incorrect size (%d should be %d) for file %s\n",
 		file_info.size, CHUNK_SIZE, pathname);
+		rv = -1;
 		goto cleanup;
 	}
 	if (LL_NE(file_info.creationTime , file_info1.creationTime)) {
 		printf(
 		"testfile PR_GetFileInfo returned incorrect creation time: %s\n",
 		pathname);
+		printf("ft = %lld, ft1 = %lld\n",file_info.creationTime,
+									file_info1.creationTime);
+		rv = -1;
 		goto cleanup;
 	}
 	if (LL_CMP(file_info.modifyTime, > , file_info1.modifyTime)) {
 		printf(
 		"testfile PR_GetFileInfo returned incorrect modify time: %s\n",
 		pathname);
+		rv = -1;
 		goto cleanup;
 	}
 
 	len = PR_Available(fd_file);
 	if (len < 0) {
 		printf("testfile PR_Available failed on file %s\n",pathname);
+		rv = -1;
 		goto cleanup;
 	} else if (len != 0) {
 		printf(
 		"testfile PR_Available failed: expected/returned = %d/%d bytes\n",
 			0, len);
+		rv = -1;
 		goto cleanup;
 	}
 	
@@ -271,11 +355,13 @@ char tmpname[1024];
 	len = PR_Available(fd_file);
 	if (len < 0) {
 		printf("testfile PR_Available failed on file %s\n",pathname);
-		return;
+		rv = -1;
+		goto cleanup;
 	} else if (len != CHUNK_SIZE) {
 		printf(
 		"testfile PR_Available failed: expected/returned = %d/%d bytes\n",
 			CHUNK_SIZE, len);
+		rv = -1;
 		goto cleanup;
 	}
     PR_Close(fd_file);
@@ -284,6 +370,7 @@ char tmpname[1024];
 	strcat(tmpname,".RENAMED");
 	if (PR_FAILURE == PR_Rename(pathname, tmpname)) {
 		printf("testfile failed to rename file %s\n",pathname);
+		rv = -1;
 		goto cleanup;
 	}
 
@@ -294,19 +381,24 @@ char tmpname[1024];
 		printf("testfile renamed to existing file %s\n",pathname);
 	}
 
-	if ((PR_Delete(tmpname)) < 0)
+	if ((PR_Delete(tmpname)) < 0) {
 		printf("testfile failed to unlink file %s\n",tmpname);
+		rv = -1;
+	}
 
 cleanup:
-	if ((PR_Delete(pathname)) < 0)
+	if ((PR_Delete(pathname)) < 0) {
 		printf("testfile failed to unlink file %s\n",pathname);
+		rv = -1;
+	}
+	return rv;
 }
 
 
 static PRInt32 PR_CALLBACK FileTest(void)
 {
 PRDir *fd_dir;
-int i, offset, len;
+int i, offset, len, rv = 0;
 PRThread *t;
 PRThreadScope scope;
 File_Rdwr_Param *fparamp;
@@ -321,7 +413,8 @@ File_Rdwr_Param *fparamp;
 	fd_dir = PR_OpenDir(TEST_DIR);
 	if (fd_dir == NULL) {
 		printf("testfile failed to open dir %s\n",TEST_DIR);
-		return -1;
+		rv =  -1;
+		goto cleanup;	
 	}
 
     PR_CloseDir(fd_dir);
@@ -334,13 +427,15 @@ File_Rdwr_Param *fparamp;
 	if (in_buf == NULL) {
 		printf(
 		"testfile failed to alloc buffer struct\n");
-		return -1;
+		rv =  -1;
+		goto cleanup;	
 	}
 	out_buf = PR_NEW(buffer);
 	if (out_buf == NULL) {
 		printf(
 		"testfile failed to alloc buffer struct\n");
-		return -1;
+		rv =  -1;
+		goto cleanup;	
 	}
 
 	/*
@@ -354,27 +449,21 @@ File_Rdwr_Param *fparamp;
 		if (fparamp == NULL) {
 			printf(
 			"testfile failed to alloc File_Rdwr_Param struct\n");
-			return -1;
+			rv =  -1;
+			goto cleanup;	
 		}
 		fparamp->pathname = pathname;
 		fparamp->buf = out_buf->data + offset;
 		fparamp->offset = offset;
 		fparamp->len = len;
 		memset(fparamp->buf, i, len);
-		/*
-		 * Create LOCAL and GLOBAL Threads, alternately
-		 */
-		if (i % 1)
-			scope = PR_GLOBAL_THREAD;
-		else
-			scope = PR_LOCAL_THREAD;
 
-		t = PR_CreateThread(PR_USER_THREAD,
+		t = create_new_thread(PR_USER_THREAD,
 			      File_Write, (void *)fparamp, 
 			      PR_PRIORITY_NORMAL,
 			      scope,
 			      PR_UNJOINABLE_THREAD,
-			      0);
+			      0, i);
 		offset += len;
 	}
 	thread_count = i;
@@ -396,26 +485,20 @@ File_Rdwr_Param *fparamp;
 		if (fparamp == NULL) {
 			printf(
 			"testfile failed to alloc File_Rdwr_Param struct\n");
-			return -1;
+			rv =  -1;
+			goto cleanup;	
 		}
 		fparamp->pathname = pathname;
 		fparamp->buf = in_buf->data + offset;
 		fparamp->offset = offset;
 		fparamp->len = len;
-		/*
-		 * Create LOCAL and GLOBAL Threads, alternately
-		 */
-		if (i % 1)
-			scope = PR_LOCAL_THREAD;
-		else
-			scope = PR_GLOBAL_THREAD;
 
-		t = PR_CreateThread(PR_USER_THREAD,
+		t = create_new_thread(PR_USER_THREAD,
 			      File_Read, (void *)fparamp, 
 			      PR_PRIORITY_NORMAL,
 			      scope,
 			      PR_UNJOINABLE_THREAD,
-			      0);
+			      0, i);
 		offset += len;
 		if ((offset + len) > BUF_DATA_SIZE)
 			break;
@@ -430,27 +513,78 @@ File_Rdwr_Param *fparamp;
 
 	if (memcmp(in_buf->data, out_buf->data, offset) != 0) {
 		printf("File Test failed: file data corrupted\n");
+		rv =  -1;
+		goto cleanup;	
 	}
 
 	if ((PR_Delete(pathname)) < 0) {
 		printf("testfile failed to unlink file %s\n",pathname);
-		return -1;
+		rv =  -1;
+		goto cleanup;	
 	}
 
 	/*
 	 * Test PR_Available, PR_Seek, PR_GetFileInfo, PR_Rename, PR_Access
 	 */
-	Misc_File_Tests(pathname);
+	if (Misc_File_Tests(pathname) < 0) {
+		rv = -1;
+	}
 
+cleanup:
 	if ((PR_RmDir(TEST_DIR)) < 0) {
 		printf("testfile failed to rmdir %s\n", TEST_DIR);
+		rv = -1;
+	}
+	return rv;
+}
+
+struct dirtest_arg {
+	PRMonitor	*mon;
+	PRInt32		done;
+};
+
+static PRInt32 RunDirTest(void)
+{
+int i;
+PRThread *t;
+PRMonitor *mon;
+struct dirtest_arg thrarg;
+
+	mon = PR_NewMonitor();
+	if (!mon) {
+		printf("RunDirTest: Error - failed to create monitor\n");
+		dirtest_failed = 1;
 		return -1;
 	}
+	thrarg.mon = mon;
+
+	for (i = 0; i < NUM_DIRTEST_THREADS; i++) {
+
+		thrarg.done= 0;
+		t = create_new_thread(PR_USER_THREAD,
+			      DirTest, &thrarg, 
+			      PR_PRIORITY_NORMAL,
+			      PR_LOCAL_THREAD,
+			      PR_UNJOINABLE_THREAD,
+			      0, i);
+		if (!t) {
+			printf("RunDirTest: Error - failed to create thread\n");
+			dirtest_failed = 1;
+			return -1;
+		}
+		PR_EnterMonitor(mon);
+		while (!thrarg.done)
+			PR_Wait(mon, PR_INTERVAL_NO_TIMEOUT);
+		PR_ExitMonitor(mon);
+
+	}
+	PR_DestroyMonitor(mon);
 	return 0;
 }
 
-static PRInt32 PR_CALLBACK DirTest(void)
+static PRInt32 PR_CALLBACK DirTest(void *arg)
 {
+struct dirtest_arg *tinfo = (struct dirtest_arg *) arg;
 PRFileDesc *fd_file;
 PRDir *fd_dir;
 int i;
@@ -763,6 +897,10 @@ HANDLE hfile;
 			TEST_DIR, PR_GetError(), PR_GetOSError());
 		return -1;
 	}
+	PR_EnterMonitor(tinfo->mon);
+	tinfo->done = 1;
+	PR_Notify(tinfo->mon);
+	PR_ExitMonitor(tinfo->mon);
 
 	return 0;
 }
@@ -774,6 +912,9 @@ HANDLE hfile;
 
 int main(int argc, char **argv)
 {
+#ifdef WIN32
+	PRUint32 len;
+#endif
 #if defined(XP_UNIX) || defined(XP_OS2_EMX)
         int opt;
         extern char *optarg;
@@ -802,14 +943,25 @@ int main(int argc, char **argv)
 		printf("testfile: PR_NewMonitor failed\n");
 		exit(2);
 	}
+#ifdef WIN32
+	len = GetTempPath(TMPDIR_LEN, testdir);
+	if ((len > 0) && (len < (TMPDIR_LEN - 7))) {
+		/*
+		 * enough space for \prdir
+		 */
+		strcpy((testdir + len),"\prdir");
+		TEST_DIR = testdir;
+		printf("TEST_DIR = %s\n",TEST_DIR);
+	}
+	
+#endif
 
 	if (FileTest() < 0) {
 		printf("File Test failed\n");
 		exit(2);
 	}
 	printf("File Test passed\n");
-
-	if (DirTest() < 0) {
+	if ((RunDirTest() < 0) || dirtest_failed) {
 		printf("Dir Test failed\n");
 		exit(2);
 	}
