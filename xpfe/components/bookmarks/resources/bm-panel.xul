@@ -138,7 +138,7 @@
     <treehead>
       <treerow id="headRow">
         <treecell class="treecell-header sortDirectionIndicator treecell-header-sidebarpanel"
-                  label="Foopy"
+                  label="&tree.header.name.label;"
                   onclick="return TriStateColumnSort('Name');"
                   observes="Name" />
       </treerow>
