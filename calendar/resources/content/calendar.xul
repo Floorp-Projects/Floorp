@@ -164,6 +164,11 @@
   var confirmDeleteEvent = "&calendar.confirm.deleteevent;";
   var confirmDeleteUntitledEvent = "&calendar.confirm.deleteuntitledevent;";
   var defaultCalendarFileName = "&calendar.file.default.name;";
+  var unifinderAlldayLabel = "&calendar.unifinder.allday.label;";
+  var unifinderTitleLabel = "&calendar.unifinder.title.label;";
+  var unifinderStartLabel = "&calendar.unifinder.start.label;";
+  var unifinderEndLabel = "&calendar.unifinder.end.label;";
+  var unifinderDescriptionLabel = "&calendar.unifinder.description.label;";
 </script>
 
 <!-- Javascript includes -->

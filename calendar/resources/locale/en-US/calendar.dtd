@@ -190,6 +190,11 @@
 <!ENTITY calendar.unifinder.todayandfuture.label  "Hide Past Events" >
 <!ENTITY calendar.unifinder.todoitems.label       "Tasks" >
 <!ENTITY calendar.unifinder.hidecompletedtodos.label "Hide Completed Tasks">
+<!ENTITY calendar.unifinder.allday.label      "All day" >
+<!ENTITY calendar.unifinder.title.label      "Title: " >
+<!ENTITY calendar.unifinder.start.label      "Start: " >
+<!ENTITY calendar.unifinder.end.label      "End: " >
+<!ENTITY calendar.unifinder.description.label      "Description: " >
 
 <!ENTITY calendar.calendartab.label "Calendar">
 <!ENTITY calendar.listofcalendarstab.label "Calendars">

@@ -536,7 +536,7 @@ var treeView =
             var startDate = formatUnifinderEventDate( eventStartDate );
             if( calendarEvent.allDay )
             {
-               startText = "All day " + startDate;
+               startText = unifinderAlldayLabel + " " + startDate;
             }
             else
             {
@@ -553,7 +553,7 @@ var treeView =
             var endDate = formatUnifinderEventDate( eventEndDate );
             if( calendarEvent.allDay )
             {
-               endText = "All day " + endDate;
+               endText = unifinderAlldayLabel + " " + endDate;
             }
             else
             {
@@ -765,27 +765,27 @@ function getPreviewText( calendarEvent )
    if (calendarEvent.title)
    {
       var TitleHtml = document.createElement( "description" );
-      var TitleText = document.createTextNode( "Title: "+calendarEvent.title );
+      var TitleText = document.createTextNode( unifinderTitleLabel+calendarEvent.title );
       TitleHtml.appendChild( TitleText );
       HolderBox.appendChild( TitleHtml );
    }
 
    var DateHtml = document.createElement( "description" );
    var startDate = new Date( calendarEvent.start.getTime() );
-   var DateText = document.createTextNode( "Start: "+gCalendarWindow.dateFormater.getFormatedDate( startDate )+" "+gCalendarWindow.dateFormater.getFormatedTime( startDate ) );
+   var DateText = document.createTextNode( unifinderStartLabel+gCalendarWindow.dateFormater.getFormatedDate( startDate )+" "+gCalendarWindow.dateFormater.getFormatedTime( startDate ) );
    DateHtml.appendChild( DateText );
    HolderBox.appendChild( DateHtml );
 
    DateHtml = document.createElement( "description" );
    var endDate = new Date( calendarEvent.end.getTime() );
-   DateText = document.createTextNode( "End: "+gCalendarWindow.dateFormater.getFormatedDate( endDate )+" "+gCalendarWindow.dateFormater.getFormatedTime( endDate ) );
+   DateText = document.createTextNode( unifinderEndLabel+gCalendarWindow.dateFormater.getFormatedDate( endDate )+" "+gCalendarWindow.dateFormater.getFormatedTime( endDate ) );
    DateHtml.appendChild( DateText );
    HolderBox.appendChild( DateHtml );
 
    if (calendarEvent.description)
    {
       var DescriptionHtml = document.createElement( "description" );
-      var DescriptionText = document.createTextNode( "Description: "+calendarEvent.description );
+      var DescriptionText = document.createTextNode( unifinderDescriptionLabel+calendarEvent.description );
       DescriptionHtml.appendChild( DescriptionText );
       HolderBox.appendChild( DescriptionHtml );
    }
