@@ -8041,8 +8041,10 @@ FindNextAnonymousSibling(nsIPresShell* aPresShell,
 }
 
 #define UNSET_DISPLAY 255
-// if the sibling is a col group, col or (row group, caption), then aContent 
-// must be the same type, otherwise aContent may get the wrong parent.
+// This gets called to see if the frames corresponding to aSiblingDisplay and aDisplay
+// should be siblings in the frame tree. Although (1) rows and cols, (2) row groups 
+// and col groups, and (3) row groups and captions are siblings from a content perspective,
+// they are not considered siblings in the frame tree.
 PRBool
 nsCSSFrameConstructor::IsValidSibling(nsIPresShell&          aPresShell,
                                       const nsIFrame&        aSibling,
@@ -8082,6 +8084,13 @@ nsCSSFrameConstructor::IsValidSibling(nsIPresShell&          aPresShell,
              (NS_STYLE_DISPLAY_TABLE_CAPTION      == aDisplay);
     }
   }
+  else if (NS_STYLE_DISPLAY_TABLE_CAPTION == aSiblingDisplay) {
+    // Nothing can be a sibling of a caption since there can only be one caption.
+    // But this check is necessary since a row group and caption are siblings
+    // from a content perspective (they share the table content as parent)
+    return PR_FALSE;
+  }
+
   return PR_TRUE;
 }
 
