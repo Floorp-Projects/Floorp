@@ -2414,10 +2414,14 @@ AC_SUBST(COMPILER_DEPEND)
 AC_SUBST(MDDEPDIR)
 
 dnl Make pedantic a flag for now since the builds currently choke on it.
-MOZ_ARG_ENABLE_BOOL(pedantic,
-[  --enable-pedantic       Issue all warnings demanded by strict ANSI C ],
-  [ _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -pedantic"
-    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -pedantic" ])
+_PEDANTIC=1
+MOZ_ARG_DISABLE_BOOL(pedantic,
+[  --disable-pedantic      Issue all warnings demanded by strict ANSI C ],
+  _PEDANTIC= )
+if test "$_PEDANTIC"; then
+  _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -pedantic"
+  _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -pedantic"
+fi
 
 dnl pass -Wno-long-long to the compiler
 MOZ_ARG_ENABLE_BOOL(ignore-no-long-long-warning,
