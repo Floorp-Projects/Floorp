@@ -224,6 +224,14 @@ nsEventQueueImpl::HandleEvent(PLEvent* aEvent)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsEventQueueImpl::WaitForEvent()
+{
+    PL_WaitForEvent(mEventQueue);
+    CheckForDeactivation();
+    return NS_OK;
+}
+
 NS_IMETHODIMP_(PRInt32) 
 nsEventQueueImpl::GetEventQueueSelectFD() 
 {
