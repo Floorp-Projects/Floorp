@@ -109,34 +109,45 @@ EditTxn::SplitNode(nsIDOMNode * aNode,
                    nsIDOMNode*  aNewNode,
                    nsIDOMNode*  aParent)
 {
-  nsCOMPtr<nsIDOMNode> resultNode;
-  nsresult result = aParent->InsertBefore(aNewNode, aNode, getter_AddRefs(resultNode));
-  if (NS_SUCCEEDED(result))
+  nsresult result;
+  NS_ASSERTION(((nsnull!=aNode) &&
+                (nsnull!=aNewNode) &&
+                (nsnull!=aParent)),
+                "null arg");
+  if ((nsnull!=aNode) &&
+      (nsnull!=aNewNode) &&
+      (nsnull!=aParent))
   {
-    // split the children between the 2 nodes
-    // at this point, nNode has all the children
-    if (0<=aOffset) // don't bother unless we're going to move at least one child
+    nsCOMPtr<nsIDOMNode> resultNode;
+    result = aParent->InsertBefore(aNewNode, aNode, getter_AddRefs(resultNode));
+    if (NS_SUCCEEDED(result))
     {
-      nsCOMPtr<nsIDOMNodeList> childNodes;
-      result = aParent->GetChildNodes(getter_AddRefs(childNodes));
-      if ((NS_SUCCEEDED(result)) && (childNodes))
+      // split the children between the 2 nodes
+      // at this point, nNode has all the children
+      if (0<=aOffset) // don't bother unless we're going to move at least one child
       {
-        PRInt32 i=0;
-        for ( ; ((NS_SUCCEEDED(result)) && (i<aOffset)); i++)
+        nsCOMPtr<nsIDOMNodeList> childNodes;
+        result = aParent->GetChildNodes(getter_AddRefs(childNodes));
+        if ((NS_SUCCEEDED(result)) && (childNodes))
         {
-          nsCOMPtr<nsIDOMNode> childNode;
-          result = childNodes->Item(i, getter_AddRefs(childNode));
-          if ((NS_SUCCEEDED(result)) && (childNode))
+          PRInt32 i=0;
+          for ( ; ((NS_SUCCEEDED(result)) && (i<aOffset)); i++)
           {
-            result = aNode->RemoveChild(childNode, getter_AddRefs(resultNode));
-            if (NS_SUCCEEDED(result))
+            nsCOMPtr<nsIDOMNode> childNode;
+            result = childNodes->Item(i, getter_AddRefs(childNode));
+            if ((NS_SUCCEEDED(result)) && (childNode))
             {
-              result = aNewNode->AppendChild(childNode, getter_AddRefs(resultNode));
+              result = aNode->RemoveChild(childNode, getter_AddRefs(resultNode));
+              if (NS_SUCCEEDED(result))
+              {
+                result = aNewNode->AppendChild(childNode, getter_AddRefs(resultNode));
+              }
             }
           }
-        }
-      }        
+        }        
+      }
     }
+    else result = NS_ERROR_NULL_POINTER;
   }
   return result;
 }
@@ -148,5 +159,51 @@ EditTxn::JoinNodes(nsIDOMNode * aNodeToKeep,
                    PRBool       aNodeToKeepIsFirst)
 {
   nsresult result;
+  NS_ASSERTION(((nsnull!=aNodeToKeep) &&
+                (nsnull!=aNodeToJoin) &&
+                (nsnull!=aParent)),
+                "null arg");
+  if ((nsnull!=aNodeToKeep) &&
+      (nsnull!=aNodeToJoin) &&
+      (nsnull!=aParent))
+  {
+    nsCOMPtr<nsIDOMNodeList> childNodes;
+    result = aNodeToJoin->GetChildNodes(getter_AddRefs(childNodes));
+    if ((NS_SUCCEEDED(result)) && (childNodes))
+    {
+      PRUint32 i;
+      PRUint32 childCount=0;
+      childNodes->GetLength(&childCount);
+      nsCOMPtr<nsIDOMNode> firstNode; //only used if aNodeToKeepIsFirst is false
+      if (PR_FALSE==aNodeToKeepIsFirst)
+      { // remember the first child in aNodeToKeep, we'll insert all the children of aNodeToJoin in front of it
+        result = aNodeToKeep->GetFirstChild(getter_AddRefs(firstNode));  
+        // GetFirstChild returns nsnull firstNode if aNodeToKeep has no children, that's ok.
+      }
+      nsCOMPtr<nsIDOMNode> resultNode;
+      for (i=0; ((NS_SUCCEEDED(result)) && (i<childCount)); i++)
+      {
+        nsCOMPtr<nsIDOMNode> childNode;
+        result = childNodes->Item(i, getter_AddRefs(childNode));
+        if ((NS_SUCCEEDED(result)) && (childNode))
+        {
+          if (PR_TRUE==aNodeToKeepIsFirst)
+          { // append children of aNodeToJoin
+            result = aNodeToKeep->AppendChild(childNode, getter_AddRefs(resultNode)); 
+          }
+          else
+          { // prepend children of aNodeToJoin
+            result = aNodeToKeep->InsertBefore(childNode, firstNode, getter_AddRefs(resultNode));
+          }
+        }
+      }
+      if (NS_SUCCEEDED(result))
+      { // delete the extra node
+        result = aParent->RemoveChild(aNodeToJoin, getter_AddRefs(resultNode));
+      }
+    }
+  }
+  else
+    result = NS_ERROR_NULL_POINTER;
   return result;
 }
