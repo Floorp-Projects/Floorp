@@ -27,19 +27,6 @@ include $(topsrcdir)/config/rules.mk
 EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/status.xul \
 	$(srcdir)/toolbar.xml \
-	$(srcdir)/contentframe.css \
-	$(srcdir)/contentframe.js \
-	$(srcdir)/contentframe.xul \
-	$(srcdir)/xul.css \
-	$(srcdir)/dialogs.css \
-	$(srcdir)/navigator.css \
-	$(srcdir)/navigator.xul \
-	$(srcdir)/navigator.js \
-	$(srcdir)/unknownContent.xul \
-	$(srcdir)/viewSource.xul \
-	$(srcdir)/viewsource.js \
-	$(srcdir)/openLocation.xul \
-	$(srcdir)/openLocation.js \
 	$(srcdir)/downloadProgress.xul \
 	$(srcdir)/downloadProgress.css \
 	$(srcdir)/navigator-shiny.css \
@@ -48,16 +35,6 @@ EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/navigator-test1.xul \
 	$(srcdir)/raindrops_light.gif \
 	$(srcdir)/skindemo.xul \
-	$(srcdir)/NetSupportUserPassword.xul \
-	$(srcdir)/NetSupportPrompt.xul \
-	$(srcdir)/NetSupportPassword.xul \
-	$(srcdir)/NetSupportAlert.xul \
-	$(srcdir)/NetSupportConfirm.xul \
-	$(srcdir)/NetSupportConfirmCheck.xul \
-	$(srcdir)/alertl.gif \
-	$(srcdir)/errorI.gif \
-	$(srcdir)/messagel.gif \
-	$(srcdir)/questionl.gif \
 	$(srcdir)/DumpDOM.js \
 	$(srcdir)/lessCols.gif \
 	$(srcdir)/lessCols_mo.gif \
@@ -74,7 +51,6 @@ EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/scrollThumb.gif \
 	$(srcdir)/scrollThumb_mo.gif \
 	$(srcdir)/scrollThumb_dis.gif \
-	$(srcdir)/tooltip.js \
 	$(NULL)
 
 install:: 
