@@ -11,13 +11,6 @@ endif
 
 DIRS	= $(SRCDIRS)
 
-all::
-	$(MAKE) export
-	$(MAKE) install
-
-install::
-	+$(LOOP_OVER_DIRS)
-
 include $(topsrcdir)/config/rules.mk
 
 # dummy target to allow platforms without a compiler-based depend (like GCC 

@@ -262,7 +262,7 @@ nsldapi_os_connect_with_to(LBER_SOCKET sockfd, struct sockaddr *saptr,
 #else /* NSLDAPI_AVOID_OS_SOCKETS */
 	int		n, error;
 	int		len;
-#ifdef _WINDOWS
+#if defined(_WINDOWS) || defined(XP_OS2)
 	int		nonblock = 1;
 	int		block = 0;
 #else
@@ -284,6 +284,8 @@ nsldapi_os_connect_with_to(LBER_SOCKET sockfd, struct sockaddr *saptr,
 
 #ifdef _WINDOWS
 	ioctlsocket(sockfd, FIONBIO, &nonblock);
+#elif defined(XP_OS2)
+  ioctl( sockfd, FIONBIO, &nonblock, sizeof(nonblock) );
 #else
 	flags = fcntl(sockfd, F_GETFL, 0);
 	fcntl(sockfd, F_SETFL, flags | O_NONBLOCK);
@@ -411,6 +413,8 @@ nsldapi_os_connect_with_to(LBER_SOCKET sockfd, struct sockaddr *saptr,
 done:
 #ifdef _WINDOWS
 	ioctlsocket(sockfd, FIONBIO, &block);
+#elif defined(XP_OS2)
+  ioctl( sockfd, FIONBIO, &nonblock, sizeof(block) );
 #else
 	fcntl(sockfd, F_SETFL, flags);
 #endif /* _WINDOWS */

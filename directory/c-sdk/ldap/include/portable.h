@@ -268,7 +268,7 @@ int strncasecmp(const char *, const char *, size_t);
 #define STRTOK( s1, s2, l )		strtok( s1, s2 )
 #elif defined(XP_BEOS)
 #define GETHOSTBYNAME( n, r, b, l, e )  gethostbyname( n )
-#define CTIME( c, b, l )                ctime_r( c, b )
+#define NSLDAPI_CTIME( c, b, l )                ctime_r( c, b )
 #define STRTOK( s1, s2, l )		strtok_r( s1, s2, l )
 #define HAVE_STRTOK_R
 #else /* UNIX */
@@ -422,7 +422,6 @@ int select(int, fd_set *, fd_set *, fd_set *, struct timeval *);
 #define strcasecmp strcmpi
 #define strncasecmp strnicmp
 #define bzero(a, b) memset( a, 0, b )
-#include "dirent.h"
 #include <string.h> /*for strcmpi()*/
 #include <time.h>   /*for ctime()*/
 

@@ -64,7 +64,7 @@
 #if defined(AIX) || defined(BSDI) || defined(HPUX) || defined(LINUX) \
     || defined(SUNOS4) || defined(SCO) || defined(UNIXWARE) \
     || defined(RHAPSODY) || defined(NEXTSTEP) || defined(QNX) \
-    || defined(BEOS) || defined(VMS)
+    || defined(BEOS) || defined(VMS) || defined(DARWIN)
 #undef HAVE_LCHOWN
 #endif
 

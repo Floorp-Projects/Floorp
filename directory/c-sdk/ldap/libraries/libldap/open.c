@@ -63,9 +63,19 @@ struct ldap                     nsldapi_ld_defaults;
 struct ldap_memalloc_fns        nsldapi_memalloc_fns = { 0, 0, 0, 0 };
 int				nsldapi_initialized = 0;
 
-#ifndef macintosh
-#ifndef _WINDOWS
+#ifdef USE_PTHREADS
 #include <pthread.h>
+#ifdef VMS
+/*
+** pthread_self() is not a routine on OpenVMS; it's inline assembler code. 
+** Since we need a real address which we can stuff away into a table, we need 
+** to make sure that pthread_self maps to the real pthread_self routine (yes,
+** we do have one fortunately).
+*/
+#undef pthread_self
+#define pthread_self PTHREAD_SELF
+extern pthread_t  _PTHREAD_CALL_  pthread_self (void);
+#endif
 static pthread_key_t		nsldapi_key;
 
 struct nsldapi_ldap_error {
@@ -80,7 +90,7 @@ struct nsldapi_ldap_error {
 	char	*le_matched;
 	char	*le_errmsg;
 };
-#else /* use static tls */
+#elif defined (_WINDOWS) /* use static tls */
 __declspec ( thread ) int	nsldapi_gldaperrno;
 __declspec ( thread ) char	*nsldapi_gmatched = NULL;
 __declspec ( thread ) char	*nsldapi_gldaperror = NULL; 
@@ -238,7 +248,9 @@ set_ld_error( int LDErrno, char *  LDMatched, char *  LDError,
 	nsldapi_gldaperror  = LDError;
 }
 #endif /* USE_WINDOWS_TLS */
-#else /* IF ! _WINDOWS */
+#endif /* ! _WINDOWS */
+
+#ifdef USE_PTHREADS
 static void *
 pthread_mutex_alloc( void )
 {
@@ -314,8 +326,9 @@ get_errno( void )
 {
         return( errno );
 }
-#endif /* ! _WINDOWS */
+#endif /* use_pthreads */
 
+#if defined(USE_PTHREADS) || defined(_WINDOWS)
 static struct ldap_thread_fns
 	nsldapi_default_thread_fns = {
 		(void *(*)(void))pthread_mutex_alloc,
@@ -337,7 +350,7 @@ static struct ldap_extra_thread_fns
 		(void *(*)(void))pthread_self
 #endif /* _WINDOWS */
 		};
-#endif /* macintosh */
+#endif /* use_pthreads || _windows */
 
 void
 nsldapi_initialize_defaults( void )
@@ -347,7 +360,7 @@ nsldapi_initialize_defaults( void )
 		return;
 	}
 
-#if !defined(_WINDOWS) && !defined(macintosh)
+#ifdef USE_PTHREADS
         if ( pthread_key_create(&nsldapi_key, free ) != 0) {
                 perror("pthread_key_create");
         }
@@ -375,7 +388,7 @@ nsldapi_initialize_defaults( void )
         /* this was picked as it is the standard tcp timeout as well */
         nsldapi_ld_defaults.ld_connect_timeout = LDAP_X_IO_TIMEOUT_NO_TIMEOUT;
 
-#if !defined(macintosh)
+#if defined(USE_PTHREADS) || defined(_WINDOWS)
         /* load up default platform specific locking routines */
         if (ldap_set_option( NULL, LDAP_OPT_THREAD_FN_PTRS,
                 (void *)&nsldapi_default_thread_fns) != LDAP_SUCCESS) {
@@ -389,7 +402,7 @@ nsldapi_initialize_defaults( void )
                 return;
         }
 #endif /* _WINDOWS */
-#endif /* macintosh */
+#endif /* use_pthreads || _windows */
 }
 
 
@@ -497,7 +510,7 @@ ldap_init( const char *defhost, int defport )
 	    LDAPDebug( LDAP_DEBUG_ANY,
 		    "ldap_init: port %d is invalid (port numbers must range from 1 to %d)\n",
 		    defport, LDAP_PORT_MAX, 0 );
-#if !defined( macintosh ) && !defined( DOS )
+#if !defined( macintosh ) && !defined( DOS ) && !defined( BEOS )
 	    errno = EINVAL;
 #endif
 	    return( NULL );

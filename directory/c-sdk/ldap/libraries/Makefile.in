@@ -32,14 +32,9 @@ ifdef USE_NSS
 DIRS		+= libssldap
 endif
 
-ifeq ($(OS_ARCH),WINNT)
-DIRS		+= libutil
-endif
-
-all:: export install
-
-install::
-	+$(LOOP_OVER_DIRS)
+# ifeq ($(OS_ARCH),WINNT)
+# DIRS		+= libutil
+# endif
 
 include $(topsrcdir)/config/rules.mk
 

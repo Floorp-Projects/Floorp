@@ -522,6 +522,7 @@ dnl Default platform specific options
 dnl ========================================================
 OBJ_SUFFIX=o
 LIB_SUFFIX=a
+LIB_PREFIX=lib
 DLL_SUFFIX=so
 ASM_SUFFIX=s
 MKSHLIB='$(LD) $(DSO_LDOPTS) -o $@'
@@ -833,7 +834,7 @@ case "$target" in
         AC_DEFINE(_PR_STAT_HAS_ST_ATIMESPEC)
         MKSHLIB='$(CC) -o $@ $(DSO_LDOPTS)'
         DSO_CFLAGS=-fPIC
-        DSO_LDOPTS='-shared -Wl,-soname,$(@:$(OBJDIR)/%.so=%.so)'
+        DSO_LDOPTS='-shared -soname $(@:$(OBJDIR)/%.so=%.so)'
         STRIP="$STRIP -d"
         case "$target_os" in
         bsdi4.2*)
@@ -1034,7 +1035,8 @@ case "$target" in
     AC_DEFINE(HAVE_FCNTL_FILE_LOCKING)
     PR_MD_CSRCS=irix.c
     PR_MD_ASFILES=os_Irix.s
-    MKSHLIB='$(LD) $(DSO_LDOPTS) -rdata_shared -shared -soname $(notdir $@) -o $@'
+    DSO_LDOPTS='-rdata_shared -shared'
+    MKSHLIB='$(LD) $(DSO_LDOPTS) -soname $(notdir $@) -o $@'
     STRIP="$STRIP -f"
     RESOLVE_LINK_SYMBOLS=1
     if test -n "$USE_64"; then
@@ -1088,7 +1090,7 @@ case "$target" in
 	    case "$target}" in
 	    *-irix6.*)
 	        CFLAGS="$CFLAGS -multigot"
-	        DSO_LDOPTS="-no_unresolved"
+	        DSO_LDOPTS="$DSO_LDOPTS -no_unresolved"
 	        if test "$USE_N32"; then
 		        CFLAGS="$CFLAGS -n32 -woff 1209"
 		        DSO_LDOPTS="$DSO_LDOPTS -n32"
@@ -1205,6 +1207,7 @@ case "$target" in
         GARBAGE='$(OBJDIR)/vc20.pdb $(OBJDIR)/vc40.pdb'
 	    OBJ_SUFFIX=obj
 	    LIB_SUFFIX=lib
+	    LIB_PREFIX=
 	    DLL_SUFFIX=dll
         PROG_SUFFIX=.exe
         
@@ -1706,6 +1709,7 @@ mips-sony-newsos*)
     AC_DEFINE(_PR_GLOBAL_THREADS_ONLY)
     OBJ_SUFFIX=obj
     LIB_SUFFIX=lib
+    LIB_PREFIX=
     DLL_SUFFIX=dll
     ASM_SUFFIX=asm
     DLLTOOL=''
@@ -2256,6 +2260,7 @@ AC_SUBST(CPU_ARCH)
 
 AC_SUBST(OBJ_SUFFIX)
 AC_SUBST(LIB_SUFFIX)
+AC_SUBST(LIB_PREFIX)
 AC_SUBST(DLL_SUFFIX)
 AC_SUBST(ASM_SUFFIX)
 AC_SUBST(PROG_SUFFIX)

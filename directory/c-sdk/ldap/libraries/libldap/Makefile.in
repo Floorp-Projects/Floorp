@@ -91,14 +91,9 @@ OBJS		= $(addprefix $(OBJDIR_NAME)/, $(REALOBJS))
 DISTHDIR	= $(DIST)/public/ldap
 HDIR		= $(topsrcdir)/ldap/include
 
-ifeq ($(OS_ARCH), WINNT)
-LIBLDAP		= $(addprefix $(OBJDIR_NAME)/, $(LDAP_LIBNAME).$(LIB_SUFFIX))
-DLLLDAP		= $(addprefix $(OBJDIR_NAME)/, $(LDAP_LIBNAME).$(DLL_SUFFIX)) 
-else
-LIBLDAP		= $(addprefix $(OBJDIR_NAME)/, lib$(LDAP_LIBNAME).$(LIB_SUFFIX))
-DLLLDAP		= $(addprefix $(OBJDIR_NAME)/, lib$(LDAP_LIBNAME).$(DLL_SUFFIX))
+LIBLDAP		= $(addprefix $(OBJDIR_NAME)/, $(LIB_PREFIX)$(LDAP_LIBNAME).$(LIB_SUFFIX))
+DLLLDAP		= $(addprefix $(OBJDIR_NAME)/, $(LIB_PREFIX)$(LDAP_LIBNAME).$(DLL_SUFFIX))
 
-endif
 INSTALLDIR	= $(DIST)/$(OBJDIR_NAME)
 
 include $(topsrcdir)/config/rules.mk
@@ -106,6 +101,10 @@ include $(topsrcdir)/config/rules.mk
 LOCAL_INCLUDES  = -I$(PUBLIC)/nspr
 INCLUDES	+= -I$(DISTHDIR) -I$(HDIR) -I$(INSTALLDIR)/public
 DEFINES		+= $(DEFS) -UMOZILLA_CLIENT
+
+ifdef USE_PTHREADS
+DEFINES   += -DUSE_PTHREADS
+endif
 
 ifeq ($(OS_ARCH),WINNT)
 PLATFORMCFLAGS	= -DNEEDPROTOS
@@ -157,6 +156,10 @@ ifeq ($(OS_ARCH), SunOS)
 EXTRA_LIBS = -L$(dist_libdir) -l$(LBER_LIBNAME)
 endif
 
+ifeq ($(OS_ARCH), IRIX)
+EXTRA_LIBS = -L$(dist_libdir) -l$(LBER_LIBNAME) $(OS_LIBS) -lc
+endif
+
 ifeq ($(OS_ARCH), Linux)
 EXTRA_LIBS = -L$(dist_libdir) -l$(LBER_LIBNAME)
 endif
@@ -167,6 +170,12 @@ EXTRA_LIBS =wsock32.lib kernel32.lib user32.lib gdi32.lib winspool.lib \
             rpcrt4.lib uuid.lib odbc32.lib odbccp32.lib winmm.lib
 EXTRA_LIBS += $(dist_libdir)/$(LDIF_LIBNAME).lib
 EXTRA_LIBS += $(dist_libdir)/$(LBER_LIBNAME).lib
+endif
+
+ifeq ($(OS_ARCH),OS2)
+EXTRA_LIBS = $(dist_libdir)/$(LDIF_LIBNAME).lib
+EXTRA_LIBS += $(dist_libdir)/$(LBER_LIBNAME).lib
+EXTRA_LIBS += $(OS_LIBS)
 endif
 
 ifeq ($(OS_ARCH), OSF1)
@@ -181,7 +190,24 @@ endif
 
 ifeq ($(OS_ARCH), HP-UX)
 EXTRA_LIBS = -L$(dist_libdir) -l$(LBER_LIBNAME)
+ifdef USE_PTHREADS
 EXTRA_LIBS += -ldld -lm -lpthread
+else
+EXTRA_LIBS += -ldld -lm
+endif
+endif
+
+ifeq ($(OS_ARCH), Darwin)
+EXTRA_LIBS = -L$(dist_libdir) -l$(LBER_LIBNAME)
+endif
+
+ifeq ($(OS_ARCH), OpenVMS)
+EXTRA_LIBS = -L$(dist_libdir) -l$(LBER_LIBNAME) $(OS_LIBS)
+SHARED_LIBRARY_LIBS = $(dist_libdir)/lib$(LBER_LIBNAME).a
+endif
+
+ifeq ($(OS_ARCH), BeOS)
+EXTRA_LIBS = -L$(dist_libdir) -l$(LBER_LIBNAME) -lbe
 endif
 
 ###########################################################################
@@ -204,7 +230,7 @@ versiont.c:	Makefile.client Version.c
 	-e "s|%VERSION%|$${v}|" \
 	< Version.c > $@)
 
-all::    $(OBJDIR_NAME) $(LIBDIR) $(OBJS) $(LIBLDAP) $(DLLLDAP)
+export::    $(OBJDIR_NAME) $(LIBDIR) $(OBJS) $(LIBLDAP) $(DLLLDAP)
 
 ltest::	$(LIBLDAP) test.o
 		$(LINK_EXE) test.o
@@ -212,31 +238,56 @@ ltest::	$(LIBLDAP) test.o
 $(LIBDIR):
 	$(MKDIR) $(LIBDIR)
 
-$(LIBLDAP): $(OBJS) $(LIBDIR) $(LDAP_EXPORT_DEFS)
+ifeq ($(OS_ARCH),OS2)
+DEF_FILE = $(LDAP_LIBNAME).def
+$(DEF_FILE):
+	echo LIBRARY $(LDAP_LIBNAME) INITINSTANCE TERMINSTANCE > $@
+	echo PROTMODE >> $@
+	echo CODE    LOADONCALL MOVEABLE DISCARDABLE >> $@
+	echo DATA    PRELOAD MOVEABLE MULTIPLE NONSHARED >> $@
+	echo EXPORTS >> $@
+	$(FILTER) $(OBJS) >> $@
+endif
+
+$(LIBLDAP): $(OBJS) $(LIBDIR) $(LDAP_EXPORT_DEFS) $(DEF_FILE)
 	@echo ======= making $(LIBLDAP)
 ifdef SO_FILES_TO_REMOVE
 	-$(RM) $(SO_FILES_TO_REMOVE)
 endif
-ifneq (,$(filter AIX Linux HP-UX, $(OS_ARCH)))
+ifneq (,$(filter AIX Linux HP-UX Darwin BeOS, $(OS_ARCH)))
 	$(LINK_LIB) ../liblber/$(OBJDIR_NAME)/*.a
+else
+ifeq ($(OS_ARCH),OS2)
+# create import library for OS/2
+	rm -f $@
+	$(IMPLIB) $@ $(DEF_FILE)
 else
 	$(LINK_LIB) $(EXTRA_LIBS)
 endif
+endif
 
-
-$(DLLLDAP): $(OBJS) $(LIBDIR) $(LDAP_EXPORT_DEFS)
+$(DLLLDAP): $(OBJS) $(LIBDIR) $(LDAP_EXPORT_DEFS) $(DEF_FILE)
 	@echo ======= making $(DLLLDAP)
 ifdef SO_FILES_TO_REMOVE
 	-$(RM) $(SO_FILES_TO_REMOVE)
 endif
-	$(LINK_DLL) $(DSO_LDOPTS) $(LDAP_EXPORT_FLAGS) $(EXTRA_LIBS)
+ifeq ($(OS_ARCH), OpenVMS)
+	@touch no-such-file.vms; rm -f no-such-file.vms $(SUB_LOBJS)
+	@if test ! -f VMSuni.opt; then \
+	    echo "Creating universal symbol option file VMSuni.opt"; \
+	    for lib in $(SHARED_LIBRARY_LIBS); do $(AR_EXTRACT) $${lib}; done; \
+	    create_opt_uni $(OBJS) $(SUB_LOBJS); \
+	fi
+	@touch no-such-file.vms; rm -f no-such-file.vms $(SUB_LOBJS)
+endif
+	$(LINK_DLL) $(LDAP_EXPORT_FLAGS) $(EXTRA_LIBS) $(DEF_FILE)
 
 veryclean:: clean
 
 # the $(dist_bindir) line is for the mozilla client, which for reasons
 # unknown wants shared libraries in /bin also
 #
-install::	$(LIBLDAP) $(DLLLDAP)
+export::	$(LIBLDAP) $(DLLLDAP)
 ifdef MKSHLIB
 	$(INSTALL) -m 444 $(LIBLDAP) $(dist_libdir)
 	$(INSTALL) -m 444 $(DLLLDAP) $(dist_libdir)

@@ -372,21 +372,40 @@ else # WINNT
 #
 # UNIX link commands
 #
+ifeq ($(OS_ARCH),OS2)
+LINK_LIB        = $(AR) $(AR_FLAGS) $(OBJS) && $(RANLIB) $@
+LINK_DLL        = $(LD) $(OS_DLLFLAGS) $(DLLFLAGS) $(OBJS)
+
+else
+
 LINK_LIB        = $(RM) $@; $(AR) $(AR_FLAGS) $(OBJS); $(RANLIB) $@
 LINK_LIB2       = $(RM) $@; $(AR) $@ $(OBJS2); $(RANLIB) $@
 ifdef SONAMEFLAG_PREFIX
 LINK_DLL        = $(LD) $(DSO_LDOPTS) $(ALDFLAGS) $(DLL_LDFLAGS) $(DLL_EXPORT_FLAGS) \
                         -o $@ $(SONAMEFLAG_PREFIX)$(notdir $@) $(OBJS)
 else # SONAMEFLAG_PREFIX
-LINK_DLL        = $(LD) $(ALDFLAGS) $(DLL_LDFLAGS) $(DLL_EXPORT_FLAGS) \
+LINK_DLL        = $(LD) $(DSO_LDOPTS) $(ALDFLAGS) $(DLL_LDFLAGS) $(DLL_EXPORT_FLAGS) \
                         -o $@ $(OBJS)
 endif # SONAMEFLAG_PREFIX
+endif #!os2
 
 ifeq ($(OS_ARCH), OSF1)
 # The linker on OSF/1 gets confused if it finds an so_locations file
 # that doesn't meet its expectations, so we arrange to remove it before
 # linking.
 SO_FILES_TO_REMOVE=so_locations
+endif
+
+ifneq (,$(filter BeOS Darwin,$(OS_ARCH)))
+LINK_DLL	= $(MKSHLIB) $(OBJS)
+endif
+
+ifeq ($(OS_ARCH),OpenVMS)
+AR_EXTRACT = ar x
+AR_LIST = ar t
+SUB_LOBJS = $(shell for lib in $(SHARED_LIBRARY_LIBS); do $(AR_LIST) $${lib}; done;)
+LINK_DLL        = $(MKSHLIB) $(DSO_LDOPTS) $(ALDFLAGS) $(DLL_LDFLAGS) \
+		  $(DLL_EXPORT_FLAGS) -o $@ $(OBJS) VMSuni.opt
 endif
 
 ifeq ($(OS_ARCH), HP-UX)

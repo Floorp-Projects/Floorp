@@ -56,6 +56,10 @@
 #include <bstring.h>
 #endif /* IRIX */
 
+#ifdef XP_BEOS
+#define NSLDAPI_AVOID_OS_SOCKETS
+#endif
+
 #define NSLBERI_LBER_INT_FRIEND
 #ifdef macintosh
 #include "lber-int.h"

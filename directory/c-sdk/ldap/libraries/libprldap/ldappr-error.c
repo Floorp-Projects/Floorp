@@ -29,7 +29,6 @@
 
 #include "ldappr-int.h"
 
-
 void
 prldap_set_system_errno( int oserrno )
 {
@@ -149,6 +148,44 @@ struct prldap_errormap_entry {
 #define ETXTBSY         -1
 #endif /* macintosh */
 
+#ifdef XP_OS2
+#define ENOTSUP         -1
+#define EOVERFLOW       -1
+#define EDEADLOCK       -1
+#define EFAULT          SOCEFAULT
+#define EPIPE           SOCEPIPE
+#define EIO             (SOCBASEERR+5)
+#define EDEADLK         (SOCBASEERR+11)
+#define ENOTBLK         (SOCBASEERR+15)
+#define EBUSY           (SOCBASEERR+16)
+#define ENOTDIR         (SOCBASEERR+20)
+#define EISDIR          (SOCBASEERR+21)
+#define ENFILE          (SOCBASEERR+23)
+#define ETXTBSY         (SOCBASEERR+26)
+#define EFBIG           (SOCBASEERR+27)
+#define ESPIPE          (SOCBASEERR+29)
+#define EROFS           (SOCBASEERR+30)
+#endif
+
+#ifdef BEOS
+#define ENOTSUP         -1
+#define ENOTBLK         -1
+#define ETXTBSY         -1
+#endif
+
+#if defined(BSDI)
+#define ENOTSUP		-1
+#endif
+
+#if defined(OSF1) || defined(BSDI) || defined(VMS)
+#define EOVERFLOW       -1
+#endif
+
+#if defined(__hpux) || defined(_AIX) || defined(OSF1) || defined(DARWIN) || \
+  defined(BEOS) || defined(FREEBSD) || defined(BSDI) || defined(VMS)
+#define EDEADLOCK       -1
+#endif
+
 /* XXX: need to verify that the -1 entries are correct (no mapping) */
 static struct prldap_errormap_entry prldap_errormap[] = {
     {  PR_OUT_OF_MEMORY_ERROR, ENOMEM },
@@ -189,19 +226,11 @@ static struct prldap_errormap_entry prldap_errormap[] = {
     {  PR_OPERATION_NOT_SUPPORTED_ERROR, EOPNOTSUPP },
     {  PR_PROTOCOL_NOT_SUPPORTED_ERROR, EPROTONOSUPPORT },
     {  PR_REMOTE_FILE_ERROR, -1 },
-#if defined(OSF1)
-    {  PR_BUFFER_OVERFLOW_ERROR, -1 },
-#else
     {  PR_BUFFER_OVERFLOW_ERROR, EOVERFLOW },
-#endif /* OSF1 */
     {  PR_CONNECT_RESET_ERROR, ECONNRESET },
     {  PR_RANGE_ERROR, ERANGE },
     {  PR_DEADLOCK_ERROR, EDEADLK },
-#if defined(HPUX11) || defined(AIX4_3) || defined(OSF1)
-    {  PR_FILE_IS_LOCKED_ERROR, -1 },	/* XXX: correct mapping ? */
-#else
     {  PR_FILE_IS_LOCKED_ERROR, EDEADLOCK },	/* XXX: correct mapping ? */
-#endif /* HPUX11 */
     {  PR_FILE_TOO_BIG_ERROR, EFBIG },
     {  PR_NO_DEVICE_SPACE_ERROR, ENOSPC },
     {  PR_PIPE_ERROR, EPIPE },

@@ -6,32 +6,18 @@
 #
 # created 17 October 2001 by Mark Smith <mcs@netscape.com>
 
-@keywords = ();
-@values = ();
+use File::Basename;
+push @INC, dirname($0);
 
-$count = 0;
+require replace;
+
+%keywords = {};
+
 foreach $str (@ARGV) {
 	($key,$val) = split( "=", $str, 2 );
-	push (@keywords, $key);
-	push (@values, $val);
-	++$count;
+	$keywords{$key} = $val;
 }
 
-$first_line = 1;
+replace::GenerateHeader(*STDIN, *STDOUT, \%keywords);
 
-while(<STDIN>) {
-	$line = $_;
-	$count = 0;
-	foreach $str (@keywords) {
-		$line =~ s/{{$str}}/$values[$count]/g;
-		++$count;
-	}
-
-	if ( ! $first_line ) {
-		print $line;
-	} else {
-		$first_line = 0;
-	}
-}
-
-#exit 0;
+exit 0;

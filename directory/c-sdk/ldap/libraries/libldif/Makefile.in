@@ -34,11 +34,7 @@ OBJS		= $(addprefix $(OBJDIR_NAME)/, $(REALOBJS))
 
 HDIR		= $(topsrcdir)/ldap/include
 
-ifeq ($(OS_ARCH), WINNT)
-LIBLDIF		= $(addprefix $(OBJDIR_NAME)/, $(LDIF_LIBNAME).$(LIB_SUFFIX))
-else
-LIBLDIF		= $(addprefix $(OBJDIR_NAME)/, lib$(LDIF_LIBNAME).$(LIB_SUFFIX))
-endif
+LIBLDIF		= $(addprefix $(OBJDIR_NAME)/, $(LIB_PREFIX)$(LDIF_LIBNAME).$(LIB_SUFFIX))
 
 INSTALLDIR      = $(DIST)/$(OBJDIR_NAME)
 
@@ -63,7 +59,7 @@ versiont.c:	Makefile.client Version.c
 	-e "s|%VERSION%|$${v}|" \
 	< Version.c > $@)
 
-all::    $(OBJDEST) $(LIBDIR) $(OBJS) $(LIBLDIF)
+export::    $(OBJDEST) $(LIBDIR) $(OBJS) $(LIBLDIF)
 
 $(LIBDIR):
 	$(MKDIR) $(LIBDIR)
@@ -80,5 +76,5 @@ veryclean:: clean
 $(OBJDEST):
 	$(MKDIR) $(OBJDEST)
 
-install::	$(LIBLDIF)
+export::	$(LIBLDIF)
 	$(INSTALL) -m 444 $(LIBLDIF) $(dist_libdir)

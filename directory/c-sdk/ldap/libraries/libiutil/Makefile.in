@@ -42,12 +42,9 @@ OBJS		= $(addprefix $(IUTILOBJDEST)/, $(REALOBJS))
 DISTHDIR	= $(DIST)/public/ldap
 HDIR		= $(topsrcdir)/ldap/include
 
-ifeq ($(OS_ARCH), WINNT)
-LIBIUTIL	= $(addprefix $(IUTILOBJDEST)/, $(IUTIL_LIBNAME).$(LIB_SUFFIX))
-else
 LIBIUTIL	= $(addprefix $(IUTILOBJDEST)/, \
-		  lib$(IUTIL_LIBNAME).$(LIB_SUFFIX))
-endif
+		  $(LIB_PREFIX)$(IUTIL_LIBNAME).$(LIB_SUFFIX))
+
 INSTALLDIR      = $(DIST)/$(OBJDIR_NAME)
 
 include $(topsrcdir)/config/rules.mk
@@ -74,7 +71,7 @@ versiont.c:	Makefile.client Version.c
 	-e "s|%VERSION%|$${v}|" \
 	< Version.c > $@)
 
-all::    $(OBJDEST) $(LIBDIR) $(OBJS) $(LIBIUTIL)
+export::    $(OBJDEST) $(LIBDIR) $(OBJS) $(LIBIUTIL)
 
 $(LIBDIR):
 	$(MKDIR) $(LIBDIR)
@@ -91,5 +88,5 @@ veryclean:: clean
 $(OBJDEST):
 	$(MKDIR) $(OBJDEST)
 
-install::	$(LIBIUTIL)
+export::	$(LIBIUTIL)
 	$(INSTALL) -m 444 $(LIBIUTIL) $(dist_libdir)
