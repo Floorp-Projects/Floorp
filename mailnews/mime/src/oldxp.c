@@ -28,7 +28,9 @@
 #endif
 
 /* RICHIE - THIS HACK MUST GO!!! - INCLUDING FILE TO TRY TO KEEP DIRECTORY CLEAN */
+#if defined(XP_WIN) || defined (XP_UNIX)
 #include "../../../lib/xp/xp_time.c"
+#endif
 
 PUBLIC void * 
 FE_SetTimeout(TimeoutCallbackFunction func, void * closure, uint32 msecs)

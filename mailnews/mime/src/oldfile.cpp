@@ -22,7 +22,9 @@
 // For xp to ns file translation
 #include "nsVoidArray.h"
 #ifndef XP_UNIX
-#include "direct.h"
+	#ifndef XP_MAC
+	#include "direct.h"
+	#endif
 #endif
 
 #include "nsIComponentManager.h" 
