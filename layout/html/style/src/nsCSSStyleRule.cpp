@@ -400,10 +400,10 @@ PRInt32 nsCSSSelector::CalcWeight(void) const
 
 // -- CSSImportantRule -------------------------------
 
-static nscoord CalcLength(const nsCSSValue& aValue, const nsStyleFont* aFont, 
+static nscoord CalcLength(const nsCSSValue& aValue, const nsFont& aFont, 
                           nsIPresContext* aPresContext);
 static PRBool SetCoord(const nsCSSValue& aValue, nsStyleCoord& aCoord, 
-                       PRInt32 aMask, const nsStyleFont* aFont, 
+                       PRInt32 aMask, const nsFont& aFont, 
                        nsIPresContext* aPresContext);
 
 static void MapDeclarationFontInto(nsICSSDeclaration* aDeclaration, 
@@ -979,7 +979,7 @@ CSSStyleRuleImpl::SetStyleSheet(nsICSSStyleSheet* aSheet)
 }
 
 nscoord CalcLength(const nsCSSValue& aValue,
-                   const nsStyleFont* aFont, 
+                   const nsFont& aFont, 
                    nsIPresContext* aPresContext)
 {
   NS_ASSERTION(aValue.IsLengthUnit(), "not a length unit");
@@ -989,13 +989,13 @@ nscoord CalcLength(const nsCSSValue& aValue,
   nsCSSUnit unit = aValue.GetUnit();
   switch (unit) {
     case eCSSUnit_EM:
-      return NSToCoordRound(aValue.GetFloatValue() * (float)aFont->mFont.size);
-      // XXX scale against font metrics height instead
+      return NSToCoordRound(aValue.GetFloatValue() * (float)aFont.size);
+      // XXX scale against font metrics height instead?
     case eCSSUnit_EN:
-      return NSToCoordRound((aValue.GetFloatValue() * (float)aFont->mFont.size) / 2.0f);
+      return NSToCoordRound((aValue.GetFloatValue() * (float)aFont.size) / 2.0f);
     case eCSSUnit_XHeight: {
       nsIFontMetrics* fm;
-      aPresContext->GetMetricsFor(aFont->mFont, &fm);
+      aPresContext->GetMetricsFor(aFont, &fm);
       NS_ASSERTION(nsnull != fm, "can't get font metrics");
       nscoord xHeight;
       if (nsnull != fm) {
@@ -1003,13 +1003,13 @@ nscoord CalcLength(const nsCSSValue& aValue,
         NS_RELEASE(fm);
       }
       else {
-        xHeight = ((aFont->mFont.size * 2) / 3);
+        xHeight = ((aFont.size * 2) / 3);
       }
       return NSToCoordRound(aValue.GetFloatValue() * (float)xHeight);
     }
     case eCSSUnit_CapHeight: {
       NS_NOTYETIMPLEMENTED("cap height unit");
-      nscoord capHeight = ((aFont->mFont.size / 3) * 2); // XXX HACK!
+      nscoord capHeight = ((aFont.size / 3) * 2); // XXX HACK!
       return NSToCoordRound(aValue.GetFloatValue() * (float)capHeight);
     }
     case eCSSUnit_Pixel:
@@ -1045,7 +1045,7 @@ nscoord CalcLength(const nsCSSValue& aValue,
 #define SETCOORD_IAH    (SETCOORD_INTEGER | SETCOORD_AH)
 
 static PRBool SetCoord(const nsCSSValue& aValue, nsStyleCoord& aCoord, 
-                       PRInt32 aMask, const nsStyleFont* aFont, 
+                       PRInt32 aMask, const nsFont& aFont, 
                        nsIPresContext* aPresContext)
 {
   PRBool  result = PR_TRUE;
@@ -1194,8 +1194,8 @@ void MapDeclarationFontInto(nsICSSDeclaration* aDeclaration,
             font->mFont.name = familyList;
             nsAutoString  face;
             if (NS_OK == dc->FirstExistingFont(font->mFont, face)) {
-              if (face.EqualsIgnoreCase("monospace")) {
-                font->mFont = font->mFixedFont;
+              if (face.EqualsIgnoreCase("-moz-fixed")) {
+                font->mFlags |= NS_STYLE_FONT_USE_FIXED;
               }
               else {
                 font->mFixedFont.name = familyList;
@@ -1301,8 +1301,8 @@ void MapDeclarationFontInto(nsICSSDeclaration* aDeclaration,
           font->mFlags &= ~NS_STYLE_FONT_SIZE_EXPLICIT;
         }
         else if (ourFont->mSize.IsLengthUnit()) {
-          font->mFont.size = CalcLength(ourFont->mSize, parentFont, aPresContext);
-          font->mFixedFont.size = CalcLength(ourFont->mSize, parentFont, aPresContext);
+          font->mFont.size = CalcLength(ourFont->mSize, parentFont->mFont, aPresContext);
+          font->mFixedFont.size = CalcLength(ourFont->mSize, parentFont->mFixedFont, aPresContext);
           font->mFlags |= NS_STYLE_FONT_SIZE_EXPLICIT;
         }
         else if (eCSSUnit_Percent == ourFont->mSize.GetUnit()) {
@@ -1346,10 +1346,10 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
 
         // letter-spacing: normal, length, inherit
         SetCoord(ourText->mLetterSpacing, text->mLetterSpacing, SETCOORD_LH | SETCOORD_NORMAL, 
-                 font, aPresContext);
+                 font->mFont, aPresContext);
 
         // line-height: normal, number, length, percent, inherit
-        SetCoord(ourText->mLineHeight, text->mLineHeight, SETCOORD_LPFHN, font, aPresContext);
+        SetCoord(ourText->mLineHeight, text->mLineHeight, SETCOORD_LPFHN, font->mFont, aPresContext);
 
         // text-align: enum, string, inherit
         if (eCSSUnit_Enumerated == ourText->mTextAlign.GetUnit()) {
@@ -1363,7 +1363,7 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
         }
 
         // text-indent: length, percent, inherit
-        SetCoord(ourText->mTextIndent, text->mTextIndent, SETCOORD_LPH, font, aPresContext);
+        SetCoord(ourText->mTextIndent, text->mTextIndent, SETCOORD_LPH, font->mFont, aPresContext);
 
         // text-decoration: none, enum (bit field), inherit
         if (eCSSUnit_Enumerated == ourText->mDecoration.GetUnit()) {
@@ -1396,7 +1396,7 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
 
         // vertical-align: enum, length, percent, inherit
         if (! SetCoord(ourText->mVerticalAlign, text->mVerticalAlign, SETCOORD_LP | SETCOORD_ENUMERATED,
-                 font, aPresContext)) {
+                       font->mFont, aPresContext)) {
           // XXX this really needs to pass the inherit value along...
           if (eCSSUnit_Inherit == ourText->mVerticalAlign.GetUnit()) {
             text->mVerticalAlign = parentText->mVerticalAlign;
@@ -1416,7 +1416,7 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
 
         // word-spacing: normal, length, inherit
         SetCoord(ourText->mWordSpacing, text->mWordSpacing, SETCOORD_LH | SETCOORD_NORMAL,
-                 font, aPresContext);
+                 font->mFont, aPresContext);
       }
     }
 
@@ -1507,7 +1507,7 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
               display->mClipFlags |= NS_STYLE_CLIP_TOP_AUTO;
             } 
             else if (ourDisplay->mClip->mTop.IsLengthUnit()) {
-              display->mClip.top = CalcLength(ourDisplay->mClip->mTop, font, aPresContext);
+              display->mClip.top = CalcLength(ourDisplay->mClip->mTop, font->mFont, aPresContext);
               fullAuto = PR_FALSE;
             }
             if (eCSSUnit_Auto == ourDisplay->mClip->mRight.GetUnit()) {
@@ -1515,7 +1515,7 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
               display->mClipFlags |= NS_STYLE_CLIP_RIGHT_AUTO;
             } 
             else if (ourDisplay->mClip->mRight.IsLengthUnit()) {
-              display->mClip.right = CalcLength(ourDisplay->mClip->mRight, font, aPresContext);
+              display->mClip.right = CalcLength(ourDisplay->mClip->mRight, font->mFont, aPresContext);
               fullAuto = PR_FALSE;
             }
             if (eCSSUnit_Auto == ourDisplay->mClip->mBottom.GetUnit()) {
@@ -1523,7 +1523,7 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
               display->mClipFlags |= NS_STYLE_CLIP_BOTTOM_AUTO;
             } 
             else if (ourDisplay->mClip->mBottom.IsLengthUnit()) {
-              display->mClip.bottom = CalcLength(ourDisplay->mClip->mBottom, font, aPresContext);
+              display->mClip.bottom = CalcLength(ourDisplay->mClip->mBottom, font->mFont, aPresContext);
               fullAuto = PR_FALSE;
             }
             if (eCSSUnit_Auto == ourDisplay->mClip->mLeft.GetUnit()) {
@@ -1531,7 +1531,7 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
               display->mClipFlags |= NS_STYLE_CLIP_LEFT_AUTO;
             } 
             else if (ourDisplay->mClip->mLeft.IsLengthUnit()) {
-              display->mClip.left = CalcLength(ourDisplay->mClip->mLeft, font, aPresContext);
+              display->mClip.left = CalcLength(ourDisplay->mClip->mLeft, font->mFont, aPresContext);
               fullAuto = PR_FALSE;
             }
             display->mClipFlags &= ~NS_STYLE_CLIP_TYPE_MASK;
@@ -1631,7 +1631,7 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
         }
         else if (ourColor->mBackPositionX.IsLengthUnit()) {
           color->mBackgroundXPosition = CalcLength(ourColor->mBackPositionX,
-                                                   font, aPresContext);
+                                                   font->mFont, aPresContext);
           color->mBackgroundFlags |= NS_STYLE_BG_X_POSITION_LENGTH;
           color->mBackgroundFlags &= ~NS_STYLE_BG_X_POSITION_PERCENT;
         }
@@ -1653,7 +1653,7 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
         }
         else if (ourColor->mBackPositionY.IsLengthUnit()) {
           color->mBackgroundYPosition = CalcLength(ourColor->mBackPositionY,
-                                                   font, aPresContext);
+                                                   font->mFont, aPresContext);
           color->mBackgroundFlags |= NS_STYLE_BG_Y_POSITION_LENGTH;
           color->mBackgroundFlags &= ~NS_STYLE_BG_Y_POSITION_PERCENT;
         }
@@ -1705,16 +1705,16 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
         // margin: length, percent, auto, inherit
         if (nsnull != ourMargin->mMargin) {
           nsStyleCoord  coord;
-          if (SetCoord(ourMargin->mMargin->mLeft, coord, SETCOORD_LPAH, font, aPresContext)) {
+          if (SetCoord(ourMargin->mMargin->mLeft, coord, SETCOORD_LPAH, font->mFont, aPresContext)) {
             spacing->mMargin.SetLeft(coord);
           }
-          if (SetCoord(ourMargin->mMargin->mTop, coord, SETCOORD_LPAH, font, aPresContext)) {
+          if (SetCoord(ourMargin->mMargin->mTop, coord, SETCOORD_LPAH, font->mFont, aPresContext)) {
             spacing->mMargin.SetTop(coord);
           }
-          if (SetCoord(ourMargin->mMargin->mRight, coord, SETCOORD_LPAH, font, aPresContext)) {
+          if (SetCoord(ourMargin->mMargin->mRight, coord, SETCOORD_LPAH, font->mFont, aPresContext)) {
             spacing->mMargin.SetRight(coord);
           }
-          if (SetCoord(ourMargin->mMargin->mBottom, coord, SETCOORD_LPAH, font, aPresContext)) {
+          if (SetCoord(ourMargin->mMargin->mBottom, coord, SETCOORD_LPAH, font->mFont, aPresContext)) {
             spacing->mMargin.SetBottom(coord);
           }
         }
@@ -1722,16 +1722,16 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
         // padding: length, percent, inherit
         if (nsnull != ourMargin->mPadding) {
           nsStyleCoord  coord;
-          if (SetCoord(ourMargin->mPadding->mLeft, coord, SETCOORD_LPH, font, aPresContext)) {
+          if (SetCoord(ourMargin->mPadding->mLeft, coord, SETCOORD_LPH, font->mFont, aPresContext)) {
             spacing->mPadding.SetLeft(coord);
           }
-          if (SetCoord(ourMargin->mPadding->mTop, coord, SETCOORD_LPH, font, aPresContext)) {
+          if (SetCoord(ourMargin->mPadding->mTop, coord, SETCOORD_LPH, font->mFont, aPresContext)) {
             spacing->mPadding.SetTop(coord);
           }
-          if (SetCoord(ourMargin->mPadding->mRight, coord, SETCOORD_LPH, font, aPresContext)) {
+          if (SetCoord(ourMargin->mPadding->mRight, coord, SETCOORD_LPH, font->mFont, aPresContext)) {
             spacing->mPadding.SetRight(coord);
           }
-          if (SetCoord(ourMargin->mPadding->mBottom, coord, SETCOORD_LPH, font, aPresContext)) {
+          if (SetCoord(ourMargin->mPadding->mBottom, coord, SETCOORD_LPH, font->mFont, aPresContext)) {
             spacing->mPadding.SetBottom(coord);
           }
         }
@@ -1739,28 +1739,28 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
         // border-size: length, enum, inherit
         if (nsnull != ourMargin->mBorderWidth) {
           nsStyleCoord  coord;
-          if (SetCoord(ourMargin->mBorderWidth->mLeft, coord, SETCOORD_LE, font, aPresContext)) {
+          if (SetCoord(ourMargin->mBorderWidth->mLeft, coord, SETCOORD_LE, font->mFont, aPresContext)) {
             spacing->mBorder.SetLeft(coord);
           }
           else if (eCSSUnit_Inherit == ourMargin->mBorderWidth->mLeft.GetUnit()) {
             spacing->mBorder.SetLeft(parentSpacing->mBorder.GetLeft(coord));
           }
 
-          if (SetCoord(ourMargin->mBorderWidth->mTop, coord, SETCOORD_LE, font, aPresContext)) {
+          if (SetCoord(ourMargin->mBorderWidth->mTop, coord, SETCOORD_LE, font->mFont, aPresContext)) {
             spacing->mBorder.SetTop(coord);
           }
           else if (eCSSUnit_Inherit == ourMargin->mBorderWidth->mTop.GetUnit()) {
             spacing->mBorder.SetTop(parentSpacing->mBorder.GetTop(coord));
           }
 
-          if (SetCoord(ourMargin->mBorderWidth->mRight, coord, SETCOORD_LE, font, aPresContext)) {
+          if (SetCoord(ourMargin->mBorderWidth->mRight, coord, SETCOORD_LE, font->mFont, aPresContext)) {
             spacing->mBorder.SetRight(coord);
           }
           else if (eCSSUnit_Inherit == ourMargin->mBorderWidth->mRight.GetUnit()) {
             spacing->mBorder.SetRight(parentSpacing->mBorder.GetRight(coord));
           }
 
-          if (SetCoord(ourMargin->mBorderWidth->mBottom, coord, SETCOORD_LE, font, aPresContext)) {
+          if (SetCoord(ourMargin->mBorderWidth->mBottom, coord, SETCOORD_LE, font->mFont, aPresContext)) {
             spacing->mBorder.SetBottom(coord);
           }
           else if (eCSSUnit_Inherit == ourMargin->mBorderWidth->mBottom.GetUnit()) {
@@ -1881,12 +1881,12 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
 
         // -moz-border-radius: length, inherit
         if (! SetCoord(ourMargin->mBorderRadius, spacing->mBorderRadius, 
-                       SETCOORD_LPH, font, aPresContext)) {
+                       SETCOORD_LPH, font->mFont, aPresContext)) {
         }
 
         // outline-width: length, enum, inherit
         if (! SetCoord(ourMargin->mOutlineWidth, spacing->mOutlineWidth, 
-                       SETCOORD_LE, font, aPresContext)) {
+                       SETCOORD_LE, font->mFont, aPresContext)) {
           if (eCSSUnit_Inherit == ourMargin->mOutlineWidth.GetUnit()) {
             spacing->mOutlineWidth = parentSpacing->mOutlineWidth;
           }
@@ -1944,38 +1944,38 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
         // box offsets: length, percent, auto, inherit
         if (nsnull != ourPosition->mOffset) {
           nsStyleCoord  coord;
-          if (SetCoord(ourPosition->mOffset->mTop, coord, SETCOORD_LPAH, font, aPresContext)) {
+          if (SetCoord(ourPosition->mOffset->mTop, coord, SETCOORD_LPAH, font->mFont, aPresContext)) {
             position->mOffset.SetTop(coord);            
           }
-          if (SetCoord(ourPosition->mOffset->mRight, coord, SETCOORD_LPAH, font, aPresContext)) {
+          if (SetCoord(ourPosition->mOffset->mRight, coord, SETCOORD_LPAH, font->mFont, aPresContext)) {
             position->mOffset.SetRight(coord);            
           }
-          if (SetCoord(ourPosition->mOffset->mBottom, coord, SETCOORD_LPAH, font, aPresContext)) {
+          if (SetCoord(ourPosition->mOffset->mBottom, coord, SETCOORD_LPAH, font->mFont, aPresContext)) {
             position->mOffset.SetBottom(coord);
           }
-          if (SetCoord(ourPosition->mOffset->mLeft, coord, SETCOORD_LPAH, font, aPresContext)) {
+          if (SetCoord(ourPosition->mOffset->mLeft, coord, SETCOORD_LPAH, font->mFont, aPresContext)) {
             position->mOffset.SetLeft(coord);
           }
         }
 
-        SetCoord(ourPosition->mWidth, position->mWidth, SETCOORD_LPAH, font, aPresContext);
-        SetCoord(ourPosition->mMinWidth, position->mMinWidth, SETCOORD_LPH, font, aPresContext);
-        if (! SetCoord(ourPosition->mMaxWidth, position->mMaxWidth, SETCOORD_LPH, font, aPresContext)) {
+        SetCoord(ourPosition->mWidth, position->mWidth, SETCOORD_LPAH, font->mFont, aPresContext);
+        SetCoord(ourPosition->mMinWidth, position->mMinWidth, SETCOORD_LPH, font->mFont, aPresContext);
+        if (! SetCoord(ourPosition->mMaxWidth, position->mMaxWidth, SETCOORD_LPH, font->mFont, aPresContext)) {
           if (eCSSUnit_None == ourPosition->mMaxWidth.GetUnit()) {
             position->mMaxWidth.Reset();
           }
         }
 
-        SetCoord(ourPosition->mHeight, position->mHeight, SETCOORD_LPAH, font, aPresContext);
-        SetCoord(ourPosition->mMinHeight, position->mMinHeight, SETCOORD_LPH, font, aPresContext);
-        if (! SetCoord(ourPosition->mMaxHeight, position->mMaxHeight, SETCOORD_LPH, font, aPresContext)) {
+        SetCoord(ourPosition->mHeight, position->mHeight, SETCOORD_LPAH, font->mFont, aPresContext);
+        SetCoord(ourPosition->mMinHeight, position->mMinHeight, SETCOORD_LPH, font->mFont, aPresContext);
+        if (! SetCoord(ourPosition->mMaxHeight, position->mMaxHeight, SETCOORD_LPH, font->mFont, aPresContext)) {
           if (eCSSUnit_None == ourPosition->mMaxHeight.GetUnit()) {
             position->mMaxHeight.Reset();
           }
         }
 
         // z-index
-        SetCoord(ourPosition->mZIndex, position->mZIndex, SETCOORD_IAH, nsnull, nsnull);
+        SetCoord(ourPosition->mZIndex, position->mZIndex, SETCOORD_IAH, font->mFont, nsnull);
       }
     }
 
@@ -2041,14 +2041,14 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
         }
 
         // border-spacing-x: length, inherit
-        if (SetCoord(ourTable->mBorderSpacingX, coord, SETCOORD_LENGTH, font, aPresContext)) {
+        if (SetCoord(ourTable->mBorderSpacingX, coord, SETCOORD_LENGTH, font->mFont, aPresContext)) {
           table->mBorderSpacingX = coord.GetCoordValue();
         }
         else if (eCSSUnit_Inherit == ourTable->mBorderSpacingX.GetUnit()) {
           table->mBorderSpacingX = parentTable->mBorderSpacingX;
         }
         // border-spacing-y: length, inherit
-        if (SetCoord(ourTable->mBorderSpacingY, coord, SETCOORD_LENGTH, font, aPresContext)) {
+        if (SetCoord(ourTable->mBorderSpacingY, coord, SETCOORD_LENGTH, font->mFont, aPresContext)) {
           table->mBorderSpacingY = coord.GetCoordValue();
         }
         else if (eCSSUnit_Inherit == ourTable->mBorderSpacingY.GetUnit()) {
@@ -2243,7 +2243,7 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
 
         // marker-offset: length, auto, inherit
         if (! SetCoord(ourContent->mMarkerOffset, content->mMarkerOffset,
-                       SETCOORD_LENGTH | SETCOORD_AUTO, font, aPresContext)) {
+                       SETCOORD_LENGTH | SETCOORD_AUTO, font->mFont, aPresContext)) {
           if (eCSSUnit_Inherit == ourContent->mMarkerOffset.GetUnit()) {
             content->mMarkerOffset = parentContent->mMarkerOffset;
           }
