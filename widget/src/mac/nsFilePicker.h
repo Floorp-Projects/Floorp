@@ -25,11 +25,13 @@
 #ifndef nsFilePicker_h__
 #define nsFilePicker_h__
 
+#include <Navigation.h>
+
 #include "nsBaseFilePicker.h"
 #include "nsString.h"
 #include "nsIFileChannel.h"
 #include "nsILocalFile.h"
-#include <Navigation.h>
+#include "nsCOMArray.h"
 
 class nsILocalFileMac;
 
@@ -59,8 +61,9 @@ public:
   NS_IMETHOD SetFilterIndex(PRInt32 aFilterIndex);
   NS_IMETHOD GetFile(nsILocalFile * *aFile);
   NS_IMETHOD GetFileURL(nsIFileURL * *aFileURL);
+  NS_IMETHOD GetFiles(nsISimpleEnumerator **aFiles);
   NS_IMETHOD Show(PRInt16 *_retval); 
-  NS_IMETHOD AppendFilter(const PRUnichar *aTitle,  const PRUnichar *aFilter) ;
+  NS_IMETHOD AppendFilter(const PRUnichar *aTitle,  const PRUnichar *aFilter);
 
 protected:
 
@@ -70,9 +73,9 @@ protected:
   NS_IMETHOD            OnCancel();
 
     // actual implementations of get/put dialogs using NavServices
-  PRInt16 GetLocalFile(const nsString& inTitle, nsILocalFileMac* ioLocalFile);
-  PRInt16 GetLocalFolder(const nsString& inTitle, nsILocalFileMac* ioLocalFile);
-  PRInt16 PutLocalFile(const nsString& inTitle, const nsString& inDefaultName, nsILocalFileMac* ioLocalFile);
+  PRInt16 GetLocalFiles(const nsString& inTitle, PRBool inAllowMultiple, nsCOMArray<nsILocalFile>& outFiles);
+  PRInt16 GetLocalFolder(const nsString& inTitle, nsILocalFile** outFile);
+  PRInt16 PutLocalFile(const nsString& inTitle, const nsString& inDefaultName, nsILocalFile** outFile);
   
   void MapFilterToFileTypes ( ) ;
 #if TARGET_CARBON
@@ -98,7 +101,7 @@ protected:
   PRBool                 mAllFilesDisplayed;
   nsString               mTitle;
   PRInt16                mMode;
-  nsCOMPtr<nsILocalFile> mFile;
+  nsCOMArray<nsILocalFile> mFiles;
   nsString               mDefault;
   nsCOMPtr<nsILocalFile> mDisplayDirectory;
 
