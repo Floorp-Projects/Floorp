@@ -356,6 +356,7 @@ morkWriter::WriteYarn(morkEnv* ev, const mdbYarn* inYarn)
   // than the entire yarn's size, since only part goes on a last line).
 {
   mork_size outSize = 0;
+  mork_size lineSize = mWriter_LineSize;
   morkStream* stream = mWriter_Stream;
 
   const mork_u1* b = (const mork_u1*) inYarn->mYarn_Buf;
@@ -364,8 +365,14 @@ morkWriter::WriteYarn(morkEnv* ev, const mdbYarn* inYarn)
     register int c;
     mork_fill fill = inYarn->mYarn_Fill;
     const mork_u1* end = b + fill;
-    while ( b < end )
+    while ( b < end && ev->Good() )
     {
+	    if ( lineSize + outSize >= mWriter_MaxLine ) // continue line?
+	    {
+        stream->PutByteThenNewline(ev, '\\');
+        mWriter_LineSize = lineSize = outSize = 0;
+	    }
+	    
       c = *b++; // next byte to print
       if ( morkCh_IsValue(c) )
       {
