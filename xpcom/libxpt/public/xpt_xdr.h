@@ -91,9 +91,10 @@ struct XPTDatapool {
 
 struct XPTCursor {
     XPTState    *state;
-    XPTPool     pool;
+    XPTDatapool *pool;
     uint32      offset;
     uint32      len;
+    uint8       bits;
 };
 
 XPTState *
@@ -124,11 +125,6 @@ XPT_GetXDRData(XPTState *state, XPTPool pool, char **data, uint32 *len);
 PRBool
 XPT_CreateCursor(XPTCursor *base, XPTPool pool, uint32 len, XPTCursor *cursor);
 
-/* increase the data allocation for the pool by XPT_GROW_CHUNK */
-#define XPT_GROW_CHUNK 8192
-PRBool
-XPT_GrowPool(XPTDatapool *pool);
-
 /* all data structures are big-endian */
 
 #if defined IS_BIG_ENDIAN
@@ -156,8 +152,7 @@ XPT_GrowPool(XPTDatapool *pool);
  * mapping.
  */
 
-#define XPT_PREAMBLE_(cursor, addrp, pool, size, new_curs, already,           \
-                     ALLOC_CODE) {                                            \
+#define XPT_PREAMBLE_(cursor, addrp, pool, size, new_curs, already)           \
     XPTMode mode = cursor->state->mode;                                       \
     if (!(mode == XPT_ENCODE || XPT_Do32(cursor, &new_curs.offset)) ||        \
         !XPT_CheckForRepeat(cursor, (void **)addrp, pool,                     \
@@ -167,25 +162,28 @@ XPT_GrowPool(XPTDatapool *pool);
         return PR_FALSE;                                                      \
     if (already)                                                              \
         return PR_TRUE;                                                       \
-    ALLOC_CODE;                                                               \
-}
 
-#define XPT_ALLOC                                                             \
+#define XPT_ALLOC(addrp, new_curs, XPTType, localp)                           \
     if (mode == XPT_DECODE) {                                                 \
         *addrp = localp = PR_NEWZAP(XPTType);                                 \
         if (!localp ||                                                        \
-            !XPT_SetAddrForOffset(new_curs, localp)                           \
+            !XPT_SetAddrForOffset(new_curs, localp))                          \
             return PR_FALSE;                                                  \
     } else {                                                                  \
         localp = *addrp;                                                      \
     }
 
-#define XPT_PREAMBLE(cursor, addrp, pool, size, new_curs, already, XPTType, localp)            \
-    XPT_PREAMBLE_(cursor, addrp, pool, size, new_curs, already, XPT_ALLOC)
+#define XPT_PREAMBLE(cursor, addrp, pool, size, new_curs, already,            \
+                     XPTType, localp)                                         \
+  {                                                                           \
+    XPT_PREAMBLE_(cursor, addrp, pool, size, new_curs, already);              \
+    XPT_ALLOC(addrp, new_curs, XPTType, localp)                               \
+  }
 
 #define XPT_PREAMBLE_NO_ALLOC(cursor, addrp, pool, size, new_curs, already)   \
-    XPT_PREAMBLE_(cursor, addrp, pool, size, new_curs, already, ;)
-
+  {                                                                           \
+    XPT_PREAMBLE_(cursor, addrp, pool, size, new_curs, already)               \
+  }
 
 #define XPT_ERROR_HANDLE(free_it)                                             \
  error:                                                                       \
