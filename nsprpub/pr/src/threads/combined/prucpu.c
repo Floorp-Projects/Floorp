@@ -117,6 +117,31 @@ void  _PR_InitCPUs()
     _PR_MD_INIT_CPUS();
 }
 
+#ifdef WINNT
+/*
+ * Right now this function merely stops the CPUs and does
+ * not do any other cleanup.
+ *
+ * It is only implemented for WINNT because bug 161998 only
+ * affects the WINNT version of NSPR, but it would be nice
+ * to implement this function for other platforms too.
+ */
+void _PR_CleanupCPUs(void)
+{
+    PRUintn i;
+    PRCList *qp;
+    _PRCPU *cpu;
+
+    _pr_cpus_exit = 1;
+    for (i = 0; i < _pr_numCPU; i++) {
+        _PR_MD_WAKEUP_WAITER(NULL);
+    }
+    for (qp = _PR_CPUQ().next; qp != &_PR_CPUQ(); qp = qp->next) {
+        cpu = _PR_CPU_PTR(qp);
+        _PR_MD_JOIN_THREAD(&cpu->thread->md);
+    }
+}
+#endif
 
 static _PRCPUQueue *_PR_CreateCPUQueue(void)
 {
@@ -332,6 +357,12 @@ static void PR_CALLBACK _PR_CPU_Idle(void *_cpu)
         /* Wait for an IO to complete */
         (void)_PR_MD_PAUSE_CPU(timeout);
 
+#ifdef WINNT
+        if (_pr_cpus_exit) {
+            /* _PR_CleanupCPUs tells us to exit */
+            _PR_MD_END_THREAD();
+        }
+#endif
 
 #if !defined(_PR_LOCAL_THREADS_ONLY) && !defined(_PR_GLOBAL_THREADS_ONLY)
 #ifdef _PR_HAVE_ATOMIC_OPS
