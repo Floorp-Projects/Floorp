@@ -69,7 +69,7 @@
 // Perform our one-time intialization for this module
 static PRBool gInitialized = PR_FALSE;
 
-static nsresult
+PR_STATIC_CALLBACK(nsresult)
 Initialize(nsIModule* self)
 {
   NS_PRECONDITION(!gInitialized, "module already initialized");
@@ -103,7 +103,7 @@ Initialize(nsIModule* self)
 }
 
 // Shutdown this module, releasing all of the module resources
-static void
+PR_STATIC_CALLBACK(void)
 Shutdown(nsIModule* self)
 {
   NS_PRECONDITION(gInitialized, "module not initialized");
