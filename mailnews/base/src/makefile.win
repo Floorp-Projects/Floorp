@@ -26,11 +26,11 @@ REQUIRES=xpcom js nspr dom
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
-CPPSRCS=                         \
-	nsMessenger.cpp			\
-	nsIMessenger.cpp		\
-	nsMessengerNameSet.cpp	\
-        nsMsgRFC822Parser.cpp    \
+CPPSRCS=                     \
+	nsMessenger.cpp			 \
+	nsIMessenger.cpp		 \
+	nsMessengerNameSet.cpp	 \
+    nsMsgRFC822Parser.cpp    \
 	nsUInt32Array.cpp        \
 	nsMsgKeyArray.cpp        \
 	nsMsgFolder.cpp          \
@@ -39,33 +39,36 @@ CPPSRCS=                         \
 	nsLocalFolderSummarySpec.cpp	\
 	nsMsgLineBuffer.cpp		 \
 	nsNewsSet.cpp            \
+	nsUrlListenerManager.cpp \
 	$(NULL)
 
-CPP_OBJS=                                    \
-    .\$(OBJDIR)\nsMessenger.obj	\
-	.\$(OBJDIR)\nsIMessenger.obj \
+CPP_OBJS=                               \
+    .\$(OBJDIR)\nsMessenger.obj			\
+	.\$(OBJDIR)\nsIMessenger.obj		\
 	.\$(OBJDIR)\nsMessengerNameSet.obj	\
-        .\$(OBJDIR)\nsMsgRFC822Parser.obj    \
-	.\$(OBJDIR)\nsUInt32Array.obj        \
-	.\$(OBJDIR)\nsMsgKeyArray.obj        \
-	.\$(OBJDIR)\nsMsgFolder.obj          \
+    .\$(OBJDIR)\nsMsgRFC822Parser.obj   \
+	.\$(OBJDIR)\nsUInt32Array.obj       \
+	.\$(OBJDIR)\nsMsgKeyArray.obj       \
+	.\$(OBJDIR)\nsMsgFolder.obj         \
 	.\$(OBJDIR)\nsLocalFolderSummarySpec.obj	\
-	.\$(OBJDIR)\nsMsgImapMailFolder.obj  \
-	.\$(OBJDIR)\nsMsgGroupRecord.obj     \
-	.\$(OBJDIR)\nsNewsSet.obj            \
-	.\$(OBJDIR)\nsMsgLineBuffer.obj            \
+	.\$(OBJDIR)\nsMsgImapMailFolder.obj \
+	.\$(OBJDIR)\nsMsgGroupRecord.obj    \
+	.\$(OBJDIR)\nsNewsSet.obj           \
+	.\$(OBJDIR)\nsMsgLineBuffer.obj     \
+	.\$(OBJDIR)\nsUrlListenerManager.obj \
 	$(NULL)
 
 EXPORTS=                    \
-	nsMessenger.h	\
-        nsMsgRFC822Parser.h \
+	nsMessenger.h		\
+    nsMsgRFC822Parser.h \
 	nsUInt32Array.h     \
 	nsMsgKeyArray.h     \
 	nsNewsSet.h         \
-	nsMsgLineBuffer.h \
+	nsMsgLineBuffer.h	\
 	nsMsgGroupRecord.h  \
 	nsLocalFolderSummarySpec.h \
 	nsMsgFolder.h		\
+	nsUrlListenerManager.h \
 	$(NULL)
 
 LINCS=                       \
@@ -75,8 +78,10 @@ LINCS=                       \
         -I$(PUBLIC)\rdf      \
         -I$(PUBLIC)\rdfutil  \
         -I$(PUBLIC)\pref     \
-        -I$(PUBLIC)\js		\
-		-I$(PUBLIC)\dom		
+        -I$(PUBLIC)\js		 \
+		-I$(PUBLIC)\netlib	 \
+		-I$(PUBLIC)\dom		 \
+		$(NULL)
 
 LCFLAGS = \
         $(LCFLAGS) \
