@@ -8118,22 +8118,22 @@ ResDef(JULIAN_STRING_1, JULIAN_MSG_BASE+1,
 /* #if defined( TRUST_LABELS ) */
 #define TRUST_LABEL_BASE  XP_MSG_BASE + 1570
 ResDef(MK_ACCESS_TL_PUR1, (TRUST_LABEL_BASE + 1),
-"This information is used for %1$s.")
+"Furthermore, it may be used for %1$s.")
 
 ResDef(MK_ACCESS_TL_PUR2, (TRUST_LABEL_BASE + 2),
-"This information is used for %1$s and %2$s.")
+"Furthermore, it may be used for %1$s and %2$s.")
 
 ResDef(MK_ACCESS_TL_PUR3, (TRUST_LABEL_BASE + 3),
-"This information is used for %1$s, %2$s and %3$s.")
+"Furthermore, it may be used for %1$s, %2$s and %3$s.")
 
 ResDef(MK_ACCESS_TL_PUR4, (TRUST_LABEL_BASE + 4),
-"This information is used for %1$s, %2$s, %3$s and %4$s.")
+"Furthermore, it may be used for %1$s, %2$s, %3$s and %4$s.")
 
 ResDef(MK_ACCESS_TL_PUR5, (TRUST_LABEL_BASE + 5),
-"This information is used for %1$s, %2$s, %3$s, %4$s and %5$s.")
+"Furthermore, it may be used for %1$s, %2$s, %3$s, %4$s and %5$s.")
 
 ResDef(MK_ACCESS_TL_PUR6, (TRUST_LABEL_BASE + 6),
-"This information is used for %1$s, %2$s, %3$s, %4$s, %5$s and %6$s.")
+"Furthermore, it may be used for %1$s, %2$s, %3$s, %4$s, %5$s and %6$s.")
 
 /* One or more of these next PPHx strings are inserted into the preceeding 
    PURx strings.
@@ -8157,10 +8157,10 @@ ResDef(MK_ACCESS_TL_PPH5, (TRUST_LABEL_BASE + 12),
 "other uses" )
 
 ResDef(MK_ACCESS_TL_ID1, (TRUST_LABEL_BASE + 13),
-"This cookie contains information that is used to identify you." )
+"The site had declared that the information contained in this cookie is used to identify you." )
 
 ResDef(MK_ACCESS_TL_ID0, (TRUST_LABEL_BASE + 14),
-"This cookie contains information that is not used to identify you." )
+"The site had declared that the information contained in this cookie is not used to identify you." )
 
 ResDef(MK_ACCESS_TL_BY, (TRUST_LABEL_BASE + 15),
 "Contact %1$s to confirm these privacy practices.")   
