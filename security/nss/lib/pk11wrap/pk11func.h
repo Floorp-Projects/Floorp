@@ -442,7 +442,11 @@ SECStatus PK11_TraverseCertsInSlot(PK11SlotInfo *slot,
 CERTCertList * PK11_ListCerts(PK11CertListType type, void *pwarg);
 CERTCertList * PK11_ListCertsInSlot(PK11SlotInfo *slot);
 SECStatus PK11_LookupCrls(CERTCrlHeadNode *nodes, int type, void *wincx);
-
+CERTSignedCrl* PK11_ImportCRL(PK11SlotInfo * slot, SECItem *derCRL, char *url,
+    int type, void *wincx, PRInt32 importOptions, PRArenaPool* arena, PRInt32 decodeOptions);
+/* import options */
+#define CRL_IMPORT_DEFAULT_OPTIONS 0x00000000
+#define CRL_IMPORT_BYPASS_CHECKS   0x00000001
 
 /**********************************************************************
  *                   Sign/Verify 
