@@ -81,7 +81,15 @@ net_rebuffering_stream_write_chunk (NET_StreamClass *stream,
 }
 
 
-extern XP_Bool ValidateDocData(MWContext *window_id);
+/* ValidateDocData() isn't implemented anywhere, it used to be part
+   of the old parser in lib/libparse/pa_parse.c.  There are 8+
+   instances of this function being stubbed out, let's stop the
+   insanity and put the stub here, since net_rebuffering_stream_abort()
+   seems to be the only caller of ValidateDocData(). */
+XP_Bool ValidateDocData(MWContext *window_id)
+{
+  return PR_TRUE;
+}
 
 static void
 net_rebuffering_stream_abort (NET_StreamClass *stream, int status)
