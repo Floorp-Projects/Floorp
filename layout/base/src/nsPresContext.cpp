@@ -50,6 +50,8 @@ nsPresContext::nsPresContext()
   mContainer = nsnull;
   mEventManager = nsnull;
 
+  mFontScaler = 0;  // XXX this should come from: prefs"browser.base_font_scaler"
+
   mDefaultColor = NS_RGB(0x00, 0x00, 0x00);
   mDefaultBackgroundColor = NS_RGB(0xFF, 0xFF, 0xFF);
 
@@ -202,6 +204,18 @@ const nsFont&
 nsPresContext::GetDefaultFixedFont(void)
 {
   return mDefaultFixedFont;
+}
+
+PRInt32 
+nsPresContext::GetFontScaler(void)
+{
+  return mFontScaler;
+}
+
+void 
+nsPresContext::SetFontScaler(PRInt32 aScaler)
+{
+  mFontScaler = aScaler;
 }
 
 NS_METHOD
