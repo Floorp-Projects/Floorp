@@ -28,10 +28,8 @@ NS_IMPL_ADDREF(EditTxn)
 NS_IMPL_RELEASE(EditTxn)
 
 // note that aEditor is not refcounted
-EditTxn::EditTxn(nsEditor *aEditor)
+EditTxn::EditTxn()
 {
-  NS_ASSERTION(nsnull!=aEditor, "null aEditor arg to EditTxn constructor");
-  mEditor = aEditor;
 }
 
 nsresult EditTxn::Do(void)

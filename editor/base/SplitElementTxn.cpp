@@ -17,44 +17,42 @@
  */
 
 #include "SplitElementTxn.h"
-#include "editor.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMElement.h"
+#include "editor.h"
 
 // note that aEditor is not refcounted
-SplitElementTxn::SplitElementTxn(nsEditor   *aEditor,
-                                 nsIDOMNode *aNode,
-                                 PRInt32     aOffset)
-  : EditTxn(aEditor)
+SplitElementTxn::SplitElementTxn()
+  : EditTxn()
 {
-  mNode = aNode;
-  NS_ADDREF(mNode);
+}
+
+nsresult SplitElementTxn::Init(nsIDOMNode *aNode,
+                               PRInt32     aOffset)
+{
+  mExistingRightNode = aNode;
   mOffset = aOffset;
-  mNewNode = nsnull;
-  mParent = nsnull;
+  return NS_OK;
 }
 
 SplitElementTxn::~SplitElementTxn()
 {
-  NS_IF_RELEASE(mNode);
-  NS_IF_RELEASE(mNewNode);
-  NS_IF_RELEASE(mParent);
 }
 
 nsresult SplitElementTxn::Do(void)
 {
   // create a new node
-  nsresult result = mNode->CloneNode(PR_FALSE, &mNewNode);
-  NS_ASSERTION(((NS_SUCCEEDED(result)) && (nsnull!=mNewNode)), "could not create element.");
+  nsresult result = mExistingRightNode->CloneNode(PR_FALSE, getter_AddRefs(mNewLeftNode));
+  NS_ASSERTION(((NS_SUCCEEDED(result)) && (mNewLeftNode)), "could not create element.");
 
-  if ((NS_SUCCEEDED(result)) && (nsnull!=mNewNode))
+  if ((NS_SUCCEEDED(result)) && (mNewLeftNode))
   {
     // get the parent node
-    result = mNode->GetParentNode(&mParent);
+    result = mExistingRightNode->GetParentNode(getter_AddRefs(mParent));
     // insert the new node
-    if ((NS_SUCCEEDED(result)) && (nsnull!=mParent))
+    if ((NS_SUCCEEDED(result)) && (mParent))
     {
-      result = mEditor->SplitNode(mNode, mOffset, mNewNode, mParent);
+      result = nsEditor::SplitNode(mExistingRightNode, mOffset, mNewLeftNode, mParent);
     }
   }
   return result;
@@ -63,13 +61,13 @@ nsresult SplitElementTxn::Do(void)
 nsresult SplitElementTxn::Undo(void)
 {
   // this assumes Do inserted the new node in front of the prior existing node
-  nsresult result = mEditor->JoinNodes(mNode, mNewNode, mParent, PR_FALSE);
+  nsresult result = nsEditor::JoinNodes(mExistingRightNode, mNewLeftNode, mParent, PR_FALSE);
   return result;
 }
 
 nsresult SplitElementTxn::Redo(void)
 {
-  nsresult result = mEditor->SplitNode(mNode, mOffset, mNewNode, mParent);
+  nsresult result = nsEditor::SplitNode(mExistingRightNode, mOffset, mNewLeftNode, mParent);
   return result;
 }
 

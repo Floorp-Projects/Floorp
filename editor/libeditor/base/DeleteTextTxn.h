@@ -20,8 +20,13 @@
 #define DeleteTextTxn_h__
 
 #include "EditTxn.h"
+#include "nsIDOMCharacterData.h"
+#include "nsCOMPtr.h"
 
-class nsIDOMCharacterData;
+#define DELETE_TEXT_TXN_IID \
+{/* 4d3a2720-ac49-11d2-86d8-000064657374 */ \
+0x4d3a2720, 0xac49, 0x11d2, \
+{0x86, 0xd8, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74} }
 
 /**
  * A transaction that changes an attribute of a content node. 
@@ -31,11 +36,15 @@ class DeleteTextTxn : public EditTxn
 {
 public:
 
-  DeleteTextTxn(nsEditor *aEditor,
-                nsIDOMCharacterData *aElement,
-                PRUint32 aOffset,
-                PRUint32 aNumCharsToDelete);
+  virtual nsresult Init(nsIDOMCharacterData *aElement,
+                        PRUint32 aOffset,
+                        PRUint32 aNumCharsToDelete);
 
+private:
+  DeleteTextTxn();
+
+public:
+	
   virtual nsresult Do(void);
 
   virtual nsresult Undo(void);
@@ -53,7 +62,7 @@ public:
 protected:
   
   /** the text element to operate upon */
-  nsIDOMCharacterData *mElement;
+  nsCOMPtr<nsIDOMCharacterData> mElement;
   
   /** the offset into mElement where the deletion is to take place */
   PRUint32 mOffset;
@@ -63,6 +72,8 @@ protected:
 
   /** the text that was deleted */
   nsString mDeletedText;
+
+  friend class TransactionFactory;
 
 };
 

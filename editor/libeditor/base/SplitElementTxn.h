@@ -20,10 +20,13 @@
 #define SplitElementTxn_h__
 
 #include "EditTxn.h"
+#include "nsIDOMNode.h"
+#include "nsCOMPtr.h"
 
-class nsIDOMNode;
-class nsIDOMElement;
-class nsIDOMDocument;
+#define SPLIT_ELEMENT_TXN_IID \
+{/* 690c6290-ac48-11d2-86d8-000064657374 */ \
+0x690c6290, 0xac48, 0x11d2, \
+{0x86, 0xd8, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74} }
 
 /**
  * A transaction that splits an element E into two identical nodes, E1 and E2
@@ -33,10 +36,12 @@ class SplitElementTxn : public EditTxn
 {
 public:
 
-  SplitElementTxn(nsEditor   *aEditor,
-                  nsIDOMNode *aNode,
-                  PRInt32     aOffset);
+  virtual nsresult Init (nsIDOMNode *aNode,
+                         PRInt32     aOffset);
+protected:
+  SplitElementTxn();
 
+public:
   virtual ~SplitElementTxn();
 
   virtual nsresult Do(void);
@@ -58,7 +63,7 @@ public:
 protected:
   
   /** the element to operate upon */
-  nsIDOMNode *mNode;
+  nsCOMPtr<nsIDOMNode> mExistingRightNode;
 
   /** the offset into mElement where the children of mElement are split.<BR>
     * mOffset is the index of the last child in the left node. 
@@ -67,8 +72,12 @@ protected:
   PRInt32  mOffset;
 
   /** the element we create when splitting mElement */
-  nsIDOMNode *mNewNode;
-  nsIDOMNode *mParent;
+  nsCOMPtr<nsIDOMNode> mNewLeftNode;
+
+  /** the parent shared by mExistingRightNode and mNewLeftNode */
+  nsCOMPtr<nsIDOMNode> mParent;
+
+  friend class TransactionFactory;
 
 };
 

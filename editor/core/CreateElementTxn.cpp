@@ -17,52 +17,50 @@
  */
 
 #include "CreateElementTxn.h"
-#include "editor.h"
-#include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
-#include "nsIDOMDocument.h"
-#include "nsIDOMElement.h"
 
-// note that aEditor is not refcounted
-CreateElementTxn::CreateElementTxn(nsEditor *aEditor,
-                                   nsIDOMDocument *aDoc,
-                                   const nsString& aTag,
-                                   nsIDOMNode *aParent,
-                                   PRUint32 aOffsetInParent)
-  : EditTxn(aEditor)
+CreateElementTxn::CreateElementTxn()
+  : EditTxn()
 {
-  mDoc = aDoc;
-  NS_ADDREF(mDoc);
-  mTag = aTag;
-  mParent = aParent;
-  NS_ADDREF(mParent);
-  mOffsetInParent = aOffsetInParent;
-  mNewNode = nsnull;
-  mRefNode = nsnull;
 }
+
+nsresult CreateElementTxn::Init(nsIDOMDocument *aDoc,
+                                const nsString& aTag,
+                                nsIDOMNode *aParent,
+                                PRUint32 aOffsetInParent)
+{
+  if ((nsnull!=aDoc) && (nsnull!=aParent))
+  {
+    mDoc = aDoc;
+    mTag = aTag;
+    mParent = aParent;
+    mOffsetInParent = aOffsetInParent;
+    mNewNode = nsnull;
+    mRefNode = nsnull;
+    return NS_OK;
+  }
+  else
+    return NS_ERROR_NULL_POINTER;
+}
+
 
 CreateElementTxn::~CreateElementTxn()
 {
-  NS_IF_RELEASE(mDoc);
-  NS_IF_RELEASE(mParent);
-  NS_IF_RELEASE(mNewNode);
 }
 
 nsresult CreateElementTxn::Do(void)
 {
   // create a new node
-  nsresult result = mDoc->CreateElement(mTag, &mNewNode);
-  NS_ASSERTION(((NS_SUCCEEDED(result)) && (nsnull!=mNewNode)), "could not create element.");
+  nsresult result = mDoc->CreateElement(mTag, getter_AddRefs(mNewNode));
+  NS_ASSERTION(((NS_SUCCEEDED(result)) && (mNewNode)), "could not create element.");
 
-  if ((NS_SUCCEEDED(result)) && (nsnull!=mNewNode))
+  if ((NS_SUCCEEDED(result)) && (mNewNode))
   {
     // insert the new node
-    nsIDOMNode *resultNode=nsnull;
+    nsCOMPtr<nsIDOMNode> resultNode;
     if (CreateElementTxn::eAppend==mOffsetInParent)
     {
-      result = mParent->AppendChild(mNewNode, &resultNode);
-      if ((NS_SUCCEEDED(result)) && (nsnull!=resultNode))
-        NS_RELEASE(resultNode); // this object already holds a ref from CreateElement
+      result = mParent->AppendChild(mNewNode, getter_AddRefs(resultNode));
     }
     else
     {
@@ -70,12 +68,10 @@ nsresult CreateElementTxn::Do(void)
       result = mParent->GetChildNodes(getter_AddRefs(childNodes));
       if ((NS_SUCCEEDED(result)) && (childNodes))
       {
-        result = childNodes->Item(mOffsetInParent, &mRefNode);
-        if ((NS_SUCCEEDED(result)) && (nsnull!=mRefNode))
+        result = childNodes->Item(mOffsetInParent, getter_AddRefs(mRefNode));
+        if ((NS_SUCCEEDED(result)) && (mRefNode))
         {
-          result = mParent->InsertBefore(mNewNode, mRefNode, &resultNode);
-          if ((NS_SUCCEEDED(result)) && (nsnull!=resultNode))
-            NS_RELEASE(resultNode); // this object already holds a ref from CreateElement
+          result = mParent->InsertBefore(mNewNode, mRefNode, getter_AddRefs(resultNode));
         }
       }
     }
@@ -85,20 +81,16 @@ nsresult CreateElementTxn::Do(void)
 
 nsresult CreateElementTxn::Undo(void)
 {
-  nsIDOMNode *resultNode=nsnull;
-  nsresult result = mParent->RemoveChild(mNewNode, &resultNode);
-  if ((NS_SUCCEEDED(result)) && (nsnull!=resultNode))
-    NS_RELEASE(resultNode);
+  nsCOMPtr<nsIDOMNode> resultNode;
+  nsresult result = mParent->RemoveChild(mNewNode, getter_AddRefs(resultNode));
   return result;
 }
 
 nsresult CreateElementTxn::Redo(void)
 {
-  nsIDOMNode *resultNode=nsnull;
-  nsresult result = mParent->InsertBefore(mNewNode, mRefNode, &resultNode);
-   if ((NS_SUCCEEDED(result)) && (nsnull!=resultNode))
-    NS_RELEASE(resultNode);
-   return result;
+  nsCOMPtr<nsIDOMNode> resultNode;
+  nsresult result = mParent->InsertBefore(mNewNode, mRefNode, getter_AddRefs(resultNode));
+  return result;
 }
 
 nsresult CreateElementTxn::GetIsTransient(PRBool *aIsTransient)

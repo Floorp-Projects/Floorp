@@ -30,12 +30,15 @@ CPPSRCS =                       \
     nsEditFactory.cpp           \
     ChangeAttributeTxn.cpp      \
     EditTxn.cpp                 \
+    EditAggregateTxn.cpp        \
     InsertTextTxn.cpp           \
     DeleteTextTxn.cpp           \
     CreateElementTxn.cpp        \
     DeleteElementTxn.cpp        \
     DeleteRangeTxn.cpp          \
     SplitElementTxn.cpp         \
+    JoinElementTxn.cpp          \
+    TransactionFactory.cpp      \
     $(NULL)
 
 MODULE = editor

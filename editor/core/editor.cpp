@@ -33,16 +33,22 @@
 #include "nsTransactionManagerCID.h"
 #include "nsITransactionManager.h"
 #include "nsIPresShell.h"
+#include "nsIViewManager.h"
 #include "nsISelection.h"
+#include "nsICollection.h"
+#include "nsIEnumerator.h"
 #include "nsIAtom.h"
 
 // transactions the editor knows how to build
+#include "TransactionFactory.h"
 #include "ChangeAttributeTxn.h"
 #include "CreateElementTxn.h"
 #include "DeleteElementTxn.h"
 #include "InsertTextTxn.h"
 #include "DeleteTextTxn.h"
 #include "DeleteRangeTxn.h"
+#include "SplitElementTxn.h"
+#include "JoinElementTxn.h"
 
 
 static NS_DEFINE_IID(kIDOMEventReceiverIID, NS_IDOMEVENTRECEIVER_IID);
@@ -58,8 +64,18 @@ static NS_DEFINE_IID(kIEditFactoryIID,      NS_IEDITORFACTORY_IID);
 static NS_DEFINE_IID(kIEditorIID,           NS_IEDITOR_IID);
 static NS_DEFINE_IID(kISupportsIID,         NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kEditorCID,            NS_EDITOR_CID);
+// transaction manager
 static NS_DEFINE_IID(kITransactionManagerIID, NS_ITRANSACTIONMANAGER_IID);
 static NS_DEFINE_CID(kCTransactionManagerFactoryCID, NS_TRANSACTION_MANAGER_FACTORY_CID);
+// transactions
+static NS_DEFINE_IID(kInsertTextTxnIID,     INSERT_TEXT_TXN_IID);
+static NS_DEFINE_IID(kDeleteTextTxnIID,     DELETE_TEXT_TXN_IID);
+static NS_DEFINE_IID(kCreateElementTxnIID,  CREATE_ELEMENT_TXN_IID);
+static NS_DEFINE_IID(kDeleteElementTxnIID,  DELETE_ELEMENT_TXN_IID);
+static NS_DEFINE_IID(kDeleteRangeTxnIID,    DELETE_RANGE_TXN_IID);
+static NS_DEFINE_IID(kChangeAttributeTxnIID,CHANGE_ATTRIBUTE_TXN_IID);
+static NS_DEFINE_IID(kSplitElementTxnIID,   SPLIT_ELEMENT_TXN_IID);
+static NS_DEFINE_IID(kJoinElementTxnIID,    JOIN_ELEMENT_TXN_IID);
 
 
 #ifdef XP_PC
@@ -165,6 +181,7 @@ nsEditor::nsEditor()
 nsEditor::~nsEditor()
 {
   NS_IF_RELEASE(mPresShell);
+  NS_IF_RELEASE(mViewManager);
   NS_IF_RELEASE(mTxnMgr);
   
   //the autopointers will clear themselves up. 
@@ -229,6 +246,8 @@ nsEditor::Init(nsIDOMDocument *aDomInterface, nsIPresShell* aPresShell)
   mDomInterfaceP = aDomInterface;
   mPresShell = aPresShell;
   NS_ADDREF(mPresShell);
+  mViewManager = mPresShell->GetViewManager();
+  mUpdateCount=0;
 
   nsresult t_result = NS_NewEditorKeyListener(getter_AddRefs(mKeyListenerP), this);
   if (NS_OK != t_result)
@@ -308,13 +327,13 @@ nsEditor::Init(nsIDOMDocument *aDomInterface, nsIPresShell* aPresShell)
 nsresult
 nsEditor::InsertString(nsString *aString)
 {
-  return AppendText(aString);
+  return NS_OK;
 }
 
 
 
 nsresult
-nsEditor::SetProperties(PROPERTIES aProperty)
+nsEditor::SetProperties(Properties aProperties)
 {
   return NS_OK;
 }
@@ -322,7 +341,7 @@ nsEditor::SetProperties(PROPERTIES aProperty)
 
 
 nsresult
-nsEditor::GetProperties(PROPERTIES **)
+nsEditor::GetProperties(Properties **aProperties)
 {
   return NS_OK;
 }
@@ -334,9 +353,13 @@ nsEditor::SetAttribute(nsIDOMElement *aElement, const nsString& aAttribute, cons
   nsresult result;
   if (nsnull != aElement)
   {
-    ChangeAttributeTxn *txn = new ChangeAttributeTxn(this, aElement, aAttribute, aValue, PR_FALSE);
+    ChangeAttributeTxn *txn;
+    result = TransactionFactory::GetNewTransaction(kChangeAttributeTxnIID, (EditTxn **)&txn);
     if (nsnull!=txn)
-      result = ExecuteTransaction(txn);  
+    {
+      txn->Init(this, aElement, aAttribute, aValue, PR_FALSE);
+      result = Do(txn);  
+    }
   }
   return result;
 }
@@ -369,10 +392,14 @@ nsEditor::RemoveAttribute(nsIDOMElement *aElement, const nsString& aAttribute)
   nsresult result;
   if (nsnull != aElement)
   {
-    nsString value;
-    ChangeAttributeTxn *txn = new ChangeAttributeTxn(this, aElement, aAttribute, value, PR_TRUE);
+    ChangeAttributeTxn *txn;
+    result = TransactionFactory::GetNewTransaction(kChangeAttributeTxnIID, (EditTxn **)&txn);
     if (nsnull!=txn)
-      result = ExecuteTransaction(txn);  
+    {
+      nsAutoString value;
+      txn->Init(this, aElement, aAttribute, value, PR_TRUE);
+      result = Do(txn);  
+    }
   }
   return result;
 }
@@ -420,26 +447,6 @@ nsEditor::MouseClick(int aX,int aY)
 //BEGIN nsEditor Private methods
 
 
-
-nsresult
-nsEditor::AppendText(nsString *aStr)
-{
-  nsCOMPtr<nsIDOMNode> currentNode;
-  nsCOMPtr<nsIDOMNode> textNode;
-  nsCOMPtr<nsIDOMText> text;
-  if (!aStr)
-    return NS_ERROR_NULL_POINTER;
-  if (NS_SUCCEEDED(GetCurrentNode(getter_AddRefs(currentNode))) && 
-      NS_SUCCEEDED(GetFirstTextNode(currentNode,getter_AddRefs(textNode))) && 
-      NS_SUCCEEDED(textNode->QueryInterface(kIDOMTextIID, getter_AddRefs(text)))) {
-    text->AppendData(*aStr);
-  }
-
-  return NS_OK;
-}
-
-
-
 nsresult
 nsEditor::GetCurrentNode(nsIDOMNode ** aNode)
 {
@@ -485,7 +492,7 @@ nsEditor::GetFirstNodeOfType(nsIDOMNode *aStartNode, const nsString &aTag, nsIDO
   while (childNode)
   {
     result = childNode->QueryInterface(kIDOMNodeIID,getter_AddRefs(element));
-    nsString tag;
+    nsAutoString tag;
     if (NS_SUCCEEDED(result) && (element))
     {    
       element->GetTagName(tag);
@@ -500,9 +507,8 @@ nsEditor::GetFirstNodeOfType(nsIDOMNode *aStartNode, const nsString &aTag, nsIDO
           return result;
       }
     }
-    nsCOMPtr<nsIDOMNode> xNode;
-    childNode->GetNextSibling(getter_AddRefs(xNode));
-    childNode=xNode;
+    nsCOMPtr<nsIDOMNode> temp = childNode;
+    temp->GetNextSibling(getter_AddRefs(childNode));
   }
 
   return NS_ERROR_FAILURE;
@@ -559,7 +565,7 @@ nsEditor::GetFirstTextNode(nsIDOMNode *aNode, nsIDOMNode **aRetNode)
 }
 
 nsresult 
-nsEditor::ExecuteTransaction(nsITransaction *aTxn)
+nsEditor::Do(nsITransaction *aTxn)
 {
   nsresult result = NS_OK;
   if (nsnull!=aTxn)
@@ -577,25 +583,63 @@ nsEditor::ExecuteTransaction(nsITransaction *aTxn)
 }
 
 nsresult 
-nsEditor::Undo()
+nsEditor::Undo(PRUint32 aCount)
 {
   nsresult result = NS_OK;
   if (nsnull!=mTxnMgr)
   {
-    result = mTxnMgr->Undo();
+    PRUint32 i=0;
+    for ( ; i<aCount; i++)
+    {
+      result = mTxnMgr->Undo();
+      if (NS_FAILED(result))
+        break;
+    }
   }
   return result;
 }
 
 nsresult 
-nsEditor::Redo()
+nsEditor::Redo(PRUint32 aCount)
 {
   nsresult result = NS_OK;
   if (nsnull!=mTxnMgr)
   {
-    result = mTxnMgr->Redo();
+    PRUint32 i=0;
+    for ( ; i<aCount; i++)
+    {
+      result = mTxnMgr->Redo();
+      if (NS_FAILED(result))
+        break;
+    }
   }
   return result;
+}
+
+nsresult 
+nsEditor::BeginUpdate()
+{
+  NS_PRECONDITION(mUpdateCount>=0, "bad state");
+  if (nsnull!=mViewManager)
+  {
+    if (0==mUpdateCount)
+      mViewManager->DisableRefresh();
+    mUpdateCount++;
+  }
+  return NS_OK;
+}
+
+nsresult 
+nsEditor::EndUpdate()
+{
+  NS_PRECONDITION(mUpdateCount>0, "bad state");
+  if (nsnull!=mViewManager)
+  {
+    mUpdateCount--;
+    if (0==mUpdateCount)
+      mViewManager->EnableRefresh();
+  }  
+  return NS_OK;
 }
 
 nsresult nsEditor::Delete(PRBool aForward, PRUint32 aCount)
@@ -610,9 +654,13 @@ nsresult nsEditor::CreateElement(const nsString& aTag,
   nsresult result;
   if (nsnull != aParent)
   {
-    CreateElementTxn *txn = new CreateElementTxn(this, mDomInterfaceP, aTag, aParent, aPosition);
+    CreateElementTxn *txn;
+    result = TransactionFactory::GetNewTransaction(kCreateElementTxnIID, (EditTxn **)&txn);
     if (nsnull!=txn)
-      result = ExecuteTransaction(txn);
+    {
+      txn->Init(mDomInterfaceP, aTag, aParent, aPosition);
+      result = Do(txn);
+    }
     else
       result = NS_ERROR_OUT_OF_MEMORY;
   }
@@ -628,9 +676,13 @@ nsresult nsEditor::DeleteElement(nsIDOMNode * aParent,
   nsresult result;
   if ((nsnull != aParent) && (nsnull != aElement))
   {
-    DeleteElementTxn *txn = new DeleteElementTxn(this, mDomInterfaceP, aElement, aParent);
+    DeleteElementTxn *txn;
+    result = TransactionFactory::GetNewTransaction(kDeleteElementTxnIID, (EditTxn **)&txn);
     if (nsnull!=txn)
-      result = ExecuteTransaction(txn);  
+    {
+      txn->Init(aElement, aParent);
+      result = Do(txn);  
+    }
     else
       result = NS_ERROR_OUT_OF_MEMORY;
   }
@@ -640,18 +692,51 @@ nsresult nsEditor::DeleteElement(nsIDOMNode * aParent,
   return result;
 }
 
-nsresult nsEditor::InsertText(nsIDOMCharacterData *aElement,
-                              PRUint32             aOffset,
-                              const nsString&      aStringToInsert)
+// XXX; factor -- should call BuildInsertTextTransaction to do most of the work
+nsresult nsEditor::InsertText(const nsString& aStringToInsert)
 {
   nsresult result;
-  if (nsnull != aElement)
+  nsISelection* selection;
+  result = mPresShell->GetSelection(&selection);
+  if ((NS_SUCCEEDED(result)) && (nsnull!=selection))
   {
-    InsertTextTxn *txn = new InsertTextTxn(this, aElement, aOffset, aStringToInsert);
-    if (nsnull!=txn)
-      result = ExecuteTransaction(txn);
-    else
-      result = NS_ERROR_OUT_OF_MEMORY;
+    nsCOMPtr<nsIEnumerator> enumerator;
+    enumerator = selection;
+    if (enumerator)
+    {
+      enumerator->First(); 
+      nsISupports *currentItem;
+      result = enumerator->CurrentItem(&currentItem);
+      if ((NS_SUCCEEDED(result)) && (nsnull!=currentItem))
+      {
+        // XXX: we'll want to deleteRange if the selection isn't just an insertion point
+        // for now, just insert text after the start of the first node
+        nsCOMPtr<nsIDOMRange> range = currentItem;
+        if (range)
+        {
+          nsCOMPtr<nsIDOMNode> node;
+          result = range->GetStartParent(getter_AddRefs(node));
+          if ((NS_SUCCEEDED(result)) && (node))
+          {
+            nsCOMPtr<nsIDOMCharacterData> nodeAsText = node;
+            if (nodeAsText)
+            {
+              PRInt32 offset;
+              range->GetStartOffset(&offset);
+              InsertTextTxn *txn;
+              result = TransactionFactory::GetNewTransaction(kInsertTextTxnIID, (EditTxn **)&txn);
+              if (nsnull!=txn)
+              {
+                txn->Init(nodeAsText, offset, aStringToInsert);
+                result = Do(txn);
+              }
+              else
+                result = NS_ERROR_OUT_OF_MEMORY;
+            }
+          }
+        }
+      }
+    }
   }
   else
     result = NS_ERROR_INVALID_ARG;
@@ -659,6 +744,7 @@ nsresult nsEditor::InsertText(nsIDOMCharacterData *aElement,
   return result;
 }
 
+// XXX; factor -- should call BuildDeleteTextTransaction to do most of the work
 nsresult nsEditor::DeleteText(nsIDOMCharacterData *aElement,
                               PRUint32             aOffset,
                               PRUint32             aLength)
@@ -666,9 +752,13 @@ nsresult nsEditor::DeleteText(nsIDOMCharacterData *aElement,
   nsresult result=NS_OK;
   if (nsnull != aElement)
   {
-    DeleteTextTxn *txn = new DeleteTextTxn(this, aElement, aOffset, aLength);
+    DeleteTextTxn *txn;
+    result = TransactionFactory::GetNewTransaction(kDeleteTextTxnIID, (EditTxn **)&txn);
     if (nsnull!=txn)
-      result = ExecuteTransaction(txn);
+    {
+      txn->Init(aElement, aOffset, aLength);
+      result = Do(txn);
+    }
     else
       result = NS_ERROR_OUT_OF_MEMORY;
   }
@@ -678,6 +768,10 @@ nsresult nsEditor::DeleteText(nsIDOMCharacterData *aElement,
   return result;
 }
 
+// XXX; factor -- should call DeleteSelectionTransaction to do most of the work
+// XXX: these should get wrapped up in a single composite transaction
+// rather than executing each individually, maybe I should alloc a generic aggregate
+// and stick each in there, then execute the aggregate
 nsresult nsEditor::DeleteSelection()
 {
   nsresult result;
@@ -685,15 +779,34 @@ nsresult nsEditor::DeleteSelection()
   result = mPresShell->GetSelection(&selection);
   if ((NS_SUCCEEDED(result)) && (nsnull!=selection))
   {
-    nsCOMPtr<nsIDOMRange> range;
-    result = selection->QueryInterface(kIDOMRangeIID, getter_AddRefs(range));
-    if ((NS_SUCCEEDED(result)) && (range))
+    nsCOMPtr<nsIEnumerator> enumerator;
+    enumerator = selection;
+    if (enumerator)
     {
-      DeleteRangeTxn *txn = new DeleteRangeTxn(this, range);
-      if (nsnull!=txn)
-        result = ExecuteTransaction(txn);  
-      else
-        result = NS_ERROR_OUT_OF_MEMORY;
+      enumerator->First();  
+      nsISupports *currentItem;
+      result = enumerator->CurrentItem(&currentItem);
+      if ((NS_SUCCEEDED(result)) && (nsnull!=currentItem))
+      {
+        nsCOMPtr<nsIDOMRange> range = currentItem;
+        DeleteRangeTxn *txn;
+        result = TransactionFactory::GetNewTransaction(kDeleteRangeTxnIID, (EditTxn **)&txn);
+        if (nsnull!=txn)
+        {
+          txn->Init(range);
+          result = Do(txn);  
+        }
+        else
+          result = NS_ERROR_OUT_OF_MEMORY;
+        if (NS_SUCCEEDED(result))
+        {
+          nsresult nextResult = enumerator->Next();
+          if (NS_SUCCEEDED(nextResult))
+          {
+            result = enumerator->CurrentItem(&currentItem);
+          }
+        }
+      }
     }
   }
   else
@@ -703,30 +816,31 @@ nsresult nsEditor::DeleteSelection()
 }
 
 nsresult 
-nsEditor::SplitNode(nsIDOMNode * aNode,
+nsEditor::SplitNode(nsIDOMNode * aExistingRightNode,
                     PRInt32      aOffset,
-                    nsIDOMNode*  aNewNode,
+                    nsIDOMNode*  aNewLeftNode,
                     nsIDOMNode*  aParent)
 {
   nsresult result;
-  NS_ASSERTION(((nsnull!=aNode) &&
-                (nsnull!=aNewNode) &&
+  NS_ASSERTION(((nsnull!=aExistingRightNode) &&
+                (nsnull!=aNewLeftNode) &&
                 (nsnull!=aParent)),
                 "null arg");
-  if ((nsnull!=aNode) &&
-      (nsnull!=aNewNode) &&
+  if ((nsnull!=aExistingRightNode) &&
+      (nsnull!=aNewLeftNode) &&
       (nsnull!=aParent))
   {
     nsCOMPtr<nsIDOMNode> resultNode;
-    result = aParent->InsertBefore(aNewNode, aNode, getter_AddRefs(resultNode));
+    result = aParent->InsertBefore(aNewLeftNode, aExistingRightNode, getter_AddRefs(resultNode));
     if (NS_SUCCEEDED(result))
     {
       // split the children between the 2 nodes
-      // at this point, nNode has all the children
+      // at this point, aExistingRightNode has all the children
+      // move all the children whose index is < aOffset to aNewLeftNode
       if (0<=aOffset) // don't bother unless we're going to move at least one child
       {
         nsCOMPtr<nsIDOMNodeList> childNodes;
-        result = aParent->GetChildNodes(getter_AddRefs(childNodes));
+        result = aExistingRightNode->GetChildNodes(getter_AddRefs(childNodes));
         if ((NS_SUCCEEDED(result)) && (childNodes))
         {
           PRInt32 i=0;
@@ -736,10 +850,10 @@ nsEditor::SplitNode(nsIDOMNode * aNode,
             result = childNodes->Item(i, getter_AddRefs(childNode));
             if ((NS_SUCCEEDED(result)) && (childNode))
             {
-              result = aNode->RemoveChild(childNode, getter_AddRefs(resultNode));
+              result = aExistingRightNode->RemoveChild(childNode, getter_AddRefs(resultNode));
               if (NS_SUCCEEDED(result))
               {
-                result = aNewNode->AppendChild(childNode, getter_AddRefs(resultNode));
+                result = aNewLeftNode->AppendChild(childNode, getter_AddRefs(resultNode));
               }
             }
           }

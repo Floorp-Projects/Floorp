@@ -25,6 +25,7 @@ CPPSRCS =				\
       editorInterfaces.cpp   \
       nsEditFactory.cpp      \
       EditTxn.cpp            \
+      EditAggregateTxn.cpp   \
       ChangeAttributeTxn.cpp \
       InsertTextTxn.cpp      \
       DeleteTextTxn.cpp      \
@@ -32,6 +33,8 @@ CPPSRCS =				\
       DeleteElementTxn.cpp   \
       DeleteRangeTxn.cpp     \
       SplitElementTxn.cpp    \
+      JoinElementTxn.cpp     \
+      TransactionFactory.cpp \
 	$(NULL)
 
 CPP_OBJS =					\
@@ -39,6 +42,7 @@ CPP_OBJS =					\
 	.\$(OBJDIR)\nsEditFactory.obj		    \
 	.\$(OBJDIR)\editorInterfaces.obj		\
   .\$(OBJDIR)\EditTxn.obj             \
+  .\$(OBJDIR)\EditAggregateTxn.obj    \
   .\$(OBJDIR)\ChangeAttributeTxn.obj  \
   .\$(OBJDIR)\InsertTextTxn.obj       \
   .\$(OBJDIR)\DeleteTextTxn.obj       \
@@ -46,6 +50,8 @@ CPP_OBJS =					\
   .\$(OBJDIR)\DeleteElementTxn.obj    \
   .\$(OBJDIR)\DeleteRangeTxn.obj      \
   .\$(OBJDIR)\SplitElementTxn.obj     \
+  .\$(OBJDIR)\JoinElementTxn.obj      \
+  .\$(OBJDIR)\TransactionFactory.obj  \
 	$(NULL)
 
 MODULE=editor 

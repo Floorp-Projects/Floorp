@@ -20,10 +20,15 @@
 #define CreateElementTxn_h__
 
 #include "EditTxn.h"
+#include "nsIDOMDocument.h"
+#include "nsIDOMNode.h"
+#include "nsIDOMElement.h"
+#include "nsCOMPtr.h"
 
-class nsIDOMDocument;
-class nsIDOMNode;
-class nsIDOMElement;
+#define CREATE_ELEMENT_TXN_IID \
+{/* 7a6393c0-ac48-11d2-86d8-000064657374 */ \
+0x7a6393c0, 0xac48, 0x11d2, \
+{0x86, 0xd8, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74} }
 
 /**
  * A transaction that creates a new node in the content tree.
@@ -34,11 +39,15 @@ public:
 
   enum { eAppend=-1 };
 
-  CreateElementTxn(nsEditor *aEditor,
-                   nsIDOMDocument *aDoc,
-                   const nsString& aTag,
-                   nsIDOMNode *aParent,
-                   PRUint32 aOffsetInParent);
+  virtual nsresult Init(nsIDOMDocument *aDoc,
+                        const nsString& aTag,
+                        nsIDOMNode *aParent,
+                        PRUint32 aOffsetInParent);
+
+private:
+  CreateElementTxn();
+
+public:
 
   virtual ~CreateElementTxn();
 
@@ -61,22 +70,24 @@ public:
 protected:
   
   /** the document into which the new node will be inserted */
-  nsIDOMDocument *mDoc;
+  nsCOMPtr<nsIDOMDocument> mDoc;
   
   /** the tag (mapping to object type) for the new element */
   nsString mTag;
 
   /** the node into which the new node will be inserted */
-  nsIDOMNode *mParent;
+  nsCOMPtr<nsIDOMNode> mParent;
 
   /** the index in mParent for the new node */
   PRUint32 mOffsetInParent;
 
   /** the new node to insert */
-  nsIDOMElement *mNewNode;  
+  nsCOMPtr<nsIDOMElement> mNewNode;  
 
   /** the node we will insert mNewNode before.  We compute this ourselves. */
-  nsIDOMNode *mRefNode;
+  nsCOMPtr<nsIDOMNode> mRefNode;
+
+  friend class TransactionFactory;
 
 };
 

@@ -19,22 +19,33 @@
 #ifndef DeleteRangeTxn_h__
 #define DeleteRangeTxn_h__
 
-#include "EditTxn.h"
+#include "EditAggregateTxn.h"
 #include "nsIDOMNode.h"
+#include "nsIEditor.h"
 #include "nsCOMPtr.h"
 
 class nsIDOMDocument;
 class nsIDOMRange;
+class nsISupportsArray;
+
+#define DELETE_RANGE_TXN_IID \
+{/* 5ec6b260-ac49-11d2-86d8-000064657374 */ \
+0x5ec6b260, 0xac49, 0x11d2, \
+{0x86, 0xd8, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74} }
 
 /**
  * A transaction that deletes an entire range in the content tree
  */
-class DeleteRangeTxn : public EditTxn
+class DeleteRangeTxn : public EditAggregateTxn
 {
 public:
 
-  DeleteRangeTxn(nsEditor *aEditor,
-                 nsIDOMRange *aRange);
+  virtual nsresult Init(nsIDOMRange *aRange);
+
+private:
+  DeleteRangeTxn();
+
+public:
 
   virtual ~DeleteRangeTxn();
 
@@ -55,6 +66,23 @@ public:
   virtual nsresult GetRedoString(nsString **aString);
 
 protected:
+
+  virtual nsresult CreateTxnsToDeleteBetween(nsIDOMNode *aStartParent, 
+                                             PRUint32    aStartOffset, 
+                                             PRUint32    aEndOffset);
+
+  virtual nsresult CreateTxnsToDeleteNodesBetween(nsIDOMNode *aParent, 
+                                                  nsIDOMNode *aFirstChild,
+                                                  nsIDOMNode *aLastChild);
+
+  virtual nsresult CreateTxnsToDeleteContent(nsIDOMNode *aParent, 
+                                             PRUint32 aOffset, 
+                                             nsIEditor::Direction aDir);
+  
+  virtual nsresult BuildAncestorList(nsIDOMNode       *aNode, 
+                                     nsISupportsArray *aList);
+
+protected:
   
   /** p1 in the range */
   nsCOMPtr<nsIDOMNode> mStartParent;
@@ -65,8 +93,13 @@ protected:
   /** p2 in the range */
   nsCOMPtr<nsIDOMNode> mEndParent;
 
+  /** the closest common parent of p1 and p2 */
+  nsCOMPtr<nsIDOMNode> mCommonParent;
+
   /** p2 offset */
   PRInt32 mEndOffset;
+
+  friend class TransactionFactory;
 
 };
 

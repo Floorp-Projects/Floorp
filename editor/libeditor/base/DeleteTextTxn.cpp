@@ -17,20 +17,23 @@
  */
 
 #include "DeleteTextTxn.h"
-#include "editor.h"
 #include "nsIDOMCharacterData.h"
 
-// note that aEditor is not refcounted
-DeleteTextTxn::DeleteTextTxn(nsEditor *aEditor,
-                             nsIDOMCharacterData *aElement,
+
+DeleteTextTxn::DeleteTextTxn()
+  : EditTxn()
+{
+}
+
+nsresult DeleteTextTxn::Init(nsIDOMCharacterData *aElement,
                              PRUint32 aOffset,
                              PRUint32 aNumCharsToDelete)
-  : EditTxn(aEditor)
 {
   mElement = aElement;
   mOffset = aOffset;
   mNumCharsToDelete = aNumCharsToDelete;
   mDeletedText = "";
+  return NS_OK;
 }
 
 nsresult DeleteTextTxn::Do(void)
