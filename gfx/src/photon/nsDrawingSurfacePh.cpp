@@ -130,48 +130,65 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Lock( PRInt32 aX, PRInt32 aY,
                                           PRUint32 aWidth, PRUint32 aHeight,
                                           void **aBits, PRInt32 *aStride,
                                           PRInt32 *aWidthBytes, PRUint32 aFlags ) {
-	PhArea_t    dst_area, src_area;
-	int         format = 0, bpl;
 
 	if( mLocked ) return NS_ERROR_FAILURE;
 
-	// create an offscreen context to save the locked rectangle into
-	PdOffscreenContext_t *odc = (PdOffscreenContext_t *) mDrawContext;
-	format = odc->format;
-	mLockDrawContext = ( PhDrawContext_t * )PdCreateOffscreenContext( format, aWidth, aHeight, Pg_OSC_MEM_PAGE_ALIGN );
-	if( !mLockDrawContext ) return NS_ERROR_FAILURE;
-
-	dst_area.pos.x = dst_area.pos.y = 0;
-	dst_area.size.w = aWidth;
-	dst_area.size.h = aHeight;
-	src_area.pos.x = aX;
-	src_area.pos.y = aY;
-	src_area.size.w = aWidth;
-	src_area.size.h = aHeight;
-	PgContextBlitArea( (PdOffscreenContext_t *)mDrawContext, &src_area, (PdOffscreenContext_t *) mLockDrawContext, &dst_area );
-
-	*aBits = PdGetOffscreenContextPtr( (PdOffscreenContext_t *) mLockDrawContext );
-	if( *aBits == nsnull ) return NS_ERROR_FAILURE; /* on certain hardware this may fail */
+	PdOffscreenContext_t *odc = (PdOffscreenContext_t *) mDrawContext, *dc;
+	int bpp, format = odc->format, offset;
 
 	switch( format ) {
 		case Pg_IMAGE_PALETTE_BYTE:
-			bpl = 1;
+			bpp = 1;
 			break;
 		case Pg_IMAGE_DIRECT_8888:
-			bpl = 4;
-			break;
+			bpp = 4;
+		break;
 		case Pg_IMAGE_DIRECT_888:
-			bpl = 3;
+			bpp = 3;
 			break;
 		case Pg_IMAGE_DIRECT_565:
 		case Pg_IMAGE_DIRECT_555:
-			bpl = 2;
+			bpp = 2;
 			break;
 		default:
 		    return NS_ERROR_FAILURE;
 		}
 
-	*aStride = *aWidthBytes = bpl * dst_area.size.w;
+
+	if( !( aFlags & NS_LOCK_SURFACE_READ_ONLY ) ) {
+		PhArea_t dst_area, src_area;
+
+		// create an offscreen context to save the locked rectangle into
+		mLockDrawContext = ( PhDrawContext_t * )PdCreateOffscreenContext( format, aWidth, aHeight, Pg_OSC_MEM_PAGE_ALIGN );
+		if( !mLockDrawContext ) return NS_ERROR_FAILURE;
+
+		dst_area.pos.x = dst_area.pos.y = 0;
+		dst_area.size.w = aWidth;
+		dst_area.size.h = aHeight;
+		src_area.pos.x = aX;
+		src_area.pos.y = aY;
+		src_area.size.w = aWidth;
+		src_area.size.h = aHeight;
+
+		PhDCSetCurrent( mLockDrawContext );
+		PgContextBlitAreaCx( mLockDrawContext, (PdOffscreenContext_t *)mDrawContext, &src_area, (PdOffscreenContext_t *) mLockDrawContext, &dst_area );
+		PgFlushCx( mLockDrawContext );
+		dc = (PdOffscreenContext_t *) mLockDrawContext; /* to be used to get the stride and bits */
+		offset = 0;
+		}
+	else {
+		mLockDrawContext = nsnull;
+		dc = (PdOffscreenContext_t *) mDrawContext; /* to be used to get the stride and bits */
+		offset = aX * bpp + aY * dc->pitch;
+		}
+
+	*aBits = PdGetOffscreenContextPtr( dc );
+	if( *aBits == nsnull ) return NS_ERROR_FAILURE; /* on certain hardware this may fail */
+
+	if( offset ) *aBits = ( (char*) *aBits ) + offset;
+
+	*aWidthBytes = bpp * aWidth;
+	*aStride = dc->pitch;
 
 	mLocked = PR_TRUE;
 	mLockX = aX;
@@ -197,12 +214,15 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Unlock( void ) {
 		src_area.pos.x = src_area.pos.y = 0;
 		src_area.size.w = mLockWidth;
 		src_area.size.h = mLockHeight;
-		PgContextBlitArea( (PdOffscreenContext_t *) mLockDrawContext, &src_area, (PdOffscreenContext_t *) mDrawContext, &dst_area );
-		}
 
-	// release the mLockDrawContext somehow !!
-	PhDCRelease( (PdDirectContext_t *) mLockDrawContext );
-	mLockDrawContext = nsnull;
+		PhDCSetCurrent( mDrawContext );
+		PgContextBlitAreaCx( mDrawContext, (PdOffscreenContext_t *) mLockDrawContext, &src_area, (PdOffscreenContext_t *) mDrawContext, &dst_area );
+		PgFlushCx( mDrawContext );
+
+		// release the mLockDrawContext
+		PhDCRelease( (PdDirectContext_t *) mLockDrawContext );
+		mLockDrawContext = nsnull;
+		}
 
 	mLocked = PR_FALSE;
 	return NS_OK;
@@ -218,7 +238,7 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Init( PRUint32 aWidth, PRUint32 aHeight, PRU
 	/* an offscreen surface owns its own PhGC_t */
 	mGC = PgCreateGC( 0 );
 
-	mDrawContext = (PhDrawContext_t *)PdCreateOffscreenContext(0, mWidth, mHeight, 0);
+	mDrawContext = (PhDrawContext_t *)PdCreateOffscreenContext(0, mWidth, mHeight, Pg_OSC_MEM_PAGE_ALIGN);
 	if( !mDrawContext ) return NS_ERROR_FAILURE;
 
 	PgSetDrawBufferSizeCx( mDrawContext, 0xffff );
@@ -244,7 +264,7 @@ int nsDrawingSurfacePh::prefChanged(const char *aPref, void *aClosure)
 	if(surface->mIsOffscreen) {
 		surface->mDrawContext->gc = nsnull; /* because we do not want to destroy the one we have since other have it */
 		PhDCRelease( surface->mDrawContext ); 
-		surface->mDrawContext = (PhDrawContext_t *)PdCreateOffscreenContext(0, surface->mWidth, surface->mHeight, 0);
+		surface->mDrawContext = (PhDrawContext_t *)PdCreateOffscreenContext(0, surface->mWidth, surface->mHeight, Pg_OSC_MEM_PAGE_ALIGN);
 		if( !surface->mDrawContext ) return NS_ERROR_FAILURE;
 
 		PgSetDrawBufferSizeCx( surface->mDrawContext, 0xffff );
