@@ -20,7 +20,7 @@
 <script type="text/javascript">
 
 
-touse = document.getElementById("touse");
+var touse = document.getElementById("touse");
 
 while (touse.hasChildNodes() ) {
         touse.removeChild(touse.firstChild);
@@ -28,7 +28,7 @@ while (touse.hasChildNodes() ) {
 
 /* i could be 0 or 1 - whatever is first ends up at the end */
 for ( var i = 0 ; i < 6; i++ ) {
-        newcell = touse.insertCell(i);
+      var  newcell = touse.insertCell(i);
         newcell.appendChild(
                 document.createTextNode("This is cell number " + i + ".")
                 )
