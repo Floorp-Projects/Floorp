@@ -29,46 +29,29 @@
 # Send comments, improvements, bugs to ramiro@netscape.com
 # 
 
-# Make sure a Makefile.in exists
-if [ ! -f Makefile.in ]
+# Make sure a Makefile exists
+if [ ! -f Makefile ]
 then
 	echo
-	echo "There ain't no 'Makefile.in' over here: $pwd"
+	echo "There ain't no 'Makefile' over here: $pwd"
 	echo
 
 	exit
 fi
 
-# Use DEPTH in the Makefile.in to determine the depth
-depth=`grep -w DEPTH Makefile.in  | grep -e "\.\." | awk -F"=" '{ print $2; }'`
+# Use DEPTH in the Makefile to determine the depth
+depth=`egrep '^DEPTH[ 	]*=[ 	]*\.' Makefile | awk -F= '{ print $2; }'`
 
-# Determine the depth count
-n=`echo $depth | tr '/' ' ' | wc -w`
+# Get the full path to the Makefile
+makefile=`pwd`/Makefile
 
-# Determine the path (strip anything before the mozilla/ root)
-path=`pwd | awk -v count=$n -F"/" '\
-{ for(i=NF-count+1; i <= NF ; i++) \
-{ \
-if (i!=NF) \
-  { printf "%s/", $i } \
-else \
-  { printf "%s", $i } \
-} \
-}'`
-
-dir=$path
-
-# Add a slash only to dirs where depth >= mozilla_root
-if [ $n -gt 0 ]
-then
-	dir=${dir}"/"
-fi
-
-back=`pwd`
-
-makefile=${dir}"Makefile"
-
+# 'cd' to the root of the tree
+echo depth=$depth
 cd $depth
+
+# Strip the tree root off the Makefile's path
+root_path=`pwd`
+makefile=`expr $makefile : $root_path'/\(.*\)'`
 
 # Make sure config.status exists
 if [ -f config.status ]
@@ -79,5 +62,3 @@ else
 	echo "There ain't no 'config.status' over here: $pwd"
 	echo
 fi
-
-cd $back
