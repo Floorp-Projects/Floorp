@@ -1086,6 +1086,9 @@ sub BuildIDLProjects()
     BuildIDLProject(":mozilla:modules:plugin:base:macbuild:pluginIDL.mcp",          "plugin");
     BuildIDLProject(":mozilla:modules:oji:macbuild:ojiIDL.mcp",                     "oji");
     BuildIDLProject(":mozilla:js:macbuild:XPConnectIDL.mcp",                        "xpconnect");
+    if ($main::options{xpctools}) {
+        BuildIDLProject(":mozilla:js:macbuild:XPCToolsIDL.mcp",                     "xpctools");
+    }
     BuildIDLProject(":mozilla:dom:macbuild:domIDL.mcp",                             "dom");
     BuildIDLProject(":mozilla:dom:macbuild:dom_baseIDL.mcp",                        "dom_base");
     BuildIDLProject(":mozilla:dom:macbuild:dom_coreIDL.mcp",                        "dom_core");
@@ -1325,6 +1328,9 @@ sub BuildCommonProjects()
     BuildOneProject(":mozilla:caps:macbuild:Caps.mcp",                          "Caps$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:modules:libpref:macbuild:libpref.mcp",            "libpref$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:js:macbuild:XPConnect.mcp",                       "XPConnect$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
+    if ($main::options{xpctools}) {
+        BuildOneProject(":mozilla:js:macbuild:XPCTools.mcp",                    "XPCTools$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    }
     BuildOneProject(":mozilla:modules:libutil:macbuild:libutil.mcp",            "libutil$D.$S", 1, $main::ALIAS_SYM_FILES, 0);
 
     BuildOneProject(":mozilla:db:mork:macbuild:mork.mcp",                       "Mork$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
