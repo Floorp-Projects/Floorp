@@ -28,8 +28,8 @@
  * Internal configuration macros
  */
 
-#define PR_LINKER_ARCH	"reliantunix"
-#define _PR_SI_SYSNAME	"ReliantUNIX"
+#define PR_LINKER_ARCH	"sinix"
+#define _PR_SI_SYSNAME	"SINIX"
 #define _PR_SI_ARCHITECTURE "mips"
 #define PR_DLL_SUFFIX ".so"
 

@@ -75,7 +75,7 @@ MDCPUCFG_H = _solaris.cfg
 endif
 endif
 
-ifeq ($(OS_ARCH),ReliantUNIX)
+ifeq ($(OS_ARCH),SINIX)
 MDCPUCFG_H = _reliantunix.cfg
 endif
 

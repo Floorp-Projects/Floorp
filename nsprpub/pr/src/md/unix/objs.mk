@@ -127,7 +127,7 @@ endif
 ifeq ($(OS_ARCH),UNIXWARE)
 CSRCS += $(UNIXWARE_CSRCS)
 endif
-ifeq ($(OS_ARCH),ReliantUNIX)
+ifeq ($(OS_ARCH),SINIX)
 CSRCS += $(RELIANTUNIX_CSRCS)
 endif
 ifeq ($(OS_ARCH),NEC)
@@ -163,8 +163,8 @@ ifeq ($(OS_ARCH),SunOS)
     endif
 endif
 
-ifeq ($(OS_ARCH), ReliantUNIX)
-    ASFILES   = os_$(OS_ARCH).s
+ifeq ($(OS_ARCH), SINIX)
+    ASFILES   = os_ReliantUNIX.s
 endif
 
 ifeq ($(OS_ARCH)$(OS_RELEASE),BSD_OS2.1)

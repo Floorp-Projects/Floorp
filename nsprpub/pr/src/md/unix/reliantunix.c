@@ -17,7 +17,7 @@
  */
 
 /*
- * ReliantUNIX5.4 - copied from unixware.c by chrisk 040497
+ * SINIX (ReliantUNIX) 5.4 - copied from unixware.c by chrisk 040497
  */
 #include "primpl.h"
 
@@ -89,12 +89,12 @@ _MD_WAKEUP_WAITER(PRThread *thread)
     return PR_SUCCESS;
 }
 
-/* These functions should not be called for ReliantUNIX */
+/* These functions should not be called for SINIX */
 /* Why? Just copied it from UNIXWARE... flying-by-night, chrisk 040497 */
 void
 _MD_YIELD(void)
 {
-    PR_NOT_REACHED("_MD_YIELD should not be called for ReliantUNIX.");
+    PR_NOT_REACHED("_MD_YIELD should not be called for SINIX.");
 }
 
 PRStatus
@@ -106,7 +106,7 @@ _MD_CREATE_THREAD(
     PRThreadState state,
     PRUint32 stackSize)
 {
-    PR_NOT_REACHED("_MD_CREATE_THREAD should not be called for ReliantUNIX.");
+    PR_NOT_REACHED("_MD_CREATE_THREAD should not be called for SINIX.");
 #if defined(SNI) && !defined(__GNUC__)
     /* make compiler happy */
     return (PRStatus)NULL;
