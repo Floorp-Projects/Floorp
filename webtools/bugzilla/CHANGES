@@ -10,6 +10,43 @@ query the CVS tree.  For example,
 will tell you what has been changed in the last week.
 
 
+4/22/99 There was a bug where the long descriptions of bugs had a variety of
+newline characters at the end, depending on the operating system of the browser
+that submitted the text.  This bug has been fixed, so that no further changes
+like that will happen.  But to fix problems that have already crept into your
+database, you can run the following perl script (which is slow and ugly, but
+does work:)
+#!/usr/bonsaitools/bin/perl -w
+use diagnostics;
+use strict;
+require "globals.pl";
+$|=1;
+ConnectToDatabase();
+SendSQL("select bug_id from bugs order by bug_id");
+my @list;
+while (MoreSQLData()) {
+    push(@list, FetchOneColumn());
+}
+foreach my $id (@list) {
+    if ($id % 50 == 0) {
+	print "\n$id ";
+    }
+    SendSQL("select long_desc from bugs where bug_id = $id");
+    my $comment = FetchOneColumn();
+    my $orig = $comment;
+    $comment =~ s/\r\n/\n/g;     # Get rid of windows-style line endings.
+    $comment =~ s/\r/\n/g;       # Get rid of mac-style line endings.
+    if ($comment ne $orig) {
+	SendSQL("update bugs set long_desc = " . SqlQuote($comment) .
+		" where bug_id = $id");
+	print ".";
+    } else {
+	print "-";
+    }
+}
+
+
+
 4/8/99 Added ability to store patches with bugs.  This requires a new table
 to store the data, so you will need to run the "makeattachmenttable.sh" script.
 
