@@ -517,7 +517,8 @@ BEGIN_MESSAGE_MAP(CPublishDlg, CDialog)
 	ON_BN_CLICKED(IDC_INCLUDE_ALL_FILES, OnIncludeAllFiles)
 	ON_BN_CLICKED(IDC_INCLUDE_IMAGE_FILES, OnIncludeImageFiles)
 	ON_CBN_KILLFOCUS(IDC_PUBLISH_LOCATION_LIST, OnKillfocusPublishLocationList)
-	ON_BN_CLICKED(IDC_PUBLISH_DEFAULT_LOCATION, OnPublishDefaultLocation)
+	ON_BN_CLICKED(IDC_PUBLISH_DEFAULT_LOCATION, OnGetDefaultLocation)
+	ON_BN_CLICKED(IDC_NETCENTER_LOCATION, OnGetNetcenterLocation)
 	ON_CBN_SELCHANGE(IDC_PUBLISH_LOCATION_LIST, OnSelchangePublishLocation)
 	//}}AFX_MSG_MAP
 #ifdef XP_WIN32
@@ -630,9 +631,7 @@ BOOL CPublishDlg::OnInitDialog()
     } 
 
     // Pad an existing password to 10 characters to not reveal how long it is
-    if( !m_csPassword.IsEmpty() )
-        while( m_csPassword.GetLength() < 10 )
-            m_csPassword += " ";
+    PadPassword();
 
     // Terminate the lists
     m_ppUserList[i] = NULL;
@@ -870,6 +869,17 @@ void CPublishDlg::OnCancel()
 	CDialog::OnCancel();
 }
 
+void CPublishDlg::PadPassword()
+{
+    // Pad password out to 10 chars with spaces 
+    //  so we don't give away the length of the password
+    if( !m_csPassword.IsEmpty() )
+    {
+        while( m_csPassword.GetLength() < 10 )
+            m_csPassword += " ";
+    }
+}
+
 // Implemented in edprops.cpp
 extern int CompareStrings( const void *arg1, const void *arg2 );
 
@@ -1029,7 +1039,10 @@ void CPublishDlg::OnSelchangePublishLocation()
         // This is lame. We can't use UpdateData 
         //  or setting selected item doesn't work right!
         GetDlgItem(IDC_PUBLISH_USER)->SetWindowText(m_ppUserList[i]);
-        GetDlgItem(IDC_PUBLISH_PASSWORD)->SetWindowText(m_ppPasswordList[i]);
+
+        m_csPassword = m_ppPasswordList[i];
+        PadPassword();
+        GetDlgItem(IDC_PUBLISH_PASSWORD)->SetWindowText(m_csPassword);
     }
 }
 
@@ -1096,42 +1109,60 @@ void CPublishDlg::OnKillfocusPublishLocationList()
     UpdateData(FALSE);
 }
 
-
-void CPublishDlg::OnPublishDefaultLocation() 
+void CPublishDlg::OnGetNetcenterLocation() 
 {
     UpdateData(TRUE);
 
     GetDlgItem(IDC_PUBLISH_LOCATION_LIST)->GetWindowText(m_csLocation);
 
-    char * pDefaultLocation = NULL;
-	PREF_CopyCharPref("editor.publish_location", &pDefaultLocation);
-    if( !pDefaultLocation){
-        return;
-    }
+    
     char *pLocation = NULL;
     char *pUserName = NULL;
+    char *pPassword = NULL;
+    EDT_GetNetcenterPublishData(m_pMWContext, &pLocation, &pUserName, &pPassword);
 
-    // Parse the preference string to extract Username
-    //  password is separate for security munging
-    NET_ParseUploadURL( pDefaultLocation, &pLocation, 
-                        &pUserName, NULL );
+    // Note that we clear existing fields if not data is found
 
-    // It would be nice to use CString::GetBuffer, but we can't XP_FREE its contents!
     m_csLocation = pLocation;
     m_csUserName = pUserName;
-
-	char * pPass = NULL;
-	PREF_CopyCharPref("editor.publish_password", &pPass);
-    char * pPassword = SECNAV_UnMungeString(pPass);
     m_csPassword = pPassword;
-    XP_FREEIF(pPassword);
-
+    PadPassword();
+    
+    // We don't use DDX for this
     GetDlgItem(IDC_PUBLISH_LOCATION_LIST)->SetWindowText(pLocation);
     
-	XP_FREEIF(pDefaultLocation);
 	XP_FREEIF(pLocation);
     XP_FREEIF(pUserName);
-	XP_FREEIF(pPass);
+	XP_FREEIF(pPassword);
+
+    UpdateData(FALSE);
+}
+
+void CPublishDlg::OnGetDefaultLocation() 
+{
+    UpdateData(TRUE);
+
+    GetDlgItem(IDC_PUBLISH_LOCATION_LIST)->GetWindowText(m_csLocation);
+
+    
+    char *pLocation = NULL;
+    char *pUserName = NULL;
+    char *pPassword = NULL;
+    EDT_GetUserDefaultPublishData(m_pMWContext, &pLocation, &pUserName, &pPassword);
+
+    // Note that we clear existing fields if not data is found
+
+    m_csLocation = pLocation;
+    m_csUserName = pUserName;
+    m_csPassword = pPassword;
+    PadPassword();
+    
+    // We don't use DDX for this
+    GetDlgItem(IDC_PUBLISH_LOCATION_LIST)->SetWindowText(pLocation);
+    
+	XP_FREEIF(pLocation);
+    XP_FREEIF(pUserName);
+	XP_FREEIF(pPassword);
 
     UpdateData(FALSE);
 }

@@ -6254,6 +6254,7 @@ mouse_over_callback(MWContext * context, LO_Element * lo_element, int32 event,
     //   which are tightly surrounded by a cell boundary.
     //  TODO: Alt key leaves menu select mode on - how do we defeat that behavior?
 
+    XP_Bool bCtrlPressed = GetAsyncKeyState(VK_CONTROL) != 0;
     if( bIsEditor && !EDT_IsSizing(context) )
     {
         ED_HitType iTableHit = ED_HIT_NONE;
@@ -6269,7 +6270,7 @@ mouse_over_callback(MWContext * context, LO_Element * lo_element, int32 event,
             // Get hit region - we don't need to know element, so use NULL for 4th param
             // If 5th param is TRUE, then select all cells if in upper left corner of table,
             //   or select/unselect cell if mouse is ANYWHERE inside of the cell
-            iTableHit = EDT_GetTableHitRegion(context, pClose->xVal, pClose->yVal, NULL, GetAsyncKeyState(VK_CONTROL));
+            iTableHit = EDT_GetTableHitRegion(context, pClose->xVal, pClose->yVal, NULL, bCtrlPressed);
         }
         if( iTableHit )
         {
@@ -6362,6 +6363,13 @@ mouse_over_callback(MWContext * context, LO_Element * lo_element, int32 event,
                 WFE_CondenseURL(csStatus, 40, FALSE);
                 csStatus += szLoadString(IDS_EDIT_LINK_HINT);
                 wfe_Progress(context, csStatus);
+                if( bCtrlPressed )
+                {
+                    // Use the Anchor icon to indicate you can jump to a target
+                    //  or load the URL into another edit window
+                    SetCursor(theApp.LoadCursor(IDC_SELECTANCHOR));
+                    bCursorSet = TRUE;
+                }
             }
             else
 #endif // EDITOR

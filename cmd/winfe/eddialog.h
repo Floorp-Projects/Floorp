@@ -282,13 +282,16 @@ protected:
 	afx_msg void OnIncludeAllFiles();
 	afx_msg void OnIncludeImageFiles();
 	afx_msg void OnKillfocusPublishLocationList();
-	afx_msg void OnPublishDefaultLocation();
+	afx_msg void OnGetDefaultLocation();
+	afx_msg void OnGetNetcenterLocation();
 	afx_msg void OnSelchangePublishLocation();
 	//}}AFX_MSG
 #ifdef XP_WIN32
     afx_msg BOOL OnHelpInfo(HELPINFO *);
 #endif
 	DECLARE_MESSAGE_MAP()
+
+    void PadPassword();
 };
 
 /////////////////////////////////////////////////////////////////////////////
