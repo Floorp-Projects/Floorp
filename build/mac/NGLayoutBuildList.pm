@@ -464,7 +464,7 @@ sub BuildClientDist()
 	}
 
 	#EXTENSIONS
-    _InstallFromManifest(":mozilla:extensions:cookie:public:MANIFEST",				"$distdirectory:cookie:");
+    _InstallFromManifest(":mozilla:extensions:cookie:MANIFEST",				"$distdirectory:cookie:");
     _InstallFromManifest(":mozilla:extensions:wallet:public:MANIFEST",				"$distdirectory:wallet:");
 
 	#WEBSHELL
