@@ -100,7 +100,7 @@ private:
     void     ParseLineSegment(char *seg, PRUint32 len);
     nsresult ParseHead(char *, PRUint32 count, PRUint32 *countRead);
     nsresult HandleContentStart();
-    nsresult HandleContent(char *, PRUint32 count, PRUint32 *contentRead, PRUint32 *bufRead);
+    nsresult HandleContent(char *, PRUint32 count, PRUint32 *contentRead, PRUint32 *contentRemaining);
     void     DeleteSelfOnConsumerThread();
 
     static void *PR_CALLBACK DeleteThis_EventHandlerFunc(PLEvent *);

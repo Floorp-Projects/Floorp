@@ -32,12 +32,11 @@ nsresult
 nsHttpChunkedDecoder::HandleChunkedContent(char *buf,
                                            PRUint32 count,
                                            PRUint32 *contentRead,
-                                           PRUint32 *bufRead)
+                                           PRUint32 *contentRemaining)
 {
     LOG(("nsHttpChunkedDecoder::HandleChunkedContent [count=%u]\n", count));
 
     *contentRead = 0;
-    *bufRead = 0;
     
     // from RFC2617 section 3.6.1, the chunked transfer coding is defined as:
     //
@@ -68,7 +67,6 @@ nsHttpChunkedDecoder::HandleChunkedContent(char *buf,
             mChunkRemaining -= amt;
 
             *contentRead += amt;
-            *bufRead += amt;
             buf += amt;
         }
         else if (mReachedEOF)
@@ -80,7 +78,6 @@ nsHttpChunkedDecoder::HandleChunkedContent(char *buf,
             if (NS_FAILED(rv)) return rv;
 
             count -= bytesConsumed;
-            *bufRead += bytesConsumed;
 
             if (count) {
                 // shift buf by bytesConsumed
@@ -88,7 +85,8 @@ nsHttpChunkedDecoder::HandleChunkedContent(char *buf,
             }
         }
     }
-
+    
+    *contentRemaining = count;
     return NS_OK;
 }
 
