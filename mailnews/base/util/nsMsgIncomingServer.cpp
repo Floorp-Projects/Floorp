@@ -771,37 +771,38 @@ nsMsgIncomingServer::StorePassword()
     rv = GetPassword(getter_Copies(pwd));
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIObserverService> os = do_GetService("@mozilla.org/observer-service;1");
-    if (os) {
-        nsXPIDLCString serverSpec;
-        rv = GetServerURI(getter_Copies(serverSpec));
-        if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIObserverService> observerService = do_GetService("@mozilla.org/observer-service;1", &rv);
+    NS_ENSURE_SUCCESS(rv,rv);
 
-        nsCOMPtr<nsIURI> uri;
-        NS_NewURI(getter_AddRefs(uri), serverSpec);
+    nsXPIDLCString serverSpec;
+    rv = GetServerURI(getter_Copies(serverSpec));
+    if (NS_FAILED(rv)) return rv;
 
-        rv = os->NotifyObservers(uri, "login-succeeded", NS_ConvertUTF8toUCS2(pwd).get());
-    }
+    nsCOMPtr<nsIURI> uri;
+    NS_NewURI(getter_AddRefs(uri), serverSpec);
 
+    rv = observerService->NotifyObservers(uri, "login-succeeded", NS_ConvertUTF8toUCS2(pwd).get());
+    NS_ENSURE_SUCCESS(rv,rv);
     return rv;
 }
 
 NS_IMETHODIMP
 nsMsgIncomingServer::ForgetPassword()
 {
-    nsresult rv = NS_OK;
+    nsresult rv;
 
-    nsCOMPtr<nsIObserverService> os = do_GetService("@mozilla.org/observer-service;1");
-    if (os) {
-        nsXPIDLCString serverSpec;
-        rv = GetServerURI(getter_Copies(serverSpec));
-        if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIObserverService> observerService = do_GetService("@mozilla.org/observer-service;1", &rv);
+    NS_ENSURE_SUCCESS(rv,rv);
 
-        nsCOMPtr<nsIURI> uri;
-        NS_NewURI(getter_AddRefs(uri), serverSpec);
+    nsXPIDLCString serverSpec;
+    rv = GetServerURI(getter_Copies(serverSpec));
+    if (NS_FAILED(rv)) return rv;
 
-        rv = os->NotifyObservers(uri, "login-failed", nsnull);
-    }
+    nsCOMPtr<nsIURI> uri;
+    NS_NewURI(getter_AddRefs(uri), serverSpec);
+
+    rv = observerService->NotifyObservers(uri, "login-failed", nsnull);
+    NS_ENSURE_SUCCESS(rv,rv);
 
     rv = SetPassword("");
     return rv;

@@ -1271,39 +1271,41 @@ nsresult nsMsgNewsFolder::CreateNewsgroupUrlForSignon(const char *inUriStr, cons
 
 NS_IMETHODIMP nsMsgNewsFolder::ForgetGroupUsername()
 {
-    nsresult rv = NS_OK;
-    nsCOMPtr<nsIObserverService> os = do_GetService("@mozilla.org/observer-service;1");
-    if (os) {
-        rv = SetGroupUsername(nsnull);
-        if (NS_FAILED(rv)) return rv;
+    nsresult rv;
+    nsCOMPtr<nsIObserverService> observerService = do_GetService("@mozilla.org/observer-service;1", &rv);
+    NS_ENSURE_SUCCESS(rv,rv);
 
-        nsXPIDLCString signonURL;
-        rv = CreateNewsgroupUsernameUrlForSignon(mURI, getter_Copies(signonURL));
-        if (NS_FAILED(rv)) return rv;
+    rv = SetGroupUsername(nsnull);
+    if (NS_FAILED(rv)) return rv;
 
-        nsCOMPtr<nsIURI> uri;
-        NS_NewURI(getter_AddRefs(uri), signonURL);
-        rv = os->NotifyObservers(uri, "login-failed", nsnull);
-    }
+    nsXPIDLCString signonURL;
+    rv = CreateNewsgroupUsernameUrlForSignon(mURI, getter_Copies(signonURL));
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIURI> uri;
+    NS_NewURI(getter_AddRefs(uri), signonURL);
+
+    rv = observerService->NotifyObservers(uri, "login-failed", nsnull);
+    NS_ENSURE_SUCCESS(rv,rv);
     return rv;
 }
 
 NS_IMETHODIMP nsMsgNewsFolder::ForgetGroupPassword()
 {
     nsresult rv = NS_OK;
-    nsCOMPtr<nsIObserverService> os = do_GetService("@mozilla.org/observer-service;1");
-    if (os) {
-        rv = SetGroupPassword(nsnull);
-        if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIObserverService> observerService = do_GetService("@mozilla.org/observer-service;1", &rv);
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = SetGroupPassword(nsnull);
+    if (NS_FAILED(rv)) return rv;
 
-        nsXPIDLCString signonURL;
-        rv = CreateNewsgroupPasswordUrlForSignon(mURI, getter_Copies(signonURL));
-        if (NS_FAILED(rv)) return rv;
+    nsXPIDLCString signonURL;
+    rv = CreateNewsgroupPasswordUrlForSignon(mURI, getter_Copies(signonURL));
+    if (NS_FAILED(rv)) return rv;
 
-        nsCOMPtr<nsIURI> uri;
-        NS_NewURI(getter_AddRefs(uri), signonURL);
-        rv = os->NotifyObservers(uri, "login-failed", nsnull);
-    }
+    nsCOMPtr<nsIURI> uri;
+    NS_NewURI(getter_AddRefs(uri), signonURL);
+    rv = observerService->NotifyObservers(uri, "login-failed", nsnull);
+    NS_ENSURE_SUCCESS(rv,rv);
     return rv;
 }
 
