@@ -796,8 +796,9 @@ public:
    * The first frame that maps that content is asked to deal with the
    * change by generating an incremental reflow command.
    *
-   * @param aIndexInParent the index in the content container where
-   *          the new content was deleted.
+   * @param aPresContext the presentation context
+   * @param aContent     the content node that was changed
+   * @param aSubContent  a hint to the frame about the change
    */
   NS_IMETHOD  ContentChanged(nsIPresContext* aPresContext,
                              nsIContent*     aChild,

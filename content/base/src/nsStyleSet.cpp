@@ -243,7 +243,8 @@ public:
   NS_IMETHOD FindPrimaryFrameFor(nsIPresContext*  aPresContext,
                                  nsIFrameManager* aFrameManager,
                                  nsIContent*      aContent,
-                                 nsIFrame**       aFrame);
+                                 nsIFrame**       aFrame,
+                                 nsFindFrameHint* aHint);
 
   // APIs for registering objects that can supply additional
   // rules during processing.
@@ -1320,10 +1321,11 @@ NS_IMETHODIMP
 StyleSetImpl::FindPrimaryFrameFor(nsIPresContext*  aPresContext,
                                   nsIFrameManager* aFrameManager,
                                   nsIContent*      aContent,
-                                  nsIFrame**       aFrame)
+                                  nsIFrame**       aFrame,
+                                  nsFindFrameHint* aHint)
 {
   return mFrameConstructor->FindPrimaryFrameFor(aPresContext, aFrameManager,
-                                                aContent, aFrame);
+                                                aContent, aFrame, aHint);
 }
 
 void StyleSetImpl::List(FILE* out, PRInt32 aIndent, nsISupportsArray* aSheets)

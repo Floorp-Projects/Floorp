@@ -505,26 +505,65 @@ FrameManager::GetPrimaryFrameFor(nsIContent* aContent, nsIFrame** aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
   NS_ENSURE_ARG_POINTER(aContent);
-  if (!aResult) {
+  if (!aContent || !aResult) {
     return NS_ERROR_NULL_POINTER;
   }
+  *aResult = nsnull;  // initialize out param
 
+  nsresult rv;
   if (mPrimaryFrameMap) {
     mPrimaryFrameMap->Search(aContent, 0, (void**)aResult);
     if (!*aResult) {
+      // XXX: todo:  Add a lookup into the undisplay map to skip searches 
+      //             if we already know the content has no frame.
+      //             nsCSSFrameConstructor calls SetUndisplayedContent() for every
+      //             content node that has display: none.
+      //             Today, the undisplay map doesn't quite support what we need.
+      //             We need to see if we can add a method to make a search for aContent 
+      //             very fast in the embedded hash table.
+      //             This would almost completely remove the lookup penalty for things
+      //             like <SCRIPT> and comments in very large documents.
       nsCOMPtr<nsIStyleSet>    styleSet;
       nsCOMPtr<nsIPresContext> presContext;
 
       // Give the frame construction code the opportunity to return the
       // frame that maps the content object
       mPresShell->GetStyleSet(getter_AddRefs(styleSet));
+      NS_ASSERTION(styleSet, "bad style set");
       mPresShell->GetPresContext(getter_AddRefs(presContext));
-      styleSet->FindPrimaryFrameFor(presContext, this, aContent, aResult);
+      NS_ASSERTION(presContext, "bad presContext");
+      if (!styleSet || !presContext) {
+        return NS_ERROR_NULL_POINTER;
+      }
+
+      // if the prev sibling of aContent has a cached primary frame,
+      // pass that data in to the style set to speed things up
+      // if any methods in here fail, don't report that failure
+      // we're just trying to enhance performance here, not test for correctness
+      nsFindFrameHint hint;
+      nsCOMPtr<nsIContent> prevSibling, parent;
+      rv = aContent->GetParent(*getter_AddRefs(parent));
+      if (NS_SUCCEEDED(rv) && parent)
+      {
+        PRInt32 index;
+        rv = parent->IndexOf(aContent, index);
+        if (NS_SUCCEEDED(rv) && index>0)  // no use looking if it's the first child
+        {
+          rv = parent->ChildAt(index-1, *getter_AddRefs(prevSibling));
+          if (NS_SUCCEEDED(rv) && prevSibling)
+          {
+            mPrimaryFrameMap->Search(prevSibling.get(), 0, (void**)&hint.mPrimaryFrameForPrevSibling);
+          }
+        }
+      }
+
+      // walk the frame tree to find the frame that maps aContent.  
+      // Use the hint if we have it.
+      styleSet->FindPrimaryFrameFor(presContext, this, aContent, aResult, 
+                                    hint.mPrimaryFrameForPrevSibling ? &hint : nsnull);
+      
     }
-  } else {
-    *aResult = nsnull;
   }
-  
   return NS_OK;
 }
 
@@ -533,6 +572,7 @@ FrameManager::SetPrimaryFrameFor(nsIContent* aContent,
                                  nsIFrame*   aPrimaryFrame)
 {
   NS_ENSURE_ARG_POINTER(aContent);
+  // it's ok if aPrimaryFrame is null
 
   // If aPrimaryFrame is NULL, then remove the mapping
   if (!aPrimaryFrame) {
@@ -551,6 +591,7 @@ FrameManager::SetPrimaryFrameFor(nsIContent* aContent,
     // Add a mapping to the hash table
     mPrimaryFrameMap->Insert(aContent, (void*)aPrimaryFrame, nsnull);
   }
+    
   return NS_OK;
 }
 
