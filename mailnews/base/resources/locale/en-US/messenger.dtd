@@ -277,7 +277,7 @@ Rights Reserved.
 <!ENTITY deleteButton.img "chrome://messenger/skin/trash.gif">
 <!ENTITY deleteButton.label "Delete">  
 <!-- LOCALIZATION NOTE (throbber.url) : Do not translate below line. -->
-<!ENTITY throbber.url "http://www.mozilla.org/"> 
+<!ENTITY throbber.url "http://www.mozilla.org/mailnews"> 
 
 <!-- Statusbar -->
 <!ENTITY  statusText.label "Document: Done">

@@ -452,7 +452,7 @@ Rights Reserved.
 		  <titledbutton src="&nextButton.img;" align="top" value="&nextButton.label;" onclick="MsgNextUnreadMessage()"/>
 		  <titledbutton src="&deleteButton.img;" align="top" value="&deleteButton.label;" onclick="MsgDeleteMessage(true)"/>
 		  <spring flex="100%"/>
-		  <titledbutton id="Throbber" onclick="window.content.location.href='&throbber.url;'">
+		  <titledbutton id="Throbber" onclick="window.open('&throbber.url;');">
 			 <observes element="Messenger:Throbber" attribute="busy"/>
 		  </titledbutton>
 
