@@ -39,6 +39,7 @@ REQUIRES	= xpcom \
 		  appshell \
 		  gfx \
 		  chrome \
+		  rdf \                  
 		  xpinstall \
 		  uriloader \
 		  view \
