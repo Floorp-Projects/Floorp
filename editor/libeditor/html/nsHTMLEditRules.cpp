@@ -4767,6 +4767,7 @@ nsHTMLEditRules::GetPromotedPoint(RulesEndpoint aWhere, nsIDOMNode *aNode, PRInt
     {
       res = nsEditor::GetNodeLocation(aNode, address_of(node), &offset);
       if (NS_FAILED(res)) return res;
+      offset++; // want to be after the text node
     }
 
     // look ahead through any further inline nodes that
@@ -4776,16 +4777,13 @@ nsHTMLEditRules::GetPromotedPoint(RulesEndpoint aWhere, nsIDOMNode *aNode, PRInt
       
     while (nextNode && NS_SUCCEEDED(res))
     {
-      if (mHTMLEditor->IsVisBreak(nextNode))
-      {
-        node = nextNode;
-        break;
-      }
       if (IsBlockNode(nextNode))
         break;
       res = nsEditor::GetNodeLocation(nextNode, address_of(node), &offset);
       if (NS_FAILED(res)) return res;
       offset++;
+      if (mHTMLEditor->IsVisBreak(nextNode))
+        break;
       res = mHTMLEditor->GetNextHTMLNode(node, offset, address_of(nextNode), PR_TRUE);
       if (NS_FAILED(res)) return res;
     }
@@ -5305,7 +5303,7 @@ nsHTMLEditRules::LookInsideDivBQandList(nsISupportsArray *aNodeArray)
     else
     {
       nsCOMPtr<nsISupports> isupports (do_QueryInterface(curNode));
-      res = aNodeArray->AppendElement(isupports);
+      aNodeArray->AppendElement(isupports);
     }
   }
   return res;
