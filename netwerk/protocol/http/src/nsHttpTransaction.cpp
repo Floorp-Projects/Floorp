@@ -29,7 +29,7 @@
 #include "nsHttpResponseHead.h"
 #include "nsHttpChunkedDecoder.h"
 #include "nsIStringStream.h"
-#include "nsISeekableStream.h"
+#include "nsIFileStream.h"
 #include "nsISocketTransportService.h"
 #include "pratom.h"
 #include "plevent.h"
@@ -312,12 +312,12 @@ nsHttpTransaction::Restart()
     LOG(("restarting transaction @%x\n", this));
 
     // rewind streams in case we already wrote out the request
-    nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mReqHeaderStream);
-    if (seekable)
-        seekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
-    seekable = do_QueryInterface(mReqUploadStream);
-    if (seekable)
-        seekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
+    nsCOMPtr<nsIRandomAccessStore> ras = do_QueryInterface(mReqHeaderStream);
+    if (ras)
+        ras->Seek(PR_SEEK_SET, 0);
+    ras = do_QueryInterface(mReqUploadStream);
+    if (ras)
+        ras->Seek(PR_SEEK_SET, 0);
 
     // just in case the connection is holding the last reference to us...
     NS_ADDREF_THIS();

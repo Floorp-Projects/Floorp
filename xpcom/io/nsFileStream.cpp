@@ -76,6 +76,8 @@ PRInt32 nsInputStream::read(void* s, PRInt32 n)
       return 0;
   PRInt32 result = 0;
   mInputStream->Read((char*)s, n, (PRUint32*)&result);
+  if (result == 0)
+      set_at_eof(PR_TRUE);
   return result;
 } // nsInputStream::read
 

@@ -4172,10 +4172,10 @@ nsresult nsDocShell::DoURILoad(nsIURI * aURI,
             // XXX it's a bit of a hack to rewind the postdata stream here but
             // it has to be done in case the post data is being reused multiple
             // times.
-            nsCOMPtr<nsISeekableStream>
+            nsCOMPtr<nsIRandomAccessStore>
                 postDataRandomAccess(do_QueryInterface(aPostData));
             if (postDataRandomAccess) {
-                postDataRandomAccess->Seek(nsISeekableStream::NS_SEEK_SET, 0);
+                postDataRandomAccess->Seek(PR_SEEK_SET, 0);
             }
 
             nsCOMPtr<nsIUploadChannel> uploadChannel(do_QueryInterface(httpChannel));
