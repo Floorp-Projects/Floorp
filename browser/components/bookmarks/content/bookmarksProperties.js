@@ -90,7 +90,6 @@ function Init()
                  NC_NS + "URL"];
 
   Bookmarks = RDF.GetDataSource("rdf:bookmarks");
-  gBookmarkURL = "";
 
   var x;
   var resource = RDF.GetResource(gBookmarkURL);
