@@ -37,6 +37,7 @@ REQUIRES	= xpcom \
 		  $(NULL)
 
 CPPSRCS		= \
+		PropertiesTest.cpp \
 		TestSocketIO.cpp \
 		TestSocketInput.cpp \
 		TestSocketTransport.cpp \

@@ -1,4 +1,5 @@
 Makefile
+PropertiesTest
 TestCallbacks
 TestSocketIO
 TestSocketInput
