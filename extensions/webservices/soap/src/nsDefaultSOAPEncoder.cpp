@@ -50,6 +50,7 @@
 NS_NAMED_LITERAL_STRING(kEmpty, "");
 
 NS_NAMED_LITERAL_STRING(kSOAPArrayTypeAttribute, "arrayType");
+NS_NAMED_LITERAL_STRING(kSOAPArrayOffsetAttribute, "offset");
 NS_NAMED_LITERAL_STRING(kSOAPArrayPositionAttribute, "position");
 
 NS_NAMED_LITERAL_STRING(kAnyTypeSchemaType, "anyType");
@@ -1529,39 +1530,39 @@ NS_IMETHODIMP
   }
   rc =
       aSource->GetAttributeNS(*nsSOAPUtils::kSOAPEncURI[mSOAPVersion],
-			      kSOAPArrayPositionAttribute, value);
+			      kSOAPArrayOffsetAttribute, value);
   if (NS_FAILED(rc))
     return rc;
-  PRInt32 first;           //  Computing first ismuch trickier, because size may be unspecified.
+  PRInt32 offset;           //  Computing offset ismuch trickier, because size may be unspecified.
   if (!value.IsEmpty()) {  //  See if the array has an initial position.
     PRInt32 pos[MAX_ARRAY_DIMENSIONS];
     nsAutoString leftover;
-    first = GetArrayDimensions(value, pos, leftover);
+    offset = GetArrayDimensions(value, pos, leftover);
     if (d == -1)
-      d = first;
-    if (first == -1        //  We have to understand this or report an error
-        || first != d      //  But the first does not need to be understood
+      d = offset;
+    if (offset == -1        //  We have to understand this or report an error
+        || offset != d      //  But the offset does not need to be understood
         || !leftover.IsEmpty())
       return NS_ERROR_ILLEGAL_VALUE;
     PRInt32 old0 = dim[0];
-    if (dim[0] == -1) {    //  It is OK to have a first where dimension 0 is unspecified
+    if (dim[0] == -1) {    //  It is OK to have a offset where dimension 0 is unspecified
        dim[0] = 2147483647;
     }
-    first  = 0;
+    offset  = 0;
     for (PRInt32 i = 0;;) {
       PRInt64 next = pos[i];
       if (next == -1
         || next >= dim[i])
         return NS_ERROR_ILLEGAL_VALUE;
-      next = (first + next);
+      next = (offset + next);
       if (next > 2147483647)
         return NS_ERROR_ILLEGAL_VALUE;
-      first = (PRInt32)next;
+      offset = (PRInt32)next;
       if (++i < d) {
-	next = first * dim[i];
+	next = offset * dim[i];
 	if (next > 2147483647)
           return NS_ERROR_ILLEGAL_VALUE;
-        first = (PRInt32)next;
+        offset = (PRInt32)next;
       }
       else {
 	break;
@@ -1570,7 +1571,7 @@ NS_IMETHODIMP
     dim[0] = old0;
   }
   else {
-    first = 0;
+    offset = 0;
   }
   if (size == -1) {  //  If no known size, we have to go through and pre-count.
     nsCOMPtr<nsIDOMElement> child;
@@ -1582,7 +1583,7 @@ NS_IMETHODIMP
       }
     }
     size = 0;
-    PRInt32 next = first;
+    PRInt32 next = offset;
     while (child) {
       nsAutoString pos;
       nsresult rc =
@@ -1652,7 +1653,7 @@ NS_IMETHODIMP
       XPType* a = new XPType[size];\
       nsCOMPtr<nsIDOMElement> child;\
       nsSOAPUtils::GetFirstChildElement(aSource, getter_AddRefs(child));\
-      PRUint32 next = first;\
+      PRUint32 next = offset;\
       while (child) {\
         nsAutoString pos;\
         rc =\
