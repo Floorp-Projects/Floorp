@@ -27,6 +27,12 @@
 #include "nsIEventSinkGetter.h"
 #include "nsString.h"
 
+#ifdef XP_MAC
+	#define NECKO_EXPORT(returnType)	PR_PUBLIC_API(returnType)
+#else
+	#define NECKO_EXPORT(returnType)	returnType
+#endif
+
 // Warning: These functions should NOT be defined with NS_NET because
 // the intention is that they'll be linked with the library/DLL that 
 // uses them. NS_NET is for DLL imports.
