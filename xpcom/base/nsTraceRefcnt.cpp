@@ -49,6 +49,7 @@ static void InitTraceLog(void)
   }
 }
 
+#if defined(MOZ_TRACE_XPCOM_REFCNT)
 #if defined(_WIN32)
 #include "imagehlp.h"
 #include <stdio.h>
@@ -190,13 +191,15 @@ nsTraceRefcnt::WalkTheStack(char* aBuffer, int aBufLen)
   *cp = 0;
 }
 
-#else /* _WIN32 */
+#endif /* _WIN32 */
+
+#else /* MOZ_TRACE_XPCOM_REFCNT */
 void
 nsTraceRefcnt::WalkTheStack(char* aBuffer, int aBufLen)
 {
   aBuffer[0] = '\0';
 }
-#endif /* _WIN32 */
+#endif /* MOZ_TRACE_XPCOM_REFCNT */
 
 NS_COM void
 nsTraceRefcnt::LoadLibrarySymbols(const char* aLibraryName,

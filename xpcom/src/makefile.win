@@ -33,7 +33,9 @@ LLIBS = \
 !if "$(MOZ_BITS)"=="32" && defined(MOZ_DEBUG) && defined(GLOWCODE)
 	$(GLOWDIR)\glowcode.lib		\
 !endif
+!if defined(MOZ_TRACE_XPCOM_REFCNT)
 	imagehlp.lib			\
+!endif	
 	$(NULL)
 
 LIBNAME = .\$(OBJDIR)\xpcom$(MOZ_BITS)
