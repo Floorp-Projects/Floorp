@@ -1640,8 +1640,6 @@ nsTreeBodyFrame::MarkDirtyIfSelect()
   nsCOMPtr<nsIContent> baseElement;
   GetBaseElement(getter_AddRefs(baseElement));
 
-  nsINodeInfo *ni = baseElement->GetNodeInfo();
-
   if (baseElement->Tag() == nsHTMLAtoms::select &&
       baseElement->IsContentOfType(nsIContent::eHTML)) {
     // If we are an intrinsically sized select widget, we may need to
@@ -3430,7 +3428,6 @@ nsTreeBodyFrame::EnsureColumns()
 
     // Note: this is dependent on the anonymous content for select
     // defined in select.xml
-    nsINodeInfo *ni = parent->GetNodeInfo();
     if (parent->Tag() == nsHTMLAtoms::select &&
         parent->IsContentOfType(nsIContent::eHTML)) {
       // We can avoid crawling the content nodes in this case, since we know
