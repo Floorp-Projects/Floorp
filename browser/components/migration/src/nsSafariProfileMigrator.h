@@ -52,6 +52,10 @@ public:
   virtual ~nsSafariProfileMigrator();
 
 protected:
+  nsresult CopyPreferences(PRBool aReplace);
+  nsresult CopyCookies(PRBool aReplace);
+  nsresult CopyHistory(PRBool aReplace);
+  nsresult CopyBookmarks(PRBool aReplace);
 
 private:
 };
