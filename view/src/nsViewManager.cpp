@@ -4199,8 +4199,17 @@ nsViewManager::ProcessInvalidateEvent()
 {
   NS_ASSERTION(IsRootVM(),
                "Incorrectly targeted invalidate event");
-  FlushPendingInvalidates();
+  // If we're in the middle of an update batch, just repost the event,
+  // to be processed when the batch ends.
+  PRBool processEvent = (mUpdateBatchCnt == 0);
+  if (processEvent) {
+    FlushPendingInvalidates();
+  }
   mInvalidateEventQueue = nsnull;
+  if (!processEvent) {
+    // We didn't actually process this event... post a new one
+    PostInvalidateEvent();
+  }
 }
 
 NS_IMETHODIMP
