@@ -115,6 +115,18 @@ const int kReuseWindowOnAE = 2;
 {
   if ( (self = [super init]) )
   {
+    // ensure that we're at least on 10.1.5 for some OS crash fixes wrt Java
+    long version = 0;
+    ::Gestalt(gestaltSystemVersion, &version);
+    if (version < 0x00001015) {
+      NSString* appName = NSLocalizedStringFromTable(@"CFBundleName", @"InfoPlist", nil);
+      NSString* alert = [NSString stringWithFormat: NSLocalizedString(@"RequiredVersionNotMetTitle", @""), appName];
+      NSString* message = [NSString stringWithFormat: NSLocalizedString(@"RequiredVersionNotMet", @""), appName];
+      NSString* quit = NSLocalizedString(@"AlreadyRunningButton",@"");
+      NSRunAlertPanel(alert, message, quit, nil, nil);
+      [NSApp terminate:self];
+    }
+    
     NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
     if ([defaults boolForKey:USER_DEFAULTS_AUTOREGISTER_KEY]) 
     {
