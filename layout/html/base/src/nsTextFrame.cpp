@@ -182,6 +182,7 @@ public:
     nscolor mSelectionBGColor;
     nscoord mSpaceWidth;
     PRBool mJustifying;
+    PRBool mPreformatted;
     PRIntn mNumSpaces;
     nscoord mExtraSpacePerSpace;
     nscoord mRemainingExtraSpace;
@@ -221,19 +222,19 @@ public:
       // Get the word and letter spacing
       mWordSpacing = 0;
       mLetterSpacing = 0;
-      if (NS_STYLE_WHITESPACE_PRE != mText->mWhiteSpace) {
-        PRIntn unit = mText->mWordSpacing.GetUnit();
-        if (eStyleUnit_Coord == unit) {
-          mWordSpacing = mText->mWordSpacing.GetCoordValue();
-        }
-        unit = mText->mLetterSpacing.GetUnit();
-        if (eStyleUnit_Coord == unit) {
-          mLetterSpacing = mText->mLetterSpacing.GetCoordValue();
-        }
+      PRIntn unit = mText->mWordSpacing.GetUnit();
+      if (eStyleUnit_Coord == unit) {
+        mWordSpacing = mText->mWordSpacing.GetCoordValue();
+      }
+      unit = mText->mLetterSpacing.GetUnit();
+      if (eStyleUnit_Coord == unit) {
+        mLetterSpacing = mText->mLetterSpacing.GetCoordValue();
       }
       mNumSpaces = 0;
       mRemainingExtraSpace = 0;
       mExtraSpacePerSpace = 0;
+      mPreformatted = (NS_STYLE_WHITESPACE_PRE == mText->mWhiteSpace) ||
+        (NS_STYLE_WHITESPACE_MOZ_PRE_WRAP == mText->mWhiteSpace);
     }
 
     ~TextStyle() {
@@ -681,6 +682,7 @@ TextFrame::PrepareUnicodeText(nsTextTransformer& aTX,
   aTextLen = textLength;
   return numSpaces;
 }
+
 
 //
 // This should be commented out, but some gfx changes on the weekend of
@@ -2193,13 +2195,14 @@ TextFrame::Reflow(nsIPresContext& aPresContext,
     }
   }
 
-  PRBool wrapping = NS_STYLE_WHITESPACE_NORMAL == ts.mText->mWhiteSpace;
+  PRBool wrapping = (NS_STYLE_WHITESPACE_NORMAL == ts.mText->mWhiteSpace) ||
+    (NS_STYLE_WHITESPACE_MOZ_PRE_WRAP == ts.mText->mWhiteSpace);
   PRBool firstLetterOK = lineLayout.GetFirstLetterStyleOK();
   PRBool justDidFirstLetter = PR_FALSE;
 
   // Set whitespace skip flag
   PRBool skipWhitespace = PR_FALSE;
-  if (NS_STYLE_WHITESPACE_PRE != ts.mText->mWhiteSpace) {
+  if (!ts.mPreformatted) {
     if (lineLayout.GetEndsInWhiteSpace()) {
       skipWhitespace = PR_TRUE;
     }
@@ -2265,7 +2268,7 @@ TextFrame::Reflow(nsIPresContext& aPresContext,
         prevOffset = offset;
         offset++;
         endsInWhitespace = PR_TRUE;
-        if (NS_STYLE_WHITESPACE_PRE == ts.mText->mWhiteSpace) {
+        if (ts.mPreformatted) {
           endsInNewline = PR_TRUE;
         }
         break;
@@ -2434,7 +2437,7 @@ TextFrame::Reflow(nsIPresContext& aPresContext,
   // Setup metrics for caller; store final max-element-size information
   aMetrics.width = x;
   mComputedWidth = x;
-  if ((0 == x) && (NS_STYLE_WHITESPACE_PRE != ts.mText->mWhiteSpace)) {
+  if ((0 == x) && !ts.mPreformatted) {
     aMetrics.height = 0;
     aMetrics.ascent = 0;
     aMetrics.descent = 0;
@@ -2538,7 +2541,8 @@ TextFrame::TrimTrailingWhiteSpace(nsIPresContext& aPresContext,
   nscoord dw = 0;
   const nsStyleText* textStyle = (const nsStyleText*)
     mStyleContext->GetStyleData(eStyleStruct_Text);
-  if (NS_STYLE_WHITESPACE_PRE != textStyle->mWhiteSpace) {
+  if ((NS_STYLE_WHITESPACE_PRE != textStyle->mWhiteSpace) &&
+      (NS_STYLE_WHITESPACE_MOZ_PRE_WRAP != textStyle->mWhiteSpace)) {
     // Get font metrics for a space so we can adjust the width by the
     // right amount.
     const nsStyleFont* fontStyle = (const nsStyleFont*)
