@@ -29,7 +29,7 @@
 // Helper Classes
 #include "nsIGenericFactory.h"
 #include "nsString.h"
-
+#include "nsXPIDLString.h"
 
 // Interfaces needed to be included
 #include "nsIDocShellTreeItem.h"
@@ -60,6 +60,7 @@ NS_INTERFACE_MAP_BEGIN(nsWebBrowserChrome)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebBrowserChrome)
    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
    NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
+   NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
    NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
 NS_INTERFACE_MAP_END
 
@@ -331,6 +332,57 @@ NS_IMETHODIMP nsWebBrowserChrome::SetTitle(const PRUnichar* aTitle)
    newTitle.Append(" - Raptor");
    
    mBrowserWindow->SetTitle(newTitle.GetUnicode());
+   return NS_OK;
+}
+
+//*****************************************************************************
+// nsWebBrowserChrome::nsIWebProgressListener
+//*****************************************************************************   
+
+NS_IMETHODIMP nsWebBrowserChrome::OnProgressChange(nsIChannel* aChannel,
+   PRInt32 aCurSelfProgress, PRInt32 aMaxSelfProgress, 
+   PRInt32 aCurTotalProgress, PRInt32 aMaxTotalProgress)
+{
+   //XXXTAB Implement
+   NS_ERROR("NotYetImplemented");
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsWebBrowserChrome::OnChildProgressChange(nsIChannel* aChannel,
+   PRInt32 aCurChildProgress, PRInt32 aMaxChildProgress)
+{
+   //XXXTAB Implement
+   NS_ERROR("NotYetImplemented");
+   return NS_OK;
+} 
+
+NS_IMETHODIMP nsWebBrowserChrome::OnStatusChange(nsIChannel* aChannel,
+   PRInt32 aProgressStatusFlags)
+{
+   //XXXTAB Implement
+   NS_ERROR("NotYetImplemented");
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsWebBrowserChrome::OnChildStatusChange(nsIChannel* aChannel,
+   PRInt32 aProgressStatusFlags)
+{
+   //XXXTAB Implement
+   NS_ERROR("NotYetImplemented");
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsWebBrowserChrome::OnLocationChange(nsIURI* aURI)
+{
+   nsXPIDLCString spec;
+
+   if(aURI)
+      aURI->GetSpec(getter_Copies(spec));
+
+   PRUint32 size;
+   nsAutoString tmp(spec);
+   mBrowserWindow->mLocation->SetText(tmp,size);
+
    return NS_OK;
 }
 

@@ -1974,9 +1974,6 @@ nsBrowserWindow::BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL)
   if (aShell == webShell.get()) {
     if (mThrobber) {
       mThrobber->Start();
-      PRUint32 size;
-      nsAutoString tmp(aURL);
-      mLocation->SetText(tmp,size);
     }
   }
   return NS_OK;
