@@ -470,7 +470,7 @@ class DToA {
 	        /* set sign for everything, including 0's and NaNs */
 	        sign[0] = true;
 	        // word0(d) &= ~Sign_bit;  /* clear sign bit */
-			setWord0(d, word0(d) & ~Sign_bit);
+			d = setWord0(d, word0(d) & ~Sign_bit);
 	    }
 	    else
 	        sign[0] = false;
