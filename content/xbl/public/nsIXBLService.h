@@ -46,11 +46,11 @@ public:
 
   // This function loads a particular XBL file and installs all of the bindings
   // onto the element.
-  NS_IMETHOD LoadBindings(nsIContent* aContent, const nsString& aURL);
+  NS_IMETHOD LoadBindings(nsIContent* aContent, const nsString& aURL) = 0;
 
   // For a given element, returns a flat list of all the anonymous children that need
   // frames built.
-  NS_IMETHOD GetContentList(nsIContent* aContent, nsISupportsArray** aResult);
+  NS_IMETHOD GetContentList(nsIContent* aContent, nsISupportsArray** aResult) = 0;
 };
 
 #endif // nsIXBLService_h__
