@@ -56,6 +56,9 @@ CBrowseDlg::CBrowseDlg(CWnd* pParent /*=NULL*/)
 	m_pBrowseDlg = this;
 	m_pControlSite = NULL;
 	m_clsid = CLSID_NULL;
+
+	CWinApp *pApp = AfxGetApp();
+	m_szTestURL = pApp->GetProfileString(SECTION_TEST, KEY_TESTURL, KEY_TESTURL_DEFAULTVALUE);
 }
 
 void CBrowseDlg::DoDataExchange(CDataExchange* pDX)
@@ -287,11 +290,12 @@ TestResult CBrowseDlg::RunTest(Test *pTest)
 		cInfo.pControlSite = m_pControlSite;
 		cInfo.pIUnknown = NULL;
 		cInfo.pfnOutputString = CBrowseDlg::OutputString;
+		cInfo.szTestURL = m_szTestURL;
 		if (cInfo.pControlSite)
 		{
 			cInfo.pControlSite->GetControlUnknown(&cInfo.pIUnknown);
 		}
-		nResult = pTest->pfn(&cInfo);
+		nResult = pTest->pfn(cInfo);
 		pTest->nLastResult = nResult;
 		if (cInfo.pIUnknown)
 		{

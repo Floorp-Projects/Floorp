@@ -18,10 +18,10 @@
 
 #include "stdafx.h"
 
-TestResult __cdecl tstDocument(BrowserInfo *pInfo)
+TestResult __cdecl tstDocument(BrowserInfo &cInfo)
 {
 	CIPtr(IHTMLDocument2) cpDocElement;
-	pInfo->GetDocument(&cpDocElement);
+	cInfo.GetDocument(&cpDocElement);
 	if (cpDocElement == NULL)
 	{
 		return trFailed;
@@ -31,7 +31,7 @@ TestResult __cdecl tstDocument(BrowserInfo *pInfo)
 }
 
 
-void tstDrillerLevel(BrowserInfo *pInfo, IHTMLElementCollection *pCollection, int nLevel)
+void tstDrillerLevel(BrowserInfo &cInfo, IHTMLElementCollection *pCollection, int nLevel)
 {
 	if (pCollection == NULL)
 	{
@@ -61,22 +61,35 @@ void tstDrillerLevel(BrowserInfo *pInfo, IHTMLElementCollection *pCollection, in
 		if ( hr == S_OK )
 		{
 
-			BSTR bstr;
-			hr = cpElem->get_tagName(&bstr);
+			BSTR bstrTagName = NULL;
+			hr = cpElem->get_tagName(&bstrTagName);
+			CString szTagName = bstrTagName;
+			SysFreeString(bstrTagName);
+
+			BSTR bstrID = NULL;
+			hr = cpElem->get_id(&bstrID);
+			CString szID = bstrID;
+			SysFreeString(bstrID);
+
+			BSTR bstrClassName = NULL;
+			hr = cpElem->get_className(&bstrClassName);
+			CString szClassName = bstrClassName;
+			SysFreeString(bstrClassName);
 			
 			USES_CONVERSION;
 			char szLevel[256];
 			memset(szLevel, 0, sizeof(szLevel));
 			memset(szLevel, ' ', nLevel);
 
-			CString strTag = bstr;
-			pInfo->pfnOutputString(_T("Parsing element: %s%s"), A2T(szLevel), strTag);
+			cInfo.pfnOutputString(_T("%sElement %s"), A2T(szLevel), szTagName);
+			cInfo.pfnOutputString(_T("%s  id=%s"), A2T(szLevel), szID);
+			cInfo.pfnOutputString(_T("%s  classname=%s"), A2T(szLevel), szClassName);
 
 			CIPtr(IHTMLImgElement) cpImgElem;
 			hr = cpDisp->QueryInterface( IID_IHTMLImgElement, (void **)&cpImgElem );
 			if ( hr == S_OK )
 			{
-				cpImgElem->get_href(&bstr);
+//				cpImgElem->get_href(&bstr);
 			}
 			else
 			{
@@ -84,25 +97,25 @@ void tstDrillerLevel(BrowserInfo *pInfo, IHTMLElementCollection *pCollection, in
 				hr = cpDisp->QueryInterface( IID_IHTMLAnchorElement, (void **)&cpAnchElem );
 				if ( hr == S_OK )
 				{
-					cpAnchElem->get_href(&bstr);
+//					cpAnchElem->get_href(&bstr);
 				}
 			}
 
 			CIPtr(IDispatch) cpDispColl;
-			hr = cpElem->get_all(&cpDispColl);
+			hr = cpElem->get_children(&cpDispColl);
 			if (hr == S_OK)
 			{
 				CIPtr(IHTMLElementCollection) cpColl = cpDispColl;
-				tstDrillerLevel(pInfo, cpColl, nLevel + 1);
+				tstDrillerLevel(cInfo, cpColl, nLevel + 1);
 			}
 		}
 	}
 }
 
-TestResult __cdecl tstDriller(BrowserInfo *pInfo)
+TestResult __cdecl tstDriller(BrowserInfo &cInfo)
 {
 	CIPtr(IHTMLDocument2) cpDocElement;
-	pInfo->GetDocument(&cpDocElement);
+	cInfo.GetDocument(&cpDocElement);
 	if (cpDocElement == NULL)
 	{
 		return trFailed;
@@ -112,21 +125,21 @@ TestResult __cdecl tstDriller(BrowserInfo *pInfo)
 	HRESULT hr = cpDocElement->get_all( &cpColl );
 	if (hr == S_OK)
 	{
-		tstDrillerLevel(pInfo, cpColl, 0);
+		tstDrillerLevel(cInfo, cpColl, 0);
 	}
 
 	return trPassed;
 }
 
-TestResult __cdecl tstTesters(BrowserInfo *pInfo)
+TestResult __cdecl tstTesters(BrowserInfo &cInfo)
 {
-	pInfo->pfnOutputString("Test architecture is reasonably sane!");
+	cInfo.pfnOutputString("Test architecture is reasonably sane!");
 	return trPassed;
 }
 
-TestResult __cdecl tstControlActive(BrowserInfo *pInfo)
+TestResult __cdecl tstControlActive(BrowserInfo &cInfo)
 {
-	CControlSiteInstance *pControlSite = pInfo->pControlSite;
+	CControlSiteInstance *pControlSite = cInfo.pControlSite;
 	if (pControlSite == NULL || !pControlSite->IsInPlaceActive())
 	{
 		return trFailed;
@@ -134,34 +147,31 @@ TestResult __cdecl tstControlActive(BrowserInfo *pInfo)
 	return trPassed;
 }
 
-TestResult __cdecl tstIWebBrowser(BrowserInfo *pInfo)
+TestResult __cdecl tstIWebBrowser(BrowserInfo &cInfo)
 {
-	if (pInfo->pIUnknown == NULL)
+	if (cInfo.pIUnknown == NULL)
 	{
 		return trFailed;
 	}
-	IWebBrowser *pIWebBrowser = NULL;
-	pInfo->pIUnknown->QueryInterface(IID_IWebBrowser, (void **) &pIWebBrowser);
-	if (pIWebBrowser)
+
+	CIPtr(IWebBrowser) cpIWebBrowser = cInfo.pIUnknown;
+	if (cpIWebBrowser)
 	{
-		pIWebBrowser->Release();
 		return trPassed;
 	}
 
 	return trFailed;
 }
 
-TestResult __cdecl tstIWebBrowser2(BrowserInfo *pInfo)
+TestResult __cdecl tstIWebBrowser2(BrowserInfo &cInfo)
 {
-	if (pInfo->pIUnknown == NULL)
+	if (cInfo.pIUnknown == NULL)
 	{
 		return trFailed;
 	}
-	IWebBrowser2 *pIWebBrowser = NULL;
-	pInfo->pIUnknown->QueryInterface(IID_IWebBrowser2, (void **) &pIWebBrowser);
-	if (pIWebBrowser)
+	CIPtr(IWebBrowser2) cpIWebBrowser = cInfo.pIUnknown;
+	if (cpIWebBrowser)
 	{
-		pIWebBrowser->Release();
 		return trPassed;
 	}
 
@@ -169,22 +179,28 @@ TestResult __cdecl tstIWebBrowser2(BrowserInfo *pInfo)
 }
 
 
-TestResult __cdecl tstIWebBrowserApp(BrowserInfo *pInfo)
+TestResult __cdecl tstIWebBrowserApp(BrowserInfo &cInfo)
 {
-	if (pInfo->pIUnknown == NULL)
+	if (cInfo.pIUnknown == NULL)
 	{
 		return trFailed;
 	}
-	IWebBrowser2 *pIWebBrowser = NULL;
-	pInfo->pIUnknown->QueryInterface(IID_IWebBrowserApp, (void **) &pIWebBrowser);
-	if (pIWebBrowser)
+
+	CIPtr(IWebBrowserApp) cpIWebBrowser = cInfo.pIUnknown;
+	if (cpIWebBrowser)
 	{
-		pIWebBrowser->Release();
 		return trPassed;
 	}
 
 	return trFailed;
 }
+
+TestResult __cdecl tstNavigate2(BrowserInfo &cInfo)
+{
+	return trFailed;
+}
+
+///////////////////////////////////////////////////////////////////////////////
 
 Test aBasic[] =
 {
@@ -193,6 +209,16 @@ Test aBasic[] =
 	{ _T("IWebBrowser"), _T("Test if control has an IWebBrowser interface"), tstIWebBrowser, trNotRun },
 	{ _T("IWebBrowser2"), _T("Test if control has an IWebBrowser2 interface"), tstIWebBrowser2, trNotRun },
 	{ _T("IWebBrowserApp"), _T("Test if control has an IWebBrowserApp interface"), tstIWebBrowserApp, trNotRun }
+};
+
+Test aBrowsing[] =
+{
+	{ _T("Navigate2"), _T("Test if browser can navigate to the test URL"), NULL }
+};
+
+Test aOther[] =
+{
+	{ _T("Print Page"), _T("Print the test URL page"), NULL }
 };
 
 Test aDHTML[] =
@@ -204,7 +230,8 @@ Test aDHTML[] =
 TestSet aTestSets[] =
 {
 	{ _T("Basic"), _T("Basic sanity tests"), 5, aBasic },
-	{ _T("Browsing"), _T("Browsing and navigation tests"), 0, NULL },
+	{ _T("Browsing"), _T("Browsing and navigation tests"), 1, aBrowsing },
+	{ _T("Other"), _T("Other tests"), 1, aOther },
 	{ _T("DHTML"), _T("Test the DOM"), 2, aDHTML }
 };
 
