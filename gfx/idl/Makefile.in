@@ -33,7 +33,7 @@ MODULE = raptor
 XPIDL_MODULE = gfx
 
 XPIDLSRCS =				\
-	nsISupportsRegion.idl		\
+	nsIScriptableRegion.idl		\
 	$(NULL)
 
 include $(topsrcdir)/config/config.mk
