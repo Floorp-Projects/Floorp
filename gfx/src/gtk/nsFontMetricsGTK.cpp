@@ -343,6 +343,9 @@ static nsFontCharSetInfo X11Johab =
 static nsFontCharSetInfo JohabNoAscii =
   { "x-johab-noascii", DoubleByteConvert, 1,
     TT_OS2_CPR1_KO_WANSUNG | TT_OS2_CPR1_KO_JOHAB, 0 };
+static nsFontCharSetInfo JamoTTF =
+  { "x-koreanjamo-0", DoubleByteConvert, 1,
+    TT_OS2_CPR1_KO_WANSUNG | TT_OS2_CPR1_KO_JOHAB, 0 };
 
 #ifdef SUNCTL
 /* Hindi range currently unsupported in FT2 range. Change TT* once we 
@@ -524,6 +527,7 @@ static nsFontCharSetMap gCharSetMap[] =
   { "johabsh-1",          &FLG_KO,      &X11Johab      },
   { "ksc5601.1987-0",     &FLG_KO,      &KSC5601       },
   { "ksc5601.1992-3",     &FLG_KO,      &JohabNoAscii  },
+  { "koreanjamo-0",       &FLG_KO,      &JamoTTF       },
   { "microsoft-cp1251",   &FLG_RUSSIAN, &CP1251        },
   { "misc-fontspecific",  &FLG_NONE,    &Unknown       },
   { "sgi-fontspecific",   &FLG_NONE,    &Unknown       },
