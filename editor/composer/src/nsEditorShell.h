@@ -73,6 +73,7 @@ class nsIScriptContext;
 class nsIDOMWindowInternal;
 class nsIDOMElement;
 class nsIDOMNode;
+class nsIDOMHTMLDocument;
 class nsIURI;
 class nsIPresShell;
 class nsIOutputStream;
@@ -174,6 +175,16 @@ class nsEditorShell :   public nsIEditorShell,
     // If aSaveToPrefs is true, then titles and URLs 
     //  for menu are saved to prefs 
     nsresult        UpdateWindowTitleAndRecentMenu(PRBool aSaveToPrefs);
+
+    nsresult        GetDocumentURI(nsIDOMDocument *aDoc, nsIURI **aDocumentURI);
+
+    nsresult        PromptAndSetTitleIfNone(nsIDOMHTMLDocument *aHTMLDocument, 
+                                            PRBool *titleChanged, PRBool *retVal);
+
+    nsresult        ShowSaveFilePicker(PRBool aDoSaveAsText, nsIURI *aDocumentURI,
+                                       nsIDOMHTMLDocument *aHTMLDocument, 
+                                       const char *aMIMEType,
+                                       PRInt16 *aDialogResult, nsIFile **aSaveLocation);
 
     // Helper method which is called at the beginning of a new page load
     nsresult        StartPageLoad(nsIChannel *aChannel);
