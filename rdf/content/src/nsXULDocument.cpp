@@ -108,6 +108,7 @@
 #include "nsRDFCID.h"
 #include "nsRDFDOMNodeList.h"
 #include "nsXPIDLString.h"
+#include "nsIDOMWindow.h"
 #include "nsXULCommandDispatcher.h"
 #include "nsXULDocument.h"
 #include "nsXULElement.h"
