@@ -84,10 +84,20 @@ public:
    *  upper-left-hand corner of the pixmap as the origin, increasing
    *  left-to-right, top-to-bottom. 
    */
-  NS_IMETHOD UpdatePixmap(void* aDisplayContext, 
+   NS_IMETHOD UpdatePixmap(void* aDisplayContext, 
 			    IL_Pixmap* aImage, 
 			    PRInt32 aXOffset, PRInt32 aYOffset, 
 			    PRInt32 aWidth, PRInt32 aHeight)=0;
+
+   /** 
+   *  Inform the implementation that the specified rectangular portion
+   *  of the destination image has been decoded.  Currently the origin 
+   *  of the decoded image is always at 0,0. The implementation doesn't
+   *  assume this. See libimg/src/scale.cpp, ~line 214 for the current
+   *  decoded image.
+   */
+   NS_IMETHOD SetDecodedRect(IL_Pixmap* aImage, PRInt32 x1, PRInt32 y1,
+                                PRInt32 x2, PRInt32 y2)=0;
 
   /**
    *  Informs the callee that the imagelib has acquired or relinquished 
@@ -157,6 +167,7 @@ public:
   NS_IMETHOD GetIconDimensions(void* aDisplayContext, 
 				 PRInt32 *aWidthPtr, PRInt32 *aHeightPtr, 
 				 PRUint32 aIconNumber)=0;
+
 };
 
 #endif

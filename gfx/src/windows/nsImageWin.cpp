@@ -51,8 +51,8 @@ nsImageWin :: nsImageWin()
   NS_INIT_REFCNT();
 
   mImageBits = nsnull;
-	mHBitmap = nsnull;
-	mAlphaHBitmap = nsnull;
+  mHBitmap = nsnull;
+  mAlphaHBitmap = nsnull;
   mAlphaBits = nsnull;
   mAlphaDepth = nsnull;
   mColorMap = nsnull;
@@ -97,6 +97,8 @@ nsresult nsImageWin :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMa
     NS_ASSERTION(PR_FALSE, "unexpected image depth");
     return NS_ERROR_UNEXPECTED;
   }
+
+  SetDecodedRect(0,0,0,0);  //init
 
   mIsTopToBottom = PR_FALSE;
   if (mNumPaletteColors >= 0){
@@ -833,4 +835,17 @@ nsImageWin::UnlockImagePixels(PRBool aMaskPixels)
    ... and do Windows unlocking of image pixels here, if necessary
     */
 	return NS_OK;
+}
+/** ---------------------------------------------------
+ *	Set the decoded dimens of the image
+ */
+NS_IMETHODIMP
+nsImageWin::SetDecodedRect(PRInt32 x1, PRInt32 y1, PRInt32 x2, PRInt32 y2 )
+{
+    
+  mDecodedX1 = x1; 
+  mDecodedY1 = y1; 
+  mDecodedX2 = x2; 
+  mDecodedY2 = y2; 
+  return NS_OK;
 }

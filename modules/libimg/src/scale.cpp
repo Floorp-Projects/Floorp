@@ -211,6 +211,9 @@ il_flush_image_data(il_container *ic)
     ic->displayable_rect.height = MAX(ic->displayable_rect.height,
                                       end_row + 1);
 
+    img_cx->img_cb->SetDecodedRect(image, 0, 0, 
+                     ic->displayable_rect.width, ic->displayable_rect.height);
+
     /* Notify observers that the image pixmap has been updated. */
     il_pixmap_update_notify(ic);
 

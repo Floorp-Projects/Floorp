@@ -46,6 +46,7 @@ public:
 			                      PRInt32 aXOffset, PRInt32 aYOffset, 
 			                      PRInt32 aWidth, PRInt32 aHeight);
 
+
   NS_IMETHOD ControlPixmapBits(void* aDisplayContext, 
 				                         IL_Pixmap* aImage, PRUint32 aControlMsg);
 
@@ -63,6 +64,12 @@ public:
   NS_IMETHOD GetIconDimensions(void* aDisplayContext, 
                         				 PRInt32 *aWidthPtr, PRInt32 *aHeightPtr, 
                         				 PRUint32 aIconNumber);
+
+  NS_IMETHOD SetDecodedRect(IL_Pixmap* aImage, 
+			                    PRInt32 x1, PRInt32 y1,
+                                PRInt32 x2, PRInt32 y2);
+
+
 };
 
 ImageRendererImpl::ImageRendererImpl()
@@ -208,6 +215,17 @@ ImageRendererImpl::UpdatePixmap(void* aDisplayContext,
   nsRect            drect(aXOffset, aYOffset, aWidth, aHeight);
 
   img->ImageUpdated(dc, nsImageUpdateFlags_kBitsChanged, &drect);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ImageRendererImpl::SetDecodedRect(   IL_Pixmap* aImage, 
+				                PRInt32 x1, PRInt32 y1,
+                                PRInt32 x2, PRInt32 y2)
+{
+  nsIImage         *img = (nsIImage *)aImage->client_data;
+
+  img->SetDecodedRect(x1, y1, x2, y2);
   return NS_OK;
 }
 
