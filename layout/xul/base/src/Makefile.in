@@ -51,6 +51,8 @@ ifdef MOZ_XUL
 DIRS		= tree grid
 endif
 
+EXPORTS		= nsIMenuParent.h
+
 CPPSRCS		= \
 		nsScrollBoxFrame.cpp \
 		nsRootBoxFrame.cpp \
