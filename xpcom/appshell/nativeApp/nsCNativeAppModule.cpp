@@ -20,6 +20,7 @@
  *   Travis Bogard <travis@netscape.com>
  */
 
+#include "nsCNativeAppImpl.h"
 #include "nsIGenericFactory.h"
 
 static nsModuleComponentInfo components[] =
