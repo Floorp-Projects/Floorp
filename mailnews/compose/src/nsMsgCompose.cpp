@@ -1509,8 +1509,12 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
   if (!mailCharset.IsEmpty())
   {
     charset = mailCharset;
-    charsetOverride = PR_TRUE;
+    charsetOverride = mCharsetOverride;
   }
+#ifdef DEBUG_jungshik
+  printf ("charset=%s\n", charset.get());
+  printf ("charsetOverride=%d\n", charsetOverride);
+#endif
 
   // although the charset in which to _send_ the message might change,
   // the original message will be parsed for quoting using the charset it is
