@@ -22,15 +22,26 @@
 
 #include "nsIComputedDOMStyle.h"
 #include "nsIPresShell.h"
+#include "nsIPresContext.h"
 #include "nsIContent.h"
 #include "nsIFrame.h"
 #include "nsIDOMElement.h"
 #include "nsIStyleContext.h"
 #include "nsIScriptObjectOwner.h"
+#include "nsROCSSPrimitiveValue.h"
+
+#include "nsCSSProps.h"
 
 #include "nsCOMPtr.h"
 #include "nsDOMError.h"
 
+/*
+ * This is the implementation of the readonly CSSStyleDeclaration that is
+ * returned by the getComputedStyle() function.
+ *
+ * This file is very much work in progress, there's a lot of code in this
+ * file that is #ifdef'd out placeholders.
+ */
 
 class nsComputedDOMStyle : public nsIComputedDOMStyle,
                            public nsIScriptObjectOwner
@@ -41,9 +52,6 @@ public:
   // nsIComputedDOMStyle
   NS_IMETHOD Init(nsIDOMElement *aElement, const nsString& aPseudoElt,
                   nsIPresShell *aPresShell);
-
-  // nsIDOMCSS2Properties
-  NS_DECL_IDOMCSS2PROPERTIES
 
   // nsIDOMCSSStyleDeclaration
   NS_DECL_IDOMCSSSTYLEDECLARATION
@@ -57,11 +65,25 @@ public:
   virtual ~nsComputedDOMStyle();
 
 private:
+  nsresult GetAbsoluteFrameRect(nsIFrame *aFrame, nsRect& aRect);
+  nsresult GetWidth(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
+  nsresult GetHeight(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
+  nsresult GetLeft(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
+  nsresult GetTop(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
+  nsresult GetRight(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
+  nsresult GetBottom(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
+
+  nsresult GetDisplay(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
+
   nsCOMPtr<nsIPresShell> mPresShell;
   nsCOMPtr<nsIContent> mContent;
   nsString mPseudo;
+
+  float mT2P; // For unit conversions
+
   void* mScriptObject;
 };
+
 
 nsresult
 NS_NewComputedDOMStyle(nsIComputedDOMStyle** aComputedStyle)
@@ -77,7 +99,10 @@ NS_NewComputedDOMStyle(nsIComputedDOMStyle** aComputedStyle)
 }
 
 
-nsComputedDOMStyle::nsComputedDOMStyle() : mScriptObject(nsnull)
+nsComputedDOMStyle::nsComputedDOMStyle() : mPresShell(nsnull),
+                                           mContent(nsnull),
+                                           mT2P(0.0f),
+                                           mScriptObject(nsnull)
 {
   NS_INIT_REFCNT();
 }
@@ -94,7 +119,6 @@ NS_IMPL_RELEASE(nsComputedDOMStyle);
 
 NS_INTERFACE_MAP_BEGIN(nsComputedDOMStyle)
    NS_INTERFACE_MAP_ENTRY(nsIComputedDOMStyle)
-   NS_INTERFACE_MAP_ENTRY(nsIDOMCSS2Properties)
    NS_INTERFACE_MAP_ENTRY(nsIDOMCSSStyleDeclaration)
    NS_INTERFACE_MAP_ENTRY(nsIScriptObjectOwner)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIComputedDOMStyle)
@@ -111,8 +135,8 @@ nsComputedDOMStyle::GetScriptObject(nsIScriptContext *aContext,
     nsISupports *supports = NS_STATIC_CAST(nsIComputedDOMStyle *, this);
 
     // XXX Should be done through factory
-    res = NS_NewScriptCSS2Properties(aContext, supports, mContent,
-                                     &mScriptObject);
+    res = NS_NewScriptCSSStyleDeclaration(aContext, supports, mContent,
+                                          &mScriptObject);
   }
 
   *aScriptObject = mScriptObject;
@@ -145,6 +169,12 @@ nsComputedDOMStyle::Init(nsIDOMElement *aElement, const nsString& aPseudoElt,
   }
 
   mPseudo = aPseudoElt;
+
+  nsCOMPtr<nsIPresContext> presCtx;
+  mPresShell->GetPresContext(getter_AddRefs(presCtx));
+  NS_ENSURE_TRUE(presCtx, NS_ERROR_FAILURE);
+
+  presCtx->GetTwipsToPixels(&mT2P);
 
   return NS_OK;
 }
@@ -199,6 +229,35 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsString& aPropertyName,
   NS_ENSURE_ARG_POINTER(aReturn);
   *aReturn = nsnull;
 
+  nsIFrame *frame = nsnull;
+  mPresShell->GetPrimaryFrameFor(mContent, &frame);
+
+  nsCOMPtr<nsIDOMCSSPrimitiveValue> val;
+  nsresult rv = NS_OK;
+
+  nsCSSProperty prop = nsCSSProps::LookupProperty(aPropertyName);
+
+  switch (prop) {
+  case eCSSProperty_width :
+    rv = GetWidth(frame, *getter_AddRefs(val)); break;
+  case eCSSProperty_height :
+    rv = GetHeight(frame, *getter_AddRefs(val)); break;
+  case eCSSProperty_left :
+    rv = GetLeft(frame, *getter_AddRefs(val)); break;
+  case eCSSProperty_top :
+    rv = GetTop(frame, *getter_AddRefs(val)); break;
+  case eCSSProperty_right :
+    rv = GetRight(frame, *getter_AddRefs(val)); break;
+  case eCSSProperty_bottom :
+    rv = GetBottom(frame, *getter_AddRefs(val)); break;
+  default :
+    break;
+  }
+
+  if (val) {
+    val->QueryInterface(NS_GET_IID(nsIDOMCSSValue), (void **)aReturn);
+  }
+
   return NS_OK;
 }
 
@@ -237,754 +296,9 @@ nsComputedDOMStyle::Item(PRUint32 aIndex, nsString& aReturn)
 }
 
 
-// nsIDOMCSS2Properties
+// Property getters...
 
-NS_IMETHODIMP 
-nsComputedDOMStyle::SetAzimuth(const nsString& aAzimuth)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetBackground(const nsString& aBackground)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetBackgroundAttachment(const nsString& aBackgroundAttachment)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetBackgroundColor(const nsString& aBackgroundColor)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetBackgroundImage(const nsString& aBackgroundImage)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetBackgroundPosition(const nsString& aBackgroundPosition)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetBackgroundRepeat(const nsString& aBackgroundRepeat)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetBehavior(const nsString& aBehavior)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetBorder(const nsString& aBorder)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetBorderCollapse(const nsString& aBorderCollapse)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetBorderColor(const nsString& aBorderColor)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetBorderSpacing(const nsString& aBorderSpacing)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetBorderStyle(const nsString& aBorderStyle)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetBorderTop(const nsString& aBorderTop)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetBorderRight(const nsString& aBorderRight)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetBorderBottom(const nsString& aBorderBottom)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetBorderLeft(const nsString& aBorderLeft)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetBorderTopColor(const nsString& aBorderTopColor)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetBorderRightColor(const nsString& aBorderRightColor)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetBorderBottomColor(const nsString& aBorderBottomColor)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetBorderLeftColor(const nsString& aBorderLeftColor)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetBorderTopStyle(const nsString& aBorderTopStyle)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetBorderRightStyle(const nsString& aBorderRightStyle)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetBorderBottomStyle(const nsString& aBorderBottomStyle)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetBorderLeftStyle(const nsString& aBorderLeftStyle)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetBorderTopWidth(const nsString& aBorderTopWidth)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetBorderRightWidth(const nsString& aBorderRightWidth)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetBorderBottomWidth(const nsString& aBorderBottomWidth)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetBorderLeftWidth(const nsString& aBorderLeftWidth)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetBorderWidth(const nsString& aBorderWidth)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetBottom(const nsString& aBottom)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetCaptionSide(const nsString& aCaptionSide)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetClear(const nsString& aClear)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetClip(const nsString& aClip)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetColor(const nsString& aColor)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetContent(const nsString& aContent)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetCounterIncrement(const nsString& aCounterIncrement)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetCounterReset(const nsString& aCounterReset)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetCssFloat(const nsString& aCssFloat)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetCue(const nsString& aCue)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetCueAfter(const nsString& aCueAfter)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetCueBefore(const nsString& aCueBefore)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetCursor(const nsString& aCursor)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetDirection(const nsString& aDirection)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetDisplay(const nsString& aDisplay)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetElevation(const nsString& aElevation)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetEmptyCells(const nsString& aEmptyCells)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetFont(const nsString& aFont)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetFontFamily(const nsString& aFontFamily)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetFontSize(const nsString& aFontSize)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetFontSizeAdjust(const nsString& aFontSizeAdjust)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetFontStretch(const nsString& aFontStretch)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetFontStyle(const nsString& aFontStyle)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetFontVariant(const nsString& aFontVariant)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetFontWeight(const nsString& aFontWeight)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetHeight(const nsString& aHeight)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetLeft(const nsString& aLeft)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetLetterSpacing(const nsString& aLetterSpacing)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetLineHeight(const nsString& aLineHeight)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetListStyle(const nsString& aListStyle)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetListStyleImage(const nsString& aListStyleImage)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetListStylePosition(const nsString& aListStylePosition)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetListStyleType(const nsString& aListStyleType)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetMargin(const nsString& aMargin)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetMarginTop(const nsString& aMarginTop)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetMarginRight(const nsString& aMarginRight)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetMarginBottom(const nsString& aMarginBottom)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetMarginLeft(const nsString& aMarginLeft)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetMarkerOffset(const nsString& aMarkerOffset)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetMarks(const nsString& aMarks)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetMaxHeight(const nsString& aMaxHeight)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetMaxWidth(const nsString& aMaxWidth)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetMinHeight(const nsString& aMinHeight)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetMinWidth(const nsString& aMinWidth)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetOrphans(const nsString& aOrphans)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetOutline(const nsString& aOutline)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetOutlineColor(const nsString& aOutlineColor)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetOutlineStyle(const nsString& aOutlineStyle)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetOutlineWidth(const nsString& aOutlineWidth)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetOverflow(const nsString& aOverflow)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetPadding(const nsString& aPadding)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetPaddingTop(const nsString& aPaddingTop)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetPaddingRight(const nsString& aPaddingRight)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetPaddingBottom(const nsString& aPaddingBottom)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetPaddingLeft(const nsString& aPaddingLeft)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetPage(const nsString& aPage)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetPageBreakAfter(const nsString& aPageBreakAfter)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetPageBreakBefore(const nsString& aPageBreakBefore)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetPageBreakInside(const nsString& aPageBreakInside)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetPause(const nsString& aPause)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetPauseAfter(const nsString& aPauseAfter)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetPauseBefore(const nsString& aPauseBefore)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetPitch(const nsString& aPitch)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetPitchRange(const nsString& aPitchRange)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetPlayDuring(const nsString& aPlayDuring)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetPosition(const nsString& aPosition)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetQuotes(const nsString& aQuotes)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetRichness(const nsString& aRichness)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetRight(const nsString& aRight)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetSize(const nsString& aSize)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetSpeak(const nsString& aSpeak)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetSpeakHeader(const nsString& aSpeakHeader)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetSpeakNumeral(const nsString& aSpeakNumeral)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetSpeakPunctuation(const nsString& aSpeakPunctuation)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetSpeechRate(const nsString& aSpeechRate)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetStress(const nsString& aStress)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetTableLayout(const nsString& aTableLayout)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetTextAlign(const nsString& aTextAlign)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetTextDecoration(const nsString& aTextDecoration)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetTextIndent(const nsString& aTextIndent)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetTextShadow(const nsString& aTextShadow)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetTextTransform(const nsString& aTextTransform)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetTop(const nsString& aTop)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetUnicodeBidi(const nsString& aUnicodeBidi)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetVerticalAlign(const nsString& aVerticalAlign)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetVisibility(const nsString& aVisibility)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetVoiceFamily(const nsString& aVoiceFamily)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetVolume(const nsString& aVolume)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetWhiteSpace(const nsString& aWhiteSpace)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetWidows(const nsString& aWidows)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetWidth(const nsString& aWidth)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetWordSpacing(const nsString& aWordSpacing)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
-nsComputedDOMStyle::SetZIndex(const nsString& aZIndex)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP 
-nsComputedDOMStyle::SetOpacity(const nsString& aOpacity)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-
-// Property getters
+#if 0
 
 NS_IMETHODIMP 
 nsComputedDOMStyle::GetAzimuth(nsString& aAzimuth)
@@ -1165,13 +479,27 @@ nsComputedDOMStyle::GetBorderWidth(nsString& aBorderWidth)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
+#endif
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetBottom(nsString& aBottom)
+nsComputedDOMStyle::GetBottom(nsIFrame *aFrame,
+                              nsIDOMCSSPrimitiveValue*& aValue)
 {
-  return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  nsISupports *tmp = NS_STATIC_CAST(nsIComputedDOMStyle *, this);
+
+  nsRect rect;
+  GetAbsoluteFrameRect(aFrame, rect);
+
+  nsROCSSPrimitiveValue *val = new nsROCSSPrimitiveValue(tmp, mT2P);
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  val->SetTwips(rect.y + rect.height);
+
+  return val->QueryInterface(NS_GET_IID(nsIDOMCSSPrimitiveValue),
+                             (void **)&aValue);
 }
 
+#if 0
 NS_IMETHODIMP
 nsComputedDOMStyle::GetCaptionSide(nsString& aCaptionSide)
 {
@@ -1249,13 +577,77 @@ nsComputedDOMStyle::GetDirection(nsString& aDirection)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
+#endif
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetDisplay(nsString& aDisplay)
+nsComputedDOMStyle::GetDisplay(nsIFrame *aFrame,
+                               nsIDOMCSSPrimitiveValue*& aValue)
 {
-  return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  nsISupports *tmp = NS_STATIC_CAST(nsIComputedDOMStyle *, this);
+
+  nsRect rect;
+  GetAbsoluteFrameRect(aFrame, rect);
+
+  nsROCSSPrimitiveValue *val = new nsROCSSPrimitiveValue(tmp, mT2P);
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStyleDisplay* display;
+  aFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
+
+  if (display) {
+    switch (display->mDisplay) {
+    case NS_STYLE_DISPLAY_NONE :
+      val->SetString("none"); break;
+    case NS_STYLE_DISPLAY_BLOCK :
+      val->SetString("block"); break;
+    case NS_STYLE_DISPLAY_INLINE :
+      val->SetString("inline"); break;
+    case NS_STYLE_DISPLAY_INLINE_BLOCK :
+      val->SetString("inline_block"); break;
+    case NS_STYLE_DISPLAY_LIST_ITEM :
+      val->SetString("list-item"); break;
+    case NS_STYLE_DISPLAY_MARKER :
+      val->SetString("marker"); break;
+    case NS_STYLE_DISPLAY_RUN_IN :
+      val->SetString("run-in"); break;
+    case NS_STYLE_DISPLAY_COMPACT :
+      val->SetString("compact"); break;
+    case NS_STYLE_DISPLAY_TABLE :
+      val->SetString("table"); break;
+    case NS_STYLE_DISPLAY_INLINE_TABLE :
+      val->SetString("inline-table"); break;
+    case NS_STYLE_DISPLAY_TABLE_ROW_GROUP :
+      val->SetString("table-row-croup"); break;
+    case NS_STYLE_DISPLAY_TABLE_COLUMN :
+      val->SetString("table-column"); break;
+    case NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP :
+      val->SetString("table-column-group"); break;
+    case NS_STYLE_DISPLAY_TABLE_HEADER_GROUP :
+      val->SetString("table-header-group"); break;
+    case NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP :
+      val->SetString("table-footer-group"); break;
+    case NS_STYLE_DISPLAY_TABLE_ROW :
+      val->SetString("table-row"); break;
+    case NS_STYLE_DISPLAY_TABLE_CELL :
+      val->SetString("table-cell"); break;
+    case NS_STYLE_DISPLAY_TABLE_CAPTION :
+      val->SetString("table-caption"); break;
+    case NS_STYLE_DISPLAY_MENU :
+      val->SetString("menu"); break;
+    default :
+      val->SetString(""); break;
+
+      break;
+    }
+  }
+
+  return val->QueryInterface(NS_GET_IID(nsIDOMCSSPrimitiveValue),
+                             (void **)&aValue);
+
+  return NS_OK;
 }
 
+#if 0
 NS_IMETHODIMP
 nsComputedDOMStyle::GetElevation(nsString& aElevation)
 {
@@ -1316,18 +708,45 @@ nsComputedDOMStyle::GetFontWeight(nsString& aFontWeight)
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
-NS_IMETHODIMP
-nsComputedDOMStyle::GetHeight(nsString& aHeight)
+#endif
+
+nsresult
+nsComputedDOMStyle::GetHeight(nsIFrame *aFrame,
+                             nsIDOMCSSPrimitiveValue*& aValue)
 {
-  return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  nsISupports *tmp = NS_STATIC_CAST(nsIComputedDOMStyle *, this);
+
+  nsRect rect;
+  GetAbsoluteFrameRect(aFrame, rect);
+
+  nsROCSSPrimitiveValue *val = new nsROCSSPrimitiveValue(tmp, mT2P);
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  val->SetTwips(rect.height);
+
+  return val->QueryInterface(NS_GET_IID(nsIDOMCSSPrimitiveValue),
+                             (void **)&aValue);
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetLeft(nsString& aLeft)
+nsComputedDOMStyle::GetLeft(nsIFrame *aFrame,
+                            nsIDOMCSSPrimitiveValue*& aValue)
 {
-  return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  nsISupports *tmp = NS_STATIC_CAST(nsIComputedDOMStyle *, this);
+
+  nsRect rect;
+  GetAbsoluteFrameRect(aFrame, rect);
+
+  nsROCSSPrimitiveValue *val = new nsROCSSPrimitiveValue(tmp, mT2P);
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  val->SetTwips(rect.x);
+
+  return val->QueryInterface(NS_GET_IID(nsIDOMCSSPrimitiveValue),
+                             (void **)&aValue);
 }
 
+#if 0
 NS_IMETHODIMP
 nsComputedDOMStyle::GetLetterSpacing(nsString& aLetterSpacing)
 {
@@ -1370,26 +789,46 @@ nsComputedDOMStyle::GetMargin(nsString& aMargin)
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
+nsresult GetMargins(nsIFrame *aFrame, nscoord& left, nscoord& top,
+                    nscoord& right, nscoord& bottom)
+{
+  const nsStyleSpacing* spacing;
+  nsStyleCoord coord;
+  frame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct*&)spacing);
+  if (spacing) {
+    if (eStyleUnit_Coord == spacing->mBorder.GetLeftUnit()) {
+      origin.x += spacing->mBorder.GetLeft(coord).GetCoordValue();
+    }
+    if (eStyleUnit_Coord == spacing->mBorder.GetTopUnit()) {
+      origin.y += spacing->mBorder.GetTop(coord).GetCoordValue();
+    }
+  }
+}
+
 NS_IMETHODIMP
-nsComputedDOMStyle::GetMarginTop(nsString& aMarginTop)
+nsComputedDOMStyle::GetMarginTop(nsIFrame *aFrame,
+                                 nsIDOMCSSPrimitiveValue*& aValue)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetMarginRight(nsString& aMarginRight)
+nsComputedDOMStyle::GetMarginRight(nsIFrame *aFrame,
+                                   nsIDOMCSSPrimitiveValue*& aValue)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetMarginBottom(nsString& aMarginBottom)
+nsComputedDOMStyle::GetMarginBottom(nsIFrame *aFrame,
+                                    nsIDOMCSSPrimitiveValue*& aValue)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetMarginLeft(nsString& aMarginLeft)
+nsComputedDOMStyle::GetMarginLeft(nsIFrame *aFrame,
+                                  nsIDOMCSSPrimitiveValue*& aValue)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
@@ -1573,13 +1012,27 @@ nsComputedDOMStyle::GetRichness(nsString& aRichness)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
+#endif
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetRight(nsString& aRight)
+nsComputedDOMStyle::GetRight(nsIFrame *aFrame,
+                             nsIDOMCSSPrimitiveValue*& aValue)
 {
-  return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  nsISupports *tmp = NS_STATIC_CAST(nsIComputedDOMStyle *, this);
+
+  nsRect rect;
+  GetAbsoluteFrameRect(aFrame, rect);
+
+  nsROCSSPrimitiveValue *val = new nsROCSSPrimitiveValue(tmp, mT2P);
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  val->SetTwips(rect.x + rect.width);
+
+  return val->QueryInterface(NS_GET_IID(nsIDOMCSSPrimitiveValue),
+                             (void **)&aValue);
 }
 
+#if 0
 NS_IMETHODIMP
 nsComputedDOMStyle::GetSize(nsString& aSize)
 {
@@ -1657,13 +1110,27 @@ nsComputedDOMStyle::GetTextTransform(nsString& aTextTransform)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
+#endif
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetTop(nsString& aTop)
+nsComputedDOMStyle::GetTop(nsIFrame *aFrame,
+                           nsIDOMCSSPrimitiveValue*& aValue)
 {
-  return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  nsISupports *tmp = NS_STATIC_CAST(nsIComputedDOMStyle *, this);
+
+  nsRect rect;
+  GetAbsoluteFrameRect(aFrame, rect);
+
+  nsROCSSPrimitiveValue *val = new nsROCSSPrimitiveValue(tmp, mT2P);
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  val->SetTwips(rect.y);
+
+  return val->QueryInterface(NS_GET_IID(nsIDOMCSSPrimitiveValue),
+                             (void **)&aValue);
 }
 
+#if 0
 NS_IMETHODIMP
 nsComputedDOMStyle::GetUnicodeBidi(nsString& aUnicodeBidi)
 {
@@ -1705,12 +1172,99 @@ nsComputedDOMStyle::GetWidows(nsString& aWidows)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
+#endif
 
-NS_IMETHODIMP
-nsComputedDOMStyle::GetWidth(nsString& aWidth)
+nsresult
+nsComputedDOMStyle::GetAbsoluteFrameRect(nsIFrame *aFrame, nsRect& aRect)
 {
-  return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  nsresult res = NS_OK;
+
+  aRect.x = aRect.y = 0;
+  aRect.Empty();
+ 
+  // Flush all pending notifications so that our frames are uptodate
+  mPresShell->FlushPendingNotifications();
+
+  // Get it's origin
+  nsPoint origin;
+  aFrame->GetOrigin(origin);
+
+  // Get the union of all rectangles in this and continuation frames
+  nsIFrame* next = aFrame;
+  do {
+    nsRect rect;
+    next->GetRect(rect);
+    aRect.UnionRect(aRect, rect);
+    next->GetNextInFlow(&next);
+  } while (nsnull != next);
+        
+  nsIFrame* parent;
+  aFrame->GetParent(&parent);
+  while (parent) {
+    // Add the parent's origin to our own to get to the
+    // right coordinate system
+    nsPoint parentOrigin;
+    parent->GetOrigin(parentOrigin);
+    origin += parentOrigin;
+
+    parent->GetParent(&parent);
+  }
+
+  // For the origin, add in the border for the frame
+  const nsStyleSpacing* spacing;
+  nsStyleCoord coord;
+  aFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct*&)spacing);
+  if (spacing) {
+    if (eStyleUnit_Coord == spacing->mBorder.GetLeftUnit()) {
+      origin.x += spacing->mBorder.GetLeft(coord).GetCoordValue();
+      aRect.width -= spacing->mBorder.GetLeft(coord).GetCoordValue();
+      //aRect.width -= spacing->mMargin.GetLeft(coord).GetCoordValue();
+      aRect.width -= spacing->mPadding.GetLeft(coord).GetCoordValue();
+    }
+    if (eStyleUnit_Coord == spacing->mBorder.GetTopUnit()) {
+      origin.y += spacing->mBorder.GetTop(coord).GetCoordValue();
+      aRect.height -= spacing->mBorder.GetTop(coord).GetCoordValue();
+      //aRect.height -= spacing->mMargin.GetTop(coord).GetCoordValue();
+      aRect.height -= spacing->mPadding.GetTop(coord).GetCoordValue();
+    }
+    if (eStyleUnit_Coord == spacing->mBorder.GetRightUnit()) {
+      aRect.width -= spacing->mBorder.GetRight(coord).GetCoordValue();
+      //aRect.width -= spacing->mMargin.GetRight(coord).GetCoordValue();
+      aRect.width -= spacing->mPadding.GetRight(coord).GetCoordValue();
+    }
+    if (eStyleUnit_Coord == spacing->mBorder.GetBottomUnit()) {
+      aRect.height -= spacing->mBorder.GetBottom(coord).GetCoordValue();
+      //aRect.height -= spacing->mMargin.GetBottom(coord).GetCoordValue();
+      aRect.height -= spacing->mPadding.GetBottom(coord).GetCoordValue();
+    }
+  }
+
+  aRect.x = origin.x;
+  aRect.y = origin.y;
+
+  return res;
+}     
+
+
+nsresult
+nsComputedDOMStyle::GetWidth(nsIFrame *aFrame,
+                             nsIDOMCSSPrimitiveValue*& aValue)
+{
+  nsISupports *tmp = NS_STATIC_CAST(nsIComputedDOMStyle *, this);
+
+  nsRect rect;
+  GetAbsoluteFrameRect(aFrame, rect);
+
+  nsROCSSPrimitiveValue *val = new nsROCSSPrimitiveValue(tmp, mT2P);
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  val->SetTwips(rect.width);
+
+  return val->QueryInterface(NS_GET_IID(nsIDOMCSSPrimitiveValue),
+                             (void **)&aValue);
 }
+
+#if 0
 
 NS_IMETHODIMP
 nsComputedDOMStyle::GetWordSpacing(nsString& aWordSpacing)
@@ -1730,3 +1284,4 @@ nsComputedDOMStyle::GetOpacity(nsString& aOpacity)
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
+#endif
