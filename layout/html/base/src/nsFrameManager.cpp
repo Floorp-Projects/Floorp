@@ -974,13 +974,15 @@ FrameManager::NotifyDestroyingFrame(nsIFrame* aFrame)
   RemoveAllPropertiesFor(presContext, aFrame);
 
 #ifdef DEBUG
-  nsCOMPtr<nsIContent> content;
-  aFrame->GetContent(getter_AddRefs(content));
-  PrimaryFrameMapEntry *entry = NS_STATIC_CAST(PrimaryFrameMapEntry*,
-      PL_DHashTableOperate(&mPrimaryFrameMap, content, PL_DHASH_LOOKUP));
-  NS_ASSERTION(!PL_DHASH_ENTRY_IS_BUSY(entry) || entry->frame != aFrame,
-               "frame was not removed from primary frame map before"
-               "destruction or was readded to map after being removed");
+  if (mPrimaryFrameMap.ops) {
+    nsCOMPtr<nsIContent> content;
+    aFrame->GetContent(getter_AddRefs(content));
+    PrimaryFrameMapEntry *entry = NS_STATIC_CAST(PrimaryFrameMapEntry*,
+        PL_DHashTableOperate(&mPrimaryFrameMap, content, PL_DHASH_LOOKUP));
+    NS_ASSERTION(!PL_DHASH_ENTRY_IS_BUSY(entry) || entry->frame != aFrame,
+                 "frame was not removed from primary frame map before"
+                 "destruction or was readded to map after being removed");
+  }
 #endif
 
   return NS_OK;
