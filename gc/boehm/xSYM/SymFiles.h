@@ -155,16 +155,18 @@ struct ModulesTableEntry {
 };
 typedef struct ModulesTableEntry ModulesTableEntry;
 
-/*	MODULE_KIND_xxx
-** The type of module.  Taken from the OMF document
-*/
-#define MODULE_KIND_NONE			0
-#define MODULE_KIND_PROGRAM			1
-#define MODULE_KIND_UNIT			2
-#define MODULE_KIND_PROCEDURE		3
-#define MODULE_KIND_FUNCTION		4
-#define MODULE_KIND_DATA			5
-#define MODULE_KIND_BLOCK			6				/* The module is an internal block */
+/*
+ * The type of module.  Taken from the OMF document
+ */
+enum {
+	kModuleKindNone					= 0,
+	kModuleKindProgram				= 1,
+	kModuleKindUnit					= 2,
+	kModuleKindProcedure			= 3,
+	kModuleKindFunction				= 4,
+	kModuleKindData					= 5,
+	kModuleKindBlock				= 6				/* The module is an internal block */
+};
 
 /*
 FILE_REFERENCE_TABLE_ENTRY = RECORD
