@@ -279,6 +279,7 @@
       <property name="ontextcommand">null</property>
       <property name="ontextrevert">null</property>
       <property name="onerrorcommand">null</property>
+      <field name="mDefaultMatchFilled">false</field>
 
       <property name="mAutoCompleteListener"><![CDATA[
         var listener = function(aSession) { this.sessionName = aSession };
@@ -513,6 +514,7 @@
           this.mSessionReturns = this.sessionCount;
           this.mFailureCount = 0;
           this.mFailureItems = 0;
+          this.mDefaultMatchFilled = false; // clear out our prefill state.
 
           // tell each session to start searching...
           for (var name in this.mSessions)
@@ -574,10 +576,7 @@
           
           this.mLastResults[aSessionName] = aResults;
 
-          // if this is the first session to return...
-          if (firstReturn) {
-            this.autoFillInput(aSessionName, aResults);
-          }
+          this.autoFillInput(aSessionName, aResults, false);
 
           // always call openResultPopup...we may not have opened it
           // if a previous search session didn't return enough search results.
@@ -636,6 +635,15 @@
           this.noMatch = failed;
           this.setAttribute("nomatch", this.noMatch);
           
+          // if we have processed all of our searches, and none of them gave us a default index,
+          // then we should try to auto fill the input field with the first match. 
+          // note: autoFillInput is smart enough to kick out if we've already prefilled something...
+          if (!this.noMatch) {
+             var defaultSession = this.getDefaultSession();
+             if (defaultSession)
+                this.autoFillInput(defaultSession, this.mLastResults[defaultSession], true);         
+          }
+          
           if (this.mFinishAfterSearch)
             this.finishAutoComplete(false, this.mFireAfterSearch);
         ]]></body>
@@ -668,10 +676,26 @@
               // do nothing
             } else if (this.forceComplete && (this.mNeedToComplete || aForceComplete)) {
               var defaultSession = this.getDefaultSession();
+
+              // we want to use the default item index for the first session which gave us a valid
+              // default item index...
+
+              for (var name in this.mLastResults) {
+               var results = this.mLastResults[name];
+               if (results && results.items.Count() > 0 && results.defaultItemIndex != -1)
+               {
+                 defaultSession = name;
+                 break;
+               }
+              }
+
               if (defaultSession) {
                 var results = this.mLastResults[defaultSession];
-                if (results && !this.noMatch && results.defaultItemIndex != -1)
+                if (results && !this.noMatch)
+                  if (results.defaultItemIndex != -1)
                   this.value = this.getSessionValueAt(defaultSession, results.defaultItemIndex);
+                  else
+                    this.value = this.getSessionValueAt(defaultSession, 0); // preselect the first one...
               }
             }
 
@@ -908,15 +932,19 @@
       <method name="autoFillInput">
         <parameter name="aSessionName"/>
         <parameter name="aResults"/>
+        <parameter name="aUseFirstMatchIfNoDefault"/>
         <body><![CDATA[
-          if (!aSessionName || aSessionName != this.getDefaultSession())
-            return;
+          if (this.mDefaultMatchFilled) return;
             
           if (!this.mFinishAfterSearch && this.autoFill && 
               this.mLastKeyCode != KeyEvent.DOM_VK_BACK_SPACE &&
               this.mLastKeyCode != KeyEvent.DOM_VK_DELETE) {
-            if (aResults.defaultItemIndex != -1) {
-              var resultValue = this.getSessionValueAt(aSessionName, aResults.defaultItemIndex);
+            var indexToUse = aResults.defaultItemIndex;
+            if (aUseFirstMatchIfNoDefault && indexToUse == -1)
+              indexToUse = 0;      
+              
+            if (indexToUse != -1) {
+              var resultValue = this.getSessionValueAt(aSessionName, indexToUse);
               var match = resultValue.toLowerCase();
               var entry = this.currentSearchString.toLowerCase();
               this.ignoreInputEvent = true;
@@ -939,6 +967,7 @@
               }
               this.mNeedToComplete = true;
               this.ignoreInputEvent = false;
+              this.mDefaultMatchFilled = true;
             }
           } 
         ]]></body>
