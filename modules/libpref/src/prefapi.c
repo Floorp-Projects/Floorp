@@ -128,14 +128,6 @@ PR_STATIC_CALLBACK(JSBool) pref_NativeSetConfig(JSContext *cx, JSObject *obj, un
 PR_STATIC_CALLBACK(JSBool) pref_NativeGetPref(JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval);
 PR_STATIC_CALLBACK(JSBool) pref_NativeGetLDAPAttr(JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval);
 
-#ifdef MOZ_OLD_LI_STUFF
-/* LI_STUFF add nativelilocalpref */
-PR_STATIC_CALLBACK(JSBool) pref_NativeLILocalPref(JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval);
-/* LI_STUFF add NativeLIUserPref - does both lilocal and user at once */
-PR_STATIC_CALLBACK(JSBool) pref_NativeLIUserPref(JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval);
-PR_STATIC_CALLBACK(JSBool) pref_NativeLIDefPref(JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval);
-#endif
-
 /*----------------------------------------------------------------------------------------*/
 #include "prefapi_private_data.h"
 
@@ -181,23 +173,14 @@ JSFunctionSpec      autoconf_methods[] = {
                     { "config",             pref_NativeSetConfig,   2,0,0 },
                     { "getPref",            pref_NativeGetPref,     1,0,0 },
                     { "getLDAPAttributes",  pref_NativeGetLDAPAttr, 4,0,0 },
-#ifdef MOZ_OLD_LI_STUFF
-                    { "localPref",          pref_NativeLILocalPref, 1,0,0 },
-                    { "localUserPref",      pref_NativeLIUserPref,  2,0,0 },
-                    { "localDefPref",       pref_NativeLIDefPref,   2,0,0 },
-#else
                     { "localPref",          pref_NativeDefaultPref, 1,0,0 },
                     { "localUserPref",      pref_NativeUserPref,    2,0,0 },
                     { "localDefPref",       pref_NativeDefaultPref, 2,0,0 },
-#endif
                     { NULL,                 NULL,                   0,0,0 }
                     };
 
 #ifdef PREF_SUPPORT_OLD_PATH_STRINGS
 char *              gFileName = NULL;
-#ifdef MOZ_OLD_LI_STUFF
-char *              gLIFileName = NULL;
-#endif
 #endif /*PREF_SUPPORT_OLD_PATH_STRINGS*/
 
 struct CallbackNode*    gCallbacks = NULL;
@@ -220,9 +203,6 @@ PLHashAllocOps      pref_HashAllocOps = {
 #define PREF_IS_LOCKED(pref)            ((pref)->flags & PREF_LOCKED)
 #define PREF_IS_CONFIG(pref)            ((pref)->flags & PREF_CONFIG)
 #define PREF_HAS_USER_VALUE(pref)       ((pref)->flags & PREF_USERSET)
-#ifdef MOZ_OLD_LI_STUFF
-#define PREF_HAS_LI_VALUE(pref)         ((pref)->flags & PREF_LILOCAL) /* LI_STUFF */
-#endif
 #define PREF_TYPE(pref)                 (PrefType)((pref)->flags & PREF_VALUETYPE_MASK)
 
 static JSBool pref_HashJSPref(unsigned int argc, jsval *argv, PrefAction action);
@@ -377,25 +357,6 @@ PRBool pref_VerifyLockFile(char* buf, long buflen)
     return PR_TRUE;
 #endif
 }
-
-#ifdef PREF_SUPPORT_OLD_PATH_STRINGS
-#ifdef MOZ_OLD_LI_STUFF
-PrefResult PREF_ReadLIJSFile(const char *filename)
-{
-    PrefResult ok;
-
-    if (filename)
-    {
-        PL_strfree(gLIFileName);
-        gLIFileName = PL_strdup(filename);
-    }
-
-    ok = pref_OpenFile(filename, PR_FALSE, PR_FALSE, PR_FALSE, PR_FALSE);
-
-    return ok;
-}
-#endif
-#endif /* PREF_SUPPORT_OLD_PATH_STRINGS */
 
 #ifdef PREF_SUPPORT_OLD_PATH_STRINGS
 PrefResult PREF_ReadUserJSFile(const char *filename)
@@ -878,81 +839,6 @@ PREF_SetDefaultRectPref(const char *pref_name, PRInt16 left, PRInt16 top, PRInt1
 }
 
 
-#ifdef MOZ_OLD_LI_STUFF
-/* LI_STUFF this does the same as savePref except it omits the lilocal prefs from the file. */
-PrefResult
-pref_saveLIPref(PLHashEntry *he, int i, void *arg)
-{
-    char **prefArray = (char**) arg;
-    PrefNode *pref = (PrefNode *) he->value;
-
-    if (pref && PREF_HAS_USER_VALUE(pref) && !PREF_HAS_LI_VALUE(pref) && 
-        pref_ValueChanged(pref->defaultPref, 
-                          pref->userPref, 
-                          (PrefType) PREF_TYPE(pref)))
-    {
-        char buf[2048];
-
-        if (pref->flags & PREF_STRING)
-        {
-            char *tmp_str = str_escape(pref->userPref.stringVal);
-    
-            /* Error checks to be sure length not too long.
-               18 refers to the number of characters in the "user_pref..."
-               string. */
-            if(((PL_strlen((char *) he->key)+PL_strlen(tmp_str))+18)>2048)
-                return PREF_BAD_PARAMETER;
-
-            if (tmp_str)
-            {
-                PR_snprintf(buf, 2048, "user_pref(\"%s\", \"%s\");" LINEBREAK,
-                    (char*) he->key, tmp_str);
-                PR_Free(tmp_str);
-            }
-        }
-        else if (pref->flags & PREF_INT)
-        {
-            PR_snprintf(buf, 2048, "user_pref(\"%s\", %ld);" LINEBREAK,
-                (char*) he->key, (long) pref->userPref.intVal);
-        }
-        else if (pref->flags & PREF_BOOL)
-        {
-            PR_snprintf(buf, 2048, "user_pref(\"%s\", %s);" LINEBREAK, (char*) he->key,
-                (pref->userPref.boolVal) ? "true" : "false");
-        }
-
-        prefArray[i] = PL_strdup(buf);
-    }
-    else if (pref && PREF_IS_LOCKED(pref) && !PREF_HAS_LI_VALUE(pref))
-    {
-        char buf[2048];
-        if (pref->flags & PREF_STRING)
-        {
-            char *tmp_str = str_escape(pref->defaultPref.stringVal);
-            if (tmp_str)
-            {
-                PR_snprintf(buf, 2048, "user_pref(\"%s\", \"%s\");" LINEBREAK,
-                    (char*) he->key, tmp_str);
-                PR_Free(tmp_str);
-            }
-        }
-        else if (pref->flags & PREF_INT)
-        {
-            PR_snprintf(buf, 2048, "user_pref(\"%s\", %ld);" LINEBREAK,
-                (char*) he->key, (long) pref->defaultPref.intVal);
-        }
-        else if (pref->flags & PREF_BOOL)
-        {
-            PR_snprintf(buf, 2048, "user_pref(\"%s\", %s);" LINEBREAK, (char*) he->key,
-                (pref->defaultPref.boolVal) ? "true" : "false");
-        }
-
-        prefArray[i] = PL_strdup(buf);
-    }
-    return PREF_NOERROR;
-}
-#endif
-
 PrefResult
 pref_savePref(PLHashEntry *he, int i, void *arg)
 {
@@ -1156,58 +1042,6 @@ PrefResult PREF_SavePrefFile()
 }
 #endif /* PREF_SUPPORT_OLD_PATH_STRINGS */
 
-#ifdef PREF_SUPPORT_OLD_PATH_STRINGS
-#ifdef MOZ_OLD_LI_STUFF
-/* 
- *  We need to flag a bunch of prefs as local that aren't initialized via all.js.
- *  This seems the safest way to do this.
- */
-PrefResult
-PREF_SetSpecialPrefsLocal(void)
-{
-    static char *prefName[] = {
-    "editor.html_editor",
-    "editor.template_history_0",
-    "editor.template_last_loc",
-    "helpers.global_mailcap_file",
-    "helpers.global_mime_types_file",
-    "helpers.private_mailcap_file",
-    "helpers.private_mime_types_file",
-    "intl.font_charset",
-    "intl.font_spec_list",
-    "mail.imap.root_dir",
-    "profile.name",
-    "profile.numprofiles",
-    "profile.directory"
-    };
-    PrefNode* pref;
-    PRUint32  i;
-
-    if (!gHashTable)
-        return PREF_NOT_INITIALIZED;
-
-    for (i = 0; i < (sizeof(prefName)/sizeof(prefName[0])); i++) {
-        pref = (PrefNode*) PR_HashTableLookup(gHashTable, prefName[i]);
-        if (pref) 
-            pref->flags |= PREF_LILOCAL;
-    }
-    return PREF_OK;
-}
-#endif /* MOZ_OLD_LI_STUFF */
-#endif /* PREF_SUPPORT_OLD_PATH_STRINGS */
-
-#ifdef MOZ_OLD_LI_STUFF
-PrefResult PREF_SaveLIPrefFile(const char *filename)
-{
-
-    if (!gHashTable)
-        return PREF_NOT_INITIALIZED;
-    PREF_SetSpecialPrefsLocal();
-    return (PrefResult)PREF_SavePrefFileWith(
-        (filename ? filename : gLIFileName),
-        (PLHashEnumerator)pref_saveLIPref);
-}
-#endif /* MOZ_OLD_LI_STUFF */
 
 #ifdef PREF_SUPPORT_OLD_PATH_STRINGS
 PrefResult PREF_SavePrefFileAs(const char *filename) 
@@ -1511,31 +1345,6 @@ PREF_DeleteBranch(const char *branch_name)
     return PREF_NOERROR;
 }
 
-#ifdef MOZ_OLD_LI_STUFF
-/* LI_STUFF  add a function to clear the li pref 
-   does anyone use this??
-*/
-PrefResult
-PREF_ClearLIPref(const char *pref_name)
-{
-    PrefResult success = PREF_ERROR;
-    PrefNode*       pref;
-
-    if (!gHashTable)
-        return PREF_NOT_INITIALIZED;
-
-    pref = (PrefNode*) PR_HashTableLookup(gHashTable, pref_name);
-    if (pref && PREF_HAS_LI_VALUE(pref))
-    {
-        pref->flags &= ~PREF_LILOCAL;
-        if (gCallbacksEnabled)
-            pref_DoCallback(pref_name);
-        success = PREF_OK;
-    }
-    return success;
-}
-#endif
-
 
 PrefResult
 PREF_ClearUserPref(const char *pref_name)
@@ -1773,20 +1582,7 @@ PrefResult pref_HashPref(const char *key, PrefValue value, PrefType type, PrefAc
             if (action == PREF_SETCONFIG)
                 pref->flags |= PREF_CONFIG;
             break;
-
-#ifdef MOZ_OLD_LI_STUFF
-        /* LI_STUFF  turn the li stuff on */
-        case PREF_SETLI:
-            if ( !PREF_HAS_LI_VALUE(pref) ||
-                    pref_ValueChanged(pref->userPref, value, type) )
-            {       
-                pref_SetValue(&pref->userPref, value, type);
-                pref->flags |= PREF_LILOCAL;
-                if (!PREF_IS_LOCKED(pref))
-                    result = PREF_VALUECHANGED;
-            }
-            break;
-#endif          
+  
         case PREF_SETUSER:
             /* If setting to the default value, then un-set the user value.
                Otherwise, set the user value only if it has changed */
@@ -1857,41 +1653,6 @@ JSBool PR_CALLBACK pref_NativeDefaultPref
 {
     return pref_HashJSPref(argc, argv, PREF_SETDEFAULT);
 }
-
-#ifdef MOZ_OLD_LI_STUFF
-/* LI_STUFF    here is the hookup with js prefs calls */
-JSBool PR_CALLBACK pref_NativeLILocalPref
-    (JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval)
-{
-    if (argc >= 1 && JSVAL_IS_STRING(argv[0]))
-    {
-        const char *key = JS_GetStringBytes(JSVAL_TO_STRING(argv[0]));
-        PrefNode* pref = (PrefNode*) PR_HashTableLookup(gHashTable, key);
-        
-        if (pref && !PREF_HAS_LI_VALUE(pref))
-        {
-            pref->flags |= PREF_LILOCAL;
-            if (gCallbacksEnabled)
-                pref_DoCallback(key);
-        }
-    }
-    return JS_TRUE;
-}
-
-/* combo li and user pref - save some time */
-JSBool PR_CALLBACK pref_NativeLIUserPref
-    (JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval)
-{
-    return (JSBool)(pref_HashJSPref(argc, argv, PREF_SETUSER) && pref_HashJSPref(argc, argv, PREF_SETLI));
-}
-
-/* combo li and user pref - save some time */
-JSBool PR_CALLBACK pref_NativeLIDefPref
-    (JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval)
-{
-    return (JSBool)(pref_HashJSPref(argc, argv, PREF_SETDEFAULT) && pref_HashJSPref(argc, argv, PREF_SETLI));
-}
-#endif
 
 JSBool PR_CALLBACK pref_NativeUserPref
     (JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval)

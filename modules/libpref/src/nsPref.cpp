@@ -691,23 +691,6 @@ NS_IMETHODIMP nsPref::ShutDown()
 } // nsPref::ShutDown
 
 
-#ifdef MOZ_OLD_LI_STUFF
-//----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsPref::ReadLIJSFile(nsIFileSpec* fileSpec)
-//----------------------------------------------------------------------------------------
-{
-    nsresult rv;
-    NS_IF_RELEASE(mLIFileSpec);
-    mLIFileSpec = fileSpec;
-    NS_IF_ADDREF(mLIFileSpec);
-    rv = pref_OpenFileSpec(fileSpec, PR_FALSE, PR_FALSE, PR_FALSE, PR_FALSE);
-
-    JS_MaybeGC(gMochaContext);
-    
-    return rv;
-}
-#endif
-
 //----------------------------------------------------------------------------------------
 nsresult nsPref::EvaluateConfigScript(const char * js_buffer,
                          PRUint32 length,
@@ -748,18 +731,6 @@ NS_IMETHODIMP nsPref::SavePrefFileAs(nsIFileSpec* fileSpec)
     return _convertRes(PREF_SavePrefFileSpecWith(fileSpec, (PLHashEnumerator)pref_savePref));
 }
 
-
-#ifdef MOZ_OLD_LI_STUFF
-//----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsPref::SaveLIPrefFile(nsIFileSpec* fileSpec)
-//----------------------------------------------------------------------------------------
-{
-    if (!gHashTable)
-        return PREF_NOT_INITIALIZED;
-    PREF_SetSpecialPrefsLocal();
-    return _convertRes(PREF_SavePrefFileSpecWith(fileSpec, (PLHashEnumerator)pref_saveLIPref));
-}
-#endif /* MOZ_OLD_LI_STUFF */
 
 //----------------------------------------------------------------------------------------
 NS_IMETHODIMP nsPref::SavePrefFile()

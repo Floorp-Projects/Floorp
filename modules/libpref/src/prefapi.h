@@ -194,11 +194,7 @@ PREF_EvaluateConfigScript(const char * js_buffer, size_t length,
 */
 
 typedef enum { PREF_SETDEFAULT, PREF_SETUSER, 
-			   PREF_LOCK, PREF_SETCONFIG
-#ifdef MOZ_OLD_LI_STUFF
-,PREF_SETLI 
-#endif
-} PrefAction;
+			   PREF_LOCK, PREF_SETCONFIG} PrefAction;
 
 /*
 // <font color=blue>
