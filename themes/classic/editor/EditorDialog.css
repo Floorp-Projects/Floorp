@@ -155,6 +155,8 @@ tree.list {
   margin-left: 5px;
 }
 
+/* ::::: table properties dialog ::::: */
+
 #MoreFewerButton[more="0"] {
   list-style-image: url(chrome://global/skin/scroll-down.gif);
   /* bug 9459 - changing button text doesn't resize width.
@@ -183,14 +185,23 @@ tree.list {
   list-style-image: url(chrome://global/skin/arrow-down.gif);
 }
 
+/* ::::: spelling dialog ::::: */
+
 #MisspelledWord {
   font-weight: bold;
 }
 
-.right {
-  /* doesn't work yet! must use align="right" in <text> */
-  text-align:   right;
+#ReplaceWordInput {
+  min-width: 16em;
+  width: 16em;
 }
+
+.spell-check {
+  min-width: 8em;
+}
+
+
+/* ::::: color picker ::::: */
 
 /* use outset shape for a button look */
 .colorpicker {

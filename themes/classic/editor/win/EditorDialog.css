@@ -162,6 +162,8 @@ tree.list {
   min-width: 12em;
 }
 
+/* ::::: table properties dialog ::::: */
+
 #MoreFewerButton[more="1"] {
   list-style-image: url(chrome://global/skin/scroll-up.gif);
   min-width: 12em;
@@ -183,14 +185,22 @@ tree.list {
   list-style-image: url(chrome://global/skin/arrow-down.gif);
 }
 
+/* ::::: spelling dialog ::::: */
+
 #MisspelledWord {
   font-weight: bold;
 }
 
-.right {
-  /* doesn't work yet! must use align="right" in <text> */
-  text-align:   right;
+#ReplaceWordInput {
+  min-width: 16em;
+  width: 16em;
 }
+
+.spell-check {
+  min-width: 8em;
+}
+
+/* ::::: color picker ::::: */
 
 /* use outset shape for a button look */
 .colorpicker {
