@@ -152,10 +152,6 @@ private:
 
 private:
 
-  NS_IMETHOD DrawScaled(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
-                        PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
-                        PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight);
-
   static unsigned scaled6[1<<6];
   static unsigned scaled5[1<<5];
 
@@ -181,8 +177,9 @@ private:
                              XImage *ximage, unsigned char *readData, unsigned char *srcData);
   inline void DrawComposited(nsIRenderingContext &aContext,
                              nsDrawingSurface aSurface,
-                             PRInt32 aSX, PRInt32 aSY,
-                             PRInt32 aSWidth, PRInt32 aSHeight,
+                             PRInt32 srcWidth, PRInt32 srcHeight,
+                             PRInt32 dstWidth, PRInt32 dstHeight,
+                             PRInt32 dstOrigX, PRInt32 dstOrigY,
                              PRInt32 aDX, PRInt32 aDY,
                              PRInt32 aDWidth, PRInt32 aDHeight);
   inline void DrawCompositeTile(nsIRenderingContext &aContext,
@@ -194,7 +191,6 @@ private:
 
   inline void TilePixmap(GdkPixmap *src, GdkPixmap *dest, PRInt32 aSXOffset, PRInt32 aSYOffset, 
                          const nsRect &destRect, const nsRect &clipRect, PRBool useClip);
-  inline void CreateAlphaBitmap(PRInt32 aWidth, PRInt32 aHeight);
   inline void CreateOffscreenPixmap(PRInt32 aWidth, PRInt32 aHeight);
   inline void SetupGCForAlpha(GdkGC *aGC, PRInt32 aX, PRInt32 aY);
 
@@ -203,6 +199,7 @@ private:
   PRUint8      *mTrueAlphaBits;
   PRUint8      *mAlphaBits;
   GdkPixmap    *mAlphaPixmap;
+  XImage       *mAlphaXImage;
 
   PRInt32       mWidth;
   PRInt32       mHeight;

@@ -19,7 +19,7 @@
  * 
  * Contributor(s):
  *    Stuart Parmenter <pavlov@netscape.com>
- *    Tim Rowley <tor@cs.brown.edu> -- 8bit alpha compositing
+ *    Tim Rowley <tor@cs.brown.edu>
  */
 #include <gtk/gtk.h>
 #include <gdk/gdkx.h>
@@ -68,6 +68,7 @@ nsImageGTK::nsImageGTK()
   mAlphaBits = mTrueAlphaBits = nsnull;
   mAlphaPixmap = nsnull;
   mImagePixmap = nsnull;
+  mAlphaXImage = nsnull;
   mAlphaDepth = mTrueAlphaDepth = 0;
   mRowBytes = 0;
   mSizeImage = 0;
@@ -111,6 +112,11 @@ nsImageGTK::~nsImageGTK()
     gdk_pixmap_unref(mImagePixmap);
   }
 
+  if (mAlphaXImage) {
+    mAlphaXImage->data = 0;
+    XDestroyImage(mAlphaXImage);
+  }
+
 #ifdef TRACE_IMAGE_ALLOCATION
   printf("nsImageGTK::~nsImageGTK(this=%p)\n",
          this);
@@ -142,6 +148,12 @@ nsresult nsImageGTK::Init(PRInt32 aWidth, PRInt32 aHeight,
   if (nsnull != mAlphaPixmap) {
     gdk_pixmap_unref(mAlphaPixmap);
     mAlphaPixmap = nsnull;
+  }
+
+  if (nsnull != mAlphaXImage) {
+    mAlphaXImage->data = 0;
+    XDestroyImage(mAlphaXImage);
+    mAlphaXImage = nsnull;
   }
 
   SetDecodedRect(0,0,0,0);  //init
@@ -217,7 +229,7 @@ nsresult nsImageGTK::Init(PRInt32 aWidth, PRInt32 aHeight,
 
   if (aMaskRequirements == nsMaskRequirements_kNeeds8Bit)
     mAlphaDepth = 0;
-
+  
   return NS_OK;
 }
 
@@ -433,8 +445,6 @@ void nsImageGTK::UpdateCachedImage()
 
     if (mAlphaDepth != 8) {
       CreateOffscreenPixmap(mWidth, mHeight);
-      if (!sXbitGC)
-        sXbitGC = gdk_gc_new(mImagePixmap);
 
       gdk_draw_rgb_image_dithalign(mImagePixmap, sXbitGC, 
                                    rect->x, rect->y,
@@ -443,6 +453,16 @@ void nsImageGTK::UpdateCachedImage()
                                    mImageBits + mRowBytes*rect->y + 3*rect->x,
                                    mRowBytes,
                                    rect->x, rect->y);
+    }
+
+    if (mAlphaDepth==1) {
+      XPutImage(GDK_WINDOW_XDISPLAY(mAlphaPixmap),
+                GDK_WINDOW_XWINDOW(mAlphaPixmap),
+                GDK_GC_XGC(s1bitGC),
+                mAlphaXImage,
+                rect->x, rect->y, 
+                rect->x, rect->y,
+                rect->width, rect->height);
     }
   }
   
@@ -455,143 +475,178 @@ void nsImageGTK::UpdateCachedImage()
 static PRTime gConvertTime, gAlphaTime, gCopyStart, gCopyEnd, gStartTime, gPixmapTime, gEndTime;
 #endif
 
+/* Xlib image scaling... */
 
-NS_IMETHODIMP
-nsImageGTK::DrawScaled(nsIRenderingContext &aContext,
-                       nsDrawingSurface aSurface,
-                       PRInt32 aSX, PRInt32 aSY,
-                       PRInt32 aSWidth, PRInt32 aSHeight,
-                       PRInt32 aDX, PRInt32 aDY,
-                       PRInt32 aDWidth, PRInt32 aDHeight)
+#define sign(x) ((x)>0 ? 1:-1)
+
+static void XlibStretchHorizontal(long x1,long x2,long y1,long y2,
+                                  long ymin,long ymax,
+                                  long startColumn, long endColumn,
+                                  long offsetX, long offsetY,
+                                  GdkPixmap *aSrcImage, GdkPixmap *aDstImage, GdkGC *gc);
+
+/**********************************************************
+ XlibRectStretch enlarges or diminishes a source rectangle of a bitmap to
+ a destination rectangle. The source rectangle is selected by the two
+ points (xs1,ys1) and (xs2,ys2), and the destination rectangle by
+ (xd1,yd1) and (xd2,yd2).
+
+ Entry:
+	xs1,ys1 - first point of source rectangle
+	xs2,ys2 - second point of source rectangle
+	xd1,yd1 - first point of destination rectangle
+	xd2,yd2 - second point of destination rectangle
+  offx, offy - offset to target
+**********************************************************/
+void
+XlibRectStretch(PRInt32 srcWidth, PRInt32 srcHeight,
+                PRInt32 dstWidth, PRInt32 dstHeight,
+                PRInt32 dstOrigX, PRInt32 dstOrigY,
+                PRInt32 aDX, PRInt32 aDY,
+                PRInt32 aDWidth, PRInt32 aDHeight,
+                GdkPixmap *aSrcImage, GdkPixmap *aDstImage,
+                GdkGC *gc, GdkGC *copygc, PRInt32 aDepth)
 {
+  long dx,dy,e,d,dx2;
+  short sx,sy;
+  GdkPixmap *aTmpImage = 0;
+  PRBool skipHorizontal=PR_FALSE, skipVertical=PR_FALSE;
+  long startColumn, startRow, endColumn, endRow;
+  long xs1, ys1, xs2, ys2, xd1, yd1, xd2, yd2;
 
-  PRInt32 origSHeight = aSHeight, origDHeight = aDHeight;
-  PRInt32 origSWidth = aSWidth, origDWidth = aDWidth;
+  xs1 = ys1 = xd1 = yd1 = 0;
+  xs2 = srcWidth-1;
+  ys2 = srcHeight-1;
+  xd2 = dstWidth-1;
+  yd2 = dstHeight-1;
 
-  if (aSWidth < 0 || aDWidth < 0 || aSHeight < 0 || aDHeight < 0)
-    return NS_ERROR_FAILURE;
+//  fprintf(stderr, "%p (%ld %ld)-(%ld %ld) (%ld %ld)-(%ld %ld)\n",
+//          aDstImage, xs1, ys1, xs2, ys2, xd1, yd1, xd2, yd2);
+  
+  startColumn = aDX-dstOrigX;
+  startRow    = aDY-dstOrigY;
+  endColumn   = aDX+aDWidth-dstOrigX;
+  endRow      = aDY+aDHeight-dstOrigY;
 
-  if (0 == aSWidth || 0 == aDWidth || 0 == aSHeight || 0 == aDHeight)
-    return NS_OK;
+//  fprintf(stderr, "startXY = %d %d  endXY = %d %d   %d x %d\n",
+//          startColumn, startRow, endColumn, endRow,
+//          endColumn-startColumn, endRow-startRow);
 
-  // limit the size of the blit to the amount of the image read in
-  if (aSX + aSWidth > mDecodedX2) {
-    aDWidth -= ((aSX + aSWidth - mDecodedX2)*origDWidth)/origSWidth;
-    aSWidth -= (aSX + aSWidth) - mDecodedX2;
-  }
-  if (aSX < mDecodedX1) {
-    aDX += ((mDecodedX1 - aSX)*origDWidth)/origSWidth;
-    aSX = mDecodedX1;
-  }
+  long scaleStartY, scaleEndY;
+  scaleStartY = startRow * (ys2-ys1+1) / (yd2-yd1+1);
+  scaleEndY   = 1 + endRow * (ys2-ys1+1) / (yd2-yd1+1);
 
-  if (aSY + aSHeight > mDecodedY2) {
-    aDHeight -= ((aSY + aSHeight - mDecodedY2)*origDHeight)/origSHeight;
-    aSHeight -= (aSY + aSHeight) - mDecodedY2;
-  }
-  if (aSY < mDecodedY1) {
-    aDY += ((mDecodedY1 - aSY)*origDHeight)/origSHeight;
-    aSY = mDecodedY1;
-  }
-
-  if ((aDWidth <= 0 || aDHeight <= 0) || (aSWidth <= 0 || aSHeight <= 0))
-    return NS_OK;
-
-  nsDrawingSurfaceGTK *drawing = (nsDrawingSurfaceGTK*)aSurface;
-
-  if (mAlphaDepth == 1) {
-    CreateAlphaBitmap(mWidth, mHeight);
-  }
-
-  if (mAlphaDepth==8) {
-    DrawComposited(aContext, aSurface, 
-                   aSX, aSY, aSWidth, aSHeight, 
-                   aDX, aDY, aDWidth, aDHeight);
-    return NS_OK;
+  if (xd2-xd1 == xs2-xs1) {
+//    fprintf(stderr, "skipping horizontal\n");
+    skipHorizontal = PR_TRUE;
+    aTmpImage = aSrcImage;
+    scaleStartY = 0;
+    scaleEndY = ys2;
   }
 
-  GdkGC *gc;
-  GdkPixmap *pixmap = 0;
+  if (yd2-yd1 == ys2-ys1) {
+//    fprintf(stderr, "skipping vertical\n");
+    skipVertical = PR_TRUE;
+    aTmpImage = aDstImage;
+  }
 
-  if (mAlphaDepth==1) {
-    PRUint32 scaledRowBytes = (aDWidth+7)>>3;   // round to next byte
-    PRUint8 *scaledAlpha = (PRUint8 *)nsMemory::Alloc(aDHeight*scaledRowBytes);
+  if (skipVertical && skipHorizontal) {
+    gdk_draw_pixmap(aDstImage, gc, aSrcImage,
+                    0, 0, srcWidth, srcHeight,
+                    dstOrigX, dstOrigY);
+    return;
+  }
 
-    // code below attempts to draw the image without the mask if mask
-    // creation fails for some reason.  thus no easy-out "return"
-    if (scaledAlpha) {
-      memset(scaledAlpha, 0, aDHeight*scaledRowBytes);
-      RectStretch(aSX, aSY, aSX+aSWidth-1, aSY+aSHeight-1,
-                  0, 0, aDWidth-1, aDHeight-1,
-                  mAlphaBits, mAlphaRowBytes, scaledAlpha, scaledRowBytes, 1);
-    
-      pixmap = gdk_pixmap_new(nsnull, aDWidth, aDHeight, 1);
-      XImage *ximage = 0;
+//  fprintf(stderr, "scaleY Start/End = %d %d\n", scaleStartY, scaleEndY);
 
-      if (pixmap) {
-        ximage = XCreateImage(GDK_WINDOW_XDISPLAY(pixmap),
-                              GDK_VISUAL_XVISUAL(gdk_rgb_get_visual()),
-                              1, XYPixmap, 0, (char *)scaledAlpha, 
-                              aDWidth, aDHeight,
-                              8, scaledRowBytes);
+  if (!skipHorizontal && !skipVertical)
+    aTmpImage = gdk_pixmap_new(nsnull,
+                               endColumn-startColumn,
+                               scaleEndY-scaleStartY,
+                               aDepth);
+  
+  dx = abs((int)(yd2-yd1));
+  dy = abs((int)(ys2-ys1));
+  sx = sign(yd2-yd1);
+  sy = sign(ys2-ys1);
+  e = dy-dx;
+  dx2 = dx;
+  dy += 1;
+  if (!dx2) dx2=1;
+
+  if (!skipHorizontal)
+    XlibStretchHorizontal(xd1, xd2, xs1, xs2, scaleStartY, scaleEndY,
+                          startColumn, endColumn,
+                          (skipVertical?MAX(dstOrigX,0):0),(skipVertical?MAX(dstOrigY,0):0),
+                          aSrcImage, aTmpImage, (skipVertical?gc:copygc));
+  
+  if (!skipVertical) {
+    for (d=0; d<=dx; d++) {
+      if ((yd1 >= startRow) && (yd1 <= endRow)) {
+        gdk_draw_pixmap(aDstImage, gc, aTmpImage,
+                        (skipHorizontal?startColumn:0), ys1-scaleStartY,
+                        (dstOrigX>0?dstOrigX:0), dstOrigY+yd1,
+                        endColumn-startColumn, 1);
       }
-      if (ximage) {
-        ximage->bits_per_pixel=1;
-        ximage->bitmap_bit_order=MSBFirst;
-        ximage->byte_order = MSBFirst;
-        
-        GdkGC *tmpGC = gdk_gc_new(pixmap);
-        if (tmpGC) {
-          XPutImage(GDK_WINDOW_XDISPLAY(pixmap), GDK_WINDOW_XWINDOW(pixmap),
-                    GDK_GC_XGC(tmpGC), ximage,
-                    0, 0, 0, 0, aDWidth, aDHeight);
-          gdk_gc_unref(tmpGC);
-        } else {
-          // can't write into the clip mask - destroy so we don't use it
-          if (pixmap)
-            gdk_pixmap_unref(pixmap);
-          pixmap = 0;
-        }
-        
-        ximage->data = 0;
-        XDestroyImage(ximage);
+      while (e>=0) {
+	      ys1 += sy;
+	      e -= dx2;
       }
-
-      nsMemory::Free(scaledAlpha);
+      yd1 += sx;
+      e += dy;
     }
   }
 
-  if (pixmap) {
-    gc = gdk_gc_new(drawing->GetDrawable());
-    gdk_gc_set_clip_origin(gc, aDX, aDY);
-    gdk_gc_set_clip_mask(gc, pixmap);
-  } else {
-    // don't make a copy... we promise not to change it
-    gc = ((nsRenderingContextGTK&)aContext).GetGC();
-  }    
-  
-  PRUint8 *scaledRGB = (PRUint8 *)nsMemory::Alloc(3*aDWidth*aDHeight);
-  if (scaledRGB && gc) {
-    RectStretch(aSX, aSY, aSX+aSWidth-1, aSY+aSHeight-1,
-                0, 0, aDWidth-1, aDHeight-1,
-                mImageBits, mRowBytes, scaledRGB, 3*aDWidth, 24);
-    
-    gdk_draw_rgb_image(drawing->GetDrawable(), gc,
-                       aDX, aDY, aDWidth, aDHeight,
-                       GDK_RGB_DITHER_MAX,
-                       scaledRGB, 3*aDWidth);
-
-    nsMemory::Free(scaledRGB);
-  }
-
-  if (gc)
-    gdk_gc_unref(gc);
-  if (pixmap)
-    gdk_pixmap_unref(pixmap);
-
-  mFlags = 0;
-
-  return NS_OK;
+  if (!skipHorizontal && !skipVertical)
+    gdk_pixmap_unref(aTmpImage);
 }
+
+/**********************************************************
+ Stretches a image horizontally by column replication/deletion.
+ Used by XlibRectStretch.
+
+ Entry:
+	x1,x2 - x-coordinates of the destination line
+	y1,y2 - x-coordinates of the source line
+	ymin  - y-coordinate of top of stretch region
+	ymax  - y-coordinate of bottom of stretch region
+**********************************************************/
+static void
+XlibStretchHorizontal(long x1, long x2, long y1, long y2,
+                      long ymin, long ymax,
+                      long startColumn, long endColumn,
+                      long offsetX, long offsetY,
+                      GdkPixmap *aSrcImage, GdkPixmap *aDstImage, GdkGC *gc)
+{
+  long dx,dy,e,d,dx2;
+  short sx,sy;
+
+  dx = abs((int)(x2-x1));
+  dy = abs((int)(y2-y1));
+  sx = sign(x2-x1);
+  sy = sign(y2-y1);
+  e = dy-dx;
+  dx2 = dx;
+  dy += 1;
+  if (!dx2) dx2=1;
+  for (d=0; d<=dx; d++) {
+    if ((x1 >= startColumn) && (x1 <= endColumn)) {
+      gdk_draw_pixmap(aDstImage, gc, aSrcImage,
+                      y1, ymin, x1-startColumn+offsetX, 0+offsetY,
+                      1, ymax-ymin);
+    }
+    while (e>=0) {
+      y1 += sy;
+      e -= dx2;
+    }
+    x1 += sx;
+    e += dy;
+  }
+}
+
+#undef sign
+
+
 
 // Draw the bitmap, this method has a source and destination coordinates
 NS_IMETHODIMP
@@ -608,61 +663,170 @@ nsImageGTK::Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
     return NS_OK;
 
 #ifdef TRACE_IMAGE_ALLOCATION
-  printf("nsImageGTK::Draw(this=%p) (%d, %d, %d, %d), (%d, %d, %d, %d)\n",
+  fprintf(stderr, "nsImageGTK::Draw(%p) s=(%4d %4d %4d %4d) d=(%4d %4d %4d %4d)\n",
          this,
          aSX, aSY, aSWidth, aSHeight,
          aDX, aDY, aDWidth, aDHeight);
 #endif
 
-  if (aSWidth != aDWidth || aSHeight != aDHeight) {
-    return DrawScaled(aContext, aSurface, aSX, aSY, aSWidth, aSHeight,
-                      aDX, aDY, aDWidth, aDHeight);
-  }
-
   if (aSWidth <= 0 || aDWidth <= 0 || aSHeight <= 0 || aDHeight <= 0) {
-    NS_ASSERTION(aSWidth > 0 && aDWidth > 0 && aSHeight > 0 && aDHeight > 0,
-                 "You can't draw an image with a 0 width or height!");
     return NS_OK;
   }
 
-  // limit the size of the blit to the amount of the image read in
+  // store some values we'll need for scaling...
+
+  PRInt32 srcWidth, srcHeight, dstWidth, dstHeight;
+  PRInt32 dstOrigX, dstOrigY;
+
+  srcWidth = aSWidth;
+  srcHeight = aSHeight;
+  dstWidth = aDWidth;
+  dstHeight = aDHeight;
+  dstOrigX = aDX;
+  dstOrigY = aDY;
+
+  // clip to decode region
   PRInt32 j = aSX + aSWidth;
   PRInt32 z;
   if (j > mDecodedX2) {
     z = j - mDecodedX2;
-    aDWidth -= z;
+    aDWidth -= z*dstWidth/srcWidth;
     aSWidth -= z;
   }
   if (aSX < mDecodedX1) {
-    aDX += mDecodedX1 - aSX;
+    aDX += (mDecodedX1 - aSX)*dstWidth/srcWidth;
     aSX = mDecodedX1;
   }
 
   j = aSY + aSHeight;
   if (j > mDecodedY2) {
     z = j - mDecodedY2;
-    aDHeight -= z;
+    aDHeight -= z*dstHeight/srcHeight;
     aSHeight -= z;
   }
   if (aSY < mDecodedY1) {
-    aDY += mDecodedY1 - aSY;
+    aDY += (mDecodedY1 - aSY)*dstHeight/srcHeight;
     aSY = mDecodedY1;
   }
 
-  if (aDWidth <= 0 || aDHeight <= 0 || aSWidth <= 0 || aSHeight <= 0)
-    return NS_OK;
-
-  if (mAlphaDepth==8) {
-    DrawComposited(aContext, aSurface, 
-                   aSX, aSY, aSWidth, aSHeight, 
-                   aDX, aDY, aSWidth, aSHeight);
+  if (aDWidth <= 0 || aDHeight <= 0 || aSWidth <= 0 || aSHeight <= 0) {
     return NS_OK;
   }
 
+  // clip to drawing surface
   nsDrawingSurfaceGTK *drawing = (nsDrawingSurfaceGTK*)aSurface;
+  PRUint32 surfaceWidth, surfaceHeight;
+  drawing->GetDimensions(&surfaceWidth, &surfaceHeight);
 
-  if (mAlphaDepth == 1)
-    CreateAlphaBitmap(mWidth, mHeight);
+  if (aDX + aDWidth > (PRInt32)surfaceWidth) {
+    z = aDX + aDWidth - surfaceWidth;
+    aDWidth -= z;
+    aSWidth -= z*srcWidth/dstWidth;
+  }
+
+  if (aDX < 0) {
+    aDWidth += aDX;
+    aSWidth += aDX*srcWidth/dstWidth;
+    aSX -= aDX*srcWidth/dstWidth;
+    aDX = 0;
+  }
+
+  if (aDY + aDHeight > (PRInt32)surfaceHeight) {
+    z = aDY + aDHeight - surfaceHeight;
+    aDHeight -= z;
+    aSHeight -= z*srcHeight/dstHeight;
+  }
+
+  if (aDY < 0) {
+    aDHeight += aDY;
+    aSHeight += aDY*srcHeight/dstHeight;
+    aSY -= aDY*srcHeight/dstHeight;
+    aDY = 0;
+  }
+
+  if (aDWidth <= 0 || aDHeight <= 0 || aSWidth <= 0 || aSHeight <= 0) {
+    return NS_OK;
+  }
+
+  if ((srcWidth != dstWidth) || (srcHeight != dstHeight)) {
+    GdkPixmap *pixmap = 0;
+    GdkGC *gc = 0;
+
+    switch (mAlphaDepth) {
+    case 8:
+      DrawComposited(aContext, aSurface,
+                     srcWidth, srcHeight,
+                     dstWidth, dstHeight,
+                     dstOrigX, dstOrigY,
+                     aDX, aDY,
+                     aDWidth, aDHeight);
+      break;
+    case 1:
+      pixmap = gdk_pixmap_new(nsnull, dstWidth, dstHeight, 1);
+      if (pixmap) {
+        XlibRectStretch(srcWidth, srcHeight,
+                        dstWidth, dstHeight,
+                        0, 0,
+                        0, 0,
+                        dstWidth, dstHeight,
+                        mAlphaPixmap, pixmap,
+                        s1bitGC, s1bitGC, 1);
+        gc = gdk_gc_new(drawing->GetDrawable());
+        if (gc) {
+          gdk_gc_set_clip_origin(gc, dstOrigX, dstOrigY);
+          gdk_gc_set_clip_mask(gc, pixmap);
+        }
+      }
+      /* fall through */
+    case 0:
+      if (!gc)
+        gc = ((nsRenderingContextGTK&)aContext).GetGC();
+
+      if (gdk_rgb_get_visual()->depth <= 8) {
+        PRUint8 *scaledRGB = (PRUint8 *)nsMemory::Alloc(3*dstWidth*dstHeight);
+        RectStretch(0, 0, mWidth-1, mHeight-1,
+                    0, 0, dstWidth-1, dstHeight-1,
+                    mImageBits, mRowBytes, scaledRGB, 3*dstWidth, 24);
+    
+        gdk_draw_rgb_image_dithalign(drawing->GetDrawable(), gc,
+                                     aDX, aDY, aDWidth, aDHeight,
+                                     GDK_RGB_DITHER_MAX, 
+                                     scaledRGB + 3*((aDY-dstOrigY)*dstWidth+(aDX-dstOrigX)),
+                                     3*dstWidth,
+                                     (aDX-dstOrigX), (aDY-dstOrigY));
+
+        nsMemory::Free(scaledRGB);
+      }
+      else
+        XlibRectStretch(srcWidth, srcHeight,
+                        dstWidth, dstHeight,
+                        dstOrigX, dstOrigY,
+                        aDX, aDY,
+                        aDWidth, aDHeight,
+                        mImagePixmap, drawing->GetDrawable(),
+                        gc, sXbitGC, gdk_rgb_get_visual()->depth);
+      break;
+    }
+    if (gc)
+      gdk_gc_unref(gc);
+    if (pixmap)
+      gdk_pixmap_unref(pixmap);
+
+    mFlags = 0;
+    return NS_OK;
+  }
+
+  // now start drawing...
+
+  if (mAlphaDepth==8) {
+    DrawComposited(aContext, aSurface, 
+                   srcWidth, srcHeight,
+                   dstWidth, dstHeight,
+                   aDX-aSX, aDY-aSY,
+                   aDX, aDY,
+                   aDWidth, aDHeight);
+    return NS_OK;
+  }
 
   GdkGC *copyGC;
   if (mAlphaPixmap) {
@@ -1019,53 +1183,27 @@ nsImageGTK::DrawCompositedGeneral(PRBool isLSB, PRBool flipBytes,
 void
 nsImageGTK::DrawComposited(nsIRenderingContext &aContext,
                            nsDrawingSurface aSurface,
-                           PRInt32 aSX, PRInt32 aSY,
-                           PRInt32 aSWidth, PRInt32 aSHeight,
+                           PRInt32 srcWidth, PRInt32 srcHeight,
+                           PRInt32 dstWidth, PRInt32 dstHeight,
+                           PRInt32 dstOrigX, PRInt32 dstOrigY,
                            PRInt32 aDX, PRInt32 aDY,
                            PRInt32 aDWidth, PRInt32 aDHeight)
 {
-  if ((aDWidth==0) || (aDHeight==0))
-    return;
-
   nsDrawingSurfaceGTK* drawing = (nsDrawingSurfaceGTK*) aSurface;
   GdkVisual *visual = gdk_rgb_get_visual();
     
   Display *dpy = GDK_WINDOW_XDISPLAY(drawing->GetDrawable());
   Drawable drawable = GDK_WINDOW_XWINDOW(drawing->GetDrawable());
 
-  // I hate clipping...
-  PRUint32 surfaceWidth, surfaceHeight;
-  drawing->GetDimensions(&surfaceWidth, &surfaceHeight);
-  
   int readX, readY;
   unsigned readWidth, readHeight, destX, destY;
 
-  if ((aDY>=(int)surfaceHeight) || (aDX>=(int)surfaceWidth) ||
-      (aDY+aDHeight<=0) || (aDX+aDWidth<=0)) {
-    // This should never happen if the layout engine is sane,
-    // as it means we're trying to draw an image which is outside
-    // the drawing surface.  Bulletproof gfx for now...
-    return;
-  }
-
-  if (aDX<0) {
-    readX = 0;   readWidth = aDWidth+aDX;    destX = aSX-aDX;
-  } else {
-    readX = aDX;  readWidth = aDWidth;       destX = aSX;
-  }
-  if (aDY<0) {
-    readY = 0;   readHeight = aDHeight+aDY;  destY = aSY-aDY;
-  } else {
-    readY = aDY;  readHeight = aDHeight;     destY = aSY;
-  }
-
-  if (readX+readWidth > surfaceWidth)
-    readWidth = surfaceWidth-readX;
-  if (readY+readHeight > surfaceHeight)
-    readHeight = surfaceHeight-readY;
-
-  if ((readHeight <= 0) || (readWidth <= 0))
-    return;
+  destX = aDX-dstOrigX;
+  destY = aDY-dstOrigY;
+  readX = aDX;
+  readY = aDY;
+  readWidth = aDWidth;
+  readHeight = aDHeight;
 
   //  fprintf(stderr, "aX=%d aY=%d, aWidth=%u aHeight=%u\n", aX, aY, aWidth, aHeight);
   //  fprintf(stderr, "surfaceWidth=%u surfaceHeight=%u\n", surfaceWidth, surfaceHeight);
@@ -1087,12 +1225,12 @@ nsImageGTK::DrawComposited(nsIRenderingContext &aContext,
   PRUint8 *scaledAlpha = 0;
   PRUint8 *imageOrigin, *alphaOrigin;
   PRUint32 imageStride, alphaStride;
-  if ((aSWidth!=aDWidth) || (aSHeight!=aDHeight)) {
+  if ((srcWidth!=dstWidth) || (srcHeight!=dstHeight)) {
     PRUint32 x1, y1, x2, y2;
-    x1 = (destX*aSWidth)/aDWidth;
-    y1 = (destY*aSHeight)/aDHeight;
-    x2 = ((destX+readWidth)*aSWidth)/aDWidth;
-    y2 = ((destY+readHeight)*aSHeight)/aDHeight;
+    x1 = destX*srcWidth/dstWidth;
+    y1 = destY*srcHeight/dstHeight;
+    x2 = (destX+aDWidth)*srcWidth/dstWidth;
+    y2 = (destY+aDHeight)*srcHeight/dstHeight;
 
     scaledImage = (PRUint8 *)nsMemory::Alloc(3*aDWidth*aDHeight);
     scaledAlpha = (PRUint8 *)nsMemory::Alloc(aDWidth*aDHeight);
@@ -1330,78 +1468,6 @@ nsImageGTK::DrawCompositeTile(nsIRenderingContext &aContext,
   mFlags = 0;
 }
 
-void nsImageGTK::CreateAlphaBitmap(PRInt32 aWidth, PRInt32 aHeight)
-{
-  XImage *x_image = nsnull;
-  Pixmap pixmap = 0;
-  Display *dpy = nsnull;
-  Visual *visual = nsnull;
-
-  // Create gc clip-mask on demand
-  if (mAlphaBits && IsFlagSet(nsImageUpdateFlags_kBitsChanged, mFlags)) {
-
-#if 1
-    if (!mAlphaPixmap) {
-      mAlphaPixmap = gdk_pixmap_new(nsnull, aWidth, aHeight, 1);
-    }
-
-    /* get the X primitives */
-    dpy = GDK_WINDOW_XDISPLAY(mAlphaPixmap);
-
-    /* this is the depth of the pixmap that we are going to draw to.
-       It's always a bitmap.  We're doing alpha here folks. */
-    visual = GDK_VISUAL_XVISUAL(gdk_rgb_get_visual());
-
-    // Make an image out of the alpha-bits created by the image library
-    x_image = XCreateImage(dpy, visual,
-                           1, /* visual depth...1 for bitmaps */
-                           XYPixmap,
-                           0, /* x offset, XXX fix this */
-                           (char *)mAlphaBits,  /* cast away our sign. */
-                           aWidth,
-                           aHeight,
-                           32,/* bitmap pad */
-                           mAlphaRowBytes); /* bytes per line */
-
-    x_image->bits_per_pixel=1;
-
-    /* Image library always places pixels left-to-right MSB to LSB */
-    x_image->bitmap_bit_order = MSBFirst;
-
-    /* This definition doesn't depend on client byte ordering
-       because the image library ensures that the bytes in
-       bitmask data are arranged left to right on the screen,
-       low to high address in memory. */
-    x_image->byte_order = MSBFirst;
-#if defined(IS_LITTLE_ENDIAN)
-    // no, it's still MSB XXX check on this!!
-    //      x_image->byte_order = LSBFirst;
-#elif defined (IS_BIG_ENDIAN)
-    x_image->byte_order = MSBFirst;
-#else
-#error ERROR! Endianness is unknown;
-#endif
-
-    // Write into the pixemap that is underneath gdk's mAlphaPixmap
-    // the image we just created.
-    pixmap = GDK_WINDOW_XWINDOW(mAlphaPixmap);
-
-    if (!s1bitGC) {
-      s1bitGC = gdk_gc_new(mAlphaPixmap);
-    }
-
-    XPutImage(dpy, pixmap, GDK_GC_XGC(s1bitGC), x_image, 0, 0, 0, 0,
-              aWidth, aHeight);
-
-    // Now we are done with the temporary image
-    x_image->data = 0;          /* Don't free the IL_Pixmap's bits. */
-    XDestroyImage(x_image);
-#else
-    mAlphaPixmap = gdk_bitmap_create_from_data(mImagePixmap, mAlphaBits, mAlphaWidth, mAlphaHeight);
-#endif
-  }
-
-}
 
 void nsImageGTK::CreateOffscreenPixmap(PRInt32 aWidth, PRInt32 aHeight)
 {
@@ -1420,6 +1486,40 @@ void nsImageGTK::CreateOffscreenPixmap(PRInt32 aWidth, PRInt32 aHeight)
     mImagePixmap = gdk_pixmap_new(nsnull, aWidth, aHeight,
                                   gdk_rgb_get_visual()->depth);
   }
+
+    // Ditto for the clipmask
+  if ((!mAlphaPixmap) && (mAlphaDepth==1)) {
+    mAlphaPixmap = gdk_pixmap_new(nsnull, aWidth, aHeight, 1);
+
+    // Need an XImage for clipmask updates (XPutImage)
+    mAlphaXImage = XCreateImage(GDK_WINDOW_XDISPLAY(mAlphaPixmap),
+                                GDK_VISUAL_XVISUAL(gdk_rgb_get_visual()),
+                                1, /* visual depth...1 for bitmaps */
+                                XYPixmap,
+                                0, /* x offset, XXX fix this */
+                                (char *)mAlphaBits,  /* cast away our sign. */
+                                aWidth,
+                                aHeight,
+                                32,/* bitmap pad */
+                                mAlphaRowBytes); /* bytes per line */
+
+    mAlphaXImage->bits_per_pixel=1;
+
+    /* Image library always places pixels left-to-right MSB to LSB */
+    mAlphaXImage->bitmap_bit_order = MSBFirst;
+
+    /* This definition doesn't depend on client byte ordering
+       because the image library ensures that the bytes in
+       bitmask data are arranged left to right on the screen,
+       low to high address in memory. */
+    mAlphaXImage->byte_order = MSBFirst;
+  }
+
+  if (!s1bitGC)
+    s1bitGC = gdk_gc_new(mAlphaPixmap);
+
+  if (!sXbitGC)
+    sXbitGC = gdk_gc_new(mImagePixmap);
 }
 
 
@@ -1449,27 +1549,6 @@ nsImageGTK::Draw(nsIRenderingContext &aContext,
                  PRInt32 aX, PRInt32 aY,
                  PRInt32 aWidth, PRInt32 aHeight)
 {
-  g_return_val_if_fail ((aSurface != nsnull), NS_ERROR_FAILURE);
-
-  if (mPendingUpdate)
-    UpdateCachedImage();
-
-  if ((mAlphaDepth==1) && mIsSpacer)
-    return NS_OK;
-
-  if (mAlphaDepth==8) {
-    DrawComposited(aContext, aSurface, 0, 0, aWidth, aHeight, aX, aY, aWidth, aHeight);
-    return NS_OK;
-  }
-
-  // XXX kipp: this is temporary code until we eliminate the
-  // width/height arguments from the draw method.
-  if ((aWidth != mWidth) || (aHeight != mHeight)) {
-    aWidth = mWidth;
-    aHeight = mHeight;
-  }
-
-
 #ifdef TRACE_IMAGE_ALLOCATION
   printf("nsImageGTK::Draw(this=%p,x=%d,y=%d,width=%d,height=%d)\n",
          this,
@@ -1477,102 +1556,9 @@ nsImageGTK::Draw(nsIRenderingContext &aContext,
          aWidth, aHeight);
 #endif
 
-  nsDrawingSurfaceGTK* drawing = (nsDrawingSurfaceGTK*) aSurface;
-
-#ifdef CHEAP_PERFORMANCE_MEASURMENT
-  gStartTime = PR_Now();
-#endif
-
-  CreateAlphaBitmap(aWidth, aHeight);
-
-#ifdef CHEAP_PERFORMANCE_MEASURMENT
-  gAlphaTime = PR_Now();
-#endif
-
-
-
-  PRInt32
-    validX = 0,
-    validY = 0,
-    validWidth  = aWidth,
-    validHeight = aHeight;
-
-  // limit the image rectangle to the size of the image data which
-  // has been validated.
-  if (mDecodedY2 < aHeight) {
-    validHeight = mDecodedY2 - mDecodedY1;
-  }
-  if (mDecodedX2 < aWidth) {
-    validWidth = mDecodedX2 - mDecodedX1;
-  }
-  if (mDecodedY1 > 0) {
-    validHeight -= mDecodedY1;
-    validY = mDecodedY1;
-  }
-  if (mDecodedX1 > 0) {
-    validWidth -= mDecodedX1;
-    validX = mDecodedX1;
-  }
-
-#ifdef CHEAP_PERFORMANCE_MEASURMENT
-  gPixmapTime = PR_Now();
-#endif
-
-  GdkGC *copyGC;
-  if (mAlphaPixmap) {
-    copyGC = gdk_gc_new(drawing->GetDrawable());
-    GdkGC *gc = ((nsRenderingContextGTK&)aContext).GetGC();
-    gdk_gc_copy(copyGC, gc);
-    gdk_gc_unref(gc); // unref the one we got
-    
-    SetupGCForAlpha(copyGC, aX, aY);
-  } else {
-    // don't make a copy... we promise not to change it
-    copyGC = ((nsRenderingContextGTK&)aContext).GetGC();
-  }
-#ifdef TRACE_IMAGE_ALLOCATION
-  printf("nsImageGTK::Draw(this=%p) gdk_draw_pixmap(x=%d,y=%d,width=%d,height=%d)\n",
-         this,
-         validX+aX,
-         validY+aY,
-         validWidth,                  
-         validHeight);
-#endif
-
-#ifdef CHEAP_PERFORMANCE_MEASURMENT
-  gCopyStart = PR_Now();
-#endif
-  // copy our offscreen pixmap onto the window.
-  gdk_window_copy_area(drawing->GetDrawable(),      // dest window
-                       copyGC,                      // gc
-                       validX+aX,                   // xdest
-                       validY+aY,                   // ydest
-                       mImagePixmap,                // source window
-                       validX,                      // xsrc
-                       validY,                      // ysrc
-                       validWidth,                  // width
-                       validHeight);                // height
-#ifdef CHEAP_PERFORMANCE_MEASURMENT
-  gCopyEnd = PR_Now();
-#endif
-
-  gdk_gc_unref(copyGC);
-
-
-#ifdef CHEAP_PERFORMANCE_MEASURMENT
-  gEndTime = PR_Now();
-  printf("nsImageGTK::Draw(this=%p,w=%d,h=%d) total=%lld pixmap=%lld, alpha=%lld, copy=%lld\n",
-         this,
-         aWidth, aHeight,
-         gEndTime - gStartTime,
-         gPixmapTime - gAlphaTime,
-         gAlphaTime - gStartTime,
-         gCopyEnd - gCopyStart);
-#endif
-
-  mFlags = 0;
-
-  return NS_OK;
+  return Draw(aContext, aSurface,
+              0, 0, mWidth, mHeight,
+              aX, aY, mWidth, mHeight);
 }
 
 /* inline */
@@ -1705,8 +1691,6 @@ NS_IMETHODIMP nsImageGTK::DrawTile(nsIRenderingContext &aContext,
     GdkPixmap *tileImg;
     GdkPixmap *tileMask;
 
-    CreateAlphaBitmap(validWidth, validHeight);
-
     nsRect tmpRect(0,0,aTileRect.width, aTileRect.height);
 
     tileImg = gdk_pixmap_new(nsnull, aTileRect.width, 
@@ -1801,60 +1785,6 @@ NS_IMETHODIMP nsImageGTK::DrawToImage(nsIImage* aDstImage,
   if (!dest)
     return NS_ERROR_FAILURE;
 
-  if (mPendingUpdate)
-    UpdateCachedImage();
-  
-  if (!dest->mImagePixmap) {
-    dest->CreateOffscreenPixmap(dest->mWidth, dest->mHeight);
-  }
-  
-  if (!dest->mImagePixmap) {
-    return NS_ERROR_FAILURE;
-  }
-
-  if (!mImagePixmap)
-    return NS_ERROR_FAILURE;
-
-  GdkGC *gc = gdk_gc_new(dest->mImagePixmap);
-
-  if (mAlphaDepth == 1)
-    CreateAlphaBitmap(mWidth, mHeight);
-  
-  if (mAlphaPixmap) {
-    SetupGCForAlpha(gc, aDX, aDY);
-  }
-
-  gdk_window_copy_area(dest->mImagePixmap, gc,
-                       aDX, aDY,
-                       mImagePixmap,
-                       0, 0, mWidth, mHeight);
-
-  gdk_gc_unref(gc);
-
-  if ((mAlphaDepth==1) && (dest->mAlphaPixmap)) {
-    GdkGCValues values;
-    GdkGCValuesMask vmask;
-
-    memset(&values, 0, sizeof(GdkGCValues));
-    values.function = GDK_OR;
-    vmask = GDK_GC_FUNCTION;
-    gc = gdk_gc_new_with_values(dest->mAlphaPixmap, &values, vmask);
-    gdk_window_copy_area(dest->mAlphaPixmap, gc,
-                         aDX, aDY,
-                         mAlphaPixmap,
-                         0, 0, mWidth, mHeight);
-    gdk_gc_unref(gc);
-  }
-
-  if (!mIsSpacer || !mAlphaDepth)
-    dest->mIsSpacer = PR_FALSE;
-
-  // Ripped out scaling code from here.  So, just to be safe, putting in an
-  // assertion that will fire in case we get an image that
-  // needs to be scaled.
-  NS_ASSERTION((aDWidth == mWidth) && (aDHeight == mHeight), 
-               "nsImageGTK::DrawToImage called for an image that needs to be scaled.");
-
   PRUint8 *rgbPtr=0, *alphaPtr=0;
   PRUint32 rgbStride, alphaStride;
 
@@ -1939,6 +1869,9 @@ NS_IMETHODIMP nsImageGTK::DrawToImage(nsIImage* aDstImage,
              rgbPtr + y*rgbStride,
              3*aDWidth);
   }
+
+  nsRect rect(aDX, aDY, aDWidth, aDHeight);
+  dest->ImageUpdated(NULL, 0, &rect);
 
   return NS_OK;
 }
