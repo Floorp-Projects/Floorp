@@ -420,9 +420,7 @@ nsresult nsMsgSearchTerm::ParseValue(char *inStream)
 	    switch (m_attribute)
 		{
 		case nsMsgSearchAttrib::Date:
-#ifdef DO_DATE_YET
-			m_value.u.date = XP_ParseTimeString (inStream, PR_FALSE);
-#endif
+			PR_ParseTimeString (inStream, PR_FALSE, &m_value.u.date);
 			break;
 		case nsMsgSearchAttrib::MsgStatus:
 			m_value.u.msgStatus = NS_MsgGetStatusValueFromName(inStream);
