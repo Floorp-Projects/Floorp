@@ -657,13 +657,9 @@ NS_IMETHODIMP nsDeviceContextOS2::GetILColorSpace(IL_ColorSpace*& aColorSpace)
       //
       // Note: the image library doesn't use the reserved colors, so it doesn't
       // matter what they're set to...
-#ifdef XP_OS2
-      IL_ColorMap* colorMap = IL_NewCubeColorMap(0, 0, COLOR_CUBE_SIZE + 10);
-#else
       IL_RGB  reserved[10];
       memset(reserved, 0, sizeof(reserved));
       IL_ColorMap* colorMap = IL_NewCubeColorMap(reserved, 10, COLOR_CUBE_SIZE + 10);
-#endif
       if (nsnull == colorMap) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
@@ -697,6 +693,43 @@ NS_IMETHODIMP nsDeviceContextOS2::GetILColorSpace(IL_ColorSpace*& aColorSpace)
   return NS_OK;
 }
 
+#define NUM_SYS_COLORS 22
+
+typedef struct _MYRGB
+{
+  BYTE red;
+  BYTE green;
+  BYTE blue;
+} MYRGB;
+
+MYRGB sysColors[NUM_SYS_COLORS] =
+{
+    0xFF, 0xFF, 0xFF,   // CLR_WHITE
+    0x00, 0x00, 0x00,   // CLR_BLACK
+    0x00, 0x00, 0xFF,   // CLR_BLUE
+    0xFF, 0x00, 0x00,   // CLR_RED
+    0xFF, 0x00, 0xFF,   // CLR_PINK
+    0x00, 0xFF, 0x00,   // CLR_GREEN
+    0x00, 0xFF, 0xFF,   // CLR_CYAN
+    0xFF, 0xFF, 0x00,   // CLR_YELLOW
+    0x80, 0x80, 0x80,   // CLR_DARKGRAY
+    0x00, 0x00, 0x80,   // CLR_DARKBLUE
+    0x80, 0x00, 0x00,   // CLR_DARKRED
+    0x80, 0x00, 0x80,   // CLR_DARKPINK
+    0x00, 0x80, 0x00,   // CLR_DARKGREEN
+    0x00, 0x80, 0x80,   // CLR_DARKCYAN
+    0x80, 0x80, 0x00,   // CLR_BROWN
+    0xCC, 0xCC, 0xCC,   // CLR_PALEGRAY
+
+    0xC0, 0xC0, 0xC0,   // Gray (Windows)
+    0xFF, 0xFB, 0xF0,   // Pale Yellow (Windows)
+    0xC0, 0xDC, 0xC0,   // Pale Green (Windows)
+    0xA4, 0xC8, 0xF0,   // Light Blue (Windows)
+    0xA4, 0xA0, 0xA4,   // Medium Gray (Windows)
+
+    0xFF, 0xFF, 0xE4    // Tooltip color - see nsLookAndFeel.cpp
+};
+
 NS_IMETHODIMP nsDeviceContextOS2::GetPaletteInfo(nsPaletteInfo& aPaletteInfo)
 {
   aPaletteInfo.isPaletteDevice = mPaletteInfo.isPaletteDevice;
@@ -708,34 +741,25 @@ NS_IMETHODIMP nsDeviceContextOS2::GetPaletteInfo(nsPaletteInfo& aPaletteInfo)
 
     if (NI_PseudoColor == colorSpace->type) {
       // Create a logical palette
-#ifdef XP_OS2
       PULONG aulTable;
-      ULONG ulCount = COLOR_CUBE_SIZE;
+      ULONG ulCount = COLOR_CUBE_SIZE+NUM_SYS_COLORS;
       aulTable = (PULONG)malloc(ulCount*sizeof(ULONG));
-#else
-      ULONG aulTable[COLOR_CUBE_SIZE+20];
-      ULONG ulCount = COLOR_CUBE_SIZE + 20;
-#endif
 
-#ifndef XP_OS2
+      PRInt32 i, j;
       // First ten system colors
-      ::GetPaletteEntries(hDefaultPalette, 0, 10, logPal->palPalEntry);
+      for (i = 0; i < 10; i++) {
+        aulTable[i] = MK_RGB(sysColors[i].red, sysColors[i].green, sysColors[i].blue);
+      }
 
-      // Last ten system colors
-      ::GetPaletteEntries(hDefaultPalette, 10, 10, &logPal->palPalEntry[COLOR_CUBE_SIZE + 10]);
-#endif
+      // Last six system colors + 5 Windows specific colors
+      for (i = 10, j = COLOR_CUBE_SIZE+10; i < NUM_SYS_COLORS; i++, j++) {
+        aulTable[j] = MK_RGB( sysColors[i].red, sysColors[i].green, sysColors[i].blue);
+      }
   
       // Now set the color cube entries.
-#ifdef XP_OS2
-      NI_RGB*       map = colorSpace->cmap.map;
-#else
       NI_RGB*       map = colorSpace->cmap.map + 10;
-#endif
-#ifdef XP_OS2
-      for (PRInt32 i = 0; i < COLOR_CUBE_SIZE; i++, map++) {
-#else
-      for (PRInt32 i = 10; i < COLOR_CUBE_SIZE; i++, map++) {
-#endif
+
+      for (i = 10; i < COLOR_CUBE_SIZE; i++, map++) {
         aulTable[i] = MK_RGB( map->red, map->green, map->blue);
       }
   
