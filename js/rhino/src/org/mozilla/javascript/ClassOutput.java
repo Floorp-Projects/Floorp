@@ -48,9 +48,10 @@ import java.io.*;
 public interface ClassOutput {  
     /**
      * @param className the name of the class for which bytecode is ready.
+     * @param isTopLevel if true, represents the top-level script being compiled
      * @return a stream into which to write bytecode.
      * @since 1.5 Release 2
      */
-    public OutputStream getOutputStream(String className)
+    public OutputStream getOutputStream(String className, boolean isTopLevel)
         throws IOException;
 }

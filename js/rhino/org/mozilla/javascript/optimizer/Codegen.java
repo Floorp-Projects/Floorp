@@ -105,12 +105,12 @@ public class Codegen extends Interpreter {
                         throw WrappedException.wrapException(iox);
                     }
                 } else {
+                    boolean isTopLevel = name.equals(generatedName);
                     ClassOutput classOutput = nameHelper.getClassOutput();
-
                     if (classOutput != null) {
                         try {
                             OutputStream out =
-                                classOutput.getOutputStream(name);
+                                classOutput.getOutputStream(name, isTopLevel);
 
                             out.write(classFile);
                             out.close();
@@ -130,7 +130,7 @@ public class Codegen extends Interpreter {
                             ClassLoader loader = clazz.getClassLoader();
                             clazz = loader.loadClass(name);
                         }
-                        if (name.equals(generatedName))
+                        if (isTopLevel)
                             result = clazz;
                     } catch (ClassFormatError ex) {
                         throw new RuntimeException(ex.toString());
