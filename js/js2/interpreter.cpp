@@ -577,7 +577,8 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     mLinkage = linkage->mNext;
                     mActivation = linkage->mActivation;
                     registers = &mActivation->mRegisters;
-                    (*registers)[linkage->mResult.first] = result;
+                    if (linkage->mResult.first != NotARegister)
+                        (*registers)[linkage->mResult.first] = result;
                     mPC = linkage->mReturnPC;
                     endPC = mActivation->mICode->its_iCode->end();
                 }
@@ -599,7 +600,8 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     mLinkage = linkage->mNext;
                     mActivation = linkage->mActivation;
                     registers = &mActivation->mRegisters;
-                    (*registers)[linkage->mResult.first] = result;
+                    if (linkage->mResult.first != NotARegister)
+                        (*registers)[linkage->mResult.first] = result;
                     mPC = linkage->mReturnPC;
                     endPC = mActivation->mICode->its_iCode->end();
                 }
@@ -631,12 +633,26 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
             case NEW_CLASS:
                 {
                     NewClass* nc = static_cast<NewClass*>(instruction);
-                    JSValue value = mGlobal->getVariable(*src1(nc));
+                    const JSValue& value = mGlobal->getVariable(*src1(nc));
                     if (value.isType()) {
-                        using JSClasses::JSClass;
-                        using JSClasses::JSInstance;
-                        JSClass* thisClass = static_cast<JSClass*>(value.type);
-                        (*registers)[dst(nc).first] = new(thisClass) JSInstance(thisClass);
+                        JSClass* thisClass = dynamic_cast<JSClass*>(value.type);
+                        if (thisClass) {
+                            JSInstance* thisInstance = new(thisClass) JSInstance(thisClass);
+                            (*registers)[dst(nc).first] = thisInstance;
+                            // call the constructor, if any.
+                            ICodeModule* ctor = thisClass->getConstructor();
+                            if (ctor) {
+                                mLinkage = new Linkage(mLinkage, ++mPC,
+                                                       mActivation, TypedRegister(NotARegister, &None_Type));
+                                JSValues args(1);
+                                args[0] = thisInstance;
+                                mActivation = new Activation(ctor, args);
+                                registers = &mActivation->mRegisters;
+                                mPC = ctor->its_iCode->begin();
+                                endPC = ctor->its_iCode->end();
+                                continue;
+                            }
+                        }
                     }
                 }
                 break;
