@@ -57,12 +57,11 @@ static const int kMAX_HEADER_SIZE = 60000;
 
 nsHTTPResponseListener::nsHTTPResponseListener(nsHTTPChannel* aConnection): 
     mConsumer(nsnull),
-    mFirstLineParsed(PR_FALSE),
-    mHeaderBuffer(eOneByte),
-    mHeadersDone(PR_FALSE),
     mReadLength(0),
-    mResponse(nsnull),
-    mResponseContext(nsnull)
+    mHeadersDone(PR_FALSE),
+    mResponseContext(nsnull),
+    mFirstLineParsed(PR_FALSE),
+    mResponse(nsnull)
 {
     NS_INIT_REFCNT();
 
@@ -422,7 +421,7 @@ nsresult nsHTTPResponseListener::ParseStatusLine(nsIBufferInputStream* in,
   //
 
   const char *token;
-  nsAutoString str(eOneByte);
+  nsCAutoString str;
   PRInt32 offset, error;
 
   //
@@ -622,7 +621,7 @@ nsresult nsHTTPResponseListener::ParseHTTPHeader(nsIBufferInputStream* in,
   // The header name is case-insensitive...
   //
   PRInt32 colonOffset;
-  nsAutoString headerKey(eOneByte);
+  nsCAutoString headerKey;
   nsCOMPtr<nsIAtom> headerAtom;
 
   colonOffset = mHeaderBuffer.FindChar(':');
@@ -691,7 +690,7 @@ nsresult nsHTTPResponseListener::FinishedResponseHeaders(void)
 
 
 nsresult nsHTTPResponseListener::ProcessHeader(nsIAtom* aHeader, 
-                                               nsString& aValue)
+                                               nsCString& aValue)
 {
   nsresult rv;
 
@@ -700,7 +699,7 @@ nsresult nsHTTPResponseListener::ProcessHeader(nsIAtom* aHeader,
   // and Charset information must be set into the nsHTTPChannel...
   //
   if (nsHTTPAtoms::Content_Type == aHeader) {
-    nsAutoString buffer(eOneByte);
+    nsCAutoString buffer;
     PRInt32 semicolon;
 
     // Set the content-type in the HTTPChannel...

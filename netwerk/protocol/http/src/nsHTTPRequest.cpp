@@ -193,7 +193,8 @@ nsHTTPRequest::Build()
     // Write the request into the stream...
     //
     nsXPIDLCString autoBuffer;
-    nsString2 lineBuffer(eOneByte);
+    nsString2 lineBuffer;
+    nsStr::Initialize(lineBuffer, eOneByte);
     PRUint32 bytesWritten = 0;
 
     PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 

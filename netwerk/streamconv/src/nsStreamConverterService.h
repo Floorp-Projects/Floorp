@@ -68,7 +68,7 @@ private:
     nsresult FindConverter(const char *aProgID, nsVoidArray **aEdgeList);
     nsresult BuildGraph(void);
     nsresult AddAdjacency(const char *aProgID);
-    nsresult ParseFromTo(const char *aProgID, nsString2 &aFromRes, nsString2 &aToRes);
+    nsresult ParseFromTo(const char *aProgID, nsCString &aFromRes, nsCString &aToRes);
 
     // member variables
     nsHashtable              *mAdjacencyList;
@@ -80,7 +80,7 @@ private:
 // adjacency list and BFS hashtable data class.
 typedef struct _tableData {
     nsHashKey *key;
-    nsString2 *keyString;
+    nsCString *keyString;
     void      *data;
 } SCTableData;
 

@@ -161,7 +161,7 @@ nsStreamConverterService::AddAdjacency(const char *aProgID) {
     nsresult rv;
     // first parse out the FROM and TO MIME-types.
 
-    nsString2 fromStr(eOneByte), toStr(eOneByte);
+    nsCString fromStr, toStr;
     rv = ParseFromTo(aProgID, fromStr, toStr);
     if (NS_FAILED(rv)) return rv;
 
@@ -188,7 +188,7 @@ nsStreamConverterService::AddAdjacency(const char *aProgID) {
         }
         data->key = fromKey;
         delFrom = PR_FALSE;
-        data->keyString = new nsString2(fromStr.GetBuffer(), eOneByte);
+        data->keyString = new nsCString(fromStr.GetBuffer());
         if (!data->keyString) {
             delete fromKey;
             delete toKey;
@@ -217,7 +217,7 @@ nsStreamConverterService::AddAdjacency(const char *aProgID) {
         }
         data->key = toKey;
         delTo = PR_FALSE;
-        data->keyString = new nsString2(toStr.GetBuffer(), eOneByte);
+        data->keyString = new nsCString(toStr.GetBuffer());
         if (!data->keyString) {
             delete fromKey;
             delete toKey;
@@ -254,15 +254,15 @@ nsStreamConverterService::AddAdjacency(const char *aProgID) {
 }
 
 nsresult
-nsStreamConverterService::ParseFromTo(const char *aProgID, nsString2 &aFromRes, nsString2 &aToRes) {
+nsStreamConverterService::ParseFromTo(const char *aProgID, nsCString &aFromRes, nsCString &aToRes) {
 
-    nsString2 ProgIDStr(aProgID, eOneByte);
+    nsCString ProgIDStr(aProgID);
 
     PRInt32 fromLoc = ProgIDStr.Find("from=") + 5;
     PRInt32 toLoc   = ProgIDStr.Find("to=") + 3;
     if (-1 == fromLoc || -1 == toLoc ) return NS_ERROR_FAILURE;
 
-    nsString2 fromStr(eOneByte), toStr(eOneByte);
+    nsCString fromStr, toStr;
 
     ProgIDStr.Mid(fromStr, fromLoc, toLoc - 4 - fromLoc);
     ProgIDStr.Mid(toStr, toLoc, ProgIDStr.Length() - toLoc);
@@ -293,7 +293,7 @@ PRBool InitBFSTable(nsHashKey *aKey, void *aData, void* closure) {
 
     SCTableData *origData = (SCTableData*)aData;
     NS_ASSERTION(origData, "no data in the table enumeration");
-    data->keyString = new nsString2(*origData->keyString, eOneByte);
+    data->keyString = new nsCString(*origData->keyString);
     data->data = state;
 
     BFSTable->Put(aKey, data);
@@ -336,18 +336,17 @@ nsStreamConverterService::FindConverter(const char *aProgID, nsVoidArray **aEdge
     NS_ASSERTION(lBFSTable.Count() == vertexCount, "strmconv BFS table init problem");
 
     // This is our source vertex; our starting point.
-    nsString2 from(eOneByte), to(eOneByte);
-    rv = ParseFromTo(aProgID, from, to);
+    nsCString fromC, toC;
+    rv = ParseFromTo(aProgID, fromC, toC);
     if (NS_FAILED(rv)) return rv;
 
-    nsStringKey *source = new nsStringKey(from.GetBuffer());
+    nsStringKey *source = new nsStringKey(fromC.GetBuffer());
     if (!source) return NS_ERROR_OUT_OF_MEMORY;
 
     SCTableData *data = (SCTableData*)lBFSTable.Get(source);
     BFSState *state = (BFSState*)data->data;
     // XXX probably don't need this check.
-    if (!state)
-        return NS_ERROR_FAILURE;
+    if (!state) return NS_ERROR_FAILURE;
 
     state->color = gray;
     state->distance = 0;
@@ -371,7 +370,8 @@ nsStreamConverterService::FindConverter(const char *aProgID, nsVoidArray **aEdge
         for (int i = 0; i < edgeCount; i++) {
             
             nsIAtom *curVertexAtom = (nsIAtom*)edges->ElementAt(i);
-            nsString2 curVertexStr(eOneByte);
+            nsString2 curVertexStr;
+            nsStr::Initialize(curVertexStr, eOneByte);
             curVertexAtom->ToString(curVertexStr);
             char * curVertexCString = curVertexStr.ToNewCString();
             nsStringKey *curVertex = new nsStringKey(curVertexCString);
@@ -402,12 +402,12 @@ nsStreamConverterService::FindConverter(const char *aProgID, nsVoidArray **aEdge
 
     // first parse out the FROM and TO MIME-types being registered.
 
-    nsString2 fromStr(eOneByte), toStr(eOneByte);
+    nsCString fromStr, toStr;
     rv = ParseFromTo(aProgID, fromStr, toStr);
     if (NS_FAILED(rv)) return rv;
 
     // get the root PROGID
-    nsString2 ProgIDPrefix(NS_ISTREAMCONVERTER_KEY, eOneByte);
+    nsCString ProgIDPrefix(NS_ISTREAMCONVERTER_KEY);
     nsVoidArray *shortestPath = new nsVoidArray();
     nsStringKey *toMIMEType = new nsStringKey(toStr);
     data = (SCTableData*)lBFSTable.Get(toMIMEType);
@@ -437,17 +437,13 @@ nsStreamConverterService::FindConverter(const char *aProgID, nsVoidArray **aEdge
         if (!predecessorData) break; // no predecessor, chain doesn't exist.
 
         // build out the PROGID.
-        nsString2 *newProgID = new nsString2(ProgIDPrefix, eOneByte);
+        nsCString *newProgID = new nsCString(ProgIDPrefix);
         newProgID->Append("?from=");
 
-        char *from = predecessorData->keyString->ToNewCString();
-        newProgID->Append(from);
-        nsAllocator::Free(from);
+        newProgID->Append(predecessorData->keyString->GetBuffer());
 
         newProgID->Append("?to=");
-        char *to = data->keyString->ToNewCString();
-        newProgID->Append(to);
-        nsAllocator::Free(to);
+        newProgID->Append(data->keyString->GetBuffer());
     
         // Add this PROGID to the chain.
         shortestPath->AppendElement(newProgID);
@@ -476,29 +472,23 @@ nsStreamConverterService::Convert(nsIInputStream *aFromStream,
 
     // first determine whether we can even handle this covnversion
     // build a PROGID
-    nsString2 progID(NS_ISTREAMCONVERTER_KEY);
+    nsCString progID(NS_ISTREAMCONVERTER_KEY);
     progID.Append("?from=");
     progID.Append(aFromType);
     progID.Append("?to=");
     progID.Append(aToType);
-    char * cProgID = progID.ToNewCString();
-    if (!cProgID) return NS_ERROR_OUT_OF_MEMORY;
+    const char *cProgID = progID.GetBuffer();
 
     nsISupports *converter = nsnull;
     rv = nsServiceManager::GetService(cProgID, nsCOMTypeInfo<nsIStreamConverter>::GetIID(), &converter);
     if (NS_FAILED(rv)) {
         // couldn't go direct, let's try walking the graph of converters.
         rv = BuildGraph();
-        if (NS_FAILED(rv)) {
-            nsAllocator::Free(cProgID);
-            return rv;
-        }
+        if (NS_FAILED(rv)) return rv;
 
         nsVoidArray *converterChain = nsnull;
 
         rv = FindConverter(cProgID, &converterChain);
-        nsAllocator::Free(cProgID);
-        cProgID = nsnull;
         if (NS_FAILED(rv)) {
             // can't make this conversion.
             // XXX should have a more descriptive error code.
@@ -516,9 +506,8 @@ nsStreamConverterService::Convert(nsIInputStream *aFromStream,
         NS_ADDREF(dataToConvert);
 
         for (PRInt32 i = edgeCount-1; i >= 0; i--) {
-            nsString2 *progIDStr = (nsString2*)converterChain->ElementAt(i);
-            char * lProgID = progIDStr->ToNewCString();
-            const char *x = lProgID;
+            nsCString *progIDStr = (nsCString*)converterChain->ElementAt(i);
+            const char *lProgID = progIDStr->GetBuffer();
 
             nsIComponentManager *comMgr;
             rv = NS_GetGlobalComponentManager(&comMgr);
@@ -526,8 +515,8 @@ nsStreamConverterService::Convert(nsIInputStream *aFromStream,
 
 
             nsCID cid;
-            rv = comMgr->ProgIDToCLSID(x, &cid);
-            if (!lProgID) return NS_ERROR_OUT_OF_MEMORY;
+            rv = comMgr->ProgIDToCLSID(lProgID, &cid);
+            // XXX should we be using a service or componentn mgr?
 //            rv = nsComponentManager::GetService(lProgID, nsCOMTypeInfo<nsIStreamConverter>::GetIID(), &converter);
             rv = comMgr->CreateInstance(cid,
                                                     nsnull,
@@ -537,8 +526,8 @@ nsStreamConverterService::Convert(nsIInputStream *aFromStream,
             //NS_ASSERTION(NS_SUCCEEDED(rv), "registration problem. someone registered a progid w/ the registry, but didn/'t register it with the component manager");
             if (NS_FAILED(rv)) {
                 // clean up the array.
-                nsString2 *progID;
-                while ( (progID = (nsString2*)converterChain->ElementAt(0)) ) {
+                nsCString *progID;
+                while ( (progID = (nsCString*)converterChain->ElementAt(0)) ) {
                     delete progID;
                     converterChain->RemoveElementAt(0);
                 }
@@ -546,9 +535,8 @@ nsStreamConverterService::Convert(nsIInputStream *aFromStream,
                 return rv;
             }
 
-            nsString2 fromStr(eOneByte), toStr(eOneByte);
+            nsCString fromStr, toStr;
             rv = ParseFromTo(lProgID, fromStr, toStr);
-            nsAllocator::Free(lProgID);
             if (NS_FAILED(rv)) return rv;
 
             nsIStreamConverter *conv = nsnull;
@@ -568,8 +556,8 @@ nsStreamConverterService::Convert(nsIInputStream *aFromStream,
         }
 
         // clean up the array.
-        nsString2 *progID;
-        while ( (progID = (nsString2*)converterChain->ElementAt(0)) ) {
+        nsCString *progID;
+        while ( (progID = (nsCString*)converterChain->ElementAt(0)) ) {
             delete progID;
             converterChain->RemoveElementAt(0);
         }
@@ -578,7 +566,6 @@ nsStreamConverterService::Convert(nsIInputStream *aFromStream,
 
     } else {
         // we're going direct.
-        nsAllocator::Free(cProgID);
         nsIStreamConverter *conv = nsnull;
         rv = converter->QueryInterface(nsCOMTypeInfo<nsIStreamConverter>::GetIID(), (void**)&conv);
         NS_RELEASE(converter);
@@ -602,29 +589,23 @@ nsStreamConverterService::AsyncConvertData(const PRUnichar *aFromType,
 
     // first determine whether we can even handle this covnversion
     // build a PROGID
-    nsString2 progID(NS_ISTREAMCONVERTER_KEY);
+    nsCString progID(NS_ISTREAMCONVERTER_KEY);
     progID.Append("?from=");
     progID.Append(aFromType);
     progID.Append("?to=");
     progID.Append(aToType);
-    char * cProgID = progID.ToNewCString();
-    if (!cProgID) return NS_ERROR_OUT_OF_MEMORY;
+    const char *cProgID = progID.GetBuffer();
 
     nsISupports *converter = nsnull;
     rv = nsServiceManager::GetService(cProgID, nsCOMTypeInfo<nsIStreamConverter>::GetIID(), &converter);
     if (NS_FAILED(rv)) {
         // couldn't go direct, let's try walking the graph of converters.
         rv = BuildGraph();
-        if (NS_FAILED(rv)) {
-            nsAllocator::Free(cProgID);
-            return rv;
-        }
+        if (NS_FAILED(rv)) return rv;
 
         nsVoidArray *converterChain = nsnull;
 
         rv = FindConverter(cProgID, &converterChain);
-        nsAllocator::Free(cProgID);
-        cProgID = nsnull;
         if (NS_FAILED(rv)) {
             // can't make this conversion.
             // XXX should have a more descriptive error code.
@@ -642,22 +623,29 @@ nsStreamConverterService::AsyncConvertData(const PRUnichar *aFromType,
         NS_ADDREF(forwardListener);
 
         for (int i = 0; i < edgeCount; i++) {
-            nsString2 *progIDStr = (nsString2*)converterChain->ElementAt(i);
-            char * lProgID = progIDStr->ToNewCString();
-            if (!lProgID) return NS_ERROR_OUT_OF_MEMORY;
+            nsCString *progIDStr = (nsCString*)converterChain->ElementAt(i);
+            const char *lProgID = progIDStr->GetBuffer();
+
+            // XXX should we be using a service or componentn mgr?
             rv = nsServiceManager::GetService(lProgID, nsCOMTypeInfo<nsIStreamConverter>::GetIID(), &converter);
             NS_ASSERTION(NS_SUCCEEDED(rv), "graph construction problem, built a progid that wasn't registered");
 
-            nsString2 fromStr(eOneByte), toStr(eOneByte);
+            nsCString fromStr, toStr;
             rv = ParseFromTo(lProgID, fromStr, toStr);
-            nsAllocator::Free(lProgID);
             if (NS_FAILED(rv)) return rv;
 
             nsIStreamConverter *conv = nsnull;
             rv = converter->QueryInterface(nsCOMTypeInfo<nsIStreamConverter>::GetIID(), (void**)&conv);
             NS_RELEASE(converter);
             if (NS_FAILED(rv)) return rv;
-            rv = conv->AsyncConvertData(fromStr.GetUnicode(), toStr.GetUnicode(), forwardListener, nsnull);
+            
+            PRUnichar *fromStrUni = fromStr.ToNewUnicode();
+            PRUnichar *toStrUni   = toStr.ToNewUnicode();
+
+            rv = conv->AsyncConvertData(fromStrUni, toStrUni, forwardListener, nsnull);
+            nsAllocator::Free(fromStrUni);
+            nsAllocator::Free(toStrUni);
+            if (NS_FAILED(rv)) return rv;
 
             nsIStreamListener *listener = nsnull;
             rv = conv->QueryInterface(NS_GET_IID(nsIStreamListener), (void**)&listener);
@@ -678,7 +666,6 @@ nsStreamConverterService::AsyncConvertData(const PRUnichar *aFromType,
 
     } else {
         // we're going direct.
-        nsAllocator::Free(cProgID);
         nsIStreamListener *listener= nsnull;
         rv = converter->QueryInterface(nsCOMTypeInfo<nsIStreamListener>::GetIID(), (void**)&listener);
         if (NS_FAILED(rv)) return rv;

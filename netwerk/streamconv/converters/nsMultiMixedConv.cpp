@@ -76,7 +76,6 @@ nsMultiMixedConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
 
     if (!mBoundaryCStr) {
         // ask the channel for the content-type and extract the boundary from it.
-        nsString2 boundaryStr(eOneByte);
         nsIHTTPChannel *httpChannel = nsnull;
         rv = channel->QueryInterface(NS_GET_IID(nsIHTTPChannel), (void**)&httpChannel);
         if (NS_SUCCEEDED(rv)) {
@@ -96,7 +95,7 @@ nsMultiMixedConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
 
             bndry++; // move past the equals sign
 
-            nsString2 boundaryString(bndry, eOneByte);
+            nsCString boundaryString(bndry);
             boundaryString.StripWhitespace();
             mBoundaryCStr = boundaryString.ToNewCString();
             if (!mBoundaryCStr) return NS_ERROR_OUT_OF_MEMORY;
@@ -144,7 +143,7 @@ nsMultiMixedConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
                 // This is the start of a part. We want to build up a new stub
                 // channel and call through to our listener.
                 mBoundaryStart = PR_TRUE;
-                nsString2 contentTypeStr(eOneByte);
+                nsCString contentTypeStr;
 
                 NS_IF_RELEASE(mPartChannel);
 
@@ -157,19 +156,19 @@ nsMultiMixedConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
                 char *headersEnd = PL_strstr(boundaryLoc + mBoundaryStrLen, "\n\n");
                 if (headersEnd) {
                     char *headerStart = boundaryLoc + mBoundaryStrLen + 1;
-                    char *header = nsnull;
-                    while ( header = PL_strchr(headerStart, '\n')) {
-                        *header = '\0';
+                    char *headerCStr = nsnull;
+                    while ( (headerCStr = PL_strchr(headerStart, '\n')) ) {
+                        *headerCStr = '\0';
 
                         char *colon = PL_strchr(headerStart, ':');
                         if (colon) {
                             *colon = '\0';
-                            nsString2 headerStr(headerStart, eOneByte);
+                            nsCString headerStr(headerStart);
                             headerStr.ToLowerCase();
                             nsIAtom *header = NS_NewAtom(headerStr.GetBuffer());
                             *colon = ':';
 
-                            nsString2 headerVal(colon + 1, eOneByte);
+                            nsCString headerVal(colon + 1);
                             headerVal.StripWhitespace();
 
                             if (headerStr == "content-type") {
@@ -180,10 +179,10 @@ nsMultiMixedConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
                             }
                         }
                         
-                        *header = '\n';
-                        if (header[1] == '\n') break;
+                        *headerCStr = '\n';
+                        if (headerCStr[1] == '\n') break;
                         // increment and move on.
-                        headerStart = header + 1;
+                        headerStart = headerCStr + 1;
                     }
                 }
 
@@ -351,7 +350,7 @@ nsMultiMixedConv::BuildURI(nsIChannel *aChannel, nsIURI **_retval) {
     if (NS_FAILED(rv)) return rv;
 
     nsCString dummyURIStr(uriSpec);
-    dummyURIStr.Append('##');
+    dummyURIStr.Append("##");
     dummyURIStr.Append(mPartCount);
 
     char *dummyCStr = dummyURIStr.ToNewCString();
