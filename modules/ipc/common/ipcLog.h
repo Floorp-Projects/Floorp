@@ -40,6 +40,9 @@
 
 #include "prtypes.h"
 
+#define IPC_LOGGING
+#ifdef IPC_LOGGING
+
 extern PRBool ipcLogEnabled;
 extern void IPC_InitLog(const char *prefix);
 extern void IPC_Log(const char *fmt, ...);
@@ -52,5 +55,11 @@ extern void IPC_Log(const char *fmt, ...);
 
 #define LOG(args)     IPC_LOG(args)
 #define LOG_ENABLED() ipcLogEnabled
+
+#else
+#define IPC_InitLog(prefix)
+#define LOG(args)
+#define LOG_ENABLED() (0)
+#endif
 
 #endif // !ipcLog_h__

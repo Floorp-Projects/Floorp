@@ -143,8 +143,8 @@ IPC_SendMsg(PRUint32 clientID, ipcMessage *msg)
 
 #define IPC_IMPL_GETMODULES(_modName, _modEntries)                        \
     ipcDaemonMethods *gIPCDaemonMethods;                                  \
-    IPC_EXPORT int IPC_GetModules(ipcDaemonMethods *, ipcModuleEntry **); \
-    int IPC_GetModules(ipcDaemonMethods *dmeths, ipcModuleEntry **ents) { \
+    IPC_EXPORT int                                                        \
+    IPC_GetModules(ipcDaemonMethods *dmeths, ipcModuleEntry **ents) {     \
         gIPCDaemonMethods = dmeths;                                       \
         *ents = _modEntries;                                              \
         return sizeof(_modEntries) / sizeof(ipcModuleEntry);              \

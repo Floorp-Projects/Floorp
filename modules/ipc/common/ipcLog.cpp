@@ -35,6 +35,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "ipcLog.h"
+
+#ifdef IPC_LOGGING
+
 #ifdef XP_UNIX
 #include <sys/types.h>
 #include <unistd.h>
@@ -50,10 +54,11 @@
 #define GETPID 0
 #endif
 
+#include <string.h>
+
 #include "prenv.h"
 #include "prprf.h"
 #include "plstr.h"
-#include "ipcLog.h"
 
 PRBool ipcLogEnabled;
 char ipcLogPrefix[10];
@@ -81,7 +86,9 @@ IPC_Log(const char *fmt, ... )
     PR_vsnprintf(buf + nb, sizeof(buf) - nb, fmt, ap);
     buf[sizeof(buf) - 1] = '\0';
 
-    printf("%s", buf);
+    fwrite(buf, strlen(buf), 1, stdout);
 
     va_end(ap);
 }
+
+#endif
