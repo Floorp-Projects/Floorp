@@ -859,6 +859,12 @@ typelib_op_dcl(TreeState *state)
     uint8 op_flags = 0;
     gboolean op_notxpcom = !!IDL_tree_property_get(op->ident, "notxpcom");
     gboolean op_noscript = !!IDL_tree_property_get(op->ident, "noscript");
+    
+    if (op->f_varargs) {
+        /* We don't currently support varargs. */
+        IDL_tree_error(state->tree, "varargs are not currently supported\n");
+        return FALSE;
+    }
 
     if (!XPT_InterfaceDescriptorAddMethods(id, 1))
         return FALSE;
