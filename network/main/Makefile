@@ -49,7 +49,7 @@ EXPORTS= mkstream.h mkformat.h mkparse.h mkfsort.h mksort.h mkgeturl.h \
 
 
 REQUIRES	= jtools nspr2 dbm util js parse lay style pref htmldlgs java \
-	libfont netcache httpurl cnetinit security img layer netcnvts
+	libfont netcache httpurl cnetinit security img layer netcnvts network
 
 include $(DEPTH)/config/rules.mk
 
