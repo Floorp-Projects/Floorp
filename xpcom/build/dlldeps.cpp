@@ -56,6 +56,7 @@
 #include "nsTextFormater.h"
 #include "nsStorageStream.h"
 #include "nsIBinaryInputStream.h"
+#include "nsIInterfaceRequestor.h"
 #ifdef DEBUG
 #include "pure.h"
 #endif
@@ -119,6 +120,7 @@ void XXXNeverCalled()
     nsCWeakProxy(0, 0);
     nsCWeakReferent(0);
     NS_GetWeakReference(NULL);
+    nsCOMPtr<nsISupports> dummyFoo(do_GetInterface(nsnull));
 #ifdef DEBUG
     TestSegmentedBuffer();
 #endif
