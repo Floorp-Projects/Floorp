@@ -1658,7 +1658,7 @@ HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
       aParentFrame->GetContent(parentContent);
     }
     styleContext = aPresContext->ResolvePseudoStyleContextFor(parentContent, 
-                                                              nsHTMLAtoms::text, 
+                                                              nsHTMLAtoms::textPseudo, 
                                                               parentStyleContext);
     NS_IF_RELEASE(parentContent);
   } else {
