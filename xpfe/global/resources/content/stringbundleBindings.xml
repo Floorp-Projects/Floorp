@@ -12,63 +12,73 @@
       <method name="getString">
         <parameter name="aStringKey"/>
         <body>
-        <![CDATA[
-          try {
-            return this._bundle.GetStringFromName(aStringKey);
-          }
-          catch (e) {
-            dump("<StringBundle> Error: Failed to get string from bundle. Are you using the right key?\n");
-            dump("The key you provided was: " + aStringKey + "\n");
-            dump("The exception thrown was:\n" + e + "\n");
-	    return null;
-          }
-        ]]>
+          <![CDATA[
+            try {
+              return this.stringBundle.GetStringFromName(aStringKey);
+            }
+            catch (e) {
+              dump("<StringBundle> Error: Failed to get string from bundle. Are you using the right key?\n");
+              dump("The key you provided was: " + aStringKey + "\n");
+              dump("The exception thrown was:\n" + e + "\n");
+              return null;
+            }
+          ]]>
         </body>
       </method>
     
-      <property name="stringBundle">
+      <property name="stringBundle" readonly="true">
         <getter>
-        <![CDATA[
-          return this._bundle;
-        ]]>
+          <![CDATA[
+            if (!this._bundle) {
+              try {
+                var stringBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                                                    .getService(Components.interfaces.nsIStringBundleService);
+                this._bundle = stringBundleService.CreateBundle(this.src, this.appLocale);
+              }
+              catch (e) {
+                dump("Failed to get stringbundle:\n");
+                dump(e + "\n");
+              }
+            }
+            return this._bundle;
+          ]]>
+        </getter>
+      </property>
+
+      <property name="src">
+        <getter>
+          <![CDATA[
+            return this.getAttribute("src");
+          ]]>
         </getter>
         <setter>
-        <![CDATA[
-          try {
-            var strBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"].getService(); 
-            strBundleService = strBundleService.QueryInterface(Components.interfaces.nsIStringBundleService);
-            this._bundle = strBundleService.CreateBundle(val, this.appLocale); 
-          } 
-          catch (ex) {
-          }
-        ]]>
+          <![CDATA[
+            this._bundle = null;
+            this.setAttribute("src", val);
+            return val;
+          ]]>
         </setter>
       </property>
 
       <property name="appLocale">
         <getter>
-        <![CDATA[
-          try {
-            var localeService = Components.classes["@mozilla.org/intl/nslocaleservice;1"].getService();
-            localeService = localeService.QueryInterface(Components.interfaces.nsILocaleService);
-            return localeService.GetApplicationLocale();
-          } 
-          catch (ex) {
-            return null;
-          }
-        ]]>
+          <![CDATA[
+            try {
+              var localeService = Components.classes["@mozilla.org/intl/nslocaleservice;1"]
+                                            .getService(Components.interfaces.nsILocaleService);
+              return localeService.GetApplicationLocale();
+            }
+            catch (ex) {
+              return null;
+            }
+          ]]>
         </getter>
       </property>
 
       <property name="_bundle"/>
+      <property name="_src"/>
+
     </implementation>
-    <handlers>
-      <handler event="bindingattached">
-      <![CDATA[
-        this.stringBundle = this.getAttribute("src");
-      ]]>
-      </handler>
-    </handlers>
   </binding>
   
-</bindings>          
+</bindings>
