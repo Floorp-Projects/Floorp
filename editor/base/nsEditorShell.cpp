@@ -973,16 +973,6 @@ nsEditorShell::DoEditorMode(nsIDocShell *aDocShell)
   return InstantiateEditor(domDoc, presShell);
 }
 
-
-NS_IMETHODIMP
-nsEditorShell::UpdateInterfaceState(const PRUnichar *tagToUpdate)
-{
-  if (!mStateMaintainer)
-    return NS_ERROR_NOT_INITIALIZED;
-
-  return mStateMaintainer->ForceUpdate(tagToUpdate);
-}  
-
 // Deletion routines
 nsresult
 nsEditorShell::ScrollSelectionIntoView()
@@ -1071,7 +1061,7 @@ nsEditorShell::SetAttribute(nsIDOMElement *element, const PRUnichar *attr, const
     nsAutoString valueStr(value);
     result = editor->SetAttribute(element, attributeStr, valueStr); 
   }
-  UpdateInterfaceState(nsnull);
+
   return result;
 }
 
@@ -1087,7 +1077,7 @@ nsEditorShell::RemoveAttribute(nsIDOMElement *element, const PRUnichar *attr)
     nsAutoString attributeStr(attr);
     result = editor->RemoveAttribute(element, attributeStr);
   }
-  UpdateInterfaceState(nsnull);
+
   return result;
 }
 
@@ -1115,7 +1105,6 @@ nsEditorShell::SetTextProperty(const PRUnichar *prop, const PRUnichar *attr, con
       err = NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  UpdateInterfaceState(prop);
   return err;
 }
 
@@ -1140,7 +1129,6 @@ nsEditorShell::RemoveOneProperty(const nsString& aProp, const nsString &aAttr)
       err = NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  UpdateInterfaceState(aProp.GetUnicode());
   return err;
 }
 
