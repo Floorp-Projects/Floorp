@@ -121,7 +121,6 @@ nsAutoString
 mozTXTToHTMLConv::CompleteAbbreviatedURL(const nsAutoString& text,
                                          const PRUint32 pos)
 {
-printf("Compl.: text: -%s-, pos: %d, text[pos]: %d\n", text.ToNewCString(), pos, text[pos]);
   nsAutoString result;
   if (text[pos] == '@')
   {
@@ -143,7 +142,6 @@ printf("Compl.: text: -%s-, pos: %d, text[pos]: %d\n", text.ToNewCString(), pos,
       result += text;
     }
   }
-printf("Compl.: result: -%s-\n", result.ToNewCString());
   return result;
 }
 
@@ -371,7 +369,6 @@ mozTXTToHTMLConv::FindURL(const nsAutoString& text, const PRUint32 pos,
      const PRUint32 whathasbeendone,
      nsAutoString& outputHTML, PRInt32& replaceBefore, PRInt32& replaceAfter)
 {
-printf("FindURL: text: -%s-, pos: %d, text[pos]: %d\n", text.ToNewCString(), pos, text[pos]);
   enum statetype {unchecked, invalid, startok, endok, success};
   const modetype ranking[mozTXTToHTMLConv_numberOfModes] =
                       {RFC1738, RFC2396E, freetext, abbreviated};
@@ -400,7 +397,6 @@ printf("FindURL: text: -%s-, pos: %d, text[pos]: %d\n", text.ToNewCString(), pos
   default:
     break;
   }
-printf("FindURL: state: %d %d %d %d %d\n", state[0], state[1], state[2], state[3], state[4]);
 
   // Test, first successful mode wins, sequence defined by |ranking|
   PRInt32 iCheck = 0;  // the currently tested modetype
