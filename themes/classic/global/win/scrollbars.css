@@ -75,7 +75,7 @@ scrollbarbutton:hover:active
   
 scrollbarbutton:hover:active > .scrollbarbutton-box
   {
-    border                : 1px solid scrollbar;
+    border                : 1px solid threedface;
     padding               : 2px 0px 0px 2px;
   }   
 
@@ -123,7 +123,7 @@ scrollbarbutton[type="increment"][disabled="true"][sborient="vertical"]
 
 slider 
   {
-    background-color      : scrollbar;
+    background-color      : threedface;
     background-image      : url("chrome://global/skin/scrollbar-slider-bg.gif");
   }
   
