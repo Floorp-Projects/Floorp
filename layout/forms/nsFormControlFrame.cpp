@@ -48,6 +48,8 @@
 #include "nsFormFrame.h"
 #include "nsIContent.h"
 #include "nsGlobalVariables.h"
+#include "nsStyleUtil.h"
+
 
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
@@ -334,15 +336,15 @@ nsFormControlFrame::Reflow(nsIPresContext&      aPresContext,
   GetView(view);
   if (nsnull == view) {
     nsresult result = 
-	    nsRepository::CreateInstance(kViewCID, nsnull, kIViewIID, (void **)&view);
-	  if (NS_OK != result) {
-	    NS_ASSERTION(0, "Could not create view for form control"); 
+      nsRepository::CreateInstance(kViewCID, nsnull, kIViewIID, (void **)&view);
+    if (NS_OK != result) {
+      NS_ASSERTION(0, "Could not create view for form control"); 
       aStatus = NS_FRAME_NOT_COMPLETE;
       return result;
-	  }
-	  nsIPresShell   *presShell = aPresContext.GetShell();     // need to release
-	  nsIViewManager *viewMan   = presShell->GetViewManager();  // need to release
-	  NS_RELEASE(presShell); 
+    }
+    nsIPresShell   *presShell = aPresContext.GetShell();     // need to release
+    nsIViewManager *viewMan   = presShell->GetViewManager();  // need to release
+    NS_RELEASE(presShell); 
 
     GetDesiredSize(&aPresContext, aReflowState, aDesiredSize, mWidgetSize);
 
@@ -350,23 +352,23 @@ nsFormControlFrame::Reflow(nsIPresContext&      aPresContext,
     nsRect boundBox(0, 0, aDesiredSize.width, aDesiredSize.height); 
 
     nsIFrame* parWithView;
-	  nsIView *parView;
+    nsIView *parView;
 
     GetParentWithView(parWithView);
-	  parWithView->GetView(parView);
+    parWithView->GetView(parView);
 
-	  // initialize the view as hidden since we don't know the (x,y) until Paint
+    // initialize the view as hidden since we don't know the (x,y) until Paint
     result = view->Init(viewMan, boundBox, parView,
                         nsnull, nsViewVisibility_kHide);
     if (NS_OK != result) {
-	    NS_ASSERTION(0, "view initialization failed"); 
+      NS_ASSERTION(0, "view initialization failed"); 
       aStatus = NS_FRAME_NOT_COMPLETE;
       return NS_OK;
-	  }
+    }
 
     viewMan->InsertChild(parView, view, 0);
 
- 	  const nsIID& id = GetCID();
+    const nsIID& id = GetCID();
     nsWidgetInitData* initData = GetWidgetInitData(aPresContext); // needs to be deleted
     view->CreateWidget(id, initData);
 
@@ -374,9 +376,9 @@ nsFormControlFrame::Reflow(nsIPresContext&      aPresContext,
       delete(initData);
     }
 
-	  // set our widget
-	  result = GetWidget(view, &mWidget);
-	  if ((NS_OK == result) && mWidget) { // keep the ref on mWidget
+    // set our widget
+    result = GetWidget(view, &mWidget);
+    if ((NS_OK == result) && mWidget) { // keep the ref on mWidget
       nsIFormControl* formControl = nsnull;
       result = mContent->QueryInterface(kIFormControlIID, (void**)&formControl);
       if ((NS_OK == result) && formControl) {
@@ -386,9 +388,9 @@ nsFormControlFrame::Reflow(nsIPresContext&      aPresContext,
       }
       PostCreateWidget(&aPresContext, aDesiredSize.width, aDesiredSize.height);
       mDidInit = PR_TRUE;
-	  } else {
-	    NS_ASSERTION(0, "could not get widget");
-	  }
+    } else {
+      NS_ASSERTION(0, "could not get widget");
+    }
 
     SetView(view);
 
@@ -396,7 +398,7 @@ nsFormControlFrame::Reflow(nsIPresContext&      aPresContext,
       viewMan->ResizeView(view, aDesiredSize.width, aDesiredSize.height);
     }
 
-	  NS_IF_RELEASE(viewMan);  
+    NS_IF_RELEASE(viewMan);  
   }
   else {
     GetDesiredSize(&aPresContext, aReflowState, aDesiredSize, mWidgetSize);
@@ -411,7 +413,7 @@ nsFormControlFrame::Reflow(nsIPresContext&      aPresContext,
 
   if (nsnull != aDesiredSize.maxElementSize) {
     aDesiredSize.maxElementSize->width = aDesiredSize.width;
-	  aDesiredSize.maxElementSize->height = aDesiredSize.height;
+    aDesiredSize.maxElementSize->height = aDesiredSize.height;
   }
     
   aStatus = NS_FRAME_COMPLETE;
@@ -649,24 +651,24 @@ NS_METHOD nsFormControlFrame::HandleEvent(nsIPresContext& aPresContext,
   GetType(&type);
   switch (aEvent->message) {
     case NS_MOUSE_ENTER:
-	    mLastMouseState = eMouseEnter;
-	    break;
+      mLastMouseState = eMouseEnter;
+      break;
     case NS_MOUSE_LEFT_BUTTON_DOWN:
       if (NS_FORM_INPUT_IMAGE == type) {
-	      mLastMouseState = eMouseDown;
+        mLastMouseState = eMouseDown;
       } else {
-	      mLastMouseState = (eMouseEnter == mLastMouseState) ? eMouseDown : eMouseNone;
+        mLastMouseState = (eMouseEnter == mLastMouseState) ? eMouseDown : eMouseNone;
       }
-	    break;
+      break;
     case NS_MOUSE_LEFT_BUTTON_UP:
-	    if (eMouseDown == mLastMouseState) {
+      if (eMouseDown == mLastMouseState) {
         MouseClicked(&aPresContext);
-	    } 
-	    mLastMouseState = eMouseEnter;
-	    break;
+      } 
+      mLastMouseState = eMouseEnter;
+      break;
     case NS_MOUSE_EXIT:
-	    mLastMouseState = eMouseNone;
-	    break;
+      mLastMouseState = eMouseNone;
+      break;
     case NS_KEY_DOWN:
       if (NS_KEY_EVENT == aEvent->eventStructType) {
         nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
@@ -818,14 +820,14 @@ nsFormControlFrame::CalculateSize (nsIPresContext* aPresContext, nsFormControlFr
       charWidth = GetTextSize(*aPresContext, aFrame, col, aBounds, aRendContext);
       aRowHeight = aBounds.height;  // XXX aBounds.height has CSS_NOTSET
     }
-	  if (aSpec.mColSizeAttrInPixels) {
-	    aWidthExplicit = PR_TRUE;
-	  }
+    if (aSpec.mColSizeAttrInPixels) {
+      aWidthExplicit = PR_TRUE;
+    }
   }
   else {
     if (CSS_NOTSET != aCSSSize.width) {  // css provides width
       aBounds.width = (aCSSSize.width > 0) ? aCSSSize.width : 1;
-	    aWidthExplicit = PR_TRUE;
+      aWidthExplicit = PR_TRUE;
     } 
     else {                       
       if (NS_CONTENT_ATTR_HAS_VALUE == valStatus) { // use width of initial value 
@@ -866,7 +868,7 @@ nsFormControlFrame::CalculateSize (nsIPresContext* aPresContext, nsFormControlFr
   }
   else if (CSS_NOTSET != aCSSSize.height) {  // css provides height
     aBounds.height = (aCSSSize.height > 0) ? aCSSSize.height : 1;
-	  aHeightExplicit = PR_TRUE;
+    aHeightExplicit = PR_TRUE;
   } 
   else {         // use default height in num lines
     if (0 == charWidth) {  
@@ -959,6 +961,11 @@ nsFormControlFrame::Reset()
 {
 }
 
+//
+// XXX: The following paint code is TEMPORARY. It is being used to get printing working
+// under windows. Later it may be used to GFX-render the controls to the display. 
+// Expect this code to repackaged and moved to a new location in the future.
+//
 
 void 
 nsFormControlFrame::DrawLine(nsIRenderingContext& aRenderingContext, 
@@ -996,4 +1003,158 @@ nsFormControlFrame::DrawLine(nsIRenderingContext& aRenderingContext,
 
 }
 
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+// Offset for arrow centerpoint 
+const nscoord nsArrowOffsetX = 3;
+const nscoord nsArrowOffsetY = 3;
+nscoord nsArrowRightPoints[]  = {0, 0, 0, 6, 6, 3 };
+nscoord nsArrowLeftPoints[]   = {0, 3, 6, 0, 6, 6 };
+nscoord nsArrowUpPoints[]     = {3, 0, 6, 6, 0, 6 }; //{0, 6, 3, 0, 6, 6 };
+nscoord nsArrowDownPoints[]   = {0, 0, 3, 6, 6, 0 };
+
+//---------------------------------------------------------------------------
+void 
+nsFormControlFrame::SetupPoints(PRUint32 aNumberOfPoints, nscoord* points, nsPoint* polygon, nscoord aScaleFactor, nscoord aX, nscoord aY) 
+{
+  const nscoord arrowOffsetX = 3 * aScaleFactor;
+  const nscoord arrowOffsetY = 3 * aScaleFactor;
+
+  PRUint32 i = 0;
+  PRUint32 count = 0;
+  for (i = 0; i < aNumberOfPoints; i++) {
+    polygon[i].x = (points[count] * aScaleFactor) + aX - arrowOffsetX;
+    count++;
+    polygon[i].y = (points[count] * aScaleFactor) + aY - arrowOffsetY;
+    count++;
+  }
+  polygon[i].x = (points[0] * aScaleFactor) + aX - arrowOffsetX;
+  polygon[i].y = (points[1] * aScaleFactor) + aY - arrowOffsetY;
+}
+
+
+
+//---------------------------------------------------------------------------
+void 
+nsFormControlFrame::DrawArrowGlyph(nsIRenderingContext& aRenderingContext, 
+                 nscoord aSX, nscoord aSY, nsArrowDirection aArrowDirection,
+								 nscoord aOnePixel)
+{
+  nsPoint polygon[4];
+
+  switch(aArrowDirection)
+  {
+    case eArrowDirection_Left:
+			SetupPoints(3, nsArrowLeftPoints, polygon, aOnePixel, aSX, aSY);
+		break;
+
+    case eArrowDirection_Right:
+			SetupPoints(3, nsArrowRightPoints, polygon, aOnePixel, aSX, aSY);
+		break;
+
+    case eArrowDirection_Up:
+			SetupPoints(3, nsArrowUpPoints, polygon, aOnePixel, aSX, aSY);
+		break;
+
+    case eArrowDirection_Down:
+			SetupPoints(3, nsArrowDownPoints, polygon, aOnePixel, aSX, aSY);
+		break;
+  }
+ 
+  aRenderingContext.FillPolygon(polygon, 3);
+}
+
+//---------------------------------------------------------------------------
+void 
+nsFormControlFrame::DrawArrow(nsArrowDirection aArrowDirection,
+					                    nsIRenderingContext& aRenderingContext,
+															nsIPresContext& aPresContext, 
+															const nsRect& aDirtyRect,
+                              nsRect& aRect, 
+															nscoord aOnePixel, 
+															const nsStyleColor& aColor,
+															const nsStyleSpacing& aSpacing,
+															nsIFrame* aForFrame,
+                              nsRect& aFrameRect)
+{
+  // Draw border using CSS
+  nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, aForFrame,
+                                    aDirtyRect, aRect,  aColor, 0, 0);
+  nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, aForFrame,
+                               aDirtyRect, aRect, aSpacing, 0);
+
+  // Draw the glyph in black
+  aRenderingContext.SetColor(NS_RGB(0, 0, 0));
+   // Draw arrow centered in the rectangle
+  DrawArrowGlyph(aRenderingContext, aRect.x + (aRect.width / 2), aRect.y + (aRect.height / 2), aArrowDirection, aOnePixel);
+
+}
+
+//---------------------------------------------------------------------------
+void 
+nsFormControlFrame::DrawScrollbar(nsIRenderingContext& aRenderingContext,
+																	nsIPresContext& aPresContext, 
+																  const nsRect& aDirtyRect,
+                                  nsRect& aRect, 
+																  PRBool aHorizontal, 
+																  nscoord aOnePixel, 
+                                  nsIStyleContext* aScrollbarStyleContext,
+                                  nsIStyleContext* aScrollbarArrowStyleContext,
+																	nsIFrame* aForFrame,
+                                  nsRect& aFrameRect)
+{
+  // Get the Scrollbar's Style structs
+  const nsStyleSpacing* scrollbarSpacing =
+    (const nsStyleSpacing*)aScrollbarStyleContext->GetStyleData(eStyleStruct_Spacing);
+  const nsStyleColor* scrollbarColor =
+    (const nsStyleColor*)aScrollbarStyleContext->GetStyleData(eStyleStruct_Color);
+
+  // Get the Scrollbar's Arrow's Style structs
+  const nsStyleSpacing* arrowSpacing =
+    (const nsStyleSpacing*)aScrollbarArrowStyleContext->GetStyleData(eStyleStruct_Spacing);
+  const nsStyleColor* arrowColor =
+    (const nsStyleColor*)aScrollbarArrowStyleContext->GetStyleData(eStyleStruct_Color);
+
+  // Draw background for scrollbar
+  nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, aForFrame,
+                                    aDirtyRect, aRect, *scrollbarColor, 0, 0);
+
+  if (PR_TRUE == aHorizontal) {
+    // Draw horizontal Arrow
+		nscoord arrowWidth = aRect.height;
+		nsRect arrowLeftRect(aRect.x, aRect.y, arrowWidth, arrowWidth);
+    DrawArrow(eArrowDirection_Left,aRenderingContext,aPresContext, 
+			        aDirtyRect, arrowLeftRect,aOnePixel, *arrowColor, *arrowSpacing, aForFrame, aFrameRect);
+
+		nsRect thumbRect(aRect.x+arrowWidth, aRect.y, arrowWidth, arrowWidth);
+    nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, aForFrame,
+                                    aDirtyRect, thumbRect, *arrowColor, 0, 0);
+    nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, aForFrame,
+                                aDirtyRect, thumbRect, *arrowSpacing, 0);
+
+    nsRect arrowRightRect(aRect.x + (aRect.width - arrowWidth), aRect.y, arrowWidth, arrowWidth);
+	  DrawArrow(eArrowDirection_Right,aRenderingContext,aPresContext, 
+			        aDirtyRect, arrowRightRect,aOnePixel, *arrowColor, *arrowSpacing, aForFrame, aFrameRect);
+
+	}
+  else {
+		// Draw vertical arrow
+		nscoord arrowHeight = aRect.width;
+		nsRect arrowUpRect(aRect.x, aRect.y, arrowHeight, arrowHeight);
+	  DrawArrow(eArrowDirection_Up,aRenderingContext,aPresContext, 
+			        aDirtyRect, arrowUpRect,aOnePixel, *arrowColor, *arrowSpacing, aForFrame, aFrameRect);
+
+		nsRect thumbRect(aRect.x, aRect.y+arrowHeight, arrowHeight, arrowHeight);
+    nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, aForFrame,
+                                    aDirtyRect, thumbRect, *arrowColor, 0, 0);
+    nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, aForFrame,
+                                aDirtyRect, thumbRect, *arrowSpacing, 0);
+
+		nsRect arrowDownRect(aRect.x, aRect.y + (aRect.height - arrowHeight), arrowHeight, arrowHeight);
+	  DrawArrow(eArrowDirection_Down,aRenderingContext,aPresContext, 
+			        aDirtyRect, arrowDownRect,aOnePixel, *arrowColor, *arrowSpacing, aForFrame, aFrameRect);
+  }
+
+}
 

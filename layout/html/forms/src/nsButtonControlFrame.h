@@ -73,6 +73,16 @@ protected:
                               const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aDesiredLayoutSize,
                               nsSize& aDesiredWidgetSize);
+  //
+  // XXX: The following methods are TEMPORARY. They are being used to get printing working
+  // under windows. Later it may be used to GFX-render the controls to the display. 
+  // Expect this code to repackaged and moved to a new location in the future.
+
+  virtual void PaintButton(nsIPresContext& aPresContext,
+                            nsIRenderingContext& aRenderingContext,
+                            const nsRect& aDirtyRect);
+
+  // XXX: End of the temporary methods
 
   nsFileControlFrame* mFileControlFrame; // for browse buttons only
 };
