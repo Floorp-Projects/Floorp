@@ -24,6 +24,8 @@
 NS_DEFINE_CID(kUnicharUtilCID, NS_UNICHARUTIL_CID);
 NS_DEFINE_IID(kCaseConversionIID, NS_ICASECONVERSION_IID);
 
+#define UNICHARUTIL_DLL_NAME "unicharutilDebug.shlib"
+
 #define TESTLEN 29
 #define T2LEN TESTLEN
 #define T3LEN TESTLEN
@@ -228,8 +230,11 @@ static PRUnichar t4result[T4LEN+1] =  {
   0x00  
 };
 
-int main(int argc, char** argv) {
-   // Register
+void TestCaseConversion()
+{
+   cout << "==============================\n";
+   cout << "Start nsICaseConversion Test \n";
+   cout << "==============================\n";
    nsICaseConversion *t = NULL;
    nsRepository::CreateInstance(kUnicharUtilCID,
                                 NULL,
@@ -330,11 +335,34 @@ int main(int argc, char** argv) {
 
      t->Release();
    }
+   cout << "==============================\n";
+   cout << "Finish nsICaseConversion Test \n";
+   cout << "==============================\n";
 
+}
+
+void RegisterFactories()
+{
+   nsRepository::RegisterFactory(kUnicharUtilCID,
+                                 UNICHARUTIL_DLL_NAME,
+                                 PR_FALSE,
+                                 PR_TRUE);
+}
+ 
+int main(int argc, char** argv) {
+   
+#ifndef USE_NSREG
+   RegisterFactories();
+#endif
+
+   // --------------------------------------------
+
+   TestCaseConversion();
+
+   // --------------------------------------------
    cout << "Finish All The Test Cases\n";
    nsRepository::FreeLibraries();
 
    cout << "nsRepository FreeLibraries Done\n";
    return 0;
 }
-
