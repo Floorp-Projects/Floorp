@@ -98,7 +98,7 @@ MYTMPDIR=`mktemp -d ./codesighs.tmp.XXXXXXXX`
 #   Find all map files.
 #
 ALLMAPSFILE="$MYTMPDIR/allmaps.list"
-find ./mozilla -type f -name *.map > $ALLMAPSFILE
+find ./mozilla -type f -name "*.map" > $ALLMAPSFILE
 
 
 #
