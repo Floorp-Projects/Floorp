@@ -53,7 +53,7 @@
 
 class nsIDocShell;
 class nsIFocusController;
-class nsTimeoutImpl;
+struct nsTimeoutImpl;
 
 #define NS_PIDOMWINDOW_IID \
 { 0x7e12a2d6, 0x9a2a, 0x4907, \
