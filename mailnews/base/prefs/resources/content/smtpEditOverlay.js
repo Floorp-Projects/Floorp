@@ -184,7 +184,7 @@ function updateControls() {
 }
 
 function selectProtocol(init) {
-  prevDefaultPort = gDefaultPort.value;
+  var prevDefaultPort = gDefaultPort.value;
 
   if (gSmtpTrySSL.selectedItem == gSmtpS) {
     gDefaultPort.value = "465";
