@@ -1263,7 +1263,7 @@ NS_IMETHODIMP nsDocShell::Reload(PRInt32 aReloadType)
    nsDocShellInfoLoadType type = nsIDocShellLoadInfo::loadReloadNormal;
    if ( aReloadType == nsIWebNavigation::loadReloadBypassProxyAndCache )
    	type = nsIDocShellLoadInfo::loadReloadBypassProxyAndCache;
-
+#if 0
    nsCOMPtr<nsISHEntry> entry;
    if (OSHE) {
 	   /* We should fall here in most cases including subframes & refreshes */
@@ -1284,9 +1284,18 @@ NS_IMETHODIMP nsDocShell::Reload(PRInt32 aReloadType)
       nsnull, type);
 
    }
+#else
+   // OK. Atleast for the heck of it, pollmann says that he doesn't crash
+   // in bug 45297 if he just did the following, instead of the one in #if 0.
+   // If this really keeps the crash from re-occuring, may be this can stay. However 
+   // there is no major difference between this one and the one inside #if 0
+   
+   return InternalLoad(mCurrentURI, mReferrerURI, nsnull, nsnull, 
+      nsnull, type);
+#endif /* 0 */
 
 	   
-   return LoadHistoryEntry(entry, type);
+  // return LoadHistoryEntry(entry, type);
 
 
 #else
