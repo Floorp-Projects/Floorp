@@ -103,6 +103,15 @@ FILE *gTestResultFile = NULL;
 #define isatty(f) 1
 #endif
 
+char *strdup(const char *str)
+{
+    char *copy = malloc(strlen(str)+1);
+    if (copy)
+        strcpy(copy, str);
+    return copy;
+}
+
+
 #ifdef XP_MAC_MPW
 /* Macintosh MPW replacements for the ANSI routines.  These translate LF's to CR's because
    the MPW libraries supplied by Metrowerks don't do that for some reason.  */
