@@ -34,6 +34,7 @@ CPPSRCS = \
 	.\$(OBJDIR)\IdlSpecification.obj\
 	.\$(OBJDIR)\FileGen.obj       \
 	.\$(OBJDIR)\XPCOMGen.obj      \
+	.\$(OBJDIR)\JSStubGen.obj     \
 	$(NULL)
 
 OBJS	= $(CPPSRCS:.cpp=.o)
