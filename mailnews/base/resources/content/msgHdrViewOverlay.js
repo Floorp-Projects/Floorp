@@ -268,8 +268,22 @@ var messageHeaderSink = {
 
     handleAttachment: function(contentType, url, displayName, uri, notDownloaded) 
     {
-      var numAttachments = currentAttachments.length;
       currentAttachments.push (new createNewAttachmentInfo(contentType, url, displayName, uri, notDownloaded));
+      // if we have an attachment, set the MSG_FLAG_ATTACH flag on the hdr
+      // this will cause the "message with attachment" icon to show up
+      // in the thread pane
+      // we only need to do this on the first attachment
+      var numAttachments = currentAttachments.length;
+      if (numAttachments == 1) {
+        try {
+          // convert the uri into a hdr
+          var hdr = messenger.messageServiceFromURI(uri).messageURIToMsgHdr(uri);
+          hdr.markHasAttachments(true);
+        }
+        catch (ex) {
+          dump("ex = " + ex + "\n");
+        }
+      }
     },
     
     onEndAllAttachments: function()

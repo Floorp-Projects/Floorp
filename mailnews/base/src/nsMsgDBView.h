@@ -53,7 +53,7 @@ enum eFieldType {
 };
 
 // reserve the top 8 bits in the msg flags for the view-only flags.
-#define MSG_VIEW_FLAGS 0xFE000000
+#define MSG_VIEW_FLAGS 0xEE000000
 #define MSG_VIEW_FLAG_HASCHILDREN 0x40000000
 #define MSG_VIEW_FLAG_ISTHREAD 0x8000000
 

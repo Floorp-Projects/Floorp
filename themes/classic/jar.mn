@@ -397,6 +397,7 @@ classic.jar:
     skin/classic/messenger/message-mail.gif                              (messenger/message-mail.gif)
     skin/classic/messenger/message-news-new.gif                          (messenger/message-news-new.gif)
     skin/classic/messenger/message-news.gif                              (messenger/message-news.gif)
+    skin/classic/messenger/message-news-attach.gif                       (messenger/message-news-attach.gif)
     skin/classic/messenger/more.gif                                      (messenger/more.gif)
     skin/classic/messenger/newmsg-disabled.gif                           (messenger/newmsg-disabled.gif)
     skin/classic/messenger/newmsg-hover-active.gif                       (messenger/newmsg-hover-active.gif)

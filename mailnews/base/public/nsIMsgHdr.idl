@@ -55,6 +55,7 @@ interface nsIMsgHdr : nsISupports
 	// Mark message routines
     void markRead(in boolean read);
     void markFlagged(in boolean flagged);
+    void markHasAttachments(in boolean hasAttachments);
     
     attribute nsMsgPriorityValue priority;
     void setPriorityString(in string priority);

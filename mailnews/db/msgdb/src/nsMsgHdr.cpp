@@ -220,6 +220,20 @@ NS_IMETHODIMP nsMsgHdr::AndFlags(PRUint32 flags, PRUint32 *result)
     return NS_OK;
 }
 
+NS_IMETHODIMP nsMsgHdr::MarkHasAttachments(PRBool bHasAttachments)
+{
+	nsresult rv = NS_OK;
+
+	if(m_mdb)
+	{
+		nsMsgKey key;
+		rv = GetMessageKey(&key);
+		if(NS_SUCCEEDED(rv))
+			rv = m_mdb->MarkHasAttachments(key, bHasAttachments, nsnull);
+	}
+	return rv;
+	}
+
 NS_IMETHODIMP nsMsgHdr::MarkRead(PRBool bRead)
 {
 	nsresult rv = NS_OK;
@@ -231,8 +245,6 @@ NS_IMETHODIMP nsMsgHdr::MarkRead(PRBool bRead)
 		if(NS_SUCCEEDED(rv))
 			rv = m_mdb->MarkRead(key, bRead, nsnull);
 	}
-
-
 	return rv;
 }
 
@@ -247,8 +259,6 @@ NS_IMETHODIMP nsMsgHdr::MarkFlagged(PRBool bFlagged)
 		if(NS_SUCCEEDED(rv))
 			rv = m_mdb->MarkMarked(key, bFlagged, nsnull);
 	}
-
-
 	return rv;
 }
 
