@@ -1037,7 +1037,7 @@
         <rdf:li><rdf:Description ID="certs_prefs" nc:name="Certificate Preferences" nc:link="chrome://help/locale/certs_prefs_help.html#certs_prefs_help_first"/> </rdf:li>
         <rdf:li><rdf:Description ID="certs-help" nc:name="Certificate Manager" nc:link="chrome://help/locale/certs_help.html"/> </rdf:li>
         <rdf:li><rdf:Description ID="sec_devices" nc:name="Device Manager" nc:link="chrome://help/locale/certs_help.html#Security_Devices"/> </rdf:li>
-        <rdf:li><rdf:Description ID="cert-dialog-help" nc:name="Certificate Information and Decisions" nc:link="chrome://help/locale/cert_dialog_help.html"/> </rdf:li>
+        <rdf:li><rdf:Description ID="cert-dialog-help" nc:name="Certificate Information and Decisions" nc:link="chrome://help/locale/cert_dialog_help.xhtml"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -1095,13 +1095,13 @@
 <rdf:Description about="#cert-dialog-help">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="cert_details" nc:name="Certificate Viewer" nc:link="chrome://help/locale/cert_dialog_help.html#Certificate_Details"/> </rdf:li>
-        <rdf:li><rdf:Description ID="which_token" nc:name="Choose Security Device" nc:link="chrome://help/locale/cert_dialog_help.html#Choose_Security_Device"/> </rdf:li>
-        <rdf:li><rdf:Description ID="priv_key_copy" nc:name="Encryption Key Copy" nc:link="chrome://help/locale/cert_dialog_help.html#Encryption_Key_Copy"/> </rdf:li>
-        <rdf:li><rdf:Description ID="backup_your_cert" nc:name="Certificate Backup" nc:link="chrome://help/locale/cert_dialog_help.html#Certificate_Backup"/> </rdf:li>
-        <rdf:li><rdf:Description ID="which_cert" nc:name="User Identification Request" nc:link="chrome://help/locale/cert_dialog_help.html#User_Identification_Request"/> </rdf:li>
-        <rdf:li><rdf:Description ID="new_ca" nc:name="New Certificate Authority" nc:link="chrome://help/locale/cert_dialog_help.html#New_Certificate_Authority"/> </rdf:li>
-        <rdf:li><rdf:Description ID="cert-dialog-help-website" nc:name="Web Site Certificates" nc:link="chrome://help/locale/cert_dialog_help.html#Web_Site_Certificates"/> </rdf:li>
+        <rdf:li><rdf:Description ID="cert_details" nc:name="Certificate Viewer" nc:link="chrome://help/locale/cert_dialog_help.xhtml#certificate_viewer"/> </rdf:li>
+        <rdf:li><rdf:Description ID="which_token" nc:name="Choose Security Device" nc:link="chrome://help/locale/cert_dialog_help.xhtml#choose_security_device"/> </rdf:li>
+        <rdf:li><rdf:Description ID="priv_key_copy" nc:name="Encryption Key Copy" nc:link="chrome://help/locale/cert_dialog_help.xhtml#encryption_key_copy"/> </rdf:li>
+        <rdf:li><rdf:Description ID="backup_your_cert" nc:name="Certificate Backup" nc:link="chrome://help/locale/cert_dialog_help.xhtml#certificate_backup"/> </rdf:li>
+        <rdf:li><rdf:Description ID="which_cert" nc:name="User Identification Request" nc:link="chrome://help/locale/cert_dialog_help.xhtml#user_identification_request"/> </rdf:li>
+        <rdf:li><rdf:Description ID="new_ca" nc:name="New Certificate Authority" nc:link="chrome://help/locale/cert_dialog_help.xhtml#new_certificate_authority"/> </rdf:li>
+        <rdf:li><rdf:Description ID="cert-dialog-help-website" nc:name="Web Site Certificates" nc:link="chrome://help/locale/cert_dialog_help.xhtml#web_site_certificates"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -1109,8 +1109,8 @@
 <rdf:Description about="#cert_details">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="cert-dialog-help-details-general" nc:name="General Tab" nc:link="chrome://help/locale/cert_dialog_help.html#General_Tab"/> </rdf:li>
-        <rdf:li><rdf:Description ID="cert-dialog-help-details-details" nc:name="Details Tab" nc:link="chrome://help/locale/cert_dialog_help.html#Details_Tab"/> </rdf:li>
+        <rdf:li><rdf:Description ID="cert-dialog-help-details-general" nc:name="General Tab" nc:link="chrome://help/locale/cert_dialog_help.xhtml#general_tab"/> </rdf:li>
+        <rdf:li><rdf:Description ID="cert-dialog-help-details-details" nc:name="Details Tab" nc:link="chrome://help/locale/cert_dialog_help.xhtml#details_tab"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -1118,10 +1118,10 @@
 <rdf:Description about="#cert-dialog-help-website">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="new_web_cert" nc:name="Web Site Certified by an Unknown Authority" nc:link="chrome://help/locale/cert_dialog_help.html#New_Web_Site_Certificate"/> </rdf:li>
-        <rdf:li><rdf:Description ID="exp_web_cert" nc:name="Server Certificate Expired" nc:link="chrome://help/locale/cert_dialog_help.html#Expired_Web_Site_Certificate"/> </rdf:li>
-        <rdf:li><rdf:Description ID="not_yet_web_cert" nc:name="Server Certificate Not Yet Valid" nc:link="chrome://help/locale/cert_dialog_help.html#Web_Site_Certificate_Not_Yet_Valid"/> </rdf:li>
-        <rdf:li><rdf:Description ID="bad_name_web_cert" nc:name="Domain Name Mismatch" nc:link="chrome://help/locale/cert_dialog_help.html#Unexpected_Certificate_Name"/> </rdf:li>
+        <rdf:li><rdf:Description ID="new_web_cert" nc:name="Web Site Certified by an Unknown Authority" nc:link="chrome://help/locale/cert_dialog_help.xhtml#web_site_certified_by_an_unknown_authority"/> </rdf:li>
+        <rdf:li><rdf:Description ID="exp_web_cert" nc:name="Server Certificate Expired" nc:link="chrome://help/locale/cert_dialog_help.xhtml#server_certificate_expired"/> </rdf:li>
+        <rdf:li><rdf:Description ID="not_yet_web_cert" nc:name="Server Certificate Not Yet Valid" nc:link="chrome://help/locale/cert_dialog_help.xhtml#server_certificate_not_yet_valid"/> </rdf:li>
+        <rdf:li><rdf:Description ID="bad_name_web_cert" nc:name="Domain Name Mismatch" nc:link="chrome://help/locale/cert_dialog_help.xhtml#domain_name_mismatch"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
