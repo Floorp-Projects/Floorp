@@ -2233,22 +2233,6 @@ NS_IMETHODIMP nsWindow::ResetInputState()
   }
 	return NS_ERROR_ABORT;
 }
-NS_IMETHODIMP nsWindow::PasswordFieldInit()
-{
-	// currently, the nsMacEventHandler is owned by nsMacWindow, which is the top level window
-	// we deletgate this call to it's parent
-  nsCOMPtr<nsIWidget> parent = getter_AddRefs(GetParent());
-  NS_ASSERTION(parent, "cannot get parent");
-  if(parent)
-  {
-  	nsCOMPtr<nsIKBStateControl> kb = do_QueryInterface(parent);
- 	  NS_ASSERTION(kb, "cannot get parent");
-  	if(kb) {
-  		return kb->PasswordFieldInit();
-  	}
-  }
-	return NS_ERROR_ABORT;
-}
 
 
 #if !TARGET_CARBON

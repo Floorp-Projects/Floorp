@@ -303,14 +303,6 @@ NS_IMETHODIMP nsWidget::ResetInputState()
   return res;
 }
 
-NS_IMETHODIMP nsWidget::PasswordFieldInit()
-{
-  // to be implemented
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::PasswordFieldInit - Not Implemented this=<%p>\n", this));
-
-  return NS_OK;
-}
-
 //-------------------------------------------------------------------------
 //
 // Hide or show this component

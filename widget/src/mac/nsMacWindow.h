@@ -104,7 +104,6 @@ public:
 
   	// nsIKBStateControl interface
   	NS_IMETHOD ResetInputState();
-    NS_IMETHOD PasswordFieldInit();
 
     void              		MoveToGlobalPoint(PRInt32 aX, PRInt32 aY);
 

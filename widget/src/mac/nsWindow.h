@@ -170,7 +170,6 @@ public:
 public:
   	// nsIKBStateControl interface
   	NS_IMETHOD ResetInputState();
-    NS_IMETHOD PasswordFieldInit();
 
 protected:
 

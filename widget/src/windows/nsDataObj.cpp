@@ -146,7 +146,6 @@ BOOL nsDataObj::FormatsMatch(const FORMATETC& source, const FORMATETC& target) c
 //-----------------------------------------------------
 STDMETHODIMP nsDataObj::GetData(LPFORMATETC pFE, LPSTGMEDIUM pSTM)
 {
-  printf("nsDataObj::GetData2\n");
   PRNTDEBUG("nsDataObj::GetData\n");
   PRNTDEBUG3("  format: %d  Text: %d\n", pFE->cfFormat, CF_TEXT);
   if ( !mTransferable )

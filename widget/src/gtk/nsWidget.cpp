@@ -2587,13 +2587,6 @@ NS_IMETHODIMP nsWidget::ResetInputState()
 #endif // USE_XIM 
   return NS_OK;
 }
-NS_IMETHODIMP nsWidget::PasswordFieldInit()
-{
-#ifdef USE_XIM
-  mIMEEnable = PR_FALSE;
-#endif // USE_XIM 
-  return NS_OK;
-}
 
 #ifdef USE_XIM
 void

@@ -970,11 +970,6 @@ NS_IMETHODIMP nsMacWindow::ResetInputState()
 {
 	return mMacEventHandler->ResetInputState();
 }
-NS_IMETHODIMP nsMacWindow::PasswordFieldInit()
-{
-	// to be implemented
-	return NS_OK;
-}
 
 void nsMacWindow::SetIsActive(PRBool aActive)
 {

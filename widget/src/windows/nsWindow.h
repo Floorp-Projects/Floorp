@@ -275,7 +275,6 @@ public:
     // nsIKBStateControl interface 
 
     NS_IMETHOD ResetInputState();
-    NS_IMETHOD PasswordFieldInit();
 
     HWND                    mBorderlessParent;
 
@@ -297,7 +296,6 @@ protected:
 
     static  BOOL            DealWithPopups ( UINT inMsg, LRESULT* outResult ) ;
 
-    static  PRBool          IsScrollbar(HWND aWnd);
     static  PRBool          EventIsInsideWindow(nsWindow* aWindow); 
 
     static  nsWindow *      GetNSWindowPtr(HWND aWnd);
@@ -365,9 +363,6 @@ protected:
     void HandleStartComposition(HIMC hIMEContext);
     void HandleEndComposition(void);
     void MapDBCSAtrributeArrayToUnicodeOffsets(PRUint32* textRangeListLengthResult, nsTextRangeArray* textRangeListResult);
-
-    NS_IMETHOD PasswordFieldEnter(PRUint32& oSavedState);
-    NS_IMETHOD PasswordFieldExit(PRUint32 aRestoredState);
 
     void ConstrainZLevel(HWND *aAfter);
 

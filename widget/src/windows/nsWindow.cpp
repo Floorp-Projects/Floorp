@@ -799,27 +799,6 @@ BOOL nsWindow::SetNSWindowPtr(HWND aWnd, nsWindow * ptr) {
   }
 }
 
-PRBool
-nsWindow::IsScrollbar(HWND aWnd) {
-
-   // Make sure this is one of our windows by comparing the window procedures
-  LONG proc = ::GetWindowLong(aWnd, GWL_WNDPROC);
-  if (proc == (LONG)&nsWindow::WindowProc) {
-    // It is a one of our windows.
-    nsWindow *someWindow = GetNSWindowPtr(aWnd);
-      //This is inefficient, but this method is only called when
-      //a popup window has been displayed, and your clicking within it.
-      //The default window class begins with Netscape so comparing with the initial
-      //S in SCROLLBAR will cause strcmp to immediately return.
-    if (strcmp(someWindow->WindowClass(),"SCROLLBAR") == 0) {
-      return PR_TRUE;
-    }
-  } 
-
-  return PR_FALSE;
-}
-
-
 //
 // DealWithPopups
 //
@@ -5121,65 +5100,6 @@ void nsWindow::GetCompositionWindowPos(HIMC hIMC, PRUint32 aEventType, COMPOSITI
 }
 
 #endif
-
-
-NS_IMETHODIMP nsWindow::PasswordFieldInit()
-{
-#ifdef DEBUG_KBSTATE
-	printf("PasswordFieldInit\n");
-#endif 
-	return NS_OK;
-}
-NS_IMETHODIMP nsWindow::PasswordFieldEnter(PRUint32& oState)
-{
-#ifdef DEBUG_KBSTATE
-	printf("PasswordFieldEnter\n");
-#endif 
-	if(IS_IME_CODEPAGE(gCurrentKeyboardCP))
-	{
-		HIMC hIMC;
-		NS_IMM_GETCONTEXT(mWnd, hIMC);
-		if(hIMC) {
-			DWORD st1,st2;
-     
-			BOOL ret = FALSE;
-      NS_IMM_GETCONVERSIONSTATUS(hIMC, &st1, &st2, ret);
-			NS_ASSERTION(ret, "ImmGetConversionStatus failed");
-			if(ret) {
-				oState = st1;
-				NS_IMM_SETCONVERSIONSTATUS(hIMC, IME_CMODE_NOCONVERSION, st2, ret);
-				NS_ASSERTION(ret, "ImmSetConversionStatus failed");
-			}
-			NS_IMM_RELEASECONTEXT(mWnd, hIMC);
-		}
-	}
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsWindow::PasswordFieldExit(PRUint32 aState)
-{
-#ifdef DEBUG_KBSTATE
-	printf("PasswordFieldExit\n");
-#endif 
-	if(IS_IME_CODEPAGE(gCurrentKeyboardCP))
-	{
-		HIMC hIMC;
-		NS_IMM_GETCONTEXT(mWnd, hIMC);
-		if(hIMC) {
-			DWORD st1,st2;
-	     
-			BOOL ret = FALSE;
-      NS_IMM_GETCONVERSIONSTATUS(hIMC, &st1, &st2, ret);
-			NS_ASSERTION(ret, "ImmGetConversionStatus failed");
-			if(ret) {
-				NS_IMM_SETCONVERSIONSTATUS(hIMC, (DWORD)aState, st2, ret);
-				NS_ASSERTION(ret, "ImmSetConversionStatus failed");
-			}
-			NS_IMM_RELEASECONTEXT(mWnd, hIMC);
-		}
-	}
-	return NS_OK;
-}
 
 // Pick some random timer ID.  Is there a better way?
 #define NS_FLASH_TIMER_ID 0x011231984

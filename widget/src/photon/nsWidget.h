@@ -146,7 +146,6 @@ public:
 
   // nsIKBStateControl
   NS_IMETHOD ResetInputState();
-  NS_IMETHOD PasswordFieldInit();
 
   void InitEvent(nsGUIEvent& event, PRUint32 aEventType, nsPoint* aPoint = nsnull);
 
