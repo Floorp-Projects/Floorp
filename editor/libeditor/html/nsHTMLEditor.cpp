@@ -1938,13 +1938,75 @@ nsHTMLEditor::InsertImage(nsString& aURL,
   return res;
 }
 
-  // This should replace InsertLink and InsertImage once it is working
+static PRBool IsLinkNode(nsIDOMNode *aNode)
+{
+  if (aNode)
+  {
+    nsCOMPtr<nsIDOMHTMLAnchorElement> anchor = do_QueryInterface(aNode);
+    if (anchor)
+    {
+      nsString tmpText;
+      if (NS_SUCCEEDED(anchor->GetHref(tmpText)) && tmpText.GetUnicode() && tmpText.Length() != 0)
+        return PR_TRUE;
+    }
+  }
+  return PR_FALSE;
+}
+
+NS_IMETHODIMP
+nsHTMLEditor::GetParentLinkElement(nsIDOMNode *aNode, nsIDOMElement** aReturn)
+{
+  if (!aNode || !aReturn )
+    return NS_ERROR_NULL_POINTER;
+  
+  // default is null - no element found
+  *aReturn = nsnull;
+  
+  nsCOMPtr<nsIDOMNode> linkNode = aNode;
+  nsCOMPtr<nsIDOMNode> parent;
+  PRBool bNodeFound = PR_FALSE;
+
+  while (PR_TRUE)
+  {
+    // Test if we have a link (an anchor with href set)
+    if (IsLinkNode(linkNode))
+    {
+      bNodeFound = PR_TRUE;
+      break;
+    }
+    // Search up the parent chain
+    // We should never fail because of root test below, but lets be safe
+    if (!NS_SUCCEEDED(linkNode->GetParentNode(getter_AddRefs(parent))) || !parent)
+      break;
+
+    // Stop searching if parent is a root (body or table cell)
+    PRBool isRoot;
+    nsAutoString parentTagName;
+    parent->GetNodeName(parentTagName);
+    if (!NS_SUCCEEDED(IsRootTag(parentTagName, isRoot)) || isRoot)
+      break;
+    linkNode = parent;
+  }
+  if (bNodeFound)
+  {
+    nsCOMPtr<nsIDOMElement> linkElement = do_QueryInterface(linkNode);
+    if (linkElement)
+    {
+      *aReturn = linkElement;
+      // Getters must addref
+      NS_ADDREF(*aReturn);
+    }
+  }
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsHTMLEditor::GetSelectedElement(const nsString& aTagName, nsIDOMElement** aReturn)
 {
   if (!aReturn )
     return NS_ERROR_NULL_POINTER;
   
+  // default is null - no element found
   *aReturn = nsnull;
   
   nsAutoString TagName = aTagName;
@@ -1966,8 +2028,78 @@ nsHTMLEditor::GetSelectedElement(const nsString& aTagName, nsIDOMElement** aRetu
   nsCOMPtr<nsIDOMElement> selectedElement;
   PRBool bNodeFound = PR_FALSE;
 
-  // Don't bother to examine selection if it is collapsed
-  if (!isCollapsed)
+  if (TagName == "href")
+  {
+    // Link tag is a special case - we return the anchor node
+    //  found for any selection that is totally within a link,
+    //  included a collapsed selection (just a caret in a link)
+    nsCOMPtr<nsIDOMNode> anchorNode;
+    res = selection->GetAnchorNode(getter_AddRefs(anchorNode));
+    PRInt32 anchorOffset = -1;
+    if (anchorNode)
+      selection->GetAnchorOffset(&anchorOffset);
+    
+    nsCOMPtr<nsIDOMNode> focusNode;
+    selection->GetFocusNode(getter_AddRefs(focusNode));
+    PRInt32 focusOffset = -1;
+    if (focusNode)
+      selection->GetFocusOffset(&focusOffset);
+
+    // Link node must be the same for both ends of selection
+    if (NS_SUCCEEDED(res) && anchorNode)
+    {
+#ifdef DEBUG_cmanske
+      {
+      nsAutoString name;
+      anchorNode->GetNodeName(name);
+      printf("GetSelectedElement: Anchor node of selection: ");
+      wprintf(name.GetUnicode());
+      printf(" Offset: %d\n", anchorOffset);
+      focusNode->GetNodeName(name);
+      printf("Focus node of selection: ");
+      wprintf(name.GetUnicode());
+      printf(" Offset: %d\n", focusOffset);
+      }
+#endif
+      nsCOMPtr<nsIDOMElement> parentLinkOfAnchor;
+      res = GetParentLinkElement(anchorNode, getter_AddRefs(parentLinkOfAnchor));
+      if (NS_SUCCEEDED(res) && parentLinkOfAnchor)
+      {
+        if (isCollapsed)
+        {
+          // We have just a caret in the link
+          bNodeFound = PR_TRUE;
+        } else if(focusNode) 
+        {  // Link node must be the same for both ends of selection
+          nsCOMPtr<nsIDOMElement> parentLinkOfFocus;
+          res = GetParentLinkElement(focusNode, getter_AddRefs(parentLinkOfFocus));
+          if (NS_SUCCEEDED(res) && parentLinkOfFocus == parentLinkOfAnchor)
+            bNodeFound = PR_TRUE;
+        }
+      
+        // We found a link node parent
+        if (bNodeFound) {
+          // GetParentLinkElement addref'd this, so we don't need to do it here
+          *aReturn = parentLinkOfAnchor;
+          return NS_OK;
+        }
+      }
+      else if (anchorOffset >= 0)  // Check if link node is the only thing selected
+      {
+        nsCOMPtr<nsIDOMNode> anchorChild;
+        anchorChild = GetChildAt(anchorNode,anchorOffset);
+        if (anchorChild && IsLinkNode(anchorChild) && 
+            (anchorNode == focusNode) && focusOffset == (anchorOffset+1))
+        {
+          selectedElement = do_QueryInterface(anchorChild);
+          bNodeFound = PR_TRUE;
+        }
+      }
+    }
+  } 
+  //NOTE: We will not find the link node aboveif it is the only thing selected
+
+  if (!bNodeFound && !isCollapsed)   // Don't bother to examine selection if it is collapsed
   {
     nsCOMPtr<nsIEnumerator> enumerator;
     res = selection->GetEnumerator(getter_AddRefs(enumerator));
@@ -2021,7 +2153,7 @@ nsHTMLEditor::GetSelectedElement(const nsString& aTagName, nsIDOMElement** aRetu
 
               // The "A" tag is a pain,
               //  used for both link(href is set) and "Named Anchor"
-              if (TagName == "href" || (TagName == "anchor"))
+              if (TagName == "href" || TagName == "anchor")
               {
                 // We could use GetAttribute, but might as well use anchor element directly
                 nsCOMPtr<nsIDOMHTMLAnchorElement> anchor = do_QueryInterface(selectedElement);
@@ -2037,44 +2169,6 @@ nsHTMLEditor::GetSelectedElement(const nsString& aTagName, nsIDOMElement** aRetu
                     if (NS_SUCCEEDED(anchor->GetName(tmpText)) && tmpText.GetUnicode() && tmpText.Length() != 0)
                       bNodeFound = PR_TRUE;
                   }
-#if 0
-// Not sure if this kind of logic should be here or in JavaScript
-                } else if (TagName == "href")
-                {
-                  // Check for a single image is inside a link
-                  // It is usually the immediate parent, but lets be sure
-                  //  by walking up the parents until we find an "A" tag
-                  nsCOMPtr<nsIDOMHTMLImageElement> image = do_QueryInterface(selectedElement);
-                  if (image)
-                  {
-                    nsCOMPtr<nsIDOMNode> parent;
-                    nsCOMPtr<nsIDOMNode> current = do_QueryInterface(selectedElement); 
-                    PRBool notDone = PR_TRUE;
-                    do {
-                      res = current->GetParentNode(getter_AddRefs(parent));
-                      notDone = NS_SUCCEEDED(res) && parent != nsnull;
-                      if(notDone)
-                      {
-                        nsString tmpText;
-                        /*nsCOMPtr<nsIDOMHTMLAnchorElement>*/
-                        anchor = do_QueryInterface(parent);
-                        if (anchor && NS_SUCCEEDED(anchor->GetHref(tmpText)) && tmpText.GetUnicode() && tmpText.Length() != 0)
-                        {
-                          
-                          nsCOMPtr<nsIDOMElement> link = do_QueryInterface(parent);
-                          if (link)
-                          {
-                            *aReturn =link;
-                            // Getters must addref
-                            NS_ADDREF(*aReturn);
-                          }
-                          return NS_OK;
-                        }
-                      }
-                      current = parent;
-                    } while (notDone);
-                  }
-#endif
                 }
               } else if (TagName == domTagName) { // All other tag names are handled here
                 bNodeFound = PR_TRUE;
@@ -2453,7 +2547,6 @@ nsHTMLEditor::InsertLinkAroundSelection(nsIDOMElement* aAnchorElement)
     printf("InsertLinkAroundSelection called but there is no selection!!!\n");     
     res = NS_OK;
   } else {
-  
     // Be sure we were given an anchor element
     nsCOMPtr<nsIDOMHTMLAnchorElement> anchor = do_QueryInterface(aAnchorElement);
     if (anchor)
