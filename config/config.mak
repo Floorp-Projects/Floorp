@@ -199,7 +199,7 @@ CFLAGS=$(CFLAGS) -DMODULAR_NETLIB -DNS_MT_SUPPORTED -DNETLIB_THREAD -DNS_NET_FIL
 !endif
 
 # Defines for new Drag and Drop for toolbars
-CFLAGS=$(CFLAGS) -DTOOLBAR_DD
+#CFLAGS=$(CFLAGS) -DTOOLBAR_DD
 
 # Defines for cookie management feature...
 CFLAGS=$(CFLAGS) -DCookieManagement
