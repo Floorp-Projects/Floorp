@@ -590,6 +590,11 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect, nsIContent** aOffsetParent)
     return;
   }
 
+  // Flush all pending notifications so that our frames are up to date.  Make
+  // sure to do this first thing, since it may end up destroying our document's
+  // presshell.
+  document->FlushPendingNotifications(Flush_Layout);
+
   // Get Presentation shell 0
   nsIPresShell *presShell = document->GetShellAt(0);
 
@@ -602,9 +607,6 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect, nsIContent** aOffsetParent)
   if (!context) {
     return;
   }
-
-  // Flush all pending notifications so that our frames are uptodate
-  document->FlushPendingNotifications(Flush_Layout);
 
   // Get the Frame for our content
   nsIFrame* frame = nsnull;
@@ -962,6 +964,9 @@ nsGenericHTMLElement::GetScrollInfo(nsIScrollableView **aScrollableView,
     return;
   }
 
+  // Flush all pending notifications so that our frames are up to date.  Make
+  // sure to do this first thing, since it may end up destroying our document's
+  // presshell.
   document->FlushPendingNotifications(Flush_Layout);
 
   // Get the presentation shell
@@ -1256,20 +1261,23 @@ nsGenericHTMLElement::GetClientWidth(PRInt32* aClientWidth)
 nsresult
 nsGenericHTMLElement::ScrollIntoView(PRBool aTop)
 {
-  if (!IsInDoc()) {
+  nsIDocument *document = GetCurrentDoc();
+
+  if (!document) {
     return NS_OK;
   }
 
+  // Flush all pending notifications so that our frames are up to date.  Make
+  // sure to do this first thing, since it may end up destroying our document's
+  // presshell.
+  document->FlushPendingNotifications(Flush_Layout);
+  
   // Get the presentation shell
-  nsIDocument *document = GetOwnerDoc();
   nsIPresShell *presShell = document->GetShellAt(0);
   if (!presShell) {
     return NS_OK;
   }
 
-  // Now flush to make sure things are up to date
-  document->FlushPendingNotifications(Flush_Layout);
-  
   // Get the primary frame for this element
   nsIFrame *frame = nsnull;
   presShell->GetPrimaryFrameFor(this, &frame);
