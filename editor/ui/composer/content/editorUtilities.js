@@ -689,7 +689,7 @@ function GetScheme(urlspec)
 
 function GetHost(urlspec)
 {
-  if (!url)
+  if (!urlspec)
     return "";
 
   var IOService = GetIOService();
@@ -706,7 +706,7 @@ function GetHost(urlspec)
 
 function GetUsername(urlspec)
 {
-  if (!url)
+  if (!urlspec)
     return "";
 
   var IOService = GetIOService();
@@ -733,7 +733,7 @@ function GetFilename(urlspec)
   var filename;
 
   try {
-    uri = IOService.newURI(urlspec, null, null);
+    var uri = IOService.newURI(urlspec, null, null);
     if (uri)
     {
       var url = uri.QueryInterface(Components.interfaces.nsIURL);
