@@ -896,7 +896,7 @@ nsXBLBinding::InstallProperties(nsIContent* aBoundElement)
                                           PR_FALSE,
                                           &getFunc);
             if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-            attrs |= JSPROP_GETTER;
+            attrs |= JSPROP_GETTER | JSPROP_SHARED;
           }
 
           // try for first <setter> tag
@@ -934,7 +934,7 @@ nsXBLBinding::InstallProperties(nsIContent* aBoundElement)
                                           PR_FALSE,
                                           &setFunc);
             if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-            attrs |= JSPROP_SETTER;
+            attrs |= JSPROP_SETTER | JSPROP_SHARED;
           }
 
           if ((getFunc || setFunc) && classObject) {
