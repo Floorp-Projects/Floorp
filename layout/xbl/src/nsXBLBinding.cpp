@@ -47,6 +47,7 @@
 #include "nsSupportsArray.h"
 #include "nsINameSpace.h"
 #include "nsJSUtils.h"
+#include "nsIJSRuntimeService.h"
 
 // Event listeners
 #include "nsIEventListenerManager.h"
@@ -332,10 +333,32 @@ nsXBLBinding::nsXBLBinding(void)
   }
 }
 
+/**
+ * Removes a root inadvertently left over.
+ * This is really an error condition, but I've written
+ * this to prevent the JS GC from asserting.
+ */
+static nsresult removeRoot(void* aSlot)
+{
+    const char kJSRuntimeServiceProgID[] = "nsJSRuntimeService";
+    nsresult rv;
+    NS_WITH_SERVICE(nsIJSRuntimeService, runtimeService, kJSRuntimeServiceProgID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    JSRuntime* rt;
+    rv = runtimeService->GetRuntime(&rt);
+    if (NS_FAILED(rv)) return rv;
+    return (JS_RemoveRootRT(rt, aSlot) ? NS_OK : NS_ERROR_FAILURE);
+ }
+ 
+
 nsXBLBinding::~nsXBLBinding(void)
 {
-  NS_ASSERTION(!mScriptObject, "XBL binding hasn't properly cleared its script object out.");
 
+    if (mScriptObject) {
+        removeRoot(&mScriptObject);
+        mScriptObject = nsnull;
+    }
+ 
   delete mAttributeTable;
 
   gRefCnt--;
