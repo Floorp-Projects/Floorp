@@ -2457,7 +2457,14 @@ PRInt32 nsNNTPProtocol::DisplayArticle(nsIInputStream * inputStream, PRUint32 le
 		else // we aren't finished with the message yet
 		{
 			PRUint32 count = 0;
-			mDisplayOutputStream->Write(line, PL_strlen(line), &count);
+
+            // skip over the quoted '.'
+            if (line[0] == '.') {
+			    mDisplayOutputStream->Write(line+1, PL_strlen(line)-1, &count);
+            }
+            else {
+			    mDisplayOutputStream->Write(line, PL_strlen(line), &count);
+            }
 			mDisplayOutputStream->Write(MSG_LINEBREAK, PL_strlen(MSG_LINEBREAK), &count);
 		}
 
