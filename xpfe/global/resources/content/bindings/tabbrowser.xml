@@ -90,7 +90,7 @@
             <xul:tab validate="never" 
                      onerror="this.parentNode.parentNode.parentNode.parentNode.addToMissedIconCache(this.getAttribute('image'));
                               this.removeAttribute('image');"
-                     maxwidth="250" width="0" minwidth="30" flex="100000"
+                     maxwidth="250" width="0" minwidth="30" flex="100"
                      class="tabbrowser-tab" label="&untitledTab;" crop="end"/>
           </xul:tabs>
         </xul:hbox>
@@ -568,7 +568,7 @@
             t.maxWidth = 250;
             t.minWidth = 30;
             t.width = 0;
-            t.setAttribute("flex", "100000");
+            t.setAttribute("flex", "100");
             t.setAttribute("validate", "never");
             t.setAttribute("onerror", "this.parentNode.parentNode.parentNode.parentNode.addToMissedIconCache(this.getAttribute('image')); this.removeAttribute('image');");
             this.mTabContainer.appendChild(t);
