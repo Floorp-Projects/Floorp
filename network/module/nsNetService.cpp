@@ -953,7 +953,7 @@ NS_NET nsresult NS_MakeAbsoluteURL(nsIURL* aURL,
     err = url->ToString(&str);
     if (err) goto done;
     string = new nsString(str);
-    delete str;
+    delete []str;
     if (string == NULL)
         err = NS_ERROR_OUT_OF_MEMORY;
     else
