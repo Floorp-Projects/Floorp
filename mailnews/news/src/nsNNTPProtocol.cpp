@@ -3328,7 +3328,10 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
     m_nextState = NEWS_FINISHED;
 
     // suspend necko request until timeout
-    m_request->Suspend();
+    // might not have a request if someone called CloseSocket()
+    // see bug #195440
+    if (m_request)
+      m_request->Suspend();
   }
   
   PR_Free(lineToFree);
@@ -3348,26 +3351,29 @@ nsNNTPProtocol::Notify(nsITimer *timer)
 
 void nsNNTPProtocol::TimerCallback()
 {
-    PR_LOG(NNTP,PR_LOG_ALWAYS,("nsNNTPProtocol::TimerCallback\n"));
-	m_nextState = NNTP_READ_LIST;
-
-    // process whatever is already in the buffer at least once.
-    //
-    // NOTE: while downloading, it would almost be enough to just
-    // resume necko since it will call us again with data.  however,
-    // if we are at the end of the data stream then we must call
-    // ProcessProtocolState since necko will not call us again.
-    //
-    // NOTE: this function may Suspend necko.  Suspend is a reference
-    // counted (i.e., two suspends requires two resumes before the
-    // request will actually be resumed).
-    //
-	ProcessProtocolState(nsnull, mInputStream, 0,0); 
-
-    // resume necko request
+  PR_LOG(NNTP,PR_LOG_ALWAYS,("nsNNTPProtocol::TimerCallback\n"));
+  m_nextState = NNTP_READ_LIST;
+  
+  // process whatever is already in the buffer at least once.
+  //
+  // NOTE: while downloading, it would almost be enough to just
+  // resume necko since it will call us again with data.  however,
+  // if we are at the end of the data stream then we must call
+  // ProcessProtocolState since necko will not call us again.
+  //
+  // NOTE: this function may Suspend necko.  Suspend is a reference
+  // counted (i.e., two suspends requires two resumes before the
+  // request will actually be resumed).
+  //
+  ProcessProtocolState(nsnull, mInputStream, 0,0); 
+  
+  // resume necko request
+  // might not have a request if someone called CloseSocket() 
+  // see bug #195440
+  if (m_request)
     m_request->Resume();
-
-	return;
+  
+  return;
 }
 
 /* start the xover command
