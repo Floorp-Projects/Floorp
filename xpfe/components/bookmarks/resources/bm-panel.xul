@@ -53,7 +53,7 @@
       ondraggesture="return BeginDragTree(event);"
       ondragdrop="return DropOnTree(event);"
       datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch rdf:httpindex" 
-      onclick="return clicked(event, event.target.parentNode.parentNode)">
+      onclick="sidebarOpenURL(event, event.target.parentNode.parentNode, 'Tree')">
 
       <template>
         <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
