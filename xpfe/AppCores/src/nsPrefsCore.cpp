@@ -19,13 +19,18 @@
  */
 
 #include "nsPrefsCore.h"
+
+#include "nsIURL.h"
 #include "nsIBrowserWindow.h"
 #include "nsIWebShell.h"
 #include "pratom.h"
 #include "nsIComponentManager.h"
 #include "nsAppCores.h"
 #include "nsAppCoresCIDs.h"
+#include "nsAppShellCIDs.h"
 #include "nsAppCoresManager.h"
+#include "nsIAppShellService.h"
+#include "nsIServiceManager.h"
 
 #include "nsIScriptGlobalObject.h"
 
@@ -42,10 +47,11 @@ static NS_DEFINE_IID(kIPrefsCoreIID,            NS_IDOMPREFSCORE_IID);
 
 static NS_DEFINE_IID(kIDOMDocumentIID,          nsIDOMDocument::GetIID());
 static NS_DEFINE_IID(kIDocumentIID,             nsIDocument::GetIID());
+static NS_DEFINE_IID(kIAppShellServiceIID,      NS_IAPPSHELL_SERVICE_IID);
 
 static NS_DEFINE_IID(kPrefsCoreCID,             NS_PREFSCORE_CID);
 static NS_DEFINE_IID(kBrowserWindowCID,         NS_BROWSER_WINDOW_CID);
-
+static NS_DEFINE_IID(kAppShellServiceCID,       NS_APPSHELL_SERVICE_CID);
 
 //----------------------------------------------------------------------------------------
 nsPrefsCore::nsPrefsCore()
@@ -112,6 +118,44 @@ NS_IMETHODIMP nsPrefsCore::SetPrefsTree(nsIDOMWindow* aWin)
 	return NS_OK;
 }
 #endif // 0
+
+//----------------------------------------------------------------------------------------
+NS_IMETHODIMP nsPrefsCore::ShowWindow(nsIDOMWindow* /*aCurrentFrontWin*/)
+//----------------------------------------------------------------------------------------
+{
+    // Get app shell service.
+    nsIAppShellService *appShell;
+    nsresult rv = nsServiceManager::GetService(kAppShellServiceCID,
+                                      kIAppShellServiceIID,
+                                      (nsISupports**)&appShell);
+
+    if (NS_FAILED(rv))
+        return rv;
+
+    nsString controllerCID = "43147b80-8a39-11d2-9938-0080c7cb1081";
+    nsIWebShellWindow *newWindow;
+
+    nsIURL *url;
+    rv = NS_NewURL(&url, "resource:/res/samples/PrefsWindow.html");
+
+    if (NS_FAILED(rv))
+        return rv;
+
+    // Create "save to disk" nsIXULCallbacks...
+    //nsIXULWindowCallbacks *cb = new nsFindDialogCallbacks( aURL, aContentType );
+    nsIXULWindowCallbacks *cb = nsnull;
+
+    rv = appShell->CreateTopLevelWindow( nsnull,
+                                         url,
+                                         controllerCID,
+                                         newWindow,
+                                         nsnull,
+                                         cb,
+                                         504,
+                                         346 );
+    NS_RELEASE(url);
+    return rv;
+} // nsPrefsCore::ShowPrefsWindow
 
 //----------------------------------------------------------------------------------------
 NS_IMETHODIMP nsPrefsCore::ChangePanel(const nsString& aURL)

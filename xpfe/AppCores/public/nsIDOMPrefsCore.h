@@ -35,6 +35,8 @@ class nsIDOMPrefsCore : public nsIDOMBaseAppCore {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMPREFSCORE_IID; return iid; }
 
+  NS_IMETHOD    ShowWindow(nsIDOMWindow* aCurrentFrontWin)=0;
+
   NS_IMETHOD    ChangePanel(const nsString& aUrl)=0;
 
   NS_IMETHOD    PanelLoaded(nsIDOMWindow* aWin)=0;
@@ -46,6 +48,7 @@ public:
 
 
 #define NS_DECL_IDOMPREFSCORE   \
+  NS_IMETHOD    ShowWindow(nsIDOMWindow* aCurrentFrontWin);  \
   NS_IMETHOD    ChangePanel(const nsString& aUrl);  \
   NS_IMETHOD    PanelLoaded(nsIDOMWindow* aWin);  \
   NS_IMETHOD    SavePrefs();  \
@@ -54,6 +57,7 @@ public:
 
 
 #define NS_FORWARD_IDOMPREFSCORE(_to)  \
+  NS_IMETHOD    ShowWindow(nsIDOMWindow* aCurrentFrontWin) { return _to##ShowWindow(aCurrentFrontWin); }  \
   NS_IMETHOD    ChangePanel(const nsString& aUrl) { return _to##ChangePanel(aUrl); }  \
   NS_IMETHOD    PanelLoaded(nsIDOMWindow* aWin) { return _to##PanelLoaded(aWin); }  \
   NS_IMETHOD    SavePrefs() { return _to##SavePrefs(); }  \
