@@ -1,9 +1,0 @@
-//
-//	CapsDebug.Prefix
-//
-// Global prefix file for the debug Caps project.
-//
-//
-
-#include "MacPrefix_debug.h"
-#include "CapsConfig.h"

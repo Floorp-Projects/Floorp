@@ -1,4 +1,0 @@
-#define XP_MAC 1
-#define JSFILE 1
-#define DEBUG 1
-#include <MSLCarbonPrefix.h>
