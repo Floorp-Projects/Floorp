@@ -38,6 +38,7 @@
 #include "nsSpecialSystemDirectory.h"
 #include "nsIDocumentEncoder.h"    // for editor output flags
 #include "nsIURI.h"
+#include "nsMsgPrompts.h"
 
 /* for StrAllocCat */
 #include "xp_str.h"
@@ -637,6 +638,18 @@ mime_generate_headers (nsMsgCompFields *fields,
 	}
 
 	if (pSubject && *pSubject) {
+    // alert the user if the subject contains characters out of charset range (e.g. multilingual data)
+    nsAutoString u; // need to convert from UTF-8 to UCS2
+    if (NS_OK == nsMsgI18NConvertToUnicode(msgCompHeaderInternalCharset(), pSubject, u) &&
+        !nsMsgI18Ncheck_data_in_charset_range(charset, u)) {
+      PRBool proceedTheSend;
+      rv = nsMsgAskBooleanQuestionByID(NS_MSG_MULTILINGUAL_SEND, &proceedTheSend);
+      if (!proceedTheSend) {
+        *status = NS_ERROR_BUT_DONT_SHOW_ALERT;
+        return nsnull;
+      }
+    }
+
 		char *convbuf;
 		PUSH_STRING ("Subject: ");
 		convbuf = nsMsgI18NEncodeMimePartIIStr((char *)pSubject, charset,
