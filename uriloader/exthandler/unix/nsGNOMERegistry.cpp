@@ -285,12 +285,18 @@ nsGNOMERegistry::GetFromType(const char *aMIMEType)
                                               -1, NULL, NULL, NULL);
   if (!nativeCommand) {
     NS_ERROR("Could not convert helper app command to filesystem encoding");
+    _gnome_vfs_mime_application_free(handlerApp);
     return nsnull;
   }
 
   gchar *commandPath = g_find_program_in_path(nativeCommand);
 
   g_free(nativeCommand);
+
+  if (!commandPath) {
+    _gnome_vfs_mime_application_free(handlerApp);
+    return nsnull;
+  }
 
   nsCOMPtr<nsILocalFile> appFile;
   NS_NewNativeLocalFile(nsDependentCString(commandPath), PR_TRUE,
