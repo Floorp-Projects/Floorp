@@ -1407,6 +1407,12 @@ CSSStyleRuleImpl::Clone(nsICSSRule*& aClone) const
 NS_IMETHODIMP
 CSSStyleRuleImpl::GetDOMRule(nsIDOMCSSRule** aDOMRule)
 {
+  if (!mSheet) {
+    // inline style rules aren't supposed to have a DOM rule object, only
+    // a declaration.
+    *aDOMRule = nsnull;
+    return NS_OK;
+  }
   if (!mDOMRule) {
     mDOMRule = new DOMCSSStyleRuleImpl(this);
     if (!mDOMRule) {
