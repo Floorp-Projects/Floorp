@@ -24,8 +24,8 @@ IGNORE_MANIFEST=1
 #
 #------------------------------------------------------------------------
 
-DEPTH=..\..
-DIRS=main cache protocol cnvts
+DEPTH=..
+DIRS=main cache protocol cnvts client
 
 
 include <$(DEPTH)\config\rules.mak> 
