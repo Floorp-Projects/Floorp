@@ -238,6 +238,8 @@ libs:: $(PROGRAM)
 	rsync -aL $(PROGRAM) $(DIST)/$(APP_NAME).app/Contents/MacOS
 	cp -RL $(srcdir)/macbuild/mach.icns $(DIST)/$(APP_NAME).app/Contents/Resources/mach.icns
 	echo -n APPLMOZB > $(DIST)/$(APP_NAME).app/Contents/PkgInfo
+#       remove CVS dirs from packaged app
+	find $(APP_NAME).app -type d -name "CVS" -prune -exec rm -rf {} \;
 
 clean clobber::
 	rm -rf $(DIST)/$(APP_NAME).app
