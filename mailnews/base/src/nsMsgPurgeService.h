@@ -91,7 +91,7 @@ protected:
   nsCOMPtr<nsIMsgSearchSession> mSearchSession;
   nsCOMPtr<nsIMsgFolder> mSearchFolder;
   nsCOMPtr<nsISupportsArray> mHdrsToDelete;
-  nsVoidArray *mPurgeArray;
+  nsVoidArray mPurgeArray;
   PRBool mHaveShutdown;
 };
 

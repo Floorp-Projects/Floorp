@@ -65,8 +65,6 @@ void OnPurgeTimer(nsITimer *timer, void *aPurgeService)
 nsMsgPurgeService::nsMsgPurgeService()
 {
   NS_INIT_ISUPPORTS();
-
-  mPurgeArray = nsnull;
   mHaveShutdown = PR_FALSE;
 }
 
@@ -76,15 +74,13 @@ nsMsgPurgeService::~nsMsgPurgeService()
     mPurgeTimer->Cancel();
   }
   
-  PRInt32 count = mPurgeArray->Count();
+  PRInt32 count = mPurgeArray.Count();
   PRInt32 i;
   for(i=0; i < count; i++)
   {
-    nsPurgeEntry *purgeEntry = (nsPurgeEntry*)mPurgeArray->ElementAt(i);
+    nsPurgeEntry *purgeEntry = (nsPurgeEntry*)mPurgeArray.ElementAt(i);
     delete purgeEntry;
   }
-  delete mPurgeArray;
-  
   if(!mHaveShutdown)
   {
     Shutdown();
@@ -100,16 +96,7 @@ NS_IMETHODIMP nsMsgPurgeService::Init()
   if (NS_SUCCEEDED(rv))
     accountManager->AddIncomingServerListener(this);
 
-  if(mHaveShutdown) //in turbo mode on profile change we don't need to do anything below this
-  {
-    mHaveShutdown = PR_FALSE;
-    return NS_OK;
-  }
-
-  mPurgeArray = new nsVoidArray();
-  if(!mPurgeArray)
-    return NS_ERROR_OUT_OF_MEMORY;
-
+  mHaveShutdown = PR_FALSE;
   return NS_OK;
 }
 
@@ -220,8 +207,8 @@ nsresult nsMsgPurgeService::RemoveServer(nsIMsgIncomingServer *server)
   PRInt32 pos = FindServer(server);
   if(pos != -1)
   {
-    nsPurgeEntry *purgeEntry = (nsPurgeEntry*)mPurgeArray->ElementAt(pos);
-    mPurgeArray->RemoveElementAt(pos);
+    nsPurgeEntry *purgeEntry = (nsPurgeEntry*)mPurgeArray.ElementAt(pos);
+    mPurgeArray.RemoveElementAt(pos);
     delete purgeEntry;
   }
   
@@ -251,10 +238,10 @@ NS_IMETHODIMP nsMsgPurgeService::OnServerChanged(nsIMsgIncomingServer *server)
 
 PRInt32 nsMsgPurgeService::FindServer(nsIMsgIncomingServer *server)
 {
-  PRInt32 count = mPurgeArray->Count();
+  PRInt32 count = mPurgeArray.Count();
   for(PRInt32 i = 0; i < count; i++)
   {
-    nsPurgeEntry *purgeEntry = (nsPurgeEntry*)mPurgeArray->ElementAt(i);
+    nsPurgeEntry *purgeEntry = (nsPurgeEntry*)mPurgeArray.ElementAt(i);
     if(server == purgeEntry->server.get())
       return i;
   }
@@ -264,15 +251,15 @@ PRInt32 nsMsgPurgeService::FindServer(nsIMsgIncomingServer *server)
 nsresult nsMsgPurgeService::AddPurgeEntry(nsPurgeEntry *purgeEntry)
 {
   PRInt32 i;
-  PRInt32 count = mPurgeArray->Count();
+  PRInt32 count = mPurgeArray.Count();
   for(i = 0; i < count; i++)
   {
-    nsPurgeEntry *current = (nsPurgeEntry*)mPurgeArray->ElementAt(i);
+    nsPurgeEntry *current = (nsPurgeEntry*)mPurgeArray.ElementAt(i);
     if(purgeEntry->nextPurgeTime < current->nextPurgeTime)
       break;
     
   }
-  mPurgeArray->InsertElementAt(purgeEntry, i);
+  mPurgeArray.InsertElementAt(purgeEntry, i);
   return NS_OK;
 }
 
@@ -283,17 +270,17 @@ nsresult nsMsgPurgeService::SetNextPurgeTime(nsPurgeEntry *purgeEntry, nsTime st
     return NS_ERROR_FAILURE;
   
   purgeEntry->nextPurgeTime = startTime;
-  for (PRInt32 i=0; i < mPurgeArray->Count()+1; i++)
+  for (PRInt32 i=0; i < mPurgeArray.Count()+1; i++)
     purgeEntry->nextPurgeTime += nsInt64(gMinDelayBetweenPurges);  //let us stagger them out by 5 mins if they happen to start at same time
   return NS_OK;
 }
 
 nsresult nsMsgPurgeService::SetupNextPurge()
 {
-  if(mPurgeArray->Count() > 0)
+  if(mPurgeArray.Count() > 0)
   {
     //Get the next purge entry
-    nsPurgeEntry *purgeEntry = (nsPurgeEntry*)mPurgeArray->ElementAt(0);
+    nsPurgeEntry *purgeEntry = (nsPurgeEntry*)mPurgeArray.ElementAt(0);
     nsTime currentTime;
     nsInt64 purgeDelay;
     nsInt64 ms(1000);
@@ -322,9 +309,9 @@ nsresult nsMsgPurgeService::SetupNextPurge()
 nsresult nsMsgPurgeService::PerformPurge()
 {
   nsTime currentTime;
-  for(PRInt32 i = 0;i < mPurgeArray->Count(); i++)
+  for(PRInt32 i = 0;i < mPurgeArray.Count(); i++)
   {
-    nsPurgeEntry *current = (nsPurgeEntry*)mPurgeArray->ElementAt(i);
+    nsPurgeEntry *current = (nsPurgeEntry*)mPurgeArray.ElementAt(i);
     if(current->nextPurgeTime < currentTime)
     {
       PRBool serverBusy = PR_FALSE;
@@ -346,7 +333,7 @@ nsresult nsMsgPurgeService::PerformPurge()
         else
           current = nsnull;
       }
-      mPurgeArray->RemoveElementAt(i);
+      mPurgeArray.RemoveElementAt(i);
       i--; //Because we removed it we need to look at the one that just moved up.
 
       if (current)
