@@ -55,7 +55,7 @@
  * ***** END LICENSE BLOCK ***** */
 #include "myspAffixmgr.h"
 #include "nsIFile.h"
-#include "nsReadCLine.h"
+#include "nsReadLine.h"
 #include "nsReadableUtils.h"
 #include "nsDirectoryServiceDefs.h"
 #include "plstr.h"

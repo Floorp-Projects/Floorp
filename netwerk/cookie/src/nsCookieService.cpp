@@ -897,7 +897,6 @@ nsCookieService::Read()
 
   static NS_NAMED_LITERAL_CSTRING(kTrue, "TRUE");
 
-  nsAutoString bufferUnicode;
   nsCAutoString buffer;
   PRBool isMore = PR_TRUE;
   PRInt32 hostIndex = 0, isDomainIndex, pathIndex, secureIndex, expiresIndex, nameIndex, cookieIndex;
@@ -924,11 +923,7 @@ nsCookieService::Read()
    *         most-recently used come first; least-recently-used come last.
    */
 
-  while (isMore && NS_SUCCEEDED(lineInputStream->ReadLine(bufferUnicode, &isMore))) {
-    // downconvert to ASCII. eventually, we want to fix nsILineInputStream
-    // to operate on a CString buffer...
-    CopyUCS2toASCII(bufferUnicode, buffer);
-
+  while (isMore && NS_SUCCEEDED(lineInputStream->ReadLine(buffer, &isMore))) {
     if (buffer.IsEmpty() || buffer.First() == '#') {
       continue;
     }

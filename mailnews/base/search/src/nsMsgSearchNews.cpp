@@ -812,49 +812,49 @@ nsresult nsMsgSearchValidityManager::InitNewsExTable (nsINntpIncomingServer *new
       newsHost->QuerySearchableHeader(":TEXT", &hasAttrib);
     else
       hasAttrib = PR_TRUE;
-		m_newsExTable->SetAvailable (nsMsgSearchAttrib::AnyText, nsMsgSearchOp::Contains, hasAttrib);
-		m_newsExTable->SetEnabled   (nsMsgSearchAttrib::AnyText, nsMsgSearchOp::Contains, hasAttrib);
-		m_newsExTable->SetAvailable (nsMsgSearchAttrib::AnyText, nsMsgSearchOp::DoesntContain, hasAttrib);
-		m_newsExTable->SetEnabled   (nsMsgSearchAttrib::AnyText, nsMsgSearchOp::DoesntContain, hasAttrib);
+    m_newsExTable->SetAvailable (nsMsgSearchAttrib::AnyText, nsMsgSearchOp::Contains, hasAttrib);
+    m_newsExTable->SetEnabled   (nsMsgSearchAttrib::AnyText, nsMsgSearchOp::Contains, hasAttrib);
+    m_newsExTable->SetAvailable (nsMsgSearchAttrib::AnyText, nsMsgSearchOp::DoesntContain, hasAttrib);
+    m_newsExTable->SetEnabled   (nsMsgSearchAttrib::AnyText, nsMsgSearchOp::DoesntContain, hasAttrib);
 
     if (newsHost)
       newsHost->QuerySearchableHeader("KEYWORDS", &hasAttrib);
     else
       hasAttrib = PR_TRUE;
-		m_newsExTable->SetAvailable (nsMsgSearchAttrib::Keywords, nsMsgSearchOp::Contains, hasAttrib);
-		m_newsExTable->SetEnabled   (nsMsgSearchAttrib::Keywords, nsMsgSearchOp::Contains, hasAttrib);
-		m_newsExTable->SetAvailable (nsMsgSearchAttrib::Keywords, nsMsgSearchOp::DoesntContain, hasAttrib);
-		m_newsExTable->SetEnabled   (nsMsgSearchAttrib::Keywords, nsMsgSearchOp::DoesntContain, hasAttrib);
+    m_newsExTable->SetAvailable (nsMsgSearchAttrib::Keywords, nsMsgSearchOp::Contains, hasAttrib);
+    m_newsExTable->SetEnabled   (nsMsgSearchAttrib::Keywords, nsMsgSearchOp::Contains, hasAttrib);
+    m_newsExTable->SetAvailable (nsMsgSearchAttrib::Keywords, nsMsgSearchOp::DoesntContain, hasAttrib);
+    m_newsExTable->SetEnabled   (nsMsgSearchAttrib::Keywords, nsMsgSearchOp::DoesntContain, hasAttrib);
 
 #ifdef LATER
-		// Not sure whether this would be useful or not. If so, can we specify more
-		// than one NEWSGROUPS term to the server? If not, it would be tricky to merge
-		// this with the NEWSGROUPS term we generate for the scope.
-		hasAttrib = newsHost ? newsHost->QuerySearchableHeader("NEWSGROUPS") : PR_TRUE;
-		m_newsExTable->SetAvailable (nsMsgSearchAttrib::Newsgroups, nsMsgSearchOp::IsBefore, hasAttrib);
-		m_newsExTable->SetEnabled   (nsMsgSearchAttrib::Newsgroups, nsMsgSearchOp::IsBefore, hasAttrib);
-		m_newsExTable->SetAvailable (nsMsgSearchAttrib::Newsgroups, nsMsgSearchOp::IsAfter, hasAttrib);
-		m_newsExTable->SetEnabled   (nsMsgSearchAttrib::Newsgroups, nsMsgSearchOp::IsAfter, hasAttrib);
+    // Not sure whether this would be useful or not. If so, can we specify more
+    // than one NEWSGROUPS term to the server? If not, it would be tricky to merge
+    // this with the NEWSGROUPS term we generate for the scope.
+    hasAttrib = newsHost ? newsHost->QuerySearchableHeader("NEWSGROUPS") : PR_TRUE;
+    m_newsExTable->SetAvailable (nsMsgSearchAttrib::Newsgroups, nsMsgSearchOp::IsBefore, hasAttrib);
+    m_newsExTable->SetEnabled   (nsMsgSearchAttrib::Newsgroups, nsMsgSearchOp::IsBefore, hasAttrib);
+    m_newsExTable->SetAvailable (nsMsgSearchAttrib::Newsgroups, nsMsgSearchOp::IsAfter, hasAttrib);
+    m_newsExTable->SetEnabled   (nsMsgSearchAttrib::Newsgroups, nsMsgSearchOp::IsAfter, hasAttrib);
 #endif
     if (newsHost)
       newsHost->QuerySearchableHeader("DATE", &hasAttrib);
     else
       hasAttrib = PR_TRUE;
-		m_newsExTable->SetAvailable (nsMsgSearchAttrib::AgeInDays, nsMsgSearchOp::IsGreaterThan, hasAttrib);
-		m_newsExTable->SetEnabled   (nsMsgSearchAttrib::AgeInDays, nsMsgSearchOp::IsGreaterThan, hasAttrib);
-		m_newsExTable->SetAvailable (nsMsgSearchAttrib::AgeInDays, nsMsgSearchOp::IsLessThan,  hasAttrib);
-		m_newsExTable->SetEnabled   (nsMsgSearchAttrib::AgeInDays, nsMsgSearchOp::IsLessThan, hasAttrib);
-		m_newsExTable->SetAvailable (nsMsgSearchAttrib::AgeInDays, nsMsgSearchOp::Is,  hasAttrib);
-		m_newsExTable->SetEnabled   (nsMsgSearchAttrib::AgeInDays, nsMsgSearchOp::Is, hasAttrib);
+    m_newsExTable->SetAvailable (nsMsgSearchAttrib::AgeInDays, nsMsgSearchOp::IsGreaterThan, hasAttrib);
+    m_newsExTable->SetEnabled   (nsMsgSearchAttrib::AgeInDays, nsMsgSearchOp::IsGreaterThan, hasAttrib);
+    m_newsExTable->SetAvailable (nsMsgSearchAttrib::AgeInDays, nsMsgSearchOp::IsLessThan,  hasAttrib);
+    m_newsExTable->SetEnabled   (nsMsgSearchAttrib::AgeInDays, nsMsgSearchOp::IsLessThan, hasAttrib);
+    m_newsExTable->SetAvailable (nsMsgSearchAttrib::AgeInDays, nsMsgSearchOp::Is,  hasAttrib);
+    m_newsExTable->SetEnabled   (nsMsgSearchAttrib::AgeInDays, nsMsgSearchOp::Is, hasAttrib);
 
-		// it is possible that the user enters an arbitrary header that is not searchable using NNTP search extensions
-		m_newsExTable->SetAvailable (nsMsgSearchAttrib::OtherHeader, nsMsgSearchOp::Contains, 1);   // added for arbitrary headers
-		m_newsExTable->SetEnabled   (nsMsgSearchAttrib::OtherHeader, nsMsgSearchOp::Contains, 1);
-		m_newsExTable->SetAvailable (nsMsgSearchAttrib::OtherHeader, nsMsgSearchOp::DoesntContain, 1);
-		m_newsExTable->SetEnabled   (nsMsgSearchAttrib::OtherHeader, nsMsgSearchOp::DoesntContain, 1);
-	}
+    // it is possible that the user enters an arbitrary header that is not searchable using NNTP search extensions
+    m_newsExTable->SetAvailable (nsMsgSearchAttrib::OtherHeader, nsMsgSearchOp::Contains, 1);   // added for arbitrary headers
+    m_newsExTable->SetEnabled   (nsMsgSearchAttrib::OtherHeader, nsMsgSearchOp::Contains, 1);
+    m_newsExTable->SetAvailable (nsMsgSearchAttrib::OtherHeader, nsMsgSearchOp::DoesntContain, 1);
+    m_newsExTable->SetEnabled   (nsMsgSearchAttrib::OtherHeader, nsMsgSearchOp::DoesntContain, 1);
+  }
 
-	return err;
+  return err;
 }
 
 nsresult nsMsgSearchValidityManager::PostProcessValidityTable (nsINntpIncomingServer *host)

@@ -876,6 +876,7 @@ BookmarkParser::Parse(nsIRDFResource *aContainer, nsIRDFResource *aNodeType)
 
     nsCOMPtr<nsIRDFResource> bookmarkNode = aContainer;
     nsAutoString description, line;
+    nsCAutoString cLine;
     PRBool       isActiveFlag = PR_TRUE, inDescriptionFlag = PR_FALSE;
 
     if ((mContents) && (mContentsLen > 0))
@@ -927,7 +928,8 @@ BookmarkParser::Parse(nsIRDFResource *aContainer, nsIRDFResource *aNodeType)
 
         while(NS_SUCCEEDED(rv) && isActiveFlag && moreData)
         {
-            rv = lineInputStream->ReadLine(line, &moreData);
+            rv = lineInputStream->ReadLine(cLine, &moreData);
+            CopyASCIItoUTF16(cLine, line);
 
             if (NS_SUCCEEDED(rv))
             {

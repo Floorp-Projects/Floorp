@@ -71,10 +71,9 @@ NS_InitLineBuffer (nsLineBuffer ** aBufferPtr) {
 
 static nsresult
 NS_ReadLine (nsIInputStream* aStream, nsLineBuffer * aBuffer,
-             nsAString & aLine, PRBool *more) {
+             nsACString & aLine, PRBool *more) {
   nsresult rv = NS_OK;
   PRUint32 bytesRead;
-  nsAutoString temp;
   *more = PR_TRUE;
   PRBool eolStarted = PR_FALSE;
   char eolchar = '\0';
@@ -107,8 +106,7 @@ NS_ReadLine (nsIInputStream* aStream, nsLineBuffer * aBuffer,
         eolStarted = PR_TRUE;
         eolchar = *(aBuffer->current);
         *(aBuffer->current) = '\0';
-        temp.AssignWithConversion(aBuffer->start);
-        aLine.Append(temp);
+        aLine.Append(aBuffer->start);
         (aBuffer->current)++;
         aBuffer->start = aBuffer->current;
       } else {
@@ -118,8 +116,7 @@ NS_ReadLine (nsIInputStream* aStream, nsLineBuffer * aBuffer,
     }
 
     // append whatever we currently have to the string
-    temp.AssignWithConversion(aBuffer->start);
-    aLine.Append(temp);
+    aLine.Append(aBuffer->start);
 
     // we've run out of buffer.  Begin anew
     aBuffer->current = aBuffer->start = aBuffer->buf;

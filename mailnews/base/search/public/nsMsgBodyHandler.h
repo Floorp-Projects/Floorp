@@ -3,10 +3,9 @@
 #define __nsMsgBodyHandler_h
 
 #include "nsIMsgSearchScopeTerm.h"
-#include "nsIFileSpec.h"
-
+#include "nsILineInputStream.h"
 //---------------------------------------------------------------------------
-// MSG_BodyHandler: used to retrive lines from POP and IMAP offline messages.
+// nsMsgBodyHandler: used to retrive lines from POP and IMAP offline messages.
 // This is a helper class used by nsMsgSearchTerm::MatchBody
 //---------------------------------------------------------------------------
 class nsMsgBodyHandler
@@ -29,8 +28,8 @@ public:
   
   virtual ~nsMsgBodyHandler();
   
-  // returns next message line in buf, up to bufSize bytes.
-  PRInt32 GetNextLine(char * buf, int bufSize);    
+  // returns next message line in buf
+  PRInt32 GetNextLine(nsCString &buf);    
   
   // Transformations
   void SetStripHtml (PRBool strip) { m_stripHtml = strip; }
@@ -42,7 +41,7 @@ protected:
   // filter related methods. For filtering we always use the headers
   // list instead of the database...
   PRBool m_Filtering;
-  PRInt32 GetNextFilterLine(char * buf, PRUint32 bufSize);
+  PRInt32 GetNextFilterLine(nsCString &buf);
   // pointer into the headers list in the original message hdr db...
   const char * m_headers;  
   PRUint32 m_headersSize;
@@ -52,10 +51,11 @@ protected:
   void OpenLocalFolder();
   
   // goes through the mail folder 
-  PRInt32 GetNextLocalLine(char * buf, int bufSize); 
+  PRInt32 GetNextLocalLine(nsCString &buf); 
 
   nsIMsgSearchScopeTerm *m_scope;
-  nsCOMPtr <nsIFileSpec> m_fileSpec;
+  nsCOMPtr <nsILineInputStream> m_fileLineStream;
+  nsCOMPtr <nsILocalFile> m_localFile;
   // local file state
   //	XP_File	*m_localFile;
   // need a file stream here, I bet
@@ -75,7 +75,7 @@ protected:
   PRBool m_stripHtml;		// PR_TRUE if we're supposed to strip off HTML tags
   PRBool m_passedHeaders;	// PR_TRUE if we've already skipped over the headers
   PRBool m_messageIsHtml;	// PR_TRUE if the Content-type header claims text/html
-  PRInt32 ApplyTransformations (char *buf, PRInt32 length, PRBool &returnThisLine);
-  void StripHtml (char *buf);
+  PRInt32 ApplyTransformations (nsCString &buf, PRInt32 length, PRBool &returnThisLine);
+  void StripHtml (nsCString &buf);
 };
 #endif

@@ -38,18 +38,17 @@
 
 #include "nsISupports.idl"
 
-%{ C++
-#include "nsString.h" // needed for AString -> nsAString, unfortunately
-%}
-
 interface nsILineInputStream;
 
-[scriptable, uuid(e7f17108-1dd1-11b2-8b9a-fda151ea0240)]
+[scriptable, uuid(c97b466c-1e6e-4773-a4ab-2b2b3190a7a6)]
 interface nsILineInputStream : nsISupports
 {
   /**
-   * Read a single line from the stream
+   * Read a single line from the stream, where a line is a 
+   * possibly zero length sequence of 8bit chars terminated by a
+   * CR, LF, CRLF, LFCR, or eof.
+   * The line terminator is not returned.
    * Return false for end of file, true otherwise
    */
-  boolean readLine(out AString aLine);
+  boolean readLine(out ACString aLine);
 };

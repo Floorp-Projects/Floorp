@@ -898,14 +898,12 @@ int main(int argc, char* argv[]){
       if (!lineInputStream)
         return -4;
 
-      nsAutoString bufferUnicode;
       nsCAutoString buffer;
       PRBool isMore = PR_TRUE;
       fprintf(stdout, "Function calls that will be checked for errors:\n");
       if (gEmitHTML)
         fprintf(stdout, "<ul>\n");
-      while (isMore && NS_SUCCEEDED(lineInputStream->ReadLine(bufferUnicode, &isMore))) {
-        LossyCopyUTF16toASCII(bufferUnicode, buffer);
+      while (isMore && NS_SUCCEEDED(lineInputStream->ReadLine(buffer, &isMore))) {
         if (NS_FAILED(myWatchList.mTableC.Put(buffer)) ||
             NS_FAILED(myWatchList.mTableCPP.Put(buffer)))
           return -1;

@@ -98,18 +98,11 @@ void nsMsgBodyHandler::Initialize()
 
 nsMsgBodyHandler::~nsMsgBodyHandler()
 {
-  if (m_fileSpec)
-  {
-    PRBool isOpen;
-    m_fileSpec->IsStreamOpen(&isOpen);
-    if (isOpen) 
-      m_fileSpec->CloseStream();
-  }
 }
 
 		
 
-PRInt32 nsMsgBodyHandler::GetNextLine (char * buf, int bufSize)
+PRInt32 nsMsgBodyHandler::GetNextLine (nsCString &buf)
 {
   PRInt32 length = 0;
   PRBool eatThisLine = PR_FALSE;
@@ -117,7 +110,7 @@ PRInt32 nsMsgBodyHandler::GetNextLine (char * buf, int bufSize)
   do {
     // first, handle the filtering case...this is easy....
     if (m_Filtering)
-      length = GetNextFilterLine(buf, bufSize);
+      length = GetNextFilterLine(buf);
     else
     {
       // 3 cases: Offline IMAP, POP, or we are dealing with a news message....
@@ -125,7 +118,7 @@ PRInt32 nsMsgBodyHandler::GetNextLine (char * buf, int bufSize)
       // to store offline messages in berkeley format folders.
       if (m_db)
       {
-         length = GetNextLocalLine (buf, bufSize); // (2) POP
+         length = GetNextLocalLine (buf); // (2) POP
       }
     }
     
@@ -136,20 +129,18 @@ PRInt32 nsMsgBodyHandler::GetNextLine (char * buf, int bufSize)
 }
 void nsMsgBodyHandler::OpenLocalFolder()
 {
-  nsresult rv = m_scope->GetMailPath(getter_AddRefs(m_fileSpec));
-  PRBool isOpen = PR_FALSE;
-  if (NS_SUCCEEDED(rv) && m_fileSpec)
+  nsCOMPtr <nsIInputStream> inputStream;
+  nsresult rv = m_scope->GetInputStream(getter_AddRefs(inputStream));
+  if (inputStream)
   {
-    m_fileSpec->IsStreamOpen(&isOpen);
-    if (!isOpen) 
-      m_fileSpec->OpenStreamForReading();
-    m_fileSpec->Seek(m_localFileOffset);
+    nsCOMPtr <nsISeekableStream> seekableStream = do_QueryInterface(inputStream);
+    seekableStream->Seek(PR_SEEK_SET, m_localFileOffset);
   }
-  
+  m_fileLineStream = do_QueryInterface(inputStream);
 }
 
 
-PRInt32 nsMsgBodyHandler::GetNextFilterLine(char * buf, PRUint32 bufSize)
+PRInt32 nsMsgBodyHandler::GetNextFilterLine(nsCString &buf)
 {
   // m_nextHdr always points to the next header in the list....the list is NULL terminated...
   PRUint32 numBytesCopied = 0;
@@ -167,10 +158,8 @@ PRInt32 nsMsgBodyHandler::GetNextFilterLine(char * buf, PRUint32 bufSize)
     
     if (m_headersSize > 0)
     {
-      numBytesCopied = strlen(m_headers)+1 /* + 1 to include NULL */ < bufSize ? strlen(m_headers)+1 : (PRInt32) bufSize;
-      memcpy(buf, m_headers, numBytesCopied);
-      if (numBytesCopied == bufSize)
-        buf[bufSize - 1] = '\0';
+      numBytesCopied = strlen(m_headers) + 1 ;
+      buf.Append(m_headers);
       m_headers += numBytesCopied;  
       // be careful...m_headersSize is unsigned. Don't let it go negative or we overflow to 2^32....*yikes*	
       if (m_headersSize < numBytesCopied)
@@ -182,14 +171,14 @@ PRInt32 nsMsgBodyHandler::GetNextFilterLine(char * buf, PRUint32 bufSize)
     }
   }
   else if (m_headersSize == 0) {
-    buf[0] = '\0';
+    buf.Truncate();
   }
   return -1;
 }
 
 // return -1 if no more local lines, length of next line otherwise.
 
-PRInt32 nsMsgBodyHandler::GetNextLocalLine(char * buf, int bufSize)
+PRInt32 nsMsgBodyHandler::GetNextLocalLine(nsCString &buf)
 // returns number of bytes copied
 {
   if (m_numLocalLines)
@@ -197,24 +186,19 @@ PRInt32 nsMsgBodyHandler::GetNextLocalLine(char * buf, int bufSize)
     if (m_passedHeaders)
       m_numLocalLines--; // the line count is only for body lines
     // do we need to check the return value here?
-    if (m_fileSpec)
+    if (m_fileLineStream)
     {
-      PRBool isEof = PR_FALSE;
-      nsresult rv = m_fileSpec->Eof(&isEof);
-      if (NS_FAILED(rv) || isEof)
-        return -1;
-      
-      PRBool wasTruncated = PR_FALSE;
-      rv = m_fileSpec->ReadLine(&buf, bufSize, &wasTruncated);
-      if (NS_SUCCEEDED(rv) && !wasTruncated)
-        return strlen(buf);
+      PRBool more = PR_FALSE;
+      nsresult rv = m_fileLineStream->ReadLine(buf, &more);
+      if (NS_SUCCEEDED(rv))
+        return buf.Length();
     }
   }
   
   return -1;
 }
 
-PRInt32 nsMsgBodyHandler::ApplyTransformations (char *buf, PRInt32 length, PRBool &eatThisLine)
+PRInt32 nsMsgBodyHandler::ApplyTransformations (nsCString &buf, PRInt32 length, PRBool &eatThisLine)
 {
   PRInt32 newLength = length;
   eatThisLine = PR_FALSE;
@@ -224,17 +208,17 @@ PRInt32 nsMsgBodyHandler::ApplyTransformations (char *buf, PRInt32 length, PRBoo
     if (m_stripHeaders)
       eatThisLine = PR_TRUE;
     
-    if (!nsCRT::strncasecmp(buf, "Content-Type:", 13) && PL_strcasestr (buf, "text/html"))
+    if (StringBeginsWith(buf, NS_LITERAL_CSTRING("Content-Type:")) && FindInReadable(buf, NS_LITERAL_CSTRING("text/html")))
       m_messageIsHtml = PR_TRUE;
     
-    m_passedHeaders = EMPTY_MESSAGE_LINE(buf);
+    m_passedHeaders = buf.IsEmpty() || buf.First() == nsCRT::CR || buf.First() == nsCRT::LF;
   }
   else	// buf is a line from the message body
   {
     if (m_stripHtml && m_messageIsHtml)
     {
       StripHtml (buf);
-      newLength = strlen (buf);
+      newLength = buf.Length();
     }
   }
   
@@ -242,13 +226,14 @@ PRInt32 nsMsgBodyHandler::ApplyTransformations (char *buf, PRInt32 length, PRBoo
 }
 
 
-void nsMsgBodyHandler::StripHtml (char *pBufInOut)
+void nsMsgBodyHandler::StripHtml (nsCString &pBufInOut)
 {
-  char *pBuf = (char*) PR_Malloc (strlen(pBufInOut) + 1);
+  char *pBuf = (char*) PR_Malloc (pBufInOut.Length() + 1);
   if (pBuf)
   {
     char *pWalk = pBuf;
-    char *pWalkInOut = pBufInOut;
+    
+    char *pWalkInOut = (char *) pBufInOut.get();
     PRBool inTag = PR_FALSE;
     while (*pWalkInOut) // throw away everything inside < >
     {
@@ -264,13 +249,7 @@ void nsMsgBodyHandler::StripHtml (char *pBufInOut)
     }
     *pWalk = 0; // null terminator
     
-    // copy the temp buffer back to the real one
-    pWalk = pBuf;
-    pWalkInOut = pBufInOut;
-    while (*pWalk)
-      *pWalkInOut++ = *pWalk++;
-    *pWalkInOut = *pWalk; // null terminator
-    PR_Free (pBuf);
+    pBufInOut.Adopt(pBuf);
   }
 }
 

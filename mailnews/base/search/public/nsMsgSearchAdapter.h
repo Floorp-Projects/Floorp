@@ -69,67 +69,67 @@ inline PRBool IsStringAttribute (nsMsgSearchAttribValue a)
 class nsMsgSearchAdapter : public nsIMsgSearchAdapter
 {
 public:
-	nsMsgSearchAdapter (nsIMsgSearchScopeTerm*, nsISupportsArray *);
-	virtual ~nsMsgSearchAdapter ();
+  nsMsgSearchAdapter (nsIMsgSearchScopeTerm*, nsISupportsArray *);
+  virtual ~nsMsgSearchAdapter ();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIMSGSEARCHADAPTER
 
-	nsIMsgSearchScopeTerm		*m_scope;
-    nsCOMPtr<nsISupportsArray> m_searchTerms;       /* linked list of criteria terms */
+  nsIMsgSearchScopeTerm	      *m_scope;
+  nsCOMPtr<nsISupportsArray>  m_searchTerms;       /* linked list of criteria terms */
 
-	PRBool m_abortCalled;
-	nsXPIDLString  m_defaultCharset;
-	PRBool m_forceAsciiSearch;
+  PRBool m_abortCalled;
+  nsXPIDLString  m_defaultCharset;
+  PRBool m_forceAsciiSearch;
 
-	static nsresult EncodeImap (char **ppEncoding, 
-									   nsISupportsArray *searchTerms,  
-									   const PRUnichar *srcCharset, 
-									   const PRUnichar *destCharset,
-									   PRBool reallyDredd = PR_FALSE);
+  static nsresult EncodeImap (char **ppEncoding, 
+			     nsISupportsArray *searchTerms,  
+			     const PRUnichar *srcCharset, 
+			     const PRUnichar *destCharset,
+			     PRBool reallyDredd = PR_FALSE);
 	
-	static nsresult EncodeImapValue(char *encoding, const char *value, PRBool useQuotes, PRBool reallyDredd);
+  static nsresult EncodeImapValue(char *encoding, const char *value, PRBool useQuotes, PRBool reallyDredd);
 
-	static char *GetImapCharsetParam(const PRUnichar *destCharset);
+  static char *GetImapCharsetParam(const PRUnichar *destCharset);
   static PRUnichar *EscapeSearchUrl (const PRUnichar *nntpCommand);
   static PRUnichar *EscapeImapSearchProtocol(const PRUnichar *imapCommand);
   static PRUnichar *EscapeQuoteImapSearchProtocol(const PRUnichar *imapCommand);
   static char *UnEscapeSearchUrl (const char *commandSpecificData);
-	// This stuff lives in the base class because the IMAP search syntax 
-	// is used by the Dredd SEARCH command as well as IMAP itself
-	static const char *m_kImapBefore;
-	static const char *m_kImapBody;
-	static const char *m_kImapCC;
-	static const char *m_kImapFrom;
-	static const char *m_kImapNot;
-	static const char *m_kImapOr;
-	static const char *m_kImapSince;
-	static const char *m_kImapSubject;
-	static const char *m_kImapTo;
-	static const char *m_kImapHeader;
-	static const char *m_kImapAnyText;
-	static const char *m_kImapKeyword;
-	static const char *m_kNntpKeywords;
-	static const char *m_kImapSentOn;
-	static const char *m_kImapSeen;
-	static const char *m_kImapAnswered;
-	static const char *m_kImapNotSeen;
-	static const char *m_kImapNotAnswered;
-	static const char *m_kImapCharset;
-	static const char *m_kImapUnDeleted;
+  // This stuff lives in the base class because the IMAP search syntax 
+  // is used by the Dredd SEARCH command as well as IMAP itself
+  static const char *m_kImapBefore;
+  static const char *m_kImapBody;
+  static const char *m_kImapCC;
+  static const char *m_kImapFrom;
+  static const char *m_kImapNot;
+  static const char *m_kImapOr;
+  static const char *m_kImapSince;
+  static const char *m_kImapSubject;
+  static const char *m_kImapTo;
+  static const char *m_kImapHeader;
+  static const char *m_kImapAnyText;
+  static const char *m_kImapKeyword;
+  static const char *m_kNntpKeywords;
+  static const char *m_kImapSentOn;
+  static const char *m_kImapSeen;
+  static const char *m_kImapAnswered;
+  static const char *m_kImapNotSeen;
+  static const char *m_kImapNotAnswered;
+  static const char *m_kImapCharset;
+  static const char *m_kImapUnDeleted;
 
 protected:
-	typedef enum _msg_TransformType
-   	{
-		kOverwrite,    /* "John Doe" -> "John*Doe",   simple contains   */
-		kInsert,       /* "John Doe" -> "John* Doe",  name completion   */
-		kSurround      /* "John Doe" -> "John* *Doe", advanced contains */
-	} msg_TransformType;
+  typedef enum _msg_TransformType
+  {
+	  kOverwrite,    /* "John Doe" -> "John*Doe",   simple contains   */
+	  kInsert,       /* "John Doe" -> "John* Doe",  name completion   */
+	  kSurround      /* "John Doe" -> "John* *Doe", advanced contains */
+  } msg_TransformType;
 
-	char *TransformSpacesToStars (const char *, msg_TransformType transformType);
-	nsresult OpenNewsResultInUnknownGroup (nsMsgResultElement*);
+  char *TransformSpacesToStars (const char *, msg_TransformType transformType);
+  nsresult OpenNewsResultInUnknownGroup (nsMsgResultElement*);
 
-	static nsresult EncodeImapTerm (nsIMsgSearchTerm *, PRBool reallyDredd, const PRUnichar *srcCharset, const PRUnichar *destCharset, char **ppOutTerm);
+  static nsresult EncodeImapTerm (nsIMsgSearchTerm *, PRBool reallyDredd, const PRUnichar *srcCharset, const PRUnichar *destCharset, char **ppOutTerm);
 };
 
 //-----------------------------------------------------------------------------
@@ -146,18 +146,18 @@ protected:
 class nsMsgSearchValidityTable : public nsIMsgSearchValidityTable
 {
 public:
-	nsMsgSearchValidityTable ();
-    NS_DECL_NSIMSGSEARCHVALIDITYTABLE
-    NS_DECL_ISUPPORTS
+  nsMsgSearchValidityTable ();
+  NS_DECL_NSIMSGSEARCHVALIDITYTABLE
+  NS_DECL_ISUPPORTS
 								  
 protected:
-	int m_numAvailAttribs;        // number of rows with at least one available operator
-	typedef struct vtBits
-	{
-		PRUint16 bitEnabled : 1;
-		PRUint16 bitAvailable : 1;
-		PRUint16 bitValidButNotShown : 1;
-	} vtBits;
+  int m_numAvailAttribs;        // number of rows with at least one available operator
+  typedef struct vtBits
+  {
+	  PRUint16 bitEnabled : 1;
+	  PRUint16 bitAvailable : 1;
+	  PRUint16 bitValidButNotShown : 1;
+  } vtBits;
   vtBits m_table [nsMsgSearchAttrib::kNumMsgSearchAttributes][nsMsgSearchOp::kNumMsgSearchOperators];
 private:    
   nsMsgSearchAttribValue m_defaultAttrib;

@@ -148,9 +148,11 @@ nsresult nsComm4xProfile::GetPrefValue(nsILocalFile *filePath, const char * pref
    PRInt32 offset;
    PRInt32 endOffset;
    while (!found && more) {
-       rv = lineStream->ReadLine(buffer, &more);
+      nsCAutoString cLine;
+       rv = lineStream->ReadLine(cLine, &more);
        if (NS_FAILED(rv))
            break;
+       CopyASCIItoUTF16(cLine, buffer);
        offset = buffer.Find(prefName,PR_FALSE, 0, -1);
        if (offset != kNotFound) {
            endOffset = buffer.Find(prefEnd,PR_FALSE, 0, -1);

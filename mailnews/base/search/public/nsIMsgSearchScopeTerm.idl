@@ -38,12 +38,14 @@
 
 #include "nsIMsgSearchSession.idl"
 
-interface nsIFileSpec;
+interface nsILocalFile;
 interface nsIMsgFolder;
+interface nsILineInputStream;
 
 [scriptable, uuid(10f5c44f-5a11-44e0-9b6b-4db81ba97963)]
 interface nsIMsgSearchScopeTerm : nsISupports {
-  readonly attribute nsIFileSpec mailPath;
+  readonly attribute nsILocalFile mailFile;
+  attribute nsIInputStream inputStream;
   readonly attribute nsIMsgFolder folder;
   readonly attribute nsIMsgSearchSession searchSession;
 };

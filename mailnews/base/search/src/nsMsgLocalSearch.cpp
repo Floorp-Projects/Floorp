@@ -246,9 +246,9 @@ void nsMsgSearchBoolExpression::GenerateEncodeStr(nsCString * buffer)
         // a ' ' to preceded the closing paren in the OR encoding.
         PRUint32 lastCharPos = buffer->Length() - 1;
         if (buffer->CharAt(lastCharPos) == ' ')
-		{
+        {
             buffer->Truncate(lastCharPos);
-		}
+        }
         
         *buffer += ')';
     }
@@ -282,9 +282,7 @@ nsMsgSearchOfflineMail::~nsMsgSearchOfflineMail ()
 
 nsresult nsMsgSearchOfflineMail::ValidateTerms ()
 {
-  nsresult err = NS_OK;
-	err = nsMsgSearchAdapter::ValidateTerms ();
-  return err;
+  return nsMsgSearchAdapter::ValidateTerms ();
 }
 
 
@@ -384,14 +382,14 @@ nsresult nsMsgSearchOfflineMail::ConstructExpressionTree(nsIMsgDBHdr *msgToMatch
 {
   PRBool result;
 
-	NS_ENSURE_ARG_POINTER(pResult);
+  NS_ENSURE_ARG_POINTER(pResult);
 
-	*pResult = PR_FALSE;
+  *pResult = PR_FALSE;
 
   // Don't even bother to look at expunged messages awaiting compression
   PRUint32 msgFlags;
   msgToMatch->GetFlags(&msgFlags);
-	if (msgFlags & MSG_FLAG_EXPUNGED)
+  if (msgFlags & MSG_FLAG_EXPUNGED)
     result = PR_FALSE;
     
   PRUint32 count;
@@ -478,7 +476,7 @@ nsresult nsMsgSearchOfflineMail::ProcessSearchTerm(nsIMsgDBHdr *msgToMatch,
 
     NS_ENSURE_ARG_POINTER(pResult);
 
-	*pResult = PR_FALSE;
+    *pResult = PR_FALSE;
 
     nsMsgSearchAttribValue attrib;
     aTerm->GetAttrib(&attrib);
@@ -629,8 +627,8 @@ nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
                           Filtering, &expressionTree, pResult);
 
   // evaluate the expression tree and return the result
-	if (NS_SUCCEEDED(err) && expressionTree)
-		*pResult = expressionTree->OfflineEvaluate();
+  if (NS_SUCCEEDED(err) && expressionTree)
+    *pResult = expressionTree->OfflineEvaluate();
   delete expressionTree;
 
   return err;
@@ -708,24 +706,15 @@ nsresult nsMsgSearchOfflineMail::Search (PRBool *aDone)
 
 void nsMsgSearchOfflineMail::CleanUpScope()
 {
-    // Let go of the DB when we're done with it so we don't kill the db cache
-    if (m_db)
-    {
-        m_listContext = nsnull; 
-        m_db->Close(PR_FALSE);
-    }
-    
-    m_db = nsnull;
-
-    nsCOMPtr <nsIFileSpec> fileSpec;
-	nsresult rv = m_scope->GetMailPath(getter_AddRefs(fileSpec));
-    PRBool isOpen = PR_FALSE;
-	if (NS_SUCCEEDED(rv) && fileSpec)
-	{
-       fileSpec->IsStreamOpen(&isOpen);
-       if (isOpen) 
-         fileSpec->CloseStream();    
-    }
+  // Let go of the DB when we're done with it so we don't kill the db cache
+  if (m_db)
+  {
+    m_listContext = nsnull; 
+    m_db->Close(PR_FALSE);
+  }
+  
+  m_db = nsnull;
+  m_scope->SetInputStream(nsnull);
 }
 
 NS_IMETHODIMP nsMsgSearchOfflineMail::AddResultElement (nsIMsgDBHdr *pHeaders)

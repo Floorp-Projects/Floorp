@@ -68,6 +68,7 @@ public:
   char *m_name;
   nsCOMPtr <nsIMsgFolder> m_folder;
   nsCOMPtr <nsIMsgSearchAdapter> m_adapter;
+  nsCOMPtr <nsIInputStream> m_inputStream; // for message bodies
   nsWeakPtr m_searchSession;
   PRBool m_searchServer;
   

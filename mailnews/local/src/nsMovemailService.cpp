@@ -406,13 +406,11 @@ nsMovemailService::GetNewMail(nsIMsgWindow *aMsgWindow,
             
     // MIDDLE of the FUN : consume the mailbox data.
     PRBool isMore = PR_TRUE;
-    nsAutoString bufferUnicode;
     nsCAutoString buffer;
 
     while (isMore &&
-           NS_SUCCEEDED(lineInputStream->ReadLine(bufferUnicode, &isMore)))
+           NS_SUCCEEDED(lineInputStream->ReadLine(buffer, &isMore)))
     {
-        CopyUCS2toASCII(bufferUnicode, buffer);
 
         // If first string is empty and we're now at EOF then abort parsing.
         if (buffer.IsEmpty() && !isMore) {

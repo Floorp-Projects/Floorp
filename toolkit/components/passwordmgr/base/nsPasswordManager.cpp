@@ -633,14 +633,13 @@ nsPasswordManager::ReadPasswords(nsIFile* aPasswordFile)
   NS_ASSERTION(lineStream, "File stream is not an nsILineInputStream");
 
   // Read the header
-  nsAutoString buffer;
   nsCAutoString utf8Buffer;
   PRBool moreData = PR_FALSE;
-  nsresult rv = lineStream->ReadLine(buffer, &moreData);
+  nsresult rv = lineStream->ReadLine(utf8Buffer, &moreData);
   if (NS_FAILED(rv))
     return NS_OK;
 
-  if (!buffer.Equals(NS_LITERAL_STRING("#2c"))) {
+  if (!utf8Buffer.Equals(NS_LITERAL_CSTRING("#2c"))) {
     NS_ERROR("Unexpected version header in signon file");
     return NS_OK;
   }
@@ -653,15 +652,9 @@ nsPasswordManager::ReadPasswords(nsIFile* aPasswordFile)
   PRBool writeOnFinish = PR_FALSE;
 
   do {
-    rv = lineStream->ReadLine(buffer, &moreData);
+    rv = lineStream->ReadLine(utf8Buffer, &moreData);
     if (NS_FAILED(rv))
       return NS_OK;
-
-    // |buffer| will contain UTF-8 encoded characters, so move it into
-    // a narrow string so we can manipulate it.  If NS_ReadLine is ever
-    // fixed to handle character encoding, this code should be cleaned up.
-
-    utf8Buffer.AssignWithConversion(buffer);
 
     switch (state) {
     case STATE_REJECT:

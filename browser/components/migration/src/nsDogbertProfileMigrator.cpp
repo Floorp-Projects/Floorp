@@ -392,7 +392,7 @@ nsDogbertProfileMigrator::FixDogbertCookies()
   if (!fileOutputStream) return NS_ERROR_OUT_OF_MEMORY;
 
   nsCOMPtr<nsILineInputStream> lineInputStream(do_QueryInterface(fileInputStream));
-  nsAutoString buffer, outBuffer;
+  nsCAutoString buffer, outBuffer;
   PRBool moreData = PR_FALSE;
   PRUint32 written = 0;
   do {
@@ -405,7 +405,7 @@ nsDogbertProfileMigrator::FixDogbertCookies()
     // skip line if it is a comment or null line
     if (buffer.IsEmpty() || buffer.CharAt(0) == '#' ||
         buffer.CharAt(0) == nsCRT::CR || buffer.CharAt(0) == nsCRT::LF) {
-      fileOutputStream->Write((const char*)buffer.get(), buffer.Length(), &written);
+      fileOutputStream->Write(buffer.get(), buffer.Length(), &written);
       continue;
     }
 
@@ -421,7 +421,7 @@ nsDogbertProfileMigrator::FixDogbertCookies()
       continue;
 
     // separate the expires field from the rest of the cookie line
-    nsAutoString prefix, expiresString, suffix;
+    nsCAutoString prefix, expiresString, suffix;
     buffer.Mid(prefix, hostIndex, expiresIndex-hostIndex-1);
     buffer.Mid(expiresString, expiresIndex, nameIndex-expiresIndex-1);
     buffer.Mid(suffix, nameIndex, buffer.Length()-nameIndex);
@@ -440,14 +440,12 @@ nsDogbertProfileMigrator::FixDogbertCookies()
 
     // generate the output buffer and write it to file
     outBuffer = prefix;
-    outBuffer.Append(PRUnichar('\t'));
-    outBuffer.AppendWithConversion(dateString);
-    outBuffer.Append(PRUnichar('\t'));
+    outBuffer.Append('\t');
+    outBuffer.Append(dateString);
+    outBuffer.Append('\t');
     outBuffer.Append(suffix);
 
-    nsCAutoString convertedBuffer;
-    convertedBuffer.Assign(NS_ConvertUCS2toUTF8(outBuffer));
-    fileOutputStream->Write(convertedBuffer.get(), convertedBuffer.Length(), &written);
+    fileOutputStream->Write(outBuffer.get(), outBuffer.Length(), &written);
   }
   while (1);
   
@@ -511,7 +509,7 @@ nsDogbertProfileMigrator::MigrateDogbertBookmarks()
   if (!outputStream) return NS_ERROR_OUT_OF_MEMORY;
 
   nsCOMPtr<nsILineInputStream> lineInputStream(do_QueryInterface(fileInputStream));
-  nsAutoString sourceBuffer;
+  nsCAutoString sourceBuffer;
   nsCAutoString targetBuffer;
   PRBool moreData = PR_FALSE;
   PRUint32 bytesWritten = 0;
@@ -525,14 +523,14 @@ nsDogbertProfileMigrator::MigrateDogbertBookmarks()
     PRInt32 nameOffset = sourceBuffer.Find(toolbarName);
     if (nameOffset >= 0) {
       // Found the personal toolbar name on a line, check to make sure it's actually a folder. 
-      NS_NAMED_LITERAL_STRING(folderPrefix, "<DT><H3 ");
+      NS_NAMED_LITERAL_CSTRING(folderPrefix, "<DT><H3 ");
       PRInt32 folderPrefixOffset = sourceBuffer.Find(folderPrefix);
       if (folderPrefixOffset >= 0)
-        sourceBuffer.Insert(NS_LITERAL_STRING("PERSONAL_TOOLBAR_FOLDER=\"true\" "), 
+        sourceBuffer.Insert(NS_LITERAL_CSTRING("PERSONAL_TOOLBAR_FOLDER=\"true\" "), 
                             folderPrefixOffset + folderPrefix.Length());
     }
 
-    targetBuffer.Assign(NS_ConvertUCS2toUTF8(sourceBuffer));
+    targetBuffer.Assign(sourceBuffer);
     targetBuffer.Append("\r\n");
     outputStream->Write(targetBuffer.get(), targetBuffer.Length(), &bytesWritten);
   }
