@@ -797,6 +797,7 @@ function saveEventsToFile( calendarEventArray )
          break;
       case 6 : // vcs
          aDataStream = eventArrayToICalString( calendarEventArray, true );
+         aDataStream = patchICalStringForVCal( aDataStream );
          extension   = extensionvCalendar;
          charset = "UTF-8";
          break;
@@ -904,6 +905,184 @@ function patchICalStringForExport( sTextiCalendar )
   return sTextiCalendar;
 }
 
+/**
+ * patchICalStringForVCal:
+ *   iCal (v2.0) [rfc2445sec4.1] says lines can be broken anywhere
+ *     to comply with 75-octet line length (SHOULD NOT be longer)
+ *   vCal (v1.0) [vCalendar1.0sec 2.1.3] says lines can only be broken
+ *     at places where there may be linear white space, and does not give 
+ *     a general max line length, though says quoted-printable lines should be
+ *     less than 76 characters. 
+ * 
+ *   Quoted-printable lines are continued with an = just before the crlf.
+ *
+ *   So approach is to eliminate breaks in lines except quoted-printable ones.
+ *   Replace      DESCRIPTION:line1\nline2
+ *   with         DESCRIPTION;ENCODING=QUOTED-PRINTABLE:=
+ *                 line1=0D=0A=
+ *                 line2
+ *
+ *   Also breaks single long values in aribrary text values
+ *   (COMMENT,DESCRIPTION,LOCATION,SUMMARY,CONTACT,RESOURCES)
+ *   using quoted-printable line breaks (end line with =), and
+ *   replaces \, with , in these values.
+ *
+ *   Converts version number to 1.0, as ENCODING=QUOTED-PRINTABLE is not
+ *   part of the version 2.0 standard (it defers to transport MIME encoding).
+ */
+function patchICalStringForVCal( sTextiCalendar )
+{
+  // replace "\r\n " or "\r\n\t" with "" except when it follows "=".
+  // i.e., replace [char-other-than-"="] followed by \r\n then [space-or-tab],
+  // with just the captured ([char-other-than-"="])
+  var unfolded = sTextiCalendar.replace(/([^=])\r\n[ \t]/g, "$1");
+  var lines = unfolded.split("\r\n");
+  // Replace "\\n" in TEXT values with "=0D=0A\r\n ":
+  // - look for (property name and params) folowed by colon
+  //   followed by (text with 'n' immediately preceded by an odd number of '\').
+  //   Assumes params may not contain a colon.
+  //   Assumes only text values contain "\\n"
+  var multilinePropertyRegExp = /^([^:]+):((?:.*[^\\](?:[\\][\\])*)?\\n.*)$/;
+  var longTextPropertyRegExp =
+    /^((?:COMMENT|DESCRIPTION|LOCATION|SUMMARY|CONTACT|RESOURCES)[^:]*):(.*)$/;
+  for (var i = 0; i < lines.length; i++)
+  {
+    var matchedMultiLineParts = lines[i].match(multilinePropertyRegExp);
+    if (matchedMultiLineParts)
+    {
+      var propertyAndParams = matchedMultiLineParts[1];
+      propertyAndParams = propertyAndParams+";ENCODING=QUOTED-PRINTABLE";
+
+      var value = matchedMultiLineParts[2];
+      // Replace "\\n" in text values with "=0D=0A\r\n ":
+      value = value.replace(/\\n/g,
+                            //replace if odd number of backslashes precede n
+                            function(match, offset, whole) {
+                              if (hasOddBackslashCount(whole, offset)){
+                                return "=0D=0A=\r\n "; // odd, so replace
+                              } else {
+                                return match;          // even, so keep \n
+                              }
+                            });
+      // trim if ends with "=0D=0A=\r\n ", to "=0D=0A"
+      if (endsWith(value, "=0D=0A=\r\n "))
+        value = value.substring(0, value.length - "=\r\n ".length);
+      // Replace "\\," in text values with ",":
+      value = replaceBackslashComma(value);
+      // limit line length
+      value = breakIntoContinuationLines(value, true);
+
+      lines[i] = propertyAndParams + ":=\r\n " + value;
+      continue;
+    } 
+
+    var matchedLongTextParts = lines[i].match(longTextPropertyRegExp);
+    if (matchedLongTextParts) // maxlen
+    {
+      /*var*/ propertyAndParams = matchedLongTextParts[1];
+      /*var*/ value = matchedLongTextParts[2];
+
+      value = replaceBackslashComma(value);
+
+      if (propertyAndParams.length + ":".length + value.length > 75)
+        value = "\r\n "+breakIntoContinuationLines(value, false);
+
+      lines[i] = propertyAndParams + ":" + value;
+      continue;
+    }
+
+    if (lines[i]=="VERSION:2.0")
+    {
+      lines[i] = "VERSION:1.0";
+      continue;
+    }
+  }
+  return lines.join("\r\n")+"\r\n";
+}
+
+/** Replace \, with , if there is an odd number of backslashes. */
+function replaceBackslashComma(value) 
+{
+  return value.replace(/\\,/g,
+                       //replace if odd number of backslashes precede n
+                       function(match, offset, whole) {
+                         if (hasOddBackslashCount(whole, offset)){
+                           return ",";            // odd, so replace
+                         } else {
+                           return match;          // even, so keep \,
+                         }
+                       });
+}
+
+
+/** whole is string.  Offset is position to look for last backslash.
+    Returns true if there are an odd number of preceding backslashes,
+    ending with the one at offset.  Returns false if offset does not
+    point to a backslash, or there are an even number before offset inclusive.
+ **/
+function hasOddBackslashCount(whole, offset)
+{
+  var backSlashCount = 0;
+  for (var i = offset; i >= 0; i--) {
+    if (whole.charAt(i) == "\\")
+      ++backSlashCount;
+    else
+      break;
+  }
+  return backSlashCount & 1;
+}
+
+/**
+ * Break long lines in string value into shorter continuations.
+ * If useQuotedPrintable, then lines are delimited by "=0D=0A=\r\n ",
+ * else they are delimited by "\r\n ";
+ * If useQUotedPrintable, then continuations are separated with "=\r\n ",
+ * else they are separated with "\r\n ";
+ */
+function breakIntoContinuationLines(value, useQuotedPrintable)
+{
+  var lineDelimiter = (useQuotedPrintable? "=0D=0A=\r\n " : "\r\n ");
+  var lineContinuer = (useQuotedPrintable? "=\r\n " : "\r\n ");
+  // leave room to add "=\r\n " or "\r\n " and still be 75 chars or less.
+  var maxLen = 75 - lineContinuer.length;
+  if (value.length > maxLen) {
+    var lines = value.split(lineDelimiter); // existing split
+    for (var i = 0; i < lines.length; i++) {
+      var line = lines[i];
+      if (line.length > maxLen) {
+        var lineParts = new Array();
+        var start = 0; // start of part of line
+        for (var end = maxLen; end < line.length; end+=maxLen) {
+          // for clarity, try to break on whitespace.
+          for(; end > 0; end--) { 
+            var c = line.charAt(end - 1);
+            if (c == " " || c == "\t")
+              break;
+          }
+          if (end == start) // line was filled with nonbreaks
+            end = start + maxLen;
+          lineParts[lineParts.length] = line.substring(start, end);
+          start = end;
+        }
+        lineParts[lineParts.length] = line.substring(start);
+        lines[i] = lineParts.join(lineContinuer);
+      }
+    }
+    value = lines.join(lineDelimiter);
+  }
+  return value;
+}
+
+function endsWith(whole, part) {
+  if (part.length <= whole.length) {
+    for (var i = 1; i <=part.length; i++)
+      if (part[part.length - i] != whole[whole.length - i])
+        return false;
+    return true;
+  } else {
+    return false;
+  }
+}
 
 /** 
 * Converts a array of events to a block of HTML code
