@@ -92,7 +92,7 @@ typedef enum _FTP_STATE {
 //// Data channel connection setup states
 ///////////////////////
     FTP_S_PASV,     // send passsive
-    FTP_R_PASV,
+    FTP_R_PASV
 //    FTP_S_PORT,     // send port
 //    FTP_R_PORT
 
