@@ -39,15 +39,17 @@
 
 #include "nsISupports.idl"
 
+interface nsIDOMNode;
+interface nsIDOMElement;
+interface nsIDOMRange;
+
 [scriptable, uuid(4805e684-49b9-11d3-9ce4-ed60bd6cb5bc)]
 
 interface nsITableEditor : nsISupports
 {
-  enum { 
-    eNoSearch, 
-    ePreviousColumn, 
-    ePreviousRow 
-  };
+  const short eNoSearch = 0;
+  const short ePreviousColumn = 1;
+  const short ePreviousRow = 2;
 
   /* ------------ Table editing Methods -------------- */
 
@@ -61,9 +63,9 @@ interface nsITableEditor : nsISupports
     * @param aAfter     If TRUE, insert after the current cell,
     *                     else insert before current cell
     */
-  void InsertTableCell(in long  aNumber, in boolean aAfter);
-  void InsertTableColumn(in long  aNumber, in boolean aAfter);
-  void InsertTableRow(in long  aNumber, in boolean aAfter);
+  void insertTableCell(in long  aNumber, in boolean aAfter);
+  void insertTableColumn(in long  aNumber, in boolean aAfter);
+  void insertTableRow(in long  aNumber, in boolean aAfter);
 
   /** Delete table methods
     * Delete starting at the selected cell or the 
@@ -75,13 +77,13 @@ interface nsITableEditor : nsISupports
     *
     * @param aNumber    Number of items to insert/delete
     */
-  void DeleteTable();
+  void deleteTable();
 
   /** Delete just the cell contents
     * This is what should happen when Delete key is used
     *   for selected cells, to minimize upsetting the table layout
     */
-  void DeleteTableCellContents();
+  void deleteTableCellContents();
 
   /** Delete cell elements as well as contents
     * @param aNumber   Number of contiguous cells, rows, or columns
@@ -92,15 +94,15 @@ interface nsITableEditor : nsISupports
     *  user simply selects a cell in each, and they don't
     *  have to be contiguous.
     */
-  void DeleteTableCell(in long  aNumber);
-  void DeleteTableColumn(in long  aNumber);
-  void DeleteTableRow(in long  aNumber);
+  void deleteTableCell(in long  aNumber);
+  void deleteTableColumn(in long  aNumber);
+  void deleteTableRow(in long  aNumber);
 
   /** Table Selection methods
     * Selecting a row or column actually
     * selects all cells (not TR in the case of rows)
     */
-  void SelectTableCell();
+  void selectTableCell();
 
   /** Select a rectangular block of cells:
     *  all cells falling within the row/column index of aStartCell
@@ -110,12 +112,13 @@ interface nsITableEditor : nsISupports
     *  @param aStartCell  starting cell in block
     *  @param aEndCell    ending cell in block
     */
-  void SelectBlockOfCells(in nsIDOMElement aStartCell, in nsIDOMElement aEndCell);
+  void selectBlockOfCells(in nsIDOMElement aStartCell,
+                          in nsIDOMElement aEndCell);
 
-  void SelectTableRow();
-  void SelectTableColumn();
-  void SelectTable();
-  void SelectAllTableCells();
+  void selectTableRow();
+  void selectTableColumn();
+  void selectTable();
+  void selectAllTableCells();
 
   /** Create a new TD or TH element, the opposite type of the supplied aSourceCell
     *   1. Copy all attributes from aSourceCell to the new cell
@@ -123,9 +126,9 @@ interface nsITableEditor : nsISupports
     *   3. Replace aSourceCell in the table with the new cell
     *
     *  @param aSourceCell   The cell to be replaced
-    *  @param aNewCell      The new cell that replaces aSourceCell
+    *  @return              The new cell that replaces aSourceCell
     */
-  void SwitchTableCellHeaderType(in nsIDOMElement aSourceCell, out nsIDOMElement aNewCell);
+  nsIDOMElement switchTableCellHeaderType(in nsIDOMElement aSourceCell);
 
   /** Merges contents of all selected cells
     * for selected cells that are adjacent,
@@ -147,7 +150,7 @@ interface nsITableEditor : nsISupports
     *   that cell and the one to the right 
     *   are merged
     */
-  void JoinTableCells(in boolean aMergeNonContiguousContents);
+  void joinTableCells(in boolean aMergeNonContiguousContents);
 
   /** Split a cell that has rowspan and/or colspan > 0
     *   into cells such that all new cells have 
@@ -155,7 +158,7 @@ interface nsITableEditor : nsISupports
     *  All of the contents are not touched --
     *   they will appear to be in the upper-left cell 
     */
-  void SplitTableCell();
+  void splitTableCell();
 
   /** Scan through all rows and add cells as needed so 
     *   all locations in the cellmap are occupied.
@@ -167,20 +170,22 @@ interface nsITableEditor : nsISupports
     *   thus it can be used to fixup all tables
     *   in a page independant of the selection
     */
-  void NormalizeTable(in nsIDOMElement aTable);
+  void normalizeTable(in nsIDOMElement aTable);
 
   /** Get the row an column index from the layout's cellmap
     * If aTable is null, it will try to find enclosing table of selection ancho
     * 
     */
-  void GetCellIndexes(in nsIDOMElement aCell, out long  aRowIndex, out long  aColIndex);
+  void getCellIndexes(in nsIDOMElement aCell,
+                      out long aRowIndex, out long aColIndex);
 
   /** Get the number of rows and columns in a table from the layout's cellmap
     * If aTable is null, it will try to find enclosing table of selection ancho
     * Note that all rows in table will not have this many because of 
     * ROWSPAN effects or if table is not "rectangular" (has short rows)
     */
-  void GetTableSize(in nsIDOMElement aTable, out long  aRowCount, out long  aColCount);
+  void getTableSize(in nsIDOMElement aTable,
+                    out long aRowCount, out long aColCount);
 
   /** Get a cell element at cellmap grid coordinates
     * A cell that spans across multiple cellmap locations will
@@ -189,12 +194,14 @@ interface nsITableEditor : nsISupports
     * @param aTable                   A table in the document
     * @param aRowIndex, aColIndex     The 0-based cellmap indexes
     *
-    * Returns NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found (passes NS_SUCCEEDED macro)
+    * Returns NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found
+    * (passes NS_SUCCEEDED macro)
     *   You can scan for all cells in a row or column
     *   by iterating through the appropriate indexes
     *   until the returned aCell is null
     */
-  void GetCellAt(in nsIDOMElement aTable, in long  aRowIndex, in long  aColIndex, out nsIDOMElement aCell);
+  nsIDOMElement getCellAt(in nsIDOMElement aTable,
+                          in long aRowIndex, in long aColIndex);
 
   /** Get a cell at cellmap grid coordinates and associated data
     * A cell that spans across multiple cellmap locations will
@@ -220,35 +227,34 @@ interface nsITableEditor : nsISupports
     *
     * Returns NS_EDITOR_ELEMENT_NOT_FOUND if a cell is not found (passes NS_SUCCEEDED macro)
     */
-  void GetCellDataAt(in nsIDOMElement aTable, in long  aRowIndex, in long  aColIndex, out nsIDOMElement aCell,
-                           out long  aStartRowIndex, out long  aStartColIndex,
-                           out long  aRowSpan, out long  aColSpan, 
-                           out long  aActualRowSpan, out long  aActualColSpan, 
-                           out boolean aIsSelected);
+  void getCellDataAt(in nsIDOMElement aTable,
+                     in long  aRowIndex, in long  aColIndex,
+                     out nsIDOMElement aCell,
+                     out long  aStartRowIndex, out long  aStartColIndex,
+                     out long  aRowSpan, out long  aColSpan, 
+                     out long  aActualRowSpan, out long  aActualColSpan, 
+                     out boolean aIsSelected);
 
   /** Get the first row element in a table
     *
-    * @param aTableElement Any TABLE or child-of-table element in the document
-    * @param aRowIndex     The 0-based index of the row
-    *
-    * Returns:
-    * @param aRow        The row at the requested index
+    * @return            The row at the requested index
     *                    Returns null if there are no rows in table
-    * Returns NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found (passes NS_SUCCEEDED macro)
+    * Returns (to C++) NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found
+    * (passes NS_SUCCEEDED macro)
     */
-  void GetFirstRow(in nsIDOMElement aTableElement, out nsIDOMElement aRow);
+  nsIDOMNode getFirstRow(in nsIDOMElement aTableElement);
 
   /** Get the next row element starting the search from aTableElement
     *
     * @param aTableElement Any TR or child-of-TR element in the document
     *
-    * Returns:
-    * @param aRow        The row to start search from
+    * @return            The row to start search from
     *                    and the row returned from the search
     *                    Returns null if there isn't another row
-    * Returns NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found (passes NS_SUCCEEDED macro)
+    * Returns (to C++) NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found
+    * (passes NS_SUCCEEDED macro)
     */
-  void GetNextRow(in nsIDOMElement aTableElement, out nsIDOMElement aRow);
+  nsIDOMNode getNextRow(in nsIDOMNode aTableElement);
   
   /** Preferred direction to search for neighboring cell
     * when trying to locate a cell to place caret in after
@@ -273,64 +279,76 @@ interface nsITableEditor : nsISupports
     *                     and can use the nsSetSelectionAfterTableEdit stack-based 
     *                     object to insure we reset the caret in a table-editing method.
     */
-  void SetSelectionAfterTableEdit(in nsIDOMElement aTable, in long  aRow, in long  aCol, 
-                                        in long  aDirection, in boolean aSelected);
+  void setSelectionAfterTableEdit(in nsIDOMElement aTable,
+                                  in long aRow, in long aCol, 
+                                  in long aDirection, in boolean aSelected);
 
   /** Examine the current selection and find
     *   a selected TABLE, TD or TH, or TR element.
     *   or return the parent TD or TH if selection is inside a table cell
     *   Returns null if no table element is found.
     *
-    * @param aTableElement      The table element (table, row, or cell) returned
-    * @param aTagName           The tagname of returned element
-    *                           Note that "td" will be returned if name is actually "th"
-    * @param aSelectedCount     How many table elements were selected
-    *                           This tells us if we have multiple cells selected
-    *                             (0 if element is a parent cell of selection)
+    * @param aTableElement    The table element (table, row, or cell) returned
+    * @param aTagName         The tagname of returned element
+    *                         Note that "td" will be returned if name
+    *                         is actually "th"
+    * @return                 How many table elements were selected
+    *                         This tells us if we have multiple cells selected
+    *                           (0 if element is a parent cell of selection)
     *
-    * Returns NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found (passes NS_SUCCEEDED macro)
+    * Returns NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found
+    * (passes NS_SUCCEEDED macro)
     */
-  void GetSelectedOrParentTableElement(out nsIDOMElement aTableElement, nsString& aTagName, out long aSelectedCount);
+  long getSelectedOrParentTableElement(out nsIDOMElement aTableElement,
+                                       out AString aTagName);
 
   /** Generally used after GetSelectedOrParentTableElement
     *   to test if selected cells are complete rows or columns
     * 
-    * @param aElement           Any table or cell element or any element inside a table
+    * @param aElement           Any table or cell element or any element
+    *                           inside a table
     *                           Used to get enclosing table. 
     *                           If null, selection's anchorNode is used
     * 
-    * @param aSelectionType     Returns:
-    *                             0                        aCellElement was not a cell (returned result = NS_ERROR_FAILURE)
-    *                             TABLESELECTION_CELL      There are 1 or more cells selected
-    *                                                        but complete rows or columns are not selected
-    *                             TABLESELECTION_ROW       All cells are in 1 or more rows
-    *                                                       and in each row, all cells selected
-    *                                                       Note: This is the value if all rows (thus all cells) are selected
-    *                             TABLESELECTION_COLUMN    All cells are in 1 or more columns
-    *                                                       and in each column, all cells are selected
+    * @return
+    *     0                        aCellElement was not a cell
+    *                              (returned result = NS_ERROR_FAILURE)
+    *     TABLESELECTION_CELL      There are 1 or more cells selected but
+    *                              complete rows or columns are not selected
+    *     TABLESELECTION_ROW       All cells are in 1 or more rows
+    *                              and in each row, all cells selected
+    *                              Note: This is the value if all rows
+    *                              (thus all cells) are selected
+    *     TABLESELECTION_COLUMN    All cells are in 1 or more columns
+    *                              and in each column, all cells are selected
     */
-  void GetSelectedCellsType(nsIDOMElement *aElement, PRUint32 &aSelectionType);
+  PRUint32 getSelectedCellsType(in nsIDOMElement aElement);
 
   /** Get first selected element from first selection range.
     * Assumes cell-selection model where each cell
     * is in a separate range (selection parent node is table row)
-    * @param aCell     Selected cell or null if ranges don't contain cell selections
-    * @param aRange    Optional: if not null, return the selection range 
+    * @param aCell     [OUT] Selected cell or null if ranges don't contain
+    *                  cell selections
+    * @param aRange    [OUT] Optional: if not null, return the selection range 
     *                     associated with the cell
-    * Returns NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found (passes NS_SUCCEEDED macro)
+    * Returns NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found
+    * (passes NS_SUCCEEDED macro)
     */
-  void GetFirstSelectedCell(nsIDOMElement **aCell, nsIDOMRange **aRange);
+  void getFirstSelectedCell(out nsIDOMElement aCell, out nsIDOMRange aRange);
   
   /** Get first selected element from first selection range.
     * Assumes cell-selection model where each cell
     * is in a separate range (selection parent node is table row)
-    * @param aCell       Selected cell or null if ranges don't contain cell selections
-    * @param aRowIndex   Optional: if not null, return the row index of first cell
-    * @param aColIndex   Optional: if not null, return the column index of first cell
+    * @param aCell       Selected cell or null if ranges don't contain
+    *                    cell selections
+    * @param aRowIndex   Optional: if not null, return row index of 1st cell
+    * @param aColIndex   Optional: if not null, return column index of 1st cell
     *
-    * Returns NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found (passes NS_SUCCEEDED macro)
+    * Returns NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found
+    * (passes NS_SUCCEEDED macro)
     */
-  void GetFirstSelectedCellInTable(nsIDOMElement **aCell, PRInt32 *aRowIndex, PRInt32 *aColIndex);
+  void getFirstSelectedCellInTable(out nsIDOMElement aCell,
+                                   out long aRowIndex, out long aColIndex);
 
   /** Get next selected cell element from first selection range.
     * Assumes cell-selection model where each cell
@@ -341,6 +359,6 @@ interface nsITableEditor : nsISupports
     * @param aRange    Optional: if not null, return the selection range 
     *                     associated with the cell
     */
-  void GetNextSelectedCell(nsIDOMElement **aCell, nsIDOMRange **aRange);
+  void getNextSelectedCell(out nsIDOMElement aCell, out nsIDOMRange aRange);
 };
 

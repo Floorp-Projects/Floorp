@@ -718,7 +718,7 @@ nsHTMLEditRules::GetAlignment(PRBool *aMixed, nsIHTMLEditor::EAlignment *aAlign)
   if (!nodeToExamine) return NS_ERROR_NULL_POINTER;
 
   PRBool useCSS;
-  mHTMLEditor->IsCSSEnabled(&useCSS);
+  mHTMLEditor->GetIsCSSEnabled(&useCSS);
   NS_NAMED_LITERAL_STRING(typeAttrName, "align");
   nsIAtom  *dummyProperty = nsnull;
   if (useCSS && mHTMLEditor->mHTMLCSSUtils->IsCSSEditableProperty(nodeToExamine, dummyProperty, &typeAttrName))
@@ -827,7 +827,7 @@ nsHTMLEditRules::GetIndentState(PRBool *aCanIndent, PRBool *aCanOutdent)
   PRInt32 i;
   arrayOfNodes->Count(&listCount);
   PRBool useCSS;
-  mHTMLEditor->IsCSSEnabled(&useCSS);
+  mHTMLEditor->GetIsCSSEnabled(&useCSS);
   for (i=(PRInt32)listCount-1; i>=0; i--)
   {
     nsCOMPtr<nsISupports> isupports = dont_AddRef(arrayOfNodes->ElementAt(i));
@@ -3029,7 +3029,7 @@ nsHTMLEditRules::WillIndent(nsISelection *aSelection, PRBool *aCancel, PRBool * 
 {
   PRBool useCSS;
   nsresult res;
-  mHTMLEditor->IsCSSEnabled(&useCSS);
+  mHTMLEditor->GetIsCSSEnabled(&useCSS);
   
   if (useCSS) {
     res = WillCSSIndent(aSelection, aCancel, aHandled);
@@ -3408,7 +3408,7 @@ nsHTMLEditRules::WillOutdent(nsISelection *aSelection, PRBool *aCancel, PRBool *
   nsresult res = NS_OK;
   nsCOMPtr<nsIDOMNode> rememberedLeftBQ, rememberedRightBQ;
   PRBool useCSS;
-  mHTMLEditor->IsCSSEnabled(&useCSS);
+  mHTMLEditor->GetIsCSSEnabled(&useCSS);
 
   res = NormalizeSelection(aSelection);
   if (NS_FAILED(res)) return res;
@@ -4008,7 +4008,7 @@ nsHTMLEditRules::WillAlign(nsISelection *aSelection,
   nsCOMPtr<nsIDOMNode> curParent;
   nsCOMPtr<nsIDOMNode> curDiv;
   PRBool useCSS;
-  mHTMLEditor->IsCSSEnabled(&useCSS);
+  mHTMLEditor->GetIsCSSEnabled(&useCSS);
   for (i=0; i<(PRInt32)listCount; i++)
   {
     // here's where we actually figure out what to do
@@ -4145,7 +4145,7 @@ nsHTMLEditRules::AlignBlockContents(nsIDOMNode *aNode, const nsAReadableString *
   nsCOMPtr <nsIDOMNode> firstChild, lastChild, divNode;
   
   PRBool useCSS;
-  mHTMLEditor->IsCSSEnabled(&useCSS);
+  mHTMLEditor->GetIsCSSEnabled(&useCSS);
 
   res = mHTMLEditor->GetFirstEditableChild(aNode, address_of(firstChild));
   if (NS_FAILED(res)) return res;
@@ -5012,7 +5012,7 @@ nsHTMLEditRules::GetNodesForOperation(nsISupportsArray *inArrayOfRanges,
   nsCOMPtr<nsISupports> isupports;
 
   PRBool useCSS;
-  mHTMLEditor->IsCSSEnabled(&useCSS);
+  mHTMLEditor->GetIsCSSEnabled(&useCSS);
 
   // bust up any inlines that cross our range endpoints,
   // but only if we are allowed to touch content.
@@ -7713,7 +7713,7 @@ nsHTMLEditRules::RemoveAlignment(nsIDOMNode * aNode, nsAReadableString & aAlignT
     aNode->GetFirstChild(getter_AddRefs(child));
   }
   PRBool useCSS;
-  mHTMLEditor->IsCSSEnabled(&useCSS);
+  mHTMLEditor->GetIsCSSEnabled(&useCSS);
 
   while (child)
   {
@@ -7904,7 +7904,7 @@ nsHTMLEditRules::AlignBlock(nsIDOMElement * aElement, const nsAReadableString * 
   if (NS_FAILED(res)) return res;
   NS_NAMED_LITERAL_STRING(attr, "align");
   PRBool useCSS;
-  mHTMLEditor->IsCSSEnabled(&useCSS);
+  mHTMLEditor->GetIsCSSEnabled(&useCSS);
   if (useCSS) {
     // let's use CSS alignment; we use margin-left and margin-right for tables
     // and text-align for other block-level elements

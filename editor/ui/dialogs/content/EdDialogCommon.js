@@ -1179,8 +1179,8 @@ function InsertElementAroundSelection(element)
     while (anchor)
     {
       node = anchor.nextSibling;
-      editor.DeleteNode(anchor);
-      editor.InsertNode(anchor, element, element.childNodes.length);
+      editor.deleteNode(anchor);
+      editor.insertNode(anchor, element, element.childNodes.length);
       if (anchor == focus) break;
       anchor = node;
     }
@@ -1207,8 +1207,8 @@ function RemoveElementKeepingChildren(element)
         offset++;
       while ((node = element.firstChild))
       {
-        editor.DeleteNode(node);
-        editor.InsertNode(node, parent, offset++);
+        editor.deleteNode(node);
+        editor.insertNode(node, parent, offset++);
       }
     }
     editorShell.DeleteElement(element);

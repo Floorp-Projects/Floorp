@@ -125,7 +125,7 @@ NS_IMETHODIMP nsHTMLEditor::SetCSSInlineProperty(nsIAtom *aProperty,
   nsresult res = NS_OK;
   PRBool useCSS;
 
-  IsCSSEnabled(&useCSS);
+  GetIsCSSEnabled(&useCSS);
   if (useCSS) {
     res = SetInlineProperty(aProperty, aAttribute, aValue);
   }
@@ -397,7 +397,7 @@ nsHTMLEditor::SetInlinePropertyOnNode( nsIDOMNode *aNode,
   ToLowerCase(tag);
   
   PRBool useCSS;
-  IsCSSEnabled(&useCSS);
+  GetIsCSSEnabled(&useCSS);
 
   if (useCSS) {
     // we are in CSS mode
@@ -580,7 +580,7 @@ nsresult nsHTMLEditor::SplitStyleAbovePoint(nsCOMPtr<nsIDOMNode> *aNode,
   PRInt32 offset;
 
   PRBool useCSS;
-  IsCSSEnabled(&useCSS);
+  GetIsCSSEnabled(&useCSS);
 
   PRBool isSet;
   while (tmp && !IsBlockNode(tmp))
@@ -677,7 +677,7 @@ nsresult nsHTMLEditor::RemoveStyleInside(nsIDOMNode *aNode,
   }
   else {
     PRBool useCSS;
-    IsCSSEnabled(&useCSS);
+    GetIsCSSEnabled(&useCSS);
 
     if (!aChildrenOnly
         && useCSS && mHTMLCSSUtils->IsCSSEditableProperty(aNode, aProperty, aAttribute)) {
@@ -908,7 +908,7 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom *aProperty,
   PRBool first=PR_TRUE;
 
   PRBool useCSS;
-  IsCSSEnabled(&useCSS);
+  GetIsCSSEnabled(&useCSS);
 
   nsCOMPtr<nsISelection>selection;
   result = GetSelection(getter_AddRefs(selection));
@@ -1154,7 +1154,7 @@ nsresult nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom *aProperty, const nsARea
   selection->GetIsCollapsed(&isCollapsed);
 
   PRBool useCSS;
-  IsCSSEnabled(&useCSS);
+  GetIsCSSEnabled(&useCSS);
 
   if (isCollapsed)
   {
@@ -1799,7 +1799,7 @@ nsHTMLEditor::GetFontColorState(PRBool *aMixed, nsAWritableString &aOutColor)
 // can handle CSS styles (for instance, Composer can, Messenger can't) and if
 // the CSS preference is checked
 nsresult
-nsHTMLEditor::IsCSSEnabled(PRBool *aIsCSSEnabled)
+nsHTMLEditor::GetIsCSSEnabled(PRBool *aIsCSSEnabled)
 {
   *aIsCSSEnabled = PR_FALSE;
   if (mCSSAware) {

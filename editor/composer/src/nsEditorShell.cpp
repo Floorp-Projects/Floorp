@@ -251,12 +251,12 @@ nsEditorShell::nsEditorShell()
 ,  mCloseWindowWhenLoaded(PR_FALSE)
 ,  mCantEditReason(eCantEditNoReason)
 ,  mEditorType(eUninitializedEditorType)
+,  mEditorTypeString(NS_LITERAL_STRING("html"))
 ,  mContentMIMEType("text/html")
 ,  mContentTypeKnown(PR_FALSE)
 ,  mWrapColumn(0)
 ,  mSuggestedWordIndex(0)
 ,  mDictionaryIndex(0)
-,  mEditorTypeString(NS_LITERAL_STRING("html"))
 {
   //TODO:Save last-used display mode in prefs so new window inherits?
   NS_INIT_REFCNT();
@@ -3674,7 +3674,7 @@ nsEditorShell::GetRowIndex(nsIDOMElement *cellElement, PRInt32 *_retval)
         {
           // Get both row and column indexes - return just row
           PRInt32 colIndex;
-          result = tableEditor->GetCellIndexes(cellElement, *_retval, colIndex);
+          result = tableEditor->GetCellIndexes(cellElement, _retval, &colIndex);
         }
       }
       break;
@@ -3700,7 +3700,7 @@ nsEditorShell::GetColumnIndex(nsIDOMElement *cellElement, PRInt32 *_retval)
         {
           // Get both row and column indexes - return just column
           PRInt32 rowIndex;
-          result = tableEditor->GetCellIndexes(cellElement, rowIndex, *_retval);
+          result = tableEditor->GetCellIndexes(cellElement, &rowIndex, _retval);
         }
       }
       break;
@@ -3727,7 +3727,7 @@ nsEditorShell::GetTableRowCount(nsIDOMElement *tableElement, PRInt32 *_retval)
         {
           // This returns both the number of rows and columns: return just rows
           PRInt32 cols;
-          result = tableEditor->GetTableSize(tableElement, *_retval, cols);
+          result = tableEditor->GetTableSize(tableElement, _retval, &cols);
         }
       }
       break;
@@ -3754,7 +3754,7 @@ nsEditorShell::GetTableColumnCount(nsIDOMElement *tableElement, PRInt32 *_retval
         {
           // This returns both the number of rows and columns: return just columns
           PRInt32 rows;
-          result = tableEditor->GetTableSize(tableElement, rows, *_retval);
+          result = tableEditor->GetTableSize(tableElement, &rows, _retval);
         }
       }
       break;
@@ -3817,10 +3817,10 @@ nsEditorShell::GetCellDataAt(nsIDOMElement *tableElement, PRInt32 rowIndex, PRIn
       nsCOMPtr<nsITableEditor> tableEditor = do_QueryInterface(mEditor);
       if (tableEditor)
         result = tableEditor->GetCellDataAt(tableElement, rowIndex, colIndex, _retval,
-                                            *aStartRowIndex, *aStartColIndex, 
-                                            *aRowSpan, *aColSpan, 
-                                            *aActualRowSpan, *aActualColSpan,
-                                            *aIsSelected);
+                                            aStartRowIndex, aStartColIndex, 
+                                            aRowSpan, aColSpan, 
+                                            aActualRowSpan, aActualColSpan,
+                                            aIsSelected);
       // Don't return NS_EDITOR_ELEMENT_NOT_FOUND (passes NS_SUCCEEDED macro)
       //  to JavaScript
       if(NS_SUCCEEDED(result)) return NS_OK;
@@ -3892,7 +3892,9 @@ nsEditorShell::GetSelectedOrParentTableElement(PRUnichar **aTagName, PRInt32 *aS
         nsCOMPtr<nsITableEditor> tableEditor = do_QueryInterface(mEditor);
         nsAutoString TagName(*aTagName);
         if (tableEditor)
-          result = tableEditor->GetSelectedOrParentTableElement(*_retval, TagName, *aSelectedCount);
+          result = tableEditor->GetSelectedOrParentTableElement(_retval,
+                                                                TagName,
+                                                                aSelectedCount);
           *aTagName = ToNewUnicode(TagName);
       }
       break;
@@ -3915,7 +3917,7 @@ nsEditorShell::GetSelectedCellsType(nsIDOMElement *aElement, PRUint32 *_retval)
       {
         nsCOMPtr<nsITableEditor> tableEditor = do_QueryInterface(mEditor);
         if (tableEditor)
-          result = tableEditor->GetSelectedCellsType(aElement, *_retval);
+          result = tableEditor->GetSelectedCellsType(aElement, _retval);
       }
       break;
     default:

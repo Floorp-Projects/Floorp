@@ -2123,7 +2123,7 @@ nsHTMLEditor::GetBackgroundColorState(PRBool *aMixed, nsAWritableString &aOutCol
 {
   nsresult res;
   PRBool useCSS;
-  IsCSSEnabled(&useCSS);
+  GetIsCSSEnabled(&useCSS);
   if (useCSS) {
     // if we are in CSS mode, we have to check if the containing block defines
     // a background color
@@ -2141,7 +2141,7 @@ nsHTMLEditor::GetHighlightColorState(PRBool *aMixed, nsAWritableString &aOutColo
 {
   nsresult res = NS_OK;
   PRBool useCSS;
-  IsCSSEnabled(&useCSS);
+  GetIsCSSEnabled(&useCSS);
   *aMixed = PR_FALSE;
   aOutColor.Assign(NS_LITERAL_STRING("transparent"));
   if (useCSS) {
@@ -2284,7 +2284,9 @@ nsHTMLEditor::GetHTMLBackgroundColorState(PRBool *aMixed, nsAWritableString &aOu
   nsCOMPtr<nsIDOMElement> element;
   PRInt32 selectedCount;
   nsAutoString tagName;
-  nsresult res = GetSelectedOrParentTableElement(*getter_AddRefs(element), tagName, selectedCount);
+  nsresult res = GetSelectedOrParentTableElement(getter_AddRefs(element),
+                                                 tagName,
+                                                 &selectedCount);
   if (NS_FAILED(res)) return res;
 
   NS_NAMED_LITERAL_STRING(styleName, "bgcolor"); 
@@ -3209,7 +3211,8 @@ nsHTMLEditor::SetHTMLBackgroundColor(const nsAReadableString& aColor)
   nsCOMPtr<nsIDOMElement> element;
   PRInt32 selectedCount;
   nsAutoString tagName;
-  nsresult res = GetSelectedOrParentTableElement(*getter_AddRefs(element), tagName, selectedCount);
+  nsresult res = GetSelectedOrParentTableElement(getter_AddRefs(element),
+                                                 tagName, &selectedCount);
   if (NS_FAILED(res)) return res;
 
   PRBool setColor = (aColor.Length() > 0);
@@ -5010,7 +5013,7 @@ nsHTMLEditor::SetAttributeOrEquivalent(nsIDOMElement * aElement,
 {
   PRBool useCSS;
   nsresult res = NS_OK;
-  IsCSSEnabled(&useCSS);
+  GetIsCSSEnabled(&useCSS);
   if (useCSS && mHTMLCSSUtils) {
     PRInt32 count;
     res = mHTMLCSSUtils->SetCSSEquivalentToHTMLStyle(aElement, nsnull, &aAttribute, &aValue, &count);
@@ -5045,7 +5048,7 @@ nsHTMLEditor::SetAttributeOrEquivalent(nsIDOMElement * aElement,
 }
 
 nsresult
-nsHTMLEditor::SetCSSEnabled(PRBool aIsCSSPrefChecked)
+nsHTMLEditor::SetIsCSSEnabled(PRBool aIsCSSPrefChecked)
 {
   nsresult  err = NS_ERROR_NOT_INITIALIZED;
   if (mHTMLCSSUtils)
@@ -5288,7 +5291,7 @@ nsHTMLEditor::SetBackgroundColor(const nsAReadableString& aColor)
 {
   nsresult res;
   PRBool useCSS;
-  IsCSSEnabled(&useCSS);
+  GetIsCSSEnabled(&useCSS);
   if (useCSS) {
     // if we are in CSS mode, we have to apply the background color to the
     // containing block (or the body if we have no block-level element in
@@ -5315,7 +5318,7 @@ nsHTMLEditor::NodesSameType(nsIDOMNode *aNode1, nsIDOMNode *aNode2)
   }
 
   PRBool useCSS;
-  IsCSSEnabled(&useCSS);
+  GetIsCSSEnabled(&useCSS);
 
   nsCOMPtr<nsIAtom> atom1 = GetTag(aNode1);
   nsCOMPtr<nsIAtom> atom2 = GetTag(aNode2);
@@ -5334,7 +5337,8 @@ nsHTMLEditor::NodesSameType(nsIDOMNode *aNode1, nsIDOMNode *aNode2)
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::ParseStyleAttrIntoCSSRule(const PRUnichar *aString, nsIDOMCSSStyleRule **_retval)
+nsHTMLEditor::ParseStyleAttrIntoCSSRule(const nsAString& aString,
+                                        nsIDOMCSSStyleRule **_retval)
 {
   nsCOMPtr<nsIDOMDocument> domdoc;
   nsEditor::GetDocument(getter_AddRefs(domdoc));
@@ -5355,8 +5359,8 @@ nsHTMLEditor::ParseStyleAttrIntoCSSRule(const PRUnichar *aString, nsIDOMCSSStyle
   NS_ASSERTION(css, "can't get a css parser");
   if (!css) return NS_ERROR_NULL_POINTER;    
 
-  nsAutoString value(aString);
-  css->ParseStyleAttribute(value, docURL, getter_AddRefs(mRule));
+  //nsAutoString value(aString);
+  css->ParseStyleAttribute(aString, docURL, getter_AddRefs(mRule));
   nsCOMPtr<nsIDOMCSSStyleRule> styleRule = do_QueryInterface(mRule);
   if (styleRule) {
     *_retval = styleRule;
