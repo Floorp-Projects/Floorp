@@ -11,9 +11,11 @@
     <implementation>
       <constructor>
       <![CDATA[
+        var i;
+        var children;
         if (this.menu == "") {
-          var children = this.childNodes;
-          for (var i = 0; i < children.length; i++) {
+          children = this.childNodes;
+          for (i = 0; i < children.length; i++) {
             if (children[i].localName == "menupopup") {
               this.menu = "_child";
               break;
@@ -21,8 +23,8 @@
           }
         }
         if (this.tooltip == "") {
-          var children = this.childNodes;
-          for (var i = 0; i < children.length; i++) {
+          children = this.childNodes;
+          for (i = 0; i < children.length; i++) {
             if (children[i].localName == "tooltip") {
               this.tooltip = "_child";
               break;
