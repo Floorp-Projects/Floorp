@@ -35,3 +35,10 @@ CPPSRCS = \
 include $(topsrcdir)/config/config.mk
 
 include $(topsrcdir)/config/rules.mk
+
+EXPORT_RESOURCE_SAMPLES := \
+	$(srcdir)/samples/embed-test.html \
+	$(NULL)
+
+install:: 
+	$(INSTALL) $(EXPORT_RESOURCE_SAMPLES) $(DIST)/bin/res/samples
