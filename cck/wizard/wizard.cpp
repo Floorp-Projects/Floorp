@@ -44,6 +44,8 @@ BOOL Config(CString globalsName, CString DialogTitle, WIDGET* curWidget)
 	CString FooCopy = rootpath + "Configs\\";
 	FooCopy += Clist ;
 	d = FindFirstFile((const char *) newDir, &data);
+	if (configField.IsEmpty())
+		return FALSE;
 	if (d == INVALID_HANDLE_VALUE)
 	{
 		if (!DialogTitle.IsEmpty())
