@@ -42,6 +42,8 @@
 #include "net.h"
 #include "client.h"
 #include "PascalString.h"
+#include "uapp.h"
+
 
 //-----------------------------------
 CNetscapeWindow::CNetscapeWindow(LStream *inStream, DataIDT inWindowType)
@@ -376,3 +378,25 @@ void CNetscapeWindow::FindCommandStatus(
 				inCommand, outEnabled, outUsesMark, outMark, outName);
 	}
 } // CNetscapeWindow::FindCommandStatus
+
+
+//----------------------------------------------------------------------------------------
+void CNetscapeWindow::Show()
+// This is intended to make initial drawing of a window much faster, so we don't
+// look so bad when windows are first displayed.
+//----------------------------------------------------------------------------------------
+{
+	Boolean wasVisible = IsVisible();
+
+	Inherited::Show();
+        
+	if (wasVisible)
+		return;
+
+	// make sure the window is hilited, if we are the frontmost app
+	if (CFrontApp::GetApplication()->IsOnDuty() && UDesktop::FetchTopRegular() == this)
+		LWindow::Activate();
+        
+	// force an immediate redraw to look good
+	LWindow::UpdatePort();
+}

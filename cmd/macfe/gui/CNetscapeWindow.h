@@ -91,6 +91,8 @@ class CNetscapeWindow
 
 		static void			DisplayStatusMessageInAllWindows(ConstStringPtr inMessage);
 
+		virtual void		Show ( ) ;
+		
 	protected:
 		// Visibility of toolbars and status bars
 		Boolean				mToolbarShown[kMaxToolbars];
