@@ -1207,6 +1207,9 @@ void ProcessorState::initialize() {
     if (xslDocument) {
         element = xslDocument->getDocumentElement();
         loadedDocuments.put(xslDocument->getBaseURI(), xslDocument);
+        // XXX hackarond to get namespacehandling in a little better shape
+        // we won't need to do this once we resolve namespaces during parsing
+        mXPathParseContext = element;
     }
     if ( element ) {
 
