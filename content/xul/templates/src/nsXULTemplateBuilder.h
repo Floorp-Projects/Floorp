@@ -310,7 +310,7 @@ public:
     nsresult
     SubstituteText(nsTemplateMatch& aMatch,
                    const nsAReadableString& aAttributeValue,
-                   nsString& aResult);
+                   nsAString& aResult);
 
     static void
     SubstituteTextAppendText(nsXULTemplateBuilder* aThis, const nsAReadableString& aText, void* aClosure);

@@ -1260,7 +1260,7 @@ nsresult nsMsgDBView::GetDBForViewIndex(nsMsgViewIndex index, nsIMsgDatabase **d
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgDBView::GetCellText(PRInt32 aRow, const PRUnichar * aColID, PRUnichar ** aValue)
+NS_IMETHODIMP nsMsgDBView::GetCellText(PRInt32 aRow, const PRUnichar * aColID, nsAString& aValue)
 {
   // remove once #116341 is fixed
   if (!aColID[0])
@@ -1279,31 +1279,35 @@ NS_IMETHODIMP nsMsgDBView::GetCellText(PRInt32 aRow, const PRUnichar * aColID, P
     return NS_MSG_INVALID_DBVIEW_INDEX;
   }
 
-  *aValue = 0;
-  // just a hack
-  nsXPIDLCString dbString;
+  aValue.SetCapacity(0);
+  // XXX fix me by making Fetch* take an nsAString& parameter
+  nsXPIDLString valueText;
   nsCOMPtr <nsIMsgThread> thread;
 
   switch (aColID[0])
   {
   case 's':
     if (aColID[1] == 'u') // subject
-      rv = FetchSubject(msgHdr, m_flags[aRow], aValue);
+      rv = FetchSubject(msgHdr, m_flags[aRow], getter_Copies(valueText));
     else if (aColID[1] == 'e') // sender
-      rv = FetchAuthor(msgHdr, aValue);
+      rv = FetchAuthor(msgHdr, getter_Copies(valueText));
     else if (aColID[1] == 'i') // size
-      rv = FetchSize(msgHdr, aValue);
+      rv = FetchSize(msgHdr, getter_Copies(valueText));
     else
-      rv = FetchStatus(m_flags[aRow], aValue);
+      rv = FetchStatus(m_flags[aRow], getter_Copies(valueText));
+    aValue.Assign(valueText);
     break;
   case 'd':  // date
-    rv = FetchDate(msgHdr, aValue);
+    rv = FetchDate(msgHdr, getter_Copies(valueText));
+    aValue.Assign(valueText);
     break;
   case 'p': // priority
-    rv = FetchPriority(msgHdr, aValue);
+    rv = FetchPriority(msgHdr, getter_Copies(valueText));
+    aValue.Assign(valueText);
     break;
   case 'l': // label
-    rv = FetchLabel(msgHdr, aValue);
+    rv = FetchLabel(msgHdr, getter_Copies(valueText));
+    aValue.Assign(valueText);
     break;
   case 't':   
     // total msgs in thread column
@@ -1318,7 +1322,7 @@ NS_IMETHODIMP nsMsgDBView::GetCellText(PRInt32 aRow, const PRUnichar * aColID, P
           PRUint32 numChildren;
           thread->GetNumChildren(&numChildren);
           formattedCountString.AppendInt(numChildren);
-          *aValue = ToNewUnicode(formattedCountString);
+          aValue.Assign(formattedCountString);
         }
       }
     }
@@ -1338,7 +1342,7 @@ NS_IMETHODIMP nsMsgDBView::GetCellText(PRInt32 aRow, const PRUnichar * aColID, P
           if (numUnreadChildren > 0)
           {
             formattedCountString.AppendInt(numUnreadChildren);
-            *aValue = ToNewUnicode(formattedCountString);
+            aValue.Assign(formattedCountString);
           }
         }
       }

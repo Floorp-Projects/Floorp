@@ -1869,14 +1869,17 @@ nsNntpIncomingServer::GetLevel(PRInt32 index, PRInt32 *_retval)
 }
 
 NS_IMETHODIMP 
-nsNntpIncomingServer::GetCellText(PRInt32 row, const PRUnichar *colID, PRUnichar **_retval)
+nsNntpIncomingServer::GetCellText(PRInt32 row, const PRUnichar *colID, nsAString& _retval)
 {
     if (colID[0] == 'n') {
       nsCString str;
       mSubscribeSearchResult.CStringAt(row, str);
       // some servers have newsgroup names that are non ASCII.  we store those as escaped
       // unescape here so the UI is consistent
-      nsresult rv = NS_MsgDecodeUnescapeURLPath(str.get(), _retval);
+      // XXX fix me by converting NS_MsgDecodeUnescapeURLPath to take an nsAString&
+      nsXPIDLString cellText;
+      nsresult rv = NS_MsgDecodeUnescapeURLPath(str.get(), getter_Copies(cellText));
+      _retval.Assign(cellText);
       NS_ENSURE_SUCCESS(rv,rv);
     }
     return NS_OK;

@@ -611,7 +611,7 @@ nsXULOutlinerBuilder::GetLevel(PRInt32 aRowIndex, PRInt32* aResult)
 }
 
 NS_IMETHODIMP
-nsXULOutlinerBuilder::GetCellText(PRInt32 aRow, const PRUnichar* aColID, PRUnichar** aResult)
+nsXULOutlinerBuilder::GetCellText(PRInt32 aRow, const PRUnichar* aColID, nsAString& aResult)
 {
     NS_PRECONDITION(aRow >= 0 && aRow < mRows.Count(), "bad index");
     if (aRow < 0 || aRow >= mRows.Count())
@@ -624,13 +624,11 @@ nsXULOutlinerBuilder::GetCellText(PRInt32 aRow, const PRUnichar* aColID, PRUnich
         nsAutoString raw;
         cell->GetAttr(kNameSpaceID_None, nsXULAtoms::label, raw);
 
-        nsAutoString cooked;
-        SubstituteText(*(mRows[aRow]->mMatch), raw, cooked);
+        SubstituteText(*(mRows[aRow]->mMatch), raw, aResult);
 
-        *aResult = nsCRT::strdup(cooked.get());
     }
     else
-        *aResult = nsnull;
+        aResult.SetCapacity(0);
 
     return NS_OK;
 }

@@ -407,13 +407,13 @@ nsOutlinerContentView::GetLevel(PRInt32 aIndex, PRInt32* _retval)
 }
 
 NS_IMETHODIMP
-nsOutlinerContentView::GetCellText(PRInt32 aRow, const PRUnichar* aColID, PRUnichar** _retval)
+nsOutlinerContentView::GetCellText(PRInt32 aRow, const PRUnichar* aColID, nsAString& _retval)
 {
   NS_PRECONDITION(aRow >= 0 && aRow < mRows.Count(), "bad row");
   if (aRow < 0 || aRow >= mRows.Count())
     return NS_ERROR_INVALID_ARG;   
 
-  *_retval = nsnull;
+  _retval.SetCapacity(0);
 
   Row* row = (Row*)mRows[aRow];
   nsCOMPtr<nsIContent> realRow;
@@ -422,9 +422,7 @@ nsOutlinerContentView::GetCellText(PRInt32 aRow, const PRUnichar* aColID, PRUnic
     nsCOMPtr<nsIContent> cell;
     GetNamedCell(realRow, aColID, getter_AddRefs(cell));
     if (cell) {
-      nsAutoString label;
-      cell->GetAttr(kNameSpaceID_None, nsHTMLAtoms::label, label);
-      *_retval = ToNewUnicode(label);
+      cell->GetAttr(kNameSpaceID_None, nsHTMLAtoms::label, _retval);
     }
   }
 

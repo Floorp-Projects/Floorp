@@ -98,11 +98,15 @@ NS_IMETHODIMP nsMsgSearchDBView::Close()
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgSearchDBView::GetCellText(PRInt32 aRow, const PRUnichar * aColID, PRUnichar ** aValue)
+NS_IMETHODIMP nsMsgSearchDBView::GetCellText(PRInt32 aRow, const PRUnichar * aColID, nsAString& aValue)
 {
   if (aColID[0] == 'l' && aColID[1] == 'o') // location, need to check for "lo" not just "l" to avoid "label" column
   {
-    return FetchLocation(aRow, aValue);
+    // XXX fix me by converting Fetch* to take an nsAString& parameter
+    nsXPIDLString valueText;
+    nsresult rv = FetchLocation(aRow, getter_Copies(valueText));
+    aValue.Assign(valueText);
+    return rv;
   }
   else
     return nsMsgDBView::GetCellText(aRow, aColID, aValue);

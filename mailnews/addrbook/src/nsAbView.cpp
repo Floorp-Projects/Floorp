@@ -451,14 +451,18 @@ nsresult nsAbView::GetCardValue(nsIAbCard *card, const PRUnichar *colID, PRUnich
   return rv;
 }
 
-NS_IMETHODIMP nsAbView::GetCellText(PRInt32 row, const PRUnichar *colID, PRUnichar **_retval)
+NS_IMETHODIMP nsAbView::GetCellText(PRInt32 row, const PRUnichar *colID, nsAString& _retval)
 {
   // XXX todo remove once #116341 is fixed
   if (!colID[0])
     return NS_OK;
 
   nsIAbCard *card = ((AbCard *)(mCards.ElementAt(row)))->card;
-  return GetCardValue(card, colID, _retval);
+  // XXX fix me by converting GetCardValue to take an nsAString&
+  nsXPIDLString cellText;
+  nsresult rv = GetCardValue(card, colID, getter_Copies(cellText));
+  _retval.Assign(cellText);
+  return rv;
 }
 
 NS_IMETHODIMP nsAbView::SetOutliner(nsIOutlinerBoxObject *outliner)
