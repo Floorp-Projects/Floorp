@@ -69,6 +69,7 @@
 #include "nsIGenericFactory.h"
 #include "nsHashtableEnumerator.h"
 #include "nsIPipe.h"
+#include "nsStreamUtils.h"
 #include "nsCWeakReference.h"
 #include "nsWeakReference.h"
 #include "nsISizeOfHandler.h"
@@ -114,7 +115,10 @@ void XXXNeverCalled()
     nsSupportsArray();
     NS_GetNumberOfAtoms();
     nsFileURL(NULL);
-    NS_NewPipe(NULL, NULL, 0, 0, PR_FALSE, PR_FALSE, NULL);
+    NS_NewPipe2(NULL, NULL, PR_FALSE, PR_FALSE, 0, 0, NULL);
+    NS_NewInputStreamReadyEvent(NULL, NULL, NULL);
+    NS_NewOutputStreamReadyEvent(NULL, NULL, NULL);
+    NS_AsyncCopy(NULL, NULL, PR_TRUE, PR_TRUE, 0, 0, NULL);
     nsFileSpec s;
     nsFixedSizeAllocator a;
     nsRecyclingAllocator recyclingAllocator(2);

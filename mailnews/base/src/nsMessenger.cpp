@@ -969,8 +969,7 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity, ns
                                           aURL, 
                                           nsnull,                 // inputStream
                                           NS_LITERAL_CSTRING(""), // contentType
-                                          NS_LITERAL_CSTRING(""), // contentCharset
-                                          -1);                    // contentLength
+                                          NS_LITERAL_CSTRING("")); // contentCharset
             if (NS_FAILED(rv)) goto done;
 
             saveListener->m_outputFormat.AssignWithConversion(saveAsFileType == 1 ? TEXT_HTML : TEXT_PLAIN);

@@ -28,11 +28,26 @@
 #include "nsHttpRequestHead.h"
 #include "nsHttpResponseHead.h"
 #include "nsHttpChunkedDecoder.h"
-#include "nsIStringStream.h"
-#include "nsISeekableStream.h"
-#include "nsISocketTransportService.h"
+#include "nsIOService.h"
+#include "nsAutoLock.h"
 #include "pratom.h"
 #include "plevent.h"
+
+#include "nsIStringStream.h"
+#include "nsISeekableStream.h"
+#include "nsISocketTransport.h"
+#include "nsMultiplexInputStream.h"
+
+//-----------------------------------------------------------------------------
+
+#ifdef DEBUG
+// defined by the socket transport service while active
+extern PRThread *gSocketThread;
+#endif
+
+//-----------------------------------------------------------------------------
+
+static NS_DEFINE_CID(kMultiplexInputStream, NS_MULTIPLEXINPUTSTREAM_CID);
 
 // mLineBuf is limited to this number of bytes.
 #define MAX_LINEBUF_LENGTH (1024 * 10)
@@ -82,32 +97,34 @@ LogHeaders(const char *lines)
 // nsHttpTransaction <public>
 //-----------------------------------------------------------------------------
 
-nsHttpTransaction::nsHttpTransaction(nsIStreamListener *listener,
-                                     nsIInterfaceRequestor *callbacks,
-                                     PRUint8 caps)
-    : mListener(listener)
-    , mCallbacks(callbacks)
+nsHttpTransaction::nsHttpTransaction()
+    : mRequestSize(0)
     , mConnection(nsnull)
-    , mReqUploadStreamOffset(0)
-    , mReqUploadStreamLength(0)
+    , mConnInfo(nsnull)
+    , mRequestHead(nsnull)
     , mResponseHead(nsnull)
     , mContentLength(-1)
     , mContentRead(0)
     , mChunkedDecoder(nsnull)
-    , mTransactionDone(0)
     , mStatus(NS_OK)
+    , mLock(PR_NewLock())
+    , mTransportStatus(0)
+    , mTransportProgress(0)
+    , mTransportProgressMax(0)
+    , mTransportStatusInProgress(PR_FALSE)
     , mRestartCount(0)
-    , mCapabilities(caps)
+    , mCaps(0)
+    , mConnected(PR_FALSE)
     , mHaveStatusLine(PR_FALSE)
     , mHaveAllHeaders(PR_FALSE)
+    , mTransactionDone(PR_FALSE)
     , mResponseIsComplete(PR_FALSE)
-    , mFiredOnStart(PR_FALSE)
+    , mDidContentStart(PR_FALSE)
     , mNoContent(PR_FALSE)
     , mPrematureEOF(PR_FALSE)
+    , mDestroying(PR_FALSE)
 {
     LOG(("Creating nsHttpTransaction @%x\n", this));
-
-    NS_PRECONDITION(listener, "null listener");
 }
 
 nsHttpTransaction::~nsHttpTransaction()
@@ -115,45 +132,37 @@ nsHttpTransaction::~nsHttpTransaction()
     LOG(("Destroying nsHttpTransaction @%x\n", this));
 
     NS_IF_RELEASE(mConnection);
+    NS_IF_RELEASE(mConnInfo);
 
-    delete mChunkedDecoder;
     delete mResponseHead;
+    delete mChunkedDecoder;
+
+    PR_DestroyLock(mLock);
 }
 
 nsresult
-nsHttpTransaction::SetupRequest(nsHttpRequestHead *requestHead,
-                                nsIInputStream *requestBody,
-                                PRBool requestBodyHasHeaders,
-                                PRBool pruneProxyHeaders)
+nsHttpTransaction::Init(PRUint8 caps,
+                        nsHttpConnectionInfo *cinfo,
+                        nsHttpRequestHead *requestHead,
+                        nsIInputStream *requestBody,
+                        PRBool requestBodyHasHeaders,
+                        nsIEventQueue *queue,
+                        nsIInterfaceRequestor *callbacks,
+                        nsITransportEventSink *eventsink,
+                        nsIAsyncInputStream **responseBody)
 {
     nsresult rv;
 
-    LOG(("nsHttpTransaction::SetupRequest [this=%x]\n", this));
+    LOG(("nsHttpTransaction::Init [this=%x caps=%x]\n", this, caps));
 
-    NS_ENSURE_ARG_POINTER(requestHead);
+    NS_ASSERTION(cinfo, "ouch");
+    NS_ASSERTION(requestHead, "ouch");
 
-    // grab a reference to the calling thread's event queue.
-    nsCOMPtr<nsIEventQueueService> eqs;
-    nsHttpHandler::get()->GetEventQueueService(getter_AddRefs(eqs));
-    if (eqs)
-        eqs->ResolveEventQueue(NS_CURRENT_EVENTQ, getter_AddRefs(mConsumerEventQ));
-
-    // build a proxy for the progress event sink
-    if (!(mCapabilities & NS_HTTP_DONT_REPORT_PROGRESS)) {
-        if (mCallbacks && mConsumerEventQ) {
-            nsCOMPtr<nsIProgressEventSink> temp = do_GetInterface(mCallbacks);
-            if (temp) {
-                nsCOMPtr<nsIProxyObjectManager> mgr;
-                nsHttpHandler::get()->GetProxyObjectManager(getter_AddRefs(mgr));
-                if (mgr)
-                    mgr->GetProxyForObject(mConsumerEventQ,
-                                           NS_GET_IID(nsIProgressEventSink),
-                                           temp,
-                                           PROXY_ASYNC | PROXY_ALWAYS,
-                                           getter_AddRefs(mProgressSink));
-            }
-        }
-    }
+    NS_ADDREF(mConnInfo = cinfo);
+    mCallbacks = callbacks;
+    mTransportSink = eventsink;
+    mConsumerEventQ = queue;
+    mCaps = caps;
 
     if (requestHead->Method() == nsHttp::Head)
         mNoContent = PR_TRUE;
@@ -161,7 +170,11 @@ nsHttpTransaction::SetupRequest(nsHttpRequestHead *requestHead,
     // grab a weak reference to the request head
     mRequestHead = requestHead;
 
-    mReqHeaderBuf.SetLength(0);
+    // make sure we eliminate any proxy specific headers from 
+    // the request if we are talking HTTPS via a SSL tunnel.
+    PRBool pruneProxyHeaders = cinfo->UsingSSL() &&
+                               cinfo->UsingHttpProxy();
+    mReqHeaderBuf.Truncate();
     requestHead->Flatten(mReqHeaderBuf, pruneProxyHeaders);
 
 #if defined(PR_LOGGING)
@@ -172,26 +185,52 @@ nsHttpTransaction::SetupRequest(nsHttpRequestHead *requestHead,
     }
 #endif
 
-    mReqUploadStream = requestBody;
-    if (mReqUploadStream) {
-        mReqUploadStream->Available(&mReqUploadStreamLength);
-        mReqUploadStreamOffset = 0;
-    }
-
     // If the request body does not include headers or if there is no request
     // body, then we must add the header/body separator manually.
     if (!requestBodyHasHeaders || !requestBody)
         mReqHeaderBuf.Append("\r\n");
 
-    // Create a string stream for the request header buf
+    // Create a string stream for the request header buf (the stream holds
+    // a non-owning reference to the request header data, so we MUST keep
+    // mReqHeaderBuf around).
     nsCOMPtr<nsISupports> sup;
     rv = NS_NewByteInputStream(getter_AddRefs(sup),
                                mReqHeaderBuf.get(),
                                mReqHeaderBuf.Length());
     if (NS_FAILED(rv)) return rv;
-    mReqHeaderStream = do_QueryInterface(sup, &rv);
+    nsCOMPtr<nsIInputStream> headers = do_QueryInterface(sup, &rv);
 
-    return rv;
+    if (requestBody) {
+        // wrap the headers and request body in a multiplexed input stream.
+        nsCOMPtr<nsIMultiplexInputStream> multi =
+            do_CreateInstance(kMultiplexInputStream, &rv);
+        if (NS_FAILED(rv)) return rv;
+
+        rv = multi->AppendStream(headers);
+        if (NS_FAILED(rv)) return rv;
+
+        rv = multi->AppendStream(requestBody);
+        if (NS_FAILED(rv)) return rv;
+
+        mRequestStream = multi;
+    }
+    else
+        mRequestStream = headers;
+
+    rv = mRequestStream->Available(&mRequestSize);
+    if (NS_FAILED(rv)) return rv;
+
+    // create pipe for response stream
+    rv = NS_NewPipe2(getter_AddRefs(mPipeIn),
+                     getter_AddRefs(mPipeOut),
+                     PR_TRUE, PR_TRUE,
+                     NS_HTTP_SEGMENT_SIZE,
+                     NS_HTTP_SEGMENT_COUNT,
+                     nsIOService::gBufferCache);
+    if (NS_FAILED(rv)) return rv;
+
+    NS_ADDREF(*responseBody = mPipeIn);
+    return NS_OK;
 }
 
 nsHttpResponseHead *
@@ -209,128 +248,187 @@ nsHttpTransaction::TakeResponseHead()
 // nsHttpTransaction::nsAHttpTransaction
 //----------------------------------------------------------------------------
 
-PRUint32
-nsHttpTransaction::GetRequestSize()
+void
+nsHttpTransaction::OnTransportStatus(nsresult status, PRUint32 progress)
 {
-    PRUint32 n = 0;
-    if (mReqHeaderStream)
-        mReqHeaderStream->Available(&n);
-    return n;
-}
-
-// called on the socket transport thread
-nsresult
-nsHttpTransaction::OnDataWritable(nsIOutputStream *os)
-{
-    PRUint32 n = 0;
-
-    LOG(("nsHttpTransaction::OnDataWritable [this=%x]\n", this));
-
-    // check if we're done writing the headers
-    nsresult rv = mReqHeaderStream->Available(&n);
-    if (NS_FAILED(rv)) return rv;
-
-    // let at most NS_HTTP_BUFFER_SIZE bytes be written at a time.
+    LOG(("nsHttpTransaction::OnSocketStatus [this=%x status=%x progress=%u]\n",
+        this, status, progress));
     
-    if (n != 0)
-        return os->WriteFrom(mReqHeaderStream, NS_HTTP_BUFFER_SIZE, &n);
+    NS_ASSERTION(PR_GetCurrentThread() == gSocketThread, "wrong thread");
 
-    if (mReqUploadStream) {
-        nsresult rv = os->WriteFrom(mReqUploadStream, NS_HTTP_BUFFER_SIZE, &n);
-        if (NS_SUCCEEDED(rv)) {
-            mReqUploadStreamOffset += n;
-            if (mProgressSink)
-                mProgressSink->OnProgress(nsnull, nsnull,
-                                          mReqUploadStreamOffset,
-                                          mReqUploadStreamLength);
+    PRBool postEvent;
+    {
+        nsAutoLock lock(mLock);
+
+        // stamp latest socket status
+        mTransportStatus = status;
+        
+        if (status == nsISocketTransport::STATUS_RECEIVING_FROM) {
+            // ignore the progress argument and use our own.  as a result,
+            // the progress reported will not include the size of the response
+            // headers.  this is OK b/c we only want to report the progress
+            // downloading the body of the response.
+            mTransportProgress = mContentRead;
+            mTransportProgressMax = mContentLength;
         }
-        return rv;
+        else {
+            // when uploading, we include the request headers in the progress
+            // notifications.
+            mTransportProgress = progress;
+            mTransportProgressMax = mRequestSize;
+        }
+
+        postEvent = !mTransportStatusInProgress;
     }
 
-    return NS_BASE_STREAM_CLOSED;
+    // only post an event if there is not already an event in progress.  we
+    // do this as an optimization to avoid an excessive number of status events.
+    if (postEvent) {
+        PLEvent *ev = new PLEvent;
+        NS_ADDREF_THIS();
+        PL_InitEvent(ev, this, TransportStatus_Handler, TransportStatus_Cleanup);
+        if (mConsumerEventQ->PostEvent(ev) != PR_SUCCESS) {
+            NS_RELEASE_THIS();
+            delete ev;
+        }
+    }
 }
 
-// called on the socket transport thread
-nsresult
-nsHttpTransaction::OnDataReadable(nsIInputStream *is)
+PRUint32
+nsHttpTransaction::Available()
 {
-    nsresult rv;
+    PRUint32 size;
+    if (NS_FAILED(mRequestStream->Available(&size)))
+        size = 0;
+    return size;
+}
 
-    LOG(("nsHttpTransaction::OnDataReadable [this=%x]\n", this));
+NS_METHOD
+nsHttpTransaction::ReadRequestSegment(nsIInputStream *stream,
+                                      void *closure,
+                                      const char *buf,
+                                      PRUint32 offset,
+                                      PRUint32 count,
+                                      PRUint32 *countRead)
+{
+    nsHttpTransaction *trans = (nsHttpTransaction *) closure;
+    return trans->mReader->OnReadSegment(buf, count, countRead);
+}
 
-    if (!mListener) {
-        LOG(("nsHttpTransaction: no listener! closing stream\n"));
+nsresult
+nsHttpTransaction::ReadSegments(nsAHttpSegmentReader *reader,
+                                PRUint32 count, PRUint32 *countRead)
+{
+    NS_ASSERTION(PR_CurrentThread() == gSocketThread, "wrong thread");
+
+    if (!mConnected) {
+        mConnected = PR_TRUE;
+        mConnection->GetSecurityInfo(getter_AddRefs(mSecurityInfo));
+    }
+
+    mReader = reader;
+
+    nsresult rv = mRequestStream->ReadSegments(ReadRequestSegment, this, count, countRead);
+
+    mReader = nsnull;
+    return rv;
+}
+
+NS_METHOD
+nsHttpTransaction::WritePipeSegment(nsIOutputStream *stream,
+                                    void *closure,
+                                    char *buf,
+                                    PRUint32 offset,
+                                    PRUint32 count,
+                                    PRUint32 *countWritten)
+{
+    nsHttpTransaction *trans = (nsHttpTransaction *) closure;
+
+    if (trans->mTransactionDone)
         return NS_BASE_STREAM_CLOSED;
-    }
 
-    mSource = is;
+    nsresult rv;
+    //
+    // OK, now let the caller fill this segment with data.
+    //
+    rv = trans->mWriter->OnWriteSegment(buf, count, countWritten);
+    if (NS_FAILED(rv)) return rv; // caller didn't want to write anything
 
-    // let our listener try to read up to NS_HTTP_BUFFER_SIZE from us.
-    rv = mListener->OnDataAvailable(this, nsnull, this,
-                                    mContentRead, NS_HTTP_BUFFER_SIZE);
+    NS_ASSERTION(*countWritten > 0, "bad writer");
 
-    LOG(("nsHttpTransaction: listener returned [rv=%x]\n", rv));
+    // now let the transaction "play" with the buffer.  it is free to modify
+    // the contents of the buffer and/or modify countWritten.
+    rv = trans->ProcessData(buf, *countWritten, countWritten);
+    if (NS_FAILED(rv))
+        trans->Close(rv);
 
-    mSource = 0;
+    return rv; // failure code only stops WriteSegments; it is not propogated.
+}
 
-    // check if this transaction needs to be restarted
-    if (mPrematureEOF) {
-        mPrematureEOF = PR_FALSE;
-        rv = Restart();
-        // if successfully restarted, then return an error to abort the 
-        // socket transport.
-        if (NS_SUCCEEDED(rv))
-            rv = NS_BINDING_ABORTED;
-    }
+nsresult
+nsHttpTransaction::WriteSegments(nsAHttpSegmentWriter *writer,
+                                 PRUint32 count, PRUint32 *countWritten)
+{
+    NS_ASSERTION(PR_CurrentThread() == gSocketThread, "wrong thread");
+
+    if (mTransactionDone)
+        return NS_BASE_STREAM_CLOSED;
+
+    mWriter = writer;
+
+    nsresult rv = mPipeOut->WriteSegments(WritePipeSegment, this, count, countWritten);
+
+    mWriter = nsnull;
+
+    // if pipe would block then we need to AsyncWait on it.
+    if (rv == NS_BASE_STREAM_WOULD_BLOCK)
+        mPipeOut->AsyncWait(this, 0, nsnull);
 
     return rv;
 }
 
-// called on any thread
-nsresult
-nsHttpTransaction::OnStopTransaction(nsresult status)
+void
+nsHttpTransaction::Close(nsresult reason)
 {
-    LOG(("nsHttpTransaction::OnStopTransaction [this=%x status=%x]\n",
-        this, status));
+    LOG(("nsHttpTransaction::Close [this=%x reason=%x]\n", this, reason));
+
+    NS_ASSERTION(PR_CurrentThread() == gSocketThread, "wrong thread");
+
+    if (NS_FAILED(mStatus)) {
+        LOG(("  already closed\n"));
+        return;
+    }
+
+    // we must no longer reference the connection!
+    NS_IF_RELEASE(mConnection);
+    mConnected = PR_FALSE;
 
     // if the connection was reset before we read any part of the response,
     // then we must try to restart the transaction.
-    if (status == NS_ERROR_NET_RESET) {
+    if (reason == NS_ERROR_NET_RESET) {
         // if some data was read, then mask the reset error, so our listener
         // will treat this as a normal failure.  XXX we might want to map
         // this error to a special error code to indicate that the transfer
         // was abnormally interrupted.
         if (mContentRead > 0)
-            status = NS_ERROR_ABORT;
+            reason = NS_ERROR_ABORT; // XXX NS_ERROR_NET_INTERRUPT??
         // if restarting fails, then we must notify our listener.
         else if (NS_SUCCEEDED(Restart()))
-            return NS_OK;
+            return;
     }
 
-    mTransactionDone = 1; // force this flag
-    mStatus = status;
+    if (NS_SUCCEEDED(reason) && !mHaveAllHeaders && !mLineBuf.IsEmpty()) {
+        // the server has not sent the final \r\n terminating the header section,
+        // and there is still a header line unparsed.  let's make sure we parse
+        // the remaining header line, and then hopefully, the response will be
+        // usable (see bug 88792).
+        ParseLineSegment("\n", 1);
+    }
 
-	if (mListener) {
-		if (!mFiredOnStart) {
-			mFiredOnStart = PR_TRUE;
-			mListener->OnStartRequest(this, nsnull); 
-		}
-		mListener->OnStopRequest(this, nsnull, status);
-        mListener = 0;
+    mTransactionDone = PR_TRUE; // force this flag
+    mStatus = reason;
 
-        // from this point forward we can't access the request head.
-        mRequestHead = nsnull;
-	}
-    return NS_OK;
-}
-
-void
-nsHttpTransaction::OnStatus(nsresult status, const PRUnichar *statusText)
-{
-    LOG(("nsHttpTransaction::OnStatus [this=%x status=%x]\n", this, status));
-
-    if (mProgressSink)
-        mProgressSink->OnStatus(nsnull, nsnull, status, statusText);
+    mPipeOut->CloseEx(reason);
 }
 
 //-----------------------------------------------------------------------------
@@ -340,10 +438,10 @@ nsHttpTransaction::OnStatus(nsresult status, const PRUnichar *statusText)
 nsresult
 nsHttpTransaction::Restart()
 {
-    nsresult rv;
+    NS_ASSERTION(PR_GetCurrentThread() == gSocketThread, "wrong thread");
 
     // limit the number of restart attempts - bug 92224
-    if (++mRestartCount >= nsHttpHandler::get()->MaxRequestAttempts()) {
+    if (++mRestartCount >= gHttpHandler->MaxRequestAttempts()) {
         LOG(("reached max request attempts, failing transaction @%x\n", this));
         return NS_ERROR_NET_RESET;
     }
@@ -351,35 +449,14 @@ nsHttpTransaction::Restart()
     LOG(("restarting transaction @%x\n", this));
 
     // rewind streams in case we already wrote out the request
-    nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mReqHeaderStream);
+    nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mRequestStream);
     if (seekable)
         seekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
-    seekable = do_QueryInterface(mReqUploadStream);
-    if (seekable)
-        seekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
-    mReqUploadStreamOffset = 0;
 
-    // just in case the connection is holding the last reference to us...
-    NS_ADDREF_THIS();
+    // clear the old socket info
+    mSecurityInfo = 0;
 
-    // we don't want the connection to send anymore notifications to us.
-    mConnection->DropTransaction(this);
-
-    nsHttpConnectionInfo *ci = nsnull;
-    mConnection->GetConnectionInfo(&ci);
-    NS_ASSERTION(ci, "connection info should be non-null");
-    if (ci) {
-        // we must release the connection before re-initiating this transaction
-        // since we'll be getting a new connection.
-        NS_RELEASE(mConnection);
-
-        rv = nsHttpHandler::get()->InitiateTransaction(this, ci);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "InitiateTransaction failed");
-
-        NS_RELEASE(ci);
-    }
-    NS_RELEASE_THIS();
-    return NS_OK;
+    return gHttpHandler->InitiateTransaction(this);
 }
 
 void
@@ -518,10 +595,7 @@ nsHttpTransaction::ParseHead(char *buf,
 nsresult
 nsHttpTransaction::HandleContentStart()
 {
-    nsresult rv;
-
-    LOG(("nsHttpTransaction::HandleContentStart [this=%x response-head=%x]\n",
-        this, mResponseHead));
+    LOG(("nsHttpTransaction::HandleContentStart [this=%x]\n", this));
 
     if (mResponseHead) {
 #if defined(PR_LOGGING)
@@ -544,7 +618,7 @@ nsHttpTransaction::HandleContentStart()
             mHaveStatusLine = PR_FALSE;
             mResponseHead->Reset();
             // wait to be called again...
-            return NS_BASE_STREAM_WOULD_BLOCK;
+            return NS_OK;
         }
 
         // check if this is a no-content response
@@ -584,12 +658,8 @@ nsHttpTransaction::HandleContentStart()
         }
     }
 
-    LOG(("nsHttpTransaction [this=%x] sending OnStartRequest\n", this));
-    mFiredOnStart = PR_TRUE;
-
-    rv = mListener->OnStartRequest(this, nsnull);
-    LOG(("OnStartRequest returned rv=%x\n", rv));
-    return rv;
+    mDidContentStart = PR_TRUE;
+    return NS_OK;
 }
 
 // called on the socket thread
@@ -601,18 +671,14 @@ nsHttpTransaction::HandleContent(char *buf,
 {
     nsresult rv;
 
-    LOG(("nsHttpTransaction::HandleContent [this=%x count=%u]\n",
-        this, count));
+    LOG(("nsHttpTransaction::HandleContent [this=%x count=%u]\n", this, count));
 
     *contentRead = 0;
     *contentRemaining = 0;
 
-    if (mTransactionDone)
-        return NS_OK;
-
     NS_ASSERTION(mConnection, "no connection");
 
-    if (!mFiredOnStart) {
+    if (!mDidContentStart) {
         rv = HandleContentStart();
         if (NS_FAILED(rv)) return rv;
     }
@@ -650,8 +716,10 @@ nsHttpTransaction::HandleContent(char *buf,
     if (*contentRead) {
         // update count of content bytes read and report progress...
         mContentRead += *contentRead;
+        /*
         if (mProgressSink)
             mProgressSink->OnProgress(nsnull, nsnull, mContentRead, PR_MAX(0, mContentLength));
+        */
     }
 
     LOG(("nsHttpTransaction [this=%x count=%u read=%u mContentRead=%u mContentLength=%d]\n",
@@ -660,22 +728,105 @@ nsHttpTransaction::HandleContent(char *buf,
     // check for end-of-file
     if ((mContentRead == PRUint32(mContentLength)) ||
         (mChunkedDecoder && mChunkedDecoder->ReachedEOF())) {
-        // atomically mark the transaction as complete to ensure that
-        // OnTransactionComplete is fired only once!
-        PRInt32 priorVal = PR_AtomicSet(&mTransactionDone, 1);
-        if (priorVal == 0) {
-            mResponseIsComplete = PR_TRUE;
-            // let the connection know that we are done with it; this should
-            // result in OnStopTransaction being fired.
-            return mConnection->OnTransactionComplete(this, NS_OK);
-        }
-        return NS_OK;
+        // the transaction is done with a complete response.
+        mTransactionDone = PR_TRUE;
+        mResponseIsComplete = PR_TRUE;
     }
 
-    // if we didn't "read" anything and this is not a no-content response,
-    // then we must return NS_BASE_STREAM_WOULD_BLOCK so we'll be called again.
-    return (!mNoContent && !*contentRead) ? NS_BASE_STREAM_WOULD_BLOCK : NS_OK;
+    return NS_OK;
 }
+
+nsresult
+nsHttpTransaction::ProcessData(char *buf, PRUint32 count, PRUint32 *countRead)
+{
+    nsresult rv;
+
+    LOG(("nsHttpTransaction::ProcessData [this=%x count=%u]\n", this, count));
+
+    *countRead = 0;
+
+    // we may not have read all of the headers yet...
+    if (!mHaveAllHeaders) {
+        PRUint32 bytesConsumed = 0;
+
+        rv = ParseHead(buf, count, &bytesConsumed);
+        if (NS_FAILED(rv)) return rv;
+
+        count -= bytesConsumed;
+
+        // if buf has some content in it, shift bytes to top of buf.
+        if (count && bytesConsumed)
+            memmove(buf, buf + bytesConsumed, count);
+    }
+
+    // even though count may be 0, we still want to call HandleContent
+    // so it can complete the transaction if this is a "no-content" response.
+    if (mHaveAllHeaders) {
+        PRUint32 countRemaining = 0;
+        //
+        // buf layout:
+        // 
+        // +--------------------------------------+----------------+-----+
+        // |              countRead               | countRemaining |     |
+        // +--------------------------------------+----------------+-----+
+        //
+        // count          : bytes read from the socket
+        // countRead      : bytes corresponding to this transaction
+        // countRemaining : bytes corresponding to next pipelined transaction
+        //
+        // NOTE:
+        // count > countRead + countRemaining <==> chunked transfer encoding
+        //
+        rv = HandleContent(buf, count, countRead, &countRemaining);
+        if (NS_FAILED(rv)) return rv;
+        // we may have read more than our share, in which case we must give
+        // the excess bytes back to the connection
+        if (mResponseIsComplete && countRemaining) {
+            NS_ASSERTION(mConnection, "no connection");
+            mConnection->PushBack(buf + *countRead, countRemaining);
+        }
+    }
+
+    return NS_OK;
+}
+
+//-----------------------------------------------------------------------------
+// nsHttpTransaction events
+//-----------------------------------------------------------------------------
+
+void *PR_CALLBACK
+nsHttpTransaction::TransportStatus_Handler(PLEvent *ev)
+{
+    nsHttpTransaction *trans =
+            NS_STATIC_CAST(nsHttpTransaction *, PL_GetEventOwner(ev));
+
+    LOG(("nsHttpTransaction::SocketStatus_Handler [trans=%x]\n", trans));
+
+    nsresult status;
+    PRUint32 progress, progressMax;
+    {
+        nsAutoLock lock(trans->mLock);
+
+        status = trans->mTransportStatus;
+        progress = trans->mTransportProgress;
+        progressMax = trans->mTransportProgressMax;
+
+        trans->mTransportStatusInProgress = PR_FALSE;
+    }
+
+    trans->mTransportSink->OnTransportStatus(nsnull, status, progress, progressMax);
+
+    NS_RELEASE(trans);
+    return nsnull;
+}
+
+void PR_CALLBACK
+nsHttpTransaction::TransportStatus_Cleanup(PLEvent *ev)
+{
+    delete ev;
+}
+
+//-----------------------------------------------------------------------------
 
 void
 nsHttpTransaction::DeleteSelfOnConsumerThread()
@@ -684,8 +835,11 @@ nsHttpTransaction::DeleteSelfOnConsumerThread()
     nsCOMPtr<nsIEventQueue> currentEventQ;
 
     LOG(("nsHttpTransaction::DeleteSelfOnConsumerThread [this=%x]\n", this));
+    
+    NS_ASSERTION(!mDestroying, "deleting self again");
+    mDestroying = PR_TRUE;
 
-    nsHttpHandler::get()->GetEventQueueService(getter_AddRefs(eqs));
+    gHttpHandler->GetEventQueueService(getter_AddRefs(eqs));
     if (eqs)
         eqs->ResolveEventQueue(NS_CURRENT_EVENTQ, getter_AddRefs(currentEventQ));
 
@@ -701,9 +855,7 @@ nsHttpTransaction::DeleteSelfOnConsumerThread()
             return;
         }
 
-        PL_InitEvent(event, this,
-                nsHttpTransaction::DeleteThis_EventHandlerFunc,
-                nsHttpTransaction::DeleteThis_EventCleanupFunc);
+        PL_InitEvent(event, this, DeleteThis_Handler, DeleteThis_Cleanup);
 
         PRStatus status = mConsumerEventQ->PostEvent(event);
         NS_ASSERTION(status == PR_SUCCESS, "PostEvent failed");
@@ -711,7 +863,7 @@ nsHttpTransaction::DeleteSelfOnConsumerThread()
 }
 
 void *PR_CALLBACK
-nsHttpTransaction::DeleteThis_EventHandlerFunc(PLEvent *ev)
+nsHttpTransaction::DeleteThis_Handler(PLEvent *ev)
 {
     nsHttpTransaction *trans =
             NS_STATIC_CAST(nsHttpTransaction *, PL_GetEventOwner(ev));
@@ -723,7 +875,7 @@ nsHttpTransaction::DeleteThis_EventHandlerFunc(PLEvent *ev)
 }
 
 void PR_CALLBACK
-nsHttpTransaction::DeleteThis_EventCleanupFunc(PLEvent *ev)
+nsHttpTransaction::DeleteThis_Cleanup(PLEvent *ev)
 {
     delete ev;
 }
@@ -752,225 +904,36 @@ nsHttpTransaction::Release()
 }
 
 NS_IMPL_THREADSAFE_QUERY_INTERFACE2(nsHttpTransaction,
-                                    nsIRequest,
-                                    nsIInputStream)
+                                    nsIOutputStreamNotify,
+                                    nsISocketEventHandler)
 
 //-----------------------------------------------------------------------------
-// nsHttpTransaction::nsIRequest
+// nsHttpTransaction::nsIOutputStreamNotify
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsHttpTransaction::GetName(nsACString &aName)
+nsHttpTransaction::OnOutputStreamReady(nsIAsyncOutputStream *out)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
+    // proxy this event to the socket thread
 
-NS_IMETHODIMP
-nsHttpTransaction::IsPending(PRBool *_retval)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
+    nsCOMPtr<nsISocketTransportService> sts;
+    gHttpHandler->ConnMgr()->GetSTS(getter_AddRefs(sts));
+    if (sts)
+        sts->PostEvent(this, 0, 0, nsnull); // only one type of event so far
 
-NS_IMETHODIMP
-nsHttpTransaction::GetStatus(nsresult *aStatus)
-{
-    *aStatus = mStatus;
     return NS_OK;
 }
 
-// called from any thread
-NS_IMETHODIMP
-nsHttpTransaction::Cancel(nsresult status)
-{
-    LOG(("nsHttpTransaction::Cancel [this=%x status=%x]\n", this, status));
-
-    // ignore cancelation if the transaction already has an error status.
-    if (NS_FAILED(mStatus)) {
-        LOG(("ignoring cancel since transaction has already failed "
-             "[this=%x mStatus=%x]\n", this, mStatus));
-        return NS_OK;
-    }
-
-    // if the transaction is already "done" then there is nothing more to do.
-    // ie., our consumer _will_ eventually receive their OnStopRequest.
-    PRInt32 priorVal = PR_AtomicSet(&mTransactionDone, 1);
-    if (priorVal == 1) {
-        LOG(("ignoring cancel since transaction is already done [this=%x]\n", this));
-        return NS_OK;
-    }
-
-    // the status must be set immediately as the cancelation may only take
-    // action asynchronously.
-    mStatus = status;
-
-    return nsHttpHandler::get()->CancelTransaction(this, status);
-}
-
-NS_IMETHODIMP
-nsHttpTransaction::Suspend()
-{
-    LOG(("nsHttpTransaction::Suspend [this=%x]\n", this));
-    if (mConnection && !mTransactionDone)
-        mConnection->OnSuspend();
-    return NS_OK;
-}
-
-// called from the consumer thread, while nothing is happening on the socket thread.
-NS_IMETHODIMP
-nsHttpTransaction::Resume()
-{
-    LOG(("nsHttpTransaction::Resume [this=%x]\n", this));
-    if (mConnection && !mTransactionDone)
-        mConnection->OnResume();
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpTransaction::GetLoadGroup(nsILoadGroup **aLoadGroup)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-NS_IMETHODIMP
-nsHttpTransaction::SetLoadGroup(nsILoadGroup *aLoadGroup)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsHttpTransaction::GetLoadFlags(nsLoadFlags *aLoadFlags)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-NS_IMETHODIMP
-nsHttpTransaction::SetLoadFlags(nsLoadFlags aLoadFlags)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 //-----------------------------------------------------------------------------
-// nsHttpTransaction::nsIInputStream
+// nsHttpTransaction::nsISocketEventHandler
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsHttpTransaction::Close()
+nsHttpTransaction::OnSocketEvent(PRUint32 type, PRUint32 param1, void *param2)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsHttpTransaction::Available(PRUint32 *result)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsHttpTransaction::Read(char *buf, PRUint32 count, PRUint32 *bytesWritten)
-{
-    nsresult rv;
-
-    LOG(("nsHttpTransaction::Read [this=%x count=%u]\n", this, count));
-
-    NS_ENSURE_TRUE(mSource, NS_ERROR_NOT_INITIALIZED);
-
-    if (mTransactionDone)
-        return NS_BASE_STREAM_CLOSED;
-
-    *bytesWritten = 0;
-
-    // read some data from our source and put it in the given buf
-    rv = mSource->Read(buf, count, bytesWritten);
-    LOG(("mSource->Read [rv=%x count=%u countRead=%u]\n", rv, count, *bytesWritten));
-
-    // detect explicit socket RESET
-    if (rv == NS_ERROR_NET_RESET) {
-        LOG(("got NS_ERROR_NET_RESET\n"));
-        *bytesWritten = 0;
+    if (mConnection) {
+        nsresult rv = mConnection->ResumeRecv();
+        NS_ASSERTION(NS_SUCCEEDED(rv), "ResumeSend failed");
     }
-    else if (NS_FAILED(rv)) {
-        LOG(("nsHttpTransaction: mSource->Read() returned [rv=%x]\n", rv));
-        return rv;
-    }
-
-    if (*bytesWritten == 0) {
-        LOG(("nsHttpTransaction: reached EOF\n"));
-        if (!mHaveStatusLine) {
-            // we've read nothing from the socket...
-            mPrematureEOF = PR_TRUE;
-            // return would block to prevent being called again.
-            return NS_BASE_STREAM_WOULD_BLOCK;
-        }
-        if (!mHaveAllHeaders && !mLineBuf.IsEmpty()) {
-            // the server has not sent the final \r\n terminating the header section,
-            // and there is still a header line unparsed.  let's make sure we parse
-            // the remaining header line, and then hopefully, the response will be
-            // usable (see bug 88792).
-            rv = ParseLineSegment("\n", 1);
-        }
-        return rv;
-    }
-
-    // pretend that no bytes were written (since we're just borrowing the
-    // given buf anyways).
-    count = *bytesWritten;
-    *bytesWritten = 0;
-
-    // we may not have read all of the headers yet...
-    if (!mHaveAllHeaders) {
-        PRUint32 bytesConsumed = 0;
-
-        rv = ParseHead(buf, count, &bytesConsumed);
-        if (NS_FAILED(rv)) return rv;
-
-        count -= bytesConsumed;
-
-        if (count && bytesConsumed) {
-            // buf has some content in it; shift bytes to top of buf.
-            memmove(buf, buf + bytesConsumed, count);
-        }
-    }
-
-    // even though count may be 0, we still want to call HandleContent
-    // so it can complete the transaction if this is a "no-content" response.
-    if (mHaveAllHeaders) {
-        PRUint32 bytesRemaining = 0;
-        //
-        // buf layout:
-        // 
-        // +-----------------------------------------+----------------+-----+
-        // |              bytesWritten               | bytesRemaining |     |
-        // +-----------------------------------------+----------------+-----+
-        //
-        // count          : bytes read from the socket
-        // bytesWritten   : bytes corresponding to this transaction
-        // bytesRemaining : bytes corresponding to next pipelined transaction
-        //
-        // NOTE:
-        // count > bytesWritten + bytesRemaining <==> chunked transfer encoding
-        //
-        rv = HandleContent(buf, count, bytesWritten, &bytesRemaining);
-        if (NS_FAILED(rv)) return rv;
-        // we may have read more than our share, in which case we must give
-        // the excess bytes back to the connection
-        if (mResponseIsComplete && bytesRemaining) {
-            NS_ASSERTION(mConnection, "no connection");
-            mConnection->PushBack(buf + *bytesWritten, bytesRemaining);
-        }
-        return rv;
-    }
-
-    // wait for more data
-    return NS_BASE_STREAM_WOULD_BLOCK;
-}
-
-NS_IMETHODIMP
-nsHttpTransaction::ReadSegments(nsWriteSegmentFun writer, void *closure,
-                                PRUint32 count, PRUint32 *countRead)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsHttpTransaction::IsNonBlocking(PRBool *result)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_OK;
 }

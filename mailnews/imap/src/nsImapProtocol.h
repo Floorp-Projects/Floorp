@@ -51,7 +51,8 @@
 #include "nsIProgressEventSink.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsITransport.h"
+#include "nsISocketTransport.h"
+#include "nsIInputStreamPump.h"
 
 // imap event sinks
 #include "nsIImapMailFolderSink.h"
@@ -390,16 +391,18 @@ private:
   nsCAutoString  m_trashFolderName;
 
 	// Ouput stream for writing commands to the socket
-	nsCOMPtr<nsITransport>		m_channel; 
-	nsCOMPtr<nsIOutputStream>	m_outputStream;   // this will be obtained from the transport interface
-	nsCOMPtr<nsIInputStream>    m_inputStream;
+	nsCOMPtr<nsISocketTransport> m_transport; 
+	nsCOMPtr<nsIOutputStream>	   m_outputStream;   // this will be obtained from the transport interface
+	nsCOMPtr<nsIInputStream>     m_inputStream;
+  nsCOMPtr<nsIInputStreamPump> m_pump;
+  PRBool                       m_pumpSuspended;
 
   nsCOMPtr<nsIInputStream>  m_channelInputStream;
 	nsCOMPtr<nsIOutputStream> m_channelOutputStream;
 	nsCOMPtr<nsIStreamListener>	    m_channelListener; // if we are displaying an article this is the rfc-822 display sink...
   nsCOMPtr<nsISupports>           m_channelContext;
   nsCOMPtr<nsIImapMockChannel>    m_mockChannel;   // this is the channel we should forward to people
-  nsCOMPtr<nsIRequest> mAsyncReadRequest; // we're going to cancel this when we're done with the conn.
+  //nsCOMPtr<nsIRequest> mAsyncReadRequest; // we're going to cancel this when we're done with the conn.
 
 
 	// this is a method designed to buffer data coming from the input stream and efficiently extract out 
@@ -669,7 +672,9 @@ private:
 
 class nsICacheEntryDescriptor;
 
-class nsImapMockChannel : public nsIImapMockChannel, public nsICacheListener
+class nsImapMockChannel : public nsIImapMockChannel
+                        , public nsICacheListener
+                        , public nsITransportEventSink
 {
 public:
 
@@ -678,6 +683,7 @@ public:
   NS_DECL_NSICHANNEL
   NS_DECL_NSIREQUEST
   NS_DECL_NSICACHELISTENER
+  NS_DECL_NSITRANSPORTEVENTSINK
 	
   nsImapMockChannel();
   virtual ~nsImapMockChannel();

@@ -36,7 +36,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsBrowserStatusFilter.h"
-#include "nsIFileTransportService.h"
 #include "nsIChannel.h"
 #include "nsITimer.h"
 #include "nsIServiceManager.h"
@@ -121,10 +120,6 @@ nsBrowserStatusFilter::OnStateChange(nsIWebProgress *aWebProgress,
                                      nsresult aStatus)
 {
     if (!mListener)
-        return NS_OK;
-
-    // ignore local/resource/chrome files
-    if (aStatus == NS_NET_STATUS_READ_FROM || aStatus == NS_NET_STATUS_WROTE_TO)
         return NS_OK;
 
     if (aStateFlags & STATE_START) {
@@ -239,10 +234,6 @@ nsBrowserStatusFilter::OnStatusChange(nsIWebProgress *aWebProgress,
                                       const PRUnichar *aMessage)
 {
     if (!mListener)
-        return NS_OK;
-
-    // ignore local/resource/chrome files
-    if (aStatus == NS_NET_STATUS_READ_FROM || aStatus == NS_NET_STATUS_WROTE_TO)
         return NS_OK;
 
     //

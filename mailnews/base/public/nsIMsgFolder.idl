@@ -376,7 +376,7 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
   boolean shouldStoreMsgOffline(in nsMsgKey msgKey);
   boolean hasMsgOffline(in nsMsgKey msgKey);
 
-  nsITransport getOfflineFileTransport(in nsMsgKey msgKey, out PRUint32 offset, out PRUint32 size);
+  nsIInputStream getOfflineFileStream(in nsMsgKey msgKey, out PRUint32 offset, out PRUint32 size);
   readonly attribute nsIOutputStream offlineStoreOutputStream;
   readonly attribute nsIInputStream offlineStoreInputStream;
   void DownloadMessagesForOffline(in nsISupportsArray messages, in nsIMsgWindow window);        

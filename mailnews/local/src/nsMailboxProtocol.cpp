@@ -61,11 +61,10 @@
 
 #include "nsFileStream.h"
 PRLogModuleInfo *MAILBOX;
-#include "nsIFileChannel.h"
 #include "nsIFileStreams.h"
+#include "nsIStreamTransportService.h"
 #include "nsIStreamConverterService.h"
 #include "nsIIOService.h"
-#include "nsIFileTransportService.h"
 #include "nsXPIDLString.h"
 #include "nsNetUtil.h"
 #include "nsIMsgWindow.h"
@@ -128,44 +127,42 @@ NS_IMETHODIMP nsMailboxProtocol::GetContentLength(PRInt32 * aContentLength)
   return NS_OK;
 }
 
+nsresult nsMailboxProtocol::OpenMultipleMsgTransport(PRUint32 offset, PRInt32 size)
+{
+  nsresult rv;
+
+  NS_DEFINE_CID(kStreamTransportServiceCID, NS_STREAMTRANSPORTSERVICE_CID);
+  nsCOMPtr<nsIStreamTransportService> serv =
+      do_GetService(kStreamTransportServiceCID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = serv->CreateInputTransport(m_multipleMsgMoveCopyStream, offset, size, PR_FALSE, getter_AddRefs(m_transport));
+
+  return rv;
+}
+
 nsresult nsMailboxProtocol::OpenFileSocketForReuse(nsIURI * aURL, PRUint32 aStartPosition, PRInt32 aReadCount)
 {
   NS_ENSURE_ARG_POINTER(aURL);
 
 	nsresult rv = NS_OK;
-	m_startPosition = aStartPosition;
 	m_readCount = aReadCount;
 
   nsCOMPtr <nsIFile> file;
 
   rv = GetFileFromURL(aURL, getter_AddRefs(file));
   NS_ENSURE_SUCCESS(rv, rv);
-
-  NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
-
-  nsCOMPtr<nsIFileTransportService> fts = 
-           do_GetService(kFileTransportServiceCID, &rv);    
-  NS_ENSURE_SUCCESS(rv, rv);
     
-  nsCOMPtr<nsIFileInputStream>     fileStream = do_CreateInstance(NS_LOCALFILEINPUTSTREAM_CONTRACTID, &rv);
+  nsCOMPtr<nsIFileInputStream> fileStream = do_CreateInstance(NS_LOCALFILEINPUTSTREAM_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   m_multipleMsgMoveCopyStream = do_QueryInterface(fileStream, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   fileStream->Init(file,  PR_RDONLY, 0664, PR_FALSE);  //just have to read the messages
-  PRUint32 length;
-  PRInt64 fileSize; 
-  rv = file->GetFileSize( &fileSize);
-  LL_L2UI( length, fileSize );  
 
-  // probably should pass in the file size instead of aReadCount
-  rv = fts->CreateTransportFromStream(NS_LITERAL_CSTRING("mailbox"),
-                            m_multipleMsgMoveCopyStream,
-                            NS_LITERAL_CSTRING(""),
-                            NS_LITERAL_CSTRING(""),
-                            length, PR_FALSE, getter_AddRefs(m_transport));
+  rv = OpenMultipleMsgTransport(aStartPosition, aReadCount);
+
   m_socketIsOpen = PR_FALSE;
-
 	return rv;
 }
 
@@ -329,8 +326,32 @@ NS_IMETHODIMP nsMailboxProtocol::OnStopRequest(nsIRequest *request, nsISupports 
                 // basically re-initialize the transport with the correct message size.
                 // then, we have to make sure the url keeps running somehow.
 			          nsCOMPtr<nsISupports> urlSupports = do_QueryInterface(m_runningUrl);
+                //
                 // put us in a state where we are always notified of incoming data
-                rv = m_transport->AsyncRead(this, urlSupports, msgKey, msgSize, 0, getter_AddRefs(m_request));
+                //
+
+                m_transport = 0; // open new stream transport
+                m_inputStream = 0;
+                m_outputStream = 0;
+
+                rv = OpenMultipleMsgTransport(msgKey, msgSize);
+                if (NS_SUCCEEDED(rv))
+                {
+                  if (!m_inputStream)
+                    rv = m_transport->OpenInputStream(0, 0, 0, getter_AddRefs(m_inputStream));
+
+                  if (NS_SUCCEEDED(rv))
+                  {
+                    nsCOMPtr<nsIInputStreamPump> pump;
+                    rv = NS_NewInputStreamPump(getter_AddRefs(pump), m_inputStream);
+                    if (NS_SUCCEEDED(rv)) {
+                      rv = pump->AsyncRead(this, urlSupports);
+                      if (NS_SUCCEEDED(rv))
+                        m_request = pump;
+                    }
+                  }
+                }
+
                 NS_ASSERTION(NS_SUCCEEDED(rv), "AsyncRead failed");
                 if (m_loadGroup)
                   m_loadGroup->RemoveRequest(NS_STATIC_CAST(nsIRequest *, this), nsnull, aStatus);
@@ -795,3 +816,4 @@ nsresult nsMailboxProtocol::CloseSocket()
 	return 0;
 }
 
+// vim: ts=2 sw=2

@@ -48,13 +48,13 @@ CPPSRCS		= \
 	nsCacheMetaData.cpp \
 	nsCacheService.cpp \
 	nsCacheSession.cpp \
+	nsMemoryCacheDevice.cpp \
 	nsDiskCacheBinding.cpp \
 	nsDiskCacheBlockFile.cpp \
 	nsDiskCacheDevice.cpp \
 	nsDiskCacheEntry.cpp \
 	nsDiskCacheMap.cpp \
 	nsDiskCacheStreams.cpp \
-	nsMemoryCacheDevice.cpp \
 	$(NULL)
 
 include $(topsrcdir)/config/config.mk

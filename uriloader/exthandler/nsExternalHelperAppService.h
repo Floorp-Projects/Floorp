@@ -39,6 +39,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsILocalFile.h"
+#include "nsIChannel.h"
 
 #include "nsIRDFDataSource.h"
 #include "nsIRDFResource.h"

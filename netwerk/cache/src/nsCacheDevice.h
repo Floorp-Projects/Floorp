@@ -32,7 +32,8 @@ class nsIFile;
 class nsCString;
 class nsCacheEntry;
 class nsICacheVisitor;
-class nsITransport;
+class nsIInputStream;
+class nsIOutputStream;
 
 /******************************************************************************
 * nsCacheDevice
@@ -52,9 +53,15 @@ public:
     virtual nsresult BindEntry( nsCacheEntry * entry ) = 0;
     virtual void     DoomEntry( nsCacheEntry * entry ) = 0;
 
-    virtual nsresult GetTransportForEntry( nsCacheEntry * entry,
-                                           nsCacheAccessMode mode,
-                                           nsITransport **result ) = 0;
+    virtual nsresult OpenInputStreamForEntry(nsCacheEntry *     entry,
+                                             nsCacheAccessMode  mode,
+                                             PRUint32           offset,
+                                             nsIInputStream **  result) = 0;
+
+    virtual nsresult OpenOutputStreamForEntry(nsCacheEntry *     entry,
+                                              nsCacheAccessMode  mode,
+                                              PRUint32           offset,
+                                              nsIOutputStream ** result) = 0;
 
     virtual nsresult GetFileForEntry( nsCacheEntry *    entry,
                                       nsIFile **        result ) = 0;

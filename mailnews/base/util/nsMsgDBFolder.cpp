@@ -42,7 +42,7 @@
 #include "nsMsgFolderFlags.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
-#include "nsIFileChannel.h"
+#include "nsNetUtil.h"
 #include "nsIMsgFolderCache.h"
 #include "nsIMsgFolderCacheElement.h"
 #include "nsMsgBaseCID.h"
@@ -53,7 +53,6 @@
 #include "nsIFileStream.h"
 #include "nsIChannel.h"
 #include "nsITransport.h"
-#include "nsIFileTransportService.h"
 #include "nsIMsgFolderCompactor.h"
 #include "nsIDocShell.h"
 #include "nsIMsgWindow.h"
@@ -520,50 +519,34 @@ NS_IMETHODIMP nsMsgDBFolder::GetOfflineStoreInputStream(nsIInputStream **stream)
   return rv;
 }
 
-NS_IMETHODIMP nsMsgDBFolder::GetOfflineFileTransport(nsMsgKey msgKey, PRUint32 *offset, PRUint32 *size, nsITransport **aFileChannel)
+NS_IMETHODIMP nsMsgDBFolder::GetOfflineFileStream(nsMsgKey msgKey, PRUint32 *offset, PRUint32 *size, nsIInputStream **aFileStream)
 {
-  NS_ENSURE_ARG(aFileChannel);
+  NS_ENSURE_ARG(aFileStream);
 
   *offset = *size = 0;
   
   nsresult rv;
 
-  rv = nsComponentManager::CreateInstance(NS_LOCALFILECHANNEL_CONTRACTID, nsnull, 
-              NS_GET_IID(nsIFileChannel), (void **) aFileChannel);
-  if (*aFileChannel)
+  nsXPIDLCString nativePath;
+  mPath->GetNativePath(getter_Copies(nativePath));
+
+  nsCOMPtr <nsILocalFile> localStore;
+  rv = NS_NewNativeLocalFile(nativePath, PR_TRUE, getter_AddRefs(localStore));
+  if (NS_SUCCEEDED(rv) && localStore)
   {
-    nsXPIDLCString nativePath;
-    mPath->GetNativePath(getter_Copies(nativePath));
+    rv = NS_NewLocalFileInputStream(aFileStream, localStore);
 
-    nsCOMPtr <nsILocalFile> localStore;
-    rv = NS_NewNativeLocalFile(nativePath, PR_TRUE, getter_AddRefs(localStore));
-    if (NS_SUCCEEDED(rv) && localStore)
+    if (NS_SUCCEEDED(rv))
     {
-      NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
-      nsCOMPtr<nsIFileTransportService> fts = 
-               do_GetService(kFileTransportServiceCID, &rv);
-    
-      if (NS_FAILED(rv))
-        return rv;
-      
-      rv = fts->CreateTransport(localStore,
-                                PR_RDWR | PR_CREATE_FILE,
-                                0664,
-                                PR_TRUE,
-                                aFileChannel);
 
-      if (NS_SUCCEEDED(rv))
+      nsresult rv = GetDatabase(nsnull);
+      NS_ENSURE_SUCCESS(rv, NS_OK);
+        nsCOMPtr<nsIMsgDBHdr> hdr;
+        rv = mDatabase->GetMsgHdrForKey(msgKey, getter_AddRefs(hdr));
+      if (hdr && NS_SUCCEEDED(rv))
       {
-
-        nsresult rv = GetDatabase(nsnull);
-        NS_ENSURE_SUCCESS(rv, NS_OK);
-	      nsCOMPtr<nsIMsgDBHdr> hdr;
-	      rv = mDatabase->GetMsgHdrForKey(msgKey, getter_AddRefs(hdr));
-        if (hdr && NS_SUCCEEDED(rv))
-        {
-          hdr->GetMessageOffset(offset);
-          hdr->GetOfflineMessageSize(size);
-        }
+        hdr->GetMessageOffset(offset);
+        hdr->GetOfflineMessageSize(size);
       }
     }
   }

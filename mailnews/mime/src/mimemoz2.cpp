@@ -1121,15 +1121,12 @@ mime_image_begin(const char *image_url, const char *content_type,
             {
               mailUrl->CacheCacheEntry(entry);
               entry->MarkValid();
-              nsCOMPtr<nsITransport> transport;
-              rv = entry->GetTransport(getter_AddRefs(transport));
-              if (NS_FAILED(rv)) return nsnull;
 
               // remember the content type as meta data so we can pull it out in the imap code
               // to feed the cache entry directly to imglib w/o going through mime.
               entry->SetMetaDataElement("contentType", content_type);
-              nsCOMPtr<nsIOutputStream> out;
-              rv = transport->OpenOutputStream(0, PRUint32(-1), 0, getter_AddRefs(mid->memCacheOutputStream));
+
+              rv = entry->OpenOutputStream(0, getter_AddRefs(mid->memCacheOutputStream));
               if (NS_FAILED(rv)) return nsnull;
             }
           }

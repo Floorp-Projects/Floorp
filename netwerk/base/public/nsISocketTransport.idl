@@ -37,59 +37,76 @@
 
 #include "nsITransport.idl"
 
-[scriptable, uuid(785CA0F0-C39E-11d3-9ED6-0010A4053FD0)]
+interface nsIInterfaceRequestor;
+interface nsISocketEventSink;
+
+%{C++
+#include "prio.h"
+%}
+
+[ptr] native PRNetAddrStar(PRNetAddr);
+
+/**
+ * nsISocketTransport
+ *
+ * NOTE: This is a free-threaded interface.
+ */
+[scriptable, uuid(1e372001-ca12-4507-8405-3267d4e0c1fd)]
 interface nsISocketTransport : nsITransport 
 {
     /**
-     * Destination host and port. These are used for reporting status messages
-     * Since the end server may change at any time (eg persistent connections
-     * through proxies), a client can update this to get correct results.
-     * There is no other effect of setting these attributes, and if a proxy
-     * server is not being used, NS_ERROR_FAILURE is returned.
+     * Get the host for the underlying socket connection.
      */
-    attribute string host;
-    attribute long port;
+    readonly attribute AUTF8String host;
 
     /**
+     * Get the port for the underlying socket connection.
+     */
+    readonly attribute long port;
+
+    /**
+     * Get the PRNetAddr for the underlying socket connection.
+     */
+    [noscript] void getAddress(in PRNetAddrStar addr);
+
+    /**
+     * Security info object returned from the PSM socket provider.  This object
+     * supports nsISSLSocketControl, nsITransportSecurityInfo, and possibly
+     * other interfaces.
+     */
+    readonly attribute nsISupports securityInfo;
+    
+    /**
+     * Security notification callbacks passed to PSM via nsISSLSocketControl at
+     * socket creation time.
      *
+     * NOTE: this attribute cannot be changed once a stream has been opened.
      */
-    attribute boolean reuseConnection;
-    
+    attribute nsIInterfaceRequestor securityCallbacks;
+   
     /**
-     * socket read/write timeout in seconds; 0 = no timeout
+     * Test if this socket transport is (still) connected.
      */
-    attribute unsigned long socketTimeout;
-    
+    boolean isAlive();
+
     /**
-     * socket   connect  timeout in seconds; 0 = no timeout
+     * nsITransportEventSink status codes:
      */
-    attribute unsigned long socketConnectTimeout;
-    
-    /**
-     * Is used to tell the channel to stop reading data after a certain point;
-     * needed by HTTP/1.1
-     */
-    attribute long bytesExpected;
-    attribute unsigned long reuseCount;
-    
-    /**
-     * Checks if the socket is still alive
-     *
-     * @param seconds   amount of time after which the socket is always deemed to be
-     *                  dead (no further checking is done in this case); seconds = 0
-     *                  will cause it not to do the timeout checking at all
-     */
-    boolean isAlive (in unsigned long seconds);
-    
-    /**
-     * maximum amount of time in seconds the transport is allowed to stay alive
-     * while connected (0 - default; no maximum idle timeout)
-     */
-    attribute unsigned long idleTimeout;
-    
-	/**
-	 * the string representation of the underlying ip address. Caller 
-	 * is responsible for de-allocating the returned string.
-	 */
-	[noscript] string GetIPStr(in unsigned long aStrLen);
+    const unsigned long STATUS_RESOLVING      = 0x804b0003;
+    const unsigned long STATUS_CONNECTED_TO   = 0x804b0004;
+    const unsigned long STATUS_SENDING_TO     = 0x804b0005;
+    const unsigned long STATUS_RECEIVING_FROM = 0x804b0006;
+    const unsigned long STATUS_CONNECTING_TO  = 0x804b0007;
+    const unsigned long STATUS_WAITING_FOR    = 0x804b000a;
 };
+
+%{C++
+/**
+ * #define's for compatibility
+ */
+#define NS_NET_STATUS_RESOLVING_HOST nsISocketTransport::STATUS_RESOLVING
+#define NS_NET_STATUS_CONNECTED_TO   nsISocketTransport::STATUS_CONNECTED_TO
+#define NS_NET_STATUS_SENDING_TO     nsISocketTransport::STATUS_SENDING_TO
+#define NS_NET_STATUS_RECEIVING_FROM nsISocketTransport::STATUS_RECEIVING_FROM
+#define NS_NET_STATUS_CONNECTING_TO  nsISocketTransport::STATUS_CONNECTING_TO
+%}

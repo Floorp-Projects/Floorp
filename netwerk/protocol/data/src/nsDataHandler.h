@@ -39,9 +39,6 @@
 #define nsDataHandler_h___
 
 #include "nsIProtocolHandler.h"
-// {B6ED3030-6183-11d3-A178-0050041CAF44}
-#define NS_DATAHANDLER_CID \
-    { 0xb6ed3030, 0x6183, 0x11d3, { 0xa1, 0x78, 0x00, 0x50, 0x04, 0x1c, 0xaf, 0x44 } }
 
 class nsDataHandler : public nsIProtocolHandler
 {

@@ -1,100 +1,86 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: NPL 1.1/GPL 2.0/LGPL 2.1
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
- * The contents of this file are subject to the Netscape Public License
- * Version 1.1 (the "License"); you may not use this file except in
- * compliance with the License. You may obtain a copy of the License at
- * http://www.mozilla.org/NPL/
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
  *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is 
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
- * the Initial Developer. All Rights Reserved.
+ * The Initial Developer of the Original Code is Brian Ryner.
+ * Portions created by Brian Ryner are Copyright (C) 2000 Brian Ryner.
+ * All Rights Reserved.
  *
- * Contributor(s):
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or 
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the NPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the NPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+ * Contributor(s): 
+ *  Brian Ryner <bryner@uiuc.edu>
+ */
 
-// datetime implementation
+// DateTime implementation
 
 #include "nsDateTimeChannel.h"
-#include "nsNetUtil.h"
 #include "nsIServiceManager.h"
 #include "nsILoadGroup.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsXPIDLString.h"
 #include "nsISocketTransportService.h"
-#include "nsITransport.h"
+#include "nsIStringStream.h"
+#include "nsMimeTypes.h"
+#include "nsIStreamConverterService.h"
+#include "nsITXTToHTMLConv.h"
 #include "nsIProgressEventSink.h"
+#include "nsEventQueueUtils.h"
+#include "nsNetUtil.h"
+#include "nsCRT.h"
+
+static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
+static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 
 // nsDateTimeChannel methods
-nsDateTimeChannel::nsDateTimeChannel() {
-    mContentLength = -1;
-    mPort = -1;
+nsDateTimeChannel::nsDateTimeChannel()
+    : mLoadFlags(LOAD_NORMAL)
+    , mStatus(NS_OK)
+    , mPort(-1)
+{
 }
 
-nsDateTimeChannel::~nsDateTimeChannel() {
+nsDateTimeChannel::~nsDateTimeChannel()
+{
 }
 
 NS_IMPL_ISUPPORTS4(nsDateTimeChannel, 
                    nsIChannel, 
-                   nsIRequest, 
+                   nsIRequest,
                    nsIStreamListener, 
                    nsIRequestObserver)
 
 nsresult
-nsDateTimeChannel::Init(nsIURI* uri, nsIProxyInfo* proxyInfo)
+nsDateTimeChannel::Init(nsIURI *uri, nsIProxyInfo *proxyInfo)
 {
     nsresult rv;
 
     NS_ASSERTION(uri, "no uri");
 
-    mUrl = uri;
+    mURI = uri;
     mProxyInfo = proxyInfo;
 
-    rv = mUrl->GetPort(&mPort);
+    rv = mURI->GetPort(&mPort);
     if (NS_FAILED(rv) || mPort < 1)
         mPort = DATETIME_PORT;
 
-    rv = mUrl->GetPath(mHost);
+    rv = mURI->GetPath(mHost);
     if (NS_FAILED(rv)) return rv;
 
-    if (!*(const char *)mHost) return NS_ERROR_NOT_INITIALIZED;
+    if (mHost.IsEmpty())
+        return NS_ERROR_MALFORMED_URI;
 
+    mContentType = NS_LITERAL_CSTRING(TEXT_HTML); // expected content-type
     return NS_OK;
-}
-
-NS_METHOD
-nsDateTimeChannel::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
-{
-    nsDateTimeChannel* dc = new nsDateTimeChannel();
-    if (dc == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(dc);
-    nsresult rv = dc->QueryInterface(aIID, aResult);
-    NS_RELEASE(dc);
-    return rv;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -103,20 +89,23 @@ nsDateTimeChannel::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult
 NS_IMETHODIMP
 nsDateTimeChannel::GetName(nsACString &result)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return mURI->GetSpec(result);
 }
 
 NS_IMETHODIMP
 nsDateTimeChannel::IsPending(PRBool *result)
 {
-    NS_NOTREACHED("nsDateTimeChannel::IsPending");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    *result = (mPump != nsnull);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDateTimeChannel::GetStatus(nsresult *status)
 {
-    *status = NS_OK;
+    if (NS_SUCCEEDED(mStatus) && mPump)
+        mPump->GetStatus(status);
+    else
+        *status = mStatus;
     return NS_OK;
 }
 
@@ -124,22 +113,28 @@ NS_IMETHODIMP
 nsDateTimeChannel::Cancel(nsresult status)
 {
     NS_ASSERTION(NS_FAILED(status), "shouldn't cancel with a success code");
-    NS_NOTREACHED("nsDateTimeChannel::Cancel");
-    return NS_ERROR_NOT_IMPLEMENTED;
+
+    mStatus = status;
+    if (mPump)
+        mPump->Cancel(status);
+
+    return NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP
-nsDateTimeChannel::Suspend(void)
+nsDateTimeChannel::Suspend()
 {
-    NS_NOTREACHED("nsDateTimeChannel::Suspend");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    if (mPump)
+        mPump->Suspend();
+    return NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP
-nsDateTimeChannel::Resume(void)
+nsDateTimeChannel::Resume()
 {
-    NS_NOTREACHED("nsDateTimeChannel::Resume");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    if (mPump)
+        mPump->Resume();
+    return NS_ERROR_UNEXPECTED;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -148,7 +143,7 @@ nsDateTimeChannel::Resume(void)
 NS_IMETHODIMP
 nsDateTimeChannel::GetOriginalURI(nsIURI* *aURI)
 {
-    *aURI = mOriginalURI ? mOriginalURI : mUrl;
+    *aURI = mOriginalURI ? mOriginalURI : mURI;
     NS_ADDREF(*aURI);
     return NS_OK;
 }
@@ -163,7 +158,7 @@ nsDateTimeChannel::SetOriginalURI(nsIURI* aURI)
 NS_IMETHODIMP
 nsDateTimeChannel::GetURI(nsIURI* *aURI)
 {
-    *aURI = mUrl;
+    *aURI = mURI;
     NS_IF_ADDREF(*aURI);
     return NS_OK;
 }
@@ -171,58 +166,84 @@ nsDateTimeChannel::GetURI(nsIURI* *aURI)
 NS_IMETHODIMP
 nsDateTimeChannel::Open(nsIInputStream **_retval)
 {
-    nsresult rv = NS_OK;
-    rv = NS_CheckPortSafety(mPort, "datetime");
-    if (NS_FAILED(rv))
-      return rv;
-
-    nsCOMPtr<nsISocketTransportService> sts = 
-             do_GetService("@mozilla.org/network/socket-transport-service;1", &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsITransport> transport;
-    rv = sts->CreateTransport(mHost,
-                              mPort,
-                              mProxyInfo,
-                              32,
-                              32,
-                              getter_AddRefs(transport));
-    if (NS_FAILED(rv)) return rv;
-
-    transport->SetNotificationCallbacks(mCallbacks,
-                                        (mLoadFlags & LOAD_BACKGROUND));
-
-    return transport->OpenInputStream(0, PRUint32(-1), 0, _retval);
+    NS_NOTREACHED("nsDateTimeChannel::Open");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsDateTimeChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
 {
     nsresult rv = NS_OK;
+
     rv = NS_CheckPortSafety(mPort, "datetime");
-    if (NS_FAILED(rv))
-      return rv;
+    if (NS_FAILED(rv)) return rv;
 
+    nsCOMPtr<nsIEventQueue> eventQ;
+    rv = NS_GetCurrentEventQ(getter_AddRefs(eventQ));
+    if (NS_FAILED(rv)) return rv;
+
+    //
+    // create transport
+    //
     nsCOMPtr<nsISocketTransportService> sts = 
-             do_GetService("@mozilla.org/network/socket-transport-service;1", &rv);
+             do_GetService(kSocketTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsITransport> transport;
-    rv = sts->CreateTransport(mHost,
-                              mPort,
-                              mProxyInfo,
-                              32,
-                              32,
-                              getter_AddRefs(transport));
+    rv = sts->CreateTransport(nsnull, 0, mHost, mPort, mProxyInfo,
+                              getter_AddRefs(mTransport));
     if (NS_FAILED(rv)) return rv;
 
-    transport->SetNotificationCallbacks(mCallbacks,
-                                        (mLoadFlags & LOAD_BACKGROUND));
+    // not fatal if these fail
+    mTransport->SetSecurityCallbacks(mCallbacks);
+    mTransport->SetEventSink(this, eventQ);
+
+    //
+    // create TXT to HTML stream converter
+    //
+    nsCOMPtr<nsIStreamConverterService> scs = 
+             do_GetService(kStreamConverterServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    NS_NAMED_LITERAL_STRING(fromStr, "text/plain");
+    NS_NAMED_LITERAL_STRING(toStr, "text/html");
+
+    nsCOMPtr<nsIStreamListener> convListener;
+    rv = scs->AsyncConvertData(fromStr.get(), toStr.get(), this, nsnull,
+                               getter_AddRefs(convListener));
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsITXTToHTMLConv> conv = do_QueryInterface(convListener);
+    if (conv) {
+        nsCAutoString userHost;
+        rv = mURI->GetPath(userHost);
+
+        nsAutoString title;
+        title = NS_LITERAL_STRING("DateTime according to ")
+              + NS_ConvertUTF8toUCS2(mHost);
+
+        conv->SetTitle(title.get());
+        conv->PreFormatHTML(PR_TRUE);
+    }
+
+    //
+    // open input stream, and create input stream pump...
+    //
+    nsCOMPtr<nsIInputStream> sockIn;
+    rv = mTransport->OpenInputStream(0, 0, 0, getter_AddRefs(sockIn));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = NS_NewInputStreamPump(getter_AddRefs(mPump), sockIn);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = mPump->AsyncRead(convListener, nsnull);
+    if (NS_FAILED(rv)) return rv;
+
+    if (mLoadGroup)
+        mLoadGroup->AddRequest(this, nsnull);
 
     mListener = aListener;
-    
-    nsCOMPtr<nsIRequest> request;
-    return transport->AsyncRead(this, ctxt, 0, PRUint32(-1), 0, getter_AddRefs(request));
+    mListenerContext = ctxt;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -239,49 +260,46 @@ nsDateTimeChannel::SetLoadFlags(PRUint32 aLoadFlags)
     return NS_OK;
 }
 
-#define DATETIME_TYPE "text/plain"
-
 NS_IMETHODIMP
 nsDateTimeChannel::GetContentType(nsACString &aContentType)
 {
-    aContentType = NS_LITERAL_CSTRING(DATETIME_TYPE);
+    aContentType = mContentType;
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDateTimeChannel::SetContentType(const nsACString &aContentType)
 {
-    // It doesn't make sense to set the content-type on this type
-    // of channel...
-    return NS_ERROR_FAILURE;
+    mContentType = aContentType;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDateTimeChannel::GetContentCharset(nsACString &aContentCharset)
 {
-    aContentCharset.Truncate();
+    aContentCharset = mContentCharset;
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDateTimeChannel::SetContentCharset(const nsACString &aContentCharset)
 {
-    NS_NOTREACHED("nsDateTimeChannel::SetContentCharset");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    mContentCharset = aContentCharset;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDateTimeChannel::GetContentLength(PRInt32 *aContentLength)
 {
-    *aContentLength = mContentLength;
+    *aContentLength = -1;
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDateTimeChannel::SetContentLength(PRInt32 aContentLength)
 {
-    NS_NOTREACHED("nsDateTimeChannel::SetContentLength");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    // silently ignore this...
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -295,13 +313,7 @@ nsDateTimeChannel::GetLoadGroup(nsILoadGroup* *aLoadGroup)
 NS_IMETHODIMP
 nsDateTimeChannel::SetLoadGroup(nsILoadGroup* aLoadGroup)
 {
-    if (mLoadGroup) // if we already had a load group remove ourselves...
-      (void)mLoadGroup->RemoveRequest(this, nsnull, NS_OK);
-
     mLoadGroup = aLoadGroup;
-    if (mLoadGroup) {
-        return mLoadGroup->AddRequest(this, nsnull);
-    }
     return NS_OK;
 }
 
@@ -332,40 +344,73 @@ NS_IMETHODIMP
 nsDateTimeChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCallbacks)
 {
     mCallbacks = aNotificationCallbacks;
+    mProgressSink = do_GetInterface(mCallbacks);
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDateTimeChannel::GetSecurityInfo(nsISupports **sec)
+NS_IMETHODIMP 
+nsDateTimeChannel::GetSecurityInfo(nsISupports **aSecurityInfo)
 {
-    NS_ENSURE_ARG_POINTER(sec);
-    *sec = nsnull;
+    if (mTransport)
+        return mTransport->GetSecurityInfo(aSecurityInfo);
+
+    *aSecurityInfo = nsnull;
     return NS_OK;
 }
 
+//-----------------------------------------------------------------------------
 // nsIRequestObserver methods
+//-----------------------------------------------------------------------------
+
 NS_IMETHODIMP
-nsDateTimeChannel::OnStartRequest(nsIRequest *request, nsISupports *aContext) {
-    return mListener->OnStartRequest(this, aContext);
+nsDateTimeChannel::OnStartRequest(nsIRequest *req, nsISupports *ctx)
+{
+    return mListener->OnStartRequest(this, mListenerContext);
 }
 
+NS_IMETHODIMP
+nsDateTimeChannel::OnStopRequest(nsIRequest *req, nsISupports *ctx, nsresult status)
+{
+    if (NS_SUCCEEDED(mStatus))
+        mStatus = status;
+
+    mListener->OnStopRequest(this, mListenerContext, mStatus);
+    mListener = 0;
+    mListenerContext = 0;
+
+    if (mLoadGroup)
+        mLoadGroup->RemoveRequest(this, nsnull, mStatus);
+
+    mPump = 0;
+    mTransport = 0;
+    return NS_OK;
+}
 
 NS_IMETHODIMP
-nsDateTimeChannel::OnStopRequest(nsIRequest *request, nsISupports* aContext,
-                                 nsresult aStatus) {
-    if (mLoadGroup) {
-        nsresult rv = mLoadGroup->RemoveRequest(this, nsnull, aStatus);
-        if (NS_FAILED(rv)) return rv;
+nsDateTimeChannel::OnDataAvailable(nsIRequest *req, nsISupports *ctx,
+                                 nsIInputStream *stream, PRUint32 offset,
+                                 PRUint32 count)
+{
+    return mListener->OnDataAvailable(this, mListenerContext, stream, offset, count);
+}
+
+//-----------------------------------------------------------------------------
+// nsITransportEventSink methods
+//-----------------------------------------------------------------------------
+
+NS_IMETHODIMP
+nsDateTimeChannel::OnTransportStatus(nsITransport *trans, nsresult status,
+                                     PRUint32 progress, PRUint32 progressMax)
+{
+    // suppress status notification if channel is no longer pending!
+    if (mProgressSink && mPump && !(mLoadFlags & LOAD_BACKGROUND)) {
+        NS_ConvertUTF8toUCS2 host(mHost);
+        mProgressSink->OnStatus(this, nsnull, status, host.get());
+
+        if (status == nsISocketTransport::STATUS_RECEIVING_FROM ||
+            status == nsISocketTransport::STATUS_SENDING_TO) {
+            mProgressSink->OnProgress(this, nsnull, progress, progressMax);
+        }
     }
-    return mListener->OnStopRequest(this, aContext, aStatus);
-}
-
-
-// nsIStreamListener method
-NS_IMETHODIMP
-nsDateTimeChannel::OnDataAvailable(nsIRequest *request, nsISupports* aContext,
-                               nsIInputStream *aInputStream, PRUint32 aSourceOffset,
-                               PRUint32 aLength) {
-    mContentLength = aLength;
-    return mListener->OnDataAvailable(this, aContext, aInputStream, aSourceOffset, aLength);
+    return NS_OK;
 }

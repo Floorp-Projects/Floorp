@@ -41,7 +41,6 @@
 #include "nscore.h"
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
-#include "nsIFileTransportService.h"
 #include "nsIURI.h"
 #include "nsIStreamListener.h"
 #include "prprf.h"
@@ -53,7 +52,6 @@
 #include "nsIErrorService.h" 
 #include "netCore.h"
 #include "nsIObserverService.h"
-#include "nsIHttpProtocolHandler.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranchInternal.h"
 #include "nsIPrefLocalizedString.h"
@@ -66,12 +64,14 @@
 #include "nsEscape.h"
 #include "nsNetCID.h"
 #include "nsIRecyclingAllocator.h"
+#include "nsISocketTransport.h"
+#include "nsCRT.h"
 
 #define PORT_PREF_PREFIX     "network.security.ports."
 #define PORT_PREF(x)         PORT_PREF_PREFIX x
 #define AUTODIAL_PREF        "network.autodial-helper.enabled"
 
-static NS_DEFINE_CID(kFileTransportService, NS_FILETRANSPORTSERVICE_CID);
+static NS_DEFINE_CID(kStreamTransportServiceCID, NS_STREAMTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kDNSServiceCID, NS_DNSSERVICE_CID);
 static NS_DEFINE_CID(kErrorServiceCID, NS_ERRORSERVICE_CID);
@@ -176,65 +176,52 @@ nsIOService::nsIOService()
 nsresult
 nsIOService::Init()
 {
-    nsresult rv = NS_OK;
+    nsresult rv;
     
     // Hold onto the eventQueue service.  We do not want any eventqueues to go away
     // when we shutdown until we process all remaining transports
 
-    if (NS_SUCCEEDED(rv))
-        mEventQueueService = do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &rv);
-  
+    mEventQueueService = do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID);
+    if (NS_FAILED(rv))
+        NS_WARNING("failed to get event queue service");
     
     // We need to get references to these services so that we can shut them
     // down later. If we wait until the nsIOService is being shut down,
     // GetService will fail at that point.
-    rv = nsServiceManager::GetService(kSocketTransportServiceCID,
-                                      NS_GET_IID(nsISocketTransportService),
-                                      getter_AddRefs(mSocketTransportService));
 
-    if (NS_FAILED(rv)) return rv;
+    mSocketTransportService = do_GetService(kSocketTransportServiceCID, &rv);
+    if (NS_FAILED(rv))
+        NS_WARNING("failed to get socket transport service");
 
-    rv = nsServiceManager::GetService(kFileTransportService,
-                                      NS_GET_IID(nsIFileTransportService),
-                                      getter_AddRefs(mFileTransportService));
-    if (NS_FAILED(rv)) return rv;
+    mStreamTransportService = do_GetService(kStreamTransportServiceCID, &rv);
+    if (NS_FAILED(rv))
+        NS_WARNING("failed to get stream transport service");
 
-    rv = nsServiceManager::GetService(kDNSServiceCID,
-                                      NS_GET_IID(nsIDNSService),
-                                      getter_AddRefs(mDNSService));
-    if (NS_FAILED(rv)) return rv;
+    mDNSService = do_GetService(kDNSServiceCID, &rv);
+    if (NS_FAILED(rv))
+        NS_WARNING("failed to get DNS service");
 
-    rv = nsServiceManager::GetService(kProtocolProxyServiceCID,
-                                      NS_GET_IID(nsIProtocolProxyService),
-                                      getter_AddRefs(mProxyService));
-    if (NS_FAILED(rv)) return rv;
+    mProxyService = do_GetService(kProtocolProxyServiceCID, &rv);
+    if (NS_FAILED(rv))
+        NS_WARNING("failed to get protocol proxy service");
 
-    // XXX hack until xpidl supports error info directly (http://bugzilla.mozilla.org/show_bug.cgi?id=13423)
-    nsCOMPtr<nsIErrorService> errorService = do_GetService(kErrorServiceCID, &rv);
-    if (NS_FAILED(rv)) 
-        return rv;
-    
-    rv = errorService->RegisterErrorStringBundle(NS_ERROR_MODULE_NETWORK, NECKO_MSGS_URL);
-    if (NS_FAILED(rv)) return rv;
-    rv = errorService->RegisterErrorStringBundleKey(NS_NET_STATUS_READ_FROM, "ReadFrom");
-    if (NS_FAILED(rv)) return rv;
-    rv = errorService->RegisterErrorStringBundleKey(NS_NET_STATUS_WROTE_TO, "WroteTo");
-    if (NS_FAILED(rv)) return rv;
-    rv = errorService->RegisterErrorStringBundleKey(NS_NET_STATUS_RESOLVING_HOST, "ResolvingHost");
-    if (NS_FAILED(rv)) return rv;
-    rv = errorService->RegisterErrorStringBundleKey(NS_NET_STATUS_CONNECTED_TO, "ConnectedTo");
-    if (NS_FAILED(rv)) return rv;
-    rv = errorService->RegisterErrorStringBundleKey(NS_NET_STATUS_SENDING_TO, "SendingTo");
-    if (NS_FAILED(rv)) return rv;
-    rv = errorService->RegisterErrorStringBundleKey(NS_NET_STATUS_RECEIVING_FROM, "ReceivingFrom");
-    if (NS_FAILED(rv)) return rv;
-    rv = errorService->RegisterErrorStringBundleKey(NS_NET_STATUS_CONNECTING_TO, "ConnectingTo");
-    if (NS_FAILED(rv)) return rv;
+    // XXX hack until xpidl supports error info directly (bug 13423)
+    nsCOMPtr<nsIErrorService> errorService = do_GetService(kErrorServiceCID);
+    if (errorService) {
+        errorService->RegisterErrorStringBundle(NS_ERROR_MODULE_NETWORK, NECKO_MSGS_URL);
+        errorService->RegisterErrorStringBundleKey(nsISocketTransport::STATUS_RESOLVING, "ResolvingHost");
+        errorService->RegisterErrorStringBundleKey(nsISocketTransport::STATUS_CONNECTED_TO, "ConnectedTo");
+        errorService->RegisterErrorStringBundleKey(nsISocketTransport::STATUS_SENDING_TO, "SendingTo");
+        errorService->RegisterErrorStringBundleKey(nsISocketTransport::STATUS_RECEIVING_FROM, "ReceivingFrom");
+        errorService->RegisterErrorStringBundleKey(nsISocketTransport::STATUS_CONNECTING_TO, "ConnectingTo");
+        errorService->RegisterErrorStringBundleKey(nsISocketTransport::STATUS_WAITING_FOR, "WaitingFor");
+    }
+    else
+        NS_WARNING("failed to get error service");
     
     // setup our bad port list stuff
-    for(int i=0; gBadPortList[i]; i++) {
+    for(int i=0; gBadPortList[i]; i++)
         mRestrictedPortList.AppendElement(NS_REINTERPRET_CAST(void *, gBadPortList[i]));
-    }
 
     // Further modifications to the port list come from prefs
     nsCOMPtr<nsIPrefBranch> prefBranch;
@@ -251,12 +238,13 @@ nsIOService::Init()
     // Register for profile change notifications
     nsCOMPtr<nsIObserverService> observerService =
         do_GetService("@mozilla.org/observer-service;1");
-    NS_ASSERTION(observerService, "Failed to get observer service");
     if (observerService) {
         observerService->AddObserver(this, kProfileChangeNetTeardownTopic, PR_TRUE);
         observerService->AddObserver(this, kProfileChangeNetRestoreTopic, PR_TRUE);
         observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_TRUE);
     }
+    else
+        NS_WARNING("failed to get observer service");
     
     return NS_OK;
 }
@@ -265,47 +253,6 @@ nsIOService::Init()
 nsIOService::~nsIOService()
 {
 }   
-
-NS_METHOD
-nsIOService::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
-{
-    static  nsISupports *_rValue = nsnull;
-
-    nsresult rv;
-    NS_ENSURE_NO_AGGREGATION(aOuter);
-
-    if (_rValue)
-    {
-        NS_ADDREF (_rValue);
-        *aResult = _rValue;
-        return NS_OK;
-    }
-
-    nsIOService* _ios = new nsIOService();
-    if (_ios == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(_ios);
-    rv = _ios->Init();
-    if (NS_FAILED(rv))
-    {
-        delete _ios;
-        return rv;
-    }
-
-    rv = _ios->QueryInterface(aIID, aResult);
-
-    if (NS_FAILED(rv))
-    {
-        delete _ios;
-        return rv;
-    }
-    
-    _rValue = NS_STATIC_CAST (nsISupports*, *aResult);
-    NS_RELEASE (_rValue);
-    _rValue = nsnull;
-
-    return rv;
-}
 
 NS_IMPL_THREADSAFE_ISUPPORTS3(nsIOService,
                               nsIIOService,
@@ -481,8 +428,6 @@ nsIOService::NewChannelFromURI(nsIURI *aURI, nsIChannel **result)
 {
     nsresult rv;
     NS_ENSURE_ARG_POINTER(aURI);
-    // If XPCOM shutdown has started, mProxyService could be null.
-    NS_ENSURE_TRUE(mProxyService, NS_ERROR_NOT_AVAILABLE);
     NS_TIMELINE_MARK_URI("nsIOService::NewChannelFromURI(%s)", aURI);
 
     nsCAutoString scheme;
@@ -490,8 +435,11 @@ nsIOService::NewChannelFromURI(nsIURI *aURI, nsIChannel **result)
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIProxyInfo> pi;
-    rv = mProxyService->ExamineForProxy(aURI, getter_AddRefs(pi));
-    if (NS_FAILED(rv)) return rv;
+    if (mProxyService) {
+        rv = mProxyService->ExamineForProxy(aURI, getter_AddRefs(pi));
+        if (NS_FAILED(rv))
+            pi = 0;
+    }
 
     nsCOMPtr<nsIProtocolHandler> handler;
 
@@ -535,50 +483,56 @@ nsIOService::GetOffline(PRBool *offline)
 NS_IMETHODIMP
 nsIOService::SetOffline(PRBool offline)
 {
-    nsCOMPtr<nsIObserverService>
-        observerService(do_GetService("@mozilla.org/observer-service;1"));
+    nsCOMPtr<nsIObserverService> observerService =
+        do_GetService("@mozilla.org/observer-service;1");
     
-    nsresult rv1 = NS_OK;
-    nsresult rv2 = NS_OK;
+    nsresult rv;
     if (offline) {
         NS_NAMED_LITERAL_STRING(offlineString, "offline");
-    	mOffline = PR_TRUE;		// indicate we're trying to shutdown
+    	mOffline = PR_TRUE; // indicate we're trying to shutdown
+
         // don't care if notification fails
-        if (observerService)
         // this allows users to attempt a little cleanup before dns and socket transport are shut down.
-            (void)observerService->NotifyObservers(NS_STATIC_CAST(nsIIOService *, this),
-                                                   "network:offline-about-to-go-offline",
-                                                   offlineString.get());
-        // be sure to try and shutdown both (even if the first fails)
-        if (mDNSService)
-            rv1 = mDNSService->Shutdown();  // shutdown dns service first, because it has callbacks for socket transport
-        if (mSocketTransportService)
-            rv2 = mSocketTransportService->Shutdown();
-        if (NS_FAILED(rv1)) return rv1;
-        if (NS_FAILED(rv2)) return rv2;
+        if (observerService)
+            observerService->NotifyObservers(NS_STATIC_CAST(nsIIOService *, this),
+                                             "network:offline-about-to-go-offline",
+                                             offlineString.get());
+
+        // be sure to try and shutdown both (even if the first fails)...
+        // shutdown dns service first, because it has callbacks for socket transport
+        if (mDNSService) {
+            rv = mDNSService->Shutdown();
+            NS_ASSERTION(NS_SUCCEEDED(rv), "DNS service shutdown failed");
+        }
+        if (mSocketTransportService) {
+            rv = mSocketTransportService->Shutdown();
+            NS_ASSERTION(NS_SUCCEEDED(rv), "socket transport service shutdown failed");
+        }
 
         // don't care if notification fails
         if (observerService)
-            (void)observerService->NotifyObservers(NS_STATIC_CAST(nsIIOService *, this),
-                                                   "network:offline-status-changed",
-                                                   offlineString.get());
+            observerService->NotifyObservers(NS_STATIC_CAST(nsIIOService *, this),
+                                             "network:offline-status-changed",
+                                             offlineString.get());
     }
     else if (!offline && mOffline) {
         // go online
-        if (mDNSService)
-            rv1 = mDNSService->Init();
-        if (NS_FAILED(rv2)) return rv1;
-
-        if (mSocketTransportService)
-            rv2 = mSocketTransportService->Init();		//XXX should we shutdown the dns service?
-        if (NS_FAILED(rv2)) return rv1;        
+        if (mDNSService) {
+            rv = mDNSService->Init();
+            NS_ASSERTION(NS_SUCCEEDED(rv), "DNS service init failed");
+        }
+        if (mSocketTransportService) {
+            rv = mSocketTransportService->Init();
+            NS_ASSERTION(NS_SUCCEEDED(rv), "socket transport service init failed");
+        }
         mOffline = PR_FALSE;    // indicate success only AFTER we've
                                 // brought up the services
+ 
         // don't care if notification fails
         if (observerService)
-            (void)observerService->NotifyObservers(NS_STATIC_CAST(nsIIOService *, this),
-                                                   "network:offline-status-changed",
-                                                   NS_LITERAL_STRING("online").get());
+            observerService->NotifyObservers(NS_STATIC_CAST(nsIIOService *, this),
+                                             "network:offline-status-changed",
+                                             NS_LITERAL_STRING("online").get());
     }
     return NS_OK;
 }
@@ -718,12 +672,13 @@ nsIOService::Observe(nsISupports *subject,
         }    
     }
     else if (!strcmp(topic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
-        (void)SetOffline(PR_TRUE);
-        if (mFileTransportService)
-            (void)mFileTransportService->Shutdown();
+        SetOffline(PR_TRUE);
+
+        if (mStreamTransportService)
+            mStreamTransportService->Shutdown();
 
         // Break circular reference.
-        mProxyService = nsnull;
+        mProxyService = 0;
     }
     return NS_OK;
 }

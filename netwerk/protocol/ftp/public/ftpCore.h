@@ -50,9 +50,3 @@
     NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_NETWORK, 28)
 
 #endif // __ftpCore_h___
-
-
-
-
-
-

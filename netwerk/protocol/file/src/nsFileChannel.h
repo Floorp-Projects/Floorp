@@ -38,83 +38,64 @@
 #ifndef nsFileChannel_h__
 #define nsFileChannel_h__
 
-#include "nsIChannel.h"
+#include "nsIFileChannel.h"
+#include "nsIFileURL.h"
+#include "nsIUploadChannel.h"
+#include "nsIRequest.h"
 #include "nsIInterfaceRequestor.h"
-#include "nsIInterfaceRequestorUtils.h"
+#include "nsIProgressEventSink.h"
 #include "nsILoadGroup.h"
 #include "nsIStreamListener.h"
-#include "nsIStreamProvider.h"
-#include "nsIURI.h"
-#include "nsIFile.h"        /* Solaris/gcc needed this here. */
-#include "nsIFileChannel.h"
-#include "nsIUploadChannel.h"
 #include "nsIInputStream.h"
-#include "nsIProgressEventSink.h"
 #include "nsITransport.h"
-#include "nsString.h"
 #include "nsCOMPtr.h"
-#include "prthread.h"
+#include "nsString.h"
 
-class nsFileChannel : public nsIFileChannel,
-                      public nsIUploadChannel,
-                      public nsIInterfaceRequestor,
-                      public nsIStreamListener,
-                      public nsIStreamProvider,
-                      public nsIProgressEventSink
+class nsFileChannel : public nsIFileChannel
+                    , public nsIUploadChannel
+                    , public nsIStreamListener
+                    , public nsITransportEventSink
 {
-public:
+public: 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIREQUEST
     NS_DECL_NSICHANNEL
     NS_DECL_NSIFILECHANNEL
     NS_DECL_NSIUPLOADCHANNEL
-    NS_DECL_NSIINTERFACEREQUESTOR
     NS_DECL_NSIREQUESTOBSERVER
     NS_DECL_NSISTREAMLISTENER
-    NS_DECL_NSISTREAMPROVIDER
-    NS_DECL_NSIPROGRESSEVENTSINK
+    NS_DECL_NSITRANSPORTEVENTSINK
 
     nsFileChannel();
-    // Always make the destructor virtual: 
-    virtual ~nsFileChannel();
+    virtual ~nsFileChannel() {}
 
-    // Define a Create method to be used with a factory:
-    static NS_METHOD
-    Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);
-    
-    nsresult Init(PRInt32 ioFlags, PRInt32 perm, nsIURI* uri, PRBool generateHTMLDirs = PR_FALSE);
-    nsresult GetFileTransport(nsITransport **);
-    nsresult SetStreamConverter();
-    nsresult EnsureFile();
+    nsresult Init(nsIURI *uri, PRBool htmlDirs);
 
-protected:
-    nsCOMPtr<nsIFile>                   mFile;
-    nsCOMPtr<nsIURI>                    mOriginalURI;
-    nsCOMPtr<nsIURI>                    mURI;
-    nsCOMPtr<nsIInterfaceRequestor>     mCallbacks;
-    PRInt32                             mIOFlags;
-    PRInt32                             mPerm;
-    nsCOMPtr<nsITransport>              mFileTransport;
-    nsCString                           mContentType;
-    nsCString                           mContentCharset;
-    PRUint32                            mLoadFlags;
-    nsCOMPtr<nsILoadGroup>              mLoadGroup;
-    nsCOMPtr<nsISupports>               mOwner;
-    nsCOMPtr<nsIStreamListener>         mRealListener;
-    PRUint32                            mTransferOffset;
-    PRInt32                             mTransferCount;
-    PRUint32                            mBufferSegmentSize;
-    PRUint32                            mBufferMaxSize;
-    nsresult                            mStatus;
-    nsCOMPtr<nsIProgressEventSink>      mProgress;
-    nsCOMPtr<nsIRequest>                mCurrentRequest;
-    nsCOMPtr<nsIInputStream>            mUploadStream;
-    PRUint32                            mUploadStreamLength;
-    PRBool                              mGenerateHTMLDirs;
+private:
 
-#ifdef DEBUG
-    PRThread*                           mInitiator;
-#endif
+    nsresult GetClonedFile(nsIFile **);
+    nsresult EnsureStream();
+
+    nsCOMPtr<nsIFileURL>            mURL;
+    nsCOMPtr<nsIURI>                mOriginalURI;
+    nsCOMPtr<nsISupports>           mOwner;
+    nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
+    nsCOMPtr<nsIProgressEventSink>  mProgressSink;
+    nsCOMPtr<nsILoadGroup>          mLoadGroup;
+    nsCOMPtr<nsIStreamListener>     mListener;
+    nsCOMPtr<nsISupports>           mListenerContext;
+    nsCString                       mContentType;
+    nsCString                       mContentCharset;
+    PRInt32                         mContentLength;
+    PRInt32                         mUploadLength;
+    PRUint32                        mLoadFlags;
+    nsresult                        mStatus;
+
+    nsCOMPtr<nsIRequest>            mRequest;
+    nsCOMPtr<nsIInputStream>        mStream;
+    PRBool                          mConvertToHTML; // applies only if is directory
+    PRBool                          mIsDir;
+    PRBool                          mUploading;
 };
 
-#endif // nsFileChannel_h__
+#endif // !nsFileChannel_h__

@@ -492,6 +492,9 @@ nsStorageInputStream::Seek(PRInt32 aWhence, PRInt32 aOffset)
         return NS_ERROR_UNEXPECTED;
     }
 
+    if (pos == mLogicalCursor)
+        return NS_OK;
+
     return Seek(pos);
 }
 

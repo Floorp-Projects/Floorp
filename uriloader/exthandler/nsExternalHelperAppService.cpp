@@ -54,8 +54,7 @@
 #include "nsIRefreshURI.h"
 #include "nsIDocumentLoader.h"
 #include "nsIHelperAppLauncherDialog.h"
-#include "nsITransport.h"
-#include "nsIFileTransportService.h"
+#include "nsNetUtil.h"
 #include "nsCExternalHandlerService.h" // contains contractids for the helper app service
 #include "nsIIOService.h"
 #include "nsNetCID.h"
@@ -1242,20 +1241,8 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
   }
 #endif
 
-  NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
-  nsCOMPtr<nsIFileTransportService> fts = 
-           do_GetService(kFileTransportServiceCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  nsCOMPtr<nsITransport> fileTransport;
-  rv = fts->CreateTransport(mTempFile,
-                            PR_WRONLY | PR_CREATE_FILE,
-                            0600,
-                            PR_TRUE,
-                            getter_AddRefs(fileTransport));
-  if (NS_FAILED(rv)) return rv;
-
-  rv = fileTransport->OpenOutputStream(0, PRUint32(-1), 0, getter_AddRefs(mOutStream));  
+  rv = NS_NewLocalFileOutputStream(getter_AddRefs(mOutStream), mTempFile,
+                                   PR_WRONLY | PR_CREATE_FILE, 0600);
 
 #ifdef XP_MAC
     nsXPIDLCString contentType;

@@ -43,10 +43,10 @@
 #include "nsIURI.h"
 #include "nsIStreamListener.h"
 #include "nsIRequest.h"
-#include "nsITransport.h"
-#include "nsString.h"
+#include "nsISocketTransport.h"
 #include "nsIOutputStream.h"
 #include "nsAutoLock.h"
+#include "nsString.h"
 
 class nsIProxyInfo;
 
@@ -65,7 +65,6 @@ public:
     nsresult Write(nsCString& command, PRBool suspend);
     
     void     GetReadRequest(nsIRequest** request) { NS_IF_ADDREF(*request=mReadRequest); }
-    void     GetWriteRequest(nsIRequest** request) { NS_IF_ADDREF(*request=mWriteRequest); }
 
     PRBool   IsAlive();
     
@@ -84,12 +83,12 @@ private:
     nsXPIDLCString   mHost;
     PRUint32         mPort;
 
-    nsCOMPtr<nsIRequest>        mReadRequest;
-    nsCOMPtr<nsIRequest>        mWriteRequest;
-    nsCOMPtr<nsITransport>      mCPipe;
-    nsCOMPtr<nsIOutputStream>   mOutStream;
-    nsCOMPtr<nsIStreamListener> mListener;
-    PRPackedBool                mWriteSuspened;
+
+    nsCOMPtr<nsIRequest>         mReadRequest;
+    nsCOMPtr<nsISocketTransport> mCPipe;
+    nsCOMPtr<nsIInputStream>     mInStream;
+    nsCOMPtr<nsIOutputStream>    mOutStream;
+    nsCOMPtr<nsIStreamListener>  mListener;
 };
 
 

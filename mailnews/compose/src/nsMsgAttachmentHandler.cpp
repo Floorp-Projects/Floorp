@@ -571,8 +571,7 @@ nsMsgAttachmentHandler::SnarfMsgAttachment(nsMsgCompFields *compFields)
       if (aURL)
         aURL->SetSpec(nsDependentCString(uri.get()));
 
-      rv = NS_NewInputStreamChannel(getter_AddRefs(m_converter_channel), aURL, nsnull,
-                                    NS_LITERAL_CSTRING(""), NS_LITERAL_CSTRING(""), -1);
+      rv = NS_NewInputStreamChannel(getter_AddRefs(m_converter_channel), aURL, nsnull);
       if (NS_FAILED(rv))
         goto done;
 

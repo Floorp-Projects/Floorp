@@ -204,13 +204,11 @@ NS_IMETHODIMP mozXMLTermStream::Open(nsIDOMWindowInternal* aDOMWindow,
     return result;
 
   // Create an input stream channel
-  PRInt32 contentLength = 1024;
   result = NS_NewInputStreamChannel(getter_AddRefs(mChannel),
                                     uri,
                                     inputStream,
                                     nsDependentCString(contentType),
-                                    NS_LITERAL_CSTRING(""),
-                                    contentLength);
+                                    NS_LITERAL_CSTRING(""));
   if (NS_FAILED(result))
     return result;
 

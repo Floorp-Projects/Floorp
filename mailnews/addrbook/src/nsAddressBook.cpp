@@ -45,7 +45,7 @@
 #include "nsIAddrBookSession.h"
 #include "nsAddrDatabase.h"
 #include "nsIOutputStream.h"
-#include "nsIFileStreams.h"
+#include "nsNetUtil.h"
 #include "msgCore.h"
 #include "nsIImportService.h"
 #include "nsIStringBundle.h"

@@ -46,6 +46,7 @@
 #include "nsIStreamListener.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
+#include "nsISocketTransport.h"
 #include "nsIMsgHeaderParser.h"
 #include "nsFileStream.h"
 #include "nsIMsgMailNewsUrl.h"
@@ -712,14 +713,10 @@ PRInt32 nsSmtpProtocol::SendTLSResponse()
   if (m_responseCode == 220) 
   {
       nsCOMPtr<nsISupports> secInfo;
-      nsCOMPtr<nsITransport> trans;
-      nsCOMPtr<nsITransportRequest> transReq = do_QueryInterface(m_request, &rv);
+      nsCOMPtr<nsISocketTransport> strans = do_QueryInterface(m_transport, &rv);
       if (NS_FAILED(rv)) return rv;
 
-      rv = transReq->GetTransport(getter_AddRefs(trans));
-      if (NS_FAILED(rv)) return rv;
-
-      rv = trans->GetSecurityInfo(getter_AddRefs(secInfo));
+      rv = strans->GetSecurityInfo(getter_AddRefs(secInfo));
 
       if (NS_SUCCEEDED(rv) && secInfo) {
           nsCOMPtr<nsISSLSocketControl> sslControl = do_QueryInterface(secInfo, &rv);

@@ -52,12 +52,13 @@ public:
     nsDiskCacheBinding(nsCacheEntry* entry, nsDiskCacheRecord * record);
     virtual ~nsDiskCacheBinding();
 
+    nsresult EnsureStreamIO();
 
 // XXX make friends
 public:
     nsCacheEntry*           mCacheEntry;    // back pointer to parent nsCacheEntry
     nsDiskCacheRecord       mRecord;
-    nsCOMPtr<nsIStreamIO>   mStreamIO;
+    nsDiskCacheStreamIO*    mStreamIO;
     PRBool                  mDoomed;        // record is not stored in cache map
     PRUint8                 mGeneration;    // possibly just reservation
 };

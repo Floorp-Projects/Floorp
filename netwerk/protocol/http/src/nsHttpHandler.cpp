@@ -34,7 +34,6 @@
 #include "nsHttpResponseHead.h"
 #include "nsHttpTransaction.h"
 #include "nsHttpAuthCache.h"
-#include "nsHttpPipeline.h"
 #include "nsStandardURL.h"
 #include "nsIHttpChannel.h"
 #include "nsIHttpNotify.h"
@@ -72,7 +71,7 @@
 
 #ifdef DEBUG
 // defined by the socket transport service while active
-extern PRThread *NS_SOCKET_THREAD;
+extern PRThread *gSocketThread;
 #endif
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
@@ -100,10 +99,10 @@ static NS_DEFINE_CID(kSocketProviderServiceCID, NS_SOCKETPROVIDERSERVICE_CID);
 // nsHttpHandler <public>
 //-----------------------------------------------------------------------------
 
-nsHttpHandler *nsHttpHandler::mGlobalInstance = 0;
+nsHttpHandler *gHttpHandler = nsnull;
 
 nsHttpHandler::nsHttpHandler()
-    : mAuthCache(nsnull)
+    : mConnMgr(nsnull)
     , mHttpVersion(NS_HTTP_VERSION_1_1)
     , mProxyHttpVersion(NS_HTTP_VERSION_1_1)
     , mCapabilities(NS_HTTP_ALLOW_KEEPALIVE)
@@ -120,10 +119,10 @@ nsHttpHandler::nsHttpHandler()
     , mRedirectionLimit(10)
     , mLastUniqueID(NowInSeconds())
     , mSessionStartTime(0)
-    , mActiveConnections(0)
-    , mIdleConnections(0)
-    , mTransactionQ(0)
-    , mConnectionLock(nsnull)
+    //, mActiveConnections(0)
+    //, mIdleConnections(0)
+    //, mTransactionQ(0)
+    //, mConnectionLock(nsnull)
     , mUserAgentIsDirty(PR_TRUE)
     , mUseCache(PR_TRUE)
     , mSendSecureXSiteReferrer(PR_TRUE)
@@ -134,8 +133,8 @@ nsHttpHandler::nsHttpHandler()
 
     LOG(("Creating nsHttpHandler [this=%x].\n", this));
 
-    NS_ASSERTION(!mGlobalInstance, "HTTP handler already created!");
-    mGlobalInstance = this;
+    NS_ASSERTION(!gHttpHandler, "HTTP handler already created!");
+    gHttpHandler = this;
 }
 
 nsHttpHandler::~nsHttpHandler()
@@ -145,26 +144,15 @@ nsHttpHandler::~nsHttpHandler()
 
     LOG(("Deleting nsHttpHandler [this=%x]\n", this));
 
+    // make sure the connection manager is shutdown
+    if (mConnMgr) {
+        mConnMgr->Shutdown();
+        NS_RELEASE(mConnMgr);
+    }
+
     nsHttp::DestroyAtomTable();
 
-    // If the |nsHttpConnection| objects stop holding references to this
-    // object (as was done to fix bug 143821), then the code from
-    // |Observe| to call |DropConnections| should probably move back
-    // here.
-    NS_ASSERTION(!mActiveConnections.Count() && !mIdleConnections.Count(),
-                 "Connections should own reference to nsHttpHandler");
-
-    if (mAuthCache) {
-        delete mAuthCache;
-        mAuthCache = nsnull;
-    }
-
-    if (mConnectionLock) {
-        PR_DestroyLock(mConnectionLock);
-        mConnectionLock = nsnull;
-    }
-
-    mGlobalInstance = nsnull;
+    gHttpHandler = nsnull;
 }
 
 nsresult
@@ -180,9 +168,9 @@ nsHttpHandler::Init()
         return rv;
     }
 
-    mConnectionLock = PR_NewLock();
-    if (!mConnectionLock)
-        return NS_ERROR_OUT_OF_MEMORY;
+    //mConnectionLock = PR_NewLock();
+    //if (!mConnectionLock)
+    //    return NS_ERROR_OUT_OF_MEMORY;
 
     InitUserAgentComponents();
 
@@ -198,7 +186,7 @@ nsHttpHandler::Init()
             pbi->AddObserver(INTL_ACCEPT_CHARSET, this, PR_TRUE);
             pbi->AddObserver(NETWORK_ENABLEIDN, this, PR_TRUE);
         }
-        PrefsChanged(prefBranch);
+        PrefsChanged(prefBranch, nsnull);
     }
 
 #if DEBUG
@@ -221,10 +209,10 @@ nsHttpHandler::Init()
 
     mSessionStartTime = NowInSeconds();
 
-    mAuthCache = new nsHttpAuthCache();
-    if (!mAuthCache)
-        return NS_ERROR_OUT_OF_MEMORY;
-    rv = mAuthCache->Init();
+    rv = mAuthCache.Init();
+    if (NS_FAILED(rv)) return rv;
+
+    rv = InitConnectionMgr();
     if (NS_FAILED(rv)) return rv;
 
     // Startup the http category
@@ -237,19 +225,60 @@ nsHttpHandler::Init()
         do_GetService("@mozilla.org/observer-service;1", &rv);
     if (observerSvc) {
         observerSvc->AddObserver(this, "profile-change-net-teardown", PR_TRUE);
+        observerSvc->AddObserver(this, "profile-change-net-restore", PR_TRUE);
         observerSvc->AddObserver(this, "session-logout", PR_TRUE);
         observerSvc->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_TRUE);
-        observerSvc->AddObserver(this, "network:offline-status-changed", PR_TRUE);
+    }
+ 
+    StartPruneDeadConnectionsTimer();
+    return NS_OK;
+}
+
+nsresult
+nsHttpHandler::InitConnectionMgr()
+{
+    nsresult rv;
+
+    if (!mConnMgr) {
+        mConnMgr = new nsHttpConnectionMgr();
+        if (!mConnMgr)
+            return NS_ERROR_OUT_OF_MEMORY;
+        NS_ADDREF(mConnMgr);
     }
 
+    rv = mConnMgr->Init(mMaxConnections,
+                        mMaxConnectionsPerServer,
+                        mMaxConnectionsPerServer,
+                        mMaxPersistentConnectionsPerServer,
+                        mMaxPersistentConnectionsPerProxy,
+                        mMaxRequestDelay,
+                        mMaxPipelinedRequests);
+    return rv;
+}
+
+void
+nsHttpHandler::StartPruneDeadConnectionsTimer()
+{
+    LOG(("nsHttpHandler::StartPruneDeadConnectionsTimer\n"));
+
     mTimer = do_CreateInstance("@mozilla.org/timer;1");
+    NS_ASSERTION(mTimer, "no timer");
     // failure to create a timer is not a fatal error, but idle connections
     // may not be cleaned up as aggressively.
     if (mTimer)
-        mTimer->InitWithFuncCallback(DeadConnectionCleanupCB, this, 15*1000, // 15 seconds
-                                     nsITimer::TYPE_REPEATING_SLACK);
- 
-    return NS_OK;
+        mTimer->Init(this, 15*1000, // every 15 seconds
+                     nsITimer::TYPE_REPEATING_SLACK);
+}
+
+void
+nsHttpHandler::StopPruneDeadConnectionsTimer()
+{
+    LOG(("nsHttpHandler::StopPruneDeadConnectionsTimer\n"));
+
+    if (mTimer) {
+        mTimer->Cancel();
+        mTimer = 0;
+    }
 }
 
 nsresult
@@ -365,133 +394,6 @@ nsHttpHandler::GetCacheSession(nsCacheStoragePolicy storagePolicy,
         NS_ADDREF(*result = mCacheSession_MEM);
     else
         NS_ADDREF(*result = mCacheSession_ANY);
-
-    return NS_OK;
-}
-
-// may be called from any thread
-nsresult
-nsHttpHandler::InitiateTransaction(nsHttpTransaction *trans,
-                                   nsHttpConnectionInfo *ci)
-{
-    LOG(("nsHttpHandler::InitiateTransaction\n"));
-
-    NS_ENSURE_ARG_POINTER(trans);
-    NS_ENSURE_ARG_POINTER(ci);
-
-    PR_Lock(mConnectionLock);
-
-    nsHttpConnection *conn = nsnull;
-    nsresult rv;
-
-    GetConnection_Locked(ci, trans->Capabilities(), &conn);
-    if (!conn) {
-        rv = EnqueueTransaction_Locked(trans, ci);
-        PR_Unlock(mConnectionLock);
-    }
-    else {
-        rv = DispatchTransaction_Locked(trans, trans->Capabilities(), conn);
-        NS_RELEASE(conn);
-    }
-    return rv;
-}
-
-// called from the socket thread
-nsresult
-nsHttpHandler::ReclaimConnection(nsHttpConnection *conn)
-{
-    NS_ENSURE_ARG_POINTER(conn);
-    NS_ASSERTION(PR_GetCurrentThread() == NS_SOCKET_THREAD, "wrong thread");
-
-    PR_Lock(mConnectionLock);
-
-    PRBool reusable = conn->CanReuse();
-
-    LOG(("nsHttpHandler::ReclaimConnection [conn=%x(%s:%d) keep-alive=%d]\n",
-        conn, conn->ConnectionInfo()->Host(), conn->ConnectionInfo()->Port(), reusable));
-
-    // remove connection from the active connection list
-    mActiveConnections.RemoveElement(conn);
-
-    if (reusable) {
-        LOG(("adding connection to idle list [conn=%x]\n", conn));
-        // hold onto this connection in the idle list.  we push it
-        // to the end of the list so as to ensure that we'll visit
-        // older connections first before getting to this one.
-        mIdleConnections.AppendElement(conn);
-    }
-    else {
-        LOG(("closing connection: connection can't be reused\n"));
-        NS_RELEASE(conn);
-    }
-
-    LOG(("active connection count is now %u\n", mActiveConnections.Count()));
-
-    ProcessTransactionQ_Locked();
-    return NS_OK;
-}
-
-nsresult 
-nsHttpHandler::PurgeDeadConnections()
-{
-    nsAutoLock lock(mConnectionLock);
-    // Loop from end to beginning because of |RemoveElement| calls.
-    for (PRInt32 i = mIdleConnections.Count() - 1; i >= 0; --i) {
-        nsHttpConnection *conn = (nsHttpConnection *) mIdleConnections[i];
-        if (conn && !conn->CanReuse()) {
-            // Dead and idle connection; purge it
-            mIdleConnections.RemoveElementAt(i);
-            NS_RELEASE(conn);
-        }
-    }
-    return NS_OK;
-}
-
-// called from the socket thread (see nsHttpConnection::OnDataAvailable)
-nsresult
-nsHttpHandler::ProcessTransactionQ()
-{
-    LOG(("nsHttpHandler::ProcessTransactionQ\n"));
-    NS_ASSERTION(PR_GetCurrentThread() == NS_SOCKET_THREAD, "wrong thread");
-
-    PR_Lock(mConnectionLock);
-
-    // conn is no longer keep-alive, so we may be able to initiate
-    // a pending transaction to the same host.
-    ProcessTransactionQ_Locked();
-    return NS_OK;
-}
-
-// called from any thread, by the implementation of nsHttpTransaction::Cancel
-nsresult
-nsHttpHandler::CancelTransaction(nsHttpTransaction *trans, nsresult status)
-{
-    nsAHttpConnection *conn;
-
-    LOG(("nsHttpHandler::CancelTransaction [trans=%x status=%x]\n",
-        trans, status));
-
-    NS_ENSURE_ARG_POINTER(trans);
-
-    // we need to be inside the connection lock in order to know whether
-    // or not this transaction has an associated connection.  otherwise,
-    // we'd have a race condition (see bug 85822).
-    {
-        nsAutoLock lock(mConnectionLock);
-
-        conn = trans->Connection();
-        if (conn)
-            NS_ADDREF(conn); // make sure the connection stays around.
-        else
-            RemovePendingTransaction_Locked(trans);
-    }
-
-    if (conn) {
-        conn->OnTransactionComplete(trans, status);
-        NS_RELEASE(conn);
-    }
-    else
-        trans->OnStopTransaction(status);
 
     return NS_OK;
 }
@@ -654,391 +556,6 @@ nsHttpHandler::UserAgent()
     }
 
     return mUserAgent;
-}
-
-nsresult
-nsHttpHandler::GetConnection_Locked(nsHttpConnectionInfo *ci,
-                                    PRUint8 caps,
-                                    nsHttpConnection **result)
-{
-    nsresult rv;
-
-    LOG(("nsHttpHandler::GetConnection_Locked\n"));
-
-    *result = nsnull;
-
-    if (AtActiveConnectionLimit_Locked(ci, caps))
-        return NS_ERROR_FAILURE;
-
-    nsHttpConnection *conn = nsnull;
-
-    if (caps & NS_HTTP_ALLOW_KEEPALIVE) {
-        // search the idle connection list
-        PRInt32 i;
-        for (i=0; i<mIdleConnections.Count(); ++i) {
-            conn = (nsHttpConnection *) mIdleConnections[i];
-
-            LOG((">> comparing against idle connection [conn=%x host=%s:%d]\n",
-                conn, conn->ConnectionInfo()->Host(), conn->ConnectionInfo()->Port()));
-
-            // we check if the connection can be reused before even checking if it
-            // is a "matching" connection.  this is how we keep the idle connection
-            // list fresh.  we could alternatively use some sort of timer for this.
-            if (!conn->CanReuse()) {
-                LOG(("   dropping stale connection: [conn=%x]\n", conn));
-                mIdleConnections.RemoveElementAt(i);
-                i--;
-                NS_RELEASE(conn);
-            }
-            else if (conn->ConnectionInfo()->Equals(ci)) {
-                LOG(("   reusing connection [conn=%x]\n", conn));
-                mIdleConnections.RemoveElementAt(i);
-                i--;
-                break;
-            }
-            conn = nsnull;
-        }
-    }
-
-    if (!conn) {
-        LOG((">> creating new connection...\n"));
-        NS_NEWXPCOM(conn, nsHttpConnection);
-        if (!conn)
-            return NS_ERROR_OUT_OF_MEMORY;
-        NS_ADDREF(conn);
-
-        rv = conn->Init(ci, mMaxRequestDelay);
-        if (NS_FAILED(rv)) {
-            NS_RELEASE(conn);
-            return rv;
-        }
-        
-        // We created a new connection
-        // If idle + active connections > max connections, then purge the oldest idle one.
-        if (mIdleConnections.Count() + mActiveConnections.Count() > mMaxConnections) {
-            LOG(("Created a new connection and popping oldest one [idlecount=%d activecount=%d maxConn=%d]\n",
-                mIdleConnections.Count(), mActiveConnections.Count(), mMaxConnections));
-            NS_ASSERTION(mIdleConnections.Count() > 0, "idle connection list is empty");
-            if (mIdleConnections.Count() > 0) {
-                nsHttpConnection *conn = (nsHttpConnection *) mIdleConnections[0];
-                NS_ASSERTION(conn, "mIdleConnections[0] is null but count > 0");
-                if (conn) {
-                    LOG(("deleting connection [conn=%x host=%s:%d]\n",
-                    conn, conn->ConnectionInfo()->Host(), conn->ConnectionInfo()->Port()));
-                    mIdleConnections.RemoveElementAt(0);
-                    NS_RELEASE(conn);
-                }
-            }
-        }
-    }
-    else {
-        // Update the connectionInfo (bug 94038)
-        conn->ConnectionInfo()->SetOriginServer(ci->Host(), ci->Port());
-    }
-
-    *result = conn;
-    return NS_OK;
-}
-
-nsresult
-nsHttpHandler::EnqueueTransaction_Locked(nsHttpTransaction *trans,
-                                         nsHttpConnectionInfo *ci)
-{
-    LOG(("nsHttpHandler::EnqueueTransaction_Locked [trans=%x]\n", trans));
-
-    nsPendingTransaction *pt = new nsPendingTransaction(trans, ci);
-    if (!pt)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    mTransactionQ.AppendElement(pt);
-
-    LOG((">> transaction queue contains %u elements\n", mTransactionQ.Count()));
-    return NS_OK;
-}
-
-// dispatch this transaction, return unlocked
-nsresult
-nsHttpHandler::DispatchTransaction_Locked(nsAHttpTransaction *trans,
-                                          PRUint8 transCaps,
-                                          nsHttpConnection *conn)
-{
-    nsresult rv;
-
-    LOG(("nsHttpHandler::DispatchTransaction_Locked [trans=%x conn=%x]\n",
-        trans, conn));
-
-    // assign the connection to the transaction.
-    trans->SetConnection(conn);
-
-    // consider this connection active, even though it may fail.
-    mActiveConnections.AppendElement(conn);
-
-    // handler now owns a reference to this connection
-    NS_ADDREF(conn);
-    
-    // we must not hold the connection lock while making the call to
-    // SetTransaction, as it could lead to deadlocks.
-    PR_Unlock(mConnectionLock);
-    rv = conn->SetTransaction(trans, transCaps);
-
-    if (NS_FAILED(rv)) {
-        LOG(("nsHttpConnection::SetTransaction failed [rv=%x]\n", rv));
-        nsAutoLock lock(mConnectionLock);
-        // the connection may already have been removed from the 
-        // active connection list.
-        if (mActiveConnections.RemoveElement(conn))
-            NS_RELEASE(conn);
-    }
-    return rv;
-}
-
-// try to dispatch a pending transaction, return unlocked
-void
-nsHttpHandler::ProcessTransactionQ_Locked()
-{
-    LOG(("nsHttpHandler::ProcessTransactionQ_Locked\n"));
-
-    nsPendingTransaction *pt = nsnull;
-    nsHttpConnection *conn = nsnull;
-    
-    //
-    // step 1: locate a pending transaction that can be processed
-    //
-    PRInt32 i;
-    for (i=0; i<mTransactionQ.Count(); ++i) {
-        pt = (nsPendingTransaction *) mTransactionQ[i];
-
-        GetConnection_Locked(pt->ConnectionInfo(),
-                             pt->Transaction()->Capabilities(),
-                             &conn);
-        if (conn)
-            break;
-    }
-    if (!conn) {
-        LOG((">> unable to process transaction queue at this time\n"));
-        // the caller expects us to unlock before returning...
-        PR_Unlock(mConnectionLock);
-        return;
-    }
-
-    //
-    // step 2: remove i'th pending transaction from the pending transaction
-    // queue.  we'll put it back if there is a problem dispatching it.
-    //
-    // the call to DispatchTransaction_Locked will temporarily leave
-    // mConnectionLock, so this step is crucial as it ensures that our
-    // state is completely defined on the stack (not in member variables).
-    //
-    mTransactionQ.RemoveElementAt(i);
-
-    // 
-    // step 3: determine if we can pipeline any other transactions along with
-    // this transaction.  if pipelining is disabled or there are no other
-    // transactions that can be sent with this transaction, then simply send
-    // this transaction.
-    //
-    nsAHttpTransaction *trans = pt->Transaction();
-    PRUint8 caps = pt->Transaction()->Capabilities();
-    nsPipelineEnqueueState pipelineState;
-    if (conn->SupportsPipelining() &&
-        caps & NS_HTTP_ALLOW_PIPELINING &&
-        BuildPipeline_Locked(pipelineState,
-                             pt->Transaction(),
-                             pt->ConnectionInfo())) {
-        // ok... let's rock!
-        trans = pipelineState.Transaction();
-        caps = pipelineState.TransactionCaps();
-        NS_ASSERTION(trans, "no transaction");
-    }
-#if defined(PR_LOGGING)
-    else
-        LOG(("no pipelining [because-of-server=%d because-of-caps=%d]\n",
-            conn->SupportsPipelining() == PR_FALSE, 
-            caps & NS_HTTP_ALLOW_PIPELINING == PR_FALSE));
-#endif
-
-    // 
-    // step 4: dispatch this transaction
-    //
-    nsresult rv = DispatchTransaction_Locked(trans, caps, conn);
-
-    // we're no longer inside mConnectionLock
-
-    // 
-    // step 5: handle errors / cleanup
-    //
-    if (NS_FAILED(rv)) {
-        LOG((">> DispatchTransaction_Locked failed [rv=%x]\n", rv));
-        nsAutoLock lock(mConnectionLock);
-        // there must have been something wrong with the connection,
-        // requeue... we'll try again later.
-        if (caps & NS_HTTP_ALLOW_PIPELINING)
-            PipelineFailed_Locked(pipelineState);
-        mTransactionQ.AppendElement(pt);
-    }
-    else
-        delete pt;
-    pipelineState.Cleanup();
-    NS_RELEASE(conn);
-}
-
-// we're at the active connection limit if any one of the following conditions is true:
-//  (1) at max-connections
-//  (2) keep-alive enabled and at max-persistent-connections-per-server/proxy
-//  (3) keep-alive disabled and at max-connections-per-server
-PRBool
-nsHttpHandler::AtActiveConnectionLimit_Locked(nsHttpConnectionInfo *ci, PRUint8 caps)
-{
-    LOG(("nsHttpHandler::AtActiveConnectionLimit_Locked [host=%s:%d caps=%x]\n",
-        ci->Host(), ci->Port(), caps));
-
-    // use >= just to be safe
-    if (mActiveConnections.Count() >= mMaxConnections)
-        return PR_TRUE;
-
-    nsHttpConnection *conn;
-    PRUint8 totalCount = 0, persistentCount = 0;
-    PRInt32 i;
-    for (i=0; i<mActiveConnections.Count(); ++i) {
-        conn = NS_STATIC_CAST(nsHttpConnection *, mActiveConnections[i]); 
-        LOG((">> comparing against active connection [conn=%x host=%s:%d]\n", 
-            conn, conn->ConnectionInfo()->Host(), conn->ConnectionInfo()->Port()));
-        if (conn->ConnectionInfo()->Equals(ci)) {
-            totalCount++;
-            if (conn->IsKeepAlive())
-                persistentCount++;
-        }
-    }
-
-    LOG(("   total-count=%u, persistent-count=%u\n",
-        PRUint32(totalCount), PRUint32(persistentCount)));
-
-    PRUint8 maxPersistentConnections =
-        ci->UsingHttpProxy() ? mMaxPersistentConnectionsPerProxy
-                             : mMaxPersistentConnectionsPerServer;
-
-    // use >= just to be safe
-    return (totalCount >= mMaxConnectionsPerServer) ||
-               ((caps & NS_HTTP_ALLOW_KEEPALIVE) &&
-                (persistentCount >= maxPersistentConnections));
-}
-
-nsresult
-nsHttpHandler::RemovePendingTransaction_Locked(nsHttpTransaction *trans)
-{
-    LOG(("nsHttpHandler::RemovePendingTransaction_Locked [trans=%x]\n", trans));
-
-    NS_ENSURE_ARG_POINTER(trans);
-
-    nsPendingTransaction *pt = nsnull;
-    PRInt32 i;
-    for (i=0; i<mTransactionQ.Count(); ++i) {
-        pt = (nsPendingTransaction *) mTransactionQ[i];
-
-        if (pt->Transaction() == trans) {
-            mTransactionQ.RemoveElementAt(i);
-            delete pt;
-            return NS_OK;
-        }
-    }
-
-    NS_WARNING("transaction not in pending queue");
-    return NS_ERROR_NOT_AVAILABLE;
-}
-
-void 
-nsHttpHandler::DeadConnectionCleanupCB(nsITimer *timer, void *closure)
-{
-    nsHttpHandler *self = NS_STATIC_CAST(nsHttpHandler*, closure);
-    if (self)
-        self->PurgeDeadConnections();
-}
-
-void
-nsHttpHandler::DropConnections(nsVoidArray &connections)
-{
-    nsHttpConnection *conn;
-    PRInt32 i;
-    for (i=0; i<connections.Count(); ++i) {
-        conn = (nsHttpConnection *) connections[i];
-        conn->DropTransport();
-        NS_RELEASE(conn);
-    }
-    connections.Clear();
-}
-
-PRBool
-nsHttpHandler::BuildPipeline_Locked(nsPipelineEnqueueState &state,
-                                    nsHttpTransaction *firstTrans,
-                                    nsHttpConnectionInfo *ci)
-{
-    if (mMaxPipelinedRequests < 2)
-        return PR_FALSE;
-
-    LOG(("BuildPipeline_Locked [trans=%x]\n", firstTrans));
-
-    //
-    // need to search the pending transaction list for other transactions
-    // that can be pipelined along with |firstTrans|.
-    //
-    nsresult rv = NS_ERROR_FAILURE; // by default, nothing to pipeline
-    PRUint8 numAppended = 0;
-    PRInt32 i = 0;
-    while (i < mTransactionQ.Count()) {
-        nsPendingTransaction *pt = (nsPendingTransaction *) mTransactionQ[i];
-        if (pt->Transaction()->Capabilities() & (NS_HTTP_ALLOW_KEEPALIVE |
-                                                 NS_HTTP_ALLOW_PIPELINING) &&
-            pt->ConnectionInfo()->Equals(ci)) {
-
-            //
-            // ok, we can add this transaction to our pipeline
-            //
-            if (numAppended == 0) {
-                rv = state.Init(firstTrans);
-                if (NS_FAILED(rv)) break;
-            }
-            rv = state.AppendTransaction(pt);
-            if (NS_FAILED(rv)) break;
-
-            //
-            // ok, remove the transaction from the pending queue; next time
-            // around the loop we'll still check the i-th element :-)
-            //
-            mTransactionQ.RemoveElementAt(i);
-
-            //
-            // we may have reached the pipelined requests limit...
-            //
-            if (++numAppended == (mMaxPipelinedRequests - 1))
-                break;
-        }
-        else
-            i++; // advance to next pending transaction
-    }
-    if (NS_FAILED(rv)) {
-        LOG(("  unable to pipeline any transactions with this one\n"));
-        state.Cleanup();
-        return PR_FALSE;
-    }
-    LOG(("  pipelined %u transactions\n", numAppended + 1));
-    return PR_TRUE;
-}
-
-void
-nsHttpHandler::PipelineFailed_Locked(nsPipelineEnqueueState &state)
-{
-    if ((mMaxPipelinedRequests < 2) || !state.HasPipeline())
-        return;
-
-    LOG(("PipelineFailed_Locked\n"));
-
-    // need to put any "appended" transactions back on the queue
-    PRInt32 i = 0;
-    while (i < state.NumAppendedTrans()) {
-        mTransactionQ.AppendElement(state.GetAppendedTrans(i));
-        i++;
-    }
-    state.DropAppendedTrans();
 }
 
 void
@@ -1905,15 +1422,26 @@ nsHttpHandler::NewProxiedChannel(nsIURI *uri,
 
     nsresult rv;
 
-    // select proxy caps if using a non-transparent proxy
-    PRInt8 caps = mCapabilities;
-    if (proxyInfo && !nsCRT::strcmp(proxyInfo->Type(), "http")) {
-        // SSL tunneling should not use proxy settings
-        PRBool isHTTPS;
-        rv = uri->SchemeIs("https", &isHTTPS);
-        if (NS_FAILED(rv)) return rv;
-        if (!isHTTPS)
-            caps = mProxyCapabilities;
+    PRBool https;
+    rv = uri->SchemeIs("https", &https);
+    if (NS_FAILED(rv)) return rv;
+
+    // select proxy caps if using a non-transparent proxy.  SSL tunneling
+    // should not use proxy settings.
+    PRInt8 caps;
+    if (proxyInfo && !nsCRT::strcmp(proxyInfo->Type(), "http") && !https)
+        caps = mProxyCapabilities;
+    else
+        caps = mCapabilities;
+
+    if (https) {
+        // HACK: make sure PSM gets initialized on the main thread.
+        nsCOMPtr<nsISocketProviderService> spserv =
+                do_GetService(kSocketProviderServiceCID);
+        if (spserv) {
+            nsCOMPtr<nsISocketProvider> provider;
+            spserv->GetSocketProvider("ssl", getter_AddRefs(provider));
+        }
     }
 
     rv = httpChannel->Init(uri, caps, proxyInfo);
@@ -2089,138 +1617,49 @@ nsHttpHandler::Observe(nsISupports *subject,
 {
     LOG(("nsHttpHandler::Observe [topic=\"%s\")]\n", topic));
 
-    if (!nsCRT::strcmp(topic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
+    if (strcmp(topic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) == 0) {
         nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(subject);
         if (prefBranch)
             PrefsChanged(prefBranch, NS_ConvertUCS2toUTF8(data).get());
+        
+        // XXX should probably shutdown and init the conn mgr.
     }
-    else if (!nsCRT::strcmp(topic, "profile-change-net-teardown") ||
-             !nsCRT::strcmp(topic, "session-logout") ||
-             !nsCRT::strcmp(topic, "network:offline-status-changed")) {
+    else if (strcmp(topic, "profile-change-net-teardown")    == 0 ||
+             strcmp(topic, "session-logout")                 == 0 ||
+             strcmp(topic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)    == 0) {
 
-        // ignore online notification
-        if (!nsCRT::strcmp(topic, "network:offline-status-changed") &&
-            NS_LITERAL_STRING("online").Equals(data))
-            return NS_OK;
+        // kill off the "prune dead connections" timer
+        StopPruneDeadConnectionsTimer();
 
         // clear cache of all authentication credentials.
-        if (mAuthCache)
-            mAuthCache->ClearAll();
+        mAuthCache.ClearAll();
 
-        {
-            nsAutoLock lock(mConnectionLock);
-
-            LOG(("  http logout [idle-count=%u active-count=%u]\n",
-                mIdleConnections.Count(),
-                mActiveConnections.Count()));
-
-            // kill idle connections; these sockets could be holding onto other
-            // resources that need to be freed (e.g., NSS file descriptors).
-            DropConnections(mIdleConnections);
-
-            // mark all active connections as not reusable.  this prevents any
-            // active connections from finding their way onto the idle
-            // connection list.
-            nsHttpConnection *conn;
-            for (PRInt32 i=0; i<mActiveConnections.Count(); ++i) {
-                conn = (nsHttpConnection *) mActiveConnections[i];
-                conn->DontReuse();
-            }
-        }
+        // ensure connection manager is shutdown
+        if (mConnMgr)
+            mConnMgr->Shutdown();
 
         // need to reset the session start time since cache validation may
         // depend on this value.
         mSessionStartTime = NowInSeconds();
     }
-    else if (!nsCRT::strcmp(topic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
-        if (mTimer) {
-            mTimer->Cancel();
-            mTimer = 0;
-        }
+    else if (strcmp(topic, "profile-change-net-restore") == 0) {
+        // initialize connection manager
+        InitConnectionMgr();
 
-        // If we don't call DropConnections here, we'll never get
-        // destroyed, since we own a reference to the connections in
-        // these arrays and they own a reference back to us.
-        {
-            nsAutoLock lock(mConnectionLock);
-
-            LOG(("dropping active connections...\n"));
-            DropConnections(mActiveConnections);
-
-            LOG(("dropping idle connections...\n"));
-            DropConnections(mIdleConnections);
-        }
+        // restart the "prune dead connections" timer
+        StartPruneDeadConnectionsTimer();
+    }
+    else if (strcmp(topic, "timer-callback") == 0) {
+        // prune dead connections
+#ifdef DEBUG
+        nsCOMPtr<nsITimer> timer = do_QueryInterface(subject);
+        NS_ASSERTION(timer == mTimer, "unexpected timer-callback");
+#endif
+        if (mConnMgr)
+            mConnMgr->PruneDeadConnections();
     }
 
     return NS_OK;
-}
-
-//-----------------------------------------------------------------------------
-// nsHttpHandler::nsPendingTransaction
-//-----------------------------------------------------------------------------
-
-nsHttpHandler::
-nsPendingTransaction::nsPendingTransaction(nsHttpTransaction *trans,
-                                           nsHttpConnectionInfo *ci)
-    : mTransaction(trans)
-    , mConnectionInfo(ci)
-    , mBusy(0)
-{
-    LOG(("Creating nsPendingTransaction @%x\n", this));
-
-    NS_PRECONDITION(mTransaction, "null transaction");
-    NS_PRECONDITION(mConnectionInfo, "null connection info");
-
-    NS_ADDREF(mTransaction);
-    NS_ADDREF(mConnectionInfo);
-}
-
-nsHttpHandler::
-nsPendingTransaction::~nsPendingTransaction()
-{
-    LOG(("Destroying nsPendingTransaction @%x\n", this));
- 
-    NS_RELEASE(mTransaction);
-    NS_RELEASE(mConnectionInfo);
-}
-
-//-----------------------------------------------------------------------------
-// nsHttpHandler::nsPipelineEnqueueState
-//-----------------------------------------------------------------------------
-
-nsresult nsHttpHandler::
-nsPipelineEnqueueState::Init(nsHttpTransaction *firstTrans)
-{
-    NS_ASSERTION(mPipeline == nsnull, "already initialized");
-
-    mPipeline = new nsHttpPipeline;
-    if (!mPipeline)
-        return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(mPipeline);
-
-    return mPipeline->Init(firstTrans);
-}
-
-nsresult nsHttpHandler::
-nsPipelineEnqueueState::AppendTransaction(nsPendingTransaction *pt)
-{
-    nsresult rv = mPipeline->AppendTransaction(pt->Transaction());
-    if (NS_FAILED(rv)) return rv;
-
-    // remember this pending transaction object
-    mAppendedTrans.AppendElement(pt);
-    return NS_OK;
-}
-
-void nsHttpHandler::
-nsPipelineEnqueueState::Cleanup()
-{
-    NS_IF_RELEASE(mPipeline);
-
-    // free any appended pending transaction objects
-    for (PRInt32 i=0; i < mAppendedTrans.Count(); i++)
-        delete GetAppendedTrans(i);
-    mAppendedTrans.Clear();
 }
 
 //-----------------------------------------------------------------------------
@@ -2259,7 +1698,7 @@ nsHttpsHandler::GetDefaultPort(PRInt32 *aPort)
 NS_IMETHODIMP
 nsHttpsHandler::GetProtocolFlags(PRUint32 *aProtocolFlags)
 {
-    return nsHttpHandler::get()->GetProtocolFlags(aProtocolFlags);
+    return gHttpHandler->GetProtocolFlags(aProtocolFlags);
 }
 
 NS_IMETHODIMP
@@ -2268,13 +1707,13 @@ nsHttpsHandler::NewURI(const nsACString &aSpec,
                        nsIURI *aBaseURI,
                        nsIURI **_retval)
 {
-    return nsHttpHandler::get()->NewURI(aSpec, aOriginCharset, aBaseURI, _retval);
+    return gHttpHandler->NewURI(aSpec, aOriginCharset, aBaseURI, _retval);
 }
 
 NS_IMETHODIMP
 nsHttpsHandler::NewChannel(nsIURI *aURI, nsIChannel **_retval)
 {
-    return nsHttpHandler::get()->NewChannel(aURI, _retval);
+    return gHttpHandler->NewChannel(aURI, _retval);
 }
 
 NS_IMETHODIMP

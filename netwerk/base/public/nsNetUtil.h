@@ -38,47 +38,46 @@
 #ifndef nsNetUtil_h__
 #define nsNetUtil_h__
 
-#include "nsString.h"
+#include "nsNetError.h"
+#include "nsNetCID.h"
 #include "nsReadableUtils.h"
-#include "netCore.h"
+#include "nsString.h"
+#include "nsMemory.h"
+#include "nsCOMPtr.h"
+#include "prio.h" // for read/write flags, permissions, etc.
+
 #include "nsIURI.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
 #include "nsIStreamListener.h"
-#include "nsIStreamProvider.h"
 #include "nsIRequestObserverProxy.h"
-#include "nsIStreamListenerProxy.h"
-#include "nsIStreamProviderProxy.h"
+#include "nsIStreamListenerProxy.h" // XXX for nsIAsyncStreamListener
 #include "nsISimpleStreamListener.h"
-#include "nsISimpleStreamProvider.h"
 #include "nsILoadGroup.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIIOService.h"
 #include "nsIServiceManager.h"
 #include "nsIChannel.h"
-#include "nsIStreamIOChannel.h"
+#include "nsIInputStreamChannel.h"
 #include "nsITransport.h"
 #include "nsIHttpChannel.h"
-#include "nsMemory.h"
-#include "nsCOMPtr.h"
 #include "nsIDownloader.h"
 #include "nsIResumableEntityID.h"
 #include "nsIStreamLoader.h"
 #include "nsIUnicharStreamLoader.h"
-#include "nsIStreamIO.h"
 #include "nsIPipe.h"
 #include "nsIProtocolHandler.h"
 #include "nsIFileProtocolHandler.h"
 #include "nsIStringStream.h"
 #include "nsILocalFile.h"
 #include "nsIFileStreams.h"
-#include "nsXPIDLString.h"
 #include "nsIProtocolProxyService.h"
 #include "nsIProxyInfo.h"
-#include "prio.h"       // for read/write flags, permissions, etc.
-
-#include "nsNetCID.h"
+#include "nsIFileStreams.h"
+#include "nsIBufferedStreams.h"
+#include "nsIInputStreamPump.h"
+#include "nsIAsyncStreamCopier.h"
 
 // Helper, to simplify getting the I/O service.
 inline const nsGetServiceByCID
@@ -289,77 +288,79 @@ NS_MakeAbsoluteURI(nsAString &result,
 }
 
 inline nsresult
-NS_NewPostDataStream(nsIInputStream **result,
-                     PRBool isFile,
-                     const nsACString &data,
-                     PRUint32 encodeFlags,
-                     nsIIOService* ioService = nsnull)     // pass in nsIIOService to optimize callers
+NS_NewInputStreamChannel(nsIChannel **result,
+                         nsIURI *uri,
+                         nsIInputStream *stream,
+                         const nsACString &contentType = NS_LITERAL_CSTRING(""),
+                         const nsACString &contentCharset = NS_LITERAL_CSTRING(""))
 {
     nsresult rv;
 
-    if (isFile) {
-        nsCOMPtr<nsILocalFile> file;
-        nsCOMPtr<nsIInputStream> fileStream;
-
-        rv = NS_NewNativeLocalFile(data, PR_FALSE, getter_AddRefs(file));
-        if (NS_FAILED(rv)) return rv;
-
-        rv = NS_NewLocalFileInputStream(getter_AddRefs(fileStream), file);
-        if (NS_FAILED(rv)) return rv;
-
-        // wrap the file stream with a buffered input stream
-        return NS_NewBufferedInputStream(result, fileStream, 8192);
-    }
-
-    // otherwise, create a string stream for the data
-    return NS_NewCStringInputStream(result, data);
-}
-
-inline nsresult
-NS_NewStreamIOChannel(nsIStreamIOChannel **result,
-                      nsIURI* uri,
-                      nsIStreamIO* io)
-{
-    nsresult rv;
-    nsCOMPtr<nsIStreamIOChannel> channel;
-    static NS_DEFINE_CID(kStreamIOChannelCID, NS_STREAMIOCHANNEL_CID);
-    rv = nsComponentManager::CreateInstance(kStreamIOChannelCID,
-                                            nsnull, 
-                                            NS_GET_IID(nsIStreamIOChannel),
-                                            getter_AddRefs(channel));
-    if (NS_FAILED(rv)) return rv;
-    rv = channel->Init(uri, io);
+    static NS_DEFINE_CID(kInputStreamChannelCID, NS_INPUTSTREAMCHANNEL_CID);
+    nsCOMPtr<nsIInputStreamChannel> channel =
+        do_CreateInstance(kInputStreamChannelCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    *result = channel;
-    NS_ADDREF(*result);
+    rv = channel->SetURI(uri);
+    if (NS_FAILED(rv)) return rv;
+    rv = channel->SetContentStream(stream);
+    if (NS_FAILED(rv)) return rv;
+    rv = channel->SetContentType(contentType);
+    if (NS_FAILED(rv)) return rv;
+    rv = channel->SetContentCharset(contentCharset);
+    if (NS_FAILED(rv)) return rv;
+
+    NS_ADDREF(*result = channel);
     return NS_OK;
 }
 
 inline nsresult
-NS_NewInputStreamChannel(nsIChannel **result,
-                         nsIURI* uri,
-                         nsIInputStream* inStr,
-                         const nsACString &contentType,
-                         const nsACString &contentCharset,
-                         PRInt32 contentLength)
+NS_NewInputStreamPump(nsIInputStreamPump **result,
+                      nsIInputStream *stream,
+                      PRInt32 streamPos = -1,
+                      PRInt32 streamLen = -1,
+                      PRUint32 segsize = 0,
+                      PRUint32 segcount = 0,
+                      PRBool closeWhenDone = PR_FALSE)
 {
     nsresult rv;
-    nsCAutoString spec;
-    rv = uri->GetSpec(spec);
+
+    static NS_DEFINE_CID(kInputStreamPumpCID, NS_INPUTSTREAMPUMP_CID);
+    nsCOMPtr<nsIInputStreamPump> pump =
+        do_CreateInstance(kInputStreamPumpCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIInputStreamIO> io;
-    rv = NS_NewInputStreamIO(getter_AddRefs(io), spec, inStr, 
-                             contentType, contentCharset, contentLength);
+    rv = pump->Init(stream, streamPos, streamLen,
+                    segsize, segcount, closeWhenDone);
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIStreamIOChannel> channel;
-    rv = NS_NewStreamIOChannel(getter_AddRefs(channel), uri, io);
+    NS_ADDREF(*result = pump);
+    return NS_OK;
+}
+
+// NOTE: you can optimize the copy by specifying whether or not your streams
+// are buffered (i.e., do they implement ReadSegments/WriteSegments).  the
+// default assumption of FALSE for both streams is OK, but the copy is much
+// more efficient if one of the streams is buffered.
+inline nsresult
+NS_NewAsyncStreamCopier(nsIAsyncStreamCopier **result,
+                        nsIInputStream *source,
+                        nsIOutputStream *sink,
+                        PRBool sourceBuffered = PR_FALSE,
+                        PRBool sinkBuffered = PR_FALSE,
+                        PRUint32 chunkSize = 0)
+{
+    nsresult rv;
+
+    static NS_DEFINE_CID(kAsyncStreamCopierCID, NS_ASYNCSTREAMCOPIER_CID);
+    nsCOMPtr<nsIAsyncStreamCopier> copier =
+        do_CreateInstance(kAsyncStreamCopierCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    *result = channel;
-    NS_ADDREF(*result);
+    rv = copier->Init(source, sink, sourceBuffered, sinkBuffered, chunkSize);
+    if (NS_FAILED(rv)) return rv; 
+    
+    NS_ADDREF(*result = copier);
     return NS_OK;
 }
 
@@ -506,58 +507,6 @@ NS_NewRequestObserverProxy(nsIRequestObserver **aResult,
 }
 
 inline nsresult
-NS_NewStreamListenerProxy(nsIStreamListener **aResult,
-                          nsIStreamListener *aListener,
-                          nsIEventQueue *aEventQ=nsnull,
-                          PRUint32 aBufferSegmentSize=0,
-                          PRUint32 aBufferMaxSize=0)
-{
-    NS_ENSURE_ARG_POINTER(aResult);
-
-    nsresult rv;
-    nsCOMPtr<nsIStreamListenerProxy> proxy;
-    static NS_DEFINE_CID(kStreamListenerProxyCID, NS_STREAMLISTENERPROXY_CID);
-
-    rv = nsComponentManager::CreateInstance(kStreamListenerProxyCID,
-                                            nsnull,
-                                            NS_GET_IID(nsIStreamListenerProxy),
-                                            getter_AddRefs(proxy));
-    if (NS_FAILED(rv)) return rv;
-
-    rv = proxy->Init(aListener, aEventQ, aBufferSegmentSize, aBufferMaxSize);
-    if (NS_FAILED(rv)) return rv;
-
-    NS_ADDREF(*aResult = proxy);
-    return NS_OK;
-}
-
-inline nsresult
-NS_NewStreamProviderProxy(nsIStreamProvider **aResult,
-                          nsIStreamProvider *aProvider,
-                          nsIEventQueue *aEventQ=nsnull,
-                          PRUint32 aBufferSegmentSize=0,
-                          PRUint32 aBufferMaxSize=0)
-{
-    NS_ENSURE_ARG_POINTER(aResult);
-
-    nsresult rv;
-    nsCOMPtr<nsIStreamProviderProxy> proxy;
-    static NS_DEFINE_CID(kStreamProviderProxyCID, NS_STREAMPROVIDERPROXY_CID);
-
-    rv = nsComponentManager::CreateInstance(kStreamProviderProxyCID,
-                                            nsnull,
-                                            NS_GET_IID(nsIStreamProviderProxy),
-                                            getter_AddRefs(proxy));
-    if (NS_FAILED(rv)) return rv;
-
-    rv = proxy->Init(aProvider, aEventQ, aBufferSegmentSize, aBufferMaxSize);
-    if (NS_FAILED(rv)) return rv;
-
-    NS_ADDREF(*aResult = proxy);
-    return NS_OK;
-}
-
-inline nsresult
 NS_NewSimpleStreamListener(nsIStreamListener **aResult,
                            nsIOutputStream *aSink,
                            nsIRequestObserver *aObserver=nsnull)
@@ -580,53 +529,7 @@ NS_NewSimpleStreamListener(nsIStreamListener **aResult,
     return NS_OK;
 }
 
-inline nsresult
-NS_NewSimpleStreamProvider(nsIStreamProvider **aResult,
-                           nsIInputStream *aSource,
-                           nsIRequestObserver *aObserver=nsnull)
-{
-    NS_ENSURE_ARG_POINTER(aResult);
-
-    nsresult rv;
-    nsCOMPtr<nsISimpleStreamProvider> provider;
-    static NS_DEFINE_CID(kSimpleStreamProviderCID, NS_SIMPLESTREAMPROVIDER_CID);
-    rv = nsComponentManager::CreateInstance(kSimpleStreamProviderCID,
-                                            nsnull,
-                                            NS_GET_IID(nsISimpleStreamProvider),
-                                            getter_AddRefs(provider));
-    if (NS_FAILED(rv)) return rv;
-
-    rv = provider->Init(aSource, aObserver);
-    if (NS_FAILED(rv)) return rv;
-
-    NS_ADDREF(*aResult = provider);
-    return NS_OK;
-}
-
-/*
-// Depracated, prefer NS_NewStreamObserverProxy
-inline nsresult
-NS_NewAsyncStreamObserver(nsIRequestObserver **result,
-                          nsIRequestObserver *receiver,
-                          nsIEventQueue *eventQueue)
-{
-    nsresult rv;
-    nsCOMPtr<nsIAsyncStreamObserver> obs;
-    static NS_DEFINE_CID(kAsyncStreamObserverCID, NS_ASYNCSTREAMOBSERVER_CID);
-    rv = nsComponentManager::CreateInstance(kAsyncStreamObserverCID,
-                                            nsnull, 
-                                            NS_GET_IID(nsIAsyncStreamObserver),
-                                            getter_AddRefs(obs));
-    if (NS_FAILED(rv)) return rv;
-    rv = obs->Init(receiver, eventQueue);
-    if (NS_FAILED(rv)) return rv;
-
-    NS_ADDREF(*result = obs);
-    return NS_OK;
-}
-*/
-
-// Depracated, prefer NS_NewStreamListenerProxy
+// Deprecated, prefer NS_NewStreamListenerProxy
 inline nsresult
 NS_NewAsyncStreamListener(nsIStreamListener **result,
                           nsIStreamListener *receiver,
@@ -645,106 +548,6 @@ NS_NewAsyncStreamListener(nsIStreamListener **result,
 
     NS_ADDREF(*result = lsnr);
     return NS_OK;
-}
-
-// Depracated, prefer a true synchonous implementation
-inline nsresult
-NS_NewSyncStreamListener(nsIInputStream **aInStream, 
-                         nsIOutputStream **aOutStream,
-                         nsIStreamListener **aResult)
-{
-    nsresult rv;
-
-    NS_ENSURE_ARG_POINTER(aInStream);
-    NS_ENSURE_ARG_POINTER(aOutStream);
-
-    nsCOMPtr<nsIInputStream> pipeIn;
-    nsCOMPtr<nsIOutputStream> pipeOut;
-
-    rv = NS_NewPipe(getter_AddRefs(pipeIn),
-                    getter_AddRefs(pipeOut),
-                    4*1024,   // NS_SYNC_STREAM_LISTENER_SEGMENT_SIZE
-                    32*1024); // NS_SYNC_STREAM_LISTENER_BUFFER_SIZE
-    if (NS_FAILED(rv)) return rv;
-
-    rv = NS_NewSimpleStreamListener(aResult, pipeOut);
-    if (NS_FAILED(rv)) return rv;
-
-    NS_ADDREF(*aInStream = pipeIn);
-    NS_ADDREF(*aOutStream = pipeOut);
-    return NS_OK;
-}
-
-//
-// Calls AsyncWrite on the specified transport, with a stream provider that
-// reads data from the specified input stream.
-//
-inline nsresult
-NS_AsyncWriteFromStream(nsIRequest **aRequest,
-                        nsITransport *aTransport,
-                        nsIInputStream *aSource,
-                        PRUint32 aOffset=0,
-                        PRUint32 aCount=0,
-                        PRUint32 aFlags=0,
-                        nsIRequestObserver *aObserver=NULL,
-                        nsISupports *aContext=NULL)
-{
-    NS_ENSURE_ARG_POINTER(aTransport);
-
-    nsresult rv;
-    nsCOMPtr<nsIStreamProvider> provider;
-    rv = NS_NewSimpleStreamProvider(getter_AddRefs(provider),
-                                    aSource,
-                                    aObserver);
-    if (NS_FAILED(rv)) return rv;
-
-    //
-    // We can safely allow the transport impl to bypass proxying the provider
-    // since we are using a simple stream provider.
-    // 
-    // A simple stream provider masks the OnDataWritable from consumers.  
-    // Moreover, it makes an assumption about the underlying nsIInputStream
-    // implementation: namely, that it is thread-safe and blocking.
-    //
-    // So, let's always make this optimization.
-    //
-    aFlags |= nsITransport::DONT_PROXY_PROVIDER;
-
-    return aTransport->AsyncWrite(provider, aContext,
-                                  aOffset,
-                                  aCount,
-                                  aFlags,
-                                  aRequest);
-}
-
-//
-// Calls AsyncRead on the specified transport, with a stream listener that
-// writes data to the specified output stream.
-//
-inline nsresult
-NS_AsyncReadToStream(nsIRequest **aRequest,
-                     nsITransport *aTransport,
-                     nsIOutputStream *aSink,
-                     PRUint32 aOffset=0,
-                     PRUint32 aCount=0,
-                     PRUint32 aFlags=0,
-                     nsIRequestObserver *aObserver=NULL,
-                     nsISupports *aContext=NULL)
-{
-    NS_ENSURE_ARG_POINTER(aTransport);
-
-    nsresult rv;
-    nsCOMPtr<nsIStreamListener> listener;
-    rv = NS_NewSimpleStreamListener(getter_AddRefs(listener),
-                                    aSink,
-                                    aObserver);
-    if (NS_FAILED(rv)) return rv;
-
-    return aTransport->AsyncRead(listener, aContext,
-                                 aOffset,
-                                 aCount,
-                                 aFlags,
-                                 aRequest);
 }
 
 inline nsresult
@@ -903,5 +706,119 @@ NS_ParseContentType(const nsACString &rawContentType,
     return NS_OK;
 }
 
-#endif // nsNetUtil_h__
+inline nsresult
+NS_NewLocalFileInputStream(nsIInputStream** aResult,
+                           nsIFile* aFile,
+                           PRInt32 aIOFlags = -1,
+                           PRInt32 aPerm = -1,
+                           PRInt32 aBehaviorFlags = 0)
+{
+    nsresult rv;
+    nsCOMPtr<nsIFileInputStream> in;
+    static NS_DEFINE_CID(kLocalFileInputStreamCID, NS_LOCALFILEINPUTSTREAM_CID);
+    rv = nsComponentManager::CreateInstance(kLocalFileInputStreamCID,
+                                            nsnull, 
+                                            NS_GET_IID(nsIFileInputStream),
+                                            getter_AddRefs(in));
+    if (NS_FAILED(rv)) return rv;
+    rv = in->Init(aFile, aIOFlags, aPerm, aBehaviorFlags);
+    if (NS_FAILED(rv)) return rv;
 
+    *aResult = in;
+    NS_ADDREF(*aResult);
+    return NS_OK;
+}
+
+inline nsresult
+NS_NewLocalFileOutputStream(nsIOutputStream** aResult,
+                            nsIFile* aFile,
+                            PRInt32 aIOFlags = -1,
+                            PRInt32 aPerm = -1,
+                            PRInt32 aBehaviorFlags = 0)
+{
+    nsresult rv;
+    nsCOMPtr<nsIFileOutputStream> out;
+    static NS_DEFINE_CID(kLocalFileOutputStreamCID, NS_LOCALFILEOUTPUTSTREAM_CID);
+    rv = nsComponentManager::CreateInstance(kLocalFileOutputStreamCID,
+                                            nsnull, 
+                                            NS_GET_IID(nsIFileOutputStream),
+                                            getter_AddRefs(out));
+    if (NS_FAILED(rv)) return rv;
+    rv = out->Init(aFile, aIOFlags, aPerm, aBehaviorFlags);
+    if (NS_FAILED(rv)) return rv;
+
+    *aResult = out;
+    NS_ADDREF(*aResult);
+    return NS_OK;
+}
+
+inline nsresult
+NS_NewBufferedInputStream(nsIInputStream** aResult,
+                          nsIInputStream* aStr,
+                          PRUint32 aBufferSize)
+{
+    nsresult rv;
+    nsCOMPtr<nsIBufferedInputStream> in;
+    static NS_DEFINE_CID(kBufferedInputStreamCID, NS_BUFFEREDINPUTSTREAM_CID);
+    rv = nsComponentManager::CreateInstance(kBufferedInputStreamCID,
+                                            nsnull, 
+                                            NS_GET_IID(nsIBufferedInputStream),
+                                            getter_AddRefs(in));
+    if (NS_FAILED(rv)) return rv;
+    rv = in->Init(aStr, aBufferSize);
+    if (NS_FAILED(rv)) return rv;
+
+    *aResult = in;
+    NS_ADDREF(*aResult);
+    return NS_OK;
+}
+
+inline nsresult
+NS_NewBufferedOutputStream(nsIOutputStream** aResult,
+                           nsIOutputStream* aStr,
+                           PRUint32 aBufferSize)
+{
+    nsresult rv;
+    nsCOMPtr<nsIBufferedOutputStream> out;
+    static NS_DEFINE_CID(kBufferedOutputStreamCID, NS_BUFFEREDOUTPUTSTREAM_CID);
+    rv = nsComponentManager::CreateInstance(kBufferedOutputStreamCID,
+                                            nsnull, 
+                                            NS_GET_IID(nsIBufferedOutputStream),
+                                            getter_AddRefs(out));
+    if (NS_FAILED(rv)) return rv;
+    rv = out->Init(aStr, aBufferSize);
+    if (NS_FAILED(rv)) return rv;
+
+    *aResult = out;
+    NS_ADDREF(*aResult);
+    return NS_OK;
+}
+
+inline nsresult
+NS_NewPostDataStream(nsIInputStream **result,
+                     PRBool isFile,
+                     const nsACString &data,
+                     PRUint32 encodeFlags,
+                     nsIIOService* ioService = nsnull)     // pass in nsIIOService to optimize callers
+{
+    nsresult rv;
+
+    if (isFile) {
+        nsCOMPtr<nsILocalFile> file;
+        nsCOMPtr<nsIInputStream> fileStream;
+
+        rv = NS_NewNativeLocalFile(data, PR_FALSE, getter_AddRefs(file));
+        if (NS_FAILED(rv)) return rv;
+
+        rv = NS_NewLocalFileInputStream(getter_AddRefs(fileStream), file);
+        if (NS_FAILED(rv)) return rv;
+
+        // wrap the file stream with a buffered input stream
+        return NS_NewBufferedInputStream(result, fileStream, 8192);
+    }
+
+    // otherwise, create a string stream for the data
+    return NS_NewCStringInputStream(result, data);
+}
+
+#endif // nsNetUtil_h__

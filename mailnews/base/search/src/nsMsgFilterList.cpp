@@ -53,8 +53,8 @@
 #include "nsIImportService.h"
 #include "nsMsgBaseCID.h"
 #include "nsIMsgFilterService.h"
-#include "nsIFileStreams.h"
 #include "nsISupportsObsolete.h"
+#include "nsNetUtil.h"
 
 // unicode "%s" format string
 static const PRUnichar unicodeFormatter[] = {

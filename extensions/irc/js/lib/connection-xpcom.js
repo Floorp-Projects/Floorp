@@ -93,29 +93,54 @@ function bc_connect(host, port, bind, tcp_flag, observer)
     var uri = ios.newURI(spec,null,null);
     var info = pps.examineForProxy(uri);
 
-    this._transport = this._sockService.createTransport (host, port, info,
-                                                         0, 0);
-    if (!this._transport)
-        throw ("Error creating transport.");
+    if (jsenv.HAS_STREAM_PROVIDER)
+    {
+        this._transport = this._sockService.createTransport (host, port, info,
+                                                             0, 0);
+        if (!this._transport)
+            throw ("Error creating transport.");
 
-    if (jsenv.HAS_NSPR_EVENTQ) 
-    {   /* we've got an event queue, so start up an async write */
-        this._streamProvider = new StreamProvider (observer);
-        this._write_req =
-            this._transport.asyncWrite (this._streamProvider, this,
-                                        0, -1, 0);
+        if (jsenv.HAS_NSPR_EVENTQ) 
+        {   /* we've got an event queue, so start up an async write */
+            this._streamProvider = new StreamProvider (observer);
+            this._write_req =
+                this._transport.asyncWrite (this._streamProvider, this,
+                                            0, -1, 0);
+        }
+        else
+        {   /* no nspr event queues in this environment, we can't use async calls,
+             * so set up the streams. */
+            this._outputStream = this._transport.openOutputStream(0, -1, 0);
+            if (!this._outputStream)
+                throw "Error getting output stream.";
+            this._inputStream =
+                toScriptableInputStream(this._transport.openInputStream (0, -1, 0));
+            if (!this._inputStream)
+                throw "Error getting input stream.";
+        }    
     }
     else
-    {   /* no nspr event queues in this environment, we can't use async calls,
-         * so set up the streams. */
-        this._outputStream = this._transport.openOutputStream(0, -1, 0);
+    {
+        /* use new necko interfaces */
+        this._transport = this._sockService.createTransport(null, 0, host, port, info);
+        if (!this._transport)
+            throw ("Error creating transport.");
+
+        /* if we don't have an event queue, then all i/o must be blocking */
+        var openFlags;
+        if (jsenv.HAS_NSPR_EVENTQ)
+            openFlags = 0;
+        else
+            openFlags = Components.interfaces.nsITransport.OPEN_BLOCKING;
+
+        /* no limit on the output stream buffer */
+        this._outputStream = this._transport.openOutputStream(openFlags, 4096, -1);
         if (!this._outputStream)
             throw "Error getting output stream.";
-        this._inputStream =
-            toScriptableInputStream(this._transport.openInputStream (0, -1, 0));
+        this._inputStream = this._transport.openInputStream(openFlags, 0, 0);
         if (!this._inputStream)
             throw "Error getting input stream.";
-    }    
+    }
 
     this.connectDate = new Date();
     this.isConnected = true;
@@ -129,6 +154,8 @@ function bc_disconnect()
 {
     if ("_inputStream" in this && this._inputStream)
         this._inputStream.close();
+    if ("_outputStream" in this && this._outputStream)
+        this._outputStream.close();
     /*
     this._streamProvider.close();
     if (this._streamProvider.isBlocked)
@@ -142,7 +169,7 @@ function bc_senddata(str)
     if (!this.isConnected)
         throw "Not Connected.";
 
-    if (jsenv.HAS_NSPR_EVENTQ)
+    if (jsenv.HAS_NSPR_EVENTQ && jsenv.HAS_STREAM_PROVIDER)
         this.asyncWrite (str);
     else
         this.sendDataNow (str);
@@ -158,7 +185,7 @@ function bc_readdata(timeout, count)
 
     try
     {
-        rv = this._inputStream.read (count);
+        rv = this._scriptableInputStream.read (count);
     }
     catch (ex)
     {
@@ -173,7 +200,15 @@ function bc_readdata(timeout, count)
 CBSConnection.prototype.startAsyncRead =
 function bc_saread (observer)
 {
-    this._transport.asyncRead (new StreamListener (observer), this, 0, -1, 0);
+    if (jsenv.HAS_STREAM_PROVIDER)
+        this._transport.asyncRead (new StreamListener (observer), this, 0, -1, 0);
+    else
+    {
+        var pump = Components.classes["@mozilla.org/network/input-stream-pump;1"].
+            createInstance(Components.interfaces.nsIInputStreamPump);
+        pump.init(this._inputStream, -1, -1, 0, 0, false);
+        pump.asyncRead(new StreamListener(observer), this);
+    }
 }
 
 CBSConnection.prototype.asyncWrite =
@@ -190,7 +225,10 @@ function bc_awrite (str)
 CBSConnection.prototype.hasPendingWrite =
 function bc_haspwrite ()
 {
-    return (this._streamProvider.pendingData != "");
+    if (jsenv.HAS_STREAM_PROVIDER)
+        return (this._streamProvider.pendingData != "");
+    else
+        return false; /* data already pushed to necko */
 }
 
 CBSConnection.prototype.sendDataNow =
@@ -223,9 +261,13 @@ if (!jsenv.HAS_NSPR_EVENTQ)
     CBSConnection.prototype.startAsyncRead = _notimpl;
     CBSConnection.prototype.asyncWrite = _notimpl;
 }
-else
+else if (jsenv.HAS_STREAM_PROVIDER)
 {
     CBSConnection.prototype.sendDataNow = _notimpl;
+}
+else
+{
+    CBSConnection.prototype.asyncWrite = _notimpl;
 }
 
 delete _notimpl;
@@ -314,8 +356,8 @@ function sl_dataavail (request, ctxt, inStr, sourceOffset, count)
             "StreamListener.onDataAvailable ***");
         return;
     }
-    if (!ctxt._inputStream)
-        ctxt._inputStream = toScriptableInputStream (inStr);
+    if (!ctxt._scriptableInputStream)
+        ctxt._scriptableInputStream = toScriptableInputStream (inStr);
 
     if (this._observer)
         this._observer.onStreamDataAvailable(request, inStr, sourceOffset,

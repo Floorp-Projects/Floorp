@@ -70,8 +70,8 @@
 #include "nsICategoryManager.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsIObservableInputStream.h"
-#include "nsIObservableOutputStream.h"
+#include "nsIAsyncInputStream.h"
+#include "nsIAsyncOutputStream.h"
 
 #define PREF_MAIL_DISPLAY_GLYPH "mail.display_glyph"
 #define PREF_MAIL_DISPLAY_STRUCT "mail.display_struct"
@@ -698,22 +698,6 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
                   NS_STREAM_CONVERTER_SEGMENT_SIZE,
                   NS_STREAM_CONVERTER_BUFFER_SIZE,
                   PR_TRUE, PR_TRUE);
-  
-  if (NS_SUCCEEDED(rv))
-  {
-    nsCOMPtr<nsIInputStreamObserver> inObs = do_GetInterface(mEmitter, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsIObservableInputStream> observableIn(do_QueryInterface(mInputStream, &rv));
-      if (NS_SUCCEEDED(rv))
-        observableIn->SetObserver(inObs);
-    }
-    nsCOMPtr<nsIOutputStreamObserver> outObs = do_GetInterface(mEmitter, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsIObservableOutputStream> observableOut(do_QueryInterface(mOutputStream, &rv));
-      if (NS_SUCCEEDED(rv))
-        observableOut->SetObserver(outObs);
-    }
-  }
   
   // initialize our emitter
   if (NS_SUCCEEDED(rv) && mEmitter)

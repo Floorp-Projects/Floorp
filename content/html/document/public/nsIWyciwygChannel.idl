@@ -56,5 +56,5 @@ interface nsIWyciwygChannel : nsIChannel
     /**
      * Close the cache entry; subsequent writes have undefined behavior.
      */
-    void closeCacheEntry();
+    void closeCacheEntry(in nsresult reason);
 };

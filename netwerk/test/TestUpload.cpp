@@ -50,6 +50,14 @@
 static NS_DEFINE_CID(kEventQueueServiceCID,      NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
+#include "prlog.h"
+#if defined(PR_LOGGING)
+//
+// set NSPR_LOG_MODULES=Test:5
+//
+static PRLogModuleInfo *gTestLog = nsnull;
+#endif
+#define LOG(args) PR_LOG(gTestLog, PR_LOG_DEBUG, args)
 
 static int gKeepRunning = 1;
 static nsIEventQueue* gEventQ = nsnull;
@@ -83,6 +91,7 @@ NS_IMPL_ISUPPORTS1(InputTestConsumer, nsIStreamListener)
 NS_IMETHODIMP
 InputTestConsumer::OnStartRequest(nsIRequest *request, nsISupports* context)
 {
+  LOG(("InputTestConsumer::OnStartRequest\n"));
   return NS_OK;
 }
 
@@ -115,6 +124,7 @@ NS_IMETHODIMP
 InputTestConsumer::OnStopRequest(nsIRequest *request, nsISupports* context,
                                  nsresult aStatus)
 {
+    LOG(("InputTestConsumer::OnStopRequest [status=%x]\n", aStatus));
     gKeepRunning = PR_FALSE;
     return NS_OK;
 }
@@ -131,6 +141,10 @@ main(int argc, char* argv[])
     }
     char* uriSpec  = argv[1];
     char* fileName = argv[2];
+
+#if defined(PR_LOGGING) 
+    gTestLog = PR_NewLogModule("Test");
+#endif
 
     {
         nsCOMPtr<nsIServiceManager> servMan;

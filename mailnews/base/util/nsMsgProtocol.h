@@ -48,9 +48,10 @@
 #include "nsIFileSpec.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsIStreamProvider.h"
 #include "nsIProgressEventSink.h"
 #include "nsITransport.h"
+#include "nsIAsyncOutputStream.h"
+#include "nsIEventQueue.h"
 
 #define UNKNOWN_ERROR             101
 #define UNKNOWN_HOST_ERROR        102
@@ -67,7 +68,9 @@ class nsIProxyInfo;
 // it unifies the core networking code for the protocols. My hope is that
 // this will make unification with Necko easier as we'll only have to change
 // this class and not all of the mailnews protocols.
-class NS_MSG_BASE nsMsgProtocol : public nsIStreamListener, public nsIChannel
+class NS_MSG_BASE nsMsgProtocol : public nsIStreamListener
+                                , public nsIChannel
+                                , public nsITransportEventSink
 {
 public:
 	nsMsgProtocol(nsIURI * aURL);
@@ -80,6 +83,7 @@ public:
   
   NS_DECL_NSISTREAMLISTENER
   NS_DECL_NSIREQUESTOBSERVER
+  NS_DECL_NSITRANSPORTEVENTSINK
 
 	// LoadUrl -- A protocol typically overrides this function, sets up any local state for the url and
 	// then calls the base class which opens the socket if it needs opened. If the socket is 
@@ -139,6 +143,7 @@ protected:
 
 	// Ouput stream for writing commands to the socket	
 	nsCOMPtr<nsIOutputStream>	m_outputStream;   // this will be obtained from the transport interface
+    nsCOMPtr<nsIInputStream>    m_inputStream;
 
 	// Ouput stream for writing commands to the socket
 	nsCOMPtr<nsITransport>		m_transport; 
@@ -147,7 +152,7 @@ protected:
 	PRBool	  m_socketIsOpen; // mscott: we should look into keeping this state in the nsSocketTransport...
 							  // I'm using it to make sure I open the socket the first time a URL is loaded into the connection
 	PRUint32	m_flags; // used to store flag information
-	PRUint32	m_startPosition;
+	//PRUint32	m_startPosition;
 	PRInt32		m_readCount;
 
 	nsFileSpec	m_tempMsgFileSpec;  // we currently have a hack where displaying a msg involves writing it to a temp file first
@@ -197,6 +202,9 @@ public:
   // if we suspended the asynch write while waiting for more data to write then this will be TRUE
   PRBool mSuspendedWrite;
   nsCOMPtr<nsIRequest>     m_WriteRequest;
+  nsCOMPtr<nsIAsyncOutputStream>  mAsyncOutStream;
+  nsCOMPtr<nsIOutputStreamNotify> mProvider;
+  nsCOMPtr<nsIEventQueue>         mProviderEventQ;
 
   // because we are reading the post data in asychronously, it's possible that we aren't sending it 
   // out fast enough and the reading gets blocked. The following set of state variables are used to 

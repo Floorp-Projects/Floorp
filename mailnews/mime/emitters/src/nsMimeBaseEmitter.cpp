@@ -78,8 +78,6 @@ NS_IMPL_THREADSAFE_RELEASE(nsMimeBaseEmitter)
 NS_INTERFACE_MAP_BEGIN(nsMimeBaseEmitter)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIMimeEmitter)
    NS_INTERFACE_MAP_ENTRY(nsIMimeEmitter)
-   NS_INTERFACE_MAP_ENTRY(nsIInputStreamObserver)
-   NS_INTERFACE_MAP_ENTRY(nsIOutputStreamObserver)
    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
 NS_INTERFACE_MAP_END
 
@@ -346,51 +344,6 @@ nsMimeBaseEmitter::LocalizeHeaderName(const char *aHeaderName, const char *aDefa
 }
 
 ///////////////////////////////////////////////////////////////////////////
-// nsIPipeObserver Interface
-///////////////////////////////////////////////////////////////////////////
-
-NS_IMETHODIMP nsMimeBaseEmitter::OnWrite(nsIOutputStream* out, PRUint32 aCount)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsMimeBaseEmitter::OnEmpty(nsIInputStream* in)
-{
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP nsMimeBaseEmitter::OnFull(nsIOutputStream* out)
-{
-  // the pipe is full so we should flush our data to the converter's listener
-  // in order to make more room. 
-
-  // since we only have one pipe per mime emitter, i can ignore the pipe param and use
-  // my outStream object directly (it will be the same thing as what we'd get from aPipe.
-
-  nsresult rv = NS_OK;
-  if (mOutListener && mInputStream)
-  {
-      PRUint32 bytesAvailable = 0;
-      rv = mInputStream->Available(&bytesAvailable);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "Available failed");
-      
-      nsCOMPtr<nsIRequest> request = do_QueryInterface(mChannel);
-      
-      rv = mOutListener->OnDataAvailable(request, mURL, mInputStream, 0, bytesAvailable);
-  }
-  else 
-    rv = NS_ERROR_NULL_POINTER;
-
-  return rv;
-}
-
-NS_IMETHODIMP nsMimeBaseEmitter::OnClose(nsIInputStream* in)
-{
-  return NS_OK;
-}
-
-///////////////////////////////////////////////////////////////////////////
 // nsMimeBaseEmitter Interface
 /////////////////////////////////////////////////////////////////////////// 
 NS_IMETHODIMP
@@ -537,8 +490,7 @@ nsMimeBaseEmitter::Write(const char *buf, PRUint32 size, PRUint32 *amountWritten
   // First, handle any old buffer data...
   if (needToWrite > 0)
   {
-    rv = mOutStream->Write(mBufferMgr->GetBuffer(), 
-                            needToWrite, &written);
+    rv = WriteHelper(mBufferMgr->GetBuffer(), needToWrite, &written);
 
     mTotalWritten += written;
     mBufferMgr->ReduceBuffer(written);
@@ -556,13 +508,33 @@ nsMimeBaseEmitter::Write(const char *buf, PRUint32 size, PRUint32 *amountWritten
 
   // if we get here, we are dealing with new data...try to write
   // and then do the right thing...
-  rv = mOutStream->Write(buf, size, &written);
+  rv = WriteHelper(buf, size, &written);
   *amountWritten = written;
   mTotalWritten += written;
 
   if (written < size)
     mBufferMgr->IncreaseBuffer(buf+written, (size-written));
 
+  return rv;
+}
+
+nsresult
+nsMimeBaseEmitter::WriteHelper(const char *buf, PRUint32 count, PRUint32 *countWritten)
+{
+  nsresult rv;
+
+  rv = mOutStream->Write(buf, count, countWritten);
+  if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
+    // pipe is full, push contents of pipe to listener...
+    PRUint32 avail;
+    rv = mInputStream->Available(&avail);
+    if (NS_SUCCEEDED(rv) && avail) {
+      mOutListener->OnDataAvailable(mChannel, mURL, mInputStream, 0, avail);
+
+      // try writing again...
+      rv = mOutStream->Write(buf, count, countWritten);
+    }
+  }
   return rv;
 }
 

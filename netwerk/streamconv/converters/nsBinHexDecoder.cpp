@@ -50,7 +50,6 @@
 
 #include "nsIMIMEService.h"
 #include "nsMimeTypes.h"
-#include "nsCExternalHandlerService.h"
 
 static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 
@@ -515,7 +514,7 @@ nsresult nsBinHexDecoder::SetContentType(nsIRequest * aRequest, const char * fil
     return NS_ERROR_FAILURE; 
   }
 
-  nsCOMPtr<nsIMIMEService> mimeService (do_GetService(NS_MIMESERVICE_CONTRACTID, &rv));
+  nsCOMPtr<nsIMIMEService> mimeService (do_GetService("@mozilla.org/mime;1", &rv));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsXPIDLCString contentType;

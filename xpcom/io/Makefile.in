@@ -54,7 +54,8 @@ CPPSRCS		= \
 		nsLinebreakConverter.cpp \
 		nsLocalFileCommon.cpp \
 		nsMultiplexInputStream.cpp \
-		nsPipe2.cpp \
+		nsPipe3.cpp \
+		nsStreamUtils.cpp \
 		nsScriptableInputStream.cpp \
 		nsSegmentedBuffer.cpp \
 		nsSpecialSystemDirectory.cpp \
@@ -90,10 +91,12 @@ EXPORTS		= \
 		nsIUnicharInputStream.h \
 		nsLinebreakConverter.h \
 		nsLocalFile.h \
+		nsMultiplexInputStream.h \
 		nsScriptableInputStream.h \
 		nsSpecialSystemDirectory.h \
 		nsStorageStream.h \
 		nsStringIO.h \
+		nsStreamUtils.h \
 		$(NULL)			
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
@@ -127,8 +130,8 @@ XPIDLSRCS	= \
 		nsIStorageStream.idl \
 		nsIStreamBufferAccess.idl \
 		nsIStringStream.idl \
-		nsIObservableInputStream.idl \
-		nsIObservableOutputStream.idl \
+		nsIAsyncInputStream.idl \
+		nsIAsyncOutputStream.idl \
 		$(NULL)
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))

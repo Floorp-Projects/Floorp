@@ -39,104 +39,70 @@
 #define nsJARChannel_h__
 
 #include "nsIJARChannel.h"
-#include "nsIStreamListener.h"
-#include "nsIJARProtocolHandler.h"
 #include "nsIJARURI.h"
-#include "nsIStreamIO.h"
-#include "nsIChannel.h"
-#include "nsIZipReader.h"
-#include "nsIChannel.h"
-#include "nsILoadGroup.h"
+#include "nsIInputStreamPump.h"
 #include "nsIInterfaceRequestor.h"
-#include "nsIInterfaceRequestorUtils.h"
-#include "nsCOMPtr.h"
-#include "nsIFile.h"
-#include "prmon.h"
+#include "nsIProgressEventSink.h"
+#include "nsIStreamListener.h"
 #include "nsIDownloader.h"
-#include "nsIInputStream.h"
-#include "nsJARProtocolHandler.h"
+#include "nsILoadGroup.h"
+#include "nsIFile.h"
+#include "nsIURI.h"
+#include "nsCOMPtr.h"
 #include "nsString.h"
+#include "prlog.h"
 
-#ifdef DEBUG
-#include "prthread.h"
-#endif
+class nsJARInputThunk;
 
-class nsIFileChannel;
-class nsJARChannel;
+//-----------------------------------------------------------------------------
 
-#define NS_JARCHANNEL_CID                            \
-{ /* 0xc7e410d5-0x85f2-11d3-9f63-006008a6efe9 */     \
-    0xc7e410d5,                                      \
-    0x85f2,                                          \
-    0x11d3,                                          \
-    {0x9f, 0x63, 0x00, 0x60, 0x08, 0xa6, 0xef, 0xe9} \
-}
-
-class nsJARChannel : public nsIJARChannel, 
-                     public nsIStreamListener,
-                     public nsIStreamIO,
-                     public nsIDownloadObserver
+class nsJARChannel : public nsIJARChannel
+                   , public nsIDownloadObserver
+                   , public nsIStreamListener
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIREQUEST
     NS_DECL_NSICHANNEL
     NS_DECL_NSIJARCHANNEL
+    NS_DECL_NSIDOWNLOADOBSERVER
     NS_DECL_NSIREQUESTOBSERVER
     NS_DECL_NSISTREAMLISTENER
-    NS_DECL_NSIDOWNLOADOBSERVER
-
-    // NS_DECL_NSISTREAMIO and nsIChannel both define (attribute string contentType)
-
-    NS_IMETHOD Open();
-    NS_IMETHOD Close(nsresult status); 
-    NS_IMETHOD GetInputStream(nsIInputStream * *aInputStream);
-    NS_IMETHOD GetOutputStream(nsIOutputStream * *aOutputStream); 
-    NS_IMETHOD GetName(char * *aName); 
 
     nsJARChannel();
     virtual ~nsJARChannel();
 
-    // Define a Create method to be used with a factory:
-    static NS_METHOD
-    Create(nsISupports* aOuter, REFNSIID aIID, void **aResult);
+    nsresult Init(nsIURI *uri);
 
-    nsresult Init(nsJARProtocolHandler* aHandler, nsIURI* uri);
-    nsresult EnsureJARFileAvailable();
-    nsresult OpenJARElement();
-    nsresult AsyncReadJARElement();
-    nsresult EnsureZipReader();
+private:
+    nsresult CreateJarInput();
+    nsresult EnsureJarInput(PRBool blocking);
 
-    friend class nsJARDownloadObserver;
-
-protected:
-    nsJARProtocolHandler*               mJARProtocolHandler;
-    nsCOMPtr<nsIJARURI>                 mURI;
-    nsCOMPtr<nsILoadGroup>              mLoadGroup;
-    nsCOMPtr<nsIInterfaceRequestor>     mCallbacks;
-    nsCOMPtr<nsIURI>                    mOriginalURI;
-    nsLoadFlags                         mLoadFlags;
-    nsCOMPtr<nsISupports>               mOwner;
-
-    nsCOMPtr<nsISupports>               mUserContext;
-    nsCOMPtr<nsIStreamListener>         mUserListener;
-
-    nsCString                           mContentType;
-    nsCString                           mContentCharset;
-    PRInt32                             mContentLength;
-    nsCOMPtr<nsIURI>                    mJARBaseURI;
-    nsCString                           mJAREntry;
-    nsCOMPtr<nsIZipReader>              mJAR;
-    nsCOMPtr<nsIFile>                   mDownloadedJARFile;
-    nsresult                            mStatus;
-    PRBool                              mSynchronousRead;
-    nsCOMPtr<nsIInputStream>            mSynchronousInputStream;
-
-    nsCOMPtr<nsIDownloader>             mDownloader;
-    nsCOMPtr<nsIRequest>                mJarExtractionTransport;
-#ifdef DEBUG
-    PRThread*                           mInitiator;
+#if defined(PR_LOGGING)
+    nsCString                       mSpec;
 #endif
+
+    nsCOMPtr<nsIJARURI>             mJarURI;
+    nsCOMPtr<nsIURI>                mOriginalURI;
+    nsCOMPtr<nsISupports>           mOwner;
+    nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
+    nsCOMPtr<nsIProgressEventSink>  mProgressSink;
+    nsCOMPtr<nsILoadGroup>          mLoadGroup;
+    nsCOMPtr<nsIStreamListener>     mListener;
+    nsCOMPtr<nsISupports>           mListenerContext;
+    nsCString                       mContentType;
+    nsCString                       mContentCharset;
+    PRInt32                         mContentLength;
+    PRUint32                        mLoadFlags;
+    nsresult                        mStatus;
+    PRBool                          mIsPending;
+
+    nsJARInputThunk                *mJarInput;
+    nsCOMPtr<nsIInputStreamPump>    mPump;
+    nsCOMPtr<nsIDownloader>         mDownloader;
+    nsCOMPtr<nsIFile>               mJarFile;
+    nsCOMPtr<nsIURI>                mJarBaseURI;
+    nsCString                       mJarEntry;
 };
 
 #endif // nsJARChannel_h__

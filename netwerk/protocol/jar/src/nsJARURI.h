@@ -24,14 +24,6 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 
-#define NS_JARURI_CID                                \
-{ /* 0xc7e410d7-0x85f2-11d3-9f63-006008a6efe9 */     \
-    0xc7e410d7,                                      \
-    0x85f2,                                          \
-    0x11d3,                                          \
-    {0x9f, 0x63, 0x00, 0x60, 0x08, 0xa6, 0xef, 0xe9} \
-}
-
 class nsJARURI : public nsIJARURI, nsISerializable
 {
 public:    

@@ -21,10 +21,12 @@
  *   Darin Fisher <darin@netscape.com> (original author)
  */
 
+#include <stdlib.h>
 #include "nsHttp.h"
 #include "nsHttpPipeline.h"
+#include "nsHttpHandler.h"
 #include "nsIRequest.h"
-#include "nsISocketTransportService.h"
+#include "nsISocketTransport.h"
 #include "nsIStringStream.h"
 #include "nsIPipe.h"
 #include "nsCOMPtr.h"
@@ -34,109 +36,42 @@
 #ifdef DEBUG
 #include "prthread.h"
 // defined by the socket transport service while active
-extern PRThread *NS_SOCKET_THREAD;
+extern PRThread *gSocketThread;
 #endif
 
 //-----------------------------------------------------------------------------
-// nsHttpPipeline::nsInputStreamWrapper
+// nsHttpPushBackWriter
 //-----------------------------------------------------------------------------
 
-nsHttpPipeline::
-nsInputStreamWrapper::nsInputStreamWrapper(const char *data, PRUint32 dataLen)
-    : mData(data)
-    , mDataLen(dataLen)
-    , mDataPos(0)
+class nsHttpPushBackWriter : public nsAHttpSegmentWriter
 {
-}
+public:
+    nsHttpPushBackWriter(const char *buf, PRUint32 bufLen)
+        : mBuf(buf)
+        , mBufLen(bufLen)
+        { }
+    virtual ~nsHttpPushBackWriter() {}
 
-nsHttpPipeline::
-nsInputStreamWrapper::~nsInputStreamWrapper()
-{
-}
+    nsresult OnWriteSegment(char *buf, PRUint32 count, PRUint32 *countWritten)
+    {
+        if (mBufLen == 0)
+            return NS_BASE_STREAM_CLOSED;
 
-// this thing is going to be allocated on the stack
-NS_IMETHODIMP_(nsrefcnt) nsHttpPipeline::
-nsInputStreamWrapper::AddRef()
-{
-    return 1;
-}
+        if (count > mBufLen)
+            count = mBufLen;
 
-NS_IMETHODIMP_(nsrefcnt) nsHttpPipeline::
-nsInputStreamWrapper::Release()
-{
-    return 1;
-}
+        memcpy(buf, mBuf, count);
 
-NS_IMPL_THREADSAFE_QUERY_INTERFACE1(nsHttpPipeline::nsInputStreamWrapper, nsIInputStream)
-
-NS_IMETHODIMP nsHttpPipeline::
-nsInputStreamWrapper::Close()
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP nsHttpPipeline::
-nsInputStreamWrapper::Available(PRUint32 *result)
-{
-    *result = (mDataLen - mDataPos);
-    return NS_OK;
-}
-
-static NS_METHOD
-nsWriteToRawBuffer(nsIInputStream *inStr,
-                   void *closure,
-                   const char *fromRawSegment,
-                   PRUint32 offset,
-                   PRUint32 count,
-                   PRUint32 *writeCount)
-{
-    char *toBuf = (char *) closure;
-    memcpy(toBuf + offset, fromRawSegment, count);
-    *writeCount = count;
-    return NS_OK;
-}
-
-NS_IMETHODIMP nsHttpPipeline::
-nsInputStreamWrapper::Read(char *buf, PRUint32 count, PRUint32 *countRead)
-{
-    return ReadSegments(nsWriteToRawBuffer, buf, count, countRead);
-}
-
-NS_IMETHODIMP nsHttpPipeline::
-nsInputStreamWrapper::ReadSegments(nsWriteSegmentFun writer,
-                                   void *closure,
-                                   PRUint32 count,
-                                   PRUint32 *countRead)
-{
-    nsresult rv;
-    PRUint32 maxCount = mDataLen - mDataPos;
-    if (count > maxCount)
-        count = maxCount;
-
-    // here's the code that distinguishes this implementation from other
-    // string stream implementations.  normally, we'd return NS_OK to
-    // signify EOF, but we need to return NS_BASE_STREAM_WOULD_BLOCK to
-    // keep the nsStreamListenerProxy code happy.
-    if (count == 0) {
-        *countRead = 0;
+        mBuf += count;
+        mBufLen -= count;
+        *countWritten = count;
         return NS_OK;
     }
-    //if (count == 0)
-    //    return NS_BASE_STREAM_WOULD_BLOCK;
 
-    rv = writer(this, closure, mData + mDataPos, 0, count, countRead);
-    if (NS_SUCCEEDED(rv))
-        mDataPos += *countRead;
-    return rv;
-}
-
-NS_IMETHODIMP nsHttpPipeline::
-nsInputStreamWrapper::IsNonBlocking(PRBool *result)
-{
-    *result = PR_TRUE;
-    return NS_OK;
-}
-
+private:
+    const char *mBuf;
+    PRUint32    mBufLen;
+};
 
 //-----------------------------------------------------------------------------
 // nsHttpPipeline <public>
@@ -144,63 +79,41 @@ nsInputStreamWrapper::IsNonBlocking(PRBool *result)
 
 nsHttpPipeline::nsHttpPipeline()
     : mConnection(nsnull)
-    , mNumTrans(0)
-    , mCurrentReader(-1)
-    , mLock(nsnull)
     , mStatus(NS_OK)
+    , mRequestIsPartial(PR_FALSE)
+    , mResponseIsPartial(PR_FALSE)
+    , mPushBackBuf(nsnull)
+    , mPushBackLen(0)
+    , mPushBackMax(0)
 {
-    memset(mTransactionQ,     0, sizeof(PRUint32) * NS_HTTP_MAX_PIPELINED_REQUESTS);
-    memset(mTransactionFlags, 0, sizeof(PRUint32) * NS_HTTP_MAX_PIPELINED_REQUESTS);
 }
 
 nsHttpPipeline::~nsHttpPipeline()
 {
-    NS_IF_RELEASE(mConnection);
+    // make sure we aren't still holding onto any transactions!
+    Close(NS_ERROR_ABORT);
 
-    for (PRInt8 i=0; i<mNumTrans; i++) {
-        if (mTransactionQ[i]) {
-            nsAHttpTransaction *trans = mTransactionQ[i];
-            NS_RELEASE(trans);
-        }
-    }
-
-    if (mLock)
-        PR_DestroyLock(mLock);
+    if (mPushBackBuf)
+        free(mPushBackBuf);
 }
 
-// called while inside nsHttpHandler::mConnectionLock
 nsresult
-nsHttpPipeline::Init(nsAHttpTransaction *firstTrans)
+nsHttpPipeline::AddTransaction(nsAHttpTransaction *trans)
 {
-    LOG(("nsHttpPipeline::Init [this=%x trans=%x]\n", this, firstTrans));
-
-    NS_ASSERTION(!mConnection, "already initialized");
-
-    mLock = PR_NewLock();
-    if (!mLock)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    NS_ADDREF(firstTrans);
-    mTransactionQ[0] = firstTrans;
-    mNumTrans++;
-
-    return NS_OK;
-}
-
-// called while inside nsHttpHandler::mConnectionLock
-nsresult
-nsHttpPipeline::AppendTransaction(nsAHttpTransaction *trans)
-{
-    LOG(("nsHttpPipeline::AppendTransaction [this=%x trans=%x]\n", this, trans));
-
-    NS_ASSERTION(!mConnection, "already initialized");
-    NS_ASSERTION(mNumTrans < NS_HTTP_MAX_PIPELINED_REQUESTS, "too many transactions");
+    LOG(("nsHttpPipeline::AddTransaction [this=%x trans=%x]\n", this, trans));
 
     NS_ADDREF(trans);
-    mTransactionQ[mNumTrans++] = trans;
+    mRequestQ.AppendElement(trans);
+
+    if (mConnection) {
+        trans->SetConnection(this);
+
+        if (mRequestQ.Count() == 1)
+            mConnection->ResumeSend();
+    }
+
     return NS_OK;
 }
-
 
 //-----------------------------------------------------------------------------
 // nsHttpPipeline::nsISupports
@@ -219,7 +132,6 @@ NS_INTERFACE_MAP_END
 // nsHttpPipeline::nsAHttpConnection
 //-----------------------------------------------------------------------------
 
-// called on the socket thread
 nsresult
 nsHttpPipeline::OnHeadersAvailable(nsAHttpTransaction *trans,
                                    nsHttpRequestHead *requestHead,
@@ -228,130 +140,128 @@ nsHttpPipeline::OnHeadersAvailable(nsAHttpTransaction *trans,
 {
     LOG(("nsHttpPipeline::OnHeadersAvailable [this=%x]\n", this));
 
+    NS_ASSERTION(PR_GetCurrentThread() == gSocketThread, "wrong thread");
     NS_ASSERTION(mConnection, "no connection");
+
     // trans has now received its response headers; forward to the real connection
     return mConnection->OnHeadersAvailable(trans, requestHead, responseHead, reset);
 }
 
-// called on any thread
 nsresult
-nsHttpPipeline::OnTransactionComplete(nsAHttpTransaction *trans, nsresult status)
+nsHttpPipeline::ResumeSend()
 {
-    LOG(("nsHttpPipeline::OnTransactionComplete [this=%x trans=%x status=%x]\n",
-        this, trans, status));
+    NS_NOTREACHED("nsHttpPipeline::ResumeSend");
+    return NS_ERROR_UNEXPECTED;
+}
 
-    // called either from nsHttpTransaction::HandleContent (socket thread)
-    //            or from nsHttpHandler::CancelTransaction (any thread)
+nsresult
+nsHttpPipeline::ResumeRecv()
+{
+    NS_ASSERTION(PR_GetCurrentThread() == gSocketThread, "wrong thread");
+    NS_ASSERTION(mConnection, "no connection");
+    return mConnection->ResumeRecv();
+}
 
-    PRBool mustCancel = PR_FALSE, stopTrans = PR_FALSE;
-    {
-        nsAutoLock lock(mLock);
+void
+nsHttpPipeline::CloseTransaction(nsAHttpTransaction *trans, nsresult reason)
+{
+    LOG(("nsHttpPipeline::CloseTransaction [this=%x trans=%x reason=%x]\n",
+        this, trans, reason));
 
-        PRInt8 transIndex = LocateTransaction_Locked(trans);
-        NS_ASSERTION(transIndex != -1, "unknown transaction");
+    NS_ASSERTION(PR_GetCurrentThread() == gSocketThread, "wrong thread");
+    NS_ASSERTION(NS_FAILED(reason), "expecting failure code");
 
-        mTransactionFlags[transIndex] = eTransactionComplete;
+    // the specified transaction is to be closed with the given "reason"
+    
+    PRInt32 index;
+    PRBool killPipeline = PR_FALSE;
 
-        if (NS_FAILED(status)) {
-            mStatus = status;
-
-            // don't bother waiting for a connection to be established if the
-            // first transaction has been canceled.
-            if (transIndex == 0)
-                mustCancel = PR_TRUE;
-            // go ahead and kill off the transaction if it hasn't started 
-            // reading yet.
-            if (transIndex > mCurrentReader) {
-                stopTrans = PR_TRUE;
-                DropTransaction_Locked(transIndex);
-            }
+    index = mRequestQ.IndexOf(trans);
+    if (index >= 0) {
+        if (index == 0 && mRequestIsPartial) {
+            // the transaction is in the request queue.  check to see if any of
+            // its data has been written out yet.
+            killPipeline = PR_TRUE;
         }
+        mRequestQ.RemoveElementAt(index);
+    }
+    else {
+        index = mResponseQ.IndexOf(trans);
+        if (index >= 0)
+            mResponseQ.RemoveElementAt(index);
+        // while we could avoid killing the pipeline if this transaction is the
+        // last transaction in the pipeline, there doesn't seem to be that much
+        // value in doing so.  most likely if this transaction is going away,
+        // the others will be shortly as well.
+        killPipeline = PR_TRUE;
     }
 
-    if (stopTrans)
-        trans->OnStopTransaction(status);
+    trans->Close(reason);
+    NS_RELEASE(trans);
 
-    if (mustCancel) {
-        NS_ASSERTION(mConnection, "no connection");
-        mConnection->OnTransactionComplete(this, status);
-    }
-
-    return NS_OK;
+    if (killPipeline)
+        Close(reason);
 }
 
-// not called on the socket thread
-nsresult
-nsHttpPipeline::OnSuspend()
-{
-    LOG(("nsHttpPipeline::OnSuspend [this=%x]\n", this));
-
-    NS_ASSERTION(mConnection, "no connection");
-    return mConnection->OnSuspend();
-}
-
-// not called on the socket thread
-nsresult
-nsHttpPipeline::OnResume()
-{
-    LOG(("nsHttpPipeline::OnResume [this=%x]\n", this));
-
-    NS_ASSERTION(mConnection, "no connection");
-    return mConnection->OnResume();
-}
-
-// called on any thread
 void
 nsHttpPipeline::GetConnectionInfo(nsHttpConnectionInfo **result)
 {
-    LOG(("nsHttpPipeline::GetConnectionInfo [this=%x]\n", this));
-
     NS_ASSERTION(mConnection, "no connection");
     mConnection->GetConnectionInfo(result);
 }
 
-// called on the socket thread
 void
-nsHttpPipeline::DropTransaction(nsAHttpTransaction *trans)
+nsHttpPipeline::GetSecurityInfo(nsISupports **result)
 {
-    LOG(("nsHttpPipeline::DropTransaction [this=%x trans=%x]\n", this, trans));
-
     NS_ASSERTION(mConnection, "no connection");
-
-    // clear the transaction from our queue
-    {
-        nsAutoLock lock(mLock);
-
-        PRInt8 transIndex = LocateTransaction_Locked(trans);
-        if (transIndex == -1)
-            return;
-
-        DropTransaction_Locked(transIndex);
-
-        mStatus = NS_ERROR_NET_RESET;
-    }
-
-    // Assuming DropTransaction is called in response to a dead socket connection...
-    mConnection->OnTransactionComplete(this, NS_ERROR_NET_RESET);
+    mConnection->GetSecurityInfo(result);
 }
 
-// called on any thread
 PRBool
 nsHttpPipeline::IsPersistent()
 {
-    return PR_TRUE;
+    return PR_TRUE; // pipelining requires this to be true!
 }
 
-// called on the socket thread
 nsresult
 nsHttpPipeline::PushBack(const char *data, PRUint32 length)
 {
     LOG(("nsHttpPipeline::PushBack [this=%x len=%u]\n", this, length));
+    
+    NS_ASSERTION(PR_GetCurrentThread() == gSocketThread, "wrong thread");
+    NS_ASSERTION(mPushBackLen == 0, "push back buffer already has data!");
 
-    nsInputStreamWrapper readable(data, length);
+    // PushBack is called recursively from WriteSegments
 
-    return OnDataReadable(&readable);
+    // XXX we have a design decision to make here.  either we buffer the data
+    // and process it when we return to WriteSegments, or we attempt to move
+    // onto the next transaction from here.  doing so adds complexity with the
+    // benefit of eliminating the extra buffer copy.  the buffer is at most
+    // 4096 bytes, so it is really unclear if there is any value in the added
+    // complexity.  besides simplicity, buffering this data has the advantage
+    // that we'll call close on the transaction sooner, which will wake up
+    // the HTTP channel sooner to continue with its work.
+
+    if (!mPushBackBuf) {
+        mPushBackMax = length;
+        mPushBackBuf = (char *) malloc(mPushBackMax);
+        if (!mPushBackBuf)
+            return NS_ERROR_OUT_OF_MEMORY;
+    }
+    else if (length > mPushBackMax) {
+        // grow push back buffer as necessary.
+        NS_ASSERTION(length <= NS_HTTP_SEGMENT_SIZE, "too big");
+        mPushBackMax = length;
+        mPushBackBuf = (char *) realloc(mPushBackBuf, mPushBackMax);
+        if (!mPushBackBuf)
+            return NS_ERROR_OUT_OF_MEMORY;
+    }
+ 
+    memcpy(mPushBackBuf, data, length);
+    mPushBackLen = length;
+
+    return NS_OK;
 }
-
 
 //-----------------------------------------------------------------------------
 // nsHttpPipeline::nsAHttpConnection
@@ -362,275 +272,52 @@ nsHttpPipeline::SetConnection(nsAHttpConnection *conn)
 {
     LOG(("nsHttpPipeline::SetConnection [this=%x conn=%x]\n", this, conn));
 
+    NS_ASSERTION(PR_GetCurrentThread() == gSocketThread, "wrong thread");
     NS_ASSERTION(!mConnection, "already have a connection");
+
     NS_IF_ADDREF(mConnection = conn);
 
-    // no need to be inside the lock
-    for (PRInt8 i=0; i<mNumTrans; ++i) {
-        NS_ASSERTION(mTransactionQ[i], "no transaction");
-        if (mTransactionQ[i])
-            mTransactionQ[i]->SetConnection(this);
-    }
+    PRInt32 i, count = mRequestQ.Count();
+    for (i=0; i<count; ++i)
+        Request(i)->SetConnection(this);
 }
 
 void
-nsHttpPipeline::SetSecurityInfo(nsISupports *securityInfo)
+nsHttpPipeline::GetSecurityCallbacks(nsIInterfaceRequestor **result)
 {
-    LOG(("nsHttpPipeline::SetSecurityInfo [this=%x]\n", this));
+    NS_ASSERTION(PR_GetCurrentThread() == gSocketThread, "wrong thread");
 
-    // set security info on each transaction
-    nsAutoLock lock(mLock);
-    for (PRInt8 i=0; i<mNumTrans; ++i) {
-        if (mTransactionQ[i])
-            mTransactionQ[i]->SetSecurityInfo(securityInfo);
-    }
-}
-
-void
-nsHttpPipeline::GetNotificationCallbacks(nsIInterfaceRequestor **result)
-{
-    LOG(("nsHttpPipeline::GetNotificationCallbacks [this=%x]\n", this));
-
-    // return notification callbacks from first transaction
-    nsAutoLock lock(mLock);
-    if (mTransactionQ[0])
-        mTransactionQ[0]->GetNotificationCallbacks(result);
+    // return security callbacks from first request
+    nsAHttpTransaction *trans = Request(0);
+    if (trans)
+        trans->GetSecurityCallbacks(result);
     else
         *result = nsnull;
 }
 
-PRUint32
-nsHttpPipeline::GetRequestSize()
-{
-    LOG(("nsHttpPipeline::GetRequestSize [this=%x]\n", this));
-
-    nsAutoLock lock(mLock);
-    return GetRequestSize_Locked();
-}
-
-// called on the socket thread
-nsresult
-nsHttpPipeline::OnDataWritable(nsIOutputStream *stream)
-{
-    LOG(("nsHttpPipeline::OnDataWritable [this=%x]\n", this));
-
-    NS_ASSERTION(PR_GetCurrentThread() == NS_SOCKET_THREAD, "wrong thread");
-
-    nsresult rv;
-    if (!mRequestData) {
-        nsAutoLock lock(mLock);
-
-        // check for early cancelation
-        if (NS_FAILED(mStatus))
-            return mStatus;
-
-        // allocate a pipe for the request data
-        PRUint32 size = GetRequestSize_Locked();
-        nsCOMPtr<nsIOutputStream> outputStream;
-        rv = NS_NewPipe(getter_AddRefs(mRequestData),
-                        getter_AddRefs(outputStream),
-                        size, size, PR_TRUE, PR_TRUE);
-        if (NS_FAILED(rv)) return rv; 
-
-        // fill the pipe
-        for (PRInt32 i=0; i<mNumTrans; ++i) {
-            // maybe this transaction has already been canceled...
-            if (mTransactionQ[i]) {
-                while (1) {
-                    PRUint32 before = 0, after = 0;
-                    mRequestData->Available(&before);
-                    // append the transaction's request data to our buffer...
-                    rv = mTransactionQ[i]->OnDataWritable(outputStream);
-                    if (rv == NS_BASE_STREAM_CLOSED)
-                        break; // advance to next transaction
-                    if (NS_FAILED(rv))
-                        return rv; // something bad happened!!
-                    // else, there's more to write (the transaction may be
-                    // writing in small chunks).  verify that the transaction
-                    // actually wrote something to the pipe, and if it didn't,
-                    // then advance to the next transaction to avoid an
-                    // infinite loop (see bug 146884).
-                    mRequestData->Available(&after);
-                    if (before == after)
-                        break;
-                }
-            }
-        }
-    }
-    else {
-        nsAutoLock lock(mLock);
-
-        // check for early cancelation... (important for slow connections)
-        // only abort if we haven't started reading
-        if (NS_FAILED(mStatus) && (mCurrentReader == -1))
-            return mStatus;
-    }
-
-    // find out how much data still needs to be written, and write it
-    PRUint32 n = 0;
-    rv = mRequestData->Available(&n);
-    if (NS_FAILED(rv)) return rv;
-
-    if (n > 0)
-        return stream->WriteFrom(mRequestData, NS_HTTP_BUFFER_SIZE, &n);
-
-    // if nothing to write, then signal EOF
-    return NS_BASE_STREAM_CLOSED;
-}
-
-// called on the socket thread (may be called recursively)
-nsresult
-nsHttpPipeline::OnDataReadable(nsIInputStream *stream)
-{
-    LOG(("nsHttpPipeline::OnDataReadable [this=%x]\n", this));
-
-    NS_ASSERTION(PR_GetCurrentThread() == NS_SOCKET_THREAD, "wrong thread");
-
-    {
-        nsresult rv = NS_OK;
-        nsAutoLock lock(mLock);
-
-        if (mCurrentReader == -1)
-            mCurrentReader = 0;
-
-        while (1) {
-            nsAHttpTransaction *reader = mTransactionQ[mCurrentReader];
-            // the reader may be NULL if it has already completed.
-            if (!reader || (mTransactionFlags[mCurrentReader] & eTransactionComplete)) {
-                // advance to next reader
-                if (++mCurrentReader == mNumTrans) {
-                    mCurrentReader = -1;
-                    return NS_OK;
-                }
-                continue;
-            }
-
-            // remember the index of this reader
-            PRUint32 readerIndex = mCurrentReader;
-            PRUint32 bytesRemaining = 0;
-
-            mTransactionFlags[readerIndex] |= eTransactionReading;
-
-            // cannot hold lock while calling OnDataReadable... must also ensure
-            // that |reader| doesn't dissappear on us.
-            nsCOMPtr<nsISupports> readerDeathGrip(reader);
-            PR_Unlock(mLock);
-
-            rv = reader->OnDataReadable(stream);
-
-            if (NS_SUCCEEDED(rv))
-                rv = stream->Available(&bytesRemaining);
-
-            PR_Lock(mLock);
-
-            if (NS_FAILED(rv))
-                return rv;
-
-            // the reader may have completed...
-            if (mTransactionFlags[readerIndex] & eTransactionComplete) {
-                reader->OnStopTransaction(reader->Status());
-                DropTransaction_Locked(readerIndex);
-            }
-
-            // the pipeline may have completed...
-            if (NS_FAILED(mStatus) || IsDone_Locked())
-                break; // exit lock
-
-            // otherwise, if there is nothing left in the stream, then unwind...
-            if (bytesRemaining == 0)
-                return NS_OK;
-
-            // PushBack may have been called during the call to OnDataReadable, so
-            // we cannot depend on |reader| pointing to |mCurrentReader| anymore.
-            // loop around, and re-acquire |reader|.
-        }
-    }
-
-    NS_ASSERTION(mConnection, "no connection");
-    mConnection->OnTransactionComplete(this, mStatus);
-    return NS_OK;
-}
-
-// called on any thread
-nsresult
-nsHttpPipeline::OnStopTransaction(nsresult status)
-{
-    LOG(("nsHttpPipeline::OnStopTransaction [this=%x status=%x]\n", this, status));
-
-    // called either from nsHttpHandler::CancelTransaction (mConnection == nsnull)
-    //            or from nsHttpConnection::OnStopRequest (on the socket thread)
-
-    if (mConnection) {
-        NS_ASSERTION(PR_GetCurrentThread() == NS_SOCKET_THREAD, "wrong thread");
-        nsAutoLock lock(mLock);
-        // XXX this assertion is wrong!!  what about network errors??
-        NS_ASSERTION(mStatus == status, "unexpected status");
-        // reset any transactions that haven't already completed.
-        //
-        // normally, we'd expect the current reader to have completed already;
-        // however, if the server happens to switch to HTTP/1.0 and not send a
-        // Content-Length for one of the pipelined responses (yes, it does
-        // happen!!), then we'll need to be sure to not reset the corresponding
-        // transaction.
-        for (PRInt8 i=0; i<mNumTrans; ++i) {
-            if (mTransactionQ[i]) {
-                nsAHttpTransaction *trans = mTransactionQ[i];
-                NS_ADDREF(trans);
-
-                PRBool mustReset = !(mTransactionFlags[i] & eTransactionReading);
-
-                DropTransaction_Locked(i);
-
-                PR_Unlock(mLock);
-                if (mustReset)
-                    // this will end up calling our DropTransaction, which will return
-                    // early since we have already dropped this transaction.  this is
-                    // important since it allows us to distinguish what we are doing
-                    // here from premature EOF detection.
-                    trans->OnStopTransaction(NS_ERROR_NET_RESET);
-                else
-                    trans->OnStopTransaction(status);
-                PR_Lock(mLock);
-
-                NS_RELEASE(trans);
-            }
-        }
-        mCurrentReader = -1;
-        mNumTrans = 0;
-    }
-    else {
-        NS_ASSERTION(NS_FAILED(status), "unexpected cancelation status");
-        NS_ASSERTION(mCurrentReader == -1, "unexpected reader");
-        for (PRInt8 i=0; i<mNumTrans; ++i) {
-            // maybe this transaction has already been canceled...
-            if (mTransactionQ[i]) {
-                mTransactionQ[i]->OnStopTransaction(status);
-                DropTransaction_Locked(i);
-            }
-        }
-    }
-
-    return NS_OK;
-}
-
-// called on the socket thread
 void
-nsHttpPipeline::OnStatus(nsresult status, const PRUnichar *statusText)
+nsHttpPipeline::OnTransportStatus(nsresult status, PRUint32 progress)
 {
-    LOG(("nsHttpPipeline::OnStatus [this=%x status=%x]\n", this, status));
+    LOG(("nsHttpPipeline::OnStatus [this=%x status=%x progress=%u]\n",
+        this, status, progress));
 
-    nsAutoLock lock(mLock);
+    NS_ASSERTION(PR_GetCurrentThread() == gSocketThread, "wrong thread");
+
+    nsAHttpTransaction *trans;
     switch (status) {
     case NS_NET_STATUS_RECEIVING_FROM:
         // forward this only to the transaction currently recieving data 
-        if (mCurrentReader != -1 && mTransactionQ[mCurrentReader])
-            mTransactionQ[mCurrentReader]->OnStatus(status, statusText);
+        trans = Response(0);
+        if (trans)
+            trans->OnTransportStatus(status, progress);
         break;
     default:
         // forward other notifications to all transactions
-        for (PRInt8 i=0; i<mNumTrans; ++i) {
-            if (mTransactionQ[i])
-                mTransactionQ[i]->OnStatus(status, statusText);
+        PRInt32 i, count = mRequestQ.Count();
+        for (i=0; i<count; ++i) {
+            trans = Request(i);
+            if (trans)
+                trans->OnTransportStatus(status, progress);
         }
         break;
     }
@@ -639,62 +326,215 @@ nsHttpPipeline::OnStatus(nsresult status, const PRUnichar *statusText)
 PRBool
 nsHttpPipeline::IsDone()
 {
-    LOG(("nsHttpPipeline::IsDone [this=%x]\n", this));
-
-    nsAutoLock lock(mLock);
-    return IsDone_Locked();
+    return (mRequestQ.Count() == 0) && (mResponseQ.Count() == 0);
 }
 
 nsresult
 nsHttpPipeline::Status()
 {
-    LOG(("nsHttpPipeline::Status [this=%x status=%x]\n", this, mStatus));
-
     return mStatus;
 }
 
-
-//-----------------------------------------------------------------------------
-// nsHttpPipeline <private>
-//-----------------------------------------------------------------------------
-
-PRBool
-nsHttpPipeline::IsDone_Locked()
+PRUint32
+nsHttpPipeline::Available()
 {
-    // done if all of the transactions are null
-    for (PRInt8 i=0; i<mNumTrans; ++i) {
-        if (mTransactionQ[i])
-            return PR_FALSE;
-    }
-    return PR_TRUE;
+    PRUint32 result = 0;
+
+    PRInt32 i, count = mRequestQ.Count();
+    for (i=0; i<count; ++i)
+        result += Request(i)->Available();
+    return result;
 }
 
-PRInt8
-nsHttpPipeline::LocateTransaction_Locked(nsAHttpTransaction *trans)
+NS_METHOD
+nsHttpPipeline::ReadFromPipe(nsIInputStream *stream,
+                             void *closure,
+                             const char *buf,
+                             PRUint32 offset,
+                             PRUint32 count,
+                             PRUint32 *countRead)
 {
-    for (PRInt8 i=0; i<mNumTrans; ++i) {
-        if (mTransactionQ[i] == trans)
-            return i;
+    nsHttpPipeline *self = (nsHttpPipeline *) closure;
+    return self->mReader->OnReadSegment(buf, count, countRead);
+}
+
+nsresult
+nsHttpPipeline::ReadSegments(nsAHttpSegmentReader *reader,
+                             PRUint32 count,
+                             PRUint32 *countRead)
+{
+    LOG(("nsHttpPipeline::ReadSegments [this=%x count=%u]\n", this, count));
+
+    NS_ASSERTION(PR_GetCurrentThread() == gSocketThread, "wrong thread");
+    nsresult rv;
+
+    PRUint32 avail = 0;
+    if (mSendBufIn) {
+        rv = mSendBufIn->Available(&avail);
+        if (NS_FAILED(rv)) return rv;
     }
-    return -1;
+
+    if (avail == 0) {
+        rv = FillSendBuf();
+        if (NS_FAILED(rv)) return rv;
+
+        rv = mSendBufIn->Available(&avail);
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    // read no more than what was requested
+    if (avail > count)
+        avail = count;
+
+    mReader = reader;
+
+    rv = mSendBufIn->ReadSegments(ReadFromPipe, this, avail, countRead);
+
+    mReader = nsnull;
+    return rv;
+}
+
+nsresult
+nsHttpPipeline::WriteSegments(nsAHttpSegmentWriter *writer,
+                              PRUint32 count,
+                              PRUint32 *countWritten)
+{
+    LOG(("nsHttpPipeline::WriteSegments [this=%x count=%u]\n", this, count));
+
+    NS_ASSERTION(PR_GetCurrentThread() == gSocketThread, "wrong thread");
+
+    nsAHttpTransaction *trans; 
+    nsresult rv;
+
+    trans = Response(0);
+    if (!trans) {
+        if (mRequestQ.Count() > 0)
+            rv = NS_BASE_STREAM_WOULD_BLOCK;
+        else
+            rv = NS_BASE_STREAM_CLOSED;
+    }
+    else {
+        // 
+        // ask the transaction to consume data from the connection.
+        // PushBack may be called recursively.
+        //
+        rv = trans->WriteSegments(writer, count, countWritten);
+
+        if (rv == NS_BASE_STREAM_CLOSED || trans->IsDone()) {
+            trans->Close(NS_OK);
+            NS_RELEASE(trans);
+            mResponseQ.RemoveElementAt(0);
+            mResponseIsPartial = PR_FALSE;
+
+            // ask the connection manager to add additional transactions
+            // to our pipeline.
+            gHttpHandler->ConnMgr()->AddTransactionToPipeline(this);
+        }
+        else
+            mResponseIsPartial = PR_TRUE;
+    }
+
+    if (mPushBackLen) {
+        nsHttpPushBackWriter writer(mPushBackBuf, mPushBackLen);
+        PRUint32 len = mPushBackLen, n;
+        mPushBackLen = 0;
+        // the push back buffer is never larger than NS_HTTP_SEGMENT_SIZE,
+        // so we are guaranteed that the next response will eat the entire
+        // push back buffer (even though it might again call PushBack).
+        rv = WriteSegments(&writer, len, &n);
+    }
+
+    return rv;
 }
 
 void
-nsHttpPipeline::DropTransaction_Locked(PRInt8 i)
+nsHttpPipeline::Close(nsresult reason)
 {
-    mTransactionFlags[i] = 0;
-    NS_RELEASE(mTransactionQ[i]);
+    LOG(("nsHttpPipeline::Close [this=%x reason=%x]\n", this, reason));
+
+    // the connection is going away!
+    mStatus = reason;
+
+    // we must no longer reference the connection!
+    NS_IF_RELEASE(mConnection);
+
+    PRUint32 i, count;
+    nsAHttpTransaction *trans;
+
+    // any pending requests can ignore this error and be restarted
+    count = mRequestQ.Count();
+    for (i=0; i<count; ++i) {
+        trans = Request(i);
+        trans->Close(NS_ERROR_NET_RESET);
+        NS_RELEASE(trans);
+    }
+    mRequestQ.Clear();
+
+    trans = Response(0);
+    if (trans) {
+        // if the current response is partially complete, then it cannot be
+        // restarted and will have to fail with the status of the connection.
+        if (mResponseIsPartial)
+            trans->Close(reason);
+        else
+            trans->Close(NS_ERROR_NET_RESET);
+        NS_RELEASE(trans);
+        
+        // any remaining pending responses can be restarted
+        count = mResponseQ.Count();
+        for (i=1; i<count; ++i) {
+            trans = Response(i);
+            trans->Close(NS_ERROR_NET_RESET);
+            NS_RELEASE(trans);
+        }
+        mResponseQ.Clear();
+    }
 }
 
-PRUint32
-nsHttpPipeline::GetRequestSize_Locked()
+nsresult
+nsHttpPipeline::OnReadSegment(const char *segment,
+                              PRUint32 count,
+                              PRUint32 *countRead)
 {
-    PRUint32 size = 0;
-    for (PRInt8 i=0; i<mNumTrans; ++i) {
-        // maybe this transaction has already been canceled...
-        if (mTransactionQ[i])
-            size += mTransactionQ[i]->GetRequestSize();
+    return mSendBufOut->Write(segment, count, countRead);
+}
+
+nsresult
+nsHttpPipeline::FillSendBuf()
+{
+    // reads from request queue, moving transactions to response queue
+    // when they have been completely read.
+
+    nsresult rv;
+    
+    if (!mSendBufIn) {
+        // allocate a single-segment pipe
+        rv = NS_NewPipe(getter_AddRefs(mSendBufIn),
+                        getter_AddRefs(mSendBufOut),
+                        NS_HTTP_SEGMENT_SIZE,
+                        NS_HTTP_SEGMENT_SIZE);
+        if (NS_FAILED(rv)) return rv;
     }
-    LOG(("  request-size=%u\n", size));
-    return size; 
+
+    PRUint32 n, avail;
+    nsAHttpTransaction *trans;
+    while ((trans = Request(0)) != nsnull) {
+        avail = trans->Available();
+        if (avail) {
+            rv = trans->ReadSegments(this, avail, &n);
+            if (NS_FAILED(rv)) return rv;
+            
+            NS_ASSERTION(n > 0, "pipe was full");
+        }
+        avail = trans->Available();
+        if (avail == 0) {
+            // move transaction from request queue to response queue
+            mRequestQ.RemoveElementAt(0);
+            mResponseQ.AppendElement(trans);
+            mRequestIsPartial = PR_FALSE;
+        }
+        else
+            mRequestIsPartial = PR_TRUE;
+    }
+    return NS_OK;
 }

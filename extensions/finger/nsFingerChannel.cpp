@@ -17,7 +17,8 @@
  * All Rights Reserved.
  *
  * Contributor(s): 
- *  Brian Ryner <bryner@uiuc.edu>
+ *   Brian Ryner <bryner@uiuc.edu>
+ *   Darin Fisher <darin@netscape.com>
  */
 
 // finger implementation
@@ -34,6 +35,7 @@
 #include "nsIStreamConverterService.h"
 #include "nsITXTToHTMLConv.h"
 #include "nsIProgressEventSink.h"
+#include "nsEventQueueUtils.h"
 #include "nsNetUtil.h"
 #include "nsCRT.h"
 
@@ -45,31 +47,31 @@ static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 
 // nsFingerChannel methods
 nsFingerChannel::nsFingerChannel()
-    : mContentLength(-1),
-      mActAsObserver(PR_TRUE),
-      mPort(-1),
-      mStatus(NS_OK)
+    : mLoadFlags(LOAD_NORMAL)
+    , mStatus(NS_OK)
+    , mPort(-1)
 {
 }
 
-nsFingerChannel::~nsFingerChannel() {
+nsFingerChannel::~nsFingerChannel()
+{
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS4(nsFingerChannel, 
-                              nsIChannel, 
-                              nsIRequest,
-                              nsIStreamListener, 
-                              nsIRequestObserver)
+NS_IMPL_ISUPPORTS4(nsFingerChannel, 
+                   nsIChannel, 
+                   nsIRequest,
+                   nsIStreamListener, 
+                   nsIRequestObserver)
 
 nsresult
-nsFingerChannel::Init(nsIURI* uri, nsIProxyInfo* proxyInfo)
+nsFingerChannel::Init(nsIURI *uri, nsIProxyInfo *proxyInfo)
 {
     nsresult rv;
     nsCAutoString autoBuffer;
 
     NS_ASSERTION(uri, "no uri");
 
-    mUrl = uri;
+    mURI = uri;
     mProxyInfo = proxyInfo;
 
 //  For security reasons, we do not allow the user to specify a
@@ -77,7 +79,7 @@ nsFingerChannel::Init(nsIURI* uri, nsIProxyInfo* proxyInfo)
 
     mPort = FINGER_PORT;
 
-    rv = mUrl->GetPath(autoBuffer); // autoBuffer = user@host
+    rv = mURI->GetPath(autoBuffer); // autoBuffer = user@host
     if (NS_FAILED(rv)) return rv;
 
     // Now parse out the user and host
@@ -86,27 +88,18 @@ nsFingerChannel::Init(nsIURI* uri, nsIProxyInfo* proxyInfo)
 
     // Catch the case of just the host being given
     if (!pos) {
+        mUser.Truncate();
         mHost.Assign(buf);
     } else {
-        mUser.Assign(buf,pos-buf);
+        mUser.Assign(buf, pos-buf);
         mHost.Assign(pos+1); // ignore '@'
     }
 
-    if (mHost.IsEmpty()) return NS_ERROR_NOT_INITIALIZED;
+    if (mHost.IsEmpty())
+        return NS_ERROR_MALFORMED_URI;
 
+    mContentType = NS_LITERAL_CSTRING(TEXT_HTML); // expected content-type
     return NS_OK;
-}
-
-NS_METHOD
-nsFingerChannel::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
-{
-    nsFingerChannel* fc = new nsFingerChannel();
-    if (fc == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(fc);
-    nsresult rv = fc->QueryInterface(aIID, aResult);
-    NS_RELEASE(fc);
-    return rv;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -115,20 +108,23 @@ nsFingerChannel::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
 NS_IMETHODIMP
 nsFingerChannel::GetName(nsACString &result)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return mURI->GetSpec(result);
 }
 
 NS_IMETHODIMP
 nsFingerChannel::IsPending(PRBool *result)
 {
-    NS_NOTREACHED("nsFingerChannel::IsPending");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    *result = (mPump != nsnull);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsFingerChannel::GetStatus(nsresult *status)
 {
-    *status = mStatus;
+    if (NS_SUCCEEDED(mStatus) && mPump)
+        mPump->GetStatus(status);
+    else
+        *status = mStatus;
     return NS_OK;
 }
 
@@ -136,27 +132,28 @@ NS_IMETHODIMP
 nsFingerChannel::Cancel(nsresult status)
 {
     NS_ASSERTION(NS_FAILED(status), "shouldn't cancel with a success code");
-    nsresult rv = NS_ERROR_FAILURE;
 
     mStatus = status;
-    if (mTransportRequest) {
-      rv = mTransportRequest->Cancel(status);
-    }
-    return rv;
+    if (mPump)
+        mPump->Cancel(status);
+
+    return NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP
-nsFingerChannel::Suspend(void)
+nsFingerChannel::Suspend()
 {
-    NS_NOTREACHED("nsFingerChannel::Suspend");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    if (mPump)
+        mPump->Suspend();
+    return NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP
-nsFingerChannel::Resume(void)
+nsFingerChannel::Resume()
 {
-    NS_NOTREACHED("nsFingerChannel::Resume");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    if (mPump)
+        mPump->Resume();
+    return NS_ERROR_UNEXPECTED;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -165,7 +162,7 @@ nsFingerChannel::Resume(void)
 NS_IMETHODIMP
 nsFingerChannel::GetOriginalURI(nsIURI* *aURI)
 {
-    *aURI = mOriginalURI ? mOriginalURI : mUrl;
+    *aURI = mOriginalURI ? mOriginalURI : mURI;
     NS_ADDREF(*aURI);
     return NS_OK;
 }
@@ -180,7 +177,7 @@ nsFingerChannel::SetOriginalURI(nsIURI* aURI)
 NS_IMETHODIMP
 nsFingerChannel::GetURI(nsIURI* *aURI)
 {
-    *aURI = mUrl;
+    *aURI = mURI;
     NS_IF_ADDREF(*aURI);
     return NS_OK;
 }
@@ -188,24 +185,8 @@ nsFingerChannel::GetURI(nsIURI* *aURI)
 NS_IMETHODIMP
 nsFingerChannel::Open(nsIInputStream **_retval)
 {
-    nsresult rv = NS_OK;
-
-    rv = NS_CheckPortSafety(mPort, "finger");
-    if (NS_FAILED(rv))
-      return rv;
-
-    nsCOMPtr<nsISocketTransportService> socketService = 
-             do_GetService(kSocketTransportServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = socketService->CreateTransport(mHost.get(), mPort, mProxyInfo, BUFFER_SEG_SIZE,
-            BUFFER_MAX_SIZE, getter_AddRefs(mTransport));
-    if (NS_FAILED(rv)) return rv;
-
-    mTransport->SetNotificationCallbacks(mCallbacks,
-                                         (mLoadFlags & LOAD_BACKGROUND));
-
-    return mTransport->OpenInputStream(0, PRUint32(-1), 0, _retval);
+    NS_NOTREACHED("nsFingerChannel::Open");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -214,24 +195,77 @@ nsFingerChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
     nsresult rv = NS_OK;
 
     rv = NS_CheckPortSafety(mPort, "finger");
-    if (NS_FAILED(rv))
-      return rv;
+    if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsISocketTransportService> socketService = 
+    nsCOMPtr<nsIEventQueue> eventQ;
+    rv = NS_GetCurrentEventQ(getter_AddRefs(eventQ));
+    if (NS_FAILED(rv)) return rv;
+
+    //
+    // create transport
+    //
+    nsCOMPtr<nsISocketTransportService> sts = 
              do_GetService(kSocketTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    rv = socketService->CreateTransport(mHost.get(), mPort, mProxyInfo, BUFFER_SEG_SIZE,
-      BUFFER_MAX_SIZE, getter_AddRefs(mTransport));
+    rv = sts->CreateTransport(nsnull, 0, mHost, mPort, mProxyInfo,
+                              getter_AddRefs(mTransport));
     if (NS_FAILED(rv)) return rv;
 
-    mTransport->SetNotificationCallbacks(mCallbacks,
-                                         (mLoadFlags & LOAD_BACKGROUND));
+    // not fatal if these fail
+    mTransport->SetSecurityCallbacks(mCallbacks);
+    mTransport->SetEventSink(this, eventQ);
+
+    rv = WriteRequest(mTransport);
+    if (NS_FAILED(rv)) return rv;
+
+    //
+    // create TXT to HTML stream converter
+    //
+    nsCOMPtr<nsIStreamConverterService> scs = 
+             do_GetService(kStreamConverterServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    NS_NAMED_LITERAL_STRING(fromStr, "text/plain");
+    NS_NAMED_LITERAL_STRING(toStr, "text/html");
+
+    nsCOMPtr<nsIStreamListener> convListener;
+    rv = scs->AsyncConvertData(fromStr.get(), toStr.get(), this, nsnull,
+                               getter_AddRefs(convListener));
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsITXTToHTMLConv> conv = do_QueryInterface(convListener);
+    if (conv) {
+        nsCAutoString userHost;
+        rv = mURI->GetPath(userHost);
+
+        nsAutoString title;
+        title = NS_LITERAL_STRING("Finger information for ")
+              + NS_ConvertUTF8toUCS2(userHost);
+
+        conv->SetTitle(title.get());
+        conv->PreFormatHTML(PR_TRUE);
+    }
+
+    //
+    // open input stream, and create input stream pump...
+    //
+    nsCOMPtr<nsIInputStream> sockIn;
+    rv = mTransport->OpenInputStream(0, 0, 0, getter_AddRefs(sockIn));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = NS_NewInputStreamPump(getter_AddRefs(mPump), sockIn);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = mPump->AsyncRead(convListener, nsnull);
+    if (NS_FAILED(rv)) return rv;
+
+    if (mLoadGroup)
+        mLoadGroup->AddRequest(this, nsnull);
 
     mListener = aListener;
-    mResponseContext = ctxt;
-
-    return SendRequest(mTransport);
+    mListenerContext = ctxt;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -248,49 +282,46 @@ nsFingerChannel::SetLoadFlags(PRUint32 aLoadFlags)
     return NS_OK;
 }
 
-#define FINGER_TYPE TEXT_HTML
-
 NS_IMETHODIMP
 nsFingerChannel::GetContentType(nsACString &aContentType)
 {
-    aContentType = NS_LITERAL_CSTRING(FINGER_TYPE);
+    aContentType = mContentType;
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsFingerChannel::SetContentType(const nsACString &aContentType)
 {
-    //It doesn't make sense to set the content-type on this type
-    // of channel...
-    return NS_ERROR_FAILURE;
+    mContentType = aContentType;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsFingerChannel::GetContentCharset(nsACString &aContentCharset)
 {
-    aContentCharset.Truncate();
+    aContentCharset = mContentCharset;
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsFingerChannel::SetContentCharset(const nsACString &aContentCharset)
 {
-    NS_NOTREACHED("nsFingerChannel::SetContentCharset");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    mContentCharset = aContentCharset;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsFingerChannel::GetContentLength(PRInt32 *aContentLength)
 {
-    *aContentLength = mContentLength;
+    *aContentLength = -1;
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsFingerChannel::SetContentLength(PRInt32 aContentLength)
 {
-    NS_NOTREACHED("nsFingerChannel::SetContentLength");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    // silently ignore this...
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -335,117 +366,96 @@ NS_IMETHODIMP
 nsFingerChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCallbacks)
 {
     mCallbacks = aNotificationCallbacks;
+    mProgressSink = do_GetInterface(mCallbacks);
     return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsFingerChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
+nsFingerChannel::GetSecurityInfo(nsISupports **aSecurityInfo)
 {
+    if (mTransport)
+        return mTransport->GetSecurityInfo(aSecurityInfo);
+
     *aSecurityInfo = nsnull;
     return NS_OK;
 }
 
+//-----------------------------------------------------------------------------
 // nsIRequestObserver methods
-NS_IMETHODIMP
-nsFingerChannel::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext) {
-    if (!mActAsObserver) {
-      // acting as a listener
-      return mListener->OnStartRequest(this, mResponseContext);
-    } else {
-      // we don't want to pass our AsyncWrite's OnStart through
-      // we just ignore this
-      return NS_OK;
-    }
-}
-
+//-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsFingerChannel::OnStopRequest(nsIRequest *aRequest, nsISupports* aContext,
-                               nsresult aStatus)
+nsFingerChannel::OnStartRequest(nsIRequest *req, nsISupports *ctx)
 {
-    nsresult rv = NS_OK;
-
-    if (NS_FAILED(aStatus) || !mActAsObserver) {
-        if (mLoadGroup) {
-          rv = mLoadGroup->RemoveRequest(this, nsnull, aStatus);
-          if (NS_FAILED(rv)) return rv;
-        }
-        rv = mListener->OnStopRequest(this, mResponseContext, aStatus);
-        mTransport = 0;
-        return rv;
-    } else {
-        // at this point we know the request has been sent.
-        // we're no longer acting as an observer.
- 
-        mActAsObserver = PR_FALSE;
-        nsCOMPtr<nsIStreamListener> converterListener;
-
-        nsCOMPtr<nsIStreamConverterService> StreamConvService = 
-                 do_GetService(kStreamConverterServiceCID, &rv);
-        if (NS_FAILED(rv)) return rv;
-
-        nsAutoString fromStr(NS_LITERAL_STRING("text/plain"));
-        nsAutoString toStr(NS_LITERAL_STRING("text/html"));
-
-        rv = StreamConvService->AsyncConvertData(fromStr.get(),
-              toStr.get(), this, mResponseContext,
-              getter_AddRefs(converterListener));
-        if (NS_FAILED(rv)) return rv;
-
-        nsCOMPtr<nsITXTToHTMLConv> converter(do_QueryInterface(converterListener));
-        if (converter) {
-          nsAutoString title(NS_LITERAL_STRING("Finger information for "));
-          nsCAutoString userHost;
-          rv = mUrl->GetPath(userHost);
-          title.Append(NS_ConvertUTF8toUCS2(userHost));
-          converter->SetTitle(title.get());
-          converter->PreFormatHTML(PR_TRUE);
-        }
-
-        return mTransport->AsyncRead(converterListener, mResponseContext, 0, PRUint32(-1), 0,
-                                     getter_AddRefs(mTransportRequest));
-    }
-
+    return mListener->OnStartRequest(this, mListenerContext);
 }
 
-
-// nsIStreamListener method
 NS_IMETHODIMP
-nsFingerChannel::OnDataAvailable(nsIRequest *aRequest, nsISupports* aContext,
-                               nsIInputStream *aInputStream, PRUint32 aSourceOffset,
-                               PRUint32 aLength) {
-    mContentLength = aLength;
-    return mListener->OnDataAvailable(this, mResponseContext, aInputStream, aSourceOffset, aLength);
+nsFingerChannel::OnStopRequest(nsIRequest *req, nsISupports *ctx, nsresult status)
+{
+    if (NS_SUCCEEDED(mStatus))
+        mStatus = status;
+
+    mListener->OnStopRequest(this, mListenerContext, mStatus);
+    mListener = 0;
+    mListenerContext = 0;
+
+    if (mLoadGroup)
+        mLoadGroup->RemoveRequest(this, nsnull, mStatus);
+
+    mPump = 0;
+    mTransport = 0;
+    return NS_OK;
 }
+
+NS_IMETHODIMP
+nsFingerChannel::OnDataAvailable(nsIRequest *req, nsISupports *ctx,
+                                 nsIInputStream *stream, PRUint32 offset,
+                                 PRUint32 count)
+{
+    return mListener->OnDataAvailable(this, mListenerContext, stream, offset, count);
+}
+
+//-----------------------------------------------------------------------------
+// nsITransportEventSink methods
+//-----------------------------------------------------------------------------
+
+NS_IMETHODIMP
+nsFingerChannel::OnTransportStatus(nsITransport *trans, nsresult status,
+                                   PRUint32 progress, PRUint32 progressMax)
+{
+    // suppress status notification if channel is no longer pending!
+    if (mProgressSink && mPump && !(mLoadFlags & LOAD_BACKGROUND)) {
+        NS_ConvertUTF8toUCS2 host(mHost);
+        mProgressSink->OnStatus(this, nsnull, status, host.get());
+
+        if (status == nsISocketTransport::STATUS_RECEIVING_FROM ||
+            status == nsISocketTransport::STATUS_SENDING_TO) {
+            mProgressSink->OnProgress(this, nsnull, progress, progressMax);
+        }
+    }
+    return NS_OK;
+}
+
+//-----------------------------------------------------------------------------
 
 nsresult
-nsFingerChannel::SendRequest(nsITransport* aTransport) {
-  // The text to send should already be in mUser
+nsFingerChannel::WriteRequest(nsITransport *trans)
+{
+    // The text to send should already be in mUser
+    nsresult rv;
 
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsISupports> result;
-  nsCOMPtr<nsIInputStream> charstream;
-  nsCString requestBuffer(mUser);
+    nsCAutoString requestBuf;
+    requestBuf = mUser + NS_LITERAL_CSTRING("\r\n");
 
-  if (mLoadGroup) {
-    mLoadGroup->AddRequest(this, nsnull);
-  }
+    nsCOMPtr<nsIOutputStream> stream;
+    rv = trans->OpenOutputStream(0, requestBuf.Length(), 1, getter_AddRefs(stream));
+    if (NS_FAILED(rv)) return rv;
 
-  requestBuffer.Append(CRLF);
+    PRUint32 n;
+    rv = stream->Write(requestBuf.get(), requestBuf.Length(), &n);
+    if (NS_FAILED(rv)) return rv;
 
-  mRequest.Assign(requestBuffer);
-
-  rv = NS_NewCharInputStream(getter_AddRefs(result), mRequest);
-  if (NS_FAILED(rv)) return rv;
-
-  charstream = do_QueryInterface(result, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = NS_AsyncWriteFromStream(getter_AddRefs(mTransportRequest),
-                               aTransport, charstream,
-                               0, requestBuffer.Length(), 0,
-                               this, nsnull);
-  return rv;
+    NS_ENSURE_TRUE(n == requestBuf.Length(), NS_ERROR_UNEXPECTED);
+    return NS_OK;
 }
-
-

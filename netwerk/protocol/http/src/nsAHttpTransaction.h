@@ -1,15 +1,57 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2002
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Darin Fisher <darin@netscape.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
 #ifndef nsAHttpTransaction_h__
 #define nsAHttpTransaction_h__
 
 #include "nsISupports.h"
 
 class nsAHttpConnection;
-class nsIInputStream;
-class nsIOutputStream;
+class nsAHttpSegmentReader;
+class nsAHttpSegmentWriter;
 class nsIInterfaceRequestor;
 
 //----------------------------------------------------------------------------
-// Abstract base class for a HTTP transaction
+// Abstract base class for a HTTP transaction:
+//
+// A transaction is a "sink" for the response data.  The connection pushes
+// data to the transaction by writing to it.  The transaction supports
+// WriteSegments and may refuse to accept data if its buffers are full (its
+// write function returns NS_BASE_STREAM_WOULD_BLOCK in this case).
 //----------------------------------------------------------------------------
 
 class nsAHttpTransaction : public nsISupports
@@ -18,37 +60,56 @@ public:
     // called by the connection when it takes ownership of the transaction.
     virtual void SetConnection(nsAHttpConnection *) = 0;
 
-    // called by the connection to pass socket security-info to the transaction.
-    virtual void SetSecurityInfo(nsISupports *) = 0;
-
-    // called by the connection to get notification callbacks to set on the 
+    // called by the connection to get security callbacks to set on the 
     // socket transport.
-    virtual void GetNotificationCallbacks(nsIInterfaceRequestor **) = 0;
+    virtual void GetSecurityCallbacks(nsIInterfaceRequestor **) = 0;
 
-    // called by the pipelining code to determine how much memory to allocate
-    // for this transaction's request headers.
-    virtual PRUint32 GetRequestSize() = 0;
+    // called to report socket status (see nsITransportEventSink)
+    virtual void OnTransportStatus(nsresult status, PRUint32 progress) = 0;
 
-    // called by the connection to indicate that the socket can be written to.
-    // the transaction returns NS_BASE_STREAM_CLOSED when it is finished
-    // writing its request(s).
-    virtual nsresult OnDataWritable(nsIOutputStream *) = 0;
-
-    // called by the connection to indicate that the socket can be read from.
-    // the transaction can return NS_BASE_STREAM_WOULD_BLOCK to suspend the
-    // socket read request.
-    virtual nsresult OnDataReadable(nsIInputStream *) = 0;
-
-    // called by the connection when the transaction should stop, either due
-    // to normal completion, cancelation, or some socket transport error.
-    virtual nsresult OnStopTransaction(nsresult status) = 0;
-
-    // called by the connection to report socket status.
-    virtual void OnStatus(nsresult status, const PRUnichar *statusText) = 0;
-
-    // called by the connection to check the transaction status.
+    // called to check the transaction status.
     virtual PRBool   IsDone() = 0;
     virtual nsresult Status() = 0;
+
+    // called to find out how much request data is available for writing.
+    virtual PRUint32 Available() = 0;
+
+    // called to read request data from the transaction.
+    virtual nsresult ReadSegments(nsAHttpSegmentReader *reader,
+                                  PRUint32 count, PRUint32 *countRead) = 0;
+
+    // called to write response data to the transaction.
+    virtual nsresult WriteSegments(nsAHttpSegmentWriter *writer,
+                                   PRUint32 count, PRUint32 *countWritten) = 0;
+
+    // called to close the transaction
+    virtual void Close(nsresult reason) = 0;
+};
+
+//-----------------------------------------------------------------------------
+// nsAHttpSegmentReader
+//-----------------------------------------------------------------------------
+
+class nsAHttpSegmentReader
+{
+public:
+    // any returned failure code stops segment iteration
+    virtual nsresult OnReadSegment(const char *segment,
+                                   PRUint32 count,
+                                   PRUint32 *countRead) = 0;
+};
+
+//-----------------------------------------------------------------------------
+// nsAHttpSegmentWriter
+//-----------------------------------------------------------------------------
+
+class nsAHttpSegmentWriter
+{
+public:
+    // any returned failure code stops segment iteration
+    virtual nsresult OnWriteSegment(char *segment,
+                                    PRUint32 count,
+                                    PRUint32 *countWritten) = 0;
 };
 
 #endif // nsAHttpTransaction_h__

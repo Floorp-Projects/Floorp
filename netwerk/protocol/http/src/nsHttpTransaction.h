@@ -28,15 +28,19 @@
 #include "nsHttpHeaderArray.h"
 #include "nsAHttpTransaction.h"
 #include "nsAHttpConnection.h"
-#include "nsIStreamListener.h"
-#include "nsIInputStream.h"
-#include "nsIInterfaceRequestor.h"
-#include "nsIInterfaceRequestorUtils.h"
-#include "nsIProgressEventSink.h"
-#include "nsIEventQueue.h"
-#include "nsXPIDLString.h"
 #include "nsCOMPtr.h"
 
+#include "nsIPipe.h"
+#include "nsIInputStream.h"
+#include "nsIOutputStream.h"
+#include "nsIInterfaceRequestor.h"
+#include "nsISocketTransportService.h"
+#include "nsITransport.h"
+#include "nsIEventQueue.h"
+
+//-----------------------------------------------------------------------------
+
+class nsHttpTransaction;
 class nsHttpRequestHead;
 class nsHttpResponseHead;
 class nsHttpChunkedDecoder;
@@ -47,32 +51,60 @@ class nsHttpChunkedDecoder;
 //-----------------------------------------------------------------------------
 
 class nsHttpTransaction : public nsAHttpTransaction
-                        , public nsIRequest
-                        , public nsIInputStream
+                        , public nsIOutputStreamNotify
+                        , public nsISocketEventHandler
 {
 public:
     NS_DECL_ISUPPORTS
-    NS_DECL_NSIREQUEST
-    NS_DECL_NSIINPUTSTREAM
+    NS_DECL_NSIOUTPUTSTREAMNOTIFY
+    NS_DECL_NSISOCKETEVENTHANDLER
 
-    // A transaction is constructed from request headers.
-    nsHttpTransaction(nsIStreamListener *, nsIInterfaceRequestor *, PRUint8 caps);
+    nsHttpTransaction();
     virtual ~nsHttpTransaction();
 
-    // Called to initialize the transaction
-    nsresult SetupRequest(nsHttpRequestHead *requestHeaders,
-                          nsIInputStream    *requestBody,
-                          PRBool             requestBodyIncludesHeaders,
-                          PRBool             pruneProxyHeaders);
+    //
+    // called to initialize the transaction
+    // 
+    // @param caps
+    //        the transaction capabilities (see nsHttp.h)
+    // @param connInfo
+    //        the connection type for this transaction.
+    // @param reqHeaders
+    //        the request header struct
+    // @param reqBody
+    //        the request body (POST or PUT data stream)
+    // @param reqBodyIncludesHeaders
+    //        fun stuff to support NPAPI plugins.
+    // @param eventQ
+    //        the event queue were notifications should be sent.
+    // @param callbacks
+    //        the notification callbacks to be given to PSM.
+    // @param responseBody
+    //        the input stream that will contain the response data.  async
+    //        wait on this input stream for data.  on first notification,
+    //        headers should be available (check transaction status).
+    //
+    nsresult Init(PRUint8                caps,
+                  nsHttpConnectionInfo  *connInfo,
+                  nsHttpRequestHead     *reqHeaders,
+                  nsIInputStream        *reqBody,
+                  PRBool                 reqBodyIncludesHeaders,
+                  nsIEventQueue         *eventQ,
+                  nsIInterfaceRequestor *callbacks,
+                  nsITransportEventSink *eventsink,
+                  nsIAsyncInputStream  **responseBody);
 
-    nsIStreamListener     *Listener()       { return mListener; }
-    nsAHttpConnection     *Connection()     { return mConnection; }
+    // attributes
+    PRUint8                Caps()           { return mCaps; }
+    nsHttpConnectionInfo  *ConnectionInfo() { return mConnInfo; }
     nsHttpRequestHead     *RequestHead()    { return mRequestHead; }
     nsHttpResponseHead    *ResponseHead()   { return mHaveAllHeaders ? mResponseHead : nsnull; }
+    nsISupports           *SecurityInfo()   { return mSecurityInfo; }
+    nsresult               TransportStatus(){ return mTransportStatus; }
+
     nsIInterfaceRequestor *Callbacks()      { return mCallbacks; } 
     nsIEventQueue         *ConsumerEventQ() { return mConsumerEventQ; }
-    nsISupports           *SecurityInfo()   { return mSecurityInfo; }
-    PRUint8                Capabilities()   { return mCapabilities; }
+    nsAHttpConnection     *Connection()     { return mConnection; }
 
     // Called to take ownership of the response headers; the transaction
     // will drop any reference to the response headers after this call.
@@ -81,18 +113,26 @@ public:
     // Called to find out if the transaction generated a complete response.
     PRBool ResponseIsComplete() { return mResponseIsComplete; }
 
+    //-------------------------------------------------------------------------
     // nsAHttpTransaction methods:
-    void     SetConnection(nsAHttpConnection *conn) { NS_IF_ADDREF(mConnection = conn); }
-    void     SetSecurityInfo(nsISupports *info) { mSecurityInfo = info; }
-    void     GetNotificationCallbacks(nsIInterfaceRequestor **cb) { NS_IF_ADDREF(*cb = mCallbacks); }
-    PRUint32 GetRequestSize();
-    PRUint32 GetContentRead() { return mContentRead; }
-    nsresult OnDataWritable(nsIOutputStream *);
-    nsresult OnDataReadable(nsIInputStream *);
-    nsresult OnStopTransaction(nsresult);
-    void     OnStatus(nsresult status, const PRUnichar *statusText);
+    //-------------------------------------------------------------------------
+
+    void SetConnection(nsAHttpConnection *conn)
+    {
+        NS_IF_RELEASE(mConnection);
+        NS_IF_ADDREF(mConnection = conn);
+    }
+    void GetSecurityCallbacks(nsIInterfaceRequestor **cb)
+    {
+        NS_IF_ADDREF(*cb = mCallbacks);
+    }
+    void     OnTransportStatus(nsresult status, PRUint32 progress);
     PRBool   IsDone() { return mTransactionDone; }
     nsresult Status() { return mStatus; }
+    PRUint32 Available();
+    nsresult ReadSegments(nsAHttpSegmentReader *, PRUint32, PRUint32 *);
+    nsresult WriteSegments(nsAHttpSegmentWriter *, PRUint32, PRUint32 *);
+    void     Close(nsresult);
 
 private:
     nsresult Restart();
@@ -101,29 +141,38 @@ private:
     nsresult ParseHead(char *, PRUint32 count, PRUint32 *countRead);
     nsresult HandleContentStart();
     nsresult HandleContent(char *, PRUint32 count, PRUint32 *contentRead, PRUint32 *contentRemaining);
+    nsresult ProcessData(char *, PRUint32, PRUint32 *);
     void     DeleteSelfOnConsumerThread();
 
-    static void *PR_CALLBACK DeleteThis_EventHandlerFunc(PLEvent *);
-    static void  PR_CALLBACK DeleteThis_EventCleanupFunc(PLEvent *);
+    static void *PR_CALLBACK TransportStatus_Handler(PLEvent *);
+    static void  PR_CALLBACK TransportStatus_Cleanup(PLEvent *);
+    static void *PR_CALLBACK DeleteThis_Handler(PLEvent *);
+    static void  PR_CALLBACK DeleteThis_Cleanup(PLEvent *);
+
+    static NS_METHOD ReadRequestSegment(nsIInputStream *, void *, const char *,
+                                        PRUint32, PRUint32, PRUint32 *);
+    static NS_METHOD WritePipeSegment(nsIOutputStream *, void *, char *,
+                                      PRUint32, PRUint32, PRUint32 *);
 
 private:
-    nsCOMPtr<nsIStreamListener>     mListener;
     nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
-    nsCOMPtr<nsIProgressEventSink>  mProgressSink;
+    nsCOMPtr<nsITransportEventSink> mTransportSink;
     nsCOMPtr<nsIEventQueue>         mConsumerEventQ;
     nsCOMPtr<nsISupports>           mSecurityInfo;
-
-    nsAHttpConnection              *mConnection;      // hard ref
+    nsCOMPtr<nsIAsyncInputStream>   mPipeIn;
+    nsCOMPtr<nsIAsyncOutputStream>  mPipeOut;
 
     nsCString                       mReqHeaderBuf;    // flattened request headers
-    nsCOMPtr<nsIInputStream>        mReqHeaderStream; // header data stream
-    nsCOMPtr<nsIInputStream>        mReqUploadStream; // upload data stream
-    PRUint32                        mReqUploadStreamOffset;
-    PRUint32                        mReqUploadStreamLength;
+    nsCOMPtr<nsIInputStream>        mRequestStream;
+    PRUint32                        mRequestSize;
 
-    nsCOMPtr<nsIInputStream>        mSource;
+    nsAHttpConnection              *mConnection;      // hard ref
+    nsHttpConnectionInfo           *mConnInfo;        // hard ref
     nsHttpRequestHead              *mRequestHead;     // weak ref
     nsHttpResponseHead             *mResponseHead;    // hard ref
+
+    nsAHttpSegmentReader           *mReader;
+    nsAHttpSegmentWriter           *mWriter;
 
     nsCString                       mLineBuf;         // may contain a partial line
 
@@ -132,18 +181,30 @@ private:
 
     nsHttpChunkedDecoder           *mChunkedDecoder;
 
-    PRInt32                         mTransactionDone; // set atomically
     nsresult                        mStatus;
 
-    PRUint16                        mRestartCount;    // the number of times this transaction has been restarted
-    PRUint8                         mCapabilities;
+    // this lock is used to protect access to members which may be accessed
+    // from both the main thread as well as the socket thread.
+    PRLock                         *mLock;
 
+    // these transport status fields are protected by mLock
+    nsresult                        mTransportStatus;
+    PRUint32                        mTransportProgress;
+    PRUint32                        mTransportProgressMax;
+    PRPackedBool                    mTransportStatusInProgress;
+
+    PRUint16                        mRestartCount;        // the number of times this transaction has been restarted
+    PRUint8                         mCaps;
+
+    PRPackedBool                    mConnected;
     PRPackedBool                    mHaveStatusLine;
     PRPackedBool                    mHaveAllHeaders;
-    PRPackedBool                    mResponseIsComplete;
-    PRPackedBool                    mFiredOnStart;
-    PRPackedBool                    mNoContent;       // expecting an empty entity body?
+    PRPackedBool                    mTransactionDone;
+    PRPackedBool                    mResponseIsComplete;  // == mTransactionDone && NS_SUCCEEDED(mStatus) ?
+    PRPackedBool                    mDidContentStart;
+    PRPackedBool                    mNoContent;           // expecting an empty entity body?
     PRPackedBool                    mPrematureEOF;
+    PRPackedBool                    mDestroying;
 };
 
 #endif // nsHttpTransaction_h__

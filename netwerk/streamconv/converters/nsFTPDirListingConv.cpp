@@ -109,12 +109,12 @@ nsFTPDirListingConv::AsyncConvertData(const PRUnichar *aFromType, const PRUnicha
     rv = aCtxt->QueryInterface(NS_GET_IID(nsIURI), (void**)&uri);
     if (NS_FAILED(rv)) return rv;
 
+    // XXX this seems really wrong!!
     rv = NS_NewInputStreamChannel(&mPartChannel,
                                   uri,
                                   nsnull,
                                   NS_LITERAL_CSTRING(APPLICATION_HTTP_INDEX_FORMAT),
-                                  NS_LITERAL_CSTRING(""),
-                                  -1);          // XXX fix contentLength
+                                  NS_LITERAL_CSTRING(""));
     NS_RELEASE(uri);
     if (NS_FAILED(rv)) return rv;
 

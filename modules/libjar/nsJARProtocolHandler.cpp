@@ -52,12 +52,20 @@
 
 static NS_DEFINE_CID(kZipReaderCacheCID, NS_ZIPREADERCACHE_CID);
 
-#define NS_JAR_CACHE_SIZE       32
+#define NS_JAR_CACHE_SIZE 32
 
-////////////////////////////////////////////////////////////////////////////////
+//-----------------------------------------------------------------------------
+
+nsJARProtocolHandler *gJarHandler = nsnull;
 
 nsJARProtocolHandler::nsJARProtocolHandler()
 {
+    gJarHandler = this;
+}
+
+nsJARProtocolHandler::~nsJARProtocolHandler()
+{
+    gJarHandler = nsnull;
 }
 
 nsresult
@@ -74,17 +82,13 @@ nsJARProtocolHandler::Init()
     return rv;
 }
 
-nsIMIMEService* 
-nsJARProtocolHandler::GetCachedMimeService()
+nsIMIMEService * 
+nsJARProtocolHandler::MimeService()
 {
-    if (!mMimeService) {
+    if (!mMimeService)
         mMimeService = do_GetService(NS_MIMESERVICE_CONTRACTID);
-    }
-    return mMimeService.get();
-}
 
-nsJARProtocolHandler::~nsJARProtocolHandler()
-{
+    return mMimeService.get();
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS3(nsJARProtocolHandler,
@@ -124,7 +128,7 @@ nsJARProtocolHandler::GetJARCache(nsIZipReaderCache* *result)
 NS_IMETHODIMP
 nsJARProtocolHandler::GetScheme(nsACString &result)
 {
-    result = "jar";
+    result = NS_LITERAL_CSTRING("jar");
     return NS_OK;
 }
 
@@ -185,21 +189,20 @@ nsJARProtocolHandler::NewURI(const nsACString &aSpec,
 }
 
 NS_IMETHODIMP
-nsJARProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
+nsJARProtocolHandler::NewChannel(nsIURI *uri, nsIChannel **result)
 {
-    nsresult rv;
+    nsJARChannel *chan = new nsJARChannel();
+    if (!chan)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(chan);
 
-    nsJARChannel* channel;
-    rv = nsJARChannel::Create(nsnull, NS_GET_IID(nsIJARChannel), (void**)&channel);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = channel->Init(this, uri);
+    nsresult rv = chan->Init(uri);
     if (NS_FAILED(rv)) {
-        NS_RELEASE(channel);
+        NS_RELEASE(chan);
         return rv;
     }
 
-    *result = channel;
+    *result = chan;
     return NS_OK;
 }
 

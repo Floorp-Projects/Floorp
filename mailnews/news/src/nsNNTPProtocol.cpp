@@ -795,11 +795,15 @@ nsresult nsNNTPProtocol::ReadFromMemCache(nsICacheEntryDescriptor *entry)
 {
   NS_ENSURE_ARG(entry);
 
-  nsCOMPtr<nsITransport> cacheTransport;
-  nsresult rv = entry->GetTransport(getter_AddRefs(cacheTransport));
+  nsCOMPtr<nsIInputStream> cacheStream;
+  nsresult rv = entry->OpenInputStream(0, getter_AddRefs(cacheStream));
      
   if (NS_SUCCEEDED(rv))
   {
+    nsCOMPtr<nsIInputStreamPump> pump;
+    rv = NS_NewInputStreamPump(getter_AddRefs(pump), cacheStream);
+    if (NS_FAILED(rv)) return rv;
+
     nsXPIDLCString group;
     nsXPIDLCString commandSpecificData;
     // do this to get m_key set, so that marking the message read will work.
@@ -815,9 +819,9 @@ nsresult nsNNTPProtocol::ReadFromMemCache(nsICacheEntryDescriptor *entry)
     nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_runningURL);
     cacheListener->Init(m_channelListener, NS_STATIC_CAST(nsIChannel *, this), mailnewsUrl);
     
-    nsCOMPtr<nsIRequest> request;
     m_ContentType = ""; // reset the content type for the upcoming read....
-    rv = cacheTransport->AsyncRead(cacheListener, m_channelContext, 0, PRUint32(-1), 0, getter_AddRefs(request));
+
+    rv = pump->AsyncRead(cacheListener, m_channelContext);
     NS_RELEASE(cacheListener);
  
     MarkCurrentMsgRead();
@@ -857,23 +861,30 @@ PRBool nsNNTPProtocol::ReadFromLocalCache()
     if (folder && NS_SUCCEEDED(rv))
     {
     // we want to create a file channel and read the msg from there.
-      nsCOMPtr<nsITransport> fileChannel;
+      nsCOMPtr<nsIInputStream> fileStream;
       PRUint32 offset=0, size=0;
-      rv = folder->GetOfflineFileTransport(m_key, &offset, &size, getter_AddRefs(fileChannel));
+      rv = folder->GetOfflineFileStream(m_key, &offset, &size, getter_AddRefs(fileStream));
 
-      // get the file channel from the folder, somehow (through the message or
+      // get the file stream from the folder, somehow (through the message or
       // folder sink?) We also need to set the transfer offset to the message offset
-      if (fileChannel && NS_SUCCEEDED(rv))
+      if (fileStream && NS_SUCCEEDED(rv))
       {
         // dougt - This may break the ablity to "cancel" a read from offline mail reading.
         // fileChannel->SetLoadGroup(m_loadGroup);
 
         m_typeWanted = ARTICLE_WANTED;
+
         nsNntpCacheStreamListener * cacheListener = new nsNntpCacheStreamListener();
         NS_ADDREF(cacheListener);
         cacheListener->Init(m_channelListener, NS_STATIC_CAST(nsIChannel *, this), mailnewsUrl);
-        nsCOMPtr<nsIRequest> request;
-        rv = fileChannel->AsyncRead(cacheListener, m_channelContext, offset, size, 0, getter_AddRefs(request));
+
+        // create a stream pump that will async read the specified amount of data.
+        nsCOMPtr<nsIInputStreamPump> pump;
+        rv = NS_NewInputStreamPump(getter_AddRefs(pump),
+                                   fileStream, offset, size);
+        if (NS_SUCCEEDED(rv))
+          rv = pump->AsyncRead(cacheListener, m_channelContext);
+
         NS_RELEASE(cacheListener);
         MarkCurrentMsgRead();
 
@@ -909,12 +920,8 @@ nsNNTPProtocol::OnCacheEntryAvailable(nsICacheEntryDescriptor *entry, nsCacheAcc
       nsCOMPtr<nsIStreamListenerTee> tee = do_CreateInstance(kStreamListenerTeeCID, &rv);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      nsCOMPtr<nsITransport> transport;
-      rv = entry->GetTransport(getter_AddRefs(transport));
-      if (NS_FAILED(rv)) return rv;
-
       nsCOMPtr<nsIOutputStream> out;
-      rv = transport->OpenOutputStream(0, PRUint32(-1), 0, getter_AddRefs(out));
+      rv = entry->OpenOutputStream(0, getter_AddRefs(out));
       NS_ENSURE_SUCCESS(rv, rv);
 
       rv = tee->Init(m_channelListener, out);

@@ -55,8 +55,6 @@
 #include "nsCacheService.h"
 #include "nsCache.h"
 
-#include "nsIFileTransportService.h"
-#include "nsITransport.h"
 #include "nsICacheVisitor.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
@@ -310,7 +308,6 @@ nsDiskCache::Truncate(PRFileDesc *  fd, PRUint32  newEOF)
 /******************************************************************************
  *  nsDiskCacheDevice
  *****************************************************************************/
-static nsCOMPtr<nsIFileTransportService> gFileTransportService;
 
 #ifdef XP_MAC
 #pragma mark -
@@ -345,10 +342,6 @@ nsDiskCacheDevice::Init()
     rv = mBindery.Init();
     if (NS_FAILED(rv)) return rv;
     
-    // hold the file transport service to avoid excessive calls to the service manager.
-    gFileTransportService = do_GetService("@mozilla.org/network/file-transport-service;1", &rv);
-    if (NS_FAILED(rv)) return rv;
-
     // XXX we should spawn another thread to do this after startup
     // delete "Cache.Trash" folder
     nsCOMPtr<nsIFile> cacheTrashDir;
@@ -379,7 +372,6 @@ error_exit:
         delete mCacheMap;
         mCacheMap = nsnull;
     }
-    gFileTransportService   = nsnull;
 
     return rv;
 }
@@ -405,9 +397,6 @@ nsDiskCacheDevice::Shutdown()
         mInitialized = PR_FALSE;
     }
 
-    // release the reference to the cached file transport service.
-    gFileTransportService = nsnull;
-    
     return NS_OK;
 }
 
@@ -596,33 +585,52 @@ nsDiskCacheDevice::DoomEntry(nsCacheEntry * entry)
     }
 }
 
-
 /**
  *  NOTE: called while holding the cache service lock
  */
 nsresult
-nsDiskCacheDevice::GetTransportForEntry(nsCacheEntry *      entry,
-                                        nsCacheAccessMode   mode, 
-                                        nsITransport **     result)
+nsDiskCacheDevice::OpenInputStreamForEntry(nsCacheEntry *      entry,
+                                           nsCacheAccessMode   mode, 
+                                           PRUint32            offset,
+                                           nsIInputStream **   result)
 {
     NS_ENSURE_ARG_POINTER(entry);
     NS_ENSURE_ARG_POINTER(result);
 
     nsresult             rv;
     nsDiskCacheBinding * binding = GetCacheEntryBinding(entry);
-    NS_ASSERTION(binding, "GetTransportForEntry: binding == nsnull");
-    if (!binding)  return NS_ERROR_UNEXPECTED;
+    NS_ENSURE_TRUE(binding, NS_ERROR_UNEXPECTED);
     
     NS_ASSERTION(binding->mCacheEntry == entry, "binding & entry don't point to each other");
 
-    if (!binding->mStreamIO) {
-        binding->mStreamIO = new nsDiskCacheStreamIO(binding);
-        if (!binding->mStreamIO)  return NS_ERROR_OUT_OF_MEMORY;
-    }
-    // XXX assumption: CreateTransportFromStreamIO() is light-weight
-    // PR_FALSE = keep streamIO open for lifetime of transport
-    rv = gFileTransportService->CreateTransportFromStreamIO(binding->mStreamIO, PR_FALSE, result);
-    return rv;    
+    rv = binding->EnsureStreamIO();
+    if (NS_FAILED(rv)) return rv;
+
+    return binding->mStreamIO->GetInputStream(offset, result);
+}
+
+/**
+ *  NOTE: called while holding the cache service lock
+ */
+nsresult
+nsDiskCacheDevice::OpenOutputStreamForEntry(nsCacheEntry *      entry,
+                                            nsCacheAccessMode   mode, 
+                                            PRUint32            offset,
+                                            nsIOutputStream **  result)
+{
+    NS_ENSURE_ARG_POINTER(entry);
+    NS_ENSURE_ARG_POINTER(result);
+
+    nsresult             rv;
+    nsDiskCacheBinding * binding = GetCacheEntryBinding(entry);
+    NS_ENSURE_TRUE(binding, NS_ERROR_UNEXPECTED);
+    
+    NS_ASSERTION(binding->mCacheEntry == entry, "binding & entry don't point to each other");
+
+    rv = binding->EnsureStreamIO();
+    if (NS_FAILED(rv)) return rv;
+
+    return binding->mStreamIO->GetOutputStream(offset, result);
 }
 
 

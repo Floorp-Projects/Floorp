@@ -729,13 +729,12 @@ nsDocShell::LoadURI(nsIURI * aURI,
 }
 
 NS_IMETHODIMP
-nsDocShell::LoadStream(nsIInputStream * aStream, nsIURI * aURI,
-                       const char *aContentType, PRInt32 aContentLen,
+nsDocShell::LoadStream(nsIInputStream *aStream, nsIURI * aURI,
+                       const nsACString &aContentType,
+                       const nsACString &aContentCharset,
                        nsIDocShellLoadInfo * aLoadInfo)
 {
     NS_ENSURE_ARG(aStream);
-    NS_ENSURE_ARG(aContentType);
-    NS_ENSURE_ARG(aContentLen);
 
     // if the caller doesn't pass in a URI we need to create a dummy URI. necko
     // currently requires a URI in various places during the load. Some consumers
@@ -770,9 +769,8 @@ nsDocShell::LoadStream(nsIInputStream * aStream, nsIURI * aURI,
     nsCOMPtr<nsIChannel> channel;
     NS_ENSURE_SUCCESS(NS_NewInputStreamChannel
                       (getter_AddRefs(channel), uri, aStream,
-                       nsDependentCString(aContentType),
-                       NS_LITERAL_CSTRING(""),
-                       aContentLen), NS_ERROR_FAILURE);
+                       aContentType, aContentCharset),
+                      NS_ERROR_FAILURE);
 
     nsCOMPtr<nsIURILoader>
         uriLoader(do_GetService(NS_URI_LOADER_CONTRACTID));

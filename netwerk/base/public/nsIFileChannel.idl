@@ -44,6 +44,8 @@ interface nsIFile;
  * nsIFileChannel is an interface that allows for the initialization
  * of a simple nsIChannel that is constructed from a single nsIFile and
  * associated content type. 
+ *
+ * XXX DEAD
  */
 [scriptable, uuid(68a26506-f947-11d3-8cda-0060b0fc14a3)]
 interface nsIFileChannel : nsIChannel

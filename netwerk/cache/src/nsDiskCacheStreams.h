@@ -29,7 +29,6 @@
 
 #include "nsCache.h"
 
-#include "nsIStreamIO.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
 
@@ -39,20 +38,17 @@ class nsDiskCacheInputStream;
 class nsDiskCacheOutputStream;
 class nsDiskCacheDevice;
 
-class nsDiskCacheStreamIO : public nsIStreamIO {
-
-// we're implementing nsIStreamIO to leverage the AsyncRead on the FileTransport thread
-
+class nsDiskCacheStreamIO : public nsISupports {
 public:
              nsDiskCacheStreamIO(nsDiskCacheBinding *   binding);
     virtual ~nsDiskCacheStreamIO();
     
     NS_DECL_ISUPPORTS
-    NS_DECL_NSISTREAMIO
-//  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISUPPORTS_IID)
-        
-    void        CloseInputStream(nsDiskCacheInputStream *  inputStream);
-    nsresult    CloseOutputStream(nsDiskCacheOutputStream *  outputStream);
+
+    nsresult    GetInputStream(PRUint32 offset, nsIInputStream ** inputStream);
+    nsresult    GetOutputStream(PRUint32 offset, nsIOutputStream ** outputStream);
+
+    nsresult    CloseOutputStream(nsDiskCacheOutputStream * outputStream);
         
     nsresult    Write( const char * buffer,
                        PRUint32     count,
@@ -77,6 +73,7 @@ public:
 private:
 
 
+    void        Close();
     nsresult    OpenCacheFile(PRIntn flags, PRFileDesc ** fd);
     nsresult    ReadCacheBlocks();
     nsresult    FlushBufferToFile(PRBool  clearBuffer); // XXX clearBuffer is always PR_TRUE

@@ -1,147 +1,138 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
- * Version: NPL 1.1/GPL 2.0/LGPL 2.1
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
- * The contents of this file are subject to the Netscape Public License
- * Version 1.1 (the "License"); you may not use this file except in
- * compliance with the License. You may obtain a copy of the License at
- * http://www.mozilla.org/NPL/
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
  *
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla.
  *
- * The Initial Developer of the Original Code is 
+ * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Portions created by the Initial Developer are Copyright (C) 2002
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Darin Fisher <darin@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or 
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
  * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the NPL, indicate your
+ * use your version of this file under the terms of the MPL, indicate your
  * decision by deleting the provisions above and replace them with the notice
  * and other provisions required by the GPL or the LGPL. If you do not delete
  * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the NPL, the GPL or the LGPL.
+ * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
-#include "nsIRequest.idl"
 
-interface nsIStreamListener;
-interface nsIStreamProvider;
 interface nsIInputStream;
 interface nsIOutputStream;
-interface nsIInterfaceRequestor;
+interface nsITransportEventSink;
+interface nsIEventQueue;
 
-[scriptable, uuid(fd01f9a4-d492-4cf8-b76e-160ffc8c01e8)]
+[scriptable, uuid(cbb0baeb-5fcb-408b-a2be-9f8fc98d0af1)]
 interface nsITransport : nsISupports
 {
     /**
-     * Get security info for this transport.
+     * Open flags.
      */
-    readonly attribute nsISupports securityInfo;
-
-    /**
-     * Get/set notificationCallbacks for this transport.
-     */
-    nsIInterfaceRequestor getNotificationCallbacks();
-    void setNotificationCallbacks(in nsIInterfaceRequestor callbacks,
-                                  in unsigned long flags);
-
-    /**
-     * If the notificationCallbacks provide a nsIProgressEventSink
-     * implementation, then progress is by default reported to the thread
-     * that called setNotificationCallbacks.  The following flags provide
-     * finer control over progress notifications:
-     *
-     * DONT_REPORT_PROGRESS - progress notifications are not sent.
-     * DONT_PROXY_PROGRESS  - progress notifications can occur on any thread.
-     */
-    const unsigned long DONT_REPORT_PROGRESS = 1;
-    const unsigned long DONT_PROXY_PROGRESS  = 2;
+    const unsigned long OPEN_BLOCKING   = 1<<0;
+    const unsigned long OPEN_UNBUFFERED = 1<<1;
 
     /**
      * Open an input stream on this transport.
      *
-     * @param offset - read starting at this offset
-     * @param count  - read this many bytes (pass PRUint32(-1) if unlimited)
-     * @param flags  - optional transport specific flags
+     * @param aFlags
+     *        optional transport specific flags.
+     * @param aSegmentSize
+     *        if OPEN_UNBUFFERED is not set, then this parameter specifies the
+     *        size of each buffer segment (pass 0 to use default value).
+     * @param aSegmentCount
+     *        if OPEN_UNBUFFERED is not set, then this parameter specifies the
+     *        maximum number of buffer segments (pass 0 to use default value).
      */
-    nsIInputStream openInputStream(in unsigned long offset,
-                                   in unsigned long count,
-                                   in unsigned long flags);
+    nsIInputStream openInputStream(in unsigned long aFlags,
+                                   in unsigned long aSegmentSize,
+                                   in unsigned long aSegmentCount);
 
     /**
      * Open an output stream on this transport.
      *
-     * @param offset - write starting at this offset
-     * @param count  - write no more than this many bytes (pass PRUint32(-1) if unlimited)
-     * @param flags  - optional transport specific flags
+     * @param aFlags
+     *        optional transport specific flags.
+     * @param aSegmentSize
+     *        if OPEN_UNBUFFERED is not set, then this parameter specifies the
+     *        size of each buffer segment (pass 0 to use default value).
+     * @param aSegmentCount
+     *        if OPEN_UNBUFFERED is not set, then this parameter specifies the
+     *        maximum number of buffer segments (pass 0 to use default value).
      */
-    nsIOutputStream openOutputStream(in unsigned long offset,
-                                     in unsigned long count,
-                                     in unsigned long flags);
+    nsIOutputStream openOutputStream(in unsigned long aFlags,
+                                     in unsigned long aSegmentSize,
+                                     in unsigned long aSegmentCount);
 
     /**
-     * Asynchronously read data from the transport.
+     * Close the transport and any open streams.
      *
-     * @param listener - notify this listener when data is available
-     * @param ctxt     - opaque parameter passed to listener methods
-     * @param offset   - read starting at this offset
-     * @param count    - read this many bytes (pass PRUint32(-1) if unlimited)
-     * @param flags    - optional transport specific flags
+     * @param aReason
+     *        the reason for closing the stream.
      */
-    nsIRequest asyncRead(in nsIStreamListener listener,
-                         in nsISupports ctxt, 
-                         in unsigned long offset,
-                         in unsigned long count,
-                         in unsigned long flags);
+    void close(in nsresult aReason);
 
     /**
-     * Asynchronously write data to the transport.
+     * Set the transport event sink.
      *
-     * @param provider - notify this provider when data can be written
-     * @param ctxt     - opaque parameter passed to provider methods
-     * @param offset   - write starting at this offset
-     * @param count    - write no more than this many bytes (pass PRUint32(-1) if unlimited)
-     * @param flags    - optional transport specific flags
+     * @param aSink
+     *        receives transport layer notifications
+     * @param aEventQ
+     *        indicates the event queue to which the notifications should
+     *        be delivered.  if NULL, then the notifications may occur on
+     *        any thread.  (NOTE: the event queue must be resolved.)
      */
-    nsIRequest asyncWrite(in nsIStreamProvider provider,
-                          in nsISupports ctxt, 
-                          in unsigned long offset,
-                          in unsigned long count,
-                          in unsigned long flags);
-
+    void setEventSink(in nsITransportEventSink aSink,
+                      in nsIEventQueue aEventQ); 
+    
     /**
-     * Callbacks from asyncRead and asyncWrite may be proxied from a
-     * background thread (if one exists) to the thread which initiated
-     * the request.  This is the expected behavior of such a nsITransport
-     * implementation.  A caller of asyncRead or asyncWrite can explicitly
-     * ask the transport to not proxy the callback.  The caller must then
-     * be prepared to handle callbacks on any thread.
+     * Generic nsITransportEventSink status codes.  nsITransport
+     * implementations may override these status codes with their own more
+     * specific status codes (e.g., see nsISocketTransport).
      */
-    const unsigned long DONT_PROXY_OBSERVER = 1 << 0;
-    const unsigned long DONT_PROXY_LISTENER = 1 << 1;
-    const unsigned long DONT_PROXY_PROVIDER = 1 << 1;
-
+    const unsigned long STATUS_READING = 0x804b0008;
+    const unsigned long STATUS_WRITING = 0x804b0009;
 };
 
-[scriptable, uuid(d7abf5a4-ce72-482a-9217-a219a905c019)]
-interface nsITransportRequest : nsIRequest
+[scriptable, uuid(561de8af-1b74-4cd4-8479-89447d48185c)]
+interface nsITransportEventSink : nsISupports
 {
     /**
-     * Get the transport associated with this request.
+     * Transport status notification.
+     *
+     * @param aTransport
+     *        the transport sending this status notification.
+     * @param aStatus
+     *        the transport status (resolvable to a string using
+     *        nsIErrorService).
+     * @param aProgress
+     *        the amount of data either read or written depending on the value
+     *        of the status code.  this value is relative to aProgressMax.
+     * @param aProgressMax
+     *        the maximum amount of data that will be read or written.  if
+     *        unknown, 0xFFFFFFFF will be passed.
      */
-    readonly attribute nsITransport transport;
+    void onTransportStatus(in nsITransport aTransport,
+                           in nsresult aStatus,
+                           in unsigned long aProgress,
+                           in unsigned long aProgressMax);
 };

@@ -44,8 +44,7 @@
 #include "nsIStreamListener.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
-#include "nsIObservableInputStream.h"
-#include "nsIObservableOutputStream.h"
+#include "nsIAsyncInputStream.h"
 #include "nsIURI.h"
 #include "nsIPref.h"
 #include "nsIChannel.h"
@@ -87,9 +86,7 @@ typedef struct {
 } headerInfoType;
 
 class nsMimeBaseEmitter : public nsIMimeEmitter, 
-                          public nsIInterfaceRequestor,
-                          public nsIInputStreamObserver,
-                          public nsIOutputStreamObserver
+                          public nsIInterfaceRequestor
 {
 public: 
   nsMimeBaseEmitter ();
@@ -99,8 +96,6 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_DECL_NSIMIMEEMITTER
-  NS_DECL_NSIINPUTSTREAMOBSERVER
-  NS_DECL_NSIOUTPUTSTREAMOBSERVER
   NS_DECL_NSIINTERFACEREQUESTOR
 
   // Utility output functions...
@@ -128,6 +123,8 @@ protected:
   nsresult            DumpToCC();
   nsresult            DumpRestOfHeaders();
   nsresult            OutputGenericHeader(const char *aHeaderVal);
+
+  nsresult            WriteHelper(const char *buf, PRUint32 count, PRUint32 *countWritten);
 
   // For string bundle usage...
   nsCOMPtr<nsIStringBundle>	m_stringBundle;        // for translated strings

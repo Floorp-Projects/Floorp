@@ -32,12 +32,14 @@
 PRLogModuleInfo * gWyciwygLog = nsnull;
 
 #define wyciwyg_TYPE "text/html"
+#define LOG(args)  PR_LOG(gWyciwygLog, 4, args)
 
 // nsWyciwygChannel methods 
 nsWyciwygChannel::nsWyciwygChannel()
-    : mStatus(NS_OK),
-      mLoadFlags(LOAD_NORMAL),
-      mIsPending(PR_FALSE)
+  : mContentLength(-1)
+  , mLoadFlags(LOAD_NORMAL)
+  , mStatus(NS_OK)
+  , mIsPending(PR_FALSE)
 {
 }
 
@@ -45,45 +47,20 @@ nsWyciwygChannel::~nsWyciwygChannel()
 {
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS8(nsWyciwygChannel, nsIChannel, nsIRequest,
-                              nsIStreamListener, nsICacheListener, 
-                              nsIInterfaceRequestor, nsIWyciwygChannel,
-                              nsIRequestObserver, nsIProgressEventSink)
+NS_IMPL_ISUPPORTS6(nsWyciwygChannel,
+                   nsIChannel,
+                   nsIRequest,
+                   nsIStreamListener,
+                   nsIRequestObserver,
+                   nsICacheListener, 
+                   nsIWyciwygChannel)
 
 nsresult
 nsWyciwygChannel::Init(nsIURI* uri)
 {
-  if (!uri)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_ARG_POINTER(uri);
   mURI = uri;
   return NS_OK;
-}
-
-//-----------------------------------------------------------------------------
-// nsHttpChannel::nsIInterfaceRequestor
-//-----------------------------------------------------------------------------
-
-NS_IMETHODIMP
-nsWyciwygChannel::GetInterface(const nsIID &aIID, void **aResult)
-{
-
-  if (aIID.Equals(NS_GET_IID(nsIProgressEventSink))) {
-    //
-    // we return ourselves as the progress event sink so we can intercept
-    // notifications and set the correct request and context parameters.
-    // but, if we don't have a progress sink to forward those messages
-    // to, then there's no point in handing out a reference to ourselves.
-    //
-    if (!mProgressSink)
-      return NS_ERROR_NO_INTERFACE;
-
-    return QueryInterface(aIID, aResult);
-  }
-
-  if (mCallbacks)
-    return mCallbacks->GetInterface(aIID, aResult);
-
-  return NS_ERROR_NO_INTERFACE;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -106,39 +83,38 @@ nsWyciwygChannel::IsPending(PRBool *aIsPending)
 NS_IMETHODIMP
 nsWyciwygChannel::GetStatus(nsresult *aStatus)
 {
-  *aStatus = mStatus;
+  if (NS_SUCCEEDED(mStatus) && mPump)
+    mPump->GetStatus(aStatus);
+  else
+    *aStatus = mStatus;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsWyciwygChannel::Cancel(nsresult aStatus)
+nsWyciwygChannel::Cancel(nsresult status)
 {
-  LOG(("nsWyciwygChannel::Cancel [this=%x status=%x]\n", this, aStatus));
-  NS_ASSERTION(NS_FAILED(aStatus), "shouldn't cancel with a success code");
-  
-  mStatus = aStatus;
-  if (mCacheReadRequest)
-    mCacheReadRequest->Cancel(aStatus);
-  // Clear out all cache handles.
-  CloseCacheEntry();
+  mStatus = status;
+  if (mPump)
+    mPump->Cancel(status);
+  // else we're waiting for OnCacheEntryAvailable
   return NS_OK;
 }
  
 NS_IMETHODIMP
-nsWyciwygChannel::Suspend(void)
+nsWyciwygChannel::Suspend()
 {
-  LOG(("nsWyciwygChannel::Suspend [this=%x]\n", this));
-  if (mCacheReadRequest)
-    return mCacheReadRequest->Suspend();
+  if (mPump)
+    mPump->Suspend();
+  // XXX else, we'll ignore this ... and that's probably bad!
   return NS_OK;
 }
  
 NS_IMETHODIMP
-nsWyciwygChannel::Resume(void)
+nsWyciwygChannel::Resume()
 {
-  LOG(("nsWyciwygChannel::Resume [this=%x]\n", this));
-  if (mCacheReadRequest)
-    return mCacheReadRequest->Resume();
+  if (mPump)
+    mPump->Resume();
+  // XXX else, we'll ignore this ... and that's probably bad!
   return NS_OK;
 }
 
@@ -176,6 +152,7 @@ nsWyciwygChannel::GetLoadFlags(PRUint32 * aLoadFlags)
 ////////////////////////////////////////////////////////////////////////////////
 // nsIChannel methods:
 ///////////////////////////////////////////////////////////////////////////////
+
 NS_IMETHODIMP
 nsWyciwygChannel::GetOriginalURI(nsIURI* *aURI)
 {
@@ -205,36 +182,24 @@ nsWyciwygChannel::GetURI(nsIURI* *aURI)
 }
 
 NS_IMETHODIMP
-nsWyciwygChannel::GetOwner(nsISupports* *aOwner)
+nsWyciwygChannel::GetOwner(nsISupports **aOwner)
 {
   nsresult rv = NS_OK;
+
   if (!mOwner) {
     // Create codebase principal with URI of original document, not our URI
-    NS_ASSERTION(mOriginalURI,
-        "nsWyciwygChannel::GetOwner without an owner or an original URI!");
-    if (mOriginalURI) {
-      nsIPrincipal* pIPrincipal = nsnull;
-      nsCOMPtr<nsIScriptSecurityManager> secMan(do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv));
-      if (secMan) {
-        rv = secMan->GetCodebasePrincipal(mOriginalURI, &pIPrincipal);
-        if (NS_SUCCEEDED(rv)) {
-          mOwner = pIPrincipal;
-          NS_RELEASE(pIPrincipal);
-        }
-      }
-    } else {
-      // Uh oh, must set originalURI before we can return an owner!
-      return NS_ERROR_FAILURE;
+    NS_ENSURE_TRUE(mOriginalURI, NS_ERROR_FAILURE); // without an owner or an original URI!
+
+    nsCOMPtr<nsIPrincipal> principal;
+    nsCOMPtr<nsIScriptSecurityManager> secMan(do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv));
+    if (secMan) {
+      rv = secMan->GetCodebasePrincipal(mOriginalURI, getter_AddRefs(principal));
+      if (NS_SUCCEEDED(rv))
+        mOwner = principal;
     }
   }
-  NS_ASSERTION(mOriginalURI,
-      "nsWyciwygChannel::GetOwner unable to get owner!");
-  if (mOwner) {
-    *aOwner = mOwner.get();
-    NS_IF_ADDREF(*aOwner);
-  } else {
-    *aOwner = nsnull;
-  }
+
+  NS_IF_ADDREF(*aOwner = mOwner);
   return rv;
 }
 
@@ -312,30 +277,39 @@ nsWyciwygChannel::Open(nsIInputStream ** aReturn)
 }
 
 NS_IMETHODIMP
-nsWyciwygChannel::AsyncOpen(nsIStreamListener * aListener, nsISupports  * aContext)
+nsWyciwygChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctx)
 {
   LOG(("nsWyciwygChannel::AsyncOpen [this=%x]\n", this));
 
-  NS_ENSURE_ARG_POINTER(aListener);
   NS_ENSURE_TRUE(!mIsPending, NS_ERROR_IN_PROGRESS);
+  NS_ENSURE_ARG_POINTER(listener);
 
-  //XXX Should I worry about Port safety? 
+  nsCAutoString spec;
+  mURI->GetSpec(spec);
+
+  // open a cache entry for this channel...
+  PRBool delayed = PR_FALSE;
+  nsresult rv = OpenCacheEntry(spec.get(), nsICache::ACCESS_READ, &delayed);        
+  if (NS_FAILED(rv)) {
+    LOG(("nsWyciwygChannel::OpenCacheEntry failed [rv=%x]\n", rv));
+    return rv;
+  }
+
+  if (!delayed) {
+    rv = ReadFromCache();
+    if (NS_FAILED(rv)) {
+      LOG(("nsWyciwygChannel::ReadFromCache failed [rv=%x]\n", rv));
+      return rv;
+    }
+  }
 
   mIsPending = PR_TRUE;
-  mListener = aListener;
-  mListenerContext = aContext;
+  mListener = listener;
+  mListenerContext = ctx;
 
-  // add ourselves to the load group. From this point forward, we'll report
-  // all failures asynchronously.
   if (mLoadGroup)
     mLoadGroup->AddRequest(this, nsnull);
 
-  nsresult rv = Connect(PR_TRUE);
-  if (NS_FAILED(rv)) {
-    LOG(("nsWyciwygChannel::AsyncOpen Connect failed [rv=%x]\n", rv));
-    CloseCacheEntry();
-    AsyncAbort(rv);
-  }
   return NS_OK;
 }
 
@@ -357,12 +331,8 @@ nsWyciwygChannel::WriteToCacheEntry(const nsACString &aScript)
   }
 
   if (!mCacheOutputStream) {
-    //Get the transport from cache
-    rv = mCacheEntry->GetTransport(getter_AddRefs(mCacheTransport)); 
-    if (NS_FAILED(rv)) return rv;
-  
-    // Get the outputstream from the transport.
-    rv = mCacheTransport->OpenOutputStream(0, PRUint32(-1), 0, getter_AddRefs(mCacheOutputStream));    
+    // Get the outputstream from the cache entry.
+    rv = mCacheEntry->OpenOutputStream(0, getter_AddRefs(mCacheOutputStream));    
     if (NS_FAILED(rv)) return rv;
   }
 
@@ -372,20 +342,19 @@ nsWyciwygChannel::WriteToCacheEntry(const nsACString &aScript)
 
 
 NS_IMETHODIMP
-nsWyciwygChannel::CloseCacheEntry()
+nsWyciwygChannel::CloseCacheEntry(nsresult reason)
 {
-  nsresult rv = NS_OK;
   if (mCacheEntry) {
     LOG(("nsWyciwygChannel::CloseCacheEntry [this=%x ]", this));
-    // make sure the cache transport isn't holding a reference back to us
-    if (mCacheTransport)
-      mCacheTransport->SetNotificationCallbacks(nsnull, 0);
-    mCacheReadRequest = 0;
-    mCacheTransport = 0;
     mCacheOutputStream = 0;
+    mCacheInputStream = 0;
+
+    if (NS_FAILED(reason))
+      mCacheEntry->Doom();
+
     mCacheEntry = 0;
   }
-  return rv;
+  return NS_OK;
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -403,26 +372,39 @@ nsWyciwygChannel::OnCacheEntryAvailable(nsICacheEntryDescriptor * aCacheEntry, n
     return NS_OK;
 
   // otherwise, we have to handle this event.
-  if (NS_SUCCEEDED(aStatus)) {
-    mCacheEntry = aCacheEntry;        
-  }
+  if (NS_SUCCEEDED(aStatus))
+    mCacheEntry = aCacheEntry;
+  else if (NS_SUCCEEDED(mStatus))
+    mStatus = aStatus;
 
   nsresult rv;
-
   if (NS_FAILED(mStatus)) {
     LOG(("channel was canceled [this=%x status=%x]\n", this, mStatus));
     rv = mStatus;
   }
-  else // advance to the next state...
-    rv = Connect(PR_FALSE);
+  else { // advance to the next state...
+    rv = ReadFromCache();
+  }
 
   // a failure from Connect means that we have to abort the channel.
   if (NS_FAILED(rv)) {
-    CloseCacheEntry();
-    AsyncAbort(rv);
+    CloseCacheEntry(rv);
+
+    if (mListener) {
+      mListener->OnStartRequest(this, mListenerContext);
+      mListener->OnStopRequest(this, mListenerContext, mStatus);
+      mListener = 0;
+      mListenerContext = 0;
+    }
+
+    mIsPending = PR_FALSE;
+
+    // Remove ourselves from the load group.
+    if (mLoadGroup)
+      mLoadGroup->RemoveRequest(this, nsnull, mStatus);
   }
 
-  return rv;
+  return NS_OK;
 }
 
 //-----------------------------------------------------------------------------
@@ -430,24 +412,21 @@ nsWyciwygChannel::OnCacheEntryAvailable(nsICacheEntryDescriptor * aCacheEntry, n
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsWyciwygChannel::OnDataAvailable(nsIRequest *aRequest, nsISupports *aCtxt,
-                               nsIInputStream *aInput,
-                               PRUint32 aOffset, PRUint32 aCount)
+nsWyciwygChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctx,
+                               nsIInputStream *input,
+                               PRUint32 offset, PRUint32 count)
 {
   LOG(("nsWyciwygChannel::OnDataAvailable [this=%x request=%x offset=%u count=%u]\n",
-        this, aRequest, aOffset, aCount));
+      this, request, offset, count));
 
-  // if the request is for something we no longer reference, then simply 
-  // drop this event.
-  if (aRequest != mCacheReadRequest) {
-    NS_WARNING("nsWyciwygChannel::OnDataAvailable got stale request... why wasn't it cancelled?");
-    return NS_BASE_STREAM_CLOSED;
-  }
+  nsresult rv;
+  
+  rv = mListener->OnDataAvailable(this, mListenerContext, input, offset, count);
 
-  if (mListener)
-    return mListener->OnDataAvailable((nsIRequest *)this, mListenerContext, aInput, aOffset, aCount);
+  if (mProgressSink && NS_SUCCEEDED(rv) && !(mLoadFlags & LOAD_BACKGROUND))
+    mProgressSink->OnProgress(this, nsnull, offset + count, mContentLength);
 
-  return NS_BASE_STREAM_CLOSED;
+  return rv; // let the pump cancel on failure
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -455,70 +434,41 @@ nsWyciwygChannel::OnDataAvailable(nsIRequest *aRequest, nsISupports *aCtxt,
 //////////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP
-nsWyciwygChannel::OnStartRequest(nsIRequest *aRequest, nsISupports *aCtxt)
+nsWyciwygChannel::OnStartRequest(nsIRequest *request, nsISupports *ctx)
 {
-  nsresult rv = NS_ERROR_FAILURE;
   LOG(("nsWyciwygChannel::OnStartRequest [this=%x request=%x\n",
-        this, aRequest));
+      this, request));
 
-  // capture the request's status, so our consumers will know ASAP of any
-  // connection failures, etc.
-  aRequest->GetStatus(&mStatus);
-  if (mListener)
-     rv = mListener->OnStartRequest(this, mListenerContext);
-  return rv;
+  return mListener->OnStartRequest(this, mListenerContext);
 }
 
 
 NS_IMETHODIMP
-nsWyciwygChannel::OnStopRequest(nsIRequest *aRequest, nsISupports *aCtxt, nsresult aStatus)
+nsWyciwygChannel::OnStopRequest(nsIRequest *request, nsISupports *ctx, nsresult status)
 {
   LOG(("nsWyciwygChannel::OnStopRequest [this=%x request=%x status=%d\n",
-        this, aRequest, (PRUint32)aStatus));
-  
-  mIsPending = PR_FALSE;
-  mStatus = aStatus;
-  CloseCacheEntry();
-  if (mListener) {
-     mListener->OnStopRequest(this, mListenerContext, aStatus);
-     mListener = 0;
-     mListenerContext = 0;
-  }
-  
+      this, request, status));
+
+  if (NS_SUCCEEDED(mStatus))
+    mStatus = status;
+
+  mListener->OnStopRequest(this, mListenerContext, mStatus);
+  mListener = 0;
+  mListenerContext = 0;
+
   if (mLoadGroup)
-    mLoadGroup->RemoveRequest(this, nsnull, aStatus);
+    mLoadGroup->RemoveRequest(this, nsnull, mStatus);
 
+  CloseCacheEntry(mStatus);
+  mPump = 0;
+  mIsPending = PR_FALSE;
   return NS_OK;
 }
-
-//////////////////////////////////////////////////////////////////////////////
-// nsIProgressEventSink
-//////////////////////////////////////////////////////////////////////////////
-
-NS_IMETHODIMP
-nsWyciwygChannel::OnStatus(nsIRequest *aRequest, nsISupports *aContext, nsresult aStatus,
-                        const PRUnichar *aStatusText)
-{
-  if (mProgressSink)
-    mProgressSink->OnStatus(this, mListenerContext, aStatus, aStatusText);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWyciwygChannel::OnProgress(nsIRequest *aRequest, nsISupports *aContext,
-                          PRUint32 aProgress, PRUint32 aProgressMax)
-{
-  if (mProgressSink)
-    mProgressSink->OnProgress(this, mListenerContext, aProgress, aProgressMax);
-
-  return NS_OK;
-}
-
 
 //////////////////////////////////////////////////////////////////////////////
 // Helper functions
 //////////////////////////////////////////////////////////////////////////////
+
 nsresult
 nsWyciwygChannel::OpenCacheEntry(const char * aCacheKey, nsCacheAccessMode aAccessMode, PRBool * aDelayFlag )
 {
@@ -568,76 +518,24 @@ nsWyciwygChannel::OpenCacheEntry(const char * aCacheKey, nsCacheAccessMode aAcce
 }
 
 nsresult
-nsWyciwygChannel::Connect(PRBool aFirstTime)
-{
-  nsresult rv = NS_ERROR_FAILURE;
-
-  LOG(("nsWyciwygChannel::Connect [this=%x]\n", this));
-
-  // true when called from AsyncOpen
-  if (aFirstTime) {
-    PRBool delayed = PR_FALSE;
-
-    nsCAutoString spec;
-    mURI->GetSpec(spec);
-    // open a cache entry for this channel...
-    rv = OpenCacheEntry(spec.get(), nsICache::ACCESS_READ, &delayed);        
-
-    if (NS_FAILED(rv)) {
-      LOG(("nsWyciwygChannel::Connect OpenCacheEntry failed [rv=%x]\n", rv));
-      return rv;
-    }
- 
-    if (NS_SUCCEEDED(rv) && delayed)
-      return NS_OK;
-  }
-
-  // Read the script from cache. 
-  if (mCacheEntry) 
-    return ReadFromCache();
-  return rv;
-}
-
-nsresult
 nsWyciwygChannel::ReadFromCache()
 {
-  nsresult rv;
-
-  NS_ENSURE_TRUE(mCacheEntry, NS_ERROR_FAILURE);
   LOG(("nsWyciwygChannel::ReadFromCache [this=%x] ", this));
 
-  // Get a transport to the cached data...
-  rv = mCacheEntry->GetTransport(getter_AddRefs(mCacheTransport));
-  if (NS_FAILED(rv) || !mCacheTransport) 
-    return rv;
+  NS_ENSURE_TRUE(mCacheEntry, NS_ERROR_FAILURE);
+  nsresult rv;
 
-  // Hookup the notification callbacks interface to the new transport...
-  mCacheTransport->SetNotificationCallbacks(this, 
-                                  ((mLoadFlags & nsIRequest::LOAD_BACKGROUND) 
-                                    ? nsITransport::DONT_REPORT_PROGRESS 
-                                    : 0));
+  // Get a transport to the cached data...
+  rv = mCacheEntry->OpenInputStream(0, getter_AddRefs(mCacheInputStream));
+  if (NS_FAILED(rv))
+    return rv;
+  NS_ENSURE_TRUE(mCacheInputStream, NS_ERROR_UNEXPECTED);
+
+  rv = NS_NewInputStreamPump(getter_AddRefs(mPump), mCacheInputStream, -1);
+  if (NS_FAILED(rv)) return rv;
 
   // Pump the cache data downstream
-  return mCacheTransport->AsyncRead(this, nsnull,
-                                    0, PRUint32(-1), 0,
-                                    getter_AddRefs(mCacheReadRequest));
+  return mPump->AsyncRead(this, nsnull);
 }
 
-
-
-
-// called when Connect fails
-nsresult
-nsWyciwygChannel::AsyncAbort(nsresult aStatus)
-{
-  LOG(("nsWyciwygChannel::AsyncAbort [this=%x status=%x]\n", this, aStatus));
-
-  mStatus = aStatus;
-  mIsPending = PR_FALSE;
-
-  // Remove ourselves from the load group.
-  if (mLoadGroup)
-    mLoadGroup->RemoveRequest((nsIRequest *)this, nsnull, aStatus);
-
-  return NS_OK;
-}
+// vim: ts=2 sw=2

@@ -173,8 +173,7 @@ nsMsgDraft::ProcessDraftOrTemplateOperation(const char *msgURI, nsMimeOutputType
   }
 
   nsCOMPtr<nsIChannel> dummyChannel;
-  rv = NS_NewInputStreamChannel(getter_AddRefs(dummyChannel), aURL, nsnull,
-                                NS_LITERAL_CSTRING(""), NS_LITERAL_CSTRING(""), -1);
+  rv = NS_NewInputStreamChannel(getter_AddRefs(dummyChannel), aURL, nsnull);
   if (NS_FAILED(mimeParser->AsyncConvertData(nsnull, nsnull, nsnull, dummyChannel)))
   {
     Release();

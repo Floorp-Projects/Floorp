@@ -34,7 +34,7 @@
 #include "nsIDocumentViewer.h"
 
 #include "nsILocalFile.h"
-#include "nsIFileStreams.h"
+#include "nsNetUtil.h"
 
 #include "nsITextContent.h"
 

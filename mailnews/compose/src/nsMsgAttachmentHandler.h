@@ -42,7 +42,7 @@
 #include "nsIMimeConverter.h"
 #include "nsMsgCompFields.h"
 #include "nsIMsgStatusFeedback.h"
-#include "nsIRequest.h"
+#include "nsIChannel.h"
 #include "nsIMsgSend.h"
 #include "nsIFileStreams.h"
 #include "nsIStreamConverter.h"

@@ -81,15 +81,12 @@ nsAboutBloat::NewChannel(nsIURI *aURI, nsIChannel **result)
     }
 
     nsCOMPtr<nsIInputStream> inStr;
-    PRUint32 size;
     if (clear) {
         nsTraceRefcnt::ResetStatistics();
 
         const char* msg = "Bloat statistics cleared.";
         rv = NS_NewCStringInputStream(getter_AddRefs(inStr), nsDependentCString(msg));
         if (NS_FAILED(rv)) return rv;
-
-        size = strlen(msg);
     }
     else if (leaks) {
         // dump the current set of leaks.
@@ -98,8 +95,6 @@ nsAboutBloat::NewChannel(nsIURI *aURI, nsIChannel **result)
         const char* msg = "Memory leaks dumped.";
         rv = NS_NewCStringInputStream(getter_AddRefs(inStr), nsDependentCString(msg));
         if (NS_FAILED(rv)) return rv;
-
-        size = strlen(msg);
     }
     else {
         nsCOMPtr<nsIFile> file;
@@ -146,11 +141,6 @@ nsAboutBloat::NewChannel(nsIURI *aURI, nsIChannel **result)
         ::fclose(out);
         if (NS_FAILED(rv)) return rv;
 
-        PRInt64 bigSize;
-        rv = file->GetFileSize(&bigSize);
-        if (NS_FAILED(rv)) return rv;
-        LL_L2UI(size, bigSize);
-
         rv = NS_NewLocalFileInputStream(getter_AddRefs(inStr), file);
         if (NS_FAILED(rv)) return rv;
     }
@@ -158,8 +148,7 @@ nsAboutBloat::NewChannel(nsIURI *aURI, nsIChannel **result)
     nsIChannel* channel;
     rv = NS_NewInputStreamChannel(&channel, aURI, inStr,
                                   NS_LITERAL_CSTRING("text/plain"),
-                                  NS_LITERAL_CSTRING(""),
-                                  size);
+                                  NS_LITERAL_CSTRING(""));
     if (NS_FAILED(rv)) return rv;
 
     *result = channel;

@@ -12,3 +12,4 @@ nsDirectoryServiceDefs.h
 nsDirectoryServiceUtils.h
 nsStringIO.h
 nsAppDirectoryServiceDefs.h
+nsStreamUtils.h

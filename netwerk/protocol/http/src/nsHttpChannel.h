@@ -24,8 +24,13 @@
 #ifndef nsHttpChannel_h__
 #define nsHttpChannel_h__
 
+#include "nsHttpTransaction.h"
 #include "nsHttpRequestHead.h"
+#include "nsXPIDLString.h"
+#include "nsCOMPtr.h"
+
 #include "nsIHttpChannel.h"
+#include "nsIHttpChannelInternal.h"
 #include "nsIHttpHeaderVisitor.h"
 #include "nsIHttpEventSink.h"
 #include "nsIStreamListener.h"
@@ -43,15 +48,10 @@
 #include "nsITransport.h"
 #include "nsIUploadChannel.h"
 #include "nsISimpleEnumerator.h"
-#include "nsIInputStream.h"
 #include "nsIOutputStream.h"
-#include "nsCOMPtr.h"
-#include "nsXPIDLString.h"
-#include "nsHttpConnection.h"
+#include "nsIAsyncInputStream.h"
+#include "nsIInputStreamPump.h"
 
-#include "nsIHttpChannelInternal.h"
-
-class nsHttpTransaction;
 class nsHttpResponseHead;
 class nsHttpAuthCache;
 class nsIHttpAuthenticator;
@@ -62,14 +62,13 @@ class nsIProxyInfo;
 //-----------------------------------------------------------------------------
 
 class nsHttpChannel : public nsIHttpChannel
+                    , public nsIHttpChannelInternal
                     , public nsIStreamListener
-                    , public nsIInterfaceRequestor
-                    , public nsIProgressEventSink
                     , public nsICachingChannel
                     , public nsIUploadChannel
                     , public nsICacheListener
                     , public nsIEncodedChannel
-                    , public nsIHttpChannelInternal
+                    , public nsITransportEventSink
 {
 public:
     NS_DECL_ISUPPORTS
@@ -78,13 +77,12 @@ public:
     NS_DECL_NSIHTTPCHANNEL
     NS_DECL_NSIREQUESTOBSERVER
     NS_DECL_NSISTREAMLISTENER
-    NS_DECL_NSIINTERFACEREQUESTOR
-    NS_DECL_NSIPROGRESSEVENTSINK
     NS_DECL_NSICACHINGCHANNEL
     NS_DECL_NSIUPLOADCHANNEL
     NS_DECL_NSICACHELISTENER
     NS_DECL_NSIENCODEDCHANNEL
     NS_DECL_NSIHTTPCHANNELINTERNAL
+    NS_DECL_NSITRANSPORTEVENTSINK
 
     nsHttpChannel();
     virtual ~nsHttpChannel();
@@ -135,7 +133,6 @@ private:
     // byte range request specific methods
     nsresult SetupByteRangeRequest(PRUint32 partialLen);
     nsresult ProcessPartialContent();
-    nsresult BufferPartialContent(nsIInputStream *, PRUint32 count);
     nsresult OnDoneReadingPartialCacheEntry(PRBool *streamDone);
 
     // auth specific methods
@@ -167,10 +164,13 @@ private:
     nsCOMPtr<nsIInputStream>          mUploadStream;
     nsCOMPtr<nsIURI>                  mReferrer;
     nsCOMPtr<nsISupports>             mSecurityInfo;
+    nsCOMPtr<nsIEventQueue>           mEventQ;
 
     nsHttpRequestHead                 mRequestHead;
     nsHttpResponseHead               *mResponseHead;
 
+    nsCOMPtr<nsIInputStreamPump>      mTransactionPump;
+    nsCOMPtr<nsIInputStreamPump>      mPrevTransactionPump;
     nsHttpTransaction                *mTransaction;     // hard ref
     nsHttpTransaction                *mPrevTransaction; // hard ref
     nsHttpConnectionInfo             *mConnectionInfo;  // hard ref
@@ -184,16 +184,11 @@ private:
 
     // cache specific data
     nsCOMPtr<nsICacheEntryDescriptor> mCacheEntry;
-    nsCOMPtr<nsITransport>            mCacheTransport;
-    nsCOMPtr<nsIRequest>              mCacheReadRequest;
+    nsCOMPtr<nsIInputStreamPump>      mCachePump;
     nsHttpResponseHead               *mCachedResponseHead;
     nsCacheAccessMode                 mCacheAccess;
     PRUint32                          mPostID;
     PRUint32                          mRequestTime;
-
-    // byte-range specific data
-    nsCOMPtr<nsIInputStream>          mBufferIn;
-    nsCOMPtr<nsIOutputStream>         mBufferOut;
 
     // auth specific data
     nsXPIDLString                     mUser;

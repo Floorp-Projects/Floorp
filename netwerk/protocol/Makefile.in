@@ -26,8 +26,16 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= about data file ftp http keyword jar res \
-                  gopher viewsource
+DIRS		= about \
+              data \
+              keyword \
+              res \
+              file \
+              jar \
+              http \
+              viewsource \
+              ftp \
+              gopher \
+              $(NULL)
 
 include $(topsrcdir)/config/rules.mk
-

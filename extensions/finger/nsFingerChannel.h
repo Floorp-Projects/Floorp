@@ -17,75 +17,73 @@
  * All Rights Reserved.
  *
  * Contributor(s): 
- *  Brian Ryner <bryner@uiuc.edu>
+ *   Brian Ryner <bryner@uiuc.edu>
+ *   Darin Fisher <darin@netscape.com>
  */
 
-#ifndef nsFingerChannel_h___
-#define nsFingerChannel_h___
+#ifndef nsFingerChannel_h__
+#define nsFingerChannel_h__
 
+#include "nsFingerHandler.h"
 #include "nsString.h"
+#include "nsCOMPtr.h"
+
 #include "nsILoadGroup.h"
 #include "nsIInputStream.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsCOMPtr.h"
-#include "nsXPIDLString.h"
+#include "nsIProgressEventSink.h"
+#include "nsIInputStreamPump.h"
 #include "nsIChannel.h"
 #include "nsIURI.h"
-#include "nsFingerHandler.h"
 #include "nsIStreamListener.h"
-#include "nsITransport.h"
+#include "nsISocketTransport.h"
 #include "nsIProxyInfo.h"
 
-class nsFingerChannel 
-: public nsIChannel, 
-  public nsIStreamListener {
+//-----------------------------------------------------------------------------
 
+class nsFingerChannel : public nsIChannel
+                      , public nsIStreamListener
+                      , public nsITransportEventSink
+{
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIREQUEST
     NS_DECL_NSICHANNEL
     NS_DECL_NSISTREAMLISTENER
     NS_DECL_NSIREQUESTOBSERVER
+    NS_DECL_NSITRANSPORTEVENTSINK
 
     // nsFingerChannel methods:
     nsFingerChannel();
     virtual ~nsFingerChannel();
-
-    // Define a Create method to be used with a factory:
-    static NS_METHOD
-    Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);
     
-    nsresult Init(nsIURI* uri, nsIProxyInfo* proxyInfo);
+    nsresult Init(nsIURI *uri, nsIProxyInfo *proxyInfo);
 
 protected:
-    nsCOMPtr<nsIInterfaceRequestor>     mCallbacks;
+
+    nsresult WriteRequest(nsITransport *transport);
+
+    nsCOMPtr<nsIURI>                    mURI;
     nsCOMPtr<nsIURI>                    mOriginalURI;
-    nsCOMPtr<nsIURI>                    mUrl;
-    nsCOMPtr<nsIStreamListener>         mListener;
-    PRUint32                            mLoadFlags;
-    nsCOMPtr<nsILoadGroup>              mLoadGroup;
-    nsCString                           mContentType;
-    PRInt32                             mContentLength;
+    nsCOMPtr<nsIInterfaceRequestor>     mCallbacks;
+    nsCOMPtr<nsIProgressEventSink>      mProgressSink;
     nsCOMPtr<nsISupports>               mOwner; 
-    PRUint32                            mBufferSegmentSize;
-    PRUint32                            mBufferMaxSize;
-    PRBool                              mActAsObserver;
+    nsCOMPtr<nsILoadGroup>              mLoadGroup;
+    nsCOMPtr<nsIStreamListener>         mListener;
+    nsCOMPtr<nsISupports>               mListenerContext;
+    nsCString                           mContentType;
+    nsCString                           mContentCharset;
+    PRUint32                            mLoadFlags;
+    nsresult                            mStatus;
+
+    nsCOMPtr<nsIInputStreamPump>        mPump;
+    nsCOMPtr<nsISocketTransport>        mTransport;
+    nsCOMPtr<nsIProxyInfo>              mProxyInfo;
 
     PRInt32                             mPort;
     nsCString                           mHost;
     nsCString                           mUser;
-
-    nsXPIDLCString                      mRequest;
-
-    nsCOMPtr<nsISupports>               mResponseContext;
-    nsCOMPtr<nsITransport>              mTransport;
-    nsCOMPtr<nsIRequest>                mTransportRequest;
-    nsCOMPtr<nsIProxyInfo>              mProxyInfo;
-    nsresult                            mStatus;
-
-protected:
-    nsresult SendRequest(nsITransport* aTransport);
 };
 
-#endif /* nsFingerChannel_h___ */
+#endif // !nsFingerChannel_h__

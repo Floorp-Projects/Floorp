@@ -128,17 +128,18 @@ nsDateTimeHandler::NewProxiedChannel(nsIURI* url, nsIProxyInfo* proxyInfo,
 {
     nsresult rv;
     
-    nsDateTimeChannel* channel;
-    rv = nsDateTimeChannel::Create(nsnull, NS_GET_IID(nsIChannel), (void**)&channel);
-    if (NS_FAILED(rv)) return rv;
+    nsDateTimeChannel *chan = new nsDateTimeChannel();
+    if (!chan)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(chan);
 
-    rv = channel->Init(url, proxyInfo);
+    rv = chan->Init(url, proxyInfo);
     if (NS_FAILED(rv)) {
-        NS_RELEASE(channel);
+        NS_RELEASE(chan);
         return rv;
     }
 
-    *result = channel;
+    *result = chan;
     return NS_OK;
 }
 

@@ -51,6 +51,7 @@ MODULE_NAME	= datetime
 REQUIRES	= xpcom \
 		  string \
 		  necko \
+		  mimetype \
 		  $(NULL)
 
 CPPSRCS		= \

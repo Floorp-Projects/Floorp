@@ -35,55 +35,44 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsFileChannel.h"
 #include "nsFileProtocolHandler.h"
-#include "nsIURL.h"
-#include "nsIURLParser.h"
-#include "nsIStandardURL.h"
-#include "nsIFileURL.h"
-#include "nsIPref.h"
-#include "nsIComponentManager.h"
-#include "nsIServiceManager.h"
-#include "nsIInterfaceRequestor.h"
-#include "nsIInterfaceRequestorUtils.h"
-#include "nsIProgressEventSink.h"
-#include "nsIThread.h"
-#include "nsIThreadPool.h"
-#include "nsISupportsArray.h"
-#include "nsXPIDLString.h"
+#include "nsFileChannel.h"
+#include "nsInputStreamChannel.h"
 #include "nsStandardURL.h"
-#include "nsNetCID.h"
 #include "nsURLHelper.h"
+#include "nsNetCID.h"
+
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
+#include "nsIServiceManager.h"
 #include "nsIDirectoryListing.h"
 
 static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+static NS_DEFINE_CID(kPrefServiceCID, NS_PREFSERVICE_CID);
 
-////////////////////////////////////////////////////////////////////////////////
+//-----------------------------------------------------------------------------
 
 nsFileProtocolHandler::nsFileProtocolHandler()
+    : mGenerateHTMLDirs(PR_FALSE)
 {
-    mGenerateHTMLContent = PR_FALSE;
 }
 
 nsresult
 nsFileProtocolHandler::Init()
 {
     nsresult rv;
-    nsCOMPtr<nsIPref> pPref(do_GetService(kPrefCID, &rv)); 
-    if (NS_SUCCEEDED(rv) || pPref) { 
-        PRInt32 sFormat;
-        rv = pPref->GetIntPref("network.dir.format", &sFormat);
-
-        if (NS_SUCCEEDED(rv) && sFormat == nsIDirectoryListing::FORMAT_HTML)
-            mGenerateHTMLContent = PR_TRUE;
+    nsCOMPtr<nsIPrefService> prefService = do_GetService(kPrefServiceCID, &rv);
+    if (NS_SUCCEEDED(rv)) { 
+        nsCOMPtr<nsIPrefBranch> prefBranch;
+        rv = prefService->GetBranch(nsnull, getter_AddRefs(prefBranch));
+        if (NS_SUCCEEDED(rv)) {
+            PRInt32 sFormat;
+            rv = prefBranch->GetIntPref("network.dir.format", &sFormat);
+            if (NS_SUCCEEDED(rv) && sFormat == nsIDirectoryListing::FORMAT_HTML)
+                mGenerateHTMLDirs = PR_TRUE;
+        }
     }
-
     return NS_OK;
-}
-
-nsFileProtocolHandler::~nsFileProtocolHandler()
-{
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS3(nsFileProtocolHandler,
@@ -91,31 +80,13 @@ NS_IMPL_THREADSAFE_ISUPPORTS3(nsFileProtocolHandler,
                               nsIProtocolHandler,
                               nsISupportsWeakReference);
 
-NS_METHOD
-nsFileProtocolHandler::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
-{
-    if (aOuter)
-        return NS_ERROR_NO_AGGREGATION;
-
-    nsFileProtocolHandler* ph = new nsFileProtocolHandler();
-    if (ph == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(ph);
-    nsresult rv = ph->Init();
-    if (NS_SUCCEEDED(rv)) {
-        rv = ph->QueryInterface(aIID, aResult);
-    }
-    NS_RELEASE(ph);
-    return rv;
-}
-
-////////////////////////////////////////////////////////////////////////////////
+//-----------------------------------------------------------------------------
 // nsIProtocolHandler methods:
 
 NS_IMETHODIMP
 nsFileProtocolHandler::GetScheme(nsACString &result)
 {
-    result = "file";
+    result = NS_LITERAL_CSTRING("file");
     return NS_OK;
 }
 
@@ -134,54 +105,49 @@ nsFileProtocolHandler::GetProtocolFlags(PRUint32 *result)
 }
 
 NS_IMETHODIMP
-nsFileProtocolHandler::NewURI(const nsACString &aSpec,
-                              const char *aCharset,
-                              nsIURI *aBaseURI,
+nsFileProtocolHandler::NewURI(const nsACString &spec,
+                              const char *charset,
+                              nsIURI *baseURI,
                               nsIURI **result)
 {
-    nsresult rv;
-
     nsCOMPtr<nsIStandardURL> url = new nsStandardURL(PR_TRUE);
     if (!url)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    rv = url->Init(nsIStandardURL::URLTYPE_NO_AUTHORITY, -1, aSpec, aCharset, aBaseURI);
+    nsresult rv = url->Init(nsIStandardURL::URLTYPE_NO_AUTHORITY, -1,
+                            spec, charset, baseURI);
     if (NS_FAILED(rv)) return rv;
 
     return CallQueryInterface(url, result);
 }
 
 NS_IMETHODIMP
-nsFileProtocolHandler::NewChannel(nsIURI* url, nsIChannel* *result)
+nsFileProtocolHandler::NewChannel(nsIURI *uri, nsIChannel **result)
 {
-    nsresult rv;
-    
-    nsFileChannel* channel;
-    rv = nsFileChannel::Create(nsnull, NS_GET_IID(nsIFileChannel), (void**)&channel);
-    if (NS_FAILED(rv)) return rv;
+    nsFileChannel *chan = new nsFileChannel();
+    if (!chan)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(chan);
 
-    rv = channel->Init(-1,      // ioFlags unspecified
-                       -1,      // permissions unspecified
-                       url,
-                       mGenerateHTMLContent);
+    nsresult rv = chan->Init(uri, mGenerateHTMLDirs);
     if (NS_FAILED(rv)) {
-        NS_RELEASE(channel);
+        NS_RELEASE(chan);
         return rv;
     }
 
-    *result = channel;
+    *result = chan;
     return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsFileProtocolHandler::AllowPort(PRInt32 port, const char *scheme, PRBool *_retval)
+nsFileProtocolHandler::AllowPort(PRInt32 port, const char *scheme, PRBool *result)
 {
     // don't override anything.  
-    *_retval = PR_FALSE;
+    *result = PR_FALSE;
     return NS_OK;
 }
 
-////////////////////////////////////////////////////////////////////////////////
+//-----------------------------------------------------------------------------
 // nsIFileProtocolHandler methods:
 
 NS_IMETHODIMP
@@ -202,13 +168,13 @@ nsFileProtocolHandler::NewFileURI(nsIFile *file, nsIURI **result)
 }
 
 NS_IMETHODIMP
-nsFileProtocolHandler::GetURLSpecFromFile(nsIFile *aFile, nsACString &result)
+nsFileProtocolHandler::GetURLSpecFromFile(nsIFile *file, nsACString &result)
 {
-    return net_GetURLSpecFromFile(aFile, result);
+    return net_GetURLSpecFromFile(file, result);
 }
 
 NS_IMETHODIMP
-nsFileProtocolHandler::GetFileFromURLSpec(const nsACString &aURL, nsIFile **result)
+nsFileProtocolHandler::GetFileFromURLSpec(const nsACString &spec, nsIFile **result)
 {
-    return net_GetFileFromURLSpec(aURL, result);
+    return net_GetFileFromURLSpec(spec, result);
 }

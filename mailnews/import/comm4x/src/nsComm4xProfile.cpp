@@ -42,6 +42,7 @@
 #include "nsILineInputStream.h"
 #include "nsReadableUtils.h"
 #include "nsIPrefMigration.h"
+#include "nsNetCID.h"
 
 
 nsComm4xProfile::nsComm4xProfile()

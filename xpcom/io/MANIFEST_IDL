@@ -13,8 +13,8 @@ nsILocalFile.idl
 nsIMultiplexInputStream.idl
 nsIObjectInputStream.idl
 nsIObjectOutputStream.idl
-nsIObservableInputStream.idl
-nsIObservableOutputStream.idl
+nsIAsyncInputStream.idl
+nsIAsyncOutputStream.idl
 nsIOutputStream.idl
 nsIPipe.idl
 nsIScriptableInputStream.idl
