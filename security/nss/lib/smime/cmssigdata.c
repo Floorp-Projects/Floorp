@@ -34,7 +34,7 @@
 /*
  * CMS signedData methods.
  *
- * $Id: cmssigdata.c,v 1.2 2000/06/13 21:56:31 chrisk%netscape.com Exp $
+ * $Id: cmssigdata.c,v 1.3 2000/09/13 06:15:13 mcgreer%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -150,9 +150,9 @@ NSS_CMSSignedData_Encode_BeforeStart(NSSCMSSignedData *sigd)
 	version = NSS_CMS_SIGNED_DATA_VERSION_EXT;
 
     signerinfos = sigd->signerInfos;
-    /* prepare all the SignerInfos */
-    for (i = 0; signerinfos[i] != NULL; i++) {
-	signerinfo = signerinfos[i];
+    /* prepare all the SignerInfos (there may be none) */
+    while (signerinfos) {
+	signerinfo = *signerinfos;
 
 	/* RFC2630 5.1 "version is the syntax version number..." */
 	if (NSS_CMSSignerInfo_GetVersion(signerinfo) != NSS_CMS_SIGNER_INFO_VERSION_ISSUERSN)
@@ -175,6 +175,7 @@ NSS_CMSSignedData_Encode_BeforeStart(NSSCMSSignedData *sigd)
 	} else {
 	    /* found it, nothing to do */
 	}
+	signerinfos++;
     }
 
     dummy = SEC_ASN1EncodeInteger(poolp, &(sigd->version), (long)version);
@@ -225,7 +226,7 @@ NSS_CMSSignedData_Encode_AfterData(NSSCMSSignedData *sigd)
     SECStatus rv;
     SECItem *contentType;
     int certcount;
-    int i, ci, cli, n, rci, si;
+    int ci, cli, n, rci, si;
     PLArenaPool *poolp;
     CERTCertificateList *certlist;
     extern const SEC_ASN1Template NSSCMSSignerInfoTemplate[];
@@ -244,9 +245,9 @@ NSS_CMSSignedData_Encode_AfterData(NSSCMSSignedData *sigd)
     signerinfos = sigd->signerInfos;
     certcount = 0;
 
-    /* prepare all the SignerInfos */
-    for (i = 0; signerinfos[i] != NULL; i++) {
-	signerinfo = signerinfos[i];
+    /* prepare all the SignerInfos (there may be none) */
+    while (signerinfos) {
+	signerinfo = *signerinfos;
 
 	/* find correct digest for this signerinfo */
 	digestalgtag = NSS_CMSSignerInfo_GetDigestAlgTag(signerinfo);
@@ -274,6 +275,7 @@ NSS_CMSSignedData_Encode_AfterData(NSSCMSSignedData *sigd)
 	certlist = NSS_CMSSignerInfo_GetCertList(signerinfo);
 	if (certlist)
 	    certcount += certlist->len;
+	signerinfos++;
     }
 
     /* this is a SET OF, so we need to sort them guys */
