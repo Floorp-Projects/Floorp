@@ -54,7 +54,6 @@ XPIDLSRCS	= \
 			ipcIService.idl \
 			ipcIMessageObserver.idl \
 			ipcIClientObserver.idl \
-			ipcIClientInfo.idl \
 			$(NULL)
 
 include $(topsrcdir)/config/rules.mk
