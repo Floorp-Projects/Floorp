@@ -609,6 +609,10 @@ jsj_EnterJava(JSContext *cx, JNIEnv **envp);
 extern void
 jsj_ExitJava(JSJavaThreadState *jsj_env);
 
+extern JSObjectMap *
+jsj_wrapper_newObjectMap(JSContext *cx, jsrefcount nrefs, JSObjectOps *ops,
+                         JSClass *clasp, JSObject *obj);
+
 #ifdef DEBUG
 #define DEBUG_LOG(args) printf args
 #endif

@@ -716,7 +716,7 @@ extern JS_IMPORT_DATA(JSObjectOps) js_ObjectOps;
 JSBool
 jsj_init_JavaClass(JSContext *cx, JSObject *global_obj)
 {
-    JavaClass_ops.newObjectMap = js_ObjectOps.newObjectMap;
+    JavaClass_ops.newObjectMap = jsj_wrapper_newObjectMap;
     JavaClass_ops.destroyObjectMap = js_ObjectOps.destroyObjectMap;
     
     /* Define JavaClass class */
