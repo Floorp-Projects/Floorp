@@ -103,8 +103,8 @@ PRLogModuleInfo* gCookieLog = nsnull;
 static const char *kCookiesFileName = "cookies.txt";
 static const char* kWhitespace="\b\t\r\n ";
 
-MODULE_PRIVATE time_t 
-cookie_ParseDate(char *date_string);
+MODULE_PRIVATE nsresult
+cookie_ParseDate(char *date_string, time_t& date);
 
 typedef enum {
   COOKIE_Normal,
@@ -1703,14 +1703,13 @@ COOKIE_SetCookieStringFromHttp(nsIURI * curURL, nsIURI * firstURL, nsIPrompt *aP
         break;
       }
     }
-    expires = cookie_ParseDate(date);
-    if (expires == 0) {
+    if (NS_SUCCEEDED(cookie_ParseDate(date, expires)) && expires == 0) {
       expires = 1; // avoid confusion with session cookies
     }
     *ptr=origLast;
   }
   if (server_date && *server_date) {
-    sDate = cookie_ParseDate(server_date);
+    cookie_ParseDate(server_date, sDate);
   } else {
     sDate = get_current_time();
   }
@@ -2107,11 +2106,11 @@ COOKIE_Remove
   }
 }
 
-MODULE_PRIVATE time_t 
-cookie_ParseDate(char *date_string) {
+MODULE_PRIVATE nsresult
+cookie_ParseDate(char *date_string, time_t & date) {
 
   PRTime prdate;
-  time_t date = 0;
+  date = 0;
   // TRACEMSG(("Parsing date string: %s\n",date_string));
 
   if(PR_ParseTimeString(date_string, PR_TRUE, &prdate) == PR_SUCCESS) {
@@ -2123,8 +2122,7 @@ cookie_ParseDate(char *date_string) {
       date = MAX_EXPIRE;
     }
     // TRACEMSG(("Parsed date as GMT: %s\n", asctime(gmtime(&date))));    // TRACEMSG(("Parsed date as local: %s\n", ctime(&date)));
-  } else {
-    // TRACEMSG(("Could not parse date"));
-  }
-  return (date);
+    return NS_OK;
+  } 
+  return NS_ERROR_FAILURE;
 }
