@@ -72,33 +72,13 @@ function display(message, msgtype)
         obj.setAttribute("msg-type", msgtype);
     }
 
-    function stringToMsg (message)
-    {
-        var ary  = message.split("\n");
-        var span = htmlSpan();
-
-        for (var l in ary)
-        {
-            var wordParts = 
-                splitLongWord (ary[l], console.prefs["output.wordbreak.length"]);
-            for (var i in wordParts)
-            {
-                span.appendChild (htmlText(wordParts[i]));
-                span.appendChild (htmlImg());
-            }
-                    
-            span.appendChild (htmlBR());
-        }
-        return span;
-    }
-
     var msgRow = htmlTR("msg");
     setAttribs(msgRow, "msg");
 
     var msgData = htmlTD();
     setAttribs(msgData, "msg-data");
     if (typeof message == "string")
-        msgData.appendChild(stringToMsg(message));
+        msgData.appendChild(stringToDOM(message));
     else
         msgData.appendChild(message);
 
@@ -226,6 +206,12 @@ function htmlVA (attribs, href, contents)
         attribs["class"] += " venkman-link";
     else
         attribs["class"] = "venkman-link";
+
+    if (!contents)
+    {
+        contents = htmlSpan();
+        insertHyphenatedWord (href, contents);
+    }
     
     return htmlA (attribs, href, contents);
 }
@@ -250,12 +236,44 @@ function init()
     console._slInputElement = 
         document.getElementById("input-single-line");
     console._slInputElement.focus();
+ 
+    console._munger = new CMunger();
+    console._munger.enabled = true;
+    console._munger.addRule
+        ("link", /((\w+):\/\/[^<>()\'\"\s:]+|www(\.[^.<>()\'\"\s:]+){2,})/,
+         insertLink);
+    console._munger.addRule ("word-hyphenator",
+                             new RegExp ("(\\S{" + console.prefs["output.wordbreak.length"] + ",})"),
+                             insertHyphenatedWord);
     
-    display(htmlSpan(null, MSG_HELLO1 + " ",
-                     htmlVA(null, 
-                            "chrome://venkman/content/tests/testpage.html"),
-                     " " + MSG_HELLO2), MT_HELLO);
+    display(MSG_HELLO, MT_HELLO);
     displayCommands();
+}
+
+function insertHyphenatedWord (longWord, containerTag)
+{
+    var wordParts = splitLongWord (longWord,
+                                   console.prefs["output.wordbreak.length"]);
+    containerTag.appendChild (htmlSpacer());
+    for (var i = 0; i < wordParts.length; ++i)
+    {
+        containerTag.appendChild (document.createTextNode (wordParts[i]));
+        if (i != wordParts.length)
+            containerTag.appendChild (htmlSpacer());
+    }
+}
+
+function insertLink (matchText, containerTag)
+{
+    var href;
+    
+    if (matchText.indexOf ("://") == -1)
+        href = "http://" + matchText;
+    else
+        href = matchText;
+    
+    var anchor = htmlVA (null, href);
+    containerTag.appendChild (anchor);    
 }
 
 function load(url, obj)
@@ -282,10 +300,35 @@ function load(url, obj)
     
 }
 
+function matchFileName (pattern)
+{
+    var rv = new Array();
+    
+    for (var scriptName in console._scripts)
+        if (scriptName.search(pattern) != -1)
+            rv.push (scriptName);
+
+    return rv;
+}
+
 function refreshResultsArray()
 {
     for (var i = 0; i < $.length; ++i)
         $[i].refresh();
+}
+
+function stringToDOM (message)
+{
+    var ary = message.split ("\n");
+    var span = htmlSpan();
+    
+    for (var l in ary)
+    {
+        console._munger.munge(ary[l], span);
+        span.appendChild (htmlBR());
+    }
+
+    return span;
 }
 
 /* exceptions */
@@ -296,6 +339,7 @@ const ERR_REQUIRED_PARAM  = 1;
 const ERR_INVALID_PARAM   = 2;
 const ERR_SUBSCRIPT_LOAD  = 3;
 const ERR_NO_DEBUGGER     = 4;
+const ERR_FAILURE         = 5;
 
 /* venkman exception factory, can be used with or without |new|.
  * throw BadMojo (ERR_REQUIRED_PARAM, MSG_VAL_OBJECT);
