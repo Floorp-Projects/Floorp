@@ -1610,9 +1610,6 @@ TextFrame::SetSelectedContentOffsets(PRBool aSelected, PRInt32 aBeginContentOffs
     if (aFocusOffset == aEndContentOffset )
       aTracker->SetFocus(this, nsnull);
   }
-#ifdef NS_DEBUG
-  printf("mContentOffset:  %i  , mContentLength  %i \n", mContentOffset, mContentLength);
-#endif //NS_DEBUG
   return SetSelected(aSelected, beginOffset, endOffset, aForceRedraw);
 }
 
