@@ -27,7 +27,6 @@
 #include "nsIDOMAppCoresManager.h"
 #include "nsIDOMDOMPropsCore.h"
 #include "nsIDOMToolkitCore.h"
-#include "nsIDOMPrefsCore.h"
 #include "nsIDOMSignonCore.h"
 #include "nsIDOMCookieCore.h"
 #include "nsIDOMWalletCore.h"
