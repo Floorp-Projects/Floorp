@@ -30,15 +30,9 @@
 #include "nsVoidArray.h"
 #include "nsHTMLIIDs.h"
 
-#if 1
-static PRBool gsDebugAssign  = PR_FALSE;
-static PRBool gsDebugBalance = PR_FALSE;
-#else
-static PRBool gsDebugAssign  = PR_TRUE;
-static PRBool gsDebugBalance = PR_TRUE;
-#endif
+#ifdef DEBUG_TABLE_STRATEGY
 static PRInt32 gsDebugCount = 0;
-
+#endif
 // The priority of allocations for columns is as follows
 //   1) max(MIN, MIN_ADJ)
 //   2) max (PCT, PCT_ADJ) 
@@ -170,7 +164,9 @@ PRBool BCW_Wrapup(nsIPresContext*           aPresContext,
 {
   if (aAllocTypes)
     delete [] aAllocTypes;
-  if (gsDebugBalance) {printf("BalanceColumnWidths ex \n"); aTableFrame->Dump(aPresContext, PR_FALSE, PR_TRUE, PR_FALSE);}
+#ifdef DEBUG_TABLE_STRATEGY
+  printf("BalanceColumnWidths ex \n"); aTableFrame->Dump(aPresContext, PR_FALSE, PR_TRUE, PR_FALSE);
+#endif
 #ifdef DEBUG_TABLE_REFLOW_TIMING
   nsTableFrame::DebugTimeMethod(nsTableFrame::eBalanceCols, *aTableFrame, (nsHTMLReflowState&)aReflowState, PR_FALSE);
 #endif
@@ -196,7 +192,9 @@ PRBool
 BasicTableLayoutStrategy::BalanceColumnWidths(nsIPresContext*          aPresContext,
                                               const nsHTMLReflowState& aReflowState)
 {
-  if (gsDebugBalance) {printf("BalanceColumnWidths en count=%d \n", gsDebugCount++); mTableFrame->Dump(aPresContext, PR_FALSE, PR_TRUE, PR_FALSE);}
+#ifdef DEBUG_TABLE_STRATEGY
+  printf("BalanceColumnWidths en count=%d \n", gsDebugCount++); mTableFrame->Dump(aPresContext, PR_FALSE, PR_TRUE, PR_FALSE);
+#endif
 #ifdef DEBUG_TABLE_REFLOW_TIMING
   nsTableFrame::DebugTimeMethod(nsTableFrame::eBalanceCols, *mTableFrame, (nsHTMLReflowState&)aReflowState, PR_TRUE);
 #endif
@@ -656,7 +654,9 @@ BasicTableLayoutStrategy::ComputeNonPctColspanWidths(PRInt32           aWidthInd
                                                      PRInt32&          aLimitType,
                                                      float             aPixelToTwips)
 {
-  //DumpColWidths(*mTableFrame, "enter ComputeNonPctColspanWidths", aCellFrame, aColIndex, aWidthIndex, aLimitType);
+#ifdef DEBUG_TABLE_STRATEGY
+  DumpColWidths(*mTableFrame, "enter ComputeNonPctColspanWidths", aCellFrame, aColIndex, aWidthIndex, aLimitType);
+#endif  
   PRBool result = PR_TRUE;
 
   nscoord spanCellSpacing   = 0; // total cell spacing cells being spanned
@@ -905,8 +905,9 @@ BasicTableLayoutStrategy::ComputeNonPctColspanWidths(PRInt32           aWidthInd
       }
     }
   }
-
-  //DumpColWidths(*mTableFrame, "exit ComputeNonPctColspanWidths", aCellFrame, aColIndex, aWidthIndex, aLimitType);
+#ifdef DEBUG_TABLE_STRATEGY
+  DumpColWidths(*mTableFrame, "exit ComputeNonPctColspanWidths", aCellFrame, aColIndex, aWidthIndex, aLimitType);
+#endif
   return result;
 }
 
@@ -927,7 +928,9 @@ BasicTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
 #ifdef DEBUG_TABLE_REFLOW_TIMING
   nsTableFrame::DebugTimeMethod(nsTableFrame::eNonPctCols, *mTableFrame, (nsHTMLReflowState&)aReflowState, PR_TRUE);
 #endif
-  if (gsDebugAssign) {printf("AssignNonPctColWidths en max=%d count=%d \n", aMaxWidth, gsDebugCount++); mTableFrame->Dump(aPresContext, PR_FALSE, PR_TRUE, PR_FALSE);}
+#ifdef DEBUG_TABLE_STRATEGY
+  printf("AssignNonPctColWidths en max=%d count=%d \n", aMaxWidth, gsDebugCount++); mTableFrame->Dump(aPresContext, PR_FALSE, PR_TRUE, PR_FALSE);
+#endif
   PRBool rv = PR_FALSE;
   PRInt32 numRows = mTableFrame->GetRowCount();
   PRInt32 numCols = mTableFrame->GetColCount();
@@ -1123,7 +1126,9 @@ BasicTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
     mTableFrame->SetColumnWidth(colX, minWidth);
   }
 
-  if (gsDebugAssign) {printf("AssignNonPctColWidths ex\n"); mTableFrame->Dump(aPresContext, PR_FALSE, PR_TRUE, PR_FALSE);}
+#ifdef DEBUG_TABLE_STRATEGY
+  printf("AssignNonPctColWidths ex\n"); mTableFrame->Dump(aPresContext, PR_FALSE, PR_TRUE, PR_FALSE);
+#endif
 #ifdef DEBUG_TABLE_REFLOW_TIMING
   nsTableFrame::DebugTimeMethod(nsTableFrame::eNonPctCols, *mTableFrame, (nsHTMLReflowState&)aReflowState, PR_FALSE);
 #endif
@@ -1968,7 +1973,7 @@ PRBool BasicTableLayoutStrategy::ColIsSpecifiedAsMinimumWidth(PRInt32 aColIndex)
 
   return result;
 }
-
+#ifdef DEBUG_TABLE_STRATEGY
 void BasicTableLayoutStrategy::Dump(PRInt32 aIndent)
 {
   char* indent = new char[aIndent + 1];
@@ -1985,4 +1990,4 @@ void BasicTableLayoutStrategy::Dump(PRInt32 aIndent)
   printf(" **END BASIC STRATEGY DUMP** \n");
   delete [] indent;
 }
-
+#endif
