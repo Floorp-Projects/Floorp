@@ -70,6 +70,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsIDOMHTMLMapElement.h"
 #include "nsIRefreshURI.h"
+#include "nsICookieService.h"
 #include "nsVoidArray.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIPrincipal.h"
@@ -3722,7 +3723,7 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
           
           // see if we have a refresh "header".
           if (!header.Compare("refresh", PR_TRUE)) {
-              // Refresh haders are parsed with the following format in mind
+              // Refresh headers are parsed with the following format in mind
               // <META HTTP-EQUIV=REFRESH CONTENT="5; URL=http://uri">
               // By the time we are here, the following is true:
               // header = "REFRESH"
@@ -3735,8 +3736,8 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
               rv = mWebShell->GetURL(&uriCStr);
               if (NS_FAILED(rv)) return rv;
 
-              nsIURI *baseURI = nsnull;
-              rv = NS_NewURI(&baseURI, uriCStr, nsnull);
+              nsCOMPtr<nsIURI> baseURI;
+              rv = NS_NewURI(getter_AddRefs(baseURI), uriCStr, nsnull);
               if (NS_FAILED(rv)) return rv;
 
               // next get any uri provided as an attribute in the tag.
@@ -3748,21 +3749,23 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
                   // go past the '=' sign
                   loc = result.Find("=", PR_TRUE, loc);
                   if (loc > -1) {
-                      loc++; // leading/trailing spaces get trimmed in url creating code.
+                      loc++;
                       result.Mid(uriAttribStr, loc, result.Length() - loc);
+                      uriAttribStr.CompressWhitespace();
+                      // remove any single or double quotes from the ends of the string
+                      uriAttribStr.Trim("\"'");
                       uriCStr = uriAttribStr.GetUnicode();
                   }
               }
 
-              nsIURI *uri = nsnull;
-              rv = NS_NewURI(&uri, uriCStr, baseURI);
+              nsCOMPtr<nsIURI> uri;
+              rv = NS_NewURI(getter_AddRefs(uri), uriCStr, baseURI);
               if (loc > -1 && NS_SUCCEEDED(rv)) {
                   NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
                                   NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
                   if (NS_SUCCEEDED(rv))
                       rv = securityManager->CheckLoadURI(baseURI, uri);
               }
-              NS_RELEASE(baseURI);
               if (NS_FAILED(rv)) return rv;
 
               // the units of the numeric value contained in the result are seconds.
@@ -3777,18 +3780,28 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
                   millis = result.ToInteger(&loc) * 1000;
               }
 
-              nsIRefreshURI *reefer = nsnull;
-              rv = mWebShell->QueryInterface(NS_GET_IID(nsIRefreshURI), (void**)&reefer);
-              if (NS_FAILED(rv)) {
-                  NS_RELEASE(uri);
-                  return rv;
-              };
+              nsCOMPtr<nsIRefreshURI> reefer = do_QueryInterface(mWebShell, &rv);
+              if (NS_FAILED(rv)) return rv;
 
               rv = reefer->RefreshURI(uri, millis, PR_FALSE);
-              NS_RELEASE(uri);
-              NS_RELEASE(reefer);
               if (NS_FAILED(rv)) return rv;
-          }
+          } // END refresh
+          else if (!header.Compare("set-cookie", PR_TRUE)) {
+              nsCOMPtr<nsICookieService> cookieServ = do_GetService(NS_COOKIESERVICE_PROGID, &rv);
+              if (NS_FAILED(rv)) return rv;
+
+              // first get our baseURI
+              const PRUnichar *uriCStr = nsnull;
+              rv = mWebShell->GetURL(&uriCStr);
+              if (NS_FAILED(rv)) return rv;
+
+              nsCOMPtr<nsIURI> baseURI;
+              rv = NS_NewURI(getter_AddRefs(baseURI), uriCStr, nsnull);
+              if (NS_FAILED(rv)) return rv;
+
+              rv = cookieServ->SetCookieString(baseURI, result);
+              if (NS_FAILED(rv)) return rv;
+          } // END set-cookie
 
           header.ToLowerCase();
           nsIAtom* fieldAtom = NS_NewAtom(header);
