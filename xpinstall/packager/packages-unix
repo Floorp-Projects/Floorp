@@ -81,7 +81,9 @@ bin/components/cookieviewer.xpt
 bin/components/dom.xpt
 bin/components/editor.xpt
 bin/components/gfx.xpt
+bin/components/gfx2.xpt
 bin/components/intl.xpt
+bin/components/imglib2.xpt
 bin/components/chardet.xpt
 bin/components/jar.xpt
 bin/components/jsconsole-clhandler.js
@@ -93,8 +95,14 @@ bin/components/libcookie.so
 bin/components/libdocshell.so
 bin/components/libeditor.so
 bin/components/libembedcomponents.so
+bin/components/libgfx2.so
 bin/components/libgfx_gtk.so
 bin/components/libgfxps.so
+bin/components/libimglib2.so
+bin/components/libimggif.so
+bin/components/libimgjpeg.so
+bin/components/libimgpng.so
+bin/components/libimgppm.so
 bin/components/libjsurl.so
 bin/components/liblwbrk.so
 bin/components/libmork.so
