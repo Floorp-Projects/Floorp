@@ -1047,8 +1047,8 @@ EOF
     *:OS/2:*:*)
 	if test "$VACPP" = "yes"; then
 		echo "i386-pc-os2_vacpp"
-    else
-    	echo "i386-pc-os2_emx"
+	else
+		echo "i386-pc-os2_emx"
 	fi
     exit 0;;
 esac
