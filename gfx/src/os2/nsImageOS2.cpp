@@ -207,6 +207,9 @@ void nsImageOS2::CleanUp(PRBool aCleanUpAll)
 void nsImageOS2::ImageUpdated( nsIDeviceContext *aContext,
                                PRUint8 aFlags, nsRect *aUpdateRect)
 {
+   if (!aContext) {
+      return;
+   } /* endif */
    // This is where we can set the bitmap colour table, as the XP code
    // has filled in the colour map.  It would be cute to be able to alias
    // the bitmap colour table as the mColorMap->Index thing, but the formats
