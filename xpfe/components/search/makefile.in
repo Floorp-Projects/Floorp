@@ -16,13 +16,13 @@
 # Reserved.
 
 DEPTH = ../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+topsrcdir       = @top_srcdir@
+srcdir          = @srcdir@
+VPATH           = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = resources
+DIRS = datasets resources
 
 include $(topsrcdir)/config/config.mk
 
