@@ -37,7 +37,6 @@
 #include "nsIInterfaceInfoManager.h"
 #include "nsIInterfaceInfo.h"
 #include "nsIServiceManager.h"
-#include "nsIAllocator.h"
 #include "nsHashtableEnumerator.h"
 
 #include "nsInterfaceInfoManager.h"
@@ -86,38 +85,18 @@ nsInterfaceInfoManager::FreeInterfaceInfoManager()
     NS_IF_RELEASE(gInterfaceInfoManager);
 }
 
-// static
-nsIAllocator*
-nsInterfaceInfoManager::GetAllocator(nsInterfaceInfoManager* iim /*= NULL*/)
-{
-    nsIAllocator* al;
-    nsInterfaceInfoManager* iiml = iim;
-
-    if(!iiml && !(iiml = GetInterfaceInfoManager()))
-        return NULL;
-    if(NULL != (al = iiml->allocator))
-        NS_ADDREF(al);
-    if(!iim)
-        NS_RELEASE(iiml);
-    return al;
-}
-
 nsInterfaceInfoManager::nsInterfaceInfoManager()
-    : typelibRecords(NULL), allocator(NULL), ctor_succeeded(PR_FALSE)
+    : typelibRecords(NULL), ctor_succeeded(PR_FALSE)
 {
     NS_INIT_REFCNT();
     NS_ADDREF_THIS();
-
-    // GetGlobalAllocator add-refs its return value
-    this->allocator = dont_AddRef(nsAllocator::GetGlobalAllocator());
-    PR_ASSERT(allocator.get());
 
     if(NS_SUCCEEDED(this->initInterfaceTables()))
         ctor_succeeded = PR_TRUE;
 }
 
 static
-XPTHeader *getHeader(const nsFileSpec *fileSpec, nsIAllocator *al)
+XPTHeader *getHeader(const nsFileSpec *fileSpec)
 {
     XPTState *state = NULL;
     XPTCursor curs;
@@ -130,7 +109,8 @@ XPTHeader *getHeader(const nsFileSpec *fileSpec, nsIAllocator *al)
     if (!fileSpec->Valid())
         return NULL;
 
-    whole = (char *)al->Alloc(flen);
+    whole = (char *)nsAllocator::Alloc(flen);
+
     if (!whole) {
         NS_ERROR("FAILED: allocation for whole");
         return NULL;
@@ -176,14 +156,14 @@ XPTHeader *getHeader(const nsFileSpec *fileSpec, nsIAllocator *al)
     if (state != NULL)
         XPT_DestroyXDRState(state);
     if (whole != NULL)
-        al->Free(whole);
+        nsAllocator::Free(whole);
     return header;
 }
 
 nsresult
 nsInterfaceInfoManager::indexify_file(const nsFileSpec *fileSpec)
 {
-    XPTHeader *header = getHeader(fileSpec, this->allocator);
+    XPTHeader *header = getHeader(fileSpec);
     if (header == NULL) {
         // XXX glean something more meaningful from getHeader?
         return NS_ERROR_FAILURE;
@@ -191,7 +171,7 @@ nsInterfaceInfoManager::indexify_file(const nsFileSpec *fileSpec)
 
     int limit = header->num_interfaces;
     nsTypelibRecord *tlrecord = new nsTypelibRecord(limit, this->typelibRecords,
-                                                    header, this->allocator);
+                                                    header);
     if (tlrecord == NULL) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -420,7 +400,7 @@ free_nametable_records(PLHashEntry *he, PRIntn index, void *arg)
 
 nsInterfaceInfoManager::~nsInterfaceInfoManager()
 {
-    nsTypelibRecord::DestroyList(typelibRecords, allocator);
+    nsTypelibRecord::DestroyList(typelibRecords);
     if (nameTable) {
         PL_HashTableEnumerateEntries(nameTable,
                                      free_nametable_records,
@@ -492,14 +472,9 @@ nsInterfaceInfoManager::GetNameForIID(const nsIID* iid, char** name)
 #endif
     PR_ASSERT(record->name != NULL);
     
-    char *p;
-    int len = strlen(record->name) + 1;
-    if((p = (char *)this->allocator->Alloc(len)) == NULL) {
-        *name = NULL;
+    *name = (char *)nsAllocator::Clone(record->name, strlen(record->name) + 1);
+    if (*name == NULL)
         return NS_ERROR_FAILURE;
-    }
-    memcpy(p, record->name, len);
-    *name = p;
     return NS_OK;
 }    
 

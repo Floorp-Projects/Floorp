@@ -26,7 +26,6 @@
 #define nsInterfaceInfoManager_h___
 
 #include "plhash.h"
-#include "nsIAllocator.h"
 #include "nsIInterfaceInfo.h"
 #include "nsIInterfaceInfoManager.h"
 #include "nsHashtable.h"
@@ -60,7 +59,6 @@ public:
     virtual ~nsInterfaceInfoManager();
     static nsInterfaceInfoManager* GetInterfaceInfoManager();
     static void FreeInterfaceInfoManager();
-    static nsIAllocator* GetAllocator(nsInterfaceInfoManager* iim = NULL);
 
 private:
     nsInterfaceInfoManager();
@@ -78,7 +76,6 @@ private:
     // mapping between IIDs and records.
     nsHashtable *IIDTable;
 
-    nsCOMPtr<nsIAllocator> allocator;
     PRBool ctor_succeeded;
 };
 

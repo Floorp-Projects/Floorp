@@ -27,33 +27,30 @@
 #include "xpt_struct.h"
 
 nsTypelibRecord::nsTypelibRecord(int size, nsTypelibRecord *in_next,
-                                 XPTHeader *in_header, nsIAllocator *allocator)
+                                 XPTHeader *in_header)
     : next(in_next),
       header(in_header)
 {
     this->interfaceRecords = (nsInterfaceRecord **)
-        allocator->Alloc((size + 1) * (sizeof (nsInterfaceRecord *)));
+        nsAllocator::Alloc((size + 1) * (sizeof (nsInterfaceRecord *)));
+
     // XXX how to account for failure in a constructor?  Can we return null?
+    // could use constructor-failed flag...
 
     // NULL-terminate it.  The rest will get filled in.
     this->interfaceRecords[size] = NULL;
 }
 
-void
-nsTypelibRecord::Destroy(nsIAllocator* aAllocator)
+nsTypelibRecord::~nsTypelibRecord()
 {
     XPT_FreeHeader(header);
-    header = nsnull;
-    aAllocator->Free(interfaceRecords);
-    interfaceRecords = nsnull;
-}
+    nsAllocator::Free(interfaceRecords);
+}    
 
-void nsTypelibRecord::DestroyList(nsTypelibRecord* aList,
-                                  nsIAllocator* aAllocator)
+void nsTypelibRecord::DestroyList(nsTypelibRecord* aList)
 {
     while (aList) {
         nsTypelibRecord* next = aList->next;
-        aList->Destroy(aAllocator);
         delete aList;
         aList = next;
     }

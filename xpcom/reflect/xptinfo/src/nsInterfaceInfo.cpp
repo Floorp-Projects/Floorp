@@ -27,7 +27,6 @@
 #include "nsISupports.h"
 #include "nsIInterfaceInfo.h"
 #include "nsIInterfaceInfoManager.h"
-#include "nsIAllocator.h"
 
 #include "nsInterfaceInfo.h"
 #include "nsInterfaceInfoManager.h"
