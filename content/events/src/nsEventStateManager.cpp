@@ -2223,7 +2223,10 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
         nsCOMPtr<nsIEventStateManager> esm;
         oldPresContext->GetEventStateManager(getter_AddRefs(esm));
         esm->SetFocusedContent(gLastFocusedContent);
-        gLastFocusedContent->HandleDOMEvent(oldPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
+        nsCOMPtr<nsIContent> temp = gLastFocusedContent;
+        NS_RELEASE(gLastFocusedContent);
+        gLastFocusedContent = nsnull;
+        temp->HandleDOMEvent(oldPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
         esm->SetFocusedContent(nsnull);
       }
 
@@ -2235,7 +2238,8 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
     // Go ahead and fire a blur on the window.
     nsCOMPtr<nsIScriptGlobalObject> globalObject;
 
-    gLastFocusedDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
+    if(gLastFocusedDocument)
+      gLastFocusedDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
   
     if (!mDocument) {  
       if (presShell) {
@@ -2243,7 +2247,7 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
       }
     }
 
-    if ((gLastFocusedDocument != mDocument) && globalObject) {  
+    if (gLastFocusedDocument && (gLastFocusedDocument != mDocument) && globalObject) {  
       nsEventStatus status = nsEventStatus_eIgnore;
       nsEvent event;
       event.eventStructType = NS_EVENT;
@@ -2252,7 +2256,10 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
       nsCOMPtr<nsIEventStateManager> esm;
       gLastFocusedPresContext->GetEventStateManager(getter_AddRefs(esm));
       esm->SetFocusedContent(nsnull);
-      gLastFocusedDocument->HandleDOMEvent(gLastFocusedPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+      nsCOMPtr<nsIDocument> temp = gLastFocusedDocument;
+      NS_RELEASE(gLastFocusedDocument);
+      gLastFocusedDocument = nsnull;
+      temp->HandleDOMEvent(gLastFocusedPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
       globalObject->HandleDOMEvent(gLastFocusedPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
     }
   }
