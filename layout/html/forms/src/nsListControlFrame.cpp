@@ -1157,19 +1157,34 @@ nsListControlFrame::GetOptionValue(nsIDOMHTMLCollection& aCollection,
                                    nsString&             aValue)
 {
   PRBool status = PR_FALSE;
+  nsresult result = NS_OK;
   nsIDOMHTMLOptionElement* option = GetOption(aCollection, aIndex);
   if (option) {
-    nsresult result = option->GetValue(aValue);
-    if (aValue.Length() > 0) {
-      status = PR_TRUE;
-    } else {
-      result = option->GetText(aValue);
-      if (aValue.Length() > 0) {
-        status = PR_TRUE;
+     // Check for value attribute on the option element.
+     // Can not use the return value from option->GetValue() because it
+     // always returns NS_OK even when the value attribute does not
+     // exist.
+   nsCOMPtr<nsIHTMLContent> optionContent;
+   result = option->QueryInterface(kIHTMLContentIID, getter_AddRefs(optionContent));
+   if (NS_SUCCEEDED(result)) {
+     nsHTMLValue value;
+      result = optionContent->GetHTMLAttribute(nsHTMLAtoms::value, value);
+
+      if (NS_CONTENT_ATTR_NOT_THERE == result) {
+        result = option->GetText(aValue);
+        if (aValue.Length() > 0) {
+          status = PR_TRUE;
+        }
+      } else {
+          // Need to use the options GetValue to get the real value because
+          // it does extra processing on the return value. (i.e it trims it.)
+         result = option->GetValue(aValue);
+         status = PR_TRUE;
       }
     }
     NS_RELEASE(option);
   }
+
   return status;
 }
 
