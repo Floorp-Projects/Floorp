@@ -323,7 +323,7 @@ nsLineLayout::EndLineReflow()
   NS_ASSERTION(mSpansAllocated == mSpansFreed, "leak");
   NS_ASSERTION(mFramesAllocated == mFramesFreed, "leak");
 
-#ifdef DEBUG_kipp
+#if 0
   static PRInt32 maxSpansAllocated = NS_LINELAYOUT_NUM_SPANS;
   static PRInt32 maxFramesAllocated = NS_LINELAYOUT_NUM_FRAMES;
   if (mSpansAllocated > maxSpansAllocated) {
