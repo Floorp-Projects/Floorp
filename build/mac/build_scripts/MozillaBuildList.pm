@@ -626,7 +626,6 @@ sub BuildClientDist()
 
     #LIBIMAGE
     InstallFromManifest(":mozilla:modules:libimg:png:MANIFEST",                    "$distdirectory:libimg:");
-    InstallFromManifest(":mozilla:modules:libimg:src:MANIFEST",                    "$distdirectory:libimg:");
 
     if ($main::options{useimg2}) {
 	    #GFX2
