@@ -26,18 +26,58 @@
 #include "nsILocalFile.h"
 #include "nsIEventQueueService.h"
 
+#include "nsIStringBundle.h"
+
+extern nsresult NS_InitEmbedding(const char *aPath);
+extern nsresult NS_TermEmbedding();
+
+
 static nsIServiceManager *sServiceManager = nsnull;
-static PRBool sRegistryInitializedFlag = PR_FALSE;
+static PRBool             sRegistryInitializedFlag = PR_FALSE;
+static PRUint32           sInitCounter = 0;
+
+#define HACK_AROUND_THREADING_ISSUES
+#define HACK_AROUND_NONREENTRANT_INITXPCOM
+
 #ifdef HACK_AROUND_NONREENTRANT_INITXPCOM
+// XXX hack class to clean up XPCOM when this module is unloaded
+class XPCOMCleanupHack
+{
+public:
+    PRBool mCleanOnExit;
+
+    XPCOMCleanupHack() : mCleanOnExit(PR_FALSE) {}
+    ~XPCOMCleanupHack()
+    {
+        if (mCleanOnExit)
+        {
+            if (sInitCounter > 0)
+            {
+                sInitCounter = 1;
+                NS_TermEmbedding();
+            }
+            // XXX Global destructors and NS_ShutdownXPCOM don't seem to mix
+//         	NS_ShutdownXPCOM(sServiceManager);
+        }
+    }
+};
 static PRBool sXPCOMInitializedFlag = PR_FALSE;
+static XPCOMCleanupHack sXPCOMCleanupHack;
 #endif
 
 extern "C" void NS_SetupRegistry();
 
-NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 nsresult NS_InitEmbedding(const char *aPath)
 {
+    // Reentrant calls to this method do nothing except increment a counter
+    if (++sInitCounter > 1)
+    {
+        return NS_OK;
+    }
+
 	// Initialise XPCOM
 #ifdef HACK_AROUND_NONREENTRANT_INITXPCOM
 	// Can't call NS_InitXPCom more than once or things go boom!
@@ -64,6 +104,7 @@ nsresult NS_InitEmbedding(const char *aPath)
 
 #ifdef HACK_AROUND_NONREENTRANT_INITXPCOM
 		sXPCOMInitializedFlag = PR_TRUE;
+        sXPCOMCleanupHack.mCleanOnExit = PR_TRUE;
 #endif
 	}
 
@@ -72,6 +113,7 @@ nsresult NS_InitEmbedding(const char *aPath)
 	// Register components
 	if (!sRegistryInitializedFlag)
 	{
+        // XXX hack method
 		NS_SetupRegistry();
  	    
         rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, NULL /* default */);
@@ -99,11 +141,32 @@ nsresult NS_InitEmbedding(const char *aPath)
 		nsServiceManager::ReleaseService(kEventQueueServiceCID, eventQService);
 	}
 
+#ifdef HACK_AROUND_THREADING_ISSUES
+    // XXX force certain objects to be created on the main thread
+    nsresult res;
+    NS_WITH_SERVICE(nsIStringBundleService, sBundleService, kStringBundleServiceCID, &res);
+    if (NS_SUCCEEDED (res) && (nsnull != sBundleService)) 
+    {
+        nsCOMPtr<nsIStringBundle> stringBundle;
+        char*  propertyURL = "chrome://necko/locale/necko.properties";
+        nsILocale *locale = nsnull;
+        res = sBundleService->CreateBundle(propertyURL, locale, getter_AddRefs(stringBundle));
+    }
+#endif
+
     return NS_OK;
 }
 
 nsresult NS_TermEmbedding()
 {
+    // Reentrant calls to this method do nothing except decrement a counter
+    if (sInitCounter > 1)
+    {
+        sInitCounter--;
+        return NS_OK;
+    }
+    sInitCounter = 0;
+
 	// Destroy the event queue
 	nsIEventQueueService* eventQService = NULL;
 	nsresult rv = nsServiceManager::GetService(kEventQueueServiceCID,
@@ -119,7 +182,7 @@ nsresult NS_TermEmbedding()
 #ifndef HACK_AROUND_NONREENTRANT_INITXPCOM
 	NS_ShutdownXPCOM(sServiceManager);
 #endif
-	sServiceManager = nsnull;
+	NS_RELEASE(sServiceManager);
 
 	return NS_OK;
 }
