@@ -1,15 +1,13 @@
 <html>
 
 <script>
-var profileCore = parent.GetProfileCore();
-
-var curProfileName = parent.GetProfileName();
 
 function GoBack()
 {
-	dump("************Inside GoBack\n");
+	//dump("************Inside GoBack\n");
 	// Load this xul to see the updated profile list
 	this.location.replace("resource:/res/profile/profileManager.html");
+	//dump("************Loading main page again **********\n");
 }
 
 </script>
@@ -20,7 +18,7 @@ function GoBack()
 <table>
 <tr>
 	<td>
-		Please select a profile first.
+		Please select a valid profile first.
 	</td>
 </tr>
 
