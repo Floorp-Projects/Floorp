@@ -115,45 +115,45 @@
                 onget="return this.boxObject.QueryInterface(Components.interfaces.nsITreeBoxObject);"
                 readonly="true"/>
       <method name="getNextItem">
-        <argument name="startItem"/>
-        <argument name="delta"/>
+        <parameter name="startItem"/>
+        <parameter name="delta"/>
         <body>
           return this.treeBoxObject.getNextItem(startItem, delta);
         </body>
       </method>
       <method name="getPreviousItem">
-        <argument name="startItem"/>
-        <argument name="delta"/>
+        <parameter name="startItem"/>
+        <parameter name="delta"/>
         <body>
           return this.treeBoxObject.getPreviousItem(startItem, delta);
         </body>
       </method>
       <method name="getIndexOfItem">
-        <argument name="item"/>
+        <parameter name="item"/>
         <body>
           return this.treeBoxObject.getIndexOfItem(item);
         </body>
       </method>
       <method name="getItemAtIndex">
-        <argument name="index"/>
+        <parameter name="index"/>
         <body>
           return this.treeBoxObject.getItemAtIndex(index);
         </body>
       </method>
       <method name="ensureIndexIsVisible">
-        <argument name="index"/>
+        <parameter name="index"/>
         <body>
           return this.treeBoxObject.ensureIndexIsVisible(index);
         </body>
       </method>
       <method name="ensureElementIsVisible">
-        <argument name="element"/>
+        <parameter name="element"/>
         <body>
           return this.ensureIndexIsVisible(this.treeBoxObject.getIndexOfItem(element));
         </body>
       </method>
       <method name="scrollToIndex">
-        <argument name="index"/>
+        <parameter name="index"/>
         <body>
           return this.treeBoxObject.scrollToIndex(index);
         </body>

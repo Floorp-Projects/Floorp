@@ -185,7 +185,7 @@ nsIAtom* nsXBLBinding::kValueAtom = nsnull;
 nsIAtom* nsXBLBinding::kActionAtom = nsnull;
 nsIAtom* nsXBLBinding::kHTMLAtom = nsnull;
 nsIAtom* nsXBLBinding::kMethodAtom = nsnull;
-nsIAtom* nsXBLBinding::kArgumentAtom = nsnull;
+nsIAtom* nsXBLBinding::kParameterAtom = nsnull;
 nsIAtom* nsXBLBinding::kBodyAtom = nsnull;
 nsIAtom* nsXBLBinding::kPropertyAtom = nsnull;
 nsIAtom* nsXBLBinding::kOnSetAtom = nsnull;
@@ -297,7 +297,7 @@ nsXBLBinding::nsXBLBinding(const nsCString& aDocURI, const nsCString& aID)
     kValueAtom = NS_NewAtom("value");
     kActionAtom = NS_NewAtom("action");
     kMethodAtom = NS_NewAtom("method");
-    kArgumentAtom = NS_NewAtom("argument");
+    kParameterAtom = NS_NewAtom("parameter");
     kBodyAtom = NS_NewAtom("body");
     kPropertyAtom = NS_NewAtom("property");
     kOnSetAtom = NS_NewAtom("onset");
@@ -346,7 +346,7 @@ nsXBLBinding::~nsXBLBinding(void)
     NS_RELEASE(kValueAtom);
     NS_RELEASE(kActionAtom);
     NS_RELEASE(kMethodAtom);
-    NS_RELEASE(kArgumentAtom);
+    NS_RELEASE(kParameterAtom);
     NS_RELEASE(kBodyAtom);
     NS_RELEASE(kPropertyAtom); 
     NS_RELEASE(kOnSetAtom);
@@ -783,7 +783,7 @@ nsXBLBinding::InstallProperties(nsIContent* aBoundElement)
           child->ChildAt(j, *getter_AddRefs(arg));
           nsCOMPtr<nsIAtom> kidTagName;
           arg->GetTag(*getter_AddRefs(kidTagName));
-          if (kidTagName.get() == kArgumentAtom) {
+          if (kidTagName.get() == kParameterAtom) {
             // Get the argname and add it to the array.
             nsAutoString argName;
             arg->GetAttribute(kNameSpaceID_None, kNameAtom, argName);

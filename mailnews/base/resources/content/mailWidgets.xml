@@ -27,8 +27,8 @@
       <property name="imgalign"   onset="return document.getAnonymousNodes(this)[0].childNodes[1].setAttribute('imgalign',val);"
                                   onget="return document.getAnonymousNodes(this)[0].childNodes[1].getAttribute('imgalign');"/>
       <method name="setTextAttribute">
-        <argument name="attributeName"/>
-        <argument name="attributeValue"/>
+        <parameter name="attributeName"/>
+        <parameter name="attributeValue"/>
         <body>
           <![CDATA[            
             var textNode = document.getAnonymousNodes(this)[0].firstChild;
@@ -38,8 +38,8 @@
       </method>
 
       <method name="getTextAttribute">
-        <argument name="attributeName"/>
-        <argument name="attributeValue"/>
+        <parameter name="attributeName"/>
+        <parameter name="attributeValue"/>
         <body>
           <![CDATA[            
             var textNode = document.getAnonymousNodes(this)[0].firstChild;
@@ -177,7 +177,7 @@
         </body>
       </method>
       <method name="onSelect">
-        <argument name="event"/>
+        <parameter name="event"/>
         <body>
           <![CDATA[
             var menulist = document.getAnonymousNodes(this)[0];
@@ -353,7 +353,7 @@
         </body>
       </method>
       <method name="saveTo">
-        <argument name="searchValue"/>
+        <parameter name="searchValue"/>
         <body>
           <![CDATA[
             this.internalValue = searchValue;
@@ -469,7 +469,7 @@
       </method>
       <!-- if you have a search term element with no search term -->
       <method name="saveTo">
-        <argument name="searchTerm"/>
+        <parameter name="searchTerm"/>
         <body>
           <![CDATA[
             this.internalSearchTerm = searchTerm;
