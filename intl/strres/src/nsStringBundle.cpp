@@ -340,6 +340,7 @@ NS_IMPL_ISUPPORTS(nsExtensibleStringBundle, NS_GET_IID(nsIStringBundle));
 nsExtensibleStringBundle::nsExtensibleStringBundle(const char * aRegistryKey, 
                                                   nsILocale * aLocale, 
                                                   nsresult * aResult)
+                                                  :mBundle(NULL)
 {
   NS_INIT_REFCNT();
 
@@ -348,6 +349,7 @@ nsExtensibleStringBundle::nsExtensibleStringBundle(const char * aRegistryKey,
   nsIRegistry * registry = NULL;
   nsRegistryKey uconvKey, key;
   nsIStringBundleService * sbServ = NULL;
+  PRBool regOpen = PR_FALSE;
 
   // get the Bundle Service
   res = nsServiceManager::GetService(kStringBundleServiceCID, 
@@ -358,6 +360,13 @@ nsExtensibleStringBundle::nsExtensibleStringBundle(const char * aRegistryKey,
   res = nsServiceManager::GetService(NS_REGISTRY_PROGID, 
     NS_GET_IID(nsIRegistry), (nsISupports**)&registry);
   if (NS_FAILED(res)) goto done;
+
+  // open registry if necessary
+  registry->IsOpen(&regOpen);
+  if (!regOpen) {
+    res = registry->OpenWellKnownRegistry(nsIRegistry::ApplicationComponentRegistry);
+    if (NS_FAILED(res)) goto done;
+  }
 
   // get subtree
   res = registry->GetSubtree(nsIRegistry::Common,  
@@ -420,6 +429,8 @@ done:
       kStringBundleServiceCID, sbServ);
 
   NS_IF_RELEASE(components);
+
+  *aResult = res;
 }
 
 nsExtensibleStringBundle::~nsExtensibleStringBundle() 
@@ -605,6 +616,32 @@ nsStringBundleService::CreateXPCBundle(const char *aURLSpec, const PRUnichar *aL
   }
 
   return ret;
+}
+
+NS_IMETHODIMP
+NS_NewStringBundleService(nsISupports* aOuter, const nsIID& aIID,
+                          void** aResult)
+{
+  nsresult rv;
+
+  if (!aResult) {                                                  
+    return NS_ERROR_INVALID_POINTER;                             
+  }                                                                
+  if (aOuter) {                                                    
+    *aResult = nsnull;                                           
+    return NS_ERROR_NO_AGGREGATION;                              
+  }                                                                
+  nsStringBundleService * inst = new nsStringBundleService();
+  if (inst == NULL) {                                             
+    *aResult = nsnull;                                           
+    return NS_ERROR_OUT_OF_MEMORY;
+  }                                                                
+  rv = inst->QueryInterface(aIID, aResult);                        
+  if (NS_FAILED(rv)) {
+    delete inst;
+    *aResult = nsnull;                                           
+  }                                                              
+  return rv;                                                     
 }
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsStringBundleService)
