@@ -1,0 +1,96 @@
+#!nmake
+#
+# The contents of this file are subject to the Netscape Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/NPL/
+#
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation. All
+# Rights Reserved.
+#
+# Contributor(s): 
+
+DEPTH=..\..
+include <$(DEPTH)/config/config.mak>
+
+DEFINES=-D_IMPL_NS_HTML 
+
+MODULE=raptor 
+IS_COMPONENT = 1
+
+BUILD_DATE=gbdate.h
+
+CPPSRCS=dlldeps.cpp nsContentDLF.cpp nsContentFactory.cpp nsContentModule.cpp
+
+CPP_OBJS=				\
+	.\$(OBJDIR)\dlldeps.obj		\
+	.\$(OBJDIR)\nsContentDLF.obj	\
+	.\$(OBJDIR)\nsContentFactory.obj	\
+	.\$(OBJDIR)\nsContentModule.obj	\
+	$(NULL)
+
+EXPORTS=nsContentCID.h $(BUILD_DATE)
+
+
+MAKE_OBJ_TYPE = DLL
+DLLNAME = gkcontent
+DLL=.\$(OBJDIR)\$(DLLNAME).dll
+
+LCFLAGS = \
+        $(LCFLAGS) \
+        $(DEFINES) \
+        $(NULL)
+
+LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\dom \
+	-I$(PUBLIC)\js -I..\html\base\src -I..\base\src \
+	-I..\html\style\src \
+	-I..\xul\content\src \
+	-I..\xul\base\src \
+	-I..\events\src \
+  -I$(PUBLIC)\rdf
+
+# These are the libraries we need to link with to create the dll
+LLIBS=					\
+ $(DIST)\lib\contentbase_s.lib		\
+ $(DIST)\lib\contenthtmlbase_s.lib	\
+ $(DIST)\lib\contenthtmlcontent_s.lib		\
+ $(DIST)\lib\contenthtmldoc_s.lib	\
+ $(DIST)\lib\contenthtmlstyle_s.lib	\
+ $(DIST)\lib\contentxmlcontent_s.lib	\
+ $(DIST)\lib\contentxmldoc_s.lib		\
+ $(DIST)\lib\contentxsldoc_s.lib		\
+ $(DIST)\lib\contentxulcontent_s.lib	\
+ $(DIST)\lib\contentxbl_s.lib \
+ $(DIST)\lib\contentevents_s.lib		\
+ $(DIST)\lib\xpcom.lib		\
+ $(DIST)\lib\gkgfxwin.lib		\
+ $(DIST)\lib\timer_s.lib \
+ $(DIST)\lib\jsdom.lib		        \
+ $(DIST)\lib\js32$(VERSION_NUMBER).lib	\
+!if defined(MOZ_PERF)
+ $(DIST)\lib\util.lib		        \
+!endif
+ $(LIBNSPR)
+
+include <$(DEPTH)\config\rules.mak>
+
+install:: $(DLL)
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
+
+clobber::
+	rm -f $(DIST)\bin\$(DLLNAME).dll
+	rm -f $(DIST)\lib\$(DLLNAME).lib
+
+$(BUILD_DATE)::
+	rm -f $@
+	$(PERL) gbdate.pl > $@
