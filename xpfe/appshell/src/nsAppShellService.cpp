@@ -133,14 +133,6 @@ nsAppShellService::Initialize( nsICmdLineService *aCmdLineService,
       mSplashScreen = do_QueryInterface( aNativeAppSupportOrSplashScreen );
   }
 
-  // Create the Event Queue for the UI thread...
-  NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID,
-                  &rv);
-  if (NS_OK == rv) {
-    // XXX: What if this fails?
-    rv = eventQService->CreateThreadEventQueue();
-  }
-
   NS_WITH_SERVICE(nsIMetaCharsetService, metacharset, kMetaCharsetCID, &rv);
   if(NS_FAILED(rv)) {
     goto done;

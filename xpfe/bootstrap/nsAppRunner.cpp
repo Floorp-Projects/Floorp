@@ -60,6 +60,7 @@
 #include "nsIChromeRegistry.h"
 #include "nsIContentHandler.h"
 #include "nsIBrowserInstance.h"
+#include "nsIEventQueueService.h"
 #include "nsAppFileLocationProvider.h"
 
 // Interfaces Needed
@@ -90,6 +91,7 @@ static NS_DEFINE_IID(kIWindowMediatorIID,NS_IWINDOWMEDIATOR_IID);
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 static NS_DEFINE_CID(kWalletServiceCID,     NS_WALLETSERVICE_CID);
 static NS_DEFINE_CID(kBrowserContentHandlerCID, NS_BROWSERCONTENTHANDLER_CID);
+static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 
 #define HELP_SPACER_1   "\t"
@@ -755,6 +757,14 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   // the JS engine.  See bugzilla bug 9967 details.
   fpsetmask(0);
 #endif
+
+  NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID,
+                  &rv);
+  if (NS_OK == rv) {
+    // XXX: What if this fails?
+    rv = eventQService->CreateThreadEventQueue();
+  }
+
 
   // Setup an autoreg obserer, so that we can update a progress
   // string in the splash screen
