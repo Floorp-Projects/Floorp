@@ -18,10 +18,8 @@
  
 #include <iostream.h>
 #include <stdlib.h>
-#define NS_IMPL_IDS
 #include "nsISupports.h"
 #include "nsIComponentManager.h"
-#include "nsIServiceManager.h"
 #include "nsILocale.h"
 #include "nsILocaleFactory.h"
 #include "nsLocaleCID.h"
@@ -33,10 +31,6 @@
 #else
 #include "nsIPosixLocale.h"
 #endif
-#include "nsICharsetConverterManager.h"
-#include "nsUCvLatinCID.h"
-#include "nsICaseConversion.h"
-#include "nsUnicharUtilCIID.h"
 #include "nsCollationCID.h"
 #include "nsICollation.h"
 #include "nsDateTimeFormatCID.h"
@@ -64,20 +58,13 @@
 // Collation
 //
 static NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
-static NS_DEFINE_IID(kICollationFactoryIID, NS_ICOLLATIONFACTORY_IID);
 static NS_DEFINE_CID(kCollationCID, NS_COLLATION_CID);
-static NS_DEFINE_IID(kICollationIID, NS_ICOLLATION_IID);
 // Date and Time
 //
 static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
-static NS_DEFINE_IID(kIDateTimeFormatIID, NS_IDATETIMEFORMAT_IID);
 // locale
 //
 static NS_DEFINE_CID(kLocaleFactoryCID, NS_LOCALEFACTORY_CID);
-static NS_DEFINE_IID(kILocaleFactoryIID, NS_ILOCALEFACTORY_IID);
-// case conversion
-//
-static NS_DEFINE_CID(kUnicharUtilCID, NS_UNICHARUTIL_CID);
 // platform specific
 //
 #ifdef XP_MAC
@@ -178,9 +165,9 @@ static void TestCollation(nsILocale *locale)
    cout << "==============================\n";
    
    res = nsComponentManager::CreateInstance(kCollationFactoryCID,
-                                NULL,
-                                kICollationFactoryIID,
-                                (void**) &f);
+                                            NULL,
+                                            nsICollationFactory::GetIID(),
+                                            (void**) &f);
            
    cout << "Test 1 - CreateInstance():\n";
    if(NS_FAILED(res) || ( f == NULL ) ) {
@@ -190,9 +177,9 @@ static void TestCollation(nsILocale *locale)
    }
 
    res = nsComponentManager::CreateInstance(kCollationFactoryCID,
-                                NULL,
-                                kICollationFactoryIID,
-                                (void**) &f);
+                                            NULL,
+                                            nsICollationFactory::GetIID(),
+                                            (void**) &f);
    if(NS_FAILED(res) || ( f == NULL ) ) {
      cout << "\t2nd CreateInstance failed\n";
    }
@@ -564,9 +551,9 @@ static void TestSort(nsILocale *locale, nsCollationStrength collationStrength, F
   cout << "==============================\n";
 
   res = nsComponentManager::CreateInstance(kCollationFactoryCID,
-                              NULL,
-                              kICollationFactoryIID,
-                              (void**) &factoryInst);
+                                           NULL,
+                                           nsICollationFactory::GetIID(),
+                                           (void**) &factoryInst);
   if(NS_FAILED(res)) {
     cout << "\tFailed!! return value != NS_OK\n";
   }
@@ -683,9 +670,9 @@ static void TestDateTimeFormat(nsILocale *locale)
   nsIDateTimeFormat *t = NULL;
   nsresult res;
   res = nsComponentManager::CreateInstance(kDateTimeFormatCID,
-                              NULL,
-                              kIDateTimeFormatIID,
-                              (void**) &t);
+                                           NULL,
+                                           nsIDateTimeFormat::GetIID(),
+                                           (void**) &t);
        
   cout << "Test 1 - CreateInstance():\n";
   if(NS_FAILED(res) || ( t == NULL ) ) {
@@ -695,9 +682,9 @@ static void TestDateTimeFormat(nsILocale *locale)
   }
 
   res = nsComponentManager::CreateInstance(kDateTimeFormatCID,
-                              NULL,
-                              kIDateTimeFormatIID,
-                              (void**) &t);
+                                           NULL,
+                                           nsIDateTimeFormat::GetIID(),
+                                           (void**) &t);
        
   if(NS_FAILED(res) || ( t == NULL ) ) {
     cout << "\t2nd CreateInstance failed\n";
@@ -784,13 +771,11 @@ static nsresult NewLocale(const nsString* localeName, nsILocale** locale)
 	nsILocaleFactory*	localeFactory;
   nsresult res;
 
-	res = nsComponentManager::CreateInstance(kLocaleFactoryCID, NULL, kILocaleFactoryIID, (void**)&localeFactory);
-  if (NS_FAILED(res) || localeFactory == nsnull) cout << "CreateInstance nsILocaleFactory failed\n";
+	res = nsComponentManager::FindFactory(kLocaleFactoryCID, (nsIFactory**)&localeFactory); 
+  if (NS_FAILED(res) || localeFactory == nsnull) cout << "FindFactory nsILocaleFactory failed\n";
 
-#ifndef XP_MAC
   res = localeFactory->NewLocale(localeName, locale);
   if (NS_FAILED(res) || locale == nsnull) cout << "NewLocale failed\n";
-#endif// No Mac implementation for NewLocale
 
 	localeFactory->Release();
 
@@ -975,15 +960,13 @@ int main(int argc, char** argv) {
 
 	nsILocaleFactory*	localeFactory = nsnull;
 
-#ifndef XP_MAC
-	res = nsComponentManager::CreateInstance(kLocaleFactoryCID, NULL, kILocaleFactoryIID, (void**)&localeFactory);
-  if (NS_FAILED(res) || localeFactory == nsnull) cout << "CreateInstance nsILocaleFactory failed\n";
+	res = nsComponentManager::FindFactory(kLocaleFactoryCID, (nsIFactory**)&localeFactory); 
+  if (NS_FAILED(res) || localeFactory == nsnull) cout << "FindFactory nsILocaleFactory failed\n";
 
   res = localeFactory->GetApplicationLocale(&locale);
   if (NS_FAILED(res) || locale == nsnull) cout << "GetApplicationLocale failed\n";
 
 	localeFactory->Release();
-#endif// No Mac implementation for GetApplicationLocale
   
   // --------------------------------------------
     nsCollationStrength strength = kCollationCaseInSensitive;
