@@ -3284,9 +3284,16 @@ nsFontMetricsWin::RealizeFont()
     mStrikeoutOffset = NSToCoordRound(oMetrics.otmsStrikeoutPosition * dev2app);
     mUnderlineSize = PR_MAX(onePixel, NSToCoordRound(oMetrics.otmsUnderscoreSize * dev2app));
     if (gDoingLineheightFixup) {
-      mUnderlineOffset = NSToCoordRound(PR_MIN(oMetrics.otmsUnderscorePosition, oMetrics.otmDescent + oMetrics.otmsUnderscoreSize) * dev2app);
-      // keep descent position, use it for mUnderlineOffset if leading allows
-      descentPos = NSToCoordRound(oMetrics.otmDescent * dev2app);
+      if(IsCJKLangGroupAtom(mLangGroup.get())) {
+        mUnderlineOffset = NSToCoordRound(PR_MIN(oMetrics.otmsUnderscorePosition, 
+                                                 oMetrics.otmDescent + oMetrics.otmsUnderscoreSize) 
+                                                 * dev2app);
+        // keep descent position, use it for mUnderlineOffset if leading allows
+        descentPos = NSToCoordRound(oMetrics.otmDescent * dev2app);
+      } else {
+        mUnderlineOffset = NSToCoordRound(PR_MIN(oMetrics.otmsUnderscorePosition*dev2app, 
+                                                 oMetrics.otmDescent*dev2app + mUnderlineSize));
+      }
     }
     else
       mUnderlineOffset = NSToCoordRound(oMetrics.otmsUnderscorePosition * dev2app);
