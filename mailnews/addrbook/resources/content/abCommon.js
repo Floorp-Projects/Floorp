@@ -752,7 +752,7 @@ function SortAndUpdateIndicators(sortColumn, sortDirection)
 
 function SaveSortSetting(column, direction)
 {
-  if (dirTree && gAbView) {
+  if ((dirTree || abList) && gAbView) {
     var node = document.getElementById(gAbView.URI);
     if (node) {
       node.setAttribute("sortColumn", column);
