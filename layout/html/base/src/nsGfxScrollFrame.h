@@ -126,9 +126,8 @@ public:
 
   void SetScrollbarVisibility(nsIBox* aScrollbar, PRBool aVisible);
 
-  NS_IMETHOD GetScrolledSize(nsPresContext* aPresContext, 
-                         nscoord *aWidth, 
-                         nscoord *aHeight) const;
+  nsSize GetScrolledSize() const;
+  nsMargin GetActualScrollbarSizes() const;
   void AdjustReflowStateForPrintPreview(nsBoxLayoutState& aState, PRBool& aSetBack);
   void AdjustReflowStateBack(nsBoxLayoutState& aState, PRBool aSetBack);
 
@@ -270,7 +269,9 @@ public:
     mInner.ScrollToRestoredPosition();
   }
 
-  virtual nsMargin GetActualScrollbarSizes() const;
+  virtual nsMargin GetActualScrollbarSizes() const {
+    return mInner.GetActualScrollbarSizes();
+  }
   virtual nsMargin GetDesiredScrollbarSizes(nsBoxLayoutState* aState);
   virtual nsGfxScrollFrameInner::ScrollbarStyles GetScrollbarStyles() const;
 
@@ -414,7 +415,9 @@ public:
     mInner.ScrollToRestoredPosition();
   }
 
-  virtual nsMargin GetActualScrollbarSizes() const;
+  virtual nsMargin GetActualScrollbarSizes() const {
+    return mInner.GetActualScrollbarSizes();
+  }
   virtual nsMargin GetDesiredScrollbarSizes(nsBoxLayoutState* aState);
   virtual nsGfxScrollFrameInner::ScrollbarStyles GetScrollbarStyles() const;
 
