@@ -579,11 +579,14 @@ $(LIBRARY)(%.o): %.o
 $(LIBRARY:%.a=.%.timestamp) :
 	@touch $@
 
+AR_FILES_TO_REMOVE := $(filter-out \
+	$(filter %.o, $(LIBRARY)($(OBJS) $(LOBJS)) ), \
+	$(shell [ -f $(LIBRARY) ] && $(AR_LIST) $(LIBRARY)))
+
 $(LIBRARY): $(LIBRARY)($(OBJS) $(LOBJS)) $(LIBRARY:%.a=.%.timestamp) Makefile.in Makefile
 	@touch $(LIBRARY:%.a=.%.timestamp)
 	$(AR) $(AR_FLAGS) $(filter $filter(%.o, $^), $(shell echo *.o))
-	$(AR_DELETE) $(LIBRARY) $(filter-out $(filter %.o, $^), \
-	$(shell [ -f $(LIBRARY) ] && $(AR_LIST) $(LIBRARY)))
+	if [ "${AR_FILES_TO_REMOVE}" != "" ]; then $(AR_DELETE) $(LIBRARY) $(AR_FILES_TO_REMOVE); fi
 	@touch $@
 
 else
