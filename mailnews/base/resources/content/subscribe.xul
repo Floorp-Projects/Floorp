@@ -32,11 +32,10 @@ Rights Reserved.
 		xmlns:nc="http://home.netscape.com/NC-rdf#"	
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         align="vertical"
-        class="dialog"
         onload="SubscribeOnLoad()"
-		title="&title.label;"
         style="padding:10px"> 
         
+<html:script language="JavaScript" src="chrome://messenger/content/widgetglue.js"/>
 <html:script language="JavaScript" src="chrome://messenger/content/subscribe.js"/>
 
 	<keyset id="keyset"/>
@@ -44,8 +43,8 @@ Rights Reserved.
 	<box align="horizontal" flex="100%">
 		<box align="vertical" flex="100%">
 			<box align="horizontal" flex="100%">
-				<html:div>Server: </html:div>
-				<titledbutton id="servername" value="cheese"/>
+				<html:div>Server:</html:div>
+				<titledbutton id="currentserver" value="..."/>
 			</box>
 			<box align="horizontal" flex="100%">
 				<html:div>Newsgroup:</html:div>
@@ -79,8 +78,8 @@ Rights Reserved.
 		</box>
 		<box align="vertical" flex="20%">
 			<spring flex="100%"/>
-			<titledbutton id="subscribe" class="push" value="Subscribe" onclick="SubscribeButtonClicked()"/>
-			<titledbutton id="unsubscribe" class="push" value="Unsubscribe" onclick="UnsubscribeButtonClicked()"/>
+			<titledbutton id="subscribe" class="push" value="&subscribeButton.label;" onclick="SubscribeButtonClicked()"/>
+			<titledbutton id="unsubscribe" class="push" value="&unsubscribeButton.label;" onclick="UnsubscribeButtonClicked()"/>
 			<spring flex="100%"/>
 		</box>
 	</box>

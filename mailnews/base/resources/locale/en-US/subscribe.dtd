@@ -18,4 +18,5 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 --> 
 
-<!ENTITY title.label			"Finally, a real subscribe dialog">
+<!ENTITY subscribeButton.label				"Subscribe">
+<!ENTITY unsubscribeButton.label			"Unsubscribe">
