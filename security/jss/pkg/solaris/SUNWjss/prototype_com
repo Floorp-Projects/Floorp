@@ -2,7 +2,7 @@
 # Copyright 2002 Sun Microsystems, Inc.  All rights reserved.
 # Use is subject to license terms.
 #
-#ident	"$Id: prototype_com,v 1.2 2003/01/13 19:42:51 glen.beasley%sun.com Exp $"
+#ident	"$Id: prototype_com,v 1.3 2004/05/13 07:13:00 christophe.ravel.bugs%sun.com Exp $"
 #
 # This required package information file contains a list of package contents.
 # The 'pkgmk' command uses this file to identify the contents of a package
@@ -26,8 +26,10 @@ i depend=pkgdepend
 d none usr 755 root sys
 d none usr/lib 755 root bin
 d none usr/lib/mps 755 root bin
-d none usr/share 755 root bin
-d none usr/share/lib 755 root bin
+d none usr/lib/mps/secv1 755 root bin
+d none usr/share 755 root sys
+d none usr/share/lib 755 root sys
 d none usr/share/lib/mps 755 root bin
-f none usr/lib/mps/libjss3.so 755 root bin
-f none usr/share/lib/mps/jss3.jar 644 root bin
+d none usr/share/lib/mps/secv1 755 root bin
+f none usr/lib/mps/secv1/libjss3.so 755 root bin
+f none usr/share/lib/mps/secv1/jss3.jar 644 root bin

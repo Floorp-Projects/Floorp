@@ -2,7 +2,7 @@
 # Copyright 2002 Sun Microsystems, Inc.  All rights reserved.
 # Use is subject to license terms.
 #
-#ident	"$Id: Makefile.com,v 1.4 2004/01/16 00:50:21 wchang0222%aol.com Exp $"
+#ident	"$Id: Makefile.com,v 1.5 2004/05/13 07:13:00 christophe.ravel.bugs%sun.com Exp $"
 #
 
 MACH = $(shell mach)
@@ -20,7 +20,7 @@ FILES = $(DATAFILES) pkginfo prototype
 
 PACKAGE = $(shell basename `pwd`)
 
-PRODUCT_VERSION = 3.5
+PRODUCT_VERSION = $(shell grep JSS_VERSION $(CORE_DEPTH)/jss/org/mozilla/jss/util/jssver.h | sed -e 's/"$$//' -e 's/.*"//' -e 's/ .*//')
 PRODUCT_NAME = JSS_3_5_RTM
 
 LN = /usr/bin/ln
