@@ -538,7 +538,7 @@ nsresult nsAbDirectoryDataSource::createDirectoryNameNode(nsIAbDirectory *direct
   if (NS_FAILED(rv)) return rv;
   nsString nameString(name);
   createNode(nameString, target);
-  delete[] name;
+  nsCRT::free(name);
   return NS_OK;
 }
 
