@@ -478,7 +478,7 @@ nsDataObj :: GetFileContentsInternetShortcut ( FORMATETC& aFE, STGMEDIUM& aSTG )
   else
     result = E_OUTOFMEMORY;
 
-  nsAllocator::Free ( urlStr );
+  nsMemory::Free ( urlStr );
     
   return result;
   
