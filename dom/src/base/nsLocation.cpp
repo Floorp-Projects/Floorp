@@ -106,8 +106,9 @@ LocationImpl::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
   if (!mScriptObject) {
     nsCOMPtr<nsIScriptGlobalObject> global(do_GetInterface(mWebShell));
     NS_ENSURE_TRUE(global, NS_ERROR_FAILURE);
-    return NS_NewScriptLocation(aContext, NS_STATIC_CAST(nsIDOMLocation*, this),
-      global, &mScriptObject);
+    NS_ENSURE_SUCCESS(NS_NewScriptLocation(aContext, 
+      NS_STATIC_CAST(nsIDOMLocation*, this),global, &mScriptObject), 
+      NS_ERROR_FAILURE);
   }
   *aScriptObject = mScriptObject;
   return NS_OK;
