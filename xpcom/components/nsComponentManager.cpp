@@ -3431,16 +3431,16 @@ NS_IMETHODIMP
 nsComponentManagerImpl::ContractIDToCID(const char *aContractID, 
                                         nsCID * *_retval)
 {
-    nsCID aCID;
-    nsresult rv = ContractIDToClassID(aContractID, &aCID);
-    if (NS_FAILED(rv))
-        return rv;
- 
-    // not sure about this... FIX
     *_retval = (nsCID*) nsMemory::Alloc(sizeof(nsCID));
-    *_retval = &aCID;
-        
-    return NS_OK;
+    if (!*_retval)
+       return NS_ERROR_OUT_OF_MEMORY;
+
+    nsresult rv = ContractIDToClassID(aContractID, *_retval);
+    if (NS_FAILED(rv)) {
+        nsMemory::Free(*_retval);
+        *_retval = nsnull;
+    }
+    return rv;
 }
 
 // end nsIComponentRegistrar
