@@ -207,7 +207,9 @@ BasicTableLayoutStrategy::BalanceColumnWidths(nsIPresContext*          aPresCont
   if ((NS_UNCONSTRAINEDSIZE != maxWidth) || (tableIsAutoWidth)) {
     // for an auto width table, use a large basis just so that the quirky
     // auto table sizing will get as big as it should
-    perAdjTableWidth = AssignPercentageColumnWidths(maxWidth - mCellSpacingTotal, tableIsAutoWidth);
+    nscoord basis = (NS_UNCONSTRAINEDSIZE == maxWidth) 
+                    ? NS_UNCONSTRAINEDSIZE : maxWidth - mCellSpacingTotal;
+    perAdjTableWidth = AssignPercentageColumnWidths(basis, tableIsAutoWidth);
   }
 
   // set the table's columns to the min width
@@ -304,7 +306,7 @@ BasicTableLayoutStrategy::BalanceColumnWidths(nsIPresContext*          aPresCont
       //NS_WARN_IF_FALSE(totalAllocated <= maxWidth, "over allocated");
     }
     else {
-      AllocateConstrained(maxWidth - totalAllocated, DES_CON, PR_FALSE, allocTypes);
+      AllocateConstrained(maxWidth - totalAllocated, DES_CON, PR_TRUE, allocTypes);
       return BCW_Wrapup(aPresContext, this, mTableFrame, allocTypes);
     }
   }
@@ -786,20 +788,6 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths(nsIPresContext* a
     // proportional width on a col or Nav Quirks cols attr
     if (fixWidth <= 0) {
       nscoord proportion = WIDTH_NOT_SET;
-#ifdef foobar
-      const nsStylePosition* colPosition;
-      colFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct *&)colPosition);
-      if (eStyleUnit_Proportional == colPosition->mWidth.GetUnit()) {
-        proportion = colPosition->mWidth.GetIntValue();
-      }
-      else if (colX < numColsForColsAttr) {
-        proportion = 1;
-        if ((eStyleUnit_Percent == colPosition->mWidth.GetUnit()) &&
-            (colPosition->mWidth.GetPercentValue() > 0.0f)) {
-          proportion = WIDTH_NOT_SET;
-        }
-      }
-#else
       nsStyleCoord colStyleWidth = colFrame->GetStyleWidth();
       if (eStyleUnit_Proportional == colStyleWidth.GetUnit()) {
         proportion = colStyleWidth.GetIntValue();
@@ -811,7 +799,6 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths(nsIPresContext* a
           proportion = WIDTH_NOT_SET;
         }
       }
-#endif
       if (proportion >= 0) {
         colFrame->SetWidth(MIN_PRO, proportion);
         if (proportion > 0) {
@@ -889,16 +876,6 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths(nsIPresContext* a
     nscoord fixColWidth = colFrame->GetWidth(FIX);
     // use the style width of a col only if the col hasn't gotten a fixed width from any cell
     if (fixColWidth <= 0) {
-#ifdef foobar
-      const nsStylePosition* colPosition;
-      colFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)colPosition);
-      if (eStyleUnit_Coord == colPosition->mWidth.GetUnit()) {
-        fixColWidth = colPosition->mWidth.GetCoordValue();
-        if (fixColWidth > 0) {
-          colFrame->SetWidth(FIX, fixColWidth);
-        }
-      }
-#else
       nsStyleCoord colStyleWidth = colFrame->GetStyleWidth();
       if (eStyleUnit_Coord == colStyleWidth.GetUnit()) {
         fixColWidth = colStyleWidth.GetCoordValue();
@@ -906,7 +883,6 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths(nsIPresContext* a
           colFrame->SetWidth(FIX, fixColWidth);
         }
       }
-#endif
     }
     nscoord minWidth = colFrame->GetMinWidth();
     mTableFrame->SetColumnWidth(colX, minWidth);
@@ -925,16 +901,22 @@ nscoord BasicTableLayoutStrategy::AssignPercentageColumnWidths(nscoord aBasisIn,
   PRInt32 numCols = mTableFrame->GetColCount();
   nscoord spacingX = mTableFrame->GetCellSpacingX();
   PRInt32 colX, rowX; 
-  nscoord basis = aBasisIn;
-  // For an auto table, determine the potentially new percent adjusted width based 
-  // on percent cells/cols. This probably should only be a NavQuirks thing, since
-  // a percentage based cell or column on an auto table should force the column to auto
-  if (aTableIsAutoWidth) {
+  nscoord basis; // basis to use for percentage based calculations
+  if (!aTableIsAutoWidth) {
+    if (NS_UNCONSTRAINEDSIZE == aBasisIn) {
+      return 0; // don't do the calculations on unconstrained basis
+    }
+    basis = aBasisIn;
+  }
+  else {
+    // For an auto table, determine the potentially new percent adjusted width based 
+    // on percent cells/cols. This probably should only be a NavQuirks thing, since
+    // a percentage based cell or column on an auto table should force the column to auto
+    basis = 0;                 
     nscoord fixWidthTotal = 0; // total of fixed widths of all cols
     float perTotal = 0.0f;     // total of percentage constrained cols and/or cells in cols
     PRInt32 numPerCols = 0;    // number of colums that have percentage constraints
     nscoord prefWidthTotal = 0;// total of des/fix widths of cols that don't have percentage constraints
-    basis = 0;                 // basis to use for percentages, computed considering percentage values
     for (colX = 0; colX < numCols; colX++) { 
       nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX);
       nscoord colBasis = -1;
@@ -967,18 +949,6 @@ nscoord BasicTableLayoutStrategy::AssignPercentageColumnWidths(nscoord aBasisIn,
       }
       if (-1 == colBasis) {
         // see if the col has a style percent width specified
-#ifdef foobar
-        const nsStylePosition* colPosition;
-        colFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct *&)colPosition);
-        if (eStyleUnit_Percent == colPosition->mWidth.GetUnit()) {
-          float percent = colPosition->mWidth.GetPercentValue();
-          colBasis = 0;
-          if (percent > 0.0f) {
-            nscoord desWidth = colFrame->GetDesWidth();
-            colBasis = NSToCoordRound((float)desWidth / percent);
-          }
-        }
-#else
         nsStyleCoord colStyleWidth = colFrame->GetStyleWidth();
         if (eStyleUnit_Percent == colStyleWidth.GetUnit()) {
           float percent = colStyleWidth.GetPercentValue();
@@ -988,7 +958,6 @@ nscoord BasicTableLayoutStrategy::AssignPercentageColumnWidths(nscoord aBasisIn,
             colBasis = NSToCoordRound((float)desWidth / percent);
           }
         }
-#endif
       }
       basis = PR_MAX(basis, colBasis);
       nscoord fixWidth = colFrame->GetFixWidth();
@@ -1015,7 +984,7 @@ nscoord BasicTableLayoutStrategy::AssignPercentageColumnWidths(nscoord aBasisIn,
         basis = PR_MAX(basis, otherBasis);
       }
     }
-    else if (prefWidthTotal > 0) { // make the basis as big as possible 
+    else if ((prefWidthTotal > 0) && (NS_UNCONSTRAINEDSIZE != aBasisIn)) { // make the basis as big as possible 
       basis = aBasisIn;
     }
 
@@ -1026,6 +995,7 @@ nscoord BasicTableLayoutStrategy::AssignPercentageColumnWidths(nscoord aBasisIn,
   nscoord colPctTotal = 0;
   nscoord* colPcts = new nscoord[numCols];
   if (!colPcts) return 0;
+  if (0 == basis) return 0;
   
   // Determine the percentage contribution for cols and for cells with colspan = 1
   // Iterate backwards, similarly to the reasoning in AssignPreliminaryColumnWidths
@@ -1068,20 +1038,11 @@ nscoord BasicTableLayoutStrategy::AssignPercentageColumnWidths(nscoord aBasisIn,
     }
     if (WIDTH_NOT_SET == maxColPctWidth) {
       // see if the col has a style percent width specified
-#ifdef foobar
-      const nsStylePosition* colPosition;
-      colFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct *&)colPosition);
-      if (eStyleUnit_Percent == colPosition->mWidth.GetUnit()) {
-        maxColPct = colPosition->mWidth.GetPercentValue();
-        maxColPctWidth = NSToCoordRound( ((float)basis) * maxColPct );
-      }
-#else
       nsStyleCoord colStyleWidth = colFrame->GetStyleWidth();
       if (eStyleUnit_Percent == colStyleWidth.GetUnit()) {
         maxColPct = colStyleWidth.GetPercentValue();
         maxColPctWidth = NSToCoordRound( ((float)basis) * maxColPct );
       }
-#endif
     }
     // conflicting pct/fixed widths are recorded. Nav 4.x may be changing the
     // fixed width value if it exceeds the pct value and not recording the pct
@@ -1407,8 +1368,10 @@ AC_Increase(PRInt32     aNumAutoCols,
     if ((aAvailWidth <= 0) || (aDivisor <= 0)) {
       break;
     }
-    float percent = ((float)aColInfo[i]->mMaxWidth) / (float)aDivisor;
-    aDivisor -= aColInfo[i]->mMaxWidth;
+    // aDivisor represents the sum of unallocated space (diff between max and min values)
+    float percent = ((float)aColInfo[i]->mMaxWidth - (float)aColInfo[i]->mMinWidth) / (float)aDivisor;
+    aDivisor -= aColInfo[i]->mMaxWidth - aColInfo[i]->mMinWidth;
+
     nscoord addition = NSToCoordRound(((float)(aAvailWidth)) * percent);
     // if its the last col, try to give what's left to it
     if ((i == aNumAutoCols - 1) && (addition < aAvailWidth)) {
@@ -1479,8 +1442,10 @@ void BasicTableLayoutStrategy::AllocateConstrained(PRInt32  aAvailWidth,
   PRInt32 numCols = mTableFrame->GetColCount();
   PRInt32 numConstrainedCols = 0;
   nscoord sumMaxConstraints  = 0;
+  nscoord sumMinConstraints  = 0;
   PRBool useAdj = PR_TRUE;
   PRInt32 colX;
+  // find out how many constrained cols there are
   for (colX = 0; colX < numCols; colX++) {
     nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX);
     if (!CanAllocate(aWidthType, aAllocTypes[colX], colFrame, useAdj)) {
@@ -1496,11 +1461,9 @@ void BasicTableLayoutStrategy::AllocateConstrained(PRInt32  aAvailWidth,
     else if (PCT == aWidthType) {
       width = PR_MAX(width, colFrame->GetWidth(PCT_ADJ));
     }
-    sumMaxConstraints += width;
   }
 
-
-  // allocate storage for the affected cols. Only they get adjusted.
+  // allocate storage for the constrained cols. Only they get adjusted.
   nsColInfo** colInfo = new nsColInfo*[numConstrainedCols];
   if (!colInfo) return;
   memset(colInfo, 0, numConstrainedCols * sizeof(nsColInfo *));
@@ -1526,6 +1489,8 @@ void BasicTableLayoutStrategy::AllocateConstrained(PRInt32  aAvailWidth,
     if (maxWidth <= 0) {
       continue;
     }
+    sumMaxConstraints += maxWidth;
+    sumMinConstraints += minWidth;
 
     maxWidth = PR_MAX(maxWidth, minWidth);
     maxMinDiff += maxWidth - minWidth;
@@ -1564,7 +1529,7 @@ void BasicTableLayoutStrategy::AllocateConstrained(PRInt32  aAvailWidth,
    
     // compute the proportion to be added to each column, don't go beyond the col's
     // max. This algorithm assumes that the Weight works as stated above
-    AC_Increase(numConstrainedCols, colInfo, sumMaxConstraints, availWidth);
+    AC_Increase(numConstrainedCols, colInfo, sumMaxConstraints - sumMinConstraints, availWidth);
   }
   else { // reduce each col width 
     nscoord reduceWidth = maxMinDiff - aAvailWidth;
@@ -1785,14 +1750,8 @@ PRBool BasicTableLayoutStrategy::ColIsSpecifiedAsMinimumWidth(PRInt32 aColIndex)
   PRBool result = PR_FALSE;
   nsTableColFrame* colFrame;
   mTableFrame->GetColumnFrame(aColIndex, colFrame);
-#ifdef foobar
-  const nsStylePosition* colPosition;
-  colFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)colPosition);
-  switch (colPosition->mWidth.GetUnit()) {
-#else
   nsStyleCoord colStyleWidth = colFrame->GetStyleWidth();
   switch (colStyleWidth.GetUnit()) {
-#endif
   case eStyleUnit_Coord:
     if (0 == colStyleWidth.GetCoordValue()) {
       result = PR_TRUE;
