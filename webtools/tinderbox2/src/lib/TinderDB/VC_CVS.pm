@@ -119,6 +119,9 @@ use File::Basename;
 use Time::Local;
 
 # Load Tinderbox libraries
+
+use lib '#tinder_libdir#';
+
 use TinderDB::BasicTxtDB;
 use Utils;
 use HTMLPopUp;
@@ -126,7 +129,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.9 $ )[1];
+$VERSION = ( qw $Revision: 1.10 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -235,28 +238,16 @@ sub apply_db_updates {
              'history',
              '-c', '-a', '-D', $cvs_date_str,);
 
-  my ($pid) = open(CVS, "-|");
-  
-  # did we fork a new process?
 
-  defined ($pid) || 
-    die("Could not fork for cmd: '@cmd': $!\n");
+  # We have a good chance that all the trees we are interested in will
+  # be in the same CVS repository.  Since we are not using the module
+  # name or branch in the CVS call all the VC data will be identical.
+  # Calls to CVS can take a very long time, use a cached result if
+  # possible.
 
-  # If we are the child exec. 
-  # Remember the exec function returns only if there is an error.
 
-  ($pid) ||
-    exec(@cmd) || 
-      die("Could not exec: '@cmd': $!\n");
+  my @cvs_output = main::cache_cmd(@cmd);
 
-  my @cvs_output = <CVS>;
-  
-  close(CVS) || 
-    die("Could not close exec: '@cmd': \$?: $? : \$\!: $!\n");
-
-  ($?) &&
-    die("Could not cmd: '@cmd' exited with error: $?\n");
-  
   if ($cvs_output[0] !~  m/^No records selected.\n/) {
 
     foreach $line (@cvs_output) {
