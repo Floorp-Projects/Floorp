@@ -83,6 +83,7 @@ nsProcess::nsProcess()
 NS_IMETHODIMP
 nsProcess::Init(nsIFile* executable)
 {
+    NS_ENSURE_ARG_POINTER(executable);
     PRBool isFile;
 
     //First make sure the file exists
@@ -213,6 +214,7 @@ NS_IMETHODIMP
 nsProcess::Run(PRBool blocking, const char **args, PRUint32 count,
                PRUint32 *pid)
 {
+    NS_ENSURE_TRUE(mExecutable, NS_ERROR_NOT_INITIALIZED);
     PRStatus status = PR_SUCCESS;
 
     // make sure that when we allocate we have 1 greater than the
@@ -262,7 +264,7 @@ nsProcess::Run(PRBool blocking, const char **args, PRUint32 count,
                            &startupInfo,
                            &procInfo
                           );
-    PR_FREEIF( cmdLine );
+    PR_Free( cmdLine );
     if (blocking) {
  
         // if success, wait for process termination. the early returns and such
@@ -413,7 +415,7 @@ nsProcess::Kill()
 {
     nsresult rv = NS_OK;
     if (mProcess)
-        rv = PR_KillProcess(mProcess);
+        rv = PR_KillProcess(mProcess) == PR_SUCCESS ? NS_OK : NS_ERROR_FAILURE;
     
     return rv;
 }
