@@ -181,7 +181,7 @@ protected:
 
   nsresult GetWindowOriginInPixels(nsIPresContext * aPresContext, PRBool aWindoless, nsPoint* aOrigin);
 
-  friend nsPluginInstanceOwner;
+  friend class nsPluginInstanceOwner;
   
   nsIPresContext *mPresContext;  // weak ref
 private:
