@@ -23,9 +23,52 @@
 [% PROCESS global/header.html.tmpl
   title = "Enter Bug"
   h2 = "This page lets you enter a new bug into Bugzilla."
+  onload="set_assign_to();"
 %]
 
-<form method="post" action="post_bug.cgi">
+<script type="text/javascript" language="JavaScript">
+<!--
+
+var default_owners = new Array([% component_.size %]);
+var components = new Array([% component_.size %]);
+[% count = 0 %]
+[%- FOREACH c = component_ %]
+    components[[% count %]] = "[% c.name FILTER html %]";
+    default_owners[[% count %]] = "[% c.default_login FILTER html %]";
+    [% count = count + 1 %]
+[%- END %]
+var last_default_owner;
+function set_assign_to() {
+    // Based on the selected component, fill the "Assign To:" field
+    // with the default component owner.
+    var form = document.Create;
+    assigned_to = form.assigned_to.value
+    var index = -1;
+    if (form.component.type == 'select-one') {
+        index = form.component.selectedIndex;
+    } else if (form.component.type == 'hidden') {
+        // Assume there is only one component in the list
+        index = 0;
+    }
+    if (index != -1) {
+        var owner = default_owners[index];
+        var component = components[index];
+        if (assigned_to == last_default_owner
+            || assigned_to == owner
+            || assigned_to == ''
+            || confirm('Would you like to change\n\n' +
+                       '     "Assign To: ' + assigned_to + '"\n\n' +
+                       'to the default "' + component + '" owner:\n\n' +
+                       '     ' + owner + "?")) {
+            form.assigned_to.value = owner;
+            last_default_owner = owner;
+        }
+    }
+}
+-->
+</script>
+
+<form name="Create" id="Create" method="post" action="post_bug.cgi">
 <input type="hidden" name="product" value="[% product FILTER html %]">
 
 <table cellspacing="2" cellpadding="0" border="0">
@@ -78,7 +121,7 @@
       </strong>
     </td>
     <td>
-      <select name="component" size="5">
+      <select name="component" onchange="set_assign_to();" size="5">
         [%- FOREACH c = component_ %]
           <option value="[% c.name FILTER html %]"
             [% " selected=\"selected\"" IF c.name == default.component_ %]>
@@ -134,13 +177,13 @@
   <tr>
     <td align="right">
       <strong>
-        <a href="bug_status.html#assigned_to">Assigned To</a>:
+        <a href="bug_status.html#assigned_to">Assign To</a>:
       </strong>
     </td>
     <td colspan="3">
       <input name="assigned_to" size="32" 
              value="[% assigned_to FILTER html %]">
-      (Leave blank to assign to default component owner)
+      <noscript>(Leave blank to assign to default component owner)</noscript>
     </td>
   </tr>
   

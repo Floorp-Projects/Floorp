@@ -242,17 +242,19 @@ elsif (1 == @{$::components{$product}}) {
 }
 
 my @components;
-SendSQL("SELECT name, description FROM components " . 
-        "WHERE product_id = $product_id ORDER BY name");
+SendSQL("SELECT name, description, login_name, realname
+             FROM components, profiles
+             WHERE product_id = $product_id
+             AND initialowner=userid
+             ORDER BY name");
 while (MoreSQLData()) {
-    my ($name, $description) = FetchSQLData();
-
-    my %component;
-
-    $component{'name'} = $name;
-    $component{'description'} = $description;
-
-    push @components, \%component;
+    my ($name, $description, $login, $realname) = FetchSQLData();
+    push @components, {
+        name => $name,
+        description => $description,
+        default_login => $login,
+        default_realname => $realname,
+    };
 }
 
 my %default;
