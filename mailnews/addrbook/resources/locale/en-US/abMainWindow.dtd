@@ -53,8 +53,8 @@ Rights Reserved.
 <!ENTITY deleteCardsCmd.label                           "Delete Selected Cards">  
 <!ENTITY propertiesCmd.label                            "Properties...">
 <!-- LOCALIZATION NOTE (propertiesCmd.accesskey) : DONT_TRANSLATE -->  
-<!ENTITY propertiesCmd.accesskey                    "i">  
-<!ENTITY propertiesCmd.key                          "i">  
+<!ENTITY propertiesCmd.accesskey                        "i">  
+<!ENTITY propertiesCmd.key                              "i">  
 
 <!-- View Menu -->
 <!ENTITY showAbToolbarCmd.label                         "Address Book Toolbar"> 
@@ -97,6 +97,7 @@ Rights Reserved.
 <!ENTITY stopButton.tooltip                             "Stop the current transfer"> 
 <!ENTITY searchButton.tooltip                           "Search the selected address book"> 
 <!ENTITY throbber.tooltip                               "Go to the &vendorShortName; home page">
+<!ENTITY clearButton.tooltip                            "Clear the search criteria and show all entries">
 <!ENTITY advancedButton.tooltip                         "Advanced address search">
 <!-- Sidebar -->  
 <!ENTITY addressbook-sidebar-header.label               "Address Books">  
