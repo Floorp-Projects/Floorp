@@ -431,6 +431,15 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
         else if (value == Undefined.instance) {
             return JSTYPE_UNDEFINED;
         }
+        else if (value instanceof String) {
+            return JSTYPE_STRING;
+        }
+        else if (value instanceof Number) {
+            return JSTYPE_NUMBER;
+        }
+        else if (value instanceof Boolean) {
+            return JSTYPE_BOOLEAN;
+        }
         else if (value instanceof Scriptable) {
             if (value instanceof NativeJavaClass) {
                 return JSTYPE_JAVA_CLASS;
@@ -445,22 +454,12 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
                 return JSTYPE_OBJECT;
             }
         }
+        else if (value instanceof Class) {
+            return JSTYPE_JAVA_CLASS;
+        }
         else {
             Class valueClass = value.getClass();
-
-            if (valueClass == ScriptRuntime.StringClass) {
-                return JSTYPE_STRING;
-            }
-            else if (valueClass == ScriptRuntime.BooleanClass) {
-                return JSTYPE_BOOLEAN;
-            }
-            else if (value instanceof Number) {
-                return JSTYPE_NUMBER;
-            }
-            else if (valueClass == ScriptRuntime.ClassClass) {
-                return JSTYPE_JAVA_CLASS;
-            }
-            else if (valueClass.isArray()) {
+            if (valueClass.isArray()) {
                 return JSTYPE_JAVA_ARRAY;
             }
             else {
