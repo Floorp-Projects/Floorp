@@ -115,7 +115,7 @@ nsresult nsSmtpService::SendMailMessage(nsIFileSpec * aFilePath,
 			smtpServer->GetHostname(getter_Copies(smtpHostName));
 			smtpServer->GetUsername(getter_Copies(smtpUserName));
 
-      if ((const char*)smtpHostName) 
+      if ((const char*)smtpHostName && (const char*)smtpHostName[0] != 0) 
 			{
         rv = NS_MsgBuildSmtpUrl(aFilePath, smtpHostName, smtpUserName,
                                 aRecipients, aSenderIdentity, aUrlListener,
