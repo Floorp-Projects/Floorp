@@ -26,8 +26,20 @@
 
 [hide] 
   {
-    display               : none;
+   display               : none;
   } 
+
+
+/** 
+ * set a min width on messenger buttons for even spacing
+**/
+.button-toolbar-2 
+  {
+       min-width: 7em !important;  /** set as important in order to show up in msg comp **/
+  }     
+
+
+
 
 /**
  * toolbar button images

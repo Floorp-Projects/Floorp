@@ -94,6 +94,17 @@ button.edit-mode[selected="1"]:hover:active
   {
     padding               : 2px 4px 0px 5px;
   }
+  
+  
+
+/** 
+ * set a min width on messenger buttons for even spacing
+**/
+.button-toolbar-2 
+  {
+       min-width: 5em !important;  
+  } 
+    
 
 #NormalModeButton 
   {
