@@ -350,7 +350,7 @@ nsElementMap::Add(nsIRDFResource* aResource, nsIContent* aContent)
                 // this warning, it's an indication that you're
                 // unnecessarily notifying the frame system, and
                 // potentially causing unnecessary reflow.
-                NS_WARNING("element was already in the map");
+                //NS_WARNING("element was already in the map");
                 return NS_OK;
             }
             if (! head->mNext)
