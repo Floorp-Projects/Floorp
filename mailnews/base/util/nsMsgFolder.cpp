@@ -154,13 +154,13 @@ nsMsgFolder::Init(const char* aURI)
   // Get username and hostname so we can get the server
   nsXPIDLCString userName;
   rv = url->GetPreHost(getter_Copies(userName));
-  NS_ASSERTION(NS_SUCCEEDED(rv), "Error parsing username from folder URI");
-  nsUnescape(NS_CONST_CAST(char*,(const char*)userName));
+  if (NS_SUCCEEDED(rv) && (const char*)userName)
+      nsUnescape(NS_CONST_CAST(char*,(const char*)userName));
   
   nsXPIDLCString hostName;
   rv = url->GetHost(getter_Copies(hostName));
-  NS_ASSERTION(NS_SUCCEEDED(rv), "Error parsing hostname from folder URI");
-  nsUnescape(NS_CONST_CAST(char*,(const char*)hostName));
+  if (NS_SUCCEEDED(rv) && (const char*)userName)
+    nsUnescape(NS_CONST_CAST(char*,(const char*)hostName));
   
   // turn it back into a server:
 
