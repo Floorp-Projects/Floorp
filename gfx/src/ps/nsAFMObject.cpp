@@ -299,6 +299,7 @@ AFMFontInformation  *fontinfo;
  *	@update 2/26/99 dwc
  */
 void
+
 nsAFMObject::GetKey(AFMKey *aKey)
 {
 PRInt32   key,len;
@@ -338,7 +339,7 @@ PRBool  found = PR_FALSE;
     if(cmpvalue == 0){
       found = PR_TRUE;
     }else{
-      if (cmpvalue <0){
+     if (cmpvalue <0){
         upper = midpoint-1;
       }else{
         lower = midpoint+1;
@@ -609,10 +610,9 @@ PRUnichar     *cptr;
 PRInt32       i ,fwidth,index;
 PRInt32       totallen=0;
 
-
-  //XXX This is not handle correctly yet!!  DWC
+ //XXX This is not handle correctly yet!!  DWC
   aWidth = 0;
-  cptr = (PRUnichar*)aString;
+ cptr = (PRUnichar*)aString;
 
   for(i=0;i<aLength;i++,cptr++){
     asciichar = (*cptr)&0x00ff;
@@ -622,5 +622,4 @@ PRInt32       totallen=0;
   }
 
   aWidth = totallen;
-
 }

@@ -203,6 +203,7 @@ NS_IMETHODIMP nsDeviceContextPS::GetILColorSpace(IL_ColorSpace*& aColorSpace)
     }
   }
 
+
   // Return the color space
   aColorSpace = mColorSpace;
   IL_AddRefToColorSpace(aColorSpace);
@@ -279,7 +280,6 @@ NS_IMETHODIMP nsDeviceContextPS::EndDocument(void)
   return NS_OK;
 }
 
-
 /** ---------------------------------------------------
  *  See documentation in nsIDeviceContext.h
  *	@update 12/21/98 dwc
@@ -291,13 +291,13 @@ NS_IMETHODIMP nsDeviceContextPS::BeginPage(void)
   return NS_OK;
 }
 
-
 /** ---------------------------------------------------
  *  See documentation in nsIDeviceContext.h
  *	@update 12/21/98 dwc
  */
 NS_IMETHODIMP nsDeviceContextPS::EndPage(void)
 {
+
   // end the page
   mPSObj->end_page();
   return NS_OK;
@@ -313,7 +313,10 @@ NS_IMETHODIMP nsDeviceContextPS :: ConvertPixel(nscolor aColor, PRUint32 & aPixe
   return NS_OK;
 }
 
-
+/** ---------------------------------------------------
+ *  See documentation in nsIDeviceContext.h
+ *	@update 12/21/98 dwc
+ */
 NS_IMETHODIMP nsDeviceContextPS::GetMetricsFor(const nsFont& aFont, nsIFontMetrics  *&aMetrics)
 {
 PRInt32         n,cnt;

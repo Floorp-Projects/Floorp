@@ -12,13 +12,13 @@
  *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
 
+
 #ifndef nsAFMObject_h__
 #define nsAFMObject_h__ 
-
 
 
 #include "nsIFontMetrics.h"
@@ -29,7 +29,6 @@
 #include "nsCRT.h"
 
 class nsDeviceContextPS;
-
 
 
 // AFM Key Words
@@ -77,6 +76,7 @@ typedef enum
   kBlendDesignPositions,
   kBlendDesignMap,
   kBlendAxisTypes,
+
 
   // Writing direction information. 
   kStartDirection,
@@ -131,6 +131,7 @@ typedef enum
   kAxisType,
   kAxisLabel,
 
+
   // Master Design Information 
   kStartMaster,
   kEndMaster
@@ -142,6 +143,7 @@ typedef enum
 // Single character infor for AFM character. 
 struct AFM_Single_Char_Metrics
 {
+
   PRInt32   mCharacter_Code;	// default charcode (-1 if not encoded) 
   double    mW0x;		          // character width x in writing direction 0 
   double    mW0y;		          // character width y in writing direction 0 
@@ -158,14 +160,16 @@ struct AFM_Single_Char_Metrics
   double    mUry;
 
   double num_ligatures;
+
   //AFMLigature *ligatures;
 };
+
 
 typedef struct AFM_Single_Char_Metrics  AFMscm;
 
 
-
 // Font information which we get from AFM files, this is needed for the PS output
+
 struct fontInformation
 {
   double  mFontVersion;
@@ -196,46 +200,137 @@ struct fontInformation
   double  mUnderlineThickness;
 
   AFMscm *AFMCharMetrics;
+
 };
 
+
 typedef struct fontInformation AFMFontInformation;
-
-
 
 
 class nsAFMObject 
 {
 public:
+
+  /** ---------------------------------------------------
+   * Construct and AFMObject
+   * @update 2/26/99 dwc
+   */
   nsAFMObject();
-  virtual ~nsAFMObject();
+
+  /** ---------------------------------------------------
+   * delete an AFMObject
+   * @update 2/26/99 dwc
+   */
+ virtual ~nsAFMObject();
+
+  /** ---------------------------------------------------
+   * Initialize an AFMObject
+   * @update 2/26/99 dwc
+   * @param aFontName - A "C" string name of the font this object will get initialized to
+   * @param aFontHeight -- The font size for this object
+   */
   void    Init(char *aFontName,PRInt32  aFontHeight);
+
+
+  /** ---------------------------------------------------
+   * Calculate the width of a unicharacter string
+   * @update 2/26/99 dwc
+   * @param aString - The unicharacter string to get the width for
+   * @param aWidth - Where the width of the string will be put.
+   * @param aLenth - The length of the passed in string
+   */
   void    GetStringWidth(const PRUnichar *aString,nscoord& aWidth,nscoord aLength);
+
+  /** ---------------------------------------------------
+   * Calculate the width of a C style string
+   * @update 2/26/99 dwc
+   * @param aString - The C string to get the width for
+   * @param aWidth - Where the width of the string will be put.
+   * @param aLenth - The length of the passed in string
+   */
   void    GetStringWidth(const char *aString,nscoord& aWidth,nscoord aLength);
 
 protected:
+  /** ---------------------------------------------------
+   * Read in and parse and AFM file
+   * @update 2/26/99 dwc
+   */
   void    AFM_ReadFile(void);
+
+  /** ---------------------------------------------------
+   * Get a Keyword in the AFM file being parsed
+   * @update 2/26/99 dwc
+   */
   void    GetKey(AFMKey *aTheKey);
+
+  /** ---------------------------------------------------
+   * Get a token from the AFM file
+   * @update 2/26/99 dwc
+   */
   PRInt32 GetToken(void);
+
+  /** ---------------------------------------------------
+   * For a given token, find the keyword it represents
+   * @update 2/26/99 dwc
+   */
   PRInt32 MatchKey(char *aKey);
+
+  /** ---------------------------------------------------
+   * Get a line from the currently parsed file
+   * @update 2/26/99 dwc
+   */
   PRInt32 GetLine(void);
+
+  /** ---------------------------------------------------
+   * Get a string from the currently parsed file
+   * @update 2/26/99 dwc
+   */
   char*   GetAFMString (void);
+
+  /** ---------------------------------------------------
+   * Get a word from the currently parsed file
+   * @update 2/26/99 dwc
+   */
   char*   GetAFMName (void); 
+
+  /** ---------------------------------------------------
+   * Get an integer from the currently parsed file
+   * @update 2/26/99 dwc
+   */
   void    GetAFMInt (PRInt32 *aInt) {GetToken();*aInt = atoi (mToken);}
+
+  /** ---------------------------------------------------
+   * Get a floating point number from the currently parsed file
+   * @update 2/26/99 dwc
+   */
   void    GetAFMNumber (double *aFloat){GetToken();*aFloat = atof (mToken);}
+
+  /** ---------------------------------------------------
+   * Get a boolean from the currently parsed file
+   * @update 2/26/99 dwc
+   */
   void    GetAFMBool (PRBool *aBool);
+
+  /** ---------------------------------------------------
+   * Read in the AFMFontInformation from the currently parsed AFM file
+   * @update 2/26/99 dwc
+   */
   void    ReadCharMetrics (AFMFontInformation *aFontInfo,PRInt32 aNumCharacters);
 
 public:
   AFMFontInformation  *mPSFontInfo;
 
+
 protected:
-  FILE                *mAFMFile;          // this is the file we are reading for the AFM files
-  char                mToken[256];        // this is where we put the token for reading;
-  nscoord             mFontHeight;        // font height in points
+  FILE                *mAFMFile;          // this is the AFM file we are parsing.
+  char                mToken[256];        // Temporary storage for reading and parsing the file
+  nscoord             mFontHeight;        // font height in points that we are supporting.
+                                          // XXX  This should be passed into the GetStringWidth
+                                          // so we can have one font family support many sizes
 
 };
-
 
 #define NUM_KEYS (sizeof (keynames) / sizeof (struct keyname_st) - 1)
 
 #endif
+
