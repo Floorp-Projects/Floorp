@@ -1018,6 +1018,20 @@ function BrowserReload() {
     dump( "Sorry, command not implemented: " + window.event.srcElement + "\n" );
 }
 
+function hiddenWindowStartup()
+{
+	// Disable menus which are not appropriate
+	var disabledItems = ['cmd_close', 'Browser:SendPage', 'Browser:EditPage', 'Browser:PrintSetup', 'Browser:PrintPreview',
+						 'Browser:Print', 'canGoBack', 'canGoForward', 'Browser:Home', 'Browser:AddBookmark', 'cmd_undo', 
+						 'cmd_redo', 'cmd_cut', 'cmd_copy','cmd_paste', 'cmd_delete', 'cmd_selectAll'];
+	for ( id in disabledItems )
+	{
+		dump("disabling "+id+"\n");
+		 var broadcaster = document.getElementById( disabledItems[id]);
+		 broadcaster.setAttribute("disabled","true");
+	}
+}
+
 // Tile
 function TileWindow()
 {
