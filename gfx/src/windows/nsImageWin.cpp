@@ -499,9 +499,8 @@ nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
   }
 
   if (nsnull != TheHDC){
+    PRBool  didComposite = PR_FALSE;
     if (!IsOptimized() || nsnull==mHBitmap){
-      PRBool  didComposite = PR_FALSE;
-
       rop = SRCCOPY;
 
       if (nsnull != mAlphaBits){
@@ -550,11 +549,30 @@ nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
         if (nsnull != mAlphaBits){
           if (1==mAlphaDepth){
             MONOBITMAPINFO  bmi(mAlphaWidth, mAlphaHeight);
-
-            ::StretchDIBits(TheHDC, aDX, aDY, aDWidth, aDHeight,aSX, srcy, aSWidth, aSHeight, mAlphaBits,
-                                          (LPBITMAPINFO)&bmi, DIB_RGB_COLORS, SRCAND);
-             rop = SRCPAINT;
-             //rop = SRCCOPY;
+            if (canRaster == DT_RASPRINTER) {
+              MONOBITMAPINFO  bmi(mAlphaWidth, mAlphaHeight);
+              if (mImageBits != nsnull) {
+                CompositeBitsInMemory(TheHDC,aDX,aDY,aDWidth,aDHeight,aSX,aSY,aSWidth,aSHeight,srcy,
+                                      mAlphaBits,&bmi,mImageBits,mBHead,mNumPaletteColors);
+                didComposite = PR_TRUE;  
+              } else {
+                ConvertDDBtoDIB(); // Create mImageBits
+                if (mImageBits != nsnull) {  
+                  CompositeBitsInMemory(TheHDC,aDX,aDY,aDWidth,aDHeight,aSX,aSY,aSWidth,aSHeight,srcy,
+                                        mAlphaBits,&bmi,mImageBits,mBHead,mNumPaletteColors);
+                  // Clean up the image bits    
+                  delete [] mImageBits;
+                  mImageBits = nsnull;
+                  didComposite = PR_TRUE;         
+                } else {
+                  NS_WARNING("Could not composite bits in memory because conversion to DIB failed\n");
+                }
+              }
+            } else {
+              ::StretchDIBits(TheHDC, aDX, aDY, aDWidth, aDHeight,aSX, srcy, aSWidth, aSHeight, mAlphaBits,
+                             (LPBITMAPINFO)&bmi, DIB_RGB_COLORS, SRCAND);
+              rop = SRCPAINT;
+            }
           }
         }
         // if this is for a printer.. we have to convert it back to a DIB
@@ -576,7 +594,8 @@ nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
                 ::StretchBlt(TheHDC, aDX, aDY, aDWidth, aDHeight, srcDC, aSX, aSY,aSWidth, aSHeight, rop);
               }
             }else{
-              PrintDDB(aSurface,aDX,aDY,aDWidth,aDHeight,rop);
+              if (! didComposite) 
+                PrintDDB(aSurface,aDX,aDY,aDWidth,aDHeight,rop);
             }
           }
         } else {
