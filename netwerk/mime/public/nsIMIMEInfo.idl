@@ -109,16 +109,6 @@ interface nsIMIMEInfo : nsISupports {
     attribute wstring Description;
 
     /**
-     * Gives you arbitrary data about the MIMEInfo. An example
-     * of this is a generic image graphically representing
-     * this MIME info. This image can be used to generically
-     * and graphically represent the type.
-     *
-     * @return A URI representing the data location.
-     */
-    readonly attribute nsIURI DataURI;
-    
-    /**
      * Mac Type and creator types
      */
     attribute PRUint32 MacType;
