@@ -24,9 +24,7 @@
 //#include "npglue.h"
 #include "prefapi.h"
 #include "np.h"
-#ifndef XP_MAC
-#include "primpl.h"
-#endif
+#include "xp_path.h"
 #include "prio.h"
 #include "prmem.h"
 #include "prthread.h"
