@@ -72,7 +72,6 @@ nsIRDFResource* nsAbDirectoryDataSource::kNC_IsWriteable = nsnull;
 // commands
 nsIRDFResource* nsAbDirectoryDataSource::kNC_Delete = nsnull;
 nsIRDFResource* nsAbDirectoryDataSource::kNC_DeleteCards = nsnull;
-nsIRDFResource* nsAbDirectoryDataSource::kNC_NewDirectory = nsnull;
 
 #define NC_RDF_CHILD				"http://home.netscape.com/NC-rdf#child"
 #define NC_RDF_DIRNAME			    "http://home.netscape.com/NC-rdf#DirName"
@@ -86,7 +85,6 @@ nsIRDFResource* nsAbDirectoryDataSource::kNC_NewDirectory = nsnull;
 //Directory Commands
 #define NC_RDF_DELETE				"http://home.netscape.com/NC-rdf#Delete"
 #define NC_RDF_DELETECARDS			"http://home.netscape.com/NC-rdf#DeleteCards"
-#define NC_RDF_NEWDIRECTORY			"http://home.netscape.com/NC-rdf#NewDirectory"
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -123,7 +121,6 @@ nsAbDirectoryDataSource::~nsAbDirectoryDataSource (void)
 
 	NS_RELEASE2(kNC_Delete, refcnt);
 	NS_RELEASE2(kNC_DeleteCards, refcnt);
-	NS_RELEASE2(kNC_NewDirectory, refcnt);
 
 	/* free all directories */
 	DIR_ShutDown();
@@ -162,7 +159,6 @@ nsAbDirectoryDataSource::Init()
 
 		mRDFService->GetResource(NC_RDF_DELETE, &kNC_Delete);
 		mRDFService->GetResource(NC_RDF_DELETECARDS, &kNC_DeleteCards);
-		mRDFService->GetResource(NC_RDF_NEWDIRECTORY, &kNC_NewDirectory);
 	}
 
 	CreateLiterals(mRDFService);
@@ -370,7 +366,6 @@ nsAbDirectoryDataSource::GetAllCommands(nsIRDFResource* source,
     NS_ENSURE_SUCCESS(rv, rv);
     cmds->AppendElement(kNC_Delete);
     cmds->AppendElement(kNC_DeleteCards);
-    cmds->AppendElement(kNC_NewDirectory);
   }
 
   if (cmds != nsnull)
@@ -394,8 +389,7 @@ nsAbDirectoryDataSource::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* 
 		directory = do_QueryInterface(source, &rv);
     if (NS_SUCCEEDED(rv)) {
       // we don't care about the arguments -- directory commands are always enabled
-      if (!((aCommand == kNC_Delete) || (aCommand == kNC_DeleteCards) ||
-		    (aCommand == kNC_NewDirectory))) {
+      if (!((aCommand == kNC_Delete) || (aCommand == kNC_DeleteCards))) {
         *aResult = PR_FALSE;
         return NS_OK;
       }
@@ -416,19 +410,17 @@ nsAbDirectoryDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSource
 
 	if ((aCommand == kNC_Delete))  
 		rv = DoDeleteFromDirectory(aSources, aArguments);
-
-	for (i = 0; i < cnt; i++) 
-	{
-		nsCOMPtr<nsISupports> supports = getter_AddRefs(aSources->ElementAt(i));
-		nsCOMPtr<nsIAbDirectory> directory = do_QueryInterface(supports, &rv);
-		if (NS_SUCCEEDED(rv)) 
-		{
-			if ((aCommand == kNC_DeleteCards))  
-				rv = DoDeleteCardsFromDirectory(directory, aArguments);
-			else if((aCommand == kNC_NewDirectory)) 
-				rv = DoNewDirectory(directory, aArguments);
-		}
-	}
+  else {
+    for (i = 0; i < cnt; i++) {
+      nsCOMPtr<nsISupports> supports = getter_AddRefs(aSources->ElementAt(i));
+      nsCOMPtr<nsIAbDirectory> directory = do_QueryInterface(supports, &rv);
+      if (NS_SUCCEEDED(rv)) {
+        NS_ASSERTION(aCommand == kNC_DeleteCards, "unknown command");
+        if ((aCommand == kNC_DeleteCards))  
+          rv = DoDeleteCardsFromDirectory(directory, aArguments);
+      }
+    }
+  }
 	//for the moment return NS_OK, because failure stops entire DoCommand process.
 	return NS_OK;
 }
@@ -719,30 +711,6 @@ nsresult nsAbDirectoryDataSource::DoDeleteCardsFromDirectory(nsIAbDirectory *dir
 	NS_ENSURE_SUCCESS(rv, rv);
 	if (cnt > 0)
 		rv = directory->DeleteCards(cardArray);
-	return rv;
-}
-
-nsresult nsAbDirectoryDataSource::DoNewDirectory(nsIAbDirectory *directory, nsISupportsArray *arguments)
-{
-	nsresult rv = NS_OK;
-	nsCOMPtr<nsISupports> elem = getter_AddRefs(arguments->ElementAt(0));
-	nsCOMPtr<nsIRDFLiteral> literal = do_QueryInterface(elem, &rv);
-
-  if(NS_SUCCEEDED(rv)) {
-    nsXPIDLString description;
-    rv = literal->GetValue(getter_Copies(description));
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    nsCOMPtr <nsIAbDirectoryProperties> properties;
-    properties = do_CreateInstance(NS_ABDIRECTORYPROPERTIES_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    rv = properties->SetDescription(description);
-    NS_ENSURE_SUCCESS(rv,rv);
-		
-    rv = directory->CreateNewDirectory(properties);
-    NS_ENSURE_SUCCESS(rv,rv);   
-	}
 	return rv;
 }
 

@@ -136,7 +136,6 @@ protected:
 	nsresult DoDirectoryHasAssertion(nsIAbDirectory *directory, 
 							 nsIRDFResource *property, nsIRDFNode *target,
 							 PRBool tv, PRBool *hasAssertion);
-	nsresult DoNewDirectory(nsIAbDirectory *directory, nsISupportsArray *arguments);
 
 	nsresult CreateLiterals(nsIRDFService *rdf);
 	nsresult GetTargetHasAssertion(nsIRDFDataSource *dataSource, nsIRDFResource* dirResource,
@@ -153,7 +152,6 @@ protected:
 	// commands
 	static nsIRDFResource* kNC_Delete;
 	static nsIRDFResource* kNC_DeleteCards;
-	static nsIRDFResource* kNC_NewDirectory;
 
 	//Cached literals
 	nsCOMPtr<nsIRDFNode> kTrueLiteral;
