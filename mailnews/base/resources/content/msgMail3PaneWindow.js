@@ -51,6 +51,7 @@ var gNextMessageViewIndexAfterDelete = -2;
 var gCurrentlyDisplayedMessage=nsMsgViewIndex_None;
 var gStartFolderUri = null;
 var gStartMsgKey = -1;
+var gEmailAddress = null;
 var gRightMouseButtonDown = false;
 // Global var to keep track of which row in the thread pane has been selected
 // This is used to make sure that the row with the currentIndex has the selection
@@ -66,6 +67,8 @@ var gThreadPaneDeleteOrMoveOccurred = false;
 var gHaveLoadedMessage;
 
 var gDisplayStartupPage = false;
+
+var gNotifyDefaultInboxLoadedOnStartup = false;
 
 // the folderListener object
 var folderListener = {
@@ -180,6 +183,23 @@ var folderListener = {
                }
                SetBusyCursor(window, false);
              }
+             if (gNotifyDefaultInboxLoadedOnStartup && (folder.flags & 0x1000))
+             {
+                var defaultAccount = accountManager.defaultAccount;
+                defaultServer = defaultAccount.incomingServer;
+                var inboxFolder = GetInboxFolder(defaultServer);
+                if (inboxFolder && inboxFolder.URI == folder.URI)
+                {
+                  NotifyObservers(null,"defaultInboxLoadedOnStartup",null);
+                  gNotifyDefaultInboxLoadedOnStartup = false;
+                }
+             }
+             //folder loading is over, now issue quick search if there is an email address
+             if (gEmailAddress)
+             {
+               Search(gEmailAddress);
+               gEmailAddress = null;
+             } 
            }
          }
        } 
@@ -356,8 +376,7 @@ function HandleDeleteOrMoveMsgCompleted(folder)
         // XXX I think there is a bug in the suppression code above.
         // what if I have two rows selected, and I hit delete, and so we load the next row.
         // what if I have commands that only enable where exactly one row is selected?
-        var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
-        observerService.notifyObservers(window, "mail:updateToolbarItems", null);
+        NotifyObservers(window, "mail:updateToolbarItems", null);
       }
     }
       gNextMessageViewIndexAfterDelete = -2;  
@@ -496,7 +515,6 @@ function OnLoadMessenger()
   HideAccountCentral();
   loadStartPage();
   InitMsgWindow();
-
   messenger.SetWindow(window, msgWindow);
 
   InitializeDataSources();
@@ -510,16 +528,19 @@ function OnLoadMessenger()
   //set up correctly.
   // argument[0] --> folder uri
   // argument[1] --> optional message key
-
+  // argument[2] --> optional email address; //will come from aim; needs to show msgs from buddy's email address  
   if ("arguments" in window && window.arguments[0])
   {
     gStartFolderUri = window.arguments[0];
     gStartMsgKey = window.arguments[1];
+    gEmailAddress = window.arguments[2];
+
   }
   else
   {
     gStartFolderUri = null;
     gStartMsgKey = -1;
+    gEmailAddress = null;
   }
 
   setTimeout("loadStartFolder(gStartFolderUri);", 0);
@@ -528,6 +549,8 @@ function OnLoadMessenger()
   OnLoadMsgHeaderPane();
 
   gHaveLoadedMessage = false;
+
+  gNotifyDefaultInboxLoadedOnStartup = true;
 
   //Set focus to the Thread Pane the first time the window is opened.
   SetFocusThreadPane();
@@ -542,6 +565,13 @@ function OnUnloadMessenger()
 
   OnMailWindowUnload();
 }
+
+function NotifyObservers(aSubject, aTopic, aData)
+{
+  var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
+  observerService.notifyObservers(aSubject, aTopic, aData);
+}
+
 
 function Create3PaneGlobals()
 {

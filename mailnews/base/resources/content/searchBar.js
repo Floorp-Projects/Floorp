@@ -24,7 +24,7 @@
  * 
  */
 
-var gSearchSession;
+var gSearchSession = null;
 var gSearchTimer = null;
 var gViewSearchListener;
 var gNumOfSearchHits = 0;
@@ -289,13 +289,18 @@ function onSearchInput(returnKeyHit)
 
 function onClearSearch()
 {
-  if (gSearchInput) 
-    gSearchInput.value ="";  //on input does not get fired for some reason
-  onSearchInput(true);
+  Search("");
 }
 
 function disableQuickSearchClearButton()
 {
  if (gClearButton)
    gClearButton.setAttribute("disabled", true); //going out of search disable clear button
+}
+
+function Search(str)
+{
+  GetSearchInput();
+  gSearchInput.value = str;  //on input does not get fired for some reason
+  onSearchInput(true);
 }

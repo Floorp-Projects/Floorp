@@ -220,7 +220,7 @@ virtual nsresult AdjustExpungedBytesOnDelete(nsIMsgDBHdr *msgHdr);
 	nsFileSpec		    m_dbName;
 	nsMsgKeySet		    *m_newSet;	// new messages since last open.
 	PRBool				m_mdbTokensInitialized;
-    nsVoidArray/*<nsIDBChangeListener>*/ *m_ChangeListeners;
+  nsCOMPtr <nsISupportsArray>  m_ChangeListeners;
 	mdb_token			m_hdrRowScopeToken;
 	mdb_token			m_threadRowScopeToken;
 	mdb_token			m_hdrTableKindToken;

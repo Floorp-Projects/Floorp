@@ -444,7 +444,7 @@ NS_IMETHODIMP nsMsgDatabase::AddListener(nsIDBChangeListener *listener)
 {
   if (m_ChangeListeners == nsnull) 
   {
-    m_ChangeListeners = new nsVoidArray();
+    NS_NewISupportsArray(getter_AddRefs(m_ChangeListeners));
     if (!m_ChangeListeners) 
       return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -457,69 +457,65 @@ NS_IMETHODIMP nsMsgDatabase::AddListener(nsIDBChangeListener *listener)
 
 NS_IMETHODIMP nsMsgDatabase::RemoveListener(nsIDBChangeListener *listener)
 {
-  if (m_ChangeListeners == nsnull) 
-    return NS_OK;
-  for (PRInt32 i = 0; i < m_ChangeListeners->Count(); i++)
-  {
-    if ((nsIDBChangeListener *) m_ChangeListeners->ElementAt(i) == listener)
-    {
-      m_ChangeListeners->RemoveElementAt(i);
-      return NS_OK;
-    }
-  }
-  return NS_COMFALSE;
+  if (m_ChangeListeners) 
+    m_ChangeListeners->RemoveElement(listener);
+  return NS_OK;
 }
 
 	// change announcer methods - just broadcast to all listeners.
 NS_IMETHODIMP nsMsgDatabase::NotifyKeyChangeAll(nsMsgKey keyChanged, PRUint32 oldFlags, PRUint32 newFlags,
 	nsIDBChangeListener *instigator)
 {
-    if (m_ChangeListeners == nsnull || oldFlags == newFlags)
+  if (m_ChangeListeners == nsnull || oldFlags == newFlags)
 		return NS_OK;
-	for (PRInt32 i = 0; i < m_ChangeListeners->Count(); i++)
+  PRUint32 count;
+  m_ChangeListeners->Count(&count);
+	for (PRUint32 i = 0; i < count; i++)
 	{
-		nsIDBChangeListener *changeListener =
-            (nsIDBChangeListener *) m_ChangeListeners->ElementAt(i);
+    nsCOMPtr<nsIDBChangeListener> changeListener;
+    m_ChangeListeners->QueryElementAt(i, NS_GET_IID(nsIDBChangeListener), (void **) getter_AddRefs(changeListener));
 
 		nsresult rv = changeListener->OnKeyChange(keyChanged, oldFlags, newFlags, instigator); 
-        if (NS_FAILED(rv)) 
+    if (NS_FAILED(rv)) 
 			return rv;
 	}
-    return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgDatabase::NotifyReadChanged(nsIDBChangeListener *instigator)
 {
-    if (m_ChangeListeners == nsnull)
-        return NS_OK;
-
-    for (PRInt32 i = 0; i < m_ChangeListeners->Count(); i++)
-    {
-        nsIDBChangeListener *changeListener =
-            (nsIDBChangeListener *) m_ChangeListeners->ElementAt(i);
-
-        nsresult rv = changeListener->OnReadChanged(instigator);
-        if (NS_FAILED(rv))
-            return rv;
-    }
+  if (m_ChangeListeners == nsnull)
     return NS_OK;
+  PRUint32 count;
+  m_ChangeListeners->Count(&count);
+  for (PRUint32 i = 0; i < count; i++)
+  {
+    nsCOMPtr<nsIDBChangeListener> changeListener;
+    m_ChangeListeners->QueryElementAt(i, NS_GET_IID(nsIDBChangeListener), (void **) getter_AddRefs(changeListener));
+
+    nsresult rv = changeListener->OnReadChanged(instigator);
+    if (NS_FAILED(rv))
+      return rv;
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgDatabase::NotifyKeyDeletedAll(nsMsgKey keyDeleted, nsMsgKey parentKey, PRInt32 flags, 
 	nsIDBChangeListener *instigator)
 {
-    if (m_ChangeListeners == nsnull)
-		return NS_OK;
-	for (PRInt32 i = 0; i < m_ChangeListeners->Count(); i++)
-	{
-		nsIDBChangeListener *changeListener = 
-            (nsIDBChangeListener *) m_ChangeListeners->ElementAt(i);
-
-		nsresult rv = changeListener->OnKeyDeleted(keyDeleted, parentKey, flags, instigator); 
-        if (NS_FAILED(rv)) 
-			return rv;
-	}
+  if (m_ChangeListeners == nsnull)
     return NS_OK;
+  PRUint32 count;
+  m_ChangeListeners->Count(&count);
+	for (PRUint32 i = 0; i < count; i++)
+	{
+    nsCOMPtr<nsIDBChangeListener> changeListener;
+    m_ChangeListeners->QueryElementAt(i, NS_GET_IID(nsIDBChangeListener), (void **) getter_AddRefs(changeListener));
+    nsresult rv = changeListener->OnKeyDeleted(keyDeleted, parentKey, flags, instigator); 
+    if (NS_FAILED(rv)) 
+      return rv;
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgDatabase::NotifyKeyAddedAll(nsMsgKey keyAdded, nsMsgKey parentKey, PRInt32 flags, 
@@ -528,35 +524,38 @@ NS_IMETHODIMP nsMsgDatabase::NotifyKeyAddedAll(nsMsgKey keyAdded, nsMsgKey paren
 #ifdef DEBUG_bienvenu1
 	printf("notifying add of %ld parent %ld\n", keyAdded, parentKey);
 #endif
-    if (m_ChangeListeners == nsnull) 
-		return NS_OK;
-	for (PRInt32 i = 0; i < m_ChangeListeners->Count(); i++)
-	{
-		nsIDBChangeListener *changeListener =
-            (nsIDBChangeListener *) m_ChangeListeners->ElementAt(i);
-
-		nsresult rv = changeListener->OnKeyAdded(keyAdded, parentKey, flags, instigator); 
-        if (NS_FAILED(rv))
-			return rv;
-	}
+  if (m_ChangeListeners == nsnull) 
     return NS_OK;
+  PRUint32 count;
+  m_ChangeListeners->Count(&count);
+  for (PRUint32 i = 0; i < count; i++)
+  {
+    nsCOMPtr<nsIDBChangeListener> changeListener;
+    m_ChangeListeners->QueryElementAt(i, NS_GET_IID(nsIDBChangeListener), (void **) getter_AddRefs(changeListener));
+
+    nsresult rv = changeListener->OnKeyAdded(keyAdded, parentKey, flags, instigator); 
+    if (NS_FAILED(rv))
+      return rv;
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgDatabase::NotifyParentChangedAll(nsMsgKey keyReparented, nsMsgKey oldParent, nsMsgKey newParent,
 	nsIDBChangeListener *instigator)
 {
-    if (m_ChangeListeners == nsnull) 
-		return NS_OK;
-	for (PRInt32 i = 0; i < m_ChangeListeners->Count(); i++)
-	{
-		nsIDBChangeListener *changeListener =
-            (nsIDBChangeListener *) m_ChangeListeners->ElementAt(i);
-
-		nsresult rv = changeListener->OnParentChanged(keyReparented, oldParent, newParent, instigator); 
-        if (NS_FAILED(rv)) 
-			return rv;
-	}
+  if (m_ChangeListeners == nsnull) 
     return NS_OK;
+  PRUint32 count;
+  m_ChangeListeners->Count(&count);
+  for (PRInt32 i = 0; i < count; i++)
+  {
+    nsCOMPtr<nsIDBChangeListener> changeListener;
+    m_ChangeListeners->QueryElementAt(i, NS_GET_IID(nsIDBChangeListener), (void **) getter_AddRefs(changeListener));
+    nsresult rv = changeListener->OnParentChanged(keyReparented, oldParent, newParent, instigator); 
+    if (NS_FAILED(rv)) 
+      return rv;
+  }
+  return NS_OK;
 }
 
 
@@ -566,12 +565,15 @@ NS_IMETHODIMP nsMsgDatabase::NotifyAnnouncerGoingAway(void)
     return NS_OK;
   // run loop backwards because listeners remove themselves from the list 
   // on this notification
-  for (PRInt32 i = m_ChangeListeners->Count() - 1; i >= 0 ; i--)
+  PRUint32 count;
+  m_ChangeListeners->Count(&count);
+  for (PRInt32 i = count - 1; i >= 0 ; i--)
   {
-    nsIDBChangeListener *changeListener =
-      (nsIDBChangeListener *) m_ChangeListeners->ElementAt(i);
-    
-    nsresult rv = changeListener->OnAnnouncerGoingAway(this); 
+    nsCOMPtr<nsIDBChangeListener> changeListener;
+    m_ChangeListeners->QueryElementAt(i, NS_GET_IID(nsIDBChangeListener), (void **) getter_AddRefs(changeListener));
+    nsresult rv;
+    if (changeListener)
+      rv = changeListener->OnAnnouncerGoingAway(this); 
     if (NS_FAILED(rv)) 
       return rv;
   }
@@ -778,12 +780,14 @@ nsMsgDatabase::~nsMsgDatabase()
 		m_mdbEnv->Release(); //??? is this right?
 		m_mdbEnv = nsnull;
 	}
-    if (m_ChangeListeners) 
+  if (m_ChangeListeners) 
 	{
-        // better not be any listeners, because we're going away.
-        NS_ASSERTION(m_ChangeListeners->Count() == 0, "shouldn't have any listeners");
-        delete m_ChangeListeners;
-    }
+    //better not be any listeners, because we're going away.
+    PRUint32 count;
+    m_ChangeListeners->Count(&count);
+    NS_ASSERTION(count == 0, "shouldn't have any listeners");
+    m_ChangeListeners = nsnull;
+  }
 
     if (m_newSet) {
 #ifdef DEBUG_MSGKEYSET
@@ -1086,8 +1090,10 @@ NS_IMETHODIMP nsMsgDatabase::ForceClosed()
   }
   if (m_ChangeListeners) 
   {
+    PRUint32 count;
+    m_ChangeListeners->Count(&count);
     // better not be any listeners, because we're going away.
-    NS_ASSERTION(m_ChangeListeners->Count() == 0, "shouldn't have any listeners left");
+    NS_ASSERTION(count == 0, "shouldn't have any listeners left");
   }
   Release();
   return err;

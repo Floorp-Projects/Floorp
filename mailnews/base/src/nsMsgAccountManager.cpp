@@ -819,16 +819,18 @@ nsMsgAccountManager::GetDefaultAccount(nsIMsgAccount * *aDefaultAccount)
 NS_IMETHODIMP
 nsMsgAccountManager::SetDefaultAccount(nsIMsgAccount * aDefaultAccount)
 {
-  nsCOMPtr<nsIMsgAccount> oldAccount = m_defaultAccount;
+  if (m_defaultAccount != aDefaultAccount)
+  {
+    nsCOMPtr<nsIMsgAccount> oldAccount = m_defaultAccount;
 
-  m_defaultAccount = aDefaultAccount;
+    m_defaultAccount = aDefaultAccount;
 
-  // it's ok if this fails
-  setDefaultAccountPref(aDefaultAccount);
+    // it's ok if this fails
+    setDefaultAccountPref(aDefaultAccount);
 
-  // ok if notifications fail
-  notifyDefaultServerChange(oldAccount, aDefaultAccount);
-  
+    // ok if notifications fail
+    notifyDefaultServerChange(oldAccount, aDefaultAccount);
+  }
   return NS_OK;
 }
 
@@ -863,6 +865,16 @@ nsMsgAccountManager::notifyDefaultServerChange(nsIMsgAccount *aOldAccount,
                                               PR_FALSE, PR_TRUE);
     }
   }
+
+  if (aOldAccount && aNewAccount)  //only notify if the user goes and changes default account
+  {
+    nsCOMPtr<nsIObserverService> observerService = 
+      do_GetService("@mozilla.org/observer-service;1", &rv);
+
+    if (NS_SUCCEEDED(rv))
+      observerService->NotifyObservers(nsnull,"mailDefaultAccountChanged",nsnull);
+  }
+
   return NS_OK;
 }
 
