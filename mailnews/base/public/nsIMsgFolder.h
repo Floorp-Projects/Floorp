@@ -12,7 +12,7 @@
 #include "nsICollection.h" /* interface nsICollection */
 #include "nsIFolderListener.h" /* interface nsIFolderListener */
 #include "nsIEnumerator.h" /* interface nsIEnumerator */
-#include "nsID.h" /* interface nsID */
+#include "nsIMsgHdr.h" /* interface nsIMsgHdr */
 #include "nsIFolder.h" /* interface nsIFolder */
 #include "nsIMessage.h" /* interface nsIMessage */
 
@@ -206,6 +206,9 @@ class nsIMsgFolder : public nsIFolder {
 
   /* boolean IsLocked (); */
   NS_IMETHOD IsLocked(PRBool *_retval) = 0;
+
+  /* nsIMessage CreateMessageFromMsgDBHdr (in nsIMsgDBHdr msgHdr); */
+  NS_IMETHOD CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDBHdr, nsIMessage **_retval) = 0;
 
 #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);

@@ -120,7 +120,7 @@ interface nsIMsgFolder : nsIFolder {
     boolean TestSemaphore (in nsISupports semHolder);
     boolean IsLocked();
 
-
+	nsIMessage CreateMessageFromMsgDBHdr(in nsIMsgDBHdr msgDBHdr);
 };
 
 
