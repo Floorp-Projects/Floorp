@@ -77,11 +77,11 @@ public:
     }
   }
 
-  virtual PRBool Alloc(nsStr& aDest,PRInt32 aCount) {
+  virtual PRBool Alloc(nsStr& aDest,PRUint32 aCount) {
     
     //we're given the acount value in charunits; we have to scale up by the charsize.
-    int     theShift=4;
-    PRInt32 theNewCapacity=eDefaultSize;
+    int       theShift=4;
+    PRUint32  theNewCapacity=eDefaultSize;
     while(theNewCapacity<aCount){ 
       theNewCapacity<<=1;
       theShift++;
