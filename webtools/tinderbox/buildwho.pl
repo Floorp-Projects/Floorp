@@ -40,7 +40,7 @@ my $lock = lock_datafile($tree);
 
 # Grab globals for this tree:
 #   $cvs_module:  The checkout module
-#   $cvs_branchlist:  List of branches for this module
+#   $cvs_branch:  The current branch
 #   $cvs_root:    The path to the cvs root
 #   $bonsai_tree: The data directory for this tree in ../bonsai
 #
@@ -85,7 +85,7 @@ sub lock_datafile {
     my ($tree) = @_;
 
     my $lock_fh = new FileHandle ">>$tree/buildwho.sem"
-      or die "Couldn't open semaphore file! $tree/buildwho.sem";
+      or die "Couldn't open semaphore file!";
 
     # Get an exclusive lock with a non-blocking request
     unless (flock($lock_fh, LOCK_EX|LOCK_NB)) {
@@ -107,28 +107,26 @@ sub build_who {
 
     print "Minimum date: $query_date_min\n" if $F_DEBUG;
 
+    $query_module=$cvs_module;
+    $query_branch=$cvs_branch;
+
+
     my $who_file = "$tree/who.dat";
     my $temp_who_file = "$who_file.$$";
     open(WHOLOG, ">$temp_who_file");
 
     chdir "../bonsai";
     $::TreeID = $bonsai_tree;
+    my $result = &query_checkins(%mod_map);
 
-    $query_module=$cvs_module;
-    
-    foreach $query_branch (split(/\s+/,$cvs_branchlist)) {
-
-        my $result = &query_checkins(%mod_map);
-
-        $last_who='';
-        $last_date=0;
-        for $ci (@$result) {
-            if ($ci->[$CI_DATE] != $last_date or $ci->[$CI_WHO] ne $last_who) {
-                print WHOLOG "$ci->[$CI_DATE]|$ci->[$CI_WHO]\n";
-            }
-            $last_who=$ci->[$CI_WHO];
-            $last_date=$ci->[$CI_DATE];
+    $last_who='';
+    $last_date=0;
+    for $ci (@$result) {
+        if ($ci->[$CI_DATE] != $last_date or $ci->[$CI_WHO] ne $last_who) {
+            print WHOLOG "$ci->[$CI_DATE]|$ci->[$CI_WHO]\n";
         }
+        $last_who=$ci->[$CI_WHO];
+        $last_date=$ci->[$CI_DATE];
     }
     close (WHOLOG);
     chdir "../tinderbox";

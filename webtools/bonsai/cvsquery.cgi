@@ -374,16 +374,14 @@ sub print_ci {
 
     my $log = &html_log($ci->[$::CI_LOG]);
     my $rev = $ci->[$::CI_REV];
-    my $ci_branch = $ci->[$::CI_BRANCH];
-    $ci_branch = 'HEAD' if ($ci_branch eq '');
 
     print "<tr>\n";
     print "<TD width=2%>${sm_font_tag}$t</font>";
     print "<TD width=2%><a href='$registryurl/who.cgi?email=$ci->[$::CI_WHO]'"
           . " onClick=\"return js_who_menu('$ci->[$::CI_WHO]','',event);\" >"
           . "$ci->[$::CI_WHO]</a>\n";
-    print "<TD width=45%><a href='cvsview2.cgi?subdir=$ci->[$::CI_DIR]&files=$ci->[$::CI_FILE]\&command=DIRECTORY&branch=$ci_branch&root=$::CVS_ROOT'\n"
-          . " onclick=\"return js_file_menu('$::CVS_ROOT', '$ci->[$::CI_DIR]','$ci->[$::CI_FILE]','$ci->[$::CI_REV]','$ci_branch',event)\">\n";
+    print "<TD width=45%><a href='cvsview2.cgi?subdir=$ci->[$::CI_DIR]&files=$ci->[$::CI_FILE]\&command=DIRECTORY&branch=$::query_branch&root=$::CVS_ROOT'\n"
+          . " onclick=\"return js_file_menu('$::CVS_ROOT', '$ci->[$::CI_DIR]','$ci->[$::CI_FILE]','$ci->[$::CI_REV]','$::query_branch',event)\">\n";
 #     if( (length $ci->[$::CI_FILE]) + (length $ci->[$::CI_DIR])  > 30 ){
 #         $d = $ci->[$::CI_DIR];
 #         if( (length $ci->[$::CI_DIR]) > 30 ){
