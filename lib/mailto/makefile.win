@@ -59,9 +59,7 @@ LINCS=-I$(XPDIST)\public\security -I$(XPDIST)\public\nspr \
     -I$(XPDIST)\public\net -I$(XPDIST)\public\progress \
     -I$(XPDIST)\public\util -I$(XPDIST)\public\network 
 
-!ifdef MOZ_ENDER_MIME 
 LCFLAGS=$(LCFLAGS) -DENDER -DMOZ_ENDER_MIME
-!endif
 
 include <$(DEPTH)\config\rules.mak>
 
