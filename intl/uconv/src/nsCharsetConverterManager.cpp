@@ -294,7 +294,7 @@ nsresult nsCharsetConverterManager::GetCharsetConverter(
                                     const ConverterInfo * aArray,
                                     PRInt32 aSize)
 {
-  nsresult res;
+  nsresult res = NS_ERROR_UCONV_NOCONV;
   nsString * str;
   GetCharsetName(aSrc, &str);
 

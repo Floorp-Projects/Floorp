@@ -41,7 +41,7 @@ class nsLocaleUnixFactory : public nsIFactory
     NS_IMETHOD LockFactory(PRBool aLock);   
 
     nsLocaleUnixFactory(const nsCID &aClass);   
-    ~nsLocaleUnixFactory();   
+    virtual ~nsLocaleUnixFactory();   
 
   private:   
     nsrefcnt  mRefCnt;   
