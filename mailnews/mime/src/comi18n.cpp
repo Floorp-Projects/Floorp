@@ -33,8 +33,6 @@
 // BEGIN EXTERNAL DEPENDANCY
 #define XP_MEMCPY memcpy
 
-#define XP_WordWrapWithPrefix(a,b,c,d,e,f) PL_strdup((const char *) (b))
-//TODO: use the real one, originaly defined in xp/xp_wrap.c
 #define MSG_UnquotePhraseOrAddr_Intl(a,b,c) (*c = PL_strdup(b)) 
 //TODO: use the real one, originaly defined in libmsg/addrutil.cpp
 
@@ -51,7 +49,6 @@
 #define CS_UTF8 0
 #define CS_GB_8BIT 0
 #define STATEFUL 0
-#define MULTIBYTE 0
 #define TAB '\t'
 #define CR '\015'
 #define LF '\012'
@@ -67,6 +64,218 @@ typedef void* CCCDataObject;
 typedef unsigned char *(*CCCFunc)(CCCDataObject, const unsigned char
 *,PRInt32);
 
+
+////////////////////////////////////////////////////////////////////////////////
+//  Pasted from the old code (xp_wrap.c)
+//  Removed multi byte support because we use utf-8 internally and no overwrap with us-ascii.
+
+#undef OUTPUT
+#define OUTPUT(b) \
+do \
+{ \
+	if (out - ret >= size) \
+	{ \
+		unsigned char *old; \
+		size *= 2; \
+		old = ret; \
+		ret = (unsigned char *) PR_REALLOC(old, size); \
+		if (!ret) \
+		{ \
+			PR_Free(old); \
+			return NULL; \
+		} \
+		out = ret + (size / 2); \
+	} \
+	*out++ = b; \
+} while (0)
+
+#undef OUTPUTSTR
+#define OUTPUTSTR(s) \
+do \
+{ \
+	const char *p = s; \
+    while(*p) {OUTPUT(*p); p++;} \
+} while (0)
+ 
+
+#undef OUTPUT_MACHINE_NEW_LINE
+#ifdef XP_PC
+#define OUTPUT_MACHINE_NEW_LINE(c) \
+do \
+{ \
+	OUTPUT(CR); \
+	OUTPUT(LF); \
+} while (0)
+#else
+#ifdef XP_MAC
+#define OUTPUT_MACHINE_NEW_LINE(c) \
+do \
+{ \
+	OUTPUT(CR); \
+	if (c) OUTPUT(LF); \
+} while (0)
+#else
+#define OUTPUT_MACHINE_NEW_LINE(c) \
+do \
+{ \
+	if (c) OUTPUT(CR); \
+	OUTPUT(LF); \
+} while (0)
+#endif
+#endif
+
+
+#undef OUTPUT_NEW_LINE
+#define OUTPUT_NEW_LINE(c) \
+do \
+{ \
+	OUTPUT_MACHINE_NEW_LINE(c); \
+	beginningOfLine = in; \
+	currentColumn = 0; \
+	lastBreakablePos = NULL; \
+} while (0)
+
+
+#undef NEW_LINE
+#define NEW_LINE(c) \
+do \
+{ \
+	if ((*in == CR) && (*(in + 1) == LF)) \
+	{ \
+		in += 2; \
+	} \
+	else \
+	{ \
+		in++; \
+	} \
+	OUTPUT_NEW_LINE(c); \
+} while (0)
+
+static unsigned char *
+xp_word_wrap(unsigned char *str, int maxColumn, int checkQuoting,
+			       const char *prefix, int addCRLF)
+{
+	unsigned char	*beginningOfLine;
+	int		byteWidth;
+	int		columnWidth;
+	int		currentColumn;
+	unsigned char	*end;
+	unsigned char	*in;
+	unsigned char	*lastBreakablePos;
+	unsigned char	*out;
+	unsigned char	*p;
+	unsigned char	*ret;
+	int32		size;
+
+	if (!str)
+	{
+		return NULL;
+	}
+
+	size = 1;
+	ret = (unsigned char *) PR_MALLOC(size);
+	if (!ret)
+	{
+		return NULL;
+	}
+
+	in = str;
+	out = ret;
+
+	beginningOfLine = str;
+	currentColumn = 0;
+	lastBreakablePos = NULL;
+
+	while (*in)
+	{
+		if (checkQuoting && (in == beginningOfLine) && (*in == '>'))
+		{
+			while (*in && (*in != CR) && (*in != LF))
+			{
+				OUTPUT(*in++);
+			}
+			if (*in)
+			{
+				NEW_LINE(addCRLF);
+				if (prefix) OUTPUTSTR(prefix);
+			}
+			else
+			{
+				/*
+				 * to prevent writing out line again after
+				 * the main while loop
+				 */
+				beginningOfLine = in;
+			}
+		}
+		else
+		{
+			if ((*in == CR) || (*in == LF))
+			{
+				if (in != beginningOfLine)
+				{
+					p = beginningOfLine;
+					while (p < in)
+					{
+						OUTPUT(*p++);
+					}
+				}
+				NEW_LINE(addCRLF);
+				if (prefix) OUTPUTSTR(prefix);
+				continue;
+			}
+			byteWidth = PL_strlen((const char *) in);
+			columnWidth = PL_strlen((const char *) in);
+			if (currentColumn + columnWidth > (maxColumn +
+				(((*in == ' ') || (*in == '\t')) ? 1 : 0)))
+			{
+				if (lastBreakablePos)
+				{
+					p = beginningOfLine;
+					end = lastBreakablePos - 1;
+					if ((*end != ' ') && (*end != '\t'))
+					{
+						end++;
+					}
+					while (p < end)
+					{
+						OUTPUT(*p++);
+					}
+					if (addCRLF && (*end == ' ' || *end == '\t'))
+					{
+						OUTPUT(*end);
+					}
+					in = lastBreakablePos;
+					OUTPUT_NEW_LINE(addCRLF);
+					if (prefix) OUTPUTSTR(prefix);
+					continue;
+				}
+			}
+			if ( ((in[0] == ' ') || (in[0] == '\t')) &&
+					((in[1] != ' ') && (in[1] != '\t')) )
+			{
+				lastBreakablePos = in + byteWidth;
+			}
+			in += byteWidth;
+			currentColumn += columnWidth;
+		}
+	}
+
+	if (in != beginningOfLine)
+	{
+		p = beginningOfLine;
+		while (*p)
+		{
+			OUTPUT(*p++);
+		}
+	}
+
+	OUTPUT(0);
+
+	return ret;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 /*	Very similar to strdup except it free's too
  */
@@ -110,12 +319,8 @@ static unsigned char* do_no_conversion_but_dup(void* obj, const unsigned char* c
 // END EXTERNAL DEPENDANCY
 
 
-#define MAXLINELEN 72
 #define IS_MAIL_SEPARATOR(p) ((*(p) == ',' || *(p) == ' ' || *(p) == '\"' || *(p) == ':' || \
   *(p) == '(' || *(p) == ')' || *(p) == '\\' || (unsigned char)*p < 0x20))
-
-#define CHARSET_NAME_MAX_LEN    40
-#define MAX_CHARSET_PREF        10
 
 
 /*
@@ -133,11 +338,9 @@ static char *   intlmime_encode_next8bitword(int wincsid, char *src);
 
 /*      we should consider replace this base64 decodeing and encoding
 function with a better one */
-static int              intlmime_decode_base64 (const char *in, char
-*out);
+static int      intlmime_decode_base64 (const char *in, char *out);
 static char *   intlmime_decode_qp(char *in);
-static int              intlmime_encode_base64 (const char *in, char
-*out);
+static int      intlmime_encode_base64 (const char *in, char *out);
 static char *   intlmime_decode_base64_buf(char *subject);
 static char *   intlmime_encode_base64_buf(char *subject, size_t size);
 static char *   intlmime_encode_qp_buf(char *subject);
@@ -148,8 +351,7 @@ static PRBool intlmime_is_mime_part2_header(const char *header);
 static PRBool intlmime_is_iso_2022_xxx(const char *, int16 );
 static  char *  intl_decode_mime_part2_str(const char *, int , PRBool, char* );
 static  char *  intl_DecodeMimePartIIStr(const char *, int16 , PRBool );
-static char *   intl_EncodeMimePartIIStr(char *subject, int16 wincsid,
-PRBool bUseMime, int maxLineLen);
+static char *   intl_EncodeMimePartIIStr(char *subject, int16 wincsid, PRBool bUseMime, int maxLineLen);
 
 
 /*      We probably should change these into private instead of PUBLIC */
@@ -162,18 +364,18 @@ static char *EncodeBase64Buffer(char *subject, size_t size);
  */
 static char *EncodeBase64Buffer(char *subject, size_t size)
 {
-        /* This function should be obsolete */
-        /* We should not make this public in libi18n */
-        /* We should use the new Base64 Encoder wrote by jwz in libmime */
-        return intlmime_encode_base64_buf(subject, size);
+  /* This function should be obsolete */
+  /* We should not make this public in libi18n */
+  /* We should use the new Base64 Encoder wrote by jwz in libmime */
+  return intlmime_encode_base64_buf(subject, size);
 }
 
 static char *DecodeBase64Buffer(char *subject)
 {
-        /* This function should be obsolete */
-        /* We should not make this public in libi18n */
-        /* We should use the new Base64 Decoder wrote by jwz in libmime */
-        return intlmime_decode_base64_buf(subject);
+  /* This function should be obsolete */
+  /* We should not make this public in libi18n */
+  /* We should use the new Base64 Decoder wrote by jwz in libmime */
+  return intlmime_decode_base64_buf(subject);
 }
 
 static char basis_64[] =
@@ -181,59 +383,59 @@ static char basis_64[] =
 
 static int intlmime_encode_base64 (const char *in, char *out)
 {
-        unsigned char c1, c2, c3;
-        c1 = in[0];
-        c2 = in[1];
-        c3 = in[2];
+  unsigned char c1, c2, c3;
+  c1 = in[0];
+  c2 = in[1];
+  c3 = in[2];
 
-    *out++ = basis_64[c1>>2];
-    *out++ = basis_64[((c1 & 0x3)<< 4) | ((c2 & 0xF0) >> 4)];
+  *out++ = basis_64[c1>>2];
+  *out++ = basis_64[((c1 & 0x3)<< 4) | ((c2 & 0xF0) >> 4)];
 
-    *out++ = basis_64[((c2 & 0xF) << 2) | ((c3 & 0xC0) >>6)];
-    *out++ = basis_64[c3 & 0x3F];
-        return 1;
+  *out++ = basis_64[((c2 & 0xF) << 2) | ((c3 & 0xC0) >>6)];
+  *out++ = basis_64[c3 & 0x3F];
+  return 1;
 }
 
 static char *intlmime_encode_base64_buf(char *subject, size_t size)
 {
-        char *output = 0;
-        char *pSrc, *pDest ;
-        int i ;
+  char *output = 0;
+  char *pSrc, *pDest ;
+  int i ;
 
-        output = (char *)PR_Malloc(size * 4 / 3 + 4);
-        if (output == NULL)
-                return NULL;
+  output = (char *)PR_Malloc(size * 4 / 3 + 4);
+  if (output == NULL)
+    return NULL;
 
-        pSrc = subject;
-        pDest = output ;
-        for (i = size; i >= 3; i -= 3)
-        {
-                if (intlmime_encode_base64(pSrc, pDest) == 0) /* error */
-                {
-                        pSrc += 3;
-                        pDest += 3;
-                }
-                else
-                {
-                        pSrc += 3;
-                        pDest += 4;
-                }
-        }
-        /* in case (i % 3 ) == 1 or 2 */
-        if(i > 0)
-        {
-                char in[3];
-                int j;
-                in[0] = in[1] = in[2] ='\0';
-                for(j=0;j<i;j++)
-                        in[j] = *pSrc++;
-                intlmime_encode_base64(in, pDest);
-                for(j=i+1;j<4;j++)
-                        pDest[j] = '=';
-                pDest += 4;
-        }
-        *pDest = '\0';
-        return output;
+  pSrc = subject;
+  pDest = output ;
+  for (i = size; i >= 3; i -= 3)
+  {
+    if (intlmime_encode_base64(pSrc, pDest) == 0) /* error */
+    {
+      pSrc += 3;
+      pDest += 3;
+    }
+    else
+    {
+      pSrc += 3;
+      pDest += 4;
+    }
+  }
+  /* in case (i % 3 ) == 1 or 2 */
+  if(i > 0)
+  {
+    char in[3];
+    int j;
+    in[0] = in[1] = in[2] ='\0';
+    for(j=0;j<i;j++)
+            in[j] = *pSrc++;
+    intlmime_encode_base64(in, pDest);
+    for(j=i+1;j<4;j++)
+            pDest[j] = '=';
+    pDest += 4;
+  }
+  *pDest = '\0';
+  return output;
 }
 
 static int intlmime_decode_base64 (const char *in, char *out)
@@ -243,22 +445,22 @@ static int intlmime_decode_base64 (const char *in, char *out)
   unsigned long num = 0;
 
   for (j = 0; j < 4; j++)
-        {
-          unsigned char c;
-          if (in[j] >= 'A' && in[j] <= 'Z')              c = in[j] - 'A';
-          else if (in[j] >= 'a' && in[j] <= 'z') c = in[j] - ('a' - 26);
-          else if (in[j] >= '0' && in[j] <= '9') c = in[j] - ('0' - 52);
-          else if (in[j] == '+')                                 c = 62;
-          else if (in[j] == '/')                                 c = 63;
-          else if (in[j] == '=')                                 c = 0;
-          else
-          {
-                /*      abort ();       */
-                PL_strcpy(out, in);        /* I hate abort */
-                return 0;
-          }
-          num = (num << 6) | c;
-        }
+  {
+    unsigned char c;
+    if (in[j] >= 'A' && in[j] <= 'Z')              c = in[j] - 'A';
+    else if (in[j] >= 'a' && in[j] <= 'z') c = in[j] - ('a' - 26);
+    else if (in[j] >= '0' && in[j] <= '9') c = in[j] - ('0' - 52);
+    else if (in[j] == '+')                                 c = 62;
+    else if (in[j] == '/')                                 c = 63;
+    else if (in[j] == '=')                                 c = 0;
+    else
+    {
+      /*      abort ();       */
+      PL_strcpy(out, in);        /* I hate abort */
+      return 0;
+    }
+    num = (num << 6) | c;
+  }
 
   *out++ = (unsigned char) (num >> 16);
   *out++ = (unsigned char) ((num >> 8) & 0xFF);
@@ -268,116 +470,115 @@ static int intlmime_decode_base64 (const char *in, char *out)
 
 static char *intlmime_decode_base64_buf(char *subject)
 {
-        char *output = 0;
-        char *pSrc, *pDest ;
-        int i ;
+  char *output = 0;
+  char *pSrc, *pDest ;
+  int i ;
 
-        StrAllocCopy(&output, subject); /* Assume converted text are always
-less than source text */
+  StrAllocCopy(&output, subject); /* Assume converted text are always less than source text */
 
-        pSrc = subject;
-        pDest = output ;
-        for (i = PL_strlen(subject); i > 3; i -= 4)
-        {
-                if (intlmime_decode_base64(pSrc, pDest) == 0)
-                {
-                        pSrc += 4;
-                        pDest += 4;
-                }
-                else
-                {
-                        pSrc += 4;
-                        pDest += 3;
-                }
-        }
+  pSrc = subject;
+  pDest = output ;
+  for (i = PL_strlen(subject); i > 3; i -= 4)
+  {
+    if (intlmime_decode_base64(pSrc, pDest) == 0)
+    {
+      pSrc += 4;
+      pDest += 4;
+    }
+    else
+    {
+      pSrc += 4;
+      pDest += 3;
+    }
+  }
 
-        *pDest = '\0';
-        return output;
+  *pDest = '\0';
+  return output;
 }
 
 static char *intlmime_encode_qp_buf(char *subject)
 {
-        char *output = 0;
-        unsigned char *p, *pDest ;
-        int i, n, len ;
+  char *output = 0;
+  unsigned char *p, *pDest ;
+  int i, n, len ;
 
-        if (subject == NULL || *subject == '\0')
-                return NULL;
-        len = PL_strlen(subject);
-        output = (char *) PR_Malloc(len * 3 + 1);
-        if (output == NULL)
-                return NULL;
+  if (subject == NULL || *subject == '\0')
+    return NULL;
+  len = PL_strlen(subject);
+  output = (char *) PR_Malloc(len * 3 + 1);
+  if (output == NULL)
+    return NULL;
 
-        p = (unsigned char*)subject;
-        pDest = (unsigned char*)output ;
+  p = (unsigned char*)subject;
+  pDest = (unsigned char*)output ;
 
-        for (i = 0; i < len; i++)
-        {
-                /* XP_IS_ALPHA(*p) || XP_IS_DIGIT(*p)) */
-                if ((*p < 0x80) &&
-                        (((*p >= 'a') && (*p <= 'z')) ||
-                         ((*p >= 'A') && (*p <= 'Z')) ||
-                         ((*p >= '0') && (*p <= '9')))
-                   )
-                        *pDest = *p;
-                else
-                {
-                        *pDest++ = '=';
-                        n = (*p & 0xF0) >> 4; /* high byte */
-                        if (n < 10)
-                                *pDest = '0' + n;
-                        else
-                                *pDest = 'A' + n - 10;
-                        pDest ++ ;
+  for (i = 0; i < len; i++)
+  {
+    /* XP_IS_ALPHA(*p) || XP_IS_DIGIT(*p)) */
+    if ((*p < 0x80) &&
+        (((*p >= 'a') && (*p <= 'z')) ||
+         ((*p >= 'A') && (*p <= 'Z')) ||
+         ((*p >= '0') && (*p <= '9')))
+       )
+      *pDest = *p;
+    else
+    {
+      *pDest++ = '=';
+      n = (*p & 0xF0) >> 4; /* high byte */
+      if (n < 10)
+        *pDest = '0' + n;
+      else
+        *pDest = 'A' + n - 10;
+      pDest ++ ;
 
-                        n = *p & 0x0F;                  /* low byte */
-                        if (n < 10)
-                                *pDest = '0' + n;
-                        else
-                                *pDest = 'A' + n - 10;
-                }
+      n = *p & 0x0F;                  /* low byte */
+      if (n < 10)
+        *pDest = '0' + n;
+      else
+        *pDest = 'A' + n - 10;
+    }
 
-                p ++;
-                pDest ++;
-        }
+    p ++;
+    pDest ++;
+  }
 
-        *pDest = '\0';
-        return output;
+  *pDest = '\0';
+  return output;
 }
 
 static char *intlmime_encode_next8bitword(int wincsid, char *src)
 {
-        char *p;
-        PRBool non_ascii = PR_FALSE;
-        if (src == NULL)
-                return NULL;
-        p = src;
-        while (*p == ' ')
-                p ++ ;
-        while ( *p )
-        {
-                if ((unsigned char) *p > 0x7F)
-                        non_ascii = PR_TRUE;
-                if ( IS_MAIL_SEPARATOR(p) )
-                {
-                        break;
-                }
-                p = INTL_NextChar(wincsid, p);
-        }
+  char *p;
+  PRBool non_ascii = PR_FALSE;
+  if (src == NULL)
+    return NULL;
+  p = src;
+  while (*p == ' ')
+    p ++ ;
+  while ( *p )
+  {
+    if ((unsigned char) *p > 0x7F)
+      non_ascii = PR_TRUE;
+    if ( IS_MAIL_SEPARATOR(p) )
+    {
+      break;
+    }
+    p = INTL_NextChar(wincsid, p);
+  }
 
-        if (non_ascii)
-                return p;
-        else
-                return NULL;
+  if (non_ascii)
+    return p;
+  else
+    return NULL;
 }
 
 /*      some utility function used by this file */
 static PRBool intlmime_only_ascii_str(const char *s)
 {
-        for(; *s; s++)
-                if(*s & 0x80)
-                        return PR_FALSE;
-        return PR_TRUE;
+  for(; *s; s++)
+    if(*s & 0x80)
+      return PR_FALSE;
+  return PR_TRUE;
 }
 
 /*
@@ -386,20 +587,20 @@ iThreshold bytes
 */
 static int ResetLen( int iThreshold, const char* buffer, int16 wincsid )
 {
-        const char *begin, *end, *tmp;
+  const char *begin, *end, *tmp;
 
-        tmp = begin = end = buffer;
-        PR_ASSERT( iThreshold > 1 );
-        PR_ASSERT( buffer != NULL );
-        while( ( end - begin ) <= iThreshold ){
-                tmp = end;
-                if (!(*end))
-                        break;
-                end = INTL_NextChar( wincsid, (char*)end );
-        }
+  tmp = begin = end = buffer;
+  PR_ASSERT( iThreshold > 1 );
+  PR_ASSERT( buffer != NULL );
+  while( ( end - begin ) <= iThreshold ){
+    tmp = end;
+    if (!(*end))
+      break;
+    end = INTL_NextChar( wincsid, (char*)end );
+  }
 
-        PR_ASSERT( tmp > begin );
-        return tmp - begin;
+  PR_ASSERT( tmp > begin );
+  return tmp - begin;
 }
 
 
@@ -773,12 +974,7 @@ char *intl_EncodeMimePartIIStr(char *subject, char *name, PRBool bUseMime, int m
 
     /* check to see if subject are all ascii or not */
     if(!stateful_encoding((const char *) name) && intlmime_only_ascii_str(subject))
-      /* Changed to dup the original string - naoki 
-       * TODO: copy code from xp_wrap.c for XP_WordWrapWithPrefix()
-       */
-      return PL_strdup(subject);
-//      return (char *) XP_WordWrapWithPrefix(mail_csid, (unsigned char *) 
-//                                            subject, maxLineLen, 0, " ", 1);
+      return (char *) xp_word_wrap((unsigned char *) subject, maxLineLen, 0, " ", 1);
 
     if (mail_csid != wincsid)
     {
@@ -799,7 +995,7 @@ char *intl_EncodeMimePartIIStr(char *subject, char *name, PRBool bUseMime, int m
     }
     /* Erik said in the case of STATEFUL mail encoding, we should FORCE it to use */
     /* MIME Part2 to get ride of ESC in To: and CC: field, which may introduce more trouble */
-    if((bUseMime) || (mail_csid & STATEFUL))/* call intlmime_encode_mail_address */
+    if((bUseMime) || stateful_encoding((const char *) name))/* call intlmime_encode_mail_address */
     {
       buf = (unsigned char *)intlmime_encode_mail_address(name, subject, obj, maxLineLen);
       if(buf == (unsigned char*)subject)      /* no encoding, set return value to NULL */
@@ -819,12 +1015,12 @@ char *intl_EncodeMimePartIIStr(char *subject, char *name, PRBool bUseMime, int m
         {
           buf = (unsigned char *)cvtfunc(obj, (unsigned char*)newbuf, iSrcLen);
           if(buf != (unsigned char*)newbuf)
-                  PR_Free(newbuf);
+            PR_Free(newbuf);
           /* time for wrapping long line */
           if (buf)
           {
             newbuf = (char*) buf;
-            buf = (unsigned char *) XP_WordWrapWithPrefix(mail_csid, (unsigned char *) newbuf, maxLineLen, 0, " ", 1);
+            buf = (unsigned char *) xp_word_wrap((unsigned char *) newbuf, maxLineLen, 0, " ", 1);
 
             if (buf != (unsigned char*) newbuf)
               PR_Free(newbuf);
@@ -844,115 +1040,105 @@ char *intl_EncodeMimePartIIStr(char *subject, char *name, PRBool bUseMime, int m
 
 static char *intlmime_decode_qp(char *in)
 {
-        int i = 0, length;
-        char token[3];
-        char *out, *dest = 0;
+  int i = 0, length;
+  char token[3];
+  char *out, *dest = 0;
 
-        out = dest = (char *)PR_Malloc(PL_strlen(in)+1);
-        if (dest == NULL)
-                return NULL;
-        memset(out, 0, PL_strlen(in)+1);
-        length = PL_strlen(in);
-        while (length > 0 || i != 0)
+  out = dest = (char *)PR_Malloc(PL_strlen(in)+1);
+  if (dest == NULL)
+    return NULL;
+  memset(out, 0, PL_strlen(in)+1);
+  length = PL_strlen(in);
+  while (length > 0 || i != 0)
+  {
+    while (i < 3 && length > 0)
+    {
+      token [i++] = *in;
+      in++;
+      length--;
+    }
+
+    if (i < 3)
+    {
+      /* Didn't get enough for a complete token.
+         If it might be a token, unread it.
+         Otherwise, just dump it.
+       */
+      strncpy (out, token, i);
+      break;
+    }
+    i = 0;
+
+    if (token [0] == '=')
+    {
+      unsigned char c = 0;
+      if (token[1] >= '0' && token[1] <= '9')
+        c = token[1] - '0';
+      else if (token[1] >= 'A' && token[1] <= 'F')
+        c = token[1] - ('A' - 10);
+      else if (token[1] >= 'a' && token[1] <= 'f')
+        c = token[1] - ('a' - 10);
+      else if (token[1] == CR || token[1] == LF)
+      {
+        /* =\n means ignore the newline. */
+        if (token[1] == CR && token[2] == LF)
+          ;               /* swallow all three chars */
+        else
         {
-                while (i < 3 && length > 0)
-                {
-                        token [i++] = *in;
-                        in++;
-                        length--;
-                }
-
-                if (i < 3)
-                {
-                  /* Didn't get enough for a complete token.
-                         If it might be a token, unread it.
-                         Otherwise, just dump it.
-                         */
-                        strncpy (out, token, i);
-                        break;
-                }
-                i = 0;
-
-                if (token [0] == '=')
-                {
-                        unsigned char c = 0;
-                        if (token[1] >= '0' && token[1] <= '9')
-                                c = token[1] - '0';
-                        else if (token[1] >= 'A' && token[1] <= 'F')
-                                c = token[1] - ('A' - 10);
-                        else if (token[1] >= 'a' && token[1] <= 'f')
-                                c = token[1] - ('a' - 10);
-                        else if (token[1] == CR || token[1] == LF)
-                        {
-                                /* =\n means ignore the newline. */
-                                if (token[1] == CR && token[2] == LF)
-                                        ;               /* swallow all
-three chars */
-                                else
-                                {
-                                        in--;   /* put the third char back
-*/
-                                        length++;
-                                }
-                                continue;
-                        }
-                        else
-                        {
-                                /* = followed by something other than hex
-or newline -
-                                 pass it through unaltered, I guess.
-(But, if
-                                 this bogus token happened to occur over a
-buffer
-                                 boundary, we can't do this, since we
-don't have
-                                 space for it.  Oh well.  Screw it.)  */
-                                if (in > out) *out++ = token[0];
-                                if (in > out) *out++ = token[1];
-                                if (in > out) *out++ = token[2];
-                                continue;
-                        }
-
-                        /* Second hex digit */
-                        c = (c << 4);
-                        if (token[2] >= '0' && token[2] <= '9')
-                                c += token[2] - '0';
-                        else if (token[2] >= 'A' && token[2] <= 'F')
-                                c += token[2] - ('A' - 10);
-                        else if (token[2] >= 'a' && token[2] <= 'f')
-                                c += token[2] - ('a' - 10);
-                        else
-                        {
-                                /* We got =xy where "x" was hex and "y"
-was not, so
-                                 treat that as a literal "=", x, and y.
-(But, if
-                                 this bogus token happened to occur over a
-buffer
-                                 boundary, we can't do this, since we
-don't have
-                                 space for it.  Oh well.  Screw it.) */
-                                if (in > out) *out++ = token[0];
-                                if (in > out) *out++ = token[1];
-                                if (in > out) *out++ = token[2];
-                                continue;
-                        }
-
-                        *out++ = (char) c;
-                }
-                else
-                {
-                        *out++ = token [0];
-
-                        token[0] = token[1];
-                        token[1] = token[2];
-                        i = 2;
-                }
+          in--;   /* put the third char back */
+          length++;
         }
-        /* take care of special underscore case */
-        for (out = dest; *out; out++)
-                if (*out == '_')        *out = ' ';
-        return dest;
+        continue;
+      }
+      else
+      {
+        /* = followed by something other than hex or newline -
+         pass it through unaltered, I guess. (But, if
+         this bogus token happened to occur over a buffer
+         boundary, we can't do this, since we don't have
+         space for it.  Oh well.  Screw it.)  */
+        if (in > out) *out++ = token[0];
+        if (in > out) *out++ = token[1];
+        if (in > out) *out++ = token[2];
+        continue;
+      }
+
+      /* Second hex digit */
+      c = (c << 4);
+      if (token[2] >= '0' && token[2] <= '9')
+        c += token[2] - '0';
+      else if (token[2] >= 'A' && token[2] <= 'F')
+        c += token[2] - ('A' - 10);
+      else if (token[2] >= 'a' && token[2] <= 'f')
+        c += token[2] - ('a' - 10);
+      else
+      {
+        /* We got =xy where "x" was hex and "y" was not, so
+         treat that as a literal "=", x, and y. (But, if
+         this bogus token happened to occur over a buffer
+         boundary, we can't do this, since we don't have
+         space for it.  Oh well.  Screw it.) */
+        if (in > out) *out++ = token[0];
+        if (in > out) *out++ = token[1];
+        if (in > out) *out++ = token[2];
+        continue;
+      }
+
+      *out++ = (char) c;
+    }
+    else
+    {
+      *out++ = token [0];
+
+      token[0] = token[1];
+      token[1] = token[2];
+      i = 2;
+    }
+  }
+  /* take care of special underscore case */
+  for (out = dest; *out; out++)
+    if (*out == '_')        *out = ' ';
+  return dest;
 }
 
 /*
@@ -960,184 +1146,169 @@ don't have
 */
 static PRBool intlmime_is_hz(const char *header)
 {
-        return (PL_strstr(header, "~{") ? PR_TRUE : PR_FALSE);
+  return (PL_strstr(header, "~{") ? PR_TRUE : PR_FALSE);
 }
 /*
-        intlmime_is_iso_2022_xxx: it is statefule encoding with esc
+  intlmime_is_iso_2022_xxx: it is statefule encoding with esc
 */
-static PRBool intlmime_is_iso_2022_xxx(const char *header, int16
-mailcsid)
+static PRBool intlmime_is_iso_2022_xxx(const char *header, int16 mailcsid)
 {
-        return (((mailcsid & STATEFUL) && (PL_strchr(header, '\033'))) ?
-PR_TRUE : PR_FALSE);
+  return (((mailcsid & STATEFUL) && (PL_strchr(header, '\033'))) ? PR_TRUE : PR_FALSE);
 }
 /*
-        intlmime_is_mime_part2_header:
+  intlmime_is_mime_part2_header:
 */
 static PRBool intlmime_is_mime_part2_header(const char *header)
 {
-        return ((
-                         PL_strstr(header, "=?") &&
-                         (
-                          PL_strstr(header, "?q?")  ||
-                          PL_strstr(header, "?Q?")  ||
-                          PL_strstr(header, "?b?")  ||
-                          PL_strstr(header, "?B?")
-                         )
-                    ) ? PR_TRUE : PR_FALSE );
+  return ((
+           PL_strstr(header, "=?") &&
+           (
+            PL_strstr(header, "?q?")  ||
+            PL_strstr(header, "?Q?")  ||
+            PL_strstr(header, "?b?")  ||
+            PL_strstr(header, "?B?")
+           )
+          ) ? PR_TRUE : PR_FALSE );
 }
 
 
-static char *intlmime_convert_but_no_decode(const char *header, int16
-mailcsid, int16 wincsid)
+static char *intlmime_convert_but_no_decode(const char *header, int16 mailcsid, int16 wincsid)
 {
-        char* tmpbuf = NULL, *convbuf = NULL;
-    CCCDataObject       obj;
-        CCCFunc cvtfunc;
-        /* Copy buf to tmpbuf, this guarantee the convresion won't
-overwrite the origional buffer and  */
-        /* It will always return something it any conversion occcur */
-        StrAllocCopy(&tmpbuf, header);
+  char* tmpbuf = NULL, *convbuf = NULL;
+  CCCDataObject       obj;
+  CCCFunc cvtfunc;
+  /* Copy buf to tmpbuf, this guarantee the convresion won't overwrite the origional buffer and  */
+  /* It will always return something it any conversion occcur */
+  StrAllocCopy(&tmpbuf, header);
 
-        if(tmpbuf == NULL)
-                return NULL;
+  if(tmpbuf == NULL)
+    return NULL;
 
-    obj = INTL_CreateCharCodeConverter();
-        if (obj == NULL)
-                return NULL;
-        INTL_GetCharCodeConverter(mailcsid, wincsid, obj);
-        convbuf = NULL;
-        cvtfunc = INTL_GetCCCCvtfunc(obj);
-        if (cvtfunc)
-                convbuf = (char*)cvtfunc(obj, (unsigned char*)tmpbuf,
-(PRInt32)PL_strlen((char*)tmpbuf));
-        PR_Free(obj);
+  obj = INTL_CreateCharCodeConverter();
+  if (obj == NULL)
+    return NULL;
+  INTL_GetCharCodeConverter(mailcsid, wincsid, obj);
+  convbuf = NULL;
+  cvtfunc = INTL_GetCCCCvtfunc(obj);
+  if (cvtfunc)
+    convbuf = (char*)cvtfunc(obj, (unsigned char*)tmpbuf, (PRInt32)PL_strlen((char*)tmpbuf));
+  PR_Free(obj);
 
-        /*      if the conversion which use the origional buffer
-                them we return the tmpbuf */
-        if(convbuf == NULL)
-                return tmpbuf;
+  /*      if the conversion which use the origional buffer
+          them we return the tmpbuf */
+  if(convbuf == NULL)
+    return tmpbuf;
 
-        /*  if the conversion return a different buffer, we free the
-                origional one and return the one return from conversion */
-        if(convbuf != tmpbuf)
-                PR_Free(tmpbuf);
-        return convbuf;
+  /*  if the conversion return a different buffer, we free the
+          origional one and return the one return from conversion */
+  if(convbuf != tmpbuf)
+    PR_Free(tmpbuf);
+  return convbuf;
 }
 
 static
-char *intl_decode_mime_part2_str(const char *header, int wincsid, PRBool
-dontConvert, char* charset)
+char *intl_decode_mime_part2_str(const char *header, int wincsid, PRBool dontConvert, char* charset)
 {
-        char *work_buf = NULL;
-        char *output_p = NULL;
-        char *retbuff = NULL;
-        char *p, *q, *decoded_text;
-        char *begin; /* tracking pointer for where we are in the work
-buffer */
-        int16    csid = 0;
-        int  ret = 0;
+  char *work_buf = NULL;
+  char *output_p = NULL;
+  char *retbuff = NULL;
+  char *p, *q, *decoded_text;
+  char *begin; /* tracking pointer for where we are in the work buffer */
+  int16    csid = 0;
+  int  ret = 0;
 
-        // initialize charset name to an empty string
-        if (charset)
-          charset[0] = '\0';
+  // initialize charset name to an empty string
+  if (charset)
+    charset[0] = '\0';
 
-        StrAllocCopy(&work_buf, header);  /* temporary buffer */
-        StrAllocCopy(&retbuff, header);
+  StrAllocCopy(&work_buf, header);  /* temporary buffer */
+  StrAllocCopy(&retbuff, header);
 
-        if (work_buf == NULL || retbuff == NULL)
-                return NULL;
+  if (work_buf == NULL || retbuff == NULL)
+    return NULL;
 
-        output_p = retbuff;
-        begin = work_buf;
+  output_p = retbuff;
+  begin = work_buf;
 
-        while (*begin != '\0')
-        {
-                char * output_text;
+  while (*begin != '\0')
+  {
+    char * output_text;
 
-                /*              GetCharset();           */
-                p = strstr(begin, "=?");
-                if (p == NULL)
-                        break;                          /* exit the loop
-because the rest are not encoded */
-                *p = '\0';
-                /* skip strings don't need conversion */
-                strncpy(output_p, begin, p - begin);
-                output_p += p - begin;
+    /*              GetCharset();           */
+    p = strstr(begin, "=?");
+    if (p == NULL)
+      break;                          /* exit the loop because the rest are not encoded */
+    *p = '\0';
+    /* skip strings don't need conversion */
+    strncpy(output_p, begin, p - begin);
+    output_p += p - begin;
 
-                p += 2;
-                begin = p;
+    p += 2;
+    begin = p;
 
-                q = strchr(p, '?');  /* Get charset info */
-                if (q == NULL)
-                        break;                          /* exit the loop
-because there are no charset info */
-                *q++ = '\0';
-                csid = INTL_CharSetNameToID(p);
-                if (charset)
-                  PL_strcpy(charset, p);
+    q = strchr(p, '?');  /* Get charset info */
+    if (q == NULL)
+            break;                          /* exit the loop because there are no charset info */
+    *q++ = '\0';
+    csid = INTL_CharSetNameToID(p);
+    if (charset)
+      PL_strcpy(charset, p);
 
-                if (csid == CS_UNKNOWN)
-                {
-                        /*
-                         * @@@ may want to use context's default doc_csid
-in the future
-                         */
-                        break;                          /* exit the loop
-because we don't know the charset */
-                }
+    if (csid == CS_UNKNOWN)
+    {
+      /*
+       * @@@ may want to use context's default doc_csid in the future
+       */
+      break;                          /* exit the loop because we don't know the charset */
+    }
 
-                if (*(q+1) == '?' &&
-                    (*q == 'Q' || *q == 'q' || *q == 'B' || *q == 'b'))
-                {
-                        p = strstr(q+2, "?=");
-                        if(p != NULL)
-                                *p = '\0';
-                        if(*q == 'Q' || *q == 'q')
-                                decoded_text = intlmime_decode_qp(q+2);
-                        else
-                                decoded_text =
-intlmime_decode_base64_buf(q+2);
-                }
-                else
-                        break;                          /* exit the loop
-because we don't know the encoding method */
+    if (*(q+1) == '?' &&
+        (*q == 'Q' || *q == 'q' || *q == 'B' || *q == 'b'))
+    {
+      p = strstr(q+2, "?=");
+      if(p != NULL)
+        *p = '\0';
+      if(*q == 'Q' || *q == 'q')
+        decoded_text = intlmime_decode_qp(q+2);
+      else
+        decoded_text = intlmime_decode_base64_buf(q+2);
+    }
+    else
+      break;                          /* exit the loop because we don't know the encoding method */
 
-                begin = (p != NULL) ? p + 2 : (q + PL_strlen(q));
+    begin = (p != NULL) ? p + 2 : (q + PL_strlen(q));
 
-                if (decoded_text == NULL)
-                        break;                          /* exit the loop
-because we have problem to decode */
+    if (decoded_text == NULL)
+      break;                          /* exit the loop because we have problem to decode */
 
-                ret = 1;
-                if ((! dontConvert) && (csid != wincsid))
-                        output_text = (char
-*)intlmime_convert_but_no_decode(decoded_text, csid, (int16)wincsid);
-                else
-                        output_text = (char *)decoded_text;
+    ret = 1;
+    if ((! dontConvert) && (csid != wincsid))
+      output_text = (char *)intlmime_convert_but_no_decode(decoded_text, csid, (int16)wincsid);
+    else
+      output_text = (char *)decoded_text;
 
-                PR_ASSERT(output_text != NULL);
-                PL_strcpy(output_p, (char *)output_text);
-                output_p += PL_strlen(output_text);
+    PR_ASSERT(output_text != NULL);
+    PL_strcpy(output_p, (char *)output_text);
+    output_p += PL_strlen(output_text);
 
-                if (output_text != decoded_text)
-                        PR_Free(output_text);
-                PR_Free(decoded_text);
-        }
-        PL_strcpy(output_p, (char *)begin);     /* put the tail back  */
+    if (output_text != decoded_text)
+      PR_Free(output_text);
+    PR_Free(decoded_text);
+  }
+  PL_strcpy(output_p, (char *)begin);     /* put the tail back  */
 
-        if (work_buf)
-                PR_Free(work_buf);
+  if (work_buf)
+    PR_Free(work_buf);
 
-        if (ret)
-        {
-                return retbuff;
-        }
-        else
-        {
-                PR_Free(retbuff);
-                return NULL;  /* null means no conversion */
-        }
+  if (ret)
+  {
+    return retbuff;
+  }
+  else
+  {
+    PR_Free(retbuff);
+    return NULL;  /* null means no conversion */
+  }
 }
 
 /* IMPORTANT NOTE: */
@@ -1148,73 +1319,54 @@ routine */
 
 
 static
-char *intl_DecodeMimePartIIStr(const char *header, int16 wincsid, PRBool
-dontConvert)
+char *intl_DecodeMimePartIIStr(const char *header, int16 wincsid, PRBool dontConvert)
 {
-        int16 mailcsid = INTL_DefaultMailCharSetID(wincsid);
-        PRBool no8bitdata = PR_TRUE;
+  int16 mailcsid = INTL_DefaultMailCharSetID(wincsid);
+  PRBool no8bitdata = PR_TRUE;
 
-        if (header == 0 || *header == '\0')
-                return NULL;
-        if (wincsid == 0) /* Use global if undefined */
-                wincsid = INTL_DefaultWinCharSetID(0);
+  if (header == 0 || *header == '\0')
+    return NULL;
+  if (wincsid == 0) /* Use global if undefined */
+    wincsid = INTL_DefaultWinCharSetID(0);
 
-        no8bitdata = intlmime_only_ascii_str(header);
+  no8bitdata = intlmime_only_ascii_str(header);
 
-        /*      Start Special Case Handling             */
-        if(! dontConvert)
-        {
-                /* Need to do conversion in here if necessary */
-                if(! no8bitdata)
-                {
-                        /*      Special Case 1: 8 Bit */
-                        /* then we assume it is not mime part 2  encoding,
-we convert from the internet encoding to wincsid */
-                        if(wincsid == CS_UTF8)
-                                return
-MIME_StripContinuations(intlmime_convert_but_no_decode(header, CS_UTF8,
-(int16)wincsid));
-                        else
-                                return
-MIME_StripContinuations(intlmime_convert_but_no_decode(header, mailcsid,
-(int16)wincsid));
-                }
-                else
-                {
-                        /* 7bit- It could be MIME Part 2 Header */
-                        if ((wincsid == CS_GB_8BIT) &&
-(intlmime_is_hz(header)) )
-                        {
-                                /*      Special Case 2: HZ */
-                                /*      for subject list pane, if it's GB,
-we only do HZ conversion */
-                                return
-MIME_StripContinuations(intlmime_convert_but_no_decode(header, CS_GB_8BIT,
-CS_GB_8BIT));
-                        }
-                        else if((wincsid == CS_UTF8) &&
-                                        (!
-intlmime_is_mime_part2_header(header)))
-                        {
-                                /*      Special Case 3: UTF7 and UTF8 */
-                                return
-MIME_StripContinuations(intlmime_convert_but_no_decode(header, CS_UTF7,
-CS_UTF8));
-                        }
-                        else if(intlmime_is_iso_2022_xxx(header, mailcsid)
-&&
-                                        (!
-intlmime_is_mime_part2_header(header)))
-                        {
-                                return
-MIME_StripContinuations(intlmime_convert_but_no_decode(header, mailcsid,
-wincsid));
-                        }
-                }
-        }
-        /* Handle only Mime Part 2 after this point */
-        return MIME_StripContinuations(intl_decode_mime_part2_str(header,
-wincsid, dontConvert, NULL));
+  /* I think this part should be out from mime decoder. naoki */
+  /* Start Special Case Handling */
+  if(! dontConvert)
+  {
+    /* Need to do conversion in here if necessary */
+    if(! no8bitdata)
+    {
+      /* Special Case 1: 8 Bit */
+      /* then we assume it is not mime part 2  encoding, we convert from the internet encoding to wincsid */
+      if(wincsid == CS_UTF8)
+        return MIME_StripContinuations(intlmime_convert_but_no_decode(header, CS_UTF8, (int16)wincsid));
+      else
+        return MIME_StripContinuations(intlmime_convert_but_no_decode(header, mailcsid, (int16)wincsid));
+    }
+    else
+    {
+      /* 7bit- It could be MIME Part 2 Header */
+      if ((wincsid == CS_GB_8BIT) && (intlmime_is_hz(header)) )
+      {
+        /* Special Case 2: HZ */
+        /* for subject list pane, if it's GB, we only do HZ conversion */
+        return MIME_StripContinuations(intlmime_convert_but_no_decode(header, CS_GB_8BIT, CS_GB_8BIT));
+      }
+      else if((wincsid == CS_UTF8) && (!intlmime_is_mime_part2_header(header)))
+      {
+        /*      Special Case 3: UTF7 and UTF8 */
+        return MIME_StripContinuations(intlmime_convert_but_no_decode(header, CS_UTF7, CS_UTF8));
+      }
+      else if(intlmime_is_iso_2022_xxx(header, mailcsid) && (!intlmime_is_mime_part2_header(header)))
+      {
+        return MIME_StripContinuations(intlmime_convert_but_no_decode(header, mailcsid, wincsid));
+      }
+    }
+  }
+  /* Handle only Mime Part 2 after this point */
+  return MIME_StripContinuations(intl_decode_mime_part2_str(header, wincsid, dontConvert, NULL));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1351,29 +1503,21 @@ static PRUint32 INTL_ConvertFromUnicode(const char* to_charset, const void* uniB
 // BEGIN PUBLIC INTERFACE
 extern "C" {
 #define PUBLIC
-PUBLIC char *INTL_DecodeMimePartIIStr(const char *header, int16 wincsid,
-PRBool dontConvert)
+PUBLIC char *INTL_DecodeMimePartIIStr(const char *header, int16 wincsid, PRBool dontConvert)
 {
-        return intl_DecodeMimePartIIStr(header, wincsid, dontConvert);
+  return intl_DecodeMimePartIIStr(header, wincsid, dontConvert);
 }
-PUBLIC char *INTL_EncodeMimePartIIStr(char *subject, int16 wincsid,
-PRBool bUseMime)
+PUBLIC char *INTL_EncodeMimePartIIStr(char *subject, int16 wincsid, PRBool bUseMime)
 {
-        return intl_EncodeMimePartIIStr(subject, INTL_CsidToCharsetNamePt(wincsid), bUseMime,
-MAXLINELEN);
+  return intl_EncodeMimePartIIStr(subject, INTL_CsidToCharsetNamePt(wincsid), bUseMime, kMIME_ENCODED_WORD_SIZE);
 }
-/*  This is a routine used to re-encode subject lines for use in the
-summary file.
-        The reason why we specify a different length here is because we
-are not encoding
-        the string for use in a mail message, but rather want to stuff as
-much content
-        into the subject string as possible. */
-PUBLIC char *INTL_EncodeMimePartIIStr_VarLen(char *subject, int16 wincsid,
-PRBool bUseMime, int encodedWordSize)
+/*  This is a routine used to re-encode subject lines for use in the summary file.
+    The reason why we specify a different length here is because we are not encoding
+    the string for use in a mail message, but rather want to stuff as much content
+    into the subject string as possible. */
+PUBLIC char *INTL_EncodeMimePartIIStr_VarLen(char *subject, int16 wincsid, PRBool bUseMime, int encodedWordSize)
 {
-        return intl_EncodeMimePartIIStr(subject, INTL_CsidToCharsetNamePt(wincsid), bUseMime,
-encodedWordSize);
+  return intl_EncodeMimePartIIStr(subject, INTL_CsidToCharsetNamePt(wincsid), bUseMime, encodedWordSize);
 }
 
 PRUint32 MIME_ConvertCharset(const char* from_charset, const char* to_charset,
@@ -1435,7 +1579,7 @@ main()
         char *encoded, *decoded;
         printf("mime\n");
         encoded = intl_EncodeMimePartIIStr("hello world…", INTL_CsidToCharsetNamePt(0), PR_TRUE,
-MAXLINELEN);
+kMIME_ENCODED_WORD_SIZE);
         printf("%s\n", encoded);
         decoded = intl_DecodeMimePartIIStr((const char *) encoded,
 PL_strlen(encoded), PR_TRUE);
