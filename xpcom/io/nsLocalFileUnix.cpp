@@ -1216,7 +1216,7 @@ nsLocalFile::Contains(nsIFile *inFile, PRBool recur, PRBool *_retval)
     if (FILE_STRNCMP(mPath, inPath, len) == 0) {
         // Now make sure that the |inFile|'s path has a separator at len,
         // which implies that it has more components after len.
-        if (inPath[len] == '/')
+        if (inPath.get()[len] == '/')
             *_retval = PR_TRUE;
     }
 
