@@ -74,6 +74,7 @@ public:
 
 	// Mark message routines
 	NS_IMETHOD MarkRead(PRBool bRead);
+	NS_IMETHOD MarkFlagged(PRBool bRead);
 
     NS_IMETHOD GetMessageKey(nsMsgKey *result);
     NS_IMETHOD GetThreadId(nsMsgKey *result);

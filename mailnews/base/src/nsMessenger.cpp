@@ -106,51 +106,16 @@ public:
   nsMessenger();
   virtual ~nsMessenger();
 
-  NS_DECL_ISUPPORTS
+	NS_DECL_ISUPPORTS
   
-  // nsIMessenger
-  NS_IMETHOD GetTransactionManager(nsITransactionManager * *aTxnMgr);
-  NS_IMETHOD Open3PaneWindow();
-  NS_IMETHOD GetNewMessages(nsIRDFCompositeDataSource *db, nsIDOMXULElement *folderElement);
-  NS_IMETHOD SetWindow(nsIDOMWindow *ptr, nsIMsgStatusFeedback *statusFeedback);
-  NS_IMETHOD OpenURL(const char * url);
-  NS_IMETHOD DoPrint();
-  NS_IMETHOD DoPrintPreview();
-  NS_IMETHOD DeleteMessages(nsIDOMXULElement *tree, nsIDOMXULElement *srcFolderElement, nsIDOMNodeList *nodeList);
-  NS_IMETHOD DeleteFolders(nsIRDFCompositeDataSource *db, nsIDOMXULElement *parentFolder, nsIDOMXULElement *folder);
-
-  NS_IMETHOD CopyMessages(nsIRDFCompositeDataSource *database, nsIDOMXULElement *srcFolderElement,
-						  nsIDOMXULElement *dstFolderElement, nsIDOMNodeList *messages, PRBool isMove);
-  NS_IMETHOD GetRDFResourceForMessage(nsIDOMXULElement *tree,
-                                      nsIDOMNodeList *nodeList, nsISupports
-                                      **aSupport); 
-  NS_IMETHOD Exit();
-  NS_IMETHOD Close();
-  NS_IMETHOD OnUnload();
-  NS_IMETHOD MarkMessagesRead(nsIRDFCompositeDataSource *database, nsIDOMNodeList *messages, PRBool markRead);
-  NS_IMETHOD MarkMessageRead(nsIRDFCompositeDataSource *database, nsIDOMXULElement *message, PRBool markRead);
-  NS_IMETHOD MarkAllMessagesRead(nsIRDFCompositeDataSource *database, nsIDOMXULElement *folder);
-
-  NS_IMETHOD NewFolder(nsIRDFCompositeDataSource *database, nsIDOMXULElement *parentFolderElement,
-						const char *name);
-  NS_IMETHOD RenameFolder(nsIRDFCompositeDataSource* db, 
-                          nsIDOMXULElement* folder,
-                          const char* name);
-  NS_IMETHOD CompactFolder(nsIRDFCompositeDataSource* db,
-                           nsIDOMXULElement* folder);
-  NS_IMETHOD EmptyTrash(nsIRDFCompositeDataSource* db,
-                           nsIDOMXULElement* folder);
-  NS_IMETHOD Undo();
-  NS_IMETHOD Redo();
-  NS_IMETHOD SendUnsentMessages();
-  NS_IMETHOD LoadFirstDraft();
-  NS_IMETHOD SetDocumentCharset(const PRUnichar *characterSet);
+	NS_DECL_NSIMESSENGER
 
 protected:
 	nsresult DoDelete(nsIRDFCompositeDataSource* db, nsISupportsArray *srcArray, nsISupportsArray *deletedArray);
 	nsresult DoCommand(nsIRDFCompositeDataSource *db, char * command, nsISupportsArray *srcArray, 
 					   nsISupportsArray *arguments);
 	nsresult DoMarkMessagesRead(nsIRDFCompositeDataSource *database, nsISupportsArray *resourceArray, PRBool markRead);
+	nsresult DoMarkMessagesFlagged(nsIRDFCompositeDataSource *database, nsISupportsArray *resourceArray, PRBool markFlagged);
 private:
   
   nsString mId;
@@ -848,6 +813,74 @@ nsMessenger::MarkAllMessagesRead(nsIRDFCompositeDataSource *database, nsIDOMXULE
 	DoCommand(database, NC_RDF_MARKALLMESSAGESREAD, folderArray, nsnull);
 
 	return rv;
+}
+
+NS_IMETHODIMP
+nsMessenger::MarkMessageFlagged(nsIRDFCompositeDataSource *database, nsIDOMXULElement *message, PRBool markFlagged)
+{
+	if(!database || !message)
+		return NS_ERROR_NULL_POINTER;
+
+	nsresult rv;
+
+	nsCOMPtr<nsIRDFResource> messageResource;
+	rv = message->GetResource(getter_AddRefs(messageResource));
+	if(NS_FAILED(rv))
+		return rv;
+
+	nsCOMPtr<nsISupportsArray> resourceArray;
+
+	rv = NS_NewISupportsArray(getter_AddRefs(resourceArray));
+	if(NS_FAILED(rv))
+		return NS_ERROR_OUT_OF_MEMORY;
+
+	resourceArray->AppendElement(messageResource);
+
+	rv = DoMarkMessagesFlagged(database, resourceArray, markFlagged);
+
+	return rv;
+}
+
+NS_IMETHODIMP
+nsMessenger::MarkMessagesFlagged(nsIRDFCompositeDataSource *database, nsIDOMNodeList *messages, PRBool markFlagged)
+{
+	nsresult rv;
+
+	if(!database || !messages)
+		return NS_ERROR_NULL_POINTER;
+
+	nsCOMPtr<nsISupportsArray> resourceArray;
+
+
+	rv =ConvertDOMListToResourceArray(messages, getter_AddRefs(resourceArray));
+	if(NS_FAILED(rv))
+		return rv;
+
+	rv= DoMarkMessagesFlagged(database, resourceArray, markFlagged);
+
+
+	return rv;
+}
+
+nsresult
+nsMessenger::DoMarkMessagesFlagged(nsIRDFCompositeDataSource *database, nsISupportsArray *resourceArray, PRBool markFlagged)
+{
+	nsresult rv;
+	nsCOMPtr<nsISupportsArray> argumentArray;
+
+	rv = NS_NewISupportsArray(getter_AddRefs(argumentArray));
+	if(NS_FAILED(rv))
+	{
+		return NS_ERROR_OUT_OF_MEMORY;
+	}
+
+	if(markFlagged)
+		rv = DoCommand(database, NC_RDF_MARKFLAGGED, resourceArray, argumentArray);
+	else
+		rv = DoCommand(database, NC_RDF_MARKUNFLAGGED, resourceArray,  argumentArray);
+
+	return rv;
+
 }
 
 NS_IMETHODIMP

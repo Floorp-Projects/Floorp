@@ -491,7 +491,16 @@ function MsgMarkAllRead()
 	}
 }
 
-function MsgMarkAsFlagged() {}
+function MsgMarkAsFlagged(markFlagged)
+{
+  dump("\MsgMarkMsgAsFlagged from XUL\n");
+  var tree = GetThreadTree();
+  //get the selected elements
+  var messageList = tree.selectedItems;
+  messenger.MarkMessagesFlagged(tree.database, messageList, markFlagged);
+
+}
+
 function MsgIgnoreThread() {}
 function MsgWatchThread() {}
 

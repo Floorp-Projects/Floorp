@@ -181,6 +181,22 @@ NS_IMETHODIMP nsMsgHdr::MarkRead(PRBool bRead)
 	return rv;
 }
 
+NS_IMETHODIMP nsMsgHdr::MarkFlagged(PRBool bFlagged)
+{
+	nsresult rv = NS_OK;
+
+	if(m_mdb)
+	{
+		nsMsgKey key;
+		rv = GetMessageKey(&key);
+		if(NS_SUCCEEDED(rv))
+			rv = m_mdb->MarkMarked(key, bFlagged, nsnull);
+	}
+
+
+	return rv;
+}
+
 NS_IMETHODIMP nsMsgHdr::GetProperty(const char *propertyName, nsString &resultProperty)
 {
 	nsresult err = NS_OK;

@@ -41,15 +41,18 @@ static NS_DEFINE_CID(kMsgMailSessionCID,		NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kLocaleFactoryCID,			NS_LOCALEFACTORY_CID);
 static NS_DEFINE_CID(kDateTimeFormatCID,		NS_DATETIMEFORMAT_CID);
 
-nsIRDFResource* nsMsgMessageDataSource::kNC_Subject;
-nsIRDFResource* nsMsgMessageDataSource::kNC_Sender;
-nsIRDFResource* nsMsgMessageDataSource::kNC_Date;
-nsIRDFResource* nsMsgMessageDataSource::kNC_Status;
+nsIRDFResource* nsMsgMessageDataSource::kNC_Subject = nsnull;
+nsIRDFResource* nsMsgMessageDataSource::kNC_Sender= nsnull;
+nsIRDFResource* nsMsgMessageDataSource::kNC_Date= nsnull;
+nsIRDFResource* nsMsgMessageDataSource::kNC_Status= nsnull;
+nsIRDFResource* nsMsgMessageDataSource::kNC_Flagged= nsnull;
 
 //commands
-nsIRDFResource* nsMsgMessageDataSource::kNC_MarkRead;
-nsIRDFResource* nsMsgMessageDataSource::kNC_MarkUnread;
-nsIRDFResource* nsMsgMessageDataSource::kNC_ToggleRead;
+nsIRDFResource* nsMsgMessageDataSource::kNC_MarkRead= nsnull;
+nsIRDFResource* nsMsgMessageDataSource::kNC_MarkUnread= nsnull;
+nsIRDFResource* nsMsgMessageDataSource::kNC_ToggleRead= nsnull;
+nsIRDFResource* nsMsgMessageDataSource::kNC_MarkFlagged= nsnull;
+nsIRDFResource* nsMsgMessageDataSource::kNC_MarkUnflagged= nsnull;
 
 
 nsMsgMessageDataSource::nsMsgMessageDataSource():
@@ -81,12 +84,18 @@ nsMsgMessageDataSource::~nsMsgMessageDataSource (void)
 		NS_RELEASE2(kNC_Date, refcnt);
 	if (kNC_Status)
 		NS_RELEASE2(kNC_Status, refcnt);
+	if (kNC_Flagged)
+		NS_RELEASE2(kNC_Flagged, refcnt);
 	if (kNC_MarkRead)
 		NS_RELEASE2(kNC_MarkRead, refcnt);
 	if (kNC_MarkUnread)
 		NS_RELEASE2(kNC_MarkUnread, refcnt);
 	if (kNC_ToggleRead)
 		NS_RELEASE2(kNC_ToggleRead, refcnt);
+	if (kNC_MarkRead)
+		NS_RELEASE2(kNC_MarkFlagged, refcnt);
+	if (kNC_MarkUnread)
+		NS_RELEASE2(kNC_MarkUnflagged, refcnt);
 
 	nsServiceManager::ReleaseService(kRDFServiceCID, mRDFService); // XXX probably need shutdown listener here
 	NS_IF_RELEASE(mHeaderParser);
@@ -125,10 +134,13 @@ nsresult nsMsgMessageDataSource::Init()
 		mRDFService->GetResource(NC_RDF_SENDER, &kNC_Sender);
 		mRDFService->GetResource(NC_RDF_DATE, &kNC_Date);
 		mRDFService->GetResource(NC_RDF_STATUS, &kNC_Status);
+		mRDFService->GetResource(NC_RDF_FLAGGED, &kNC_Flagged);
 
 		mRDFService->GetResource(NC_RDF_MARKREAD, &kNC_MarkRead);
 		mRDFService->GetResource(NC_RDF_MARKUNREAD, &kNC_MarkUnread);
 		mRDFService->GetResource(NC_RDF_TOGGLEREAD, &kNC_ToggleRead);
+		mRDFService->GetResource(NC_RDF_MARKFLAGGED, &kNC_MarkFlagged);
+		mRDFService->GetResource(NC_RDF_MARKUNFLAGGED, &kNC_MarkUnflagged);
     
 	}
 	mInitialized = PR_TRUE;
@@ -235,7 +247,7 @@ NS_IMETHODIMP nsMsgMessageDataSource::GetTargets(nsIRDFResource* source,
 	nsCOMPtr<nsIMessage> message(do_QueryInterface(source, &rv));
 	if (NS_SUCCEEDED(rv)) {
 		if((kNC_Subject == property) || (kNC_Date == property) ||
-			(kNC_Status == property))
+			(kNC_Status == property) || kNC_Flagged == property)
 		{
 			nsSingletonEnumerator* cursor =
 				new nsSingletonEnumerator(source);
@@ -338,15 +350,16 @@ nsMsgMessageDataSource::getMessageArcLabelsOut(nsIMessage *folder,
                                               nsISupportsArray **arcs)
 {
 	nsresult rv;
-  rv = NS_NewISupportsArray(arcs);
+	rv = NS_NewISupportsArray(arcs);
 	if(NS_FAILED(rv))
 		return rv;
 
-  (*arcs)->AppendElement(kNC_Subject);
-  (*arcs)->AppendElement(kNC_Sender);
-  (*arcs)->AppendElement(kNC_Date);
+	(*arcs)->AppendElement(kNC_Subject);
+	(*arcs)->AppendElement(kNC_Sender);
+	(*arcs)->AppendElement(kNC_Date);
 	(*arcs)->AppendElement(kNC_Status);
-  return NS_OK;
+	(*arcs)->AppendElement(kNC_Flagged);
+	return NS_OK;
 }
 
 
@@ -421,6 +434,10 @@ nsMsgMessageDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources
 		rv = DoMarkMessagesRead(aSources, PR_TRUE);
 	else if((aCommand == kNC_MarkUnread))
 		rv = DoMarkMessagesRead(aSources, PR_FALSE);
+	if((aCommand == kNC_MarkFlagged))
+		rv = DoMarkMessagesFlagged(aSources, PR_TRUE);
+	else if((aCommand == kNC_MarkUnflagged))
+		rv = DoMarkMessagesFlagged(aSources, PR_FALSE);
 
   //for the moment return NS_OK, because failure stops entire DoCommand process.
   return NS_OK;
@@ -463,6 +480,17 @@ NS_IMETHODIMP nsMsgMessageDataSource::OnItemPropertyFlagChanged(nsISupports *ite
 				return rv;
 			rv = NotifyPropertyChanged(resource, kNC_Status, oldStatusStr, newStatusStr);
 		}
+		else if(PL_strcmp("Flagged", property) == 0)
+		{
+			nsCAutoString oldFlaggedStr, newFlaggedStr;
+			rv = createFlaggedStringFromFlag(oldFlag, oldFlaggedStr);
+			if(NS_FAILED(rv))
+				return rv;
+			rv = createFlaggedStringFromFlag(newFlag, newFlaggedStr);
+			if(NS_FAILED(rv))
+				return rv;
+			rv = NotifyPropertyChanged(resource, kNC_Flagged, oldFlaggedStr, newFlaggedStr);
+		}
 	}
 	return rv;
 }
@@ -479,8 +507,10 @@ nsMsgMessageDataSource::createMessageNode(nsIMessage *message,
       return createMessageSenderNode(message, sort, target);
     else if ((kNC_Date == property))
       return createMessageDateNode(message, target);
-		else if ((kNC_Status == property))
+	else if ((kNC_Status == property))
       return createMessageStatusNode(message, target);
+	else if ((kNC_Flagged == property))
+      return createMessageFlaggedNode(message, target);
     else
       return NS_RDF_NO_VALUE;
 }
@@ -582,11 +612,29 @@ nsMsgMessageDataSource::createMessageStatusNode(nsIMessage *message,
 	return rv;
 }
 
+nsresult
+nsMsgMessageDataSource::createMessageFlaggedNode(nsIMessage *message,
+                                               nsIRDFNode **target)
+{
+	nsresult rv;
+	PRUint32 flags;
+	nsCAutoString statusStr;
+	rv = message->GetFlags(&flags);
+	if(NS_FAILED(rv))
+		return rv;
+	rv = createFlaggedStringFromFlag(flags, statusStr);
+	if(NS_FAILED(rv))
+		return rv;
+	nsString uniStr = statusStr;
+	rv = createNode(uniStr, target);
+	return rv;
+}
+
 nsresult 
 nsMsgMessageDataSource::createStatusStringFromFlag(PRUint32 flags, nsCAutoString &statusStr)
 {
 	nsresult rv = NS_OK;
-	statusStr = "";
+	statusStr = " ";
 	if(flags & MSG_FLAG_REPLIED)
 		statusStr = "replied";
 	else if(flags & MSG_FLAG_FORWARDED)
@@ -595,6 +643,17 @@ nsMsgMessageDataSource::createStatusStringFromFlag(PRUint32 flags, nsCAutoString
 		statusStr = "new";
 	else if(flags & MSG_FLAG_READ)
 		statusStr = "read";
+	return rv;
+}
+
+nsresult 
+nsMsgMessageDataSource::createFlaggedStringFromFlag(PRUint32 flags, nsCAutoString &statusStr)
+{
+	nsresult rv = NS_OK;
+	if(flags & MSG_FLAG_MARKED)
+		statusStr = "flagged";
+	else 
+		statusStr = "unflagged";
 	return rv;
 }
 
@@ -622,6 +681,37 @@ nsMsgMessageDataSource::DoMarkMessagesRead(nsISupportsArray *messages, PRBool ma
 			return rv;
 
 		folder->MarkMessagesRead(messageArray, markRead);
+		rv = messages->Count(&count);
+		if(NS_FAILED(rv))
+			return rv;
+	}
+	return rv;
+}
+
+nsresult
+nsMsgMessageDataSource::DoMarkMessagesFlagged(nsISupportsArray *messages, PRBool markFlagged)
+{
+	PRUint32 count;
+	nsresult rv;
+
+	nsCOMPtr<nsITransactionManager> transactionManager;
+	rv = GetTransactionManager(messages, getter_AddRefs(transactionManager));
+	if(NS_FAILED(rv))
+		return rv;
+
+	rv = messages->Count(&count);
+	if(NS_FAILED(rv))
+		return rv;
+	while(count > 0)
+	{
+		nsCOMPtr<nsISupportsArray> messageArray;
+		nsCOMPtr<nsIMsgFolder> folder;
+	
+		rv = GetMessagesAndFirstFolder(messages, getter_AddRefs(folder), getter_AddRefs(messageArray));
+		if(NS_FAILED(rv))
+			return rv;
+
+		folder->MarkMessagesFlagged(messageArray, markFlagged);
 		rv = messages->Count(&count);
 		if(NS_FAILED(rv))
 			return rv;

@@ -138,7 +138,12 @@ protected:
 								   nsIRDFNode **target);
 	nsresult createStatusStringFromFlag(PRUint32 flags, nsCAutoString &statusStr);
 
+	nsresult createMessageFlaggedNode(nsIMessage *message,
+								   nsIRDFNode **target);
+	nsresult createFlaggedStringFromFlag(PRUint32 flags, nsCAutoString &statusStr);
+
 	nsresult DoMarkMessagesRead(nsISupportsArray *messages, PRBool markRead);
+	nsresult DoMarkMessagesFlagged(nsISupportsArray *messages, PRBool markFlagged);
 
 	nsresult NotifyPropertyChanged(nsIRDFResource *resource,
 								  nsIRDFResource *propertyResource,
@@ -158,11 +163,14 @@ protected:
 	static nsIRDFResource* kNC_Sender;
 	static nsIRDFResource* kNC_Date;
 	static nsIRDFResource* kNC_Status;
+	static nsIRDFResource* kNC_Flagged;
 
 	// commands
 	static nsIRDFResource* kNC_MarkRead;
 	static nsIRDFResource* kNC_MarkUnread;
 	static nsIRDFResource* kNC_ToggleRead;
+	static nsIRDFResource* kNC_MarkFlagged;
+	static nsIRDFResource* kNC_MarkUnflagged;
 
 
 };

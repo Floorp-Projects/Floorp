@@ -37,6 +37,7 @@ typedef struct _nsMsgRDFNotification {
 #define NC_RDF_SENDER				NC_NAMESPACE_URI "Sender"
 #define NC_RDF_DATE					NC_NAMESPACE_URI "Date"
 #define NC_RDF_STATUS				NC_NAMESPACE_URI "Status"
+#define NC_RDF_FLAGGED				NC_NAMESPACE_URI "Flagged"
 
 #define NC_RDF_CHILD				NC_NAMESPACE_URI "child"
 #define NC_RDF_MESSAGECHILD			NC_NAMESPACE_URI "MessageChild"
@@ -65,7 +66,8 @@ typedef struct _nsMsgRDFNotification {
 #define NC_RDF_MARKREAD				NC_NAMESPACE_URI "MarkRead"
 #define NC_RDF_MARKUNREAD			NC_NAMESPACE_URI "MarkUnread"
 #define NC_RDF_TOGGLEREAD			NC_NAMESPACE_URI "ToggleRead"
-
+#define NC_RDF_MARKFLAGGED			NC_NAMESPACE_URI "MarkFlagged"
+#define NC_RDF_MARKUNFLAGGED		NC_NAMESPACE_URI "MarkUnflagged"
 
 //Returns PR_TRUE if r1 is equal to r2 and r2 is the sort property.
 PRBool

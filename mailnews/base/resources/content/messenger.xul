@@ -352,7 +352,8 @@ Rights Reserved.
         <menuitem value="&markByDateCmd.label;" oncommand="MsgMarkByDate();"/>
         <menuitem value="&markAllReadCmd.label;" oncommand="MsgMarkAllRead();"/>
         <menuseparator/>
-        <menuitem value="&markFlaggedCmd.label;" oncommand="MsgMarkAsFlagged();"/>
+        <menuitem value="&markFlaggedCmd.label;" oncommand="MsgMarkAsFlagged(true);"/>
+        <menuitem value="&markUnflaggedCmd.label;" oncommand="MsgMarkAsFlagged(false);"/>
 		</menupopup>
       </menu>
       <menuseparator/>
