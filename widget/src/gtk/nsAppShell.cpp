@@ -473,8 +473,10 @@ NS_IMETHODIMP nsAppShell::EventIsForModalWindow(PRBool aRealEvent,
     case GDK_3BUTTON_PRESS:
     case GDK_BUTTON_RELEASE:
       isMouseEvent = PR_TRUE;
+      break;
     default:
       isMouseEvent = PR_FALSE;
+      break;
   }
 
   *aForWindow = isInWindow == PR_TRUE || 
