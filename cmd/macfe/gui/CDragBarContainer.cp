@@ -72,15 +72,33 @@ void CDragBarContainer::FinishCreateSelf(void)
 	Assert_(mDock != NULL);
 	mDock->AddListener(this);
 
+	BuildToolbarsPresentAtStartup ( );
+	
+	AdjustContainer();
+	AdjustDock();
+	
+	// Because new toolbar drag bars could adjust their frames
+	// at FinishCreateSelf time, call RepositionBars
+	RepositionBars();
+}
+
+
+//
+// BuildToolbarsPresentAtStartup
+//
+// Add what toolbars have at creation time to the toolbar.
+//
+void
+CDragBarContainer :: BuildToolbarsPresentAtStartup ( )
+{
 	StResource	theIDList('RidL', mBarListResID);
-	{
+	if ( theIDList ) {
 		StHandleLocker theLock(theIDList);
 		LDataStream theBarStream(*theIDList.mResourceH, ::GetHandleSize(theIDList));
 		
 		Int16 theItemCount;
 		theBarStream >> theItemCount;	
-		for (Int16 i = 0; i < theItemCount; i++)
-			{
+		for (Int16 i = 0; i < theItemCount; i++) {
 			PaneIDT thePaneID;
 			theBarStream >> thePaneID;
 			
@@ -92,15 +110,8 @@ void CDragBarContainer::FinishCreateSelf(void)
 
 			mBars.InsertItemsAt(1, 	LArray::index_Last, &theBar);
 			theBar->AddListener(this);
-			}
+		}
 	}
-	
-	AdjustContainer();
-	AdjustDock();
-	
-	// Because new toolbar drag bars could adjust their frames
-	// at FinishCreateSelf time, call RepositionBars
-	RepositionBars();
 }
 
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
@@ -110,14 +121,12 @@ void CDragBarContainer::FinishCreateSelf(void)
 void
 CDragBarContainer::AddBar( CDragBar* inBar )
 	{
-		if ( inBar->IsDocked() )
+		if ( inBar->IsDocked() && mDock )
 			mDock->AddBarToDock(inBar);
 		mBars.InsertItemsAt(1, LArray::index_Last, &inBar);
 		inBar->AddListener(this);
 
-		AdjustContainer();
-		AdjustDock();
-		RepositionBars();
+		ShowBar(inBar, false);
 	}
 
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
@@ -221,7 +230,8 @@ void CDragBarContainer::HideBar(CDragBar* inBar, Boolean inRefresh)
 	if (inBar->IsAvailable())
 	{
 		if (!inBar->IsDocked()) inBar->Hide(); // hide if undocked
-		mDock->HideBar(inBar);
+		if ( mDock )
+			mDock->HideBar(inBar);
 		inBar->SetAvailable(false);
 		
 		RepositionBars();
@@ -239,7 +249,8 @@ void CDragBarContainer::ShowBar(CDragBar* inBar, Boolean inRefresh)
 	if (!inBar->IsAvailable())
 	{
 		if (!inBar->IsDocked()) inBar->Show(); // show if undocked
-		mDock->ShowBar(inBar);
+		if ( mDock )
+			mDock->ShowBar(inBar);
 		inBar->SetAvailable(true);
 
 		RepositionBars();
@@ -260,7 +271,7 @@ void CDragBarContainer::NoteCollapseBar(CDragBar* inBar)
 	// 3/6/97 pkc
 	// When inBar is NULL, we just want to adjust things, but we
 	// don't need to add a bar to the dock
-	if (inBar)
+	if (inBar && mDock)
 		mDock->AddBarToDock(inBar);
 
 	RepositionBars();
@@ -393,11 +404,13 @@ void CDragBarContainer::AdjustContainer(void)
 		theNewSize.height += theBarSize.height;
 		}
 
-	SDimension16 theDockSize;
-	mDock->GetFrameSize(theDockSize);
+	// AdjustContainer can be called before dock is created.
+	if ( mDock && mDock->HasDockedBars() ) {
+		SDimension16 theDockSize;
+		mDock->GetFrameSize(theDockSize);
 
-	if (mDock->HasDockedBars())
 		theNewSize.height += theDockSize.height;
+	}
 		
 	ResizeFrameTo(theNewSize.width, theNewSize.height, true);
 }
@@ -408,10 +421,12 @@ void CDragBarContainer::AdjustContainer(void)
 
 void CDragBarContainer::AdjustDock(void)
 {
-	if (mDock->HasDockedBars())
-		mDock->Show();
-	else
-		mDock->Hide();
+	if ( mDock ) {
+		if (mDock->HasDockedBars())
+			mDock->Show();
+		else
+			mDock->Hide();
+	}
 }
 
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ

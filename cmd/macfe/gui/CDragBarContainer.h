@@ -73,6 +73,7 @@ class CDragBarContainer :
 		virtual	void			AdjustDock(void);
 
 		virtual	void			FinishCreateSelf(void);
+		virtual void			BuildToolbarsPresentAtStartup ( ) ;
 
 			// DROP AREA BEHAVIOUR
 
