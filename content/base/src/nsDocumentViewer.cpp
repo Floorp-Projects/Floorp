@@ -4693,25 +4693,23 @@ NS_IMETHODIMP DocumentViewerImpl::GetDefaultCharacterSet(PRUnichar** aDefaultCha
   NS_ENSURE_ARG_POINTER(aDefaultCharacterSet);
   NS_ENSURE_STATE(mContainer);
 
-  static PRUnichar *gDefCharset = nsnull;    // XXX: memory leak!
-
   if (0 == mDefaultCharacterSet.Length()) 
   {
-    if ((nsnull == gDefCharset) || (nsnull == *gDefCharset)) 
-    {
-      nsCOMPtr<nsIWebShell> webShell;
-      webShell = do_QueryInterface(mContainer);
-      if (webShell)
-      {
-        nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
-        if(prefs)
-          prefs->GetLocalizedUnicharPref("intl.charset.default", &gDefCharset);
-      }
-    }
-    if ((nsnull == gDefCharset) || (nsnull == *gDefCharset))
-      mDefaultCharacterSet.AssignWithConversion("ISO-8859-1");
+    nsXPIDLString defCharset;
+
+    nsCOMPtr<nsIWebShell> webShell;
+    webShell = do_QueryInterface(mContainer);
+    if (webShell)
+    { 
+      nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
+      if (prefs)
+        prefs->GetLocalizedUnicharPref("intl.charset.default", getter_Copies(defCharset));
+    } 
+
+    if (defCharset && defCharset.Length())
+      mDefaultCharacterSet.Assign(defCharset.get());
     else
-      mDefaultCharacterSet.Assign(gDefCharset);
+      mDefaultCharacterSet.Assign(NS_LITERAL_STRING("ISO-8859-1"));
   }
   *aDefaultCharacterSet = ToNewUnicode(mDefaultCharacterSet);
   return NS_OK;
