@@ -34,9 +34,9 @@ DIRS= \
 	gopher \
 	http \
 	remote \
-#ifdef SMART_MAIL
+!ifdef SMART_MAIL
 	pop3 \
-#endif
+!endif
 !ifndef MODULAR_NETLIB
 	dataurl \
 	js \
