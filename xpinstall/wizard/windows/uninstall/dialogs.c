@@ -77,6 +77,18 @@ void ParseAllUninstallLogs()
     /* update Wininit.ini to remove itself at reboot */
     RemoveUninstaller(ugUninstall.szUninstallFilename);
   }
+
+  /* Broadcast message only under NT51 (WinXP) regarding the following
+   * registry keys in case they were changed during uninstallation.  If they
+   * were, then the broadcast will alert the OS to update the appropriate UIs.
+   * This needs to be done regardless if the user canceled the uninstall
+   * process or not.
+   */
+  if(ulOSType & OS_NT51)
+  {
+    SendMessage(HWND_BROADCAST, WM_SETTINGCHANGE, 0, (LPARAM)"Software\\Clients\\StartMenuInternet");
+    SendMessage(HWND_BROADCAST, WM_SETTINGCHANGE, 0, (LPARAM)"Software\\Clients\\Mail");
+  }
 }
 
 LRESULT CALLBACK DlgProcUninstall(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)

@@ -591,54 +591,71 @@ void ParsePath(LPSTR szInput, LPSTR szOutput, DWORD dwOutputSize, DWORD dwType)
 
 void DetermineOSVersion()
 {
-  DWORD         dwVersion;
-  DWORD         dwWindowsMajorVersion;
-  DWORD         dwWindowsMinorVersion;
-  DWORD         dwWindowsVersion;
   BOOL          bIsWin95Debute;
-  char          szESetupRequirement[MAX_BUF];
+  char          szEMsg[MAX_BUF];
+  OSVERSIONINFO osVersionInfo;
 
-  ulOSType        = 0;
-  dwVersion       = GetVersion();
+  ulOSType = 0;
+  osVersionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+  if(!GetVersionEx(&osVersionInfo))
+  {
+    /* GetVersionEx() failed for some reason.  It's not fatal, but could cause
+     * some complications during installation */
+    if(GetPrivateProfileString("Messages", "ERROR_GETVERSION", "", szEMsg, sizeof(szEMsg), szFileIniUninstall))
+      PrintError(szEMsg, ERROR_CODE_SHOW);
+  }
+
   bIsWin95Debute  = IsWin95Debute();
-
-  // Get major and minor version numbers of Windows
-  dwWindowsMajorVersion =  (DWORD)(LOBYTE(LOWORD(dwVersion)));
-  dwWindowsMinorVersion =  (DWORD)(HIBYTE(LOWORD(dwVersion)));
-  dwWindowsVersion      =  (DWORD)(HIWORD(dwVersion));
-
-  // Get build numbers for Windows NT or Win95/Win98
-  if(dwVersion < 0x80000000) // Windows NT
+  switch(osVersionInfo.dwPlatformId)
   {
-    ulOSType |= OS_NT;
-    if(dwWindowsMajorVersion == 3)
-      ulOSType |= OS_NT3;
-    else if(dwWindowsMajorVersion == 4)
-      ulOSType |= OS_NT4;
-    else
-      ulOSType |= OS_NT5;
-  }
-  else if(dwWindowsMajorVersion == 4)
-  {
-    ulOSType |= OS_WIN9x;
-    if(dwWindowsMinorVersion == 0)
-    {
-      ulOSType |= OS_WIN95;
+    case VER_PLATFORM_WIN32_WINDOWS:
+      ulOSType |= OS_WIN9x;
+      if(osVersionInfo.dwMinorVersion == 0)
+      {
+        ulOSType |= OS_WIN95;
+        if(bIsWin95Debute)
+          ulOSType |= OS_WIN95_DEBUTE;
+      }
+      else
+        ulOSType |= OS_WIN98;
+      break;
 
-      if(bIsWin95Debute)
-        ulOSType |= OS_WIN95_DEBUTE;
-    }
-    else
-      ulOSType |= OS_WIN98;
-  }
-  else
-  {
-    if(GetPrivateProfileString("Messages", "ERROR_SETUP_REQUIREMENT", "",
-                               szESetupRequirement, sizeof(szESetupRequirement), 
-                               szFileIniUninstall))
-      PrintError(szESetupRequirement, ERROR_CODE_HIDE);
+    case VER_PLATFORM_WIN32_NT:
+      ulOSType |= OS_NT;
+      switch(osVersionInfo.dwMajorVersion)
+      {
+        case 3:
+          ulOSType |= OS_NT3;
+          break;
 
-    exit(1);
+        case 4:
+          ulOSType |= OS_NT4;
+          break;
+
+        default:
+          ulOSType |= OS_NT5;
+          switch(osVersionInfo.dwMinorVersion)
+          {
+            case 0:
+              /* a minor version of 0 (major.minor.build) indicates Win2000 */
+              ulOSType |= OS_NT50;
+              break;
+
+            case 1:
+              /* a minor version of 1 (major.minor.build) indicates WinXP */
+              ulOSType |= OS_NT51;
+          break;
+          }
+        break;
+      }
+      break;
+
+    default:
+      if(GetPrivateProfileString("Messages", "ERROR_SETUP_REQUIREMENT", "", szEMsg, sizeof(szEMsg), szFileIniUninstall))
+        PrintError(szEMsg, ERROR_CODE_HIDE);
+
+      exit(1);
+      break;
   }
 }
 

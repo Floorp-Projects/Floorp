@@ -95,14 +95,16 @@ typedef int PRInt32;
 #define AUTO                            2
 
 /* OS: Operating System */
-#define OS_WIN9x                        1
-#define OS_WIN95_DEBUTE                 2
-#define OS_WIN95                        4
-#define OS_WIN98                        8
-#define OS_NT                          16
-#define OS_NT3                         32
-#define OS_NT4                         64
-#define OS_NT5                        128
+#define OS_WIN9x                        0x00000001
+#define OS_WIN95_DEBUTE                 0x00000002
+#define OS_WIN95                        0x00000004
+#define OS_WIN98                        0x00000008
+#define OS_NT                           0x00000010
+#define OS_NT3                          0x00000020
+#define OS_NT4                          0x00000040
+#define OS_NT5                          0x00000080
+#define OS_NT50                         0x00000100
+#define OS_NT51                         0x00000200
 
 typedef struct dlgUninstall
 {
