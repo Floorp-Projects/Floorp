@@ -42,10 +42,12 @@
 #include <ToolUtils.h>
 #include <LowMem.h>
 
-#define DRAW_ON_RESIZE
+#if DEBUG
+#include <SIOUX.h>
+#include "macstdlibextras.h"
+#endif
 
-const char SUSPENDRESUMEMESSAGE = 0x01;
-const char MOUSEMOVEDMESSAGE = 0xFA;
+#define DRAW_ON_RESIZE
 
 const short	kMinWindowWidth = 300;
 const short kMinWindowHeight = 150;
@@ -112,6 +114,12 @@ nsMacMessagePump::DoMessagePump()
 
 		if (haveEvent)
 		{
+
+#if DEBUG
+			if (SIOUXHandleOneEvent(&theEvent))
+				continue;
+#endif
+
 			switch(theEvent.what)
 			{
 				case keyUp:
@@ -140,14 +148,14 @@ nsMacMessagePump::DoMessagePump()
 					unsigned char eventType = ((theEvent.message >> 24) & 0x00ff);
 					switch (eventType)
 					{
-						case SUSPENDRESUMEMESSAGE:
-							if (theEvent.message & 0x00000001)
+						case suspendResumeMessage:
+							if ((theEvent.message & 1) == resumeFlag)
 								mInBackground = PR_FALSE;		// resume message
 							else
 								mInBackground = PR_TRUE;		// suspend message
 							break;
 
-						case MOUSEMOVEDMESSAGE:
+						case mouseMovedMessage:
 							DoMouseMove(theEvent);
 							break;
 					}
@@ -165,7 +173,7 @@ nsMacMessagePump::DoMessagePump()
 			LPeriodical::DevoteTimeToRepeaters(theEvent);
 	}
 
-  return NS_OK;
+  return NS_OK;		// a PR_BOOL? Should be PR_TRUE or PR_FALSE. Which is unclear
 }
 
 #pragma mark -
