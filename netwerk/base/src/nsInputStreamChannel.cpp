@@ -55,7 +55,7 @@ nsInputStreamChannel::Create(nsISupports *aOuter, REFNSIID aIID,
     return rv;
 }
 
-nsresult
+NS_IMETHODIMP
 nsInputStreamChannel::Init(nsIURI* uri, const char* contentType,
                            PRInt32 contentLength, nsIInputStream* in,
                            nsILoadGroup* group, nsIURI* originalURI)
