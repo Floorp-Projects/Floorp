@@ -148,10 +148,14 @@ NS_METHOD nsWindow::RemoveTooltips()
 
 NS_METHOD nsWindow::Destroy()
 {
-  // Call base class first...
-  nsWidget::Destroy();
+  // Call base class first... we need to ensure that upper management
+  // knows about the close so that if this is the main application
+  // window, for example, the application will exit as it should.
 
   if (mIsDestroying == PR_TRUE) {
+    nsBaseWidget::Destroy();
+    if (PR_FALSE == mOnDestroyCalled)
+        nsWidget::OnDestroy();
     if (mShell) {
     	if (GTK_IS_WIDGET(mShell))
      		gtk_widget_destroy(mShell);
@@ -161,7 +165,6 @@ NS_METHOD nsWindow::Destroy()
 
   return NS_OK;
 }
-
 
 gint handle_delete_event(GtkWidget *w, GdkEventAny *e, nsWindow *win)
 {
