@@ -123,10 +123,8 @@ nsMathMLTokenFrame::SetInitialChildList(nsIPresContext* aPresContext,
   mState |= NS_FRAME_OUTSIDE_CHILDREN;
   nsIFrame* childFrame = mFrames.FirstChild();
   while (childFrame) {
-    nsFrameState state;
-    childFrame->GetFrameState(&state);
-    childFrame->SetFrameState(state | NS_FRAME_OUTSIDE_CHILDREN);
-    childFrame->GetNextSibling(&childFrame);
+    childFrame->AddStateBits(NS_FRAME_OUTSIDE_CHILDREN);
+    childFrame = childFrame->GetNextSibling();
   }
 
   SetQuotes(aPresContext);
@@ -172,8 +170,7 @@ printf("\n");
     if (NS_FAILED(rv)) return rv;
 
     // origins are used as placeholders to store the child's ascent and descent.
-    childFrame->SetRect(aPresContext,
-                        nsRect(childDesiredSize.descent, childDesiredSize.ascent,
+    childFrame->SetRect(nsRect(childDesiredSize.descent, childDesiredSize.ascent,
                                childDesiredSize.width, childDesiredSize.height));
     // compute and cache the bounding metrics
     if (0 == count)
@@ -182,7 +179,7 @@ printf("\n");
       aDesiredSize.mBoundingMetrics += childDesiredSize.mBoundingMetrics;
 
     count++;
-    childFrame->GetNextSibling(&childFrame);
+    childFrame = childFrame->GetNextSibling();
   }
 
   if (aDesiredSize.mComputeMEW) {
@@ -221,11 +218,10 @@ nsMathMLTokenFrame::Place(nsIPresContext*      aPresContext,
 
   if (aPlaceOrigin) {
     nscoord dy, dx = 0;
-    nsRect rect;
     nsIFrame* childFrame;
     FirstChild(aPresContext, nsnull, &childFrame);
     while (childFrame) {
-      childFrame->GetRect(rect);
+      nsRect rect = childFrame->GetRect();
       nsHTMLReflowMetrics childSize(nsnull);
       childSize.width = rect.width;
       childSize.height = aDesiredSize.height; //rect.height;
@@ -234,7 +230,7 @@ nsMathMLTokenFrame::Place(nsIPresContext*      aPresContext,
       dy = rect.IsEmpty() ? 0 : aDesiredSize.ascent - rect.y;
       FinishReflowChild(childFrame, aPresContext, nsnull, childSize, dx, dy, 0);
       dx += rect.width;
-      childFrame->GetNextSibling(&childFrame);
+      childFrame = childFrame->GetNextSibling();
     }
   }
 
@@ -359,8 +355,7 @@ nsMathMLTokenFrame::SetTextStyle(nsIPresContext* aPresContext)
                                 changeList, minChange, maxChange);
 #ifdef DEBUG
       // Use the parent frame to make sure we catch in-flows and such
-      nsIFrame* parentFrame;
-      GetParent(&parentFrame);
+      nsIFrame* parentFrame = GetParent();
       fm->DebugVerifyStyleTree(parentFrame ? parentFrame : this);
 #endif
     }
@@ -399,8 +394,7 @@ SetQuote(nsIPresContext* aPresContext,
     aFrame = textFrame;
   } while (textFrame);
   if (textFrame) {
-    nsCOMPtr<nsIContent> quoteContent;
-    textFrame->GetContent(getter_AddRefs(quoteContent));
+    nsIContent* quoteContent = textFrame->GetContent();
     if (quoteContent) {
       nsCOMPtr<nsIDOMText> domText(do_QueryInterface(quoteContent));
       if (domText) {
@@ -425,9 +419,9 @@ nsMathMLTokenFrame::SetQuotes(nsIPresContext* aPresContext)
   nsIFrame* baseFrame = nsnull;
   nsIFrame* leftFrame = mFrames.FirstChild();
   if (leftFrame)
-    leftFrame->GetNextSibling(&baseFrame);
+    baseFrame = leftFrame->GetNextSibling();
   if (baseFrame)
-    baseFrame->GetNextSibling(&rightFrame);
+    rightFrame = baseFrame->GetNextSibling();
   if (!leftFrame || !baseFrame || !rightFrame)
     return;
 

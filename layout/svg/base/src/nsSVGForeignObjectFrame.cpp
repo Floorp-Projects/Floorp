@@ -336,8 +336,8 @@ nsSVGForeignObjectFrame::Reflow(nsIPresContext*          aPresContext,
   y -= height/2.0f;
 
   // move ourselves to (x,y):
-  MoveTo(aPresContext, (nscoord) (x*twipsPerPx), (nscoord) (y*twipsPerPx));
-  // XXX: if we have a view, move that 
+  SetPosition(nsPoint((nscoord) (x*twipsPerPx), (nscoord) (y*twipsPerPx)));
+  // Xxx: if zewe have a view, move that 
   
   // create a new reflow state, setting our max size to (width,height):
   nsSize availableSpace((nscoord)(width*twipsPerPx), (nscoord)(height*twipsPerPx));
@@ -607,7 +607,7 @@ ArtUta* nsSVGForeignObjectFrame::DoReflow()
   
   WillReflow(presContext);
   Reflow(presContext, desiredSize, reflowState, status);
-  SizeTo(presContext, desiredSize.width, desiredSize.height);
+  SetSize(nsSize(desiredSize.width, desiredSize.height));
   DidReflow(presContext, &reflowState, NS_FRAME_REFLOW_FINISHED);
 
   AccumulateUta(&dirtyRegion, GetUta());

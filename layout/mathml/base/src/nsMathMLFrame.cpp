@@ -169,8 +169,7 @@ nsMathMLFrame::GetPresentationDataFrom(nsIFrame*           aFrame,
     }
     // stop if we reach the root <math> tag
     nsCOMPtr<nsIAtom> tag;
-    nsCOMPtr<nsIContent> content;
-    frame->GetContent(getter_AddRefs(content));
+    nsIContent* content = frame->GetContent();
     NS_ASSERTION(content, "dangling frame without a content node");
     if (!content)
       break;
@@ -182,20 +181,9 @@ nsMathMLFrame::GetPresentationDataFrom(nsIFrame*           aFrame,
       }
       break;
     }
-    frame->GetParent(&frame);
+    frame = frame->GetParent();
   }
   NS_ASSERTION(frame, "bad MathML markup - could not find the top <math> element");
-}
-
-/* static */ PRBool
-nsMathMLFrame::HasNextSibling(nsIFrame* aFrame)
-{
-  if (aFrame) {
-    nsIFrame* sibling;
-    aFrame->GetNextSibling(&sibling);
-    return sibling != nsnull;
-  }
-  return PR_FALSE;
 }
 
 // helper to get an attribute from the content or the surrounding <mstyle> hierarchy
@@ -215,11 +203,7 @@ nsMathMLFrame::GetAttribute(nsIContent* aContent,
   if (NS_CONTENT_ATTR_NOT_THERE == rv) {
     // see if we can get the attribute from the mstyle frame
     if (aMathMLmstyleFrame) {
-      nsCOMPtr<nsIContent> mstyleContent;
-      aMathMLmstyleFrame->GetContent(getter_AddRefs(mstyleContent));
-
-      nsIFrame* mstyleParent;
-      aMathMLmstyleFrame->GetParent(&mstyleParent);
+      nsIFrame* mstyleParent = aMathMLmstyleFrame->GetParent();
 
       nsPresentationData mstyleParentData;
       mstyleParentData.mstyle = nsnull;
@@ -233,7 +217,8 @@ nsMathMLFrame::GetAttribute(nsIContent* aContent,
       }
 
       // recurse all the way up into the <mstyle> hierarchy
-      rv = GetAttribute(mstyleContent, mstyleParentData.mstyle, aAttributeAtom, aValue);
+      rv = GetAttribute(aMathMLmstyleFrame->GetContent(),
+			mstyleParentData.mstyle, aAttributeAtom, aValue);
     }
   }
   return rv;
@@ -699,9 +684,7 @@ nsMathMLFrame::MapAttributesIntoCSS(nsIPresContext* aPresContext,
 nsMathMLFrame::MapAttributesIntoCSS(nsIPresContext* aPresContext,
                                     nsIFrame*       aFrame)
 {
-  nsCOMPtr<nsIContent> content;
-  aFrame->GetContent(getter_AddRefs(content));
-  PRInt32 ruleCount = MapAttributesIntoCSS(aPresContext, content);
+  PRInt32 ruleCount = MapAttributesIntoCSS(aPresContext, aFrame->GetContent());
   if (!ruleCount)
     return 0;
 
@@ -718,8 +701,7 @@ nsMathMLFrame::MapAttributesIntoCSS(nsIPresContext* aPresContext,
                                 changeList, minChange, maxChange);
 #ifdef DEBUG
       // Use the parent frame to make sure we catch in-flows and such
-      nsIFrame* parentFrame;
-      aFrame->GetParent(&parentFrame);
+      nsIFrame* parentFrame = aFrame->GetParent();
       fm->DebugVerifyStyleTree(parentFrame ? parentFrame : aFrame);
 #endif
     }

@@ -207,7 +207,7 @@ nsMathMLmrootFrame::Reflow(nsIPresContext*          aPresContext,
       bmIndex = childDesiredSize.mBoundingMetrics;
     }
     count++;
-    childFrame->GetNextSibling(&childFrame);
+    childFrame = childFrame->GetNextSibling();
   }
   if (aDesiredSize.mComputeMEW) {
     aDesiredSize.mMaxElementWidth = childDesiredSize.mMaxElementWidth;

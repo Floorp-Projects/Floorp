@@ -280,14 +280,12 @@ nsMathMLmsqrtFrame::Reflow(nsIPresContext*          aPresContext,
   //////////////////
   // Adjust the origins to leave room for the sqrt char and the overline bar
 
-  nsPoint origin;
   dx = radicalSize.width;
   dy = aDesiredSize.ascent - baseSize.ascent;
   nsIFrame* childFrame = mFrames.FirstChild();
   while (childFrame) {
-    childFrame->GetOrigin(origin);
-    childFrame->MoveTo(aPresContext, origin.x + dx, origin.y + dy);
-    childFrame->GetNextSibling(&childFrame);
+    childFrame->SetPosition(childFrame->GetPosition() + nsPoint(dx, dy));
+    childFrame = childFrame->GetNextSibling();
   }
 
   if (aDesiredSize.mComputeMEW) {

@@ -159,10 +159,11 @@ nsMathMLmsubsupFrame::PlaceSubSupScript(nsIPresContext*      aPresContext,
   nsIFrame* supScriptFrame = nsnull;
   aFrame->FirstChild(aPresContext, nsnull, &baseFrame);
   if (baseFrame)
-    baseFrame->GetNextSibling(&subScriptFrame);
+    subScriptFrame = baseFrame->GetNextSibling();
   if (subScriptFrame)
-    subScriptFrame->GetNextSibling(&supScriptFrame);
-  if (!baseFrame || !subScriptFrame || !supScriptFrame || HasNextSibling(supScriptFrame)) {
+    supScriptFrame = subScriptFrame->GetNextSibling();
+  if (!baseFrame || !subScriptFrame || !supScriptFrame ||
+      supScriptFrame->GetNextSibling()) {
     // report an error, encourage people to get their markups in order
     NS_WARNING("invalid markup");
     return NS_STATIC_CAST(nsMathMLContainerFrame*,

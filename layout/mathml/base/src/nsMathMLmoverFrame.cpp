@@ -133,7 +133,7 @@ nsMathMLmoverFrame::UpdatePresentationDataFromChildAt(nsIPresContext* aPresConte
         aScriptLevelIncrement, aFlagsValues, aFlagsToUpdate);
     }
     index++;
-    childFrame->GetNextSibling(&childFrame);
+    childFrame = childFrame->GetNextSibling();
   }
   return NS_OK;
 
@@ -179,7 +179,7 @@ XXX The winner is the outermost in conflicting settings like these:
   nsIFrame* overscriptFrame = nsnull;
   nsIFrame* baseFrame = mFrames.FirstChild();
   if (baseFrame)
-    baseFrame->GetNextSibling(&overscriptFrame);
+    overscriptFrame = baseFrame->GetNextSibling();
   if (!baseFrame || !overscriptFrame)
     return NS_OK; // a visual error indicator will be reported later during layout
 
@@ -282,8 +282,8 @@ nsMathMLmoverFrame::Place(nsIPresContext*      aPresContext,
   nsIFrame* overFrame = nsnull;
   nsIFrame* baseFrame = mFrames.FirstChild();
   if (baseFrame)
-    baseFrame->GetNextSibling(&overFrame);
-  if (!baseFrame || !overFrame || HasNextSibling(overFrame)) {
+    overFrame = baseFrame->GetNextSibling();
+  if (!baseFrame || !overFrame || overFrame->GetNextSibling()) {
     // report an error, encourage people to get their markups in order
     NS_WARNING("invalid markup");
     return ReflowError(aPresContext, aRenderingContext, aDesiredSize);

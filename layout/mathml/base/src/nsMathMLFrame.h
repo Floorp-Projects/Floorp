@@ -192,11 +192,6 @@ public:
                           nsPresentationData& aPresentationData,
                           PRBool              aClimbTree = PR_TRUE);
 
-  // helper to check if a frame has a next sibling - used to report
-  // an error when a next sibling is found where unexpected
-  static PRBool
-  HasNextSibling(nsIFrame* aFrame);
-
   // helper to check if a content has an attribute. If content is nsnull or if
   // the attribute is not there, check if the attribute is on the mstyle hierarchy
   // @return NS_CONTENT_ATTR_HAS_VALUE --if attribute has non-empty value, attr="value"

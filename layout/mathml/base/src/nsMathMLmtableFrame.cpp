@@ -127,9 +127,8 @@ GetValueAt(nsIPresContext* aPresContext,
       if (!valueList) {
         // The property isn't there yet, so set it
         nsAutoString values;
-        nsCOMPtr<nsIContent> content;
-        aTableOrRowFrame->GetContent(getter_AddRefs(content));
-        if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, aAttributeAtom, values)) {
+        if (NS_CONTENT_ATTR_HAS_VALUE ==
+	    aTableOrRowFrame->GetContent()->GetAttr(kNameSpaceID_None, aAttributeAtom, values)) {
           valueList = new nsValueList(values);
           if (valueList) {
             frameManager->SetFrameProperty(aTableOrRowFrame, aAttributeAtom,
@@ -170,13 +169,9 @@ MapAttributesInto(nsIPresContext* aPresContext,
   NS_ASSERTION(NS_SUCCEEDED(rv), "cannot find the position of the cell frame");
   if (NS_FAILED(rv)) return;
 
-  nsIFrame* tableFrame;
-  nsIFrame* rowgroupFrame;
-  nsIFrame* rowFrame;
-
-  cellFrame->GetParent(&rowFrame);
-  rowFrame->GetParent(&rowgroupFrame);
-  rowgroupFrame->GetParent(&tableFrame);
+  nsIFrame* rowFrame = cellFrame->GetParent();
+  nsIFrame* rowgroupFrame = rowFrame->GetParent();
+  nsIFrame* tableFrame = rowgroupFrame->GetParent();
   DEBUG_VERIFY_THAT_FRAME_IS(rowFrame, TABLE_ROW);
   DEBUG_VERIFY_THAT_FRAME_IS(rowgroupFrame, TABLE_ROW_GROUP);
   DEBUG_VERIFY_THAT_FRAME_IS(tableFrame, TABLE);
@@ -297,8 +292,7 @@ MapAttributesInto(nsIPresContext* aPresContext,
                                   changeList, minChange, maxChange);
 #ifdef DEBUG
         // Use the parent frame to make sure we catch in-flows and such
-        nsIFrame* parentFrame;
-        aCellFrame->GetParent(&parentFrame);
+        nsIFrame* parentFrame = aCellFrame->GetParent();
         fm->DebugVerifyStyleTree(parentFrame ? parentFrame : aCellFrame);
 #endif
       }
@@ -516,14 +510,11 @@ nsMathMLmtableOuterFrame::Reflow(nsIPresContext*          aPresContext,
     rowFrame = GetRowFrameAt(aPresContext, rowIndex);
     if (rowFrame) {
       // translate the coordinates to be relative to us
-      nsRect rect;
       nsIFrame* frame = rowFrame;
-      frame->GetRect(rect);
-      height = rect.height;
+      height = frame->GetSize().height;
       do {
-        dy += rect.y;
-        frame->GetParent(&frame);
-        frame->GetRect(rect);
+        dy += frame->GetPosition().y;
+        frame = frame->GetParent();
       } while (frame != this);
     }
   }

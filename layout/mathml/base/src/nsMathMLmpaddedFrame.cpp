@@ -447,9 +447,8 @@ nsMathMLmpaddedFrame::Reflow(nsIPresContext*          aPresContext,
   if (dx || dy) {
     nsIFrame* childFrame = mFrames.FirstChild();
     while (childFrame) {
-      childFrame->GetRect(rect);
-      childFrame->MoveTo(aPresContext, rect.x + dx, rect.y + dy);
-      childFrame->GetNextSibling(&childFrame);
+      childFrame->SetPosition(childFrame->GetPosition() + nsPoint(dx, dy));
+      childFrame = childFrame->GetNextSibling();
     }
   }
 
