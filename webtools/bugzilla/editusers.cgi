@@ -66,7 +66,7 @@ sub CheckUser ($)
 {
     my $user = shift;
 
-    # do we have a product?
+    # do we have a user?
     unless ($user) {
         print "Sorry, you haven't specified a user.";
         PutTrailer();
