@@ -1,0 +1,182 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+// YY need to pass isMultiple before create called
+
+//#include "nsFormControlFrame.h"
+#include "nsLegendFrame.h"
+#include "nsIDOMNode.h"
+#include "nsIDOMHTMLLegendElement.h"
+#include "nsCSSRendering.h"
+//#include "nsIDOMHTMLCollection.h"
+#include "nsIContent.h"
+//#include "prtypes.h"
+#include "nsIFrame.h"
+#include "nsISupports.h"
+#include "nsIAtom.h"
+#include "nsIPresContext.h"
+#include "nsIHTMLContent.h"
+#include "nsHTMLIIDs.h"
+#include "nsHTMLParts.h"
+//#include "nsIRadioButton.h"
+//#include "nsWidgetsCID.h"
+//#include "nsSize.h"
+#include "nsHTMLAtoms.h"
+//#include "nsIView.h"
+//#include "nsIListWidget.h"
+//#include "nsIComboBox.h"
+//#include "nsIListBox.h"
+#include "nsIStyleContext.h"
+#include "nsStyleConsts.h"
+#include "nsStyleUtil.h"
+#include "nsFont.h"
+
+static NS_DEFINE_IID(kLegendFrameCID, NS_LEGEND_FRAME_CID);
+static NS_DEFINE_IID(kIDOMHTMLLegendElementIID, NS_IDOMHTMLLEGENDELEMENT_IID);
+ 
+nsresult
+NS_NewLegendFrame(nsIContent* aContent,
+                  nsIFrame*   aParent,
+                  nsIFrame*&  aResult)
+{
+  aResult = new nsLegendFrame(aContent, aParent);
+  if (nsnull == aResult) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  return NS_OK;
+}
+
+nsLegendFrame::nsLegendFrame(nsIContent* aContent,
+                                               nsIFrame* aParentFrame)
+  : nsHTMLContainerFrame(aContent, aParentFrame)
+{
+  mInline = PR_FALSE;
+}
+
+nsLegendFrame::~nsLegendFrame()
+{
+}
+
+NS_IMETHODIMP
+nsLegendFrame::QueryInterface(REFNSIID aIID, void** aInstancePtrResult)
+{
+  NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
+  if (nsnull == aInstancePtrResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (aIID.Equals(kLegendFrameCID)) {
+    *aInstancePtrResult = (void*) ((nsLegendFrame*)this);
+    return NS_OK;
+  }
+  return nsHTMLContainerFrame::QueryInterface(aIID, aInstancePtrResult);
+}
+
+NS_IMETHODIMP
+nsLegendFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
+{
+  // cache our display type
+  const nsStyleDisplay* styleDisplay;
+  GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) styleDisplay);
+  mInline = (NS_STYLE_DISPLAY_BLOCK != styleDisplay->mDisplay);
+
+  if (mInline) {
+    NS_NewInlineFrame(mContent, this, mFirstChild);
+  } else {
+    NS_NewBodyFrame(mContent, this, mFirstChild, PR_FALSE);
+  }
+
+  // Resolve style and set the style context
+  nsIStyleContext* styleContext =
+    aPresContext.ResolveStyleContextFor(mContent, this);              
+  mFirstChild->SetStyleContext(&aPresContext, styleContext);
+  NS_RELEASE(styleContext);                                           
+
+  // Set the geometric and content parent for each of the child frames
+  for (nsIFrame* frame = aChildList; nsnull != frame; frame->GetNextSibling(frame)) {
+    frame->SetGeometricParent(mFirstChild);
+    frame->SetContentParent(mFirstChild);
+  }
+
+  // Queue up the frames for the inline frame
+  return mFirstChild->Init(aPresContext, aChildList);
+}
+
+NS_IMETHODIMP
+nsLegendFrame::Paint(nsIPresContext& aPresContext,
+                     nsIRenderingContext& aRenderingContext,
+                     const nsRect& aDirtyRect)
+{
+  return nsHTMLContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect);
+}
+
+NS_IMETHODIMP 
+nsLegendFrame::Reflow(nsIPresContext& aPresContext,
+                               nsHTMLReflowMetrics& aDesiredSize,
+                               const nsHTMLReflowState& aReflowState,
+                               nsReflowStatus& aStatus)
+{
+  nsSize availSize(aReflowState.maxSize);
+
+  // Try to reflow the child into the available space. It might not fit
+  nsHTMLReflowState reflowState(mFirstChild, aReflowState, availSize);
+  //nsIHTMLReflow* htmlReflow = nsnull;
+  //if (NS_OK == mFirstChild->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
+    //htmlReflow->WillReflow(aPresContext);
+    //mFirstChild->MoveTo(0, 0);
+    ReflowChild(mFirstChild, aPresContext, aDesiredSize, reflowState, aStatus);
+  //}
+
+  // Place the child
+  nsRect rect = nsRect(0, 0, aDesiredSize.width, aDesiredSize.height);
+  mFirstChild->SetRect(rect);
+
+  aDesiredSize.ascent  = aDesiredSize.height;
+  aDesiredSize.descent = 0;
+
+  aStatus = NS_FRAME_COMPLETE;
+  return NS_OK;
+}
+
+PRInt32 nsLegendFrame::GetAlign()
+{
+  PRInt32 intValue = NS_STYLE_TEXT_ALIGN_CENTER;
+  nsIHTMLContent* content = nsnull;
+  mContent->QueryInterface(kIHTMLContentIID, (void**) &content);
+  if (nsnull != content) {
+    nsHTMLValue value;
+    if (NS_CONTENT_ATTR_HAS_VALUE == (content->GetAttribute(nsHTMLAtoms::align, value))) {
+      if (eHTMLUnit_Enumerated == value.GetUnit()) {
+        intValue = value.GetIntValue();
+      }
+    }
+    NS_RELEASE(content);
+  }
+  return intValue;
+}
+
+PRIntn
+nsLegendFrame::GetSkipSides() const
+{
+  return 0;
+}
+
+PRBool
+nsLegendFrame::IsInline()
+{
+  return mInline;
+}

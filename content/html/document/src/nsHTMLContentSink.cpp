@@ -522,6 +522,10 @@ MakeContentObject(nsHTMLTag aNodeType,
   case eHTMLTag_embed:
     rv = NS_NewHTMLEmbedElement(aResult, aAtom);
     break;
+  case eHTMLTag_fieldset:
+    rv = NS_NewHTMLFieldSetElement(aResult, aAtom);
+    SetForm(*aResult, aForm);
+    break;
   case eHTMLTag_font:
     rv = NS_NewHTMLFontElement(aResult, aAtom);
     break;

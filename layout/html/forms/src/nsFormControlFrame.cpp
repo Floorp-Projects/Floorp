@@ -309,18 +309,25 @@ nsFormControlFrame::GetWidgetInitData(nsIPresContext& aPresContext)
 }
 
 void 
-nsFormControlFrame::SetColors()
+nsFormControlFrame::SetColors(nsIPresContext& aPresContext)
 {
   if (mWidget) {
-    const nsStyleColor* color = nsStyleUtil::FindNonTransparentBackground(mStyleContext);
-    if (nsnull != color) {
-      mWidget->SetBackgroundColor(color->mBackgroundColor);
-    } else {
-      mWidget->SetBackgroundColor(NS_RGB(0xFF, 0xFF, 0xFF));
-    }
-    const nsStyleColor* myColor =
+    nsCompatibility mode;
+    aPresContext.GetCompatibilityMode(mode);
+    const nsStyleColor* color =
       (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
-    mWidget->SetForegroundColor(myColor->mColor);
+    if (nsnull != color) {
+      if (!(NS_STYLE_BG_COLOR_TRANSPARENT & color->mBackgroundFlags)) {
+        mWidget->SetBackgroundColor(color->mBackgroundColor);
+#ifdef bug_1021_closed
+      } else if (eCompatibility_NavQuirks == mode) {
+#else
+      } else {
+#endif
+        mWidget->SetBackgroundColor(NS_RGB(0xFF, 0xFF, 0xFF));
+      }
+      mWidget->SetForegroundColor(color->mColor);
+    }
   }
 }
 
@@ -564,7 +571,7 @@ void nsFormControlFrame::GetStyleSize(nsIPresContext& aPresContext,
   }
 }
 
-void
+nsCompatibility
 GetRepChars(nsIPresContext& aPresContext, char& char1, char& char2) 
 {
   nsCompatibility mode;
@@ -572,9 +579,11 @@ GetRepChars(nsIPresContext& aPresContext, char& char1, char& char2)
   if (eCompatibility_Standard == mode) {
     char1 = 'm';
     char2 = 'a';
+    return eCompatibility_Standard;
   } else {
     char1 = '%';
     char2 = '%';
+    return eCompatibility_NavQuirks;
   }
 }
 
@@ -595,7 +604,7 @@ nsFormControlFrame::GetTextSize(nsIPresContext& aPresContext, nsFormControlFrame
   fontMet->GetHeight(aSize.height);
 
   char char1, char2;
-  GetRepChars(aPresContext, char1, char2);
+  nsCompatibility mode = GetRepChars(aPresContext, char1, char2);
   nscoord char1Width, char2Width;
   aRendContext->GetWidth(char1, char1Width);
   aRendContext->GetWidth(char2, char2Width);
@@ -603,8 +612,12 @@ nsFormControlFrame::GetTextSize(nsIPresContext& aPresContext, nsFormControlFrame
   NS_RELEASE(fontMet);
   NS_RELEASE(deviceContext);
 
-  return ((char1Width + char2Width) / 2) + 1;
-}
+  if (eCompatibility_Standard == mode) {
+    return ((char1Width + char2Width) / 2) + 1;
+  } else {
+    return char1Width;
+  }
+}  
   
 nscoord
 nsFormControlFrame::GetTextSize(nsIPresContext& aPresContext, nsFormControlFrame* aFrame,

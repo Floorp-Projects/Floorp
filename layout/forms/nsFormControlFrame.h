@@ -168,7 +168,7 @@ public:
     * created.
     */
   virtual void PostCreateWidget(nsIPresContext* aPresContext);
-  void SetColors();
+  void SetColors(nsIPresContext& aPresContext);
   
   virtual void Reset();
   virtual PRBool IsSuccessful();

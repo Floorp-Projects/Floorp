@@ -107,6 +107,7 @@ public:
   static nsIAtom* enctype;
 
   static nsIAtom* face;
+  static nsIAtom* fieldset;
   static nsIAtom* font;
   static nsIAtom* fontWeight;
   static nsIAtom* _for;
@@ -148,6 +149,7 @@ public:
   static nsIAtom* link;
   static nsIAtom* left;
   static nsIAtom* leftpadding;
+  static nsIAtom* legend;
   static nsIAtom* length;
   static nsIAtom* longdesc;
   static nsIAtom* lowsrc;

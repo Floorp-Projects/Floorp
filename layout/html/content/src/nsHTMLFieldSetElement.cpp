@@ -180,16 +180,28 @@ nsHTMLFieldSetElement::GetForm(nsIDOMHTMLFormElement** aForm)
   return result;
 }
 
+// An important assumption is that if aForm is null, the previous mForm will not be released
+// This allows nsHTMLFormElement to deal with circular references.
 NS_IMETHODIMP
 nsHTMLFieldSetElement::SetForm(nsIDOMHTMLFormElement* aForm)
 {
+  nsresult result = NS_OK;
 	if (nsnull == aForm) {
     mForm = nsnull;
     return NS_OK;
   } else {
     NS_IF_RELEASE(mForm);
-    return aForm->QueryInterface(kIFormIID, (void**)&mForm);
+    nsIFormControl* formControl = nsnull;
+    result = QueryInterface(kIFormControlIID, (void**)&formControl);
+    if ((NS_OK == result) && formControl) {
+      result = aForm->QueryInterface(kIFormIID, (void**)&mForm); // keep the ref
+      if ((NS_OK == result) && mForm) {
+        mForm->AddElement(formControl);
+      }
+      NS_RELEASE(formControl);
+    }
   }
+  return result;
 }
 
 NS_IMETHODIMP

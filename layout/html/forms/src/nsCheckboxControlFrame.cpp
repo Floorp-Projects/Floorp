@@ -151,7 +151,7 @@ nsCheckboxControlFrame::PostCreateWidget(nsIPresContext* aPresContext)
   
     if (mWidget && (NS_OK == mWidget->QueryInterface(GetIID(),(void**)&checkbox))) {
 	    checkbox->SetState(checked);
-      SetColors();
+      SetColors(*aPresContext);
       NS_IF_RELEASE(checkbox);
     }
   }
