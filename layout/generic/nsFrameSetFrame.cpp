@@ -245,6 +245,9 @@ nsHTMLFramesetFrame::~nsHTMLFramesetFrame()
   delete[] mColSizes;
   delete[] mVerBorders;
   delete[] mHorBorders;
+  delete[] mChildTypes;
+  delete[] mChildFrameborder;
+  delete[] mChildBorderColors;
 
   nsContentUtils::UnregisterPrefCallback(kFrameResizePref,
                                          FrameResizePrefCallback, this);
@@ -354,20 +357,30 @@ nsHTMLFramesetFrame::Init(nsPresContext*  aPresContext,
   NS_ENSURE_SUCCESS(result, result);
   mRowSizes  = new nscoord[mNumRows];
   mColSizes  = new nscoord[mNumCols];
+  if (!mRowSizes || !mColSizes)
+    return NS_ERROR_OUT_OF_MEMORY; 
 
   PRInt32 numCells = mNumRows*mNumCols;
 
   mVerBorders    = new nsHTMLFramesetBorderFrame*[mNumCols];  // 1 more than number of ver borders
+  if (!mVerBorders)
+    return NS_ERROR_OUT_OF_MEMORY;
+
   for (int verX  = 0; verX < mNumCols; verX++)
     mVerBorders[verX]    = nsnull;
 
   mHorBorders    = new nsHTMLFramesetBorderFrame*[mNumRows];  // 1 more than number of hor borders
+  if (!mHorBorders)
+    return NS_ERROR_OUT_OF_MEMORY;
+
   for (int horX = 0; horX < mNumRows; horX++)
     mHorBorders[horX]    = nsnull;
      
   mChildTypes = new PRInt32[numCells]; 
   mChildFrameborder  = new nsFrameborder[numCells]; 
   mChildBorderColors  = new nsBorderColor[numCells]; 
+  if (!mChildTypes || !mChildFrameborder || !mChildBorderColors)
+    return NS_ERROR_OUT_OF_MEMORY;
 
   // create the children frames; skip content which isn't <frameset> or <frame>
   nsIFrame* lastChild = nsnull;
@@ -394,18 +407,31 @@ nsHTMLFramesetFrame::Init(nsPresContext*  aPresContext,
       kidSC = shell->StyleSet()->ResolveStyleFor(child, mStyleContext);
       if (tag == nsHTMLAtoms::frameset) {
         result = NS_NewHTMLFramesetFrame(shell, &frame);
+        if (NS_FAILED(result))
+          return result;
 
         mChildTypes[mChildCount] = FRAMESET;
         nsHTMLFramesetFrame* childFrame = (nsHTMLFramesetFrame*)frame;
         childFrame->SetParentFrameborder(frameborder);
         childFrame->SetParentBorderWidth(borderWidth);
         childFrame->SetParentBorderColor(borderColor);
-        frame->Init(aPresContext, child, this, kidSC, nsnull);
-        
+        result = frame->Init(aPresContext, child, this, kidSC, nsnull);
+        if (NS_FAILED(result)) {
+          frame->Destroy(aPresContext);
+          return result;
+        }
+
         mChildBorderColors[mChildCount].Set(childFrame->GetBorderColor());
       } else { // frame
         result = NS_NewSubDocumentFrame(shell, &frame);
-        frame->Init(aPresContext, child, this, kidSC, nsnull);
+        if (NS_FAILED(result))
+          return NS_ERROR_OUT_OF_MEMORY;
+
+        result = frame->Init(aPresContext, child, this, kidSC, nsnull);
+        if (NS_FAILED(result)) {
+          frame->Destroy(aPresContext);
+          return result;
+        }
 
         mChildTypes[mChildCount] = FRAME;
         
@@ -432,12 +458,23 @@ nsHTMLFramesetFrame::Init(nsPresContext*  aPresContext,
     // XXX the blank frame is using the content of its parent - at some point it 
     // should just have null content, if we support that
     nsHTMLFramesetBlankFrame* blankFrame = new (shell) nsHTMLFramesetBlankFrame;
+    if (!blankFrame)
+      return NS_ERROR_OUT_OF_MEMORY;
+
     nsRefPtr<nsStyleContext> pseudoStyleContext;
     pseudoStyleContext = shell->StyleSet()->ResolvePseudoStyleFor(nsnull,
                                                                   nsCSSAnonBoxes::framesetBlank,
                                                                   mStyleContext);
-    if(blankFrame)
-      blankFrame->Init(aPresContext, mContent, this, pseudoStyleContext, nsnull);
+    if (!pseudoStyleContext) {
+      blankFrame->Destroy(aPresContext);
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    result = blankFrame->Init(aPresContext, mContent, this, pseudoStyleContext, nsnull);
+    if (NS_FAILED(result)) {
+      blankFrame->Destroy(aPresContext);
+      return result;
+    }
    
     if (lastChild)
       lastChild->SetNextSibling(blankFrame);
@@ -1214,6 +1251,10 @@ nsHTMLFramesetFrame::Reflow(nsPresContext*          aPresContext,
     delete[] mChildTypes; 
     delete[] mChildFrameborder;
     delete[] mChildBorderColors;
+
+    mChildTypes = nsnull;
+    mChildFrameborder = nsnull;
+    mChildBorderColors = nsnull;
   }
 
   if (aDesiredSize.mComputeMEW) {
