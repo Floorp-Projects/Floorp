@@ -19,6 +19,19 @@
  *
  * Contributor(s):
  *  Brian Ryner <bryner@netscape.com>
+ *  Javier Delgadillo <javi@netscape.com>
+ *
+ * Alternatively, the contents of this file may be used under the
+ * terms of the GNU General Public License Version 2 or later (the
+ * "GPL"), in which case the provisions of the GPL are applicable 
+ * instead of those above.  If you wish to allow use of your 
+ * version of this file only under the terms of the GPL and not to
+ * allow others to use your version of this file under the MPL,
+ * indicate your decision by deleting the provisions above and
+ * replace them with the notice and other provisions required by
+ * the GPL.  If you do not delete the provisions above, a recipient
+ * may use your version of this file under either the MPL or the
+ * GPL.
  */
 
 #include "nsNSSIOLayer.h"
@@ -31,6 +44,8 @@
 #include "nsIWebProgressListener.h"
 
 #include "ssl.h"
+#include "secerr.h"
+#include "sslerr.h"
 
 //#define DEBUG_SSL_VERBOSE
 
@@ -345,6 +360,85 @@ nsSSLIOLayerNewSocket(const char *host,
   return NS_OK;
 }
 
+static PRBool
+nsCertErrorNeedsDialog(int error)
+{
+  return ((error == SEC_ERROR_UNKNOWN_ISSUER) ||
+          (error == SEC_ERROR_UNTRUSTED_ISSUER) ||
+          (error == SSL_ERROR_BAD_CERT_DOMAIN) ||
+          (error == SSL_ERROR_POST_WARNING) ||
+          (error == SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE) ||
+          (error == SEC_ERROR_CA_CERT_INVALID) ||
+          (error == SEC_ERROR_EXPIRED_CERTIFICATE));
+}
+
+static PRBool
+nsUnknownIssuerDialog(nsNSSSocketInfo *infoObject, 
+                     PRFileDesc      *socket)
+{
+  return PR_FALSE;
+}
+
+static PRBool
+nsBadCertDomainDialog(nsNSSSocketInfo *infoObject, 
+                      PRFileDesc      *socket)
+{
+  return PR_FALSE;
+}
+
+static PRBool
+nsExpiredCertDialog(nsNSSSocketInfo *infoObject, 
+                    PRFileDesc      *socket)
+{
+  return PR_FALSE;
+}
+
+
+static PRBool
+nsContinueDespiteCertError(nsNSSSocketInfo *infoObject,
+                           PRFileDesc      *socket,
+                           int              error)
+{
+  PRBool retVal = PR_FALSE;
+  switch (error) {
+  case SEC_ERROR_UNKNOWN_ISSUER:
+  case SEC_ERROR_CA_CERT_INVALID:
+  case SEC_ERROR_UNTRUSTED_ISSUER:
+    retVal = nsUnknownIssuerDialog(infoObject, socket);
+    break;
+  case SSL_ERROR_BAD_CERT_DOMAIN:
+    retVal = nsBadCertDomainDialog(infoObject, socket);
+    break;
+  case SEC_ERROR_EXPIRED_CERTIFICATE:
+    retVal = nsExpiredCertDialog(infoObject, socket);
+    break;
+  default:
+    break;
+  }
+  return retVal;
+}
+
+static int
+nsNSSBadCertHandler(void *arg, PRFileDesc *socket)
+{
+  SECStatus rv = SECFailure;
+  int error;
+  nsNSSSocketInfo* infoObject = (nsNSSSocketInfo *)arg;
+
+  while (rv != SECSuccess) {
+    error = PR_GetError();
+    if (!nsCertErrorNeedsDialog(error)) {
+      // Some weird error we don't really know how to handle.
+      break;
+    }
+    if (!nsContinueDespiteCertError(infoObject, socket, error)) {
+      break;
+    }
+    rv = SECSuccess; //This will eventually re-verify the cert to
+                     //make sure nothing else is wrong.
+  }
+  return (int)rv;
+}
 
 nsresult
 nsSSLIOLayerAddToSocket(const char* host,
@@ -406,6 +500,19 @@ nsSSLIOLayerAddToSocket(const char* host,
 
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("[%p] Socket set up\n", (void*)sslSock));
   infoObject->QueryInterface(NS_GET_IID(nsISupports), (void**) (info));
+  if (SECSuccess != SSL_Enable(sslSock, SSL_SECURITY, PR_TRUE)) {
+    return NS_ERROR_FAILURE;
+  }
+  if (SECSuccess != SSL_Enable(sslSock, SSL_HANDSHAKE_AS_CLIENT, PR_TRUE)) {
+    return NS_ERROR_FAILURE;
+  }
+  if (SECSuccess != SSL_Enable(sslSock, SSL_ENABLE_FDX, PR_TRUE)) {
+    return NS_ERROR_FAILURE;
+  }
+  if (SECSuccess != SSL_BadCertHook(sslSock, nsNSSBadCertHandler,
+                                    infoObject)) {
+    return NS_ERROR_FAILURE;
+  }
   return NS_OK;
 }
   
