@@ -1679,14 +1679,18 @@ int main(int argc, char* argv[])
   //       has responsibility to release it.
   nsISplashScreen *splash = 0;
   PRBool defaultSplash;
+#ifdef MOZ_WIDGET_PHOTON
+	defaultSplash = PR_TRUE;
+#else
 #ifdef MOZ_XUL_APP
   defaultSplash = aAppData.GetSplashEnabled();
 #else
-#ifdef XP_UNIX && !defined(MOZ_WIDGET_PHOTON)
+#ifdef XP_UNIX
   defaultSplash = PR_FALSE;
 #else
   defaultSplash = PR_TRUE;
-#endif /* XP_UNIX && !defined(MOZ_WIDGET_PHOTON) */
+#endif /* MOZ_WIDGET_PHOTON */
+#endif /* XP_UNIX */
 #endif /* MOZ_XUL_APP */
 
   PRBool dosplash = GetWantSplashScreen(argc, argv, defaultSplash);
