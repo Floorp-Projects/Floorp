@@ -251,7 +251,7 @@ nsInstallFile::RegisterInVersionRegistry()
     }
 
     VR_Install( (char*)(const char*)nsAutoCString(*mVersionRegistryName), 
-                (char*)(const char*)nsprPath(*mFinalFile),
+                (char*)(const char*)nsNSPRPath(*mFinalFile),
                 (char*)(const char*)nsAutoCString(regPackageName), 
                 PR_FALSE );
 

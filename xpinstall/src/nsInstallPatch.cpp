@@ -249,7 +249,7 @@ PRInt32 nsInstallPatch::Complete()
             char* tempVersion = tempVersionString.ToNewCString();
 
             err = VR_Install( tempRegName, 
-							  (char*) (const char *) nsprPath(*mTargetFile),
+							  (char*) (const char *) nsNSPRPath(*mTargetFile),
                               tempVersion, 
                               PR_FALSE );
             
@@ -314,7 +314,7 @@ nsInstallPatch::NativePatch(const nsFileSpec &sourceFile, const nsFileSpec &patc
 	DIFFDATA	*dd;
 	PRInt32		status		= GDIFF_ERR_MEM;
 	char 		*tmpurl		= NULL;
-	char 		*realfile	= PL_strdup(nsprPath(sourceFile)); // needs to be sourceFile!!!
+	char 		*realfile	= PL_strdup(nsNSPRPath(sourceFile)); // needs to be sourceFile!!!
 	nsFileSpec  outFileSpec = sourceFile;
 
 	dd = (DIFFDATA *)PR_Calloc( 1, sizeof(DIFFDATA));
@@ -331,7 +331,7 @@ nsInstallPatch::NativePatch(const nsFileSpec &sourceFile, const nsFileSpec &patc
 		dd->bufsize = BUFSIZE;
 
 		// validate patch header & check for special instructions
-		dd->fDiff = PR_Open (nsprPath(patchFile), PR_RDONLY, 0666);
+		dd->fDiff = PR_Open (nsNSPRPath(patchFile), PR_RDONLY, 0666);
 
 
 		if (dd->fDiff != NULL)
@@ -383,7 +383,7 @@ nsInstallPatch::NativePatch(const nsFileSpec &sourceFile, const nsFileSpec &patc
 			{
 				// set
                 PL_strfree(realfile);
-				realfile = PL_strdup(nsprPath(tempMacFile));
+				realfile = PL_strdup(nsNSPRPath(tempMacFile));
 			}
 		}
 #endif 
@@ -414,7 +414,7 @@ nsInstallPatch::NativePatch(const nsFileSpec &sourceFile, const nsFileSpec &patc
 		outFileSpec.SetLeafName(newFileName); //????
 		outFileSpec.MakeUnique();
 
-        char *outFile = PL_strdup(nsprPath(outFileSpec));
+        char *outFile = PL_strdup(nsNSPRPath(outFileSpec));
 
 		// apply patch to the source file
 		dd->fSrc = PR_Open ( realfile, PR_RDONLY, 0666);
@@ -556,7 +556,7 @@ nsInstallPatch::HashFilePath(const nsFilePath& aPath)
 {
     PRUint32 rv = 0;
 
-	char* cPath = PL_strdup(nsprPath(aPath));
+	char* cPath = PL_strdup(nsNSPRPath(aPath));
     
     if(cPath != nsnull) 
     {
