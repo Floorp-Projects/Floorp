@@ -2542,7 +2542,7 @@ alpha*-*-osf*)
     DSO_LDOPTS='-Wl,-shared -Wl,-h -Wl,$(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
     MKSHLIB='$(CXX) $(DSO_LDOPTS)'
     if $CC -E - -dM </dev/null | grep -v __ELF__ >/dev/null; then
-	DSO_LDOPTS="-Bshareable"
+	DSO_LDOPTS="-Bshareable $DSO_LDOPTS"
     fi
     if test "$LIBRUNPATH"; then
 	DSO_LDOPTS="-R$LIBRUNPATH $DSO_LDOPTS"
