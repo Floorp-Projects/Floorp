@@ -1568,7 +1568,7 @@ nsTreeRowGroupFrame::ReflowScrollbar(nsIPresContext* aPresContext)
       // event manager doesn't send events to the destroyed scrollbar frames
       nsCOMPtr<nsIPresShell> shell;
       aPresContext->GetShell(getter_AddRefs(shell));
-      ClearFrameRefs(mScrollbar);
+      ClearFrameRefs(aPresContext, shell, mScrollbar);
       
       // Nuke the scrollbar.
       mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, mScrollbar, nsnull);
