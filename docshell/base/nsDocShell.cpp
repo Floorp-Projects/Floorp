@@ -36,6 +36,7 @@
 #include "nsIFrame.h"
 #include "nsIMarkupDocumentViewer.h"
 #include "nsXPIDLString.h"
+#include "nsIChromeEventHandler.h"
 
 #ifdef XXX_NS_DEBUG       // XXX: we'll need a logging facility for debugging
 #define WEB_TRACE(_bit,_args)            \
@@ -56,13 +57,15 @@
 //*****************************************************************************
 
 nsDocShell::nsDocShell() : 
-  mCreated(PR_FALSE), 
+  mCreated(PR_FALSE),
+  mInitInfo(nsnull), 
   mContentListener(nsnull),
   mItemType(typeContent),
   mMarginWidth(0), 
   mMarginHeight(0),
   mParent(nsnull),
-  mTreeOwner(nsnull)
+  mTreeOwner(nsnull),
+  mChromeEventHandler(nsnull)
 {
   NS_INIT_REFCNT();
 }
@@ -329,7 +332,8 @@ NS_IMETHODIMP nsDocShell::GetContentViewer(nsIContentViewer** aContentViewer)
 
 NS_IMETHODIMP nsDocShell::SetChromeEventHandler(nsIChromeEventHandler* aChromeEventHandler)
 {
-   //XXX Implement
+   // Weak reference. Don't addref.
+   mChromeEventHandler = aChromeEventHandler;
    return NS_OK;
 }
 
@@ -337,7 +341,8 @@ NS_IMETHODIMP nsDocShell::GetChromeEventHandler(nsIChromeEventHandler** aChromeE
 {
    NS_ENSURE_ARG_POINTER(aChromeEventHandler);
 
-   //XXX Implement
+   *aChromeEventHandler = mChromeEventHandler;
+   NS_IF_ADDREF(*aChromeEventHandler);
    return NS_OK;
 }
 
@@ -1158,18 +1163,34 @@ NS_IMETHODIMP nsDocShell::FocusAvailable(nsIBaseWindow* aCurrentFocus,
    return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShell::GetTitle(PRUnichar** title)
+NS_IMETHODIMP nsDocShell::GetTitle(PRUnichar** aTitle)
 {
-   NS_ENSURE_ARG_POINTER(title);
+   NS_ENSURE_ARG_POINTER(aTitle);
 
-   //XXX First Check
-   return NS_ERROR_FAILURE;
+   *aTitle = mTitle.ToNewUnicode();
+   return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShell::SetTitle(const PRUnichar* title)
+NS_IMETHODIMP nsDocShell::SetTitle(const PRUnichar* aTitle)
 {
-   //XXX First Check
-   return NS_ERROR_FAILURE;
+   // Store local title
+   mTitle = aTitle;
+
+   nsCOMPtr<nsIDocShellTreeItem> parent;
+   GetSameTypeParent(getter_AddRefs(parent));
+
+   // When title is set on the top object it should then be passed to the 
+   // tree owner.
+   if(!parent)
+      {
+      nsCOMPtr<nsIBaseWindow> treeOwnerAsWin(do_QueryInterface(mTreeOwner));
+      if(!treeOwnerAsWin)
+         return NS_OK;
+
+      treeOwnerAsWin->SetTitle(aTitle);
+      }
+
+   return NS_OK;
 }
 
 //*****************************************************************************
