@@ -2678,11 +2678,14 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
     return NS_OK;
 
     // retrieve a path for layout module. Needed for plugin mime types registration
-    nsCOMPtr<nsIComponentManager> compManager = do_GetService(kComponentManagerCID);
     nsCOMPtr<nsIFile> path;
-    nsresult rvIsLayoutPath = compManager->SpecForRegistryLocation(REL_PLUGIN_DLL, getter_AddRefs(path));
-
-    LoadXPCOMPlugins(compManager, path);
+    PRBool isLayoutPath = PR_FALSE;
+    nsresult rv;
+    nsCOMPtr<nsIComponentManager> compManager = do_GetService(kComponentManagerCID, &rv);
+    if (NS_SUCCEEDED(rv) && compManager) {
+      isLayoutPath = NS_SUCCEEDED(compManager->SpecForRegistryLocation(REL_PLUGIN_DLL, getter_AddRefs(path)));
+      rv = LoadXPCOMPlugins(compManager, path);
+    }
 
 		// 1. scan the plugins directory (where is it?) for eligible plugin libraries.
 		nsPluginsDir pluginsDir;
@@ -2695,34 +2698,29 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
 				nsPluginFile pluginFile(file);
 				PRLibrary* pluginLibrary = NULL;
 
-#ifndef XP_WIN
-				// load the plugin's library so we can ask it some questions but not for Windows for now
-        if (pluginFile.LoadPlugin(pluginLibrary) == NS_OK && pluginLibrary != NULL) {
-#endif
-          // create a tag describing this plugin.
-          nsPluginInfo info = { sizeof(info) };
-          nsresult res = pluginFile.GetPluginInfo(info);
-          if(NS_FAILED(res))
-        	  continue;
+        // load the plugin's library so we can ask it some questions
+        if (pluginFile.LoadPlugin(pluginLibrary) != NS_OK || pluginLibrary == NULL)
+          continue;
 
-          nsPluginTag* pluginTag = new nsPluginTag(&info);
+        // create a tag describing this plugin.
+        nsPluginInfo info = { sizeof(info) };
+        nsresult res = pluginFile.GetPluginInfo(info);
+        if(NS_FAILED(res))
+        	continue;
 
-          pluginFile.FreePluginInfo(info);
+        nsPluginTag* pluginTag = new nsPluginTag(&info);
+        pluginFile.FreePluginInfo(info);
 
-          if(pluginTag == nsnull)
-            return NS_ERROR_OUT_OF_MEMORY;
+        if(pluginTag == nsnull)
+          return NS_ERROR_OUT_OF_MEMORY;
 
-				  pluginTag->mNext = mPlugins;
-				  mPlugins = pluginTag;
+				pluginTag->mNext = mPlugins;
+				mPlugins = pluginTag;
 
-          if(NS_SUCCEEDED(rvIsLayoutPath))
-            RegisterPluginMimeTypesWithLayout(pluginTag, compManager, path);
+        if(isLayoutPath)
+          RegisterPluginMimeTypesWithLayout(pluginTag, compManager, path);
 
-          pluginTag->mLibrary = pluginLibrary;
-
-#ifndef XP_WIN
-				}
-#endif
+        pluginTag->mLibrary = pluginLibrary;
 			}
 		}
 

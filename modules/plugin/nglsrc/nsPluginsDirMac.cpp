@@ -128,7 +128,8 @@ static char* GetPluginString(short id, short index)
  */
 nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
 {
-  nsCRT::memset(&info, 0, sizeof(info));
+   // clear out the info, except for the first field.
+   nsCRT::memset(&info.fName, 0, sizeof(info) - sizeof(PRUint32));
 
   // need to open the plugin's resource file and read some resources.
 	FSSpec spec = *this;
