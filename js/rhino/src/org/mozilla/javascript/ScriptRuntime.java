@@ -1908,15 +1908,7 @@ public class ScriptRuntime {
                                         NativeFunction funObj,
                                         Scriptable thisObj, Object[] args)
     {
-        NativeCall result = new NativeCall(cx, scope, funObj, thisObj, args);
-        String[] argNames = funObj.argNames;
-        if (argNames != null) {
-            for (int i = funObj.argCount; i != argNames.length; i++) {
-                String name = argNames[i];
-                result.put(name, result, Undefined.instance);
-            }
-        }
-        return result;
+        return new NativeCall(cx, scope, funObj, thisObj, args);
     }
 
     public static void popActivation(Context cx) {

@@ -78,6 +78,12 @@ public final class NativeCall extends IdScriptable {
 
         // initialize "arguments" property
         super.put("arguments", this, new Arguments(this));
+
+        if (argNames != null) {
+            for (int i = funObj.argCount; i != argNames.length; i++) {
+                super.put(argNames[i], this, Undefined.instance);
+            }
+        }
     }
 
     private NativeCall() {
@@ -164,7 +170,7 @@ public final class NativeCall extends IdScriptable {
     NativeCall caller;
     NativeFunction funObj;
     Scriptable thisObj;
-    Object[] originalArgs;
+    private Object[] originalArgs;
     public int debugPC;
 
     private boolean prototypeFlag;
