@@ -1926,6 +1926,7 @@ nsresult nsAddrDatabase::AddListAttributeColumnsToRow(nsIAbDirectory *list, nsIM
 			PRInt32 emailLength = nsCRT::strlen(email);
 			if (email && emailLength)
 				total++;
+	                PR_FREEIF(email);
 		}
 		SetListAddressTotal(listRow, total);
 
@@ -1948,6 +1949,7 @@ nsresult nsAddrDatabase::AddListAttributeColumnsToRow(nsIAbDirectory *list, nsIM
 				if (pNewCard)
 					pAddressLists->ReplaceElementAt(pNewCard, i);
 			}
+	                PR_FREEIF(email);
 		}
 	}
 	return NS_OK;
