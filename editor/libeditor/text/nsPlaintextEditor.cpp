@@ -699,11 +699,9 @@ nsPlaintextEditor::GetAbsoluteOffsetsForPoints(nsIDOMNode *aInStartNode,
   nsCOMPtr<nsIContent>blockParentContent = do_QueryInterface(aInCommonParentNode);
   iter->Init(blockParentContent);
   // loop through the content iterator for each content node
-  nsCOMPtr<nsIContent> content;
-  result = iter->CurrentNode(getter_AddRefs(content));
-  while (NS_ENUMERATOR_FALSE == iter->IsDone())
+  while (!iter->IsDone())
   {
-    textNode = do_QueryInterface(content);
+    textNode = do_QueryInterface(iter->GetCurrentNode());
     if (textNode)
     {
       nsCOMPtr<nsIDOMNode>currentNode = do_QueryInterface(textNode);
@@ -725,7 +723,6 @@ nsPlaintextEditor::GetAbsoluteOffsetsForPoints(nsIDOMNode *aInStartNode,
       }
     }
     iter->Next();
-    iter->CurrentNode(getter_AddRefs(content));
   }
   if (-1==aOutEndOffset) {
     aOutEndOffset = totalLength;

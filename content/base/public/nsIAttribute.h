@@ -1,4 +1,4 @@
-/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -41,9 +41,9 @@
 #define nsIAttribute_h___
 
 #include "nsISupports.h"
+#include "nsINodeInfo.h"
 
 class nsIContent;
-class nsINodeInfo;
 
 #define NS_IATTRIBUTE_IID  \
  {0xa6cf90dd, 0x15b3, 0x11d2,        \
@@ -54,12 +54,38 @@ class nsIAttribute : public nsISupports
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IATTRIBUTE_IID)
 
-  NS_IMETHOD DropReference() = 0;
+  void SetContent(nsIContent* aContent)
+  {
+    mContent = aContent;
+  }
 
-  NS_IMETHOD SetContent(nsIContent* aContent) = 0;
-  NS_IMETHOD GetContent(nsIContent** aContent) = 0;
+  nsIContent *GetContent()
+  {
+    return mContent;
+  }
 
-  NS_IMETHOD GetNodeInfo(nsINodeInfo** aNodeInfo) = 0;
+  nsINodeInfo *NodeInfo()
+  {
+    return mNodeInfo;
+  }
+
+protected:
+  nsIAttribute(nsIContent *aContent, nsINodeInfo *aNodeInfo)
+    : mContent(aContent), mNodeInfo(aNodeInfo)
+  {
+    NS_ADDREF(mNodeInfo);
+  }
+
+  virtual ~nsIAttribute()
+  {
+    NS_RELEASE(mNodeInfo);
+  }
+
+  nsIContent *mContent; // WEAK
+  nsINodeInfo *mNodeInfo; // STRONG
+
+private:
+  nsIAttribute(); // Not to be implemented.
 };
 
 #endif /* nsIAttribute_h___ */

@@ -70,7 +70,6 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIForm.h"
-#include "nsIContentList.h"
 #include "nsContentUtils.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"

@@ -4319,10 +4319,9 @@ NS_IMPL_NSIDOCUMENTOBSERVER_STATE_STUB(HTMLContentSink)
 NS_IMPL_NSIDOCUMENTOBSERVER_CONTENT(HTMLContentSink)
 NS_IMPL_NSIDOCUMENTOBSERVER_STYLE_STUB(HTMLContentSink)
 
-NS_IMETHODIMP
+void
 HTMLContentSink::BeginUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
 {
-  nsresult result = NS_OK;
   // If we're in a script and we didn't do the notification,
   // something else in the script processing caused the
   // notification to occur. Since this could result in frame
@@ -4332,13 +4331,11 @@ HTMLContentSink::BeginUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
   // until the end of this update, even if nested updates or
   // FlushPendingNotifications calls happen during it.
   if (!mInNotification++ && mCurrentContext) {
-    result = mCurrentContext->FlushTags(PR_TRUE);
+    mCurrentContext->FlushTags(PR_TRUE);
   }
-
-  return result;
 }
 
-NS_IMETHODIMP
+void
 HTMLContentSink::EndUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
 {
 
@@ -4350,14 +4347,11 @@ HTMLContentSink::EndUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
   if (!--mInNotification) {
     UpdateAllContexts();
   }
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 HTMLContentSink::DocumentWillBeDestroyed(nsIDocument *aDocument)
 {
-  return NS_OK;
 }
 
 nsresult

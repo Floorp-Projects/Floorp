@@ -61,15 +61,15 @@ public:
   virtual ~nsFilteredContentIterator();
 
   /* nsIContentIterator */
-  NS_IMETHOD Init(nsIContent* aRoot);
-  NS_IMETHOD Init(nsIDOMRange* aRange);
-  NS_IMETHOD First();
-  NS_IMETHOD Last();
-  NS_IMETHOD Next();
-  NS_IMETHOD Prev();
-  NS_IMETHOD CurrentNode(nsIContent **aNode);
-  NS_IMETHOD IsDone();
-  NS_IMETHOD PositionAt(nsIContent* aCurNode);
+  virtual nsresult Init(nsIContent* aRoot);
+  virtual nsresult Init(nsIDOMRange* aRange);
+  virtual void First();
+  virtual void Last();
+  virtual void Next();
+  virtual void Prev();
+  virtual nsIContent *GetCurrentNode();
+  virtual PRBool IsDone();
+  virtual nsresult PositionAt(nsIContent* aCurNode);
 
   /* Helpers */
   PRPackedBool DidSkip()      { return mDidSkip; }

@@ -280,7 +280,7 @@ nsFind::NextNode(nsIDOMRange* aSearchRange,
 {
   nsresult rv;
 
-  nsCOMPtr<nsIContent> content;
+  nsIContent *content = nsnull;
   nsCOMPtr<nsITextContent> tc;
 
   if (!mIterator || aContinueOk)
@@ -343,7 +343,7 @@ nsFind::NextNode(nsIDOMRange* aSearchRange,
     if (!aStartPoint)
       aStartPoint = aSearchRange;
 
-    rv = mIterator->CurrentNode(getter_AddRefs(content));
+    content = mIterator->GetCurrentNode();
 #ifdef DEBUG_FIND
     nsCOMPtr<nsIDOMNode> dnode (do_QueryInterface(content));
     printf(":::::: Got the first node "); DumpNode(dnode);
@@ -379,19 +379,18 @@ nsFind::NextNode(nsIDOMRange* aSearchRange,
   while (1)
   {
     if (mFindBackward)
-      rv = mIterator->Prev();
+      mIterator->Prev();
     else
-      rv = mIterator->Next();
-    if (NS_FAILED(rv)) break;
-    rv = mIterator->CurrentNode(getter_AddRefs(content));
+      mIterator->Next();
+
+    content = mIterator->GetCurrentNode();
+    if (!content)
+      break;
+
 #ifdef DEBUG_FIND
     nsCOMPtr<nsIDOMNode> dnode (do_QueryInterface(content));
     printf(":::::: Got another node "); DumpNode(dnode);
 #endif
-    // nsIContentIterator.h says Next() will return error at end,
-    // but it doesn't really, so we have to check:
-    if (NS_FAILED(rv) || !content)
-      break;
 
     // If we ever cross a block node, we might want to reset
     // the match anchor:

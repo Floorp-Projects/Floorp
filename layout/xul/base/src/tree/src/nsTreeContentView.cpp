@@ -688,27 +688,24 @@ NS_IMPL_NSIDOCUMENTOBSERVER_LOAD_STUB(nsTreeContentView)
 NS_IMPL_NSIDOCUMENTOBSERVER_REFLOW_STUB(nsTreeContentView)
 NS_IMPL_NSIDOCUMENTOBSERVER_STYLE_STUB(nsTreeContentView)
 
-NS_IMETHODIMP
+void
 nsTreeContentView::BeginUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
 {
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsTreeContentView::EndUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
 {
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsTreeContentView::ContentChanged(nsIDocument *aDocument,
                                      nsIContent* aContent,
                                      nsISupports* aSubContent)
 {
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsTreeContentView::ContentStatesChanged(nsIDocument* aDocument,
                                            nsIContent* aContent1,
                                            nsIContent* aContent2,
@@ -717,7 +714,7 @@ nsTreeContentView::ContentStatesChanged(nsIDocument* aDocument,
   if (!aContent1 || !mSelection ||
       !aContent1->IsContentOfType(nsIContent::eHTML) ||
       !(aStateMask & NS_EVENT_STATE_CHECKED))
-    return NS_OK;
+    return;
 
   if (aContent1->Tag() == nsHTMLAtoms::option) {
     // update the selected state for this node
@@ -725,11 +722,9 @@ nsTreeContentView::ContentStatesChanged(nsIDocument* aDocument,
     if (index >= 0)
       mSelection->ToggleSelect(index);
   }
-  
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsTreeContentView::AttributeChanged(nsIDocument *aDocument,
                                     nsIContent*  aContent,
                                     PRInt32      aNameSpaceID,
@@ -746,10 +741,10 @@ nsTreeContentView::AttributeChanged(nsIDocument *aDocument,
         tag != nsXULAtoms::treeseparator &&
         tag != nsXULAtoms::treerow &&
         tag != nsXULAtoms::treecell)
-      return NS_OK;
+      return;
   }
   else
-    return NS_OK;
+    return;
 
   // If we have a legal tag, go up to the tree and make sure that it's ours.
   nsCOMPtr<nsIContent> parent = aContent;
@@ -762,7 +757,7 @@ nsTreeContentView::AttributeChanged(nsIDocument *aDocument,
 
   if (parent != mRoot) {
     // This is not for us, we can bail out.
-    return NS_OK;
+    return;
   }
 
   // Handle changes of the hidden attribute.
@@ -790,7 +785,7 @@ nsTreeContentView::AttributeChanged(nsIDocument *aDocument,
       }
     }
 
-    return NS_OK;
+    return;
   }
 
   if (tag == nsXULAtoms::treecol) {
@@ -871,22 +866,18 @@ nsTreeContentView::AttributeChanged(nsIDocument *aDocument,
       }
     }
   }
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsTreeContentView::ContentAppended(nsIDocument *aDocument,
                                    nsIContent* aContainer,
                                    PRInt32     aNewIndexInContainer)
 {
   nsIContent *child = aContainer->GetChildAt(aNewIndexInContainer);
   ContentInserted(aDocument, aContainer, child, aNewIndexInContainer);
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsTreeContentView::ContentInserted(nsIDocument *aDocument,
                                       nsIContent* aContainer,
                                       nsIContent* aChild,
@@ -901,16 +892,16 @@ nsTreeContentView::ContentInserted(nsIDocument *aDocument,
   if (aChild->IsContentOfType(nsIContent::eHTML)) {
     if (childTag != nsHTMLAtoms::option &&
         childTag != nsHTMLAtoms::optgroup)
-      return NS_OK;
+      return;
   } else if (aChild->IsContentOfType(nsIContent::eXUL)) {
     if (childTag != nsXULAtoms::treeitem &&
         childTag != nsXULAtoms::treeseparator &&
         childTag != nsXULAtoms::treechildren &&
         childTag != nsXULAtoms::treerow &&
         childTag != nsXULAtoms::treecell)
-      return NS_OK;
+      return;
   } else
-    return NS_OK;
+    return;
 
   // If we have a legal tag, go up to the tree/select and make sure
   // that it's ours.
@@ -922,7 +913,7 @@ nsTreeContentView::ContentInserted(nsIDocument *aDocument,
       if (element == mRoot) // this is for us, stop looking
         break;
       else // this is not for us, we can bail out
-        return NS_OK;
+        return;
   }
 
   if (childTag == nsXULAtoms::treeitem ||
@@ -969,11 +960,9 @@ nsTreeContentView::ContentInserted(nsIDocument *aDocument,
         mBoxObject->InvalidateRow(index);
     }
   }
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsTreeContentView::ContentReplaced(nsIDocument *aDocument,
                                       nsIContent* aContainer,
                                       nsIContent* aOldChild,
@@ -982,11 +971,9 @@ nsTreeContentView::ContentReplaced(nsIDocument *aDocument,
 {
   ContentRemoved(aDocument, aContainer, aOldChild, aIndexInContainer);
   ContentInserted(aDocument, aContainer, aNewChild, aIndexInContainer);
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsTreeContentView::ContentRemoved(nsIDocument *aDocument,
                                      nsIContent* aContainer,
                                      nsIContent* aChild,
@@ -1001,16 +988,16 @@ nsTreeContentView::ContentRemoved(nsIDocument *aDocument,
   if (aChild->IsContentOfType(nsIContent::eHTML)) {
     if (tag != nsHTMLAtoms::option &&
         tag != nsHTMLAtoms::optgroup)
-      return NS_OK;
+      return;
   } else if (aChild->IsContentOfType(nsIContent::eXUL)) {
     if (tag != nsXULAtoms::treeitem &&
         tag != nsXULAtoms::treeseparator &&
         tag != nsXULAtoms::treechildren &&
         tag != nsXULAtoms::treerow &&
         tag != nsXULAtoms::treecell)
-      return NS_OK;
+      return;
   } else
-    return NS_OK;
+    return;
 
   // If we have a legal tag, go up to the tree/select and make sure
   // that it's ours.
@@ -1021,7 +1008,7 @@ nsTreeContentView::ContentRemoved(nsIDocument *aDocument,
       if (element == mRoot) // this is for us, stop looking
         break;
       else // this is not for us, we can bail out
-        return NS_OK;
+        return;
   }
 
   if (tag == nsXULAtoms::treeitem ||
@@ -1069,11 +1056,9 @@ nsTreeContentView::ContentRemoved(nsIDocument *aDocument,
         mBoxObject->InvalidateRow(index);
     }
   }
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsTreeContentView::DocumentWillBeDestroyed(nsIDocument *aDocument)
 {
   // Remove ourselves from mDocument's observers.
@@ -1083,8 +1068,6 @@ nsTreeContentView::DocumentWillBeDestroyed(nsIDocument *aDocument)
   }
 
   ClearRows();
-
-  return NS_OK;
 }
 
 

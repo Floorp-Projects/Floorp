@@ -3553,7 +3553,7 @@ PresShell::GetPageSequenceFrame(nsIPageSequenceFrame** aResult) const
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP
+void
 PresShell::BeginUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
 {
 #ifdef DEBUG
@@ -3561,11 +3561,9 @@ PresShell::BeginUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
 #endif
   if (aUpdateType & UPDATE_STYLE)
     mStyleSet->BeginUpdate();
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 PresShell::EndUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
 {
 #ifdef DEBUG
@@ -3577,12 +3575,10 @@ PresShell::EndUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
     mStyleSet->EndUpdate();
 
   if (mStylesHaveChanged && (aUpdateType & UPDATE_STYLE))
-    return ReconstructStyleData();
-  
-  return NS_OK;
+    ReconstructStyleData();
 }
 
-NS_IMETHODIMP
+void
 PresShell::BeginLoad(nsIDocument *aDocument)
 {  
 #ifdef MOZ_PERF_METRICS
@@ -3590,10 +3586,9 @@ PresShell::BeginLoad(nsIDocument *aDocument)
   MOZ_TIMER_DEBUGLOG(("Reset: Style Resolution: PresShell::BeginLoad(), this=%p\n", (void*)this));
 #endif  
   mDocumentLoading = PR_TRUE;
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 PresShell::EndLoad(nsIDocument *aDocument)
 {
 
@@ -3603,11 +3598,11 @@ PresShell::EndLoad(nsIDocument *aDocument)
   nsCOMPtr<nsISupports> container;
   mPresContext->GetContainer(getter_AddRefs(container));
   if (!container)
-    return NS_ERROR_FAILURE;
+    return;
 
   nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
   if (!docShell)
-    return NS_ERROR_FAILURE;
+    return;
 
   nsCOMPtr<nsILayoutHistoryState> historyState;
   docShell->GetLayoutHistoryState(getter_AddRefs(historyState));
@@ -3636,7 +3631,6 @@ PresShell::EndLoad(nsIDocument *aDocument)
   MOZ_TIMER_DEBUGLOG(("Stop: Style Resolution: PresShell::EndLoad(), this=%p\n", this));
 #endif  
   mDocumentLoading = PR_FALSE;
-  return NS_OK;
 }
 
 NS_IMPL_NSIDOCUMENTOBSERVER_REFLOW_STUB(PresShell)
@@ -5192,103 +5186,90 @@ PresShell::GetReflowBatchingStatus(PRBool* aIsBatching)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 PresShell::ContentChanged(nsIDocument *aDocument,
                           nsIContent*  aContent,
                           nsISupports* aSubContent)
 {
   WillCauseReflow();
-  nsresult rv = mFrameConstructor->ContentChanged(mPresContext,
-                                                  aContent, aSubContent);
+  mFrameConstructor->ContentChanged(mPresContext, aContent, aSubContent);
   VERIFY_STYLE_TREE;
   DidCauseReflow();
-
-  return rv;
 }
 
-NS_IMETHODIMP
+void
 PresShell::ContentStatesChanged(nsIDocument* aDocument,
                                 nsIContent* aContent1,
                                 nsIContent* aContent2,
                                 PRInt32 aStateMask)
 {
   WillCauseReflow();
-  nsresult rv = mFrameConstructor->ContentStatesChanged(mPresContext,
-                                                        aContent1,
-                                                        aContent2, aStateMask);
+  mFrameConstructor->ContentStatesChanged(mPresContext, aContent1, aContent2,
+                                          aStateMask);
   VERIFY_STYLE_TREE;
   DidCauseReflow();
-
-  return rv;
 }
 
 
-NS_IMETHODIMP
+void
 PresShell::AttributeChanged(nsIDocument *aDocument,
                             nsIContent*  aContent,
                             PRInt32      aNameSpaceID,
                             nsIAtom*     aAttribute,
                             PRInt32      aModType)
 {
-  nsresult rv = NS_OK;
   // XXXwaterson it might be more elegant to wait until after the
   // initial reflow to begin observing the document. That would
   // squelch any other inappropriate notifications as well.
   if (mDidInitialReflow) {
     WillCauseReflow();
-    rv = mFrameConstructor->AttributeChanged(mPresContext, aContent,
-                                             aNameSpaceID, aAttribute,
-                                             aModType);
+    mFrameConstructor->AttributeChanged(mPresContext, aContent, aNameSpaceID,
+                                        aAttribute, aModType);
     VERIFY_STYLE_TREE;
     DidCauseReflow();
   }
-  return rv;
 }
 
-NS_IMETHODIMP
+void
 PresShell::ContentAppended(nsIDocument *aDocument,
                            nsIContent* aContainer,
                            PRInt32     aNewIndexInContainer)
 {
   if (!mDidInitialReflow) {
-    return NS_OK;
+    return;
   }
   
   WillCauseReflow();
   MOZ_TIMER_DEBUGLOG(("Start: Frame Creation: PresShell::ContentAppended(), this=%p\n", this));
   MOZ_TIMER_START(mFrameCreationWatch);
 
-  nsresult  rv = mFrameConstructor->ContentAppended(mPresContext, aContainer,
-                                                    aNewIndexInContainer);
+  mFrameConstructor->ContentAppended(mPresContext, aContainer,
+                                     aNewIndexInContainer);
   VERIFY_STYLE_TREE;
 
   MOZ_TIMER_DEBUGLOG(("Stop: Frame Creation: PresShell::ContentAppended(), this=%p\n", this));
   MOZ_TIMER_STOP(mFrameCreationWatch);
   DidCauseReflow();
-  return rv;
 }
 
-NS_IMETHODIMP
+void
 PresShell::ContentInserted(nsIDocument* aDocument,
                            nsIContent*  aContainer,
                            nsIContent*  aChild,
                            PRInt32      aIndexInContainer)
 {
   if (!mDidInitialReflow) {
-    return NS_OK;
+    return;
   }
   
   WillCauseReflow();
-  nsresult  rv = mFrameConstructor->ContentInserted(mPresContext, aContainer,
-                                                    nsnull, aChild,
-                                                    aIndexInContainer, nsnull,
-                                                    PR_FALSE);
+  mFrameConstructor->ContentInserted(mPresContext, aContainer, nsnull, aChild,
+                                     aIndexInContainer, nsnull, PR_FALSE);
   VERIFY_STYLE_TREE;
   DidCauseReflow();
-  return rv;
 }
 
-NS_IMETHODIMP
+void
 PresShell::ContentReplaced(nsIDocument* aDocument,
                            nsIContent*  aContainer,
                            nsIContent*  aOldChild,
@@ -5303,15 +5284,13 @@ PresShell::ContentReplaced(nsIDocument* aDocument,
     esm->ContentRemoved(aOldChild);
 
   WillCauseReflow();
-  nsresult  rv = mFrameConstructor->ContentReplaced(mPresContext, aContainer,
-                                                    aOldChild, aNewChild,
-                                                    aIndexInContainer);
+  mFrameConstructor->ContentReplaced(mPresContext, aContainer, aOldChild,
+                                     aNewChild, aIndexInContainer);
   VERIFY_STYLE_TREE;
   DidCauseReflow();
-  return rv;
 }
 
-NS_IMETHODIMP
+void
 PresShell::ContentRemoved(nsIDocument *aDocument,
                           nsIContent* aContainer,
                           nsIContent* aChild,
@@ -5325,9 +5304,8 @@ PresShell::ContentRemoved(nsIDocument *aDocument,
     esm->ContentRemoved(aChild);
 
   WillCauseReflow();
-  nsresult  rv = mFrameConstructor->ContentRemoved(mPresContext, aContainer,
-                                                   aChild, aIndexInContainer,
-                                                   PR_FALSE);
+  mFrameConstructor->ContentRemoved(mPresContext, aContainer, aChild,
+                                    aIndexInContainer, PR_FALSE);
 
   // If we have no root content node at this point, be sure to reset
   // mDidInitialReflow to PR_FALSE, this will allow InitialReflow()
@@ -5339,7 +5317,6 @@ PresShell::ContentRemoved(nsIDocument *aDocument,
 
   VERIFY_STYLE_TREE;
   DidCauseReflow();
-  return rv;
 }
 
 nsresult
@@ -5377,11 +5354,11 @@ PresShell::ReconstructStyleData()
   mFrameConstructor->ProcessRestyledFrames(changeList, mPresContext);
 
   VERIFY_STYLE_TREE;
-  
+
   return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 PresShell::StyleSheetAdded(nsIDocument *aDocument,
                            nsIStyleSheet* aStyleSheet)
 {
@@ -5393,11 +5370,9 @@ PresShell::StyleSheetAdded(nsIDocument *aDocument,
   if (applicable && aStyleSheet->HasRules()) {
     mStylesHaveChanged = PR_TRUE;
   }
-  
-  return NS_OK;
 }
 
-NS_IMETHODIMP 
+void 
 PresShell::StyleSheetRemoved(nsIDocument *aDocument,
                              nsIStyleSheet* aStyleSheet)
 {
@@ -5408,11 +5383,9 @@ PresShell::StyleSheetRemoved(nsIDocument *aDocument,
   if (applicable && aStyleSheet->HasRules()) {
     mStylesHaveChanged = PR_TRUE;
   }
-  
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 PresShell::StyleSheetApplicableStateChanged(nsIDocument *aDocument,
                                             nsIStyleSheet* aStyleSheet,
                                             PRBool aApplicable)
@@ -5420,42 +5393,36 @@ PresShell::StyleSheetApplicableStateChanged(nsIDocument *aDocument,
   if (aStyleSheet->HasRules()) {
     mStylesHaveChanged = PR_TRUE;
   }
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 PresShell::StyleRuleChanged(nsIDocument *aDocument,
                             nsIStyleSheet* aStyleSheet,
                             nsIStyleRule* aOldStyleRule,
                             nsIStyleRule* aNewStyleRule)
 {
   mStylesHaveChanged = PR_TRUE;
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 PresShell::StyleRuleAdded(nsIDocument *aDocument,
                           nsIStyleSheet* aStyleSheet,
                           nsIStyleRule* aStyleRule) 
 {
   mStylesHaveChanged = PR_TRUE;
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 PresShell::StyleRuleRemoved(nsIDocument *aDocument,
                             nsIStyleSheet* aStyleSheet,
                             nsIStyleRule* aStyleRule) 
 {
   mStylesHaveChanged = PR_TRUE;
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 PresShell::DocumentWillBeDestroyed(nsIDocument *aDocument)
 {
-  return NS_OK;
 }
 
 NS_IMETHODIMP

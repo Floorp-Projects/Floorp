@@ -839,12 +839,12 @@ nsresult nsRange::PopRanges(nsIDOMNode* aDestNode, PRInt32 aOffset, nsIContent* 
   nsresult res = NS_NewContentIterator(getter_AddRefs(iter));
   iter->Init(aSourceNode);
 
-  nsCOMPtr<nsIContent> cN;
   const nsVoidArray* theRangeList;
-  
-  iter->CurrentNode(getter_AddRefs(cN));
-  while (cN && (NS_ENUMERATOR_FALSE == iter->IsDone()))
+
+  while (!iter->IsDone())
   {
+    nsIContent *cN = iter->GetCurrentNode();
+
     theRangeList = cN->GetRangeList();
     if (theRangeList)
     {
@@ -884,13 +884,8 @@ nsresult nsRange::PopRanges(nsIDOMNode* aDestNode, PRInt32 aOffset, nsIContent* 
             theCount = 0;
        } 
     }
-    res = iter->Next();
-    if (NS_FAILED(res)) // a little noise here to catch bugs
-    {
-      NS_NOTREACHED("nsRange::PopRanges() : iterator failed to advance");
-      return res;
-    }
-    iter->CurrentNode(getter_AddRefs(cN));
+
+    iter->Next();
   }
   
   return NS_OK;
@@ -1192,236 +1187,213 @@ private:
   nsCOMPtr<nsIContentIterator>  mIter;
   RangeSubtreeIterState         mIterState;
 
-  nsCOMPtr<nsIDOMNode>          mStartCData;
-  nsCOMPtr<nsIDOMNode>          mEndCData;
+  nsCOMPtr<nsIDOMCharacterData> mStartCData;
+  nsCOMPtr<nsIDOMCharacterData> mEndCData;
 
 public:
 
-  RangeSubtreeIterator() : mIterState(eDone) {}
-  ~RangeSubtreeIterator() {}
-
-  nsresult Init(nsIDOMRange *aRange)
+  RangeSubtreeIterator()
+    : mIterState(eDone)
   {
-    NS_ENSURE_ARG_POINTER(aRange);
-
-    mIterState = eDone;
-
-    nsCOMPtr<nsIDOMNode> node;
-
-    // Grab the start point of the range and QI it to
-    // a CharacterData pointer. If it is CharacterData store
-    // a pointer to the node.
-
-    nsresult res = aRange->GetStartContainer(getter_AddRefs(node));
-    if (NS_FAILED(res)) return res;
-    if (!node) return NS_ERROR_FAILURE;
-
-    nsCOMPtr<nsIDOMCharacterData> cData = do_QueryInterface(node);
-    if (cData)
-      mStartCData = node;
-
-    // Grab the end point of the range and QI it to
-    // a CharacterData pointer. If it is CharacterData store
-    // a pointer to the node.
-
-    res = aRange->GetEndContainer(getter_AddRefs(node));
-    if (NS_FAILED(res)) return res;
-    if (!node) return NS_ERROR_FAILURE;
-
-    cData = do_QueryInterface(node);
-    if (cData)
-      mEndCData = node;
-
-    if (mStartCData && mStartCData == mEndCData)
-    {
-      // The range starts and stops in the same CharacterData
-      // node. Null out the end pointer so we only visit the
-      // node once!
-
-      mEndCData = nsnull;
-    }
-    else
-    {
-      // Now create a Content Subtree Iterator to be used
-      // for the subtrees between the end points!
-
-      res = NS_NewContentSubtreeIterator(getter_AddRefs(mIter));
-
-      if (NS_FAILED(res)) return res;
-      if (!mIter) return NS_ERROR_FAILURE;
-
-      res = mIter->Init(aRange);
-      if (NS_FAILED(res)) return res;
-
-      if (mIter->IsDone() != NS_ENUMERATOR_FALSE)
-      {
-        // The subtree iterator thinks there's nothing
-        // to iterate over, so just free it up so we
-        // don't accidentally call into it.
-
-        mIter = nsnull;
-      }
-    }
-
-    // Initialize the iterator by calling First().
-    // Note that we are ignoring the return value on purpose!
-
-    (void)First();
-
-    return NS_OK;
+  }
+  ~RangeSubtreeIterator()
+  {
   }
 
-  nsresult CurrentNode(nsIDOMNode **aNode)
-  {
-    NS_ENSURE_ARG_POINTER(aNode);
-
-    *aNode = nsnull;
-
-    nsresult res = NS_OK;
-
-    if (mIterState == eUseStartCData && mStartCData)
-      *aNode = mStartCData;
-    else if (mIterState == eUseEndCData && mEndCData)
-      *aNode = mEndCData;
-    else if (mIterState == eUseIterator && mIter)
-    {
-      nsCOMPtr<nsIContent> content;
-      res = mIter->CurrentNode(getter_AddRefs(content));
-      if (NS_FAILED(res)) return res;
-      if (!content) return NS_ERROR_FAILURE;
-      nsCOMPtr<nsIDOMNode> node(do_QueryInterface(content));
-      if (!node) return NS_ERROR_FAILURE;
-      *aNode = node;
-    }
-    else
-      res = NS_ERROR_FAILURE;
-
-    NS_IF_ADDREF(*aNode);
-
-    return res;
-  }
-
-  nsresult First()
-  {
-    nsresult res = NS_OK;
-
-    if (mStartCData)
-      mIterState = eUseStartCData;
-    else if (mIter)
-    {
-      res = mIter->First();
-      if (NS_FAILED(res)) return res;
-      mIterState = eUseIterator;
-    }
-    else if (mEndCData)
-      mIterState = eUseEndCData;
-    else
-      res = NS_ERROR_FAILURE;
-
-    return res;
-  }
-
-  nsresult Last()
-  {
-    nsresult res = NS_OK;
-
-    if (mEndCData)
-      mIterState = eUseEndCData;
-    else if (mIter)
-    {
-      res = mIter->Last();
-      if (NS_FAILED(res)) return res;
-      mIterState = eUseIterator;
-    }
-    else if (mStartCData)
-      mIterState = eUseStartCData;
-    else
-      res = NS_ERROR_FAILURE;
-
-    return res;
-  }
-
-  nsresult Next()
-  {
-    nsresult res = NS_OK;
-
-    if (mIterState == eUseStartCData)
-    {
-      if (mIter)
-      {
-        res = mIter->First();
-        if (NS_FAILED(res)) return res;
-        mIterState = eUseIterator;
-      }
-      else if (mEndCData)
-        mIterState = eUseEndCData;
-      else
-        mIterState = eDone;
-    }
-    else if (mIterState == eUseIterator)
-    {
-      res = mIter->Next();
-      if (NS_FAILED(res)) return res;
-
-      if (mIter->IsDone() != NS_ENUMERATOR_FALSE)
-      {
-        if (mEndCData)
-          mIterState = eUseEndCData;
-        else
-          mIterState = eDone;
-      }
-    }
-    else if (mIterState == eUseEndCData)
-      mIterState = eDone;
-    else
-      res = NS_ERROR_FAILURE;
-
-    return res;
-  }
-
-  nsresult Prev()
-  {
-    nsresult res = NS_OK;
-
-    if (mIterState == eUseEndCData)
-    {
-      if (mIter)
-      {
-        res = mIter->Last();
-        if (NS_FAILED(res)) return res;
-        mIterState = eUseIterator;
-      }
-      else if (mStartCData)
-        mIterState = eUseStartCData;
-      else
-        mIterState = eDone;
-    }
-    else if (mIterState == eUseIterator)
-    {
-      res = mIter->Prev();
-      if (NS_FAILED(res)) return res;
-
-      if (mIter->IsDone() != NS_ENUMERATOR_FALSE)
-      {
-        if (mStartCData)
-          mIterState = eUseStartCData;
-        else
-          mIterState = eDone;
-      }
-    }
-    else if (mIterState == eUseStartCData)
-      mIterState = eDone;
-    else
-      res = NS_ERROR_FAILURE;
-
-    return res;
-  }
+  nsresult Init(nsIDOMRange *aRange);
+  already_AddRefed<nsIDOMNode> GetCurrentNode();
+  void First();
+  void Last();
+  void Next();
+  void Prev();
 
   PRBool IsDone()
   {
     return mIterState == eDone;
   }
 };
+
+nsresult
+RangeSubtreeIterator::Init(nsIDOMRange *aRange)
+{
+  mIterState = eDone;
+
+  nsCOMPtr<nsIDOMNode> node;
+
+  // Grab the start point of the range and QI it to
+  // a CharacterData pointer. If it is CharacterData store
+  // a pointer to the node.
+
+  nsresult res = aRange->GetStartContainer(getter_AddRefs(node));
+  if (!node) return NS_ERROR_FAILURE;
+
+  mStartCData = do_QueryInterface(node);
+
+  // Grab the end point of the range and QI it to
+  // a CharacterData pointer. If it is CharacterData store
+  // a pointer to the node.
+
+  res = aRange->GetEndContainer(getter_AddRefs(node));
+  if (!node) return NS_ERROR_FAILURE;
+
+  mEndCData = do_QueryInterface(node);
+
+  if (mStartCData && mStartCData == mEndCData)
+  {
+    // The range starts and stops in the same CharacterData
+    // node. Null out the end pointer so we only visit the
+    // node once!
+
+    mEndCData = nsnull;
+  }
+  else
+  {
+    // Now create a Content Subtree Iterator to be used
+    // for the subtrees between the end points!
+
+    res = NS_NewContentSubtreeIterator(getter_AddRefs(mIter));
+    if (NS_FAILED(res)) return res;
+
+    res = mIter->Init(aRange);
+    if (NS_FAILED(res)) return res;
+
+    if (mIter->IsDone())
+    {
+      // The subtree iterator thinks there's nothing
+      // to iterate over, so just free it up so we
+      // don't accidentally call into it.
+
+      mIter = nsnull;
+    }
+  }
+
+  // Initialize the iterator by calling First().
+  // Note that we are ignoring the return value on purpose!
+
+  First();
+
+  return NS_OK;
+}
+
+already_AddRefed<nsIDOMNode>
+RangeSubtreeIterator::GetCurrentNode()
+{
+  nsIDOMNode *node = nsnull;
+
+  if (mIterState == eUseStartCData && mStartCData) {
+    NS_ADDREF(node = mStartCData);
+  } else if (mIterState == eUseEndCData && mEndCData)
+    NS_ADDREF(node = mEndCData);
+  else if (mIterState == eUseIterator && mIter)
+  {
+    nsIContent *content = mIter->GetCurrentNode();
+
+    if (content) {
+      CallQueryInterface(content, &node);
+    }
+  }
+
+  return node;
+}
+
+void
+RangeSubtreeIterator::First()
+{
+  if (mStartCData)
+    mIterState = eUseStartCData;
+  else if (mIter)
+  {
+    mIter->First();
+
+    mIterState = eUseIterator;
+  }
+  else if (mEndCData)
+    mIterState = eUseEndCData;
+  else
+    mIterState = eDone;
+}
+
+void
+RangeSubtreeIterator::Last()
+{
+  if (mEndCData)
+    mIterState = eUseEndCData;
+  else if (mIter)
+  {
+    mIter->Last();
+
+    mIterState = eUseIterator;
+  }
+  else if (mStartCData)
+    mIterState = eUseStartCData;
+  else
+    mIterState = eDone;
+}
+
+void
+RangeSubtreeIterator::Next()
+{
+  if (mIterState == eUseStartCData)
+  {
+    if (mIter)
+    {
+      mIter->First();
+
+      mIterState = eUseIterator;
+    }
+    else if (mEndCData)
+      mIterState = eUseEndCData;
+    else
+      mIterState = eDone;
+  }
+  else if (mIterState == eUseIterator)
+  {
+    mIter->Next();
+
+    if (mIter->IsDone())
+    {
+      if (mEndCData)
+        mIterState = eUseEndCData;
+      else
+        mIterState = eDone;
+    }
+  }
+  else
+    mIterState = eDone;
+}
+
+void
+RangeSubtreeIterator::Prev()
+{
+  if (mIterState == eUseEndCData)
+  {
+    if (mIter)
+    {
+      mIter->Last();
+
+      mIterState = eUseIterator;
+    }
+    else if (mStartCData)
+      mIterState = eUseStartCData;
+    else
+      mIterState = eDone;
+  }
+  else if (mIterState == eUseIterator)
+  {
+    mIter->Prev();
+
+    if (mIter->IsDone())
+    {
+      if (mStartCData)
+        mIterState = eUseStartCData;
+      else
+        mIterState = eDone;
+    }
+  }
+  else
+    mIterState = eDone;
+}
+
 
 // CollapseRangeAfterDelete() is a utiltiy method that is used by
 // DeleteContents() and ExtractContents() to collapse the range
@@ -1540,13 +1512,7 @@ nsresult nsRange::DeleteContents()
 
   // We delete backwards to avoid iterator problems!
 
-  res = iter.Last();
-  if (NS_FAILED(res)) return res;
-
-  nsCOMPtr<nsIDOMNode> node;
-  res = iter.CurrentNode(getter_AddRefs(node));
-  if (NS_FAILED(res)) return res;
-  if (!node) return NS_ERROR_FAILURE;
+  iter.Last();
 
   PRBool handled = PR_FALSE;
 
@@ -1554,13 +1520,14 @@ nsresult nsRange::DeleteContents()
   // end points, the subtree iterator should only give us back subtrees
   // that are completely contained between the range's end points.
 
-  while (node)
+  while (!iter.IsDone())
   {
+    nsCOMPtr<nsIDOMNode> node(iter.GetCurrentNode());
+
     // Before we delete anything, advance the iterator to the
     // next subtree.
 
-    res = iter.Prev();
-    if (NS_FAILED(res)) return res;
+    iter.Prev();
 
     handled = PR_FALSE;
 
@@ -1628,19 +1595,11 @@ nsresult nsRange::DeleteContents()
 
       nsCOMPtr<nsIDOMNode> parent, tmpNode;
 
-      res = node->GetParentNode(getter_AddRefs(parent));
-      if (NS_FAILED(res)) return res;
+      node->GetParentNode(getter_AddRefs(parent));
 
       res = parent->RemoveChild(node, getter_AddRefs(tmpNode));
       if (NS_FAILED(res)) return res;
     }
-
-    if (iter.IsDone())
-      break; // We must be done!
-
-    res = iter.CurrentNode(getter_AddRefs(node));
-    if (NS_FAILED(res)) return res;
-    if (!node) return NS_ERROR_FAILURE;
   }
 
   // XXX_kin: At this point we should be checking for the case
@@ -1834,14 +1793,7 @@ nsresult nsRange::CloneContents(nsIDOMDocumentFragment** aReturn)
     return NS_OK;
   }
 
-  res = iter.First();
-  if (NS_FAILED(res)) return res;
-
-  nsCOMPtr<nsIDOMNode> node;
-  res = iter.CurrentNode(getter_AddRefs(node));
-  if (NS_FAILED(res)) return res;
-  if (!node) return NS_ERROR_FAILURE;
-
+  iter.First();
 
   // With the exception of text nodes that contain one of the range
   // end points, the subtree iterator should only give us back subtrees
@@ -1852,15 +1804,14 @@ nsresult nsRange::CloneContents(nsIDOMDocumentFragment** aReturn)
   // parent hierarchy, adds a cloned version of the subtree, to it, then
   // correctly places this new subtree into the doc fragment.
 
-  while (node)
+  while (!iter.IsDone())
   {
+    nsCOMPtr<nsIDOMNode> node(iter.GetCurrentNode());
     // Clone the current subtree!
 
     nsCOMPtr<nsIDOMNode> clone;
     res = node->CloneNode(PR_TRUE, getter_AddRefs(clone));
-
     if (NS_FAILED(res)) return res;
-    if (!clone) return NS_ERROR_FAILURE;
 
     // If it's CharacterData, make sure we only clone what
     // is in the range.
@@ -1931,8 +1882,6 @@ nsresult nsRange::CloneContents(nsIDOMDocumentFragment** aReturn)
       // immediate parent of the subtree.
 
       res = closestAncestor->AppendChild(clone, getter_AddRefs(tmpNode));
-
-      if (NS_FAILED(res)) return res;
     }
     else
     {
@@ -1940,21 +1889,18 @@ nsresult nsRange::CloneContents(nsIDOMDocumentFragment** aReturn)
       // commonAncestor and node, so just append clone to commonCloneAncestor.
 
       res = commonCloneAncestor->AppendChild(clone, getter_AddRefs(tmpNode));
-
-      if (NS_FAILED(res)) return res;
     }
+    if (NS_FAILED(res)) return res;
 
     // Get the next subtree to be processed. The idea here is to setup
     // the parameters for the next iteration of the loop.
 
-    res = iter.Next();
+    iter.Next();
 
     if (iter.IsDone())
       break; // We must be done!
 
-    nsCOMPtr<nsIDOMNode> nextNode;
-    res = iter.CurrentNode(getter_AddRefs(nextNode));
-    if (NS_FAILED(res)) return res;
+    nsCOMPtr<nsIDOMNode> nextNode(iter.GetCurrentNode());
     if (!nextNode) return NS_ERROR_FAILURE;
 
     // Get node and nextNode's common parent.
@@ -1979,7 +1925,6 @@ nsresult nsRange::CloneContents(nsIDOMDocumentFragment** aReturn)
     }
 
     commonCloneAncestor = clone;
-    node = nextNode;
   }
 
   *aReturn = clonedFrag;
@@ -2221,13 +2166,13 @@ nsresult nsRange::ToString(nsAString& aReturn)
   iter->Init(this);
   
   nsString tempString;
-  nsCOMPtr<nsIContent> cN;
  
   // loop through the content iterator, which returns nodes in the range in 
   // close tag order, and grab the text from any text node
-  iter->CurrentNode(getter_AddRefs(cN));
-  while (cN && (NS_ENUMERATOR_FALSE == iter->IsDone()))
+  while (!iter->IsDone())
   {
+    nsIContent *cN = iter->GetCurrentNode();
+
 #ifdef DEBUG_range
     // If debug, dump it:
     cN->List(stdout);
@@ -2253,13 +2198,8 @@ nsresult nsRange::ToString(nsAString& aReturn)
         aReturn += tempString;
       }
     }
-    nsresult res = iter->Next();
-    if (NS_FAILED(res)) // a little noise here to catch bugs
-    {
-      NS_NOTREACHED("nsRange::ToString() : iterator failed to advance");
-      return res;
-    }
-    iter->CurrentNode(getter_AddRefs(cN));
+
+    iter->Next();
   }
 
 #ifdef DEBUG_range

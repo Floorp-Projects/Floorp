@@ -65,10 +65,10 @@ public:
   // nsIDOMNodeList
   NS_DECL_NSIDOMNODELIST
 
-  NS_IMETHOD AppendElement(nsIContent *aContent);
-  NS_IMETHOD RemoveElement(nsIContent *aContent);
-  NS_IMETHOD_(PRInt32) IndexOf(nsIContent *aContent, PRBool aDoFlush);
-  NS_IMETHOD Reset();
+  virtual void AppendElement(nsIContent *aContent);
+  virtual void RemoveElement(nsIContent *aContent);
+  virtual PRInt32 IndexOf(nsIContent *aContent, PRBool aDoFlush);
+  virtual void Reset();
 
   static void Shutdown();
 
@@ -87,10 +87,10 @@ public:
                     nsBaseContentList& aContentList);
   virtual ~nsFormContentList();
 
-  NS_IMETHOD AppendElement(nsIContent *aContent);
-  NS_IMETHOD RemoveElement(nsIContent *aContent);
+  virtual void AppendElement(nsIContent *aContent);
+  virtual void RemoveElement(nsIContent *aContent);
 
-  NS_IMETHOD Reset();
+  virtual void Reset();
 };
 
 /**
@@ -169,18 +169,14 @@ public:
   virtual ~nsContentList();
 
   // nsIDOMHTMLCollection
-  NS_IMETHOD GetLength(PRUint32* aLength);
-  NS_IMETHOD Item(PRUint32 aIndex, nsIDOMNode** aReturn);
-  NS_IMETHOD NamedItem(const nsAString& aName, nsIDOMNode** aReturn);
+  NS_DECL_NSIDOMHTMLCOLLECTION
 
   /// nsIContentList
-  NS_IMETHOD GetParentObject(nsISupports** aParentObject);
-  NS_IMETHOD_(PRUint32) GetLength(PRBool aDoFlush);
-  NS_IMETHOD Item(PRUint32 aIndex, nsIDOMNode** aReturn,
-                  PRBool aDoFlush);
-  NS_IMETHOD NamedItem(const nsAString& aName, nsIDOMNode** aReturn,
-                       PRBool aDoFlush);
-  NS_IMETHOD_(PRInt32) IndexOf(nsIContent *aContent, PRBool aDoFlush);
+  virtual nsISupports *GetParentObject();
+  virtual PRUint32 Length(PRBool aDoFlush);
+  virtual nsIContent *Item(PRUint32 aIndex, PRBool aDoFlush);
+  virtual nsIContent *NamedItem(const nsAString& aName, PRBool aDoFlush);
+  virtual PRInt32 IndexOf(nsIContent *aContent, PRBool aDoFlush);
 
   // nsIDocumentObserver
   NS_DECL_NSIDOCUMENTOBSERVER

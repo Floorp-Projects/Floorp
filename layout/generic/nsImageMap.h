@@ -122,6 +122,8 @@ protected:
   nsresult ChangeFocus(nsIDOMEvent* aEvent, PRBool aFocus);
   nsresult Invalidate(nsIPresContext* aPresContext, nsIFrame* aFrame, nsRect& aRect);
 
+  void MaybeUpdateAreas(nsIContent *aContent);
+
   nsIPresShell* mPresShell; // WEAK - owns the frame that owns us
   nsIFrame* mImageFrame;  // the frame that owns us
   nsIDocument* mDocument; // WEAK - the imagemap will not outlive the document

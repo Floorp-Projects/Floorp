@@ -7624,14 +7624,14 @@ nsHTMLEditRules::RemoveEmptyNodes()
   nsVoidArray skipList;
 
   // check for empty nodes
-  while (NS_ENUMERATOR_FALSE == iter->IsDone())
+  while (!iter->IsDone())
   {
     nsCOMPtr<nsIDOMNode> node, parent;
-    nsCOMPtr<nsIContent> content;
-    res = iter->CurrentNode(getter_AddRefs(content));
-    if (NS_FAILED(res)) return res;
-    node = do_QueryInterface(content);
-    if (!node) return NS_ERROR_FAILURE;
+
+    node = do_QueryInterface(iter->GetCurrentNode());
+    if (!node)
+      return NS_ERROR_FAILURE;
+
     node->GetParentNode(getter_AddRefs(parent));
     
     PRInt32 idx = skipList.IndexOf((void*)node);
@@ -7703,8 +7703,8 @@ nsHTMLEditRules::RemoveEmptyNodes()
         skipList.AppendElement((void*)parent);
       }
     }
-    res = iter->Next();
-    if (NS_FAILED(res)) return res;
+
+    iter->Next();
   }
   
   // now delete the empty nodes

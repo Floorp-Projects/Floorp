@@ -60,7 +60,8 @@ typedef PRUint32 nsUpdateType;
 #define UPDATE_ALL (UPDATE_CONTENT_MODEL | UPDATE_STYLE | UPDATE_CONTENT_STATE)
 
 // Document observer interface
-class nsIDocumentObserver : public nsISupports {
+class nsIDocumentObserver : public nsISupports
+{
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOCUMENT_OBSERVER_IID)
 
@@ -68,37 +69,38 @@ public:
    * Notify that a content model update is beginning. This call can be
    * nested.
    */
-  NS_IMETHOD BeginUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType) = 0;
+  virtual void BeginUpdate(nsIDocument *aDocument,
+                           nsUpdateType aUpdateType) = 0;
 
   /**
    * Notify that a content model update is finished. This call can be
    * nested.
    */
-  NS_IMETHOD EndUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType) = 0;
+  virtual void EndUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType) = 0;
 
   /**
    * Notify the observer that a document load is beginning.
    */
-  NS_IMETHOD BeginLoad(nsIDocument *aDocument) = 0;
+  virtual void BeginLoad(nsIDocument *aDocument) = 0;
 
   /**
    * Notify the observer that a document load has finished. Note that
    * the associated reflow of the document will be done <b>before</b>
    * EndLoad is invoked, not after.
    */
-  NS_IMETHOD EndLoad(nsIDocument *aDocument) = 0;
+  virtual void EndLoad(nsIDocument *aDocument) = 0;
 
   /**
    * Notify the observer that the document is being reflowed in
    * the given presentation shell.
    */
-  NS_IMETHOD BeginReflow(nsIDocument *aDocument, nsIPresShell* aShell) = 0;
+  virtual void BeginReflow(nsIDocument *aDocument, nsIPresShell* aShell) = 0;
 
   /**
    * Notify the observer that the document is done being reflowed in
    * the given presentation shell.
    */
-  NS_IMETHOD EndReflow(nsIDocument *aDocument, nsIPresShell* aShell) = 0;
+  virtual void EndReflow(nsIDocument *aDocument, nsIPresShell* aShell) = 0;
 
   /**
    * Notification that the content model has changed. This method is
@@ -117,9 +119,9 @@ public:
    * @param aSubContent subrange information about the piece of content
    *  that changed
    */
-  NS_IMETHOD ContentChanged(nsIDocument *aDocument,
-                            nsIContent* aContent,
-                            nsISupports* aSubContent) = 0;
+  virtual void ContentChanged(nsIDocument *aDocument,
+                              nsIContent* aContent,
+                              nsISupports* aSubContent) = 0;
 
   /**
    * Notification that the state of a content node has changed. 
@@ -144,10 +146,10 @@ public:
    * @param aContent1 the piece of content that changed
    * @param aContent2 optional second piece of content that changed
    */
-  NS_IMETHOD ContentStatesChanged(nsIDocument* aDocument,
-                                  nsIContent* aContent1,
-                                  nsIContent* aContent2,
-                                  PRInt32 aStateMask) = 0;
+  virtual void ContentStatesChanged(nsIDocument* aDocument,
+                                    nsIContent* aContent1,
+                                    nsIContent* aContent2,
+                                    PRInt32 aStateMask) = 0;
 
   /**
    * Notification that the content model has changed. This method is called
@@ -161,11 +163,11 @@ public:
    * @param aModType Whether or not the attribute was added, changed, or removed.
    *   The constants are defined in nsIDOMMutationEvent.h.
    */
-  NS_IMETHOD AttributeChanged(nsIDocument *aDocument,
-                              nsIContent*  aContent,
-                              PRInt32      aNameSpaceID,
-                              nsIAtom*     aAttribute,
-                              PRInt32      aModType) = 0;
+  virtual void AttributeChanged(nsIDocument *aDocument,
+                                nsIContent*  aContent,
+                                PRInt32      aNameSpaceID,
+                                nsIAtom*     aAttribute,
+                                PRInt32      aModType) = 0;
 
   /**
    * Notifcation that the content model has had data appended to the
@@ -180,9 +182,9 @@ public:
    * @param aNewIndexInContainer the index in the container of the first
    *          new child
    */
-  NS_IMETHOD ContentAppended(nsIDocument *aDocument,
-                             nsIContent* aContainer,
-                             PRInt32     aNewIndexInContainer) = 0;
+  virtual void ContentAppended(nsIDocument *aDocument,
+                               nsIContent* aContainer,
+                               PRInt32     aNewIndexInContainer) = 0;
 
   /**
    * Notification that content has been inserted. This method is called
@@ -196,10 +198,10 @@ public:
    * @param aChild the child that was inserted
    * @param aIndexInContainer the index of the child in the container
    */
-  NS_IMETHOD ContentInserted(nsIDocument *aDocument,
-                             nsIContent* aContainer,
-                             nsIContent* aChild,
-                             PRInt32 aIndexInContainer) = 0;
+  virtual void ContentInserted(nsIDocument *aDocument,
+                               nsIContent* aContainer,
+                               nsIContent* aChild,
+                               PRInt32 aIndexInContainer) = 0;
 
   /**
    * Notification that content has been replaced. This method is called
@@ -215,11 +217,11 @@ public:
    * @param aIndexInContainer the index of the old and new child in the
    *  container
    */
-  NS_IMETHOD ContentReplaced(nsIDocument *aDocument,
-                             nsIContent* aContainer,
-                             nsIContent* aOldChild,
-                             nsIContent* aNewChild,
-                             PRInt32 aIndexInContainer) = 0;
+  virtual void ContentReplaced(nsIDocument *aDocument,
+                               nsIContent* aContainer,
+                               nsIContent* aOldChild,
+                               nsIContent* aNewChild,
+                               PRInt32 aIndexInContainer) = 0;
 
   /**
    * Content has just been removed. This method is called automatically
@@ -234,10 +236,10 @@ public:
    * @param aIndexInContainer the index of the child in the container
    *  before it was removed
    */
-  NS_IMETHOD ContentRemoved(nsIDocument *aDocument,
-                            nsIContent* aContainer,
-                            nsIContent* aChild,
-                            PRInt32 aIndexInContainer) = 0;
+  virtual void ContentRemoved(nsIDocument *aDocument,
+                              nsIContent* aContainer,
+                              nsIContent* aChild,
+                              PRInt32 aIndexInContainer) = 0;
 
   /**
    * A StyleSheet has just been added to the document.  This method is
@@ -248,8 +250,8 @@ public:
    * @param aDocument The document being observed
    * @param aStyleSheet the StyleSheet that has been added
    */
-  NS_IMETHOD StyleSheetAdded(nsIDocument *aDocument,
-                             nsIStyleSheet* aStyleSheet) = 0;
+  virtual void StyleSheetAdded(nsIDocument *aDocument,
+                               nsIStyleSheet* aStyleSheet) = 0;
 
   /**
    * A StyleSheet has just been removed from the document.  This
@@ -260,8 +262,8 @@ public:
    * @param aDocument The document being observed
    * @param aStyleSheet the StyleSheet that has been removed
    */
-  NS_IMETHOD StyleSheetRemoved(nsIDocument *aDocument,
-                               nsIStyleSheet* aStyleSheet) = 0;
+  virtual void StyleSheetRemoved(nsIDocument *aDocument,
+                                 nsIStyleSheet* aStyleSheet) = 0;
   
   /**
    * A StyleSheet has just changed its applicable state.
@@ -275,9 +277,9 @@ public:
    * @param aApplicable PR_TRUE if the sheet is applicable, PR_FALSE if
    *        it is not applicable
    */
-  NS_IMETHOD StyleSheetApplicableStateChanged(nsIDocument *aDocument,
-                                              nsIStyleSheet* aStyleSheet,
-                                              PRBool aApplicable) = 0;
+  virtual void StyleSheetApplicableStateChanged(nsIDocument *aDocument,
+                                                nsIStyleSheet* aStyleSheet,
+                                                PRBool aApplicable) = 0;
 
   /**
    * A StyleRule has just been modified within a style sheet.
@@ -302,10 +304,10 @@ public:
    *                      |QueryInterface|.
    * @param aNewStyleRule The rule being added.
    */
-  NS_IMETHOD StyleRuleChanged(nsIDocument *aDocument,
-                              nsIStyleSheet* aStyleSheet,
-                              nsIStyleRule* aOldStyleRule,
-                              nsIStyleRule* aNewStyleRule) = 0;
+  virtual void StyleRuleChanged(nsIDocument *aDocument,
+                                nsIStyleSheet* aStyleSheet,
+                                nsIStyleRule* aOldStyleRule,
+                                nsIStyleRule* aNewStyleRule) = 0;
 
   /**
    * A StyleRule has just been added to a style sheet.
@@ -318,9 +320,9 @@ public:
    * @param aStyleSheet the StyleSheet that has been modified
    * @param aStyleRule the rule that was added
    */
-  NS_IMETHOD StyleRuleAdded(nsIDocument *aDocument,
-                            nsIStyleSheet* aStyleSheet,
-                            nsIStyleRule* aStyleRule) = 0;
+  virtual void StyleRuleAdded(nsIDocument *aDocument,
+                              nsIStyleSheet* aStyleSheet,
+                              nsIStyleRule* aStyleRule) = 0;
 
   /**
    * A StyleRule has just been removed from a style sheet.
@@ -333,9 +335,9 @@ public:
    * @param aStyleSheet the StyleSheet that has been modified
    * @param aStyleRule the rule that was removed
    */
-  NS_IMETHOD StyleRuleRemoved(nsIDocument *aDocument,
-                              nsIStyleSheet* aStyleSheet,
-                              nsIStyleRule* aStyleRule) = 0;
+  virtual void StyleRuleRemoved(nsIDocument *aDocument,
+                                nsIStyleSheet* aStyleSheet,
+                                nsIStyleRule* aStyleRule) = 0;
 
  /**
    * The document is in the process of being destroyed.
@@ -344,210 +346,190 @@ public:
    * 
    * @param aDocument The document being observed
    */
-  NS_IMETHOD DocumentWillBeDestroyed(nsIDocument *aDocument) = 0;
+  virtual void DocumentWillBeDestroyed(nsIDocument *aDocument) = 0;
 };
 
 #define NS_DECL_NSIDOCUMENTOBSERVER                                          \
-    NS_IMETHOD BeginUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType);\
-    NS_IMETHOD EndUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType);  \
-    NS_IMETHOD BeginLoad(nsIDocument* aDocument);                            \
-    NS_IMETHOD EndLoad(nsIDocument* aDocument);                              \
-    NS_IMETHOD BeginReflow(nsIDocument* aDocument,                           \
+    virtual void BeginUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType);\
+    virtual void EndUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType);\
+    virtual void BeginLoad(nsIDocument* aDocument);                          \
+    virtual void EndLoad(nsIDocument* aDocument);                            \
+    virtual void BeginReflow(nsIDocument* aDocument,                         \
+                             nsIPresShell* aShell);                          \
+    virtual void EndReflow(nsIDocument* aDocument,                           \
                            nsIPresShell* aShell);                            \
-    NS_IMETHOD EndReflow(nsIDocument* aDocument,                             \
-                         nsIPresShell* aShell);                              \
-    NS_IMETHOD ContentChanged(nsIDocument* aDocument,                        \
-                              nsIContent* aContent,                          \
-                              nsISupports* aSubContent);                     \
-    NS_IMETHOD ContentStatesChanged(nsIDocument* aDocument,                  \
-                                    nsIContent* aContent1,                   \
-                                    nsIContent* aContent2,                   \
-                                    PRInt32 aStateMask);                     \
-    NS_IMETHOD AttributeChanged(nsIDocument* aDocument,                      \
+    virtual void ContentChanged(nsIDocument* aDocument,                      \
                                 nsIContent* aContent,                        \
-                                PRInt32 aNameSpaceID,                        \
-                                nsIAtom* aAttribute,                         \
-                                PRInt32 aModType);                           \
-    NS_IMETHOD ContentAppended(nsIDocument* aDocument,                       \
-                               nsIContent* aContainer,                       \
-                               PRInt32 aNewIndexInContainer);                \
-    NS_IMETHOD ContentInserted(nsIDocument* aDocument,                       \
-                               nsIContent* aContainer,                       \
-                               nsIContent* aChild,                           \
-                               PRInt32 aIndexInContainer);                   \
-    NS_IMETHOD ContentReplaced(nsIDocument* aDocument,                       \
-                               nsIContent* aContainer,                       \
-                               nsIContent* aOldChild,                        \
-                               nsIContent* aNewChild,                        \
-                               PRInt32 aIndexInContainer);                   \
-    NS_IMETHOD ContentRemoved(nsIDocument* aDocument,                        \
-                              nsIContent* aContainer,                        \
-                              nsIContent* aChild,                            \
-                              PRInt32 aIndexInContainer);                    \
-    NS_IMETHOD StyleSheetAdded(nsIDocument* aDocument,                       \
-                               nsIStyleSheet* aStyleSheet);                  \
-    NS_IMETHOD StyleSheetRemoved(nsIDocument* aDocument,                     \
+                                nsISupports* aSubContent);                   \
+    virtual void ContentStatesChanged(nsIDocument* aDocument,                \
+                                      nsIContent* aContent1,                 \
+                                      nsIContent* aContent2,                 \
+                                      PRInt32 aStateMask);                   \
+    virtual void AttributeChanged(nsIDocument* aDocument,                    \
+                                  nsIContent* aContent,                      \
+                                  PRInt32 aNameSpaceID,                      \
+                                  nsIAtom* aAttribute,                       \
+                                  PRInt32 aModType);                         \
+    virtual void ContentAppended(nsIDocument* aDocument,                     \
+                                 nsIContent* aContainer,                     \
+                                 PRInt32 aNewIndexInContainer);              \
+    virtual void ContentInserted(nsIDocument* aDocument,                     \
+                                 nsIContent* aContainer,                     \
+                                 nsIContent* aChild,                         \
+                                 PRInt32 aIndexInContainer);                 \
+    virtual void ContentReplaced(nsIDocument* aDocument,                     \
+                                 nsIContent* aContainer,                     \
+                                 nsIContent* aOldChild,                      \
+                                 nsIContent* aNewChild,                      \
+                                 PRInt32 aIndexInContainer);                 \
+    virtual void ContentRemoved(nsIDocument* aDocument,                      \
+                                nsIContent* aContainer,                      \
+                                nsIContent* aChild,                          \
+                                PRInt32 aIndexInContainer);                  \
+    virtual void StyleSheetAdded(nsIDocument* aDocument,                     \
                                  nsIStyleSheet* aStyleSheet);                \
-    NS_IMETHOD StyleSheetApplicableStateChanged(nsIDocument* aDocument,      \
-                                                nsIStyleSheet* aStyleSheet,  \
-                                                PRBool aApplicable);         \
-    NS_IMETHOD StyleRuleChanged(nsIDocument* aDocument,                      \
-                                nsIStyleSheet* aStyleSheet,                  \
-                                nsIStyleRule* aOldStyleRule,                 \
-                                nsIStyleRule* aNewStyleRule);                \
-    NS_IMETHOD StyleRuleAdded(nsIDocument* aDocument,                        \
-                              nsIStyleSheet* aStyleSheet,                    \
-                              nsIStyleRule* aStyleRule);                     \
-    NS_IMETHOD StyleRuleRemoved(nsIDocument* aDocument,                      \
+    virtual void StyleSheetRemoved(nsIDocument* aDocument,                   \
+                                   nsIStyleSheet* aStyleSheet);              \
+    virtual void StyleSheetApplicableStateChanged(nsIDocument* aDocument,    \
+                                                  nsIStyleSheet* aStyleSheet,\
+                                                  PRBool aApplicable);       \
+    virtual void StyleRuleChanged(nsIDocument* aDocument,                    \
+                                  nsIStyleSheet* aStyleSheet,                \
+                                  nsIStyleRule* aOldStyleRule,               \
+                                  nsIStyleRule* aNewStyleRule);              \
+    virtual void StyleRuleAdded(nsIDocument* aDocument,                      \
                                 nsIStyleSheet* aStyleSheet,                  \
                                 nsIStyleRule* aStyleRule);                   \
-    NS_IMETHOD DocumentWillBeDestroyed(nsIDocument* aDocument);              \
+    virtual void StyleRuleRemoved(nsIDocument* aDocument,                    \
+                                  nsIStyleSheet* aStyleSheet,                \
+                                  nsIStyleRule* aStyleRule);                 \
+    virtual void DocumentWillBeDestroyed(nsIDocument* aDocument);            \
 
 
 #define NS_IMPL_NSIDOCUMENTOBSERVER_CORE_STUB(_class)                     \
-NS_IMETHODIMP                                                             \
+void                                                                      \
 _class::BeginUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType)     \
 {                                                                         \
-  return NS_OK;                                                           \
 }                                                                         \
-NS_IMETHODIMP                                                             \
+void                                                                      \
 _class::EndUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType)       \
 {                                                                         \
-  return NS_OK;                                                           \
 }                                                                         \
-NS_IMETHODIMP                                                             \
+void                                                                      \
 _class::DocumentWillBeDestroyed(nsIDocument* aDocument)                   \
 {                                                                         \
-  return NS_OK;                                                           \
 }
 
 #define NS_IMPL_NSIDOCUMENTOBSERVER_LOAD_STUB(_class)                     \
-NS_IMETHODIMP                                                             \
+void                                                                      \
 _class::BeginLoad(nsIDocument* aDocument)                                 \
 {                                                                         \
-  return NS_OK;                                                           \
 }                                                                         \
-NS_IMETHODIMP                                                             \
+void                                                                      \
 _class::EndLoad(nsIDocument* aDocument)                                   \
 {                                                                         \
-  return NS_OK;                                                           \
 }
 
 #define NS_IMPL_NSIDOCUMENTOBSERVER_REFLOW_STUB(_class)                   \
-NS_IMETHODIMP                                                             \
+void                                                                      \
 _class::BeginReflow(nsIDocument* aDocument,                               \
-                                  nsIPresShell* aShell)                   \
+                    nsIPresShell* aShell)                                 \
 {                                                                         \
-  return NS_OK;                                                           \
 }                                                                         \
-NS_IMETHODIMP                                                             \
+void                                                                      \
 _class::EndReflow(nsIDocument* aDocument,                                 \
-                                nsIPresShell* aShell)                     \
+                  nsIPresShell* aShell)                                   \
 {                                                                         \
-  return NS_OK;                                                           \
 }
 
 #define NS_IMPL_NSIDOCUMENTOBSERVER_STATE_STUB(_class)                    \
-NS_IMETHODIMP                                                             \
+void                                                                      \
 _class::ContentStatesChanged(nsIDocument* aDocument,                      \
-                                           nsIContent* aContent1,         \
-                                           nsIContent* aContent2,         \
-                                           PRInt32 aStateMask)            \
+                             nsIContent* aContent1,                       \
+                             nsIContent* aContent2,                       \
+                             PRInt32 aStateMask)                          \
 {                                                                         \
-  return NS_OK;                                                           \
 }
 
 #define NS_IMPL_NSIDOCUMENTOBSERVER_CONTENT(_class)                       \
-NS_IMETHODIMP                                                             \
+void                                                                      \
 _class::ContentChanged(nsIDocument* aDocument,                            \
-                                     nsIContent* aContent,                \
-                                     nsISupports* aSubContent)            \
+                       nsIContent* aContent,                              \
+                       nsISupports* aSubContent)                          \
 {                                                                         \
-  return NS_OK;                                                           \
 }                                                                         \
-NS_IMETHODIMP                                                             \
+void                                                                      \
 _class::AttributeChanged(nsIDocument* aDocument,                          \
-                                       nsIContent* aContent,              \
-                                       PRInt32 aNameSpaceID,              \
-                                       nsIAtom* aAttribute,               \
-                                       PRInt32 aModType)                  \
+                         nsIContent* aContent,                            \
+                         PRInt32 aNameSpaceID,                            \
+                         nsIAtom* aAttribute,                             \
+                         PRInt32 aModType)                                \
 {                                                                         \
-  return NS_OK;                                                           \
 }                                                                         \
-NS_IMETHODIMP                                                             \
+void                                                                      \
 _class::ContentAppended(nsIDocument* aDocument,                           \
-                                      nsIContent* aContainer,             \
-                                      PRInt32 aNewIndexInContainer)       \
+                        nsIContent* aContainer,                           \
+                        PRInt32 aNewIndexInContainer)                     \
 {                                                                         \
-  return NS_OK;                                                           \
 }                                                                         \
-NS_IMETHODIMP                                                             \
+void                                                                      \
 _class::ContentInserted(nsIDocument* aDocument,                           \
-                                      nsIContent* aContainer,             \
-                                      nsIContent* aChild,                 \
-                                      PRInt32 aIndexInContainer)          \
+                        nsIContent* aContainer,                           \
+                        nsIContent* aChild,                               \
+                        PRInt32 aIndexInContainer)                        \
 {                                                                         \
-  return NS_OK;                                                           \
 }                                                                         \
-NS_IMETHODIMP                                                             \
+void                                                                      \
 _class::ContentReplaced(nsIDocument* aDocument,                           \
-                                      nsIContent* aContainer,             \
-                                      nsIContent* aOldChild,              \
-                                      nsIContent* aNewChild,              \
-                                      PRInt32 aIndexInContainer)          \
+                        nsIContent* aContainer,                           \
+                        nsIContent* aOldChild,                            \
+                        nsIContent* aNewChild,                            \
+                        PRInt32 aIndexInContainer)                        \
 {                                                                         \
-  return NS_OK;                                                           \
 }                                                                         \
-NS_IMETHODIMP                                                             \
+void                                                                      \
 _class::ContentRemoved(nsIDocument* aDocument,                            \
-                                     nsIContent* aContainer,              \
-                                     nsIContent* aChild,                  \
-                                     PRInt32 aIndexInContainer)           \
+                       nsIContent* aContainer,                            \
+                       nsIContent* aChild,                                \
+                       PRInt32 aIndexInContainer)                         \
 {                                                                         \
-  return NS_OK;                                                           \
 }
 
 #define NS_IMPL_NSIDOCUMENTOBSERVER_STYLE_STUB(_class)                    \
-NS_IMETHODIMP                                                             \
+void                                                                      \
 _class::StyleSheetAdded(nsIDocument* aDocument,                           \
-                                      nsIStyleSheet* aStyleSheet)         \
+                        nsIStyleSheet* aStyleSheet)                       \
 {                                                                         \
-  return NS_OK;                                                           \
 }                                                                         \
-NS_IMETHODIMP                                                             \
+void                                                                      \
 _class::StyleSheetRemoved(nsIDocument* aDocument,                         \
-                                        nsIStyleSheet* aStyleSheet)       \
+                          nsIStyleSheet* aStyleSheet)                     \
 {                                                                         \
-  return NS_OK;                                                           \
 }                                                                         \
-NS_IMETHODIMP                                                             \
+void                                                                      \
 _class::StyleSheetApplicableStateChanged(nsIDocument* aDocument,          \
                                          nsIStyleSheet* aStyleSheet,      \
                                          PRBool aApplicable)              \
 {                                                                         \
-  return NS_OK;                                                           \
 }                                                                         \
-NS_IMETHODIMP                                                             \
+void                                                                      \
 _class::StyleRuleChanged(nsIDocument* aDocument,                          \
                          nsIStyleSheet* aStyleSheet,                      \
                          nsIStyleRule* aOldStyleRule,                     \
                          nsIStyleRule* aNewStyleRule)                     \
 {                                                                         \
-  return NS_OK;                                                           \
 }                                                                         \
-NS_IMETHODIMP                                                             \
+void                                                                      \
 _class::StyleRuleAdded(nsIDocument* aDocument,                            \
-                                     nsIStyleSheet* aStyleSheet,          \
-                                     nsIStyleRule* aStyleRule)            \
+                       nsIStyleSheet* aStyleSheet,                        \
+                       nsIStyleRule* aStyleRule)                          \
 {                                                                         \
-  return NS_OK;                                                           \
 }                                                                         \
-NS_IMETHODIMP                                                             \
+void                                                                      \
 _class::StyleRuleRemoved(nsIDocument* aDocument,                          \
-                                       nsIStyleSheet* aStyleSheet,        \
-                                       nsIStyleRule* aStyleRule)          \
+                         nsIStyleSheet* aStyleSheet,                      \
+                         nsIStyleRule* aStyleRule)                        \
 {                                                                         \
-  return NS_OK;                                                           \
 }
 
 #endif /* nsIDocumentObserver_h___ */
