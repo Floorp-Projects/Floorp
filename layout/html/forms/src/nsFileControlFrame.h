@@ -235,8 +235,8 @@ private:
    */
   void PreDestroy(nsIPresContext* aPresContext);
 
-  NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
-  NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }
+  NS_IMETHOD_(nsrefcnt) AddRef() { return 1; }
+  NS_IMETHOD_(nsrefcnt) Release() { return 1; }
 
   PRBool mDidPreDestroy; // has PreDestroy been called
 };
