@@ -1280,11 +1280,21 @@ nsMsgComposeAndSend::GetBodyFromEditor()
     // If later Editor generates entities then we can remove this.
     rv = nsMsgI18NSaveAsCharset(mCompFields->GetForcePlainText() ? TEXT_PLAIN : attachment1_type, 
                                 aCharset, bodyText, &outCString);
-    if (NS_SUCCEEDED(rv)) 
-    {
-      // body contains multilingual data, confirm send to the user
-      // do this only for text/plain
-      if ((NS_ERROR_UENC_NOMAPPING == rv) && mCompFields->GetForcePlainText()) {
+
+    // body contains multilingual data, confirm send to the user
+    // do this only for text/plain
+    if ((NS_ERROR_UENC_NOMAPPING == rv) && mCompFields->GetForcePlainText()) {
+      // if nbsp then replace it by sp and try again
+      PRUnichar *bodyTextPtr = bodyText;
+      while (*bodyTextPtr) {
+        if (0x00A0 == *bodyTextPtr)
+          *bodyTextPtr = 0x0020;
+        bodyTextPtr++;
+      }
+      PR_FREEIF(outCString);
+      rv = nsMsgI18NSaveAsCharset(TEXT_PLAIN, aCharset, bodyText, &outCString);
+
+      if (NS_ERROR_UENC_NOMAPPING == rv) {
         PRBool proceedTheSend;
         rv = nsMsgAskBooleanQuestionByID(NS_MSG_MULTILINGUAL_SEND, &proceedTheSend);
         if (!proceedTheSend) {
@@ -1294,7 +1304,10 @@ nsMsgComposeAndSend::GetBodyFromEditor()
           return NS_ERROR_BUT_DONT_SHOW_ALERT;
         }
       }
+    }
 
+    if (NS_SUCCEEDED(rv)) 
+    {
       PR_FREEIF(attachment1_body);
       attachment1_body = outCString;
       Recycle(bodyText);
