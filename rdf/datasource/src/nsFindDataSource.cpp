@@ -854,8 +854,7 @@ FindDataSource::GetAllCommands(nsIRDFResource* source,nsIEnumerator/*<nsIRDFReso
 NS_IMETHODIMP
 FindDataSource::GetAllCmds(nsIRDFResource* source, nsISimpleEnumerator/*<nsIRDFResource>*/** commands)
 {
-	NS_NOTYETIMPLEMENTED("write me!");
-	return NS_ERROR_NOT_IMPLEMENTED;
+	return(NS_NewEmptyEnumerator(commands));
 }
 
 

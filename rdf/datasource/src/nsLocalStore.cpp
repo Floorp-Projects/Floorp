@@ -316,9 +316,7 @@ NS_IMETHODIMP
 LocalStoreImpl::GetAllCmds(nsIRDFResource* aSource,
                                nsISimpleEnumerator/*<nsIRDFResource>*/** aCommands)
 {
-    // XXX Although this is the wrong thing to do, it works. I'll file a
-    // bug to fix it.
-    return NS_ERROR_FAILURE;
+	return(NS_NewEmptyEnumerator(aCommands));
 }
 
 NS_IMETHODIMP
