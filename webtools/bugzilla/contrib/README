@@ -16,3 +16,5 @@ This directory includes:
       README.Mailif --  Readme describing the mail interface.
   bugmail_help.html --  User help page for the mail interface.
 
+       yp_nomail.sh --  script you can run via cron that regularly updates
+                        the nomail file for terminated employees 
