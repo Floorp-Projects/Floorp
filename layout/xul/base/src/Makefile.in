@@ -45,6 +45,7 @@ CPPSRCS		= \
 		nsTreeFrame.cpp \
 		nsTreeRowGroupFrame.cpp \
 		nsTreeIndentationFrame.cpp \
+		nsTreeItemDragCapturer.cpp \
 		nsTreeCellFrame.cpp \
 		nsTreeRowFrame.cpp \
 		nsTreeTwistyListener.cpp \
