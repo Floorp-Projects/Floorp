@@ -86,12 +86,12 @@ static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
 
 // defined in msgCompGlue.cpp
 extern char * INTL_GetDefaultMailCharset(void);
-extern nsresult ConvertFromUnicode(const nsString aCharset, 
-                                   const nsString inString,
+extern nsresult ConvertFromUnicode(const nsString& aCharset, 
+                                   const nsString& inString,
                                    char** outCString);
-extern nsresult ConvertToUnicode(const nsString aCharset, 
-                                 const char *inCString, 
-                                 nsString &outString);
+extern nsresult ConvertToUnicode(const nsString& aCharset, 
+                                 const char* inCString, 
+                                 nsString& outString);
 extern const char *msgCompHeaderInternalCharset(void);
 extern nsresult INTL_DecodeMimePartIIStr(const nsString& header, nsString& charset, nsString& decodedString);
 

@@ -109,8 +109,8 @@ extern "C" {
 //
 
 // Convert an unicode string to a C string with a given charset.
-nsresult ConvertFromUnicode(const nsString aCharset, 
-                            const nsString inString,
+nsresult ConvertFromUnicode(const nsString& aCharset, 
+                            const nsString& inString,
                             char** outCString)
 {
   nsresult res;
@@ -140,23 +140,14 @@ nsresult ConvertFromUnicode(const nsString aCharset,
       *outCString = (char *) PR_Malloc(dstLength + 1);
       if (*outCString != nsnull) {
         PRInt32 originalLength = unicharLength;
-        PRInt32 estimatedLength = dstLength;
         // convert from unicode
         res = encoder->Convert(unichars, &unicharLength, *outCString, &dstLength);
-        // buffer was too small, reallocate buffer and try again
+        // estimation of GetMaxLength was incorrect
         if (unicharLength < originalLength) {
           PR_Free(*outCString);
-          unicharLength = originalLength;
-          dstLength = estimatedLength * 4;  // estimation was not correct
-          *outCString = (char *) PR_Malloc(dstLength + 1);
-          if (*outCString != nsnull) {
-            res = encoder->Convert(unichars, &unicharLength, *outCString, &dstLength);
-            // This may also happen for the case like requesting charset "ISO-8859-1" for text in CJK range.
-            // We don't want assertion for those cases.
-            // NS_ASSERTION(unicharLength == originalLength, "unicharLength != originalLength");
-          }
+          res = NS_ERROR_FAILURE;
         }
-        if (*outCString != nsnull) {
+        else {
           (*outCString)[dstLength] = '\0';
         }
       }
@@ -170,9 +161,9 @@ nsresult ConvertFromUnicode(const nsString aCharset,
 }
 
 // Convert a C string to an unicode string.
-nsresult ConvertToUnicode(const nsString aCharset, 
-                          const char *inCString, 
-                          nsString &outString)
+nsresult ConvertToUnicode(const nsString& aCharset, 
+                          const char* inCString, 
+                          nsString& outString)
 {
   nsresult res;
   NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &res); 
