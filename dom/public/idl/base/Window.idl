@@ -31,8 +31,6 @@
                  attribute  long pageXOffset;
                  attribute  long pageYOffset;
 
-        boolean Equals(in Window window);
- 
         void  dump(in wstring str);
         void  alert(/* ... */);
 	boolean  confirm(/* ... */);

@@ -911,64 +911,6 @@ ResolveWindow(JSContext *cx, JSObject *obj, jsval id)
 
 
 //
-// Native method Equals
-//
-PR_STATIC_CALLBACK(JSBool)
-WindowEquals(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
-  PRBool nativeRet;
-  nsIDOMWindowPtr b0;
-
-  *rval = JSVAL_NULL;
-
-  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
-    PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "window.equals", &ok);
-    if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
-    }
-    NS_RELEASE(secMan);
-  }
-  else {
-    return JS_FALSE;
-  }
-
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  if (argc >= 1) {
-
-    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
-                                           kIWindowIID,
-                                           "Window",
-                                           cx,
-                                           argv[0])) {
-      return JS_FALSE;
-    }
-
-    if (NS_OK != nativeThis->Equals(b0, &nativeRet)) {
-      return JS_FALSE;
-    }
-
-    *rval = BOOLEAN_TO_JSVAL(nativeRet);
-  }
-  else {
-    JS_ReportError(cx, "Function Equals requires 1 parameters");
-    return JS_FALSE;
-  }
-
-  return JS_TRUE;
-}
-
-
-//
 // Native method Dump
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -2625,7 +2567,6 @@ static JSPropertySpec WindowProperties[] =
 //
 static JSFunctionSpec WindowMethods[] = 
 {
-  {"Equals",          WindowEquals,     1},
   {"dump",          WindowDump,     1},
   {"alert",          WindowAlert,     0},
   {"confirm",          WindowConfirm,     0},
@@ -2705,7 +2646,7 @@ extern "C" NS_DOM nsresult NS_NewScriptWindow(nsIScriptContext *aContext, nsISup
     // is called, so part of the global object initialization has to be moved 
     // after JS_InitStandardClasses
 
-    // assign "this" to the js object, don't AddRef
+    // assign "this" to the js object
     ::JS_SetPrivate(jscontext, global, aSupports);
     NS_ADDREF(aSupports);
 
