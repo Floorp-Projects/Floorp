@@ -1408,13 +1408,17 @@ with_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
      * Check whether id names an argument or local variable in an active
      * function.  If so, pretend we didn't find it, so that the real arg or
      * var property can be found in the function's call object, later on in
-     * the scope chain.
+     * the scope chain.  But skip unshared arg and var properties -- those
+     * result when a script sets a function "static" property explicitly.
+     * See jsinterp.c:SetFunctionSlot.
+     *
      * XXX blame pre-ECMA reflection of function args and vars as properties
      */
     if ((sprop = (JSScopeProperty *) *propp) &&
         (proto = *objp, OBJ_IS_NATIVE(proto)) &&
         (sprop->getter == js_GetArgument ||
-         sprop->getter == js_GetLocalVariable)) {
+         sprop->getter == js_GetLocalVariable) &&
+        (sprop->attrs & JSPROP_SHARED)) {
         JS_ASSERT(OBJ_GET_CLASS(cx, proto) == &js_FunctionClass);
         for (fp = cx->fp; fp && (!fp->fun || fp->fun->native); fp = fp->down)
             continue;
