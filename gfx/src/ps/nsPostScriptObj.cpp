@@ -116,6 +116,41 @@ FreeLangGroups(nsHashKey * aKey, void *aData, void *aClosure)
   return PR_TRUE;
 }
 
+static void
+PrintAsDSCTextline(XP_File f, char *text, int maxlen)
+{
+  NS_ASSERTION(maxlen > 1, "bad max length");
+
+  if (*text != '(') {
+    // Format as DSC textline type
+    XP_FilePrintf(f, "%.*s", maxlen, text);
+    return;
+  }
+
+  // Fallback: Format as DSC text type
+  XP_FilePrintf(f, "(");
+
+  int len = maxlen - 2;
+  while (*text && len > 0) {
+    if (!isprint(*text)) {
+      if (len < 4) break;
+      XP_FilePrintf(f, "\\%03o", *text);
+      len -= 4;
+    }
+    else if (*text == '(' || *text == ')' || *text == '\\') {
+      if (len < 2) break;
+      XP_FilePrintf(f, "\\%c", *text);
+      len -= 2;
+    }
+    else {
+      XP_FilePrintf(f, "%c", *text);
+      len--;
+    }
+    text++;
+  }
+  XP_FilePrintf(f, ")");
+}
+
 /** ---------------------------------------------------
  *  Default Constructor
  *	@update 2/1/99 dwc
@@ -410,7 +445,13 @@ XP_File f;
   else
 	  XP_FilePrintf(f, "%%%%PageOrder: Ascend\n");
 
-  XP_FilePrintf(f, "%%%%Title: %s\n", mPrintContext->prInfo->doc_title);
+  if (nsnull != mPrintContext->prInfo->doc_title) {
+    // DSC spec: max line length is 255 characters
+    XP_FilePrintf(f, "%%%%Title: ");
+    PrintAsDSCTextline(f, mPrintContext->prInfo->doc_title, 230);
+    XP_FilePrintf(f, "\n");
+  }
+
 #ifdef NOTYET
   XP_FilePrintf(f, "%%%%For: %n", user_name_stuff);
 #endif
