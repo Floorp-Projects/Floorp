@@ -1,0 +1,5 @@
+packages/core.jar:
+    communicator/content/platformBrowserBindings.xul
+    communicator/content/platformEditorBindings.xul
+    communicator/content/platformGlobalOverlay.xul
+

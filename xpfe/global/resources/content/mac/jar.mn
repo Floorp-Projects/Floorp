@@ -1,0 +1,6 @@
+packages/widget-toolkit.jar:
+	global/content/platformGlobalOverlay.xul
+	global/content/platformDialogOverlay.xul
+	global/content/platformInputBindings.xul
+	global/content/platformTextAreaBindings.xul
+	global/content/platformHTMLBindings.xml
