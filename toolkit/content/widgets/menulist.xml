@@ -200,7 +200,8 @@
           var item = document.createElementNS(XULNS, "menuitem");
           item.setAttribute("label", label);
           item.setAttribute("value", value);
-          item.setAttribute("description", description);
+          if (description)
+            item.setAttribute("description", description);
 
           popup.appendChild(item);
           return item;
@@ -221,7 +222,8 @@
           var item = document.createElementNS(XULNS, "menuitem");
           item.setAttribute("label", label);
           item.setAttribute("value", value);
-          item.setAttribute("description", description);
+          if (description)
+            item.setAttribute("description", description);
 
           if (index < popup.childNodes.length)
             popup.insertBefore(item, popup.childNodes[index]);
