@@ -82,7 +82,7 @@ nsMenuListener::KeyUp(nsIDOMEvent* aKeyEvent)
 nsresult
 nsMenuListener::KeyDown(nsIDOMEvent* aKeyEvent)
 {
-#ifndef XP_UNIX
+#if !defined(XP_UNIX) || defined(NTO)
   // See if the ALT key goes down by itself.
   // If so, then close up the menu completely.
   nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
@@ -142,7 +142,7 @@ nsMenuListener::KeyPress(nsIDOMEvent* aKeyEvent)
     // Open one level.
     mMenuParent->Enter();
   }
-#ifndef XP_UNIX
+#if !defined(XP_UNIX) || defined(NTO)
   else {
     // Do shortcut navigation.
     // A letter was pressed. We want to see if a shortcut gets matched. If
