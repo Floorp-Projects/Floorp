@@ -158,6 +158,3 @@
 <!ENTITY formatToolbar.boldChar "B">
 <!ENTITY formatToolbar.italicChar "I">
 <!ENTITY formatToolbar.underlineChar "U">
-
-<!-- Destination for click on throbber button -->
-<!ENTITY throbber.url "http://www.mozilla.org/mailnews"> 

@@ -380,7 +380,7 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 		</box>
 
 		<box id="toolbar_throbber_box" align="vertical">
-			<titledbutton id="Throbber" onclick="window.open('&throbber.url;');">
+			<titledbutton id="Throbber" onclick='goClickThrobber("compose.throbber.url")'>
 				<observes element="broadcaster_throbber" attribute="busy"/>
 			</titledbutton>
 		</box>

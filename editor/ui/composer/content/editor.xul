@@ -146,7 +146,7 @@
     <spring flex="100%"/>
 
 		<box id="toolbar_throbber_box" align="vertical">
-			<titledbutton id="Throbber" onclick="window.open('http://www.mozilla.org/editor');">
+			<titledbutton id="Throbber" onclick='goClickThrobber("editor.throbber.url")'>
 				<observes element="Editor:Throbber" attribute="busy"/>
 			</titledbutton>
 		</box>

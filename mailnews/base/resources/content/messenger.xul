@@ -769,7 +769,7 @@ Rights Reserved.
           </box>
 
 		  <box id="toolbar_throbber_box" align="vertical">
-			  <titledbutton id="Throbber" onclick="window.open('&throbber.url;');">
+              <titledbutton id="Throbber" onclick='goClickThrobber("messenger.throbber.url")'>
 				  <observes element="Messenger:Throbber" attribute="busy"/>
 			  </titledbutton>
 		  </box>

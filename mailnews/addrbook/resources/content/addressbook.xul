@@ -233,7 +233,7 @@ Rights Reserved.
 			</box>
 
 			<box id="toolbar_throbber_box" align="vertical">
-				<titledbutton id="Throbber">
+				<titledbutton id="Throbber" onclick='goClickThrobber("addressbook.throbber.url")'>
 					<observes element="broadcaster_throbber" attribute="busy"/>
 				</titledbutton>
 			</box>

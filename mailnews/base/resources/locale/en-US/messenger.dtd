@@ -262,9 +262,6 @@ Rights Reserved.
 <!ENTITY  unreadCountText.label "Unread: ">
 <!ENTITY  totalCountText.label " Total: ">
 
-<!-- Destination for click on throbber button -->
-<!ENTITY throbber.url "http://www.mozilla.org/mailnews"> 
-
 <!-- Thread Pane Context Menu -->
 <!ENTITY contextOpenNewWindow.label "Open in New Window">
 <!ENTITY contextEditAsNew.label "Edit As New...">

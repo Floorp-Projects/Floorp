@@ -102,6 +102,26 @@ function goToggleToolbar( id, elementID )
 	}
 }
 
+
+function goClickThrobber( urlPref )
+{
+	var url;
+	try {
+		var pref = Components.classes["component://netscape/preferences"].getService();
+		if( pref )
+		pref = pref.QueryInterface( Components.interfaces.nsIPref );
+		url = pref.CopyCharPref(urlPref);
+	}
+
+	catch(e) {
+		url = null;
+	}
+
+	if ( url )
+		openTopWin(url);
+}
+
+
 //No longer needed.  Rip this out since we are using openTopWin
 function goHelpMenu( url )
 {
@@ -113,26 +133,28 @@ function goHelpMenu( url )
 
 function openTopWin( url )
 {
-  /* note that this chrome url should probably change to not have all of the navigator controls */
+  /* note that this chrome url should probably change to not have all of the navigator controls,
+     but if we do this we need to have the option for chrome controls because goClickThrobber()
+     needs to use this function with chrome controls */
   /* also, do we want to limit the number of help windows that can be spawned? */
-
-         dump("SetPrefToCurrentPage("+ url +") \n ");
-         if ((url == null) || (url == "")) return;
-          
-         var windowManager = Components.classes['component://netscape/rdf/datasource?name=window-mediator'].getService();
-         var windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
+    dump("SetPrefToCurrentPage("+ url +") \n ");
+    if ((url == null) || (url == "")) return;
+     
+    var windowManager = Components.classes['component://netscape/rdf/datasource?name=window-mediator'].getService();
+    var windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
  
-         var topWindowOfType = windowManagerInterface.getMostRecentWindow( "navigator:browser" );
-         if ( topWindowOfType )
-         {
-                  dump("setting page: " + topWindowOfType.content.location.href + "\n");
-                         topWindowOfType.content.location.href = url;
-         }
-         else
-         {
-                 dump(" No browser window. Should be disabling this button \n");
-				 window.openDialog( "chrome://navigator/content/navigator.xul", "_blank", "chrome,all,dialog=no", url );
-         }
+    var topWindowOfType = windowManagerInterface.getMostRecentWindow( "navigator:browser" );
+    if ( topWindowOfType )
+    {
+        dump("setting page: " + topWindowOfType.content.location.href + "\n");
+        topWindowOfType.focus();
+        topWindowOfType.content.location.href = url;
+    }
+    else
+    {
+        dump(" No browser window. Should be disabling this button \n");
+        window.openDialog( "chrome://navigator/content/navigator.xul", "_blank", "chrome,all,dialog=no", url );
+    }
 }
 
 function goAboutDialog()
