@@ -23,13 +23,6 @@ function init_sidebar(name, uri, width) {
     prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
   }
   if (prefs) {
-    try {
-	    prefs.SetDefaultBoolPref(sidebar_pref + '.open', false);
-    }
-    catch (ex) {
-	    dump("failed to set the sidebar_pref\n");
-    }
-
     // The sidebar is closed by default, so open it only if the
     //    preference is set to true.
     try {
