@@ -364,7 +364,7 @@ nsEventStatus nsMenu::MenuDestruct(const nsMenuEvent & aMenuEvent)
 */
 NS_METHOD nsMenu::SetDOMNode(nsIDOMNode * aMenuNode)
 {
-	return NS_OK:
+	return NS_OK;
 }
 
 //-------------------------------------------------------------------------
