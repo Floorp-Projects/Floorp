@@ -26,6 +26,8 @@
 #include "nspr.h"
 //#include <string.h>
 
+#include "imgScaler.h"
+
 #define IsFlagSet(a,b) (a & b)
 
 NS_IMPL_ISUPPORTS1(nsImageBeOS, nsIImage)
@@ -124,8 +126,8 @@ nsresult
       // 32-bit align each row
       mAlphaRowBytes = (mAlphaRowBytes + 3) & ~0x3;
 
-      mAlphaBits = new PRUint8[8 * mAlphaRowBytes * aHeight]; 
-	  memset(mAlphaBits, 255, 8*mAlphaRowBytes * aHeight);
+      mAlphaBits = new PRUint8[mAlphaRowBytes * aHeight]; 
+	  memset(mAlphaBits, 255, mAlphaRowBytes * aHeight);
       mAlphaWidth = aWidth;
       mAlphaHeight = aHeight;
       break;
@@ -255,6 +257,7 @@ nsImageBeOS::Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
 		view->DrawBitmapAsync(mImage, BRect(aSX, aSY, aSX + aSWidth - 1, aSY + aSHeight - 1),
 			BRect(aDX, aDY, aDX + aDWidth - 1, aDY + aDHeight - 1));
 		view->SetDrawingMode(B_OP_COPY);
+		view->Sync();
 		view->UnlockLooper();
 	}
 	beosdrawing->ReleaseView();
@@ -294,6 +297,7 @@ nsImageBeOS::Draw(nsIRenderingContext &aContext,
                           BRect(0, 0, aWidth - 1, aHeight - 1),
                           BRect(aX, aY, aX + aWidth - 1, aY + aHeight - 1));
     view->SetDrawingMode(B_OP_COPY);
+    view->Sync();
     view->UnlockLooper();
   }
   beosdrawing->ReleaseView();
@@ -549,6 +553,144 @@ NS_IMETHODIMP nsImageBeOS::DrawToImage(nsIImage* aDstImage,
                                        nscoord aDX, nscoord aDY,
                                        nscoord aDWidth, nscoord aDHeight)
 {
-  return NS_ERROR_FAILURE;
+  nsImageBeOS *dest = NS_STATIC_CAST(nsImageBeOS *, aDstImage);
+
+  if (!dest)
+    return NS_ERROR_FAILURE;
+  
+  if (!dest->mImage)
+    dest->CreateImage(NULL);
+  
+  if (!dest->mImage)
+    return NS_ERROR_FAILURE;
+
+  if (!mImage)
+    CreateImage(NULL);
+  
+  if (!mImage)
+    return NS_ERROR_FAILURE;
+    
+  BBitmap *bmpDst = dest->mImage;
+  BBitmap bmpTmp(bmpDst->Bounds(), bmpDst->ColorSpace(), true);
+  BView *v = new BView(bmpDst->Bounds(), "", 0, 0);
+  if (!v)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  memcpy( bmpTmp.Bits(), bmpDst->Bits(), bmpDst->BitsLength() );
+  bmpTmp.AddChild(v);
+  
+  bmpTmp.Lock();
+  v->SetDrawingMode(B_OP_ALPHA);
+  v->SetBlendingMode(B_PIXEL_ALPHA, B_ALPHA_COMPOSITE);
+  v->DrawBitmap(mImage, BRect(0, 0, mWidth - 1, mHeight - 1), BRect( aDX, aDY, aDX + aDWidth - 1, aDY + aDHeight -1 ));
+  v->SetDrawingMode(B_OP_COPY);
+  v->Sync();
+  bmpTmp.Unlock();
+  bmpTmp.RemoveChild(v);
+  bmpDst->SetBits(bmpTmp.Bits(), bmpTmp.BitsLength(), 0, bmpTmp.ColorSpace() );
+  delete v;
+  
+  //
+  // following part is derived from GTK version
+  // 2001/6/21 Makoto Hamanaka < VTA04230@nifty.com >
+  
+  // need to copy the mImageBits in case we're rendered scaled
+  PRUint8 *scaledImage = 0, *scaledAlpha = 0;
+  PRUint8 *rgbPtr=0, *alphaPtr=0;
+  PRUint32 rgbStride, alphaStride;
+
+  if ((aDWidth != mWidth) || (aDHeight != mHeight)) {
+    // scale factor in DrawTo... start scaling
+    scaledImage = (PRUint8 *)nsMemory::Alloc(3*aDWidth*aDHeight);
+    if (!scaledImage)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    RectStretch(0, 0, mWidth-1, mHeight-1, 0, 0, aDWidth-1, aDHeight-1,
+                mImageBits, mRowBytes, scaledImage, 3*aDWidth, 24);
+
+    if (mAlphaDepth) {
+      if (mAlphaDepth==1)
+        alphaStride = (aDWidth+7)>>3;    // round to next byte
+      else
+        alphaStride = aDWidth;
+
+      scaledAlpha = (PRUint8 *)nsMemory::Alloc(alphaStride*aDHeight);
+      if (!scaledAlpha) {
+        nsMemory::Free(scaledImage);
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+
+      RectStretch(0, 0, mWidth-1, mHeight-1, 0, 0, aDWidth-1, aDHeight-1,
+                  mAlphaBits, mAlphaRowBytes, scaledAlpha, alphaStride,
+                  mAlphaDepth);
+    }
+    rgbPtr = scaledImage;
+    rgbStride = 3*aDWidth;
+    alphaPtr = scaledAlpha;
+  } else {
+    rgbPtr = mImageBits;
+    rgbStride = mRowBytes;
+    alphaPtr = mAlphaBits;
+    alphaStride = mAlphaRowBytes;
+  }
+
+  PRInt32 y;
+  // now composite the two images together
+  switch (mAlphaDepth) {
+  case 1:
+    for (y=0; y<aDHeight; y++) {
+      PRUint8 *dst = dest->mImageBits + (y+aDY)*dest->mRowBytes + 3*aDX;
+      PRUint8 *dstAlpha = dest->mAlphaBits + (y+aDY)*dest->mAlphaRowBytes;
+      PRUint8 *src = rgbPtr + y*rgbStride; 
+      PRUint8 *alpha = alphaPtr + y*alphaStride;
+      for (int x=0; x<aDWidth; x++, dst+=3, src+=3) {
+#define NS_GET_BIT(rowptr, x) (rowptr[(x)>>3] &  (1<<(7-(x)&0x7)))
+#define NS_SET_BIT(rowptr, x) (rowptr[(x)>>3] |= (1<<(7-(x)&0x7)))
+
+        // if this pixel is opaque then copy into the destination image
+        if (NS_GET_BIT(alpha, x)) {
+          dst[0] = src[0];
+          dst[1] = src[1];
+          dst[2] = src[2];
+          NS_SET_BIT(dstAlpha, aDX+x);
+        }
+
+#undef NS_GET_BIT
+#undef NS_SET_BIT
+      }
+    }
+    break;
+  case 8:
+    for (y=0; y<aDHeight; y++) {
+      PRUint8 *dst = dest->mImageBits + (y+aDY)*dest->mRowBytes + 3*aDX;
+      PRUint8 *dstAlpha = 
+        dest->mAlphaBits + (y+aDY)*dest->mAlphaRowBytes + aDX;
+      PRUint8 *src = rgbPtr + y*rgbStride; 
+      PRUint8 *alpha = alphaPtr + y*alphaStride;
+      for (int x=0; x<aDWidth; x++, dst+=3, dstAlpha++, src+=3, alpha++) {
+
+        // blend this pixel over the destination image
+        unsigned val = *alpha;
+        MOZ_BLEND(dst[0], dst[0], src[0], val);
+        MOZ_BLEND(dst[1], dst[1], src[1], val);
+        MOZ_BLEND(dst[2], dst[2], src[2], val);
+        MOZ_BLEND(*dstAlpha, *dstAlpha, val, val);
+      }
+    }
+    break;
+  case 0:
+  default:
+    for (y=0; y<aDHeight; y++)
+      memcpy(dest->mImageBits + (y+aDY)*dest->mRowBytes + 3*aDX, 
+             rgbPtr + y*rgbStride,
+             3*aDWidth);
+  }
+  if (scaledAlpha)
+    nsMemory::Free(scaledAlpha);
+  if (scaledImage)
+    nsMemory::Free(scaledImage);
+  
+  return NS_OK;
+
 }
 #endif
