@@ -32,11 +32,17 @@
 #include "nsIThread.h"
 
 #include <stdlib.h>
+#include <signal.h>
+//#include <unistd.h>
+//#include "nsTraceRefcnt.h"
+
 #include "plevent.h"
 #include "resources.h"
 
 #include <photon/Pg.h>
 #include <Pt.h>
+
+extern "C" char * strsignal(int);
 
 #define PRINTF printf
 
@@ -122,56 +128,56 @@ nsNativeBrowserWindow::DispatchMenuItem(PRInt32 aID)
 }
 
 
-//#ifdef DEBUG_kirkj
-#define CRAWL_STACK_ON_SIGSEGV
-//#endif // DEBUG_kirkj
-
-
-#ifdef CRAWL_STACK_ON_SIGSEGV
-
-#include <signal.h>
-#include <unistd.h>
-#include "nsTraceRefcnt.h"
-
-extern "C" char * strsignal(int);
-
-static char _progname[1024] = "huh?";
-
-void
-ah_crap_handler(int signum)
+void abnormal_exit_handler(int signum)
 {
-  PR_CurrentThread();
+  /* Free any shared memory that has been allocated */
+  PgShmemCleanup();
 
-  printf("prog = %s\npid = %d\nsignal = %s\n",
-         _progname,
-         getpid(),
-         strsignal(signum));
+  signal(SIGTERM, abnormal_exit_handler);
+  signal(SIGQUIT, abnormal_exit_handler);
+  signal(SIGINT,  abnormal_exit_handler);
+  signal(SIGHUP,  abnormal_exit_handler);
+  signal(SIGSEGV, abnormal_exit_handler);
+  signal(SIGILL,  abnormal_exit_handler);
+  signal(SIGABRT, abnormal_exit_handler);
   
-  printf("stack logged to someplace\n");
-  printf("need to fix xpcom/base/nsTraceRefCnt.cpp in WalkTheStack.\n");
-  nsTraceRefcnt::WalkTheStack(stdout);
+#if 1
+  if (    (signum == SIGSEGV)
+       || (signum == SIGILL)
+	   || (signum == SIGABRT)
+	 )
+  {
+    PR_CurrentThread();
+    printf("prog = viewer\npid = %d\nsignal = %s\n", getpid(), strsignal(signum));
 
-  printf("Sleeping for 5 minutes.\n");
-  printf("Type 'gdb %s %d' to attatch your debugger to this thread.\n",
-         _progname,
-         getpid());
+#if 0
+    printf("stack logged to someplace\n");
+    printf("need to fix xpcom/base/nsTraceRefCnt.cpp in WalkTheStack.\n");
+    nsTraceRefcnt::WalkTheStack(stdout);
+#endif
 
-  sleep(300);
+    printf("Sleeping for 5 minutes.\n");
+    printf("Type 'gdb viewer %d' to attatch your debugger to this thread.\n", getpid());
+    sleep(300);
+    printf("Done sleeping...\n");
+  }
+#endif
 
-  printf("Done sleeping...\n");
+  _exit(1);
 } 
-#endif // CRAWL_STACK_ON_SIGSEGV
 
 //----------------------------------------------------------------------
 int main(int argc, char **argv)
 {
-#ifdef CRAWL_STACK_ON_SIGSEGV
-  strcpy(_progname,argv[0]);
-  signal(SIGSEGV, ah_crap_handler);
-  signal(SIGILL, ah_crap_handler);
-  signal(SIGABRT, ah_crap_handler);
-#endif // CRAWL_STACK_ON_SIGSEGV
 
+  /* I need this to free shared memory in case of a crash */
+  signal(SIGTERM, abnormal_exit_handler);
+  signal(SIGQUIT, abnormal_exit_handler);
+  signal(SIGINT,  abnormal_exit_handler);
+  signal(SIGHUP,  abnormal_exit_handler);
+  signal(SIGSEGV, abnormal_exit_handler);
+  signal(SIGILL,  abnormal_exit_handler);
+  signal(SIGABRT, abnormal_exit_handler);
 
   // Initialize XPCOM
   nsresult rv = NS_InitXPCOM(nsnull, nsnull, nsnull);
