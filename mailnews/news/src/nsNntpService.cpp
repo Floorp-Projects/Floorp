@@ -18,6 +18,7 @@
 
 #include "msgCore.h"    // precompiled header...
 #include "nntpCore.h"
+#include "nsMsgNewsCID.h"
 
 #ifdef XP_PC
 #include <windows.h>    // for InterlockedIncrement
@@ -417,11 +418,14 @@ nsresult nsNntpService::PostMessage(nsFilePath &pathToFile, const char *newsgrou
 #endif
 
   char *urlstr = PR_smprintf("%s/%s",kNewsRootURI,host.GetBuffer());
-  nntpUrl->SetSpec(urlstr);
+  nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(nntpUrl);
+  if (mailnewsurl)
+	mailnewsurl->SetSpec(urlstr);
+  
   PR_FREEIF(urlstr);
   
   if (aUrlListener) // register listener if there is one...
-    nntpUrl->RegisterListener(aUrlListener);
+    mailnewsurl->RegisterListener(aUrlListener);
   
   // almost there...now create a nntp protocol instance to run the url in...
   nsNNTPProtocol *nntpProtocol = nsnull;
@@ -429,7 +433,7 @@ nsresult nsNntpService::PostMessage(nsFilePath &pathToFile, const char *newsgrou
   nntpProtocol = new nsNNTPProtocol();
   if (!nntpProtocol) return NS_ERROR_OUT_OF_MEMORY;;
   
-  rv = nntpProtocol->Initialize(nntpUrl);
+  rv = nntpProtocol->Initialize(mailnewsurl);
   if (NS_FAILED(rv)) return rv;
   
   nsCOMPtr <nsINNTPNewsgroupPost> post;
@@ -446,10 +450,10 @@ nsresult nsNntpService::PostMessage(nsFilePath &pathToFile, const char *newsgrou
   rv = nntpUrl->SetMessageToPost(post);
   if (NS_FAILED(rv)) return rv;
             
-  rv = nntpProtocol->LoadUrl(nntpUrl, /* aConsumer */ nsnull);
+  rv = nntpProtocol->LoadUrl(mailnewsurl, /* aConsumer */ nsnull);
 		
   if (_retval)
-    *_retval = nntpUrl; // transfer ref count
+	  nntpUrl->QueryInterface(nsIURL::GetIID(), (void **) _retval);
     
   NS_UNLOCK_INSTANCE();
 
@@ -469,7 +473,8 @@ nsNntpService::RunNewsUrl(nsString& urlString, nsString &newsgroupName, nsMsgKey
   rv = nsComponentManager::CreateInstance(kCNntpUrlCID, nsnull, nsINntpUrl::GetIID(), getter_AddRefs(nntpUrl));
   if (NS_FAILED(rv) || !nntpUrl) return rv;
   
-  nntpUrl->SetSpec(nsAutoCString(urlString));
+  nsCOMPtr <nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(nntpUrl);
+  mailnewsurl->SetSpec(nsAutoCString(urlString));
 
   if (newsgroupName != "") {
     nsCOMPtr <nsINNTPNewsgroup> newsgroup;
@@ -488,7 +493,7 @@ nsNntpService::RunNewsUrl(nsString& urlString, nsString &newsgroupName, nsMsgKey
   }
   
   if (aUrlListener) // register listener if there is one...
-    nntpUrl->RegisterListener(aUrlListener);
+    mailnewsurl->RegisterListener(aUrlListener);
 
   // almost there...now create a nntp protocol instance to run the url in...
   nsNNTPProtocol *nntpProtocol = nsnull;
@@ -496,14 +501,14 @@ nsNntpService::RunNewsUrl(nsString& urlString, nsString &newsgroupName, nsMsgKey
   nntpProtocol = new nsNNTPProtocol();
   if (!nntpProtocol) return NS_ERROR_OUT_OF_MEMORY;
   
-  rv = nntpProtocol->Initialize(nntpUrl);
+  rv = nntpProtocol->Initialize(mailnewsurl);
   if (NS_FAILED(rv)) return rv;
   
-  rv = nntpProtocol->LoadUrl(nntpUrl, aConsumer);
+  rv = nntpProtocol->LoadUrl(mailnewsurl, aConsumer);
   if (NS_FAILED(rv)) return rv;
   
   if (_retval)
-    *_retval = nntpUrl; // transfer ref count
+	  nntpUrl->QueryInterface(nsIURL::GetIID(), (void **) _retval);
 	
   return rv;
 }

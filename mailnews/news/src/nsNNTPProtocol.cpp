@@ -777,15 +777,17 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURL * aURL, nsISupports * aConsumer)
 	  // our first state is a process state so drive the state machine...
 	  PRBool transportOpen = PR_FALSE;
 	  rv = m_transport->IsTransportOpen(&transportOpen);
-	  m_runningURL->SetUrlState(PR_TRUE, NS_OK); // set the url as a url currently being run...
+	  nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
+	  if (mailnewsurl)
+		mailnewsurl->SetUrlState(PR_TRUE, NS_OK); // set the url as a url currently being run...
 	  if (!transportOpen)
 	  {
 		  m_nextStateAfterResponse = m_nextState;
 		  m_nextState = NNTP_RESPONSE; 
-		  rv = m_transport->Open(m_runningURL);  // opening the url will cause to get notified when the connection is established
+		  rv = m_transport->Open(mailnewsurl);  // opening the url will cause to get notified when the connection is established
 	  }
 	  else  // the connection is already open so we should begin processing our new url...
-		 return ProcessProtocolState(m_runningURL, nsnull, 0); 
+		 return ProcessProtocolState(mailnewsurl, nsnull, 0); 
   }
 
   return rv;
@@ -1053,7 +1055,9 @@ PRInt32 nsNNTPProtocol::NewsResponse(nsIInputStream * inputStream, PRUint32 leng
     /* if TCP error of if there is not a full line yet return */
     if(status < 0)
 	{
-        m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError()));
+		nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
+		if (mailnewsurl)
+			mailnewsurl->SetErrorMessage(NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError()));
         /* return TCP error
          */
         return MK_TCP_READ_ERROR;
@@ -1159,7 +1163,9 @@ PRInt32 nsNNTPProtocol::LoginResponse()
 
     if(MK_NNTP_RESPONSE_TYPE(m_responseCode)!=MK_NNTP_RESPONSE_TYPE_OK)
 	{
-		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_NNTP_ERROR_MESSAGE, m_responseText));
+		nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
+		if (mailnewsurl)
+			mailnewsurl->SetErrorMessage(NET_ExplainErrorDetails(MK_NNTP_ERROR_MESSAGE, m_responseText));
 
     	m_nextState = NNTP_ERROR;
 #ifdef UNREADY_CODE
@@ -1178,7 +1184,10 @@ PRInt32 nsNNTPProtocol::LoginResponse()
 
 PRInt32 nsNNTPProtocol::SendModeReader()
 {  
-	nsresult status = SendData(m_runningURL, NNTP_CMD_MODE_READER); 
+	nsresult status = NS_OK;
+	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
+	if (mailnewsurl)
+		status = SendData(mailnewsurl, NNTP_CMD_MODE_READER); 
     m_nextState = NNTP_RESPONSE;
     m_nextStateAfterResponse = NNTP_SEND_MODE_READER_RESPONSE;
     SetFlag(NNTP_PAUSE_FOR_READ); 
@@ -1205,7 +1214,10 @@ PRInt32 nsNNTPProtocol::SendModeReaderResponse()
 
 PRInt32 nsNNTPProtocol::SendListExtensions()
 {
-	PRInt32 status = SendData(m_runningURL, NNTP_CMD_LIST_EXTENSIONS);
+	PRInt32 status = 0;
+	nsCOMPtr<nsIURL> url = do_QueryInterface(m_runningURL);
+	if (url)
+		status = SendData(url, NNTP_CMD_LIST_EXTENSIONS);
 
 	m_nextState = NNTP_RESPONSE;
 	m_nextStateAfterResponse = SEND_LIST_EXTENSIONS_RESPONSE;
@@ -1233,7 +1245,9 @@ PRInt32 nsNNTPProtocol::SendListExtensionsResponse(nsIInputStream * inputStream,
 			return status;  /* no line yet */
 		if (status < 0)
 		{
-			m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError()));
+			nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
+			if (mailnewsurl)
+				mailnewsurl->SetErrorMessage(NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError()));
 
 			/* return TCP error */
 			return MK_TCP_READ_ERROR;
@@ -1272,7 +1286,9 @@ PRInt32 nsNNTPProtocol::SendListSearches()
     rv = m_newsHost->QueryExtension("SEARCH",&searchable);
     if (NS_SUCCEEDED(rv) && searchable)
 	{
-		status = SendData(m_runningURL, NNTP_CMD_LIST_SEARCHES);
+		nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
+		if (mailnewsurl)
+			status = SendData(mailnewsurl, NNTP_CMD_LIST_SEARCHES);
 
 		m_nextState = NNTP_RESPONSE;
 		m_nextStateAfterResponse = SEND_LIST_SEARCHES_RESPONSE;
@@ -1309,7 +1325,9 @@ PRInt32 nsNNTPProtocol::SendListSearchesResponse(nsIInputStream * inputStream, P
 		return status;  /* no line yet */
 	if (status < 0)
 	{
-		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError()));
+		nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
+		if (mailnewsurl)
+			mailnewsurl->SetErrorMessage(NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError()));
 		/* return TCP error */
 		return MK_TCP_READ_ERROR;
 	}
@@ -1333,7 +1351,10 @@ PRInt32 nsNNTPProtocol::SendListSearchesResponse(nsIInputStream * inputStream, P
 
 PRInt32 nsNNTPProtocol::SendListSearchHeaders()
 {
-	PRInt32 status = SendData(m_runningURL, NNTP_CMD_LIST_SEARCH_FIELDS);
+	PRInt32 status = 0;
+	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
+	if (mailnewsurl)
+		status = SendData(mailnewsurl, NNTP_CMD_LIST_SEARCH_FIELDS);
 
 	m_nextState = NNTP_RESPONSE;
 	m_nextStateAfterResponse = NNTP_LIST_SEARCH_HEADERS_RESPONSE;
@@ -1359,7 +1380,9 @@ PRInt32 nsNNTPProtocol::SendListSearchHeadersResponse(nsIInputStream * inputStre
 		return status;  /* no line yet */
 	if (status < 0)
 	{
-		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError()));
+		nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
+		if (mailnewsurl)
+			mailnewsurl->SetErrorMessage(NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError()));
 
 		/* return TCP error */
 		return MK_TCP_READ_ERROR;
@@ -1386,7 +1409,9 @@ PRInt32 nsNNTPProtocol::GetProperties()
     rv = m_newsHost->QueryExtension("SETGET",&setget);
     if (NS_SUCCEEDED(rv) && setget)
 	{
-		status = SendData(m_runningURL, NNTP_CMD_GET_PROPERTIES);
+		nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
+		if (mailnewsurl)
+			status = SendData(mailnewsurl, NNTP_CMD_GET_PROPERTIES);
 		m_nextState = NNTP_RESPONSE;
 		m_nextStateAfterResponse = NNTP_GET_PROPERTIES_RESPONSE;
 		SetFlag(NNTP_PAUSE_FOR_READ);
@@ -1417,7 +1442,9 @@ PRInt32 nsNNTPProtocol::GetPropertiesResponse(nsIInputStream * inputStream, PRUi
 		return status;  /* no line yet */
 	if (status < 0)
 	{
-		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError()));
+		nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
+		if (mailnewsurl)
+			mailnewsurl->SetErrorMessage(NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError()));
 
 		/* return TCP error */
 		return MK_TCP_READ_ERROR;
@@ -1461,7 +1488,9 @@ PRInt32 nsNNTPProtocol::SendListSubscriptions()
 	if (0)
 #endif
 	{
-		status = SendData(m_runningURL, NNTP_CMD_LIST_SUBSCRIPTIONS);
+		nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
+		if (mailnewsurl)
+			status = SendData(mailnewsurl, NNTP_CMD_LIST_SUBSCRIPTIONS);
 		m_nextState = NNTP_RESPONSE;
 		m_nextStateAfterResponse = SEND_LIST_SUBSCRIPTIONS_RESPONSE;
 		SetFlag(NNTP_PAUSE_FOR_READ);
@@ -1493,7 +1522,9 @@ PRInt32 nsNNTPProtocol::SendListSubscriptionsResponse(nsIInputStream * inputStre
 		return status;  /* no line yet */
 	if (status < 0)
 	{
-		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError()));
+		nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
+		if (mailnewsurl)
+			mailnewsurl->SetErrorMessage(NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError()));
 		/* return TCP error */
 		return MK_TCP_READ_ERROR;
 	}
@@ -1591,8 +1622,10 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURL * url)
         PRExplodedTime  expandedTime;
 
 		if(!last_update)
-		{	
-			m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_NNTP_NEWSGROUP_SCAN_ERROR));
+		{
+			nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
+			if (mailnewsurl)
+				mailnewsurl->SetErrorMessage(NET_ExplainErrorDetails(MK_NNTP_NEWSGROUP_SCAN_ERROR));
 			m_nextState = NEWS_ERROR;
 			return(MK_INTERRUPTED);
 		}
@@ -1788,7 +1821,9 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURL * url)
 	}
 
     NET_SACat(&command, CRLF);
-	status = SendData(m_runningURL, command);
+	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
+	if (mailnewsurl)
+		status = SendData(mailnewsurl, command);
     PR_Free(command);
 
 	m_nextState = NNTP_RESPONSE;
@@ -1869,8 +1904,8 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommandResponse()
             PR_snprintf(outputBuffer,OUTPUT_BUFFER_SIZE, UNTIL_STRING_BUNDLES_XP_HTML_ARTICLE_EXPIRED);
             m_tempErrorStream->Write(outputBuffer, PL_strlen(outputBuffer), &count);
             
-	    nsMsgKey key = nsMsgKey_None;
-	    rv = m_runningURL->GetMessageKey(&key);
+			nsMsgKey key = nsMsgKey_None;
+			rv = m_runningURL->GetMessageKey(&key);
             PR_ASSERT(m_messageID && (key != nsMsgKey_None));
 			if (m_messageID && (key != nsMsgKey_None)) {
 				PR_snprintf(outputBuffer,OUTPUT_BUFFER_SIZE,"<P>&lt;%.512s&gt; (%lu)", m_messageID, key);
@@ -1933,7 +1968,9 @@ PRInt32 nsNNTPProtocol::SendGroupForArticle()
 			"GROUP %.512s" CRLF, 
 			m_currentGroup);
 
-  status = SendData(m_runningURL, outputBuffer);
+  nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
+  if (mailnewsurl)
+	status = SendData(mailnewsurl, outputBuffer);
 
   m_nextState = NNTP_RESPONSE;
   m_nextStateAfterResponse = NNTP_SEND_GROUP_FOR_ARTICLE_RESPONSE;
@@ -1958,7 +1995,9 @@ PRInt32 nsNNTPProtocol::SendArticleNumber()
 	PRInt32 status = 0; 
 	PR_snprintf(outputBuffer, OUTPUT_BUFFER_SIZE, "ARTICLE %lu" CRLF, m_articleNumber);
 
-	status = SendData(m_runningURL, outputBuffer);
+	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
+	if (mailnewsurl)
+		status = SendData(mailnewsurl, outputBuffer);
 
     m_nextState = NNTP_RESPONSE;
     m_nextStateAfterResponse = SEND_FIRST_NNTP_COMMAND_RESPONSE;
@@ -2303,7 +2342,9 @@ PRInt32 nsNNTPProtocol::BeginAuthorization()
 	  net_news_last_username_probably_valid = PR_FALSE;
 	  if(!username) 
 	  {
-		m_runningURL->SetErrorMessage(
+		nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
+		if (mailnewsurl)
+			mailnewsurl->SetErrorMessage(
 		  NET_ExplainErrorDetails( MK_NNTP_AUTH_FAILED, "Aborted by user"));
 		return(MK_NNTP_AUTH_FAILED);
 	  }
@@ -2326,7 +2367,9 @@ PRInt32 nsNNTPProtocol::BeginAuthorization()
 	NET_SACopy(&command, username);
 	NET_SACopy(&command, CRLF);
 
-	status = SendData(m_runningURL, command);
+	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
+	if (mailnewsurl)
+		status = SendData(mailnewsurl, command);
 
 	PR_Free(command);
 	PR_Free(username);
@@ -2446,7 +2489,9 @@ PRInt32 nsNNTPProtocol::AuthorizationResponse()
 		  
 		if(!password)	
 		{
-		  m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_NNTP_AUTH_FAILED, "Aborted by user"));
+		  nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
+		  if (mailnewsurl)
+			mailnewsurl->SetErrorMessage(NET_ExplainErrorDetails(MK_NNTP_AUTH_FAILED, "Aborted by user"));
 		  return(MK_NNTP_AUTH_FAILED);
 		}
 		else 
@@ -2471,7 +2516,9 @@ PRInt32 nsNNTPProtocol::AuthorizationResponse()
 		NET_SACat(&command, password);
 		NET_SACat(&command, CRLF);
 	
-		status = SendData(m_runningURL, command);
+		nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
+		if (mailnewsurl)
+			status = SendData(mailnewsurl, command);
 
 		PR_FREEIF(command);
 		PR_FREEIF(password);
@@ -2484,7 +2531,9 @@ PRInt32 nsNNTPProtocol::AuthorizationResponse()
 	  }
 	else
 	{
-		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(
+		nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
+		if (mailnewsurl)
+			mailnewsurl->SetErrorMessage(NET_ExplainErrorDetails(
 									MK_NNTP_AUTH_FAILED,
 									m_responseText ? m_responseText : ""));
 
@@ -2533,7 +2582,9 @@ PRInt32 nsNNTPProtocol::PasswordResponse()
 	  }
 	else
 	{
-		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(
+		nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
+		if (mailnewsurl)
+			mailnewsurl->SetErrorMessage(NET_ExplainErrorDetails(
 									MK_NNTP_AUTH_FAILED,
 									m_responseText ? m_responseText : ""));
 
@@ -2601,7 +2652,9 @@ PRInt32 nsNNTPProtocol::ProcessNewsgroups(nsIInputStream * inputStream, PRUint32
 
     if(status<0)
     {
-        m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError()));
+		nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
+		if (mailnewsurl)
+			mailnewsurl->SetErrorMessage(NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError()));
 
         /* return TCP error
          */
@@ -2743,7 +2796,9 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
 
     if(status<0)
 	{
-        m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError()));
+		nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
+		if (mailnewsurl)
+			mailnewsurl->SetErrorMessage(NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError()));
         /* return TCP error
          */
         return MK_TCP_READ_ERROR;
@@ -2848,7 +2903,9 @@ PRInt32 nsNNTPProtocol::FigureNextChunk()
 	PRInt32 status = 0;
 
 	const char * host_and_port = NULL;
-	m_runningURL->GetHost(&host_and_port);
+	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
+	if (mailnewsurl)
+		mailnewsurl->GetHost(&host_and_port);
 
 	if (!host_and_port) return MK_OUT_OF_MEMORY;
 
@@ -2971,7 +3028,9 @@ PRInt32 nsNNTPProtocol::XoverSend()
 	NET_Progress(ce->window_id, XP_GetString(XP_PROGRESS_RECEIVE_LISTARTICLES));
 #endif
 
-	status = SendData(m_runningURL, outputBuffer); 
+	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
+	if (mailnewsurl)
+		status = SendData(mailnewsurl, outputBuffer); 
 	return status;
 }
 
@@ -3034,7 +3093,9 @@ PRInt32 nsNNTPProtocol::ReadXover(nsIInputStream * inputStream, PRUint32 length)
 
 	if(status<0) 
 	{
-        m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError()));
+		nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
+		if (mailnewsurl)
+			mailnewsurl->SetErrorMessage(NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError()));
 
         /* return TCP error
          */
@@ -3118,8 +3179,11 @@ PRInt32 nsNNTPProtocol::ReadNewsgroup()
 		m_nextStateAfterResponse = NNTP_READ_GROUP_RESPONSE;
 
         SetFlag(NNTP_PAUSE_FOR_READ);
-
-        return SendData(m_runningURL, outputBuffer);
+		nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
+		if (mailnewsurl)
+			return SendData(mailnewsurl, outputBuffer);
+		else
+			return 0;
     }
 }
 
@@ -3174,7 +3238,9 @@ PRInt32 nsNNTPProtocol::ReadNewsgroupBody(nsIInputStream * inputStream, PRUint32
 
   if(status < 0)
   {
-	  m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError()));
+	  nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
+	  if (mailnewsurl)
+		mailnewsurl->SetErrorMessage(NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError()));
 	  /* return TCP error
 	   */
 	  return MK_TCP_READ_ERROR;
@@ -3296,7 +3362,9 @@ PRInt32 nsNNTPProtocol::PostMessageInFile(const nsFilePath &filePath)
 				} while (line && bsize > 100);
               }
 
-			SendData(m_runningURL, buffer); 
+			nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
+			if (mailnewsurl)
+				SendData(mailnewsurl, buffer); 
 		}
 	} // if filePath
 
@@ -3307,7 +3375,9 @@ PRInt32 nsNNTPProtocol::PostMessageInFile(const nsFilePath &filePath)
 
 	// always issue a '.' and CRLF when we are done...
     PL_strcpy(m_dataBuf, CRLF "." CRLF);
-	SendData(m_runningURL, m_dataBuf);
+	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
+	if (mailnewsurl)
+		SendData(mailnewsurl, m_dataBuf);
 #ifdef UNREADY_CODE
     NET_Progress(CE_WINDOW_ID,
                  XP_GetString(XP_MESSAGE_SENT_WAITING_MAIL_REPLY));
@@ -3474,7 +3544,9 @@ PRInt32 nsNNTPProtocol::DisplayNewsRC()
 		char outputBuffer[OUTPUT_BUFFER_SIZE];
 
 		PR_snprintf(outputBuffer, OUTPUT_BUFFER_SIZE, "GROUP %.512s" CRLF, m_currentGroup);
-		status = SendData(m_runningURL, outputBuffer);
+		nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
+		if (mailnewsurl)
+			status = SendData(mailnewsurl, outputBuffer);
 
 		percent = (m_newsRCListCount) ?
 					(PRInt32) (100.0 * ( (double)m_newsRCListIndex / (double)m_newsRCListCount )) :
@@ -3612,7 +3684,10 @@ PRInt32 nsNNTPProtocol::DisplayNewsRCResponse()
 
 PRInt32 nsNNTPProtocol::StartCancel()
 {
-  PRInt32 status = SendData(m_runningURL, NNTP_CMD_POST);
+  PRInt32 status = 0;
+  nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
+  if (mailnewsurl)
+	status = SendData(mailnewsurl, NNTP_CMD_POST);
 
   m_nextState = NNTP_RESPONSE;
   m_nextStateAfterResponse = NEWS_DO_CANCEL;
@@ -3740,7 +3815,9 @@ PRInt32 nsNNTPProtocol::Cancel()
           }
           
           status = MK_NNTP_CANCEL_DISALLOWED;
-          m_runningURL->SetErrorMessage(PL_strdup("not implemented"));
+		  nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
+		  if (mailnewsurl)
+			mailnewsurl->SetErrorMessage(PL_strdup("not implemented"));
           m_nextState = NEWS_ERROR; /* even though it worked */
           ClearFlag(NNTP_PAUSE_FOR_READ);
           goto FAIL;
@@ -3813,10 +3890,12 @@ PRInt32 nsNNTPProtocol::Cancel()
                        from, newsgroups, subject, id,
                        other_random_headers, body);
     
-	status = SendData(m_runningURL, data);
+	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
+	if (mailnewsurl)
+		status = SendData(mailnewsurl, data);
     PR_Free (data);
     if (status < 0) {
-		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_TCP_WRITE_ERROR, status));
+		mailnewsurl->SetErrorMessage(NET_ExplainErrorDetails(MK_TCP_WRITE_ERROR, status));
 		goto FAIL;
 	}
 
@@ -3894,7 +3973,9 @@ PRInt32 nsNNTPProtocol::XPATSend()
 
 		/* send one term off to the server */
 		NNTP_LOG_WRITE(command);
-		status = SendData(m_runningURL, unescapedCommand);
+		nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
+		if (mailnewsurl)
+			status = SendData(mailnewsurl, unescapedCommand);
 
 		m_nextState = NNTP_RESPONSE;
 		m_nextStateAfterResponse = NNTP_XPAT_RESPONSE;
@@ -3982,7 +4063,9 @@ PRInt32 nsNNTPProtocol::ListPrettyNames()
 			"LIST PRETTYNAMES %.512s" CRLF,
             NS_SUCCEEDED(rv) ? group_name : "");
     
-	status = SendData(m_runningURL, outputBuffer);
+	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
+	if (mailnewsurl)
+		status = SendData(mailnewsurl, outputBuffer);
 #ifdef DEBUG_NEWS
 	printf(outputBuffer);
 #endif
@@ -4064,7 +4147,10 @@ PRInt32 nsNNTPProtocol::ListXActive()
 			OUTPUT_BUFFER_SIZE, 
 			"LIST XACTIVE %.512s" CRLF,
             group_name);
-	status = SendData(m_runningURL, outputBuffer);
+
+	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
+	if (mailnewsurl)
+		status = SendData(mailnewsurl, outputBuffer);
 
 	m_nextState = NNTP_RESPONSE;
 	m_nextStateAfterResponse = NNTP_LIST_XACTIVE_RESPONSE;
@@ -4214,7 +4300,9 @@ PRInt32 nsNNTPProtocol::ListGroup()
 
     m_articleList->Initialize(m_newsHost, m_newsgroup);
 	
-	status = SendData(m_runningURL, outputBuffer); 
+	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
+	if (mailnewsurl)
+		status = SendData(mailnewsurl, outputBuffer); 
 
 	m_nextState = NNTP_RESPONSE;
 	m_nextStateAfterResponse = NNTP_LIST_GROUP_RESPONSE;
@@ -4302,7 +4390,9 @@ PRInt32 nsNNTPProtocol::SearchResults(nsIInputStream *inputStream, PRUint32 leng
 		return status;  /* no line yet */
 	if (status < 0)
 	{
-		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError()));
+		nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
+		if (mailnewsurl)
+			mailnewsurl->SetErrorMessage(NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError()));
 
 		/* return TCP error */
 		return MK_TCP_READ_ERROR;
@@ -4378,6 +4468,7 @@ PRInt32 nsNNTPProtocol::SetupForTransfer()
 nsresult nsNNTPProtocol::ProcessProtocolState(nsIURL * url, nsIInputStream * inputStream, PRUint32 length)
 {
 	PRInt32 status = 0; 
+	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
 
 #ifdef UNREADY_CODE
     if (m_offlineNewsState != NULL)
@@ -4712,15 +4803,15 @@ nsresult nsNNTPProtocol::ProcessProtocolState(nsIURL * url, nsIInputStream * inp
 			case NEWS_POST_DONE:
 #ifdef DEBUG_NEWS
 				printf("NEWS_POST_DONE!\n");
-#endif
-				m_runningURL->SetUrlState(PR_FALSE, NS_OK);
+#endif			
+				mailnewsurl->SetUrlState(PR_FALSE, NS_OK);
 				m_nextState = NEWS_FREE;
 				break;
 	        case NEWS_ERROR:
 #ifdef DEBUG_NEWS
 				printf("NEWS_ERROR!\n");
 #endif
-				m_runningURL->SetUrlState(PR_FALSE, NS_ERROR_FAILURE);
+				mailnewsurl->SetUrlState(PR_FALSE, NS_ERROR_FAILURE);
 				m_nextState = NEWS_FREE;
 #if 0   // mscott 01/04/99. This should be temporary until I figure out what to do with this code.....
 	            if(cd->stream)
@@ -4791,7 +4882,7 @@ nsresult nsNNTPProtocol::ProcessProtocolState(nsIURL * url, nsIInputStream * inp
 
 				// SendData(m_runningURL, "quit"CRLF); // this will cause OnStopBinding to get called
 				if (m_transport)
-					m_transport->OnStopBinding(m_runningURL, 0, nsnull);
+					m_transport->OnStopBinding(mailnewsurl, 0, nsnull);
 				CloseSocket();
 				return NS_OK;
 				//SetFlag(NNTP_PAUSE_FOR_READ);
