@@ -942,6 +942,9 @@ static void DumpHelp(char *appname)
   printf("%s-splash%sEnable splash screen.\n",HELP_SPACER_1,HELP_SPACER_2);
 #else
   printf("%s-nosplash%sDisable splash screen.\n",HELP_SPACER_1,HELP_SPACER_2);
+#ifdef XP_PC
+  printf("%s-quiet%sDisable splash screen.\n",HELP_SPACER_1,HELP_SPACER_2);
+#endif
 #endif
 
   // this works, but only after the components have registered.  so if you drop in a new command line handler, -help
