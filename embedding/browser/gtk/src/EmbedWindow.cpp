@@ -33,6 +33,7 @@ EmbedWindow::EmbedWindow(void)
 {
   NS_INIT_REFCNT();
   mOwner       = nsnull;
+  mVisibility  = PR_FALSE;
 }
 
 EmbedWindow::~EmbedWindow(void)
@@ -184,6 +185,10 @@ EmbedWindow::CreateBrowserWindow(PRUint32 aChromeFlags,
   EmbedPrivate *newEmbedPrivate = NS_STATIC_CAST(EmbedPrivate *,
 						 newEmbed->data);
 
+  // set the chrome flag on the new window if it's a chrome open
+  if (aChromeFlags && nsIWebBrowserChrome::CHROME_OPENAS_CHROME)
+    newEmbedPrivate->mIsChrome = PR_TRUE;
+
   newEmbedPrivate->mWindow->GetWebBrowser(_retval);
   
   if (*_retval)
@@ -299,12 +304,22 @@ EmbedWindow::GetSiteWindow(void **aSiteWindow)
 NS_IMETHODIMP
 EmbedWindow::GetVisibility(PRBool *aVisibility)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *aVisibility = mVisibility;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 EmbedWindow::SetVisibility(PRBool aVisibility)
 {
+  // We always set the visibility so that if it's chrome and we finish
+  // the load we know that we have to show the window.
+  mVisibility = aVisibility;
+
+  // if this is a chrome window and the chrome hasn't finished loading
+  // yet then don't show the window yet.
+  if (mOwner->mIsChrome && !mOwner->mChromeLoaded)
+    return NS_OK;
+
   gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
 		  moz_embed_signals[VISIBILITY],
 		  aVisibility);

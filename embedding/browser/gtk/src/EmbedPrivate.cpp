@@ -37,6 +37,7 @@
 #include <nsEmbedAPI.h>
 
 // all of the crap that we need for event listeners
+// and when chrome windows finish loading
 #include <nsIDOMWindow.h>
 #include <nsPIDOMWindow.h>
 #include <nsIDOMWindowInternal.h>
@@ -76,6 +77,8 @@ EmbedPrivate::EmbedPrivate(void)
   mEventListener    = nsnull;
   mStream           = nsnull;
   mChromeMask       = 0;
+  mIsChrome         = PR_FALSE;
+  mChromeLoaded     = PR_FALSE;
   mListenersAttached = PR_FALSE;
 
   PushStartup();
@@ -434,7 +437,8 @@ EmbedPrivate::FindPrivateForBrowser(nsIWebBrowserChrome *aBrowser)
 void
 EmbedPrivate::ContentProgressChange(void)
 {
-  if (mListenersAttached)
+  // we don't attach listeners to chrome
+  if (mListenersAttached && !mIsChrome)
     return;
 
   GetListener();
@@ -444,6 +448,41 @@ EmbedPrivate::ContentProgressChange(void)
   
   AttachListeners();
 
+}
+
+void
+EmbedPrivate::ContentFinishedLoading(void)
+{
+  if (mIsChrome) {
+    // We're done loading.
+    mChromeLoaded = PR_TRUE;
+
+    // get the web browser
+    nsCOMPtr<nsIWebBrowser> webBrowser;
+    mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
+    
+    // get the content DOM window for that web browser
+    nsCOMPtr<nsIDOMWindow> domWindow;
+    webBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
+    if (!domWindow) {
+      NS_WARNING("no dom window in content finished loading\n");
+      return;
+    }
+    
+    // get the private DOM window
+    nsCOMPtr<nsIDOMWindowInternal> domWindowInternal = 
+      do_QueryInterface(domWindow);
+    
+    // resize the content
+    domWindowInternal->SizeToContent();
+
+    // and since we're done loading show the window, assuming that the
+    // visibility flag has been set.
+    PRBool visibility;
+    mWindow->GetVisibility(&visibility);
+    if (visibility)
+      mWindow->SetVisibility(PR_TRUE);
+  }
 }
 
 // Get the event listener for the chrome event handler.
