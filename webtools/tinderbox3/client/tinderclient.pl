@@ -27,10 +27,10 @@ $args{statusinterval} = 15;
 GetOptions(\%args, "throttle:i", "url:s",
                    "trust!", "usepatches!", "usecommands!", "usemozconfig!",
                    "upgrade!", "upgrade_url:s",
-                   "cvs_co_date:s", "cvsroot:s", "tests:s", "clobber!",
-                   "lowbandwidth!", "statusinterval:s",
+                   "branch:s", "cvs_co_date:s", "cvsroot:s", "tests:s",
+                   "clobber!", "lowbandwidth!", "statusinterval:s",
                    "upload_ssh_loc:s", "upload_ssh_dir:s", "upload_dir:s",
-                   "uploaded_url:s",
+                   "uploaded_url:s", "distribute:s",
                    "help|h|?!");
 if (!$args{url} || @ARGV != 2 || $args{help}) {
   print <<EOM;
@@ -64,6 +64,7 @@ will be used instead.
 --tests: the list of tests to run.  Defaults to "Tp,Ts,Txul"
 --cvsroot: the cvsroot to grab Mozilla and friends from.  Defaults to
            ":pserver:anonymous\@cvs-mirror.mozilla.org:/cvsroot"
+--branch the branch to check out
 --cvs_co_date date to check out at, or blank (current) or "off".  If you do not
              set this, the server will control it.  Defaults to blank (current).
 --clobber, --noclobber: clobber or depend build.  Defaults to --noclobber.
@@ -73,6 +74,10 @@ will be used instead.
               through network drives or if you have a server locally)
 --uploaded_url: url where the build can be found once uploaded (\%s will be
                 replaced with the build name)
+--distribute: the list of things to distribute.  Defaults to "build_zip".
+              "raw_zip" is another useful one, that just zips up everything in
+              the dist/bin directory (actually makes a .tgz).
+--raw_zip_name: the project name of the raw build (defaults to "mozilla")
 
 EOM
   exit(1);
@@ -87,13 +92,15 @@ if (!$args{trust}) {
   $args{cvsroot} = ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot' if !defined($args{cvsroot});
   $args{cvs_co_date} = "" if !defined($args{cvs_co_date});
   $args{clobber} = 0 if !defined($args{clobber});
+  $args{distribute} = "build_zip" if !defined($args{distribute});
+  $args{raw_zip_name} = "mozilla" if !defined($args{distribute});
 }
 
 if ($args{dir}) {
   chdir($args{dir});
 }
 
-my $client = new TinderClient(\%args, $ARGV[0], $ARGV[1], \@original_args, [ "init_tests", "init_tree", "build" ]);
+my $client = new TinderClient(\%args, $ARGV[0], $ARGV[1], \@original_args);
 while (1) {
   $client->build_iteration();
 }
@@ -121,7 +128,7 @@ sub new {
   $VERSION = "0.1";
   $PROTOCOL_VERSION = "0.1";
 
-  my ($args, $tree, $machine_name, $original_args, $modules) = @_;
+  my ($args, $tree, $machine_name, $original_args) = @_;
   # The arguments hash
   $this->{ARGS} = $args;
   $this->{CONFIG} = { %{$args} };
@@ -142,8 +149,6 @@ sub new {
   $this->{SYSINFO} = TinderClient::SysInfo::get_sysinfo();
   # the original program arguments in case we have to upgrade
   $this->{ORIGINAL_ARGS} = $original_args;
-  # modules
-  $this->{MODULES} = [ @{$modules} ];
   # persistent vars for the build modules
   $this->{PERSISTENT_VARS} = {};
 
@@ -258,7 +263,9 @@ sub parse_content {
       return 0;
     }
     $this->get_field($content_ref, "upgrade_url");
-    foreach my $module (@{$this->{MODULES}}) {
+
+    # Call cleanup
+    foreach my $module ("init_tree", "build", "distribute", "tests") {
       $this->call_module($module, "get_config", $content_ref);
     }
   }
@@ -349,27 +356,6 @@ sub end_section {
   my $this = shift;
   my ($section) = @_;
   $this->print_log("<--- TINDERBOX FINISHED $section\n");
-}
-
-# NOTE: added modules won't get their configuration called if they are added
-# after the config cycle
-sub add_module {
-  my $this = shift;
-  my ($module) = @_;
-  push @{$this->{MODULES}}, $module;
-}
-
-sub remove_module {
-  my $this = shift;
-  my ($module) = @_;
-  for (my $i=0; $i < @{$this->{MODULES}}; $i++) {
-    if ($this->{MODULES}[$i] eq $module) {
-      $this->call_module($module, "finish_build");
-      splice @{$this->{MODULES}}, $i, 1;
-      return 1;
-    }
-  }
-  return 0;
 }
 
 sub eat_command {
@@ -476,7 +462,6 @@ Arguments: @{[join ' ', @{$this->{ORIGINAL_ARGS}}]}
 URL: $this->{CONFIG}{url}
 Tree: $this->{TREE}
 Commands: @{[join(' ', sort keys %{$this->{COMMANDS}})]}
-Modules: @{[join(' ', @{$this->{MODULES}})]}
 Config:
 @{[join("\n", map { $_ . " = '" . $this->{CONFIG}{$_} . "'" } sort keys %{$this->{CONFIG}})]}
 == End Tinderbox Client Info
@@ -579,13 +564,13 @@ sub build_iteration {
     $this->print_build_info();
 
     # Build
-    foreach my $module (@{$this->{MODULES}}) {
+    foreach my $module ("init_tree", "build", "distribute", "tests") {
       $err = $this->call_module($module, "do_action");
       last if $err;
     }
 
     # Call cleanup
-    foreach my $module (@{$this->{MODULES}}) {
+    foreach my $module ("init_tree", "build", "distribute", "tests") {
       $this->call_module($module, "finish_build");
     }
   };
@@ -683,32 +668,6 @@ sub new {
 }
 
 
-package TinderClient::Modules::init_tests;
-
-use strict;
-
-# We add these modules so that they will be able to parse their own config
-sub get_config {
-  my ($client, $config, $persistent_vars, $build_vars, $content_ref) = @_;
-  $client->get_field($content_ref, "tests");
-  foreach my $module (split(/,/, $config->{tests})) {
-    $client->add_module($module);
-  }
-}
-
-sub finish_build {
-  my ($client, $config, $persistent_vars, $build_vars) = @_;
-  foreach my $module (split(/,/, $config->{tests})) {
-    $client->remove_module($module);
-  }
-}
-
-sub do_action {
-  my ($client, $config, $persistent_vars, $build_vars) = @_;
-  return 0;
-}
-
-
 package TinderClient::Modules::init_tree;
 
 use strict;
@@ -738,6 +697,10 @@ sub get_config {
 
 sub finish_build {
   my ($client, $config, $persistent_vars, $build_vars) = @_;
+  delete $ENV{MOZILLA_OFFICIAL};
+  delete $ENV{BUILD_OFFICIAL};
+  delete $ENV{MOZ_CO_DATE};
+  delete $ENV{MOZ_OBJDIR};
 }
 
 sub do_action {
@@ -990,24 +953,54 @@ sub do_action {
           return "";
         } :
         undef);
+  } else {
+    $client->print_log("Skipping build because no changes were made\n");
+  }
 
+  return $err;
+}
+
+package TinderClient::Modules::distribute;
+
+use strict;
+
+sub get_config {
+  my ($client, $config, $persistent_vars, $build_vars, $content_ref) = @_;
+  $client->get_field($content_ref, "upload_ssh_loc");
+  $client->get_field($content_ref, "upload_ssh_dir");
+  $client->get_field($content_ref, "upload_dir");
+  $client->get_field($content_ref, "uploaded_url");
+  $client->get_field($content_ref, "distribute");
+  foreach my $distribution (split(/,/, $config->{distribute})) {
+    $client->call_module($distribution, "get_config", $content_ref);
+  }
+}
+
+sub finish_build {
+  my ($client, $config, $persistent_vars, $build_vars) = @_;
+  foreach my $distribution (split(/,/, $config->{distribute})) {
+    $client->call_module($distribution, "finish_build");
+  }
+}
+
+sub do_action {
+  my ($client, $config, $persistent_vars, $build_vars) = @_;
+
+  #
+  # Build and upload distribution
+  #
+  my $err = 0;
+  $build_vars->{PACKAGES} = {};
+  # Do not build distributions unless we built
+  if (1 || $build_vars->{SHOULD_BUILD}) {
     #
-    # Build distribution
+    # Build distributions
     #
     if (!$err) {
-      $client->do_command("make -C objdir/xpinstall/packager", 11);
-    #  # We always do the installer if we can, to ensure that it compiles
-    #  if ($client->sysinfo()->{OS} =~ /^WIN/) {
-    #    if (chdir("xpinstall/wizard/windows/builder")) {
-    #      $err = $client->do_command("perl build.pl", 12);
-    #      chdir("../../../..");
-    #    }
-    #  }# elsif ($client->sysinfo()->{OS} =~ /Linux/) {
-    #  #  if (chdir("xpinstall/packager/unix")) {
-    #  #    $client->do_command("perl deliver.pl", 12);
-    #  #    chdir("../../..");
-    #  #  }
-    #  #}
+      foreach my $distribution (split(/,/, $config->{distribute})) {
+        $err = $client->call_module($distribution, "do_action");
+        last if $err;
+      }
     }
 
     #
@@ -1015,45 +1008,41 @@ sub do_action {
     #
     if (!$err) {
       # Get build id
-      open BUILD_NUMBER, "objdir/config/build_number";
-      my $build_id = <BUILD_NUMBER>;
-      chomp $build_id;
-      close BUILD_NUMBER;
-
-      # Find zipped build
-      my ($local_file) = glob("objdir/dist/mozilla*.tgz");
-      if (!$local_file) {
-        ($local_file) = glob("objdir/dist/mozilla*.tar.gz");
+      my $build_id = "";
+      if (open BUILD_NUMBER, "objdir/config/build_number") {
+        $build_id = <BUILD_NUMBER>;
+        chomp $build_id;
+        close BUILD_NUMBER;
       }
-      if (!$local_file) {
-        ($local_file) = glob("objdir/dist/mozilla*.zip");
+      if (!$build_id) {
+        $build_id = time2str("%Y%m%d%H", time);
       }
 
       # Upload
-      if ($local_file) {
-        $local_file =~ /([^\/]*)$/;
+      foreach my $field_name (keys %{$build_vars->{PACKAGES}}) {
+        $build_vars->{PACKAGES}{$field_name} =~ /([^\/]*)$/;
         my $upload_file = $1;
         $upload_file =~ s/(\..*)$/-$build_id$1/;
-        upload_build($config, $build_vars, $local_file, $upload_file);
+        upload_build($config, $build_vars, $field_name, $build_vars->{PACKAGES}{$field_name}, $upload_file);
       }
     }
   } else {
-    $client->print_log("Skipping build because no changes were made\n");
+    $client->print_log("Skipping distribution because no build was done\n");
   }
   return $err;
 }
 
 sub upload_build {
-  my ($config, $build_vars, $local_name, $upload_name) = @_;
+  my ($config, $build_vars, $field_name, $local_name, $upload_name) = @_;
   if ($config->{upload_ssh_loc} && `which scp`) {
     $config->{upload_ssh_dir} .= "/" if $config->{upload_ssh_dir} && $config->{upload_ssh_dir} !~ /\/$/;
     $client->do_command("scp $local_name $config->{upload_ssh_loc}:$config->{upload_ssh_dir}$upload_name");
-    set_upload_dir($config, "build_zip", $build_vars, $upload_name);
+    set_upload_dir($config, $field_name, $build_vars, $upload_name);
   }
   if ($config->{upload_dir}) {
     $config->{upload_dir} .= "/" if $config->{upload_dir} && $config->{upload_dir} !~ /\/$/;
     $client->do_command("cp $local_name $config->{upload_dir}$upload_name");
-    set_upload_dir($config, "build_zip", $build_vars, $upload_name);
+    set_upload_dir($config, $field_name, $build_vars, $upload_name);
   }
 }
 
@@ -1067,6 +1056,125 @@ sub set_upload_dir {
     }
     push @{$build_vars->{fields}{$field_name}}, $url;
   }
+}
+
+
+package TinderClient::Modules::installer;
+
+sub get_config {
+  my ($client, $config, $persistent_vars, $build_vars, $content_ref) = @_;
+}
+
+sub finish_build {
+  my ($client, $config, $persistent_vars, $build_vars) = @_;
+}
+
+sub do_action {
+  my ($client, $config, $persistent_vars, $build_vars) = @_;
+
+  #  # We always do the installer if we can, to ensure that it compiles
+  #  if ($client->sysinfo()->{OS} =~ /^WIN/) {
+  #    if (chdir("xpinstall/wizard/windows/builder")) {
+  #      $err = $client->do_command("perl build.pl", 12);
+  #      chdir("../../../..");
+  #    }
+  #  }# elsif ($client->sysinfo()->{OS} =~ /Linux/) {
+  #  #  if (chdir("xpinstall/packager/unix")) {
+  #  #    $client->do_command("perl deliver.pl", 12);
+  #  #    chdir("../../..");
+  #  #  }
+  #  #}
+  
+  #if ($local_file) {
+  #  $build_vars->{PACKAGES}{build_zip} = $local_file;
+  #}
+  $client->print_log("---> installer is not supported until it works with objdir builds (bug 162079) <---\n");
+  return 0;
+}
+
+package TinderClient::Modules::build_zip;
+
+sub get_config {
+  my ($client, $config, $persistent_vars, $build_vars, $content_ref) = @_;
+}
+
+sub finish_build {
+  my ($client, $config, $persistent_vars, $build_vars) = @_;
+}
+
+sub do_action {
+  my ($client, $config, $persistent_vars, $build_vars) = @_;
+
+  $client->do_command("make -C objdir/xpinstall/packager", 11);
+
+  # Find zipped build
+  my ($local_file) = glob("objdir/dist/mozilla*.tgz");
+  if (!$local_file) {
+    ($local_file) = glob("objdir/dist/mozilla*.tar.gz");
+  }
+  if (!$local_file) {
+    ($local_file) = glob("objdir/dist/mozilla*.zip");
+  }
+  if ($local_file) {
+    $build_vars->{PACKAGES}{build_zip} = $local_file;
+  }
+  return 0;
+}
+
+package TinderClient::Modules::raw_zip;
+
+sub get_config {
+  my ($client, $config, $persistent_vars, $build_vars, $content_ref) = @_;
+  $client->get_field($content_ref, "raw_zip_name");
+}
+
+sub finish_build {
+  my ($client, $config, $persistent_vars, $build_vars) = @_;
+}
+
+sub do_action {
+  my ($client, $config, $persistent_vars, $build_vars) = @_;
+
+  my $sysinfo = $client->sysinfo();
+  if (chdir("objdir/dist/bin")) {
+    my $os = $sysinfo->{OS};
+    $os =~ tr/A-Z/a-z/;
+    $os =~ s/[^a-z]//g;
+    $client->do_command("tar czvfh ../$config->{raw_zip_name}-$os.tar.gz *", 12);
+    chdir("../../..");
+    $build_vars->{PACKAGES}{raw_zip} = "objdir/dist/$config->{raw_zip_name}-$os.tar.gz";
+  }
+  return 0;
+}
+
+package TinderClient::Modules::tests;
+
+use strict;
+
+sub get_config {
+  my ($client, $config, $persistent_vars, $build_vars, $content_ref) = @_;
+  $client->get_field($content_ref, "tests");
+  foreach my $module (split(/,/, $config->{tests})) {
+    $client->call_module($module, "get_config", $content_ref);
+  }
+}
+
+sub finish_build {
+  my ($client, $config, $persistent_vars, $build_vars) = @_;
+  foreach my $module (split(/,/, $config->{tests})) {
+    $client->call_module($module, "finish_build");
+  }
+}
+
+sub do_action {
+  my ($client, $config, $persistent_vars, $build_vars) = @_;
+  foreach my $module (split(/,/, $config->{tests})) {
+    my $err = $client->call_module($module, "do_action");
+    if ($err) {
+      return $err;
+    }
+  }
+  return 0;
 }
 
 
