@@ -25,6 +25,7 @@
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        class="dialog"
         onload="return StartUp('Composer');"  alighn="vertical" title="&title.label;">
 
 <html:script language="javascript" src="chrome://pref/content/PrefsWindow.js"/>

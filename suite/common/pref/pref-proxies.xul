@@ -24,6 +24,7 @@
 <!DOCTYPE window SYSTEM "chrome://pref/locale/pref-proxies.dtd" >
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        class="dialog"
         onload="manualSelected();return StartUp('Proxies');"  title="Sample Prefs Panel">
 
 <html:script language="javascript" src="PrefsWindow.js"/>
