@@ -215,7 +215,7 @@
         <![CDATA[
           const tabs = this.childNodes;
           for (var i = 0; i < tabs.length; i++) {
-            if (tabs.selected)
+            if (tabs[i].selected)
               return i;
           }
           // throw an exception when no tab is selected (we shouldn't get here)
