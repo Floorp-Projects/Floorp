@@ -245,7 +245,9 @@ the data is sent to the STDIN of the mail processing programs upon
 delivery and that the process which runs this is the same uid as the
 tinderbox server. I have not thought too much about how to set up
 these alternate delivery mechanisms so I have no practical advice but
-It should not be too hard to setup.
+It should not be too hard to setup. There is a set of instructions for
+this in lwpcook.pod which suggest you will need to install
+HTTP::Request::Common and LWP::UserAgent;
 
 *) Set up the bug tracking system to send mail to 'tinderbox_bugs' on
 the webserver machine whenever a Bug ticket changes state. It is not
