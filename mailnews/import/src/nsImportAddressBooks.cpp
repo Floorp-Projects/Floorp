@@ -818,7 +818,7 @@ nsIAddrDatabase *GetAddressBook( const PRUnichar *name, PRBool makeNew)
 				PR_smprintf_free(parentUri);
 			if (parentDir) {
 				char *fileName = (*dbPath).GetLeafName();
-				parentDir->CreateNewDirectory( name, fileName);
+				parentDir->CreateNewDirectory(name, fileName, PR_FALSE /* migrating */);
 				nsCRT::free( fileName);
 			}
 
