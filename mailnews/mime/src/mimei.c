@@ -144,23 +144,16 @@ get_content_type(cthandler_struct *ct)
 {
   typedef char * (*mime_get_ct_fn_type)(void);
 
-//  char * (FAR PASCAL *lpfnMIME_GetContentType) (void);
-
-//  (FARPROC)lpfnMIME_GetContentType = GetProcAddress(ct->ct_handler, "MIME_GetContentType"); 
-//  mime_get_ct_fn_type getct_fn = GetProcAddress(ct->ct_handler, "MIME_GetContentType"); 
-//  if (!lpfnMIME_GetContentType)
   mime_get_ct_fn_type getct_fn = (mime_get_ct_fn_type) PR_FindSymbol(ct->ct_handler, "MIME_GetContentType"); 
   if (!getct_fn)
     return NULL;
 
-//  return ( (*lpfnMIME_GetContentType) () );
   return ( (getct_fn) () );
 }
 
 MimeObjectClass * 
 create_content_type_handler_class(cthandler_struct *ct)
 {
-//  MimeObjectClass * (FAR PASCAL *lpfnMIME_CreateContentTypeHandlerClass) (const char *);
   typedef MimeObjectClass * (*mime_create_class_fn_type)(const char *);
 
   mime_create_class_fn_type class_fn = (mime_create_class_fn_type) PR_FindSymbol(ct->ct_handler, "MIME_CreateContentTypeHandlerClass"); 
