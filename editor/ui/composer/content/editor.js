@@ -1201,8 +1201,8 @@ function SetEditMode(mode)
       gSourceContentWindow.value = source.slice(start);
       gSourceContentWindow.focus();
 
-      // Set oninput handler so we know if user made any changes
-      gSourceContentWindow.setAttribute("oninput", "oninputHTMLSource();");
+      // Add input handler so we know if user made any changes
+      gSourceContentWindow.addEventListener("input", oninputHTMLSource, false);
       gHTMLSourceChanged = false;
     }
     else if (previousMode == DisplayModeSource)
@@ -1242,6 +1242,9 @@ function SetEditMode(mode)
         }
         editorShell.EndBatchChanges();
 
+      } else {
+        // We don't need to call this again, so remove handler
+        gSourceContentWindow.removeEventListener("input", oninputHTMLSource, false);
       }
       gHTMLSourceChanged = false;
 
@@ -1261,8 +1264,7 @@ function oninputHTMLSource()
   goUpdateCommand("cmd_save");
 
   // We don't need to call this again, so remove handler
-  // (Note: using "removeAttribute" didn't work!)
-  gSourceContentWindow.setAttribute("oninput", null);
+  gSourceContentWindow.removeEventListener("input", oninputHTMLSource, false);
 }
 
 function ResetWindowTitleWithFilename()
@@ -1853,8 +1855,8 @@ function EditorSetDefaultPrefsAndDoctype()
       node = nodelist.item(i);
       if ( node )
       {
-        var value = node.getAttribute("name").toLowerCase();
-        if (value == "author")
+        var value = node.getAttribute("name");
+        if (value && value.toLowerCase() == "author")
         {
           authorFound = true;
         }
