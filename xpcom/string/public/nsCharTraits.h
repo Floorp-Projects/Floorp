@@ -596,7 +596,7 @@ struct nsCharSinkTraits<CharT*>
     PRUint32
     write( CharT*& iter, const CharT* s, PRUint32 n )
       {
-        nsCharTraits<CharT>::copy(iter, s, n);
+        nsCharTraits<CharT>::move(iter, s, n);
         iter += n;
         return n;
       }
@@ -611,7 +611,7 @@ struct nsCharSinkTraits<char*>
     PRUint32
     write( char*& iter, const char* s, PRUint32 n )
       {
-        nsCharTraits<char>::copy(iter, s, n);
+        nsCharTraits<char>::move(iter, s, n);
         iter += n;
         return n;
       }
@@ -624,7 +624,7 @@ struct nsCharSinkTraits<PRUnichar*>
     PRUint32
     write( PRUnichar*& iter, const PRUnichar* s, PRUint32 n )
       {
-        nsCharTraits<PRUnichar>::copy(iter, s, n);
+        nsCharTraits<PRUnichar>::move(iter, s, n);
         iter += n;
         return n;
       }
