@@ -851,18 +851,26 @@ public:
     NS_IMETHOD RemoveChildGroup(nsIURLGroup* aGroup);
 
     // Implementation specific methods...
-    void FireOnStartDocumentLoad(nsIURL* aURL, const char* aCOmmand);
-    void FireOnEndDocumentLoad(PRInt32 aStatus);
+    void FireOnStartDocumentLoad(nsIDocumentLoader* aLoadInitiator,
+                                 nsIURL* aURL, 
+                                 const char* aCommand);
+    void FireOnEndDocumentLoad(nsIDocumentLoader* aLoadInitiator,
+                               PRInt32 aStatus);
 
-    void FireOnStartURLLoad(nsIURL* aURL, const char* aContentType, 
+    void FireOnStartURLLoad(nsIDocumentLoader* aLoadInitiator,
+                            nsIURL* aURL, 
+                            const char* aContentType, 
                             nsIContentViewer* aViewer);
 
-    void FireOnProgressURLLoad(nsIURL* aURL, PRUint32 aProgress, 
+    void FireOnProgressURLLoad(nsIDocumentLoader* aLoadInitiator,
+                               nsIURL* aURL, PRUint32 aProgress, 
                                PRUint32 aProgressMax);
 
-    void FireOnStatusURLLoad(nsIURL* aURL, nsString& aMsg);
+    void FireOnStatusURLLoad(nsIDocumentLoader* aLoadInitiator,
+                             nsIURL* aURL, nsString& aMsg);
 
-    void FireOnEndURLLoad(nsIURL* aURL, PRInt32 aStatus);
+    void FireOnEndURLLoad(nsIDocumentLoader* aLoadInitiator,
+                          nsIURL* aURL, PRInt32 aStatus);
 
     void LoadURLComplete(nsIURL* aURL, nsISupports* aLoader, PRInt32 aStatus);
     void SetParent(nsDocLoaderImpl* aParent);
@@ -872,6 +880,7 @@ protected:
     virtual ~nsDocLoaderImpl();
 
     void ChildDocLoaderFiredEndDocumentLoad(nsDocLoaderImpl* aChild,
+                                            nsIDocumentLoader* aLoadInitiator,
                                             PRInt32 aStatus);
 
 private:
@@ -1414,7 +1423,8 @@ nsDocLoaderImpl::RemoveChildGroup(nsIURLGroup* aGroup)
 }
 
 
-void nsDocLoaderImpl::FireOnStartDocumentLoad(nsIURL* aURL, 
+void nsDocLoaderImpl::FireOnStartDocumentLoad(nsIDocumentLoader* aLoadInitiator,
+                                              nsIURL* aURL, 
                                               const char* aCommand)
 {
   PRInt32 count = mDocObservers.Count();
@@ -1425,18 +1435,19 @@ void nsDocLoaderImpl::FireOnStartDocumentLoad(nsIURL* aURL,
    */
   for (index = 0; index < count; index++) {
     nsIDocumentLoaderObserver* observer = (nsIDocumentLoaderObserver*)mDocObservers.ElementAt(index);
-    observer->OnStartDocumentLoad((nsIDocumentLoader*) this, aURL, aCommand);
+    observer->OnStartDocumentLoad(aLoadInitiator, aURL, aCommand);
   }
 
   /*
    * Finally notify the parent...
    */
   if (nsnull != mParent) {
-    mParent->FireOnStartDocumentLoad(aURL, aCommand);
+    mParent->FireOnStartDocumentLoad(aLoadInitiator, aURL, aCommand);
   }
 }
 
-void nsDocLoaderImpl::FireOnEndDocumentLoad(PRInt32 aStatus)
+void nsDocLoaderImpl::FireOnEndDocumentLoad(nsIDocumentLoader* aLoadInitiator,
+                                            PRInt32 aStatus)
 {
     PRInt32 count = mDocObservers.Count();
     PRInt32 index;
@@ -1447,7 +1458,7 @@ void nsDocLoaderImpl::FireOnEndDocumentLoad(PRInt32 aStatus)
     for (index = 0; index < count; index++) {
         nsIDocumentLoaderObserver* observer = (nsIDocumentLoaderObserver*)
             mDocObservers.ElementAt(index);
-        observer->OnEndDocumentLoad((nsIDocumentLoader*)this, mDocumentUrl,
+        observer->OnEndDocumentLoad(aLoadInitiator, mDocumentUrl,
                                     aStatus);
     }
 
@@ -1455,12 +1466,13 @@ void nsDocLoaderImpl::FireOnEndDocumentLoad(PRInt32 aStatus)
      * Finally notify the parent...
      */
     if (nsnull != mParent) {
-        mParent->ChildDocLoaderFiredEndDocumentLoad(this, aStatus);
+        mParent->ChildDocLoaderFiredEndDocumentLoad(this, aLoadInitiator, aStatus);
     }
 }
 
 void
 nsDocLoaderImpl::ChildDocLoaderFiredEndDocumentLoad(nsDocLoaderImpl* aChild,
+                                                    nsIDocumentLoader* aLoadInitiator,
                                                     PRInt32 aStatus)
 {
     PRBool busy;
@@ -1469,11 +1481,12 @@ nsDocLoaderImpl::ChildDocLoaderFiredEndDocumentLoad(nsDocLoaderImpl* aChild,
         // If the parent is no longer busy because a child document
         // loader finished, then its time for the parent to fire its
         // on-end-document-load notification.
-        FireOnEndDocumentLoad(aStatus);
+        FireOnEndDocumentLoad(aLoadInitiator, aStatus);
     }
 }
 
-void nsDocLoaderImpl::FireOnStartURLLoad(nsIURL* aURL, const char* aContentType, 
+void nsDocLoaderImpl::FireOnStartURLLoad(nsIDocumentLoader* aLoadInitiator,
+                                         nsIURL* aURL, const char* aContentType, 
                                          nsIContentViewer* aViewer)
 {
   PRInt32 count = mDocObservers.Count();
@@ -1484,18 +1497,19 @@ void nsDocLoaderImpl::FireOnStartURLLoad(nsIURL* aURL, const char* aContentType,
    */
   for (index = 0; index < count; index++) {
     nsIDocumentLoaderObserver* observer = (nsIDocumentLoaderObserver*)mDocObservers.ElementAt(index);
-    observer->OnStartURLLoad((nsIDocumentLoader*) this, aURL, aContentType, aViewer);
+    observer->OnStartURLLoad(aLoadInitiator, aURL, aContentType, aViewer);
   }
 
   /*
    * Finally notify the parent...
    */
   if (nsnull != mParent) {
-    mParent->FireOnStartURLLoad(aURL, aContentType, aViewer);
+    mParent->FireOnStartURLLoad(aLoadInitiator, aURL, aContentType, aViewer);
   }
 }
 
-void nsDocLoaderImpl::FireOnProgressURLLoad(nsIURL* aURL, PRUint32 aProgress,
+void nsDocLoaderImpl::FireOnProgressURLLoad(nsIDocumentLoader* aLoadInitiator,
+                                            nsIURL* aURL, PRUint32 aProgress,
                                             PRUint32 aProgressMax)
 {
   PRInt32 count = mDocObservers.Count();
@@ -1506,18 +1520,19 @@ void nsDocLoaderImpl::FireOnProgressURLLoad(nsIURL* aURL, PRUint32 aProgress,
    */
   for (index = 0; index < count; index++) {
     nsIDocumentLoaderObserver* observer = (nsIDocumentLoaderObserver*)mDocObservers.ElementAt(index);
-    observer->OnProgressURLLoad((nsIDocumentLoader*) this, aURL, aProgress, aProgressMax);
+    observer->OnProgressURLLoad(aLoadInitiator, aURL, aProgress, aProgressMax);
   }
 
   /*
    * Finally notify the parent...
    */
   if (nsnull != mParent) {
-    mParent->FireOnProgressURLLoad(aURL, aProgress, aProgressMax);
+    mParent->FireOnProgressURLLoad(aLoadInitiator, aURL, aProgress, aProgressMax);
   }
 }
 
-void nsDocLoaderImpl::FireOnStatusURLLoad(nsIURL* aURL, nsString& aMsg)
+void nsDocLoaderImpl::FireOnStatusURLLoad(nsIDocumentLoader* aLoadInitiator,
+                                          nsIURL* aURL, nsString& aMsg)
 {
   PRInt32 count = mDocObservers.Count();
   PRInt32 index;
@@ -1527,18 +1542,19 @@ void nsDocLoaderImpl::FireOnStatusURLLoad(nsIURL* aURL, nsString& aMsg)
    */
   for (index = 0; index < count; index++) {
     nsIDocumentLoaderObserver* observer = (nsIDocumentLoaderObserver*)mDocObservers.ElementAt(index);
-    observer->OnStatusURLLoad((nsIDocumentLoader*) this, aURL, aMsg);
+    observer->OnStatusURLLoad(aLoadInitiator, aURL, aMsg);
   }
 
   /*
    * Finally notify the parent...
    */
   if (nsnull != mParent) {
-    mParent->FireOnStatusURLLoad(aURL, aMsg);
+    mParent->FireOnStatusURLLoad(aLoadInitiator, aURL, aMsg);
   }
 }
 
-void nsDocLoaderImpl::FireOnEndURLLoad(nsIURL* aURL, PRInt32 aStatus)
+void nsDocLoaderImpl::FireOnEndURLLoad(nsIDocumentLoader* aLoadInitiator,
+                                       nsIURL* aURL, PRInt32 aStatus)
 {
   PRInt32 count = mDocObservers.Count();
   PRInt32 index;
@@ -1548,14 +1564,14 @@ void nsDocLoaderImpl::FireOnEndURLLoad(nsIURL* aURL, PRInt32 aStatus)
    */
   for (index = 0; index < count; index++) {
     nsIDocumentLoaderObserver* observer = (nsIDocumentLoaderObserver*)mDocObservers.ElementAt(index);
-    observer->OnEndURLLoad((nsIDocumentLoader*) this, aURL, aStatus);
+    observer->OnEndURLLoad(aLoadInitiator, aURL, aStatus);
   }
 
   /*
    * Finally notify the parent...
    */
   if (nsnull != mParent) {
-    mParent->FireOnEndURLLoad(aURL, aStatus);
+    mParent->FireOnEndURLLoad(aLoadInitiator, aURL, aStatus);
   }
 }
 
@@ -1604,7 +1620,7 @@ void nsDocLoaderImpl::LoadURLComplete(nsIURL* aURL, nsISupports* aBindInfo, PRIn
     /*
      * Fire the OnEndURLLoad notification to any observers...
      */
-    FireOnEndURLLoad(aURL, aStatus);
+    FireOnEndURLLoad((nsIDocumentLoader *) this, aURL, aStatus);
 
     /*
      * Fire the OnEndDocumentLoad notification to any observers...
@@ -1621,7 +1637,7 @@ void nsDocLoaderImpl::LoadURLComplete(nsIURL* aURL, nsISupports* aBindInfo, PRIn
                 this, buffer));
 #endif /* DEBUG */
 
-        FireOnEndDocumentLoad(aStatus);
+        FireOnEndDocumentLoad((nsIDocumentLoader *) this, aStatus);
     }
 }
 
@@ -1828,7 +1844,8 @@ nsresult nsDocumentBindInfo::Bind(const nsString& aURLSpec,
     /*
      * Fire the OnStarDocumentLoad interfaces 
      */
-    m_DocLoader->FireOnStartDocumentLoad(url, m_Command);
+    m_DocLoader->FireOnStartDocumentLoad((nsIDocumentLoader *) m_DocLoader, url, m_Command);
+
     /*
      * Initiate the network request...
      */
@@ -1944,7 +1961,7 @@ NS_METHOD nsDocumentBindInfo::OnProgress(nsIURL* aURL, PRUint32 aProgress,
     }
 
     /* Pass the notification out to any observers... */
-    m_DocLoader->FireOnProgressURLLoad(aURL, aProgress, aProgressMax);
+    m_DocLoader->FireOnProgressURLLoad((nsIDocumentLoader *) m_DocLoader, aURL, aProgress, aProgressMax);
 
     /* Pass the notification out to the Observer... */
     if (nsnull != m_Observer) {
@@ -1967,7 +1984,7 @@ NS_METHOD nsDocumentBindInfo::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
 
     /* Pass the notification out to any observers... */
     nsString msgStr(aMsg);
-    m_DocLoader->FireOnStatusURLLoad(aURL, msgStr);
+    m_DocLoader->FireOnStatusURLLoad((nsIDocumentLoader *) m_DocLoader, aURL, msgStr);
 
     /* Pass the notification out to the Observer... */
     if (nsnull != m_Observer) {
@@ -2056,7 +2073,7 @@ NS_METHOD nsDocumentBindInfo::OnStartBinding(nsIURL* aURL, const char *aContentT
     if ((nsnull == viewer) && (nsnull != m_Container)) {
       m_Container->GetContentViewer(&viewer);
     }
-    m_DocLoader->FireOnStartURLLoad(m_Url, aContentType, viewer);
+    m_DocLoader->FireOnStartURLLoad((nsIDocumentLoader *)m_DocLoader, m_Url, aContentType, viewer);
 
     /* Pass the notification out to the Observer... */
     if (nsnull != m_Observer) {
