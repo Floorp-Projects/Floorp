@@ -1664,12 +1664,18 @@ install:    \
 	    $(OUTDIR)\trackgdi.dll   \
 !ENDIF
 !endif
+!if defined(MOZ_OJI)
+!IF EXIST($(DIST)\bin\jrt32$(VERSION_NUMBER).dll)
+	    $(JAVABIN_DIR)\jrt32$(VERSION_NUMBER).dll    \
+!ENDIF
+!elseif defined(MOZ_JAVA)
+!IF EXIST($(DIST)\bin\jrt32$(VERSION_NUMBER).dll)
+	    $(OUTDIR)\jrt32$(VERSION_NUMBER).dll    \
+!ENDIF
+!endif
 !if defined(JAVA_OR_OJI)
 !IF EXIST($(DIST)\bin\npj32$(VERSION_NUMBER).dll)
 	    $(JAVABIN_DIR)\npj32$(VERSION_NUMBER).dll    \
-!ENDIF
-!IF EXIST($(DIST)\bin\jrt32$(VERSION_NUMBER).dll)
-	    $(JAVABIN_DIR)\jrt32$(VERSION_NUMBER).dll    \
 !ENDIF
 !IF EXIST($(DIST)\bin\awt32$(VERSION_NUMBER).dll)
  	    $(JAVABIN_DIR)\awt32$(VERSION_NUMBER).dll   \
