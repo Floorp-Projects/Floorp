@@ -69,18 +69,18 @@ delay=0
 
 [2]
 APICall=NPN_GetURL
-arg2=http://w3
+arg2=http://mozilla.org
 arg3=_npapi_Display
 
 [3]
 APICall=NPN_GetURLNotify
-arg2=http://w3
+arg2=http://mozilla.org
 arg3=_npapi_Display
 arg4=1
 
 [4]
 APICall=NPN_PostURL
-arg2=http://w3
+arg2=http://mozilla.org
 arg3=_npapi_Display
 arg4=4
 arg5=test
@@ -88,7 +88,7 @@ arg6=FALSE
 
 [5]
 APICall=NPN_PostURLNotify
-arg2=http://w3
+arg2=http://mozilla.org
 arg3=_npapi_Display
 arg4=4
 arg5=test
