@@ -361,7 +361,7 @@ nsAreaFrame::IncrementalReflow(nsIPresContext&          aPresContext,
 {
   nsIReflowCommand::ReflowType  type;
   nsIFrame*                     newFrames;
-  PRInt32                       numFrames;
+  PRInt32                       numFrames = 0;
 
   // Get the type of reflow command
   aReflowState.reflowCommand->GetType(type);
