@@ -89,6 +89,8 @@ class nsHTMLContentSerializer : public nsXMLContentSerializer {
                               nsAWritableString& aOutputStr,
                               PRBool aTranslateEntities = PR_FALSE,
                               PRBool aIncrColumn = PR_TRUE);
+  virtual void AppendToStringConvertLF(const nsAReadableString& aStr,
+                                       nsAWritableString& aOutputStr);
   virtual void AppendToStringWrapped(const nsAReadableString& aStr,
                                      nsAWritableString& aOutputStr,
                                      PRBool aTranslateEntities);
