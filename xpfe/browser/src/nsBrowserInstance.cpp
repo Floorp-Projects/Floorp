@@ -222,25 +222,25 @@ public:
 
     NS_WITH_SERVICE(nsIObserverService, obsServ, NS_OBSERVERSERVICE_PROGID, &rv);
     if (NS_FAILED(rv)) return rv;
-    nsString topic("EndDocumentLoad");
+    nsString topic; topic.AssignWithConversion("EndDocumentLoad");
     rv = obsServ->AddObserver(this, topic.GetUnicode());
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add self to observer service");
     return rv; 
   }
 
   nsresult GetNextURL(nsString& result) {
-    result = mCursor;
+    result.AssignWithConversion(mCursor);
     PRInt32 pos = result.Find(NS_LINEBREAK);
     if (pos > 0) {
       result.Truncate(pos);
-      mLastRequest = result;
+      mLastRequest.Assign(result);
       mCursor += pos + NS_LINEBREAK_LEN;
       return NS_OK;
     }
     else if ( !result.IsEmpty() ) {
       // no more URLs after this one
       mCursor += result.Length(); // Advance cursor to terminating '\0'
-      mLastRequest = result;
+      mLastRequest.Assign(result);
       return NS_OK;
     }
     else {
@@ -552,7 +552,7 @@ nsBrowserInstance::LoadInitialPage(void)
     if (urlstr != nsnull) {
       // A url was provided. Load it
       if (APP_DEBUG) printf("Got Command line URL to load %s\n", urlstr);
-      nsString url ( urlstr );
+      nsString url; url.AssignWithConversion( urlstr );
       rv = LoadUrl( url.GetUnicode() );
       cmdLineURLUsed = PR_TRUE;
       return rv;
@@ -576,14 +576,14 @@ nsBrowserInstance::LoadInitialPage(void)
   if (!argsElement) {
     // Couldn't get the "args" element from the xul file. Load a blank page
     if (APP_DEBUG) printf("Couldn't find args element\n");
-    nsAutoString url ("about:blank");
+    nsAutoString url; url.AssignWithConversion("about:blank");
     rv = LoadUrl( url.GetUnicode() );
     return rv;
   }
 
   // Load the default page mentioned in the xul file.
   nsString value;
-  argsElement->GetAttribute(nsString("value"), value);
+  argsElement->GetAttribute(NS_ConvertASCIItoUCS2("value"), value);
   if (value.Length()) {
     rv = LoadUrl(value.GetUnicode());
     return rv;
@@ -1187,7 +1187,7 @@ nsBrowserInstance::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURI* aURL,
   rv = aURL->GetSpec(&url);
   if (NS_FAILED(rv)) return rv;
 
-  nsAutoString urlStr(url);
+  nsAutoString urlStr; urlStr.AssignWithConversion(url);
 
 #ifdef DEBUG_warren
   char* urls;
@@ -1216,7 +1216,7 @@ nsBrowserInstance::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURI* aURL,
   }
 
   if (!isFrame) {
-    nsAutoString kStartDocumentLoad("StartDocumentLoad");
+    nsAutoString kStartDocumentLoad; kStartDocumentLoad.AssignWithConversion("StartDocumentLoad");
     rv = observer->Notify(mContentWindow,
                         kStartDocumentLoad.GetUnicode(),
                         urlStr.GetUnicode());
@@ -1274,9 +1274,9 @@ nsBrowserInstance::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* cha
    * & observer thingy 
    */
   if (!isFrame) {
-      nsAutoString urlStr(url);
-      nsAutoString kEndDocumentLoad("EndDocumentLoad");
-      nsAutoString kFailDocumentLoad("FailDocumentLoad");
+      nsAutoString urlStr; urlStr.AssignWithConversion(url);
+      nsAutoString kEndDocumentLoad; kEndDocumentLoad.AssignWithConversion("EndDocumentLoad");
+      nsAutoString kFailDocumentLoad; kFailDocumentLoad.AssignWithConversion("FailDocumentLoad");
 
       // Notify observers that a document load has started in the
       // content window.
@@ -1529,7 +1529,7 @@ NS_IMETHODIMP nsBrowserInstance::OnLocationChange(nsIURI* aLocation)
 
    nsXPIDLCString spec;
    aLocation->GetSpec(getter_Copies(spec));
-   nsAutoString specW(spec);
+   nsAutoString specW; specW.AssignWithConversion(spec);
    mXULBrowserWindow->OnLocationChange(specW.GetUnicode());
 
    return NS_OK;
@@ -1572,7 +1572,7 @@ NS_IMETHODIMP nsBrowserInstance::CreateMenuItem(
   
   // Create nsMenuItem
   nsCOMPtr<nsIDOMElement>  menuItemElement;
-  nsString  tagName("menuitem");
+  nsString  tagName; tagName.AssignWithConversion("menuitem");
   rv = doc->CreateElement(tagName, getter_AddRefs(menuItemElement));
   if (!NS_SUCCEEDED(rv)) {
     printf("nsBrowserInstance::CreateMenuItem ERROR creating the menu item element\n");
@@ -1582,14 +1582,14 @@ NS_IMETHODIMP nsBrowserInstance::CreateMenuItem(
   //Set the label for the menu item
   nsString menuitemlabel(aName);
   if (APP_DEBUG) printf("nsBrowserInstance::CreateMenuItem Setting menu name to %s\n", menuitemlabel.ToNewCString());
-  rv = menuItemElement->SetAttribute(nsString("value"), menuitemlabel);
+  rv = menuItemElement->SetAttribute(NS_ConvertASCIItoUCS2("value"), menuitemlabel);
   if (!NS_SUCCEEDED(rv)) {
     printf("nsBrowserInstance::CreateMenuItem ERROR Setting node value for menu item ****\n");
     return NS_ERROR_FAILURE;
   }
 
   // Set the hist attribute to true
-  rv = menuItemElement->SetAttribute(nsString("ishist"), nsString("true"));
+  rv = menuItemElement->SetAttribute(NS_ConvertASCIItoUCS2("ishist"), NS_ConvertASCIItoUCS2("true"));
   if (!NS_SUCCEEDED(rv)) {
     printf("nsBrowserInstance::CreateMenuItem ERROR setting ishist handler\n");
     return NS_ERROR_FAILURE;
@@ -1613,11 +1613,11 @@ NS_IMETHODIMP nsBrowserInstance::CreateMenuItem(
   }
 
   //Set the onaction attribute
-  nsString menuitemCmd("gotoHistoryIndex(");
-  menuitemCmd.Append(aIndex);
-  menuitemCmd += ")";  
+  nsString menuitemCmd; menuitemCmd.AssignWithConversion("gotoHistoryIndex(");
+  menuitemCmd.AppendInt(aIndex);
+  menuitemCmd.AppendWithConversion(")");  
   if (APP_DEBUG) printf("nsBrowserInstance::CreateMenuItem Setting action handler to %s\n", menuitemCmd.ToNewCString());
-  nsString attrName("oncommand");
+  nsString attrName; attrName.AssignWithConversion("oncommand");
   rv = menuItemElement->SetAttribute(attrName, menuitemCmd);
   if (!NS_SUCCEEDED(rv)) {
     printf("nsBrowserInstance::CreateMenuItem ERROR setting onaction handler\n");
@@ -1790,10 +1790,10 @@ nsBrowserInstance::ClearHistoryPopup(nsIDOMNode * aParent)
         printf("nsBrowserInstance::ClearHistorypopup Could n't get DOMElement out of DOMNode for child\n");
         return NS_ERROR_FAILURE;
       }
-      nsString  attrname("ishist");
+      nsString  attrname; attrname.AssignWithConversion("ishist");
       nsString  attrvalue;
       rv = childElement->GetAttribute(attrname, attrvalue);
-      if (NS_SUCCEEDED(rv) && attrvalue.Equals("true")) {
+      if (NS_SUCCEEDED(rv) && attrvalue.EqualsWithConversion("true")) {
         // It is a history menu item. Remove it
                 nsCOMPtr<nsIDOMNode> ret;         
                 rv = menu->RemoveChild(child, getter_AddRefs(ret));
@@ -1826,7 +1826,7 @@ nsBrowserInstance::EnsureXULBrowserWindow()
    NS_ENSURE_TRUE(piDOMWindow, NS_ERROR_FAILURE);
 
    nsCOMPtr<nsISupports> xpConnectObj;
-   nsAutoString xulBrowserWinId("XULBrowserWindow");
+   nsAutoString xulBrowserWinId; xulBrowserWinId.AssignWithConversion("XULBrowserWindow");
    piDOMWindow->GetObjectProperty(xulBrowserWinId.GetUnicode(), getter_AddRefs(xpConnectObj));
    mXULBrowserWindow = do_QueryInterface(xpConnectObj);
 
@@ -1860,7 +1860,7 @@ FindNamedXULElement(nsIDocShell * aShell,
                     // Find specified element.
                     nsCOMPtr<nsIDOMElement> elem;
 
-                    rv = xulDoc->GetElementById( aId, getter_AddRefs(elem) );
+                    rv = xulDoc->GetElementById( NS_ConvertASCIItoUCS2(aId), getter_AddRefs(elem) );
                     if ( elem ) {
       *aResult =  elem;
                     } else {
@@ -1940,7 +1940,7 @@ NS_IMETHODIMP nsBrowserContentHandler::GetDefaultArgs(PRUnichar **aDefaultArgs)
 
 #ifdef FORCE_CHECKIN_GUIDELINES
     printf("FOR DEBUG BUILDS ONLY:  we are forcing you to see the checkin guidelines when you open a browser window\n");
-    args = "http://www.mozilla.org/quality/checkin-guidelines.html";
+    args.AssignWithConversion("http://www.mozilla.org/quality/checkin-guidelines.html");
 #else
 
     nsresult rv;
@@ -2069,8 +2069,8 @@ NS_IMETHODIMP nsBrowserContentHandler::HandleContent(const char * aContentType,
   void* mark;
   jsval* argv;
 
-  nsAutoString value = "";
-  value += spec;
+  nsAutoString value;
+  value.AssignWithConversion(spec);
 
   // we only want to pass in the window target name if it isn't something like _new or _blank....
   // i.e. only real names like "my window", etc...
