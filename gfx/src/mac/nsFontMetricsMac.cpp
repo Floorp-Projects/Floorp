@@ -195,7 +195,7 @@ nsFontMetricsMac :: GetUnderline(nscoord& aOffset, nscoord& aSize)
 {
   float  dev2app;
   mContext->GetDevUnitsToAppUnits(dev2app);
-  aOffset = NSToCoordRound(- float(mMaxDescent / 2) + dev2app);
+  aOffset = - dev2app;
   aSize   = dev2app;
   return NS_OK;
 }
