@@ -160,7 +160,7 @@
 
 <!ENTITY onthe-text            "Am ">
 <!ENTITY last-text             "Letzten ">
-<!ENTITY ofthemonth-text       " des Monats.">
+<!ENTITY ofthemonth-text       " des Monats">
 
 
 <!ENTITY todo.title.new         "Neue Aufgabe">

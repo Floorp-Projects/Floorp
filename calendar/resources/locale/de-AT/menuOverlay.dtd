@@ -120,7 +120,7 @@
 <!ENTITY toolsMenu.label                "Tools">
 <!ENTITY toolsMenu.accesskey            "o">
 
-<!ENTITY javaScriptConsoleCmd.label     "JavaScript Console">
+<!ENTITY javaScriptConsoleCmd.label     "JavaScript-Konsole">
 <!ENTITY javaScriptConsoleCmd.accesskey "S">
 
 <!ENTITY navigatorCmd.label     "Browser">
@@ -129,7 +129,7 @@
 <!ENTITY messengerCmd.label     "Mail">
 <!ENTITY messengerCmd.accesskey "M">
 
-<!ENTITY addressBookCmd.label     "Address Book">
+<!ENTITY addressBookCmd.label     "Adressbuch">
 <!ENTITY addressBookCmd.accesskey "A">
 
 <!ENTITY helpMenu.accesskey            "H">

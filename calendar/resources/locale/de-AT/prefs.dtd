@@ -39,14 +39,14 @@
 <!ENTITY calendarPanel.label        "Kalender" >
 <!ENTITY calendar.accesskey         "K" >
 <!ENTITY calendar.publish.label     "Publizieren">
-<!ENTITY calendar.general.label     "General">
+<!ENTITY calendar.general.label     "Allgemein">
 <!ENTITY calendar.alarms.label      "Alarme">
 <!ENTITY calendar.views.label       "Ansichten">
 <!ENTITY calendar.timezone.label    "Meine Zeitzone">
 
-<!ENTITY prefWindow.title            "Calendar Options">
+<!ENTITY prefWindow.title            "Kalender-Optionen">
 <!ENTITY prefWindow.size             "width: 52.3em; height: 41em;">
-<!ENTITY prefWindow.category         "Category">
+<!ENTITY prefWindow.category         "Kategorie">
 
 <!ENTITY pref.mainbox.label         "Allgemeine Einstellungen" >
 <!ENTITY pref.alarmgoesoff.label "Wenn ein Alarm ausgelöst wird:">
