@@ -157,6 +157,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS5(nsMsgAccountManager,
 
 nsMsgAccountManager::nsMsgAccountManager() :
   m_accountsLoaded(PR_FALSE),
+  m_folderCacheNeedsClearing(PR_FALSE),
   m_emptyTrashInProgress(PR_FALSE),
   m_cleanupInboxInProgress(PR_FALSE),
   m_haveShutdown(PR_FALSE),
@@ -224,8 +225,12 @@ nsresult nsMsgAccountManager::Shutdown()
       msgDBService->UnregisterPendingListener(m_virtualFolderListeners[i]);
   }
   if(m_msgFolderCache)
+  {
+    if (m_folderCacheNeedsClearing)
+      m_msgFolderCache->Clear();
+    m_folderCacheNeedsClearing = PR_FALSE;
     WriteToFolderCache(m_msgFolderCache);
-
+  }
   (void)ShutdownServers();
   (void)UnloadAccounts();
   
@@ -2918,6 +2923,9 @@ nsresult nsMsgAccountManager::LoadVirtualFolders()
               msgDBService->RegisterPendingListener(realFolder, dbListener);
             }
           }
+          else // this folder is useless
+          {
+          }
         }
         else if (dbFolderInfo && Substring(buffer, 0, 6).Equals("terms="))
         {
@@ -2991,10 +2999,13 @@ NS_IMETHODIMP nsMsgAccountManager::SaveVirtualFolders()
               dbFolderInfo->GetCharPtrProperty("searchFolderUri", getter_Copies(srchFolderUri));
               dbFolderInfo->GetCharPtrProperty("searchStr", getter_Copies(searchTerms));
               folderRes->GetValueConst(&uri);
-              WriteLineToOutputStream("uri=", uri, outputStream);
-              WriteLineToOutputStream("scope=", srchFolderUri.get(), outputStream);
-              WriteLineToOutputStream("terms=", searchTerms.get(), outputStream);
-              WriteLineToOutputStream("searchOnline=", searchOnline ? "true" : "false", outputStream);
+              if (!srchFolderUri.IsEmpty() && !searchTerms.IsEmpty())
+              {
+                WriteLineToOutputStream("uri=", uri, outputStream);
+                WriteLineToOutputStream("scope=", srchFolderUri.get(), outputStream);
+                WriteLineToOutputStream("terms=", searchTerms.get(), outputStream);
+                WriteLineToOutputStream("searchOnline=", searchOnline ? "true" : "false", outputStream);
+              }
             }
           }
         }
@@ -3060,6 +3071,7 @@ NS_IMETHODIMP nsMsgAccountManager::OnItemRemoved(nsIRDFResource *parentItem, nsI
   // just kick out with a success code if the item in question is not a folder
   if (!folder)
     return NS_OK;
+  m_folderCacheNeedsClearing = PR_TRUE;
   nsresult rv = NS_OK;
   PRUint32 folderFlags;
   folder->GetFlags(&folderFlags);

@@ -82,7 +82,7 @@ public:
 private:
 
   PRBool m_accountsLoaded;
-  
+  PRBool m_folderCacheNeedsClearing;  
   nsCOMPtr <nsIMsgFolderCache>	m_msgFolderCache;
   nsCOMPtr<nsIAtom> kDefaultServerAtom;
   nsCOMPtr<nsISupportsArray> m_accounts;

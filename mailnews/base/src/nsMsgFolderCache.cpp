@@ -377,6 +377,15 @@ NS_IMETHODIMP nsMsgFolderCache::GetCacheElement(const char *pathKey, PRBool crea
 	return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP nsMsgFolderCache::Clear()
+{
+  if (m_cacheElements)
+    m_cacheElements->Reset();
+  if (m_mdbAllFoldersTable)
+    m_mdbAllFoldersTable->CutAllRows(GetEnv());
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsMsgFolderCache::Close()
 {
   return Commit(PR_TRUE);

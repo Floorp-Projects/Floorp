@@ -536,7 +536,10 @@ nsresult nsImapMailFolder::CreateSubFolders(nsFileSpec &path)
         PRInt32 hierarchyDelimiter;
         rv = cacheElement->GetInt32Property("hierDelim", &hierarchyDelimiter);
         if (NS_SUCCEEDED(rv) && hierarchyDelimiter == kOnlineHierarchySeparatorUnknown)
-          continue; // ignore .msf files for folders with unknown delimiter.
+        {
+          currentFolderPath.Delete(PR_FALSE);
+          continue; // blow away .msf files for folders with unknown delimiter.
+        }
         rv = cacheElement->GetStringProperty("onlineName", getter_Copies(onlineFullUtf7Name));
         if (NS_SUCCEEDED(rv) && onlineFullUtf7Name.get() && strlen(onlineFullUtf7Name.get()))
         {
