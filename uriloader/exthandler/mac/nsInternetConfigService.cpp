@@ -364,7 +364,7 @@ nsresult nsInternetConfigService::FillMIMEInfoForICEntry(ICMapEntry& entry, nsIM
     nsCAutoString mimetype ((char *)&entry.MIMEType[1], entry.MIMEType[0]);
     // check if entry.MIMEType is empty, if so, set mime type to APPLICATION_OCTET_STREAM
     if (entry.MIMEType[0])
-      info->SetMIMEType(mimetype.get());
+      info->SetMIMEType(mimetype);
     else
     { // The IC mappings seem to not be very agressive about determining the mime type if
       // all we have is a type or creator code.  This is a bandaid approach for when we
