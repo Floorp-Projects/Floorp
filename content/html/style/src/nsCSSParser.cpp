@@ -3117,6 +3117,13 @@ PRBool CSSParserImpl::ParseAttr(PRInt32& aErrorCode, nsCSSValue& aValue)
   return PR_FALSE;
 }
 
+inline static PRBool
+css_RequiresAbsoluteURI(const nsString& uri)
+{
+  // cheap shot at figuring out if this requires an absolute url translation
+  return Substring(uri, 0, 9).Equals(NS_LITERAL_STRING("chrome:")) == PR_FALSE;
+}
+
 PRBool CSSParserImpl::ParseURL(PRInt32& aErrorCode, nsCSSValue& aValue)
 {
   if (ExpectSymbol(aErrorCode, '(', PR_FALSE)) {
@@ -3129,14 +3136,9 @@ PRBool CSSParserImpl::ParseURL(PRInt32& aErrorCode, nsCSSValue& aValue)
       // the style sheet.
       // XXX editors won't like this - too bad for now
       nsAutoString absURL;
-      if (nsnull != mURL) {
-        nsAutoString baseURL;
+      if (nsnull != mURL && css_RequiresAbsoluteURI(tk->mIdent)) {
         nsresult rv;
-        nsCOMPtr<nsIURI> base;
-        rv = mURL->Clone(getter_AddRefs(base));
-        if (NS_SUCCEEDED(rv)) {
-          rv = NS_MakeAbsoluteURI(absURL, tk->mIdent, base);
-        }
+        rv = NS_MakeAbsoluteURI(absURL, tk->mIdent, mURL);
         if (NS_FAILED(rv)) {
           absURL = tk->mIdent;
         }
