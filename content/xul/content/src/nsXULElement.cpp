@@ -1923,7 +1923,14 @@ nsXULElement::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject)
         aContext->AddNamedReference((void*) &mScriptObject, mScriptObject, rootname);
     }
 
-    *aScriptObject = mScriptObject;
+    void* object = nsnull;
+    if (Binding()) {
+      nsCOMPtr<nsIScriptObjectOwner> owner(do_QueryInterface(Binding()));
+      owner->GetScriptObject(aContext, &object);
+    }
+
+    *aScriptObject = object ? object : mScriptObject;
+    
     return rv;
 }
 
@@ -2156,6 +2163,8 @@ nsXULElement::SetDocument(nsIDocument* aDocument, PRBool aDeep)
                     global->GetContext(getter_AddRefs(context));
                     if (context) {
                         context->RemoveReference((void*) &mScriptObject, mScriptObject);
+                        if (Binding())
+                          Binding()->RemoveScriptReferences(context);
                     }
                 }
             }
