@@ -17,14 +17,14 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
+ * Original Author:
+ *   Scott Collins <scc@mozilla.org>
+ *
  * Contributor(s):
- *   Scott Collins <scc@netscape.com>
  */
 
 #ifndef _nsSharedString_h__
 #define _nsSharedString_h__
-
-  // WORK IN PROGRESS
 
 #include "nsAReadableString.h"
 
@@ -106,14 +106,56 @@ basic_nsSharedString<CharT>::GetReadableFragment( nsReadableFragment<CharT>& aFr
 
 
 template <class CharT>
-class nsSharedStringPtr
+class basic_nsSharedStringPtr
   {
     public:
-      // ...
+      basic_nsSharedStringPtr() : mRawPtr(0) { }
+
+      basic_nsSharedStringPtr( const basic_nsSharedStringPtr<CharT>& rhs )
+          : mRawPtr(rhs.mRawPtr)
+        {
+          mRawPtr->AddRef();
+        }
+
+     ~basic_nsSharedStringPtr()
+        {
+          if ( mRawPtr )
+            mRawPtr->Release();
+        }
+
+      basic_nsSharedStringPtr<CharT>&
+      operator=( const basic_nsSharedStringPtr<CharT>& );
+
+      basic_nsSharedString<CharT>*
+      operator->() const
+        {
+          NS_PRECONDITION(mRawPtr != 0, "You can't dereference a NULL string pointer with operator->().");
+          return mRawPtr;
+        }
+
+      basic_nsSharedString<CharT>&
+      operator*() const
+        {
+          NS_PRECONDITION(mRawPtr != 0, "You can't dereference a NULL string pointer with operator->().");
+          return *mRawPtr;
+        }
 
     private:
-      basic_nsSharedString<CharT>*  mRawPtr;
+      const basic_nsSharedString<CharT>*  mRawPtr;
   };
+
+template <class CharT>
+basic_nsSharedStringPtr<CharT>&
+basic_nsSharedStringPtr<CharT>::operator=( const basic_nsSharedStringPtr<CharT>& rhs )
+    // Not |inline|
+  {
+    if ( rhs.mRawPtr )
+      rhs.mRawPtr->AddRef();
+    basic_nsSharedString<CharT>* oldPtr = mRawPtr;
+    mRawPtr = rhs.mRawPtr;
+    if ( oldPtr )
+      oldPtr->Release();
+  }
 
 
 template <class CharT>
@@ -139,6 +181,9 @@ new_nsSharedString( const basic_nsAReadableString<CharT>& aReadable )
 
 typedef basic_nsSharedString<PRUnichar>     nsSharedString;
 typedef basic_nsSharedString<char>          nsSharedCString;
+
+typedef basic_nsSharedStringPtr<PRUnichar>  nsSharedStringPtr;
+typedef basic_nsSharedStringPtr<char>       nsSharedCStringPtr;
 
 
 #endif // !defined(_nsSharedString_h__)
