@@ -1,0 +1,211 @@
+#!/usr/dt/bin/dtksh
+#
+# Solaris patch checker script
+#
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Initial Developer of the Original Code is
+# Roland Mainz <roland.mainz@nrubsig.org>
+# Portions created by the Initial Developer are Copyright (C) 2004
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+export PATH=/usr/xpg4/bin:/usr/sbin:/usr/bin
+
+# Enumerate installed patches
+enumerate_patch_list()
+{
+    showrev -p | grep "^Patch: "
+    #cat patchlist.txt | grep "^Patch: "
+}
+
+# Setup list of required patches
+typeset -A required_patches
+case "$(uname -p)" in
+  "sparc")
+      case "$(uname -r)" in
+        # Solaris 2.7/SPARC
+        "5.7")
+            required_patches=(
+              [0]="106950-24" [0_title]="SunOS 5.7: linker patch"
+              [1]="106327-21" [1_title]="32-Bit Shared library patch for C++"
+              [2]="106300-22" [2_title]="64-Bit Shared library patch for C++"
+              [3]="108376-44" [3_title]="OpenWindows 3.6.1: Xsun Patch"
+              [4]="107650-08" [4_title]="OpenWindows 3.6.1 X11R6.4 Xprint Extension Patch"
+              [5]="107636-10" [5_title]="SunOS 5.7: X Input & Output Method patch"
+              [6]="112689-02" [6_title]="SunOS 5.7: UTF-8 locale ICONV patch"
+            )
+            num_required_patches=7
+            ;;
+
+        # Solaris 2.8/SPARC
+        "5.8")
+            required_patches=(
+              [0]="109147-27" [0_title]="SunOS 5.8: linker patch"
+              [1]="108434-14" [1_title]="32-Bit Shared library patch for C++"
+              [2]="108435-14" [2_title]="64-Bit Shared library patch for C++"
+              [3]="108773-18" [3_title]="SunOS 5.8: IIIM and X Input & Output Method patch"
+              [4]="108652-77" [4_title]="X11 6.5.1: Xsun patch"
+            )
+            num_required_patches=5
+            ;;
+
+        # Solaris 2.9/SPARC
+        "5.9")
+            required_patches=(
+              [0]="112963-10" [0_title]="SunOS 5.9: linker patch"
+              [1]="111711-08" [1_title]="32-Bit Shared library patch for C++"
+              [2]="111712-08" [2_title]="64-Bit Shared library patch for C++"
+              [3]="112661-06" [3_title]="SunOS 5.9: IIIM and X Input & Output Method patch"
+              [4]="112785-30" [4_title]="X11 6.6.1: Xsun patch"
+            )
+            num_required_patches=5
+            ;;
+        *)
+            echo "# WARNING: Patch checker not supported for $(uname -s)."
+            exit 0
+            ;;
+      esac
+      ;;
+  # FixMe: Need support for Solaris/{x86,x86-64}
+  *)
+      echo "# WARNING: Patch checker not supported for $(uname -p)."
+      exit 0
+      ;;
+esac
+
+
+typeset -A patchmap
+
+# Fill patchmap
+enumerate_patch_list | while read i1 i2 i3 ; do
+  patch_id="${i2%-*}"
+  patch_rev="${i2#*-}"
+  patchmap[${patch_id}]="${patch_rev}"
+done
+
+# Check patch requirements against the list of installed patches and
+# print out missing patches ...
+missing_patches_msg="$(
+count=0
+while [ ${count} -lt ${num_required_patches} ] ; do
+  req_patch_id="${required_patches[${count}]%-*}"
+  req_patch_rev="${required_patches[${count}]#*-}"
+
+  if [ "${patchmap[${req_patch_id}]}" = "" ] ; then
+    echo "- patch ${req_patch_id} (\"${required_patches[${count}_title]}\"). Install ${required_patches[${count}]} (or higher)."
+  fi
+  
+  count=$((${count} + 1))
+done
+)"
+
+# ... and then the patches which need updates:
+low_rev_patches_msg="$(
+count=0
+while [ ${count} -lt ${num_required_patches} ] ; do
+  req_patch_id="${required_patches[${count}]%-*}"
+  req_patch_rev="${required_patches[${count}]#*-}"
+
+  if [ "${patchmap[${req_patch_id}]}" != "" ] ; then
+    if [ ${req_patch_rev} -gt ${patchmap[${req_patch_id}]} ] ; then
+      echo "- patch ${required_patches[${count}]} (or higher), currently installed patch ${req_patch_id}-${patchmap[${req_patch_id}]} (\"${required_patches[${count}_title]}\")."
+    fi
+  fi
+  
+  count=$((${count} + 1))
+done
+)"
+
+# Build message text
+display_warning=false
+# Intro...
+msg=" \
+One or more of the following Solaris patches are missing in your OS which are requirements to run Mozilla.\n \
+Please contact your system adminstrator to install these patches. \n \
+"
+# ... missing patches ...
+if [ "${missing_patches_msg}" != "" ] ; then
+    msg="$(printf "%s\n%s\n%s\n " "${msg}" "* The following patches are not installed:" "${missing_patches_msg}")"
+    display_warning=true
+fi
+# ... and the too old ones ...
+if [ "${low_rev_patches_msg}" != "" ] ; then
+    msg="$(printf "%s\n%s\n%s\n " "${msg}" "* The following patches need to be updated to higher revisions:" "${low_rev_patches_msg}")"
+    display_warning=true
+fi
+
+# Do we really need to display the dialog ?
+if [ "${display_warning}" = "false" ] ; then
+    exit 0
+fi
+
+# Display warning dialog
+dismissCB()
+{
+   exit 0
+}
+
+exitCB()
+{
+   exit 1
+}
+
+XtInitialize TOPLEVEL moz_patch_error MozPatchError "$@"
+
+XmCreateMessageBox MISSING_PATCHES_DIALOG ${TOPLEVEL} missing_patches_dialog \
+  messageString:"${msg}" \
+  dialogTitle:"Mozilla patch checker" \
+  okLabelString:"Ignore problem and start Mozilla" \
+  cancelLabelString:"Exit" \
+  dialogType:DIALOG_ERROR
+XmMessageBoxGetChild CANCEL_BUTTON ${MISSING_PATCHES_DIALOG} DIALOG_CANCEL_BUTTON
+XmMessageBoxGetChild HELP_BUTTON   ${MISSING_PATCHES_DIALOG} DIALOG_HELP_BUTTON
+
+# Remove the unwanted help button
+XtUnmanageChild ${HELP_BUTTON}
+
+XtAddCallback ${MISSING_PATCHES_DIALOG} okCallback dismissCB 
+XtAddCallback ${MISSING_PATCHES_DIALOG} cancelCallback exitCB 
+
+XtDisplay DISP ${TOPLEVEL}
+XmInternAtom CLOSE_ATOM ${DISP} WM_DELETE_WINDOW false
+XmAddWMProtocolCallback ${TOPLEVEL} ${CLOSE_ATOM} exitCB
+ 
+XtSetValues ${TOPLEVEL} deleteResponse:DO_NOTHING
+
+XtManageChild ${MISSING_PATCHES_DIALOG}
+
+XtRealizeWidget ${TOPLEVEL}
+
+XtMainLoop
+
+echo "# should not be hit."
+exit 255
+# EOF.
