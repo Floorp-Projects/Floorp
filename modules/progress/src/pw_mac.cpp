@@ -199,7 +199,7 @@ pw_ptr PW_Create( MWContext * /*parent*/, 		/* Parent window, can be NULL */
 				PW_WindowType type			/* What kind of window ? Modality, etc */
 				)
 {
-	volatile CProgressMac * mac = NULL;
+	/*volatile*/ CProgressMac * mac = NULL;
 	
 	try
 	{
