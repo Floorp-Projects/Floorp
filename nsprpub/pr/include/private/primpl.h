@@ -1384,13 +1384,6 @@ struct PRThreadStack {
 #endif /* defined(_PR_PTHREADS) */
 };
 
-/*
- * Thread private data destructor array
- * There is a destructor (or NULL) associated with each key and
- *    applied to all threads known to the system.
- *  Storage allocated in prtpd.c.
- */
-extern PRThreadPrivateDTOR *_pr_tpd_destructors;
 extern void _PR_DestroyThreadPrivate(PRThread*);
 
 typedef void (PR_CALLBACK *_PRStartFn)(void *);

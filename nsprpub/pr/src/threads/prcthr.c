@@ -40,17 +40,9 @@ extern PRLock *_pr_sleeplock;  /* allocated and initialized in prinit */
 void _PR_CleanupThread(PRThread *thread)
 {
     PRUintn i;
-    void **ptd;
-    PRThreadPrivateDTOR *destructor;
 
     /* Free up per-thread-data */
-    ptd = thread->privateData;
-    destructor = _pr_tpd_destructors;
-    for (i = 0; i < thread->tpdLength; i++, ptd++, destructor++)
-    {
-            if (*destructor && *ptd) (**destructor)(*ptd);
-            *ptd = NULL;
-    }
+    _PR_DestroyThreadPrivate(thread);
 
     /* Free any thread dump procs */
     if (thread->dumpArg) {
