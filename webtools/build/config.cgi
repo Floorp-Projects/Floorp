@@ -232,7 +232,7 @@ sub print_script {
 sub print_configure_form {
   mkdir 'configure-mirror', 0777 if not -d 'configure-mirror';
   system 'echo :pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot Ay=0=a%0bZ | cat > configure-mirror/.cvspass' if not -f 'configure-mirror/.cvspass';
-  link 'config.cgi', '.mozconfig' if not -f '.mozconfig';
+  symlink 'config.cgi', '.mozconfig' if not -f '.mozconfig';
   # Set the HOME variable to pick up '.cvspass' for cvs login
   system "cd configure-mirror && HOME=. cvs -d $CVSROOT co mozilla/configure.in > /dev/null 2>&1";
 
