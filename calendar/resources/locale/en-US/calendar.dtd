@@ -60,11 +60,6 @@
 <!ENTITY priority.level.medium   "Medium" >
 <!ENTITY priority.level.high     "High" >
 
-<!ENTITY tasks.category.business "Business" >
-<!ENTITY tasks.category.personal "Personal" >
-<!ENTITY tasks.category.family   "Family" >
-<!ENTITY tasks.category.unfiled  "Unfiled" >
-
 <!ENTITY newevent.title.label        "Title" >
 <!ENTITY newevent.location.label     "Location" >
 <!ENTITY newevent.start.label        "Start" >

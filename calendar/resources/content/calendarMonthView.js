@@ -537,7 +537,8 @@ MonthView.prototype.hiliteSelectedDate = function( )
    
    var ThisBox = this.dayBoxItemByDateArray[ this.calendarWindow.getSelectedDate().getDate() ];
    
-   ThisBox.setAttribute( "monthselected" , "true" );
+   if( ThisBox )
+      ThisBox.setAttribute( "monthselected" , "true" );
 }
 
 

@@ -418,7 +418,7 @@ function updateCompletedItemEnabled()
       if( getFieldValue( "percent-complete-menulist" ) == 100 )
          setFieldValue( "percent-complete-menulist", "0" );
    }
-   }
+}
 
 function percentCompleteCommand()
 {

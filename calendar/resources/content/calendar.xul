@@ -82,7 +82,8 @@
  
 <commandset id="calendar_commands">
    <command id="new_command" oncommand="newEventCommand()"/>
-   <command id="delete_command" oncommand="unifinderDeleteCommand( true )" disabled="true"/>
+   <command id="delete_command" oncommand="unifinderDeleteCommand( )" disabled="true"/>
+   <command id="delete_command_no_confirm" oncommand="unifinderDeleteCommand( true )" disabled="true"/>
    <command id="modify_command" oncommand="unifinderEditCommand()" disabled="true"/>
    <command id="send_event_command" oncommand="sendEvent()" disabled="true"/>
    <command id="cut_command" oncommand="cutToClipboard()" disabled="true"/>
@@ -108,7 +109,7 @@
 </commandset>
 
 <keyset>
-  <key id="delete_key" keycode="VK_DELETE" observes="delete_command"/>
+  <key id="delete_key" keycode="VK_DELETE" observes="delete_command_no_confirm"/>
   <key id="new_event_key" key="N" modifiers="control" observes="new_command"/>
   <key id="new_todo_key" key="M" modifiers="control" observes="new_todo_command"/>
   <key id="modify_event_key" key="E" modifiers="control" observes="modify_command"/>
@@ -256,7 +257,7 @@
                </box>
                <listbox tooltip="savetip" flex="1" id="unifinder-todo-listbox" seltype="single">
                   <listhead>
-                     <listheader label="&calendar.unifinder.listbox.done.label;"/>
+                     <listheader><checkbox checked="true" readonly="true"/></listheader>
                      <listheader label="&calendar.unifinder.listbox.title.label;"/>
                      <listheader label="&calendar.unifinder.listbox.duedate.label;"/>
                   </listhead>

@@ -145,6 +145,7 @@ CalendarEventSelection.prototype.onSelectionChanged = function ( )
       document.getElementById( "copy_command" ).removeAttribute( "disabled" );
 
       document.getElementById( "delete_command" ).removeAttribute( "disabled" );
+      document.getElementById( "delete_command_no_confirm" ).removeAttribute( "disabled" );
 
       if( this.selectedEvents.length == 1 )
          document.getElementById( "modify_command" ).removeAttribute( "disabled" );
@@ -163,6 +164,7 @@ CalendarEventSelection.prototype.onSelectionChanged = function ( )
       document.getElementById( "copy_command" ).setAttribute( "disabled", "true" );
 
       document.getElementById( "delete_command" ).setAttribute( "disabled", "true" );
+      document.getElementById( "delete_command_no_confirm" ).setAttribute( "disabled", "true" );
 
       document.getElementById( "modify_command" ).setAttribute( "disabled", "true" );
 
