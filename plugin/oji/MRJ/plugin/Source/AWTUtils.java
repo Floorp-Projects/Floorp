@@ -24,27 +24,31 @@ package netscape.oji;
 
 import java.awt.Container;
 import java.awt.Graphics;
-import java.awt.Toolkit;
+import java.awt.Point;
+
+import com.apple.mrj.internal.awt.PrintingPort;
 
 public class AWTUtils {
 	/**
 	 * Prints the components of a specified Container.
 	 */
-	public static void printContainer(Container container, Object notifier) {
-		// print the specified container.
-		Graphics g = container.getGraphics();
-		g.drawString("AWTUtils.printContainer()", 0, 12);
-		container.print(g);
-		g.dispose();
-		
-		// try to flush the graphics pipeline.
-		Toolkit tk = Toolkit.getDefaultToolkit();
-		tk.sync();
+	public static void printContainer(Container container, int printingPort, int originX, int originY, Object notifier) {
+		try {
+			// obtain a graphics object to draw with.
+			PrintingPort printer = new PrintingPort(printingPort, originX, originY);
+			Graphics graphics = printer.getGraphics(container);
 
-		// if caller is waiting for this to complete, then notify.
-		if (notifier != null) {
-			synchronized(notifier) {
-				notifier.notifyAll();
+			// print the specified container.
+			container.printAll(graphics);
+			
+			graphics.dispose();
+			printer.dispose();
+		} finally {
+			// if caller is waiting for this to complete, then notify.
+			if (notifier != null) {
+				synchronized(notifier) {
+					notifier.notifyAll();
+				}
 			}
 		}
 	}
