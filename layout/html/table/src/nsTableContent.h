@@ -29,7 +29,7 @@
  * within a table.
  *
  * @author  sclark
- * @version $Revision: 3.2 $
+ * @version $Revision: 3.3 $
  * @see
  */
 class nsTableContent : public nsHTMLContainer, public nsITableContent
@@ -76,6 +76,13 @@ public:
     * see /ns/raptor/doc/MemoryModel.html
     **/
   void SetTable (nsTablePart *aTable);
+
+
+  /** Set the children of this piece of content to
+    * be aTable 
+    **/
+  void SetTableForChildren(nsTablePart *aTable);
+
 
   /** @see nsITableContent::IsImplicit */
   virtual PRBool IsImplicit () const;
