@@ -45,7 +45,7 @@
 #include "nsFontPackageHandler.h"
 #include "nsWindowDataSource.h"
 #include "nsRDFCID.h"
-#ifndef MOZ_PHOENIX
+#if !defined(MOZ_PHOENIX) && !defined(MOZ_XULRUNNER)
 #include "nsAutoComplete.h"
 #include "nsBookmarksService.h"
 #include "nsRelatedLinksHandlerImpl.h"
@@ -58,7 +58,7 @@
 #endif
 #endif
 #if defined(XP_WIN)
-#ifndef MOZ_PHOENIX
+#if !defined(MOZ_PHOENIX) && !defined(MOZ_XULRUNNER)
 #include "nsWindowsHooks.h"
 #include "nsAlertsService.h"
 #include "nsUrlWidget.h"
@@ -83,7 +83,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(LocalSearchDataSource, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(InternetSearchDataSource, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontPackageHandler)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsWindowDataSource, Init)
-#ifndef MOZ_PHOENIX
+#if !defined(MOZ_PHOENIX) && !defined(MOZ_XULRUNNER)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(RelatedLinksHandlerImpl, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAutoCompleteItem)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAutoCompleteResults)
@@ -96,7 +96,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsLDAPAutoCompleteSession)
 #endif
 #endif
 #if defined(XP_WIN)
-#ifndef MOZ_PHOENIX
+#if !defined(MOZ_PHOENIX) && !defined(MOZ_XULRUNNER)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindowsHooks)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAlertsService)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsUrlWidget, Init)
@@ -150,7 +150,7 @@ static const nsModuleComponentInfo components[] = {
       nsHTTPIndexConstructor },
     { "Directory Viewer", NS_HTTPINDEX_SERVICE_CID, NS_HTTPINDEX_DATASOURCE_CONTRACTID,
       nsHTTPIndexConstructor },
-#ifndef MOZ_PHOENIX
+#if !defined(MOZ_PHOENIX) && !defined(MOZ_XULRUNNER)
     { "Bookmarks", NS_BOOKMARKS_SERVICE_CID, NS_BOOKMARKS_SERVICE_CONTRACTID,
       nsBookmarksServiceConstructor },
     { "Bookmarks", NS_BOOKMARKS_SERVICE_CID, NS_BOOKMARKS_DATASOURCE_CONTRACTID,
@@ -196,7 +196,7 @@ static const nsModuleComponentInfo components[] = {
       NS_RDF_DATASOURCE_CONTRACTID_PREFIX "window-mediator",
       nsWindowDataSourceConstructor },
 #if defined(XP_WIN)
-#ifndef MOZ_PHOENIX
+#if !defined(MOZ_PHOENIX) && !defined(MOZ_XULRUNNER)
     { NS_IURLWIDGET_CLASSNAME, NS_IURLWIDGET_CID, NS_IURLWIDGET_CONTRACTID,
       nsUrlWidgetConstructor },
     { "nsAlertsService", NS_ALERTSSERVICE_CID, NS_ALERTSERVICE_CONTRACTID, nsAlertsServiceConstructor},

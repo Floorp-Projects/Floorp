@@ -66,7 +66,7 @@ REQUIRES	= xpcom \
 		  history \
 		  $(NULL)
 
-ifdef MOZ_PHOENIX
+ifneq (,$(MOZ_PHOENIX)$(MOZ_XULRUNNER))
 REQUIRES += toolkitcomps history
 endif
 
