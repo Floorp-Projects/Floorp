@@ -6095,31 +6095,37 @@ PresShell::HandleEvent(nsIView         *aView,
         }
 
         if (mCurrentEventFrame) {
-          // Bug 103055, bug 185889: mouse events apply to *elements*, not all
-          // nodes.
-          // We use weak pointers because during this tight loop, the node will
-          // *not* go away.  And this happens on every mousemove.
-          //
-          // Get the nearest element parent
           nsCOMPtr<nsIContent> targetElement;
           mCurrentEventFrame->GetContentForEvent(mPresContext, aEvent,
                                                  getter_AddRefs(targetElement));
-          while (targetElement &&
-                 !targetElement->IsContentOfType(nsIContent::eELEMENT)) {
-            nsIContent* temp = targetElement;
-            temp->GetParent(*getter_AddRefs(targetElement));
-          }
 
-          // If we found an element, target it.  Otherwise, target *nothing*.
-          if (!targetElement) {
-            NS_IF_RELEASE(mCurrentEventContent);
-            mCurrentEventFrame = nsnull;
-          } else if (targetElement != mCurrentEventContent) {
-            NS_IF_RELEASE(mCurrentEventContent);
-            mCurrentEventContent = targetElement;
-            NS_ADDREF(mCurrentEventContent);
-            // XXX we leave the frame the same as it was so that the text frame
-            // will receive the event
+          // If there is no content for this frame, target it anyway.  Some
+          // frames can be targeted but do not have content, particularly
+          // windows with scrolling off.
+          if (targetElement) {
+            // Bug 103055, bug 185889: mouse events apply to *elements*, not all
+            // nodes.  Thus we get the nearest element parent here.
+            // XXX we leave the frame the same even if we find an element
+            // parent, so that the text frame will receive the event (selection
+            // and friends are the ones who care about that anyway)
+            //
+            // We use weak pointers because during this tight loop, the node
+            // will *not* go away.  And this happens on every mousemove.
+            while (targetElement &&
+                   !targetElement->IsContentOfType(nsIContent::eELEMENT)) {
+              nsIContent* temp = targetElement;
+              temp->GetParent(*getter_AddRefs(targetElement));
+            }
+
+            // If we found an element, target it.  Otherwise, target *nothing*.
+            if (!targetElement) {
+              NS_IF_RELEASE(mCurrentEventContent);
+              mCurrentEventFrame = nsnull;
+            } else if (targetElement != mCurrentEventContent) {
+              NS_IF_RELEASE(mCurrentEventContent);
+              mCurrentEventContent = targetElement;
+              NS_ADDREF(mCurrentEventContent);
+            }
           }
         }
 
