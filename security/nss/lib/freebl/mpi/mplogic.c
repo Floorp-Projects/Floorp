@@ -34,7 +34,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- *  $Id: mplogic.c,v 1.6 2000/07/27 02:37:49 nelsonb%netscape.com Exp $
+ *  $Id: mplogic.c,v 1.7 2000/07/28 22:49:42 nelsonb%netscape.com Exp $
  */
 
 #include "mpi-priv.h"
@@ -405,9 +405,9 @@ mp_err mpl_parity(mp_int *a)
   Returns MP_OKAY or some error code.
   Grows a if needed to set a bit to 1.
  */
-mp_err mpl_set_bit(mp_int *a, unsigned int bitNum, unsigned int value)
+mp_err mpl_set_bit(mp_int *a, mp_size bitNum, mp_size value)
 {
-  unsigned int ix;
+  mp_size      ix;
   mp_err       rv;
   mp_digit     mask;
 
@@ -435,9 +435,9 @@ mp_err mpl_set_bit(mp_int *a, unsigned int bitNum, unsigned int value)
 
   returns 0 or 1 or some (negative) error code.
  */
-mp_err mpl_get_bit(mp_int *a, unsigned int bitNum)
+mp_err mpl_get_bit(mp_int *a, mp_size bitNum)
 {
-  unsigned int bit, ix;
+  mp_size      bit, ix;
   mp_err       rv;
 
   ARGCHK(a != NULL, MP_BADARG);
