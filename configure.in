@@ -1665,7 +1665,7 @@ AC_ARG_WITH(libIDL,
 AC_PATH_PROGS(LIBIDL_CONFIG, $LIBIDL_CONFIG libIDL-config)
 
 dnl We don't have a libIDL config program.  Look for orbit-config instead
-if test -z $LIBIDL_CONFIG; then
+if test -z "$LIBIDL_CONFIG"; then
     AC_PATH_PROGS(ORBIT_CONFIG, $ORBIT_CONFIG orbit-config)
     if test -n "$ORBIT_CONFIG"; then
         SKIP_IDL_CHECK="yes"
