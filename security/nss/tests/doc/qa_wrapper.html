@@ -4,12 +4,31 @@
    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
    <meta name="GENERATOR" content="Mozilla/4.7 [en] (X11; U; SunOS 5.8 sun4u) [Netscape]">
 </head>
-<body>
-<a href="#nssqa">nssqa</a>&nbsp; - the script that calls the actual qa
-script all.sh
+<body text="#000000" bgcolor="#FFFFFF" link="#0000EE" vlink="#551A8B" alink="#FF0000">
+
+<h3>
+<b><font face="Times New Roman,Times">Author Sonja Mirtitsch</font></b></h3>
+
+<h3>
+<b><font face="Times New Roman,Times">Last updated: 4/4/2001</font></b></h3>
+
+<h1>
+<b><font face="Times New Roman,Times">NSS 3.2.QA Wrapper</font></b></h1>
+
+<p><br>The QA&nbsp; wrapper tests the nightly builds of NSS. The actual
+tests are being run are called from the QA script all.sh. I will add documentation
+for the actual QA soon. The main purpose of the wrapper is: find out which
+build (NSS version, date, Build Platform) to test on which machine (OS,
+OS version) and construct a summary report, which is then mailed to the
+nss developers (aka mailing list nss-qa-report@netscape.com). Please see
+also the <a href="#advertisement">feature</a> section.
+<p><a href="#nssqa">nssqa</a>&nbsp; - the script that calls the actual
+qa script all.sh
 <br><a href="#qa_stat">qa_stat</a> - sends out status reports
 <br><a href="#qaclean">qaclean</a>&nbsp; - if everything else fails
-<br><a href="#advertisement">commercial advertisement for the qa wrapper</a>
+<p>Sample <a href="/u/sonmi/doc/publish/glob_result.html">global result</a>,
+<a href="/u/sonmi/doc/publish/results.html">individual result </a>and <a href="/u/sonmi/doc/publish/output.log">log
+files</a>
 <p>The QA wrapper consistst mainly of scripts, most located in security/nss/tests
 and subdirectories, but run from /u/sonmi/bin
 <p>nssqa and qa_stat, the main scripts both include a common header (<a href="../header">header</a>)
@@ -37,13 +56,13 @@ would the -cron
 <br>&nbsp;&nbsp;&nbsp; -l &lt;mozroot> run on a local build - does not
 work at this time
 <br>&nbsp;&nbsp;&nbsp; -cron equivalient to -y -s -d -f $RESULTDIR/$HOST.&lt;scriptname>
-<p><b>nssqa and qa_stat are Beta , unfortunately I have a lot of other
-work and the progress on these scripts is slow</b>
+<br>&nbsp;
 <p>Please be aware that some iPlanet specific environments and features
 are being used.
 <p>-d Debug option might be removed from cron in a few weeks - or maybe
 not
-<br>-l QA on local build is not fully implemented yet
+<br>-l QA on local build is not fully implemented yet - will not be implemented,
+all.sh can be called directly instead
 <p>Please do not use on Windows 95 and 98, ME platforms yet.
 <p>use -d if script behaves strange or exits unexpectedly
 <p><b><font size=+1>How to use the QA-wrapper</font></b>
@@ -57,10 +76,10 @@ before) please use completely interactive, to see what the variables are
 being initialized to, and read the warnings. Same is true if being run
 from a different user account than svbld.
 <p>In any case, if you are using it, please let me know the results.
-<p><a NAME="nssqa"></a><b><u><font size=+1>nssqa:</font></u></b><font size=+1></font>
+<p><a NAME="nssqa"></a><b><u><font size=+1>nssqa:</font></u></b>
 <p>the script that calls the actual qa script all.sh
 <p>nssqa <a href="#Parameters">parameters</a> and&nbsp; <a href="#Options">options</a>
-<p><a href="../nssqa">view the script</a>&nbsp;
+<p><a href="../nssqa">view the script</a>
 <p><b><u><font size=+1>Pseudocode Description of nssqa</font></u></b>
 <br>not quite up to date
 <p>&nbsp;&nbsp;&nbsp; header:init (global)
@@ -74,7 +93,9 @@ if running from cron
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; determine os and set up
 the environment (espec. PATH)
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; set the directories to run
-in (influenced by parameters and -l option)
+in (influenced by parameters and -l option)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; set the directories for backward
+compatibility testing
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; set and initialize the tmp
 / debugging / output files
 <p>&nbsp;&nbsp;&nbsp; nssqa:init (local)
@@ -137,8 +158,7 @@ as severe errors
 <br>&nbsp;
 <br>&nbsp;
 <br>&nbsp;
-<p><img SRC="clean.gif" height=129 width=92 align=LEFT><a NAME="qaclean"></a><b><u><font size=+2>qaclean:</font><font size=+1>
-</font></u></b>/u/sonmi/bin/qaclean
+<p><img SRC="clean.gif" height=129 width=92 align=LEFT><a NAME="qaclean"></a><b><u><font size=+2>qaclean:</font></u></b>/u/sonmi/bin/qaclean
 <br>&nbsp;
 <p>Use qaclean as user "svbld" to get the propper permissions. It is supposed
 to clean up after a "hanging" QA and will also brutally kill, interupt
@@ -177,7 +197,7 @@ clean up tmp files</li>
 <p>qa_stat is the script that is being started from the svbld cron on kentuckyderby
 every morning at 10:00 and runs some (very primitive) analysis on the qa
 results.
-<br>I'd like to rewrite the whole thing in perl, and in a few weeks I&nbsp;might
+<br>I'd like to rewrite the whole thing in perl, and in a few weeks I might
 just do this...
 <p>&nbsp;<a href="../qa_stat">view the script</a>
 <p>qa_stat <a href="#Parameters">parameters</a> and&nbsp; <a href="#Options">options</a>
@@ -210,12 +230,7 @@ runs on <b>all required platforms</b> (Windows 98 and before not functional
 yet)</li>
 
 <li>
-also works on <b>local builds</b> (not fully functional yet)</li>
-
-<li>
-Windows version runs on <b>free Cygnus</b> instead of MKS only (it has
-been decided by management that both need to be sopported, and the main
-focus needs to be on MKS, so cygnus is completely broken at the moment)</li>
+Windows version runs on <b>free Cygnus</b> as well as on MKS</li>
 
 <li>
 debug mode, normal mode and silent mode</li>
@@ -230,11 +245,6 @@ tmpfiles, lock files)</li>
 The 1st script is started via cron between 5:00 and 8:00 am on different
 systems, and starts QA on the nightly build. At 10:00 the next script is
 started, and sends a QA summary to the nss developers.
-<p>Since all.sh never got to run on the MKS Tool kit on Win 95 and 98 and
-is almost unusable on NT and 2000 (I got a long list of problems, so does
-Larry, in case anyone is interested) we decided to move to the Cygnus tool
-kit, but unfortunately this project was abandoned when it was decided that
-MKS functionallity is not allowed to be broken.
 <p><b>Cygnus Advantages</b>:
 <ul>
 <li>
@@ -253,8 +263,7 @@ MKS functionality needs to be preserved (makes <b>8 Windows platforms</b>
 instead of 4 for the QA suites - makes 32 testruns on Windows alone)</li>
 
 <br>In certain functionality's <b>slow</b>
-<br><b></b>&nbsp;
 <br><b></b>&nbsp;</ul>
-
+<b>Porting the windows QA&nbsp;to Uwin as well is also being considered</b>
 </body>
 </html>
