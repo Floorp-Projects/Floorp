@@ -32,6 +32,7 @@
 ]>
 
 <window id="devicemanager"
+	windowtype="mozilla:devicemanager"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
         title="&devmgr.title;"
         persist="screenX screenY width height"

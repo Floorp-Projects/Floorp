@@ -35,12 +35,30 @@
 
 function openCertManager()
 {
-    window.open('chrome://pippki/content/certManager.xul',  "",
-                'chrome,width=500,height=400,resizable=yes,dialog=no');
+    //check for an existing certManager window and focus it; it's not application modal
+    const kWindowMediatorContractID = "@mozilla.org/appshell/window-mediator;1";
+    const kWindowMediatorIID = Components.interfaces.nsIWindowMediator;
+    const kWindowMediator = Components.classes[kWindowMediatorContractID].getService(kWindowMediatorIID);
+    var lastCertManager = kWindowMediator.getMostRecentWindow("mozilla:certmanager");
+    if (lastCertManager)
+      lastCertManager.focus();
+    else {
+      window.open('chrome://pippki/content/certManager.xul',  "",
+                  'chrome,width=500,height=400,resizable=yes,dialog=no');
+    }
 }
 
 function openDeviceManager()
 {
-    window.open('chrome://pippki/content/device_manager.xul',  "devmgr",
-                'chrome,width=540,height=360,resizable=yes');
+    //check for an existing deviceManger window and focus it; it's not application modal
+    const kWindowMediatorContractID = "@mozilla.org/appshell/window-mediator;1";
+    const kWindowMediatorIID = Components.interfaces.nsIWindowMediator;
+    const kWindowMediator = Components.classes[kWindowMediatorContractID].getService(kWindowMediatorIID);
+    var lastCertManager = kWindowMediator.getMostRecentWindow("mozilla:devicemanager");
+    if (lastCertManager)
+      lastCertManager.focus();
+    else {
+      window.open('chrome://pippki/content/device_manager.xul',  "devmgr",
+                  'chrome,width=540,height=360,resizable=yes');
+    }
 }
