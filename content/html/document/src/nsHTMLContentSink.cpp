@@ -108,6 +108,8 @@
 #include "nsIScrollable.h"
 #include "nsContentPolicyUtils.h"
 
+#include "nsWeakReference.h"//nshtmlelementfactory supports weak references
+
 #ifdef ALLOW_ASYNCH_STYLE_SHEETS
 const PRBool kBlockByDefault=PR_FALSE;
 #else
@@ -1081,7 +1083,7 @@ NS_CreateHTMLElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo)
 //----------------------------------------------------------------------
 
 
-class nsHTMLElementFactory : public nsIElementFactory {
+class nsHTMLElementFactory : public nsIElementFactory, public nsSupportsWeakReference {
 public:
   nsHTMLElementFactory();
   virtual ~nsHTMLElementFactory();
@@ -1116,7 +1118,7 @@ nsHTMLElementFactory::~nsHTMLElementFactory()
 {
 }
 
-NS_IMPL_ISUPPORTS1(nsHTMLElementFactory, nsIElementFactory);
+NS_IMPL_ISUPPORTS2(nsHTMLElementFactory, nsIElementFactory, nsISupportsWeakReference);
 
 NS_IMETHODIMP
 nsHTMLElementFactory::CreateInstanceByTag(nsINodeInfo *aNodeInfo,
