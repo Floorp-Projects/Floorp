@@ -320,12 +320,16 @@ if (NS_SUCCEEDED(rv)) {
 			return rv;
 	
 		// 2. get the plugin instance corresponding to this element.
-		nsIPresShell* shell = mInner.mDocument->GetShellAt(0);
-		if (nsnull == shell)
-			return NS_ERROR_FAILURE;
-		nsIFrame* frame = nsnull;
-		shell->GetPrimaryFrameFor(mInner.mContent, &frame);
-		NS_RELEASE(shell);
+		nsIPresShell* shell = nsnull;
+    if (mInner.mDocument)
+      shell = mInner.mDocument->GetShellAt(0);
+
+    nsIFrame* frame = nsnull;
+
+    if (shell) {
+      shell->GetPrimaryFrameFor(mInner.mContent, &frame);
+  		NS_RELEASE(shell);
+    }
 
     if(frame != nsnull)
     {
