@@ -143,7 +143,6 @@ nsInterfaceInfo::GetMethodInfoForName(const char* methodName, uint16 *index,
 {
     // XXX probably want to speed this up with a hashtable, or by at least interning
     // the names to avoid the strcmp
-    nsresult rv;
     for (uint16 i = mMethodBaseIndex; i < mMethodCount; i++) {
         const nsXPTMethodInfo* info;
         info = NS_REINTERPRET_CAST(nsXPTMethodInfo*,

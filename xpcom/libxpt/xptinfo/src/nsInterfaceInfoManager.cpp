@@ -24,6 +24,7 @@
 #include <sys/stat.h>
 #endif
 #include "nscore.h"
+#include "nsSpecialSystemDirectory.h" 
 
 #include "nsISupports.h"
 #include "nsIInterfaceInfoManager.h"
@@ -61,6 +62,8 @@ nsInterfaceInfoManager::GetInterfaceInfoManager()
     if(!impl)
     {
         impl = new nsInterfaceInfoManager();
+        if(!impl->initialized)
+            NS_RELEASE(impl);
     }
     if(impl)
         NS_ADDREF(impl);
@@ -87,7 +90,7 @@ static NS_DEFINE_IID(kAllocatorCID, NS_ALLOCATOR_CID);
 static NS_DEFINE_IID(kIAllocatorIID, NS_IALLOCATOR_IID);
 
 nsInterfaceInfoManager::nsInterfaceInfoManager()
-    : allocator(NULL)
+    : allocator(NULL), typelibRecords(NULL), initialized(PR_FALSE)
 {
     NS_INIT_REFCNT();
     NS_ADDREF_THIS();
@@ -98,7 +101,8 @@ nsInterfaceInfoManager::nsInterfaceInfoManager()
 
     PR_ASSERT(this->allocator != NULL);
 
-    this->initInterfaceTables();
+    if(NS_SUCCEEDED(this->initInterfaceTables()))
+        initialized = PR_TRUE;
 }
 
 static
@@ -137,7 +141,7 @@ XPTHeader *getHeader(const char *filename, nsIAllocator *al) {
         }
 
         // XXX lengths are PRUInt32, reads are PRInt32?
-        if (howmany < flen) {
+        if (howmany < (PRInt32) flen) {
             NS_ERROR("short read of typelib file");
             goto out;
         }
@@ -307,8 +311,17 @@ nsInterfaceInfoManager::initInterfaceTables()
         return NS_ERROR_FAILURE;
     }
 
+    // XXX We need to get rid of the env var on all platforms
+#ifdef XP_PC
+    // this code stolen from SetupRegistry; it might bear further
+    // examination, as the code there doesn't look quite done.
+    nsSpecialSystemDirectory sysdir(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+    sysdir += "components";
+    const char *xptdirname = sysdir.GetCString(); // native path
+#else
     // First, find the xpt directory from the env.  XXX Temporary hack.
-    char *xptdirname = PR_GetEnv("XPTDIR");
+    const char *xptdirname = PR_GetEnv("XPTDIR");
+#endif
     PRDir *xptdir;
     if (xptdirname == NULL || (xptdir = PR_OpenDir(xptdirname)) == NULL)
         return NS_ERROR_FAILURE;
