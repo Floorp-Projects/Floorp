@@ -385,7 +385,7 @@ nsresult nsInternetConfigService::FillMIMEInfoForICEntry(ICMapEntry& entry, nsIM
     info->SetDescription(NS_ConvertASCIItoUCS2(temp.get()).get());
     
     temp.Assign((char *) &entry.postAppName[1], entry.postAppName[0]);
-    info->SetApplicationDescription(NS_ConvertASCIItoUCS2(temp.get()).get());
+    info->SetDefaultDescription(NS_ConvertASCIItoUCS2(temp.get()).get());
     
     if (entry.flags & kICMapPostMask)
     {
@@ -397,10 +397,9 @@ nsresult nsInternetConfigService::FillMIMEInfoForICEntry(ICMapEntry& entry, nsIM
         rv = file->InitToAppWithCreatorCode(entry.postCreator);
         if (rv == NS_OK)
         {
-          //info->SetAlwaysAskBeforeHandling(PR_FALSE);
           nsCOMPtr<nsIFile> nsfile = do_QueryInterface(file, &rv);
           if (rv == NS_OK)
-            info->SetPreferredApplicationHandler(nsfile);
+            info->SetDefaultApplicationHandler(nsfile);
         }
       }
     }
