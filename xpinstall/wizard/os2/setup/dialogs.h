@@ -64,6 +64,7 @@ WNDPROC           SubclassWindow( HWND hWnd, WNDPROC NewWndProc);
 LRESULT CALLBACK  ListBoxBrowseWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 void              DisableSystemMenuItems(HWND hWnd, BOOL bDisableClose);
 void              CommitInstall(void);
+void              AdjustDialogSize(HWND hwndDlg);
 
 #endif /* _DIALOGS_H_ */
 

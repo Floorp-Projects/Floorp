@@ -6596,14 +6596,10 @@ HWND FindWindow(PCSZ pszAtomString)
     while ((hwnd = WinGetNextWindow(henum)) != NULLHANDLE)
     {
       ULONG ulWindowWord;
-      printf("found window %x\n", hwnd);
-//      ulWindowWord = WinQueryWindowULong(hwnd, QWL_STYLE);
-//      if (ulWindowWord & CS_FRAME) {
         ulWindowWord = WinQueryWindowULong(hwnd, QWL_USER);
         if (ulWindowWord == atom) {
           break;
         }
-//      }
     }
   }
   WinEndEnumWindows(henum);
