@@ -1,20 +1,3 @@
-From - Wed Jun 21 15:13:30 2000
-Return-Path: <cltbld@netscape.com>
-Delivered-To: seawood.org-cls@seawood.org
-Received: (qmail 21070 invoked from network); 21 Jun 2000 21:20:45 -0000
-Received: from h-205-217-237-46.netscape.com (HELO netscape.com) (205.217.237.46)
-  by mail.aureate.com with SMTP; 21 Jun 2000 21:20:49 -0000
-Received: from nebiros.mcom.com (nebiros.mcom.com [208.12.36.112])
-	by netscape.com (8.10.0/8.10.0) with ESMTP id e5LLCog28359
-	for <cls@seawood.org>; Wed, 21 Jun 2000 14:12:50 -0700 (PDT)
-Received: (from cltbld@localhost)
-	by nebiros.mcom.com (8.9.3+Sun/8.9.1) id OAA28538
-	for cls@seawood.org; Wed, 21 Jun 2000 14:20:25 -0700 (PDT)
-Date: Wed, 21 Jun 2000 14:20:25 -0700 (PDT)
-From: client build account <cltbld@netscape.com>
-Message-Id: <200006212120.OAA28538@nebiros.mcom.com>
-To: cls@seawood.org
-
 #!/usr/bin/perl
 #
 # Requires: tinder-defaults.pl
@@ -35,7 +18,7 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
-$::UtilsVersion = '$Revision: 1.20 $ ';
+$::UtilsVersion = '$Revision: 1.21 $ ';
 
 package TinderUtils;
 
