@@ -55,6 +55,7 @@
 #include "nsIPageSequenceFrame.h"
 #include "nsIURL.h"
 #include "nsIWebShell.h"
+#include "nsIInterfaceRequestor.h"
 
 
 #include "nsIServiceManager.h"
@@ -139,7 +140,7 @@ protected:
   // (ie, non owning) references. If you add any members to this
   // class, please make the ownership explicit (pinkerton, scc).
   
-  nsIContentViewerContainer* mContainer; // [WEAK] it owns me!
+  nsISupports* mContainer; // [WEAK] it owns me!
   nsCOMPtr<nsIDeviceContext> mDeviceContext;   // ??? can't hurt, but...
   nsIView*                 mView;        // [WEAK] cleaned up by view mgr
 
@@ -309,9 +310,11 @@ DocumentViewerImpl::SetContainer(nsIContentViewerContainer* aContainer)
 NS_IMETHODIMP
 DocumentViewerImpl::GetContainer(nsIContentViewerContainer*& aResult)
 {
-  aResult = mContainer;
-  NS_IF_ADDREF(aResult);
-  return NS_OK;
+   if(mContainer)
+      return CallQueryInterface(mContainer, &aResult);
+   else
+      aResult = nsnull;
+   return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -341,31 +344,28 @@ DocumentViewerImpl::Init(nsNativeWidget aNativeParent,
     makeCX = PR_TRUE;
   }
 
-  if (nsnull != mContainer) {
-    nsILinkHandler* linkHandler = nsnull;
-    mContainer->QueryCapability(kILinkHandlerIID, (void**)&linkHandler);
+  nsCOMPtr<nsIInterfaceRequestor> requestor(do_QueryInterface(mContainer));
+  if (requestor) {
+    nsCOMPtr<nsILinkHandler> linkHandler;
+    requestor->GetInterface(NS_GET_IID(nsILinkHandler), 
+       getter_AddRefs(linkHandler));
     mPresContext->SetContainer(mContainer);
     mPresContext->SetLinkHandler(linkHandler);
-    NS_IF_RELEASE(linkHandler);
 
     // Set script-context-owner in the document
-    nsIScriptContextOwner* owner = nsnull;
-    mContainer->QueryCapability(kIScriptContextOwnerIID, (void**)&owner);
+    nsCOMPtr<nsIScriptContextOwner> owner;
+    requestor->GetInterface(NS_GET_IID(nsIScriptContextOwner),
+       getter_AddRefs(owner));
     if (nsnull != owner) {
       mDocument->SetScriptContextOwner(owner);
-      nsIScriptGlobalObject* global;
-      rv = owner->GetScriptGlobalObject(&global);
+      nsCOMPtr<nsIScriptGlobalObject> global;
+      rv = owner->GetScriptGlobalObject(getter_AddRefs(global));
       if (NS_SUCCEEDED(rv) && (nsnull != global)) {
-        nsIDOMDocument *domdoc = nsnull;
-        mDocument->QueryInterface(kIDOMDocumentIID,
-                                  (void**) &domdoc);
+        nsCOMPtr<nsIDOMDocument> domdoc(do_QueryInterface(mDocument));
         if (nsnull != domdoc) {
           global->SetNewDocument(domdoc);
-          NS_RELEASE(domdoc);
         }
-        NS_RELEASE(global);
       }
-      NS_RELEASE(owner);
     }
   }
 
