@@ -230,7 +230,30 @@ nsresult nsMenuButton::SetBounds(const nsRect &aBounds)
 nsEventStatus nsMenuButton::OnPaint(nsIRenderingContext& aRenderingContext,
                                        const nsRect& aDirtyRect)
 {
-  return nsImageButton::OnPaint(aRenderingContext, aDirtyRect);  
+  const int kNumPolyPoints = 3;    // the drop-triangle poly has 3 points
+  
+  // draw the button, as normal
+  nsEventStatus rv = nsImageButton::OnPaint(aRenderingContext, aDirtyRect);
+  
+  // draw the triangle in the top right corner to indicate this is a dropdown,
+  // but only if the dirty rect contains that area
+  if ( aDirtyRect.YMost() > mBounds.YMost() - 11 ) {
+	  aRenderingContext.PushState();
+	  nscolor triangleColor = 0; 
+	  if ( mState & eButtonState_disabled )
+	    triangleColor = nscolor(NS_RGB(0xaa,0xaa,0xaa));   //*** this should go to l&f object
+	  aRenderingContext.SetColor(triangleColor);
+
+	  nsPoint trianglePoints[kNumPolyPoints];
+	  trianglePoints[0] = nsPoint(mBounds.width - 16, 5);  // top left
+	  trianglePoints[1] = nsPoint(mBounds.width - 2, 5);   // top right
+	  trianglePoints[2] = nsPoint(mBounds.width - 9, 13);    // bottom point
+	  aRenderingContext.FillPolygon ( trianglePoints, kNumPolyPoints );
+	  
+	  PRBool ignored;
+	  aRenderingContext.PopState(ignored);
+  }
+  return rv;
 }
 
 
