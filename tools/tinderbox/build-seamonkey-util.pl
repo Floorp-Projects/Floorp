@@ -18,7 +18,7 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
-$::UtilsVersion = '$Revision: 1.44 $ ';
+$::UtilsVersion = '$Revision: 1.45 $ ';
 
 package TinderUtils;
 
@@ -389,8 +389,10 @@ sub SetupPath {
         if ($Settings::CPU eq 'i86pc') {
             $ENV{PATH} = '/opt/gnu/bin:' . $ENV{PATH};
             $ENV{LD_LIBRARY_PATH} .= ':/opt/gnu/lib';
-            $Settings::ConfigureEnvArgs = 'CC=egcc CXX=eg++';
-            $Settings::Compiler = 'egcc';
+ 	    if ($Settings::ConfigureEnvArgs eq '') {
+            	$Settings::ConfigureEnvArgs = 'CC=egcc CXX=eg++';
+            	$Settings::Compiler = 'egcc';
+	    }
             
             # Possible NSPR bug... If USE_PTHREADS is defined, then
             #   _PR_HAVE_ATOMIC_CAS gets defined (erroneously?) and
