@@ -43,16 +43,10 @@
 
   <commandset id="selectEditMenuItems"/>
   <commandset id="globalEditMenuItems"/>
-  <commandset id="historyEditMenuItems"
-              commandupdater="true"
-              events="select"
-              oncommandupdate="updateHistoryCommands()"/>
+
   <!-- File Menu -->
   <command id="cmd_close" oncommand="window.close()"/>
   <command id="bm_cmd_saveas"/>
-  <!-- Edit Menu -->
-  <command id="cmd_deleteByHostname" oncommand="goDoCommand('cmd_deleteByHostname');"/>
-  <command id="cmd_deleteByDomain" oncommand="goDoCommand('cmd_deleteByDomain');"/>
 
 <keyset>
   <!-- File Menu -->
@@ -75,13 +69,13 @@
   </menu>
 
   <menu id="menu_Edit">
-    <menupopup>
+    <menupopup onpopupshowing="updateEditMenuitems();">
       <menuitem id="menu_cut"/>
       <menuitem id="menu_copy"/>
       <menuitem id="menu_delete"/>
-      <menuitem id="menu_deleteByHostname" command="cmd_deleteByHostname"
+      <menuitem id="menu_deleteByHostname" oncommand="deleteByHostname();"
                 accesskey="&deleteHostnameCmd.accesskey;"/>
-      <menuitem id="menu_deleteByDomain" command="cmd_deleteByDomain"
+      <menuitem id="menu_deleteByDomain" oncommand="deleteByDomain();"
                 accesskey="&deleteDomainCmd.accesskey;"/>
       <menuseparator/>
       <menuitem id="menu_selectAll"/>
