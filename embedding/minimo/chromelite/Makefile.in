@@ -43,7 +43,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 
-MODULE_NAME     = chromeline
+MODULE_NAME     = chromelite
 MODULE		= chrmlite
 LIBRARY_NAME	= chrmlite
 
