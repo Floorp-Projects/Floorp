@@ -282,8 +282,6 @@ CFLAGS_LIBSTYLE_C=      $(CFLAGS_DEFAULT) /Fp"$(OUTDIR)/stylec.pch" /YX"xp.h"
 CFLAGS_LIBJAR_C=        $(CFLAGS_DEFAULT) 
 CFLAGS_LIBLAYER_C=      $(CFLAGS_DEFAULT) 
 CFLAGS_LIBMISC_C=       $(CFLAGS_DEFAULT) 
-CFLAGS_LIBNET_C=        $(CFLAGS_DEFAULT) /Fp"$(OUTDIR)/netc.pch" /YX"mkutils.h"  
-CFLAGS_LIBNET_CPP=      $(CFLAGS_DEFAULT) /Fp"$(OUTDIR)/netcpp.pch" /YX"mkutils.h"
 CFLAGS_LIBPARSE_C=      $(CFLAGS_DEFAULT) /Fp"$(OUTDIR)/pa_parse.pch" /YX"pa_parse.h"
 CFLAGS_XP_C=            $(CFLAGS_DEFAULT) 
 CFLAGS_LIBPICS_C=       $(CFLAGS_DEFAULT) 
@@ -406,6 +404,7 @@ LINK_LIBS= \
     $(DIST)\lib\remoturl.lib \
     $(DIST)\lib\netcache.lib \
     $(DIST)\lib\netcnvts.lib \
+    $(DIST)\lib\mimetype.lib \
     $(DIST)\lib\network.lib \
     $(DIST)\lib\cnetinit.lib \
 !ifdef MOZ_LDAP
@@ -2134,7 +2133,6 @@ BATCH_BUILD_1:          \
 	BATCH_LIBLAYER_C                \
 	BATCH_LIBMSG_CPP                \
 	BATCH_PLUGIN_CPP                \
-	BATCH_LIBNET_CPP                \
 	BATCH_LIBDBM_C          \
 	BATCH_LAYOUT_CPP                \
 	BATCH_WINFE_CPP         \
@@ -2147,7 +2145,6 @@ BATCH_BUILD_1:          \
 BATCH_BUILD_2:             \
 	BATCH_LIBADDR_C         \
 	BATCH_LIBMIME_C         \
-	BATCH_LIBNET_C          \
 	BATCH_LIBPARSE_C                \
 	BATCH_LIBMSG_C          \
 	BATCH_LIBMISC_C         \
