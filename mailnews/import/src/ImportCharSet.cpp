@@ -39,7 +39,7 @@
 #include "ImportCharSet.h"
 
 char ImportCharSet::m_upperCaseMap[256];
-char ImportCharSet::m_Ascii[256];
+char ImportCharSet::m_Ascii[256] = {0};
 
 class UInitMaps {
 public:
