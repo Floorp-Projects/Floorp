@@ -283,7 +283,7 @@ nsresult nsPop3Sink::WriteLineToMailbox(char *buffer)
 	if (buffer)
 	{
 		if (m_newMailParser)
-			m_newMailParser->ParseFolderLine(buffer, PL_strlen(buffer));
+			m_newMailParser->HandleLine(buffer, PL_strlen(buffer));
 		if (m_outFileStream)
 			*m_outFileStream << buffer;
 	}
