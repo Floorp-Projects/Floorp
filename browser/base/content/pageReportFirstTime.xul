@@ -23,6 +23,8 @@
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
 
 <!DOCTYPE dialog [
+  <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+  %brandDTD;
   <!ENTITY % pageReportFirstTimeDTD SYSTEM "chrome://browser/locale/pageReportFirstTime.dtd" >
   %pageReportFirstTimeDTD;
 ]>            
