@@ -4885,11 +4885,11 @@ nsresult nsPluginHostImpl::ScanPluginsDirectory(nsIFile * pluginsDir,
     nsCOMPtr <nsILocalFile> localfile = do_QueryInterface(file);
     localfile->InitWithPath(pfd->mFilename);
     PRInt64 fileModTime = pfd->mModTime;
-    //delete pfd;
 
     // Look for it in our cache
     nsPluginTag *pluginTag = RemoveCachedPluginsInfo(NS_ConvertUCS2toUTF8(pfd->mFilename).get());
 
+    delete pfd;
     if (pluginTag) {
       // If plugin changed, delete cachedPluginTag and dont use cache
       if (LL_NE(fileModTime, pluginTag->mLastModifiedTime)) {
