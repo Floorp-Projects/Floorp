@@ -32,6 +32,11 @@ nsISelectionMgr* theSelectionMgr = 0;
 extern "C" NS_EXPORT nsISelectionMgr*
 GetSelectionMgr()
 {
+  if (!theSelectionMgr)
+  {
+    nsresult result = NS_NewSelectionMgr(&theSelectionMgr);
+    NS_ASSERTION(NS_SUCCEEDED(result),"Could not allocate the selection manager");
+  }
   return theSelectionMgr;
 }
 // BWEEP BWEEP
@@ -105,7 +110,7 @@ static void PlaceHTMLOnClipboard(PRUint32 aFormat, char* aData, int aLength)
   char*       preamble = "";
   char*       postamble = "";
 
-  if (aFormat == cf_aol || aFormat == CF_TEXT)
+  if (aFormat == cf_aol)
   {
     preamble = "<HTML>";
     postamble = "</HTML>";
