@@ -95,54 +95,54 @@
 #define HJ67078
 #define HJ10196
 #define HJ58932
-#define HJ04608	--- unused #053, take it! ---
-#define HJ79059	--- unused #054, take it! ---
-#define HJ73882	--- unused #055, take it! ---
-#define HJ30080	--- unused #056, take it! ---
-#define HJ45070	--- unused #057, take it! ---
-#define HJ61958	--- unused #058, take it! ---
-#define HJ21522	--- unused #059, take it! ---
-#define HJ96785	--- unused #060, take it! ---
-#define HJ59487	--- unused #061, take it! ---
-#define HJ54981	--- unused #062, take it! ---
-#define HJ00694	--- unused #063, take it! ---
-#define HJ41820	--- unused #064, take it! ---
-#define HJ45057	--- unused #065, take it! ---
-#define HJ36644	--- unused #066, take it! ---
-#define HJ10796	--- unused #067, take it! ---
-#define HJ54126	--- unused #068, take it! ---
-#define HJ98599	--- unused #069, take it! ---
-#define HJ77112	--- unused #070, take it! ---
-#define HJ47843	--- unused #071, take it! ---
-#define HJ99856	--- unused #072, take it! ---
-#define HJ19399	--- unused #073, take it! ---
-#define HJ44303	--- unused #074, take it! ---
-#define HJ25252	--- unused #075, take it! ---
-#define HJ31338	--- unused #076, take it! ---
-#define HJ97854	--- unused #077, take it! ---
-#define HJ61508	--- unused #078, take it! ---
-#define HJ99641	--- unused #079, take it! ---
-#define HJ11208	--- unused #080, take it! ---
-#define HJ03550	--- unused #081, take it! ---
-#define HJ87744	--- unused #082, take it! ---
-#define HJ66276	--- unused #083, take it! ---
-#define HJ29683	--- unused #084, take it! ---
-#define HJ44384	--- unused #085, take it! ---
-#define HJ24073	--- unused #086, take it! ---
-#define HJ47039	--- unused #087, take it! ---
-#define HJ04672	--- unused #088, take it! ---
-#define HJ09993	--- unused #089, take it! ---
-#define HJ65563	--- unused #090, take it! ---
-#define HJ24393	--- unused #091, take it! ---
-#define HJ91088	--- unused #092, take it! ---
-#define HJ14587	--- unused #093, take it! ---
-#define HJ85226	--- unused #094, take it! ---
-#define HJ39686	--- unused #095, take it! ---
-#define HJ86771	--- unused #096, take it! ---
-#define HJ17283	--- unused #097, take it! ---
-#define HJ60714	--- unused #098, take it! ---
-#define HJ06328	--- unused #099, take it! ---
-#define HJ73151	--- unused #100, take it! ---
+#define HJ04608	--- unused /* #053 */, take it! ---
+#define HJ79059	--- unused /* #054 */, take it! ---
+#define HJ73882	--- unused /* #055 */, take it! ---
+#define HJ30080	--- unused /* #056 */, take it! ---
+#define HJ45070	--- unused /* #057 */, take it! ---
+#define HJ61958	--- unused /* #058 */, take it! ---
+#define HJ21522	--- unused /* #059 */, take it! ---
+#define HJ96785	--- unused /* #060 */, take it! ---
+#define HJ59487	--- unused /* #061 */, take it! ---
+#define HJ54981	--- unused /* #062 */, take it! ---
+#define HJ00694	--- unused /* #063 */, take it! ---
+#define HJ41820	--- unused /* #064 */, take it! ---
+#define HJ45057	--- unused /* #065 */, take it! ---
+#define HJ36644	--- unused /* #066 */, take it! ---
+#define HJ10796	--- unused /* #067 */, take it! ---
+#define HJ54126	--- unused /* #068 */, take it! ---
+#define HJ98599	--- unused /* #069 */, take it! ---
+#define HJ77112	--- unused /* #070 */, take it! ---
+#define HJ47843	--- unused /* #071 */, take it! ---
+#define HJ99856	--- unused /* #072 */, take it! ---
+#define HJ19399	--- unused /* #073 */, take it! ---
+#define HJ44303	--- unused /* #074 */, take it! ---
+#define HJ25252	--- unused /* #075 */, take it! ---
+#define HJ31338	--- unused /* #076 */, take it! ---
+#define HJ97854	--- unused /* #077 */, take it! ---
+#define HJ61508	--- unused /* #078 */, take it! ---
+#define HJ99641	--- unused /* #079 */, take it! ---
+#define HJ11208	--- unused /* #080 */, take it! ---
+#define HJ03550	--- unused /* #081 */, take it! ---
+#define HJ87744	--- unused /* #082 */, take it! ---
+#define HJ66276	--- unused /* #083 */, take it! ---
+#define HJ29683	--- unused /* #084 */, take it! ---
+#define HJ44384	--- unused /* #085 */, take it! ---
+#define HJ24073	--- unused /* #086 */, take it! ---
+#define HJ47039	--- unused /* #087 */, take it! ---
+#define HJ04672	--- unused /* #088 */, take it! ---
+#define HJ09993	--- unused /* #089 */, take it! ---
+#define HJ65563	--- unused /* #090 */, take it! ---
+#define HJ24393	--- unused /* #091 */, take it! ---
+#define HJ91088	--- unused /* #092 */, take it! ---
+#define HJ14587	--- unused /* #093 */, take it! ---
+#define HJ85226	--- unused /* #094 */, take it! ---
+#define HJ39686	--- unused /* #095 */, take it! ---
+#define HJ86771	--- unused /* #096 */, take it! ---
+#define HJ17283	--- unused /* #097 */, take it! ---
+#define HJ60714	--- unused /* #098 */, take it! ---
+#define HJ06328	--- unused /* #099 */, take it! ---
+#define HJ73151	--- unused /* #100 */, take it! ---
 
 
 #endif
