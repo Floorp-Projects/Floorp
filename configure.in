@@ -172,6 +172,15 @@ alpha*-*-osf*)
     MKSHLIB='$(LD) $(DSO_LDOPTS)'
     ;;
 
+*-hpux*)
+    if test -z "$GNU_CC"; then
+	DSO_CFLAGS="+Z"
+    fi
+    DLL_SUFFIX="sl"
+    DSO_LDOPTS='-b -E -L$(DIST)/bin $(LDFLAGS)'
+    MKSHLIB='$(LD) $(DSO_LDOPTS)'
+    ;;
+
 *-irix*)
     AC_DEFINE(IRIX6_3)
     DSO_LDOPTS='-elf -shared -all'
