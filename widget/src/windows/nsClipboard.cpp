@@ -36,6 +36,7 @@
 #include "nsISupportsPrimitives.h"
 #include "nsXPIDLString.h"
 #include "nsPrimitiveHelpers.h"
+#include "nsIURL.h"
 
 #include "nsIWidget.h"
 #include "nsIComponentManager.h"
@@ -46,6 +47,7 @@
 
 #include "nsGfxCIID.h"
 #include "nsIImage.h"
+
 
 #define DEBUG_PINK 0
 
@@ -585,8 +587,10 @@ nsresult nsClipboard::GetDataFromDataObject(IDataObject     * aDataObject,
       currentFlavor->ToString(getter_Copies(flavorStr));
       UINT format = GetFormat(flavorStr);
 
-      void   * data;
-      PRUint32 dataLen;
+      // Try to get the data using the desired flavor. This might fail, but all is
+      // not lost.
+      void* data = nsnull;
+      PRUint32 dataLen = 0;
       PRBool dataFound = PR_FALSE;
       if (nsnull != aDataObject) {
         if ( NS_SUCCEEDED(GetNativeDataOffClipboard(aDataObject, anIndex, format, &data, &dataLen)) )
@@ -596,38 +600,28 @@ nsresult nsClipboard::GetDataFromDataObject(IDataObject     * aDataObject,
         if ( NS_SUCCEEDED(GetNativeDataOffClipboard(aWindow, anIndex, format, &data, &dataLen)) )
           dataFound = PR_TRUE;
       }
+
+      // This is our second chance to try to find some data, having not found it
+      // when directly asking for the flavor. Let's try digging around in other
+      // flavors to help satisfy our craving for data.
       if ( !dataFound ) {
-	    // if we are looking for text/unicode and we fail to find it on the clipboard first,
-        // try again with text/plain. If that is present, convert it to unicode.
-        if ( strcmp(flavorStr, kUnicodeMime) == 0 ) {
-          nsresult loadResult = GetNativeDataOffClipboard(aDataObject, anIndex, GetFormat(kTextMime), &data, &dataLen);
-          if ( NS_SUCCEEDED(loadResult) && data ) {
-            const char* castedText = NS_REINTERPRET_CAST(char*, data);          
-            PRUnichar* convertedText = nsnull;
-            PRInt32 convertedTextLen = 0;
-            nsPrimitiveHelpers::ConvertPlatformPlainTextToUnicode ( castedText, dataLen, 
-                                                                      &convertedText, &convertedTextLen );
-            if ( convertedText ) {
-              // out with the old, in with the new 
-              nsMemory::Free(data);
-              data = convertedText;
-              dataLen = convertedTextLen * 2;
-              dataFound = PR_TRUE;
-            }
-          } // if plain text data on clipboard
-        } // if looking for text/unicode   
+        if ( strcmp(flavorStr, kUnicodeMime) == 0 )
+          dataFound = FindUnicodeFromPlainText ( aDataObject, anIndex, &data, &dataLen );
+        else if ( strcmp(flavorStr, kURLMime) == 0 )
+          dataFound = FindURLFromLocalFile ( aDataObject, anIndex, &data, &dataLen );
       } // if we try one last ditch effort to find our data
 
+      // Hopefully by this point we've found it and can go about our business
       if ( dataFound ) {
         nsCOMPtr<nsISupports> genericDataWrapper;
-	    if ( strcmp(flavorStr, kFileMime) == 0 ) {
-	      // we have a file path in |data|. Create an nsLocalFile object.
-	      char* filepath = NS_REINTERPRET_CAST(char*, data);
-	      nsCOMPtr<nsILocalFile> file;
-	      if ( NS_SUCCEEDED(NS_NewLocalFile(filepath, PR_FALSE, getter_AddRefs(file))) )
-	        genericDataWrapper = do_QueryInterface(file);
-	    }
-	    else {
+	      if ( strcmp(flavorStr, kFileMime) == 0 ) {
+	        // we have a file path in |data|. Create an nsLocalFile object.
+	        char* filepath = NS_REINTERPRET_CAST(char*, data);
+	        nsCOMPtr<nsILocalFile> file;
+	        if ( NS_SUCCEEDED(NS_NewLocalFile(filepath, PR_FALSE, getter_AddRefs(file))) )
+	          genericDataWrapper = do_QueryInterface(file);
+	      }
+	      else {
           // we probably have some form of text. The DOM only wants LF, so convert from Win32 line 
           // endings to DOM line endings.
           PRInt32 signedLen = NS_STATIC_CAST(PRInt32, dataLen);
@@ -653,6 +647,171 @@ nsresult nsClipboard::GetDataFromDataObject(IDataObject     * aDataObject,
   return res;
 
 }
+
+
+//
+// FindURLFromLocalFile
+//
+// we are looking for text/unicode and we failed to find it on the clipboard first,
+// try again with text/plain. If that is present, convert it to unicode.
+//
+PRBool
+nsClipboard :: FindUnicodeFromPlainText ( IDataObject* inDataObject, UINT inIndex, void** outData, PRUint32* outDataLen )
+{
+  PRBool dataFound = PR_FALSE;
+
+  // we are looking for text/unicode and we failed to find it on the clipboard first,
+  // try again with text/plain. If that is present, convert it to unicode.
+  nsresult loadResult = GetNativeDataOffClipboard(inDataObject, inIndex, GetFormat(kTextMime), outData, outDataLen);
+  if ( NS_SUCCEEDED(loadResult) && *outData ) {
+    const char* castedText = NS_REINTERPRET_CAST(char*, *outData);          
+    PRUnichar* convertedText = nsnull;
+    PRInt32 convertedTextLen = 0;
+    nsPrimitiveHelpers::ConvertPlatformPlainTextToUnicode ( castedText, *outDataLen, 
+                                                              &convertedText, &convertedTextLen );
+    if ( convertedText ) {
+      // out with the old, in with the new 
+      nsMemory::Free(*outData);
+      *outData = convertedText;
+      *outDataLen = convertedTextLen * sizeof(PRUnichar);
+      dataFound = PR_TRUE;
+    }
+  } // if plain text data on clipboard
+
+  return dataFound;
+
+} // FindUnicodeFromPlainText
+
+
+//
+// FindURLFromLocalFile
+//
+// we are looking for a URL and couldn't find it, try again with looking for 
+// a local file. If we have one, it may either be a normal file or an internet shortcut.
+// In both cases, however, we can get a URL (it will be a file:// url in the
+// local file case).
+//
+PRBool
+nsClipboard :: FindURLFromLocalFile ( IDataObject* inDataObject, UINT inIndex, void** outData, PRUint32* outDataLen )
+{
+  PRBool dataFound = PR_FALSE;
+
+  nsresult loadResult = GetNativeDataOffClipboard(inDataObject, inIndex, GetFormat(kFileMime), outData, outDataLen);
+  if ( NS_SUCCEEDED(loadResult) && *outData ) {
+	  // we have a file path in |data|. Create an nsLocalFile object so we can work with it.
+	  char* filepath = NS_REINTERPRET_CAST(char*, *outData);
+	  nsCOMPtr<nsILocalFile> file;
+    if ( NS_SUCCEEDED(NS_NewLocalFile(filepath, PR_FALSE, getter_AddRefs(file))) ) {
+      if ( IsInternetShortcut(filepath) ) {
+        FILE* shortcutFile = nsnull;
+        file->OpenANSIFileDesc ( "r", &shortcutFile );
+        if ( shortcutFile ) {
+          const int kMaxURLLen = 1000;    // if url can't fit into 1000, then screw it
+          char buffer[MAX_PATH];
+
+// This will read only internet shortcut files created by NS4 and Mozilla, not
+// real shortcuts (which can have more complicated data formats). The problem is that
+// I'm having problems with ResolveShortcut() giving an error loading the file. If
+// you want to help fix this, it's bug #37412.
+#if 1
+          // skip over prefix
+          fscanf(shortcutFile, "[InternetShortcut]\nURL=", buffer);
+
+          // read the actual url
+          fgets(buffer, kMaxURLLen, shortcutFile);
+#else
+          ResolveShortcut ( filepath, buffer );
+#endif
+
+          // convert it to unicode and pass it out
+          nsMemory::Free(*outData);
+          nsAutoString urlUnicode;
+          urlUnicode.AssignWithConversion( buffer );
+          *outData = urlUnicode.ToNewUnicode();
+          *outDataLen = strlen(buffer) * sizeof(PRUnichar);
+
+          dataFound = PR_TRUE;
+        }
+        else {
+          *outData = nsnull;
+          *outDataLen = 0;
+
+        }
+      }
+      else {
+        nsCOMPtr<nsIFileURL> url ( do_CreateInstance("component://netscape/network/standard-url") );
+        if ( url ) {
+          // get the file:// url from our native path
+          url->SetFile ( file );
+          char* urlSpec = nsnull;
+          url->GetSpec ( &urlSpec );
+
+          // convert it to unicode and pass it out
+          nsMemory::Free(*outData);
+          nsAutoString urlSpecUnicode;
+          urlSpecUnicode.AssignWithConversion( urlSpec );
+          *outData = urlSpecUnicode.ToNewUnicode();
+          *outDataLen = strlen(urlSpec) * sizeof(PRUnichar);
+          nsMemory::Free(urlSpec);
+
+          dataFound = PR_TRUE;
+        }
+      } // else regular file
+    }
+  }
+
+  return dataFound;
+} // FindURLFromLocalFile
+
+
+void
+nsClipboard :: ResolveShortcut ( const char* inFileName, char* outURL )
+{
+  HRESULT result;
+
+  IShellLink* link = nsnull;
+  result = ::CoCreateInstance ( CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER,
+                        IID_IShellLink, (void**)&link );
+  if ( SUCCEEDED(result) && link ) {
+    IPersistFile* persistFile = nsnull;
+    result = link->QueryInterface ( IID_IPersistFile, (void**)&persistFile );
+    if ( SUCCEEDED(result) && persistFile ) {
+      WORD wideFileName[MAX_PATH];
+      ::MultiByteToWideChar ( CP_ACP, 0, inFileName, -1, wideFileName, MAX_PATH );
+  
+      result = persistFile->Load ( wideFileName, NULL );
+      if ( SUCCEEDED(result) ) {
+        result = link->Resolve ( NULL, SLR_ANY_MATCH );
+        if ( SUCCEEDED(result) ) {
+          char path[MAX_PATH];
+          WIN32_FIND_DATA wfd;
+
+          strcpy ( path, inFileName );
+          result = link->GetPath ( path, MAX_PATH, &wfd, SLGP_SHORTPATH );
+          strcpy ( outURL, path );
+        }
+      }
+    }
+  }
+
+} // ResolveShortcut
+
+
+//
+// IsInternetShortcut
+//
+// A file is an Internet Shortcut if it ends with .URL
+//
+PRBool
+nsClipboard :: IsInternetShortcut ( const char* inFileName ) 
+{
+  if ( strstr(inFileName, ".URL") || strstr(inFileName, ".url") )
+    return PR_TRUE;
+  else
+    return PR_FALSE;
+
+} // IsInternetShortcut
+
 
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsClipboard::GetNativeClipboardData ( nsITransferable * aTransferable, PRInt32 aWhichClipboard )
@@ -792,12 +951,14 @@ NS_IMETHODIMP nsClipboard::HasDataMatchingFlavors(nsISupportsArray *aFlavorList,
         break;
       }
       else {
-        // if the client asked for unicode and it wasn't present, check if we have CF_TEXT.
-        // We'll handle the actual data substitution in the data object.
+        // We haven't found the exact flavor the client asked for, but maybe we can
+        // still find it from something else that's on the clipboard...
         if ( strcmp(flavorStr, kUnicodeMime) == 0 ) {
+          // client asked for unicode and it wasn't present, check if we have CF_TEXT.
+          // We'll handle the actual data substitution in the data object.
           if ( ::IsClipboardFormatAvailable(GetFormat(kTextMime)) )
             *_retval = PR_TRUE;
-        }      
+        }
       }
     }
   }
