@@ -46,6 +46,7 @@
 #include "stdafx.h"
 #include "testembed.h"
 #include "nsICommandMgr.h"
+#include "nsICmdParams.h"
 #include "QaUtils.h"
 #include "BrowserFrm.h"
 #include "BrowserImpl.h"
@@ -71,9 +72,10 @@ CnsICommandMgr::~CnsICommandMgr()
 }
 
 
-nsICommandManager * CnsICommandMgr::GetCommandMgrObject()
+nsICommandManager * CnsICommandMgr::GetCommandMgrObject(nsIWebBrowser *aWebBrowser)
 {
-	nsCOMPtr<nsICommandManager> cmdMgrObj = do_GetInterface(qaWebBrowser, &rv);
+	nsCOMPtr<nsIWebBrowser> wb(aWebBrowser);
+	nsCOMPtr<nsICommandManager> cmdMgrObj = do_GetInterface(wb, &rv);
 	RvTestResult(rv, "GetCommandMgrObject() test", 1); 
     if (!cmdMgrObj) {
         QAOutput("Didn't get nsICommandManager object.");
@@ -93,24 +95,11 @@ nsICommandManager * CnsICommandMgr::GetCommandMgrWithContractIDObject()
 	return cmdMgrObj;
 }
 
-nsICommandParams * CnsICommandMgr::GetCommandParamsObject()
-{
-    nsCOMPtr<nsICommandParams> cmdParamsObj = do_CreateInstance(NS_COMMAND_PARAMS_CONTRACTID,&rv);
-	RvTestResult(rv, "GetCommandParamsObject() test", 1); 
-    if (!cmdParamsObj) {
-        QAOutput("Didn't get nsICommandParams object.");
-		return nsnull;
-	}
-	nsICommandParams *retVal = cmdParamsObj;
-	NS_ADDREF(retVal);
-	return retVal;
-}
-
 void CnsICommandMgr::IsCommandSupportedTest(const char *aCommandName)
 {
 	PRBool isSupported;
 
-	cmdMgrObj = GetCommandMgrObject();
+	cmdMgrObj = GetCommandMgrObject(qaWebBrowser);
 	rv = cmdMgrObj->IsCommandSupported(aCommandName, &isSupported);
 	RvTestResult(rv, "IsCommandSupported() test", 2);
 	FormatAndPrintOutput("isSupported boolean = ", isSupported, 2);
@@ -120,7 +109,7 @@ void CnsICommandMgr::IsCommandEnabledTest(const char *aCommandName)
 {
 	PRBool isEnabled;
 
-	cmdMgrObj = GetCommandMgrObject();
+	cmdMgrObj = GetCommandMgrObject(qaWebBrowser);
 	rv = cmdMgrObj->IsCommandEnabled(aCommandName, &isEnabled);
 	RvTestResult(rv, "IsCommandEnabled() test", 2);
 	FormatAndPrintOutput("isEnabled boolean = ", isEnabled, 2);
@@ -130,22 +119,32 @@ void CnsICommandMgr::GetCommandStateTest(const char *aCommandName, const char *s
 {
 	PRBool enabled = PR_FALSE;
 
-	cmdMgrObj = GetCommandMgrObject();
-	cmdParamObj = GetCommandParamsObject();
-	rv = cmdMgrObj->GetCommandState(aCommandName, cmdParamObj);
-	RvTestResult(rv, "GetCommandState() test", 2);
-	FormatAndPrintOutput("The input state type = ", stateType, 2);
-	cmdParamObj->GetBooleanValue(stateType, &enabled);
-	FormatAndPrintOutput("isEnabled boolean = ", enabled, 2);
+	cmdMgrObj = GetCommandMgrObject(qaWebBrowser);
+	cmdParamObj = CnsICmdParams::GetCommandParamObject();
+	if (!cmdMgrObj) {
+        QAOutput("Didn't get nsICommandManager object.");
+		return;
+	}
+	else if (!cmdParamObj) {
+        QAOutput("Didn't get nsICommandParams object.");
+		return;
+	}
+	else {
+		rv = cmdMgrObj->GetCommandState(aCommandName, cmdParamObj);
+		RvTestResult(rv, "GetCommandState() test", 2);
+	}
+//	FormatAndPrintOutput("The input state type = ", stateType, 2);
+//	cmdParamObj->GetBooleanValue(stateType, &enabled);
+//	FormatAndPrintOutput("isEnabled boolean = ", enabled, 2);
 }
 
 void CnsICommandMgr::DoCommandTest(const char *aCommandName, const char *value)
 {
-	cmdMgrObj = GetCommandMgrObject();
-	cmdParamObj = GetCommandParamsObject();
+	cmdMgrObj = GetCommandMgrObject(qaWebBrowser);
+	cmdParamObj = CnsICmdParams::GetCommandParamObject();
 	rv = cmdMgrObj->DoCommand(aCommandName, cmdParamObj);
 	RvTestResult(rv, "DoCommand() test", 2);
-	cmdParamObj->SetCStringValue("state_attribute", value);
+//	cmdParamObj->SetCStringValue("state_attribute", value);
 }
 
 void CnsICommandMgr::OnStartTests(UINT nMenuID)

@@ -73,6 +73,7 @@ public:
 
 	// Mozilla interfaces
 	//
+	//static 
 	nsCOMPtr<nsIWebBrowser> qaWebBrowser;
 	nsCOMPtr<nsIBaseWindow> qaBaseWindow;
 	nsCOMPtr<nsIWebNavigation> qaWebNav;
