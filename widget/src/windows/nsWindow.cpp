@@ -916,6 +916,7 @@ nsWindow::~nsWindow()
 {
 #ifdef ACCESSIBILITY
   if (mRootAccessible) {
+    mRootAccessible->Shutdown();
     mRootAccessible->Release();
     mRootAccessible = nsnull;
   }
@@ -4508,8 +4509,14 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         if (mIsTopWidgetWindow && !mRootAccessible) 
           CreateRootAccessible();
         if (mRootAccessible) {
-          if (lParam == OBJID_CLIENT)  // oleacc.dll will be loaded dynamically
-            lAcc = Accessible::LresultFromObject(IID_IAccessible, wParam, mRootAccessible); // does an addref          
+          if (lParam == OBJID_CLIENT) { // oleacc.dll will be loaded dynamically
+            IAccessible *rootAccessible = nsnull;
+            mRootAccessible->QueryInterface(IID_IAccessible, (void**)&rootAccessible); // does an addref
+            if (rootAccessible) {
+              lAcc = Accessible::LresultFromObject(IID_IAccessible, wParam, rootAccessible); // does an addref          
+              rootAccessible->Release(); // release addref from QueryInterface
+            }
+          }
           if (lParam == OBJID_CARET) {  // each root accessible owns a caret accessible
             VARIANT variant;
             VariantInit(&variant);

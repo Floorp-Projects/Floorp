@@ -53,8 +53,10 @@
 #include "nsReadableUtils.h"
 #include "nsWindow.h"
 #include "String.h"
+#include "nsCRT.h"
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
+#include "nsIAccessibilityService.h"
 
 // for the COM IEnumVARIANT solution in get_AccSelection()
 #define _ATLBASE_IMPL
@@ -79,6 +81,7 @@ static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 PRInt32 RootAccessible::gListCount = 0;
 PRInt32 RootAccessible::gNextPos = 0;
+PRInt32 RootAccessible::gActiveRootAccessibles = 0;
 nsAccessibleEventMap RootAccessible::gList[MAX_LIST_SIZE];
 PRBool Accessible::gIsCacheDisabled = PR_FALSE;
 PRBool Accessible::gIsEnumVariantSupportDisabled = PR_FALSE;
@@ -104,7 +107,6 @@ Accessible::Accessible(nsIAccessible* aXPAccessible, nsIDOMNode* aNode, HWND aWn
 
   // Inherited from SimpleDOMNode
   mWnd = aWnd;  // The window handle, for NotifyWinEvent, or getting the accessible parent thru the window parent
-  m_cRef = 0;   // for reference counting, so we know when to delete ourselves
 
 #ifdef DEBUG_LEAKS
   printf("Accessibles=%d\n", ++gAccessibles);
@@ -117,13 +119,14 @@ Accessible::Accessible(nsIAccessible* aXPAccessible, nsIDOMNode* aNode, HWND aWn
 //-----------------------------------------------------
 Accessible::~Accessible()
 {
-  m_cRef = 0;
   mXPAccessible = nsnull;
   if (mCachedNextSibling) {
     mCachedNextSibling->Release();
+    mCachedNextSibling = nsnull;
   }
   if (mCachedFirstChild) {
     mCachedFirstChild->Release();
+    mCachedFirstChild = nsnull;
   }
 #ifdef DEBUG_LEAKS
   printf("Accessibles=%d\n", --gAccessibles);
@@ -936,10 +939,10 @@ void Accessible::GetNSAccessibleFor(VARIANT varChild, nsCOMPtr<nsIAccessible>& a
     aXPAccessible = mXPAccessible;
   } 
   else {
-    // XXX aaronl
-    // I can't find anything that uses VARIANT with a child num
-    // so let's not worry about optimizing this.
-    NS_NOTREACHED("MSAA VARIANT with child number being used");
+    // XXX It is rare to use a VARIANT with a child num
+    // so optimizing this is not a priority
+    // We can come back it do it later, if there are perf problems
+    // with a specific assistive technology
     nsCOMPtr<nsIAccessible> xpAccessible;
     mXPAccessible->GetAccFirstChild(getter_AddRefs(xpAccessible));
     for (PRInt32 index = 0; xpAccessible; index ++) {
@@ -1099,11 +1102,13 @@ RootAccessible::Release(void)
   return DocAccessible::Release();
 }
 
-RootAccessible::RootAccessible(nsIAccessible* aAcc, HWND aWnd):DocAccessible(aAcc,nsnull,aWnd)
+RootAccessible::RootAccessible(nsIAccessible* aAcc, HWND aWnd):
+                DocAccessible(aAcc,nsnull,aWnd), mIsActive(PR_TRUE)
 {
-  nsCOMPtr<nsIAccessibleEventReceiver> r(do_QueryInterface(mXPAccessible));
-  if (r)
-    r->AddAccessibleEventListener(this);
+  nsCOMPtr<nsIAccessibleEventReceiver> accReceiver =
+    do_QueryInterface(mXPAccessible);
+  if (accReceiver)
+    accReceiver->AddAccessibleEventListener(this);
 
   static PRBool prefsInitialized;
 
@@ -1127,17 +1132,58 @@ RootAccessible::RootAccessible(nsIAccessible* aAcc, HWND aWnd):DocAccessible(aAc
       gmGetGUIThreadInfo = (LPFNGETGUITHREADINFO)GetProcAddress(gmUserLib,"GetGUIThreadInfo");
   }
 
+  ++gActiveRootAccessibles;
 }
 
 RootAccessible::~RootAccessible()
 {
-  nsCOMPtr<nsIAccessibleEventReceiver> r(do_QueryInterface(mXPAccessible));
-  if (r) 
-    r->RemoveAccessibleEventListener();
+  Shutdown();
+}
 
-  // free up accessibles
-  for (int i=0; i < gListCount; i++)
-    gList[i].mAccessible = nsnull;
+void RootAccessible::Shutdown()
+{
+  if (mIsActive) {
+    mIsActive = PR_FALSE;
+    nsCOMPtr<nsIAccessibleEventReceiver> accReceiver = 
+      do_QueryInterface(mXPAccessible);
+    if (accReceiver) 
+      accReceiver->RemoveAccessibleEventListener();
+
+    if (--gActiveRootAccessibles == 0)   // Last root accessible. 
+      ShutdownAll();
+
+    mDOMNode = nsnull;
+    mXPAccessible = nsnull;
+
+    if (mCachedNextSibling) {
+      mCachedNextSibling->Release();
+      mCachedNextSibling = nsnull;
+    }
+    if (mCachedFirstChild) {
+      mCachedFirstChild->Release();
+      mCachedFirstChild = nsnull;
+    }
+  }
+}
+
+void RootAccessible::ShutdownAll()
+{
+  // Turn accessibility support off and destroy all objects rather 
+  // than waiting until shutdown otherwise there will be crashes when 
+  // releases occur in modules that are no longer loaded
+
+  // First free up accessibles
+  for (PRInt32 count=0; count < gListCount; count++) {
+    gList[count].mAccessible = nsnull;
+  }
+  gListCount = 0;
+
+  // Shutdown accessibility service
+  nsCOMPtr<nsIAccessibilityService> accService = 
+    do_GetService("@mozilla.org/accessibilityService;1");
+  if (accService) {
+    accService->Shutdown();
+  }
 }
 
 void RootAccessible::GetNSAccessibleFor(VARIANT varChild, nsCOMPtr<nsIAccessible>& aAcc)
@@ -1196,6 +1242,10 @@ STDMETHODIMP RootAccessible::get_accChild(
   
 NS_IMETHODIMP RootAccessible::HandleEvent(PRUint32 aEvent, nsIAccessible* aAccessible, AccessibleEventData* aData)
 {
+  if (!mIsActive) {
+    return NS_ERROR_FAILURE;
+  }
+
 #ifdef SWALLOW_DOC_FOCUS_EVENTS
   // Remove this until we can figure out which focus events are coming at
   // the same time as native window focus events, although
@@ -1230,7 +1280,9 @@ NS_IMETHODIMP RootAccessible::HandleEvent(PRUint32 aEvent, nsIAccessible* aAcces
   }
 
   HWND hWnd = mWnd;
-  if (aEvent == EVENT_FOCUS && gmGetGUIThreadInfo) {
+  if (gmGetGUIThreadInfo && (aEvent == EVENT_FOCUS || 
+      aEvent == EVENT_MENUPOPUPSTART ||
+      aEvent == EVENT_MENUPOPUPEND)) {
     GUITHREADINFO guiInfo;
     guiInfo.cbSize = sizeof(GUITHREADINFO);
     if (gmGetGUIThreadInfo(NULL, &guiInfo)) {

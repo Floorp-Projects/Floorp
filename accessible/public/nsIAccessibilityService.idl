@@ -97,6 +97,7 @@ interface nsIAccessibilityService : nsISupports
   nsIAccessible createXULTooltipAccessible(in nsIDOMNode aNode);
 
   nsIAccessible getAccessibleFor(in nsIDOMNode aNode);
+  void Shutdown();
 };
 
 
