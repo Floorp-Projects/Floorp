@@ -55,7 +55,7 @@ nsresult ChangeAttributeTxn::Do(void)
 
   // now set the attribute to the new value
   if (PR_FALSE==mRemoveAttribute)
-    result = mElement->SetDOMAttribute(mAttribute, mValue);
+    result = mElement->SetAttribute(mAttribute, mValue);
   else
    result = mElement->RemoveAttribute(mAttribute);
 
@@ -66,7 +66,7 @@ nsresult ChangeAttributeTxn::Undo(void)
 {
   nsresult result=NS_OK;
   if (PR_TRUE==mAttributeWasSet)
-    result = mElement->SetDOMAttribute(mAttribute, mUndoValue);
+    result = mElement->SetAttribute(mAttribute, mUndoValue);
   else
     result = mElement->RemoveAttribute(mAttribute);
 
@@ -78,7 +78,7 @@ nsresult ChangeAttributeTxn::Redo(void)
   nsresult result;
 
   if (PR_FALSE==mRemoveAttribute)
-   result = mElement->SetDOMAttribute(mAttribute, mValue);
+   result = mElement->SetAttribute(mAttribute, mValue);
   else
    result = mElement->RemoveAttribute(mAttribute);
 
