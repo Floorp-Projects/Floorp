@@ -241,6 +241,23 @@ XFE_STATIC_LIBS			+= $(XFE_STATIC_PREF_LIB)
 endif
 
 ##
+## XfeToolTip Library
+##
+XFE_STATIC_TOOL_TIP_LIB		= $(DIST)/lib/libXfeToolTip.a
+XFE_SHARED_TOOL_TIP_LIB		= $(DIST)/bin/libXfeToolTip.$(DLL_SUFFIX)
+XFE_TOOL_TIP_REQUIRES		= XfeToolTip
+
+##
+## XfeToolTip required ?
+##
+ifeq ($(filter $(REQUIRES),$(XFE_TOOL_TIP_REQUIRES)),$(XFE_TOOL_TIP_REQUIRES))
+
+XFE_SHARED_LIBS			+= $(XFE_SHARED_TOOL_TIP_LIB)
+XFE_STATIC_LIBS			+= $(XFE_STATIC_TOOL_TIP_LIB)
+
+endif
+
+##
 ## XfeTest required ?
 ##
 ifeq ($(filter $(REQUIRES),$(XFE_TEST_REQUIRES)),$(XFE_TEST_REQUIRES))
