@@ -10,6 +10,7 @@
       min-width           : 0px;
       margin              : 0px;
       border              : 1px solid transparent;
+      user-focus          : ignore;
     }
 
   .button-toolbar
@@ -17,10 +18,31 @@
       background-color    : none;
       behavior            : url("chrome://global/content/xulBindings.xml#buttonleft");
       min-width           : 0px;
-      margin              : 2px 0px 2px 0px;
+      margin              : 2px;
       border              : none;
+      user-focus          : ignore;
+      max-width           : 14em;
     }
 
+  /* drag and drop feedback */
+  .button-toolbar[dragover-left="true"]
+    {
+      margin-left         : 0px;
+      border-left         : 2px solid threeddarkshadow;
+    }
+
+  .button-toolbar[dragover-right="true"]
+    {
+      margin-right        : 0px;
+      border-right        : 2px solid threeddarkshadow;
+    }
+    
+  .menubutton-toolbar-single-text[dragover-top="true"]
+    {
+      background-color    : threeddarkshadow;
+      color               : threedhighlight;
+    }
+    
   /* taskbar buttons */    
   .button-toolbar-4    
     {
@@ -29,6 +51,7 @@
       min-width           : 0px;
       margin              : 0px;
       border              : 1px solid transparent;
+      user-focus          : ignore;
     }
     
   .button-toolbar-4 > .button-internal-box
@@ -45,7 +68,7 @@
       color               : #0000FF;
     } 
     
-  .button-toolbar:hover
+  .bookmarkitem.button-toolbar:hover
     {
       color               : #0000FF;
       text-decoration     : underline;

@@ -67,7 +67,7 @@ treecell
     border-top            : 1px solid threedface;
     border-right          : 1px solid threedshadow;
     border-bottom         : 1px solid threedshadow;
-    padding               : 2px 5px 2px 4px;
+    padding               : 1px 5px 1px 4px;
   }  
   
 .sortable.treecell-header:hover:active,
@@ -80,7 +80,7 @@ treecell
 .sortable.treecell-inset-header:hover:active > .treecell-header-box
   {
     border                : 1px solid threedface;
-    padding               : 3px 4px 1px 5px;
+    padding               : 2px 4px 0px 5px;
   }
   
   

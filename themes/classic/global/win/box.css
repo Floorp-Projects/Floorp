@@ -8,17 +8,12 @@ titledbox
 
 title
   {
-    margin-left           : 6px;
-    padding-right         : 40px;
+    margin                : 0px 40px 2px 6px;
+    padding               : 0px 3px 0px 3px;
+    background-color      : threedface;
   }
 
-box.titledbox-title 
-  {
-    padding-left           : 5px;
-    padding-right          : 5px;     
-  } 
-
-box.titledbox-body
+.titledbox-body
   {
     display               : block;
     padding               : inherit;

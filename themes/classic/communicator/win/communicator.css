@@ -14,7 +14,8 @@
 @import url(chrome://communicator/skin/menubutton.css);
 @import url(chrome://communicator/skin/formatting.css);
 @import url(chrome://communicator/skin/toolbar.css);
-
+/* should we put this here, or make a dialog include it specifically? */
+@import url(chrome://communicator/skin/search-widgets.css);
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); /* set default namespace to XUL */
 @namespace html url("http://www.w3.org/1999/xhtml"); /* namespace for HTML elements */

@@ -1,4 +1,5 @@
 skins\classic.jar:                                               
+    communicator\skin\search-widgets.css                         (communicator\search-widgets.css)
     communicator\skin\navbar-endbox.gif                          (communicator\navbar-endbox.gif)
     communicator\skin\toolbar-bg.gif                             (communicator\toolbar-bg.gif)
     communicator\skin\toolbar-bg.png                             (communicator\toolbar-bg.png)
@@ -336,6 +337,8 @@ skins\classic.jar:
     global\skin\twisty-open-active.gif                           (global\twisty-open-active.gif)
     global\skin\twisty-open.gif                                  (global\twisty-open.gif)
     global\skin\twisty-open-selected.gif                         (global\twisty-open-selected.gif)
+    global\skin\toolbargrippy-twisty-collapsed.gif               (global\toolbargrippy-twisty-collapsed.gif)
+    global\skin\toolbargrippy-texture-collapsed.gif              (global\toolbargrippy-texture-collapsed.gif)
     messenger\skin\AccountManager.css                            (messenger\AccountManager.css)
     messenger\skin\addtoab.gif                                   (messenger\addtoab.gif)
     messenger\skin\attach.gif                                    (messenger\attach.gif)

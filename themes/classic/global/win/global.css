@@ -56,6 +56,7 @@
       color               : windowtext;
       padding             : 0px;
       font                : dialog, sans-serif;
+      user-focus          : ignore;
     }
   
   window[wait-cursor] 
@@ -66,7 +67,7 @@
   window.dialog 
     { 
       background-color    : threedface;
-      padding             : 7px 5px 5px 5px;
+      padding             : 8px 10px 10px 8px;
     }
 
 /**

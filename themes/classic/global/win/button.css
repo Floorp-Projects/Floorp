@@ -16,6 +16,7 @@
       min-width           : 6.3em;
       font                : button,sans-serif;
       color               : buttontext;
+      user-focus          : normal;
     }
   
   .button-box-1  
@@ -122,6 +123,25 @@
       border              : 0px ! important;
       margin              : 0px;
       padding             : 0px;
+    }
+    
+  .reorder-up
+    {
+      min-width           : 0px;
+      list-style-image    : url("chrome://global/skin/scroll-up.gif");
+    }    
+    
+  .reorder-down
+    {
+      min-width           : 0px;
+      list-style-image    : url("chrome://global/skin/scroll-down.gif");
+    }    
+    
+  .reorder-up > .button-internal-box > .button-icon,
+  .reorder-down > .button-internal-box > .button-icon
+    {
+      margin              : none;
+      padding             : none;
     }
     
     

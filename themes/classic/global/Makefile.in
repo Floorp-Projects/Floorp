@@ -144,6 +144,8 @@ EXPORT_RESOURCE_SAMPLES_2 = \
 	toolbar-menu-arrow.gif \
 	toolbargrippy-twisty.gif \
 	toolbargrippy-texture.gif \
+	toolbargrippy-twisty-collapsed.gif \
+	toolbargrippy-texture-collapsed.gif \
 	loading.gif \
 	splitter-drag-bg.gif \
 	dropmarker-down-on-active.gif \

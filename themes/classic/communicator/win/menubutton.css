@@ -18,6 +18,19 @@ menubutton.button-toolbar
   {
     behavior                : url("chrome://communicator/skin/menubuttonBindings.xml#menubutton-toolbar-single");
   }
+  
+menubutton.button-toolbar[open="true"], 
+menubutton.button-toolbar:hover 
+  {
+    color                   : #FF0000;
+    text-decoration         : underline;
+  }  
+
+  
+menubutton.button-toolbar > .menubutton-toolbar-single-internal-box > .menubutton-toolbar-single-icon
+  {
+    margin-right            : 5px;
+  }
     
 menubutton.button-toolbar-4:hover
   {

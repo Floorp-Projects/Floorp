@@ -44,6 +44,38 @@ toolbargrippy
     background-repeat     : repeat-y;
   } 
 
+toolbargrippy[tbgrippy-collapsed="true"] 
+  {
+    behavior              : url("chrome://global/skin/classicBindings.xml#toolbargrippy-collapsed");
+    border-left           : 1px solid threedhighlight;
+    border-top            : 1px solid threedhighlight;
+    border-right          : 1px solid threedshadow;
+    border-bottom         : 1px solid threedshadow;
+    height                : 12px;
+    padding-right         : 1px;
+  }
+
+.toolbargrippy-twisty-collapsed
+  {
+    list-style-image      : url("chrome://global/skin/toolbargrippy-twisty-collapsed.gif");
+    margin-left           : 2px;
+  }
+
+
+.toolbargrippy-texture-collapsed
+  {
+    margin                : 2px 1px 1px 5px;
+    background-image      : url("chrome://global/skin/toolbargrippy-texture-collapsed.gif");
+    background-position   : 0% 50%;
+    background-repeat     : repeat-x;
+  } 
+
+
+.collapsed-tray-spring
+  {
+    border-bottom         : 1px solid threedshadow;
+  }  
+  
 toolbargrippy:hover
   {
     background-color      : #CCCCFF;
