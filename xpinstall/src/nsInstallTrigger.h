@@ -42,6 +42,7 @@ class nsInstallTrigger: public nsIScriptObjectOwner, public nsIDOMInstallTrigger
         NS_IMETHOD    CompareVersion(const nsString& aRegName, PRInt32 aMajor, PRInt32 aMinor, PRInt32 aRelease, PRInt32 aBuild, PRInt32* aReturn);
         NS_IMETHOD    CompareVersion(const nsString& aRegName, const nsString& aVersion, PRInt32* aReturn);
         NS_IMETHOD    CompareVersion(const nsString& aRegName, nsIDOMInstallVersion* aVersion, PRInt32* aReturn);
+        NS_IMETHOD    GetVersion(const nsString& component, nsString& version);
 
         
     private:
