@@ -50,13 +50,12 @@ nsresult
 nsCreateInstanceByCID::operator()( const nsIID& aIID, void** aInstancePtr ) const
 {
     nsCOMPtr<nsIComponentManager> compMgr;
-    NS_GetComponentManager(getter_AddRefs(compMgr));
-    if (!compMgr)
-        return NS_ERROR_FAILURE;
-    nsresult status = compMgr->CreateInstance(mCID, 
-                                              mOuter, 
-                                              aIID, 
-                                              aInstancePtr);
+    nsresult status = NS_GetComponentManager(getter_AddRefs(compMgr));
+    if (compMgr)
+        status = compMgr->CreateInstance(mCID, mOuter, aIID, aInstancePtr);
+    else if (NS_SUCCEEDED(status))
+        status = NS_ERROR_UNEXPECTED;
+
     if ( NS_FAILED(status) )
         *aInstancePtr = 0;
     
@@ -71,19 +70,18 @@ nsCreateInstanceByContractID::operator()( const nsIID& aIID, void** aInstancePtr
     nsresult status;
     if ( mContractID ) {
         nsCOMPtr<nsIComponentManager> compMgr;
-        NS_GetComponentManager(getter_AddRefs(compMgr));
-        if (!compMgr)
-            return NS_ERROR_FAILURE;
-        status = compMgr->CreateInstanceByContractID(mContractID,
-                                                     mOuter,
-                                                     aIID,
-                                                     aInstancePtr);
-        if (NS_FAILED(status))
-            *aInstancePtr = 0;
+        status = NS_GetComponentManager(getter_AddRefs(compMgr));
+        if (compMgr)
+            status = compMgr->CreateInstanceByContractID(mContractID, mOuter,
+                                                         aIID, aInstancePtr);
+        else if (NS_SUCCEEDED(status))
+            status = NS_ERROR_UNEXPECTED;
     }
     else
         status = NS_ERROR_NULL_POINTER;
     
+    if (NS_FAILED(status))
+        *aInstancePtr = 0;
     if ( mErrorPtr )
         *mErrorPtr = status;
     return status;
