@@ -1268,8 +1268,10 @@ nsViewerApp::DoPrefs(nsBrowserWindow* aWindow)
                                  CLSCTX_INPROC_SERVER,
                                  IID_INGLayoutPrefs, (void**)&pPrefs);
 
-  pPrefs->Show(NULL);
-  pPrefs->Release();
+  if (SUCCEEDED(res)) {
+      pPrefs->Show(NULL);
+      pPrefs->Release();
+  }
   CoUninitialize();
 #endif
   return NS_OK;
