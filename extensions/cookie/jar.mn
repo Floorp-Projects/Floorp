@@ -9,8 +9,13 @@ comm.jar:
     content/cookie/cookieOverlay.js                (resources/content/cookieOverlay.js)
     content/cookie/p3p.xul                         (resources/content/p3p.xul)
     content/cookie/p3pDialog.xul                   (resources/content/p3pDialog.xul)
-    content/cookie/taskbar-cookie.gif              (resources/content/taskbar-cookie.gif) 
     content/cookie/status.jpg                      (resources/content/status.jpg) 
+
+modern.jar:
+    skin/modern/communicator/cookie/taskbar-cookie.gif          (resources/skin/modern/taskbar-cookie.gif)
+
+classic.jar:
+    skin/classic/communicator/cookie/taskbar-cookie.gif         (resources/skin/classic/taskbar-cookie.gif)
 
 en-US.jar:
     locale/en-US/cookie/contents.rdf               (resources/locale/en-US/contents.rdf)
