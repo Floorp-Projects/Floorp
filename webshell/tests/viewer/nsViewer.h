@@ -30,6 +30,8 @@
 #define GFXWIN_DLL "raptorgfxwin.dll"
 #define VIEW_DLL   "raptorview.dll"
 
+#define MAXPATHLEN 1024
+
 class DocObserver : public nsIDocumentObserver,
                     public nsIStreamListener,
                     public nsILinkHandler
@@ -125,6 +127,7 @@ class nsViewer : public nsDispatchListener {
     virtual void Stop();
     virtual void AfterDispatch();
     virtual void CrtSetDebug(PRUint32 aNewFlags);
+    virtual void ExitViewer();
 
     virtual nsDocLoader* SetupViewer(nsIWidget **aMainWindow);
     virtual void CleanupViewer(nsDocLoader* aDl);
