@@ -35,7 +35,7 @@
  * Implementation of OCSP services, for both client and server.
  * (XXX, really, mostly just for client right now, but intended to do both.)
  *
- * $Id: ocsp.c,v 1.10 2002/07/10 15:16:10 wtc%netscape.com Exp $
+ * $Id: ocsp.c,v 1.11 2002/08/04 02:50:40 jpierre%netscape.com Exp $
  */
 
 #include "prerror.h"
@@ -2892,6 +2892,11 @@ ocsp_TimeIsRecent(int64 checkTime)
     return PR_TRUE;
 }
 
+#define OCSP_SLOP (5L*60L) /* OCSP responses are allowed to be 5 minutes
+                              in the future by default */
+
+static PRUint32 ocspsloptime = OCSP_SLOP;	/* seconds */
+
 /*
  * Check that this single response is okay.  A return of SECSuccess means:
  *   1. The signer (represented by "signerCert") is authorized to give status
@@ -2922,7 +2927,7 @@ ocsp_VerifySingleResponse(CERTOCSPSingleResponse *single,
 			  int64 producedAt)
 {
     CERTOCSPCertID *certID = single->certID;
-    int64 now, thisUpdate, nextUpdate;
+    int64 now, thisUpdate, nextUpdate, tmstamp, tmp;
     SECStatus rv;
 
     /*
@@ -2955,7 +2960,12 @@ ocsp_VerifySingleResponse(CERTOCSPSingleResponse *single,
      * Now check the time stuff, as described above.
      */
     now = PR_Now();
-    if (LL_CMP(thisUpdate, >, now) || LL_CMP(producedAt, <, thisUpdate)) {
+    /* allow slop time for future response */
+    LL_UI2L(tmstamp, ocspsloptime); /* get slop time in seconds */
+    LL_UI2L(tmp, PR_USEC_PER_SEC);
+    LL_MUL(tmstamp, tmstamp, tmp); /* convert the slop time to PRTime */
+    LL_ADD(tmstamp, tmstamp, now); /* add current time to it */
+    if (LL_CMP(thisUpdate, >, tmstamp) || LL_CMP(producedAt, <, thisUpdate)) {
 	PORT_SetError(SEC_ERROR_OCSP_FUTURE_RESPONSE);
 	return SECFailure;
     }
