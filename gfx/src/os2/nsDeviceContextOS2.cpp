@@ -71,7 +71,7 @@ nsDeviceContextOS2 :: nsDeviceContextOS2()
 
 #ifdef XP_OS2 // OS2TODO - GET RID OF THIS!
    // Init module if necessary
-   if( !gModuleData.lDisplayDepth)
+   if( !gModuleData.hpsScreen)
       gModuleData.Init();
 #endif
 
