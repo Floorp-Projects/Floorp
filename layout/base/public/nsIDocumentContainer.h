@@ -66,6 +66,6 @@ public:
    * @see mg.magellan.script.IScriptEnvrionment
    */
   virtual nsIScriptable* GetScriptableContainer() = 0;
-}
+};
 
 #endif /* nsIDocumentContainer_h___ */
