@@ -23,10 +23,43 @@
 
 CRDFToolbarContainer::CRDFToolbarContainer( LStream* inStream )
 		: CDragBarContainer(inStream),
-			_ht_root( HT_NewToolbarPane(CreateNotificationStruct()) )
+//			_ht_root( HT_NewToolbarPane(CreateNotificationStruct()) )
+			_ht_root( NULL )
 	{
 		HT_SetPaneFEData(_ht_root.get(), this);
 	}
+
+
+void
+CRDFToolbarContainer :: FinishCreateSelf ( )
+{
+	CDragBarContainer::FinishCreateSelf();
+	
+	// defer creation of the toolbar pane until everything is created because
+	// we need to have the dock around when we pull in the toolbars
+	_ht_root = auto_ptr<_HT_PaneStruct>(HT_NewToolbarPane(CreateNotificationStruct()));
+	
+} // FinishCreateSelf
+
+
+//
+// BuildToolbarsPresentAtStartup
+//
+// Nothing for now.
+void
+CRDFToolbarContainer :: BuildToolbarsPresentAtStartup ( )
+{
+
+
+
+} // BuildToolbarsPresentAtStartup
+
+
+void 
+CRDFToolbarContainer :: RestorePlace(LStream *inPlace)
+{
+
+} // RestorePlace
 
 
 void
@@ -36,14 +69,11 @@ CRDFToolbarContainer::HandleNotification( HT_Notification notification, HT_Resou
 
 		switch ( event )
 			{
-				case HT_EVENT_VIEW_ADDED: // i.e., create a toolbar
-					{
-						CRDFToolbar* toolbar = new CRDFToolbar(ht_view, this);
-						AddBar(toolbar);
-					}
+				case HT_EVENT_VIEW_ADDED:		// i.e., create a toolbar
+					AddBar( new CRDFToolbar(ht_view, this) );
 					break;
 
-				case HT_EVENT_VIEW_DELETED: // i.e., destroy a toolbar
+				case HT_EVENT_VIEW_DELETED:	// i.e., destroy a toolbar
 					if( CRDFToolbar* toolbar = reinterpret_cast<CRDFToolbar*>(HT_GetViewFEData(ht_view)) )
 						delete toolbar;
 					break;
@@ -75,7 +105,7 @@ CRDFToolbarContainer::HandleNotification( HT_Notification notification, HT_Resou
 				case HT_EVENT_COLUMN_HIDE:
 				case HT_EVENT_VIEW_MODECHANGED:
 #endif
-				default:
+				default:	// If it's not a message for me, it may be for some object under me...
 					if ( CRDFToolbar* toolbar = reinterpret_cast<CRDFToolbar*>(HT_GetViewFEData(ht_view)) )
 						toolbar->HandleNotification(notification, node, event, token, tokenType);
 			}

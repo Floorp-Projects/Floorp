@@ -54,8 +54,14 @@ class CRDFToolbarContainer
 			CRDFToolbarContainer& operator=( const CRDFToolbarContainer& );	// DON'T IMPLEMENT
 
 
-		protected: // ...overriding the appropriate methods of |CRDFNotificationHandler|
+		protected: 
+				// overriding the appropriate methods of |CRDFNotificationHandler|
 			virtual void HandleNotification( HT_Notification, HT_Resource, HT_Event, void*, uint32 );
+
+				// overriding the appropriate methods of |CDragBarContainer|
+			virtual void BuildToolbarsPresentAtStartup ( ) ;
+			virtual void RestorePlace(LStream *inPlace);
+			virtual void FinishCreateSelf();
 
 		private:
 			auto_ptr<_HT_PaneStruct> _ht_root;
