@@ -388,8 +388,7 @@ static float64 testFunctionCall(World &world, float64 n)
 
 
     // preset the global property "sum" to contain the above function
-    JSValue v(funCode);
-    defineGlobalProperty(widenCString("sum"), JSValue(v));
+    defineFunction(sum, funCode);
 
     JSValue result = interpret(script.complete(), JSValues());
     std::cout << "sum(" << n << ") = " << result.f64 << std::endl;
@@ -439,8 +438,7 @@ static float64 testFactorial(World &world, float64 n)
 
      // preset the global property "fact" to contain the above function
     StringAtom& fact = world.identifiers[widenCString("fact")];
-    JSValue v(icm);
-    defineGlobalProperty(fact, v);
+    defineFunction(fact, icm);
 
     // now a script : 
     // return fact(n);
@@ -534,7 +532,7 @@ int main(int argc, char **argv)
     assert(testFactorial(world, 5) == 120);
     assert(testObjects(world, 5) == 5);
 //    testICG(world);
-    testFunctionCall(world, 5);
+    assert(testFunctionCall(world, 5) == 5);
   #endif
 	readEvalPrint(stdin, world);
     return 0;
