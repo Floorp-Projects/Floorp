@@ -1025,6 +1025,7 @@ nsTableRowGroupFrame::Reflow(nsIPresContext*          aPresContext,
                              const nsHTMLReflowState& aReflowState,
                              nsReflowStatus&          aStatus)
 {
+  DO_GLOBAL_REFLOW_COUNT("nsTableRowGroupFrame", aReflowState.reason);
   if (nsDebugTable::gRflRowGrp) nsTableFrame::DebugReflow("TRG::Rfl", this, &aReflowState, nsnull);
   nsresult rv=NS_OK;
 

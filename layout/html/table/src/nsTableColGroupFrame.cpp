@@ -485,6 +485,7 @@ NS_METHOD nsTableColGroupFrame::Reflow(nsIPresContext*          aPresContext,
                                        const nsHTMLReflowState& aReflowState,
                                        nsReflowStatus&          aStatus)
 {
+  DO_GLOBAL_REFLOW_COUNT("nsTableColGroupFrame", aReflowState.reason);
   NS_ASSERTION(nsnull!=mContent, "bad state -- null content for frame");
   nsresult rv=NS_OK;
   // for every content child that (is a column thingy and does not already have a frame)
