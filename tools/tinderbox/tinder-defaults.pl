@@ -45,6 +45,7 @@ $AliveTestTimeout               = 45;
 $ViewerTestTimeout              = 45;
 $EmbedTestTimeout               = 45;
 $BloatTestTimeout               = 120;    # seconds
+$MailBloatTestTimeout           = 120;    # seconds
 $JavaTestTimeout                = 45;
 $DomTestTimeout	                = 45;     # seconds
 $LayoutPerformanceTestTimeout   = 1200;  # seconds
