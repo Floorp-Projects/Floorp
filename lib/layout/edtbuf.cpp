@@ -12506,8 +12506,8 @@ EDT_ClipboardResult CEditBuffer::PasteText( char *pText, XP_Bool bMailQuote, XP_
             pEnd = m_pRoot->GetLastMostChild(); // This is almost always too far, but it is safe.
         }
 
-        Reflow( start.m_pElement, start.m_iPos, pEnd );
-        //
+        Relayout( start.m_pElement, start.m_iPos, pEnd );
+        // was Reflow.  did not fix up problems with tree and layout inconsistencies(sp)
         if( bMailQuote ){
             CEditInsertPoint start = PersistentToEphemeral(persistentStart);
             //SetInsertPoint( start );
