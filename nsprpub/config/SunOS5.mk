@@ -106,6 +106,16 @@ ifeq (,$(filter-out 5.3 5.4,$(OS_RELEASE)))
 OS_DEFINES		+= -D_PR_NO_LARGE_FILES
 else
 OS_DEFINES		+= -D_PR_HAVE_OFF64_T
+# The lfcompile64(5) man page on Solaris 2.6 says:
+#     For applications that do not wish to conform to the POSIX or
+#     X/Open  specifications,  the  64-bit transitional interfaces
+#     are available by default.  No compile-time flags need to  be
+#     set.
+# But gcc 2.7.2.x fails to define _LARGEFILE64_SOURCE by default.
+# The native compiler, gcc 2.8.x, and egcs don't have this problem.
+ifdef NS_USE_GCC
+OS_DEFINES		+= -D_LARGEFILE64_SOURCE
+endif
 endif
 endif
 
