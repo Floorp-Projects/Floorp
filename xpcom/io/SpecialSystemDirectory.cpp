@@ -339,7 +339,12 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
           } 
 #elif defined(XP_MAC)
         return nsIFileFromOSType(kTemporaryFolderType, aFile);
-        
+
+#elif defined(XP_MACOSX)
+        {
+            return GetOSXFolderType(kUserDomain, kTemporaryFolderType, aFile);
+        }
+
 #elif defined(XP_UNIX) || defined(XP_BEOS)
 		{
 			static const char *tPath = nsnull;
@@ -778,65 +783,23 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
     }
 }
 
-#if defined(XP_MAC)
-//----------------------------------------------------------------------------------------
-static nsresult nsIFileFromOSType(OSType folderType, nsILocalFile** aFile)
-//----------------------------------------------------------------------------------------
+#if defined (XP_MACOSX)
+nsresult
+GetOSXFolderType(short aDomain, OSType aFolderType, nsILocalFile **localFile)
 {
-    CInfoPBRec cinfo;
-    DirInfo *dipb=(DirInfo *)&cinfo;
-    
-    // hack: first check for kDefaultDownloadFolderType
-    // if it is, get Internet Config Download folder, if that's
-    // not availble use desktop folder
-    if (folderType == kDefaultDownloadFolderType)
-    {
-      nsCOMPtr<nsIInternetConfigService> icService (do_GetService(NS_INTERNETCONFIGSERVICE_CONTRACTID));
-      if (icService)
-      {
-        if (NS_SUCCEEDED(icService->GetDownloadFolder(&mSpec)))
-          return;
-        else
-          folderType = kDesktopFolderType;
-      }
-      else
-      {
-        folderType = kDesktopFolderType;
-      }
-    }
-    // Call FindFolder to fill in the vrefnum and dirid
-    for (int attempts = 0; attempts < 2; attempts++)
-    {
-        mError = NS_FILE_RESULT(FindFolder(kOnSystemDisk,
-                                           folderType,
-                                           true,
-                                           &dipb->ioVRefNum,
-                                           &dipb->ioDrDirID));
-        if (NS_SUCCEEDED(mError))
-            break;
-        if (attempts > 0)
-		    return;
-		switch (folderType)
-		{
-	        case kDocumentsFolderType:
-                // Find folder will find this, as long as it exists.
-                // The "create" parameter, however, is sadly ignored.
-                // How do we internationalize this?
-                return nsIFileFromOSType(kVolumeRootFolderType;
-                *this += "Documents";
-                CreateDirectory();
-                break;
-		} // switch
-    } // for
-    StrFileName filename;
-    filename[0] = '\0';
-    dipb->ioNamePtr = (StringPtr)&filename;
-    dipb->ioFDirIndex = -1;
-    
-    mError = NS_FILE_RESULT(PBGetCatInfoSync(&cinfo));
-    if (NS_SUCCEEDED(mError))
-    {
-	    mError = NS_FILE_RESULT(FSMakeFSSpec(dipb->ioVRefNum, dipb->ioDrParID, filename, &mSpec));
-    }
-}
-#endif // XP_MAC
+  OSErr err;
+  FSRef fsRef;
+	nsresult rv = NS_ERROR_FAILURE;
+
+  err = ::FSFindFolder(aDomain, aFolderType, kCreateFolder, &fsRef);
+  if (err == noErr)
+  {
+      NS_NewLocalFile(nsString(), PR_TRUE, localFile);
+      nsCOMPtr<nsILocalFileMac> localMacFile(do_QueryInterface(*localFile));
+      if (localMacFile)
+          rv = localMacFile->InitWithFSRef(&fsRef);
+  }
+  return rv;
+}                                                                      
+#endif
+

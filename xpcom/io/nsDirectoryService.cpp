@@ -100,7 +100,7 @@
 #if defined (XP_WIN)
 #define HOME_DIR NS_WIN_APPDATA_DIR
 #elif defined (XP_MAC) || defined (XP_MACOSX)
-#define HOME_DIR NS_MAC_HOME_DIR
+#define HOME_DIR NS_OSX_HOME_DIR
 #elif defined (XP_UNIX)
 #define HOME_DIR NS_UNIX_HOME_DIR
 #elif defined (XP_OS2)
@@ -348,7 +348,7 @@ nsIAtom*  nsDirectoryService::sOS_DriveDirectory = nsnull;
 nsIAtom*  nsDirectoryService::sOS_TemporaryDirectory = nsnull;
 nsIAtom*  nsDirectoryService::sOS_CurrentProcessDirectory = nsnull;
 nsIAtom*  nsDirectoryService::sOS_CurrentWorkingDirectory = nsnull;
-#if defined(XP_MAC)
+#if defined (XP_MACOSX)
 nsIAtom*  nsDirectoryService::sDirectory = nsnull;
 nsIAtom*  nsDirectoryService::sDesktopDirectory = nsnull;
 nsIAtom*  nsDirectoryService::sTrashDirectory = nsnull;
@@ -358,16 +358,28 @@ nsIAtom*  nsDirectoryService::sAppleMenuDirectory = nsnull;
 nsIAtom*  nsDirectoryService::sControlPanelDirectory = nsnull;
 nsIAtom*  nsDirectoryService::sExtensionDirectory = nsnull;
 nsIAtom*  nsDirectoryService::sFontsDirectory = nsnull;
-nsIAtom*  nsDirectoryService::sClassicPreferencesDirectory = nsnull;
 nsIAtom*  nsDirectoryService::sPreferencesDirectory = nsnull;
 nsIAtom*  nsDirectoryService::sDocumentsDirectory = nsnull;
 nsIAtom*  nsDirectoryService::sInternetSearchDirectory = nsnull;
-nsIAtom*  nsDirectoryService::sHomeDirectory = nsnull;
-nsIAtom*  nsDirectoryService::sDefaultDownloadDirectory = nsnull;
 nsIAtom*  nsDirectoryService::sUserLibDirectory = nsnull;
-#elif defined (XP_MACOSX)
 nsIAtom*  nsDirectoryService::sHomeDirectory = nsnull;
 nsIAtom*  nsDirectoryService::sDefaultDownloadDirectory = nsnull;
+nsIAtom*  nsDirectoryService::sUserDesktopDirectory = nsnull;
+nsIAtom*  nsDirectoryService::sLocalDesktopDirectory = nsnull;
+nsIAtom*  nsDirectoryService::sUserApplicationsDirectory = nsnull;
+nsIAtom*  nsDirectoryService::sLocalApplicationsDirectory = nsnull;
+nsIAtom*  nsDirectoryService::sUserDocumentsDirectory = nsnull;
+nsIAtom*  nsDirectoryService::sLocalDocumentsDirectory = nsnull;
+nsIAtom*  nsDirectoryService::sUserInternetPlugInDirectory = nsnull;
+nsIAtom*  nsDirectoryService::sLocalInternetPlugInDirectory = nsnull;
+nsIAtom*  nsDirectoryService::sUserFrameworksDirectory = nsnull;
+nsIAtom*  nsDirectoryService::sLocalFrameworksDirectory = nsnull;
+nsIAtom*  nsDirectoryService::sUserPreferencesDirectory = nsnull;
+nsIAtom*  nsDirectoryService::sLocalPreferencesDirectory = nsnull;
+nsIAtom*  nsDirectoryService::sPictureDocumentsDirectory = nsnull;
+nsIAtom*  nsDirectoryService::sMovieDocumentsDirectory = nsnull;
+nsIAtom*  nsDirectoryService::sMusicDocumentsDirectory = nsnull;
+nsIAtom*  nsDirectoryService::sInternetSitesDirectory = nsnull;
 #elif defined (XP_WIN) 
 nsIAtom*  nsDirectoryService::sSystemDirectory = nsnull;
 nsIAtom*  nsDirectoryService::sWindowsDirectory = nsnull;
@@ -444,26 +456,38 @@ static const nsStaticAtom directory_atoms[] = {
     { NS_OS_TEMP_DIR,              &nsDirectoryService::sOS_TemporaryDirectory },
     { NS_OS_CURRENT_PROCESS_DIR,   &nsDirectoryService::sOS_CurrentProcessDirectory },
     { NS_OS_CURRENT_WORKING_DIR,   &nsDirectoryService::sOS_CurrentWorkingDirectory },
-#if defined(XP_MAC)
-    { NS_OS_SYSTEM_DIR,            &nsDirectoryService::sDirectory },
-    { NS_MAC_DESKTOP_DIR,          &nsDirectoryService::sDesktopDirectory },
-    { NS_MAC_TRASH_DIR,            &nsDirectoryService::sTrashDirectory },
-    { NS_MAC_STARTUP_DIR,          &nsDirectoryService::sStartupDirectory },
-    { NS_MAC_SHUTDOWN_DIR,         &nsDirectoryService::sShutdownDirectory },
-    { NS_MAC_APPLE_MENU_DIR,       &nsDirectoryService::sAppleMenuDirectory },
-    { NS_MAC_CONTROL_PANELS_DIR,   &nsDirectoryService::sControlPanelDirectory },
-    { NS_MAC_EXTENSIONS_DIR,       &nsDirectoryService::sExtensionDirectory },
-    { NS_MAC_FONTS_DIR,            &nsDirectoryService::sFontsDirectory },
-    { NS_MAC_CLASSICPREFS_DIR,     &nsDirectoryService::sClassicPreferencesDirectory },
-    { NS_MAC_PREFS_DIR,            &nsDirectoryService::sPreferencesDirectory },
-    { NS_MAC_DOCUMENTS_DIR,        &nsDirectoryService::sDocumentsDirectory },
-    { NS_MAC_INTERNET_SEARCH_DIR,  &nsDirectoryService::sInternetSearchDirectory },
-    { NS_MAC_HOME_DIR,             &nsDirectoryService::sHomeDirectory },
-    { NS_MAC_DEFAULT_DOWNLOAD_DIR, &nsDirectoryService::sDefaultDownloadDirectory },
-    { NS_MAC_USER_LIB_DIR,         &nsDirectoryService::sUserLibDirectory },
-#elif defined (XP_MACOSX)
-    { NS_MAC_HOME_DIR,             &nsDirectoryService::sHomeDirectory },
-    { NS_MAC_DEFAULT_DOWNLOAD_DIR, &nsDirectoryService::sDefaultDownloadDirectory },
+#if defined (XP_MACOSX)
+    { NS_OS_SYSTEM_DIR,                   &nsDirectoryService::sDirectory },
+    { NS_MAC_DESKTOP_DIR,                 &nsDirectoryService::sDesktopDirectory },
+    { NS_MAC_TRASH_DIR,                   &nsDirectoryService::sTrashDirectory },
+    { NS_MAC_STARTUP_DIR,                 &nsDirectoryService::sStartupDirectory },
+    { NS_MAC_SHUTDOWN_DIR,                &nsDirectoryService::sShutdownDirectory },
+    { NS_MAC_APPLE_MENU_DIR,              &nsDirectoryService::sAppleMenuDirectory },
+    { NS_MAC_CONTROL_PANELS_DIR,          &nsDirectoryService::sControlPanelDirectory },
+    { NS_MAC_EXTENSIONS_DIR,              &nsDirectoryService::sExtensionDirectory },
+    { NS_MAC_FONTS_DIR,                   &nsDirectoryService::sFontsDirectory },
+    { NS_MAC_PREFS_DIR,                   &nsDirectoryService::sPreferencesDirectory },
+    { NS_MAC_DOCUMENTS_DIR,               &nsDirectoryService::sDocumentsDirectory },
+    { NS_MAC_INTERNET_SEARCH_DIR,         &nsDirectoryService::sInternetSearchDirectory },
+    { NS_MAC_USER_LIB_DIR,                &nsDirectoryService::sUserLibDirectory },
+    { NS_OSX_HOME_DIR,                    &nsDirectoryService::sHomeDirectory },
+    { NS_OSX_DEFAULT_DOWNLOAD_DIR,        &nsDirectoryService::sDefaultDownloadDirectory },
+    { NS_OSX_USER_DESKTOP_DIR,            &nsDirectoryService::sUserDesktopDirectory },
+    { NS_OSX_LOCAL_DESKTOP_DIR,           &nsDirectoryService::sLocalDesktopDirectory },
+    { NS_OSX_USER_APPLICATIONS_DIR,       &nsDirectoryService::sUserApplicationsDirectory },
+    { NS_OSX_LOCAL_APPLICATIONS_DIR,      &nsDirectoryService::sLocalApplicationsDirectory },
+    { NS_OSX_USER_DOCUMENTS_DIR,          &nsDirectoryService::sUserDocumentsDirectory },
+    { NS_OSX_LOCAL_DOCUMENTS_DIR,         &nsDirectoryService::sLocalDocumentsDirectory },
+    { NS_OSX_USER_INTERNET_PLUGIN_DIR,    &nsDirectoryService::sUserInternetPlugInDirectory },
+    { NS_OSX_LOCAL_INTERNET_PLUGIN_DIR,   &nsDirectoryService::sLocalInternetPlugInDirectory },
+    { NS_OSX_USER_FRAMEWORKS_DIR,         &nsDirectoryService::sUserFrameworksDirectory },
+    { NS_OSX_LOCAL_FRAMEWORKS_DIR,        &nsDirectoryService::sLocalFrameworksDirectory },
+    { NS_OSX_USER_PREFERENCES_DIR,        &nsDirectoryService::sUserPreferencesDirectory },
+    { NS_OSX_LOCAL_PREFERENCES_DIR,       &nsDirectoryService::sLocalPreferencesDirectory },
+    { NS_OSX_PICTURE_DOCUMENTS_DIR,       &nsDirectoryService::sPictureDocumentsDirectory },
+    { NS_OSX_MOVIE_DOCUMENTS_DIR,         &nsDirectoryService::sMovieDocumentsDirectory },
+    { NS_OSX_MUSIC_DOCUMENTS_DIR,         &nsDirectoryService::sMusicDocumentsDirectory },
+    { NS_OSX_INTERNET_SITES_DIR,          &nsDirectoryService::sInternetSitesDirectory },
 #elif defined (XP_WIN) 
     { NS_OS_SYSTEM_DIR,            &nsDirectoryService::sSystemDirectory },
     { NS_WIN_WINDOWS_DIR,          &nsDirectoryService::sWindowsDirectory },
@@ -806,84 +830,62 @@ nsDirectoryService::GetFile(const char *prop, PRBool *persistent, nsIFile **_ret
         rv = GetSpecialSystemDirectory(OS_CurrentWorkingDirectory, getter_AddRefs(localFile)); 
     }
        
-#if defined(XP_MAC)
+#if defined(XP_MACOSX)
     else if (inAtom == nsDirectoryService::sDirectory)
     {
-        rv = GetSpecialSystemDirectory(Mac_SystemDirectory, getter_AddRefs(localFile)); 
+        rv = GetOSXFolderType(kClassicDomain, kSystemFolderType, getter_AddRefs(localFile));
     }
     else if (inAtom == nsDirectoryService::sDesktopDirectory)
     {
-        rv = GetSpecialSystemDirectory(Mac_DesktopDirectory, getter_AddRefs(localFile)); 
-    }
-    else if (inAtom == nsDirectoryService::sHomeDirectory)
-    {
-        rv = GetSpecialSystemDirectory(Mac_DocumentsDirectory, getter_AddRefs(localFile)); 
+        rv = GetOSXFolderType(kClassicDomain, kDesktopFolderType, getter_AddRefs(localFile));
     }
     else if (inAtom == nsDirectoryService::sTrashDirectory)
     {
-        rv = GetSpecialSystemDirectory(Mac_TrashDirectory, getter_AddRefs(localFile)); 
+        rv = GetOSXFolderType(kClassicDomain, kTrashFolderType, getter_AddRefs(localFile));
     }
     else if (inAtom == nsDirectoryService::sStartupDirectory)
     {
-        rv = GetSpecialSystemDirectory(Mac_StartupDirectory, getter_AddRefs(localFile)); 
+        rv = GetOSXFolderType(kClassicDomain, kStartupFolderType, getter_AddRefs(localFile));
     }
     else if (inAtom == nsDirectoryService::sShutdownDirectory)
     {
-        rv = GetSpecialSystemDirectory(Mac_ShutdownDirectory, getter_AddRefs(localFile)); 
+        rv = GetOSXFolderType(kClassicDomain, kShutdownFolderType, getter_AddRefs(localFile));
     }
     else if (inAtom == nsDirectoryService::sAppleMenuDirectory)
     {
-        rv = GetSpecialSystemDirectory(Mac_AppleMenuDirectory, getter_AddRefs(localFile)); 
+        rv = GetOSXFolderType(kClassicDomain, kAppleMenuFolderType, getter_AddRefs(localFile));
     }
     else if (inAtom == nsDirectoryService::sControlPanelDirectory)
     {
-        rv = GetSpecialSystemDirectory(Mac_ControlPanelDirectory, getter_AddRefs(localFile)); 
+        rv = GetOSXFolderType(kClassicDomain, kControlPanelFolderType, getter_AddRefs(localFile));
     }
     else if (inAtom == nsDirectoryService::sExtensionDirectory)
     {
-        rv = GetSpecialSystemDirectory(Mac_ExtensionDirectory, getter_AddRefs(localFile));
+        rv = GetOSXFolderType(kClassicDomain, kExtensionFolderType, getter_AddRefs(localFile));
     }
     else if (inAtom == nsDirectoryService::sFontsDirectory)
     {
-        rv = GetSpecialSystemDirectory(Mac_FontsDirectory, getter_AddRefs(localFile)); 
-    }
-    else if (inAtom == nsDirectoryService::sClassicPreferencesDirectory)
-    {
-        rv = GetSpecialSystemDirectory(Mac_ClassicPreferencesDirectory, getter_AddRefs(localFile)); 
+        rv = GetOSXFolderType(kClassicDomain, kFontsFolderType, getter_AddRefs(localFile));
     }
     else if (inAtom == nsDirectoryService::sPreferencesDirectory)
     {
-        rv = GetSpecialSystemDirectory(Mac_PreferencesDirectory, getter_AddRefs(localFile)); 
+        rv = GetOSXFolderType(kClassicDomain, kPreferencesFolderType, getter_AddRefs(localFile));
     }
     else if (inAtom == nsDirectoryService::sDocumentsDirectory)
     {
-        rv = GetSpecialSystemDirectory(Mac_DocumentsDirectory, getter_AddRefs(localFile));
+        rv = GetOSXFolderType(kClassicDomain, kDocumentsFolderType, getter_AddRefs(localFile));
     }
     else if (inAtom == nsDirectoryService::sInternetSearchDirectory)
     {
-        rv = GetSpecialSystemDirectory(Mac_InternetSearchDirectory, getter_AddRefs(localFile)); 
+        rv = GetOSXFolderType(kClassicDomain, kInternetSearchSitesFolderType, getter_AddRefs(localFile));
     }   
-    else if (inAtom == nsDirectoryService::sDefaultDownloadDirectory)
-    {
-        rv = GetSpecialSystemDirectory(Mac_DefaultDownloadDirectory, getter_AddRefs(localFile)); 
-    }
     else if (inAtom == nsDirectoryService::sUserLibDirectory)
     {
-        rv = GetSpecialSystemDirectory(Mac_UserLibDirectory, getter_AddRefs(localFile)); 
+        rv = GetOSXFolderType(kUserDomain, kDomainLibraryFolderType, getter_AddRefs(localFile));
     }
-#elif defined (XP_MACOSX)
     else if (inAtom == nsDirectoryService::sHomeDirectory)
     {
-        OSErr err;
-        FSRef fsRef;
-        err = ::FSFindFolder(kUserDomain, kDomainTopLevelFolderType, kCreateFolder, &fsRef);
-        if (err == noErr)
-        {
-            NS_NewLocalFile(nsString(), PR_TRUE, getter_AddRefs(localFile));
-            nsCOMPtr<nsILocalFileMac> localMacFile(do_QueryInterface(localFile));
-            if (localMacFile)
-                rv = localMacFile->InitWithFSRef(&fsRef);
-        }
+        rv = GetOSXFolderType(kUserDomain, kDomainTopLevelFolderType, getter_AddRefs(localFile));
     }
     else if (inAtom == nsDirectoryService::sDefaultDownloadDirectory)
     {
@@ -910,17 +912,79 @@ nsDirectoryService::GetFile(const char *prop, PRBool *persistent, nsIFile **_ret
             }
             
             if NS_FAILED(rv)
-            { // We got an error getting the DL folder from IC so try finding the user's Desktop folder
-                FSRef fsRef;
-                err = ::FSFindFolder(kUserDomain, kSystemDesktopFolderType, kCreateFolder, &fsRef);
-                if (err == noErr)
-                    rv = localMacFile->InitWithFSRef(&fsRef);
+            { 
+                // We got an error getting the DL folder from IC so try finding the user's Desktop folder
+                rv = GetOSXFolderType(kUserDomain, kSystemDesktopFolderType, getter_AddRefs(localFile));
             }
         }
         
         // Don't cache the DL directory as the user may change it while we're running.
         // Negligible perf hit as this directory is only requested for downloads
         *persistent = PR_FALSE;
+    }
+    else if (inAtom == nsDirectoryService::sUserDesktopDirectory)
+    {
+        rv = GetOSXFolderType(kUserDomain, kDesktopFolderType, getter_AddRefs(localFile));
+    }
+    else if (inAtom == nsDirectoryService::sLocalDesktopDirectory)
+    {
+        rv = GetOSXFolderType(kLocalDomain, kDesktopFolderType, getter_AddRefs(localFile));
+    }
+    else if (inAtom == nsDirectoryService::sUserApplicationsDirectory)
+    {
+        rv = GetOSXFolderType(kUserDomain, kApplicationsFolderType, getter_AddRefs(localFile));
+    }
+    else if (inAtom == nsDirectoryService::sLocalApplicationsDirectory)
+    {
+        rv = GetOSXFolderType(kLocalDomain, kApplicationsFolderType, getter_AddRefs(localFile));
+    }
+    else if (inAtom == nsDirectoryService::sUserDocumentsDirectory)
+    {
+        rv = GetOSXFolderType(kUserDomain, kDocumentsFolderType, getter_AddRefs(localFile));
+    }
+    else if (inAtom == nsDirectoryService::sLocalDocumentsDirectory)
+    {
+        rv = GetOSXFolderType(kLocalDomain, kDocumentsFolderType, getter_AddRefs(localFile));
+    }
+    else if (inAtom == nsDirectoryService::sUserInternetPlugInDirectory)
+    {
+        rv = GetOSXFolderType(kUserDomain, kInternetPlugInFolderType, getter_AddRefs(localFile));
+    }
+    else if (inAtom == nsDirectoryService::sLocalInternetPlugInDirectory)
+    {
+        rv = GetOSXFolderType(kLocalDomain, kInternetPlugInFolderType, getter_AddRefs(localFile));
+    }
+    else if (inAtom == nsDirectoryService::sUserFrameworksDirectory)
+    {
+        rv = GetOSXFolderType(kUserDomain, kFrameworksFolderType, getter_AddRefs(localFile));
+    }
+    else if (inAtom == nsDirectoryService::sLocalFrameworksDirectory)
+    {
+        rv = GetOSXFolderType(kLocalDomain, kFrameworksFolderType, getter_AddRefs(localFile));
+    }
+    else if (inAtom == nsDirectoryService::sUserPreferencesDirectory)
+    {
+        rv = GetOSXFolderType(kUserDomain, kPreferencesFolderType, getter_AddRefs(localFile));
+    }
+    else if (inAtom == nsDirectoryService::sLocalPreferencesDirectory)
+    {
+        rv = GetOSXFolderType(kLocalDomain, kPreferencesFolderType, getter_AddRefs(localFile));
+    }
+    else if (inAtom == nsDirectoryService::sPictureDocumentsDirectory)
+    {
+        rv = GetOSXFolderType(kUserDomain, kPictureDocumentsFolderType, getter_AddRefs(localFile));
+    }
+    else if (inAtom == nsDirectoryService::sMovieDocumentsDirectory)
+    {
+        rv = GetOSXFolderType(kUserDomain, kMovieDocumentsFolderType, getter_AddRefs(localFile));
+    }
+    else if (inAtom == nsDirectoryService::sMusicDocumentsDirectory)
+    {
+        rv = GetOSXFolderType(kUserDomain, kMusicDocumentsFolderType, getter_AddRefs(localFile));
+    }
+    else if (inAtom == nsDirectoryService::sInternetSitesDirectory)
+    {
+        rv = GetOSXFolderType(kUserDomain, kInternetSitesFolderType, getter_AddRefs(localFile));
     }
 #elif defined (XP_WIN)
     else if (inAtom == nsDirectoryService::sSystemDirectory)

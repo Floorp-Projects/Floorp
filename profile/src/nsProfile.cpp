@@ -1982,7 +1982,7 @@ char * nsProfile::GetOldRegLocation()
 #elif defined(XP_WIN)
     NS_GetSpecialDirectory(NS_WIN_WINDOWS_DIR, getter_AddRefs(oldRegFile));
 #elif defined(XP_MAC)
-    NS_GetSpecialDirectory(NS_MAC_CLASSICPREFS_DIR, getter_AddRefs(oldRegFile));
+    NS_GetSpecialDirectory(NS_MAC_PREFS_DIR, getter_AddRefs(oldRegFile));
 #endif
 
     if (!oldRegFile)
