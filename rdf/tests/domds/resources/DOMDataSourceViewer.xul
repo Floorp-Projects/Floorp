@@ -12,6 +12,7 @@
 
 <html:script language="JavaScript" src="DOMDataSourceViewer.js"/>
 <box align="vertical" flex="30%">
+  <html:input type="text" name="url" id="url" onkeyup="if (event.which == 13) loadUrl();"/>
   <box align="horizontal">
     <html:input name="url" id="url" value="http://www.mozillazine.org/"/>
     <titledbutton onclick="loadUrl();" value="Load"/>
