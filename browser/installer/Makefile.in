@@ -42,4 +42,27 @@ VPATH		= @srcdir@
 
 NO_GECKO_SDK=1
 
-include $(topsrcdir)/xpinstall/packager/Makefile
+NO_PKG_FILES = \
+	TestGtkEmbed \
+	bloaturls.txt \
+	codesighs* \
+	elf-dynstr-gc \
+	firefox-config \
+	mangle* \
+	maptsv* \
+	mfc* \
+	mkdepend* \
+	nm2tsv* \
+	nsinstall* \
+	rebasedlls* \
+	regchrome* \
+	regxpcom* \
+	res/samples \
+	res/throbber \
+	xpcshell* \
+	xpidl* \
+	xpt_dump* \
+	xpt_link* \
+	$(NULL)
+
+include $(DEPTH)/xpinstall/packager/Makefile
