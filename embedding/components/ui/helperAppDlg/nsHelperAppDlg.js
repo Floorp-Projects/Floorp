@@ -180,20 +180,6 @@ nsHelperAppDialog.prototype = {
         return result;
     },
     
-    // showProgressDialog:  For now, use old dialog.  At some point, the caller should be
-    //                      converted to use the new generic progress dialog (when it's
-    //                      finished).
-    showProgressDialog: function(aLauncher, aContext) {
-         // Display the dialog using the Window Watcher interface.
-         var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                    .getService( Components.interfaces.nsIWindowWatcher );
-         ww.openWindow( null, // no parent
-                        "chrome://global/content/nsProgressDlg.xul",
-                        null,
-                        "chrome,titlebar,minimizable,dialog=yes",
-                        aLauncher );
-    },
-    
     // ---------- implementation methods ----------
 
     // Web progress listener so we can detect errors while mLauncher is

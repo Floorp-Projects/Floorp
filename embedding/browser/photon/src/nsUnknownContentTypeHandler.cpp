@@ -59,18 +59,6 @@ nsUnknownContentTypeHandler::nsUnknownContentTypeHandler( ) {
 nsUnknownContentTypeHandler::~nsUnknownContentTypeHandler( ) { }
 
 
-NS_IMETHODIMP nsUnknownContentTypeHandler::ShowProgressDialog(nsIHelperAppLauncher *aLauncher, nsISupports *aContext ) {
-	nsresult rv = NS_OK;
-
-/* ATENTIE */ //printf("ShowProgressDialog!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n\n");
-
-	/* we need a dummy listener because the nsExternalAppHandler class verifies that a progress window has been displayed */
-	nsCOMPtr<nsIWebProgressListener> dummy = new nsWebProgressListener;
-	aLauncher->SetWebProgressListener( dummy );
-
-	return rv;
-	}
-
 NS_IMETHODIMP nsUnknownContentTypeHandler::Show( nsIHelperAppLauncher *aLauncher, nsISupports *aContext ) {
 	nsresult rv = NS_OK;
 /* ATENTIE */ //printf("Show!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n\n");

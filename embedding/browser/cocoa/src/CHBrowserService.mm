@@ -257,15 +257,6 @@ CHBrowserService::PromptForSaveToFile(nsISupports *aWindowContext, const PRUnich
   return NS_ERROR_FAILURE;
 }
 
-/* void showProgressDialog (in nsIHelperAppLauncher aLauncher, in nsISupports aContext); */
-NS_IMETHODIMP
-CHBrowserService::ShowProgressDialog(nsIHelperAppLauncher *aLauncher, nsISupports *aContext)
-{
-  NSLog(@"CHBrowserService::ShowProgressDialog");
-  return NS_OK;
-}
-
-
 //
 // RegisterAppComponents
 //

@@ -57,7 +57,7 @@ interface nsILocalFile;
  * will access methods of the nsIHelperAppLauncher passed in to show()
  * in order to cause a "save to disk" or "open using" action.
  *
- * Note: The promptForSaveToFile and showProgressDialog methods are
+ * Note: The promptForSaveToFile method is
  *       obsolescent.  Caller(s) will be converted to use specific
  *       file-picker and progress-dialog interfaces.
  */
@@ -74,7 +74,6 @@ interface nsIHelperAppLauncherDialog : nsISupports {
 	// aFileLocation --> return value for the file location
 	nsILocalFile promptForSaveToFile(in nsISupports aWindowContext, in wstring aDefaultFile, in wstring aSuggestedFileExtension );
 
-	void showProgressDialog(in nsIHelperAppLauncher aLauncher, in nsISupports aContext);
 };
 
 
