@@ -88,7 +88,7 @@
 
 <ol>
 	<li>Open the Edit menu and choose Preferences.
-	<li>Under the Privacy and Security category, choose Certificates. (If no subcategories are visible, double-click to expand the list.)
+	<li>Under the Privacy &amp; Security category, choose Certificates. (If no subcategories are visible, double-click the category to expand the list.)
 	<li>In the Manage Certificates section, click Manage Certificates. You see the Certificate Manager.
 </ol>
 
@@ -236,7 +236,7 @@
 
 <ol>
 	<li>Open the Edit menu and choose Preferences.
-	<li>Under the Privacy and Security category, choose Certificates. (If no subcategories are visible, double-click to expand the list.)
+	<li>Under the Privacy &amp; Security category, choose Certificates. (If no subcategories are visible, double-click the category to expand the list.)
 	<li>In the Certificates panel, click Manage Devices.
 </ol>
 
@@ -269,7 +269,7 @@
 
 <ol>
 	<li>Open the Edit menu and choose Preferences.
-	<li>Under the Privacy and Security category, choose Certificates. (If no subcategories are visible, double-click to expand the list.)
+	<li>Under the Privacy &amp; Security category, choose Certificates. (If no subcategories are visible, double-click the category to expand the list.)
 	<li>In the Certificates panel, click Manage Devices.
 	<li>Click Load.
 	<li>In the Load PKCS #11 Module dialog box, click the Browse button, locate the module file, and click Open. 
@@ -291,7 +291,7 @@
 
 <ol>
 	<li>Open the Edit menu and choose Preferences.
-	<li>Under the Privacy and Security category, choose Certificates. (If no subcategories are visible, double-click to expand the list.)
+	<li>Under the Privacy &amp; Security category, choose Certificates. (If no subcategories are visible, double-click the category to expand the list.)
 	<li>In the Certificates panel, click Manage Devices.
 	<li>Click the Enable FIPS button. When FIPS is enabled, the name NSS Internal PKCS #11 Module changes to NSS Internal FIPS PKCS #11 Module and the Enable FIPS button changes to Disable FIPS. 
 </ol>
@@ -315,7 +315,7 @@
 
 <ol>
 	<li>Open the Edit menu and choose Preferences.
-	<li>Under the Privacy and Security category, select SSL. (If no subcategories are visible, double-click to expand the list.)
+	<li>Under the Privacy &amp; Security category, select SSL. (If no subcategories are visible, double-click the category to expand the list.)
 </ol>
 
 <p>For more details, click the Help button in the SSL Settings panel or see <a href="ssl_help.html">SSL Settings</a>.
@@ -362,9 +362,9 @@
 
 <p>If the CA certificate is not itself present, the <a href="glossary.html#certificate_chain">certificate chain</a> for the CA certificate must include a higher-level CA certificate that is present and correctly trusted. Certificate Manager also confirms that the certificate being verified has not been marked as untrusted in the certificate store. If any one of these checks fails, Certificate Manager marks the certificate as unverified and won't recognize the identity it certifies.
 
-<p>A certificate can pass all these tests and still be compromised in some way; for example, the certificate may have been revoked because an unauthorized person has gained access to the private key that corresponds to the public key in the certificate. A compromised certificate can allow an unauthorized person (or web site) to pretend to be the certificate owner.
+<p>A certificate can pass all these tests and still be compromised in some way; for example, the certificate be revoked because an unauthorized person has gained access to the certificate's private key. A compromised certificate can allow an unauthorized person (or web site) to pretend to be the certificate owner.
 
-<p>One way to combat this threat is for Certificate Manager to check a certificate revocation list (CRL) periodically (see <a href="#Managing_CRLs">Managing CRLs</a>, below). However, the reliability of CRLs is subject to the frequency with which they are both updated by a server and checked by a client, and their size can sometimes cause delays in the verification process that may not be acceptable to some people.
+<p>One way to combat this threat is for Certificate Manager to check a certificate revocation list (CRL) as part of the verification process (see <a href="#Managing_CRLs">Managing CRLs</a>, below). Typically, you download a CRL to your browser by clicking a link. If a CRL is present, Certificate Manager checks each certificate issued by the same CA against the list. The reliability of CRLs is subject to the frequency with which they are both updated by a server and checked by a client, and their size can sometimes cause delays in the verification process that may not be acceptable to some people.
 
 <p>Another way to combat this threat is to use a special server that supports the Online Certificate Status Protocol (OCSP). Such a server can answer client queries about individual certificates (see <a href="#Configuring_Certificate_Manager_for_OCSP">Configuring Certificate Manager for OCSP</a>, below). The server, called an OCSP responder, receives an updated CRL periodically from the CA that issues the certificates to be verified. You can configure Certificate Manager to submit a status request for a certificate to the OCSP responder, and the OCSP responder confirms whether the certificate is valid.  
 
@@ -390,7 +390,7 @@
 
 <ol>
 	<li>Open the Edit menu and choose Preferences.
-	<li>Under the Privacy and Security category, choose Validation. (If no subcategories are visible, double-click to expand the list.)
+	<li>Under the Privacy &amp; Security category, choose Validation. (If no subcategories are visible, double-click the category to expand the list.)
 </ol>
 
 <p>Click Manage CRLs in the Validation panel to see a list of the CRLs available to Certificate Manager. 
@@ -407,7 +407,7 @@
 
 <ol>
 	<li>Open the Edit menu and choose Preferences.
-	<li>Under the Privacy and Security category, choose Validation. (If no subcategories are visible, double-click to expand the list.)
+	<li>Under the Privacy &amp; Security category, choose Validation. (If no subcategories are visible, double-click the category to expand the list.)
 </ol>
 
 <p>For information about the OCSP options available, see <a href="validation_help.html">Validation Settings</a>.
@@ -419,7 +419,7 @@
 
 
 <hr>
-<p><i>8/21/2001</i></p>
+<p><i>8/31/2001</i></p>
 <p>Copyright &copy; 1994-2001 Netscape Communications Corporation.</p>
 
 </body>
