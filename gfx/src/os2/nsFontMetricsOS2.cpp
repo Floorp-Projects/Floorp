@@ -494,14 +494,14 @@ nsFontMetricsOS2::FindFont(HPS aPS, PRUnichar aChar)
     font = FindLocalFont(aPS, aChar);
     if (!font) {
       font = FindGenericFont(aPS, aChar);
-#ifndef XP_OS2
       if (!font) {
         font = FindGlobalFont(aPS, aChar);
+#ifndef XP_OS2
         if (!font) {
           font = FindSubstituteFont(aPS, aChar);
         }
-      }
 #endif
+      }
     }
   }
 
@@ -1047,6 +1047,48 @@ nsFontMetricsOS2::InitializeGlobalFonts(HPS aPS)
 
   return gGlobalFonts;
 }
+
+nsFontOS2*
+nsFontMetricsOS2::FindGlobalFont(HPS aPS, PRUnichar c)
+{
+  if (!gGlobalFonts) {
+    if (!InitializeGlobalFonts(aPS)) {
+      return nsnull;
+    }
+  }
+  for (int i = 0; i < gGlobalFontsCount; i++) {
+    if (!gGlobalFonts[i].skip) {
+#ifndef XP_OS2
+      if (!gGlobalFonts[i].map) {
+        HFONT font = ::CreateFontIndirect(&gGlobalFonts[i].logFont);
+        if (!font) {
+          continue;
+        }
+        HFONT oldFont = (HFONT) ::SelectObject(aDC, font);
+        gGlobalFonts[i].map = GetCMAP(aDC, gGlobalFonts[i].logFont.lfFaceName,
+          nsnull, nsnull);
+        ::SelectObject(aDC, oldFont);
+        ::DeleteObject(font);
+        if (!gGlobalFonts[i].map) {
+          gGlobalFonts[i].skip = 1;
+          continue;
+        }
+        if (SameAsPreviousMap(i)) {
+          continue;
+        }
+      }
+      if (FONT_HAS_GLYPH(gGlobalFonts[i].map, c)) {
+        return LoadFont(aDC, gGlobalFonts[i].name);
+      }
+#else
+        return LoadFont(aPS, gGlobalFonts[i].name);
+#endif
+    }
+  }
+
+  return nsnull;
+}
+
 
 // The Font Enumerator
 
