@@ -901,7 +901,7 @@ nsGfxScrollFrameInner::AttributeChanged(nsIDocument *aDocument,
                               PRInt32         aModType,
                               nsChangeHint    aHint) 
 {
-   if (mHScrollbarBox && mVScrollbarBox && (mHasHorizontalScrollbar || mHasVerticalScrollbar))
+   if (mHScrollbarBox && mVScrollbarBox)
    {
      nsIFrame* hframe = nsnull;
      mHScrollbarBox->GetFrame(&hframe);
