@@ -4777,7 +4777,7 @@ DocumentViewerImpl::CheckForPrinters(nsIPrintOptions*  aPrintOptions,
         }
       }
       numPrinters++;
-    } while (true);
+    } while (1);
 
     if (numPrinters == 0) {
       // this means there were no printers
