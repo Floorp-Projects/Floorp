@@ -37,6 +37,7 @@ class nsIDOMSelection;
 class nsString;
 class nsStringArray;
 class nsICaret;
+class nsIStyleContext;
 
 #define NS_IPRESSHELL_IID     \
 { 0x76e79c60, 0x944e, 0x11d1, \
@@ -146,6 +147,13 @@ public:
    */
   NS_IMETHOD GetPrimaryFrameFor(nsIContent* aContent,
                                 nsIFrame**  aPrimaryFrame) const = 0;
+
+  /** Returns the style context associated with the frame.
+    * Used by code outside of layout that can't use nsIFrame methods to get
+    * the style context directly.
+    */
+  NS_IMETHOD GetStyleContextFor(nsIFrame*         aFrame,
+                                nsIStyleContext** aStyleContext) const = 0;
 
   /**
    * Returns a layout object associated with the primary frame for the content object.
