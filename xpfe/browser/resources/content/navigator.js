@@ -867,8 +867,8 @@ function BrowserOpenFileWindow()
     debug("BrowserAddBookmark: " + docCharset + "\n");
   }
 
-/ // Set up a lame hack to avoid opening two bookmarks.
-/ // Could otherwise happen with two Ctrl-B's in a row.
+// Set up a lame hack to avoid opening two bookmarks.
+// Could otherwise happen with two Ctrl-B's in a row.
 var gDisableBookmarks = false;
 function enableBookmarks()
 {
