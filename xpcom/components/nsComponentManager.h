@@ -19,11 +19,15 @@
 #ifndef nsComponentManager_h__
 #define nsComponentManager_h__
 
+#include "nsIComponentLoader.h"
+#include "nsNativeComponentLoader.h"
 #include "nsIComponentManager.h"
+#include "nsIFactory.h"
 #include "nsIRegistry.h"
 #include "nsHashtable.h"
 #include "prtime.h"
 #include "prmon.h"
+#include "nsCOMPtr.h"
 
 class nsFactoryEntry;
 class nsDll;
@@ -35,6 +39,11 @@ class nsIServiceManager;
 // does not have a local include file, we are putting this definition
 // here rather than in nsIRegistry.h
 extern "C" NS_EXPORT nsresult NS_RegistryGetFactory(nsIFactory** aFactory);
+
+extern const char xpcomBaseName[];
+extern const char xpcomKeyName[];
+extern const char lastModValueName[];
+extern const char fileSizeValueName[];
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -161,6 +170,18 @@ public:
     nsresult PlatformPrePopulateRegistry();
 
 protected:
+    nsresult RegisterComponentCommon(const nsCID &aClass,
+                                     const char *aClassName,
+                                     const char *aProgID, char *aRegistryName,
+                                     PRBool aReplace, PRBool aPersist,
+                                     const char *aType);
+    nsresult AddComponentToRegistry(const nsCID &aCID, const char *aClassName,
+                                    const char *aProgID,
+                                    const char *aRegistryName,
+                                    const char *aType);
+    nsresult GetLoaderForType(const char *aType, 
+                              nsIComponentLoader **aLoader);
+
     nsresult LoadFactory(nsFactoryEntry *aEntry, nsIFactory **aFactory);
     nsFactoryEntry *GetFactoryEntry(const nsCID &aClass, PRBool checkRegistry);
 
@@ -168,35 +189,29 @@ protected:
     nsresult SelfRegisterDll(nsDll *dll);
     nsresult SelfUnregisterDll(nsDll *dll);
     nsresult HashProgID(const char *aprogID, const nsCID &aClass);
-    nsDll *CreateCachedDll(const char *persistentDescriptor, PRUint32 modDate, PRUint32 size);
-    nsDll *CreateCachedDll(nsIFileSpec *dllSpec);
-    nsDll *CreateCachedDllName(const char *dllName);
     nsresult UnloadLibraries(nsIServiceManager *servmgr);
 
     // The following functions are the only ones that operate on the persistent
     // registry
     nsresult PlatformInit(void);
     nsresult PlatformVersionCheck();
-    nsresult PlatformCreateDll(const char *fullname, nsDll* *result);
-    nsresult PlatformMarkNoComponents(nsDll *dll);
     nsresult PlatformRegister(const char *cidString, const char *className, const char *progID, nsDll *dll);
     nsresult PlatformUnregister(const char *cidString, const char *aLibrary);
-    nsresult PlatformFind(const nsCID &aCID, nsDll* *aDll);
+    nsresult PlatformFind(const nsCID &aCID, nsFactoryEntry* *result);
     nsresult PlatformProgIDToCLSID(const char *aProgID, nsCID *aClass);
     nsresult PlatformCLSIDToProgID(nsCID *aClass, char* *aClassName, char* *aProgID);
-    void     PlatformGetFileInfo(nsIRegistry::Key Key, PRUint32 *lastModifiedTime, PRUint32 *fileSize);
-    void     PlatformSetFileInfo(nsIRegistry::Key Key, PRUint32 lastModifiedTime, PRUint32 fileSize);
 
 protected:
     nsObjectHashtable*  mFactories;
     nsObjectHashtable*  mProgIDs;
+    nsSupportsHashtable*  mLoaders;
     PRMonitor*          mMon;
-    nsObjectHashtable*  mDllStore;
     nsIRegistry*        mRegistry;
     nsIRegistry::Key    mXPCOMKey;
     nsIRegistry::Key    mClassesKey;
     nsIRegistry::Key    mCLSIDKey;
     PRBool              mPrePopulationDone;
+    nsNativeComponentLoader *mNativeComponentLoader;
 };
 
 #define NS_MAX_FILENAME_LEN	1024
@@ -241,8 +256,9 @@ protected:
  * alpha0.50 : using nsIRegistry
  * alpha0.60 : xpcom 2.0 landing
  * alpha0.70 : using nsIFileSpec. PRTime -> PRUint32
+ * alpha0.90 : using nsIComponentLoader, abs:/rel:/lib:, shaver-cleanup
  */
-#define NS_XPCOM_COMPONENT_MANAGER_VERSION_STRING "alpha0.70"
+#define NS_XPCOM_COMPONENT_MANAGER_VERSION_STRING "alpha0.90"
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
@@ -261,19 +277,33 @@ protected:
 
 class nsFactoryEntry {
 public:
-    nsFactoryEntry(const nsCID &aClass, nsDll *dll);
+    nsFactoryEntry(const nsCID &aClass, char *location, char *aType,
+                   nsIComponentLoader *aLoader);
     nsFactoryEntry(const nsCID &aClass, nsIFactory *aFactory);
     ~nsFactoryEntry();
 
+    nsresult GetFactory(nsIFactory **aFactory) {
+        if (factory) {
+            *aFactory = factory.get();
+            NS_ADDREF(*aFactory);
+            return NS_OK;
+        }
+        nsresult rv = loader->GetFactory(cid, location, type, aFactory);
+        if (NS_SUCCEEDED(rv))
+            factory = *aFactory;
+        return rv;
+    }
+
+#if 0 /* unused? */
     nsresult Init(nsHashtable* dllHashtable, const nsCID &aClass, const char *aLibrary,
                   PRTime lastModTime, PRUint32 fileSize);
+#endif
 
     nsCID cid;
-    nsIFactory *factory;
-
-    // DO NOT DELETE THIS. Many nsFactoryEntry(s) could be sharing the same Dll.
-    // This gets deleted from the dllStore going away.
-    nsDll *dll;
+    char *location;
+    nsCOMPtr<nsIFactory> factory;
+    char *type;
+    nsCOMPtr<nsIComponentLoader> loader;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

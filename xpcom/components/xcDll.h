@@ -28,6 +28,9 @@
 #include "prlink.h"
 #include "nsISupports.h"
 
+#ifndef xcDll_h__
+#define xcDll_h__
+
 class nsIFileSpec;
 class nsIModule;
 class nsIServiceManager;
@@ -59,13 +62,14 @@ private:
     char *m_nativePath;
 
     PRBool m_markForUnload;
+    char *m_registryLocation;
 
     void Init(nsIFileSpec *dllSpec);
     void Init(const char *persistentDescriptor);
 
 public:
  
-	nsDll(nsIFileSpec *dllSpec);
+	nsDll(nsIFileSpec *dllSpec, const char *registryLocation);
 	nsDll(const char *persistentDescriptor);
 	nsDll(const char *persistentDescriptor, PRUint32 modDate, PRUint32 fileSize);
     nsDll(const char *dll, int type /* dummy */);
@@ -101,3 +105,5 @@ public:
     nsresult GetDllSpec(nsIFileSpec **dllSpec);
     nsresult GetModule(nsISupports *servMgr, nsIModule **mobj);
 };
+
+#endif /* xcDll_h__ */

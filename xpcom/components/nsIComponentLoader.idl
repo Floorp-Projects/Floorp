@@ -1,0 +1,76 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.1 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+#include "nsISupports.idl"
+#include "nsIFactory.idl"
+#include "nsIFileSpec.idl"
+
+[object, uuid(c073cfc0-567c-11d3-aec1-0000f8e25c06)]
+interface nsIComponentLoader : nsISupports {
+
+    /**
+     * Get the factory for a given component.
+     */
+    nsIFactory GetFactory(in nsIIDRef aCID, in string aLocation,
+                          in string aType);
+
+    /**
+     * Initialize the loader.
+     *
+     * We use nsISupports here because nsIComponentManager and nsIRegistry
+     * aren't IDLized yet.
+     */
+    void Init(in nsISupports aCompMgr, in nsISupports aRegistry);
+    
+    /**
+     * Called when a component of the appropriate type is registered,
+     * to give the component loader an opportunity to do things like
+     * annotate the registry and such.
+     */
+    void OnRegister(in nsIIDRef aCID, in string aType,
+                    in string aClassName, in string aProgID,
+                    in string aLocation, in boolean aReplace,
+                    in boolean aPersist);
+
+    /**
+     * When is AutoRegistration occuring?
+     */
+    const long Startup = 0;
+    const long Component = 1;
+    const long Timer = 2;
+
+    /**
+     * AutoRegister components in the given directory.
+     */
+    void AutoRegisterComponents(in long aWhen, in nsIFileSpec aDirectory);
+
+    /**
+     * AutoRegister the given component.
+     *
+     * Returns true if the component was registered, false if it couldn't
+     * attempt to register the component (wrong type) and ``throws'' an
+     * NS_FAILED code if there was an error during registration.
+     */
+    boolean AutoRegisterComponent(in long aWhen, in nsIFileSpec aComponent);
+
+    /**
+     * Unload all components that are willing.
+     */
+    void UnloadAll(in long aWhen);
+    
+};
