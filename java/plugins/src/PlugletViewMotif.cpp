@@ -51,9 +51,15 @@ extern "C" void getAwtData(int          *awt_depth,
 
 extern "C" Display *getAwtDisplay(void);
 
+#if 0
 extern "C" void getAwtLockFunctions(void (**AwtLock)(JNIEnv *),
                                     void (**AwtUnlock)(JNIEnv *),
                                     void (**AwtNoFlushUnlock)(JNIEnv *),
+                                    void *pReserved);
+#endif
+extern "C" void getAwtLockFunctions(void *AwtLock,
+                                    void *AwtUnlock,
+                                    void *AwtNoFlushUnlock,
                                     void *pReserved);
 
 static int awt_depth;
@@ -80,7 +86,8 @@ void PlugletViewMotif::Initialize() {
         clazz = NULL;
         return;
     }
-    getAwtData(&awt_depth, &awt_cmap, &awt_visual, &awt_num_colors, NULL);
+    getAwtData((void*)&awt_depth, (void*)&awt_cmap, (void*)&awt_visual, 
+               (void*)&awt_num_colors, NULL);
     getAwtLockFunctions(&AwtLock, &AwtUnLock, &AwtNoFlushUnLock,NULL);
 }
 
@@ -112,7 +119,7 @@ PRBool PlugletViewMotif::SetWindow(nsPluginWindow* win) {
         return PR_FALSE;
     }
     AwtLock(env);
-    int containerWindowID = win->window;
+    int containerWindowID = (int) win->window;
     printf("containerWindowID=%d WindowID=%d\n",containerWindowID, WindowID);
 #if 0
     if (WindowID == containerWindowID) {
