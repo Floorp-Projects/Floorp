@@ -48,6 +48,7 @@ EXPORTS =				\
 	nsIDOMCompositionListener.h	\
 	nsIDOMMenuListener.h        \
 	nsIDOMScrollListener.h        \
+	nsIDOMContextMenuListener.h        \
 	$(NULL)
 
 MODULE=dom
