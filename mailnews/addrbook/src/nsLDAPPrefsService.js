@@ -103,7 +103,7 @@ nsLDAPPrefsService.prototype.QueryInterface =
 function (iid) {
 
     if (!iid.equals(nsISupports) &&
-        !iid.equals(NS_LDAPPREFSSERVICE_IID))
+        !iid.equals(nsILDAPPrefsService))
         throw Components.results.NS_ERROR_NO_INTERFACE;
 
     return this;
