@@ -1861,33 +1861,23 @@ nsHTMLDocument::SetCookie(const nsAString& aCookie)
 }
 
 // static
-nsresult
-nsHTMLDocument::GetSourceDocumentURI(nsIURI** sourceURI)
+nsIPrincipal *
+nsHTMLDocument::GetCallerPrincipal()
 {
-  // XXX Tom said this reminded him of the "Six Degrees of
-  // Kevin Bacon" game. We try to get from here to there using
-  // whatever connections possible. The problem is that this
-  // could break if any of the connections along the way change.
-  // I wish there were a better way.
-  *sourceURI = nsnull;
-
   // XXX This will fail on non-DOM contexts :(
   nsIDOMDocument *domDoc = nsContentUtils::GetDocumentFromCaller();
 
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
   if (!doc) {
-    return NS_OK; // No document in the window
+    return nsnull; // No document in the window
   }
 
-  NS_IF_ADDREF(*sourceURI = doc->GetDocumentURI());
-
-  return sourceURI ? NS_OK : NS_ERROR_FAILURE;
+  return doc->GetPrincipal();
 }
 
 // XXX TBI: accepting arguments to the open method.
 nsresult
-nsHTMLDocument::OpenCommon(nsIURI* aSourceURI, const nsACString& aContentType,
-                           PRBool aReplace)
+nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
 {
   // If we already have a parser we ignore the document.open call.
   if (mParser) {
@@ -1900,19 +1890,35 @@ nsHTMLDocument::OpenCommon(nsIURI* aSourceURI, const nsACString& aContentType,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDocument> callingDoc =
+  nsresult rv = NS_OK;
+
+  nsCOMPtr<nsIDocument> callerDoc =
     do_QueryInterface(nsContentUtils::GetDocumentFromCaller());
 
   // Grab a reference to the calling documents security info (if any)
-  // as it may be lost in the call to Reset().
+  // and principal as it may be lost in the call to Reset().
   nsCOMPtr<nsISupports> securityInfo;
+  nsCOMPtr<nsIPrincipal> callerPrincipal;
 
-  if (callingDoc) {
-    securityInfo = callingDoc->GetSecurityInfo();
+  if (callerDoc) {
+    securityInfo = callerDoc->GetSecurityInfo();
+    callerPrincipal = GetCallerPrincipal();
+  }
+
+  // The URI for the document after this call. Get it from the calling
+  // principal (if available), or set it to "about:blank" if no
+  // principal is reachable.
+  nsCOMPtr<nsIURI> uri;
+
+  if (callerPrincipal) {
+    callerPrincipal->GetURI(getter_AddRefs(uri));
+  } else {
+    rv = NS_NewURI(getter_AddRefs(uri),
+                   NS_LITERAL_CSTRING("about:blank"));
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   nsCOMPtr<nsIDocShell> docshell = do_QueryReferent(mDocumentContainer);
-  nsresult rv = NS_OK;
 
   // Stop current loads targeted at the window this document is in.
   if (mScriptGlobalObject && docshell) {
@@ -1939,7 +1945,7 @@ nsHTMLDocument::OpenCommon(nsIURI* aSourceURI, const nsACString& aContentType,
   nsCOMPtr<nsIChannel> channel;
   nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mDocumentLoadGroup);
 
-  rv = NS_NewChannel(getter_AddRefs(channel), aSourceURI, nsnull, group);
+  rv = NS_NewChannel(getter_AddRefs(channel), uri, nsnull, group);
 
   if (NS_FAILED(rv)) {
     return rv;
@@ -2020,6 +2026,17 @@ nsHTMLDocument::OpenCommon(nsIURI* aSourceURI, const nsACString& aContentType,
   // resetting the document.
   mSecurityInfo = securityInfo;
 
+  // Restore the principal to that of the caller.
+  mPrincipal = callerPrincipal;
+
+  // Recover if we had a problem obtaining the caller principal. In
+  // such a case we set the documents URI to be about:blank (uri is
+  // set to that above already) and the appropriate principal will be
+  // created as needed.
+  if (!mPrincipal) {
+    mDocumentURI = uri;
+  }
+
   mParser = do_CreateInstance(kCParserCID, &rv);
 
   // This will be propagated to the parser when someone actually calls write()
@@ -2030,8 +2047,8 @@ nsHTMLDocument::OpenCommon(nsIURI* aSourceURI, const nsACString& aContentType,
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIHTMLContentSink> sink;
 
-    rv = NS_NewHTMLContentSink(getter_AddRefs(sink), this, aSourceURI,
-                               docshell, channel);
+    rv = NS_NewHTMLContentSink(getter_AddRefs(sink), this, uri, docshell,
+                               channel);
     NS_ENSURE_SUCCESS(rv, rv);
 
     static NS_DEFINE_CID(kNavDTDCID, NS_CNAVDTD_CID);
@@ -2092,21 +2109,7 @@ NS_IMETHODIMP
 nsHTMLDocument::Open(const nsACString& aContentType, PRBool aReplace,
                      nsIDOMDocument** aReturn)
 {
-  // XXX The URI of the newly created document will match
-  // that of the source document. Is this right?
-
-  // XXX This will fail on non-DOM contexts :(
-  nsCOMPtr<nsIURI> sourceURI;
-  nsresult rv = GetSourceDocumentURI(getter_AddRefs(sourceURI));
-
-  // Recover if we had a problem obtaining the source URI
-  if (!sourceURI) {
-    rv = NS_NewURI(getter_AddRefs(sourceURI),
-                   NS_LITERAL_CSTRING("about:blank"));
-  }
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = OpenCommon(sourceURI, aContentType, aReplace);
+  nsresult rv = OpenCommon(aContentType, aReplace);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return CallQueryInterface(this, aReturn);
@@ -2253,7 +2256,7 @@ nsHTMLDocument::ScriptWriteCommon(PRBool aNewlineTerminate)
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  if (!mDocumentURI || nsCRT::strcasecmp(spec.get(), "about:blank") == 0) {
+  if (!mDocumentURI || spec.EqualsLiteral("about:blank")) {
     // The current document's URI and principal are empty or "about:blank".
     // By writing to this document, the script acquires responsibility for the
     // document for security purposes. Thus a document.write of a script tag
@@ -2813,7 +2816,6 @@ nsHTMLDocument::GetSelection(nsAString& aReturn)
   NS_ENSURE_TRUE(window, NS_OK);
 
   nsCOMPtr<nsISelection> selection;
-
   nsresult rv = window->GetSelection(getter_AddRefs(selection));
   NS_ENSURE_TRUE(selection && NS_SUCCEEDED(rv), rv);
 
@@ -2868,7 +2870,6 @@ nsHTMLDocument::RouteEvent(nsIDOMEvent* aEvt)
 NS_IMETHODIMP
 nsHTMLDocument::GetCompatMode(nsAString& aCompatMode)
 {
-  aCompatMode.Truncate();
   NS_ASSERTION(mCompatMode == eCompatibility_NavQuirks ||
                mCompatMode == eCompatibility_AlmostStandards ||
                mCompatMode == eCompatibility_FullStandards,
