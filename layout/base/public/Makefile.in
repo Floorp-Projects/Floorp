@@ -59,6 +59,7 @@ nsIPageSequenceFrame.h \
 nsIPresContext.h \
 nsIPresShell.h \
 nsIPresState.h \
+nsIPrintContext.h \
 nsIReflowCallback.h \
 nsIReflowCommand.h \
 nsIFrameSelection.h \
