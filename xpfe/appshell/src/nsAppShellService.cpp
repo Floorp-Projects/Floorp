@@ -32,6 +32,8 @@
 #include "nsIWebShellWindow.h"
 #include "nsWebShellWindow.h"
 
+#include "nsIWindowMediator.h"
+
 #include "nsIAppShellComponent.h"
 #include "nsIRegistry.h"
 #include "nsIEnumerator.h"
@@ -65,7 +67,9 @@ static NS_DEFINE_IID(kPICSCID, NS_PICS_CID);
 static NS_DEFINE_IID(kAppShellCID,          NS_APPSHELL_CID);
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kCScriptNameSetRegistryCID, NS_SCRIPT_NAMESET_REGISTRY_CID);
+static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 static NS_DEFINE_IID(kMetaCharsetCID, NS_META_CHARSET_CID);
+
 
 /* Define Interface IDs */
 
@@ -75,6 +79,7 @@ static NS_DEFINE_IID(kIAppShellServiceIID,   NS_IAPPSHELL_SERVICE_IID);
 static NS_DEFINE_IID(kIAppShellIID,          NS_IAPPSHELL_IID);
 static NS_DEFINE_IID(kIWebShellWindowIID,    NS_IWEBSHELL_WINDOW_IID);
 static NS_DEFINE_IID(kIScriptNameSetRegistryIID, NS_ISCRIPTNAMESETREGISTRY_IID);
+static NS_DEFINE_IID(kIWindowMediatorIID,NS_IWINDOWMEDIATOR_IID);
 static NS_DEFINE_IID(kIMetaCharsetServiceIID, NS_IMETA_CHARSET_SERVICE_IID);
 
 
@@ -586,6 +591,13 @@ nsAppShellService::RegisterTopLevelWindow(nsIWebShellWindow* aWindow)
   if (NS_SUCCEEDED(rv)) {
     mWindowList->AppendElement(wsc);
     NS_RELEASE(wsc);
+    
+    nsIWindowMediator* service;
+		if (NS_SUCCEEDED(nsServiceManager::GetService(kWindowMediatorCID, kIWindowMediatorIID, (nsISupports**) &service ) ) )
+		{
+			service->RegisterWindow( aWindow);
+			nsServiceManager::ReleaseService(kWindowMediatorCID, service);
+		}
   }
   return rv;
 }
@@ -594,6 +606,13 @@ nsAppShellService::RegisterTopLevelWindow(nsIWebShellWindow* aWindow)
 NS_IMETHODIMP
 nsAppShellService::UnregisterTopLevelWindow(nsIWebShellWindow* aWindow)
 {
+  nsIWindowMediator* service;
+	if (NS_SUCCEEDED(nsServiceManager::GetService(kWindowMediatorCID, kIWindowMediatorIID, (nsISupports**) &service ) ) )
+	{
+		service->RegisterWindow( aWindow);
+		nsServiceManager::ReleaseService(kWindowMediatorCID, service);
+	}
+  
   nsresult rv;
 
   nsIWebShellContainer* wsc;
@@ -616,7 +635,7 @@ NS_EXPORT nsresult NS_NewAppShellService(nsIAppShellService** aResult)
   if (nsnull == aResult) {
     return NS_ERROR_NULL_POINTER;
   }
-
+	
   *aResult = new nsAppShellService();
   if (nsnull == *aResult) {
     return NS_ERROR_OUT_OF_MEMORY;
