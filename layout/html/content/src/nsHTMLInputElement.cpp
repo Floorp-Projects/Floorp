@@ -52,6 +52,7 @@
 #include "nsIServiceManager.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsDOMError.h"
+#include "nsIPrivateDOMEvent.h"
 
 #include "nsIPresState.h"
 #include "nsIDOMEvent.h"
@@ -768,10 +769,62 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
     return rv;
   }
 
+  // If we're a file input we have anonymous content underneath
+  // that we need to hide.  We need to set the event target now
+  // to ourselves
+  PRInt32 type;
+  GetType(&type);
+  if (type == NS_FORM_INPUT_FILE) {
+    // If the event is starting here that's fine.  If it's not
+    // init'ing here it started beneath us and needs modification.
+    if (!(NS_EVENT_FLAG_INIT & aFlags)) {
+      if (!*aDOMEvent) {
+        // We haven't made a DOMEvent yet.  Force making one now.
+        nsCOMPtr<nsIEventListenerManager> listenerManager;
+        if (NS_FAILED(rv = mInner.GetListenerManager(getter_AddRefs(listenerManager)))) {
+          return rv;
+        }
+        nsAutoString empty;
+        if (NS_FAILED(rv = listenerManager->CreateEvent(aPresContext, aEvent, empty, aDOMEvent))) {
+          return rv;
+        }
+      }
+      if (!*aDOMEvent) {
+        return NS_ERROR_FAILURE;
+      }
+      nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(*aDOMEvent);
+      if (!privateEvent) {
+        return NS_ERROR_FAILURE;
+      }
+
+      nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface((nsIDOMHTMLInputElement*)this);
+      privateEvent->SetTarget(target);
+    }
+  }
+
   // Try script event handlers first if its not a focus/blur event
   //we dont want the doc to get these
   nsresult ret = mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                aFlags, aEventStatus);
+
+  // Finish the special file control processing...
+  if (type == NS_FORM_INPUT_FILE) {
+    // If the event is starting here that's fine.  If it's not
+    // init'ing here it started beneath us and needs modification.
+    if (!(NS_EVENT_FLAG_INIT & aFlags)) {
+      if (!*aDOMEvent) {
+        return NS_ERROR_FAILURE;
+      }
+      nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(*aDOMEvent);
+      if (!privateEvent) {
+        return NS_ERROR_FAILURE;
+      }
+
+      // This will reset the target to its original value
+      privateEvent->SetTarget(nsnull);
+    }
+  }
+
 
   if ((NS_OK == ret) && (nsEventStatus_eIgnore == *aEventStatus) &&
       !(aFlags & NS_EVENT_FLAG_CAPTURE)) {
