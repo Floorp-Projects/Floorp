@@ -50,6 +50,7 @@
 #include "nsIXPCSecurityManager.h"
 #include "nsIStringBundle.h"
 #include "nsIConsoleService.h"
+#include "nsIScriptError.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
@@ -5701,7 +5702,7 @@ GetDocumentAllHelper(JSContext *cx, JSObject *obj)
 }
 
 static void
-PrintDocumentAllWarningOnConsole()
+PrintDocumentAllWarningOnConsole(JSContext *cx)
 {
   nsCOMPtr<nsIStringBundleService>
     stringService(do_GetService(NS_STRINGBUNDLE_CONTRACTID));
@@ -5726,9 +5727,43 @@ PrintDocumentAllWarningOnConsole()
 
   nsCOMPtr<nsIConsoleService> consoleService
     (do_GetService("@mozilla.org/consoleservice;1"));
+  if (!consoleService) {
+    return;
+  }
 
-  if (consoleService) {
-    consoleService->LogStringMessage(msg.get());
+  nsCOMPtr<nsIScriptError> scriptError =
+    do_CreateInstance(NS_SCRIPTERROR_CONTRACTID);
+  if (!scriptError) {
+    return;
+  }
+
+  JSStackFrame *fp, *iterator = nsnull;
+  fp = ::JS_FrameIterator(cx, &iterator);
+  PRUint32 lineno = 0;
+  const char* filename = nsnull;
+  nsAutoString sourcefile;
+  if (fp) {
+    JSScript* script = ::JS_GetFrameScript(cx, fp);
+    if (script) {
+      const char* filename = ::JS_GetScriptFilename(cx, script);
+      if (filename) {
+        CopyUTF8toUTF16(nsDependentCString(filename), sourcefile);
+      }
+      jsbytecode* pc = ::JS_GetFramePC(cx, fp);
+      if (pc) {
+        lineno = ::JS_PCToLineNumber(cx, script, pc);
+      }
+    }
+  }
+  nsresult rv = scriptError->Init(msg.get(),
+                                  sourcefile.get(),
+                                  EmptyString().get(),
+                                  lineno,
+                                  0, // column for error is not available
+                                  nsIScriptError::warningFlag,
+                                  "DOM:HTML");
+  if (NS_SUCCEEDED(rv)){
+    consoleService->LogMessage(scriptError);
   }
 }
 
@@ -5763,7 +5798,7 @@ nsHTMLDocumentSH::DocumentAllHelperGetProperty(JSContext *cx, JSObject *obj,
     // qualified name. Expose the document.all collection.
 
     if (!(flags & DOCUMENT_ALL_DID_WARN)) {
-      PrintDocumentAllWarningOnConsole();
+      PrintDocumentAllWarningOnConsole(cx);
 
       // Remember that we've complained about document.all being used
       // in this document already.
