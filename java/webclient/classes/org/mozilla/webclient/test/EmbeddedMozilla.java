@@ -41,7 +41,7 @@ import org.mozilla.util.Assert;
  * This is a test application for using the BrowserControl.
 
  *
- * @version $Id: EmbeddedMozilla.java,v 1.5 1999/12/03 01:55:30 edburns%acm.org Exp $
+ * @version $Id: EmbeddedMozilla.java,v 1.6 1999/12/06 23:31:06 edburns%acm.org Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlFactory
 
@@ -77,7 +77,8 @@ public static void printUsage()
     
     public EmbeddedMozilla (String title, String binDir, String url) {
 		super(title);
-        System.out.println("constructed with " + url);
+        System.out.println("constructed with binDir: " + binDir + " url: " + 
+                           url);
 	
 		addWindowListener(new WindowAdapter() {
 		    public void windowClosing(WindowEvent e) {

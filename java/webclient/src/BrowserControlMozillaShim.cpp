@@ -49,7 +49,7 @@
 #include "nsString.h"
 #include "nsRepository.h"
 #ifdef NECKO
-#include "nsNeckoUtil.h"
+#include "nsNetUtil.h"
 #else
 #include "nsINetService.h"
 #endif
@@ -69,6 +69,12 @@ nsMacMessageSink gMessageSink;
 #ifdef XP_UNIX
 #include <gtk/gtk.h>
 #include "motif/MozillaEventThread.h"
+
+
+// debug: edburns: start
+#include <unistd.h>
+// debug: edburns: end
+
 #endif
 
 #include "nsActions.h"
@@ -78,6 +84,10 @@ nsMacMessageSink gMessageSink;
 #include "nsIPref.h"
 #include "DocumentObserver.h"
 #include "nsIDocumentLoader.h"
+
+#ifdef XP_UNIX
+#include "gtkmozarea.h"
+#endif
 
 #ifdef XP_PC
 
@@ -143,6 +153,26 @@ struct WebShellInitContext {
 	int					w;
 	int					h;
 };
+
+#ifdef XP_UNIX
+
+void edburnsDebugBreak(void)
+{
+    pid_t curPid = -1;
+
+    if (-1 == (curPid = getpid())) {
+        printf("can't get pid\n");
+        return;
+    }
+    
+    printf("dbx - %d\n\n", curPid);
+    fflush(stdout);
+    sleep(10);
+
+    return;
+}
+
+#endif
 
 void    PostEvent (WebShellInitContext * initContext, PLEvent * event);
 void *  PostSynchronousEvent (WebShellInitContext * initContext, PLEvent * event);
@@ -334,7 +364,8 @@ EmbeddedEventHandler (void * arg) {
 	printf("EmbeddedEventHandler(%lx): Init the WebShell...\n", initContext);
 #endif
     
-    rv = initContext->webShell->Init((nsNativeWidget *)initContext->parentHWnd,
+    //rv = initContext->webShell->Init((nsNativeWidget *)initContext->parentHWnd,
+    rv = initContext->webShell->Init((nsNativeWidget *) GTK_MOZAREA(initContext->parentHWnd)->superwin,
                                      initContext->x, initContext->y, initContext->w, initContext->h);
     if (NS_FAILED(rv)) {
         initContext->initFailCode = kInitWebShellError;
@@ -414,6 +445,18 @@ EmbeddedEventHandler (void * arg) {
 void
 InitEmbeddedEventHandler (WebShellInitContext* initContext)
 {
+
+    // this used to be in nativeInitialize
+    // PENDING, assert that the registryFile and component Dir are valid
+    NS_InitXPCOM(NULL, &gRegistryFile, &gComponentDir);
+    NS_SetupRegistry();
+    nsComponentManager::RegisterComponentLib(kSessionHistoryCID, NULL, 
+                                             NULL, APPSHELL_DLL, 
+                                             PR_FALSE, PR_FALSE);
+    NS_AutoregisterComponents();
+    
+
+
 #if DEBUG_RAPTOR_CANVAS
     printf("InitEmbeddedEventHandler(%lx): Creating embedded thread...\n", initContext);
 #endif
@@ -677,6 +720,7 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeInitialize(
 	JNIEnv		*	pEnv = env;
 	jobject			jobj = obj;
 	static PRBool	gFirstTime = PR_TRUE;
+
 	if (gFirstTime)
 	{
         // set the gRegistryFile and gComponentDir correctly
@@ -686,12 +730,6 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeInitialize(
         gComponentDir = nativePath;
         gComponentDir += "components";
         
-        NS_InitXPCOM(NULL, &gRegistryFile, &gComponentDir);
-		NS_SetupRegistry();
-        nsComponentManager::RegisterComponentLib(kSessionHistoryCID, NULL, 
-                                                 NULL, APPSHELL_DLL, 
-                                                 PR_FALSE, PR_FALSE);
-        NS_AutoregisterComponents();
 		gFirstTime = PR_FALSE;
 	}
 } // Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeInitialize()
@@ -1978,6 +2016,10 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeDebugBreak(JNIEnv *jE
 {
     const char *charFileName = (char *) jEnv->GetStringUTFChars(fileName, 0);
     nsDebug::Break(charFileName, lineNumber);
+#ifdef XP_UNIX
+    edburnsDebugBreak();
+#endif
+
 }
 
 

@@ -36,12 +36,15 @@
 // JNI Header
 #include "MozillaEventThread.h"
 
+// allow code in webclientstub.so to load us
+#include "BrowserControlMozillaShimStub.h"
+
 // Global reference to webclient dll
 void * webClientDll;
 
 extern void locateMotifBrowserControlStubFunctions(void *);
 
-void (* nativeInitialize) (JNIEnv *, jobject);
+void (* nativeInitialize) (JNIEnv *, jobject, jstring);
 void (* nativeTerminate) (JNIEnv *, jobject);
 void (* nativeSendKeyDownEvent) (JNIEnv *, jobject, jint, jchar, jint, jint, jint);
 void (* nativeSendKeyUpEvent) (JNIEnv *, jobject, jint, jchar, jint, jint, jint);
@@ -82,7 +85,7 @@ void (* processNativeEventQueue) (JNIEnv *, jobject, jint);
 
 
 void locateBrowserControlStubFunctions(void * dll) {
-  nativeInitialize = (void (*) (JNIEnv *, jobject)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeInitialize");
+  nativeInitialize = (void (*) (JNIEnv *, jobject, jstring)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeInitialize");
   if (!nativeInitialize) {
     printf("got dlsym error %s\n", dlerror());
   }
@@ -247,6 +250,19 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_motif_MozillaEventThread_proce
     (* processNativeEventQueue) (env, obj, gtkWinPtr);
 }
 
+void loadMainDll(void)
+{
+    webClientDll = dlopen("libwebclient.so", RTLD_LAZY | RTLD_GLOBAL);
+    
+    if (webClientDll) {
+        locateBrowserControlStubFunctions(webClientDll);
+        locateMotifBrowserControlStubFunctions(webClientDll);
+    } else {
+        printf("Got Error: %s\n", dlerror());
+    }
+}
+
+
 
 /*
  * Class:     MozWebShellMozillaShim
@@ -256,19 +272,9 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_motif_MozillaEventThread_proce
 JNIEXPORT void JNICALL
 Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeInitialize (
 	JNIEnv		*	env,
-	jobject			obj)
+	jobject			obj, jstring verifiedBinDirAbsolutePath)
 {
-  webClientDll = dlopen("libwebclient.so", RTLD_LAZY | RTLD_GLOBAL);
-
-  if (webClientDll) {
-    locateBrowserControlStubFunctions(webClientDll);
-    locateMotifBrowserControlStubFunctions(webClientDll);
-    
-    (* nativeInitialize) (env, obj);
-  } else {
-    printf("Got Error: %s\n", dlerror());
-  }
-
+    (* nativeInitialize) (env, obj, verifiedBinDirAbsolutePath);
 } // Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeInitialize()
 
 

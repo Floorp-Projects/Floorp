@@ -31,9 +31,9 @@ echo LD_LIBRARY_PATH=${LD_LIBRARY_PATH}
 echo "===================================================================="
 echo
 # For debugging...
-#${JAVA} -native -verbose:jni -Xcheck:jni -classpath ${CLASSES} ${CLASSNAME} $1
-echo ${JAVA} -native -classpath ${CLASSES} ${CLASSNAME} $1 $2 $3 $4 $5
-${JAVA} -native -classpath ${CLASSES} ${CLASSNAME} $1 $2 $3 $4 $5
+#${JAVA} -native -verbose:jni -Xcheck:jni -classpath ${CLASSES} ${CLASSNAME} ${MOZILLA_FIVE_HOME} $1
+echo ${JAVA} -native -classpath ${CLASSES} ${CLASSNAME} ${MOZILLA_FIVE_HOME} $1 $2 $3 $4 $5
+${JAVA} -native -classpath ${CLASSES} ${CLASSNAME} ${MOZILLA_FIVE_HOME} $1 $2 $3 $4 $5
 
 
 

@@ -31,6 +31,8 @@
 #include <jni.h>
 #include "MotifBrowserControlCanvas.h"
 
+#include "BrowserControlMozillaShimStub.h"
+
 #include <dlfcn.h>
 
 extern void locateBrowserControlStubFunctions(void *);
@@ -131,4 +133,15 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_motif_MotifBrowserControlCanva
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_motif_MotifBrowserControlCanvas_setGTKWindowSize
     (JNIEnv * env, jobject obj, jint xwinID, jint width, jint height) {
     (* setGTKWindowSize) (env, obj, xwinID, width, height);
+}
+
+/*
+ * Class:     org_mozilla_webclient_motif_MotifBrowserControlCanvas
+ * Method:    loadMainDll
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_motif_MotifBrowserControlCanvas_loadMainDll
+  (JNIEnv *, jclass)
+{
+    loadMainDll();
 }

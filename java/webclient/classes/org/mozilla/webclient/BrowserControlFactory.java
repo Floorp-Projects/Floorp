@@ -43,7 +43,7 @@ import java.io.FileNotFoundException;
  * This is a static class, it is neven instantiated.
 
  *
- * @version $Id: BrowserControlFactory.java,v 1.1 1999/12/03 01:55:28 edburns%acm.org Exp $
+ * @version $Id: BrowserControlFactory.java,v 1.2 1999/12/06 23:31:04 edburns%acm.org Exp $
  * 
  * @see	org.mozilla.webclient.test.EmbeddedMozilla
 
@@ -116,17 +116,30 @@ public static void setAppData(String absolutePathToNativeBrowserBinDir) throws F
         // none loads, then I return a error message.
         // If you think up of a better way, let me know.
         // -- Mark
+
+        Class win32DrawingSurfaceInfoClass;
         
-        Class win32DrawingSurfaceInfoClass = 
-            Class.forName("sun.awt.windows.WDrawingSurfaceInfo");
+        try {
+            win32DrawingSurfaceInfoClass = 
+                Class.forName("sun.awt.windows.WDrawingSurfaceInfo");
+        }
+        catch (Exception e) {
+            win32DrawingSurfaceInfoClass = null;
+        }
         
         if (win32DrawingSurfaceInfoClass != null) {
             platformCanvasClassName = "org.mozilla.webclient.win32.Win32BrowserControlCanvas";
         }
         
         if (null == platformCanvasClassName) {
-            Class motifDrawingSurfaceInfoClass = 
-                Class.forName("sun.awt.motif.MDrawingSurfaceInfo");
+            Class motifDrawingSurfaceInfoClass; 
+            try {
+                motifDrawingSurfaceInfoClass = 
+                    Class.forName("sun.awt.motif.MDrawingSurfaceInfo");
+            }
+            catch (Exception e) {
+                motifDrawingSurfaceInfoClass = null;
+            }
             
             if (motifDrawingSurfaceInfoClass != null) {
                 platformCanvasClassName = "org.mozilla.webclient.motif.MotifBrowserControlCanvas";
@@ -184,7 +197,7 @@ public static void main(String [] args)
     Assert.setEnabled(true);
     Log.setApplicationName("BrowserControlFactory");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: BrowserControlFactory.java,v 1.1 1999/12/03 01:55:28 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: BrowserControlFactory.java,v 1.2 1999/12/06 23:31:04 edburns%acm.org Exp $");
 
     java.awt.Canvas canvas = null;
     BrowserControl control = null;

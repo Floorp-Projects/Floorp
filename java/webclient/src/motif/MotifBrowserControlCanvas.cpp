@@ -33,6 +33,7 @@
 #include <gdk/gdkx.h>
 #include <gtk/gtk.h>
 #include "gtkmozilla.h"
+#include "gtkmozarea.h"
 
 #include "nsIDOMDocument.h"
 #include <dlfcn.h>
@@ -48,37 +49,8 @@ extern "C" {
  */
 JNIEXPORT jint JNICALL Java_org_mozilla_webclient_motif_MotifBrowserControlCanvas_createTopLevelWindow
 (JNIEnv * env, jobject obj) {
-    static GtkWidget *window = NULL;
+    static GtkWidget *mShell = NULL;
 
-    // PENDING(mark): This is a hack needed in order to get those error
-    // messages about:
-    /***************************************************
-     *nsComponentManager: Load(/disk4/mozilla/mozilla/dist/bin/components/librdf.so) 
-     *FAILED with error: libsunwjdga.so: cannot open shared object file: 
-     *No such file or directory
-     ****************************************************/
-    // But the weird thing is, libhistory.so isn't linked with libsunwjdga.so.
-    // In fact, libsunwjdga.so doesn't even exist anywhere! I know it's
-    // a JDK library, but I think it is only supposed to get used on
-    // Solaris, not Linux. And why the hell is nsComponentManager trying
-    // to open this JDK library anyways? I need to try and get my stuff
-    // building on Solaris. Also, I will have to scan the Linux 
-    // JDK1.2 sources and figure out what's going on. In the meantime....
-    //
-    // -Mark
-    void * dll;
-
-    dll = dlopen("components/libhistory.so", RTLD_NOW | RTLD_GLOBAL);
-    if (!dll) {
-        printf("Got Error: %s\n", dlerror());
-    }
-    dll = dlopen("components/librdf.so", RTLD_NOW | RTLD_GLOBAL);
-    if (!dll) {
-        printf("Got Error: %s\n", dlerror());
-    }
-
-    NS_SetupRegistry();
-    
     /* Initialise GTK */
     gtk_set_locale ();
     
@@ -86,11 +58,11 @@ JNIEXPORT jint JNICALL Java_org_mozilla_webclient_motif_MotifBrowserControlCanva
     
     gdk_rgb_init();
     
-    window = gtk_window_new (GTK_WINDOW_POPUP);
-    gtk_window_set_default_size(GTK_WINDOW(window), 300, 300);
-    gtk_window_set_title(GTK_WINDOW(window), "Simple browser");
-
-    return (jint) window;
+    mShell = gtk_window_new (GTK_WINDOW_POPUP);
+    gtk_window_set_default_size(GTK_WINDOW(mShell), 300, 300);
+    gtk_window_set_title(GTK_WINDOW(mShell), "Simple browser");
+    
+    return (jint) mShell;
 }
 
 /*
@@ -101,25 +73,21 @@ JNIEXPORT jint JNICALL Java_org_mozilla_webclient_motif_MotifBrowserControlCanva
 JNIEXPORT jint JNICALL Java_org_mozilla_webclient_motif_MotifBrowserControlCanvas_createContainerWindow
     (JNIEnv * env, jobject obj, jint parent, jint screenWidth, jint screenHeight) {
     GtkWidget * window = (GtkWidget *) parent;
-    GtkWidget * vbox;
-    GtkWidget * mozilla;
-    
-    vbox = gtk_vbox_new (FALSE, 5);
-    gtk_container_add (GTK_CONTAINER (window), vbox);
-    gtk_widget_show(vbox);
-    
-    mozilla = gtk_mozilla_new();
-    gtk_box_pack_start (GTK_BOX (vbox), mozilla, TRUE, TRUE, 0);
+    GtkWidget *mMozArea = NULL;
+
+    mMozArea = gtk_mozarea_new();
+    gtk_container_add(GTK_CONTAINER(window), mMozArea);
+    gtk_widget_realize(GTK_WIDGET(mMozArea));
     
     // HACK: javaMake sure this window doesn't appear onscreen!!!!
     gtk_widget_set_uposition(window, screenWidth + 20, screenHeight + 20);
-    gtk_widget_show(mozilla);
+    gtk_widget_show(mMozArea);
     
     gtk_widget_show(window);
     
     //gtk_main();
 
-    return (jint) mozilla;
+    return (jint) mMozArea;
 }
 
 int getWinID(GtkWidget * gtkWidgetPtr) {
@@ -179,9 +147,19 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_motif_MotifBrowserControlCanva
     }
 }
 
+/*
+ * Class:     org_mozilla_webclient_motif_MotifBrowserControlCanvas
+ * Method:    loadMainDll
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_motif_MotifBrowserControlCanvas_loadMainDll
+  (JNIEnv *, jclass)
+{
+    printf("incorrect loadMainDll called\n\n");
+    fflush(stdout);
+}
+
+
 
 } // End extern "C"
-
-
-
 
