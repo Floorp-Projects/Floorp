@@ -668,7 +668,7 @@ cryptojs_generateOneKeyPair(JSContext *cx, nsKeyPairInfo *keyPairInfo,
       KeygenRunnable->Join();
 
       NS_RELEASE(dialogs);
-      if (!NS_FAILED(rv)) {
+      if (NS_SUCCEEDED(rv)) {
         rv = KeygenRunnable->GetParams(&keyPairInfo->privKey, &keyPairInfo->pubKey);
       }
     }

@@ -223,7 +223,7 @@ static PRInt32 GetSecurityStateFromChannel(nsIChannel* aChannel)
                                        (nsISupports *)info));
   
   res = psmInfo->GetSecurityState(&securityState);
-  if (!NS_SUCCEEDED(res)) {
+  if (NS_FAILED(res)) {
     PR_LOG(gSecureDocLog, PR_LOG_DEBUG, ("SecureUI: GetSecurityState:%p - GetSecurityState failed: %d\n",
                                          aChannel, res));
     securityState = nsIWebProgressListener::STATE_IS_BROKEN;

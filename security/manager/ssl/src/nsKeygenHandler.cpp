@@ -464,7 +464,7 @@ found_match:
             KeygenRunnable->Join();
 
             NS_RELEASE(dialogs);
-            if (!NS_FAILED(rv)) {
+            if (NS_SUCCEEDED(rv)) {
                 rv = KeygenRunnable->GetParams(&privateKey, &publicKey);
             }
         }

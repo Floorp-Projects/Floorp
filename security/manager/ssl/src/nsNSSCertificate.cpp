@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsNSSCertificate.cpp,v 1.56 2001/12/11 05:59:49 rangansen%netscape.com Exp $
+ * $Id: nsNSSCertificate.cpp,v 1.57 2001/12/13 01:17:49 javi%netscape.com Exp $
  */
 
 #include "prmem.h"
@@ -1242,7 +1242,7 @@ nsNSSCertificate::GetTokenName(PRUnichar **aTokenName)
       if (NS_FAILED(rv)) return rv;
       rv = nssComponent->GetPIPNSSBundleString(
                                 NS_LITERAL_STRING("InternalToken").get(), tok);
-      if (!NS_FAILED(rv))
+      if (NS_SUCCEEDED(rv))
         *aTokenName = ToNewUnicode(tok);
     }
   }
