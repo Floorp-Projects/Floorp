@@ -31,6 +31,8 @@
 
 #include "xlibrgb.h"
 
+#define CHAR_BUF_SIZE 40
+
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 
@@ -481,6 +483,9 @@ nsAppShell::HandleConfigureNotifyEvent(XEvent *event, nsWidget *aWidget)
 void
 nsAppShell::HandleKeyPressEvent(XEvent *event, nsWidget *aWidget)
 {
+  char string_buf[CHAR_BUF_SIZE];
+  int  len = 0;
+
   PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("KeyPress event for window 0x%lx\n",
                                        event->xkey.window));
 
@@ -494,6 +499,10 @@ nsAppShell::HandleKeyPressEvent(XEvent *event, nsWidget *aWidget)
 
   KeySym     keysym = nsKeyCode::ConvertKeyCodeToKeySym(event->xkey.display,
                                                         event->xkey.keycode);
+  XComposeStatus compose;
+
+  len = XLookupString(&event->xkey, string_buf, CHAR_BUF_SIZE, &keysym, &compose);
+  string_buf[len] = '\0';
 
   keyEvent.keyCode = nsKeyCode::ConvertKeySymToVirtualKey(keysym);
   keyEvent.charCode = 0;
@@ -501,41 +510,30 @@ nsAppShell::HandleKeyPressEvent(XEvent *event, nsWidget *aWidget)
   keyEvent.isShift = event->xkey.state & ShiftMask;
   keyEvent.isControl = event->xkey.state & ControlMask;
   keyEvent.isAlt = event->xkey.state & Mod1Mask;
-  //  keyEvent.point.x = event->xkey.x;
-  //  keyEvent.point.y = event->xkey.y;
   keyEvent.point.x = 0;
   keyEvent.point.y = 0;
   keyEvent.message = NS_KEY_DOWN;
   keyEvent.widget = aWidget;
   keyEvent.eventStructType = NS_KEY_EVENT;
 
-  printf("keysym = %x, keycode = %x, vk = %x\n",
-         keysym,
-         event->xkey.keycode,
-         keyEvent.keyCode);
+  //  printf("keysym = %x, keycode = %x, vk = %x\n",
+  //         keysym,
+  //         event->xkey.keycode,
+  //         keyEvent.keyCode);
 
   aWidget->DispatchKeyEvent(keyEvent);
 
   keyEvent.keyCode = nsKeyCode::ConvertKeySymToVirtualKey(keysym);
-  keyEvent.charCode = 0;
+  keyEvent.charCode = string_buf[0];
   keyEvent.time = event->xkey.time;
   keyEvent.isShift = event->xkey.state & ShiftMask;
   keyEvent.isControl = event->xkey.state & ControlMask;
   keyEvent.isAlt = event->xkey.state & Mod1Mask;
-  //  keyEvent.point.x = event->xkey.x;
-  //  keyEvent.point.y = event->xkey.y;
   keyEvent.point.x = 0;
   keyEvent.point.y = 0;
   keyEvent.message = NS_KEY_PRESS;
   keyEvent.widget = aWidget;
   keyEvent.eventStructType = NS_KEY_EVENT;
-
-  char buf[2];
-
-  buf[0] = keyEvent.keyCode;
-  buf[1] = nsnull;
-
-  keyEvent.charCode = keyEvent.keyCode;
 
   aWidget->DispatchKeyEvent(keyEvent);
 
