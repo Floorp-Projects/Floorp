@@ -62,6 +62,7 @@ CPPSRCS =				\
 	nsVISCIIToUnicode.cpp		\
 	nsVPSToUnicode.cpp		\
 	nsUTF8ToUnicode.cpp		\
+	nsMUTF7ToUnicode.cpp		\
 	nsUnicodeToISO88591.cpp		\
 	nsUnicodeToISO88592.cpp		\
 	nsUnicodeToISO88593.cpp		\
@@ -93,6 +94,7 @@ CPPSRCS =				\
 	nsUnicodeToMacUkrainian.cpp	\
 	nsUnicodeToMacIcelandic.cpp	\
 	nsUnicodeToUTF8.cpp		\
+	nsUnicodeToMUTF7.cpp		\
 	nsUnicodeToARMSCII8.cpp		\
 	nsUnicodeToTCVN5712.cpp		\
 	nsUnicodeToVISCII.cpp		\
@@ -129,6 +131,7 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsMacGreekToUnicode.obj 		\
 	.\$(OBJDIR)\nsMacTurkishToUnicode.obj 		\
 	.\$(OBJDIR)\nsUTF8ToUnicode.obj 		\
+	.\$(OBJDIR)\nsMUTF7ToUnicode.obj 		\
 	.\$(OBJDIR)\nsMacCroatianToUnicode.obj		\
 	.\$(OBJDIR)\nsMacRomanianToUnicode.obj		\
 	.\$(OBJDIR)\nsMacCyrillicToUnicode.obj		\
@@ -164,6 +167,7 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsUnicodeToMacGreek.obj		\
 	.\$(OBJDIR)\nsUnicodeToMacTurkish.obj		\
 	.\$(OBJDIR)\nsUnicodeToUTF8.obj			\
+	.\$(OBJDIR)\nsUnicodeToMUTF7.obj		\
 	.\$(OBJDIR)\nsUnicodeToMacCroatian.obj		\
 	.\$(OBJDIR)\nsUnicodeToMacRomanian.obj		\
 	.\$(OBJDIR)\nsUnicodeToMacCyrillic.obj		\
