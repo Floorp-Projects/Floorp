@@ -2289,8 +2289,8 @@ PK11_GetBestSlotMultiple(CK_MECHANISM_TYPE *type, int mech_count, void *wincx)
 	}
     }
 
-    for (le = PK11_GetFirstRef(list); le;
-			 	le = PK11_GetNextRef(list,le,PR_TRUE)) {
+    for (le = PK11_GetFirstSafe(list); le;
+			 	le = PK11_GetNextSafe(list,le,PR_TRUE)) {
 	if (PK11_IsPresent(le->slot)) {
 	    PRBool doExit = PR_FALSE;
 	    for (i=0; i < mech_count; i++) {
