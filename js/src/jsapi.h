@@ -389,6 +389,7 @@ struct JSClass {
 #define JSCLASS_HAS_PRIVATE     0x01    /* class instances have private slot */
 #define JSCLASS_NEW_ENUMERATE   0x02    /* class has JSNewEnumerateOp method */
 #define JSCLASS_NEW_RESOLVE     0x04    /* class has JSNewResolveOp method */
+#define JSCLASS_PRIVATE_IS_NSISUPPORTS 0x08  /* private slot is nsISupports* */
 
 struct JSObjectOps {
     /* Mandatory non-null function pointer members. */
