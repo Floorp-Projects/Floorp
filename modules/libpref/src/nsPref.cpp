@@ -1217,6 +1217,9 @@ NS_IMETHODIMP nsPref::UnregisterCallback( const char* domain,
 NS_IMETHODIMP nsPref::AddObserver(const char *domain,
                                   nsIObserver *observer)
 {
+    NS_ENSURE_ARG_POINTER(domain);
+    NS_ENSURE_ARG_POINTER(observer);
+
     nsCStringKey key(domain);
     mObservers.Put(&key, observer);
     return RegisterCallback(domain, NotifyObserver, observer);
@@ -1225,6 +1228,9 @@ NS_IMETHODIMP nsPref::AddObserver(const char *domain,
 NS_IMETHODIMP nsPref::RemoveObserver(const char *domain,
                                      nsIObserver *observer)
 {
+    NS_ENSURE_ARG_POINTER(domain);
+    NS_ENSURE_ARG_POINTER(observer);
+
     nsCStringKey key(domain);
     mObservers.Remove(&key);
     return UnregisterCallback(domain, NotifyObserver, observer);
