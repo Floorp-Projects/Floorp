@@ -92,13 +92,7 @@ LDFLAGS += \
 	-L/usr/X11R6/lib -lXm -lXp -lXt -lXext -lX11 \
 	$(NULL)
 
-# Static :(
-#	-lraptorwidgetmotif_s \
-
-
-
 include $(DEPTH)/config/rules.mk
-
 
 # This wasn't being used, due to the $(PROGRAM) + rules.mk stuff.
 # Commenting-out for now. -mcafee
