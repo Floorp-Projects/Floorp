@@ -80,8 +80,7 @@ NS_IMETHODIMP nsAbsoluteFrame::Reflow(nsIPresContext&      aPresContext,
   return nsFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 }
 
-NS_IMETHODIMP nsAbsoluteFrame::ContentChanged(nsIPresShell*   aShell,
-                                              nsIPresContext* aPresContext,
+NS_IMETHODIMP nsAbsoluteFrame::ContentChanged(nsIPresContext* aPresContext,
                                               nsIContent*     aChild,
                                               nsISupports*    aSubContent)
 {
@@ -89,11 +88,26 @@ NS_IMETHODIMP nsAbsoluteFrame::ContentChanged(nsIPresShell*   aShell,
 
   // Forward the notification to the absolutely positioned frame
   if (nsnull != mFrame) {
-    return mFrame->ContentChanged(aShell, aPresContext, aChild, aSubContent);
+    return mFrame->ContentChanged(aPresContext, aChild, aSubContent);
   }
 
   return NS_OK;
 }
+
+NS_IMETHODIMP nsAbsoluteFrame::AttributeChanged(nsIPresContext* aPresContext,
+                                                nsIContent*     aChild,
+                                                nsIAtom*        aAttribute,
+                                                PRInt32         aHint)
+{
+  NS_ASSERTION(mContent == aChild, "bad content-changed target");
+
+  // Forward the notification to the absolutely positioned frame
+  if (nsnull != mFrame) {
+    return mFrame->AttributeChanged(aPresContext, aChild, aAttribute, aHint);
+  }
+  return NS_OK;
+}
+
 
 nsIFrame* nsAbsoluteFrame::GetContainingBlock() const
 {

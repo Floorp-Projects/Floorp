@@ -21,6 +21,7 @@
 #include "nsHTMLParts.h"
 #include "nsHTMLAtoms.h"
 #include "nsIPresShell.h"
+#include "nsIPresContext.h"
 #include "nsIStyleContext.h"
 
 nsLeafFrame::nsLeafFrame(nsIContent* aContent, nsIFrame* aParentFrame)
@@ -105,8 +106,7 @@ void nsLeafFrame::GetInnerArea(nsIPresContext* aPresContext,
     (borderPadding.top + borderPadding.bottom);
 }
 
-NS_METHOD nsLeafFrame::ContentChanged(nsIPresShell*   aShell,
-                                      nsIPresContext* aPresContext,
+NS_METHOD nsLeafFrame::ContentChanged(nsIPresContext* aPresContext,
                                       nsIContent*     aChild,
                                       nsISupports*    aSubContent)
 {
@@ -116,22 +116,12 @@ NS_METHOD nsLeafFrame::ContentChanged(nsIPresShell*   aShell,
                                                 
   result = NS_NewHTMLReflowCommand(&cmd, this, nsIReflowCommand::ContentChanged);
   if (NS_OK == result) {
-    aShell->AppendReflowCommand(cmd);
+    nsIPresShell* shell = aPresContext->GetShell();
+    shell->AppendReflowCommand(cmd);
+    NS_RELEASE(shell);
     NS_RELEASE(cmd);
   }
 
   return result;
 }
 
-NS_IMETHODIMP
-nsLeafFrame::AttributeChanged(nsIPresShell* aShell,
-                              nsIPresContext* aPresContext,
-                              nsIContent* aChild,
-                              nsIAtom* aAttribute)
-{
-  if (nsHTMLAtoms::style == aAttribute) {
-    nsHTMLContainerFrame::ApplyStyleChangeToTree(*aPresContext, this);
-    nsHTMLContainerFrame::StyleChangeReflow(*aPresContext, this);
-  }
-  return NS_OK;
-}

@@ -133,8 +133,7 @@ public:
                                    nsIContent** aContent,
                                    PRInt32& aCursor);
 
-  NS_IMETHOD ContentChanged(nsIPresShell*   aShell,
-                            nsIPresContext* aPresContext,
+  NS_IMETHOD ContentChanged(nsIPresContext* aPresContext,
                             nsIContent*     aChild,
                             nsISupports*    aSubContent);
 
@@ -408,8 +407,7 @@ TextFrame::CreateContinuingFrame(nsIPresContext&  aCX,
 }
 
 NS_IMETHODIMP
-TextFrame::ContentChanged(nsIPresShell*   aShell,
-                          nsIPresContext* aPresContext,
+TextFrame::ContentChanged(nsIPresContext* aPresContext,
                           nsIContent*     aChild,
                           nsISupports*    aSubContent)
 {
@@ -419,7 +417,9 @@ TextFrame::ContentChanged(nsIPresShell*   aShell,
                                                 
   result = NS_NewHTMLReflowCommand(&cmd, this, nsIReflowCommand::ContentChanged);
   if (NS_OK == result) {
-    aShell->AppendReflowCommand(cmd);
+    nsIPresShell* shell = aPresContext->GetShell();
+    shell->AppendReflowCommand(cmd);
+    NS_RELEASE(shell);
     NS_RELEASE(cmd);
   }
 

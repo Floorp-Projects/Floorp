@@ -139,8 +139,7 @@ nsPlaceholderFrame::Paint(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPlaceholderFrame::ContentChanged(nsIPresShell*   aShell,
-                                                 nsIPresContext* aPresContext,
+NS_IMETHODIMP nsPlaceholderFrame::ContentChanged(nsIPresContext* aPresContext,
                                                  nsIContent*     aChild,
                                                  nsISupports*    aSubContent)
 {
@@ -148,21 +147,21 @@ NS_IMETHODIMP nsPlaceholderFrame::ContentChanged(nsIPresShell*   aShell,
 
   // Forward the notification to the floater
   if (nsnull != mAnchoredItem) {
-    return mAnchoredItem->ContentChanged(aShell, aPresContext, aChild, aSubContent);
+    return mAnchoredItem->ContentChanged(aPresContext, aChild, aSubContent);
   }
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPlaceholderFrame::AttributeChanged(nsIPresShell* aShell,
-                                     nsIPresContext* aPresContext,
+nsPlaceholderFrame::AttributeChanged(nsIPresContext* aPresContext,
                                      nsIContent* aChild,
-                                     nsIAtom* aAttribute)
+                                     nsIAtom* aAttribute,
+                                     PRInt32 aHint)
 {
   // Forward the notification to the floater
   if (nsnull != mAnchoredItem) {
-    return mAnchoredItem->AttributeChanged(aShell, aPresContext, aChild, aAttribute);
+    return mAnchoredItem->AttributeChanged(aPresContext, aChild, aAttribute, aHint);
   }
 
   return NS_OK;
