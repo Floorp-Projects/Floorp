@@ -143,7 +143,7 @@ CParserContext::~CParserContext(){
  * Set's the mimetype for this context
  * @update	rickg 03.18.2000
  */
-void CParserContext::SetMimeType(const nsString& aMimeType){
+void CParserContext::SetMimeType(nsAReadableString& aMimeType){
   mMimeType.Assign(aMimeType);
 
   mDocType=ePlainText;

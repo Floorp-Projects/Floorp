@@ -76,7 +76,7 @@ public:
     CParserContext( const CParserContext& aContext);
     ~CParserContext();
 
-    void  SetMimeType(const nsString& aMimeType);
+    void  SetMimeType(nsAReadableString& aMimeType);
 
     CParserContext*     mPrevContext;
     nsDTDMode           mDTDMode;
