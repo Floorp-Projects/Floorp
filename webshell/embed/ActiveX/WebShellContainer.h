@@ -83,12 +83,12 @@ public:
 						 const nsString& aPopupAlignment,
                          nsIDOMWindow* aWindow, nsIDOMWindow** outPopup);
 
-#ifdef NECKO
 	// nsIStreamObserver
     NS_IMETHOD OnStartRequest(nsIURI* aURL, const char *aContentType);
     NS_IMETHOD OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
     NS_IMETHOD OnStatus(nsIURI* aURL, const PRUnichar* aMsg);
     NS_IMETHOD OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg);
+#ifdef NECKO
 
 	// nsIDocumentLoaderObserver 
 	NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL, const char* aCommand);
@@ -99,11 +99,6 @@ public:
 	NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, PRInt32 aStatus);
 	NS_IMETHOD HandleUnknownContentType(nsIDocumentLoader* loader, nsIChannel* channel, const char *aContentType,const char *aCommand );		
 #else
-	// nsIStreamObserver
-    NS_IMETHOD OnStartBinding(nsIURI* aURL, const char *aContentType);
-    NS_IMETHOD OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
-    NS_IMETHOD OnStatus(nsIURI* aURL, const PRUnichar* aMsg);
-    NS_IMETHOD OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg);
 
 	NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL, const char* aCommand);
 	NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, nsIURI *aUrl, PRInt32 aStatus, nsIDocumentLoaderObserver* aObserver);
