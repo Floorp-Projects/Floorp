@@ -162,7 +162,11 @@ endif
 
 # Rules to convert EXTRA_LIBS to platform-dependent naming scheme
 ifdef AR_LIBS
+  ifeq ($(OS_ARCH), WINNT)
+	AR_LIBS := $(addprefix $(CONFIG_DIST_LIB)$(OPT_SLASH), $(AR_LIBS:%=%$(LIBRARY_VERSION)$(ARCHIVE_SUFFIX)$(STATIC_LIB_SUFFIX)))
+  else
 	AR_LIBS := $(addprefix $(CONFIG_DIST_LIB)$(OPT_SLASH)lib, $(AR_LIBS:%=%$(LIBRARY_VERSION)$(ARCHIVE_SUFFIX)$(STATIC_LIB_SUFFIX)))
+  endif
 endif
 
 ifdef LIBRARY
