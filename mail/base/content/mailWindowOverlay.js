@@ -404,9 +404,9 @@ function InitMessageMenu()
   // disable the move and copy menus if there are no messages selected.
   // disable the move menu if we can't delete msgs from the folder
   var moveMenu = document.getElementById("moveMenu");
+  var msgFolder = GetLoadedMsgFolder();
   if(moveMenu)
   {
-      var msgFolder = GetLoadedMsgFolder();
       var enableMenuItem = aMessage && msgFolder && msgFolder.canDeleteMessages;
       moveMenu.setAttribute("disabled", !enableMenuItem);
   }
@@ -427,10 +427,7 @@ function InitMessageMenu()
   // Disable mark menu when we're not in a folder
   var markMenu = document.getElementById("markMenu");
   if(markMenu)
-  {
-      var msgFolder = GetLoadedMsgFolder();
-      markMenu.setAttribute("disabled", !msgFolder);
-  }
+    markMenu.setAttribute("disabled", !msgFolder);
 
   document.commandDispatcher.updateCommands('create-menu-message');
 }
