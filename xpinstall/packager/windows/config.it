@@ -159,11 +159,11 @@ Description Long=Program will be installed with the minimal options.
 ; List of components to install/enable for this Setup Type.
 ; All other components not listed here will be disabled if
 ; this Setup Type is selected.
-C0=Component0
-C1=Component1
-C2=Component3
-C3=Component5
-C4=Component6
+C0=Component XPCOM
+C1=Component Navigator
+C2=Component Uninstaller
+C3=Component US English Profile Defaults
+C4=Component En US lang pack
 
 [Setup Type1]
 ;*** LOCALIZE ME BABY ***
@@ -174,13 +174,13 @@ Description Long=Program will be installed with the most common options.
 ; List of components to install/enable for this Setup Type.
 ; All other components not listed here will be disabled if
 ; this Setup Type is selected.
-C0=Component0
-C1=Component1
-C2=Component2
-C3=Component3
-C4=Component4
-C5=Component5
-C6=Component6
+C0=Component XPCOM
+C1=Component Navigator
+C2=Component MailNews
+C3=Component Uninstaller
+C4=Component Chatzilla
+C5=Component US English Profile Defaults
+C6=Component En US lang pack
 
 [Setup Type2]
 ;*** LOCALIZE ME BABY ***
@@ -193,13 +193,13 @@ Description Long=You may choose the options you want to install.  Recommended fo
 ; List of components to install/enable for this Setup Type.
 ; All other components not listed here will be disabled if
 ; this Setup Type is selected.
-C0=Component0
-C1=Component1
-C2=Component2
-C3=Component3
-C4=Component4
-C5=Component5
-C6=Component6
+C0=Component XPCOM
+C1=Component Navigator
+C2=Component MailNews
+C3=Component Uninstaller
+C4=Component Chatzilla
+C5=Component US English Profile Defaults
+C6=Component En US lang pack
 
 ;[Setup Type3]
 ;Description Short=C&ustom
@@ -208,11 +208,11 @@ C6=Component6
 ; List of components to install/enable for this Setup Type.
 ; All other components not listed here will be disabled if
 ; this Setup Type is selected.
-;C0=Component0
-;C1=Component1
-;C2=Component2
-;C3=Component3
-;C4=Component4
+;C0=Component XPCOM
+;C1=Component Navigator
+;C2=Component MailNews
+;C3=Component Uninstaller
+;C4=Component Chatzilla
 
 [Dialog Select Components]
 Show Dialog=TRUE
@@ -318,8 +318,8 @@ Message=Setup has detected that $ProductName$ is currently running.  Please quit
 ; These are the components to be offered to the user (shown in the Select
 ; Components dialog) for installation.
 ; There is no limit to the number of components to install.
-[Component0]
-Description Short=Mozilla Xpinstall Engine
+[Component XPCOM]
+Description Short=Mozilla XPCOM
 ;*** LOCALIZE ME BABY ***
 Description Long=Install Engine
 Archive=xpcom.xpi
@@ -331,9 +331,9 @@ $InstallSizeArchive$:xpcom.xpi
 ; Attributes can be the following values:
 ;   SELECTED  - the component is selected to be installed by default.
 ;   INVISIBLE - the component is not shown in the Select Components dialog.
-Attributes=SELECTED|INVISIBLE|CRITICAL
+Attributes=SELECTED|INVISIBLE
 
-[Component1]
+[Component Navigator]
 Description Short=Mozilla Navigator
 ;*** LOCALIZE ME BABY ***
 Description Long=The Mozilla internet browser
@@ -345,9 +345,9 @@ $InstallSizeArchive$:browser.xpi
 ; Attributes can be the following values:
 ;   SELECTED  - the component is selected to be installed by default.
 ;   INVISIBLE - the component is not shown in the Select Components dialog.
-Attributes=SELECTED|DISABLED|CRITICAL
+Attributes=SELECTED|DISABLED
 
-[Component2]
+[Component MailNews]
 Description Short=Mail & News
 ;*** LOCALIZE ME BABY ***
 Description Long=Mozilla Mail & News
@@ -362,7 +362,7 @@ $InstallSizeArchive$:mail.xpi
 Attributes=SELECTED
 Parameter=
 
-[Component3]
+[Component Uninstaller]
 Description Short=$CompanyName$ Uninstaller
 ;*** LOCALIZE ME BABY ***
 Description Long=Uninstaller for $ProductName$
@@ -379,11 +379,11 @@ Parameter=
 
 ;Since the uninstaller program is going to be installed into the Windows folder,
 ;Setup.exe need to know to calculate the disk space required for the Windows folder.
-;This section overrides the default user-chosen path for Component3 only.
-[Component3-Destination Path0]
+;This section overrides the default user-chosen path for Uninstaller only.
+[Component Uninstaller-Destination Path0]
 Path=[WINDIR]
 
-[Component4]
+[Component Chatzilla]
 Description Short=Chatzilla
 ;*** LOCALIZE ME BABY ***
 Description Long=Chatzilla IRC client
@@ -398,7 +398,7 @@ $InstallSizeArchive$:chatzilla.xpi
 Attributes=SELECTED
 Parameter=
 
-[Component5]
+[Component US English Profile Defaults]
 Description Short=US English profile defaults
 ;*** LOCALIZE ME BABY ***
 Description Long=US English profile defaults
@@ -410,10 +410,10 @@ $InstallSizeArchive$:deflenus.xpi
 ; Attributes can be the following values:
 ;   SELECTED  - the component is selected to be installed by default.
 ;   INVISIBLE - the component is not shown in the Select Components dialog.
-Attributes=SELECTED|INVISIBLE|CRITICAL
+Attributes=SELECTED|INVISIBLE
 Parameter=
 
-[Component6]
+[Component En US lang pack]
 Description Short=English-US language pack
 ;*** LOCALIZE ME BABY ***
 Description Long=English-US language pack
@@ -425,7 +425,7 @@ $InstallSizeArchive$:langenus.xpi
 ; Attributes can be the following values:
 ;   SELECTED  - the component is selected to be installed by default.
 ;   INVISIBLE - the component is not shown in the Select Components dialog.
-Attributes=SELECTED|INVISIBLE|CRITICAL
+Attributes=SELECTED|INVISIBLE
 Parameter=
 
 
