@@ -213,7 +213,7 @@ namespace VM {
         
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers)
         {
-            f << getRegisterValue(registers, mOp1.first) << ", " << getRegisterValue(registers, mOp2.first) << ", " << getRegisterValue(registers, mOp3.first);
+            f /* << getRegisterValue(registers, mOp1.first) << ", " */ << getRegisterValue(registers, mOp2.first) << ", " << getRegisterValue(registers, mOp3.first);
             return f;
         }
     };
@@ -229,7 +229,7 @@ namespace VM {
 
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers)
         {
-            f << getRegisterValue(registers, mOp1.first) << ", " << getRegisterValue(registers, mOp2.first);
+            f /* << getRegisterValue(registers, mOp1.first) << ", " */ << getRegisterValue(registers, mOp2.first);
             return f;
         }
     };

@@ -49,6 +49,7 @@ namespace ICG {
 } /* namespace ICG */
 namespace Interpreter {
     class Context;
+    struct Activation;
 } /* namespace Interpreter */
 } /* namespace JavaScript */
 
@@ -504,7 +505,6 @@ namespace JSTypes {
         static JSObject* FunctionPrototypeObject;
         ICodeModule* mICode;
         
-
    	    typedef JavaScript::gc_traits_finalizable<JSFunction> traits;
 	    typedef gc_allocator<JSFunction, traits> allocator;
 		
@@ -519,7 +519,6 @@ namespace JSTypes {
         {
             setClass(FunctionString);
         }
-
         virtual ~JSFunction();
 
         virtual JSValue getThis()  { return kNullValue; }
@@ -560,6 +559,21 @@ namespace JSTypes {
         JSBinaryCode mCode;
         JSBinaryOperator(JSBinaryCode code) : mCode(code) {}
         virtual bool isNative()    { return true; }
+        void* operator new(size_t) { return allocator::allocate(1); }
+    };
+
+    class JSClosure : public JSFunction {
+        Interpreter::Activation *mActivation;
+        JSClosure *mPrevious;
+   	    typedef JavaScript::gc_traits_finalizable<JSClosure> traits;
+	    typedef gc_allocator<JSClosure, traits> allocator;
+    public:
+        JSClosure(ICodeModule* iCode, Interpreter::Activation *activation, JSClosure *previous) 
+            : JSFunction(iCode), mActivation(activation), mPrevious(previous) {}
+
+        JSClosure* getPrevious()         { return mPrevious; }
+        Interpreter::Activation* getActivation()      { return mActivation; }
+
         void* operator new(size_t) { return allocator::allocate(1); }
     };
 

@@ -217,6 +217,7 @@ namespace ICG {
         LabelList *pLabels;                 // label for each parameter initialization entry point
 
         const StringAtom &mInitName;
+        ICodeGenerator *mContainingFunction;// outer function for nested functions
 
         std::vector<bool> mPermanentRegister;
 
@@ -260,7 +261,6 @@ namespace ICG {
         void endWith()                          { iCode->push_back(new Without()); }
         
 
-
         void startStatement(uint32 pos)         { (*mInstructionMap)[iCode->size()] = pos; }
 
         ICodeOp mapExprNodeToICodeOp(ExprNode::Kind kind);
@@ -272,16 +272,18 @@ namespace ICG {
 
         void setFlag(uint32 flag, bool v) { mFlags = (ICodeGeneratorFlags)((v) ? mFlags | flag : mFlags & ~flag); }
 
-        typedef enum { Var, Property, Slot, Static, Constructor, Name, Method } LValueKind;
+        typedef enum { NoKind, Var, Property, Slot, Static, Constructor, Name, Method } LValueKind;
 
-        LValueKind resolveIdentifier(const StringAtom &name, TypedRegister &v, uint32 &slotIndex, bool lvalue);
+        LValueKind ICodeGenerator::getVariableByName(const StringAtom &name, TypedRegister &v);
+        LValueKind ICodeGenerator::scanForVariable(const StringAtom &name, TypedRegister &v, uint32 &slotIndex, TypedRegister &base);
+        LValueKind resolveIdentifier(const StringAtom &name, TypedRegister &v, uint32 &slotIndex, TypedRegister &base, bool lvalue);
         TypedRegister handleIdentifier(IdentifierExprNode *p, ExprNode::Kind use, ICodeOp xcrementOp, TypedRegister ret, ArgumentList *args, bool lvalue);
         TypedRegister handleDot(BinaryExprNode *b, ExprNode::Kind use, ICodeOp xcrementOp, TypedRegister ret, ArgumentList *args, bool lvalue);
-        ICodeModule *genFunction(FunctionStmtNode *f, bool isConstructor, JSClass *superClass);
+        ICodeModule *genFunction(FunctionDefinition &function, bool isStatic, bool isConstructor, JSClass *superClass);
     
     public:
 
-        ICodeGenerator(Context *cx, JSClass *aClass = NULL, ICodeGeneratorFlags flags = kIsTopLevel);
+        ICodeGenerator(Context *cx, ICodeGenerator *containingFunction = NULL, JSClass *aClass = NULL, ICodeGeneratorFlags flags = kIsTopLevel);
         
         ~ICodeGenerator()
         {
@@ -352,6 +354,8 @@ namespace ICG {
         TypedRegister directCall(JSFunction *target, ArgumentList *args);
         TypedRegister bindThis(TypedRegister thisArg, TypedRegister target);
         TypedRegister getMethod(TypedRegister thisArg, uint32 slotIndex);
+        TypedRegister getClosure(uint32 count);
+        TypedRegister newClosure(ICodeModule *icm);
 
         void move(TypedRegister destination, TypedRegister source);
         TypedRegister logicalNot(TypedRegister source);

@@ -119,6 +119,14 @@ SOURCE=..\debugger.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\exception.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\exception_msgs.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\hash.cpp
 # End Source File
 # Begin Source File
@@ -144,6 +152,10 @@ SOURCE=..\jsmath.cpp
 # Begin Source File
 
 SOURCE=..\jstypes.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\lexutils.cpp
 # End Source File
 # Begin Source File
 
@@ -176,6 +188,10 @@ SOURCE=..\xmlparser.cpp
 # Begin Source File
 
 SOURCE=..\cpucfg.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\exception.h
 # End Source File
 # Begin Source File
 
@@ -216,6 +232,10 @@ SOURCE=..\jsmath.h
 # Begin Source File
 
 SOURCE=..\jstypes.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\lexutils.h
 # End Source File
 # Begin Source File
 

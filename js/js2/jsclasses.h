@@ -347,10 +347,27 @@ namespace JSClasses {
             return gc_base::operator new(n);
         }
         
+        void* operator new(size_t n, uint32 slotCount)
+        {
+            if (slotCount > 0) n += sizeof(JSValue) * (slotCount - 1);
+            return gc_base::operator new(n);
+        }
+        
 #if !defined(XP_MAC)
         void operator delete(void* /*ptr*/) {}
         void operator delete(void* /*ptr*/, JSClass* /*thisClass*/) {}
+        void operator delete(void* /*ptr*/, uint32 /*slotCount*/) {}
 #endif
+        
+        JSInstance(uint32 slotCount)
+        {
+            mType = NULL;
+            // initialize extra slots with undefined.
+            if (slotCount > 0) {
+                std::uninitialized_fill(&mSlots[1], &mSlots[1] + (slotCount - 1),
+                                        JSTypes::kUndefinedValue);
+            }
+        }
         
         JSInstance(JSClass* thisClass)
         {

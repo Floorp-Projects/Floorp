@@ -40,7 +40,7 @@ namespace Interpreter {
         void initContext();
     public:
         explicit Context(World& world, JSScope* aGlobal)
-            : mWorld(world), mGlobal(aGlobal), mLinkage(0), mActivation(0), mHasOperatorsPackageLoaded(false) { initContext(); }
+            : mWorld(world), mGlobal(aGlobal), mLinkage(0), mActivation(0), mHasOperatorsPackageLoaded(false), mCurrentClosure(0) { initContext(); }
 
         World& getWorld()           { return mWorld; }
         JSScope* getGlobalObject()  { return mGlobal; }
@@ -102,6 +102,8 @@ namespace Interpreter {
         typedef ListenerList::iterator ListenerIterator;
         ListenerList mListeners;
         Activation* mActivation;
+        ICodeModule* mICode;
+        JSClosure* mCurrentClosure;
         bool mHasOperatorsPackageLoaded;
 
         InstructionIterator mPC;
@@ -109,6 +111,80 @@ namespace Interpreter {
         BinaryOperatorList mBinaryOperators[BinaryOperator::BinaryOperatorCount];
 
     }; /* class Context */
+
+    /**
+    * 
+    */
+    struct Handler: public gc_base {
+        Handler(Label *catchLabel, Label *finallyLabel)
+            : catchTarget(catchLabel), finallyTarget(finallyLabel) {}
+        Label *catchTarget;
+        Label *finallyTarget;
+    };
+    typedef std::vector<Handler *> CatchStack;
+
+
+    /**
+     * Represents the current function's invocation state.
+     */
+    struct Activation : public JSObject {
+        JSValues mRegisters;
+        CatchStack catchStack;
+        
+        Activation(uint32 highRegister, const JSValues& args)
+            : mRegisters(highRegister + 1)
+        {
+            // copy arg list to initial registers.
+            JSValues::iterator dest = mRegisters.begin();
+            for (JSValues::const_iterator src = args.begin(), 
+                     end = args.end(); src != end; ++src, ++dest) {
+                *dest = *src;
+            }
+        }
+
+        Activation(uint32 highRegister, Activation* caller, const JSValue thisArg,
+                     const ArgumentList* list)
+            : mRegisters(highRegister + 1)
+        {
+            // copy caller's parameter list to initial registers.
+            JSValues::iterator dest = mRegisters.begin();
+            *dest++ = thisArg;
+            const JSValues& params = caller->mRegisters;
+            for (ArgumentList::const_iterator src = list->begin(), 
+                     end = list->end(); src != end; ++src, ++dest) {
+                Register r = (*src).first.first;
+                if (r != NotARegister)
+                    *dest = params[r];
+                else
+                    *dest = JSValue(JSValue::uninitialized_tag);
+            }
+        }
+
+        // calling a binary operator, no 'this'
+        Activation(uint32 highRegister, const JSValue thisArg, const JSValue arg1, const JSValue arg2)
+            : mRegisters(highRegister + 1)
+        {
+            mRegisters[0] = thisArg;
+            mRegisters[1] = arg1;
+            mRegisters[2] = arg2;
+        }
+
+        // calling a getter function, no arguments
+        Activation(uint32 highRegister, const JSValue thisArg)
+            : mRegisters(highRegister + 1)
+        {
+            mRegisters[0] = thisArg;
+        }
+
+        // calling a setter function, 1 argument
+        Activation(uint32 highRegister, const JSValue thisArg, const JSValue arg)
+            : mRegisters(highRegister + 1)
+        {
+            mRegisters[0] = thisArg;
+            mRegisters[1] = arg;
+        }
+
+    };  /* struct Activation */
 
 } /* namespace Interpreter */
 } /* namespace JavaScript */

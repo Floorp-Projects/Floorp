@@ -26,6 +26,7 @@
         DIVIDE, /* dest, source1, source2 */
         ELEM_XCR, /* dest, base, index, value */
         GENERIC_BINARY_OP, /* dest, op, source1, source2 */
+        GET_CLOSURE, /* dest, closure depth */
         GET_ELEMENT, /* dest, base, index */
         GET_METHOD, /* result, target base, index */
         GET_PROP, /* dest, object, prop name */
@@ -43,6 +44,7 @@
         NEGATE, /* dest, source */
         NEW_ARRAY, /* dest */
         NEW_CLASS, /* dest, class */
+        NEW_CLOSURE, /* dest, ICodeModule */
         NEW_FUNCTION, /* dest, ICodeModule */
         NEW_OBJECT, /* dest, constructor */
         NOP, /* do nothing and like it */
@@ -402,6 +404,22 @@
         }
     };
 
+    class GetClosure : public Instruction_2<TypedRegister, uint32> {
+    public:
+        /* dest, closure depth */
+        GetClosure (TypedRegister aOp1, uint32 aOp2) :
+            Instruction_2<TypedRegister, uint32>
+            (GET_CLOSURE, aOp1, aOp2) {};
+        virtual Formatter& print(Formatter& f) {
+            f << opcodeNames[GET_CLOSURE] << "\t" << mOp1 << ", " << mOp2;
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << getRegisterValue(registers, mOp1.first);
+            return f;
+        }
+    };
+
     class GetElement : public Instruction_3<TypedRegister, TypedRegister, TypedRegister> {
     public:
         /* dest, base, index */
@@ -658,6 +676,22 @@
             (NEW_CLASS, aOp1, aOp2) {};
         virtual Formatter& print(Formatter& f) {
             f << opcodeNames[NEW_CLASS] << "\t" << mOp1 << ", " << mOp2->getName();
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << getRegisterValue(registers, mOp1.first);
+            return f;
+        }
+    };
+
+    class NewClosure : public Instruction_2<TypedRegister, ICodeModule*> {
+    public:
+        /* dest, ICodeModule */
+        NewClosure (TypedRegister aOp1, ICodeModule* aOp2) :
+            Instruction_2<TypedRegister, ICodeModule*>
+            (NEW_CLOSURE, aOp1, aOp2) {};
+        virtual Formatter& print(Formatter& f) {
+            f << opcodeNames[NEW_CLOSURE] << "\t" << mOp1 << ", " << "ICodeModule";
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
@@ -1165,6 +1199,7 @@
         "DIVIDE            ",
         "ELEM_XCR          ",
         "GENERIC_BINARY_OP ",
+        "GET_CLOSURE       ",
         "GET_ELEMENT       ",
         "GET_METHOD        ",
         "GET_PROP          ",
@@ -1182,6 +1217,7 @@
         "NEGATE            ",
         "NEW_ARRAY         ",
         "NEW_CLASS         ",
+        "NEW_CLOSURE       ",
         "NEW_FUNCTION      ",
         "NEW_OBJECT        ",
         "NOP               ",
