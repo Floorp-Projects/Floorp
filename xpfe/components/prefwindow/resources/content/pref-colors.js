@@ -18,9 +18,12 @@
     var menu      = document.getElementById(menuid);  // picker container
     var colorWell = menu.firstChild;                  // display for picker colour
     var colorRef  = menu.nextSibling;                 // prefs JS sets this.
-    colorWell.style.backgroundColor = colorRef.value; // set the well from prefs.
+    colorWell.style.backgroundColor = colorRef.getAttribute("value"); // set the well from prefs.
     var color     = colorWell.style.backgroundColor;   
     setColorFromPicker( null, color );
+
+
+	return color;
   }     
 
   function setColorFromPicker(colorWell,color )
@@ -36,6 +39,7 @@
     getColorFromWellAndSetValue("backgroundmenu");
     getColorFromWellAndSetValue("unvisitedlinkmenu");
     getColorFromWellAndSetValue("visitedlinkmenu");
+
     return true;
   }                   
   
