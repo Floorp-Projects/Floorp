@@ -41,12 +41,17 @@
 #include "nsHTMLDocument.h"
 #include "nsGenericHTMLElement.h"
 #include "nsAutoPtr.h"
+#include "nsIStringBundle.h"
+
+#define NSMEDIADOCUMENT_PROPERTIES_URI "chrome://communicator/locale/layout/MediaDocument.properties"
 
 class nsMediaDocument : public nsHTMLDocument
 {
 public:
   nsMediaDocument();
   virtual ~nsMediaDocument();
+
+  virtual nsresult  Init();
 
   NS_IMETHOD StartDocumentLoad(const char*         aCommand,
                                nsIChannel*         aChannel,
@@ -61,6 +66,28 @@ protected:
 
   friend class nsMediaDocumentStreamListener;
   nsresult StartLayout();
+
+  // |aFormatNames[]| needs to have four elements in the following order: 
+  // a format name with neither dimension nor file, a format name with
+  // filename but w/o dimension, a format name with dimension but w/o filename,
+  // a format name with both of them.  For instance, it can have
+  // "ImageTitleWithNeitherDimensionsNorFile", "ImageTitleWithoutDimensions",
+  // "ImageTitleWithDimesions",  "ImageTitleWithDimensionsAndFile".
+  //
+  // Also see MediaDocument.properties if you want to define format names
+  // for a new subclass. aWidth and aHeight are pixels for |nsImageDocument|,
+  // but could be in other units for other 'media', in which case you have to 
+  // define format names accordingly. 
+  void UpdateTitleAndCharset(const nsACString&  aTypeStr, 
+                             const char* const* aFormatNames = sFormatNames,
+                             PRInt32            aWidth = 0, 
+                             PRInt32            aHeight = 0);
+
+  nsCOMPtr<nsIStringBundle>     mStringBundle;
+  static const char* const      sFormatNames[4];   
+
+private:
+  enum                          {eWithNoInfo, eWithFile, eWithDim, eWithDimAndFile};
 };
 
 

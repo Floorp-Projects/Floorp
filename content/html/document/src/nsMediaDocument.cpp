@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Jungshik Shin <jshin@mailaps.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -42,6 +43,9 @@
 #include "nsIPresShell.h"
 #include "nsIScrollable.h"
 #include "nsIViewManager.h"
+#include "nsITextToSubURI.h"
+#include "nsIURL.h"
+#include "nsPrintfCString.h"
 
 nsMediaDocumentStreamListener::nsMediaDocumentStreamListener(nsMediaDocument *aDocument)
 {
@@ -108,11 +112,37 @@ nsMediaDocumentStreamListener::OnDataAvailable(nsIRequest* request,
   return NS_OK;
 }
 
+// default format names for nsMediaDocument. 
+const char* const nsMediaDocument::sFormatNames[4] = 
+{
+  "MediaTitleWithNoInfo",    // eWithNoInfo
+  "MediaTitleWithFile",      // eWithFile
+  "",                        // eWithDim
+  ""                         // eWithDimAndFile
+};
+
 nsMediaDocument::nsMediaDocument()
 {
 }
 nsMediaDocument::~nsMediaDocument()
 {
+}
+
+nsresult
+nsMediaDocument::Init()
+{
+  nsresult rv = nsHTMLDocument::Init();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Create a bundle for the localization
+  nsCOMPtr<nsIStringBundleService> stringService(
+    do_GetService(NS_STRINGBUNDLE_CONTRACTID));
+  if (stringService) {
+    stringService->CreateBundle(NSMEDIADOCUMENT_PROPERTIES_URI,
+                                getter_AddRefs(mStringBundle));
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -209,4 +239,82 @@ nsMediaDocument::StartLayout()
   }
 
   return NS_OK;
+}
+
+void 
+nsMediaDocument::UpdateTitleAndCharset(const nsACString& aTypeStr, 
+                                       const char* const* aFormatNames, 
+                                       PRInt32 aWidth, PRInt32 aHeight)
+{
+  nsXPIDLString fileStr;
+  nsCOMPtr<nsIURI> uri = do_QueryInterface(mDocumentURL);
+  if (uri) {
+    nsCAutoString originCharset;
+    uri->GetOriginCharset(originCharset);
+    nsCAutoString fileName;
+    nsCOMPtr<nsIURL> url = do_QueryInterface(uri);
+    if (url)
+      url->GetFileName(fileName);
+    if (!originCharset.IsEmpty()) {
+      // set doc. charset to that of the referring document if known so that
+      // filepicker comes up with the correct non-ascii filename.
+      SetDocumentCharacterSet(NS_ConvertASCIItoUCS2(originCharset));
+      if (!fileName.IsEmpty()) {
+        nsresult rv;
+        nsCOMPtr<nsITextToSubURI> textToSubURI = 
+          do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
+        if (NS_SUCCEEDED(rv))
+          rv = textToSubURI->UnEscapeURIForUI(originCharset, fileName, fileStr);
+      }
+    }
+    if (fileStr.IsEmpty())
+      fileStr.Assign(NS_ConvertUTF8toUCS2(fileName));
+  }
+
+
+  NS_ConvertASCIItoUCS2 typeStr(aTypeStr);
+  nsXPIDLString title;
+
+  if (mStringBundle) {
+    // if we got a valid size (not all media have a size)
+    if (aWidth != 0 && aHeight != 0) {
+      nsAutoString widthStr;
+      nsAutoString heightStr;
+      widthStr.AppendInt(aWidth);
+      heightStr.AppendInt(aHeight);
+      // If we got a filename, display it
+      if (!fileStr.IsEmpty()) {
+        const PRUnichar *formatStrings[4]  = {fileStr.get(), typeStr.get(), 
+          widthStr.get(), heightStr.get()};
+        NS_ConvertASCIItoUCS2 fmtName(aFormatNames[eWithDimAndFile]);
+        mStringBundle->FormatStringFromName(fmtName.get(), formatStrings, 4, 
+                                            getter_Copies(title));
+      } 
+      else {
+        const PRUnichar *formatStrings[3]  = {typeStr.get(), widthStr.get(), 
+          heightStr.get()};
+        NS_ConvertASCIItoUCS2 fmtName(aFormatNames[eWithDim]);
+        mStringBundle->FormatStringFromName(fmtName.get(), formatStrings, 3, 
+                                            getter_Copies(title));
+      }
+    } 
+    else {
+    // If we got a filename, display it
+      if (!fileStr.IsEmpty()) {
+        const PRUnichar *formatStrings[2] = {fileStr.get(), typeStr.get()};
+        NS_ConvertASCIItoUCS2 fmtName(aFormatNames[eWithFile]);
+        mStringBundle->FormatStringFromName(fmtName.get(), formatStrings, 2, 
+                                            getter_Copies(title));
+      } 
+      else {
+        const PRUnichar *formatStrings[1]  = {typeStr.get()};
+        NS_ConvertASCIItoUCS2 fmtName(aFormatNames[eWithNoInfo]);
+        mStringBundle->FormatStringFromName(fmtName.get(), formatStrings, 1, 
+                                            getter_Copies(title));
+      }
+    }
+  } 
+
+  // set it on the document
+  SetTitle(title);
 }
