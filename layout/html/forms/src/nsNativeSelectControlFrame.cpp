@@ -50,10 +50,6 @@
 #include "nsILookAndFeel.h"
 #include "nsIComponentManager.h"
 #include "nsISelectControlFrame.h"
-#include "nsIStatefulFrame.h"
-#include "nsISupportsArray.h"
-#include "nsISupportsPrimitives.h"
-#include "nsIComponentManager.h"
 
 static NS_DEFINE_IID(kIDOMHTMLSelectElementIID, NS_IDOMHTMLSELECTELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLOptionElementIID, NS_IDOMHTMLOPTIONELEMENT_IID);
@@ -67,12 +63,12 @@ static NS_DEFINE_IID(kListCID, NS_LISTBOX_CID);
 static NS_DEFINE_IID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
 static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 static NS_DEFINE_IID(kISelectControlFrameIID, NS_ISELECTCONTROLFRAME_IID);
+
  
 class nsOption;
 
 class nsNativeSelectControlFrame : public nsNativeFormControlFrame,
-                                   public nsISelectControlFrame,
-				   public nsIStatefulFrame
+                                   public nsISelectControlFrame
 {
 private:
 	typedef nsNativeFormControlFrame Inherited;
@@ -153,12 +149,6 @@ public:
   NS_IMETHOD AddOption(PRInt32 aIndex);
   NS_IMETHOD RemoveOption(PRInt32 aIndex);
   NS_IMETHOD SetOptionSelected(PRInt32 aIndex, PRBool aValue);
-  NS_IMETHOD GetOptionSelected(PRInt32 aIndex, PRBool* aValue);
-
-  //nsIStatefulFrame
-  NS_IMETHOD GetStateType(StateType* aStateType);
-  NS_IMETHOD SaveState(nsISupports** aState);
-  NS_IMETHOD RestoreState(nsISupports* aState);
 
 protected:
   PRInt32 mNumRows;
@@ -169,7 +159,6 @@ protected:
   PRBool GetOptionValue(nsIDOMHTMLCollection& aCollecton, PRUint32 aIndex, nsString& aValue);
   PRInt32 GetSelectedIndex();
   nsresult UpdateWidgetToCache(PRBool aDeselectFirst = PR_TRUE);
-  nsresult Deselect();
 
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
                               const nsHTMLReflowState& aReflowState,
@@ -185,7 +174,6 @@ protected:
   // GFX-rendered or not.  This is used to detect changes in MouseClicked
   PRInt32 mNumOptions;
   PRBool* mOptionSelected;
-  PRBool mCachedState; // A flag meaning "Don't reset state on PostCreateWidget"
 
   // Accessor methods for mOptionsSelected and mNumOptions
   void GetOptionSelectedCache(PRInt32 index, PRBool* aValue);
@@ -226,7 +214,6 @@ nsNativeSelectControlFrame::nsNativeSelectControlFrame()
   mNumRows      = 0;
   mNumOptions   = 0;
   mOptionSelected = nsnull;
-  mCachedState  = PR_FALSE;
 }
 
 // XXX is this the right way to clean up?
@@ -242,16 +229,11 @@ nsNativeSelectControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePt
   NS_PRECONDITION(0 != aInstancePtr, "null ptr");
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
-  } else if (aIID.Equals(NS_GET_IID(nsISelectControlFrame))) {
-    *aInstancePtr = (void*)(nsISelectControlFrame*) this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  } else if (aIID.Equals(NS_GET_IID(nsIStatefulFrame))) {
-    *aInstancePtr = (void*)(nsIStatefulFrame*) this;
-    NS_ADDREF_THIS();
+  }
+  if (aIID.Equals(kISelectControlFrameIID)) {
+    *aInstancePtr = (void*) ((nsISelectControlFrame*) this);
     return NS_OK;
   }
-
   return Inherited::QueryInterface(aIID, aInstancePtr);
 }
 
@@ -766,26 +748,21 @@ nsNativeSelectControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumV
 void
 nsNativeSelectControlFrame::Reset() 
 {
-  if (mCachedState) {
-    mCachedState = PR_FALSE;
-  } else {
-    // Reset selection to default
-    nsIDOMHTMLCollection* options = GetOptions();
-    if (!options) return; // XXX NS_ERROR_UNEXPECTED;
-    PRUint32 numOptions;
-    options->GetLength(&numOptions);
-    for (PRUint32 i = 0; i < numOptions; i++) {
-      nsIDOMHTMLOptionElement* option = GetOption(*options, i);
-      if (option) {
-        // Cache the state of each option locally
-        PRBool selected = PR_FALSE;
-        option->GetDefaultSelected(&selected);
-        SetOptionSelectedCache(i, selected);
-	NS_RELEASE(option);
-      }
+  // Reset selection to default
+  nsIDOMHTMLCollection* options = GetOptions();
+  if (!options) return; // XXX NS_ERROR_UNEXPECTED;
+  PRUint32 numOptions;
+  options->GetLength(&numOptions);
+  for (PRUint32 i = 0; i < numOptions; i++) {
+    nsIDOMHTMLOptionElement* option = GetOption(*options, i);
+    if (option) {
+      // Cache the state of each option locally
+      PRBool selected = PR_FALSE;
+      option->GetDefaultSelected(&selected);
+      SetOptionSelectedCache(i, selected);
     }
-    NS_RELEASE(options);
   }
+  NS_RELEASE(options);
 
   UpdateWidgetToCache();
 }
@@ -1216,7 +1193,7 @@ void nsNativeSelectControlFrame::GetOptionSelectedWidget(PRInt32 indx, PRBool* a
 void nsNativeSelectControlFrame::SetOptionSelectedCache(PRInt32 indx, PRBool aValue)
 {
   if (nsnull != mOptionSelected) {
-    if ((-1 < indx) && (mNumOptions >= indx)) {
+    if (mNumOptions >= indx) {
       mOptionSelected[indx] = aValue;
     }
   }
@@ -1248,10 +1225,9 @@ NS_IMETHODIMP nsNativeSelectControlFrame::SetProperty(nsIAtom* aName, const nsSt
       return NS_ERROR_INVALID_ARG; // Couldn't convert to integer
 
     // Update local cache of selected values
-    nsresult res = Deselect();
-    if (NS_SUCCEEDED(res)) {
-      SetOptionSelectedCache(selectedIndex, PR_TRUE);	// Select selectedIndex
-    }
+    for (PRInt32 i=0; i < mNumOptions; i++)	// Deselect all options
+      SetOptionSelectedCache(i, PR_FALSE);
+    SetOptionSelectedCache(selectedIndex, PR_TRUE);	// Select selectedIndex
 
     // Update widget
     UpdateWidgetToCache();
@@ -1291,12 +1267,7 @@ NS_IMETHODIMP nsNativeSelectControlFrame::AddOption(PRInt32 aIndex)
 
         // Get the correct selected value and text of the option
         nsIDOMHTMLOptionElement* option = GetOption(*options, i);
-	if (option) {
-          option->GetDefaultSelected(&selected);
-	  NS_RELEASE(option);
-	} else {
-	  selected = PR_FALSE; // XXX failure case.
-	}
+        option->GetDefaultSelected(&selected);
         mOptionSelected[j]=selected;
         j++;
       }
@@ -1371,12 +1342,7 @@ NS_IMETHODIMP nsNativeSelectControlFrame::RemoveOption(PRInt32 aIndex)
 
           // Get the default (XXXincorrect) selected value and text of the option
           nsIDOMHTMLOptionElement* option = GetOption(*options, i);
-	  if (option) {
-            option->GetDefaultSelected(&selected); // Should be sel, not defsel :(
-	    NS_RELEASE(option);
-	  } else {
-	    selected = PR_FALSE; // XXX failure case
-	  }
+          option->GetDefaultSelected(&selected); // Should be sel, not defsel :(
           mOptionSelected[i]=selected;
         }
       }
@@ -1398,38 +1364,38 @@ NS_IMETHODIMP nsNativeSelectControlFrame::GetProperty(nsIAtom* aName, nsString& 
     PRInt32 error = 0;
     PRBool selected = PR_FALSE;
     PRInt32 indx = aValue.ToInteger(&error, 10); // Get index from aValue
+//    if (error == 0)
+//      GetOptionSelectedWidget(indx, &selected);
     GetOptionSelectedCache(indx, &selected);
     nsFormControlHelper::GetBoolString(selected, aValue);
     
   // For selectedIndex, get the value from the widget
   } else  if (nsHTMLAtoms::selectedindex == aName) {
     PRInt32 selectedIndex = -1;
-    if (mWidget) {
-      PRBool multiple;
-      GetMultiple(&multiple);
-      if (!multiple) {
-        nsIListWidget* listWidget;
-        nsresult result = mWidget->QueryInterface(kListWidgetIID, (void **) &listWidget);
-        if ((NS_OK == result) && (nsnull != listWidget)) {
-          selectedIndex = listWidget->GetSelectedIndex();
-          NS_RELEASE(listWidget);
+    PRBool multiple;
+    GetMultiple(&multiple);
+    if (!multiple) {
+      nsIListWidget* listWidget;
+      nsresult result = mWidget->QueryInterface(kListWidgetIID, (void **) &listWidget);
+      if ((NS_OK == result) && (nsnull != listWidget)) {
+        selectedIndex = listWidget->GetSelectedIndex();
+        NS_RELEASE(listWidget);
+      }
+    } else {
+      // Listboxes don't do GetSelectedIndex on windows.  Use GetSelectedIndices
+      nsIListBox* listBox;
+      nsresult result = mWidget->QueryInterface(kListBoxIID, (void **) &listBox);
+      if ((NS_OK == result) && (nsnull != listBox)) {
+        PRUint32 numSelected = listBox->GetSelectedCount();
+        PRInt32* selOptions = nsnull;
+        if (numSelected > 0) {
+          // Could we set numSelected to 1 here? (memory, speed optimization)
+          selOptions = new PRInt32[numSelected];
+          listBox->GetSelectedIndices(selOptions, numSelected);
+          selectedIndex = selOptions[0];
+          delete[] selOptions;
         }
-      } else {
-        // Listboxes don't do GetSelectedIndex on windows.  Use GetSelectedIndices
-        nsIListBox* listBox;
-        nsresult result = mWidget->QueryInterface(kListBoxIID, (void **) &listBox);
-        if ((NS_OK == result) && (nsnull != listBox)) {
-          PRUint32 numSelected = listBox->GetSelectedCount();
-          PRInt32* selOptions = nsnull;
-          if (numSelected > 0) {
-            // Could we set numSelected to 1 here? (memory, speed optimization)
-            selOptions = new PRInt32[numSelected];
-            listBox->GetSelectedIndices(selOptions, numSelected);
-            selectedIndex = selOptions[0];
-            delete[] selOptions;
-          }
-          NS_RELEASE(listBox);
-        }
+        NS_RELEASE(listBox);
       }
     }
     aValue.Append(selectedIndex, 10);
@@ -1443,6 +1409,8 @@ NS_IMETHODIMP nsNativeSelectControlFrame::GetProperty(nsIAtom* aName, nsString& 
 NS_IMETHODIMP
 nsNativeSelectControlFrame::SetOptionSelected(PRInt32 aIndex, PRBool aValue)
 {
+  // Get Selected index out of Content model
+  PRInt32 selectedIndex = GetSelectedIndex();
   PRBool multiple = PR_FALSE;
   GetMultiple(&multiple);
 
@@ -1450,38 +1418,18 @@ nsNativeSelectControlFrame::SetOptionSelected(PRInt32 aIndex, PRBool aValue)
     SetOptionSelectedCache(aIndex, aValue);
   } else {
     if (aValue) {
-      // Get Selected index out of Content model
-      PRInt32 selectedIndex = GetSelectedIndex();
-      if (-1 < selectedIndex)
-        SetOptionSelectedCache(selectedIndex, PR_FALSE);
+      SetOptionSelectedCache(selectedIndex, PR_FALSE);
       SetOptionSelectedCache(aIndex, PR_TRUE);
     } else {
       SetOptionSelectedCache(aIndex, PR_FALSE);
     }
   }
-  // Note that UpdateWidgetToCache may return NS_ERROR_UNEXPECTED if the
-  // widget is not created yet.  We can safely ignore this as when Reset is
-  // called, it will update the widget to the cache's state.
-  UpdateWidgetToCache(!aValue); // Don't deselect all if adding selection
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNativeSelectControlFrame::GetOptionSelected(PRInt32 aIndex, PRBool* aValue)
-{
-  // Determine if option is selected in local cache
-  GetOptionSelectedCache(aIndex, aValue);
-  return NS_OK;
+  return UpdateWidgetToCache(!aValue); // Don't deselect all if adding selection
 }
 
 nsresult
 nsNativeSelectControlFrame::UpdateWidgetToCache(PRBool aDeselectFirst)
 {
-  if (!mWidget) {
-    mCachedState = PR_TRUE; // Handle this update later when widget is created.
-    return NS_OK;
-  }
-
   // Grab the list widget
   nsIListWidget* listWidget;
   nsresult result = mWidget->QueryInterface(kListWidgetIID, (void **) &listWidget);
@@ -1520,87 +1468,4 @@ nsNativeSelectControlFrame::AppendFrames(nsIPresContext& aPresContext,
 {
   //NS_PRECONDITION(PR_FALSE, "not a container");
   return NS_ERROR_UNEXPECTED;
-}
-
-nsresult
-nsNativeSelectControlFrame::Deselect()
-{
-  nsresult res = NS_OK;
-  for (PRInt32 i=0; (i<mNumOptions) && NS_SUCCEEDED(res); i++)
-    res = SetOptionSelected(i, PR_FALSE);
-  return res;
-}
-
-//----------------------------------------------------------------------
-// nsIStatefulFrame
-//----------------------------------------------------------------------
-NS_IMETHODIMP
-nsNativeSelectControlFrame::GetStateType(StateType* aStateType)
-{
-  *aStateType = eSelectType;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNativeSelectControlFrame::SaveState(nsISupports** aState)
-{
-  nsISupportsArray* value = nsnull;
-  nsresult res = NS_NewISupportsArray(&value);
-  if (NS_SUCCEEDED(res) && value) {
-    PRInt32 j=0;
-    PRInt32 i;
-    for (i=0; i<mNumOptions; i++) {
-      PRBool selected = PR_FALSE;
-      res = GetOptionSelected(i, &selected);
-      if (NS_SUCCEEDED(res) && selected) {
-        nsISupportsPRInt32* thisVal = nsnull;
-        res = nsComponentManager::CreateInstance(NS_SUPPORTS_PRINT32_PROGID,
-	                       nsnull, NS_GET_IID(nsISupportsPRInt32), (void**)&thisVal);
-        if (NS_SUCCEEDED(res) && thisVal) {
-          res = thisVal->SetData(i);
-	  if (NS_SUCCEEDED(res)) {
-            PRBool okay = value->InsertElementAt((nsISupports *)thisVal, j++);
-	    if (!okay) res = NS_ERROR_OUT_OF_MEMORY; // Most likely cause;
-	  }
-          if (!NS_SUCCEEDED(res)) NS_RELEASE(thisVal);
-	}
-      }
-      if (!NS_SUCCEEDED(res)) break;
-    }
-    if (i<mNumOptions)
-      NS_RELEASE(value);
-  }
-  *aState = (nsISupports*)value;  // Set to null if not successful
-  return res;
-}
-
-NS_IMETHODIMP
-nsNativeSelectControlFrame::RestoreState(nsISupports* aState)
-{
-  nsISupportsArray* value = (nsISupportsArray *)aState;
-  nsresult res = NS_ERROR_NULL_POINTER;
-  if (value) {
-    res = Deselect();
-    if (NS_SUCCEEDED(res)) {
-      PRUint32 count = 0;
-      res = value->Count(&count);
-      if (NS_SUCCEEDED(res)) {
-        nsISupportsPRInt32* thisVal = nsnull;
-        PRInt32 j=0;
-        for (PRUint32 k=0; k<count; k++) {
-          thisVal = (nsISupportsPRInt32*) value->ElementAt(k);
-          if (thisVal) {
-            res = thisVal->GetData(&j);
-	    if (NS_SUCCEEDED(res)) {
-              res = SetOptionSelected(j, PR_TRUE);
-	    }
-	  } else {
-	    res = NS_ERROR_UNEXPECTED;
-	  }
-	  if (!NS_SUCCEEDED(res)) break;
-	}
-      }
-    }
-  }
-  return res;
 }

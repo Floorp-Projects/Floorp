@@ -20,14 +20,11 @@
 #define nsTextControlFrame_h___
 
 #include "nsNativeFormControlFrame.h"
-#include "nsIStatefulFrame.h"
-
 class nsIContent;
 class nsIFrame;
 class nsIPresContext;
 
-class nsTextControlFrame : public nsNativeFormControlFrame,
-                           public nsIStatefulFrame
+class nsTextControlFrame : public nsNativeFormControlFrame
 {
 /* ---------- methods implemented by base class ---------- */
 public:
@@ -36,8 +33,6 @@ public:
 
   virtual const nsIID& GetCID();
   virtual const nsIID& GetIID();
-
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
   NS_IMETHOD GetFrameName(nsString& aResult) const;
   
@@ -58,11 +53,6 @@ public:
     * returns NS_CONTENT_ATTR_NOT_THERE if the property does not exist for this
     */
   NS_IMETHOD GetWrapProperty(nsString &aOutValue);
-  
-  //nsIStatefulFrame
-  NS_IMETHOD GetStateType(StateType* aStateType);
-  NS_IMETHOD SaveState(nsISupports** aState);
-  NS_IMETHOD RestoreState(nsISupports* aState);
 
 protected:
 
@@ -77,9 +67,6 @@ protected:
 
   PRInt32 GetDefaultColumnWidth() const { return (PRInt32)(20); } // this was DEFAULT_PIXEL_WIDTH
 
-private:
-  NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
-  NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }
 
 
 /* ---------- abstract methods derived class must implement ---------- */

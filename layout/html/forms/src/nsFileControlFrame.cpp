@@ -45,9 +45,7 @@
 #include "nsIDOMMouseListener.h"
 #include "nsIPresShell.h"
 #include "nsIDOMHTMLInputElement.h"
-#include "nsIStatefulFrame.h"
-#include "nsISupportsPrimitives.h"
-#include "nsIComponentManager.h"
+
 
 static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
 static NS_DEFINE_IID(kIFileWidgetIID, NS_IFILEWIDGET_IID);
@@ -78,16 +76,11 @@ nsFileControlFrame::nsFileControlFrame():
 {
     //Shrink the area around it's contents
   SetFlags(NS_BLOCK_SHRINK_WRAP);
-  mCachedState = nsnull;
 }
 
 nsFileControlFrame::~nsFileControlFrame()
 {
   NS_IF_RELEASE(mTextContent);
-  if (mCachedState) {
-    delete mCachedState;
-    mCachedState = nsnull;
-  }
 }
 
 NS_IMETHODIMP
@@ -128,28 +121,25 @@ nsFileControlFrame::CreateAnonymousContent(nsISupportsArray& aChildList)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsFileControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
   NS_PRECONDITION(0 != aInstancePtr, "null ptr");
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
-  } else if (aIID.Equals(kIAnonymousContentCreatorIID)) {
-    *aInstancePtr = (void*)(nsIAnonymousContentCreator*) this;
-    NS_ADDREF_THIS();
-    return NS_OK;
+  } else if (aIID.Equals(kIAnonymousContentCreatorIID)) {                                         
+    *aInstancePtr = (void*)(nsIAnonymousContentCreator*) this;                                        
+    NS_ADDREF_THIS();                                                    
+    return NS_OK;                                                        
   } else if (aIID.Equals(kIFormControlFrameIID)) {
     *aInstancePtr = (void*) ((nsIFormControlFrame*) this);
     return NS_OK;
-  } else  if (aIID.Equals(kIDOMMouseListenerIID)) {
-    *aInstancePtr = (void*)(nsIDOMMouseListener*) this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  } else  if (aIID.Equals(NS_GET_IID(nsIStatefulFrame))) {
-    *aInstancePtr = (void*)(nsIStatefulFrame*) this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
+  } else  if (aIID.Equals(kIDOMMouseListenerIID)) {                                         
+    *aInstancePtr = (void*)(nsIDOMMouseListener*) this;                                        
+    NS_ADDREF_THIS();                                                    
+    return NS_OK;                                                        
+  }   
+
   return nsHTMLContainerFrame::QueryInterface(aIID, aInstancePtr);
 }
 
@@ -270,12 +260,6 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsIPresContext&          aPresContext,
     // add ourself as an nsIFormControlFrame
     nsFormFrame::AddFormControlFrame(aPresContext, *this);
     mTextFrame = GetTextControlFrame(this);
-    if (!mTextFrame) return NS_ERROR_UNEXPECTED;
-    if (mCachedState) {
-      mTextFrame->SetProperty(nsHTMLAtoms::value, *mCachedState);
-      delete mCachedState;
-      mCachedState = nsnull;
-    }
   }
 
   return nsAreaFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
@@ -307,7 +291,7 @@ nsFileControlFrame::GetTextControlFrame(nsIFrame* aStart)
   nsIFrame* childFrame = nsnull;
   aStart->FirstChild(nsnull, &childFrame);
 
-  while (childFrame) {
+  while (nsnull != childFrame) {    
     // see if the child is a text control
     nsCOMPtr<nsIContent> content;
     childFrame->GetContent(getter_AddRefs(content));
@@ -324,7 +308,7 @@ nsFileControlFrame::GetTextControlFrame(nsIFrame* aStart)
 
     // if not continue looking
     nsTextControlFrame* frame = GetTextControlFrame(childFrame);
-    if (frame)
+    if (frame != nsnull)
        return frame;
      
     nsresult rv = childFrame->GetNextSibling(&childFrame);
@@ -501,51 +485,4 @@ nsFileControlFrame::Paint(nsIPresContext& aPresContext,
                           nsFramePaintLayer aWhichLayer)
 {
   return nsAreaFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
-}
-
-//----------------------------------------------------------------------
-// nsIStatefulFrame
-//----------------------------------------------------------------------
-NS_IMETHODIMP
-nsFileControlFrame::GetStateType(StateType* aStateType)
-{
-  *aStateType = eFileType;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFileControlFrame::SaveState(nsISupports** aState)
-{
-  nsISupportsString* value = nsnull;
-  nsAutoString string;
-  nsresult res = mTextFrame->GetProperty(nsHTMLAtoms::value, string);
-  if (NS_SUCCEEDED(res)) {
-    char* chars = string.ToNewCString();
-    if (chars) {
-      res = nsComponentManager::CreateInstance(NS_SUPPORTS_STRING_PROGID, nsnull, 
-                                           NS_GET_IID(nsISupportsString), (void**)&value);
-      if (NS_SUCCEEDED(res) && value) {
-        value->SetData(chars);
-      }
-      nsCRT::free(chars);
-    } else {
-      res = NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
-  *aState = (nsISupports*)value;
-  return res;
-}
-
-NS_IMETHODIMP
-nsFileControlFrame::RestoreState(nsISupports* aState)
-{
-  char* chars = nsnull;
-  nsresult res = ((nsISupportsString*)aState)->GetData(&chars);
-  if (NS_SUCCEEDED(res) && chars) {
-    // Don't poke mTextFrame, it's not there yet.
-    mCachedState = new nsString(chars);
-    if (!mCachedState) res = NS_ERROR_OUT_OF_MEMORY;
-    nsCRT::free(chars);
-  }
-  return res;
 }
