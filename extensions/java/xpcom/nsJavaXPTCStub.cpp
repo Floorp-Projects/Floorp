@@ -46,21 +46,18 @@
 
 
 nsJavaXPTCStub::nsJavaXPTCStub(JNIEnv* aJavaEnv, jobject aJavaObject,
-                               nsIInterfaceInfo *aIInfo, nsJavaXPTCStub* aMaster)
+                               nsIInterfaceInfo *aIInfo)
   : mJavaEnv(aJavaEnv)
   , mIInfo(aIInfo)
-  , mMaster(aMaster)
+  , mMaster(nsnull)
 {
-  // Only the master stub object holds a strong ref to the Java object
-  if (!mMaster)
-    mJavaObject = aJavaEnv->NewGlobalRef(aJavaObject);
+  mJavaObject = aJavaEnv->NewGlobalRef(aJavaObject);
 
 #ifdef DEBUG
   jboolean isCopy;
   nsID* iid = nsnull;
   char* iid_str = nsnull;
-  nsJavaXPTCStub *master = mMaster ? mMaster : this;
-  jclass clazz = mJavaEnv->GetObjectClass(master->mJavaObject);
+  jclass clazz = mJavaEnv->GetObjectClass(mJavaObject);
   jstring name = (jstring) mJavaEnv->CallObjectMethod(clazz, getNameMID);
   const char* javaObjectName = mJavaEnv->GetStringUTFChars(name, &isCopy);
   if (mIInfo) {
@@ -71,7 +68,7 @@ nsJavaXPTCStub::nsJavaXPTCStub(JNIEnv* aJavaEnv, jobject aJavaObject,
     }
   }
   LOG("+++ nsJavaXPTCStub(this=0x%08x java_obj=0x%08x %s iid=%s)\n", (int) this,
-      mJavaEnv->CallIntMethod(master->mJavaObject, hashCodeMID), javaObjectName,
+      mJavaEnv->CallIntMethod(mJavaObject, hashCodeMID), javaObjectName,
       iid_str ? iid_str : "NULL");
   if (isCopy)
     mJavaEnv->ReleaseStringUTFChars(name, javaObjectName);
@@ -82,15 +79,13 @@ nsJavaXPTCStub::nsJavaXPTCStub(JNIEnv* aJavaEnv, jobject aJavaObject,
 
 nsJavaXPTCStub::~nsJavaXPTCStub()
 {
-  nsJavaXPTCStub *master = mMaster ? mMaster : this;
-
 #ifdef DEBUG
   jboolean isCopy;
-  jclass clazz = mJavaEnv->GetObjectClass(master->mJavaObject);
+  jclass clazz = mJavaEnv->GetObjectClass(mJavaObject);
   jstring name = (jstring) mJavaEnv->CallObjectMethod(clazz, getNameMID);
   const char* javaObjectName = mJavaEnv->GetStringUTFChars(name, &isCopy);
   LOG("--- ~nsJavaXPTCStub(this=0x%08x java_obj=0x%08x %s)\n", (int) this,
-      mJavaEnv->CallIntMethod(master->mJavaObject, hashCodeMID), javaObjectName);
+      mJavaEnv->CallIntMethod(mJavaObject, hashCodeMID), javaObjectName);
   if (isCopy)
     mJavaEnv->ReleaseStringUTFChars(name, javaObjectName);
 #endif
@@ -102,8 +97,9 @@ nsJavaXPTCStub::~nsJavaXPTCStub()
     }
 
     RemoveJavaXPCOMBinding(mJavaEnv, mJavaObject, this);
-    mJavaEnv->DeleteGlobalRef(mJavaObject);
   }
+
+  mJavaEnv->DeleteGlobalRef(mJavaObject);
 }
 
 NS_IMETHODIMP_(nsrefcnt)
@@ -173,7 +169,7 @@ nsJavaXPTCStub::QueryInterface(const nsID &aIID, void **aInstancePtr)
 
   // Query Java object
   LOG("\tCalling Java object queryInterface\n");
-  jclass clazz = mJavaEnv->GetObjectClass(master->mJavaObject);
+  jclass clazz = mJavaEnv->GetObjectClass(mJavaObject);
   char* sig = "(Ljava/lang/String;)Lorg/mozilla/xpcom/nsISupports;";
   jmethodID qiMID = mJavaEnv->GetMethodID(clazz, "queryInterface", sig);
   NS_ASSERTION(qiMID, "Failed to get queryInterface method ID");
@@ -181,7 +177,7 @@ nsJavaXPTCStub::QueryInterface(const nsID &aIID, void **aInstancePtr)
   char* iid_str = aIID.ToString();
   jstring iid_jstr = mJavaEnv->NewStringUTF(iid_str);
   PR_Free(iid_str);
-  jobject obj = mJavaEnv->CallObjectMethod(master->mJavaObject, qiMID, iid_jstr);
+  jobject obj = mJavaEnv->CallObjectMethod(mJavaObject, qiMID, iid_jstr);
 
   if (obj) {
     // Get interface info for new java object
@@ -189,7 +185,7 @@ nsJavaXPTCStub::QueryInterface(const nsID &aIID, void **aInstancePtr)
     nsCOMPtr<nsIInterfaceInfo> iinfo;
     iim->GetInfoForIID(&aIID, getter_AddRefs(iinfo));
 
-    nsJavaXPTCStub* stub = new nsJavaXPTCStub(mJavaEnv, obj, iinfo, master);
+    nsJavaXPTCStub* stub = new nsJavaXPTCStub(mJavaEnv, obj, iinfo);
 
     // add stub to the master's list of children, so we can preserve
     // symmetry in future QI calls.  the master will delete each child
@@ -212,6 +208,7 @@ nsJavaXPTCStub::QueryInterface(const nsID &aIID, void **aInstancePtr)
     // to access |foo| even if the code doesn't own a strong reference
     // to |foo|!  clearly wrong, but we need to support it anyways.
 
+    stub->mMaster = master;
     master->mChildren.AppendElement(stub);
 
     *aInstancePtr = stub;
@@ -278,7 +275,6 @@ nsJavaXPTCStub::CallMethod(PRUint16 aMethodIndex,
 #endif
 
   nsresult rv = NS_OK;
-  nsJavaXPTCStub *master = mMaster ? mMaster : this;
 
   nsCAutoString methodSig("(");
 
@@ -331,7 +327,7 @@ nsJavaXPTCStub::CallMethod(PRUint16 aMethodIndex,
       methodName.SetCharAt(tolower(methodName[0]), 0);
     }
 
-    jclass clazz = mJavaEnv->GetObjectClass(master->mJavaObject);
+    jclass clazz = mJavaEnv->GetObjectClass(mJavaObject);
     if (clazz)
       mid = mJavaEnv->GetMethodID(clazz, methodName.get(), methodSig.get());
     NS_ASSERTION(mid, "Failed to get requested method for Java object");
@@ -341,46 +337,46 @@ nsJavaXPTCStub::CallMethod(PRUint16 aMethodIndex,
   jvalue retval;
   if (mid) {
     if (!retvalInfo) {
-      mJavaEnv->CallVoidMethodA(master->mJavaObject, mid, java_params);
+      mJavaEnv->CallVoidMethodA(mJavaObject, mid, java_params);
     } else {
       switch (retvalInfo->GetType().TagPart())
       {
         case nsXPTType::T_I8:
         case nsXPTType::T_U8:
-          retval.b = mJavaEnv->CallByteMethodA(master->mJavaObject, mid,
+          retval.b = mJavaEnv->CallByteMethodA(mJavaObject, mid,
                                                java_params);
           break;
 
         case nsXPTType::T_I16:
         case nsXPTType::T_U16:
-          retval.s = mJavaEnv->CallShortMethodA(master->mJavaObject, mid,
+          retval.s = mJavaEnv->CallShortMethodA(mJavaObject, mid,
                                                 java_params);
           break;
 
         case nsXPTType::T_I32:
         case nsXPTType::T_U32:
-          retval.i = mJavaEnv->CallIntMethodA(master->mJavaObject, mid,
+          retval.i = mJavaEnv->CallIntMethodA(mJavaObject, mid,
                                               java_params);
           break;
 
         case nsXPTType::T_FLOAT:
-          retval.f = mJavaEnv->CallFloatMethodA(master->mJavaObject, mid,
+          retval.f = mJavaEnv->CallFloatMethodA(mJavaObject, mid,
                                                 java_params);
           break;
 
         case nsXPTType::T_DOUBLE:
-          retval.d = mJavaEnv->CallDoubleMethodA(master->mJavaObject, mid,
+          retval.d = mJavaEnv->CallDoubleMethodA(mJavaObject, mid,
                                                  java_params);
           break;
 
         case nsXPTType::T_BOOL:
-          retval.z = mJavaEnv->CallBooleanMethodA(master->mJavaObject, mid,
+          retval.z = mJavaEnv->CallBooleanMethodA(mJavaObject, mid,
                                                   java_params);
           break;
 
         case nsXPTType::T_CHAR:
         case nsXPTType::T_WCHAR:
-          retval.c = mJavaEnv->CallCharMethodA(master->mJavaObject, mid,
+          retval.c = mJavaEnv->CallCharMethodA(mJavaObject, mid,
                                                java_params);
           break;
 
@@ -393,12 +389,12 @@ nsJavaXPTCStub::CallMethod(PRUint16 aMethodIndex,
         case nsXPTType::T_CSTRING:
         case nsXPTType::T_INTERFACE:
         case nsXPTType::T_INTERFACE_IS:
-          retval.l = mJavaEnv->CallObjectMethodA(master->mJavaObject, mid,
+          retval.l = mJavaEnv->CallObjectMethodA(mJavaObject, mid,
                                                  java_params);
           break;
 
         case nsXPTType::T_VOID:
-          retval.i = mJavaEnv->CallIntMethodA(master->mJavaObject, mid,
+          retval.i = mJavaEnv->CallIntMethodA(mJavaObject, mid,
                                               java_params);
           break;
 
@@ -1265,9 +1261,8 @@ nsJavaXPTCStub::GetWeakReference(nsIWeakReference** aInstancePtr)
   if (!aInstancePtr)
     return NS_ERROR_NULL_POINTER;
 
-  nsJavaXPTCStub *master = mMaster ? mMaster : this;
   nsJavaXPTCStubWeakRef* weakref =
-                       new nsJavaXPTCStubWeakRef(mJavaEnv, master->mJavaObject);
+                       new nsJavaXPTCStubWeakRef(mJavaEnv, mJavaObject);
   *aInstancePtr = weakref;
   NS_ADDREF(*aInstancePtr);
 
@@ -1277,6 +1272,5 @@ nsJavaXPTCStub::GetWeakReference(nsIWeakReference** aInstancePtr)
 jobject
 nsJavaXPTCStub::GetJavaObject()
 {
-  nsJavaXPTCStub *master = mMaster ? mMaster : this;
-  return master->mJavaObject;
+  return mJavaObject;
 }
