@@ -300,7 +300,7 @@ nsLocaleService::nsLocaleService(void)
 		if (NS_SUCCEEDED(result)) {
 			result = NewLocale(xpLocale, getter_AddRefs(mSystemLocale));
 			if (NS_SUCCEEDED(result)) {
-				NS_ADDREF(mApplicationLocale = mSystemLocale);
+				mApplicationLocale = mSystemLocale;
 			}
 		}
 	}
