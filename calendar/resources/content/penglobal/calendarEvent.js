@@ -99,7 +99,7 @@ CalendarEvent.kRepeatUnits = new Array(
 
 CalendarEvent.kAlarmUnit_minutes    = "minutes";
 CalendarEvent.kAlarmUnit_hours      = "hours";
-CalendarEvent.krAlarmUnit_days      = "days";
+CalendarEvent.kAlarmUnit_days      = "days";
                                     
 CalendarEvent.kAlarmUnits = new Array( 
                                           CalendarEvent.kAlarmUnit_minutes, 
@@ -489,6 +489,7 @@ CalendarEventDataSource.prototype.search = function( searchText, fieldName )
                if( value.indexOf( searchText ) != -1 )
                {
                   searchEventTable[ searchEventTable.length ]  =  calendarEvent; 
+                  break;
                }
             }
          }
@@ -503,6 +504,7 @@ CalendarEventDataSource.prototype.search = function( searchText, fieldName )
                   if( value.indexOf( searchText ) != -1 )
                   {
                      searchEventTable[ searchEventTable.length ]  =  calendarEvent; 
+                     break;
                   }
                }
             }
@@ -543,6 +545,8 @@ CalendarEventDataSource.prototype.getEventsForMonth = function( date )
    {
       var calendarEvent = eventTable[ eventIndex ];
       
+      calendarEvent.displayDate = calendarEvent.start;
+
       var eventDate = calendarEvent.start;
       
       if( eventDate.getFullYear() == yearToFind  && eventDate.getMonth() == monthToFind  )
@@ -559,7 +563,7 @@ CalendarEventDataSource.prototype.getEventsForMonth = function( date )
          {
             var CheckDateInMs = eventDate.getTime();
             
-            CheckDateInMs = CheckDateInMs + (60 * 60 * 24 * 1000 );
+            //CheckDateInMs = CheckDateInMs + (60 * 60 * 24 * 1000 );
 
             var newDate = new Date( CheckDateInMs );
 
@@ -570,8 +574,6 @@ CalendarEventDataSource.prototype.getEventsForMonth = function( date )
          else
          {
             var CheckDateInMs = new Date( yearToFind, monthToFind, 1, 0, 0, 0 );
-
-            CheckDateInMs = CheckDateInMs - ( 1000 * 60 * 60 * 24 );
 
             var newDate = new Date( CheckDateInMs );
             
@@ -614,22 +616,17 @@ CalendarEventDataSource.prototype.getEventsForMonth = function( date )
                //change its display day to the one for repeating events.
                newCalendarEvent.displayDate = new Date( YearToCheck, MonthToCheck, DateToCheck, calendarEvent.start.getHours(), calendarEvent.start.getMinutes(), 0 );
                
-               monthEvents[ monthEvents.length ] = newCalendarEvent;
+               if( newCalendarEvent.displayDate.getMonth() == MonthToCheck )
+               {
+                  monthEvents[ monthEvents.length ] = newCalendarEvent;
+               }
             } 
             else if ( YearToCheck != yearToFind || MonthToCheck != monthToFind ) 
             {
                break;
             }
 
-            //add one day less 1 hour to avoid getting the same event again.
-            var CheckDate = new Date( YearToCheck, MonthToCheck, DateToCheck, calendarEvent.start.getHours(), calendarEvent.start.getMinutes(), 0 );
-            var CheckDateInMs = CheckDate.getTime();
-
-            CheckDateInMs = CheckDateInMs + ( 1000 * 60 * 60 * 24 );
-            var NewDate = new Date( CheckDateInMs );
-            YearToCheck = NewDate.getFullYear();
-            MonthToCheck = NewDate.getMonth();
-            DateToCheck = NewDate.getDate();
+            
          }
       }
    }
@@ -748,6 +745,8 @@ CalendarEventDataSource.prototype.getEventsForDay = function( date )
    {
       var calendarEvent = monthEventList[ eventIndex ];
       
+      calendarEvent.displayDate = calendarEvent.start;
+
       var eventDate = calendarEvent.displayDate;
       
       //if( eventDate.getDate() == dateToFind )
@@ -878,6 +877,8 @@ CalendarEventDataSource.prototype.getEventsForWeek = function( date )
    {
       var calendarEvent = weekEventList[ eventIndex ];
       
+      calendarEvent.displayDate = calendarEvent.start;
+
       var eventDate = calendarEvent.displayDate;
             
       //if the event happens in this week.
@@ -2150,9 +2151,9 @@ CalendarEvent.prototype.convertToMcalEvent = function( )
       }
       else if( this.repeatUnits == ( CalendarEvent.kRepeatUnit_weeks ) )
       {
-         //this.recurType = 2;
-         this.recurType = 1;
-         this.recurInterval = 7 * this.recurInterval;
+         this.recurType = 2;
+         //this.recurType = 1;
+         //this.recurInterval = 7 * this.recurInterval;
       }
       else if( this.repeatUnits == ( CalendarEvent.kRepeatUnit_months ) )
          this.recurType = 3;

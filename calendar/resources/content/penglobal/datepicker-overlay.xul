@@ -72,17 +72,18 @@
 <vbox id="oe-date-picker-overlay-box" >
 
 
-    <!-- Year controls -->
+   <!-- Year controls -->
+      <hbox id="oe-date-picker-year-controls-box"  >
 
-    <hbox id="oe-date-picker-year-controls-box"  >
-
-        <image flex="1" id="oe-date-picker-year-previous-button" onclick="oeDatePicker.previousYearCommand()"/>
+         <box flex="1">   
+            <image id="oe-date-picker-year-previous-button" onclick="oeDatePicker.previousYearCommand()"/>
+         </box>
                 
-        <text id="oe-date-picker-year-title-text" value="" />
+         <label id="oe-date-picker-year-title-text" value="" />
         
-        <box flex="1" id="oe-date-picker-year-next-button-box" >
+         <box flex="1" id="oe-date-picker-year-next-button-box" >
             <image id="oe-date-picker-year-next-button" onclick="oeDatePicker.nextYearCommand()"/> 
-        </box>  
+         </box>  
 
     </hbox> 
     
@@ -99,68 +100,68 @@
         <rows >
             <row flex="1"  >
                 <vbox class="oe-date-picker-year-month-box-class"  id="oe-date-picker-year-month-1-box"  onclick="oeDatePicker.clickMonth(this, 1)" >
-                    <spring flex="1" />
-                    <box ><text  class="oe-date-picker-year-month-name-class"  value="&month.1.MMM;" /></box> 
-                    <spring flex="1" />
+                    <spacer flex="1" />
+                    <box ><label  class="oe-date-picker-year-month-name-class"  value="&month.1.MMM;" /></box> 
+                    <spacer flex="1" />
                 </vbox>  
                 <vbox class="oe-date-picker-year-month-box-class" id="oe-date-picker-year-month-2-box"  onclick="oeDatePicker.clickMonth(this, 2)" >
-                    <spring flex="1" />
-                    <box><text  class="oe-date-picker-year-month-name-class"  value="&month.2.MMM;" /></box> 
-                    <spring flex="1" />
+                    <spacer flex="1" />
+                    <box><label  class="oe-date-picker-year-month-name-class"  value="&month.2.MMM;" /></box> 
+                    <spacer flex="1" />
                 </vbox>  
                 <vbox class="oe-date-picker-year-month-box-class" id="oe-date-picker-year-month-3-box"  onclick="oeDatePicker.clickMonth(this, 3)" >
-                    <spring flex="1" />
-                    <box><text  class="oe-date-picker-year-month-name-class"  value="&month.3.MMM;" /></box> 
-                    <spring flex="1" />
+                    <spacer flex="1" />
+                    <box><label  class="oe-date-picker-year-month-name-class"  value="&month.3.MMM;" /></box> 
+                    <spacer flex="1" />
                 </vbox>  
                 <vbox class="oe-date-picker-year-month-box-class" id="oe-date-picker-year-month-4-box"  onclick="oeDatePicker.clickMonth(this, 4)" >
-                    <spring flex="1" />
-                    <box><text  class="oe-date-picker-year-month-name-class"  value="&month.4.MMM;" /></box> 
-                    <spring flex="1" />
+                    <spacer flex="1" />
+                    <box><label  class="oe-date-picker-year-month-name-class"  value="&month.4.MMM;" /></box> 
+                    <spacer flex="1" />
                 </vbox>  
             </row>  
             <row flex="1"  >
                 <vbox class="oe-date-picker-year-month-box-class" id="oe-date-picker-year-month-5-box"  onclick="oeDatePicker.clickMonth(this, 5)" >
-                    <spring flex="1" />
-                    <box><text  class="oe-date-picker-year-month-name-class"  value="&month.5.MMM;" /></box> 
-                    <spring flex="1" />
+                    <spacer flex="1" />
+                    <box><label  class="oe-date-picker-year-month-name-class"  value="&month.5.MMM;" /></box> 
+                    <spacer flex="1" />
                 </vbox>  
                 <vbox class="oe-date-picker-year-month-box-class"  id="oe-date-picker-year-month-6-box" onclick="oeDatePicker.clickMonth(this, 6)" >
-                    <spring flex="1" />
-                    <box><text  class="oe-date-picker-year-month-name-class"  value="&month.6.MMM;" /></box> 
-                    <spring flex="1" />
+                    <spacer flex="1" />
+                    <box><label  class="oe-date-picker-year-month-name-class"  value="&month.6.MMM;" /></box> 
+                    <spacer flex="1" />
                 </vbox>  
                 <vbox class="oe-date-picker-year-month-box-class"  id="oe-date-picker-year-month-7-box" onclick="oeDatePicker.clickMonth(this, 7)" >
-                    <spring flex="1" />
-                    <box><text  class="oe-date-picker-year-month-name-class"  value="&month.7.MMM;" /></box> 
-                    <spring flex="1" />
+                    <spacer flex="1" />
+                    <box><label  class="oe-date-picker-year-month-name-class"  value="&month.7.MMM;" /></box> 
+                    <spacer flex="1" />
                 </vbox>  
                 <vbox class="oe-date-picker-year-month-box-class"  id="oe-date-picker-year-month-8-box" onclick="oeDatePicker.clickMonth(this, 8)" >
-                    <spring flex="1" />
-                    <box><text  class="oe-date-picker-year-month-name-class"  value="&month.8.MMM;" /></box> 
-                    <spring flex="1" />
+                    <spacer flex="1" />
+                    <box><label  class="oe-date-picker-year-month-name-class"  value="&month.8.MMM;" /></box> 
+                    <spacer flex="1" />
                 </vbox>  
             </row>  
             <row flex="1"  >
                 <vbox class="oe-date-picker-year-month-box-class" id="oe-date-picker-year-month-9-box"  onclick="oeDatePicker.clickMonth(this, 9)" >
-                    <spring flex="1" />
-                    <box><text  class="oe-date-picker-year-month-name-class"  value="&month.9.MMM;" /></box> 
-                    <spring flex="1" />
+                    <spacer flex="1" />
+                    <box><label  class="oe-date-picker-year-month-name-class"  value="&month.9.MMM;" /></box> 
+                    <spacer flex="1" />
                 </vbox>  
                 <vbox class="oe-date-picker-year-month-box-class"  id="oe-date-picker-year-month-10-box" onclick="oeDatePicker.clickMonth(this, 10)" >
-                    <spring flex="1" />
-                    <box><text  class="oe-date-picker-year-month-name-class"  value="&month.10.MMM;" /></box> 
-                    <spring flex="1" />
+                    <spacer flex="1" />
+                    <box><label  class="oe-date-picker-year-month-name-class"  value="&month.10.MMM;" /></box> 
+                    <spacer flex="1" />
                 </vbox>  
                 <vbox class="oe-date-picker-year-month-box-class" id="oe-date-picker-year-month-11-box"  onclick="oeDatePicker.clickMonth(this, 11)" >
-                    <spring flex="1" />
-                    <box><text  class="oe-date-picker-year-month-name-class"  value="&month.11.MMM;" /></box> 
-                    <spring flex="1" />
+                    <spacer flex="1" />
+                    <box><label  class="oe-date-picker-year-month-name-class"  value="&month.11.MMM;" /></box> 
+                    <spacer flex="1" />
                 </vbox>  
                 <vbox class="oe-date-picker-year-month-box-class" id="oe-date-picker-year-month-12-box"  onclick="oeDatePicker.clickMonth(this, 12)" >
-                    <spring flex="1" />
-                    <box><text  class="oe-date-picker-year-month-name-class"  value="&month.12.MMM;" /></box> 
-                    <spring flex="1" />
+                    <spacer flex="1" />
+                    <box><label  class="oe-date-picker-year-month-name-class"  value="&month.12.MMM;" /></box> 
+                    <spacer flex="1" />
                 </vbox>  
             </row>  
         
@@ -187,145 +188,145 @@
            
                 <row flex="1"  >
                     <vbox class="oe-date-picker-month-day-box-class" id="oe-date-picker-month-day-1-box" onclick="oeDatePicker.clickDay(1)">
-                        <box><text  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-1" value="" /></box> 
+                        <box><label  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-1" value="" /></box> 
                     </vbox>    
                     <vbox class="oe-date-picker-month-day-box-class" id="oe-date-picker-month-day-2-box" onclick="oeDatePicker.clickDay(2)">
-                        <box><text  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-2" value="" /></box>  
+                        <box><label  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-2" value="" /></box>  
                     </vbox>    
                     <vbox class="oe-date-picker-month-day-box-class" id="oe-date-picker-month-day-3-box" onclick="oeDatePicker.clickDay(3)">
-                        <box><text  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-3" value="" /></box> 
+                        <box><label  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-3" value="" /></box> 
                     </vbox>    
                     <vbox class="oe-date-picker-month-day-box-class" id="oe-date-picker-month-day-4-box" onclick="oeDatePicker.clickDay(4)">
-                        <box><text  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-4" value="" /></box> 
+                        <box><label  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-4" value="" /></box> 
                     </vbox>    
                     <vbox class="oe-date-picker-month-day-box-class"  id="oe-date-picker-month-day-5-box" onclick="oeDatePicker.clickDay(5)">
-                        <box><text  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-5" value="" /></box> 
+                        <box><label  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-5" value="" /></box> 
                     </vbox>    
                     <vbox class="oe-date-picker-month-day-box-class"  id="oe-date-picker-month-day-6-box" onclick="oeDatePicker.clickDay(6)">
-                        <box><text  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-6" value="" /></box> 
+                        <box><label  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-6" value="" /></box> 
                     </vbox>    
                     <vbox class="oe-date-picker-month-day-box-class"  id="oe-date-picker-month-day-7-box" onclick="oeDatePicker.clickDay(7)">
-                        <box><text  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-7" value="" /></box> 
+                        <box><label  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-7" value="" /></box> 
                     </vbox>    
                 </row>
                 
                 <row flex="1"  >
                     <vbox class="oe-date-picker-month-day-box-class"  id="oe-date-picker-month-day-8-box" onclick="oeDatePicker.clickDay(8)">
-                        <box><text  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-8" value="" /></box> 
+                        <box><label  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-8" value="" /></box> 
                     </vbox>    
                     <vbox class="oe-date-picker-month-day-box-class"  id="oe-date-picker-month-day-9-box" onclick="oeDatePicker.clickDay(9)">
-                        <box><text  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-9" value="" /></box> 
+                        <box><label  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-9" value="" /></box> 
                     </vbox>    
                     <vbox class="oe-date-picker-month-day-box-class"  id="oe-date-picker-month-day-10-box" onclick="oeDatePicker.clickDay(10)">
-                        <box><text  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-10" value="" /></box> 
+                        <box><label  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-10" value="" /></box> 
                     </vbox>    
                     <vbox class="oe-date-picker-month-day-box-class"  id="oe-date-picker-month-day-11-box" onclick="oeDatePicker.clickDay(11)">
-                        <box><text  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-11" value="" /></box> 
+                        <box><label  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-11" value="" /></box> 
                     </vbox>    
                     <vbox class="oe-date-picker-month-day-box-class"  id="oe-date-picker-month-day-12-box" onclick="oeDatePicker.clickDay(12)">
-                        <box><text  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-12" value="" /></box> 
+                        <box><label  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-12" value="" /></box> 
                     </vbox>    
                     <vbox class="oe-date-picker-month-day-box-class" id="oe-date-picker-month-day-13-box"  onclick="oeDatePicker.clickDay(13)">
-                        <box><text  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-13" value="" /></box> 
+                        <box><label  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-13" value="" /></box> 
                     </vbox>    
                     <vbox class="oe-date-picker-month-day-box-class" id="oe-date-picker-month-day-14-box" onclick="oeDatePicker.clickDay(14)">
-                        <box><text  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-14" value="" /></box> 
+                        <box><label  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-14" value="" /></box> 
                     </vbox>    
                 </row>
                 
                 <row flex="1"  >
                     <vbox class="oe-date-picker-month-day-box-class" id="oe-date-picker-month-day-15-box" onclick="oeDatePicker.clickDay(15)">
-                        <box><text  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-15" value="" /></box> 
+                        <box><label  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-15" value="" /></box> 
                     </vbox>    
                     <vbox class="oe-date-picker-month-day-box-class" id="oe-date-picker-month-day-16-box" onclick="oeDatePicker.clickDay(16)">
-                        <box><text  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-16" value="" /></box> 
+                        <box><label  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-16" value="" /></box> 
                     </vbox>    
                     <vbox class="oe-date-picker-month-day-box-class"  id="oe-date-picker-month-day-17-box" onclick="oeDatePicker.clickDay(17)">
-                        <box><text  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-17" value="" /></box> 
+                        <box><label  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-17" value="" /></box> 
                     </vbox>    
                     <vbox class="oe-date-picker-month-day-box-class"  id="oe-date-picker-month-day-18-box" onclick="oeDatePicker.clickDay(18)">
-                        <box><text  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-18" value="" /></box> 
+                        <box><label  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-18" value="" /></box> 
                     </vbox>    
                     <vbox class="oe-date-picker-month-day-box-class"  id="oe-date-picker-month-day-19-box" onclick="oeDatePicker.clickDay(19)">
-                        <box><text  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-19" value="" /></box> 
+                        <box><label  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-19" value="" /></box> 
                     </vbox>    
                     <vbox class="oe-date-picker-month-day-box-class"  id="oe-date-picker-month-day-20-box" onclick="oeDatePicker.clickDay(20)">
-                        <box><text  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-20" value="" /></box> 
+                        <box><label  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-20" value="" /></box> 
                     </vbox>    
                     <vbox class="oe-date-picker-month-day-box-class"  id="oe-date-picker-month-day-21-box" onclick="oeDatePicker.clickDay(21)">
-                        <box><text  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-21" value="" /></box> 
+                        <box><label  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-21" value="" /></box> 
                     </vbox>    
                 </row>
                 
                 <row flex="1"  >
                     <vbox class="oe-date-picker-month-day-box-class"  id="oe-date-picker-month-day-22-box" onclick="oeDatePicker.clickDay(22)">
-                        <box><text  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-22" value="" /></box> 
+                        <box><label  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-22" value="" /></box> 
                     </vbox>    
                     <vbox class="oe-date-picker-month-day-box-class"  id="oe-date-picker-month-day-23-box" onclick="oeDatePicker.clickDay(23)">
-                        <box><text  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-23" value="" /></box> 
+                        <box><label  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-23" value="" /></box> 
                     </vbox>    
                     <vbox class="oe-date-picker-month-day-box-class"  id="oe-date-picker-month-day-24-box" onclick="oeDatePicker.clickDay(24)">
-                        <box><text  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-24" value="" /></box> 
+                        <box><label  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-24" value="" /></box> 
                     </vbox>    
                     <vbox class="oe-date-picker-month-day-box-class"   id="oe-date-picker-month-day-25-box" onclick="oeDatePicker.clickDay(25)">
-                        <box><text  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-25" value="" /></box> 
+                        <box><label  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-25" value="" /></box> 
                     </vbox>    
                     <vbox class="oe-date-picker-month-day-box-class"  id="oe-date-picker-month-day-26-box" onclick="oeDatePicker.clickDay(26)">
-                        <box><text  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-26" value="" /></box> 
+                        <box><label  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-26" value="" /></box> 
                     </vbox>    
                     <vbox class="oe-date-picker-month-day-box-class"  id="oe-date-picker-month-day-27-box" onclick="oeDatePicker.clickDay(27)">
-                        <box><text  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-27" value="" /></box>
+                        <box><label  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-27" value="" /></box>
                     </vbox>    
                     <vbox class="oe-date-picker-month-day-box-class"  id="oe-date-picker-month-day-28-box" onclick="oeDatePicker.clickDay(28)">
-                        <box><text  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-28" value="" /></box>
+                        <box><label  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-28" value="" /></box>
                     </vbox>    
                 </row>
                 
                 <row flex="1"  >
                     <vbox class="oe-date-picker-month-day-box-class" id="oe-date-picker-month-day-29-box" onclick="oeDatePicker.clickDay(29)">
-                        <box><text  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-29" value="" /></box> 
+                        <box><label  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-29" value="" /></box> 
                     </vbox>    
                     <vbox class="oe-date-picker-month-day-box-class" id="oe-date-picker-month-day-30-box" onclick="oeDatePicker.clickDay(30)">
-                        <box><text  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-30" value="" /></box> 
+                        <box><label  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-30" value="" /></box> 
                     </vbox>    
                     <vbox class="oe-date-picker-month-day-box-class"  id="oe-date-picker-month-day-31-box" onclick="oeDatePicker.clickDay(31)">
-                        <box><text  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-31" value="" /></box>
+                        <box><label  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-31" value="" /></box>
                     </vbox>    
                     <vbox class="oe-date-picker-month-day-box-class"  id="oe-date-picker-month-day-32-box" onclick="oeDatePicker.clickDay(32)">
-                        <box><text  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-32" value="" /></box> 
+                        <box><label  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-32" value="" /></box> 
                     </vbox>    
                     <vbox class="oe-date-picker-month-day-box-class"  id="oe-date-picker-month-day-33-box" onclick="oeDatePicker.clickDay(33)">
-                        <box><text  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-33" value="" /></box> 
+                        <box><label  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-33" value="" /></box> 
                     </vbox>    
                     <vbox class="oe-date-picker-month-day-box-class"  id="oe-date-picker-month-day-34-box" onclick="oeDatePicker.clickDay(34)">
-                        <box><text  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-34" value="" /></box> 
+                        <box><label  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-34" value="" /></box> 
                     </vbox>    
                     <vbox class="oe-date-picker-month-day-box-class"  id="oe-date-picker-month-day-35-box" onclick="oeDatePicker.clickDay(35)">
-                        <box><text  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-35" value="" /></box> 
+                        <box><label  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-35" value="" /></box> 
                     </vbox>    
                 </row>
                 
                 <row flex="1"  >
                     <vbox class="oe-date-picker-month-day-box-class"  id="oe-date-picker-month-day-36-box" onclick="oeDatePicker.clickDay(36)">
-                        <box><text  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-36" value="" /></box> 
+                        <box><label  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-36" value="" /></box> 
                     </vbox>    
                     <vbox class="oe-date-picker-month-day-box-class"  id="oe-date-picker-month-day-37-box" onclick="oeDatePicker.clickDay(37)">
-                        <box><text  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-37" value="" /></box> 
+                        <box><label  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-37" value="" /></box> 
                     </vbox>    
                     <vbox class="oe-date-picker-month-day-box-class"  id="oe-date-picker-month-day-38-box" onclick="oeDatePicker.clickDay(38)">
-                        <box><text  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-38" value="" /></box> 
+                        <box><label  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-38" value="" /></box> 
                     </vbox>    
                     <vbox class="oe-date-picker-month-day-box-class"  id="oe-date-picker-month-day-39-box" onclick="oeDatePicker.clickDay(39)">
-                        <box><text  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-39" value="" /></box> 
+                        <box><label  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-39" value="" /></box> 
                     </vbox>    
                     <vbox class="oe-date-picker-month-day-box-class"   id="oe-date-picker-month-day-40-box" onclick="oeDatePicker.clickDay(40)">
-                        <box><text  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-40" value="" /></box> 
+                        <box><label  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-40" value="" /></box> 
                     </vbox>    
                     <vbox class="oe-date-picker-month-day-box-class"   id="oe-date-picker-month-day-41-box" onclick="oeDatePicker.clickDay(41)">
-                        <box><text  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-41" value="" /></box> 
+                        <box><label  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-41" value="" /></box> 
                     </vbox>    
                     <vbox class="oe-date-picker-month-day-box-class"  id="oe-date-picker-month-day-42-box" onclick="oeDatePicker.clickDay(42)">
-                        <box><text  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-42" value="" /></box>
+                        <box><label  class="oe-date-picker-month-day-number-class" id="oe-date-picker-month-day-text-42" value="" /></box>
                     </vbox>    
                 </row>
                 

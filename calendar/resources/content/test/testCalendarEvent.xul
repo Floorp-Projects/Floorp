@@ -64,7 +64,7 @@
 <script type="application/x-javascript" src="chrome://calendar/content/test/testCalendarEvent.js"></script>
 
   
-  <html> Calendar Event Testing </html>
+  <description> Calendar Event Testing </description>
   
   
 </window>

@@ -69,11 +69,11 @@
    <vbox id="dialog-box">
 	<hbox id="standard-dialog-title">
 		<image id="standard-dialog-title-icon"/>
-		<spring flex="1"/>
+		<spacer flex="1"/>
 		<box id="standard-dialog-title-text-box" flex="1">
 			<label id="standard-dialog-title-text"/>	
 		</box>
-		<spring flex="1"/>
+		<spacer flex="1"/>
 	</hbox>
   
 	<box id="standard-dialog-content">
@@ -85,17 +85,17 @@
            			<column flex="1"/>
            		</columns>
            		<rows>
-           			<row autostretch="never">
+           			<row>
            				<spacer/>
            			</row>
-           			<row autostretch="never">
-           				<text class="label" value="&addCalendarFolder.name.label;" for="name"/>
+           			<row>
+           				<label class="label" value="&addCalendarFolder.name.label;" for="name"/>
            				<box>
            					<textbox size="40" id="name"/>
-           					<spring flex="1"/>
+           					<spacer flex="1"/>
            				</box>
            			</row>
-           			<row autostretch="never">
+           			<row>
            				<spacer/>		  
            			</row>
            		</rows>

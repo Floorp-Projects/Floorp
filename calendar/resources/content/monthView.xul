@@ -65,7 +65,9 @@
 				  
       <hbox id="month-controls-box">
 
-         <image flex="1" id="month-previous-button" onclick="gCalendarWindow.goToPrevious()"/>
+         <box flex="1">
+            <image id="month-previous-button" onclick="gCalendarWindow.goToPrevious()"/>
+         </box>
                   
          <label id="month-title-text" value="" />
                   

@@ -48,12 +48,9 @@
 
       <?xul-overlay href="chrome://penglobal/content/timepicker-overlay.xul"?>
 *
-* Make a popupset in your XUL that includes the picker popup from the overlay
 *
-     <popupset>
-       <popup  id="oe-time-picker-popup"  oncommand="yourCommandFunction( this )" >
-       </popup>
-     </popupset>
+    <popup  id="oe-time-picker-popup"  oncommand="yourCommandFunction( this )" >
+    </popup>
 * 
 * Attach the time picker to an item using the popup attribute, an image for example:
 * 

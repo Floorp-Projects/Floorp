@@ -225,7 +225,7 @@ WeekView.prototype.refreshEvents = function( )
             weekBoxItem.numEvents +=  1;
          }
          
-         //if its an all day event, don't show it in the hours bulletin board.
+         //if its an all day event, don't show it in the hours stack.
          
          if ( calendarEvent.allDay == true ) 
          {
@@ -252,11 +252,11 @@ WeekView.prototype.refreshEvents = function( )
             //note the use of the WeekViewAllDayText Attribute.  
             //This is used to remove the text when the day is changed.
             
-            SeperatorNode = document.createElement( "text" );
+            SeperatorNode = document.createElement( "label" );
             SeperatorNode.setAttribute( "value", Seperator );
             SeperatorNode.setAttribute( "WeekViewAllDayText", "true" );
    
-            newHTMLNode = document.createElement( "html" );
+            newHTMLNode = document.createElement( "description" );
                         
             newTextNode = document.createTextNode( eventText );
             //newTextNode.setAttribute( "value", eventText );
@@ -282,7 +282,7 @@ WeekView.prototype.refreshEvents = function( )
          {
             eventBox = this.createEventBox( calendarEvent, dayIndex );    
             
-            //add the box to the bulletin board.
+            //add the box to the stack.
             document.getElementById( "week-view-content-board" ).appendChild( eventBox );
          }
       }
@@ -356,14 +356,14 @@ WeekView.prototype.createEventBox = function ( calendarEvent, dayIndex )
    ** 
    ** THIS REQUIRES THE DESCRIPTION XUL ELEMENT, WHICH WE MISSED BY 9 DAYS FOR BETA
    */
+   /*
    var eventDescriptionElement = document.createElement( "description" );
-   eventDescriptionElement.value = "This is my new text";
    var DescriptionText = document.createTextNode( "This is my new text" );
    eventDescriptionElement.appendChild( DescriptionText );
-   //eventDescriptionElement.setAttribute( "style", "border: 1px solid red; min-height: "+Height+"; max-height: "+Height+"; overflow: never;" );
+   eventDescriptionElement.setAttribute( "style", "border: 1px solid red; height: "+Height+";" );
    eventDescriptionElement.crop = "end";
    eventBox.appendChild( eventDescriptionElement );
-   
+   */
    
    // add a property to the event box that holds the calendarEvent that the
    // box represents
@@ -405,7 +405,7 @@ WeekView.prototype.switchTo = function( )
    // switch views in the deck
 
    var calendarDeckItem = document.getElementById( "calendar-deck" );
-   calendarDeckItem.setAttribute( "index", 1 );
+   calendarDeckItem.setAttribute( "selectedIndex", 1 );
 }
 
 

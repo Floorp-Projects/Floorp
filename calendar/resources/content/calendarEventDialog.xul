@@ -86,12 +86,8 @@
 
 <!-- Picker popups -->
 
-  <popupset>
-    <popup  id="oe-date-picker-popup"  popupalign="topleft" oncommand="onDatePick( this )" value="">
-    </popup>
-    <popup  id="oe-time-picker-popup"  popupalign="topleft" oncommand="onTimePick( this )" value="">
-    </popup>
-  </popupset>
+ <popup  id="oe-date-picker-popup"  position="after_start" oncommand="onDatePick( this )" value=""/>
+ <popup  id="oe-time-picker-popup"  position="after_start" oncommand="onTimePick( this )" value=""/>
 
 <!-- The dialog -->
     
@@ -103,19 +99,19 @@
       
       <box id="standard-dialog-title">
          <image id="standard-dialog-title-icon" insertbefore="standard-dialog-title-text-box"/>
-         <spring flex="1" insertafter="standard-dialog-title-icon"/>
-         <box id="standard-dialog-title-text-box" valign="middle" autostretch="never">
-            <text id="standard-dialog-title-text"/>
+         <spacer flex="1" insertafter="standard-dialog-title-icon"/>
+         <box id="standard-dialog-title-text-box">
+            <label id="standard-dialog-title-text"/>
          </box>
-         <spring id="second-title-spring" flex="1" insertafter="standard-dialog-title-text-box"/>
+         <spacer id="second-title-spring" flex="1" insertafter="standard-dialog-title-text-box"/>
       </box>
  
             
         <!-- standard-dialog-tips: from dialogOverlay.xul  Proper tip is shown in on load code-->
         
         <box id="standard-dialog-tips">
-          <html id="tip-new"  collapsed ="true" >&event.tip.new;</html>
-          <html id="tip-edit" collapsed ="false">&event.tip.edit;</html>
+          <description id="tip-new"  collapsed ="true" >&event.tip.new;</description>
+          <description id="tip-edit" collapsed ="false">&event.tip.edit;</description>
         </box>
         
         <!-- standard-dialog-content: from dialogOverlay.xul  -->
@@ -124,7 +120,7 @@
         
             <!-- Form elements -->
             
-            <grid autostretch="never" flex="1">
+            <grid>
             
                 <columns>
                     <column />
@@ -134,25 +130,25 @@
                 <rows>
             
                     <!-- Title -->    
-                    <row autostretch="never">
+                    <row>
                         <hbox class="field-label-box-class">
-                            <text for="title-field" value="&newevent.title.label;"/>
+                            <label for="title-field" value="&newevent.title.label;"/>
                         </hbox>
                         <textbox id="title-field"/>
                     </row>
         
                     <!-- Location -->    
-                    <row autostretch="never">
+                    <row>
                         <hbox class="field-label-box-class" >
-                            <text for="location-field" value="&newevent.location.label;"/>
+                            <label for="location-field" value="&newevent.location.label;"/>
                         </hbox>
                         <textbox id="location-field"/>
                     </row>
             
                     <!-- Category -->    
-                    <row autostretch="never">
+                    <row collapsed="true">
                         <hbox class="field-label-box-class" >
-                            <text for="category-field" value="&newevent.category.label;"/>
+                            <label for="category-field" value="&newevent.category.label;"/>
                         </hbox>
                         <menulist id="category-field" label="&newevent.choosecategory.label;" value="" >
 									<menupopup id="category-field-menupopup">
@@ -162,20 +158,20 @@
                     </row>
             
                     <!-- Date -->    
-                    <row autostretch="never" >
+                    <row>
                         <hbox class="field-label-box-class" >
-                            <text value="&newevent.date.label;"/>
+                            <label value="&newevent.date.label;"/>
                         </hbox>
-                        <hbox  id="start-date-box" autostretch="never"  >
-                            <textbox id="start-date-text" readonly="true"                 onmousedown="prepareDatePicker('start-date-text')" popup="oe-date-picker-popup" popupanchor="bottomleft"/>
-                            <image class="four-state-image-button" id="start-date-button" onmousedown="prepareDatePicker('start-date-text')" popup="oe-date-picker-popup" popupanchor="bottomleft" />
+                        <hbox  id="start-date-box">
+                            <textbox id="start-date-text" readonly="true"                 onmousedown="prepareDatePicker('start-date-text')" popup="oe-date-picker-popup" position="after_start"/>
+                            <image class="four-state-image-button" id="start-date-button" onmousedown="prepareDatePicker('start-date-text')" popup="oe-date-picker-popup" position="after_start" />
                         </hbox>
                     </row>
                     
             
                     <!-- All Day -->    
-                    <row autostretch="never">
-                        <spring />
+                    <row>
+                        <spacer />
                         <hbox>
                           <checkbox id="all-day-event-checkbox" label="&newevent.alldayevent.label;" checked="true" oncommand="commandAllDay()"/>
                         </hbox>
@@ -183,25 +179,25 @@
             
                     
                     <!-- Start -->    
-                    <row autostretch="never">
+                    <row>
                         <hbox class="field-label-box-class" >
-                            <text id="start-time-label" value="&newevent.start.label;"/>
+                            <label id="start-time-label" value="&newevent.start.label;"/>
                         </hbox>
-                        <hbox id="start-event-time-box" autostretch="never" >
-                            <textbox id="start-time-text" readonly="true" value=""      onmousedown="prepareTimePicker('start-time-text')" popup="oe-time-picker-popup" popupanchor="bottomleft"/>
-                            <image class="four-state-image-button" id="start-time-button" onmousedown="prepareTimePicker('start-time-text')" popup="oe-time-picker-popup" popupanchor="bottomleft"/>
+                        <hbox id="start-event-time-box">
+                            <textbox id="start-time-text" readonly="true" value=""      onmousedown="prepareTimePicker('start-time-text')" popup="oe-time-picker-popup" position="after_start"/>
+                            <image class="four-state-image-button" id="start-time-button" onmousedown="prepareTimePicker('start-time-text')" popup="oe-time-picker-popup" position="after_start"/>
                         </hbox>
                     </row>
                     
                     
                     <!-- End -->    
-                    <row autostretch="never">
+                    <row>
                         <hbox class="field-label-box-class" >
-                            <text id="end-time-label" value="&newevent.end.label;"/>
+                            <label id="end-time-label" value="&newevent.end.label;"/>
                         </hbox>
-                        <hbox id="end-event-time-box"  autostretch="never" >
-                            <textbox id="end-time-text" readonly="true" value=""      onmousedown="prepareTimePicker('end-time-text')" popup="oe-time-picker-popup" popupanchor="bottomleft"/>
-                            <image class="four-state-image-button" id="end-time-button" onmousedown="prepareTimePicker('end-time-text')" popup="oe-time-picker-popup" popupanchor="bottomleft"/>
+                        <hbox id="end-event-time-box">
+                            <textbox id="end-time-text" readonly="true" value=""      onmousedown="prepareTimePicker('end-time-text')" popup="oe-time-picker-popup" position="after_start"/>
+                            <image class="four-state-image-button" id="end-time-button" onmousedown="prepareTimePicker('end-time-text')" popup="oe-time-picker-popup" position="after_start"/>
                         </hbox>
                     </row>
                     
@@ -209,15 +205,15 @@
                     <!-- Description -->    
                     <row flex="1">
                         <hbox class="field-label-box-class" >
-                            <text for="description-field" value="&newevent.description.label;"/>
+                            <label for="description-field" value="&newevent.description.label;"/>
                         </hbox>
                         <textbox id="description-field" multiline="true" rows="3" cols="30" />
                     </row>
                     
             
                     <!-- Private -->    
-                    <row autostretch="never" >
-                        <spring />
+                    <row collapsed="true">
+                        <spacer />
                         <hbox>
                           <checkbox id="private-checkbox" checked="false" label="&newevent.private.label;"/>
                         </hbox>
@@ -225,12 +221,12 @@
             
             
                     <!-- Alarm -->    
-                    <row autostretch="never">
-                        <spring />
+                    <row>
+                        <spacer />
                         <vbox>
-									<hbox  id="alarm-box"  autostretch="never">
+									<hbox  id="alarm-box">
 										 <checkbox id="alarm-checkbox"  label="&newevent.alarm.label;" checked="false" oncommand="commandAlarm()"/>
-										 <spring id="alarm-spacer" />
+										 <spacer id="alarm-spacer" />
 										 <textbox id="alarm-length-field"  value="15" />
 										 <menulist  id="alarm-length-units" label="&alarm.units.minutes;" value="minutes" >
 											  <menupopup >
@@ -242,7 +238,7 @@
 										 
 										 <label id="alarm-length-text" for="alarm-length-field" value="&newevent.beforealarm.label;"/>
 									</hbox>
-									<hbox  id="alarm-box-email">
+									<hbox id="alarm-box-email" collapsed="true">
 										 <checkbox id="alarm-email-checkbox"  label="&newevent.email.label;" checked="false" oncommand="commandAlarmEmail()"/>
 										 <textbox id="alarm-email-field" disabled="true" size="39" value="" />
 									</hbox>       
@@ -250,12 +246,12 @@
                     </row>
              
                     <!-- Invite -->    
-                    <row autostretch="never">
-                        <spring />
+                    <row collapsed="true">
+                        <spacer />
                         <vbox>
 									<hbox id="invite-box">
 										 <checkbox id="invite-checkbox"  label="&newevent.invite.label;" checked="false" oncommand="commandInvite()"/>
-										 <spring id="invite-spacer" />
+										 <spacer id="invite-spacer" />
 										 <textbox id="invite-email-field" size="39" disabled="true"/>
 									</hbox>
                         </vbox>
@@ -263,10 +259,10 @@
              
                     <!-- Repeat -->    
                     <!-- STARTING TO BE IMPLEMENTED	-->
-						  <row autostretch="never" collapsed="false">
-                        <spring />
+						  <row collapsed="false">
+                        <spacer />
                         <vbox>
-                          <hbox id="repeat-box" autostretch="never">
+                          <hbox id="repeat-box">
                             <checkbox id="repeat-checkbox" label="&newevent.repeat.label;"  checked="false" oncommand="commandRepeat()"/>
                             <textbox id="repeat-length-field" value="1"  />
                                     
@@ -282,16 +278,16 @@
                                
                           
                           <hbox>
-                            <spring id="radio-spacer" />
+                            <spacer id="radio-spacer" />
                             <radiogroup id="repeat-until-group" orient="vertical">
                               <hbox>
                                 <radio group="repeat-until-group" id="repeat-forever-radio" checked="false" label="&newevent.forever.label;" oncommand="commandUntil()"/>
                               </hbox>    
-                              <hbox id="repeat-end-box" autostretch="never">
+                              <hbox id="repeat-end-box">
                                   <radio group="repeat-until-group" id="repeat-until-radio" checked="true" label="&newevent.until.label;"   oncommand="commandUntil()"/>
-                                  <spring id="until-spacer"/>
-                                  <textbox id="repeat-end-date-text" readonly="true" value="" onmousedown="prepareDatePicker('repeat-end-date-text')" popup="oe-date-picker-popup" popupanchor="bottomleft"/>
-                                  <image class="four-state-image-button" id="repeat-end-date-button" onmousedown="prepareDatePicker('repeat-end-date-text')" popup="oe-date-picker-popup" popupanchor="bottomleft"/>
+                                  <spacer id="until-spacer"/>
+                                  <textbox id="repeat-end-date-text" readonly="true" value="" onmousedown="prepareDatePicker('repeat-end-date-text')" popup="oe-date-picker-popup" position="after_start"/>
+                                  <image class="four-state-image-button" id="repeat-end-date-button" onmousedown="prepareDatePicker('repeat-end-date-text')" popup="oe-date-picker-popup" position="after_start"/>
                               </hbox>
                             
                             </radiogroup>

@@ -131,10 +131,7 @@ const kMAX_NUMBER_OF_DOTS_IN_MONTH_VIEW = "8"; //the maximum number of dots that
 
 function calendarInit() 
 {
-	window.moveTo(0, 0);
-	window.resizeTo(1024, 708);
-
-   // set up pen application
+	// set up pen application
    
    calendar = penapplication;
    
@@ -160,6 +157,10 @@ function calendarInit()
    gCalendarWindow.switchToMonthView( );
 
    update_date( );
+
+   deselectEventInUnifinder();
+   //sizeToContent();
+   //window.resizeTo(1024,708);
 }
 
 // Set the date and time on the clock and set up a timeout to refresh the clock when the 
@@ -237,14 +238,12 @@ function dayEventItemClick( eventBox, event )
 
 function dayEventItemDoubleClick( eventBox, event )
 {
-   /* THIS IS DISABLED FOR REPEATING EVENTS
    editEvent( eventBox.calendarEvent );
 
    if ( event ) 
    {
       event.stopPropagation();
    }
-   */
 }
 
 
@@ -308,14 +307,12 @@ function weekEventItemClick( eventBox, event )
 
 function weekEventItemDoubleClick( eventBox, event )
 {
-   /* THIS IS DISABLED BECAUSE OF REPEATING EVENTS
    editEvent( eventBox.calendarEvent );
 
    if ( event ) 
    {
       event.stopPropagation();
    }
-   */
 }
 
 /** ( event )
@@ -380,8 +377,6 @@ function monthEventBoxClickEvent( eventBox, event )
 
 function monthEventBoxDoubleClickEvent( eventBox, event )
 {
-   /* THIS IS DISABLED BECAUSE OF REPEATING EVENTS
-   
    selectEventInUnifinder( eventBox.calendarEvent );
 
    gCalendarWindow.monthView.clearSelectedDate( );
@@ -392,7 +387,6 @@ function monthEventBoxDoubleClickEvent( eventBox, event )
    {
       event.stopPropagation();
    }
-   */
    
 }
    
@@ -415,6 +409,10 @@ function selectEventInUnifinder( calendarEvent )
       Tree.selectItem( TreeItem );
 
    }
+
+   document.getElementById( "unifinder-remove-button" ).removeAttribute( "disabled" );
+
+   document.getElementById( "unifinder-modify-button" ).removeAttribute( "disabled" );
 }
 
 
@@ -434,6 +432,9 @@ function deselectEventInUnifinder( )
       gUnifinderSelection = null;
    }
 
+   document.getElementById( "unifinder-remove-button" ).setAttribute( "disabled", true );
+
+   document.getElementById( "unifinder-modify-button" ).setAttribute( "disabled", true );
 }
    
 
@@ -533,33 +534,31 @@ function modifyEventDialogResponse( calendarEvent )
 
 function getPreviewText( calendarEvent )
 {
-   var TextToReturn = " At "+calendarEvent.displayDate+" you have an event titled: "+calendarEvent.title;
-	/*HolderBox = document.createElement( "vbox" );
+   //var TextToReturn = " At "+calendarEvent.displayDate+" you have an event titled: "+calendarEvent.title;
+	HolderBox = document.createElement( "vbox" );
 
-   TitleHtml = document.createElement( "html" );
+   TitleHtml = document.createElement( "description" );
    TitleText = document.createTextNode( calendarEvent.title );
    TitleHtml.appendChild( TitleText );
    HolderBox.appendChild( TitleHtml );
 
-   DateHtml = document.createElement( "html" );
+   DateHtml = document.createElement( "description" );
    DateText = document.createTextNode( calendarEvent.start );
    DateHtml.appendChild( DateText );
    HolderBox.appendChild( DateHtml );
 
-   TimeHtml = document.createElement( "html" );
+   TimeHtml = document.createElement( "description" );
    TimeText = document.createTextNode( calendarEvent.start );
    TimeHtml.appendChild( TimeText );
    HolderBox.appendChild( TimeHtml );
 
-   DescriptionHtml = document.createElement( "html" );
+   DescriptionHtml = document.createElement( "description" );
    DescriptionText = document.createTextNode( calendarEvent.description );
    DescriptionHtml.appendChild( DescriptionText );
    HolderBox.appendChild( DescriptionHtml );
 
 
    return ( HolderBox );
-	*/
-	return( TextToReturn );
 }
 
 
@@ -894,7 +893,6 @@ CalendarWindow.prototype.switchToView = function( newView )
    if( this.currentView !== newView )
    {
       // call switch from for the view we are leaving
-      
       if( this.currentView )
       {
          this.currentView.switchFrom();
@@ -907,6 +905,7 @@ CalendarWindow.prototype.switchToView = function( newView )
       // switch to and refresh the view
       
       newView.switchTo();
+      
       newView.refresh();
    }
 }
@@ -920,13 +919,7 @@ CalendarWindow.prototype.switchToView = function( newView )
 
 CalendarWindow.prototype.mouseOverInfo = function( calendarEvent, event )
 {
-   Text = document.getElementById( "popuptooltiptext" );
-   
-   TextValue = getPreviewText( event.currentTarget.calendarEvent );
-   
-   Text.setAttribute( "value", TextValue );
-	
-	/*Html = document.getElementById( "savetip" );
+   Html = document.getElementById( "savetip" );
 
    while( Html.hasChildNodes() )
    {
@@ -936,9 +929,6 @@ CalendarWindow.prototype.mouseOverInfo = function( calendarEvent, event )
    HolderBox = getPreviewText( event.currentTarget.calendarEvent );
    
    Html.appendChild( HolderBox );
-
-   dump( "\n I'm in MouseOverInfo for the calendarWindow!\n--\n" );
-	*/
 }
 
 /** PRIVATE

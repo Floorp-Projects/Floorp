@@ -207,9 +207,9 @@ function loadCalendarEventDialog()
    
    setFieldValue( "repeat-checkbox", gEvent.repeat, "checked");
    setFieldValue( "repeat-length-field", gEvent.recurInterval );
-   setFieldValue( "repeat-length-units", gEvent.repeatUnits, "value" );  
-   setFieldValue( "repeat-forever-radio", (gEvent.repeatForever != undefined && gEvent.repeatForever != false), "checked" );
-   setFieldValue( "repeat-until-radio", (gEvent.repeatForever == undefined || gEvent.repeatForever == false), "checked" );
+   setFieldValue( "repeat-length-units", gEvent.repeatUnits, "value" ); 
+   setFieldValue( "repeat-forever-radio", (gEvent.repeatForever != undefined && gEvent.repeatForever != false), "selected" );
+   setFieldValue( "repeat-until-radio", (gEvent.repeatForever == undefined || gEvent.repeatForever == false), "selected" );
    
    // update enabling and disabling
    
@@ -281,7 +281,7 @@ function onOKCommand()
    }
    gEvent.repeat         = getFieldValue( "repeat-checkbox", "checked" );
    gEvent.repeatUnits    = getFieldValue( "repeat-length-units", "value"  );  
-   gEvent.repeatForever  = getFieldValue( "repeat-forever-radio", "checked" );
+   gEvent.repeatForever  = getFieldValue( "repeat-forever-radio", "selected" );
    gEvent.recurInterval  = getFieldValue( "repeat-length-field" );
    
    if( gEvent.recurInterval == 0 )
@@ -638,7 +638,7 @@ function updateUntilItemEnabled()
    var repeatEndText = document.getElementById( "repeat-end-date-text" );
    var repeatEndPicker = document.getElementById( "repeat-end-date-button" );
   
-   if( repeatCheckBox.checked && repeatUntilRadio.checked  )
+   if( repeatCheckBox.checked && repeatUntilRadio.selected  )
    {
       repeatEndText.removeAttribute( "disabled"  );
       repeatEndText.setAttribute( "popup", "oe-date-picker-popup" );
@@ -729,6 +729,7 @@ function setFieldValue( elementId, newValue, propertyName  )
       if( propertyName )
       {
          field[ propertyName ] = newValue;
+         field.setAttribute( propertyName, newValue );
       }
       else
       {

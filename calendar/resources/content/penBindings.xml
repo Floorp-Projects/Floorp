@@ -45,7 +45,7 @@
   	  <xul:box class="button-internal-box" orient="vertical" flex="1">
         <xul:image class="button-icon" inherits="src"/>
         <xul:box orient="vertical" class="button-text-container" flex="1">
-          <xul:text class="button-text" inherits="value=label,accesskey,crop,dragover-top"/>
+          <xul:label class="button-text" inherits="value=label,accesskey,crop,dragover-top"/>
         </xul:box>
       </xul:box>
     </content>
@@ -54,9 +54,9 @@
   <binding id="penButton" extends="chrome://global/content/bindings/button.xml#button-base">
     <content>
   	  <xul:box class="button-internal-box" orient="vertical" flex="1" style="-moz-box-align:center;">
-        <xul:spring flex="1"/>
+        <xul:spacer flex="1"/>
         <xul:image class="button-icon" inherits="src"/>
-        <xul:spring flex="1"/>
+        <xul:spacer flex="1"/>
       </xul:box>
     </content>
   </binding>  
@@ -65,9 +65,9 @@
     <content>
   	  <xul:box class="button-internal-box" flex="1" style="-moz-box-align:center;">
         <xul:image class="button-icon" inherits="src"/>
-        <xul:spring flex="1"/>
-        <xul:text class="button-text" inherits="value=label,accesskey,crop,dragover-top"/>
-        <xul:spring flex="1"/>
+        <xul:spacer flex="1"/>
+        <xul:label class="button-text" inherits="value=label,accesskey,crop,dragover-top"/>
+        <xul:spacer flex="1"/>
       </xul:box>
     </content>
   </binding>  

@@ -68,12 +68,8 @@
 
 <!-- Picker popups -->
 
-  <popupset>
-    <popup  id="oe-date-picker-popup"  popupalign="topleft" oncommand="onDatePick( this )" label="">
-    </popup>
-    <popup  id="oe-time-picker-popup"  popupalign="topleft" oncommand="onTimePick( this )" label="">
-    </popup>
-  </popupset>
+ <popup  id="oe-date-picker-popup"  position="after_start" oncommand="onDatePick( this )" label=""/>
+ <popup  id="oe-time-picker-popup"  position="after_start" oncommand="onTimePick( this )" label=""/>
 
 <!-- The dialog -->
     
@@ -84,18 +80,18 @@
       <!-- standard-dialog-title: from dialogOverlay.xul -->
       
       <box id="standard-dialog-title">
-			<spring flex="1"/>
+			<spacer flex="1"/>
 			<image id="standar-dialog-title-icon"/>
 			<box id="standard-dialog-title-text-box">
 				<label id="standard-dialog-title-text" value="&event.title.alarm;"/>
 			</box>
-			<spring flex="1"/>
+			<spacer flex="1"/>
 		</box>
                
       <!-- standard-dialog-tips: from dialogOverlay.xul  Proper tip is shown in on load code-->
         
       <box id="standard-dialog-tips">
-         <html id="tip-new">&event.tip.alert;</html>
+         <description id="tip-new">&event.tip.alert;</description>
       </box>
         
       <!-- standard-dialog-content: from dialogOverlay.xul  -->
@@ -103,16 +99,16 @@
       <vbox id="standard-dialog-content">
          <box flex="1" id="event-message-box"/>
 			<box flex="1" id="event-message-time-box"/>
-			<!-- <spring flex="1"/> -->
+			<!-- <spacer flex="1"/> -->
 			<box id="alarm-dialog-content" collapsed="true">
 				<checkbox id="remind-again-checkbox"/>
-				<html>&event.alarm.checkbox.label;</html>
+				<description>&event.alarm.checkbox.label;</description>
 				<textbox id="dialog-alarm-minutes" value="5" size="4" maxlength="2"/> 
 				<label for="dialog-alarm-minutes" value="Minutes"/>
 				
 			</box>
 			<box>
-				<spring flex="1"/>
+				<spacer flex="1"/>
             <button id="dialog-btn-yes" label="Ok" default="true" oncommand="doOKButton();"/>
 			</box>
       </vbox> 

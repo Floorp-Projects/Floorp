@@ -61,13 +61,13 @@
 
    <unifinder id="calendar-unifinder-overlay">
    
-        <tabbox orient="vertical" flex="1"> 
+        <tabbox flex="1"> 
            <toolbar id="unifinder-toolbar">
               <!--
-              <unifinder-button class="unifinder-new-category-button" tooltip="aTooltip" tooltiptext="&unifinder.toolbar.newfolder.tooltip;" oncommand="unifinderNewCategoryCommand()" />
+              <unifinder-button id="unifinder-new-category-button" class="unifinder-new-category-button" tooltip="aTooltip" tooltiptext="&unifinder.toolbar.newfolder.tooltip;" oncommand="unifinderNewCategoryCommand()" />
               -->
-              <unifinder-button class="unifinder-remove-button" tooltip="aTooltip" tooltiptext="&calendar.tools.delete.tooltip;" oncommand="unifinderRemoveCommand()" />
-              <unifinder-button class="unifinder-modify-button" tooltip="aTooltip" tooltiptext="&calendar.tools.modify.tooltip;" oncommand="unifinderModifyCommand()" />
+              <unifinder-button id="unifinder-remove-button" class="unifinder-remove-button" tooltip="aTooltip" tooltiptext="&calendar.tools.delete.tooltip;" oncommand="unifinderRemoveCommand()" />
+              <unifinder-button id="unifinder-modify-button" class="unifinder-modify-button" tooltip="aTooltip" tooltiptext="&calendar.tools.modify.tooltip;" oncommand="unifinderModifyCommand()" />
            </toolbar>
            
            <tabs  class="unifinder-tab" orient="horizontal" >

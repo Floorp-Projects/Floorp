@@ -75,12 +75,12 @@
     
     <hbox id="oe-time-picker-ampm-controls-box"  >
 
-        <box class="oe-time-picker-am-pm-box-class" id="oe-time-picker-am-box"  autostretch="never" align="center"  flex="1" onclick="oeTimePicker.clickAm( this )">
-            <text id="oe-time-picker-year-title-text" value="&time.AM;" />
+        <box class="oe-time-picker-am-pm-box-class" id="oe-time-picker-am-box"  flex="1" onclick="oeTimePicker.clickAm( this )">
+            <label id="oe-time-picker-year-title-text" value="&time.AM;" />
         </box>  
         
-        <box class="oe-time-picker-am-pm-box-class" id="oe-time-picker-pm-box"  autostretch="never" align="center"  flex="1" onclick="oeTimePicker.clickPm( this )" >
-            <text id="oe-time-picker-year-title-text" value="&time.PM;" />
+        <box class="oe-time-picker-am-pm-box-class" id="oe-time-picker-pm-box"  flex="1" onclick="oeTimePicker.clickPm( this )" >
+            <label id="oe-time-picker-year-title-text" value="&time.PM;" />
         </box>  
 
 
@@ -107,64 +107,64 @@
         <rows >
             <row flex="1"  >
                 <vbox class="oe-time-picker-hour-box-class"  id="oe-time-picker-hour-box-0" onclick="oeTimePicker.clickHour(this, 0)" >
-                    <spring flex="1" />
-                    <box ><text  class="oe-time-picker-hour-name-class"  value="12" /></box> 
-                    <spring flex="1" />
+                    <spacer flex="1" />
+                    <box ><label  class="oe-time-picker-hour-name-class"  value="12" /></box> 
+                    <spacer flex="1" />
                 </vbox>  
                 <vbox class="oe-time-picker-hour-box-class" id="oe-time-picker-hour-box-1"  onclick="oeTimePicker.clickHour(this, 1)" >
-                    <spring flex="1" />
-                    <box ><text  class="oe-time-picker-hour-name-class"  value="1" /></box> 
-                    <spring flex="1" />
+                    <spacer flex="1" />
+                    <box ><label  class="oe-time-picker-hour-name-class"  value="1" /></box> 
+                    <spacer flex="1" />
                 </vbox>  
                 <vbox class="oe-time-picker-hour-box-class" id="oe-time-picker-hour-box-2"  onclick="oeTimePicker.clickHour(this, 2)" >
-                    <spring flex="1" />
-                    <box ><text  class="oe-time-picker-hour-name-class"  value="2" /></box> 
-                    <spring flex="1" />
+                    <spacer flex="1" />
+                    <box ><label  class="oe-time-picker-hour-name-class"  value="2" /></box> 
+                    <spacer flex="1" />
                 </vbox>  
                 <vbox class="oe-time-picker-hour-box-class" id="oe-time-picker-hour-box-3"  onclick="oeTimePicker.clickHour(this, 3)" >
-                    <spring flex="1" />
-                    <box ><text  class="oe-time-picker-hour-name-class"  value="3" /></box> 
-                    <spring flex="1" />
+                    <spacer flex="1" />
+                    <box ><label  class="oe-time-picker-hour-name-class"  value="3" /></box> 
+                    <spacer flex="1" />
                 </vbox>  
                 <vbox class="oe-time-picker-hour-box-class" id="oe-time-picker-hour-box-4"  onclick="oeTimePicker.clickHour(this, 4)" >
-                    <spring flex="1" />
-                    <box ><text  class="oe-time-picker-hour-name-class"  value="4" /></box> 
-                    <spring flex="1" />
+                    <spacer flex="1" />
+                    <box ><label  class="oe-time-picker-hour-name-class"  value="4" /></box> 
+                    <spacer flex="1" />
                 </vbox>  
                 <vbox class="oe-time-picker-hour-box-class" id="oe-time-picker-hour-box-5"  onclick="oeTimePicker.clickHour(this, 5)" >
-                    <spring flex="1" />
-                    <box ><text  class="oe-time-picker-hour-name-class"  value="5" /></box> 
-                    <spring flex="1" />
+                    <spacer flex="1" />
+                    <box ><label  class="oe-time-picker-hour-name-class"  value="5" /></box> 
+                    <spacer flex="1" />
                 </vbox>  
                 <vbox class="oe-time-picker-hour-box-class" id="oe-time-picker-hour-box-6"  onclick="oeTimePicker.clickHour(this, 6)" >
-                    <spring flex="1" />
-                    <box ><text  class="oe-time-picker-hour-name-class"  value="6" /></box> 
-                    <spring flex="1" />
+                    <spacer flex="1" />
+                    <box ><label  class="oe-time-picker-hour-name-class"  value="6" /></box> 
+                    <spacer flex="1" />
                 </vbox>  
                 <vbox class="oe-time-picker-hour-box-class" id="oe-time-picker-hour-box-7"  onclick="oeTimePicker.clickHour(this, 7)" >
-                    <spring flex="1" />
-                    <box ><text  class="oe-time-picker-hour-name-class"  value="7" /></box> 
-                    <spring flex="1" />
+                    <spacer flex="1" />
+                    <box ><label  class="oe-time-picker-hour-name-class"  value="7" /></box> 
+                    <spacer flex="1" />
                 </vbox>  
                 <vbox class="oe-time-picker-hour-box-class" id="oe-time-picker-hour-box-8"  onclick="oeTimePicker.clickHour(this, 8)" >
-                    <spring flex="1" />
-                    <box ><text  class="oe-time-picker-hour-name-class"  value="8" /></box> 
-                    <spring flex="1" />
+                    <spacer flex="1" />
+                    <box ><label  class="oe-time-picker-hour-name-class"  value="8" /></box> 
+                    <spacer flex="1" />
                 </vbox>  
                 <vbox class="oe-time-picker-hour-box-class" id="oe-time-picker-hour-box-9"  onclick="oeTimePicker.clickHour(this, 9)" >
-                    <spring flex="1" />
-                    <box ><text  class="oe-time-picker-hour-name-class"  value="9" /></box> 
-                    <spring flex="1" />
+                    <spacer flex="1" />
+                    <box ><label  class="oe-time-picker-hour-name-class"  value="9" /></box> 
+                    <spacer flex="1" />
                 </vbox>  
                 <vbox class="oe-time-picker-hour-box-class" id="oe-time-picker-hour-box-10"  onclick="oeTimePicker.clickHour(this, 10)" >
-                    <spring flex="1" />
-                    <box ><text  class="oe-time-picker-hour-name-class"  value="10" /></box> 
-                    <spring flex="1" />
+                    <spacer flex="1" />
+                    <box ><label  class="oe-time-picker-hour-name-class"  value="10" /></box> 
+                    <spacer flex="1" />
                 </vbox>  
                 <vbox class="oe-time-picker-hour-box-class" id="oe-time-picker-hour-box-11"  onclick="oeTimePicker.clickHour(this, 11)" >
-                    <spring flex="1" />
-                    <box ><text  class="oe-time-picker-hour-name-class"  value="11" /></box> 
-                    <spring flex="1" />
+                    <spacer flex="1" />
+                    <box ><label  class="oe-time-picker-hour-name-class"  value="11" /></box> 
+                    <spacer flex="1" />
                 </vbox>  
             </row>  
         
@@ -191,67 +191,67 @@
            
                 <row flex="1"  >
                     <vbox class="oe-time-picker-five-minute-box-class" id="oe-time-picker-five-minute-box-0" onclick="oeTimePicker.clickMinute(this, 0)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-five-minute-number-class"  value=":00" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-five-minute-number-class"  value=":00" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                     <vbox class="oe-time-picker-five-minute-box-class" id="oe-time-picker-five-minute-box-5" onclick="oeTimePicker.clickMinute(this, 5)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-five-minute-number-class"  value=":05" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-five-minute-number-class"  value=":05" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                     <vbox class="oe-time-picker-five-minute-box-class" id="oe-time-picker-five-minute-box-10" onclick="oeTimePicker.clickMinute(this, 10)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-five-minute-number-class"  value=":10" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-five-minute-number-class"  value=":10" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                     <vbox class="oe-time-picker-five-minute-box-class" id="oe-time-picker-five-minute-box-15" onclick="oeTimePicker.clickMinute(this, 15)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-five-minute-number-class"  value=":15" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-five-minute-number-class"  value=":15" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                     <vbox class="oe-time-picker-five-minute-box-class" id="oe-time-picker-five-minute-box-20" onclick="oeTimePicker.clickMinute(this, 20)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-five-minute-number-class"  value=":20" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-five-minute-number-class"  value=":20" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                     <vbox class="oe-time-picker-five-minute-box-class" id="oe-time-picker-five-minute-box-25" onclick="oeTimePicker.clickMinute(this, 25)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-five-minute-number-class"  value=":25" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-five-minute-number-class"  value=":25" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                 </row>
                 
                 <row flex="1"  >
                     <vbox class="oe-time-picker-five-minute-box-class" id="oe-time-picker-five-minute-box-30" onclick="oeTimePicker.clickMinute(this, 30)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-five-minute-number-class"  value=":30" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-five-minute-number-class"  value=":30" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                     <vbox class="oe-time-picker-five-minute-box-class" id="oe-time-picker-five-minute-box-35" onclick="oeTimePicker.clickMinute(this, 35)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-five-minute-number-class"  value=":35" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-five-minute-number-class"  value=":35" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                     <vbox class="oe-time-picker-five-minute-box-class" id="oe-time-picker-five-minute-box-40" onclick="oeTimePicker.clickMinute(this, 40)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-five-minute-number-class"  value=":40" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-five-minute-number-class"  value=":40" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                     <vbox class="oe-time-picker-five-minute-box-class" id="oe-time-picker-five-minute-box-45" onclick="oeTimePicker.clickMinute(this, 45)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-five-minute-number-class"  value=":45" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-five-minute-number-class"  value=":45" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                     <vbox class="oe-time-picker-five-minute-box-class" id="oe-time-picker-five-minute-box-50" onclick="oeTimePicker.clickMinute(this, 50)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-five-minute-number-class"  value=":50" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-five-minute-number-class"  value=":50" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                     <vbox class="oe-time-picker-five-minute-box-class" id="oe-time-picker-five-minute-box-55" onclick="oeTimePicker.clickMinute(this, 55)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-five-minute-number-class"  value=":55" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-five-minute-number-class"  value=":55" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                 </row>
                 
@@ -282,339 +282,339 @@
            
                 <row flex="1"  >
                     <vbox class="oe-time-picker-one-minute-box-class" id="oe-time-picker-one-minute-box-0" onclick="oeTimePicker.clickMinute(this, 0)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-one-minute-number-class"  value=":00" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-one-minute-number-class"  value=":00" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                     <vbox class="oe-time-picker-one-minute-box-class" id="oe-time-picker-one-minute-box-1" onclick="oeTimePicker.clickMinute(this, 1)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-one-minute-number-class"  value=":01" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-one-minute-number-class"  value=":01" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                     <vbox class="oe-time-picker-one-minute-box-class" id="oe-time-picker-one-minute-box-2" onclick="oeTimePicker.clickMinute(this, 2)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-one-minute-number-class"  value=":02" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-one-minute-number-class"  value=":02" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                     <vbox class="oe-time-picker-one-minute-box-class" id="oe-time-picker-one-minute-box-3" onclick="oeTimePicker.clickMinute(this, 3)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-one-minute-number-class"  value=":03" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-one-minute-number-class"  value=":03" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                     <vbox class="oe-time-picker-one-minute-box-class" id="oe-time-picker-one-minute-box-4" onclick="oeTimePicker.clickMinute(this, 4)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-one-minute-number-class"  value=":04" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-one-minute-number-class"  value=":04" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                 </row>
                 
                 <row flex="1"  >
                     <vbox class="oe-time-picker-one-minute-box-class" id="oe-time-picker-one-minute-box-5" onclick="oeTimePicker.clickMinute(this, 5)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-one-minute-number-class"  value=":05" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-one-minute-number-class"  value=":05" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                     <vbox class="oe-time-picker-one-minute-box-class" id="oe-time-picker-one-minute-box-6" onclick="oeTimePicker.clickMinute(this, 6)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-one-minute-number-class"  value=":06" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-one-minute-number-class"  value=":06" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                     <vbox class="oe-time-picker-one-minute-box-class" id="oe-time-picker-one-minute-box-7" onclick="oeTimePicker.clickMinute(this, 7)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-one-minute-number-class"  value=":07" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-one-minute-number-class"  value=":07" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                     <vbox class="oe-time-picker-one-minute-box-class" id="oe-time-picker-one-minute-box-8" onclick="oeTimePicker.clickMinute(this, 8)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-one-minute-number-class"  value=":08" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-one-minute-number-class"  value=":08" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                     <vbox class="oe-time-picker-one-minute-box-class" id="oe-time-picker-one-minute-box-9" onclick="oeTimePicker.clickMinute(this, 9)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-one-minute-number-class"  value=":09" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-one-minute-number-class"  value=":09" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                 </row>
                 
                 <row flex="1"  >
                     <vbox class="oe-time-picker-one-minute-box-class" id="oe-time-picker-one-minute-box-10" onclick="oeTimePicker.clickMinute(this, 10)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-one-minute-number-class"  value=":10" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-one-minute-number-class"  value=":10" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                     <vbox class="oe-time-picker-one-minute-box-class" id="oe-time-picker-one-minute-box-11" onclick="oeTimePicker.clickMinute(this, 11)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-one-minute-number-class"  value=":11" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-one-minute-number-class"  value=":11" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                     <vbox class="oe-time-picker-one-minute-box-class" id="oe-time-picker-one-minute-box-12" onclick="oeTimePicker.clickMinute(this, 12)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-one-minute-number-class"  value=":12" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-one-minute-number-class"  value=":12" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                     <vbox class="oe-time-picker-one-minute-box-class" id="oe-time-picker-one-minute-box-13" onclick="oeTimePicker.clickMinute(this, 13)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-one-minute-number-class"  value=":13" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-one-minute-number-class"  value=":13" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                     <vbox class="oe-time-picker-one-minute-box-class" id="oe-time-picker-one-minute-box-14" onclick="oeTimePicker.clickMinute(this, 14)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-one-minute-number-class"  value=":14" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-one-minute-number-class"  value=":14" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                 </row>
                 
                 <row flex="1"  >
                     <vbox class="oe-time-picker-one-minute-box-class" id="oe-time-picker-one-minute-box-15" onclick="oeTimePicker.clickMinute(this, 15)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-one-minute-number-class"  value=":15" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-one-minute-number-class"  value=":15" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                     <vbox class="oe-time-picker-one-minute-box-class" id="oe-time-picker-one-minute-box-16" onclick="oeTimePicker.clickMinute(this, 16)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-one-minute-number-class"  value=":16" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-one-minute-number-class"  value=":16" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                     <vbox class="oe-time-picker-one-minute-box-class" id="oe-time-picker-one-minute-box-17" onclick="oeTimePicker.clickMinute(this, 17)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-one-minute-number-class"  value=":17" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-one-minute-number-class"  value=":17" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                     <vbox class="oe-time-picker-one-minute-box-class" id="oe-time-picker-one-minute-box-18" onclick="oeTimePicker.clickMinute(this, 18)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-one-minute-number-class"  value=":18" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-one-minute-number-class"  value=":18" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                     <vbox class="oe-time-picker-one-minute-box-class" id="oe-time-picker-one-minute-box-19" onclick="oeTimePicker.clickMinute(this, 19)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-one-minute-number-class"  value=":19" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-one-minute-number-class"  value=":19" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                 </row>
                 
                 <row flex="1"  >
                     <vbox class="oe-time-picker-one-minute-box-class" id="oe-time-picker-one-minute-box-20" onclick="oeTimePicker.clickMinute(this, 20)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-one-minute-number-class"  value=":20" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-one-minute-number-class"  value=":20" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                     <vbox class="oe-time-picker-one-minute-box-class" id="oe-time-picker-one-minute-box-21" onclick="oeTimePicker.clickMinute(this, 21)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-one-minute-number-class"  value=":21" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-one-minute-number-class"  value=":21" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                     <vbox class="oe-time-picker-one-minute-box-class" id="oe-time-picker-one-minute-box-22" onclick="oeTimePicker.clickMinute(this, 22)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-one-minute-number-class"  value=":22" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-one-minute-number-class"  value=":22" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                     <vbox class="oe-time-picker-one-minute-box-class" id="oe-time-picker-one-minute-box-23" onclick="oeTimePicker.clickMinute(this, 23)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-one-minute-number-class"  value=":23" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-one-minute-number-class"  value=":23" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                     <vbox class="oe-time-picker-one-minute-box-class" id="oe-time-picker-one-minute-box-24" onclick="oeTimePicker.clickMinute(this, 24)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-one-minute-number-class"  value=":24" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-one-minute-number-class"  value=":24" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                 </row>
                 
                 <row flex="1"  >
                     <vbox class="oe-time-picker-one-minute-box-class" id="oe-time-picker-one-minute-box-25" onclick="oeTimePicker.clickMinute(this, 25)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-one-minute-number-class"  value=":25" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-one-minute-number-class"  value=":25" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                     <vbox class="oe-time-picker-one-minute-box-class" id="oe-time-picker-one-minute-box-26" onclick="oeTimePicker.clickMinute(this, 26)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-one-minute-number-class"  value=":26" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-one-minute-number-class"  value=":26" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                     <vbox class="oe-time-picker-one-minute-box-class" id="oe-time-picker-one-minute-box-27" onclick="oeTimePicker.clickMinute(this, 27)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-one-minute-number-class"  value=":27" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-one-minute-number-class"  value=":27" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                     <vbox class="oe-time-picker-one-minute-box-class" id="oe-time-picker-one-minute-box-28" onclick="oeTimePicker.clickMinute(this, 28)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-one-minute-number-class"  value=":28" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-one-minute-number-class"  value=":28" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                     <vbox class="oe-time-picker-one-minute-box-class" id="oe-time-picker-one-minute-box-29" onclick="oeTimePicker.clickMinute(this, 29)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-one-minute-number-class"  value=":29" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-one-minute-number-class"  value=":29" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                 </row>
                 
                 
                 <row flex="1"  >
                     <vbox class="oe-time-picker-one-minute-box-class" id="oe-time-picker-one-minute-box-30" onclick="oeTimePicker.clickMinute(this, 30)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-one-minute-number-class"  value=":30" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-one-minute-number-class"  value=":30" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                     <vbox class="oe-time-picker-one-minute-box-class" id="oe-time-picker-one-minute-box-31" onclick="oeTimePicker.clickMinute(this, 31)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-one-minute-number-class"  value=":31" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-one-minute-number-class"  value=":31" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                     <vbox class="oe-time-picker-one-minute-box-class" id="oe-time-picker-one-minute-box-32" onclick="oeTimePicker.clickMinute(this, 32)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-one-minute-number-class"  value=":32" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-one-minute-number-class"  value=":32" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                     <vbox class="oe-time-picker-one-minute-box-class" id="oe-time-picker-one-minute-box-33" onclick="oeTimePicker.clickMinute(this, 33)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-one-minute-number-class"  value=":33" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-one-minute-number-class"  value=":33" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                     <vbox class="oe-time-picker-one-minute-box-class" id="oe-time-picker-one-minute-box-34" onclick="oeTimePicker.clickMinute(this, 34)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-one-minute-number-class"  value=":34" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-one-minute-number-class"  value=":34" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                 </row>
                 
                 <row flex="1"  >
                     <vbox class="oe-time-picker-one-minute-box-class" id="oe-time-picker-one-minute-box-35" onclick="oeTimePicker.clickMinute(this, 35)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-one-minute-number-class"  value=":35" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-one-minute-number-class"  value=":35" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                     <vbox class="oe-time-picker-one-minute-box-class" id="oe-time-picker-one-minute-box-36" onclick="oeTimePicker.clickMinute(this, 36)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-one-minute-number-class"  value=":36" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-one-minute-number-class"  value=":36" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                     <vbox class="oe-time-picker-one-minute-box-class" id="oe-time-picker-one-minute-box-37" onclick="oeTimePicker.clickMinute(this, 37)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-one-minute-number-class"  value=":37" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-one-minute-number-class"  value=":37" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                     <vbox class="oe-time-picker-one-minute-box-class" id="oe-time-picker-one-minute-box-38" onclick="oeTimePicker.clickMinute(this, 38)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-one-minute-number-class"  value=":38" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-one-minute-number-class"  value=":38" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                     <vbox class="oe-time-picker-one-minute-box-class" id="oe-time-picker-one-minute-box-39" onclick="oeTimePicker.clickMinute(this, 39)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-one-minute-number-class"  value=":39" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-one-minute-number-class"  value=":39" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                 </row>
                 
                 <row flex="1"  >
                     <vbox class="oe-time-picker-one-minute-box-class" id="oe-time-picker-one-minute-box-40" onclick="oeTimePicker.clickMinute(this, 40)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-one-minute-number-class"  value=":40" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-one-minute-number-class"  value=":40" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                     <vbox class="oe-time-picker-one-minute-box-class" id="oe-time-picker-one-minute-box-41" onclick="oeTimePicker.clickMinute(this, 41)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-one-minute-number-class"  value=":41" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-one-minute-number-class"  value=":41" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                     <vbox class="oe-time-picker-one-minute-box-class" id="oe-time-picker-one-minute-box-42" onclick="oeTimePicker.clickMinute(this, 42)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-one-minute-number-class"  value=":42" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-one-minute-number-class"  value=":42" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                     <vbox class="oe-time-picker-one-minute-box-class" id="oe-time-picker-one-minute-box-43" onclick="oeTimePicker.clickMinute(this, 43)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-one-minute-number-class"  value=":43" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-one-minute-number-class"  value=":43" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                     <vbox class="oe-time-picker-one-minute-box-class" id="oe-time-picker-one-minute-box-44" onclick="oeTimePicker.clickMinute(this, 44)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-one-minute-number-class"  value=":44" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-one-minute-number-class"  value=":44" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                 </row>
                 
                 
                 <row flex="1"  >
                     <vbox class="oe-time-picker-one-minute-box-class" id="oe-time-picker-one-minute-box-45" onclick="oeTimePicker.clickMinute(this, 45)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-one-minute-number-class"  value=":45" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-one-minute-number-class"  value=":45" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                     <vbox class="oe-time-picker-one-minute-box-class" id="oe-time-picker-one-minute-box-46" onclick="oeTimePicker.clickMinute(this, 46)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-one-minute-number-class"  value=":46" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-one-minute-number-class"  value=":46" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                     <vbox class="oe-time-picker-one-minute-box-class" id="oe-time-picker-one-minute-box-47" onclick="oeTimePicker.clickMinute(this, 47)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-one-minute-number-class"  value=":47" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-one-minute-number-class"  value=":47" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                     <vbox class="oe-time-picker-one-minute-box-class" id="oe-time-picker-one-minute-box-48" onclick="oeTimePicker.clickMinute(this, 48)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-one-minute-number-class"  value=":48" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-one-minute-number-class"  value=":48" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                     <vbox class="oe-time-picker-one-minute-box-class" id="oe-time-picker-one-minute-box-49" onclick="oeTimePicker.clickMinute(this, 49)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-one-minute-number-class"  value=":49" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-one-minute-number-class"  value=":49" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                 </row>
                 
                 <row flex="1"  >
                     <vbox class="oe-time-picker-one-minute-box-class" id="oe-time-picker-one-minute-box-50" onclick="oeTimePicker.clickMinute(this, 50)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-one-minute-number-class"  value=":50" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-one-minute-number-class"  value=":50" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                     <vbox class="oe-time-picker-one-minute-box-class" id="oe-time-picker-one-minute-box-51" onclick="oeTimePicker.clickMinute(this, 51)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-one-minute-number-class"  value=":51" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-one-minute-number-class"  value=":51" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                     <vbox class="oe-time-picker-one-minute-box-class" id="oe-time-picker-one-minute-box-52" onclick="oeTimePicker.clickMinute(this, 52)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-one-minute-number-class"  value=":52" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-one-minute-number-class"  value=":52" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                     <vbox class="oe-time-picker-one-minute-box-class" id="oe-time-picker-one-minute-box-53" onclick="oeTimePicker.clickMinute(this, 53)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-one-minute-number-class"  value=":53" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-one-minute-number-class"  value=":53" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                     <vbox class="oe-time-picker-one-minute-box-class" id="oe-time-picker-one-minute-box-54" onclick="oeTimePicker.clickMinute(this, 54)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-one-minute-number-class"  value=":54" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-one-minute-number-class"  value=":54" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                 </row>
                 
                 <row flex="1"  >
                     <vbox class="oe-time-picker-one-minute-box-class" id="oe-time-picker-one-minute-box-55" onclick="oeTimePicker.clickMinute(this, 55)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-one-minute-number-class"  value=":55" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-one-minute-number-class"  value=":55" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                     <vbox class="oe-time-picker-one-minute-box-class" id="oe-time-picker-one-minute-box-56" onclick="oeTimePicker.clickMinute(this, 56)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-one-minute-number-class"  value=":56" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-one-minute-number-class"  value=":56" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                     <vbox class="oe-time-picker-one-minute-box-class" id="oe-time-picker-one-minute-box-57" onclick="oeTimePicker.clickMinute(this, 57)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-one-minute-number-class"  value=":57" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-one-minute-number-class"  value=":57" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                     <vbox class="oe-time-picker-one-minute-box-class" id="oe-time-picker-one-minute-box-58" onclick="oeTimePicker.clickMinute(this, 58)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-one-minute-number-class"  value=":58" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-one-minute-number-class"  value=":58" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                     <vbox class="oe-time-picker-one-minute-box-class" id="oe-time-picker-one-minute-box-59" onclick="oeTimePicker.clickMinute(this, 59)">
-                        <spring flex="1" />
-                        <box><text  class="oe-time-picker-one-minute-number-class"  value=":59" /></box> 
-                        <spring flex="1" />
+                        <spacer flex="1" />
+                        <box><label  class="oe-time-picker-one-minute-number-class"  value=":59" /></box> 
+                        <spacer flex="1" />
                     </vbox>    
                 </row>
                 

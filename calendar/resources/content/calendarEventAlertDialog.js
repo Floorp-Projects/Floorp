@@ -50,14 +50,14 @@ function createAlarmText( )
 {
    var Text = opener.penapplication.username+" has an event titled "+gCalendarEvent.title;
    var TextBox = document.getElementById( "event-message-box" );
-   var HtmlInBox = document.createElement( "html" );
+   var HtmlInBox = document.createElement( "description" );
    var TextInBox = document.createTextNode( Text );
    HtmlInBox.appendChild( TextInBox );
    TextBox.appendChild( HtmlInBox );
 
    var Text = " at "+gCalendarEvent.start;
    var TextBox = document.getElementById( "event-message-time-box" );
-   var HtmlInBox = document.createElement( "html" );
+   var HtmlInBox = document.createElement( "description" );
    var TextInBox = document.createTextNode( Text );
    HtmlInBox.appendChild( TextInBox );
    TextBox.appendChild( HtmlInBox );

@@ -824,8 +824,7 @@ button.calendar-management-button:hover:active
 
 #day-title-box
 {
-   min-width               : 400px;
-   max-width               : 400px;
+   width               : 400px;
 
 }
 
@@ -873,7 +872,7 @@ button.calendar-management-button:hover:active
    margin-rignt         : 2px;
    overflow             : auto;
    border               : 2px solid #2085c4;
-   vertical-align       : middle;
+   -moz-box-pack       : center;
 
 }
 
@@ -921,12 +920,13 @@ button.calendar-management-button:hover:active
 
 .day-view-hour-box-class
 {
-   min-width            : 609px;
-   max-width            : 609px;
-   
+   width                : 609px;
    border-top           : 1px solid #2085c4;
    background-color     : white;
-   vertical-align       : middle;
+   -moz-box-pack        : start;
+   -moz-box-align       : center;
+   height               : 50px;
+   padding-top          : 2px;
 }
 
 
@@ -948,12 +948,13 @@ button.calendar-management-button:hover:active
 
 .day-time-class
 {
-   min-width            : 140px;
    margin               : 6px; 	
+   margin-left          : 0px;
    font-size            : 10pt;
    font-family          : Arial, Helvetica;
    color                : #1d7ab5;
-   vertical-align       : middle;
+   -moz-box-pack        : start;
+   -moz-box-align       : center;
 }
 
 /*--------------------------------------------------------------------
@@ -979,7 +980,7 @@ button.calendar-management-button:hover:active
 
 #week-view-content-board
 {
-	height						: 1200px;
+	/*height						: 1200px;*/
 }
 
 #week-view-day-gradient
@@ -997,8 +998,7 @@ button.calendar-management-button:hover:active
 
 #week-title-box
 {
-   min-width               : 400px;
-   max-width               : 400px;
+   width               : 400px;
 }
 
 #week-title-text
@@ -1030,15 +1030,13 @@ button.calendar-management-button:hover:active
 
 #weekview-daynumber-spacer-left
 {
-   max-width            :99px;
-   min-width            :99px;
+   width                :99px;
 }
 
 .weekview-daynumber-class
 {
    -moz-box-align       : center;
-   max-width            :78px;
-   min-width            :78px;
+   width                :78px;
 }
 #week-view-header
 {
@@ -1159,8 +1157,7 @@ button.calendar-management-button:hover:active
 #week-view-all-day-content-box
 {
    border               : 1px solid #2085c4;
-   max-height           : 50px;
-   min-height           : 50px;
+   height           : 50px;
 }
 
 #all-day-content-box-text-box
@@ -1175,27 +1172,24 @@ button.calendar-management-button:hover:active
    font-size            : 10pt;
    font-family          : Arial, Helvetica;
    color                : #1d7ab5;
-   vertical-align       : middle;
+   -moz-box-pack       : center;
    text-align           : center;
 } 
 
 .all-day-content-box-week
 {
-  	max-width				: 78px;
-	min-width				: 78px;
-	/*border					: 1px solid red;*/
+  	width				: 78px;
+   /*border					: 1px solid red;*/
 }
 
 #all-day-content-box-week-1
 {
-	max-width				: 76px;
-	min-width				: 76px;
+	width				: 76px;
 }
 
 #all-day-content-spacer
 {
-  	min-width				: 8px;
-	max-width				: 8px;
+  	width			: 8px;
 }	
 
 .weekend
@@ -1206,8 +1200,7 @@ button.calendar-management-button:hover:active
 .calendar-unifinder-event-text
 {
 
-   max-width			: 350px;
-	/*border				: 1px solid red;*/
+   /*border				: 1px solid red;*/
 }
 
 .calendar-unifinder-event-indent

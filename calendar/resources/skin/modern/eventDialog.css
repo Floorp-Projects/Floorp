@@ -50,7 +50,7 @@
 #start-event-time-box,
 #start-date-box
 {
-   vertical-align : middle;
+   -moz-box-pack : start;
 }
 
 #dialog-box

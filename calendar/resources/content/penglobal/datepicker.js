@@ -48,12 +48,9 @@
 
       <?xul-overlay href="chrome://penglobal/content/datepicker-overlay.xul"?>
 *
-* Make a popupset in your XUL that includes the picker popup from the overlay
 *
-     <popupset>
-       <popup  id="oe-date-picker-popup"  oncommand="yourCommandFunction( this )" >
-       </popup>
-     </popupset>
+    <popup  id="oe-date-picker-popup"  oncommand="yourCommandFunction( this )" >
+    </popup>
 * 
 * Attach the date picker to an item using the popup attribute, an image for example:
 * 

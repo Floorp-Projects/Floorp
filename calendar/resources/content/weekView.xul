@@ -65,9 +65,11 @@
           
       <hbox id="week-controls-box">
   
-         <image flex="1" id="week-previous-button" onclick="gCalendarWindow.goToPrevious()"/>            
+         <box flex="1">
+            <image id="week-previous-button" onclick="gCalendarWindow.goToPrevious()"/>            
+         </box>
          
-         <text id="week-title-text" value="" />
+         <label id="week-title-text" value="" />
                   
          <box flex="1" id="week-next-button-box" >
             <image id="week-next-button" onclick="gCalendarWindow.goToNext()"/>            
@@ -82,42 +84,42 @@
       <box id="week-view-header">
          <vbox id="weekview-daynumber-spacer-left"/>
                
-         <vbox flex="1" class="weekview-daynumber-class" autostretch="never">
+         <vbox flex="1" class="weekview-daynumber-class">
             <label id="week-header-date-1" value="" />
             <label value="&day.1.DDD;"/>
          </vbox>
          
-         <vbox flex="1" class="weekview-daynumber-class" autostretch="never">
+         <vbox flex="1" class="weekview-daynumber-class">
             <label id="week-header-date-2" value="" />
             <label value="&day.2.DDD;" />
          </vbox>
          
-         <vbox flex="1" class="weekview-daynumber-class" autostretch="never">
+         <vbox flex="1" class="weekview-daynumber-class">
             <label id="week-header-date-3" value="" />
             <label value="&day.3.DDD;" />
          </vbox>
                
-         <vbox flex="1" class="weekview-daynumber-class" autostretch="never">
+         <vbox flex="1" class="weekview-daynumber-class">
             <label id="week-header-date-4" value="" />
             <label value="&day.4.DDD;" />
          </vbox>
               
-         <vbox flex="1" class="weekview-daynumber-class" autostretch="never">
+         <vbox flex="1" class="weekview-daynumber-class">
             <label id="week-header-date-5" value="" />
             <label value="&day.5.DDD;" />
          </vbox>
                
-         <vbox flex="1" class="weekview-daynumber-class" autostretch="never">
+         <vbox flex="1" class="weekview-daynumber-class">
             <label id="week-header-date-6" value="" />
             <label value="&day.6.DDD;" />
          </vbox>
          
-         <vbox flex="1" class="weekview-daynumber-class" autostretch="never">
+         <vbox flex="1" class="weekview-daynumber-class">
             <label id="week-header-date-7" value="" />
             <label value="&day.7.DDD;" />
          </vbox>
                
-         <vbox flex="1" autostretch="never" width="8"/>
+         <vbox flex="1" width="8"/>
       </box>
           
       <box id="week-view-all-day-content-box" debug="false">
@@ -125,14 +127,14 @@
             <label id="all-day-content-box-text-title" value="All Day Events"/>
          </vbox>
                
-         <hbox autostretch="never" class="all-day-content-box-week" id="all-day-content-box-week-1"/>
-         <hbox autostretch="never" class="all-day-content-box-week" id="all-day-content-box-week-2"/>
-         <hbox autostretch="never" class="all-day-content-box-week" id="all-day-content-box-week-3"/>
-         <hbox autostretch="never" class="all-day-content-box-week" id="all-day-content-box-week-4"/>
-         <hbox autostretch="never" class="all-day-content-box-week" id="all-day-content-box-week-5"/>
-         <hbox autostretch="never" class="all-day-content-box-week" id="all-day-content-box-week-6"/>
-         <hbox autostretch="never" class="all-day-content-box-week" id="all-day-content-box-week-7"/>
-         <vbox autostretch="never" id="all-day-content-spacer"/>
+         <hbox class="all-day-content-box-week" id="all-day-content-box-week-1"/>
+         <hbox class="all-day-content-box-week" id="all-day-content-box-week-2"/>
+         <hbox class="all-day-content-box-week" id="all-day-content-box-week-3"/>
+         <hbox class="all-day-content-box-week" id="all-day-content-box-week-4"/>
+         <hbox class="all-day-content-box-week" id="all-day-content-box-week-5"/>
+         <hbox class="all-day-content-box-week" id="all-day-content-box-week-6"/>
+         <hbox class="all-day-content-box-week" id="all-day-content-box-week-7"/>
+         <vbox id="all-day-content-spacer"/>
       </box>
             
       <box id="week-view-content-box" flex="1">    

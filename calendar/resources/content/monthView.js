@@ -220,7 +220,7 @@ MonthView.prototype.refreshEvents = function( )
       {
          // Make a text item to show the event title
          
-         var eventBoxText = document.createElement( "text" );
+         var eventBoxText = document.createElement( "label" );
          eventBoxText.setAttribute( "crop", "right" );
          eventBoxText.setAttribute( "class", "month-day-event-text-class" );
          eventBoxText.setAttribute( "value", calendarEvent.title );
@@ -359,7 +359,7 @@ MonthView.prototype.switchTo = function( )
    // switch views in the deck
    
    var calendarDeckItem = document.getElementById( "calendar-deck" );
-   calendarDeckItem.setAttribute( "index", 0 );
+   calendarDeckItem.setAttribute( "selectedIndex", 0 );
 }
 
 

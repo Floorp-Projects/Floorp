@@ -47,7 +47,6 @@
 <?xul-overlay href="chrome://penglobal/content/penApplicationOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 
-<?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://penglobal/content/datepicker-overlay.xul"?>
 
 <?xul-overlay href="chrome://calendar/content/unifinder-overlay.xul"?>
@@ -75,6 +74,7 @@
    onunload="calendarFinish()"
    xmlns:html="http://www.w3.org/1999/xhtml"
    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+   persist="screenX screenY width height"
    > 
  
 <!-- Javascript DTD To Variable -->
@@ -111,7 +111,7 @@
    <menuitem label="Reload" oncommand="window.location = 'chrome://calendar/content/calendar.xul';"/>
  </popup>
  
- <popup  id="oe-date-picker-popup"  popupalign="topleft" oncommand="gCalendarWindow.goToDay( date )" value=""/>
+ <popup  id="oe-date-picker-popup"  position="after_start" oncommand="gCalendarWindow.goToDay( date )" value=""/>
 
  <popup id="unifinder-options-menu">
      <menuitem label="&calendar.menu.options.newcategory;" oncommand="unifinderNewCategoryCommand()" />
@@ -127,16 +127,16 @@
   <!-- Calendar Controls-->
  
 	<hbox id="calendar-controls-box" flex="1" >
-		<spring flex="1" />
+		<spacer flex="1" />
    
 		<button class="calendar-management-button" id="calendar-new-event-button"    tooltip="aTooltip" tooltiptext="&calendar.newevent.button.tooltip;"     label="&calendar.newevent.button.label;"     oncommand="newEventCommand()"/>    
 		<image class="calendar-control-divider" />
 		<button class="calendar-management-button" id="calendar-go-to-today-button"  tooltip="aTooltip" tooltiptext="&calendar.gototoday.button.tooltip;"    label="&calendar.gototoday.button.label;"    oncommand="gCalendarWindow.goToToday()"/>    
 		<button class="calendar-management-button" id="calendar-choose-date-button"  tooltip="aTooltip" tooltiptext="&calendar.choosedate.button.tooltip;"   label="&calendar.choosedate.button.label;"   onmousedown="prepareChooseDate()" popup="oe-date-picker-popup" />    
 		<image class="calendar-control-divider" />
-		<button class="calendar-management-button" id="calendar-day-view-button"     tooltip="aTooltip" tooltiptext="&calendar.dayview.button.tooltip;"      label="&calendar.dayview.button.label;"      oncommand="gCalendarWindow.switchToDayView()"/>    
-		<button class="calendar-management-button" id="calendar-week-view-button"    tooltip="aTooltip" tooltiptext="&calendar.weekview.button.tooltip;"     label="&calendar.weekview.button.label;"     oncommand="gCalendarWindow.switchToWeekView()"/>    
-		<button class="calendar-management-button" id="calendar-month-view-button"   tooltip="aTooltip" tooltiptext="&calendar.monthview.button.tooltip;"    label="&calendar.monthview.button.label;"    oncommand="gCalendarWindow.switchToMonthView()"/>  
+		<button class="calendar-management-button" id="calendar-day-view-button"     tooltip="aTooltip" tooltiptext="&calendar.dayview.button.tooltip;"      label="&calendar.dayview.button.label;"      oncommand="gCalendarWindow.switchToDayView();"/>
+		<button class="calendar-management-button" id="calendar-week-view-button"    tooltip="aTooltip" tooltiptext="&calendar.weekview.button.tooltip;"     label="&calendar.weekview.button.label;"     oncommand="gCalendarWindow.switchToWeekView();"/>
+		<button class="calendar-management-button" id="calendar-month-view-button"   tooltip="aTooltip" tooltiptext="&calendar.monthview.button.tooltip;"    label="&calendar.monthview.button.label;"    oncommand="gCalendarWindow.switchToMonthView();"/>
 	</hbox>
 
    
@@ -149,20 +149,15 @@
     
 		<splitter id="unifinder-splitter" />
    
-		<popupset>
-			<popup id="savetip" style="background-color: #FFFFC0;">
-				<text id="popuptooltiptext" value=" "/>
-				<!--
-				<html id="popuptooltiptext"/>
-				-->
-			</popup>
-		</popupset>
+		<popup id="savetip" style="background-color: #FFFFC0;">
+			<label id="popuptooltiptext" value=" "/>
+		</popup>
 
 
-		<spring flex="1"/>
+		<spacer flex="1"/>
       
       <!-- Begin Day/Month/Week Deck -->
-		<deck id="calendar-deck" flex="1" index="3" >
+		<deck id="calendar-deck" selectedIndex="0" flex="1">
 				 
 			 <!-- Calendar Month View -->
 			    
@@ -173,7 +168,7 @@
 			 
           <!-- Calendar Week View -->
 				 
-			 <vbox id="week-view-box" flex="1"  orient="vertical"/>
+			 <vbox id="week-view-box" flex="1"/>
 			
 			 <!-- End: Calendar Week View -->
 			
@@ -183,14 +178,10 @@
 			 <vbox id="day-view-box" flex="1"/>
 			
 			 <!-- End: Calendar Day View -->
-			
-			
-			 <!-- Calendar Empty View -->
-			 <vbox/>  
-			 
+						 
 		</deck>  <!-- End: Day/Month/Week Deck -->
 		
-      <spring flex="1"/>
+      <spacer flex="1"/>
       
       </hbox> <!-- End: box with unifinder on left, calendar on right -->
 	</vbox>

@@ -55,7 +55,7 @@
 	border					:1px #000000 solid;
 	background-image			:url('chrome://penglobal/skin/dialog/standard-dialog-title-background.png');
 	background-repeat			:repeat;
-	vertical-align				:bottom;
+   -moz-box-pack       : end;
 }
 
 /* this needs 1 px padding because of the 1 px border in the standard-dialog-title */
@@ -107,7 +107,7 @@
 	border					:1px #000000 solid;
 	background-image			:url('chrome://penglobal/skin/dialog/standard-dialog-title-background.png');
 	background-repeat			:repeat;
-	vertical-align				:bottom;
+   -moz-box-pack       : center;
 }
 
 #message-dialog-title-warning-text,
@@ -129,17 +129,6 @@
 	backround-color				:#E7EEEC;
 	padding			:10px;
    -moz-box-align : center;
-}
-
-.daveskungfuclass
-{
-	font-family			:Helvetica;
-	font-size			:10pt;
-	padding-left			:10px;
-	padding-right			:10px;
-	backround-color			:#E7EEEC;
-        max-width                       :500px;
-        overflow                        :hidden;
 }
 
 /* Details for dialogs, provides advanced functionality */

@@ -364,10 +364,10 @@ function refreshSearchEventTree( eventArray, childrenName )
       treeCellBox.setAttribute( "id", "search-unifinder-treecell-box" );
       treeCellBox.setAttribute( "crop", "right" );
 
-      var text1 = document.createElement( "text" );
+      var text1 = document.createElement( "label" );
       text1.setAttribute( "class", "calendar-unifinder-event-text" );
       text1.setAttribute( "crop", "right" );
-      var text2 = document.createElement( "text" );
+      var text2 = document.createElement( "label" );
       text1.setAttribute( "class", "calendar-unifinder-event-text" );
       text1.setAttribute( "crop", "right" );
 
@@ -505,11 +505,11 @@ function refreshEventTree( eventArray, childrenName )
       treeCellVBox.setAttribute( "crop", "right" );
       treeCellVBox.setAttribute( "flex", "1" );
 
-      var text1 = document.createElement( "text" );
+      var text1 = document.createElement( "label" );
       //text1.setAttribute( "class", "calendar-unifinder-event-text" );
       text1.setAttribute( "crop", "right" );
       
-      var text2 = document.createElement( "text" );
+      var text2 = document.createElement( "label" );
       //text2.setAttribute( "class", "calendar-unifinder-event-text" );
       text2.setAttribute( "crop", "right" );
 

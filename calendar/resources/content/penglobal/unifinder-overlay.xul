@@ -75,8 +75,8 @@
     </tree>
 
     <splitter id="unifinder-splitter" collapse="before" persist="state hidden collapsed"
-           class="chromeclass-extrachrome sidebar-splitter" autostretch="never"
-           orient="vertical">
+           class="chromeclass-extrachrome sidebar-splitter"
+           >
        <grippy class="sidebar-splitter-grippy"/>
     </splitter>
 

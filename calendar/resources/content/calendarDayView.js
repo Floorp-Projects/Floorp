@@ -120,7 +120,7 @@ DayView.prototype.refreshEvents = function( )
    //var TextNode = document.getElementById( "all-day-content-box-text" );
    //if ( TextNode == null ) 
    //{
-      HtmlNode = document.createElement( "html" );
+      HtmlNode = document.createElement( "description" );
       HtmlNode.setAttribute( "id", "all-day-content-box-text" );
       TextNode = document.createTextNode( "All-Day Events: " );
       HtmlNode.appendChild( TextNode );
@@ -164,13 +164,13 @@ DayView.prototype.refreshEvents = function( )
             calendarEventToMatchMinutes = calendarEventToMatch.displayDate.getMinutes();
             calendarEventDisplayHours = calendarEvent.displayDate.getHours();
             calendarEventDisplayMinutes = calendarEvent.displayDate.getMinutes();
-            calendarEventEndHours = calendarEvent.end.getHours();
-            calendarEventEndMinutes = calendarEvent.end.getMinutes();
+            calendarEventToMatchEndHours = calendarEventToMatch.end.getHours();
+            calendarEventToMatchEndMinutes = calendarEventToMatch.end.getMinutes();
 
             calendarEventToMatch.displayDateTime = new Date( 2000, 1, 1, calendarEventToMatchHours, calendarEventToMatchMinutes, 0 );
             calendarEvent.displayDateTime = new Date( 2000, 1, 1, calendarEventDisplayHours, calendarEventDisplayMinutes, 0 );
-            calendarEventToMatch.endTime = new Date( 2000, 1, 1, calendarEventToMatchHours, calendarEventToMatchMinutes, 0 );
-
+            calendarEventToMatch.endTime = new Date( 2000, 1, 1, calendarEventToMatchEndHours, calendarEventToMatchEndMinutes, 0 );
+           
             //if this event overlaps with another event...
             if ( ( ( calendarEventToMatch.displayDateTime >= calendarEvent.displayDateTime &&
                  calendarEventToMatch.displayDateTime < calendarEvent.endTime ) ||
@@ -197,6 +197,7 @@ DayView.prototype.refreshEvents = function( )
          //this is the actual spot (0 -> n) that the event will go in on the day view.
          calendarEvent.CurrentSpot = LowestNumber;
          calendarEvent.NumberOfSameTimeEvents = SortedOtherSpotArray.length;
+  
       }
 
    }
@@ -205,7 +206,7 @@ DayView.prototype.refreshEvents = function( )
    {
       var calendarEvent = dayEventList[ eventIndex ];
 
-      //if its an all day event, don't show it in the hours bulletin board.
+      //if its an all day event, don't show it in the hours stack.
       if ( calendarEvent.allDay == true ) 
       {
          // build up the text to show for this event
@@ -254,7 +255,7 @@ DayView.prototype.refreshEvents = function( )
       {
          eventBox = this.createEventBox( calendarEvent );    
          
-         //add the box to the bulletin board.
+         //add the box to the stack.
          document.getElementById( "day-view-content-board" ).appendChild( eventBox );
       }
 
@@ -328,7 +329,7 @@ DayView.prototype.createEventBox = function ( calendarEvent )
    eventBox.setAttribute( "id", "day-view-event-box-"+calendarEvent.id );
    eventBox.setAttribute( "name", "day-view-event-box-"+calendarEvent.id );
 
-   var eventHTMLElement = document.createElement( "html" );
+   var eventHTMLElement = document.createElement( "description" );
    eventHTMLElement.setAttribute( "id", "day-view-event-html"+calendarEvent.id );
 
    var eventTextElement = document.createTextNode( eventText );
@@ -338,7 +339,6 @@ DayView.prototype.createEventBox = function ( calendarEvent )
    eventHTMLElement.setAttribute( "style", "max-width: "+eventBox.getAttribute( "width" )+";"+";max-height: "+eventBox.getAttribute( "height" )+";overflow: never;"  );
    eventBox.setAttribute( "style", "max-width: "+eventBox.getAttribute( "width" )+";max-height: "+eventBox.getAttribute( "height" )+";overflow: never;" );
    
-   eventHTMLElement.setAttribute( "autostretch", "never" );
    eventHTMLElement.appendChild( eventTextElement );
    eventBox.appendChild( eventHTMLElement );
 
@@ -384,7 +384,9 @@ DayView.prototype.switchTo = function( )
    // switch views in the deck
    
    var calendarDeckItem = document.getElementById( "calendar-deck" );
-   calendarDeckItem.setAttribute( "index", 2 );
+   
+
+   calendarDeckItem.setAttribute( "selectedIndex", 2 );
 }
 
 
