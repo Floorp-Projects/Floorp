@@ -52,13 +52,13 @@
 #elif defined(XP_OS2)
 #  include "unidef.h"
 #  include "nsIOS2Locale.h"
+#elif defined(XP_MAC) || defined(XP_MACOSX)
+#  include <script.h>
+#  include "nsIMacLocale.h"
 #elif defined(XP_UNIX) || defined(XP_BEOS)
 #  include <locale.h>
 #  include <stdlib.h>
 #  include "nsIPosixLocale.h"
-#elif defined(XP_MAC)
-#  include <script.h>
-#  include "nsIMacLocale.h"
 #endif
 
 //
@@ -190,7 +190,7 @@ nsLocaleService::nsLocaleService(void)
 		if (NS_FAILED(result)) { return;}
 	}
 #endif
-#if defined(XP_UNIX) || defined(XP_BEOS)
+#if (defined(XP_UNIX) || defined(XP_BEOS)) && !defined(XP_MACOSX)
     nsresult result;
     nsCOMPtr<nsIPosixLocale> posixConverter =
         do_CreateInstance(NS_POSIXLOCALE_CONTRACTID, &result);
@@ -298,7 +298,7 @@ nsLocaleService::nsLocaleService(void)
 
 #endif
 
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
 	long script = GetScriptManagerVariable(smSysScript);
 	long lang = GetScriptVariable(smSystemScript,smScriptLang);
 	long region = GetScriptManagerVariable(smRegionCode);

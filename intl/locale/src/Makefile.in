@@ -36,11 +36,11 @@ REQUIRES	= xpcom \
 		  intl \
 		  $(NULL)
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
-DIRS		= os2
+ifneq (,$(filter mac os2 windows, $(MOZ_WIDGET_TOOLKIT)))
+DIRS		= $(MOZ_WIDGET_TOOLKIT)
 else
-ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-DIRS		= windows
+ifeq ($(MOZ_WIDGET_TOOLKIT), cocoa)
+DIRS		= mac
 else
 DIRS		= unix
 endif

@@ -44,7 +44,7 @@
 #include "nsILocale.h"
 #include "nsILocaleFactory.h"
 #include "nsLocaleCID.h"
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
 #include "nsIMacLocale.h"
 #include <TextEncodingConverter.h>
 #elif defined(XP_PC)
@@ -89,7 +89,7 @@ static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
 static NS_DEFINE_CID(kLocaleFactoryCID, NS_LOCALEFACTORY_CID);
 // platform specific
 //
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
 static NS_DEFINE_IID(kMacLocaleFactoryCID, NS_MACLOCALEFACTORY_CID);
 static NS_DEFINE_IID(kIMacLocaleIID, NS_MACLOCALE_CID);
 #elif defined(XP_PC)
@@ -151,7 +151,7 @@ static void DebugDump(nsString& aString, ostream& aStream) {
   s[len] = '\0';
   aStream.flush();
   printf("%s\n", s);
-#elif defined(XP_MAC)
+#elif defined(XP_MAC) || defined(XP_MACOSX)
 	// Use TEC (Text Encoding Conversion Manager)
   TextEncoding outEncoding;
   TECObjectRef anEncodingConverter;
@@ -859,7 +859,7 @@ static nsresult NewLocale(const nsString* localeName, nsILocale** locale)
 
 static void Test_nsLocale()
 {
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
   nsString localeName;
   nsIMacLocale* macLocale;
   short script, lang;

@@ -339,6 +339,15 @@ nsresult nsDateTimeFormatMac::FormatTime(nsILocale* locale,
   return FormatTMTime(locale, dateFormatSelector, timeFormatSelector, localtime(&timetTime), stringOut);
 }
 
+#if !TARGET_CARBON
+static void CopyPascalStringToC(StringPtr aSrc, char* aDest)
+{
+  int len = aSrc[0];
+  ::BlockMoveData(aSrc + 1, aDest, len);
+  aDest[len] = '\0';
+}
+#endif
+
 // performs a locale sensitive date formatting operation on the struct tm parameter
 nsresult nsDateTimeFormatMac::FormatTMTime(nsILocale* locale, 
                                            const nsDateFormatSelector  dateFormatSelector, 
@@ -428,17 +437,18 @@ nsresult nsDateTimeFormatMac::FormatTMTime(nsILocale* locale,
   }
   
   // construct a C string
-  char *localBuffer;
+  char localBuffer[2 * 255 + 2 + 1]; // 2 255-byte-max pascal strings, plus
+                                     // a space and a null.
   if (dateFormatSelector != kDateFormatNone && timeFormatSelector != kTimeFormatNone) {
-    localBuffer = p2cstr(dateString);
-    strcat(localBuffer, " ");
-    strcat(localBuffer, p2cstr(timeString));
+    CopyPascalStringToC(dateString, localBuffer);
+    localBuffer[dateString[0]] = ' ';
+    CopyPascalStringToC(timeString, &(localBuffer[dateString[0] + 1]));
   }
   else if (dateFormatSelector != kDateFormatNone) {
-    localBuffer = p2cstr(dateString);
+    CopyPascalStringToC(dateString, localBuffer);
   }
   else if (timeFormatSelector != kTimeFormatNone) {
-    localBuffer = p2cstr(timeString);
+    CopyPascalStringToC(timeString, localBuffer);
   }
 
   // convert result to unicode
