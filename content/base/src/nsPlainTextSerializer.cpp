@@ -106,6 +106,7 @@ nsPlainTextSerializer::nsPlainTextSerializer()
   mStructs = PR_TRUE;       // will be read from prefs later
   mHeaderStrategy = 1 /*indent increasingly*/;   // ditto
   mQuotesPreformatted = PR_FALSE;                // ditto
+  mDontWrapAnyQuotes = PR_FALSE;                 // ditto
   mSpanLevel = 0;
   for (PRInt32 i = 0; i <= 6; i++) {
     mHeaderCounter[i] = 0;
@@ -202,6 +203,14 @@ nsPlainTextSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn,
       // The quotesPreformatted pref is a temporary measure. See bug 69638.
       prefs->GetBoolPref("editor.quotesPreformatted", &tempBool);
       mQuotesPreformatted = tempBool;
+      // DontWrapAnyQuotes is set according to whether plaintext mail
+      // is wrapping to window width -- see bug 134439.
+      // We'll only want this if we're wrapping and formatted.
+      if (mFlags & nsIDocumentEncoder::OutputWrap || mWrapColumn > 0)
+      {
+        prefs->GetBoolPref("mail.compose.wrap_to_window_width", &tempBool);
+        mDontWrapAnyQuotes = tempBool;
+      }
     }
 
     // XXX We should let the caller pass this in.
@@ -1224,7 +1233,6 @@ nsPlainTextSerializer::AddToLine(const PRUnichar * aLineFragment,
 #endif
   }
 
-  
   linelength = mCurrentLine.Length();
 
   //  Wrap?
@@ -1509,9 +1517,8 @@ nsPlainTextSerializer::Write(const nsAString& aString)
   // that does normal formatted text. The one for preformatted text calls
   // Output directly while the other code path goes through AddToLine.
   if ((mPreFormatted && !mWrapColumn) || IsInPre()
-      || (!mQuotesPreformatted && mSpanLevel > 0
-          //&& Substring(aString, 0, 1) == NS_LITERAL_STRING(">"))) {
-          && aString.First() == PRUnichar('>'))) {
+      || ((((!mQuotesPreformatted && mSpanLevel > 0) || mDontWrapAnyQuotes))
+          && mEmptyLines >= 0 && aString.First() == PRUnichar('>'))) {
     // No intelligent wrapping.
 
     // This mustn't be mixed with intelligent wrapping without clearing

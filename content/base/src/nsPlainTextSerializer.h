@@ -168,7 +168,18 @@ protected:
 
   PRPackedBool     mInHead;
   PRPackedBool     mAtFirstColumn;
-  PRPackedBool     mQuotesPreformatted; // (pref)
+
+  // Handling of quoted text (for mail):
+  // Quotes need to be wrapped differently from non-quoted text,
+  // because quoted text has a few extra characters (e.g. ">> ")
+  // which makes the line length longer.
+  // Mail can represent quotes in different ways: it can wrap
+  // quotes in a <pre> (if editor.quotesPreformatted is set),
+  // or not wrapped in any special tag (if mail.compose.wrap_to_window_width)
+  // or in a <span> (if neither of the above are set).
+  PRPackedBool     mQuotesPreformatted; // expect quotes wrapped in <pre>
+  PRPackedBool     mDontWrapAnyQuotes;  // no special quote markers
+
   PRPackedBool     mStructs;            // Output structs (pref)
 
   PRInt32          mIndent;

@@ -1494,6 +1494,9 @@ NS_IMETHODIMP
 nsHTMLEditor::InsertAsPlaintextQuotation(const nsAString & aQuotedText,
                                          nsIDOMNode **aNodeInserted)
 {
+  if (mWrapToWindow)
+    return nsPlaintextEditor::InsertAsQuotation(aQuotedText, aNodeInserted);
+
   nsresult rv;
 
   // The quotesPreformatted pref is a temporary measure. See bug 69638.
@@ -1501,7 +1504,7 @@ nsHTMLEditor::InsertAsPlaintextQuotation(const nsAString & aQuotedText,
   PRBool quotesInPre;
   nsCOMPtr<nsIPref> prefs = do_GetService(kPrefServiceCID, &rv);
   if (NS_SUCCEEDED(rv) && prefs)
-    rv = prefs->GetBoolPref("editor.quotesPreformatted", &quotesInPre);
+    prefs->GetBoolPref("editor.quotesPreformatted", &quotesInPre);
 
   nsCOMPtr<nsIDOMNode> preNode;
   // get selection

@@ -135,6 +135,8 @@ nsPlaintextEditor::nsPlaintextEditor()
 , mIgnoreSpuriousDragEvent(PR_FALSE)
 , mRules(nsnull)
 , mIsComposing(PR_FALSE)
+, mWrapToWindow(PR_FALSE)
+, mWrapColumn(0)
 , mMaxTextLength(-1)
 , mInitTriggerCounter(0)
 {
@@ -1192,41 +1194,15 @@ nsPlaintextEditor::GetBodyStyleContext(nsIStyleContext** aStyleContext)
 }
 
 //
-// Get the wrap width for the root of the document.
+// Get the wrap width
 //
 NS_IMETHODIMP 
 nsPlaintextEditor::GetWrapWidth(PRInt32 *aWrapColumn)
 {
-  nsresult res;
-
   if (! aWrapColumn)
     return NS_ERROR_NULL_POINTER;
 
-  *aWrapColumn = -1;        // default: no wrap
-
-  nsCOMPtr<nsIStyleContext> styleContext;
-  res = GetBodyStyleContext(getter_AddRefs(styleContext));
-  if (NS_FAILED(res)) return res;
-  NS_ASSERTION(styleContext, "styleContext is null!");
-  if (!styleContext) return NS_ERROR_FAILURE;
-
-  const nsStyleText* styleText =
-    (const nsStyleText*)styleContext->GetStyleData(eStyleStruct_Text);
-
-  if (NS_STYLE_WHITESPACE_PRE == styleText->mWhiteSpace)
-  {
-    *aWrapColumn = 0;   // wrap to window width
-  }
-  else if (NS_STYLE_WHITESPACE_MOZ_PRE_WRAP == styleText->mWhiteSpace)
-  {
-    const nsStylePosition* stylePosition =
-      (const nsStylePosition*)styleContext->GetStyleData(eStyleStruct_Position); 
-    if (stylePosition->mWidth.GetUnit() == eStyleUnit_Chars)
-      *aWrapColumn = stylePosition->mWidth.GetIntValue(); 
-    else 
-      return NS_ERROR_UNEXPECTED;
-  }
-
+  *aWrapColumn = mWrapColumn;
   return NS_OK;
 }
 
@@ -1255,6 +1231,15 @@ NS_IMETHODIMP
 nsPlaintextEditor::SetWrapWidth(PRInt32 aWrapColumn)
 {
   nsresult res;
+
+  mWrapColumn = aWrapColumn;
+
+  // Make sure we're a plaintext editor, otherwise we shouldn't
+  // do the rest of this.
+  PRUint32 flags = 0;
+  GetFlags(&flags);
+  if (!(flags & eEditorPlaintextMask))
+    return NS_OK;
 
   // Ought to set a style sheet here ...
   // Probably should keep around an mPlaintextStyleSheet for this purpose.
@@ -1285,19 +1270,29 @@ nsPlaintextEditor::SetWrapWidth(PRInt32 aWrapColumn)
   // Make sure we have fixed-width font.  This should be done for us,
   // but it isn't, see bug 22502, so we have to add "font: -moz-fixed;".
   // Only do this if we're wrapping.
-  PRUint32 flags = 0;
-  GetFlags(&flags);
   if ((flags & eEditorEnableWrapHackMask) && aWrapColumn >= 0)
     styleValue.Append(NS_LITERAL_STRING("font-family: -moz-fixed; "));
 
+  // If "mail.compose.wrap_to_window_width" is set, and we're a mail editor,
+  // then remember our wrap width (for output purposes) but set the visual
+  // wrapping to window width.
+  // We may reset mWrapToWindow here, based on the pref's current value.
+  if (flags & eEditorMailMask)
+  {
+    nsresult rv;
+    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &rv));
+    if (NS_SUCCEEDED(rv))
+      prefs->GetBoolPref("mail.compose.wrap_to_window_width", &mWrapToWindow);
+  }
+
   // and now we're ready to set the new whitespace/wrapping style.
-  if (aWrapColumn > 0)        // Wrap to a fixed column
+  if (aWrapColumn > 0 && !mWrapToWindow)        // Wrap to a fixed column
   {
     styleValue.Append(NS_LITERAL_STRING("white-space: -moz-pre-wrap; width: "));
     styleValue.AppendInt(aWrapColumn);
     styleValue.Append(NS_LITERAL_STRING("ch;"));
   }
-  else if (aWrapColumn == 0)
+  else if (mWrapToWindow || aWrapColumn == 0)
     styleValue.Append(NS_LITERAL_STRING("white-space: -moz-pre-wrap;"));
   else
     styleValue.Append(NS_LITERAL_STRING("white-space: pre;"));
