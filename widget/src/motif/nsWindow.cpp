@@ -48,9 +48,9 @@
 
 #define SET_VALUES 1
 
-#if defined(LINUX)
-#undef SET_VALUES
-#endif
+//#if defined(LINUX)
+//#undef SET_VALUES
+//#endif
 
 Widget gFirstTopLevelWindow = 0;
 
