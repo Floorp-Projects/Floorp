@@ -47,15 +47,21 @@ class nsIFtpEventSink;
 // ftp states
 typedef enum _FTP_STATE {
     FTP_CONNECT,
-    FTP_S_USER,
+    FTP_S_USER,		// send username
     FTP_R_USER,
-    FTP_S_PASS,
+    FTP_S_PASS,		// send password
     FTP_R_PASS,
-    FTP_S_ACCT,
+//	FTP_S_REST,		// send restart
+//	FTP_R_REST,
+	FTP_S_SYST,		// send system (interrogates server)
+	FTP_R_SYST,
+    FTP_S_ACCT,		// send account
     FTP_R_ACCT,
-    FTP_S_PASV,
+	FTP_S_PWD ,		// send parent working directory (pwd)
+	FTP_R_PWD ,
+    FTP_S_PASV,		// send passive
     FTP_R_PASV,
-    FTP_S_PORT,
+    FTP_S_PORT,		// send port
     FTP_R_PORT,
     FTP_COMPLETE
 } FTP_STATE;
@@ -98,6 +104,9 @@ public:
 
     nsresult Init(nsIUrl* aUrl, nsISupports* aEventSink, PLEventQueue* aEventQueue);
 
+private:
+	void SetSystInternals(void);
+
 protected:
     nsIUrl*                 mUrl;
     nsIFtpEventSink*        mEventSink;
@@ -108,7 +117,8 @@ protected:
     FTP_STATE               mState;
     nsITransport*           mCPipe;                 // the command channel
     nsITransport*           mDPipe;                 // the data channel
-    PRInt32                 mResponseCode;          // the last command channel response code.
+    PRInt32                 mResponseCode;          // the last command response code.
+	nsString				mResponseMsg;			// the last command response text
     nsString                mUsername;
     nsString                mPassword;
 };
