@@ -42,9 +42,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMFocusListener.h"
 
-#include "nsIXULParentDocument.h"
 #include "nsIXULPopupListener.h"
-#include "nsIXULChildDocument.h"
 #include "nsIDOMXULElement.h"
 #include "nsRDFCID.h"
 
