@@ -128,7 +128,7 @@
     <key id="focusSearchBar"     key="&searchFocus.commandkey;" oncommand="focusSearchBar();" modifiers="accel"/>
     <key id="openFileKb"         key="&openFileCmd.commandkey;" command="Browser:OpenFile"  modifiers="accel"/>
     <key id="key_savePage"       key="&savePageCmd.commandkey;" command="Browser:SavePage" modifiers="accel"/>
-    <key id="printKb"            key="&printCmd.commandkey;" command="Browser:Print"  modifiers="accel"/>
+    <key id="printKb"            key="&printCmd.commandkey;" command="cmd_print"  modifiers="accel"/>
     <key id="key_close"  key="&closeCmd.key;" command="cmd_close" modifiers="accel"/>
     <key id="key_closeWindow"  key="&closeCmd.key;" command="cmd_closeWindow" modifiers="accel,shift"/>
     <key id="key_undo"
