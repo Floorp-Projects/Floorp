@@ -16,15 +16,16 @@
  * Reserved.
  */
 
+#include "msgCore.h"
 #include "nsMsgHdr.h"
 #include "nsMsgDatabase.h"
 
 nsMsgHdr::nsMsgHdr()
 {
 	mRefCnt = 1;
+	Init();
 	m_mdb = NULL;
 	m_mdbRow = NULL;
-	m_messageKey = MSG_MESSAGEKEYNONE;
 }
 
 nsMsgHdr::nsMsgHdr(nsMsgDatabase *db, mdbRow *dbRow)
@@ -32,6 +33,12 @@ nsMsgHdr::nsMsgHdr(nsMsgDatabase *db, mdbRow *dbRow)
 	mRefCnt = 1;
 	m_mdb = db;
 	m_mdbRow = dbRow;
+	Init();
+}
+
+void nsMsgHdr::Init()
+{
+	m_statusOffset = -1;
 	m_messageKey = MSG_MESSAGEKEYNONE;
 }
 
@@ -106,6 +113,17 @@ nsresult	nsMsgHdr::SetProperty(const char *propertyName, nsString &propertyStr)
 	return err;
 }
 
+nsresult nsMsgHdr::GetUint32Property(const char *propertyName, PRUint32 *pResult)
+{
+	nsresult err = NS_OK;
+	mdb_token	property_token;
+
+	err = m_mdb->GetStore()->StringToToken(m_mdb->GetEnv(),  propertyName, &property_token);
+	if (err == NS_OK)
+		err = m_mdb->RowCellColumnToUInt32(GetMDBRow(), property_token, pResult);
+
+	return err;
+}
 
 uint16		nsMsgHdr::GetNumReferences()
 {

@@ -35,24 +35,36 @@ class nsMsgHdr
 public:
 				nsMsgHdr();
 				nsMsgHdr(nsMsgDatabase *db, mdbRow *dbRow);
+	void		Init();
+
 	virtual		~nsMsgHdr();
 	nsrefcnt	AddRef(void);                                       
     nsrefcnt	Release(void);   
 	nsresult	GetProperty(const char *propertyName, nsString &resultProperty);
 	nsresult	SetProperty(const char *propertyName, nsString &propertyStr);
+	nsresult	GetUint32Property(const char *propertyName, PRUint32 *pResult);
+	nsresult	SetUint32Property(const char *propertyName, PRUint32 propertyVal);
 	uint16		GetNumReferences();
 	nsresult	GetStringReference(PRInt32 refNum, nsString &resultReference);
 	time_t		GetDate();
+
+			// flag handling routines
+	virtual PRUint32 GetFlags() {return m_flags;}
+	void		SetFlags(PRUint32 flags);
+	PRUint32	OrFlags(PRUint32 flags);
+	PRUint32	AndFlags(PRUint32 flags);
+	PRUint32	GetMozillaStatusFlags();
 
 	MessageKey  GetMessageKey();
 	MessageKey	GetThreadId();
 	void		SetMessageKey(MessageKey inKey) {m_messageKey = inKey;}
 	virtual	PRUint32 GetMessageSize() {return m_messageSize;}
-	virtual PRUint32 GetFlags() {return m_flags;}
 
 			// this is almost always the m_messageKey, except for the first message.
 			// NeoAccess doesn't allow fID's of 0.
 			virtual PRUint32 GetMessageOffset() {return m_messageKey;}
+			virtual PRUint32 GetStatusOffset(); 
+
 			mdbRow		*GetMDBRow() {return m_mdbRow;}
 protected:
 	nsrefcnt mRefCnt;                                                         
@@ -61,6 +73,7 @@ protected:
 	MessageKey	m_messageKey; 	//news: article number, mail mbox offset, imap uid...
 	time_t 		m_date;                         
 	PRUint32		m_messageSize;	// lines for news articles, bytes for mail messages
+	PRUint32		m_statusOffset;	// offset in a local mail message of the mozilla status hdr
 	PRUint32		m_flags;
 	PRUint16		m_numReferences;	// x-ref header for threading
 

@@ -16,6 +16,7 @@
  * Reserved.
  */
 
+#include "msgCore.h"
 #include "nsDBFolderInfo.h"
 #include "nsMsgDatabase.h"
 

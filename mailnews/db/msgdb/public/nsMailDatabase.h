@@ -27,6 +27,7 @@ class nsOfflineImapOperation;
 class nsMsgKeyArray;
 class MSG_Master;
 class MSG_FolderInfo;
+class nsIOFileStream;
 
 // this is the version number for the mail db. If the file format changes, we 
 // just reparse the mail folder. 
@@ -72,15 +73,15 @@ public:
 
 
 protected:
-	virtual void			SetHdrFlag(nsMsgHdr *, PRBool bSet, MsgFlags flag);
+	virtual PRBool			SetHdrFlag(nsMsgHdr *, PRBool bSet, MsgFlags flag);
 	virtual void			UpdateFolderFlag(nsMsgHdr *msgHdr, PRBool bSet, 
-									 MsgFlags flag, PRFileDesc *fid);
+									 MsgFlags flag, nsIOFileStream **ppFileStream);
 	virtual void			SetReparse(PRBool reparse);
 
-	MSG_Master		*m_master;
-	PRBool			m_reparse;
-	char			*m_folderName;
-	PRFileDesc		*m_folderFile;	/* this is a cache for loops which want file left open */
+	MSG_Master					*m_master;
+	PRBool						m_reparse;
+	nsFilePath					m_folderName;
+	nsIOFileStream				*m_folderStream; 	/* this is a cache for loops which want file left open */
 };
 
 #endif

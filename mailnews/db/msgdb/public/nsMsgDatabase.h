@@ -26,10 +26,20 @@
 #include "nsIDBChangeListener.h"
 #include "nsMsgMessageFlags.h"
 
+class nsThreadMessageHdr;
 class ListContext;
 class nsDBFolderInfo;
 class nsMsgKeyArray;
 class nsNewsSet;
+
+typedef enum
+{
+	kSmallCommit,
+	kLargeCommit,
+	kSessionCommit,
+	kCompressCommit
+} msgDBCommitType;
+
 
 class nsDBChangeAnnouncer : public nsVoidArray  // array of ChangeListeners
 {
@@ -89,6 +99,7 @@ public:
 	virtual nsresult	Close(PRBool forceCommit = TRUE);
 	virtual nsresult	OpenMDB(const char *dbName, PRBool create);
 	virtual nsresult	CloseMDB(PRBool commit = TRUE);
+	virtual nsresult	Commit(msgDBCommitType commitType);
 	// Force closed is evil, and we should see if we can do without it.
 	// In 4.x, it was mainly used to remove corrupted databases.
 	virtual nsresult	ForceClosed();
@@ -110,13 +121,67 @@ public:
 	nsresult	ListFirst(ListContext **pContext, nsMsgHdr **pResult);
 	nsresult	ListNext(ListContext *pContext, nsMsgHdr **pResult);
 	nsresult	ListDone(ListContext *pContext);
+	nsresult	ListNextUnread(ListContext **pContext, nsMsgHdr **pResult);
 
 	// helpers for user command functions like delete, mark read, etc.
 
-	virtual nsresult	DeleteMessages(nsMsgKeyArray &messageKeys, nsIDBChangeListener *instigator);
-	virtual nsresult	DeleteHeader(nsMsgHdr *msgHdr, nsIDBChangeListener *instigator, PRBool commit, PRBool notify  = TRUE);
-	virtual nsresult	RemoveHeaderFromDB(nsMsgHdr *msgHdr);
-	virtual nsresult	IsRead(MessageKey messageKey, PRBool *pRead);
+	virtual nsresult MarkHdrRead(nsMsgHdr *msgHdr, PRBool bRead, nsIDBChangeListener *instigator);
+	// MDN support
+	virtual nsresult		MarkMDNNeeded(MessageKey messageKey, PRBool bNeeded,
+									  nsIDBChangeListener *instigator = NULL);
+						// MarkMDNneeded only used when mail server is a POP3 server
+						// or when the IMAP server does not support user defined
+						// PERMANENTFLAGS
+	virtual nsresult		IsMDNNeeded(MessageKey messageKey, PRBool *isNeeded);
+
+	virtual nsresult		MarkMDNSent(MessageKey messageKey, PRBool bNeeded,
+									nsIDBChangeListener *instigator = NULL);
+	virtual nsresult		IsMDNSent(MessageKey messageKey, PRBool *isSent);
+
+// methods to get and set docsets for ids.
+	virtual nsresult		MarkRead(MessageKey messageKey, PRBool bRead, 
+								nsIDBChangeListener *instigator = NULL);
+
+	virtual nsresult		MarkReplied(MessageKey messageKey, PRBool bReplied, 
+								nsIDBChangeListener *instigator = NULL);
+
+	virtual nsresult		MarkForwarded(MessageKey messageKey, PRBool bForwarded, 
+								nsIDBChangeListener *instigator = NULL);
+
+	virtual nsresult		MarkHasAttachments(MessageKey messageKey, PRBool bHasAttachments, 
+								nsIDBChangeListener *instigator = NULL);
+
+	virtual nsresult		MarkThreadIgnored(nsThreadMessageHdr *thread, MessageKey threadKey, PRBool bIgnored,
+									nsIDBChangeListener *instigator = NULL);
+	virtual nsresult		MarkThreadWatched(nsThreadMessageHdr *thread, MessageKey threadKey, PRBool bWatched,
+									nsIDBChangeListener *instigator = NULL);
+	virtual nsresult		IsRead(MessageKey messageKey, PRBool *pRead);
+	virtual nsresult		IsIgnored(MessageKey messageKey, PRBool *pIgnored);
+	virtual nsresult		IsMarked(MessageKey messageKey, PRBool *pMarked);
+	virtual nsresult		HasAttachments(MessageKey messageKey, PRBool *pHasThem);
+
+	virtual nsresult		MarkAllRead(nsMsgKeyArray *thoseMarked);
+	virtual nsresult		MarkReadByDate (time_t startDate, time_t endDate, nsMsgKeyArray *markedIds);
+
+	virtual nsresult		DeleteMessages(nsMsgKeyArray &messageKeys, nsIDBChangeListener *instigator);
+	virtual nsresult		DeleteMessage(MessageKey messageKey, 
+										nsIDBChangeListener *instigator = NULL,
+										PRBool commit = PR_TRUE);
+	virtual nsresult		DeleteHeader(nsMsgHdr *msgHdr, nsIDBChangeListener *instigator, PRBool commit, PRBool notify = TRUE);
+	virtual nsresult		UndoDelete(nsMsgHdr *msgHdr);
+	virtual nsresult		MarkLater(MessageKey messageKey, time_t until);
+	virtual nsresult		MarkMarked(MessageKey messageKey, PRBool mark,
+										nsIDBChangeListener *instigator = NULL);
+	virtual nsresult		MarkOffline(MessageKey messageKey, PRBool offline,
+										nsIDBChangeListener *instigator);
+	virtual PRBool			AllMessageKeysImapDeleted(const nsMsgKeyArray &keys);
+	virtual nsresult		MarkImapDeleted(MessageKey messageKey, PRBool deleted,
+										nsIDBChangeListener *instigator);
+
+	virtual MessageKey		GetFirstNew();
+	virtual PRBool			HasNew();
+	virtual void			ClearNewList(PRBool notify = FALSE);
+
 
 	// used mainly to force the timestamp of a local mail folder db to
 	// match the time stamp of the corresponding berkeley mail folder,
@@ -164,11 +229,15 @@ protected:
 
 	virtual nsresult SetKeyFlag(MessageKey messageKey, PRBool set, PRInt32 flag,
 							  nsIDBChangeListener *instigator = NULL);
-	virtual void	SetHdrFlag(nsMsgHdr *, PRBool bSet, MsgFlags flag);
+	virtual PRBool	SetHdrFlag(nsMsgHdr *, PRBool bSet, MsgFlags flag);
+	virtual			nsresult			IsHeaderRead(nsMsgHdr *hdr, PRBool *pRead);
+	virtual PRUint32					GetStatusFlags(nsMsgHdr *msgHdr);
+	// helper function which doesn't involve thread object
 	virtual void	MarkHdrReadInDB(nsMsgHdr *msgHdr, PRBool bRead,
 									nsIDBChangeListener *instigator);
 
-	virtual			nsresult			IsHeaderRead(nsMsgHdr *hdr, PRBool *pRead);
+	virtual nsresult		RemoveHeaderFromDB(nsMsgHdr *msgHdr);
+
 
 	static nsMsgDatabaseArray*	GetDBCache();
 	static nsMsgDatabaseArray	*m_dbCache;
@@ -190,7 +259,7 @@ protected:
 	mdb_token			m_messageSizeColumnToken;
 	mdb_token			m_flagsColumnToken;
 	mdb_token			m_priorityColumnToken;
-
+	mdb_token			m_statusOffsetColumnToken;
 };
 
 #endif

@@ -16,11 +16,16 @@
  * Reserved.
  */
 
+#include "msgCore.h"
 #include "nsMailDatabase.h"
 #include "nsDBFolderInfo.h"
+#include "nsMsgLocalFolderHdrs.h"
+#include "nsFileStream.h"
 
 nsMailDatabase::nsMailDatabase()
+: m_folderName("")
 {
+	m_folderStream = NULL;
 }
 
 nsMailDatabase::~nsMailDatabase()
@@ -141,15 +146,163 @@ nsresult nsMailDatabase::OnNewPath (nsFilePath &newPath)
 nsresult nsMailDatabase::DeleteMessages(nsMsgKeyArray &messageKeys, nsIDBChangeListener *instigator)
 {
 	nsresult ret = NS_OK;
-	m_folderFile = PR_Open(m_dbName, PR_RDWR, 0);
+	m_folderStream = new nsIOFileStream(m_dbName);
 	ret = nsMsgDatabase::DeleteMessages(messageKeys, instigator);
-	if (m_folderFile)
-		PR_Close(m_folderFile);
-	m_folderFile = NULL;
-	SetFolderInfoValid(m_dbName, 0, 0);
+	if (m_folderStream)
+		delete m_folderStream;
+	m_folderStream = NULL;
+	SetFolderInfoValid(m_folderName, 0, 0);
 	return ret;
 }
 
+
+// Helper routine - lowest level of flag setting
+PRBool nsMailDatabase::SetHdrFlag(nsMsgHdr *msgHdr, PRBool bSet, MsgFlags flag)
+{
+	nsIOFileStream *fileStream = NULL;
+	PRBool		ret = PR_FALSE;
+
+	if (nsMsgDatabase::SetHdrFlag(msgHdr, bSet, flag))
+	{
+		UpdateFolderFlag(msgHdr, bSet, flag, &fileStream);
+		if (fileStream != NULL)
+		{
+			delete fileStream;
+			SetFolderInfoValid(m_folderName, 0, 0);
+		}
+		ret = PR_TRUE;
+	}
+	return ret;
+}
+
+#ifdef XP_MAC
+extern PRFileDesc *gIncorporateFID;
+extern const char* gIncorporatePath;
+#endif // XP_MAC
+
+// ### should move this into some utils class...
+int msg_UnHex(char C)
+{
+	return ((C >= '0' && C <= '9') ? C - '0' :
+			((C >= 'A' && C <= 'F') ? C - 'A' + 10 :
+			 ((C >= 'a' && C <= 'f') ? C - 'a' + 10 : 0)));
+}
+
+
+// We let the caller close the file in case he's updating a lot of flags
+// and we don't want to open and close the file every time through.
+// As an experiment, try caching the fid in the db as m_folderFile.
+// If this is set, use it but don't return *pFid.
+void nsMailDatabase::UpdateFolderFlag(nsMsgHdr *mailHdr, PRBool bSet, 
+							  MsgFlags flag, nsIOFileStream **ppFileStream)
+{
+	static char buf[30];
+	nsIOFileStream *fileStream = (m_folderStream) ? m_folderStream : *ppFileStream;
+//#ifdef GET_FILE_STUFF_TOGETHER
+#ifdef XP_MAC
+	// This is a horrible hack and we should make sure we don't need it anymore.
+	// It has to do with multiple people having the same file open, I believe, but the
+	// mac file system only has one handle, and they compete for the file position.
+	// Prevent closing the file from under the incorporate stuff. #82785.
+	int32 savedPosition = -1;
+	if (!fid && gIncorporatePath && !XP_STRCMP(m_folderName, gIncorporatePath))
+	{
+		fid = gIncorporateFID;
+		savedPosition = ftell(gIncorporateFID); // so we can restore it.
+	}
+#endif // XP_MAC
+	if (mailHdr->GetStatusOffset() > 0) 
+	{
+		
+		if (fileStream == NULL) 
+		{
+			fileStream = new nsIOFileStream(m_folderName);
+		}
+		if (fileStream) 
+		{
+			PRUint32 position = mailHdr->GetStatusOffset() + mailHdr->GetMessageOffset();
+			PR_ASSERT(mailHdr->GetStatusOffset() < 10000);
+			fileStream->seek(position);
+			buf[0] = '\0';
+			if (fileStream->readline(buf, sizeof(buf))) 
+			{
+				if (strncmp(buf, X_MOZILLA_STATUS, X_MOZILLA_STATUS_LEN) == 0 &&
+					strncmp(buf + X_MOZILLA_STATUS_LEN, ": ", 2) == 0 &&
+					strlen(buf) > X_MOZILLA_STATUS_LEN + 6) 
+				{
+		            uint16 flags = mailHdr->GetMozillaStatusFlags();
+					if (!(flags & MSG_FLAG_EXPUNGED))
+					{
+						int i;
+						char *p = buf + X_MOZILLA_STATUS_LEN + 2;
+					
+						for (i=0, flags = 0; i<4; i++, p++)
+						{
+							flags = (flags << 4) | msg_UnHex(*p);
+						}
+						flags = (flags & MSG_FLAG_QUEUED) |
+							(mailHdr->GetMozillaStatusFlags() & 
+							 ~MSG_FLAG_RUNTIME_ONLY);
+					}
+					else
+					{
+						flags &= ~MSG_FLAG_RUNTIME_ONLY;
+					}
+					fileStream->seek(position);
+					// We are filing out old Cheddar flags here
+					PR_snprintf(buf, sizeof(buf), X_MOZILLA_STATUS_FORMAT, flags);
+					fileStream->write(buf, PL_strlen(buf));
+
+					// time to upate x-mozilla-status2
+					position = fileStream->tell();
+					fileStream->seek(position + LINEBREAK_LEN);
+					if (fileStream->readline(buf, sizeof(buf))) 
+					{
+						if (strncmp(buf, X_MOZILLA_STATUS2, X_MOZILLA_STATUS2_LEN) == 0 &&
+							strncmp(buf + X_MOZILLA_STATUS2_LEN, ": ", 2) == 0 &&
+							strlen(buf) > X_MOZILLA_STATUS2_LEN + 10) 
+						{
+							uint32 dbFlags = mailHdr->GetFlags();
+							dbFlags &= (MSG_FLAG_MDN_REPORT_NEEDED | MSG_FLAG_MDN_REPORT_SENT | MSG_FLAG_TEMPLATE);
+							fileStream->seek(position + LINEBREAK_LEN);
+							PR_snprintf(buf, sizeof(buf), X_MOZILLA_STATUS2_FORMAT, dbFlags);
+							fileStream->write(buf, PL_strlen(buf));
+						}
+					}
+				} else 
+				{
+					printf("Didn't find %s where expected at position %ld\n"
+						  "instead, found %s.\n",
+						  X_MOZILLA_STATUS, (long) position, buf);
+					SetReparse(TRUE);
+				}			
+			} 
+			else 
+			{
+				printf("Couldn't read old status line at all at position %ld\n",
+						(long) position);
+				SetReparse(TRUE);
+			}
+#ifdef XP_MAC
+			// Restore the file position
+			if (savedPosition >= 0)
+				XP_FileSeek(fid, savedPosition, SEEK_SET);
+#endif
+		}
+		else
+		{
+			printf("Couldn't open mail folder for update%s!\n", m_folderName);
+			PR_ASSERT(PR_FALSE);
+		}
+	}
+//#endif // GET_FILE_STUFF_TOGETHER
+#ifdef XP_MAC
+	if (!m_folderStream && fid != gIncorporateFID)
+#else
+	if (!m_folderStream)
+#endif
+		*ppFileStream = fileStream; // This tells the caller that we opened the file, and please to close it.
+}
 
 /* static */  nsresult nsMailDatabase::SetSummaryValid(PRBool valid)
 {
