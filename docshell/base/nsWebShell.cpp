@@ -1361,12 +1361,13 @@ NS_IMETHODIMP
 nsWebShell::GetTopLevelWindow(nsIWebShellContainer** aTopLevelWindow)
 {
    NS_ENSURE_ARG_POINTER(aTopLevelWindow);
-   *aTopLevelWindow;
+   *aTopLevelWindow = nsnull;
 
    nsCOMPtr<nsIWebShell> rootWebShell;
 
    GetRootWebShellEvenIfChrome(getter_AddRefs(rootWebShell));
-   NS_ENSURE_TRUE(rootWebShell, NS_OK);
+   if(!rootWebShell)
+      return NS_OK;
    
    nsCOMPtr<nsIWebShellContainer> rootContainer;
    rootWebShell->GetContainer(*aTopLevelWindow);
