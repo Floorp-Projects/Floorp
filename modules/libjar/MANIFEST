@@ -3,3 +3,5 @@
 #
 
 zipfile.h
+zipstub.h
+zipstruct.h
