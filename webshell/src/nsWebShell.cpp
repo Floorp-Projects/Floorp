@@ -24,6 +24,8 @@
 #include "nsIWebShell.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIDocumentLoader.h"
+#include "nsIDocumentLoaderObserver.h"
+#include "nsIDocumentLoaderFactory.h"
 #include "nsIContentViewer.h"
 #include "nsIDocumentViewer.h"
 #include "nsIMarkupDocumentViewer.h"
@@ -38,7 +40,6 @@
 #include "nsIRefreshURI.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptGlobalObjectOwner.h"
-#include "nsIDocumentLoaderObserver.h"
 #include "nsIProgressEventSink.h"
 #include "nsDOMEvent.h"
 #include "nsIPresContext.h"
@@ -82,6 +83,10 @@
 #include "nsIDocShellTreeNode.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsCURILoader.h"
+
+#include "nsIHTTPChannel.h" // add this to the ick include list...we need it to QI for post data interface
+#include "nsHTTPEnums.h"
+
 
 #include "nsILocaleService.h"
 #include "nsIStringBundle.h"
@@ -188,6 +193,8 @@ public:
 
   // nsIInterfaceRequestor
   NS_DECL_NSIINTERFACEREQUESTOR
+
+  NS_DECL_NSIDOCUMENTLOADEROBSERVER
 
   // nsIContentViewerContainer
   NS_IMETHOD Embed(nsIContentViewer* aDocViewer,
@@ -305,28 +312,6 @@ public:
 
   // nsIScriptGlobalObjectOwner
   NS_DECL_NSISCRIPTGLOBALOBJECTOWNER
-
-  // nsIDocumentLoaderObserver
-  NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* loader,
-                                 nsIURI* aURL,
-                                 const char* aCommand);
-  NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader,
-                               nsIChannel* channel,
-                               nsresult aStatus);
-  NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader,
-                            nsIChannel* channel);
-  NS_IMETHOD OnProgressURLLoad(nsIDocumentLoader* loader,
-                               nsIChannel* channel, PRUint32 aProgress,
-                               PRUint32 aProgressMax);
-  NS_IMETHOD OnStatusURLLoad(nsIDocumentLoader* loader,
-                             nsIChannel* channel, nsString& aMsg);
-  NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader,
-                          nsIChannel* channel, nsresult aStatus);
-  NS_IMETHOD HandleUnknownContentType(nsIDocumentLoader* loader,
-                                      nsIChannel* channel,
-                                      const char *aContentType,
-                                      const char *aCommand );
-
 
   NS_IMETHOD RefreshURL(const char* aURL, PRInt32 millis, PRBool repeat);
 
@@ -505,8 +490,6 @@ static NS_DEFINE_IID(kWebShellCID,            NS_WEB_SHELL_CID);
 // IID's
 static NS_DEFINE_IID(kIContentViewerContainerIID,
                      NS_ICONTENT_VIEWER_CONTAINER_IID);
-static NS_DEFINE_IID(kIDocumentLoaderObserverIID,
-                     NS_IDOCUMENT_LOADER_OBSERVER_IID);
 static NS_DEFINE_IID(kIProgressEventSinkIID,  NS_IPROGRESSEVENTSINK_IID);
 static NS_DEFINE_IID(kIDeviceContextIID,      NS_IDEVICE_CONTEXT_IID);
 static NS_DEFINE_IID(kIDocumentLoaderIID,     NS_IDOCUMENTLOADER_IID);
@@ -985,25 +968,12 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
     goto done;
   }
 */
-  // Create a document loader...
-  nsCOMPtr<nsIWebShell> webShellParent(do_QueryInterface(mParent));
-  if (webShellParent) {
-    nsIDocumentLoader* parentLoader;
 
-    // Create a child document loader...
-    rv = webShellParent->GetDocumentLoader(parentLoader);
-    if (NS_SUCCEEDED(rv)) {
-      rv = parentLoader->CreateDocumentLoader(&mDocLoader);
-      NS_RELEASE(parentLoader);
-    }
-  } else {
-    NS_WITH_SERVICE(nsIDocumentLoader, docLoaderService, kDocLoaderServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-
-    rv = docLoaderService->CreateDocumentLoader(&mDocLoader);
-    if (NS_FAILED(rv)) return rv;
-  }
+  // HACK....force the uri loader to give us a load cookie for this webshell...then get it's
+  // doc loader and store it...as more of the docshell lands, we'll be able to get rid
+  // of this hack...
+  nsCOMPtr<nsIURILoader> uriLoader = do_GetService(NS_URI_LOADER_PROGID);
+  uriLoader->GetDocumentLoaderForContext(NS_STATIC_CAST( nsISupports*, (nsIWebShell *) this), &mDocLoader);
 
   // Set the webshell as the default IContentViewerContainer for the loader...
   mDocLoader->SetContainer(NS_STATIC_CAST(nsIContentViewerContainer*, (nsIWebShell*)this));
@@ -1106,7 +1076,7 @@ nsWebShell::IsBusy(PRBool& aResult)
 {
 
   if (mDocLoader!=nsnull) {
-    mDocLoader->IsBusy(aResult);
+    mDocLoader->IsBusy(&aResult);
   }
 
   return NS_OK;
@@ -1208,12 +1178,12 @@ nsWebShell::SetContainer(nsIWebShellContainer* aContainer)
   nsresult rv = NS_OK;
   nsCOMPtr<nsIURIContentListener> contentListener = do_QueryInterface(mContainer, &rv);
   if (NS_SUCCEEDED(rv) && contentListener)
-    SetParentURIContentListener(contentListener);
+    SetParentContentListener(contentListener);
 
   // if the container is getting set to null, then our parent must be going away
   // so clear out our knowledge of the content listener represented by the container
   if (!aContainer)
-    SetParentURIContentListener(nsnull);
+    SetParentContentListener(nsnull);
 
   return NS_OK;
 }
@@ -1711,16 +1681,61 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
     MOZ_TIMER_RESET(mTotalTime);
     MOZ_TIMER_START(mTotalTime);
 #endif
-        
-    rv = mDocLoader->LoadDocument(aUri,        // URL string
-                                  aCommand,        // Command
-                                  NS_STATIC_CAST(nsIContentViewerContainer*, (nsIWebShell*)this),// Container
-                                  aPostDataStream, // Post Data
-                                  nsnull,          // Extra Info...
-                                  aType,           // reload type
-                                  aLocalIP,        // load attributes.
-                                  aReferrer);      // referrer
 
+    nsCOMPtr<nsIURILoader> pURILoader = do_GetService(NS_URI_LOADER_PROGID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    nsXPIDLCString aUrlScheme;
+    aUri->GetScheme(getter_Copies(aUrlScheme));
+    nsCOMPtr<nsILoadGroup> loadGroup;
+    pURILoader->GetLoadGroupForContext(NS_STATIC_CAST(nsISupports *, (nsIWebShell *) this), getter_AddRefs(loadGroup));
+
+    // first, create a channel for the protocol....
+    nsCOMPtr<nsIIOService> pNetService = do_GetService(kIOServiceCID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsIChannel> pChannel;
+      nsCOMPtr<nsIInterfaceRequestor> requestor (do_QueryInterface(NS_STATIC_CAST(nsIContentViewerContainer*, (nsIWebShell*)this)));
+
+      // Create a referrer URI
+      nsCOMPtr<nsIURI> referrer;
+      if (aReferrer) {
+        nsAutoString tempReferrer(aReferrer);
+        char* referrerStr = tempReferrer.ToNewCString();
+        pNetService->NewURI(referrerStr, nsnull, getter_AddRefs(referrer));
+        Recycle(referrerStr);
+      }
+
+      rv = pNetService->NewChannelFromURI(aCommand, aUri, loadGroup, requestor,
+                                          aType, referrer /* referring uri */, 0, 0,
+                                          getter_AddRefs(pChannel));
+      if (NS_FAILED(rv)) return rv; // uhoh we were unable to get a channel to handle the url!!!
+
+      // Mark the channel as being a document URI...
+      nsLoadFlags loadAttribs = 0;
+      pChannel->GetLoadAttributes(&loadAttribs);
+      loadAttribs |= nsIChannel::LOAD_DOCUMENT_URI;
+
+      pChannel->SetLoadAttributes(loadAttribs);
+      
+      // figure out if we need to set the post data stream on the channel...right now, 
+      // this is only done for http channels.....
+      nsCOMPtr<nsIHTTPChannel> httpChannel(do_QueryInterface(pChannel));
+      if (httpChannel && aPostDataStream)
+      {
+        httpChannel->SetRequestMethod(HM_POST);
+        httpChannel->SetPostDataStream(aPostDataStream);
+      }
+
+      // now let's pass the channel into the uri loader
+      nsURILoadCommand loadCmd = nsIURILoader::viewNormal;
+      if (nsCRT::strcasecmp(aCommand, "view-link-click") == 0)
+        loadCmd = nsIURILoader::viewUserClick;
+      else if (nsCRT::strcasecmp(aCommand, "view-source") == 0)
+        loadCmd = nsIURILoader::viewSource;
+
+      rv = pURILoader->OpenURI(pChannel, loadCmd, nsnull /* window target */, 
+                               NS_STATIC_CAST(nsIContentViewerContainer*, (nsIWebShell*)this));
+    }
   }
 
   // Fix for bug 1646.  Change the notion of current url and referrer only after
@@ -1752,7 +1767,7 @@ NS_IMETHODIMP nsWebShell::CanHandleContent(const char * aContentType,
   // the webshell knows nothing about content policy....pass this
   // up to our parent content handler...
   nsCOMPtr<nsIURIContentListener> parentListener;
-  nsresult rv = GetParentURIContentListener(getter_AddRefs(parentListener));
+  nsresult rv = GetParentContentListener(getter_AddRefs(parentListener));
   if (parentListener)
     rv = parentListener->CanHandleContent(aContentType, aCommand, aWindowTarget, aDesiredContentType, 
                                           aCanHandleContent);
@@ -1774,6 +1789,7 @@ nsWebShell::DoContent(const char * aContentType,
                       nsIStreamListener ** aContentHandler,
                       PRBool * aAbortProcess)
 {
+  NS_ENSURE_ARG(aOpenedChannel);
   nsresult rv = NS_OK;
   if (aAbortProcess)
     *aAbortProcess = PR_FALSE;
@@ -1785,19 +1801,25 @@ nsWebShell::DoContent(const char * aContentType,
   if (NS_SUCCEEDED(rv))
     pURILoader->GetStringForCommand(aCommand, getter_Copies(strCommand));
 
-
-  // first, run any uri preparation stuff that we would have run normally
-  // had we gone through OpenURI
-  nsCOMPtr<nsIURI> aUri;
-  aOpenedChannel->GetURI(getter_AddRefs(aUri));
-  PrepareToLoadURI(aUri, strCommand, nsnull, PR_TRUE, nsIChannel::LOAD_NORMAL, 0, nsnull, nsnull);
-  // mscott: when I called DoLoadURL I found that we ran into problems because
-  // we currently don't have channel retargeting yet. Basically, what happens is that
-  // DoLoadURL calls StopBeforeRequestingURL and this cancels the current load group
-  // however since we can't retarget yet, we were basically canceling our very
-  // own load group!!! So the request would get canceled out from under us...
-  // after retargeting we may be able to safely call DoLoadURL. 
-  DoLoadURL(aUri, strCommand, nsnull, nsIChannel::LOAD_NORMAL, 0, nsnull, PR_FALSE);
+  // determine if the channel has just been retargeted to us...
+  nsLoadFlags loadAttribs = 0;
+  aOpenedChannel->GetLoadAttributes(&loadAttribs);
+  if (loadAttribs & nsIChannel::LOAD_RETARGETED_DOCUMENT_URI)
+  {
+    // first, run any uri preparation stuff that we would have run normally
+    // had we gone through OpenURI
+    nsCOMPtr<nsIURI> aUri;
+    aOpenedChannel->GetURI(getter_AddRefs(aUri));
+    PrepareToLoadURI(aUri, strCommand, nsnull, PR_TRUE, nsIChannel::LOAD_NORMAL, 0, nsnull, nsnull);
+    // mscott: when I called DoLoadURL I found that we ran into problems because
+    // we currently don't have channel retargeting yet. Basically, what happens is that
+    // DoLoadURL calls StopBeforeRequestingURL and this cancels the current load group
+    // however since we can't retarget yet, we were basically canceling our very
+    // own load group!!! So the request would get canceled out from under us...
+    // after retargeting we may be able to safely call DoLoadURL. 
+    DoLoadURL(aUri, strCommand, nsnull, nsIChannel::LOAD_NORMAL, 0, nsnull, PR_FALSE);
+    SetFocus(); // force focus to get set on the retargeted window...
+  }
 
   return CreateViewer(aOpenedChannel, 
                       aContentType, 
@@ -4261,16 +4283,36 @@ nsWebShell::SetChromeEventHandler(nsIChromeEventHandler* aChromeEventHandler)
    return nsDocShell::SetChromeEventHandler(aChromeEventHandler);
 }
 
-NS_IMETHODIMP nsWebShell::GetParentURIContentListener(nsIURIContentListener**
-   aParent)
+NS_IMETHODIMP nsWebShell::GetParentContentListener(nsIURIContentListener** aParent)
 {
-   return nsDocShell::GetParentURIContentListener(aParent);
+  return GetParentURIContentListener(aParent);
 }
 
-NS_IMETHODIMP nsWebShell::SetParentURIContentListener(nsIURIContentListener*
-   aParent)
+NS_IMETHODIMP nsWebShell::SetParentContentListener(nsIURIContentListener* aParent)
 {
-   return nsDocShell::SetParentURIContentListener(aParent);
+  return SetParentURIContentListener(aParent);
+}
+
+NS_IMETHODIMP nsWebShell::GetParentURIContentListener(nsIURIContentListener** aParent)
+{
+  return nsDocShell::GetParentURIContentListener(aParent);
+}
+
+NS_IMETHODIMP nsWebShell::SetParentURIContentListener(nsIURIContentListener* aParent)
+{
+  return nsDocShell::SetParentURIContentListener(aParent);
+}
+
+NS_IMETHODIMP nsWebShell::GetLoadCookie(nsISupports ** aLoadCookie)
+{
+  NS_ENSURE_SUCCESS(EnsureContentListener(), NS_ERROR_FAILURE);
+  return mContentListener->GetLoadCookie(aLoadCookie);
+}
+
+NS_IMETHODIMP nsWebShell::SetLoadCookie(nsISupports * aLoadCookie)
+{
+  NS_ENSURE_SUCCESS(EnsureContentListener(), NS_ERROR_FAILURE);
+  return mContentListener->SetLoadCookie(aLoadCookie);
 }
 
 NS_IMETHODIMP nsWebShell::GetPrefs(nsIPref** aPrefs)
