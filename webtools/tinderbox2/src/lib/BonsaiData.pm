@@ -7,8 +7,8 @@
 # module which uses this library is: lib/TinderDB/VC_Bonsai.pm
 
 
-# $Revision: 1.4 $ 
-# $Date: 2001/07/20 19:04:58 $ 
+# $Revision: 1.5 $ 
+# $Date: 2001/07/27 20:44:45 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/BonsaiData.pm,v $ 
 # $Name:  $ 
@@ -51,17 +51,23 @@ use File::Basename;
 
 # Bonsai Specific Libraries
 
+use TreeData;
+
+
 # we really want to 'use lib BONSAI_DIR' unfortunatly BONSAI_DIR is
 # set AFTER the libararies are loaded.  We take a quick and dirty
 # approach.
 
 sub load_bonsai_libs {
+    my ($bonsai_tree) = @_;
   
   ($LIBS_LOADED) && 
     return 1;
   
   $LIBS_LOADED = 1;
   
+  $::CVS_ROOT = $TreeData::VC_TREE{$bonsai_tree}{'root'};;
+
   $BONSAI_DIR = ($TinderConfig::BONSAI_DIR ||
                  "/home/httpd/cgi-bin/bonsai");
 
@@ -136,24 +142,39 @@ sub get_file_variable {
 sub get_tree_state {
     my ($bonsai_tree) = @_;
     
-    load_bonsai_libs();
+    load_bonsai_libs($bonsai_tree);
 
     # The default file is in the data directory, other files are in
     # directories with their own name.  If there is no directory the
     # tree is assumed open.
 
-    my ($dir) = "$BONSAI_DIR/data/$bonsai_tree";
-    $dir =~ s!/default$!!;
+    my $is_bonsai_default = $TreeData::VC_TREE{$bonsai_tree}{'is_bonsai_default'};
 
+    my ($dir);
+
+    if ($is_bonsai_default) {
+        $dir = "$BONSAI_DIR/data";
+    } else {
+        $dir = "$BONSAI_DIR/data/$bonsai_tree";
+    }
+
+    # new branches may not have directories
     (-d $dir) ||
         return 'Open';
 
     # find the current batch file
     my ($file) = "$dir/batchid.pl";
+    (-f $file) ||
+        return 'Open';
+
+    # find the current batch file
+
     $current_batchid = get_file_variable($file, 'BatchID');
 
     # get the tree state
     my ($file) = "$dir/batch-${current_batchid}.pl";
+    (-f $file) ||
+        return 'Open';
     $is_tree_open = get_file_variable($file, 'TreeOpen');
 
     my ($tree_state) = ($is_tree_open ? 'Open' : 'Closed');
@@ -211,7 +232,7 @@ sub undef_query_vars {
 sub get_checkin_data {
     my ($bonsai_tree, $cvs_module, $cvs_branch, $date_min) = @_;
 
-    load_bonsai_libs();
+    load_bonsai_libs($bonsai_tree);
 
     undef_query_vars();
 
