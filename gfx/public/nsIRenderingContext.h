@@ -805,12 +805,12 @@ public:
   NS_IMETHOD SetRightToLeftText(PRBool aIsRTL) = 0;
 
   /**
-   *  Draw an image, scaling it to fit a specified rectangle.
+   *  Draw a portion of an image, scaling it to fit within a specified rect.
    *  @param aImage     The image to draw
-   *  @param aSrcRect   The portion (in twips) of the image to draw.
+   *  @param aSrcRect   The rect (in twips) of the image to draw.
    *                    [x,y] denotes the top left corner of the region.
-   *  @param aDestRect  The region (in twips) of the page that the image should
-   *                    occupy. [x,y] denotes the top left corner.
+   *  @param aDestRect  The device context rect (in twips) that the image
+   *                    portion should occupy. [x,y] denotes the top left corner.
    *                    [height,width] denotes the desired image size.
    */
   NS_IMETHOD DrawImage(imgIContainer *aImage, const nsRect & aSrcRect, const nsRect & aDestRect) = 0;

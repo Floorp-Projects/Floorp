@@ -196,14 +196,14 @@ public:
                                nsTextDimensions& aLastWordDimensions,
                                PRInt32*          aFontID = nsnull);
 
-  /** ---------------------------------------------------
-   *  Draw an image, scaling it to fit a specified rectangle.
-   *    @param aImage     The image to draw
-   *           aSrcRect   The portion of the image to draw. [x,y] denotes
-   *                      the top left corner of the region.
-   *           aDestRect  The region of the page that the image should
-   *                      occupy. [x,y] denotes the top left corner.
-   *                      [height,width] denotes the image size.
+  /**
+   *  Draw a portion of an image, scaling it to fit a specified rect.
+   *  @param aImage     The image to draw
+   *  @param aSrcRect   The rect (in twips) of the image to draw.
+   *                    [x,y] denotes the top left corner of the region.
+   *  @param aDestRect  The device context rect (in twips) that the image
+   *                    portion should occupy. [x,y] denotes the top left corner.
+   *                    [height,width] denotes the desired image size.
    */
   NS_IMETHOD DrawImage(imgIContainer *aImage,
     const nsRect & aSrcRect, const nsRect & aDestRect);
