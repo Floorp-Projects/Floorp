@@ -99,9 +99,9 @@ RemoveJSGCRoot(void* aScriptObjectRef)
 
 MOZ_DECL_CTOR_COUNTER(nsXBLProtoImplMethod);
 
-nsXBLProtoImplMethod::nsXBLProtoImplMethod(const PRUnichar* aName)
-:nsXBLProtoImplMember(aName), 
- mUncompiledMethod(nsnull)
+nsXBLProtoImplMethod::nsXBLProtoImplMethod(const PRUnichar* aName) :
+  nsXBLProtoImplMember(aName), 
+  mUncompiledMethod(nsnull)
 {
   MOZ_COUNT_CTOR(nsXBLProtoImplMethod);
 }
@@ -147,6 +147,18 @@ nsXBLProtoImplMethod::AddParameter(const nsAString& aText)
   }
 
   mUncompiledMethod->AddParameter(aText);
+}
+
+void
+nsXBLProtoImplMethod::SetLineNumber(PRUint32 aLineNumber)
+{
+  if (!mUncompiledMethod) {
+    mUncompiledMethod = new nsXBLUncompiledMethod();
+    if (!mUncompiledMethod)
+      return;
+  }
+
+  mUncompiledMethod->SetLineNumber(aLineNumber);
 }
 
 nsresult
@@ -204,14 +216,15 @@ nsXBLProtoImplMethod::CompileMember(nsIScriptContext* aContext, const nsCString&
 
   // Now that we have a body and args, compile the function
   // and then define it.
-  nsDependentString body(mUncompiledMethod->mBodyText);
+  nsDependentString body(mUncompiledMethod->mBodyText.GetText());
   if (!body.IsEmpty()) {
-    nsCAutoString cname; cname.AssignWithConversion(mName);
+    NS_ConvertUCS2toUTF8 cname(mName);
     nsCAutoString functionUri(aClassStr);
-    functionUri += ".";
-    functionUri += cname;
-    functionUri += "()";
-    
+    PRInt32 hash = functionUri.RFindChar('#');
+    if (hash != kNotFound) {
+      functionUri.Truncate(hash);
+    }
+
     JSObject* methodObject = nsnull;
     aContext->CompileFunction(aClassObject,
                               cname,
@@ -219,7 +232,7 @@ nsXBLProtoImplMethod::CompileMember(nsIScriptContext* aContext, const nsCString&
                               (const char**)args,
                               body, 
                               functionUri.get(),
-                              0,
+                              mUncompiledMethod->mBodyText.GetLineNumber(),
                               PR_FALSE,
                               (void **) &methodObject);
 

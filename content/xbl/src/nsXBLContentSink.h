@@ -104,7 +104,8 @@ protected:
     PRBool OnOpenContainer(const PRUnichar **aAtts, 
                            PRUint32 aAttsCount, 
                            PRInt32 aNameSpaceID, 
-                           nsIAtom* aTagName);
+                           nsIAtom* aTagName,
+                           PRUint32 aLineNumber);
     
     nsresult CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
                            nsINodeInfo* aNodeInfo, PRUint32 aLineNumber,
@@ -121,13 +122,13 @@ protected:
 
     // Our own helpers for constructing XBL prototype objects.
     void ConstructBinding();
-    void ConstructHandler(const PRUnichar **aAtts);
+    void ConstructHandler(const PRUnichar **aAtts, PRUint32 aLineNumber);
     void ConstructResource(const PRUnichar **aAtts, nsIAtom* aResourceType);
     void ConstructImplementation(const PRUnichar **aAtts);
     void ConstructProperty(const PRUnichar **aAtts);
     void ConstructMethod(const PRUnichar **aAtts);
     void ConstructParameter(const PRUnichar **aAtts);
-    void ConstructField(const PRUnichar **aAtts);
+    void ConstructField(const PRUnichar **aAtts, PRUint32 aLineNumber);
   
 
   // nsXMLContentSink overrides

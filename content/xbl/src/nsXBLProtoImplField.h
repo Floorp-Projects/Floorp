@@ -55,6 +55,10 @@ public:
   virtual void Destroy(PRBool aIsCompiled);
 
   void AppendFieldText(const nsAString& aText);
+  void SetLineNumber(PRUint32 aLineNumber) {
+    // XXXbz fields need to have a URI in InstallMember (see XXX
+    // comment there) before line number reporting will be useful.
+  }
   
   virtual nsresult InstallMember(nsIScriptContext* aContext, nsIContent* aBoundElement, 
                                  void* aScriptObject, void* aTargetClassObject);

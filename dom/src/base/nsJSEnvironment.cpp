@@ -1021,7 +1021,7 @@ nsJSContext::CompileEventHandler(void *aTarget, nsIAtom *aName,
 
 NS_IMETHODIMP
 nsJSContext::CompileFunction(void* aTarget,
-                             const nsCString& aName,
+                             const nsACString& aName,
                              PRUint32 aArgCount,
                              const char** aArgArray,
                              const nsAString& aBody,
@@ -1048,7 +1048,8 @@ nsJSContext::CompileFunction(void* aTarget,
   JSObject *target = (JSObject*)aTarget;
   JSFunction* fun =
       ::JS_CompileUCFunctionForPrincipals(mContext, target, jsprin,
-                                          aName.get(), aArgCount, aArgArray,
+                                          PromiseFlatCString(aName).get(),
+                                          aArgCount, aArgArray,
                                           (jschar*)(const PRUnichar*)PromiseFlatString(aBody).get(),
                                           aBody.Length(),
                                           aURL, aLineNo);

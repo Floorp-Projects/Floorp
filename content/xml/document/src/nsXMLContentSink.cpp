@@ -1726,7 +1726,7 @@ nsXMLContentSink::HandleStartElement(const PRUnichar *aName,
 
   PRInt32 nameSpaceID = GetNameSpaceId(nameSpacePrefix);
 
-  if (!OnOpenContainer(aAtts, aAttsCount, nameSpaceID, tagAtom))
+  if (!OnOpenContainer(aAtts, aAttsCount, nameSpaceID, tagAtom, aLineNumber))
     return NS_OK;
   
   nsCOMPtr<nsINodeInfo> nodeInfo;

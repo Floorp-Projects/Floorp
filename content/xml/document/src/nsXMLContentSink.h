@@ -125,7 +125,8 @@ protected:
   virtual PRBool OnOpenContainer(const PRUnichar **aAtts, 
                                  PRUint32 aAttsCount, 
                                  PRInt32 aNameSpaceID, 
-                                 nsIAtom* aTagName) { return PR_TRUE; }
+                                 nsIAtom* aTagName,
+                                 PRUint32 aLineNumber) { return PR_TRUE; }
   virtual nsresult CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
                                  nsINodeInfo* aNodeInfo, PRUint32 aLineNumber,
                                  nsIContent** aResult, PRBool* aAppendContent);

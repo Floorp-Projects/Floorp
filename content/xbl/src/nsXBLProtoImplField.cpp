@@ -108,6 +108,7 @@ nsXBLProtoImplField::InstallMember(nsIScriptContext* aContext, nsIContent* aBoun
   // compile the literal string 
   jsval result = nsnull;
   PRBool undefined;
+  // XXX Need a URI here!
   aContext->EvaluateStringWithValue(nsDependentString(mFieldText,
                                                       mFieldTextLength), 
                                     scriptObject,
