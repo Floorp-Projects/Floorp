@@ -41,21 +41,34 @@
 #endif
 
 struct SHA1ContextStr {
+  union {
+    PRUint32 w[80];		/* input buffer, plus 64 words */
+    PRUint8  b[320];
+  } u;
   PRUint32 H[5];		/* 5 state variables */
-  PRUint32 W[80];		/* input buffer, plus 64 words */
   PRUint32 sizeHi,sizeLo;	/* 64-bit count of hashed bytes. */
-  int      lenW;		/* bytes of data in input buffer */
 };
-
+#define W u.w
+#define B u.b
 
 static void shaCompress(SHA1Context *ctx);
+
+#define SHA_MASK      0x00FF00FF
+#if defined(IS_LITTLE_ENDIAN)
+#define SHA_HTONL(x)  (A = (x), A = A << 16 | A >> 16, \
+                       (A & SHA_MASK) << 8 | (A >> 8) & SHA_MASK)
+#else
+#define SHA_HTONL(x)  (x)
+#endif
+#define SHA_BYTESWAP(x) x = SHA_HTONL(x)
 
 #define SHA_ROTL(X,n) (((X) << (n)) | ((X) >> (32-(n))))
 #define SHA_F1(X,Y,Z) ((((Y)^(Z))&(X))^(Z))
 #define SHA_F2(X,Y,Z) ((X)^(Y)^(Z))
 #define SHA_F3(X,Y,Z) (((X)&(Y))|((Z)&((X)|(Y))))
 #define SHA_F4(X,Y,Z) ((X)^(Y)^(Z))
-
+#define SHA_MIX(t)    ctx->W[t] = \
+  (A = ctx->W[t-3] ^ ctx->W[t-8] ^ ctx->W[t-14] ^ ctx->W[t-16], SHA_ROTL(A, 1))
 
 /*
  *  SHA: Zeroize and initialize context
@@ -63,11 +76,7 @@ static void shaCompress(SHA1Context *ctx);
 void 
 SHA1_Begin(SHA1Context *ctx)
 {
-  int i;
-
   memset(ctx, 0, sizeof(SHA1Context));
-  ctx->lenW = 0;
-  ctx->sizeHi = ctx->sizeLo = 0;
 
   /*
    *  Initialize H with constants from FIPS180-1.
@@ -78,8 +87,6 @@ SHA1_Begin(SHA1Context *ctx)
   ctx->H[3] = 0x10325476L;
   ctx->H[4] = 0xc3d2e1f0L;
 
-  for (i = 0; i < 80; i++)
-    ctx->W[i] = 0;
 }
 
 
@@ -89,7 +96,7 @@ SHA1_Begin(SHA1Context *ctx)
 void 
 SHA1_Update(SHA1Context *ctx, const unsigned char *dataIn, unsigned int len) 
 {
-  register unsigned int lenW = ctx->lenW;
+  register unsigned int lenB = ctx->sizeLo & 63;
   register unsigned int togo;
 
   if (!len)
@@ -102,31 +109,27 @@ SHA1_Update(SHA1Context *ctx, const unsigned char *dataIn, unsigned int len)
   /*
    *  Read the data into W and process blocks as they get full
    */
-  if (lenW > 0) {
-    togo = 64 - lenW;
+  if (lenB > 0) {
+    togo = 64 - lenB;
     if (len < togo)
       togo = len;
-    memcpy((unsigned char *)ctx->W + lenW, dataIn, togo);
+    memcpy(ctx->B + lenB, dataIn, togo);
     len    -= togo;
     dataIn += togo;
-    lenW    = (lenW + togo) & 63;
-    if (!lenW) {
+    lenB    = (lenB + togo) & 63;
+    if (!lenB) {
       shaCompress(ctx);
     }
   }
-  togo = 64;
-  while (len >= togo) {
-    memcpy((unsigned char *)ctx->W, dataIn, togo);
-    dataIn += togo;
-    len    -= togo;
+  while (len >= 64) {
+    memcpy(ctx->B, dataIn, 64);
+    dataIn += 64;
+    len    -= 64;
     shaCompress(ctx);
   }
   if (len) {
-    memcpy((unsigned char *)ctx->W, dataIn, len);
-    lenW  = len;
+    memcpy(ctx->B, dataIn, len);
   }
-  ctx->lenW = lenW;
-
 }
 
 
@@ -137,12 +140,11 @@ void
 SHA1_End(SHA1Context *ctx, unsigned char *hashout,
          unsigned int *pDigestLen, unsigned int maxDigestLen)
 {
-  register PRUint32 sizeHi, sizeLo;
-  int i;
+  register PRUint32 sizeHi, sizeLo, lenB;
   static const unsigned char bulk_pad[64] = { 0x80,0,0,0,0,0,0,0,0,0,
           0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
           0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0  };
-  unsigned char length_pad[8];
+#define A lenB
 
   PORT_Assert (maxDigestLen >= SHA1_LENGTH);
 
@@ -151,37 +153,29 @@ SHA1_End(SHA1Context *ctx, unsigned char *hashout,
    */
   sizeHi = ctx->sizeHi;
   sizeLo = ctx->sizeLo;
+  lenB = sizeLo & 63;
+  SHA1_Update(ctx, bulk_pad, (((55+64) - lenB) & 63) + 1);
+  PORT_Assert((ctx->sizeLo & 63) == 56);
+
   /* Convert size{Hi,Lo} from bytes to bits. */
-  sizeHi = (sizeHi << 3) + (sizeLo >> 29);
+  sizeHi = (sizeHi << 3) | (sizeLo >> 29);
   sizeLo <<= 3;
 
-  length_pad[0] = (unsigned char)(sizeHi >> 24);
-  length_pad[1] = (unsigned char)(sizeHi >> 16);
-  length_pad[2] = (unsigned char)(sizeHi >>  8);
-  length_pad[3] = (unsigned char)(sizeHi >>  0);
-  length_pad[4] = (unsigned char)(sizeLo >> 24);
-  length_pad[5] = (unsigned char)(sizeLo >> 16);
-  length_pad[6] = (unsigned char)(sizeLo >>  8);
-  length_pad[7] = (unsigned char)(sizeLo >>  0);
-
-  SHA1_Update(ctx, bulk_pad, (((55+64) - ctx->lenW) & 63) + 1);
-  SHA1_Update(ctx, length_pad, 8);
+  ctx->W[14] = SHA_HTONL(sizeHi);
+  ctx->W[15] = SHA_HTONL(sizeLo);
+  shaCompress(ctx);
 
   /*
    *  Output hash
    */
 #if defined(IS_LITTLE_ENDIAN)
-  for (i = 0; i < SHA1_LENGTH/4; i++) {
-    register PRUint32 w   = ctx->H[i];
-    hashout[0] = ((unsigned char)(w >> 24));
-    hashout[1] = ((unsigned char)(w >> 16));
-    hashout[2] = ((unsigned char)(w >>  8));
-    hashout[3] = ((unsigned char)(w      ));
-    hashout += 4;
-  }
-#else
-  memcpy(hashout, ctx->H, SHA1_LENGTH);
+  SHA_BYTESWAP(ctx->H[0]);
+  SHA_BYTESWAP(ctx->H[1]);
+  SHA_BYTESWAP(ctx->H[2]);
+  SHA_BYTESWAP(ctx->H[3]);
+  SHA_BYTESWAP(ctx->H[4]);
 #endif
+  memcpy(hashout, ctx->H, SHA1_LENGTH);
   *pDigestLen = SHA1_LENGTH;
 
   /*
@@ -190,25 +184,33 @@ SHA1_End(SHA1Context *ctx, unsigned char *hashout,
   SHA1_Begin(ctx);
 }
 
+#undef A
+#undef B
 /*
  *  SHA: Compression function, unrolled.
  */
 static void 
 shaCompress(SHA1Context *ctx) 
 {
-  int t;
-  register PRUint32 A,B,C,D,E;
+  register PRUint32 A, B, C, D, E;
 
 #if defined(IS_LITTLE_ENDIAN)
-#define MSK 0x00FF00FF
-
-  for (t = 0; t <= 15; t++) {
-    /* This is ctx->W[t] = htonl( ctx->W[t] ); */
-    A = ctx->W[t];
-    A = (A << 16) | (A >> 16);
-    A = (A & MSK) << 8 | (A >> 8) & MSK;
-    ctx->W[t] = A;
-  }
+  SHA_BYTESWAP(ctx->W[0]);
+  SHA_BYTESWAP(ctx->W[1]);
+  SHA_BYTESWAP(ctx->W[2]);
+  SHA_BYTESWAP(ctx->W[3]);
+  SHA_BYTESWAP(ctx->W[4]);
+  SHA_BYTESWAP(ctx->W[5]);
+  SHA_BYTESWAP(ctx->W[6]);
+  SHA_BYTESWAP(ctx->W[7]);
+  SHA_BYTESWAP(ctx->W[8]);
+  SHA_BYTESWAP(ctx->W[9]);
+  SHA_BYTESWAP(ctx->W[10]);
+  SHA_BYTESWAP(ctx->W[11]);
+  SHA_BYTESWAP(ctx->W[12]);
+  SHA_BYTESWAP(ctx->W[13]);
+  SHA_BYTESWAP(ctx->W[14]);
+  SHA_BYTESWAP(ctx->W[15]);
 #endif
 
   /*
@@ -216,9 +218,20 @@ shaCompress(SHA1Context *ctx)
    *  so can cause some compilers to run out of registers and resort
    *  to storing intermediates in RAM.
    */
-  for (t = 16; t <= 79; t++)
-    ctx->W[t] =
-      SHA_ROTL(ctx->W[t-3] ^ ctx->W[t-8] ^ ctx->W[t-14] ^ ctx->W[t-16], 1);
+
+               SHA_MIX(16); SHA_MIX(17); SHA_MIX(18); SHA_MIX(19);
+  SHA_MIX(20); SHA_MIX(21); SHA_MIX(22); SHA_MIX(23); SHA_MIX(24);
+  SHA_MIX(25); SHA_MIX(26); SHA_MIX(27); SHA_MIX(28); SHA_MIX(29);
+  SHA_MIX(30); SHA_MIX(31); SHA_MIX(32); SHA_MIX(33); SHA_MIX(34);
+  SHA_MIX(35); SHA_MIX(36); SHA_MIX(37); SHA_MIX(38); SHA_MIX(39);
+  SHA_MIX(40); SHA_MIX(41); SHA_MIX(42); SHA_MIX(43); SHA_MIX(44);
+  SHA_MIX(45); SHA_MIX(46); SHA_MIX(47); SHA_MIX(48); SHA_MIX(49);
+  SHA_MIX(50); SHA_MIX(51); SHA_MIX(52); SHA_MIX(53); SHA_MIX(54);
+  SHA_MIX(55); SHA_MIX(56); SHA_MIX(57); SHA_MIX(58); SHA_MIX(59);
+  SHA_MIX(60); SHA_MIX(61); SHA_MIX(62); SHA_MIX(63); SHA_MIX(64);
+  SHA_MIX(65); SHA_MIX(66); SHA_MIX(67); SHA_MIX(68); SHA_MIX(69);
+  SHA_MIX(70); SHA_MIX(71); SHA_MIX(72); SHA_MIX(73); SHA_MIX(74);
+  SHA_MIX(75); SHA_MIX(76); SHA_MIX(77); SHA_MIX(78); SHA_MIX(79);
 
   A = ctx->H[0];
   B = ctx->H[1];
@@ -399,7 +412,7 @@ SHA1_TraceState(SHA1Context *ctx)
     SSL_TRC(99, ("%d: SSL: SHA1 state: %08x %08x %08x %08x %08x", SSL_GETPID(), 
 	         ctx->H[0], ctx->H[1], ctx->H[2], ctx->H[3], ctx->H[4]));
 
-    len = (int)(ctx->lenW);
+    len = (int)(ctx->sizeLo & 63);
     remainder = len % 4;
     if (remainder) 
     	fixWord = len - remainder;
