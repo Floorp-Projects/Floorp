@@ -92,7 +92,7 @@ void nsHTTreeDataModel::SetContentRoot(nsIContent* pContent)
 	if (mRootNode)
 	{
 		nsHTItem* pItem = (nsHTItem*)(mRootNode->GetImplData());
-		nsIContent* pColumnNode = pItem->FindChildWithName("columns");
+		nsIContent* pColumnNode = nsHTDataModel::FindChildWithName(pItem->GetContentNode(), "columns");
 		if (pColumnNode)
 		{
 			PRInt32 numChildren;

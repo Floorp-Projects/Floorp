@@ -99,7 +99,7 @@ void nsHTDataModel::AddNodesToArray(nsIContent* pContent, PRUint32 indentLevel)
 
 	nsHTItem* pItem = NS_STATIC_CAST(nsHTItem*, pDataItem->GetImplData());
 
-	nsIContent* pChildrenNode = pItem->FindChildWithName("children");
+	nsIContent* pChildrenNode = nsHTDataModel::FindChildWithName(pItem->GetContentNode(), "children");
 	if (pChildrenNode)
 	{
 		// If the node is OPEN, then its children need to be added to the visibility array.
@@ -159,6 +159,7 @@ void nsHTDataModel::ImageLoaded(nsHierarchicalDataItem* pItem)
 	}
 }
 
+// Static Helper functions
 void nsHTDataModel::GetChildTextForNode(nsIContent* pChildNode, nsString& text)
 {
 	nsIContent* pChild;
@@ -175,4 +176,25 @@ static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
 	else text = "null";
 
 	NS_IF_RELEASE(pChild);
+}
+
+nsIContent* nsHTDataModel::FindChildWithName(nsIContent* pNode, const nsString& name) 
+{
+	PRInt32 count;
+	pNode->ChildCount(count);
+	for (PRInt32 i = 0; i < count; i++)
+	{
+		nsIAtom* pAtom = nsnull;
+		nsIContent* pChild = nsnull;
+		pNode->ChildAt(i, pChild);
+		pChild->GetTag(pAtom);
+		nsString answer;
+		pAtom->ToString(answer);
+		NS_IF_RELEASE(pAtom);
+		if (answer.EqualsIgnoreCase(name))
+			return pChild;
+		else NS_IF_RELEASE(pChild);
+	}
+
+	return nsnull;
 }

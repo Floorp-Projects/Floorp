@@ -33,9 +33,8 @@ public:
 	virtual PRUint32 GetIndentationLevelDelegate() const;
 	virtual void SetIndentationLevelDelegate(PRUint32 n);
 
-public:
-	nsIContent* FindChildWithName(const nsString& name) const; // Caller must release the content ptr.
-	
+	nsIContent* GetContentNode() const { return mContentNode; };
+
 protected:
 	nsHierarchicalDataModel* mDataModel;
 	nsIContent* mContentNode;
