@@ -52,6 +52,25 @@ use CGI::Carp qw(fatalsToBrowser);
 
 require 'globals.pl';
 
+# If Bugzilla is shut down, do not go any further, just display a message
+# to the user about the downtime.  (do)editparams.cgi is exempted from
+# this message, of course, since it needs to be available in order for
+# the administrator to open Bugzilla back up.
+if (Param("shutdownhtml") && $0 !~ m:[\\/](do)?editparams.cgi$:) {
+    # The shut down message we are going to display to the user.
+    $::vars->{'title'} = "Bugzilla is Down";
+    $::vars->{'h1'} = "Bugzilla is Down";
+    $::vars->{'message'} = Param("shutdownhtml");
+    
+    # Return the appropriate HTTP response headers.
+    print "Content-Type: text/html\n\n";
+    
+    # Generate and return an HTML message about the downtime.
+    $::template->process("global/message.html.tmpl", $::vars)
+      || DisplayError("Template process failed: " . $::template->error());
+    exit;
+}
+
 sub GeneratePersonInput {
     my ($field, $required, $def_value, $extraJavaScript) = (@_);
     $extraJavaScript ||= "";
@@ -1110,16 +1129,6 @@ sub PutHeader {
        $extra = "";
     }
     $jscript ||= "";
-    # If we are shutdown, we want a very basic page to give that
-    # information.  Also, the page title should indicate that
-    # we are down.  
-    if (Param('shutdownhtml')) {
-        $title = "Bugzilla is Down";
-        $h1 = "Bugzilla is currently down";
-        $h2 = "";
-        $extra = "";
-        $jscript = "";
-    }
 
     print qq|
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">

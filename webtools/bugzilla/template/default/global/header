@@ -41,11 +41,8 @@
     </table>
 [% END %]
 
-    [% IF message %]
-      <table width="100%" cellspacing="0" cellpadding="5" border="1"><tr><td>
-        <font color="green">[% message %]</font>
-      </td></tr></table>
-    [% END %]
-
-    [% Param('shutdownhtml') %]
-
+[% IF message %]
+  <table width="100%" cellspacing="0" cellpadding="5" border="1"><tr><td>
+    <font color="green">[% message %]</font>
+  </td></tr></table>
+[% END %]
