@@ -132,54 +132,53 @@
             datasources="rdf:null" ref="NC:DownloadsRoot" flags="dont-test-empty"
             ondblclick="return goDoCommand('cmd_properties');" enableColumnDrag="true"
             onselect="onSelect(event);">
-    <treecols>
+    <treecols onclick="doSort(event.target)">
       <treecol id="Name" primary="true"
                    label="&view.header.name.label;"
                    class="sortDirectionIndicator" width="3*" flex="3"
-                   sort="http://home.netscape.com/NC-rdf#Name"
+                   resource="http://home.netscape.com/NC-rdf#Name"
                    persist="width sortActive sortDirection"/>
       <splitter class="tree-splitter"/>
       <treecol id="Progress" type="progressmeter"
                    label="&view.header.progress.label;"
                    class="sortDirectionIndicator" width="3*" flex="3"
-                   sort="http://home.netscape.com/NC-rdf#ProgressPercent"
-                   persist="width hidden sortActive sortDirection"
-                   sortActive="true" sortDirection="descending"/>
+                   resource="http://home.netscape.com/NC-rdf#ProgressPercent"
+                   persist="width hidden sortActive sortDirection"/>
       <splitter class="tree-splitter"/>
       <treecol id="ProgressPercent" hidden="true"
                    label="&view.header.progresstext.label;"
                    class="sortDirectionIndicator" width="1*" flex="1"
-                   sort="http://home.netscape.com/NC-rdf#ProgressPercent"
+                   resource="http://home.netscape.com/NC-rdf#ProgressPercent"
                    persist="width hidden sortActive sortDirection"/>
       <splitter class="tree-splitter"/>
       <treecol id="TimeRemaining"
                    label="&view.header.timeremaining.label;"
                    class="sortDirectionIndicator" width="1*" flex="1"
-                   sort="http://home.netscape.com/NC-rdf#TimeRemaining"
+                   resource="http://home.netscape.com/NC-rdf#TimeRemaining"
                    persist="width hidden sortActive sortDirection"/>
       <splitter class="tree-splitter"/>
       <treecol id="Transferred"
                    label="&view.header.transferred.label;"
                    class="sortDirectionIndicator" width="1*" flex="1"
-                   sort="http://home.netscape.com/NC-rdf#Transferred"
+                   resource="http://home.netscape.com/NC-rdf#Transferred"
                    persist="width hidden sortActive sortDirection"/>
       <splitter class="tree-splitter"/>
       <treecol id="TransferRate"
                    label="&view.header.transferrate.label;"
                    class="sortDirectionIndicator" width="1*" flex="1"
-                   sort="http://home.netscape.com/NC-rdf#TransferRate"
+                   resource="http://home.netscape.com/NC-rdf#TransferRate"
                    persist="width hidden sortActive sortDirection"/>
       <splitter class="tree-splitter"/>
       <treecol id="TimeElapsed" hidden="true"
                    label="&view.header.timeelapsed.label;"
                    class="sortDirectionIndicator" width="1*" flex="1"
-                   sort="http://home.netscape.com/NC-rdf#TimeElapsed"
+                   resource="http://home.netscape.com/NC-rdf#TimeElapsed"
                    persist="width hidden sortActive sortDirection"/>
       <splitter class="tree-splitter"/>
       <treecol id="Source" hidden="true"
                    label="&view.header.source.label;"
                    class="sortDirectionIndicator" width="1*" flex="1"
-                   sort="http://home.netscape.com/NC-rdf#URL"
+                   resource="http://home.netscape.com/NC-rdf#URL"
                    persist="width hidden sortActive sortDirection"/>
     </treecols>
     <template>

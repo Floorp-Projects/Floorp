@@ -425,18 +425,8 @@ nsDownloadManager::AddDownload(nsIURI* aSource,
   nsCOMPtr<nsIRDFResource> downloadRes;
   gRDFService->GetResource(path.get(), getter_AddRefs(downloadRes));
 
-  // if the resource is in the container already (the user has already
-  // downloaded this file), remove it
-  PRInt32 itemIndex;
   nsCOMPtr<nsIRDFNode> node;
-  downloads->IndexOf(downloadRes, &itemIndex);
-  if (itemIndex > 0) {
-    rv = downloads->RemoveElementAt(itemIndex, PR_TRUE, getter_AddRefs(node));
-    if (NS_FAILED(rv)) return rv;
-  }
-  rv = downloads->AppendElement(downloadRes);
-  if (NS_FAILED(rv)) return rv;
-  
+
   // Assert source url information
   nsCAutoString spec;
   aSource->GetSpec(spec);
@@ -448,11 +438,7 @@ nsDownloadManager::AddDownload(nsIURI* aSource,
     rv = mDataSource->Change(downloadRes, gNC_URL, node, urlResource);
   else
     rv = mDataSource->Assert(downloadRes, gNC_URL, urlResource, PR_TRUE);
-  if (NS_FAILED(rv)) {
-    downloads->IndexOf(downloadRes, &itemIndex);
-    downloads->RemoveElementAt(itemIndex, PR_TRUE, getter_AddRefs(node));
-    return rv;
-  }
+  if (NS_FAILED(rv)) return rv;
 
   // Set and assert the "pretty" (display) name of the download
   nsAutoString displayName; displayName.Assign(aDisplayName);
@@ -468,11 +454,7 @@ nsDownloadManager::AddDownload(nsIURI* aSource,
     rv = mDataSource->Change(downloadRes, gNC_Name, node, nameLiteral);
   else
     rv = mDataSource->Assert(downloadRes, gNC_Name, nameLiteral, PR_TRUE);
-  if (NS_FAILED(rv)) {
-    downloads->IndexOf(downloadRes, &itemIndex);
-    downloads->RemoveElementAt(itemIndex, PR_TRUE, getter_AddRefs(node));
-    return rv;
-  }
+  if (NS_FAILED(rv)) return rv;
   
   internalDownload->SetMIMEInfo(aMIMEInfo);
   internalDownload->SetStartTime(aStartTime);
@@ -481,11 +463,7 @@ nsDownloadManager::AddDownload(nsIURI* aSource,
   nsCOMPtr<nsIRDFResource> fileResource;
   gRDFService->GetResource(path.get(), getter_AddRefs(fileResource));
   rv = mDataSource->Assert(downloadRes, gNC_File, fileResource, PR_TRUE);
-  if (NS_FAILED(rv)) {
-    downloads->IndexOf(downloadRes, &itemIndex);
-    downloads->RemoveElementAt(itemIndex, PR_TRUE, getter_AddRefs(node));
-    return rv;
-  }
+  if (NS_FAILED(rv)) return rv;
   
   // Assert download state information (NOTSTARTED, since it's just now being added)
   nsCOMPtr<nsIRDFInt> intLiteral;
@@ -495,20 +473,19 @@ nsDownloadManager::AddDownload(nsIURI* aSource,
     rv = mDataSource->Change(downloadRes, gNC_DownloadState, node, intLiteral);
   else
     rv = mDataSource->Assert(downloadRes, gNC_DownloadState, intLiteral, PR_TRUE);
-  if (NS_FAILED(rv)) {
-    downloads->IndexOf(downloadRes, &itemIndex);
-    downloads->RemoveElementAt(itemIndex, PR_TRUE, getter_AddRefs(node));
-    return rv;
-  }
+  if (NS_FAILED(rv)) return rv;
   
+  PRInt32 itemIndex;
+  downloads->IndexOf(downloadRes, &itemIndex);
+  if (itemIndex == -1) {
+    rv = downloads->AppendElement(downloadRes);
+    if (NS_FAILED(rv)) return rv;
+  }
+
   // Now flush all this to disk
   nsCOMPtr<nsIRDFRemoteDataSource> remote(do_QueryInterface(mDataSource));
   rv = remote->Flush();
-  if (NS_FAILED(rv)) {
-    downloads->IndexOf(downloadRes, &itemIndex);
-    downloads->RemoveElementAt(itemIndex, PR_TRUE, getter_AddRefs(node));
-    return rv;
-  }
+  if (NS_FAILED(rv)) return rv;
 
   // if a persist object was specified, set the download item as the progress listener
   // this will create a cycle that will be broken in nsDownload::OnStateChange

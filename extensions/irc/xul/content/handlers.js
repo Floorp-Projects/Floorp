@@ -628,11 +628,11 @@ function onSortCol(sortColName)
         return false;
     try
     {
-        xulSortService.Sort(node, sortResource, sortDirection);
+        xulSortService.sort(node, sortResource, sortDirection);
     }
     catch(ex)
     {
-            //dd("Exception calling xulSortService.Sort()");
+            //dd("Exception calling xulSortService.sort()");
     }
     
     return false;

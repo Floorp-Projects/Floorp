@@ -133,7 +133,7 @@ function onLoad() {
 function sortAccountList(accounttree)
 {
   var xulSortService = Components.classes["@mozilla.org/xul/xul-sort-service;1"].getService(Components.interfaces.nsIXULSortService);
-  xulSortService.Sort(accounttree, 'http://home.netscape.com/NC-rdf#FolderTreeName?sort=true', 'ascending');
+  xulSortService.sort(accounttree, 'http://home.netscape.com/NC-rdf#FolderTreeName?sort=true', 'ascending');
 }
 
 function selectServer(server, selectPage)
