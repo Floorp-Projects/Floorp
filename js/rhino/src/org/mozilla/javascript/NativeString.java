@@ -182,7 +182,7 @@ final class NativeString extends IdScriptable {
                         else return ScriptRuntime.NaNobj;
                     }
                     char c = target.charAt((int)pos);
-                       if (methodId == Id_charAt) return String.valueOf(c);
+                    if (methodId == Id_charAt) return String.valueOf(c);
                     else return wrap_int(c);
                 }
 
