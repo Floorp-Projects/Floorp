@@ -147,4 +147,42 @@ protected:
       char * aDest, PRInt32 * aDestLength);
 };
 
+//----------------------------------------------------------------------
+// Class nsTablesEncoderSupport [declaration]
+
+/**
+ * Support class for a multi-table-driven Unicode encoder.
+ * 
+ * @created         11/Mar/1999
+ * @author  Catalin Rotaru [CATA]
+ */
+class nsTablesEncoderSupport : public nsEncoderSupport
+{
+public:
+
+  /**
+   * Class constructor.
+   */
+  nsTablesEncoderSupport(PRInt32 aTableCount, uShiftTable ** aShiftTable,
+      uMappingTable  ** aMappingTable);
+
+  /**
+   * Class destructor.
+   */
+  virtual ~nsTablesEncoderSupport();
+
+protected:
+
+  nsIUnicodeEncodeHelper    * mHelper;      // encoder helper object
+  PRInt32                   mTableCount;
+  uShiftTable               ** mShiftTable;
+  uMappingTable             ** mMappingTable;
+
+  //--------------------------------------------------------------------
+  // Subclassing of nsEncoderSupport class [declaration]
+
+  NS_IMETHOD ConvertNoBuffNoErr(const PRUnichar * aSrc, PRInt32 * aSrcLength, 
+      char * aDest, PRInt32 * aDestLength);
+};
+
 #endif /* nsUCvJa2Support_h___ */

@@ -306,3 +306,45 @@ NS_IMETHODIMP nsTableEncoderSupport::ConvertNoBuffNoErr(
       mShiftTable, mMappingTable);
   return res;
 }
+
+//----------------------------------------------------------------------
+// Class nsTablesEncoderSupport [implementation]
+
+nsTablesEncoderSupport::nsTablesEncoderSupport(PRInt32 aTableCount,
+                                               uShiftTable ** aShiftTable, 
+                                               uMappingTable  ** aMappingTable) 
+: nsEncoderSupport()
+{
+  mHelper = NULL;
+  mTableCount = aTableCount;
+  mShiftTable = aShiftTable;
+  mMappingTable = aMappingTable;
+}
+
+nsTablesEncoderSupport::~nsTablesEncoderSupport() 
+{
+  NS_IF_RELEASE(mHelper);
+}
+
+//----------------------------------------------------------------------
+// Subclassing of nsEncoderSupport class [implementation]
+
+NS_IMETHODIMP nsTablesEncoderSupport::ConvertNoBuffNoErr(
+                                      const PRUnichar * aSrc, 
+                                      PRInt32 * aSrcLength, 
+                                      char * aDest, 
+                                      PRInt32 * aDestLength)
+{
+  nsresult res;
+
+  if (mHelper == nsnull) {
+    res = nsComponentManager::CreateInstance(kUnicodeEncodeHelperCID, NULL, 
+        kIUnicodeEncodeHelperIID, (void**) & mHelper);
+    
+    if (NS_FAILED(res)) return NS_ERROR_UENC_NOHELPER;
+  }
+
+  res = mHelper->ConvertByTables(aSrc, aSrcLength, aDest, aDestLength, 
+      mTableCount, mShiftTable, mMappingTable);
+  return res;
+}
