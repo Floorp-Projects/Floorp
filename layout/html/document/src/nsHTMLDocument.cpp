@@ -58,6 +58,7 @@
 #include "nsINetService.h"
 #else
 #include "nsIIOService.h"
+#include "nsICookieService.h"
 #endif // NECKO
 
 #include "nsIServiceManager.h"
@@ -118,6 +119,7 @@ static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
 #else
 static NS_DEFINE_IID(kIIOServiceIID, NS_IIOSERVICE_IID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+static NS_DEFINE_IID(kCookieServiceCID, NS_COOKIESERVICE_CID);
 #endif // NECKO
 
 static NS_DEFINE_IID(kIHTMLContentContainerIID, NS_IHTMLCONTENTCONTAINER_IID);
@@ -1398,9 +1400,12 @@ nsHTMLDocument::GetCookie(nsString& aCookie)
   }
   return result;
 #else
-  // XXX NECKO we need to use the cookie module for this info instead of 
-  // XXX the IOService
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsresult result = NS_OK;
+  NS_WITH_SERVICE(nsICookieService, service, kCookieServiceCID, &result);
+  if ((NS_OK == result) && (nsnull != service) && (nsnull != mDocumentURL)) {
+    result = service->GetCookieString(mDocumentURL, aCookie);
+  }
+  return result;
 #endif // NECKO
 }
 
@@ -1415,9 +1420,12 @@ nsHTMLDocument::SetCookie(const nsString& aCookie)
   }
   return result;
 #else
-  // XXX NECKO we need to use the cookie module for this info instead of 
-  // XXX the IOService
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsresult result = NS_OK;
+  NS_WITH_SERVICE(nsICookieService, service, kCookieServiceCID, &result);
+  if ((NS_OK == result) && (nsnull != service) && (nsnull != mDocumentURL)) {
+    result = service->SetCookieString(mDocumentURL, aCookie);
+  }
+  return result;
 #endif // NECKO
 }
 
