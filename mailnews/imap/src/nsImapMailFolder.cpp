@@ -73,7 +73,7 @@
 #include "nsMsgUtf7Utils.h"
 #include "nsICacheSession.h"
 #include "nsEscape.h"
-#include "nsIDomWindowInternal.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIMsgFilter.h"
 #include "nsImapMoveCoalescer.h"
 #include "nsIPrompt.h"
