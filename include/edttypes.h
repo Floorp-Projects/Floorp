@@ -179,25 +179,54 @@ typedef enum {                /* Return value for EDT_GetTableHitRegion) */
 typedef enum {             /* Return types for EDT_GetTableDragDropRegion */
     ED_DROP_NONE,               /* Don't allow drop - when pasting wouldn't change anything */
     ED_DROP_NORMAL,             /* No special table behavior - do the same as any HTML drop */
-    ED_DROP_INSERT_BEFORE,      /* Between columns - near left border of cell when source = column */
-    ED_DROP_INSERT_AFTER,       /* Between columns - near right border of cell when source = column */
-    ED_DROP_INSERT_ABOVE,       /* Between rows - near top border of cell when source = row */
-    ED_DROP_INSERT_BELOW,       /* Between rows - near bottom border of cell when source = row */
-    ED_DROP_REPLACE_CELL,       /* Inside cell - when we want to replace cell contents */
-    ED_DROP_APPEND_CONTENTS     /* Inside cell - when we append to existing contents */
+    ED_DROP_ROW_ABOVE,          /* Between rows - near top border of cell when source = row */
+    ED_DROP_ROW_BELOW,          /* Between rows - near bottom border of cell when source = row */
+    ED_DROP_COLUMN_BEFORE,      /* Between columns - near left border of cell when source = column */
+    ED_DROP_COLUMN_AFTER,       /* Between columns - near right border of cell when source = column */
+    ED_DROP_REPLACE_CELLS       /* Inside cell - when we want to replace cell contents */
 } ED_DropType;
 
+/* Different behavior when pasting table cells. 2nd param values for EDT_PasteHTML() */
+typedef enum {
+    ED_PASTE_NORMAL,
+    ED_PASTE_TABLE,                 /* Create a new table at insert point */
+    ED_PASTE_ROW_ABOVE,             /* Insert new row(s) above current row */
+    ED_PASTE_ROW_BELOW,             /* Insert new row(s) below current row*/
+    ED_PASTE_COLUMN_BEFORE,         /* Insert new column(s) before current column */
+    ED_PASTE_COLUMN_AFTER,          /* Insert new column(s) after current column */
+    ED_PASTE_REPLACE_CELLS,         /* Replace cell contents of cells marked with
+                                       the "special selection" attribute */
+    /* Next 2 are used only when pasting tab-delimited text or image representation from Excel */
+    ED_PASTE_TEXT,                  /* Paste plain text, not a table */
+    ED_PASTE_IMAGE                  /* Paste the image representation of the text */
+} ED_PasteType;
+/* Note: Keep the range from ROW_ABOVE through REPLACE_CELLS in synch with ED_DropType values 
+         for quick conversion from ED_DropType into ED_PasteType */
+
+/* Data type written to stream. Used to decide how to paste into existing table */
+typedef enum {
+
+    ED_COPY_NORMAL,     /* Default = 0. Normal HTML copying, not a table */
+    ED_COPY_TABLE,      /* Entire Table was copied */
+    ED_COPY_ROWS,       /* Only entire rows were copied */
+    ED_COPY_COLUMNS,    /* Only entire columns were copied */
+    ED_COPY_CELLS       /* Arbitrary set of selected cells were copied */
+} ED_CopyType;
+
 struct _EDT_DragTableData {
+    void       *pSourceTable;        /* So we can tell if dragging between different tables */
     ED_HitType  iSourceType;         /* One of the ED_HIT_SEL_... enums */
-    ED_DropType iDropType;           /* One of above enum values */
+    ED_DropType iDropType;           /* One of ED_DROP_... enums */
     LO_Element  *pFirstSelectedCell; /* First cell in source being dragged */
     LO_Element  *pDragOverCell;      /* Cell being dragged over */
-    intn         iRows;              /* Number of rows */
-    intn         iColumns;           /*  and columns in selection */
+    int32        iRows;              /* Number of rows being dragged */
+    int32        iColumns;           /* Number of columns being dragged (counts COLSPAN) */
+    int32       *pCellsPerRow;       /* Array of number of actual cells in each row (size = iRows)  
+                                     /*   (this doesn't count COLSPAN effects) */
     int32        X;                  /* Location to place highlighting or make caret */
     int32        Y;                  /*  to show where to drop cells */
-    int32        iWidth;
-    int32        iHeight;
+    int32        iWidth;             /* The width and */
+    int32        iHeight;            /*  height of the insert-between-cells feedback */
 };
 typedef struct _EDT_DragTableData EDT_DragTableData;
 

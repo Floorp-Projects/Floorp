@@ -264,8 +264,11 @@ void EDT_PageUp( MWContext *context, XP_Bool bSelect );
 void EDT_PageDown( MWContext *context, XP_Bool bSelect );
 void EDT_PreviousWord( MWContext *context, XP_Bool bSelect );
 void EDT_NextWord( MWContext *context, XP_Bool bSelect );
-void EDT_NextTableCell( MWContext *context, XP_Bool bSelect );
-void EDT_PreviousTableCell( MWContext *context, XP_Bool bSelect );
+/* We never select text when moving from cell to cell, so no bSelect.
+   bEndOfCell determines if caret is placed at beginning or
+   end of the next or previous cell's contents */
+void EDT_NextTableCell( MWContext *context, XP_Bool bEndOfCell );
+void EDT_PreviousTableCell( MWContext *context, XP_Bool bEndOfCell );
 
 void EDT_WindowScrolled( MWContext *context );
 
@@ -630,7 +633,27 @@ EDT_ClipboardResult EDT_PasteText( MWContext *pContext, char *pText );
 #ifdef ENDER
 EDT_ClipboardResult EDT_SetDefaultText( MWContext *pContext, char *pText ); /* can done before finishedload can be called. */
 #endif /*ENDER*/
-EDT_ClipboardResult EDT_PasteHTML( MWContext *pContext, char *pHtml );
+
+EDT_ClipboardResult EDT_PasteHTML( MWContext *pContext, char *pHtml, ED_PasteType iPasteType );
+
+/* Extract the int that says if we have full columns, rows, just cells, or a table in pBuffer 
+ * Used by FE to give user more choices when pasting into existing table
+*/
+ED_CopyType EDT_GetHTMLCopyType(char *pBuffer);
+
+/* Front end check for spreadsheet-formated text
+  (tabs between cells, CR at end of row, equal number of cells per row)
+  Optional(if pointers supplied): Return number of rows and columns in pText,
+    and if current caret is inside an existing table
+*/
+XP_Bool EDT_CanPasteTextAsTable(MWContext *pContext, char * pText, 
+                                intn *pRows, intn *pCols, XP_Bool *pIsInTable);
+
+/* Paste text as a table. This will call EDT_CanPasteTextAsTable to be sure its OK 
+   iPasteType applies only if we are inside an existing table,
+   to determine if we should insert a new table or how to integrate into existing table
+ */
+EDT_ClipboardResult EDT_PasteTextAsTable( MWContext *pContext, char *pText, ED_PasteType iPasteType );
 
 /** API for pasting quoted text into the editor.
  * Call EDT_PasteQuoteBegin, then call EDT_PasteQuoteINTL zero or more times,
