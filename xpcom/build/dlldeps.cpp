@@ -31,6 +31,7 @@
 //#include "nsIByteBufferInputStream.h"
 #include "nsFileStream.h"
 #include "nsFileSpecStreaming.h"
+#include "nsFixedSizeAllocator.h"
 #include "nsSpecialSystemDirectory.h"
 #include "nsIThread.h"
 #include "nsDeque.h"
@@ -92,6 +93,7 @@ void XXXNeverCalled()
     nsFileURL(NULL);
     NS_NewPipe(NULL, NULL, NULL, 0, 0);
     nsFileSpec s;
+    nsFixedSizeAllocator a;
     NS_NewIOFileStream(NULL, s, 0, 0);
     nsInputFileStream(s, 0, 0);
     nsPersistentFileDescriptor d;
