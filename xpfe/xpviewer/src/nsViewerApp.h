@@ -67,6 +67,8 @@ public:
   NS_IMETHOD CreateJSConsole(nsBrowserWindow* aWindow);
   NS_IMETHOD Exit();
 
+  NS_IMETHOD DoPrefs(nsBrowserWindow* aWindow);
+
   NS_IMETHOD Run();
 
 protected:
@@ -78,7 +80,7 @@ protected:
   nsString mStartURL;
   PRBool mDoPurify;
   PRBool mLoadTestFromFile;
-  PRBool mCrawl;
+  //PRBool mCrawl;
   nsString mInputFileName;
   PRInt32 mNumSamples;
   PRInt32 mDelay;
@@ -88,13 +90,6 @@ protected:
   PRBool mIsInitialized;
 };
 
-/*class nsNativeViewerApp : public nsViewerApp {
-public:
-  nsNativeViewerApp();
-  ~nsNativeViewerApp();
-
-  virtual int Run();
-};*/
 
 #endif /* nsViewerApp_h___ */
 

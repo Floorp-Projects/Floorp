@@ -178,6 +178,9 @@ static const char* gsHTMLFormat = "text/html";
 static PRInt32 gBtnWidth  = 54;
 static PRInt32 gBtnHeight = 42;
 
+//----------------------------------------------------------------------
+nsVoidArray nsBrowserWindow::gBrowsers;
+
 /////////////////////////////////////////////////////////////
 // This part is temporary until we get the XML/HTML code working
 /////////////////////////////////////////////////////////////
@@ -196,6 +199,8 @@ typedef struct {
   char *  mRolloverName;
 } ButtonCreateInfo;
 
+//-----------------------------------------------------------------
+// XXX These constants will go away once we are hooked up to JavaScript
 const PRInt32 gBackBtnInx      = 0;
 const PRInt32 gForwardBtnInx   = 1;
 const PRInt32 gReloadBtnInx    = 2;
@@ -223,6 +228,8 @@ const PRInt32 kWhatsRelatedCmd = 3012;
 
 const PRInt32 kPersonalCmd  = 4000;
 
+//-------------------------------------------
+// These static toolbar definitions will go away once we have XML/HTML
 ButtonCreateInfo gBtnToolbarInfo[] = {
 {10, 23, 21, PR_FALSE, kBackCmd,     "Back",    "Return to previous document in history list", "TB_Back.gif",    "TB_Back.gif",    "TB_Back_dis.gif",     "TB_Back_mo.gif"},
 {2,  23, 21, PR_FALSE, kForwardCmd,  "Forward", "Move forward to next document in history list", "TB_Forward.gif", "TB_Forward.gif", "TB_Forward_dis.gif",  "TB_Forward_mo.gif"},
@@ -275,9 +282,269 @@ static nsEventStatus PR_CALLBACK HandleGUIEvent(nsGUIEvent *aEvent);
 static void* GetItemsNativeData(nsISupports* aObject);
 
 //----------------------------------------------------------------------
+// Note: operator new zeros our memory
+nsBrowserWindow::nsBrowserWindow()
+{
+  AddBrowser(this);
+}
 
-nsVoidArray nsBrowserWindow::gBrowsers;
+//---------------------------------------------------------------
+nsBrowserWindow::~nsBrowserWindow()
+{
+}
 
+NS_IMPL_ADDREF(nsBrowserWindow)
+NS_IMPL_RELEASE(nsBrowserWindow)
+
+//----------------------------------------------------------------------
+nsresult
+nsBrowserWindow::QueryInterface(const nsIID& aIID,
+                                void** aInstancePtrResult)
+{
+  NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
+  if (nsnull == aInstancePtrResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  *aInstancePtrResult = NULL;
+
+  if (aIID.Equals(kIBrowserWindowIID)) {
+    *aInstancePtrResult = (void*) ((nsIBrowserWindow*)this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(kIStreamObserverIID)) {
+    *aInstancePtrResult = (void*) ((nsIStreamObserver*)this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(kIWebShellContainerIID)) {
+    *aInstancePtrResult = (void*) ((nsIWebShellContainer*)this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(kINetSupportIID)) {
+    *aInstancePtrResult = (void*) ((nsINetSupport*)this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(kISupportsIID)) {
+    *aInstancePtrResult = (void*) ((nsISupports*)((nsIBrowserWindow*)this));
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  return NS_NOINTERFACE;
+}
+
+//---------------------------------------------------------------
+static nsEventStatus PR_CALLBACK
+HandleBrowserEvent(nsGUIEvent *aEvent)
+{ 
+  nsEventStatus result = nsEventStatus_eIgnore;
+  nsBrowserWindow* bw = nsBrowserWindow::FindBrowserFor(aEvent->widget, FIND_WINDOW);
+
+  if (nsnull != bw) {
+    nsSizeEvent* sizeEvent;
+    switch(aEvent->message) {
+    case NS_SIZE:
+      sizeEvent = (nsSizeEvent*)aEvent;  
+      bw->Layout(sizeEvent->windowSize->width,
+                 sizeEvent->windowSize->height);
+      result = nsEventStatus_eConsumeNoDefault;
+      break;
+
+    case NS_DESTROY:
+      {
+        nsViewerApp* app = bw->mApp;
+        result = nsEventStatus_eConsumeDoDefault;
+        bw->Close();
+        NS_RELEASE(bw);
+
+        // XXX Really shouldn't just exit, we should just notify somebody...
+        if (0 == nsBrowserWindow::gBrowsers.Count()) {
+          app->Exit();
+        }
+      }
+      return result;
+
+    case NS_MENU_SELECTED:
+      result = bw->DispatchMenuItem(((nsMenuEvent*)aEvent)->menuItem);
+      break;
+
+    // XXX This is a hack, but a needed one
+    // It draws one line between the layout window and the status bar
+    case NS_PAINT: 
+      nsIWidget * statusWidget;
+      if (NS_OK == bw->mStatusBar->QueryInterface(kIWidgetIID,(void**)&statusWidget)) {
+        nsRect rect;
+        statusWidget->GetBounds(rect);
+
+        nsRect r;
+        aEvent->widget->GetBounds(r);
+        r.x = 0;
+        r.y = 0;
+        nsIRenderingContext *drawCtx = ((nsPaintEvent*)aEvent)->renderingContext;
+        drawCtx->SetColor(NS_RGB(192, 192, 192));//aEvent->widget->GetBackgroundColor());
+        rect.y -= 1;
+        drawCtx->DrawLine(0, rect.y, r.width, rect.y);
+        NS_RELEASE(statusWidget);
+      } break;
+
+    default:
+      break;
+    }
+    NS_RELEASE(bw);
+  }
+  return result;
+}
+
+
+//----------------------------------------------------------------------
+nsresult
+nsBrowserWindow::Init(nsIAppShell* aAppShell,
+                      nsIPref* aPrefs,
+                      const nsRect& aBounds,
+                      PRUint32 aChromeMask,
+                      PRBool aAllowPlugins)
+{
+  mChromeMask = aChromeMask;
+  mAppShell = aAppShell;
+  mPrefs = aPrefs;
+  mAllowPlugins = aAllowPlugins;
+
+  // Create top level window
+  nsresult rv = nsRepository::CreateInstance(kWindowCID, nsnull, kIWidgetIID,
+                                             (void**)&mWindow);
+  if (NS_OK != rv) {
+    return rv;
+  }
+  nsRect r(0, 0, aBounds.width, aBounds.height);
+  mWindow->Create((nsIWidget*)NULL, r, HandleBrowserEvent,
+                  nsnull, aAppShell);
+  mWindow->GetBounds(r);
+  mWindow->SetBackgroundColor(NS_RGB(192,192,192));
+
+  // Create web shell
+  rv = nsRepository::CreateInstance(kWebShellCID, nsnull,
+                                    kIWebShellIID,
+                                    (void**)&mWebShell);
+  if (NS_OK != rv) {
+    return rv;
+  }
+  r.x = r.y = 0;
+  rv = mWebShell->Init(mWindow->GetNativeData(NS_NATIVE_WIDGET), 
+                       r.x, r.y, r.width, r.height,
+                       nsScrollPreference_kAuto, aAllowPlugins);
+  mWebShell->SetContainer((nsIWebShellContainer*) this);
+  mWebShell->SetObserver((nsIStreamObserver*)this);
+  mWebShell->SetPrefs(aPrefs);
+  mWebShell->Show();
+
+  if (NS_CHROME_MENU_BAR_ON & aChromeMask) {
+    rv = CreateMenuBar(r.width);
+    if (NS_OK != rv) {
+      return rv;
+    }
+    mWindow->GetBounds(r);
+    r.x = r.y = 0;
+  }
+
+  if (NS_CHROME_TOOL_BAR_ON & aChromeMask) {
+    rv = CreateToolBar(r.width);
+    if (NS_OK != rv) {
+      return rv;
+    }
+  }
+
+  if (NS_CHROME_STATUS_BAR_ON & aChromeMask) {
+    rv = CreateStatusBar(r.width);
+    if (NS_OK != rv) {
+      return rv;
+    }
+  }
+
+  // Now lay it all out
+  Layout(r.width, r.height);
+
+
+  return NS_OK;
+}
+
+
+//---------------------------------------------------------------
+// XXX This will be going away when I get the "default" handle done for toolbars
+static nsEventStatus PR_CALLBACK
+HandleToolbarEvent(nsGUIEvent *aEvent)
+{
+  nsEventStatus result = nsEventStatus_eIgnore;
+  nsIToolbar * toolbar;
+	if (NS_OK == aEvent->widget->QueryInterface(kIToolbarIID,(void**)&toolbar)) {
+    result = toolbar->HandleEvent(aEvent);
+    NS_RELEASE(toolbar);
+  }
+
+
+  return result;
+}
+
+//---------------------------------------------------------------
+// XXX This will be going away when I get the "default" handle done for toolbars managers
+static nsEventStatus PR_CALLBACK
+HandleToolbarMgrEvent(nsGUIEvent *aEvent)
+{
+  nsEventStatus result = nsEventStatus_eIgnore;
+
+  switch(aEvent->message) {
+    case NS_PAINT: {
+      nsRect r;
+      aEvent->widget->GetBounds(r);
+      r.x = 0;
+      r.y = 0;
+      nsIRenderingContext *drawCtx = ((nsPaintEvent*)aEvent)->renderingContext;
+      drawCtx->SetColor(aEvent->widget->GetBackgroundColor());
+      drawCtx->FillRect(r);
+
+      //nsRect rect(*(((nsPaintEvent*)aEvent)->rect));
+      nsRect rect(r);
+      drawCtx->SetColor(NS_RGB(255,255,255));
+      drawCtx->DrawLine(0,0,rect.width,0);
+      drawCtx->SetColor(NS_RGB(128,128,128));
+      drawCtx->DrawLine(0,rect.height-1,rect.width,rect.height-1);
+    }
+    break;
+  } //switch
+
+  return result;
+}
+
+//---------------------------------------------------------------
+// XXX This is needed for now, but I will be putting a listener on the text widget
+// eventually this will be replaced with and formal "URLBar" implementation
+static nsEventStatus PR_CALLBACK
+HandleLocationEvent(nsGUIEvent *aEvent)
+{
+  nsEventStatus result = nsEventStatus_eIgnore;
+  nsBrowserWindow* bw =
+    nsBrowserWindow::FindBrowserFor(aEvent->widget, FIND_LOCATION);
+  if (nsnull != bw) {
+    switch (aEvent->message) {
+    case NS_KEY_UP:
+      if (NS_VK_RETURN == ((nsKeyEvent*)aEvent)->keyCode) {
+        nsAutoString text;
+        PRUint32 size;
+        bw->mLocation->GetText(text, 1000, size);
+        bw->GoTo(text);
+      }
+      break;
+    default:
+      break;
+    }
+    NS_RELEASE(bw);
+  }
+  return result;
+}
+
+//-----------------------------------------------------------------
 nsBrowserWindow*
 nsBrowserWindow::FindBrowserFor(nsIWidget* aWidget, PRIntn aWhich)
 {
@@ -371,145 +638,6 @@ nsBrowserWindow::CloseAllWindows()
   gBrowsers.Clear();
 }
 
-//---------------------------------------------------------------
-static nsEventStatus PR_CALLBACK
-HandleBrowserEvent(nsGUIEvent *aEvent)
-{ 
-  nsEventStatus result = nsEventStatus_eIgnore;
-  nsBrowserWindow* bw = nsBrowserWindow::FindBrowserFor(aEvent->widget, FIND_WINDOW);
-
-  if (nsnull != bw) {
-    nsSizeEvent* sizeEvent;
-    switch(aEvent->message) {
-    case NS_SIZE:
-      sizeEvent = (nsSizeEvent*)aEvent;  
-      bw->Layout(sizeEvent->windowSize->width,
-                 sizeEvent->windowSize->height);
-      result = nsEventStatus_eConsumeNoDefault;
-      break;
-
-    case NS_DESTROY:
-      {
-        nsViewerApp* app = bw->mApp;
-        result = nsEventStatus_eConsumeDoDefault;
-        bw->Close();
-        NS_RELEASE(bw);
-
-        // XXX Really shouldn't just exit, we should just notify somebody...
-        if (0 == nsBrowserWindow::gBrowsers.Count()) {
-          app->Exit();
-        }
-      }
-      return result;
-
-    case NS_MENU_SELECTED:
-      result = bw->DispatchMenuItem(((nsMenuEvent*)aEvent)->menuItem);
-      break;
-
-    // XXX This is a hack, but a needed one
-    // It draws one line between the layout window and the status bar
-    case NS_PAINT: 
-      nsIWidget * statusWidget;
-      if (NS_OK == bw->mStatusBar->QueryInterface(kIWidgetIID,(void**)&statusWidget)) {
-        nsRect rect;
-        statusWidget->GetBounds(rect);
-
-        nsRect r;
-        aEvent->widget->GetBounds(r);
-        r.x = 0;
-        r.y = 0;
-        nsIRenderingContext *drawCtx = ((nsPaintEvent*)aEvent)->renderingContext;
-        drawCtx->SetColor(NS_RGB(192, 192, 192));//aEvent->widget->GetBackgroundColor());
-        rect.y -= 1;
-        drawCtx->DrawLine(0, rect.y, r.width, rect.y);
-        NS_RELEASE(statusWidget);
-      } break;
-
-    default:
-      break;
-    }
-    NS_RELEASE(bw);
-  }
-  return result;
-}
-
-//---------------------------------------------------------------
-static nsEventStatus PR_CALLBACK
-HandleToolbarEvent(nsGUIEvent *aEvent)
-{
-  nsEventStatus result = nsEventStatus_eIgnore;
-  nsBrowserWindow* bw = nsBrowserWindow::FindBrowserFor(aEvent->widget, FIND_BACK);
-  if (nsnull != bw) {
-    switch(aEvent->message) {
-    case NS_MOUSE_LEFT_BUTTON_UP:
-      //bw->Back();
-      break;
-    }
-    NS_RELEASE(bw);
-  }
-  nsIToolbar * toolbar;
-	if (NS_OK == aEvent->widget->QueryInterface(kIToolbarIID,(void**)&toolbar)) {
-    result = toolbar->HandleEvent(aEvent);
-    NS_RELEASE(toolbar);
-  }
-
-
-  return result;
-}
-
-//---------------------------------------------------------------
-static nsEventStatus PR_CALLBACK
-HandleToolbarMgrEvent(nsGUIEvent *aEvent)
-{
-  nsEventStatus result = nsEventStatus_eIgnore;
-
-  switch(aEvent->message) {
-    case NS_PAINT: {
-      nsRect r;
-      aEvent->widget->GetBounds(r);
-      r.x = 0;
-      r.y = 0;
-      nsIRenderingContext *drawCtx = ((nsPaintEvent*)aEvent)->renderingContext;
-      drawCtx->SetColor(aEvent->widget->GetBackgroundColor());
-      drawCtx->FillRect(r);
-
-      //nsRect rect(*(((nsPaintEvent*)aEvent)->rect));
-      nsRect rect(r);
-      drawCtx->SetColor(NS_RGB(255,255,255));
-      drawCtx->DrawLine(0,0,rect.width,0);
-      drawCtx->SetColor(NS_RGB(128,128,128));
-      drawCtx->DrawLine(0,rect.height-1,rect.width,rect.height-1);
-    }
-    break;
-  } //switch
-
-  return result;
-}
-
-//---------------------------------------------------------------
-static nsEventStatus PR_CALLBACK
-HandleLocationEvent(nsGUIEvent *aEvent)
-{
-  nsEventStatus result = nsEventStatus_eIgnore;
-  nsBrowserWindow* bw =
-    nsBrowserWindow::FindBrowserFor(aEvent->widget, FIND_LOCATION);
-  if (nsnull != bw) {
-    switch (aEvent->message) {
-    case NS_KEY_UP:
-      if (NS_VK_RETURN == ((nsKeyEvent*)aEvent)->keyCode) {
-        nsAutoString text;
-        PRUint32 size;
-        bw->mLocation->GetText(text, 1000, size);
-        bw->GoTo(text);
-      }
-      break;
-    default:
-      break;
-    }
-    NS_RELEASE(bw);
-  }
-  return result;
-}
 
 //---------------------------------------------------------------
 void
@@ -524,6 +652,7 @@ nsBrowserWindow::UpdateToolbarBtns()
 }
 
 //---------------------------------------------------------------
+// 
 nsEventStatus
 nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
 {
@@ -591,18 +720,21 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
   return nsEventStatus_eIgnore;
 }
 
+//---------------------------------------------------------------
 void
 nsBrowserWindow::Back()
 {
   mWebShell->Back();
 }
 
+//---------------------------------------------------------------
 void
 nsBrowserWindow::Forward()
 {
   mWebShell->Forward();
 }
 
+//---------------------------------------------------------------
 void
 nsBrowserWindow::GoTo(const PRUnichar* aURL)
 {
@@ -612,6 +744,7 @@ nsBrowserWindow::GoTo(const PRUnichar* aURL)
 
 #define FILE_PROTOCOL "file://"
 
+//---------------------------------------------------------------
 static PRBool GetFileNameFromFileSelector(nsIWidget* aParentWindow,
                                           nsString* aFileName)
 {
@@ -687,10 +820,6 @@ nsEventStatus PR_CALLBACK HandleGUIEvent(nsGUIEvent *aEvent)
     return result;
   }
 
-  if (aEvent->message == 301 || aEvent->message == 302) {
-    int x = 0;
-  }
-
   void * data;
   aEvent->widget->GetClientData(data);
 
@@ -712,6 +841,7 @@ nsEventStatus PR_CALLBACK HandleGUIEvent(nsGUIEvent *aEvent)
 
 
 
+//---------------------------------------------------------------
 static void* GetItemsNativeData(nsISupports* aObject)
 {
 	void* 			result = nsnull;
@@ -724,13 +854,9 @@ static void* GetItemsNativeData(nsISupports* aObject)
 	return result;
 }
 
-/**--------------------------------------------------------------------------------
- * Main Handler
- *--------------------------------------------------------------------------------
- */
-
- 
- 
+//--------------------------------------------------------------------------------
+// Main Dialog Handler
+// XXX This is experimental code, it will change a lot when we have XML/HTML dialogs
 nsEventStatus nsBrowserWindow::ProcessDialogEvent(nsGUIEvent *aEvent)
 { 
   nsEventStatus result = nsEventStatus_eIgnore;
@@ -847,6 +973,7 @@ nsEventStatus nsBrowserWindow::ProcessDialogEvent(nsGUIEvent *aEvent)
 }
 
 
+//---------------------------------------------------------------
 void
 nsBrowserWindow::DoFind()
 {
@@ -975,6 +1102,7 @@ nsBrowserWindow::DoFind()
 
 }
 
+//---------------------------------------------------------------
 void
 nsBrowserWindow::DoSelectAll()
 {
@@ -991,6 +1119,7 @@ nsBrowserWindow::DoSelectAll()
   }
 }
 
+//---------------------------------------------------------------
 void
 nsBrowserWindow::ForceRefresh()
 {
@@ -1009,130 +1138,6 @@ nsBrowserWindow::ForceRefresh()
   }
 }
 
-
-//----------------------------------------------------------------------
-
-// Note: operator new zeros our memory
-nsBrowserWindow::nsBrowserWindow()
-{
-  AddBrowser(this);
-}
-
-nsBrowserWindow::~nsBrowserWindow()
-{
-}
-
-NS_IMPL_ADDREF(nsBrowserWindow)
-NS_IMPL_RELEASE(nsBrowserWindow)
-
-nsresult
-nsBrowserWindow::QueryInterface(const nsIID& aIID,
-                                void** aInstancePtrResult)
-{
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  *aInstancePtrResult = NULL;
-
-  if (aIID.Equals(kIBrowserWindowIID)) {
-    *aInstancePtrResult = (void*) ((nsIBrowserWindow*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIStreamObserverIID)) {
-    *aInstancePtrResult = (void*) ((nsIStreamObserver*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIWebShellContainerIID)) {
-    *aInstancePtrResult = (void*) ((nsIWebShellContainer*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kINetSupportIID)) {
-    *aInstancePtrResult = (void*) ((nsINetSupport*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtrResult = (void*) ((nsISupports*)((nsIBrowserWindow*)this));
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
-
-nsresult
-nsBrowserWindow::Init(nsIAppShell* aAppShell,
-                      nsIPref* aPrefs,
-                      const nsRect& aBounds,
-                      PRUint32 aChromeMask,
-                      PRBool aAllowPlugins)
-{
-  mChromeMask = aChromeMask;
-  mAppShell = aAppShell;
-  mPrefs = aPrefs;
-  mAllowPlugins = aAllowPlugins;
-
-  // Create top level window
-  nsresult rv = nsRepository::CreateInstance(kWindowCID, nsnull, kIWidgetIID,
-                                             (void**)&mWindow);
-  if (NS_OK != rv) {
-    return rv;
-  }
-  nsRect r(0, 0, aBounds.width, aBounds.height);
-  mWindow->Create((nsIWidget*)NULL, r, HandleBrowserEvent,
-                  nsnull, aAppShell);
-  mWindow->GetBounds(r);
-  mWindow->SetBackgroundColor(NS_RGB(192,192,192));
-
-  // Create web shell
-  rv = nsRepository::CreateInstance(kWebShellCID, nsnull,
-                                    kIWebShellIID,
-                                    (void**)&mWebShell);
-  if (NS_OK != rv) {
-    return rv;
-  }
-  r.x = r.y = 0;
-  rv = mWebShell->Init(mWindow->GetNativeData(NS_NATIVE_WIDGET), 
-                       r.x, r.y, r.width, r.height,
-                       nsScrollPreference_kAuto, aAllowPlugins);
-  mWebShell->SetContainer((nsIWebShellContainer*) this);
-  mWebShell->SetObserver((nsIStreamObserver*)this);
-  mWebShell->SetPrefs(aPrefs);
-  mWebShell->Show();
-
-  if (NS_CHROME_MENU_BAR_ON & aChromeMask) {
-    rv = CreateMenuBar(r.width);
-    if (NS_OK != rv) {
-      return rv;
-    }
-    mWindow->GetBounds(r);
-    r.x = r.y = 0;
-  }
-
-  if (NS_CHROME_TOOL_BAR_ON & aChromeMask) {
-    rv = CreateToolBar(r.width);
-    if (NS_OK != rv) {
-      return rv;
-    }
-  }
-
-  if (NS_CHROME_STATUS_BAR_ON & aChromeMask) {
-    rv = CreateStatusBar(r.width);
-    if (NS_OK != rv) {
-      return rv;
-    }
-  }
-
-  // Now lay it all out
-  Layout(r.width, r.height);
-
-
-  return NS_OK;
-}
 
 // XXX This sort of thing should be in a resource
 #define TOOL_BAR_FONT      "Helvetica"
@@ -1209,7 +1214,7 @@ NS_CreateImageButton(nsISupports      *aParent,
 }
 
 //------------------------------------------------------------------
-// This method needs to be moved into nsWidgetSupport
+// XXX This method needs to be moved into nsWidgetSupport
 nsresult 
 NS_CreateMenuButton(nsISupports      *aParent, 
 								      nsIMenuButton  *&aButton, 
@@ -1276,6 +1281,7 @@ NS_CreateMenuButton(nsISupports      *aParent,
 }
 
 //-----------------------------------------------------------
+// XXX This method needs to be moved into nsWidgetSupport
 nsresult 
 nsBrowserWindow::AddToolbarItem(nsIToolbar      *aToolbar,
                                 PRInt32          aGap,
@@ -1316,6 +1322,8 @@ nsBrowserWindow::AddToolbarItem(nsIToolbar      *aToolbar,
 }
 
 
+//-----------------------------------------------------------
+// 
 void
 nsBrowserWindow::DoAppsDialog()
 {
@@ -1999,37 +2007,16 @@ nsBrowserWindow::Layout(PRInt32 aWidth, PRInt32 aHeight)
     txtHeight = 24;
   }
 
-
-  nsIWidget * btnToolBarWidget;
-  if (NS_OK != mBtnToolbar->QueryInterface(kIWidgetIID,(void**)&btnToolBarWidget)) {
-    return;
-  }
-
-  nsIWidget * urlToolBarWidget;
-  if (NS_OK != mURLToolbar->QueryInterface(kIWidgetIID,(void**)&urlToolBarWidget)) {
-    return;
-  }
-
   nsIWidget * tbManagerWidget;
   if (NS_OK != mToolbarMgr->QueryInterface(kIWidgetIID,(void**)&tbManagerWidget)) {
     return;
   }
 
   nsRect rr(0, 0, aWidth, aHeight);
-  nsIWidget* locationWidget = nsnull;
 
   PRInt32 preferredWidth  = aWidth;
   PRInt32 preferredHeight = aHeight;
-  /*btnToolBarWidget->GetPreferredSize(preferredWidth, preferredHeight);
-  btnToolBarWidget->Resize(0,0, aWidth, preferredHeight, PR_TRUE);
-  rr.y      += preferredHeight;
-  rr.height -= preferredHeight;
 
-  urlToolBarWidget->GetPreferredSize(preferredWidth, preferredHeight);
-  urlToolBarWidget->Resize(0,rr.y, aWidth, preferredHeight, PR_TRUE);
-  rr.y      += preferredHeight;
-  rr.height -= preferredHeight;
-  */
   tbManagerWidget->GetPreferredSize(preferredWidth, preferredHeight);
   tbManagerWidget->Resize(0,0, aWidth, preferredHeight, PR_TRUE);
   rr.y      += preferredHeight;
@@ -2061,12 +2048,11 @@ nsBrowserWindow::Layout(PRInt32 aWidth, PRInt32 aHeight)
   rr.height -= WEBSHELL_TOP_INSET + WEBSHELL_BOTTOM_INSET;
   mWebShell->SetBounds(rr.x, rr.y, rr.width, rr.height);
 
-  NS_IF_RELEASE(locationWidget);
-  NS_IF_RELEASE(btnToolBarWidget);
-  NS_IF_RELEASE(urlToolBarWidget);
   NS_IF_RELEASE(statusWidget);
+  NS_IF_RELEASE(tbManagerWidget);
 }
 
+//----------------------------------------------------
 NS_IMETHODIMP
 nsBrowserWindow::MoveTo(PRInt32 aX, PRInt32 aY)
 {
@@ -2075,6 +2061,7 @@ nsBrowserWindow::MoveTo(PRInt32 aX, PRInt32 aY)
   return NS_OK;
 }
 
+//----------------------------------------------------
 NS_IMETHODIMP
 nsBrowserWindow::SizeTo(PRInt32 aWidth, PRInt32 aHeight)
 {
@@ -2087,6 +2074,7 @@ nsBrowserWindow::SizeTo(PRInt32 aWidth, PRInt32 aHeight)
   return NS_OK;
 }
 
+//----------------------------------------------------
 NS_IMETHODIMP
 nsBrowserWindow::GetBounds(nsRect& aBounds)
 {
@@ -2094,6 +2082,7 @@ nsBrowserWindow::GetBounds(nsRect& aBounds)
   return NS_OK;
 }
 
+//----------------------------------------------------
 NS_IMETHODIMP
 nsBrowserWindow::Show()
 {
@@ -2102,6 +2091,7 @@ nsBrowserWindow::Show()
   return NS_OK;
 }
 
+//----------------------------------------------------
 NS_IMETHODIMP
 nsBrowserWindow::Hide()
 {
@@ -2110,6 +2100,7 @@ nsBrowserWindow::Hide()
   return NS_OK;
 }
 
+//----------------------------------------------------
 NS_IMETHODIMP
 nsBrowserWindow::Close()
 {
@@ -2137,6 +2128,7 @@ nsBrowserWindow::Close()
 }
 
 
+//----------------------------------------------------
 NS_IMETHODIMP
 nsBrowserWindow::SetChrome(PRUint32 aChromeMask)
 {
@@ -2148,6 +2140,7 @@ nsBrowserWindow::SetChrome(PRUint32 aChromeMask)
   return NS_OK;
 }
 
+//----------------------------------------------------
 NS_IMETHODIMP
 nsBrowserWindow::GetChrome(PRUint32& aChromeMaskResult)
 {
@@ -2155,6 +2148,7 @@ nsBrowserWindow::GetChrome(PRUint32& aChromeMaskResult)
   return NS_OK;
 }
 
+//----------------------------------------------------
 NS_IMETHODIMP
 nsBrowserWindow::GetWebShell(nsIWebShell*& aResult)
 {
@@ -2163,6 +2157,7 @@ nsBrowserWindow::GetWebShell(nsIWebShell*& aResult)
   return NS_OK;
 }
 
+//----------------------------------------------------
 NS_IMETHODIMP
 nsBrowserWindow::HandleEvent(nsGUIEvent * anEvent)
 {
@@ -2353,6 +2348,39 @@ nsBrowserWindow::NewWebShell(nsIWebShell*& aNewWebShell)
 
   return rv;
 }
+
+//----------------------------------------
+NS_IMETHODIMP
+nsBrowserWindow::FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& aResult)
+{
+  PRInt32 i, n = gBrowsers.Count();
+
+  aResult = nsnull;
+  nsString aNameStr(aName);
+
+  for (i = 0; i < n; i++) {
+    nsBrowserWindow* bw = (nsBrowserWindow*) gBrowsers.ElementAt(i);
+    nsIWebShell *ws;
+    
+    if (NS_OK == bw->GetWebShell(ws)) {
+      PRUnichar *name;
+      if (NS_OK == ws->GetName(&name)) {
+        if (aNameStr.Equals(name)) {
+          aResult = ws;
+          NS_ADDREF(aResult);
+          return NS_OK;
+        }
+      }      
+    }
+    if (NS_OK == ws->FindChildWithName(aName, aResult)) {
+      if (nsnull != aResult) {
+        return NS_OK;
+      }
+    }
+  }
+  return NS_OK;
+}
+
 
 //----------------------------------------
 
@@ -2761,6 +2789,7 @@ nsBrowserWindow::DumpContent(FILE* out)
   }
 }
 
+//----------------------------------------------------
 void
 nsBrowserWindow::DumpFrames(FILE* out, nsString *aFilterName)
 {
@@ -3323,7 +3352,7 @@ nsBrowserWindow::CreateMenuBar(PRInt32 aWidth)
   ::SetMenu(hwnd, menu);
   */
 
-  nsIMenuBar * menuBar;
+/*  nsIMenuBar * menuBar;
 
   nsresult rv = nsRepository::CreateInstance(kMenuBarCID,
                                              nsnull,
@@ -3345,7 +3374,7 @@ nsBrowserWindow::CreateMenuBar(PRInt32 aWidth)
 	  }
 
   }
-
+*/
   return NS_OK;
 }
 
