@@ -71,8 +71,12 @@ function doDump(text, value) {
 // * dialog initialization code
 function Startup()
 {
-  if (!InitEditorShell())
+  // let's just check we have an editor... We don't store it
+  // because we prefer calling GetCurrentEditor() every time
+  if (!GetCurrentEditor()) {
+    window.close();
     return;
+  }
 
   // gDialog is declared in EdDialogCommon.js
   // Set commonly-used widgets like this:
@@ -191,7 +195,7 @@ function FlushChanges()
 {
   if (gDialog.modified) {
     // let's make sure the editor is going to require save on exit
-    editorShell.editor.incrementModificationCount(1);
+    GetCurrentEditor().incrementModificationCount(1);
   }
   // Validate all user data and set attributes and possibly insert new element here
   // If there's an error the user must correct, return false to keep dialog open.
@@ -1154,7 +1158,7 @@ function onConfirmCreateNewObject()
       break;
     case SHEET:
       if (gDialog.newExternal && gDialog.newURL != "") {
-        newSheetOwnerNode = editorShell.editorDocument.createElement("link");
+        newSheetOwnerNode = GetCurrentEditor().document.createElement("link");
         newSheetOwnerNode.setAttribute("type", "text/css");
         newSheetOwnerNode.setAttribute("href", gDialog.newURL);
         if (gDialog.newAlternate) {
@@ -1204,7 +1208,7 @@ function onConfirmCreateNewObject()
         }
       }
       else if (!gDialog.newExternal) {
-        newSheetOwnerNode = editorShell.editorDocument.createElement("style");
+        newSheetOwnerNode = GetCurrentEditor().document.createElement("style");
         newSheetOwnerNode.setAttribute("type", "text/css");
         if (gDialog.newMediaList != "") {
           newSheetOwnerNode.setAttribute("media", gDialog.newMediaList);
