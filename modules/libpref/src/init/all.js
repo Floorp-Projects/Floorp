@@ -110,6 +110,9 @@ pref("browser.urlbar.matchOnlyTyped", false);
 pref("browser.chrome.site_icons", true);
 pref("browser.chrome.favicons", false);
 
+// 0 = never, 1 = when in cache, 2 = always
+pref("browser.chrome.load_toolbar_icons", 0);
+
 pref("browser.chrome.toolbar_tips",         true);
 // 0 = Pictures Only, 1 = Text Only, 2 = Pictures and Text
 pref("browser.chrome.toolbar_style",        2);

@@ -1744,8 +1744,14 @@ nsBookmarksService::Init()
     nsCOMPtr<nsIPref> prefServ(do_GetService(kPrefCID, &rv));
     if (NS_SUCCEEDED(rv) && (prefServ))
     {
-        // get browser icon pref
-        prefServ->GetBoolPref("browser.chrome.site_icons", &mBrowserIcons);
+        // get browser icon prefs
+        PRInt32 toolbarIcons = 0;
+        prefServ->GetIntPref("browser.chrome.load_toolbar_icons", &toolbarIcons);
+        if (toolbarIcons > 0) {
+              prefServ->GetBoolPref("browser.chrome.site_icons", &mBrowserIcons);
+              mAlwaysLoadIcons = (toolbarIcons > 1);
+        } else
+              mAlwaysLoadIcons = mBrowserIcons = PR_FALSE;
         
         // determine what the name of the Personal Toolbar Folder is...
         // first from user preference, then string bundle, then hard-coded default
@@ -4178,10 +4184,13 @@ nsBookmarksService::ProcessCachedBookmarkIcon(nsIRDFResource* aSource,
         }
     }
 
+    PRBool forceLoad = mAlwaysLoadIcons;
+
     // if no internal icon reference, try and synthesize a URL
     if (path.IsEmpty())
     {
         const char  *uri;
+        forceLoad = PR_FALSE;
         if (NS_FAILED(rv = aSource->GetValueConst( &uri )))
         {
             return rv;
@@ -4214,27 +4223,29 @@ nsBookmarksService::ProcessCachedBookmarkIcon(nsIRDFResource* aSource,
         path.Append("/favicon.ico");
     }
 
-    // only return favicon reference if its in the cache
-    // (that is, never go out onto the net)
-    if (!mCacheSession)
-    {
-        return NS_RDF_NO_VALUE;
+    if (!forceLoad) {
+        // only return favicon reference if its in the cache
+        // (that is, never go out onto the net)
+        if (!mCacheSession)
+        {
+            return NS_RDF_NO_VALUE;
+        }
+        nsCOMPtr<nsICacheEntryDescriptor> entry;
+        rv = mCacheSession->OpenCacheEntry(path.get(), nsICache::ACCESS_READ,
+                                           nsICache::NON_BLOCKING, getter_AddRefs(entry));
+        if (NS_FAILED(rv) || (!entry))
+        {
+            return NS_RDF_NO_VALUE;
+        }
+        if (entry) 
+        {
+            PRUint32 expTime;
+            entry->GetExpirationTime(&expTime);
+            if (expTime != PR_UINT32_MAX)
+                entry->SetExpirationTime(PR_UINT32_MAX);
+        }
+        entry->Close();
     }
-    nsCOMPtr<nsICacheEntryDescriptor> entry;
-    rv = mCacheSession->OpenCacheEntry(path.get(), nsICache::ACCESS_READ,
-                                       nsICache::NON_BLOCKING, getter_AddRefs(entry));
-    if (NS_FAILED(rv) || (!entry))
-    {
-        return NS_RDF_NO_VALUE;
-    }
-    if (entry) 
-    {
-        PRUint32 expTime;
-        entry->GetExpirationTime(&expTime);
-        if (expTime != PR_UINT32_MAX)
-            entry->SetExpirationTime(PR_UINT32_MAX);
-    }
-    entry->Close();
 
     // ok, have a cached icon entry, so return the URL's associated favicon
     nsAutoString litStr;
