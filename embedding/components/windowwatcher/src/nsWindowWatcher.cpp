@@ -479,22 +479,21 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
     return rv;
 
   /* disable persistence of size/position in popups (determined by
-     looking for the outerWidth/outerHeight features. seems backward
-     though -- it's a popup if both features are lacking? */
+     determining whether the features parameter specifies width or height
+     in any way). We consider any overriding of the window's size or position
+     in the open call as disabling persistence of those attributes.
+     Popup windows (which should not persist size or position) generally set
+     the size. */
   if (windowIsNew) {
-    PRBool present = PR_FALSE;
+    /* at the moment, the strings "height=" or "width=" never happen
+       outside a size specification, so we can do this the Q&D way. */
 
-    if (!(WinHasOption(features, "outerWidth", 0, &present) || present) &&
-        !(WinHasOption(features, "outerHeight", 0, &present) || present)) {
+    if (PL_strcasestr(features, "width=") || PL_strcasestr(features, "height=")) {
 
       nsCOMPtr<nsIDocShellTreeOwner> newTreeOwner;
       newDocShellItem->GetTreeOwner(getter_AddRefs(newTreeOwner));
-      if (newTreeOwner) {
-        nsCOMPtr<nsIWebBrowserChrome> newChrome = do_GetInterface(newTreeOwner);
-        if (newChrome)
-          newChrome->SetPersistence(PR_FALSE, PR_FALSE, PR_FALSE, PR_FALSE,
-                                    PR_FALSE);
-      }
+      if (newTreeOwner)
+        newTreeOwner->SetPersistence(PR_FALSE, PR_FALSE, PR_FALSE);
     }
   }
 

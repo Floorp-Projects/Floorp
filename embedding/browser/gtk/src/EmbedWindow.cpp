@@ -219,22 +219,6 @@ EmbedWindow::ExitModalEventLoop(nsresult aStatus)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP
-EmbedWindow::SetPersistence(PRBool aPersistX, PRBool aPersistY,
-			    PRBool aPersistCX, PRBool aPersistCY,
-			    PRBool aPersistSizeMode)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-EmbedWindow::GetPersistence(PRBool *aPersistX, PRBool *aPersistY,
-			    PRBool *aPersistCX, PRBool *aPersistCY,
-			    PRBool *aPersistSizeMode)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 // nsIWebBrowserSiteWindow
 
 NS_IMETHODIMP

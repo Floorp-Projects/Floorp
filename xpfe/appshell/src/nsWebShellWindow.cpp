@@ -1397,16 +1397,6 @@ void nsWebShellWindow::StoreBoundsToXUL(PRBool aPosition, PRBool aSize, PRBool a
    PersistPositionAndSize(aPosition, aSize, aSizeMode);
 } // StoreBoundsToXUL
 
-
-void nsWebShellWindow::KillPersistentSize()
-{
-   PRBool persistX, persistY;
-
-   mContentTreeOwner->GetPersistence(&persistX, &persistY, nsnull, nsnull, nsnull);
-   mContentTreeOwner->SetPersistence(persistX, persistY, PR_FALSE, PR_FALSE, PR_FALSE);
-}
-
-
 // if the main document URL specified URLs for any content areas, start them loading
 void nsWebShellWindow::LoadContentAreas() {
 

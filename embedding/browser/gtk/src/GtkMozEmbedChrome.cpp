@@ -726,6 +726,22 @@ NS_IMETHODIMP GtkMozEmbedChrome::GetNewWindow(PRInt32 aChromeFlags,
     return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP
+GtkMozEmbedChrome::SetPersistence(PRBool aPersistPosition,
+                                  PRBool aPersistSize,
+                                  PRBool aPersistSizeMode)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+GtkMozEmbedChrome::GetPersistence(PRBool* aPersistPosition,
+                                  PRBool* aPersistSize,
+                                  PRBool* aPersistSizeMode)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 // nsIWebBrowserSiteWindow interface
 
 NS_IMETHODIMP GtkMozEmbedChrome::Destroy(void)
@@ -834,22 +850,6 @@ NS_IMETHODIMP GtkMozEmbedChrome::SetTitle(const PRUnichar * aTitle)
   if (mChromeListener)
     mChromeListener->Message(GtkEmbedListener::MessageTitle, mTitle);
   return NS_OK;
-}
-
-NS_IMETHODIMP
-GtkMozEmbedChrome::SetPersistence(PRBool aPersistX, PRBool aPersistY,
-                                  PRBool aPersistCX, PRBool aPersistCY,
-                                  PRBool aPersistSizeMode)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-GtkMozEmbedChrome::GetPersistence(PRBool* aPersistX, PRBool* aPersistY,
-                                  PRBool* aPersistCX, PRBool* aPersistCY,
-                                  PRBool* aPersistSizeMode)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 // nsIPrompt

@@ -126,19 +126,4 @@ interface nsIWebBrowserChrome : nsISupports
 	 @param aStatus - the result code to return from showAsModal
 	*/
 	void exitModalEventLoop(in nsresult aStatus);
-
-	/*
-	Sets the persistence of different dimensions of the window.
-	*/
-	void setPersistence(in boolean persistX, in boolean persistY, 
-		in boolean persistCX, in boolean persistCY,
-		in boolean persistSizeMode);
-
-	/*
-	Gets the current persistence states of the window.
-	*/
-	void getPersistence(out boolean persistX, out boolean persistY, 
-		out boolean persistCX, out boolean persistCY,
-		out boolean persistSizeMode);
-
 };
