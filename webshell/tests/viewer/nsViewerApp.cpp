@@ -339,6 +339,7 @@ static void
 PrintHelpInfo(char **argv)
 {
   fprintf(stderr, "Usage: %s [options] [starting url]\n", argv[0]);
+  fprintf(stderr, "-M -- measure (and show) page load time\n");
   fprintf(stderr, "-p[#]   -- autload tests 0-#\n");
   fprintf(stderr, "-q -- jiggles window width after page has autoloaded\n");
   fprintf(stderr, "-f filename -- read a list of URLs to autoload from <filename>\n");
@@ -563,6 +564,9 @@ nsViewerApp::ProcessArguments(int argc, char** argv)
       else if (PL_strcmp(argv[i], "-v") == 0) {
         mCrawler->SetVerbose(PR_TRUE);
       }
+      else if (PL_strcmp(argv[i], "-M") == 0) {
+        mShowLoadTimes = PR_TRUE;
+      }
       else {
         PrintHelpInfo(argv);
         exit(-1);
@@ -597,6 +601,7 @@ nsViewerApp::OpenWindow()
     return rv;
   }
   bw->SetApp(this);
+  bw->SetShowLoadTimes(mShowLoadTimes);
   bw->Init(mAppShell, mPrefs, nsRect(0, 0, mWidth, mHeight),
            PRUint32(~0), mAllowPlugins);
   bw->Show();
