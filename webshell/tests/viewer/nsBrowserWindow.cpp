@@ -2865,6 +2865,20 @@ nsBrowserWindow::ToggleFrameBorders()
 }
 
 void
+nsBrowserWindow::ToggleFlashPaintArea()
+{
+  if (nsnull != mPrefs) 
+  {
+    PRBool flashing;
+    mPrefs->GetBoolPref("nglayout.widget.flash_invalidate_areas",&flashing);
+    mPrefs->SetBoolPref("nglayout.widget.flash_invalidate_areas",!flashing);
+    mPrefs->SavePrefFile();
+    
+    ForceRefresh();
+  }
+}
+
+void
 nsBrowserWindow::ShowContentSize()
 {
   // XXX not yet implemented
@@ -2918,6 +2932,11 @@ nsBrowserWindow::DispatchDebugMenu(PRInt32 aID)
   switch(aID) {
   case VIEWER_VISUAL_DEBUGGING:
     ToggleFrameBorders();
+    result = nsEventStatus_eConsumeNoDefault;
+    break;
+
+  case VIEWER_FLASH_PAINT_AREA:
+    ToggleFlashPaintArea();
     result = nsEventStatus_eConsumeNoDefault;
     break;
 

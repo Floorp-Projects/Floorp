@@ -81,6 +81,7 @@ GtkItemFactoryEntry menu_items[] =
 //#ifdef DEBUG // turning off for now
   { "/_Debug",				nsnull,	nsnull,			0,			"<Branch>"	},
   { "/Debug/_Visual Debugging",		nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_VISUAL_DEBUGGING,nsnull },
+  { "/Debug/_Flash Paint Area",		nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_FLASH_PAINT_AREA,nsnull },
   { "/Debug/_Reflow Test",		nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_REFLOW_TEST,	nsnull },
   { "/Debug/sep1",			nsnull,	nsnull,			0,			"<Separator>" },
   { "/Debug/Dump _Content",		nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_DUMP_CONTENT,	nsnull },
