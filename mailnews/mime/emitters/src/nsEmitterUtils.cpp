@@ -52,6 +52,7 @@ EmitThisHeaderForPrefSetting(PRInt32 dispType, const char *header)
   if (nsMimeHeaderDisplayTypes::NormalHeaders == dispType)
   {
     if (
+        (!PL_strcmp(header, HEADER_DATE)) ||
         (!PL_strcmp(header, HEADER_TO)) ||
         (!PL_strcmp(header, HEADER_SUBJECT)) ||
         (!PL_strcmp(header, HEADER_SENDER)) ||
