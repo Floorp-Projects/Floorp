@@ -57,10 +57,10 @@ nsLeafFrame::Paint(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsLeafFrame::Reflow(nsIPresContext&      aPresContext,
+nsLeafFrame::Reflow(nsIPresContext& aPresContext,
                     nsHTMLReflowMetrics& aMetrics,
                     const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus&      aStatus)
+                    nsReflowStatus& aStatus)
 {
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
                  ("enter nsLeafFrame::Reflow: aMaxSize=%d,%d",
@@ -73,7 +73,8 @@ nsLeafFrame::Reflow(nsIPresContext&      aPresContext,
 
 
   GetDesiredSize(&aPresContext, aReflowState, aMetrics);
-  AddBordersAndPadding(&aPresContext, aMetrics);
+  nsMargin borderPadding;
+  AddBordersAndPadding(&aPresContext, aReflowState, aMetrics, borderPadding);
   if (nsnull != aMetrics.maxElementSize) {
     aMetrics.maxElementSize->width = aMetrics.width;
     aMetrics.maxElementSize->height = aMetrics.height;
@@ -90,32 +91,17 @@ nsLeafFrame::Reflow(nsIPresContext&      aPresContext,
 // => descent = borderPadding.bottom for example
 void
 nsLeafFrame::AddBordersAndPadding(nsIPresContext* aPresContext,
-                                  nsHTMLReflowMetrics& aMetrics)
+                                  const nsHTMLReflowState& aReflowState,
+                                  nsHTMLReflowMetrics& aMetrics,
+                                  nsMargin& aBorderPadding)
 {
-  const nsStyleSpacing* space =
-    (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
-  nsMargin  borderPadding;
-  space->CalcBorderPaddingFor(this, borderPadding);
-  aMetrics.width += borderPadding.left + borderPadding.right;
-  aMetrics.height += borderPadding.top + borderPadding.bottom;
+  nsHTMLReflowState::ComputeBorderPaddingFor(this,
+                                             aReflowState.parentReflowState,
+                                             aBorderPadding);
+  aMetrics.width += aBorderPadding.left + aBorderPadding.right;
+  aMetrics.height += aBorderPadding.top + aBorderPadding.bottom;
   aMetrics.ascent = aMetrics.height;
   aMetrics.descent = 0;
-}
-
-void
-nsLeafFrame::GetInnerArea(nsIPresContext* aPresContext,
-                          nsRect& aInnerArea) const
-{
-  const nsStyleSpacing* space =
-    (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
-  nsMargin  borderPadding;
-  space->CalcBorderPaddingFor(this, borderPadding);
-  aInnerArea.x = borderPadding.left;
-  aInnerArea.y = borderPadding.top;
-  aInnerArea.width = mRect.width -
-    (borderPadding.left + borderPadding.right);
-  aInnerArea.height = mRect.height -
-    (borderPadding.top + borderPadding.bottom);
 }
 
 NS_IMETHODIMP
