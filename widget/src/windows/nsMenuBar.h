@@ -84,9 +84,11 @@ protected:
   
   // Hold onto our content node representation
   nsCOMPtr<nsIDOMElement> mDOMElement;
-  nsCOMPtr<nsIDOMNode>    mDOMNode;
+  //nsCOMPtr<nsIDOMNode>    mDOMNode;
+
 
   nsIWebShell * mWebShell;
+  nsIDOMNode  * mDOMNode;
 };
 
 #endif // nsMenuBar_h__

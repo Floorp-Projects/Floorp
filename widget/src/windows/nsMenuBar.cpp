@@ -122,6 +122,7 @@ nsEventStatus nsMenuBar::MenuConstruct(
 	void              * aWebShell)
 {
     mWebShell = (nsIWebShell*) aWebShell;
+	mDOMNode  = (nsIDOMNode*)menubarNode;
 
     nsIMenuBar * pnsMenuBar = nsnull;
     nsresult rv = nsComponentManager::CreateInstance(kMenuBarCID, nsnull, kIMenuBarIID, (void**)&pnsMenuBar);
@@ -211,6 +212,7 @@ nsMenuBar::nsMenuBar() : nsIMenuBar(), nsIMenuListener()
   mIsMenuBarAdded = PR_FALSE;
   mItems    = new nsVoidArray();
   mWebShell = nsnull;
+  mDOMNode  = nsnull;
 }
 
 //-------------------------------------------------------------------------

@@ -1500,16 +1500,24 @@ static void AdjustMenus(nsIMenu * aCurrentMenu, nsIMenu * aNewMenu, nsMenuEvent 
     nsIMenuListener * listener;
     if (NS_OK == aCurrentMenu->QueryInterface(kIMenuListenerIID, (void **)&listener)) {
       //listener->MenuDeselected(aEvent);
-
-	  listener->MenuDestruct(aEvent);
+	  //listener->MenuDestruct(aEvent);
 
       NS_RELEASE(listener);
+
     }
+
   }
 
+
+
   if (nsnull != aNewMenu)  {
+
     nsIMenuListener * listener;
+
     if (NS_OK == aNewMenu->QueryInterface(kIMenuListenerIID, (void **)&listener)) {
+
+		NS_ASSERTION(false, "get debugger");
+
       //listener->MenuSelected(aEvent);
 
 	  //listener->MenuConstruct(aEvent, this, null);
@@ -1524,24 +1532,16 @@ static void AdjustMenus(nsIMenu * aCurrentMenu, nsIMenu * aNewMenu, nsMenuEvent 
 
 
 
-
-
 //-------------------------------------------------------------------------
 
 nsresult nsWindow::MenuHasBeenSelected(
-
   HMENU aNativeMenu, 
-
   UINT  aItemNum, 
-
   UINT  aFlags, 
-
   UINT  aCommand)
-
 {
 
   // Build nsMenuEvent
-
   nsMenuEvent event;
   event.mCommand = aCommand;
   event.eventStructType = NS_MENU_EVENT;
@@ -1560,13 +1560,107 @@ nsresult nsWindow::MenuHasBeenSelected(
   if (!aNativeMenu) {
     printf("///////////// Menu is NULL!\n");
     // check to make sure something had been selected
-    AdjustMenus(mHitMenu, nsnull, event);
+    //AdjustMenus(mHitMenu, nsnull, event);
+
+	nsIMenu * aNewMenu = nsnull;
+
+	nsMenuEvent aEvent = event;
+
+//static void AdjustMenus(nsIMenu * aCurrentMenu, nsIMenu * aNewMenu, nsMenuEvent & aEvent) 
+
+{
+
+  if (nsnull != mHitMenu) {
+
+    nsIMenuListener * listener;
+
+    if (NS_OK == mHitMenu->QueryInterface(kIMenuListenerIID, (void **)&listener)) {
+
+		//NS_ASSERTION(false, "get debugger");
+
+      //listener->MenuDeselected(aEvent);
+
+	  //listener->MenuDestruct(aEvent);
+
+      NS_RELEASE(listener);
+
+    }
+
+  }
+
+
+
+  if (nsnull != aNewMenu)  {
+
+    nsIMenuListener * listener;
+
+    if (NS_OK == aNewMenu->QueryInterface(kIMenuListenerIID, (void **)&listener)) {
+
+      //listener->MenuSelected(aEvent);
+
+	  //listener->MenuConstruct(aEvent, this, null);
+
+      NS_RELEASE(listener);
+
+    }
+
+  }
+
+}
+
     NS_IF_RELEASE(mHitMenu);
     // Clear All SubMenu items
     while (mHitSubMenus->Count() > 0) {
       PRUint32 inx = mHitSubMenus->Count()-1;
       nsIMenu * menu = (nsIMenu *)mHitSubMenus->ElementAt(inx);
-      AdjustMenus(menu, nsnull, event);
+      //AdjustMenus(menu, nsnull, event);
+
+	  nsIMenu * aCurrentMenu = menu;
+
+	  nsIMenu * aNewMenu = nsnull;
+
+//static void AdjustMenus(nsIMenu * aCurrentMenu, nsIMenu * aNewMenu, nsMenuEvent & aEvent) 
+
+{
+
+  if (nsnull != aCurrentMenu) {
+
+    nsIMenuListener * listener;
+
+    if (NS_OK == aCurrentMenu->QueryInterface(kIMenuListenerIID, (void **)&listener)) {
+
+		//NS_ASSERTION(false, "get debugger");
+
+      //listener->MenuDeselected(event);
+
+	  //listener->MenuDestruct(event);
+
+      NS_RELEASE(listener);
+
+    }
+
+  }
+
+
+
+  if (nsnull != aNewMenu)  {
+
+    nsIMenuListener * listener;
+
+    if (NS_OK == aNewMenu->QueryInterface(kIMenuListenerIID, (void **)&listener)) {
+
+      //listener->MenuSelected(event);
+
+	  //listener->MenuConstruct(event, this, null);
+
+      NS_RELEASE(listener);
+
+    }
+
+  }
+
+}
+
       NS_RELEASE(menu);
       mHitSubMenus->RemoveElementAt(inx);
     }
@@ -1584,7 +1678,6 @@ nsresult nsWindow::MenuHasBeenSelected(
 		  //mHitMenu, hitMenu, event
 
 //AdjustMenus(nsIMenu * aCurrentMenu, nsIMenu * aNewMenu, nsMenuEvent & aEvent) 
-
 {
 
   if (nsnull != mHitMenu) {
@@ -1593,28 +1686,24 @@ nsresult nsWindow::MenuHasBeenSelected(
 
     if (NS_OK == mHitMenu->QueryInterface(kIMenuListenerIID, (void **)&listener)) {
 
+		//NS_ASSERTION(false, "get debugger");
+
       //listener->MenuDeselected(aEvent);
 
 	  listener->MenuDestruct(event);
-
       NS_RELEASE(listener);
 
     }
 
   }
 
-
-
   if (nsnull != hitMenu)  {
-
     nsIMenuListener * listener;
 
     if (NS_OK == hitMenu->QueryInterface(kIMenuListenerIID, (void **)&listener)) {
-
       //listener->MenuSelected(aEvent);
 
 	  listener->MenuConstruct(event, this, NULL, NULL);
-
       NS_RELEASE(listener);
 
     }
@@ -1622,8 +1711,6 @@ nsresult nsWindow::MenuHasBeenSelected(
   }
 
 }
-
-
 
         NS_IF_RELEASE(mHitMenu);
         mHitMenu = hitMenu;
@@ -1722,7 +1809,58 @@ nsresult nsWindow::MenuHasBeenSelected(
         PRInt32 ii;
         for (ii=0;ii<numToRemove;ii++) {
           nsIMenu * m = (nsIMenu *)mHitSubMenus->ElementAt(mHitSubMenus->Count()-1 );
-          AdjustMenus(m, nsnull, event);
+          //AdjustMenus(m, nsnull, event);
+
+		  nsIMenu * aCurrentMenu = m;
+
+		  nsIMenu * aNewMenu = nsnull;
+
+		  nsMenuEvent aEvent = event;
+
+//static void AdjustMenus(nsIMenu * aCurrentMenu, nsIMenu * aNewMenu, nsMenuEvent & aEvent) 
+
+{
+
+  if (nsnull != aCurrentMenu) {
+
+    nsIMenuListener * listener;
+
+    if (NS_OK == aCurrentMenu->QueryInterface(kIMenuListenerIID, (void **)&listener)) {
+
+      //listener->MenuDeselected(aEvent);
+
+	  //listener->MenuDestruct(aEvent);
+
+      NS_RELEASE(listener);
+
+    }
+
+  }
+
+
+
+  if (nsnull != aNewMenu)  {
+
+    nsIMenuListener * listener;
+
+    if (NS_OK == aNewMenu->QueryInterface(kIMenuListenerIID, (void **)&listener)) {
+
+		NS_ASSERTION(false, "get debugger");
+
+      //listener->MenuSelected(aEvent);
+
+	  //listener->MenuConstruct(aEvent, this, null);
+
+      NS_RELEASE(listener);
+
+    }
+
+  }
+
+}
+
+
+
           nsString name;
           m->GetLabel(name);
           NS_RELEASE(m);
@@ -1742,7 +1880,60 @@ nsresult nsWindow::MenuHasBeenSelected(
         if (newMenu != (nsIMenu *)mHitSubMenus->ElementAt(mHitSubMenus->Count()-1)) {
           mHitSubMenus->AppendElement(newMenu);
           NS_ADDREF(newMenu);
-          AdjustMenus(nsnull, newMenu, event);
+          //AdjustMenus(nsnull, newMenu, event);
+
+		  nsIMenu * aCurrentMenu = nsnull;
+
+		  nsIMenu * aNewMenu = newMenu;
+
+		  nsMenuEvent aEvent = event;
+
+//static void AdjustMenus(nsIMenu * aCurrentMenu, nsIMenu * aNewMenu, nsMenuEvent & aEvent) 
+
+{
+
+  if (nsnull != aCurrentMenu) {
+
+    nsIMenuListener * listener;
+
+    if (NS_OK == aCurrentMenu->QueryInterface(kIMenuListenerIID, (void **)&listener)) {
+
+      //listener->MenuDeselected(aEvent);
+
+	  //listener->MenuDestruct(aEvent);
+
+      NS_RELEASE(listener);
+
+    }
+
+  }
+
+
+
+  if (nsnull != aNewMenu)  {
+
+    nsIMenuListener * listener;
+
+    if (NS_OK == aNewMenu->QueryInterface(kIMenuListenerIID, (void **)&listener)) {
+
+	  //NS_ASSERTION(false, "get debugger");
+
+      //listener->MenuSelected(aEvent);
+
+	  //nsIDOMNode * node;
+
+      //mMenuBar->GetDOMNode(&node);
+
+	  listener->MenuConstruct(aEvent, this, nsnull, nsnull);
+
+      NS_RELEASE(listener);
+
+    }
+
+  }
+
+}
+
         }
 
         NS_RELEASE(parentMenu);
@@ -1797,6 +1988,9 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             event.eventStructType = NS_MENU_EVENT;
             InitEvent(event, NS_MENU_SELECTED);
             result = DispatchWindowEvent(&event);
+
+			printf("WM_COMMAND \n");
+
             if (mMenuBar) {
               PRUint32 i, count;
               mMenuBar->GetMenuCount(count);
@@ -1809,6 +2003,12 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
                   if (NS_OK == menuItem->QueryInterface(kIMenuListenerIID, (void **)&listener)) {
                     listener->MenuSelected(event);
                     NS_RELEASE(listener);
+
+					menu->QueryInterface(kIMenuListenerIID, (void **)&listener);
+					if(listener){
+					  listener->MenuDestruct(event);
+					  NS_RELEASE(listener);
+					}
                   }
                   NS_RELEASE(menuItem);
                 }
@@ -2071,7 +2271,8 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             }
             break;
         }
-#if 0 // these are needed for now
+//#if 0 // these are needed for now
+
         case WM_INITMENU: {
           printf("WM_INITMENU\n");
           } break;
@@ -2079,9 +2280,11 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         case WM_INITMENUPOPUP: {
           printf("WM_INITMENUPOPUP\n");
           } break;
-#endif
+//#endif
+
 
         case WM_MENUSELECT: 
+			printf("WM_MENUSELECT\n");
           if (mMenuBar) {
             MenuHasBeenSelected((HMENU)lParam, (UINT)LOWORD(wParam), (UINT)HIWORD(wParam), (UINT) LOWORD(wParam));
           }
