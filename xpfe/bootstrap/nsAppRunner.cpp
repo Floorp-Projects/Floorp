@@ -244,7 +244,7 @@ static void DumpArbitraryHelp()
         progid->ToString (getter_Copies(progidString));
         
 #ifdef DEBUG_CMD_LINE
-        printf("cmd line hander progid = %s\n", (const char *)progidString);
+        printf("cmd line handler progid = %s\n", (const char *)progidString);
 #endif /* DEBUG_CMD_LINE */
         
         nsCOMPtr <nsICmdLineHandler> handler = do_GetService((const char *)progidString, &rv);
@@ -418,8 +418,8 @@ void startupPrefEnumerationFunction(const char *prefName, void *data)
   if (PL_strlen(prefName) <= prefixLen) return;
  
   if (prefValue) {
-    // this is the progid prefix that all the command line handers register
-    nsCAutoString progID = "component://netscape/commandlinehander/general-startup-";
+    // this is the progid prefix that all the command line handlers register
+    nsCAutoString progID = "component://netscape/commandlinehandler/general-startup-";
     progID += (prefName + prefixLen);
 
 #ifdef DEBUG_CMD_LINE  
@@ -497,7 +497,7 @@ static nsresult HandleArbitraryStartup( nsICmdLineService* cmdLineArgs, nsIPref 
       printf("XXX argv[%d] = %s\n",i,argv[i]);
 #endif /* DEBUG_CMD_LINE */
       if (IsStartupCommand(argv[i])) {
-        nsCAutoString progID = "component://netscape/commandlinehander/general-startup-";
+        nsCAutoString progID = "component://netscape/commandlinehandler/general-startup-";
         
         // skip over the - (or / on windows)
         char *command = argv[i] + 1;
@@ -797,7 +797,7 @@ void DumpHelp(char *appname)
   printf("%s-nosplash%sDisable splash screen.\n",HELP_SPACER_1,HELP_SPACER_2);
 #endif
 
-  // this works, but only after the components have registered.  so if you drop in a new command line hander, -help
+  // this works, but only after the components have registered.  so if you drop in a new command line handler, -help
   // won't not until the second run.
   // out of the bug, because we ship a component.reg file, it works correctly.
   DumpArbitraryHelp();

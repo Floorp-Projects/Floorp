@@ -2660,7 +2660,7 @@ static nsModuleComponentInfo components[] = {
   },
   { "Chrome Startup Handler",
     NS_BROWSERCONTENTHANDLER_CID,
-    "component://netscape/commandlinehander/general-startup-chrome",
+    "component://netscape/commandlinehandler/general-startup-chrome",
     nsBrowserContentHandlerConstructor,
   } 
   

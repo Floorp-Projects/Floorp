@@ -88,7 +88,7 @@ function toOpenWindowByType( inType, uri )
 function OpenBrowserWindow()
 {
   dump("In OpenBrowserWindw()...\n");
-  var handler = Components.classes['component://netscape/commandlinehander/general-startup-browser'];
+  var handler = Components.classes['component://netscape/commandlinehandler/general-startup-browser'];
   handler = handler.getService();
   handler = handler.QueryInterface(Components.interfaces.nsICmdLineHandler);
   var startpage = handler.defaultArgs;
