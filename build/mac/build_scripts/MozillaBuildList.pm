@@ -1243,28 +1243,31 @@ sub BuildImglibProjects()
 
 sub BuildImglib2Projects()
 {
-    unless( $main::options{useimg2} ) { return; }
+    unless( $main::build{libimg2} ) { return; }
 
     # $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
     my($D) = $main::DEBUG ? "Debug" : "";
 
-    StartBuildModule("libimg2");
+    StartBuildModule("libimg2");    
     
-    BuildOneProject(":mozilla:gfx2:macbuild:gfx2.mcp",                          "gfx2$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:modules:libpr0n:macbuild:libimg2.mcp",             "libimg2$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:modules:libpr0n:macbuild:pngdecoder2.mcp",         "pngdecoder2$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:modules:libpr0n:macbuild:gifdecoder2.mcp",        "gifdecoder2$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:modules:libpr0n:macbuild:jpegdecoder2.mcp",       "jpegdecoder2$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
-    
-    # MNG
-    if ($main::options{mng})
+    if ($main::options{useimg2})
     {
-        #BuildOneProject(":mozilla:modules:libimg:macbuild:mng.mcp",                 "mng$D.o", 0, 0, 0);
-        #BuildOneProject(":mozilla:modules:libimg:macbuild:mngdecoder.mcp",          "mngdecoder$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+        BuildOneProject(":mozilla:gfx2:macbuild:gfx2.mcp",                          "gfx2$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+        BuildOneProject(":mozilla:modules:libpr0n:macbuild:libimg2.mcp",             "libimg2$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+        BuildOneProject(":mozilla:modules:libpr0n:macbuild:pngdecoder2.mcp",         "pngdecoder2$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+        BuildOneProject(":mozilla:modules:libpr0n:macbuild:gifdecoder2.mcp",        "gifdecoder2$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+        BuildOneProject(":mozilla:modules:libpr0n:macbuild:jpegdecoder2.mcp",       "jpegdecoder2$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+        
+        # MNG
+        if ($main::options{mng})
+        {
+            #BuildOneProject(":mozilla:modules:libimg:macbuild:mng.mcp",                 "mng$D.o", 0, 0, 0);
+            #BuildOneProject(":mozilla:modules:libimg:macbuild:mngdecoder.mcp",          "mngdecoder$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+        }
     }
-
+    
     EndBuildModule("libimg2");
-} # imglib
+} # imglib2
     
 #//--------------------------------------------------------------------------------------------------
 #// Build international projects
