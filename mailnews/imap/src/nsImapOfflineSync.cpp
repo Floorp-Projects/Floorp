@@ -251,31 +251,31 @@ void nsImapOfflineSync::ProcessFlagOperation(nsIMsgOfflineImapOperation *current
 void
 nsImapOfflineSync::ProcessAppendMsgOperation(nsIMsgOfflineImapOperation *currentOp, PRInt32 opType)
 {
-	nsCOMPtr <nsIMsgDBHdr> mailHdr;
+  nsCOMPtr <nsIMsgDBHdr> mailHdr;
   nsMsgKey msgKey;
   currentOp->GetMessageKey(&msgKey);
   nsresult rv = m_currentDB->GetMsgHdrForKey(msgKey, getter_AddRefs(mailHdr)); 
-	if (NS_SUCCEEDED(rv) && mailHdr)
-	{
+  if (NS_SUCCEEDED(rv) && mailHdr)
+  {
     nsMsgKey messageOffset;
     PRUint32 messageSize;
     mailHdr->GetMessageOffset(&messageOffset);
     mailHdr->GetOfflineMessageSize(&messageSize);
     nsCOMPtr <nsIFileSpec>	tempFileSpec;
     nsSpecialSystemDirectory tmpFileSpec(nsSpecialSystemDirectory::OS_TemporaryDirectory);
-  
+    
     tmpFileSpec += "nscpmsg.txt";
     tmpFileSpec.MakeUnique();
     rv = NS_NewFileSpecWithSpec(tmpFileSpec,
-                                  getter_AddRefs(tempFileSpec));
-	  if (tempFileSpec)
+      getter_AddRefs(tempFileSpec));
+    if (tempFileSpec)
     {
       nsCOMPtr <nsIOutputStream> outputStream;
       rv = tempFileSpec->GetOutputStream(getter_AddRefs(outputStream));
       if (NS_SUCCEEDED(rv) && outputStream)
       {
-				nsXPIDLCString moveDestination;
-				currentOp->GetDestinationFolderURI(getter_Copies(moveDestination));
+        nsXPIDLCString moveDestination;
+        currentOp->GetDestinationFolderURI(getter_Copies(moveDestination));
         nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv));
         nsCOMPtr<nsIRDFResource> res;
         if (NS_FAILED(rv)) return ; // ### return error code.
@@ -295,28 +295,32 @@ nsImapOfflineSync::ProcessAppendMsgOperation(nsIMsgOfflineImapOperation *current
               {
                 rv = seekStream->Seek(PR_SEEK_SET, messageOffset);
                 if (NS_SUCCEEDED(rv))
-		{
+                {
                   // now, copy the dest folder offline store msg to the temp file
                   PRInt32 inputBufferSize = 10240;
                   char *inputBuffer = nsnull;
-        
+                  
                   while (!inputBuffer && (inputBufferSize >= 512))
                   {
                     inputBuffer = (char *) PR_Malloc(inputBufferSize);
                     if (!inputBuffer)
                       inputBufferSize /= 2;
                   }
-                  PRUint32 bytesLeft, bytesRead, bytesWritten;
+                  PRInt32 bytesLeft;
+                  PRUint32 bytesRead, bytesWritten;
                   bytesLeft = messageSize;
                   rv = NS_OK;
                   while (bytesLeft > 0 && NS_SUCCEEDED(rv))
                   {
-                    rv = offlineStoreInputStream->Read(inputBuffer, inputBufferSize, &bytesRead);
+                    PRInt32 bytesToRead = PR_MIN(inputBufferSize, bytesLeft);
+                    rv = offlineStoreInputStream->Read(inputBuffer, bytesToRead, &bytesRead);
                     if (NS_SUCCEEDED(rv) && bytesRead > 0)
                     {
                       rv = outputStream->Write(inputBuffer, bytesRead, &bytesWritten);
                       NS_ASSERTION(bytesWritten == bytesRead, "wrote out correct number of bytes");
                     }
+                    else
+                      break;
                     bytesLeft -= bytesRead;
                   }
                   outputStream->Flush();
@@ -325,25 +329,25 @@ nsImapOfflineSync::ProcessAppendMsgOperation(nsIMsgOfflineImapOperation *current
                   {
                     m_curTempFile = tempFileSpec;
                     rv = destFolder->CopyFileMessage(tempFileSpec,
-                                  /* nsIMsgDBHdr* msgToReplace */ nsnull,
-                                  PR_TRUE /* isDraftOrTemplate */,
-                                  m_window,
-                                  this);
+                      /* nsIMsgDBHdr* msgToReplace */ nsnull,
+                      PR_TRUE /* isDraftOrTemplate */,
+                      m_window,
+                      this);
                   }
                   else
                     m_curTempFile->Delete(PR_FALSE);
                 }
-				        currentOp->ClearOperation(nsIMsgOfflineImapOperation::kAppendDraft);
+                currentOp->ClearOperation(nsIMsgOfflineImapOperation::kAppendDraft);
                 m_currentDB->DeleteHeader(mailHdr, nsnull, PR_TRUE, PR_TRUE);
-					}
-				}
+              }
+            }
             // want to close in failure case too
             tempFileSpec->CloseStream();
-			}
-		}
-	}
-}
-	}
+          }
+        }
+      }
+    }
+  }
 }
 
 
@@ -867,22 +871,23 @@ nsresult nsImapOfflineSync::ProcessNextOperation()
 
 void nsImapOfflineSync::DeleteAllOfflineOpsForCurrentDB()
 {
-	m_KeyIndex = 0;
-	nsCOMPtr <nsIMsgOfflineImapOperation> currentOp;
+  m_KeyIndex = 0;
+  nsCOMPtr <nsIMsgOfflineImapOperation> currentOp;
   m_currentDB->GetOfflineOpForKey(m_CurrentKeys[m_KeyIndex], PR_FALSE, getter_AddRefs(currentOp));
-	while (currentOp)
-	{
-//		NS_ASSERTION(currentOp->GetOperationFlags() == 0);
-		// delete any ops that have already played back
-		m_currentDB->RemoveOfflineOp(currentOp);
-		currentOp = nsnull;
-		
-		if (++m_KeyIndex < m_CurrentKeys.GetSize())
-			m_currentDB->GetOfflineOpForKey(m_CurrentKeys[m_KeyIndex], PR_FALSE, getter_AddRefs(currentOp));
-	}
-	// turn off MSG_FOLDER_PREF_OFFLINEEVENTS
-	if (m_currentFolder)
-		m_currentFolder->ClearFlag(MSG_FOLDER_FLAG_OFFLINEEVENTS);
+  while (currentOp)
+  {
+    // NS_ASSERTION(currentOp->GetOperationFlags() == 0);
+    // delete any ops that have already played back
+    m_currentDB->RemoveOfflineOp(currentOp);
+    m_currentDB->Commit(nsMsgDBCommitType::kLargeCommit);
+    currentOp = nsnull;
+    
+    if (++m_KeyIndex < m_CurrentKeys.GetSize())
+      m_currentDB->GetOfflineOpForKey(m_CurrentKeys[m_KeyIndex], PR_FALSE, getter_AddRefs(currentOp));
+  }
+  // turn off MSG_FOLDER_PREF_OFFLINEEVENTS
+  if (m_currentFolder)
+    m_currentFolder->ClearFlag(MSG_FOLDER_FLAG_OFFLINEEVENTS);
 }
 
 nsImapOfflineDownloader::nsImapOfflineDownloader(nsIMsgWindow *aMsgWindow, nsIUrlListener *aListener) : nsImapOfflineSync(aMsgWindow, aListener)
