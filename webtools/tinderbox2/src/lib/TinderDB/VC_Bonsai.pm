@@ -95,7 +95,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.16 $ )[1];
+$VERSION = ( qw $Revision: 1.17 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -390,7 +390,7 @@ sub status_table_row {
   # all this should not prevent the VC column from being rendered.
 
   if (!($LAST_TREESTATE)) {
-      $LAST_TREESTATE = $TinderHeader::HEADER2DEFAULT_HTML{'TreeState'});
+      $LAST_TREESTATE = $TinderHeader::HEADER2DEFAULT_HTML{'TreeState'};
   }
 
   my ($cell_color) = TreeData::TreeState2color($LAST_TREESTATE);
