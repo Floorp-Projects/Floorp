@@ -17,9 +17,21 @@
  *
  * Contributor(s): Henry Sobotka <sobotka@axess.com> 2OOO/O2 update
  *
+ * This Original Code has been modified by IBM Corporation.
+ * Modifications made by IBM described herein are
+ * Copyright (c) International Business Machines
+ * Corporation, 2000
+ *
+ * Modifications to Mozilla code or documentation
+ * identified per MPL Section 3.3
+ *
+ * Date             Modified by     Description of modification
+ * ----             -----------     ---------------------------
+ * 5/31/2000        IBM Corp.       Add method isPrintDC() to class nsDeviceContextOS2 to use in file
+ *                                         nsRenderingContextOS2.cpp
  */
 
-// ToDo: 
+// ToDo:
 #include "nsGfxDefs.h"
 #include "libprint.h"
 
@@ -59,7 +71,7 @@ nsDeviceContextOS2::nsDeviceContextOS2() : DeviceContextImpl()
    mHeightFloat = 0.0f;
    mWidth = -1;
    mHeight = -1;
-   mDC = nsnull;
+   mPrintDC = nsnull;
    mClientRectConverted = PR_FALSE;
    mSpec = nsnull;
    mPrintState = nsPrintState_ePreBeginDoc;
@@ -74,11 +86,11 @@ nsDeviceContextOS2::~nsDeviceContextOS2()
    NS_IF_RELEASE( mSurface);
    NS_IF_RELEASE( mPalette);
 
-   if( mDC)
+   if( mPrintDC)
    {
       GpiAssociate( mPS, 0);
       GpiDestroyPS( mPS);
-      PrnCloseDC( mDC);
+      PrnCloseDC( mPrintDC);
    }
 
    NS_IF_RELEASE(mSpec);
@@ -111,8 +123,8 @@ nsresult nsDeviceContextOS2::Init( nsNativeDeviceContext aContext,
 
    float origscale, newscale;
    float t2d, a2d;
- 
-   mDC = (HDC)aContext; // we are print dc...
+
+   mPrintDC = (HDC)aContext; // we are print dc...
 
    // Create a print PS now.  This is necessary 'cos we need it from
    // odd places to do font-y things, where the only common reference
@@ -120,24 +132,24 @@ nsresult nsDeviceContextOS2::Init( nsNativeDeviceContext aContext,
    // PS can be associated with a given DC, and we can't get that PS from
    // the DC (really?).  And it would be slow :-)
    SIZEL sizel = { 0 , 0 };
-   mPS = GpiCreatePS( 0/*hab*/, mDC, &sizel,
+   mPS = GpiCreatePS( 0/*hab*/, mPrintDC, &sizel,
                       PU_PELS | GPIT_MICRO | GPIA_ASSOC);
- 
-   CommonInit( mDC);
- 
+
+   CommonInit( mPrintDC);
+
    GetTwipsToDevUnits( newscale);
    aOrigContext->GetTwipsToDevUnits( origscale);
- 
+
    mPixelScale = newscale / origscale;
- 
+
    aOrigContext->GetTwipsToDevUnits( t2d);
    aOrigContext->GetAppUnitsToDevUnits( a2d);
- 
+
    mAppUnitsToDevUnits = (a2d / t2d) * mTwipsToPixels;
    mDevUnitsToAppUnits = 1.0f / mAppUnitsToDevUnits;
 
    HCINFO hcinfo;
-   PrnQueryHardcopyCaps( mDC, &hcinfo);
+   PrnQueryHardcopyCaps( mPrintDC, &hcinfo);
    mWidth = hcinfo.xPels;
    mHeight = hcinfo.yPels;
    // XXX hsb says there are margin problems, must be from here...
@@ -148,7 +160,7 @@ nsresult nsDeviceContextOS2::Init( nsNativeDeviceContext aContext,
    // this point to do stuff like create fonts, which required the PS to
    // be associated with a DC which has been DEVESC_STARTDOC'd.
    BeginDocument();
-   
+
    return NS_OK;
 }
 
@@ -165,7 +177,7 @@ void nsDeviceContextOS2::CommonInit( HDC aDC)
    mTwipsToPixels = ((float) lCap) / (float)NSIntPointsToTwips(72);
    mPixelsToTwips = 1.0f / mTwipsToPixels;
 
-   // max palette size: level out at COLOR_CUBE_SIZE 
+   // max palette size: level out at COLOR_CUBE_SIZE
    // (or CAPS_COLORS ?)
    DevQueryCaps( aDC, CAPS_PHYS_COLORS, 1, &lCap);
    mPaletteInfo.sizePalette = (PRUint8) (min( lCap, COLOR_CUBE_SIZE));
@@ -236,7 +248,7 @@ nsresult nsDeviceContextOS2::GetDeviceContextFor( nsIDeviceContextSpec *aDevice,
 // Create a rendering context against our hdc for a printer
 nsresult nsDeviceContextOS2::CreateRenderingContext( nsIRenderingContext *&aContext)
 {
-   NS_ASSERTION( mDC, "CreateRenderingContext for non-print DC");
+   NS_ASSERTION( mPrintDC, "CreateRenderingContext for non-print DC");
 
    nsIRenderingContext *pContext = new nsRenderingContextOS2;
    if (!pContext)
@@ -267,7 +279,7 @@ HPS nsDeviceContextOS2::GetRepresentativePS() const
 {
    HPS hps;
 
-   if( mDC == 0)
+   if( mPrintDC == 0)
    {
       HWND hwnd = mWidget ? (HWND)mWidget : HWND_DESKTOP;
       hps = WinGetPS( hwnd);
@@ -280,7 +292,7 @@ HPS nsDeviceContextOS2::GetRepresentativePS() const
 
 void nsDeviceContextOS2::ReleaseRepresentativePS( HPS aPS)
 {
-   if( mDC == 0)
+   if( mPrintDC == 0)
       if( !WinReleasePS( aPS))
          PMERROR( "WinReleasePS (DC)");
    else
@@ -452,7 +464,7 @@ nsresult nsDeviceContextOS2::GetSystemAttribute( nsSystemAttrID anID,
                          "8.Helv", "9.Warpsans");
          break;
       // don't want to be here
-      default: 
+      default:
          NS_ASSERTION(0,"Bad eSystemAttr value");
          break;
    }
@@ -461,9 +473,9 @@ nsresult nsDeviceContextOS2::GetSystemAttribute( nsSystemAttrID anID,
    if( sysclr != 0)
    {
       long lColor = WinQuerySysColor( HWND_DESKTOP, sysclr, 0);
-   
+
       RGB2 *pRGB2 = (RGB2*) &lColor;
-   
+
       *(aInfo->mColor) = NS_RGB( pRGB2->bRed, pRGB2->bGreen, pRGB2->bBlue);
    }
    else if( sysval != 0)
@@ -526,7 +538,7 @@ nsresult nsDeviceContextOS2::GetDepth( PRUint32& aDepth)
 // Yuck...
 nsresult nsDeviceContextOS2::SupportsNativeWidgets( PRBool &aSupportsWidgets)
 {
-   aSupportsWidgets = (mDC == 0) ? PR_TRUE : PR_FALSE;
+   aSupportsWidgets = (mPrintDC == 0) ? PR_TRUE : PR_FALSE;
    return NS_OK;
 }
 
@@ -560,7 +572,7 @@ nsresult nsDeviceContextOS2::CheckFontExistence( const nsString &aFontName)
 nsresult nsDeviceContextOS2::CreateFontAliasTable()
 {
    nsresult result = NS_OK;
- 
+
    if( !mFontAliasTable)
    {
       mFontAliasTable = new nsHashtable;
@@ -608,25 +620,25 @@ nsresult nsDeviceContextOS2::GetILColorSpace( IL_ColorSpace *&aColorSpace)
          IL_ColorMap *cMap = IL_NewCubeColorMap( 0, 0, COLOR_CUBE_SIZE);
          if( !cMap)
             return NS_ERROR_OUT_OF_MEMORY;
-    
+
          // Create a pseudo color space
          mColorSpace = IL_CreatePseudoColorSpace( cMap, 8, 8);
-      } 
+      }
       else
       {
          IL_RGBBits colorRGBBits;
-       
+
          // Create a 24-bit color space
-         colorRGBBits.red_shift   = 16;  
+         colorRGBBits.red_shift   = 16;
          colorRGBBits.red_bits    = 8;
          colorRGBBits.green_shift = 8;
-         colorRGBBits.green_bits  = 8; 
-         colorRGBBits.blue_shift  = 0; 
-         colorRGBBits.blue_bits   = 8;  
-       
+         colorRGBBits.green_bits  = 8;
+         colorRGBBits.blue_shift  = 0;
+         colorRGBBits.blue_bits   = 8;
+
          mColorSpace = IL_CreateTrueColorSpace(&colorRGBBits, 24);
       }
-  
+
       if( !mColorSpace)
       {
          aColorSpace = nsnull;
@@ -669,7 +681,7 @@ nsresult nsDeviceContextOS2::SetupColorMaps()
    {
       // Share a single palette between all screen instances; printers need
       // a separate palette for compatability reasons.
-      if( mDC) rc = NS_CreatePalette( this, mPalette);
+      if( mPrintDC) rc = NS_CreatePalette( this, mPalette);
       else mPalette = gModuleData.GetUIPalette( this);
 
       if( rc == NS_OK)
@@ -688,10 +700,10 @@ NS_IMETHODIMP nsDeviceContextOS2::ConvertPixel(nscolor aColor, PRUint32 & aPixel
 // Printing ------------------------------------------------------------------
 nsresult nsDeviceContextOS2::BeginDocument()
 {
-   NS_ASSERTION(mDC, "BeginDocument for non-print DC");
+   NS_ASSERTION(mPrintDC, "BeginDocument for non-print DC");
    if( mPrintState == nsPrintState_ePreBeginDoc)
    {
-      PrnStartJob( mDC, "Warpzilla NGLayout job");
+      PrnStartJob( mPrintDC, "Warpzilla NGLayout job");
       printf( "BeginDoc\n");
       mPrintState = nsPrintState_eBegunDoc;
    }
@@ -700,7 +712,7 @@ nsresult nsDeviceContextOS2::BeginDocument()
 
 nsresult nsDeviceContextOS2::EndDocument()
 {
-   PrnEndJob( mDC);
+   PrnEndJob( mPrintDC);
    mPrintState = nsPrintState_ePreBeginDoc;
    printf("EndDoc\n");
    return NS_OK;
@@ -712,7 +724,7 @@ nsresult nsDeviceContextOS2::BeginPage()
       mPrintState = nsPrintState_eBegunFirstPage;
    else
    {
-      PrnNewPage( mDC);
+      PrnNewPage( mPrintDC);
       printf("NewPage");
    }
    return NS_OK;
@@ -722,4 +734,13 @@ nsresult nsDeviceContextOS2::EndPage()
 {
    /* nop */
    return NS_OK;
+}
+
+BOOL nsDeviceContextOS2::isPrintDC()
+{
+   if ( mPrintDC == nsnull )
+      return 0;
+
+   else
+      return 1;
 }
