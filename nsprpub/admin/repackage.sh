@@ -60,10 +60,10 @@
 #
 # These variables should be modified for each NSPR release.
 #
-FROMTOP=/share/builds/components/nspr20/v4.1.1
-TOTOP=./v4.1.1
-NSPRDIR=nspr-4.1.1
-SOURCETAG=NSPRPUB_RELEASE_4_1_1
+FROMTOP=/share/builds/components/nspr20/v4.2
+TOTOP=./v4.2
+NSPRDIR=nspr-4.2
+SOURCETAG=NSPR_4_2_RELEASE
 
 #
 # enumerate Unix object directories on /s/b/c
@@ -80,12 +80,16 @@ IRIX6.5_n32_PTH_DBG.OBJ
 IRIX6.5_n32_PTH_OPT.OBJ
 Linux2.2_x86_glibc_PTH_DBG.OBJ
 Linux2.2_x86_glibc_PTH_OPT.OBJ
-OSF1V4.0D_DBG.OBJ
-OSF1V4.0D_OPT.OBJ
+Linux2.4_x86_glibc_PTH_DBG.OBJ
+Linux2.4_x86_glibc_PTH_OPT.OBJ
+OSF1V5.0_DBG.OBJ
+OSF1V5.0_OPT.OBJ
 SunOS5.6_DBG.OBJ
 SunOS5.6_OPT.OBJ
-SunOS5.7_64_DBG.OBJ
-SunOS5.7_64_OPT.OBJ
+SunOS5.8_64_DBG.OBJ
+SunOS5.8_64_OPT.OBJ
+SunOS5.8_DBG.OBJ
+SunOS5.8_OPT.OBJ
 "
 #
 # enumerate Windows object directories on /s/b/c
