@@ -628,6 +628,27 @@ PreferredGeometry(Widget w,Dimension * width,Dimension * height)
 
 	*width += max_width;
 	*height += max_height;
+
+
+    /*
+     * HACKERY HACKERY HACKERY HACKERY HACKERY HACKERY HACKERY HACKERY
+     *
+     * This is a complete HACK.  Hardcode the dimensions to 640x480
+     * until I write some clever code to compute dimensions from
+     * resources, command line, children preferred geometries, and
+     * other magical things.
+     *
+     * HACKERY HACKERY HACKERY HACKERY HACKERY HACKERY HACKERY HACKERY
+     */
+    if (*width <= 2)
+    {
+      *width = 600;
+    }
+    
+    if (*height <= 2)
+    {
+      *height = 480;
+    }
 }
 /*----------------------------------------------------------------------*/
 static Boolean

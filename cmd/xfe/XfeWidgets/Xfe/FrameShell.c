@@ -422,10 +422,14 @@ Realize(Widget w,XtValueMask * mask,XSetWindowAttributes * wa)
 						XmCR_BEFORE_REALIZE,NULL,False);
 
     /*
+     * HACKERY HACKERY HACKERY HACKERY HACKERY HACKERY HACKERY HACKERY
+     *
      * This is a complete HACK.  Hardcode the dimensions to 640x480
      * until I write some clever code to compute dimensions from
      * resources, command line, children preferred geometries, and
      * other magical things.
+     *
+     * HACKERY HACKERY HACKERY HACKERY HACKERY HACKERY HACKERY HACKERY
      */
     if (_XfeWidth(w) <= 2)
     {
