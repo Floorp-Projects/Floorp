@@ -103,6 +103,11 @@ interface nsIAutoCompleteController : nsISupports
    */
   boolean handleEscape();
 
+  /* 
+   * Handle tab. Just closes up.
+   */
+  void handleTab();
+
   /*
    * Notify the controller of the following key navigation events:
    *   up, down, left, right, page up, page down
