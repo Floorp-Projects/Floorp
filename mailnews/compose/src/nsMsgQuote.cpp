@@ -37,15 +37,18 @@
 #include "nsMsgDeliveryListener.h"
 #include "nsIIOService.h"
 #include "nsMsgMimeCID.h"
+#include "nsMsgCompCID.h"
 #include "nsMsgCompose.h"
 #include "nsMsgMailNewsUrl.h"
+#include "nsXPIDLString.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kIStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 static NS_DEFINE_CID(kStreamConverterCID,    NS_MAILNEWS_MIME_STREAM_CONVERTER_CID);
+static NS_DEFINE_CID(kMsgQuoteListenerCID, NS_MSGQUOTELISTENER_CID);
 
 
-NS_IMPL_ISUPPORTS(nsMsgQuoteListener, nsCOMTypeInfo<nsIMimeStreamConverterListener>::GetIID())
+NS_IMPL_ISUPPORTS2(nsMsgQuoteListener, nsIMimeStreamConverterListener, nsIMsgQuoteListener)
 
 nsMsgQuoteListener::nsMsgQuoteListener() :
 	mMsgQuote(nsnull)
@@ -58,23 +61,40 @@ nsMsgQuoteListener::~nsMsgQuoteListener()
 {
 }
 
-void nsMsgQuoteListener::SetMsgQuote(nsMsgQuote * msgQuote)
+NS_IMETHODIMP nsMsgQuoteListener::SetMsgQuote(nsIMsgQuote * msgQuote)
 {
 	mMsgQuote = msgQuote;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgQuoteListener::GetMsgQuote(nsIMsgQuote ** aMsgQuote)
+{
+  nsresult rv = NS_OK;
+  if (aMsgQuote)
+  {
+    *aMsgQuote = mMsgQuote;
+    NS_IF_ADDREF(*aMsgQuote);
+  }
+  else
+    rv = NS_ERROR_NULL_POINTER;
+
+  return rv;
 }
 
 nsresult nsMsgQuoteListener::OnHeadersReady(nsIMimeHeaders * headers)
 {
 
 	printf("RECEIVE CALLBACK: OnHeadersReady\n");
-	
-	if (mMsgQuote && mMsgQuote->mStreamListener)
+	nsCOMPtr<nsIStreamListener> aStreamListener;
+  if (mMsgQuote)
+    mMsgQuote->GetStreamListener(getter_AddRefs(aStreamListener));
+	if (aStreamListener)
 	{
 		QuotingOutputStreamListener * quoting;
-		if (NS_SUCCEEDED(mMsgQuote->mStreamListener->QueryInterface(QuotingOutputStreamListener::GetIID(), (void**)&quoting)) &&
+		if (NS_SUCCEEDED(aStreamListener->QueryInterface(NS_GET_IID(QuotingOutputStreamListener), (void**)&quoting)) &&
 			quoting)
 		{
-  		  	quoting->SetMimeHeaders(headers);
+	  	quoting->SetMimeHeaders(headers);
 			NS_RELEASE(quoting);			
 		}
 		else
@@ -94,88 +114,71 @@ nsresult nsMsgQuoteListener::OnHeadersReady(nsIMimeHeaders * headers)
 nsMsgQuote::nsMsgQuote()
 {
 	NS_INIT_REFCNT();
-
-  mURI = nsnull;
-  mMessageService = nsnull;
   mQuoteHeaders = PR_FALSE;
   mQuoteListener = nsnull;
 }
 
 nsMsgQuote::~nsMsgQuote()
 {
-  if (mMessageService)
-  {
-    ReleaseMessageServiceFromURI(mURI, mMessageService);
-    mMessageService = nsnull;
-  }
-
-  PR_FREEIF(mURI);
-  NS_IF_RELEASE(mQuoteListener);
 }
 
 /* the following macro actually implement addref, release and query interface for our component. */
 NS_IMPL_ISUPPORTS(nsMsgQuote, nsCOMTypeInfo<nsIMsgQuote>::GetIID());
 
-/* this function will be used by the factory to generate an Message Compose Fields Object....*/
-nsresult 
-NS_NewMsgQuote(const nsIID &aIID, void ** aInstancePtrResult)
+NS_IMETHODIMP nsMsgQuote::GetStreamListener(nsIStreamListener ** aStreamListener)
 {
-	/* note this new macro for assertions...they can take a string describing the assertion */
-	NS_PRECONDITION(nsnull != aInstancePtrResult, "nsnull ptr");
-	if (nsnull != aInstancePtrResult)
-	{
-		nsMsgQuote *pQuote = new nsMsgQuote();
-		if (pQuote)
-			return pQuote->QueryInterface(aIID, aInstancePtrResult);
-		else
-			return NS_ERROR_OUT_OF_MEMORY; /* we couldn't allocate the object */
-	}
-	else
-		return NS_ERROR_NULL_POINTER; /* aInstancePtrResult was NULL....*/
-}
+  nsresult rv = NS_OK;
+  if (aStreamListener)
+  {
+    *aStreamListener = mStreamListener;
+    NS_IF_ADDREF(*aStreamListener);
+  }
+  else
+    rv = NS_ERROR_NULL_POINTER;
 
+  return rv;
+}
 
 nsresult
 nsMsgQuote::QuoteMessage(const PRUnichar *msgURI, PRBool quoteHeaders, nsIStreamListener * aQuoteMsgStreamListener)
 {
-nsresult  rv;
+  nsresult  rv;
 
   if (!msgURI)
     return NS_ERROR_INVALID_ARG;
+  nsCAutoString aMsgUri (msgURI);
 
   mQuoteHeaders = quoteHeaders;
   mStreamListener = aQuoteMsgStreamListener;
 
-  nsString                convertString(msgURI);
-
-  if (quoteHeaders)
-      convertString += "?header=quote";
-  else
-      convertString += "?header=quotebody";
-
-  mURI = convertString.ToNewCString();
-
-  if (!mURI)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  rv = GetMessageServiceFromURI(mURI, &mMessageService);
-  if (NS_FAILED(rv) && !mMessageService)
-  {
-    return rv;
-  }
-
-  // NS_ADDREF(this);
-  AddRef();
-
-  NS_WITH_SERVICE(nsIStreamConverterService, streamConverterService, 
-                  kIStreamConverterServiceCID, &rv);
+  // first, convert the rdf msg uri into a url that represents the message...
+  nsIMsgMessageService * msgService = nsnull;
+  rv = GetMessageServiceFromURI(aMsgUri, &msgService);
   if (NS_FAILED(rv)) return rv;
-  nsAutoString from, to;
-  from = "message/rfc822";
-  to = "text/xul";
 
   nsCOMPtr<nsIURI> aURL;
-  rv = CreateStartupUrl(mURI, getter_AddRefs(aURL));
+  rv = msgService->GetUrlForUri(aMsgUri, getter_AddRefs(aURL));
+  if (NS_FAILED(rv)) return rv;
+
+  // now we want to append some quote specific information to the 
+  // end of the url spec. 
+  nsXPIDLCString urlSpec;
+  aURL->GetSpec(getter_Copies(urlSpec));
+  nsCAutoString modifiedUrlSpec(urlSpec);
+  if (quoteHeaders)
+      modifiedUrlSpec += "?header=quote";
+  else
+      modifiedUrlSpec += "?header=quotebody";
+
+  aURL->SetSpec((const char *) modifiedUrlSpec);
+
+  rv = nsComponentManager::CreateInstance(kMsgQuoteListenerCID, nsnull, NS_GET_IID(nsIMsgQuoteListener), getter_AddRefs(mQuoteListener));
+  if (NS_FAILED(rv)) return rv;
+  mQuoteListener->SetMsgQuote(this);
+
+  nsCOMPtr<nsISupports> quoteSupport;
+  rv = QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(),
+                      getter_AddRefs(quoteSupport));
 
   mQuoteChannel = null_nsCOMPtr();
   NS_WITH_SERVICE(nsIIOService, netService, kIOServiceCID, &rv);
@@ -187,38 +190,28 @@ nsresult  rv;
                                          nsnull,      // originalURI
                                          getter_AddRefs(mQuoteChannel));
 
-  NS_ASSERTION(!mQuoteListener, "Oops quote listener exists\n");
-
-  if (mQuoteListener)
-      delete mQuoteListener;
-      
-  mQuoteListener = new nsMsgQuoteListener();
-  if (mQuoteListener)
-  {
-      NS_ADDREF(mQuoteListener);
-      mQuoteListener->SetMsgQuote(this);
-  }
-  nsCOMPtr<nsISupports> quoteSupport;
-  rv = QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(),
-                      getter_AddRefs(quoteSupport));
-  
+  NS_WITH_SERVICE(nsIStreamConverterService, streamConverterService, kIStreamConverterServiceCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+  nsAutoString from, to;
+  from = "message/rfc822";
+  to = "text/xul";
   nsCOMPtr<nsIStreamListener> convertedListener;
   rv = streamConverterService->AsyncConvertData(from.GetUnicode(),
                                                 to.GetUnicode(),
                                                 mStreamListener,
                                                 quoteSupport,
-                                      getter_AddRefs(convertedListener));
-  if (NS_SUCCEEDED(rv))
-      rv = mMessageService->DisplayMessage(mURI, convertedListener, nsnull,
-                                           nsnull);
-  ReleaseMessageServiceFromURI(mURI, mMessageService);
-  mMessageService = nsnull;
-  Release();
+                                                getter_AddRefs(convertedListener));
 
-	if (NS_FAILED(rv))
-    return rv;    
-  else
-    return NS_OK;
+  // now we want to create a necko channel for this url and we want to open it
+  nsCOMPtr<nsIChannel> aChannel;
+  rv = netService->NewChannelFromURI(nsnull, aURL, nsnull, nsnull, nsnull, getter_AddRefs(aChannel));
+  if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsISupports> aCtxt = do_QueryInterface(aURL);
+  //  now try to open the channel passing in our display consumer as the listener 
+  rv = aChannel->AsyncRead(0, -1, aCtxt, convertedListener);
+
+  ReleaseMessageServiceFromURI(aMsgUri, msgService);
+  return rv;
 }
 
 NS_IMETHODIMP
