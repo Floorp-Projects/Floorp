@@ -457,31 +457,35 @@ function toDoUnifinderItemUpdate( calendarToDo )
 }
 
 
-function contextChangePriority( Priority, event )
+function contextChangeProgress( event, Progress )
 {
+   var tree = document.getElementById( ToDoUnifinderTreeName );
+
    if (tree.treeBoxObject.selection.count > 0)
    {
       var treeitem = tree.treeBoxObject.view.getItemAtIndex( tree.currentIndex );
       if(treeitem)
       {
          var todoId = treeitem.getAttribute("toDoID");
-         var ToDoItem = gICalLib.fetchToDo( todoId );
-         ToDoItem.priority = Priority;
+         var ToDoItem = gICalLib.fetchTodo( todoId );
+         ToDoItem.percent = Progress;
          gICalLib.modifyTodo( ToDoItem );
       }
    }
 }
 
 
-function contextChangePriority( Priority, event )
+function contextChangePriority( event, Priority )
 {
+   var tree = document.getElementById( ToDoUnifinderTreeName );
+
    if (tree.treeBoxObject.selection.count > 0)
    {
       var treeitem = tree.treeBoxObject.view.getItemAtIndex( tree.currentIndex );
       if(treeitem)
       {
          var todoId = treeitem.getAttribute("toDoID");
-         var ToDoItem = gICalLib.fetchToDo( todoId );
+         var ToDoItem = gICalLib.fetchTodo( todoId );
          ToDoItem.priority = Priority;
          gICalLib.modifyTodo( ToDoItem );
       }
