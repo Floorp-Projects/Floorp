@@ -46,6 +46,9 @@
 
 textbox[type="autocomplete"] {
   cursor: default !important;
+}
+
+.textbox-input-box {
   -moz-box-align: center;
 }
 
