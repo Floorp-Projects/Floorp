@@ -29,27 +29,8 @@ LIBRARY_NAME	= xp
 
 INHIBIT_STRIP_NOT_EXPORTED = 1
 
-ifndef MODULAR_NETLIB
-CSRCS		= \
-		  xp_alloc.c \
-		  xp_cntxt.c \
-		  xp_core.c \
-		  xp_error.c \
-		  xp_intl.c \
-		  xp_ncent.c \
-		  xp_rgb.c \
-		  xp_str.c \
-		  xp_thrmo.c \
-		  xp_time.c \
-		  xp_trace.c \
-		  xp_wrap.c \
-		  xpassert.c \
-		  xplocale.c \
-		  xp_linebuf.c \
-		  $(NULL)
-else
+#For MODULAR_NETLIB
 CSRCS		= xp_stub.c
-endif
 
 CSRCS		+= \
 		  xp_file.c \
