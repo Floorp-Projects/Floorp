@@ -126,10 +126,6 @@ nsRenderingContextUnix :: ~nsRenderingContextUnix()
 
   // Destroy the front buffer and it's GC if one was allocated for it
   if (nsnull != mFrontBuffer) {
-    if (mFrontBuffer != mRenderingSurface) {
-      ::XFreeGC(mFrontBuffer->display,
-		mFrontBuffer->gc);
-    }
     delete mFrontBuffer;
   }
 
@@ -233,14 +229,6 @@ nsresult nsRenderingContextUnix :: CommonInit()
 
 nsresult nsRenderingContextUnix :: SelectOffScreenDrawingSurface(nsDrawingSurface aSurface)
 {  
-
-  if (mFrontBuffer == mRenderingSurface) {
-    XGCValues values;
-    mFrontBuffer->gc = ::XCreateGC(mRenderingSurface->display,
-				   mRenderingSurface->drawable,
-				   nsnull, &values);
-  }
-  
   mRenderingSurface = (nsDrawingSurfaceUnix *) aSurface;  
   return NS_OK;
 }
@@ -675,7 +663,7 @@ nsDrawingSurface nsRenderingContextUnix :: CreateDrawingSurface(nsRect *aBounds)
 
   surface->drawable = p ;
   surface->display  = mRenderingSurface->display;
-  surface->gc       = mFrontBuffer->gc;
+  surface->gc       = mRenderingSurface->gc;
   surface->visual   = mRenderingSurface->visual;
   surface->depth    = mRenderingSurface->depth;
 
@@ -1062,7 +1050,7 @@ nsresult nsRenderingContextUnix :: CopyOffScreenBits(nsRect &aBounds)
   ::XCopyArea(mRenderingSurface->display, 
 	      mRenderingSurface->drawable,
 	      mFrontBuffer->drawable,
-	      mFrontBuffer->gc,
+	      mRenderingSurface->gc,
 	      0,0, aBounds.width, aBounds.height, 0,0);
 
   return NS_OK;
