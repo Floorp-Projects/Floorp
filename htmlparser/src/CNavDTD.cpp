@@ -50,10 +50,11 @@ static NS_DEFINE_IID(kClassIID,     NS_INAVHTML_DTD_IID);
  
 //static const char* kNullURL = "Error: Null URL given";
 //static const char* kNullFilename= "Error: Null filename given";
-static const char* kNullToken = "Error: Null token given";
-static const char* kInvalidTagStackPos = "Error: invalid tag stack position";
-static char* kVerificationDir = "c:/temp";
-static const char* kViewSourceCommand= "view-source";
+static const  char* kNullToken = "Error: Null token given";
+static const  char* kInvalidTagStackPos = "Error: invalid tag stack position";
+static char*        kVerificationDir = "c:/temp";
+static const  char* kViewSourceCommand= "view-source";
+static char         gShowCRC=0;
  
 static nsAutoString gEmpty;
 
@@ -356,12 +357,8 @@ CNavDTD::CNavDTD() : nsIDTD(){
   mFormContext=0;
   mMapContext=0;
   mTokenizer=0;
-
-#ifdef NS_DEBUG
   mComputedCRC32=0;
   mExpectedCRC32=0;
-#endif
-
 //  DebugDumpContainmentRules2(*this,"c:/temp/DTDRules.new","New CNavDTD Containment Rules");
 }
 
@@ -478,12 +475,8 @@ nsresult CNavDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink,nsIParse
     if((aNotifySink) && (mSink)) {
       result = mSink->WillBuildModel();
     }
-
-#ifdef NS_DEBUG
     mComputedCRC32=0;
     mExpectedCRC32=0;
-#endif
-
   }
   return result;
 }
@@ -530,7 +523,7 @@ nsresult CNavDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsIToke
  * 
  * @update  gess5/18/98
  * @param 
- * @return
+ * @return 
  */
 nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParser* aParser,nsIContentSink* aSink){
   nsresult result= NS_OK;
@@ -547,21 +540,30 @@ nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParse
         result = CloseContainersTo(0,eHTMLTag_unknown,PR_FALSE);
       }
 
-#ifdef NS_DEBUG
-      if(mComputedCRC32!=mExpectedCRC32) {
-        if(mExpectedCRC32!=0) {
-          printf("Expected CRC: %u,",mExpectedCRC32);
-          result = mSink->DidBuildModel(2);
-        } 
-        else {
-          printf("Computed CRC: %u.\n",mComputedCRC32);
-          result = mSink->DidBuildModel(3);
+        //let's only grab this state once!
+      if(!gShowCRC) {
+        gShowCRC=1; //this only indicates we'll not initialize again.
+        char* theEnvString = PR_GetEnv("RICKG_CRC");
+        if(theEnvString){
+          if(('1'==theEnvString[0]) || ('Y'==theEnvString[0]) || ('y'==theEnvString[0])){
+            gShowCRC=2;  //this indicates that the CRC flag was found in the environment.
+          }
         }
       }
-      else result = mSink->DidBuildModel(0);
-#else
-  result = mSink->DidBuildModel(3);
-#endif
+
+      if(2==gShowCRC) {
+        if(mComputedCRC32!=mExpectedCRC32) {
+          if(mExpectedCRC32!=0) {
+            printf("CRC Computed: %u  Expected CRC: %u\n,",mComputedCRC32,mExpectedCRC32);
+            result = mSink->DidBuildModel(2);
+          } 
+          else {
+            printf("Computed CRC: %u.\n",mComputedCRC32);
+            result = mSink->DidBuildModel(3);
+          }
+        }
+        else result = mSink->DidBuildModel(0);
+      }
       if(mDTDDebug) {
         mDTDDebug->DumpVectorRecord();
       }
@@ -946,7 +948,7 @@ nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsCParserNode
           } //if
         }
       } //if
-#ifdef NS_DEBUG
+
       else if(theKey.EqualsIgnoreCase("NAME")) {
         const nsString& theValue1=aNode.GetValueAt(0);
         if(theValue1.EqualsIgnoreCase("\"CRC\"")) {
@@ -958,7 +960,7 @@ nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsCParserNode
           } //if
         } //if
       } //else
-#endif
+
     } //if
   }//if
 
@@ -2263,11 +2265,9 @@ CNavDTD::OpenContainer(const nsIParserNode& aNode,PRBool aUpdateStyleStack){
   nsresult   result=NS_OK; 
   eHTMLTags nodeType=(eHTMLTags)aNode.GetNodeType();
 
-#ifdef  NS_DEBUG
-#define K_OPENOP 100
+  #define K_OPENOP 100
   CRCStruct theStruct(nodeType,K_OPENOP);
   mComputedCRC32=AccumulateCRC(mComputedCRC32,(char*)&theStruct,sizeof(theStruct));
-#endif
 
   switch(nodeType) {
 
@@ -2350,11 +2350,9 @@ CNavDTD::CloseContainer(const nsIParserNode& aNode,eHTMLTags aTag,
   nsresult   result=NS_OK;
   eHTMLTags nodeType=(eHTMLTags)aNode.GetNodeType();
   
-#ifdef  NS_DEBUG
-#define K_CLOSEOP 200
+  #define K_CLOSEOP 200
   CRCStruct theStruct(nodeType,K_CLOSEOP);
   mComputedCRC32=AccumulateCRC(mComputedCRC32,(char*)&theStruct,sizeof(theStruct));
-#endif
 
   switch(nodeType) {
 
