@@ -233,7 +233,7 @@ private:
     void OnMsgOutputClosed(nsresult reason);
 
     // called when the socket is connected
-    void OnSocketConnected(PRFileDesc *fd);
+    void OnSocketConnected();
 
     //-------------------------------------------------------------------------
     // socket input/output objects.  these may be accessed on any thread with

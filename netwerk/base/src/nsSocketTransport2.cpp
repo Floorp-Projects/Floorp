@@ -770,8 +770,7 @@ nsSocketTransport::ResolveHost()
 
         LOG(("  advancing to STATE_RESOLVING\n"));
         mState = STATE_RESOLVING;
-
-        SendStatus(nsISocketTransport::STATUS_RESOLVING);
+        SendStatus(STATUS_RESOLVING);
     }
     return rv;
 }
@@ -868,6 +867,7 @@ nsSocketTransport::BuildSocket(PRFileDesc *&fd, PRBool &proxyTransparent, PRBool
                 PR_Close(fd);
         }
     }
+
     return rv;
 }
 
@@ -890,26 +890,46 @@ nsSocketTransport::InitiateSocket()
     }
 
     PRStatus status;
-    PRSocketOptionData opt;
 
     // Make the socket non-blocking...
+    PRSocketOptionData opt;
     opt.option = PR_SockOpt_Nonblocking;
     opt.value.non_blocking = PR_TRUE;
     status = PR_SetSocketOption(fd, &opt);
-    if (status != PR_SUCCESS) {
-        rv = NS_ERROR_FAILURE;
-        goto loser;
+    NS_ASSERTION(status == PR_SUCCESS, "unable to make socket non-blocking");
+    
+    // inform socket transport about this newly created socket...
+    rv = gSocketTransportService->AttachSocket(fd, this);
+    if (NS_FAILED(rv)) {
+        PR_Close(fd);
+        return rv;
+    }
+    mAttached = PR_TRUE;
+
+    // assign mFD so that we can properly handle OnSocketDetached before we've
+    // established a connection.
+    {
+        nsAutoLock lock(mLock);
+        mFD = fd;
+        mFDref = 1;
+        mFDconnected = PR_FALSE;
     }
 
     LOG(("  advancing to STATE_CONNECTING\n"));
     mState = STATE_CONNECTING;
-    SendStatus(nsISocketTransport::STATUS_CONNECTING_TO);
+    SendStatus(STATUS_CONNECTING_TO);
 
     // 
     // Initiate the connect() to the host...  
     //
     status = PR_Connect(fd, mNetAddr, NS_SOCKET_CONNECT_TIMEOUT);
-    if (status != PR_SUCCESS) {
+    if (status == PR_SUCCESS) {
+        // 
+        // we are connected!
+        //
+        OnSocketConnected();
+    }
+    else {
         PRErrorCode code = PR_GetError();
 #if defined(TEST_CONNECT_ERRORS)
         code = RandomizeConnectError(code);
@@ -926,7 +946,7 @@ nsSocketTransport::InitiateSocket()
             //
             // we are connected!
             //
-            OnSocketConnected(fd);
+            OnSocketConnected();
 
             if (mSecInfo && !mProxyHost.IsEmpty() && proxyTransparent && usingSSL) {
                 // if the connection phase is finished, and the ssl layer has
@@ -954,27 +974,8 @@ nsSocketTransport::InitiateSocket()
             rv = ErrorAccordingToNSPR(code);
             if ((rv == NS_ERROR_CONNECTION_REFUSED) && !mProxyHost.IsEmpty())
                 rv = NS_ERROR_PROXY_CONNECTION_REFUSED;
-            goto loser;
         }
     }
-
-    rv = gSocketTransportService->AttachSocket(fd, this);
-    if (NS_FAILED(rv))
-        goto loser;
-
-    mAttached = PR_TRUE;
-    {
-        nsAutoLock lock(mLock);
-        mFD = fd; 
-        mFDref = 1;
-        mFDconnected = PR_FALSE;
-    }
-    return NS_OK;
-
-loser:
-    LOG(("  closing socket [rv=%x]\n", rv));
-    mPollFlags = 0;
-    PR_Close(fd);
     return rv;
 }
 
@@ -1088,18 +1089,21 @@ nsSocketTransport::OnMsgOutputClosed(nsresult reason)
 }
 
 void
-nsSocketTransport::OnSocketConnected(PRFileDesc *fd)
+nsSocketTransport::OnSocketConnected()
 {
     LOG(("  advancing to STATE_TRANSFERRING\n"));
-    mState = STATE_TRANSFERRING;
+
     mPollFlags = (PR_POLL_READ | PR_POLL_WRITE | PR_POLL_EXCEPT);
+    mState = STATE_TRANSFERRING;
 
-    SendStatus(nsISocketTransport::STATUS_CONNECTED_TO);
+    SendStatus(STATUS_CONNECTED_TO);
 
-    // assign mFD (must do this within the transport lock)
+    // assign mFD (must do this within the transport lock), but take care not
+    // to trample over mFDref if mFD is already set.
     {
         nsAutoLock lock(mLock);
-        mFDref = 1;
+        NS_ASSERTION(mFD, "no socket");
+        NS_ASSERTION(mFDref == 1, "wrong socket ref count");
         mFDconnected = PR_TRUE;
     }
 
@@ -1110,8 +1114,13 @@ nsSocketTransport::OnSocketConnected(PRFileDesc *fd)
 PRFileDesc *
 nsSocketTransport::GetFD_Locked()
 {
-    if (mFD && mFDconnected)
+    // mFD is not available to the streams while disconnected.
+    if (!mFDconnected)
+        return nsnull;
+
+    if (mFD)
         mFDref++;
+
     return mFD;
 }
 
@@ -1123,6 +1132,7 @@ nsSocketTransport::ReleaseFD_Locked(PRFileDesc *fd)
     if (--mFDref == 0) {
         LOG(("nsSocketTransport: calling PR_Close [this=%x]\n", this));
         PR_Close(mFD);
+        mFD = nsnull;
     }
 }
 
@@ -1224,14 +1234,14 @@ nsSocketTransport::OnSocketReady(PRFileDesc *fd, PRInt16 pollFlags)
         }
         else {
             if (pollFlags & PR_POLL_WRITE) {
-                SendStatus(nsISocketTransport::STATUS_SENDING_TO);
+                SendStatus(STATUS_SENDING_TO);
                 // assume that we won't need to poll any longer (the stream will
                 // request that we poll again if it is still pending).
                 mPollFlags &= ~PR_POLL_WRITE;
                 mOutput.OnSocketReady(NS_OK);
             }
             if (pollFlags & PR_POLL_READ) {
-                SendStatus(nsISocketTransport::STATUS_RECEIVING_FROM);
+                SendStatus(STATUS_RECEIVING_FROM);
                 // assume that we won't need to poll any longer (the stream will
                 // request that we poll again if it is still pending).
                 mPollFlags &= ~PR_POLL_READ;
@@ -1245,7 +1255,7 @@ nsSocketTransport::OnSocketReady(PRFileDesc *fd, PRInt16 pollFlags)
             //
             // we are connected!
             //
-            OnSocketConnected(fd);
+            OnSocketConnected();
         }
         else {
             PRErrorCode code = PR_GetError();
@@ -1316,7 +1326,8 @@ nsSocketTransport::OnSocketDetached(PRFileDesc *fd)
         nsAutoLock lock(mLock);
         if (mFD) {
             ReleaseFD_Locked(mFD);
-            // flag mFD as unusable
+            // flag mFD as unusable; this prevents other consumers from 
+            // acquiring a reference to mFD.
             mFDconnected = PR_FALSE;
         }
     }
