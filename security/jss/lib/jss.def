@@ -211,3 +211,10 @@ Java_org_mozilla_jss_util_Password_readPasswordFromConsole;
 ;+    local:
 ;+       *;
 ;+};
+;+JSS_3.1 {       # JSS 3.1 release
+;+    global:
+Java_org_mozilla_jss_pkcs11_PK11KeyWrapper_nativeUnwrapSymPlaintext;
+;+    local:
+;+       *;
+;+};
+
