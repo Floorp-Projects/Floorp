@@ -42,6 +42,7 @@ CPPSRCS		= \
         nsSetupTypeDlg.cpp \
         nsComponentsDlg.cpp \
         nsInstallDlg.cpp \
+        nsZipExtractor.cpp \
         nsXIOptions.cpp \
         nsXIContext.cpp \
         nsXInstaller.cpp \
@@ -51,6 +52,7 @@ CPPSRCS		= \
 
 LIBS        = \
         `gtk-config --libs` \
+        -ljar50_s \
         $(NULL)
 
 LOCAL_INCLUDES += -I$(srcdir)/../../../stub

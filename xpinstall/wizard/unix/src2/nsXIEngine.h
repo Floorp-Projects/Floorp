@@ -30,6 +30,7 @@
 #include "nsComponent.h"
 #include "nsComponentList.h"
 #include "nsInstallDlg.h"
+#include "nsZipExtractor.h"
 
 #include "xpistub.h"
 
