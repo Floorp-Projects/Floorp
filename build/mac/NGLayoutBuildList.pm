@@ -503,6 +503,13 @@ sub BuildLayoutProjects()
 	
 	BuildProject(":mozilla:webshell:tests:viewer:mac:viewer.mcp",						"viewer$D");
 	BuildProject(":mozilla:xpfe:macbuild:xpfeviewer.mcp",								"xpfeViewer$D");
+	
+	BuildProject(":mozilla:xpfe:appshell:macbuild:AppShell.mcp",						"AppShell$D.shlb");
+	MakeAlias(":mozilla:xpfe:appshell:macbuild:AppShell$D.shlb",							"$dist_dir");
+	$main::DEBUG ? MakeAlias(":mozilla:xpfe:appshell:macbuild:AppShell.shlb.xSYM",			"$dist_dir") : 0;
+	
+	BuildProject(":mozilla:xpfe:bootstrap:macbuild:XPAppViewer.mcp",					"XPAppViewer$D");
+	
 }
 
 
