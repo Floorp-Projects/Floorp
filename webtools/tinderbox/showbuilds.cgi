@@ -169,9 +169,17 @@ sub print_page_head {
 
   &print_javascript;
 
-  # Get the message of the day only on the first pageful
-  do "$::tree/mod.pl" if $nowdate eq $maxdate;
-  print "$message_of_day\n";  # from $::tree/mod.pl
+  # Print rules, sheriff, and status.  Only on the first pageful.
+  if ($nowdate eq $maxdate) {
+     do "$::tree/rules.pl";
+     print "$rules_message<br>";  # from $::tree/rules.pl
+     
+     do "$::tree/sheriff.pl";
+     print "$current_sheriff<br>";  # from $::tree/sheriff.pl
+
+     do "$::tree/status.pl";
+     print "$status_message<br>";  # from $::tree/status.pl
+  }
 
   # Quote and Lengend
   #

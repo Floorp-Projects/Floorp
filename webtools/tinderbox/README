@@ -194,7 +194,9 @@ rows separated by "\n" and columns by '|'.
 $tree/${logfile}
 $tree/${logfile}.brief.html
 $tree/ignorebuilds.pl
-$tree/mod.pl
+$tree/rules.pl
+$tree/status.pl
+$tree/sheriff.pl
 $tree/notes.txt
 $tree/treedata.pl
 $tree/who.dat
@@ -212,9 +214,17 @@ ignorebuilds.pl is a file which specifies builds that should not be
 performed.  It is valid perl code which sets the hash reference
 $ignore_builds, each key is a tree name.
 
-mod.pl stores the tree specific message of the day.  This is not to be
-       confused with mod perl the CGI library. Its contents looks like:
-        $message_of_day = 'message';
+status.pl stores the tree-specific status.  Its contents looks like:
+          $status_message = 'message';
+          1;
+
+rules.pl  stores the tree rules message.  Its contents looks like:
+          $rules_message = 'message';
+          1;
+
+sheriff.pl stores the current sheriff.  Its contents looks like:
+          $current_sheriff = 'sheriff';
+          1;
 
 notes.txt store the database of notes:
 $buildtime|$buildname||$author|$time_now|$note 

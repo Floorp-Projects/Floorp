@@ -46,8 +46,14 @@ elsif( $command eq 'remove_build' ){
 elsif( $command eq 'trim_logs' ){
     &trim_logs;
 }
-elsif( $command eq 'set_message' ){
-    &set_message;
+elsif( $command eq 'set_status_message' ){
+    &set_status_message;
+}
+elsif( $command eq 'set_rules_message' ){
+    &set_rules_message;
+}
+elsif( $command eq 'set_sheriff' ){
+    &set_sheriff;
 }
 elsif( $command eq 'disable_builds' ){
     &disable_builds;
@@ -206,15 +212,36 @@ sub disable_builds {
     print "<h2><a href=showbuilds.cgi?tree=$treename>Build state Changed</a></h2>\n";
 }
 
-
-sub set_message {
-    $m = $form{'message'};
+sub set_sheriff {
+    $m = $form{'sheriff'};
     $m =~ s/\'/\\\'/g;
-    open(MOD, ">$tree/mod.pl");
-    print MOD "\$message_of_day = \'$m\'\;\n1;";
-    close(MOD);
-    chmod( 0777, "$tree/mod.pl");
+    open(SHERIFF, ">$tree/sheriff.pl");
+    print SHERIFF "\$current_sheriff = '$m';\n1;";
+    close(SHERIFF);
+    chmod( 0777, "$tree/sheriff.pl");
     print "<h2><a href=showbuilds.cgi?tree=$tree>
-            Message Changed</a></h2>\n";
+            Sheriff Changed.</a><br></h2>\n";
+}
+
+sub set_status_message {
+    $m = $form{'status'};
+    $m =~ s/\'/\\\'/g;
+    open(TREESTATUS, ">$tree/status.pl");
+    print TREESTATUS "\$status_message = \'$m\'\;\n1;";
+    close(TREESTATUS);
+    chmod( 0777, "$tree/status.pl");
+    print "<h2><a href=showbuilds.cgi?tree=$tree>
+            Status message changed.</a><br></h2>\n";
+}
+
+sub set_rules_message {
+    $m = $form{'rules'};
+    $m =~ s/\'/\\\'/g;
+    open(RULES, ">$tree/rules.pl");
+    print RULES "\$rules_message = \'$m\';\n1;";
+    close(RULES);
+    chmod( 0777, "$tree/rules.pl");
+    print "<h2><a href=showbuilds.cgi?tree=$tree>
+            Rule message changed.</a><br></h2>\n";
 }
 
