@@ -52,6 +52,7 @@ LIBS := \
 	$(TOOLKIT_WIDGET_LIB) \
 	-lraptorgfx \
 	$(TOOLKIT_GFX_LIB) \
+	-lgfxps \
 	-lraptorhtml \
 	$(DIST)/lib/libraptorhtmlforms_s.a \
 	$(TOOLKIT_BASE_LIB) \
