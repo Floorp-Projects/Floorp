@@ -38,7 +38,6 @@ use strict;
 #require "globals.pl";
 
 package RelationSet;
-use CGI::Carp qw(fatalsToBrowser);
 
 # create a new empty RelationSet
 #

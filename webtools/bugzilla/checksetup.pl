@@ -187,8 +187,15 @@ sub have_vers {
   no strict 'refs';
   printf("Checking for %15s %-9s ", $pkg, !$wanted?'(any)':"(v$wanted)") unless $silent;
 
-  eval { my $p; ($p = $pkg . ".pm") =~ s!::!/!g; require $p; };
+  # Modules may change $SIG{__DIE__} and $SIG{__WARN__}, so localise them here
+  # so that later errors display 'normally'
+  local $::SIG{__DIE__};
+  local $::SIG{__WARN__};
 
+  eval "require $pkg;";
+
+  # do this twice to avoid a "used only once" error for these vars
+  $vnum = ${"${pkg}::VERSION"} || ${"${pkg}::Version"} || 0;
   $vnum = ${"${pkg}::VERSION"} || ${"${pkg}::Version"} || 0;
   $vnum = -1 if $@;
 
@@ -260,11 +267,7 @@ my $modules = [
 
 my %missing = ();
 
-# Modules may change $SIG{__DIE__} and $SIG{__WARN__}, so localise them here
-# so that later errors display 'normally'
 foreach my $module (@{$modules}) {
-    local $::SIG{__DIE__};
-    local $::SIG{__WARN__};
     unless (have_vers($module->{name}, $module->{version})) { 
         $missing{$module->{name}} = $module->{version};
     }
