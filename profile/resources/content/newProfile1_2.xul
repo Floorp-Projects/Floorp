@@ -50,14 +50,8 @@
     <vbox valign="top">
       <button label="&button.choosefolder.label;" oncommand="chooseProfileFolder();"/>
       <button id="useDefault" label="&button.usedefault.label;" oncommand="setDisplayToDefaultFolder();" disabled="true"/>
+      <button label="&langSelection.label;" oncommand="showLangDialog();"/>
     </vbox>
-  </hbox>
-
-  <separator/>
-
-  <hbox align="center">
-    <spacer flex="1"/>
-    <button label="&langSelection.label;" oncommand="showLangDialog();"/>
   </hbox>
 
   <spacer flex="1"/>
