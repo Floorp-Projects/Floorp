@@ -3,3 +3,4 @@ TestLeaky
 TestPreload
 leaky
 ShowLibs
+.deps-*
