@@ -139,7 +139,7 @@ nsSSLIOLayerConnect(PRFileDesc *fd, const PRNetAddr *addr, PRIntervalTime timeou
                                        PR_ntohs(addr->inet.port),
                                        ipBuffer,
                                        (hostName ? hostName : ipBuffer),
-                                       forceHandshake,
+                                       (CMBool)forceHandshake,
                                        nsnull);
     }
     else
