@@ -862,7 +862,8 @@ printf("plugin manager2 processnextevent called\n");
 
 nsresult nsPluginHostImpl :: Init(void)
 {
-  nsresult    rv;
+  nsresult    rv = NS_OK;
+
   nsISupports *object;
 
 //  rv = nsMalloc::Create(nsnull, kIMallocIID, (void **)&mMalloc);
@@ -875,7 +876,6 @@ nsresult nsPluginHostImpl :: Init(void)
     rv = object->QueryInterface(kIMallocIID, (void **)&mMalloc);
     NS_RELEASE(object);
   }
-
   return rv;
 }
 
@@ -1377,13 +1377,16 @@ printf("loaded plugin %s for mime type %s\n", plugins->mName, aMimeType);
 
         if (plugins->mFlags & NS_PLUGIN_FLAG_OLDSCHOOL)
         {
-          nsresult rv = ns4xPlugin::CreatePlugin(plugins->mLibrary, (nsIPlugin **)&plugins->mEntryPoint);
+		  // we have to load an old 4x style plugin
+          nsresult rv = ns4xPlugin::CreatePlugin(plugins->mLibrary, (nsIPlugin **)&plugins->mEntryPoint,
+												(nsISupports*)(nsIPluginManager*) this);
 #ifdef NS_DEBUG
-printf("result of creating plugin adapter: %d\n", rv);
+		  printf("result of creating plugin adapter: %d\n", rv);
 #endif
         }
         else
         {
+		  // we have to load a new 5x style plugin
           nsFactoryProc  fact = (nsFactoryProc)PR_FindSymbol(plugins->mLibrary, "NSGetFactory");
 
           if (nsnull != fact)
@@ -1396,10 +1399,11 @@ printf("result of creating plugin adapter: %d\n", rv);
               NS_RELEASE(factory);
             }
           }
+		  // we only need to call this for 5x style plugins - CreatePlugin() handles this for
+		  // 4x style plugins
+		  if (nsnull != plugins->mEntryPoint)
+			plugins->mEntryPoint->Initialize((nsISupports *)(nsIPluginManager *)this);
         }
-
-        if (nsnull != plugins->mEntryPoint)
-          plugins->mEntryPoint->Initialize((nsISupports *)(nsIPluginManager *)this);
       }
 
       if (nsnull != plugins->mEntryPoint)

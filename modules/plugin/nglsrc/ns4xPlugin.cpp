@@ -59,7 +59,7 @@ ns4xPlugin::CheckClassInitialized(void)
     CALLBACKS.memflush         = NewNPN_MemFlushProc(_memflush);
     CALLBACKS.reloadplugins    = NewNPN_ReloadPluginsProc(_reloadplugins);
     CALLBACKS.getJavaEnv       = NewNPN_GetJavaEnvProc(_getJavaEnv);
-//    CALLBACKS.getJavaPeer      = NewNPN_GetJavaPeerProc(_getJavaPeer);
+    CALLBACKS.getJavaPeer      = NewNPN_GetJavaPeerProc(_getJavaPeer);
     CALLBACKS.geturlnotify     = NewNPN_GetURLNotifyProc(_geturlnotify);
     CALLBACKS.posturlnotify    = NewNPN_PostURLNotifyProc(_posturlnotify);
     CALLBACKS.getvalue         = NewNPN_GetValueProc(_getvalue);
@@ -74,13 +74,12 @@ ns4xPlugin::CheckClassInitialized(void)
 ////////////////////////////////////////////////////////////////////////
 
 
-ns4xPlugin::ns4xPlugin(NPPluginFuncs* callbacks, NP_PLUGINSHUTDOWN aShutdown, NP_PLUGININIT aInit)
+ns4xPlugin::ns4xPlugin(NPPluginFuncs* callbacks, NP_PLUGINSHUTDOWN aShutdown)
 {
     NS_INIT_REFCNT();
 
     memcpy((void*) &fCallbacks, (void*) callbacks, sizeof(fCallbacks));
     fShutdownEntry = aShutdown;
-	fInitialize = aInit;
 }
 
 
@@ -144,6 +143,8 @@ ns4xPlugin::QueryInterface(const nsIID& iid, void** instance)
     return NS_NOINTERFACE;
 }
 
+static NS_DEFINE_IID(kIPluginManagerIID, NS_IPLUGINMANAGER_IID); 
+static NS_DEFINE_IID(kIMallocIID, NS_IMALLOC_IID); 
 
 ////////////////////////////////////////////////////////////////////////
 // Static factory method.
@@ -151,10 +152,11 @@ ns4xPlugin::QueryInterface(const nsIID& iid, void** instance)
 
 nsresult
 ns4xPlugin::CreatePlugin(PRLibrary *library,
-                         nsIPlugin **result)
+                         nsIPlugin **result, nsISupports* browserInterfaces)
 {
     CheckClassInitialized();
 
+	// XXX this only applies on Windows
     NP_GETENTRYPOINTS pfnGetEntryPoints =
         (NP_GETENTRYPOINTS)PR_FindSymbol(library, "NP_GetEntryPoints");
 
@@ -177,11 +179,25 @@ ns4xPlugin::CreatePlugin(PRLibrary *library,
     NP_PLUGINSHUTDOWN pfnShutdown =
         (NP_PLUGINSHUTDOWN)PR_FindSymbol(library, "NP_Shutdown");
 
+	// create the new plugin handler
+    *result = new ns4xPlugin(&callbacks, pfnShutdown);
+
+    NS_ADDREF(*result);
+
+    if (*result == NULL)
+      return NS_ERROR_OUT_OF_MEMORY;
+	
+	// we must init here because the plugin may call NPN functions
+	// when we call into the NP_Initialize entry point - NPN functions
+	// require that mBrowserManager be set up
+	(*result)->Initialize(browserInterfaces);
+
     // the NP_Initialize entry point was misnamed as NP_PluginInit,
     // early in plugin project development.  Its correct name is
     // documented now, and new developers expect it to work.  However,
     // I don't want to break the plugins already in the field, so
     // we'll accept either name
+
     NP_PLUGININIT pfnInitialize =
         (NP_PLUGININIT)PR_FindSymbol(library, "NP_Initialize");
 
@@ -193,12 +209,8 @@ ns4xPlugin::CreatePlugin(PRLibrary *library,
     if (pfnInitialize == NULL)
         return NS_ERROR_UNEXPECTED; // XXX Right error?
 
-    *result = new ns4xPlugin(&callbacks, pfnShutdown, pfnInitialize);
-
-    NS_ADDREF(*result);
-
-    if (*result == NULL)
-      return NS_ERROR_OUT_OF_MEMORY;
+	if (pfnInitialize(&(ns4xPlugin::CALLBACKS)) != NS_OK)
+		return NS_ERROR_UNEXPECTED;
 
     return NS_OK;
 }
@@ -238,24 +250,20 @@ nsresult ns4xPlugin :: LockFactory(PRBool aLock)
   return NS_OK;
 }  
 
-static NS_DEFINE_IID(kIPluginManagerIID, NS_IPLUGINMANAGER_IID); 
-static NS_DEFINE_IID(kIMallocIID, NS_IMALLOC_IID); 
-
 nsresult
 ns4xPlugin::Initialize(nsISupports* browserInterfaces)
 {
-  nsresult  rv = NS_OK;
+	nsresult rv = NS_OK;
 
-  if (nsnull == mPluginManager)
-    rv = browserInterfaces->QueryInterface(kIPluginManagerIID, (void **)&mPluginManager);
+	// set up the connections to the plugin manager
+	if (nsnull == mPluginManager)
+		if((rv = browserInterfaces->QueryInterface(kIPluginManagerIID, (void **)&mPluginManager)) != NS_OK)
+			return rv;
+	if (nsnull == mMalloc)
+		if((rv = browserInterfaces->QueryInterface(kIMallocIID, (void **)&mMalloc)) != NS_OK)
+			return rv;
 
-  if (nsnull == mMalloc)
-    rv = browserInterfaces->QueryInterface(kIMallocIID, (void **)&mMalloc);
-
-  if (fInitialize(&ns4xPlugin::CALLBACKS) != NS_OK)
-	rv = NS_ERROR_UNEXPECTED; // XXX shoudl convert the 4.x error...
-
-  return rv;
+	return rv;
 }
 
 nsresult
@@ -744,22 +752,21 @@ ns4xPlugin::_memalloc (uint32 size)
     return mMalloc->Alloc(size);
 }
 
-#if 0
+#if 1
 
-#ifdef JAVA
 java_lang_Class* NP_EXPORT
 ns4xPlugin::_getJavaClass(void* handle)
 {
     // Is this just a generic call into the Java VM?
     return NULL;
 }
-#endif
 
 
 
 jref NP_EXPORT
 ns4xPlugin::_getJavaPeer(NPP npp)
 {
+#if 0
     NPIPluginInstancePeer* peer = (NPIPluginInstancePeer*) npp->ndata;
     PR_ASSERT(peer != NULL);
     if (peer == NULL)
@@ -775,7 +782,7 @@ ns4xPlugin::_getJavaPeer(NPP npp)
         lcPeer->Release();
         return result;
     }
-
+#endif
     return NULL;
 }
 

@@ -64,7 +64,7 @@ typedef NPError (PLUGIN_ENTRYPOINT_CALL_TYPE *NP_PLUGINSHUTDOWN)();
 class ns4xPlugin : public nsILiveConnectPlugin
 {
 public:
-  ns4xPlugin(NPPluginFuncs* callbacks, NP_PLUGINSHUTDOWN aShutdown, NP_PLUGININIT aInit);
+  ns4xPlugin(NPPluginFuncs* callbacks, NP_PLUGINSHUTDOWN aShutdown);
   ~ns4xPlugin(void);
 
   NS_DECL_ISUPPORTS
@@ -106,7 +106,8 @@ public:
    */
   static nsresult
   CreatePlugin(PRLibrary *library,
-               nsIPlugin **result);
+               nsIPlugin **result,
+			   nsISupports* browserInterfaces);
 
 protected:
   /**
@@ -202,10 +203,13 @@ protected:
   static JRIEnv* NP_EXPORT
   _getJavaEnv(void);
 
-#if 0
+#if 1
 
   static jref NP_EXPORT
   _getJavaPeer(NPP npp);
+
+  static java_lang_Class* NP_EXPORT
+  _getJavaClass(void* handle);
 
 #endif
 
@@ -219,7 +223,6 @@ protected:
    */
   NPPluginFuncs fCallbacks;
 
-  NP_PLUGININIT fInitialize;
   NP_PLUGINSHUTDOWN fShutdownEntry;
 
   /**
