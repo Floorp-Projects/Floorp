@@ -218,104 +218,96 @@ extern "C" NS_EXPORT PRBool NSCanUnload(nsISupports* aServMgr)
 
 extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char* path)
 {
-	nsresult rv;
+	nsresult rv = NS_OK;
+	nsresult finalResult = NS_OK;
 
 	nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
 	if (NS_FAILED(rv)) return rv;
 
-	nsIComponentManager* compMgr;
-	rv = servMgr->GetService(kComponentManagerCID, 
-						   nsIComponentManager::GetIID(), 
-						   (nsISupports**)&compMgr);
+	NS_WITH_SERVICE(nsIComponentManager, compMgr, kComponentManagerCID, &rv);
 	if (NS_FAILED(rv)) return rv;
 
 	// register the message compose factory
 	rv = compMgr->RegisterComponent(kCSmtpServiceCID,
 										"SMTP Service", nsnull,
 										path, PR_TRUE, PR_TRUE);
-	if (NS_FAILED(rv)) goto done;
+	if (NS_FAILED(rv)) finalResult = rv;
 
 	rv = compMgr->RegisterComponent(kCMsgCompFieldsCID,
 										"Compose Fields",
 										nsnull, path, PR_TRUE, PR_TRUE);
-	if (NS_FAILED(rv)) goto done;
+	if (NS_FAILED(rv)) finalResult = rv;
 
 	rv = compMgr->RegisterComponent(kCMsgSendCID,
 										"Message Send",
 										nsnull, path, PR_TRUE, PR_TRUE);
-	if (NS_FAILED(rv)) goto done;
+	if (NS_FAILED(rv)) finalResult = rv;
 
 	rv = compMgr->RegisterComponent(kCMsgComposeCID,
 										"Message Compose",
 										nsnull,
 										path, PR_TRUE, PR_TRUE);
-	if (NS_FAILED(rv)) goto done;
+	if (NS_FAILED(rv)) finalResult = rv;
 
 	rv = compMgr->RegisterComponent(kCComposerCID,
 										"Message Composer",
 										"component://netscape/composer/application",
 										path, PR_TRUE, PR_TRUE);
-	if (NS_FAILED(rv)) goto done;
+	if (NS_FAILED(rv)) finalResult = rv;
 
 	rv = compMgr->RegisterComponent(kCComposerBootstrapCID,
 									   "Netscape Composer Bootstrapper",
 									   "component://netscape/composer",
 									   path,
 									   PR_TRUE, PR_TRUE);
-	if (NS_FAILED(rv)) goto done;
+	if (NS_FAILED(rv)) finalResult = rv;
 
 	rv = compMgr->RegisterComponent(kCComposeAppCoreCID,
 									   "Composer AppCore",
 									   "component://netscape/appcores/composer",
 								  	   path,
 									   PR_TRUE, PR_TRUE);
-	if (NS_FAILED(rv)) goto done;
+	if (NS_FAILED(rv)) finalResult = rv;
 
 #ifdef NS_DEBUG
   printf("composer registering from %s\n",path);
 #endif
 
-  done:
-  (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
-  return rv;
+  return finalResult;
 }
 
 extern "C" NS_EXPORT nsresult
 NSUnregisterSelf(nsISupports* aServMgr, const char* path)
 {
-	nsresult rv;
+	nsresult finalResult = NS_OK;
+	nsresult rv = NS_OK;
 
 	nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
 	if (NS_FAILED(rv)) return rv;
 
-	nsIComponentManager* compMgr;
-	rv = servMgr->GetService(kComponentManagerCID, 
-						   nsIComponentManager::GetIID(), 
-						   (nsISupports**)&compMgr);
+	NS_WITH_SERVICE(nsIComponentManager, compMgr, kComponentManagerCID, &rv);
 	if (NS_FAILED(rv)) return rv;
 
 	rv = compMgr->UnregisterComponent(kCComposeAppCoreCID, path);
-	if (NS_FAILED(rv)) goto done;
+	if (NS_FAILED(rv)) finalResult = rv;
 
 	rv = compMgr->UnregisterComponent(kCComposerBootstrapCID, path);
-	if (NS_FAILED(rv)) goto done;
+	if (NS_FAILED(rv)) finalResult = rv;
 
 	rv = compMgr->UnregisterComponent(kCComposerCID, path);
-	if (NS_FAILED(rv)) goto done;
+	if (NS_FAILED(rv)) finalResult = rv;
 
 	rv = compMgr->UnregisterComponent(kCMsgComposeCID, path);
-	if (NS_FAILED(rv)) goto done;
+	if (NS_FAILED(rv))finalResult = rv;
 
 	rv = compMgr->UnregisterComponent(kCMsgSendCID, path);
-	if (NS_FAILED(rv)) goto done;
+	if (NS_FAILED(rv)) finalResult = rv;
 
 	rv = compMgr->UnregisterComponent(kCMsgCompFieldsCID, path);
-	if (NS_FAILED(rv)) goto done;
+	if (NS_FAILED(rv)) finalResult = rv;
 
 	rv = compMgr->UnregisterComponent(kCSmtpServiceCID, path);
-	if (NS_FAILED(rv)) goto done;
+	if (NS_FAILED(rv)) finalResult = rv;
 
-	done:
-	(void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
-	return rv;
+	return finalResult;
 }
