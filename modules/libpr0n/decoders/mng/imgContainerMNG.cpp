@@ -290,23 +290,23 @@ il_mng_processheader(mng_handle handle, mng_uint32 width, mng_uint32 height)
   EXTRACT_CONTAINER;
 
   gfx_format format;
-  switch (mng_get_alphadepth(handle)) {
-  case 0:
+
+#if defined(XP_PC) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
+  if (mng_get_alphadepth(handle)) {
+    format = gfxIFormats::BGR_A8;
+    mng_set_canvasstyle(handle, MNG_CANVAS_RGB8_A8);
+  } else {
+    format = gfxIFormats::BGR;
+    mng_set_canvasstyle(handle, MNG_CANVAS_RGB8);
+  }
+#else
+  if (mng_get_alphadepth(handle)) {
+    format = gfxIFormats::RGB_A8;
+    mng_set_canvasstyle(handle, MNG_CANVAS_RGB8_A8);
+  } else {
     format = gfxIFormats::RGB;
     mng_set_canvasstyle(handle, MNG_CANVAS_RGB8);
-    break;
-  case 1:
-    format = gfxIFormats::RGB_A8;
-    mng_set_canvasstyle(handle, MNG_CANVAS_RGB8_A8);
-    break;
-  default:
-    format = gfxIFormats::RGB_A8;
-    mng_set_canvasstyle(handle, MNG_CANVAS_RGB8_A8);
-    break;
   }
-
-#ifdef XP_PC
-  format += 1;
 #endif
 
   nsMNGDecoder* decoder = container->mDecoder;
@@ -378,7 +378,7 @@ il_mng_refresh(mng_handle handle,
   container->mFrame->GetAlphaBytesPerRow(&abpr);
 
 // stupid Mac code that shouldn't be in the image decoders...
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#if defined(XP_MAC) || defined(XP_MACOSX) || defined(XP_PC) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
   PRInt32 iwidth;
   container->mFrame->GetWidth(&iwidth);
   PRUint8 *buf = (PRUint8 *)nsMemory::Alloc(bpr);
@@ -400,6 +400,16 @@ il_mng_refresh(mng_handle handle,
       *cptr++ = *row++;
     }
     container->mFrame->SetImageData(buf, bpr, bpr*y);
+#elif defined(XP_PC) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
+    PRUint8 *cptr = buf;
+    PRUint8 *row = container->image+y*container->mByteWidth;
+    for (PRUint32 x=0; x<iwidth; x++) {
+      *cptr++ = row[2];
+      *cptr++ = row[1];
+      *cptr++ = row[0];
+      row += 3;
+    }
+    container->mFrame->SetImageData(buf, bpr, bpr*y);
 #else
     container->mFrame->SetImageData(container->image + 
 			 y*container->mByteWidth,
@@ -407,7 +417,7 @@ il_mng_refresh(mng_handle handle,
 			 bpr*y);
 #endif
   }
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#if defined(XP_MAC) || defined(XP_MACOSX) || defined(XP_PC) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
   nsMemory::Free(buf);
 #endif
 
