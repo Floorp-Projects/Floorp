@@ -676,10 +676,11 @@ nsDiskCacheDevice::OnDataSizeChange(nsCacheEntry * entry, PRInt32 deltaSize)
     NS_ASSERTION(binding->mRecord.ValidRecord(), "bad record");
 
     PRUint32  newSize = entry->DataSize() + deltaSize;
-    if (newSize > mCacheCapacity) {
+    PRUint32  maxSize = PR_MIN(mCacheCapacity / 2, kMaxDataFileSize);
+    if (newSize > maxSize) {
         nsresult rv = nsCacheService::DoomEntry(entry);
         NS_ASSERTION(NS_SUCCEEDED(rv),"DoomEntry() failed.");
-        return rv;
+        return NS_ERROR_ABORT;
     }
 
     PRUint32  sizeK = ((entry->DataSize() + 0x03FF) >> 10); // round up to next 1k
