@@ -16,7 +16,7 @@
 # Reserved.
 #
 
-## $Id: mozilla.in,v 1.2 2002/06/13 12:16:52 seawood%netscape.com Exp $
+## $Id: mozilla.in,v 1.3 2002/08/07 11:46:15 seawood%netscape.com Exp $
 ## 
 ## Usage:
 ##
@@ -43,9 +43,9 @@ else
   # If not, then start resolving symlinks until we find run-mozilla.sh
   found=0
   progname=$0
-  curdir=`dirname $progname`
+  curdir=`dirname "$progname"`
   run_moz="$curdir/run-mozilla.sh"
-  if test -x $run_moz; then
+  if test -x "$run_moz"; then
     dist_bin=$curdir
     found=1
   else
@@ -57,16 +57,16 @@ else
       if [ ! -x "$progname" ]; then
         break
       fi
-      curdir=`dirname $progname`
+      curdir=`dirname "$progname"`
       run_moz="$curdir/run-mozilla.sh"
-      if [ -x $run_moz ]; then
-        cd $curdir
+      if [ -x "$run_moz" ]; then
+        cd "$curdir"
         dist_bin=`pwd`
         found=1
         break
       fi
     done
-    cd $here
+    cd "$here"
   fi
   if [ $found = 0 ]; then
     # Check default compile-time libdir
@@ -117,4 +117,4 @@ if [ $debugging = 1 ]
 then
   echo $dist_bin/run-mozilla.sh $script_args $dist_bin/$MOZILLA_BIN "$@"
 fi
-exec $dist_bin/run-mozilla.sh $script_args $dist_bin/$MOZILLA_BIN "$@"
+exec "$dist_bin/run-mozilla.sh" $script_args "$dist_bin/$MOZILLA_BIN" "$@"
