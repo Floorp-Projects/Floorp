@@ -215,7 +215,10 @@ static const char kRDFNameSpaceURI[]
 RDFGenericBuilderImpl::~RDFGenericBuilderImpl(void)
 {
     NS_IF_RELEASE(mRoot);
-    NS_IF_RELEASE(mDB);
+    if (mDB) {
+        mDB->RemoveObserver(this);
+        NS_RELEASE(mDB);
+    }
     // NS_IF_RELEASE(mDocument) not refcounted
 
     --gRefCnt;
@@ -304,6 +307,8 @@ RDFGenericBuilderImpl::SetDataBase(nsIRDFCompositeDataSource* aDataBase)
 
     mDB = aDataBase;
     NS_ADDREF(mDB);
+
+    mDB->AddObserver(this);
     return NS_OK;
 }
 
