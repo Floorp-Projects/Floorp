@@ -27,6 +27,7 @@
 #include "dialogs.h"
 #include "ifuncns.h"
 #include "parser.h"
+#include "rdi.h"
 
 void ParseAllUninstallLogs()
 {
@@ -41,6 +42,7 @@ void ParseAllUninstallLogs()
   {
     if((silFile = InitSilNodes(szFileInstallLog)) != NULL)
     {
+      UndoDesktopIntegration();
       FileDelete(szFileInstallLog);
       dwRv = Uninstall(silFile);
       DeInitSilNodes(&silFile);
