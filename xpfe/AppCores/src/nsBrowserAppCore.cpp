@@ -84,6 +84,11 @@ static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 NS_DEFINE_IID(kINetServiceIID,            NS_INETSERVICE_IID);
 NS_DEFINE_IID(kNetServiceCID,             NS_NETSERVICE_CID);
 
+// For related links
+#include "nsRDFCID.h"
+#include "nsIRDFService.h"
+NS_DEFINE_CID(kRDFServiceCID,             NS_RDFSERVICE_CID);
+
 // Stuff to implement find/findnext
 #include "nsIFindComponent.h"
 
@@ -834,8 +839,8 @@ nsBrowserAppCore::OnEndDocumentLoad(nsIURL *aUrl, PRInt32 aStatus)
 						nsCOMPtr<nsIDOMXULDocument>	xulDoc( do_QueryInterface(aDOMDocument) );
 						if (xulDoc)
 						{
-							nsCOMPtr<nsIRDFService>		rdfService;
-							if (NS_SUCCEEDED(rv = xulDoc->GetRdf(getter_AddRefs(rdfService))))
+							NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv);
+							if (NS_SUCCEEDED(rv))
 							{
 								nsCOMPtr<nsIRDFDataSource>	relatedLinksDS;
 								if (NS_SUCCEEDED(rv = rdfService->GetDataSource("rdf:relatedlinks", getter_AddRefs(relatedLinksDS))))
