@@ -154,6 +154,8 @@ public:
   NS_IMETHOD AllowDoubleBuffering(PRBool aDoubleBuffer);
   NS_IMETHOD IsPainting(PRBool& aIsPainting);
   NS_IMETHOD FlushPendingInvalidates();
+  NS_IMETHOD SetDefaultBackgroundColor(nscolor aColor);
+  NS_IMETHOD GetDefaultBackgroundColor(nscolor* aColor);
   nsresult ProcessInvalidateEvent();
   static PRInt32 GetViewManagerCount();
   static const nsVoidArray* GetViewManagerArray();
@@ -175,6 +177,7 @@ private:
 	             nsIRegion *region, PRUint32 aUpdateFlags);
 	void Refresh(nsIView* aView, nsIRenderingContext *aContext,
 	             const nsRect *rect, PRUint32 aUpdateFlags);
+	void DefaultRefresh(nsIView* aView, const nsRect* aRect);
 	void RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, const nsRect& aRect,
 					 PRBool &aResult);
 
@@ -327,6 +330,7 @@ private:
   nsRect            mTranslucentArea;       // bounding box of all translucent views.
   nsIScrollableView *mRootScrollable;
   PRInt32           mCachingWidgetChanges;
+  nscolor           mDefaultBackgroundColor;
 
   nsHashtable       mMapPlaceholderViewToZTreeNode;
 
