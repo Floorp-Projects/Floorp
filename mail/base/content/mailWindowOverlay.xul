@@ -1600,7 +1600,7 @@ Rights Reserved.
            toolbarname="Mail" 
            fullscreentoolbar="true" mode="icons"
            customizable="true"
-           defaultset="button-getmsg,button-newmsg,button-reply,button-replyall,button-forward,button-delete,button-junk,button-print,button-stop,spring,throbber-box">
+           defaultset="button-getmsg,button-newmsg,button-address,spacer,spacer,spacer,button-reply,button-replyall,button-forward,spacer,spacer,spacer,button-delete,button-junk,button-print,button-stop,spring,throbber-box">
   </toolbar>
   <toolbarset id="customToolbars" context="toolbar-context-menu"/>
 </toolbox>
