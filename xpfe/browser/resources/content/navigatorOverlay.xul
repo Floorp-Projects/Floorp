@@ -233,24 +233,20 @@
         <menuseparator />
 
         <menuitem accesskey="&translateMenu.accesskey;" label="&translateMenu.label;" oncommand="Translate();"/>
-        <menu label="&webContentMenu.label;" accesskey="&webContentMenu.accesskey;"
+        <menu label="&webContentMenu.label;" accesskey="&webContentMenu.accesskey;">
+          <menupopup
               datasources="rdf:chrome"  ref="urn:mozilla:locale:root" 
               sortResource="http://www.mozilla.org/rdf/chrome#name"
               sortDirection="ascending" oncommand="selectLocale(event)">
-          <menupopup>
             <menuitem label="&downloadMore.label;" accesskey="&downloadMore.accesskey;" 
                       oncommand="loadXURL('urn:clienturl:viewmenu:intlwebcontent');"/>
             <menuseparator/>
-          </menupopup>
-          <template>
-            <rule>
-              <menupopup>
+            <template>
                 <menuitem class="standard" uri="rdf:*" 
                           label="rdf:http://www.mozilla.org/rdf/chrome#displayName"
                           value="rdf:http://www.mozilla.org/rdf/chrome#name"/>
-              </menupopup>
-            </rule>
-          </template>
+            </template>
+	  </menupopup>
         </menu>
 
         <menu id = "charsetMenu" />
