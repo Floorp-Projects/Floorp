@@ -76,6 +76,7 @@ NS_IMETHODIMP nsGB2312ToUnicodeV2::ConvertNoBuff(const char* aSrc,
   PRUint8 left;
   PRUint8 right;
   PRUint16 iGBKToUnicodeIndex = 0;
+  nsresult rv = NS_OK;
 
   for (i=0;i<iSrcLength;i++)
     {
@@ -83,10 +84,18 @@ NS_IMETHODIMP nsGB2312ToUnicodeV2::ConvertNoBuff(const char* aSrc,
       pDestDBCode = aDest;
       
       if ( iDestlen >= (*aDestLength) )
-        break;
+      {
+         rv = NS_OK_UDEC_MOREOUTPUT;
+         break;
+      }
 		
       if ( *aSrc & 0x80 )
         {
+          if(i+1 >= iSrcLength)
+          {
+            rv = NS_OK_UDEC_MOREINPUT;
+            break;
+          }
           
 		  // The source is a GBCode
      
@@ -113,6 +122,6 @@ NS_IMETHODIMP nsGB2312ToUnicodeV2::ConvertNoBuff(const char* aSrc,
 
   *aDestLength = iDestlen;
 
-  return NS_OK;
+  return rv;
   
 }
