@@ -208,6 +208,8 @@ protected:
 
   static nsresult GetSourceDocumentURL(JSContext* cx, nsIURI** sourceURL);
 
+  static void PR_CALLBACK DocumentWriteTerminationFunc(nsISupports *aRef);
+
   PRBool GetBodyContent();
   NS_IMETHOD GetBodyElement(nsIDOMHTMLBodyElement** aBody);
 
