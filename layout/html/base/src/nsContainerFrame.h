@@ -55,9 +55,7 @@ public:
                          PRInt32&        aCursor);
 
   // Child frame enumeration.
-  // ChildAt() retruns null if the index is not in the range 0 .. ChildCount() - 1.
-  // IndexOf() returns -1 if the frame is not in the child list.
-  NS_IMETHOD  FirstChild(nsIFrame*& aFirstChild) const;
+  NS_IMETHOD  FirstChild(nsIAtom* aListName, nsIFrame*& aFirstChild) const;
 
   // re-resolve style context for self and children as necessary
   // Subclasses need to override if they add child lists or

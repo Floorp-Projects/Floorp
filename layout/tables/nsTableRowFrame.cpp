@@ -1393,7 +1393,7 @@ PRBool nsTableRowFrame::Contains(nsPoint& aPoint)
   // if that fails, check the cells, they might span outside the row rect
   else {
     nsIFrame* kid;
-    FirstChild(kid);
+    FirstChild(nsnull, kid);
     while (nsnull != kid) {
       nsRect kidRect;
       kid->GetRect(kidRect);

@@ -111,11 +111,15 @@ typedef PRUint32 nsFrameState;
  * A frame in the layout model. This interface is supported by all frame
  * objects.
  *
- * Frames are NOT reference counted. Use the DeleteFrame() member function
- * to delete a frame.
+ * Frames can have multiple child lists: the default unnamed child list
+ * (referred to as the <i>principal</i> child list, and additional named
+ * child lists. There is an ordering of frames within a child list, but
+ * there is no order defined between frames in different child lists of
+ * the same parent frame.
  *
- * The lifetime of the frame hierarchy is bounded by the lifetime of the
- * presentation shell which owns the frames.
+ * Frames are NOT reference counted. Use the DeleteFrame() member function
+ * to delete a frame. The lifetime of the frame hierarchy is bounded by the
+ * lifetime of the presentation shell which owns the frames.
  */
 class nsIFrame : public nsISupports
 {
@@ -201,11 +205,18 @@ public:
   NS_IMETHOD  SizeTo(nscoord aWidth, nscoord aHeight) = 0;
 
   /**
-   * Child frame enumeration.
+   * Get the first child frame from the specified child list.
    *
-   * Child frames are linked together in a singly-linked list.
+   * @param   aListName the name of the child list. A NULL pointer for the atom
+   *            name means the unnamed principal child list
+   * @return  NS_ERROR_INVALID_ARG if there is no child list with the specified name
+   * @see     #GetAdditionalListName()
    */
-  NS_IMETHOD  FirstChild(nsIFrame*& aFirstChild) const = 0;
+  NS_IMETHOD  FirstChild(nsIAtom* aListName, nsIFrame*& aFirstChild) const = 0;
+
+  /**
+   * Child frames are linked together in a singly-linked
+   */
   NS_IMETHOD  GetNextSibling(nsIFrame*& aNextSibling) const = 0;
   NS_IMETHOD  SetNextSibling(nsIFrame* aNextSibling) = 0;
 

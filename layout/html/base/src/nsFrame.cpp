@@ -524,10 +524,10 @@ NS_IMETHODIMP nsFrame::SizeTo(nscoord aWidth, nscoord aHeight)
 
 // Child frame enumeration
 
-NS_IMETHODIMP nsFrame::FirstChild(nsIFrame*& aFirstChild) const
+NS_IMETHODIMP nsFrame::FirstChild(nsIAtom* aListName, nsIFrame*& aFirstChild) const
 {
   aFirstChild = nsnull;
-  return NS_OK;
+  return nsnull == aListName ? NS_OK : NS_ERROR_INVALID_ARG;
 }
 
 PRBool nsFrame::DisplaySelection(nsIPresContext& aPresContext, PRBool isOkToTurnOn)
@@ -1658,7 +1658,7 @@ void RefreshAllContentFrames(nsIFrame * aFrame, nsIContent * aContent)
   }
   NS_RELEASE(frameContent);
 
-  aFrame->FirstChild(aFrame);
+  aFrame->FirstChild(nsnull, aFrame);
   while (aFrame) {
     RefreshAllContentFrames(aFrame, aContent);
     aFrame->GetNextSibling(aFrame);

@@ -118,7 +118,7 @@ nsContainerFrame::DidReflow(nsIPresContext& aPresContext,
                       aStatus));
   if (NS_FRAME_REFLOW_FINISHED == aStatus) {
     nsIFrame* kid;
-    FirstChild(kid);
+    FirstChild(nsnull, kid);
     while (nsnull != kid) {
       nsIHTMLReflow*  htmlReflow;
       if (NS_OK == kid->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
@@ -179,10 +179,17 @@ nsContainerFrame::GetCombinedRect(nsRect& aRect)
 /////////////////////////////////////////////////////////////////////////////
 // Child frame enumeration
 
-NS_METHOD nsContainerFrame::FirstChild(nsIFrame*& aFirstChild) const
+NS_METHOD nsContainerFrame::FirstChild(nsIAtom* aListName, nsIFrame*& aFirstChild) const
 {
-  aFirstChild = mFirstChild;
-  return NS_OK;
+  // We only know about the unnamed principal child list
+  if (nsnull == aListName) {
+    aFirstChild = mFirstChild;
+    return NS_OK;
+
+  } else {
+    aFirstChild = nsnull;
+    return NS_ERROR_INVALID_ARG;
+  }
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -346,7 +353,7 @@ NS_METHOD nsContainerFrame::HandleEvent(nsIPresContext& aPresContext,
   aEventStatus = nsEventStatus_eIgnore;
 
   nsIFrame* kid;
-  FirstChild(kid);
+  FirstChild(nsnull, kid);
   while (nsnull != kid) {
     nsRect kidRect;
     kid->GetRect(kidRect);
@@ -372,7 +379,7 @@ NS_METHOD nsContainerFrame::GetCursorAndContentAt(nsIPresContext& aPresContext,
   *aContent = mContent;
 
   nsIFrame* kid;
-  FirstChild(kid);
+  FirstChild(nsnull, kid);
   nsPoint tmp;
   while (nsnull != kid) {
     nsRect kidRect;
@@ -472,7 +479,7 @@ nsContainerFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext, nsIFrame*
   PRInt32   childCount;
   nsIFrame* firstChild;
 
-  nextInFlow->FirstChild(firstChild);
+  nextInFlow->FirstChild(nsnull, firstChild);
   childCount = LengthOf(firstChild);
 
   if ((0 != childCount) || (nsnull != firstChild)) {

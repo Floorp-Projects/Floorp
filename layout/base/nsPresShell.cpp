@@ -912,7 +912,7 @@ FindFrameWithContent(nsIFrame* aFrame, nsIContent* aContent)
   }
   NS_RELEASE(frameContent);
 
-  aFrame->FirstChild(aFrame);
+  aFrame->FirstChild(nsnull, aFrame);
   while (aFrame) {
     nsIFrame* result = FindFrameWithContent(aFrame, aContent);
 
@@ -1043,8 +1043,8 @@ static void
 CompareTrees(nsIFrame* aA, nsIFrame* aB)
 {
   nsIFrame* k1, *k2;
-  aA->FirstChild(k1);
-  aB->FirstChild(k2);
+  aA->FirstChild(nsnull, k1);
+  aB->FirstChild(nsnull, k2);
   NS_ASSERTION(nsContainerFrame::LengthOf(k1) == nsContainerFrame::LengthOf(k2),
                "child counts don't match");
 

@@ -147,7 +147,7 @@ nsIFrame* nsAbsoluteFrame::GetContainingBlock() const
     // nsIAbsoluteItems
     // XXX This is pretty yucky, but there isn't currently a better way to do
     // this...
-    lastFrame->FirstChild(result);
+    lastFrame->FirstChild(nsnull, result);
 
     while (nsnull != result) {
       nsIAbsoluteItems* interface;
@@ -155,7 +155,7 @@ nsIFrame* nsAbsoluteFrame::GetContainingBlock() const
         break;
       }
 
-      result->FirstChild(result);      
+      result->FirstChild(nsnull, result);      
     }
   }
 

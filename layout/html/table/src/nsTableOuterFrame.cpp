@@ -1213,7 +1213,7 @@ PRBool nsTableOuterFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext, n
   PRInt32   childCount;
   nsIFrame* firstChild;
 
-  nextInFlow->FirstChild(firstChild);
+  nextInFlow->FirstChild(nsnull, firstChild);
   childCount = LengthOf(firstChild);
 
   NS_ASSERTION(childCount == 0, "deleting !empty next-in-flow");
