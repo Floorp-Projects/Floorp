@@ -49,9 +49,8 @@ CHROME_L10N	= \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
+		$(MOZ_NECKO_UTIL_LIBS) \
 		-L$(DIST)/bin \
-		-L$(DIST)/lib \
-		-lneckoutil_s \
 		-lxpcom \
 		$(NSPR_LIBS) \
 		$(NULL)

@@ -32,7 +32,7 @@ CPPSRCS		= \
 LIBS		= \
 		-lxpcom \
 		-lmozjs \
-		-lwidgetsupport_s \
+		$(MOZ_WIDGET_SUPPORT_LIBS) \
 		-lraptorgfx \
 		$(MOZ_TIMER_LIBS) \
 		$(NSPR_LIBS) \

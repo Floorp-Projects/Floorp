@@ -26,9 +26,8 @@ PROGRAM		= rdfpoll
 CPPSRCS		= rdfpoll.cpp
 
 LIBS		= \
-		-lneckoutil_s \
+		$(MOZ_NECKO_UTIL_LIBS) \
 		$(MOZ_TIMER_LIBS) \
-		$(IMGLIB_LIBS) \
 		-lmozjs \
 		-lxpcom \
 		$(NSPR_LIBS) \

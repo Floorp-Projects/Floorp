@@ -29,9 +29,8 @@ IS_COMPONENT	= 1
 CPPSRCS		= nsRelatedLinksHandler.cpp
 
 EXTRA_DSO_LDOPTS = \
+		$(MOZ_NECKO_UTIL_LIBS) \
 		-L$(DIST)/bin \
-		-L$(DIST)/lib \
-		-lneckoutil_s \
 		-lxpcom \
 		$(NSPR_LIBS) \
 		$(NULL)

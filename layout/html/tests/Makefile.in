@@ -40,12 +40,12 @@ LIBS		= \
 		$(DIST)/lib/libraptorhtmltable_s.a \
 		$(DIST)/lib/libraptorlayout_s.a \
 		$(DIST)/lib/libraptorevents_s.a \
+		$(MOZ_NECKO_UTIL_LIBS) \
+		$(MOZ_TIMER_LIBS) \
 		-lmozjs \
 		-lraptorgfx \
 		-lxpcom \
-		$(MOZ_TIMER_LIBS) \
 		$(TK_LIBS) \
-		$(DIST)/lib/libneckoutil_s.a \
 		$(NSPR_LIBS) \
 		$(NULL)
 

@@ -29,13 +29,12 @@ IS_COMPONENT	= 1
 CPPSRCS		= nsBookmarksService.cpp
 
 EXTRA_DSO_LDOPTS = \
+		$(MOZ_NECKO_UTIL_LIBS) \
+		$(MOZ_TIMER_LIBS)	\
 		-L$(DIST)/bin	\
 		-lxpcom		\
 		-lmozjs		\
 		$(NSPR_LIBS)	\
-		-L$(DIST)/lib	\
-		-lneckoutil_s	\
-		$(MOZ_TIMER_LIBS)	\
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

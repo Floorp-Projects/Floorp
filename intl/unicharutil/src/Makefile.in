@@ -36,7 +36,9 @@ CPPSRCS		= \
 		nsEntityConverter.cpp \
 		$(NULL)
 
-EXTRA_DSO_LDOPTS = -L$(DIST)/lib -lneckoutil_s
+EXTRA_DSO_LDOPTS =\
+				$(MOZ_NECKO_UTIL_LIBS) \
+				$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 

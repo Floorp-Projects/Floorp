@@ -90,16 +90,20 @@ JSJ_LIB			= -ljsj
 endif
 
 XP_DIST_LIBS		= \
-			-lwidgetsupport_s \
 			-lraptorgfx \
-			-lneckoutil_s \
-			$(MOZ_TIMER_LIBS) \
 			-lmozjs \
 			-lxpcom \
 			$(JSJ_LIB) \
 			$(NULL)
 
-XP_LIBS			= \
+XP_NS_UNDERBAR_CRAP = \
+			$(MOZ_NECKO_UTIL_LIBS) \
+			$(MOZ_TIMER_LIBS) \
+			$(MOZ_WIDGET_SUPPORT_LIBS) \
+			$(NULL)
+
+XP_LIBS		= \
+			$(XP_NS_UNDERBAR_CRAP) \
 			$(XP_DIST_LIBS) \
 			$(NSPR_LIBS) \
 			$(NULL)
@@ -124,6 +128,8 @@ EXTRA_DEPS		= \
 			$(addprefix $(DIST)/,$(patsubst -l%,bin/lib%.$(DLL_SUFFIX),$(XP_DIST_LIBS:-l%_s=lib/lib%_s.a))) \
 			$(UNIX_VIEWER_TK_LIBS) \
 			$(NULL)
+
+EXTRA_DEPS += $(XP_NS_UNDERBAR_CRAP)
 
 include $(topsrcdir)/config/rules.mk
 
@@ -166,3 +172,6 @@ ifdef MOZ_ENABLE_XLIB
 install:: $(PROGRAM)_xlib
 	$(INSTALL) -m 555 $< $(DIST)/bin
 endif
+
+caca:
+	@echo $(EXTRA_DEPS)

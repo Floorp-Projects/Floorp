@@ -43,14 +43,13 @@ SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/librdfcontent_s.a \
 		$(DIST)/lib/librdfdatasource_s.a \
 		$(DIST)/lib/librdfutil_s.a \
-		$(DIST)/lib/libneckoutil_s.a \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
 		$(MKSHLIB_FORCE_ALL) \
 		$(SHARED_LIBRARY_LIBS) \
 		$(MKSHLIB_UNFORCE_ALL) \
-		-L$(DIST)/lib \
+		$(MOZ_NECKO_UTIL_LIBS) \
 		$(MOZ_TIMER_LIBS) \
 		-L$(DIST)/bin \
 		-ljsdom \
