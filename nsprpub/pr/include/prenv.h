@@ -72,7 +72,7 @@ PR_BEGIN_EXTERN_C
 **   other platforms, a subsequent call to getenv() returns a
 **   pointer to a null-string (a byte of zero).
 ** 
-**   PR_GetEnv(), PR_PutEnv() provide a consistent behavior 
+**   PR_GetEnv(), PR_SetEnv() provide a consistent behavior 
 **   across all supported platforms. There are, however, some
 **   restrictions and some practices you must use to achieve
 **   consistent results everywhere.
@@ -82,9 +82,9 @@ PR_BEGIN_EXTERN_C
 **   you interpret the return of a pointer to null-string to
 **   mean the same as a return of NULL from PR_GetEnv().
 ** 
-**   A call to PR_PutEnv() where the parameter is of the form
+**   A call to PR_SetEnv() where the parameter is of the form
 **   "name" will return PR_FAILURE; the environment remains
-**   unchanged. A call to PR_PutEnv() where the parameter is
+**   unchanged. A call to PR_SetEnv() where the parameter is
 **   of the form "name=" may un-set the envrionment variable on
 **   some platforms; on others it may set the value of the
 **   environment variable to the null-string.
@@ -99,10 +99,10 @@ PR_BEGIN_EXTERN_C
 **      }
 ** 
 **   The caller must ensure that the string passed
-**   to PR_PutEnv() is persistent. That is: The string should
+**   to PR_SetEnv() is persistent. That is: The string should
 **   not be on the stack, where it can be overwritten
-**   on return from the function calling PR_PutEnv().
-**   Similarly, the string passed to PR_PutEnv() must not be
+**   on return from the function calling PR_SetEnv().
+**   Similarly, the string passed to PR_SetEnv() must not be
 **   overwritten by other actions of the process. ... Some
 **   platforms use the string by reference rather than copying
 **   it into the environment space. ... You have been warned!
@@ -120,10 +120,10 @@ PR_BEGIN_EXTERN_C
 NSPR_API(char*) PR_GetEnv(const char *var);
 
 /*
-** PR_PutEnv() -- set, unset or change an environment variable
+** PR_SetEnv() -- set, unset or change an environment variable
 ** 
 ** Description:
-** PR_PutEnv() is modeled on the Unix putenv() function.
+** PR_SetEnv() is modeled on the Unix putenv() function.
 ** 
 ** Inputs: 
 **   string -- pointer to a caller supplied
@@ -140,7 +140,14 @@ NSPR_API(char*) PR_GetEnv(const char *var);
 ** 
 ** 
 */
-NSPR_API(PRStatus) PR_PutEnv(const char *string);
+NSPR_API(PRStatus) PR_SetEnv(const char *string);
+
+/*
+** DEPRECATED.  Use PR_SetEnv() instead.
+*/
+#ifdef XP_MAC
+NSPR_API(PRIntn) PR_PutEnv(const char *string);
+#endif
 
 PR_END_EXTERN_C
 
