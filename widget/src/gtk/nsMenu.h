@@ -24,6 +24,7 @@
 #include "nsIMenuListener.h"
 
 class nsIMenuBar;
+class nsIMenuListener;
 
 /**
  * Native GTK+ Menu wrapper
@@ -40,6 +41,7 @@ public:
   
   // nsIMenuListener methods
   nsEventStatus MenuSelected(const nsMenuEvent & aMenuEvent); 
+  nsEventStatus MenuDeselected(const nsMenuEvent & aMenuEvent); 
   
   NS_IMETHOD Create(nsIMenuBar * aParent, const nsString &aLabel);
   NS_IMETHOD Create(nsIMenu * aParent, const nsString &aLabel);
@@ -70,7 +72,7 @@ protected:
 
   nsIMenu    *mMenuParent;
   nsIMenuBar *mMenuBarParent;
-
+  nsIMenuListener * mListener;
 };
 
 #endif // nsMenu_h__

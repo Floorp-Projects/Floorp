@@ -134,6 +134,19 @@ class nsIMenu : public nsISupports {
     *
     */
     NS_IMETHOD  GetNativeData(void*& aData) = 0;
+
+   /**
+    * Adds menu listener
+    *
+    */
+    NS_IMETHOD AddMenuListener(nsIMenuListener * aMenuListener) = 0;
+
+   /**
+    * Removes menu listener
+    *
+    */
+    NS_IMETHOD RemoveMenuListener(nsIMenuListener * aMenuListener) = 0;
+
 };
 
 #endif

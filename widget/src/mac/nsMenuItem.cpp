@@ -342,3 +342,11 @@ nsEventStatus nsMenuItem::MenuSelected(const nsMenuEvent & aMenuEvent)
   	return nsEventStatus_eIgnore;
 }
 
+//-------------------------------------------------------------------------
+// nsIMenuListener interface
+//-------------------------------------------------------------------------
+nsEventStatus nsMenuItem::MenuDeselected(const nsMenuEvent & aMenuEvent)
+{
+  	return nsEventStatus_eIgnore;
+}
+

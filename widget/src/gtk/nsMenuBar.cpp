@@ -60,16 +60,6 @@ NS_IMPL_RELEASE(nsMenuBar)
 
 //-------------------------------------------------------------------------
 //
-// nsMenuListener interface
-//
-//-------------------------------------------------------------------------
-nsEventStatus nsMenuBar::MenuSelected(const nsMenuEvent & aMenuEvent)
-{
-  return nsEventStatus_eIgnore;
-}
-
-//-------------------------------------------------------------------------
-//
 // nsMenuBar constructor
 //
 //-------------------------------------------------------------------------
@@ -184,3 +174,19 @@ NS_METHOD nsMenuBar::Paint()
 {
   return NS_OK;
 }
+
+//-------------------------------------------------------------------------
+//
+// nsMenuListener interface
+//
+//-------------------------------------------------------------------------
+nsEventStatus nsMenuBar::MenuSelected(const nsMenuEvent & aMenuEvent)
+{
+  return nsEventStatus_eIgnore;
+}
+
+nsEventStatus nsMenuBar::MenuDeselected(const nsMenuEvent & aMenuEvent)
+{
+  return nsEventStatus_eIgnore;
+}
+

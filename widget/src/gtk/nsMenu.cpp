@@ -25,6 +25,7 @@
 
 #include "nsString.h"
 #include "nsStringUtil.h"
+#include "nsIMenuListener.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIMenuIID, NS_IMENU_IID);
@@ -71,6 +72,7 @@ nsMenu::nsMenu() : nsIMenu()
   mMenu          = nsnull;
   mMenuParent    = nsnull;
   mMenuBarParent = nsnull;
+  mListener      = nsnull;
 }
 
 //-------------------------------------------------------------------------
@@ -82,6 +84,7 @@ nsMenu::~nsMenu()
 {
   NS_IF_RELEASE(mMenuBarParent);
   NS_IF_RELEASE(mMenuParent);
+  NS_IF_RELEASE(mListener);
 }
 
 //-------------------------------------------------------------------------
@@ -271,8 +274,39 @@ GtkWidget *nsMenu::GetNativeParent()
 }
 
 //-------------------------------------------------------------------------
+NS_METHOD nsMenu::AddMenuListener(nsIMenuListener * aMenuListener)
+{
+  mListener = aMenuListener;
+  NS_ADDREF(mListener);
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+NS_METHOD nsMenu::RemoveMenuListener(nsIMenuListener * aMenuListener)
+{
+  if (aMenuListener == mListener) {
+    NS_IF_RELEASE(mListener);
+  }
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+// nsIMenuListener interface
+//-------------------------------------------------------------------------
 nsEventStatus nsMenu::MenuSelected(const nsMenuEvent & aMenuEvent)
 {
+  if (nsnull != mListener) {
+    mListener->MenuSelected(aMenuEvent);
+  }
+  return nsEventStatus_eIgnore;
+}
+
+//-------------------------------------------------------------------------
+nsEventStatus nsMenu::MenuDeselected(const nsMenuEvent & aMenuEvent)
+{
+  if (nsnull != mListener) {
+    mListener->MenuDeselected(aMenuEvent);
+  }
   return nsEventStatus_eIgnore;
 }
 

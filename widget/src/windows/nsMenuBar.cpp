@@ -74,6 +74,11 @@ nsEventStatus nsMenuBar::MenuSelected(const nsMenuEvent & aMenuEvent)
 	return nsEventStatus_eIgnore;
 }
 
+nsEventStatus nsMenuBar::MenuDeselected(const nsMenuEvent & aMenuEvent)
+{
+	return nsEventStatus_eIgnore;
+}
+
 //-------------------------------------------------------------------------
 //
 // nsMenuBar constructor
@@ -85,6 +90,7 @@ nsMenuBar::nsMenuBar() : nsIMenuBar(), nsIMenuListener()
   mMenu     = nsnull;
   mParent   = nsnull;
   mIsMenuBarAdded = PR_FALSE;
+  mItems = new nsVoidArray(16);
 }
 
 //-------------------------------------------------------------------------
@@ -121,21 +127,21 @@ NS_METHOD nsMenuBar::GetParent(nsIWidget *&aParent)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuBar::AddMenu(nsIMenu * aMenu)
 {
-  InsertMenuAt(mItems.Count(), aMenu);
+  InsertMenuAt(mItems->Count(), aMenu);
   return NS_OK;
 }
 
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuBar::GetMenuCount(PRUint32 &aCount)
 {
-  aCount = mItems.Count();
+  aCount = mItems->Count();
   return NS_OK;
 }
 
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuBar::GetMenuAt(const PRUint32 aPos, nsIMenu *& aMenu)
 {
-  aMenu = (nsIMenu *)mItems[aPos];
+  aMenu = (nsIMenu *)mItems->ElementAt(aPos);
   return NS_OK;
 }
 
@@ -146,7 +152,7 @@ NS_METHOD nsMenuBar::InsertMenuAt(const PRUint32 aPos, nsIMenu *& aMenu)
   aMenu->GetLabel(name);
   char * nameStr = name.ToNewCString();
 
-  mItems.InsertElementAt(aMenu, (PRInt32)aPos);
+  mItems->InsertElementAt(aMenu, (PRInt32)aPos);
   NS_ADDREF(aMenu);
 
   HMENU nativeMenuHandle;
@@ -179,19 +185,19 @@ NS_METHOD nsMenuBar::InsertMenuAt(const PRUint32 aPos, nsIMenu *& aMenu)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuBar::RemoveMenu(const PRUint32 aPos)
 {
-  nsIMenu * menu = (nsIMenu *)mItems.ElementAt(aPos);
+  nsIMenu * menu = (nsIMenu *)mItems->ElementAt(aPos);
   NS_RELEASE(menu);
-  mItems.RemoveElementAt(aPos);
+  mItems->RemoveElementAt(aPos);
   return (::RemoveMenu(mMenu, aPos, MF_BYPOSITION) ? NS_OK:NS_ERROR_FAILURE);
 }
 
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuBar::RemoveAll()
 {
-  while (mItems.Count()) {
-    nsISupports * supports = (nsISupports *)mItems.ElementAt(0);
+  while (mItems->Count()) {
+    nsISupports * supports = (nsISupports *)mItems->ElementAt(0);
     NS_RELEASE(supports);
-    mItems.RemoveElementAt(0);
+    mItems->RemoveElementAt(0);
 
     ::RemoveMenu(mMenu, 0, MF_BYPOSITION);
   }

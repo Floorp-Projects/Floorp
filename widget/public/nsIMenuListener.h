@@ -40,6 +40,7 @@ static NS_DEFINE_IID(kIMenuListenerIID, NS_IMENULISTENER_IID);
 class nsIMenuListener : public nsISupports {
 
   public:
+    static const nsIID& IID() { static nsIID iid = NS_IMENULISTENER_IID; return iid; }
 
     /**
      * Processes a menu selected event
@@ -47,6 +48,13 @@ class nsIMenuListener : public nsISupports {
      * @return whether the event was consumed or ignored. See nsEventStatus
      */
     virtual nsEventStatus MenuSelected(const nsMenuEvent & aMenuEvent) = 0;
+
+    /**
+     * Processes a menu deselect event
+     * @param aMenuEvent See nsGUIEvent.h 
+     * @return whether the event was consumed or ignored. See nsEventStatus
+     */
+    virtual nsEventStatus MenuDeselected(const nsMenuEvent & aMenuEvent) = 0;
 
 };
 

@@ -34,6 +34,7 @@
 #include "nsIRenderingContextWin.h"
 
 #include "nsIMenu.h"
+#include "nsMenu.h"
 #include "nsIMenuItem.h"
 #include "nsIMenuListener.h"
 #include "nsMenuItem.h"
@@ -1312,6 +1313,28 @@ nsIMenuItem * FindMenuItem(nsIMenu * aMenu, PRUint32 aId)
 
 
 //-------------------------------------------------------------------------
+nsIMenu * FindMenu(nsIMenu * aMenu, HMENU aNativeMenu)
+{
+  PRUint32 i, count;
+  aMenu->GetItemCount(count);
+  for (i=0;i<count;i++) {
+    nsISupports * item;
+    aMenu->GetItemAt(i, item);
+    nsIMenu * menu;
+    if (NS_OK == item->QueryInterface(kIMenuIID, (void **)&menu)) {
+      HMENU nativeMenu = ((nsMenu *)menu)->GetNativeMenu();
+      if (nativeMenu == aNativeMenu) {
+        return menu;
+      } else {
+        return FindMenu(menu, aNativeMenu);
+      }
+    }
+  }
+  return nsnull;
+}
+
+
+//-------------------------------------------------------------------------
 //
 // Process all nsWindows messages
 //
@@ -1320,10 +1343,94 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 {
     PRBool        result = PR_FALSE; // call the default nsWindow proc
     nsPaletteInfo palInfo;
-            
-    *aRetValue = 0;
+    static nsIMenu * mHitMenu = nsnull;
 
+    *aRetValue = 0;
+//printf("msg: %d\n", msg);
     switch (msg) {
+
+        case WM_INITMENU: {
+          int x = 0;
+          printf("WM_INITMENU\n");
+          } break;
+
+        case WM_INITMENUPOPUP: {
+          int x = 0;
+          printf("WM_INITMENUPOPUP\n");
+          } break;
+
+        case WM_MENUSELECT: {
+          //printf("WM_MENUSELECT %d\n", ::GetMessageTime());
+          UINT fuFlags = (UINT) HIWORD(wParam);
+          /*if (fuFlags & MF_HILITE) {
+            printf("  MF_HILITE\n");
+          }
+          if (fuFlags & MF_MOUSESELECT) {
+            printf("  MF_MOUSESELECT\n");
+          }
+          if (fuFlags & MF_POPUP) {
+            printf("  MF_POPUP\n");
+          }*/
+          if (mMenuBar) {
+            nsMenuEvent event;
+            event.mCommand = LOWORD(wParam);
+            event.eventStructType = NS_MENU_EVENT;
+            InitEvent(event, NS_MENU_SELECTED);
+
+            UINT  uItem       = (UINT) LOWORD(wParam);
+            HMENU clickedMenu = (HMENU)lParam;
+            if (!clickedMenu) {
+              if (mHitMenu != nsnull) {
+                nsIMenuListener * listener;
+                if (NS_OK == mHitMenu->QueryInterface(kIMenuListenerIID, (void **)&listener)) {
+                  listener->MenuDeselected(event);
+                  NS_RELEASE(listener);
+                }
+                NS_RELEASE(mHitMenu);
+                mHitMenu = nsnull;
+              }
+              int x = 0;
+            } else {
+              void * voidData;
+              mMenuBar->GetNativeData(voidData);
+              HMENU nativeMenuBar = (HMENU)voidData;
+
+              nsIMenu * hitMenu = nsnull;
+              if (clickedMenu == nativeMenuBar) {
+                mMenuBar->GetMenuAt(uItem, hitMenu);
+              } else {
+                PRUint32 i, count;
+                mMenuBar->GetMenuCount(count);
+                for (i=0;i<count;i++) {
+                  nsIMenu * menu;
+                  mMenuBar->GetMenuAt(i, menu);
+                  hitMenu = FindMenu(menu, (HMENU)lParam);
+                  if (hitMenu) {
+                    break;
+                  }
+                }
+              }
+              if (hitMenu) {
+                if (nsnull != mHitMenu) {
+                  nsIMenuListener * listener;
+                  if (NS_OK == mHitMenu->QueryInterface(kIMenuListenerIID, (void **)&listener)) {
+                    listener->MenuDeselected(event);
+                    NS_RELEASE(listener);
+                  }
+                }
+                mHitMenu = hitMenu;
+                NS_ADDREF(mHitMenu);
+
+                nsIMenuListener * listener;
+                if (NS_OK == hitMenu->QueryInterface(kIMenuListenerIID, (void **)&listener)) {
+                  listener->MenuSelected(event);
+                  NS_RELEASE(listener);
+                }
+                //NS_RELEASE(hitMenu);
+              }
+            }
+          }
+          } break;
 
         case WM_COMMAND: {
           WORD wNotifyCode = HIWORD(wParam); // notification code 
