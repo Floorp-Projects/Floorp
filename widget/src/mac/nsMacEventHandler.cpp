@@ -1068,11 +1068,13 @@ PRBool nsMacEventHandler::HandleMouseDownEvent(
 	WindowPtr		whichWindow;
 	short partCode = ::FindWindow(aOSEvent.where, &whichWindow);
 
-    if(whichWindow != ::FrontWindow()) {
-    	if (nsnull != gRollupListener && (nsnull != gRollupWidget) ) {
+  PRBool ignoreClickInContent = PR_FALSE;
+  if ( whichWindow != ::FrontWindow() ) {
+    if (nsnull != gRollupListener && (nsnull != gRollupWidget) ) {
 			gRollupListener->Rollup();
+			ignoreClickInContent = PR_TRUE;
 		}
-    }
+  }
  
 	switch (partCode)
 	{
@@ -1116,24 +1118,15 @@ PRBool nsMacEventHandler::HandleMouseDownEvent(
 
 		case inContent:
 		{
+		  // don't allow clicks that rolled up a popup through to the content area.
+      if ( ignoreClickInContent )
+        break;
+        
 			nsMouseEvent mouseEvent;
 			ConvertOSEventToMouseEvent(aOSEvent, mouseEvent, NS_MOUSE_LEFT_BUTTON_DOWN);
 			nsWindow* widgetHit = (nsWindow*)mouseEvent.widget;
 			if (widgetHit)
 			{
-#ifdef NOTNOW
-				if (nsnull != gRollupListener && (nsnull != gRollupWidget) ) {
-					nsRect	widgetRect,newrect;
-					Point macPoint = aOSEvent.where;			
-						
-						widgetHit->GetBounds(widgetRect);
-						widgetHit->WidgetToScreen(widgetRect,newrect);
-						if( macPoint.h < newrect.x ||  macPoint.h > newrect.XMost() ||  
-								macPoint.v < newrect.y ||  macPoint.v > newrect.YMost() ) {
-							gRollupListener->Rollup();
-						}
-				}
-#endif
 				// set the activation and focus on the widget hit, if it accepts it
 				{
 					nsMouseEvent mouseActivateEvent;
@@ -1188,16 +1181,17 @@ PRBool nsMacEventHandler::HandleMouseUpEvent(
 	nsWindow* widgetReleased = (nsWindow*)mouseEvent.widget;
 	nsWindow* widgetHit = gEventDispatchHandler.GetWidgetHit();
 
-	if ((widgetReleased != nsnull) && (widgetReleased != widgetHit))
+	if ( widgetReleased )
 		retVal |= widgetReleased->DispatchMouseEvent(mouseEvent);
-
-	if (widgetHit)
-	{
-		gEventDispatchHandler.SetWidgetHit(nsnull);
-
-		mouseEvent.widget = widgetHit;
-		retVal |= widgetHit->DispatchMouseEvent(mouseEvent);
+	
+	if ( widgetReleased != widgetHit ) {
+	  //XXX we should send a mouse exit event to the last widget, right?!?! But
+	  //XXX we cannot use the same event, because the coordinates we just
+	  //XXX computed are in the wrong window/widget coordinate space. I'm 
+	  //XXX unclear what we should do in this case. (pinkerton).
 	}
+	
+	gEventDispatchHandler.SetWidgetHit(nsnull);
 
 	return retVal;
 }
@@ -1307,6 +1301,7 @@ void nsMacEventHandler::ConvertOSEventToMouseEvent(
 
 	// get the widget hit and the hit point inside that widget
 	Point hitPoint = aOSEvent.where;
+	PRBool topLevelIsAPopup = (mTopLevelWidget->GetWindowType() == eWindowType_popup);
 	WindowRef wind = reinterpret_cast<WindowRef>(mTopLevelWidget->GetNativeData(NS_NATIVE_DISPLAY));
 	::SetPortWindowPort(wind);
 	Rect savePortRect;
@@ -1316,25 +1311,32 @@ void nsMacEventHandler::ConvertOSEventToMouseEvent(
 	::SetOrigin(savePortRect.left, savePortRect.top);
 	nsPoint widgetHitPoint(hitPoint.h, hitPoint.v);
 
-	// if the mouse button is still down, send events to the last widget hit
+	WindowPtr windowThatHasEvent = nsnull;
+	short partCode = ::FindWindow ( aOSEvent.where, &windowThatHasEvent );
+
+	// if the mouse button is still down, send events to the last widget hit unless the
+	// new event is in a popup window.
 	nsWindow* lastWidgetHit = gEventDispatchHandler.GetWidgetHit();
 	nsWindow* widgetHit = nsnull;
-
 	if (lastWidgetHit)
 	{
- 		if (::StillDown() || aMessage == NS_MOUSE_LEFT_BUTTON_UP)
-	 		widgetHit = lastWidgetHit;
-	 	else
-	 	{
-	 		// Some widgets can eat mouseUp events (text widgets in TEClick, sbars in TrackControl).
-	 		// In that case, stop considering this widget as being still hit.
-	 		gEventDispatchHandler.SetWidgetHit(nsnull);
-	 	}
+	  // make sure we in the same window as where we started before we go assuming
+	  // that we know where the event will go.
+	  WindowRef lastWind = reinterpret_cast<WindowRef>(lastWidgetHit->GetNativeData(NS_NATIVE_DISPLAY));
+	  PRBool eventInSameWindowAsLastEvent = (windowThatHasEvent == lastWind);
+	  if ( eventInSameWindowAsLastEvent || !topLevelIsAPopup ) {	  
+ 		  if (::StillDown() || aMessage == NS_MOUSE_LEFT_BUTTON_UP)
+	  		widgetHit = lastWidgetHit;
+	  	else
+	  	{
+	 	  	// Some widgets can eat mouseUp events (text widgets in TEClick, sbars in TrackControl).
+	 	  	// In that case, stop considering this widget as being still hit.
+	 	  	gEventDispatchHandler.SetWidgetHit(nsnull);
+	  	}
+	  }
 	}
 
 	// if the mouse is in the grow box, pretend like it has left the window
-	WindowPtr ignored = nsnull;
-	short partCode = ::FindWindow ( aOSEvent.where, &ignored );
 	if ( partCode != inGrow ) {
 		if (! widgetHit)
 			widgetHit = mTopLevelWidget->FindWidgetHit(hitPoint);
@@ -1348,6 +1350,14 @@ void nsMacEventHandler::ConvertOSEventToMouseEvent(
 			widgetHitPoint.MoveBy(-widgetOrigin.x, -widgetOrigin.y);
 		}
 	}
+
+  // if we haven't found anything and we're tracking the mouse for a popup, then
+  // it's probable that the coordinates are just negative and we were dispatched
+  // here just cuz we're the top window in the app right now. In that case, just
+  // set the widget hit to this one. It's harmless (I hope), and it avoids asserts
+  // in the view code about null widgets.
+  if ( !widgetHit && topLevelIsAPopup && (hitPoint.h < 0 || hitPoint.v < 0) )
+    widgetHit = mTopLevelWidget;
 	
 	// nsEvent
 	aMouseEvent.eventStructType = NS_MOUSE_EVENT;
