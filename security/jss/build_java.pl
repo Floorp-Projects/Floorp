@@ -125,11 +125,13 @@ sub setup_vars {
     $class_release_dir = $cmdline_vars{SOURCE_RELEASE_PREFIX};
     if( $ENV{BUILD_OPT} ) {
         $class_dir = "$dist_dir/classes";
+        $class_jar = "$dist_dir/$cmdline_vars{XPCLASS_JAR}";
         $class_release_dir .= "/$cmdline_vars{SOURCE_RELEASE_CLASSES_DIR}";
         $javac_opt_flag = "-O";
         $debug_source_file = "org/mozilla/jss/util/Debug_ship.jnot";
     } else {
         $class_dir = "$dist_dir/classes_DBG";
+        $class_jar = "$dist_dir/$cmdline_vars{XPCLASS_DBG_JAR}";
         $class_release_dir .= "/$cmdline_vars{SOURCE_RELEASE_CLASSES_DBG_DIR}";
         $javac_opt_flag = "-g";
         $debug_source_file = "org/mozilla/jss/util/Debug_debug.jnot";
@@ -143,6 +145,7 @@ sub setup_vars {
 
 sub clean {
     print_do("rm -rf $class_dir");
+    print_do("rm -f $class_jar");
     print_do("rm -rf $jni_header_dir");
 }
 
@@ -192,6 +195,7 @@ sub build {
         ensure_dir_exists($class_dir);
         print_do("$javac $javac_opt_flag -sourcepath . -d $class_dir " .
             "$classpath " . join(" ",@source_list));
+        print_do("cd $class_dir; rm -f $class_jar; zip -r $class_jar org");
     }
 
     #
