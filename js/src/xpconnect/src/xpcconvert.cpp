@@ -286,6 +286,26 @@ XPCConvert::NativeData2JS(JSContext* cx, jsval* d, const void* s,
     return JS_TRUE;
 }
 
+static JSBool
+GetISupportsFromJSObject(JSContext* cx, JSObject* obj, nsISupports** iface)
+{
+    JSClass* jsclass =
+#ifdef JS_THREADSAFE
+            JS_GetClass(cx, obj);
+#else
+            JS_GetClass(obj);
+#endif
+    NS_ASSERTION(jsclass, "obj has no class");
+    if(jsclass &&
+       (jsclass->flags & JSCLASS_HAS_PRIVATE) &&
+       (jsclass->flags & JSCLASS_PRIVATE_IS_NSISUPPORTS))
+    {
+        *iface = (nsISupports*) JS_GetPrivate(cx, obj);
+        return JS_TRUE;
+    }
+    return JS_FALSE;
+}
+
 /***************************************************************************/
 // static
 JSBool
@@ -522,6 +542,16 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
                     NS_ADDREF(iface);
                 else
                     iface->QueryInterface(*iid, (void**)&iface);
+            }
+            else if(GetISupportsFromJSObject(cx, obj, &iface))
+            {
+                if(iface)
+                    iface->QueryInterface(*iid, (void**)&iface);
+                else
+                {
+                    *((nsISupports**)d) = NULL;
+                    return JS_TRUE;
+                }
             }
             else
             {

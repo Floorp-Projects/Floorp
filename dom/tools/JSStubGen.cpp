@@ -1210,7 +1210,7 @@ static const char *kJSClassStr =
 "//\n"
 "JSClass %sClass = {\n"
 "  \"%s\", \n"
-"  JSCLASS_HAS_PRIVATE,\n"
+"  JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS,\n"
 "  JS_PropertyStub,\n"
 "  JS_PropertyStub,\n"
 "  Get%sProperty,\n"
