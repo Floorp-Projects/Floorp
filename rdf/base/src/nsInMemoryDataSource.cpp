@@ -49,6 +49,7 @@
 #include "nsEnumeratorUtils.h"
 #include "nsVoidArray.h"  // XXX introduces dependency on raptorbase
 #include "nsRDFCID.h"
+#include "nsRDFBaseDataSources.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
 #include "rdfutil.h"
@@ -155,8 +156,6 @@ class InMemoryDataSource : public nsIRDFDataSource,
                            public nsIRDFPurgeableDataSource
 {
 protected:
-    char*        mURL;
-
     // These hash tables are keyed on pointers to nsIRDFResource
     // objects (the nsIRDFService ensures that there is only ever one
     // nsIRDFResource object per unique URI). The value of an entry is
@@ -165,7 +164,7 @@ protected:
     PLHashTable* mForwardArcs; 
     PLHashTable* mReverseArcs; 
 
-    nsVoidArray* mObservers;  
+    nsCOMPtr<nsISupportsArray> mObservers;  
 
     static const PRInt32 kInitialTableSize;
 
@@ -200,8 +199,6 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIRDFDataSource methods
-    NS_IMETHOD Init(const char* uri);
-
     NS_IMETHOD GetURI(char* *uri);
 
     NS_IMETHOD GetSource(nsIRDFResource* property,
@@ -232,6 +229,16 @@ public:
     NS_IMETHOD Unassert(nsIRDFResource* source,
                         nsIRDFResource* property,
                         nsIRDFNode* target);
+
+    NS_IMETHOD Change(nsIRDFResource* aSource,
+                      nsIRDFResource* aProperty,
+                      nsIRDFNode* aOldTarget,
+                      nsIRDFNode* aNewTarget);
+
+    NS_IMETHOD Move(nsIRDFResource* aOldSource,
+                    nsIRDFResource* aNewSource,
+                    nsIRDFResource* aProperty,
+                    nsIRDFNode* aTarget);
 
     NS_IMETHOD HasAssertion(nsIRDFResource* source,
                             nsIRDFResource* property,
@@ -604,12 +611,10 @@ NS_NewRDFInMemoryDataSource(nsISupports* aOuter, const nsIID& aIID, void** aResu
 
 
 InMemoryDataSource::InMemoryDataSource(nsISupports* aOuter)
-    : mURL(nsnull),
-      mForwardArcs(nsnull),
+    : mForwardArcs(nsnull),
       mReverseArcs(nsnull),
-      mObservers(nsnull),
-      mLock(nsnull),
-      mOuter(aOuter)
+      mOuter(aOuter),
+      mLock(nsnull)
 {
     NS_INIT_REFCNT();
 }
@@ -668,12 +673,9 @@ InMemoryDataSource::~InMemoryDataSource()
         mReverseArcs = nsnull;
     }
 
-    delete mObservers; // we only hold a weak ref to each observer
-
     PR_LOG(gLog, PR_LOG_ALWAYS,
-           ("InMemoryDataSource(%s): destroyed.", mURL));
+           ("InMemoryDataSource(%p): destroyed.", this));
 
-    if (mURL) PL_strfree(mURL);
     PR_DestroyLock(mLock);
 }
 
@@ -806,7 +808,7 @@ InMemoryDataSource::LogOperation(const char* aOperation,
     nsXPIDLCString uri;
     aSource->GetValue(getter_Copies(uri));
     PR_LOG(gLog, PR_LOG_ALWAYS,
-           ("InMemoryDataSource(%s): %s", mURL, aOperation));
+           ("InMemoryDataSource(%p): %s", this, aOperation));
 
     PR_LOG(gLog, PR_LOG_ALWAYS,
            ("  [(%p)%s]--", aSource, (const char*) uri));
@@ -845,28 +847,14 @@ InMemoryDataSource::LogOperation(const char* aOperation,
 
 
 NS_IMETHODIMP
-InMemoryDataSource::Init(const char* uri)
-{
-    if ((mURL = PL_strdup(uri)) == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    PR_LOG(gLog, PR_LOG_ALWAYS,
-           ("InMemoryDataSource(%s): initialized.", mURL));
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 InMemoryDataSource::GetURI(char* *uri)
 {
     NS_PRECONDITION(uri != nsnull, "null ptr");
     if (! uri)
         return NS_ERROR_NULL_POINTER;
 
-    if ((*uri = nsXPIDLCString::Copy(mURL)) == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-    else
-        return NS_OK;
+    *uri = nsnull;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1126,9 +1114,14 @@ InMemoryDataSource::Assert(nsIRDFResource* source,
 
     // notify observers
     if (mObservers) {
-        for (PRInt32 i = mObservers->Count() - 1; i >= 0; --i) {
+        PRUint32 count;
+        rv = mObservers->Count(&count);
+        if (NS_FAILED(rv)) return rv;
+
+        for (PRInt32 i = PRInt32(count) - 1; i >= 0; --i) {
             nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
             obs->OnAssert(source, property, target);
+            NS_RELEASE(obs);
             // XXX ignore return value?
         }
     }
@@ -1221,14 +1214,41 @@ InMemoryDataSource::Unassert(nsIRDFResource* source,
 
     // Notify the world
     if (mObservers) {
-        for (PRInt32 i = mObservers->Count() - 1; i >= 0; --i) {
+        PRUint32 count;
+        rv = mObservers->Count(&count);
+        if (NS_FAILED(rv)) return rv;
+
+        for (PRInt32 i = PRInt32(count) - 1; i >= 0; --i) {
             nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
             obs->OnUnassert(source, property, target);
+            NS_RELEASE(obs);
             // XXX ignore return value?
         }
     }
 
     return NS_RDF_ASSERTION_ACCEPTED;
+}
+
+
+NS_IMETHODIMP
+InMemoryDataSource::Change(nsIRDFResource* aSource,
+                           nsIRDFResource* aProperty,
+                           nsIRDFNode* aOldTarget,
+                           nsIRDFNode* aNewTarget)
+{
+    NS_NOTYETIMPLEMENTED("write me");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+NS_IMETHODIMP
+InMemoryDataSource::Move(nsIRDFResource* aOldSource,
+                         nsIRDFResource* aNewSource,
+                         nsIRDFResource* aProperty,
+                         nsIRDFNode* aTarget)
+{
+    NS_NOTYETIMPLEMENTED("write me");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 
@@ -1242,8 +1262,9 @@ InMemoryDataSource::AddObserver(nsIRDFObserver* observer)
     NS_AUTOLOCK(mLock);
 
     if (! mObservers) {
-        if ((mObservers = new nsVoidArray()) == nsnull)
-            return NS_ERROR_OUT_OF_MEMORY;
+        nsresult rv;
+        rv = NS_NewISupportsArray(getter_AddRefs(mObservers));
+        if (NS_FAILED(rv)) return rv;
     }
 
     mObservers->AppendElement(observer);
@@ -1468,10 +1489,15 @@ InMemoryDataSource::Sweep()
 #endif
         
         if (mObservers) {
-            for (PRInt32 i = mObservers->Count() - 1; i >= 0; --i) {
-                nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
-                obs->OnUnassert(as->mSource, as->mProperty, as->mTarget);
-                // XXX ignore return value?
+            nsresult rv;
+            PRUint32 count;
+            rv = mObservers->Count(&count);
+            if (NS_SUCCEEDED(rv)) {
+                for (PRInt32 i = PRInt32(count) - 1; i >= 0; --i) {
+                    nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
+                    obs->OnUnassert(as->mSource, as->mProperty, as->mTarget);
+                    // XXX ignore return value?
+                }
             }
         }
 

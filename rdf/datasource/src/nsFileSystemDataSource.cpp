@@ -63,8 +63,7 @@ static const char kURINC_FileSystemRoot[] = "NC:FilesRoot";
 class FileSystemDataSource : public nsIRDFFileSystemDataSource
 {
 private:
-	char			*mURI;
-	nsVoidArray		*mObservers;
+	nsCOMPtr<nsISupportsArray> mObservers;
 
     static PRInt32 gRefCnt;
 
@@ -87,7 +86,6 @@ public:
 
 	// nsIRDFDataSource methods
 
-	NS_IMETHOD	Init(const char *uri);
 	NS_IMETHOD	GetURI(char **uri);
 	NS_IMETHOD	GetSource(nsIRDFResource *property,
 				nsIRDFNode *target,
@@ -112,6 +110,14 @@ public:
 	NS_IMETHOD	Unassert(nsIRDFResource *source,
 				nsIRDFResource *property,
 				nsIRDFNode *target);
+	NS_IMETHOD	Change(nsIRDFResource* aSource,
+				nsIRDFResource* aProperty,
+				nsIRDFNode* aOldTarget,
+				nsIRDFNode* aNewTarget);
+	NS_IMETHOD	Move(nsIRDFResource* aOldSource,
+				nsIRDFResource* aNewSource,
+				nsIRDFResource* aProperty,
+				nsIRDFNode* aTarget);
 	NS_IMETHOD	HasAssertion(nsIRDFResource *source,
 				nsIRDFResource *property,
 				nsIRDFNode *target,
@@ -124,7 +130,6 @@ public:
 	NS_IMETHOD	GetAllResources(nsISimpleEnumerator** aResult);
 	NS_IMETHOD	AddObserver(nsIRDFObserver *n);
 	NS_IMETHOD	RemoveObserver(nsIRDFObserver *n);
-	NS_IMETHOD	Flush();
 
 	NS_IMETHOD	GetAllCommands(nsIRDFResource* source,
 				nsIEnumerator/*<nsIRDFResource>*/** commands);
@@ -188,8 +193,6 @@ FileSystemDataSource::isFileURI(nsIRDFResource *r)
 
 
 FileSystemDataSource::FileSystemDataSource(void)
-	: mURI(nsnull),
-	  mObservers(nsnull)
 {
     NS_INIT_REFCNT();
 
@@ -220,10 +223,6 @@ FileSystemDataSource::~FileSystemDataSource (void)
 {
     gRDFService->UnregisterDataSource(this);
 
-    PL_strfree(mURI);
-
-    delete mObservers; // we only hold a weak ref to each observer
-
     if (--gRefCnt == 0) {
         NS_RELEASE(kNC_FileSystemRoot);
         NS_RELEASE(kNC_Child);
@@ -243,36 +242,16 @@ FileSystemDataSource::~FileSystemDataSource (void)
 NS_IMPL_ISUPPORTS(FileSystemDataSource, nsIRDFDataSource::GetIID());
 
 NS_IMETHODIMP
-FileSystemDataSource::Init(const char *uri)
-{
-    NS_PRECONDITION(uri != nsnull, "null ptr");
-    if (! uri)
-        return NS_ERROR_NULL_POINTER;
-
-	nsresult	rv = NS_ERROR_OUT_OF_MEMORY;
-
-	if ((mURI = PL_strdup(uri)) == nsnull)
-		return rv;
-
-	// register this as a named data source with the service manager
-	if (NS_FAILED(rv = gRDFService->RegisterDataSource(this, PR_FALSE)))
-		return rv;
-	return NS_OK;
-}
-
-
-
-NS_IMETHODIMP
 FileSystemDataSource::GetURI(char **uri)
 {
     NS_PRECONDITION(uri != nsnull, "null ptr");
     if (! uri)
         return NS_ERROR_NULL_POINTER;
 
-    if ((*uri = nsXPIDLCString::Copy(mURI)) == nsnull)
+    if ((*uri = nsXPIDLCString::Copy("rdf:files")) == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
-    else
-        return NS_OK;
+
+	return NS_OK;
 }
 
 
@@ -546,7 +525,6 @@ FileSystemDataSource::Assert(nsIRDFResource *source,
                        nsIRDFNode *target,
                        PRBool tv)
 {
-//	PR_ASSERT(0);
 	return NS_RDF_ASSERTION_REJECTED;
 }
 
@@ -557,11 +535,28 @@ FileSystemDataSource::Unassert(nsIRDFResource *source,
                          nsIRDFResource *property,
                          nsIRDFNode *target)
 {
-//	PR_ASSERT(0);
 	return NS_RDF_ASSERTION_REJECTED;
 }
 
 
+NS_IMETHODIMP
+FileSystemDataSource::Change(nsIRDFResource* aSource,
+							 nsIRDFResource* aProperty,
+							 nsIRDFNode* aOldTarget,
+							 nsIRDFNode* aNewTarget)
+{
+	return NS_RDF_ASSERTION_REJECTED;
+}
+
+
+NS_IMETHODIMP
+FileSystemDataSource::Move(nsIRDFResource* aOldSource,
+						   nsIRDFResource* aNewSource,
+						   nsIRDFResource* aProperty,
+						   nsIRDFNode* aTarget)
+{
+	return NS_RDF_ASSERTION_REJECTED;
+}
 
 NS_IMETHODIMP
 FileSystemDataSource::HasAssertion(nsIRDFResource *source,
@@ -700,10 +695,11 @@ FileSystemDataSource::AddObserver(nsIRDFObserver *n)
     if (! n)
         return NS_ERROR_NULL_POINTER;
 
-	if (nsnull == mObservers)
+	if (! mObservers)
 	{
-		if ((mObservers = new nsVoidArray()) == nsnull)
-			return NS_ERROR_OUT_OF_MEMORY;
+		nsresult rv;
+		rv = NS_NewISupportsArray(getter_AddRefs(mObservers));
+		if (NS_FAILED(rv)) return rv;
 	}
 	mObservers->AppendElement(n);
 	return NS_OK;
@@ -718,21 +714,12 @@ FileSystemDataSource::RemoveObserver(nsIRDFObserver *n)
     if (! n)
         return NS_ERROR_NULL_POINTER;
 
-	if (nsnull == mObservers)
+	if (! mObservers)
 		return NS_OK;
+
 	mObservers->RemoveElement(n);
 	return NS_OK;
 }
-
-
-
-NS_IMETHODIMP
-FileSystemDataSource::Flush()
-{
-	PR_ASSERT(0);
-	return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 
 
 NS_IMETHODIMP

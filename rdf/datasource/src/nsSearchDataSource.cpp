@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 4; c-file-style: "stroustrup" -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4; c-file-style: "stroustrup" -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -129,9 +129,6 @@ public:
 class SearchDataSource : public nsIRDFSearchDataSource
 {
 private:
-	char			*mURI;
-	nsVoidArray		*mObservers;
-
 	static PRInt32		gRefCnt;
 
     // pseudo-constants
@@ -152,12 +149,12 @@ friend	class SearchDataSourceCallback;
 
 	NS_DECL_ISUPPORTS
 
-			SearchDataSource(void);
+				SearchDataSource(void);
 	virtual		~SearchDataSource(void);
+	nsresult	Init();
 
 	// nsIRDFDataSource methods
 
-	NS_IMETHOD	Init(const char *uri);
 	NS_IMETHOD	GetURI(char **uri);
 	NS_IMETHOD	GetSource(nsIRDFResource *property,
 				nsIRDFNode *target,
@@ -182,6 +179,14 @@ friend	class SearchDataSourceCallback;
 	NS_IMETHOD	Unassert(nsIRDFResource *source,
 				nsIRDFResource *property,
 				nsIRDFNode *target);
+	NS_IMETHOD	Change(nsIRDFResource* aSource,
+				nsIRDFResource* aProperty,
+				nsIRDFNode* aOldTarget,
+				nsIRDFNode* aNewTarget);
+	NS_IMETHOD	Move(nsIRDFResource* aOldSource,
+				nsIRDFResource* aNewSource,
+				nsIRDFResource* aProperty,
+				nsIRDFNode* aTarget);
 	NS_IMETHOD	HasAssertion(nsIRDFResource *source,
 				nsIRDFResource *property,
 				nsIRDFNode *target,
@@ -194,7 +199,6 @@ friend	class SearchDataSourceCallback;
 	NS_IMETHOD	GetAllResources(nsISimpleEnumerator** aResult);
 	NS_IMETHOD	AddObserver(nsIRDFObserver *n);
 	NS_IMETHOD	RemoveObserver(nsIRDFObserver *n);
-	NS_IMETHOD	Flush();
 	NS_IMETHOD	GetAllCommands(nsIRDFResource* source,
 				nsIEnumerator/*<nsIRDFResource>*/** commands);
 
@@ -284,8 +288,6 @@ SearchDataSource::isSearchURI(nsIRDFResource *r)
 
 
 SearchDataSource::SearchDataSource(void)
-	: mURI(nsnull),
-	  mObservers(nsnull)
 {
 	NS_INIT_REFCNT();
 
@@ -315,10 +317,6 @@ SearchDataSource::~SearchDataSource (void)
 {
 	gRDFService->UnregisterDataSource(this);
 
-	PL_strfree(mURI);
-
-	delete mObservers; // we only hold a weak ref to each observer
-
 	if (--gRefCnt == 0)
 	{
 		NS_RELEASE(kNC_SearchRoot);
@@ -343,22 +341,13 @@ NS_IMPL_ISUPPORTS(SearchDataSource, nsIRDFDataSource::GetIID());
 
 
 
-NS_IMETHODIMP
-SearchDataSource::Init(const char *uri)
+nsresult
+SearchDataSource::Init()
 {
-	NS_PRECONDITION(uri != nsnull, "null ptr");
-	if (! uri)
-		return NS_ERROR_NULL_POINTER;
-
 	nsresult	rv = NS_ERROR_OUT_OF_MEMORY;
 
 	if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID,
 		nsnull, nsIRDFDataSource::GetIID(), (void **)&mInner)))
-		return(rv);
-	if (NS_FAILED(rv = mInner->Init(uri)))
-		return(rv);
-
-	if ((mURI = PL_strdup(uri)) == nsnull)
 		return(rv);
 
 	// register this as a named data source with the service manager
@@ -381,8 +370,9 @@ SearchDataSource::GetURI(char **uri)
 	if (! uri)
 		return NS_ERROR_NULL_POINTER;
 
-	if ((*uri = nsXPIDLCString::Copy(mURI)) == nsnull)
+	if ((*uri = nsXPIDLCString::Copy("rdf:search")) == nsnull)
 		return NS_ERROR_OUT_OF_MEMORY;
+
 	return NS_OK;
 }
 
@@ -523,7 +513,6 @@ SearchDataSource::Assert(nsIRDFResource *source,
                        nsIRDFNode *target,
                        PRBool tv)
 {
-//	PR_ASSERT(0);
 	return NS_RDF_ASSERTION_REJECTED;
 }
 
@@ -534,10 +523,27 @@ SearchDataSource::Unassert(nsIRDFResource *source,
                          nsIRDFResource *property,
                          nsIRDFNode *target)
 {
-//	PR_ASSERT(0);
 	return NS_RDF_ASSERTION_REJECTED;
 }
 
+NS_IMETHODIMP
+SearchDataSource::Change(nsIRDFResource* aSource,
+						 nsIRDFResource* aProperty,
+						 nsIRDFNode* aOldTarget,
+						 nsIRDFNode* aNewTarget)
+{
+	return NS_RDF_ASSERTION_REJECTED;
+}
+
+
+NS_IMETHODIMP
+SearchDataSource::Move(nsIRDFResource* aOldSource,
+					   nsIRDFResource* aNewSource,
+					   nsIRDFResource* aProperty,
+					   nsIRDFNode* aTarget)
+{
+	return NS_RDF_ASSERTION_REJECTED;
+}
 
 
 NS_IMETHODIMP
@@ -621,7 +627,7 @@ SearchDataSource::ArcLabelsOut(nsIRDFResource *source,
             return NS_OK;
 	}
 
-        return NS_NewEmptyEnumerator(labels);
+	return NS_NewEmptyEnumerator(labels);
 }
 
 
@@ -629,72 +635,23 @@ SearchDataSource::ArcLabelsOut(nsIRDFResource *source,
 NS_IMETHODIMP
 SearchDataSource::GetAllResources(nsISimpleEnumerator** aCursor)
 {
-	nsresult	rv = NS_RDF_NO_VALUE;
-
-	if (mInner)
-	{
-		rv = mInner->GetAllResources(aCursor);
-	}
-	return(rv);
+	return mInner->GetAllResources(aCursor);
 }
 
 
 
 NS_IMETHODIMP
-SearchDataSource::AddObserver(nsIRDFObserver *n)
+SearchDataSource::AddObserver(nsIRDFObserver *aObserver)
 {
-	nsresult	rv = NS_OK;
-
-	NS_PRECONDITION(n != nsnull, "null ptr");
-	if (! n)
-		return(NS_ERROR_NULL_POINTER);
-
-	if (nsnull == mObservers)
-	{
-		if ((mObservers = new nsVoidArray()) == nsnull)
-			return NS_ERROR_OUT_OF_MEMORY;
-	}
-	mObservers->AppendElement(n);
-	if (mInner)
-	{
-		rv = mInner->AddObserver(n);
-	}
-	return(rv);
+	return mInner->AddObserver(aObserver);
 }
 
 
 
 NS_IMETHODIMP
-SearchDataSource::RemoveObserver(nsIRDFObserver *n)
+SearchDataSource::RemoveObserver(nsIRDFObserver *aObserver)
 {
-	nsresult	rv = NS_OK;
-
-	NS_PRECONDITION(n != nsnull, "null ptr");
-	if (! n)
-		return NS_ERROR_NULL_POINTER;
-
-	if (nsnull == mObservers)
-		return NS_OK;
-	mObservers->RemoveElement(n);
-	if (mInner)
-	{
-		rv = mInner->RemoveObserver(n);
-	}
-	return(rv);
-}
-
-
-
-NS_IMETHODIMP
-SearchDataSource::Flush()
-{
-	nsresult	rv = NS_OK;
-
-	if (mInner)
-	{
-		rv = mInner->Flush();
-	}
-	return(rv);
+	return mInner->RemoveObserver(aObserver);
 }
 
 
@@ -744,6 +701,13 @@ NS_NewRDFSearchDataSource(nsIRDFDataSource **result)
 		if ((gSearchDataSource = new SearchDataSource()) == nsnull)
 		{
 			return NS_ERROR_OUT_OF_MEMORY;
+		}
+
+		nsresult rv = gSearchDataSource->Init();
+		if (NS_FAILED(rv)) {
+			delete gSearchDataSource;
+			gSearchDataSource = nsnull;
+			return rv;
 		}
 	}
 	NS_ADDREF(gSearchDataSource);

@@ -32,7 +32,6 @@
 #include "nsIRDFContentSink.h"
 #include "nsIRDFDocument.h"
 #include "nsIRDFService.h"
-#include "nsIRDFXMLDataSource.h"
 #include "nsIXULContentSink.h"
 #include "nsISupports.h"
 #include "nsRDFBaseDataSources.h"
@@ -75,7 +74,6 @@ static NS_DEFINE_CID(kRDFTreeBuilderCID,                  NS_RDFTREEBUILDER_CID)
 static NS_DEFINE_CID(kRDFXMLDataSourceCID,                NS_RDFXMLDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFXULBuilderCID,                   NS_RDFXULBUILDER_CID);
 static NS_DEFINE_CID(kXULContentSinkCID,                  NS_XULCONTENTSINK_CID);
-static NS_DEFINE_CID(kXULDataSourceCID,	                  NS_XULDATASOURCE_CID);
 static NS_DEFINE_CID(kXULDocumentCID,                     NS_XULDOCUMENT_CID);
 static NS_DEFINE_CID(kXULSortServiceCID,                  NS_XULSORTSERVICE_CID);
 static NS_DEFINE_CID(kXULDocumentInfoCID,                 NS_XULDOCUMENTINFO_CID);
@@ -187,7 +185,7 @@ RDFFactoryImpl::CreateInstance(nsISupports *aOuter,
             return rv;
     }
     else if (mClassID.Equals(kRDFXMLDataSourceCID)) {
-        if (NS_FAILED(rv = NS_NewRDFXMLDataSource((nsIRDFXMLDataSource**) &inst)))
+        if (NS_FAILED(rv = NS_NewRDFXMLDataSource((nsIRDFDataSource**) &inst)))
           return rv;
     }
     else if (mClassID.Equals(kRDFFileSystemDataSourceCID)) {
@@ -250,12 +248,6 @@ RDFFactoryImpl::CreateInstance(nsISupports *aOuter,
         if (NS_FAILED(rv = NS_NewRDFContentSink((nsIRDFContentSink**) &inst)))
             return rv;
     }
-#if 0 // I think we may need this later, re: rejecting assertions
-	else if (mClassID.Equals(kXULDataSourceCID)) {
-		if (NS_FAILED(rv = NS_NewXULDataSource((nsIRDFXMLDataSource**) &inst)))
-			return rv;
-	}
-#endif
 	else if (mClassID.Equals(kXULContentSinkCID)) {
         if (NS_FAILED(rv = NS_NewXULContentSink((nsIXULContentSink**) &inst)))
             return rv;
@@ -399,11 +391,6 @@ NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
                                          NS_RDF_DATASOURCE_PROGID_PREFIX "xml-datasource",
                                          aPath, PR_TRUE, PR_TRUE);
     if (NS_FAILED(rv)) goto done;
-    rv = compMgr->RegisterComponent(kXULDataSourceCID,
-                                         "XUL Data Source",
-                                         NS_RDF_DATASOURCE_PROGID_PREFIX "xul-datasource",
-                                         aPath, PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) goto done;
 
     // register our built-in resource factories:
     rv = compMgr->RegisterComponent(kRDFDefaultResourceCID,
@@ -533,12 +520,8 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* aPath)
     if (NS_FAILED(rv)) goto done;
     rv = compMgr->UnregisterComponent(kRDFXMLDataSourceCID,       aPath);
     if (NS_FAILED(rv)) goto done;
-    rv = compMgr->UnregisterComponent(kXULDataSourceCID,          aPath);
-    if (NS_FAILED(rv)) goto done;
-
     rv = compMgr->UnregisterComponent(kRDFDefaultResourceCID,     aPath);
     if (NS_FAILED(rv)) goto done;
-
     rv = compMgr->UnregisterComponent(kRDFContentSinkCID,         aPath);
     if (NS_FAILED(rv)) goto done;
     rv = compMgr->UnregisterComponent(kRDFHTMLBuilderCID,         aPath);

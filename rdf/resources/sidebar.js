@@ -57,11 +57,13 @@ function Init(sidebardb, sidebar_resource)
     // synchronously. nsIRDFService::GetDataSource() loads RDF/XML
     // asynchronously by default.
     registry = Components.classes['component://netscape/rdf/datasource?name=xml-datasource'].createInstance();
-    registry = registry.QueryInterface(Components.interfaces.nsIRDFXMLDataSource);
-    registry.Init(sidebardb); // this will throw if it's already been opened and registered.
+    registry = registry.QueryInterface(Components.interfaces.nsIRDFDataSource);
+
+    var remote = registry.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
+    remote.Init(sidebardb); // this will throw if it's already been opened and registered.
 
     // read it in synchronously.
-    registry.Open(true);
+    remote.Refresh(true);
   }
   catch (ex) {
     // if we get here, then the RDF/XML has been opened and read
@@ -179,10 +181,10 @@ function Reload(url, pollInterval)
     dump('Reload(' + url + ', ' + pollInterval + ')\n');
 
     var datasource = RDF.GetDataSource(url);
-    datasource = datasource.QueryInterface(Components.interfaces.nsIRDFXMLDataSource);
+    datasource = datasource.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
 
     // Reload, asynchronously.
-    datasource.Open(false);
+    datasource.Refresh(false);
 
     // Reschedule
     Schedule(url, pollInterval);

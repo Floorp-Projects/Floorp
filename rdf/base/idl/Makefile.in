@@ -32,11 +32,12 @@ XPIDLSRCS = \
 	nsIRDFNode.idl			\
 	nsIRDFObserver.idl		\
 	nsIRDFPurgeableDataSource.idl	\
+	nsIRDFRemoteDataSource.idl	\
 	nsIRDFResource.idl		\
 	nsIRDFService.idl		\
-	nsIRDFXMLDataSource.idl		\
+	nsIRDFXMLSink.idl		\
 	nsIRDFXMLSource.idl		\
-	nsIController.idl			\
+	nsIController.idl		\
 	nsIGenericCommandSet.idl	\
 	xulstubs.idl			\
 	$(NULL)

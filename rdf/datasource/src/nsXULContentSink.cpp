@@ -53,7 +53,6 @@
 #include "nsIRDFDocument.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFService.h"
-#include "nsIRDFXMLDataSource.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptContextOwner.h"
 #include "nsIServiceManager.h"

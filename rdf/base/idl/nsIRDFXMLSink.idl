@@ -17,9 +17,8 @@
  */
 
 #include "nsISupports.idl"
-#include "nsIRDFDataSource.idl"
 
-// XXX Until these get scriptable. See nsIRDFXMLDataSource::AddNameSpace()
+// XXX Until these get scriptable. See nsIRDFXMLSink::AddNameSpace()
 [ptr] native nsIAtomPtr(nsIAtom);
 [ref] native nsStringRef(nsString);
 %{C++
@@ -27,25 +26,23 @@ class nsIAtom;
 class nsString;
 %}
 
-interface nsIRDFXMLDataSource;
+interface nsIRDFXMLSink;
 
 [scriptable, uuid(EB1A5D30-AB33-11D2-8EC6-00805F29F370)]
-interface nsIRDFXMLDataSourceObserver : nsISupports
+interface nsIRDFXMLSinkObserver : nsISupports
 {
-    void OnBeginLoad(in nsIRDFXMLDataSource aStream);
-    void OnInterrupt(in nsIRDFXMLDataSource aStream);
-    void OnResume(in nsIRDFXMLDataSource aStream);
-    void OnEndLoad(in nsIRDFXMLDataSource aStream);
+    void OnBeginLoad(in nsIRDFXMLSink aSink);
+    void OnInterrupt(in nsIRDFXMLSink aSink);
+    void OnResume(in nsIRDFXMLSink aSink);
+    void OnEndLoad(in nsIRDFXMLSink aSink);
 };
 
 
 
 [scriptable, uuid(EB1A5D31-AB33-11D2-8EC6-00805F29F370)]
-interface nsIRDFXMLDataSource : nsIRDFDataSource
+interface nsIRDFXMLSink : nsISupports
 {
     attribute boolean ReadOnly;
-
-    void Open(in boolean aBlocking);
 
     void BeginLoad();
     void Interrupt();
@@ -54,19 +51,7 @@ interface nsIRDFXMLDataSource : nsIRDFDataSource
 
     void AddNameSpace(in nsIAtomPtr aPrefix, [const] in nsStringRef aURI);
 
-    void AddXMLStreamObserver(in nsIRDFXMLDataSourceObserver aObserver);
-    void RemoveXMLStreamObserver(in nsIRDFXMLDataSourceObserver aObserver);
+    void AddXMLSinkObserver(in nsIRDFXMLSinkObserver aObserver);
+    void RemoveXMLSinkObserver(in nsIRDFXMLSinkObserver aObserver);
 };
 
-
-%{C++
-
-// Two different kinds of XML data sources exist for RDF: serialized RDF and XUL.
-// These are the methods that make these data sources.
-extern nsresult
-NS_NewRDFXMLDataSource(nsIRDFXMLDataSource** result);
-
-extern nsresult
-NS_NewXULDataSource(nsIRDFXMLDataSource** result);
-
-%}

@@ -20,8 +20,9 @@
 #include "nsFileSpec.h"
 #include "nsSpecialSystemDirectory.h"
 #include "nsIChromeRegistry.h"
-#include "nsIRDFXMLDataSource.h"
+#include "nsIRDFDataSource.h"
 #include "nsIRDFObserver.h"
+#include "nsIRDFRemoteDataSource.h"
 #include "nsCRT.h"
 #include "rdf.h"
 #include "nsIServiceManager.h"
@@ -68,7 +69,6 @@ public:
     NS_IMETHOD ConvertChromeURL(nsIURI* aChromeURL);
 
     // nsIRDFDataSource methods
-    NS_IMETHOD Init(const char* uri)  ; // Called to init the data source.
     NS_IMETHOD GetURI(char** uri);
     NS_IMETHOD GetSource(nsIRDFResource* property,
                          nsIRDFNode* target,
@@ -93,6 +93,14 @@ public:
     NS_IMETHOD Unassert(nsIRDFResource* source,
                         nsIRDFResource* property,
                         nsIRDFNode* target)  ;
+    NS_IMETHOD Change(nsIRDFResource* aSource,
+                      nsIRDFResource* aProperty,
+                      nsIRDFNode* aOldTarget,
+                      nsIRDFNode* aNewTarget);
+    NS_IMETHOD Move(nsIRDFResource* aOldSource,
+                    nsIRDFResource* aNewSource,
+                    nsIRDFResource* aProperty,
+                    nsIRDFNode* aTarget);
     NS_IMETHOD HasAssertion(nsIRDFResource* source,
                             nsIRDFResource* property,
                             nsIRDFNode* target,
@@ -105,7 +113,6 @@ public:
     NS_IMETHOD ArcLabelsOut(nsIRDFResource* source,
                             nsISimpleEnumerator** labels /* out */)  ;
     NS_IMETHOD GetAllResources(nsISimpleEnumerator** aResult)  ;
-    NS_IMETHOD Flush(void)  ;
     NS_IMETHOD GetAllCommands(nsIRDFResource* source,
                               nsIEnumerator/*<nsIRDFResource>*/** commands)  ;
     NS_IMETHOD IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
@@ -344,9 +351,86 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL)
 NS_IMETHODIMP
 nsChromeRegistry::InitRegistry()
 {
-  if (mInner == nsnull)
-    return Init("rdf:chrome");
-  else return NS_OK;
+    gRefCnt++;
+    if (gRefCnt == 1) {
+        nsresult rv;
+        rv = nsServiceManager::GetService(kRDFServiceCID,
+                                          kIRDFServiceIID,
+                                          (nsISupports**)&gRDFService);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
+        if (NS_FAILED(rv)) return rv;
+
+        // get all the properties we'll need:
+        rv = gRDFService->GetResource(kURICHROME_chrome, &kCHROME_chrome);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
+        if (NS_FAILED(rv)) return rv;
+
+        rv = gRDFService->GetResource(kURICHROME_skin, &kCHROME_skin);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
+        if (NS_FAILED(rv)) return rv;
+
+        rv = gRDFService->GetResource(kURICHROME_content, &kCHROME_content);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
+        if (NS_FAILED(rv)) return rv;
+
+        rv = gRDFService->GetResource(kURICHROME_content, &kCHROME_platform);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
+        if (NS_FAILED(rv)) return rv;
+
+        rv = gRDFService->GetResource(kURICHROME_content, &kCHROME_locale);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
+        if (NS_FAILED(rv)) return rv;
+
+        rv = gRDFService->GetResource(kURICHROME_content, &kCHROME_behavior);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
+        if (NS_FAILED(rv)) return rv;
+
+        rv = gRDFService->GetResource(kURICHROME_base, &kCHROME_base);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
+        if (NS_FAILED(rv)) return rv;
+
+        rv = gRDFService->GetResource(kURICHROME_main, &kCHROME_main);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
+        if (NS_FAILED(rv)) return rv;
+
+        rv = gRDFService->GetResource(kURICHROME_archive, &kCHROME_archive);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
+        if (NS_FAILED(rv)) return rv;
+
+        rv = gRDFService->GetResource(kURICHROME_name, &kCHROME_name);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
+        if (NS_FAILED(rv)) return rv;
+
+        rv = gRDFService->GetResource(kURICHROME_displayname, &kCHROME_displayname);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
+        if (NS_FAILED(rv)) return rv;
+
+        rv = nsComponentManager::CreateInstance(kRDFXMLDataSourceCID,
+                                                nsnull,
+                                                nsIRDFDataSource::GetIID(),
+                                                (void**) &mInner);
+        if (NS_FAILED(rv)) return rv;
+
+        nsCOMPtr<nsIRDFRemoteDataSource> remote = do_QueryInterface(mInner);
+        if (! remote)
+            return NS_ERROR_UNEXPECTED;
+
+        // Retrieve the mInner data source.
+        nsSpecialSystemDirectory chromeFile(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+        chromeFile += "chrome";
+        chromeFile += "registry.rdf";
+
+        nsFileURL chromeURL(chromeFile);
+        const char* innerURI = chromeURL.GetAsString();
+
+        rv = remote->Init(innerURI);
+        if (NS_FAILED(rv)) return rv;
+
+        // We need to read this synchronously.
+        rv = remote->Refresh(PR_TRUE);
+        if (NS_FAILED(rv)) return rv;
+    }
+    return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -433,98 +517,14 @@ NS_NewChromeRegistry(nsIChromeRegistry** aResult)
 ////////////////////////////////////////////////////////////////////////////////
 
 // nsIRDFDataSource methods
-NS_IMETHODIMP
-nsChromeRegistry::Init(const char* uri)
-{
-  // We're going to be init'ed with the "rdf:chrome" URI.
-  // We want to use the location of the registry source instead.
-  nsresult rv = NS_OK;
-
-  gRefCnt++;
-  if (gRefCnt == 1) {
-      rv = nsServiceManager::GetService(kRDFServiceCID,
-                                        kIRDFServiceIID,
-                                        (nsISupports**)&gRDFService);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
-      if (NS_FAILED(rv)) return rv;
-
-      // get all the properties we'll need:
-      rv = gRDFService->GetResource(kURICHROME_chrome, &kCHROME_chrome);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
-      if (NS_FAILED(rv)) return rv;
-
-      rv = gRDFService->GetResource(kURICHROME_skin, &kCHROME_skin);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
-      if (NS_FAILED(rv)) return rv;
-
-      rv = gRDFService->GetResource(kURICHROME_content, &kCHROME_content);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
-      if (NS_FAILED(rv)) return rv;
-
-      rv = gRDFService->GetResource(kURICHROME_content, &kCHROME_platform);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
-      if (NS_FAILED(rv)) return rv;
-
-      rv = gRDFService->GetResource(kURICHROME_content, &kCHROME_locale);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
-      if (NS_FAILED(rv)) return rv;
-
-      rv = gRDFService->GetResource(kURICHROME_content, &kCHROME_behavior);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
-      if (NS_FAILED(rv)) return rv;
-
-      rv = gRDFService->GetResource(kURICHROME_base, &kCHROME_base);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
-      if (NS_FAILED(rv)) return rv;
-
-      rv = gRDFService->GetResource(kURICHROME_main, &kCHROME_main);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
-      if (NS_FAILED(rv)) return rv;
-
-      rv = gRDFService->GetResource(kURICHROME_archive, &kCHROME_archive);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
-      if (NS_FAILED(rv)) return rv;
-
-      rv = gRDFService->GetResource(kURICHROME_name, &kCHROME_name);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
-      if (NS_FAILED(rv)) return rv;
-
-      rv = gRDFService->GetResource(kURICHROME_displayname, &kCHROME_displayname);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
-      if (NS_FAILED(rv)) return rv;
-
-      rv = nsComponentManager::CreateInstance(kRDFXMLDataSourceCID,
-                                              nsnull,
-                                              nsIRDFXMLDataSource::GetIID(),
-                                              (void**) &mInner);
-      if (NS_FAILED(rv)) return rv;
-
-      // Retrieve the mInner data source.
-      nsSpecialSystemDirectory chromeFile(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
-      chromeFile += "chrome";
-      chromeFile += "registry.rdf";
-
-      nsFileURL chromeURL(chromeFile);
-      const char* innerURI = chromeURL.GetAsString();
-
-      rv = mInner->Init(innerURI);
-      if (NS_FAILED(rv)) return rv;
-
-      nsCOMPtr<nsIRDFXMLDataSource> xmlds = do_QueryInterface(mInner);
-      if (! xmlds)
-          return NS_ERROR_FAILURE;
-
-      // We need to read this synchronously.
-      rv = xmlds->Open(PR_TRUE);
-  }
-  
-  return rv;
-}
-  
 NS_IMETHODIMP 
 nsChromeRegistry::GetURI(char** uri)
 {
-  return mInner->GetURI(uri);
+    *uri = nsXPIDLCString::Copy("rdf:chrome");
+    if (! *uri)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP 
@@ -581,6 +581,24 @@ nsChromeRegistry::Unassert(nsIRDFResource* source,
   return mInner->Unassert(source, property, target);
 }
 
+NS_IMETHODIMP
+nsChromeRegistry::Change(nsIRDFResource* aSource,
+                         nsIRDFResource* aProperty,
+                         nsIRDFNode* aOldTarget,
+                         nsIRDFNode* aNewTarget)
+{
+    return mInner->Change(aSource, aProperty, aOldTarget, aNewTarget);
+}
+
+NS_IMETHODIMP
+nsChromeRegistry::Move(nsIRDFResource* aOldSource,
+                       nsIRDFResource* aNewSource,
+                       nsIRDFResource* aProperty,
+                       nsIRDFNode* aTarget)
+{
+    return mInner->Move(aOldSource, aNewSource, aProperty, aTarget);
+}
+
 NS_IMETHODIMP 
 nsChromeRegistry::HasAssertion(nsIRDFResource* source,
                         nsIRDFResource* property,
@@ -616,12 +634,6 @@ NS_IMETHODIMP nsChromeRegistry::ArcLabelsOut(nsIRDFResource* source,
 NS_IMETHODIMP nsChromeRegistry::GetAllResources(nsISimpleEnumerator** aCursor)
 {
   return mInner->GetAllResources(aCursor);
-}
-
-NS_IMETHODIMP 
-nsChromeRegistry::Flush(void)
-{
-  return mInner->Flush();
 }
 
 NS_IMETHODIMP 

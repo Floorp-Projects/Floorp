@@ -28,11 +28,12 @@ XPIDLSRCS=      .\nsIRDFNode.idl                  \
                 .\nsIRDFContainer.idl             \
                 .\nsIRDFContainerUtils.idl        \
                 .\nsIRDFPurgeableDataSource.idl   \
-                .\nsIRDFXMLDataSource.idl         \
+                .\nsIRDFRemoteDataSource.idl      \
+                .\nsIRDFXMLSink.idl               \
                 .\nsIRDFXMLSource.idl             \
-				.\nsIController.idl				  \
-				.\nsIGenericCommandSet.idl		  \
-		.\xulstubs.idl			\
+                .\nsIController.idl               \
+                .\nsIGenericCommandSet.idl        \
+                .\xulstubs.idl                    \
                 $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

@@ -1616,6 +1616,29 @@ RDFGenericBuilderImpl::OnUnassert(nsIRDFResource* aSubject,
     return NS_OK;
 }
 
+
+NS_IMETHODIMP
+RDFGenericBuilderImpl::OnChange(nsIRDFResource* aSource,
+								nsIRDFResource* aProperty,
+								nsIRDFNode* aOldTarget,
+								nsIRDFNode* aNewTarget)
+{
+	NS_NOTYETIMPLEMENTED("write me");
+	return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+NS_IMETHODIMP
+RDFGenericBuilderImpl::OnMove(nsIRDFResource* aOldSource,
+							  nsIRDFResource* aNewSource,
+							  nsIRDFResource* aProperty,
+							  nsIRDFNode* aTarget)
+{
+	NS_NOTYETIMPLEMENTED("write me");
+	return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
 ////////////////////////////////////////////////////////////////////////
 // nsIDOMNodeObserver interface
 //

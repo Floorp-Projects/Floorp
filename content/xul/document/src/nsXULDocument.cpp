@@ -175,7 +175,6 @@ static NS_DEFINE_CID(kRangeListCID,              NS_RANGELIST_CID);
 static NS_DEFINE_CID(kTextNodeCID,               NS_TEXTNODE_CID);
 static NS_DEFINE_CID(kWellFormedDTDCID,          NS_WELLFORMEDDTD_CID);
 static NS_DEFINE_CID(kXULContentSinkCID,         NS_XULCONTENTSINK_CID);
-static NS_DEFINE_CID(kXULDataSourceCID,		     NS_XULDATASOURCE_CID);
 
 static NS_DEFINE_CID(kXULFocusTrackerCID, NS_XULFOCUSTRACKER_CID);
 static NS_DEFINE_IID(kIXULFocusTrackerIID, NS_IXULFOCUSTRACKER_IID);
@@ -1188,13 +1187,6 @@ XULDocumentImpl::PrepareToLoad( nsCOMPtr<nsIParser>* created_parser,
 
         if (NS_FAILED(rv = db->AddDataSource(mDocumentDataSource))) {
             NS_ERROR("unable to add XUL datasource to db");
-            return rv;
-        }
-
-				const char* seedCString = 0;
-				syntheticURL->GetSpec(&seedCString);
-        if (NS_FAILED(rv = mDocumentDataSource->Init(seedCString))) {
-            NS_ERROR("unable to initialize XUL data source");
             return rv;
         }
     }
