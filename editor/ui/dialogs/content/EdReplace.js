@@ -183,10 +183,9 @@ function onReplace()
       {
         if (selArray[i] != specArray[i])
         {
-          if ( selArray[i][0].search(/\s/) == -1 ||
-               specArray[i][0].search(/\s/) == -1)
+          if ( /\S/.test(selArray[i][0]) || /\S/.test(specArray[i][0]) )
           {
-            // lowercase \s, not a space chunk -- match fails
+            // not a space chunk -- match fails
             matches = false;
             break;
           }

@@ -139,11 +139,10 @@ function InitImage()
 
   // dialog.border.value       = globalElement.getAttribute("border");
   var bv = GetHTMLOrCSSStyleValue(globalElement, "border", "border-top-width");
-  var pxIndex = bv.search(/px/);
-  if (pxIndex  > 0)
+  if (/px/.test(bv))
   {
     // Strip out the px
-    bv = bv.substr(0, pxIndex);
+    bv = RegExp.leftContext;
   }
   else if (bv == "thin")
   {

@@ -150,7 +150,7 @@ function onAccept()
       {
         var tagContent = TrimString(str.slice(start+1, end));
 
-        if ( tagContent.match(/^ol|^ul|^dl/) )
+        if ( /^ol|^ul|^dl/.test(tagContent) )
         {
           //  Replace list tag with <BR> to start new row 
           //   at begining of second or greater list tag
@@ -161,7 +161,7 @@ function onAccept()
           // Reset for list item separation into cells
           listItemSeparator = "";
         }
-        else if ( tagContent.match(/^li|^dt|^dd/) )
+        else if ( /^li|^dt|^dd/.test(tagContent) )
         {
           // Start a new row if this is first item after the ending the last list
           if (endList)
@@ -178,8 +178,8 @@ function onAccept()
         else 
         {
           // Find end tags
-          endList = tagContent.match(/^\/ol|^\/ul|^\/dl/);
-          if ( endList || tagContent.match(/^\/li|^\/dt|^\/dd/) )
+          endList = /^\/ol|^\/ul|^\/dl/.test(tagContent);
+          if ( endList || /^\/li|^\/dt|^\/dd/.test(tagContent) )
           {
             // Strip out tag
             str = str.slice(0, start) + str.slice(end+1);

@@ -74,7 +74,9 @@ function InitDialog()
   // Just to be confusing, "size" is used instead of height because it does
   // not accept % values, only pixels
   var height = GetHTMLOrCSSStyleValue(globalElement, "size", "height")
-  height = StripPxUnit(height);
+  if (/px/.test(height)) {
+    height = RegExp.leftContext;
+  }
   if(!height) {
     height = 2; //Default value
   }
@@ -124,16 +126,15 @@ function onSaveDefault()
       }
       prefs.setIntPref("editor.hrule.align", alignInt);
 
-      var percentIndex = width.search(/%/);
       var percent;
       var widthInt;
       var heightInt;
 
       if (width)
       {
-        if (percentIndex > 0) {
+        if (/%/.test(width)) {
           percent = true;
-          widthInt = Number(width.substr(0, percentIndex));
+          widthInt = Number(RegExp.leftContext);
         } else {
           percent = false;
           widthInt = Number(width);
