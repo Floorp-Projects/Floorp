@@ -27,7 +27,7 @@ CPPSRCS		= nettest.cpp
 
 REQUIRES	= raptor netlib xpcom pref
 
-LOCAL_INCLUDES	:= -I$(srcdir)/../src
+LOCAL_INCLUDES	= -I$(srcdir)/../src
 
 LIBS		= \
 		-lnetlib \
