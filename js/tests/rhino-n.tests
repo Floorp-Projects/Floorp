@@ -43,3 +43,6 @@ js1_5/Regress/regress-68498-003.js
 js1_5/Regress/regress-44009.js
 #Skip this test until the corresponding bug is fixed
 ecma_3/RegExp/regress-78156.js
+#Skip these two; see http://bugzilla.mozilla.org/show_bug.cgi?id=81086
+ecma_3/Statements/regress-74474-002.js
+ecma_3/Statements/regress-74474-003.js
