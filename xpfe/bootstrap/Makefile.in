@@ -215,7 +215,7 @@ OS_LIBS += comctl32.lib comdlg32.lib uuid.lib shell32.lib ole32.lib oleaut32.lib
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-CMMSRCS += nsNativeAppSupportCocoa.mm
+CMMSRCS += nsNativeAppSupportForCocoa.mm
 LDFLAGS += \
         -framework Cocoa \
         $(NULL)   
