@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim:set ts=2 sts=2 sw=2 et cin:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -46,6 +47,7 @@
 #include "nsIServiceManager.h"
 #include "nsIServiceManagerUtils.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIStringBundle.h"
 #include "nsIPrefService.h"
 #include "nsIPrompt.h"
@@ -89,7 +91,7 @@ private:
     nsresult mStatus;
 
     nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
-    PRBool PromptForScheme(nsIURI *aURI, nsACString& aScheme);
+    PRBool PromptForScheme(nsIURI *aURI);
 };
 
 NS_IMPL_THREADSAFE_ADDREF(nsExtProtocolChannel)
@@ -121,7 +123,7 @@ NS_IMETHODIMP nsExtProtocolChannel::SetLoadGroup(nsILoadGroup * aLoadGroup)
 
 NS_IMETHODIMP nsExtProtocolChannel::GetNotificationCallbacks(nsIInterfaceRequestor* *aNotificationCallbacks)
 {
-  NS_ENSURE_ARG_POINTER(aNotificationCallbacks);
+  NS_PRECONDITION(aNotificationCallbacks, "No out param?");
   *aNotificationCallbacks = mCallbacks;
   NS_IF_ADDREF(*aNotificationCallbacks);
   return NS_OK;
@@ -130,7 +132,7 @@ NS_IMETHODIMP nsExtProtocolChannel::GetNotificationCallbacks(nsIInterfaceRequest
 NS_IMETHODIMP nsExtProtocolChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCallbacks)
 {
   mCallbacks = aNotificationCallbacks;
-  return NS_OK;       // don't fail when trying to set this
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
@@ -166,26 +168,25 @@ nsresult nsExtProtocolChannel::SetURI(nsIURI* aURI)
   return NS_OK; 
 }
  
-PRBool nsExtProtocolChannel::PromptForScheme(nsIURI* aURI,
-                                             nsACString& aScheme)
+PRBool nsExtProtocolChannel::PromptForScheme(nsIURI* aURI)
 {
   // deny the load if we aren't able to ask but prefs say we should
-  nsresult rv;
+  nsCAutoString scheme;
+  nsresult rv = aURI->GetScheme(scheme);
   if (!mCallbacks) {
-    NS_ERROR("Notification Callbacks not set!");
+    NS_WARNING("Notification Callbacks not set!");
     return PR_FALSE;
   }
 
-  nsCOMPtr<nsIPrompt> prompt;
-  mCallbacks->GetInterface(NS_GET_IID(nsIPrompt), getter_AddRefs(prompt));
+  nsCOMPtr<nsIPrompt> prompt = do_GetInterface(mCallbacks);
   if (!prompt) {
-    NS_ERROR("No prompt interface on channel");
+    NS_WARNING("No prompt interface on channel");
     return PR_FALSE;
   }
 
   nsCOMPtr<nsIStringBundleService> sbSvc(do_GetService(NS_STRINGBUNDLE_CONTRACTID));
   if (!sbSvc) {
-    NS_ERROR("Couldn't load StringBundleService");
+    NS_WARNING("Couldn't load StringBundleService");
     return PR_FALSE;
   }
 
@@ -193,14 +194,14 @@ PRBool nsExtProtocolChannel::PromptForScheme(nsIURI* aURI,
   rv = sbSvc->CreateBundle("chrome://global/locale/appstrings.properties",
                            getter_AddRefs(appstrings));
   if (NS_FAILED(rv) || !appstrings) {
-    NS_ERROR("Failed to create appstrings.properties bundle");
+    NS_WARNING("Failed to create appstrings.properties bundle");
     return PR_FALSE;
   }
 
   nsCAutoString spec;
   aURI->GetSpec(spec);
   NS_ConvertUTF8toUTF16 uri(spec);
-  NS_ConvertUTF8toUTF16 scheme(aScheme);
+  NS_ConvertUTF8toUTF16 utf16scheme(scheme);
 
   nsXPIDLString title;
   appstrings->GetStringFromName(NS_LITERAL_STRING("externalProtocolTitle").get(),
@@ -213,13 +214,13 @@ PRBool nsExtProtocolChannel::PromptForScheme(nsIURI* aURI,
                                 getter_Copies(launchBtn));
 
   nsXPIDLString message;
-  const PRUnichar* msgArgs[] = { scheme.get(), uri.get() };
+  const PRUnichar* msgArgs[] = { utf16scheme.get(), uri.get(), desc.get() };
   appstrings->FormatStringFromName(NS_LITERAL_STRING("externalProtocolPrompt").get(),
                                    msgArgs,
                                    NS_ARRAY_LENGTH(msgArgs),
                                    getter_Copies(message));
 
-  if (scheme.IsEmpty() || uri.IsEmpty() || title.IsEmpty() ||
+  if (utf16scheme.IsEmpty() || uri.IsEmpty() || title.IsEmpty() ||
       checkMsg.IsEmpty() || launchBtn.IsEmpty() || message.IsEmpty())
     return PR_FALSE;
 
@@ -245,7 +246,7 @@ PRBool nsExtProtocolChannel::PromptForScheme(nsIURI* aURI,
       if (prefs)
       {
           nsCAutoString prefname(kExternalProtocolPrefPrefix);
-          prefname += aScheme;
+          prefname += scheme;
           prefs->SetBoolPref(prefname.get(), allowLoad);
       }
     }
@@ -299,7 +300,7 @@ nsresult nsExtProtocolChannel::OpenURL()
         }
         else if (externalDefault == kExternalProtocolAsk)
         {
-          allowLoad = PromptForScheme(mUrl, urlScheme);
+          allowLoad = PromptForScheme(mUrl);
         }
       }
     }
@@ -322,8 +323,8 @@ static void *PR_CALLBACK handleExtProtoEvent(PLEvent *event)
   nsExtProtocolChannel *channel =
       NS_STATIC_CAST(nsExtProtocolChannel*, PL_GetEventOwner(event));
 
-  if (channel)
-      channel->OpenURL();
+  NS_ASSERTION(channel, "Where has the channel gone?");
+  channel->OpenURL();
 
   return nsnull;
 }
@@ -332,7 +333,8 @@ static void PR_CALLBACK destroyExtProtoEvent(PLEvent *event)
 {
   nsExtProtocolChannel *channel =
       NS_STATIC_CAST(nsExtProtocolChannel*, PL_GetEventOwner(event));
-  NS_IF_RELEASE(channel);
+  NS_ASSERTION(channel, "Where has the channel gone?");
+  NS_RELEASE(channel);
   delete event;
 }
 
