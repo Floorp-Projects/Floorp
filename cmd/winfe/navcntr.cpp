@@ -939,8 +939,8 @@ CSelectorButton* CSelector::GetButtonFromPoint(CPoint point, int& dragFraction)
 		}
 	}
 
-	dragFraction = 2;
-	return NULL;
+	dragFraction = 3;
+	return pButton;
 }
 
 void CSelector::OnTimer(UINT nID)
