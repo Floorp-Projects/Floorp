@@ -34,7 +34,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.25 2002/02/12 00:38:16 ian.mcgreer%sun.com Exp $
+ * $Id: certdb.c,v 1.26 2002/04/09 23:46:57 ian.mcgreer%sun.com Exp $
  */
 
 #include "nssilock.h"
@@ -2028,8 +2028,17 @@ CERT_ImportCerts(CERTCertDBHandle *certdb, SECCertUsage usage,
     
 	/* decode all of the certs into the temporary DB */
 	for ( i = 0, fcerts= 0; i < ncerts; i++) {
-	    certs[fcerts] = CERT_DecodeDERCertificate(derCerts[i], PR_FALSE,
-						NULL);
+	    if ( keepCerts ) {
+		certs[fcerts] = CERT_DecodeDERCertificate(derCerts[i], 
+		                                          PR_FALSE,
+		                                          NULL);
+	    } else {
+		certs[fcerts] = CERT_NewTempCertificate(certdb,
+		                                        derCerts[i],
+		                                        NULL,
+		                                        PR_FALSE,
+		                                        PR_TRUE);
+	    }
 	    if (certs[fcerts]) fcerts++;
 	}
 
