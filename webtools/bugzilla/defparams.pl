@@ -1057,6 +1057,73 @@ Reason: %reason%
    default => 1,
   },
 
+# Added for Patch Viewer stuff (attachment.cgi?action=diff)
+  {
+   name    => 'cvsroot',
+   desc    => 'The <a href="http://www.cvshome.org">CVS</a> root that most ' .
+              'users of your system will be using for "cvs diff".  Used in ' .
+              'Patch Viewer ("Diff" option on patches) to figure out where ' .
+              'patches are rooted even if users did the "cvs diff" from ' .
+              'different places in the directory structure.  (NOTE: if your ' .
+              'CVS repository is remote and requires a password, you must ' .
+              'either ensure the Bugzilla user has done a "cvs login" or ' .
+              'specify the password ' .
+              '<a href="http://www.cvshome.org/docs/manual/cvs_2.html#SEC26">as ' .
+              'part of the CVS root.</a>)  Leave this blank if you have no ' .
+              'CVS repository.',
+   type    => 't',
+   default => '',
+  },
+
+  {
+   name    => 'cvsroot_get',
+   desc    => 'The CVS root Bugzilla will be using to get patches from.  ' .
+              'Some installations may want to mirror their CVS repository on ' .
+              'the Bugzilla server or even have it on that same server, and ' .
+              'thus the repository can be the local file system (and much ' .
+              'faster).  Make this the same as cvsroot if you don\'t ' .
+              'understand what this is (if cvsroot is blank, make this blank ' .
+              'too).',
+   type    => 't',
+   default => '',
+  },
+
+  {
+   name    => 'bonsai_url',
+   desc    => 'The URL to a ' .
+              '<a href="http://www.mozilla.org/bonsai.html">Bonsai</a> ' .
+              'server containing information about your CVS repository.  ' .
+              'Patch Viewer will use this information to create links to ' .
+              'bonsai\'s blame for each section of a patch (it will append ' .
+              '"/cvsblame.cgi?..." to this url).  Leave this blank if you ' .
+              'don\'t understand what this is.',
+   type    => 't',
+   default => ''
+  },
+
+  {
+   name    => 'lxr_url',
+   desc    => 'The URL to an ' .
+              '<a href="http://sourceforge.net/projects/lxr">LXR</a> server ' .
+              'that indexes your CVS repository.  Patch Viewer will use this ' .
+              'information to create links to LXR for each file in a patch.  ' .
+              'Leave this blank if you don\'t understand what this is.',
+   type    => 't',
+   default => ''
+  },
+
+  {
+   name    => 'lxr_root',
+   desc    => 'Some LXR installations do not index the CVS repository from ' .
+              'the root--' .
+              '<a href="http://lxr.mozilla.org/mozilla">Mozilla\'s</a>, for ' .
+              'example, starts indexing under <code>mozilla/</code>.  This ' .
+              'means URLs are relative to that extra path under the root.  ' .
+              'Enter this if you have a similar situation.  Leave it blank ' .
+              'if you don\'t know what this is.',
+   type    => 't',
+   default => '',
+  },
 );
 
 1;

@@ -42,6 +42,10 @@
 
 <script type="application/x-javascript" language="JavaScript">
   <!--
+  var prev_mode = 'raw';
+  var current_mode = 'raw';
+  var has_edited = 0;
+  var has_viewed_as_diff = 0;
   function editAsComment()
     {
       // Get the content of the document as a string.
@@ -69,44 +73,81 @@
       // with a newline.
       theContent = theContent.replace( /(.*\n|.+)/g , ">$1" );
 
-      hideElementById('viewFrame');
-      hideElementById('editButton');
-      hideElementById('smallCommentFrame');
+      switchToMode('edit');
 
-      showElementById('undoEditButton');
-
-      // Show the TEXTAREA that will contain the editable attachment
-      // and copy the content of the attachment into it.
-      showElementById('editFrame');
-
+      // Copy the contents of the diff into the textarea
       var editFrame = document.getElementById('editFrame');
       editFrame.value = theContent;
       editFrame.value += "\n\n";
+
+      has_edited = 1;
     }
   function undoEditAsComment()
     {
-      // Hide the "edit attachment as comment" TEXTAREA and the "undo" button.
-      hideElementById('undoEditButton');
-      hideElementById('editFrame');
-
-      // Show the "view attachment" IFRAME, the "redo" button that allows the user
-      // to go back to editing the attachment as a comment, and the small comment field.
-      showElementById('viewFrame');
-      showElementById('redoEditButton');
-      showElementById('smallCommentFrame');
-
+      switchToMode(prev_mode);
     }
   function redoEditAsComment()
     {
-      // Hide the "view attachment" IFRAME, the "redo" button that allows the user
-      // to go back to editing the attachment as a comment, and the small comment field.
-      hideElementById('viewFrame');
-      hideElementById('redoEditButton');
-      hideElementById('smallCommentFrame');
+      switchToMode('edit');
+    }
+  function viewDiff()
+    {
+      switchToMode('diff');
 
-      // Show the "edit attachment as comment" TEXTAREA and the "undo" button.
-      showElementById('undoEditButton');
-      showElementById('editFrame');
+      // If we have not viewed as diff before, set the view diff frame URL
+      if (!has_viewed_as_diff) {
+        var viewDiffFrame = document.getElementById('viewDiffFrame');
+        viewDiffFrame.src =
+            'attachment.cgi?id=[% attachid %]&action=diff&headers=0';
+        has_viewed_as_diff = 1;
+      }
+    }
+  function viewRaw()
+    {
+      switchToMode('raw');
+    }
+
+  function switchToMode(mode)
+    {
+      if (mode == current_mode) {
+        alert('switched to same mode!  This should not happen.');
+        return;
+      }
+
+      // Switch out of current mode
+      if (current_mode == 'edit') {
+        hideElementById('editFrame');
+        hideElementById('undoEditButton');
+      } else if (current_mode == 'raw') {
+        hideElementById('viewFrame');
+        hideElementById('viewDiffButton');
+        hideElementById(has_edited ? 'redoEditButton' : 'editButton');
+        hideElementById('smallCommentFrame');
+      } else if (current_mode == 'diff') {
+        hideElementById('viewDiffFrame');
+        hideElementById('viewRawButton');
+        hideElementById(has_edited ? 'redoEditButton' : 'editButton');
+        hideElementById('smallCommentFrame');
+      }
+
+      // Switch into new mode
+      if (mode == 'edit') {
+        showElementById('editFrame');
+        showElementById('undoEditButton');
+      } else if (mode == 'raw') {
+        showElementById('viewFrame');
+        showElementById('viewDiffButton');
+        showElementById(has_edited ? 'redoEditButton' : 'editButton');
+        showElementById('smallCommentFrame');
+      } else if (mode == 'diff') {
+        showElementById('viewDiffFrame');
+        showElementById('viewRawButton');
+        showElementById(has_edited ? 'redoEditButton' : 'editButton');
+        showElementById('smallCommentFrame');
+      }
+
+      prev_mode = current_mode;
+      current_mode = mode;
     }
 
   function hideElementById(id)
@@ -184,8 +225,11 @@
             <textarea name="comment" rows="5" cols="25" wrap="soft"></textarea><br>
         </div>
 
-        <input type="submit" value="Submit">
-
+        <input type="submit" value="Submit"><br><br>
+        <strong>Actions:</strong> <a href="attachment.cgi?id=[% attachid %]">View</a>
+        [% IF ispatch %]
+         | <a href="attachment.cgi?id=[% attachid %]&action=diff">Diff</a>
+        [% END %]
         </small>
       </td>
 
@@ -199,9 +243,12 @@
           <script type="application/x-javascript" language="JavaScript">
             <!--
             if (typeof document.getElementById == "function") {
+              document.write('<iframe id="viewDiffFrame" style="height: 400px; width: 100%; display: none;"></iframe>');
               document.write('<button type="button" id="editButton" onclick="editAsComment();">Edit Attachment As Comment</button>');
               document.write('<button type="button" id="undoEditButton" onclick="undoEditAsComment();" style="display: none;">Undo Edit As Comment</button>');
               document.write('<button type="button" id="redoEditButton" onclick="redoEditAsComment();" style="display: none;">Redo Edit As Comment</button>');
+              document.write('<button type="button" id="viewDiffButton" onclick="viewDiff();">View Attachment As Diff</button>');
+              document.write('<button type="button" id="viewRawButton" onclick="viewRaw();" style="display: none;">View Attachment As Raw</button>');
             }
             //-->
           </script>

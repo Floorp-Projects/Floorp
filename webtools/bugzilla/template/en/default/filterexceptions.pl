@@ -105,7 +105,6 @@
 
 'reports/components.html.tmpl' => [
   'numcols',
-  'numcols - 1',
   'comp.description', 
   'comp.initialowner', # email address
   'comp.initialqacontact', # email address
@@ -181,10 +180,6 @@
   'other_format.name', 
   'other_format.description', #
   'sizeurl', 
-  'height + 100', 
-  'height - 100', 
-  'width + 100', 
-  'width - 100', 
   'switchbase',
   'format',
   'cumulate',
@@ -257,7 +252,6 @@
 
 'list/table.html.tmpl' => [
   'id', 
-  'splitheader ? 2 : 1', 
   'abbrev.$id.title || field_descs.$id || column.title', #
   'tableheader',
   'bug.bug_severity', #
@@ -387,9 +381,6 @@
   'dependson_ids.join(",")', 
   'blocked_ids.join(",")', 
   'dep_id', 
-  'hide_resolved ? 0 : 1', 
-  'hide_resolved ? "Show" : "Hide"', 
-  'realdepth < 2 || maxdepth == 1 ? "disabled" : ""', 
   'hide_resolved', 
   'realdepth < 2 ? "disabled" : ""', 
   'maxdepth + 1', 
@@ -420,7 +411,6 @@
 ],
 
 'bug/navigate.html.tmpl' => [
-  'this_bug_idx + 1', 
   'bug_list.first', 
   'bug_list.last', 
   'bug_list.$prev_bug', 
@@ -540,7 +530,6 @@
   'flag.type.name', 
   'flag.status',
   'flag.requestee.nick', # Email
-  'show_attachment_flags ? 4 : 3',
   'bugid',
 ],
 
@@ -551,6 +540,27 @@
 'attachment/updated.html.tmpl' => [
   'attachid', 
   'bugid', 
+],
+
+'attachment/diff-header.html.tmpl' => [
+  'attachid',
+  'bugid',
+  'old_url',
+  'new_url',
+  'oldid',
+  'newid',
+  'style',
+  'javascript',
+  'patch.id',
+],
+
+'attachment/diff-file.html.tmpl' => [
+  'lxr_prefix',
+  'file.minus_lines',
+  'file.plus_lines',
+  'bonsai_prefix',
+  'section.old_start',
+  'section_num'
 ],
 
 'admin/products/groupcontrol/confirm-edit.html.tmpl' => [
@@ -586,7 +596,6 @@
 ],
 
 'admin/flag-type/list.html.tmpl' => [
-  'type.is_active ? "active" : "inactive"', 
   'type.id', 
   'type.flag_count', 
 ],
@@ -601,7 +610,6 @@
 
 'account/prefs/email.html.tmpl' => [
   'watchedusers', # Email
-  'useqacontact ? \'5\' : \'4\'', 
   'role', 
   'reason.name', 
   'reason.description',
@@ -617,7 +625,6 @@
   'tab.description', 
   'current_tab.name', 
   'current_tab.description', 
-  'current_tab.description FILTER lower',
 ],
 
 );

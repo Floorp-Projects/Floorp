@@ -75,7 +75,7 @@ use DBI;
 
 use Date::Format;               # For time2str().
 use Date::Parse;               # For str2time().
-#use Carp;                       # for confess
+use Carp;                       # for confess
 use RelationSet;
 
 # Use standard Perl libraries for cross-platform file/directory manipulation.
@@ -98,12 +98,12 @@ $::SIG{PIPE} = 'IGNORE';
 $::defaultqueryname = "(Default query)"; # This string not exposed in UI
 $::unconfirmedstate = "UNCONFIRMED";
 
-#sub die_with_dignity {
-#    my ($err_msg) = @_;
-#    print $err_msg;
-#    confess($err_msg);
-#}
-#$::SIG{__DIE__} = \&die_with_dignity;
+sub die_with_dignity {
+    my ($err_msg) = @_;
+    print $err_msg;
+    confess($err_msg);
+}
+$::SIG{__DIE__} = \&die_with_dignity;
 
 @::default_column_list = ("bug_severity", "priority", "rep_platform", 
                           "assigned_to", "bug_status", "resolution",

@@ -101,60 +101,13 @@ foreach my $path (@Support::Templates::include_paths) {
             my @lineno = ($` =~ m/\n/gs);
             my $lineno = scalar(@lineno) + 1;
 
-            # Comments
-            next if $directive =~ /^[+-]?#/;        
+            if (!directive_ok($file, $directive)) {
 
-            # Remove any leading/trailing + or - and whitespace.
-            $directive =~ s/^[+-]?\s*//;
-            $directive =~ s/\s*[+-]?$//;
-
-            # Directives
-            next if $directive =~ /^(IF|END|UNLESS|FOREACH|PROCESS|INCLUDE|
-                                     BLOCK|USE|ELSE|NEXT|LAST|DEFAULT|FLUSH|
-                                     ELSIF|SET|SWITCH|CASE)/x;
-
-            # Simple assignments
-            next if $directive =~ /^[\w\.\$]+\s+=\s+/;
-
-            # Conditional literals with either sort of quotes 
-            # There must be no $ in the string for it to be a literal
-            next if $directive =~ /^(["'])[^\$]*[^\\]\1/;
-
-            # Special values always used for numbers
-            next if $directive =~ /^[ijkn]$/;
-            next if $directive =~ /^count$/;
-            
-            # Params
-            next if $directive =~ /^Param\(/;
-
-            # Other functions guaranteed to return OK output
-            next if $directive =~ /^(time2str|GetBugLink)\(/;
-
-            # Safe Template Toolkit virtual methods
-            next if $directive =~ /\.(size)$/;
-
-            # Special Template Toolkit loop variable
-            next if $directive =~ /^loop\.(index|count)$/;
-            
-            # Branding terms
-            next if $directive =~ /^terms\./;
-            
-            # Things which are already filtered
-            # Note: If a single directive prints two things, and only one is 
-            # filtered, we may not catch that case.
-            next if $directive =~ /FILTER\ (html|csv|js|url_quote|quoteUrls|
-                                            time|uri|xml)/x;
-
-            # Exclude those on the nofilter list
-            if (defined($safe{$file}{$directive})) {
-                $safe{$file}{$directive}++;
-                next;
-            };
-
-            # This intentionally makes no effort to eliminate duplicates; to do
-            # so would merely make it more likely that the user would not 
-            # escape all instances when attempting to correct an error.
-            push(@unfiltered, "$lineno:$directive");
+              # This intentionally makes no effort to eliminate duplicates; to do
+              # so would merely make it more likely that the user would not 
+              # escape all instances when attempting to correct an error.
+              push(@unfiltered, "$lineno:$directive");
+            }
         }  
 
         my $fullpath = File::Spec->catfile($path, $file);
@@ -181,6 +134,74 @@ foreach my $path (@Support::Templates::include_paths) {
             }
         }
     }
+}
+
+sub directive_ok {
+    my ($file, $directive) = @_;
+
+    # Comments
+    return 1 if $directive =~ /^[+-]?#/;        
+
+    # Remove any leading/trailing + or - and whitespace.
+    $directive =~ s/^[+-]?\s*//;
+    $directive =~ s/\s*[+-]?$//;
+
+    # Exclude those on the nofilter list
+    if (defined($safe{$file}{$directive})) {
+        $safe{$file}{$directive}++;
+        return 1;
+    };
+
+    # Directives
+    return 1 if $directive =~ /^(IF|END|UNLESS|FOREACH|PROCESS|INCLUDE|
+                                 BLOCK|USE|ELSE|NEXT|LAST|DEFAULT|FLUSH|
+                                 ELSIF|SET|SWITCH|CASE|WHILE)/x;
+
+    # ? :
+    if ($directive =~ /.+\?(.+):(.+)/) {
+        return 1 if directive_ok($file, $1) && directive_ok($file, $2);
+    }
+
+    # + - * /
+    return 1 if $directive =~ /[+\-*\/]/;
+
+    # Numbers
+    return 1 if $directive =~ /^[0-9]+$/;
+
+    # Simple assignments
+    return 1 if $directive =~ /^[\w\.\$]+\s+=\s+/;
+
+    # Conditional literals with either sort of quotes 
+    # There must be no $ in the string for it to be a literal
+    return 1 if $directive =~ /^(["'])[^\$]*[^\\]\1/;
+    return 1 if $directive =~ /^(["'])\1/;
+
+    # Special values always used for numbers
+    return 1 if $directive =~ /^[ijkn]$/;
+    return 1 if $directive =~ /^count$/;
+    
+    # Params
+    return 1 if $directive =~ /^Param\(/;
+
+    # Other functions guaranteed to return OK output
+    return 1 if $directive =~ /^(time2str|GetBugLink|url)\(/;
+
+    # Safe Template Toolkit virtual methods
+    return 1 if $directive =~ /\.(size)$/;
+
+    # Special Template Toolkit loop variable
+    return 1 if $directive =~ /^loop\.(index|count)$/;
+    
+    # Branding terms
+    return 1 if $directive =~ /^terms\./;
+            
+    # Things which are already filtered
+    # Note: If a single directive prints two things, and only one is 
+    # filtered, we may not catch that case.
+    return 1 if $directive =~ /FILTER\ (html|csv|js|url_quote|quoteUrls|
+                                        time|uri|xml|lower)/x;
+
+    return 0;
 }
 
 $/ = $oldrecsep;

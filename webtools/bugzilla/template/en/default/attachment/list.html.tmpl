@@ -69,8 +69,12 @@
       <td valign="top">
         [% IF attachment.canedit %]
           <a href="attachment.cgi?id=[% attachment.attachid %]&amp;action=edit">Edit</a>
-        [% ELSE %]
-          None
+        [% END %]
+        [% IF attachment.ispatch %]
+          [% IF attachment.canedit %]
+            |
+          [% END %]
+          <a href="attachment.cgi?id=[% attachment.attachid %]&amp;action=diff">Diff</a>
         [% END %]
       </td>
     </tr>

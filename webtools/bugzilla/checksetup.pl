@@ -430,6 +430,60 @@ LocalVar('mysqlpath', <<"END");
 END
 
 
+my $cvs_executable = `which cvs`;
+if ($cvs_executable =~ /no cvs/) {
+    # If which didn't find it, just set to blank
+    $cvs_executable = "";
+} else {
+    chomp $cvs_executable;
+}
+
+LocalVar('cvsbin', <<"END");
+#
+# For some optional functions of Bugzilla (such as the pretty-print patch
+# viewer), we need the cvs binary to access files and revisions.
+# Because it's possible that this program is not in your path, you can specify
+# its location here.  Please specify the full path to the executable.
+\$cvsbin = "$cvs_executable";
+END
+
+
+my $interdiff_executable = `which interdiff`;
+if ($interdiff_executable =~ /no interdiff/) {
+    # If which didn't find it, set to blank
+    $interdiff_executable = "";
+} else {
+    chomp $interdiff_executable;
+}
+
+LocalVar('interdiffbin', <<"END");
+
+#
+# For some optional functions of Bugzilla (such as the pretty-print patch
+# viewer), we need the interdiff binary to make diffs between two patches.
+# Because it's possible that this program is not in your path, you can specify
+# its location here.  Please specify the full path to the executable.
+\$interdiffbin = "$interdiff_executable";
+END
+
+
+my $diff_binaries = `which diff`;
+if ($diff_binaries =~ /no diff/) {
+    # If which didn't find it, set to blank
+    $diff_binaries = "";
+} else {
+    $diff_binaries =~ s:/diff\n$::;
+}
+
+LocalVar('diffpath', <<"END");
+
+#
+# The interdiff feature needs diff, so we have to have that path.
+# Please specify only the directory name, with no trailing slash.
+\$diffpath = "$diff_binaries";
+END
+
+
 LocalVar('create_htaccess', <<'END');
 #
 # If you are using Apache for your web server, Bugzilla can create .htaccess

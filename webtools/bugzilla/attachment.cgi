@@ -80,6 +80,21 @@ if ($action eq "view")
   validateID();
   view(); 
 }
+elsif ($action eq "interdiff")
+{
+  validateID('oldid');
+  validateID('newid');
+  validateFormat("html", "raw");
+  validateContext();
+  interdiff();
+}
+elsif ($action eq "diff")
+{
+  validateID();
+  validateFormat("html", "raw");
+  validateContext();
+  diff();
+}
 elsif ($action eq "viewall") 
 { 
   ValidateBugID($::FORM{'bugid'});
@@ -149,16 +164,18 @@ exit;
 
 sub validateID
 {
+    my $param = @_ ? $_[0] : 'id';
+
     # Validate the value of the "id" form field, which must contain an
     # integer that is the ID of an existing attachment.
 
-    $vars->{'attach_id'} = $::FORM{'id'};
+    $vars->{'attach_id'} = $::FORM{$param};
     
-    detaint_natural($::FORM{'id'}) 
+    detaint_natural($::FORM{$param}) 
      || ThrowUserError("invalid_attach_id");
   
     # Make sure the attachment exists in the database.
-    SendSQL("SELECT bug_id, isprivate FROM attachments WHERE attach_id = $::FORM{'id'}");
+    SendSQL("SELECT bug_id, isprivate FROM attachments WHERE attach_id = $::FORM{$param}");
     MoreSQLData()
       || ThrowUserError("invalid_attach_id");
 
@@ -168,6 +185,28 @@ sub validateID
     if (($isprivate > 0 ) && Param("insidergroup") && !(UserInGroup(Param("insidergroup")))) {
         ThrowUserError("attachment_access_denied");
     }
+}
+
+sub validateFormat
+{
+  $::FORM{'format'} ||= $_[0];
+  if (! grep { $_ eq $::FORM{'format'} } @_)
+  {
+     $vars->{'format'} = $::FORM{'format'};
+     $vars->{'formats'} = \@_;
+     ThrowUserError("invalid_format");
+  }
+}
+
+sub validateContext
+{
+  $::FORM{'context'} ||= "patch";
+  if ($::FORM{'context'} ne "file" && $::FORM{'context'} ne "patch") {
+    $vars->{'context'} = $::FORM{'context'};
+    detaint_natural($::FORM{'context'})
+      || ThrowUserError("invalid_context");
+    delete $vars->{'context'};
+  }
 }
 
 sub validateCanEdit
@@ -408,6 +447,238 @@ sub view
     print $thedata;
 }
 
+sub interdiff
+{
+  # Get old patch data
+  my ($old_bugid, $old_description, $old_filename, $old_file_list) =
+      get_unified_diff($::FORM{'oldid'});
+
+  # Get new patch data
+  my ($new_bugid, $new_description, $new_filename, $new_file_list) =
+      get_unified_diff($::FORM{'newid'});
+
+  my $warning = warn_if_interdiff_might_fail($old_file_list, $new_file_list);
+
+  #
+  # send through interdiff, send output directly to template
+  #
+  # Must hack path so that interdiff will work.
+  #
+  $ENV{'PATH'} = $::diffpath;
+  open my $interdiff_fh, "$::interdiffbin $old_filename $new_filename|";
+  binmode $interdiff_fh;
+  my ($iter, $last_iter) = setup_iterators("");
+  if ($::FORM{'format'} eq "raw")
+  {
+    require PatchIterator::DiffPrinter::raw;
+    $last_iter->sends_data_to(new PatchIterator::DiffPrinter::raw());
+    # Actually print out the patch
+    print $cgi->header(-type => 'text/plain',
+                       -expires => '+3M');
+  }
+  else
+  {
+    $vars->{warning} = $warning if $warning;
+    $vars->{bugid} = $new_bugid;
+    $vars->{oldid} = $::FORM{'oldid'};
+    $vars->{old_desc} = $old_description;
+    $vars->{newid} = $::FORM{'newid'};
+    $vars->{new_desc} = $new_description;
+    delete $vars->{attachid};
+    delete $vars->{do_context};
+    delete $vars->{context};
+    setup_template_iterator($iter, $last_iter);
+  }
+  $iter->iterate_fh($interdiff_fh, "interdiff #$::FORM{'oldid'} #$::FORM{'newid'}");
+  close $interdiff_fh;
+  $ENV{'PATH'} = '';
+
+  #
+  # Delete temporary files
+  #
+  unlink($old_filename) or warn "Could not unlink $old_filename: $!";
+  unlink($new_filename) or warn "Could not unlink $new_filename: $!";
+}
+
+sub get_unified_diff
+{
+  my ($id) = @_;
+
+  # Bring in the modules we need
+  require PatchIterator::Raw;
+  require PatchIterator::FixPatchRoot;
+  require PatchIterator::DiffPrinter::raw;
+  require PatchIterator::PatchInfoGrabber;
+  require File::Temp;
+
+  # Get the patch
+  SendSQL("SELECT bug_id, description, ispatch, thedata FROM attachments WHERE attach_id = $id");
+  my ($bugid, $description, $ispatch, $thedata) = FetchSQLData();
+  if (!$ispatch) {
+    $vars->{'attach_id'} = $id;
+    ThrowCodeError("must_be_patch");
+  }
+
+  # Reads in the patch, converting to unified diff in a temp file
+  my $iter = new PatchIterator::Raw;
+  # fixes patch root (makes canonical if possible)
+  my $fix_patch_root = new PatchIterator::FixPatchRoot(Param('cvsroot'));
+  $iter->sends_data_to($fix_patch_root);
+  # Grabs the patch file info
+  my $patch_info_grabber = new PatchIterator::PatchInfoGrabber();
+  $fix_patch_root->sends_data_to($patch_info_grabber);
+  # Prints out to temporary file
+  my ($fh, $filename) = File::Temp::tempfile();
+  $patch_info_grabber->sends_data_to(new PatchIterator::DiffPrinter::raw($fh));
+  # Iterate!
+  $iter->iterate_string($id, $thedata);
+
+  return ($bugid, $description, $filename, $patch_info_grabber->patch_info()->{files});
+}
+
+sub warn_if_interdiff_might_fail {
+  my ($old_file_list, $new_file_list) = @_;
+  # Verify that the list of files diffed is the same
+  my @old_files = sort keys %{$old_file_list};
+  my @new_files = sort keys %{$new_file_list};
+  if (@old_files != @new_files ||
+      join(' ', @old_files) ne join(' ', @new_files)) {
+    return "interdiff1";
+  }
+
+  # Verify that the revisions in the files are the same
+  foreach my $file (keys %{$old_file_list}) {
+    if ($old_file_list->{$file}{old_revision} ne
+        $new_file_list->{$file}{old_revision}) {
+      return "interdiff2";
+    }
+  }
+
+  return undef;
+}
+
+sub setup_iterators {
+  my ($diff_root) = @_;
+
+  #
+  # Parameters:
+  # format=raw|html
+  # context=patch|file|0-n
+  # collapsed=0|1
+  # headers=0|1
+  #
+
+  # Define the iterators
+  # The iterator that reads the patch in (whatever its format)
+  require PatchIterator::Raw;
+  my $iter = new PatchIterator::Raw;
+  my $last_iter = $iter;
+  # Fix the patch root if we have a cvs root
+  if (Param('cvsroot'))
+  {
+    require PatchIterator::FixPatchRoot;
+    $last_iter->sends_data_to(new PatchIterator::FixPatchRoot(Param('cvsroot')));
+    $last_iter->sends_data_to->diff_root($diff_root) if defined($diff_root);
+    $last_iter = $last_iter->sends_data_to;
+  }
+  # Add in cvs context if we have the necessary info to do it
+  if ($::FORM{'context'} ne "patch" && $::cvsbin && Param('cvsroot_get'))
+  {
+    require PatchIterator::AddCVSContext;
+    $last_iter->sends_data_to(
+        new PatchIterator::AddCVSContext($::FORM{'context'},
+                                         Param('cvsroot_get')));
+    $last_iter = $last_iter->sends_data_to;
+  }
+  return ($iter, $last_iter);
+}
+
+sub setup_template_iterator
+{
+  my ($iter, $last_iter) = @_;
+
+  require PatchIterator::DiffPrinter::template;
+
+  my $format = $::FORM{'format'};
+
+  # Define the vars for templates
+  if (defined($::FORM{'headers'})) {
+    $vars->{headers} = $::FORM{'headers'};
+  } else {
+    $vars->{headers} = 1 if !defined($::FORM{'headers'});
+  }
+  $vars->{collapsed} = $::FORM{'collapsed'};
+  $vars->{context} = $::FORM{'context'};
+  $vars->{do_context} = $::cvsbin && Param('cvsroot_get') && !$vars->{'newid'};
+
+  # Print everything out
+  print $cgi->header(-type => 'text/html',
+                     -expires => '+3M');
+  $last_iter->sends_data_to(new PatchIterator::DiffPrinter::template($template,
+                             "attachment/diff-header.$format.tmpl",
+                             "attachment/diff-file.$format.tmpl",
+                             "attachment/diff-footer.$format.tmpl",
+                             { %{$vars},
+                               bonsai_url => Param('bonsai_url'),
+                               lxr_url => Param('lxr_url'),
+                               lxr_root => Param('lxr_root'),
+                             }));
+}
+
+sub diff
+{
+  # Get patch data
+  SendSQL("SELECT bug_id, description, ispatch, thedata FROM attachments WHERE attach_id = $::FORM{'id'}");
+  my ($bugid, $description, $ispatch, $thedata) = FetchSQLData();
+
+  # If it is not a patch, view normally
+  if (!$ispatch)
+  {
+    view();
+    return;
+  }
+
+  my ($iter, $last_iter) = setup_iterators();
+
+  if ($::FORM{'format'} eq "raw")
+  {
+    require PatchIterator::DiffPrinter::raw;
+    $last_iter->sends_data_to(new PatchIterator::DiffPrinter::raw());
+    # Actually print out the patch
+    use vars qw($cgi);
+    print $cgi->header(-type => 'text/plain',
+                       -expires => '+3M');
+    $iter->iterate_string("Attachment " . $::FORM{'id'}, $thedata);
+  }
+  else
+  {
+    $vars->{other_patches} = [];
+    if ($::interdiffbin && $::diffpath) {
+      # Get list of attachments on this bug.
+      # Ignore the current patch, but select the one right before it
+      # chronologically.
+      SendSQL("SELECT attach_id, description FROM attachments WHERE bug_id = $bugid AND ispatch = 1 ORDER BY creation_ts DESC");
+      my $select_next_patch = 0;
+      while (my ($other_id, $other_desc) = FetchSQLData()) {
+        if ($other_id eq $::FORM{'id'}) {
+          $select_next_patch = 1;
+        } else {
+          push @{$vars->{other_patches}}, { id => $other_id, desc => $other_desc, selected => $select_next_patch };
+          if ($select_next_patch) {
+            $select_next_patch = 0;
+          }
+        }
+      }
+    }
+
+    $vars->{bugid} = $bugid;
+    $vars->{attachid} = $::FORM{'id'};
+    $vars->{description} = $description;
+    setup_template_iterator($iter, $last_iter);
+    # Actually print out the patch
+    $iter->iterate_string("Attachment " . $::FORM{'id'}, $thedata);
+  }
+}
 
 sub viewall
 {

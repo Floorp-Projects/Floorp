@@ -344,6 +344,19 @@
     Valid types must be of the form <em>foo/bar</em> where <em>foo</em>
     is either <em>application, audio, image, message, model, multipart,
     text,</em> or <em>video</em>.
+    
+  [% ELSIF error == "invalid_context" %]
+    [% title = "Invalid Context" %]
+    The context [% context FILTER html %] is invalid (must be a number,
+    "file" or "patch").
+
+  [% ELSIF error == "invalid_format" %]
+    [% title = "Invalid Format" %]
+    The format "[% format FILTER html %]" is invalid (must be one of
+    [% FOREACH my_format = formats %]
+      "[% my_format FILTER html %]"
+    [% END %]
+    ).
 
   [% ELSIF error == "invalid_maxrow" %]
     [% title = "Invalid Max Rows" %]
@@ -427,6 +440,10 @@
     The query named <em>[% queryname FILTER html %]</em> does not
     exist.
         
+  [% ELSIF error == "must_be_patch" %]
+    [% title = "Attachment Must Be Patch" %]
+    Attachment #[% attach_id FILTER html %] must be a patch.
+
   [% ELSIF error == "missing_subcategory" %]
     [% title = "Missing Subcategory" %]
     You did not specify a subcategory for this series.
