@@ -496,7 +496,7 @@ PK11_ImportSymKeyWithFlags(PK11SlotInfo *slot, CK_MECHANISM_TYPE type,
     keyType = PK11_GetKeyType(type,key->len);
     symKey = pk11_ImportSymKeyWithTempl(slot, type, origin, keyTemplate, 
     					templateCount, key, wincx);
-    if (isPerm) {
+    if (symKey && isPerm) {
 	symKey->owner = PR_FALSE;
     }
     return symKey;
