@@ -227,8 +227,8 @@ protected:
     protected:
         struct Entry {
             nsXULPrototypeNode* mNode;
-            // a LOT of nodes have children, but leave for now
-            nsVoidArray         mChildren;
+            // a LOT of nodes have children; preallocate for 8
+            nsAutoVoidArray     mChildren;
             State               mState;
             Entry*              mNext;
         };

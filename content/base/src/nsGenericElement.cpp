@@ -366,8 +366,7 @@ nsCheapVoidArray::SwitchToVector()
 {
   void* child = GetSingleChild();
 
-  // XXX Probably should be nsAutoVoidArray to avoid extra alloc - check bloat!
-  mChildren = (void*)new nsVoidArray();
+  mChildren = (void*)new nsAutoVoidArray();
   nsVoidArray* vector = GetChildVector();
   if (vector && child) {
     vector->AppendElement(child);
