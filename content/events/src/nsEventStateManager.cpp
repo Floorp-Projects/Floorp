@@ -3725,20 +3725,18 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
 
     if (clearFirstFocusEvent) {
       NS_RELEASE(mFirstFocusEvent);
-    }
-  } else if (!aContent) {
-    //fire focus on document even if the content isn't focusable (ie. text)
-    //see bugzilla bug 93521
-    nsEventStatus status = nsEventStatus_eIgnore;
-    nsEvent event;
-    event.eventStructType = NS_EVENT;
-    event.message = NS_FOCUS_CONTENT;
-    if (nsnull != mPresContext && mDocument) {
-      mDocument->HandleDOMEvent(mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+    } else if (!aContent) {
+      //fire focus on document even if the content isn't focusable (ie. text)
+      //see bugzilla bug 93521
+      nsEventStatus status = nsEventStatus_eIgnore;
+      nsEvent event;
+      event.eventStructType = NS_EVENT;
+      event.message = NS_FOCUS_CONTENT;
+      if (nsnull != mPresContext && mDocument) {
+        mDocument->HandleDOMEvent(mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+      }
     }
   }
-
-
 
   nsIFrame * currentFocusFrame = nsnull;
   if (mCurrentFocus)
