@@ -73,6 +73,8 @@ public:
 
   NS_IMETHOD    Blur()=0;
 
+  NS_IMETHOD    Close()=0;
+
   NS_IMETHOD    ClearTimeout(PRInt32 aTimerID)=0;
 
   NS_IMETHOD    ClearInterval(PRInt32 aTimerID)=0;
@@ -106,6 +108,7 @@ public:
   NS_IMETHOD    Alert(const nsString& aStr);  \
   NS_IMETHOD    Focus();  \
   NS_IMETHOD    Blur();  \
+  NS_IMETHOD    Close();  \
   NS_IMETHOD    ClearTimeout(PRInt32 aTimerID);  \
   NS_IMETHOD    ClearInterval(PRInt32 aTimerID);  \
   NS_IMETHOD    SetTimeout(JSContext *cx, jsval *argv, PRUint32 argc, PRInt32* aReturn);  \
@@ -135,6 +138,7 @@ public:
   NS_IMETHOD    Alert(const nsString& aStr) { return _to##Alert(aStr); }  \
   NS_IMETHOD    Focus() { return _to##Focus(); }  \
   NS_IMETHOD    Blur() { return _to##Blur(); }  \
+  NS_IMETHOD    Close() { return _to##Close(); }  \
   NS_IMETHOD    ClearTimeout(PRInt32 aTimerID) { return _to##ClearTimeout(aTimerID); }  \
   NS_IMETHOD    ClearInterval(PRInt32 aTimerID) { return _to##ClearInterval(aTimerID); }  \
   NS_IMETHOD    SetTimeout(JSContext *cx, jsval *argv, PRUint32 argc, PRInt32* aReturn) { return _to##SetTimeout(cx, argv, argc, aReturn); }  \

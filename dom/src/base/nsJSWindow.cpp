@@ -679,6 +679,39 @@ WindowBlur(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
 
 //
+// Native method Close
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowClose(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMWindow *nativeThis = (nsIDOMWindow*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->Close()) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function close requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method ClearTimeout
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -921,6 +954,7 @@ static JSFunctionSpec WindowMethods[] =
   {"alert",          WindowAlert,     1},
   {"focus",          WindowFocus,     0},
   {"blur",          WindowBlur,     0},
+  {"close",          WindowClose,     0},
   {"clearTimeout",          WindowClearTimeout,     1},
   {"clearInterval",          WindowClearInterval,     1},
   {"setTimeout",          WindowSetTimeout,     0},
