@@ -364,7 +364,7 @@ void nsWindow::InitEvent(nsGUIEvent& event, PRUint32 aEventType, nsPoint* aPoint
 		event.point.x = aPoint->x;
 		event.point.y = aPoint->y;
 	}
-	event.time = system_time() / 1000;
+	event.time = PR_IntervalNow();
 	event.message = aEventType;
 }
 
@@ -909,8 +909,8 @@ NS_METHOD nsWindow::GetBounds(nsRect &aRect)
 		BRect r = mView->Frame();
 		aRect.x = nscoord(r.left);
 		aRect.y = nscoord(r.top);
-		aRect.width  = r.IntegerWidth() + 1;
-		aRect.height = r.IntegerHeight() + 1;
+		aRect.width  = r.IntegerWidth();
+		aRect.height = r.IntegerHeight();
 		mView->UnlockLooper();
 	} else {
 		aRect = mBounds;
@@ -931,8 +931,8 @@ NS_METHOD nsWindow::GetClientBounds(nsRect &aRect)
 		BRect r = mView->Bounds();
 		aRect.x = nscoord(r.left);
 		aRect.y = nscoord(r.top);
-		aRect.width  = r.IntegerWidth() + 1;
-		aRect.height = r.IntegerHeight() + 1;
+		aRect.width  = r.IntegerWidth();
+		aRect.height = r.IntegerHeight();
 		mView->UnlockLooper();
 	} else {
 		aRect.SetRect(0,0,0,0);
@@ -2394,25 +2394,49 @@ PRBool nsWindow::AutoErase()
 
 NS_METHOD nsWindow::SetMenuBar(nsIMenuBar * aMenuBar) 
 {
-	BMenuBar *menubar;
-	void *data;
-	aMenuBar->GetNativeData(data);
-	menubar = (BMenuBar *)data;
-
-	if(mView && mView->LockLooper())
+	if(mMenuBar == aMenuBar)
 	{
-		mView->Window()->AddChild(menubar);
-		float sz = menubar->Bounds().Height() + 1;
+		// Ignore duplicate calls
+		return NS_OK;
+	}
 
-		// FIXME: this is probably not correct, but seems to work ok;
-		// I think only the first view should be moved/resized...
-		for(BView *v = mView->Window()->ChildAt(0); v; v = v->NextSibling())
-			if(v != menubar)
-			{
-				v->ResizeBy(0, -sz);
-				v->MoveBy(0, sz);
-			}
-		mView->UnlockLooper();
+	if(mMenuBar)
+	{
+		// Get rid of the old menubar
+printf("nsWindow::SetMenuBar - FIXME: Get rid of the old menubar!\n");
+//		GtkWidget* oldMenuBar;
+//		mMenuBar->GetNativeData((void*&) oldMenuBar);
+//		if (oldMenuBar) {
+//			gtk_container_remove(GTK_CONTAINER(mVBox), oldMenuBar);
+//		}
+		NS_RELEASE(mMenuBar);
+	}
+	
+	mMenuBar = aMenuBar;
+
+	if(aMenuBar)
+	{
+	    NS_ADDREF(mMenuBar);
+		BMenuBar *menubar;
+		void *data;
+		aMenuBar->GetNativeData(data);
+		menubar = (BMenuBar *)data;
+	
+		if(mView && mView->LockLooper())
+		{
+			mView->Window()->AddChild(menubar);
+			float sz = menubar->Bounds().Height() + 1;
+	
+			// FIXME: this is probably not correct, but seems to work ok;
+			// I think only the first view should be moved/resized...
+			for(BView *v = mView->Window()->ChildAt(0); v; v = v->NextSibling())
+				if(v != menubar)
+				{
+					v->ResizeBy(0, -sz);
+					v->MoveBy(0, sz);
+				}
+			mView->UnlockLooper();
+		}
 	}
 
 	return NS_OK;
@@ -2435,7 +2459,7 @@ printf("nsWindow::ShowMenuBar - FIXME: not implemented!\n");
 //  else
 //    gtk_widget_hide(menubar);
 //
-//  return NS_OK;
+	return NS_OK;
 }
 
 NS_METHOD nsWindow::IsMenuBarVisible(PRBool *aVisible)
