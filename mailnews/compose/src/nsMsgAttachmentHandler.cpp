@@ -99,6 +99,7 @@ nsMsgAttachmentHandler::nsMsgAttachmentHandler()
   m_encoding = nsnull;
   m_real_name = nsnull;
   m_encoding = nsnull;
+  m_content_id = nsnull;
   m_already_encoded_p = PR_FALSE;
   m_decrypted_p = PR_FALSE;
   
@@ -148,6 +149,17 @@ nsMsgAttachmentHandler::~nsMsgAttachmentHandler()
   if (mFileSpec && mDeleteFile)
     mFileSpec->Delete(PR_FALSE);
 
+  PR_FREEIF(m_charset);
+  PR_FREEIF(m_type);
+  PR_FREEIF(m_content_id);
+  PR_FREEIF(m_desired_type);
+  PR_FREEIF(m_encoding);
+  PR_FREEIF(m_override_type);
+  PR_FREEIF(m_description);
+  PR_FREEIF(m_real_name);
+  PR_FREEIF(m_override_encoding);
+  PR_FREEIF(m_x_mac_type);
+  PR_FREEIF(m_x_mac_creator);
   PR_FREEIF(m_uri);
 }
 
