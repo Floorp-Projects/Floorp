@@ -222,7 +222,8 @@ function buildContextMenu()
   var copyLocationItem = document.getElementById("miCopyLink");
   var sep1 = document.getElementById("pre-bookmarks-separator");
   var sep2 = document.getElementById("post-bookmarks-separator");
-  var collapseExpandItem = document.getElementById("miCollapseExpand");
+  var expandItem = document.getElementById("miExpand");
+  var collapseItem = document.getElementById("miCollapse");
   if (count > 1) {
     openItem.hidden = true;
     openItemInNewWindow.hidden = true;
@@ -231,13 +232,13 @@ function buildContextMenu()
     copyLocationItem.hidden = true;
     sep1.hidden = true;
     sep2.hidden = true;
-    collapseExpandItem.hidden = true;    
+    expandItem.hidden = true;    
+    collapseItem.hidden = true;    
   }
   else {
     var currentIndex = gHistoryTree.currentIndex;
     if ((gHistoryGrouping == "day" || gHistoryGrouping == "dayandsite")
         && isContainer(gHistoryTree, currentIndex)) {
-      var bundle = document.getElementById("historyBundle");    
       openItem.hidden = true;
       openItemInNewWindow.hidden = true;
       openItemInNewTab.hidden = true;
@@ -245,11 +246,13 @@ function buildContextMenu()
       copyLocationItem.hidden = true;
       sep1.hidden = true;
       sep2.hidden = false;
-      collapseExpandItem.hidden = false;
-      if (isContainerOpen(gHistoryTree, currentIndex))
-        collapseExpandItem.setAttribute("label", bundle.getString("collapseLabel"));
-      else
-        collapseExpandItem.setAttribute("label", bundle.getString("expandLabel"));
+      if (isContainerOpen(gHistoryTree, currentIndex)) {
+        expandItem.hidden = true;
+        collapseItem.hidden = false;
+      } else {
+        expandItem.hidden = false;
+        collapseItem.hidden = true;
+      }
     }
     else {
       openItem.hidden = false;
@@ -259,7 +262,8 @@ function buildContextMenu()
       copyLocationItem.hidden = false;
       sep1.hidden = false;
       sep2.hidden = false;
-      collapseExpandItem.hidden = true;
+      expandItem.hidden = true;
+      collapseItem.hidden = true;
     }
   }
 }
