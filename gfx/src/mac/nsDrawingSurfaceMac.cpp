@@ -101,8 +101,10 @@ NS_IMETHODIMP nsDrawingSurfaceMac :: QueryInterface(REFNSIID aIID, void** aInsta
   return NS_NOINTERFACE;
 }
 
-NS_IMPL_ADDREF(nsDrawingSurfaceMac)
-NS_IMPL_RELEASE(nsDrawingSurfaceMac)
+NS_IMPL_ADDREF(nsDrawingSurfaceMac);
+NS_IMPL_RELEASE(nsDrawingSurfaceMac);
+
+#pragma mark-
 
 /** --------------------------------------------------- 
  * See Documentation in nsIDrawingSurface.h
@@ -163,6 +165,8 @@ NS_IMETHODIMP nsDrawingSurfaceMac :: GetPixelFormat(nsPixelFormat *aFormat)
 
   return NS_OK;
 }
+
+#pragma mark -
 
 /** --------------------------------------------------- 
  * See Documentation in nsIDrawingSurfaceMac.h

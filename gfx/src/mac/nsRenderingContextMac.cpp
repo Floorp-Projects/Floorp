@@ -467,6 +467,8 @@ NS_IMETHODIMP nsRenderingContextMac :: CopyOffScreenBits(nsDrawingSurface aSrcSu
 
 NS_IMETHODIMP nsRenderingContextMac :: CreateDrawingSurface(nsRect *aBounds, PRUint32 aSurfFlags, nsDrawingSurface &aSurface)
 {
+	aSurface = nsnull;
+
   PRUint32 depth = 8;
   if (mContext)
   	mContext->GetDepth(depth);
@@ -485,10 +487,13 @@ NS_IMETHODIMP nsRenderingContextMac :: CreateDrawingSurface(nsRect *aBounds, PRU
 	if (!surface)
 		return NS_ERROR_OUT_OF_MEMORY;
 
-	surface->Init(depth,macRect.right,macRect.bottom,aSurfFlags);
-	aSurface = surface;	
+	nsresult rv = surface->Init(depth, macRect.right, macRect.bottom, aSurfFlags);
+	if (NS_SUCCEEDED(rv))
+		aSurface = surface;
+	else
+		delete surface;
 
-  return NS_OK;
+  return rv;
 }
 
 //------------------------------------------------------------------------
