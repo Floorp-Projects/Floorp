@@ -1231,6 +1231,11 @@ void nsMenu::LoadMenuItem(
 	    keyElement->GetAttribute(altAtom, altValue);
 	    keyElement->GetAttribute(commandAtom, commandValue);
 	    
+      nsAutoString xulkey;
+      keyElement->GetAttribute("xulkey", xulkey);
+      if (xulkey == "true")
+        modifiers |= knsMenuItemCommandModifier;
+
 		if(keyChar != " ") 
 	      pnsMenuItem->SetShortcutChar(keyChar);
 	      
