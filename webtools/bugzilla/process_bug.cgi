@@ -1111,14 +1111,15 @@ sub FindWrapPoint {
 }
 
 sub LogDependencyActivity {
-    my ($i, $oldstr, $target, $me) = (@_);
+    my ($i, $oldstr, $target, $me, $timestamp) = (@_);
+    my $sql_timestamp = SqlQuote($timestamp);
     my $newstr = SnapShotDeps($i, $target, $me);
     if ($oldstr ne $newstr) {
         # Figure out what's really different...
         my ($removed, $added) = diff_strings($oldstr, $newstr);
         LogActivityEntry($i,$target,$removed,$added,$whoid,$timestamp);
         # update timestamp on target bug so midairs will be triggered
-        SendSQL("UPDATE bugs SET delta_ts=NOW() WHERE bug_id=$i");
+        SendSQL("UPDATE bugs SET delta_ts = $sql_timestamp WHERE bug_id = $i");
         $bug_changed = 1;
         return 1;
     }
@@ -1350,6 +1351,7 @@ foreach my $id (@idlist) {
 
     SendSQL("select now()");
     $timestamp = FetchOneColumn();
+    my $sql_timestamp = SqlQuote($timestamp);
 
     my $work_time;
     if (UserInGroup(Param('timetrackinggroup'))) {
@@ -1402,7 +1404,7 @@ foreach my $id (@idlist) {
             while (MoreSQLData()) {
                 push(@list, FetchOneColumn());
             }
-            SendSQL("UPDATE bugs SET keywords = " .
+            SendSQL("UPDATE bugs SET delta_ts = $sql_timestamp, keywords = " .
                     SqlQuote(join(', ', @list)) .
                     " WHERE bug_id = $id");
         }
@@ -1557,9 +1559,9 @@ foreach my $id (@idlist) {
                     SendSQL("insert into dependencies ($me, $target) values ($id, $i)");
                 }
                 foreach my $k (@keys) {
-                    LogDependencyActivity($k, $snapshot{$k}, $me, $target);
+                    LogDependencyActivity($k, $snapshot{$k}, $me, $target, $timestamp);
                 }
-                LogDependencyActivity($id, $oldsnap, $target, $me);
+                LogDependencyActivity($id, $oldsnap, $target, $me, $timestamp);
                 $check_dep_bugs = 1;
             }
 
@@ -1770,7 +1772,7 @@ foreach my $id (@idlist) {
         Bugzilla::Flag::process($target, $timestamp, \%::FORM);
     }
     if ($bug_changed) {
-        SendSQL("UPDATE bugs SET delta_ts = " . SqlQuote($timestamp) . " WHERE bug_id = $id");
+        SendSQL("UPDATE bugs SET delta_ts = $sql_timestamp WHERE bug_id = $id");
     }
     SendSQL("UNLOCK TABLES");
 
@@ -1803,7 +1805,10 @@ foreach my $id (@idlist) {
             SendSQL("INSERT INTO cc (who, bug_id) VALUES ($reporter, " . SqlQuote($duplicate) . ")");
         }
         # Bug 171639 - Duplicate notifications do not need to be private. 
-        AppendComment($duplicate, Bugzilla->user->login, "*** Bug $::FORM{'id'} has been marked as a duplicate of this bug. ***", 0);
+        AppendComment($duplicate, Bugzilla->user->login,
+                      "*** Bug $::FORM{'id'} has been marked as a duplicate of this bug. ***",
+                      0, $timestamp);
+
         CheckFormFieldDefined(\%::FORM,'comment');
         SendSQL("INSERT INTO duplicates VALUES ($duplicate, $::FORM{'id'})");
         

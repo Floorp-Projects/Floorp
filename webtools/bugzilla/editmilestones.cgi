@@ -548,8 +548,7 @@ if ($action eq 'update') {
         trick_taint($milestoneold);
 
         $dbh->do('UPDATE bugs
-                  SET target_milestone = ?,
-                  delta_ts = delta_ts
+                  SET target_milestone = ?
                   WHERE target_milestone = ?
                   AND product_id = ?',
                  undef,

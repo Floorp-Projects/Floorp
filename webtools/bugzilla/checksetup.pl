@@ -1767,7 +1767,7 @@ $table{bugs} =
     bug_severity enum($my_severities) not null,
     bug_status enum("UNCONFIRMED", "NEW", "ASSIGNED", "REOPENED", "RESOLVED", "VERIFIED", "CLOSED") not null,
     creation_ts datetime not null,
-    delta_ts timestamp not null,
+    delta_ts datetime not null,
     short_desc mediumtext not null,
     op_sys enum($my_opsys) not null,
     priority enum($my_priorities) not null,
@@ -4701,6 +4701,13 @@ if ($emptygroupid) {
     $sth = $dbh->prepare("UPDATE groups SET name = ? WHERE id = $emptygroupid");
     $sth->execute($trygroupname);
     print "Group $emptygroupid had an empty name; renamed as '$trygroupname'.\n";
+}
+
+# 2005-01-17 - Tomas.Kopal@altap.cz, bug 257315
+# Change bugs.delta_ts type from timestamp to datetime
+if (($fielddef = GetFieldDef("bugs", "delta_ts")) &&
+    $fielddef->[1] =~ /^timestamp/) {
+    ChangeFieldType ('bugs', 'delta_ts', 'DATETIME NOT NULL');
 }
 
 #

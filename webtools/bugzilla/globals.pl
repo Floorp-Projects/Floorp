@@ -137,7 +137,7 @@ sub AppendComment {
         "VALUES($bugid, $whoid, $timestamp, " . SqlQuote($comment) . ", " . 
         $privacyval . ", " . SqlQuote($work_time) . ")");
 
-    SendSQL("UPDATE bugs SET delta_ts = now() WHERE bug_id = $bugid");
+    SendSQL("UPDATE bugs SET delta_ts = $timestamp WHERE bug_id = $bugid");
 }
 
 sub GetFieldID {
@@ -1269,8 +1269,7 @@ sub RemoveVotes {
         SendSQL("SELECT SUM(vote_count) FROM votes WHERE bug_id = $id");
         my $v = FetchOneColumn();
         $v ||= 0;
-        SendSQL("UPDATE bugs SET votes = $v, delta_ts = delta_ts " .
-                "WHERE bug_id = $id");
+        SendSQL("UPDATE bugs SET votes = $v WHERE bug_id = $id");
     }
 }
 

@@ -344,8 +344,7 @@ sub record_votes {
     foreach my $id (keys %affected) {
         SendSQL("SELECT sum(vote_count) FROM votes WHERE bug_id = $id");
         my $v = FetchOneColumn() || 0;
-        SendSQL("UPDATE bugs SET votes = $v, delta_ts=delta_ts 
-                 WHERE bug_id = $id");
+        SendSQL("UPDATE bugs SET votes = $v WHERE bug_id = $id");
         my $confirmed = CheckIfVotedConfirmed($id, $who);
         $vars->{'header_done'} = 1 if $confirmed;
     }

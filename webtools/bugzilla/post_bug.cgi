@@ -321,9 +321,14 @@ if (UserInGroup("editbugs") && defined($::FORM{'dependson'})) {
     }
 }
 
+# get current time
+SendSQL("SELECT NOW()");
+my $timestamp = FetchOneColumn();
+my $sql_timestamp = SqlQuote($timestamp);
+
 # Build up SQL string to add bug.
 my $sql = "INSERT INTO bugs " . 
-  "(" . join(",", @used_fields) . ", reporter, creation_ts, " .
+  "(" . join(",", @used_fields) . ", reporter, creation_ts, delta_ts, " .
   "estimated_time, remaining_time, deadline) " .
   "VALUES (";
 
@@ -337,7 +342,7 @@ $comment = trim($comment);
 # OK except for the fact that it causes e-mail to be suppressed.
 $comment = $comment ? $comment : " ";
 
-$sql .= "$::userid, now(), ";
+$sql .= "$::userid, $sql_timestamp, $sql_timestamp, ";
 
 # Time Tracking
 if (UserInGroup(Param("timetrackinggroup")) &&
@@ -414,9 +419,6 @@ while (MoreSQLData()) {
 # Add the bug report to the DB.
 SendSQL($sql);
 
-SendSQL("select now()");
-my $timestamp = FetchOneColumn();
-
 # Get the bug ID back.
 SendSQL("select LAST_INSERT_ID()");
 my $id = FetchOneColumn();
@@ -434,8 +436,8 @@ if (Param("insidergroup") && UserInGroup(Param("insidergroup"))) {
 }
 
 SendSQL("INSERT INTO longdescs (bug_id, who, bug_when, thetext, isprivate) 
-         VALUES ($id, " . SqlQuote($user->id) . ", " . SqlQuote($timestamp) . 
-        ", " . SqlQuote($comment) . ", $privacy)");
+         VALUES ($id, " . SqlQuote($user->id) . ", $sql_timestamp, " .
+        SqlQuote($comment) . ", $privacy)");
 
 # Insert the cclist into the database
 foreach my $ccid (keys(%ccids)) {
@@ -456,8 +458,8 @@ if (UserInGroup("editbugs")) {
         while (MoreSQLData()) {
             push (@list, FetchOneColumn());
         }
-        SendSQL("UPDATE bugs SET keywords = " .
-                SqlQuote(join(', ', @list)) .
+        SendSQL("UPDATE bugs SET delta_ts = $sql_timestamp," .
+                " keywords = " . SqlQuote(join(', ', @list)) .
                 " WHERE bug_id = $id");
     }
     if (defined $::FORM{'dependson'}) {

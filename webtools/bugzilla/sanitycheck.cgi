@@ -96,7 +96,7 @@ PutHeader("Bugzilla Sanity Check");
 if (defined $cgi->param('rebuildvotecache')) {
     Status("OK, now rebuilding vote cache.");
     SendSQL("LOCK TABLES bugs WRITE, votes READ");
-    SendSQL("UPDATE bugs SET votes = 0, delta_ts = delta_ts");
+    SendSQL("UPDATE bugs SET votes = 0");
     SendSQL("SELECT bug_id, SUM(vote_count) FROM votes GROUP BY bug_id");
     my %votes;
     while (@row = FetchSQLData()) {
@@ -104,7 +104,7 @@ if (defined $cgi->param('rebuildvotecache')) {
         $votes{$id} = $v;
     }
     foreach my $id (keys %votes) {
-        SendSQL("UPDATE bugs SET votes = $votes{$id}, delta_ts = delta_ts WHERE bug_id = $id");
+        SendSQL("UPDATE bugs SET votes = $votes{$id} WHERE bug_id = $id");
     }
     SendSQL("UNLOCK TABLES");
     Status("Vote cache has been rebuilt.");
@@ -586,8 +586,7 @@ if (@badbugs) {
             if (exists($realk{$b})) {
                 $k = $realk{$b};
             }
-            SendSQL("UPDATE bugs SET delta_ts = delta_ts, keywords = " .
-                    SqlQuote($k) .
+            SendSQL("UPDATE bugs SET keywords = " . SqlQuote($k) .
                     " WHERE bug_id = $b");
         }
         Status("Keyword cache fixed.");

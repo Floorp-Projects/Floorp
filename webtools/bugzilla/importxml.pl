@@ -339,11 +339,19 @@ for (my $k=1 ; $k <= $bugqty ; $k++) {
 
   my @query = ();
   my @values = ();
-  foreach my $field ( qw(creation_ts delta_ts status_whiteboard) ) {
+  foreach my $field ( qw(creation_ts status_whiteboard) ) {
       if ( (defined $bug_fields{$field}) && ($bug_fields{$field}) ){
         push (@query, "$field");
         push (@values, SqlQuote($bug_fields{$field}));
       }
+  }
+
+  push (@query, "delta_ts");
+  if ( (defined $bug_fields{'delta_ts'}) && ($bug_fields{'delta_ts'}) ){
+      push (@values, SqlQuote($bug_fields{'delta_ts'}));
+  }
+  else {
+      push (@values, "NOW()");
   }
 
   if ( (defined $bug_fields{'bug_file_loc'}) && ($bug_fields{'bug_file_loc'}) ){

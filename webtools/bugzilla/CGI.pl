@@ -246,32 +246,34 @@ sub CheckIfVotedConfirmed {
     my ($id, $who) = (@_);
     PushGlobalSQLState();
     SendSQL("SELECT bugs.votes, bugs.bug_status, products.votestoconfirm, " .
-            "       bugs.everconfirmed " .
+            "       bugs.everconfirmed, NOW() " .
             "FROM bugs, products " .
             "WHERE bugs.bug_id = $id AND products.id = bugs.product_id");
-    my ($votes, $status, $votestoconfirm, $everconfirmed) = (FetchSQLData());
+    my ($votes, $status, $votestoconfirm, $everconfirmed, $timestamp) = (FetchSQLData());
+    my $sql_timestamp = SqlQuote($timestamp);
     my $ret = 0;
     if ($votes >= $votestoconfirm && $status eq 'UNCONFIRMED') {
-        SendSQL("UPDATE bugs SET bug_status = 'NEW', everconfirmed = 1 " .
-                "WHERE bug_id = $id");
+        SendSQL("UPDATE bugs SET bug_status = 'NEW', everconfirmed = 1, " .
+                "delta_ts = $sql_timestamp WHERE bug_id = $id");
         my $fieldid = GetFieldID("bug_status");
         SendSQL("INSERT INTO bugs_activity " .
-                "(bug_id,who,bug_when,fieldid,removed,added) VALUES " .
-                "($id,$who,now(),$fieldid,'UNCONFIRMED','NEW')");
+                "(bug_id, who, bug_when, fieldid, removed, added) VALUES " .
+                "($id, $who, $sql_timestamp, $fieldid, 'UNCONFIRMED', 'NEW')");
         if (!$everconfirmed) {
             $fieldid = GetFieldID("everconfirmed");
             SendSQL("INSERT INTO bugs_activity " .
-                    "(bug_id,who,bug_when,fieldid,removed,added) VALUES " .
-                    "($id,$who,now(),$fieldid,'0','1')");
+                    "(bug_id, who, bug_when, fieldid, removed, added) VALUES " .
+                    "($id, $who, $sql_timestamp, $fieldid, '0', '1')");
         }
-        
+
         AppendComment($id, DBID_to_name($who),
-                      "*** This bug has been confirmed by popular vote. ***", 0);
-                      
+                      "*** This bug has been confirmed by popular vote. ***",
+                      0, $timestamp);
+
         $vars->{'type'} = "votes";
         $vars->{'id'} = $id;
         $vars->{'mailrecipients'} = { 'changer' => $who };
-        
+
         $template->process("bug/process/results.html.tmpl", $vars)
           || ThrowTemplateError($template->error());
         $ret = 1;
