@@ -98,6 +98,7 @@ nsComboboxControlFrame::~nsComboboxControlFrame()
   NS_IF_RELEASE(mVisibleStyleContext);
   NS_IF_RELEASE(mHiddenStyleContext);
   NS_IF_RELEASE(mBlockTextStyle);
+  mFormFrame = nsnull;
 }
 
 //--------------------------------------------------------------
@@ -276,8 +277,6 @@ nsComboboxControlFrame::SetInitialChildList(nsIPresContext& aPresContext,
                                             nsIAtom*        aListName,
                                             nsIFrame*       aChildList)
 {
-  nsFormFrame::AddFormControlFrame(aPresContext, *this);
-  
   return NS_OK;
 }
 
@@ -293,6 +292,7 @@ NS_IMETHODIMP nsComboboxControlFrame::Reflow(nsIPresContext&          aPresConte
   if (mFirstTime) {
     ReResolveStyleContext(&aPresContext, mStyleContext, NS_STYLE_HINT_REFLOW, nsnull, nsnull); // XXX This temporary
     mListFrame->ReResolveStyleContext(&aPresContext, mCurrentStyleContext, NS_STYLE_HINT_REFLOW, nsnull, nsnull);
+    nsFormFrame::AddFormControlFrame(aPresContext, *this);
     mFirstTime = PR_FALSE;
   }
 

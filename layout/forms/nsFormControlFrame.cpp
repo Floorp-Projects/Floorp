@@ -66,6 +66,7 @@ nsFormControlFrame::nsFormControlFrame()
   mLastMouseState = eMouseNone;
   mDidInit        = PR_FALSE;
   mWidget         = nsnull;
+  mFormFrame      = nsnull;
 }
 
 nsFormControlFrame::~nsFormControlFrame()
@@ -210,8 +211,6 @@ nsFormControlFrame::SetInitialChildList(nsIPresContext& aPresContext,
                                         nsIAtom*        aListName,
                                         nsIFrame*       aChildList)
 {
-  // add ourself as an nsIFormControlFrame
-  nsFormFrame::AddFormControlFrame(aPresContext, *this);
   return NS_OK;
 }
 
@@ -222,6 +221,11 @@ nsFormControlFrame::Reflow(nsIPresContext&          aPresContext,
                            nsReflowStatus&          aStatus)
 {
   nsresult result = NS_OK;
+
+  // add ourself as an nsIFormControlFrame
+  if (!mFormFrame && (eReflowReason_Initial == aReflowState.reason)) {
+    nsFormFrame::AddFormControlFrame(aPresContext, *this);
+  }
 
   nsCOMPtr<nsIDeviceContext> dx;
   aPresContext.GetDeviceContext(getter_AddRefs(dx));

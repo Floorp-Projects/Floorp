@@ -35,38 +35,11 @@ class nsIDocument;
 class nsIPresContext;
 class nsFormFrame;
 
-// XXX these structs and gFormFrameTable below provide a faster way to get from a form content to
-// the appropriate frame. Before replacing this mechanism with FindFrameWithContent, please test
-// a page with thousands of frames and hundreds of form controls.
-struct nsFormFrameTableEntry 
-{
-  nsIPresContext*        mPresContext;
-  nsIDOMHTMLFormElement* mFormElement;
-  nsFormFrame*           mFormFrame;
-  nsFormFrameTableEntry(nsIPresContext&        aPresContext, 
-                        nsIDOMHTMLFormElement& aFormElement,
-                        nsFormFrame&           aFormFrame);
-  ~nsFormFrameTableEntry();
-};
-struct nsFormFrameTable
-{
-  nsVoidArray mEntries;
-  nsFormFrameTable() {}
-  ~nsFormFrameTable();
-  void Put(nsIPresContext& aPresContext, nsIDOMHTMLFormElement& aFormElem, nsFormFrame& aFormFrame);  
-  nsFormFrame* Get(nsIPresContext& aPresContext, nsIDOMHTMLFormElement& aFormElem);
-  void Remove(nsFormFrame& aFormFrame);
-};
-
 class nsFormFrame : public nsLeafFrame, 
                     public nsIFormManager
 {
 public:
   nsFormFrame();
-
-  NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
-                                 nsIAtom*        aListName,
-                                 nsIFrame*       aChildList);
 
   NS_IMETHOD Reflow(nsIPresContext&      aPresContext,
                     nsHTMLReflowMetrics& aDesiredSize,
@@ -95,15 +68,6 @@ public:
   NS_IMETHOD GetEnctype(PRInt32* aEnctype);
   NS_IMETHOD GetTarget(nsString* aTarget);
   NS_IMETHOD GetAction(nsString* aAction);
-
-  static nsFormFrame* GetFormFrame(nsIPresContext& aPresContext,
-                                   nsIDOMHTMLFormElement& aFormElem);
-
-  static void PutFormFrame(nsIPresContext& aPresContext,
-                           nsIDOMHTMLFormElement& aFormElem, 
-                           nsFormFrame& aFrame);
-
-  static void RemoveFormFrame(nsFormFrame& aFrame);
 
   // static helper functions for nsIFormControls
   

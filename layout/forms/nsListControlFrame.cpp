@@ -106,12 +106,14 @@ nsListControlFrame::nsListControlFrame()
   mNumSelections  = 0;
   mInDropDownMode = PR_FALSE;
   mComboboxFrame  = nsnull;
+  mFormFrame      = nsnull;
 }
 
 //----------------------------------------------------------------------
 nsListControlFrame::~nsListControlFrame()
 {
   NS_IF_RELEASE(mComboboxFrame);
+  mFormFrame = nsnull;
 }
 
 //----------------------------------------------------------------------
@@ -826,8 +828,8 @@ NS_IMETHODIMP nsListControlFrame::HandleEvent(nsIPresContext& aPresContext,
 //----------------------------------------------------------------------
 NS_IMETHODIMP
 nsListControlFrame::SetInitialChildList(nsIPresContext& aPresContext,
-                                  nsIAtom*        aListName,
-                                  nsIFrame*       aChildList)
+                                        nsIAtom*        aListName,
+                                        nsIFrame*       aChildList)
 {
   mContentFrame = aChildList;
 

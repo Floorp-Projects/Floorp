@@ -101,107 +101,6 @@ static NS_DEFINE_IID(kIDOMNSHTMLFormElementIID, NS_IDOMNSHTMLFORMELEMENT_IID);
 static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
 static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
 
-// XXX This crud needs to go! The FindFrameWithContent *will* be using
-// a hashtable so this code will be redundant. In addition,
-// FindFrameWithContent will be connected to the frame construction
-// and guaranteed to be kept properly up to date.
-static nsFormFrameTable* gFormFrameTable;
-
-nsFormFrame*
-nsFormFrame::GetFormFrame(nsIPresContext& aPresContext,
-                          nsIDOMHTMLFormElement& aFormElem)
-{ 
-  if (nsnull == gFormFrameTable) {
-    gFormFrameTable = new nsFormFrameTable();
-  }
-  return gFormFrameTable->Get(aPresContext, aFormElem);
-}
-
-void
-nsFormFrame::PutFormFrame(nsIPresContext& aPresContext,
-                          nsIDOMHTMLFormElement& aFormElem, 
-                          nsFormFrame& aFrame)
-{ 
-  if (nsnull == gFormFrameTable) {
-    gFormFrameTable = new nsFormFrameTable();
-  }
-  gFormFrameTable->Put(aPresContext, aFormElem, aFrame);
-}
-
-void
-nsFormFrame::RemoveFormFrame(nsFormFrame& aFrame)
-{
-  if (nsnull == gFormFrameTable) {
-    gFormFrameTable = new nsFormFrameTable();
-  }
-  gFormFrameTable->Remove(aFrame);
-}
-
-nsFormFrameTableEntry::
-nsFormFrameTableEntry(nsIPresContext&        aPresContext, 
-                      nsIDOMHTMLFormElement& aFormElement,
-                      nsFormFrame&           aFormFrame) : mPresContext(&aPresContext), 
-                                                           mFormElement(&aFormElement), 
-                                                           mFormFrame(&aFormFrame) 
-{
-}
-
-nsFormFrameTableEntry::~nsFormFrameTableEntry()
-{
-}
-
-nsFormFrameTable::~nsFormFrameTable() 
-{ 
-  PRInt32 count = mEntries.Count(); 
-  for (PRInt32 i = 0; i < count; i++) {
-    delete mEntries.ElementAt(i);
-  }
-  mEntries.Clear();
-}
-
-nsFormFrame* 
-nsFormFrameTable::Get(nsIPresContext& aPresContext, nsIDOMHTMLFormElement& aFormElem) 
-{
-  PRInt32 count = mEntries.Count();
-  for (PRInt32 i = 0; i < count; i++) {
-    nsFormFrameTableEntry* entry = (nsFormFrameTableEntry *)mEntries.ElementAt(i);
-    if ((entry->mPresContext == &aPresContext) && (entry->mFormElement == &aFormElem)) {
-      return entry->mFormFrame;
-    }
-  }
-  return nsnull;
-}
-  
-void 
-nsFormFrameTable::Put(nsIPresContext& aPresContext, nsIDOMHTMLFormElement& aFormElem, 
-                           nsFormFrame& aFormFrame) 
-{
-  NS_ADDREF(&aFormElem);
-  mEntries.AppendElement(new nsFormFrameTableEntry(aPresContext, aFormElem, aFormFrame));
-}
-
-void
-nsFormFrameTable::Remove(nsFormFrame& aFormFrame) 
-{
-  PRInt32 hits[10];
-  PRInt32 hitIndex = 0;
-  PRInt32 count = mEntries.Count();
-  PRInt32 i;
-  for (i = 0; i < count; i++) {
-    nsFormFrameTableEntry* entry = (nsFormFrameTableEntry *)mEntries.ElementAt(i);
-    if (entry->mFormFrame == &aFormFrame) {
-      hits[hitIndex] = i;
-      hitIndex++;
-      NS_IF_RELEASE(entry->mFormElement);
-    }
-  }
-  for (i = hitIndex-1; i >= 0; i--) {
-    delete mEntries.ElementAt(i);
-    mEntries.RemoveElementAt(i);
-  }
-}
-
-
 NS_IMETHODIMP
 nsFormFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
@@ -232,9 +131,6 @@ nsFormFrame::nsFormFrame()
 
 nsFormFrame::~nsFormFrame()
 {
-  mFormControls.Clear();
-  RemoveFormFrame(*this);
-  RemoveRadioGroups();
 }
 
 PRBool 
@@ -343,23 +239,6 @@ nsFormFrame::GetEnctype(PRInt32* aEnctype)
 }
 
 NS_IMETHODIMP
-nsFormFrame::SetInitialChildList(nsIPresContext& aPresContext,
-                                 nsIAtom*        aListName,
-                                 nsIFrame*       aChildList)
-{
-  nsresult result = NS_OK;
-  nsIDOMHTMLFormElement* content = nsnull;
-  if (mContent) {
-    nsresult result = mContent->QueryInterface(kIDOMHTMLFormElementIID, (void**)&content);
-    if ((NS_OK == result) && (nsnull != content)) {
-      nsFormFrame::PutFormFrame(aPresContext, *content, *this);
-      NS_RELEASE(content);
-    }
-  }
-  return result;
-}
-
-NS_IMETHODIMP
 nsFormFrame::Reflow(nsIPresContext&      aPresContext,
                     nsHTMLReflowMetrics& aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
@@ -399,25 +278,32 @@ void nsFormFrame::AddFormControlFrame(nsIPresContext& aPresContext, nsIFrame& aF
     return;
   }
 
-  nsIContent* iContent = nsnull;
-  aFrame.GetContent(&iContent);
-  if (nsnull != iContent) {
-    nsIFormControl* formControl = nsnull;
-    result = iContent->QueryInterface(kIFormControlIID, (void**)&formControl);
-    if ((NS_OK == result) && (nsnull != formControl)) {
-      nsIDOMHTMLFormElement* formElem = nsnull;
-      result = formControl->GetForm(&formElem);
-      if (nsnull != formElem) {
-        nsFormFrame* formFrame = nsFormFrame::GetFormFrame(aPresContext, *formElem);
-        if (nsnull != formFrame) {
-          formFrame->AddFormControlFrame(*fcFrame);
-          fcFrame->SetFormFrame(formFrame);
+  nsCOMPtr<nsIContent> iContent;
+  result = aFrame.GetContent(getter_AddRefs(iContent));
+  if (NS_SUCCEEDED(result) && iContent) {
+    nsCOMPtr<nsIFormControl> formControl;
+    result = iContent->QueryInterface(kIFormControlIID, getter_AddRefs(formControl));
+    if (NS_SUCCEEDED(result) && formControl) {
+      nsCOMPtr<nsIDOMHTMLFormElement> formElem;
+      result = formControl->GetForm(getter_AddRefs(formElem));
+      if (NS_SUCCEEDED(result) && formElem) {
+        nsCOMPtr<nsIPresShell> presShell;
+        result = aPresContext.GetShell(getter_AddRefs(presShell));
+        if (NS_SUCCEEDED(result) && presShell) {
+          nsIContent* formContent;
+          result = formElem->QueryInterface(kIContentIID, (void**)&formContent);
+          if (NS_SUCCEEDED(result) && formContent) {
+            nsFormFrame* formFrame = nsnull;
+            result = presShell->GetPrimaryFrameFor(formContent, (nsIFrame**)&formFrame);
+            if (NS_SUCCEEDED(result) && formFrame) {
+              formFrame->AddFormControlFrame(*fcFrame);
+              fcFrame->SetFormFrame(formFrame);
+            }
+            NS_RELEASE(formContent);
+          }
         }
-        NS_RELEASE(formElem);
       }
-      NS_RELEASE(formControl);
     }
-    NS_RELEASE(iContent);
   }
 }
 
