@@ -35,7 +35,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslsock.c,v 1.21 2001/09/21 03:07:35 nelsonb%netscape.com Exp $
+ * $Id: sslsock.c,v 1.22 2001/11/02 04:00:27 nelsonb%netscape.com Exp $
  */
 #include "seccomon.h"
 #include "cert.h"
@@ -55,7 +55,11 @@ struct cipherPolicyStr {
 
 typedef struct cipherPolicyStr cipherPolicy;
 
-/* this table reflects Netscape's browser policies. */
+/* This table contains two preconfigured policies: Export and France.
+** It is used only by the functions SSL_SetDomesticPolicy, 
+** SSL_SetExportPolicy, and SSL_SetFrancyPolicy.
+** Order of entries is not important.
+*/
 static cipherPolicy ssl_ciphers[] = {	   /*   Export           France   */
  {  SSL_EN_RC4_128_WITH_MD5,		    SSL_NOT_ALLOWED, SSL_NOT_ALLOWED },
  {  SSL_EN_RC4_128_EXPORT40_WITH_MD5,	    SSL_ALLOWED,     SSL_ALLOWED },
