@@ -58,6 +58,10 @@ ifeq ($(OS_TEST),alpha)
         OS_REL_CFLAGS   = -D_ALPHA_ -DLINUX1_2 -D_XOPEN_SOURCE
 	CPU_ARCH	= alpha
 else
+ifeq ($(OS_TEST),ia64)
+	OS_REL_CFLAGS	= -DLINUX1_2 -D_XOPEN_SOURCE
+	CPU_ARCH	= ia64
+else
 ifeq ($(OS_TEST),sparc)
 	OS_REL_CFLAGS   = -DLINUX1_2 -D_XOPEN_SOURCE
 	CPU_ARCH        = sparc
@@ -68,6 +72,7 @@ ifeq ($(OS_TEST),sparc64)
 else
 	OS_REL_CFLAGS	= -DLINUX1_2 -Di386 -D_XOPEN_SOURCE
 	CPU_ARCH	= x86
+endif
 endif
 endif
 endif

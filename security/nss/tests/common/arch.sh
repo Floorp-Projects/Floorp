@@ -222,6 +222,8 @@ if  [ ${OS_ARCH} = "Linux" ]; then
 		CPU_TAG=_ppc
 	elif [ ${OS_TEST} = "alpha" ]; then
 		CPU_TAG=_alpha
+	elif [ ${OS_TEST} = "ia64" ]; then
+		CPU_TAG=_ia64
 	else
 		CPU_TAG=_x86
 	fi
