@@ -187,21 +187,74 @@ nsXPCThreadJSContextStackImpl::GetSafeJSContext(JSContext * *aSafeJSContext)
 
 /***************************************************************************/
 
+static const PRUintn BAD_TLS_INDEX = (PRUintn) -1;
+
+PRUintn           xpcPerThreadData::gTLSIndex = BAD_TLS_INDEX;
+PRLock*           xpcPerThreadData::gLock     = nsnull;
+xpcPerThreadData* xpcPerThreadData::gThreads  = nsnull;
+
 xpcPerThreadData::xpcPerThreadData()
     :   mException(nsnull),
         mJSContextStack(new nsDeque(nsnull)),
-        mSafeJSContext(nsnull)
+        mSafeJSContext(nsnull),
+        mNextThread(nsnull)
 {
-    // empty...
+    if(gLock)
+    {
+        nsAutoLock lock(gLock);
+        mNextThread = gThreads;
+        gThreads = this;
+    }
+}
+
+void 
+xpcPerThreadData::Cleanup()
+{
+    NS_IF_RELEASE(mException);
+
+    if(mJSContextStack)
+    {
+        delete mJSContextStack;
+        mJSContextStack = nsnull;
+    }
+
+    if(mSafeJSContext)
+    {
+        JS_DestroyContext(mSafeJSContext);
+        mSafeJSContext = nsnull;
+    }
 }
 
 xpcPerThreadData::~xpcPerThreadData()
 {
-    NS_IF_RELEASE(mException);
-    if(mJSContextStack)
-        delete mJSContextStack;
-    if(mSafeJSContext)
-        JS_DestroyContext(mSafeJSContext);
+    Cleanup();
+
+    // Unlink 'this' from the list of threads.
+    if(gLock)
+    {
+        nsAutoLock lock(gLock);
+        if(gThreads == this)
+            gThreads = mNextThread;
+        else
+        {
+            xpcPerThreadData* cur = gThreads;
+            while(cur)
+            {
+                if(cur->mNextThread == this)
+                {
+                    cur->mNextThread = mNextThread;
+                    break;            
+                }
+                cur = cur->mNextThread;    
+            }        
+        }
+    }
+
+    if(gLock && !gThreads)
+    {
+        PR_DestroyLock(gLock);
+        gLock = nsnull;
+    }
 }
 
 PRBool 
@@ -283,20 +336,32 @@ xpc_ThreadDataDtorCB(void* ptr)
 xpcPerThreadData*
 xpcPerThreadData::GetData()
 {
-    static const PRUintn BAD_TLS_INDEX = (PRUintn) -1;
-    static PRUintn index = BAD_TLS_INDEX;
     xpcPerThreadData* data;
-    if(index == BAD_TLS_INDEX)
+
+    if(!gLock)
     {
-        if(PR_FAILURE == PR_NewThreadPrivateIndex(&index, xpc_ThreadDataDtorCB))
-        {
-            NS_ASSERTION(0, "PR_NewThreadPrivateIndex failed!");
-            index = BAD_TLS_INDEX;
+        gLock = PR_NewLock();
+        if(!gLock)
             return nsnull;
+    }
+    
+    if(gTLSIndex == BAD_TLS_INDEX)
+    {
+        nsAutoLock lock(gLock);
+        // check again now that we have the lock...
+        if(gTLSIndex == BAD_TLS_INDEX)
+        {
+            if(PR_FAILURE == 
+               PR_NewThreadPrivateIndex(&gTLSIndex, xpc_ThreadDataDtorCB))
+            {
+                NS_ASSERTION(0, "PR_NewThreadPrivateIndex failed!");
+                gTLSIndex = BAD_TLS_INDEX;
+                return nsnull;
+            }
         }
     }
 
-    data = (xpcPerThreadData*) PR_GetThreadPrivate(index);
+    data = (xpcPerThreadData*) PR_GetThreadPrivate(gTLSIndex);
     if(!data)
     {
         data = new xpcPerThreadData();
@@ -307,7 +372,7 @@ xpcPerThreadData::GetData()
                 delete data;
             return nsnull;
         }
-        if(PR_FAILURE == PR_SetThreadPrivate(index, data))
+        if(PR_FAILURE == PR_SetThreadPrivate(gTLSIndex, data))
         {
             NS_ASSERTION(0, "PR_SetThreadPrivate failed!");
             delete data;
@@ -316,3 +381,17 @@ xpcPerThreadData::GetData()
     }
     return data;
 }
+
+// static 
+void 
+xpcPerThreadData::CleanupAllThreads()
+{
+    if(gLock)
+    {
+        nsAutoLock lock(gLock);
+
+        for(xpcPerThreadData* cur = gThreads; cur; cur = cur->mNextThread)
+            cur->Cleanup();
+    }
+}
+
