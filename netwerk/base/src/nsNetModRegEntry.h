@@ -40,9 +40,12 @@ public:
 
 protected:
     char                    *mTopic;
+    nsCOMPtr<nsINetNotify>  mRealNotifier;
     nsCOMPtr<nsINetNotify>  mSyncProxy;
     nsCOMPtr<nsINetNotify>  mAsyncProxy;
     nsCOMPtr<nsIEventQueue> mEventQ;
+
+    nsresult BuildProxy(PRBool sync);
 };
 
 #endif //___nsNetModRegEntry_h___
