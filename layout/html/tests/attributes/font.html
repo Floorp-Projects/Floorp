@@ -45,7 +45,7 @@ var basefnt = document.getElementsByTagName("basefont")[0];
 var obj = null;
 
 function determineTarget() {
-   if (document.forms[0].applyTo.checked)
+   if (document.forms[0].applyTo[0].checked)
       obj = fnt;
    else
       obj = basefnt;
