@@ -259,6 +259,14 @@ protected:
 
    PRBool IsFrame();
 
+  //
+  // Helper method that is called when a new document (including any
+  // sub-documents - ie. frames) has been completely loaded.
+  //
+  virtual nsresult EndPageLoad(nsIWebProgress *aProgress, 
+                               nsIChannel *aChannel,
+                               nsresult aResult);
+
 protected:
    nsString                   mName;
    nsString                   mTitle;
