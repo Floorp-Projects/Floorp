@@ -1251,15 +1251,15 @@ cookie_SetCookieString(nsIURI * curURL, nsIPrompt *aPrompter, const char * setCo
       *(iter+1) = '\0';
     }
     path_from_header = nsCRT::strdup(cur_path.get());
-#if 1
-/*
- * The following test is part of the RFC2109 spec.  Loosely speaking, it says that a site
- * cannot set a cookie for a path that it is not on.  See bug 155083.  However this patch
- * broke several sites -- nordea (bug 155768) and citibank (bug 156725).  So this test is being
- * bracketed by an if statement to allow it to be disabled in the event that we cannot
- * evangelize these sites.
- */
+#if 0
   } else {
+    /*
+     * The following test is part of the RFC2109 spec.  Loosely speaking, it says that a site
+     * cannot set a cookie for a path that it is not on.  See bug 155083.  However this patch
+     * broke several sites -- nordea (bug 155768) and citibank (bug 156725).  So this test is being
+     * bracketed by an if statement to allow it to be disabled in the event that we cannot
+     * evangelize these sites.
+     */
     if(PL_strncmp(cur_path.get(), path_from_header, PL_strlen(path_from_header))) {
       PR_FREEIF(path_from_header);
       PR_FREEIF(host_from_header);
