@@ -18,6 +18,8 @@
  * Rights Reserved.
  */
 
+const MSG_FOLDER_FLAG_INBOX = 0x1000
+
 var gRDF = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
 
 var gEditButton;
@@ -165,7 +167,7 @@ function setServer(uri)
    
    // root the folder picker to this server
    gRunFiltersFolderPicker.setAttribute("ref", uri);
-
+ 
    // run filters after the fact not supported by news
    if (msgFolder.server.type == "nntp" && !msgFolder.isServer) {
      gRunFiltersFolderPicker.setAttribute("hidden", "true");
@@ -181,10 +183,13 @@ function setServer(uri)
      gRunFiltersFolderPicker.selectedIndex = 0;
    }
 
-   SetFolderPicker(uri, "runFiltersFolder");
+   // Get the first folder uri for this server. INBOX for
+   // imap and pop accts and 1st news group for news.
+   var firstFolderURI = getFirstFolderURI(msgFolder);
+   SetFolderPicker(firstFolderURI, "runFiltersFolder");
    updateButtons();
 
-   gCurrentServerURI = uri;
+   gCurrentServerURI = firstFolderURI;
 }
 
 function toggleFilter(aFilterURI)
@@ -584,3 +589,34 @@ function doHelpButton()
   openHelp("mail-filters");
 }
 
+/**
+  * For a given server folder, get the uri for the first folder. For imap
+  * and pop it's INBOX and it's the very first group for news accounts.
+  */
+function getFirstFolderURI(msgFolder)
+{
+  // Sanity check.
+  if (! msgFolder.isServer)
+    return msgFolder.URI;
+
+  try {
+    // Find Inbox for imap and pop
+    if (msgFolder.server.type != "nntp")
+    {
+      var outNumFolders = new Object();
+      var inboxFolder = msgFolder.getFoldersWithFlag(MSG_FOLDER_FLAG_INBOX, 1, outNumFolders);
+      if (inboxFolder)
+        return inboxFolder.URI;
+      else
+        // If inbox does not exist then use the server uri as default.
+        return msgFolder.URI;
+    }
+    else
+      // XXX TODO: For news, we should find the 1st group/folder off the news groups. For now use server uri.
+      return msgFolder.URI;
+  }
+  catch (ex) {
+    dump(ex + "\n");
+  }
+  return msgFolder.URI;
+}
