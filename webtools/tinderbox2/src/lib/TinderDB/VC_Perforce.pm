@@ -19,9 +19,15 @@
 # does not make such regular changes to the security tables
 # perticularly easy or safe to be performed by so many people.
 
-# The only perforce command this module runs is:
+# The only perforce commands this module runs are:
 #
 #		 'p4 describe -s $num'
+#		 'p4 changes  -s \@$date_str\@now $filespec'
+
+# 			which looks like this 
+
+#		 'p4 describe -s 75437'
+# 		 'p4 changes -s submitted @2003/05/10,@now //...'
 #
 # This means that tinderbox needs to run as a user which has Perforce
 # 'list' privileges.
@@ -71,8 +77,8 @@
 # Contributor(s): 
 
 
-# $Revision: 1.15 $ 
-# $Date: 2002/05/03 03:38:44 $ 
+# $Revision: 1.16 $ 
+# $Date: 2003/05/26 13:32:38 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/VC_Perforce.pm,v $ 
 # $Name:  $ 
@@ -92,10 +98,11 @@ package TinderDB::VC_Perforce;
 #  particular time as follows:
 
 #  $DATABASE{$tree}{$time}{'author'}{$author} = 
-#            [\@affected_files, \@jobs_fixed, $change_num];
+#            [\@affected_files, \@jobs_fixed, 
+# 		$change_num, $workspace, $comment];
 
 # Where each element of @affected_files looks like
-#	 [$filename, $revision, $action, $comment];
+#	 [$filename, $revision, $action];
 #
 # This was extracted from perforce data which looked like
 #         ... //depot/filename#32 edit
@@ -141,14 +148,17 @@ use Time::Local;
 use lib '#tinder_libdir#';
 
 
-use TinderDB::BasicTxtDB;
-use Utils;
-use HTMLPopUp;
+use BTData;
 use TreeData;
+use TinderHeader;
+use HTMLPopUp;
+use TinderDB::BasicTxtDB;
+use TinderDB::Notice;
+use Utils;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.15 $ )[1];
+$VERSION = ( qw $Revision: 1.16 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -158,29 +168,160 @@ $VC_NAME = $TinderConfig::VC_NAME || "Perforce";
 
 # how we recoginise bug number in the checkin comments.
 $VC_BUGNUM_REGEXP = $TinderConfig::VC_BUGNUM_REGEXP ||
-    "(\d\d\d+)";
+    '(\d\d\d+)';
+
+# We 'have a' notice so that we can put stars in our column.
+
+$NOTICE= TinderDB::Notice->new();
+$DEBUG = 1;
 
 $ENV{'P4PORT'} = $TinderConfig::PERFORCE_PORT || 1666;
 
 
+# return a string of the whole Database in a visually useful form.
 
-# remove all records from the database which are older then last_time.
+sub get_all_perforce_data {
+  my ($self, $tree) = (@_);
 
-sub trim_db_history {
-  my ($self, $tree,) = (@_);
+  my $treestate = TinderHeader::gettree_header('TreeState', $tree);
 
-  my ($last_time) =  $main::TIME - $TinderDB::TRIM_SECONDS;
+  # sort numerically descending
+  my (@times) = sort {$b <=> $a} keys %{ $DATABASE{$tree} };
 
-  # sort numerically ascending
-  my (@times) = sort {$a <=> $b} keys %{ $DATABASE{$tree} };
+  my $out;
+  $out .= "<HTML>\n";
+  $out .= "<HEAD>\n";
+  $out .= "\t<TITLE>Perforce Checkin Data as gathered by Tinderbox</TITLE>\n";
+  $out .= "</HEAD>\n";
+  $out .= "<BODY>\n";
+  $out .= "<H3>Perforce Checkin Data as gathered by Tinderbox</H3>\n";
+  $out .= "\n\n";
+  $out .= "<TABLE BORDER=1 BGCOLOR='#FFFFFF' CELLSPACING=1 CELLPADDING=1>\n";
+  $out .= "\t<TR>\n";
+  $out .= "\t\t<TH>Time</TH>\n";
+  $out .= "\t\t<TH>Tree State</TH>\n";
+  $out .= "\t\t<TH>Author</TH>\n";
+  $out .= "\t\t<TH>File</TH>\n";
+  $out .= "\t\t<TH>Log</TH>\n";
+  $out .= "\t</TR>\n";
+
+  # we want to be able to make links into this page either with the
+  # times of checkins or of times which are round numbers.
+
+  my $rounded_increment = $main::SECONDS_PER_MINUTE * 5;
+  my $rounded_time = main::round_time($times[0]);
+
+  # Why are the names so confusing in this code?
+  # Netscape does not scroll to the middle of a large table if we
+  # put names between the rows, however it will scroll if we name
+  # the contents of a cell.
+  
   foreach $time (@times) {
-    ($time >= $last_time) && last;
 
-    delete $DATABASE{$tree}{$time};
-  }
+      # Allow us to create links which point to times which may not
+      # appear in the data.  These links should correspond to the cell
+      # spacing in the status table.
 
-  return ;
+      my $names = '';
+      while ($rounded_time > $time) { 
+          my $comment = "<!-- ".localtime($rounded_time)." -->";
+          $names .= (
+                     "\t\t\t".
+                     HTMLPopUp::Link(
+                                     "name" => $rounded_time,
+                                     "linktxt" => $comment,
+                                     ).
+                     "\n");
+          $rounded_time -= $rounded_increment;
+      }
+
+      # Allow us to create links which point to any row.
+
+      my $localtime = localtime($time);
+      my $cell_time =
+          HTMLPopUp::Link(
+                          "name" => $time,
+                          "linktxt" => $localtime,
+                          ) ;
+      
+      ($names) &&
+          ($cell_time .= "\n".$names."\t\t");
+
+
+      if (defined($DATABASE{$tree}{$time}{'treestate'})) {
+          $treestate = $DATABASE{$tree}{$time}{'treestate'};
+
+          $out .= "\t<TR>\n";
+          $out .= "\t\t<TD>$cell_time</TD>\n";
+          $out .= "\t\t<TD ALIGN=center >$treestate</TD>\n";
+          $out .= "\t\t<TD>$HTMLPopUp::EMPTY_TABLE_CELL</TD>\n";
+          $out .= "\t\t<TD>$HTMLPopUp::EMPTY_TABLE_CELL</TD>\n";
+          $out .= "\t\t<TD>$HTMLPopUp::EMPTY_TABLE_CELL</TD>\n";
+          $out .= "\t</TR>\n";
+      }
+
+      if ( defined($DATABASE{$tree}{$time}{'author'}) ) {
+          my ($recs) = $DATABASE{$tree}{$time}{'author'};
+          my (@authors) = sort (keys %{ $recs });
+
+          foreach $author (@authors) {
+              my($affected_files_ref, $jobs_fixed_ref, 
+                 $change_num, $workspace, $comment) = 
+                     @{ $recs->{$author} };
+              my $localtime = localtime($time);
+
+              $out .= (
+                       HTMLPopUp::Link(
+                                       "name" => $time,
+                                       ).
+                       HTMLPopUp::Link(
+                                       "name" => "change".$change_num,
+                                       ).
+                       "\n");
+
+              $out .= (
+                       "Change number: $change_num <br>\n".
+                       "at $localtime<br>\n".
+                       "by $author <br>\n".
+                       "on workspace: $workspace<br>\n".
+                       "<br>\n".
+                       "$comment<br>\n".
+                       "<br>\n".
+                       "\n");
+                       
+              my (@affected_header) = get_affected_files_header();
+
+#              ($affected_table, $affected_num_rows, $affected_max_length) = 
+#                  struct2table(\@affected_header, $author, $affected_files_ref);
+
+              my (@jobs_header) =  get_jobs_fixed_header();
+#
+#      ($jobs_table, $jobs_num_rows, $jobs_max_length) = 
+#          struct2table(\@jobs_header, $author, $jobs_fixed);
+#
+
+              $out .= "\n";
+              $out .= $affected_table;
+              $out .= "\n";
+
+         } # $author
+      }
+
+  } # $time
+
+  $out .= "</TABLE>\n";
+
+  $out .= "\n\n";
+  $out .= "This page was generated at: ";
+  $out .= localtime($main::TIME);
+  $out .= "\n\n";
+
+  $out .= "</BODY>\n";
+  $out .= "</HTML>\n";
+
+  return $out;
 }
+
 
 
 # Return the most recent times that we recieved treestate and checkin
@@ -242,7 +383,7 @@ sub status_table_legend {
     my ($cell_color) = TreeData::TreeState2color($state);
     my ($char) = TreeData::TreeState2char($state);
     my ($description) = TreeData::TreeStates2descriptions($state);
-    my $description = "$state: $description";
+    $description = "$state: $description";
     my $text_browser_color_string = 
       HTMLPopUp::text_browser_color_string($cell_color, $char);
 
@@ -266,8 +407,16 @@ sub status_table_legend {
 }
 
 
+# where can people attach notices to?
+# Really this is the names the columns produced by this DB
+
+sub notice_association {
+    return $VC_NAME;
+}
+
+
 sub status_table_header {
-  return ("\t<th>VC checkins</th>\n");
+  return ("\t<th>$VC_NAME</th>\n");
 }
 
 
@@ -317,6 +466,7 @@ sub status_table_row {
   # find the tree state for this cell.
 
   my ($affected_files, $jobs_fixed);
+  my (@authors,  @change_nums, @workspaces, );
   
   while (1) {
    my ($time) = $DB_TIMES[$NEXT_DB];
@@ -326,7 +476,7 @@ sub status_table_row {
 
     $NEXT_DB++;
 
-    if ($DATABASE{$tree}{$time}{'treestate'}) {
+    if (defined($DATABASE{$tree}{$time}{'treestate'})) {
       $LAST_TREESTATE = $DATABASE{$tree}{$time}{'treestate'};
     }
 
@@ -336,19 +486,29 @@ sub status_table_row {
    # appear together.  The previous data structure allowed us to find
    # out what data was in each cell.
 
-    foreach $author (keys %{ $DATABASE{$tree}{$time}{'author'} }) {
+   if (defined($DATABASE{$tree}{$time}{'author'})) {
+       foreach $author (keys %{ $DATABASE{$tree}{$time}{'author'} }) {
+           
+           my($affected_files_ref, $jobs_fixed_ref, 
+              $change_num, $workspace, $comment) = 
+                  @{ $DATABASE{$tree}{$time}{'author'}{$author} };
+           
+           push @authors, $author;
+           push @change_nums, $change_num;
+           push @workspaces, $workspace;
+       }
+   }
 
-        my($affected_files_ref, $jobs_fixed_ref, $change_num) = 
-            @{ $DATABASE{$tree}{$time}{'author'}{$author} };
-
-        $affected_files->{$author}{$time}{$change_num} = 
-            $affected_files_ref;
-
-        $jobs_fixed->{$author}{$time}{$change_num} = 
-            $jobs_fixed_ref;
-
-    }
-  } # while (1)
+   if (defined( $DATABASE{$tree}{$time}{'bugs'} )) {
+       $recs = $DATABASE{$tree}{$time}{'bugs'};
+       foreach $bug (keys %{ $recs }) {
+           $bugs{$bug} =1;
+       }
+   }
+   
+} # while (1)
+  
+  @workspaces = main::uniq(@workspace);
 
   # If there is no treestate, then the tree state has not changed
   # since an early time.  The earliest time was assigned a state in
@@ -362,7 +522,7 @@ sub status_table_row {
   my ($cell_color) = TreeData::TreeState2color($LAST_TREESTATE);
   my ($char) = TreeData::TreeState2char($LAST_TREESTATE);
 
-  my $cell_options;
+  my $cell_options = '';
   my $text_browser_color_string;
   my $empty_cell_contents = $HTMLPopUp::EMPTY_TABLE_CELL;
 
@@ -379,166 +539,195 @@ sub status_table_row {
        if (
            ($cell_color !~ m/white/) &&
            (!($text_browser_color_string)) &&
-           (!($empty_cell_contents) &&
-            ) {
+           (!($empty_cell_contents)) &&
+           1) {
                $empty_cell_contents = "&nbsp;";
            }
   }
 
   my $query_links = '';
-  $query_links.=  "\t\t".$text_browser_color_string."\n";
+  if ($text_browser_color_string) {
+      $query_links.=  "\t\t".$text_browser_color_string."\n";
+  }
 
-  if ( scalar(%{$affected_files}) || scalar(%{$jobs_fixed}) ) {
+  if ( scalar(@authors) ) {
     
-    # find the times which bound the cell so that we can set up a
-    # VC query.
-    
-    my ($mindate) = $row_times->[$row_index];
-
-    my ($maxdate);
-    if ($row_index > 0){
-      $maxdate = $row_times->[$row_index - 1];
-    } else {
-      $maxdate = $main::TIME;
-    }
-    my ($format_maxdate) = HTMLPopUp::timeHTML($maxdate);
-    my ($format_mindate) = HTMLPopUp::timeHTML($mindate);
-    my ($time_interval_str) = "$format_maxdate to $format_mindate",
-
-    # create a string of all VC data for displaying with the checkin table
-
-    my ($vc_info);
-    foreach $key ('module','branch',) {
-      my ($value) = $TreeData::VC_TREE{$tree}{$key};
-      $vc_info .= "$key: $value <br>\n";
-    }
-
-    # define two tables, to show what was checked in and what jobs
-    # were fixed for each author
-
-    my (@authors) = main::uniq ( 
-                                 (keys %{$affected_files}), 
-                                 (keys %{$jobs_fixed})
-                                 );
-
-    foreach $author (@authors) {
-      my ($table) = '';
-      my ($num_rows) = 0;
-      my ($max_length) = 0;
+      # find the times which bound the cell so that we can set up a
+      # VC query.
       
-      $table .= "Work by <b>$author</b> <br> for $vc_info \n";
-
-      # create two tables showing what has happened in this time period, the
-      # first shows checkins the second shows jobs.
-
-      my (@affected_header) = get_affected_files_header();
-   
-      ($affected_table, $affected_num_rows, $affected_max_length) = 
-          struct2table(\@affected_header, $author, $affected_files);
-
-      if ($affected_num_rows > 0) {
-          $table .= $affected_table;
-          $num_rows += $affected_num_rows;
-          $max_length = main::max(
-                                  $max_length, 
-                                  $affected_max_length,
-                                  );
-      }
-
-      my (@jobs_header) =  get_jobs_fixed_header();
-
-      ($jobs_table, $jobs_num_rows, $jobs_max_length) = 
-          struct2table(\@jobs_header, $author, $jobs_fixed);
-
-      if ($jobs_num_rows > 0) {
-          $table .= $jobs_table; 
-          $num_rows += $jobs_num_rows;
-          $max_length = main::max(
-                                  $max_length, 
-                                  $jobs_max_length,
-                                  );
-      }
-
-
-      # we display the list of names in 'teletype font' so that the
-      # names do not bunch together. It seems to make a difference if
-      # there is a <cr> between each link or not, but it does make a
-      # difference if we close the <tt> for each author or only for
-      # the group of links.
-
-      my (%popup_args) = (
-                          "linktxt" => "\t\t<tt>$author</tt>",
-                          
-                          "windowtxt" => $table,
-                          "windowtitle" => ("VC Info ".
-                                            "Author: $author ".
-                                            "$time_interval_str "),
-
-                          "windowheight" => ($num_rows * 50) + 100,
-                          "windowwidth" => ($max_length * 10) + 100,
-                         );
-
-      # If you have a VCDisplay implementation you should make the
-      # link point to its query method otherwise you want a 'mailto:'
-      # link
-
-      my ($query_link) = "";
-      if ( 
-          ($TinderConfig::VCDisplayImpl) && 
-          ($TinderConfig::VCDisplayImpl =~ 'None') 
-         ) {
-        
-        $query_link .= 
-          HTMLPopUp::Link(
-                          "href" => "mailto: $author",
-                          
-                          %popup_args,
-                         );
+      my ($mindate) = $row_times->[$row_index];
+      
+      my ($maxdate);
+      if ($row_index > 0){
+          $maxdate = $row_times->[$row_index - 1];
       } else {
-        
-        $query_link .= 
-          VCDisplay::query(
-                           'tree' => $tree,
-                           'mindate' => $mindate,
-                           'maxdate' => $maxdate,
-                           'who' => $author,
-                           
-                           %popup_args,
-                             );
+          $maxdate = $main::TIME;
       }
+      my ($format_maxdate) = HTMLPopUp::timeHTML($maxdate);
+      my ($format_mindate) = HTMLPopUp::timeHTML($mindate);
+      my ($time_interval_str) = "$format_maxdate to $format_mindate",
+      
+      # create a string of all VC data for displaying with the checkin table
+      
+      my ($vc_info);
 
-      # put each link on its own line and add good comments so we
-      # can debug the HTML.
+      my $filespec = TreeData::Tree2Filespec($treename);
+      $vc_info .= "Filespec: $filespec <br>\n";
 
-      $query_link = "\t\t".$query_link."\n";
-      my ($date_str) = localtime($mindate)."-".localtime($maxdate);
-
-      $query_links .= (
-                       "\t\t<!-- VC: ".("Author: $author, ".
-                                        "Time: '$date_str', ".
-                                        "Tree: $tree, ".
-                                       "").
-                       "  -->\n".
-                       "");
-
-      $query_links .= $query_link;
-    }
-
-    
-    $query_links.=  "\t\t".$text_browser_color_string."\n";
-
-    @outrow = (
-               "\t<td align=center $cell_options>\n".
-               $query_links.
-               "\t</td>\n".
-               "");
-        
-  } else {
-
-    @outrow = ("\t<!-- skipping: VC_Bonsai: tree: $tree -->".
-               "<td align=center $cell_options>$empty_cell_contents</td>\n");
+      $vc_info .= "Changes: @change_nums <br>\n";
+      
+      foreach $author (@authors) {
+          
+          my $display_author=$author;
+            
+          my $mailto_author=$author;
+          $mailto_author = TreeData::VCName2MailAddress($author);
+          
+          @bug_numbers = main::uniq(@bug_numbers);
+          
+          # The Link Choices inside the popup.
+          
+          my $link_choices = "Checkins by <b>$author</b><br>";
+          $link_choices .= " for $vc_info \n<br>";
+          $link_choices .= 
+              VCDisplay::query(
+                               'tree' => $tree,
+                               'mindate' => $mindate,
+                               'maxdate' => $maxdate,
+                               'who' => $author,
+                               
+                               "linktxt" => "This check-in",
+                               );
+          
+          $link_choices .= "<br>";
+          $link_choices .= 
+              VCDisplay::query(
+                               'tree' => $tree,
+                               'mindate' => $mindate - $main::SECONDS_PER_DAY,
+                               'maxdate' => $maxdate,
+                               'who' => $author,
+                               
+                               "linktxt" => "Check-ins within 24 hours",
+                               );
+          
+          $link_choices .= "<br>";
+          $link_choices .= 
+              VCDisplay::query(
+                               'tree' => $tree,
+                               'mindate' => $mindate - $main::SECONDS_PER_WEEK,
+                               'maxdate' => $maxdate,
+                               'who' => $author,
+                               
+                               "linktxt" => "Check-ins within 7 days",
+                               );
+          
+          $link_choices .= "<br>";
+          $link_choices .= 
+              HTMLPopUp::Link(
+                              "href" => "mailto:$mailto_author",
+                              "linktxt" => "Send Mail to $author",
+                              );
+          
+          $link_choices .= "<br>";
+          
+          my ($href) = (FileStructure::get_filename($tree, 'tree_URL').
+                        "/all_vc.html#$checkin_page_reference");
+          
+          $link_choices .= 
+              HTMLPopUp::Link(
+                              "href" => $href,
+                              "linktxt" => "Tinderbox Checkin Data",
+                              );
+          
+          $link_choices .= "<br>";
+          
+          foreach $bug_number (@bug_numbers) {
+              my $href = BTData::bug_id2bug_url($bug_number);
+                $link_choices .= 
+                    HTMLPopUp::Link(
+                                    "href" => $href,
+                                    "linktxt" => "\t\tBug: $bug_number",
+                                    );
+                $link_choices .= "<br>";
+          }
+          
+          # we display the list of names in 'teletype font' so that the
+          # names do not bunch together. It seems to make a difference if
+          # there is a <cr> between each link or not, but it does make a
+          # difference if we close the <tt> for each author or only for
+          # the group of links.
+          
+          my (%popup_args) = (
+                              "windowtxt" => $link_choices,
+                              "windowtitle" => ("$VC_NAME Info ".
+                                                "Author: $author ".
+                                                "$time_interval_str "),
+                              );
+          
+          my ($query_link) = "";
+          $query_link .= 
+              VCDisplay::query(
+                               'tree' => $tree,
+                               'mindate' => $mindate,
+                               'maxdate' => $maxdate,
+                               'who' => $author,
+                               
+                               "linktxt" => "\t\t<tt>$display_author</tt>",
+                               %popup_args,
+                               );
+          
+          my $bug_links = '';
+          foreach $bug_number (@bug_numbers) {
+              my $href = BTData::bug_id2bug_url($bug_number);
+              $bug_links .= 
+                  HTMLPopUp::Link(
+                                  "href" => $href,
+                                  "linktxt" => "\t\t<tt>$bug_number</tt>",
+                                  
+                                  %popup_args,
+                                    );
+          }
+          $query_link .= $bug_links;
+          
+          # put each link on its own line and add good comments so we
+          # can debug the HTML.
+          
+          my ($date_str) = localtime($mindate)."-".localtime($maxdate);
+          
+          if ($DEBUG) {
+              $query_links .= (
+                               "\t\t<!-- VC_Perforce: ".
+                               ("Author: $author, ".
+                                "Bug_Numbers: '@bug_numbers', ".
+                                "Time: '$date_str', ".
+                                "Tree: $tree, ".
+                                "").
+                               "  -->\n".
+                               "");
+          }
+          
+          $query_links .= "\t\t".$query_link."\n";
+          
+      } # foreach @author
+  } # if @authors
+  
+  my $notice = $NOTICE->Notice_Link(
+                                    $maxdate,
+                                    $tree,
+                                    $VC_NAME,
+                                    );
+  if ($notice) {
+      $query_links.= "\t\t".$notice."\n";
   }
   
+  $query_links.=  "\t\t".$text_browser_color_string."\n";
+  
+  @outrow = (
+             "\t<!-- VC_Perforce: authors -->\n".               
+             "\t<td align=center $cell_options>\n".
+             $query_links.
+             "\t</td>\n".
+             "");
   
   return @outrow; 
 }
@@ -548,18 +737,24 @@ sub status_table_row {
 # convert perforce string time into unix time.
 # currently I see times of the form 
 # (this function will change if perforce changes how it reports the time)
-#          /year/month/mday hours:min:seconds
+#          year/month/mday hours:min:seconds
 
 sub parse_perforce_time { 
 
-  my ($date, $time) = @_;
+  my ($date_str, $time_str) = @_;
 
-  # we do not bother to untaint the variables since we will check the
-  # result to see if it is resonable.
+  # untaint
+  $date_str =~ s![^0-9\/\:]+!!g;
+  $time_str =~ s![^0-9\/\:]+!!g;
 
-  my ($year, $mon, $mday) = split(/\//, $date);
+  my ($year, $mon, $mday) = split(/\//, $date_str);
 
-  my ($hours, $min, $sec) = split(/:/, $time);
+  my ($hours, $min, $sec) = split(/:/, $time_str);
+  
+  # The perl conventions for these variables is 0 origin while
+  # the "display" convention for these variables is 1 origin.
+  
+  $mon--;
   
   my ($time) = timelocal($sec,$min,$hours,$mday,$mon,$year);    
 
@@ -625,63 +820,54 @@ sub apply_db_updates {
 
   my ($num_updates) = 0;
 
+  ($last_tree_data) ||
+   ($last_tree_data = $main::TIME - $TinderDB::TRIM_SECONDS );
+  
+  @change_sets = get_new_change_sets($last_tree_data, $tree);
+
   (defined($METADATA{$tree}{'next_change_num'})) ||
       ($METADATA{$tree}{'next_change_num'} = 1);
 
-  while (1) {
+  my $change_num = $METADATA{$tree}{'next_change_num'};
 
-        my $change_num = $METADATA{$tree}{'next_change_num'};
+  # We can put more then one change number in a
+  # request and they will all be answered.  Send multiple
+  # requests per call to save the cost of creating a new
+  # process.
 
-        my (@cmd) = ('p4', 'describe', '-s', $change_num);
-
-#        if ($TreeData::VC_TREE{$tree}{'file_spec'}) {
-#            (@cmd) = (@cmd, $TreeData::VC_TREE{$tree}{'file_spec'} );
-#        }
-
-        store_cmd_output(@cmd);        
-
-        if (does_cmd_nextline_match("^Change ")) {
-
-      # Ignore directories which are not in our module.  Since we are not
-      # CVS we can only guess what these might be based on patterns.
+  while (scalar(@change_sets)) {
+      my @cmd_change_sets = splice @change_sets, 0, 20;
+      my $biggest_change_num = $cmd_change_sets[$#cmd_change_sets];
       
-      # This is to correct a bug (lack of feature) in CVS history command.
-
-#      if ($TreeData::VC_TREE{$tree}{'dir_pattern'}) {
-#
-#
-#        # There must be at least one file in the change set which
-#        # matches the dir pattern for us to assume that this change
-#        # set applies to this tree.  If not we ignore the change set.
-#
-#        my $pattern = $TreeData::VC_TREE{$tree}{'dir_pattern'};
-#        my $count = ( 
-#                   grep {/$pattern/} 
-#                   map { @{ $_ }[0] } 
-#                   @affected_files
-#                   );
-#       ($count) ||   
-#            next;
-#      }
-
+      my (@cmd) = ('p4', 'describe', '-s', @cmd_change_sets);
+      
+      store_cmd_output(@cmd);        
+      
+      while (does_cmd_nextline_match("^Change ")) {
+          
             $METADATA{$tree}{'next_change_num'}++;
             $num_updates++;
 
             # process the data in this change set
 
-            my ($change_num, $author, $time) = parse_update_header_line();
+            my ($change_num, $author, $time, $workspace) = 
+                parse_update_header_line();
             my ($comment) = parse_update_comment();
             my (@jobs_fixed) = parse_update_jobs_fixed();
-            my (@affected_files) = parse_update_affected_files($comment);
+            my (@affected_files) = parse_update_affected_files();
 
             $DATABASE{$tree}{$time}{'author'}{$author} = 
-            [\@affected_files, \@jobs_fixed, $change_num];
+                [\@affected_files, \@jobs_fixed, 
+                 $change_num, $workspace, $comment];
 
-        } else {
-            last;
-        }
+            if ($comment =~ m/$VC_BUGNUM_REGEXP/) {
+                my $bug_number = $1;
+                $DATABASE{$tree}{$time}{'bugs'}{$bug_number} = 1;
+            }
 
-    }
+        } # each change
+
+  } # each p4 subprocess
 
     $METADATA{$tree}{'updates_since_trim'} += $num_updates;
 
@@ -689,19 +875,63 @@ sub apply_db_updates {
           $TinderDB::MAX_UPDATES_SINCE_TRIM)
          ) {
         $METADATA{$tree}{'updates_since_trim'}=0;
-        trim_db_history(@_);
+        $self->trim_db_history($tree);
     }
     
     $self->savetree_db($tree);
     
+  # VCDisplay needs to know the filename that we write to, so that the
+  # None.pm can reference this file.  However VCDisplay is called by
+  # Build, Time as well as this VC column and we would rather not have
+  # VCDisplay depend on anything in the VC_* code.  So all the VC
+  # implementations must store their data into a file with the same
+  # name. It is highly unlikely that one user will run VC_CVS.pm and
+  # VC_Bonsai.pm module together.
+
+  my $all_vc_data = $self->get_all_perforce_data($tree);
+  my ($outfile) = (FileStructure::get_filename($tree, 'tree_HTML').
+                   "/all_vc.html");
+  main::overwrite_file($outfile, $all_vc_data);
+
     return $num_updates;
 } # apply_db_updates
+
+# Find the change sets which are new since the last time we checked
+# and are relevent for this tree. Unfortunatly the 'p4 changes'
+# command will not tell us which files have changed.  We will call the
+# 'p4 describe' command to get more detailed information.
+
+sub get_new_change_sets {
+  my ($date, $tree, ) = @_;
+
+  my @date_time_str = time2perforceFormat($date);
+  my $date_str = $date_time_str[0];
+
+  # use this command to pick a starting changeset
+  # p4 changes -s submitted @2003/05/10,@now //...
+
+  $filespec = TreeData::Tree2Filespec($treename);
+  my (@cmd) = (
+               'p4', 'changes', '-s', 
+               '@'.$date_str.',@now', 
+               $filespec,
+               );
+  
+  my (@p4_output) = main::cache_cmd(@cmd);
+  
+  my @change_set;
+  foreach $line (@p4_output) {
+      ($line =~ m/^Change (\d+) on/) &&
+          push @change_set, $1;
+  }
+  
+  return @change_set;
+}
 
 
 # This set of functions are used by apply_db_updates() and the
 # 'parse_update_' functions to retrieve the output of the VC one line
 # at a time so that it can be parsed.
-
 
 sub store_cmd_output {
     my (@cmd) = @_;
@@ -808,6 +1038,7 @@ sub parse_update_header_line {
     
     my ($change, $change_num, $by, $author, $on, $date, $time,) = 
         split(/\s+/, $line);
+    my $workspace;
     
     {
         # untaint the input and assure we parsed it correctly.
@@ -830,6 +1061,7 @@ sub parse_update_header_line {
         $change_num = main::extract_digits($change_num);
 
         $author = main::extract_user($author);
+        ($author, $workspace) = split ('@', $author);
         
         $time = parse_perforce_time($date, $time);
         
@@ -839,7 +1071,7 @@ sub parse_update_header_line {
                 " is not valid. \n");
         }
     }
-    return ($change_num, $author, $time,);
+    return ($change_num, $author, $time, $workspace,);
 } # parse_update_header_line
 
 
@@ -851,7 +1083,8 @@ sub parse_update_jobheader_line {
     #
     # 		job000001 on 2001/05/27 by ken *closed*
     # 
-    # Remember: the jobname is any sequence of non-whitespace characters
+    # Remember: the jobname is any sequence of non-whitespace
+    # characters
 
     my ($jobname, $on, $date, $by, $author, $status) = 
         split(/\s+/, $line);
@@ -873,6 +1106,11 @@ sub parse_update_jobheader_line {
         $author = main::extract_user($author);
         $status = main::extract_printable_chars($status);
 
+        if ($status =~ m/\*(.*)\*/) {
+            # strip the enclosing asterix's
+            $status = $1
+        }
+
         # Ignore the date it is not very accurate and thus not
         # interesting.
     }
@@ -883,10 +1121,11 @@ sub parse_update_jobheader_line {
 
 
 sub parse_update_jobs_fixed {
-            
-    # before we begin parsing ensure we have the right section of output.
 
-    (does_cmd_nextline_match('^Jobs fixed ')) ||
+    # before we begin parsing ensure we have the right section of
+    # output.
+
+    (does_cmd_nextline_match('^Jobs fixed')) ||
         return ;
 
     # its good, throw away the line and start parsing.
@@ -909,7 +1148,8 @@ sub parse_update_jobs_fixed {
 } # parse_update_jobs_fixed
         
 sub get_jobs_fixed_header {
-    # this is the header to use when parsing the jobs_fixed datastructure.
+    # this is the header to use when parsing the 
+    # jobs_fixed datastructure.
     my (@header) = qw(JobName Author Status Comment);
     return @header;
 }
@@ -918,9 +1158,8 @@ sub get_jobs_fixed_header {
 
 
 sub parse_update_affected_files {
-    my ($comment) = @_;
-
-    # before we begin parsing ensure we have the right section of output.
+    # before we begin parsing ensure we have the right section of
+    # output.
 
     (does_cmd_nextline_match('^Affected files')) ||
         return ;
@@ -939,11 +1178,18 @@ sub parse_update_affected_files {
         # The lines looks like this:
         #
         # ... //depot/filename#32 edit
+        # ... //depot/filename with spaces#32 edit
         
-        my ($elipsis, $filename_and_revision, $action,) = 
-            split(/\s+/, $line);
+        my ($elipsis, $filename_and_revision, $action,);
 
-        my ($filename, $revision,) = split(/\#/, $filename_and_revision);
+        @line = split(/\s+/, $line);
+
+        $action = pop @line;
+        $elipsis = shift @line;
+        $filename_and_revision = "@line";
+
+        my ($filename, $revision,) = 
+            split(/\#/, $filename_and_revision);
         
         $filename = main::extract_printable_chars($filename);
         $action = main::extract_printable_chars($action);
@@ -963,7 +1209,7 @@ sub parse_update_affected_files {
                 "expected filename to have forward or backward slash: ".
                 "'filename' : '$line'\n");
 
-        push @affected_files, [$filename, $revision, $action, $comment];
+        push @affected_files, [$filename, $revision, $action,];
         $line = get_cmd_nextline();
     }
     
@@ -972,7 +1218,8 @@ sub parse_update_affected_files {
 
 
 sub get_affected_files_header {
-    # this is the header to use when parsing the affect_files datastructure.
+    # this is the header to use when parsing the 
+    # affect_files datastructure.
     my (@header) = qw(Filename Revision Action Comment);
     return @header;
 }
@@ -1046,6 +1293,42 @@ sub list2table_row {
                  "");
     
     return $row;
+}
+
+sub time2perforceFormat {
+  # convert time() format to the format which appears in perforce output
+  my ($time) = @_;
+
+  my ($sec,$min,$hour,$mday,$mon,
+      $year,$wday,$yday,$isdst) =
+        localtime($time);
+
+  $mon++;
+  $year += 1900;
+
+  my $date_str = sprintf("%04u/%02u/%02u",
+                         $year, $mon, $mday);
+  
+  my $time_str = sprintf("%02u:%02u:%02u",
+                         $hour, $min, $sec);
+
+  return ($date_str, $time_str);
+}
+
+sub perforce_date_str2time {      
+    my ($perforce_date_str) = @_;
+    
+    my ($year, $mon, $mday,) = split('/', $perforce_date_str);
+    my ($hour, $min, $sec) = 0;
+
+    # The perl conventions for these variables is 0 origin while
+    # the "display" convention for these variables is 1 origin.
+    
+    $mon--;
+    
+    my ($time) = timelocal($sec,$min,$hour,$mday,$mon,$year);    
+    
+    return $time;
 }
 
 
