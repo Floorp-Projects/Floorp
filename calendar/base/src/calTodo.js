@@ -140,7 +140,7 @@ calTodo.prototype = {
         return icalcomp;
     },
 
-    set icalComponent() {
+    set icalComponent(event) {
         this.modify();
         if (event.componentType != "VTODO") {
             event = event.getFirstSubcomponent("VTODO");

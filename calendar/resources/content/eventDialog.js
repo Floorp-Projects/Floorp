@@ -26,6 +26,7 @@
  *                 ArentJan Banck <ajbanck@planet.nl>
  *                 Mostafa Hosseini <mostafah@oeone.com>
  *                 Eric Belhaire <belhaire@ief.u-psud.fr>
+ *                 Stelian Pop <stelian.pop@fr.alcove.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -501,20 +502,19 @@ function onOKCommand()
             event = originalEvent.clone().QueryInterface(Components.interfaces.calITodo);
 
         if ( getElementValue("start-datetime") ) {
-            event.entryDate.jsdate = getElementValue("start-datetime");
+            event.entryDate.jsDate = getElementValue("start-datetime");
             event.entryDate.timezone = tzid;
         } else {
             event.entryDate.reset();
         }
 
         if ( getElementValue("due-datetime") ) {
-            event.dueDate.jsdate = getElementValue("due-datetime");
+            event.dueDate.jsDate = getElementValue("due-datetime");
             event.dueDate.timezone = tzid;
         } else {
             event.dueDate.reset();
         }
 
-        event.isAllDay.reset();
         event.status          = getElementValue("todo-status-field");
         event.percentComplete = getElementValue("percent-complete-menulist");
     } else {
@@ -796,19 +796,6 @@ function setTimeError(state)
     setElementValue("end-time-warning", !state, "hidden");
 }
 
-
-/*
- * Check that the due date is after the start date, if they are the same day
- * then the checkDueTime function should catch the problem (if there is one).
- */
-function checkDueDate()
-{
-   var startDate = getElementValue("start-datetime");
-   var dueDate   = getElementValue("due-datetime");
-   compareIgnoringTimeOfDay(dueDate, startDate);
-}
-
-
 /*
  * Check that start datetime <= due datetime if both exist.
  * Provide separate error message for startDate > dueDate or
@@ -819,19 +806,20 @@ function checkDueSetTimeDate()
     var startCheckbox = getElementValue("start-checkbox", "checked");
     var dueCheckbox   = getElementValue("due-checkbox", "checked");
 
-    if (startCheckbox && dueCheckBox) {
-        var CheckDueDate = checkDueDate();
-        if ( CheckDueDate < 0 ) {
+    if (startCheckbox && dueCheckbox) {
+        var startDate = getElementValue("start-datetime");
+        var dueDate = getElementValue("due-datetime");
+        var dateComparison = compareIgnoringTimeOfDay(dueDate, startDate);
+        if ( dateComparison < 0 ) {
             // due before start
             setDueDateError(true);
             setDueTimeError(false);
             return false;
-        } else if ( CheckDueDate == 0 ) {
+        } else if ( dateComparison == 0 ) {
             setDueDateError(false);
-            // start & due same
-            var CheckDueTime = checkDueTime();
-            setDueTimeError(CheckDueTime);
-            return !CheckDueTime;
+            var isBadEndTime = dueDate.getTime() < startDate.getTime();
+            setDueTimeError(isBadEndTime);
+            return !isBadEndTime;
         }
     }
     setDueDateError(false);
@@ -854,19 +842,24 @@ function setDueTimeError(state)
 
 function setOkButton(state)
 {
-   if (state == false)
-      document.getElementById("calendar-new-component-window").getButton("accept").setAttribute("disabled", true);
-   else
-      document.getElementById("calendar-new-component-window").getButton("accept").removeAttribute("disabled");
+    if (state == false)
+        document.getElementById("calendar-new-component-window").getButton("accept").setAttribute("disabled", true);
+    else
+        document.getElementById("calendar-new-component-window").getButton("accept").removeAttribute("disabled");
 }
 
 
 function updateOKButton()
 {
-   var checkRecur = checkSetRecur();
-   var checkTimeDate = checkSetTimeDate();
-   setOkButton(checkRecur && checkTimeDate);
-   //this.sizeToContent();
+    var checkRecur = checkSetRecur();
+    var componentType = getElementValue("component-type");
+    var checkTimeDate;
+    if (componentType == "event")
+        checkTimeDate = checkSetTimeDate();
+    else
+        checkTimeDate = checkDueSetTimeDate();
+    setOkButton(checkRecur && checkTimeDate);
+    //this.sizeToContent();
 }
 
 
@@ -875,37 +868,52 @@ function updateOKButton()
  */
 function onDateTimePick(dateTimePicker)
 {
-    var startDate      = getElementValue("start-datetime");
-    var endDate        = getElementValue("end-datetime");
     var pickedDateTime = new Date(dateTimePicker.value);
-    var duration       = ( endDate.getTime() - startDate.getTime() );
 
+    // set the new end (or due) date
     if (dateTimePicker.id == "end-datetime") {
         if (getElementValue("all-day-event-checkbox", "checked")) {
-          //display enddate == ical enddate - 1 (for allday events)
-          pickedDateTime.setDate( pickedDateTime.getDate() + 1 );
+            //display enddate == ical enddate - 1 (for allday events)
+            pickedDateTime.setDate( pickedDateTime.getDate() + 1 );
         }
         setElementValue("end-datetime", pickedDateTime);
-        endDate = getElementValue("end-datetime");
-        // save the duration
-        duration = endDate.getTime() - startDate.getTime();
-
         updateOKButton();
         return;
     }
 
+    if (dateTimePicker.id == "due-datetime") {
+        setElementValue("due-datetime", pickedDateTime);
+        updateOKButton();
+        return;
+    }
+
+    // set the new start date
     if (dateTimePicker.id == "start-datetime") {
+        var componentType = getElementValue("component-type");
+        var startDate = getElementValue("start-datetime");
+        var endDate;
+
+        if (componentType == "event")
+            endDate = getElementValue("end-datetime");
+        else
+            endDate = getElementValue("due-datetime");
+        var duration = ( endDate.getTime() - startDate.getTime() );
+
         setElementValue("start-datetime", pickedDateTime);
         startDate = getElementValue("start-datetime");
         // preserve the previous duration by changing end
         endDate.setTime(startDate.getTime() + duration );
         
         var displayEndDate = new Date(endDate)
-        if (getElementValue("all-day-event-checkbox", "checked")) {
-          //display enddate == ical enddate - 1 (for allday events)
-          displayEndDate.setDate( displayEndDate.getDate() - 1 );
+        if (componentType == "event") {
+            if (getElementValue("all-day-event-checkbox", "checked")) {
+                //display enddate == ical enddate - 1 (for allday events)
+                displayEndDate.setDate( displayEndDate.getDate() - 1 );
+            }
+            setElementValue("end-datetime", displayEndDate);
         }
-        setElementValue("end-datetime", displayEndDate);
+        else
+            setElementValue("due-datetime", displayEndDate);
     }
 
     var now = new Date();
