@@ -61,6 +61,9 @@ public:
   virtual PRBool OnPaint(nsPaintEvent & aEvent);
   virtual PRBool OnResize(nsSizeEvent &aEvent);
   virtual PRBool DispatchMouseEvent(nsMouseEvent &aEvent);
+  NS_IMETHOD     Resize(PRUint32 aWidth,PRUint32 aHeight, PRBool aRepaint);
+  NS_IMETHOD     Resize(PRUint32 aX, PRUint32 aY,PRUint32 aWidth,PRUint32 aHeight, PRBool aRepaint);
+
   	
   
   // Overriden from nsWindow
