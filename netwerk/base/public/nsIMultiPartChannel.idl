@@ -39,4 +39,10 @@ interface nsIMultiPartChannel : nsISupports
      */
     readonly attribute nsIChannel baseChannel;
 
+    /**
+     * Access to the Content-Disposition header field of this part of
+     * a multipart message.  This allows getting the preferred
+     * handling method, preferred filename, etc.  See RFC 2183.
+     */
+    attribute string contentDisposition;
 };
