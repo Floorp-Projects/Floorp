@@ -327,7 +327,7 @@ var nsOpenCommand =
      */
     if (fp.file && fp.file.path.length > 0) {
       SaveFilePickerDirectory(fp, "html");
-      EditorOpenUrl(fp.fileURL.spec);
+      editPage(fp.fileURL.spec, window, false);
     }
   }
 };
@@ -2379,7 +2379,7 @@ var nsEditLinkCommand =
   {
     var element = window.editorShell.GetSelectedElement("href");
     if (element)
-      EditorOpenUrl(element.href);
+      editPage(element.href, window, false);
 
     window._content.focus();
   }
