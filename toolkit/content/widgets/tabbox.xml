@@ -1,5 +1,10 @@
 <?xml version="1.0"?>
 
+<!DOCTYPE bindings [
+  <!ENTITY % globalRegionDTD SYSTEM "chrome://global-region/locale/region.dtd">
+  %globalRegionDTD;
+]>
+
 <bindings id="tabBindings"
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -182,7 +187,7 @@
 
   <binding id="tabs" display="xul:box"
            extends="chrome://global/content/bindings/tabbox.xml#tab-base">
-    <content>
+    <content chromedir="&locale.dir;">
       <xul:spacer class="tabs-left"/>
       <children/>
       <xul:spacer class="tabs-right" flex="1"/>
