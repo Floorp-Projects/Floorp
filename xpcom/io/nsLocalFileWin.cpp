@@ -826,8 +826,31 @@ nsLocalFile::Create(PRUint32 type, PRUint32 attributes)
     if (NS_FAILED(rv) && rv != NS_ERROR_FILE_NOT_FOUND)
         return rv;  
     
-   // create nested directories to target
-    unsigned char* slash = _mbschr((const unsigned char*) mResolvedPath.get(), '\\');
+    // create directories to target
+    //
+    // A given local file can be either one of these forms:
+    //
+    //   - normal:    X:\some\path\on\this\drive
+    //                       ^--- start here
+    //
+    //   - UNC path:  \\machine\volume\some\path\on\this\drive
+    //                                     ^--- start here
+    //
+    // Skip the first 'X:\' for the first form, and skip the first full
+    // '\\machine\volume\' segment for the second form.
+
+    const unsigned char* path = (const unsigned char*) mResolvedPath.get();
+    if (path[0] == '\\' && path[1] == '\\')
+    {
+        // dealing with a UNC path here; skip past '\\machine\'
+        path = _mbschr(path + 2, '\\');
+        if (!path)
+            return NS_ERROR_FILE_INVALID_PATH;
+        ++path;
+    }
+
+    // search for first slash after the drive (or volume) name
+    unsigned char* slash = _mbschr(path, '\\');
 
     if (slash)
     {
@@ -841,7 +864,12 @@ nsLocalFile::Create(PRUint32 type, PRUint32 attributes)
         
             if (!CreateDirectoryA(mResolvedPath.get(), NULL)) {
                 rv = ConvertWinError(GetLastError());
-                if (rv != NS_ERROR_FILE_ALREADY_EXISTS) return rv;
+                // perhaps the base path already exists, or perhaps we don't have
+                // permissions to create the directory.  NOTE: access denied could
+                // occur on a parent directory even though it exists.
+                if (rv != NS_ERROR_FILE_ALREADY_EXISTS &&
+                    rv != NS_ERROR_FILE_ACCESS_DENIED)
+                    return rv;
             }
             *slash = '\\';
             ++slash;

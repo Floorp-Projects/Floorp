@@ -61,6 +61,16 @@
 extern unsigned char* _mbsrchr( const unsigned char*, int);
 #endif
 
+// return pointer to last instance of the given separator
+static inline char *GetLastSeparator(const char *str, char sep)
+{
+#if defined(XP_WIN) || defined(XP_OS2)
+    return (char*) _mbsrchr((const unsigned char *) str, sep);
+#else
+    return (char*) strrchr(str, sep);
+#endif
+}
+
 #if defined(XP_MACOSX)
 #include <sys/stat.h>
 #endif
@@ -336,11 +346,7 @@ void nsSimpleCharString::LeafReplace(char inSeparator, const char* inLeafName)
         return;
     }
     char* chars = mData->mString;
-#if defined(XP_WIN) || defined(XP_OS2)
-    char* lastSeparator = (char*) _mbsrchr((const unsigned char*) chars, inSeparator);
-#else
-    char* lastSeparator = strrchr(chars, inSeparator);
-#endif
+    char* lastSeparator = GetLastSeparator(chars, inSeparator);
     int oldLength = Length();
     PRBool trailingSeparator = (lastSeparator + 1 == chars + oldLength);
     if (trailingSeparator)
@@ -348,11 +354,7 @@ void nsSimpleCharString::LeafReplace(char inSeparator, const char* inLeafName)
         char savedCh = *lastSeparator;
         char *savedLastSeparator = lastSeparator;
         *lastSeparator = '\0';
-#if defined(XP_WIN) || defined(XP_OS2)
-        lastSeparator = (char*) _mbsrchr((const unsigned char*) chars, inSeparator);
-#else
-        lastSeparator = strrchr(chars, inSeparator);
-#endif
+        lastSeparator = GetLastSeparator(chars, inSeparator);
         *savedLastSeparator = savedCh;
     }
     if (lastSeparator)
@@ -387,11 +389,7 @@ char* nsSimpleCharString::GetLeaf(char inSeparator) const
         return nsnull;
 
     char* chars = mData->mString;
-#if defined(XP_WIN) || defined(XP_OS2)
-    const char* lastSeparator = (const char*) _mbsrchr((const unsigned char *) chars, inSeparator);
-#else
-    const char* lastSeparator = strrchr(chars, inSeparator);
-#endif    
+    const char* lastSeparator = GetLastSeparator(chars, inSeparator);
     // If there was no separator, then return a copy of our path.
     if (!lastSeparator)
         return nsCRT::strdup(*this);
@@ -404,17 +402,13 @@ char* nsSimpleCharString::GetLeaf(char inSeparator) const
 
     // So now, separator was the last character. Poke in a null instead.
     *(char*)lastSeparator = '\0'; // Should use const_cast, but Unix has old compiler.
-#if defined(XP_WIN) || defined(XP_OS2)
-    leafPointer = (const char*) _mbsrchr((const unsigned char *) chars, inSeparator);
-#else
-    leafPointer = strrchr(chars, inSeparator);
-#endif
+    leafPointer = GetLastSeparator(chars, inSeparator);
     char* result = leafPointer ? nsCRT::strdup(++leafPointer) : nsCRT::strdup(chars);
     // Restore the poked null before returning.
     *(char*)lastSeparator = inSeparator;
 #if defined(XP_WIN) || defined(XP_OS2)
     // If it's a drive letter use the colon notation.
-    if (!leafPointer && result[2] == 0 && result[1] == '|')
+    if (!leafPointer && result[1] == '|' && result[2] == 0)
         result[1] = ':';
 #endif
     return result;
@@ -446,7 +440,8 @@ void nsFileSpecHelpers::MakeAllDirectories(const char* inPath, int mode)
 #if defined(XP_WIN) || defined(XP_OS2)
     // Either this is a relative path, or we ensure that it has
     // a drive letter specifier.
-    NS_ASSERTION( pathCopy[0] != '/' || pathCopy[2] == '|', "No drive letter!" );
+    NS_ASSERTION( pathCopy[0] != '/' || (pathCopy[1] && (pathCopy[2] == '|' || pathCopy[2] == '/')),
+        "Not a UNC path and no drive letter!" );
 #endif
     char* currentStart = pathCopy;
     char* currentEnd = strchr(currentStart + kSkipFirst, kSeparator);
@@ -460,7 +455,7 @@ void nsFileSpecHelpers::MakeAllDirectories(const char* inPath, int mode)
            if we have a drive letter path, we must make sure that the inital path has a '/' on it, or
            Canonify will turn "/c|" into a path relative to the running executable.
         */
-        if (pathCopy[0] == '/' && pathCopy[2] == '|')
+        if (pathCopy[0] == '/' && pathCopy[1] && pathCopy[2] == '|')
         {
             char* startDir = (char*)PR_Malloc(strlen(pathCopy) + 2);
             strcpy(startDir, pathCopy);
@@ -647,11 +642,11 @@ void nsFileURL::operator = (const nsFilePath& inOther)
     if (!original || !*original) return;
 #if defined(XP_WIN) || defined(XP_OS2)
     // because we don't want to escape the '|' character, change it to a letter.
-    NS_ASSERTION(original[2] == '|', "No drive letter part!");
+    // Note that a UNC path will not have a '|' character.
+    char oldchar = original[2];
     original[2] = 'x';
     char* escapedPath = nsEscape(original, url_Path);
-    original[2] = '|'; // restore it
-    escapedPath[2] = '|';
+    original[2] = escapedPath[2] = oldchar; // restore it
 #else
     char* escapedPath = nsEscape(original, url_Path);
 #endif
@@ -707,7 +702,11 @@ nsFilePath::nsFilePath(const char* inString, PRBool inCreateDirs)
     // Make canonical and absolute.
     nsFileSpecHelpers::Canonify(mPath, inCreateDirs);
 #if defined(XP_WIN) || defined(XP_OS2)
-    NS_ASSERTION( mPath[1] == ':', "unexpected canonical path" );
+    // Assert native path is of one of these forms:
+    //    -  regular: X:\some\path
+    //    -  UNC: \\some_machine\some\path
+    NS_ASSERTION( mPath[1] == ':' || (mPath[0] == '\\' && mPath[1] == '\\'),
+                 "unexpected canonical path" );
     nsFileSpecHelpers::NativeToUnix(mPath);
 #endif
 }
