@@ -147,12 +147,12 @@ public class Interpreter
                                       encodedSource);
         itsData.topLevel = true;
 
-        if (tree instanceof FunctionNode) {
+        if (returnFunction) {
             generateFunctionICode();
             return createFunction(cx, scope, itsData, false);
         } else {
-            generateICodeFromTree(scriptOrFn);
             itsData.itsFromEvalCode = compilerEnv.isFromEval();
+            generateICodeFromTree(scriptOrFn);
             return new InterpretedScript(itsData);
         }
     }
@@ -183,6 +183,8 @@ public class Interpreter
 
     private void generateFunctionICode()
     {
+        itsInFunctionFlag = true;
+
         FunctionNode theFunction = (FunctionNode)scriptOrFn;
 
         itsData.itsFunctionType = theFunction.getFunctionType();
@@ -285,7 +287,6 @@ public class Interpreter
             jsi.scriptOrFn = def;
             jsi.itsData = new InterpreterData(itsData);
             jsi.itsData.itsCheckThis = def.getCheckThis();
-            jsi.itsInFunctionFlag = true;
             jsi.generateFunctionICode();
             array[i] = jsi.itsData;
         }
@@ -373,13 +374,23 @@ public class Interpreter
             case Token.DEFAULT :
             case Token.BLOCK :
             case Token.EMPTY :
-            case Token.WITH :
                 stackShouldBeZero = true;
                 iCodeTop = updateLineNumber(node, iCodeTop);
                 while (child != null) {
                     iCodeTop = generateICode(child, iCodeTop);
                     child = child.getNext();
                 }
+                break;
+
+            case Token.WITH :
+                ++itsWithDepth;
+                stackShouldBeZero = true;
+                iCodeTop = updateLineNumber(node, iCodeTop);
+                while (child != null) {
+                    iCodeTop = generateICode(child, iCodeTop);
+                    child = child.getNext();
+                }
+                --itsWithDepth;
                 break;
 
             case Token.LOCAL_BLOCK :
@@ -1109,7 +1120,20 @@ public class Interpreter
         int type = left.getType();
         if (type == Token.NAME) {
             String name = left.getString();
+            // Conditionally skip ScriptRuntime.getThis.
+            // The getThis entry in the runtime will take a
+            // Scriptable object intended to be used as a 'this'
+            // and make sure that it is neither a With object or
+            // an activation object.
+            // Executing getThis requires at least two instanceof
+            // tests, so we only include it if we are currently
+            // inside a 'with' statement, or if we are executing
+            // eval script (to protect against an eval inside a with).
+            boolean skipGetThis = (itsWithDepth == 0
+                                   && (itsInFunctionFlag
+                                       || !itsData.itsFromEvalCode));
             iCodeTop = addString(Icode_NAME_AND_THIS, name, iCodeTop);
+            iCodeTop = addByte(skipGetThis ? 1 : 0, iCodeTop);
             itsStackDepth += 2;
             if (itsStackDepth > itsData.itsMaxStack)
                 itsData.itsMaxStack = itsStackDepth;
@@ -1593,7 +1617,6 @@ public class Interpreter
                     }
                     case Token.CATCH_SCOPE :
                     case Icode_TYPEOFNAME :
-                    case Icode_NAME_AND_THIS :
                     case Token.BINDNAME :
                     case Token.SETNAME :
                     case Token.NAME :
@@ -1603,6 +1626,13 @@ public class Interpreter
                         String str = strings[getIndex(iCode, pc)];
                         out.println(tname + " \"" + str + '"');
                         pc += 2;
+                        break;
+                    }
+                    case Icode_NAME_AND_THIS : {
+                        String str = strings[getIndex(iCode, pc)];
+                        boolean skipGetThis = (0 != iCode[pc + 2]);
+                        out.println(tname + " \"" + str + '"'+" "+skipGetThis);
+                        pc += 3;
                         break;
                     }
                     case Icode_LINE : {
@@ -1764,7 +1794,6 @@ public class Interpreter
 
             case Token.CATCH_SCOPE :
             case Icode_TYPEOFNAME :
-            case Icode_NAME_AND_THIS :
             case Token.BINDNAME :
             case Token.SETNAME :
             case Token.NAME :
@@ -1773,6 +1802,10 @@ public class Interpreter
             case Token.STRING :
                 // string index
                 return 1 + 2;
+
+            case Icode_NAME_AND_THIS :
+                // string index skipGetThis
+                return 1 + 2 + 1;
 
             case Icode_LINE :
                 // line number
@@ -2704,10 +2737,9 @@ public class Interpreter
     }
     case Icode_NAME_AND_THIS : {
         String name = strings[getIndex(iCode, pc + 1)];
-        Scriptable base = ScriptRuntime.getBase(scope, name);
-        stack[++stackTop] = ScriptRuntime.getProp(base, name, scope);
-        stack[++stackTop] = ScriptRuntime.getThis(base);
-        pc += 2;
+        boolean skipGetThis = (0 != iCode[pc + 3]);
+        stackTop = do_nameAndThis(stack, stackTop, scope, name, skipGetThis);
+        pc += 3;
         break;
     }
     case Token.STRING :
@@ -3225,6 +3257,30 @@ public class Interpreter
             }
         }
         stack[stackTop - 2] = result;
+    }
+
+    private static int do_nameAndThis(Object[] stack, int stackTop,
+                                      Scriptable scope, String name,
+                                      boolean skipGetThis)
+    {
+        Object prop;
+        Scriptable obj = scope;
+ search: {
+            while (obj != null) {
+                prop = ScriptableObject.getProperty(obj, name);
+                if (prop != Scriptable.NOT_FOUND) {
+                    break search;
+                }
+                obj = obj.getParentScope();
+            }
+            throw ScriptRuntime.notFoundError(scope, name);
+        }
+
+        Scriptable thisArg = skipGetThis ? obj : ScriptRuntime.getThis(obj);
+        stack[++stackTop] = prop;
+        stack[++stackTop] = thisArg;
+
+        return stackTop;
     }
 
     private static Object[] getArgsArray(Object[] stack, double[] sDbl,
