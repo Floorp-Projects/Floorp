@@ -40,6 +40,8 @@ public:
   // nsIMenuListener methods
   nsEventStatus MenuSelected(const nsMenuEvent & aMenuEvent); 
   nsEventStatus MenuDeselected(const nsMenuEvent & aMenuEvent); 
+  nsEventStatus MenuConstruct(const nsMenuEvent & aMenuEvent);
+  nsEventStatus MenuDestruct(const nsMenuEvent & aMenuEvent);
   
   // nsIMenu Methods
   NS_IMETHOD Create(nsISupports * aParent, const nsString &aLabel);

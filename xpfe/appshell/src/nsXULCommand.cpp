@@ -212,3 +212,14 @@ nsEventStatus nsXULCommand::MenuDeselected(const nsMenuEvent & aMenuEvent)
   return nsEventStatus_eConsumeNoDefault;
 }
 
+nsEventStatus nsXULCommand::MenuConstruct(const nsMenuEvent & aMenuEvent)
+{
+  DoCommand();
+  return nsEventStatus_eConsumeNoDefault;
+}
+
+nsEventStatus nsXULCommand::MenuDestruct(const nsMenuEvent & aMenuEvent)
+{
+  DoCommand();
+  return nsEventStatus_eConsumeNoDefault;
+}

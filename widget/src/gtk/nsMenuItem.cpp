@@ -336,3 +336,14 @@ nsEventStatus nsMenuItem::MenuDeselected(const nsMenuEvent & aMenuEvent)
   return nsEventStatus_eIgnore;
 }
 
+nsEventStatus nsMenuItem::MenuConstruct(const nsMenuEvent & aMenuEvent)
+{
+  g_print("nsMenuItem::MenuConstruct\n");
+  return nsEventStatus_eIgnore;
+}
+
+nsEventStatus nsMenuItem::MenuDestruct(const nsMenuEvent & aMenuEvent)
+{
+  g_print("nsMenuItem::MenuDestruct\n");
+  return nsEventStatus_eIgnore;
+}
