@@ -23,13 +23,8 @@
 #ifndef nsCharsetMenu_h___
 #define nsCharsetMenu_h___
 
-#include "nsIFactory.h"
-
-//----------------------------------------------------------------------------
-// Global functions and data [declaration]
-
 #define NS_CHARSETMENU_CID \
-  {0xcd131b11, 0x6f85, 0x11d3, {0x8a, 0xb5, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36}}
+  {0x42c52b81, 0xa200, 0x11d3, { 0x9d, 0xb, 0x0, 0x50, 0x4, 0x0, 0x7, 0xb2}}
 
 #define NS_CHARSETMENU_PID "charset-menu"
 
