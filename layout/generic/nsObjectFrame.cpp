@@ -441,7 +441,8 @@ exit:
   return result;
 }
 
-#define EMBED_DEF_DIM 50
+#define EMBED_DEF_WIDTH 240
+#define EMBED_DEF_HEIGHT 200
 
 void
 nsObjectFrame::GetDesiredSize(nsIPresContext* aPresContext,
@@ -451,8 +452,8 @@ nsObjectFrame::GetDesiredSize(nsIPresContext* aPresContext,
   // Determine our size stylistically
   PRBool haveWidth = PR_FALSE;
   PRBool haveHeight = PR_FALSE;
-  PRUint32 width = EMBED_DEF_DIM;
-  PRUint32 height = EMBED_DEF_DIM;
+  PRUint32 width = EMBED_DEF_WIDTH;
+  PRUint32 height = EMBED_DEF_HEIGHT;
 
   if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedWidth) {
     aMetrics.width = aReflowState.mComputedWidth;
@@ -472,10 +473,10 @@ nsObjectFrame::GetDesiredSize(nsIPresContext* aPresContext,
   {
     // the first time, mInstanceOwner will be null, so we a temporary default
 
-    // if no width and height attributes specified use embed_def_dim.
+    // if no width and height attributes specified use embed_def_*.
     if(NS_OK != mInstanceOwner->GetWidth(&width))
     {
-      width = EMBED_DEF_DIM;
+      width = EMBED_DEF_WIDTH;
   	  haveWidth = PR_FALSE;
     }
     else
@@ -483,7 +484,7 @@ nsObjectFrame::GetDesiredSize(nsIPresContext* aPresContext,
 
     if(NS_OK != mInstanceOwner->GetHeight(&height))
     {
-      height = EMBED_DEF_DIM;
+      height = EMBED_DEF_HEIGHT;
   	  haveHeight = PR_FALSE;
     }
     else
