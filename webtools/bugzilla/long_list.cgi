@@ -42,7 +42,7 @@ my $cgi = Bugzilla->cgi;
 my $generic_query = "
   SELECT 
     bugs.bug_id, 
-    IFNULL(bugs.alias,''), 
+    COALESCE(bugs.alias, ''), 
     products.name, 
     bugs.version, 
     bugs.rep_platform,

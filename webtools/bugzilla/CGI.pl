@@ -317,7 +317,7 @@ sub GetBugActivity {
     }
     
     my $query = "
-        SELECT IFNULL(fielddefs.description, bugs_activity.fieldid),
+        SELECT COALESCE(fielddefs.description, bugs_activity.fieldid),
                 fielddefs.name,
                 bugs_activity.attach_id,
                 DATE_FORMAT(bugs_activity.bug_when,'%Y.%m.%d %H:%i'),

@@ -143,7 +143,7 @@ sub initBug  {
       reporter, bug_file_loc, short_desc, target_milestone,
       qa_contact, status_whiteboard,
       DATE_FORMAT(creation_ts,'%Y.%m.%d %H:%i'),
-      delta_ts, ifnull(sum(votes.vote_count),0),
+      delta_ts, COALESCE(SUM(votes.vote_count), 0),
       reporter_accessible, cclist_accessible,
       estimated_time, remaining_time
     from bugs left join votes using(bug_id),
