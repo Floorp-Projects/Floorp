@@ -357,11 +357,6 @@ install::
     @$(W95MAKE) install $(MAKEDIR) $(DIRS)
 !endif # DIRS
 
-xinstall::
-!ifdef DIRS
-    @$(W95MAKE) install $(MAKEDIR) $(DIRS)
-!endif # DIRS
-
 depend::
 !ifdef DIRS
     @$(W95MAKE) depend $(MAKEDIR) $(DIRS)
@@ -398,9 +393,6 @@ libs::
 	@set MAKE_ARGS=$@
 
 install:: 
-	@set MAKE_ARGS=$@
-
-xinstall:: 
 	@set MAKE_ARGS=$@
 
 mangle:: 
@@ -456,8 +448,6 @@ libs::
 
 install:: $(DIRS) $(LIBRARY)
 
-xinstall:: $(DIRS)
-
 depend:: $(DIRS)
 
 mangle:: $(DIRS)
@@ -468,7 +458,7 @@ unmangle:: $(DIRS)
 
 
 alltags::
-        echo Making emacs tags
+        @echo +++ Making emacs tags
 	c:\\mksnt\\find . -name dist -prune -o ( -name '*.[hc]' -o -name '*.cpp' -o -name '*.idl' ) -print | c:\\mksnt\\xargs etags -a
 
 
@@ -479,7 +469,6 @@ alltags::
 #//------------------------------------------------------------------------
 $(OBJDIR):
 	@echo +++ make: Creating directory: $(OBJDIR)
-	echo.
     -mkdir $(OBJDIR)
 
 #//------------------------------------------------------------------------
@@ -677,13 +666,11 @@ TYPELIB = $(XPIDL_GEN_DIR)\$(XPIDL_MODULE).xpt
 
 $(TYPELIB): $(XPIDL_TYPELIBS) $(XPTLINK_PROG)
         @echo +++ make: Creating typelib: $(TYPELIB)
-	@echo.
         $(XPTLINK_PROG) $(TYPELIB) $(XPIDL_TYPELIBS)
 !endif
 
 $(XPIDL_GEN_DIR):
 	@echo +++ make: Creating directory: $(XPIDL_GEN_DIR)
-	echo.
 	-mkdir $(XPIDL_GEN_DIR)
 
 $(XPIDL_HEADERS): $(XPIDL_PROG)
@@ -693,12 +680,10 @@ $(XPIDL_HEADERS): $(XPIDL_PROG)
 
 $(DIST)\include:
 	@echo +++ make: Creating directory: $(DIST)\include
-	@echo.
 	-mkdir $(DIST)\include
 
 $(XPDIST)\idl:
         @echo +++ make: Creating directory: $(XPDIST)\idl
-        @echo.
         -mkdir $(XPDIST)\idl
 
 export:: $(XPDIST)\idl
@@ -712,7 +697,6 @@ export:: $(XPIDL_GEN_DIR) $(XPIDL_HEADERS) $(PUBLIC)
 !ifndef NO_GEN_XPT
 install:: $(XPIDL_GEN_DIR) $(TYPELIB)
         @echo +++ make: installing typelib '$(TYPELIB)' to components directory
-        @echo.
         $(MAKE_INSTALL) $(TYPELIB) $(DIST)\bin\components
 !endif
 
@@ -777,7 +761,7 @@ CHROME_CONTENT_DIR=.
 !endif
 
 # Export content files by copying to dist.
-install:: $(CHROME_CONTENT:.\=INSTALL\.\)
+chrome:: $(CHROME_CONTENT:.\=INSTALL\.\)
 
 # Pseudo-target specifying how to install content files.
 $(CHROME_CONTENT:.\=INSTALL\.\):
@@ -803,7 +787,7 @@ CHROME_SKIN_DIR=.
 !endif
 
 # Export skin files by copying to dist.
-install:: $(CHROME_SKIN:.\=INSTALL\.\)
+chrome:: $(CHROME_SKIN:.\=INSTALL\.\)
 
 # Pseudo-target specifying how to install chrome files.
 $(CHROME_SKIN:.\=INSTALL\.\):
@@ -829,7 +813,7 @@ CHROME_L10N_DIR=.
 !endif
 
 # Export l10n files by copying to dist.
-install:: $(CHROME_L10N:.\=INSTALL\.\)
+chrome:: $(CHROME_L10N:.\=INSTALL\.\)
 
 # Pseudo-target specifying how to install l10n files.
 $(CHROME_L10N:.\=INSTALL\.\):
@@ -855,7 +839,7 @@ CHROME_MISC_DIR=.
 !endif
 
 # Export misc files by copying to dist.
-install:: $(CHROME_MISC:.\=INSTALL\.\)
+chrome:: $(CHROME_MISC:.\=INSTALL\.\)
 
 # Pseudo-target specifying how to install content files.
 $(CHROME_MISC:.\=INSTALL\.\):
@@ -871,8 +855,13 @@ $(CHROME_MISC:.\=CLOBBER\.\):
 !endif # miscellaneous chrome
 
 !if "$(CHROME_TYPE)" != "$(NULL)"
-install::
+!ifdef JAR_PACKAGING
+chrome::
+    -for %t in ($(CHROME_TYPE)) do echo %t,install,url,jar:resource:/chrome/$(CHROME_DIR:\=/).jar!/ >>$(DIST)\bin\chrome\installed-chrome.txt
+!else # !JAR_PACKAGING
+chrome::
     -for %t in ($(CHROME_TYPE)) do echo %t,install,url,resource:/chrome/$(CHROME_DIR:\=/)/ >>$(DIST)\bin\chrome\installed-chrome.txt
+!endif # !JAR_PACKAGING
 !endif
 
 !endif # chrome
@@ -891,11 +880,25 @@ run::
 ## JAR Manifests
 
 JAR_MANIFEST = jar.mn
+
 !if exist($(JAR_MANIFEST))
 
-xinstall:: 
+!ifdef JAR_PACKAGING
+
+chrome:: 
         $(PERL) $(DEPTH)\config\make-jars.pl -d $(DIST)\bin\chrome < $(JAR_MANIFEST)
 
+!else # !JAR_PACKAGING
+
+chrome::
+        @echo.
+        @echo ****************** IF YOU ADD OR REMOVE CHROME FILES, PLEASE UPDATE $(PWD)/$(JAR_MANIFEST) (or tell warren@netscape.com) **********************
+        @echo.
+
+!endif # !JAR_PACKAGING
+
 !endif
+
+install:: chrome
 
 ################################################################################
