@@ -21,6 +21,12 @@
 #include "nsISupports.idl"
 #include "nsIFileSpec.idl"
 
+%{C++
+#define NS_MSGPROTOCOLINFO_PROGID_PREFIX \
+  "component://netscape/messenger/protocol/info;type="
+%}
+
+
 [scriptable, uuid(53d0214a-689c-11d3-80f5-00a0c900d445)]
 interface nsIMsgProtocolInfo : nsISupports
 {
