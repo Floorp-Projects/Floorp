@@ -112,7 +112,7 @@ private:
   nsCOMPtr<nsISVGGlyphMetricsSource> mSource;
     
 public:
-  static nsDataHashtable<nsStringHashKey,nsDependentString*> sFontAliases;  
+  static nsDataHashtable<nsStringHashKey,const nsDependentString*> sFontAliases;  
 };
 
 /** @} */
@@ -120,7 +120,7 @@ public:
 //----------------------------------------------------------------------
 // nsSVGLibartGlyphMetricsFT implementation:
 
-nsDataHashtable<nsStringHashKey,nsDependentString*>
+nsDataHashtable<nsStringHashKey,const nsDependentString*>
 nsSVGLibartGlyphMetricsFT::sFontAliases;
 
 
@@ -406,7 +406,7 @@ FindFont(const nsString& aFamily, PRBool aGeneric, void *aData)
   }
   else {
     // try alias if there is one:
-    nsDependentString *alias = nsnull;
+    const nsDependentString *alias = nsnull;
     nsSVGLibartGlyphMetricsFT::sFontAliases.Get(NS_ConvertUTF8toUCS2(family_name),
                                                 &alias);
     if (alias) {
