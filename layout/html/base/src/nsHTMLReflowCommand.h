@@ -21,6 +21,8 @@
 #include "nsIReflowCommand.h"
 #include "nsVoidArray.h"
 
+class nsIAtom;
+
 /**
  * An HTML reflow command
  */
@@ -33,7 +35,8 @@ public:
    */
   nsHTMLReflowCommand(nsIFrame*  aTargetFrame,
                       ReflowType aReflowType,
-                      nsIFrame*  aChildFrame = nsnull);
+                      nsIFrame*  aChildFrame = nsnull,
+                      nsIAtom*   aAttribute = nsnull);
 
   /**
    * Construct an HTML reflow command of type FrameInserted, with target
@@ -58,6 +61,10 @@ public:
   NS_IMETHOD GetTarget(nsIFrame*& aTargetFrame) const;
   NS_IMETHOD SetTarget(nsIFrame* aTargetFrame);
   NS_IMETHOD GetType(ReflowType& aReflowType) const;
+
+  /** can return nsnull.  If nsnull is not returned, the caller must NS_RELEASE aAttribute */
+  NS_IMETHOD GetAttribute(nsIAtom *& aAttribute) const;
+
   NS_IMETHOD GetChildFrame(nsIFrame*& aChildFrame) const;
   NS_IMETHOD GetPrevSiblingFrame(nsIFrame*& aSiblingFrame) const;
 
@@ -70,6 +77,7 @@ private:
   nsIFrame*       mTargetFrame;
   nsIFrame*       mChildFrame;
   nsIFrame*       mPrevSiblingFrame;
+  nsIAtom*        mAttribute;
   nsVoidArray     mPath;
 };
 
