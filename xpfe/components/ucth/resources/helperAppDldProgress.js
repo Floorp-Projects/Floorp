@@ -69,7 +69,6 @@ var progressListener = {
         } 
         catch ( exception ) 
         {
-          dump( "Error setting close timeout\n" );
           // OK, try to just close the window immediately.
           window.close();
           // If that's not working either, change button text to give user a clue.
@@ -183,7 +182,7 @@ var progressListener = {
       // Update percentage label on progress meter.
       var percentMsg = getString( "percentMsg" );
       percentMsg = replaceInsert( percentMsg, 1, percent );
-      dialog.progress.progresstext = percentMsg;
+      dialog.progressText.setAttribute("value", percentMsg);
 
       // Update time remaining.
       if ( rate && aMaxTotalProgress != "-1" ) 
@@ -201,8 +200,8 @@ var progressListener = {
     },
     onStatusChange: function(aWebProgress, aRequest, aStatus, aMessage)
     {
-      if (aMessage)
-        dialog.status.setAttribute("value", status);
+//      if (aMessage && aMessage != "")
+//        dialog.status.setAttribute("value", aMessage);
     },
     onSecurityChange: function(aWebProgress, aRequest, state)
     {
@@ -294,6 +293,7 @@ function onLoad() {
     dialog.fileName    = document.getElementById("dialog.fileName");
     dialog.status      = document.getElementById("dialog.status");
     dialog.progress    = document.getElementById("dialog.progress");
+    dialog.progressText = document.getElementById("dialog.progressText");
     dialog.timeLeft    = document.getElementById("dialog.timeLeft");
     dialog.timeElapsed = document.getElementById("dialog.timeElapsed");
     dialog.cancel      = document.getElementById("dialog.cancel");
