@@ -186,6 +186,9 @@ public:
   NS_IMETHOD    Close();
   NS_IMETHOD    Close(JSContext* cx, jsval* argv, PRUint32 argc);
 
+  NS_IMETHOD    Escape(const nsString& aStr, nsString& aReturn);
+  NS_IMETHOD    Unescape(const nsString& aStr, nsString& aReturn);
+
   NS_IMETHOD    CaptureEvents(PRInt32 aEventFlags);
   NS_IMETHOD    ReleaseEvents(PRInt32 aEventFlags);
   NS_IMETHOD    RouteEvent(nsIDOMEvent* aEvt);

@@ -86,6 +86,9 @@
 #include "nsDOMPropEnums.h"
 #include "nsXPIDLString.h"
 #include "nsICookieService.h"
+#include "nsICharsetConverterManager.h"
+#include "nsEscape.h"
+
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 #include "nsIJVMManager.h"
@@ -123,6 +126,7 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_IID(kCookieServiceCID, NS_COOKIESERVICE_CID);
 
 static NS_DEFINE_CID(kXULControllersCID,          NS_XULCONTROLLERS_CID);
+static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
 //STATIC METHOD
 //one MORE implementation of this function
@@ -1404,6 +1408,162 @@ GlobalWindowImpl::Close(JSContext* cx, jsval* argv, PRUint32 argc)
     }
   }
   return result;
+}
+
+NS_IMETHODIMP    
+GlobalWindowImpl::Escape(const nsString& aStr, nsString& aReturn)
+{
+  nsresult result;
+  nsCOMPtr<nsIUnicodeEncoder> encoder;
+  nsAutoString charset;
+
+  NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &result);
+  if (NS_FAILED(result) || !ccm) {
+    return result;
+  }
+
+  // Get the document character set
+  charset = "UTF-8"; // default to utf-8
+  if (mDocument) {
+    nsCOMPtr<nsIDocument> doc = do_QueryInterface(mDocument);
+
+    if (doc) {
+      result = doc->GetDocumentCharacterSet(charset);
+    }
+  }
+  if (NS_FAILED(result)) {
+    return result;
+  }
+
+  // Get an encoder for the character set
+  result = ccm->GetUnicodeEncoder(&charset, getter_AddRefs(encoder));
+  if (NS_FAILED(result)) {
+    return result;
+  }
+
+  result = encoder->Reset();
+  if (NS_FAILED(result)) {
+    return result;
+  }
+
+  PRInt32 maxByteLen, srcLen;
+  srcLen = aStr.Length();
+  const PRUnichar* src = aStr.GetUnicode();
+
+  // Get the expected length of result string
+  result = encoder->GetMaxLength(src, srcLen, &maxByteLen);
+  if (NS_FAILED(result)) {
+    return result;
+  }
+
+  // Allocate a buffer of the maximum length
+  char* dest = (char*)nsAllocator::Alloc(maxByteLen+1);
+  PRInt32 destLen2, destLen = maxByteLen;
+  if (nsnull == dest) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  
+  // Convert from unicode to the character set
+  result = encoder->Convert(src, &srcLen, dest, &destLen);
+  if (NS_FAILED(result)) {
+    nsAllocator::Free(dest);
+    return result;
+  }
+
+  // Allow the encoder to finish the conversion
+  destLen2 = maxByteLen - destLen;
+  encoder->Finish(dest+destLen, &destLen2);
+  dest[destLen+destLen2] = '\0';
+
+  // Escape the string
+  char* outBuf = nsEscape(dest, nsEscapeMask(url_XAlphas | url_XPAlphas | url_Path)); 
+  aReturn.SetString(outBuf);
+
+  nsAllocator::Free(outBuf);
+  nsAllocator::Free(dest);
+
+  return result;
+}
+ 
+NS_IMETHODIMP    
+GlobalWindowImpl::Unescape(const nsString& aStr, nsString& aReturn)
+{
+  nsresult result;
+  nsCOMPtr<nsIUnicodeDecoder> decoder;
+  nsAutoString charset;
+
+  NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &result);
+  if (NS_FAILED(result) || !ccm) {
+    return result;
+  }
+
+  // Get the document character set
+  charset = "UTF-8"; // default to utf-8
+  if (mDocument) {
+    nsCOMPtr<nsIDocument> doc = do_QueryInterface(mDocument);
+
+    if (doc) {
+      result = doc->GetDocumentCharacterSet(charset);
+    }
+  }
+  if (NS_FAILED(result)) {
+    return result;
+  }
+
+  // Get an decoder for the character set
+  result = ccm->GetUnicodeDecoder(&charset, getter_AddRefs(decoder));
+  if (NS_FAILED(result)) {
+    return result;
+  }
+
+  result = decoder->Reset();
+  if (NS_FAILED(result)) {
+    return result;
+  }
+
+  // Need to copy to do the two-byte to one-byte deflation
+  char* inBuf = aStr.ToNewCString();
+  if (nsnull == inBuf) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  // Unescape the string
+  char* src = nsUnescape(inBuf);
+  nsAllocator::Free(inBuf);
+  if (nsnull == src) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  PRInt32 maxLength, srcLen;
+  srcLen = aStr.Length();
+
+  // Get the expected length of the result string
+  result = decoder->GetMaxLength(src, srcLen, &maxLength);
+  if (NS_FAILED(result)) {
+    nsAllocator::Free(src);
+    return result;
+  }
+
+  // Allocate a buffer of the maximum length
+  PRUnichar* dest = (PRUnichar*)nsAllocator::Alloc(sizeof(PRUnichar)*maxLength);
+  PRInt32 destLen = maxLength;
+  if (nsnull == dest) {
+    nsAllocator::Free(src);
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  // Convert from character set to unicode
+  result = decoder->Convert(src, &srcLen, dest, &destLen);
+  nsAllocator::Free(src);
+  if (NS_FAILED(result)) {
+    nsAllocator::Free(dest);
+    return result;
+  }
+
+  aReturn.SetString(dest, destLen);
+  nsAllocator::Free(dest);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP

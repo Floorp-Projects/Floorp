@@ -817,6 +817,7 @@
     "window.document", \
     "window.dump", \
     "window.enableexternalcapture", \
+    "window.escape", \
     "window.focus", \
     "window.forward", \
     "window.frames", \
@@ -864,6 +865,7 @@
     "window.stop", \
     "window.toolbar", \
     "window.top", \
+    "window.unescape", \
     "window.window", \
     "windowcollection.item", \
     "windowcollection.length", \
