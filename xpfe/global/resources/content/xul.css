@@ -724,14 +724,6 @@ scrollbar {
   direction: ltr;
 }
 
-/* Scrollbars which have been marked 'lazy' are unbound while
-   collapsed; this saves anonymous content creation for scrollbars
-   which are not visible */
-scrollbar[lazy="true"][collapsed="true"],
-scrollbar[lazy="true"][moz-collapsed="true"] {
-  -moz-binding: none;
-}
-
 thumb 
 {
   -moz-binding: url(chrome://global/content/bindings/scrollbar.xml#thumb);

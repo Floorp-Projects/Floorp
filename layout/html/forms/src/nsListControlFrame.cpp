@@ -1424,6 +1424,17 @@ nsListControlFrame::GetFormContent(nsIContent*& aContent) const
   return rv;
 }
 
+nsListControlFrame::ScrollbarStyles
+nsListControlFrame::GetScrollbarStyles() const
+{
+  // We can't express this in the style system yet; when we can, this can go away
+  // and GetScrollbarStyles can be devirtualized
+  if (IsInDropDownMode()) {
+    return ScrollbarStyles(NS_STYLE_OVERFLOW_HIDDEN, NS_STYLE_OVERFLOW_AUTO);
+  } else {
+    return ScrollbarStyles(NS_STYLE_OVERFLOW_HIDDEN, NS_STYLE_OVERFLOW_SCROLL);
+  }
+}
 
 //---------------------------------------------------------
 NS_IMETHODIMP
@@ -2218,7 +2229,7 @@ nsListControlFrame::GetSelectedIndex(PRInt32 * aIndex)
 
 //---------------------------------------------------------
 PRBool 
-nsListControlFrame::IsInDropDownMode()
+nsListControlFrame::IsInDropDownMode() const
 {
   return((nsnull == mComboboxFrame) ? PR_FALSE : PR_TRUE);
 }
