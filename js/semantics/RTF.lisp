@@ -319,6 +319,7 @@
     ((:but-not 6) (b "except"))
     ((:begin-negative-lookahead 13) "[lookahead" :not-member-10 "{")
     ((:end-negative-lookahead 2) "}]")
+    ((:no-line-break 15) "[no" ~ "line" ~ "break]")
     (:subscript sub)
     (:superscript super)
     (:plain-subscript b 0 i 0 :subscript)
