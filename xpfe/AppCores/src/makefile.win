@@ -143,6 +143,7 @@ install:: $(DLL)
 	$(MAKE_INSTALL) ..\xul\resources\TB_PersonalIcon.gif	$(DIST)\bin\res\toolbar
 	$(MAKE_INSTALL) ..\xul\resources\TB_Places.gif			$(DIST)\bin\res\toolbar
 	$(MAKE_INSTALL) ..\xul\resources\TB_Places_mo.gif		$(DIST)\bin\res\toolbar
+	$(MAKE_INSTALL) ..\xul\resources\TB_popup.gif			$(DIST)\bin\res\toolbar
 	$(MAKE_INSTALL) ..\xul\resources\TB_Print.gif			$(DIST)\bin\res\toolbar
 	$(MAKE_INSTALL) ..\xul\resources\TB_Print_mo.gif		$(DIST)\bin\res\toolbar
 	$(MAKE_INSTALL) ..\xul\resources\TB_Reload.gif			$(DIST)\bin\res\toolbar
@@ -245,7 +246,8 @@ clobber::
 	rm -f $(DIST)\res\samples\TB_Netscape_mo.gif		
 	rm -f $(DIST)\res\samples\TB_PersonalIcon.gif	
 	rm -f $(DIST)\res\samples\TB_Places.gif			
-	rm -f $(DIST)\res\samples\TB_Places_mo.gif		
+	rm -f $(DIST)\res\samples\TB_Places_mo.gif
+	rm -f $(DIST)\res\samples\TB_popup.gif		
 	rm -f $(DIST)\res\samples\TB_Print.gif			
 	rm -f $(DIST)\res\samples\TB_Print_mo.gif		
 	rm -f $(DIST)\res\samples\TB_Reload.gif			
