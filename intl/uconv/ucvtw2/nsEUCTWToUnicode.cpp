@@ -18,21 +18,11 @@
  */
 
 #include "nsEUCTWToUnicode.h"
+#include "nsUCvTW2Dll.h"
 
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
 
-static PRUint16 g_ASCIIMappingTable[] = {
-  0x0001, 0x0004, 0x0005, 0x0008, 0x0000, 0x0000, 0x007F, 0x0000
-};
-
-static PRUint16 g_CNS1MappingTable[] = {
-#include "cns_1.ut"
-};
-
-static PRUint16 g_CNS2MappingTable[] = {
-#include "cns_2.ut"
-};
 
 static PRInt16 g_ASCIIShiftTable[] =  {
   0, u1ByteCharset,

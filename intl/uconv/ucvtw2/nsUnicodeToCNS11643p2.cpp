@@ -17,53 +17,29 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
-#include "nsUnicodeToEUCTW.h"
+#include "nsUnicodeToCNS11643p2.h"
 #include "nsUCvTW2Dll.h"
 
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
 
-static PRInt16 g_ASCIIShiftTable[] =  {
-  0, u1ByteCharset,
-  ShiftCell(0,0,0,0,0,0,0,0)
-};
-
 static PRInt16 g_CNS1ShiftTable[] =  {
-  0, u2BytesGRCharset,
+  0, u2BytesCharset,
   ShiftCell(0, 0, 0, 0, 0, 0, 0, 0),
-};
-
-static PRInt16 g_CNS2ShiftTable[] =  {
-  0, u2BytesGRPrefix8EA2Charset,
-  ShiftCell(0, 0, 0, 0, 0, 0, 0, 0),
-};
-
-
-static PRInt16 *g_EUCTWShiftTableSet [] = {
-  g_ASCIIShiftTable,
-  g_CNS1ShiftTable,
-  g_CNS2ShiftTable
-};
-
-static PRUint16 *g_EUCTWMappingTableSet [] ={
-  g_ASCIIMappingTable,
-  g_ufCNS1MappingTable,
-  g_ufCNS2MappingTable
 };
 
 //----------------------------------------------------------------------
-// Class nsUnicodeToEUCTW [implementation]
+// Class nsUnicodeToCNS11643p2 [implementation]
 
-nsUnicodeToEUCTW::nsUnicodeToEUCTW() 
-: nsMultiTableEncoderSupport( 3,
-                        (uShiftTable**) &g_EUCTWShiftTableSet, 
-                        (uMappingTable**) &g_EUCTWMappingTableSet)
+nsUnicodeToCNS11643p2::nsUnicodeToCNS11643p2() 
+: nsTableEncoderSupport((uShiftTable*) &g_CNS1ShiftTable, 
+                        (uMappingTable*) &g_ufCNS1MappingTable)
 {
 }
 
-nsresult nsUnicodeToEUCTW::CreateInstance(nsISupports ** aResult) 
+nsresult nsUnicodeToCNS11643p2::CreateInstance(nsISupports ** aResult) 
 {
-  nsIUnicodeEncoder *p = new nsUnicodeToEUCTW();
+  nsIUnicodeEncoder *p = new nsUnicodeToCNS11643p2();
   if(p) {
    *aResult = p;
    return NS_OK;
@@ -74,10 +50,10 @@ nsresult nsUnicodeToEUCTW::CreateInstance(nsISupports ** aResult)
 //----------------------------------------------------------------------
 // Subclassing of nsTableEncoderSupport class [implementation]
 
-NS_IMETHODIMP nsUnicodeToEUCTW::GetMaxLength(const PRUnichar * aSrc, 
+NS_IMETHODIMP nsUnicodeToCNS11643p2::GetMaxLength(const PRUnichar * aSrc, 
                                               PRInt32 aSrcLength,
                                               PRInt32 * aDestLength)
 {
-  *aDestLength = 4 * aSrcLength;
-  return NS_OK;
+  *aDestLength = 2 * aSrcLength;
+  return NS_OK_UENC_EXACTLENGTH;
 }
