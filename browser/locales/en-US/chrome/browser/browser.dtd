@@ -241,7 +241,7 @@
 <!ENTITY bookmarkFrameCmd.label       "Bookmark This Frame...">
 <!ENTITY bookmarkFrameCmd.accesskey   "F">
 <!ENTITY sendPageCmd.label            "Send Page...">
-<!ENTITY sendPageCmd.accesskey        "S">
+<!ENTITY sendPageCmd.accesskey        "e">
 <!ENTITY savePageCmd.label            "Save Page As...">
 <!ENTITY savePageCmd.accesskey        "A">
 <!ENTITY savePageCmd.commandkey       "s">
