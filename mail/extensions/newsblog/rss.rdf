@@ -1,4 +1,14 @@
 <?xml version="1.0"?>
+
+<!DOCTYPE RDF 
+ [
+  <!ENTITY rss.accountName            "News &amp; Blogs">
+  <!ENTITY rss.wizardShortName        "RSS">  
+  <!ENTITY rss.wizardLongName         "RSS News &amp; Blogs">
+  <!ENTITY rss.hostName               "News &amp; Blogs">
+ ]
+>
+
 <RDF:RDF
     xmlns:NC="http://home.netscape.com/NC-rdf#"
     xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
@@ -10,7 +20,7 @@
         <!-- server info -->
         <NC:incomingServer>
           <NC:nsIMsgIncomingServer>
-            <NC:hostName>News &amp; Blogs</NC:hostName>
+            <NC:hostName>&rss.hostName;</NC:hostName>
             <NC:type>rss</NC:type>
             <NC:biffMinutes>45</NC:biffMinutes>
             <NC:username>nobody</NC:username>
@@ -24,10 +34,10 @@
         </NC:identity>
 
         <NC:wizardHideIncoming>true</NC:wizardHideIncoming>
-	  <NC:wizardAccountName>News &amp; Blogs</NC:wizardAccountName>
+	      <NC:wizardAccountName>&rss.accountName;</NC:wizardAccountName>
         <NC:wizardSkipPanels>identitypage,serverpage,loginpage</NC:wizardSkipPanels>
-        <NC:wizardShortName>RSS</NC:wizardShortName>
-        <NC:wizardLongName>RSS News &amp; Blogs Account</NC:wizardLongName>
+        <NC:wizardShortName>&rss.wizardShortName;</NC:wizardShortName>
+        <NC:wizardLongName>&rss.wizardLongName;</NC:wizardLongName>
         <NC:wizardShow>true</NC:wizardShow>
         <NC:emailProviderName>RSS</NC:emailProviderName>
         <NC:showServerDetailsOnWizardSummary>false</NC:showServerDetailsOnWizardSummary> 
