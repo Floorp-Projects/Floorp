@@ -440,9 +440,13 @@ tbx_missing_platforms ()
     QA_MISSING="QA report missing"
     MACHINE="0"
 
+    if [ "$QA_OS_STRING" = "WINNT4.0" ] ; then
+        QA_OS_STRING="Windows-NT-4.0"
+    fi
     for BUILDPLATFORM in `grep $QA_OS_STRING $TESTSCRIPTDIR/platformlist.tbx`
     do
         if [ "$BUILDPLATFORM" != "$QA_OS_STRING" ] ; then
+            Debug  "BUILDPLATFORM = $BUILDPLATFORM QA_OS_STRING = $QA_OS_STRING"
             grep $BUILDPLATFORM ${MACHINES_TO_CHECK}*/results.html \
                 >/dev/null || {
                 setQAsysvars
@@ -660,7 +664,7 @@ tbx_main()
     qa_stat_get_sysinfo # find out the OS we are running and all required tests
                         # on this OS
     
-    MACHINES_TO_CHECK=`uname -n` # only search the local tests for errors
+    MACHINES_TO_CHECK=$HOST  #`uname -n` only search the local tests for errors
     qa_errorlist > $ERRORLIST        # 
     platformlist 
     tbx_missing_platforms 
