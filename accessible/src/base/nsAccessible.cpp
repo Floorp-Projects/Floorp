@@ -995,7 +995,9 @@ NS_IMETHODIMP nsAccessible::AccGetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width,
   if (presContext) {
     nsRect orgRectPixels, pageRectPixels;
     GetScreenOrigin(presContext, aBoundingFrame, &orgRectPixels);
-    GetScrollOffset(&pageRectPixels);
+    nsCOMPtr<nsIAccessibleEventReceiver> accessibleEventReceiver(do_QueryInterface(this));
+    if (!accessibleEventReceiver)        // Only the root accessible object supports this interface
+      GetScrollOffset(&pageRectPixels);  // Don't add scroll offsets for the root accessible
     *x += orgRectPixels.x - pageRectPixels.x;
     *y += orgRectPixels.y - pageRectPixels.y;
   }
