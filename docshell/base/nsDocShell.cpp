@@ -4497,12 +4497,18 @@ nsDocShell::NewContentViewerObj(const char *aContentType,
                                                        aViewer),
                       NS_ERROR_FAILURE);
 
-    (*aViewer)->SetContainer(NS_STATIC_CAST(nsIContentViewerContainer *, this));
-
     nsCOMPtr<nsIPluginViewer> pv(do_QueryInterface(*aViewer));
-    if (pv)
-      SetTitle(nsnull);  // clear title bar for full-page plugin
+    if (pv) {
+      if (mName.EqualsIgnoreCase("messagepane")) {
+        NS_IF_RELEASE(*aViewer);
+        NS_IF_RELEASE(*aContentHandler);
+        return NS_ERROR_FAILURE; 
+      }
+      else
+        SetTitle(nsnull);  // clear title bar for full-page plugin
+    }
 
+    (*aViewer)->SetContainer(NS_STATIC_CAST(nsIContentViewerContainer *, this));
     return NS_OK;
 }
 
