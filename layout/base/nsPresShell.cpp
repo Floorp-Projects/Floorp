@@ -1863,7 +1863,13 @@ FindFrameWithContent(nsIFrame* aFrame, nsIContent* aContent)
     NS_RELEASE(styleContext);
     NS_IF_RELEASE(pseudoTag);
 
-    if (!isPlaceholder) {
+    // Also ignore frames associated with generated content
+    nsFrameState  frameState;
+    PRBool        isGeneratedContent;
+    aFrame->GetFrameState(&frameState);
+    isGeneratedContent = (frameState & NS_FRAME_GENERATED_CONTENT) == NS_FRAME_GENERATED_CONTENT;
+
+    if (!isPlaceholder && !isGeneratedContent) {
       NS_IF_RELEASE(frameContent);
       return aFrame;
     }
