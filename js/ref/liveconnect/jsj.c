@@ -500,7 +500,7 @@ find_jsjava_thread(JNIEnv *jEnv)
 
     /* Search for the thread state among the list of all created
        LiveConnect threads */
-    for (p=&thread_list; e = *p; p = &(e->next)) {
+    for (p = &thread_list; (e = *p) != NULL; p = &(e->next)) {
         if (e->jEnv == jEnv) {
             jsj_env = e;
             *p = jsj_env->next;
@@ -628,7 +628,7 @@ JSJ_DetachCurrentThreadFromJava(JSJavaThreadState *jsj_env)
     jsj_ClearPendingJSErrors(jsj_env);
 
     /* THREADSAFETY - need to protect against races */
-    for (p=&thread_list; e = *p; p = &(e->next)) {
+    for (p = &thread_list; (e = *p) != NULL; p = &(e->next)) {
         if (e == jsj_env) {
             *p = jsj_env->next;
             break;
@@ -680,7 +680,7 @@ default_map_jsj_thread_to_js_context(JSJavaThreadState *jsj_env, char **errp)
 }
 
 /* Trivial implementation of callback function */
-JSObject *
+static JSObject *
 default_map_java_object_to_js_object(JNIEnv *jEnv, jobject hint, char **errp)
 {
     return the_global_js_obj;
