@@ -224,8 +224,11 @@ Contributor(s): ______________________________________. -->
         datasources="rdf:bookmarks"
         ref="NC:PersonalToolbarFolder" id="innermostBox">
 
-        <menu datasources="rdf:bookmarks" ref="NC:BookmarksRoot">
-          <titledbutton class="bookmarkbutton" align="left" 
+          // pinkerton - i added the container=true on this button as a temp hack until we can get this
+          //   button into rdf. we can't allow drags on this container so we have to be able
+          //   to identify it. (bug 19588)
+        <menu datasources="rdf:bookmarks" ref="NC:BookmarksRoot" container="true">
+          <titledbutton class="bookmarkbutton" align="left"
             value="&bookmarksButton.label;" crop="right"/>
 		        <spring uri="rdf:*" class="personaltoolbarspacer" flex="1"/>
           <template>

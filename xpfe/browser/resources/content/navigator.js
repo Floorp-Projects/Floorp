@@ -63,8 +63,18 @@ catch (ex) {
     // make sure we can find it before we go any further. If we can't find it, we're
     // up the creek, but don't keep propagating the event.
     var childWithDatabase = document.getElementById("innermostBox");
-    if ( ! childWithDatabase )
-      return false;
+    if ( ! childWithDatabase ) {
+      event.preventBubble();
+      return;
+    }
+
+    // pinkerton
+    // right now, the issue of d&d and these popup menus is really wacky, so i'm punting
+    // until I have time to fix it and we can come up with a good UI gesture (bug 19588). In
+    // the meantime, if the target is a container, don't initiate the drag.
+    var container = event.target.getAttribute("container");
+    if ( container == "true" )
+      return;
     
     var dragStarted = false;
     var dragService = Components.classes["component://netscape/widget/dragservice"].getService();
@@ -130,6 +140,8 @@ this doesn't work anymore (target is null), not sure why.
 
     if ( dragStarted )               // don't propagate the event if a drag has begun
       event.preventBubble();
+    
+    return true;
     
   } // BeginDragPersonalToolbar
   
@@ -266,6 +278,8 @@ this doesn't work anymore (target is null), not sure why.
           validFlavor = true;
         else if ( dragSession.isDataFlavorSupported("text/plain") )
           validFlavor = true;
+        else if ( dragSession.isDataFlavorSupported("text/unicode") )
+          validFlavor = true;
         //XXX other flavors here...such as files from the desktop?
         
         if ( validFlavor ) {
@@ -298,27 +312,38 @@ this doesn't work anymore (target is null), not sure why.
         var trans = Components.classes["component://netscape/widget/transferable"].createInstance();
         if ( trans ) trans = trans.QueryInterface(Components.interfaces.nsITransferable);
         if ( trans ) {
+          trans.addDataFlavor("text/unicode");
           trans.addDataFlavor("text/plain");
           for ( var i = 0; i < dragSession.numDropItems; ++i ) {
+            var id = "";
             dragSession.getData ( trans, i );
             var dataObj = new Object();
             var bestFlavor = new Object();
             var len = new Object();
             trans.getAnyTransferData ( bestFlavor, dataObj, len );
-            if ( dataObj ) dataObj = dataObj.value.QueryInterface(Components.interfaces.nsISupportsString);
-            if ( dataObj ) {
-            
-              // pull the URL out of the data object
-              var id = dataObj.data.substring(0, len.value);
-              dump("ID: '" + id + "'\n");
-
-              // stuff it into the url field and go, baby, go!
-              var urlBar = document.getElementById ( "urlbar" );
-              urlBar.value = id;
-              BrowserLoadURL();
-              
-              event.preventBubble();     
+            if ( bestFlavor.value == "text/unicode" ) {
+              if ( dataObj ) dataObj = dataObj.value.QueryInterface(Components.interfaces.nsISupportsWString);
+              if ( dataObj ) {            
+                // pull the URL out of the data object, two byte data
+                var id = dataObj.data.substring(0, len.value / 2);
+                dump("ID: '" + id + "'\n");
+              }
             }
+            else {
+              if ( dataObj ) dataObj = dataObj.value.QueryInterface(Components.interfaces.nsISupportsString);
+              if ( dataObj ) {            
+                // pull the URL out of the data object
+                var id = dataObj.data.substring(0, len.value);
+                dump("ID: '" + id + "'\n");
+              }
+            }
+            
+            // stuff it into the url field and go, baby, go!
+            var urlBar = document.getElementById ( "urlbar" );
+            urlBar.value = id;
+            BrowserLoadURL();
+              
+            event.preventBubble();
           } // foreach drag item
         }
       }
