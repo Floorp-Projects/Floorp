@@ -887,14 +887,11 @@ public class Interpreter {
                     iCodeTop = addForwardGoto(TokenStream.GOTO, iCodeTop);
                     int finallyOffset = iCodeTop - tryStart;
                     recordJumpOffset(tryStart + 3, finallyOffset);
-                    // on entry the stack will have the exception object
-                    itsStackDepth = 1;
-                    if (itsStackDepth > itsData.itsMaxStack)
-                        itsData.itsMaxStack = itsStackDepth;
+                    // Stack depth is handled during generation of
+                    // finallyTarget
                     iCodeTop = addGoto(finallyTarget, TokenStream.GOSUB,
                                        iCodeTop);
                     iCodeTop = addByte(TokenStream.JTHROW, iCodeTop);
-                    itsStackDepth = 0;
                     resolveForwardGoto(skippyJumpStart, iCodeTop);
                 }
                 itsTryDepth--;
