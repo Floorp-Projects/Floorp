@@ -184,6 +184,26 @@ public:
     return NS_OK;
   }
 
+  NS_IMETHOD    ImportNode(nsIDOMNode* aImportedNode, PRBool aDeep, nsIDOMNode** aReturn) {
+    return NS_OK;
+  }
+
+  NS_IMETHOD    CreateElementNS(const nsString& aNamespaceURI, const nsString& aQualifiedName, nsIDOMElement** aReturn) {
+    return NS_OK;
+  }
+
+  NS_IMETHOD    CreateAttributeNS(const nsString& aNamespaceURI, const nsString& aQualifiedName, nsIDOMAttr** aReturn) {
+    return NS_OK;
+  }
+
+  NS_IMETHOD    GetElementsByTagNameNS(const nsString& aNamespaceURI, const nsString& aLocalName, nsIDOMNodeList** aReturn) {
+    return NS_OK;
+  }
+
+  NS_IMETHOD    GetElementById(const nsString& aElementId, nsIDOMElement** aReturn) {
+    return NS_OK;
+  }
+
 protected:
   virtual ~MyDocument();
 };
