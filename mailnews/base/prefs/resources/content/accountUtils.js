@@ -88,7 +88,7 @@ function verifyAccounts(wizardcallback) {
         // then kick off the account migration
         if (accountCount == invalidAccounts.length) {
             try {
-                  messengerMigrator = Components.classes[messengerMigratorContractID].getService(Components.interfaces.nsIMessengerMigrator);  
+                  var messengerMigrator = Components.classes[messengerMigratorContractID].getService(Components.interfaces.nsIMessengerMigrator);  
                   dump("attempt to UpgradePrefs.  If that fails, open the account wizard.\n");
                   messengerMigrator.UpgradePrefs();
                   // if there is a callback mechanism then inform parent window to shut itself down

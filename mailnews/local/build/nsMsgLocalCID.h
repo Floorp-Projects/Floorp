@@ -164,7 +164,7 @@
 //
 
 #define NS_MOVEMAILSERVICE_CONTRACTID \
-  "component://netscape/messenger/movemailservice"
+  "@mozilla.org/messenger/movemailservice;1"
 
 #define NS_MOVEMAILPROTOCOLINFO_CONTRACTID \
   NS_MSGPROTOCOLINFO_CONTRACTID_PREFIX "movemail"
