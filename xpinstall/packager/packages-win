@@ -186,6 +186,7 @@ bin\chrome\platformHTMLBindings.xml
 bin\chrome\xul.css
 bin\chrome\xulBindings.xml
 bin\chrome\autocomplete.xml
+bin\chrome\menulistBindings.xml
 bin\defaults\pref\all.js
 bin\defaults\pref\mailnews.js
 bin\defaults\pref\config.js
