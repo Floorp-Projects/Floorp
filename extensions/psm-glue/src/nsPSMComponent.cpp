@@ -503,7 +503,7 @@ nsPSMComponent::GetControlConnection( CMT_CONTROL * *_retval )
             goto failure;
 
         nsFileSpec profileSpec;
-        char*      profileName = nsnull;
+        PRUnichar*      profileName;
         
         NS_WITH_SERVICE(nsIProfile, profile, kProfileCID, &rv);
         if (NS_FAILED(rv)) goto failure;
@@ -514,13 +514,13 @@ nsPSMComponent::GetControlConnection( CMT_CONTROL * *_retval )
         rv = profile->GetCurrentProfile(&profileName);
         if (NS_FAILED(rv)) goto failure;
           
-          CMTStatus psmStatus;
+        CMTStatus psmStatus;
           
-          psmStatus = CMT_Hello( mControl, 
-                                       PROTOCOL_VERSION, 
-                                       profileName, 
-                                       (char*)profileSpec.GetNativePathCString());
-          
+        psmStatus = CMT_Hello( mControl, 
+                                   PROTOCOL_VERSION, 
+                                   nsCAutoString(profileName), 
+                                   (char*)profileSpec.GetNativePathCString());        
+
         if (psmStatus == CMTFailure)
         {  
             PR_FREEIF(profileName);       

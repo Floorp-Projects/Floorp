@@ -99,49 +99,49 @@ static PRBool GetProfileDirectory(nsFileSpec& outSpec)
         if (numProfiles == 0)
             return PR_FALSE;
 
-        char* currProfileName = nsnull;
+        PRUnichar* currProfileName;
         nsFileSpec currProfileDirSpec;
         if (numProfiles == 1)
         {
             // one profile exists: use that profile
             profileService->GetFirstProfile(&currProfileName);
-	    if (currProfileName && (PL_strlen(currProfileName) > 0)) {
-            	profileService->GetProfileDir(currProfileName, &currProfileDirSpec);
-	    }
-	    else {
-		// this should never happen
-		PR_FREEIF(currProfileName);
-		return PR_FALSE;
-	    }
+            if (currProfileName && (nsCRT::strlen(currProfileName) > 0)) {
+                profileService->GetProfileDir(currProfileName, &currProfileDirSpec);
+            }
+            else {
+                // this should never happen
+                PR_FREEIF(currProfileName);
+                return PR_FALSE;
+            }
         }
-	    else
-	    {
-		    // multiple profiles exist: we'll use the same profile as last time 
-		    // (see following rules) 
-		    // (if we can't figure out what the last profile used was for some reason, 
-		    // we'll pick the first one as returned from the registry query) 
-	        profileService->GetCurrentProfile(&currProfileName);
-	        if (currProfileName && (PL_strlen(currProfileName) > 0)) {
-	            profileService->GetProfileDir(currProfileName, &currProfileDirSpec);
-		}
-	        else
-	        {
-	            profileService->GetFirstProfile(&currProfileName);
-	            if (currProfileName && (PL_strlen(currProfileName) > 0)) {
-			    profileService->GetProfileDir(currProfileName, &currProfileDirSpec);
-		    }
-	        }
-	    }
-	if (!currProfileName || (PL_strlen(currProfileName) == 0)) {
-		// we don't have it, return false.
-		PR_FREEIF(currProfileName);
-		return PR_FALSE;
-	}    
+        else
+        {
+            // multiple profiles exist: we'll use the same profile as last time 
+            // (see following rules) 
+            // (if we can't figure out what the last profile used was for some reason, 
+            // we'll pick the first one as returned from the registry query) 
+            profileService->GetCurrentProfile(&currProfileName);
+            if (currProfileName && (nsCRT::strlen(currProfileName) > 0)) {
+                profileService->GetProfileDir(currProfileName, &currProfileDirSpec);
+            }
+            else
+            {
+                profileService->GetFirstProfile(&currProfileName);
+                if (!currProfileName || (nsCRT::strlen(currProfileName) == 0)) {
+                    profileService->GetProfileDir(currProfileName, &currProfileDirSpec);
+                }
+            }
+        }
+        if (!currProfileName || (nsCRT::strlen(currProfileName) == 0)) {
+            // we don't have it, return false.
+            PR_FREEIF(currProfileName);
+            return PR_FALSE;
+        }    
 #if defined(NS_DEBUG)
-	if (currProfileName) {
-		printf("ProfileName : %s\n", currProfileName);
-		printf("ProfileDir  : %s\n", currProfileDirSpec.GetNativePathCString());
-	}
+    if (currProfileName) {
+        printf("ProfileName : %s\n", nsCAutoString(currProfileName).GetBuffer());
+        printf("ProfileDir  : %s\n", currProfileDirSpec.GetNativePathCString());
+    }
 #endif /* NS_DEBUG */
         PR_FREEIF(currProfileName);
         if (!currProfileDirSpec.Exists())
