@@ -2722,6 +2722,68 @@ INTLCharSetID INTL_GetCharSetID(INTL_CharSetID_Selector selector);
 const char* INTL_CharsetCorrection(const char* charsetname);
 
 
+/* Definition for language country selector. 
+ */ 
+typedef enum { 
+    INTL_LanguageSel = 1, 	        /* User's default language */
+    INTL_LanguageCollateSel,		/* User's default language for collation */
+    INTL_LanguageMonetarySel,		/* User's default language for monetary format */
+    INTL_LanguageNumericSel,		/* User's default language for numeric format */
+    INTL_LanguageTimeSel,			/* User's default language for data/time format */
+    INTL_CountrySel,				/* User's default country */
+    INTL_CountryCollateSel,			/* User's default country for collation */
+    INTL_CountryMonetarySel,		/* User's default country for monetary format */
+    INTL_CountryNumericSel,			/* User's default country for numeric format */
+    INTL_CountryTimeSel, 			/* User's default country for data/time format */
+	INTL_ALL_LocalesSel				/* All locales installed to the user's machine */
+} INTL_LanguageCountry_Selector; 
+
+
+/** 
+ * Returns an ISO language or country code for a given selector. 
+ * 
+ * Using a given selector, this returns a language (ISO639) code or country (ISO3166 code2) code in a C string. 
+ * 
+ * @param     selector    Specification for a name to get. 
+ * @return    A string of ISO language or country code specified by the input selector. 
+ *            Returns an empty string when the requested information is not available from the system. 
+ *            The caller is responsible for deallocalte the memory returned.
+ */ 
+
+PUBLIC char *INTL_GetLanguageCountry(INTL_LanguageCountry_Selector selector);
+
+/** 
+ * Front end implementation of INTL_GetLanguageCountry. 
+ * 
+ * Using a given selector, this returns a language (ISO639) code or country (ISO3166 code2) code in a C string
+ * 
+ * @param     selector    Specification for a name to get. 
+ * @return    A string of ISO language or country code specified by the input selector. 
+ *            Returns an empty string when the requested information is not available from the system. 
+ *            The caller is responsible for deallocalte the memory returned.
+ * @see INTL_GetLanguageCountry.
+ */ 
+
+PUBLIC char *FE_GetLanguageCountry(INTL_LanguageCountry_Selector selector);
+
+
+/** 
+ * Convert platform specific id to ISO code. 
+ * 
+ * This function is supposed to be called by the front end code.
+ * It converts a platform specific id to a language (ISO639) and a country (ISO3166 code2) code. 
+ * 
+ * @param     platformIdNum Platform specific id in number. Langid for Windows, language or region code for Macintosh or zero for Unix.
+ * @param     platformIdStr Platform specific id in string or NULL for Windows and Macintosh. 
+ * @param     bLanguage     TRUE for language, FALSE for country. 
+ * @return    A C string of language/country code connected by a hyphen (e.g. "en-US"). 
+ *            Returns an empty string when the requested information is not available from the system. 
+ *            The caller is should not modify or free the memory returned.
+ */ 
+
+PUBLIC const char *INTL_PlatformIdToISOCode(unsigned short platformIdNum, char *platformIdStr, XP_Bool bLanguage); 
+
+
 XP_END_PROTOS
 
 #endif /* INTL_LIBI18N_H */
