@@ -24,6 +24,8 @@
 #include "nsIRenderingContext.h"
 #include "nsIDOMRenderingContext.h"
 #include "nsIWidget.h"
+#include "nsIWebShell.h"
+#include "nsIPresShell.h"
 
 static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
@@ -32,6 +34,7 @@ static NS_DEFINE_IID(kIDOMEventIID, NS_IDOMEVENT_IID);
 static NS_DEFINE_IID(kIDOMUIEventIID, NS_IDOMUIEVENT_IID);
 static NS_DEFINE_IID(kIDOMNSUIEventIID, NS_IDOMNSUIEVENT_IID);
 static NS_DEFINE_IID(kIPrivateDOMEventIID, NS_IPRIVATEDOMEVENT_IID);
+static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 
 static char* mEventNames[] = {
   "mousedown", "mouseup", "click", "dblclick", "mouseover",
@@ -238,17 +241,87 @@ NS_METHOD nsDOMEvent::GetScreenY(PRInt32* aScreenY)
 
 NS_METHOD nsDOMEvent::GetClientX(PRInt32* aClientX)
 {
-  float t2p;
-  mPresContext->GetTwipsToPixels(&t2p);
-  *aClientX = NSTwipsToIntPixels(mEvent->point.x, t2p);
+  //My god, man, there *must* be a better way to do this.
+  nsIPresShell* shell;
+  nsIWidget* rootWidget = nsnull;
+  mPresContext->GetShell(&shell);
+
+  if (shell) {
+    nsIViewManager* vm;
+    shell->GetViewManager(&vm);
+    if (vm) {
+      nsIView* rootView = nsnull;
+      vm->GetRootView(rootView);
+      if (rootView) {
+        rootView->GetWidget(rootWidget);
+      }
+      NS_RELEASE(vm);
+    }
+    NS_RELEASE(shell);
+  }
+
+
+  nsRect bounds, offset;
+  offset.x = 0;
+
+  nsIWidget* parent = ((nsGUIEvent*)mEvent)->widget;
+  //Add extra ref since loop will free one.
+  NS_ADDREF(parent);
+  nsIWidget* tmp;
+  while (rootWidget != parent) {
+    parent->GetBounds(bounds);
+    offset.x += bounds.x;
+    tmp = parent;
+    parent = tmp->GetParent();
+    NS_RELEASE(tmp);
+  }
+  NS_IF_RELEASE(parent);
+  NS_IF_RELEASE(rootWidget);
+  
+  *aClientX = mEvent->refPoint.x + offset.x;
   return NS_OK;
 }
 
 NS_METHOD nsDOMEvent::GetClientY(PRInt32* aClientY)
 {
-  float t2p;
-  mPresContext->GetTwipsToPixels(&t2p);
-  *aClientY = NSTwipsToIntPixels(mEvent->point.y, t2p);
+  //My god, man, there *must* be a better way to do this.
+  nsIPresShell* shell;
+  nsIWidget* rootWidget = nsnull;
+  mPresContext->GetShell(&shell);
+
+  if (shell) {
+    nsIViewManager* vm;
+    shell->GetViewManager(&vm);
+    if (vm) {
+      nsIView* rootView = nsnull;
+      vm->GetRootView(rootView);
+      if (rootView) {
+        rootView->GetWidget(rootWidget);
+      }
+      NS_RELEASE(vm);
+    }
+    NS_RELEASE(shell);
+  }
+
+
+  nsRect bounds, offset;
+  offset.y = 0;
+
+  nsIWidget* parent = ((nsGUIEvent*)mEvent)->widget;
+  //Add extra ref since loop will free one.
+  NS_ADDREF(parent);
+  nsIWidget* tmp;
+  while (rootWidget != parent) {
+    parent->GetBounds(bounds);
+    offset.y += bounds.y;
+    tmp = parent;
+    parent = tmp->GetParent();
+    NS_RELEASE(tmp);
+  }
+  NS_IF_RELEASE(parent);
+  NS_IF_RELEASE(rootWidget);
+  
+  *aClientY = mEvent->refPoint.y + offset.y;
   return NS_OK;
 }
 
@@ -337,12 +410,18 @@ NS_METHOD nsDOMEvent::GetButton(PRUint32* aButton)
 // nsINSEventInterface
 NS_METHOD nsDOMEvent::GetLayerX(PRInt32* aLayerX)
 {
-  return GetClientX(aLayerX);
+  float t2p;
+  mPresContext->GetTwipsToPixels(&t2p);
+  *aLayerX = NSTwipsToIntPixels(mEvent->point.x, t2p);
+  return NS_OK;
 }
 
 NS_METHOD nsDOMEvent::GetLayerY(PRInt32* aLayerY)
 {
-  return GetClientY(aLayerY);
+  float t2p;
+  mPresContext->GetTwipsToPixels(&t2p);
+  *aLayerY = NSTwipsToIntPixels(mEvent->point.y, t2p);
+  return NS_OK;
 }
 
 NS_METHOD nsDOMEvent::GetPageX(PRInt32* aPageX)
@@ -378,7 +457,6 @@ NS_METHOD nsDOMEvent::GetRangeParent(nsIDOMNode** aRangeParent)
 
   if (targetFrame) {
     nsIContent* parent = nsnull;
-    PRUint32 actualOffset;
     PRInt32 offset, endOffset;
 
     if (NS_SUCCEEDED(targetFrame->GetPosition(*mPresContext, 
@@ -408,7 +486,6 @@ NS_METHOD nsDOMEvent::GetRangeOffset(PRInt32* aRangeOffset)
 
   if (targetFrame) {
     nsIContent* parent = nsnull;
-    PRUint32 actualOffset;
     PRInt32 endOffset;
 
     if (NS_SUCCEEDED(targetFrame->GetPosition(*mPresContext, 
@@ -416,7 +493,6 @@ NS_METHOD nsDOMEvent::GetRangeOffset(PRInt32* aRangeOffset)
                                               &parent,
                                               *aRangeOffset,
                                               endOffset))) {
-      *aRangeOffset += actualOffset;
       NS_IF_RELEASE(parent);
       return NS_OK;
     }
