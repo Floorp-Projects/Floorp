@@ -19,7 +19,7 @@
 import org.mozilla.javascript.*;
 
 /**
- * RunScript2: Like RunScript, but reflects the arguments into JavaScript.
+ * RunScript2: Like RunScript, but reflects the System.out into JavaScript.
  * 
  * @author Norris Boyd
  */
