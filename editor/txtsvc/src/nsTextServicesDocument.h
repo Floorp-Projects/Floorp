@@ -22,10 +22,13 @@
 #include "nsCOMPtr.h"
 #include "nsIPresShell.h"
 #include "nsIDOMDocument.h"
+#include "nsIContent.h"
 #include "nsIContentIterator.h"
 #include "nsIEditor.h"
+#include "nsIEditActionListener.h"
 #include "nsITextServicesDocument.h"
 #include "nsVoidArray.h"
+#include "nsTSDNotifier.h"
 
 /** implementation of a text services object.
  *
@@ -63,16 +66,19 @@ private:
 
   static PRInt32 sInstanceCount;
 
-  nsCOMPtr<nsIDOMDocument>     mDOMDocument;
-  nsCOMPtr<nsIPresShell>       mPresShell;
-  nsCOMPtr<nsIEditor>          mEditor;
-  nsCOMPtr<nsIContentIterator> mIterator;
-  nsVoidArray                  mOffsetTable;
+  nsCOMPtr<nsIDOMDocument>        mDOMDocument;
+  nsCOMPtr<nsIPresShell>          mPresShell;
+  nsCOMPtr<nsIEditor>             mEditor;
+  nsCOMPtr<nsIContentIterator>    mIterator;
+  nsCOMPtr<nsIContent>            mPrevTextBlock;
+  nsCOMPtr<nsIContent>            mNextTextBlock;
+  nsCOMPtr<nsIEditActionListener> mNotifier;
+  nsVoidArray                     mOffsetTable;
 
-  PRInt32                      mSelStartIndex;
-  PRInt32                      mSelStartOffset;
-  PRInt32                      mSelEndIndex;
-  PRInt32                      mSelEndOffset;
+  PRInt32                         mSelStartIndex;
+  PRInt32                         mSelStartOffset;
+  PRInt32                         mSelEndIndex;
+  PRInt32                         mSelEndOffset;
 
 public:
 
@@ -102,14 +108,29 @@ public:
   NS_IMETHOD DeleteSelection();
   NS_IMETHOD InsertText(const nsString *aText);
 
+  /* nsIEditActionListener method implementations. */
+  nsresult InsertNode(nsIDOMNode * aNode,
+                      nsIDOMNode * aParent,
+                      PRInt32      aPosition);
+  nsresult DeleteNode(nsIDOMNode * aChild);
+  nsresult SplitNode(nsIDOMNode * aExistingRightNode,
+                     PRInt32      aOffset,
+                     nsIDOMNode * aNewLeftNode);
+  nsresult JoinNodes(nsIDOMNode  *aLeftNode,
+                     nsIDOMNode  *aRightNode,
+                     nsIDOMNode  *aParent);
+
 private:
 
   /* nsTextServicesDocument private methods. */
   nsresult InitContentIterator();
+  nsresult AdjustContentIterator();
 
   nsresult FirstTextNodeInCurrentBlock();
   nsresult FirstTextNodeInPrevBlock();
   nsresult FirstTextNodeInNextBlock();
+  nsresult FindFirstTextNodeInPrevBlock(nsIContent **aContent);
+  nsresult FindFirstTextNodeInNextBlock(nsIContent **aContent);
 
   PRBool IsBlockNode(nsIContent *aContent);
   PRBool IsTextNode(nsIContent *aContent);
@@ -119,7 +140,11 @@ private:
   PRBool SelectionIsCollapsed();
   PRBool SelectionIsValid();
 
+  nsresult RemoveInvalidOffsetEntries();
   nsresult ClearOffsetTable();
+  nsresult SplitOffsetEntry(PRInt32 aTableIndex, PRInt32 aOffsetIntoEntry);
+
+  nsresult NodeHasOffsetEntry(nsIDOMNode *aNode, PRBool *aHasEntry, PRInt32 *aEntryIndex);
 
   /* DEBUG */
   void PrintOffsetTable();
