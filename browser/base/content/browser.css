@@ -10,9 +10,9 @@ toolbar[printpreview="true"] {
 
 #search-proxy-button {
   -moz-binding: url("chrome://browser/content/search.xml#searchBarDropMarker");
+  -moz-user-focus: none;
 }
 
 #statusbar-updates {
   -moz-binding: url("chrome://mozapps/content/update/updates.xml#updateStatusbarNotification");
 }
-
