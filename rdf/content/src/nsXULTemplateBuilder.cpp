@@ -1677,6 +1677,7 @@ public:
     SynchronizeUsingTemplate(nsIContent *aTemplateNode,
                              nsIContent* aRealNode,
                              UpdateAction aAction,
+                             Match& aMatch,
                              nsIRDFResource* aProperty,
                              nsIRDFNode* aValue);
 
@@ -1724,17 +1725,8 @@ public:
                                  PRBool aNotify,
                                  nsIContent** aResult);
 
-    PRBool
-    IsContainmentProperty(nsIContent* aElement, nsIRDFResource* aProperty);
-
-    PRBool
-    IsIgnoredProperty(nsIContent* aElement, nsIRDFResource* aProperty);
-
-    PRBool
-    IsContainer(nsIContent* aParentElement, nsIRDFResource* aTargetResource);
-
-    PRBool
-    IsEmpty(nsIContent* aParentElement, nsIRDFResource* aContainer);
+    nsresult
+    CheckContainer(nsIRDFResource* aTargetResource, PRBool* aIsContainer, PRBool* aIsEmpty);
 
     PRBool
     IsOpen(nsIContent* aElement);
@@ -1763,7 +1755,7 @@ public:
                   nsIContent** aResult);
 
     nsresult
-    SetEmpty(nsIContent *element, PRBool empty);
+    SetEmpty(nsIContent *aElement, const Match& aMatch);
 
 #ifdef PR_LOGGING
     nsresult
@@ -1825,8 +1817,8 @@ protected:
 
     static nsIXULSortService* gXULSortService;
 
-    static nsString    trueStr;
-    static nsString    falseStr;
+    static nsString    kTrueStr;
+    static nsString    kFalseStr;
 
 
     class ContentIdTestNode : public TestNode
@@ -1890,8 +1882,8 @@ protected:
 nsrefcnt            nsXULTemplateBuilder::gRefCnt = 0;
 nsIXULSortService*  nsXULTemplateBuilder::gXULSortService = nsnull;
 
-nsString nsXULTemplateBuilder::trueStr;
-nsString nsXULTemplateBuilder::falseStr;
+nsString nsXULTemplateBuilder::kTrueStr;
+nsString nsXULTemplateBuilder::kFalseStr;
 
 PRInt32  nsXULTemplateBuilder::kNameSpaceID_RDF;
 PRInt32  nsXULTemplateBuilder::kNameSpaceID_XUL;
@@ -3028,8 +3020,8 @@ nsXULTemplateBuilder::Init()
     if (gRefCnt++ == 0) {
         nsXULAtoms::AddRef();
 
-    trueStr.AssignWithConversion("true");
-    falseStr.AssignWithConversion("false");
+        kTrueStr.AssignWithConversion("true");
+        kFalseStr.AssignWithConversion("false");
 
         nsresult rv;
 
@@ -3546,6 +3538,9 @@ nsXULTemplateBuilder::FireNewlyMatchedRules(const KeySet& aNewKeys)
                                           PR_TRUE, *bestmatch, nsnull, nsnull);
 
             if (NS_FAILED(rv)) return rv;
+
+            // Update the 'empty' attribute
+            SetEmpty(content, *bestmatch);
         }
     }
 
@@ -3604,15 +3599,20 @@ nsXULTemplateBuilder::Retract(nsIRDFResource* aSource,
         {
             MatchSet::ConstIterator last = retractions.Last();
             for (MatchSet::ConstIterator match = retractions.First(); match != last; ++match) {
-                Value member;
-                match->mInstantiation.mBindings.GetBindingFor(match->mRule->GetMemberVariable(), &member);
+                Value memberval;
+                match->mInstantiation.mBindings.GetBindingFor(match->mRule->GetMemberVariable(), &memberval);
 
-                Value content;
-                match->mInstantiation.mBindings.GetBindingFor(mContentVar, &content);
+                Value contentval;
+                match->mInstantiation.mBindings.GetBindingFor(mContentVar, &contentval);
 
-                RemoveMember(VALUE_TO_ICONTENT(content),
-                             VALUE_TO_IRDFRESOURCE(member),
-                             PR_TRUE);
+                nsIContent* content = VALUE_TO_ICONTENT(contentval);
+                if (! content)
+                    continue;
+
+                RemoveMember(content, VALUE_TO_IRDFRESOURCE(memberval), PR_TRUE);
+
+                // Update the 'empty' attribute
+                SetEmpty(content, *match);
             }
         }
 
@@ -3880,7 +3880,7 @@ nsXULTemplateBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
         aTemplateNode->GetAttribute(kNameSpaceID_None, nsXULAtoms::id, templatestr);
 
         PR_LOG(gLog, PR_LOG_DEBUG,
-               ("rdfgeneric[%p] build-content-from-template %s (template='%s') [%s]",
+               ("xultemplate[%p] build-content-from-template %s (template='%s') [%s]",
                 this,
                 (const char*) nsCAutoString(tagstr),
                 (const char*) nsCAutoString(templatestr),
@@ -3978,7 +3978,7 @@ nsXULTemplateBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
             nsAutoString tagname;
             tag->ToString(tagname);
             PR_LOG(gLog, PR_LOG_DEBUG,
-                   ("rdfgeneric[%p]     building %s %s %s",
+                   ("xultemplate[%p]     building %s %s %s",
                     this, (const char*) nsCAutoString(tagname),
                     (isResourceElement ? "[resource]" : ""),
                     (isUnique ? "[unique]" : "")));
@@ -4083,13 +4083,19 @@ nsXULTemplateBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
 
             // Set up the element's 'container' and 'empty'
             // attributes.
-            if (IsContainer(tmplKid, aChild)) {
-                rv = realKid->SetAttribute(kNameSpaceID_None, nsXULAtoms::container, trueStr, PR_FALSE);
+            PRBool iscontainer, isempty;
+            rv = CheckContainer(aChild, &iscontainer, &isempty);
+            if (NS_FAILED(rv)) return rv;
+
+            if (iscontainer) {
+                rv = realKid->SetAttribute(kNameSpaceID_None, nsXULAtoms::container, kTrueStr, PR_FALSE);
                 if (NS_FAILED(rv)) return rv;
 
                 // test to see if the container has contents
-                nsAutoString isEmpty = IsEmpty(tmplKid, aChild) ? trueStr : falseStr;
-                rv = realKid->SetAttribute(kNameSpaceID_None, nsXULAtoms::empty, isEmpty, PR_FALSE);
+                rv = realKid->SetAttribute(kNameSpaceID_None, nsXULAtoms::empty,
+                                           isempty ? kTrueStr : kFalseStr,
+                                           PR_FALSE);
+
                 if (NS_FAILED(rv)) return rv;
             }
         }
@@ -4381,7 +4387,10 @@ nsXULTemplateBuilder::SynchronizeAll(nsIRDFResource* aSource,
             return NS_ERROR_UNEXPECTED;
 
         // this node was created by a XUL template, so update it accordingly
-        rv = SynchronizeUsingTemplate(templateNode, element, aAction, aProperty, aTarget);
+        Match match;
+        mContentSupportMap.Get(element, &match);
+
+        rv = SynchronizeUsingTemplate(templateNode, element, aAction, match, aProperty, aTarget);
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -4392,6 +4401,7 @@ nsresult
 nsXULTemplateBuilder::SynchronizeUsingTemplate(nsIContent* aTemplateNode,
                                                nsIContent* aRealElement,
                                                UpdateAction aAction,
+                                               Match& aMatch,
                                                nsIRDFResource* aProperty,
                                                nsIRDFNode* aValue)
 {
@@ -4422,34 +4432,36 @@ nsXULTemplateBuilder::SynchronizeUsingTemplate(nsIContent* aTemplateNode,
             if (rv != NS_CONTENT_ATTR_HAS_VALUE)
                 continue;
 
-            if (attribValue.Find("rdf:") != 0)
-                continue;
+            if (attribValue[0] == PRUnichar('?')) {
+                // XXXwaterson TODO deal with changes to <bindings>
+            }
+            else if (attribValue.Find("rdf:") == 0) {
+                // found an attribute which wants to bind its value
+                // to RDF so look it up in the graph
+                attribValue.Cut(0,4);
 
-            // found an attribute which wants to bind its value
-            // to RDF so look it up in the graph
-            attribValue.Cut(0,4);
+                nsCOMPtr<nsIRDFResource> property;
+                rv = gRDFService->GetUnicodeResource(attribValue.GetUnicode(),
+                                                     getter_AddRefs(property));
+                if (NS_FAILED(rv)) return rv;
 
-            nsCOMPtr<nsIRDFResource> property;
-            rv = gRDFService->GetUnicodeResource(attribValue.GetUnicode(),
-                                                 getter_AddRefs(property));
-            if (NS_FAILED(rv)) return rv;
+                if (property.get() != aProperty)
+                    continue;
 
-            if (property.get() == aProperty) {
                 nsAutoString text;
-
                 rv = gXULUtils->GetTextForNode(aValue, text);
                 if (NS_FAILED(rv)) return rv;
 
                 if ((text.Length() > 0) && (aAction == eSet)) {
                     aRealElement->SetAttribute(attribNameSpaceID,
-                                                   attribName,
-                                                   text,
-                                                   PR_TRUE);
+                                               attribName,
+                                               text,
+                                               PR_TRUE);
                 }
                 else {
                     aRealElement->UnsetAttribute(attribNameSpaceID,
-                                                     attribName,
-                                                     PR_TRUE);
+                                                 attribName,
+                                                 PR_TRUE);
                 }
             }
         }
@@ -4488,7 +4500,7 @@ nsXULTemplateBuilder::SynchronizeUsingTemplate(nsIContent* aTemplateNode,
             if (! realKid)
                 break;
 
-            rv = SynchronizeUsingTemplate(tmplKid, realKid, aAction, aProperty, aValue);
+            rv = SynchronizeUsingTemplate(tmplKid, realKid, aAction, aMatch, aProperty, aValue);
             if (NS_FAILED(rv)) return rv;
         }
     }
@@ -4572,7 +4584,7 @@ nsXULTemplateBuilder::RemoveMember(nsIContent* aContainerElement,
             if (NS_FAILED(rv)) return rv;
             
             PR_LOG(gLog, PR_LOG_ALWAYS,
-                   ("rdfgeneric[%p] remove-member %s->%s [%s]",
+                   ("xultemplate[%p] remove-member %s->%s [%s]",
                     this,
                     (const char*) nsCAutoString(parentTagStr),
                     (const char*) nsCAutoString(childTagStr),
@@ -4833,102 +4845,22 @@ nsXULTemplateBuilder::EnsureElementHasGenericChild(nsIContent* parent,
 }
 
 
-PRBool
-nsXULTemplateBuilder::IsContainmentProperty(nsIContent* aElement, nsIRDFResource* aProperty)
+nsresult
+nsXULTemplateBuilder::CheckContainer(nsIRDFResource* aResource, PRBool* aIsContainer, PRBool* aIsEmpty)
 {
-    // XXX is this okay to _always_ treat ordinal properties as tree
-    // properties? Probably not...
-    nsresult        rv;
-    PRBool        isOrdinal;
-
-    rv = gRDFContainerUtils->IsOrdinalProperty(aProperty, &isOrdinal);
-    if (NS_FAILED(rv))
-        return PR_FALSE;
-
-    if (isOrdinal)
-        return PR_TRUE;
-
-    const char        *propertyURI;
-
-    rv = aProperty->GetValueConst(&propertyURI);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get property URI");
-    if (NS_FAILED(rv)) return PR_FALSE;
-
-    PRUnichar		buffer[256];
-    nsAutoString	containment(CBufDescriptor(buffer, PR_TRUE, sizeof(buffer) / sizeof(PRUnichar), 0));
-
-    // rjc: Optimization: 99% of trees that use "containment='...'" put the
-    // attribute on the root of the tree, so check that first
-    rv = mRoot->GetAttribute(kNameSpaceID_None, nsXULAtoms::containment, containment);
-    if (NS_FAILED(rv)) return rv;
-    if (rv == NS_CONTENT_ATTR_HAS_VALUE)
-    {
-        if (containment.Find(propertyURI) >= 0)
-            return PR_TRUE;
-        else    return PR_FALSE;
-    }
-
-    // If we get here, we didn't find any tree property: so now
-    // defaults start to kick in.
-
-#define TREE_PROPERTY_HACK
-#if defined(TREE_PROPERTY_HACK)
-    if ((aProperty == kNC_child) ||
-        (aProperty == kNC_Folder) ||
-        (aProperty == kRDF_child)) {
-        return PR_TRUE;
-    }
-#endif // defined(TREE_PROPERTY_HACK)
-
-    return PR_FALSE;
-}
-
-
-PRBool
-nsXULTemplateBuilder::IsIgnoredProperty(nsIContent* aElement, nsIRDFResource* aProperty)
-{
-    nsresult        rv;
-    const char        *propertyURI;
-
-    rv = aProperty->GetValueConst(&propertyURI);
-    if (NS_FAILED(rv)) return PR_FALSE;
-
-    PRUnichar		buffer[256];
-    nsAutoString	uri(CBufDescriptor(buffer, PR_TRUE, sizeof(buffer) / sizeof(PRUnichar), 0));
-    PRInt32        	nameSpaceID;
-
-    // rjc: Optimization: 99% of trees that use "ignore='...'" put the
-    // attribute on the root of the tree, so check that first
-    rv = mRoot->GetNameSpaceID(nameSpaceID);
-    if (NS_FAILED(rv)) return PR_FALSE;
-        // Never ever ask an HTML element about non-HTML attributes
-        if (nameSpaceID != kNameSpaceID_HTML)
-        {
-            rv = mRoot->GetAttribute(kNameSpaceID_None, nsXULAtoms::ignore, uri);
-            if (NS_FAILED(rv)) return PR_FALSE;
-            if (rv == NS_CONTENT_ATTR_HAS_VALUE)
-            {
-                return uri.Find(propertyURI) >= 0 ? PR_TRUE : PR_FALSE;
-            }
-        }
-
-    return PR_FALSE;
-}
-
-PRBool
-nsXULTemplateBuilder::IsContainer(nsIContent* aElement, nsIRDFResource* aResource)
-{
-    // Look at all of the arcs extending _out_ of the resource: if any
-    // of them are that "containment" property, then we know we'll
-    // have children.
-
-    nsCOMPtr<nsISimpleEnumerator> arcs;
+    // We have to look at all of the arcs extending out of the
+    // resource: if any of them are that "containment" property, then
+    // we know we'll have children.
     nsresult rv;
 
+    nsCOMPtr<nsISimpleEnumerator> arcs;
     rv = mDB->ArcLabelsOut(aResource, getter_AddRefs(arcs));
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get arcs out");
-    if (NS_FAILED(rv))
-        return PR_FALSE;
+    if (NS_FAILED(rv)) return rv;
+
+    // Initialize to some sane default values
+    *aIsContainer = PR_FALSE;
+    *aIsEmpty = PR_TRUE;
 
     while (1) {
         PRBool hasMore;
@@ -4947,62 +4879,37 @@ nsXULTemplateBuilder::IsContainer(nsIContent* aElement, nsIRDFResource* aResourc
 
         nsCOMPtr<nsIRDFResource> property = do_QueryInterface(isupports);
 
-        if (! IsContainmentProperty(aElement, property))
-            continue;
-
-        return PR_TRUE;
-    }
-
-    return PR_FALSE;
-}
-
-
-PRBool
-nsXULTemplateBuilder::IsEmpty(nsIContent* aElement, nsIRDFResource* aContainer)
-{
-    // Look at all of the arcs extending _out_ of the resource: if any
-    // of them are that "containment" property, then we know we'll
-    // have children.
-
-    nsCOMPtr<nsISimpleEnumerator> arcs;
-    nsresult rv;
-
-    rv = mDB->ArcLabelsOut(aContainer, getter_AddRefs(arcs));
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get arcs out");
-    if (NS_FAILED(rv))
-        return PR_TRUE;
-
-    while (1) {
-        PRBool hasMore;
-        rv = arcs->HasMoreElements(&hasMore);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "severe error advancing cursor");
-        if (NS_FAILED(rv))
-            return PR_TRUE;
-
-        if (! hasMore)
-            break;
-
-        nsCOMPtr<nsISupports> isupports;
-        rv = arcs->GetNext(getter_AddRefs(isupports));
-        if (NS_FAILED(rv))
-            return PR_TRUE;
-
-        nsCOMPtr<nsIRDFResource> property = do_QueryInterface(isupports);
-
-        if (! IsContainmentProperty(aElement, property))
-            continue;
-
-        // now that we know its a container, check to see if it's "empty"
-        // by testing to see if the property has a target.
-        nsCOMPtr<nsIRDFNode> dummy;
-        rv = mDB->GetTarget(aContainer, property, PR_TRUE, getter_AddRefs(dummy));
+        PRBool isordinal;
+        rv = gRDFContainerUtils->IsOrdinalProperty(property, &isordinal);
         if (NS_FAILED(rv)) return rv;
 
-        if (dummy)
-            return PR_FALSE;
+        if (isordinal || mContainmentProperties.Contains(property)) {
+            // Well, it's a container...
+            *aIsContainer = PR_TRUE;
+
+            // ...is it empty?
+            nsCOMPtr<nsIRDFNode> dummy;
+            rv = mDB->GetTarget(aResource, property, PR_TRUE, getter_AddRefs(dummy));
+            if (NS_FAILED(rv)) return rv;
+
+            if (dummy != nsnull) {
+                *aIsEmpty = PR_FALSE;
+                return NS_OK;
+            }
+
+            // Even if there isn't a target for *this* containment
+            // property, we have continue to check the other
+            // properties: one of them may have a target.
+        }
     }
 
-    return PR_TRUE;
+    // If we get here, and it's a container, then it's an *empty*
+    // container.
+    if  (*aIsContainer)
+        return NS_OK;
+
+    // Otherwise, just return whether or not it's an RDF container
+    return gRDFContainerUtils->IsContainer(mDB, aResource, aIsContainer);
 }
 
 
@@ -5026,7 +4933,7 @@ nsXULTemplateBuilder::IsOpen(nsIContent* aElement)
     if (NS_FAILED(rv)) return PR_FALSE;
 
     if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-        if (value.Equals(trueStr))
+        if (value == kTrueStr)
             return PR_TRUE;
     }
 
@@ -5256,19 +5163,25 @@ nsXULTemplateBuilder::CreateElement(PRInt32 aNameSpaceID,
 }
 
 nsresult
-nsXULTemplateBuilder::SetEmpty(nsIContent *element, PRBool empty)
+nsXULTemplateBuilder::SetEmpty(nsIContent *aElement, const Match& aMatch)
 {
-    nsresult rv;
+    NS_PRECONDITION(aMatch.mRule != nsnull, "null ptr");
+    if (! aMatch.mRule)
+        return NS_ERROR_NULL_POINTER;
 
-    nsAutoString newEmptyStr(empty ? trueStr : falseStr);
-    nsAutoString emptyStr;
+    Value containerval;
+    aMatch.mInstantiation.mBindings.GetBindingFor(aMatch.mRule->GetContainerVariable(), &containerval);
 
-    rv = element->GetAttribute(kNameSpaceID_None, nsXULAtoms::empty, emptyStr);
-    if (NS_FAILED(rv)) return rv;
+    nsAutoString oldvalue;
+    aElement->GetAttribute(kNameSpaceID_None, nsXULAtoms::empty, oldvalue);
 
-    if ((rv != NS_CONTENT_ATTR_HAS_VALUE) || (! emptyStr.Equals(newEmptyStr))) {
-        rv = element->SetAttribute(kNameSpaceID_None, nsXULAtoms::empty, newEmptyStr, PR_TRUE);
-        if (NS_FAILED(rv)) return rv;
+    PRBool iscontainer, isempty;
+    CheckContainer(VALUE_TO_IRDFRESOURCE(containerval), &iscontainer, &isempty);
+
+    const nsString& newvalue = (iscontainer && isempty) ? kTrueStr : kFalseStr;
+
+    if (oldvalue != newvalue) {
+        aElement->SetAttribute(kNameSpaceID_None, nsXULAtoms::empty, newvalue, PR_TRUE);
     }
 
     return NS_OK;
@@ -5310,7 +5223,7 @@ nsXULTemplateBuilder::Log(const char* aOperation,
         if (NS_FAILED(rv)) return rv;
 
         PR_LOG(gLog, PR_LOG_DEBUG,
-               ("rdfgeneric[%p] %8s [%s]--", this, aOperation, sourceStr));
+               ("xultemplate[%p] %8s [%s]--", this, aOperation, sourceStr));
 
         const char* propertyStr;
         rv = aProperty->GetValueConst(&propertyStr);
@@ -5321,7 +5234,7 @@ nsXULTemplateBuilder::Log(const char* aOperation,
         if (NS_FAILED(rv)) return rv;
 
         PR_LOG(gLog, PR_LOG_DEBUG,
-               ("                       --[%s]-->[%s]",
+               ("                        --[%s]-->[%s]",
                 propertyStr,
                 (const char*) nsCAutoString(targetStr)));
     }
@@ -5465,6 +5378,7 @@ nsXULTemplateBuilder::ComputeContainmentProperties()
         offset = end;
     }
 
+#define TREE_PROPERTY_HACK 1
 #if defined(TREE_PROPERTY_HACK)
     if (! len) {
         // Some ever-present membership tests.
@@ -5854,7 +5768,7 @@ nsXULTemplateBuilder::CompileExtendedRule(nsIContent* aRule,
 
     if (! conditions) {
         PR_LOG(gLog, PR_LOG_ALWAYS,
-               ("rdfgeneric[%p] no <conditions> element in extended rule", this));
+               ("xultemplate[%p] no <conditions> element in extended rule", this));
 
         return NS_OK;
     }
@@ -5865,7 +5779,7 @@ nsXULTemplateBuilder::CompileExtendedRule(nsIContent* aRule,
 
     if (! action) {
         PR_LOG(gLog, PR_LOG_ALWAYS,
-               ("rdfgeneric[%p] no <action> element in extended rule", this));
+               ("xultemplate[%p] no <action> element in extended rule", this));
 
         return NS_OK;
     }
@@ -5955,7 +5869,7 @@ nsresult nsXULTemplateBuilder::CompileConditions(Rule* aRule,
             tag->ToString(tagstr);
 
             PR_LOG(gLog, PR_LOG_ALWAYS,
-                   ("rdfgeneric[%p] unrecognized condition test <%s>",
+                   ("xultemplate[%p] unrecognized condition test <%s>",
                     this, NS_STATIC_CAST(const char*, nsCAutoString(tagstr))));
 #endif
             continue;
@@ -6024,7 +5938,7 @@ nsXULTemplateBuilder::CompileTripleCondition(Rule* aRule,
     nsCOMPtr<nsIRDFResource> pres;
     if (predicate[0] == PRUnichar('?')) {
         PR_LOG(gLog, PR_LOG_ALWAYS,
-               ("rdfgeneric[%p] cannot handle variables in <triple> 'predicate'", this));
+               ("xultemplate[%p] cannot handle variables in <triple> 'predicate'", this));
 
         return NS_OK;
     }
@@ -6070,7 +5984,7 @@ nsXULTemplateBuilder::CompileTripleCondition(Rule* aRule,
     }
     else {
         PR_LOG(gLog, PR_LOG_ALWAYS,
-               ("rdfgeneric[%p] tautology in <triple> test", this));
+               ("xultemplate[%p] tautology in <triple> test", this));
 
         return NS_OK;
     }
@@ -6102,7 +6016,7 @@ nsXULTemplateBuilder::CompileMemberCondition(Rule* aRule,
 
     if (container[0] != PRUnichar('?')) {
         PR_LOG(gLog, PR_LOG_ALWAYS,
-               ("rdfgeneric[%p] on <member> test, expected 'container' attribute to name a variable", this));
+               ("xultemplate[%p] on <member> test, expected 'container' attribute to name a variable", this));
 
         return NS_OK;
     }
@@ -6119,7 +6033,7 @@ nsXULTemplateBuilder::CompileMemberCondition(Rule* aRule,
 
     if (child[0] != PRUnichar('?')) {
         PR_LOG(gLog, PR_LOG_ALWAYS,
-               ("rdfgeneric[%p] on <member> test, expected 'child' attribute to name a variable", this));
+               ("xultemplate[%p] on <member> test, expected 'child' attribute to name a variable", this));
 
         return NS_OK;
     }
@@ -6169,7 +6083,7 @@ nsXULTemplateBuilder::CompileContentCondition(Rule* aRule,
 
     if (uri[0] != PRUnichar('?')) {
         PR_LOG(gLog, PR_LOG_ALWAYS,
-               ("rdfgeneric[%p] on <content> test, expected 'uri' attribute to name a variable", this));
+               ("xultemplate[%p] on <content> test, expected 'uri' attribute to name a variable", this));
 
         return NS_OK;
     }
