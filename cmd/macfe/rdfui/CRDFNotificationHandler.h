@@ -38,12 +38,14 @@ protected:
 	virtual	void	HandleNotification(
 						HT_Notification	notifyStruct,
 						HT_Resource		node,
-						HT_Event		event) = 0;
+						HT_Event		event,
+						void			*token,
+						uint32			tokenType) = 0;
 	
 	static void		rdfNotifyProc(
 						HT_Notification	notifyStruct,
 						HT_Resource		node,
 						HT_Event		event,
-						void *param,	
-						uint32 tokenType);
+						void			*token,
+						uint32			tokenType);
 };

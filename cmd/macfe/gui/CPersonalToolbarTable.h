@@ -106,7 +106,7 @@ class CPersonalToolbarTable : public LSmallIconTable, public LDragAndDrop,
 		void AddButton ( const string & inURL, const string & inTitle, Uint32 inIndex ) ;
 		void RemoveButton ( Uint32 inIndex );
 
-		void HandleNotification( HT_Notification notifyStruct, HT_Resource node, HT_Event event);
+		void HandleNotification( HT_Notification notifyStruct, HT_Resource node, HT_Event event, void* token, uint32 tokenType);
 
 			// for handling mouse tracking
 		virtual void MouseLeave ( ) ;

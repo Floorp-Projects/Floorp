@@ -77,7 +77,7 @@ CBookmarksAttachment :: InitQuickfileView ( )
 
 void
 CBookmarksAttachment :: HandleNotification( HT_Notification /* notifyStruct*/,
-												HT_Resource node, HT_Event event)
+			HT_Resource node, HT_Event event, void *token, uint32 tokenType)
 {
 	switch (event) {
 	

@@ -59,7 +59,7 @@ public:
 protected:
 	static void			FillMenuFromList( HT_Resource top, LMenu* newMenu, int& nextMenuID, int whichItem );
 
-	virtual	void		HandleNotification( HT_Notification	notifyStruct, HT_Resource node, HT_Event event);
+	virtual	void		HandleNotification( HT_Notification	notifyStruct, HT_Resource node, HT_Event event, void *token, uint32 tokenType);
 
 	static LMenu*		sMenu;
 	static Boolean		sInvalidMenu;

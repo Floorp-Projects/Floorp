@@ -103,7 +103,7 @@ protected:
 	virtual void	CollapseNode(HT_Resource node);
 
 		// messaging and notifications
-	virtual	void	HandleNotification( HT_Notification	notifyStruct, HT_Resource node, HT_Event event);
+	virtual	void	HandleNotification( HT_Notification	notifyStruct, HT_Resource node, HT_Event event, void *token, uint32 tokenType);
 	virtual void	ListenToMessage( MessageT inMessage, void *ioParam);
 
 	PaneIDT					mSelectorPaneID;	// for the selector shelf

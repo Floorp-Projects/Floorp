@@ -263,7 +263,9 @@ CRDFCoordinator :: RestorePlace ( LStream* inStreamData )
 void CRDFCoordinator::HandleNotification(
 	HT_Notification	/*notifyStruct*/,
 	HT_Resource		node,
-	HT_Event		event)
+	HT_Event		event,
+	void			*token,
+	uint32			tokenType)
 {
 	PRBool isOpen;
 	HT_Error err;
