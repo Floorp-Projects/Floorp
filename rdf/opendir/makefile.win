@@ -1,0 +1,26 @@
+#
+# Microsoft Visual C makefile for WAI sample
+
+
+INCLUDES = -I..\..\..\include -I..\..\include
+NSLIB = ..\..\..\lib
+WAILIB= c:\netscape\suitespot\wai\lib
+LIBS = $(WAILIB)\ONEiiop10.lib WSOCK32.lib
+CPPFLAGS=$(INCLUDES) -DXP_WIN32 -DWIN32 -DDEBUG /MD
+OPTIMIZER=-Zi -Od -DDEBUG
+
+OBJS = opendir.o \
+       rdf.o  \
+       rdfparse.o \
+       remstore.o \
+       hash.o  \
+       $(NULL)	
+    
+
+all: opendir
+
+opendir: opendir.c rdf.c rdfparse.c remstore.c hash.c
+	$(CC) $(CPPFLAGS) $(LIBS) $? -o  $@
+
+clean:
+	del *.obj
