@@ -23,7 +23,6 @@ CPPSRCS = \
 	TestCSSParser.cpp	\
 	TestCSSPropertyLookup.cpp	\
 	TestCSSScanner.cpp	\
-	TestHTMLTagLookup.cpp	\
 	$(NULL)
 
 INCLUDES += -I../src \
