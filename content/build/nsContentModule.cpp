@@ -241,6 +241,7 @@ nsContentModule::Shutdown()
   nsLayoutAtoms::ReleaseAtoms();
 
 #ifdef MOZ_XUL
+  nsXULContentUtils::Finish();
   nsXULAtoms::ReleaseAtoms();
 #endif
 
