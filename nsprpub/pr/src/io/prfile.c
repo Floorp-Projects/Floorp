@@ -357,9 +357,7 @@ PR_IMPLEMENT(PRFileDesc*) PR_Open(const char *name, PRIntn flags, PRIntn mode)
 {
     PRInt32 osfd;
     PRFileDesc *fd = 0;
-#if defined(XP_UNIX) /* BugZilla: 4090 */
-    PRBool  appendMode = PR_FALSE;
-#else
+#if !defined(XP_UNIX) /* BugZilla: 4090 */
     PRBool  appendMode = ( PR_APPEND & flags )? PR_TRUE : PR_FALSE;
 #endif
 
@@ -373,7 +371,9 @@ PR_IMPLEMENT(PRFileDesc*) PR_Open(const char *name, PRIntn flags, PRIntn mode)
         if (!fd) {
             (void) _PR_MD_CLOSE_FILE(osfd);
         } else {
+#if !defined(XP_UNIX) /* BugZilla: 4090 */
             fd->secret->appendMode = appendMode;
+#endif
             _PR_MD_INIT_FD_INHERITABLE(fd, PR_FALSE);
         }
     }
@@ -385,9 +385,7 @@ PR_IMPLEMENT(PRFileDesc*) PR_OpenFile(
 {
     PRInt32 osfd;
     PRFileDesc *fd = 0;
-#if defined(XP_UNIX) /* BugZilla: 4090 */
-    PRBool  appendMode = PR_FALSE;
-#else
+#if !defined(XP_UNIX) /* BugZilla: 4090 */
     PRBool  appendMode = ( PR_APPEND & flags )? PR_TRUE : PR_FALSE;
 #endif
 
@@ -401,7 +399,9 @@ PR_IMPLEMENT(PRFileDesc*) PR_OpenFile(
         if (!fd) {
             (void) _PR_MD_CLOSE_FILE(osfd);
         } else {
+#if !defined(XP_UNIX) /* BugZilla: 4090 */
             fd->secret->appendMode = appendMode;
+#endif
             _PR_MD_INIT_FD_INHERITABLE(fd, PR_FALSE);
         }
     }
