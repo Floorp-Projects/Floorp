@@ -53,13 +53,7 @@ public:
                      nsIID *aSinkIID = nsnull);
 
 private:
-  nsIURL * mUrl;
-  nsIDTD * mDTD;
-  nsIContentSink * mSink;
   nsIVector * mStreamObjects;
-
-public:
-  nsIParser * mParser;
 
 };
 

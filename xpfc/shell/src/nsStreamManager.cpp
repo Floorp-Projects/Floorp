@@ -45,18 +45,10 @@ static NS_DEFINE_IID(kIStreamListenerIID,  NS_ISTREAMLISTENER_IID);
 nsStreamManager::nsStreamManager()
 {
   NS_INIT_REFCNT();
-  mUrl = nsnull;
-  mParser = nsnull;
-  mDTD = nsnull;
-  mSink = nsnull;
 }
 
 nsStreamManager::~nsStreamManager()
 {
-  NS_IF_RELEASE(mUrl);
-  NS_IF_RELEASE(mParser);
-  NS_IF_RELEASE(mSink);
-
   if (mStreamObjects != nsnull) {
     mStreamObjects->RemoveAll();
     NS_RELEASE(mStreamObjects);
