@@ -165,6 +165,8 @@ protected:
   // have we received information from the user about how they want to dispose of this content...
   PRBool mReceivedDispostionInfo;
   PRBool mStopRequestIssued; 
+  PRBool mProgressWindowCreated; 
+  PRInt64 mTimeDownloadStarted;
 
   // when we are told to save the temp file to disk (in a more permament location) before we are done
   // writing the content to a temp file, then we need to remember the final destination until we are ready to
@@ -190,6 +192,16 @@ protected:
   // to invoke this method multiple times. We'll clear mOriginalChannel after it's called and this ensures we won't
   // call it again....
   void ProcessAnyRefreshTags();
+
+  // an internal method used to actually move the temp file to the final destination
+  // once we done receiving data AND have showed the progress dialog.
+  nsresult MoveFile(nsIFile * aNewFileLocation);
+  // an internal method used to actually launch a helper app given the temp file
+  // once we are done receiving data AND have showed the progress dialog.
+  nsresult OpenWithApplication(nsIFile * aApplication);
+  // helper routine which peaks at the mime action specified by mMimeInfo
+  // and calls either MoveFile or OpenWithApplication
+  nsresult ExecuteDesiredAction();
   
   nsCOMPtr<nsISupports>           mLoadCookie;    // load cookie used by the uri loader when we fetch the url
   nsCOMPtr<nsIWebProgressListener> mWebProgressListener;
