@@ -75,7 +75,6 @@ nsAbSync::InternalInit()
   mTransactionID = 100;
   mPostEngine = nsnull;
 
-  mAbSyncServer = nsnull;
   mAbSyncPort = 5000;
   mAbSyncAddressBook = nsnull;
   mAbSyncAddressBookFileName = nsnull;
@@ -122,7 +121,6 @@ nsAbSync::InternalCleanup()
   /* cleanup code */
   DeleteListeners();
 
-  PR_FREEIF(mAbSyncServer);
   PR_FREEIF(mAbSyncAddressBook);
   PR_FREEIF(mAbSyncAddressBookFileName);
 
@@ -514,7 +512,6 @@ NS_IMETHODIMP nsAbSync::CancelAbSync()
 NS_IMETHODIMP nsAbSync::PerformAbSync(PRInt32 *aTransactionID)
 {
   nsresult      rv;
-  char          *postSpec = nsnull;
   char          *protocolRequest = nsnull;
   char          *prefixStr = nsnull;
   char          *clientIDStr = nsnull;
@@ -534,7 +531,6 @@ NS_IMETHODIMP nsAbSync::PerformAbSync(PRInt32 *aTransactionID)
   if (NS_FAILED(rv) || !prefs) 
     return NS_ERROR_FAILURE;
 
-  prefs->CopyCharPref("mail.absync.server",           &mAbSyncServer);
   prefs->CopyCharPref("mail.absync.address_book",     &mAbSyncAddressBook);
   prefs->GetIntPref  ("mail.absync.last_change",      &mLastChangeNum);
   if (NS_FAILED(prefs->GetIntPref("mail.absync.port", &mAbSyncPort)))
@@ -544,32 +540,9 @@ NS_IMETHODIMP nsAbSync::PerformAbSync(PRInt32 *aTransactionID)
   if (mLastChangeNum == 0)
     mLastChangeNum = 1;
 
-  // Did we get sane values...
-  if (!mAbSyncServer)
-  {
-    // If we get here, we need to put up a UI warning
-    PRUnichar   *outValue = GetString(NS_ConvertASCIItoUCS2("syncNeedPrefs").GetUnicode());
-    DisplayErrorMessage(outValue);
-    PR_FREEIF(outValue);
-
-    rv = NS_ERROR_FAILURE;
-    goto EarlyExit;
-  }
-
   // Get the string arrays setup for the phone numbers...
   mPhoneTypes = new nsStringArray();
   mPhoneValues = new nsStringArray();
-
-#ifdef DEBUG_rhp
-  printf("ABSYNC: PerformAbSync: Server = %s\n", mAbSyncServer);
-#endif
-
-  postSpec = PR_smprintf("http://%s", mAbSyncServer);
-  if (!postSpec)  
-  {
-    rv = NS_ERROR_OUT_OF_MEMORY;
-    goto EarlyExit;
-  }
 
   // Ok, we need to see if a particular address book was in the prefs
   // If not, then we will use the default, but if there was one specified, 
@@ -632,7 +605,7 @@ NS_IMETHODIMP nsAbSync::PerformAbSync(PRInt32 *aTransactionID)
     goto EarlyExit;
 
   // Ok, FIRE!
-  rv = mPostEngine->SendAbRequest(postSpec, mAbSyncPort, protocolRequest, mTransactionID);
+  rv = mPostEngine->SendAbRequest(nsnull, mAbSyncPort, protocolRequest, mTransactionID);
   if (NS_SUCCEEDED(rv))
   {
     mCurrentState = nsIAbSyncState::nsIAbSyncRunning;
@@ -645,7 +618,6 @@ NS_IMETHODIMP nsAbSync::PerformAbSync(PRInt32 *aTransactionID)
 
 EarlyExit:
   PR_FREEIF(protocolRequest);
-  PR_FREEIF(postSpec);
   PR_FREEIF(clientIDStr);
 
   if (NS_FAILED(rv))
