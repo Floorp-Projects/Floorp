@@ -469,7 +469,6 @@ pref("network.enablePad",                   false); // Allow client to do proxy 
 pref("network.enableIDN",                   true); // Turn on/off IDN (Internationalized Domain Name) resolution
 pref("converter.html2txt.structs",          true); // Output structured phrases (strong, em, code, sub, sup, b, i, u)
 pref("converter.html2txt.header_strategy",  1); // 0 = no indention; 1 = indention, increased with header level; 2 = numbering and slight indention
-pref("imageblocker.enabled",                true);
 
 // l12n and i18n
 pref("intl.accept_languages", "chrome://global/locale/intl.properties");

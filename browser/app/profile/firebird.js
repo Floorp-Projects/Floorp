@@ -131,8 +131,6 @@ pref("network.protocols.useSystemDefaults", false); // set to true if user links
 pref("network.cookie.cookieBehavior",       0); // cookies enabled
 pref("network.cookie.enableForCurrentSessionOnly", false);
 
-pref("imageblocker.enabled",                true);
-
 // l12n and i18n
 pref("intl.accept_languages", "chrome://global/locale/intl.properties");
 // collationOption is only set on linux for japanese. see bug 18338 and 62015

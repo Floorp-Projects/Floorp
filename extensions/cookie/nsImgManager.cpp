@@ -58,11 +58,9 @@
 
 static const char kImageBehaviorPrefName[] = "network.image.imageBehavior";
 static const char kImageWarningPrefName[] = "network.image.warnAboutImages";
-static const char kImageBlockerPrefName[] = "imageblocker.enabled";
 static const char kImageBlockImageInMailNewsPrefName[] = "mailnews.message_display.disable_remote_image";
 
 static const PRUint8      kImageBehaviorPrefDefault = IMAGE_ACCEPT;
-static const PRPackedBool kImageBlockerPrefDefault = PR_FALSE;
 static const PRPackedBool kImageWarningPrefDefault = PR_FALSE;
 static const PRPackedBool kImageBlockImageInMailNewsPrefDefault = PR_FALSE;
 
@@ -100,7 +98,6 @@ NS_IMPL_ISUPPORTS4(nsImgManager,
 
 nsImgManager::nsImgManager()
   : mBehaviorPref(kImageBehaviorPrefDefault)
-  , mBlockerPref(kImageBlockerPrefDefault)
   , mWarningPref(kImageWarningPrefDefault)
   , mBlockInMailNewsPref(kImageBlockImageInMailNewsPrefDefault)
 {
@@ -123,8 +120,6 @@ nsresult nsImgManager::Init()
     // We don't do anything with it yet, but let it be. (bug 110112, 146513)
     prefBranch->AddObserver(kImageWarningPrefName, this, PR_TRUE);
 
-    // What is this pref, and how do you set it?
-    prefBranch->AddObserver(kImageBlockerPrefName, this, PR_TRUE);
     prefBranch->AddObserver(kImageBlockImageInMailNewsPrefName, this, PR_TRUE);
 
     PrefChanged(prefBranch, nsnull);
@@ -145,10 +140,6 @@ nsImgManager::PrefChanged(nsIPrefBranch *aPrefBranch,
       NS_SUCCEEDED(aPrefBranch->GetIntPref(kImageBehaviorPrefName, &val)) &&
       val >= 0 && val <= 2)
     mBehaviorPref = val;
-
-  if (PREF_CHANGED(kImageBlockerPrefName) &&
-      NS_SUCCEEDED(aPrefBranch->GetBoolPref(kImageBlockerPrefName, &val)))
-    mBlockerPref = val;
 
   if (PREF_CHANGED(kImageWarningPrefName) &&
       NS_SUCCEEDED(aPrefBranch->GetBoolPref(kImageWarningPrefName, &val)))
@@ -254,13 +245,6 @@ nsImgManager::TestPermission(nsIURI *aCurrentURI,
 {
   nsresult rv;
   *aPermission = PR_TRUE;
-
-  // return if imageblocker is not enabled
-  // TODO: Why? Where is the pref set?
-  if (!mBlockerPref) {
-    *aPermission = (mBehaviorPref != IMAGE_DENY);
-    return NS_OK;
-  }
 
   // check the permission list first; if we find an entry, it overrides
   // default prefs. this is new behavior, see bug 184059.
