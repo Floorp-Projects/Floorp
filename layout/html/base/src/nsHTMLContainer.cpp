@@ -241,14 +241,33 @@ static nsHTMLTagContent::EnumTable kListItemTypeTable[] = {
   { 0 }
 };
 
+static nsHTMLTagContent::EnumTable kDirTable[] = {
+  { "ltr", NS_STYLE_DIRECTION_LTR },
+  { "rtl", NS_STYLE_DIRECTION_RTL },
+  { 0 }
+};
+
 void nsHTMLContainer::SetAttribute(nsIAtom* aAttribute,
                                    const nsString& aValue)
 {
   // Special handling code for various html container attributes; note
   // that if an attribute doesn't require special handling then we
   // fall through and use the default base class implementation.
-
   nsHTMLValue val;
+
+  // Check for attributes common to most html containers
+  if (aAttribute == nsHTMLAtoms::dir) {
+    if (ParseEnumValue(aValue, kDirTable, val)) {
+      nsHTMLTagContent::SetAttribute(aAttribute, val);
+      return;
+    }
+    return;
+  }
+  if (aAttribute == nsHTMLAtoms::lang) {
+    nsHTMLTagContent::SetAttribute(aAttribute, aValue);
+    return;
+  }
+
   if (mTag == nsHTMLAtoms::p) {
     if ((aAttribute == nsHTMLAtoms::align) &&
         ParseDivAlignParam(aValue, val)) {
