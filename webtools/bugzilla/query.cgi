@@ -400,7 +400,7 @@ print "
 
 </td>
 <td align=left valign=top>
-@{[make_selection_widget(\"op_sys\",\@::legal_platform,$default{'op_sys'}, $type{'op_sys'}, 1)]}
+@{[make_selection_widget(\"op_sys\",\@::legal_opsys,$default{'op_sys'}, $type{'op_sys'}, 1)]}
 
 </td>
 <td align=left valign=top>
