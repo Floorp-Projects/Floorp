@@ -7,14 +7,34 @@ class nsXBLService: public nsIXBLService
 
   // This function loads a particular XBL file and installs all of the bindings
   // onto the element.
-  NS_IMETHOD LoadBindings(nsIContent* aContent, const nsString& aURL) { return NS_OK; };
+  NS_IMETHOD LoadBindings(nsIContent* aContent, const nsString& aURL);
 
   // For a given element, returns a flat list of all the anonymous children that need
   // frames built.
-  NS_IMETHOD GetContentList(nsIContent* aContent, nsISupportsArray** aResult) { return NS_OK; };
+  NS_IMETHOD GetContentList(nsIContent* aContent, nsISupportsArray** aResult);
 };
 
 NS_IMPL_ISUPPORTS1(nsXBLService, nsIXBLService)
+
+// Implementation
+
+// This function loads a particular XBL file and installs all of the bindings
+// onto the element.
+NS_IMETHODIMP
+nsXBLService::LoadBindings(nsIContent* aContent, const nsString& aURL) 
+{ 
+  return NS_OK; 
+}
+
+// For a given element, returns a flat list of all the anonymous children that need
+// frames built.
+NS_IMETHODIMP
+nsXBLService::GetContentList(nsIContent* aContent, nsISupportsArray** aResult)
+{ 
+  return NS_OK;
+}
+
+// Creation Routine ///////////////////////////////////////////////////////////////////////
 
 nsresult
 NS_NewXBLService(nsIXBLService** aResult)
