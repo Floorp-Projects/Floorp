@@ -465,6 +465,11 @@ nsXMLElement::HandleDOMEvent(nsIPresContext* aPresContext,
     case NS_MOUSE_LEFT_CLICK:
       {
         if (nsEventStatus_eConsumeNoDefault != *aEventStatus) {
+          nsInputEvent* inputEvent = NS_STATIC_CAST(nsInputEvent*, aEvent);
+          if (inputEvent->isControl || inputEvent->isMeta ||
+              inputEvent->isAlt || inputEvent->isShift) {
+            break;  // let the click go through so we can handle it in JS/XUL
+          }
           nsAutoString show, href, target;
           nsIURI* baseURL = nsnull;
           nsLinkVerb verb = eLinkVerb_Undefined;
@@ -502,6 +507,35 @@ nsXMLElement::HandleDOMEvent(nsIPresContext* aPresContext,
 
     case NS_MOUSE_RIGHT_BUTTON_DOWN:
       // XXX Bring up a contextual menu provided by the application
+      break;
+
+    case NS_KEY_PRESS:
+      if (aEvent->eventStructType == NS_KEY_EVENT) {
+        nsKeyEvent* keyEvent = NS_STATIC_CAST(nsKeyEvent*, aEvent);
+        if (keyEvent->keyCode == NS_VK_RETURN) {
+          nsMouseEvent event;
+          nsEventStatus status = nsEventStatus_eIgnore;
+
+          //fire click
+          event.message = NS_MOUSE_LEFT_CLICK;
+          event.eventStructType = NS_MOUSE_EVENT;
+          nsGUIEvent* guiEvent = NS_STATIC_CAST(nsGUIEvent*, aEvent);
+          event.widget = guiEvent->widget;
+          event.point = aEvent->point;
+          event.refPoint = aEvent->refPoint;
+          event.clickCount = 1;
+          event.isShift = keyEvent->isShift;
+          event.isControl = keyEvent->isControl;
+          event.isAlt = keyEvent->isAlt;
+          event.isMeta = keyEvent->isMeta;
+
+          nsCOMPtr<nsIPresShell> presShell;
+          aPresContext->GetShell(getter_AddRefs(presShell));
+          if (presShell) {
+            ret = presShell->HandleDOMEventWithTarget(this, &event, &status);
+          }
+        }
+      }
       break;
 
     case NS_MOUSE_ENTER_SYNTH:
