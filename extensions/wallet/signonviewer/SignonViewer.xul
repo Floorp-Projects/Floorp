@@ -61,6 +61,7 @@
                 multiple="true" onkeypress="HandleEvent(event,0)">
             <treecolgroup>
               <treecol width="0" flex="45"/>
+              <splitter class="tree-splitter"/>
               <treecol width="0" flex="55"/>
             </treecolgroup>
             <treehead>
@@ -167,4 +168,3 @@
   <box id="okCancelButtonsRight"/>
  
 </window>
-
