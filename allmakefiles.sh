@@ -945,7 +945,7 @@ fi
 
 # modules/staticmod
 
-if [ "$MOZ_STATIC_COMPONENTS" ]; then
+if [ "$MOZ_STATIC_COMPONENTS" -o "$MOZ_META_COMPONENTS" ]; then
     MAKEFILES_static_components="$MAKEFILES_static_components
 	modules/staticmod/Makefile
 "
