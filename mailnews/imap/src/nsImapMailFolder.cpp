@@ -1556,8 +1556,11 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
   return rv;
 }
 
+// check if folder is the trash, or a descendent of the trash
+// so we can tell if the folders we're deleting from it should
+// be *really* deleted.
 PRBool
-nsImapMailFolder::InTrash(nsIMsgFolder* folder)
+nsImapMailFolder::TrashOrDescendentOfTrash(nsIMsgFolder* folder)
 {
     nsCOMPtr<nsIMsgFolder> parent;
     nsCOMPtr<nsIFolder> iFolder;
@@ -1571,14 +1574,14 @@ nsImapMailFolder::InTrash(nsIMsgFolder* folder)
 
     do 
     {
+        rv = curFolder->GetFlags(&flags);
+        if (NS_FAILED(rv)) return PR_FALSE;
+        if (flags & MSG_FOLDER_FLAG_TRASH)
+            return PR_TRUE;
         rv = curFolder->GetParent(getter_AddRefs(iFolder));
         if (NS_FAILED(rv)) return PR_FALSE;
         parent = do_QueryInterface(iFolder, &rv);
         if (NS_FAILED(rv)) return PR_FALSE;
-        rv = parent->GetFlags(&flags);
-        if (NS_FAILED(rv)) return PR_FALSE;
-        if (flags & MSG_FOLDER_FLAG_TRASH)
-            return PR_TRUE;
         curFolder = do_QueryInterface(parent, &rv);
     } while (NS_SUCCEEDED(rv) && curFolder);
 
@@ -1593,7 +1596,8 @@ nsImapMailFolder::DeleteSubFolders(nsISupportsArray* folders, nsIMsgWindow *msgW
     nsCOMPtr<nsIMsgFolder> trashFolder;
     PRUint32 i, folderCount = 0;
     nsresult rv;
-    PRBool deleteFromTrash = InTrash(this);;
+    // "this" is the folder we're deleting from
+    PRBool deleteNoTrash = TrashOrDescendentOfTrash(this);;
     PRBool moveToTrash = PR_FALSE;
 
     NS_WITH_SERVICE (nsIImapService, imapService, kCImapService, &rv);
@@ -1608,38 +1612,68 @@ nsImapMailFolder::DeleteSubFolders(nsISupportsArray* folders, nsIMsgWindow *msgW
             msgWindow->GetRootDocShell(getter_AddRefs(docShell));
             nsCOMPtr<nsIPrompt> dialog;
             if (docShell) dialog = do_GetInterface(docShell);
-            PRUnichar *moveToTrashStr = IMAPGetStringByID(IMAP_MOVE_FOLDER_TO_TRASH);
-
-            if (dialog && moveToTrashStr) {
-                dialog->Confirm(nsnull, moveToTrashStr, &moveToTrash);
-            }
-                
-            for (i = 0; i < folderCount; i++)
+            if (!deleteNoTrash)
             {
-                folderSupport = getter_AddRefs(folders->ElementAt(i));
-                curFolder = do_QueryInterface(folderSupport, &rv);
-                if (NS_SUCCEEDED(rv))
+              PRBool canHaveSubFoldersOfTrash = PR_TRUE;
+              trashFolder->GetCanCreateSubfolders(&canHaveSubFoldersOfTrash);
+              if (canHaveSubFoldersOfTrash) // UW server doesn't set NOINFERIORS - check dual use pref
+              {
+                nsCOMPtr<nsIImapIncomingServer> imapServer;
+                nsCOMPtr<nsIMsgIncomingServer> server;
+
+                nsresult rv = GetServer(getter_AddRefs(server));
+                if (server) 
                 {
-                    urlListener = do_QueryInterface(curFolder);
-                    if (deleteFromTrash)
-                        rv = imapService->DeleteFolder(m_eventQueue,
+                  imapServer = do_QueryInterface(server, &rv);
+                  if (NS_SUCCEEDED(rv) && imapServer) 
+                  {
+                    PRBool serverSupportsDualUseFolders;
+                    imapServer->GetDualUseFolders(&serverSupportsDualUseFolders);
+                    if (!serverSupportsDualUseFolders)
+                      canHaveSubFoldersOfTrash = PR_FALSE;
+                  }
+                }
+              }
+              if (!canHaveSubFoldersOfTrash)
+                deleteNoTrash = PR_TRUE;
+            }
+
+            PRUnichar *confirmationStr = IMAPGetStringByID((!deleteNoTrash)
+              ? IMAP_MOVE_FOLDER_TO_TRASH : IMAP_DELETE_NO_TRASH);
+
+            PRBool confirmed = PR_FALSE;
+            if (dialog && confirmationStr) {
+                dialog->Confirm(nsnull, confirmationStr, &confirmed);
+            }
+            if (confirmed)
+            {
+              for (i = 0; i < folderCount; i++)
+              {
+                  folderSupport = getter_AddRefs(folders->ElementAt(i));
+                  curFolder = do_QueryInterface(folderSupport, &rv);
+                  if (NS_SUCCEEDED(rv))
+                  {
+                      urlListener = do_QueryInterface(curFolder);
+                      if (deleteNoTrash)
+                          rv = imapService->DeleteFolder(m_eventQueue,
+                                                         curFolder,
+                                                         urlListener,
+                                                         nsnull);
+                      else
+                          rv = imapService->MoveFolder(m_eventQueue,
                                                        curFolder,
+                                                       trashFolder,
                                                        urlListener,
                                                        nsnull);
-                    else if (moveToTrash)
-                        rv = imapService->MoveFolder(m_eventQueue,
-                                                     curFolder,
-                                                     trashFolder,
-                                                     urlListener,
-                                                     nsnull);
-                }
+                  }
+              }
             }
-            if (moveToTrashStr)
-                nsCRT::free(moveToTrashStr);
+            if (confirmationStr)
+                nsCRT::free(confirmationStr);
         }
     }
     
-    if (deleteFromTrash || moveToTrash)
+    if (deleteNoTrash || moveToTrash)
         return nsMsgFolder::DeleteSubFolders(folders, nsnull);
     else
         return rv;
@@ -3045,16 +3079,39 @@ PRBool nsImapMailFolder::ShowDeletedMessages()
   nsresult err;
     NS_WITH_SERVICE(nsIImapHostSessionList, hostSession,
                     kCImapHostSessionList, &err);
-  PRBool rv = PR_FALSE;
+  PRBool showDeleted = PR_FALSE;
 
-    if (NS_SUCCEEDED(err) && hostSession)
+  if (NS_SUCCEEDED(err) && hostSession)
   {
-        char *serverKey = nsnull;
-        GetServerKey(&serverKey);
-        err = hostSession->GetShowDeletedMessagesForHost(serverKey, rv);
-        PR_FREEIF(serverKey);
+    nsXPIDLCString serverKey;
+    GetServerKey(getter_Copies(serverKey));
+    err = hostSession->GetShowDeletedMessagesForHost(serverKey, showDeleted);
   }
-  return rv;
+  // check for special folders that need to show deleted messages
+  if (!showDeleted)
+  {
+    nsCOMPtr<nsIImapIncomingServer> imapServer;
+    nsCOMPtr<nsIMsgIncomingServer> server;
+
+    nsresult rv = GetServer(getter_AddRefs(server));
+    if (server) 
+    {
+      imapServer = do_QueryInterface(server, &rv);
+      if (NS_SUCCEEDED(rv) && imapServer) 
+      {
+        PRBool isAOLServer = PR_FALSE;
+        imapServer->GetIsAOLServer(&isAOLServer);
+        if (isAOLServer)
+        {
+          nsXPIDLString folderName;
+          GetName(getter_Copies(folderName));
+          if (!nsCRT::strncasecmp(folderName, "Trash", 5))
+            showDeleted = PR_TRUE;
+        }
+      }
+    }
+  }
+  return showDeleted;
 }
 
 

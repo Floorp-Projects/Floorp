@@ -282,7 +282,7 @@ protected:
 	void ParseUidString(char *uidString, nsMsgKeyArray &keys);
   nsresult GetFolder(const char *name, nsIMsgFolder **pFolder);
 	nsresult GetTrashFolder(nsIMsgFolder **pTrashFolder);
-  PRBool InTrash(nsIMsgFolder* folder);
+  PRBool TrashOrDescendentOfTrash(nsIMsgFolder* folder);
 	nsresult GetServerKey(char **serverKey);
 
   nsresult DisplayStatusMsg(nsIImapUrl *aImapUrl, const PRUnichar *msg);

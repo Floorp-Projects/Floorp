@@ -963,6 +963,10 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
 		nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(child);
 		if (imapFolder)
 		{
+      PRBool isAOLServer = PR_FALSE;
+
+      GetIsAOLServer(&isAOLServer);
+
 			nsXPIDLCString onlineName;
 			nsXPIDLString unicodeName;
 			imapFolder->SetVerifiedAsOnlineFolder(PR_TRUE);
@@ -975,7 +979,11 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
 				imapFolder->SetOnlineName(dupFolderPath);
 			if (NS_SUCCEEDED(CreatePRUnicharStringFromUTF7(folderName, getter_Copies(unicodeName))))
 				child->SetName(unicodeName);
-
+      if (isAOLServer && onlineName && !nsCRT::strcasecmp(onlineName, "RECYCLE"))
+      {
+        nsAutoString trashName; trashName.AssignWithConversion("Trash");
+        child->SetPrettyName(trashName.GetUnicode()); // don't localize - it's a semi-reserved name for IMAP
+      }
 		}
     }
 	return NS_OK;

@@ -20,6 +20,10 @@
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
+#ifdef DEBUG_bienvenu
+#define DOING_PSEUDO_MAILBOXES
+#endif
+
 // sorry, this has to be before the pre-compiled header
 #define FORCE_PR_LOG /* Allow logging in the release build */
 // as does this
@@ -1451,10 +1455,21 @@ NS_IMETHODIMP nsImapProtocol::CanHandleUrl(nsIImapUrl * aImapUrl,
     }
 
     nsImapState imapState;
+    nsImapAction actionForProposedUrl;
+    aImapUrl->GetImapAction(&actionForProposedUrl);
     aImapUrl->GetRequiredImapState(&imapState);
-    
-    PRBool isSelectedStateUrl = imapState ==
-        nsIImapUrl::nsImapSelectedState;
+
+    // OK, this is a bit of a hack - we're going to pretend that
+    // a delete folder url requires a selected state connection on
+    // the folder to be deleted. This isn't technically true,
+    // but we would much rather use that connection for several reasons,
+    // one is that some UW servers require us to use that connection
+    // the other is that we don't want to leave a connection dangling in
+    // the selected state for the deleted folder.
+    // If we don't find a connection in that selected state,
+    // we'll fall back to the first free connection.
+    PRBool isSelectedStateUrl = imapState == nsIImapUrl::nsImapSelectedState 
+      || actionForProposedUrl == nsIImapUrl::nsImapDeleteFolder;
     
     nsCOMPtr<nsIMsgMailNewsUrl> msgUrl = do_QueryInterface(aImapUrl);
     nsCOMPtr<nsIMsgIncomingServer> server;
@@ -1513,7 +1528,6 @@ NS_IMETHODIMP nsImapProtocol::CanHandleUrl(nsIImapUrl * aImapUrl,
           else // *** jt - an authenticated state url can be run in either
               // authenticated or selected state
           {
-            nsImapAction actionForProposedUrl;
             nsImapAction actionForRunningUrl;
 
             // If proposed url is subscription related, and we are currently running
@@ -1521,7 +1535,6 @@ NS_IMETHODIMP nsImapProtocol::CanHandleUrl(nsIImapUrl * aImapUrl,
             // Otherwise, we can run this url if we're not busy.
             // If we never find a running subscription-related url, the caller will
             // just use whatever free connection it can find, which is what we want.
-            aImapUrl->GetImapAction(&actionForProposedUrl);
             if (IS_SUBSCRIPTION_RELATED_ACTION(actionForProposedUrl))
             {
               if (isBusy && m_runningUrl)
@@ -5795,7 +5808,18 @@ void nsImapProtocol::CreateMailbox(const char *mailboxName)
 
 void nsImapProtocol::DeleteMailbox(const char *mailboxName)
 {
-    ProgressEventFunctionUsingIdWithString (IMAP_STATUS_DELETING_MAILBOX, mailboxName);
+
+  // check if this connection currently has the folder to be deleted selected.
+  // If so, we should close it because at least some UW servers don't like you deleting
+  // a folder you have open.
+  if (GetServerStateParser().GetIMAPstate() ==
+      nsImapServerResponseParser::kFolderSelected && GetServerStateParser().GetSelectedMailboxName() && 
+      PL_strcmp(GetServerStateParser().GetSelectedMailboxName(),
+                    mailboxName) == 0)
+    Close();
+  
+  
+  ProgressEventFunctionUsingIdWithString (IMAP_STATUS_DELETING_MAILBOX, mailboxName);
 
     IncrementCommandTagNumber();
     
