@@ -37,6 +37,14 @@
 #include "nsPoint.h"
 #include "nsSVGAtoms.h"
 #include "nsIDeviceContext.h"
+
+#include "nsIReflowCommand.h"
+extern nsresult
+NS_NewHTMLReflowCommand(nsIReflowCommand**           aInstancePtrResult,
+                        nsIFrame*                    aTargetFrame,
+                        nsIReflowCommand::ReflowType aReflowType,
+                        nsIFrame*                    aChildFrame = nsnull,
+                        nsIAtom*                     aAttribute = nsnull);
 //#include "nsPolygonCID.h"
 //
 // NS_NewPolygonFrame
@@ -66,7 +74,8 @@ nsPolygonFrame::nsPolygonFrame() :
   mPnts(nsnull),
   mNumPnts(0),
   mX(0),
-  mY(0)
+  mY(0),
+  mPresContext(nsnull)
 {
 
 }
@@ -76,6 +85,7 @@ nsPolygonFrame::~nsPolygonFrame()
   if (mPnts) {
     delete [] mPnts;
   }
+  NS_IF_RELEASE(mPresContext);
 }
 
 
@@ -86,6 +96,8 @@ nsPolygonFrame::Init(nsIPresContext*  aPresContext,
                          nsIStyleContext* aContext,
                          nsIFrame*        aPrevInFlow)
 {
+  mPresContext = aPresContext;
+  NS_ADDREF(mPresContext);
  
   nsresult rv = nsLeafFrame::Init(aPresContext, aContent, aParent, aContext,
                                   aPrevInFlow);
@@ -158,16 +170,24 @@ nsPolygonFrame::Reflow(nsIPresContext*          aPresContext,
 
   if (mPoints.Count() == 0) {
     GetPoints();
-  }
-  nscoord maxWidth  = 0;
-  nscoord maxHeight = 0;
-  for (PRInt32 i=0;i<mNumPnts;i++) {
-    maxWidth = PR_MAX(maxWidth, NSIntPixelsToTwips(mPnts[i].x, p2t*scale));
-    maxHeight = PR_MAX(maxHeight, NSIntPixelsToTwips(mPnts[i].y, p2t*scale));
+    // Convert points from Pixels to twips
+    // and these points are relative to the X & Y
+    // then find max width and height
+    nscoord maxWidth  = 0;
+    nscoord maxHeight = 0;
+    for (PRInt32 i=0;i<mNumPnts;i++) {
+      mPnts[i].x = NSIntPixelsToTwips(mPnts[i].x, p2t*scale);
+      mPnts[i].y = NSIntPixelsToTwips(mPnts[i].y, p2t*scale);
+      maxWidth   = PR_MAX(maxWidth,  mPnts[i].x);
+      maxHeight  = PR_MAX(maxHeight, mPnts[i].y);
+    }
+    aDesiredSize.width  = maxWidth  + nscoord(p2t*scale);
+    aDesiredSize.height = maxHeight + nscoord(p2t*scale);
+  } else {
+    aDesiredSize.width  = mRect.width;
+    aDesiredSize.height = mRect.height;
   }
 
-  aDesiredSize.width  = maxWidth  + nscoord(p2t*scale);
-  aDesiredSize.height = maxHeight + nscoord(p2t*scale);
   aDesiredSize.ascent = aDesiredSize.height;
   aDesiredSize.descent = 0;
 
@@ -175,6 +195,8 @@ nsPolygonFrame::Reflow(nsIPresContext*          aPresContext,
     aDesiredSize.maxElementSize->width  = aDesiredSize.width;
     aDesiredSize.maxElementSize->height = aDesiredSize.height;
   }
+  //nsRect  rect(0, 0, aDesiredSize.width, aDesiredSize.height);
+  //Invalidate(aPresContext, rect, PR_TRUE);
   return NS_OK;
 }
 
@@ -205,6 +227,12 @@ nsPolygonFrame::HandleMouseDownEvent(nsIPresContext* aPresContext,
 NS_METHOD 
 nsPolygonFrame::GetPoints()
 {
+  if (mPnts != nsnull) {
+    delete [] mPnts;
+    mNumPnts = 0;
+    mPoints.Clear();
+  }
+
   nsAutoString pointsStr;
   nsresult res = mContent->GetAttribute(kNameSpaceID_None, nsSVGAtoms::points, pointsStr);
 
@@ -236,6 +264,11 @@ nsPolygonFrame::GetPoints()
   }
   mPnts[mNumPnts-1] = mPnts[0];
 
+  //printf("0x%X Points are:\n", this);
+  //for (PRInt32 i=0;i<mNumPnts;i++) {
+  //  printf("%d -> [%d,%d]\n", i, mPnts[i].x, mPnts[i].y);
+  //}
+
   return NS_OK;
 }
 
@@ -257,6 +290,24 @@ nsPolygonFrame::AttributeChanged(nsIPresContext* aPresContext,
                                           nsIAtom*        aAttribute,
                                           PRInt32         aHint)
 {
+  if (aAttribute == nsSVGAtoms::points) {
+    //GetPoints();
+    mPoints.Clear();
+
+    nsCOMPtr<nsIPresShell> shell;
+    aPresContext->GetShell(getter_AddRefs(shell));
+    
+    nsIReflowCommand* reflowCmd;
+    nsresult rv = NS_NewHTMLReflowCommand(&reflowCmd, this,
+                                          nsIReflowCommand::ContentChanged);
+    if (NS_SUCCEEDED(rv)) {
+      shell->AppendReflowCommand(reflowCmd);
+      NS_RELEASE(reflowCmd);
+      rv = shell->FlushPendingNotifications();
+    }
+  } else if (aAttribute == nsSVGAtoms::x) {
+  } else if (aAttribute == nsSVGAtoms::y) {
+  }
   return nsLeafFrame::AttributeChanged(aPresContext, aChild, aNameSpaceID, aAttribute, aHint);
 }
   
@@ -283,65 +334,60 @@ nsPolygonFrame::Paint(nsIPresContext* aPresContext,
                           const nsRect& aDirtyRect,
                           nsFramePaintLayer aWhichLayer)
 {
-  const nsStyleDisplay* disp = (const nsStyleDisplay*)
-  mStyleContext->GetStyleData(eStyleStruct_Display);
 
   // if we aren't visible then we are done.
+  const nsStyleDisplay* disp = (const nsStyleDisplay*)
+  mStyleContext->GetStyleData(eStyleStruct_Display);
   if (!disp->IsVisibleOrCollapsed()) 
 	   return NS_OK;  
 
-  // if we are visible then tell our superclass to paint
-  nsLeafFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
-                     aWhichLayer);
-
-  // get our border
-	const nsStyleSpacing* spacing = (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
-	nsMargin border(0,0,0,0);
-	spacing->CalcBorderFor(this, border);
-
-  
-  // XXX - Color needs to comes from new style property fill
-  // and not mColor
-  const nsStyleColor* colorStyle = (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
-  nscolor color = colorStyle->mColor;
-  
-
-  aRenderingContext.PushState();
-
-  // set the clip region
-  nsRect rect;
-
-  PRBool clipState;
-  GetRect(rect);
-
-  // Clip so we don't render outside the inner rect
-  aRenderingContext.SetClipRect(rect, nsClipCombine_kReplace, clipState);
-  aRenderingContext.SetColor(color);
-  
-  ///////////////////////////////////////////
-  // XXX - This is all just a quick hack
-  // needs to be rewritten
-  nsCOMPtr<nsIDeviceContext> dx;
-  aPresContext->GetDeviceContext(getter_AddRefs(dx));
-  float p2t   = 1.0;
-  float scale = 1.0;
-  if (dx) { 
-    aPresContext->GetPixelsToTwips(&p2t);
-    dx->GetCanonicalPixelScale(scale); 
-  }  
-  
-  nsPoint points[256];
-  for (PRInt32 i=0;i<mNumPnts;i++) {
-    points[i] = mPnts[i];
-    points[i].x = NSIntPixelsToTwips(points[i].x, p2t*scale)+mX;
-    points[i].y = NSIntPixelsToTwips(points[i].y, p2t*scale)+mY;
-    //printf("%p   Draw Poly: %d,%d\n", this, points[i].x, points[i].y);
+  if (aWhichLayer == NS_FRAME_PAINT_LAYER_BACKGROUND) {
+    // if we are visible then tell our superclass to paint
+    nsLeafFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
+                       aWhichLayer);
   }
-  // XXX - down to here
 
-  RenderPoints(aRenderingContext, points, mNumPnts);
+  if (aWhichLayer == NS_FRAME_PAINT_LAYER_FOREGROUND) {
 
-  aRenderingContext.PopState(clipState);
+    // get our border
+	  const nsStyleSpacing* spacing = (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
+	  nsMargin border(0,0,0,0);
+	  spacing->CalcBorderFor(this, border);
+
+  
+    // XXX - Color needs to comes from new style property fill
+    // and not mColor
+    const nsStyleColor* colorStyle = (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
+    nscolor color = colorStyle->mColor;
+  
+
+    aRenderingContext.PushState();
+
+    // set the clip region
+    nsRect rect;
+
+    PRBool clipState;
+    GetRect(rect);
+
+    // Clip so we don't render outside the inner rect
+    rect.x = 0;
+    rect.y = 0;
+    aRenderingContext.SetClipRect(rect, nsClipCombine_kReplace, clipState);
+    aRenderingContext.SetColor(color);
+  
+    ///////////////////////////////////////////
+    // XXX - This is all just a quick hack
+    // needs to be rewritten
+    nsPoint points[256];
+    for (PRInt32 i=0;i<mNumPnts;i++) {
+      points[i] = mPnts[i];
+    }
+    // XXX - down to here
+
+    RenderPoints(aRenderingContext, points, mNumPnts);
+
+    aRenderingContext.PopState(clipState);
+  }
 
   return NS_OK;
 }

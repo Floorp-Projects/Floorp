@@ -36,7 +36,7 @@
 #include "nsISVGFrame.h"
 
 class nsString;
-
+class nsIPresContext;
 
 nsresult NS_NewPolygonFrame(nsIPresShell* aPresShell, nsIFrame** aResult) ;
 
@@ -111,6 +111,8 @@ protected:
   PRInt32    mNumPnts;
   nscoord    mX;
   nscoord    mY;
+
+  nsIPresContext* mPresContext;  // XXX: Remove the need to cache the pres context.
 
 private:
   NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
