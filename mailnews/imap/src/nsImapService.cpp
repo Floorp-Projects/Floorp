@@ -1147,10 +1147,11 @@ nsImapService::OnlineMessageCopy(nsIEventQueue* aClientEventQueue,
     nsIImapUrl* imapUrl = nsnull;
     nsString2 urlSpec("", eOneByte);
 
-    rv = GetImapConnectionAndUrl(aClientEventQueue, imapUrl, aDstFolder,
+    rv = GetImapConnectionAndUrl(aClientEventQueue, imapUrl, aSrcFolder,
                                  protocolInstance, urlSpec);
     if (NS_SUCCEEDED(rv) && imapUrl)
     {
+        SetImapUrlSink(aSrcFolder, imapUrl);
         // **** fix me with real host hierarchy separator
         char hierarchySeparator = kOnlineHierarchySeparatorUnknown;
         if (isMove)
