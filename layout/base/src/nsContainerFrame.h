@@ -253,11 +253,6 @@ protected:
    */
   PRBool IsChild(const nsIFrame* aChild) const;
 
-  /**
-   * Returns PR_TRUE if aChild is the last child of this frame.
-   */
-  PRBool IsLastChild(const nsIFrame* aChild) const;
-
   void DumpTree() const;
 #endif
 

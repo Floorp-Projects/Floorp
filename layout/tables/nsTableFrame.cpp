@@ -1702,10 +1702,6 @@ nsReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresContext,
   // Recalculate Layout Dependencies
   RecalcLayoutData();
 
-  if (nsnull != prevKidFrame) {
-    NS_ASSERTION(IsLastChild(prevKidFrame), "unexpected last child");
-  }
-
   aDesiredSize.width = kidSize.width;
   mFirstPassValid = PR_TRUE;
 

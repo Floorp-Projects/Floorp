@@ -672,7 +672,7 @@ nsInlineFrame::ReflowFrame(nsInlineReflowState& aState,
 
 nsIFrame*
 nsInlineFrame::PullOneChild(nsInlineFrame* aNextInFlow,
-                               nsIFrame*         aLastChild)
+                               nsIFrame*   aLastChild)
 {
   NS_PRECONDITION(nsnull != aNextInFlow, "null ptr");
 
@@ -711,7 +711,6 @@ nsInlineFrame::PullOneChild(nsInlineFrame* aNextInFlow,
   if (nsnull == aLastChild) {
     mFirstChild = kidFrame;
   } else {
-    NS_ASSERTION(IsLastChild(aLastChild), "bad last child");
     aLastChild->SetNextSibling(kidFrame);
   }
   kidFrame->SetNextSibling(nsnull);

@@ -523,11 +523,6 @@ PRBool nsTableRowGroupFrame::PullUpChildren(nsIPresContext*      aPresContext,
     }
   }
 
-  // Update our last content offset
-  if (nsnull != prevKidFrame) {
-    NS_ASSERTION(IsLastChild(prevKidFrame), "bad last child");
-  }
-
   return result;
 }
 
