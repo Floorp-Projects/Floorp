@@ -22,23 +22,24 @@ name
 
 $name.suffix
 suffix
+name
+
+$name.suffix
+suffix
 
 %name
 name
 
 $street.line1
 address
-line
 1
 
 $street.line2
 address
-line
 2
 
 $street.line3
 address
-line
 3
 
 %address
