@@ -51,27 +51,21 @@ namespace VM {
         AND, /* dest, source1, source2 */
         BITNOT, /* dest, source */
         BRANCH, /* target label */
-        BRANCH_EQ, /* target label, condition */
         BRANCH_FALSE, /* target label, condition */
-        BRANCH_GE, /* target label, condition */
-        BRANCH_GT, /* target label, condition */
-        BRANCH_LE, /* target label, condition */
-        BRANCH_LT, /* target label, condition */
-        BRANCH_NE, /* target label, condition */
         BRANCH_TRUE, /* target label, condition */
         CALL, /* result, target, args */
-        COMPARE_EQ, /* dest, source */
-        COMPARE_GE, /* dest, source */
-        COMPARE_GT, /* dest, source */
-        COMPARE_IN, /* dest, source */
-        COMPARE_LE, /* dest, source */
-        COMPARE_LT, /* dest, source */
-        COMPARE_NE, /* dest, source */
+        COMPARE_EQ, /* dest, source1, source2 */
+        COMPARE_GE, /* dest, source1, source2 */
+        COMPARE_GT, /* dest, source1, source2 */
+        COMPARE_IN, /* dest, source1, source2 */
+        COMPARE_LE, /* dest, source1, source2 */
+        COMPARE_LT, /* dest, source1, source2 */
+        COMPARE_NE, /* dest, source1, source2 */
         DIVIDE, /* dest, source1, source2 */
         ELEM_XCR, /* dest, base, index, value */
         GET_ELEMENT, /* dest, base, index */
         GET_PROP, /* dest, object, prop name */
-        INSTANCEOF, /* dest, source */
+        INSTANCEOF, /* dest, source1, source2 */
         JSR, /* target */
         LOAD_IMMEDIATE, /* dest, immediate value (double) */
         LOAD_NAME, /* dest, name */
@@ -97,8 +91,8 @@ namespace VM {
         SET_PROP, /* object, name, source */
         SHIFTLEFT, /* dest, source1, source2 */
         SHIFTRIGHT, /* dest, source1, source2 */
-        STRICT_EQ, /* dest, source */
-        STRICT_NE, /* dest, source */
+        STRICT_EQ, /* dest, source1, source2 */
+        STRICT_NE, /* dest, source1, source2 */
         SUBTRACT, /* dest, source1, source2 */
         TEST, /* dest, source */
         THROW, /* exception value */
@@ -120,13 +114,7 @@ namespace VM {
         "AND           ",
         "BITNOT        ",
         "BRANCH        ",
-        "BRANCH_EQ     ",
         "BRANCH_FALSE  ",
-        "BRANCH_GE     ",
-        "BRANCH_GT     ",
-        "BRANCH_LE     ",
-        "BRANCH_LT     ",
-        "BRANCH_NE     ",
         "BRANCH_TRUE   ",
         "CALL          ",
         "COMPARE_EQ    ",
@@ -199,8 +187,6 @@ namespace VM {
         {
             return f;
         }
-        
-        ICodeOp getBranchOp();
         
         ICodeOp op() { return mOpcode; }
         
@@ -390,6 +376,7 @@ namespace VM {
 
         void resolveTo (uint32 aOffset) { mOp1->mOffset = aOffset; }
         uint32 getOffset() { return mOp1->mOffset; }
+        void setTarget(Label *label) { mOp1 = label; }
     };
 
     /********************************************************************/
@@ -436,21 +423,12 @@ namespace VM {
             GenericBranch
             (BRANCH, aOp1) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[BRANCH] << "\t" << "Offset " << mOp1->mOffset;
+            f << opcodeNames[BRANCH] << "\t" << "Offset " << ((mOp1) ? mOp1->mOffset : NotAnOffset);
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& /*registers*/) {
             return f;
         }
-    };
-
-    class BranchEQ : public GenericBranch {
-    public:
-        /* target label, condition */
-        BranchEQ (Label* aOp1, Register aOp2) :
-            GenericBranch
-            (BRANCH_EQ, aOp1, aOp2) {};
-        /* print() and printOperands() inherited from GenericBranch */
     };
 
     class BranchFalse : public GenericBranch {
@@ -459,51 +437,6 @@ namespace VM {
         BranchFalse (Label* aOp1, Register aOp2) :
             GenericBranch
             (BRANCH_FALSE, aOp1, aOp2) {};
-        /* print() and printOperands() inherited from GenericBranch */
-    };
-
-    class BranchGE : public GenericBranch {
-    public:
-        /* target label, condition */
-        BranchGE (Label* aOp1, Register aOp2) :
-            GenericBranch
-            (BRANCH_GE, aOp1, aOp2) {};
-        /* print() and printOperands() inherited from GenericBranch */
-    };
-
-    class BranchGT : public GenericBranch {
-    public:
-        /* target label, condition */
-        BranchGT (Label* aOp1, Register aOp2) :
-            GenericBranch
-            (BRANCH_GT, aOp1, aOp2) {};
-        /* print() and printOperands() inherited from GenericBranch */
-    };
-
-    class BranchLE : public GenericBranch {
-    public:
-        /* target label, condition */
-        BranchLE (Label* aOp1, Register aOp2) :
-            GenericBranch
-            (BRANCH_LE, aOp1, aOp2) {};
-        /* print() and printOperands() inherited from GenericBranch */
-    };
-
-    class BranchLT : public GenericBranch {
-    public:
-        /* target label, condition */
-        BranchLT (Label* aOp1, Register aOp2) :
-            GenericBranch
-            (BRANCH_LT, aOp1, aOp2) {};
-        /* print() and printOperands() inherited from GenericBranch */
-    };
-
-    class BranchNE : public GenericBranch {
-    public:
-        /* target label, condition */
-        BranchNE (Label* aOp1, Register aOp2) :
-            GenericBranch
-            (BRANCH_NE, aOp1, aOp2) {};
         /* print() and printOperands() inherited from GenericBranch */
     };
 
@@ -668,7 +601,7 @@ namespace VM {
             GenericBranch
             (JSR, aOp1) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[JSR] << "\t" << "Offset " << mOp1->mOffset;
+            f << opcodeNames[JSR] << "\t" << "Offset " << ((mOp1) ? mOp1->mOffset : NotAnOffset);
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& /*registers*/) {
@@ -1088,7 +1021,7 @@ namespace VM {
             Instruction_2<Label*, Label*>
             (TRYIN, aOp1, aOp2) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[TRYIN] << "\t" << "Offset " << mOp1->mOffset << ", " << "Offset " << mOp2->mOffset;
+            f << opcodeNames[TRYIN] << "\t" << "Offset " << ((mOp1) ? mOp1->mOffset : NotAnOffset) << ", " << "Offset " << ((mOp2) ? mOp2->mOffset : NotAnOffset);
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& /*registers*/) {

@@ -46,7 +46,6 @@ const JSValue kNaN = JSValue(nan);
 const JSValue kTrue = JSValue(true);
 const JSValue kFalse = JSValue(false);
 
-// PATRICK, HELP!!!!!
 const JSType Any_Type = JSType(NULL);
 const JSType Integer_Type = JSType(&Any_Type);
 const JSType Number_Type = JSType(&Integer_Type);
@@ -151,6 +150,20 @@ int JSValue::operator==(const JSValue& value) const
     return 0;
 }
 
+Formatter& operator<<(Formatter& f, const JSObject& obj)
+{
+    obj.printProperties(f);
+    return f;
+}
+
+void JSObject::printProperties(Formatter& f) const
+{
+    for (JSProperties::const_iterator i = mProperties.begin(); i != mProperties.end(); i++) {
+        f << (*i).first << " : " << (*i).second;
+        f << "\n";
+    }
+}
+
 Formatter& operator<<(Formatter& f, const JSValue& value)
 {
     switch (value.tag) {
@@ -164,9 +177,16 @@ Formatter& operator<<(Formatter& f, const JSValue& value)
         f << value.f64;
         break;
     case JSValue::object_tag:
+        {
+            printFormat(f, "Object @ 0x%08X\n", value.object);
+            f << *value.object;
+        }
+        break;
     case JSValue::array_tag:
+        printFormat(f, "Array @ 0x%08X", value.object);
+        break;
     case JSValue::function_tag:
-        printFormat(f, "0x%08X", value.object);
+        printFormat(f, "Function @ 0x%08X", value.object);
         break;
     case JSValue::string_tag:
         f << *value.string;

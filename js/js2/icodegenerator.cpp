@@ -61,32 +61,27 @@ Formatter& operator<<(Formatter &f, ICodeModule &i)
 // ICodeGenerator
 //
 
-ICodeGenerator::ICodeGenerator(World *world, bool hasTryStatement, uint32 switchStatementNesting)
+ICodeGenerator::ICodeGenerator(World *world)
     :   topRegister(0), 
         registerBase(0), 
         maxRegister(0), 
         parameterCount(0),
         exceptionRegister(NotARegister),
-        switchRegister(NotARegister),
         variableList(new VariableList()),
-        mWorld(world)
+        mWorld(world),
+        mInstructionMap(new InstructionMap())
 { 
     iCode = new InstructionStream();
     iCodeOwner = true;
-    if (hasTryStatement) 
-        exceptionRegister = allocateVariable(world->identifiers[widenCString("__exceptionObject__")]);
-    for (uint i = 0; i < switchStatementNesting; i++) {
-        String s = widenCString("__switchControlVariable__");
-        char num[8]; 
-        sprintf(num, "%.2d", i);
-        appendChars(s, num, strlen(num));
-        if (switchRegister == NotARegister)
-            switchRegister = allocateVariable(world->identifiers[s]);
-        else
-            allocateVariable(world->identifiers[s]);
-    }
 }
 
+Register ICodeGenerator::allocateVariable(const StringAtom& name) 
+{ 
+    if (exceptionRegister == NotARegister) {
+        exceptionRegister = grabRegister(mWorld->identifiers[widenCString("__exceptionObject__")]);
+    }
+    return grabRegister(name); 
+}
 
 ICodeModule *ICodeGenerator::complete()
 {
@@ -121,7 +116,7 @@ ICodeModule *ICodeGenerator::complete()
     }
     */
     markMaxRegister();
-    ICodeModule* module = new ICodeModule(iCode, variableList, maxRegister, 0);
+    ICodeModule* module = new ICodeModule(iCode, variableList, maxRegister, 0, mInstructionMap);
     iCodeOwner = false;   // give ownership to the module.
     return module;
 }
@@ -333,44 +328,28 @@ void ICodeGenerator::branch(Label *label)
     iCode->push_back(instr);
 }
 
-void ICodeGenerator::branchConditional(Label *label, Register condition)
-{
-    ICodeOp branchOp = getBranchOp();
-    ASSERT(branchOp != NOP);
-    GenericBranch *instr = new GenericBranch(branchOp, label, condition);
-    iCode->push_back(instr);
-}
-
-void ICodeGenerator::branchTrue(Label *label, Register condition)
+GenericBranch *ICodeGenerator::branchTrue(Label *label, Register condition)
 {
     GenericBranch *instr = new GenericBranch(BRANCH_TRUE, label, condition);
     iCode->push_back(instr);
+    return instr;
 }
 
-void ICodeGenerator::branchFalse(Label *label, Register condition)
+GenericBranch *ICodeGenerator::branchFalse(Label *label, Register condition)
 {
     GenericBranch *instr = new GenericBranch(BRANCH_FALSE, label, condition);
     iCode->push_back(instr);
+    return instr;
 }
 
-void ICodeGenerator::branchNotConditional(Label *label, Register condition)
+void ICodeGenerator::returnStmt(Register r)
 {
-    ICodeOp branchOp = getBranchOp();
-    ASSERT(branchOp != NOP);
-    switch (branchOp) {
-        case BRANCH_FALSE   : branchOp = BRANCH_TRUE;   break;
-        case BRANCH_TRUE    : branchOp = BRANCH_FALSE;  break;
-        case BRANCH_EQ      : branchOp = BRANCH_NE;     break;
-        case BRANCH_GE      : branchOp = BRANCH_LT;     break;
-        case BRANCH_GT      : branchOp = BRANCH_LE;     break;
-        case BRANCH_LE      : branchOp = BRANCH_GT;     break;
-        case BRANCH_LT      : branchOp = BRANCH_GE;     break;
-        case BRANCH_NE      : branchOp = BRANCH_EQ;     break;
-        default : NOT_REACHED("Expected a branch op");  break;
-    }
-    GenericBranch *instr = new GenericBranch(branchOp, label, condition);
-    iCode->push_back(instr);
+    if (r == NotARegister)
+        iCode->push_back(new ReturnVoid());
+    else
+        iCode->push_back(new Return(r));
 }
+
 
 /********************************************************************/
 
@@ -492,10 +471,13 @@ static bool generatedBoolean(ExprNode *p)
 
 /*
     if trueBranch OR falseBranch are not null, the sub-expression should generate
-    a conditional branch do the appropriate target. If either branch is NULL, it
+    a conditional branch to the appropriate target. If either branch is NULL, it
     indicates that the label is immediately forthcoming.
 */
-Register ICodeGenerator::genExpr(ExprNode *p, bool needBoolValueInBranch, Label *trueBranch, Label *falseBranch)
+Register ICodeGenerator::genExpr(ExprNode *p, 
+                                    bool needBoolValueInBranch, 
+                                    Label *trueBranch, 
+                                    Label *falseBranch)
 {
     Register ret = NotARegister;
     switch (p->getKind()) {
@@ -561,13 +543,13 @@ Register ICodeGenerator::genExpr(ExprNode *p, bool needBoolValueInBranch, Label 
         break;
     case ExprNode::identifier :
         {
-            /*
-                variable or name? If there's a 'with' in this scope, then it's
-                a name, otherwise look it up in the function variable map.
-            */
-            Register v = findVariable((static_cast<IdentifierExprNode *>(p))->name);
-            if (v != NotARegister)
-                ret = v;
+            if (mWithinWith) {
+                Register v = findVariable((static_cast<IdentifierExprNode *>(p))->name);
+                if (v != NotARegister)
+                    ret = v;
+                else
+                    ret = loadName((static_cast<IdentifierExprNode *>(p))->name);
+            }
             else
                 ret = loadName((static_cast<IdentifierExprNode *>(p))->name);
         }
@@ -688,9 +670,9 @@ Register ICodeGenerator::genExpr(ExprNode *p, bool needBoolValueInBranch, Label 
             ret = op(mapExprNodeToICodeOp(p->getKind()), r1, r2);
             if (trueBranch || falseBranch) {
                 if (trueBranch == NULL)
-                    branchNotConditional(falseBranch, ret);
+                    branchFalse(falseBranch, ret);
                 else {
-                    branchConditional(trueBranch, ret);
+                    branchTrue(trueBranch, ret);
                     if (falseBranch)
                         branch(falseBranch);
                 }
@@ -706,9 +688,9 @@ Register ICodeGenerator::genExpr(ExprNode *p, bool needBoolValueInBranch, Label 
             ret = op(mapExprNodeToICodeOp(p->getKind()), r2, r1);   // will return reverse case
             if (trueBranch || falseBranch) {
                 if (trueBranch == NULL)
-                    branchNotConditional(falseBranch, ret);
+                    branchFalse(falseBranch, ret);
                 else {
-                    branchConditional(trueBranch, ret);
+                    branchTrue(trueBranch, ret);
                     if (falseBranch)
                         branch(falseBranch);
                 }
@@ -725,9 +707,9 @@ Register ICodeGenerator::genExpr(ExprNode *p, bool needBoolValueInBranch, Label 
             ret = op(mapExprNodeToICodeOp(p->getKind()), r1, r2);
             if (trueBranch || falseBranch) {
                 if (trueBranch == NULL)
-                    branchNotConditional(falseBranch, ret);
+                    branchFalse(falseBranch, ret);
                 else {
-                    branchConditional(trueBranch, ret);
+                    branchTrue(trueBranch, ret);
                     if (falseBranch)
                         branch(falseBranch);
                 }
@@ -796,7 +778,7 @@ Register ICodeGenerator::genExpr(ExprNode *p, bool needBoolValueInBranch, Label 
             Label *beyondBranch = getLabel();
             Register c = genExpr(t->op1, false, NULL, fBranch);
             if (!generatedBoolean(t->op1))
-                branchNotConditional(fBranch, test(c));
+                branchFalse(fBranch, test(c));
             Register r1 = genExpr(t->op2);
             branch(beyondBranch);
             setLabel(fBranch);
@@ -818,7 +800,6 @@ Register ICodeGenerator::genExpr(ExprNode *p, bool needBoolValueInBranch, Label 
 /*
  need pre-pass to find: 
     variable & function definitions,
-    #nested switch statements
     contains 'with' or 'eval'
     contains 'try {} catch {} finally {}'
 */
@@ -838,11 +819,28 @@ Register ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
 {
     Register ret = NotARegister;
 
+    startStatement(p->pos);
+    if (exceptionRegister == NotARegister) {
+        exceptionRegister = grabRegister(mWorld->identifiers[widenCString("__exceptionObject__")]);
+    }
+
     switch (p->getKind()) {
     case StmtNode::expression:
         {
             ExprStmtNode *e = static_cast<ExprStmtNode *>(p);
             ret = genExpr(e->expr);
+        }
+        break;
+    case StmtNode::Throw:
+        {
+            ExprStmtNode *e = static_cast<ExprStmtNode *>(p);
+            throwStmt(genExpr(e->expr));
+        }
+        break;
+    case StmtNode::Return:
+        {
+            ExprStmtNode *e = static_cast<ExprStmtNode *>(p);
+            returnStmt(ret = genExpr(e->expr));
         }
         break;
     case StmtNode::If:
@@ -851,7 +849,7 @@ Register ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
             UnaryStmtNode *i = static_cast<UnaryStmtNode *>(p);
             Register c = genExpr(i->expr, false, NULL, falseLabel);
             if (!generatedBoolean(i->expr))
-                branchNotConditional(falseLabel, test(c));
+                branchFalse(falseLabel, test(c));
             genStmt(i->stmt);
             setLabel(falseLabel);
         }
@@ -863,38 +861,78 @@ Register ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
             BinaryStmtNode *i = static_cast<BinaryStmtNode *>(p);
             Register c = genExpr(i->expr, false, NULL, falseLabel);
             if (!generatedBoolean(i->expr))
-                branchNotConditional(falseLabel, test(c));
+                branchFalse(falseLabel, test(c));
             genStmt(i->stmt);
             branch(beyondLabel);
             setLabel(falseLabel);
             genStmt(i->stmt2);
         }
         break;
+    case StmtNode::With:
+        {
+            UnaryStmtNode *w = static_cast<UnaryStmtNode *>(p);
+            Register o = genExpr(w->expr);
+            bool withinWith = mWithinWith;
+            mWithinWith = true;
+            beginWith(o);
+            genStmt(w->stmt);
+            endWith();
+            mWithinWith = withinWith;
+        }
+        break;
     case StmtNode::Switch:
         {
+            Label *defaultLabel = NULL;
             LabelEntry *e = new LabelEntry(currentLabelSet, getLabel());
             mLabelStack.push_back(e);
             SwitchStmtNode *sw = static_cast<SwitchStmtNode *>(p);
             Register sc = genExpr(sw->expr);
             StmtNode *s = sw->statements;
             // ECMA requires case & default statements to be immediate children of switch
-            // unlike C where they can be arbitrarily deeply nested in other statements.
+            // unlike C where they can be arbitrarily deeply nested in other statements.    
+            Label *nextCaseLabel = NULL;
+            GenericBranch *lastBranch = NULL;
             while (s) {
-                ASSERT(s->getKind() == StmtNode::Case);
-                UnaryStmtNode *c = static_cast<UnaryStmtNode *>(s);
-                if (c->expr) {
-                    Label *beyondCaseLabel = getLabel();
-                    Register r = genExpr(c->expr);
-                    Register eq = op(COMPARE_EQ, r, sc);
-                    branchNotConditional(beyondCaseLabel, eq);
-                    genStmt(c->stmt);
-                    setLabel(beyondCaseLabel);
+                if (s->getKind() == StmtNode::Case) {
+                    ExprStmtNode *c = static_cast<ExprStmtNode *>(s);
+                    if (c->expr) {
+                        if (nextCaseLabel)
+                            setLabel(nextCaseLabel);
+                        nextCaseLabel = getLabel();
+                        Register r = genExpr(c->expr);
+                        Register eq = op(COMPARE_EQ, r, sc);
+                        lastBranch = branchFalse(nextCaseLabel, eq);
+                    }
+                    else {
+                        defaultLabel = getLabel();
+                        setLabel(defaultLabel);
+                    }
                 }
-                // else it's the default case... THIS IS NOT DONE YET....
                 else
-                    genStmt(c->stmt);
+                    genStmt(s);
                 s = s->next;
             }
+            if (nextCaseLabel)
+                setLabel(nextCaseLabel);
+            if (defaultLabel && lastBranch)
+                lastBranch->setTarget(defaultLabel);
+
+            setLabel(e->breakLabel);
+            mLabelStack.pop_back();
+        }
+        break;
+    case StmtNode::DoWhile:
+        {
+            LabelEntry *e = new LabelEntry(currentLabelSet, getLabel(), getLabel());
+            mLabelStack.push_back(e);
+            UnaryStmtNode *d = static_cast<UnaryStmtNode *>(p);
+            Label *doBodyTopLabel = getLabel();
+            setLabel(doBodyTopLabel);
+            genStmt(d->stmt);
+            setLabel(e->continueLabel);
+            Register c = genExpr(d->expr, false, doBodyTopLabel, NULL);
+            if (!generatedBoolean(d->expr))
+                branchTrue(doBodyTopLabel, test(c));
             setLabel(e->breakLabel);
             mLabelStack.pop_back();
         }
@@ -914,7 +952,7 @@ Register ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
             setLabel(e->continueLabel);
             Register c = genExpr(w->expr, false, whileBodyTopLabel, NULL);
             if (!generatedBoolean(w->expr))
-                branchConditional(whileBodyTopLabel, test(c));
+                branchTrue(whileBodyTopLabel, test(c));
 
             setLabel(e->breakLabel);
             mLabelStack.pop_back();
@@ -943,7 +981,7 @@ Register ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
             if (f->expr2) {
                 Register c = genExpr(f->expr2, false, forBlockTop, NULL);
                 if (!generatedBoolean(f->expr2))
-                    branchConditional(forBlockTop, test(c));
+                    branchTrue(forBlockTop, test(c));
             }
             
             setLabel(e->breakLabel);
@@ -1003,12 +1041,84 @@ Register ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
                 ASSERT(e->breakLabel);
                 branch(e->breakLabel);
             }
-
         }
         break;
+    case StmtNode::Continue:
+        {
+            GoStmtNode *g = static_cast<GoStmtNode *>(p);
+            if (g->label) {
+                LabelEntry *e = NULL;
+                for (LabelStack::reverse_iterator i = mLabelStack.rbegin(); i != mLabelStack.rend(); i++) {
+                    e = (*i);
+                    if (e->containsLabel(g->name))
+                        break;
+                }
+                if (e) {
+                    ASSERT(e->continueLabel);
+                    branch(e->continueLabel);
+                }
+                else
+                    NOT_REACHED("continue label not in label set");
+            }
+            else {
+                ASSERT(!mLabelStack.empty());
+                LabelEntry *e = mLabelStack.back();
+                ASSERT(e->continueLabel);
+                branch(e->continueLabel);
+            }
+        }
+        break;
+
+    case StmtNode::Try:
+        {
+            /*
+                The finallyInvoker is a little stub used by the interpreter to
+                invoke the finally handler on the (exceptional) way out of the
+                try block assuming there are no catch clauses.
+            */
+            Register ex = NotARegister;
+            TryStmtNode *t = static_cast<TryStmtNode *>(p);
+            Label *catchLabel = (t->catches) ? getLabel() : NULL;
+            Label *finallyInvoker = (t->finally) ? getLabel() : NULL;
+            Label *finallyLabel = (t->finally) ? getLabel() : NULL;
+            Label *beyondLabel = getLabel();
+            beginTry(catchLabel, finallyLabel);
+            genStmt(t->stmt);
+            endTry();
+            if (finallyLabel)
+                jsr(finallyLabel);
+            branch(beyondLabel);
+            if (catchLabel) {
+                setLabel(catchLabel);
+                CatchClause *c = t->catches;
+                while (c) {
+                    // Bind the incoming exception ...
+                    setRegisterForVariable(c->name, exceptionRegister);
+
+                    genStmt(c->stmt);
+                    if (finallyLabel)
+                        jsr(finallyLabel);
+                    throwStmt(exceptionRegister);
+                    c = c->next;
+                }
+            }
+            if (finallyLabel) {
+                setLabel(finallyInvoker);
+                jsr(finallyLabel);
+                throwStmt(exceptionRegister);
+
+                setLabel(finallyLabel);
+                genStmt(t->finally);
+                rts();
+            }
+            setLabel(beyondLabel);
+        }
+        break;
+
     default:
         NOT_REACHED("unimplemented statement kind");
     }
+    resetStatement();
     return ret;
 }
 
@@ -1018,8 +1128,18 @@ Register ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
 
 Formatter& ICodeGenerator::print(Formatter& f)
 {
-    f << "ICG! " << (uint32)iCode->size() << "\n"; // << *iCode;
-    return VM::operator<<(f, *iCode);
+    f << "ICG! " << (uint32)iCode->size() << "\n";
+    VM::operator<<(f, *iCode);
+    f << "  Src  :  Instr" << "\n";
+    for (InstructionMap::iterator i = mInstructionMap->begin(); i != mInstructionMap->end(); i++)
+    {
+        printDec( f, (*i)->first, 6);
+        f << " : ";
+        printDec( f, (*i)->second, 6);
+        f << "\n";
+//        f << (*i)->first << " : " << (*i)->second << "\n";
+    }
+    return f;
 }
 
 Formatter& ICodeModule::print(Formatter& f)
