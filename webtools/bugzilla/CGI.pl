@@ -762,7 +762,7 @@ sub MailPassword {
                              "login" => $login,
                              "password" => $password});
 
-    open SENDMAIL, "|/usr/lib/sendmail -ti";
+    open SENDMAIL, "|/usr/lib/sendmail -t -i";
     print SENDMAIL $msg;
     close SENDMAIL;
 }

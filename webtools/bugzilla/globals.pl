@@ -1432,7 +1432,7 @@ sub RemoveVotes {
             if (Param('sendmailnow')) {
                $sendmailparm = '';
             }
-            if (open(SENDMAIL, "|/usr/lib/sendmail $sendmailparm -ti")) {
+            if (open(SENDMAIL, "|/usr/lib/sendmail $sendmailparm -t -i")) {
                 my %substs;
 
                 $substs{"to"} = $name;

@@ -101,7 +101,7 @@ sub MailPasswordToken {
     my $emailsuffix = &::Param('emailsuffix');
     $token = &::url_quote($token);
 
-    open SENDMAIL, "|/usr/lib/sendmail -ti";
+    open SENDMAIL, "|/usr/lib/sendmail -t -i";
 
     print SENDMAIL qq|From: bugzilla-daemon
 To: $emailaddress$emailsuffix
@@ -144,7 +144,7 @@ sub Cancel {
     my $username = $realname ? $realname . " <" . $loginname . ">" : $loginname;
 
     # Notify the user via email about the cancellation.
-    open SENDMAIL, "|/usr/lib/sendmail -ti";
+    open SENDMAIL, "|/usr/lib/sendmail -t -i";
     print SENDMAIL qq|From: bugzilla-daemon
 To: $username
 Subject: "$tokentype" token cancelled
