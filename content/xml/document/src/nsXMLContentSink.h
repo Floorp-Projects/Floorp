@@ -46,7 +46,6 @@
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 
-
 class nsIDocument;
 class nsIURI;
 class nsIContent;
@@ -64,7 +63,8 @@ typedef enum {
 class nsXMLContentSink : public nsContentSink,
                          public nsIXMLContentSink,
                          public nsITransformObserver,
-                         public nsIExpatSink
+                         public nsIExpatSink,
+                         public nsSupportsWeakReference
 {
 public:
   nsXMLContentSink();
