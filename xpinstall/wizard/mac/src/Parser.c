@@ -854,6 +854,9 @@ PopulateMiscKeys(char *cfgText)
 			break;
 		}
 		
+		gControls->cfg->checks[i].subfolder = NewHandleClear(kValueMaxLen);
+		FillKeyValueSecNameKeyID(rParseKeys, section, sSubfolder, gControls->cfg->checks[i].subfolder, cfgText);
+		
 		/* if no version, we'll detect if the file is there and throw up the warning dlg */
 		gControls->cfg->checks[i].version = NewHandleClear(kValueMaxLen);
 		FillKeyValueSecNameKeyID(rParseKeys, section, sVersion, gControls->cfg->checks[i].version, cfgText);

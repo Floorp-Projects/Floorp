@@ -306,6 +306,7 @@ if (err) 								\
 
 #define sLegacyCheck	38
 #define	sFilename		39
+#define sSubfolder		49
 #define sVersion		40
 #define sMessage		41
 
@@ -372,6 +373,7 @@ typedef struct RunApp {
 
 typedef struct LegacyCheck {
 	Handle	filename;
+	Handle 	subfolder;
 	Handle	version;
 	Handle	message;
 } LegacyCheck;
@@ -656,7 +658,7 @@ unsigned char* pstrcpy(unsigned char*, unsigned char*);
 unsigned char* pstrcat(unsigned char*, unsigned char*);
 void		InSetupTypeContent(EventRecord *, WindowPtr);
 Boolean		LegacyFileCheck(short, long);
-int			CompareVersion(Handle, Handle);
+int			CompareVersion(Handle, FSSpecPtr);
 void		EnableSetupTypeWin(void);
 void		DisableSetupTypeWin(void);
 
