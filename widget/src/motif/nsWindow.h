@@ -117,7 +117,12 @@ public:
 
 protected:
   void InitCallbacks();
-
+  void CreateWindow(nsNativeWindow aNativeParent, nsIWidget *aWidgetParent,
+                      const nsRect &aRect,
+                      EVENT_CALLBACK aHandleEventFunction,
+                      nsIDeviceContext *aContext,
+                      nsIToolkit *aToolkit,
+                      nsWidgetInitData *aInitData);
 
   Widget mWidget;
   EVENT_CALLBACK mEventCallback;
