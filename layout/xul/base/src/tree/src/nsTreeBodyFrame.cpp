@@ -214,11 +214,6 @@ nsTreeColumn::nsTreeColumn(nsIContent* aColElement, nsIFrame* aFrame)
   else if (crop.EqualsIgnoreCase("left") || crop.EqualsIgnoreCase("start"))
     mCropStyle = 2;
 
-  if (mCropStyle == 0 || mCropStyle == 2) { // Left or Right
-    if (vis->mDirection == NS_STYLE_DIRECTION_RTL)
-      mCropStyle = 2 - mCropStyle; // Right becomes left, left becomes right.
-  }
-
   // Cache our text alignment policy.
   const nsStyleText* textStyle =
         (const nsStyleText*)styleContext->GetStyleData(eStyleStruct_Text);

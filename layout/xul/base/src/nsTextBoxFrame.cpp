@@ -244,17 +244,6 @@ nsTextBoxFrame::UpdateAttributes(nsIPresContext*  aPresContext,
             aResize = PR_TRUE;
             mCropType = cropType;
         }
-
-        if (mCropType == CropLeft || mCropType == CropRight) {
-          const nsStyleVisibility* vis = 
-            (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
-          if (vis->mDirection == NS_STYLE_DIRECTION_RTL) {
-            if (mCropType == CropLeft)
-              mCropType = CropRight;
-            else
-              mCropType = CropLeft;
-          }
-        }
     }
 
     if (aAttribute == nsnull || aAttribute == nsHTMLAtoms::value) {
