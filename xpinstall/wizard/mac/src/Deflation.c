@@ -355,7 +355,7 @@ CleanupExtractedFiles(short tgtVRefNum, long tgtDirID)
 		}
 	
 		HUnlock(gControls->cfg->coreDir);
-		goto exit;
+		goto aurevoir;
 	}	
 		
 	HUnlock(gControls->cfg->coreDir);
@@ -366,7 +366,7 @@ CleanupExtractedFiles(short tgtVRefNum, long tgtDirID)
 		FSpDelete( &coreFileList[i] );
 	}
 
-exit:
+aurevoir:
 	if (pcoreDir)
 		DisposePtr((Ptr) pcoreDir);	
 	return err;

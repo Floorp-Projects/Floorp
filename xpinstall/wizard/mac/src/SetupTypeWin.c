@@ -661,6 +661,9 @@ pstrcpy(unsigned char* dest, unsigned char* src)
 	register short i;
 	unsigned char* origdest;
 	
+	if (!dest || !src)
+		return nil;
+	
 	origdest = dest;
 	len = *src;
 	for (i=0; i<=len; i++)
@@ -673,6 +676,29 @@ pstrcpy(unsigned char* dest, unsigned char* src)
 	return origdest;
 }
 	
+unsigned char*
+pstrcat(unsigned char* dst, unsigned char* src)
+{
+	unsigned char 	*origdst;
+	long			dlen, slen;
+	register short	i;
+	
+	if (!dst || !src)
+		return nil;
+		
+	origdst = dst;
+	dlen = *dst;
+	slen = *src;
+	*dst = dlen+slen; 
+	
+	for (i=1; i<=slen; i++)
+	{
+		*(dst+dlen+i) = *(src+i);
+	}
+	
+	return origdst;
+}
+
 void
 GetAllVInfo( unsigned char **volName, short *count)
 {
