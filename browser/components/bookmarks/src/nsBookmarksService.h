@@ -92,6 +92,7 @@ protected:
     PRBool        mDirty;
     PRBool        mBrowserIcons;
     PRBool        busySchedule;
+    PRBool        mNeedBackupUpdate;
 
 public:
     // bookmark resources used to indicate that a livemark
@@ -177,6 +178,9 @@ protected:
     nsresult GetLastModifiedFolders(nsISimpleEnumerator **aResult);
 
     nsresult UpdateLivemarkChildren(nsIRDFResource* aSource);
+
+    void SaveToBackup();
+    void MaybeRestoreFromBackup(nsIFile* aBookmarkFile, nsIFile* aParentFolder);
 
     // nsIStreamObserver methods:
     NS_DECL_NSIREQUESTOBSERVER
