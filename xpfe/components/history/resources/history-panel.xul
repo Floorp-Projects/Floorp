@@ -25,7 +25,6 @@
 <?xml-stylesheet href="chrome://communicator/skin/sidebar/sidebarListView.css" type="text/css"?>
 
 <?xul-overlay href="chrome://communicator/content/history/historyTreeOverlay.xul"?>
-<?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 
 <!DOCTYPE page SYSTEM "chrome://communicator/locale/history/history.dtd" >
 
