@@ -20,7 +20,12 @@ use Moz::Moz;
 use vars qw( @ISA @EXPORT );
 
 @ISA        = qw(Exporter);
-@EXPORT     = qw(CreateJarFileFromDirectory WriteOutJarFiles SanityCheckJarOptions);
+@EXPORT     = qw(
+                    CreateJarFileFromDirectory
+                    CreateJarFromManifest
+                    WriteOutJarFiles
+                    SanityCheckJarOptions
+                );
 
 
 #-------------------------------------------------------------------------------
@@ -331,7 +336,7 @@ sub setupJarFile($$$)
     
     my($jar_file) = $jar_id;
     $jar_file =~ s|/|:|g;           # slash to colons
-    my($full_jar_path) = Moz::full_path_to($dest_path.":".$jar_file);
+    my($full_jar_path) = full_path_to($dest_path.":".$jar_file);
 
     if ($main::options{chrome_jars})
     {
@@ -398,7 +403,7 @@ sub WriteOutJarFiles($$)
 
     unless ($main::options{chrome_jars}) { return; }
     
-    my($full_chrome_path) = Moz::full_path_to($chrome_dir);
+    my($full_chrome_path) = full_path_to($chrome_dir);
 
     my($key);
     foreach $key (keys %$jars)
@@ -491,8 +496,8 @@ sub CreateJarFromManifest($$$)
         print "Installing files from $jar_man_path\n";
     }
 
-    $jar_man_path = Moz::full_path_to($jar_man_path);
-    $dest_path = Moz::full_path_to($dest_path);
+    $jar_man_path = full_path_to($jar_man_path);
+    $dest_path = full_path_to($dest_path);
 
     # if the jars hash is empty, nuke installed-chrome.txt
     if (! scalar(%$jars))
