@@ -42,7 +42,7 @@ LLFLAGS=                        \
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(PROGRAM)
+install:: $(PROGRAM) $(DIST)\install\nszip.exe
     $(MAKE_INSTALL) $(PROGRAM) $(DIST)\install
     $(DIST)\install\$(MODULE).exe -g $(DIST)\install\nszip.exe $(DIST)\install\nsinstall.exe
 
