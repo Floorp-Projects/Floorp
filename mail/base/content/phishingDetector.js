@@ -55,10 +55,9 @@ function isPhishingURL(aLinkNode, aSilentMode)
   var phishingType = kPhishingNotSuspicious;
   var href = aLinkNode.href;
   var linkTextURL = {};
-  var hrefURL = Components.classes["@mozilla.org/network/standard-url;1"].
-                createInstance(Components.interfaces.nsIURI); 
-  
-  hrefURL.spec = href;
+
+  var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
+  hrefURL  = ioService.newURI(href, null, null);
   
   // (1) if the host name is an IP address then block the url...
   // TODO: add support for IPv6
@@ -70,8 +69,8 @@ function isPhishingURL(aLinkNode, aSilentMode)
 
   var isPhishingURL = phishingType != kPhishingNotSuspicious;
 
-  if (!aSilentMode) // allow the user to over ride the decision
-    isPhishingURL = confirmSuspiciousURL(phishingType, hrefURL, linkTextURL.value);
+  if (!aSilentMode && isPhishingURL) // allow the user to over ride the decision
+    isPhishingURL = confirmSuspiciousURL(phishingType, hrefURL);
 
   return isPhishingURL;
 }
@@ -89,8 +88,8 @@ function misMatchedHostWithLinkText(aLinkNode, aHrefURL, aLinkTextURL)
     // does the link text look like a http url?
      if (linkNodeText.search(/(^http:|^https:)/) != -1)
      {
-       var linkTextURL = Components.classes["@mozilla.org/network/standard-url;1"].createInstance(Components.interfaces.nsIURI); 
-       linkTextURL.spec = linkNodeText;
+       var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
+       linkTextURL  = ioService.newURI(linkNodeText, null, null);
        aLinkTextURL.value = linkTextURL;
        return aHrefURL.host != linkTextURL.host;
      }
@@ -100,7 +99,7 @@ function misMatchedHostWithLinkText(aLinkNode, aHrefURL, aLinkTextURL)
 }
 
 // returns true if the user confirms the URL is a scam
-function confirmSuspiciousURL(phishingType, hrefURL, linkNodeURL)
+function confirmSuspiciousURL(phishingType, hrefURL)
 {
   var brandShortName = gBrandBundle.getString("brandRealShortName");
   var titleMsg = gMessengerBundle.getString("confirmPhishingTitle");
@@ -109,10 +108,8 @@ function confirmSuspiciousURL(phishingType, hrefURL, linkNodeURL)
   switch (phishingType)
   {
     case kPhishingWithIPAddress:
-      dialogMsg = gMessengerBundle.getFormattedString("confirmPhishingUrl" + phishingType, [brandShortName, hrefURL.host], 2);
-      break;
     case kPhishingWithMismatchedHosts:
-      dialogMsg = gMessengerBundle.getFormattedString("confirmPhishingUrl" + phishingType, [brandShortName, hrefURL.host, linkNodeURL.host], 3);
+      dialogMsg = gMessengerBundle.getFormattedString("confirmPhishingUrl" + phishingType, [brandShortName, hrefURL.host], 2);
       break;
     default:
       return false;
