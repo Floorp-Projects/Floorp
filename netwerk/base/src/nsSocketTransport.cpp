@@ -27,7 +27,6 @@
 #include "nsIStreamListener.h"
 #include "nsSocketTransport.h"
 #include "nsSocketTransportService.h"
-#include "nsSocketTransportStreams.h"
 #include "nsIBuffer.h"
 #include "nsIBufferInputStream.h"
 #include "nsIBufferOutputStream.h"
@@ -130,11 +129,13 @@ nsSocketTransport::nsSocketTransport()
   mLock         = nsnull;
 
   mSuspendCount = 0;
+  mIsWaitingForRead = PR_FALSE;
 
   mCurrentState = eSocketState_Created;
   mOperation    = eSocketOperation_None;
   mSelectFlags  = 0;
 
+  mReadBuffer   = nsnull;
   mReadStream   = nsnull;
   mReadContext  = nsnull;
   mReadListener = nsnull;
@@ -183,6 +184,7 @@ nsSocketTransport::~nsSocketTransport()
 
   NS_IF_RELEASE(mReadListener);
   NS_IF_RELEASE(mReadStream);
+  NS_IF_RELEASE(mReadBuffer);
   NS_IF_RELEASE(mReadContext);
 
   NS_IF_RELEASE(mWriteObserver);
@@ -311,6 +313,8 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
             NS_IF_RELEASE(mReadContext);
           }
           NS_IF_RELEASE(mReadStream);
+          // XXX: The buffer should be reused...
+          NS_IF_RELEASE(mReadBuffer);
         }
 
         // Fire a notification that the write has finished...
@@ -690,8 +694,8 @@ nsresult nsSocketTransport::doRead(PRInt16 aSelectFlags)
   //
   //
   totalBytesWritten = 0;
-  rv = mReadStream->FillStream(nsReadFromSocket, (void*)mSocketFD, 
-                               MAX_IO_TRANSFER_SIZE, &totalBytesWritten);
+  rv = mReadBuffer->WriteSegments(nsReadFromSocket, (void*)mSocketFD, 
+                                  MAX_IO_TRANSFER_SIZE, &totalBytesWritten);
   PR_LOG(gSocketLog, PR_LOG_DEBUG, 
          ("FillStream [fd=%x].  rv = %x. Bytes read =%d\n",
                   mSocketFD, rv, totalBytesWritten));
@@ -700,10 +704,6 @@ nsresult nsSocketTransport::doRead(PRInt16 aSelectFlags)
   // Deal with the possible return values...
   //
   if (NS_BASE_STREAM_FULL == rv) {
-    if (0 == totalBytesWritten) {
-      mSuspendCount += 1;
-      mReadStream->BlockTransport();
-    }
     rv = NS_BASE_STREAM_WOULD_BLOCK;
   }
   else if (NS_BASE_STREAM_EOF == rv) {
@@ -856,7 +856,29 @@ nsresult nsSocketTransport::CloseConnection(void)
 // --------------------------------------------------------------------------
 //
 
-NS_IMPL_THREADSAFE_ISUPPORTS(nsSocketTransport, nsIChannel::GetIID());
+NS_IMPL_THREADSAFE_ADDREF(nsSocketTransport);
+NS_IMPL_THREADSAFE_RELEASE(nsSocketTransport);
+
+NS_IMETHODIMP
+nsSocketTransport::QueryInterface(const nsIID& aIID, void* *aInstancePtr)
+{
+  if (NULL == aInstancePtr) {
+    return NS_ERROR_NULL_POINTER; 
+  } 
+  if (aIID.Equals(nsIChannel::GetIID()) ||
+      aIID.Equals(kISupportsIID)) {
+    *aInstancePtr = NS_STATIC_CAST(nsIChannel*, this); 
+    NS_ADDREF_THIS(); 
+    return NS_OK; 
+  } 
+  if (aIID.Equals(nsIBufferObserver::GetIID())) {
+    *aInstancePtr = NS_STATIC_CAST(nsIBufferObserver*, this); 
+    NS_ADDREF_THIS(); 
+    return NS_OK; 
+  } 
+  return NS_NOINTERFACE; 
+}
+
 
 
 //
@@ -938,6 +960,53 @@ nsSocketTransport::Resume(void)
 
 //
 // --------------------------------------------------------------------------
+// nsIBufferObserver implementation...
+// --------------------------------------------------------------------------
+//
+NS_IMETHODIMP
+nsSocketTransport::OnFull(void)
+{
+  PR_LOG(gSocketLog, PR_LOG_DEBUG, 
+         ("nsSocketTransport::OnFull() [this=%x].\n", this));
+
+  //
+  // Block the transport...  It is assumed that the calling thread *is* 
+  // holding the socket transport lock so Suspend(...) cannot be called.
+  // However, it is safe to directly modify the suspend count...
+  //
+  if (!mIsWaitingForRead) {
+    mSuspendCount += 1;
+    mIsWaitingForRead = PR_TRUE;
+  }
+
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP 
+nsSocketTransport::OnEmpty(void)
+{
+  nsresult rv = NS_OK;
+
+  PR_LOG(gSocketLog, PR_LOG_DEBUG, 
+         ("nsSocketTransport::OnEmpty() [this=%x].\n", this));
+
+  //
+  // Unblock the transport...  It is assumed that the calling thread is not
+  // holding the socket transport lock so it is safe to call Resume() 
+  // directly...
+  //
+  if (mIsWaitingForRead) {
+    rv = Resume();
+    mIsWaitingForRead = PR_FALSE;
+  }
+
+  return rv;
+}
+
+
+//
+// --------------------------------------------------------------------------
 // nsIChannel implementation...
 // --------------------------------------------------------------------------
 //
@@ -969,12 +1038,11 @@ nsSocketTransport::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
 
   // Create a new non-blocking input stream for reading data into...
   if (NS_SUCCEEDED(rv) && !mReadStream) {
-    mReadStream = new nsSocketTransportStream();
-    if (mReadStream) {
-      NS_ADDREF(mReadStream);
-      rv = mReadStream->Init(this, PR_FALSE);
-    } else {
-      rv = NS_ERROR_OUT_OF_MEMORY;
+    rv = NS_NewBuffer(&mReadBuffer, MAX_IO_BUFFER_SIZE/2, 
+                      2*MAX_IO_BUFFER_SIZE, this);
+
+    if (NS_SUCCEEDED(rv)) {
+      rv = NS_NewBufferInputStream(&mReadStream, mReadBuffer, PR_FALSE);
     }
   }
 
@@ -1076,14 +1144,15 @@ nsSocketTransport::OpenInputStream(PRUint32 startPosition, PRInt32 readCount,
   // Create a new blocking input stream for reading data into...
   if (NS_SUCCEEDED(rv)) {
     NS_IF_RELEASE(mReadStream);
+    // XXX: The buffer should be reused...
+    NS_IF_RELEASE(mReadBuffer);
     NS_IF_RELEASE(mReadContext);
 
-    mReadStream = new nsSocketTransportStream();
-    if (mReadStream) {
-      NS_ADDREF(mReadStream);
-      rv = mReadStream->Init(this, PR_TRUE);
-    } else {
-      rv = NS_ERROR_OUT_OF_MEMORY;
+    rv = NS_NewBuffer(&mReadBuffer, MAX_IO_BUFFER_SIZE/2, 
+                      2*MAX_IO_BUFFER_SIZE, this);
+
+    if (NS_SUCCEEDED(rv)) {
+      rv = NS_NewBufferInputStream(&mReadStream, mReadBuffer, PR_TRUE);
     }
   }
 
