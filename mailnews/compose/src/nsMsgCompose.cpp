@@ -2258,7 +2258,6 @@ static nsresult OpenAddressBook(const char * dbUri, nsIAddrDatabase** aDatabase,
 	return rv;
 }
 
-
 nsresult nsMsgCompose::GetABDirectories(const char * dirUri, nsISupportsArray* directoriesArray, PRBool searchSubDirectory)
 {
   static PRBool collectedAddressbookFound;
@@ -2298,10 +2297,12 @@ nsresult nsMsgCompose::GetABDirectories(const char * dirUri, nsISupportsArray* d
             if (NS_SUCCEEDED(directory->GetIsMailList(&bIsMailList)) && bIsMailList)
               continue;
 
+	    nsCOMPtr<nsIRDFResource> source(do_QueryInterface(directory));
+	    
             nsXPIDLCString uri;
-            rv = directory->GetDirUri(getter_Copies(uri));
-            if (NS_FAILED(rv))
-              return rv;
+            // rv = directory->GetDirUri(getter_Copies(uri));
+            rv = source->GetValue(getter_Copies(uri));
+            NS_ENSURE_SUCCESS(rv, rv);
 
             PRInt32 pos;
             if (nsCRT::strcmp((const char *)uri, kPersonalAddressbookUri) == 0)
@@ -2511,11 +2512,13 @@ NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, 
       abDirectory = do_QueryInterface(item, &rv);
       if (NS_FAILED(rv))
         return rv;
+	    
+      nsCOMPtr<nsIRDFResource> source(do_QueryInterface(abDirectory));
 
       nsXPIDLCString uri;
-      rv = abDirectory->GetDirUri(getter_Copies(uri));
-      if (NS_FAILED(rv))
-        return rv;
+      // rv = abDirectory->GetDirUri(getter_Copies(uri));
+      rv = source->GetValue(getter_Copies(uri));
+      NS_ENSURE_SUCCESS(rv, rv);
 
       rv = OpenAddressBook((const char *)uri, getter_AddRefs(abDataBase), getter_AddRefs(abDirectory));
       if (NS_FAILED(rv) || !abDataBase || !abDirectory)

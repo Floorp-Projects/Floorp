@@ -816,10 +816,40 @@ nsIAddrDatabase *GetAddressBook( const PRUnichar *name, PRBool makeNew)
 										parentResource, PROXY_SYNC | PROXY_ALWAYS, getter_AddRefs( parentDir));
 			if (parentUri)
 				PR_smprintf_free(parentUri);
-			if (parentDir) {
+			if (parentDir)
+		       	{
+				PRUint32 prefCount = 2;
+				char **prefNames = (char **) nsMemory::Alloc(prefCount * (sizeof (char *)));
+				if (!prefNames)
+					return nsnull;
+
+				PRUnichar ** prefValues = (PRUnichar **) nsMemory::Alloc(prefCount * (sizeof(PRUnichar *)));
+				if (!prefValues)
+					return nsnull;
+					
+				prefNames[0] = PR_smprintf("description");
+				prefNames[1] = PR_smprintf("fileName");
+					
+				prefValues[0] = (PRUnichar *)name;
+	
 				char *fileName = (*dbPath).GetLeafName();
-				parentDir->CreateNewDirectory(name, fileName, PR_FALSE /* migrating */);
-				nsCRT::free( fileName);
+				PRInt32 descLength = PL_strlen(fileName);
+				NS_ConvertUTF8toUCS2 temp((const char *)fileName, descLength);
+				prefValues[1] = nsCRT::strdup(temp.GetUnicode());
+
+				parentDir->CreateNewDirectory((unsigned int )prefCount, (const char** )prefNames, (const PRUnichar** )prefValues);
+
+				if (fileName)
+					nsCRT::free(fileName);
+				if (prefNames[0])
+					PR_smprintf_free(prefNames[0]);
+				if (prefNames[1])
+					PR_smprintf_free(prefNames[1]);
+				if (prefNames)
+					nsMemory::Free(prefNames);
+				if (prefValues)
+					nsMemory::Free(prefValues);
+				
 			}
 
 			IMPORT_LOG0( "Added new address book to the UI\n");
