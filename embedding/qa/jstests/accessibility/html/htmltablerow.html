@@ -1,0 +1,110 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<title> nsIAccessible Interface Test Case </title>
+<!-- Descrpt: Test nsIAccessible Interface attributes and methods
+     for HTML TABLE ROW Node
+     Author: dsirnapalli@netscape.com
+     Created:01.20.02
+     Last Updated:06.25.02.
+
+   - The contents of this file are subject to the Mozilla Public
+   - License Version 1.1 (the "License"); you may not use this file
+   - except in compliance with the License. You may obtain a copy of
+   - the License at http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS
+   - IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   - implied. See the License for the specific language governing
+   - rights and limitations under the License.
+   -
+   - The Original Code is Mozilla Communicator Test Cases.
+   -
+   - The Initial Developer of the Original Code is Netscape Communications
+   - Corp.  Portions created by Netscape Communications Corp. are
+   - Copyright (C) 1999 Netscape Communications Corp.  All
+   - Rights Reserved.
+   -
+   - Contributor(s):
+  -->
+<head>
+
+<script type="text/javascript" src="http://www.mozilla.org/quality/embed/jstests/accessibility/jslib/accesslib.js"> </script>
+<script type="text/javascript" src="http://www.mozilla.org/quality/embed/jstests/accessibility/jslib/bridge.js"> </script>
+
+<script type="text/javascript">
+
+function getDomNodeTableRow()
+{
+ try{
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+  var node = document.getElementsByTagName("tr").item(0);
+  return node;
+ }
+ catch(e){
+  alert("Exception: " + e);
+ }
+}
+
+function executeTestCase()
+{
+  var domNode = getDomNodeTableRow();
+  var accNode = getAccessibleNode(domNode);
+  if(accNode == "Exception")
+  {
+    temp = "<table border cols=2 width='70%'>";
+    temp += "<tr>";
+    temp += "<td> The Node you selected is not an Accessible Node </td>";
+    temp += "<td> PASS </td>";
+    temp += "</tr>";
+    temp += "</table>";
+    res = res + temp;
+  }
+  if(!isRunningStandalone())
+    WriteResults(res);
+  else
+    submitToCookie();
+}
+
+</script>
+</head>
+<body>
+
+<script type="text/javascript">
+cookieName = "nsIAccessibleTestTableRowNode";
+var res = "<b><u> Results for HTML Table Row Node:</u></b><br><br>";
+
+if(readCookie(cookieName) == null)
+{
+  <!-- Test Table -->
+  document.write('<center>');
+  document.write('<table border cols=2 width="50%">');
+  document.write('<caption>Test Table</caption>');
+  document.write('<tr>');
+  document.write(' <td> Row1,Col1</td>');
+  document.write(' <td> Row1,Col2</td>');
+  document.write('</tr>');
+  document.write('<tr>');
+  document.write(' <td> Row2,Col1</td>');
+  document.write(' <td> Row2,Col2</td>');
+  document.write('</tr>');
+  document.write('<tr>');
+  document.write(' <td> Row3,Col1</td>');
+  document.write(' <td> Row3,Col2</td>');
+  document.write('</tr>');
+  document.write('</table>');
+  document.write('</center>');
+
+  setTimeout("executeTestCase();", 2000);
+}
+else
+{
+  var cookieValue = readCookie(cookieName);
+  eraseCookie(cookieName);
+  document.write(cookieValue);
+}
+
+</script>
+</body>
+</html>

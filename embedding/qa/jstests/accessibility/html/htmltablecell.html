@@ -1,0 +1,138 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<title> nsIAccessible Interface Test Case </title>
+<!-- Descrpt: Test nsIAccessible Interface attributes and methods
+     for HTML TABLE CELL Node
+     Author: dsirnapalli@netscape.com
+     Created:01.20.02
+     Last Updated:06.25.02.
+
+   - The contents of this file are subject to the Mozilla Public
+   - License Version 1.1 (the "License"); you may not use this file
+   - except in compliance with the License. You may obtain a copy of
+   - the License at http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS
+   - IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   - implied. See the License for the specific language governing
+   - rights and limitations under the License.
+   -
+   - The Original Code is Mozilla Communicator Test Cases.
+   -
+   - The Initial Developer of the Original Code is Netscape Communications
+   - Corp.  Portions created by Netscape Communications Corp. are
+   - Copyright (C) 1999 Netscape Communications Corp.  All
+   - Rights Reserved.
+   -
+   - Contributor(s):
+  -->
+<head>
+
+<script type="text/javascript" src="http://www.mozilla.org/quality/embed/jstests/accessibility/jslib/accesslib.js"> </script>
+<script type="text/javascript" src="http://www.mozilla.org/quality/embed/jstests/accessibility/jslib/bridge.js"> </script>
+
+<script type="text/javascript">
+
+function getDomNodeTableCell()
+{
+ try{
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+  var node = document.getElementsByTagName("td").item(0);
+  return node;
+ }
+ catch(e){
+  alert("Exception: " + e);
+ }
+}
+
+function executeTestCase()
+{
+  var domNode = getDomNodeTableCell();
+  accNode = getAccessibleNode(domNode);
+  setTimeout("constructResults();", 2000);
+}
+
+function constructResults()
+{
+ try{
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+  var name = getName(accNode);
+  var role = getRole(accNode);
+  var state = getState(accNode);
+  var value = getValue(accNode);
+  var newvalue = value.toString();
+
+  var expectedName      = null;
+  var expectedRole      = "29";
+  var expectedState     = "0";
+  var expectedValue     = "NS_ERROR_NOT_IMPLEMENTED";
+
+  var row0 = new Array("Property/Method", "Expected Values", "Actual Values", "Result");
+  var row1 = new Array("Name->", expectedName, name);
+  var row2 = new Array("Role->", expectedRole, role);
+  var row3 = new Array("State->", expectedState, state);
+  var row4 = new Array("Value->", expectedValue, value);
+
+  row = new Array(row0, row1, row2, row3, row4);
+
+  if (name == expectedName)          row1[3] = "PASS"; else row1[3] = "FAIL";
+  if (role == expectedRole)          row2[3] = "PASS"; else row2[3] = "FAIL";
+  if (state == expectedState)        row3[3] = "PASS"; else row3[3] = "FAIL";
+  if (newvalue.match(expectedValue)) row4[3] = "PASS"; else row4[3] = "FAIL";
+
+  appendTableResHTML();
+  if(!isRunningStandalone())
+    WriteResults(res);
+  else
+    submitToCookie();
+ }
+ catch(e){
+  alert("Exception**: " + e);
+ }
+}
+
+</script>
+</head>
+<body>
+
+<script type="text/javascript">
+cookieName = "nsIAccessibleTestButtonNode";
+var res = "<b><u> Results for HTML Table Cell Node:</u></b><br><br>";
+
+if(readCookie(cookieName) == null)
+{
+  <!-- Test Table -->
+  document.write('<center>');
+  document.write('<table border cols=2 width="50%">');
+  document.write('<caption>Test Table</caption>');
+  document.write('<tr>');
+  document.write(' <td> Row1,Col1</td>');
+  document.write(' <td> Row1,Col2</td>');
+  document.write('</tr>');
+  document.write('<tr>');
+  document.write(' <td> Row2,Col1</td>');
+  document.write(' <td> Row2,Col2</td>');
+  document.write('</tr>');
+  document.write('<tr>');
+  document.write(' <td> Row3,Col1</td>');
+  document.write(' <td> Row3,Col2</td>');
+  document.write('</tr>');
+  document.write('</table>');
+  document.write('</center>');
+
+  setTimeout("executeTestCase();", 2000);
+}
+else
+{
+  var cookieValue = readCookie(cookieName);
+  eraseCookie(cookieName);
+  document.write(cookieValue);
+}
+
+</script>
+</body>
+</html>
