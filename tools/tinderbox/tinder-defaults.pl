@@ -33,6 +33,9 @@ $CVSCO         = 'checkout -P';
 #- Set these proper values for your tinderbox server
 $Tinderbox_server = 'tinderbox-daemon@tinderbox.mozilla.org';
 
+#- Set if you want to build in a separate object tree
+$ObjDir = '';
+
 #-
 #- The rest should not need to be changed
 #-

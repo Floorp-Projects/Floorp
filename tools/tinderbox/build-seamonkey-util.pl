@@ -18,7 +18,7 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
-$::UtilsVersion = '$Revision: 1.15 $ ';
+$::UtilsVersion = '$Revision: 1.16 $ ';
 
 package TinderUtils;
 
@@ -168,7 +168,7 @@ sub GetSystemInfo {
     $Settings::OS = `uname -s`;
     my $os_ver = `uname -r`;
     $Settings::CPU = `uname -m`;
-    $Settings::ObjDir = '';
+    #$Settings::ObjDir = '';
     my $build_type = $Settings::BuildDepend ? 'Depend' : 'Clobber';
     my $host = ::hostname();
     $host =~ s/\..*$//;
@@ -259,11 +259,9 @@ sub LoadConfig {
 sub SetupEnv {
     umask 0;
     my $topsrcdir = "$Settings::BaseDir/$Settings::DirName/mozilla";
-    $ENV{LD_LIBRARY_PATH} = "$topsrcdir/${Settings::ObjDir}dist/bin"
+    $ENV{LD_LIBRARY_PATH} = "$topsrcdir/${Settings::ObjDir}/dist/bin"
                           . ":/usr/lib/png:/usr/local/lib";
-    $ENV{LD_LIBRARY_PATH} .= ":$topsrcdir/dist/bin"
-      if defined $Setting::Objdir and $Settings::Objdir ne '';
-    $ENV{MOZILLA_FIVE_HOME} = "$topsrcdir/${Settings::ObjDir}dist/bin";
+    $ENV{MOZILLA_FIVE_HOME} = "$topsrcdir/${Settings::ObjDir}/dist/bin";
     $ENV{DISPLAY} = $Settings::DisplayServer;
     $ENV{MOZCONFIG} = "$Settings::BaseDir/$Settings::MozConfigFileName" 
       if $Settings::MozConfigFileName ne '' and -e $Settings::MozConfigFileName;
@@ -271,7 +269,7 @@ sub SetupEnv {
 
 sub SetupPath {
     #print "Path before: $ENV{PATH}\n";
-
+    $ENV{PATH} .= ":$Settings::BaseDir/$Settings::DirName/mozilla/${Settings::ObjDir}/dist/bin";
     if ($Settings::OS eq 'AIX') {
         $ENV{PATH} = "/builds/local/bin:$ENV{PATH}:/usr/lpp/xlC/bin";
         $Settings::ConfigureArgs   .= '--x-includes=/usr/include/X11 '
@@ -501,7 +499,7 @@ sub BuildIt {
     
     my $build_dir = Cwd::getcwd();
     my $binary_basename = "$Settings::BinaryName";
-    my $binary_dir = "$build_dir/$Settings::Topsrcdir/dist/bin";
+    my $binary_dir = "$build_dir/$Settings::Topsrcdir/${Settings::ObjDir}/dist/bin";
     my $full_binary_name = "$binary_dir/$binary_basename";
     my $exit_early = 0;
     my $start_time = 0;
