@@ -89,9 +89,9 @@ typedef struct thread_rwlock_stack {
 
 } thread_rwlock_stack;
 
-static void _PR_SET_THREAD_RWLOCK_RANK(PRThread *me, PRRWLock *rwlock);
-static PRUint32 _PR_GET_THREAD_RWLOCK_RANK(PRThread *me);
-static void _PR_UNSET_THREAD_RWLOCK_RANK(PRThread *me, PRRWLock *rwlock);
+static void _PR_SET_THREAD_RWLOCK_RANK(PRRWLock *rwlock);
+static PRUint32 _PR_GET_THREAD_RWLOCK_RANK(void);
+static void _PR_UNSET_THREAD_RWLOCK_RANK(PRRWLock *rwlock);
 static void _PR_RELEASE_LOCK_STACK(void *lock_stack);
 
 #endif
@@ -199,9 +199,6 @@ PR_DestroyRWLock(PRRWLock *rwlock)
 PR_IMPLEMENT(void)
 PR_RWLock_Rlock(PRRWLock *rwlock)
 {
-#ifdef _PR_RWLOCK_RANK_ORDER_DEBUG
-PRThread *me = PR_GetCurrentThread();
-#endif
 #if defined(HAVE_UNIX98_RWLOCK) || defined(HAVE_UI_RWLOCK)
 int err;
 #endif
@@ -213,7 +210,7 @@ int err;
 	 * the thread.
 	 */
 	PR_ASSERT((rwlock->rw_rank == PR_RWLOCK_RANK_NONE) || 
-					(rwlock->rw_rank >= _PR_GET_THREAD_RWLOCK_RANK(me)));
+					(rwlock->rw_rank >= _PR_GET_THREAD_RWLOCK_RANK()));
 #endif
 
 #if defined(HAVE_UNIX98_RWLOCK) || defined(HAVE_UI_RWLOCK)
@@ -242,7 +239,7 @@ int err;
 	/*
 	 * update thread's lock rank
 	 */
-	_PR_SET_THREAD_RWLOCK_RANK(me,rwlock);
+	_PR_SET_THREAD_RWLOCK_RANK(rwlock);
 #endif
 }
 
@@ -253,7 +250,7 @@ PR_IMPLEMENT(void)
 PR_RWLock_Wlock(PRRWLock *rwlock)
 {
 PRInt32 lock_acquired = 0;
-#if defined(DEBUG) || defined(_PR_RWLOCK_RANK_ORDER_DEBUG)
+#if defined(DEBUG)
 PRThread *me = PR_GetCurrentThread();
 #endif
 #if defined(HAVE_UNIX98_RWLOCK) || defined(HAVE_UI_RWLOCK)
@@ -267,7 +264,7 @@ int err;
 	 * the thread.
 	 */
 	PR_ASSERT((rwlock->rw_rank == PR_RWLOCK_RANK_NONE) || 
-					(rwlock->rw_rank >= _PR_GET_THREAD_RWLOCK_RANK(me)));
+					(rwlock->rw_rank >= _PR_GET_THREAD_RWLOCK_RANK()));
 #endif
 
 #if defined(HAVE_UNIX98_RWLOCK) || defined(HAVE_UI_RWLOCK)
@@ -288,9 +285,9 @@ int err;
 	 */
 	rwlock->rw_lock_cnt--;
 	PR_ASSERT(rwlock->rw_lock_cnt == -1);
-	PR_ASSERT(me != NULL);
 #ifdef DEBUG
-    rwlock->rw_owner = me;
+	PR_ASSERT(me != NULL);
+	rwlock->rw_owner = me;
 #endif
 	PR_Unlock(rwlock->rw_lock);
 #endif
@@ -299,7 +296,7 @@ int err;
 	/*
 	 * update thread's lock rank
 	 */
-	_PR_SET_THREAD_RWLOCK_RANK(me,rwlock);
+	_PR_SET_THREAD_RWLOCK_RANK(rwlock);
 #endif
 }
 
@@ -309,7 +306,7 @@ int err;
 PR_IMPLEMENT(void)
 PR_RWLock_Unlock(PRRWLock *rwlock)
 {
-#if defined(DEBUG) || defined(_PR_RWLOCK_RANK_ORDER_DEBUG)
+#if defined(DEBUG)
 PRThread *me = PR_GetCurrentThread();
 #endif
 #if defined(HAVE_UNIX98_RWLOCK) || defined(HAVE_UI_RWLOCK)
@@ -364,7 +361,7 @@ int err;
 	/*
 	 * update thread's lock rank
 	 */
-	_PR_UNSET_THREAD_RWLOCK_RANK(me, rwlock);
+	_PR_UNSET_THREAD_RWLOCK_RANK(rwlock);
 #endif
 	return;
 }
@@ -395,7 +392,7 @@ void _PR_InitRWLocks(void)
  */
 
 static void
-_PR_SET_THREAD_RWLOCK_RANK(PRThread *me, PRRWLock *rwlock)
+_PR_SET_THREAD_RWLOCK_RANK(PRRWLock *rwlock)
 {
 thread_rwlock_stack *lock_stack;
 PRStatus rv;
@@ -442,7 +439,7 @@ _PR_RELEASE_LOCK_STACK(void *lock_stack)
  */
 	
 static PRUint32
-_PR_GET_THREAD_RWLOCK_RANK(PRThread *me)
+_PR_GET_THREAD_RWLOCK_RANK(void)
 {
 	thread_rwlock_stack *lock_stack;
 
@@ -460,7 +457,7 @@ _PR_GET_THREAD_RWLOCK_RANK(PRThread *me)
  */
 	
 static void
-_PR_UNSET_THREAD_RWLOCK_RANK(PRThread *me, PRRWLock *rwlock)
+_PR_UNSET_THREAD_RWLOCK_RANK(PRRWLock *rwlock)
 {
 	thread_rwlock_stack *lock_stack;
 	int new_index = 0, index, done = 0;

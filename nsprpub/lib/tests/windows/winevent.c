@@ -275,8 +275,7 @@ static char *startMessage = "Poppad: NSPR Windows GUI and event test program.\n"
                             "You should be able to type in the window.\n\n";
 
 static char *stopMessage = "\n\nIf you saw a series of dots being emitted in the window\n"
-                           " at one second intervals, the test worked.\n\n"
-                           "Begin Test for multiple event queues.\n\n";
+                           " at one second intervals, the test worked.\n\n";
 
 /*
 ** HandlePadEvent() -- gets called because of PostEvent

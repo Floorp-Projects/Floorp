@@ -26,7 +26,7 @@
 #include <windows.h>
 #include <process.h>
 #endif
-#if defined(_PR_PTHREADS)
+#if defined(_PR_PTHREADS) && !defined(_PR_DCETHREADS)
 #include <pthread.h>
 #endif
 
@@ -111,7 +111,7 @@ PRThread* create_new_thread(PRThreadType type,
 PRInt32 native_thread = 0;
 
 	PR_ASSERT(state == PR_UNJOINABLE_THREAD);
-#if defined(_PR_PTHREADS) || defined(WINNT)
+#if (defined(_PR_PTHREADS) && !defined(_PR_DCETHREADS)) || defined(WINNT)
 	switch(index %  4) {
 		case 0:
 			scope = (PR_LOCAL_THREAD);
@@ -130,7 +130,7 @@ PRInt32 native_thread = 0;
 			break;
 	}
 	if (native_thread) {
-#ifdef _PR_PTHREADS
+#if defined(_PR_PTHREADS) && !defined(_PR_DCETHREADS)
 		pthread_t tid;
 		printf("creating pthread\n");
 		if (!pthread_create(&tid, NULL, start, arg))

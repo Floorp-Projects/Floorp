@@ -320,7 +320,7 @@ static void Help( void )
 PRIntn main(PRIntn argc, char **argv )
 {
     PLOptStatus os;
-  	PLOptState *opt = PL_CreateOptState(argc, argv, "dh");
+  	PLOptState *opt = PL_CreateOptState(argc, argv, "dhmt:i:");
 
 
 	while (PL_OPT_EOL != (os = PL_GetNextOpt(opt)))
@@ -332,6 +332,12 @@ PRIntn main(PRIntn argc, char **argv )
             useMonitoredQueue = PR_TRUE;
             break;
         case 'd':  /* debug mode (noop) */
+            break;
+        case 't':  /* needs guidance */
+            numThreads = atol(opt->value);
+            break;
+        case 'i':  /* needs guidance */
+            iterations = atol(opt->value);
             break;
         case 'h':  /* needs guidance */
         default:
