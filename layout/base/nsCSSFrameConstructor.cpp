@@ -3586,14 +3586,14 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
 #endif
 
   // the style tag has its own interpretation based on aHint 
-  if ((nsHTMLAtoms::style != aAttribute) && (NS_STYLE_HINT_UNKNOWN == aHint)) { 
-    nsIHTMLContent* htmlContent;
-    result = aContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent);
+  if (NS_STYLE_HINT_UNKNOWN == aHint) { 
+    nsIStyledContent* styledContent;
+    result = aContent->QueryInterface(nsIStyledContent::IID(), (void**)&styledContent);
 
     if (NS_OK == result) { 
       // Get style hint from HTML content object. 
-      htmlContent->GetStyleHintForAttributeChange(aAttribute, &aHint);
-      NS_RELEASE(htmlContent); 
+      styledContent->GetStyleHintForAttributeChange(aAttribute, &aHint);
+      NS_RELEASE(styledContent); 
     } 
     else aHint = NS_STYLE_HINT_REFLOW;
   } 
