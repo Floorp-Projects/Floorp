@@ -53,6 +53,16 @@ CPPSRCS		= \
 endif
 endif
 
+# Neutrino/Intel (uses the same unixish_x86 code)
+ifeq ($(OS_TARGET),NTO)
+ifeq ($(OS_TEST),x86)
+CPPSRCS		= \
+		  xptcinvoke_unixish_x86.cpp \
+		  xptcstubs_unixish_x86.cpp \
+		  $(NULL)
+endif
+endif
+
 # Solaris/sparc
 ifneq (,$(filter SunOS,$(OS_ARCH)))
 ifneq (86,$(findstring 86,$(OS_TEST)))
