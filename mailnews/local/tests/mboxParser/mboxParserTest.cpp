@@ -131,7 +131,7 @@ protected:
 
 	void InitializeProtocol(const char * urlSpec);
 	PRBool m_protocolInitialized; 
-	nsParseMailboxProtocol	*m_mailboxParser;
+	nsMsgMailboxParser	*m_mailboxParser;
 };
 
 nsMailboxParserTestDriver::nsMailboxParserTestDriver()
@@ -203,7 +203,7 @@ void nsMailboxParserTestDriver::InitializeTestDriver()
 	scanf("%s", fileName);
 	// now prompt for the local mail folder directory .....
 	printf("Enter local mail folder directory [%s]: ", m_mailDirectory);
-	m_mailboxParser = new nsParseMailboxProtocol(fileName);
+	m_mailboxParser = new nsMsgMailboxParser;
 }
 
 // prints the userPrompt and then reads in the user data. Assumes urlData has already been allocated.

@@ -25,6 +25,7 @@
 #include "nsIInputStream.h"
 #include "nsIPop3URL.h"
 #include "nsIPop3Sink.h"
+#include "nsMsgLineBuffer.h"
 
 #include "rosetta.h"
 #include HG09893
@@ -291,7 +292,7 @@ typedef struct _Pop3ConData {
     char *sender_info;
 } Pop3ConData;
 
-class nsPop3Protocol : public nsIStreamListener
+class nsPop3Protocol : public nsIStreamListener, public nsMsgLineBuffer
 {
 public:
     nsPop3Protocol(nsIURL* aURL, nsITransport* aTransport);
@@ -398,7 +399,7 @@ private:
     PRInt32 SendXsender();
     PRInt32 XsenderResponse();
     PRInt32 SendRetr();
-    static PRInt32 RetrHandleLine(char *line, PRUint32 line_length, void* closure);
+    PRInt32 HandleLine(char *line, PRUint32 line_length);
 
     PRInt32 RetrResponse(nsIInputStream* inputStream, 
                          PRUint32 length);

@@ -28,6 +28,8 @@
 #include "plstr.h"
 #include "prenv.h"
 
+class nsParseNewMailState;
+
 class nsPop3Sink : public nsIPop3Sink
 {
 public:
@@ -56,6 +58,9 @@ public:
     static char*  GetDummyEnvelope(void);
     
 protected:
+
+	nsresult WriteLineToMailbox(char *buffer);
+
     PRBool m_authed;
     char* m_accountUrl;
     PRUint32 m_biffState;
@@ -63,6 +68,7 @@ protected:
     char* m_outputBuffer;
     PRInt32 m_outputBufferSize;
     char* m_mailDirectory;
+	nsParseNewMailState	*m_newMailParser;
 #ifdef DEBUG
     PRInt32 m_fileCounter;
 #endif

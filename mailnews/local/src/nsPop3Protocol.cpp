@@ -387,7 +387,7 @@ NS_IMETHODIMP nsPop3Protocol::OnStopBinding(nsIURL* aURL, nsresult aStatus,
     return NS_OK; // for now
 }
 
-nsPop3Protocol::nsPop3Protocol(nsIURL* aURL, nsITransport* aTransport)
+nsPop3Protocol::nsPop3Protocol(nsIURL* aURL, nsITransport* aTransport) : nsMsgLineBuffer(NULL, FALSE)
 {
     nsresult rv = 0;
 
@@ -2038,15 +2038,6 @@ nsPop3Protocol::SendRetr()
 }
 
 
-extern PRInt32 msg_LineBuffer (const char *net_buffer, PRInt32 net_buffer_size,
-						   char **bufferP, PRUint32 *buffer_sizeP,
-						   PRUint32 *buffer_fpP,
-						   PRBool convert_newlines_p,
-						   PRInt32 (*per_line_fn) (char *line, PRUint32
-                                   line_length, void *closure),
-               void *closure);
-
-
 static PRInt32 gPOP3parsed_bytes, gPOP3size;
 static PRBool gPOP3dotFix, gPOP3AssumedEnd;
 
@@ -2175,10 +2166,7 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
             m_pop3ConData->obuffer_size = 1024;
             m_pop3ConData->obuffer_fp = 0;
         }
-        status = msg_LineBuffer(buffer, buffer_size,
-                                &m_pop3ConData->obuffer, &m_pop3ConData->obuffer_size,
-                                &m_pop3ConData->obuffer_fp, PR_FALSE,
-                                RetrHandleLine, (void *) this);
+        status = BufferInput(buffer, buffer_size);
     }
     if (status < 0)
     {
@@ -2296,16 +2284,15 @@ nsPop3Protocol::TopResponse(nsIInputStream* inputStream, PRUint32 length)
 
 
 PRInt32
-nsPop3Protocol::RetrHandleLine(char *line, PRUint32 line_length, void *closure)
+nsPop3Protocol::HandleLine(char *line, PRUint32 line_length)
 {
-    nsPop3Protocol* p3p = (nsPop3Protocol *) closure;
     int status;
     
-    PR_ASSERT(p3p->m_pop3ConData->msg_closure);
-    if (!p3p->m_pop3ConData->msg_closure)
+    PR_ASSERT(m_pop3ConData->msg_closure);
+    if (!m_pop3ConData->msg_closure)
         return -1;
     
-    if (p3p->m_pop3ConData->sender_info && !p3p->m_pop3ConData->seenFromHeader)
+    if (m_pop3ConData->sender_info && !m_pop3ConData->seenFromHeader)
     {
         if (line_length > 6 && !XP_MEMCMP("From: ", line, 6))
         {
@@ -2317,16 +2304,16 @@ nsPop3Protocol::RetrHandleLine(char *line, PRUint32 line_length, void *closure)
              */
             char ch = line[line_length-1];
             line[line_length-1] = 0;
-            p3p->m_pop3ConData->seenFromHeader = PR_TRUE;
-            if (PL_strstr(line, p3p->m_pop3ConData->sender_info) == NULL)
-                p3p->m_nsIPop3Sink->SetSenderAuthedFlag(p3p->m_pop3ConData->msg_closure,
+            m_pop3ConData->seenFromHeader = PR_TRUE;
+            if (PL_strstr(line, m_pop3ConData->sender_info) == NULL)
+                m_nsIPop3Sink->SetSenderAuthedFlag(m_pop3ConData->msg_closure,
                                                      PR_FALSE);
             line[line_length-1] = ch;
         }
     }
     
     status =
-        p3p->m_nsIPop3Sink->IncorporateWrite(p3p->m_pop3ConData->msg_closure, 
+        m_nsIPop3Sink->IncorporateWrite(m_pop3ConData->msg_closure, 
                                              line, line_length);
     
     if ((status >= 0) &&
@@ -2335,12 +2322,12 @@ nsPop3Protocol::RetrHandleLine(char *line, PRUint32 line_length, void *closure)
     {
         gPOP3AssumedEnd = PR_TRUE;	/* in case byte count from server is */
                                     /* wrong, mark we may have had the end */ 
-        if (!gPOP3dotFix || p3p->m_pop3ConData->truncating_cur_msg ||
+        if (!gPOP3dotFix || m_pop3ConData->truncating_cur_msg ||
             (gPOP3parsed_bytes >= (gPOP3size -3))) 
         {
             status = 
-                p3p->m_nsIPop3Sink->IncorporateComplete(p3p->m_pop3ConData->msg_closure);
-            p3p->m_pop3ConData->msg_closure = 0;
+                m_nsIPop3Sink->IncorporateComplete(m_pop3ConData->msg_closure);
+            m_pop3ConData->msg_closure = 0;
         }
     }
     

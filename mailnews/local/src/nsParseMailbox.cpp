@@ -124,7 +124,7 @@ nsMsgMailboxParser::nsMsgMailboxParser() : nsMsgLineBuffer(NULL, PR_FALSE)
 
 nsMsgMailboxParser::~nsMsgMailboxParser()
 {
-	XP_FREE(m_mailboxName);
+	PR_FREEIF(m_mailboxName);
 }
 
 void nsMsgMailboxParser::UpdateStatusText ()
@@ -1223,187 +1223,23 @@ int nsParseMailMessageState::FinalizeHeaders()
 
 
 
-#ifdef NEW_MAIL_HANDLED
-int ParseNewMailState::MarkFilteredMessageRead(nsMsgHdr *msgHdr)
+nsParseNewMailState::nsParseNewMailState(MSG_Master *master, nsFilePath &folder)
 {
-	if (m_mailDB)
-		m_mailDB->MarkHdrRead(msgHdr, TRUE, NULL);
-	else
-		msgHdr->OrFlags(kIsRead);
-	return 0;
-}
+//	SetMaster(master);
+	m_mailboxName = PL_strdup(folder);
 
-int ParseNewMailState::MoveIncorporatedMessage(nsMsgHdr *mailHdr, 
-											   nsMailDatabase *sourceDB, 
-											   char *destFolder,
-											   MSG_Filter *filter)
-{
-	int err = 0;
-	XP_File		destFid;
-	XP_File		sourceFid = m_file;
+	// the new mail parser isn't going to get the stream input, it seems, so we can't use
+	// the OnStartBinding mechanism the mailbox parser uses. So, let's open the db right now.
+	nsMailDatabase::Open(folder, PR_TRUE, &m_mailDB, PR_FALSE);
 
-	// Make sure no one else is writing into this folder
-	MSG_FolderInfo *lockedFolder = m_mailMaster->FindMailFolder (destFolder, FALSE /*create*/);
-	if (lockedFolder && (err = lockedFolder->AcquireSemaphore (this)) != 0)
-		return err;
-
-	if (sourceFid == 0)
-	{
-		sourceFid = XP_FileOpen(m_mailboxName,
-										xpMailFolder, XP_FILE_READ_BIN);
-	}
-	XP_ASSERT(sourceFid != 0);
-	if (sourceFid == 0)
-	{
-#ifdef DEBUG_bienvenu
-		XP_ASSERT(FALSE);
-#endif
-		if (lockedFolder)
-			lockedFolder->ReleaseSemaphore (this);
-
-		return MK_MSG_FOLDER_UNREADABLE;	// ### dmb
-	}
-
-	XP_FileSeek (sourceFid, mailHdr->GetMessageOffset(), SEEK_SET);
-	int newMsgPos;
-
-	destFid = XP_FileOpen(destFolder, xpMailFolder, XP_FILE_APPEND_BIN);
-
-	if (!destFid) 
-	{
-#ifdef DEBUG_bienvenu
-		XP_ASSERT(FALSE);
-#endif
-		if (lockedFolder)
-			lockedFolder->ReleaseSemaphore (this);
-		XP_FileClose (sourceFid);
-		return  MK_MSG_ERROR_WRITING_MAIL_FOLDER;
-	}
-
-	if (!XP_FileSeek (destFid, 0, SEEK_END))
-	{
-		newMsgPos = ftell (destFid);
-	}
-	else
-	{
-		XP_ASSERT(FALSE);
-		if (lockedFolder)
-			lockedFolder->ReleaseSemaphore (this);
-		XP_FileClose (destFid);
-		XP_FileClose (sourceFid);
-		return  MK_MSG_ERROR_WRITING_MAIL_FOLDER;
-	}
-
-	nsMailDatabase *mailDb = NULL;
-	// don't force upgrade in place - open the db here before we start writing to the 
-	// destination file because XP_Stat can return file size including bytes written...
-	MsgERR msgErr = nsMailDatabase::Open (destFolder, TRUE, &mailDb);	
-	PRUint32 length = mailHdr->GetByteLength();
-
-	m_ibuffer_size = 10240;
-	m_ibuffer = NULL;
-
-	while (!m_ibuffer && (m_ibuffer_size >= 512))
-	{
-		m_ibuffer = (char *) XP_ALLOC(m_ibuffer_size);
-		if (m_ibuffer == NULL)
-			m_ibuffer_size /= 2;
-	}
-	XP_ASSERT(m_ibuffer != NULL);
-	while ((length > 0) && m_ibuffer)
-	{
-		PRUint32 nRead = XP_FileRead (m_ibuffer, length > m_ibuffer_size ? m_ibuffer_size  : length, sourceFid);
-		if (nRead == 0)
-			break;
-		
-		// we must monitor the number of bytes actually written to the file. (mscott)
-		if (XP_FileWrite (m_ibuffer, nRead, destFid) != nRead) 
-		{
-			XP_FileClose(sourceFid);
-			XP_FileClose(destFid);     
-
-			// truncate  destination file in case message was partially written
-			XP_FileTruncate(destFolder,xpMailFolder,newMsgPos);
-
-			if (lockedFolder)
-				lockedFolder->ReleaseSemaphore(this);
-
-			if (mailDb)
-				mailDb->Close();
-
-			return MK_MSG_ERROR_WRITING_MAIL_FOLDER;   // caller (ApplyFilters) currently ignores error conditions
-		}
-			
-		length -= nRead;
-	}
-	
-	XP_ASSERT(length == 0);
-
-	// if we have made it this far then the message has successfully been written to the new folder
-	// now add the header to the mailDb.
-	if (eSUCCESS == msgErr)
-	{
-		nsMsgHdr *newHdr = new nsMsgHdr();	
-		if (newHdr)
-		{
-			newHdr->CopyFromMsgHdr (mailHdr, sourceDB->GetDB(), mailDb->GetDB());
-			// set new byte offset, since the offset in the old file is certainly wrong
-			newHdr->SetMessageKey (newMsgPos); 
-			newHdr->OrFlags(kNew);
-
-			msgErr = mailDb->AddHdrToDB (newHdr, NULL, m_updateAsWeGo);
-		}
-	}
-	else
-	{
-		if (mailDb)
-		{
-			mailDb->Close();
-			mailDb = NULL;
-		}
-	}
-
-	XP_FileClose(sourceFid);
-	XP_FileClose(destFid);
-	int truncRet = XP_FileTruncate(m_mailboxName, xpMailFolder, mailHdr->GetMessageOffset());
-	XP_ASSERT(truncRet >= 0);
-
-	if (lockedFolder)
-		lockedFolder->ReleaseSemaphore (this);
-
-	// tell outgoing parser that we've truncated the Inbox
-	m_parseMsgState->Init(mailHdr->GetMessageOffset());
-	MSG_FolderInfo *folder = m_mailMaster->FindMailFolder(destFolder, FALSE);
-
-	if (folder)
-		folder->SetFlag(MSG_FOLDER_FLAG_GOT_NEW);
-
-	if (mailDb != NULL)
-	{
-		// update the folder size so we won't reparse.
-		UpdateDBFolderInfo(mailDb, destFolder);
-		if (folder != NULL)
-			folder->SummaryChanged();
-
-		mailDb->Close();
-	}
-	// We are logging the hit with the old mailHdr, which should work, as long
-	// as LogRuleHit doesn't assume the new hdr.
-	if (m_filterList->IsLoggingEnabled())
-		LogRuleHit(filter, mailHdr);
-
-	return err;
-
-}
-
-ParseNewMailState::ParseNewMailState(MSG_Master *master, MSG_FolderInfoMail
-									 *folder) :
-	nsMsgMailboxParser(folder->GetPathname())
-{
-	SetMaster(master);
+#ifdef DOING_FILTERS
 	if (MSG_FilterList::Open(master, filterInbox, NULL, folder, &m_filterList)
 		!= FilterError_Success)
 		m_filterList = NULL;
+
+	m_logFile = NULL;
+#endif
+#ifdef DOING_MDN
 	if (m_filterList)
 	{
 		const char *folderName = NULL;
@@ -1424,7 +1260,6 @@ ParseNewMailState::ParseNewMailState(MSG_Master *master, MSG_FolderInfoMail
 				XP_FREE(defaultFolderName);
 			}
 		}
-
 		if (folderName)
 		{
 			MSG_Filter *newFilter = new MSG_Filter(filterInboxRule, "receipt");
@@ -1453,29 +1288,109 @@ ParseNewMailState::ParseNewMailState(MSG_Master *master, MSG_FolderInfoMail
 			}
 		}
 	}
-	m_logFile = NULL;
+#endif DOING_MDN
 	m_usingTempDB = FALSE;
 	m_tmpdbName = NULL;
 	m_disableFilters = FALSE;
 }
 
-ParseNewMailState::~ParseNewMailState()
+nsParseNewMailState::~nsParseNewMailState()
 {
+#ifdef DOING_FILTERS
 	if (m_filterList != NULL)
 		MSG_CancelFilterList(m_filterList);
 	if (m_logFile != NULL)
 		XP_FileClose(m_logFile);
+#endif
 	if (m_mailDB)
 		m_mailDB->Close();
-	if (m_usingTempDB)
-	{
-		XP_FileRemove(m_tmpdbName, xpMailFolderSummary);
-	}
-	FREEIF(m_tmpdbName);
+//	if (m_usingTempDB)
+//	{
+//		XP_FileRemove(m_tmpdbName, xpMailFolderSummary);
+//	}
+	PR_FREEIF(m_tmpdbName);
+#ifdef DOING_FILTERS
 	JSFilter_cleanup();
+#endif
 }
 
-XP_File ParseNewMailState::GetLogFile ()
+
+// This gets called for every message because libnet calls IncorporateBegin,
+// IncorporateWrite (once or more), and IncorporateComplete for every message.
+void nsParseNewMailState::DoneParsingFolder()
+{
+	PRBool moved = FALSE;
+/* End of file.  Flush out any partial line remaining in the buffer. */
+	if (m_ibuffer_fp > 0) 
+	{
+		ParseFolderLine(m_ibuffer, m_ibuffer_fp);
+		m_ibuffer_fp = 0;
+	}
+	PublishMsgHeader();
+	if (!moved && m_mailDB != NULL)	// finished parsing, so flush db folder info 
+		UpdateDBFolderInfo();
+
+#ifdef HAVE_FOLDERINFO
+	if (m_folder != NULL)
+		m_folder->SummaryChanged();
+#endif
+
+	/* We're done reading the folder - we don't need these things
+	 any more. */
+	PR_FREEIF (m_ibuffer);
+	m_ibuffer_size = 0;
+	PR_FREEIF (m_obuffer);
+	m_obuffer_size = 0;
+}
+
+PRInt32 nsParseNewMailState::PublishMsgHeader()
+{
+	PRBool		moved = FALSE;
+
+	FinishHeader();
+	
+	if (m_newMsgHdr)
+	{
+		FolderTypeSpecificTweakMsgHeader(m_newMsgHdr);
+#ifdef DOING_FILTERS
+		if (!m_disableFilters) {
+			ApplyFilters(&moved);
+		}
+#endif // DOING_FILTERS
+		if (!moved)
+		{
+			if (m_mailDB)
+			{
+				PRUint32 newFlags;
+				m_newMsgHdr->OrFlags(MSG_FLAG_NEW, &newFlags);
+
+//				m_mailDB->AddHdrToDB (m_newMsgHdr, NULL,
+//									  m_updateAsWeGo);
+			}
+#ifdef HAVE_FOLDERINFO
+			if (m_folder)
+				m_folder->SetFlag(MSG_FOLDER_FLAG_GOT_NEW);
+#endif
+
+		}		// if it was moved by imap filter, m_parseMsgState->m_newMsgHdr == NULL
+		else if (m_newMsgHdr)
+		{
+			m_newMsgHdr->Release();
+		}
+		m_newMsgHdr = NULL;
+	}
+	return 0;
+}
+
+void	nsParseNewMailState::SetUsingTempDB(PRBool usingTempDB, char *tmpDBName)
+{
+	m_usingTempDB = usingTempDB;
+	m_tmpdbName = tmpDBName;
+}
+
+#ifdef DOING_FILTERS
+
+XP_File nsParseNewMailState::GetLogFile ()
 {
 	// This log file is used by regular filters and JS filters
 	if (m_logFile == NULL)
@@ -1483,7 +1398,7 @@ XP_File ParseNewMailState::GetLogFile ()
 	return m_logFile;
 }
 
-void ParseNewMailState::LogRuleHit(MSG_Filter *filter, nsMsgHdr *msgHdr)
+void nsParseNewMailState::LogRuleHit(MSG_Filter *filter, nsMsgHdr *msgHdr)
 {
 	char	*filterName = "";
 	time_t	date;
@@ -1524,14 +1439,14 @@ void ParseNewMailState::LogRuleHit(MSG_Filter *filter, nsMsgHdr *msgHdr)
 	}
 }
 
-MSG_FolderInfoMail *ParseNewMailState::GetTrashFolder()
+MSG_FolderInfoMail *nsParseNewMailState::GetTrashFolder()
 {
 	MSG_FolderInfo *foundTrash = NULL;
 	GetMaster()->GetLocalMailFolderTree()->GetFoldersWithFlag(MSG_FOLDER_FLAG_TRASH, &foundTrash, 1);
 	return foundTrash ? foundTrash->GetMailFolderInfo() : (MSG_FolderInfoMail *)NULL;
 }
 
-void ParseNewMailState::ApplyFilters(PRBool *pMoved)
+void nsParseNewMailState::ApplyFilters(PRBool *pMoved)
 {
 	MSG_Filter	*filter;
 	PRInt32		filterCount = 0;
@@ -1694,75 +1609,184 @@ void ParseNewMailState::ApplyFilters(PRBool *pMoved)
 		*pMoved = msgMoved;
 }
 
-// This gets called for every message because libnet calls IncorporateBegin,
-// IncorporateWrite (once or more), and IncorporateComplete for every message.
-void ParseNewMailState::DoneParsingFolder()
+int nsParseNewMailState::MarkFilteredMessageRead(nsMsgHdr *msgHdr)
 {
-	PRBool moved = FALSE;
-/* End of file.  Flush out any partial line remaining in the buffer. */
-	if (m_ibuffer_fp > 0) 
-	{
-		m_parseMsgState->ParseFolderLine(m_ibuffer, m_ibuffer_fp);
-		m_ibuffer_fp = 0;
-	}
-	PublishMsgHeader();
-	if (!moved && m_mailDB != NULL)	// finished parsing, so flush db folder info 
-		UpdateDBFolderInfo();
-
-	if (m_folder != NULL)
-		m_folder->SummaryChanged();
-
-	/* We're done reading the folder - we don't need these things
-	 any more. */
-	FREEIF (m_ibuffer);
-	m_ibuffer_size = 0;
-	FREEIF (m_obuffer);
-	m_obuffer_size = 0;
-}
-
-PRInt32 ParseNewMailState::PublishMsgHeader()
-{
-	PRBool		moved = FALSE;
-
-	m_parseMsgState->FinishHeader();
-	
-	if (m_parseMsgState->m_newMsgHdr)
-	{
-		FolderTypeSpecificTweakMsgHeader(m_parseMsgState->m_newMsgHdr);
-		if (!m_disableFilters) {
-			ApplyFilters(&moved);
-		}
-		if (!moved)
-		{
-			if (m_mailDB)
-			{
-				m_parseMsgState->m_newMsgHdr->OrFlags(kNew);
-				m_mailDB->AddHdrToDB (m_parseMsgState->m_newMsgHdr, NULL,
-									  m_updateAsWeGo);
-			}
-			if (m_folder)
-				m_folder->SetFlag(MSG_FOLDER_FLAG_GOT_NEW);
-
-
-		}		// if it was moved by imap filter, m_parseMsgState->m_newMsgHdr == NULL
-		else if (m_parseMsgState->m_newMsgHdr)
-		{
-			m_parseMsgState->m_newMsgHdr->unrefer();
-		}
-		m_parseMsgState->m_newMsgHdr = NULL;
-	}
+	if (m_mailDB)
+		m_mailDB->MarkHdrRead(msgHdr, TRUE, NULL);
+	else
+		msgHdr->OrFlags(kIsRead);
 	return 0;
 }
 
-void	ParseNewMailState::SetUsingTempDB(PRBool usingTempDB, char *tmpDBName)
+int nsParseNewMailState::MoveIncorporatedMessage(nsMsgHdr *mailHdr, 
+											   nsMailDatabase *sourceDB, 
+											   char *destFolder,
+											   MSG_Filter *filter)
 {
-	m_usingTempDB = usingTempDB;
-	m_tmpdbName = tmpDBName;
+	int err = 0;
+	XP_File		destFid;
+	XP_File		sourceFid = m_file;
+
+	// Make sure no one else is writing into this folder
+	MSG_FolderInfo *lockedFolder = m_mailMaster->FindMailFolder (destFolder, FALSE /*create*/);
+	if (lockedFolder && (err = lockedFolder->AcquireSemaphore (this)) != 0)
+		return err;
+
+	if (sourceFid == 0)
+	{
+		sourceFid = XP_FileOpen(m_mailboxName,
+										xpMailFolder, XP_FILE_READ_BIN);
+	}
+	XP_ASSERT(sourceFid != 0);
+	if (sourceFid == 0)
+	{
+#ifdef DEBUG_bienvenu
+		XP_ASSERT(FALSE);
+#endif
+		if (lockedFolder)
+			lockedFolder->ReleaseSemaphore (this);
+
+		return MK_MSG_FOLDER_UNREADABLE;	// ### dmb
+	}
+
+	XP_FileSeek (sourceFid, mailHdr->GetMessageOffset(), SEEK_SET);
+	int newMsgPos;
+
+	destFid = XP_FileOpen(destFolder, xpMailFolder, XP_FILE_APPEND_BIN);
+
+	if (!destFid) 
+	{
+#ifdef DEBUG_bienvenu
+		XP_ASSERT(FALSE);
+#endif
+		if (lockedFolder)
+			lockedFolder->ReleaseSemaphore (this);
+		XP_FileClose (sourceFid);
+		return  MK_MSG_ERROR_WRITING_MAIL_FOLDER;
+	}
+
+	if (!XP_FileSeek (destFid, 0, SEEK_END))
+	{
+		newMsgPos = ftell (destFid);
+	}
+	else
+	{
+		XP_ASSERT(FALSE);
+		if (lockedFolder)
+			lockedFolder->ReleaseSemaphore (this);
+		XP_FileClose (destFid);
+		XP_FileClose (sourceFid);
+		return  MK_MSG_ERROR_WRITING_MAIL_FOLDER;
+	}
+
+	nsMailDatabase *mailDb = NULL;
+	// don't force upgrade in place - open the db here before we start writing to the 
+	// destination file because XP_Stat can return file size including bytes written...
+	MsgERR msgErr = nsMailDatabase::Open (destFolder, TRUE, &mailDb);	
+	PRUint32 length = mailHdr->GetByteLength();
+
+	m_ibuffer_size = 10240;
+	m_ibuffer = NULL;
+
+	while (!m_ibuffer && (m_ibuffer_size >= 512))
+	{
+		m_ibuffer = (char *) XP_ALLOC(m_ibuffer_size);
+		if (m_ibuffer == NULL)
+			m_ibuffer_size /= 2;
+	}
+	XP_ASSERT(m_ibuffer != NULL);
+	while ((length > 0) && m_ibuffer)
+	{
+		PRUint32 nRead = XP_FileRead (m_ibuffer, length > m_ibuffer_size ? m_ibuffer_size  : length, sourceFid);
+		if (nRead == 0)
+			break;
+		
+		// we must monitor the number of bytes actually written to the file. (mscott)
+		if (XP_FileWrite (m_ibuffer, nRead, destFid) != nRead) 
+		{
+			XP_FileClose(sourceFid);
+			XP_FileClose(destFid);     
+
+			// truncate  destination file in case message was partially written
+			XP_FileTruncate(destFolder,xpMailFolder,newMsgPos);
+
+			if (lockedFolder)
+				lockedFolder->ReleaseSemaphore(this);
+
+			if (mailDb)
+				mailDb->Close();
+
+			return MK_MSG_ERROR_WRITING_MAIL_FOLDER;   // caller (ApplyFilters) currently ignores error conditions
+		}
+			
+		length -= nRead;
+	}
+	
+	XP_ASSERT(length == 0);
+
+	// if we have made it this far then the message has successfully been written to the new folder
+	// now add the header to the mailDb.
+	if (eSUCCESS == msgErr)
+	{
+		nsMsgHdr *newHdr = new nsMsgHdr();	
+		if (newHdr)
+		{
+			newHdr->CopyFromMsgHdr (mailHdr, sourceDB->GetDB(), mailDb->GetDB());
+			// set new byte offset, since the offset in the old file is certainly wrong
+			newHdr->SetMessageKey (newMsgPos); 
+			newHdr->OrFlags(kNew);
+
+			msgErr = mailDb->AddHdrToDB (newHdr, NULL, m_updateAsWeGo);
+		}
+	}
+	else
+	{
+		if (mailDb)
+		{
+			mailDb->Close();
+			mailDb = NULL;
+		}
+	}
+
+	XP_FileClose(sourceFid);
+	XP_FileClose(destFid);
+	int truncRet = XP_FileTruncate(m_mailboxName, xpMailFolder, mailHdr->GetMessageOffset());
+	XP_ASSERT(truncRet >= 0);
+
+	if (lockedFolder)
+		lockedFolder->ReleaseSemaphore (this);
+
+	// tell outgoing parser that we've truncated the Inbox
+	m_parseMsgState->Init(mailHdr->GetMessageOffset());
+	MSG_FolderInfo *folder = m_mailMaster->FindMailFolder(destFolder, FALSE);
+
+	if (folder)
+		folder->SetFlag(MSG_FOLDER_FLAG_GOT_NEW);
+
+	if (mailDb != NULL)
+	{
+		// update the folder size so we won't reparse.
+		UpdateDBFolderInfo(mailDb, destFolder);
+		if (folder != NULL)
+			folder->SummaryChanged();
+
+		mailDb->Close();
+	}
+	// We are logging the hit with the old mailHdr, which should work, as long
+	// as LogRuleHit doesn't assume the new hdr.
+	if (m_filterList->IsLoggingEnabled())
+		LogRuleHit(filter, mailHdr);
+
+	return err;
+
 }
+#endif // DOING_FILTERS
+
+#ifdef IMAP_NEW_MAIL_HANDLED
 
 ParseIMAPMailboxState::ParseIMAPMailboxState(MSG_Master *master, MSG_IMAPHost *host, MSG_FolderInfoMail *folder,
 											 MSG_UrlQueue *urlQueue, TImapFlagAndUidState *flagStateAdopted)
-											: ParseNewMailState(master, folder), fUrlQueue(urlQueue)
+											: nsParseNewMailState(master, folder), fUrlQueue(urlQueue)
 {
  	MSG_FolderInfoContainer *imapContainer =  m_mailMaster->GetImapMailFolderTreeForHost(host->GetHostName());
  	MSG_FolderInfo *filteredFolder = imapContainer->FindMailPathname(folder->GetPathname());
@@ -1910,7 +1934,7 @@ MSG_FolderInfoMail *ParseIMAPMailboxState::GetTrashFolder()
 void ParseIMAPMailboxState::ApplyFilters(PRBool *pMoved)
 {
  	if (fParsingInbox && !(GetCurrentMsg()->GetFlags() & kIsRead) )
- 		ParseNewMailState::ApplyFilters(pMoved);
+ 		nsParseNewMailState::ApplyFilters(pMoved);
  	else
  		*pMoved = FALSE;
  	
@@ -2184,4 +2208,4 @@ void ParseOutgoingMessage::FlushOutputBuffer()
 	}
 }
 
-#endif /* NEW_MAIL_HANDLED */
+#endif /* IMAP_NEW_MAIL_HANDLED */

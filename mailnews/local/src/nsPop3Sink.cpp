@@ -23,6 +23,7 @@
 #include "nscore.h"
 #include <stdio.h>
 #include <time.h>
+#include "nsParseMailbox.h"
 
 #ifdef XP_MAC
 #  define LINEBREAK             "\015"
@@ -51,6 +52,7 @@ nsPop3Sink::nsPop3Sink()
     m_outputBuffer = nsnull;
     m_outputBufferSize = 0;
     m_mailDirectory = 0;
+	m_newMailParser = NULL;
 #ifdef DEBUG
     m_fileCounter = 0;
 #endif
@@ -61,6 +63,8 @@ nsPop3Sink::~nsPop3Sink()
     PR_FREEIF(m_accountUrl);
     PR_FREEIF(m_outputBuffer);
     PR_FREEIF(m_mailDirectory);
+	if (m_newMailParser)
+		delete m_newMailParser;
 }
 
 nsresult
@@ -121,6 +125,9 @@ nsPop3Sink::BeginMailDelivery(PRBool* aBool)
     nsFilePath filePath(path);
     m_outFileStream = new nsOutputFileStream(filePath, 
                                              PR_WRONLY | PR_CREATE_FILE | PR_APPEND);
+
+	// create a new mail parser
+	m_newMailParser = new nsParseNewMailState(NULL, filePath);
     PR_FREEIF(path);
 
 #ifdef DEBUG
@@ -140,6 +147,12 @@ nsPop3Sink::EndMailDelivery()
         delete m_outFileStream;
         m_outFileStream = 0;
     }
+	if (m_newMailParser)
+	{
+		delete m_newMailParser;
+		m_newMailParser = NULL;
+	}
+
 #ifdef DEBUG
     printf("End mail message delivery.\n");
 #endif 
@@ -178,9 +191,9 @@ nsPop3Sink::IncorporateBegin(const char* uidlString,
     
     char *dummyEnvelope = GetDummyEnvelope();
 
-    *m_outFileStream << dummyEnvelope;
-    *m_outFileStream << "X-Mozilla-Status: 8000\r\n";
-    *m_outFileStream << "X-Mozilla-Status2: 00000000\r\n";
+    WriteLineToMailbox(dummyEnvelope);
+    WriteLineToMailbox("X-Mozilla-Status: 8000\r\n");
+    WriteLineToMailbox("X-Mozilla-Status2: 00000000\r\n");
 
     return NS_OK;
 }
@@ -254,10 +267,27 @@ nsPop3Sink::IncorporateWrite(void* closure,
 #ifdef DEBUG
         printf("%s\n", m_outputBuffer);
 #endif 
-        if (m_outFileStream)
-            *m_outFileStream << m_outputBuffer;
+		WriteLineToMailbox (m_outputBuffer);
+		// Is this where we should hook up the new mail parser? Is this block a line, or a real block?
+		// I think it's a real line. We're also not escaping lines that start with "From ", which is
+		// a potentially horrible bug...Should this be done here, or in the mailbox parser? I vote for
+		// here. Also, we're writing out the mozilla-status line in IncorporateBegin, but we need to 
+		// pass that along to the mailbox parser so that the mozilla-status offset is handled correctly.
+		// And what about uidl? Don't we need to be able to write out an X-UIDL header?
     }
     return NS_OK;
+}
+
+nsresult nsPop3Sink::WriteLineToMailbox(char *buffer)
+{
+	if (buffer)
+	{
+		if (m_newMailParser)
+			m_newMailParser->ParseFolderLine(buffer, PL_strlen(buffer));
+		if (m_outFileStream)
+			*m_outFileStream << buffer;
+	}
+	return NS_OK;
 }
 
 nsresult
@@ -275,8 +305,7 @@ nsPop3Sink::IncorporateComplete(void* closure)
 nsresult
 nsPop3Sink::IncorporateAbort(void* closure, PRInt32 status)
 {
-    if (m_outFileStream)
-        *m_outFileStream << LINEBREAK;
+	WriteLineToMailbox(LINEBREAK);
 
 #ifdef DEBUG
     printf("Incorporate message abort.\n");

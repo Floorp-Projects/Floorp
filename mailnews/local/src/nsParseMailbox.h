@@ -26,24 +26,23 @@
 #include "nsMsgLineBuffer.h"
 #include "nsMsgRFC822Parser.h"
 
+class nsFilePath;
 class nsByteArray;
 class nsMailDatabase;
 class nsMsgHdr;
+class nsOutputFileStream;
+class nsInputFileStream;
+class MSG_Filter;
+class MSG_Master;
+class MSG_FolderInfoMail;
+class MSG_FilterList;
 
 /*
-class MSG_Master;
-class MailDB;
-class MSG_Pane;
-class MSG_FolderPane;
-class MailMessageHdr;
-struct MSG_FilterList;
-struct MSG_Filter;
 struct MSG_Rule;
 class MailMessageHdr;
 class MSG_UrlQueue;
 class TImapFlagAndUidState;
 class MSG_FolderInfoContainer;
-class MSG_FolderInfoMail;
 class MSG_IMAPHost;
 */
 
@@ -100,14 +99,8 @@ public:
 	PRUint32			m_headerstartpos;
 
 	nsByteArray		m_headers;
-//	char			*m_headers;
-//	PRUint32			m_headers_fp;
-//	PRUint32			m_headers_size;
 
 	nsByteArray		m_envelope;
-//	char			*m_envelope;
-//	PRUint32			m_envelope_fp;
-//	PRUint32			m_envelope_size;
 
 	struct message_header m_message_id;
 	struct message_header m_references;
@@ -232,18 +225,17 @@ private:
 
 };
 
-#ifdef NEW_MAIL_HANDLED
-
-class ParseNewMailState : public ParseMailboxState 
+class nsParseNewMailState : public nsMsgMailboxParser 
 {
 public:
-	ParseNewMailState(MSG_Master *master, MSG_FolderInfoMail *folder);
-	virtual ~ParseNewMailState();
+	nsParseNewMailState(MSG_Master *master, nsFilePath &folder);
+	virtual ~nsParseNewMailState();
 	virtual void	DoneParsingFolder();
 	virtual void	SetUsingTempDB(PRBool usingTempDB, char *tmpDBName);
 
 	void DisableFilters() {m_disableFilters = TRUE;}
 
+#ifdef DOING_FILTERS
 	// from jsmsg.cpp
 	friend void JSMailFilter_MoveMessage(ParseNewMailState *state, 
 										 nsMsgHdr *msgHdr, 
@@ -251,24 +243,28 @@ public:
 										 const char *folder, 
 										 MSG_Filter *filter,
 										 PRBool *pMoved);
-	XP_File GetLogFile();
-
+	nsInputFileStream *GetLogFile();
+#endif // DOING_FILTERS
 protected:
 	virtual PRInt32	PublishMsgHeader();
+#ifdef DOING_FILTERS
 	virtual void	ApplyFilters(PRBool *pMoved);
 	virtual MSG_FolderInfoMail *GetTrashFolder();
 	virtual int		MoveIncorporatedMessage(nsMsgHdr *mailHdr, 
 											   nsMailDatabase *sourceDB, 
 											   char *destFolder,
 											   MSG_Filter *filter);
-	virtual	int		MarkFilteredMessageRead(nsMsgHdr *msgHdr);
-			void	LogRuleHit(MSG_Filter *filter, nsMsgHdr *msgHdr);
-	MSG_FilterList *m_filterList;
-	XP_File			m_logFile;
-	char			*m_tmpdbName;				// Temporary filename of new database
-	PRBool			m_usingTempDB;
-	PRBool			m_disableFilters;
+	virtual	int			MarkFilteredMessageRead(nsMsgHdr *msgHdr);
+			void		LogRuleHit(MSG_Filter *filter, nsMsgHdr *msgHdr);
+	MSG_FilterList		*m_filterList;
+	nsOutputFileStream	*m_logFile;
+#endif // DOING_FILTERS
+	char				*m_tmpdbName;				// Temporary filename of new database
+	PRBool				m_usingTempDB;
+	PRBool				m_disableFilters;
 };
+
+#ifdef IMAP_NEW_MAIL_HANDLED
 
 
 class ParseIMAPMailboxState : public ParseNewMailState 
