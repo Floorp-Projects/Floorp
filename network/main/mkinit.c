@@ -373,13 +373,20 @@ net_register_new_converter(char *contenttype, char *command, char *xmode,
                 else if (!PL_strcasecmp(contenttype, IMAGE_GIF))
                         NET_RegisterContentTypeConverter (IMAGE_GIF,
                                  FO_PRESENT,NULL, IL_ViewStream);
+
+                else if (!PL_strcasecmp(contenttype, IMAGE_ART)||
+                         !PL_strcasecmp(contenttype, IMAGE_ART2))
+                        NET_RegisterContentTypeConverter (IMAGE_ART, FO_PRESENT
+                                 ,NULL, IL_ViewStream);
+
                 else if (!PL_strcasecmp(contenttype, IMAGE_XBM) ||
-						 !PL_strcasecmp(contenttype, IMAGE_XBM2) ||
-						 !PL_strcasecmp(contenttype, IMAGE_XBM3))
+						             !PL_strcasecmp(contenttype, IMAGE_XBM2) ||
+						             !PL_strcasecmp(contenttype, IMAGE_XBM3))
                         NET_RegisterContentTypeConverter (IMAGE_XBM,
                                  FO_PRESENT,NULL, IL_ViewStream);
+
                 else if (!PL_strcasecmp(contenttype, IMAGE_JPG) ||
-						 !PL_strcasecmp(contenttype, IMAGE_PJPG))
+						             !PL_strcasecmp(contenttype, IMAGE_PJPG))
                         NET_RegisterContentTypeConverter (IMAGE_JPG,
                                  FO_PRESENT,NULL, IL_ViewStream);
 
