@@ -846,6 +846,11 @@
     Value is out of range for field 
     <em>[% field_descs.$field FILTER html %]</em>.
 
+  [% ELSIF error == "whine_access_denied" %]
+    [% title = "Access Denied" %]
+    Sorry, you aren't a member of the 'bz_canusewhines' group, and so
+    you aren't allowed to schedule whine reports.
+
   [% ELSIF error == "zero_length_file" %]
     [% title = "File Is Empty" %]
     The file you are trying to attach is empty!

@@ -1262,7 +1262,8 @@ WriteParams();
 
 # These are the files which need to be marked executable
 my @executable_files = ('whineatnews.pl', 'collectstats.pl',
-   'checksetup.pl', 'importxml.pl', 'runtests.sh', 'testserver.pl');
+   'checksetup.pl', 'importxml.pl', 'runtests.sh', 'testserver.pl',
+   'whine.pl');
 
 # tell me if a file is executable.  All CGI files and those in @executable_files
 # are executable
@@ -1989,6 +1990,37 @@ $table{series_categories} =
      
      unique(name)';
      
+
+
+# whine system
+
+$table{whine_queries} =
+    'id             mediumint       auto_increment primary key,
+     eventid        mediumint       not null,
+     query_name     varchar(64)     not null default \'\',
+     sortkey        smallint        not null default 0,
+     onemailperbug  tinyint         not null default 0,
+     title          varchar(128)    not null,
+     
+     index(eventid)';
+
+$table{whine_schedules} =
+    'id             mediumint       auto_increment primary key,
+     eventid        mediumint       not null,
+     run_day        varchar(32),
+     run_time       varchar(32),
+     run_next       datetime,
+     mailto_userid  mediumint       not null,
+     
+     index(run_next),
+     index(eventid)';
+
+$table{whine_events} =
+    'id             mediumint       auto_increment primary key,
+     owner_userid   mediumint       not null,
+     subject        varchar(128),
+     body           mediumtext';
+
 ###########################################################################
 # Create tables
 ###########################################################################
@@ -4012,6 +4044,18 @@ if (!GroupDoesExist("canconfirm")) {
 
 }
 
+# Create bz_canusewhineatothers and bz_canusewhines
+if (!GroupDoesExist('bz_canusewhines')) {
+    my $whine_group = AddGroup('bz_canusewhines',
+                               'User can configure whine reports for self');
+    my $whineatothers_group = AddGroup('bz_canusewhineatothers',
+                                       'Can configure whine reports for ' .
+                                       'other users');
+    $dbh->do("INSERT IGNORE INTO group_group_map " .
+             "(member_id, grantor_id, grant_type) " .
+             "VALUES (${whine_group}, ${whineatothers_group}, " .
+             GROUP_MEMBERSHIP . ")");
+}
 
 ###########################################################################
 # Create Administrator  --ADMIN--

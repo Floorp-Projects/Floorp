@@ -70,8 +70,12 @@
           <a href="query.cgi?[% q.query FILTER html %]">Edit</a>
         </td>
         <td>
-          <a href="buglist.cgi?cmdtype=dorem&amp;remaction=forget&amp;namedcmd=
-                   [% q.name FILTER html %]">Forget</a>
+          [% IF q.usedinwhine %]
+            Remove from <a href="editwhines.cgi">whining</a> first
+          [% ELSE %]
+            <a href="buglist.cgi?cmdtype=dorem&amp;remaction=forget&amp;namedcmd=
+                     [% q.name FILTER html %]">Forget</a>
+          [% END %]
         </td>
         <td align="center">
           <input type="checkbox" 

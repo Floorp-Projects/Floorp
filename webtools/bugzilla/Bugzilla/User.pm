@@ -172,10 +172,14 @@ sub queries {
     return [] unless $self->id;
 
     my $dbh = Bugzilla->dbh;
-    my $sth = $dbh->prepare(q{  SELECT name, query, linkinfooter
-                                  FROM namedqueries
-                                 WHERE userid=?
-                              ORDER BY UPPER(name)});
+    my $sth = $dbh->prepare(q{ SELECT
+                             DISTINCT name, query, linkinfooter,
+                                      IF(whine_queries.id IS NOT NULL, 1, 0)
+                                 FROM namedqueries
+                            LEFT JOIN whine_queries
+                                   ON whine_queries.query_name = name
+                                WHERE userid=?
+                             ORDER BY UPPER(name)});
     $sth->execute($self->{id});
 
     my @queries;
@@ -184,6 +188,7 @@ sub queries {
                           name         => $row->[0],
                           query        => $row->[1],
                           linkinfooter => $row->[2],
+                          usedinwhine  => $row->[3],
                         });
     }
     $self->{queries} = \@queries;

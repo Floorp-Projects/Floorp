@@ -37,6 +37,19 @@
 
 %::safe = (
 
+'whine/schedule.html.tmpl' => [
+  'event.key',
+  'query.id',
+  'query.sort',
+  'schedule.id',
+  'option.0',
+  'option.1',
+],
+
+'whine/mail.html.tmpl' => [
+  'bug.bug_id',
+],
+
 'sidebar.xul.tmpl' => [
   'template_version', 
 ],
