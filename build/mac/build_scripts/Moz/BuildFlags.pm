@@ -222,6 +222,7 @@ sub SetOptionDefines($)
   $optiondefines->{"cache"}{"MOZ_NEW_CACHE"}  = 1;
   $optiondefines->{"soap"}{"MOZ_SOAP"}        = 1;
   $optiondefines->{"ldap_experimental"}{"MOZ_LDAP_XPCOM_EXPERIMENTAL"} = 1;
+  $optiondefines->{"useimg2"}{"USE_IMG2"}     = 1;
 }
 
 

@@ -361,6 +361,9 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(imgIRequest *request, nsISupports *cx,
 {
   LOG_SCOPE(gImgLog, "imgRequest::OnDataAvailable");
 
+  nsCOMPtr<imgIDecoderObserver> container = do_QueryInterface(mImage);
+  container->OnDataAvailable(request, cx, frame, rect);
+  
   PRInt32 i = -1;
   PRInt32 count = mObservers.Count();
 

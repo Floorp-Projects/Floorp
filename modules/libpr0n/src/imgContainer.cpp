@@ -25,33 +25,35 @@
 #include "imgContainer.h"
 
 #include "nsIServiceManager.h"
-
+#include "nsIInterfaceRequestor.h"
 #include "gfxIImageFrame.h"
+#include "nsIImage.h"
 
-NS_IMPL_ISUPPORTS2(imgContainer, imgIContainer, nsITimerCallback)
+NS_IMPL_ISUPPORTS3(imgContainer, imgIContainer, nsITimerCallback,imgIDecoderObserver)
 
+//******************************************************************************
 imgContainer::imgContainer()
 {
   NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
-  mCurrentFrame = 0;
-  mCurrentAnimationFrame = 0;
+  mCurrentDecodingFrameIndex = 0;
+  mCurrentAnimationFrameIndex = 0;
   mCurrentFrameIsFinishedDecoding = PR_FALSE;
   mDoneDecoding = PR_FALSE;
   mAnimating = PR_FALSE;
 }
 
+//******************************************************************************
 imgContainer::~imgContainer()
 {
-  /* destructor code */
-  mFrames.Clear();
-
   if (mTimer)
     mTimer->Cancel();
+    
+  /* destructor code */
+  mFrames.Clear();
 }
 
-
-
+//******************************************************************************
 /* void init (in nscoord aWidth, in nscoord aHeight, in imgIContainerObserver aObserver); */
 NS_IMETHODIMP imgContainer::Init(nscoord aWidth, nscoord aHeight, imgIContainerObserver *aObserver)
 {
@@ -99,9 +101,10 @@ NS_IMETHODIMP imgContainer::GetCurrentFrame(gfxIImageFrame * *aCurrentFrame)
   if(mCompositingFrame)
     return mCompositingFrame->QueryInterface(NS_GET_IID(gfxIImageFrame), (void**)aCurrentFrame); // addrefs again
   else
-    return this->GetFrameAt(mCurrentFrame, aCurrentFrame);
+    return this->GetFrameAt(mCurrentAnimationFrameIndex, aCurrentFrame);
 }
 
+//******************************************************************************
 /* readonly attribute unsigned long numFrames; */
 NS_IMETHODIMP imgContainer::GetNumFrames(PRUint32 *aNumFrames)
 {
@@ -132,32 +135,43 @@ NS_IMETHODIMP imgContainer::AppendFrame(gfxIImageFrame *item)
   // size is the same the frame size. Otherwise, we'll either need the composite frame
   // for animation compositing (GIF) or for filling in with a background color.
   // XXX IMPORTANT: this means that the frame should be initialized BEFORE appending to container
+  PRUint32 numFrames;
+  this->GetNumFrames(&numFrames);
+  
   if(!mCompositingFrame) {
     nsRect frameRect;
     item->GetRect(frameRect);
-    if((frameRect.x != 0) ||
+    // We used to create a compositing frame if any frame was smaller than the logical
+    // image size. You could create a single frame that was 10x10 in the middle of
+    // an 20x20 logical screen and have the extra screen space filled by the image 
+    // background color. However, it turns out that neither NS4.x nor IE correctly
+    // support this, and as a result there are many GIFs out there that look "wrong"
+    // when this is correctly supported. So for now, we only create a compositing frame
+    // if we have more than one frame in the image.
+    if(/*(frameRect.x != 0) ||
        (frameRect.y != 0) ||
        (frameRect.width != mSize.width) ||
-       (frameRect.height != mSize.height)) 
+       (frameRect.height != mSize.height) ||*/
+       (numFrames >= 1)) // Not sure if I want to create a composite frame for every anim. Could be smarter.
     {
       mCompositingFrame = do_CreateInstance("@mozilla.org/gfx/image/frame;2");
-      gfx_format format;
-      item->GetFormat(&format);
-      mCompositingFrame->Init(0, 0, mSize.width, mSize.height, format); 
+      mCompositingFrame->Init(0, 0, mSize.width, mSize.height, gfxIFormats::RGB); 
+      nsCOMPtr<nsIImage> img(do_GetInterface(mCompositingFrame));
+      img->SetDecodedRect(0, 0, mSize.width, mSize.height);
+      
+      nsCOMPtr<gfxIImageFrame> firstFrame;
+      this->GetFrameAt(0, getter_AddRefs(firstFrame));
+      firstFrame->DrawTo(mCompositingFrame, 0, 0, mSize.width, mSize.height);
     }
   }
   // If this is our second frame, init a timer so we don't display
   // the next frame until the delay timer has expired for the current
   // frame.
 
-  PRUint32 numFrames;
-  this->GetNumFrames(&numFrames);
-
-  if (!mTimer){
-    if (numFrames > 1) {
+  if (!mTimer && (numFrames >= 1)) {
       PRInt32 timeout;
       nsCOMPtr<gfxIImageFrame> currentFrame;
-      this->GetFrameAt(mCurrentFrame, getter_AddRefs(currentFrame));
+      this->GetFrameAt(mCurrentDecodingFrameIndex, getter_AddRefs(currentFrame));
       currentFrame->GetTimeout(&timeout);
       if (timeout != -1 &&
          timeout >= 0) { // -1 means display this frame forever
@@ -170,10 +184,9 @@ NS_IMETHODIMP imgContainer::AppendFrame(gfxIImageFrame *item)
             timeout, NS_PRIORITY_NORMAL, NS_TYPE_REPEATING_SLACK);
         }
       }
-    }
   }
  
-  if (numFrames > 0) mCurrentFrame++;
+  if (numFrames > 0) mCurrentDecodingFrameIndex++;
 
   mCurrentFrameIsFinishedDecoding = PR_FALSE;
 
@@ -187,6 +200,7 @@ NS_IMETHODIMP imgContainer::RemoveFrame(gfxIImageFrame *item)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+//******************************************************************************
 /* void endFrameDecode (in gfxIImageFrame item, in unsigned long timeout); */
 NS_IMETHODIMP imgContainer::EndFrameDecode(PRUint32 aFrameNum, PRUint32 aTimeout)
 {
@@ -194,7 +208,7 @@ NS_IMETHODIMP imgContainer::EndFrameDecode(PRUint32 aFrameNum, PRUint32 aTimeout
   mCurrentFrameIsFinishedDecoding = PR_TRUE;
 
   nsCOMPtr<gfxIImageFrame> currentFrame;
-  this->GetCurrentFrame(getter_AddRefs(currentFrame));
+  this->GetFrameAt(aFrameNum-1, getter_AddRefs(currentFrame));
   currentFrame->SetTimeout(aTimeout);
       
   if (!mTimer && mAnimating){
@@ -249,8 +263,6 @@ NS_IMETHODIMP imgContainer::StartAnimation()
   this->GetNumFrames(&numFrames);
 
   if (numFrames > 1) {
- 
-
     PRInt32 timeout;
     nsCOMPtr<gfxIImageFrame> currentFrame;
     this->GetCurrentFrame(getter_AddRefs(currentFrame));
@@ -314,69 +326,71 @@ NS_IMETHODIMP_(void) imgContainer::Notify(nsITimer *timer)
 {
   NS_ASSERTION(mTimer == timer, "uh");
 
-  if(!mAnimating)
+  if(!mAnimating || !mTimer)
     return;
   
   nsCOMPtr<gfxIImageFrame> nextFrame;
   PRInt32 timeout = 100;
-      
+  PRUint32 numFrames;
+  GetNumFrames(&numFrames);
+  if(!numFrames)
+    return;
+  
   // If we're done decoding the next frame, go ahead and display it now and reinit
   // the timer with the next frame's delay time.
-  PRUint32 previousAnimationFrame = mCurrentAnimationFrame;
+  PRUint32 previousAnimationFrameIndex = mCurrentAnimationFrameIndex;
   if (mCurrentFrameIsFinishedDecoding && !mDoneDecoding) {
     // If we have the next frame in the sequence set the timer callback from it
-    GetFrameAt(mCurrentAnimationFrame + 1, getter_AddRefs(nextFrame));
+    GetFrameAt(mCurrentAnimationFrameIndex+1, getter_AddRefs(nextFrame));
     if (nextFrame) {
       // Go to next frame in sequence
       nextFrame->GetTimeout(&timeout);
-      mCurrentAnimationFrame++;
-    } else if (mDoneDecoding) {
-      // Go back to the beginning of the loop
-      GetFrameAt(0, getter_AddRefs(nextFrame));
-      nextFrame->GetTimeout(&timeout);
-      mCurrentAnimationFrame = 0;
+      mCurrentAnimationFrameIndex++;
     } else {
       // twiddle our thumbs
-      GetFrameAt(mCurrentAnimationFrame, getter_AddRefs(nextFrame));
+      GetFrameAt(mCurrentAnimationFrameIndex, getter_AddRefs(nextFrame));
+      if(!nextFrame) return;
+      
       nextFrame->GetTimeout(&timeout);
     }
   } else if (mDoneDecoding){
-    PRUint32 numFrames;
-    GetNumFrames(&numFrames);
-    if (numFrames == mCurrentAnimationFrame) {
+    if ((numFrames-1) == mCurrentAnimationFrameIndex) {
+      // Go back to the beginning of the animation
       GetFrameAt(0, getter_AddRefs(nextFrame));
-      mCurrentAnimationFrame = 0;
+      if(!nextFrame) return;
+      
+      mCurrentAnimationFrameIndex = 0;
       nextFrame->GetTimeout(&timeout);
     } else {
-      GetFrameAt(mCurrentAnimationFrame++, getter_AddRefs(nextFrame));
+      mCurrentAnimationFrameIndex++;
+      GetFrameAt(mCurrentAnimationFrameIndex, getter_AddRefs(nextFrame));
+      if(!nextFrame) return;
+      
       nextFrame->GetTimeout(&timeout);
     }
-    mCurrentFrame = mCurrentAnimationFrame;
   } else {
-    GetFrameAt(mCurrentFrame, getter_AddRefs(nextFrame));
-    nextFrame->GetTimeout(&timeout);
+    GetFrameAt(mCurrentAnimationFrameIndex, getter_AddRefs(nextFrame));
+    if(!nextFrame) return;
   }
-  
-  //  printf("timer callback; timeout = %d, mCurrentAnimationFrame = %d\n", timeout, mCurrentAnimationFrame);
-  if(mTimer) mTimer->SetDelay(timeout);
+
+  if(timeout >= 0)
+    mTimer->SetDelay(timeout);
+  else
+    this->StopAnimation();
     
-  //XXX update the composited frame
-  if(mCompositingFrame && (previousAnimationFrame != mCurrentAnimationFrame)) {
-    nsRect dirtyRect;
+    
+  nsRect dirtyRect;
+  // update the composited frame
+  if(mCompositingFrame && (previousAnimationFrameIndex != mCurrentAnimationFrameIndex)) {
     nsCOMPtr<gfxIImageFrame> frameToUse;
-    DoComposite(getter_AddRefs(frameToUse), &dirtyRect, previousAnimationFrame, mCurrentAnimationFrame);
-    
-    /*      printf("x=%d, y=%d, w=%d, h=%d\n", dirtyRect.x, dirtyRect.y,
-            dirtyRect.width, dirtyRect.height);
-    */
+    DoComposite(getter_AddRefs(frameToUse), &dirtyRect, previousAnimationFrameIndex, mCurrentAnimationFrameIndex);
 
     // do notification to FE to draw this frame, but hand it the compositing frame
-    if (mObserver)
+    if (mObserver) {
       mObserver->FrameChanged(this, nsnull, mCompositingFrame, &dirtyRect);
-      //mObserver->FrameChanged(this, nsnull, nextFrame, &dirtyRect);
-    
-  } else {
-    nsRect dirtyRect;
+    }
+  } 
+  else {
     nextFrame->GetRect(dirtyRect);
 
     // do notification to FE to draw this frame
@@ -422,16 +436,18 @@ void imgContainer::DoComposite(gfxIImageFrame** aFrameToUse, nsRect* aDirtyRect,
   nextFrame->GetHeight(&height);
   
   switch (prevFrameDisposalMethod) {
+    default:
     case 0: // DISPOSE_NOT_SPECIFIED
     case 1: // DISPOSE_KEEP Leave previous frame in the framebuffer
       mCompositingFrame->QueryInterface(NS_GET_IID(gfxIImageFrame), (void**)aFrameToUse); // addrefs again
       //XXX blit into the composite frame too!!!
       nextFrame->DrawTo(mCompositingFrame, x, y, width, height);
-      
-      (*aDirtyRect).x = 0;
-      (*aDirtyRect).y = 0;
-      (*aDirtyRect).width = mSize.width;
-      (*aDirtyRect).height = mSize.height;
+          
+      // we're drawing only the updated frame
+      (*aDirtyRect).x = x;
+      (*aDirtyRect).y = y;
+      (*aDirtyRect).width = width;
+      (*aDirtyRect).height = height;
     break;
     
     case 2: // DISPOSE_OVERWRITE_BGCOLOR Overwrite with background color
@@ -439,10 +455,6 @@ void imgContainer::DoComposite(gfxIImageFrame** aFrameToUse, nsRect* aDirtyRect,
       gfx_color backgroundColor;
       nextFrame->GetBackgroundColor(&backgroundColor);
       //XXX Do background color overwrite of mCompositeFrame here
-      //mCompositingFrame->FillWithColor(
-      //  backgroundColor&0xFF000000, 
-      // backgroundColor&0x00FF0000, 
-      // backgroundColor&0x0000FF00);
       
       // blit next frame into this clean slate
       nextFrame->DrawTo(mCompositingFrame, x, y, width, height);
@@ -458,6 +470,10 @@ void imgContainer::DoComposite(gfxIImageFrame** aFrameToUse, nsRect* aDirtyRect,
     case 4: // DISPOSE_OVERWRITE_PREVIOUS Save-under
       //XXX Reblit previous composite into frame buffer
       // 
+      (*aDirtyRect).x = 0;
+      (*aDirtyRect).y = 0;
+      (*aDirtyRect).width = mSize.width;
+      (*aDirtyRect).height = mSize.height;
     break;
   }
   
@@ -469,3 +485,65 @@ void imgContainer::DoComposite(gfxIImageFrame** aFrameToUse, nsRect* aDirtyRect,
   //XXX if(nextFrameDisposalMethod == 4)
   // blit mPreviousCompositeFrame with this frame
 }
+//******************************************************************************
+/* void onStartDecode (in imgIRequest aRequest, in nsISupports cx); */
+NS_IMETHODIMP imgContainer::OnStartDecode(imgIRequest *aRequest, nsISupports *cx)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+//******************************************************************************
+/* void onStartContainer (in imgIRequest aRequest, in nsISupports cx, in imgIContainer aContainer); */
+NS_IMETHODIMP imgContainer::OnStartContainer(imgIRequest *aRequest, nsISupports *cx, imgIContainer *aContainer)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+//******************************************************************************
+/* void onStartFrame (in imgIRequest aRequest, in nsISupports cx, in gfxIImageFrame aFrame); */
+NS_IMETHODIMP imgContainer::OnStartFrame(imgIRequest *aRequest, nsISupports *cx, gfxIImageFrame *aFrame)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+//******************************************************************************
+/* [noscript] void onDataAvailable (in imgIRequest aRequest, in nsISupports cx, in gfxIImageFrame aFrame, [const] in nsRect aRect); */
+NS_IMETHODIMP imgContainer::OnDataAvailable(imgIRequest *aRequest, nsISupports *cx, gfxIImageFrame *aFrame, const nsRect * aRect)
+{
+  if(mCompositingFrame && !mCurrentDecodingFrameIndex) {
+    // Update the composite frame
+    PRInt32 x;
+    aFrame->GetX(&x);
+    aFrame->DrawTo(mCompositingFrame, x, aRect->y, aRect->width, aRect->height);
+  }
+    return NS_OK;
+}
+
+//******************************************************************************
+/* void onStopFrame (in imgIRequest aRequest, in nsISupports cx, in gfxIImageFrame aFrame); */
+NS_IMETHODIMP imgContainer::OnStopFrame(imgIRequest *aRequest, nsISupports *cx, gfxIImageFrame *aFrame)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+//******************************************************************************
+/* void onStopContainer (in imgIRequest aRequest, in nsISupports cx, in imgIContainer aContainer); */
+NS_IMETHODIMP imgContainer::OnStopContainer(imgIRequest *aRequest, nsISupports *cx, imgIContainer *aContainer)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+//******************************************************************************
+/* void onStopDecode (in imgIRequest aRequest, in nsISupports cx, in nsresult status, in wstring statusArg); */
+NS_IMETHODIMP imgContainer::OnStopDecode(imgIRequest *aRequest, nsISupports *cx, nsresult status, const PRUnichar *statusArg)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+//******************************************************************************
+/* [noscript] void frameChanged (in imgIContainer aContainer, in nsISupports aCX, in gfxIImageFrame aFrame, in nsRect aDirtyRect); */
+NS_IMETHODIMP imgContainer::FrameChanged(imgIContainer *aContainer, nsISupports *aCX, gfxIImageFrame *aFrame, nsRect * aDirtyRect)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
