@@ -156,9 +156,14 @@ NS_METHOD nsPopUpMenu::ShowMenu(PRInt32 aX, PRInt32 aY)
 //-------------------------------------------------------------------------
 NS_METHOD nsPopUpMenu::GetNativeData(void *& aData)
 {
-  //void * data = (void *)mMenu;
-  //aData = data;
   aData = (void *)mMenu;
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+NS_METHOD nsPopUpMenu::GetParent(nsIWidget *& aParent)
+{
+  aParent = mParent;
   return NS_OK;
 }
 

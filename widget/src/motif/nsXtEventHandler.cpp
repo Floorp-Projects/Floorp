@@ -26,13 +26,13 @@
 #include "nsRadioButton.h"
 #include "nsFileWidget.h"
 #include "nsGUIEvent.h"
+#include "nsIMenuItem.h"
 
 #include "stdio.h"
 
 #define DBG 0
 
 extern XtAppContext gAppContext;
-
 
 struct nsKeyConverter {
   int vkCode; // Platform independent key code
@@ -611,6 +611,7 @@ void nsXtWidget_FSBOk_Callback(Widget w, XtPointer p, XtPointer call_data)
   }
 }
 
+//==============================================================
 void nsXtWidget_InitNSKeyEvent(int aEventType, nsKeyEvent& aKeyEvent, Widget w, XtPointer p, XEvent * event, Boolean * b)
 {
   nsWindow * widgetWindow = (nsWindow *) p ;
@@ -629,7 +630,7 @@ void nsXtWidget_InitNSKeyEvent(int aEventType, nsKeyEvent& aKeyEvent, Widget w, 
   XtTranslateKeycode(xKeyEvent->display,xKeyEvent->keycode, xKeyEvent->state, &modout, &res); 
   res = XKeycodeToKeysym(xKeyEvent->display, xKeyEvent->keycode, 0);
 
-  aKeyEvent.keyCode   = nsConvertKey(res);
+  aKeyEvent.keyCode   = nsConvertKey(res) - 0xFF00;
   aKeyEvent.time      = xKeyEvent->time; 
   aKeyEvent.isShift   = (xKeyEvent->state & ShiftMask) ? PR_TRUE : PR_FALSE; 
   aKeyEvent.isControl = (xKeyEvent->state & ControlMask) ? PR_TRUE : PR_FALSE;
@@ -637,6 +638,7 @@ void nsXtWidget_InitNSKeyEvent(int aEventType, nsKeyEvent& aKeyEvent, Widget w, 
  printf("KEY Event type %d %d shift %d control %d alt %d \n", aEventType == NS_KEY_DOWN, aKeyEvent.keyCode, aKeyEvent.isShift, aKeyEvent.isControl, aKeyEvent.isAlt);
 }
 
+//==============================================================
 void nsXtWidget_KeyPressMask_EventHandler(Widget w, XtPointer p, XEvent * event, Boolean * b)
 {
   nsKeyEvent kevent;
@@ -645,6 +647,7 @@ void nsXtWidget_KeyPressMask_EventHandler(Widget w, XtPointer p, XEvent * event,
   widgetWindow->OnKey(NS_KEY_DOWN, kevent.keyCode, &kevent);
 }
 
+//==============================================================
 void nsXtWidget_KeyReleaseMask_EventHandler(Widget w, XtPointer p, XEvent * event, Boolean * b)
 {
   nsKeyEvent kevent;
@@ -653,9 +656,35 @@ void nsXtWidget_KeyReleaseMask_EventHandler(Widget w, XtPointer p, XEvent * even
   widgetWindow->OnKey(NS_KEY_UP, kevent.keyCode, &kevent);
 }
 
+//==============================================================
 void nsXtWidget_ResetResize_Callback(XtPointer call_data)
 {
     nsWindow* widgetWindow = (nsWindow*)call_data;
     widgetWindow->SetResized(PR_FALSE);
+}
+
+//==============================================================
+void nsXtWidget_Menu_Callback(Widget w, XtPointer p, XtPointer call_data)
+{
+
+  nsIMenuItem * menuItem = (nsIMenuItem *)p;
+  if (menuItem != NULL) {
+    nsMenuEvent mevent;
+    mevent.message = NS_MENU_SELECTED;
+    mevent.eventStructType = NS_MENU_EVENT;
+    mevent.point.x = 0;
+    mevent.point.y = 0;
+
+    menuItem->GetTarget(mevent.widget);
+    menuItem->GetCommand(mevent.mCommand);
+    mevent.mMenuItem = menuItem;
+
+    mevent.time = 0; //TBD
+
+    mevent.widget->DispatchEvent((nsGUIEvent *)&mevent);
+
+    if (DBG) fprintf(stderr, "Out nsXtWidget_ExposureMask_EventHandler\n");
+
+  }
 }
 

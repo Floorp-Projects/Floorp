@@ -44,9 +44,12 @@ EXTRA_DSO_LDOPTS+= -lXm -lXt -lX11 -lm
 endif
 
 CPPSRCS= \
+        nsMenuBar.cpp \
+        nsMenu.cpp \
+        nsMenuItem.cpp \
+        nsPopUpMenu.cpp \
         nsWidgetSupport.cpp \
         nsObject.cpp \
-	nsWindow.cpp \
 	nsComboBox.cpp \
 	nsTextHelper.cpp \
 	nsTextAreaWidget.cpp \
@@ -58,29 +61,43 @@ CPPSRCS= \
 	nsScrollbar.cpp \
 	nsButton.cpp \
 	nsAppShell.cpp \
-	nsWidgetFactory.cpp \
-	nsXtEventHandler.cpp \
 	nsLookAndFeel.cpp \
 	nsToolkit.cpp \
 	nsLabel.cpp \
 	nsDialog.cpp \
+	nsWidgetFactory.cpp \
+	nsWindow.cpp \
+	nsXtEventHandler.cpp \
         nsXtManageWidget.cpp
 
 CPP_OBJS=				\
+ ./$(OBJDIR)/nsMenuButton.o  \
+ ./$(OBJDIR)/nsPopUpMenu.o  \
+ ./$(OBJDIR)/nsToolbarItemHolder.o  \
+ ./$(OBJDIR)/nsToolbarManager.o  \
+ ./$(OBJDIR)/nsImageButton.o  \
+ ./$(OBJDIR)/nsToolBar.obj  \
+ ./$(OBJDIR)/nsWidgetSupport.o		\
+ ./$(OBJDIR)/nsObject.o		        \
  ./$(OBJDIR)/nsComboBox.o		\
+ ./$(OBJDIR)/nsFileWidget.o		\
+ ./$(OBJDIR)/nsTextHelper.o		\
  ./$(OBJDIR)/nsTextAreaWidget.o		\
+ ./$(OBJDIR)/nsTextWidget.o		\
  ./$(OBJDIR)/nsListBox.o		\
  ./$(OBJDIR)/nsRadioButton.o		\
  ./$(OBJDIR)/nsFileWidget.o		\
- ./$(OBJDIR)/nsTextHelper.o		\
- ./$(OBJDIR)/nsTextWidget.o		\
  ./$(OBJDIR)/nsCheckButton.o		\
- ./$(OBJDIR)/nsButton.o		\
+ ./$(OBJDIR)/nsScrollbar.o		\
+ ./$(OBJDIR)/nsButton.o		        \
  ./$(OBJDIR)/nsScrollbar.o		\
  ./$(OBJDIR)/nsAppShell.o		\
+ ./$(OBJDIR)/nsLookAndFeel.o		\
+ ./$(OBJDIR)/nsToolkit.o		\
+ ./$(OBJDIR)/nsLabel.o			\
+ ./$(OBJDIR)/nsDialog.o		\
  ./$(OBJDIR)/nsWidgetFactory.o		\
  ./$(OBJDIR)/nsWindow.o		\
- ./$(OBJDIR)/nsToolkit.o		\
  ./$(OBJDIR)/nsXtEventHandler.o		\
  $(NULL)
 

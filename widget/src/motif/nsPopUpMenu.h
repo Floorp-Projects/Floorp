@@ -55,6 +55,7 @@ public:
   NS_IMETHOD RemoveAll();
   NS_IMETHOD ShowMenu(PRInt32 aX, PRInt32 aY);
   NS_IMETHOD GetNativeData(void*& aData);
+  NS_IMETHOD GetParent(nsIWidget*& aParent);
 
 protected:
 

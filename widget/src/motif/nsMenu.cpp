@@ -26,6 +26,7 @@
 #include <Xm/CascadeBG.h>
 #include <Xm/SeparatoG.h>
 
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kMenuIID, NS_IMENU_IID);
 NS_IMPL_ISUPPORTS(nsMenu, kMenuIID)
 
@@ -133,6 +134,20 @@ NS_METHOD nsMenu::Create(nsIMenu *aParent, const nsString &aLabel)
   aParent->AddMenu(this);
 
   return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+NS_METHOD nsMenu::GetParent(nsISupports*& aParent)
+{
+
+  aParent = nsnull;
+  if (nsnull != mMenuParent) {
+    return mMenuParent->QueryInterface(kISupportsIID,(void**)&aParent);
+  } else if (nsnull != mMenuBarParent) {
+    return mMenuBarParent->QueryInterface(kISupportsIID,(void**)&aParent);
+  }
+
+  return NS_ERROR_FAILURE;
 }
 
 //-------------------------------------------------------------------------

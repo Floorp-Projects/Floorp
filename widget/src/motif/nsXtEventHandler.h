@@ -21,6 +21,9 @@
 
 #include "Xm/Xm.h"
 
+class nsIWidget;
+class nsIMenuItem;
+
 void nsXtWidget_KeyPressMask_EventHandler(Widget w, XtPointer p, XEvent * event, Boolean * b);
 void nsXtWidget_KeyReleaseMask_EventHandler(Widget w, XtPointer p, XEvent * event, Boolean * b);
 void nsXtWidget_ExposureMask_EventHandler(Widget w, XtPointer p, XEvent * event, Boolean * b);
@@ -52,6 +55,7 @@ void nsXtWidget_Refresh_Callback(XtPointer call_data);
 
 void nsXtWidget_ResetResize_Callback(XtPointer call_data);
 
+void nsXtWidget_Menu_Callback(Widget w, XtPointer p, XtPointer call_data);
 
 #endif  // __nsXtEventHandler.h
 

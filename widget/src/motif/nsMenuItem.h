@@ -20,13 +20,13 @@
 #define nsMenuItem_h__
 
 #include "Xm/Xm.h"
-#include "nsXtManageWidget.h"
 
 #include "nsIMenuItem.h"
 #include "nsString.h"
 
 class nsIMenu;
 class nsIPopUpMenu;
+class nsIWidget;
 
 /**
  * Native Motif MenuItem wrapper
@@ -42,17 +42,25 @@ public:
   // nsISupports
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD Create(nsIMenu * aParent, const nsString &aLabel, PRUint32 aCommand) ;
-  NS_IMETHOD Create(nsIPopUpMenu * aParent, const nsString &aLabel, PRUint32 aCommand) ;
+  NS_IMETHOD Create(nsIMenu        *aParent, 
+                    const nsString &aLabel,  
+                    PRUint32        aCommand);
+
+  NS_IMETHOD Create(nsIPopUpMenu   *aParent, 
+                    const nsString &aLabel, 
+                    PRUint32        aCommand) ;
 
   // nsIMenuBar Methods
   NS_IMETHOD GetLabel(nsString &aText);
   NS_IMETHOD GetCommand(PRUint32 & aCommand);
+  NS_IMETHOD GetTarget(nsIWidget *& aTarget);
   NS_IMETHOD GetNativeData(void*& aData);
 
 
 protected:
-  void   Create(Widget aParent, const nsString &aLabel, PRUint32 aCommand);
+  void Create(nsIWidget * aMBParent, Widget aParent,
+              const nsString &aLabel, PRUint32 aCommand);
+  nsIWidget * GetMenuBarParent(nsISupports * aParentSupports);
   Widget GetNativeParent();
 
   nsString   mLabel;
@@ -60,8 +68,10 @@ protected:
 
   nsIMenu      * mMenuParent;
   nsIPopUpMenu * mPopUpParent;
+  nsIWidget    * mTarget;
 
-  Widget mMenu;
+  Widget mMenu; // native cascade widget
+
 };
 
 #endif // nsMenuItem_h__

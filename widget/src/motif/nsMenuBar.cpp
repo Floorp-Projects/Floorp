@@ -58,14 +58,27 @@ nsMenuBar::~nsMenuBar()
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuBar::Create(nsIWidget *aParent)
 {
-  Widget parentWidget = mParent->GetNativeData(NS_NATIVE_WINDOW);
-
-  mMenu = ::XmCreateMenuBar(parentWidget, "menubar", nsnull);
-
   mParent = aParent;
   NS_ADDREF(mParent);
+
+  Widget parentWidget = (Widget)mParent->GetNativeData(NS_NATIVE_WIDGET);
+
+  Widget mainWindow = XtParent(parentWidget);
+
+  mMenu = ::XmCreateMenuBar(mainWindow, "menubar", nsnull, 0);
+  XtManageChild(mMenu);
+
   return NS_OK;
 
+}
+
+//-------------------------------------------------------------------------
+NS_METHOD nsMenuBar::GetParent(nsIWidget *&aParent)
+{
+
+  aParent = mParent;
+
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
