@@ -19,12 +19,20 @@
 * Contributor(s): pschwartau@netscape.com
 * Date: 2001-08-13
 *
-* SUMMARY: Negative test: class A should not see a global object variable
-* if the latter is defined too late (before the first instance of A is defined)
+* SUMMARY: Negative test: class A should not see a global variable
+* if the latter is defined too late. But what exactly is "too late"?
+*
+* In this test, the global variable in question is "objB". To define
+* it "too late", it is not enough to have 'var objB = etc.' as the
+* last line of the script. All var statements in top-level script
+* are "hoisted" and processed FIRST (before any assignments).
+*
+* So we define objB on the last line without any 'var'.
+* The fact that objB is an object variable is immaterial.
 */
 //-----------------------------------------------------------------------------
 var bug:String = '(none)';
-var summary:String = "Negative test: accessing object var before it's defined";
+var summary:String = "Negative test: access a variable before it is defined";
 var cnFAILURE:String = 'Expected an exception to be thrown, but none was -';
 
 
@@ -65,8 +73,11 @@ class C
 printBugNumber (bug);
 printStatus (summary);
 
-var objC = new C; // creates a new A; but this depends on objB...
-var objB = new B;
+// creates a new A; but this depends on objB...
+var objC = new C;
+ 
+// see Introduction for why we leave out the 'var'
+objB = new B;
 
 // WE SHOULD NEVER REACH THIS POINT -
 reportFailure(cnFAILURE);
