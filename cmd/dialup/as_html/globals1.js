@@ -17,8 +17,6 @@
  */
 <!--  to hide script contents from old browsers
 
-
-
 compromisePrincipals();
 enableExternalCapture(); 												// This requires UniversalBrowserWrite access
 parent.captureEvents( Event.MOUSEDOWN | Event.MOUSEUP | Event.DRAGDROP | Event.DBLCLICK );
@@ -26,7 +24,9 @@ parent.onmousedown = cancelEvent;
 parent.onmouseup = cancelEvent;
 parent.ondragdrop = cancelEvent;
 parent.ondblclick = cancelEvent;
+
 var oneStepSemaphore = false;
+var selectedISP = null;
 
 function cancelEvent( e )
 {
@@ -42,10 +42,11 @@ function cancelEvent( e )
 
 function debug( theString )
 {
-	netscape.security.PrivilegeManager.enablePrivilege( "AccountSetup" );
-
-	if ( document.vars.debugMode.value.toLowerCase() == "yes" )
-		document.setupPlugin.debug( theString );
+	java.lang.System.out.println( theString );
+//	netscape.security.PrivilegeManager.enablePrivilege( "AccountSetup" );
+//
+//	if ( document.vars.debugMode.value.toLowerCase() == "yes" )
+//		document.setupPlugin.debug( theString );
 }
 
 function GetNameValuePair( file, section, variable )
@@ -63,7 +64,7 @@ function SetNameValuePair( file, section, variable, data )
 	netscape.security.PrivilegeManager.enablePrivilege( "AccountSetup" );
 
 	parent.globals.document.setupPlugin.SetNameValuePair( file, section, variable, data );
-	debug( "\tSetNameValuePair: [" + section + "] " + variable + "=" + data );
+	//debug( "\tSetNameValuePair: [" + section + "] " + variable + "=" + data );
 }
 
 
@@ -74,7 +75,7 @@ function getConfigFolder( object )
 	var	pathName;
 	pathName = getFolder( object ) + "Config/";
 
-	debug( "getConfigFolder: " + pathName );
+	//debug( "getConfigFolder: " + pathName );
 
 	return pathName;
 }
@@ -86,7 +87,7 @@ function getAcctSetupFilename( object )
 	var file;
 	file = getConfigFolder( object ) + "ACCTSET.INI";
 
-	debug( "getAcctSetupFilename: " + file );
+	//debug( "getAcctSetupFilename: " + file );
 	return file;
 }
 
@@ -345,6 +346,11 @@ function loadUserInput()
 				document.vars.modemAreaCode.value = GetNameValuePair(userInputFile,theSection,"modemAreaCode");
 				}
 			document.vars.modemPhoneNumber.value = GetNameValuePair(userInputFile,theSection,"modemPhoneNumber");
+			
+			document.vars.altAreaCode1.value = GetNameValuePair( userInputFile, theSection, "altAreaCode1" );
+			document.vars.altAreaCode2.value = GetNameValuePair( userInputFile, theSection, "altAreaCode2" );
+			document.vars.altAreaCode3.value = GetNameValuePair( userInputFile, theSection, "altAreaCode3" );
+			
 			document.vars.cwData.value = GetNameValuePair(userInputFile,theSection,"cwData");
 			if (document.vars.cwData.value != null && document.vars.cwData.value != "")	{
 //				document.vars.prefix.cwOFF=1;

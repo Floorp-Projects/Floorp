@@ -24,15 +24,23 @@ var theToolBar = null; 					// a global pointer to our toolbar - should it exist
 var helpWindow = null;
 var preLoaded = false;
 
+var backImages 		= null;
+var helpImages		= null;
+var exitImages		= null;
+var nextImages		= null;
+var connectImages	= null;
+var doneImages		= null;
+var ffImages		= null;
+var rebootImages	= null;
 
 
 compromisePrincipals();
 
 
-
 function preLoadImages()
 {
-	if (preLoaded == false)	{
+	if ( preLoaded == false )
+	{
 		//img[0] is the normal image
 		//img[1] is the mouseover
 		//img[2] is the mousedown
@@ -143,9 +151,7 @@ function generateControls()
 	if ( formName != null && formName != "" && formName != "about:blank" )
 	{
 		if ( ( x = formName.lastIndexOf( "/" ) ) > 0 )
-		{
 			formName = formName.substring( x + 1, formName.length );
-		}
 
 		if ( editMode == true )
 		{
@@ -213,11 +219,14 @@ function generateControls()
 		}
 		else if ( editMode == true && formName == "billing.htm" )
 		{
-			showScreenOptions=true;
+			showScreenOptions = true;
 		}
 		else if ( formName == "accounts.htm" )
 		{
 			showNext = false;
+		}
+		else if ( formName == "compare.htm" )
+		{
 		}
 		else if ( formName == "connect1.htm" )
 		{
@@ -247,6 +256,13 @@ function generateControls()
 			showHelp = false;
 			if ( editMode == true )
 				showBack = true;
+		}
+		else if ( formName == "2step.htm" )
+		{
+			showNext = false;
+			showConnectServer = true;
+			if ( editMode == true )
+				showScreenOptions = true;
 		}
 		else if ( formName == "register.htm" )
 		{
@@ -679,81 +695,79 @@ function generateToolBarControls()
 		}
 
 
-		if (formName == "main.htm")	{
+		if (formName == "main.htm")
 			showScreenOptions=true;
-			}
-		else if (formName == "useAcct.htm")	{
+		else if (formName == "useAcct.htm")
 			showScreenOptions=true;
-			}
-		else if (formName == "servers.htm")	{
+		else if (formName == "servers.htm")
 			showScreenOptions=false;
-			}
-		else if (formName == "billing.htm")	{
+		else if (formName == "billing.htm")
 			showScreenOptions=true;
-			}
-		else if (formName == "connect1.htm")	{
+		else if (formName == "connect1.htm")
 				showScreenOptions=true;
-			}
-		else if (formName == "connect2.htm")	{
-			}
-		else if (formName == "register.htm")	{
-			}
-		else if (formName == "ok.htm")	{
+		else if (formName == "connect2.htm")
+			;
+		else if (formName == "register.htm")
+			;
+		else if (formName == "ok.htm")
 			showScreenOptions=true;
-			}
-		else if (formName == "okreboot.htm")	{
+		else if (formName == "okreboot.htm")
 			showScreenOptions=true;
-			}
-		else if (formName == "error.htm")	{
-			}
-		else if (formName == "later.htm")	{
-			}
-		else if (formName == "settings.htm")	{
+		else if (formName == "error.htm")
+			;
+		else if (formName == "later.htm")
+			;
+		else if (formName == "settings.htm")
 			editMode = false;
-			}
-		else if (formName == "editregs.htm")	{
+		else if (formName == "editregs.htm")
 			editMode=false;
-			}
-		else if (formName == "editisps.htm")	{
+		else if (formName == "editisps.htm")
 			editMode=false;
-			}
-		else if (formName == "aboutbox.htm")	{
-			}
-		else if (formName == "namepw.htm")		{
+		else if (formName == "aboutbox.htm")
+			;
+		else if (formName == "namepw.htm")
 			showScreenOptions=true;
-			}
-		else if ((formName == "asktty.htm")) 	{
+
+		else if (formName == "asktty.htm")
+		{
 			showScreenOptions=false;
 			editMode=false;
-			}
-		else if (formName == "askserv.htm")		{
+		}
+		else if (formName == "askserv.htm")
+		{
 			showScreenOptions=false;
 			editMode=false;
-			}
-		else if (formName == "asksvinf.htm")	{
+		}
+		else if (formName == "asksvinf.htm")
+		{
 			showScreenOptions=false;
 			editMode=false;
-			}
-		else if (formName == "showphon.htm")	{
+		}
+		else if (formName == "showphon.htm")
+		{
 			showScreenOptions=false;
 			editMode=false;
-			}
-		else if (formName == "editcc.htm")	{
+		}
+		else if (formName == "editcc.htm")
+		{
 			showScreenOptions=false;
 			editMode=false;
-			}
-		else if (formName == "addnci.htm")		{
+		}
+		else if (formName == "addnci.htm")
+		{
 			showScreenOptions=false;
 			editMode=false;
-			}
-		else if (formName == "addias.htm")		{
+		}
+		else if (formName == "addias.htm")
+		{
 			showScreenOptions=false;
 			editMode=false;
-			}
-		else if (formName == "editfour.htm")		{
+		}
+		else if (formName == "editfour.htm")
+		{
 			showScreenOptions=false;
 			editMode=false;
-			}
+		}
 
 
 		if (theToolBar && theToolBar != null && (theToolBar.location) && (theToolBar.document.layers) && !(theToolBar.closed)

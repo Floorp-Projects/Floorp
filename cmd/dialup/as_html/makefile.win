@@ -32,7 +32,7 @@ export:: $(JAVA_DESTPATH)\$(PACKAGE)
 	copy $(JAVA_DESTPATH)\$(PACKAGE)\*.class $(SIGNDIR)\$(PACKAGE)
 
 install:: $(JAVA_DESTPATH)\$(PACKAGE)
-	-rm compare.htm
+	-rm $(SIGNDIR)\compare.htm
 	-rm -rf $(SIGNDIR)\asw.arc
 	cd $(SIGNDIR) 
 #	signtool \

@@ -36,7 +36,7 @@ function page( file, section, variable )
 // the following three functions make sense if you go look at the "Next" clause in the function
 // "go" below
 
-// ¥ a "condition" is read from the Account Setup init file (typically "Config\ACCTSET.INI"),
+// * a "condition" is read from the Account Setup init file (typically "Config\ACCTSET.INI"),
 // from the section "[section]" and the given variable name, and if the given "value" matches,
 // the "file" gets loaded
 function condition( file, section, variable, value )
@@ -48,7 +48,7 @@ function condition( file, section, variable, value )
 	this.value = value;
 }
 
-// ¥ a "method" is given in "method" (a JavaScript method), and if when evaluated, it's value
+// * a "method" is given in "method" (a JavaScript method), and if when evaluated, it's value
 // is "value", the given "file" gets loaded
 function method( file, method, value )
 {
@@ -58,24 +58,19 @@ function method( file, method, value )
 	this.value = value;
 }
 
-// ¥ an "action" simply loads the given "file"
+// * an "action" simply loads the given "file"
 function action( file )
 {
 	this.type = "ACTION";
 	this.file = file;
 }
 
-
 function checkEditMode()
 {
 	if ( parent.parent && parent.parent.globals && parent.parent.globals.document.vars.editMode.value.toLowerCase() == "yes" )
-	{
 		return true;
-	}
 	else
-	{
 		return false;
-	}
 }
 
 
@@ -133,6 +128,18 @@ pages[ 53 ][ 1 ] = new method( "1step.htm", "parent.content.go( '' )", true );
 
 pages[ 54 ] = new Array();
 pages[ 54 ][ 0 ] = new page( "1step.htm", null, null );
+
+pages[ 55 ] = new Array();
+pages[ 55 ][ 0 ] = new page( "compwrap.htm", null, null );
+pages[ 55 ][ 1 ] = new method( "moreinfo.htm", "parent.content.go( '' )", true );
+
+pages[ 56 ] = new Array();
+pages[ 56 ][ 0 ] = new page( "moreinfo.htm", null, null );
+pages[ 56 ][ 1 ] = new method( "2step.htm", "parent.content.go( '' )", true );
+
+pages[ 57 ] = new Array();
+pages[ 57 ][ 0 ] = new page( "2step.htm", null, null );
+pages[ 57 ][ 1 ] = new method( "register.htm", "parent.content.go( '' )", true );
 
 pages[ 8 ] = new Array();
 pages[ 8 ][ 0 ] = new page( "connect1.htm", null, null );
@@ -375,13 +382,13 @@ function checkShowIntroFlag()
 // return the page number (according to ordinals along the path taken) of "file"
 function findPageOffset( file )
 {
-	// ¥ take off any path information preceeding file name
+	// * take off any path information preceeding file name
 	if ( ( slashPos = file.lastIndexOf( "/" ) ) > 0 )
 	{
 		file = file.substring( slashPos + 1, file.length );
 	}
 
-	// ¥ loop through all the page information and attempt to find a page name matching
+	// * loop through all the page information and attempt to find a page name matching
 	// "file"
 	var	pageNum = -1;
 	for ( var x = 0; x < pages.length; x++ )
@@ -392,26 +399,26 @@ function findPageOffset( file )
 			{
 				var theName = pages[ x ][ y ].file;
 
-				// ¥ again, remove any path
+				// * again, remove any path
 				if ( ( slashPos = theName.lastIndexOf( "/" ) ) > 0 )
 				{
 					theName = theName.substring( slashPos + 1, theName.length );
 				}
 		
-				// ¥ pages[ x ][ y ].file
+				// * pages[ x ][ y ].file
 				if ( theName == file )
 				{
-					// ¥ found it
+					// * found it
 					pageNum = x;
 				}
 			
-				// ¥ break here so we don't keep testing all the rest of the array entries after
+				// * break here so we don't keep testing all the rest of the array entries after
 				// we've found the "INFO" entry	
 				break;
 			}
 		}
 		
-		// ¥ break if we've found it
+		// * break if we've found it
 		if ( pageNum >= 0 )
 			break;
 	}
@@ -429,77 +436,63 @@ function findPageOffset( file )
 // that was pressed
 function go( msg )
 {
-	var editMode = false;
-
 	netscape.security.PrivilegeManager.enablePrivilege( "AccountSetup" );
 
+	var editMode = false;
+	var globals = null;
+	
 	if ( parent && parent.parent && parent.parent.globals )
-	{
-		editMode = ( parent.parent.globals.document.vars.editMode.value.toLowerCase() == "yes" ) ? true : false;
-	}
+		globals = parent.parent.globals;
+	
+	if ( globals != null )
+		editMode = ( globals.document.vars.editMode.value.toLowerCase() == "yes" ) ? true : false;
 
 //	var formName = new String(parent.content.location);
 	var formName = "" + parent.content.location;
 
 	if ( ( x = formName.lastIndexOf( "/" ) ) > 0 )
-	{
 		formName = formName.substring( x + 1, formName.length );
-	}
 	
 	var pageNum = findPageOffset( formName );
 	if ( pageNum >= 0 )
-	{
 		formName = pages[ pageNum ][ 0 ].file;
-	}
 
-//		var startingPageName = parent.content.document.forms[0].name;
+//	var startingPageName = parent.content.document.forms[0].name;
 	var startingPageName = formName;
-
-	var thePlatform = new String( navigator.userAgent );
-	var x = thePlatform.indexOf( "(" ) + 1;
-	var y = thePlatform.indexOf( ";", x + 1 );
-	thePlatform = thePlatform.substring( x, y );
-
+	var thePlatform = globals.getPlatform();
 	var separatorString = ",";
 
 	// process messages
 
 	if ( msg == "Next" )
 	{
-		// ¥ if something is wrong with the current page content, don't do anything
-		if ( !parent || !parent.content || !parent.content.checkData )
+		// * if something is wrong with the current page content, don't do anything
+		if ( !parent || !parent.content )
 			return;
 			
-		// ¥Êif we're currently loading, don't do anything
+		// * if we're currently loading, don't do anything
 		if ( parent.content.loading )
 			return;
 			
 		if ( editMode != true )
 		{
-			if ( parent.content.checkData() == false )
-			{
+			if ( parent.content.checkData && ( parent.content.checkData() == false ) )
 				return;
-			}
+
 			// workaround for onunload handler bugs in 4.0b2; no longer using onunload handler
 			if ( parent.content.saveData != null )
-			{
 				parent.content.saveData();
-			}
 		}
 
 		var pageName = startingPageName;
 
-		if ( parent && parent.parent && parent.parent.globals )
-		{
-			parent.parent.globals.debug("\ngo: Starting at page " +pageName);
-		}
+		if ( globals != null )
+			globals.debug("\ngo: Starting at page " +pageName);
 
-		var theFile = "";
-		if ( parent && parent.parent && parent.parent.globals )
-		{
-			theFile = parent.parent.globals.getAcctSetupFilename( self );
-		
-		}
+		var acctSetupFile = "";
+		if ( globals != null )
+			acctSetupFile = globals.getAcctSetupFilename( self );
+
 		var moved = false;
 		var active = true;
 
@@ -517,7 +510,7 @@ function go( msg )
 			{
 				if ( editMode == false && pages[ pageNum ][ x ].type == "CONDITION" )
 				{
-					var theFlag = parent.parent.globals.GetNameValuePair( theFile, pages[ pageNum ][ x ].section, 
+					var theFlag = globals.GetNameValuePair( acctSetupFile, pages[ pageNum ][ x ].section, 
 																			pages[ pageNum ][ x ].variable );
 					theFlag = theFlag.toLowerCase();
 					
@@ -542,10 +535,10 @@ function go( msg )
 				{
 					var val = eval( pages[ pageNum ][ x ].method );
 						
-					if ( parent && parent.parent && parent.parent.globals )
+					if ( globals != null )
 					{
-						parent.parent.globals.debug( "\tMethod: " + pages[ pageNum ][ x ].method );
-						parent.parent.globals.debug( "\tReturned: " + val );
+						globals.debug( "\tMethod: " + pages[ pageNum ][ x ].method );
+						globals.debug( "\tReturned: " + val );
 					}
 
 					if ( val == pages[ pageNum ][ x ].value )
@@ -558,37 +551,31 @@ function go( msg )
 
 				else if ( moved == false && pages[ pageNum ][ x ].type == "ACTION" )
 				{
-					parent.parent.globals.debug( "\tAction: " + pages[ pageNum ][ x ].file );
+					globals.debug( "\tAction: " + pages[ pageNum ][ x ].file );
 					active = false;
 					moved = true;
 					pageName = pages[ pageNum ][ x ].file;
 					break;
 				}
-
+				
 			}
 		}
 		
 		
 		if ( pageName != startingPageName )
 		{
-			if ( parent && parent.parent && parent.parent.globals )
+			if ( globals != null )
 			{
-				if ( parent.parent.globals.document.setupPlugin.NeedReboot() == true )
-				{
-					parent.parent.globals.forceReboot( pageName );
-				}
+				if ( globals.document.setupPlugin.NeedReboot() == true )
+					globals.forceReboot( pageName );
 				else
 				{
 					if ( pageName == "main.htm" )
-					{
-						parent.parent.globals.document.vars.pageHistory.value = "";
-					}
+						globals.document.vars.pageHistory.value = "";
 					else
-					{
-						parent.parent.globals.document.vars.pageHistory.value += startingPageName + separatorString;
-					}
+						globals.document.vars.pageHistory.value += startingPageName + separatorString;
 	
-					parent.parent.globals.debug( "go: Moving to page " + pageName );
+					globals.debug( "go: Moving to page " + pageName );
 	
 					pages.current = pageName;
 					parent.content.location.replace( pageName );
@@ -624,262 +611,303 @@ function go( msg )
 		}
 	}
 
-	else if (msg == "Back")	{
-		if (parent.content.loading) return;
+	else if ( msg == "Back" )
+	{
+		if ( parent.content.loading )
+			return;
 
 		// workaround for onunload handler bugs in 4.0b2; no longer using onunload handler
-		if (parent.content.saveData!=null)	{
+		if ( parent.content.saveData !=null )
 			parent.content.saveData();
-			}
+
 //		parent.content.history.back();
 
-		if (parent.content.verifyData)	{
+		if ( parent.content.verifyData )
+		{
 			var verifyFlag = parent.content.verifyData();
-			if (verifyFlag != true)	{
+			if ( verifyFlag != true )
+			{
 				generateControls();
 				return;
-				}
 			}
+		}
 
-		if (parent && parent.parent && parent.parent.globals)	{
+		if ( globals != null )
+		{
 			var historyCleanup = true;
-			while (historyCleanup == true)	{
+			while ( historyCleanup == true )
+			{
 				historyCleanup = false;
 
-				var pageHistory = parent.parent.globals.document.vars.pageHistory.value;
-				if (pageHistory!="")	{			
+				var pageHistory = globals.document.vars.pageHistory.value;
+				if ( pageHistory!="" )
+				{			
 					var pageName="";
-					x = pageHistory.lastIndexOf(separatorString);
-					pageHistory=pageHistory.substring(0,x);
-					x = pageHistory.lastIndexOf(separatorString);
-					if (x>=0)	{
-						pageName=pageHistory.substring(x+1,pageHistory.length);
-						parent.parent.globals.document.vars.pageHistory.value = pageHistory.substring(0,x+1);
-						if ((pageName == "register.htm") || (pageName == "error.htm"))	{
+					x = pageHistory.lastIndexOf( separatorString );
+					pageHistory = pageHistory.substring( 0, x );
+					x = pageHistory.lastIndexOf( separatorString );
+					if ( x >= 0 )
+					{
+						pageName = pageHistory.substring( x + 1, pageHistory.length );
+						globals.document.vars.pageHistory.value = pageHistory.substring( 0, x + 1 );
+						if ( ( pageName == "register.htm" ) || ( pageName == "error.htm" ) )
 							historyCleanup = true;
-							}
-						}
-					else	{
+					}
+					else
+					{
 						pageName=pageHistory;
-						parent.parent.globals.document.vars.pageHistory.value="";
-						}
+						globals.document.vars.pageHistory.value="";
 					}
 				}
-			parent.parent.globals.debug("go: Moving back to page " +pageName);
+			}
+			globals.debug("go: Moving back to page " + pageName );
 			
-			if (pageName == "undefined")
+			if ( pageName == "undefined" )
 				return;
 
 			pages.current = pageName;
-			if (pageNum >= 0 && pages[pageNum][0].fullhistory == true)	{
+			if ( pageNum >= 0 && pages[ pageNum ][ 0 ].fullhistory == true )
 				parent.parent.history.back();
-				}
-			else	{
-				parent.content.location.replace(pageName);
-				}
+			else
+				parent.content.location.replace( pageName );
 
-			if (helpWindow && helpWindow != null)	{
-				if (helpWindow.closed==false)	{
-					doHelp(pageName);
-					}
-				}
+			if ( helpWindow && helpWindow != null )
+			{
+				if ( helpWindow.closed == false )
+					doHelp( pageName );
 			}
-		else	{
-			if (pages[pageNum][0].fullhistory == true)	{
+		}
+		else
+		{
+			if ( pages[ pageNum ][ 0 ].fullhistory == true )
 				parent.parent.history.back();
-				}
-			else	{
+			else
 				parent.content.history.back();
-				}
-			}
 		}
-	else if (msg == "Help")	{
-		doHelp(formName);
-		}
-	else if (msg == "Show Screen")	{
-		var pageNum=findPageOffset(formName);
-		if (pageNum>=0)	{
-			var section=pages[pageNum][0].section;
-			var variable=pages[pageNum][0].variable;
-			if (section!=null && section!="" && variable!=null && variable!="")	{
-				showScreenToggle=true;
-				var theFile = parent.parent.globals.getAcctSetupFilename(self);
-				var theFlag = parent.parent.globals.GetNameValuePair(theFile,section, variable);
+	}
+	else if ( msg == "Help" )
+	{
+		doHelp( formName );
+	}
+	else if ( msg == "Show Screen" )
+	{
+		var pageNum = findPageOffset( formName );
+		if ( pageNum>=0 )
+		{
+			var section = pages[ pageNum ][ 0 ].section;
+			var variable = pages[ pageNum ][ 0 ].variable;
+			if ( section != null && section!="" && variable != null && variable!="" )
+			{
+				showScreenToggle = true;
+				var acctSetupFile = globals.getAcctSetupFilename( self );
+				var theFlag = globals.GetNameValuePair( acctSetupFile, section, variable);
 				theFlag = theFlag.toLowerCase();
-				if (theFlag == "no")	theFlag="yes";
-				else			theFlag="no";
+				if ( theFlag == "no" )
+					theFlag="yes";
+				else
+					theFlag="no";
 				
-				parent.parent.SetNameValuePair(theFile,section, variable,theFlag);
-				}
+				parent.parent.SetNameValuePair( acctSetupFile, section, variable, theFlag);
 			}
 		}
-	else if (msg == "Later")	{
-		if (parent.content.go("Later") == true)	{
+	}
+	else if ( msg == "Later" )
+	{
+		if ( parent.content.go( "Later" ) == true )
+		{
 
-			if ((parent.parent.globals.document.vars.editMode.value.toLowerCase() != "yes") || (confirm("Normally, this would complete the Account Setup process and quit Communicator.  Would you like to quit now?") == true))
+			if ( ( globals.document.vars.editMode.value.toLowerCase() != "yes") || 
+					( confirm( "Normally, this would complete the Account Setup process and quit Communicator.  Would you like to quit now?" ) == true ) )
+			{
+//				parent.content.location.href = "later.htm";
+				if ( globals != null )
 				{
-//					parent.content.location.href = "later.htm";
-					if (parent && parent.parent && parent.parent.globals)	{
-						if (parent.parent.globals.document.vars.editMode.value.toLowerCase() != "yes")
-							parent.parent.globals.saveGlobalData();
-						parent.parent.globals.document.setupPlugin.QuitNavigator();
-						}
-					window.close();
+					if ( globals.document.vars.editMode.value.toLowerCase() != "yes")
+						globals.saveGlobalData();
+					globals.document.setupPlugin.QuitNavigator();
 				}
-			}
-		}
-	else if (msg == "Done")	{
-		if (parent && parent.parent && parent.parent.globals)	{
-			if (parent.parent.globals.document.vars.editMode.value.toLowerCase() != "yes")
-				parent.parent.globals.saveGlobalData();
-			if ((parent.parent.globals.document.vars.editMode.value.toLowerCase() != "yes") || (confirm("Normally, this would complete the Account Setup process and quit Communicator.  Would you like to quit now?") == true)) {	
-				parent.parent.globals.document.setupPlugin.QuitNavigator();
 				window.close();
-				}
 			}
 		}
-	else if (msg == "Exit")	{
+	}
+	else if ( msg == "Done" )
+	{
+		if ( globals != null )
+		{
+			if ( globals.document.vars.editMode.value.toLowerCase() != "yes" )
+				globals.saveGlobalData();
+			if ( ( globals.document.vars.editMode.value.toLowerCase() != "yes") || 
+					( confirm( "Normally, this would complete the Account Setup process and quit Communicator.  Would you like to quit now?") == true ) )
+			{
+				globals.document.setupPlugin.QuitNavigator();
+				window.close();
+			}
+		}
+	}
+	else if ( msg == "Exit" )
+	{
 		var	longMsgFlag = true;
 		var confirmFlag = false;
 		
-		if (formName.indexOf("main.htm")>=0)			longMsgFlag = false;
-		else if (formName.indexOf("aboutbox.htm")>=0)	longMsgFlag = false;
-		else if (formName.indexOf("error.htm")>=0)		longMsgFlag = false;
-		else if (formName.indexOf("intro/")>=0)			longMsgFlag = false;
-		else if (formName.indexOf("ipreview/")>=0)		longMsgFlag = false;
-		else if (formName.indexOf("preview/")>=0)		longMsgFlag = false;
+		if ( formName.indexOf( "main.htm" ) >= 0 )
+			longMsgFlag = false;
+		else if ( formName.indexOf( "aboutbox.htm" ) >= 0 )
+			longMsgFlag = false;
+		else if (formName.indexOf( "error.htm" ) >= 0 )
+			longMsgFlag = false;
+		else if (formName.indexOf( "intro/" ) >= 0 )
+			longMsgFlag = false;
+		else if (formName.indexOf( "ipreview/" ) >= 0 )
+			longMsgFlag = false;
+		else if (formName.indexOf( "preview/" ) >= 0 )
+			longMsgFlag = false;
 
-		if (longMsgFlag == true)	{
-			if (parent.parent.globals.document.vars.editMode.value.toLowerCase() != "yes")	
-				confirmFlag = confirm("Your haven't finished setting up your account. Are you sure you want to quit Account Setup?");
+		if ( longMsgFlag == true )
+		{
+			if ( globals.document.vars.editMode.value.toLowerCase() != "yes" )	
+				confirmFlag = confirm( "Your haven't finished setting up your account. Are you sure you want to quit Account Setup?" );
 			else	// this is for the account setup editor
-				confirmFlag = confirm("Are you sure you want to quit the Account Setup Editor?");
-			}
-		else	{
-			confirmFlag = confirm("Quit Account Setup?");
-			}
-
-		if (confirmFlag == true)	{
-			if (parent && parent.parent && parent.parent.globals)	{
-				parent.parent.globals.saveGlobalData();
-				parent.parent.globals.document.setupPlugin.QuitNavigator();
-				}
-			window.close();
-			}
+				confirmFlag = confirm( "Are you sure you want to quit the Account Setup Editor?" );
 		}
-	else if (msg == "Restart")	{
-		if (parent.parent.globals.document.vars.editMode.value.toLowerCase() != "yes")	{
-			parent.parent.globals.saveGlobalData();
-			parent.parent.globals.document.setupPlugin.Reboot(null);
+		else
+			confirmFlag = confirm( "Quit Account Setup?" );
+		
+		if ( confirmFlag == true )
+		{
+			if ( globals != null )
+			{
+				globals.saveGlobalData();
+				globals.document.setupPlugin.QuitNavigator();
+			}
 			window.close();
-			}
-		else	{
-			alert("Cannot reboot in edit mode.");
-			}
 		}
-	else if (msg == "About")	{
-		parent.parent.globals.document.vars.pageHistory.value += startingPageName + separatorString;
+	}
+	else if ( msg == "Restart" )
+	{
+		if ( globals.document.vars.editMode.value.toLowerCase() != "yes" )
+		{
+			globals.saveGlobalData();
+			globals.document.setupPlugin.Reboot( null );
+			window.close();
+		}
+		else
+			alert( "Cannot reboot in edit mode." );
+	}
+	else if ( msg == "About" )
+	{
+		globals.document.vars.pageHistory.value += startingPageName + separatorString;
 		pages.current = "aboutbox.htm";
-		parent.content.location.replace("aboutbox.htm");
-		}
-	else if (msg == "Setup")	{
-		parent.parent.globals.document.vars.pageHistory.value += startingPageName + separatorString;
+		parent.content.location.replace( "aboutbox.htm" );
+	}
+	else if ( msg == "Setup" )
+	{
+		globals.document.vars.pageHistory.value += startingPageName + separatorString;
 
-		var acctSetupFile = parent.parent.globals.getAcctSetupFilename(self);
-		var newPathFlag = parent.parent.globals.GetNameValuePair(acctSetupFile,"Mode Selection","ForceNew");
+		var acctSetupFile = globals.getAcctSetupFilename( self );
+		var newPathFlag = globals.GetNameValuePair( acctSetupFile, "Mode Selection", "ForceNew" );
 		newPathFlag = newPathFlag.toLowerCase();
-		var existingPathFlag = parent.parent.globals.GetNameValuePair(acctSetupFile,"Mode Selection","ForceExisting");
+		var existingPathFlag = globals.GetNameValuePair( acctSetupFile, "Mode Selection", "ForceExisting" );
 		existingPathFlag = existingPathFlag.toLowerCase();
 
 		var pageName="";
-		if (newPathFlag == "yes" && existingPathFlag != "yes")	{
+		if ( newPathFlag == "yes" && existingPathFlag != "yes")
 			pageName = "needs1.htm";
-			}
-		else if (existingPathFlag == "yes" && newPathFlag != "yes")	{
+		else if ( existingPathFlag == "yes" && newPathFlag != "yes" )
 			pageName = "useAcct.htm";
-			}
-		else	{
-			pageName = "accounts.htm";
-			}
-		parent.content.location.replace(pageName);
-		if (helpWindow && helpWindow != null)	{
-			if (helpWindow.closed==false)	{
-				doHelp(pageName);
-				}
-			}
-		}
-	else if (msg == "Edit Settings")	{
-		parent.parent.globals.document.vars.pageHistory.value += startingPageName + separatorString;
-		pages.current = "settings.htm";
-		parent.content.location.replace("../CG/docs/settings.htm");
-		}
-	else if (msg == "Manage Servers")	{
-		parent.parent.globals.document.vars.pageHistory.value += startingPageName + separatorString;
-		pages.current = "editregs.htm";
-		parent.content.location.replace("../CG/docs/editregs.htm");
-		}
-	else if (msg == "Manage Accounts")	{
-		parent.parent.globals.document.vars.pageHistory.value += startingPageName + separatorString;
-		pages.current = "editisps.htm";
-		parent.content.location.replace("../CG/docs/editisps.htm");
-		}
-	else if (msg == "Edit IAS")			{
-		if (thePlatform == "Macintosh")
-			parent.parent.globals.document.vars.pageHistory.value += "../../Tools/CG/docs/" + startingPageName + separatorString;
 		else
-			parent.parent.globals.document.vars.pageHistory.value += "../../../AccountSetupTools/CG/docs/" + startingPageName + separatorString;
+			pageName = "accounts.htm";
+		parent.content.location.replace( pageName );
+		if ( helpWindow && helpWindow != null )
+		{
+			if ( helpWindow.closed == false )
+				doHelp( pageName );
+		}
+	}
+	else if ( msg == "Edit Settings" )
+	{
+		globals.document.vars.pageHistory.value += startingPageName + separatorString;
+		pages.current = "settings.htm";
+		parent.content.location.replace( "../CG/docs/settings.htm" );
+	}
+	else if ( msg == "Manage Servers" )
+	{
+		globals.document.vars.pageHistory.value += startingPageName + separatorString;
+		pages.current = "editregs.htm";
+		parent.content.location.replace( "../CG/docs/editregs.htm" );
+	}
+	else if ( msg == "Manage Accounts" )
+	{
+		globals.document.vars.pageHistory.value += startingPageName + separatorString;
+		pages.current = "editisps.htm";
+		parent.content.location.replace( "../CG/docs/editisps.htm" );
+	}
+	else if ( msg == "Edit IAS" )
+	{
+		if ( thePlatform == "Macintosh" )
+			globals.document.vars.pageHistory.value += "../../Tools/CG/docs/" + startingPageName + separatorString;
+		else
+			globals.document.vars.pageHistory.value += "../../../AccountSetupTools/CG/docs/" + startingPageName + separatorString;
 			
 		pages.current = "addias.htm";
 		parent.content.location.replace("ias/addias.htm");
-		}
-	else if (msg == "Edit NCI")			{
+	}
+	else if ( msg == "Edit NCI" )
+	{
 		if (thePlatform == "Macintosh")
-			parent.parent.globals.document.vars.pageHistory.value += "../../Tools/CG/docs/" + startingPageName + separatorString;
+			globals.document.vars.pageHistory.value += "../../Tools/CG/docs/" + startingPageName + separatorString;
 		else
-			parent.parent.globals.document.vars.pageHistory.value += "../../../AccountSetupTools/CG/docs/" + startingPageName + separatorString;
+			globals.document.vars.pageHistory.value += "../../../AccountSetupTools/CG/docs/" + startingPageName + separatorString;
 		pages.current = "addnci.htm";
-		parent.content.location.replace("nci/addnci.htm");
-		}	
-	else if (msg == "Screen Options")	{
-		parent.parent.globals.document.vars.pageHistory.value += startingPageName + separatorString;
+		parent.content.location.replace( "nci/addnci.htm" );
+	}	
+	else if ( msg == "Screen Options" )
+	{
+		globals.document.vars.pageHistory.value += startingPageName + separatorString;
 			
-		if (formName == "namepw.htm")	{
-				pages.current = "asktty.htm";
-				parent.content.location.replace("../CG/docs/asktty.htm");
-				}
+		if ( formName == "namepw.htm" )
+		{
+			pages.current = "asktty.htm";
+			parent.content.location.replace( "../CG/docs/asktty.htm" );
+		}
 		//else if (formName == "servers.htm")	{
 		//		pages.current = "askserv.htm";
 		//		parent.content.location.replace("../CG/docs/askserv.htm");
 		//		}
-		else if (formName == "ok.htm")	{
-				pages.current = "asksvinf.htm";
-				parent.content.location.replace("../CG/docs/asksvinf.htm");
-				}
-		else if (formName == "okreboot.htm")	{
-				pages.current = "asksvinf.htm";
-				parent.content.location.replace("../CG/docs/asksvinf.htm");
-				}
-		else if (formName == "billing.htm") {
-				pages.current = "editcc.htm";
-				parent.content.location.replace("../CG/docs/editcc.htm");
-				}
-		else if (formName == "main.htm")	{
-				pages.current = "settings.htm";
-				parent.content.location.replace("../CG/docs/settings.htm");
-				}
-		else if (formName == "useAcct.htm")	{
-				pages.current = "editisps.htm";
-				parent.content.location.replace("../CG/docs/editisps.htm");
-				}
-		else if (formName == "connect1.htm") {
-				pages.current = "editregs.htm";
-				parent.content.location.replace("../CG/docs/editregs.htm");
-				}		
+		else if ( formName == "ok.htm" )
+		{
+			pages.current = "asksvinf.htm";
+			parent.content.location.replace( "../CG/docs/asksvinf.htm" );
+		}
+		else if ( formName == "okreboot.htm" )
+		{
+			pages.current = "asksvinf.htm";
+			parent.content.location.replace( "../CG/docs/asksvinf.htm" );
+		}
+		else if ( formName == "billing.htm" )
+		{
+			pages.current = "editcc.htm";
+			parent.content.location.replace( "../CG/docs/editcc.htm" );
+		}
+		else if ( formName == "main.htm" )
+		{
+			pages.current = "settings.htm";
+			parent.content.location.replace( "../CG/docs/settings.htm" );
+		}
+		else if ( formName == "useAcct.htm" )
+		{
+			pages.current = "editisps.htm";
+			parent.content.location.replace( "../CG/docs/editisps.htm" );
+		}
+		else if ( formName == "connect1.htm" )
+		{
+			pages.current = "editregs.htm";
+			parent.content.location.replace( "../CG/docs/editregs.htm" );
+		}		
 
-		}	//end screen options special casing
+	}	//end screen options special casing
 		
 	else	
-		parent.content.go(msg);
+		parent.content.go( msg );
 //	generateControls();
 }
 

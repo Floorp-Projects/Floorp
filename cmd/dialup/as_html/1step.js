@@ -23,6 +23,8 @@ var documentVars = globals.document.vars;
 
 function go( msg )
 {
+	parent.parent.globals.debug( "1step go" );
+	
 	if ( parent.parent.globals.document.vars.editMode.value == "yes" )
 		return true;
 	else
@@ -146,6 +148,8 @@ function loadData()
 
 		var intlFlag = globals.GetNameValuePair( acctSetupIni, "Mode Selection", "IntlMode" );
 		intlFlag = intlFlag.toLowerCase();
+
+		var regSource = globals.GetNameValuePair( acctSetupIni, "Mode Selection", "RegSource" );
 		
 		var localFlag = globals.GetNameValuePair( regFile, "Dial-In Configuration", "LocalMode" );
 		localFlag = localFlag.toLowerCase();
@@ -165,7 +169,7 @@ function loadData()
 		regCGI = globals.GetNameValuePair( regFile, "IP", "RegCGI" );
 		regRoot = globals.GetNameValuePair( regFile, "Configuration", "RegRoot" );
 		metadataMode = globals.GetNameValuePair( regFile, "Configuration", "MetadataMode" );
-		
+
 		if ( regCGI == null || regCGI == "" )
 		{
 			alert( "Internal problem determining the Registration Server." );
@@ -196,15 +200,18 @@ function loadData()
 		// * automatically submit form to registration server
 		//document.forms[ 0 ].submit();
 
-		reggieData = plugin.newStringArray( 7 );		// increment this # as new dialer strings are added
+		reggieData = plugin.newStringArray( 8 );		// increment this # as new dialer strings are added
 		reggieData[ 0 ] = "CST_PHONE_NUMBER=" + documentVars.modemPhoneNumber.value;
-		reggieData[ 1 ] = "REG_SOURCE=" + "APL";
+		reggieData[ 1 ] = "REG_SOURCE=" + regSource;
 		reggieData[ 2 ] = "CLIENT_LANGUAGE=" + navigator.language;
 		reggieData[ 3 ] = "CST_AREA_CODE_1=" + documentVars.modemAreaCode.value;
 		reggieData[ 4 ] = "CST_AREA_CODE_2=" + documentVars.altAreaCode1.value;
 		reggieData[ 5 ] = "CST_AREA_CODE_3=" + documentVars.altAreaCode2.value;
 		reggieData[ 6 ] = "CST_AREA_CODE_4=" + documentVars.altAreaCode3.value;
+		reggieData[ 7 ] = "CST_COUNTRY_CODE=" + "1";
 		
+		/*documentVars.countryCode.value;*/
+				
 		if ( localFlag != "yes" )
 			globals.set1StepMode( 1 );
 		var		result = plugin.GenerateComparePage( globals.getFolder( self ), regCGI, regRoot, metadataMode, reggieData );
@@ -212,7 +219,7 @@ function loadData()
 			globals.oneStepSemaphore = true;
 		
 		if ( result == true )
-			window.location.replace( "compare.htm" );
+			window.location.replace( "compwrap.htm" );
 		else
 			window.location.replace( "error.htm" );
 	}

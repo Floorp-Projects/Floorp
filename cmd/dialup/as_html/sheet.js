@@ -38,8 +38,6 @@ document.tags.P.marginRight="72";
 document.tags.P.marginBottom="-6";
 document.tags.P.marginLeft="72";
 
-
-
 //Titles of Account Setup screens
 
 document.classes.title.all.fontFamily="PrimaSans BT,Helvetica,Arial";
@@ -52,7 +50,29 @@ document.classes.title.all.marginRight="40";
 //classes.title.all.marginBottom="16";
 document.classes.title.all.marginLeft="40";
 
+document.classes.compare.all.fontFamily="PrimaSans BT,Helvetica,Arial";
+document.classes.compare.all.fontSize="12px";
+document.classes.compare.all.lineHeight="1.0";
+document.classes.compare.all.marginTop="0";
+document.classes.compare.all.marginRight="0";
+document.classes.compare.all.marginBottom="0";
+document.classes.compare.all.marginLeft="0";
 
+document.classes.comparebig.all.fontFamily="PrimaSans BT,Helvetica,Arial";
+document.classes.comparebig.all.fontSize="14px";
+document.classes.comparebig.all.lineHeight="1.0";
+document.classes.comparebig.all.marginTop="0";
+document.classes.comparebig.all.marginRight="0";
+document.classes.comparebig.all.marginBottom="0";
+document.classes.comparebig.all.marginLeft="0";
+
+document.classes.comparesmall.all.fontFamily="PrimaSans BT,Helvetica,Arial";
+document.classes.comparesmall.all.fontSize="10px";
+document.classes.comparesmall.all.lineHeight="1.0";
+document.classes.comparesmall.all.marginTop="0";
+document.classes.comparesmall.all.marginRight="0";
+document.classes.comparesmall.all.marginBottom="0";
+document.classes.comparesmall.all.marginLeft="0";
 
 //Tables (for forms inputs, etc.)
 

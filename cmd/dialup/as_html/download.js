@@ -21,12 +21,14 @@
 
 function go( msg )
 {
+	parent.parent.globals.debug( "download go" );
+	
 	netscape.security.PrivilegeManager.enablePrivilege( "AccountSetup" );
 
-	// ¥ skip if we're in edit mode
+	// * skip if we're in edit mode
 	if ( parent.parent.globals.document.vars.editMode.value != "yes" )
 	{
-		// ¥ if "RegServer" specified in ACCTSET.INI, use it
+		// * if "RegServer" specified in ACCTSET.INI, use it
 		var theFile = parent.parent.globals.getAcctSetupFilename( self );
 		var intlFlag = parent.parent.globals.GetNameValuePair( theFile, "Mode Selection", "IntlMode" );
 		intlFlag = intlFlag.toLowerCase();
@@ -38,7 +40,7 @@ function go( msg )
 		}
 		else
 		{
-			// ¥ otherwise, if multiple .IAS files exist, get list selection and determine appropriate .IAS file
+			// * otherwise, if multiple .IAS files exist, get list selection and determine appropriate .IAS file
 			var pathName = parent.parent.globals.getConfigFolder( self );
 			var theList = parent.parent.globals.document.setupPlugin.GetFolderContents( pathName,".IAS" );
 
