@@ -41,11 +41,12 @@ import javax.mail.Store;
 import javax.mail.URLName;
 
 import javax.swing.AbstractListModel;
-import javax.swing.FileType;
 import javax.swing.JFileChooser;
+import javax.swing.filechooser.FileFilter;
 //import java.awt.FileDialog;
 //import java.io.File;
 //import java.io.FilenameFilter;
+import javax.swing.JComponent;
 import javax.swing.JList;
 import javax.swing.JScrollPane;
 import javax.swing.ListModel;
@@ -68,6 +69,8 @@ import javax.swing.table.AbstractTableModel;
 
 import grendel.ui.EditHostDialog;
 import grendel.ui.Util;
+import grendel.ui.PageModel;
+import grendel.ui.PageUI;
 
 public class MailServerPrefsEditor implements PropertyEditor
 {
@@ -99,27 +102,12 @@ public class MailServerPrefsEditor implements PropertyEditor
       fValues.put(kMailDirectoryKey, "");
       fValues.put(kLeaveOnServerKey, Boolean.TRUE);
       fValues.put(kSMTPHostKey, "");
-    }
-
-    public Object getAttribute(String aAttrib) throws AttrNotFoundException {
-      Object res = fValues.get(aAttrib);
-      if (res == null) {
-        res = fLabels.getString(aAttrib);
-      }
-      if (res == null) {
-        throw new AttrNotFoundException(aAttrib);
-      }
-      return res;
-    }
-
-    public void setAttribute(String aAttrib, Object aValue) {
-      if (fValues.containsKey(aAttrib)) {
-        fValues.put(aAttrib, aValue);
-      }
+      setStore(fValues);
     }
 
     public void actionPerformed(ActionEvent aEvent) {
       String action = aEvent.getActionCommand();
+      System.out.println(action);
       if (action.equals(kNewKey)) {
         EditHostDialog hostDialog =
           new EditHostDialog(Util.GetParentFrame(fPanel), null);
@@ -130,10 +118,10 @@ public class MailServerPrefsEditor implements PropertyEditor
           fListeners.firePropertyChange(null, null, fPrefs);
         }
       } else if (action.equals(kEditKey)) {
-        AbstractCtrl c;
-        c = fPanel.getCtrlByName(kHostListKey);
+        JList c;
+        c = (JList)fPanel.getCtrlByName(kHostListKey);
 
-        URLName value = (URLName) c.getValue();
+        URLName value = (URLName)c.getSelectedValue();
         if (value != null) {
           EditHostDialog hostDialog =
             new EditHostDialog(Util.GetParentFrame(fPanel), value);
@@ -145,10 +133,10 @@ public class MailServerPrefsEditor implements PropertyEditor
           }
         }
       } else if (action.equals(kDeleteKey)) {
-        AbstractCtrl c;
-        c = fPanel.getCtrlByName(kHostListKey);
+        JList c;
+        c = (JList)fPanel.getCtrlByName(kHostListKey);
 
-        URLName value = (URLName) c.getValue();
+        URLName value = (URLName) c.getSelectedValue();
         if (value != null) {
           fHostListModel.remove(value);
           fPrefs.setStores(fHostListModel.getStores());
@@ -156,8 +144,9 @@ public class MailServerPrefsEditor implements PropertyEditor
         }
       } else if (action.equals(kChooseKey)) {
         JFileChooser chooser = new JFileChooser(fPrefs.getMailDirectory());
-        chooser.setChoosableFileTypes(new FileType[] {FileType.SharedFolder});
-        chooser.showDialog(fPanel);
+        // chooser.addChoosableFileFilter(new FileFilter[] 
+        // {FileFilter.SharedFolder});
+        chooser.showDialog(fPanel, "Okay");
       }
     }
   }
@@ -166,15 +155,11 @@ public class MailServerPrefsEditor implements PropertyEditor
     fModel = new ServerPrefsModel();
     fHostListModel = new HostListModel();
 
-    XMLNode root = null;
     URL url = getClass().getResource("PrefDialogs.xml");
     try {
-      root = xml.tree.TreeBuilder.build(url, getClass());
-      XMLNode editHost = root.getChild("dialog", "id", "serverPrefs");
+      fPanel = new PageUI(url, "id", "serverPrefs", fModel, getClass());
 
-      fPanel = new PageUI(url, editHost, fModel);
-
-      AbstractCtrl c;
+      JComponent c;
       ChangeAction ca = new ChangeAction();
 
       c = fPanel.getCtrlByName(kSMTPHostKey);
@@ -184,8 +169,8 @@ public class MailServerPrefsEditor implements PropertyEditor
       c.addPropertyChangeListener(ca);
 
       c = fPanel.getCtrlByName(kHostListKey);
-      if (c instanceof JLISTeditor) {
-        ((JLISTeditor) c).setModel(fHostListModel);
+      if (c instanceof JList) {
+        ((JList) c).setModel(fHostListModel);
       }
       c.addPropertyChangeListener(new ListListener());
 
@@ -263,9 +248,9 @@ public class MailServerPrefsEditor implements PropertyEditor
 
   class ListListener implements PropertyChangeListener {
     public void propertyChange(PropertyChangeEvent e) {
-      AbstractCtrl c;
-      c = (AbstractCtrl) e.getSource();
-      boolean enabled = c.getValue() != null;
+      JComponent c;
+      c = (JComponent)e.getSource();
+      boolean enabled = (((JList)c).getSelectedValue() != null);
 
       c = fPanel.getCtrlByName(kDeleteKey);
       c.setEnabled(enabled);
@@ -274,7 +259,6 @@ public class MailServerPrefsEditor implements PropertyEditor
       c.setEnabled(enabled);
     }
   }
-
 
   class HostListModel extends AbstractListModel {
     URLName fStores[];
@@ -354,5 +338,13 @@ public class MailServerPrefsEditor implements PropertyEditor
     public void propertyChange(PropertyChangeEvent aEvent) {
       event(aEvent);
     }
+  }
+
+  public static void main(String[] args) {
+    javax.swing.JFrame frame = new javax.swing.JFrame("Foo bar");
+    MailServerPrefsEditor ui = new MailServerPrefsEditor();
+    frame.getContentPane().add(ui.fPanel);
+    frame.pack();
+    frame.setVisible(true);
   }
 }

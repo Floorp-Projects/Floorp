@@ -58,7 +58,7 @@ public class EditHostDialog extends GeneralDialog {
 
   Hashtable fValues = null;
 
-  JPanel fPanel;
+  PageUI fPanel;
 
   EditHostModel model;
 
@@ -99,28 +99,9 @@ public class EditHostDialog extends GeneralDialog {
     setModal(true);
     model = new EditHostModel(aURL);
 
-    // use the XML parser to get the root XML node of the resource tree
-    // XMLNode root = null;
     URL url = getClass().getResource("dialogs.xml");
 
-    /*
-    try {
-      root = xml.tree.TreeBuilder.build(url, getClass());
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-
-    XMLNode editHost = root.getChild("dialog", "id", "editHost");
-
-    fPanel = new PageUI(url, editHost, model);
-    */
-    XMLPageBuilder pb = new XMLPageBuilder("id", "editHost", model);
-    try {
-      pb.buildFrom(url.openStream());
-      fPanel = pb.getComponent();
-    } catch (IOException io) {
-      System.out.println(io);
-    }
+    fPanel = new PageUI(url, "id", "editHost", model);
 
     JOptionPane actionPanel = new JOptionPane(fPanel,
                                               JOptionPane.PLAIN_MESSAGE,
@@ -130,7 +111,7 @@ public class EditHostDialog extends GeneralDialog {
 
     // XXX This is a stupid hack because PageUI doesn't to a resource lookup
     // on it's title. Bleh.
-    String title = pb.getTitle();
+    String title = fPanel.getTitle();
     if (title.charAt(0) == '$') {
       title = (String) model.getAttribute(title.substring(1));
     }
@@ -157,7 +138,7 @@ public class EditHostDialog extends GeneralDialog {
 
         if (value == JOptionPane.OK_OPTION) {
           // Grab all the values
-          // fPanel.saveAll();
+          fPanel.saveAll();
 
           String proto;
           Boolean imap = (Boolean) model.getAttribute(kIMAPRadioKey);

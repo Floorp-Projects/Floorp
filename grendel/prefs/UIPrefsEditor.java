@@ -37,20 +37,19 @@ import java.util.Hashtable;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
+import javax.swing.JList;
+import javax.swing.JComponent;
 import javax.swing.AbstractListModel;
 import javax.swing.LookAndFeel;
 import javax.swing.UIManager;
+import javax.swing.JPanel;
 
-//import netscape.orion.dialogs.AbstractCtrl;
-//import netscape.orion.dialogs.AttrNotFoundException;
-//import netscape.orion.dialogs.JLISTeditor;
-//import netscape.orion.dialogs.PageModel;
-//import netscape.orion.dialogs.PageUI;
+import grendel.ui.XMLPageBuilder;
+import grendel.ui.PageModel;
+import grendel.ui.PageUI;
 
-//import xml.tree.XMLNode;
-//import xml.tree.TreeBuilder;
-
-public class UIPrefsEditor implements PropertyEditor {
+public class UIPrefsEditor extends JPanel
+  implements PropertyEditor {
   UIPrefs fPrefs = new UIPrefs();
   PropertyChangeSupport fListeners = new PropertyChangeSupport(this);
 
@@ -68,23 +67,7 @@ public class UIPrefsEditor implements PropertyEditor {
   class UIPrefsModel extends PageModel {
     public UIPrefsModel() {
       fValues = new Hashtable();
-    }
-
-    public Object getAttribute(String aAttrib) throws AttrNotFoundException {
-      Object res = fValues.get(aAttrib);
-      if (res == null) {
-        res = fLabels.getString(aAttrib);
-      }
-      if (res == null) {
-        throw new AttrNotFoundException(aAttrib);
-      }
-      return res;
-    }
-
-    public void setAttribute(String aAttrib, Object aValue) {
-      if (fValues.containsKey(aAttrib)) {
-        fValues.put(aAttrib, aValue);
-      }
+      setStore(fValues);
     }
 
     public void actionPerformed(ActionEvent aEvent) {
@@ -94,25 +77,17 @@ public class UIPrefsEditor implements PropertyEditor {
   public UIPrefsEditor() {
     fModel = new UIPrefsModel();
 
-    XMLNode root = null;
+    // XMLNode root = null;
     URL url = getClass().getResource("PrefDialogs.xml");
-    try {
-      root = xml.tree.TreeBuilder.build(url, getClass());
-      XMLNode editHost = root.getChild("dialog", "id", "UIPrefs");
+    fPanel = new PageUI(url, "id", "UIPrefs", fModel, getClass());
 
-      fPanel = new PageUI(url, editHost, fModel);
+    JComponent c;
+    ChangeAction ca = new ChangeAction();
 
-      AbstractCtrl c;
-      ChangeAction ca = new ChangeAction();
-
-      c = fPanel.getCtrlByName(kLAFKey);
-      c.addPropertyChangeListener(ca);
-      if (c instanceof JLISTeditor) {
-        ((JLISTeditor) c).setModel(new LAFListModel());
-      }
-
-    } catch (Exception e) {
-      e.printStackTrace();
+    c = fPanel.getCtrlByName(kLAFKey);
+    c.addPropertyChangeListener(ca);
+    if (c instanceof JList) {
+      ((JList) c).setModel(new LAFListModel());
     }
   }
 
@@ -135,8 +110,8 @@ public class UIPrefsEditor implements PropertyEditor {
   public Object getValue() {
     fPanel.saveAll();
 
-    AbstractCtrl c = fPanel.getCtrlByName(kLAFKey);
-    fPrefs.setLAF((LookAndFeel) c.getValue());
+    // AbstractCtrl c = fPanel.getCtrlByName(kLAFKey);
+    // fPrefs.setLAF((LookAndFeel) c.getValue());
 
     return fPrefs;
   }
@@ -156,8 +131,8 @@ public class UIPrefsEditor implements PropertyEditor {
       UIPrefs oldPrefs = fPrefs;
       fPrefs = (UIPrefs) aValue;
 
-      AbstractCtrl c = fPanel.getCtrlByName(kLAFKey);
-      c.setValue(fPrefs.getLAF());
+      // AbstractCtrl c = fPanel.getCtrlByName(kLAFKey);
+      // c.setValue(fPrefs.getLAF());
 
       fListeners.firePropertyChange(null, oldPrefs, fPrefs);
     }
@@ -195,9 +170,9 @@ public class UIPrefsEditor implements PropertyEditor {
       fLAFs = UIManager.getAuxiliaryLookAndFeels();
       */
       fLAFs = new LookAndFeel[] {
-        new javax.swing.jlf.JLFLookAndFeel(),
-        new javax.swing.motif.MotifLookAndFeel(),
-        new javax.swing.windows.WindowsLookAndFeel()
+        new javax.swing.plaf.metal.MetalLookAndFeel(),
+          // new javax.swing.plaf.motif.MotifLookAndFeel(),
+          // new javax.swing.windows.WindowsLookAndFeel()
       };
     }
 
@@ -214,6 +189,14 @@ public class UIPrefsEditor implements PropertyEditor {
       }
       return null;
     }
+  }
+
+  public static void main(String[] args) throws Exception {
+    javax.swing.JFrame frame = new javax.swing.JFrame("Foo bar");
+    UIPrefsEditor ui = new UIPrefsEditor();
+    frame.getContentPane().add(ui.fPanel);
+    frame.pack();
+    frame.setVisible(true);
   }
 
 }

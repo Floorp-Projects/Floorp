@@ -1,6 +1,6 @@
 <xml>
 <head>
-  <link rel="stringprops" href="Labels.properties"/>
+  <link role="stringprops" href="PrefLabels.properties"/>
 </head>
 <body>
 
@@ -62,7 +62,7 @@
      insets="[5,5,0,5]"/>
 
     <input type="text" ID="mailDirectoryField" value="mailDirectoryField"
-     weightx="1" fill="horizontal" gridwidth="relative"
+     weightx="1" fill="horizontal" gridwidth="relative" columns="15"
      insets="[0,5,5,5]"/>
 
     <input type="button" ID="chooseButton" command="chooseButton"

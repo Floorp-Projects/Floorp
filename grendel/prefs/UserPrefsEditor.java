@@ -44,6 +44,13 @@ import java.util.ResourceBundle;
 //import xml.tree.XMLNode;
 //import xml.tree.TreeBuilder;
 
+import javax.swing.JComponent;
+import javax.swing.JPanel;
+
+import grendel.ui.XMLPageBuilder;
+import grendel.ui.PageModel;
+import grendel.ui.PageUI;
+
 public class UserPrefsEditor implements PropertyEditor {
   UserPrefs fPrefs = new UserPrefs();
   PropertyChangeSupport fListeners = new PropertyChangeSupport(this);
@@ -67,23 +74,7 @@ public class UserPrefsEditor implements PropertyEditor {
       fValues.put(kNameKey, "");
       fValues.put(kOrganizationKey, "");
       fValues.put(kEmailAddressKey, "");
-    }
-
-    public Object getAttribute(String aAttrib) throws AttrNotFoundException {
-      Object res = fValues.get(aAttrib);
-      if (res == null) {
-        res = fLabels.getString(aAttrib);
-      }
-      if (res == null) {
-        throw new AttrNotFoundException(aAttrib);
-      }
-      return res;
-    }
-
-    public void setAttribute(String aAttrib, Object aValue) {
-      if (fValues.containsKey(aAttrib)) {
-        fValues.put(aAttrib, aValue);
-      }
+      setStore(fValues);
     }
 
     public void actionPerformed(ActionEvent aEvent) {
@@ -92,25 +83,29 @@ public class UserPrefsEditor implements PropertyEditor {
 
   public UserPrefsEditor() {
     fModel = new UserPrefsModel();
-    XMLNode root = null;
+    // XMLNode root = null;
     URL url = getClass().getResource("PrefDialogs.xml");
     try {
-      root = xml.tree.TreeBuilder.build(url, getClass());
-      XMLNode editHost = root.getChild("dialog", "id", "userPrefs");
+      // root = xml.tree.TreeBuilder.build(url, getClass());
+      // XMLNode editHost = root.getChild("dialog", "id", "userPrefs");
+      XMLPageBuilder pb = new XMLPageBuilder("id", "userPrefs", fModel);
+      pb.setReference(getClass());
+      pb.buildFrom(url.openStream());
 
-      fPanel = new PageUI(url, editHost, fModel);
+      // fPanel = new PageUI(url, editHost, fModel);
+      fPanel = new PageUI(url, "id", "userPrefs", fModel, getClass());
 
-      AbstractCtrl c;
       ChangeAction ca = new ChangeAction();
+      Component c;
 
       c = fPanel.getCtrlByName(kNameKey);
-      c.addPropertyChangeListener(ca);
+      ((JComponent)c).addPropertyChangeListener(ca);
 
       c = fPanel.getCtrlByName(kOrganizationKey);
-      c.addPropertyChangeListener(ca);
+      ((JComponent)c).addPropertyChangeListener(ca);
 
       c = fPanel.getCtrlByName(kEmailAddressKey);
-      c.addPropertyChangeListener(ca);
+      ((JComponent)c).addPropertyChangeListener(ca);
     } catch (Exception e) {
       e.printStackTrace();
     }
@@ -133,7 +128,7 @@ public class UserPrefsEditor implements PropertyEditor {
   }
 
   public Object getValue() {
-    fPanel.saveAll();
+    // fPanel.saveAll();
 
     String name = (String) fValues.get(kNameKey);
     String org = (String) fValues.get(kOrganizationKey);
@@ -192,5 +187,13 @@ public class UserPrefsEditor implements PropertyEditor {
     public void propertyChange(PropertyChangeEvent aEvent) {
       event(aEvent);
     }
+  }
+
+  public static void main(String[] args) throws Exception {
+    javax.swing.JFrame frame = new javax.swing.JFrame("Foo bar");
+    UserPrefsEditor d = new UserPrefsEditor();
+    frame.getContentPane().add(d.fPanel);
+    frame.pack();
+    frame.setVisible(true);
   }
 }
