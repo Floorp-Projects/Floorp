@@ -816,7 +816,7 @@ listKeys(PK11SlotInfo *slot, KeyType keyType, void *pwarg)
     SECKEY_DestroyPrivateKeyList(list);
 
     if (count == 0) {
-	SECU_PrintError(progName, "no keys found");
+	fprintf(stderr, "%s: no keys found\n", progName);
 	return SECFailure;
     }
     return SECSuccess;
