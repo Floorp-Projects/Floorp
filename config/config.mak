@@ -151,10 +151,6 @@ CFLAGS = $(CFLAGS) -FR
 #//
 #//-----------------------------------------------------------------------
 
-!ifdef STANDALONE_IMAGE_LIB
-CFLAGS=$(CFLAGS) -DSTANDALONE_IMAGE_LIB
-!endif
-
 # Crash-reporting system.  http://www.fullcirclesoftware.com
 !ifdef MOZ_FULLCIRCLE
 CFLAGS=$(CFLAGS) -DMOZ_FULLCIRCLE
