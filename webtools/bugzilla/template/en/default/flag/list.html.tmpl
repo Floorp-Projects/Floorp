@@ -166,7 +166,7 @@
 
   [%# Step 2: Display flag type again (if type is multiplicable). %]
   [% FOREACH type = flag_types %]
-    [% NEXT UNLESS type.flags.size > 0 && type.is_multiplicable && type.is_active %]
+    [% NEXT UNLESS type.flags && type.flags.size > 0 && type.is_multiplicable && type.is_active %]
     [% IF !separator_displayed %]
         <tr><td colspan="3"><hr></td></tr>
         [% separator_displayed = 1 %]
