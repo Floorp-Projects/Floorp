@@ -702,26 +702,18 @@ nsFileTransport::Process(void)
                ("nsFileTransport: OPENING [this=%x %s]",
                 this, (const char*)mSpec));
         mStatus = mFileObject->Open(&mContentType, &mTotalAmount);
-        if (NS_FAILED(mStatus)) {
-            mState = CLOSING;
-            return;
-        }
-        if (mOpenObserver) {
+        if (NS_SUCCEEDED(mStatus) && mOpenObserver) {
             mStatus = mOpenObserver->OnStartRequest(this, mOpenContext);
-            if (NS_FAILED(mStatus)) {
-                mState = CLOSING;
-                return;
-            }
         }
         switch (mCommand) {
           case INITIATE_READ:
-            mState = START_READ;
+            mState = NS_FAILED(mStatus) ? END_READ : START_READ;
             break;
           case INITIATE_WRITE:
-            mState = START_WRITE;
+            mState = NS_FAILED(mStatus) ? END_WRITE : START_WRITE;
             break;
           default:
-            mState = OPENED;
+            mState = NS_FAILED(mStatus) ? CLOSING : OPENED;
             break;
         }
         break;
@@ -857,7 +849,7 @@ nsFileTransport::Process(void)
         }
         mContext = null_nsCOMPtr();
 
-        mState = OPENED;      // stay in the opened state for the next read/write request
+        mState = NS_FAILED(mStatus) ? CLOSING : OPENED;      // stay in the opened state for the next read/write request
         mCommand = NONE;
         break;
       }
@@ -964,40 +956,40 @@ nsFileTransport::Process(void)
       }
 
       case END_WRITE: {
-	PR_LOG(gFileTransportLog, PR_LOG_DEBUG,
-	       ("nsFileTransport: END_WRITE [this=%x %s] status=%x",
-		this, (const char*)mSpec, mStatus));
+        PR_LOG(gFileTransportLog, PR_LOG_DEBUG,
+               ("nsFileTransport: END_WRITE [this=%x %s] status=%x",
+                this, (const char*)mSpec, mStatus));
 
-	if (mSink) {
-	    mSink->Flush();
-	}
-	if (mBufferInputStream)
-	    mBufferInputStream = null_nsCOMPtr();
-	else if (mBuffer) {
-	    delete mBuffer;
-	    mBuffer = nsnull;
-	}
-	mSink = null_nsCOMPtr();
-	mSource = null_nsCOMPtr();
+        if (mSink) {
+            mSink->Flush();
+        }
+        if (mBufferInputStream)
+            mBufferInputStream = null_nsCOMPtr();
+        else if (mBuffer) {
+            delete mBuffer;
+            mBuffer = nsnull;
+        }
+        mSink = null_nsCOMPtr();
+        mSource = null_nsCOMPtr();
 
-	mState = OPENED;
+        mState = OPENED;
 
-	if (mObserver) {
-	    // XXX where do we get the done message?
-	    (void)mObserver->OnStopRequest(this, mContext, mStatus, nsnull);
-	    mObserver = null_nsCOMPtr();
-	}
-	if (mProgress) {
-	    // XXX fix up this message for i18n
-	    nsAutoString msg = "Wrote ";
-	    msg += (const char*)mSpec;
-	    (void)mProgress->OnStatus(this, mContext, msg.mUStr);
-	}
-	mContext = null_nsCOMPtr();
+        if (mObserver) {
+            // XXX where do we get the done message?
+            (void)mObserver->OnStopRequest(this, mContext, mStatus, nsnull);
+            mObserver = null_nsCOMPtr();
+        }
+        if (mProgress) {
+            // XXX fix up this message for i18n
+            nsAutoString msg = "Wrote ";
+            msg += (const char*)mSpec;
+            (void)mProgress->OnStatus(this, mContext, msg.mUStr);
+        }
+        mContext = null_nsCOMPtr();
 
-	mState = OPENED;      // stay in the opened state for the next read/write request
-	mCommand = NONE;
-	break;
+        mState = NS_FAILED(mStatus) ? CLOSING : OPENED;      // stay in the opened state for the next read/write request
+        mCommand = NONE;
+        break;
       }
 
       case CLOSING: {
@@ -1006,7 +998,7 @@ nsFileTransport::Process(void)
                 this, (const char*)mSpec, mStatus));
 
         if (mOpenObserver) {
-            (void)mOpenObserver->OnStopRequest(this, mOpenContext,
+            (void)mOpenObserver->OnStopRequest(this, mOpenContext, 
                                                mStatus, nsnull);  // XXX fix error message
             mOpenObserver = null_nsCOMPtr();
             mOpenContext = null_nsCOMPtr();
@@ -1016,6 +1008,7 @@ nsFileTransport::Process(void)
             NS_ASSERTION(NS_SUCCEEDED(rv), "unexpected Close failure");
             mFileObject = null_nsCOMPtr();
         }
+        mState = CLOSED;
         break;
       }
 
