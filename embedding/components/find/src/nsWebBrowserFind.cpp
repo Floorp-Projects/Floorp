@@ -751,19 +751,6 @@ nsresult nsWebBrowserFind::SearchInFrame(nsIDOMWindow* aWindow,
     rv = secMan->CheckSameOrigin(nsnull, docURI);
     if (NS_FAILED(rv)) return rv;
 
-    // if this is a different frame to last time, throw away the mTSFind
-    // and make a new one. The nsIFindAndReplace is *not* stateless;
-    // it remembers the last search offset etc.
-    nsCOMPtr<nsIDOMWindow> searchFrame = do_QueryReferent(mCurrentSearchFrame);    
-    // Get the selection controller -- we'd better do this every time,
-    // since the doc might have changed since the last time.
-    nsIDocShell *docShell = GetDocShellFromWindow(aWindow);
-    NS_ENSURE_ARG_POINTER(docShell);
-
-    nsCOMPtr<nsIPresShell> presShell;
-    docShell->GetPresShell(getter_AddRefs(presShell));
-    NS_ENSURE_ARG_POINTER(presShell);
-
     if (!mFind)
         mFind = do_CreateInstance(NS_FIND_CONTRACTID, &rv);
 
