@@ -3751,7 +3751,7 @@ DocumentViewerImpl::InstallNewPresentation()
     mWindow       = nsnull;
   }
 
-  // XXX InstallPrintPreviewListener();
+  mPrintEngine->InstallPrintPreviewListener();
 
   mPrintEngine->GetNewPresentation(mPresShell, mPresContext, mViewManager, mWindow);
 

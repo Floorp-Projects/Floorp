@@ -38,26 +38,16 @@
 
 #include "nsPrintPreviewListener.h"
 #include "nsIDOMKeyEvent.h"
+#include "nsLiteralString.h"
 
-NS_IMPL_ADDREF(nsPrintPreviewListener)
-NS_IMPL_RELEASE(nsPrintPreviewListener)
-
-NS_INTERFACE_MAP_BEGIN(nsPrintPreviewListener)
-    NS_INTERFACE_MAP_ENTRY(nsIDOMContextMenuListener)
-    NS_INTERFACE_MAP_ENTRY(nsIDOMKeyListener)
-    NS_INTERFACE_MAP_ENTRY(nsIDOMMouseListener)
-    NS_INTERFACE_MAP_ENTRY(nsIDOMMouseMotionListener)
-    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMEventListener, nsIDOMContextMenuListener)
-    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMContextMenuListener)
-NS_INTERFACE_MAP_END
+NS_IMPL_ISUPPORTS1(nsPrintPreviewListener, nsIDOMEventListener)
 
 
 //
 // nsPrintPreviewListener ctor
 //
-nsPrintPreviewListener::nsPrintPreviewListener (nsIDOMEventReceiver* aEVRec) 
-  : mEventReceiver(aEVRec),
-    mRegFlags(REG_NONE_LISTENER)
+nsPrintPreviewListener::nsPrintPreviewListener (nsIDOMEventTarget* aTarget)
+  : mEventTarget(aTarget)
 {
   NS_ADDREF_THIS();
 } // ctor
@@ -72,27 +62,17 @@ nsPrintPreviewListener::nsPrintPreviewListener (nsIDOMEventReceiver* aEVRec)
 nsresult
 nsPrintPreviewListener::AddListeners()
 {
-  if (mRegFlags != REG_NONE_LISTENER) return NS_ERROR_FAILURE;
-
-  if (mEventReceiver) {
-    nsIDOMContextMenuListener *pListener = NS_STATIC_CAST(nsIDOMContextMenuListener *, this);
-    NS_ASSERTION(pListener, "Cast can't fail!");
-
-    nsresult rv = mEventReceiver->AddEventListenerByIID(pListener, NS_GET_IID(nsIDOMContextMenuListener));
-    NS_ENSURE_SUCCESS(rv, rv);
-    mRegFlags |= REG_CONTEXTMENU_LISTENER;
-
-    rv = mEventReceiver->AddEventListenerByIID(pListener, NS_GET_IID(nsIDOMKeyListener));
-    NS_ENSURE_SUCCESS(rv, rv);
-    mRegFlags |= REG_KEY_LISTENER;
-
-    rv = mEventReceiver->AddEventListenerByIID(pListener, NS_GET_IID(nsIDOMMouseListener));
-    NS_ENSURE_SUCCESS(rv, rv);
-    mRegFlags |= REG_MOUSE_LISTENER;
-
-    rv = mEventReceiver->AddEventListenerByIID(pListener, NS_GET_IID(nsIDOMMouseMotionListener));
-    NS_ENSURE_SUCCESS(rv, rv);
-    mRegFlags |= REG_MOUSEMOTION_LISTENER;
+  if (mEventTarget) {
+    mEventTarget->AddEventListener(NS_LITERAL_STRING("click"), this, true);
+    mEventTarget->AddEventListener(NS_LITERAL_STRING("contextmenu"), this, true);
+    mEventTarget->AddEventListener(NS_LITERAL_STRING("keydown"), this, true);
+    mEventTarget->AddEventListener(NS_LITERAL_STRING("keypress"), this, true);
+    mEventTarget->AddEventListener(NS_LITERAL_STRING("keyup"), this, true);
+    mEventTarget->AddEventListener(NS_LITERAL_STRING("mousedown"), this, true);
+    mEventTarget->AddEventListener(NS_LITERAL_STRING("mousemove"), this, true);
+    mEventTarget->AddEventListener(NS_LITERAL_STRING("mouseout"), this, true);
+    mEventTarget->AddEventListener(NS_LITERAL_STRING("mouseover"), this, true);
+    mEventTarget->AddEventListener(NS_LITERAL_STRING("mouseup"), this, true);
   }
 
   return NS_OK;
@@ -108,23 +88,17 @@ nsPrintPreviewListener::AddListeners()
 nsresult 
 nsPrintPreviewListener::RemoveListeners()
 {
-  if (mEventReceiver && mRegFlags != REG_NONE_LISTENER) {
-    nsIDOMContextMenuListener *pListener = NS_STATIC_CAST(nsIDOMContextMenuListener *, this);
-    NS_ASSERTION(pListener, "Cast can't fail!");
-
-    // ignore return values, so we can try to unregister the other listeners
-    if (mRegFlags & REG_CONTEXTMENU_LISTENER) {
-      mEventReceiver->RemoveEventListenerByIID(pListener, NS_GET_IID(nsIDOMContextMenuListener));
-    }
-    if (mRegFlags & REG_KEY_LISTENER) {
-      mEventReceiver->RemoveEventListenerByIID(pListener, NS_GET_IID(nsIDOMKeyListener));
-    }
-    if (mRegFlags & REG_MOUSE_LISTENER) {
-      mEventReceiver->RemoveEventListenerByIID(pListener, NS_GET_IID(nsIDOMMouseListener));
-    }
-    if (mRegFlags & REG_MOUSEMOTION_LISTENER) {
-      mEventReceiver->RemoveEventListenerByIID(pListener, NS_GET_IID(nsIDOMMouseMotionListener));
-    }
+  if (mEventTarget) {
+    mEventTarget->RemoveEventListener(NS_LITERAL_STRING("click"), this, true);
+    mEventTarget->RemoveEventListener(NS_LITERAL_STRING("contextmenu"), this, true);
+    mEventTarget->RemoveEventListener(NS_LITERAL_STRING("keydown"), this, true);
+    mEventTarget->RemoveEventListener(NS_LITERAL_STRING("keypress"), this, true);
+    mEventTarget->RemoveEventListener(NS_LITERAL_STRING("keyup"), this, true);
+    mEventTarget->RemoveEventListener(NS_LITERAL_STRING("mousedown"), this, true);
+    mEventTarget->RemoveEventListener(NS_LITERAL_STRING("mousemove"), this, true);
+    mEventTarget->RemoveEventListener(NS_LITERAL_STRING("mouseout"), this, true);
+    mEventTarget->RemoveEventListener(NS_LITERAL_STRING("mouseover"), this, true);
+    mEventTarget->RemoveEventListener(NS_LITERAL_STRING("mouseup"), this, true);
   }
 
   return NS_OK;
@@ -166,39 +140,11 @@ static PRBool IsKeyOK(nsIDOMEvent* aEvent)
   return PR_FALSE;
 }
 
-//-------------------------------------------------------
-//
-// KeyDown
-//
-NS_IMETHODIMP nsPrintPreviewListener::KeyDown(nsIDOMEvent* aKeyEvent)         
+NS_IMETHODIMP nsPrintPreviewListener::HandleEvent(nsIDOMEvent* aKeyEvent)
 { 
   if (!IsKeyOK(aKeyEvent)) {
+    aKeyEvent->StopPropagation();
     aKeyEvent->PreventDefault(); 
   }
   return NS_OK; 
 }
-
-//-------------------------------------------------------
-//
-// KeyUp
-//
-NS_IMETHODIMP nsPrintPreviewListener::KeyUp(nsIDOMEvent* aKeyEvent)           
-{ 
-  if (!IsKeyOK(aKeyEvent)) {
-    aKeyEvent->PreventDefault(); 
-  }
-  return NS_OK; 
-}
-
-//-------------------------------------------------------
-//
-// KeyPress
-//
-NS_IMETHODIMP nsPrintPreviewListener::KeyPress(nsIDOMEvent* aKeyEvent)        
-{ 
-  if (!IsKeyOK(aKeyEvent)) {
-    aKeyEvent->PreventDefault(); 
-  }
-  return NS_OK; 
-}
-
