@@ -300,10 +300,6 @@ char* AFMFileName= aFontName.name.ToNewUTF8String(); // file we will open
   mAFMFile = fopen((const char *)AFMFileName,"r");
   Recycle(AFMFileName);
 
-
-
-  mAFMFile = fopen((const char *)AFMFileName,"r");
-
   if(nsnull != mAFMFile) {
     // create the structure to put the information in
     mPSFontInfo = new AFMFontInformation;
