@@ -18,6 +18,13 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *
+ * This Original Code has been modified by IBM Corporation. Modifications made by IBM
+ * described herein are Copyright (c) International Business Machines Corporation, 2000.
+ * Modifications to Mozilla code or documentation identified per MPL Section 3.3
+ *
+ * Date        Modified by     Description of modification
+ * 04/10/2000  IBM Corp.       Added DebugBreak() definitions for OS/2
  */
 
 #include "nsDebug.h"
@@ -36,10 +43,33 @@
 #include <stdlib.h>
 #endif
 
-#if defined(XP_UNIX) || defined(_WIN32)
+#if defined(XP_UNIX) || defined(_WIN32) || defined(XP_OS2)
 /* for abort() and getenv() */
 #include <stdlib.h>
 #endif
+
+#if defined(XP_OS2) && defined(DEBUG)
+/* Added definitions for DebugBreak() for 2 different OS/2 compilers.  Doing
+ * the int3 on purpose for Visual Age so that a developer can step over the
+ * instruction if so desired.  Not always possible if trapping due to exception
+ * handling IBM-AKR
+ */
+#define INCL_WINDIALOGS  // need for WinMessageBox
+#include <os2.h>
+
+#if defined(XP_OS2_VACPP)
+   #include <builtin.h>
+   #define DebugBreak() { _interrupt(3); }
+#elif defined(XP_OS2_EMX)
+   /* Force a trap */
+   #define DebugBreak() { int *pTrap=NULL; *pTrap = 1; }
+#else
+   #define DebugBreak()
+#endif
+
+#elif defined(XP_OS2)
+   #define DebugBreak()
+#endif /* XP_OS2 && DEBUG */
 
 #if defined(_WIN32)
 #include <windows.h>
@@ -188,6 +218,27 @@ NS_COM void nsDebug::Assertion(const char* aStr, const char* aExpr,
       }
 #endif
 
+#if defined(XP_OS2)
+      char msg[1200];
+      PR_snprintf(msg, sizeof(msg),
+                "%s\n\nClick Retry to Debug Application.\n"
+                "Click Cancel to continue running the Application.", buf); 
+      ULONG code = WinMessageBox(HWND_DESKTOP, HWND_DESKTOP, msg, 
+                                 "nsDebug::Assertion", 0,
+                                 MB_ERROR | MB_RETRYCANCEL);
+
+      /* It is possible that we are executing on a thread that doesn't have a
+       * message queue.  In that case, the message won't appear, and code will
+       * be 0xFFFF.  We'll give the user a chance to debug it by calling
+       * Break()
+       */
+      if( code == MBID_CANCEL )
+      {
+         return;
+         // If Retry, Fall Through
+      }
+#endif
+
    Break(aFile, aLine);
 }
 
@@ -266,6 +317,8 @@ NS_COM void nsDebug::Abort(const char* aFile, PRIntn aLine)
   ExitToShell();
 #elif defined(XP_UNIX)
   PR_Abort();
+#elif defined(XP_OS2)
+  DebugBreak();
 #elif defined(XP_BEOS)
   {
 #ifndef DEBUG_cls
