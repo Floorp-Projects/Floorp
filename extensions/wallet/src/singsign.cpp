@@ -403,31 +403,18 @@ si_SetNotificationPref(PRBool x)
 PRIVATE void
 si_SetSignonRememberingPref(PRBool x)
 {
-    /* do nothing if new value of pref is same as current value */
-    if (x == si_RememberSignons) {
-        return;
-    }
-
-    /* if pref is being turned off, save the current signons to a file */
-    if (x == 0) {
-        si_lock_signon_list();
-        si_SaveSignonDataLocked(PR_TRUE);
-        si_unlock_signon_list();
 #ifdef APPLE_KEYCHAIN
-            /* We no longer need the Keychain callback installed */
-            KCRemoveCallback( si_kcUPP );
-            DisposeRoutineDescriptor( si_kcUPP );
-            si_kcUPP = NULL;
-#endif
+    if (x == 0) {
+        /* We no longer need the Keychain callback installed */
+        KCRemoveCallback( si_kcUPP );
+        DisposeRoutineDescriptor( si_kcUPP );
+        si_kcUPP = NULL;
     }
+#endif
 
     /* change the pref */
     si_RememberSignons = x;
 
-    /* if pref is being turned on, load the signon file into memory */
-    if (x == 1) {
-        SI_LoadSignonData(FALSE);
-    }
 }
 
 MODULE_PRIVATE int PR_CALLBACK
@@ -448,24 +435,11 @@ si_RegisterSignonPrefCallbacks(void)
     if(first_time)
     {
         first_time = PR_FALSE;
+        SI_LoadSignonData(FALSE);
         x = SI_GetBoolPref(pref_Notified, PR_FALSE);
         si_SetNotificationPref(x);        
 
-        /*
-         * We initially want the rememberSignons pref to be TRUE so that a notification
-         * will be given the first time a signon form is sumbitted.  So that is the
-         * default value used below if we don't find the pref in the preference file.
-         *
-         * However, if the user opens the preference panel and clicks OK, a value of
-         * FALSE for the signon pref is written to the file and that will override our
-         * default of TRUE.  This will prevent the notification message from ever
-         * occurring.
-         *
-         * To get around this problem, if the signon pref is FALSE and no notification has
-         * ever been given, we will treat this as if the signon pref were TRUE.  See coding
-         * in si_GetSignonRememberinPref() that does this.
-         */
-        x = SI_GetBoolPref(pref_rememberSignons, PR_TRUE); /* see comment above */
+        x = SI_GetBoolPref(pref_rememberSignons, PR_FALSE);
         si_SetSignonRememberingPref(x);
         SI_RegisterCallback(pref_rememberSignons, si_SignonRememberingPrefChanged, NULL);
     }
@@ -491,8 +465,10 @@ si_GetSignonRememberingPref(void)
     si_RegisterSignonPrefCallbacks();
 
     /*
-     * see comment in si_RegisterSignonPrefCallbacks() for why GetNotificationPref is
-     * used in line below
+     * We initially want the rememberSignons pref to be FALSE.  But this will
+     * prevent the notification message from ever occurring.  To get around
+     * this problem, if the signon pref is FALSE and no notification has
+     * ever been given, we will treat this as if the signon pref were TRUE.
      */
     if (!si_RememberSignons && !si_GetNotificationPref()) {
         return PR_TRUE;
