@@ -132,7 +132,7 @@ function toEditor()
 	  }
 	}
 	if (toolkitCore) {
-	  toolkitCore.ShowWindowWithArgs("chrome://editor/content/EditorAppShell.xul",window,"chrome://editor/content/EditorInitPage.html");
+	  toolkitCore.ShowWindowWithArgs("chrome://editor/content/EditorAppShell.xul",null,"chrome://editor/content/EditorInitPage.html");
 	}
 }
 
@@ -146,7 +146,7 @@ function toNewTextEditorWindow()
 	    }
 	}
 	if ( core ) {
-	    core.ShowWindowWithArgs( "chrome://editor/content/TextEditorAppShell.xul", window, "chrome://editor/content/EditorInitPagePlain.html" );
+	    core.ShowWindowWithArgs( "chrome://editor/content/TextEditorAppShell.xul", null, "chrome://editor/content/EditorInitPagePlain.html" );
 	} else {
 	    dump("Error; can't create toolkitCore\n");
 	}
