@@ -42,15 +42,13 @@ PR_STATIC_CALLBACK(void) end_callback(png_structp png_ptr, png_infop info_ptr);
 
 NS_IMPL_ISUPPORTS1(nsPNGDecoder, imgIDecoder)
 
-nsPNGDecoder::nsPNGDecoder()
+nsPNGDecoder::nsPNGDecoder() :
+  mPNG(nsnull), mInfo(nsnull),
+  colorLine(nsnull), alphaLine(nsnull),
+  interlacebuf(nsnull), ibpr(0),
+  mError(PR_FALSE)
 {
   NS_INIT_ISUPPORTS();
-
-  mPNG = nsnull;
-  mInfo = nsnull;
-  colorLine = 0;
-  alphaLine = 0;
-  interlacebuf = 0;
 }
 
 nsPNGDecoder::~nsPNGDecoder()
@@ -122,28 +120,44 @@ static NS_METHOD ReadDataOut(nsIInputStream* in,
 {
   nsPNGDecoder *decoder = NS_STATIC_CAST(nsPNGDecoder*, closure);
 
-  // we need to do the setjmp here otherwise bad things will happen
-  if (setjmp(decoder->mPNG->jmpbuf)) {
-    png_destroy_read_struct(&decoder->mPNG, &decoder->mInfo, NULL);
+  if (decoder->mError) {
     *writeCount = 0;
     return NS_ERROR_FAILURE;
   }
 
-  return decoder->ProcessData((unsigned char*)fromRawSegment, count, writeCount);
-}
+  // we need to do the setjmp here otherwise bad things will happen
+  if (setjmp(decoder->mPNG->jmpbuf)) {
+    png_destroy_read_struct(&decoder->mPNG, &decoder->mInfo, NULL);
 
-nsresult nsPNGDecoder::ProcessData(unsigned char *data, PRUint32 count, PRUint32 *readCount)
-{
-  png_process_data(mPNG, mInfo, data, count);
-  *readCount = count; // we always consume all the data
+    decoder->mError = PR_TRUE;
+    *writeCount = 0;
+    return NS_ERROR_FAILURE;
+  }
+
+  png_process_data(decoder->mPNG, decoder->mInfo,
+                   NS_REINTERPRET_CAST(unsigned char *, NS_CONST_CAST(char *, fromRawSegment)), count);
+
+  *writeCount = count;
   return NS_OK;
 }
+
 
 /* unsigned long writeFrom (in nsIInputStream inStr, in unsigned long count); */
 NS_IMETHODIMP nsPNGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PRUint32 *_retval)
 {
   NS_ASSERTION(inStr, "Got a null input stream!");
-  return inStr->ReadSegments(ReadDataOut, this, count, _retval);
+
+  nsresult rv;
+
+  if (!mError)
+    rv = inStr->ReadSegments(ReadDataOut, this, count, _retval);
+
+  if (mError) {
+    *_retval = 0;
+    rv = NS_ERROR_FAILURE;
+  }
+
+  return rv;
 }
 
 
