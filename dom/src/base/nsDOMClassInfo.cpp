@@ -2247,7 +2247,7 @@ nsWindowSH::doCheckReadAccess(JSContext *cx, JSObject *obj, jsval id,
     return NS_OK;
   }
 
-  PRBool isLocation = STRING_TO_JSVAL(sLocation_id);
+  PRBool isLocation = (id == STRING_TO_JSVAL(sLocation_id));
 
   nsCOMPtr<nsISupports> native;
   wrapper->GetNative(getter_AddRefs(native));
