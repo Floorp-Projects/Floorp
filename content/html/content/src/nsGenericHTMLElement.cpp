@@ -1762,10 +1762,9 @@ nsGenericHTMLElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
 
   // Use subclass to convert enums to string.
   if (attrValue->Type() == nsAttrValue::eEnum) {
+    nsHTMLValue htmlVal(attrValue->GetEnumValue(), eHTMLUnit_Enumerated);
     if (aNameSpaceID != kNameSpaceID_None ||
-        AttributeToString(aAttribute, nsHTMLValue(attrValue->GetEnumValue(),
-                                                  eHTMLUnit_Enumerated),
-                          aResult) !=
+        AttributeToString(aAttribute, htmlVal, aResult) !=
         NS_CONTENT_ATTR_HAS_VALUE) {
       NS_NOTREACHED("no enum to string conversion found");
 
