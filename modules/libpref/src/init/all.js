@@ -41,7 +41,7 @@
 pref("startup.homepage_override_url","chrome://navigator-region/locale/region.properties");
 pref("browser.chromeURL","chrome://navigator/content/navigator.xul");
 
-pref("keyword.URL", "http://keyword.netscape.com/keyword/");
+pref("keyword.URL", "http://www.google.com/search?ie=UTF-8&oe=utf-8&q=");
 pref("keyword.enabled", false);
 pref("general.useragent.locale", "chrome://navigator/locale/navigator.properties");
 pref("general.useragent.contentlocale", "chrome://navigator-region/locale/region.properties");
