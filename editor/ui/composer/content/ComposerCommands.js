@@ -95,7 +95,6 @@ function SetupTextEditorCommands()
   
   controller.registerCommand("cmd_find",       nsFindCommand);
   controller.registerCommand("cmd_findNext",   nsFindNextCommand);
-  controller.registerCommand("cmd_replace",    nsReplaceCommand);
   controller.registerCommand("cmd_spelling",   nsSpellingCommand);
   controller.registerCommand("cmd_insertChars", nsInsertCharsCommand);
 }
@@ -605,20 +604,6 @@ var nsFindNextCommand =
 };
 
 //-----------------------------------------------------------------------------------
-var nsReplaceCommand =
-{
-  isCommandEnabled: function(aCommand, dummy)
-  {
-    return (window.editorShell && !IsInHTMLSourceMode());
-  },
-
-  doCommand: function(aCommand)
-  {
-    window.editorShell.Replace();
-  }
-};
-
-//-----------------------------------------------------------------------------------
 var nsSpellingCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
@@ -686,10 +671,9 @@ var nsHLineCommand =
               hLine.setAttribute("align", "left");
             } else if (align == 2) {
               hLine.setAttribute("align", "right");
-            } else  {
-              // Default is center
-              hLine.setAttribute("align", "center");
             }
+
+            //Note: Default is center (don't write attribute)
   	  
             var width = gPrefs.GetIntPref("editor.hrule.width");
             var percent = gPrefs.GetBoolPref("editor.hrule.width_percent");

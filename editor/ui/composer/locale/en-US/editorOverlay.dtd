@@ -101,13 +101,12 @@
 <!ENTITY editpastequotation.keybinding "v">
 <!ENTITY editStripQuotesCmd.label "Strip Quotes">
 <!ENTITY editRewrapCmd.label "Rewrap">
-<!ENTITY findCmd.label "Find...">
+<!ENTITY findCmd.label "Find and Replace...">
 <!ENTITY editfind.accesskey "f">
 <!ENTITY editfind.keybinding "f">
 <!ENTITY findAgainCmd.label "Find Again">
 <!ENTITY editfindnext.accesskey "n">
 <!ENTITY editfindnext.keybinding "g">
-<!ENTITY replaceCmd.label "Replace...">
 <!ENTITY checkSpellingCmd.label "Check Spelling">
 <!ENTITY editcheckspelling.accesskey "s">
 <!ENTITY editcheckspelling.keybinding "k">
@@ -594,6 +593,7 @@
 <!ENTITY outdentToolbarCmd.tooltip "Outdent text (move left)">
 <!ENTITY indentToolbarCmd.tooltip "Indent text (move right)">
 <!ENTITY AlignPopupButton.tooltip "Choose text alignment">
+<!ENTITY InsertPopupButton.tooltip "Insert a Link, Anchor, Image, Horizontal Line, or Table">
 <!ENTITY alignLeftButton.tooltip "Align text along left margin">
 <!ENTITY alignCenterButton.tooltip "Align text centered">
 <!ENTITY alignRightButton.tooltip "Align text along right margin">
