@@ -120,7 +120,7 @@ static int my_inflate(unsigned char* compr, PRUint32 comprLen, unsigned char* un
 CertReader::CertReader(nsIURI* aURI, nsISupports* aContext, nsPICertNotification* aObs):
   mContext(aContext),
   mURI(aURI),
-  mObserver(do_QueryInterface(aObs))
+  mObserver(aObs)
 {
 }
 
