@@ -320,26 +320,30 @@ NS_NewCSSParser(nsICSSParser** aInstancePtrResult)
 
 #ifdef CSS_REPORT_PARSE_ERRORS
 
-#define REPORT_UNEXPECTED_EOF() mScanner->ReportError(NS_LITERAL_STRING("Unexpected end of file"))
-#define REPORT_UNEXPECTED_TOKEN() ReportUnexpectedToken(mScanner,mToken,nsnull)
-#define REPORT_UNEXPECTED_TOKEN1(_reas) ReportUnexpectedToken(mScanner,mToken,_reas)
+#define REPORT_UNEXPECTED1(_err) \
+  mScanner->ReportError(_err)
+
+#define REPORT_UNEXPECTED_EOF() \
+  mScanner->ReportError(NS_LITERAL_STRING("Unexpected end of file"))
+
+#define REPORT_UNEXPECTED_TOKEN() \
+  ReportUnexpectedToken(mScanner,mToken,NS_LITERAL_STRING("Unexpected token "))
+
+#define REPORT_UNEXPECTED_TOKEN1(_reas) \
+  ReportUnexpectedToken(mScanner,mToken,_reas)
 
 static void ReportUnexpectedToken(nsCSSScanner *sc,
                                   nsCSSToken& tok,
-                                  char* reason)
+                                  const nsAReadableString& err)
 {
-  nsString err;
-  if (!reason) {
-    err.AssignWithConversion("Unexpected token ");
-  } else {
-    err.AssignWithConversion(reason);
-  }
-  tok.AppendToString(err);
-  sc->ReportError(err.GetUnicode());
+  nsAutoString error(err);
+  tok.AppendToString(error);
+  sc->ReportError(error);
 }
 
 #else
 
+#define REPORT_UNEXPECTED1(_err);
 #define REPORT_UNEXPECTED_EOF();
 #define REPORT_UNEXPECTED_TOKEN();
 #define REPORT_UNEXPECTED_TOKEN1(_reas);
@@ -801,12 +805,7 @@ PRBool CSSParserImpl::ParseAtRule(PRInt32& aErrorCode)
       return PR_TRUE;
     }
   }
-#ifdef CSS_REPORT_PARSE_ERRORS
-  nsString err;
-  err.AssignWithConversion("Unrecognized at-rule ");
-  mToken.AppendToString(err);
-  mScanner->ReportError(err.GetUnicode());
-#endif
+  REPORT_UNEXPECTED_TOKEN1(NS_LITERAL_STRING("Unrecognized at-rule "));
 
   // Skip over unsupported at rule, don't advance section
   return SkipAtRule(aErrorCode);
@@ -1031,6 +1030,7 @@ PRBool CSSParserImpl::ParseNameSpaceRule(PRInt32& aErrorCode)
 
   if (eCSSToken_Ident == mToken.mType) {
     prefix = mToken.mIdent;
+    prefix.ToLowerCase(); // always case insensitive, since stays within CSS
     if (! GetToken(aErrorCode, PR_TRUE)) {
       REPORT_UNEXPECTED_EOF();
       return PR_FALSE;
@@ -1180,8 +1180,6 @@ void CSSParserImpl::SkipRuleSet(PRInt32& aErrorCode)
   }
 }
 
-// XXX Make sure report errors before calling Skip*
-
 PRBool CSSParserImpl::PushGroup(nsICSSGroupRule* aRule)
 {
   if (! mGroupStack) {
@@ -1226,6 +1224,7 @@ PRBool CSSParserImpl::ParseRuleSet(PRInt32& aErrorCode)
   // First get the list of selectors for the rule
   SelectorList* slist = nsnull;
   if (! ParseSelectorList(aErrorCode, slist)) {
+    REPORT_UNEXPECTED1(NS_LITERAL_STRING("Ruleset ignored due to bad selector"));
     SkipRuleSet(aErrorCode);
     return PR_FALSE;
   }
@@ -1282,9 +1281,7 @@ PRBool CSSParserImpl::ParseSelectorList(PRInt32& aErrorCode,
   SelectorList* list = nsnull;
   if (! ParseSelectorGroup(aErrorCode, list)) {
     // must have at least one selector group
-#ifdef CSS_REPORT_PARSE_ERRORS
-    mScanner->ReportError(NS_LITERAL_STRING("Selector expected"));
-#endif
+    REPORT_UNEXPECTED1(NS_LITERAL_STRING("Selector expected"));
     aListHead = nsnull;
     return PR_FALSE;
   }
@@ -1443,18 +1440,15 @@ PRBool CSSParserImpl::ParseSelectorGroup(PRInt32& aErrorCode,
       weight += selector.CalcWeight();
     }
   }
-#ifdef CSS_REPORT_PARSE_ERRORS
-  if (!list)
-    mScanner->ReportError(NS_LITERAL_STRING("Selector expected"));
-#endif
+  if (!list) {
+    REPORT_UNEXPECTED1(NS_LITERAL_STRING("Selector expected"));
+  }
   if (PRUnichar(0) != combinator) { // no dangling combinators
     if (list) {
       delete list;
     }
     list = nsnull;
-#ifdef CSS_REPORT_PARSE_ERRORS
-    mScanner->ReportError(NS_LITERAL_STRING("Dangling combinator"));
-#endif
+    REPORT_UNEXPECTED1(NS_LITERAL_STRING("Dangling combinator"));
   }
   aList = list;
   if (nsnull != list) {
@@ -1549,18 +1543,13 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
       PRInt32 nameSpaceID = kNameSpaceID_Unknown;
       if (mNameSpace) {
         nsIAtom* prefix;
-        if (mCaseSensitive) {
-          prefix = NS_NewAtom(buffer);
-        }
-        else {
-          buffer.ToLowerCase();
-          prefix = NS_NewAtom(buffer);
-        }
+        buffer.ToLowerCase(); // always case insensitive, since stays within CSS
+        prefix = NS_NewAtom(buffer);
         mNameSpace->FindNameSpaceID(prefix, nameSpaceID);
         NS_IF_RELEASE(prefix);
       } // else, no delcared namespaces
       if (kNameSpaceID_Unknown == nameSpaceID) {  // unknown prefix, dump it
-        REPORT_UNEXPECTED_TOKEN1("Unknown namespace prefix ");
+        REPORT_UNEXPECTED_TOKEN1(NS_LITERAL_STRING("Unknown namespace prefix "));
         return PR_FALSE;
       }
       aSelector.SetNameSpace(nameSpaceID);
@@ -1720,7 +1709,7 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
           }
         }
         else {  // multiple pseudo elements, not legal
-          REPORT_UNEXPECTED_TOKEN1("Extra pseudo-element ");
+          REPORT_UNEXPECTED_TOKEN1(NS_LITERAL_STRING("Extra pseudo-element "));
           UngetToken();
           NS_RELEASE(pseudo);
           return PR_FALSE;
@@ -1782,18 +1771,13 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
           nameSpaceID = kNameSpaceID_Unknown;
           if (mNameSpace) {
             nsIAtom* prefix;
-            if (mCaseSensitive) {
-              prefix = NS_NewAtom(attr);
-            }
-            else {
-              attr.ToLowerCase();
-              prefix = NS_NewAtom(attr);
-            }
+            attr.ToLowerCase(); // always case insensitive, since stays within CSS
+            prefix = NS_NewAtom(attr);
             mNameSpace->FindNameSpaceID(prefix, nameSpaceID);
             NS_IF_RELEASE(prefix);
           } // else, no delcared namespaces
           if (kNameSpaceID_Unknown == nameSpaceID) {  // unknown prefix, dump it
-            REPORT_UNEXPECTED_TOKEN1("Unknown namespace prefix ");
+            REPORT_UNEXPECTED_TOKEN1(NS_LITERAL_STRING("Unknown namespace prefix "));
             return PR_FALSE;
           }
           if (! GetToken(aErrorCode, PR_FALSE)) { // premature EOF
@@ -1916,6 +1900,7 @@ CSSParserImpl::ParseDeclarationBlock(PRInt32& aErrorCode,
         count++;  // count declarations
       }
       else {
+        // XXX More error reporting here?
       	dropDeclaration = (aErrorCode == NS_CSS_PARSER_DROP_DECLARATION);
         if (!SkipDeclaration(aErrorCode, aCheckForBraces)) {
           break;
@@ -1925,9 +1910,7 @@ CSSParserImpl::ParseDeclarationBlock(PRInt32& aErrorCode,
             break;
           }
         }
-#ifdef CSS_REPORT_PARSE_ERRORS
-        mScanner->ReportError(NS_LITERAL_STRING("Declaration dropped"));
-#endif
+        REPORT_UNEXPECTED1(NS_LITERAL_STRING("Declaration dropped"));
         // Since the skipped declaration didn't end the block we parse
         // the next declaration.
       }
@@ -2117,20 +2100,14 @@ CSSParserImpl::ParseDeclaration(PRInt32& aErrorCode,
   // Map property name to it's ID and then parse the property
   nsCSSProperty propID = nsCSSProps::LookupProperty(propertyName);
   if (eCSSProperty_UNKNOWN == propID) { // unknown property
-#ifdef CSS_REPORT_PARSE_ERRORS
-    nsString err(NS_LITERAL_STRING("Unknown property "));
-    err.Append(propertyName);
-    mScanner->ReportError(err.GetUnicode());
-#endif
+    REPORT_UNEXPECTED1(NS_LITERAL_STRING("Unknown property ") +
+                       propertyName);
     return PR_FALSE;
   }
   if (! ParseProperty(aErrorCode, aDeclaration, propID, aChangeHint)) {
-#ifdef CSS_REPORT_PARSE_ERRORS
     // XXX Much better to put stuff in the value parsers instead...
-    nsString err(NS_LITERAL_STRING("Error parsing value for property "));
-    err.Append(propertyName);
-    mScanner->ReportError(err.GetUnicode());
-#endif
+    REPORT_UNEXPECTED1(NS_LITERAL_STRING("Error parsing value for property ") +
+                       propertyName);
     return PR_FALSE;
   }
 
@@ -2600,13 +2577,8 @@ PRBool CSSParserImpl::ParseAttr(PRInt32& aErrorCode, nsCSSValue& aValue)
           PRInt32 nameSpaceID = kNameSpaceID_Unknown;
           if (mNameSpace) {
             nsIAtom* prefix;
-            if (mCaseSensitive) {
-              prefix = NS_NewAtom(holdIdent);
-            }
-            else {
-              holdIdent.ToLowerCase();
-              prefix = NS_NewAtom(holdIdent);
-            }
+            holdIdent.ToLowerCase(); // always case insensitive, since stays within CSS
+            prefix = NS_NewAtom(holdIdent);
             mNameSpace->FindNameSpaceID(prefix, nameSpaceID);
             NS_IF_RELEASE(prefix);
           } // else, no delcared namespaces
@@ -2934,9 +2906,7 @@ PRBool CSSParserImpl::ParseProperty(PRInt32& aErrorCode,
   case eCSSProperty_text_shadow_x:
   case eCSSProperty_text_shadow_y:
     // The user can't use these
-#ifdef CSS_REPORT_PARSE_ERRORS
-    mScanner->ReportError(NS_LITERAL_STRING("Attempt to use inaccessible property"));
-#endif
+    REPORT_UNEXPECTED1(NS_LITERAL_STRING("Attempt to use inaccessible property"));
     return PR_FALSE;
 
   default:  // must be single property
