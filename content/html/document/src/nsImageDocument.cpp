@@ -366,12 +366,12 @@ nsImageDocument::CreateSyntheticDocument()
   }
   image->SetDocument(this, PR_FALSE, PR_TRUE);
 
-  char* src;
-  mDocumentURL->GetSpec(&src);
+  nsXPIDLCString src;
+  mDocumentURL->GetSpec(getter_Copies(src));
 
   nsString src_string; src_string.AssignWithConversion(src);
   nsHTMLValue val(src_string);
-  delete[] src;
+
   image->SetHTMLAttribute(nsHTMLAtoms::src, val, PR_FALSE);
   image->SetHTMLAttribute(nsHTMLAtoms::alt, val, PR_FALSE);
 
