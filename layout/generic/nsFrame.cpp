@@ -2070,8 +2070,9 @@ NS_IMETHODIMP nsFrame::GetOffsetFromView(nsIPresContext* aPresContext,
 // left corner, into the coordinate system of the view associated
 // with the frame.
 //
-// If there is no view associated with the frame, the offset
-// returned will always be (0,0).
+// If there is no view associated with the frame, or the view is
+// not a descendant of the frame's parent view (ex: scrolling popup menu),
+// the offset returned will be (0,0).
 
 NS_IMETHODIMP nsFrame::GetOriginToViewOffset(nsIPresContext* aPresContext,
                                              nsPoint&        aOffset,
@@ -2093,15 +2094,46 @@ NS_IMETHODIMP nsFrame::GetOriginToViewOffset(nsIPresContext* aPresContext,
     rv = GetOffsetFromView(aPresContext, offsetToParentView, &parentView);
 
     if (NS_SUCCEEDED(rv)) {
-      nsPoint viewPos;
-      rv = view->GetPosition(&viewPos.x, &viewPos.y);
+      nsPoint viewOffsetFromParent(0,0);
+      nsIView *tmpView = view;
 
-      if (NS_SUCCEEDED(rv)) {
-        aOffset = offsetToParentView - viewPos;
+      while (tmpView && tmpView != parentView) {
+        nsPoint viewPos;
 
-        if (aView)
-          *aView = view;
+        rv = tmpView->GetPosition(&viewPos.x, &viewPos.y);
+
+        if (NS_FAILED(rv))
+          return rv;
+
+        viewOffsetFromParent += viewPos;
+
+        rv = tmpView->GetParent(tmpView);
+
+        if (NS_FAILED(rv))
+          return rv;
       }
+
+#ifdef DEBUG_KIN
+      if (tmpView != parentView) {
+        // XXX: At this point, tmpView is probably null since it traversed
+        //      all the way up view's parent hierarchy and did not run across
+        //      parentView. In the future, instead of just returning an offset
+        //      of (0,0) for this case, we may want offsetToParentView to
+        //      include the offset from the parentView to the top of the
+        //      view hierarchy which would make both offsetToParentView and
+        //      viewOffsetFromParent, offsets to the global coordinate space.
+        //      We'd have to investigate any perf impact this would have before
+        //      checking in such a change, so for now we just return (0,0).
+        //      -- kin    
+        NS_WARNING("view is not a descendant of parentView!");
+      }
+#endif // DEBUG
+
+      if (tmpView == parentView)
+        aOffset = offsetToParentView - viewOffsetFromParent;
+
+      if (aView)
+        *aView = view;
     }
   }
 
