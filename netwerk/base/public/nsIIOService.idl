@@ -43,15 +43,15 @@ interface nsIURI;
 interface nsIFile;
 
 /**
- * nsIIOService provides a set of utility functions for necko.  The interface
+ * nsIIOService provides a set of network utility functions.  This interface
  * duplicates many of the nsIProtocolHandler methods in a protocol handler
- * independent way (e.g., NewURI sniffs the scheme to determine which protocol
- * handler's NewURI should be invoked).  nsIIOService also provides a set of
- * URL parsing utility functions.  These are provided to make the programmers
- * job easier and in some cases to improve performance by eliminating
- * intermediate data structures and interfaces.
+ * independent way (e.g., NewURI inspects the scheme in order to delegate
+ * creation of the new URI to the appropriate protocol handler).  nsIIOService
+ * also provides a set of URL parsing utility functions.  These are provided
+ * as a convenience to the programmer and in some cases to improve performance
+ * by eliminating intermediate data structures and interfaces.
  *
- * @status UNDER_REVIEW
+ * @status FROZEN
  */
 [scriptable, uuid(bddeda3f-9020-4d12-8c70-984ee9f7935e)]
 interface nsIIOService : nsISupports
@@ -73,10 +73,10 @@ interface nsIIOService : nsISupports
     unsigned long getProtocolFlags(in string aScheme);
 
     /**
-     * This method constructs a new URI by first determining the scheme
-     * of the URI spec, and then delegating the construction of the URI
-     * to the protocol handler for that scheme. QueryInterface can be used
-     * on the resulting URI object to obtain a more specific type of URI.
+     * This method constructs a new URI by determining the scheme of the
+     * URI spec, and then delegating the construction of the URI to the
+     * protocol handler for that scheme. QueryInterface can be used on
+     * the resulting URI object to obtain a more specific type of URI.
      *
      * @see nsIProtocolHandler::newURI
      */
@@ -117,13 +117,13 @@ interface nsIIOService : nsISupports
     attribute boolean offline;
 
     /**
-     * Checks if a port number is banned. This involves consulting a black-
-     * list of port numbers corresponding to services that may be easily
-     * exploitable. If the given port is found on the black-list, then the
-     * protocol handler (corresponding to aScheme) will be asked if it wishes
-     * to override the IO service's decision to block the port. This gives
-     * the protocol handler ultimate control over its own security policy
-     * while ensuring reasonable, default protection.
+     * Checks if a port number is banned. This involves consulting a list of
+     * unsafe ports, corresponding to network services that may be easily
+     * exploitable. If the given port is considered unsafe, then the protocol
+     * handler (corresponding to aScheme) will be asked whether it wishes to
+     * override the IO service's decision to block the port. This gives the
+     * protocol handler ultimate control over its own security policy while
+     * ensuring reasonable, default protection.
      *
      * @see nsIProtocolHandler::allowPort
      */
