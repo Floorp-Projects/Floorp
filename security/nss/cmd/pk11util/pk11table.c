@@ -1,3 +1,39 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is the Netscape security libraries.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1994-2000
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
 #include <pkcs11.h>
 #include "pk11util.h"
 
@@ -564,15 +600,13 @@ const Commands _commands[] = {
     {"C_Initialize", F_C_Initialize,
 "C_Initialize pInitArgs\n\n"
 "C_Initialize initializes the PKCS #11 library.\n"
-"  pInitArgs  if this is not NULL_PTR  it gets\n"
-"              cast to \n"
-"              and dereferenced\n",
+"  pInitArgs  if this is not NULL_PTR it gets cast to and dereferenced\n",
 	{ArgInitializeArgs, ArgNone, ArgNone, ArgNone, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_Finalize", F_C_Finalize,
-"C_Finalize pReserved \n\n"
+"C_Finalize pReserved\n\n"
 "C_Finalize indicates that an application is done with the PKCS #11 library.\n"
-" pReserved   reserved.  Should be NULL_PTR\n",
+" pReserved  reserved. Should be NULL_PTR\n",
 	{ArgInitializeArgs, ArgNone, ArgNone, ArgNone, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_GetInfo", F_C_GetInfo,
@@ -582,14 +616,13 @@ const Commands _commands[] = {
 	{ArgInfo|ArgOut,   ArgNone, ArgNone, ArgNone, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_GetFunctionList", F_C_GetFunctionList,
-"C_GetFunctionList ppFunctionList \n\n"
+"C_GetFunctionList ppFunctionList\n\n"
 "C_GetFunctionList returns the function list.\n"
-" ppFunctionList   receives pointer to\n"
-"                  function list\n",
+" ppFunctionList   receives pointer to function list\n",
 	{ArgFunctionList|ArgOut,   ArgNone, ArgNone, ArgNone, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_GetSlotList", F_C_GetSlotList,
-"C_GetSlotList tokenPresent pSlotList pulCount \n\n"
+"C_GetSlotList tokenPresent pSlotList pulCount\n\n"
 "C_GetSlotList obtains a list of slots in the system.\n"
 " tokenPresent    only slots with tokens?\n"
 " pSlotList       receives array of slot IDs\n"
@@ -620,7 +653,8 @@ const Commands _commands[] = {
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_GetMechanismInfo", F_C_GetMechanismInfo,
 "C_GetMechanismInfo slotID type pInfo\n\n"
-"C_GetMechanismInfo obtains information about a particular mechanism possibly supported by a token.\n"
+"C_GetMechanismInfo obtains information about a particular mechanism possibly\n"
+"supported by a token.\n"
 " slotID    ID of the token's slot\n"
 " type      type of mechanism\n"
 " pInfo     receives mechanism info\n",
@@ -657,7 +691,7 @@ const Commands _commands[] = {
 "C_OpenSession slotID flags phSession\n\n"
 "C_OpenSession opens a session between an application and a token.\n"
 " slotID          the slot's ID\n"
-" flags           from \n"
+" flags           from\n"
 " phSession       gets session handle\n",
 	{ArgULong, ArgULong, ArgULong|ArgOut, ArgNone, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
@@ -682,7 +716,8 @@ const Commands _commands[] = {
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_GetOperationState", F_C_GetOperationState,
 "C_GetOperationState hSession pOpState pulOpStateLen\n\n"
-"C_GetOperationState obtains the state of the cryptographic operation in a session.\n"
+"C_GetOperationState obtains the state of the cryptographic operation in a\n"
+"session.\n"
 " hSession        session's handle\n"
 " pOpState        gets state\n"
 " pulOpStateLen   gets state length\n",
@@ -690,7 +725,8 @@ const Commands _commands[] = {
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_SetOperationState", F_C_SetOperationState,
 "C_SetOperationState hSession pOpState ulOpStateLen hEncKey hAuthKey\n\n"
-"C_SetOperationState restores the state of the cryptographic operation in a session.\n"
+"C_SetOperationState restores the state of the cryptographic operation in a\n"
+"session.\n"
 " hSession        session's handle\n"
 " pOpState        holds state\n"
 " ulOpStateLen    holds state length\n"
@@ -724,7 +760,7 @@ const Commands _commands[] = {
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_CopyObject", F_C_CopyObject,
 "C_CopyObject hSession hObject pTemplate ulCount phNewObject\n\n"
-"C_CopyObject copies an object  creating a new object for the copy.\n"
+"C_CopyObject copies an object creating a new object for the copy.\n"
 " hSession      the session's handle\n"
 " hObject       the object's handle\n"
 " pTemplate     template for new object\n"
@@ -767,7 +803,8 @@ const Commands _commands[] = {
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_FindObjectsInit", F_C_FindObjectsInit,
 "C_FindObjectsInit hSession pTemplate ulCount\n\n"
-"C_FindObjectsInit initializes a search for token and session objects that match a template.\n"
+"C_FindObjectsInit initializes a search for token and session objects that\n"
+"match a template.\n"
 " hSession     the session's handle\n"
 " pTemplate    attribute values to match\n"
 " ulCount      attrs in search template\n",
@@ -781,7 +818,8 @@ const Commands _commands[] = {
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_FindObjects", F_C_FindObjects,
 "C_FindObjects hSession phObject ulMaxObjectCount pulObjectCount\n\n"
-"C_FindObjects continues a search for token and session objects that match a template  obtaining additional object handles.\n"
+"C_FindObjects continues a search for token and session objects that match\n"
+"a template obtaining additional object handles.\n"
 " hSession            session's handle\n"
 " phObject            gets obj. handles\n"
 " ulMaxObjectCount    max handles to get\n"
@@ -797,7 +835,8 @@ const Commands _commands[] = {
 	{ArgULong, ArgMechanism, ArgULong, ArgNone, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_EncryptUpdate", F_C_EncryptUpdate,
-"C_EncryptUpdate hSession pPart ulPartLen pEncryptedPart pulEncryptedPartLen\n\n"
+"C_EncryptUpdate hSession pPart ulPartLen pEncryptedPart pulEncryptedPartLen\n"
+"\n"
 "C_EncryptUpdate continues a multiple-part encryption operation.\n"
 " hSession             session's handle\n"
 " pPart                the plaintext data\n"
@@ -833,7 +872,8 @@ const Commands _commands[] = {
 	{ArgULong, ArgMechanism, ArgULong, ArgNone, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_DecryptUpdate", F_C_DecryptUpdate,
-"C_DecryptUpdate hSession pEncryptedPart ulEncryptedPartLen pPart pulPartLen\n\n"
+"C_DecryptUpdate hSession pEncryptedPart ulEncryptedPartLen pPart pulPartLen\n"
+"\n"
 "C_DecryptUpdate continues a multiple-part decryption operation.\n"
 " hSession              session's handle\n"
 " pEncryptedPart        encrypted data\n"
@@ -877,7 +917,8 @@ const Commands _commands[] = {
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_DigestKey", F_C_DigestKey,
 "C_DigestKey hSession hKey\n\n"
-"C_DigestKey continues a multi-part message-digesting operation  by digesting the value of a secret key as part of the data already digested.\n"
+"C_DigestKey continues a multi-part message-digesting operation by digesting\n"
+"the value of a secret key as part of the data already digested.\n"
 " hSession    the session's handle\n"
 " hKey        secret key to digest\n",
 	{ArgULong, ArgULong, ArgNone, ArgNone, ArgNone,
@@ -901,8 +942,10 @@ const Commands _commands[] = {
 	{ArgULong, ArgChar, ArgULong, ArgChar|ArgOut, ArgULong|ArgOut,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_SignInit", F_C_SignInit,
-"C_SignInit hSession pMechanism hKey \n\n"
-"C_SignInit initializes a signature (private key encryption operation  where the signature is (will be) an appendix to the data  and plaintext cannot be recovered from the signature.\n"
+"C_SignInit hSession pMechanism hKey\n\n"
+"C_SignInit initializes a signature (private key encryption operation where\n"
+"the signature is (will be) an appendix to the data and plaintext cannot be\n"
+"recovered from the signature.\n"
 " hSession      the session's handle\n"
 " pMechanism    the signature mechanism\n"
 " hKey          handle of signature key\n",
@@ -910,7 +953,9 @@ const Commands _commands[] = {
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_SignUpdate", F_C_SignUpdate,
 "C_SignUpdate hSession pPart ulPartLen\n\n"
-"C_SignUpdate continues a multiple-part signature operation  where the signature is (will be) an appendix to the data  and plaintext cannot be recovered from the signature.\n"
+"C_SignUpdate continues a multiple-part signature operation where the\n"
+"signature is (will be) an appendix to the data and plaintext cannot be\n"
+"recovered from the signature.\n"
 " hSession    the session's handle\n"
 " pPart       the data to sign\n"
 " ulPartLen   count of bytes to sign\n",
@@ -918,7 +963,8 @@ const Commands _commands[] = {
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_SignFinal", F_C_SignFinal,
 "C_SignFinal hSession pSignature pulSignatureLen\n\n"
-"C_SignFinal finishes a multiple-part signature operation  returning the signature.\n"
+"C_SignFinal finishes a multiple-part signature operation returning the\n"
+"signature.\n"
 " hSession          the session's handle\n"
 " pSignature        gets the signature\n"
 " pulSignatureLen   gets signature length\n",
@@ -926,7 +972,8 @@ const Commands _commands[] = {
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_SignRecoverInit", F_C_SignRecoverInit,
 "C_SignRecoverInit hSession pMechanism hKey\n\n"
-"C_SignRecoverInit initializes a signature operation  where the data can be recovered from the signature.\n"
+"C_SignRecoverInit initializes a signature operation where the data can be\n"
+"recovered from the signature.\n"
 " hSession     the session's handle\n"
 " pMechanism   the signature mechanism\n"
 " hKey         handle of the signature key\n",
@@ -934,7 +981,8 @@ const Commands _commands[] = {
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_SignRecover", F_C_SignRecover,
 "C_SignRecover hSession pData ulDataLen pSignature pulSignatureLen\n\n"
-"C_SignRecover signs data in a single operation  where the data can be recovered from the signature.\n"
+"C_SignRecover signs data in a single operation where the data can be\n"
+"recovered from the signature.\n"
 " hSession          the session's handle\n"
 " pData             the data to sign\n"
 " ulDataLen         count of bytes to sign\n"
@@ -944,7 +992,9 @@ const Commands _commands[] = {
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_Sign", F_C_Sign,
 "C_Sign hSession pData ulDataLen pSignature pulSignatureLen\n\n"
-"C_Sign signs (encrypts with private key) data in a single part  where the signature is (will be) an appendix to the data  and plaintext cannot be recovered from the signature.\n"
+"C_Sign signs (encrypts with private key) data in a single part where the\n"
+"signature is (will be) an appendix to the data and plaintext cannot be\n"
+"recovered from the signature.\n"
 " hSession          the session's handle\n"
 " pData             the data to sign\n"
 " ulDataLen         count of bytes to sign\n"
@@ -954,15 +1004,19 @@ const Commands _commands[] = {
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_VerifyInit", F_C_VerifyInit,
 "C_VerifyInit hSession pMechanism hKey\n\n"
-"C_VerifyInit initializes a verification operation  where the signature is an appendix to the data  and plaintext cannot cannot be recovered from the signature (e.g. DSA).\n"
+"C_VerifyInit initializes a verification operation where the signature is an\n"
+"appendix to the data and plaintext cannot cannot be recovered from the\n"
+"signature (e.g. DSA).\n"
 " hSession      the session's handle\n"
 " pMechanism    the verification mechanism\n"
-" hKey          verification key \n",
+" hKey          verification key\n",
 	{ArgULong, ArgMechanism, ArgULong, ArgNone, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_VerifyUpdate", F_C_VerifyUpdate,
 "C_VerifyUpdate hSession pPart ulPartLen\n\n"
-"C_VerifyUpdate continues a multiple-part verification operation  where the signature is an appendix to the data  and plaintext cannot be recovered from the signature.\n"
+"C_VerifyUpdate continues a multiple-part verification operation where the\n"
+"signature is an appendix to the data and plaintext cannot be recovered from\n"
+"the signature.\n"
 " hSession    the session's handle\n"
 " pPart       signed data\n"
 " ulPartLen   length of signed data\n",
@@ -970,7 +1024,8 @@ const Commands _commands[] = {
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_VerifyFinal", F_C_VerifyFinal,
 "C_VerifyFinal hSession pSignature ulSignatureLen\n\n"
-"C_VerifyFinal finishes a multiple-part verification operation  checking the signature.\n"
+"C_VerifyFinal finishes a multiple-part verification operation checking the\n"
+"signature.\n"
 " hSession         the session's handle\n"
 " pSignature       signature to verify\n"
 " ulSignatureLen   signature length\n",
@@ -978,7 +1033,8 @@ const Commands _commands[] = {
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_VerifyRecoverInit", F_C_VerifyRecoverInit,
 "C_VerifyRecoverInit hSession pMechanism hKey\n\n"
-"C_VerifyRecoverInit initializes a signature verification operation  where the data is recovered from the signature.\n"
+"C_VerifyRecoverInit initializes a signature verification operation where the\n"
+"data is recovered from the signature.\n"
 " hSession      the session's handle\n"
 " pMechanism    the verification mechanism\n"
 " hKey          verification key\n",
@@ -986,7 +1042,8 @@ const Commands _commands[] = {
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_VerifyRecover", F_C_VerifyRecover,
 "C_VerifyRecover hSession pSignature ulSignatureLen pData pulDataLen\n\n"
-"C_VerifyRecover verifies a signature in a single-part operation  where the data is recovered from the signature.\n"
+"C_VerifyRecover verifies a signature in a single-part operation where the\n"
+"data is recovered from the signature.\n"
 " hSession          the session's handle\n"
 " pSignature        signature to verify\n"
 " ulSignatureLen    signature length\n"
@@ -996,7 +1053,9 @@ const Commands _commands[] = {
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_Verify", F_C_Verify,
 "C_Verify hSession pData ulDataLen pSignature ulSignatureLen\n\n"
-"C_Verify verifies a signature in a single-part operation  where the signature is an appendix to the data  and plaintext cannot be recovered from the signature.\n"
+"C_Verify verifies a signature in a single-part operation where the signature\n"
+"is an appendix to the data and plaintext cannot be recovered from the\n"
+"signature.\n"
 " hSession         the session's handle\n"
 " pData            signed data\n"
 " ulDataLen        length of signed data\n"
@@ -1005,8 +1064,10 @@ const Commands _commands[] = {
 	{ArgULong, ArgChar, ArgULong, ArgChar|ArgOut, ArgULong|ArgOut,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_DigestEncryptUpdate", F_C_DigestEncryptUpdate,
-"C_DigestEncryptUpdate hSession pPart ulPartLen pEncryptedPart pulEncryptedPartLen\n\n"
-"C_DigestEncryptUpdate continues a multiple-part digesting and encryption operation.\n"
+"C_DigestEncryptUpdate hSession pPart ulPartLen pEncryptedPart \\\n"
+"    pulEncryptedPartLen\n\n"
+"C_DigestEncryptUpdate continues a multiple-part digesting and encryption\n"
+"operation.\n"
 " hSession              session's handle\n"
 " pPart                 the plaintext data\n"
 " ulPartLen             plaintext length\n"
@@ -1015,8 +1076,10 @@ const Commands _commands[] = {
 	{ArgULong, ArgChar, ArgULong, ArgChar|ArgOut, ArgULong|ArgOut,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_DecryptDigestUpdate", F_C_DecryptDigestUpdate,
-"C_DecryptDigestUpdate hSession pEncryptedPart ulEncryptedPartLen pPart pulPartLen\n\n"
-"C_DecryptDigestUpdate continues a multiple-part decryption and digesting operation.\n"
+"C_DecryptDigestUpdate hSession pEncryptedPart ulEncryptedPartLen pPart \\\n"
+"    pulPartLen\n\n"
+"C_DecryptDigestUpdate continues a multiple-part decryption and digesting\n"
+"operation.\n"
 " hSession              session's handle\n"
 " pEncryptedPart        ciphertext\n"
 " ulEncryptedPartLen    ciphertext length\n"
@@ -1025,8 +1088,10 @@ const Commands _commands[] = {
 	{ArgULong, ArgChar, ArgULong, ArgChar|ArgOut, ArgULong|ArgOut,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_SignEncryptUpdate", F_C_SignEncryptUpdate,
-"C_SignEncryptUpdate hSession pPart ulPartLen pEncryptedPart pulEncryptedPartLen\n\n"
-"C_SignEncryptUpdate continues a multiple-part signing and encryption operation.\n"
+"C_SignEncryptUpdate hSession pPart ulPartLen pEncryptedPart \\\n"
+"    pulEncryptedPartLen\n\n"
+"C_SignEncryptUpdate continues a multiple-part signing and encryption\n"
+"operation.\n"
 " hSession              session's handle\n"
 " pPart                 the plaintext data\n"
 " ulPartLen             plaintext length\n"
@@ -1035,8 +1100,10 @@ const Commands _commands[] = {
 	{ArgULong, ArgChar, ArgULong, ArgChar|ArgOut, ArgULong|ArgOut,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_DecryptVerifyUpdate", F_C_DecryptVerifyUpdate,
-"C_DecryptVerifyUpdate hSession pEncryptedPart ulEncryptedPartLen pPart pulPartLen\n\n"
-"C_DecryptVerifyUpdate continues a multiple-part decryption and verify operation.\n"
+"C_DecryptVerifyUpdate hSession pEncryptedPart ulEncryptedPartLen pPart \\\n"
+"    pulPartLen\n\n"
+"C_DecryptVerifyUpdate continues a multiple-part decryption and verify\n"
+"operation.\n"
 " hSession              session's handle\n"
 " pEncryptedPart        ciphertext\n"
 " ulEncryptedPartLen    ciphertext length\n"
@@ -1045,8 +1112,11 @@ const Commands _commands[] = {
 	{ArgULong, ArgChar, ArgULong, ArgChar|ArgOut, ArgULong|ArgOut,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_GenerateKeyPair", F_C_GenerateKeyPair,
-"C_GenerateKeyPair hSession pMechanism pPublicKeyTemplate ulPublicKeyAttributeCount pPrivateKeyTemplate ulPrivateKeyAttributeCount phPublicKey phPrivateKey \n\n"
-"C_GenerateKeyPair generates a public-key/private-key pair  creating new key objects.\n"
+"C_GenerateKeyPair hSession pMechanism pPublicKeyTemplate \\\n"
+"    ulPublicKeyAttributeCount pPrivateKeyTemplate ulPrivateKeyAttributeCount \\\n"
+"    phPublicKey phPrivateKey\n\n"
+"C_GenerateKeyPair generates a public-key/private-key pair creating new key\n"
+"objects.\n"
 " hSession                      sessionhandle\n"
 " pMechanism                    key-genmech.\n"
 " pPublicKeyTemplate            templatefor pub. key\n"
@@ -1059,8 +1129,8 @@ const Commands _commands[] = {
 						ArgAttribute|ArgArray,
 	 ArgULong, ArgULong|ArgOut, ArgULong|ArgOut, ArgNone, ArgNone }},
     {"C_GenerateKey", F_C_GenerateKey,
-"C_GenerateKey hSession pMechanism pTemplate ulCount phKey \n\n"
-"C_GenerateKey generates a secret key  creating a new key object.\n"
+"C_GenerateKey hSession pMechanism pTemplate ulCount phKey\n\n"
+"C_GenerateKey generates a secret key creating a new key object.\n"
 " hSession      the session's handle\n"
 " pMechanism    key generation mech.\n"
 " pTemplate     template for new key\n"
@@ -1071,7 +1141,7 @@ const Commands _commands[] = {
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_WrapKey", F_C_WrapKey,
 "C_WrapKey hSession pMechanism hWrappingKey hKey pWrappedKey pulWrappedKeyLen\n\n"
-"C_WrapKey wraps (i.e.  encrypts) a key.\n"
+"C_WrapKey wraps (i.e. encrypts) a key.\n"
 " hSession          the session's handle\n"
 " pMechanism        the wrapping mechanism\n"
 " hWrappingKey      wrapping key\n"
@@ -1081,8 +1151,9 @@ const Commands _commands[] = {
 	{ArgULong, ArgMechanism, ArgULong, ArgULong, ArgULong,
 	 ArgChar|ArgOut, ArgULong|ArgOut, ArgNone, ArgNone, ArgNone }},
     {"C_UnwrapKey", F_C_UnwrapKey,
-"C_UnwrapKey hSession pMechanism hUnwrappingKey pWrappedKey ulWrappedKeyLen pTemplate ulAttributeCount phKey\n\n"
-"C_UnwrapKey unwraps (decrypts) a wrapped key  creating a new key object.\n"
+"C_UnwrapKey hSession pMechanism hUnwrappingKey pWrappedKey ulWrappedKeyLen \\\n"
+"    pTemplate ulAttributeCount phKey\n\n"
+"C_UnwrapKey unwraps (decrypts) a wrapped key creating a new key object.\n"
 " hSession            session's handle\n"
 " pMechanism          unwrapping mech.\n"
 " hUnwrappingKey      unwrapping key\n"
@@ -1095,7 +1166,7 @@ const Commands _commands[] = {
 	 ArgAttribute|ArgArray, ArgULong, ArgULong|ArgOut, ArgNone, ArgNone }},
     {"C_DeriveKey", F_C_DeriveKey,
 "C_DeriveKey hSession pMechanism hBaseKey pTemplate ulAttributeCount phKey\n\n"
-"C_DeriveKey derives a key from a base key  creating a new key object.\n"
+"C_DeriveKey derives a key from a base key creating a new key object.\n"
 " hSession            session's handle\n"
 " pMechanism          key deriv. mech.\n"
 " hBaseKey            base key\n"
@@ -1106,7 +1177,8 @@ const Commands _commands[] = {
 	 ArgULong|ArgOut, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_SeedRandom", F_C_SeedRandom,
 "C_SeedRandom hSession pSeed ulSeedLen\n\n"
-"C_SeedRandom mixes additional seed material into the token's random number generator.\n"
+"C_SeedRandom mixes additional seed material into the token's random number\n"
+"generator.\n"
 " hSession    the session's handle\n"
 " pSeed       the seed material\n"
 " ulSeedLen   length of seed material\n",
@@ -1122,19 +1194,22 @@ const Commands _commands[] = {
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_GetFunctionStatus", F_C_GetFunctionStatus,
 "C_GetFunctionStatus hSession\n\n"
-"C_GetFunctionStatus is a legacy function; it obtains an updated status of a function running in parallel with an application.\n"
+"C_GetFunctionStatus is a legacy function; it obtains an updated status of\n"
+"a function running in parallel with an application.\n"
 " hSession   the session's handle\n",
 	{ArgULong, ArgNone, ArgNone, ArgNone, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_CancelFunction", F_C_CancelFunction,
 "C_CancelFunction hSession\n\n"
-"C_CancelFunction is a legacy function; it cancels a function running in parallel.\n"
+"C_CancelFunction is a legacy function; it cancels a function running in\n"
+"parallel.\n"
 " hSession   the session's handle\n",
 	{ArgULong, ArgNone, ArgNone, ArgNone, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"C_WaitForSlotEvent", F_C_WaitForSlotEvent,
-"C_WaitForSlotEvent flags pSlot pRserved \n\n"
-"C_WaitForSlotEvent waits for a slot event (token insertion  removal  etc.) to occur.\n"
+"C_WaitForSlotEvent flags pSlot pRserved\n\n"
+"C_WaitForSlotEvent waits for a slot event (token insertion removal etc.)\n"
+"to occur.\n"
 " flags          blocking/nonblocking flag\n"
 " pSlot    location that receives the slot ID\n"
 " pRserved    reserved.  Should be NULL_PTR\n",
@@ -1164,7 +1239,8 @@ const Commands _commands[] = {
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"BuildTemplate", F_BuildTemplate,
 "BuildTemplate template\n\n"
-"Allocates space for the value in a template which has the sizes filled in, but no values allocated yet.\n"
+"Allocates space for the value in a template which has the sizes filled in,\n"
+"but no values allocated yet.\n"
 " template        variable name of the template\n",
 	{ArgAttribute, ArgNone, ArgNone, ArgNone, ArgNone, 
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
