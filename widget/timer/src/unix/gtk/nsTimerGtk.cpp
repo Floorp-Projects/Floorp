@@ -40,6 +40,12 @@ TimeVal::TimeVal()
   mUSeconds = 0; 
 }
 
+TimeVal::TimeVal(const TimeVal &tv)
+{
+  mSeconds = tv.mSeconds;
+  mUSeconds = tv.mUSeconds;
+}
+
 TimeVal::~TimeVal()
 {
 
@@ -51,26 +57,33 @@ void TimeVal::Set(PRUint32 sec, PRUint32 usec)
   mUSeconds = usec;
 }
 
+TimeVal& TimeVal::operator+=(PRInt32 msec) {
+  mSeconds += (PRUint32)(msec / 1000);
+  mUSeconds += (msec % 1000) * 1000;
+
+  if (mUSeconds > 1000000) {
+    mUSeconds -= 1000000;
+    mSeconds ++;
+  }
+
+  return *this;
+}
+
+TimeVal operator+(const TimeVal& lhs, PRInt32 rhs)
+{
+  return TimeVal(lhs) += rhs;
+}
+
+TimeVal operator+(PRInt32 lhs, const TimeVal& rhs)
+{
+  return TimeVal(rhs) += lhs;
+}
+
 TimeVal& TimeVal::operator=(const struct timeval &tv)
 {
   mSeconds = tv.tv_sec;
   mUSeconds = tv.tv_usec;
   return *this;
-}
-
-TimeVal TimeVal::operator+(PRUint32 msec) const
-{
-  TimeVal *t = new TimeVal(*this);
-
-  t->mSeconds += (PRUint32)(msec / 1000);
-  t->mUSeconds += (msec % 1000) * 1000;
-
-  if (t->mUSeconds >= 1000000) {
-    t->mUSeconds -= 1000000;
-    t->mSeconds++;
-  }
- 
-  return *t;
 }
 
 PRBool TimeVal::operator==(const TimeVal &tv) const
