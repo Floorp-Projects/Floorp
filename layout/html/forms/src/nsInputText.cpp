@@ -55,7 +55,6 @@ protected:
 
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
                               const nsReflowState& aReflowState,
-                              const nsSize& aMaxSize,
                               nsReflowMetrics& aDesiredLayoutSize,
                               nsSize& aDesiredWidgetSize);
 };
@@ -111,7 +110,6 @@ nsInputTextFrame::GetTextType()
 void 
 nsInputTextFrame::GetDesiredSize(nsIPresContext* aPresContext,
                                  const nsReflowState& aReflowState,
-                                 const nsSize& aMaxSize,
                                  nsReflowMetrics& aDesiredLayoutSize,
                                  nsSize& aDesiredWidgetSize)
 {
