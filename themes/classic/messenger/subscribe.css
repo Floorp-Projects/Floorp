@@ -31,14 +31,14 @@
 
 /* ::::: subscribed icons  :::::: */
 
-treechildren:-moz-tree-cell(SubscribedColumn),
-treechildren:-moz-tree-cell(subscribedCol) {
+treechildren:-moz-tree-image(SubscribedColumn),
+treechildren:-moz-tree-image(subscribedCol) {
   margin-right: 2px;
   list-style-image: url("chrome://messenger/skin/icons/dot.gif");
 }
 
-treechildren:-moz-tree-cell(SubscribedColumn, Subscribed-true),
-treechildren:-moz-tree-cell(subscribedCol, subscribed) {
+treechildren:-moz-tree-image(SubscribedColumn, Subscribed-true),
+treechildren:-moz-tree-image(subscribedCol, subscribed) {
   list-style-image: url("chrome://messenger/skin/icons/check.gif");
 }
 
