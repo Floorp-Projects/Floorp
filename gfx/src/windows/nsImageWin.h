@@ -104,6 +104,29 @@ private:
    */
   void CreateDDB(nsDrawingSurface aSurface);
 
+
+  /** 
+   * Create a Device Dependent bitmap from a drawing surface
+   * @update dc - 05/20/99
+   * @param aSurface - The drawingsurface to create the DIB from.
+   * @param aWidth - width of DIB
+   * @param aHeight - height of DIB
+   */
+  nsresult ConvertDDBtoDIB(PRInt32 aWidth,PRInt32 aHeight);
+
+
+  /** 
+   * Print a DDB
+   * @update dc - 05/20/99
+   * @param aSurface - The drawingsurface to create the DIB from.
+   * @param aX - x location to place image
+   * @param aX - y location to place image
+   * @param aWidth - width of DIB
+   * @param aHeight - height of DIB
+   */
+  nsresult PrintDDB(nsDrawingSurface aSurface,PRInt32 aX,PRInt32 aY,PRInt32 aWidth,PRInt32 aHeight);
+
+
   /** 
    * Get an index in the palette that matches as closly as possible the passed in RGB colors
    * @update dc - 10/29/98

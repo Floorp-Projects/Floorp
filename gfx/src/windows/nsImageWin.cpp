@@ -22,6 +22,9 @@
 
 static NS_DEFINE_IID(kIImageIID, NS_IIMAGE_IID);
 
+static nsresult BuildDIB(LPBITMAPINFOHEADER  *aBHead,PRInt32 aWidth,PRInt32 aHeight,PRInt32 aDepth,PRInt8  *aNumBitPix);
+
+
 static PRBool
 IsWindowsNT()
 {
@@ -435,7 +438,8 @@ NS_IMETHODIMP nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface
 NS_IMETHODIMP nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
 				 PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
-  HDC   TheHDC;
+HDC     TheHDC;
+PRInt32 canRaster;
 
   if (mBHead == nsnull) 
     return NS_ERROR_FAILURE;
@@ -446,29 +450,23 @@ NS_IMETHODIMP nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface
 
   ((nsDrawingSurfaceWin *)aSurface)->GetDC(&TheHDC);
 
-  if (nsnull != TheHDC)
-  {
-    if (!IsOptimized())
-    {
+  if (nsnull != TheHDC){
+    if (!IsOptimized()){
       DWORD rop = SRCCOPY;
 
-      if (nsnull != mAlphaBits)
-      {
-	MONOBITMAPINFO  bmi(mAlphaWidth, mAlphaHeight);
+      if (nsnull != mAlphaBits){
+	      MONOBITMAPINFO  bmi(mAlphaWidth, mAlphaHeight);
 
-	::StretchDIBits(TheHDC, aX, aY, aWidth, aHeight,
-			0, 0, mAlphaWidth, mAlphaHeight, mAlphaBits,
-			(LPBITMAPINFO)&bmi, DIB_RGB_COLORS, SRCAND);
-	rop = SRCPAINT;
+	      ::StretchDIBits(TheHDC, aX, aY, aWidth, aHeight,0, 0, mAlphaWidth, mAlphaHeight, mAlphaBits,
+			            (LPBITMAPINFO)&bmi, DIB_RGB_COLORS, SRCAND);
+	      rop = SRCPAINT;
       }
 
       ::StretchDIBits(TheHDC, aX, aY, aWidth, aHeight,
 		      0, 0, mBHead->biWidth, mBHead->biHeight, mImageBits,
 		      (LPBITMAPINFO)mBHead, 256 == mNumPaletteColors ? DIB_PAL_COLORS :
 		      DIB_RGB_COLORS, rop);
-    }
-    else
-    {
+    }else{
       nsIDeviceContext    *dx;
       aContext.GetDeviceContext(dx);
       nsDrawingSurface     ds;
@@ -476,45 +474,48 @@ NS_IMETHODIMP nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface
       nsDrawingSurfaceWin *srcDS = (nsDrawingSurfaceWin *)ds;
       HDC                 srcDC;
 
-      if (nsnull != srcDS)
-      {
-	srcDS->GetDC(&srcDC);
+      if (nsnull != srcDS){
+	      srcDS->GetDC(&srcDC);
 
-	if (NULL != srcDC)
-	{
-	  HBITMAP oldBits;
+	      if (NULL != srcDC){
+	        HBITMAP oldBits;
 
-	  if (nsnull == mAlphaHBitmap)
-	  {
-	    oldBits = (HBITMAP)::SelectObject(srcDC, mHBitmap);
-	    ::StretchBlt(TheHDC, aX, aY, aWidth, aHeight, srcDC, 0, 0,
-			 mBHead->biWidth, mBHead->biHeight, SRCCOPY);
+	        if (nsnull == mAlphaHBitmap){
+            canRaster = ::GetDeviceCaps(TheHDC, TECHNOLOGY);
+            if(canRaster == DT_RASPRINTER){
+              if(!(GetDeviceCaps(TheHDC,RASTERCAPS) &(RC_BITBLT | RC_STRETCHBLT))) {
+                // we have an error with the printer not supporting a raster device
+              } else {
+                PrintDDB(aSurface,aX,aY,aWidth,aHeight);
+              }
+            } else {
+	            oldBits = (HBITMAP)::SelectObject(srcDC, mHBitmap);
+	            ::StretchBlt(TheHDC, aX, aY, aWidth, aHeight, srcDC, 0, 0,
+			         mBHead->biWidth, mBHead->biHeight, SRCCOPY);
+            }
+	        }else {
+            if (gIsWinNT && (aWidth == mBHead->biWidth) && (aHeight == mBHead->biHeight)){
+	            oldBits = (HBITMAP)::SelectObject(srcDC, mHBitmap);
+	            ::MaskBlt(TheHDC, aX, aY, aWidth, aHeight,
+		              srcDC, 0, 0, mAlphaHBitmap, 0, 0, MASKBLT_ROP);
+	            }else{
+	              COLORREF oldTextColor = ::SetTextColor(TheHDC, RGB(0, 0, 0));
+	              COLORREF oldBkColor = ::SetBkColor(TheHDC, RGB(255, 255, 255));
+	              oldBits = (HBITMAP)::SelectObject(srcDC, mAlphaHBitmap);
+	              ::StretchBlt(TheHDC, aX, aY, aWidth, aHeight, srcDC, 0, 0,
+			           mAlphaWidth, mAlphaHeight, SRCAND);
+	              ::SetTextColor(TheHDC, oldTextColor);
+	              ::SetBkColor(TheHDC, oldBkColor);
 
-	  }
-	  else if (gIsWinNT && (aWidth == mBHead->biWidth) && (aHeight == mBHead->biHeight)){
-	    oldBits = (HBITMAP)::SelectObject(srcDC, mHBitmap);
-	    ::MaskBlt(TheHDC, aX, aY, aWidth, aHeight,
-		      srcDC, 0, 0, mAlphaHBitmap, 0, 0, MASKBLT_ROP);
-	  }
-	  else
-	  {
-	    COLORREF oldTextColor = ::SetTextColor(TheHDC, RGB(0, 0, 0));
-	    COLORREF oldBkColor = ::SetBkColor(TheHDC, RGB(255, 255, 255));
-	    oldBits = (HBITMAP)::SelectObject(srcDC, mAlphaHBitmap);
-	    ::StretchBlt(TheHDC, aX, aY, aWidth, aHeight, srcDC, 0, 0,
-			 mAlphaWidth, mAlphaHeight, SRCAND);
-	    ::SetTextColor(TheHDC, oldTextColor);
-	    ::SetBkColor(TheHDC, oldBkColor);
+	              ::SelectObject(srcDC, mHBitmap);
+	              ::StretchBlt(TheHDC, aX, aY, aWidth, aHeight, srcDC, 0, 0,
+			           mBHead->biWidth, mBHead->biHeight, SRCPAINT);
+	            }
+            }
+	        ::SelectObject(srcDC, oldBits);
 
-	    ::SelectObject(srcDC, mHBitmap);
-	    ::StretchBlt(TheHDC, aX, aY, aWidth, aHeight, srcDC, 0, 0,
-			 mBHead->biWidth, mBHead->biHeight, SRCPAINT);
-	  }
-
-	  ::SelectObject(srcDC, oldBits);
-
-	  srcDS->ReleaseDC();
-	}
+	        srcDS->ReleaseDC();
+	        }
       }
 
       NS_RELEASE(dx);
@@ -609,4 +610,115 @@ void nsImageWin :: CleanUp(PRBool aCleanUpAll)
   mColorMap = nsnull;
 }
 
+/** ----------------------------------------------------------------
+ * See documentation in nsIImage.h
+ * @update - dwc 5/20/99
+ * @return the result of the operation, if NS_OK, then the pixelmap is unoptimized
+ */
+nsresult nsImageWin::PrintDDB(nsDrawingSurface aSurface,PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
+{
+HDC theHDC;
+
+  if (mIsOptimized == PR_TRUE){
+    
+	  if (mHBitmap != nsnull){
+      ConvertDDBtoDIB(aWidth,aHeight);
+      ((nsDrawingSurfaceWin *)aSurface)->GetDC(&theHDC);
+      ::StretchDIBits(theHDC, aX, aY, aWidth, aHeight,
+		      0, 0, mBHead->biWidth, mBHead->biHeight, mImageBits,
+		      (LPBITMAPINFO)mBHead, 256 == mNumPaletteColors ? DIB_PAL_COLORS :
+		      DIB_RGB_COLORS, SRCCOPY);
+
+       if (mImageBits != nsnull) {
+        delete [] mImageBits;
+        mImageBits = nsnull;
+        }
+    }
+  }
+
+  return NS_OK;
+
+}
+/** ----------------------------------------------------------------
+ * See documentation in nsIImage.h
+ * @update - dwc 5/20/99
+ * @return the result of the operation, if NS_OK, then the pixelmap is unoptimized
+ */
+nsresult nsImageWin::ConvertDDBtoDIB(PRInt32 aWidth, PRInt32 aHeight)
+{
+PRInt32             numbytes;
+BITMAP              srcinfo;
+HDC                 memPrDC;
+
+  if (mIsOptimized == PR_TRUE){
+
+	  if (mHBitmap != nsnull){
+      memPrDC = ::CreateDC("DISPLAY",NULL,NULL,NULL);
+      ::SelectObject(memPrDC,mHBitmap);
+
+      numbytes = ::GetObject(mHBitmap,sizeof(BITMAP),&srcinfo);
+
+      // put into a DIB
+      BuildDIB(&mBHead,mBHead->biWidth,mBHead->biHeight,srcinfo.bmBitsPixel,&mNumBytesPixel);
+      mRowBytes = CalcBytesSpan(mBHead->biWidth);
+      mSizeImage = mRowBytes * mBHead->biHeight; // no compression
+
+      // Allocate the image bits
+      mImageBits = new unsigned char[mSizeImage];
+      numbytes = ::GetDIBits(memPrDC,mHBitmap,0,srcinfo.bmHeight,mImageBits,(LPBITMAPINFO)mBHead,DIB_RGB_COLORS);
+      DeleteDC(memPrDC);
+    }
+  }
+
+  return NS_OK;
+
+}
+
+
+
+/** ----------------------------------------------------------------
+ * Build A DIB header and allocate memory 
+ * @update dc - 11/20/98
+ * @return void
+ */
+nsresult
+BuildDIB(LPBITMAPINFOHEADER  *aBHead,PRInt32 aWidth,PRInt32 aHeight,PRInt32 aDepth,PRInt8 *aNumBytesPix)
+{
+PRInt16 numPaletteColors;
+
+  if (8 == aDepth) {
+    numPaletteColors = 256;
+    *aNumBytesPix = 1;
+  } else if (24 == aDepth) {
+    numPaletteColors = 0;
+    *aNumBytesPix = 3;
+  } else {
+    NS_ASSERTION(PR_FALSE, "unexpected image depth");
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  if (0 == numPaletteColors) {
+    // space for the header only (no color table)
+    (*aBHead) = (LPBITMAPINFOHEADER)new char[sizeof(BITMAPINFO)];
+  } else {
+    // Space for the header and the palette. Since we'll be using DIB_PAL_COLORS
+    // the color table is an array of 16-bit unsigned integers that specify an
+    // index into the currently realized logical palette
+    (*aBHead) = (LPBITMAPINFOHEADER)new char[sizeof(BITMAPINFOHEADER) + (256 * sizeof(WORD))];
+  }
+
+  (*aBHead)->biSize = sizeof(BITMAPINFOHEADER);
+  (*aBHead)->biWidth = aWidth;
+  (*aBHead)->biHeight = aHeight;
+  (*aBHead)->biPlanes = 1;
+  (*aBHead)->biBitCount = (WORD)aDepth;
+  (*aBHead)->biCompression = BI_RGB;
+  (*aBHead)->biSizeImage = 0;            // not compressed, so we dont need this to be set
+  (*aBHead)->biXPelsPerMeter = 0;
+  (*aBHead)->biYPelsPerMeter = 0;
+  (*aBHead)->biClrUsed = numPaletteColors;
+  (*aBHead)->biClrImportant = numPaletteColors;
+
+  return NS_OK;
+}
 
