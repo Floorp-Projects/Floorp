@@ -49,7 +49,7 @@ function initPrefs()
 console.prefs.save =
 function pfs_save ()
 {
-    throw BadMojo(ERR_NOT_IMPLEMENTED);
+    throw new BadMojo(ERR_NOT_IMPLEMENTED);
 }
 
 console.addPref =

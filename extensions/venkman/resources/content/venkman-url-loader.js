@@ -44,7 +44,7 @@ function _getChannelForURL (url)
 {
     var serv = Components.classes[IOSERVICE_CTRID].getService(nsIIOService);
     if (!serv)
-        throw BadMojo(ERR_FAILURE);
+        throw new BadMojo(ERR_FAILURE);
     
     return serv.newChannel(url, null);
 
