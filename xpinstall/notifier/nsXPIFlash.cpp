@@ -37,25 +37,22 @@
 #include "nsIPref.h"
 #include "nsISoftwareUpdate.h"
 
-#define NC_XPIFLASH_SOURCES     "NC:SoftwareUpdateDataSources"
-#define NC_XPIFLASH_PACKAGES    "NC:SoftwarePackages"
-
-#define NC_RDF_FLASHROOT		"NC:FlashRoot"
-
-#define NC_RDF_TYPE				"http://home.netscape.com/NC-rdf#type"
+#define NC_RDF_NAME	         	"http://home.netscape.com/NC-rdf#name"
 #define NC_RDF_SOURCE			"http://home.netscape.com/NC-rdf#source"
-#define NC_RDF_DESCRIPTION		"http://home.netscape.com/NC-rdf#description"
-#define NC_RDF_TIMESTAMP		"http://home.netscape.com/NC-rdf#timestamp"
 #define NC_RDF_URL				"http://home.netscape.com/NC-rdf#url"
 #define NC_RDF_CHILD			"http://home.netscape.com/NC-rdf#child"
 
-#define NC_XPIFLASH_TYPE        "http://home.netscape.com/NC-rdf#XPInstallNotification"
+#define NC_RDF_NOTIFICATION_ROOT		"NC:SoftwareNotificationRoot"
+#define NC_RDF_NOTIFICATION_LIST		"NC:SoftwareNotificationList"
 
-#define NC_XPIFLASH_TITLE       "http://home.netscape.com/NC-rdf#title"
-#define NC_XPIFLASH_REGKEY      "http://home.netscape.com/NC-rdf#registryKey"
-#define NC_XPIFLASH_VERSION     "http://home.netscape.com/NC-rdf#version"
-#define NC_XPIFLASH_DESCRIPTION	"http://home.netscape.com/NC-rdf#description"
-#define NC_XPIFLASH_URL			"http://home.netscape.com/NC-rdf#url"
+
+#define NC_XPI_SOURCES     "NC:SoftwareUpdateDataSources"
+#define NC_XPI_PACKAGES    "NC:SoftwarePackages"
+
+#define NC_XPI_TITLE        "http://home.netscape.com/NC-rdf#title"
+#define NC_XPI_REGKEY       "http://home.netscape.com/NC-rdf#registryKey"
+#define NC_XPI_VERSION      "http://home.netscape.com/NC-rdf#version"
+#define NC_XPI_DESCRIPTION	"http://home.netscape.com/NC-rdf#description"
 
 static NS_DEFINE_CID(kRDFServiceCID,   NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFContainerCID, NS_RDFCONTAINER_CID);
@@ -93,15 +90,11 @@ protected:
     static nsIRDFResource* kXPI_NotifierPackage_Version;
     static nsIRDFResource* kXPI_NotifierPackage_Description;
     static nsIRDFResource* kXPI_NotifierPackage_RegKey;
-    static nsIRDFResource* kXPI_NotifierPackage_URL;
-    static nsIRDFResource* kXPI_Notifier_Type;
 
-
-    static nsIRDFResource* kNC_FlashRoot;
-	static nsIRDFResource* kNC_Type;
+    static nsIRDFResource* kNC_NotificationRoot;
+    static nsIRDFResource* kNC_NotificationList;
 	static nsIRDFResource* kNC_Source;
-	static nsIRDFResource* kNC_Description;
-	static nsIRDFResource* kNC_TimeStamp;
+	static nsIRDFResource* kNC_Name;
 	static nsIRDFResource* kNC_URL;
 	static nsIRDFResource* kNC_Child;
 	
@@ -113,14 +106,11 @@ nsIRDFResource* nsXPINotifierImpl::kXPI_NotifierPackage_Title = nsnull;
 nsIRDFResource* nsXPINotifierImpl::kXPI_NotifierPackage_Version = nsnull;
 nsIRDFResource* nsXPINotifierImpl::kXPI_NotifierPackage_Description = nsnull;
 nsIRDFResource* nsXPINotifierImpl::kXPI_NotifierPackage_RegKey = nsnull;
-nsIRDFResource* nsXPINotifierImpl::kXPI_NotifierPackage_URL = nsnull;
-nsIRDFResource* nsXPINotifierImpl::kXPI_Notifier_Type = nsnull;
 
-nsIRDFResource* nsXPINotifierImpl::kNC_FlashRoot = nsnull;
-nsIRDFResource* nsXPINotifierImpl::kNC_Type = nsnull;
+nsIRDFResource* nsXPINotifierImpl::kNC_NotificationRoot = nsnull;
+nsIRDFResource* nsXPINotifierImpl::kNC_NotificationList = nsnull;
 nsIRDFResource* nsXPINotifierImpl::kNC_Source = nsnull;
-nsIRDFResource* nsXPINotifierImpl::kNC_Description = nsnull;
-nsIRDFResource* nsXPINotifierImpl::kNC_TimeStamp = nsnull;
+nsIRDFResource* nsXPINotifierImpl::kNC_Name = nsnull;
 nsIRDFResource* nsXPINotifierImpl::kNC_URL = nsnull;
 nsIRDFResource* nsXPINotifierImpl::kNC_Child = nsnull;
 
@@ -154,15 +144,11 @@ nsXPINotifierImpl::~nsXPINotifierImpl()
     NS_IF_RELEASE(kXPI_NotifierPackage_Version);
     NS_IF_RELEASE(kXPI_NotifierPackage_Description);
     NS_IF_RELEASE(kXPI_NotifierPackage_RegKey);
-    NS_IF_RELEASE(kXPI_NotifierPackage_URL);
 
-    NS_IF_RELEASE(kXPI_Notifier_Type);
-
-   	NS_IF_RELEASE(kNC_FlashRoot);
-	NS_IF_RELEASE(kNC_Type);
+   	NS_IF_RELEASE(kNC_NotificationRoot);
+    NS_IF_RELEASE(kNC_NotificationList);
 	NS_IF_RELEASE(kNC_Source);
-	NS_IF_RELEASE(kNC_Description);
-	NS_IF_RELEASE(kNC_TimeStamp);
+	NS_IF_RELEASE(kNC_Name);
 	NS_IF_RELEASE(kNC_URL);
 	NS_IF_RELEASE(kNC_Child);
 }
@@ -261,21 +247,18 @@ nsXPINotifierImpl::Init()
     
     if (! kXPI_NotifierSources)
 	{
-	   mRDF->GetResource(NC_XPIFLASH_SOURCES,       &kXPI_NotifierSources);
-       mRDF->GetResource(NC_XPIFLASH_PACKAGES,      &kXPI_NotifierPackages);
-       mRDF->GetResource(NC_XPIFLASH_TITLE,         &kXPI_NotifierPackage_Title);
-       mRDF->GetResource(NC_XPIFLASH_VERSION,       &kXPI_NotifierPackage_Version);
-       mRDF->GetResource(NC_XPIFLASH_DESCRIPTION,   &kXPI_NotifierPackage_Description);
-       mRDF->GetResource(NC_XPIFLASH_REGKEY,        &kXPI_NotifierPackage_RegKey);
-       mRDF->GetResource(NC_XPIFLASH_URL,           &kXPI_NotifierPackage_URL);
+	   mRDF->GetResource(NC_XPI_SOURCES,       &kXPI_NotifierSources);
+       mRDF->GetResource(NC_XPI_PACKAGES,      &kXPI_NotifierPackages);
+       mRDF->GetResource(NC_XPI_TITLE,         &kXPI_NotifierPackage_Title);
+       mRDF->GetResource(NC_XPI_VERSION,       &kXPI_NotifierPackage_Version);
+       mRDF->GetResource(NC_XPI_DESCRIPTION,   &kXPI_NotifierPackage_Description);
+       mRDF->GetResource(NC_XPI_REGKEY,        &kXPI_NotifierPackage_RegKey);
 
-       mRDF->GetResource(NC_XPIFLASH_TYPE,          &kXPI_Notifier_Type);
-              
-       mRDF->GetResource(NC_RDF_FLASHROOT,          &kNC_FlashRoot);
-	   mRDF->GetResource(NC_RDF_TYPE,               &kNC_Type);
-	   mRDF->GetResource(NC_RDF_SOURCE,             &kNC_Source);
-	   mRDF->GetResource(NC_RDF_DESCRIPTION,        &kNC_Description);
-	   mRDF->GetResource(NC_RDF_TIMESTAMP,          &kNC_TimeStamp);
+       mRDF->GetResource(NC_RDF_NOTIFICATION_ROOT,  &kNC_NotificationRoot);
+       mRDF->GetResource(NC_RDF_NOTIFICATION_LIST,  &kNC_NotificationList);
+	   
+       mRDF->GetResource(NC_RDF_SOURCE,             &kNC_Source);
+	   mRDF->GetResource(NC_RDF_NAME,               &kNC_Name);
 	   mRDF->GetResource(NC_RDF_URL,                &kNC_URL);
 	   mRDF->GetResource(NC_RDF_CHILD,              &kNC_Child);
 
@@ -612,7 +595,7 @@ nsXPINotifierImpl::OnEndLoad(nsIRDFXMLSink *aSink)
                         
                         nsCOMPtr<nsIRDFNode> urlNode;
                         distributorDataSource->GetTarget(kXPI_NotifierPackages, 
-                                                         kXPI_NotifierPackage_URL, 
+                                                         kNC_URL, 
                                                          PR_TRUE, 
                                                          getter_AddRefs(urlNode));
 
@@ -631,11 +614,10 @@ nsXPINotifierImpl::OnEndLoad(nsIRDFXMLSink *aSink)
 
                         nsCOMPtr<nsIRDFDataSource> ds = do_QueryInterface(mInner);
 
-                        ds->Assert(aPackage, kNC_Type, kXPI_Notifier_Type, PR_TRUE);
-                        ds->Assert(aPackage, kNC_Description, title, PR_TRUE);
+                        ds->Assert(aPackage, kNC_Name, title, PR_TRUE);
                         ds->Assert(aPackage, kNC_URL, url, PR_TRUE);
 
-                        ds->Assert(kNC_FlashRoot, kNC_Child, aPackage, PR_TRUE);
+                        ds->Assert(kNC_NotificationRoot, kNC_Child, aPackage, PR_TRUE);
                         break;
 
                     }
