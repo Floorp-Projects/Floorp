@@ -527,6 +527,11 @@ nsSocketTransport::CompleteAsyncRead()
     NS_RELEASE(mReadRequest);
     mReadRequest = nsnull;
 
+    // From bug 71391:
+    //
+    // If the socket is not to be reused, then make sure it
+    // is closed once we reach eSocketState_Done.
+    //
     if (mReuseCount == 0)
         mCloseConnectionOnceDone = PR_TRUE;
 }
@@ -931,14 +936,17 @@ nsSocketTransport::doReadWrite(PRInt16 aSelectFlags)
 
     if (PR_POLL_EXCEPT & aSelectFlags) {
         LOG(("nsSocketTransport: [this=%x] received PR_POLL_EXCEPT\n", this));
+        // The socket will be closed when we reach eSocketState_Error.
         return NS_BINDING_FAILED;
     }
     if (PR_POLL_ERR & aSelectFlags) {
         LOG(("nsSocketTransport: [this=%x] received PR_POLL_ERR\n", this));
+        // The socket will be closed when we reach eSocketState_Error.
         return NS_BINDING_FAILED;
     }
     if (PR_POLL_HUP & aSelectFlags) {
         LOG(("nsSocketTransport: [this=%x] received PR_POLL_HUP\n", this));
+        // Make sure this socket is closed when we reach eSocketState_Done.
         mCloseConnectionOnceDone = PR_TRUE;
         return NS_OK;
     }
