@@ -95,6 +95,9 @@
     {0xad, 0x26, 0x11, 0x3f, 0x2c, 0x02, 0xd0, 0xfe} \
 }
 
+#define JSDS_MAJOR_VERSION 1
+#define JSDS_MINOR_VERSION 1
+
 #define NS_CATMAN_CTRID   "@mozilla.org/categorymanager;1"
 #define NS_JSRT_CTRID     "@mozilla.org/js/xpc/RuntimeService;1"
 
@@ -107,8 +110,9 @@ jsds_GCCallbackProc (JSContext *cx, JSGCStatus status);
 
 /*******************************************************************************
  * global vars
- *******************************************************************************/
+ ******************************************************************************/
 
+const char implementationString[] = "Mozilla JavaScript Debugger Service";
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
@@ -2367,6 +2371,29 @@ NS_IMETHODIMP
 jsdService::SetFlags (PRUint32 flags)
 {
     JSD_SetContextFlags (mCx, flags);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdService::GetImplementationString(char **_rval)
+{
+    *_rval = PL_strdup(implementationString);
+    if (!*_rval)
+        return NS_ERROR_OUT_OF_MEMORY;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdService::GetImplementationMajor(PRUint32 *_rval)
+{
+    *_rval = JSDS_MAJOR_VERSION;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdService::GetImplementationMinor(PRUint32 *_rval)
+{
+    *_rval = JSDS_MINOR_VERSION;
     return NS_OK;
 }
 

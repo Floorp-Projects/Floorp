@@ -164,8 +164,19 @@ jsd_CallExecutionHook(JSDContext* jsdc,
 
     if(hook && NULL != (jsdthreadstate = jsd_NewThreadState(jsdc,cx)))
     {
-        hookanswer = hook(jsdc, jsdthreadstate, type, hookData, rval);
-        jsd_DestroyThreadState(jsdc, jsdthreadstate);
+        if ((type != JSD_HOOK_THROW && type != JSD_HOOK_INTERRUPTED) ||
+            jsdc->flags & JSD_MASK_TOP_FRAME_ONLY ||
+            !(jsdthreadstate->flags & TS_HAS_DISABLED_FRAME))
+        {
+            /*
+             * if it's not a throw and it's not an interrupt,
+             * or we're only masking the top frame,
+             * or there are no disabled frames in this stack,
+             * then call out.
+             */
+             hookanswer = hook(jsdc, jsdthreadstate, type, hookData, rval);
+             jsd_DestroyThreadState(jsdc, jsdthreadstate);
+        }
     }
 
     switch(hookanswer)
