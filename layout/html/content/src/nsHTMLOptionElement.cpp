@@ -511,7 +511,7 @@ nsHTMLOptionElement::SetText(const nsString& aText)
       if (NS_SUCCEEDED(result) && domtext) {
         result = domtext->SetData(aText);
 	      if (NS_SUCCEEDED(result)) {
-          result = AppendChildTo(text, PR_FALSE);
+          result = AppendChildTo(text, PR_TRUE);
           if (NS_SUCCEEDED(result)) {
             nsIDocument * doc;
             result = GetDocument(doc);
