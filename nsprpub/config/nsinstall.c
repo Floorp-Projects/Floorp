@@ -43,7 +43,9 @@
 
 #define HAVE_LCHOWN
 
-#if defined(AIX) || defined(BSDI) || defined(HPUX) || defined(LINUX) || defined(SUNOS4) || defined(SCO) || defined(UNIXWARE) || defined(RHAPSODY) || defined(NEXTSTEP)
+#if defined(AIX) || defined(BSDI) || defined(HPUX) || defined(LINUX) \
+    || defined(SUNOS4) || defined(SCO) || defined(UNIXWARE) \
+    || defined(RHAPSODY) || defined(NEXTSTEP) || defined(QNX)
 #undef HAVE_LCHOWN
 #endif
 
@@ -91,6 +93,10 @@ my_getcwd (char *buf, size_t size)
 
 #if defined(SNI)
 extern int fchmod(int fildes, mode_t mode);
+#endif
+
+#ifdef QNX
+#define d_ino d_stat.st_ino
 #endif
 
 static void

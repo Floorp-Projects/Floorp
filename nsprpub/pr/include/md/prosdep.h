@@ -110,6 +110,9 @@ PR_BEGIN_EXTERN_C
 #elif defined(DGUX)
 #include "md/_dgux.h"
 
+#elif defined(QNX)
+#include "md/_qnx.h"
+
 #else
 #error unknown Unix flavor
 

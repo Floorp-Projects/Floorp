@@ -21,7 +21,6 @@
 #include <string.h>
 #include <signal.h>
 #include <unistd.h>
-#include <memory.h>
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -47,10 +46,11 @@
     || defined(AIX4_1) || defined(LINUX) || defined(SONY) \
     || defined(BSDI) || defined(SCO) || defined(NEC) || defined(SNI) \
     || defined(SUNOS4) || defined(NCR) || defined(RHAPSODY) \
-    || defined(NEXTSTEP)
+    || defined(NEXTSTEP) || defined(QNX)
 #define _PRSockLen_t int
 #elif (defined(AIX) && !defined(AIX4_1)) || defined(FREEBSD) \
-    || defined(NETBSD) || defined(OPENBSD) || defined(UNIXWARE) || defined(DGUX)
+    || defined(NETBSD) || defined(OPENBSD) || defined(UNIXWARE) \
+    || defined(DGUX)
 #define _PRSockLen_t size_t
 #else
 #error "Cannot determine architecture"
@@ -87,10 +87,6 @@ static sigset_t empty_set;
 
 #ifndef PIPE_BUF
 #define PIPE_BUF 512
-#endif
-
-#ifndef PROT_NONE
-#define PROT_NONE 0
 #endif
 
 /*
@@ -835,12 +831,9 @@ PRInt32 _MD_recvfrom(PRFileDesc *fd, void *buf, PRInt32 amount,
 done:
 #ifdef _PR_HAVE_SOCKADDR_LEN
     if (rv != -1) {
-        /* mask off the first byte of struct sockaddr (the length field) */
+        /* ignore the sa_len field of struct sockaddr */
         if (addr) {
-            *((unsigned char *) addr) = 0;
-#ifdef IS_LITTLE_ENDIAN
-            addr->raw.family = ntohs(addr->raw.family);
-#endif
+            addr->raw.family = ((struct sockaddr *) addr)->sa_family;
         }
     }
 #endif /* _PR_HAVE_SOCKADDR_LEN */
@@ -916,9 +909,19 @@ PRInt32 _MD_sendto(
     PRInt32 osfd = fd->secret->md.osfd;
     PRInt32 rv, err;
     PRThread *me = _PR_MD_CURRENT_THREAD();
+#ifdef _PR_HAVE_SOCKADDR_LEN
+    PRNetAddr addrCopy;
+
+    addrCopy = *addr;
+    ((struct sockaddr *) &addrCopy)->sa_len = addrlen;
+    ((struct sockaddr *) &addrCopy)->sa_family = addr->raw.family;
 
     while ((rv = sendto(osfd, buf, amount, flags,
+            (struct sockaddr *) &addrCopy, addrlen)) == -1) {
+#else
+    while ((rv = sendto(osfd, buf, amount, flags,
             (struct sockaddr *) addr, addrlen)) == -1) {
+#endif
         err = _MD_ERRNO();
         if ((err == EAGAIN) || (err == EWOULDBLOCK))    {
             if (fd->secret->nonblocking) {
@@ -1044,12 +1047,9 @@ PRInt32 _MD_accept(PRFileDesc *fd, PRNetAddr *addr,
 done:
 #ifdef _PR_HAVE_SOCKADDR_LEN
     if (rv != -1) {
-        /* mask off the first byte of struct sockaddr (the length field) */
+        /* ignore the sa_len field of struct sockaddr */
         if (addr) {
-            *((unsigned char *) addr) = 0;
-#ifdef IS_LITTLE_ENDIAN
-            addr->raw.family = ntohs(addr->raw.family);
-#endif
+            addr->raw.family = ((struct sockaddr *) addr)->sa_family;
         }
     }
 #endif /* _PR_HAVE_SOCKADDR_LEN */
@@ -1066,6 +1066,13 @@ PRInt32 _MD_connect(
 #ifdef IRIX
 extern PRInt32 _MD_irix_connect(
         PRInt32 osfd, const PRNetAddr *addr, PRInt32 addrlen, PRIntervalTime timeout);
+#endif
+#ifdef _PR_HAVE_SOCKADDR_LEN
+    PRNetAddr addrCopy;
+
+    addrCopy = *addr;
+    ((struct sockaddr *) &addrCopy)->sa_len = addrlen;
+    ((struct sockaddr *) &addrCopy)->sa_family = addr->raw.family;
 #endif
 
     /*
@@ -1084,7 +1091,11 @@ retry:
 #ifdef IRIX
     if ((rv = _MD_irix_connect(osfd, addr, addrlen, timeout)) == -1) {
 #else
+#ifdef _PR_HAVE_SOCKADDR_LEN
+    if ((rv = connect(osfd, (struct sockaddr *)&addrCopy, addrlen)) == -1) {
+#else
     if ((rv = connect(osfd, (struct sockaddr *)addr, addrlen)) == -1) {
+#endif
 #endif
         err = _MD_ERRNO();
 
@@ -1136,8 +1147,16 @@ retry:
 PRInt32 _MD_bind(PRFileDesc *fd, const PRNetAddr *addr, PRUint32 addrlen)
 {
     PRInt32 rv, err;
+#ifdef _PR_HAVE_SOCKADDR_LEN
+    PRNetAddr addrCopy;
 
+    addrCopy = *addr;
+    ((struct sockaddr *) &addrCopy)->sa_len = addrlen;
+    ((struct sockaddr *) &addrCopy)->sa_family = addr->raw.family;
+    rv = bind(fd->secret->md.osfd, (struct sockaddr *) &addrCopy, (int )addrlen);
+#else
     rv = bind(fd->secret->md.osfd, (struct sockaddr *) addr, (int )addrlen);
+#endif
     if (rv < 0) {
         err = _MD_ERRNO();
         _PR_MD_MAP_BIND_ERROR(err);
@@ -1191,12 +1210,9 @@ PRStatus _MD_getsockname(PRFileDesc *fd, PRNetAddr *addr,
             (struct sockaddr *) addr, (_PRSockLen_t *)addrlen);
 #ifdef _PR_HAVE_SOCKADDR_LEN
     if (rv == 0) {
-        /* mask off the first byte of struct sockaddr (the length field) */
+        /* ignore the sa_len field of struct sockaddr */
         if (addr) {
-            *((unsigned char *) addr) = 0;
-#ifdef IS_LITTLE_ENDIAN
-            addr->raw.family = ntohs(addr->raw.family);
-#endif
+            addr->raw.family = ((struct sockaddr *) addr)->sa_family;
         }
     }
 #endif /* _PR_HAVE_SOCKADDR_LEN */
@@ -1216,12 +1232,9 @@ PRStatus _MD_getpeername(PRFileDesc *fd, PRNetAddr *addr,
             (struct sockaddr *) addr, (_PRSockLen_t *)addrlen);
 #ifdef _PR_HAVE_SOCKADDR_LEN
     if (rv == 0) {
-        /* mask off the first byte of struct sockaddr (the length field) */
+        /* ignore the sa_len field of struct sockaddr */
         if (addr) {
-            *((unsigned char *) addr) = 0;
-#ifdef IS_LITTLE_ENDIAN
-            addr->raw.family = ntohs(addr->raw.family);
-#endif
+            addr->raw.family = ((struct sockaddr *) addr)->sa_family;
         }
     }
 #endif /* _PR_HAVE_SOCKADDR_LEN */
@@ -2246,20 +2259,34 @@ static void _MD_set_fileinfo_times(
     const struct stat *sb,
     PRFileInfo *info)
 {
-    info->modifyTime = ((PRTime)sb->st_mtim.tv_sec * PR_USEC_PER_SEC);
-    info->modifyTime += (sb->st_mtim.tv_nsec / 1000);
-    info->creationTime = ((PRTime)sb->st_ctim.tv_sec * PR_USEC_PER_SEC);
-    info->creationTime += (sb->st_ctim.tv_nsec / 1000);
+    PRInt64 us, s2us;
+
+    LL_I2L(s2us, PR_USEC_PER_SEC);
+    LL_I2L(info->modifyTime, sb->st_mtim.tv_sec);
+    LL_MUL(info->modifyTime, info->modifyTime, s2us);
+    LL_I2L(us, sb->st_mtim.tv_nsec / 1000);
+    LL_ADD(info->modifyTime, info->modifyTime, us);
+    LL_I2L(info->creationTime, sb->st_ctim.tv_sec);
+    LL_MUL(info->creationTime, info->creationTime, s2us);
+    LL_I2L(us, sb->st_ctim.tv_nsec / 1000);
+    LL_ADD(info->creationTime, info->creationTime, us);
 }
 
 static void _MD_set_fileinfo64_times(
     const _MDStat64 *sb,
     PRFileInfo64 *info)
 {
-    info->modifyTime = ((PRTime)sb->st_mtim.tv_sec * PR_USEC_PER_SEC);
-    info->modifyTime += (sb->st_mtim.tv_nsec / 1000);
-    info->creationTime = ((PRTime)sb->st_ctim.tv_sec * PR_USEC_PER_SEC);
-    info->creationTime += (sb->st_ctim.tv_nsec / 1000);
+    PRInt64 us, s2us;
+
+    LL_I2L(s2us, PR_USEC_PER_SEC);
+    LL_I2L(info->modifyTime, sb->st_mtim.tv_sec);
+    LL_MUL(info->modifyTime, info->modifyTime, s2us);
+    LL_I2L(us, sb->st_mtim.tv_nsec / 1000);
+    LL_ADD(info->modifyTime, info->modifyTime, us);
+    LL_I2L(info->creationTime, sb->st_ctim.tv_sec);
+    LL_MUL(info->creationTime, info->creationTime, s2us);
+    LL_I2L(us, sb->st_ctim.tv_nsec / 1000);
+    LL_ADD(info->creationTime, info->creationTime, us);
 }
 #elif defined(_PR_STAT_HAS_ST_ATIM_UNION)
 /*
@@ -2558,35 +2585,6 @@ static PRIntn _MD_solaris25_stat64(const char *fn, _MDStat64 *buf)
 
 #if defined(_PR_NO_LARGE_FILES) || defined(SOLARIS2_5)
 
-static PRIntn _MD_Unix_lockf64(PRIntn osfd, PRIntn function, PRInt64 size)
-{
-#if defined(HAVE_BSD_FLOCK)
-    /*
-     * XXX: HAVE_BSD_FLOCK is not really the appropriate macro
-     * to test for here.  We are trying to identify the platforms
-     * that don't have lockf, e.g., BSD/OS, FreeBSD, and Rhapsody.
-     */
-    /* No lockf */
-    PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
-    return -1;
-#else
-    PRInt64 desired, maxoff;
-    PRInt32 current = lseek(osfd, SEEK_CUR, 0);
-
-    LL_I2L(maxoff, 0x7fffffff);
-    LL_I2L(desired, current);
-    LL_ADD(desired, desired, size);
-    if (LL_CMP(desired, <=, maxoff))
-    {
-        off_t offset;
-        LL_L2I(offset, size);
-        return lockf(osfd, function, offset);
-    }
-    PR_SetError(PR_FILE_TOO_BIG_ERROR, 0);
-    return -1;
-#endif
-}  /* _MD_Unix_lockf64 */
-
 static PRInt64 _MD_Unix_lseek64(PRIntn osfd, PRInt64 offset, PRIntn whence)
 {
     PRUint64 maxoff;
@@ -2611,32 +2609,6 @@ static void* _MD_Unix_mmap64(
 }  /* _MD_Unix_mmap64 */
 #endif /* defined(_PR_NO_LARGE_FILES) || defined(SOLARIS2_5) */
 
-#if defined(IRIX) || defined(UNIXWARE)
-
-/*
-** This function emulates a lock64 for IRIX using fcntl calls. It is a true
-** 64-bit operation, just a different system API to get it.
-*/
-static PRIntn _MD_irix_lockf64(PRIntn osfd, PRIntn function, PRInt64 size)
-{
-#if 1
-    PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
-    PR_NOT_REACHED("NOT IMPLEMENTED");
-    return -1;
-#else
-    flock64_t lock;
-    /* $$$ have no idea what I'm doing $$$ */
-    lock.l_type = function;
-    lock.l_whence = SEEK_CUR;
-    lock.l_start = 0;
-    lock.l_len = size;
-
-    return fcntl(osfd, F_SETLKW64, &lock);
-#endif
-}  /* _MD_irix_lockf64 */
-
-#endif  /* defined(IRIX) */
-
 static void _PR_InitIOV(void)
 {
 #if defined(SOLARIS2_5)
@@ -2651,7 +2623,6 @@ static void _PR_InitIOV(void)
         _md_iovector._mmap64 = (_MD_Mmap64)PR_FindSymbol(lib, "mmap64");
         _md_iovector._fstat64 = (_MD_Fstat64)PR_FindSymbol(lib, "fstat64");
         _md_iovector._stat64 = (_MD_Stat64)PR_FindSymbol(lib, "stat64");
-        _md_iovector._lockf64 = (_MD_Lockf64)PR_FindSymbol(lib, "lockf64");
         _md_iovector._lseek64 = (_MD_Lseek64)PR_FindSymbol(lib, "lseek64");
         (void)PR_UnloadLibrary(lib);
     }
@@ -2661,7 +2632,6 @@ static void _PR_InitIOV(void)
         _md_iovector._mmap64 = _MD_Unix_mmap64;
         _md_iovector._fstat64 = _MD_solaris25_fstat64;
         _md_iovector._stat64 = _MD_solaris25_stat64;
-        _md_iovector._lockf64 = _MD_Unix_lockf64;
         _md_iovector._lseek64 = _MD_Unix_lseek64;
     }
 #elif defined(_PR_NO_LARGE_FILES)
@@ -2669,30 +2639,22 @@ static void _PR_InitIOV(void)
     _md_iovector._mmap64 = _MD_Unix_mmap64;
     _md_iovector._fstat64 = fstat;
     _md_iovector._stat64 = stat;
-    _md_iovector._lockf64 = _MD_Unix_lockf64;
     _md_iovector._lseek64 = _MD_Unix_lseek64;
 #elif defined(_PR_HAVE_OFF64_T)
+#if defined(IRIX5_3)
+    _md_iovector._open64 = open;
+#else
     _md_iovector._open64 = open64;
+#endif
     _md_iovector._mmap64 = mmap64;
     _md_iovector._fstat64 = fstat64;
     _md_iovector._stat64 = stat64;
-
-/*
-** $$$ IRIX does not have a lockf64. One must fabricate it from fcntl
-** calls with 64 bit arguments.
-*/
-#if defined(IRIX) || defined(UNIXWARE)
-    _md_iovector._lockf64 = _MD_irix_lockf64;
-#else
-    _md_iovector._lockf64 = lockf64;
-#endif
     _md_iovector._lseek64 = lseek64;
 #elif defined(_PR_HAVE_LARGE_OFF_T)
     _md_iovector._open64 = open;
     _md_iovector._mmap64 = mmap;
     _md_iovector._fstat64 = fstat;
     _md_iovector._stat64 = stat;
-    _md_iovector._lockf64 = lockf;
     _md_iovector._lseek64 = lseek;
 #else
 #error "I don't know yet"

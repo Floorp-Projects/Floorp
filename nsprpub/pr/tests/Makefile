@@ -212,7 +212,7 @@ ifeq ($(OS_ARCH), OSF1)
     endif
 # I haven't figured out how to pass -rpath to cc on OSF1 V3.2, so
 # we do static linking.
-    ifeq ($(OS_RELEASE), V3.2)
+    ifeq (,$(filter-out V2.0 V3.2,$(OS_RELEASE)))
         LIBPR = $(DIST)/lib/libnspr$(MOD_VERSION).a
         LIBPLC = $(DIST)/lib/libplc$(MOD_VERSION).a
         EXTRA_LIBS = -lc_r
@@ -351,7 +351,9 @@ LDOPTS += -Xlinker -R $(PWD)/$(DIST)/lib
 endif
 
 ifeq ($(OS_ARCH),BSD_OS)
+ifneq ($(OS_RELEASE),1.1)
 EXTRA_LIBS = -ldl
+endif
 endif
 
 ifeq ($(USE_PTHREADS),1)

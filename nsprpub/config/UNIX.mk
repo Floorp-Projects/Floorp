@@ -71,5 +71,5 @@ endif
 endif
 
 define MAKE_OBJDIR
-if test ! -d $(@D); then rm -rf $(@D); $(NSINSTALL) -D $(@D); fi
+if test ! -d $(@D); then rm -rf $(@D); $(NSINSTALL) -D $(@D); else true; fi
 endef

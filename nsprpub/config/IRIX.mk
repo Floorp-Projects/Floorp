@@ -32,10 +32,16 @@ endif
 endif
 
 #
-# The default implementation strategy for Irix is pthreads.
-# Classic nspr (user-level threads on top of sprocs) is also
-# available.
+# On IRIX 5.3, classic nspr (user-level threads on top of sprocs)
+# is the default (and only) implementation strategy.
 #
+# On IRIX 6.2 and later, the default implementation strategy is
+# pthreads.  Classic nspr is also available.
+#
+ifeq ($(OS_RELEASE),5.3)
+CLASSIC_NSPR = 1
+endif
+
 ifeq ($(CLASSIC_NSPR),1)
 	IMPL_STRATEGY = _MxN
 else
@@ -106,6 +112,10 @@ NOMD_OS_CFLAGS		= $(ODD_CFLAGS) -D_SGI_MP_SOURCE
 
 ifeq ($(OS_RELEASE),5.3)
 OS_CFLAGS               += -DIRIX5_3
+endif
+
+ifeq (,$(filter-out 6.5,$(OS_RELEASE)))
+OS_CFLAGS		+= -D_PR_HAVE_GETPROTO_R -D_PR_HAVE_GETPROTO_R_POINTER
 endif
 
 ifndef NO_MDUPDATE

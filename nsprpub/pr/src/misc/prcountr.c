@@ -494,17 +494,6 @@ PR_IMPLEMENT(PRCounterHandle)
 **
 **
 */
+/* Some compilers don't like an empty compilation unit. */
+static int dummy = 0;
 #endif /* defined(DEBUG) || defined(FORCE_NSPR_COUNTERS) */
-
-
-
-
-
-
-
-
-
-
-
-
-

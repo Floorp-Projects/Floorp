@@ -49,6 +49,8 @@
 #define _PR_RECV_BROKEN /* recv doesn't work on Unix Domain Sockets */
 #define _PR_POLL_AVAILABLE
 #define _PR_USE_POLL
+#define _PR_STAT_HAS_ST_ATIM
+#define _PR_NO_LARGE_FILES
 
 /*
  * Mike Patnode indicated that it is possibly safe now to use context-switching

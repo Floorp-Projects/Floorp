@@ -564,12 +564,11 @@ PRBool _PR_Obsolete(const char *obsolete, const char *preferred)
     PR_fprintf(
         PR_STDERR, "'%s' is obsolete. Use '%s' instead.\n",
         obsolete, (NULL == preferred) ? "something else" : preferred);
-    return PR_FALSE;
 #else
 #pragma unused (obsolete, preferred)
+#endif
+#endif
     return PR_FALSE;
-#endif
-#endif
 }  /* _PR_Obsolete */
 
 /* prinit.c */

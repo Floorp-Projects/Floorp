@@ -21,7 +21,7 @@ MOD_DEPTH = ../../..
 
 include $(MOD_DEPTH)/config/config.mk
 
-HEADERS = *.h 
+HEADERS = $(wildcard *.h)
 
 RELEASE_HEADERS = $(HEADERS)
 RELEASE_HEADERS_DEST = $(RELEASE_INCLUDE_DIR)/obsolete

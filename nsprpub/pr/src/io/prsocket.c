@@ -51,7 +51,21 @@ static PRBool IsValidNetAddrLen(const PRNetAddr *addr, PRInt32 addr_len)
             && (addr->raw.family != AF_UNIX)
 #endif
             && (PR_NETADDR_SIZE(addr) != addr_len)) {
+        /*
+         * The accept(), getsockname(), etc. calls on some platforms
+         * do not set the actual socket address length on return.
+         * In this case, we verifiy addr_len is still the value we
+         * passed in (i.e., sizeof(PRNetAddr)).
+         */
+#if defined(QNX)
+        if (sizeof(PRNetAddr) != addr_len) {
+            return PR_FALSE;
+        } else {
+            return PR_TRUE;
+        }
+#else
         return PR_FALSE;
+#endif
     }
     return PR_TRUE;
 }

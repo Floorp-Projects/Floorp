@@ -195,10 +195,14 @@ ifdef RELEASE_LIBS
 	@if test -z "$(BUILD_NUMBER)"; then \
 		echo "BUILD_NUMBER must be defined"; \
 		false; \
+	else \
+		true; \
 	fi
 	@if test ! -d $(RELEASE_LIB_DIR); then \
 		rm -rf $(RELEASE_LIB_DIR); \
 		$(NSINSTALL) -D $(RELEASE_LIB_DIR);\
+	else \
+		true; \
 	fi
 	cp $(RELEASE_LIBS) $(RELEASE_LIB_DIR)
 endif
@@ -207,10 +211,14 @@ ifdef RELEASE_HEADERS
 	@if test -z "$(BUILD_NUMBER)"; then \
 		echo "BUILD_NUMBER must be defined"; \
 		false; \
+	else \
+		true; \
 	fi
 	@if test ! -d $(RELEASE_HEADERS_DEST); then \
 		rm -rf $(RELEASE_HEADERS_DEST); \
 		$(NSINSTALL) -D $(RELEASE_HEADERS_DEST);\
+	else \
+		true; \
 	fi
 	cp $(RELEASE_HEADERS) $(RELEASE_HEADERS_DEST)
 endif
@@ -324,7 +332,7 @@ ifeq ($(OS_ARCH), WINNT)
 ifndef XP_OS2_EMX
 	$(CCC) -Fo$@ -c $(CCCFLAGS) $<
 else
-	$(CCC) -o $@ -c $(CFLAGS) $< 
+	$(CCC) -o $@ -c $(CCCFLAGS) $< 
 endif
 else
 	$(CCC) -o $@ -c $(CCCFLAGS) $<

@@ -32,7 +32,7 @@
 #include <dlfcn.h>
 #elif defined(USE_HPSHL)
 #include <dl.h>
-#elif defined(RHAPSODY) || defined(NEXTSTEP)
+#elif defined(USE_MACH_DYLD)
 #include <mach-o/dyld.h>
 #endif
 
@@ -71,7 +71,7 @@ struct PRLibrary {
 #ifdef XP_UNIX
 #if defined(USE_HPSHL)
     shl_t                       dlh;
-#elif defined(RHAPSODY) || defined(NEXTSTEP)
+#elif defined(USE_MACH_DYLD)
     NSModule                    dlh;
 #else
     void*                       dlh;
@@ -170,7 +170,7 @@ void _PR_InitLinker(void)
 #elif defined(USE_HPSHL)
     h = NULL;
     /* don't abort with this NULL */
-#elif defined(RHAPSODY) || defined(NEXTSTEP)
+#elif defined(USE_MACH_DYLD)
     h = NULL; /* XXXX  toshok */
 #else
 #error no dll strategy
@@ -284,7 +284,7 @@ PR_GetLibraryPath()
 #endif
 
 #ifdef XP_UNIX
-#if defined USE_DLFCN || defined RHAPSODY
+#if defined USE_DLFCN || defined USE_MACH_DYLD
     {
     char *home;
     char *local;
@@ -639,7 +639,7 @@ PR_LoadLibrary(const char *name)
     void *h = dlopen(name, RTLD_LAZY);
 #elif defined(USE_HPSHL)
     shl_t h = shl_load(name, BIND_DEFERRED | DYNAMIC_PATH, 0L);
-#elif defined(RHAPSODY) || defined(NEXTSTEP)
+#elif defined(USE_MACH_DYLD)
     NSObjectFileImage ofi;
     NSModule h = NULL;
     if (NSCreateObjectFileImageFromFile(name, &ofi)
@@ -712,7 +712,7 @@ PR_UnloadLibrary(PRLibrary *lib)
     result = dlclose(lib->dlh);
 #elif defined(USE_HPSHL)
     result = shl_unload(lib->dlh);
-#elif defined(RHAPSODY) || defined(NEXTSTEP)
+#elif defined(USE_MACH_DYLD)
     result = NSUnLinkModule(lib->dlh, FALSE);
 #else
 #error Configuration error
@@ -825,7 +825,7 @@ pr_FindSymbolInLib(PRLibrary *lm, const char *name)
     if (shl_findsym(&lm->dlh, name, TYPE_PROCEDURE, &f) == -1) {
         f = NULL;
     }
-#elif defined(RHAPSODY) || defined(NEXTSTEP)
+#elif defined(USE_MACH_DYLD)
     f = NSAddressOfSymbol(NSLookupAndBindSymbol(name));
 #endif
 #endif /* HAVE_DLL */

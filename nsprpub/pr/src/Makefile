@@ -75,7 +75,7 @@ endif
 # On AIX, we override malloc in non-pthread versions.  On AIX 4.2 or
 # above, this requires that we use the rtl-enabled version of libc.a.
 ifeq ($(OS_ARCH),AIX)
-ifneq ($(OS_RELEASE),4.1)
+ifneq (,$(filter-out 3.2 4.1,$(OS_RELEASE)))
 ifneq ($(USE_PTHREADS),1)
 BUILD_AIX_RTL_LIBC = 1
 AIX_RTL_LIBC	= $(OBJDIR)/libc.a
