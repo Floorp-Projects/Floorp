@@ -72,9 +72,10 @@ sub CheckProduct ($)
 # Displays the form to edit a products parameters
 #
 
-sub EmitFormElements ($$$$)
+sub EmitFormElements ($$$$$)
 {
-    my ($product, $description, $milestoneurl, $disallownew) = @_;
+    my ($product, $description, $milestoneurl, $disallownew,
+        $votesperuser) = @_;
 
     $product = value_quote($product);
     $description = value_quote($description);
@@ -97,6 +98,10 @@ sub EmitFormElements ($$$$)
     print "  <TH ALIGN=\"right\">Closed for bug entry:</TH>\n";
     my $closed = $disallownew ? "CHECKED" : "";
     print "  <TD><INPUT TYPE=CHECKBOX NAME=\"disallownew\" $closed VALUE=\"1\"></TD>\n";
+
+    print "</TR><TR>\n";
+    print "  <TH ALIGN=\"right\">Maximum votes per person:</TH>\n";
+    print "  <TD><INPUT SIZE=5 MAXLENGTH=5 NAME=\"votesperuser\" VALUE=\"$votesperuser\"></TD>\n";
 }
 
 
@@ -167,7 +172,8 @@ my $localtrailer = "<A HREF=\"editproducts.cgi\">edit</A> more products";
 unless ($action) {
     PutHeader("Select product");
 
-    SendSQL("SELECT products.product,description,disallownew,COUNT(bug_id)
+    SendSQL("SELECT products.product,description,disallownew,
+                    votesperuser,COUNT(bug_id)
              FROM products LEFT JOIN bugs
                ON products.product=bugs.product
              GROUP BY products.product
@@ -176,11 +182,13 @@ unless ($action) {
     print "  <TH ALIGN=\"left\">Edit product ...</TH>\n";
     print "  <TH ALIGN=\"left\">Description</TH>\n";
     print "  <TH ALIGN=\"left\">Status</TH>\n";
+    print "  <TH ALIGN=\"left\">Votes<br>per<br>user</TH>\n";
     print "  <TH ALIGN=\"left\">Bugs</TH>\n";
     print "  <TH ALIGN=\"left\">Action</TH>\n";
     print "</TR>";
     while ( MoreSQLData() ) {
-        my ($product, $description, $disallownew, $bugs) = FetchSQLData();
+        my ($product, $description, $disallownew, $votesperuser,
+            $bugs) = FetchSQLData();
         $description ||= "<FONT COLOR=\"red\">missing</FONT>";
         $disallownew = $disallownew ? 'closed' : 'open';
         $bugs        ||= 'none';
@@ -188,7 +196,8 @@ unless ($action) {
         print "  <TD VALIGN=\"top\"><A HREF=\"editproducts.cgi?action=edit&product=", url_quote($product), "\"><B>$product</B></A></TD>\n";
         print "  <TD VALIGN=\"top\">$description</TD>\n";
         print "  <TD VALIGN=\"top\">$disallownew</TD>\n";
-        print "  <TD VALIGN=\"top\">$bugs</TD>\n";
+        print "  <TD VALIGN=\"top\" ALIGN=\"right\">$votesperuser</TD>\n";
+        print "  <TD VALIGN=\"top\" ALIGN=\"right\">$bugs</TD>\n";
         print "  <TD VALIGN=\"top\"><A HREF=\"editproducts.cgi?action=del&product=", url_quote($product), "\">Delete</A></TD>\n";
         print "</TR>";
     }
@@ -218,7 +227,7 @@ if ($action eq 'add') {
     print "<FORM METHOD=POST ACTION=editproducts.cgi>\n";
     print "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0><TR>\n";
 
-    EmitFormElements('', '', '', 0);
+    EmitFormElements('', '', '', 0, 0);
 
     print "</TR><TR>\n";
     print "  <TH ALIGN=\"right\">Version:</TH>\n";
@@ -272,15 +281,18 @@ if ($action eq 'new') {
     my $milestoneurl = trim($::FORM{milestoneurl} || '');
     my $disallownew = 0;
     $disallownew = 1 if $::FORM{disallownew};
+    my $votesperuser = $::FORM{votesperuser};
+    $votesperuser ||= 0;
 
     # Add the new product.
     SendSQL("INSERT INTO products ( " .
-          "product, description, milestoneurl, disallownew" .
+          "product, description, milestoneurl, disallownew, votesperuser" .
           " ) VALUES ( " .
           SqlQuote($product) . "," .
           SqlQuote($description) . "," .
           SqlQuote($milestoneurl) . "," .
-          $disallownew . ")" );
+          $disallownew . "," .
+          SqlQuote($votesperuser) . ")" );
     SendSQL("INSERT INTO versions ( " .
           "value, program" .
           " ) VALUES ( " .
@@ -501,15 +513,17 @@ if ($action eq 'edit') {
     CheckProduct($product);
 
     # get data of product
-    SendSQL("SELECT description,milestoneurl,disallownew
+    SendSQL("SELECT description,milestoneurl,disallownew,votesperuser
              FROM products
              WHERE product=" . SqlQuote($product));
-    my ($description, $milestoneurl, $disallownew) = FetchSQLData();
+    my ($description, $milestoneurl, $disallownew, $votesperuser) =
+        FetchSQLData();
 
     print "<FORM METHOD=POST ACTION=editproducts.cgi>\n";
     print "<TABLE  BORDER=0 CELLPADDING=4 CELLSPACING=0><TR>\n";
 
-    EmitFormElements($product, $description, $milestoneurl, $disallownew);
+    EmitFormElements($product, $description, $milestoneurl, $disallownew,
+                     $votesperuser);
     
     print "</TR><TR VALIGN=top>\n";
     print "  <TH ALIGN=\"right\"><A HREF=\"editcomponents.cgi?product=", url_quote($product), "\">Edit components:</A></TH>\n";
@@ -571,6 +585,7 @@ if ($action eq 'edit') {
     print "<INPUT TYPE=HIDDEN NAME=\"milestoneurlold\" VALUE=\"" .
         value_quote($milestoneurl) . "\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"disallownewold\" VALUE=\"$disallownew\">\n";
+    print "<INPUT TYPE=HIDDEN NAME=\"votesperuserold\" VALUE=\"$votesperuser\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"action\" VALUE=\"update\">\n";
     print "<INPUT TYPE=SUBMIT VALUE=\"Update\">\n";
 
@@ -598,6 +613,8 @@ if ($action eq 'update') {
     my $disallownewold  = trim($::FORM{disallownewold}  || '');
     my $milestoneurl    = trim($::FORM{milestoneurl}    || '');
     my $milestoneurlold = trim($::FORM{milestoneurlold} || '');
+    my $votesperuser    = trim($::FORM{votesperuser}    || 0);
+    my $votesperuserold = trim($::FORM{votesperuserold} || '');
 
     CheckProduct($productold);
 
@@ -635,6 +652,13 @@ if ($action eq 'update') {
                  SET milestoneurl=" . SqlQuote($milestoneurl) . "
                  WHERE product=" . SqlQuote($productold));
         print "Updated mile stone URL.<BR>\n";
+    }
+
+    if ($votesperuser ne $votesperuserold) {
+        SendSQL("UPDATE products
+                 SET votesperuser=$votesperuser
+                 WHERE product=" . SqlQuote($productold));
+        print "Update votes per user.<BR>\n";
     }
 
 
