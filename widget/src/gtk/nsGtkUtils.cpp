@@ -33,6 +33,9 @@
 */
 int usleep(useconds_t);
 #endif
+#if defined(__QNX__)
+#define usleep(s)	sleep(s)
+#endif
 
 //////////////////////////////////////////////////////////////////
 #if 0
