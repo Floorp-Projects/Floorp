@@ -52,7 +52,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsHTMLAtoms.h"
 #include "nsXULAtoms.h"
-#include "nsIReflowCommand.h"
+#include "nsHTMLReflowCommand.h"
 #include "nsIContent.h"
 #include "nsSpaceManager.h"
 #include "nsHTMLParts.h"
@@ -111,13 +111,13 @@ nsAdaptorPrintReason(nsHTMLReflowState& aReflowState)
           break;
         case eReflowReason_Incremental: 
         {
-           nsIReflowCommand::ReflowType  type;
+           nsReflowType  type;
             aReflowState.reflowCommand->GetType(type);
             switch (type) {
-              case nsIReflowCommand::StyleChanged:
+              case eReflowType_StyleChanged:
                  reflowReasonString = "incremental (StyleChanged)";
               break;
-              case nsIReflowCommand::ReflowDirty:
+              case eReflowType_ReflowDirty:
                  reflowReasonString = "incremental (ReflowDirty)";
               break;
               default:
@@ -793,10 +793,10 @@ nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
 
          reflowState.reason = eReflowReason_StyleChange;
       } else if (reason == eReflowReason_Incremental) {
-         nsIReflowCommand::ReflowType  type;
+         nsReflowType  type;
           reflowState.reflowCommand->GetType(type);
 
-          if (type != nsIReflowCommand::StyleChanged) {
+          if (type != eReflowType_StyleChanged) {
              #ifdef DEBUG_REFLOW
                 nsAdaptorAddIndents();
                 printf("Size=(%d,%d)\n",reflowState.mComputedWidth, reflowState.mComputedHeight);
@@ -1062,10 +1062,10 @@ nsBoxToBlockAdaptor::CanSetMaxElementSize(nsBoxLayoutState& aState, nsReflowReas
       if (reflowState->reason == eReflowReason_Incremental) {
         if (reflowState->reflowCommand) {
           // MaxElement doesn't work on style change reflows.. :-(
-          nsIReflowCommand::ReflowType  type;
+          nsReflowType  type;
           reflowState->reflowCommand->GetType(type);
 
-          if (type == nsIReflowCommand::StyleChanged) 
+          if (type == eReflowType_StyleChanged) 
             return PR_FALSE;
         }
 

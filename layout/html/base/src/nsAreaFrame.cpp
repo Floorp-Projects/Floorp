@@ -36,7 +36,6 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nsAreaFrame.h"
 #include "nsBlockBandData.h"
-#include "nsIReflowCommand.h"
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"

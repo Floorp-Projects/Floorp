@@ -328,7 +328,7 @@ nsBox::MarkStyleChange(nsBoxLayoutState& aState)
     nsIFrame* frame = nsnull;
     GetFrame(&frame);
     nsFrame::CreateAndPostReflowCommand(shell, frame, 
-      nsIReflowCommand::StyleChange, nsnull, nsnull, nsnull);
+      nsHTMLReflowCommand::StyleChange, nsnull, nsnull, nsnull);
     return NS_OK;
     */
     nsIFrame* frame = nsnull;
@@ -423,7 +423,7 @@ nsBox::RelayoutStyleChange(nsBoxLayoutState& aState, nsIBox* aChild)
         nsIFrame* frame = nsnull;
         aChild->GetFrame(&frame);
         nsFrame::CreateAndPostReflowCommand(shell, frame, 
-          nsIReflowCommand::StyleChanged, nsnull, nsnull, nsnull);
+          eReflowType_StyleChanged, nsnull, nsnull, nsnull);
         return NS_OK;
       }
     } else {

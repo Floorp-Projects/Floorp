@@ -40,7 +40,7 @@
 #include "nsTableCellFrame.h"
 #include "nsTableFrame.h"
 #include "nsTableRowGroupFrame.h"
-#include "nsIReflowCommand.h"
+#include "nsHTMLReflowCommand.h"
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
@@ -858,9 +858,9 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
     rv = aReflowState.reflowCommand->GetTarget(target);
     if ((PR_TRUE==NS_SUCCEEDED(rv)) && target) {
       if (this == target) {
-        nsIReflowCommand::ReflowType type;
+        nsReflowType type;
         aReflowState.reflowCommand->GetType(type);
-        if (nsIReflowCommand::StyleChanged == type) {
+        if (eReflowType_StyleChanged == type) {
           isStyleChanged = PR_TRUE;
         }
         else {

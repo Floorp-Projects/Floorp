@@ -45,7 +45,7 @@
 #include "nsStyleConsts.h"
 #include "nsIContent.h"
 #include "nsIView.h"
-#include "nsIReflowCommand.h"
+#include "nsHTMLReflowCommand.h"
 #include "nsHTMLIIDs.h"
 #include "nsIDeviceContext.h"
 #include "nsHTMLAtoms.h"
@@ -430,9 +430,9 @@ nsTableRowGroupFrame::ReflowChildren(nsIPresContext*        aPresContext,
       if (eReflowReason_Incremental == aReflowState.reason) {
         aReflowState.reflowState.reflowCommand->GetTarget(target);
         if (this == target) {
-          nsIReflowCommand::ReflowType type;
+          nsReflowType type;
           aReflowState.reflowState.reflowCommand->GetType(type);
-          if (nsIReflowCommand::StyleChanged == type) {
+          if (eReflowType_StyleChanged == type) {
             reason = eReflowReason_StyleChange;
           }
         }
@@ -1356,11 +1356,11 @@ nsTableRowGroupFrame::IR_TargetIsMe(nsIPresContext*        aPresContext,
                                     nsReflowStatus&        aStatus)
 {
   nsresult rv = NS_FRAME_COMPLETE;
-  nsIReflowCommand::ReflowType type;
+  nsReflowType type;
   aReflowState.reflowState.reflowCommand->GetType(type);
 
   switch (type) {
-    case nsIReflowCommand::ReflowDirty: {
+    case eReflowType_ReflowDirty: {
       nsRowGroupReflowState state(aReflowState);
       state.reason = eReflowReason_Resize;
       // Reflow the dirty child frames. Typically this is newly added frames.
@@ -1370,10 +1370,10 @@ nsTableRowGroupFrame::IR_TargetIsMe(nsIPresContext*        aPresContext,
       CalculateRowHeights(aPresContext, aDesiredSize, aReflowState.reflowState, firstRowReflowed);
       break;
     }
-    case nsIReflowCommand::StyleChanged :
+    case eReflowType_StyleChanged :
       rv = IR_StyleChanged(aPresContext, aDesiredSize, aReflowState, aStatus);
       break;
-    case nsIReflowCommand::ContentChanged :
+    case eReflowType_ContentChanged :
       NS_ASSERTION(PR_FALSE, "illegal reflow type: ContentChanged");
       rv = NS_ERROR_ILLEGAL_VALUE;
       break; 

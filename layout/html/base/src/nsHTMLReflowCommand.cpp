@@ -49,11 +49,11 @@
 
 
 nsresult
-NS_NewHTMLReflowCommand(nsIReflowCommand**           aInstancePtrResult,
-                        nsIFrame*                    aTargetFrame,
-                        nsIReflowCommand::ReflowType aReflowType,
-                        nsIFrame*                    aChildFrame,
-                        nsIAtom*                     aAttribute)
+NS_NewHTMLReflowCommand(nsHTMLReflowCommand**           aInstancePtrResult,
+                        nsIFrame*                       aTargetFrame,
+                        nsReflowType                    aReflowType,
+                        nsIFrame*                       aChildFrame,
+                        nsIAtom*                        aAttribute)
 {
   NS_ASSERTION(aInstancePtrResult,
                "null result passed to NS_NewHTMLReflowCommand");
@@ -63,8 +63,6 @@ NS_NewHTMLReflowCommand(nsIReflowCommand**           aInstancePtrResult,
   if (!*aInstancePtrResult) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-
-  NS_ADDREF(*aInstancePtrResult);
 
   return NS_OK;
 }
@@ -107,20 +105,20 @@ mPathStats gmPathStats;
 
 // Construct a reflow command given a target frame, reflow command type,
 // and optional child frame
-nsHTMLReflowCommand::nsHTMLReflowCommand(nsIFrame*  aTargetFrame,
-                                         ReflowType aReflowType,
-                                         nsIFrame*  aChildFrame,
-                                         nsIAtom*   aAttribute)
+nsHTMLReflowCommand::nsHTMLReflowCommand(nsIFrame*    aTargetFrame,
+                                         nsReflowType aReflowType,
+                                         nsIFrame*    aChildFrame,
+                                         nsIAtom*     aAttribute)
   : mType(aReflowType), mTargetFrame(aTargetFrame), mChildFrame(aChildFrame),
     mPrevSiblingFrame(nsnull),
     mAttribute(aAttribute),
     mListName(nsnull),
     mFlags(0)
 {
+  MOZ_COUNT_CTOR(nsHTMLReflowCommand);
   NS_PRECONDITION(mTargetFrame != nsnull, "null target frame");
   if (nsnull!=mAttribute)
     NS_ADDREF(mAttribute);
-  NS_INIT_REFCNT();
 #ifdef DEBUG_jesup
   gReflows++;
   gReflowsInUse++;
@@ -131,6 +129,7 @@ nsHTMLReflowCommand::nsHTMLReflowCommand(nsIFrame*  aTargetFrame,
 
 nsHTMLReflowCommand::~nsHTMLReflowCommand()
 {
+  MOZ_COUNT_DTOR(nsHTMLReflowCommand);
 #ifdef DEBUG_jesup
   if (mPath.GetArraySize() == 0)
     gReflowsMaxZero++;
@@ -144,8 +143,6 @@ nsHTMLReflowCommand::~nsHTMLReflowCommand()
   NS_IF_RELEASE(mAttribute);
   NS_IF_RELEASE(mListName);
 }
-
-NS_IMPL_ISUPPORTS1(nsHTMLReflowCommand, nsIReflowCommand)
 
 nsIFrame* nsHTMLReflowCommand::GetContainingBlock(nsIFrame* aFloater) const
 {
@@ -255,7 +252,7 @@ NS_IMETHODIMP nsHTMLReflowCommand::SetTarget(nsIFrame* aTargetFrame)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLReflowCommand::GetType(ReflowType& aReflowType) const
+NS_IMETHODIMP nsHTMLReflowCommand::GetType(nsReflowType& aReflowType) const
 {
   aReflowType = mType;
   return NS_OK;
@@ -374,3 +371,4 @@ nsHTMLReflowCommand::SetFlags(PRInt32 aFlags)
   mFlags = aFlags;
   return NS_OK;
 }
+

@@ -38,7 +38,6 @@
 #include "nsReadableUtils.h"
 #include "nsSimplePageSequence.h"
 #include "nsIPresContext.h"
-#include "nsIReflowCommand.h"
 #include "nsIRenderingContext.h"
 #include "nsIStyleContext.h"
 #include "nsHTMLAtoms.h"

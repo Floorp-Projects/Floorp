@@ -419,13 +419,19 @@ GetIBContainingBlockFor(nsIFrame* aFrame)
   nsIFrame* parentFrame;
   do {
     aFrame->GetParent(&parentFrame);
-    if (!parentFrame || !IsFrameSpecial(parentFrame))
+
+    if (! parentFrame) {
+      NS_ERROR("no unsplit block frame in IB hierarchy");
+      return aFrame;
+    }
+
+    if (!IsFrameSpecial(parentFrame))
       break;
 
     aFrame = parentFrame;
   } while (1);
 
-  return aFrame;
+  return parentFrame;
 }
 
 //----------------------------------------------------------------------
@@ -8605,6 +8611,17 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
                                                    nsLayoutAtoms::fixedList,
                                                    state.mFixedItems.childList);
       }
+
+#ifdef DEBUG
+      if (gReallyNoisyContentUpdates && docElementFrame) {
+        nsIFrameDebug* fdbg = nsnull;
+        CallQueryInterface(docElementFrame, &fdbg);
+        if (fdbg) {
+          printf("nsCSSFrameConstructor::ContentInserted: resulting frame model:\n");
+          fdbg->List(aPresContext, stdout, 0);
+        }
+      }
+#endif
     }
 
     nsCOMPtr<nsIBindingManager> bm;
@@ -9904,9 +9921,9 @@ nsCSSFrameConstructor::StyleChangeReflow(nsIPresContext* aPresContext,
     nsCOMPtr<nsIPresShell> shell;
     aPresContext->GetShell(getter_AddRefs(shell));
  
-    nsCOMPtr<nsIReflowCommand> reflowCmd;
-    rv = NS_NewHTMLReflowCommand(getter_AddRefs(reflowCmd), aFrame,
-                                 nsIReflowCommand::StyleChanged,
+    nsHTMLReflowCommand *reflowCmd;
+    rv = NS_NewHTMLReflowCommand(&reflowCmd, aFrame,
+                                 eReflowType_StyleChanged,
                                  nsnull,
                                  aAttribute);
   
@@ -13461,6 +13478,12 @@ nsCSSFrameConstructor::WipeContainingBlock(nsIPresContext* aPresContext,
   aFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&) parentDisplay);
   if (NS_STYLE_DISPLAY_INLINE == parentDisplay->mDisplay) {
     if (!AreAllKidsInline(aFrameList)) {
+      // XXXwaterson temporary code until we figure out why bug 102931
+      // is really happening.
+      NS_ASSERTION(aBlockContent != nsnull, "ack, inline without a containing block");
+      if (! aBlockContent)
+        return PR_FALSE;
+
       // Ok, reverse tracks: wipe out the frames we just created
       nsCOMPtr<nsIPresShell>    presShell;
       nsCOMPtr<nsIFrameManager> frameManager;

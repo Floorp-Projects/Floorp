@@ -56,7 +56,7 @@ class nsCalculatedBoxInfo;
 struct nsHTMLReflowMetrics;
 class nsString;
 class nsIBox;
-class nsIReflowCommand;
+class nsHTMLReflowCommand;
 
 class nsBoxLayoutState
 {
@@ -104,8 +104,8 @@ public:
 
 private:
   //void DirtyAllChildren(nsBoxLayoutState& aState, nsIBox* aBox);
-  void UnWind(nsIReflowCommand* aCommand, nsIBox* aRootBox);
-  nsIBox* GetTargetBox(nsIReflowCommand* mCommand, PRBool& aIsAdaptor);
+  void UnWind(nsHTMLReflowCommand* aCommand, nsIBox* aRootBox);
+  nsIBox* GetTargetBox(nsHTMLReflowCommand* mCommand, PRBool& aIsAdaptor);
   nsIBox* GetBoxForFrame(nsIFrame* aFrame, PRBool& aIsAdaptor);
 
   nsCOMPtr<nsIPresContext> mPresContext;

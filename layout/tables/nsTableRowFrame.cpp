@@ -47,7 +47,7 @@
 #include "nsTableFrame.h"
 #include "nsTableCellFrame.h"
 #include "nsIView.h"
-#include "nsIReflowCommand.h"
+#include "nsHTMLReflowCommand.h"
 #include "nsCSSRendering.h"
 #include "nsHTMLIIDs.h"
 #include "nsLayoutAtoms.h"
@@ -924,9 +924,9 @@ nsTableRowFrame::ReflowChildren(nsIPresContext*          aPresContext,
   if (eReflowReason_Incremental == aReflowState.reason) {
     aReflowState.reflowCommand->GetTarget(target);
     if (this == target) {
-      nsIReflowCommand::ReflowType type;
+      nsReflowType type;
       aReflowState.reflowCommand->GetType(type);
-      if (nsIReflowCommand::StyleChanged == type) {
+      if (eReflowType_StyleChanged == type) {
         notifyStyleChange = PR_TRUE;
       }
     }
@@ -1166,17 +1166,17 @@ nsTableRowFrame::IR_TargetIsMe(nsIPresContext*          aPresContext,
 {
   nsresult rv = NS_FRAME_COMPLETE;
 
-  nsIReflowCommand::ReflowType type;
+  nsReflowType type;
   aReflowState.reflowCommand->GetType(type);
   switch (type) {
-    case nsIReflowCommand::ReflowDirty: 
+    case eReflowType_ReflowDirty: 
       // Reflow the dirty child frames. Typically this is newly added frames.
       rv = ReflowChildren(aPresContext, aDesiredSize, aReflowState, aTableFrame, aStatus, PR_TRUE);
       break;
-    case nsIReflowCommand::StyleChanged :
+    case eReflowType_StyleChanged :
       rv = IR_StyleChanged(aPresContext, aDesiredSize, aReflowState, aTableFrame, aStatus);
       break;
-    case nsIReflowCommand::ContentChanged :
+    case eReflowType_ContentChanged :
       NS_ASSERTION(PR_FALSE, "illegal reflow type: ContentChanged");
       rv = NS_ERROR_ILLEGAL_VALUE;
       break;

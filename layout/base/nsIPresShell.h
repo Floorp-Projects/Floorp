@@ -39,9 +39,10 @@
 
 #include "nsISupports.h"
 #include "nsCoord.h"
-#include "nsIReflowCommand.h"
 #include "nsEvent.h"
+#include "nsReflowType.h"
 
+class nsIAtom;
 class nsIContent;
 class nsIContentIterator;
 class nsIDocument;
@@ -64,6 +65,7 @@ class nsIArena;
 class nsIReflowCallback;
 class nsISupportsArray;
 class nsIDOMNode;
+class nsHTMLReflowCommand;
 
 #define NS_IPRESSHELL_IID     \
 { 0x76e79c60, 0x944e, 0x11d1, \
@@ -287,8 +289,8 @@ public:
   /**
    * Reflow commands
    */
-  NS_IMETHOD AppendReflowCommand(nsIReflowCommand* aReflowCommand) = 0;
-  NS_IMETHOD CancelReflowCommand(nsIFrame* aTargetFrame, nsIReflowCommand::ReflowType* aCmdType) = 0;
+  NS_IMETHOD AppendReflowCommand(nsHTMLReflowCommand* aReflowCommand) = 0;
+  NS_IMETHOD CancelReflowCommand(nsIFrame* aTargetFrame, nsReflowType* aCmdType) = 0;
   NS_IMETHOD CancelAllReflowCommands() = 0;
 
 

@@ -73,7 +73,6 @@
 #include "nsINameSpaceManager.h"
 #include "nsHTMLAtoms.h"
 #include "nsXULAtoms.h"
-#include "nsIReflowCommand.h"
 #include "nsIContent.h"
 #include "nsSpaceManager.h"
 #include "nsHTMLParts.h"

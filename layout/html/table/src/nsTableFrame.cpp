@@ -63,7 +63,7 @@
 #include "nsIView.h"
 #include "nsHTMLAtoms.h"
 #include "nsHTMLIIDs.h"
-#include "nsIReflowCommand.h"
+#include "nsHTMLReflowCommand.h"
 #include "nsLayoutAtoms.h"
 #include "nsIDeviceContext.h"
 #include "nsIStyleSet.h"
@@ -295,7 +295,7 @@ nsTableFrame::Destroy(nsIPresContext* aPresContext)
 
 NS_IMETHODIMP
 nsTableFrame::ReflowCommandNotify(nsIPresShell*     aShell,
-                                  nsIReflowCommand* aRC,
+                                  nsHTMLReflowCommand* aRC,
                                   PRBool            aCommandAdded)
 
 {
@@ -305,14 +305,14 @@ nsTableFrame::ReflowCommandNotify(nsIPresShell*     aShell,
   }
 
 #ifndef TABLE_REFLOW_COALESCING_OFF
-  nsIReflowCommand::ReflowType type;
+  nsReflowType type;
   aRC->GetType(type);
-  if ((type == nsIReflowCommand::ContentChanged) ||
-      (type == nsIReflowCommand::StyleChanged)   ||
-      (type == nsIReflowCommand::ReflowDirty)) {
+  if ((type == eReflowType_ContentChanged) ||
+      (type == eReflowType_StyleChanged)   ||
+      (type == eReflowType_ReflowDirty)) {
     mNumDescendantReflowsPending += (aCommandAdded) ? 1 : -1;
   }
-  else if (type == nsIReflowCommand::Timeout) {
+  else if (type == eReflowType_Timeout) {
     if (aCommandAdded) {
       mNumDescendantTimeoutReflowsPending++;
       if (RequestedTimeoutReflow()) {
@@ -389,13 +389,12 @@ nsTableFrame::AppendDirtyReflowCommand(nsIPresShell* aPresShell,
   frameState |= NS_FRAME_IS_DIRTY;  // mark the table frame as dirty  
   aFrame->SetFrameState(frameState);
 
-  nsIReflowCommand* reflowCmd;
+  nsHTMLReflowCommand* reflowCmd;
   nsresult rv = NS_NewHTMLReflowCommand(&reflowCmd, aFrame,
-                                        nsIReflowCommand::ReflowDirty);
+                                        eReflowType_ReflowDirty);
   if (NS_SUCCEEDED(rv)) {
     // Add the reflow command
     rv = aPresShell->AppendReflowCommand(reflowCmd);
-    NS_RELEASE(reflowCmd);
   }
 
   return rv;
@@ -1607,9 +1606,9 @@ PRBool nsTableFrame::NeedsReflow(const nsHTMLReflowState& aReflowState)
 #ifndef TABLE_REFLOW_COALESCING_OFF
     nsIFrame* reflowTarget;
     aReflowState.reflowCommand->GetTarget(reflowTarget);
-    nsIReflowCommand::ReflowType reflowType;
+    nsReflowType reflowType;
     aReflowState.reflowCommand->GetType(reflowType);
-    if (reflowType == nsIReflowCommand::Timeout) {
+    if (reflowType == eReflowType_Timeout) {
       result = PR_FALSE;
       if (this == reflowTarget) {
         if (mNumDescendantTimeoutReflowsPending <= 0) {
@@ -2032,9 +2031,9 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext*          aPresContext,
   // determine if we need to reset DescendantReflowedNotTimeout and/or
   // RequestedTimeoutReflow after a timeout reflow.
   if (aReflowState.reflowCommand) {
-    nsIReflowCommand::ReflowType type;
+    nsReflowType type;
     aReflowState.reflowCommand->GetType(type);
-    if (nsIReflowCommand::Timeout == type) {
+    if (eReflowType_Timeout == type) {
       nsIFrame* target = nsnull;
       aReflowState.reflowCommand->GetTarget(target);
       if (target == this) { // target is me
@@ -2682,7 +2681,7 @@ nsTableFrame::IncrementalReflow(nsIPresContext*          aPresContext,
   nsIFrame* target = nsnull;
   rv = aReflowState.reflowCommand->GetTarget(target);
   if (NS_SUCCEEDED(rv) && target) {
-    nsIReflowCommand::ReflowType type;
+    nsReflowType type;
     aReflowState.reflowCommand->GetType(type);
     // this is the target if target is either this or the outer table frame containing this inner frame
     nsIFrame* outerTableFrame = nsnull;
@@ -2713,18 +2712,18 @@ nsTableFrame::IR_TargetIsMe(nsIPresContext*      aPresContext,
   nsresult rv = NS_OK;
   aStatus = NS_FRAME_COMPLETE;
 
-  nsIReflowCommand::ReflowType type;
+  nsReflowType type;
   aReflowState.reflowState.reflowCommand->GetType(type);
 
   switch (type) {
-    case nsIReflowCommand::StyleChanged :
+    case eReflowType_StyleChanged :
       rv = IR_StyleChanged(aPresContext, aReflowState, aStatus);
       break;
-    case nsIReflowCommand::ContentChanged :
+    case eReflowType_ContentChanged :
       NS_ASSERTION(PR_FALSE, "illegal reflow type: ContentChanged");
       rv = NS_ERROR_ILLEGAL_VALUE;
       break;
-    case nsIReflowCommand::ReflowDirty: {
+    case eReflowType_ReflowDirty: {
       // reflow the dirty children
       nsTableReflowState reflowState(aReflowState.reflowState, *this, eReflowReason_Initial,
                                      aReflowState.availSize.width, aReflowState.availSize.height); 
@@ -2735,7 +2734,7 @@ nsTableFrame::IR_TargetIsMe(nsIPresContext*      aPresContext,
         SetNeedStrategyInit(PR_TRUE);
       }
       break;
-    case nsIReflowCommand::Timeout: {
+    case eReflowType_Timeout: {
       // for a timeout reflow, don't do anything here
       break;
     }
@@ -2864,9 +2863,9 @@ nsTableFrame::IR_TargetIsChild(nsIPresContext*      aPresContext,
 #ifndef TABLE_REFLOW_COALESCING_OFF
   // update the descendant reflow counts and determine if we need to request a timeout reflow
   PRBool needToRequestTimeoutReflow = PR_FALSE;
-  nsIReflowCommand::ReflowType type;
+  nsReflowType type;
   aReflowState.reflowState.reflowCommand->GetType(type);
-  if (nsIReflowCommand::Timeout == type) {
+  if (eReflowType_Timeout == type) {
     mNumDescendantTimeoutReflowsPending--;
     NS_ASSERTION(mNumDescendantTimeoutReflowsPending >= 0, "invalid descendant reflow count");
   }
@@ -4877,9 +4876,9 @@ void nsTableFrame::DebugReflow(nsIFrame*            aFrame,
     timer->mComputedWidth = aState.mComputedWidth;
     timer->mComputedHeight = aState.mComputedHeight;
     timer->mCount = gRflCount++; 
-    nsIReflowCommand* reflowCommand = aState.reflowCommand;
+    nsHTMLReflowCommand* reflowCommand = aState.reflowCommand;
     if (reflowCommand) {
-      nsIReflowCommand::ReflowType reflowType;
+      nsReflowType reflowType;
       reflowCommand->GetType(reflowType);
       timer->mReflowType = reflowType;
     }

@@ -562,9 +562,9 @@ public:
   // increment or decrement the count of pending reflow commands targeted at
   // descendants. Only rebalance the table when this count goes to 0 or the
   // reflow is the last one in a batch (limited by the pres shell).
-  NS_IMETHOD  ReflowCommandNotify(nsIPresShell*     aShell,
-                                  nsIReflowCommand* aRC,
-                                  PRBool            aCommandAdded);
+  NS_IMETHOD  ReflowCommandNotify(nsIPresShell*        aShell,
+                                  nsHTMLReflowCommand* aRC,
+                                  PRBool               aCommandAdded);
   PRBool IsRowInserted() const;
   void   SetRowInserted(PRBool aValue);
 

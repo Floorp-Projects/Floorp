@@ -43,7 +43,7 @@
 //
 
 #include "nsBoxLayoutState.h"
-#include "nsIReflowCommand.h"
+#include "nsHTMLReflowCommand.h"
 #include "nsBoxFrame.h"
 #include "nsIStyleContext.h"
 #include "nsHTMLAtoms.h"
@@ -186,13 +186,13 @@ nsBoxLayoutState::HandleReflow(nsIBox* aRootBox)
 
 
 void
-nsBoxLayoutState::UnWind(nsIReflowCommand* aCommand, nsIBox* aBox)
+nsBoxLayoutState::UnWind(nsHTMLReflowCommand* aCommand, nsIBox* aBox)
 {
   // if incremental unwindow the chain
   nsIFrame* incrementalChild = nsnull;
   nsIFrame* target = nsnull;
   aCommand->GetTarget(target);
-  nsIReflowCommand::ReflowType  type;
+  nsReflowType  type;
   mReflowState->reflowCommand->GetType(type);
 
   while(1)
@@ -227,7 +227,7 @@ nsBoxLayoutState::UnWind(nsIReflowCommand* aCommand, nsIBox* aBox)
          // mark it dirty generating a new reflow command targeted
          // at us and coelesce out this one.
 
-         if (type == nsIReflowCommand::StyleChanged) {
+         if (type == eReflowType_StyleChanged) {
             ibox->MarkStyleChange(*this);
 
             // could be a visiblity change. Like collapse so we need to dirty
@@ -290,7 +290,7 @@ nsBoxLayoutState::UnWind(nsIReflowCommand* aCommand, nsIBox* aBox)
 
 /*
 void
-nsBoxLayoutState::UnWind(nsIReflowCommand* aCommand, nsIBox* aBox)
+nsBoxLayoutState::UnWind(nsHTMLReflowCommand* aCommand, nsIBox* aBox)
 {
     
   nsFrameState state;
@@ -333,7 +333,7 @@ nsBoxLayoutState::UnWind(nsIReflowCommand* aCommand, nsIBox* aBox)
 */
 
 nsIBox*
-nsBoxLayoutState::GetTargetBox(nsIReflowCommand* mCommand, PRBool& aIsAdaptor)
+nsBoxLayoutState::GetTargetBox(nsHTMLReflowCommand* mCommand, PRBool& aIsAdaptor)
 {
   nsIFrame* target = nsnull;
   mReflowState->reflowCommand->GetTarget(target);

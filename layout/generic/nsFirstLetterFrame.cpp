@@ -38,7 +38,6 @@
 #include "nsHTMLContainerFrame.h"
 #include "nsIPresContext.h"
 #include "nsIStyleContext.h"
-#include "nsIReflowCommand.h"
 #include "nsIContent.h"
 #include "nsLineLayout.h"
 #include "nsHTMLAtoms.h"

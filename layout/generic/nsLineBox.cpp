@@ -495,7 +495,7 @@ nsLineBox::GetCombinedArea(nsRect* aResult)
   if (aResult) {
     *aResult = mData ? mData->mCombinedArea : mBounds;
 #ifdef VERY_NOISY_REFLOW
-    printf("nsLB::SetCombinedArea(1) %p (%d, %d, %d, %d)\n", 
+    printf("nsLineBox::GetCombinedArea(1) %p (%d,%d,%d,%d)\n", 
          this, aResult->x, aResult->y, aResult->width, aResult->height);
 #endif
   }

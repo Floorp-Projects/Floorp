@@ -43,7 +43,7 @@
 #include "nsIScrollableFrame.h"
 #include "nsIDeviceContext.h"
 #include "nsIPresContext.h"
-#include "nsIReflowCommand.h"
+#include "nsHTMLReflowCommand.h"
 #include "nsIPresShell.h"
 
 
@@ -209,12 +209,11 @@ ViewportFrame::AppendFrames(nsIPresContext* aPresContext,
     mFixedFrames.AppendFrames(nsnull, aFrameList);
     
     // Generate a reflow command to reflow the dirty frames
-    nsIReflowCommand* reflowCmd;
-    rv = NS_NewHTMLReflowCommand(&reflowCmd, this, nsIReflowCommand::ReflowDirty);
+    nsHTMLReflowCommand* reflowCmd;
+    rv = NS_NewHTMLReflowCommand(&reflowCmd, this, eReflowType_ReflowDirty);
     if (NS_SUCCEEDED(rv)) {
       reflowCmd->SetChildListName(nsLayoutAtoms::fixedList);
       aPresShell.AppendReflowCommand(reflowCmd);
-      NS_RELEASE(reflowCmd);
     }
   }
 
@@ -243,12 +242,11 @@ ViewportFrame::InsertFrames(nsIPresContext* aPresContext,
     mFixedFrames.InsertFrames(nsnull, aPrevFrame, aFrameList);
   
     // Generate a reflow command to reflow the dirty frames
-    nsIReflowCommand* reflowCmd;
-    rv = NS_NewHTMLReflowCommand(&reflowCmd, this, nsIReflowCommand::ReflowDirty);
+    nsHTMLReflowCommand* reflowCmd;
+    rv = NS_NewHTMLReflowCommand(&reflowCmd, this, eReflowType_ReflowDirty);
     if (NS_SUCCEEDED(rv)) {
       reflowCmd->SetChildListName(nsLayoutAtoms::fixedList);
       aPresShell.AppendReflowCommand(reflowCmd);
-      NS_RELEASE(reflowCmd);
     }
   }
 
@@ -456,14 +454,14 @@ nsresult
 ViewportFrame::IncrementalReflow(nsIPresContext*          aPresContext,
                                  const nsHTMLReflowState& aReflowState)
 {
-  nsIReflowCommand::ReflowType  type;
+  nsReflowType  type;
 
   // Get the type of reflow command
   aReflowState.reflowCommand->GetType(type);
 
   // The only type of reflow command we expect is that we have dirty
   // child frames to reflow
-  NS_ASSERTION(nsIReflowCommand::ReflowDirty, "unexpected reflow type");
+  NS_ASSERTION(eReflowType_ReflowDirty, "unexpected reflow type");
   
   // Calculate how much room is available for the fixed items. That means
   // determining if the viewport is scrollable and whether the vertical and/or
@@ -513,11 +511,11 @@ ViewportFrame::Reflow(nsIPresContext*          aPresContext,
   nsIFrame* nextFrame = nsnull;
   PRBool    isHandled = PR_FALSE;
   
-  nsIReflowCommand::ReflowType reflowType = nsIReflowCommand::ContentChanged;
+  nsReflowType reflowType = eReflowType_ContentChanged;
   if (aReflowState.reflowCommand) {
     aReflowState.reflowCommand->GetType(reflowType);
   }
-  if (reflowType == nsIReflowCommand::UserDefined) {
+  if (reflowType == eReflowType_UserDefined) {
     // Reflow the fixed frames to account for changed scrolled area size
     ReflowFixedFrames(aPresContext, aReflowState);
     isHandled = PR_TRUE;

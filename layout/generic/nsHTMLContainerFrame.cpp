@@ -56,7 +56,6 @@
 #include "nsIView.h"
 #include "nsIViewManager.h"
 #include "nsViewsCID.h"
-#include "nsIReflowCommand.h"
 #include "nsHTMLIIDs.h"
 #include "nsIDOMEvent.h"
 #include "nsIScrollableView.h"

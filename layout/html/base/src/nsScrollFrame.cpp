@@ -38,7 +38,7 @@
 #include "nsCOMPtr.h"
 #include "nsHTMLParts.h"
 #include "nsIPresContext.h"
-#include "nsIReflowCommand.h"
+#include "nsHTMLReflowCommand.h"
 #include "nsIDeviceContext.h"
 #include "nsPageFrame.h"
 #include "nsViewsCID.h"
@@ -675,12 +675,12 @@ nsScrollFrame::Reflow(nsIPresContext*          aPresContext,
     // See whether we're the target of the reflow command
     aReflowState.reflowCommand->GetTarget(targetFrame);
     if (this == targetFrame) {
-      nsIReflowCommand::ReflowType  type;
+      nsReflowType  type;
 
       // The only type of reflow command we expect to get is a style
       // change reflow command
       aReflowState.reflowCommand->GetType(type);
-      NS_ASSERTION(nsIReflowCommand::StyleChanged == type, "unexpected reflow type");
+      NS_ASSERTION(eReflowType_StyleChanged == type, "unexpected reflow type");
 
       // Make a copy of the reflow state (with a different reflow reason) and
       // then recurse
@@ -907,7 +907,7 @@ nsScrollFrame::Reflow(nsIPresContext*          aPresContext,
 
           // force a reflow of the fixed children
           nsFrame::CreateAndPostReflowCommand(presShell, parentFrame,
-            nsIReflowCommand::UserDefined, nsnull, nsnull, nsLayoutAtoms::fixedList);
+            eReflowType_UserDefined, nsnull, nsnull, nsLayoutAtoms::fixedList);
         }
       }
     }

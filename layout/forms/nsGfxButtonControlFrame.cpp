@@ -319,9 +319,9 @@ nsGfxButtonControlFrame::DoNavQuirksReflow(nsIPresContext*          aPresContext
     if (this == targetFrame) {
       Invalidate(aPresContext, nsRect(0,0,mRect.width,mRect.height), PR_FALSE);
 
-      nsIReflowCommand::ReflowType  reflowType;
+      nsReflowType  reflowType;
       aReflowState.reflowCommand->GetType(reflowType);
-      if (nsIReflowCommand::StyleChanged == reflowType) {
+      if (eReflowType_StyleChanged == reflowType) {
         reflowState.reason = eReflowReason_StyleChange;
       }
       else {

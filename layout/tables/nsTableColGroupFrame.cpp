@@ -39,7 +39,7 @@
 #include "nsTableFrame.h"
 #include "nsIHTMLTableColElement.h"
 #include "nsIDOMHTMLTableColElement.h"
-#include "nsIReflowCommand.h"
+#include "nsHTMLReflowCommand.h"
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
@@ -551,7 +551,7 @@ NS_METHOD nsTableColGroupFrame::IR_TargetIsMe(nsIPresContext*          aPresCont
 {
   nsresult rv = NS_OK;
   aStatus = NS_FRAME_COMPLETE;
-  nsIReflowCommand::ReflowType type;
+  nsReflowType type;
   aReflowState.reflowCommand->GetType(type);
   nsIFrame *objectFrame;
   aReflowState.reflowCommand->GetChildFrame(objectFrame); 
@@ -560,11 +560,11 @@ NS_METHOD nsTableColGroupFrame::IR_TargetIsMe(nsIPresContext*          aPresCont
     objectFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
   switch (type)
   {
-  case nsIReflowCommand::StyleChanged :
+  case eReflowType_StyleChanged :
     rv = IR_StyleChanged(aPresContext, aDesiredSize, aReflowState, aStatus);
     break;
 
-  case nsIReflowCommand::ContentChanged :
+  case eReflowType_ContentChanged :
     NS_ASSERTION(PR_FALSE, "illegal reflow type: ContentChanged");
     rv = NS_ERROR_ILLEGAL_VALUE;
     break;

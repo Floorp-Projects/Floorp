@@ -39,13 +39,15 @@
 
 #include "nscore.h"
 #include "nsISupports.h"
-#include "nsIReflowCommand.h"
+#include "nsReflowType.h"
+class nsHTMLReflowCommand;
 class nsIArena;
 class nsIAtom;
 class nsINodeInfo;
 class nsIContent;
 class nsIContentIterator;
 class nsIDocument;
+class nsIFrame;
 class nsIHTMLContent;
 class nsIHTMLContentSink;
 class nsIHTMLFragmentContentSink;
@@ -213,10 +215,10 @@ extern nsresult NS_NewHTMLFragmentContentSink(nsIHTMLFragmentContentSink** aInst
 
 /** Create a new HTML reflow command */
 extern nsresult
-NS_NewHTMLReflowCommand(nsIReflowCommand**           aInstancePtrResult,
-                        nsIFrame*                    aTargetFrame,
-                        nsIReflowCommand::ReflowType aReflowType,
-                        nsIFrame*                    aChildFrame = nsnull,
-                        nsIAtom*                     aAttribute = nsnull);
+NS_NewHTMLReflowCommand(nsHTMLReflowCommand** aInstancePtrResult,
+                        nsIFrame*             aTargetFrame,
+                        nsReflowType          aReflowType,
+                        nsIFrame*             aChildFrame = nsnull,
+                        nsIAtom*              aAttribute = nsnull);
 
 #endif /* nsHTMLParts_h___ */
