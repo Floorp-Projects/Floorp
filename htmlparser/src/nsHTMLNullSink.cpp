@@ -48,7 +48,6 @@ public:
   NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
 
   // nsIHTMLContentSink
-  NS_IMETHOD PushMark();
   NS_IMETHOD SetTitle(const nsString& aValue);
   NS_IMETHOD OpenHTML(const nsIParserNode& aNode);
   NS_IMETHOD CloseHTML(const nsIParserNode& aNode);
@@ -168,13 +167,6 @@ nsHTMLNullSink::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   }
   ((nsISupports*) *aInstancePtr)->AddRef();
   return NS_OK;                                                        
-}
-
-NS_IMETHODIMP
-nsHTMLNullSink::PushMark()
-{
-  // XXX We need to defer our output when this occurs
-  return NS_OK;
 }
 
 /**
