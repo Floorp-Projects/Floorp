@@ -12,7 +12,7 @@
 <!ENTITY fullnameExample.label "(For example, &quot;John Smith&quot;)">
 <!ENTITY fullnameLabel.label "Your Name:">
 
-<!ENTITY emailDesc.label "Enter your email address. This is the address otherws will use to send email to you.">
+<!ENTITY emailDesc.label "Enter your email address. This is the address others will use to send email to you.">
 <!-- LOCALIZATION NOTE (fullnameDesc.label) : do not translate "&quot;test@netscape.net&quot;" in below line -->
 <!ENTITY emailExample.label "(For example, &quot;test@netscape.net&quot;)">
 <!ENTITY emailLabel.label "Email Address:">
