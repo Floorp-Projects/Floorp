@@ -1920,7 +1920,7 @@ extern PRStatus _PR_MD_GETSYSINFO(PRSysInfo cmd, char *name, PRUint32 namelen);
 
 /* --- PR_GetRandomNoise() related things --- */
 
-extern PRSize _PR_MD_GetNoise( void *buf, PRSize size );
+extern PRSize _PR_MD_GetRandomNoise( void *buf, PRSize size );
 #define _PR_MD_GET_RANDOM_NOISE(buf,size) _PR_MD_GetRandomNoise((buf),(size))
 extern PRSize _pr_CopyLowBits( void *dest, PRSize dstlen, void *src, PRSize srclen );
 
