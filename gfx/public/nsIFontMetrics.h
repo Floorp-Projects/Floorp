@@ -46,6 +46,8 @@ class nsIFontMetrics : public nsISupports
   // XXX what about encoding, where do we put that? MMP
 
 public:
+  static const nsIID& IID() { static nsIID iid = NS_IFONT_METRICS_IID; return iid; }
+
   /**
    * Initialize the font metrics. Call this after creating the font metrics.
    * Font metrics you get from the font cache do NOT need to be initialized
