@@ -88,10 +88,11 @@ if (defined $tree && defined $start && defined $end) {
 
 if (!defined $tree) {
     $tree = "";
-
+}
 
 if (!defined $start) {
     $start = time2str($TIMEFORMAT, time() - 7*24*60*60); # One week ago.
+}
 
 
 if (!defined $end) {
