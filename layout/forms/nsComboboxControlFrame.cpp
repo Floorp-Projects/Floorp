@@ -1045,7 +1045,10 @@ nsComboboxControlFrame::SelectionChanged()
           nsCOMPtr<nsIPresShell> shell;
           rv = mPresContext->GetShell(getter_AddRefs(shell));
           if (NS_SUCCEEDED(rv) && shell) {
-            shell->AppendReflowCommand(cmd);
+            if (NS_SUCCEEDED(shell->EnterReflowLock())) {
+              shell->AppendReflowCommand(cmd);
+              shell->ExitReflowLock();
+            }
           }
           NS_RELEASE(cmd);
         }
