@@ -54,7 +54,7 @@ if( $url = $form{"note"} ){
     $note =~ s/\</&lt;/gi;
     $note =~ s/\>/&gt;/gi;
     $enc_note = url_encode( $note );
-    lock;
+
     open( NOTES,">>$tree/notes.txt");
     flock(NOTES, LOCK_EX);
     print NOTES "$buildtime|$buildname|$who|$now|$enc_note\n"; 
@@ -79,6 +79,11 @@ if( $url = $form{"note"} ){
 Go back to the Error Log</a>
 <a href=\"showbuilds.cgi?tree=$tree\">
 <br>Go back to the build Page</a>";
+
+  # Build tinderbox static pages
+  $ENV{QUERY_STRING}="tree=$tree&static=1";
+  $ENV{REQUEST_METHOD}="GET";
+  system './showbuilds.cgi >/dev/null';
 
 } else {
 
