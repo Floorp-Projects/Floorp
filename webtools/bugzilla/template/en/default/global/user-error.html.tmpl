@@ -624,9 +624,9 @@
 
   [% ELSIF error == "reassign_to_empty" %]
     [% title = "Illegal Reassignment" %]
-    You cannot reassign to [% terms.abug %] to nobody. Unless you
-    intentionally cleared out the "Reassign [% terms.bug %] to"
-    field, [% Param("browserbugmessage") %]
+    To reassign [% terms.abug %], you must provide an address for
+    the new owner. If you did not intentionally clear out the 
+    "Reassign [% terms.bug %] to" field, [% Param("browserbugmessage") %]
 
   [% ELSIF error == "report_access_denied" %]
     [% title = "Access Denied" %]
