@@ -21,14 +21,18 @@ DEFINES=-D_IMPL_NS_HTML
 
 MODULE=raptor 
 REQUIRES=xpcom raptor dom js
+IS_COMPONENT = 1
 
-CPPSRCS=dlldeps.cpp nsLayoutFactory.cpp
+CPPSRCS=dlldeps.cpp nsLayoutDLF.cpp nsLayoutFactory.cpp
 
-CPP_OBJS=.\$(OBJDIR)\dlldeps.obj .\$(OBJDIR)\nsLayoutFactory.obj
+CPP_OBJS=				\
+	.\$(OBJDIR)\dlldeps.obj		\
+	.\$(OBJDIR)\nsLayoutDLF.obj	\
+	.\$(OBJDIR)\nsLayoutFactory.obj	\
+	$(NULL)
 
 EXPORTS=nsLayoutCID.h
 
-LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor -I$(PUBLIC)\dom
 
 MAKE_OBJ_TYPE = DLL
 DLLNAME = raptorhtml
@@ -44,7 +48,7 @@ MISCDEP =				\
  $(DIST)\lib\raptorhtmltable_s.lib	\
  $(DIST)\lib\raptorxmlcontent_s.lib	\
  $(DIST)\lib\raptorxmldoc_s.lib		\
- $(DIST)\lib\raptorxulbase_s.lib \
+ $(DIST)\lib\raptorxulbase_s.lib	\
  $(DIST)\lib\raptorxulcontent_s.lib	\
  $(DIST)\lib\raptorevents_s.lib		\
  $(DIST)\lib\xpcom32.lib		\
@@ -52,9 +56,9 @@ MISCDEP =				\
  $(DIST)\lib\raptorgfxwin.lib		\
  $(DIST)\lib\raptorhtmlpars.lib		\
  $(DIST)\lib\jsdom.lib		        \
- $(DIST)\lib\plc3.lib		\
+ $(DIST)\lib\plc3.lib			\
  $(DIST)\lib\js3250.lib			\
- $(DIST)\lib\oji.lib                  \
+ $(DIST)\lib\oji.lib			\
  $(DIST)\lib\jsj3250.lib                \
  $(LIBNSPR)
 
@@ -63,7 +67,9 @@ LCFLAGS = \
         $(DEFINES) \
         $(NULL)
 
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\dom -I$(PUBLIC)\js -I..\..\style\src -I..\html\base\src -I..\base\src
+LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\dom \
+	-I$(PUBLIC)\js -I..\..\style\src -I..\html\base\src -I..\base\src \
+	-I$(PUBLIC)\netlib -I$(PUBLIC)\rdf
 
 # These are the libraries we need to link with to create the dll
 LLIBS=					\
@@ -95,7 +101,7 @@ LLIBS=					\
 include <$(DEPTH)\config\rules.mak>
 
 install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
 
 clobber::
