@@ -271,8 +271,11 @@ nsresult nsExternalHelperAppService::FillContentHandlerProperties(const char * a
   
   // always ask
   FillLiteralValueFromTarget(contentTypeHandlerNodeResource,kNC_AlwaysAsk, &stringValue);
-  if (stringValue && nsCRT::strcasecmp(stringValue, "true") == 0)
-       aMIMEInfo->SetPreferredAction(nsIMIMEInfo::alwaysAsk);
+  if (stringValue && nsCRT::strcasecmp(stringValue, "false") == 0)
+       aMIMEInfo->SetAlwaysAskBeforeHandling(PR_FALSE);
+  else
+    aMIMEInfo->SetAlwaysAskBeforeHandling(PR_TRUE);
+
 
   // now digest the external application information
 
@@ -460,9 +463,11 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIChannel * aChannel, nsISup
   // now that the temp file is set up, find out if we need to invoke a dialog asking the user what
   // they want us to do with this content...
 
-  nsMIMEInfoHandleAction action = nsIMIMEInfo::alwaysAsk;
-  mMimeInfo->GetPreferredAction(&action);  // commented out for testing purposes only!
-  if (action ==  nsIMIMEInfo::alwaysAsk)
+  PRBool alwaysAsk = PR_FALSE;
+  mMimeInfo->GetAlwaysAskBeforeHandling(&alwaysAsk);
+  // temporary hack...we don't have a dialog yet so don't try to ask
+  alwaysAsk = PR_FALSE;
+  if (alwaysAsk)
   {
     // do this first! make sure we don't try to take an action until the user tells us what they want to do
     // with it...
@@ -523,15 +528,10 @@ NS_IMETHODIMP nsExternalAppHandler::OnStopRequest(nsIChannel * aChannel, nsISupp
 
   if (mReceivedDispostionInfo && !mCanceled)
   {
-    nsMIMEInfoHandleAction action = nsIMIMEInfo::alwaysAsk;
+    nsMIMEInfoHandleAction action = nsIMIMEInfo::saveToDisk;
     mMimeInfo->GetPreferredAction(&action);
     if (action == nsIMIMEInfo::saveToDisk)
     {
-#ifdef DEBUG_mscott
-      // create a temp file for the data...and open it for writing.
-      NS_GetSpecialDirectory("system.OS_TemporaryDirectory", getter_AddRefs(mFinalFileDestination));
-      mFinalFileDestination->Append("foo.txt");
-#endif
       rv = SaveToDisk(mFinalFileDestination, PR_FALSE);
     }
     else
