@@ -302,6 +302,21 @@ nsRegistryDataSource::OpenWellKnownRegistry(PRInt32 aID)
 }
 
 
+NS_IMETHODIMP
+nsRegistryDataSource::OpenDefaultRegistry()
+{
+    nsresult rv;
+    rv = nsComponentManager::CreateInstance(kRegistryCID,
+                                            nsnull,
+                                            NS_GET_IID(nsIRegistry),
+                                            getter_AddRefs(mRegistry));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = mRegistry->OpenDefault();
+    if (NS_FAILED(rv)) return rv;
+
+    return NS_OK;
+}
 
 //------------------------------------------------------------------------
 //
