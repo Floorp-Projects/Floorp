@@ -43,6 +43,7 @@
 #include "nsIDOMHTMLLinkElement.h"
 #include "nsIDOMHTMLImageElement.h"
 #include "nsIDOMCharacterData.h"
+#include "nsUnicharUtils.h"
 
 class GeckoUtils
 {
