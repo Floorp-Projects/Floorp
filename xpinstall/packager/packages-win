@@ -13,6 +13,8 @@
 ; en-US 
 bin\chrome\en-US\*
 bin\chrome\en-win\*
+bin\chrome\en-unix\*
+bin\chrome\en-mac\*
 
 [regus]
 ;

@@ -26,7 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= unix
+DIRS		= unix win
 
 include $(topsrcdir)/config/rules.mk
 

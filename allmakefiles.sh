@@ -670,6 +670,7 @@ xpfe/components/prefwindow/resources/content/unix/Makefile
 xpfe/components/prefwindow/resources/locale/Makefile
 xpfe/components/prefwindow/resources/locale/en-US/Makefile
 xpfe/components/prefwindow/resources/locale/en-US/unix/Makefile
+xpfe/components/prefwindow/resources/locale/en-US/win/Makefile
 xpfe/components/related/Makefile
 xpfe/components/related/src/Makefile
 xpfe/components/related/public/Makefile
@@ -717,8 +718,10 @@ xpfe/global/resources/content/os2/Makefile
 xpfe/global/resources/content/unix/Makefile
 xpfe/global/resources/locale/Makefile
 xpfe/global/resources/locale/en-US/Makefile
+xpfe/global/resources/locale/en-US/mac/Makefile
 xpfe/global/resources/locale/en-US/os2/Makefile
 xpfe/global/resources/locale/en-US/unix/Makefile
+xpfe/global/resources/locale/en-US/win/Makefile
 xpfe/communicator/Makefile
 xpfe/communicator/resources/Makefile
 xpfe/communicator/resources/locale/Makefile

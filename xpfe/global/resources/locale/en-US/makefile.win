@@ -21,7 +21,7 @@
 
 DEPTH=..\..\..\..\..
 
-DIRS=win
+DIRS=win unix mac
 
 CHROME_DIR=locales\en-US
 CHROME_L10N_DIR=global\locale
