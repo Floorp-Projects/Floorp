@@ -171,10 +171,13 @@ nsNntpService::DisplayMessage(const char* aMessageURI, nsISupports * aDisplayCon
   nsCAutoString newsgroupName;
   nsMsgKey key = nsMsgKey_None;
  
-  if (PL_strncmp(aMessageURI, kNewsMessageRootURI, kNewsMessageRootURILen) == 0)
+  if (PL_strncmp(aMessageURI, kNewsMessageRootURI, kNewsMessageRootURILen) == 0) {
 	rv = ConvertNewsMessageURI2NewsURI(aMessageURI, uri, newsgroupName, &key);
-  else
-    return NS_ERROR_UNEXPECTED;
+	NS_ASSERTION(NS_SUCCEEDED(rv),"failed to convert the news_message:// uri");
+  }
+  else {
+	// todo:  if we get here, make sure uri really a news article url (example:  "news://host/aa@bb")
+  }
 
   // now create a url with this uri spec
   nsCOMPtr<nsIURI> myuri;
