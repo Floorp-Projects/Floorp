@@ -149,7 +149,6 @@ sub execute_tests {
     my ($test, $shell_command, $line, @output);
     my $file_param = " -f ";
     my ($last_suite, $last_test_dir);
-    my $failure_lines;
 
     &status ("Executing " . ($#test_list + 1) . " test(s).");
 
@@ -158,7 +157,10 @@ sub execute_tests {
         # *-n.js is a negative test, expect exit code 3 (runtime error)
         my $expected_exit = ($test =~ /\-n\.js$/) ? 3 : 0;
         my ($got_exit, $exit_signal);
+        my $failure_lines;
         my $bug_line;
+        my $bug_number;
+        my $status_lines;
 
         # user selected [Q]uit from ^C handler.
         if ($user_exit) {
@@ -208,6 +210,8 @@ sub execute_tests {
 
         $failure_lines = "";
         $bug_line = "";
+        $bug_number = "";
+        $status_lines = "";
 
         foreach $line (@output) {
 
@@ -230,6 +234,12 @@ sub execute_tests {
                 $1 =~ /(\n+)/;
                 $bug_line = "<a href='$opt_bug_url$1' target='other_window'>" .
                   "Bug Number $1</a>";
+                $bug_number = "Bug $1";
+            }
+
+            # and watch for status
+            if ($line =~ /status/i) {
+                $status_lines .= $line;
             }
 
         }
@@ -247,7 +257,7 @@ sub execute_tests {
                              join ("\n",@output), $bug_line);
         } elsif ($failure_lines) {
             # only offending lines if exit codes matched
-            &report_failure ($test, "Failure messages were:\n" . $failure_lines,
+            &report_failure ($test, "$bug_number\n$status_lines\nFailure messages were:\n$failure_lines",
                              $bug_line);
         }        
         
