@@ -313,7 +313,7 @@ ifneq ($(OS_ARCH), WINNT)
 	$(NSINSTALL) -m 775 start-psm xpi/psm
 endif
 	$(NSINSTALL) -m 755 $(PROGRAM) xpi/psm
-ifneq ($(OS_ARCH, WINNT)
+ifneq ($(OS_ARCH), WINNT)
 	cd $(PLATFORM); $(DIST)/bin/regxpcom
 	cp $(PLATFORM>/component.reg xpi/psm 
 endif
