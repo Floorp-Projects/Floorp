@@ -1891,6 +1891,7 @@ nsIEProfileMigrator::CopyProxyPreferences(nsIPrefBranch* aPrefs)
         // is of the form host:port and that it applies to all protocols.
         for (PRUint32 i = 0; i < 5; ++i)
           SetProxyPref(bufStr, data[i].hostPref, data[i].portPref, aPrefs);
+        aPrefs->SetBoolPref("network.proxy.share_proxy_settings", PR_TRUE);
       }
     }
 
