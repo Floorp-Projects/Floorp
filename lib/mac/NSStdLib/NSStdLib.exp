@@ -2,8 +2,8 @@ get__11EnvironmentFPCc		# Environment::get(const char*)
 __dt__11EnvironmentFv		# Environment::~Environment()
 __ct__11EnvironmentFv		# Environment::Environment()
 
-FSRefParentAndFilename_fopen
-FSRef_fopen
+#FSRefParentAndFilename_fopen
+#FSRef_fopen
 FSp_fopen
 __MacOSErrNo
 __aborting
@@ -70,12 +70,12 @@ __logbl
 __logl
 __lower_map
 __modfl
-__msl_get_system_encoding
-__msl_path2fsr
-__msl_path2splitfsr
-__msl_system_has_new_file_apis
-__msl_text2unicode
-__msl_unicode2text
+#__msl_get_system_encoding
+#__msl_path2fsr
+#__msl_path2splitfsr
+#__msl_system_has_new_file_apis
+#__msl_text2unicode
+#__msl_unicode2text
 __nearbyintl
 __nextafterl
 __path2fss
