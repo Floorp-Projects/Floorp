@@ -61,6 +61,7 @@ HTML_ATOM(mozSingleLineTextControlFrame, ":-moz-singleline-textcontrol-frame")
 HTML_ATOM(mozFocusInnerPseudo, ":-moz-focus-inner")
 HTML_ATOM(mozFocusOuterPseudo, ":-moz-focus-outer")
 HTML_ATOM(mozDisplayComboboxControlFrame, ":-moz-display-comboboxcontrol-frame")
+HTML_ATOM(inputCheckedPseudo, "_moz-input-checked")
 
 HTML_ATOM(_baseHref, NS_HTML_BASE_HREF)
 HTML_ATOM(_baseTarget, NS_HTML_BASE_TARGET)

@@ -706,6 +706,13 @@ nsHTMLInputElement::SetChecked(PRBool aValue)
       }
     }
   }
+  else if (type == NS_FORM_INPUT_CHECKBOX) {
+    if (mChecked)
+      SetAttr(kNameSpaceID_None, nsHTMLAtoms::inputCheckedPseudo,
+              NS_LITERAL_STRING(""), PR_TRUE);
+    else
+      UnsetAttr(kNameSpaceID_None, nsHTMLAtoms::inputCheckedPseudo, PR_TRUE);
+  }
 
   return NS_OK;
 }

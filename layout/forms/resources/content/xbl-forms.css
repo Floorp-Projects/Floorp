@@ -74,6 +74,22 @@ xul|*.select-outlinerbody {
   display: -moz-box;
 }
 
+
+input[type="checkbox"] {
+  -moz-binding: url("chrome://forms/content/checkbox.xml#checkbox");
+
+  /* override these values from the input rule */
+  background-color: transparent;
+  border: none;
+  color: inherit;
+  cursor: default;
+  font: inherit;
+  text-align: inherit;
+  vertical-align: inherit;
+  -moz-box-sizing: content-box; /* XXX ??? */
+  padding: none;
+}
+
 /*
  * The following rules are copied from forms.css, for widgets that aren't yet
  * defined in XBL.
@@ -221,40 +237,20 @@ input[type="radio"] {
   padding: 0;
 }
 
-/* check boxes */
-input[type="checkbox"] {
-  border: 2px inset ThreeDFace;
-  background-color: -moz-Field;
-  color: -moz-FieldText;
-  width: 13px;
-  height: 13px;
-  cursor: default;
-  vertical-align: text-bottom;
-  -moz-binding: none;
-  margin: 3px 3px 3px 4px;
-  padding: 0;
-}
-
 /* common features of radio buttons and check boxes */
 input[type="radio"][disabled],
 input[type="radio"][disabled]:active,
 input[type="radio"][disabled]:hover,
-input[type="radio"][disabled]:hover:active,
-input[type="checkbox"][disabled],
-input[type="checkbox"][disabled]:active,
-input[type="checkbox"][disabled]:hover,
-input[type="checkbox"][disabled]:hover:active {
+input[type="radio"][disabled]:hover:active {
   padding: 1px;
   border: 1px inset ThreeDShadow;
   background-color: GrayText;
 }
 
-input[type="checkbox"]:focus,
 input[type="radio"]:focus {
   border-style: groove;
 }
 
-input[type="checkbox"]:hover:active,
 input[type="radio"]:hover:active {
   border-style: inset;
   background-color: ThreeDFace;
