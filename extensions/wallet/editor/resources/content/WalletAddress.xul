@@ -1,0 +1,167 @@
+<?xml version="1.0"?> 
+
+<!--
+   The contents of this file are subject to the Netscape Public
+   License Version 1.1 (the "License"); you may not use this file
+   except in compliance with the License. You may obtain a copy of
+   the License at http://www.mozilla.org/NPL/
+    
+   implied. See the License for the specific language governing
+   rights and limitations under the License.
+    
+   The Original Code is Mozilla Communicator client code, released
+   March 31, 1998.
+   
+   The Initial Developer of the Original Code is Netscape
+   Communications Corporation. Portions created by Netscape are
+   Copyright (C) 1998-1999 Netscape Communications Corporation. All
+   Rights Reserved.
+   
+   Contributor(s): 
+  -->
+
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+
+<!DOCTYPE window [
+<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+%brandDTD;
+<!ENTITY % walletviewerDTD SYSTEM "chrome://communicator/locale/wallet/WalletViewer.dtd" >
+%walletviewerDTD;
+]>
+
+<window debug="false" xmlns:html="http://www.w3.org/1999/xhtml"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        class="color-dialog"
+        orient="vertical"
+        onload="parent.initPanel();">
+
+  <script language="JavaScript">
+  <![CDATA[
+    var _elementIDs = ["street.line1", "street.line2", "street.line3",
+                       "city", "state", "postalcode.prefix", "postalcode.suffix", "country",
+                       "email", "uri"];
+  ]]>
+  </script>
+
+  <script language="JavaScript"
+          src="chrome://communicator/content/wallet/WalletViewer.js"/>
+  
+  <titledbox class="tabpanel" autostretch="never">
+    <title><text value="&address.title;"/></title>
+    <grid class="indent">
+
+      <columns>
+        <column width="100"/>
+        <column width="250"/>
+      </columns>
+
+      <rows>
+
+        <row>
+          <html>&addressLine1.label;</html>
+          <menulist id="street.line1" editable="true"
+                    onchange="Append(this)" onmousedown="Append(this)">
+            <menupopup>
+              <menuitem value="" len="0"/>
+            </menupopup>
+          </menulist>
+        </row>
+
+        <row>
+          <html>&addressLine2.label;</html>
+          <menulist id="street.line2" editable="true"
+                    onchange="Append(this)" onmousedown="Append(this)">
+            <menupopup>
+              <menuitem value="" len="0"/>
+            </menupopup>
+          </menulist>
+        </row>
+
+        <row>
+          <html>&addressLine3.label;</html>
+          <menulist id="street.line3" editable="true"
+                    onchange="Append(this)" onmousedown="Append(this)">
+            <menupopup>
+              <menuitem value="" len="0"/>
+            </menupopup>
+          </menulist>
+        </row>
+
+        <row>
+          <html>&addressCity.label;</html>
+          <menulist id="city" editable="true"
+                    onchange="Append(this)" onmousedown="Append(this)">
+            <menupopup>
+              <menuitem value="" len="0"/>
+            </menupopup>
+          </menulist>
+        </row>
+
+        <row>
+          <html>&addressState.label;</html>
+          <menulist id="state" editable="true"
+                    onchange="Append(this)" onmousedown="Append(this)">
+            <menupopup>
+              <menuitem value="" len="0"/>
+            </menupopup>
+          </menulist>
+        </row>
+
+        <row>
+          <html>&addressZipcode.label;</html>
+          <box>
+          <menulist id="postalcode.prefix" editable="true" width="60"
+                    onchange="Append(this)" onmousedown="Append(this)">
+            <menupopup>
+              <menuitem value="" len="0"/>
+            </menupopup>
+          </menulist>
+          <html>__</html>
+          <menulist id="postalcode.suffix" editable="true" width="53"
+                    onchange="Append(this)" onmousedown="Append(this)">
+            <menupopup>
+              <menuitem value="" len="0"/>
+            </menupopup>
+          </menulist>
+          </box>
+        </row>
+
+        <row>
+          <html>&addressCountry.label;</html>
+          <menulist id="country" editable="true"
+                    onchange="Append(this)" onmousedown="Append(this)">
+            <menupopup>
+              <menuitem value="" len="0"/>
+            </menupopup>
+          </menulist>
+        </row>
+
+        <row>
+          <html>&email.label;</html>
+          <menulist id="email" editable="true"
+                    onchange="Append(this)" onmousedown="Append(this)">
+            <menupopup>
+              <menuitem value="" len="0"/>
+            </menupopup>
+          </menulist>
+        </row>
+
+        <row>
+          <html>&homepage.label;</html>
+          <menulist id="uri" editable="true"
+                    onchange="Append(this)" onmousedown="Append(this)">
+
+            <menupopup>
+              <menuitem value="" len="0"/>
+            </menupopup>
+          </menulist>
+        </row>
+
+      </rows>
+
+    </grid>
+
+  </titledbox>
+
+</window>

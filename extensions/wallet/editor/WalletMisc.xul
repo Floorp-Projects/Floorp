@@ -1,0 +1,177 @@
+<?xml version="1.0"?> 
+
+<!--
+   The contents of this file are subject to the Netscape Public
+   License Version 1.1 (the "License"); you may not use this file
+   except in compliance with the License. You may obtain a copy of
+   the License at http://www.mozilla.org/NPL/
+    
+   implied. See the License for the specific language governing
+   rights and limitations under the License.
+    
+   The Original Code is Mozilla Communicator client code, released
+   March 31, 1998.
+   
+   The Initial Developer of the Original Code is Netscape
+   Communications Corporation. Portions created by Netscape are
+   Copyright (C) 1998-1999 Netscape Communications Corporation. All
+   Rights Reserved.
+   
+   Contributor(s): 
+  -->
+
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+
+<!DOCTYPE window [
+<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+%brandDTD;
+<!ENTITY % walletviewerDTD SYSTEM "chrome://communicator/locale/wallet/WalletViewer.dtd" >
+%walletviewerDTD;
+]>
+
+<window debug="false" xmlns:html="http://www.w3.org/1999/xhtml"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        class="color-dialog"
+        orient="vertical"
+        onload="parent.initPanel();">
+
+  <script language="JavaScript">
+  <![CDATA[
+    var _elementIDs = ["socsec.prefix", "socsec.middle", "socsec.suffix",
+                       "license.number", "license.state", "mothersmaidenname",
+                       "bdate.month", "bdate.day", "bdate.year",
+                       "anniv.month", "anniv.day", "anniv.year"];
+  ]]>
+  </script>
+
+  <script language="JavaScript"
+          src="chrome://communicator/content/wallet/WalletViewer.js"/>
+  
+  <titledbox class="tabpanel" autostretch="never">
+    <title><text value="&misc.title;"/></title>
+    <grid class="indent">
+
+      <columns>
+        <column width="130"/>
+        <column width="225"/>
+      </columns>
+
+      <rows>
+
+        <row>
+          <html>&miscSS.label;</html>
+          <box>
+          <menulist id="socsec.prefix" editable="true" width="45"
+                    onchange="Append(this)" onmousedown="Append(this)">
+            <menupopup>
+              <menuitem value="" len="0"/>
+            </menupopup>
+          </menulist>
+          <html>___</html>
+          <menulist id="socsec.middle" editable="true" width="38"
+                    onchange="Append(this)" onmousedown="Append(this)">
+            <menupopup>
+              <menuitem value="" len="0"/>
+            </menupopup>
+          </menulist>
+          <html>___</html>
+          <menulist id="socsec.suffix" editable="true" width="52"
+                    onchange="Append(this)" onmousedown="Append(this)">
+            <menupopup>
+              <menuitem value="" len="0"/>
+            </menupopup>
+          </menulist>
+          </box>
+        </row>
+
+        <row>
+          <html>&miscLicense.label;</html>
+          <box>
+          <menulist id="license.number" editable="true" width="110"
+                    onchange="Append(this)" onmousedown="Append(this)">
+            <menupopup>
+              <menuitem value="" len="0"/>
+            </menupopup>
+          </menulist>
+          <spring style="width: 5px;"/>
+          <html>&miscLicenseState.label;</html>
+          <menulist id="license.state" editable="true" width="53"
+                    onchange="Append(this)" onmousedown="Append(this)">
+            <menupopup>
+              <menuitem value="" len="0"/>
+            </menupopup>
+          </menulist>
+          </box>
+        </row>
+
+        <row>
+          <html>&miscMaiden.label;</html>
+          <menulist id="mothersmaidenname" editable="true"
+                    onchange="Append(this)" onmousedown="Append(this)">
+            <menupopup>
+              <menuitem value="" len="0"/>
+            </menupopup>
+          </menulist>
+        </row>
+
+        <row>
+          <html>&miscBirthday.label;</html>
+          <box>
+          <html>&miscBirthdayMonth.label;</html>
+          <menulist id="bdate.month" editable="true" width="38"
+                    onchange="Append(this)" onmousedown="Append(this)">
+            <menupopup>
+              <menuitem value="" len="0"/>
+            </menupopup>
+          </menulist>
+          <html>&miscBirthdayDay.label;</html>
+          <menulist id="bdate.day" editable="true" width="38"
+                    onchange="Append(this)" onmousedown="Append(this)">
+            <menupopup>
+              <menuitem value="" len="0"/>
+            </menupopup>
+          </menulist>
+          <html>&miscBirthdayYear.label;</html>
+          <menulist id="bdate.year" editable="true" width="52"
+                    onchange="Append(this)" onmousedown="Append(this)">
+            <menupopup>
+              <menuitem value="" len="0"/>
+            </menupopup>
+          </menulist>
+          </box>
+        </row>
+
+        <row>
+          <html>&miscAnniv.label;</html>
+          <box>
+          <html>&miscAnnivMonth.label;</html>
+          <menulist id="anniv.month" editable="true" width="38"
+                    onchange="Append(this)" onmousedown="Append(this)">
+            <menupopup>
+              <menuitem value="" len="0"/>
+            </menupopup>
+          </menulist>
+          <html>&miscAnnivDay.label;</html>
+          <menulist id="anniv.day" editable="true" width="38"
+                    onchange="Append(this)" onmousedown="Append(this)">
+            <menupopup>
+              <menuitem value="" len="0"/>
+            </menupopup>
+          </menulist>
+          <html>&miscAnnivYear.label;</html>
+          <menulist id="anniv.year" editable="true" width="52"
+                    onchange="Append(this)" onmousedown="Append(this)">
+            <menupopup>
+              <menuitem value="" len="0"/>
+            </menupopup>
+          </menulist>
+          </box>
+        </row>
+
+      </rows>
+
+    </grid>
+  </titledbox>
+
+</window>

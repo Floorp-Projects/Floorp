@@ -1,0 +1,68 @@
+<?xml version="1.0"?> 
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?> 
+
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+<?xul-overlay href="chrome://communicator/content/wallet/WalletTree.xul"?>
+
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/wallet/WalletViewer.dtd" >
+
+<window id="walletViewer" 
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Form Manager" 
+        orient="vertical"
+        class="dialog"
+        persist="screenX screenY width height"
+        screenX="24" screenY="24"
+        onload="Startup();"
+        width="620" height="470"> 
+
+  <script>
+  <![CDATA[
+
+  var hWalletViewer = null;
+
+  /** General startup routine for form-manager dialog. 
+   **/
+  function Startup()
+    {
+      hWalletViewer = new nsWalletViewer('panelFrame');  
+      
+      if( !hWalletViewer )
+        throw "failed to create walletviewer";
+
+      hWalletViewer.init();
+
+      // If this call worked, we could center the window here:
+      // centerWindowOnScreen();
+      
+    }
+  
+  ]]>
+  
+  </script>        
+        
+  <script language="javascript" src="chrome://communicator/content/wallet/WalletViewer.js"></script>
+  <script language="javascript" src="chrome://global/content/strres.js" />
+
+  <keyset id="keyset"/>
+
+  <box flex="1">
+    <!-- tree sidebar -->
+    <tree class="inset" id="panelTree" style="width: 0px" flex="3"/>      
+
+    <iframe id="panelFrame" name="panelFrame" style="width:0px" flex="7"/>
+    <script language="JavaScript">
+    <![CDATA[
+      document.getElementById("panelFrame").setAttribute("src", "chrome://communicator/content/wallet/WalletName.xul");
+      document.getElementById("panelFrame").setAttribute("tag", "" );
+    ]]>
+    </script>
+  </box>
+
+  <separator/>
+
+  <box id="okCancelButtonsRight" />
+
+</window>

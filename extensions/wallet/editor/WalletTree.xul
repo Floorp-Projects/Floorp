@@ -1,0 +1,160 @@
+<?xml version="1.0"?>
+
+<!--
+   The contents of this file are subject to the Netscape Public
+   License Version 1.1 (the "License"); you may not use this file
+   except in compliance with the License. You may obtain a copy of
+   the License at http://www.mozilla.org/NPL/
+    
+   Software distributed under the License is distributed on an "AS
+   IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   implied. See the License for the specific language governing
+   rights and limitations under the License.
+    
+   The Original Code is Mozilla Communicator client code, released
+   March 31, 1998.
+   
+   The Initial Developer of the Original Code is Netscape
+   Communications Corporation. Portions created by Netscape are
+   Copyright (C) 1998-1999 Netscape Communications Corporation. All
+   Rights Reserved.
+   
+   Contributor(s): 
+  -->
+
+<?xul-overlay href="chrome://communicator/content/pref/platformPrefOverlay.xul"?>
+
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/wallet/WalletViewer.dtd">
+
+<overlay id="prefTreeOverlay"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<script>
+<![CDATA[
+  var _elementIDs = []; // hack
+]]>
+</script>
+  
+<tree id="panelTree" 
+      onselect="if( hWalletViewer ) hWalletViewer.switchPage();">
+
+  <treecolgroup>
+    <treecol flex="1"/>
+  </treecolgroup>      
+      
+  <treehead name="tree">
+    <treerow>
+      <treecell class="treecell-header outset" url="__header" value="&categoryHeader;"/>
+    </treerow>
+  </treehead>
+
+  <treechildren id="panelChildren" flex="1">
+
+    <treeitem container="true" open="true" id="primary">
+      <treerow>
+        <treecell class="treecell-indent" url="chrome://communicator/content/wallet/WalletPrimary.xul" value="&primary.label;"/> 
+      </treerow>
+      <treechildren>
+        <treeitem id="pnameID">
+          <treerow>
+            <treecell class="treecell-indent" tag="" url="chrome://communicator/content/wallet/WalletName.xul" value="&pname.label;"/>
+          </treerow>
+        </treeitem>
+        <treeitem id="paddressID">
+          <treerow>
+            <treecell class="treecell-indent" tag="home." url="chrome://communicator/content/wallet/WalletAddress.xul" value="&paddress.label;"/> 
+          </treerow>
+        </treeitem>
+        <treeitem id="pphoneID">
+          <treerow>
+            <treecell class="treecell-indent" tag="home." url="chrome://communicator/content/wallet/WalletPhone.xul" value="&pphone.label;"/> 
+          </treerow>
+        </treeitem>
+        <treeitem id="pcreditID">
+          <treerow>
+            <treecell class="treecell-indent" tag="" url="chrome://communicator/content/wallet/WalletCredit.xul" value="&pcredit.label;"/> 
+          </treerow>
+        </treeitem>
+        <treeitem id="pemployID">
+          <treerow>
+            <treecell class="treecell-indent" tag="" url="chrome://communicator/content/wallet/WalletEmploy.xul" value="&pemploy.label;"/> 
+          </treerow>
+        </treeitem>
+        <treeitem id="pmiscID">
+          <treerow>
+            <treecell class="treecell-indent" tag="" url="chrome://communicator/content/wallet/WalletMisc.xul" value="&pmisc.label;"/> 
+          </treerow>
+        </treeitem>
+      </treechildren>
+    </treeitem>
+
+    <treeitem container="true" open="true" id="shipping">
+      <treerow>
+        <treecell class="treecell-indent" url="chrome://communicator/content/wallet/WalletShipping.xul" value="&shipping.label;"/> 
+      </treerow>
+      <treechildren>
+        <treeitem id="snameID">
+          <treerow>
+            <treecell class="treecell-indent" tag="shipto." url="chrome://communicator/content/wallet/WalletName.xul" value="&sname.label;"/> 
+          </treerow>
+        </treeitem>
+        <treeitem id="saddressID">
+          <treerow>
+            <treecell class="treecell-indent" tag="shipto." url="chrome://communicator/content/wallet/WalletAddress.xul" value="&saddress.label;"/> 
+          </treerow>
+        </treeitem>
+        <treeitem id="sphoneID">
+          <treerow>
+            <treecell class="treecell-indent" tag="shipto." url="chrome://communicator/content/wallet/WalletPhone.xul" value="&sphone.label;"/> 
+          </treerow>
+        </treeitem>
+      </treechildren>
+    </treeitem>
+
+    <treeitem container="true" open="true" id="billing">
+      <treerow>
+        <treecell class="treecell-indent" url="chrome://communicator/content/wallet/WalletBilling.xul" value="&billing.label;"/>
+      </treerow>
+      <treechildren>
+        <treeitem id="bnameID">
+          <treerow>
+            <treecell class="treecell-indent" tag="billto." url="chrome://communicator/content/wallet/WalletName.xul" value="&bname.label;"/> 
+          </treerow>
+        </treeitem>
+        <treeitem id="baddressID">
+          <treerow>
+            <treecell class="treecell-indent" tag="billto." url="chrome://communicator/content/wallet/WalletAddress.xul" value="&baddress.label;"/> 
+          </treerow>
+        </treeitem>
+        <treeitem id="bphoneID">
+          <treerow>
+            <treecell class="treecell-indent" tag="billto." url="chrome://communicator/content/wallet/WalletPhone.xul" value="&bphone.label;"/> 
+          </treerow>
+        </treeitem>
+      </treechildren>
+    </treeitem>
+
+    <treeitem container="true" open="true" id="other">
+      <treerow>
+        <treecell class="treecell-indent" url="chrome://communicator/content/wallet/WalletOther.xul" value="&other.label;"/>
+      </treerow>
+      <treechildren>
+        <treeitem id="concatenatedID">
+          <treerow>
+            <treecell class="treecell-indent" tag="" url="chrome://communicator/content/wallet/WalletConcatenated.xul" value="&concatenated.label;"/> 
+          </treerow>
+        </treeitem>
+        <treeitem id="urlspecificID">
+          <treerow>
+            <treecell class="treecell-indent" tag="" url="chrome://communicator/content/wallet/WalletUrlspecific.xul" value="&urlspecific.label;"/> 
+          </treerow>
+        </treeitem>
+      </treechildren>
+    </treeitem>
+
+  </treechildren>
+
+</tree>
+
+</overlay>

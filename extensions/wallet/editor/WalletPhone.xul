@@ -1,0 +1,214 @@
+<?xml version="1.0"?> 
+
+<!--
+   The contents of this file are subject to the Netscape Public
+   License Version 1.1 (the "License"); you may not use this file
+   except in compliance with the License. You may obtain a copy of
+   the License at http://www.mozilla.org/NPL/
+    
+   implied. See the License for the specific language governing
+   rights and limitations under the License.
+    
+   The Original Code is Mozilla Communicator client code, released
+   March 31, 1998.
+   
+   The Initial Developer of the Original Code is Netscape
+   Communications Corporation. Portions created by Netscape are
+   Copyright (C) 1998-1999 Netscape Communications Corporation. All
+   Rights Reserved.
+   
+   Contributor(s): 
+  -->
+
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+
+<!DOCTYPE window [
+<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+%brandDTD;
+<!ENTITY % walletviewerDTD SYSTEM "chrome://communicator/locale/wallet/WalletViewer.dtd" >
+%walletviewerDTD;
+]>
+
+<window debug="false" xmlns:html="http://www.w3.org/1999/xhtml"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        class="color-dialog"
+        orient="vertical"
+        onload="parent.initPanel();">
+
+  <script language="JavaScript">
+  <![CDATA[
+    var _elementIDs = ["phone.loccode", "phone.number.prefix", "phone.number.suffix", "phone.extension",
+                       "altphone.loccode", "altphone.number.prefix", "altphone.number.suffix", "altphone.extension",
+                       "fax.loccode", "fax.number.prefix", "fax.number.suffix",
+                       "mobile.loccode", "mobile.number.prefix", "mobile.number.suffix",
+                       "pager.loccode", "pager.number.prefix", "pager.number.suffix"];
+  ]]>
+  </script>
+
+  <script language="JavaScript"
+          src="chrome://communicator/content/wallet/WalletViewer.js"/>
+  
+  <titledbox class="tabpanel" autostretch="never">
+    <title><text value="&phone.title;"/></title>
+    <grid class="indent">
+
+      <columns>
+        <column width="40"/>
+        <column width="1"/>
+        <column width="55"/>
+        <column width="1"/>
+        <column width="55"/>
+        <column width="1"/>
+        <column width="65"/>
+        <column width="1"/>
+        <column width="65"/>
+      </columns>
+
+      <rows>
+
+        <row>
+          <html>&phoneDay.label;</html>
+          <html>(</html>
+          <menulist id="phone.loccode" editable="true"
+                    onchange="Append(this)" onmousedown="Append(this)">
+            <menupopup>
+              <menuitem value="" len="0"/>
+            </menupopup>
+          </menulist>
+          <html>)</html>
+          <menulist id="phone.number.prefix" editable="true"
+                    onchange="Append(this)" onmousedown="Append(this)">
+            <menupopup>
+              <menuitem value="" len="0"/>
+            </menupopup>
+          </menulist>
+          <html>__</html>
+          <menulist id="phone.number.suffix" editable="true"
+                    onchange="Append(this)" onmousedown="Append(this)">
+            <menupopup>
+              <menuitem value="" len="0"/>
+            </menupopup>
+          </menulist>
+          <html>  &phoneDayExt.label;</html>
+          <menulist id="phone.extension" editable="true"
+                    onchange="Append(this)" onmousedown="Append(this)">
+            <menupopup>
+              <menuitem value="" len="0"/>
+            </menupopup>
+          </menulist>
+        </row>
+
+        <row>
+          <html>&phoneEve.label;</html>
+          <html>(</html>
+          <menulist id="altphone.loccode" editable="true"
+                    onchange="Append(this)" onmousedown="Append(this)">
+            <menupopup>
+              <menuitem value="" len="0"/>
+            </menupopup>
+          </menulist>
+          <html>)</html>
+          <menulist id="altphone.number.prefix" editable="true"
+                    onchange="Append(this)" onmousedown="Append(this)">
+            <menupopup>
+              <menuitem value="" len="0"/>
+            </menupopup>
+          </menulist>
+          <html>__</html>
+          <menulist id="altphone.number.suffix" editable="true"
+                    onchange="Append(this)" onmousedown="Append(this)">
+            <menupopup>
+              <menuitem value="" len="0"/>
+            </menupopup>
+          </menulist>
+          <html>  &phoneEveExt.label;</html>
+          <menulist id="altphone.extension" editable="true"
+                    onchange="Append(this)" onmousedown="Append(this)">
+            <menupopup>
+              <menuitem value="" len="0"/>
+            </menupopup>
+          </menulist>
+        </row>
+
+        <row>
+          <html>&phoneFax.label;</html>
+          <html>(</html>
+          <menulist id="fax.loccode" editable="true"
+                    onchange="Append(this)" onmousedown="Append(this)">
+            <menupopup>
+              <menuitem value="" len="0"/>
+            </menupopup>
+          </menulist>
+          <html>)</html>
+          <menulist id="fax.number.prefix" editable="true"
+                    onchange="Append(this)" onmousedown="Append(this)">
+            <menupopup>
+              <menuitem value="" len="0"/>
+            </menupopup>
+          </menulist>
+          <html>__</html>
+          <menulist id="fax.number.suffix" editable="true"
+                    onchange="Append(this)" onmousedown="Append(this)">
+            <menupopup>
+              <menuitem value="" len="0"/>
+            </menupopup>
+          </menulist>
+        </row>
+
+        <row>
+          <html>&phoneCell.label;</html>
+          <html>(</html>
+          <menulist id="mobile.loccode" editable="true"
+                    onchange="Append(this)" onmousedown="Append(this)">
+            <menupopup>
+              <menuitem value="" len="0"/>
+            </menupopup>
+          </menulist>
+          <html>)</html>
+          <menulist id="mobile.number.prefix" editable="true"
+                    onchange="Append(this)" onmousedown="Append(this)">
+            <menupopup>
+              <menuitem value="" len="0"/>
+            </menupopup>
+          </menulist>
+          <html>__</html>
+          <menulist id="mobile.number.suffix" editable="true"
+                    onchange="Append(this)" onmousedown="Append(this)">
+            <menupopup>
+              <menuitem value="" len="0"/>
+            </menupopup>
+          </menulist>
+        </row>
+
+        <row>
+          <html>&phonePager.label;</html>
+          <html>(</html>
+          <menulist id="pager.loccode" editable="true"
+                    onchange="Append(this)" onmousedown="Append(this)">
+            <menupopup>
+              <menuitem value="" len="0"/>
+            </menupopup>
+          </menulist>
+          <html>)</html>
+          <menulist id="pager.number.prefix" editable="true"
+                    onchange="Append(this)" onmousedown="Append(this)">
+            <menupopup>
+              <menuitem value="" len="0"/>
+            </menupopup>
+          </menulist>
+          <html>__</html>
+          <menulist id="pager.number.suffix" editable="true"
+                    onchange="Append(this)" onmousedown="Append(this)">
+            <menupopup>
+              <menuitem value="" len="0"/>
+            </menupopup>
+          </menulist>
+        </row>
+
+      </rows>
+
+    </grid>
+  </titledbox>
+
+</window>
