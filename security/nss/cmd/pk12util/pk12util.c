@@ -794,9 +794,6 @@ P12U_Init(char *dir)
         exit(-1);
     }
 
-    /* enable all ciphers */
-    p12u_EnableAllCiphers();
-
     /* setup unicode callback functions */
     PORT_SetUCS2_ASCIIConversionFunction(p12u_ucs2_ascii_conversion_function);
     PORT_SetUCS4_UTF8ConversionFunction(sec_port_ucs4_utf8_conversion_function);
