@@ -62,6 +62,7 @@ CPPSRCS = \
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 else
+CPPSRCS += ipcTransportUnix.cpp
 CPPSRCS += ipcSocketProviderUnix.cpp
 endif
 
