@@ -3096,7 +3096,7 @@ js_ExecuteRegExp(JSContext *cx, JSRegExp *re, JSString *str, size_t *indexp,
 
     res->lastMatch.chars = cp;
     res->lastMatch.length = matchlen;
-    if (cx->version == JSVERSION_1_2) {
+    if (JS_VERSION_IS_1_2(cx)) {
         /*
          * JS1.2 emulated Perl4.0.1.8 (patch level 36) for global regexps used
          * in scalar contexts, and unintentionally for the string.match "list"

@@ -981,7 +981,7 @@ JS_ContextIterator(JSRuntime *rt, JSContext **iterp)
 JS_PUBLIC_API(JSVersion)
 JS_GetVersion(JSContext *cx)
 {
-    return cx->version;
+    return cx->version & JSVERSION_MASK;
 }
 
 JS_PUBLIC_API(JSVersion)
@@ -989,22 +989,15 @@ JS_SetVersion(JSContext *cx, JSVersion version)
 {
     JSVersion oldVersion;
 
-    oldVersion = cx->version;
+    JS_ASSERT(version != JSVERSION_UNKNOWN);
+    JS_ASSERT((version & ~JSVERSION_MASK) == 0);
+
+    oldVersion = cx->version & JSVERSION_MASK;
     if (version == oldVersion)
         return oldVersion;
 
-    cx->version = version;
-
-#if !JS_BUG_FALLIBLE_EQOPS
-    if (cx->version == JSVERSION_1_2) {
-        cx->jsop_eq = JSOP_NEW_EQ;
-        cx->jsop_ne = JSOP_NEW_NE;
-    } else {
-        cx->jsop_eq = JSOP_EQ;
-        cx->jsop_ne = JSOP_NE;
-    }
-#endif /* !JS_BUG_FALLIBLE_EQOPS */
-
+    cx->version = (cx->version & ~JSVERSION_MASK) | version;
+    js_OnVersionChange(cx);
     return oldVersion;
 }
 
@@ -1051,11 +1044,20 @@ JS_GetOptions(JSContext *cx)
     return cx->options;
 }
 
+#define SYNC_OPTIONS_TO_VERSION(cx)                                           \
+    JS_BEGIN_MACRO                                                            \
+        if ((cx)->options & JSOPTION_XML)                                     \
+            (cx)->version |= JSVERSION_HAS_XML;                               \
+        else                                                                  \
+            (cx)->version &= ~JSVERSION_HAS_XML;                              \
+    JS_END_MACRO
+
 JS_PUBLIC_API(uint32)
 JS_SetOptions(JSContext *cx, uint32 options)
 {
     uint32 oldopts = cx->options;
     cx->options = options;
+    SYNC_OPTIONS_TO_VERSION(cx);
     return oldopts;
 }
 
@@ -1064,6 +1066,7 @@ JS_ToggleOptions(JSContext *cx, uint32 options)
 {
     uint32 oldopts = cx->options;
     cx->options ^= options;
+    SYNC_OPTIONS_TO_VERSION(cx);
     return oldopts;
 }
 

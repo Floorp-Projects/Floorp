@@ -409,7 +409,7 @@ args_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
             if (!js_DefineProperty(cx, obj, INT_JSVAL_TO_JSID(id),
                                    fp->argv[slot],
                                    args_getProperty, args_setProperty,
-                                   JSVERSION_IS_ECMA(cx->version)
+                                   JS_VERSION_IS_ECMA(cx)
                                    ? 0
                                    : JSPROP_ENUMERATE,
                                    NULL)) {
@@ -915,7 +915,7 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 #endif /* !JS_HAS_ARGS_OBJECT */
 
       case ARGS_LENGTH:
-        if (!JSVERSION_IS_ECMA(cx->version))
+        if (!JS_VERSION_IS_ECMA(cx))
             *vp = INT_TO_JSVAL((jsint)(fp && fp->fun ? fp->argc : fun->nargs));
         else
       case FUN_ARITY:
@@ -1633,7 +1633,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 #endif
 
     fun = js_NewFunction(cx, obj, NULL, 0, JSFUN_LAMBDA, parent,
-                         JSVERSION_IS_ECMA(cx->version)
+                         JS_VERSION_IS_ECMA(cx)
                          ? cx->runtime->atomState.anonymousAtom
                          : NULL);
 

@@ -1267,7 +1267,8 @@ retry:
         if (!hadUnicodeEscape && ATOM_KEYWORD(atom)) {
             struct keyword *kw = ATOM_KEYWORD(atom);
 
-            if (JSVERSION_IS_ECMA(cx->version) || kw->version <= cx->version) {
+            if (JS_VERSION_IS_ECMA(cx) ||
+                kw->version <= (cx->version & JSVERSION_MASK)) {
                 tt = kw->tokentype;
                 tp->t_op = (JSOp) kw->op;
                 goto out;
@@ -1433,7 +1434,7 @@ retry:
                             c = (JS7_UNHEX(cp[0]) << 4) + JS7_UNHEX(cp[1]);
                             SkipChars(ts, 2);
                         }
-                    } else if (c == '\n' && JSVERSION_IS_ECMA(cx->version)) {
+                    } else if (c == '\n' && JS_VERSION_IS_ECMA(cx)) {
                         /* ECMA follows C by removing escaped newlines. */
                         continue;
                     }

@@ -63,6 +63,27 @@
 #include "jsscript.h"
 #include "jsstr.h"
 
+void
+js_OnVersionChange(JSContext *cx)
+{
+#if !JS_BUG_FALLIBLE_EQOPS
+    if (JS_VERSION_IS_1_2(cx)) {
+        cx->jsop_eq = JSOP_NEW_EQ;
+        cx->jsop_ne = JSOP_NEW_NE;
+    } else {
+        cx->jsop_eq = JSOP_EQ;
+        cx->jsop_ne = JSOP_NE;
+    }
+#endif /* !JS_BUG_FALLIBLE_EQOPS */
+}
+
+void
+js_SetVersion(JSContext *cx, JSVersion version)
+{
+    cx->version = version;
+    js_OnVersionChange(cx);
+}
+
 JSContext *
 js_NewContext(JSRuntime *rt, size_t stackChunkSize)
 {

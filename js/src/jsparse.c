@@ -1082,7 +1082,7 @@ Condition(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         pn->pn_op == JSOP_NOP &&
         pn->pn_right->pn_type > TOK_EQOP)
     {
-        JSBool rewrite = !JSVERSION_IS_ECMA(cx->version);
+        JSBool rewrite = !JS_VERSION_IS_ECMA(cx);
         if (!js_ReportCompileErrorNumber(cx, ts,
                                          JSREPORT_TS |
                                          JSREPORT_WARNING |
@@ -1457,7 +1457,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         js_PopStatement(tc);
         pn->pn_pos.end = pn2->pn_pos.end;
         pn->pn_right = pn2;
-        if (cx->version != JSVERSION_ECMA_3) {
+        if ((cx->version & JSVERSION_MASK) != JSVERSION_ECMA_3) {
             /*
              * All legacy and extended versions must do automatic semicolon
              * insertion after do-while.  See the testcase and discussion in

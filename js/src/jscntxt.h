@@ -344,7 +344,7 @@ struct JSContext {
     jsuword             stackLimit;
 
     /* Runtime version control identifier and equality operators. */
-    JSVersion           version;
+    uint16              version;
     jsbytecode          jsop_eq;
     jsbytecode          jsop_ne;
 
@@ -459,17 +459,72 @@ struct JSContext {
 };
 
 /*
- * Slightly more readable macros, also to hide bitset implementation detail.
- * XXX beware non-boolean truth values, which belie the bitset hiding claim!
+ * Slightly more readable macros for testing per-context option settings (also
+ * to hide bitset implementation detail).
+ *
+ * JSOPTION_XML must be handled specially in order to propagate from compile-
+ * to run-time (from cx->options to script->version/cx->version).  To do that,
+ * we copy JSOPTION_XML from cx->options into cx->version as JSVERSION_HAS_XML
+ * whenever options are set, and preserve this XML flag across version number
+ * changes done via the JS_SetVersion API.
+ *
+ * But when executing a script or scripted function, the interpreter changes
+ * cx->version, including the XML flag, to script->version.  Thus JSOPTION_XML
+ * is a compile-time option that causes a run-time version change during each
+ * activation of the compiled script.  That version change has the effect of
+ * changing JS_HAS_XML_OPTION, so that any compiling done via eval enables XML
+ * support.  If an XML-enabled script or function calls a non-XML function,
+ * the flag bit will be cleared during the callee's activation.
+ *
+ * Note that JS_SetVersion API calls never pass JSVERSION_HAS_XML or'd into
+ * that API's version parameter.
+ * 
+ * Note also that script->version must contain this XML option flag in order
+ * for XDR'ed scripts to serialize and deserialize with that option preserved
+ * for detection at run-time.  We can't copy other compile-time options into
+ * script->version because that would break backward compatibility (certain
+ * other options, e.g. JSOPTION_VAROBJFIX, are analogous to JSOPTION_XML).
  */
-#define JS_HAS_STRICT_OPTION(cx)        ((cx)->options & JSOPTION_STRICT)
-#define JS_HAS_WERROR_OPTION(cx)        ((cx)->options & JSOPTION_WERROR)
-#define JS_HAS_COMPILE_N_GO_OPTION(cx)  ((cx)->options & JSOPTION_COMPILE_N_GO)
-#define JS_HAS_ATLINE_OPTION(cx)        ((cx)->options & JSOPTION_ATLINE)
-#define JS_HAS_XML_OPTION(cx)           ((cx)->options & JSOPTION_XML)
-#define JS_HAS_NATIVE_BRANCH_CALLBACK_OPTION(cx)                              \
-    ((cx)->options & JSOPTION_NATIVE_BRANCH_CALLBACK)
+#define JS_HAS_OPTION(cx,option)        (((cx)->options & (option)) != 0)
+#define JS_HAS_STRICT_OPTION(cx)        JS_HAS_OPTION(cx, JSOPTION_STRICT)
+#define JS_HAS_WERROR_OPTION(cx)        JS_HAS_OPTION(cx, JSOPTION_WERROR)
+#define JS_HAS_COMPILE_N_GO_OPTION(cx)  JS_HAS_OPTION(cx, JSOPTION_COMPILE_N_GO)
+#define JS_HAS_ATLINE_OPTION(cx)        JS_HAS_OPTION(cx, JSOPTION_ATLINE)
 
+#define JSVERSION_MASK                  0x0FFF  /* see JSVersion in jspubtd.h */
+#define JSVERSION_HAS_XML               0x1000  /* flag induced by XML option */
+#define JS_HAS_XML_OPTION(cx)           ((cx)->version & JSVERSION_HAS_XML)
+
+#define JS_HAS_NATIVE_BRANCH_CALLBACK_OPTION(cx)                              \
+    JS_HAS_OPTION(cx, JSOPTION_NATIVE_BRANCH_CALLBACK)
+
+/*
+ * Wrappers for the JSVERSION_IS_* macros from jspubtd.h taking JSContext *cx
+ * and masking off the XML flag and any other high order bits.
+ */
+#define JS_VERSION_IS_ECMA(cx)                                                \
+    JSVERSION_IS_ECMA((cx)->version & JSVERSION_MASK)
+#define JS_VERSION_IS_1_2(cx)                                                 \
+    (((cx)->version & JSVERSION_MASK) == JSVERSION_1_2)
+
+/*
+ * Common subroutine of JS_SetVersion and js_SetVersion, to update per-context
+ * data that depends on version.
+ */
+extern void
+js_OnVersionChange(JSContext *cx);
+
+/*
+ * Unlike the JS_SetVersion API, this function stores JSVERSION_HAS_XML and
+ * any future non-version-number flags induced by compiler options.
+ */
+extern void
+js_SetVersion(JSContext *cx, JSVersion version);
+
+/*
+ * Create and destroy functions for JSContext, which is manually allocated
+ * and exclusively owned.
+ */
 extern JSContext *
 js_NewContext(JSRuntime *rt, size_t stackChunkSize);
 

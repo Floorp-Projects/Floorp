@@ -2191,7 +2191,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                               lval,
                               (op == JSOP_NEW_EQ) ? '=' : '!',
 #if JS_HAS_TRIPLE_EQOPS
-                              JSVERSION_IS_ECMA(cx->version) ? "==" :
+                              JS_VERSION_IS_ECMA(cx) ? "==" :
 #endif
                               "=",
                               rval);
