@@ -58,11 +58,11 @@ CFLAGS = /D "WIN32" /GX /GF /MT /O1
 PATH=$(DIST)\bin;$(PATH)
 
 install:: $(DLL)
-!if "$(WINOS)" == "WIN95"
     $(MAKE_INSTALL) $(DLL) $(DIST)\bin
-!else
-    $(MAKE_INSTALL) $(DLL) $(DIST)\bin
+!ifndef MOZ_NO_ACTIVEX_REGISTRATION
+!if "$(WINOS)" != "WIN95"
     regsvr32 /s /c $(DIST)\bin\$(DLLNAME).dll
+!endif
 !endif
 
 clobber::
