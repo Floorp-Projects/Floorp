@@ -1073,6 +1073,12 @@ DocumentViewerImpl::LoadComplete(nsresult aStatus)
 
   mLoaded = PR_TRUE;
 
+  /* We need to protect ourself against auto-destruction in case the window is closed
+     while processing the OnLoad event.
+     See bug http://bugzilla.mozilla.org/show_bug.cgi?id=78445 for more explanation.
+  */
+  NS_ADDREF_THIS();
+
   // Now, fire either an OnLoad or OnError event to the document...
   if(NS_SUCCEEDED(aStatus)) {
     nsEventStatus status = nsEventStatus_eIgnore;
@@ -1090,6 +1096,8 @@ DocumentViewerImpl::LoadComplete(nsresult aStatus)
   // to unsuppress painting.
   if (mPresShell && !mStopped)
     mPresShell->UnsuppressPainting();
+
+  NS_RELEASE_THIS();
 
   return rv;
 }
