@@ -59,11 +59,6 @@
 #include "patricia.h"
 
 #include "nsAEDefs.h"       // for AE_ASSERT
-#include "nslog.h"
-
-NS_IMPL_LOG(patriciaLog)
-#define PRINTF NS_LOG_PRINTF(patriciaLog)
-#define FLUSH  NS_LOG_FLUSH(patriciaLog)
 
 /* Data structures */
 
@@ -231,7 +226,7 @@ static int InternalTraverse(TPatriciaTree *tree, TNode *x, NodeTraverseFunction 
 	AE_ASSERT(x, "No node");
 	AE_ASSERT(x->left && x->right, "Left or right child missing");
 
-	PRINTF("Visiting node %ld with left %ld and right %ld\n", x->nodeID, x->left->nodeID, x->right->nodeID);
+	//printf("Visiting node %ld with left %ld and right %ld\n", x->nodeID, x->left->nodeID, x->right->nodeID);
 
 	if (x != tree->headNode) {
 		err = (*traverseFunc)(x->data, x->key, arg1, arg2);
@@ -293,7 +288,7 @@ static int TraverseAndFree(TPatriciaTree *tree, TNode *x, NodeFreeFunction freeF
 
 	err = (*freeFunc)(x->data, x->key, refCon);
 	
-	PRINTF("Freeing node %ld\n", x->nodeID);
+	//printf("Freeing node %ld\n", x->nodeID);
 
 	free(x->key);
 	free(x);
@@ -465,7 +460,7 @@ int PatriciaInsert(PatriciaTreeRef treeRef, NodeReplaceFunction replaceFunc, con
 	else
 		p->left = t;
 	
-	PRINTF("Inserted node %ld with left %ld and right %ld\n", t->nodeID, t->left->nodeID, t->right->nodeID);
+	//printf("Inserted node %ld with left %ld and right %ld\n", t->nodeID, t->left->nodeID, t->right->nodeID);
 
 	tree->numNodes ++;
 	
