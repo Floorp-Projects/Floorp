@@ -118,6 +118,24 @@ public:
   NS_IMETHOD  SetInitialChildList(nsIPresContext& aPresContext,
                                   nsIAtom*        aListName,
                                   nsIFrame*       aChildList);
+  NS_IMETHOD  AppendFrames(nsIPresContext& aPresContext,
+                           nsIPresShell&   aPresShell,
+                           nsIAtom*        aListName,
+                           nsIFrame*       aFrameList);
+  NS_IMETHOD  InsertFrames(nsIPresContext& aPresContext,
+                           nsIPresShell&   aPresShell,
+                           nsIAtom*        aListName,
+                           nsIFrame*       aPrevFrame,
+                           nsIFrame*       aFrameList);
+  NS_IMETHOD  ReplaceFrame(nsIPresContext& aPresContext,
+                           nsIPresShell&   aPresShell,
+                           nsIAtom*        aListName,
+                           nsIFrame*       aOldFrame,
+                           nsIFrame*       aNewFrame);
+  NS_IMETHOD  RemoveFrame(nsIPresContext& aPresContext,
+                          nsIPresShell&   aPresShell,
+                          nsIAtom*        aListName,
+                          nsIFrame*       aOldFrame);
   NS_IMETHOD  DeleteFrame(nsIPresContext& aPresContext);
   NS_IMETHOD  SizeOf(nsISizeOfHandler* aHandler) const;
   NS_IMETHOD  GetContent(nsIContent*& aContent) const;

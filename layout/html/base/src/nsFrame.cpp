@@ -42,6 +42,7 @@
 #include "nsHTMLIIDs.h"
 #include "nsIEventStateManager.h"
 #include "nsIFocusTracker.h"
+#include "nsHTMLParts.h"
 
 // Some Misc #defines
 #define SELECTION_DEBUG        0
@@ -296,7 +297,98 @@ NS_IMETHODIMP nsFrame::SetInitialChildList(nsIPresContext& aPresContext,
 #endif
 }
 
-NS_IMETHODIMP nsFrame::DeleteFrame(nsIPresContext& aPresContext)
+NS_IMETHODIMP
+nsFrame::AppendFrames(nsIPresContext& aPresContext,
+                      nsIPresShell&   aPresShell,
+                      nsIAtom*        aListName,
+                      nsIFrame*       aFrameList)
+{
+#if 0
+  return NS_ERROR_UNEXPECTED;
+#else
+  // XXX temporary code until frame containers stop using the old
+  // reflow command api's
+  nsIReflowCommand* reflowCmd = nsnull;
+  nsresult rv;
+  rv = NS_NewHTMLReflowCommand(&reflowCmd, this,
+                               nsIReflowCommand::FrameAppended,
+                               aFrameList);
+  if (NS_SUCCEEDED(rv)) {
+    if (nsnull != aListName) {
+      reflowCmd->SetChildListName(aListName);
+    }
+    aPresShell.AppendReflowCommand(reflowCmd);
+    NS_RELEASE(reflowCmd);
+  }
+  return rv;
+#endif
+}
+
+NS_IMETHODIMP
+nsFrame::InsertFrames(nsIPresContext& aPresContext,
+                      nsIPresShell&   aPresShell,
+                      nsIAtom*        aListName,
+                      nsIFrame*       aPrevFrame,
+                      nsIFrame*       aFrameList)
+{
+#if 0
+  return NS_ERROR_UNEXPECTED;
+#else
+  // XXX temporary code until frame containers stop using the old
+  // reflow command api's
+  nsIReflowCommand* reflowCmd = nsnull;
+  nsresult rv;
+  rv = NS_NewHTMLReflowCommand(&reflowCmd, this, aFrameList, aPrevFrame);
+  if (NS_SUCCEEDED(rv)) {
+    if (nsnull != aListName) {
+      reflowCmd->SetChildListName(aListName);
+    }
+    aPresShell.AppendReflowCommand(reflowCmd);
+    NS_RELEASE(reflowCmd);
+  }
+  return rv;
+#endif
+}
+
+NS_IMETHODIMP
+nsFrame::ReplaceFrame(nsIPresContext& aPresContext,
+                      nsIPresShell&   aPresShell,
+                      nsIAtom*        aListName,
+                      nsIFrame*       aOldFrame,
+                      nsIFrame*       aNewFrame)
+{
+  return NS_ERROR_UNEXPECTED;
+}
+
+NS_IMETHODIMP
+nsFrame::RemoveFrame(nsIPresContext& aPresContext,
+                     nsIPresShell&   aPresShell,
+                     nsIAtom*        aListName,
+                     nsIFrame*       aOldFrame)
+{
+#if 0
+  return NS_ERROR_UNEXPECTED;
+#else
+  // XXX temporary code until frame containers stop using the old
+  // reflow command api's
+  nsIReflowCommand* reflowCmd = nsnull;
+  nsresult rv;
+  rv = NS_NewHTMLReflowCommand(&reflowCmd, this,
+                               nsIReflowCommand::FrameRemoved,
+                               aOldFrame);
+  if (NS_SUCCEEDED(rv)) {
+    if (nsnull != aListName) {
+      reflowCmd->SetChildListName(aListName);
+    }
+    aPresShell.AppendReflowCommand(reflowCmd);
+    NS_RELEASE(reflowCmd);
+  }
+  return rv;
+#endif
+}
+
+NS_IMETHODIMP
+nsFrame::DeleteFrame(nsIPresContext& aPresContext)
 {
   if (mState & NS_FRAME_EXTERNAL_REFERENCE) {
     nsIPresShell *shell = aPresContext.GetShell();
