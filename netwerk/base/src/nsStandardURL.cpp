@@ -146,28 +146,7 @@ nsPrefObserver::Observe(nsISupports *subject,
     if (!strcmp(topic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
         nsCOMPtr<nsIPrefBranch> prefBranch( do_QueryInterface(subject) );
         if (prefBranch) {
-            if (!nsCRT::strcmp(data, NS_LITERAL_STRING(NS_NET_PREF_ESCAPEUTF8).get())) {
-                PRBool val;
-                if (NS_SUCCEEDED(prefBranch->GetBoolPref(NS_NET_PREF_ESCAPEUTF8, &val)))
-                    gEscapeUTF8 = val;
-                LOG(("escape UTF-8 %s\n", gEscapeUTF8 ? "enabled" : "disabled"));
-            }
-            else if (!nsCRT::strcmp(data, NS_LITERAL_STRING(NS_NET_PREF_ENABLEIDN).get())) {
-                PRBool val;
-                NS_IF_RELEASE(gIDNService);
-                if (NS_SUCCEEDED(prefBranch->GetBoolPref(NS_NET_PREF_ENABLEIDN, &val)) && val) {
-                    nsCOMPtr<nsIIDNService> serv(do_GetService(NS_IDNSERVICE_CONTRACTID));
-                    if (serv)
-                        NS_ADDREF(gIDNService = serv.get());
-                }
-                LOG(("IDN support %s\n", gIDNService ? "enabled" : "disabled"));
-            }
-            else if (!nsCRT::strcmp(data, NS_LITERAL_STRING(NS_NET_PREF_ALWAYSENCODEINUTF8).get())) {
-                PRBool val;
-                if (NS_SUCCEEDED(prefBranch->GetBoolPref(NS_NET_PREF_ALWAYSENCODEINUTF8, &val)))
-                    gAlwaysEncodeInUTF8 = val;
-                LOG(("encode in UTF-8 %s\n", gAlwaysEncodeInUTF8 ? "enabled" : "disabled"));
-            }
+            PrefsChanged(prefBranch, NS_ConvertUTF16toUTF8(data).get());
         } 
     }
     return NS_OK;
@@ -318,10 +297,8 @@ nsStandardURL::InitGlobalObjects()
         prefBranch->AddObserver(NS_NET_PREF_ESCAPEUTF8, obs.get(), PR_FALSE); 
         prefBranch->AddObserver(NS_NET_PREF_ALWAYSENCODEINUTF8, obs.get(), PR_FALSE);
         prefBranch->AddObserver(NS_NET_PREF_ENABLEIDN, obs.get(), PR_FALSE); 
-        // initialize IDN
-        nsCOMPtr<nsIIDNService> serv(do_GetService(NS_IDNSERVICE_CONTRACTID));
-        if (serv)
-            NS_ADDREF(gIDNService = serv.get());
+
+        PrefsChanged(prefBranch, nsnull);
     }
 }
 
@@ -818,6 +795,41 @@ nsStandardURL::WriteSegment(nsIBinaryOutputStream *stream, const URLSegment &seg
     return NS_OK;
 }
 
+/* static */ void
+nsStandardURL::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
+{
+    PRBool val;
+
+    LOG(("nsStandardURL::PrefsChanged [pref=%s]\n", pref));
+
+#define PREF_CHANGED(p) ((pref == nsnull) || !strcmp(pref, p))
+#define GOT_PREF(p, b) (NS_SUCCEEDED(prefs->GetBoolPref(p, &b)))
+
+    if (PREF_CHANGED(NS_NET_PREF_ENABLEIDN)) {
+        NS_IF_RELEASE(gIDNService);
+        if (GOT_PREF(NS_NET_PREF_ENABLEIDN, val) && val) {
+            // initialize IDN
+            nsCOMPtr<nsIIDNService> serv(do_GetService(NS_IDNSERVICE_CONTRACTID));
+            if (serv)
+                NS_ADDREF(gIDNService = serv.get());
+        }
+        LOG(("IDN support %s\n", gIDNService ? "enabled" : "disabled"));
+    }
+    
+    if (PREF_CHANGED(NS_NET_PREF_ESCAPEUTF8)) {
+        if (GOT_PREF(NS_NET_PREF_ESCAPEUTF8, val))
+            gEscapeUTF8 = val;
+        LOG(("escape UTF-8 %s\n", gEscapeUTF8 ? "enabled" : "disabled"));
+    }
+        
+    if (PREF_CHANGED(NS_NET_PREF_ALWAYSENCODEINUTF8)) {
+        if (GOT_PREF(NS_NET_PREF_ALWAYSENCODEINUTF8, val))
+            gAlwaysEncodeInUTF8 = val;
+        LOG(("encode in UTF-8 %s\n", gAlwaysEncodeInUTF8 ? "enabled" : "disabled"));
+    }
+#undef PREF_CHANGED
+#undef GOT_PREF
+}
 //----------------------------------------------------------------------------
 // nsStandardURL::nsISupports
 //----------------------------------------------------------------------------
