@@ -1,0 +1,107 @@
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is OEone Calendar Code, released October 31st, 2001.
+   -
+   - The Initial Developer of the Original Code is
+   - OEone Corporation.
+   - Portions created by the Initial Developer are Copyright (C) 2001
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s): Garth Smedley <garths@oeone.com>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<!ENTITY time.midnight "0:00" >
+<!ENTITY time.1 "1:00" >
+<!ENTITY time.2 "2:00" >
+<!ENTITY time.3 "3:00" >
+<!ENTITY time.4 "4:00" >
+<!ENTITY time.5 "5:00" >
+<!ENTITY time.6 "6:00" >
+<!ENTITY time.7 "7:00" >
+<!ENTITY time.8 "8:00" >
+<!ENTITY time.9 "9:00" >
+<!ENTITY time.10 "10:00" >
+<!ENTITY time.11 "11:00" >
+<!ENTITY time.noon "12:00" >
+<!ENTITY time.13 "13:00" >
+<!ENTITY time.14 "14:00" >
+<!ENTITY time.15 "15:00" >
+<!ENTITY time.16 "16:00" >
+<!ENTITY time.17 "17:00" >
+<!ENTITY time.18 "18:00" >
+<!ENTITY time.19 "19:00" >
+<!ENTITY time.20 "20:00" >
+<!ENTITY time.21 "21:00" >
+<!ENTITY time.22 "22:00" >
+<!ENTITY time.23 "23:00" >
+
+<!-- Month Names -->
+<!ENTITY day.1.Ddd "sekmadienį" >
+<!ENTITY day.2.Ddd "pirmadienį" >
+<!ENTITY day.3.Ddd "antradienį" >
+<!ENTITY day.4.Ddd "trečiadienį" >
+<!ENTITY day.5.Ddd "ketvirtadienį" >
+<!ENTITY day.6.Ddd "penktadienį" >
+<!ENTITY day.7.Ddd "šeštadienį" >
+
+<!ENTITY day.1.DDD "Se" >
+<!ENTITY day.2.DDD "Pr" >
+<!ENTITY day.3.DDD "An" >
+<!ENTITY day.4.DDD "Tr" >
+<!ENTITY day.5.DDD "Kt" >
+<!ENTITY day.6.DDD "Pe" >
+<!ENTITY day.7.DDD "Še" >
+
+<!ENTITY day.1.name "Sekmadienis" >
+<!ENTITY day.2.name "Pirmadienis" >
+<!ENTITY day.3.name "Antradienis" >
+<!ENTITY day.4.name "Trečiadienis" >
+<!ENTITY day.5.name "Ketvirtadienis" >
+<!ENTITY day.6.name "Penktadienis" >
+<!ENTITY day.7.name "Šeštadienis" >
+
+<!ENTITY time.am "priešpiet" >
+<!ENTITY time.pm "popiet" >
+
+<!ENTITY month.1.MMM "Sausio" >
+<!ENTITY month.2.MMM "Vasario" >
+<!ENTITY month.3.MMM "Kovo" >
+<!ENTITY month.4.MMM "Balandžio" >
+<!ENTITY month.5.MMM "Gegužės" >
+<!ENTITY month.6.MMM "Birželio" >
+<!ENTITY month.7.MMM "Liepos" >
+<!ENTITY month.8.MMM "Rugpjūčio" >
+<!ENTITY month.9.MMM "Rugsėjo" >
+<!ENTITY month.10.MMM "Spalio" >
+<!ENTITY month.11.MMM "Lapk" >
+<!ENTITY month.12.MMM "Gruodžio" >
+
+<!ENTITY time.AM "Prieš piet" >
+<!ENTITY time.PM "Po piet" >
+
+<!ENTITY more.label "Kas 1 min" >
+<!ENTITY less.label "Kas 5 min" >
