@@ -30,7 +30,6 @@ DISTXUL=$(DIST)\bin\chrome
 
 install::
 	$(MAKE_INSTALL) tasksOverlay.css $(DISTBROWSER)
-	$(MAKE_INSTALL) globalBindings.xml $(DISTBROWSER)
 	$(MAKE_INSTALL) global.css $(DISTBROWSER)
 	$(MAKE_INSTALL) button.css $(DISTBROWSER)
 	$(MAKE_INSTALL) checkbox.css $(DISTBROWSER)
