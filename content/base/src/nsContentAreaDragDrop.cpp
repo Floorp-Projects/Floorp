@@ -723,7 +723,7 @@ nsContentAreaDragDrop::BuildDragData(nsIDOMEvent* inMouseEvent, nsAString & outU
       FindParentNode(draggedNode, NS_LITERAL_STRING("a").get(), getter_AddRefs(linkNode));
       if ( linkNode ) {
         *outIsAnchor = PR_TRUE;
-        GetAnchorURL(draggedNode, urlString);
+        GetAnchorURL(linkNode, urlString);
         CreateLinkText(urlString, htmlString, htmlString);
       }
     }
