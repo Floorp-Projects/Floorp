@@ -234,9 +234,34 @@ nsPluginFile::~nsPluginFile()
 nsresult nsPluginFile::LoadPlugin(PRLibrary* &outLibrary)
 {
 	// How can we convert to a full path names for using with NSPR?
-	//nsFilePath path(*this);
 	const char* path = this->GetCString();
+  char* index;
+  char* pluginFolderPath = PL_strdup(path);
+
+  index = PL_strrchr(pluginFolderPath, '\\');
+  *index = 0;
+
+	BOOL restoreOrigDir = FALSE;
+	char aOrigDir[MAX_PATH + 1];
+	DWORD dwCheck = ::GetCurrentDirectory(sizeof(aOrigDir), aOrigDir);
+	NS_ASSERTION(dwCheck <= MAX_PATH + 1, "Error in Loading plugin");
+
+	if (dwCheck <= MAX_PATH + 1)
+		{
+		restoreOrigDir = ::SetCurrentDirectory(pluginFolderPath);
+		NS_ASSERTION(restoreOrigDir, "Error in Loading plugin");
+		}
+
 	outLibrary = PR_LoadLibrary(path);
+
+	if (restoreOrigDir)
+		{
+		BOOL bCheck = ::SetCurrentDirectory(aOrigDir);
+		NS_ASSERTION(bCheck, "Error in Loading plugin");
+		}
+
+  PL_strfree(pluginFolderPath);
+
 	return NS_OK;
 }
 
