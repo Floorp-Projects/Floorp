@@ -52,22 +52,21 @@
 #include "imgIContainer.h"
 #include "imgIDecoderObserver.h"
 #include "nsIURL.h"
-#include "nsIScrollable.h"
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
 #include "nsStyleContext.h"
-#include "nsIViewManager.h"
 #include "nsIStringBundle.h"
 #include "nsIPrefService.h"
 #include "nsITextToSubURI.h"
 #include "nsAutoPtr.h"
+#include "nsMediaDocument.h"
 
 #define NSIMAGEDOCUMENT_PROPERTIES_URI "chrome://communicator/locale/layout/ImageDocument.properties"
 #define AUTOMATIC_IMAGE_RESIZING_PREF "browser.enable_automatic_image_resizing"
 
 class nsImageDocument;
 
-class ImageListener: public nsIStreamListener
+class ImageListener: public nsMediaDocumentStreamListener
 {
 public:
   ImageListener(nsImageDocument* aDocument);
@@ -76,14 +75,9 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_DECL_NSIREQUESTOBSERVER
-
-  NS_DECL_NSISTREAMLISTENER
-
-  nsImageDocument*              mDocument;
-  nsCOMPtr<nsIStreamListener>   mNextStream;
 };
 
-class nsImageDocument : public nsHTMLDocument,
+class nsImageDocument : public nsMediaDocument,
                         public nsIImageDocument,
                         public imgIDecoderObserver,
                         public nsIDOMEventListener
@@ -122,9 +116,9 @@ protected:
 
   nsresult CheckOverflowing();
 
-  nsresult StartLayout();
-
   nsresult UpdateTitle();
+
+  nsRefPtr<nsMediaDocumentStreamListener>  mStreamListener;
 
   nsCOMPtr<nsIStringBundle>     mStringBundle;
   nsCOMPtr<nsIDOMElement>       mImageElement;
@@ -140,25 +134,27 @@ protected:
   PRPackedBool                  mImageIsResized;
 };
 
+NS_IMPL_ADDREF_INHERITED(ImageListener, nsMediaDocumentStreamListener)
+NS_IMPL_RELEASE_INHERITED(ImageListener, nsMediaDocumentStreamListener)
+
+NS_INTERFACE_MAP_BEGIN(ImageListener)
+NS_INTERFACE_MAP_END_INHERITING(nsMediaDocumentStreamListener)
 
 ImageListener::ImageListener(nsImageDocument* aDocument)
+  : nsMediaDocumentStreamListener(aDocument)
 {
-  NS_ADDREF(mDocument = aDocument);
 }
+
 
 ImageListener::~ImageListener()
 {
-  NS_RELEASE(mDocument);
-}
-
-NS_IMPL_THREADSAFE_ISUPPORTS2(ImageListener,
-                              nsIRequestObserver,
-                              nsIStreamListener)
+};
 
 NS_IMETHODIMP
 ImageListener::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
 {
-  NS_PRECONDITION(!mDocument->mImageRequest, "OnStartRequest called twice!");
+  nsImageDocument *imgDoc = (nsImageDocument*)mDocument.get();
+  NS_PRECONDITION(!imgDoc->mImageRequest, "OnStartRequest called twice!");
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
   if (!channel) {
     return NS_ERROR_FAILURE;
@@ -166,43 +162,22 @@ ImageListener::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
 
   nsCOMPtr<imgILoader> il(do_GetService("@mozilla.org/image/loader;1"));
   nsCOMPtr<nsISupports> docSupports;
-  CallQueryInterface(mDocument, NS_STATIC_CAST(nsISupports**,
-                                               getter_AddRefs(docSupports)));
-  il->LoadImageWithChannel(channel, mDocument, docSupports,
+  CallQueryInterface(imgDoc, NS_STATIC_CAST(nsISupports**,
+                                            getter_AddRefs(docSupports)));
+  il->LoadImageWithChannel(channel, imgDoc, docSupports,
                            getter_AddRefs(mNextStream), 
-                           getter_AddRefs(mDocument->mImageRequest));
+                           getter_AddRefs(imgDoc->mImageRequest));
 
-  mDocument->StartLayout();
-
-  if (mNextStream) {
-    return mNextStream->OnStartRequest(request, ctxt);
-  }
-
-  return NS_OK;
+  return nsMediaDocumentStreamListener::OnStartRequest(request, ctxt);
 }
 
 NS_IMETHODIMP
 ImageListener::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
                              nsresult status)
 {
-  mDocument->UpdateTitle();
+  ((nsImageDocument*) mDocument.get())->UpdateTitle();
 
-  if (mNextStream) {
-    return mNextStream->OnStopRequest(request, ctxt, status);
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-ImageListener::OnDataAvailable(nsIRequest* request, nsISupports *ctxt,
-                               nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count)
-{
-  if (mNextStream) {
-    return mNextStream->OnDataAvailable(request, ctxt, inStr, sourceOffset, count);
-  }
-
-  return NS_OK;
+  return nsMediaDocumentStreamListener::OnStopRequest(request, ctxt, status);
 }
 
 nsImageDocument::nsImageDocument()
@@ -268,30 +243,18 @@ nsImageDocument::StartDocumentLoad(const char*         aCommand,
                                    PRBool              aReset,
                                    nsIContentSink*     aSink)
 {
-  nsresult rv = nsDocument::StartDocumentLoad(aCommand, aChannel, aLoadGroup,
-                                              aContainer, aDocListener, aReset,
-                                              aSink);
+  nsresult rv = nsMediaDocument::StartDocumentLoad(aCommand, aChannel, aLoadGroup,
+                                                   aContainer, aDocListener, aReset,
+                                                   aSink);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
-  if (httpChannel) {
-    // The misspelled key 'referer' is as per the HTTP spec
-    nsCAutoString referrerHeader;
-    rv = httpChannel->GetRequestHeader(NS_LITERAL_CSTRING("referer"),
-                                       referrerHeader);
-    
-    if (NS_SUCCEEDED(rv)) {
-      SetReferrer(NS_ConvertASCIItoUCS2(referrerHeader));
-    }
-  }
-
-  NS_ASSERTION(aDocListener, "null aDocListener");
-  *aDocListener = new ImageListener(this);
-  if (!*aDocListener)
+  mStreamListener = new ImageListener(this);
+  if (!mStreamListener)
     return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(*aDocListener);
+  NS_ASSERTION(aDocListener, "null aDocListener");
+  NS_ADDREF(*aDocListener = mStreamListener);
 
   return NS_OK;
 }
@@ -516,35 +479,16 @@ nsresult
 nsImageDocument::CreateSyntheticDocument()
 {
   // Synthesize an html document that refers to the image
-  nsresult rv;
+  nsresult rv = nsMediaDocument::CreateSyntheticDocument();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIHTMLContent> body = do_QueryInterface(mBodyContent);
+  if (!body) {
+    NS_WARNING("no body on image document!");
+    return NS_ERROR_FAILURE;
+  }
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
-  rv = mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::html, nsnull,
-                                     kNameSpaceID_None,
-                                     *getter_AddRefs(nodeInfo));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIHTMLContent> root;
-  rv = NS_NewHTMLHtmlElement(getter_AddRefs(root), nodeInfo);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  root->SetDocument(this, PR_FALSE, PR_TRUE);
-  SetRootContent(root);
-
-  rv = mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::body, nsnull,
-                                     kNameSpaceID_None,
-                                     *getter_AddRefs(nodeInfo));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIHTMLContent> body;
-  rv = NS_NewHTMLBodyElement(getter_AddRefs(body), nodeInfo);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  body->SetDocument(this, PR_FALSE, PR_TRUE);
-  mBodyContent = do_QueryInterface(body);
-
   rv = mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::img, nsnull,
                                      kNameSpaceID_None,
                                      *getter_AddRefs(nodeInfo));
@@ -574,7 +518,6 @@ nsImageDocument::CreateSyntheticDocument()
     image->SetAttr(kNameSpaceID_None, nsHTMLAtoms::alt, errorMsg, PR_FALSE);
   }
 
-  root->AppendChildTo(body, PR_FALSE, PR_FALSE);
   body->AppendChildTo(image, PR_FALSE, PR_FALSE);
 
   return NS_OK;
@@ -626,42 +569,6 @@ nsImageDocument::CheckOverflowing()
   return NS_OK;
 }
 
-nsresult
-nsImageDocument::StartLayout()
-{
-  // Reset scrolling to default settings for this shell.
-  // This must happen before the initial reflow, when we create the root frame
-  nsCOMPtr<nsIScrollable> scrollableContainer(do_QueryReferent(mDocumentContainer));
-  if (scrollableContainer) {
-    scrollableContainer->ResetScrollbarPreferences();
-  }
-
-  PRInt32 numberOfShells = GetNumberOfShells();
-  for (PRInt32 i = 0; i < numberOfShells; i++) {
-    nsCOMPtr<nsIPresShell> shell;
-    GetShellAt(i, getter_AddRefs(shell));
-    if (shell) {
-      // Make shell an observer for next time.
-      shell->BeginObservingDocument();
-
-      // Initial-reflow this time.
-      nsCOMPtr<nsIPresContext> context;
-      shell->GetPresContext(getter_AddRefs(context));
-      nsRect visibleArea;
-      context->GetVisibleArea(visibleArea);
-      shell->InitialReflow(visibleArea.width, visibleArea.height);
-
-      // Now trigger a refresh.
-      nsCOMPtr<nsIViewManager> vm;
-      shell->GetViewManager(getter_AddRefs(vm));
-      if (vm) {
-        vm->EnableRefresh(NS_VMREFRESH_IMMEDIATE);
-      }
-    }
-  }
-
-  return NS_OK;
-}
 
 nsresult nsImageDocument::UpdateTitle()
 {

@@ -149,6 +149,10 @@ class nsIDocumentLoaderFactory;
 #define NS_HTMLOPTIONELEMENT_CONTRACTID \
   "@mozilla.org/content/element/html;1?name=option"
 
+/* 0ddf4df8-4dbb-4133-8b79-9afb966514f5 */
+#define NS_PLUGINDOCLOADERFACTORY_CID \
+{ 0x0ddf4df8, 0x4dbb, 0x4133, { 0x8b, 0x79, 0x9a, 0xfb, 0x96, 0x65, 0x14, 0xf5 } }
+
 
 #ifdef MOZ_XUL
 #include "nsIXULContentSink.h"
@@ -531,6 +535,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsInspectorCSSUtils)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWyciwygProtocolHandler)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsContentAreaDragDrop)
 MAKE_CTOR(CreateSyncLoadDOMService,       nsISyncLoadDOMService,       NS_NewSyncLoadDOMService)
+MAKE_CTOR(CreatePluginDocument,           nsIDocument,                 NS_NewPluginDocument)
 
 // views are not refcounted, so this is the same as
 // NS_GENERIC_FACTORY_CONSTRUCTOR without the NS_ADDREF/NS_RELEASE
@@ -1209,7 +1214,17 @@ static const nsModuleComponentInfo gComponents[] = {
   { "Scrolling View", NS_SCROLLING_VIEW_CID, "@mozilla.org/scrolling-view;1",
     nsScrollingViewConstructor },
   { "Scroll Port View", NS_SCROLL_PORT_VIEW_CID,
-    "@mozilla.org/scroll-port-view;1", nsScrollPortViewConstructor }
+    "@mozilla.org/scroll-port-view;1", nsScrollPortViewConstructor },
+
+  { "Plugin Document Loader Factory",
+    NS_PLUGINDOCLOADERFACTORY_CID,
+    "@mozilla.org/content/plugin/document-loader-factory;1",
+    CreateContentDLF },
+
+  { "Plugin Document",
+    NS_PLUGINDOCUMENT_CID,
+    nsnull,
+    CreatePluginDocument }
 };
 
 NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(nsLayoutModule, gComponents, Initialize, Shutdown)

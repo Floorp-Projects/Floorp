@@ -58,12 +58,15 @@ REQUIRES	= xpcom \
 		  unicharutil \
 		  commandhandler \
 		  composer \
+		  plugin \
 		  $(NULL)
 
 CPPSRCS		= \
 		nsHTMLContentSink.cpp \
 		nsHTMLFragmentContentSink.cpp \
 		nsHTMLDocument.cpp \
+		nsMediaDocument.cpp \
+		nsPluginDocument.cpp \
 		nsImageDocument.cpp \
 		nsMarkupDocument.cpp \
 		nsWyciwygChannel.cpp \

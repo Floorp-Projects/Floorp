@@ -133,6 +133,7 @@
 #include "nsIObjectFrame.h"
 #include "nsPluginNativeWindow.h"
 #include "nsPIPluginHost.h"
+#include "nsIPluginDocument.h"
 
 // accessibility support
 #ifdef ACCESSIBILITY
@@ -1322,7 +1323,32 @@ nsObjectFrame::InstantiatePlugin(nsIPresContext* aPresContext,
     }
   }
 
-  return aPluginHost->InstantiateEmbededPlugin(aMimetype, aURI, mInstanceOwner);
+  nsCOMPtr<nsIDocument> doc;
+  nsresult rv = mInstanceOwner->GetDocument(getter_AddRefs(doc));
+  nsCOMPtr<nsIPluginDocument> pDoc (do_QueryInterface(doc));
+
+  if (pDoc) {  /* full-page mode */
+
+    nsCAutoString spec;
+    rv = aURI->GetSpec(spec);
+    if (NS_SUCCEEDED(rv)) {
+      NS_ConvertUTF8toUCS2 url(spec);
+
+      nsCOMPtr<nsIStreamListener> stream;
+      rv = aPluginHost->InstantiateFullPagePlugin(aMimetype,
+                                                  url,
+            /* resulting stream listener */       *getter_AddRefs(stream),
+                                                  mInstanceOwner);
+      if (NS_SUCCEEDED(rv))
+        pDoc->SetStreamListener(stream);
+    }
+  } else {   /* embedded mode */
+    rv = aPluginHost->InstantiateEmbededPlugin(aMimetype,
+                                               aURI,
+                                               mInstanceOwner);
+  }
+
+  return rv;
 }
 
 // This is called when the page containing plugin is resized, and plugin has its dimensions
@@ -2247,8 +2273,17 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetWindow(nsPluginWindow *&aWindow)
 
 NS_IMETHODIMP nsPluginInstanceOwner::GetMode(nsPluginMode *aMode)
 {
-  *aMode = nsPluginMode_Embedded;
-  return NS_OK;
+  nsCOMPtr<nsIDocument> doc;
+  nsresult rv = GetDocument(getter_AddRefs(doc));
+  nsCOMPtr<nsIPluginDocument> pDoc (do_QueryInterface(doc));
+
+  if (pDoc) {
+    *aMode = nsPluginMode_Full;
+  } else {
+    *aMode = nsPluginMode_Embedded;
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP nsPluginInstanceOwner::GetAttributes(PRUint16& n,

@@ -748,6 +748,72 @@ nsHTMLDocument::StartAutodetection(nsIDocShell *aDocShell,
   }
 }
 
+nsresult
+nsHTMLDocument::RetrieveRelevantHeaders(nsIChannel *aChannel)
+{
+  nsAutoString lastModified;
+  mHttpChannel = do_QueryInterface(aChannel);
+
+  if (mHttpChannel) {
+    nsCAutoString lastModHeader;
+    nsresult rv = mHttpChannel->GetResponseHeader(NS_LITERAL_CSTRING("last-modified"),
+                                                  lastModHeader);
+ 
+    if (NS_SUCCEEDED(rv)) {
+      CopyASCIItoUCS2(lastModHeader, lastModified);
+      SetLastModified(lastModified);
+    }
+
+    nsCAutoString referrerHeader;
+    // The misspelled key 'referer' is as per the HTTP spec
+    rv = mHttpChannel->GetRequestHeader(NS_LITERAL_CSTRING("referer"),
+                                        referrerHeader);
+
+    if (NS_SUCCEEDED(rv)) {
+      SetReferrer(NS_ConvertASCIItoUCS2(referrerHeader));
+    }
+  }
+
+  nsCOMPtr<nsIFileChannel> fileChannel = do_QueryInterface(aChannel);
+  if (fileChannel) {
+    PRTime modDate, usecs;
+
+    nsCOMPtr<nsIFile> file;
+    nsresult rv = fileChannel->GetFile(getter_AddRefs(file));
+    if (NS_SUCCEEDED(rv)) {
+      // if we failed to get a last modification date, then we don't
+      // want to necessarily fail to create a document for this
+      // file. Just don't set the last modified date on it...
+      rv = file->GetLastModifiedTime(&modDate);
+      if (NS_SUCCEEDED(rv)) {
+        PRExplodedTime prtime;
+        char buf[100];
+        PRInt64 intermediateValue;
+
+        LL_I2L(intermediateValue, PR_USEC_PER_MSEC);
+        LL_MUL(usecs, modDate, intermediateValue);
+        PR_ExplodeTime(usecs, PR_LocalTimeParameters, &prtime);
+
+        // Use '%#c' for windows, because '%c' is backward-compatible and
+        // non-y2k with msvc; '%#c' requests that a full year be used in the
+        // result string.  Other OSes just use "%c".
+        PR_FormatTime(buf, sizeof buf,
+#if defined(XP_PC) && !defined(XP_OS2)
+                      "%#c",
+#else
+                      "%c",
+#endif
+                      &prtime);
+        lastModified.AssignWithConversion(buf);
+        SetLastModified(lastModified);
+      }
+    }
+  }
+
+  return NS_OK;
+
+}
+
 NS_IMETHODIMP
 nsHTMLDocument::StartDocumentLoad(const char* aCommand,
                                   nsIChannel* aChannel,
@@ -780,77 +846,14 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     return rv;
   }
 
-  nsAutoString lastModified;
-  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
+  RetrieveRelevantHeaders(aChannel);
 
-  if (httpChannel) {
-    nsCAutoString lastModHeader;
-    rv = httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("last-modified"),
-                                        lastModHeader);
-
-    if (NS_SUCCEEDED(rv)) {
-      CopyASCIItoUCS2(lastModHeader, lastModified);
-      SetLastModified(lastModified);
-    }
-
-    nsCAutoString referrerHeader;
-    // The misspelled key 'referer' is as per the HTTP spec
-    rv = httpChannel->GetRequestHeader(NS_LITERAL_CSTRING("referer"),
-                                       referrerHeader);
-
-    if (NS_SUCCEEDED(rv)) {
-      SetReferrer(NS_ConvertASCIItoUCS2(referrerHeader));
-    }
-
-    mHttpChannel = httpChannel;
-
-    nsCOMPtr<nsICachingChannel> cachingChan = do_QueryInterface(httpChannel);
-    if (cachingChan) {
-      nsCOMPtr<nsISupports> cacheToken;
-      cachingChan->GetCacheToken(getter_AddRefs(cacheToken));
-      if (cacheToken)
-        cacheDescriptor = do_QueryInterface(cacheToken);
-    }
-
-    // Don't propagate the result code beyond here, since it
-    // could just be that the response header wasn't found.
-    rv = NS_OK;
-  }
-
-  nsCOMPtr<nsIFileChannel> fileChannel = do_QueryInterface(aChannel);
-  if (fileChannel) {
-    PRTime modDate, usecs;
-
-    nsCOMPtr<nsIFile> file;
-    rv = fileChannel->GetFile(getter_AddRefs(file));
-    if (NS_SUCCEEDED(rv)) {
-      // if we failed to get a last modification date, then we don't
-      // want to necessarily fail to create a document for this
-      // file. Just don't set the last modified date on it...
-      rv = file->GetLastModifiedTime(&modDate);
-      if (NS_SUCCEEDED(rv)) {
-        PRExplodedTime prtime;
-        char buf[100];
-        PRInt64 intermediateValue;
-
-        LL_I2L(intermediateValue, PR_USEC_PER_MSEC);
-        LL_MUL(usecs, modDate, intermediateValue);
-        PR_ExplodeTime(usecs, PR_LocalTimeParameters, &prtime);
-
-        // Use '%#c' for windows, because '%c' is backward-compatible and
-        // non-y2k with msvc; '%#c' requests that a full year be used in the
-        // result string.  Other OSes just use "%c".
-        PR_FormatTime(buf, sizeof buf,
-#if defined(XP_PC) && !defined(XP_OS2)
-                      "%#c",
-#else
-                      "%c",
-#endif
-                      &prtime);
-        lastModified.AssignWithConversion(buf);
-        SetLastModified(lastModified);
-      }
-    }
+  nsCOMPtr<nsICachingChannel> cachingChan = do_QueryInterface(aChannel);
+  if (cachingChan) {
+    nsCOMPtr<nsISupports> cacheToken;
+    cachingChan->GetCacheToken(getter_AddRefs(cacheToken));
+    if (cacheToken)
+      cacheDescriptor = do_QueryInterface(cacheToken);
   }
 
   if (needsParser) {
@@ -946,9 +949,9 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 
   PRBool isPostPage = PR_FALSE;
   //check if current doc is from POST command
-  if (httpChannel) {  
+  if (mHttpChannel) {  
     nsCAutoString methodStr;
-    rv = httpChannel->GetRequestMethod(methodStr);
+    rv = mHttpChannel->GetRequestMethod(methodStr);
     if (NS_SUCCEEDED(rv) && methodStr.Equals(NS_LITERAL_CSTRING("POST")))
       isPostPage = PR_TRUE;
   }

@@ -159,6 +159,7 @@ static const char sPrintOptionsContractID[]         = "@mozilla.org/gfx/printset
 #include "nsIDOMHTMLFrameElement.h"
 #include "nsIDOMHTMLIFrameElement.h"
 #include "nsIDOMHTMLObjectElement.h"
+#include "nsIPluginDocument.h"
 
 // Print Preview
 #include "nsIPrintPreviewContext.h"
@@ -3049,6 +3050,12 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
     nsPrintEngine::ShowPrintErrorDialog(rv);
     return rv;
   }
+
+  // If we are hosting a full-page plugin, tell it to print
+  // first. It shows its own native print UI.
+  nsCOMPtr<nsIPluginDocument> pDoc(do_QueryInterface(mDocument));
+  if (pDoc)
+    return pDoc->Print();
 
   if (!mPrintEngine) {
     mPrintEngine = new nsPrintEngine();

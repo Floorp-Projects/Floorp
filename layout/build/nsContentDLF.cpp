@@ -66,6 +66,12 @@
 
 #include "imgILoader.h"
 
+// plugins
+#include "nsIPluginManager.h"
+#include "nsIPluginHost.h"
+static NS_DEFINE_CID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
+static NS_DEFINE_CID(kPluginDocumentCID, NS_PLUGINDOCUMENT_CID);
+
 // URL for the "user agent" style sheet
 #define UA_CSS_URL "resource:/res/ua.css"
 
@@ -264,6 +270,15 @@ nsContentDLF::CreateInstance(const char* aCommand,
                           aContainer, kImageDocumentCID,
                           aDocListener, aDocViewer);
   }
+
+  nsCOMPtr<nsIPluginHost> ph (do_GetService(kPluginManagerCID));
+  if(ph && NS_SUCCEEDED(ph->IsPluginEnabledForType(aContentType))) {
+    return CreateDocument(aCommand,
+                          aChannel, aLoadGroup,
+                          aContainer, kPluginDocumentCID,
+                          aDocListener, aDocViewer);
+  }
+
 
   // If we get here, then we weren't able to create anything. Sorry!
   return NS_ERROR_FAILURE;

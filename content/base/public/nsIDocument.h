@@ -486,5 +486,7 @@ NS_NewDOMDocument(nsIDOMDocument** aInstancePtrResult,
                   const nsAString& aQualifiedName, 
                   nsIDOMDocumentType* aDoctype,
                   nsIURI* aBaseURI);
+nsresult
+NS_NewPluginDocument(nsIDocument** aInstancePtrResult);
 
 #endif /* nsIDocument_h___ */
