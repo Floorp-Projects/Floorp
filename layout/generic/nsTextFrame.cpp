@@ -302,7 +302,6 @@ public:
       mColor = (const nsStyleColor*) sc->GetStyleData(eStyleStruct_Color);
       mFont = (const nsStyleFont*) sc->GetStyleData(eStyleStruct_Font);
       mText = (const nsStyleText*) sc->GetStyleData(eStyleStruct_Text);
-      aRenderingContext.SetColor(mColor->mColor);
 
       // Cache the original decorations and reuse the current font
       // to query metrics, rather than creating a new font which is expensive.
@@ -859,6 +858,7 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
     if (!displaySelection || !isSelected ) { 
       // When there is no selection showing, use the fastest and
       // simplest rendering approach
+      aRenderingContext.SetColor(aTextStyle.mColor->mColor);
       aRenderingContext.DrawString(text, PRUint32(textLength), dx, dy);
       PaintTextDecorations(aRenderingContext, aStyleContext, aTextStyle,
                            dx, dy, width);
@@ -901,6 +901,7 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
           selectionEndOffset = ip[selectionEndOffset]  - mContentOffset;
         }
         if (!drawSelected || (selectionStartOffset == selectionEndOffset)) {
+          aRenderingContext.SetColor(aTextStyle.mColor->mColor);
           aRenderingContext.DrawString(text, PRUint32(textLength), dx, dy);
           PaintTextDecorations(aRenderingContext, aStyleContext,
                                aTextStyle, dx, dy, width);
@@ -919,6 +920,7 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
             // Render first (unselected) section
             aRenderingContext.GetWidth(text, PRUint32(selectionStartOffset),//si.mStartOffset),
                                        textWidth);
+            aRenderingContext.SetColor(aTextStyle.mColor->mColor);
             aRenderingContext.DrawString(text, PRUint32(selectionStartOffset),
                                          x, dy);
             PaintTextDecorations(aRenderingContext, aStyleContext, aTextStyle,
@@ -939,7 +941,6 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
                                           PRUint32(secondLen), x, dy);
             PaintTextDecorations(aRenderingContext, aStyleContext, aTextStyle,
                                  x, dy, textWidth);
-            aRenderingContext.SetColor(aTextStyle.mColor->mColor);
             x += textWidth;
           }
           if (textLength != selectionEndOffset) {
@@ -951,6 +952,7 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
               // Render third (unselected) section
               aRenderingContext.GetWidth(text + selectionEndOffset, PRUint32(thirdLen),
                                          textWidth);
+              aRenderingContext.SetColor(aTextStyle.mColor->mColor);
               aRenderingContext.DrawString(text + selectionEndOffset,
                                            PRUint32(thirdLen), x, dy);
               PaintTextDecorations(aRenderingContext, aStyleContext, aTextStyle,
@@ -1185,6 +1187,7 @@ nsTextFrame::RenderString(nsIRenderingContext& aRenderingContext,
       pendingCount = bp - runStart;
       if (0 != pendingCount) {
         // Measure previous run of characters using the previous font
+        aRenderingContext.SetColor(aTextStyle.mColor->mColor);
         aRenderingContext.DrawString(runStart, pendingCount,
                                      aX, lastY, -1,
                                      spacing ? sp0 : nsnull);
@@ -1211,6 +1214,7 @@ nsTextFrame::RenderString(nsIRenderingContext& aRenderingContext,
   pendingCount = bp - runStart;
   if (0 != pendingCount) {
     // Measure previous run of characters using the previous font
+    aRenderingContext.SetColor(aTextStyle.mColor->mColor);
     aRenderingContext.DrawString(runStart, pendingCount, aX, lastY, -1,
                                  spacing ? sp0 : nsnull);
 
@@ -1522,6 +1526,7 @@ nsTextFrame::PaintAsciiText(nsIPresContext* aPresContext,
       //if selection is > content length then selection has "slid off"
       // When there is no selection showing, use the fastest and
       // simplest rendering approach
+      aRenderingContext.SetColor(aTextStyle.mColor->mColor);
       aRenderingContext.DrawString(text, PRUint32(textLength), dx, dy);
       PaintTextDecorations(aRenderingContext, aStyleContext, aTextStyle,
                            dx, dy, width);
@@ -1562,6 +1567,7 @@ nsTextFrame::PaintAsciiText(nsIPresContext* aPresContext,
           selectionEndOffset = ip[selectionEndOffset]  - mContentOffset;
         }
         if (!drawSelected || (selectionStartOffset == selectionEndOffset)){
+          aRenderingContext.SetColor(aTextStyle.mColor->mColor);
           aRenderingContext.DrawString(text, PRUint32(textLength), dx, dy);
           PaintTextDecorations(aRenderingContext, aStyleContext,
                                aTextStyle, dx, dy, width);
@@ -1582,6 +1588,7 @@ nsTextFrame::PaintAsciiText(nsIPresContext* aPresContext,
             // Render first (unselected) section
             aRenderingContext.GetWidth(text, PRUint32(selectionStartOffset),//si.mStartOffset),
                                        textWidth);
+            aRenderingContext.SetColor(aTextStyle.mColor->mColor);
             aRenderingContext.DrawString(text, PRUint32(selectionStartOffset),
                                          x, dy);
             PaintTextDecorations(aRenderingContext, aStyleContext, aTextStyle,
@@ -1602,7 +1609,6 @@ nsTextFrame::PaintAsciiText(nsIPresContext* aPresContext,
                                           PRUint32(secondLen), x, dy);
             PaintTextDecorations(aRenderingContext, aStyleContext, aTextStyle,
                                  x, dy, textWidth);
-            aRenderingContext.SetColor(aTextStyle.mColor->mColor);
             x += textWidth;
           }
           if (textLength != selectionEndOffset) {
@@ -1614,6 +1620,7 @@ nsTextFrame::PaintAsciiText(nsIPresContext* aPresContext,
               // Render third (unselected) section
               aRenderingContext.GetWidth(text + selectionEndOffset, PRUint32(thirdLen),
                                          textWidth);
+              aRenderingContext.SetColor(aTextStyle.mColor->mColor);
               aRenderingContext.DrawString(text + selectionEndOffset,
                                            PRUint32(thirdLen), x, dy);
               PaintTextDecorations(aRenderingContext, aStyleContext, aTextStyle,
