@@ -31,8 +31,8 @@
           <xul:treechildren>
             <xul:treeitem>
               <xul:treecell><xul:treeindentation/>
-                 <html:img html:src="http://www.mozilla.org/images/logo-star.gif"/>
-                 <html:i>Another</html:i> hard-coded <html:font html:color="green">item</html:font>
+                 <html:img src="http://www.mozilla.org/images/logo-star.gif"/>
+                 <html:i>Another</html:i> hard-coded <html:font color="green">item</html:font>
               </xul:treecell>
               <xul:treecell>http://moreblah.blah.com</xul:treecell>
             </xul:treeitem>
