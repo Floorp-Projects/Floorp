@@ -43,7 +43,7 @@
 #error "This code is for Win32 only"
 #endif
 
-static void __stdcall
+static void __fastcall
 invoke_copy_to_stack(PRUint32* d, PRUint32 paramCount, nsXPTCVariant* s)
 {
     for(; paramCount > 0; paramCount--, d++, s++)
@@ -84,25 +84,21 @@ XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
     __asm {
         push    ebp
         mov     ebp,esp
-        mov     eax,paramCount 
-        cmp     eax,0               // maybe we don't have any params to copy
+        mov     edx,paramCount      // Save paramCount for later
+        test    edx,edx             // maybe we don't have any params to copy
         jz      noparams
-        mov     ecx,eax             // save paramCount for later
+        mov     eax,edx             
         shl     eax,3               // *= 8 (max possible param size)
         sub     esp,eax             // make space for params
-        mov     edx,esp
+        mov     ecx,esp
         push    params
-        push    ecx                 // paramCount
-        push    edx
-        call    invoke_copy_to_stack // stdcall
+        call    invoke_copy_to_stack // fastcall, ecx = d, edx = paramCount, params is on the stack
 noparams:
         mov     ecx,that            // instance in ecx
         push    ecx                 // push this
         mov     edx,[ecx]           // vtable in edx
         mov     eax,methodIndex
-        shl     eax,2               // *= 4
-        add     edx,eax
-        call    [edx]               // stdcall, i.e. callee cleans up stack.
+        call    [edx][eax*4]        // stdcall, i.e. callee cleans up stack.
         mov     esp,ebp
         pop     ebp
         ret
