@@ -25,6 +25,7 @@ EXPORTS=nsIFormManager.h \
   nsIListControlFrame.h \
   nsIComboboxControlFrame.h \
   nsIRadioControlFrame.h \
+  nsICheckboxControlFrame.h \
   nsIFormControlFrame.h \
   nsIFormSubmitObserver.h \
   nsIFormProcessor.h \

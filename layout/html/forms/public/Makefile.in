@@ -34,6 +34,7 @@ EXPORTS		= \
 		nsIComboboxControlFrame.h \
 		nsIFormControlFrame.h \
 		nsIRadioControlFrame.h \
+		nsICheckboxControlFrame.h \
 		nsIFormSubmitObserver.h \
 		nsIFormProcessor.h \
 		nsISelectControlFrame.h \
