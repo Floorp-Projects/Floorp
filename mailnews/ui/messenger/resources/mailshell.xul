@@ -7,10 +7,7 @@
 <!ENTITY messengerWindow.title "Messenger">
 
 <!-- menu items:  the . means that the menu item isn't implemented yet -->
-
 <!-- File menu items -->
-<!ENTITY Menu.label ""> 
-<!ENTITY Cmd.label ".">  
 
 <!-- Toolbar items -->  
 <!ENTITY getMsgButton.img "resource:/res/mailnews/messenger/getmsg.gif">
