@@ -5040,12 +5040,16 @@ PresShell::CancelReflowCallback(nsIReflowCallback* aCallback)
       {
         nsCallbackEventRequest* toFree = node;
         if (node == mFirstCallbackEventRequest) {
-           mFirstCallbackEventRequest = node->next;
-           node = mFirstCallbackEventRequest;
-           before = nsnull;
+          node = node->next;
+          mFirstCallbackEventRequest = node;
+          NS_ASSERTION(before == nsnull, "impossible");
         } else {
-           node = node->next;
-           before->next = node;
+          node = node->next;
+          before->next = node;
+        }
+
+        if (toFree == mLastCallbackEventRequest) {
+          mLastCallbackEventRequest = before;
         }
 
         FreeFrame(sizeof(nsCallbackEventRequest), toFree);
@@ -5134,20 +5138,19 @@ void
 PresShell::HandlePostedReflowCallbacks()
 {
    PRBool shouldFlush = PR_FALSE;
-   nsCallbackEventRequest* node = mFirstCallbackEventRequest;
-   while(node)
-   {
-      nsIReflowCallback* callback = node->callback;
-      nsCallbackEventRequest* toFree = node;
-      node = node->next;
-      mFirstCallbackEventRequest = node;
-      FreeFrame(sizeof(nsCallbackEventRequest), toFree);
-      if (callback)
-        callback->ReflowFinished(this, &shouldFlush);
-      NS_IF_RELEASE(callback);
-   }
 
-   mFirstCallbackEventRequest = mLastCallbackEventRequest = nsnull;
+   while (mFirstCallbackEventRequest) {
+     nsCallbackEventRequest* node = mFirstCallbackEventRequest;
+     mFirstCallbackEventRequest = node->next;
+     if (!mFirstCallbackEventRequest) {
+       mLastCallbackEventRequest = nsnull;
+     }
+     nsIReflowCallback* callback = node->callback;
+     FreeFrame(sizeof(nsCallbackEventRequest), node);
+     if (callback)
+       callback->ReflowFinished(this, &shouldFlush);
+     NS_IF_RELEASE(callback);
+   }
 
    if (shouldFlush)
      FlushPendingNotifications(PR_FALSE);
