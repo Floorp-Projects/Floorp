@@ -52,7 +52,9 @@
                 var paletteID = paletteItem.getAttribute("id");
                 if (paletteID == item) {
                   var newItem = paletteItem.cloneNode(true);
+                  newItem.hidden = true;
                   this.insertBefore(newItem, this.afterPalette);
+                  newItem.hidden = false;
                   break;
                 }
                   
