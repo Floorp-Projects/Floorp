@@ -37,7 +37,7 @@ public:
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
 
-  nsStreamLoader() { NS_INIT_REFCNT(); mObserver = nsnull; } ;
+  nsStreamLoader() { NS_INIT_REFCNT(); };
   virtual ~nsStreamLoader() {};
 
   static NS_METHOD
