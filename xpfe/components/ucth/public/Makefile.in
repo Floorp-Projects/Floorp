@@ -28,7 +28,7 @@ EXPORTS =				\
 XPIDL_MODULE=mozucth
 
 XPIDLSRCS=\
-    nsIUnknownContentTypeHandler.idl \
+    nsIUnkContentTypeHandler.idl \
     $(NULL)
 
 include $(topsrcdir)/config/config.mk

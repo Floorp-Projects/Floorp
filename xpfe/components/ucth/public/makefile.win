@@ -27,7 +27,7 @@ EXPORTS=\
 XPIDL_MODULE=mozucth
 
 XPIDLSRCS=\
-    .\nsIUnknownContentTypeHandler.idl \
+    .\nsIUnkContentTypeHandler.idl \
     $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

@@ -68,11 +68,13 @@
         }
 
         function more() {
-            dump( "unknownContent::more not implemented\n" );
+            // Have C++ code go to appropriate web page.
+            data.execute.setAttribute("command","more");
         }
 
         function pick() {
-            dump( "unknownContent::pick not implemented\n" );
+            // Have C++ code prompt user for app and run it.
+            data.execute.setAttribute("command","pick");
         }
 
         function save() {
@@ -99,10 +101,10 @@
     
         <html:tr>
             <html:td style="width:25%">
-                <html:button id="dialog.more" onclick="more()" disabled="">&dialogMore.label;</html:button>
+                <html:button id="dialog.more" onclick="more()">&dialogMore.label;</html:button>
             </html:td>
             <html:td style="width:25%">
-                <html:button id="dialog.pick" onclick="pick()" disabled="">&dialogPick.label;</html:button>
+                <html:button id="dialog.pick" onclick="pick()">&dialogPick.label;</html:button>
             </html:td>
             <html:td style="width:25%">
                 <html:button id="dialog.save" onclick="save()">&dialogSave.label;</html:button>
