@@ -27,7 +27,7 @@
 class nsIPrefMigration : public nsISupports 
 {
   public:
-    static const nsIID& IID() { static nsIID iid = NS_IPrefMigration_IID; return iid; }
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPrefMigration_IID)
 
     //NS_IMETHOD Startup() = 0;
     //NS_IMETHOD Shutdown()= 0;
@@ -40,7 +40,7 @@ class nsPrefMigrationFactory : public nsIFactory
   public:
 
     nsPrefMigrationFactory();
-    ~nsPrefMigrationFactory();
+    virtual ~nsPrefMigrationFactory();
 
     NS_DECL_ISUPPORTS
 

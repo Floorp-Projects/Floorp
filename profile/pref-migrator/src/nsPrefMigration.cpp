@@ -29,6 +29,7 @@
 #include "prmem.h"
 #include "prefapi.h"
 #include "plstr.h"
+#include "prprf.h"
 
 /* Network */
 
@@ -36,6 +37,22 @@
 
 #include "nsPrefMigration.h"
 #include "nsPMProgressDlg.h"
+
+/* who's going to win the file name battle? */
+#if defined(XP_UNIX)
+#define PREF_FILE_NAME_IN_4x "preferences.js"
+#elif defined(XP_MAC)
+#define PREF_FILE_NAME_IN_4x "Netscape Preferences"
+#elif defined(XP_PC)
+#define PREF_FILE_NAME_IN_4x "prefs.js"
+#else
+/* this will cause a failure at run time, as it should, since we don't know
+   how to migrate platforms other than Mac, Windows and UNIX */
+#define PREF_FILE_NAME_IN_4x ""
+#endif
+
+/* and the winner is:  Windows */
+#define PREF_FILE_NAME_IN_5x "prefs.js"
 
 /*-----------------------------------------------------------------
  * Globals
@@ -115,15 +132,10 @@ nsPrefMigration::ProcessPrefs(char* oldProfilePathStr, char* newProfilePathStr, 
   PRUint32 totalMailSize = 0, 
            totalNewsSize = 0, 
            totalProfileSize = 0,
-           totalRequired = 0,
-           totalSize = 0,
-           numberOfMailFiles = 0, 
-           numberOfNewsFiles = 0, 
-           numberOfProfileFiles = 0;
+           totalRequired = 0;
 
-  PRInt32 oldDirLength = 0,
-	      serverType = 0,
-          nameLength = _MAX_PATH;
+  PRInt32 serverType = 0, 
+    nameLength = MAXPATHLEN;
   
   PRBool hasIMAP = PR_FALSE;
 
@@ -132,63 +144,63 @@ nsPrefMigration::ProcessPrefs(char* oldProfilePathStr, char* newProfilePathStr, 
 #endif
 
 
-  if((newPOPMailPathStr = (char*) PR_MALLOC(_MAX_PATH)) == NULL)
+  if((newPOPMailPathStr = (char*) PR_MALLOC(MAXPATHLEN)) == NULL)
   {
     PR_Free(newPOPMailPathStr);
     *aResult = NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
   }
   
-  if((newIMAPMailPathStr = (char*) PR_MALLOC(_MAX_PATH)) == NULL)
+  if((newIMAPMailPathStr = (char*) PR_MALLOC(MAXPATHLEN)) == NULL)
   {
     PR_Free(newIMAPMailPathStr);
     *aResult = NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
   }
 
-  if((newIMAPLocalMailPathStr = (char*) PR_MALLOC(_MAX_PATH)) == NULL)
+  if((newIMAPLocalMailPathStr = (char*) PR_MALLOC(MAXPATHLEN)) == NULL)
   {
     PR_Free(newIMAPLocalMailPathStr);
     *aResult = NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
   }
 
-  if((newNewsPathStr = (char*) PR_MALLOC(_MAX_PATH)) == NULL)
+  if((newNewsPathStr = (char*) PR_MALLOC(MAXPATHLEN)) == NULL)
   {
     PR_Free(newNewsPathStr);
     *aResult = NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
   }
 
-  if((oldPOPMailPathStr = (char*) PR_MALLOC(_MAX_PATH)) == NULL)
+  if((oldPOPMailPathStr = (char*) PR_MALLOC(MAXPATHLEN)) == NULL)
   {
     PR_Free(oldPOPMailPathStr);
     *aResult = NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
   }
 
-  if((oldIMAPMailPathStr = (char*) PR_MALLOC(_MAX_PATH)) == NULL)
+  if((oldIMAPMailPathStr = (char*) PR_MALLOC(MAXPATHLEN)) == NULL)
   {
     PR_Free(oldIMAPMailPathStr);
     *aResult = NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
   }
   
-  if((oldIMAPLocalMailPathStr = (char*) PR_MALLOC(_MAX_PATH)) == NULL)
+  if((oldIMAPLocalMailPathStr = (char*) PR_MALLOC(MAXPATHLEN)) == NULL)
   {
     PR_Free(oldIMAPLocalMailPathStr);
     *aResult = NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
   }
 
-  if((oldNewsPathStr = (char*) PR_MALLOC(_MAX_PATH)) == NULL)
+  if((oldNewsPathStr = (char*) PR_MALLOC(MAXPATHLEN)) == NULL)
   {
     PR_Free(oldNewsPathStr);
     *aResult = NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
   }
 
-  if((popServerName = (char*) PR_MALLOC(_MAX_PATH)) == NULL)
+  if((popServerName = (char*) PR_MALLOC(MAXPATHLEN)) == NULL)
   {
     PR_Free(popServerName);
     *aResult = NS_ERROR_OUT_OF_MEMORY;
@@ -476,9 +488,13 @@ nsPrefMigration::ProcessPrefs(char* oldProfilePathStr, char* newProfilePathStr, 
 nsresult
 nsPrefMigration::CreateNewUser5Tree(char* oldProfilePath, char* newProfilePath)
 {
-
   char* prefsFile;
-
+  
+  NS_ASSERTION((PL_strlen(PREF_FILE_NAME_IN_4x) > 0), "don't know how to migrate your platform");
+  if (PL_strlen(PREF_FILE_NAME_IN_4x) > 0) {
+    return NS_ERROR_UNEXPECTED;
+  }
+      
   /* Copy the old prefs.js file to the new profile directory for modification and reading */
   if ((prefsFile = (char*) PR_MALLOC(PL_strlen(oldProfilePath) + 32)) == NULL)
   {
@@ -487,11 +503,7 @@ nsPrefMigration::CreateNewUser5Tree(char* oldProfilePath, char* newProfilePath)
   }
 
   nsFileSpec oldPrefsFile(oldProfilePath);
-#ifdef XP_PC
-  oldPrefsFile += "prefs.js";
-#else
-  oldPrefsFile += "Netscape Preferences";
-#endif
+  oldPrefsFile += PREF_FILE_NAME_IN_4x;
 
   nsFileSpec newPrefsFile(newProfilePath);
       
@@ -501,12 +513,9 @@ nsPrefMigration::CreateNewUser5Tree(char* oldProfilePath, char* newProfilePath)
   }
 
   oldPrefsFile.Copy(newPrefsFile);
-#ifdef XP_MAC
-  newPrefsFile += "Netscape Preferences";
-  newPrefsFile.Rename("prefs.js"); /* Rename the file for the Mac only */
-#else
-  newPrefsFile += "prefs.js";
-#endif
+
+  newPrefsFile += PREF_FILE_NAME_IN_4x;
+  newPrefsFile.Rename(PREF_FILE_NAME_IN_5x);
 
   PREF_Init(newPrefsFile);
 
@@ -532,7 +541,7 @@ nsPrefMigration::ComputeMailPath(nsFileSpec oldPath, nsFileSpec *newPath)
   const char *localMailString="Local Mail"; /* string used for new IMAP dirs */ 
   const char *mail = "Mail";
 
-  int  nameLength = _MAX_PATH;
+  int  nameLength = MAXPATHLEN;
   char *serverType, *popServerName, *mailPath;
 
   PREF_GetCharPref("mail.server.type", serverType, &nameLength);
@@ -575,7 +584,7 @@ nsPrefMigration::ComputeMailPath(nsFileSpec oldPath, nsFileSpec *newPath)
 nsresult
 nsPrefMigration::GetDirFromPref(char* newProfilePath, char* pref, char* newPath, char* oldPath)
 {
-  int oldDirLength = _MAX_PATH;
+  int oldDirLength = MAXPATHLEN;
   PRInt32 foundPref;
 
 
@@ -584,6 +593,16 @@ nsPrefMigration::GetDirFromPref(char* newProfilePath, char* pref, char* newPath,
   {
     PL_strcpy(newPath, oldPath);
     PL_strcat(newPath, "5");
+
+    // save off the old pref, prefixed with "premigration"
+    // for example, we need the old "mail.directory" pref whe migrating
+    // the copies and folder prefs.
+    char *premigration_pref = nsnull;
+    premigration_pref = PR_smprintf("premigration.%s", pref);
+    if (!premigration_pref) return NS_ERROR_FAILURE;
+    PREF_SetCharPref (premigration_pref, oldPath);
+    PR_FREEIF(premigration_pref);
+
     PREF_SetCharPref (pref, newPath); 
     return NS_OK;
   }
@@ -606,7 +625,6 @@ nsPrefMigration::GetDirFromPref(char* newProfilePath, char* pref, char* newPath,
 nsresult
 nsPrefMigration::GetSizes(nsFileSpec inputPath, PRBool readSubdirs, PRUint32 *sizeTotal)
 {
-  int i = 0;
   char* folderName;
   nsAutoString fileOrDirNameStr;
   PRInt32 len;
@@ -711,7 +729,6 @@ nsPrefMigration::CheckForSpace(nsFileSpec newProfilePath, PRFloat64 requiredSpac
 nsresult
 nsPrefMigration::DoTheCopy(nsFileSpec oldPath, nsFileSpec newPath, PRBool readSubdirs)
 {
-  int i = 0;
   char* folderName;
   nsAutoString fileOrDirNameStr;
  
@@ -761,13 +778,13 @@ nsPrefMigration::DoSpecialUpdates(nsFileSpec profilePath)
   const char *headerString="# Mozilla User Preferences    "; 
   
   nsFileSpec fs(profilePath);
-  fs += "prefs.js";
-
+  fs += PREF_FILE_NAME_IN_5x;
+  
   nsOutputFileStream fsStream(fs, (PR_WRONLY | PR_CREATE_FILE | PR_APPEND));
   
   if (!fsStream.is_open())
   {
-    return -1;
+    return NS_ERROR_FAILURE;
   }
 
   fsStream << headerString << nsEndl ;
