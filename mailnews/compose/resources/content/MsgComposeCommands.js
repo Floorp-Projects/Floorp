@@ -177,6 +177,12 @@ function enableEditableFields()
 
 var gComposeRecyclingListener = {
   onClose: function() {
+    //Reset focus to avoid undesirable visual effect when reopening the winodw
+    var identityElement = document.getElementById("msgIdentity");
+    if (identityElement)
+      identityElement.focus();
+
+    //Reset recipients and attachments
 	  awResetAllRows();
 	  RemoveAllAttachments();
 
