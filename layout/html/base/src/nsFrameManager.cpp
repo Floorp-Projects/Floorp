@@ -419,6 +419,7 @@ private:
   PropertyList*                   mPropertyList;
   nsCOMPtr<nsIContentList>        mHTMLForms;
   nsCOMPtr<nsIContentList>        mHTMLFormControls;
+  PRBool                          mIsDestroyingFrames;
 
   void ReResolveStyleContext(nsIPresContext* aPresContext,
                              nsIFrame* aFrame,
@@ -512,6 +513,9 @@ FrameManager::Destroy()
   // we've destroyed the frame hierarchy because some frames may expect to be
   // able to retrieve their properties during destruction
   mPresShell->SetIgnoreFrameDestruction(PR_TRUE);
+
+  mIsDestroyingFrames = PR_TRUE;  // This flag prevents GetPrimaryFrameFor from returning pointers to destroyed frames
+
   if (mRootFrame) {
     mRootFrame->Destroy(presContext);
     mRootFrame = nsnull;
@@ -606,6 +610,13 @@ FrameManager::GetPrimaryFrameFor(nsIContent* aContent, nsIFrame** aResult)
   NS_ENSURE_ARG_POINTER(aResult);
   NS_ENSURE_ARG_POINTER(aContent);
   *aResult = nsnull;  // initialize out param
+
+  if (mIsDestroyingFrames) {
+#ifdef DEBUG
+    printf("GetPrimaryFrameFor() called while FrameManager is being destroyed!\n");
+#endif
+    return NS_ERROR_FAILURE;
+  }
 
   nsresult rv;
   if (mPrimaryFrameMap.ops) {
