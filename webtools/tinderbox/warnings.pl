@@ -31,87 +31,145 @@
 
 use FileHandle;
 
-# Terrible globals:
-#   %warnings
-#   %warnings_by_who
-#   %who_count
-#   $ignore_pat
-#   @ignore_match_pat
+# A few global variables are used in the program.
 #
+# %warnings - Main warnings data structure
+# $warnings{$file}{$line} => { 
+#   first_seen_line =>, # First place in build log where warning is seen.
+#   count           =>, # Number of warnings attributed to this line.
+#   ignorecount     =>, # Number of ignored warnings for this line.
+#   list => [ {         # Array of hash tables for each warning.
+#     log_file     =>,  # Then name of the log file from which the warning came.
+#     warning_text =>,  # The actual text of the warning
+#     ignore       =>,  # Is this warning ignored? (values are 0 or 1)
+#   }, {...}, ... ]
+# }
+#
+# %warnings_by_who - Like %warnings, but adds indexing by who, and blame fields.
+# $warnings_by_who{$who}{$file}{$line} => {
+#   first_seen_line =>,
+#   count           =>,
+#   ignorecount     =>,
+#   list => [ {
+#     log_file     =>,
+#     warning_text =>,
+#     ignore       =>,
+#   }, {...}, ... ]
+#   line_rev        =>, # CVS revision number of line
+#   source          =>, # Five lines of source code centered on the line
+# }
+#
+# %who_count - Number of warnings attributed to each email address
+# $who_count{$who} = $count
+#
+# @ignore - Array of regexp's of warnings to ignore
+# @ignore_match - Array of hashes of warnings matched with source to ignore
+# @ignore_match = (
+#  { warning=>'<warning pattern>', source=>'<source patter>' },
+#  {...}, ...
+# )
+
 
 # This is for gunzip (should add a configure script to handle this).
 $ENV{PATH} .= ":/usr/local/bin";
 
 $debug = 1 if $ARGV[0] eq '--debug';
 
-if ($debug) {
-  foreach my $key (sort keys %ENV) {
-    warn "debug> $key=$ENV{$key}\n";
-  }
-}
-
+# Load tinderbox build data.
+#   (So we can find the last successful build for the tree of intestest.)
 $tree = 'SeaMonkey';
 # tinderbox/tbglobals.pl uses many shameful globals
 $form{tree} = $tree;
 require 'tbglobals.pl';
+require "$tree/treedata.pl";
 
-$cvsroot = '/cvsroot';
 $source_root_pat = '^.*/mozilla/';
+
+# ===================================================================
+# Warnings to ignore
 
 @ignore = ( 
   'location of the previous definition',
   '\' was hidden',
-  'aggregate has a partly bracketed initializer', # mailnews guys say this has to stay
+  'aggregate has a partly bracketed initializer', # mailnews is stuck with this
   #'declaration of \`index\' shadows global',
   'declaration of \`ws\' shadows global', # from istream
   'declaration of \`(?:y0|y1)\' shadows global', # from mathcalls.h
   'is not \(any longer\) pertinent', # cvs warning we can safely ignore
   'ANSI C forbids long long integer constants', # js uses long long constants
 );
+
+# Patterns that need to match warning text and source code text
+#
 @ignore_match = (
   { warning=>'statement with no effect', source=>'(?:JS_|PR_)?ASSERT'},
 );
-$ignore_pat       = "(?:".join('|',@ignore).")";
 
+
+# ===================================================================
+# beginning of main
+
+
+# Build a hash table of all the files in the tree.
+#   We need this because the warnings do not always give the full
+#   paths to files.
+#
 print STDERR "Building hash of file names...";
-($file_bases, $file_fullpaths) = build_file_hash($cvsroot, $tree);
+($file_bases, $file_fullpaths) = build_file_hash($cvs_root, $tree);
 print STDERR "done.\n";
 
+# Find the build we want and generate warnings for it
+#
 for $br (last_successful_builds($tree)) {
   next unless $br->{buildname} =~ /shrike.*\b(Clobber|Clbr)\b/;
 
   my $log_file = "$br->{logfile}";
 
+  # Parse the build log for warnings
+  #
   warn "Parsing build log, $log_file\n";
 
   $fh = new FileHandle "gunzip -c $tree/$log_file |" 
     or die "Unable to open $tree/$log_file\n";
-  &gcc_parser($fh, $cvsroot, $tree, $log_file, $file_bases, $file_fullpaths);
+  &gcc_parser($fh, $cvs_root, $tree, $log_file, $file_bases, $file_fullpaths);
   $fh->close;
 
-  &build_blame;
+  # Attach blame to all the warnings
+  #   (Yes, global variables are flying around.)
+  &build_blame($cvs_root);
 
+  # Come up with the temporary filenames for the output
+  #
   my $warn_file = "$tree/warn$log_file";
   $warn_file =~ s/\.gz$/.html/;
   my $warn_file_by_file = $warn_file;
   $warn_file_by_file =~ s/\.html$/-by-file.html/;
 
+  # Write the warnings indexed by who
+  #
   $fh->open(">$warn_file") or die "Unable to open $warn_file: $!\n";
   my $time_str = print_html_by_who($fh, $br);
   $fh->close;
 
+  # Write the warnings indexed by file
+  #
 #  $fh->open(">$warn_file_by_file")
 #    or die "Unable to open $warn_file_by_file: $!\n";
 #  print_html_by_file($fh, $br);
 #  $fh->close;
   
+  # Count up all the total warnings for the summary report
   my $total_unignored_warnings = $total_warnings_count - $total_ignored_count;
+
+  # If we have zero warnings, something must be wrong. Bail.
   next unless $total_unignored_warnings > 0;
 
-  # Make it live
+  # Make the new warnings live.
   use File::Copy 'move';
   move($warn_file, "$tree/warnings.html");
 
+  # Print a summary for the main tinderbox page.
+  #
   my $warn_summary = "$tree/warn$log_file";
   $warn_summary =~ s/.gz$/.pl/;
 
@@ -124,6 +182,7 @@ for $br (last_successful_builds($tree)) {
       .'slamm</a><p>\';'."\n";
   $fh->close;
 
+  # Make the summary live.
   move($warn_summary, "$tree/warn.pl");
 
   warn "$total_unignored_warnings warnings ($total_ignored_count ignored),"
@@ -132,17 +191,11 @@ for $br (last_successful_builds($tree)) {
   last;
 }
 
-sub commify {
-    my $text = reverse $_[0];
-    $text =~ s/(\d\d\d)(?=\d)(?!\d*\.)/$1,/g;
-    return scalar reverse $text;
-}
-
 # end of main
 # ===================================================================
 
 sub build_file_hash {
-  my ($cvsroot, $tree) = @_;
+  my ($cvs_root, $tree) = @_;
 
   read_cvs_modules_file();
   @include_list = ();
@@ -153,8 +206,8 @@ sub build_file_hash {
 
   use File::Find;
   for my $include (@include_list) {
-    $include .= ",v" unless -d "$cvsroot/$include";
-    &find(\&find_cvs_files, "$cvsroot/$include"); 
+    $include .= ",v" unless -d "$cvs_root/$include";
+    &find(\&find_cvs_files, "$cvs_root/$include"); 
   }
   return \%bases, \%fullpath;
 }
@@ -162,8 +215,8 @@ sub build_file_hash {
 sub read_cvs_modules_file
 {
   local $_;
-  open MODULES, "$cvsroot/CVSROOT/modules" 
-    or die "Unable to open modules file: $cvsroot/CVSROOT/modules\n";
+  open MODULES, "$cvs_root/CVSROOT/modules" 
+    or die "Unable to open modules file: $cvs_root/CVSROOT/modules\n";
   while (<MODULES>) {
     if (/ -a /) {
       while (/\\$/) {
@@ -198,7 +251,7 @@ sub find_cvs_files {
     return;
   }
   my $dir = $File::Find::dir;
-  $dir =~ s|^$cvsroot/||o;
+  $dir =~ s|^$cvs_root/||o;
   $dir =~ s|/$||;
   my $file = substr $_, 0, -2;
 
@@ -233,8 +286,9 @@ sub last_successful_builds {
 }
 
 sub gcc_parser {
-  my ($fh, $cvsroot, $tree, $log_file, $file_bases, $file_fullnames) = @_;
+  my ($fh, $cvs_root, $tree, $log_file, $file_bases, $file_fullnames) = @_;
   my $build_dir = '';
+  my $ignore_pat = "(?:".join('|',@ignore).")";
 
  PARSE_TOP: while (<$fh>) {
     # Directory
@@ -273,8 +327,10 @@ sub gcc_parser {
     $warning_text = "...was hidden $warning_text" if $warning_text =~ /^by \`/;
 
     # Remember line of first occurrence in the build log
-    $warnings{$file}{$line}->{first_seen_line} = $.
-      unless defined $warnings{$file}{$line};
+    unless (defined $warnings{$file}{$line}) {
+      $warnings{$file}{$line}->{first_seen_line} = $.
+      $warnings{$file}{$line}->{ignorecount}++;
+    }
 
     my $ignore_it = /$ignore_pat/o;
     if ($ignore_it) {
@@ -300,26 +356,16 @@ sub gcc_parser {
   warn "debug> $. lines read\n" if $debug;
 }
 
-
-sub dump_warning_data {
-  while (my ($file, $lines_hash) = each %warnings) {
-    while (my ($line, $record) = each %{$lines_hash}) {
-      print join ':', 
-      $file,$line,
-      $record->{first_seen_line},
-      $record->{count},
-      $record->{warning_text};
-      print "\n";
-} } }
-
 sub build_blame {
+  my ($cvs_root) = @_;
+
   use lib '../bonsai';
   require 'utils.pl';
   require 'cvsblame.pl';
 
   while (($file, $lines_hash) = each %warnings) {
 
-    my $rcs_filename = "$cvsroot/$file,v";
+    my $rcs_filename = "$cvs_root/$file,v";
 
     unless (-e $rcs_filename) {
       warn "Unable to find $rcs_filename\n";
@@ -676,5 +722,12 @@ sub trim_common_leading_whitespace {
   s/^(?:$white)?//gm;
   s/^\s+$//gm;
   return $_;
+}
+
+# Print big numbers with commas (e.g. 3,314).
+sub commify {
+    my $text = reverse $_[0];
+    $text =~ s/(\d\d\d)(?=\d)(?!\d*\.)/$1,/g;
+    return scalar reverse $text;
 }
 
