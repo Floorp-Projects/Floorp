@@ -149,6 +149,8 @@ int showHelp(void)
 "                                   '0' is by weight (lifespan * byte size).\n"
 "                                                       '1' is by byte size.\n"
 "                                                 '2' is by time (lifetime).\n"
+                   "");
+        PR_fprintf(PR_STDOUT, "%s",
 "                                         '3' is by allocation object count.\n"
 "                                     '4' is by heap operation runtime cost.\n"
 "                                                  By default, <num> is '0'.\n"
@@ -236,7 +238,7 @@ int showHelp(void)
         PR_fprintf(PR_STDOUT,
 "              Set <num> to '1' in order to see the actual allocation sizes.\n"
 "              Alignment is taken into account prior to allocation overhead.\n"
-"                                                    By default, <num> is %u.\n"
+"                                                   By default, <num> is %u.\n"
                    "\n", ST_DEFAULT_ALIGNMENT_SIZE);
 
         PR_fprintf(PR_STDOUT,
@@ -244,14 +246,15 @@ int showHelp(void)
 "                            All allocations cost an additional <num> bytes.\n"
 "                 Overhead is taken into account after allocation alignment.\n"
 "              Set <num> to '0' in order to see the actual allocation sizes.\n"
-"                                                   By default, <num> is %u.\n"
+"                                                    By default, <num> is %u.\n"
                    "\n", ST_DEFAULT_OVERHEAD_SIZE);
 
-        PR_fprintf(PR_STDOUT, "%s",
+        PR_fprintf(PR_STDOUT,
 " -c<text>     Restrict callsite backtraces to only those containing <text>.\n"
 "                      Allows targeting of specific object creation methods.\n"
+"                     A maximum of %d multiple restrictions can be specified.\n"
 "                                By default, there is no <text> restriction.\n"
-                   "\n");
+                   "\n", ST_SUBSTRING_MATCH_MAX);
 
         /*
         ** Showed something.
@@ -804,13 +807,31 @@ int initOptions(int aArgCount, char** aArgArray)
                     */
                     if('\0' != aArgArray[traverse][2])
                     {
-                        if(NULL != globals.mOptions.mRestrictText)
-                        {
-                            free(globals.mOptions.mRestrictText);
-                        }
-                        globals.mOptions.mRestrictText = strdup(&aArgArray[traverse][2]);
+                        int looper = 0;
 
-                        if(NULL == globals.mOptions.mRestrictText)
+                        /*
+                        ** Figure out if we have any free space.
+                        ** If so, copy it.
+                        */
+                        for(looper = 0; ST_SUBSTRING_MATCH_MAX > looper; looper++)
+                        {
+                            if(NULL != globals.mOptions.mRestrictText[looper])
+                            {
+                                continue;
+                            }
+
+                            globals.mOptions.mRestrictText[looper] = strdup(&aArgArray[traverse][2]);
+                            if(NULL == globals.mOptions.mRestrictText[looper])
+                            {
+                                retval = __LINE__;
+                            }
+                            break;
+                        }
+
+                        /*
+                        ** Error on no more space left.
+                        */
+                        if(ST_SUBSTRING_MATCH_MAX == looper)
                         {
                             retval = __LINE__;
                         }
@@ -1441,6 +1462,7 @@ int harvestRun(const STRun* aInRun, STRun* aOutRun, STOptions* aOptions)
                 PRUint64 bytesize64 = LL_INIT(0, 0);
                 PRUint64 lifetime64 = LL_INIT(0, 0);
                 int appendRes = 0;
+                int looper = 0;
 
                 /*
                 ** Use this as an opportune time to fixup a memory
@@ -1528,12 +1550,19 @@ int harvestRun(const STRun* aInRun, STRun* aOutRun, STOptions* aOptions)
                 ** One day, we may need to expand the logic to check for
                 **  events beyond the initial allocation event.
                 */
-                if(NULL != globals.mOptions.mRestrictText && '\0' != globals.mOptions.mRestrictText[0])
+                for(looper = 0; ST_SUBSTRING_MATCH_MAX > looper; looper++)
                 {
-                    if(0 == hasCallsiteMatch(current->mEvents[0].mCallsite, globals.mOptions.mRestrictText, ST_FOLLOW_PARENTS))
+                    if(NULL != globals.mOptions.mRestrictText[looper] && '\0' != globals.mOptions.mRestrictText[looper][0])
                     {
-                        continue;
+                        if(0 == hasCallsiteMatch(current->mEvents[0].mCallsite, globals.mOptions.mRestrictText[looper], ST_FOLLOW_PARENTS))
+                        {
+                            break;
+                        }
                     }
+                }
+                if(ST_SUBSTRING_MATCH_MAX != looper)
+                {
+                    continue;
                 }
 
                 /*
@@ -4886,6 +4915,7 @@ int displaySettings(void)
 {
     int retval = 0;
     PRUint32 cached = 0;
+    PRIntn looper = 0;
 
     /*
     ** If we've got get data, we need to attempt to enact the changes.
@@ -4898,6 +4928,7 @@ int displaySettings(void)
         int changedOrder = 0;
         int changedGraph = 0;
         int changedDontCare = 0;
+        char looper_buf[32];
 
         getRes += getDataPRUint32(globals.mRequest.mGetData, "mListItemMax", &globals.mOptions.mListItemMax, &changedDontCare, 1);
         getRes += getDataPRUint32(globals.mRequest.mGetData, "mTimevalMin", &globals.mOptions.mTimevalMin, &changedSet, ST_TIMEVAL_RESOLUTION);
@@ -4919,7 +4950,11 @@ int displaySettings(void)
         getRes += getDataPRUint32(globals.mRequest.mGetData, "mLifetimeMax", &globals.mOptions.mLifetimeMax, &changedSet, ST_TIMEVAL_RESOLUTION);
         getRes += getDataPRUint64(globals.mRequest.mGetData, "mWeightMin", &globals.mOptions.mWeightMin64, &changedSet);
         getRes += getDataPRUint64(globals.mRequest.mGetData, "mWeightMax", &globals.mOptions.mWeightMax64, &changedSet);
-        getRes += getDataString(globals.mRequest.mGetData, "mRestrictText", &globals.mOptions.mRestrictText, &changedSet);
+        for(looper = 0; ST_SUBSTRING_MATCH_MAX > looper; looper++)
+        {
+            PR_snprintf(looper_buf, sizeof(looper_buf), "mRestrictText%d", looper);
+            getRes += getDataString(globals.mRequest.mGetData, looper_buf, &globals.mOptions.mRestrictText[looper], &changedSet);
+        }
 
         /*
         ** Resort the global based on new prefs if needed.
@@ -5064,7 +5099,10 @@ int displaySettings(void)
 
     PR_fprintf(globals.mRequest.mFD, "Restrict callsite backtraces to thost only containing the specified text.\n");
     PR_fprintf(globals.mRequest.mFD, "This allows targeting of specific creation functions.<br>\n");
-    PR_fprintf(globals.mRequest.mFD, "<input type=text name=\"mRestrictText\" value=\"%s\"><br>\n", NULL == globals.mOptions.mRestrictText ? "" : globals.mOptions.mRestrictText);
+    for(looper = 0; ST_SUBSTRING_MATCH_MAX > looper; looper++)
+    {
+        PR_fprintf(globals.mRequest.mFD, "<input type=text name=\"mRestrictText%d\" value=\"%s\"><br>\n", looper, NULL == globals.mOptions.mRestrictText[looper] ? "" : globals.mOptions.mRestrictText[looper]);
+    }
     PR_fprintf(globals.mRequest.mFD, "<hr>\n");
 
     /*
@@ -5969,6 +6007,7 @@ int main(int aArgCount, char** aArgArray)
     int optionsResult = 0;
     PRStatus prResult = PR_SUCCESS;
     int showedHelp = 0;
+    int looper = 0;
 
     /*
     ** Set the minimum timeval really high so other code
@@ -6020,10 +6059,13 @@ int main(int aArgCount, char** aArgArray)
     /*
     ** Options cleanup.
     */
-    if(NULL != globals.mOptions.mRestrictText)
+    for(looper = 0; ST_SUBSTRING_MATCH_MAX > looper; looper++)
     {
-        free(globals.mOptions.mRestrictText);
-        globals.mOptions.mRestrictText = NULL;
+        if(NULL != globals.mOptions.mRestrictText[looper])
+        {
+            free(globals.mOptions.mRestrictText[looper]);
+            globals.mOptions.mRestrictText[looper] = NULL;
+        }
     }
 
     /*
