@@ -35,14 +35,19 @@ Handler = Handler.QueryInterface(Components.interfaces.nsIRelatedLinksHandler);
 // Our observer object
 var Observer = {
     Observe: function(subject, topic, data) {
-        //dump("_Observe(" + subject + ", " + topic + ", " + data + ")\n");
-
+        // Convert the subject to a nsIDOMWindow, which is what it should be.
         subject = subject.QueryInterface(Components.interfaces.nsIDOMWindow);
-        //dump("subject = " + subject + "\n");
-        //dump("ContentWindow = " + ContentWindow + "\n");
 
         // We can't use '==' until the DOM is converted to XPIDL.
-        if (subject.Equals(ContentWindow)) {
+        if (! subject.Equals(ContentWindow)) {
+            return;
+        }
+
+        // Okay, it's a hit. Before we go out and fetch RL data, make sure that
+        // the RelatedLinks folder is open.
+        var root = document.getElementById('NC:RelatedLinks');
+
+        if (root.getAttribute('open') == 'true') {
             Handler.URL = data;
         }
     }
@@ -55,8 +60,6 @@ function Init() {
     var Tree = document.getElementById("Tree");
     Tree.database.AddDataSource(Handler.QueryInterface(Components.interfaces.nsIRDFDataSource));
 
-    Handler.URL = ContentWindow.location;
-
     // Install the observer so we'll be notified when new content is loaded.
     var ObserverService = Components.classes["component://netscape/observer-service"].getService();
     ObserverService = ObserverService.QueryInterface(Components.interfaces.nsIObserverService);
@@ -64,6 +67,33 @@ function Init() {
 
     ObserverService.AddObserver(Observer, "EndDocumentLoad");
     dump("added observer\n");
+}
+
+
+function OnDblClick(treeitem)
+{
+    // Deal with a double-click
+
+    // First, see if they're opening the related links node. If so,
+    // we'll need to go out and fetch related links _now_.
+    if (treeitem.getAttribute('id') == 'NC:RelatedLinks' &&
+        treeitem.getAttribute('open') != 'true') {
+        Handler.URL = ContentWindow.location;
+        return;
+    }
+
+    // Next, check to see if it's a container. If so, then just let
+    // the tree do its open and close stuff.
+    if (treeitem.getAttribute('container') == 'true') {
+        return;
+    }
+
+    // Okay, it's not a container. See if it has a URL, and if so, open it.
+    var URL = treeitem.getAttribute('URL');
+    if (URL) {
+        ContentWindow.location = URL;
+        return;
+    }
 }
 
 
