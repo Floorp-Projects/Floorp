@@ -184,7 +184,7 @@ fi
 
 echo "</TABLE><BR>" >> ${RESULTS}
 
-rm -f ${TEMPFILES}
+#rm -f ${TEMPFILES}
 cd ${CURDIR}
 
 echo "</BODY></HTML>" >> ${RESULTS}
