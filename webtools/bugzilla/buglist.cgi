@@ -172,6 +172,14 @@ sub DiffDate {
     return $date;
 }
 
+sub iCalendarDateTime {
+    my ($datestr) = @_;
+    my $date = str2time($datestr);
+    my ($s,$m,$h,$d,$mo,$y,$wd)= gmtime $date;
+    $date = sprintf "%04d%02d%02dT%02d%02d%02dZ", 1900+$y,$mo+1,$d,$h,$m,$s;
+    return $date;
+}
+
 sub LookupNamedQuery {
     my ($name) = @_;
     confirm_login();
@@ -525,6 +533,9 @@ if ($dotweak) {
     push(@selectcolumns, "bug_status") if !grep($_ eq 'bug_status', @selectcolumns);
 }
 
+if ($format->{'extension'} eq 'ics') {
+    push(@selectcolumns, "opendate") if !grep($_ eq 'opendate', @selectcolumns);
+}
 
 ################################################################################
 # Query Generation
@@ -712,10 +723,23 @@ while (my @row = FetchSQLData()) {
     # Process certain values further (i.e. date format conversion).
     if ($bug->{'changeddate'}) {
         $bug->{'changeddate'} =~ 
-          s/^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})$/$1-$2-$3 $4:$5:$6/;
-        $bug->{'changeddate'} = DiffDate($bug->{'changeddate'});
+            s/^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})$/$1-$2-$3 $4:$5:$6/;
+        if ($format->{'extension'} eq 'ics') {
+            $bug->{'changeddate'} = iCalendarDateTime($bug->{'changeddate'});
+        }
+        else {
+            $bug->{'changeddate'} = DiffDate($bug->{'changeddate'});
+        }
     }
-    ($bug->{'opendate'} = DiffDate($bug->{'opendate'})) if $bug->{'opendate'};
+
+    if ($bug->{'opendate'}) {
+        if ($format->{'extension'} eq 'ics') {
+            $bug->{'opendate'} = iCalendarDateTime($bug->{'opendate'});
+        }
+        else {
+            $bug->{'opendate'} = DiffDate($bug->{'opendate'});
+        }
+    }
 
     # Record the owner, product, and status in the big hashes of those things.
     $bugowners->{$bug->{'assigned_to'}} = 1 if $bug->{'assigned_to'};
@@ -800,6 +824,9 @@ $vars->{'splitheader'} = $::COOKIE{'SPLITHEADER'} ? 1 : 0;
 
 $vars->{'quip'} = GetQuip();
 $vars->{'currenttime'} = time();
+if ($format->{'extension'} eq 'ics') {
+    $vars->{'currenttime'} = iCalendarDateTime(scalar gmtime $vars->{'currenttime'});
+}
 
 # The following variables are used when the user is making changes to multiple bugs.
 if ($dotweak) {

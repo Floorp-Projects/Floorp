@@ -293,6 +293,31 @@ sub create {
                 return $var;
             },
             
+            # iCalendar contentline filter
+            ics => [ sub {
+                         my ($context, @args) = @_;
+                         return sub {
+                             my ($var) = shift;
+                             my ($par) = shift @args;
+                             my ($output) = "";
+
+                             $var =~ s/[\r\n]/ /g;
+                             $var =~ s/([;\\\"])/\\$1/g;
+
+                             if ($par) {
+                                 $output = sprintf("%s:%s", $par, $var);
+                             } else {
+                                 $output = $var;
+                             }
+                             
+                             $output =~ s/(.{75,75})/$1\n /g;
+
+                             return $output;
+                         };
+                     },
+                     1
+                     ],
+
             # We force filtering of every variable in key security-critical
             # places; we have a none filter for people to use when they 
             # really, really don't want a variable to be changed.
