@@ -135,8 +135,14 @@ XFE_PersonalToolbar::XFE_PersonalToolbar(MWContext *	bookmarkContext,
 	// Install the destruction handler
 	installDestroyHandler();
 
+    // The following call seems to be crashing the browser for some
+    // people.  I cannot reproduce the problem yet.  Im working on
+    // finding a real solution, but I dont want the browser to 
+    // crash on startup on the next mozilla release. -re
+#if 0
 	// Force the items to update
 	reallyUpdateRoot();
+#endif
 
 	// If we are supposed to have a toolbar folder, but it does not
 	// exist, then we need to create one and populate it with the default
