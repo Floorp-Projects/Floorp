@@ -112,6 +112,7 @@ nsXBLPrototypeHandler::nsXBLPrototypeHandler(const PRUnichar* aEvent,
                                              const PRUnichar* aModifiers,
                                              const PRUnichar* aButton,
                                              const PRUnichar* aClickCount,
+                                             const PRUnichar* aGroup,
                                              const PRUnichar* aPreventDefault,
                                              nsXBLPrototypeBinding* aBinding)
   : mHandlerText(nsnull),
@@ -126,7 +127,7 @@ nsXBLPrototypeHandler::nsXBLPrototypeHandler(const PRUnichar* aEvent,
 
   ConstructPrototype(nsnull, aEvent, aPhase, aAction, aCommand, aKeyCode,
                      aCharCode, aModifiers, aButton, aClickCount,
-                     aPreventDefault);
+                     aGroup, aPreventDefault);
 }
 
 nsXBLPrototypeHandler::nsXBLPrototypeHandler(nsIContent* aHandlerElement)
@@ -768,6 +769,7 @@ nsXBLPrototypeHandler::ConstructPrototype(nsIContent* aKeyElement,
                                           const PRUnichar* aModifiers,
                                           const PRUnichar* aButton,
                                           const PRUnichar* aClickCount,
+                                          const PRUnichar* aGroup,
                                           const PRUnichar* aPreventDefault)
 {
   mType = 0;
@@ -883,6 +885,9 @@ nsXBLPrototypeHandler::ConstructPrototype(nsIContent* aKeyElement,
       mDetail = GetMatchingKeyCode(key);
     }
   }
+
+  if (aGroup && nsDependentString(aGroup).EqualsLiteral("system"))
+    mType |= NS_HANDLER_TYPE_SYSTEM;
 
   nsAutoString preventDefault(aPreventDefault);
   if (preventDefault.EqualsLiteral("true"))
