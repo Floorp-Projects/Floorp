@@ -379,14 +379,18 @@ nsDrawingSurfaceMac::StartQuartzDrawing()
     ::CGContextScaleCTM(context, 1, -1);
   }
 
-  // Construct a CG path from the QD region and clip to the path.
-  // NOTE: Ordinarily we would use ClipCGContextToRegion, but it seems to have
-  //   some bugs, particulary when drawing interlaced PNGs.
-  StRegionFromPool currentClipRgn;
-  ::GetPortClipRegion(mPort, currentClipRgn);
-  ::QDRegionToRects(currentClipRgn, kQDParseRegionFromTopLeft,
-                    CreatePathFromRectsProc, context);
-  ::CGContextClip(context);
+  if (::IsPortClipRegionEmpty(mPort)) {
+    // If port clip region is empty, then we need to create 0 by 0 path.
+    CGRect rect = ::CGRectMake(0, 0, 0, 0);
+    ::CGContextClipToRect(context, rect);
+  } else {
+    // Construct a CG path from the QD region and clip to the path.
+    StRegionFromPool currentClipRgn;
+    ::GetPortClipRegion(mPort, currentClipRgn);
+    ::QDRegionToRects(currentClipRgn, kQDParseRegionFromTopLeft,
+                      CreatePathFromRectsProc, context);
+    ::CGContextClip(context);
+  }
 
   return context;
 }
