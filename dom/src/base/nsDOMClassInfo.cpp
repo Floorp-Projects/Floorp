@@ -677,7 +677,6 @@ JSString *nsDOMClassInfo::sComponents_id      = nsnull;
 JSString *nsDOMClassInfo::s_content_id        = nsnull;
 JSString *nsDOMClassInfo::sContent_id         = nsnull;
 JSString *nsDOMClassInfo::sSidebar_id         = nsnull;
-JSString *nsDOMClassInfo::sPrompter_id        = nsnull;
 JSString *nsDOMClassInfo::sMenubar_id         = nsnull;
 JSString *nsDOMClassInfo::sToolbar_id         = nsnull;
 JSString *nsDOMClassInfo::sLocationbar_id     = nsnull;
@@ -724,7 +723,6 @@ nsDOMClassInfo::DefineStaticJSStrings(JSContext *cx)
   s_content_id       = ::JS_InternString(cx, "_content");
   sContent_id        = ::JS_InternString(cx, "content");
   sSidebar_id        = ::JS_InternString(cx, "sidebar");
-  sPrompter_id       = ::JS_InternString(cx, "prompter");
   sMenubar_id        = ::JS_InternString(cx, "menubar");
   sToolbar_id        = ::JS_InternString(cx, "toolbar");
   sLocationbar_id    = ::JS_InternString(cx, "locationbar");
@@ -2121,7 +2119,6 @@ nsDOMClassInfo::ShutDown()
   s_content_id        = jsnullstring;
   sContent_id         = jsnullstring;
   sSidebar_id         = jsnullstring;
-  sPrompter_id        = jsnullstring;
   sMenubar_id         = jsnullstring;
   sToolbar_id         = jsnullstring;
   sLocationbar_id     = jsnullstring;
@@ -3025,7 +3022,6 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
           str == sScrollbars_id   ||
           str == sContent_id      ||
           str == sSidebar_id      ||
-          str == sPrompter_id     ||
           str == sMenubar_id      ||
           str == sToolbar_id      ||
           str == sLocationbar_id  ||
