@@ -22,14 +22,14 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-PROGRAM	=	TestStreamConv
-MODULE  = 	TestStreamConv
+MODULE		= TestStreamConv
+PROGRAM		= TestStreamConv
 
 REQUIRES	= libreg xpcom
 
-CPPSRCS		= 			\
-		Converters.cpp 		\
-		TestStreamConv.cpp 	\
+CPPSRCS		= \
+		Converters.cpp \
+		TestStreamConv.cpp \
 		$(NULL)
 
 ifdef NO_LD_ARCHIVE_FLAGS
@@ -42,13 +42,7 @@ LIBS		= \
 		$(NSPR_LIBS) \
 		$(NULL)
 
-include $(topsrcdir)/config/config.mk
-
-# hack until necko lands
-ifndef NECKO
-PUBLIC		= $(DEPTH)/netwerk/dist/include
-endif
-
 include $(topsrcdir)/config/rules.mk
 
 DEFINES		+= -DUSE_NSREG
+
