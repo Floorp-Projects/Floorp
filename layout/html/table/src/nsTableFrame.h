@@ -697,6 +697,8 @@ protected:
                                 const nsHTMLReflowState& aReflowState,
                                 nsReflowStatus&          aStatus);
 
+  virtual void CacheColFramesInCellMap();
+
   /** called every time we discover we have a new cell to add to the table.
     * This could be because we got actual cell content, because of rowspan/colspan attributes, etc.
     * This method changes mCellMap as necessary to account for the new cell.

@@ -1270,6 +1270,8 @@ void nsTableFrame::ComputeVerticalCollapsingBorders(nsIPresContext& aPresContext
   if (nsnull==cellMap)
     return; // no info yet, so nothing useful to do
   
+  CacheColFramesInCellMap();
+
   // compute all the collapsing border values for the entire table
   // XXX: we have to make this more incremental!
   const nsStyleTable *tableStyle=nsnull;
@@ -3976,33 +3978,12 @@ void nsTableFrame::BuildColumnCache( nsIPresContext&          aPresContext,
   }
 
   mColCache = new ColumnInfoCache(GetColCount());
-  nsIFrame * childFrame = mColGroups.FirstChild();
-  while (nsnull!=childFrame)
-  { // in this loop, we cache column info and set column style info from cells
-    nsTableColFrame *colFrame=nsnull;
-    childFrame->FirstChild(nsnull, (nsIFrame *&)colFrame);
-    while (nsnull!=colFrame)
-    {
-      PRInt32 repeat = colFrame->GetSpan();
-      for (PRInt32 i=0; i<repeat; i++)
-      {
-        nsTableColFrame *cachedColFrame = mCellMap->GetColumnFrame(colIndex+i);
-        if (nsnull==cachedColFrame)
-        {
-          if (gsDebug) printf("TIF BCB: adding column frame %p\n", colFrame);
-          mCellMap->AppendColumnFrame(colFrame);
-        }
-        colIndex++;
-      }
-      colFrame->GetNextSibling((nsIFrame *&)colFrame);
-    }
-    childFrame->GetNextSibling(childFrame);
-  }
+  CacheColFramesInCellMap();
 
   // handle rowgroups
-  childFrame = mFrames.FirstChild();
+  nsIFrame * childFrame = mFrames.FirstChild();
   while (nsnull!=childFrame)
-  {
+  { // in this loop, set column style info from cells
     const nsStyleDisplay *childDisplay;
     childFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
     if (PR_TRUE==IsRowGroup(childDisplay->mDisplay))
@@ -4068,6 +4049,34 @@ void nsTableFrame::BuildColumnCache( nsIPresContext&          aPresContext,
   }
   if (PR_TRUE==gsDebugIR) printf("TIF BCC: mColumnCacheValid=PR_TRUE.\n");
   mColumnCacheValid=PR_TRUE;
+}
+
+void nsTableFrame::CacheColFramesInCellMap()
+{
+  nsIFrame * childFrame = mColGroups.FirstChild();
+  while (nsnull!=childFrame)
+  { // in this loop, we cache column info 
+    nsTableColFrame *colFrame=nsnull;
+    childFrame->FirstChild(nsnull, (nsIFrame *&)colFrame);
+    while (nsnull!=colFrame)
+    {
+      PRInt32 colIndex = colFrame->GetColumnIndex();
+      PRInt32 repeat   = colFrame->GetSpan();
+      for (PRInt32 i=0; i<repeat; i++)
+      {
+        nsTableColFrame *cachedColFrame = mCellMap->GetColumnFrame(colIndex+i);
+        if (nsnull==cachedColFrame)
+        {
+          if (gsDebug) 
+            printf("TIF BCB: adding column frame %p\n", colFrame);
+          mCellMap->AppendColumnFrame(colFrame);
+        }
+        colIndex++;
+      }
+      colFrame->GetNextSibling((nsIFrame *&)colFrame);
+    }
+    childFrame->GetNextSibling(childFrame);
+  }
 }
 
 void nsTableFrame::InvalidateColumnWidths()
