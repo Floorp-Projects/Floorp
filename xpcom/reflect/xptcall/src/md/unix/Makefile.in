@@ -35,11 +35,11 @@ CPPSRCS		= \
 		  xptcstubs_unsupported.cpp \
 		  $(NULL)
 
-ifeq ($(OS_ARCH),Linux)
+ifneq (,$(filter Linux FreeBSD NetBSD,$(OS_ARCH)))
 ifeq (86,$(findstring 86,$(OS_TEST)))
 CPPSRCS		= \
-		  xptcinvoke_linux_x86.cpp \
-		  xptcstubs_linux_x86.cpp \
+		  xptcinvoke_unixish_x86.cpp \
+		  xptcstubs_unixish_x86.cpp \
 		  $(NULL)
 endif
 endif
