@@ -165,11 +165,13 @@ function AbEditCard()
     card = card.QueryInterface(Components.interfaces.nsIAbCard);
     if (card.isMailList) {
       var dirUri = dirTree.selectedItems[0].getAttribute("id");
-      listUri = dirUri + "/MailList" + card.dbRowID;
+      var listUri = dirUri + "/MailList" + card.dbRowID;
       goEditListDialog(resultsTree.getAttribute("ref"), listUri);
     }
-    else
-      goEditCardDialog(resultsTree.getAttribute("ref"), card, top.gUpdateCardView);
+    else {
+      var updateFunc = ("gUpdateCardView" in top) ? top.gUpdateCardView : null;
+      goEditCardDialog(resultsTree.getAttribute("ref"), card, updateFunc);
+    }
   }
 }
 
