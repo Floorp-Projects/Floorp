@@ -61,58 +61,33 @@
         <rows>
           <row valign="middle" autostretch="never">
             <text class="label" id="Text" value="&normalText.label;&colon.character;" />
-            <stack>
-              <button id="TextButton" class="dialog color-button" oncommand="GetColorAndUpdate('textCW');"/>
-              <hbox autostretch="never" valign="middle" mousethrough="always">
-                <spacer flex="1"/>
-                <spacer id="textCW" class="color-well"/>
-                <spacer flex="1"/>
-              </hbox>
-            </stack>
+            <button id="TextButton" class="color-button" oncommand="GetColorAndUpdate('textCW');">
+              <spacer id="textCW" class="color-well"/>
+            </button>
           </row>
           <row valign="middle" autostretch="never">
             <text class="label" id="Link" value="&linkText.label;&colon.character;" />
-            <stack>
-              <button id="LinkButton" class="dialog color-button" oncommand="GetColorAndUpdate('linkCW');"/>
-              <hbox autostretch="never" valign="middle" mousethrough="always">
-                <spacer flex="1"/>
-                <spacer id="linkCW" class="color-well"/>
-                <spacer flex="1"/>
-              </hbox>
-            </stack>
+            <button id="LinkButton" class="color-button" oncommand="GetColorAndUpdate('linkCW');">
+              <spacer id="linkCW" class="color-well"/>
+            </button>
           </row>
           <row valign="middle" autostretch="never">
             <text class="label" id="Active" value="&activeLinkText.label;&colon.character;" />
-            <stack>
-              <button id="ActiveLinkButton" class="dialog color-button" oncommand="GetColorAndUpdate('activeCW');"/>
-              <hbox autostretch="never" valign="middle" mousethrough="always">
-                <spacer flex="1"/>
-                <spacer id="activeCW" class="color-well"/>
-                <spacer flex="1"/>
-              </hbox>
-            </stack>
+            <button id="ActiveLinkButton" class="color-button" oncommand="GetColorAndUpdate('activeCW');">
+              <spacer id="activeCW" class="color-well"/>
+            </button>
           </row>
           <row valign="middle" autostretch="never">
             <text class="label" id="Visited" value ="&visitedLinkText.label;&colon.character;" />
-            <stack>
-              <button id="VisitedLinkButton" class="dialog color-button" oncommand="GetColorAndUpdate('visitedCW');"/>
-              <hbox autostretch="never" valign="middle" mousethrough="always">
-                <spacer flex="1"/>
-                <spacer id="visitedCW" class="color-well"/>
-                <spacer flex="1"/>
-              </hbox>
-            </stack>
+            <button id="VisitedLinkButton" class="color-button" oncommand="GetColorAndUpdate('visitedCW');">
+              <spacer id="visitedCW" class="color-well"/>
+            </button>
           </row>
           <row valign="middle" autostretch="never">
             <text class="label" id="Background" value="&background.label;" />
-            <stack>
-              <button id="BackgroundButton" class="dialog color-button" oncommand="GetColorAndUpdate('backgroundCW');"/>
-              <hbox autostretch="never" valign="middle" mousethrough="always">
-                <spacer flex="1"/>
-                <spacer id="backgroundCW" class="color-well"/>
-                <spacer flex="1"/>
-              </hbox>
-            </stack>
+            <button id="BackgroundButton" class="color-button" oncommand="GetColorAndUpdate('backgroundCW');">
+              <spacer id="backgroundCW" class="color-well"/>
+            </button>
           </row>
         </rows>
       </grid>
