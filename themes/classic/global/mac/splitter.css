@@ -18,6 +18,7 @@ grippy, grippy[collapse="before"]
     border-right          : 1px solid #9D9D9D;
     border-bottom         : 1px solid #9D9D9D;
 	padding               : 0px;
+  min-height            : 1px;
 	list-style-image      : url("chrome://global/skin/grippy-horizontal-before.gif");
 	cursor                : pointer;
   }

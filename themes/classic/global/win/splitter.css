@@ -20,6 +20,7 @@
       border                : 1px solid ThreeDShadow;
   	  list-style-image      : url("chrome://global/skin/grippy-horizontal-before.gif");
   	  cursor                : pointer;
+      min-height            : 1px;
     }
   
   grippy:hover

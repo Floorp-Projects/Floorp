@@ -29,10 +29,6 @@
    display               : none;
   } 
 
-
-
-
-
 /**
  * toolbar button images
  */
@@ -452,6 +448,7 @@ splitter
  {
    border-bottom         : 1px solid #FFFFFF;
    border-left           : 1px solid #999999;
+   min-width             : 1px;
  }
 
 #threadOutliner > outlinerrows  > .outliner-bodybox

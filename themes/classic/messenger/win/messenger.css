@@ -459,6 +459,7 @@ searchterm
   {
     border-bottom         : 1px solid ThreeDHighlight;
     border-left           : 1px solid ThreeDShadow;
+    min-width             : 1px;
   }
 
 #threadOutliner > .outliner-columns 

@@ -30,6 +30,11 @@
 
 /* ::::: msg header toolbars ::::: */
 
+#collapsedHeaderView,
+#expandedHeaderView {
+  min-width: 1px;
+}
+
 #msgHeaderView {
   border-bottom: 1px solid #000000;
 }

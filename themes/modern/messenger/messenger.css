@@ -463,6 +463,7 @@ searchterm {
   border-right: none;
   border-bottom: 1px solid #C6D3D6;
   border-left: 1px solid #63717B;
+  min-width: 1px;
 }
 
 #threadOutliner > outlinerrows {
