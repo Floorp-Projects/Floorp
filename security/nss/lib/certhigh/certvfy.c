@@ -337,21 +337,26 @@ loser:
 #else
     NSSCertificate *me;
     NSSTime *nssTime;
-    NSSUsage nssUsage;
+    NSSTrustDomain *td;
+    NSSCryptoContext *cc;
     NSSCertificate *chain[3];
+    NSSUsage nssUsage;
     PRStatus status;
+
     me = STAN_GetNSSCertificate(cert);
+    if (!me) {
+        PORT_SetError(SEC_ERROR_NO_MEMORY);
+	return NULL;
+    }
     nssTime = NSSTime_SetPRTime(NULL, validTime);
     nssUsage.anyUsage = PR_FALSE;
     nssUsage.nss3usage = usage;
     nssUsage.nss3lookingForCA = PR_TRUE;
     memset(chain, 0, 3*sizeof(NSSCertificate *));
-    if (!me) {
-	PORT_SetError (SEC_ERROR_BAD_DATABASE);
-	return NULL;
-    }
+    td   = STAN_GetDefaultTrustDomain();
+    cc = STAN_GetDefaultCryptoContext();
     (void)NSSCertificate_BuildChain(me, nssTime, &nssUsage, NULL, 
-                                    chain, 2, NULL, &status);
+                                    chain, 2, NULL, &status, td, cc);
     nss_ZFreeIf(nssTime);
     if (status == PR_SUCCESS) {
 	/* if it's a root, the chain will only have one cert */

@@ -35,7 +35,7 @@
 #define NSSPKI_H
 
 #ifdef DEBUG
-static const char NSSPKI_CVS_ID[] = "@(#) $RCSfile: nsspki.h,v $ $Revision: 1.7 $ $Date: 2001/12/14 17:32:19 $ $Name:  $";
+static const char NSSPKI_CVS_ID[] = "@(#) $RCSfile: nsspki.h,v $ $Revision: 1.8 $ $Date: 2004/02/07 07:17:30 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -247,7 +247,9 @@ NSSCertificate_BuildChain
   NSSCertificate **rvOpt,
   PRUint32 rvLimit, /* zero for no limit */
   NSSArena *arenaOpt,
-  PRStatus *statusOpt
+  PRStatus *statusOpt,
+  NSSTrustDomain *td,
+  NSSCryptoContext *cc 
 );
 
 /*
