@@ -1114,6 +1114,13 @@ skip-networking
           changes will be lost when Template Toolkit recompiles them.
         </para>
       </note>
+
+      <note>
+        <para>It is recommended that you run <command>./checksetup.pl</command>
+        after any template edits, especially if you've created a new file in
+        the <filename class="directory">custom</filename> directory.
+        </para>
+      </note>
     </section>
     
     <section>
