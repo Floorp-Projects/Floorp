@@ -365,7 +365,7 @@ static void TestEntityConversion(PRUint32 version)
   cout << "Start nsIEntityConverter Test \n";
   cout << "==============================\n";
 
-  PRInt32 i;
+  PRUint32 i;
   nsString inString;
   PRUnichar uChar;
   nsresult res;
@@ -396,7 +396,7 @@ static void TestEntityConversion(PRUint32 version)
   PRUnichar *entities;
   res = entityConv->ConvertToEntities(inString.GetUnicode(), version, &entities);
   if (NS_SUCCEEDED(res) && NULL != entities) {
-    for (i = 0; i < (PRInt32) nsCRT::strlen(entities); i++) {
+    for (i = 0; i < nsCRT::strlen(entities); i++) {
       cout << (char) entities[i];
       if (';' == (char) entities[i])
         cout << "\n";
@@ -422,7 +422,7 @@ static void TestSaveAsCharset()
   char *outString;
   
   // first, dump input string
-  for (PRInt32 i = 0; i < inString.Length(); i++) {
+  for (PRUint32 i = 0; i < inString.Length(); i++) {
     cout << inString[i] << " ";
   }
   cout << "\n";
