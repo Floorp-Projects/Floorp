@@ -4827,6 +4827,9 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
     wordLen = start;
 #endif // IBMBIDI
 
+    bp2 = aTx.GetNextWord(aTextData.mInWord, &wordLen, &contentLen, &isWhitespace,
+                          &wasTransformed, textRun.mNumSegments == 0);
+
     // We need to set aTextData.mCanBreakBefore to true after 1st word. But we can't set 
     // aTextData.mCanBreakBefore without seeing the 2nd word. That's because this frame 
     // may only contain part of one word, the other part is in next frame. 
@@ -4835,8 +4838,6 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
       firstWordDone = PR_TRUE;
     }
 
-    bp2 = aTx.GetNextWord(aTextData.mInWord, &wordLen, &contentLen, &isWhitespace,
-                          &wasTransformed, textRun.mNumSegments == 0);
 #ifdef IBMBIDI
     if (nextBidi) {
       mContentLength -= contentLen;
