@@ -30,6 +30,7 @@
 #include "PyXPCOM_std.h"
 #include "nsReadableUtils.h"
 #include <nsIConsoleService.h>
+#include "nspr.h" // PR_fprintf
 
 static char *PyTraceback_AsString(PyObject *exc_tb);
 
@@ -43,7 +44,7 @@ void LogMessage(const char *prefix, const char *pszMessageText)
 	if (consoleService)
 		consoleService->LogStringMessage(NS_ConvertASCIItoUCS2(pszMessageText).get());
 	else
-		printf("%s\n", pszMessageText);
+		PR_fprintf(PR_STDERR,"%s\n", pszMessageText);
 }
 
 void LogMessage(const char *prefix, nsACString &text)
