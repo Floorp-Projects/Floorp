@@ -38,4 +38,16 @@ treehead treeitem treecell {
  background-color: #a0a0a0; 
  border: thin black solid; 
 } 
+
+treecell[selectedcell] {
+ background-color: yellow;
+ }
+ 
+treecell[sortActive="true"] {
+ background-color: #404040;
+ }
+ 
+treecol[sortActive="true"] {
+  background-color: green;
+}
   

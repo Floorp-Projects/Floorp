@@ -64,9 +64,18 @@ function doSort(sortColName)
 
   <xul:treehead>
     <xul:treeitem>
-      <xul:treecell resource='http://home.netscape.com/NC-rdf#Name' onclick="return doSort('NameColumn');">Name</xul:treecell>
-      <xul:treecell resource='http://home.netscape.com/NC-rdf#URL' onclick="return doSort('URLColumn');">URL</xul:treecell>
-      <xul:treecell resource='http://home.netscape.com/WEB-rdf#LastModifiedDate' onclick="return doSort('LastModColumn');">Last Modified</xul:treecell>
+      <xul:treecell resource='http://home.netscape.com/NC-rdf#Name' onclick="return doSort('NameColumn');">
+      	<xul:observes element="NameColumn" attribute="sortActive"/>
+      	<xul:observes element="NameColumn" attribute="sortDirection"/>
+      	Name</xul:treecell>
+      <xul:treecell resource='http://home.netscape.com/NC-rdf#URL' onclick="return doSort('URLColumn');">
+      	<xul:observes element="URLColumn" attribute="sortActive"/>
+      	<xul:observes element="URLColumn" attribute="sortDirection"/>
+      	URL</xul:treecell>
+      <xul:treecell resource='http://home.netscape.com/WEB-rdf#LastModifiedDate' onclick="return doSort('LastModColumn');">
+      	<xul:observes element="LastModColumn" attribute="sortActive"/>
+      	<xul:observes element="LastModColumn" attribute="sortDirection"/>
+      	Last Modified</xul:treecell>
     </xul:treeitem>
   </xul:treehead>
 
