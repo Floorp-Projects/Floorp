@@ -72,6 +72,18 @@
 #endif
 #include "nsXPIDLString.h"
 
+class UTF8traits
+  {
+    public:
+      static PRBool isASCII(char c) { return (c & 0x80) == 0x00; }
+      static PRBool isInSeq(char c) { return (c & 0xC0) == 0x80; }
+      static PRBool is2byte(char c) { return (c & 0xE0) == 0xC0; }
+      static PRBool is3byte(char c) { return (c & 0xF0) == 0xE0; }
+      static PRBool is4byte(char c) { return (c & 0xF8) == 0xF0; }
+      static PRBool is5byte(char c) { return (c & 0xFC) == 0xF8; }
+      static PRBool is6byte(char c) { return (c & 0xFE) == 0xFC; }
+  };
+
 #ifdef STANDALONE_MI_STRING_TESTS
   class nsAFlatString { public: virtual ~nsAString() { } };
 #endif
