@@ -16,81 +16,132 @@
  * Reserved.
  */
 
+/*
+
+   Script for the directory window
+
+*/
+
 // By the time this runs, The 'HTTPIndex' variable will have been
 // magically set on the global object by the native code.
 
+function debug(msg)
+{
+    // Uncomment to print out debug info.
+    //dump(msg);
+}
+
 function Init()
 {
-    dump("directory.js: Init()\n");
+    debug("directory.js: Init()\n");
 
     // Add the HTTPIndex datasource into the tree
     var tree = document.getElementById('tree');
     tree.database.AddDataSource(HTTPIndex.DataSource);
 
     // Initialize the tree's base URL to whatever the HTTPIndex is rooted at
-    dump("base URL = " + HTTPIndex.BaseURL + "\n");
+    debug("base URL = " + HTTPIndex.BaseURL + "\n");
     tree.setAttribute('ref', HTTPIndex.BaseURL);
+}
+
+
+function OnClick(event)
+{
+    debug('OnClick()\n');
+
+    // This'll be set to 'twisty' on the twisty icon, and 'filename'
+    // if they're over the filename link.
+    var targetclass = event.target.getAttribute('class');
+    debug('targetclass = ' + targetclass + '\n');
+
+    if (targetclass == 'twisty') {
+        // The twisty is nested three below the treeitem:
+        // <treeitem>
+        //   <treerow>
+        //     <treecell>
+        //       <titledbutton class="twisty">
+        var treeitem = event.target.parentNode.parentNode.parentNode;
+        ToggleOpenState(treeitem);
+    }
+    else {
+        // The click'll have hit a cell, which is nested two below the
+        // treeitem.
+        var treeitem = event.target.parentNode.parentNode;
+
+        // This'll be set to 'FILE' for files and 'DIRECTORY' for
+        // directories.
+        var type = treeitem.getAttribute('type');
+
+        if (targetclass == 'filename' && type == 'FILE') {
+            var url = treeitem.getAttribute('id');
+
+            debug('navigating to ' + url + '\n');
+            window.content.location.href = url;
+        }
+    }
 }
 
 
 function OnDblClick(event)
 {
-    var item = event.target.parentNode.parentNode;
-    var url = item.getAttribute('id');
+    debug('OnDblClick()\n');
 
-    var type = item.getAttribute('type');
-    if (type == 'DIRECTORY') {
-        // open inline
-        dump('reading directory ' + url + '\n');
-        ReadDirectory(url);
-    }
-    else {
-        dump('navigating to ' + url + '\n');
-        window.content.location.href = url;
+    // This'll be set to 'filename' if they're over the filename link.
+    var targetclass = event.target.getAttribute('class');
+
+    // This'll be the treeitem that got the event
+    var treeitem = event.target.parentNode.parentNode;
+
+    // This'll be set to 'FILE' for files and 'DIRECTORY' for
+    // directories.
+    var type = treeitem.getAttribute('type');
+
+    if (targetclass == 'filename' && type == 'DIRECTORY') {
+        ToggleOpenState(treeitem);
     }
 }
 
 
-function ToggleTwisty(event)
+function ToggleOpenState(treeitem)
 {
-    var item = event.target.parentNode.parentNode.parentNode;
-    if (item.getAttribute('open') == 'true') {
-        item.removeAttribute('open');
+    debug('ToggleOpenState(' + treeitem.tagName + ')');
+
+    if (treeitem.getAttribute('open') == 'true') {
+        debug('...closing\n');
+        treeitem.removeAttribute('open');
     }
     else {
-        var url = item.getAttribute('id');
-        ReadDirectory(url);
-        item.setAttribute('open', 'true');
-    }
+        debug('...opening\n');
+        treeitem.setAttribute('open', 'true');
 
-    // XXX need to cancel the event here!!!
+        var url = treeitem.getAttribute('id');
+        ReadDirectory(url);
+    }
 }
 
-
+// This array contains the URL of each directory we've read, so that
+// we don't load a directory into the datasource >1 time.
 var Read = new Array();
 
 function ReadDirectory(url)
 {
-    if (Read[url]) {
-        dump("directory already read\n");
+    // Check to make sure we haven't read the directory yet...
+    if (Read[url])
         return;
-    }
+
+    debug('ReadDirectory(' + url + ')\n');
 
     var ios = Components.classes['component://netscape/network/net-service'].getService();
     ios = ios.QueryInterface(Components.interfaces.nsIIOService);
-    dump("ios = " + ios + "\n");
 
     var uri = ios.NewURI(url, null);
-    dump("uri = " + uri + "\n");
 
+    // Create a channel...
     var channel = ios.NewChannelFromURI('load', uri, null);
-    dump("channel = " + channel + "\n");
 
-    var listener = HTTPIndex.CreateListener();
-    dump("listener = " + listener + "\n");
-
-    channel.AsyncRead(0, -1, null, listener);
-
+    // ...so that we can pipe it into a new HTTPIndex listener to
+    // parse the directory's contents.
+    channel.AsyncRead(0, -1, null, HTTPIndex.CreateListener());
     Read[url] = true;
 }
 

@@ -27,8 +27,7 @@
   title="&directoryWindowTitle.label;"
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  align="vertical"
-  ondblclick="OnDblClick(event);">
+  align="vertical">
 
   <html:script src="directory.js" />
 
@@ -37,11 +36,9 @@
       <treechildren>
         <treeitem uri="..." type="rdf:urn:http-index-format:File-Type">
           <treerow>
-            <treecell class="Filename">
+            <treecell class="filename">
               <treeindentation/>
-              <titledbutton class="twisty"
-                            treeallowevents="true"
-                            onclick="ToggleTwisty(event);"/>
+              <titledbutton class="twisty" treeallowevents="true" />
               <text value="rdf:urn:http-index-format:Filename"/>
             </treecell>
             <treecell><text value="rdf:urn:http-index-format:Content-Length"/></treecell>
@@ -58,5 +55,12 @@
         <treecell>&directoryWindow.lastmodified.label;</treecell>
       </treerow>
     </treehead>
+
+    <!-- Create the treechildren here so we can attach event handlers
+         at this level (rather than at the tree level -->
+    <treechildren
+        onclick="OnClick(event);"
+        ondblclick="OnDblClick(event);" />
+
   </tree>
 </window>
