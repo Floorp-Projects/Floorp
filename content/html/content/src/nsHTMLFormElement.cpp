@@ -1752,9 +1752,8 @@ nsFormControlList::AddElementToTable(nsIFormControl* aChild,
       nsBaseContentList *list = NS_STATIC_CAST(nsBaseContentList *,
                                                (nsIDOMNodeList *)nodeList.get());
 
-      PRInt32 oldIndex = -1;
-      list->IndexOf(newChild, oldIndex);
-
+      PRInt32 oldIndex = list->IndexOf(newChild, PR_FALSE);
+      
       // Add the new child only if it's not in our list already
       if (oldIndex < 0) {
         list->AppendElement(newChild);
@@ -1797,8 +1796,11 @@ nsFormControlList::RemoveElementFromTable(nsIFormControl* aChild,
   nsCOMPtr<nsIFormControl> fctrl(do_QueryInterface(supports));
 
   if (fctrl) {
-    // Single element in the hash, just remove it...
-    mNameLookupTable.Remove(aName);
+    // Single element in the hash, just remove it if it's the one
+    // we're trying to remove...
+    if (fctrl == aChild) {
+      mNameLookupTable.Remove(aName);
+    }
 
     return NS_OK;
   }
