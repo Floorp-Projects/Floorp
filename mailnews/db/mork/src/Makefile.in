@@ -79,6 +79,10 @@ CPPSRCS = \
 	morkYarn.cpp\
 	$(NULL)
 
+EXTRA_DSO_LDOPTS =\
+	$(NSPR_LIBS)	\
+	$(NULL)
+
 
 include $(topsrcdir)/config/config.mk
 
