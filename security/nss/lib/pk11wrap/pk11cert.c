@@ -3245,7 +3245,7 @@ isOnList(CERTCertList *certList,NSSCertificate *c)
 	}
 	return PR_FALSE;
 }
-static SECStatus
+static PRStatus
 pk11ListCertCallback(NSSCertificate *c, void *arg)
 {
     struct listCertsStr *listCertP = (struct listCertsStr *)arg;
@@ -3269,28 +3269,28 @@ pk11ListCertCallback(NSSCertificate *c, void *arg)
     /* if we want user certs and we don't have one skip this cert */
     if ((type == PK11CertListUser) && 
 		!NSSCertificate_IsPrivateKeyAvailable(c, NULL,NULL)) {
-	return SECSuccess;
+	return PR_SUCCESS;
     }
 
     /* if we want root certs, skip the user certs */
     if ((type == PK11CertListRootUnique) && 
 		NSSCertificate_IsPrivateKeyAvailable(c, NULL,NULL)) {
-	return SECSuccess;
+	return PR_SUCCESS;
     }
 
     /* if we want Unique certs and we already have it on our list, skip it */
     if ( isUnique && isOnList(certList,c) ) {
-	return SECSuccess;
+	return PR_SUCCESS;
     }
 
 
     newCert = STAN_GetCERTCertificate(c);
     if (!newCert) {
-	return SECSuccess;
+	return PR_SUCCESS;
     }
     /* if we want CA certs and it ain't one, skip it */
     if( isCA  && (!CERT_IsCACert(newCert, &certType)) ) {
-	return SECSuccess;
+	return PR_SUCCESS;
     }
     CERT_DupCertificate(newCert);
 
@@ -3302,7 +3302,7 @@ pk11ListCertCallback(NSSCertificate *c, void *arg)
     } else {
     	CERT_AddCertToListHeadWithData(certList,newCert,nickname);
     }
-    return SECSuccess;
+    return PR_SUCCESS;
 }
 
 
