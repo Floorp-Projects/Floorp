@@ -312,19 +312,32 @@ nsTextInputListener::KeyPress(nsIDOMEvent* aKeyEvent)
     if(dispatchStopped)
       return NS_OK;
   }
-  PRUint32     keyCode;
-  keyEvent->GetKeyCode(&keyCode);
-  if (nsIDOMKeyEvent::DOM_VK_RETURN==keyCode
-      || nsIDOMKeyEvent::DOM_VK_ENTER==keyCode)
+
+  if (mFrame && mFrame->IsSingleLineTextControl())
   {
-    if (mFrame)
-      mFrame->CallOnChange();
-    if (mFrame)//we must recheck frame since callonchange may cause a deletion of this frame!
+    PRUint32     keyCode;
+    keyEvent->GetKeyCode(&keyCode);
+
+    if (nsIDOMKeyEvent::DOM_VK_RETURN==keyCode ||
+        nsIDOMKeyEvent::DOM_VK_ENTER==keyCode)
     {
-      nsAutoString blurValue;
-      mFrame->GetText(&blurValue,PR_FALSE);
-      mFocusedValue = blurValue;
-      mFrame->SubmitAttempt();
+      nsAutoString curValue;
+      mFrame->GetText(&curValue,PR_FALSE);
+
+      // If the text control's contents have changed, fire
+      // off an onChange().
+
+      if (!mFocusedValue.Equals(curValue))
+      {
+        mFocusedValue = curValue;
+        mFrame->CallOnChange();
+      }
+
+      // Now try to submit the form. Be sure to check mFrame again
+      // since CallOnChange() may have caused the deletion of mFrame.
+
+      if (mFrame)
+        mFrame->SubmitAttempt();
     }
   }
   return NS_OK;
