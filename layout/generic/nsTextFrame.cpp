@@ -3358,10 +3358,13 @@ nsTextFrame::GetPosition(nsIPresContext* aCX,
           }
         }
 #ifdef IBMBIDI
-        while ((aContentOffset >= mContentOffset) && 
-               (aContentOffset < (mContentOffset + mContentLength)) &&
-               IS_BIDI_DIACRITIC(text[aContentOffset - mContentOffset]) ) {
-          aContentOffset++;
+        if (aContentOffset >= mContentOffset) {
+          PRInt32 stopOffset = mContentOffset + mContentLength;
+          while (aContentOffset < stopOffset &&
+                 IS_BIDI_DIACRITIC(text[ip[aContentOffset - mContentOffset]]) )
+		  {
+            aContentOffset++;
+          }
         }
 #endif // IBMBIDI
         aContentOffsetEnd = aContentOffset;
