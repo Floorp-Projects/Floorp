@@ -18,6 +18,7 @@
  */
 #include "nsBlockFrame.h"
 #include "nsBlockReflowContext.h"
+#include "nsBlockBandData.h"
 #include "nsBulletFrame.h"
 #include "nsLineBox.h"
 
@@ -166,100 +167,6 @@ RecordReflowStatus(PRBool aIsBlock,
 
 //----------------------------------------------------------------------
 
-// XXX Should I move the GetAvailSpace method here?
-// XXX Should I move the ClearFloaters method here?
-
-/**
- * Class used to manage processing of the space-manager band data.
- * Provides HTML/CSS specific behavior to the raw data.
- */
-struct nsBlockBandData : public nsBandData {
-  // Trapezoids used during band processing
-  // XXX what happens if we need more than 12 trapezoids?
-  nsBandTrapezoid data[12];
-
-  // Bounding rect of available space between any left and right floaters
-  nsRect          availSpace;
-
-  nsBlockBandData() {
-    size = 12;
-    trapezoids = data;
-  }
-
-  void ComputeAvailSpaceRect();
-};
-
-/**
- * Computes the bounding rect of the available space, i.e. space
- * between any left and right floaters. Uses the current trapezoid
- * data, see nsISpaceManager::GetBandData(). Also updates member
- * data "availSpace".
- */
-void
-nsBlockBandData::ComputeAvailSpaceRect()
-{
-  nsBandTrapezoid*  trapezoid = data;
-
-  if (count > 1) {
-    // If there's more than one trapezoid that means there are floaters
-    PRInt32 i;
-
-    // Stop when we get to space occupied by a right floater, or when we've
-    // looked at every trapezoid and none are right floaters
-    for (i = 0; i < count; i++) {
-      nsBandTrapezoid*  trapezoid = &data[i];
-      if (trapezoid->state != nsBandTrapezoid::Available) {
-        const nsStyleDisplay* display;
-        if (nsBandTrapezoid::OccupiedMultiple == trapezoid->state) {
-          PRInt32 j, numFrames = trapezoid->frames->Count();
-          NS_ASSERTION(numFrames > 0, "bad trapezoid frame list");
-          for (j = 0; j < numFrames; j++) {
-            nsIFrame* f = (nsIFrame*)trapezoid->frames->ElementAt(j);
-            f->GetStyleData(eStyleStruct_Display,
-                            (const nsStyleStruct*&)display);
-            if (NS_STYLE_FLOAT_RIGHT == display->mFloats) {
-              goto foundRightFloater;
-            }
-          }
-        } else {
-          trapezoid->frame->GetStyleData(eStyleStruct_Display,
-                                         (const nsStyleStruct*&)display);
-          if (NS_STYLE_FLOAT_RIGHT == display->mFloats) {
-            break;
-          }
-        }
-      }
-    }
-  foundRightFloater:
-
-    if (i > 0) {
-      trapezoid = &data[i - 1];
-    }
-  }
-
-  if (nsBandTrapezoid::Available == trapezoid->state) {
-    // The trapezoid is available
-    trapezoid->GetRect(availSpace);
-  } else {
-    const nsStyleDisplay* display;
-
-    // The trapezoid is occupied. That means there's no available space
-    trapezoid->GetRect(availSpace);
-
-    // XXX Better handle the case of multiple frames
-    if (nsBandTrapezoid::Occupied == trapezoid->state) {
-      trapezoid->frame->GetStyleData(eStyleStruct_Display,
-                                     (const nsStyleStruct*&)display);
-      if (NS_STYLE_FLOAT_LEFT == display->mFloats) {
-        availSpace.x = availSpace.XMost();
-      }
-    }
-    availSpace.width = 0;
-  }
-}
-
-//----------------------------------------------------------------------
-
 class nsBlockReflowState : public nsFrameReflowState {
 public:
   nsBlockReflowState(nsIPresContext& aPresContext,
@@ -283,10 +190,6 @@ public:
   void PlaceFloaters(nsVoidArray* aFloaters, PRBool aAllOfThem);
 
   void ClearFloaters(nscoord aY, PRUint8 aBreakType);
-
-  nscoord GetFrameYMost(nsIFrame* aFrame);
-
-  PRBool ShouldClearFrame(nsIFrame* aFrame, PRUint8 aBreakType);
 
   PRBool IsLeftMostChild(nsIFrame* aFrame);
 
@@ -337,6 +240,7 @@ public:
   PRInt32 mNextListOrdinal;
 
   nsBlockBandData mCurrentBand;
+  nsRect mAvailSpaceRect;
 };
 
 // XXX This is vile. Make it go away
@@ -443,6 +347,7 @@ nsBlockReflowState::nsBlockReflowState(nsIPresContext& aPresContext,
   if (!mUnconstrainedHeight) {
     mBottomEdge -= mBorderPadding.bottom;
   }
+  mCurrentBand.Init(mSpaceManager, mContentArea);
 
   mPrevChild = nsnull;
   mPrevLine = nsnull;
@@ -470,29 +375,20 @@ nsBlockReflowState::GetAvailableSpace()
                "bad coord system");
 #endif
 
-  // Fill in band data for the specific Y coordinate. Because the
-  // space manager is pre-translated into our content-area (so that
-  // nested blocks/inlines will line up properly), we have to remove
-  // the Y translation to find the band coordinates relative to our
-  // inner (content area) upper left corner (0,0).
-  sm->GetBandData(mY - mBorderPadding.top, mContentArea, mCurrentBand);
-
-  // Compute the bounding rect of the available space, i.e. space
-  // between any left and right floaters.
-  mCurrentBand.ComputeAvailSpaceRect();
+  mCurrentBand.GetAvailableSpace(mY - mBorderPadding.top, mAvailSpaceRect);
 
   NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
      ("nsBlockReflowState::GetAvailableSpace: band={%d,%d,%d,%d} count=%d",
-      mCurrentBand.availSpace.x, mCurrentBand.availSpace.y,
-      mCurrentBand.availSpace.width, mCurrentBand.availSpace.height,
-      mCurrentBand.count));
+      mAvailSpaceRect.x, mAvailSpaceRect.y,
+      mAvailSpaceRect.width, mAvailSpaceRect.height,
+      mCurrentBand.GetTrapezoidCount()));
 #ifdef NOISY_INCREMENTAL_REFLOW
   if (reason == eReflowReason_Incremental) {
     nsFrame::IndentBy(stdout, gNoiseIndent);
     printf("GetAvailableSpace: band=%d,%d,%d,%d count=%d\n",
-           mCurrentBand.availSpace.x, mCurrentBand.availSpace.y,
-           mCurrentBand.availSpace.width, mCurrentBand.availSpace.height,
-           mCurrentBand.count);
+           mAvailSpaceRect.x, mAvailSpaceRect.y,
+           mAvailSpaceRect.width, mAvailSpaceRect.height,
+           mCurrentBand.GetTrapezoidCount());
   }
 #endif
 }
@@ -1781,15 +1677,15 @@ nsBaseIBFrame::ReflowLine(nsBlockReflowState& aState,
 
       // Setup initial coordinate system for reflowing the inline frames
       // into.
-      x = aState.mCurrentBand.availSpace.x + aState.mBorderPadding.left;
-      availWidth = aState.mCurrentBand.availSpace.width;
+      x = aState.mAvailSpaceRect.x + aState.mBorderPadding.left;
+      availWidth = aState.mAvailSpaceRect.width;
 
       if (aState.mUnconstrainedHeight) {
         availHeight = NS_UNCONSTRAINEDSIZE;
       }
       else {
         /* XXX get the height right! */
-        availHeight = aState.mCurrentBand.availSpace.height;
+        availHeight = aState.mAvailSpaceRect.height;
       }
     }
     else {
@@ -2273,20 +2169,26 @@ nsBaseIBFrame::ReflowBlockFrame(nsBlockReflowState& aState,
   // floaters.  Otherwise we position the block outside of the
   // floaters.
   nscoord availX, availWidth;
+  nsSplittableType splitType;
   switch (display->mDisplay) {
   case NS_STYLE_DISPLAY_BLOCK:
   case NS_STYLE_DISPLAY_RUN_IN:
   case NS_STYLE_DISPLAY_COMPACT:
   case NS_STYLE_DISPLAY_LIST_ITEM:
-    availX = aState.mBorderPadding.left;
-    availWidth = aState.mUnconstrainedWidth
-      ? NS_UNCONSTRAINEDSIZE
-      : aState.mContentArea.width;
-    break;
+    if (NS_SUCCEEDED(frame->IsSplittable(splitType)) &&
+        (NS_FRAME_SPLITTABLE_NON_RECTANGULAR == splitType)) {
+      availX = aState.mBorderPadding.left;
+      availWidth = aState.mUnconstrainedWidth
+        ? NS_UNCONSTRAINEDSIZE
+        : aState.mContentArea.width;
+      break;
+    }
+    // Assume the frame is clueless about the space manager
+    // FALLTHROUGH
 
   default:
-    availX = aState.mCurrentBand.availSpace.x + aState.mBorderPadding.left;
-    availWidth = aState.mCurrentBand.availSpace.width;
+    availX = aState.mAvailSpaceRect.x + aState.mBorderPadding.left;
+    availWidth = aState.mAvailSpaceRect.width;
     break;
   }
 
@@ -3552,10 +3454,10 @@ nsBlockReflowState::AddFloater(nsPlaceholderFrame* aPlaceholder)
 
     // Pass on updated available space to the current inline reflow engine
     GetAvailableSpace();
-    mLineLayout->UpdateInlines(mCurrentBand.availSpace.x + mBorderPadding.left,
+    mLineLayout->UpdateInlines(mAvailSpaceRect.x + mBorderPadding.left,
                                mY,
-                               mCurrentBand.availSpace.width,
-                               mCurrentBand.availSpace.height,
+                               mAvailSpaceRect.width,
+                               mAvailSpaceRect.height,
                                isLeftFloater);
 
     // Restore coordinate system
@@ -3674,8 +3576,8 @@ nsBlockReflowState::PlaceFloater(nsPlaceholderFrame* aPlaceholder,
   // While there is not enough room for the floater, clear past
   // other floaters until there is room (or the band is not impacted
   // by a floater).
-  while ((mCurrentBand.availSpace.width < region.width) &&
-         (mCurrentBand.availSpace.width < mContentArea.width)) {
+  while ((mAvailSpaceRect.width < region.width) &&
+         (mAvailSpaceRect.width < mContentArea.width)) {
     // The CSS2 spec says that floaters should be placed as high as
     // possible. We accomodate this easily by noting that if the band
     // is not the full width of the content area then it must have
@@ -3687,11 +3589,11 @@ nsBlockReflowState::PlaceFloater(nsPlaceholderFrame* aPlaceholder,
     mBlock->ListTag(stdout);
     printf(": clearing floater during floater placement: ");
     printf("availWidth=%d regionWidth=%d,%d(w/o margins) contentWidth=%d\n",
-           mCurrentBand.availSpace.width, region.width,
+           mAvailSpaceRect.width, region.width,
            region.width - floaterMargin.left - floaterMargin.right,
            mContentArea.width);
 #endif
-    mY += mCurrentBand.availSpace.height;
+    mY += mAvailSpaceRect.height;
     GetAvailableSpace();
   }
 
@@ -3701,15 +3603,15 @@ nsBlockReflowState::PlaceFloater(nsPlaceholderFrame* aPlaceholder,
   // <b>inside</b> the border/padding area.
   if (NS_STYLE_FLOAT_LEFT == floaterDisplay->mFloats) {
     aIsLeftFloater = PR_TRUE;
-    region.x = mCurrentBand.availSpace.x;
+    region.x = mAvailSpaceRect.x;
   }
   else {
     aIsLeftFloater = PR_FALSE;
-    region.x = mCurrentBand.availSpace.XMost() - region.width;
+    region.x = mAvailSpaceRect.XMost() - region.width;
 
     // In case the floater is too big, don't go past the left edge
-    if (region.x < mCurrentBand.availSpace.x) {
-      region.x = mCurrentBand.availSpace.x;
+    if (region.x < mAvailSpaceRect.x) {
+      region.x = mAvailSpaceRect.x;
     }
   }
   region.y = mY - mBorderPadding.top;
@@ -3766,83 +3668,6 @@ nsBlockReflowState::PlaceFloaters(nsVoidArray* aFloaters, PRBool aAllOfThem)
   GetAvailableSpace();
 }
 
-/**
- * See if the given frame should be cleared
- */
-PRBool
-nsBlockReflowState::ShouldClearFrame(nsIFrame* aFrame,
-                                     PRUint8 aBreakType)
-{
-  PRBool result = PR_FALSE;
-  const nsStyleDisplay* display;
-  nsresult rv = aFrame->GetStyleData(eStyleStruct_Display,
-                                     (const nsStyleStruct*&)display);
-  if (NS_SUCCEEDED(rv) && (nsnull != display)) {
-    if (NS_STYLE_CLEAR_LEFT_AND_RIGHT == aBreakType) {
-      result = PR_TRUE;
-    }
-    else if (NS_STYLE_FLOAT_LEFT == display->mFloats) {
-      if (NS_STYLE_CLEAR_LEFT == aBreakType) {
-        result = PR_TRUE;
-      }
-    }
-    else if (NS_STYLE_FLOAT_RIGHT == display->mFloats) {
-      if (NS_STYLE_CLEAR_RIGHT == aBreakType) {
-        result = PR_TRUE;
-      }
-    }
-  }
-  return result;
-}
-
-/**
- * Get the frames YMost, in the space managers "root" coordinate
- * system. Because the floating frame may have been placed in a
- * parent/child frame, we map the coordinates into the space-managers
- * untranslated coordinate system.
- */
-nscoord
-nsBlockReflowState::GetFrameYMost(nsIFrame* aFrame)
-{
-  nsIFrame* spaceFrame;
-  spaceFrame = mSpaceManager->GetFrame();
-
-  nsRect r;
-  nsPoint p;
-  aFrame->GetRect(r);
-  nscoord y = r.y;
-  nsIFrame* parent;
-  aFrame->GetGeometricParent(parent);
-  PRBool done = PR_FALSE;
-  while (!done && (parent != spaceFrame)) {
-    // If parent has a prev-in-flow, check there for equality first
-    // before looking upward.
-    nsIFrame* parentPrevInFlow;
-    parent->GetPrevInFlow(parentPrevInFlow);
-    while (nsnull != parentPrevInFlow) {
-      if (parentPrevInFlow == spaceFrame) {
-        done = PR_TRUE;
-        break;
-      }
-      parentPrevInFlow->GetPrevInFlow(parentPrevInFlow);
-    }
-
-    if (!done) {
-      parent->GetOrigin(p);
-      y += p.y;
-      parent->GetGeometricParent(parent);
-    }
-  }
-
-#ifdef NOISY_INCREMENTAL_REFLOW
-  if (reason == eReflowReason_Incremental) {
-    nsFrame::IndentBy(stdout, gNoiseIndent);
-    printf("frame=%p r.y=%d y=%d spacemanagerY=%d\n", aFrame, r.y, y);
-  }
-#endif
-  return y + r.height;
-}
-
 void
 nsBlockReflowState::ClearFloaters(nscoord aY, PRUint8 aBreakType)
 {
@@ -3854,49 +3679,9 @@ nsBlockReflowState::ClearFloaters(nscoord aY, PRUint8 aBreakType)
   }
 #endif
 
-  // Update band information based on target Y before clearing.
-  nscoord oldY = mY;
-  mY = aY;
-  GetAvailableSpace();
-
-  // Compute aY in space-manager "root" coordinates.
-  nscoord finalY = oldY;
-  nscoord aYS = (aY - mBorderPadding.top) + mSpaceManagerY;
-
-  // Calculate the largest trapezoid YMost for the appropriate
-  // floaters in this band.
-  PRBool haveFloater = PR_FALSE;
-  nscoord yMost = aYS;
-  PRInt32 i;
-  for (i = 0; i < mCurrentBand.count; i++) {
-    nsBandTrapezoid* trapezoid = &mCurrentBand.data[i];
-    if (nsBandTrapezoid::Available != trapezoid->state) {
-      if (nsBandTrapezoid::OccupiedMultiple == trapezoid->state) {
-        PRInt32 fn, numFrames = trapezoid->frames->Count();
-        NS_ASSERTION(numFrames > 0, "bad trapezoid frame list");
-        for (fn = 0; fn < numFrames; fn++) {
-          nsIFrame* frame = (nsIFrame*) trapezoid->frames->ElementAt(fn);
-          if (ShouldClearFrame(frame, aBreakType)) {
-            nscoord ym = GetFrameYMost(frame);
-            if (ym > yMost) yMost = ym;
-          }
-        }
-      }
-      else if (ShouldClearFrame(trapezoid->frame, aBreakType)) {
-        nscoord ym = GetFrameYMost(trapezoid->frame);
-        if (ym > yMost) yMost = ym;
-      }
-    }
-  }
-
-  // If yMost is unchanged (aYS) then there were no appropriate
-  // floaters in the band. In that case we restore mY to its
-  // original value.
-  if (yMost != aYS) {
-    finalY = aY + (yMost - aYS);
-  }
-
-  mY = finalY;
+  nscoord newY = mCurrentBand.ClearFloaters(aY - mBorderPadding.top,
+                                            aBreakType);
+  mY = newY;
   GetAvailableSpace();
 
 #ifdef NOISY_INCREMENTAL_REFLOW
@@ -4472,6 +4257,9 @@ nsBlockFrame::Reflow(nsIPresContext&          aPresContext,
 {
   nsresult rv = nsBlockFrameSuper::Reflow(aPresContext, aDesiredSize,
                                           aReflowState, aStatus);
+  if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
+    printf("look ma, an incomplete block!\n");
+  }
   BuildFloaterList();
   return rv;
 }
