@@ -3312,7 +3312,7 @@ nsMsgComposeAndSend::NotifyListenerOnStopCopy(nsresult aStatus)
         {
           nsMsgAskBooleanQuestionByString(prompt, eMsg, &oopsGiveMeBackTheComposeWindow);
           if (!oopsGiveMeBackTheComposeWindow)
-            rv = NS_OK;
+            aStatus = NS_OK;
           else
             aStatus = NS_ERROR_FAILURE;
         }
@@ -3325,19 +3325,33 @@ nsMsgComposeAndSend::NotifyListenerOnStopCopy(nsresult aStatus)
   {
     //
     // If we hit here, the ASYNC copy operation FAILED and we should at least tell the
-    // user that it did fail but the send operation has already succeeded.
-    //
-    PRBool oopsGiveMeBackTheComposeWindow = PR_FALSE;
-
-    nsXPIDLString eMsg; 
-    mComposeBundle->GetStringByID(NS_MSG_FAILED_COPY_OPERATION, getter_Copies(eMsg));
-    Fail(NS_ERROR_BUT_DONT_SHOW_ALERT, eMsg);
-
-    if (mGUINotificationEnabled)
+    // user that it did fail but the send operation has already succeeded. This only if
+    // we are sending the message and not just saving it!
+    
+	  if ( m_deliver_mode != nsMsgSaveAsDraft && m_deliver_mode != nsMsgSaveAsTemplate ) 
     {
-      nsMsgAskBooleanQuestionByString(prompt, eMsg, &oopsGiveMeBackTheComposeWindow);
-      if (!oopsGiveMeBackTheComposeWindow)
-    	  aStatus = NS_OK;
+      PRBool oopsGiveMeBackTheComposeWindow = PR_FALSE;
+
+      nsXPIDLString eMsg; 
+      mComposeBundle->GetStringByID(NS_MSG_FAILED_COPY_OPERATION, getter_Copies(eMsg));
+      Fail(NS_ERROR_BUT_DONT_SHOW_ALERT, eMsg);
+
+      if (mGUINotificationEnabled)
+      {
+        nsMsgAskBooleanQuestionByString(prompt, eMsg, &oopsGiveMeBackTheComposeWindow);
+        if (!oopsGiveMeBackTheComposeWindow)
+    	    aStatus = NS_OK;
+      }
+    }
+    else
+    {
+      nsXPIDLString eMsg; 
+      if (m_deliver_mode == nsMsgSaveAsTemplate)
+        mComposeBundle->GetStringByID(NS_MSG_UNABLE_TO_SAVE_TEMPLATE, getter_Copies(eMsg));
+      else
+        mComposeBundle->GetStringByID(NS_MSG_UNABLE_TO_SAVE_DRAFT, getter_Copies(eMsg));
+      Fail(aStatus, eMsg);
+      aStatus = NS_ERROR_BUT_DONT_SHOW_ALERT;
     }
   }
 
@@ -3349,7 +3363,7 @@ nsMsgComposeAndSend::NotifyListenerOnStopCopy(nsresult aStatus)
       copyListener->OnStopCopy(aStatus);
   }
 
-  return NS_OK;
+  return aStatus;
 }
 
 /* This is the main driving function of this module.  It generates a
@@ -3549,7 +3563,7 @@ nsMsgComposeAndSend::SendToMagicFolder(nsMsgDeliverMode mode)
     // The caller of MimeDoFCC needs to deal with failure.
     //
     if (NS_FAILED(rv))
-      NotifyListenerOnStopCopy(rv);
+      rv = NotifyListenerOnStopCopy(rv);
     
     return rv;
 }

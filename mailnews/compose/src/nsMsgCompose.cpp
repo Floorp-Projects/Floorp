@@ -774,7 +774,24 @@ nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,  nsIMsgIdentity *ide
 	{
     if (rv != NS_ERROR_BUT_DONT_SHOW_ALERT)
       if (NS_FAILED(nsMsgDisplayMessageByID(prompt, rv)))
-        nsMsgDisplayMessageByID(prompt, NS_ERROR_SEND_FAILED);
+      {
+        /* If we come here it's because we have an unknown error and we need to warm the user
+           Let's try our best...
+        */
+        switch (deliverMode)
+        {
+          case nsIMsgCompDeliverMode::SaveAsDraft:
+            nsMsgDisplayMessageByID(prompt, NS_MSG_UNABLE_TO_SAVE_DRAFT);
+            break;
+          case nsIMsgCompDeliverMode::SaveAsTemplate:
+            nsMsgDisplayMessageByID(prompt, NS_MSG_UNABLE_TO_SAVE_TEMPLATE);
+            break;
+
+          default:
+            nsMsgDisplayMessageByID(prompt, NS_ERROR_SEND_FAILED);
+            break;
+        }
+      }
 
     if (progress)
       progress->CloseProgressDialog(PR_TRUE);
