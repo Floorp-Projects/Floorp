@@ -757,15 +757,8 @@ function UpdateBookmarksLastVisitedDate(event)
 
   function BrowserHome()
   {
-   var homepage = null;
-   try {
-	homepage = pref.CopyCharPref("browser.startup.homepage");
-   }
-   catch (ex) {
-   	dump("failed to get the homepage!\n");
-	homepage = homePageDefault;
-   }
-   appCore.loadUrl(homepage);
+   // this eventual calls nsGlobalWIndow::Home()
+   window.content.home();
    RefreshUrlbar();
   }
 
