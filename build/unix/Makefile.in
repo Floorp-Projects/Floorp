@@ -46,7 +46,7 @@ pkg_config_files=mozilla-nspr.pc mozilla-xpcom.pc mozilla-js.pc \
 
 GARBAGE	= $(pkg_config_files) mozilla-config
 
-mozilla-config:: mozilla-config.in Makefile.in Makefile
+mozilla-config:: mozilla-config.in Makefile.in Makefile $(DEPTH)/config/autoconf.mk
 	cat $< | sed \
 	-e "s|%prefix%|$(prefix)|" \
 	-e "s|%exec_prefix%|$(exec_prefix)|" \
@@ -57,7 +57,7 @@ mozilla-config:: mozilla-config.in Makefile.in Makefile
 	-e "s|%FULL_NSPR_LIBS%|$(FULL_NSPR_LIBS)|" \
 	-e "s|%FULL_NSPR_CFLAGS%|$(FULL_NSPR_CFLAGS)|" > $@
 
-%.pc : %.pc.in Makefile.in Makefile
+%.pc : %.pc.in Makefile.in Makefile $(DEPTH)/config/autoconf.mk
 	cat $< | sed \
 	-e "s|%prefix%|$(prefix)|" \
 	-e "s|%exec_prefix%|$(exec_prefix)|" \
