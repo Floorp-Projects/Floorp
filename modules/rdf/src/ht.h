@@ -53,7 +53,7 @@
 
 	/* external string references in allxpstr */
 extern	int	RDF_HTML_STR, RDF_HTML_STR_1, RDF_HTML_STR_2, RDF_HTML_STR_3;
-extern	int	RDF_HTML_STR_4, RDF_HTML_STR_5;
+extern	int	RDF_HTML_STR_4, RDF_HTML_STR_5, RDF_HTML_STR_NUMBER;
 extern	int	RDF_HTML_WINDATE, RDF_HTML_MACDATE, RDF_CMD_0, RDF_DATA_1, RDF_DATA_2;
 extern	int	RDF_DELETEFILE, RDF_UNABLETODELETEFILE, RDF_DELETEFOLDER;
 extern	int	RDF_UNABLETODELETEFOLDER, RDF_SITEMAPNAME;
@@ -62,6 +62,11 @@ extern	int	RDF_NEWWORKSPACEPROMPT, RDF_DELETEWORKSPACE;
 extern	int	RDF_ADDITIONS_ALLOWED, RDF_DELETION_ALLOWED;
 extern	int	RDF_ICON_URL_LOCKED, RDF_NAME_LOCKED, RDF_COPY_ALLOWED;
 extern	int	RDF_MOVE_ALLOWED, RDF_WORKSPACE_POS_LOCKED;
+extern	int	RDF_MAIN_TITLE, RDF_COLOR_TITLE, RDF_HTML_INFOHEADER_STR;
+extern	int	RDF_MISSION_CONTROL_TITLE, RDF_TREE_COLORS_TITLE, RDF_SELECTION_COLORS_TITLE;
+extern	int	RDF_COLUMN_COLORS_TITLE, RDF_TITLEBAR_COLORS_TITLE, RDF_HTML_MAININFOHEADER_STR;
+extern	int	RDF_HTML_EMPTYHEADER_STR, RDF_HTML_COLOR_STR, RDF_SETCOLOR_JS, RDF_DEFAULTCOLOR_JS;
+extern	int	RDF_COLOR_LAYER, RDF_HTMLCOLOR_STR;
 
 #ifdef	HT_PASSWORD_RTNS
 extern	int	RDF_NEWPASSWORD, RDF_CONFIRMPASSWORD;
@@ -269,6 +274,7 @@ void				addHtmlElement(HT_Resource node, RDF_Resource token, uint32 tokenType);
 void				freeHtmlElementList();
 _htmlElementPtr			findHtmlElement(void *token);
 void				freeHtmlElement(void *token);
+char *				constructHTMLTagData(char *dynStr, int strID, char *data);
 char *				constructHTML(char *dynStr, HT_Resource node, void *token, uint32 tokenType);
 char *				constructHTMLPermission(char *dynStr, HT_Resource node, RDF_Resource token, char *permText);
 PRBool				htIsOpLocked(HT_Resource node, RDF_Resource token);

@@ -373,7 +373,8 @@ lockedp (RDF_Resource r)
 
 uint8
 resourceType (RDF_Resource r)
-{ return r->type;
+{
+ return r->type;
 }
 
 

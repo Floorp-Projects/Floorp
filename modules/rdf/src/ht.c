@@ -206,6 +206,7 @@ deleteWorkspace(HT_Pane pane, RDF_Resource r)
 void
 htrdfNotifFunc (RDF_Event ns, void* pdata)
 {
+	HT_Event		theEvent;
 	HT_Pane			pane;
 	HT_Resource		htr;
 	PRHashTable		*hash;
@@ -266,11 +267,19 @@ htrdfNotifFunc (RDF_Event ns, void* pdata)
 		}
 		else
 		{
+			if (aev->s == gNavCenter->RDF_HTMLURL)
+			{
+				theEvent = HT_EVENT_VIEW_HTML_ADD;
+			}
+			else
+			{
+				theEvent = HT_EVENT_NODE_VPROP_CHANGED;
+			}
 			htr = PR_HashTableLookup(hash, aev->u);
 			while (htr != NULL)
 			{
 				resynchItem(htr, aev->s, aev->v, TRUE);
-				sendNotification(htr, HT_EVENT_NODE_VPROP_CHANGED);
+				sendNotification(htr, theEvent);
 				htr = htr->nextItem;
 			}
 		}
@@ -299,11 +308,19 @@ htrdfNotifFunc (RDF_Event ns, void* pdata)
 		}
 		else
 		{
+			if (uev->s == gNavCenter->RDF_HTMLURL)
+			{
+				theEvent = HT_EVENT_VIEW_HTML_REMOVE;
+			}
+			else
+			{
+				theEvent = HT_EVENT_NODE_VPROP_CHANGED;
+			}
 			htr = PR_HashTableLookup(hash, (RDF_Resource)uev->u);
 			while (htr != NULL)
 			{
 				resynchItem(htr, uev->s, uev->v, FALSE);
-				sendNotification(htr, HT_EVENT_NODE_VPROP_CHANGED);
+				sendNotification(htr, theEvent);
 				htr = htr->nextItem;
 			}      
 		}
@@ -4212,7 +4229,7 @@ HT_GetNodeData (HT_Resource node, void *token, uint32 tokenType, void **nodeData
 		{
 			if (token == gWebData->RDF_URL)
 			{
-				data =  resourceID(node->node);
+				data = resourceID(node->node);
 			}
 			else
 			{
@@ -4227,7 +4244,10 @@ HT_GetNodeData (HT_Resource node, void *token, uint32 tokenType, void **nodeData
 			}
 #endif
 
-			foundData = true;
+			if (data != NULL)
+			{
+				foundData = true;
+			}
 		}
 
 		if (values = (HT_Value)getMem(sizeof(HT_ValueStruct)))
@@ -4351,7 +4371,8 @@ HT_IsNodeDataEditable(HT_Resource node, void *token, uint32 tokenType)
 		if (((token == gCoreVocab->RDF_name) && (!htIsOpLocked(node, gNavCenter->RDF_NameLock))) ||
 		    ((token == gNavCenter->RDF_largeIcon) && (!htIsOpLocked(node, gNavCenter->RDF_IconLock))) ||
 		    ((token == gNavCenter->RDF_smallIcon) && (!htIsOpLocked(node, gNavCenter->RDF_IconLock))) ||
-		    (token == gWebData->RDF_description) ||
+		    (token == gWebData->RDF_description) || (token == gNavCenter->RDF_URLShortcut) ||
+		    (token == gNavCenter->RDF_HTMLURL) || (token == gNavCenter->RDF_HTMLHeight) ||
 		    (token == gNavCenter->treeFGColor) || (token == gNavCenter->treeBGColor) ||
 		    (token == gNavCenter->treeBGURL) || (token == gNavCenter->showTreeConnections) ||
 		    (token == gNavCenter->treeConnectionFGColor) || (token == gNavCenter->treeOpenTriggerIconURL) ||
@@ -4370,13 +4391,13 @@ HT_IsNodeDataEditable(HT_Resource node, void *token, uint32 tokenType)
 			(token == gNavCenter->RDF_Password) ||
 #endif
 			((gMissionControlEnabled == true) && 
-			(token == gNavCenter->RDF_AddLock) ||
+			((token == gNavCenter->RDF_AddLock) ||
 			(token == gNavCenter->RDF_DeleteLock) ||
 			(token == gNavCenter->RDF_IconLock) ||
 			(token == gNavCenter->RDF_NameLock) ||
 			(token == gNavCenter->RDF_CopyLock) ||
 			(token == gNavCenter->RDF_MoveLock) ||
-			(token == gNavCenter->RDF_WorkspacePosLock)))
+			(token == gNavCenter->RDF_WorkspacePosLock))))
 		{
 			if (tokenType == HT_COLUMN_STRING)
 			{
@@ -4841,7 +4862,8 @@ rdfProcDialogHandler(XPDialogState *dlgstate, char **argv, int argc, unsigned in
 	_htmlElementPtr         htmlElement;
 	int			loop;
 	void			*data = NULL;
-	char			*dynStr = NULL;
+	char			*dynStr = NULL, *preHTMLdynStr = NULL, *postHTMLdynStr = NULL;
+	PRInt32			val;
 
 	switch(button)
 	{
@@ -4918,14 +4940,26 @@ rdfProcDialogHandler(XPDialogState *dlgstate, char **argv, int argc, unsigned in
 						{
 							dirty = TRUE;
 						}
+						if (dirty == TRUE)
+						{
+							HT_SetNodeData (htmlElement->node,
+									htmlElement->token,
+									htmlElement->tokenType,
+									argv[loop+1]);
+						}
 						break;
-					}
-					if (dirty == TRUE)
-					{
-						HT_SetNodeData (htmlElement->node,
-								htmlElement->token,
-								htmlElement->tokenType,
-								argv[loop+1]);
+
+						case	HT_COLUMN_INT:
+						val = atol(argv[loop+1]);
+						if (dirty == TRUE)
+						{
+							HT_SetNodeData (htmlElement->node,
+									htmlElement->token,
+									htmlElement->tokenType,
+									&val);
+						}
+						break;
+
 					}
 				}
 				break;
@@ -4940,6 +4974,10 @@ rdfProcDialogHandler(XPDialogState *dlgstate, char **argv, int argc, unsigned in
 
 		case	XP_DIALOG_MOREINFO_BUTTON:
 		node = htmlElementList->node;
+
+		preHTMLdynStr = constructHTMLTagData(preHTMLdynStr, RDF_SETCOLOR_JS, NULL);
+
+		dynStr = constructHTMLTagData(dynStr, RDF_HTML_INFOHEADER_STR, XP_GetString(RDF_TREE_COLORS_TITLE));
 		dynStr = constructHTML(dynStr, node, gNavCenter->treeFGColor, HT_COLUMN_STRING);
 		dynStr = constructHTML(dynStr, node, gNavCenter->treeBGColor, HT_COLUMN_STRING);
 		dynStr = constructHTML(dynStr, node, gNavCenter->treeBGURL, HT_COLUMN_STRING);
@@ -4947,10 +4985,21 @@ rdfProcDialogHandler(XPDialogState *dlgstate, char **argv, int argc, unsigned in
 		dynStr = constructHTML(dynStr, node, gNavCenter->treeConnectionFGColor, HT_COLUMN_STRING);
 		dynStr = constructHTML(dynStr, node, gNavCenter->treeOpenTriggerIconURL, HT_COLUMN_STRING);
 		dynStr = constructHTML(dynStr, node, gNavCenter->treeClosedTriggerIconURL, HT_COLUMN_STRING);
+		dynStr = constructHTML(dynStr, node, gNavCenter->triggerPlacement, HT_COLUMN_STRING);
 
+		dynStr = constructHTMLTagData(dynStr, RDF_HTML_EMPTYHEADER_STR, "");
+		dynStr = constructHTMLTagData(dynStr, RDF_HTML_INFOHEADER_STR, XP_GetString(RDF_TITLEBAR_COLORS_TITLE));
+		dynStr = constructHTML(dynStr, node, gNavCenter->titleBarFGColor, HT_COLUMN_STRING);
+		dynStr = constructHTML(dynStr, node, gNavCenter->titleBarBGColor, HT_COLUMN_STRING);
+		dynStr = constructHTML(dynStr, node, gNavCenter->titleBarBGURL, HT_COLUMN_STRING);
+
+		dynStr = constructHTMLTagData(dynStr, RDF_HTML_EMPTYHEADER_STR, "");
+		dynStr = constructHTMLTagData(dynStr, RDF_HTML_INFOHEADER_STR, XP_GetString(RDF_SELECTION_COLORS_TITLE));
 		dynStr = constructHTML(dynStr, node, gNavCenter->selectionFGColor, HT_COLUMN_STRING);
 		dynStr = constructHTML(dynStr, node, gNavCenter->selectionBGColor, HT_COLUMN_STRING);
 
+		dynStr = constructHTMLTagData(dynStr, RDF_HTML_EMPTYHEADER_STR, "");
+		dynStr = constructHTMLTagData(dynStr, RDF_HTML_INFOHEADER_STR, XP_GetString(RDF_COLUMN_COLORS_TITLE));
 		dynStr = constructHTML(dynStr, node, gNavCenter->columnHeaderFGColor, HT_COLUMN_STRING);
 		dynStr = constructHTML(dynStr, node, gNavCenter->columnHeaderBGColor, HT_COLUMN_STRING);
 		dynStr = constructHTML(dynStr, node, gNavCenter->columnHeaderBGURL, HT_COLUMN_STRING);
@@ -4961,20 +5010,45 @@ rdfProcDialogHandler(XPDialogState *dlgstate, char **argv, int argc, unsigned in
 		dynStr = constructHTML(dynStr, node, gNavCenter->sortColumnFGColor, HT_COLUMN_STRING);
 		dynStr = constructHTML(dynStr, node, gNavCenter->sortColumnBGColor, HT_COLUMN_STRING);
 		dynStr = constructHTML(dynStr, node, gNavCenter->showColumnHilite, HT_COLUMN_STRING);
-
-		dynStr = constructHTML(dynStr, node, gNavCenter->titleBarFGColor, HT_COLUMN_STRING);
-		dynStr = constructHTML(dynStr, node, gNavCenter->titleBarBGColor, HT_COLUMN_STRING);
-		dynStr = constructHTML(dynStr, node, gNavCenter->titleBarBGURL, HT_COLUMN_STRING);
-
 		dynStr = constructHTML(dynStr, node, gNavCenter->showDivider, HT_COLUMN_STRING);
 		dynStr = constructHTML(dynStr, node, gNavCenter->dividerColor, HT_COLUMN_STRING);
-		dynStr = constructHTML(dynStr, node, gNavCenter->triggerPlacement, HT_COLUMN_STRING);
 
-		strings = XP_GetDialogStrings(RDF_HTML_STR);
-		if (strings != NULL && dynStr != NULL)
+		postHTMLdynStr = constructHTMLTagData(postHTMLdynStr, RDF_COLOR_LAYER, resourceID(gNavCenter->treeFGColor));
+		postHTMLdynStr = constructHTMLTagData(postHTMLdynStr, RDF_DEFAULTCOLOR_JS, resourceID(gNavCenter->treeFGColor));
+		postHTMLdynStr = constructHTMLTagData(postHTMLdynStr, RDF_COLOR_LAYER, resourceID(gNavCenter->treeBGColor));
+		postHTMLdynStr = constructHTMLTagData(postHTMLdynStr, RDF_DEFAULTCOLOR_JS, resourceID(gNavCenter->treeBGColor));
+		postHTMLdynStr = constructHTMLTagData(postHTMLdynStr, RDF_COLOR_LAYER, resourceID(gNavCenter->treeConnectionFGColor));
+		postHTMLdynStr = constructHTMLTagData(postHTMLdynStr, RDF_DEFAULTCOLOR_JS, resourceID(gNavCenter->treeConnectionFGColor));
+		postHTMLdynStr = constructHTMLTagData(postHTMLdynStr, RDF_COLOR_LAYER, resourceID(gNavCenter->titleBarFGColor));
+		postHTMLdynStr = constructHTMLTagData(postHTMLdynStr, RDF_DEFAULTCOLOR_JS, resourceID(gNavCenter->titleBarFGColor));
+		postHTMLdynStr = constructHTMLTagData(postHTMLdynStr, RDF_COLOR_LAYER, resourceID(gNavCenter->titleBarBGColor));
+		postHTMLdynStr = constructHTMLTagData(postHTMLdynStr, RDF_DEFAULTCOLOR_JS, resourceID(gNavCenter->titleBarBGColor));
+		postHTMLdynStr = constructHTMLTagData(postHTMLdynStr, RDF_COLOR_LAYER, resourceID(gNavCenter->selectionFGColor));
+		postHTMLdynStr = constructHTMLTagData(postHTMLdynStr, RDF_DEFAULTCOLOR_JS, resourceID(gNavCenter->selectionFGColor));
+		postHTMLdynStr = constructHTMLTagData(postHTMLdynStr, RDF_COLOR_LAYER, resourceID(gNavCenter->selectionBGColor));
+		postHTMLdynStr = constructHTMLTagData(postHTMLdynStr, RDF_DEFAULTCOLOR_JS, resourceID(gNavCenter->selectionBGColor));
+		postHTMLdynStr = constructHTMLTagData(postHTMLdynStr, RDF_COLOR_LAYER, resourceID(gNavCenter->columnHeaderFGColor));
+		postHTMLdynStr = constructHTMLTagData(postHTMLdynStr, RDF_DEFAULTCOLOR_JS, resourceID(gNavCenter->columnHeaderFGColor));
+		postHTMLdynStr = constructHTMLTagData(postHTMLdynStr, RDF_COLOR_LAYER, resourceID(gNavCenter->columnHeaderBGColor));
+		postHTMLdynStr = constructHTMLTagData(postHTMLdynStr, RDF_DEFAULTCOLOR_JS, resourceID(gNavCenter->columnHeaderBGColor));
+		postHTMLdynStr = constructHTMLTagData(postHTMLdynStr, RDF_COLOR_LAYER, resourceID(gNavCenter->selectedColumnHeaderFGColor));
+		postHTMLdynStr = constructHTMLTagData(postHTMLdynStr, RDF_DEFAULTCOLOR_JS, resourceID(gNavCenter->selectedColumnHeaderFGColor));
+		postHTMLdynStr = constructHTMLTagData(postHTMLdynStr, RDF_COLOR_LAYER, resourceID(gNavCenter->selectedColumnHeaderBGColor));
+		postHTMLdynStr = constructHTMLTagData(postHTMLdynStr, RDF_DEFAULTCOLOR_JS, resourceID(gNavCenter->selectedColumnHeaderBGColor));
+		postHTMLdynStr = constructHTMLTagData(postHTMLdynStr, RDF_COLOR_LAYER, resourceID(gNavCenter->sortColumnFGColor));
+		postHTMLdynStr = constructHTMLTagData(postHTMLdynStr, RDF_DEFAULTCOLOR_JS, resourceID(gNavCenter->sortColumnFGColor));
+		postHTMLdynStr = constructHTMLTagData(postHTMLdynStr, RDF_COLOR_LAYER, resourceID(gNavCenter->sortColumnBGColor));
+		postHTMLdynStr = constructHTMLTagData(postHTMLdynStr, RDF_DEFAULTCOLOR_JS, resourceID(gNavCenter->sortColumnBGColor));
+		postHTMLdynStr = constructHTMLTagData(postHTMLdynStr, RDF_COLOR_LAYER, resourceID(gNavCenter->dividerColor));
+		postHTMLdynStr = constructHTMLTagData(postHTMLdynStr, RDF_DEFAULTCOLOR_JS, resourceID(gNavCenter->dividerColor));
+
+		strings = XP_GetDialogStrings(RDF_HTMLCOLOR_STR);
+		if ((strings != NULL) && (dynStr != NULL))
 		{
-			XP_CopyDialogString(strings, 0, dynStr);
-			XP_MakeHTMLDialog(NULL, &rdfColorPropDialogInfo, 0,
+			if (preHTMLdynStr != NULL)	XP_CopyDialogString(strings, 0, preHTMLdynStr);
+			XP_CopyDialogString(strings, 1, dynStr);
+			if (postHTMLdynStr != NULL)	XP_CopyDialogString(strings, 2, postHTMLdynStr);
+			XP_MakeHTMLDialog(NULL, &rdfColorPropDialogInfo, RDF_COLOR_TITLE,
 				strings, node, PR_FALSE);
 		}
 		if (dynStr != NULL)	XP_FREE(dynStr);
@@ -5077,13 +5151,43 @@ freeHtmlElement(void *token)
 
 
 char *
+constructHTMLTagData(char *dynStr, int strID, char *data)
+{
+	char			*html, *temp1, *temp2;
+
+	if ((html = XP_GetString(strID)) != NULL)
+	{
+		/* yikes... need to find a better solution */
+		if (data == NULL)	data="";
+		temp1 = PR_smprintf(html, data, data, data, data, data, data, data, data);
+		if (temp1 != NULL)
+		{
+			if (dynStr != NULL)
+			{
+				temp2 = PR_smprintf("%s%s",dynStr, temp1);
+				XP_FREE(temp1);
+				XP_FREE(dynStr);
+				dynStr = temp2;
+			}
+			else
+			{
+				dynStr = temp1;
+			}
+		}
+	}
+	return(dynStr);
+}
+
+
+
+char *
 constructHTML(char *dynStr, HT_Resource node, void *token, uint32 tokenType)
 {
 	struct tm		*time;
 	time_t			dateVal;
 	PRBool			isEditable;
-	char			*html = NULL, *temp1, *temp2;
-	void			*data;
+	char			*html = NULL, *temp1 = NULL, *temp2;
+	char			*data = NULL, *tokenName;
 	char			buffer[128];
 
 	XP_ASSERT(node != NULL);
@@ -5143,6 +5247,25 @@ constructHTML(char *dynStr, HT_Resource node, void *token, uint32 tokenType)
 	
 	addHtmlElement(node, token, tokenType);
 
+	tokenName = (char *) RDF_GetSlotValue(gNCDB, token,
+					gCoreVocab->RDF_name,
+					RDF_STRING_TYPE, false, true);
+#ifndef	DEBUG_RDF_GetSlotValue_Memory_Needs_Freedom
+
+	if (tokenName != NULL)
+	{
+		tokenName = copyString(tokenName);
+	}
+#endif
+	if (tokenName == NULL)
+	{
+		tokenName = resourceID((RDF_Resource)token);
+		if (tokenName != NULL)
+		{
+			tokenName = copyString(tokenName);
+		}
+	}
+
 	if (isEditable)
 	{
 
@@ -5153,31 +5276,62 @@ constructHTML(char *dynStr, HT_Resource node, void *token, uint32 tokenType)
 		}
 		else
 #endif
+
 		if (token == gWebData->RDF_description)
 		{
 			html = XP_GetString(RDF_HTML_STR_5);
 		}
-		else {
+		else if ((token == gNavCenter->treeFGColor) || (token == gNavCenter->treeBGColor) ||
+			 (token == gNavCenter->selectionFGColor) || (token == gNavCenter->selectionBGColor) ||
+			 (token == gNavCenter->columnHeaderFGColor) || (token == gNavCenter->columnHeaderBGColor) ||
+			 (token == gNavCenter->sortColumnFGColor) || (token == gNavCenter->sortColumnBGColor) ||
+			 (token == gNavCenter->titleBarFGColor) || (token == gNavCenter->titleBarBGColor) ||
+			 (token == gNavCenter->selectedColumnHeaderFGColor) || (token == gNavCenter->selectedColumnHeaderBGColor) ||
+			 (token == gNavCenter->treeConnectionFGColor) || (token == gNavCenter->dividerColor))
+		{
+			/* yikes... need to find a better solution */
+			html = XP_GetString(RDF_HTML_COLOR_STR);
+			temp1 = PR_smprintf(html, tokenName, resourceID((RDF_Resource)token),
+					(data) ? data:"", resourceID((RDF_Resource)token),
+					resourceID((RDF_Resource)token));
+		}
+		else if (token == gNavCenter->RDF_HTMLHeight)
+		{
+			html = XP_GetString(RDF_HTML_STR_NUMBER);
+		}
+		else
+		{
 			html = XP_GetString(RDF_HTML_STR_1);
 		}
-		temp1 = PR_smprintf(html,  resourceID((RDF_Resource)token),
-				 resourceID((RDF_Resource)token), (data) ? data:"");
+		if (temp1 == NULL)
+		{
+			temp1 = PR_smprintf(html, tokenName, resourceID((RDF_Resource)token), (data) ? data:"");
+		}
 	}
-	else
+	else if ((data != NULL) && ((*data) != NULL))
 	{
 		html=XP_GetString(RDF_HTML_STR_3);
-		temp1 = PR_smprintf(html,  resourceID((RDF_Resource)token), (data) ? data:"");
+		temp1 = PR_smprintf(html, tokenName, (data) ? data:"");
 	}
-	if (dynStr != NULL)
+
+	if (tokenName != NULL)
 	{
-		temp2 = PR_smprintf("%s%s",dynStr, temp1);
-		XP_FREE(temp1);
-		XP_FREE(dynStr);
-		dynStr = temp2;
+		freeMem(tokenName);
 	}
-	else
+
+	if (temp1 != NULL)
 	{
-		dynStr = temp1;
+		if (dynStr != NULL)
+		{
+			temp2 = PR_smprintf("%s%s",dynStr, temp1);
+			XP_FREE(temp1);
+			XP_FREE(dynStr);
+			dynStr = temp2;
+		}
+		else
+		{
+			dynStr = temp1;
+		}
 	}
 	return(dynStr);
 }
@@ -5247,7 +5401,7 @@ HT_Properties (HT_Resource node)
 	PRBool			isContainer, showPermissions = false;
 	XP_Bool			mcEnabled = false;
 	XPDialogStrings		*strings = NULL;
-	char			*dynStr = NULL, *dynStr2 = NULL;
+	char			*dynStr = NULL, *postHTMLdynStr = NULL, *title;
 
 	XP_ASSERT(node != NULL);
 	XP_ASSERT(node->node != NULL);
@@ -5266,6 +5420,13 @@ HT_Properties (HT_Resource node)
 		showPermissions = true;
 	}
 
+	title = HT_GetNodeName(node);
+	if (title == NULL)
+	{
+		title = HT_GetNodeURL(node);
+	}
+	dynStr = constructHTMLTagData(dynStr, RDF_HTML_MAININFOHEADER_STR, title );
+
 	switch(type)
 	{
 		case    RDF_RT:
@@ -5277,18 +5438,31 @@ HT_Properties (HT_Resource node)
 			dynStr = constructHTML(dynStr, node, (void *)gNavCenter->RDF_Password, HT_COLUMN_STRING);
 #endif
 			dynStr = constructHTML(dynStr, node, (void *)gNavCenter->RDF_bookmarkAddDate, HT_COLUMN_DATE_STRING);
+#ifdef	HT_LARGE_ICON_SUPPORT
 			dynStr = constructHTML(dynStr, node, (void *)gNavCenter->RDF_largeIcon, HT_COLUMN_STRING);
+#endif
 			dynStr = constructHTML(dynStr, node, (void *)gNavCenter->RDF_smallIcon, HT_COLUMN_STRING);
+			if (node->parent == NULL)
+			{
+				dynStr = constructHTML(dynStr, node, (void *)gNavCenter->RDF_HTMLURL, HT_COLUMN_STRING);
+				dynStr = constructHTML(dynStr, node, (void *)gNavCenter->RDF_HTMLHeight, HT_COLUMN_STRING);
+			}
 		}
 		else
 		{
 			dynStr = constructHTML(dynStr, node, (void *)gCoreVocab->RDF_name, HT_COLUMN_STRING);
 			dynStr = constructHTML(dynStr, node, (void *)gWebData->RDF_URL, HT_COLUMN_STRING);
+			if (HT_IsLocalData(node))
+			{
+				dynStr = constructHTML(dynStr, node, (void *)gNavCenter->RDF_URLShortcut, HT_COLUMN_STRING);
+			}
 			dynStr = constructHTML(dynStr, node, (void *)gWebData->RDF_description, HT_COLUMN_STRING);
 			dynStr = constructHTML(dynStr, node, (void *)gNavCenter->RDF_bookmarkAddDate, HT_COLUMN_DATE_STRING);
 			dynStr = constructHTML(dynStr, node, (void *)gWebData->RDF_lastVisitDate, HT_COLUMN_DATE_STRING);
 			dynStr = constructHTML(dynStr, node, (void *)gWebData->RDF_lastModifiedDate, HT_COLUMN_DATE_STRING);
+#ifdef	HT_LARGE_ICON_SUPPORT
 			dynStr = constructHTML(dynStr, node, (void *)gNavCenter->RDF_largeIcon, HT_COLUMN_STRING);
+#endif
 			dynStr = constructHTML(dynStr, node, (void *)gNavCenter->RDF_smallIcon, HT_COLUMN_STRING);
 		}
 		break;
@@ -5312,7 +5486,9 @@ HT_Properties (HT_Resource node)
 			}
 			else
 			{
+#ifdef	HT_LARGE_ICON_SUPPORT
 				dynStr = constructHTML(dynStr, node, (void *)gNavCenter->RDF_largeIcon, HT_COLUMN_STRING);
+#endif
 				dynStr = constructHTML(dynStr, node, (void *)gNavCenter->RDF_smallIcon, HT_COLUMN_STRING);
 			}
 		}
@@ -5336,7 +5512,9 @@ HT_Properties (HT_Resource node)
 			{
 				showPermissions = true;
 				dynStr = constructHTML(dynStr, node, (void *)gCoreVocab->RDF_name, HT_COLUMN_STRING);
+#ifdef	HT_LARGE_ICON_SUPPORT
 				dynStr = constructHTML(dynStr, node, (void *)gNavCenter->RDF_largeIcon, HT_COLUMN_STRING);
+#endif
 				dynStr = constructHTML(dynStr, node, (void *)gNavCenter->RDF_smallIcon, HT_COLUMN_STRING);
 			}
 		}
@@ -5369,18 +5547,22 @@ HT_Properties (HT_Resource node)
 
 	if (showPermissions == true)
 	{
+
+		dynStr = constructHTMLTagData(dynStr, RDF_HTML_EMPTYHEADER_STR, "");
+		dynStr = constructHTMLTagData(dynStr, RDF_HTML_INFOHEADER_STR, XP_GetString(RDF_MISSION_CONTROL_TITLE));
+
 		if (HT_IsContainer(node) && (resourceType(node->node) == RDF_RT))
 		{
-			dynStr2 = constructHTMLPermission(dynStr2, node, gNavCenter->RDF_AddLock, XP_GetString(RDF_ADDITIONS_ALLOWED));
+			postHTMLdynStr = constructHTMLPermission(postHTMLdynStr, node, gNavCenter->RDF_AddLock, XP_GetString(RDF_ADDITIONS_ALLOWED));
 		}
-		dynStr2 = constructHTMLPermission(dynStr2, node, gNavCenter->RDF_DeleteLock, XP_GetString(RDF_DELETION_ALLOWED));
-		dynStr2 = constructHTMLPermission(dynStr2, node, gNavCenter->RDF_IconLock, XP_GetString(RDF_ICON_URL_LOCKED));
-		dynStr2 = constructHTMLPermission(dynStr2, node, gNavCenter->RDF_NameLock, XP_GetString(RDF_NAME_LOCKED));
-		dynStr2 = constructHTMLPermission(dynStr2, node, gNavCenter->RDF_CopyLock, XP_GetString(RDF_COPY_ALLOWED));
-		dynStr2 = constructHTMLPermission(dynStr2, node, gNavCenter->RDF_MoveLock, XP_GetString(RDF_MOVE_ALLOWED));
+		postHTMLdynStr = constructHTMLPermission(postHTMLdynStr, node, gNavCenter->RDF_DeleteLock, XP_GetString(RDF_DELETION_ALLOWED));
+		postHTMLdynStr = constructHTMLPermission(postHTMLdynStr, node, gNavCenter->RDF_IconLock, XP_GetString(RDF_ICON_URL_LOCKED));
+		postHTMLdynStr = constructHTMLPermission(postHTMLdynStr, node, gNavCenter->RDF_NameLock, XP_GetString(RDF_NAME_LOCKED));
+		postHTMLdynStr = constructHTMLPermission(postHTMLdynStr, node, gNavCenter->RDF_CopyLock, XP_GetString(RDF_COPY_ALLOWED));
+		postHTMLdynStr = constructHTMLPermission(postHTMLdynStr, node, gNavCenter->RDF_MoveLock, XP_GetString(RDF_MOVE_ALLOWED));
 		if (HT_IsContainer(node) && (node->parent == NULL))
 		{
-			dynStr2 = constructHTMLPermission(dynStr2, node, gNavCenter->RDF_WorkspacePosLock, XP_GetString(RDF_WORKSPACE_POS_LOCKED));
+			postHTMLdynStr = constructHTMLPermission(postHTMLdynStr, node, gNavCenter->RDF_WorkspacePosLock, XP_GetString(RDF_WORKSPACE_POS_LOCKED));
 		}
 	}
 
@@ -5404,18 +5586,18 @@ HT_Properties (HT_Resource node)
 	if (strings != NULL && dynStr != NULL)
 	{
 		XP_CopyDialogString(strings, 0, dynStr);
-		if (dynStr2 != NULL)
+		if (postHTMLdynStr != NULL)
 		{
-			XP_CopyDialogString(strings, 1, dynStr2);
+			XP_CopyDialogString(strings, 1, postHTMLdynStr);
 		}
 		if (node->parent == NULL)
 		{
-			XP_MakeHTMLDialog(NULL, &rdfWorkspacePropDialogInfo, 0,
+			XP_MakeHTMLDialog(NULL, &rdfWorkspacePropDialogInfo, RDF_MAIN_TITLE,
 				strings, node, PR_FALSE);
 		}
 		else
 		{
-			XP_MakeHTMLDialog(NULL, &rdfPropDialogInfo, 0,
+			XP_MakeHTMLDialog(NULL, &rdfPropDialogInfo, RDF_MAIN_TITLE,
 				strings, node, PR_FALSE);
 		}
 	}
@@ -7397,26 +7579,46 @@ HT_AddRelatedLinksFor(HT_Pane htPane, char *pUrl)
 PR_PUBLIC_API(PRBool)
 HT_HasHTMLPane(HT_View htView)
 {
-	RDF_Resource		r;
+	HT_Resource		top;
 	PRBool			hasHTML = PR_FALSE;
 	char			*url = NULL;
   
 	XP_ASSERT(htView != NULL);
-  
+
 	if (htView != NULL)
 	{
-		r = htView->top->node;
-		url = RDF_GetSlotValue (htView->pane->db, r, gNavCenter->RDF_HTMLURL,
-					RDF_STRING_TYPE, 0, 1);
-		if (url != NULL)
+		if ((top = HT_TopNode(htView)) != NULL)
 		{
-			hasHTML = PR_TRUE;
-
-#ifdef	DEBUG_RDF_GetSlotValue_Memory_Needs_Freedom
-			freeMem(url);
-#endif
-
+			HT_GetNodeData (top, gNavCenter->RDF_HTMLURL, HT_COLUMN_STRING, (void *)&url);
+			if (url != NULL)
+			{
+				hasHTML = PR_TRUE;
+			}
 		}
 	}
 	return(hasHTML);
+}
+
+
+
+PR_PUBLIC_API(char *)
+HT_HTMLPaneHeight(HT_View htView)
+{
+	HT_Resource		top;
+	PRBool			hasHTML = PR_FALSE;
+	char			*paneHeightStr = NULL;
+  
+	XP_ASSERT(htView != NULL);
+
+	if (htView != NULL)
+	{
+		if (HT_HasHTMLPane(htView))
+		{
+			if ((top = HT_TopNode(htView)) != NULL)
+			{
+				HT_GetNodeData (top, gNavCenter->RDF_HTMLHeight, HT_COLUMN_STRING, (void *)&paneHeightStr);
+			}
+		}
+	}
+	return(paneHeightStr);
 }

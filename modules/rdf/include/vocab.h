@@ -71,6 +71,7 @@ typedef struct _RDF_NCVocabStruct {
   RDF_Resource RDF_largeIcon;
   RDF_Resource RDF_Guide;
   RDF_Resource RDF_HTMLURL;
+  RDF_Resource RDF_HTMLHeight;
   RDF_Resource RDF_LocalFiles;
   RDF_Resource RDF_Appletalk;
   RDF_Resource RDF_Mail;
@@ -90,6 +91,7 @@ typedef struct _RDF_NCVocabStruct {
   RDF_Resource RDF_resultType;
   RDF_Resource RDF_HTMLType;
   RDF_Resource RDF_Command;
+  RDF_Resource RDF_URLShortcut;
 
   /* NavCenter appearance styles */
 

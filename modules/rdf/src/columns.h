@@ -22,13 +22,18 @@
 
 #include "xp.h"
 #include "xpassert.h"
+#include "xpgetstr.h"
 #include "rdf-int.h"
 #include "htrdf.h"
+#include "utils.h"
 
 
 
 /* columns.c data structures */
 
+extern	int		RDF_NAME_STR, RDF_SHORTCUT_STR, RDF_URL_STR, RDF_DESCRIPTION_STR;
+extern	int		RDF_FIRST_VISIT_STR, RDF_LAST_VISIT_STR, RDF_NUM_ACCESSES_STR;
+extern	int		RDF_CREATED_ON_STR, RDF_LAST_MOD_STR, RDF_SIZE_STR, RDF_ADDED_ON_STR;
 
 
 /* columns.c function prototypes */

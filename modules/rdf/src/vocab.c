@@ -115,16 +115,17 @@ createNavCenterVocab () {
   setResourceType(gNavCenter->RDF_History, HISTORY_RT);
   setResourceType(gNavCenter->RDF_HistoryBySite, HISTORY_RT);
   setResourceType(gNavCenter->RDF_HistoryByDate, HISTORY_RT);
-  gNavCenter->RDF_bookmarkAddDate  = RDF_GetResource(gCoreDB, "bookmarkAddDate", true);
+  gNavCenter->RDF_bookmarkAddDate  = newResource("bookmarkAddDate", RDF_ADDED_ON_STR);
   gNavCenter->RDF_PersonalToolbarFolderCategory = RDF_GetResource(gCoreDB, "PersonalToolbarCat", true);
   gNavCenter->RDF_Column = RDF_GetResource(gCoreDB, "Column", true);
   gNavCenter->RDF_ColumnResource = RDF_GetResource(gCoreDB, "ColumnResource", true);
   gNavCenter->RDF_ColumnWidth = RDF_GetResource(gCoreDB, "ColumnWidth", true);
   gNavCenter->RDF_ColumnIconURL = RDF_GetResource(gCoreDB, "ColumnIconURL", true);
   gNavCenter->RDF_ColumnDataType = RDF_GetResource(gCoreDB, "ColumnDataType", true);
-  gNavCenter->RDF_smallIcon = RDF_GetResource(gCoreDB, "smallIcon", true);
-  gNavCenter->RDF_largeIcon  = RDF_GetResource(gCoreDB, "largeIcon", true);
-  gNavCenter->RDF_HTMLURL = RDF_GetResource(gCoreDB, "htmlURL", true);
+  gNavCenter->RDF_smallIcon = newResource("smallIcon", RDF_ICON_URL_STR);
+  gNavCenter->RDF_largeIcon  = newResource("largeIcon", RDF_LARGE_ICON_URL_STR);
+  gNavCenter->RDF_HTMLURL = newResource("htmlURL", RDF_HTML_URL_STR);
+  gNavCenter->RDF_HTMLHeight = newResource("htmlHeight", RDF_HTML_HEIGHT_STR);
   gNavCenter->RDF_LocalFiles = RDF_GetResource(gCoreDB, "NC:LocalFiles", true);
   gNavCenter->RDF_Appletalk = createContainer("NC:Appletalk");
   setResourceType(gNavCenter->RDF_Appletalk, ATALKVIRTUAL_RT);
@@ -146,39 +147,35 @@ createNavCenterVocab () {
   gNavCenter->RDF_resultType = RDF_GetResource (gCoreDB, "resultType", true);
   gNavCenter->RDF_HTMLType = RDF_GetResource (gCoreDB, "HTMLPage", true);
   gNavCenter->RDF_Command = RDF_GetResource (gCoreDB, "Command", true);
+  gNavCenter->RDF_URLShortcut = RDF_GetResource(gCoreDB, "URLShortcut", true);
 
   /* NavCenter appearance styles */
 
-  gNavCenter->treeFGColor = RDF_GetResource (gCoreDB, "treeFGColor", true);
-  gNavCenter->treeBGColor = RDF_GetResource (gCoreDB, "treeBGColor", true);
-  gNavCenter->treeBGURL = RDF_GetResource (gCoreDB, "treeBGURL", true);
-  gNavCenter->showTreeConnections = RDF_GetResource (gCoreDB, "showTreeConnections", true);
-  gNavCenter->treeConnectionFGColor = RDF_GetResource (gCoreDB, "treeConnectionFGColor", true);
-  gNavCenter->treeOpenTriggerIconURL = RDF_GetResource (gCoreDB, "treeOpenTriggerIconURL", true);
-  gNavCenter->treeClosedTriggerIconURL = RDF_GetResource (gCoreDB, "treeClosedTriggerIconURL", true);
-
-  gNavCenter->selectionFGColor = RDF_GetResource (gCoreDB, "selectionFGColor", true);
-  gNavCenter->selectionBGColor = RDF_GetResource (gCoreDB, "selectionBGColor", true);
-
-  gNavCenter->columnHeaderFGColor = RDF_GetResource (gCoreDB, "columnHeaderFGColor", true);
-  gNavCenter->columnHeaderBGColor = RDF_GetResource (gCoreDB, "columnHeaderBGColor", true);
-  gNavCenter->columnHeaderBGURL = RDF_GetResource (gCoreDB, "columnHeaderBGURL", true);
-  gNavCenter->showColumnHeaders = RDF_GetResource (gCoreDB, "showColumnHeaders", true);
-  gNavCenter->showColumnHeaderDividers = RDF_GetResource (gCoreDB, "showColumnHeaderDividers", true);
-
-  gNavCenter->sortColumnFGColor = RDF_GetResource (gCoreDB, "sortColumnFGColor", true);
-  gNavCenter->sortColumnBGColor = RDF_GetResource (gCoreDB, "sortColumnBGColor", true);
-
-  gNavCenter->titleBarFGColor = RDF_GetResource (gCoreDB, "titleBarFGColor", true);
-  gNavCenter->titleBarBGColor = RDF_GetResource (gCoreDB, "titleBarBGColor", true);
-  gNavCenter->titleBarBGURL = RDF_GetResource (gCoreDB, "titleBarBGURL", true);
-
-  gNavCenter->dividerColor = RDF_GetResource (gCoreDB, "dividerColor", true);
-  gNavCenter->showDivider = RDF_GetResource (gCoreDB, "showDivider", true);
-  gNavCenter->selectedColumnHeaderFGColor = RDF_GetResource (gCoreDB, "selectedColumnHeaderFGColor", true);
-  gNavCenter->selectedColumnHeaderBGColor = RDF_GetResource (gCoreDB, "selectedColumnHeaderBGColor", true);
-  gNavCenter->showColumnHilite = RDF_GetResource (gCoreDB, "showColumnHilite", true);
-  gNavCenter->triggerPlacement = RDF_GetResource (gCoreDB, "triggerPlacement", true);
+  gNavCenter->treeFGColor = newResource("treeFGColor", RDF_FOREGROUND_COLOR_STR);
+  gNavCenter->treeBGColor = newResource("treeBGColor", RDF_BACKGROUND_COLOR_STR);
+  gNavCenter->treeBGURL = newResource("treeBGURL", RDF_BACKGROUND_IMAGE_STR);
+  gNavCenter->showTreeConnections = newResource("showTreeConnections", RDF_SHOW_TREE_CONNECTIONS_STR);
+  gNavCenter->treeConnectionFGColor = newResource("treeConnectionFGColor", RDF_CONNECTION_FG_COLOR_STR);
+  gNavCenter->treeOpenTriggerIconURL = newResource("treeOpenTriggerIconURL", RDF_OPEN_TRIGGER_IMAGE_STR);
+  gNavCenter->treeClosedTriggerIconURL = newResource("treeClosedTriggerIconURL", RDF_CLOSED_TRIGGER_IMAGE_STR);
+  gNavCenter->selectionFGColor = newResource("selectionFGColor", RDF_FOREGROUND_COLOR_STR);
+  gNavCenter->selectionBGColor = newResource("selectionBGColor", RDF_BACKGROUND_COLOR_STR);
+  gNavCenter->columnHeaderFGColor = newResource("columnHeaderFGColor", RDF_FOREGROUND_COLOR_STR);
+  gNavCenter->columnHeaderBGColor = newResource("columnHeaderBGColor", RDF_BACKGROUND_COLOR_STR);
+  gNavCenter->columnHeaderBGURL = newResource("columnHeaderBGURL", RDF_BACKGROUND_IMAGE_STR);
+  gNavCenter->showColumnHeaders = newResource("showColumnHeaders", RDF_SHOW_HEADERS_STR);
+  gNavCenter->showColumnHeaderDividers = newResource("showColumnHeaderDividers", RDF_SHOW_HEADER_DIVIDERS_STR);
+  gNavCenter->sortColumnFGColor = newResource("sortColumnFGColor", RDF_SORT_COLUMN_FG_COLOR_STR);
+  gNavCenter->sortColumnBGColor = newResource("sortColumnBGColor", RDF_SORT_COLUMN_BG_COLOR_STR);
+  gNavCenter->titleBarFGColor = newResource("titleBarFGColor", RDF_FOREGROUND_COLOR_STR);
+  gNavCenter->titleBarBGColor = newResource("titleBarBGColor", RDF_BACKGROUND_COLOR_STR);
+  gNavCenter->titleBarBGURL = newResource("titleBarBGURL", RDF_BACKGROUND_IMAGE_STR);
+  gNavCenter->dividerColor = newResource("dividerColor", RDF_DIVIDER_COLOR_STR);
+  gNavCenter->showDivider = newResource("showDivider", RDF_SHOW_COLUMN_DIVIDERS_STR);
+  gNavCenter->selectedColumnHeaderFGColor = newResource("selectedColumnHeaderFGColor", RDF_SELECTED_HEADER_FG_COLOR_STR);
+  gNavCenter->selectedColumnHeaderBGColor = newResource("selectedColumnHeaderBGColor", RDF_SELECTED_HEADER_BG_COLOR_STR);
+  gNavCenter->showColumnHilite = newResource("showColumnHilite", RDF_SHOW_COLUMN_HILITING_STR);
+  gNavCenter->triggerPlacement = newResource("triggerPlacement", RDF_TRIGGER_PLACEMENT_STR);
 }
 
 
@@ -187,13 +184,35 @@ void
 createWebDataVocab ()
 {
   gWebData = (RDF_WDVocab) getMem(sizeof(RDF_WDVocabStruct));
-  gWebData->RDF_URL =  RDF_GetResource(gCoreDB, "URL", true);
-  gWebData->RDF_description = RDF_GetResource(gCoreDB, "description", 1);
-  gWebData->RDF_Container = RDF_GetResource(gCoreDB, "Container", 1);
-  gWebData->RDF_firstVisitDate = RDF_GetResource(gCoreDB, "firstVisitDate", 1);
-  gWebData->RDF_lastVisitDate = RDF_GetResource(gCoreDB, "lastVisitDate", 1);
-  gWebData->RDF_numAccesses = RDF_GetResource(gCoreDB, "numAccesses", 1);
-  gWebData->RDF_creationDate = RDF_GetResource(gCoreDB, "creationDate", 1);
-  gWebData->RDF_lastModifiedDate = RDF_GetResource(gCoreDB, "lastModifiedDate", 1);
-  gWebData->RDF_size = RDF_GetResource(gCoreDB,  "size", 1);
+  gWebData->RDF_URL =  newResource("URL", RDF_URL_STR);
+  gWebData->RDF_description = newResource("description", RDF_DESCRIPTION_STR);
+  gWebData->RDF_Container = RDF_GetResource (gCoreDB, "Container", true);
+  gWebData->RDF_firstVisitDate = newResource("firstVisitDate", RDF_FIRST_VISIT_STR);
+  gWebData->RDF_lastVisitDate = newResource("lastVisitDate", RDF_LAST_VISIT_STR);
+  gWebData->RDF_numAccesses = newResource("numAccesses", RDF_NUM_ACCESSES_STR);
+  gWebData->RDF_creationDate = newResource("creationDate", RDF_CREATED_ON_STR);
+  gWebData->RDF_lastModifiedDate = newResource("lastModifiedDate", RDF_LAST_MOD_STR);
+  gWebData->RDF_size = newResource("size", RDF_SIZE_STR);
 } 
+
+
+
+RDF_Resource
+newResource(char *id, int optionalNameStrID)
+{
+	RDF_Resource		r, RDF_name;
+	char			*optionalNameStr;
+
+	if ((r = RDF_GetResource(gCoreDB, id, true)) != NULL)
+	{
+		if ((optionalNameStr = XP_GetString(optionalNameStrID)) != NULL)
+		{
+			/* need to have our own private "name" resource */
+			RDF_name = RDF_GetResource(gCoreDB, "name", 1);
+
+			remoteStoreAdd(gRemoteStore, r, RDF_name, copyString(optionalNameStr),
+					RDF_STRING_TYPE, PR_TRUE);
+		}
+	}
+	return(r);
+}

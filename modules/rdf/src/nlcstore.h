@@ -25,6 +25,7 @@
 #include "xp.h"
 #include "mcom_ndbm.h"
 #include "xpassert.h"
+#include "xpgetstr.h"
 
 
 #if !defined(IS_LITTLE_ENDIAN) && !defined(IS_BIG_ENDIAN)
@@ -47,6 +48,8 @@
 
 
 /* nlcstore.c data structures and defines */
+
+extern	int		RDF_PERSONAL_TOOLBAR_NAME;
 
 typedef struct _DBMAsStruct {
   uint8 size[3];

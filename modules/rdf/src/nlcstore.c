@@ -107,9 +107,9 @@ readInBookmarksOnInit(RDFFile f)
 		addSlotValue(f, ptFolder, gCoreVocab->RDF_parent,
 			gNavCenter->RDF_BookmarkFolderCategory,
 			RDF_RESOURCE_TYPE, true);
-		/* XXX localization */
   		addSlotValue(f, ptFolder, gCoreVocab->RDF_name,
-  			"Personal Toolbar", RDF_STRING_TYPE, true );
+  			copyString(XP_GetString(RDF_PERSONAL_TOOLBAR_NAME)),
+  			RDF_STRING_TYPE, true );
 		RDFUtil_SetPTFolder(ptFolder);
   	}
   }

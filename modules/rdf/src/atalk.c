@@ -247,9 +247,7 @@ setAtalkResourceName(RDF_Resource u)
 	{
 		if (u == gNavCenter->RDF_Appletalk)
 		{
-			/* XXX localization */
-
-			val = copyString("Appletalk Zones and File Servers");
+			val = copyString(XP_GetString(RDF_APPLETALK_TOP_NAME));
 		}
 		else if (startsWith("virtualzone://", resourceID(u)))
 		{

@@ -31,6 +31,8 @@
 
 /* atalk.c data structures and defines */
 
+extern	int	RDF_APPLETALK_TOP_NAME;
+
 
 /* atalk.c function prototypes */
 

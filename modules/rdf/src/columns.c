@@ -59,17 +59,17 @@ ColumnsGetSlotValue(RDFT rdf, RDF_Resource u, RDF_Resource s, RDF_ValueType type
 	if ((s == gCoreVocab->RDF_name) && (type == RDF_STRING_TYPE)
 		&& (!inversep) && (tv))
 	{
-		/* XXX localization */
-		if (u == gCoreVocab->RDF_name)			val = copyString("Name");
-		else if (u == gWebData->RDF_URL)		val = copyString("URL");
-		else if (u == gWebData->RDF_description)	val = copyString("Description");
-		else if (u == gWebData->RDF_firstVisitDate)	val = copyString("First Visit");
-		else if (u == gWebData->RDF_lastVisitDate)	val = copyString("Last Visit");
-		else if (u == gWebData->RDF_numAccesses)	val = copyString("Accesses");
-		else if (u == gWebData->RDF_creationDate)	val = copyString("Created");
-		else if (u == gWebData->RDF_lastModifiedDate)	val = copyString("Modified");
-		else if (u == gWebData->RDF_size)		val = copyString("Size");
-		else if (u == gNavCenter->RDF_bookmarkAddDate)	val = copyString("Added");
+		if (u == gCoreVocab->RDF_name)			val = copyString(XP_GetString(RDF_NAME_STR));
+		else if (u == gNavCenter->RDF_URLShortcut)	val = copyString(XP_GetString(RDF_SHORTCUT_STR));
+		else if (u == gWebData->RDF_URL)		val = copyString(XP_GetString(RDF_URL_STR));
+		else if (u == gWebData->RDF_description)	val = copyString(XP_GetString(RDF_DESCRIPTION_STR));
+		else if (u == gWebData->RDF_firstVisitDate)	val = copyString(XP_GetString(RDF_FIRST_VISIT_STR));
+		else if (u == gWebData->RDF_lastVisitDate)	val = copyString(XP_GetString(RDF_LAST_VISIT_STR));
+		else if (u == gWebData->RDF_numAccesses)	val = copyString(XP_GetString(RDF_NUM_ACCESSES_STR));
+		else if (u == gWebData->RDF_creationDate)	val = copyString(XP_GetString(RDF_CREATED_ON_STR));
+		else if (u == gWebData->RDF_lastModifiedDate)	val = copyString(XP_GetString(RDF_LAST_MOD_STR));
+		else if (u == gWebData->RDF_size)		val = copyString(XP_GetString(RDF_SIZE_STR));
+		else if (u == gNavCenter->RDF_bookmarkAddDate)	val = copyString(XP_GetString(RDF_ADDED_ON_STR));
 		else val = copyString(resourceID(u));
 	}
 	else if ((s == gNavCenter->RDF_ColumnDataType) &&
@@ -127,18 +127,32 @@ ColumnsNextValue (RDFT rdf, RDF_Cursor c)
 				case	1:	arc = gWebData->RDF_URL;		break;
 			}
 		}
-		else
+		else do
 		{
 			switch(c->count)
 			{
 				case	0:	arc = gCoreVocab->RDF_name;		break;
-				case	1:	arc = gWebData->RDF_URL;		break;
-				case	2:	arc = gWebData->RDF_description;	break;
-				case	3:	arc = gNavCenter->RDF_bookmarkAddDate;	break;
-				case	4:	arc = gWebData->RDF_lastVisitDate;	break;
-				case	5:	arc = gWebData->RDF_lastModifiedDate;	break;
+				case	1:	
+				if ((idenEqual(c->u, gNavCenter->RDF_BookmarkFolderCategory)) ||
+					((!startsWith("http://", resourceID(c->u))) && endsWith(".rdf", resourceID(c->u))))
+				{
+					arc = gNavCenter->RDF_URLShortcut;
+				}
+				else
+				{
+					/* disallow shortcuts from external RDF graphs, so skip to next column */
+					arc = NULL;
+					++(c->count);
+				}
+				break;
+
+				case	2:	arc = gWebData->RDF_URL;		break;
+				case	3:	arc = gWebData->RDF_description;	break;
+				case	4:	arc = gNavCenter->RDF_bookmarkAddDate;	break;
+				case	5:	arc = gWebData->RDF_lastVisitDate;	break;
+				case	6:	arc = gWebData->RDF_lastModifiedDate;	break;
 			}
-		}
+		} while ((c->count <= 6) && (arc == NULL));
 		break;
 
 		case	HISTORY_RT:

@@ -66,20 +66,26 @@ RDF_Init(RDF_InitParams params)
   char* navCenterURL;
   if ( sRDFInitedB )
     return -1;
+
+  XP_ASSERT(params->profileURL != NULL);
+  XP_ASSERT(params->bookmarksURL != NULL);
+  XP_ASSERT(params->globalHistoryURL != NULL);
+
+  /*
+     copy init params out before doing anything else (such as creating vocabulary)
+     to prevent any XP_GetString round-robin problems (ex: FE could be using XP_GetString
+     to pass in the init strings, which createVocabs() could affect
+  */
+  profileDirURL     = copyString(params->profileURL);
+  gBookmarkURL      = copyString(params->bookmarksURL);
+  gGlobalHistoryURL = copyString(params->globalHistoryURL);
+
   resourceHash = PL_NewHashTable(500, PL_HashString, PL_CompareStrings, PL_CompareValues,  
 				 NULL, NULL);
   RDFglueInitialize();
   MakeRemoteStore("rdf:remoteStore");
   createVocabs();
   sRDFInitedB = PR_TRUE;
-
-  XP_ASSERT(params->profileURL != NULL);
-  XP_ASSERT(params->bookmarksURL != NULL);
-  XP_ASSERT(params->globalHistoryURL != NULL);
-
-  profileDirURL     = copyString(params->profileURL);
-  gBookmarkURL      = copyString(params->bookmarksURL);
-  gGlobalHistoryURL = copyString(params->globalHistoryURL);
 
   PREF_SetDefaultCharPref("browser.NavCenter", "http://rdf.netscape.com/rdf/navcntr.rdf");
   PREF_CopyCharPref("browser.NavCenter", &navCenterURL);

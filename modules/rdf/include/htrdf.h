@@ -125,6 +125,8 @@ typedef HT_NotificationStruct* HT_Notification;
 #define	HT_EVENT_VIEW_WORKSPACE_REFRESH		0x00001000UL
 #define	HT_EVENT_NODE_EDIT			0x00002000UL
 #define	HT_EVENT_WORKSPACE_EDIT			0x00004000UL
+#define	HT_EVENT_VIEW_HTML_ADD			0x00008000UL
+#define	HT_EVENT_VIEW_HTML_REMOVE		0x00010000UL
 #define HT_EVENT_NO_NOTIFICATION_MASK           0x00000000UL
 #define HT_EVENT_DEFAULT_NOTIFICATION_MASK      0xFFFFFFFFUL
 
@@ -477,6 +479,8 @@ PR_PUBLIC_API(RDF) RDF_GetNavCenterDB();
 PR_PUBLIC_API(void) HT_InformRDFOfNewDocument(char* address);
 
 PR_PUBLIC_API(PRBool) HT_HasHTMLPane(HT_View htView);
+PR_PUBLIC_API(char *) HT_HTMLPaneHeight(HT_View htView);
+
 PR_PUBLIC_API(void) HT_AddSitemapFor(HT_Pane htPane, char *pUrl, char *pSitemapUrl, char* name);
 PR_PUBLIC_API(void) HT_AddRelatedLinksFor(HT_Pane htPane, char *pUrl);
 PR_PUBLIC_API(void) HT_ExitPage(HT_Pane htPane, char *pUrl);
