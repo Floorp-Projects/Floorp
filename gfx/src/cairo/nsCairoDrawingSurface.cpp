@@ -86,7 +86,7 @@ nsCairoDrawingSurface::Init(nsCairoDeviceContext *aDC, PRUint32 aWidth, PRUint32
         mXDisplay = aDC->GetXDisplay();
         mPixmap = XCreatePixmap(mXDisplay,
                                 aDC->GetXPixmapParentDrawable(),
-                                aWidth, aHeight, 32);
+                                aWidth, aHeight, 24);
 
         mSurface = cairo_xlib_surface_create (aDC->GetXDisplay(),
                                               mPixmap,

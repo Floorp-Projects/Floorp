@@ -65,18 +65,15 @@ static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
 NS_IMPL_ISUPPORTS1(nsCairoRenderingContext, nsIRenderingContext)
 
 nsCairoRenderingContext::nsCairoRenderingContext() :
-    mBackBuffer(nsnull), mLineStyle(nsLineStyle_kNone), mCairo(nsnull), mSurface(nsnull), mSelectedSurface(nsnull)
+    mLineStyle(nsLineStyle_kNone),
+    mCairo(nsnull)
 {
 }
 
 nsCairoRenderingContext::~nsCairoRenderingContext()
 {
-    if (mBackBuffer)
-        NS_RELEASE(mBackBuffer);
     if (mCairo)
         cairo_destroy(mCairo);
-    if (mSurface)
-        cairo_surface_destroy(mSurface);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -85,20 +82,20 @@ nsCairoRenderingContext::~nsCairoRenderingContext()
 NS_IMETHODIMP
 nsCairoRenderingContext::Init(nsIDeviceContext* aContext, nsIWidget *aWidget)
 {
-    nsCairoDeviceContext *cairoDevCtx = NS_STATIC_CAST(nsCairoDeviceContext*, aContext);
-    nsNativeWidget nativeWidget = aWidget->GetNativeData(NS_NATIVE_WIDGET);
+    nsCairoDeviceContext *cairoDC = NS_STATIC_CAST(nsCairoDeviceContext*, aContext);
 
     mDeviceContext = aContext;
     mWidget = aWidget;
 
-    cairoDevCtx->CreateCairoFor(nativeWidget, &mCairo);
-    mSurface = cairo_current_target_surface(mCairo);
+    mDrawingSurface = new nsCairoDrawingSurface();
+    mDrawingSurface->Init (cairoDC, aWidget);
+
+    mCairo = cairo_create ();
+    cairo_set_target_surface (mCairo, mDrawingSurface->GetCairoSurface());
 
     mClipRegion = new nsCairoRegion();
 
     cairo_select_font (mCairo, "Sans", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
-
-    cairo_save(mCairo);
 
     return NS_OK;
 }
@@ -106,16 +103,19 @@ nsCairoRenderingContext::Init(nsIDeviceContext* aContext, nsIWidget *aWidget)
 NS_IMETHODIMP
 nsCairoRenderingContext::Init(nsIDeviceContext* aContext, nsIDrawingSurface *aSurface)
 {
-    NS_WARNING ("not implemented");
-    mDeviceContext = aContext;
-
     nsCairoDrawingSurface *cds = (nsCairoDrawingSurface *) aSurface;
 
-    mCairo = cairo_create ();
-    cairo_select_font (mCairo, "Sans", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
+    mDeviceContext = aContext;
+    mWidget = nsnull;
 
-    mSurface = cds->GetCairoSurface();
-    cairo_surface_reference(mSurface);
+    mDrawingSurface = (nsCairoDrawingSurface *) cds;
+
+    mCairo = cairo_create ();
+    cairo_set_target_surface (mCairo, mDrawingSurface->GetCairoSurface());
+
+    mClipRegion = new nsCairoRegion();
+
+    cairo_select_font (mCairo, "Sans", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
 
     return NS_OK;
 }
@@ -123,8 +123,13 @@ nsCairoRenderingContext::Init(nsIDeviceContext* aContext, nsIDrawingSurface *aSu
 NS_IMETHODIMP
 nsCairoRenderingContext::Reset(void)
 {
-    cairo_restore(mCairo);
-    cairo_save(mCairo);
+    cairo_surface_t *surf = cairo_current_target_surface (mCairo);
+    cairo_t *cairo = cairo_create ();
+    cairo_set_target_surface (cairo, surf);
+    cairo_destroy (mCairo);
+    mCairo = cairo;
+
+    mClipRegion = new nsCairoRegion();
 
     return NS_OK;
 }
@@ -144,10 +149,10 @@ nsCairoRenderingContext::LockDrawingSurface(PRInt32 aX, PRInt32 aY,
                                             PRInt32 *aWidthBytes,
                                             PRUint32 aFlags)
 {
-    if (mSelectedSurface)
-        return mSelectedSurface->Lock(aX, aY, aWidth, aHeight, aBits, aStride, aWidthBytes, aFlags);
+    if (mOffscreenSurface)
+        return mOffscreenSurface->Lock(aX, aY, aWidth, aHeight, aBits, aStride, aWidthBytes, aFlags);
     else
-        NS_WARNING ("LockDrawingSurface with non-selected surface");
+        return mDrawingSurface->Lock(aX, aY, aWidth, aHeight, aBits, aStride, aWidthBytes, aFlags);
 
     return NS_OK;
 }
@@ -155,10 +160,10 @@ nsCairoRenderingContext::LockDrawingSurface(PRInt32 aX, PRInt32 aY,
 NS_IMETHODIMP
 nsCairoRenderingContext::UnlockDrawingSurface(void)
 {
-    if (mSelectedSurface)
-        return mSelectedSurface->Unlock();
+    if (mOffscreenSurface)
+        return mOffscreenSurface->Unlock();
     else
-        NS_WARNING ("UnlockDrawingSurface with non-selected surface");
+        return mDrawingSurface->Unlock();
 
     return NS_OK;
 }
@@ -166,31 +171,23 @@ nsCairoRenderingContext::UnlockDrawingSurface(void)
 NS_IMETHODIMP
 nsCairoRenderingContext::SelectOffScreenDrawingSurface(nsIDrawingSurface *aSurface)
 {
-    nsCairoDrawingSurface *cds = (nsCairoDrawingSurface *) aSurface;
+    NS_WARNING("not implemented, because I don't know how to unselect the offscreen surface");
+    return NS_ERROR_FAILURE;
 
-    cairo_set_target_surface(mCairo, cds->GetCairoSurface());
-    if (mSurface)
-        cairo_surface_destroy(mSurface);
-    mSurface = cds->GetCairoSurface();
-    cairo_surface_reference (mSurface);
-
-    if (mSelectedSurface)
-        delete mSelectedSurface;
-    mSelectedSurface = (nsCairoDrawingSurface *) aSurface;
-
+    mOffscreenSurface = NS_STATIC_CAST(nsCairoDrawingSurface *, aSurface);
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsCairoRenderingContext::GetDrawingSurface(nsIDrawingSurface **aSurface)
 {
-    if (mSelectedSurface)
-        // XXX should this addref?
-        *aSurface = (nsIDrawingSurface*) mSelectedSurface;
-    else {
-        NS_WARNING ("nsCairoRenderingContext::GetDrawingSurface with non-selected surface!\n");
-        *aSurface = nsnull;
-    }
+    if (mOffscreenSurface)
+        *aSurface = mOffscreenSurface;
+    else if (mDrawingSurface)
+        *aSurface = mDrawingSurface;
+
+    NS_IF_ADDREF (*aSurface);
+    
     return NS_OK;
 }
 
@@ -225,13 +222,6 @@ nsCairoRenderingContext::IsVisibleRect(const nsRect& aRect, PRBool &aIsVisible)
 {
     // XXX
     aIsVisible = PR_TRUE;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCairoRenderingContext::SetClipRect(const nsRect& aRect, nsClipCombine aCombine)
-{
-    // transform rect by current transform matrix and clip
     return NS_OK;
 }
 
@@ -276,7 +266,14 @@ nsCairoRenderingContext::DoCairoClip()
         mClipRegion->FreeRects (rects);
     }
 }
-    
+
+NS_IMETHODIMP
+nsCairoRenderingContext::SetClipRect(const nsRect& aRect, nsClipCombine aCombine)
+{
+    // transform rect by current transform matrix and clip
+    return NS_OK;
+}
+
 NS_IMETHODIMP
 nsCairoRenderingContext::SetClipRegion(const nsIRegion& aRegion,
                                        nsClipCombine aCombine)
@@ -468,8 +465,12 @@ nsCairoRenderingContext::CreateDrawingSurface(const nsRect &aBounds,
                                               nsIDrawingSurface* &aSurface)
 {
     nsCairoDrawingSurface *cds = new nsCairoDrawingSurface();
-    cds->Init ((nsCairoDeviceContext *)mDeviceContext.get(), aBounds.width, aBounds.height, PR_FALSE);
+    nsIDeviceContext *dc = mDeviceContext.get();
+    cds->Init (NS_STATIC_CAST(nsCairoDeviceContext *, dc),
+               aBounds.width, aBounds.height,
+               PR_FALSE);
     aSurface = (nsIDrawingSurface*) cds;
+    NS_ADDREF(aSurface);
 
     return NS_OK;
 }
@@ -477,8 +478,7 @@ nsCairoRenderingContext::CreateDrawingSurface(const nsRect &aBounds,
 NS_IMETHODIMP
 nsCairoRenderingContext::DestroyDrawingSurface(nsIDrawingSurface *aDS)
 {
-    nsCairoDrawingSurface *cds = (nsCairoDrawingSurface *) aDS;
-    cds->Release();
+    NS_RELEASE(aDS);
 
     return NS_OK;
 }
@@ -738,7 +738,7 @@ nsCairoRenderingContext::RetrieveCurrentNativeGraphicData(PRUint32 * ngd)
 NS_IMETHODIMP
 nsCairoRenderingContext::UseBackbuffer(PRBool* aUseBackbuffer)
 {
-    *aUseBackbuffer = PR_TRUE;
+    *aUseBackbuffer = PR_FALSE;
     return NS_OK;
 }
 
@@ -747,45 +747,22 @@ nsCairoRenderingContext::GetBackbuffer(const nsRect &aRequestedSize,
                                        const nsRect &aMaxSize,
                                        nsIDrawingSurface* &aBackbuffer)
 {
-    if (mBackBuffer) {
-        PRUint32 w, h;
-        mBackBuffer->GetDimensions(&w, &h);
-        if (w < (PRUint32) aRequestedSize.width || h < (PRUint32) aRequestedSize.height) {
-            NS_RELEASE(mBackBuffer);
-            mBackBuffer = nsnull;
-        }
-    }
-
-    if (!mBackBuffer) {
-        mBackBuffer = new nsCairoDrawingSurface();
-        mBackBuffer->Init ((nsCairoDeviceContext *)mDeviceContext.get(), aRequestedSize.width, aRequestedSize.height, PR_FALSE);
-        NS_ADDREF(mBackBuffer);
-    }
-
-    aBackbuffer = mBackBuffer;
-    return NS_OK;
+    NS_WARNING("GetBackbuffer: not implemented");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsCairoRenderingContext::ReleaseBackbuffer(void)
 {
-    if (mBackBuffer) {
-        NS_RELEASE(mBackBuffer);
-        mBackBuffer = nsnull;
-    }
-
-    return NS_OK;
+    NS_WARNING("ReleaseBackbuffer: not implemented");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsCairoRenderingContext::DestroyCachedBackbuffer(void)
 {
-    if (mBackBuffer) {
-        NS_RELEASE(mBackBuffer);
-        mBackBuffer = nsnull;
-    }
-
-    return NS_OK;
+    NS_WARNING("DestroyCachedBackbuffer: not implemented");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP

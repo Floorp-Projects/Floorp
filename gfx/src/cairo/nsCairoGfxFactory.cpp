@@ -63,7 +63,7 @@ static NS_IMETHODIMP nsScriptableRegionConstructor(nsISupports *aOuter, REFNSIID
 {
   nsresult rv;
 
-  nsIScriptableRegion *inst;
+  nsIScriptableRegion *inst = nsnull;
 
   if ( !aResult )
   {
