@@ -1148,7 +1148,7 @@ void XFE_PrefsPageMailNewsIdentity::create()
 // Inputs:
 // Side effects: 
 
-void XFE_PrefsPageMailNewsIdentity::init()
+void XFE_PrefsPageMailNewsIdentity::read()
 {
 	XP_ASSERT(m_prefsDataMailNewsIdentity);
 
@@ -1259,7 +1259,7 @@ Boolean XFE_PrefsPageMailNewsIdentity::verify()
 // Inputs:
 // Side effects: 
 
-void XFE_PrefsPageMailNewsIdentity::save()
+void XFE_PrefsPageMailNewsIdentity::write()
 {
 	PrefsDataMailNewsIdentity *fep = m_prefsDataMailNewsIdentity;
 

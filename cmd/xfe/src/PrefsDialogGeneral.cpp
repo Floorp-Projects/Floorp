@@ -479,12 +479,9 @@ void XFE_PrefsPageGeneralAppearance::create()
 	setCreated(TRUE);
 }
 
-// Member:       init
-// Description:  Initializes page for Appearance
-// Inputs:
-// Side effects: 
 
-void XFE_PrefsPageGeneralAppearance::init()
+// Read prefs from PREF backend.
+void XFE_PrefsPageGeneralAppearance::read()
 {
 	XP_ASSERT(m_prefsDataGeneralAppearance);
 
@@ -585,12 +582,9 @@ void XFE_PrefsPageGeneralAppearance::install()
 	}
 }
 
-// Member:       save
-// Description:  
-// Inputs:
-// Side effects: 
 
-void XFE_PrefsPageGeneralAppearance::save()
+// Write prefs UI to PREF backend.
+void XFE_PrefsPageGeneralAppearance::write()
 {
 	PrefsDataGeneralAppearance *fep = m_prefsDataGeneralAppearance;
 	Boolean                     b;
@@ -1197,12 +1191,9 @@ void XFE_PrefsPageGeneralFonts::create()
 	setCreated(TRUE);
 }
 
-// Member:       init
-// Description:  Initializes page for GeneralFonts
-// Inputs:
-// Side effects: 
 
-void XFE_PrefsPageGeneralFonts::init()
+// Read prefs from PREF backend.
+void XFE_PrefsPageGeneralFonts::read()
 {
 	XP_ASSERT(m_prefsDataGeneralFonts);
 
@@ -1245,12 +1236,9 @@ void XFE_PrefsPageGeneralFonts::install()
 	fe_installGeneralFonts();
 }
 
-// Member:       save
-// Description:  
-// Inputs:
-// Side effects: 
 
-void XFE_PrefsPageGeneralFonts::save()
+// Write prefs UI to PREF backend.
+void XFE_PrefsPageGeneralFonts::write()
 {
 	PrefsDataGeneralFonts *fep = m_prefsDataGeneralFonts;
 
@@ -2113,12 +2101,9 @@ void XFE_PrefsPageGeneralColors::create()
 	setCreated(TRUE);
 }
 
-// Member:       init
-// Description:  Initializes page for GeneralColors
-// Inputs:
-// Side effects: 
 
-void XFE_PrefsPageGeneralColors::init()
+// Read prefs from PREF backend.
+void XFE_PrefsPageGeneralColors::read()
 {
 	XP_ASSERT(m_prefsDataGeneralColors);
 
@@ -2223,12 +2208,9 @@ void XFE_PrefsPageGeneralColors::install()
 	}
 }
 
-// Member:       save
-// Description:  
-// Inputs:
-// Side effects: 
 
-void XFE_PrefsPageGeneralColors::save()
+// Write prefs UI to PREF backend.
+void XFE_PrefsPageGeneralColors::write()
 {
 	PrefsDataGeneralColors *fep = m_prefsDataGeneralColors;
 	Boolean                 b;
@@ -2579,7 +2561,8 @@ void XFE_PrefsPageGeneralAdvanced::create()
 }
 
 
-void XFE_PrefsPageGeneralAdvanced::init()
+// Read prefs from PREF backend.
+void XFE_PrefsPageGeneralAdvanced::read()
 {
 	XP_ASSERT(m_prefsDataGeneralAdvanced);
 
@@ -2639,7 +2622,8 @@ void XFE_PrefsPageGeneralAdvanced::install()
 }
 
 
-void XFE_PrefsPageGeneralAdvanced::save()
+// Write prefs UI to PREF backend.
+void XFE_PrefsPageGeneralAdvanced::write()
 {
 	PrefsDataGeneralAdvanced *fep = m_prefsDataGeneralAdvanced;
 	Boolean                  b;
@@ -2693,6 +2677,10 @@ PrefsDataGeneralAdvanced *XFE_PrefsPageGeneralAdvanced::getData()
 // ************************  General/Privacy **************************
 // ********************************************************************
 
+#define PREF_NETWORK_SIGNON_REMEMBERSIGNONS "network.signon.rememberSignons"
+#define PREF_PRIVACY_WARN_NO_POLICY "privacy.warn_no_policy"
+#define PREF_NETWORK_COOKIE_COOKIEBEHAVIOR "network.cookie.cookieBehavior"
+#define PREF_NETWORK_COOKIE_WARNABOUTCOOKIES "network.cookie.warnAboutCookies"
 
 XFE_PrefsPageGeneralPrivacy::XFE_PrefsPageGeneralPrivacy(XFE_PrefsDialog *dialog)
 	: XFE_PrefsPage(dialog),
@@ -2887,60 +2875,61 @@ void XFE_PrefsPageGeneralPrivacy::create()
   setCreated(TRUE);
 }
 
-void XFE_PrefsPageGeneralPrivacy::init()
+
+// Read prefs from PREF backend.
+void XFE_PrefsPageGeneralPrivacy::read()
 {
   XP_ASSERT(m_prefsDataGeneralPrivacy);
 
   PrefsDataGeneralPrivacy *fep = m_prefsDataGeneralPrivacy;
-  XFE_GlobalPrefs          *prefs = &fe_globalPrefs;
-  Boolean                  sensitive;
-  XP_Bool                  initialValue;
+  Boolean   sensitive;
+  XP_Bool   initialBoolValue;
+  int       initialIntValue;
 
   // Privacy
-  sensitive = !PREF_PrefIsLocked("network.signon.rememberSignons");
-  PREF_GetBoolPref("network.signon.rememberSignons", &initialValue);
+  sensitive = !PREF_PrefIsLocked(PREF_NETWORK_SIGNON_REMEMBERSIGNONS);
+  PREF_GetBoolPref(PREF_NETWORK_SIGNON_REMEMBERSIGNONS, &initialBoolValue);
   XtVaSetValues(fep->save_logins_and_passwords, 
-                XmNset, initialValue,
+                XmNset, initialBoolValue,
                 XmNsensitive, sensitive,
                 NULL);
 
-  sensitive = !PREF_PrefIsLocked("privacy.warn_no_policy");
-  PREF_GetBoolPref("privacy.warn_no_policy", &initialValue);
+  sensitive = !PREF_PrefIsLocked(PREF_PRIVACY_WARN_NO_POLICY);
+  PREF_GetBoolPref(PREF_PRIVACY_WARN_NO_POLICY, &initialBoolValue);
   XtVaSetValues(fep->warn_no_privacy, 
-                XmNset, initialValue,
+                XmNset, initialBoolValue,
                 XmNsensitive, sensitive,
                 NULL);
- 
 
   // Cookies
-  sensitive = !PREF_PrefIsLocked("network.cookie.cookieBehavior");
+  sensitive = !PREF_PrefIsLocked(PREF_NETWORK_COOKIE_COOKIEBEHAVIOR);
+  PREF_GetIntPref(PREF_NETWORK_COOKIE_COOKIEBEHAVIOR, &initialIntValue);
   XtVaSetValues(fep->always_accept_cookie_toggle, 
-                XmNset, prefs->accept_cookie == NET_Accept,
+                XmNset, initialIntValue == NET_Accept,
                 XmNsensitive, sensitive,
                 0);
   XtVaSetValues(fep->no_foreign_cookie_toggle, 
-                XmNset, prefs->accept_cookie == NET_DontAcceptForeign,
+                XmNset, initialIntValue == NET_DontAcceptForeign,
                 XmNsensitive, sensitive,
                 0);
   XtVaSetValues(fep->never_accept_cookie_toggle, 
-                XmNset, prefs->accept_cookie == NET_DontUse,
+                XmNset, initialIntValue == NET_DontUse,
                 XmNsensitive, sensitive,
                 0);
   
-  sensitive = !PREF_PrefIsLocked("network.cookie.warnAboutCookies");
+  sensitive = !PREF_PrefIsLocked(PREF_NETWORK_COOKIE_WARNABOUTCOOKIES);
+  PREF_GetBoolPref(PREF_NETWORK_COOKIE_WARNABOUTCOOKIES, &initialBoolValue);
   XtVaSetValues(fep->warn_cookie_toggle, 
-                XmNset, prefs->warn_accept_cookie,
+                XmNset, initialBoolValue,
                 XmNsensitive, sensitive,
                 0);
 
   setInitialized(TRUE);
 }
 
+// Do we need this?  God this code is a mess.
 void XFE_PrefsPageGeneralPrivacy::install()
 {
-  // Legacy code?
-  // fe_installGeneralAdvanced();
-
   if (m_toolbar_needs_updating) {
     // Notify whoever is interested in updating toolbar appearance
     XFE_MozillaApp::theApp()->
@@ -2950,7 +2939,9 @@ void XFE_PrefsPageGeneralPrivacy::install()
   }  
 }
 
-void XFE_PrefsPageGeneralPrivacy::save()
+
+// Write prefs UI to PREF backend.
+void XFE_PrefsPageGeneralPrivacy::write()
 {
   PrefsDataGeneralPrivacy *fep = m_prefsDataGeneralPrivacy;
   Boolean b;
@@ -2959,31 +2950,31 @@ void XFE_PrefsPageGeneralPrivacy::save()
 
   // Privacy
   XtVaGetValues(fep->save_logins_and_passwords, XmNset, &b, 0);
-  PREF_SetBoolPref("network.signon.rememberSignons", (XP_Bool)b);
+  PREF_SetBoolPref(PREF_NETWORK_SIGNON_REMEMBERSIGNONS, (XP_Bool)b);
   
   XtVaGetValues(fep->warn_no_privacy, XmNset, &b, 0);
-  PREF_SetBoolPref("privacy.warn_no_policy", (XP_Bool)b);
+  PREF_SetBoolPref(PREF_PRIVACY_WARN_NO_POLICY, (XP_Bool)b);
   
 
   // Cookies
   XtVaGetValues(fep->always_accept_cookie_toggle, XmNset, &b, 0);
-  if (b) { 
-    fe_globalPrefs.accept_cookie = NET_Accept;
+  if (b) {
+    PREF_SetIntPref(PREF_NETWORK_COOKIE_COOKIEBEHAVIOR, NET_Accept);
   }
 
   XtVaGetValues(fep->no_foreign_cookie_toggle, XmNset, &b, 0);
   if (b) {
-    fe_globalPrefs.accept_cookie = NET_DontAcceptForeign;
+    PREF_SetIntPref(PREF_NETWORK_COOKIE_COOKIEBEHAVIOR, 
+                    NET_DontAcceptForeign);
   }
 
   XtVaGetValues(fep->never_accept_cookie_toggle, XmNset, &b, 0);
-  
   if (b) {
-    fe_globalPrefs.accept_cookie = NET_DontUse;
+    PREF_SetIntPref(PREF_NETWORK_COOKIE_COOKIEBEHAVIOR, NET_DontUse);
   }
 
   XtVaGetValues(fep->warn_cookie_toggle, XmNset, &b, 0);
-  fe_globalPrefs.warn_accept_cookie = b;
+  PREF_SetBoolPref(PREF_NETWORK_COOKIE_WARNABOUTCOOKIES, (XP_Bool)b);
   
   install();
 }
@@ -3362,12 +3353,9 @@ void XFE_PrefsPageGeneralAppl::create()
 	setCreated(TRUE);
 }
 
-// Member:       init
-// Description:  Initializes page for GeneralAppl
-// Inputs:
-// Side effects: 
 
-void XFE_PrefsPageGeneralAppl::init()
+// Read prefs from PREF backend.
+void XFE_PrefsPageGeneralAppl::read()
 {
 	XFE_GlobalPrefs      *prefs = &fe_globalPrefs;
 	XP_ASSERT(m_prefsDataGeneralAppl);
@@ -3527,12 +3515,9 @@ void XFE_PrefsPageGeneralAppl::setModified(Boolean flag)
 	fep->helpers_changed = flag;
 }
 
-// Member:       save
-// Description:  
-// Inputs:
-// Side effects: 
 
-void XFE_PrefsPageGeneralAppl::save()
+// Write prefs UI to PREF backend.
+void XFE_PrefsPageGeneralAppl::write()
 {
 	XP_ASSERT(m_prefsDataGeneralAppl);
 	PrefsDataGeneralAppl *fep = m_prefsDataGeneralAppl;
@@ -4050,12 +4035,9 @@ void XFE_PrefsPageGeneralCache::create()
 	setCreated(TRUE);
 }
 
-// Member:       init
-// Description:  Initializes page for GeneralCache
-// Inputs:
-// Side effects: 
 
-void XFE_PrefsPageGeneralCache::init()
+// Read prefs from PREF backend.
+void XFE_PrefsPageGeneralCache::read()
 {
 	XP_ASSERT(m_prefsDataGeneralCache);
 
@@ -4108,12 +4090,9 @@ void XFE_PrefsPageGeneralCache::install()
 	fe_installGeneralCache();
 }
 
-// Member:       save
-// Description:  
-// Inputs:
-// Side effects: 
 
-void XFE_PrefsPageGeneralCache::save()
+// Write prefs UI to PREF backend.
+void XFE_PrefsPageGeneralCache::write()
 {
 	PrefsDataGeneralCache *fep = m_prefsDataGeneralCache;
 	Boolean                b;
@@ -4444,12 +4423,9 @@ void XFE_PrefsPageGeneralProxies::create()
 	setCreated(TRUE);
 }
 
-// Member:       init
-// Description:  Initializes page for GeneralProxies
-// Inputs:
-// Side effects: 
 
-void XFE_PrefsPageGeneralProxies::init()
+// Read prefs from PREF backend.
+void XFE_PrefsPageGeneralProxies::read()
 {
 	XP_ASSERT(m_prefsDataGeneralProxies);
 
@@ -4495,12 +4471,9 @@ void XFE_PrefsPageGeneralProxies::install()
 	fe_installGeneralProxies();
 }
 
-// Member:       save
-// Description:  
-// Inputs:
-// Side effects: 
 
-void XFE_PrefsPageGeneralProxies::save()
+// Write prefs UI to PREF backend.
+void XFE_PrefsPageGeneralProxies::write()
 {
 	PrefsDataGeneralProxies *fep = m_prefsDataGeneralProxies;
 
@@ -5007,12 +4980,9 @@ void XFE_PrefsPageDiskSpace::create()
 	setCreated(TRUE);
 }
 
-// Member:       init
-// Description:  Initializes page for DiskSpace
-// Inputs:
-// Side effects: 
 
-void XFE_PrefsPageDiskSpace::init()
+// Read prefs from PREF backend.
+void XFE_PrefsPageDiskSpace::read()
 {
 	XP_ASSERT(m_prefsDataDiskSpace);
 
@@ -5115,12 +5085,9 @@ void XFE_PrefsPageDiskSpace::install()
 	fe_installDiskSpace();
 }
 
-// Member:       save
-// Description:  
-// Inputs:
-// Side effects: 
 
-void XFE_PrefsPageDiskSpace::save()
+// Write prefs UI to PREF backend.
+void XFE_PrefsPageDiskSpace::write()
 {
 	PrefsDataDiskSpace *fep = m_prefsDataDiskSpace;
 

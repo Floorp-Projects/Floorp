@@ -410,12 +410,8 @@ void XFE_PrefsPageBrowser::create()
 	setCreated(TRUE);
 }
 
-// Member:       init
-// Description:  Initializes page for Browser
-// Inputs:
-// Side effects: 
-
-void XFE_PrefsPageBrowser::init()
+// Read prefs from PREF backend.
+void XFE_PrefsPageBrowser::read()
 {
 	XP_ASSERT(m_prefsDataBrowser);
 	
@@ -480,12 +476,9 @@ void XFE_PrefsPageBrowser::install()
 	}
 }
 
-// Member:       save
-// Description:  
-// Inputs:
-// Side effects: 
 
-void XFE_PrefsPageBrowser::save()
+// Write pref UI to PREF backend.
+void XFE_PrefsPageBrowser::write()
 {
 	PrefsDataBrowser *fep = m_prefsDataBrowser;
 
@@ -897,12 +890,8 @@ void XFE_PrefsPageBrowserLang::create()
 	setCreated(TRUE);
 }
 
-// Member:       init
-// Description:  Initializes page for BrowserLang
-// Inputs:
-// Side effects: 
 
-void XFE_PrefsPageBrowserLang::init()
+void XFE_PrefsPageBrowserLang::read()
 {
 	XP_ASSERT(m_prefsDataBrowserLang);
 	PrefsDataBrowserLang   *fep = m_prefsDataBrowserLang;
@@ -947,12 +936,9 @@ void XFE_PrefsPageBrowserLang::install()
 	fe_installBrowserLang(new_accept_lang);
 }
 
-// Member:       save
-// Description:  
-// Inputs:
-// Side effects: 
 
-void XFE_PrefsPageBrowserLang::save()
+// Write pref UI to PREF backend.
+void XFE_PrefsPageBrowserLang::write()
 {
 	PrefsDataBrowserLang *fep = m_prefsDataBrowserLang;
 

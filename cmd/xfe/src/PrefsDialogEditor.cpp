@@ -509,12 +509,8 @@ void XFE_PrefsPageEditor::create()
 	setCreated(TRUE);
 }
 
-// Member:       init
-// Description:  Initializes page for Editor
-// Inputs:
-// Side effects: 
 
-void XFE_PrefsPageEditor::init()
+void XFE_PrefsPageEditor::read()
 {
 	XP_ASSERT(m_prefsDataEditor);
 	PrefsDataEditor    *w_data = m_prefsDataEditor;
@@ -659,12 +655,8 @@ void XFE_PrefsPageEditor::install()
 	EDT_EndBatchChanges(context);
 }
 
-// Member:       save
-// Description:  
-// Inputs:
-// Side effects: 
 
-void XFE_PrefsPageEditor::save()
+void XFE_PrefsPageEditor::write()
 {
  	// XFE_PrefsDialog   *theDialog = getPrefsDialog();
 	PrefsDataEditor   *fep = m_prefsDataEditor;
@@ -1225,12 +1217,8 @@ void XFE_PrefsPageEditorAppearance::create()
 	setCreated(TRUE);
 }
 
-// Member:       init
-// Description:  Initializes page for EditorAppearance
-// Inputs:
-// Side effects: 
 
-void XFE_PrefsPageEditorAppearance::init()
+void XFE_PrefsPageEditorAppearance::read()
 {
 	XP_ASSERT(m_prefsDataEditorAppearance);
 	PrefsDataEditorAppearance    *fep = m_prefsDataEditorAppearance;
@@ -1262,12 +1250,8 @@ void XFE_PrefsPageEditorAppearance::install()
 	EDT_EndBatchChanges(context);
 }
 
-// Member:       save
-// Description:  
-// Inputs:
-// Side effects: 
 
-void XFE_PrefsPageEditorAppearance::save()
+void XFE_PrefsPageEditorAppearance::write()
 {
 	// XFE_PrefsDialog            *theDialog = getPrefsDialog();
 	PrefsDataEditorAppearance  *fep = m_prefsDataEditorAppearance;
@@ -1543,12 +1527,8 @@ void XFE_PrefsPageEditorPublish::create()
 	setCreated(TRUE);
 }
 
-// Member:       init
-// Description:  Initializes page for EditorPublish
-// Inputs:
-// Side effects: 
 
-void XFE_PrefsPageEditorPublish::init()
+void XFE_PrefsPageEditorPublish::read()
 {
 	XP_ASSERT(m_prefsDataEditorPublish);
 
@@ -1673,12 +1653,8 @@ void XFE_PrefsPageEditorPublish::install()
 	EDT_EndBatchChanges(context);
 }
 
-// Member:       save
-// Description:  
-// Inputs:
-// Side effects: 
 
-void XFE_PrefsPageEditorPublish::save()
+void XFE_PrefsPageEditorPublish::write()
 {
 	// XFE_PrefsDialog         *theDialog = getPrefsDialog();
 	PrefsDataEditorPublish  *fep = m_prefsDataEditorPublish;

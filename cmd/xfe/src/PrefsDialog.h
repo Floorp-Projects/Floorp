@@ -262,12 +262,12 @@ public:
 
 	// Manipulators
 	virtual void create() = 0;
-	virtual void init() = 0;
+	virtual void read() = 0;
 	virtual void map();
 	virtual void unmap();
 	virtual Boolean verify();
 	virtual void install() = 0;
-	virtual void save() = 0;
+	virtual void write() = 0;
 
 	void setCreated(Boolean);
 	void setInitialized(Boolean);
@@ -309,9 +309,9 @@ public:
 
 	// Manipulators
 	virtual void create();
-	virtual void init();
+	virtual void read();
 	virtual void install();
-	virtual void save();
+	virtual void write();
 
 	// Gets
 	PrefsDataGeneralAppearance *getData();
@@ -339,9 +339,9 @@ public:
 	// Manipulators
 	virtual void create();
 	virtual void relayout(PrefsDataGeneralFonts *fep);
-	virtual void init();
+	virtual void read();
 	virtual void install();
-	virtual void save();
+	virtual void write();
 
 	// Gets
 	PrefsDataGeneralFonts *getData();
@@ -369,9 +369,9 @@ public:
 
 	// Manipulators
 	virtual void create();
-	virtual void init();
+	virtual void read();
 	virtual void install();
-	virtual void save();
+	virtual void write();
 
 	// Gets
 	PrefsDataGeneralColors *getData();
@@ -400,9 +400,9 @@ public:
 
 	// Manipulators
 	virtual void create();
-	virtual void init();
+	virtual void read();
 	virtual void install();
-	virtual void save();
+	virtual void write();
 
 	// Gets
 	PrefsDataGeneralAdvanced *getData();
@@ -427,9 +427,9 @@ public:
   
   // Manipulators
   virtual void create();
-  virtual void init();
+  virtual void read();
   virtual void install();
-  virtual void save();
+  virtual void write();
   
   // Gets
   PrefsDataGeneralPrivacy *getData();
@@ -454,9 +454,9 @@ public:
 
 	// Manipulators
 	virtual void create();
-	virtual void init();
+	virtual void read();
 	virtual void install();
-	virtual void save();
+	virtual void write();
 	virtual void unmap();
 	void setModified(Boolean);
 
@@ -486,9 +486,9 @@ public:
 
 	// Manipulators
 	virtual void create();
-	virtual void init();
+	virtual void read();
 	virtual void install();
-	virtual void save();
+	virtual void write();
 
 	// Gets
 	PrefsDataGeneralCache *getData();
@@ -516,9 +516,9 @@ public:
 
 	// Manipulators
 	virtual void create();
-	virtual void init();
+	virtual void read();
 	virtual void install();
-	virtual void save();
+	virtual void write();
 
 	// Gets
 	PrefsDataGeneralProxies *getData();
@@ -546,9 +546,9 @@ public:
 
 	// Manipulators
 	virtual void create();
-	virtual void init();
+	virtual void read();
 	virtual void install();
-	virtual void save();
+	virtual void write();
 
 	// Gets
 	PrefsDataBrowser *getData();
@@ -578,9 +578,9 @@ public:
 
 	// Manipulators
 	virtual void create();
-	virtual void init();
+	virtual void read();
 	virtual void install();
-	virtual void save();
+	virtual void write();
 
 	void    insertLang(char *lang);
 	void    insertLangAtPos(int pos, char *lang);
@@ -638,6 +638,46 @@ private:
 	int                     m_rowIndex;
 };
 
+
+// ********************* XFE_PrefsPageBrowserSmart  *************************
+class XFE_PrefsPageBrowserSmart : public XFE_PrefsPage
+{
+public:
+
+	// Constructors, Destructors
+
+	XFE_PrefsPageBrowserSmart(XFE_PrefsDialog  *dialog);
+	virtual ~XFE_PrefsPageBrowserSmart();
+
+	// Manipulators
+
+	virtual void create();
+	virtual void read();
+	virtual void install();
+	virtual void write();
+
+	// Gets
+
+	PrefsDataBrowserSmart *getData();
+
+	// Callbacks - page Browser/Smart
+
+// 	static void cb_toggleInternetKeywords(Widget, XtPointer, XtPointer);
+	static void cb_toggleRelatedAutoload(Widget, XtPointer, XtPointer);
+ 	static void cb_toggleRelatedEnabled(Widget, XtPointer, XtPointer);
+
+private:	
+
+	// Data
+	PrefsDataBrowserSmart        *m_prefsDataBrowserSmart;
+
+	XP_Bool		m_rl_need_chrome_update;
+
+ 	void updateRelatedLinksSensitive();
+ 	void updateInternetKeywordsSensitive();
+};
+
+
 #ifdef MOZ_MAIL_NEWS
 
 // ************************* XFE_PrefsPageMailNews  *************************
@@ -652,9 +692,9 @@ public:
 
 	// Manipulators
 	virtual void create();
-	virtual void init();
+	virtual void read();
 	virtual void install();
-	virtual void save();
+	virtual void write();
 
 	// Gets
 	PrefsDataMailNews *getData();
@@ -683,9 +723,9 @@ public:
 
 	// Manipulators
 	virtual void create();
-	virtual void init();
+	virtual void read();
 	virtual void install();
-	virtual void save();
+	virtual void write();
 	virtual Boolean verify();
 
 	// Gets
@@ -815,9 +855,9 @@ public:
 
 	// Manipulators
 	virtual void create();
-	virtual void init();
+	virtual void read();
 	virtual void install();
-	virtual void save();
+	virtual void write();
 	virtual Boolean verify();
 
 	// Callbacks - page Mail News/Mail Server
@@ -845,9 +885,9 @@ public:
     
     MSG_FolderInfo *GetFolderInfoFromPath(char *path,
                                           MSG_FolderInfo *parent=NULL);
-    virtual void init();
+    virtual void read();
     virtual void install();
-    virtual void save();
+    virtual void write();
     virtual Boolean verify();
     
 private:
@@ -903,9 +943,9 @@ public:
     virtual ~XFE_PrefsPageMailNewsHTML();
     
     virtual void create();
-    virtual void init();
+    virtual void read();
     virtual void install();
-    virtual void save();
+    virtual void write();
     virtual Boolean verify();
     
 private:
@@ -930,9 +970,9 @@ public:
     virtual ~XFE_PrefsPageMailNewsReceipts();
     
     virtual void create();
-    virtual void init();
+    virtual void read();
     virtual void install();
-    virtual void save();
+    virtual void write();
     virtual Boolean verify();
         
 private:
@@ -964,9 +1004,9 @@ public:
 
 	// Manipulators
 	virtual void create();
-	virtual void init();
+	virtual void read();
 	virtual void install();
-	virtual void save();
+	virtual void write();
 	virtual Boolean verify();
 
 	// Gets
@@ -997,9 +1037,9 @@ public:
 
 	// Manipulators
 	virtual void create();
-	virtual void init();
+	virtual void read();
 	virtual void install();
-	virtual void save();
+	virtual void write();
 
 	// Gets
 	PrefsDataEditorAppearance *getData();
@@ -1024,9 +1064,9 @@ public:
 
 	// Manipulators
 	virtual void create();
-	virtual void init();
+	virtual void read();
 	virtual void install();
-	virtual void save();
+	virtual void write();
 
 	// Gets
 	PrefsDataEditorPublish *getData();
@@ -1056,9 +1096,9 @@ public:
 
 	// Manipulators
 	virtual void create();
-	virtual void init();
+	virtual void read();
 	virtual void install();
-	virtual void save();
+	virtual void write();
 
 	// Gets
 	PrefsDataOffline *getData();
@@ -1086,9 +1126,9 @@ public:
 
 	// Manipulators
 	virtual void create();
-	virtual void init();
+	virtual void read();
 	virtual void install();
-	virtual void save();
+	virtual void write();
 
 	// Gets
 	PrefsDataOfflineNews *getData();
@@ -1118,9 +1158,9 @@ public:
 
 	// Manipulators
 	virtual void create();
-	virtual void init();
+	virtual void read();
 	virtual void install();
-	virtual void save();
+	virtual void write();
 
 	// Gets
 	PrefsDataDiskSpace *getData();
@@ -1150,9 +1190,9 @@ public:
 
 	// Manipulators
 	virtual void create();
-	virtual void init();
+	virtual void read();
 	virtual void install();
-	virtual void save();
+	virtual void write();
 
 	// Gets
 	PrefsDataHelpFiles *getData();
