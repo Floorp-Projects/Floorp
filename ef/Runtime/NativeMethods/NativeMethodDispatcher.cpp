@@ -187,12 +187,7 @@ PRLibrary *NativeMethodDispatcher::loadLibrary(const char *simpleLibName)
     //free(libName);
   }
 
-  /* XXX The NSPR doc says it's our responsibility to free this, but in 
-   * reality PR_GetLibraryPath() returns a pointer to the actual path. 
-   * So until they fix this or clarify how PR_GetLibraryPath() should
-   * behave, this line shall remain commented out -- Sriram, 8/12/97
-   */
-  /* if (libPath) PR_DELETE(libPath); */
+  if (libPath) PR_DELETE(libPath);
 
   return lib;
 }
