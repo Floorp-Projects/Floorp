@@ -44,6 +44,7 @@ bin/libxpcom_compat.so
 ; [Base Browser Files]
 bin/firefox-bin
 bin/firefox
+bin/mozilla-xremote-client
 bin/run-mozilla.sh
 bin/plugins/libnullplugin.so
 bin/res/cmessage.txt
@@ -183,6 +184,7 @@ bin/chrome/browser.jar
 bin/chrome/classic.jar
 bin/chrome/comm.jar
 bin/chrome/toolkit.jar
+bin/chrome/icons/default/default.xpm
 
 ; [Default Preferences]
 ; All the pref files must be part of base to prevent migration bugs
