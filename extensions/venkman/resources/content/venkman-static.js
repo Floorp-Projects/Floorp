@@ -160,7 +160,8 @@ function dispatch (text, e, flags)
             }
             catch (ex)
             {
-                display (getMsg(MSN_ERR_INTERNAL_DISPATCH, ary[0]), MT_ERROR);
+                display (getMsg(MSN_ERR_INTERNAL_DISPATCH, ary[0].name),
+                         MT_ERROR);
                 display (formatException(ex), MT_ERROR);
             }
             break;
