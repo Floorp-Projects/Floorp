@@ -504,7 +504,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 
   nsCOMPtr<nsIFileChannel> fileChannel = do_QueryInterface(aChannel);
   if (fileChannel) {
-    PRTime modDate;
+    PRTime modDate, usecs;
 
     nsCOMPtr<nsIFile> file;
     rv = fileChannel->GetFile(getter_AddRefs(file));
@@ -514,7 +514,8 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     PRExplodedTime prtime;
     char buf[100];
 
-    PR_ExplodeTime(modDate, PR_LocalTimeParameters, &prtime);
+    LL_MUL(usecs, modDate, PR_USEC_PER_MSEC);
+    PR_ExplodeTime(usecs, PR_LocalTimeParameters, &prtime);
 
     // Use '%#c' for windows, because '%c' is backward-compatible and
     // non-y2k with msvc; '%#c' requests that a full year be used in the
