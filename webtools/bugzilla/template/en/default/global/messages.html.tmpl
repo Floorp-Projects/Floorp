@@ -252,6 +252,10 @@
     intentionally cleared out the "Reassign bug to" 
     field, [% Param("browserbugmessage") %]
 
+  [% ELSIF message_tag == "shutdown" %]
+    [% title = "Bugzilla is Down" %]
+    [% Param("shutdownhtml") %]
+    
   [% ELSIF message_tag == "unknown_keyword" %]
     [% title = "Unknown Keyword" %]
     <code>[% keyword FILTER html %]</code> is not a known keyword. 

@@ -61,10 +61,7 @@ use vars qw($template $vars);
 # this message, of course, since it needs to be available in order for
 # the administrator to open Bugzilla back up.
 if (Param("shutdownhtml") && $0 !~ m:[\\/](do)?editparams.cgi$:) {
-    # The shut down message we are going to display to the user.
-    $::vars->{'title'} = "Bugzilla is Down";
-    $::vars->{'h1'} = "Bugzilla is Down";
-    $::vars->{'message'} = Param("shutdownhtml");
+    $::vars->{'message'} = "shutdown";
     
     # Return the appropriate HTTP response headers.
     print "Content-Type: text/html\n\n";
