@@ -819,7 +819,7 @@ FE_SetTimeout(TimeoutCallbackFunction func, void * closure, uint32 msecs)
                              closure, msecs);
 }
 
-NS_EXPORT(void)
+NS_EXPORT void
 FE_ClearTimeout(void *timer_id)
 {
     il_ss->ClearTimeout(timer_id);
