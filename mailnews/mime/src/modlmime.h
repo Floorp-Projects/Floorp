@@ -31,6 +31,7 @@
 #include "nsMailHeaders.h"
 #include "nsIMimeStreamConverter.h"
 #include "nsIPref.h"
+#include "mozITXTToHTMLConv.h"
 
 #define MIME_DRAFTS
 
@@ -140,6 +141,7 @@ typedef char *(*MimeHTMLGeneratorFunction) (const char *data, void *closure,
 
 struct MimeDisplayOptions
 {
+  mozITXTToHTMLConv   *conv;        // For text conversion...
   nsIPref             *prefs;       /* Connnection to prefs service manager */
   nsMimeOutputType    format_out;   // The format out type
 

@@ -43,91 +43,26 @@ nsresult NS_NewMimeHtmlEmitter(const nsIID& iid, void **result)
  */
 nsMimeHtmlEmitter::nsMimeHtmlEmitter()
 {
+  mFirst = PR_TRUE;
 }
 
 nsMimeHtmlEmitter::~nsMimeHtmlEmitter(void)
 {
 }
 
-// Header handling routines.
-nsresult
-nsMimeHtmlEmitter::StartHeader(PRBool rootMailHeader, PRBool headerOnly, const char *msgID,
-                           const char *outCharset)
-{
-  mDocHeader = rootMailHeader;
-
-  if (mDocHeader)
-  {
-    UtilityWrite("<TABLE BORDER=0>");
-  }  
-  else
-    UtilityWrite("<TABLE BORDER=0>");
-  return NS_OK;
-}
-
-nsresult
-nsMimeHtmlEmitter::AddHeaderField(const char *field, const char *value)
-{
-  if ( (!field) || (!value) )
-    return NS_OK;
-
-  //
-  // This is a check to see what the pref is for header display. If
-  // We should only output stuff that corresponds with that setting.
-  //
-  if (!EmitThisHeaderForPrefSetting(mHeaderDisplayType, field))
-    return NS_OK;
-
-  char  *newValue = nsEscapeHTML(value);
-  if (!newValue)
-    return NS_OK;
-
-  UtilityWrite("<TR>");
-
-  UtilityWrite("<TD>");
-  UtilityWrite("<DIV align=right>");
-  UtilityWrite("<B>");
-
-  // Here is where we are going to try to L10N the tagName so we will always
-  // get a field name next to an emitted header value. Note: Default will always
-  // be the name of the header itself.
-  //
-  nsString  newTagName(field);
-  newTagName.CompressWhitespace(PR_TRUE, PR_TRUE);
-  newTagName.ToUpperCase();
-  char *upCaseField = newTagName.ToNewCString();
-
-  char *l10nTagName = LocalizeHeaderName(upCaseField, field);
-  if ( (!l10nTagName) || (!*l10nTagName) )
-    UtilityWrite(field);
-  else
-  {
-    UtilityWrite(l10nTagName);
-    PR_FREEIF(l10nTagName);
-  }
-
-  // Now write out the actual value itself and move on!
-  //
-  UtilityWrite(":");
-  UtilityWrite("</B>");
-  UtilityWrite("</DIV>");
-  UtilityWrite("</TD>");
-
-  UtilityWrite("<TD>");
-  UtilityWrite(newValue);
-  UtilityWrite("</TD>");
-
-  UtilityWrite("</TR>");
-
-  PR_FREEIF(newValue);
-  nsCRT::free(upCaseField);
-  return NS_OK;
-}
-
 nsresult
 nsMimeHtmlEmitter::EndHeader()
 {
-  UtilityWrite("</TABLE></BLOCKQUOTE>");
+  if (mDocHeader)
+  {
+    // Stylesheet info!
+    UtilityWriteCRLF("<LINK REL=\"STYLESHEET\" HREF=\"chrome://messenger/skin/mailheader.css\">");
+
+    // Make it look consistent...
+    UtilityWriteCRLF("<LINK REL=\"STYLESHEET\" HREF=\"chrome://global/skin\">");
+  }
+ 
+  WriteHTMLHeaders();
   return NS_OK;
 }
 
@@ -139,14 +74,22 @@ nsMimeHtmlEmitter::EndHeader()
 nsresult
 nsMimeHtmlEmitter::StartAttachment(const char *name, const char *contentType, const char *url)
 {
+  if (mFirst)
+    UtilityWrite("<HR WIDTH=\"90%\" SIZE=4>");
+
+  mFirst = PR_FALSE;
+
   UtilityWrite("<CENTER>");
-  UtilityWrite("<TABLE BORDER CELLSPACING=0>");
+  UtilityWrite("<TABLE BORDER>");
   UtilityWrite("<tr>");
   UtilityWrite("<TD>");
 
   UtilityWrite("<CENTER>");
-  UtilityWrite("<B>Attachment: </B>");
+  UtilityWrite("<DIV align=right CLASS=\"headerdisplayname\">");
+
   UtilityWrite(name);
+
+  UtilityWrite("</DIV>");
   UtilityWrite("</CENTER>");
 
   UtilityWrite("</TD>");
@@ -162,16 +105,19 @@ nsMimeHtmlEmitter::AddAttachmentField(const char *field, const char *value)
   if ( (!value) || (!*value) )
     return NS_OK;
 
+  // Don't output this ugly header...
+  if (!nsCRT::strcmp(field, HEADER_X_MOZILLA_PART_URL))
+    return NS_OK;
+
   char  *newValue = nsEscapeHTML(value);
 
   UtilityWrite("<TR>");
 
   UtilityWrite("<TD>");
-  UtilityWrite("<DIV align=right>");
-  UtilityWrite("<B>");
+  UtilityWrite("<DIV align=right CLASS=\"headerdisplayname\">");
+
   UtilityWrite(field);
   UtilityWrite(":");
-  UtilityWrite("</B>");
   UtilityWrite("</DIV>");
   UtilityWrite("</TD>");
   UtilityWrite("<TD>");
@@ -195,13 +141,6 @@ nsMimeHtmlEmitter::EndAttachment()
   UtilityWrite("</TABLE>");
   UtilityWrite("</CENTER>");
   UtilityWrite("<BR>");
-  return NS_OK;
-}
-
-// Attachment handling routines
-nsresult
-nsMimeHtmlEmitter::StartBody(PRBool bodyOnly, const char *msgID, const char *outCharset)
-{
   return NS_OK;
 }
 

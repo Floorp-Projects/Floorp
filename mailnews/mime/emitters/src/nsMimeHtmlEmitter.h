@@ -39,9 +39,6 @@ public:
     virtual       ~nsMimeHtmlEmitter (void);
 
     // Header handling routines.
-    NS_IMETHOD    StartHeader(PRBool rootMailHeader, PRBool headerOnly, const char *msgID,
-                              const char *outCharset);
-    NS_IMETHOD    AddHeaderField(const char *field, const char *value);
     NS_IMETHOD    EndHeader();
 
     // Attachment handling routines
@@ -50,10 +47,10 @@ public:
     NS_IMETHOD    EndAttachment();
 
     // Body handling routines
-    NS_IMETHOD    StartBody(PRBool bodyOnly, const char *msgID, const char *outCharset);
     NS_IMETHOD    WriteBody(const char *buf, PRUint32 size, PRUint32 *amountWritten);
 
 protected:
+    PRBool        mFirst;  // Attachment flag...
 };
 
 /* this function will be used by the factory to generate an class access object....*/

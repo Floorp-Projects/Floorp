@@ -77,6 +77,9 @@ static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
 static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
+// Text Scanning...
+static NS_DEFINE_CID(kTXTToHTMLConvCID, MOZITXTTOHTMLCONV_CID);
+
 extern "C" char     *MIME_DecodeMimePartIIStr(const char *header, char *charset);
 
 static MimeHeadersState MIME_HeaderType;
@@ -367,7 +370,8 @@ NotifyEmittersOfAttachmentList(MimeDisplayOptions     *opt,
 	  if (spec)
 		  nsAllocator::Free(spec);
 
-    if (opt->format_out == nsMimeOutput::nsMimeMessageQuoting)
+    if ( (opt->format_out == nsMimeOutput::nsMimeMessageQuoting) || 
+         (opt->format_out == nsMimeOutput::nsMimeMessagePrintOutput) )
     {
       mimeEmitterAddAttachmentField(opt, HEADER_CONTENT_DESCRIPTION, tmp->description);
       mimeEmitterAddAttachmentField(opt, HEADER_CONTENT_TYPE, tmp->real_type);
@@ -625,6 +629,14 @@ mime_display_stream_complete (nsMIMESession *stream)
     int       status;
     PRBool    abortNow = PR_FALSE;
 
+    // Release the prefs service
+    if ( (obj->options) && (obj->options->prefs) )
+      nsServiceManager::ReleaseService(kPrefCID, obj->options->prefs);
+    
+    // Release the conversion object
+    if ( (obj->options) && (obj->options->conv) )
+      NS_RELEASE(obj->options->conv);
+
     if ((obj->options) && (obj->options->headers == MimeHeadersOnly))
       abortNow = PR_TRUE;
 
@@ -661,11 +673,7 @@ mime_display_stream_complete (nsMIMESession *stream)
       msd->options = 0;
     }
   }
-    
-  // Release the prefs service
-  if ( (obj) && (obj->options) && (obj->options->prefs) )
-    nsServiceManager::ReleaseService(kPrefCID, obj->options->prefs);
-    
+
   if (msd->headers)
   	MimeHeaders_free (msd->headers);
 
@@ -1047,6 +1055,16 @@ GetPrefServiceManager(MimeDisplayOptions *opt)
   return opt->prefs;
 }
 
+// Get the text converter...
+mozITXTToHTMLConv *
+GetTextConverter(MimeDisplayOptions *opt)
+{
+  if (!opt) 
+    return nsnull;
+
+  return opt->conv;
+}
+
 ////////////////////////////////////////////////////////////////
 // Bridge routines for new stream converter XP-COM interface 
 ////////////////////////////////////////////////////////////////
@@ -1111,6 +1129,17 @@ mime_bridge_create_display_stream(
     return nsnull;
   }
 
+  // Need the text converter...
+  rv = nsComponentManager::CreateInstance(kTXTToHTMLConvCID,
+                                          NULL, nsCOMTypeInfo<mozITXTToHTMLConv>::GetIID(),
+                                          (void **)&(msd->options->conv));
+  if (NS_FAILED(rv))
+	{
+    nsServiceManager::ReleaseService(kPrefCID, msd->options->prefs);
+    PR_FREEIF(msd);
+    return nsnull;
+  }
+
   //
   // Set the defaults, based on the context, and the output-type.
   //
@@ -1126,7 +1155,8 @@ mime_bridge_create_display_stream(
       msd->options->fancy_links_p = PR_TRUE;
       break;
 
-	case nsMimeOutput::nsMimeMessageQuoting:        // all HTML quoted output
+	case nsMimeOutput::nsMimeMessageQuoting:        // all HTML quoted/printed output
+  case nsMimeOutput::nsMimeMessagePrintOutput:
       msd->options->fancy_headers_p = PR_TRUE;
       msd->options->fancy_links_p = PR_TRUE;
       break;
@@ -1193,7 +1223,8 @@ mime_bridge_create_display_stream(
 
   //
   // For quoting, don't mess with citatation...
-  if (format_out == nsMimeOutput::nsMimeMessageQuoting || format_out == nsMimeOutput::nsMimeMessageBodyQuoting)
+  if ( format_out == nsMimeOutput::nsMimeMessageQuoting || format_out == nsMimeOutput::nsMimeMessageBodyQuoting || 
+       format_out == nsMimeOutput::nsMimeMessagePrintOutput )
   {
     msd->options->charset_conversion_fn = mime_insert_html_convert_charset;
     msd->options->dont_touch_citations_p = PR_TRUE;

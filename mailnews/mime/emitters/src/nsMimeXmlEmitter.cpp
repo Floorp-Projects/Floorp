@@ -86,12 +86,6 @@ nsMimeXmlEmitter::WriteXMLHeader(const char *msgID)
   UtilityWrite("<?xml version=\"1.0\"?>");
 
   UtilityWriteCRLF("<?xml-stylesheet href=\"chrome://messenger/skin/mailheader.css\" type=\"text/css\"?>");
-  if (mHeaderDisplayType == nsMimeHeaderDisplayTypes::MicroHeaders)
-    UtilityWrite("<?xml-stylesheet href=\"chrome://messenger/skin/mailheader-micro.css\" type=\"text/css\"?>");
-  else if (mHeaderDisplayType == nsMimeHeaderDisplayTypes::NormalHeaders)
-    UtilityWrite("<?xml-stylesheet href=\"chrome://messenger/skin/mailheader-normal.css\" type=\"text/css\"?>");
-  else /* AllHeaders */
-    UtilityWrite("<?xml-stylesheet href=\"chrome://messenger/skin/mailheader-all.css\" type=\"text/css\"?>");
 
   UtilityWrite("<message id=\"");
   UtilityWrite(newValue);

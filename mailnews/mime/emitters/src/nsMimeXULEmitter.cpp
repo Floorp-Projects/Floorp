@@ -65,14 +65,6 @@ nsMimeXULEmitter::nsMimeXULEmitter()
 {
   mCutoffValue = 3;
 
-  // Header cache...
-  mHeaderArray = new nsVoidArray();
-
-  // Setup array for attachments
-  mAttachCount = 0;
-  mAttachArray = new nsVoidArray();
-  mCurrentAttachment = nsnull;
-
   // Vars to handle the body...
   mBody = "";
   mBodyStarted = PR_FALSE;
@@ -92,38 +84,7 @@ nsMimeXULEmitter::nsMimeXULEmitter()
 
 nsMimeXULEmitter::~nsMimeXULEmitter(void)
 {
-  PRInt32 i;
-
-  if (mAttachArray)
-  {
-    for (i=0; i<mAttachArray->Count(); i++)
-    {
-      attachmentInfoType *attachInfo = (attachmentInfoType *)mAttachArray->ElementAt(i);
-      if (!attachInfo)
-        continue;
-    
-      PR_FREEIF(attachInfo->contentType);
-      PR_FREEIF(attachInfo->displayName);
-      PR_FREEIF(attachInfo->urlSpec);
-	  delete attachInfo;
-    }
-    delete mAttachArray;
-  }
-
-  if (mHeaderArray)
-  {
-    for (i=0; i<mHeaderArray->Count(); i++)
-    {
-      headerInfoType *headerInfo = (headerInfoType *)mHeaderArray->ElementAt(i);
-      if (!headerInfo)
-        continue;
-    
-      PR_FREEIF(headerInfo->name);
-      PR_FREEIF(headerInfo->value);
-	  delete headerInfo;
-    }
-    delete mHeaderArray;
-  }
+  PRInt32     i;
 
   if (mMiscStatusArray)
   {
@@ -134,7 +95,7 @@ nsMimeXULEmitter::~nsMimeXULEmitter(void)
         continue;
     
       NS_IF_RELEASE(statusInfo->obj);
-	  delete statusInfo;
+	    delete statusInfo;
     }
 
     delete mMiscStatusArray;
@@ -143,44 +104,17 @@ nsMimeXULEmitter::~nsMimeXULEmitter(void)
 
 // Attachment handling routines
 nsresult
-nsMimeXULEmitter::StartAttachment(const char *name, const char *contentType, const char *url)
-{
-  // Ok, now we will setup the attachment info 
-  mCurrentAttachment = (attachmentInfoType *) PR_NEWZAP(attachmentInfoType);
-  if ( (mCurrentAttachment) && mAttachArray)
-  {
-    ++mAttachCount;
-
-    mCurrentAttachment->displayName = nsCRT::strdup(name);
-    mCurrentAttachment->urlSpec = nsCRT::strdup(url);
-    mCurrentAttachment->contentType = nsCRT::strdup(contentType);
-  }
-
-  return NS_OK;
-}
-
-nsresult
-nsMimeXULEmitter::EndAttachment()
-{
-  // Ok, add the attachment info to the attachment array...
-  if ( (mCurrentAttachment) && (mAttachArray) )
-  {
-    mAttachArray->AppendElement(mCurrentAttachment);
-    mCurrentAttachment = nsnull;
-  }
-
-  return NS_OK;
-}
-
-// Attachment handling routines
-nsresult
 nsMimeXULEmitter::StartBody(PRBool bodyOnly, const char *msgID, const char *outCharset)
 {
+  // Setup everything for META tags and stylesheet info!
   mBody.Append("<HTML>");
-
   mBody.Append("<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=");
   mBody.Append(outCharset);
   mBody.Append("\">");
+
+  // Now for some style...
+  mBody.Append("<LINK REL=\"STYLESHEET\" HREF=\"chrome://messenger/skin/mailheader.css\">");
+  mBody.Append("<LINK REL=\"STYLESHEET\" HREF=\"chrome://global/skin\">");
 
   mBodyStarted = PR_TRUE;
   return NS_OK;
@@ -201,9 +135,6 @@ nsMimeXULEmitter::WriteBody(const char *buf, PRUint32 size, PRUint32 *amountWrit
   return NS_OK;
 }
 
-#define TEMP_FILE_PREFIX    "nsMimeBody"
-
-
 nsresult
 nsMimeXULEmitter::EndBody()
 {
@@ -213,88 +144,95 @@ nsMimeXULEmitter::EndBody()
 }
 
 nsresult
-nsMimeXULEmitter::AddHeaderFieldHTML(const char *field, const char *value)
+nsMimeXULEmitter::BuildListOfStatusProviders() 
 {
-  if ( (!field) || (!value) )
-    return NS_OK;
+  nsresult rv;
 
-  //
-  // This is a check to see what the pref is for header display. If
-  // We should only output stuff that corresponds with that setting.
-  //
-  if (!EmitThisHeaderForPrefSetting(mHeaderDisplayType, field))
-    return NS_OK;
+  // enumerate the registry subkeys
+  nsRegistryKey      key;
+  nsCOMPtr<nsIEnumerator> components;
+  miscStatusType        *newInfo = nsnull;
 
-  char  *newValue = nsEscapeHTML(value);
-  if (!newValue)
-    return NS_OK;
-
-  UtilityWrite("<TR>");
-
-  UtilityWrite("<td>");
-  UtilityWrite("<div align=right>");
-  UtilityWrite("<B>");
-
-  // Here is where we are going to try to L10N the tagName so we will always
-  // get a field name next to an emitted header value. Note: Default will always
-  // be the name of the header itself.
-  //
-  nsCAutoString  newTagName(field);
-  newTagName.CompressWhitespace(PR_TRUE, PR_TRUE);
-  newTagName.ToUpperCase();
-
-  char *l10nTagName = LocalizeHeaderName((const char *) newTagName, field);
-  if ( (!l10nTagName) || (!*l10nTagName) )
-    UtilityWrite(field);
-  else
+  NS_WITH_SERVICE(nsIRegistry, registry, NS_REGISTRY_PROGID, &rv); 
+  if (NS_FAILED(rv)) 
+    return rv;
+  
+  rv = registry->OpenWellKnownRegistry(nsIRegistry::ApplicationComponentRegistry);
+  if (NS_FAILED(rv)) 
+    return rv;
+  
+  rv = registry->GetSubtree(nsIRegistry::Common, NS_IMIME_MISC_STATUS_KEY, &key);
+  if (NS_FAILED(rv)) 
+    return rv;
+  
+  rv = registry->EnumerateSubtrees(key, getter_AddRefs(components));
+  if (NS_FAILED(rv)) 
+    return rv;
+  
+  // go ahead and enumerate through.
+  nsCAutoString actualProgID;
+  rv = components->First();
+  while (NS_SUCCEEDED(rv) && (NS_OK != components->IsDone()))
   {
-    UtilityWrite(l10nTagName);
-    PR_FREEIF(l10nTagName);
+    nsCOMPtr<nsISupports> base;
+    
+    rv = components->CurrentItem(getter_AddRefs(base));
+    if (NS_FAILED(rv)) 
+      return rv;
+    
+    nsCOMPtr<nsIRegistryNode> node;
+    node = do_QueryInterface(base, &rv);
+    if (NS_FAILED(rv)) 
+      return rv;
+    
+    nsXPIDLCString name;
+    rv = node->GetName(getter_Copies(name));
+    if (NS_FAILED(rv)) 
+      return rv;
+    
+    actualProgID = NS_IMIME_MISC_STATUS_KEY;
+    actualProgID.Append(name);
+    
+    // now we've got the PROGID, let's add it to the list...
+    newInfo = (miscStatusType *)PR_NEWZAP(miscStatusType);
+    if (newInfo)
+    {
+      newInfo->obj = GetStatusObjForProgID(actualProgID);
+      if (newInfo->obj)
+      {
+        newInfo->progID = actualProgID;
+        mMiscStatusArray->AppendElement(newInfo);
+      }
+    }
+
+    rv = components->Next();
   }
-
-  // Now write out the actual value itself and move on!
-  //
-  UtilityWrite(":");
-  UtilityWrite("</B>");
-  UtilityWrite("</div>");
-  UtilityWrite("</td>");
-
-  UtilityWrite("<td>");
-  UtilityWrite(newValue);
-  UtilityWrite("</td>");
-
-  UtilityWrite("</TR>");
-
-  PR_FREEIF(newValue);
+  
+  registry->Close();
+ 
   return NS_OK;
 }
 
-//
-// Find a cached header! Note: Do NOT free this value!
-//
-char *
-nsMimeXULEmitter::GetHeaderValue(const char *aHeaderName)
+nsIMimeMiscStatus *
+nsMimeXULEmitter::GetStatusObjForProgID(nsCString aProgID)
 {
-  PRInt32     i;
-  char        *retVal = nsnull;
+  nsresult            rv = NS_OK;
+  nsISupports         *obj = nsnull;
 
-  if (!mHeaderArray)
+  NS_WITH_SERVICE(nsIComponentManager, comMgr, kComponentManagerCID, &rv);
+  if (NS_FAILED(rv)) 
+    return nsnull;
+  
+  nsCID         cid;
+  rv = comMgr->ProgIDToCLSID(aProgID, &cid);
+  if (NS_FAILED(rv))
     return nsnull;
 
-  for (i=0; i<mHeaderArray->Count(); i++)
-  {
-    headerInfoType *headerInfo = (headerInfoType *)mHeaderArray->ElementAt(i);
-    if ( (!headerInfo) || (!headerInfo->name) || (!(*headerInfo->name)) )
-      continue;
-    
-    if (!nsCRT::strcasecmp(aHeaderName, headerInfo->name))
-    {
-      retVal = headerInfo->value;
-      break;
-    }
-  }
-
-  return retVal;
+  rv = comMgr->CreateInstance(cid, nsnull, NS_GET_IID(nsIMimeMiscStatus), (void**)&obj);  
+  if (NS_FAILED(rv))
+    return nsnull;
+  else
+    return (nsIMimeMiscStatus *)obj;
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -310,24 +248,11 @@ nsMimeXULEmitter::GetHeaderValue(const char *aHeaderName)
 // display. This will include style sheet information, etc...
 //
 nsresult
-nsMimeXULEmitter::WriteXULHeader(const char *msgID)
+nsMimeXULEmitter::WriteXULHeader()
 {
-  if ( (!msgID) || (!*msgID) )
-    msgID = "none";
-    
-  char  *newValue = nsEscapeHTML(msgID);
-  if (!newValue)
-    return NS_ERROR_OUT_OF_MEMORY;
-    
   UtilityWriteCRLF("<?xml version=\"1.0\"?>");
 
   UtilityWriteCRLF("<?xml-stylesheet href=\"chrome://messenger/skin/mailheader.css\" type=\"text/css\"?>");
-  if (mHeaderDisplayType == nsMimeHeaderDisplayTypes::MicroHeaders)
-    UtilityWriteCRLF("<?xml-stylesheet href=\"chrome://messenger/skin/mailheader-micro.css\" type=\"text/css\"?>");
-  else if (mHeaderDisplayType == nsMimeHeaderDisplayTypes::NormalHeaders)
-    UtilityWriteCRLF("<?xml-stylesheet href=\"chrome://messenger/skin/mailheader-normal.css\" type=\"text/css\"?>");
-  else /* AllHeaders */
-    UtilityWriteCRLF("<?xml-stylesheet href=\"chrome://messenger/skin/mailheader-all.css\" type=\"text/css\"?>");
 
   // Make it look consistent...
   UtilityWriteCRLF("<?xml-stylesheet href=\"chrome://global/skin/\" type=\"text/css\"?>");
@@ -341,42 +266,12 @@ nsMimeXULEmitter::WriteXULHeader(const char *msgID)
   DoWindowStatusProcessing();
   UtilityWriteCRLF("align=\"vertical\" flex=\"1\"> ");
 
-  // Output the message ID to make it query-able via the DOM
-  UtilityWrite("<message id=\"");
-  UtilityWrite(newValue);
-  PR_FREEIF(newValue);
-  UtilityWriteCRLF("\"/>");
-
   // Now, the JavaScript...
   UtilityWriteCRLF("<html:script language=\"javascript\" src=\"chrome://messenger/content/attach.js\"/>");
   UtilityWriteCRLF("<html:script language=\"javascript\" src=\"chrome://messenger/content/mime.js\"/>");
   DoGlobalStatusProcessing();
 
   return NS_OK;
-}
-
-//
-// This is called at the start of the header block for all header information in ANY
-// AND ALL MESSAGES (yes, quoted, attached, etc...) So, we need to handle these differently
-// if they are the rood message as opposed to quoted message. If rootMailHeader is set to
-// PR_TRUE, this is the root document, else it is a header in the body somewhere
-//
-nsresult
-nsMimeXULEmitter::StartHeader(PRBool rootMailHeader, PRBool headerOnly, const char *msgID,
-                              const char *outCharset)
-{
-  mDocHeader = rootMailHeader;
-
-  if (!mDocHeader)
-  {
-    UtilityWriteCRLF("<BLOCKQUOTE><table BORDER=0 BGCOLOR=\"#CCCCCC\" >");
-  }
-  else
-  {
-    WriteXULHeader(msgID);
-  }
-
-  return NS_OK; 
 }
 
 nsresult
@@ -394,45 +289,21 @@ nsMimeXULEmitter::DoSpecialSenderProcessing(const char *field, const char *value
 }
 
 //
-// This will be called for every header field...for now, we are calling the WriteXULTag for
-// each of these calls.
-//
-nsresult
-nsMimeXULEmitter::AddHeaderField(const char *field, const char *value)
-{
-  if ( (!field) || (!value) )
-    return NS_OK;
-
-  if ( (mDocHeader) && (!nsCRT::strcmp(field, HEADER_FROM)) )
-    DoSpecialSenderProcessing(field, value);
-
-  if (!mDocHeader)
-    return AddHeaderFieldHTML(field, value);
-  else
-  { 
-    // This is the main header so we do caching for XUL later!
-    // Ok, now we will setup the header info for the header array!
-    headerInfoType  *ptr = (headerInfoType *) PR_NEWZAP(headerInfoType);
-    if ( (ptr) && mHeaderArray)
-    {
-      ptr->name = nsCRT::strdup(field);
-      ptr->value = nsCRT::strdup(value);
-      mHeaderArray->AppendElement(ptr);
-    }
-
-    return NS_OK;
-  }
-}
-
-//
 // This finalizes the header field being parsed.
 //
 nsresult
 nsMimeXULEmitter::EndHeader()
 {
+  //
+  // If this is NOT the mail messages's header, then we need to write
+  // out the contents of the headers in HTML form.
+  //
   if (!mDocHeader)
-    UtilityWriteCRLF("</TABLE></BLOCKQUOTE>");
-  
+  {
+    WriteHTMLHeaders();
+    return NS_OK;
+  }
+
   // Nothing to do in the case of the actual Envelope. This will be done
   // on Complete().
 
@@ -449,6 +320,9 @@ nsMimeXULEmitter::EndHeader()
 nsresult
 nsMimeXULEmitter::Complete()
 {
+  // First the top of the document...
+  WriteXULHeader();
+
   // Start off the header as a toolbox!
   UtilityWriteCRLF("<toolbox>");
 
@@ -474,6 +348,18 @@ nsMimeXULEmitter::Complete()
   return nsMimeBaseEmitter::Complete();
 }
 
+//
+// This will be called for every header field regardless if it is in an
+// internal body or the outer message. If it is the 
+//
+NS_IMETHODIMP
+nsMimeXULEmitter::AddHeaderField(const char *field, const char *value)
+{
+  if (mDocHeader)
+    DoSpecialSenderProcessing(field, value);
+
+  return nsMimeBaseEmitter::AddHeaderField(field, value);
+}
 
 nsresult
 nsMimeXULEmitter::DumpAttachmentMenu()
@@ -628,12 +514,12 @@ nsMimeXULEmitter::DumpBody()
 {
   // Now we will write out the XUL/IFRAME line for the mBody
   //
-  // remove nsMimePlatformFileToURL?
   UtilityWrite("<html:iframe id=\"mail-body-frame\" type=\"content-primary\" src=\"");
   UtilityWrite("data:text/html;base64,");
   char *encoded = PL_Base64Encode(mBody, 0, nsnull);
   if (!encoded)
     return NS_ERROR_OUT_OF_MEMORY;
+
   UtilityWrite(encoded);
   PR_Free(encoded);
   UtilityWriteCRLF("\" border=\"0\" scrolling=\"auto\" resize=\"yes\" width=\"100%\" flex=\"1\"/>");
@@ -643,7 +529,7 @@ nsMimeXULEmitter::DumpBody()
 nsresult
 nsMimeXULEmitter::OutputGenericHeader(const char *aHeaderVal)
 {
-  char      *val = GetHeaderValue(aHeaderVal);
+  char      *val = GetHeaderValue(aHeaderVal, mHeaderArray);
   nsresult  rv;
 
   if (val)
@@ -679,7 +565,7 @@ nsMimeXULEmitter::DumpSubjectFromDate()
       UtilityWriteCRLF("<spring flex=\"1\"/>");
 
         // Now the addbook and attachment icons need to be displayed
-        DumpAddBookIcon(GetHeaderValue(HEADER_FROM));
+        DumpAddBookIcon(GetHeaderValue(HEADER_FROM, mHeaderArray));
         DumpAttachmentMenu();
 
       UtilityWriteCRLF("<spring flex=\"1\"/>");
@@ -694,10 +580,10 @@ nsMimeXULEmitter::DumpSubjectFromDate()
 nsresult
 nsMimeXULEmitter::DumpToCC()
 {
-  char * toField = GetHeaderValue(HEADER_TO);
-  char * ccField = GetHeaderValue(HEADER_CC);
-  char * bccField = GetHeaderValue(HEADER_BCC);
-  char * newsgroupField = GetHeaderValue(HEADER_NEWSGROUPS);
+  char * toField = GetHeaderValue(HEADER_TO, mHeaderArray);
+  char * ccField = GetHeaderValue(HEADER_CC, mHeaderArray);
+  char * bccField = GetHeaderValue(HEADER_BCC, mHeaderArray);
+  char * newsgroupField = GetHeaderValue(HEADER_NEWSGROUPS, mHeaderArray);
 
   // only dump these fields if we have at least one of them! When displaying news
   // messages that didn't have a to or cc field, we'd always get an empty box
@@ -723,12 +609,12 @@ nsresult
 nsMimeXULEmitter::DumpRestOfHeaders()
 {
   PRInt32     i;
-
+  
   if (mHeaderDisplayType != nsMimeHeaderDisplayTypes::AllHeaders)
   {
     // For now, lets advertise the fact that 5.0 sent this message.
-    char  *userAgent = nsMimeXULEmitter::GetHeaderValue(HEADER_USER_AGENT);
-
+    char  *userAgent = nsMimeXULEmitter::GetHeaderValue(HEADER_USER_AGENT, mHeaderArray);
+    
     if (userAgent)
     {
       char  *compVal = "Mozilla 5.0";
@@ -743,36 +629,34 @@ nsMimeXULEmitter::DumpRestOfHeaders()
         UtilityWriteCRLF("</toolbar>");
       }
     }
-
+    
     return NS_OK;
   }
 
-
-  UtilityWriteCRLF("<toolbar>");
-
-    UtilityWriteCRLF("<box name=\"header-part3\" align=\"vertical\" flex=\"1\">");
-
-      for (i=0; i<mHeaderArray->Count(); i++)
-      {
-        headerInfoType *headerInfo = (headerInfoType *)mHeaderArray->ElementAt(i);
-        if ( (!headerInfo) || (!headerInfo->name) || (!(*headerInfo->name)) ||
-              (!headerInfo->value) || (!(*headerInfo->value)))
-          continue;
+  UtilityWriteCRLF("<toolbar>");  
+  UtilityWriteCRLF("<box name=\"header-part3\" align=\"vertical\" flex=\"1\">");
+  
+  for (i=0; i<mHeaderArray->Count(); i++)
+  {
+    headerInfoType *headerInfo = (headerInfoType *)mHeaderArray->ElementAt(i);
+    if ( (!headerInfo) || (!headerInfo->name) || (!(*headerInfo->name)) ||
+      (!headerInfo->value) || (!(*headerInfo->value)))
+      continue;
     
-        if ( (!nsCRT::strcasecmp(HEADER_SUBJECT, headerInfo->name)) ||
-             (!nsCRT::strcasecmp(HEADER_DATE, headerInfo->name)) ||
-             (!nsCRT::strcasecmp(HEADER_FROM, headerInfo->name)) ||
-             (!nsCRT::strcasecmp(HEADER_TO, headerInfo->name)) ||
-             (!nsCRT::strcasecmp(HEADER_CC, headerInfo->name)) )
-           continue;
-
-        UtilityWriteCRLF("<box>");
-        WriteXULTag(headerInfo->name, headerInfo->value);
-        UtilityWriteCRLF("</box>");
-      }
-
+    if ( (!nsCRT::strcasecmp(HEADER_SUBJECT, headerInfo->name)) ||
+      (!nsCRT::strcasecmp(HEADER_DATE, headerInfo->name)) ||
+      (!nsCRT::strcasecmp(HEADER_FROM, headerInfo->name)) ||
+      (!nsCRT::strcasecmp(HEADER_TO, headerInfo->name)) ||
+      (!nsCRT::strcasecmp(HEADER_CC, headerInfo->name)) )
+      continue;
+    
+    UtilityWriteCRLF("<box>");
+    WriteXULTag(headerInfo->name, headerInfo->value);
     UtilityWriteCRLF("</box>");
-
+  }
+  
+  UtilityWriteCRLF("</box>");
+  
   UtilityWriteCRLF("</toolbar>");
   return NS_OK;
 }
@@ -895,7 +779,6 @@ nsMimeXULEmitter::WriteMiscXULTag(const char *tagName, const char *value)
   {
     UtilityWrite(value);
   }
-  ////
 
   UtilityWriteCRLF("</html:td>");
 
@@ -1118,154 +1001,4 @@ nsMimeXULEmitter::ProcessSingleEmailEntry(const char *curHeader, char *curName, 
   }
 
   return NS_OK;  
-}
-
-nsresult
-nsMimeXULEmitter::BuildListOfStatusProviders() 
-{
-  nsresult rv;
-
-  // enumerate the registry subkeys
-  nsRegistryKey      key;
-  nsCOMPtr<nsIEnumerator> components;
-  miscStatusType        *newInfo = nsnull;
-
-  NS_WITH_SERVICE(nsIRegistry, registry, NS_REGISTRY_PROGID, &rv); 
-  if (NS_FAILED(rv)) 
-    return rv;
-  
-  rv = registry->OpenWellKnownRegistry(nsIRegistry::ApplicationComponentRegistry);
-  if (NS_FAILED(rv)) 
-    return rv;
-  
-  rv = registry->GetSubtree(nsIRegistry::Common, NS_IMIME_MISC_STATUS_KEY, &key);
-  if (NS_FAILED(rv)) 
-    return rv;
-  
-  rv = registry->EnumerateSubtrees(key, getter_AddRefs(components));
-  if (NS_FAILED(rv)) 
-    return rv;
-  
-  // go ahead and enumerate through.
-  nsCAutoString actualProgID;
-  rv = components->First();
-  while (NS_SUCCEEDED(rv) && (NS_OK != components->IsDone()))
-  {
-    nsCOMPtr<nsISupports> base;
-    
-    rv = components->CurrentItem(getter_AddRefs(base));
-    if (NS_FAILED(rv)) 
-      return rv;
-    
-    nsCOMPtr<nsIRegistryNode> node;
-    node = do_QueryInterface(base, &rv);
-    if (NS_FAILED(rv)) 
-      return rv;
-    
-    nsXPIDLCString name;
-    rv = node->GetName(getter_Copies(name));
-    if (NS_FAILED(rv)) 
-      return rv;
-    
-    actualProgID = NS_IMIME_MISC_STATUS_KEY;
-    actualProgID.Append(name);
-    
-    // now we've got the PROGID, let's add it to the list...
-    newInfo = (miscStatusType *)PR_NEWZAP(miscStatusType);
-    if (newInfo)
-    {
-      newInfo->obj = GetStatusObjForProgID(actualProgID);
-      if (newInfo->obj)
-      {
-        newInfo->progID = actualProgID;
-        mMiscStatusArray->AppendElement(newInfo);
-      }
-    }
-
-    rv = components->Next();
-  }
-  
-  registry->Close();
- 
-  return NS_OK;
-}
-
-nsIMimeMiscStatus *
-nsMimeXULEmitter::GetStatusObjForProgID(nsCString aProgID)
-{
-  nsresult            rv = NS_OK;
-  nsISupports         *obj = nsnull;
-
-  NS_WITH_SERVICE(nsIComponentManager, comMgr, kComponentManagerCID, &rv);
-  if (NS_FAILED(rv)) 
-    return nsnull;
-  
-  nsCID         cid;
-  rv = comMgr->ProgIDToCLSID(aProgID, &cid);
-  if (NS_FAILED(rv))
-    return nsnull;
-
-  rv = comMgr->CreateInstance(cid, nsnull, NS_GET_IID(nsIMimeMiscStatus), (void**)&obj);  
-  if (NS_FAILED(rv))
-    return nsnull;
-  else
-    return (nsIMimeMiscStatus *)obj;
-}
-
-NS_IMETHODIMP
-nsMimeXULEmitter::Write(const char *buf, PRUint32 size, PRUint32 *amountWritten)
-{
-  unsigned int        written = 0;
-  PRUint32            rc = 0;
-  PRUint32            needToWrite;
-
-  //
-  // Make sure that the buffer we are "pushing" into has enough room
-  // for the write operation. If not, we have to buffer, return, and get
-  // it on the next time through
-  //
-  *amountWritten = 0;
-
-  needToWrite = mBufferMgr->GetSize();
-  // First, handle any old buffer data...
-  if (needToWrite > 0)
-  {
-    rc += mOutStream->Write(mBufferMgr->GetBuffer(), 
-                            needToWrite, &written);
-    mTotalWritten += written;
-    mBufferMgr->ReduceBuffer(written);
-
-    *amountWritten = written;
-
-    // if we couldn't write all the old data, buffer the new data
-    // and return
-    if (mBufferMgr->GetSize() > 0)
-    {
-      mBufferMgr->IncreaseBuffer(buf, size);
-      return NS_OK;
-    }
-  }
-
-  // if we get here, we are dealing with new data...try to write
-  // and then do the right thing...
-  //
-  // Note: if the body has been started, we shouldn't write to the
-  // output stream, but rather, just append to the body buffer.
-  //
-  if (mBodyStarted)
-  {
-    mBody.Append(buf, size);
-    rc = size;
-    written = size;
-  }
-  else
-    rc = mOutStream->Write(buf, size, &written);
-
-  *amountWritten = written;
-  mTotalWritten += written;
-
-  if (written < size)
-    mBufferMgr->IncreaseBuffer(buf+written, (size-written));
-
-  return rc;
 }

@@ -30,6 +30,7 @@
 #include "nsIComponentManager.h"
 #include "nsString.h"
 #include "nsMimeStringResources.h"
+#include "mimemoz2.h"
 
 static NS_DEFINE_CID(kTXTToHTMLConvCID, MOZITXTTOHTMLCONV_CID);
 
@@ -150,24 +151,20 @@ MimeInlineTextPlain_parse_line (char *line, PRInt32 length, MimeObject *obj)
    */
   *obj->obuffer = 0;
 
+  mozITXTToHTMLConv *conv = GetTextConverter(obj->options);
+
   // If we have been told not to mess with this text, then don't do this search!
-  PRBool skipScanning = (obj->options && obj->options->force_user_charset) || 
+  PRBool skipScanning = (!conv) ||
+                        (obj->options && obj->options->force_user_charset) || 
                         (obj->options && (obj->options->format_out == nsMimeOutput::nsMimeMessageQuoting)) ||
                         (obj->options && (obj->options->format_out == nsMimeOutput::nsMimeMessageBodyQuoting));
     
   if (!skipScanning)
   {
-    nsCOMPtr<mozITXTToHTMLConv> conv;
-    nsresult rv = nsComponentManager::CreateInstance(kTXTToHTMLConvCID,
-                              NULL, nsCOMTypeInfo<mozITXTToHTMLConv>::GetIID(),
-                              (void **) getter_AddRefs(conv));
-    if (NS_FAILED(rv))
-      return -1;
-
     nsString strline(line, length);
 
     PRUnichar* wresult;
-    rv = conv->ScanTXT(strline.GetUnicode(),
+    nsresult rv = conv->ScanTXT(strline.GetUnicode(),
                  obj->options->dont_touch_citations_p /*XXX This is pref abuse.
                       ScanTXT does nothing with citations. Add prefs.*/
                  ? conv->kURLs : ~PRUint32(0),

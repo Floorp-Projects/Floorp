@@ -245,6 +245,7 @@ nsStreamConverter::DetermineOutputFormat(const char *url,  nsMimeOutputType *aNe
       char *ptr3 = PL_strcasestr ("quote", (header+lenOfHeader));
       char *ptr4 = PL_strcasestr ("quotebody", (header+lenOfHeader));
       char *ptr5 = PL_strcasestr ("none", (header+lenOfHeader));
+      char *ptr6 = PL_strcasestr ("print", (header+lenOfHeader));
       if (ptr5)
       {
         PR_FREEIF(mOutputFormat);
@@ -268,6 +269,12 @@ nsStreamConverter::DetermineOutputFormat(const char *url,  nsMimeOutputType *aNe
         PR_FREEIF(mOutputFormat);
         mOutputFormat = nsCRT::strdup("text/html");
         *aNewType = nsMimeOutput::nsMimeMessageBodyQuoting;
+      }
+      else if (ptr6)
+      {
+        PR_FREEIF(mOutputFormat);
+        mOutputFormat = nsCRT::strdup("text/html");
+        *aNewType = nsMimeOutput::nsMimeMessagePrintOutput;
       }
     }
     else
@@ -397,6 +404,7 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
 
 		case nsMimeOutput::nsMimeMessageQuoting:   		// all HTML quoted output
 		case nsMimeOutput::nsMimeMessageBodyQuoting: 	// only HTML body quoted output
+		case nsMimeOutput::nsMimeMessagePrintOutput:  // all Printing output
 			PR_FREEIF(mOutputFormat);
 			mOutputFormat = nsCRT::strdup("text/html");
 			break;

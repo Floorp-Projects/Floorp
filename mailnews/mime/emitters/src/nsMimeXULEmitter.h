@@ -37,19 +37,6 @@
 #include "nsIMsgHeaderParser.h"
 #include "nsCOMPtr.h"
 
-//
-// Used for keeping track of the attachment information...
-//
-typedef struct {
-  char      *displayName;
-  char      *urlSpec;
-  char      *contentType;
-} attachmentInfoType;
-
-typedef struct {
-  char      *name;
-  char      *value;
-} headerInfoType;
 
 typedef struct {
   nsString            progID;
@@ -61,30 +48,22 @@ public:
     nsMimeXULEmitter ();
     virtual       ~nsMimeXULEmitter (void);
 
-    NS_IMETHOD    Complete();
-
-    // Header handling routines.
-    NS_IMETHOD    StartHeader(PRBool rootMailHeader, PRBool headerOnly, const char *msgID,
-                              const char *outCharset);
+    // Header handling output routines.
     NS_IMETHOD    AddHeaderField(const char *field, const char *value);
     NS_IMETHOD    EndHeader();
-    NS_IMETHOD    AddHeaderFieldHTML(const char *field, const char *value);
-
-    // Attachment handling routines
-    NS_IMETHOD    StartAttachment(const char *name, const char *contentType, const char *url);
-    NS_IMETHOD    EndAttachment();
 
     // Body handling routines
     NS_IMETHOD    StartBody(PRBool bodyOnly, const char *msgID, const char *outCharset);
     NS_IMETHOD    WriteBody(const char *buf, PRUint32 size, PRUint32 *amountWritten);
     NS_IMETHOD    EndBody();
 
-    // Generic write routine. This is necessary for output that
-    // libmime needs to pass through without any particular parsing
-    // involved (i.e. decoded images, HTML Body Text, etc...
-    NS_IMETHOD    Write(const char *buf, PRUint32 size, PRUint32 *amountWritten);
+    // Complete() the emitter operation.
+    NS_IMETHOD    Complete();
 
-    NS_IMETHOD    WriteXULHeader(const char *msgID);
+    //
+    // XUL Specific Output methods
+    //
+    NS_IMETHOD    WriteXULHeader();
     NS_IMETHOD    WriteXULTag(const char *tagName, const char *value);
     NS_IMETHOD    WriteMiscXULTag(const char *tagName, const char *value);
     NS_IMETHOD    WriteEmailAddrXULTag(const char *tagName, const char *value);
@@ -92,7 +71,6 @@ public:
     nsresult      ProcessSingleEmailEntry(const char *curHeader, char *curName, char *curAddress);
     nsresult      WriteXULTagPrefix(const char *tagName, const char *value);
     nsresult      WriteXULTagPostfix(const char *tagName, const char *value);
-    nsresult      OhTheHumanityCleanupTempFileHack();
 
     // For Interesting XUL output!
     nsresult      DumpAttachmentMenu();
@@ -105,29 +83,18 @@ public:
 
     // For storing recipient info in the history database...
     nsresult      DoSpecialSenderProcessing(const char *field, const char *value);
+
+    // For per-email address status processing...
     nsresult      DoGlobalStatusProcessing();
     nsresult      DoWindowStatusProcessing();
     nsresult      BuildListOfStatusProviders();
     nsIMimeMiscStatus   *GetStatusObjForProgID(nsCString aProgID);
 
-    char          *GetHeaderValue(const char *aHeaderName);
-
 protected:
     PRInt32             mCutoffValue;
 
-    // For attachment processing...
-    PRInt32             mAttachCount;
-    nsVoidArray         *mAttachArray;
-    attachmentInfoType  *mCurrentAttachment;
-
-    // For body caching...
-    PRBool              mBodyStarted;
-    nsCString           mBody;
-
-    // For header caching...
-    nsVoidArray         *mHeaderArray;
+    // For fancy per-email status!
     nsVoidArray         *mMiscStatusArray;
-    nsCOMPtr<nsIMsgHeaderParser>  mHeaderParser;
 };
 
 

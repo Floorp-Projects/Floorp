@@ -192,6 +192,7 @@ public:
 	{
       if ((mOutFormat == nsMimeOutput::nsMimeMessageSplitDisplay) ||
           (mOutFormat == nsMimeOutput::nsMimeMessageBodyDisplay) ||
+          (mOutFormat == nsMimeOutput::nsMimeMessagePrintOutput) ||
           (mOutFormat == nsMimeOutput::nsMimeMessageQuoting))
       {
         char *note = "\n<center><hr WIDTH=\"90%\"><br><b>Anything after the above horizontal line is diagnostic output<br>and is not part of the HTML stream!</b></center><pre>\n";
@@ -498,7 +499,7 @@ DoRFC822toHTMLConversion(char *filename, int numArgs)
   if (numArgs >= 3)
     outFormat = nsMimeOutput::nsMimeMessageXULDisplay;
   else
-    outFormat = nsMimeOutput::nsMimeMessageQuoting;
+    outFormat = nsMimeOutput::nsMimeMessagePrintOutput;
 
   char *opts = PL_strchr(filename, '?');
   char save;
@@ -621,7 +622,7 @@ DoFormattingOnly(char *filename)
   nsMimeOutputType  outFormat;
   char              *contentType = nsnull;
 
-  outFormat = nsMimeOutput::nsMimeMessageQuoting;
+  outFormat = nsMimeOutput::nsMimeMessagePrintOutput;
 
   char *opts = PL_strchr(filename, '?');
   char save;

@@ -134,16 +134,3 @@ nsMsgCreateTempFileName(char *tFileName)
   else
     return tString;
 }
-
-char *
-nsMimePlatformFileToURL (nsFileSpec  aFileSpec)
-{
-  nsFileURL   tURL(aFileSpec);
-  const char  *tPtr = nsnull;
-
-  tPtr = tURL.GetURLString();
-  if (tPtr)
-    return nsCRT::strdup(tPtr);
-  else
-    return nsnull;
-}

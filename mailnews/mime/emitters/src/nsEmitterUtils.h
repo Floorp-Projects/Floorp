@@ -34,7 +34,5 @@ extern "C" PRBool   EmitThisHeaderForPrefSetting(PRInt32 dispType, const char *h
 nsFileSpec  *nsMsgCreateTempFileSpec(char *tFileName);
 char        *nsMsgCreateTempFileName(char *tFileName);
 
-char        *nsMimePlatformFileToURL (nsFileSpec  aFileSpec);
-
 #endif // _nsEmitterUtils_h_
 

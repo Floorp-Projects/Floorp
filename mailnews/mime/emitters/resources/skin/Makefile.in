@@ -28,9 +28,6 @@ include $(DEPTH)/config/autoconf.mk
 
 EXPORT_RESOURCES = \
 		$(srcdir)/mailheader.css \
-		$(srcdir)/mailheader-micro.css \
-		$(srcdir)/mailheader-normal.css \
-		$(srcdir)/mailheader-all.css \
 		$(srcdir)/addcard.gif \
 		$(srcdir)/attach.gif \
 		$(NULL)

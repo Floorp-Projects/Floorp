@@ -38,50 +38,109 @@
 #include "nsIPipe.h"
 #include "nsIStringBundle.h"
 #include "nsCOMPtr.h"
+#include "nsVoidArray.h"
+
+//
+// The base emitter will serve as the place to do all of the caching,
+// sorting, etc... of mail headers and bodies for this internally developed
+// emitter library. The other emitter classes in this file (nsMimeHTMLEmitter, etc.)
+// will only be concerned with doing output processing ONLY.
+//
+
+//
+// Used for keeping track of the attachment information...
+//
+typedef struct {
+  char      *displayName;
+  char      *urlSpec;
+  char      *contentType;
+} attachmentInfoType;
+
+//
+// For header info...
+//
+typedef struct {
+  char      *name;
+  char      *value;
+} headerInfoType;
 
 class nsMimeBaseEmitter : public nsIMimeEmitter, nsIPipeObserver {
 public: 
-    nsMimeBaseEmitter ();
-    virtual       ~nsMimeBaseEmitter (void);
+  nsMimeBaseEmitter ();
+  virtual             ~nsMimeBaseEmitter (void);
 
-    // nsISupports interface
-    NS_DECL_ISUPPORTS
+  // nsISupports interface
+  NS_DECL_ISUPPORTS
 
-    NS_DECL_NSIMIMEEMITTER
-    NS_DECL_NSIPIPEOBSERVER
+  NS_DECL_NSIMIMEEMITTER
+  NS_DECL_NSIPIPEOBSERVER
 
-    NS_IMETHOD    UtilityWriteCRLF(const char *buf);
+  // Utility output functions...
+  NS_IMETHOD          UtilityWriteCRLF(const char *buf);
 
-    // For cacheing string bundles...
-    char          *MimeGetStringByName(const char *aHeaderName);
-    char          *LocalizeHeaderName(const char *aHeaderName, const char *aDefaultName);
+  // For string bundle usage...
+  char                *MimeGetStringByName(const char *aHeaderName);
+  char                *LocalizeHeaderName(const char *aHeaderName, const char *aDefaultName);
+
+  // For header processing...
+  char                *GetHeaderValue(const char  *aHeaderName,
+                                      nsVoidArray *aArray);
+
+  // To write out a stored header array as HTML
+  nsresult            WriteHeaderFieldHTMLPrefix();
+  nsresult            WriteHeaderFieldHTML(const char *field, const char *value);
+  nsresult            WriteHeaderFieldHTMLPostfix();
+  nsresult            WriteHTMLHeaders();
 
 protected:
-    // For buffer management on output
-    MimeRebuffer        *mBufferMgr;
+  // Internal methods...
+  void                CleanupHeaderArray(nsVoidArray *aArray);
 
-    nsCOMPtr<nsIStringBundle>	m_stringBundle;     // For string bundle usage...
+  // For header output...
+  nsresult            DumpSubjectFromDate();
+  nsresult            DumpToCC();
+  nsresult            DumpRestOfHeaders();
+  nsresult            OutputGenericHeader(const char *aHeaderVal);
 
+  // For string bundle usage...
+  nsCOMPtr<nsIStringBundle>	m_stringBundle;     // For string bundle usage...
 
-	// mscott - dont ref count the streams....the emitter is owned by the converter
+  // For buffer management on output
+  MimeRebuffer        *mBufferMgr;
+
+	// mscott
+  // dont ref count the streams....the emitter is owned by the converter
 	// which owns these streams...
+  //
   nsIOutputStream     *mOutStream;
 	nsIInputStream	    *mInputStream;
   nsIStreamListener   *mOutListener;
 	nsIChannel			    *mChannel;
 
+  // For gathering statistics on processing...
   PRUint32            mTotalWritten;
   PRUint32            mTotalRead;
 
-  // For header determination...
-  PRBool              mDocHeader;
+  // Output control and info...
+  nsIPref             *mPrefs;            // Connnection to prefs service manager
+  PRBool              mDocHeader;         // For header determination...
+  nsIURI              *mURL;              // the url for the data being processed...
+  PRInt32             mHeaderDisplayType; // The setting for header output...
+  nsCString           mHTMLHeaders;       // HTML Header Data...
 
-  // the url for the data being processed...
-  nsIURI              *mURL;
+  // For attachment processing...
+  PRInt32             mAttachCount;
+  nsVoidArray         *mAttachArray;
+  attachmentInfoType  *mCurrentAttachment;
 
-  // The setting for header output...
-  nsIPref             *mPrefs;          /* Connnection to prefs service manager */
-  PRInt32             mHeaderDisplayType; 
+  // For header caching...
+  nsVoidArray         *mHeaderArray;
+  nsVoidArray         *mEmbeddedHeaderArray;
+  nsCOMPtr<nsIMsgHeaderParser>  mHeaderParser;
+
+  // For body caching...
+  PRBool              mBodyStarted;
+  nsCString           mBody;
 };
 
 #endif /* _nsMimeBaseEmitter_h_ */

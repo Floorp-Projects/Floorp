@@ -147,6 +147,9 @@ extern "C" nsresult     mimeEmitterStartHeader(MimeDisplayOptions *opt, PRBool r
 /* To Get the connnection to prefs service manager */
 extern "C" nsIPref          *GetPrefServiceManager(MimeDisplayOptions *opt);
 
+// Get the text converter...
+mozITXTToHTMLConv           *GetTextConverter(MimeDisplayOptions *opt);
+
 /* This is the next generation string retrieval call */
 extern "C" char             *MimeGetStringByID(PRInt32 stringID);
 
