@@ -10,8 +10,6 @@
 <!-- LOCALIZATION NOTE (mainWindow.titlemodifiermenuseparator): DONT_TRANSLATE -->
 <!ENTITY mainWindow.titlemodifiermenuseparator " - ">
 
-<!ENTITY nothingAvailable.label "(Nothing Available)">
-
 <!ENTITY browserCmd.label	"New Window">
 <!ENTITY browserCmd.accesskey	"N">
 <!ENTITY browserCmd.commandkey "n">
