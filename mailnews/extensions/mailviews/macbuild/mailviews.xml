@@ -507,9 +507,7 @@
                 <!-- Settings for "FTP Panel" panel -->
                 <SETTING><NAME>MWFTP_Post_hostName</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_username</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE>26348ueq0&amp;&#216;
-
-H&#208;%&#184;</VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_remoteDir</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_ftp_PathVersion</NAME><VALUE>0</VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_ftp_PathType</NAME><VALUE>0</VALUE></SETTING>
@@ -781,7 +779,7 @@ H&#208;%&#184;</VALUE></SETTING>
                 <SETTING><NAME>MWProject_PPC_type</NAME><VALUE>StubLibrary</VALUE></SETTING>
                 <SETTING><NAME>MWProject_PPC_outfile</NAME><VALUE>mailviewsDebug.shlb</VALUE></SETTING>
                 <SETTING><NAME>MWProject_PPC_filecreator</NAME><VALUE>????</VALUE></SETTING>
-                <SETTING><NAME>MWProject_PPC_filetype</NAME><VALUE>stub</VALUE></SETTING>
+                <SETTING><NAME>MWProject_PPC_filetype</NAME><VALUE>shlb</VALUE></SETTING>
                 <SETTING><NAME>MWProject_PPC_size</NAME><VALUE>0</VALUE></SETTING>
                 <SETTING><NAME>MWProject_PPC_minsize</NAME><VALUE>0</VALUE></SETTING>
                 <SETTING><NAME>MWProject_PPC_stacksize</NAME><VALUE>0</VALUE></SETTING>
@@ -1466,9 +1464,7 @@ H&#208;%&#184;</VALUE></SETTING>
                 <!-- Settings for "FTP Panel" panel -->
                 <SETTING><NAME>MWFTP_Post_hostName</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_username</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE>26348ueq0&amp;&#216;
-
-H&#208;%&#184;</VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_remoteDir</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_ftp_PathVersion</NAME><VALUE>0</VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_ftp_PathType</NAME><VALUE>0</VALUE></SETTING>
