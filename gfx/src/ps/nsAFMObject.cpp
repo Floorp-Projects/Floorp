@@ -37,7 +37,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsAFMObject.h"
-#include "nsFileSpec.h" // for nsAutoCString
 #include "Helvetica.h"
 #include "Helvetica-Bold.h"
 #include "Helvetica-BoldOblique.h"

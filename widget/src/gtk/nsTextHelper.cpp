@@ -114,13 +114,13 @@ NS_IMETHODIMP  nsTextHelper::SetText(const nsString& aText, PRUint32& aActualSiz
 {
   if (GTK_IS_ENTRY(mTextWidget)) {
     gtk_entry_set_text(GTK_ENTRY(mTextWidget),
-                       (const gchar *)nsAutoCString(aText));
+                       (const gchar *)NS_LossyConvertUCS2toASCII(aText).get());
   } else if (GTK_IS_TEXT(mTextWidget)) {
     gtk_editable_delete_text(GTK_EDITABLE(mTextWidget), 0,
                              gtk_text_get_length(GTK_TEXT (mTextWidget)));
     gtk_text_insert(GTK_TEXT(mTextWidget),
                     nsnull, nsnull, nsnull,
-                    (const char *)nsAutoCString(aText),
+                    NS_LossyConvertUCS2toASCII(aText).get(),
                     aText.Length());
   }
 
@@ -136,7 +136,7 @@ NS_IMETHODIMP  nsTextHelper::InsertText(const nsString &aText,
                                     PRUint32& aActualSize)
 {
   gtk_editable_insert_text(GTK_EDITABLE(mTextWidget),
-                           (const gchar *)nsAutoCString(aText),
+                           (const gchar *)NS_LossyConvertUCS2toASCII(aText).get(),
                            (gint)aText.Length(), (gint*)&aStartPos);
 
   aActualSize = aText.Length();

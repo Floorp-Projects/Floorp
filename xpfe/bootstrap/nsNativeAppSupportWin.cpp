@@ -1860,10 +1860,9 @@ nsNativeAppSupportWin::SetupSysTrayIcon() {
         if ( brandBundle ) {
             brandBundle->GetStringFromName( NS_LITERAL_STRING( "brandShortName" ).get(),
                                             getter_Copies( tooltip ) );
-            // (damned strings...)
-            nsAutoString autoTip( tooltip );
-            nsAutoCString tip( autoTip );
-            ::strncpy( mIconData.szTip, (const char*)tip, sizeof mIconData.szTip - 1 );
+            ::strncpy( mIconData.szTip,
+                       NS_LossyConvertUCS2toASCII(tooltip).get(),
+                       sizeof mIconData.szTip - 1 );
         }
         // Build menu.
         nsCOMPtr<nsIStringBundle> turboBundle;

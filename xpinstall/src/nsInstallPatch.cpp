@@ -175,7 +175,7 @@ nsInstallPatch::nsInstallPatch( nsInstall* inInstall,
     mVersionInfo->Init(inVInfo);
     
     if(! inPartialPath.IsEmpty())
-        mTargetFile->Append(nsAutoCString(inPartialPath));
+        mTargetFile->Append(NS_LossyConvertUCS2toASCII(inPartialPath).get());
 }
 
 nsInstallPatch::~nsInstallPatch()
@@ -470,7 +470,7 @@ nsInstallPatch::NativePatch(nsIFile *sourceFile, nsIFile *patchFile, nsIFile **n
         
     
         rv = sourceFile->Clone(getter_AddRefs(tempSrcFile));  //Clone the sourceFile
-        tempSrcFile->SetLeafName(nsAutoCString(tmpFileName)); //Append the new leafname
+        tempSrcFile->SetLeafName(NS_LossyConvertUCS2toASCII(tmpFileName).get()); //Append the new leafname
         uniqueSrcFile = do_QueryInterface(tempSrcFile, &rv);  //Create an nsILocalFile version to pass to MakeUnique
         MakeUnique(uniqueSrcFile); 
 
@@ -537,7 +537,7 @@ nsInstallPatch::NativePatch(nsIFile *sourceFile, nsIFile *patchFile, nsIFile **n
     }
 
 
-    outFileSpec->SetLeafName(nsAutoCString(newFileName));  //Set new leafname
+    outFileSpec->SetLeafName(NS_LossyConvertUCS2toASCII(newFileName).get());  //Set new leafname
     nsCOMPtr<nsILocalFile> outFileLocal = do_QueryInterface(outFileSpec, &rv); //Create an nsILocalFile version 
                                                                                //to send to MakeUnique()
     MakeUnique(outFileLocal);

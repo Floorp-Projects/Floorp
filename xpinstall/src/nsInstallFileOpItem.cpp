@@ -653,8 +653,8 @@ nsInstallFileOpItem::NativeFileOpFileRenamePrepare()
       nsIFile* target;
 
       mSrc->GetParent(&target);
-      nsAutoCString tempTargetString(*mStrTarget);
-      nsresult rv = target->Append(tempTargetString);
+      nsresult rv =
+          target->Append(NS_LossyConvertUCS2toASCII(*mStrTarget).get());
       //90% of the failures during Append will be because the target wasn't in string form
       // which it must be.
       if (NS_FAILED(rv)) return nsInstall::INVALID_ARGUMENTS;
@@ -694,8 +694,7 @@ nsInstallFileOpItem::NativeFileOpFileRenameComplete()
 
             if (target)
             {
-                nsAutoCString tempTargetString(*mStrTarget);
-                target->Append(tempTargetString);
+                target->Append(NS_LossyConvertUCS2toASCII(*mStrTarget).get());
             }
             else
                 return nsInstall::UNEXPECTED_ERROR;
@@ -703,8 +702,8 @@ nsInstallFileOpItem::NativeFileOpFileRenameComplete()
             target->Exists(&flagExists);
             if(!flagExists)
             {
-                nsAutoCString tempTargetString(*mStrTarget);
-                mSrc->MoveTo(parent, tempTargetString);
+                mSrc->MoveTo(parent,
+                             NS_LossyConvertUCS2toASCII(*mStrTarget).get());
             }
             else
                 return nsInstall::ALREADY_EXISTS;
@@ -739,8 +738,7 @@ nsInstallFileOpItem::NativeFileOpFileRenameAbort()
       mSrc->GetParent(getter_AddRefs(parent));
       if(parent)
       {
-        nsAutoCString tempTargetString(*mStrTarget);
-        newFilename->Append(tempTargetString);
+        newFilename->Append(NS_LossyConvertUCS2toASCII(*mStrTarget).get());
     
         mSrc->GetLeafName(&leafName);
 
@@ -967,7 +965,7 @@ PRInt32
 nsInstallFileOpItem::NativeFileOpFileExecuteComplete()
 {
   //mTarget->Execute(*mParams);
-  //mTarget->Spawn(nsAutoCString(*mParams), 0);
+  //mTarget->Spawn(NS_LossyConvertUCS2toASCII(*mParams).get(), 0);
 
   char *cParams[1];
 
@@ -1146,7 +1144,7 @@ nsInstallFileOpItem::NativeFileOpDirRenamePrepare()
       nsCOMPtr<nsIFile> target;
 
       mSrc->GetParent(getter_AddRefs(target));
-      target->Append(nsAutoCString(*mStrTarget));
+      target->Append(NS_LossyConvertUCS2toASCII(*mStrTarget).get());
 
       target->Exists(&flagExists);
       if(flagExists)
@@ -1176,16 +1174,15 @@ nsInstallFileOpItem::NativeFileOpDirRenameComplete()
       nsCOMPtr<nsIFile> target;
 
       mSrc->GetParent(getter_AddRefs(target));
-      target->Append(nsAutoCString(*mStrTarget));
+      target->Append(NS_LossyConvertUCS2toASCII(*mStrTarget).get());
 
       target->Exists(&flagExists);
       if(!flagExists)
       {
-        nsAutoCString cStrTarget(*mStrTarget);
-
         nsCOMPtr<nsIFile> parent;
         mSrc->GetParent(getter_AddRefs(parent));
-        ret = mSrc->MoveTo(parent, cStrTarget);
+        ret = mSrc->MoveTo(parent,
+                           NS_LossyConvertUCS2toASCII(*mStrTarget).get());
       }
       else
         return nsInstall::ALREADY_EXISTS;
@@ -1212,7 +1209,7 @@ nsInstallFileOpItem::NativeFileOpDirRenameAbort()
   if(!flagExists)
   {
     mSrc->GetParent(getter_AddRefs(newDirName));
-    newDirName->Append(nsAutoCString(*mStrTarget));
+    newDirName->Append(NS_LossyConvertUCS2toASCII(*mStrTarget).get());
     mSrc->GetLeafName(&leafName);
     mSrc->GetParent(getter_AddRefs(parent));
     ret = newDirName->MoveTo(parent, leafName);
@@ -1326,7 +1323,7 @@ nsInstallFileOpItem::NativeFileOpWindowsShortcutAbort()
   shortcutDescription = *mDescription;
   shortcutDescription.AppendWithConversion(".lnk");
   mShortcutPath->Clone(getter_AddRefs(shortcutTarget));
-  shortcutTarget->Append(nsAutoCString(shortcutDescription));
+  shortcutTarget->Append(NS_LossyConvertUCS2toASCII(shortcutDescription).get());
 
   NativeFileOpFileDeleteComplete(shortcutTarget);
 #endif

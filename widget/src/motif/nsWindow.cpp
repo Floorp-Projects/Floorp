@@ -1256,7 +1256,7 @@ nsWindow::DebugPrintEvent(nsGUIEvent &   aEvent,
 
   printf("%4d %-26s(this=%-8p , widget=%-8p",
          sPrintCount++,
-         (const char *) nsAutoCString(debug_GuiEventToString(&aEvent)),
+         NS_LossyConvertUCS2toASCII(debug_GuiEventToString(&aEvent)).get(),
          this,
          (void *) aWidget);
   

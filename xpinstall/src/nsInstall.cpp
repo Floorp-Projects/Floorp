@@ -731,9 +731,9 @@ nsInstall::DiskSpaceAvailable(const nsString& aFolder, PRInt64* aReturn)
         LL_L2D(d, *aReturn);
         return NS_OK;
     }
-    nsAutoCString temp(aFolder);
     nsCOMPtr<nsILocalFile> folder;
-    NS_NewLocalFile(temp, PR_TRUE, getter_AddRefs(folder));
+    NS_NewLocalFile(NS_LossyConvertUCS2toASCII(aFolder).get(), PR_TRUE,
+                    getter_AddRefs(folder));
 
     result = folder->GetDiskSpaceAvailable(aReturn);
     return NS_OK;
@@ -2628,8 +2628,7 @@ nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsIFile* aSuggestedName,
             aJarfile.Right(extension, (aJarfile.Length() - extpos) );
             tempFileName += extension;
         }
-        nsAutoCString temp(tempFileName);
-        tempFile->Append(temp);
+        tempFile->Append(NS_LossyConvertUCS2toASCII(tempFileName).get());
 
         // Create a temporary file to extract to
         MakeUnique(tempFile);
@@ -2679,7 +2678,8 @@ nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsIFile* aSuggestedName,
         extractHereSpec = temp;
     }
 
-    rv = mJarFileData->Extract(nsAutoCString(aJarfile), extractHereSpec);
+    rv = mJarFileData->Extract(NS_LossyConvertUCS2toASCII(aJarfile).get(),
+                               extractHereSpec);
     if (NS_FAILED(rv)) 
     {
         switch (rv) {
@@ -2743,19 +2743,13 @@ nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsIFile* aSuggestedName,
 char*
 nsInstall::GetResourcedString(const nsString& aResName)
 {
-    nsString rscdStr;
-    PRBool bStrBdlSuccess = PR_FALSE;
-
     if (mStringBundle)
     {   
-        const PRUnichar *ucResName = aResName.get();
-        PRUnichar *ucRscdStr = nsnull;
-        nsresult rv = mStringBundle->GetStringFromName(ucResName, &ucRscdStr);
+        nsXPIDLString ucRscdStr;
+        nsresult rv = mStringBundle->GetStringFromName(aResName.get(),
+                                                     getter_Copies(ucRscdStr));
         if (NS_SUCCEEDED(rv))
-        {
-            bStrBdlSuccess = PR_TRUE;
-            rscdStr = ucRscdStr;
-        }
+            return ToNewCString(ucRscdStr);
     }
     
     /*
@@ -2763,13 +2757,8 @@ nsInstall::GetResourcedString(const nsString& aResName)
     ** so we failover to hardcoded english strings so we log something rather
     ** than nothing due to failure above: always the case for the Install Wizards.
     */
-    if (!bStrBdlSuccess)
-    {
-        nsAutoCString temp(aResName);
-        rscdStr.AssignWithConversion(nsInstallResources::GetDefaultVal(temp));
-    }
-    
-    return ToNewCString(rscdStr);
+    return nsCRT::strdup(nsInstallResources::GetDefaultVal(
+                    NS_LossyConvertUCS2toASCII(aResName).get()));
 }
 
 
@@ -2782,11 +2771,12 @@ nsInstall::ExtractDirEntries(const nsString& directory, nsVoidArray *paths)
 
     if ( paths )
     {
-        nsString pattern(directory);
-        pattern.AppendWithConversion("/*");
+        nsString pattern(directory + NS_LITERAL_STRING("/*"));
         PRInt32 prefix_length = directory.Length()+1; // account for slash
 
-        nsresult rv = mJarFileData->FindEntries( nsAutoCString(pattern), &jarEnum );
+        nsresult rv = mJarFileData->FindEntries(
+                          NS_LossyConvertUCS2toASCII(pattern).get(),
+                          &jarEnum );
         if (NS_FAILED(rv) || !jarEnum)
             goto handle_err;
 

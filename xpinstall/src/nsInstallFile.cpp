@@ -140,8 +140,7 @@ nsInstallFile::nsInstallFile(nsInstall* inInstall,
         else
         {
             nsresult rv = inPartialPath.Mid(subString, offset, nodeLength);
-            nsAutoCString tempSubString(subString);
-            mFinalFile->Append(tempSubString);
+            mFinalFile->Append(NS_LossyConvertUCS2toASCII(subString).get());
             offset += nodeLength + 1;
             if (!finished)
                 location = inPartialPath.FindChar('/',PR_FALSE, offset);
