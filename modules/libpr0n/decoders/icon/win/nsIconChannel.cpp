@@ -282,7 +282,9 @@ PRUint32 CalcWordAlignedRowSpan(PRUint32  aWidth, PRUint32 aBitCount)
 
 void ConvertMaskBitMap(unsigned char * aBitMaskBuffer, PBITMAPINFOHEADER pBitMapHeaderInfo, nsCString& iconBuffer)
 {
-  InvertRows(aBitMaskBuffer, pBitMapHeaderInfo->biSizeImage, 4);
+  // ok, the math at the end means: Get on a 32-bit boundary, rounding up in the progress, and divide by 8
+  // because only 1 bit per pixel is used for transparency
+  InvertRows(aBitMaskBuffer, pBitMapHeaderInfo->biSizeImage, ((pBitMapHeaderInfo->biWidth + 31)/32) * 4);
   PRUint32 index = 0;
   // for some reason the bit mask on windows are flipped from the values we really want for transparency. 
   // So complement each byte in the bit mask.
@@ -319,7 +321,7 @@ NS_IMETHODIMP nsIconChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports
    infoFlags |= SHGFI_USEFILEATTRIBUTES;
 
   if (desiredImageSize > 16)
-    infoFlags |= SHGFI_LARGEICON;
+    infoFlags |= SHGFI_SHELLICONSIZE;
   else
     infoFlags |= SHGFI_SMALLICON;
 
