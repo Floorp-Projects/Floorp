@@ -476,7 +476,7 @@ tbx_dirs()
         else
             URL="cindercone.red.iplanet.com"
         fi
-        RESULTDIRURL='<a href="http://${URL}${RESULTDIR}">http://${URL}${RESULTDIR}</a>'
+        RESULTDIRURL="<a title=\"QA Results\" href=\"http://${URL}${RESULTDIR}\">http://${URL}${RESULTDIR}</a>"
     fi
     TBX_DAILY_BUILD=`cd ../../../../..;pwd`
     NSS_VER_DIR="${TBX_DAILY_BUILD}/../.." 
