@@ -342,7 +342,13 @@ LRESULT CALLBACK nsWindow::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
         }
     }
 
-    return ::CallWindowProc((FARPROC)someWindow->GetPrevWindowProc(), hWnd, msg, wParam, lParam);
+#if defined(STRICT)
+    return ::CallWindowProc((WNDPROC)someWindow->GetPrevWindowProc(), hWnd, 
+                            msg, wParam, lParam);
+#else
+    return ::CallWindowProc((FARPROC)someWindow->GetPrevWindowProc(), hWnd, 
+                            msg, wParam, lParam);
+#endif
 }
 
 
@@ -627,7 +633,7 @@ void nsWindow::Create(nsNativeWidget aParent,
                             aRect.y,
                             aRect.width,
                             GetHeight(aRect.height),
-                            aParent,
+                            (HWND)aParent,
                             NULL,
                             nsToolkit::mDllInstance,
                             NULL);
