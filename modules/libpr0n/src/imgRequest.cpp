@@ -741,7 +741,15 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
       return NS_IMAGELIB_ERROR_NO_DECODER;
     }
 
-    mDecoder->Init(NS_STATIC_CAST(imgIRequest*, this));
+    nsresult rv = mDecoder->Init(NS_STATIC_CAST(imgIRequest*, this));
+    if (NS_FAILED(rv)) {
+      PR_LOG(gImgLog, PR_LOG_WARNING,
+             ("[this=%p] imgRequest::OnDataAvailable -- mDecoder->Init failed\n", this));
+
+      this->Cancel(NS_BINDING_ABORTED);
+
+      return NS_BINDING_ABORTED;
+    }
   }
 
   if (!mDecoder) {
