@@ -45,6 +45,16 @@
     window.openDialog("chrome://communicator/content/wallet/CookieViewer.xul","","modal=yes,chrome,resizable=no", 0);
   }  
 
+  function viewTutorial() 
+  {
+    pref = Components.classes['component://netscape/preferences'];
+    pref = pref.getService();
+    pref = pref.QueryInterface(Components.interfaces.nsIPref);
+    server = pref.getLocalizedUnicharPref("wallet.Samples");
+    window.openDialog
+      (server+"privacy.html","","modal=yes,chrome,resizable=yes,height=400,width=600", 0);
+  }  
+
  
   ]]>
   </script>   
@@ -68,6 +78,7 @@
               prefattribute="checked"/>
     <box autostretch="never" halign="right">
       <button class="dialog" value="&viewCookies.label;" accesskey="&viewCookies.accesskey;" oncommand="viewCookies();"/>
+      <button class="dialog" value="&viewTutorial.label;" accesskey="&viewTutorial.accesskey;" oncommand="viewTutorial();"/>
     </box>              
   </titledbox>
 

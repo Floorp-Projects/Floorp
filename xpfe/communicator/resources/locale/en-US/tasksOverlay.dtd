@@ -65,6 +65,8 @@
 <!ENTITY walletInterviewCmd.accesskey "i">
 <!ENTITY walletSamplesCmd.label "Demonstration">
 <!ENTITY walletSamplesCmd.accesskey "d">
+<!ENTITY walletTutorialCmd.label "Understanding Privacy">
+<!ENTITY walletTutorialCmd.accesskey "u">
 <!ENTITY walletChangePasswordCmd.label "Change Master Password...">
 <!ENTITY walletChangePasswordCmd.accesskey "c">
 <!ENTITY walletExpirePasswordCmd.label "Log Out">

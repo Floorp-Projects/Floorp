@@ -383,6 +383,10 @@ function WalletDialog( which )
     case "walletsites":
       window.openDialog("chrome://communicator/content/wallet/SignonViewer.xul","SSViewer","modal=yes,chrome,resizable=no","W"); 
       break;
+    case "tutorial":
+      server = this.pref.getLocalizedUnicharPref("wallet.Samples");
+      window._content.location.href = server + 'privacy.html';
+      break;
     case "wallet":
     default:
       window.openDialog("chrome://communicator/content/wallet/WalletEditor.xul","walletEditor","modal=yes,chrome,resizable=no"); 
