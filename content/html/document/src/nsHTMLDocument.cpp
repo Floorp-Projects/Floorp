@@ -266,6 +266,20 @@ NS_IMETHODIMP nsHTMLDocument::GetImageMap(const nsString& aMapName,
   return 1;/* XXX NS_NOT_FOUND */
 }
 
+NS_IMETHODIMP nsHTMLDocument::GetAttributeStyleSheet(nsIHTMLStyleSheet** aResult)
+{
+  NS_PRECONDITION(nsnull != aResult, "null ptr");
+  if (nsnull == aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  *aResult = mAttrStyleSheet;
+  if (nsnull == mAttrStyleSheet) {
+    return NS_ERROR_NOT_AVAILABLE;  // probably not the right error...
+  }
+  return NS_OK;
+}
+
+
 void nsHTMLDocument::AddStyleSheetToSet(nsIStyleSheet* aSheet, nsIStyleSet* aSet)
 {
   if ((nsnull != mAttrStyleSheet) && (aSheet != mAttrStyleSheet)) {

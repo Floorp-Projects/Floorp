@@ -21,6 +21,7 @@
 #include "nsISupports.h"
 class nsIImageMap;
 class nsString;
+class nsIHTMLStyleSheet;
 
 /* b2a848b0-d0a9-11d1-89b1-006008911b81 */
 #define NS_IHTMLDOCUMENT_IID \
@@ -36,6 +37,8 @@ public:
   NS_IMETHOD AddImageMap(nsIImageMap* aMap) = 0;
 
   NS_IMETHOD GetImageMap(const nsString& aMapName, nsIImageMap** aResult) = 0;
+
+  NS_IMETHOD GetAttributeStyleSheet(nsIHTMLStyleSheet** aStyleSheet) = 0;
 };
 
 #endif /* nsIHTMLDocument_h___ */
