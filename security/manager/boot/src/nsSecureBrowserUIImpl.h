@@ -22,7 +22,7 @@
  * Contributor(s):
  *   Hubbie Shaw
  *   Doug Turner <dougt@netscape.com>
- *   Brian Ryner <bryner@netscape.com>
+ *   Brian Ryner <bryner@brianryner.com>
  *   Kai Engert <kaie@netscape.com>
  *
  * ***** END LICENSE BLOCK ***** */

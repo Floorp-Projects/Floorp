@@ -18,7 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s):
- *  Brian Ryner <bryner@netscape.com>
+ *  Brian Ryner <bryner@brianryner.com>
  *  Javier Delgadillo <javi@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the

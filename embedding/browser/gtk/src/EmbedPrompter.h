@@ -19,7 +19,7 @@
  * 
  * Contributor(s):
  *   Christopher Blizzard <blizzard@mozilla.org>
- *   Brian Ryner <bryner@netscape.com>
+ *   Brian Ryner <bryner@brianryner.com>
  */
 
 #include <nsString.h>

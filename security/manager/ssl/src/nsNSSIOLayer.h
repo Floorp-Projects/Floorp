@@ -18,7 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s):
- *  Brian Ryner <bryner@netscape.com>
+ *  Brian Ryner <bryner@brianryner.com>
  */
 
 #ifndef _NSNSSIOLAYER_H
