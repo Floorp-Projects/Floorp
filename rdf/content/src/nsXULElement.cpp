@@ -1604,6 +1604,10 @@ nsXULElement::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject)
             fn = NS_NewScriptXULElement;
         }
 
+        // Create the script object; N.B. that if |mDocument| is null,
+        // the script object's |parent| will refer to the class's
+        // ctor. This is distinctly different from an element that
+        // lives "in" the document when its script object is created.
         rv = fn(aContext, (nsIDOMXULElement*) this, mDocument, (void**) &mScriptObject);
 
         // Ensure that a reference exists to this element
