@@ -607,7 +607,6 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
     
     // dont spaz my selection in subtransactions
     nsAutoTxnsConserveSelection dontSpazMySelection(mEditor);
-    nsSubsumeStr subStr;
     nsString tString(*outString);
     const PRUnichar *unicodeBuf = tString.get();
     nsCOMPtr<nsIDOMNode> unused;
@@ -618,6 +617,7 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
     // it is to search for both tabs and newlines.
     if (isPRE)
     {
+      NS_NAMED_LITERAL_STRING(newlineStr, "\n");
       char newlineChar = '\n';
       while (unicodeBuf && (pos != -1) && ((PRUint32)pos < tString.Length()))
       {
@@ -638,10 +638,10 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
           pos = tString.Length();
         }
 
-        subStr.Subsume((PRUnichar*)&unicodeBuf[oldPos], PR_FALSE, subStrLen);
+        nsDependentSubstring subStr(tString, oldPos, subStrLen);
         
         // is it a return?
-        if (subStr.EqualsWithConversion("\n"))
+        if (subStr.Equals(newlineStr))
         {
           if (nsIPlaintextEditor::eEditorSingleLineMask & mFlags)
           {
@@ -662,6 +662,8 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
     }
     else
     {
+      NS_NAMED_LITERAL_STRING(tabStr, "\t");
+      NS_NAMED_LITERAL_STRING(newlineStr, "\n");
       char specialChars[] = {'\t','\n',0};
       nsAutoString tabString; tabString.AssignWithConversion("    ");
       while (unicodeBuf && (pos != -1) && ((PRUint32)pos < tString.Length()))
@@ -683,16 +685,16 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
           pos = tString.Length();
         }
 
-        subStr.Subsume((PRUnichar*)&unicodeBuf[oldPos], PR_FALSE, subStrLen);
+        nsDependentSubstring subStr(tString, oldPos, subStrLen);
         
         // is it a tab?
-        if (subStr.EqualsWithConversion("\t"))
+        if (subStr.Equals(tabStr))
         {
           res = mEditor->InsertTextImpl(tabString, address_of(curNode), &curOffset, doc);
           pos++;
         }
         // is it a return?
-        else if (subStr.EqualsWithConversion("\n"))
+        else if (subStr.Equals(newlineStr))
         {
           res = mEditor->CreateBRImpl(address_of(curNode), &curOffset, address_of(unused), nsIEditor::eNone);
           pos++;

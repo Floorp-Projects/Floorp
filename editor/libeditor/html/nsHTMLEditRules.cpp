@@ -1059,7 +1059,6 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
     
     // dont spaz my selection in subtransactions
     nsAutoTxnsConserveSelection dontSpazMySelection(mHTMLEditor);
-    nsSubsumeStr subStr;
     nsAutoString tString(*inString);
     const PRUnichar *unicodeBuf = tString.get();
     nsCOMPtr<nsIDOMNode> unused;
@@ -1070,6 +1069,7 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
     // it is to search for both tabs and newlines.
     if (isPRE || bPlaintext)
     {
+      NS_NAMED_LITERAL_STRING(newlineStr, "\n");
       char newlineChar = '\n';
       while (unicodeBuf && (pos != -1) && (pos < (PRInt32)(*inString).Length()))
       {
@@ -1090,10 +1090,10 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
           pos = tString.Length();
         }
 
-        subStr.Subsume((PRUnichar*)&unicodeBuf[oldPos], PR_FALSE, subStrLen);
+        nsDependentSubstring subStr(tString, oldPos, subStrLen);
         
         // is it a return?
-        if (subStr.EqualsWithConversion("\n"))
+        if (subStr.Equals(newlineStr))
         {
           res = mHTMLEditor->CreateBRImpl(address_of(curNode), &curOffset, address_of(unused), nsIEditor::eNone);
           pos++;
@@ -1107,6 +1107,8 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
     }
     else
     {
+      NS_NAMED_LITERAL_STRING(tabStr, "\t");
+      NS_NAMED_LITERAL_STRING(newlineStr, "\n");
       char specialChars[] = {'\t','\n',0};
       nsAutoString tabString; tabString.AssignWithConversion("    ");
       while (unicodeBuf && (pos != -1) && (pos < (PRInt32)inString->Length()))
@@ -1128,12 +1130,12 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
           pos = tString.Length();
         }
 
-        subStr.Subsume((PRUnichar*)&unicodeBuf[oldPos], PR_FALSE, subStrLen);
+        nsDependentSubstring subStr(tString, oldPos, subStrLen);
         
         nsWSRunObject wsObj(mHTMLEditor, curNode, curOffset);
         
         // is it a tab?
-        if (subStr.EqualsWithConversion("\t"))
+        if (subStr.Equals(tabStr))
         {
 //        res = mHTMLEditor->InsertTextImpl(tabString, address_of(curNode), &curOffset, doc);
           res = wsObj.InsertText(tabString, address_of(curNode), &curOffset, doc);
@@ -1141,7 +1143,7 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
           pos++;
         }
         // is it a return?
-        else if (subStr.EqualsWithConversion("\n"))
+        else if (subStr.Equals(newlineStr))
         {
 //        res = mHTMLEditor->CreateBRImpl(address_of(curNode), &curOffset, address_of(unused), nsIEditor::eNone);
           res = wsObj.InsertBreak(address_of(curNode), &curOffset, address_of(unused), nsIEditor::eNone);

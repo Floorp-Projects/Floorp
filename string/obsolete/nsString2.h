@@ -67,8 +67,6 @@ class nsISizeOfHandler;
 #define nsString2     nsString
 #define nsAutoString2 nsAutoString
 
-class NS_COM nsSubsumeStr;
-
 class NS_COM nsString :
   public nsAFlatString,
   public nsStr {
@@ -98,16 +96,6 @@ public:
   explicit nsString(const PRUnichar*);
   nsString(const PRUnichar*, PRInt32);
 
-
-  /**
-   * This constructor takes a subsumestr
-   * @param   reference to subsumestr
-   */
-#if defined(AIX) || defined(XP_OS2_VACPP)
-  explicit nsString(const nsSubsumeStr& aSubsumeStr);   // AIX and VAC++ require a const here
-#else
-  explicit nsString(nsSubsumeStr& aSubsumeStr);   
-#endif
 
   /**
    * Destructor
@@ -568,13 +556,6 @@ public:
     explicit nsAutoString(PRUnichar aChar);
     explicit nsAutoString(const CBufDescriptor& aBuffer);    
 
-#if defined(AIX) || defined(XP_OS2_VACPP)
-    explicit nsAutoString(const nsSubsumeStr& aSubsumeStr);  // AIX and VAC++ requires a const
-#else
-    explicit nsAutoString(nsSubsumeStr& aSubsumeStr);
-#endif // AIX || XP_OS2_VACPP
-
-
     nsAutoString& operator=( const nsAutoString& aString )                          { Assign(aString); return *this; }
   private:
     void operator=( char ); // NOT TO BE IMPLEMENTED
@@ -645,37 +626,6 @@ class NS_COM NS_ConvertUTF8toUCS2
     private:
       NS_ConvertUTF8toUCS2( PRUnichar );
   };
-
-/***************************************************************
-  The subsumestr class is very unusual. 
-  It differs from a normal string in that it doesn't use normal
-  copy semantics when another string is assign to this. 
-  Instead, it "steals" the contents of the source string.
-
-  This is very handy for returning nsString classes as part of
-  an operator+(...) for example, in that it cuts down the number
-  of copy operations that must occur. 
-
-  You should probably not use this class unless you really know
-  what you're doing.
- ***************************************************************/
-class NS_COM nsSubsumeStr : public nsString {
-public:
-  nsSubsumeStr();
-  explicit nsSubsumeStr(nsStr& aString);
-  nsSubsumeStr(PRUnichar* aString,PRBool assumeOwnership,PRInt32 aLength=-1);
-  nsSubsumeStr(char* aString,PRBool assumeOwnership,PRInt32 aLength=-1);
-  int Subsume(PRUnichar* aString,PRBool assumeOwnership,PRInt32 aLength=-1);
-
-  nsSubsumeStr& operator=( const nsSubsumeStr& aReadable )                        { Assign(aReadable); return *this; }
-  nsSubsumeStr& operator=( const nsAString& aReadable )                           { Assign(aReadable); return *this; }
-//nsSubsumeStr& operator=( const nsPromiseReadable<PRUnichar>& aReadable )        { Assign(aReadable); return *this; }
-  nsSubsumeStr& operator=( const PRUnichar* aPtr )                                { Assign(aPtr); return *this; }
-  nsSubsumeStr& operator=( PRUnichar aChar )                                      { Assign(aChar); return *this; }
-private:
-  void operator=( char ); // NOT TO BE IMPLEMENTED
-};
-
 
 #endif
 

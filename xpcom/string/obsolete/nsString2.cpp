@@ -45,28 +45,6 @@ nsString::GetFlatBufferHandle() const
     return NS_REINTERPRET_CAST(const nsBufferHandle<PRUnichar>*, 1);
   }
 
-
-
-static void Subsume(nsStr& aDest,nsStr& aSource){
-  if(aSource.mStr && aSource.mLength) {
-    if(aSource.mOwnsBuffer){
-      nsStr::Destroy(aDest);
-      aDest.mStr=aSource.mStr;
-      aDest.mLength=aSource.mLength;
-      aDest.mCharSize=aSource.mCharSize;
-      aDest.mCapacity=aSource.mCapacity;
-      aDest.mOwnsBuffer=aSource.mOwnsBuffer;
-      aSource.mOwnsBuffer=PR_FALSE;
-      aSource.mStr=0;
-    }
-    else{
-      nsStr::StrAssign(aDest,aSource,0,aSource.mLength);
-    }
-  } 
-  else nsStr::StrTruncate(aDest,0);
-}
-
-
 /**
  * Default constructor. 
  */
@@ -98,25 +76,6 @@ nsString::nsString(const PRUnichar* aString,PRInt32 aCount) {
 nsString::nsString(const nsString& aString) {
   Initialize(*this,eTwoByte);
   StrAssign(*this,aString,0,aString.mLength);
-}
-
-/**
- * construct from subsumeable string
- * @update  gess 1/4/99
- * @param   reference to a subsumeString
- */
-#if defined(AIX) || defined(XP_OS2_VACPP)
-nsString::nsString(const nsSubsumeStr& aSubsumeStr)  {
-  Initialize(*this,eTwoByte);
-
-  nsSubsumeStr temp(aSubsumeStr);  // a temp is needed for the AIX and VAC++ compilers
-  Subsume(*this,temp);
-#else
-nsString::nsString(nsSubsumeStr& aSubsumeStr)  {
-  Initialize(*this,eTwoByte);
-
-  Subsume(*this,aSubsumeStr);
-#endif /* AIX  || XP_OS2_VACPP */
 }
 
 /**
@@ -1871,21 +1830,6 @@ nsAutoString::nsAutoString(PRUnichar aChar) : nsString(){
 }
 
 /**
- * construct from a subsumeable string
- * @update  gess 1/4/99
- * @param   reference to a subsumeString
- */
-#if defined(AIX) || defined(XP_OS2_VACPP)
-nsAutoString::nsAutoString(const nsSubsumeStr& aSubsumeStr) :nsString() {
-  nsSubsumeStr temp(aSubsumeStr);  // a temp is needed for the AIX and VAC++ compilers
-  Subsume(*this,temp);
-#else
-nsAutoString::nsAutoString( nsSubsumeStr& aSubsumeStr) :nsString() {
-  Subsume(*this,aSubsumeStr);
-#endif // AIX || XP_OS2_VACPP
-}
-
-/**
  * deconstruct the autstring
  * @param   
  */
@@ -1896,34 +1840,5 @@ void nsAutoString::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const {
   if (aResult) {
     *aResult = sizeof(*this) + mCapacity * mCharSize;
   }
-}
-
-nsSubsumeStr::nsSubsumeStr() : nsString() {
-}
-
-nsSubsumeStr::nsSubsumeStr(nsStr& aString) : nsString() {
-  ::Subsume(*this,aString);
-}
-
-nsSubsumeStr::nsSubsumeStr(PRUnichar* aString,PRBool assumeOwnership,PRInt32 aLength) : nsString() {
-  mUStr=aString;
-  mCharSize=eTwoByte;
-  mCapacity=mLength=(-1==aLength) ? nsCRT::strlen(aString) : aLength;
-  mOwnsBuffer=assumeOwnership;
-}
- 
-nsSubsumeStr::nsSubsumeStr(char* aString,PRBool assumeOwnership,PRInt32 aLength) : nsString() {
-  mStr=aString;
-  mCharSize=eOneByte;
-  mCapacity=mLength=(-1==aLength) ? strlen(aString) : aLength;
-  mOwnsBuffer=assumeOwnership;
-}
-
-int nsSubsumeStr::Subsume(PRUnichar* aString,PRBool assumeOwnership,PRInt32 aLength) {
-  mUStr=aString;
-  mCharSize=eTwoByte;
-  mCapacity=mLength=(-1==aLength) ? nsCRT::strlen(aString) : aLength;
-  mOwnsBuffer=assumeOwnership;
-  return 0;
 }
 
