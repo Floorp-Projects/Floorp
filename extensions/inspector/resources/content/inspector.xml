@@ -477,6 +477,7 @@
         </setter>
       </property>
 
+      <field name="mLinkedPanel">null</field>
       <field name="mCurrentViewer">null</field>
       <field name="mCurrentEntry">null</field>
       
