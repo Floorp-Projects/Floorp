@@ -48,6 +48,7 @@
 #include "nsEscape.h"
 
 #define POP3_PORT 110 // The IANA port for Pop3
+#define SECURE_POP3_PORT 995 // The port for Pop3 over SSL
 
 #define PREF_MAIL_ROOT_POP3 "mail.root.pop3"
 
@@ -572,7 +573,15 @@ nsPop3Service::GetNeedToBuildSpecialFolderURIs(PRBool *needToBuildSpecialFolderU
 NS_IMETHODIMP
 nsPop3Service::GetDefaultServerPort(PRBool isSecure, PRInt32 *aPort)
 {
-    return GetDefaultPort(aPort);
+    NS_ENSURE_ARG_POINTER(aPort);
+    nsresult rv = NS_OK;
+
+    if (isSecure)
+      *aPort = SECURE_POP3_PORT;
+    else
+      rv = GetDefaultPort(aPort);
+
+    return rv;
 }
 
 NS_IMETHODIMP

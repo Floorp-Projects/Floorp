@@ -431,6 +431,8 @@ nsresult nsPop3Protocol::Initialize(nsIURI * aURL)
 
   if (aURL)
   {
+    PRBool isSecure = PR_FALSE;
+
     // extract out message feedback if there is any.
     nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(aURL);
     if (mailnewsUrl)
@@ -439,6 +441,10 @@ nsresult nsPop3Protocol::Initialize(nsIURI * aURL)
       mailnewsUrl->GetStatusFeedback(getter_AddRefs(m_statusFeedback));
       mailnewsUrl->GetServer(getter_AddRefs(server));
       NS_ENSURE_TRUE(server, NS_MSG_INVALID_OR_MISSING_SERVER);
+
+      rv = server->GetIsSecure(&isSecure);
+      NS_ENSURE_SUCCESS(rv,rv);
+
       m_pop3Server = do_QueryInterface(server);
       if (m_pop3Server)
         m_pop3Server->GetPop3CapabilityFlags(&m_pop3ConData->capability_flags);
@@ -455,8 +461,13 @@ nsresult nsPop3Protocol::Initialize(nsIURI * aURL)
         ir = do_QueryInterface(docshell);
     }
 
-    // if the server is secure, pass in "ssl" for the last arg
-    rv = OpenNetworkSocket(aURL, nsnull, ir);
+    if (isSecure) {
+	    rv = OpenNetworkSocket(aURL, "ssl-forcehandshake", ir);
+    }
+    else {
+	    rv = OpenNetworkSocket(aURL, nsnull, ir);
+    }
+
 	if(NS_FAILED(rv))
 		return rv;
   } // if we got a url...

@@ -90,8 +90,8 @@ Contributors:
   <groupbox>
   <label value="&serverSettings.label;"/>
   <vbox flex="1">
-  <checkbox iscontrolcontainer="true" hidable="true" wsm_persist="true" id="server.isSecure"
-            label="&isSecure.label;" hidefor="pop3" oncommand="secureSelect();"
+  <checkbox iscontrolcontainer="true" wsm_persist="true" id="server.isSecure"
+            label="&isSecure.label;" oncommand="secureSelect();"
             pref="true" preftype="bool" prefattribute="value"
             prefstring="mail.server.%serverkey%.isSecure"/>
   <checkbox iscontrolcontainer="true" hidable="true" wsm_persist="true"
