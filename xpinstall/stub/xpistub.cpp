@@ -43,6 +43,7 @@
 #include "plstr.h"
 
 #ifdef XP_PC
+#include <windows.h>
 #include <direct.h>
 #define COMPONENT_REG "component.reg"
 #endif
@@ -103,13 +104,21 @@ PR_PUBLIC_API(nsresult) XPI_Init(
     {
     	rv = NS_ERROR_FAILURE;
     }
-#elif defined(XP_PC) || defined(XP_UNIX)
+#elif defined(XP_PC)
+    char componentPath[MAX_PATH];
+    getcwd(componentPath, MAX_PATH);
+
+    nsCOMPtr<nsILocalFile> file;
+    NS_NewLocalFile(componentPath, getter_AddRefs(file));
     
+    rv = NS_InitXPCOM(&gServiceMgr, file); 
+
+#elif defined(XP_UNIX)
     nsCOMPtr<nsILocalFile> file;
     NS_NewLocalFile(aProgramDir, getter_AddRefs(file));
     
     rv = NS_InitXPCOM(&gServiceMgr, file); 
-        
+
 #else
     rv = NS_InitXPCOM(&gServiceMgr, NULL);
 #endif
