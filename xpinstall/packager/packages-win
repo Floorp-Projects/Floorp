@@ -190,6 +190,7 @@ bin\components\urildr.dll
 bin\components\uriloader.xpt
 bin\components\exthandler.xpt
 bin\components\util.xpt
+bin\components\promptservice.xpt
 bin\components\wallet.dll
 bin\components\wallet.xpt
 bin\components\walleteditor.xpt

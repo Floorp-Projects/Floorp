@@ -86,6 +86,7 @@ components\editor.xpt
 components\webbrwsr.dll              
 components\webBrowser_core.xpt
 components\embedcomponents.dll
+components\promptservice.xpt
 components\windowwatcher.xpt
 
 ; find functionality
