@@ -226,7 +226,12 @@ sub update_makefiles {
       $ac_dir_suffix = "/$ac_dir";
       $ac_dir_suffix =~ s%^/\./%/%;
       $ac_dots = $ac_dir_suffix;
-      $ac_dots =~ s%/[^/]*/\.\.%%g;
+      # Remove .. components from the provided dir suffix, and
+      # also the forward path components they were reversing.
+      my $backtracks = $ac_dots =~ s%\.\.(/|$)%%g;
+      while ($backtracks--) {
+        $ac_dots =~ s%/[^/]*%%;
+      }
       $ac_dots =~ s%/[^/]*%../%g;
     }
     if ($ac_given_srcdir eq '.') {
@@ -238,6 +243,10 @@ sub update_makefiles {
       $srcdir     = "$pac_given_srcdir$ac_dir_suffix";
       $top_srcdir = "$pac_given_srcdir";
     } else {
+      if ($debug) {
+      	print "ac_dots       = $ac_dots\n";
+	print "ac_dir_suffix = $ac_dir_suffix\n";
+      }
       $srcdir     = "$ac_dots$ac_given_srcdir$ac_dir_suffix";
       $top_srcdir = "$ac_dots$ac_given_srcdir";
     }
