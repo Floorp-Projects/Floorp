@@ -3103,6 +3103,8 @@ nsMsgViewIndex nsMsgDBView::GetInsertIndex(nsIMsgDBHdr *msgHdr)
   nsMsgViewIndex highIndex = GetSize() - 1;
   IdDWord	dWordEntryInfo1, dWordEntryInfo2;
   IdKeyPtr	keyInfo1, keyInfo2;
+  keyInfo1.key=nsnull;
+  keyInfo2.key=nsnull;
   IdPRTime timeInfo1, timeInfo2;
   void *comparisonContext = nsnull;
   
@@ -3166,6 +3168,7 @@ nsMsgViewIndex nsMsgDBView::GetInsertIndex(nsIMsgDBHdr *msgHdr)
       break;
     if (fieldType == kCollationKey)
     {
+      PR_FREEIF(keyInfo2.key);
       rv = GetCollationKey(tryHdr, m_sortType, &(keyInfo2.key), &(keyInfo2.info.len));
       NS_ASSERTION(NS_SUCCEEDED(rv),"failed to create collation key");
       keyInfo2.info.id = messageKey;
@@ -3230,6 +3233,8 @@ nsMsgViewIndex nsMsgDBView::GetInsertIndex(nsIMsgDBHdr *msgHdr)
   else if (retStatus < 0)
     retIndex = tryIndex;
   
+  PR_FREEIF(keyInfo1.key);
+  PR_FREEIF(keyInfo2.key);
   return retIndex;
 }
 
