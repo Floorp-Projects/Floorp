@@ -24,6 +24,8 @@
 #include "nsFtpControlConnection.h"
 #include "nsFtpProtocolHandler.h"
 
+#include <limits.h>
+
 #include "nsISocketTransport.h"
 #include "nsIStreamConverterService.h"
 #include "prprf.h"
