@@ -21,24 +21,24 @@
 #
 #
 
-DEPTH		= ../../..
+DEPTH		= ..\..\..\..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
-include $(DEPTH)/config/autoconf.mk
+include <$(DEPTH)\config\autoconf.mk>
 
-DIRS        = content locale skin
+CHROME_DIR=packages\cview
+CHROME_CONTENT_DIR=cview\content
 
-CHROME_DIR = packages/cview
-CHROME_MISC_DIR = .
+CHROME_CONTENT = \
+		.\cviewOverlay.xul \
+		.\cviewOverlay.js \
+		.\cview.xul \
+		.\cview-utils.js \
+		.\cview-handlers.js \
+		.\cview-static.js \
+		.\cview-rdf.js \
+		$(NULL)
 
-# this is the magic variable that causes the various parts of the
-# chrome registration information to get created.
-CHROME_TYPE = content locale skin
-
-CHROME_MISC = \
-	manifest.rdf \
-	$(NULL)
-
-include $(topsrcdir)/config/rules.mk
+include <$(topsrcdir)/config/rules.mk>
