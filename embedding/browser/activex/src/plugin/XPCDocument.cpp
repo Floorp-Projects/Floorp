@@ -40,18 +40,27 @@
 #include "StdAfx.h"
 
 #include <mshtml.h>
-
-#include "XPConnect.h"
-#include "XPCBrowser.h"
-#include "LegacyPlugin.h"
+#include <hlink.h>
 
 #include "npapi.h"
 
 #include "nsCOMPtr.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsString.h"
+#include "nsNetUtil.h"
+
+#include "nsIURI.h"
 #include "nsIDOMWindow.h"
+#include "nsIDOMElement.h"
+#include "nsIDOMDocument.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIDOMLocation.h"
+#include "nsIWebNavigation.h"
+#include "nsILinkHandler.h"
+
+#include "XPConnect.h"
+#include "XPCBrowser.h"
+#include "LegacyPlugin.h"
 
 /*
  * This file contains partial implementations of various IE objects and
@@ -250,6 +259,7 @@ BEGIN_COM_MAP(IEWindow)
     COM_INTERFACE_ENTRY(IDispatch)
     COM_INTERFACE_ENTRY(IHTMLWindow2)
     COM_INTERFACE_ENTRY(IHTMLFramesCollection2)
+    COM_INTERFACE_ENTRY_BREAK(IHlinkFrame)
 END_COM_MAP()
 
 //IHTMLFramesCollection2
@@ -649,7 +659,7 @@ END_COM_MAP()
         /* [out][retval] */ BSTR __RPC_FAR *String)
     {
         return E_NOTIMPL;
-            }
+    }
     
     virtual /* [id] */ HRESULT STDMETHODCALLTYPE scrollBy( 
         /* [in] */ long x,
@@ -706,11 +716,15 @@ class IEDocument :
     public CComObjectRootEx<CComSingleThreadModel>,
     public IDispatchImpl<IHTMLDocument2, &IID_IHTMLDocument2, &LIBID_MSHTML>,
     public IServiceProvider,
-    public IOleContainer
+    public IOleContainer,
+    public IBindHost,
+    public IHlinkFrame
 {
 public:
     PluginInstanceData *mData;
 
+    nsCOMPtr<nsIDOMWindow> mDOMWindow;
+    nsCOMPtr<nsIDOMDocument> mDOMDocument;
     CComObject<IEWindow> *mWindow;
     CComObject<IEBrowser> *mBrowser;
     CComBSTR mURL;
@@ -726,12 +740,20 @@ public:
     HRESULT Init(PluginInstanceData *pData)
     {
         mData = pData;
+        nsCOMPtr<nsIDOMElement> element;
 
-        nsCOMPtr<nsIDOMWindow> window;
-        NPN_GetValue(mData->pPluginInstance, NPNVDOMWindow, (void *) &window);
-        if (window)
+        // Get the DOM document
+        NPN_GetValue(mData->pPluginInstance, NPNVDOMElement, (void *) &element);
+        if (element)
         {
-            nsCOMPtr<nsIDOMWindowInternal> windowInternal = do_QueryInterface(window);
+            element->GetOwnerDocument(getter_AddRefs(mDOMDocument));
+        }
+
+        // Get the DOM window
+        NPN_GetValue(mData->pPluginInstance, NPNVDOMWindow, (void *) &mDOMWindow);
+        if (mDOMWindow)
+        {
+            nsCOMPtr<nsIDOMWindowInternal> windowInternal = do_QueryInterface(mDOMWindow);
             if (windowInternal)
             {
                 nsCOMPtr<nsIDOMLocation> location;
@@ -757,7 +779,7 @@ public:
 
         CComObject<IEBrowser>::CreateInstance(&mBrowser);
         ATLASSERT(mBrowser);
-        if (mBrowser)
+        if (!mBrowser)
         {
             return E_OUTOFMEMORY;
         }
@@ -781,12 +803,15 @@ public:
     }
 
 BEGIN_COM_MAP(IEDocument)
+    COM_INTERFACE_ENTRY(IServiceProvider)
     COM_INTERFACE_ENTRY(IDispatch)
     COM_INTERFACE_ENTRY(IHTMLDocument)
     COM_INTERFACE_ENTRY(IHTMLDocument2)
-    COM_INTERFACE_ENTRY(IServiceProvider)
     COM_INTERFACE_ENTRY(IParseDisplayName)
     COM_INTERFACE_ENTRY(IOleContainer)
+    COM_INTERFACE_ENTRY(IBindHost)
+    COM_INTERFACE_ENTRY_BREAK(IHlinkTarget)
+    COM_INTERFACE_ENTRY(IHlinkFrame)
 END_COM_MAP()
 
 // IServiceProvider
@@ -814,6 +839,10 @@ END_COM_MAP()
         else if (IsEqualIID(riid, __uuidof(IHTMLDocument2)))
         {
             ATLTRACE(_T("  IHTMLDocument2\n"));
+        }
+        else if (IsEqualIID(riid, __uuidof(IBindHost)))
+        {
+            ATLTRACE(_T("  IBindHost\n"));
         }
         else
         {
@@ -1524,6 +1553,154 @@ END_COM_MAP()
     {
         return E_NOTIMPL;
     }
+
+
+// IHlinkFrame
+    virtual HRESULT STDMETHODCALLTYPE SetBrowseContext( 
+        /* [unique][in] */ IHlinkBrowseContext *pihlbc)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual HRESULT STDMETHODCALLTYPE GetBrowseContext( 
+        /* [out] */ IHlinkBrowseContext **ppihlbc)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual HRESULT STDMETHODCALLTYPE Navigate( 
+        /* [in] */ DWORD grfHLNF,
+        /* [unique][in] */ LPBC pbc,
+        /* [unique][in] */ IBindStatusCallback *pibsc,
+        /* [unique][in] */ IHlink *pihlNavigate)
+    {
+        if (!pihlNavigate) return E_INVALIDARG;
+        // TODO check grfHLNF for type of link
+        LPWSTR szTarget = NULL;
+        LPWSTR szLocation = NULL;
+        LPWSTR szTargetFrame = NULL;
+        HRESULT hr;
+        hr = pihlNavigate->GetStringReference(HLINKGETREF_DEFAULT, &szTarget, &szLocation);
+        hr = pihlNavigate->GetTargetFrameName(&szTargetFrame);
+        if (szTarget && szTarget[0] != WCHAR('\0'))
+        {
+            nsCAutoString spec = NS_ConvertUCS2toUTF8(szTarget);
+            nsCOMPtr<nsIURI> uri;
+            nsresult rv = NS_NewURI(getter_AddRefs(uri), spec);
+            if (NS_SUCCEEDED(rv) && uri)
+            {
+                nsCOMPtr<nsIWebNavigation> webNav = do_GetInterface(mDOMWindow);
+                if (webNav)
+                {
+                    nsCOMPtr<nsILinkHandler> lh = do_QueryInterface(webNav);
+                    if (lh)
+                    {
+                        lh->OnLinkClick(nsnull, eLinkVerb_Replace,
+                            uri, szTargetFrame);
+                    }
+                }
+                hr = S_OK;
+            }
+            else
+            {
+                hr = E_FAIL;
+            }
+        }
+        else
+        {
+            hr = E_FAIL;
+        }
+        if (szTarget)
+            CoTaskMemFree(szTarget);
+        if (szLocation)
+            CoTaskMemFree(szLocation);
+        if (szTargetFrame)
+            CoTaskMemFree(szTargetFrame);
+        return hr;
+    }
+    
+    virtual HRESULT STDMETHODCALLTYPE OnNavigate( 
+        /* [in] */ DWORD grfHLNF,
+        /* [unique][in] */ IMoniker *pimkTarget,
+        /* [unique][in] */ LPCWSTR pwzLocation,
+        /* [unique][in] */ LPCWSTR pwzFriendlyName,
+        /* [in] */ DWORD dwreserved)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual HRESULT STDMETHODCALLTYPE UpdateHlink( 
+        /* [in] */ ULONG uHLID,
+        /* [unique][in] */ IMoniker *pimkTarget,
+        /* [unique][in] */ LPCWSTR pwzLocation,
+        /* [unique][in] */ LPCWSTR pwzFriendlyName)
+    {
+        return E_NOTIMPL;
+    }
+
+// IBindHost
+    virtual HRESULT STDMETHODCALLTYPE CreateMoniker( 
+        /* [in] */ LPOLESTR szName,
+        /* [in] */ IBindCtx *pBC,
+        /* [out] */ IMoniker **ppmk,
+        /* [in] */ DWORD dwReserved)
+    {
+    	if (!szName || !ppmk) return E_POINTER;
+		if (!*szName) return E_INVALIDARG;
+
+		*ppmk = NULL;
+		HRESULT hr = CreateURLMoniker(NULL, szName, ppmk);
+		if (SUCCEEDED(hr) && !*ppmk)
+			hr = E_FAIL;
+		return hr;
+    }
+    
+    virtual /* [local] */ HRESULT STDMETHODCALLTYPE MonikerBindToStorage( 
+        /* [in] */ IMoniker *pMk,
+        /* [in] */ IBindCtx *pBC,
+        /* [in] */ IBindStatusCallback *pBSC,
+        /* [in] */ REFIID riid,
+        /* [out] */ void **ppvObj)
+    {
+		if (!pMk || !ppvObj) return E_POINTER;
+
+		*ppvObj = NULL;
+		HRESULT hr = S_OK;
+        CComPtr<IBindCtx> spBindCtx;
+		if (pBC)
+		{
+			spBindCtx = pBC;
+			if (pBSC)
+			{
+				hr = RegisterBindStatusCallback(spBindCtx, pBSC, NULL, 0);
+				if (FAILED(hr))
+					return hr;
+			}
+		}
+		else
+		{
+			if (pBSC)
+				hr = CreateAsyncBindCtx(0, pBSC, NULL, &spBindCtx);
+			else
+				hr = CreateBindCtx(0, &spBindCtx);
+			if (SUCCEEDED(hr) && !spBindCtx)
+				hr = E_FAIL;
+			if (FAILED(hr))
+				return hr;
+		}
+		return pMk->BindToStorage(spBindCtx, NULL, riid, ppvObj);
+    }
+    
+    virtual /* [local] */ HRESULT STDMETHODCALLTYPE MonikerBindToObject( 
+        /* [in] */ IMoniker *pMk,
+        /* [in] */ IBindCtx *pBC,
+        /* [in] */ IBindStatusCallback *pBSC,
+        /* [in] */ REFIID riid,
+        /* [out] */ void **ppvObj)
+    {
+        return E_NOTIMPL;
+    }
+
 };
 
 HRESULT xpc_GetServiceProvider(PluginInstanceData *pData, IServiceProvider **pSP)

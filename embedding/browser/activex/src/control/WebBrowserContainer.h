@@ -76,8 +76,8 @@ protected:
 protected:
     CMozillaBrowser *mOwner;
     nsCOMPtr<nsIURI> mCurrentURI;
-    CDWebBrowserEvents1 *mEvents1;
-    CDWebBrowserEvents2 *mEvents2;
+    CProxyDWebBrowserEvents<CMozillaBrowser>  *mEvents1;
+    CProxyDWebBrowserEvents2<CMozillaBrowser> *mEvents2;
     nsString mTitle;
     PRPackedBool mVisible;
 
