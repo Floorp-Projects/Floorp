@@ -536,11 +536,13 @@ done:
     nsServiceManager::ReleaseService(kPrefCID, prefs);
   }
 
+#ifdef XP_PC
   /* Release the global profile... */
   if (profile) {
     profile->Shutdown();
     nsServiceManager::ReleaseService(kProfileCID, profile);
   }
+#endif
 
   /* 
    * Translate the nsresult into an appropriate platform-specific return code.
