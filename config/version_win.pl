@@ -37,6 +37,10 @@
 
 #use diagnostics;
 require strict;
+my $dir = $0;
+$dir =~ s/[^\/]*$//;
+push(@INC, "$dir");
+require "Moz/Milestone.pm";
 use Getopt::Long;
 use Getopt::Std;
 
@@ -203,16 +207,16 @@ if ($official eq "1") {
 		$fileflags = "VS_FF_PRERELEASE | VS_FF_DEBUG";
 	}
 
-        # Try to grab milestone from milestone.pl
+        # Try to grab milestone.
         # I'd love to put this in the makefiles rather than here,
         # since I could run it once per build rather than once per
         # dll/program, but I can't seem to get backticks working
         # properly in the makefiles =P
         if ($milestone eq "") {
-            $milestone = `perl $topsrcdir/config/milestone.pl --topsrcdir $topsrcdir --getms`;
+            $milestone = Moz::Milestone::getOfficialMilestone();
         }
 
-	if ($milestone ne "") {
+	if ($milestone ne "" && $milestone !~ /\+$/) {
 		#its a milestone build
 
 		$mpversion = $milestone;

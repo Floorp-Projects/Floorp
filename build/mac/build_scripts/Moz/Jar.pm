@@ -16,6 +16,7 @@ use File::Path;
 use Mac::Files;
 
 use Moz::Moz;
+use Moz::Milestone;
 
 use vars qw( @ISA @EXPORT );
 
@@ -184,12 +185,32 @@ sub addToJarFile($$$$$$$)
     my($src) = $jar_man_dir.":".$file_src;
     if ((!-e $src) && ($file_src =~ m/.+:([^:]+)$/))    # src does not exist. Fall back to looking for src in jar.mn dir
     {
-        $file_src = $1;
-        $src = $jar_man_dir.":".$file_src;
-        
-        if (!-e $src) {
-            die "Error: Can't find chrome file $src\n";
+				    my $tmpl_file = "$src.tmpl";
+        if (-e $tmpl_file) {
+            my $mfile = $src;
+
+            #
+            # A sloppy way of getting $topsrcdir... but not sure how to do it otherwise.
+            #
+            if ($mfile =~ /:ns:/) {
+              $mfile =~ s/:ns:.*$/:ns/;
+            } else { 
+              $mfile =~ s/:mozilla:.*$/:mozilla/;
+            }
+            $mfile =~ s/:$//;
+            $mfile .= ":config:milestone.txt";
+
+            Moz::Milestone::getOfficialMilestone($mfile);
+            Moz::Milestone::build_file($tmpl_file,$src);
         }
+        else {
+            $file_src = $1;
+            $src = $jar_man_dir.":".$file_src;
+        
+            if (!-e $src) {
+                die "Error: Can't find chrome file $src\n";
+												}     
+   				 }
     }
     
     if ($main::options{chrome_jars})
