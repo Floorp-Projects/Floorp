@@ -15,7 +15,6 @@ ac_add_options --disable-mailnews
 ac_add_options --enable-extensions=pref
 ac_add_options --enable-crypto
 ac_add_options --disable-composer
-ac_add_options --disable-profilesharing
 ac_add_options --enable-plaintext-editor-only
 ac_add_options --enable-necko-protocols=about,http,file,jar,res
 ac_add_options --disable-accessibility
