@@ -137,7 +137,6 @@ function onOK()
 
   // Set the HREF directly on the editor document's anchor node
   //  or on the newly-created node if insertNew is true
-//  dump(anchorElement + "\n");
   anchorElement.setAttribute("href",dialog.hrefInput.value);
 
   // Get text to use for a new link

@@ -459,7 +459,11 @@ nsEditor::GetBodyElement(nsIDOMElement **aBodyElement)
     // Is above equivalent to this:
     nsCOMPtr<nsIDOMElement> bodyElement = do_QueryInterface(node);
     if (bodyElement)
+    {
       *aBodyElement = bodyElement;
+      // A "getter" method should always addref
+      NS_ADDREF(*aBodyElement);
+    }
   }
   return result;
 }
@@ -2548,7 +2552,7 @@ nsEditor::IsNodeInline(nsIDOMNode *aNode, PRBool &aIsInline)
           tagAtom==nsIEditProperty::sub    ||
           tagAtom==nsIEditProperty::sup    ||
           tagAtom==nsIEditProperty::tt     ||
-          tagAtom==nsIEditProperty::u        )
+          tagAtom==nsIEditProperty::u      )
       {
         aIsInline = PR_TRUE;
       }

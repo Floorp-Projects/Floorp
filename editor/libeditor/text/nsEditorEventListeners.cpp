@@ -987,6 +987,26 @@ nsTextEditorMouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
 nsresult
 nsTextEditorMouseListener::MouseDblClick(nsIDOMEvent* aMouseEvent)
 {
+  if (mEditor)
+  {
+    nsIHTMLEditor * HTMLEditor;
+    if (NS_SUCCEEDED(mEditor->QueryInterface(nsIHTMLEditor::GetIID(), (void**)&HTMLEditor)))
+    {
+      nsCOMPtr<nsIDOMElement> selectedElement;
+      if (NS_SUCCEEDED(HTMLEditor->GetSelectedElement("", getter_AddRefs(selectedElement))) && selectedElement)
+      {
+        nsAutoString TagName;
+        selectedElement->GetTagName(TagName);
+        TagName.ToLowerCase();
+
+#if DEBUG_cmanske
+        char szTagName[64];
+        TagName.ToCString(szTagName, 64);
+        printf("Single Selected element found: %s\n", szTagName);
+#endif
+      }
+    }
+  }
   return NS_OK;
 }
 
