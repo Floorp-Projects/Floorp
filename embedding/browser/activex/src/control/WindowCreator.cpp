@@ -76,9 +76,9 @@ CWindowCreator::CreateChromeWindow(nsIWebBrowserChrome *aParent, PRUint32 aChrom
     VARIANT_BOOL bCancel = VARIANT_FALSE;
 
     // Test if the event sink can give us a new window to navigate into
-    if (pContainer->m_pEvents2)
+    if (pContainer->mEvents2)
     {
-        pContainer->m_pEvents2->Fire_NewWindow2(&dispNew, &bCancel);
+        pContainer->mEvents2->Fire_NewWindow2(&dispNew, &bCancel);
         if ((bCancel == VARIANT_FALSE) && dispNew)
         {
             CComQIPtr<IMozControlBridge> cpBridge = dispNew;

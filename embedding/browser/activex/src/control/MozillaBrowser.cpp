@@ -48,6 +48,7 @@
 #include "IEHtmlDocument.h"
 #include "PropertyDlg.h"
 #include "PromptService.h"
+#include "HelperAppDlg.h"
 #include "WindowCreator.h"
 
 #include "nsCWebBrowser.h"
@@ -75,7 +76,11 @@ static HANDLE s_hHackedNonReentrancy = NULL;
 #define NS_PROMPTSERVICE_CID \
   {0xa2112d6a, 0x0e28, 0x421f, {0xb4, 0x6a, 0x25, 0xc0, 0xb3, 0x8, 0xcb, 0xd0}}
 
+#define NS_HELPERAPPLAUNCHERDIALOG_CID \
+    {0xf68578eb, 0x6ec2, 0x4169, {0xae, 0x19, 0x8c, 0x62, 0x43, 0xf0, 0xab, 0xe1}}
+
 static NS_DEFINE_CID(kPromptServiceCID, NS_PROMPTSERVICE_CID);
+static NS_DEFINE_CID(kHelperAppLauncherDialogCID, NS_HELPERAPPLAUNCHERDIALOG_CID);
 
 // Macros to return errors from bad calls to the automation
 // interfaces and sets a descriptive string on IErrorInfo so VB programmers
@@ -735,7 +740,7 @@ LRESULT CMozillaBrowser::OnViewSource(WORD wNotifyCode, WORD wID, HWND hWndCtl, 
 {
     NG_TRACE_METHOD(CMozillaBrowser::OnViewSource);
 
-    if (mWebBrowserContainer->m_pCurrentURI)
+    if (mWebBrowserContainer->mCurrentURI)
     {
         // No URI to view!
         NG_ASSERT(0);
@@ -744,7 +749,7 @@ LRESULT CMozillaBrowser::OnViewSource(WORD wNotifyCode, WORD wID, HWND hWndCtl, 
 
     // Get the current URI
     nsCAutoString aURI;
-    mWebBrowserContainer->m_pCurrentURI->GetSpec(aURI);
+    mWebBrowserContainer->mCurrentURI->GetSpec(aURI);
 
     nsAutoString strURI;
     strURI.Assign(NS_LITERAL_STRING("view-source:"));
@@ -1045,6 +1050,15 @@ HRESULT CMozillaBrowser::Initialize()
             promptFactory,
             PR_TRUE); // replace existing
 
+        // Helper app launcher dialog
+        nsCOMPtr<nsIFactory> helperAppDlgFactory;
+        rv = NS_NewHelperAppLauncherDlgFactory(getter_AddRefs(helperAppDlgFactory));
+        rv = nsComponentManager::RegisterFactory(kHelperAppLauncherDialogCID,
+            "Helper App Launcher Dialog",
+            "@mozilla.org/helperapplauncherdialog;1",
+            helperAppDlgFactory,
+            PR_TRUE); // replace existing
+
         // create our local object
         CWindowCreator *creator = new CWindowCreator();
         nsCOMPtr<nsIWindowCreator> windowCreator;
@@ -1104,8 +1118,6 @@ HRESULT CMozillaBrowser::CreateBrowser()
 
     nsresult rv;
 
-    PRBool aAllowPlugins = PR_TRUE;
-
     // Create the web browser
     mWebBrowser = do_CreateInstance(NS_WEBBROWSER_CONTRACTID, &rv);
     if (NS_FAILED(rv))
@@ -1118,8 +1130,14 @@ HRESULT CMozillaBrowser::CreateBrowser()
 
     // Configure what the web browser can and cannot do
     nsCOMPtr<nsIWebBrowserSetup> webBrowserAsSetup(do_QueryInterface(mWebBrowser));
-    // webBrowserAsSetup->SetProperty(nsIWebBrowserSetup::SETUP_ALLOW_PLUGINS, aAllowPlugins);
-    // webBrowserAsSetup->SetProperty(nsIWebBrowserSetup::SETUP_CONTAINS_CHROME, PR_TRUE);
+
+    // Allow plugins?
+    const PRBool kAllowPlugins = PR_TRUE;
+    webBrowserAsSetup->SetProperty(nsIWebBrowserSetup::SETUP_ALLOW_PLUGINS, kAllowPlugins);
+
+    // Host chrome or content?
+    const PRBool kHostChrome = PR_FALSE; // Hardcoded for now
+    webBrowserAsSetup->SetProperty(nsIWebBrowserSetup::SETUP_IS_CHROME_WRAPPER, PR_FALSE);
 
     // Create the webbrowser window
     mWebBrowserAsWin = do_QueryInterface(mWebBrowser);
