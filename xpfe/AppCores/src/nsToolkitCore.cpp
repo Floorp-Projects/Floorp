@@ -315,8 +315,8 @@ nsToolkitCore::ShowWindowWithArgs(const nsString& aUrl,
   if (NS_FAILED(rv)) return rv;
 
   nsIURI *uri = nsnull;
-  const char *uriStr = aUrl.GetBuffer();
-  rv = service->NewURI(uriStr, nsnull, &uri);
+  nsCAutoString aUriStr(aUrl);
+  rv = service->NewURI(aUriStr, nsnull, &uri);
   if (NS_FAILED(rv)) return rv;
 
   rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&urlObj);
