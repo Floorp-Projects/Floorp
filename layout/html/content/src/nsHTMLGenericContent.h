@@ -44,6 +44,13 @@ class nsIStyleContext;
 class nsIStyleRule;
 class nsISupportsArray;
 
+enum nsSetAttrNotify {
+  eSetAttrNotify_None = 0,
+  eSetAttrNotify_Render = 1,
+  eSetAttrNotify_Reflow = 2,
+  eSetAttrNotify_Restart = 3
+};
+
 struct nsHTMLGenericContent {
   nsHTMLGenericContent();
   ~nsHTMLGenericContent();
@@ -141,6 +148,12 @@ struct nsHTMLGenericContent {
                        nsIFrame*&       aResult);
 
   //----------------------------------------
+
+  nsresult SetAttr(nsIAtom* aAttribute, const nsString& aValue,
+                   nsSetAttrNotify aNotify);
+
+  nsresult SetAttr(nsIAtom* aAttribute, const nsHTMLValue& aValue,
+                   nsSetAttrNotify aNotify);
 
   nsresult AddScriptEventListener(nsIAtom* aAttribute,
                                   nsHTMLValue& aValue,
