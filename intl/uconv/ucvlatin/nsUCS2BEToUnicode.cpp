@@ -76,10 +76,6 @@ public:
   NS_IMETHOD Convert(const char * aSrc, PRInt32 * aSrcLength,
       PRUnichar * aDest, PRInt32 * aDestLength); 
   NS_IMETHOD Reset();
-  /**
-   * Static class constructor.
-   */
-  static nsresult CreateInstance(nsISupports **aResult);
 
 protected:
   //--------------------------------------------------------------------
@@ -92,11 +88,6 @@ protected:
   PRUint8 mData;
 };
 
-nsresult nsUTF16SameEndianToUnicode::CreateInstance(nsISupports ** aResult) 
-{
-  *aResult = new nsUTF16SameEndianToUnicode();
-  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-}
 
 //----------------------------------------------------------------------
 // Subclassing of nsTableDecoderSupport class [implementation]

@@ -443,7 +443,7 @@ FactoryData g_FactoryData[] =
     "Unicode"
   },
   {
-    &kUTF32LEToUnicodeCID,
+    &kUTF16LEToUnicodeCID,
     //nsUCS2LEToUnicode::CreateInstance,
     NEW_UTF16LEToUnicode,
     "UTF-16LE",
@@ -745,15 +745,23 @@ FactoryData g_FactoryData[] =
   },
   {
     &kUnicodeToUTF16BECID,
-    nsUnicodeToUCS2BE::CreateInstance,
+    // nsUnicodeToUCS2BE::CreateInstance,
+    NEW_UnicodeToUTF16BE,
     "Unicode",
     "UTF-16BE"
   },
   {
-    &kUnicodeToUTF16CID,
-    nsUnicodeToUCS2LE::CreateInstance,
+    &kUnicodeToUTF16LECID,
+    // nsUnicodeToUCS2LE::CreateInstance,
+    NEW_UnicodeToUTF16LE,
     "Unicode",
     "UTF-16LE"
+  },
+  {
+    &kUnicodeToUTF16CID,
+    NEW_UnicodeToUTF16,
+    "Unicode",
+    "UTF-16"
   },
   {
     &kUnicodeToUTF32BECID,
@@ -793,8 +801,8 @@ FactoryData g_FactoryData[] =
   }
 };
 
-#define ARRAY_SIZE(_array)                                      \
-     (sizeof(_array) / sizeof(_array[0]))
+#define ARRAY_SIZE                                      \
+     (sizeof(g_FactoryData) / sizeof(FactoryData))
 
 //----------------------------------------------------------------------
 // Class nsConverterFactory [declaration]
@@ -861,7 +869,7 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* aServMgr,
   nsConverterFactory * fac;
   FactoryData * data;
 
-  for (PRUint32 i=0; i<ARRAY_SIZE(g_FactoryData); i++) {
+  for (PRUint32 i=0; i<ARRAY_SIZE; i++) {
     data = &(g_FactoryData[i]);
     if (aClass.Equals(*(data->mCID))) {
       fac = new nsConverterFactory(data);
@@ -910,7 +918,7 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports * aServMgr,
 
   char name[128];
   char progid[128];
-  for (i=0; i<ARRAY_SIZE(g_FactoryData); i++) {
+  for (i=0; i<ARRAY_SIZE; i++) {
     if(0==PL_strcmp(g_FactoryData[i].mCharsetSrc,"Unicode"))
     {
        PL_strcpy(name, DECODER_NAME_BASE);
@@ -964,7 +972,7 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf_0(nsISupports* aServMgr, const char
                            (nsISupports**)&compMgr);
   if (NS_FAILED(rv)) return rv;
 
-  for (PRUint32 i=0; i<ARRAY_SIZE(g_FactoryData); i++) {
+  for (PRUint32 i=0; i<ARRAY_SIZE; i++) {
     rv = compMgr->RegisterComponent(*(g_FactoryData[i].mCID), NULL, NULL,
       path, PR_TRUE, PR_TRUE);
     if(NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS != rv)) goto done;
@@ -988,7 +996,7 @@ extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char
                            (nsISupports**)&compMgr);
   if (NS_FAILED(rv)) return rv;
 
-  for (PRUint32 i=0; i<ARRAY_SIZE(g_FactoryData); i++) {
+  for (PRUint32 i=0; i<ARRAY_SIZE; i++) {
     rv = compMgr->UnregisterComponent(*(g_FactoryData[i].mCID), path);
     if(NS_FAILED(rv)) goto done;
   }
