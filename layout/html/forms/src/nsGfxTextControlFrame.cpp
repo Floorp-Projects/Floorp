@@ -1100,7 +1100,13 @@ void nsGfxTextControlFrame::CalcSizeOfSubDocInTwips(const nsMargin &aBorder,
     aSubBounds.x      = aBorder.left + aPadding.left;
     aSubBounds.y      = aBorder.top + aPadding.top;
     aSubBounds.width  = (aFrameSize.width - (aBorder.left + aPadding.left + aBorder.right + aPadding.right));
+    if (aSubBounds.width<0) {
+      aSubBounds.width = 0;
+    }
     aSubBounds.height = (aFrameSize.height - (aBorder.top + aPadding.top + aBorder.bottom + aPadding.bottom));
+    if (aSubBounds.height<0) {
+      aSubBounds.height = 0;
+    }
 }
 
 PRInt32 
@@ -2050,6 +2056,9 @@ nsGfxTextControlFrame::Reflow(nsIPresContext* aPresContext,
 {
 #ifdef DEBUG
   mDebugTotalReflows++;
+  if (1==mDebugTotalReflows) {  // first reflow, better be initial reflow!
+    NS_ASSERTION((eReflowReason_Initial == aReflowState.reason), "Frame got first reflow, but reason is not "initial");
+  }
   if (eReflowReason_Resize == aReflowState.reason) {
     mDebugResizeReflows++;
   }
