@@ -1083,27 +1083,19 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
   const nsStyleVisibility* vis;
   GetStyleData(eStyleStruct_Visibility, (const nsStyleStruct*&)vis);
 
-  if (vis->mDirection == NS_STYLE_DIRECTION_RTL)
-  {
+  if (vis->mDirection == NS_STYLE_DIRECTION_RTL) {
     nscoord bidiScrolledAreaWidth = scrolledAreaDesiredSize.maxElementSize->width;
     firstPassState.reason = eReflowReason_StyleChange;
-    float p2t;
-    aPresContext->GetScaledPixelsToTwips(&p2t);
-    if (aReflowState.mComputedWidth == NS_UNCONSTRAINEDSIZE)
-    {
-      if (needsVerticalScrollbar) {
-        bidiScrolledAreaWidth -= scrollbarWidth;
-      } else {
-        bidiScrolledAreaWidth = aReflowState.mComputedWidth - scrollbarWidth + (6 * p2t);
-        if (needsVerticalScrollbar) bidiScrolledAreaWidth -= scrollbarWidth;
-      }
-
-      bidiScrolledAreaWidth -= (aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right);
-
-      firstPassState.mComputedWidth  = bidiScrolledAreaWidth;
-      firstPassState.availableWidth = bidiScrolledAreaWidth;
-      nsScrollFrame::Reflow(aPresContext, aDesiredSize, firstPassState, aStatus);
+    if (aReflowState.mComputedWidth != NS_UNCONSTRAINEDSIZE) {
+      bidiScrolledAreaWidth = aReflowState.mComputedWidth;
     }
+    if (needsVerticalScrollbar) {
+      bidiScrolledAreaWidth -= scrollbarWidth;
+    }
+
+    firstPassState.mComputedWidth  = bidiScrolledAreaWidth;
+    firstPassState.availableWidth = bidiScrolledAreaWidth;
+    nsScrollFrame::Reflow(aPresContext, aDesiredSize, firstPassState, aStatus);
   }
 #endif // IBMBIDI
 
