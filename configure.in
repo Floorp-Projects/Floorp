@@ -112,7 +112,7 @@ AC_ARG_ENABLE(random-options,
 
 	    AC_MSG_RESULT([$_new_args]);
 		
-            ac_configure_args=`echo $ac_configure_args | sed 's|--enable-random-options||'`
+            ac_configure_args=`echo $ac_configure_args | sed 's/--enable-random-options//'`
 	    ac_configure_args="$ac_configure_args $_new_args";
 
 	fi
@@ -751,6 +751,8 @@ alpha*-*-osf*)
 	AC_DEFINE(NSCAP_DISABLE_TEST_DONTQUERY_CASES)
 	AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
     fi
+    dnl Needed in order to pick up the prototype for usleep.
+    AC_DEFINE(_XOPEN_SOURCE_EXTENDED)
     ;;
 
 *-qnx*) 
@@ -2441,8 +2443,8 @@ dnl = Enable debug for specific modules only
 dnl = 
 dnl ========================================================
 MOZ_ARG_WITH_STRING(debug-modules,
-[  --with-debug-modules          Enable debug for specific modulues only],
-  [ MOZ_DEBUG_MODULES=`echo $withval | sed 's|,| |g'` ] )
+[  --with-debug-modules          Enable debug for specific modules only],
+  [ MOZ_DEBUG_MODULES=`echo $withval | sed 's/,/ /g'` ] )
 dnl ========================================================
 
 dnl ========================================================
@@ -2454,7 +2456,7 @@ dnl =
 dnl ========================================================
 MOZ_ARG_WITH_STRING(extensions,
 [  --with-extensions             Enable extensions (dirs in extensions/)],
-  [ MOZ_EXTENSIONS=`echo $withval | sed 's|,| |g'` ] )
+  [ MOZ_EXTENSIONS=`echo $withval | sed 's/,/ /g'` ] )
 dnl ========================================================
 
 _cpp_md_flag=
