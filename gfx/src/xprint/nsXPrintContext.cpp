@@ -1061,6 +1061,13 @@ nsXPrintContext::DrawImageBitsScaled(xGC *xgc, nsIImage *aImage,
   PRInt32  aSrcHeight    = aImage->GetHeight();
   PRUint8 *composed_bits = nsnull;
 
+ /* image data might not be available (ex: spacer image) */
+  if (!image_bits)
+  {
+    aImage->UnlockImagePixels(PR_FALSE);
+    return NS_OK;
+  }
+ 
   // Use client-side alpha image composing - plain X11 can only do 1bit alpha 
   // stuff - this method adds 8bit alpha support, too...
   if( alphaBits != nsnull )
@@ -1139,6 +1146,13 @@ nsXPrintContext::DrawImage(xGC *xgc, nsIImage *aImage,
   PRUint8 *image_bits    = aImage->GetBits();
   PRUint8 *composed_bits = nsnull;
   PRInt32  row_bytes     = aImage->GetLineStride();
+
+  /* image data might not be available (ex: spacer image) */
+  if (!image_bits)
+  {
+    aImage->UnlockImagePixels(PR_FALSE);
+    return NS_OK;
+  }
   
   // Use client-side alpha image composing - plain X11 can only do 1bit alpha
   // stuff - this method adds 8bit alpha support, too...
