@@ -242,7 +242,7 @@ nsresult ns_file_convert_result(PRInt32 nativeErr);
 #define NS_FILE_FAILURE NS_FILE_RESULT(-1)
 
 //========================================================================================
-class NS_COM nsSimpleCharString
+class nsSimpleCharString
 //  An envelope for char*: reference counted. Used internally by all the nsFileSpec
 //  classes below.
 //========================================================================================
@@ -330,7 +330,6 @@ class NS_COM nsFileSpec
         
         NS_EXPLICIT             nsFileSpec(const nsFilePath& inPath);
         NS_EXPLICIT             nsFileSpec(const nsFileURL& inURL);
-        NS_EXPLICIT             nsFileSpec(const nsPersistentFileDescriptor& inURL);
                                 nsFileSpec(const nsFileSpec& inPath);
         virtual                 ~nsFileSpec();
 
@@ -518,6 +517,9 @@ class NS_COM nsFileSpec
         nsSimpleCharString      mPath;
         nsresult                mError;
 
+private:
+        NS_EXPLICIT             nsFileSpec(const nsPersistentFileDescriptor& inURL);
+  
 }; // class nsFileSpec
 
 // FOR HISTORICAL REASONS:
@@ -634,7 +636,7 @@ class NS_COM nsFilePath
 }; // class nsFilePath
 
 //========================================================================================
-class NS_COM nsPersistentFileDescriptor
+class nsPersistentFileDescriptor
 // To save information about a file's location in another file, initialize
 // one of these from your nsFileSpec, and then write this out to your output stream.
 // To retrieve the info, create one of these, read its value from an input stream.
@@ -664,10 +666,8 @@ class NS_COM nsPersistentFileDescriptor
     	    // writes the data to a file
         friend class nsFileSpec;
 
-        void                    GetData(nsSimpleCharString& outData) const;
-        void                    SetData(const nsSimpleCharString& inData);
-        void                    GetData(nsSimpleCharString& outData, PRInt32& outSize) const;
-        void                    SetData(const nsSimpleCharString& inData, PRInt32 inSize);
+        void                    GetData(nsAFlatCString& outData) const;
+        void                    SetData(const nsAFlatCString& inData);
         void                    SetData(const char* inData, PRInt32 inSize);
 
     //--------------------------------------------------
