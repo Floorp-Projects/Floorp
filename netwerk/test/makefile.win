@@ -35,9 +35,10 @@ PROGC = .\$(OBJDIR)\TestWriteStream.exe
 PROGD = .\$(OBJDIR)\TestWriteSpeed.exe
 PROGE = .\$(OBJDIR)\TestCallbacks.exe
 PROGF = .\$(OBJDIR)\TestHttp.exe
+PROGG = .\$(OBJDIR)\TestPageLoad.exe
 PROGRAMS = \
 $(PROG1) $(PROG2) $(PROG3) $(PROG4) $(PROG5) $(PROG6) $(PROG7) $(PROG8) $(PROG9)\
-          $(PROGC) $(PROGD) $(PROGE) $(PROGF)
+          $(PROGC) $(PROGD) $(PROGE) $(PROGF) $(PROGG)
 
 LCFLAGS=-DUSE_NSREG -GX
 
@@ -85,3 +86,4 @@ $(PROGE): $(OBJDIR) TestCallbacks.cpp
 
 $(PROGF): $(OBJDIR) TestHttp.cpp
 
+$(PROGG): $(OBJDIR) TestPageLoad.cpp
