@@ -171,7 +171,7 @@ nsStackLayout::GetAscent(nsIBox* aBox, nsBoxLayoutState& aState, nscoord& aAscen
   return NS_OK;
 }
 
-nsresult
+PRBool
 nsStackLayout::AddOffset(nsBoxLayoutState& aState, nsIBox* aChild, nsSize& aSize)
 {
   nsSize offset(0,0);
@@ -187,7 +187,7 @@ nsStackLayout::AddOffset(nsBoxLayoutState& aState, nsIBox* aChild, nsSize& aSize
   // As an optimization, we cache the fact that we are not positioned to avoid
   // wasting time fetching attributes and checking style data.
   if (state & NS_STATE_STACK_NOT_POSITIONED)
-    return NS_OK;
+    return PR_FALSE;
   
   PRBool offsetSpecified = PR_FALSE;
   frame->GetStyleData(eStyleStruct_Position,(const nsStyleStruct*&) pos);
@@ -239,7 +239,7 @@ nsStackLayout::AddOffset(nsBoxLayoutState& aState, nsIBox* aChild, nsSize& aSize
     frame->SetFrameState(state);
   }
     
-  return NS_OK;
+  return offsetSpecified;
 }
 
 
@@ -290,7 +290,7 @@ nsStackLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
 
           // obtain our offset from the top left border of the stack's content box.
           nsSize offset(0,0);
-          AddOffset(aState, child, offset);
+          PRBool offsetSpecified = AddOffset(aState, child, offset);
 
           // Correct the child's x/y position by adding in both the margins
           // and the left/top offset.
@@ -299,7 +299,7 @@ nsStackLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
           
           // If we have an offset, we don't stretch the child.  Just use
           // its preferred size.
-          if (offset.width != 0 || offset.height != 0) {
+          if (offsetSpecified) {
             nsSize pref(0,0);
             child->GetPrefSize(aState, pref);
             childRect.width = pref.width;

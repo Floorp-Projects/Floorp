@@ -52,7 +52,7 @@ public:
   NS_IMETHOD GetAscent(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nscoord& aAscent);
 
 protected:
-  nsresult AddOffset(nsBoxLayoutState& aState, nsIBox* aChild, nsSize& aSize);
+  PRBool AddOffset(nsBoxLayoutState& aState, nsIBox* aChild, nsSize& aSize);
 
 private:
   static nsIBoxLayout* gInstance;
