@@ -119,6 +119,14 @@ protected:
 
   // These functions are for mousewheel scrolling
   nsIScrollableView* GetNearestScrollingView(nsIView* aView);
+  nsresult GetParentScrollingView(nsMouseScrollEvent* aEvent,
+                                  nsIPresContext* aPresContext,
+                                  nsIFrame* &targetOuterFrame,
+                                  nsIPresContext* &presCtxOuter);
+  nsresult DoWheelScroll(nsIPresContext* aPresContext,
+                         nsIFrame* aTargetFrame,
+                         nsMouseScrollEvent* msEvent, PRInt32 numLines,
+                         PRBool scrollPage, PRBool aUseTargetFrame);
   void ForceViewUpdate(nsIView* aView);
   nsresult getPrefService();
   nsresult ChangeTextSize(PRInt32 change);

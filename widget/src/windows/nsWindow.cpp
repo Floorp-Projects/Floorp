@@ -829,40 +829,20 @@ nsWindow :: DealWithPopups ( UINT inMsg, LRESULT* outResult )
 {
   if ( gRollupListener && gRollupWidget) {
 
-     // All mouse wheel events cause the popup to rollup.
-     // XXX: Need something more reliable then WM_MOUSEWHEEL.
-     // This event is not always generated. The mouse wheel
-     // is plugged into the scrollbar scrolling in odd ways
-     // which make it difficult to find a message which will
-     // reliably be generated when the mouse wheel changes position
-    if ((inMsg == WM_MOUSEWHEEL) || (inMsg == uMSH_MOUSEWHEEL)) {
-
-      // XXX Turn on ifdef or remove the "else" part of this ifdef when
-      // Bug 33733 is fixed
-#if 0 
-      PRBool doRollup;
-      gRollupListener->ShouldRollupOnMouseWheelEvent(&doRollup);
-      if (!doRollup) {
-        *outResult = FALSE;
-        return FALSE;
-      } else {
-        gRollupListener->Rollup();
-        *outResult = TRUE;
-        return TRUE;
-      }
-#else
-      gRollupListener->Rollup();
-      *outResult = TRUE;
-      return TRUE;
-#endif
-    }
-    
     if (inMsg == WM_ACTIVATE || inMsg == WM_NCLBUTTONDOWN || inMsg == WM_LBUTTONDOWN ||
       inMsg == WM_RBUTTONDOWN || inMsg == WM_MBUTTONDOWN || 
-      inMsg == WM_NCMBUTTONDOWN || inMsg == WM_NCRBUTTONDOWN || inMsg == WM_MOUSEACTIVATE) {
+      inMsg == WM_NCMBUTTONDOWN || inMsg == WM_NCRBUTTONDOWN || inMsg == WM_MOUSEACTIVATE ||
+      inMsg == WM_MOUSEWHEEL || inMsg == uMSH_MOUSEWHEEL)
+    {
       // Rollup if the event is outside the popup.
       PRBool rollup = !nsWindow::EventIsInsideWindow((nsWindow*)gRollupWidget);
-      
+
+      if (rollup && (inMsg == WM_MOUSEWHEEL || inMsg == uMSH_MOUSEWHEEL)) 
+      {
+        gRollupListener->ShouldRollupOnMouseWheelEvent(&rollup);
+        *outResult = PR_TRUE;
+      }
+
       // If we're dealing with menus, we probably have submenus and we don't
       // want to rollup if the click is in a parent menu of the current submenu.
       if (rollup) {

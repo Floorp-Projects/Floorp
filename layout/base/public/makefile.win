@@ -83,6 +83,7 @@ EXPORTS =				\
 	nsIPrivateDOMImplementation.h \
 	nsIContentSerializer.h \
 	nsIHTMLToTextSink.h \
+	nsIScrollableViewProvider.h \
 	$(NULL)
 
 MODULE=layout_base
