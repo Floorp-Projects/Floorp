@@ -1411,12 +1411,12 @@ nsFtpState::S_list() {
     NS_WITH_SERVICE(nsIStreamConverterService, streamConvService, kStreamConverterServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    nsAutoString httpIndexFormatStr = NS_LITERAL_STRING("application/http-index-format");
-    nsAutoString fromStr = NS_LITERAL_STRING("text/ftp-dir-");
+    nsAutoString httpIndexFormatStr; httpIndexFormatStr.AssignWithConversion("application/http-index-format");
+    nsAutoString fromStr; fromStr.AssignWithConversion("text/ftp-dir-");
     SetDirMIMEType(fromStr);
 
     if (mGenerateHTMLContent) {
-        nsAutoString textHTMLStr = NS_LITERAL_STRING("text/html");
+        nsAutoString textHTMLStr; textHTMLStr.AssignWithConversion("text/html");
         nsCOMPtr<nsIStreamListener> converterListener2;
         
         rv = streamConvService->AsyncConvertData(httpIndexFormatStr.GetUnicode(), textHTMLStr.GetUnicode(),
