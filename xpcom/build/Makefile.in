@@ -55,7 +55,8 @@ LOCAL_INCLUDES	= \
 EXTRA_DSO_LDOPTS = \
 		$(MKSHLIB_FORCE_ALL) \
 		$(SHARED_LIBRARY_LIBS) \
-		$(MKSHLIB_UNFORCE_ALL)
+		$(MKSHLIB_UNFORCE_ALL) \
+		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
