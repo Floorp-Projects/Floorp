@@ -90,6 +90,8 @@ public:
   NS_IMETHOD GetFocusedContent(nsIContent **aContent) = 0;
   NS_IMETHOD SetFocusedContent(nsIContent* aContent) = 0;
 
+  NS_IMETHOD ContentRemoved(nsIContent* aContent) = 0;
+
   NS_IMETHOD GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* aFrame,
                                     PRBool forward, nsIContent** aResult) = 0;
 

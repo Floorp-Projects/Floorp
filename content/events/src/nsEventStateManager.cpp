@@ -3681,6 +3681,21 @@ nsEventStateManager::SetFocusedContent(nsIContent* aContent)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsEventStateManager::ContentRemoved(nsIContent* aContent)
+{
+  if (aContent == mCurrentFocus) {
+    // Note that we don't use SetContentState() here because
+    // we don't want to fire a blur.  Blurs should only be fired
+    // in response to clicks or tabbing.
+
+    NS_RELEASE(mCurrentFocus);
+  }
+
+  return NS_OK;
+}
+
+
 //-------------------------------------------
 // Access Key Registration
 //-------------------------------------------

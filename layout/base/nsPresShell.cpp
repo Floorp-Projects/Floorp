@@ -5218,6 +5218,14 @@ PresShell::ContentRemoved(nsIDocument *aDocument,
                           nsIContent* aChild,
                           PRInt32     aIndexInContainer)
 {
+  // Notify the ESM that the content has been removed, so that
+  // it can clean up any state related to the content.
+
+  nsCOMPtr<nsIEventStateManager> esm;
+  mPresContext->GetEventStateManager(getter_AddRefs(esm));
+  if (esm)
+    esm->ContentRemoved(aChild);
+
   WillCauseReflow();
   nsresult  rv = mStyleSet->ContentRemoved(mPresContext, aContainer,
                                            aChild, aIndexInContainer);
