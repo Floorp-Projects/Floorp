@@ -116,7 +116,7 @@ sub JarIt
     if (!($overrides eq "")) {
 	my $err = 0; 
         print "+++ overriding $overrides\n";
-        system("zip", "$destPath/$jarfile $overrides\n") == 0 or 
+        system("zip $destPath/$jarfile $overrides\n") == 0 or 
 	    $err = $? >> 8;
 	zipErrorCheck($err);
 
