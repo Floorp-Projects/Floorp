@@ -38,26 +38,24 @@
 
 #include "nsISupports.idl"
 
-/* This interface is PRIVATE.
+/**
+ * This interface is PRIVATE.
+ *
  * It is used as an opaque cookie, and this class may change at
  * any time without notice.
  *
- * @see nsIProtocolProxyService::GetProxyInfo
+ * XXX The HTTP protocol handler does not treat this type as opaque,
+ * so perhaps it is wrong to restrict it to be opaque.
+ *
+ * @see nsIProtocolProxyService::examineForProxy
+ * @see nsISocketTransportService::createTransport
  */
-
 native constCharPtr(const char*);
 
 [scriptable, uuid(b65d22b0-1dd1-11b2-8f95-920e5b7b56f0)]
 interface nsIProxyInfo : nsISupports
 {
     [noscript, notxpcom] constCharPtr Host();
-    [noscript, notxpcom] PRInt32 Port();
+    [noscript, notxpcom] PRInt32      Port();
     [noscript, notxpcom] constCharPtr Type();
-
-    /**
-     * proxy info objects may be chained if several proxies could be treated
-     * equivalently.  this is used to support proxy failover.
-     */
-    readonly attribute nsIProxyInfo next;
 };
-
