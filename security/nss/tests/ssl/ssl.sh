@@ -212,8 +212,6 @@ else
     echo "<TR><TD> Wait for Server </TD><TD bgcolor=lightGreen>Passed</TD><TR>" >> ${RESULTS}
 fi
 
-NULL_SERVER=1	#test to see if we need to restart the server
-
  cat ${SSLCOV} | while read tls param testname
 do
     if [ $tls != "#" ]; then
@@ -225,29 +223,6 @@ do
 	sparam=""
 	if [ ${param} = "i" ]; then
 		sparam='-c i'
-		if [ $NULL_SERVER = 0 ]
-		then
-			${KILL} `cat ${SERVERPID}` # now kill the server
-			wait `cat ${SERVERPID}`
-			if [ ${fileout} -eq 1 ]; then
-   				cat ${SERVEROUTFILE}
-			fi
-			${SLEEP}
-			echo "selfserv -v -p ${PORT} -d ${SERVERDIR} -n ${HOST}.${DOMSUF} -i ${SERVERPID} -w nss ${sparam} & "
-			if [ ${fileout} -eq 1 ]; then
-				selfserv -v -p ${PORT} -d ${SERVERDIR} -n ${HOST}.${DOMSUF} -i ${SERVERPID} -w nss ${sparam} > ${SERVEROUTFILE} 2>&1 &
-			else
-				selfserv -v -p ${PORT} -d ${SERVERDIR} -n ${HOST}.${DOMSUF} -w nss ${sparam} -i ${SERVERPID} &
-			fi
-			echo "tstclnt -p ${PORT} -h ${HOST} -q -d . < ${REQUEST_FILE}"
-			tstclnt -p ${PORT} -h ${HOST} -q -d . < ${REQUEST_FILE}
-			if [ $? -ne 0 ]; then
-    			echo "<TR><TD> Wait for Server - NULL </TD><TD bgcolor=red>Failed</TD><TR>" >> ${RESULTS}
-			else
-    			echo "<TR><TD> Wait for Server - NULL </TD><TD bgcolor=lightGreen>Passed</TD><TR>" >> ${RESULTS}
-			fi
-			NULL_SERVER=1
-		fi
 	fi
 
 	echo "tstclnt -p ${PORT} -h ${HOST} -c ${param} ${TLS_FLAG} -f -d . redir from ${REQUEST_FILE}"
