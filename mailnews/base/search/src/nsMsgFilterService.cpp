@@ -92,7 +92,7 @@ NS_IMETHODIMP nsMsgFilterService::OpenFilterList(nsFileSpec *filterFile, nsIMsgF
 
 NS_IMETHODIMP nsMsgFilterService::CloseFilterList(nsIMsgFilterList *filterList)
 {
-	NS_ASSERTION(PR_FALSE,"CloseFilterList doesn't do anything yet");
+	//NS_ASSERTION(PR_FALSE,"CloseFilterList doesn't do anything yet");
 	return NS_OK;
 }
 
