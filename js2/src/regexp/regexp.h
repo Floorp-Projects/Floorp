@@ -171,3 +171,4 @@ extern REchar canonicalize(REchar ch);
 #ifndef RE_ISSPACE
 #define RE_ISSPACE(c) ( (c == ' ') || (c == '\t') || (c == '\n') || (c == '\r')  || (c == '\v')  || (c == '\f') )
 #endif
+
