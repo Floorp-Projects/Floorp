@@ -29,7 +29,6 @@
 #include "nsIAddrDatabase.h"
 #include "nsIDocShell.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsIFileSpecWithUI.h"
 #include "nsICmdLineHandler.h"
 #include "nsIComponentManager.h"
 
