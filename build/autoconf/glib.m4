@@ -41,6 +41,9 @@ AC_ARG_ENABLE(glibtest, [  --disable-glibtest       Do not try to compile and ru
       esac
   done
 
+  dnl Force a version check to keep upgraded versions from being overridden by the cached value.
+  unset ac_cv_path_GLIB_CONFIG
+
   AC_PATH_PROG(GLIB_CONFIG, glib-config, no)
   min_glib_version=ifelse([$1], ,0.99.7,$1)
   AC_MSG_CHECKING(for GLIB - version >= $min_glib_version)

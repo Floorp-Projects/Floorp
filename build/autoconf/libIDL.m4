@@ -29,6 +29,9 @@ AC_ARG_ENABLE(libIDLtest, [  --disable-libIDLtest       Do not try to compile an
 
   AM_PATH_GLIB(1.2.0)
 
+  dnl Force a version check to keep upgraded versions from being overridden by the cached value.
+  unset ac_cv_path_LIBIDL_CONFIG
+
   AC_PATH_PROG(LIBIDL_CONFIG, libIDL-config, no)
   min_libIDL_version=ifelse([$1], ,0.6.0,$1)
   AC_MSG_CHECKING(for libIDL - version >= $min_libIDL_version)

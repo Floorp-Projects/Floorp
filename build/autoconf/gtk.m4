@@ -29,6 +29,9 @@ AC_ARG_ENABLE(gtktest, [  --disable-gtktest       Do not try to compile and run 
      fi
   fi
 
+  dnl Force a version check to keep upgraded versions from being overridden by the cached value.
+  unset ac_cv_path_GTK_CONFIG
+
   AC_PATH_PROG(GTK_CONFIG, gtk-config, no)
   min_gtk_version=ifelse([$1], ,0.99.7,$1)
   AC_MSG_CHECKING(for GTK - version >= $min_gtk_version)
