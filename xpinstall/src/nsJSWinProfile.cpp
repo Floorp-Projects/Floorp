@@ -25,19 +25,19 @@
 #include "nsWinProfile.h"
 #include "nsJSWinProfile.h"
 
-extern void nsCvrtJSValToStr(nsString&  aString,
+extern void ConvertJSValToStr(nsString&  aString,
                              JSContext* aContext,
                              jsval      aValue);
 
-extern void nsCvrtStrToJSVal(const nsString& aProp,
+extern void ConvertStrToJSVal(const nsString& aProp,
                              JSContext* aContext,
                              jsval* aReturn);
 
-extern PRBool nsCvrtJSValToBool(PRBool* aProp,
+extern PRBool ConvertJSValToBool(PRBool* aProp,
                                 JSContext* aContext,
                                 jsval aValue);
 
-extern PRBool nsCvrtJSValToObj(nsISupports** aSupports,
+extern PRBool ConvertJSValToObj(nsISupports** aSupports,
                                REFNSIID aIID,
                                const nsString& aTypeName,
                                JSContext* aContext,
@@ -77,12 +77,12 @@ WinProfileGetString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
     //  public int getString ( String section,
     //                         String key);
 
-    nsCvrtJSValToStr(b0, cx, argv[0]);
-    nsCvrtJSValToStr(b1, cx, argv[1]);
+    ConvertJSValToStr(b0, cx, argv[0]);
+    ConvertJSValToStr(b1, cx, argv[1]);
 
     nativeThis->getString(b0, b1, &nativeRet);
 
-    nsCvrtStrToJSVal(nativeRet, cx, rval);
+    ConvertStrToJSVal(nativeRet, cx, rval);
   }
   else
   {
@@ -119,9 +119,9 @@ WinProfileWriteString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
     //                           String key,
     //                           String value);
 
-    nsCvrtJSValToStr(b0, cx, argv[0]);
-    nsCvrtJSValToStr(b1, cx, argv[1]);
-    nsCvrtJSValToStr(b2, cx, argv[2]);
+    ConvertJSValToStr(b0, cx, argv[0]);
+    ConvertJSValToStr(b1, cx, argv[1]);
+    ConvertJSValToStr(b2, cx, argv[2]);
 
     if(NS_OK != nativeThis->writeString(b0, b1, b2, &nativeRet))
     {

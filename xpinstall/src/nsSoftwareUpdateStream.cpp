@@ -39,12 +39,15 @@ static NS_DEFINE_IID(kISoftwareUpdateIID, NS_ISOFTWAREUPDATE_IID);
 static NS_DEFINE_IID(kSoftwareUpdateCID,  NS_SoftwareUpdate_CID);
 
 
-nsSoftwareUpdateListener::nsSoftwareUpdateListener(nsInstallInfo *nextInstall)
+nsSoftwareUpdateListener::nsSoftwareUpdateListener(const nsString& fromURL, const nsString& localFile, long flags)
 {
     NS_INIT_REFCNT();
     
-    mInstallInfo = nextInstall;
-    mOutFileDesc = PR_Open(nsAutoCString(nextInstall->GetLocalFile()),  PR_CREATE_FILE | PR_RDWR, 0744);
+    mFromURL    = fromURL;
+    mLocalFile  = localFile;
+    mFlags      = flags;
+
+    mOutFileDesc = PR_Open(nsAutoCString(localFile),  PR_CREATE_FILE | PR_RDWR, 0744);
     
     if(mOutFileDesc == NULL)
     {
@@ -59,7 +62,7 @@ nsSoftwareUpdateListener::nsSoftwareUpdateListener(nsInstallInfo *nextInstall)
         return;
 
     nsIURL  *pURL  = nsnull;
-    mResult = NS_NewURL(&pURL, nextInstall->GetFromURL());
+    mResult = NS_NewURL(&pURL, fromURL);
 
     if (NS_FAILED(mResult)) 
         return;
@@ -69,7 +72,6 @@ nsSoftwareUpdateListener::nsSoftwareUpdateListener(nsInstallInfo *nextInstall)
 
 nsSoftwareUpdateListener::~nsSoftwareUpdateListener()
 {    
-    delete mInstallInfo;
     mSoftwareUpdate->Release();
 }
 
@@ -114,12 +116,9 @@ nsSoftwareUpdateListener::OnStopBinding(nsIURL* aURL,
 
         case NS_BINDING_SUCCEEDED:
                 PR_Close(mOutFileDesc);
-                // Add to the XPInstall Queue.  Yes this is a bit redunant.  I be you are asking, why I have a nsInstallInfo, am 
-                // creating a new one.  well, if I pull this out into its own dll, I would not want to pass a class around.  
-
-                mSoftwareUpdate->InstallJar(mInstallInfo->GetFromURL(),
-                                            mInstallInfo->GetLocalFile(),
-                                            mInstallInfo->GetFlags() );
+                mSoftwareUpdate->InstallJar(mFromURL,
+                                            mLocalFile,
+                                            mFlags );
             break;
 
         case NS_BINDING_FAILED:

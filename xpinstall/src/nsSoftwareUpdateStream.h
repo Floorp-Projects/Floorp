@@ -38,17 +38,12 @@ static NS_DEFINE_IID(kInetServiceCID, NS_NETSERVICE_CID);
 static NS_DEFINE_IID(kInetLibURLIID, NS_INETLIBURL_IID);
 static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
 
-
-extern "C" nsresult DownloadJar(nsInstallInfo *nextInstall);
-
-
 class nsSoftwareUpdateListener : public nsIStreamListener
 {
-
     public:
         NS_DECL_ISUPPORTS
     
-        nsSoftwareUpdateListener(nsInstallInfo *nextInstall);
+        nsSoftwareUpdateListener(const nsString& fromURL, const nsString& localFile, long flags);
 
         NS_IMETHOD GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* info);
         NS_IMETHOD OnProgress(nsIURL* aURL, PRUint32 Progress, PRUint32 ProgressMax);
@@ -68,7 +63,11 @@ class nsSoftwareUpdateListener : public nsIStreamListener
 
           nsISoftwareUpdate *mSoftwareUpdate;
           PRFileDesc        *mOutFileDesc;
-          nsInstallInfo     *mInstallInfo;
+          
+          nsString           mFromURL;
+          nsString           mLocalFile;
+          long               mFlags;
+
           PRInt32            mResult;
 };
 

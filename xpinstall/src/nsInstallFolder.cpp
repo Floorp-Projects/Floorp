@@ -28,10 +28,14 @@
 
 #include "nscore.h"
 #include "prtypes.h"
+#include "nsRepository.h"
 
 #include "nsString.h"
 #include "nsFileSpec.h"
 #include "nsSpecialSystemDirectory.h"
+
+#include "nsFileLocations.h"
+#include "nsIFileLocator.h"
 
 struct DirectoryTable
 {
@@ -48,9 +52,12 @@ struct DirectoryTable DirectoryTable[] =
 	{"Temporary",           104 },
 	{"Installed",           105 },
 	{"Current User",        106 },
-	{"NetHelp",             107 },
+	{"Preferences",         107 },
 	{"OS Drive",            108 },
-	{"File URL",            109 },
+	{"file:///",            109 },
+
+    {"Components",          110 },
+    {"Chrome",              111 },
 
 	{"Win System",          200 },
 	{"Windows",             201 },
@@ -77,13 +84,34 @@ struct DirectoryTable DirectoryTable[] =
 
 nsInstallFolder::nsInstallFolder(const nsString& aFolderID)
 {
-    nsInstallFolder(aFolderID, "");
+    mFileSpec = nsnull;
+    SetDirectoryPath( aFolderID, "");
 }
 
 nsInstallFolder::nsInstallFolder(const nsString& aFolderID, const nsString& aRelativePath)
 {
     mFileSpec = nsnull;
-    SetDirectoryPath( aFolderID, aRelativePath);
+
+    /*
+        aFolderID can be either a Folder enum in which case we merely pass it to SetDirectoryPath, or
+        it can be a Directory.  If it is the later, it must already exist and of course be a directory
+        not a file.  
+    */
+    
+    nsFileSpec dirCheck(aFolderID);
+    if ( (dirCheck.Error() == NS_OK) && (dirCheck.IsDirectory()) && (dirCheck.Exists()))
+    {
+        nsString tempString = aFolderID;
+        tempString += aRelativePath;
+        mFileSpec = new nsFileSpec(tempString);
+
+        // make sure that the directory is created.
+        nsFileSpec(mFileSpec->GetCString(), PR_TRUE);
+    }
+    else
+    {
+        SetDirectoryPath( aFolderID, aRelativePath);
+    }
 }
 
 
@@ -96,7 +124,7 @@ nsInstallFolder::~nsInstallFolder()
 void 
 nsInstallFolder::GetDirectoryPath(nsString& aDirectoryPath)
 {
-	aDirectoryPath.SetLength(0);
+	aDirectoryPath = "";
     
     if (mFileSpec != nsnull)
     {
@@ -125,108 +153,123 @@ nsInstallFolder::SetDirectoryPath(const nsString& aFolderID, const nsString& aRe
         switch (folderDirSpecID) 
 		{
             case 100: ///////////////////////////////////////////////////////////  Plugins
-                // FIX
+                SetAppShellDirectory(nsSpecialFileSpec::App_PluginsDirectory );
                 break; 
 
             case 101: ///////////////////////////////////////////////////////////  Program
-                *this = nsSpecialSystemDirectory::OS_CurrentProcessDirectory;
+                mFileSpec = new nsFileSpec( nsSpecialSystemDirectory( nsSpecialSystemDirectory::OS_CurrentProcessDirectory ));
                 break;
             
             case 102: ///////////////////////////////////////////////////////////  Communicator
-                *this = nsSpecialSystemDirectory::OS_CurrentProcessDirectory;  // FIX?
+                mFileSpec = new nsFileSpec( nsSpecialSystemDirectory( nsSpecialSystemDirectory::OS_CurrentProcessDirectory ));
                 break;
 
             case 103: ///////////////////////////////////////////////////////////  User Pick
                 // we should never be here.
+                mFileSpec = nsnull;
                 break;
 
             case 104: ///////////////////////////////////////////////////////////  Temporary
-                *this = nsSpecialSystemDirectory::OS_TemporaryDirectory;
+                mFileSpec = new nsFileSpec( nsSpecialSystemDirectory( nsSpecialSystemDirectory::OS_TemporaryDirectory ));
                 break;
 
             case 105: ///////////////////////////////////////////////////////////  Installed
                 // we should never be here.
+                mFileSpec = nsnull;
                 break;
 
             case 106: ///////////////////////////////////////////////////////////  Current User
-                // FIX
+                SetAppShellDirectory(nsSpecialFileSpec::App_UserProfileDirectory50 );
                 break;
 
-            case 107: ///////////////////////////////////////////////////////////  NetHelp
-                // FIX
+            case 107: ///////////////////////////////////////////////////////////  Preferences
+                SetAppShellDirectory(nsSpecialFileSpec::App_PrefsDirectory50 );
                 break;
 
             case 108: ///////////////////////////////////////////////////////////  OS Drive
-                *this = nsSpecialSystemDirectory::OS_DriveDirectory;
+                mFileSpec = new nsFileSpec( nsSpecialSystemDirectory( nsSpecialSystemDirectory::OS_DriveDirectory ));
                 break;
 
             case 109: ///////////////////////////////////////////////////////////  File URL
-                // we should never be here.
+                {
+                    nsString tempFileURLString = aFolderID;
+                    tempFileURLString += aRelativePath;
+                    mFileSpec = new nsFileSpec( nsFileURL(tempFileURLString) );
+                }
+                break;
+
+            case 110: ///////////////////////////////////////////////////////////  Components
+                SetAppShellDirectory(nsSpecialFileSpec::App_ComponentsDirectory );
+                break;
+            
+            case 111: ///////////////////////////////////////////////////////////  Chrome
+                SetAppShellDirectory(nsSpecialFileSpec::App_ChromeDirectory );
                 break;
 
             case 200: ///////////////////////////////////////////////////////////  Win System
-                *this = nsSpecialSystemDirectory::Win_SystemDirectory;
+                mFileSpec = new nsFileSpec( nsSpecialSystemDirectory( nsSpecialSystemDirectory::Win_SystemDirectory ));
                 break;
 
             case 201: ///////////////////////////////////////////////////////////  Windows
-                *this = nsSpecialSystemDirectory::Win_WindowsDirectory;
+                mFileSpec = new nsFileSpec( nsSpecialSystemDirectory( nsSpecialSystemDirectory::Win_WindowsDirectory ));
                 break;
 
             case 300: ///////////////////////////////////////////////////////////  Mac System
-                *this = nsSpecialSystemDirectory::Mac_SystemDirectory;
+                mFileSpec = new nsFileSpec( nsSpecialSystemDirectory( nsSpecialSystemDirectory::Mac_SystemDirectory ));
                 break;
 
             case 301: ///////////////////////////////////////////////////////////  Mac Desktop
-                *this = nsSpecialSystemDirectory::Mac_DesktopDirectory;
+                mFileSpec = new nsFileSpec( nsSpecialSystemDirectory( nsSpecialSystemDirectory::Mac_DesktopDirectory ));
                 break;
 
             case 302: ///////////////////////////////////////////////////////////  Mac Trash
-                *this = nsSpecialSystemDirectory::Mac_TrashDirectory;
+                mFileSpec = new nsFileSpec( nsSpecialSystemDirectory( nsSpecialSystemDirectory::Mac_TrashDirectory ));
                 break;
 
             case 303: ///////////////////////////////////////////////////////////  Mac Startup
-                *this = nsSpecialSystemDirectory::Mac_StartupDirectory;
+                mFileSpec = new nsFileSpec( nsSpecialSystemDirectory( nsSpecialSystemDirectory::Mac_StartupDirectory ));
                 break;
 
             case 304: ///////////////////////////////////////////////////////////  Mac Shutdown
-                *this = nsSpecialSystemDirectory::Mac_StartupDirectory;
+                mFileSpec = new nsFileSpec( nsSpecialSystemDirectory( nsSpecialSystemDirectory::Mac_StartupDirectory ));
                 break;
 
             case 305: ///////////////////////////////////////////////////////////  Mac Apple Menu
-                *this = nsSpecialSystemDirectory::Mac_AppleMenuDirectory;
+                mFileSpec = new nsFileSpec( nsSpecialSystemDirectory( nsSpecialSystemDirectory::Mac_AppleMenuDirectory ));
                 break;
 
             case 306: ///////////////////////////////////////////////////////////  Mac Control Panel
-                *this = nsSpecialSystemDirectory::Mac_ControlPanelDirectory;
+                mFileSpec = new nsFileSpec( nsSpecialSystemDirectory( nsSpecialSystemDirectory::Mac_ControlPanelDirectory ));
                 break;
 
             case 307: ///////////////////////////////////////////////////////////  Mac Extension
-                *this = nsSpecialSystemDirectory::Mac_ExtensionDirectory;
+                mFileSpec = new nsFileSpec( nsSpecialSystemDirectory( nsSpecialSystemDirectory::Mac_ExtensionDirectory ));
                 break;
 
             case 308: ///////////////////////////////////////////////////////////  Mac Fonts
-                *this = nsSpecialSystemDirectory::Mac_FontsDirectory;
+                mFileSpec = new nsFileSpec( nsSpecialSystemDirectory( nsSpecialSystemDirectory::Mac_FontsDirectory ));
                 break;
 
             case 309: ///////////////////////////////////////////////////////////  Mac Preferences
-                *this = nsSpecialSystemDirectory::Mac_PreferencesDirectory;
+                mFileSpec = new nsFileSpec( nsSpecialSystemDirectory( nsSpecialSystemDirectory::Mac_PreferencesDirectory ));
                 break;
                     
             case 310: ///////////////////////////////////////////////////////////  Mac Documents
-                *this = nsSpecialSystemDirectory::Mac_DocumentsDirectory;
+                mFileSpec = new nsFileSpec( nsSpecialSystemDirectory( nsSpecialSystemDirectory::Mac_DocumentsDirectory ));
                 break;
                     
             case 400: ///////////////////////////////////////////////////////////  Unix Local
-                *this = nsSpecialSystemDirectory::Unix_LocalDirectory;
+                mFileSpec = new nsFileSpec( nsSpecialSystemDirectory( nsSpecialSystemDirectory::Unix_LocalDirectory ));
                 break;
 
             case 401: ///////////////////////////////////////////////////////////  Unix Lib
-                *this = nsSpecialSystemDirectory::Unix_LibDirectory;
+                mFileSpec = new nsFileSpec( nsSpecialSystemDirectory( nsSpecialSystemDirectory::Unix_LibDirectory ));
                 break;
 
 
             case -1:
 		    default:
+                mFileSpec = nsnull;
 			   return;
 		}
 #ifndef XP_MAC
@@ -271,11 +314,23 @@ nsInstallFolder::MapNameToEnum(const nsString& name)
 }
 
 
+static NS_DEFINE_IID(kFileLocatorIID, NS_IFILELOCATOR_IID);
+static NS_DEFINE_IID(kFileLocatorCID, NS_FILELOCATOR_CID);
 
-//----------------------------------------------------------------------------------------
-void nsInstallFolder::operator = (enum nsSpecialSystemDirectory::SystemDirectories aSystemSystemDirectory)
-//----------------------------------------------------------------------------------------
+void
+nsInstallFolder::SetAppShellDirectory(PRUint32 value)
 {
-    nsSpecialSystemDirectory temp(aSystemSystemDirectory);
-    mFileSpec = new nsFileSpec(temp);
+    nsIFileLocator * appShellLocator;
+    
+    nsresult rv = nsComponentManager::CreateInstance(kFileLocatorCID, 
+                                                     nsnull,
+                                                     kFileLocatorIID,
+                                                     (void**) &appShellLocator);
+
+    if ( NS_SUCCEEDED(rv) )
+    {
+        mFileSpec = new nsFileSpec();
+        appShellLocator->GetFileLocation(value, mFileSpec);
+        NS_RELEASE(appShellLocator);
+    }
 }

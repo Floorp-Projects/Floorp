@@ -51,7 +51,7 @@ class nsInstallFile : public nsInstallObject
        *************************************************************/
         nsInstallFile(  nsInstall* inInstall,
                         const nsString& inVRName,
-                        nsIDOMInstallVersion* inVInfo,
+                        const nsString& inVInfo,
                         const nsString& inJarLocation,
                         const nsString& folderSpec,
                         const nsString& inPartialPath,
@@ -72,7 +72,7 @@ class nsInstallFile : public nsInstallObject
     private:
 
         /* Private Fields */
-        nsInstallVersion* mVersionInfo;	  /* Version info for this file*/
+        nsString*     mVersionInfo;	  /* Version info for this file*/
         
         nsString*     mJarLocation;	      /* Location in the JAR */
         nsFileSpec*   mExtracedFile;	  /* temporary file location */

@@ -28,7 +28,7 @@
 #include "VerReg.h"
 #include "ScheduledTasks.h"
 #include "nsInstall.h"
-#include "nsInstallVersion.h"
+#include "nsIDOMInstallVersion.h"
 #include "nsInstallResources.h"
 
 /* Public Methods */
@@ -40,9 +40,11 @@
         inJarLocation   - location inside the JAR file
         inFinalFileSpec	- final	location on disk
 */
+
+
 nsInstallFile::nsInstallFile(nsInstall* inInstall,
                              const nsString& inComponentName,
-                             nsIDOMInstallVersion* inVInfo,
+                             const nsString& inVInfo,
                              const nsString& inJarLocation,
                              const nsString& folderSpec,
                              const nsString& inPartialPath,
@@ -50,30 +52,79 @@ nsInstallFile::nsInstallFile(nsInstall* inInstall,
                              PRInt32 *error) 
 : nsInstallObject(inInstall)
 {
-    mExtracedFile= nsnull;
-    mFinalFile   = nsnull;
-    mUpgradeFile = PR_FALSE;
+    mVersionRegistryName = nsnull;
+    mJarLocation         = nsnull;
+    mExtracedFile        = nsnull;
+    mFinalFile           = nsnull;
+    mVersionInfo         = nsnull;
 
-    if ((folderSpec == "null") || (inInstall == NULL)  || (inVInfo == NULL)) 
+    mUpgradeFile = PR_FALSE;
+    
+    if ((folderSpec == "null") || (inInstall == NULL)) 
     {
         *error = nsInstall::INVALID_ARGUMENTS;
         return;
     }
+
+    /* Check for existence of the newer	version	*/
+    
+    PRBool versionNewer = PR_FALSE;  // Is this a newer version
+    char* qualifiedRegNameString = inComponentName.ToNewCString();
+
+    if ( (forceInstall == PR_FALSE ) && (inVInfo !=  "") && ( VR_ValidateComponent( qualifiedRegNameString ) == 0 ) ) 
+    {
+        nsInstallVersion *newVersion = new nsInstallVersion();
+        newVersion->Init(inVInfo);
+        
+        VERSION versionStruct;
+        
+        VR_GetVersion( qualifiedRegNameString, &versionStruct );
+        
+        nsInstallVersion* oldVersion = new nsInstallVersion();
+
+        oldVersion->Init(versionStruct.major,
+                         versionStruct.minor,
+                         versionStruct.release,
+                         versionStruct.build);
+
+        PRInt32 areTheyEqual;
+        newVersion->CompareTo(oldVersion, &areTheyEqual);
+        
+        delete oldVersion;
+        delete newVersion;
+
+        if (areTheyEqual == nsIDOMInstallVersion::MAJOR_DIFF_MINUS ||
+            areTheyEqual == nsIDOMInstallVersion::MINOR_DIFF_MINUS ||
+            areTheyEqual == nsIDOMInstallVersion::REL_DIFF_MINUS   ||
+            areTheyEqual == nsIDOMInstallVersion::BLD_DIFF_MINUS   )
+        {
+            // the file to be installed is OLDER than what is on disk.  Return error
+            delete qualifiedRegNameString;
+            *error = areTheyEqual;
+            return;
+        }
+    }
+
+    delete qualifiedRegNameString;
+
     
      mFinalFile = new nsFileSpec(folderSpec);
     *mFinalFile += inPartialPath;
     
-    mReplaceFile            = mFinalFile->Exists();
+    mReplaceFile = mFinalFile->Exists();
+    
+    if (mReplaceFile == PR_FALSE)
+    {
+        nsFileSpec parent;
+        mFinalFile->GetParent(parent);
+        nsFileSpec makeDirs(parent.GetCString(), PR_TRUE);
+    }
 
     mForceInstall           = forceInstall;
     
     mVersionRegistryName    = new nsString(inComponentName);
     mJarLocation            = new nsString(inJarLocation);
-    mVersionInfo	        = new nsInstallVersion();
-    
-    nsString tempString;
-    inVInfo->ToString(tempString);
-    mVersionInfo->Init(tempString);
+    mVersionInfo	        = new nsString(inVInfo);
         
     nsString regPackageName;
     mInstall->GetRegPackageName(regPackageName);
@@ -87,9 +138,12 @@ nsInstallFile::nsInstallFile(nsInstall* inInstall,
     } 
     else 
     {
-        //mChildFile = mVersionRegistryName.startsWith(regPackageName);
-        /* Because nsString doesn't support startWith, implemented the following. Waiting for approval */
-        if (mVersionRegistryName->Find(regPackageName) == 0)
+        
+        // there is no "starts with" api in nsString.  LAME!
+        nsString startsWith;
+        mVersionRegistryName->Left(startsWith, regPackageName.Length());
+
+        if (startsWith.Equals(regPackageName))
         {
             mChildFile = true;
         }
@@ -98,8 +152,6 @@ nsInstallFile::nsInstallFile(nsInstall* inInstall,
             mChildFile = false;
         }
     }
-    
-
 }
 
 
@@ -202,7 +254,7 @@ PRInt32 nsInstallFile::CompleteFileMove()
     } 
     else 
     {
-        result = ReplaceFileLater(*mExtracedFile, *mFinalFile );
+        result = ReplaceFileNowOrSchedule(*mExtracedFile, *mFinalFile );
     }
 
   return result;  
@@ -251,11 +303,18 @@ nsInstallFile::RegisterInVersionRegistry()
     }
 
     VR_Install( (char*)(const char*)nsAutoCString(*mVersionRegistryName), 
-                (char*)(const char*)nsNSPRPath(*mFinalFile),
-                (char*)(const char*)nsAutoCString(regPackageName), 
+                (char*)(const char*)mFinalFile->GetNativePathCString(),  // DO NOT CHANGE THIS. 
+                (char*)(const char*)nsAutoCString(*mVersionInfo), 
                 PR_FALSE );
 
-    if (!mUpgradeFile) 
+    if (mUpgradeFile) 
+    {
+        if (refCount == 0) 
+            VR_SetRefCount( (char*)(const char*)nsAutoCString(*mVersionRegistryName), 1 );
+        else 
+            VR_SetRefCount( (char*)(const char*)nsAutoCString(*mVersionRegistryName), refCount );  //FIX?? what should the ref count be/
+    }
+    else
     {
         if (refCount != 0) 
         {
@@ -263,18 +322,11 @@ nsInstallFile::RegisterInVersionRegistry()
         } 
         else 
         {
-            if (mFinalFile->Exists())
+            if (mReplaceFile)
                 VR_SetRefCount( (char*)(const char*)nsAutoCString(*mVersionRegistryName), 2 );
             else
                 VR_SetRefCount( (char*)(const char*)nsAutoCString(*mVersionRegistryName), 1 );
         }
-    } 
-    else 
-    {
-        if (refCount == 0) 
-            VR_SetRefCount( (char*)(const char*)nsAutoCString(*mVersionRegistryName), 1 );
-        else 
-            VR_SetRefCount( (char*)(const char*)nsAutoCString(*mVersionRegistryName), 0 );
     }
     
     if ( !mChildFile && !mUpgradeFile ) 

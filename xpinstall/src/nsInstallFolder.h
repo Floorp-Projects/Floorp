@@ -51,8 +51,7 @@ class nsInstallFolder
 		void         SetDirectoryPath(const nsString& aFolderID, const nsString& aRelativePath);
         void         PickDefaultDirectory();
         PRInt32      MapNameToEnum(const nsString&  name);
-
-        void         operator = (enum nsSpecialSystemDirectory::SystemDirectories aSystemSystemDirectory);
+        void         SetAppShellDirectory(PRUint32 value);
 };
 
 

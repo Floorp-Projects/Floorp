@@ -182,14 +182,14 @@ REGERR su_UninstallProcessItem(char *component_path)
             else 
             {
                 err = VR_Remove(component_path);
-                DeleteFileLater(nsFileSpec(filepath));
+                DeleteFileNowOrSchedule(nsFileSpec(filepath));
             }
         }
         else
         {
             /* delete node and file */
             err = VR_Remove(component_path);
-            DeleteFileLater(nsFileSpec(filepath));
+            DeleteFileNowOrSchedule(nsFileSpec(filepath));
         }
     }
     return err;

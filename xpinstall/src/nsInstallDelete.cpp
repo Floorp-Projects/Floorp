@@ -222,7 +222,7 @@ PRInt32 nsInstallDelete::NativeComplete()
     {
         if (mFinalFile->IsFile())
         {
-           return DeleteFileLater(*mFinalFile);
+           return DeleteFileNowOrSchedule(*mFinalFile);
         }
         else
         {
