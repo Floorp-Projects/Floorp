@@ -26,7 +26,7 @@
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsIPref.h"
-#include "nsHashtable.h"
+#include "nsVoidArray.h"
 #include "nsXPIDLString.h"
 #include "nsIProtocolProxyService.h"
 
@@ -35,15 +35,8 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIPROTOCOLPROXYSERVICE
 
-    nsProtocolProxyService() {
-        NS_INIT_REFCNT();
-        mUseProxy = PR_FALSE;
-        mFilters=0;
-    };
-
-    virtual ~nsProtocolProxyService() {
-        CRTFREEIF(mFilters);
-    };
+    nsProtocolProxyService();
+    virtual ~nsProtocolProxyService();
 
     NS_IMETHOD Init();
 
@@ -53,10 +46,21 @@ public:
     void PrefsChanged(const char* pref);
 
 protected:
+
+    void           LoadFilters(const char* filters);
+    static PRBool  CleanupFilterArray(void* aElement, void* aData);
+
+    // simplified array of filters defined by this struct
+    struct host_port {
+        nsCString*  host;
+        PRInt32     port;
+    };
+
+    nsVoidArray             mFiltersArray;
+
     PRBool CanUseProxy(nsIURI* aURI);
 
     nsCOMPtr<nsIPref>       mPrefs;
-    char                    *mFilters;
     PRBool                  mUseProxy;
 
     nsXPIDLCString          mHTTPProxyHost;
@@ -64,6 +68,9 @@ protected:
 
     nsXPIDLCString          mFTPProxyHost;
     PRInt32                 mFTPProxyPort;
+
+    nsXPIDLCString          mHTTPSProxyHost;
+    PRInt32                 mHTTPSProxyPort;
 };
 
 #endif // __nsprotocolproxyservice___h___

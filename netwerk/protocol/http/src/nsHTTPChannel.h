@@ -88,7 +88,7 @@ public:
     nsresult            Authenticate(const char *iChallenge,
                                      PRBool bProxyAuth = PR_FALSE);
     nsresult            Init();
-    nsresult            Open();
+    nsresult            Open(PRBool bIgnoreCache=PR_FALSE);
     nsresult            Redirect(const char *aURL,
                                  nsIChannel **aResult);
 
@@ -129,6 +129,10 @@ public:
     nsHTTPResponse*                     mCachedResponse;
 
 protected:
+    // for PUT/POST cases...
+    nsCOMPtr<nsIInputStream>            mRequestStream;
+    nsCOMPtr<nsIStreamObserver>         mWriteObserver;
+
     nsCOMPtr<nsIURI>                    mOriginalURI;
     nsCOMPtr<nsIURI>                    mURI;
     nsCOMPtr<nsIURI>                    mReferrer;

@@ -222,8 +222,8 @@ nsSocketTransport::~nsSocketTransport()
 
     NS_IF_RELEASE (mService);
     
-    CRTFREEIF (mPrintHost );
-    CRTFREEIF ( mHostName );
+    CRTFREEIF (mPrintHost);
+    CRTFREEIF (mHostName);
     CRTFREEIF (mSocketType);
 
     if (mMonitor) {
@@ -237,11 +237,11 @@ nsSocketTransport::~nsSocketTransport()
     }
 
     if (mService)
-        PR_AtomicDecrement (&mService -> mTotalTransports);
+        PR_AtomicDecrement(&mService->mTotalTransports);
 }
 
 
-nsresult nsSocketTransport::Init (nsSocketTransportService* aService,
+nsresult nsSocketTransport::Init(nsSocketTransportService* aService,
                                  const char* aHost, 
                                  PRInt32 aPort,
                                  const char* aSocketType,
@@ -2327,8 +2327,11 @@ nsSocketTransport::fireStatus(PRUint32 aCode)
   nsAutoString mesg(tempmesg);
   if (mPrintHost)
     mesg.AppendWithConversion(mPrintHost);
-  else
-    mesg.AppendWithConversion(mHostName);
+  else 
+  {
+      NS_ASSERTION(0, "no print host specified for this socket!");
+      mesg.AppendWithConversion(mHostName);
+  }
 
   if (NS_FAILED(rv)) return rv;
 

@@ -113,10 +113,8 @@ public:
     nsresult            SetTransport (nsIChannel * aTransport);
     nsresult            GetTransport (nsIChannel **aTransport);
 
-    // Build the actual request string based on the settings. 
-
-    nsresult            GetPostDataStream(nsIInputStream* *aResult);
-    nsresult            SetPostDataStream(nsIInputStream* aStream);
+    nsresult            GetUploadStream(nsIInputStream** o_UploadStream);
+    nsresult            SetUploadStream(nsIInputStream* i_UploadStream);
 
     nsresult            SetOverrideRequestSpec(const char* i_Spec);
     nsresult            GetOverrideRequestSpec(char** o_Spec);
@@ -124,7 +122,8 @@ public:
     PRUint32            mBufferSegmentSize;
     PRUint32            mBufferMaxSize;
 
-    nsCOMPtr<nsIInputStream>    mPostDataStream;
+    // for POST or PUT data...
+    nsCOMPtr<nsIInputStream>    mInputStream;
 
     nsresult formHeaders (PRUint32 capabilities);
     nsresult formBuffer  (nsCString * reqBuffer, PRUint32 capabilities);
@@ -184,7 +183,7 @@ public:
     nsresult    GetTransport (nsIChannel **aTransport);
 
     // Build the actual request string based on the settings. 
-    nsresult    WriteRequest ();
+    nsresult    WriteRequest(nsIInputStream* iRequestStream);
 
     nsresult    AddToPipeline(nsHTTPRequest *aRequest);
     nsresult    GetRequestCount (PRUint32 * aReqCount);
@@ -213,8 +212,8 @@ protected:
     PRUint32                mBufferMaxSize;
     PRBool                  mMustCommit;   
 
-    PRUint32                mTotalWritten;
     PRUint32                mTotalProcessed;
+    PRUint32                mTotalWritten;
 
 private:
     nsCOMPtr<nsISupportsArray> mRequests;
@@ -222,7 +221,7 @@ private:
     nsHTTPHandler*          mHandler;
     nsCString               mRequestBuffer;
 
-    nsCOMPtr<nsIInputStream>    mPostDataStream;
+    nsCOMPtr<nsIInputStream>    mInputStream; 
 
     nsXPIDLCString  mHost;
     PRInt32         mPort;

@@ -59,11 +59,6 @@ interface nsIHTTPChannel : nsIChannel
     void SetRequestMethod(in unsigned long method);
 //  NS_IMETHOD SetRequestMethod(HTTPMethod i_Method=HM_GET) = 0;
 
-    /*
-        Pass in the post data if any...
-    */
-	attribute nsIInputStream PostDataStream;
-
     /* 
         Response funtions. A call to any of these implicitly calls 
         Load() on this protocol instance. 
@@ -72,12 +67,13 @@ interface nsIHTTPChannel : nsIChannel
     void   SetResponseHeader(in nsIAtom headerAtom, in string headerValue);
     nsISimpleEnumerator GetResponseHeaderEnumerator();
 
+    attribute nsIInputStream UploadStream;
     /* 
         Explicitly set a referrer (HTTP's Referer) on this channel
     */
     void   SetReferrer(in nsIURI referrer, in unsigned long referrerLevel);
 
-	 readonly attribute nsIURI referrer;
+    readonly attribute nsIURI referrer;
 
     readonly attribute unsigned long ResponseStatus;
 
