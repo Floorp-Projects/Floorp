@@ -10,7 +10,8 @@ close(UA);
 
 if (!($css =~ m|\@import.*mathml\.css|)) 
 {
-  open(UA, "+>>$ua");
-  print UA "\@import url(resource:/res/mathml.css);\n";
+  $css =~ s|(\@import[^\@]+\;)\n\n|$1\n\@import url\(resource:/res/mathml\.css\);\n\n|;
+  open(UA, ">$ua");
+  print UA $css;
   close(UA);
 }
