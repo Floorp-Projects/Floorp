@@ -141,4 +141,5 @@ Rights Reserved.
 
   <box id="okCancelButtons"/>
 
+  <statusbar id="status-bar" class="chromeclass-status"/>
 </window>

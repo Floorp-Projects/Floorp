@@ -53,7 +53,7 @@ Contributor(s):
       </box>
     </radiogroup>
     <box class="indent" autostretch="never">
-      <checkbox id="markread" value="&mark.label;"/>
+      <checkbox id="markread" label="&mark.label;"/>
     </box>
   </box>
   <separator/>

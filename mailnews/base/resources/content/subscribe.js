@@ -48,7 +48,7 @@ function SetServerTypeSpecificTextValues()
 	stringName = "foldersheaderfor-" + serverType;
 	stringval = gSubscribeBundle.getString(stringName);
     element = document.getElementById("foldersheaderlabel");
-	element.setAttribute('value',stringval);
+	element.setAttribute('label',stringval);
 
     //set the delimiter
     try {
