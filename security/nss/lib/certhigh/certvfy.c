@@ -705,7 +705,7 @@ CERT_VerifyCertChain(CERTCertDBHandle *handle, CERTCertificate *cert,
 	subjectNameList = CERT_GetCertificateNames(subjectCert, arena);
 	subjectNameListLen = CERT_GetNamesLength(subjectNameList);
 	for (i = 0; i < subjectNameListLen; i++) {
-	    if (namesIndexLen < namesCount + i) {
+	    if (namesIndexLen <= namesCount + i) {
 		namesIndexLen = namesIndexLen * 2;
 		namesIndex = (SECItem *) PORT_Realloc(namesIndex, namesIndexLen * 
 						       sizeof(SECItem));
