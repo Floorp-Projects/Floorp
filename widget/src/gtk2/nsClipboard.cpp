@@ -441,13 +441,8 @@ nsClipboard::SelectionGetEvent (GtkWidget        *aWidget,
         if (!wideString)
             return;
 
-        PRUnichar *tmpString = nsnull;
-        wideString->GetData(&tmpString);
-        if (!tmpString)
-            return;
-
-        nsString ucs2string;
-        ucs2string.Adopt(tmpString);
+        nsAutoString ucs2string;
+        wideString->GetData(ucs2string);
         char *utf8string = ToNewUTF8String(ucs2string);
         if (!utf8string)
             return;
