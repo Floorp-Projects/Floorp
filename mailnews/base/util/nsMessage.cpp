@@ -352,6 +352,14 @@ NS_IMETHODIMP nsMessage::GetMessageSize(PRUint32 *result)
 		return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP nsMessage::GetLineCount(PRUint32 *result)
+{
+	if(mMsgHdr)
+		return mMsgHdr->GetLineCount(result);
+	else
+		return NS_ERROR_FAILURE;
+}
+
 NS_IMETHODIMP nsMessage::SetMessageSize(PRUint32 messageSize)
 {
 	if(mMsgHdr)

@@ -84,6 +84,7 @@ public:
     NS_IMETHOD SetMessageKey(nsMsgKey inKey);
     NS_IMETHOD GetMessageSize(PRUint32 *result);
     NS_IMETHOD SetMessageSize(PRUint32 messageSize);
+    NS_IMETHOD GetLineCount(PRUint32 *result);
     NS_IMETHOD SetLineCount(PRUint32 lineCount);
     NS_IMETHOD SetPriority(nsMsgPriority priority);
     NS_IMETHOD SetPriority(const char *priority);

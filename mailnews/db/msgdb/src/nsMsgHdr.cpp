@@ -95,14 +95,6 @@ nsMsgHdr::~nsMsgHdr()
 	}
 }
 
-#if 0
-NS_IMETHODIMP nsMsgHdr::GetMessageSize(PRUint32 *result)
-{
-    *result = m_messageSize;
-    return NS_OK;
-}
-#endif
-
 NS_IMETHODIMP nsMsgHdr::GetMessageKey(nsMsgKey *result)
 {
 	if (m_messageKey == nsMsgKey_None && m_mdbRow != NULL)
@@ -419,6 +411,14 @@ NS_IMETHODIMP nsMsgHdr::GetMessageSize(PRUint32 *result)
 
 	*result = size;
 	return res;
+}
+
+NS_IMETHODIMP nsMsgHdr::GetLineCount(PRUint32 *result)
+{
+        PRUint32 linecount;
+        nsresult res = GetUInt32Column(m_mdb->m_numLinesColumnToken, &linecount);
+        *result = linecount;
+        return res;
 }
 
 NS_IMETHODIMP nsMsgHdr::SetPriority(const char *priority)
