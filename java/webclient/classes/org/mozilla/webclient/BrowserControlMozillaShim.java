@@ -38,7 +38,7 @@ import java.awt.*;
  * There is one instance of this class and all of the exposed methods
  * are static.
 
- * @version $Id: BrowserControlMozillaShim.java,v 1.2 1999/08/10 03:59:04 mark.lin%eng.sun.com Exp $
+ * @version $Id: BrowserControlMozillaShim.java,v 1.3 1999/09/03 19:28:45 edburns%acm.org Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlImpl
 
@@ -485,6 +485,21 @@ public static String webShellGetURL(int webShellPtr,
 	}
 }
 
+/**
+ * Added by Mark Goddard OTMP 9/2/1999
+ */
+
+public static boolean webShellRefresh(int webShellPtr) throws Exception
+{
+ 	synchronized(lock) {
+		if (initialized) {
+			return instance.nativeWebShellRefresh(webShellPtr);
+		}
+		else {
+			throw new Exception("instance is not initialized.");
+		}
+	}
+}   
 //
 // Native interfaces
 //
@@ -553,6 +568,11 @@ private native int		nativeWebShellGetHistoryLength	(int webShellPtr) throws Exce
 private native int		nativeWebShellGetHistoryIndex	(int webShellPtr) throws Exception;
 private native String	nativeWebShellGetURL			(int webShellPtr, int aHistoryIndex) throws Exception;
 
+/**
+ * Added by Mark Goddard OTMP 9/2/1999
+ */
+private native boolean  nativeWebShellRefresh           (int webShellPtr) throws Exception;
+
 //
 // General Methods
 //
@@ -569,7 +589,7 @@ public static void main(String [] args)
     BrowserControlMozillaShim me = new BrowserControlMozillaShim();
     Log.setApplicationName("BrowserControlMozillaShim");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: BrowserControlMozillaShim.java,v 1.2 1999/08/10 03:59:04 mark.lin%eng.sun.com Exp $");
+    Log.setApplicationVersionDate("$Id: BrowserControlMozillaShim.java,v 1.3 1999/09/03 19:28:45 edburns%acm.org Exp $");
     
 }
 

@@ -32,7 +32,7 @@ import org.mozilla.webclient.*;
  * This is a test application for using the BrowserControl.
 
  *
- * @version $Id: EmbeddedMozilla.java,v 1.1 1999/07/30 01:03:07 edburns%acm.org Exp $
+ * @version $Id: EmbeddedMozilla.java,v 1.2 1999/09/03 19:28:45 edburns%acm.org Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlCanvasFactory
 
@@ -85,6 +85,7 @@ public class EmbeddedMozilla extends Frame implements ActionListener {
 		makeItem(buttonsPanel, "Back",    0, 0, 1, 1, 0.0, 0.0);
 		makeItem(buttonsPanel, "Forward", 1, 0, 1, 1, 0.0, 0.0);
 		makeItem(buttonsPanel, "Stop",    2, 0, 1, 1, 0.0, 0.0);
+		makeItem(buttonsPanel, "Refresh", 3, 0, 1, 1, 0.0, 0.0);
 
 		// Create the control panel
 		controlPanel = new Panel();
@@ -148,6 +149,9 @@ public class EmbeddedMozilla extends Frame implements ActionListener {
 	    	else if (command.equals("Stop")) {
 	    		browserControl.stop();
 	    	}
+            else if (command.equals("Refresh")) {
+                browserControl.refresh();
+            }
 	    	else {
 		        browserControl.loadURL(urlField.getText());
 		    }

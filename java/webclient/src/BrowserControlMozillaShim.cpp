@@ -1788,6 +1788,41 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellGetURL (
 	return urlString;
 } // Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellGetURL()
 
+// added my Mark Goddard OTMP 9/2/1999
+/*
+ * Class:     org_mozilla_webclient_BrowserControlMozillaShim
+ * Method:    nativeWebShellRefresh
+ * Signature: (I)V
+ */
+JNIEXPORT jboolean JNICALL 
+    Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellRefresh (
+	JNIEnv	*	env,
+	jobject		obj,
+	jint		webShellPtr)
+{
+	JNIEnv	*	pEnv = env;
+	jobject		jobj = obj;
+	void	*	voidResult = nsnull;
+
+    WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
+
+	if (initContext == nsnull) {
+		::ThrowExceptionToJava(env, "Exception: null webShellPtr passed to raptorWebShellRefresh");
+		return JNI_FALSE;
+	}
+
+	if (initContext->initComplete) {
+		wsRefreshEvent	* actionEvent = new wsRefreshEvent(initContext->webShell);
+        PLEvent	   	* event       = (PLEvent*) *actionEvent;
+
+        voidResult = ::PostSynchronousEvent(initContext, event);
+
+		return (NS_FAILED((nsresult) voidResult)) ? JNI_FALSE : JNI_TRUE;
+	}
+
+	return JNI_FALSE;
+} // Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellBack()
+
 
 #ifdef XP_UNIX
 /*

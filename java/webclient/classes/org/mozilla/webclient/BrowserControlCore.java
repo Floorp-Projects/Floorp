@@ -24,7 +24,7 @@ package org.mozilla.webclient;
  *  <B>BrowserControlCore</B> Defines the core methods for browsing
  *
 
- * @version $Id: BrowserControlCore.java,v 1.1 1999/07/30 01:03:04 edburns%acm.org Exp $
+ * @version $Id: BrowserControlCore.java,v 1.2 1999/09/03 19:28:44 edburns%acm.org Exp $
  * 
 
  * @see	org.mozilla.webclient.BrowserControlExtended
@@ -47,6 +47,11 @@ public boolean back() throws Exception;
 
 public boolean forward() throws Exception;
 
+// added by Mark Goddard OTMP 9/2/1999
+public boolean refresh() throws Exception;
+
 public int getNativeWebShell();
 
 } // end of interface BrowserControlCore
+
+

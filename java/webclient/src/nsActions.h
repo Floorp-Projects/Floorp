@@ -237,6 +237,16 @@ protected:
         PRInt32        mHistoryIndex;
 };
 
+// added by Mark Goddard OTMP 9/2/1999 
+class wsRefreshEvent : public nsActionEvent {
+public:
+                        wsRefreshEvent (nsIWebShell* webShell);
+        void    *       handleEvent    (void);
+
+protected:
+        nsIWebShell *   mWebShell;
+};
+
 
 #endif /* nsActions_h___ */
 

@@ -71,6 +71,8 @@ jboolean (* nativeWebShellGoTo) (JNIEnv *, jobject, jint, jint);
 jint (* nativeWebShellGetHistoryLength) (JNIEnv *, jobject, jint);
 jint (* nativeWebShellGetHistoryIndex) (JNIEnv *, jobject, jint);
 jstring (* nativeWebShellGetURL) (JNIEnv *, jobject, jint, jint);
+// added by Mark Goddard OTMP 9/2/1999
+jboolean (* nativeWebShellRefresh)(JNIEnv *, jobject, jint);
 void (* processNativeEventQueue) (JNIEnv *, jobject, jint);
 
 
@@ -211,6 +213,13 @@ void locateBrowserControlStubFunctions(void * dll) {
   if (!nativeWebShellGetURL) {
     printf("got dlsym error %s\n", dlerror());
   }
+  
+  // added by Mark Goddard OTMP 9/2/1999
+  nativeWebShellRefresh = (jboolean (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellRefresh");
+  if (!nativeWebShellRefresh) {
+    printf("got dlsym error %s\n", dlerror());
+  }
+
   processNativeEventQueue = (void (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_motif_MozillaEventThread_processNativeEventQueue");
   if (!processNativeEventQueue) {
     printf("got dlsym error %s\n", dlerror());
@@ -793,6 +802,20 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellGetURL (
   return (* nativeWebShellGetURL) (env, obj, webShellPtr, historyIndex);
 } // Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellGetURL()
 
+// added by Mark Goddard OTMP 9/2/1999
+/*
+ * Class:     MozWebShellMozillaShim
+ * Method:    raptorWebShellRefresh
+ * Signature: (I)Z
+ */
+JNIEXPORT jboolean JNICALL
+Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellRefresh (
+	JNIEnv	*	env,
+	jobject		obj,
+	jint		webShellPtr)
+{
+  return (* nativeWebShellRefresh) (env, obj, webShellPtr);
+} // Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellRefresh()
 
 
 // EOF

@@ -564,6 +564,35 @@ wsGetURLEvent::handleEvent ()
         return NULL;
 } // handleEvent()
 
+// Added by Mark Goddard OTMP 9/2/1999
+
+/*
+ * wsRefreshEvent
+ */
+
+wsRefreshEvent::wsRefreshEvent(nsIWebShell* webShell) :
+        nsActionEvent(),
+        mWebShell(webShell)
+{
+}
+
+
+void *
+wsRefreshEvent::handleEvent ()
+{
+        if (mWebShell) {
+                
+                printf("handleEvent(Refresh())\n");
+
+                nsresult rv = mWebShell->Reload(nsIChannel::LOAD_NORMAL);
+                
+                printf("result = %lx\n", rv);
+
+                return (void *) rv;
+        }
+        return NULL;
+} // handleEvent()
+
 
 
 // EOF
