@@ -27,50 +27,15 @@
 #include "nsIStreamListener.h"
 #include "nsIOutputStream.h"
 #include "nsIURI.h"
-#include "nsAutoLock.h"
 #include "prtime.h"
 #include "nsString2.h"
 #include "nsIEventQueue.h"
 #include "nsHashtable.h"
 #include "nsIChannel.h"
 #include "nsIFTPContext.h"
-
-// The cache object string key has the following syntax
-// "HostPort" NOTE: no seperators.
-class nsConnCacheObj {
-public:
-    nsConnCacheObj(nsIChannel *aChannel,
-                   nsIInputStream *aInputStream,
-                   nsIOutputStream *aOutputStream)
-    { 
-        mSocketTransport = aChannel;
-        NS_ADDREF(mSocketTransport);
-
-        mInputStream = aInputStream;
-        NS_ADDREF(mInputStream);
-
-        mOutputStream = aOutputStream;
-        NS_ADDREF(mOutputStream);
-
-        mServerType = 0;
-        mList = PR_FALSE;
-        mUseDefaultPath = PR_TRUE;
-    };
-    ~nsConnCacheObj()
-    {
-        NS_RELEASE(mSocketTransport);
-        NS_RELEASE(mInputStream);
-        NS_RELEASE(mOutputStream);
-    };
-
-    nsIChannel      *mSocketTransport;      // the connection
-    nsIInputStream  *mInputStream;          // to read from server
-    nsIOutputStream *mOutputStream;         // to write to server
-    PRUint32         mServerType;           // what kind of server is it.
-    nsCAutoString    mCwd;                  // what dir are we in
-    PRBool           mList;                 // are we sending LIST or NLST
-    PRBool           mUseDefaultPath;       // do we need to use the default path.
-};
+#include "nsIConnectionCache.h"
+#include "nsConnectionCacheObj.h"
+#include "nsIProtocolHandler.h"
 
 // ftp server types
 #define FTP_GENERIC_TYPE     0
@@ -160,10 +125,9 @@ public:
     nsresult Init(nsIEventQueue* aFTPEventQ,
                   nsIURI* aUrl,
                   nsIEventQueue* aEventQ,
-                  nsIStreamListener *aListener,
+                  nsIProtocolHandler* aHandler,
                   nsIChannel* channel,
-                  nsISupports* ctxt,
-                  nsHashtable* aConnectionList);
+                  nsISupports* ctxt);
     nsresult Process();
 
     // user level setup
@@ -255,8 +219,7 @@ private:
     nsCAutoString       mCwdAttempt;        // the dir we're trying to get into.
 // end "these ...."
 
-    nsStringKey         *mCacheKey;         // the key into the cache hash.
-    PRLock              *mCacheLock;        // the lock for accessing the cache.
+    nsCAutoString       mCacheKey;         // the key into the cache hash.
 
     PRBool              mConnected;
     PRBool              mUseDefaultPath;    // use PWD to figure out path
@@ -273,16 +236,18 @@ private:
 
     nsIStreamListener*  mListener;          // the listener we want to call
                                             // during our event firing.
+    nsIStreamListener*  mSyncListener;      // a syncronous version of our listener
+
     nsIChannel*         mChannel;
     nsISupports*        mContext;
     nsIFTPContext*      mFTPContext;        // FTP channel specific context.
-
+    nsIConnectionCache* mConnCache;         // the nsISupports proxy ptr to the FTP proto handler
+    nsIProtocolHandler* mHandler;           // The protocol handler that created this.
+    nsConnectionCacheObj* mConn;            // The cached connection.
     PRBool              mKeepRunning;       // thread event loop boolean
 
     nsString2           mContentType;       // the content type of the data we're dealing w/.
     char*               mURLSpec;
-    nsHashtable*        mConnectionList;    // list of open FTP connections
-
 };
 
 #define NS_FTP_BUFFER_READ_SIZE             (8*1024)

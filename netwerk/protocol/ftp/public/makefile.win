@@ -25,6 +25,7 @@ XPIDL_MODULE = necko_ftp
 XPIDLSRCS =                 \
         .\nsIFTPChannel.idl \
         .\nsIFTPContext.idl \
+        .\nsIConnectionCache.idl  \
         $(NULL)
 
 EXPORTS =                 \

@@ -20,6 +20,7 @@
 
 #include "nsFTPChannel.h"
 #include "nscore.h"
+#include "prlog.h"
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
 #include "nsIBufferInputStream.h"
@@ -70,6 +71,7 @@ nsFTPChannel::nsFTPChannel() {
     mContentLength = -1;
     mThreadRequest = nsnull;
     mConnectionEventQueue = nsnull;
+    mHandler = nsnull;
 }
 
 nsFTPChannel::~nsFTPChannel() {
@@ -82,19 +84,19 @@ nsFTPChannel::~nsFTPChannel() {
     NS_IF_RELEASE(mThreadRequest);
     NS_IF_RELEASE(mBufferInputStream);
     NS_IF_RELEASE(mBufferOutputStream);
+    NS_IF_RELEASE(mHandler);
 }
 
 NS_IMPL_ISUPPORTS4(nsFTPChannel, nsIChannel, nsIFTPChannel, nsIStreamListener, nsIStreamObserver);
 
 nsresult
 nsFTPChannel::Init(const char* verb, nsIURI* uri, nsILoadGroup *aGroup,
-                   nsIEventSinkGetter* getter, nsHashtable *aConnectionList,
-                   nsIThread **_retval)
+                   nsIEventSinkGetter* getter, nsIProtocolHandler* aHandler)
 {
     nsresult rv;
 
-    NS_ASSERTION(aConnectionList, "FTP needs a connection list");
-    mConnectionList = aConnectionList;
+    mHandler = aHandler;
+    NS_ADDREF(mHandler);
 
     if (mConnected)
         return NS_ERROR_FAILURE;
@@ -130,16 +132,14 @@ nsFTPChannel::Init(const char* verb, nsIURI* uri, nsILoadGroup *aGroup,
 
     // go ahead and create the thread for the connection.
     // we'll init it and kick it off later
-    rv = NS_NewThread(&mConnectionThread, 0, PR_JOINABLE_THREAD);
+    rv = NS_NewThread(&mConnectionThread);
     if (NS_FAILED(rv)) return rv;
-    *_retval = mConnectionThread;
-    NS_ADDREF(*_retval);
 
-#if 1
     // we'll create the FTP connection's event queue here, on this thread.
     // it will be passed to the FTP connection upon FTP connection 
     // initialization. at that point it's up to the FTP conn thread to
     // turn the crank on it.
+#if 1
     PRThread *thread; // does not need deleting
     rv = mConnectionThread->GetPRThread(&thread);
     if (NS_FAILED(rv)) return rv;
@@ -148,15 +148,11 @@ nsFTPChannel::Init(const char* verb, nsIURI* uri, nsILoadGroup *aGroup,
     if (!PLEventQ) return rv;
 
     rv = eventQService->CreateFromPLEventQueue(PLEventQ, &mConnectionEventQueue);
-    if (NS_FAILED(rv)) return rv;  
 #else
     rv = eventQService->CreateFromIThread(mConnectionThread, &mConnectionEventQueue);
-    if (NS_FAILED(rv)) return rv;
 #endif
 
-
-
-    return NS_OK;
+    return rv;
 }
 
 NS_METHOD
@@ -330,8 +326,8 @@ nsFTPChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
     rv = protocolInterpreter->Init(mConnectionEventQueue,   /* FTP thread queue */
                                    mUrl,                    /* url to load */
                                    mEventQueue,             /* event queue for this thread */
-                                   this, this, ctxt, 
-                                   mConnectionList          /* list of cached connections */);
+                                   mHandler,
+                                   this, ctxt);
     if (NS_FAILED(rv)) return rv;
 
     // create the proxy object so we can call into the FTP thread.
@@ -494,7 +490,7 @@ nsFTPChannel::OnStartRequest(nsIChannel* channel, nsISupports* context) {
     nsresult rv = NS_OK;
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFTPChannel::OnStartRequest(channel = %x, context = %x)\n", channel, context));
     if (mListener) {
-        rv = mListener->OnStartRequest(channel, context);
+        rv = mListener->OnStartRequest(channel, mContext);
     }
     return rv;
 }
@@ -506,7 +502,7 @@ nsFTPChannel::OnStopRequest(nsIChannel* channel, nsISupports* context,
     nsresult rv = NS_OK;
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFTPChannel::OnStopRequest(channel = %x, context = %x, status = %d, msg = N/A)\n",channel, context, aStatus));
     if (mListener) {
-        rv = mListener->OnStopRequest(channel, context, aStatus, aMsg);
+        rv = mListener->OnStopRequest(channel, mContext, aStatus, aMsg);
     }
 
     // release the proxy object to the thread.
@@ -546,7 +542,7 @@ nsFTPChannel::OnDataAvailable(nsIChannel* channel, nsISupports* context,
     }
     
     if (mListener) {
-        rv = mListener->OnDataAvailable(channel, context, aIStream, aSourceOffset, aLength);
+        rv = mListener->OnDataAvailable(channel, mContext, aIStream, aSourceOffset, aLength);
     }
     return rv;
 }
