@@ -211,7 +211,6 @@ pref("mailnews.language_sensitive_font",    true);
 
 pref("offline.news.download.unread_only",   true);
 pref("offline.news.download.by_date",       true);
-pref("offline.news.download.use_days",      false);
 pref("offline.news.download.days",          30);    // days
 pref("offline.news.download.increments",    3); // 0-yesterday, 1-1 wk ago, 2-2 wk ago,
                                                 // 3-1 month ago, 4-6 month ago, 5-1 year ago
@@ -384,7 +383,8 @@ pref("mail.smtpserver.default.try_ssl", 0);
 pref("mail.display_glyph", true);   // TXT->HTML :-) etc. in viewer
 pref("mail.display_struct", true);  // TXT->HTML *bold* etc. in viewer; ditto
 pref("mail.send_struct", false);   // HTML->HTML *bold* etc. during Send; ditto
-// For the next 4 prefs, see <http://www.bucksch.org/1/projects/mozilla/108153>
+pref("mailnews.display.original_date", false);   // display date string from mail headers without interpreting
+
 pref("mailnews.display.prefer_plaintext", false);  // Ignore HTML parts in multipart/alternative
 pref("mailnews.display.html_as", 0);  // How to display HTML parts. 0 = Render the sender's HTML; 1 = HTML->TXT->HTML; 2 = Show HTML source; 3 = Sanitize HTML
 pref("mailnews.display.html_sanitizer.allowed_tags", "html head title body p br div(lang,title) h1 h2 h3 h4 h5 h6 ul ol li(value,start,compact) dl dt dd blockquote(type,cite) pre noscript noframes strong em sub sup span(lang,title) acronym(title) abbr(title) del(title,cite,datetime) ins(title,cite,datetime) q(cite) a(href,name,title) img(alt,title,longdesc) base(href) area(alt) applet(alt) object(alt) var samp dfn address kbd code cite s strike tt b i table(align) caption tr(align,valign) td(rowspan,colspan,align,valign) th(rowspan,colspan,align,valign)");

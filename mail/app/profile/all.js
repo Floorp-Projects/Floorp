@@ -467,7 +467,6 @@ pref("offline.startup_state",            0);
 pref("offline.send.unsent_messages",            0);
 pref("offline.download.download_messages",  0);
 pref("offline.prompt_synch_on_exit",            true);
-pref("offline.news.download.use_days",          0);
 
 // If there is ever a security firedrill that requires
 // us to block certian ports global, this is the pref 
@@ -539,7 +538,7 @@ pref("network.http.connect.timeout",  30);	// in seconds
 pref("network.http.request.timeout", 120);	// in seconds
 
 // Headers
-pref("network.http.accept.default", "text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,video/x-mng,image/png,image/jpeg,image/gif;q=0.2,*/*;q=0.1");
+pref("network.http.accept.default", "text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,image/jpeg,image/gif;q=0.2,*/*;q=0.1");
 
 pref("network.http.sendRefererHeader",      2); // 0=don't send any, 1=send only on clicks, 2=send on image requests as well
 
