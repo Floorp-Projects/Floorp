@@ -386,6 +386,12 @@ nsEventQueueImpl::ProcessPendingEvents()
   }
 #endif
   PL_ProcessPendingEvents(mEventQueue);
+
+  // if we're no longer accepting events and there are still events in the
+  // queue, then process remaining events.
+  if (!mAcceptingEvents && PL_EventAvailable(mEventQueue))
+      PL_ProcessPendingEvents(mEventQueue);
+
   CheckForDeactivation();
 
   if (mElderQueue) {
