@@ -44,7 +44,7 @@
 #include "nsMacLocale.h"
 #include "nsLocaleCID.h"
 #include "prprf.h"
-#include <script.h>
+#include <Script.h>
 
 NS_DEFINE_IID(kMacLocaleCID, NS_MACLOCALE_CID);
 
