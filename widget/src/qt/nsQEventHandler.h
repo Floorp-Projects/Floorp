@@ -29,6 +29,8 @@ class nsIMenuItem;
 #include <qevent.h>
 #include <map>
 
+
+
 class nsQEventHandler : public QObject//, public nsISupports
 {
     Q_OBJECT
@@ -47,19 +49,22 @@ public slots:
     bool eventFilter(QObject * object, QEvent * event);
     bool MousePressedEvent(QMouseEvent * event, nsWidget * widget);
     bool MouseReleasedEvent(QMouseEvent * event, nsWidget * widget);
+    bool MouseMovedEvent(QMouseEvent * event, nsWidget * widget);
     bool DestroyEvent(QCloseEvent * event, nsWidget * widget);
     bool ShowEvent(QShowEvent * event, nsWidget * widget);
     bool HideEvent(QHideEvent * event, nsWidget * widget);
     bool ResizeEvent(QResizeEvent * event, nsWidget * widget);
     bool MoveEvent(QMoveEvent * event, nsWidget * widget);
     bool PaintEvent(QPaintEvent * event, nsWidget * widget);
-
-    bool KeyPressEvent(QWidget * widget);
-    bool KeyReleaseEvent(QWidget * widget);
+    bool KeyPressEvent(QKeyEvent * event, nsWidget * widget);
+    bool KeyReleaseEvent(QKeyEvent * event, nsWidget * widget);
     bool FocusInEvent(QWidget * widget);
     bool FocusOutEvent(QWidget * widget);
     bool ScrollbarValueChanged(int value);
     bool TextChangedEvent(const QString & string);
+
+protected:
+    PRInt32 GetNSKey(PRInt32 key, PRInt32 state);
 
 private:
     static nsQEventHandler *            mInstance;
