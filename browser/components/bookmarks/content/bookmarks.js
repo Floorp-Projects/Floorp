@@ -543,7 +543,8 @@ var BookmarksCommand = {
   {
     var rv = { selectedFolder: null };      
     openDialog("chrome://browser/content/bookmarks/addBookmark.xul", "", 
-               ADD_BM_DIALOG_FEATURES, null, null, null, null, "selectFolder", rv);
+               "centerscreen,chrome,modal=yes,dialog=yes,resizable=yes", null, 
+               null, null, null, "selectFolder", rv);
     if (!rv.target)
       return;
     BookmarksUtils.moveAndCheckSelection("move", aSelection, rv.target);
