@@ -487,7 +487,7 @@ public:
 #ifdef _WIN32
       mNormalFont->GetAveCharWidth(mAveCharWidth);
 #else
-      mAveCharWidth = 0;
+      mAveCharWidth = 10;
 #endif
       mLastFont = mNormalFont;
 
