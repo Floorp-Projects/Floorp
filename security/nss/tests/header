@@ -570,7 +570,7 @@ init_dirs()
     if [ -z "${BCDIST}" ] ; then
         #BCDIST=/share/builds/mccrel3/nss/${BC_MASTER}/mozilla/dist
         BCDIST=${NSS_VER_DIR}/../${BC_MASTER}/mozilla/dist
-        if [ ! -d $BCDIST ] ; then
+        if [ ! -d $BCDIST -a `basename $0` != jssqa ] ; then
             ask "Backward compatibility directory $BCDIST does not exist, continue" "y" "n" || Exit
         fi
     fi
@@ -602,7 +602,7 @@ init_dirs()
         TESTSCRIPTDIR=${MOZILLA_ROOT}/security/nss/tests
     fi
 
-    if [ ! -d $TESTSCRIPTDIR ] ; then
+    if [ ! -d $TESTSCRIPTDIR -a `basename $0` != jssqa ] ; then
         if [ "$O_WIN" = "ON" -a "$WIN_WAIT_FOREVER" = "ON" ]
         then
             WaitForever $TESTSCRIPTDIR/all.sh 1
@@ -871,22 +871,20 @@ eval_opts()
         -*)
             glob_usage "Error: Can't handle option $1"
             ;;
-        ?*)
+        tip|3.|3..)
             NSSVER=$1
-            if [ -z "$NSSVER" ]        
-            then
-                NSSVER="tip"
-                Debug "NSS Version: Parameters missing - defaulting to tip!"
-            else
-                BUILDDATE=$2
-                if [ -z "$BUILDDATE" ] 
-                then
-                    BUILDDATE=`date +%m%d`
-                    Debug "Builddate: Parameters missing - defaulting to today!"
-                else
-                    shift
-                fi
+            if [ -z "$NSSVER" ] ; then
+                glob_usage "Error: illegal parameter"
             fi
+            ;;
+        [01][0-9][0123][0-9])
+            BUILDDATE=$1
+            if [ -z "$BUILDDATE" ] ; then
+                glob_usage "Error: illegal parameter"
+            fi
+            ;;
+        ?*)
+            glob_usage "Error: Can't handle parameter $1"
             ;;
     esac
     shift
@@ -895,16 +893,17 @@ eval_opts()
   if [ -z "$PORT" -a "$O_TBX" = "ON" ] ; then
       PORT=8444
       export PORT
+      if [ -z "$NSSVER" ] ; then
+          NSSVER="tip"
+          Debug "NSS Version: Parameters missing - defaulting to tip!"
+      fi
+  elif [ -z "$NSSVER" ] ; then
+      NSSVER="341"
+      Debug "NSS Version: Parameters missing - defaulting to 341!"
   fi
-  if [ -z "$BUILDDATE" ]         
-  then
+  if [ -z "$BUILDDATE" ] ; then
       BUILDDATE=`date +%m%d`
       Debug "Builddate: Parameters missing - defaulting to today!"
-  fi
-  if [ -z "$NSSVER" ]            
-  then
-      NSSVER="tip"
-      Debug "NSS Version: Parameters missing - defaulting to tip!"
   fi
   
   Debug "Builddate $BUILDDATE NssVersion $NSSVER"
