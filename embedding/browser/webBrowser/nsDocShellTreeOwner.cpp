@@ -31,18 +31,21 @@
 
 // Interfaces needed to be included
 #include "nsIContextMenuListener.h"
+#include "nsIPrivateDOMEvent.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentType.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMEvent.h"
-#include "nsIDOMEventReceiver.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIPresShell.h"
+#include "nsPIDOMWindow.h"
+#include "nsIFocusController.h"
+#include "nsIDOMWindowInternal.h"
 
 // CIDs
 
@@ -551,6 +554,10 @@ nsDocShellTreeOwner::OnSecurityChange(nsIWebProgress *aWebProgress,
 
 void nsDocShellTreeOwner::WebBrowser(nsWebBrowser* aWebBrowser)
 {
+    if (aWebBrowser == nsnull)
+    {
+        RemoveMouseListener();
+    }
     mWebBrowser = aWebBrowser;
 }
 
@@ -604,35 +611,44 @@ NS_IMETHODIMP nsDocShellTreeOwner::SetWebBrowserChrome(nsIWebBrowserChrome* aWeb
    return NS_OK;
 }
 
+
 ///////////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP nsDocShellTreeOwner::AddMouseListener()
 {
-    // Clear out the old listener
-    RemoveMouseListener();
-
     NS_ENSURE_TRUE(mWebBrowser, NS_ERROR_FAILURE);
 
-    // Get the DOM document
-    nsCOMPtr<nsIDOMDocument> domDocument;
-    mWebBrowser->GetDocument(getter_AddRefs(domDocument));
-	if (domDocument == nsnull)
-	{
-        return NS_ERROR_FAILURE;
+    if (mMouseListenerActive)
+    {
+        return NS_OK;
     }
 
+    nsCOMPtr<nsIDOMWindow> domWindow;
+    mWebBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
+    NS_ENSURE_TRUE(domWindow, NS_ERROR_FAILURE);
+
+    nsCOMPtr<nsPIDOMWindow> domWindowPrivate = do_QueryInterface(domWindow);
+    NS_ENSURE_TRUE(domWindowPrivate, NS_ERROR_FAILURE);
+    nsCOMPtr<nsIDOMWindowInternal> rootWindow;
+    domWindowPrivate->GetPrivateRoot(getter_AddRefs(rootWindow));
+    NS_ENSURE_TRUE(rootWindow, NS_ERROR_FAILURE);
+    nsCOMPtr<nsIChromeEventHandler> chromeHandler;
+    nsCOMPtr<nsPIDOMWindow> piWin(do_QueryInterface(rootWindow));
+    piWin->GetChromeEventHandler(getter_AddRefs(chromeHandler));
+    NS_ENSURE_TRUE(chromeHandler, NS_ERROR_FAILURE);
+
     // Subscribe to mouse events
-    nsCOMPtr<nsIDOMEventReceiver> eventReceiver;
-    domDocument->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), getter_AddRefs(eventReceiver));
-    if (eventReceiver)
+    mEventReceiver = do_QueryInterface(chromeHandler);
+    if (mEventReceiver)
 	{
         nsresult rv;
         nsIDOMMouseListener *pListener = NS_STATIC_CAST(nsIDOMMouseListener *, this);
-        rv = eventReceiver->AddEventListenerByIID(pListener, NS_GET_IID(nsIDOMMouseListener));
+        rv = mEventReceiver->AddEventListenerByIID(pListener, NS_GET_IID(nsIDOMMouseListener));
         if (NS_SUCCEEDED(rv))
+        {
             mMouseListenerActive = PR_TRUE;
+        }
     }
-    mLastDOMDocument = domDocument;
 
     return NS_OK;
 }
@@ -640,29 +656,32 @@ NS_IMETHODIMP nsDocShellTreeOwner::AddMouseListener()
 
 NS_IMETHODIMP nsDocShellTreeOwner::RemoveMouseListener()
 {
+    NS_ENSURE_TRUE(mWebBrowser, NS_ERROR_FAILURE);
+
     // Unsubscribe from mouse events
-    if (mLastDOMDocument)
+    if (mEventReceiver)
     {
         // Removing the mouse listener may cause this instance to
         // be deleted...  So, keep an extra reference to defer destruction..
         nsCOMPtr<nsIDocShellTreeOwner> kungFuDeathGrip(this);
-
-    	nsCOMPtr<nsIDOMEventReceiver> eventReceiver;
-		mLastDOMDocument->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), getter_AddRefs(eventReceiver));
-		if (eventReceiver)
+		if (mEventReceiver)
 		{
 			nsresult rv;
             nsIDOMMouseListener *pListener = NS_STATIC_CAST(nsIDOMMouseListener *, this);
-            rv = eventReceiver->RemoveEventListenerByIID(pListener, NS_GET_IID(nsIDOMMouseListener));
+            rv = mEventReceiver->RemoveEventListenerByIID(pListener, NS_GET_IID(nsIDOMMouseListener));
             if (NS_SUCCEEDED(rv))
                 mMouseListenerActive = PR_FALSE;
         }
-        mLastDOMDocument = nsnull;
+        mEventReceiver = nsnull;
     }
 
     return NS_OK;
 }
 
+
+//*****************************************************************************
+// nsDocShellTreeOwner::nsIDOMMouseListener
+//*****************************************************************************   
 
 nsresult nsDocShellTreeOwner::HandleEvent(nsIDOMEvent* aEvent)
 {
