@@ -9,6 +9,8 @@
 // Global variables
 var AltWin;                   // Alternate (browser) window
 
+var gStyleRuleNames;
+
 var Tips = new Array();       // Usage tip strings
 var TipNames = new Array();   // Usage tip names
 var TipCount = 0;             // No. of tips
@@ -237,56 +239,69 @@ function FormBlur() {
   return false;
 }
 
-// Set user level
-function UpdateSettings() {
+// Set user level, icons mode etc.
+function UpdateSettings(selectName) {
 
-  var oldUserLevel = window.userLevel;
-  window.userLevel = document.xmltform1.level.options[document.xmltform1.level.selectedIndex].value;
+   dump("UpdateSettings: "+selectName+"\n");
 
-  var oldShowIcons = window.showIcons;
-  window.showIcons = document.xmltform1.icons.options[document.xmltform1.icons.selectedIndex].value;
+   switch(selectName) {
+      case "level":
+         // Change icon display style in the style sheet
+         var oldUserLevel = window.userLevel;
+         window.userLevel = document.xmltform1.level.options[document.xmltform1.level.selectedIndex].value;
 
-  window.windowsMode = document.xmltform1.windows.options[document.xmltform1.windows.selectedIndex].value;
+         if (window.userLevel != oldUserLevel) {
+            dump("UpdateSettings: userLevel="+window.userLevel+"\n");
 
-  dump("UpdateSettings: userLevel="+window.userLevel+"\n");
-  dump("UpdateSettings: windowsMode="+window.windowsMode+"\n");
-  dump("UpdateSettings: showIcons="+window.showIcons+"\n");
+            if (window.userLevel == "advanced") {
+              AlterStyle("DIV.beginner",     "display", "none");
+              AlterStyle("DIV.intermediate", "display", "none");
+         
+            } else if (window.userLevel == "intermediate") {
+              AlterStyle("DIV.intermediate", "display", "block");
+              AlterStyle("DIV.beginner",     "display", "none");
+         
+            } else {
+              AlterStyle("DIV.beginner",     "display", "block");
+              AlterStyle("DIV.intermediate", "display", "block");
+            }
+         }
+         break;
 
-  if (window.userLevel != oldUserLevel) {
-    // Change icon display style in the style sheet
+      case "icons":
+         var oldShowIcons = window.showIcons;
+         window.showIcons = document.xmltform1.icons.options[document.xmltform1.icons.selectedIndex].value;
 
-    if (window.userLevel == "advanced") {
-      AlterStyle("DIV.beginner",     "display", "none");
-      AlterStyle("DIV.intermediate", "display", "none");
+         if (window.showIcons != oldShowIcons) {
+            dump("UpdateSettings: showIcons="+window.showIcons+"\n");
+         
+            if (window.showIcons == "on") {
+               AlterStyle("SPAN.noicons", "display", "none");
+               AlterStyle("SPAN.icons",   "display", "inline");
+               AlterStyle("IMG.icons",    "display", "inline");
+               AlterStyle("TR.icons",     "display", "table-row");
 
-    } else if (window.userLevel == "intermediate") {
-      AlterStyle("DIV.intermediate", "display", "block");
-      AlterStyle("DIV.beginner",     "display", "none");
+            } else {
+               AlterStyle("SPAN.noicons", "display", "inline");
+               AlterStyle("SPAN.icons",   "display", "none");
+               AlterStyle("IMG.icons",    "display", "none");
+               AlterStyle("TR.icons",     "display", "none");
+            }
+         }
+         break;
 
-    } else {
-      AlterStyle("DIV.beginner",     "display", "block");
-      AlterStyle("DIV.intermediate", "display", "block");
-    }
-  }
+      case "windows":
+         // Change icon display style in the style sheet
+         window.windowsMode = document.xmltform1.windows.options[document.xmltform1.windows.selectedIndex].value;
+         dump("UpdateSettings: windowsMode="+window.windowsMode+"\n");
+         break;
 
-  if (window.showIcons != oldShowIcons) {
-    // Change icon display style in the style sheet
+      default:
+         dump("UpdateSettings: Unknown selectName "+selectName+"\n");
+         break;
+   }
 
-    if (window.showIcons == "on") {
-      AlterStyle("SPAN.noicons", "display", "none");
-      AlterStyle("SPAN.icons",   "display", "inline");
-      AlterStyle("IMG.icons",    "display", "inline");
-      AlterStyle("TR.icons",     "display", "table-row");
-
-    } else {
-      AlterStyle("SPAN.noicons", "display", "inline");
-      AlterStyle("SPAN.icons",   "display", "none");
-      AlterStyle("IMG.icons",    "display", "none");
-      AlterStyle("TR.icons",     "display", "none");
-    }
-  }
-
-  return false;
+   return false;
 }
 
 // Alter style in stylesheet of specified document doc, or current document
@@ -302,11 +317,14 @@ function AlterStyle(ruleName, propertyName, propertyValue, doc) {
   var r;
   for (r = 0; r < sheet.cssRules.length; r++) {
     //dump("selectorText["+r+"]="+sheet.cssRules[r].selectorText+"\n");
-    //dump("cssText["+r+"]="+sheet.cssRules[r].cssText+"\n");
 
-    if (sheet.cssRules[r].selectorText == ruleName) {
+    //if (sheet.cssRules[r].selectorText == ruleName) {
+    // Ugly workaround for accessing rules until bug 53448 is fixed
+    if (gStyleRuleNames[r] == ruleName) {
+
+      dump("cssText["+r+"]="+sheet.cssRules[r].cssText+"\n");
       var style = sheet.cssRules[r].style;
-      //dump("style="+style.getPropertyValue(propertyName)+"\n");
+      dump("style="+style.getPropertyValue(propertyName)+"\n");
 
       style.setProperty(propertyName,propertyValue,"");
     }
@@ -642,8 +660,20 @@ function AboutXMLTerm() {
 function LoadHandler() {
   dump("xmlterm: LoadHandler ... "+window.xmlterm+"\n");
 
+  // Ugly workaround for accessing rules in stylesheet until bug 53448 is fixed
+  var sheet = document.styleSheets[0];
+  dump("sheet.cssRules.length="+sheet.cssRules.length+"\n");
+
+  var styleElement = (document.getElementsByTagName("style"))[0];
+  var styleText = styleElement.firstChild.data;
+
+  gStyleRuleNames = styleText.match(/\b[\w-.]+(?=\s*\{)/g);
+  dump("gStyleRuleNames.length="+gStyleRuleNames.length+"\n");
+
   // Update settings
-  UpdateSettings();
+  UpdateSettings('level');
+  UpdateSettings('icons');
+  UpdateSettings('windows');
 
   NewTip();
 

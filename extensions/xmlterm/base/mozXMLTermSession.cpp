@@ -3163,7 +3163,7 @@ NS_IMETHODIMP mozXMLTermSession::NewEntry(const nsString& aPrompt)
     imgElement->SetAttribute(attName, attValue);
 
     attName.AssignWithConversion("src");
-    attValue.AssignWithConversion("chrome://xmlterm/skin/wheel.gif");
+    attValue.AssignWithConversion("chrome://xmlterm/content/wheel.gif");
     imgElement->SetAttribute(attName, attValue);
 
     attName.AssignWithConversion("align");
