@@ -55,8 +55,6 @@ const GENERIC_SELECTOR      = 0;
 const TYPE_ELEMENT_SELECTOR = 1;
 const CLASS_SELECTOR        = 2;
 
-const kUrlString = "url(";
-
 const kAsyncTimeout = 1500; // 1.5 second
 
 var objectsArray = null;

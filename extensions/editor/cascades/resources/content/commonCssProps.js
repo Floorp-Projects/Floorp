@@ -39,6 +39,8 @@
 var gTimerID;
 var textColor, backgroundColor, borderColor;
 var gLocalFonts = null;
+const kUrlString = "url(";
+
 
 // * if |value| is not empty, sets the CSS property |property| to |value|
 //   in |elt| element's inline styles ; otherwise removes the property
@@ -404,7 +406,7 @@ function onBackgroundAttachmentChange()
   if (!gDialog.selectedObject) return;
   // the checkbox is checked if the background scrolls with the page
   var value = gDialog.backgroundAttachmentCheckbox.checked ? "" : "fixed";
-  AddStyleToElement(gDialog.selectedObject, gDialog.selectedObject, value);
+  AddStyleToElement(gDialog.selectedObject, "background-attachment", value);
   SetModifiedFlagOnStylesheet();
 }
 

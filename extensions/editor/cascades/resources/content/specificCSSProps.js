@@ -37,7 +37,6 @@
 
 var gTimerID;
 
-const urlString = "url(";
 const styleStr  = "style";
 
 var textColor, backgroundColor;
@@ -222,6 +221,15 @@ function InitDialog()
       break;
     case "text":
       InitTextTabPanel();
+      break;
+    case "background":
+      InitBackgroundTabPanel();
+      break;
+    case "box":
+      InitBoxTabPanel();
+      break;
+    case "aural":
+      InitAuralTabPanel();
       break;
     default:
       break;
