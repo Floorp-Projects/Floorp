@@ -107,7 +107,8 @@ nsCLiveconnect::GetMember(JNIEnv *jEnv, jsobject obj, const jchar *name, jsize l
 {
     JSContext         *cx             = NULL;
     JSJavaThreadState *jsj_env        = NULL;
-    JSObject          *js_obj         = (JSObject *)obj;
+    JSObjectHandle    *handle         = (JSObjectHandle*)obj;
+    JSObject          *js_obj         = handle->js_obj;
     jobject            member         = NULL;
     jsval              js_val;
     int                dummy_cost     = 0;
@@ -159,7 +160,8 @@ nsCLiveconnect::GetSlot(JNIEnv *jEnv, jsobject obj, jint slot, jobject *pjobj)
 {
     JSContext         *cx             = NULL;
     JSJavaThreadState *jsj_env        = NULL;
-    JSObject          *js_obj         = (JSObject *)obj;
+    JSObjectHandle    *handle         = (JSObjectHandle*)obj;
+    JSObject          *js_obj         = handle->js_obj;
     jobject            member         = NULL;
     jsval              js_val;
     int                dummy_cost     = 0;
@@ -205,7 +207,8 @@ nsCLiveconnect::SetMember(JNIEnv *jEnv, jsobject obj, const jchar *name, jsize l
 {
     JSContext         *cx             = NULL;
     JSJavaThreadState *jsj_env        = NULL;
-    JSObject          *js_obj         = (JSObject *)obj;
+    JSObjectHandle    *handle         = (JSObjectHandle*)obj;
+    JSObject          *js_obj         = handle->js_obj;
     jsval              js_val;
     JavaToJSSavedState saved_state    = {NULL,NULL};
 
@@ -249,7 +252,8 @@ nsCLiveconnect::SetSlot(JNIEnv *jEnv, jsobject obj, jint slot, jobject java_obj)
 {
     JSContext         *cx             = NULL;
     JSJavaThreadState *jsj_env        = NULL;
-    JSObject          *js_obj         = (JSObject *)obj;
+    JSObjectHandle    *handle         = (JSObjectHandle*)obj;
+    JSObject          *js_obj         = handle->js_obj;
     jsval              js_val;
     JavaToJSSavedState saved_state    = {NULL,NULL};
 
@@ -283,7 +287,8 @@ nsCLiveconnect::RemoveMember(JNIEnv *jEnv, jsobject obj, const jchar *name, jsiz
 {
     JSContext         *cx             = NULL;
     JSJavaThreadState *jsj_env        = NULL;
-    JSObject          *js_obj         = (JSObject *)obj;
+    JSObjectHandle    *handle         = (JSObjectHandle*)obj;
+    JSObject          *js_obj         = handle->js_obj;
     jsval              js_val;
     JavaToJSSavedState saved_state    = {NULL,NULL};
 
@@ -325,7 +330,8 @@ nsCLiveconnect::Call(JNIEnv *jEnv, jsobject obj, const jchar *name, jsize length
     jsval             *argv           = 0;
     JSContext         *cx             = NULL;
     JSJavaThreadState *jsj_env        = NULL;
-    JSObject          *js_obj         = (JSObject *)obj;
+    JSObjectHandle    *handle         = (JSObjectHandle*)obj;
+    JSObject          *js_obj         = handle->js_obj;
     jsval              js_val;
     jsval              function_val   = 0;
     int                dummy_cost     = 0;
