@@ -104,6 +104,12 @@ OperationListener.prototype =
     {
         dump("GET " + resource.urlSpec + " complete: " + status + "\n");
         stopEventPump();
+    },
+    
+    onRemoveResult: function (status, resource)
+    {
+        dump("DELETE " + resource.urlSpec + " complete: " + status + "\n");
+        stopEventPump();
     }
 }
 
@@ -179,6 +185,12 @@ function PROPFIND_names(url, depth)
 {
     var listener = new PropfindListener();
     davSvc.getResourcePropertyNames(new Resource(url), depth, listener);
+    runEventPump();
+}
+
+function DELETE(url)
+{
+    davSvc.remove(new Resource(url), new OperationListener());
     runEventPump();
 }
 

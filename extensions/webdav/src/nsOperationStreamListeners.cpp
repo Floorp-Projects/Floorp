@@ -51,7 +51,7 @@ public:
     NS_DECL_NSISTREAMLISTENER
     
     enum OperationMode {
-        PUT, GET
+        PUT, GET, DELETE
     };
     
     OperationStreamListener(nsIWebDAVResource *resource,
@@ -96,6 +96,9 @@ OperationStreamListener::OnStopRequest(nsIRequest *aRequest,
     case GET:
         mListener->OnGetResult(aStatusCode, mResource);
         break;
+    case DELETE:
+        mListener->OnRemoveResult(aStatusCode, mResource);
+        break;
     }
 
     if (mOutputStream)
@@ -121,6 +124,19 @@ NS_WD_NewPutOperationStreamListener(nsIWebDAVResource *resource,
     nsCOMPtr<nsIRequestObserver> osl = 
         new OperationStreamListener(resource, listener, nsnull,
                                     OperationStreamListener::PUT);
+    if (!osl)
+        return NS_ERROR_OUT_OF_MEMORY;
+    return CallQueryInterface(osl, streamListener);
+}
+
+nsresult
+NS_WD_NewDeleteOperationStreamListener(nsIWebDAVResource *resource,
+                                       nsIWebDAVOperationListener *listener,
+                                       nsIStreamListener **streamListener)
+{
+    nsCOMPtr<nsIRequestObserver> osl = 
+        new OperationStreamListener(resource, listener, nsnull,
+                                    OperationStreamListener::DELETE);
     if (!osl)
         return NS_ERROR_OUT_OF_MEMORY;
     return CallQueryInterface(osl, streamListener);

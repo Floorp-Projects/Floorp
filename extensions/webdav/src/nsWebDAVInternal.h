@@ -65,6 +65,11 @@ NS_WD_NewPutOperationStreamListener(nsIWebDAVResource *resource,
                                     nsIStreamListener **streamListener);
 
 nsresult
+NS_WD_NewDeleteOperationStreamListener(nsIWebDAVResource *resource,
+                                       nsIWebDAVOperationListener *listener,
+                                       nsIStreamListener **streamListener);
+
+nsresult
 NS_WD_NewGetOperationRequestObserver(nsIWebDAVResource *resource,
                                      nsIWebDAVOperationListener *listener,
                                      nsIOutputStream *outstream,

@@ -513,7 +513,26 @@ NS_IMETHODIMP
 nsWebDAVService::Remove(nsIWebDAVResource *resource,
                         nsIWebDAVOperationListener *listener)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsCOMPtr<nsIHttpChannel> channel;
+    nsresult rv = ChannelFromResource(resource, getter_AddRefs(channel));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIStreamListener> streamListener;
+    rv = NS_WD_NewDeleteOperationStreamListener(resource, listener,
+                                                getter_AddRefs(streamListener));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    channel->SetRequestMethod(NS_LITERAL_CSTRING("DELETE"));
+
+    if (LOG_ENABLED()) {
+        nsCOMPtr<nsIURI> uri;
+        channel->GetURI(getter_AddRefs(uri));
+        nsCAutoString spec;
+        uri->GetSpec(spec);
+        LOG(("DELETE starting for %s", spec.get()));
+    }
+
+    return channel->AsyncOpen(streamListener, channel);
 }
 
 NS_IMETHODIMP
