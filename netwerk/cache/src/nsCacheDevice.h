@@ -39,7 +39,8 @@ class nsITransport;
 *******************************************************************************/
 class nsCacheDevice {
 public:
-    virtual ~nsCacheDevice() {}
+    nsCacheDevice() { MOZ_COUNT_CTOR(nsCacheDevice); }
+    virtual ~nsCacheDevice() { MOZ_COUNT_DTOR(nsCacheDevice); }
 
     virtual nsresult Init() = 0;
     virtual nsresult Shutdown() = 0;
