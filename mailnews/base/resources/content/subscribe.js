@@ -11,7 +11,7 @@ var gFolderDelimiter = ".";
 function Stop()
 {
 	dump("Stop()\n");
-	dump("we need to stop the news url that is running.\n");
+	dump("we need to stop the url that is running.\n");
 }
 
 var Bundle = srGetStrBundle("chrome://messenger/locale/subscribe.properties");
@@ -31,6 +31,16 @@ function SetServerTypeSpecificTextValues()
 	stringval = Bundle.GetStringFromName(stringName);
     element = document.getElementById("foldersheaderlabel");
 	element.setAttribute('value',stringval);
+
+	// XXX todo, fix this hack
+	// qi the server to get a nsISubscribable server
+	// and ask it for the delimiter
+	if (serverType == "news") {
+		gFolderDelimiter = ".";
+	}
+	else {
+		gFolderDelimiter = "/";
+	}
 }
 
 function onServerClick(event)
