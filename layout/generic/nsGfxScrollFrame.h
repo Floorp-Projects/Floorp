@@ -114,7 +114,7 @@ protected:
   virtual PRIntn GetSkipSides() const;
 
 private:
-  friend nsGfxScrollFrameInner;
+  friend class nsGfxScrollFrameInner;
   nsGfxScrollFrameInner* mInner;
 };
 
