@@ -602,6 +602,19 @@ nsGfxScrollFrame::Paint(nsIPresContext&      aPresContext,
                                  aWhichLayer);
 }
 
+NS_IMETHODIMP
+nsGfxScrollFrame::GetContentAndOffsetsFromPoint(nsIPresContext& aCX,
+                                                const nsPoint&  aPoint,
+                                                nsIContent **   aNewContent,
+                                                PRInt32&        aContentOffset,
+                                                PRInt32&        aContentOffsetEnd,
+                                                PRBool&         aBeginFrameContent)
+{
+  if (! mInner)
+    return NS_ERROR_NULL_POINTER;
+
+  return mInner->mScrollAreaFrame->GetContentAndOffsetsFromPoint(aCX, aPoint, aNewContent, aContentOffset, aContentOffsetEnd, aBeginFrameContent);
+}
 
 PRIntn
 nsGfxScrollFrame::GetSkipSides() const

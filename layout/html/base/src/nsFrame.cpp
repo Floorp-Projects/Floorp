@@ -1035,6 +1035,64 @@ nsresult nsFrame::GetContentAndOffsetsFromPoint(nsIPresContext& aCX,
     PRInt32 closestYDistance = HUGE_DISTANCE;
 
     while (nsnull != kid) {
+
+      // Skip over generated content kid frames, or frames
+      // that don't have a proper parent-child relationship!
+
+      PRBool skipThisKid = PR_FALSE;
+      nsFrameState frameState;
+      result = kid->GetFrameState(&frameState);
+
+      if (NS_FAILED(result))
+        return result;
+
+      if (frameState & NS_FRAME_GENERATED_CONTENT) {
+        // It's generated content, so skip it!
+        skipThisKid = PR_TRUE;
+      }
+      else {
+        // The frame's content is not generated. Now check
+        // if it is anonymous content!
+
+        nsCOMPtr<nsIContent> kidContent;
+
+        result = kid->GetContent(getter_AddRefs(kidContent));
+
+        if (NS_SUCCEEDED(result) && kidContent) {
+          nsCOMPtr<nsIContent> content;
+
+          result = kidContent->GetParent(*getter_AddRefs(content));
+
+          if (NS_SUCCEEDED(result) && content) {
+            PRInt32 kidCount = 0;
+
+            result = content->ChildCount(kidCount);
+            if (NS_SUCCEEDED(result)) {
+
+              PRInt32 kidIndex = 0;
+              result = content->IndexOf(kidContent, kidIndex);
+
+              // IndexOf() should return -1 for the index if it doesn't
+              // find kidContent in it's child list.
+
+              if (NS_SUCCEEDED(result) && (kidIndex < 0 || kidIndex >= kidCount)) {
+                // Must be anonymous content! So skip it!
+                skipThisKid = PR_TRUE;
+              }
+            }
+          }
+        }
+      }
+
+      if (skipThisKid) {
+        kid->GetNextSibling(&kid);
+        continue;
+      }
+
+      // Kid frame has content that has a proper parent-child
+      // relationship. Now see if the aPoint inside it's bounding
+      // rect or close by.
+
       nsRect rect;
       nsPoint offsetPoint(0,0);
       nsIView * kidView = nsnull;
@@ -1066,7 +1124,7 @@ nsresult nsFrame::GetContentAndOffsetsFromPoint(nsIPresContext& aCX,
 
         PRInt32 xDistance = PR_MIN(abs(xa - aPoint.x),abs(xb - aPoint.x));
 
-        if (xDistance < closestXDistance)
+        if (xDistance < closestXDistance || (xDistance == closestXDistance && rect.x <= aPoint.x))
         {
           closestXDistance = xDistance;
           closestYDistance = yDistance;

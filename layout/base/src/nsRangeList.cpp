@@ -255,7 +255,10 @@ private:
   void         InvalidateDesiredX(); //do not listen to mDesiredX you must get another.
   void         SetDesiredX(nscoord aX); //set the mDesiredX
 
-  
+  nsresult     GetRootForContentSubtree(nsIContent *aContent, nsIContent **aParent);
+  nsresult     GetGlobalViewOffsetsFromFrame(nsIPresContext *aPresContext, nsIFrame *aFrame, nscoord *offsetX, nscoord *offsetY);
+  nsresult     ConstrainFrameAndPointToAnchorSubtree(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint, nsIFrame **aRetFrame, nsPoint& aRetPoint);
+
   PRUint32     GetBatching(){return mBatching;}
   PRBool       GetNotifyFrames(){return mNotifyFrames;}
   void         SetDirty(PRBool aDirty=PR_TRUE){if (mBatching) mChangesDuringBatching = aDirty;}
@@ -744,6 +747,256 @@ nsRangeList::SetDesiredX(nscoord aX) //set the mDesiredX
   mDesiredXSet = PR_TRUE;
 }
 
+nsresult
+nsRangeList::GetRootForContentSubtree(nsIContent *aContent, nsIContent **aParent)
+{
+  // This method returns the root of the sub-tree containing aContent.
+  // We do this by searching up through the parent hierarchy, and stopping
+  // when there are no more parents, or we hit a situation where the
+  // parent/child relationship becomes invalid.
+  //
+  // An example of an invalid parent/child relationship is anonymous content.
+  // Anonymous content has a pointer to it's parent, but it is not listed
+  // as a child of it's parent. In this case, the anonymous content would
+  // be considered the root of the subtree.
+
+  nsresult result;
+
+  if (!aContent || !aParent)
+    return NS_ERROR_NULL_POINTER;
+
+  *aParent = 0;
+
+  nsCOMPtr<nsIContent> parent = do_QueryInterface(aContent);
+  nsCOMPtr<nsIContent> child = parent;
+
+  while (child)
+  {
+    result = child->GetParent(*getter_AddRefs(parent));
+
+    if (NS_FAILED(result))
+      return result;
+
+    if (!parent)
+      break;
+
+    PRInt32 childIndex = 0;
+    PRInt32 childCount = 0;
+
+    result = parent->ChildCount(childCount);
+
+    if (NS_FAILED(result))
+      return result;
+
+    if (childCount < 1)
+      break;
+
+    result = parent->IndexOf(child, childIndex);
+
+    if (NS_FAILED(result))
+      return result;
+
+    if (childIndex < 0 || childIndex >= childCount)
+      break;
+
+    child = parent;
+  }
+
+  *aParent = child;
+
+  NS_IF_ADDREF(*aParent);
+
+  return result;
+}
+
+nsresult
+nsRangeList::GetGlobalViewOffsetsFromFrame(nsIPresContext *aPresContext, nsIFrame *aFrame, nscoord *offsetX, nscoord *offsetY)
+{
+  //
+  // The idea here is to figure out what the offset of aFrame's view
+  // is within the global space. Where I define the global space to
+  // be the coordinate system that exists above all views.
+  //
+  // The offsets are calculated by walking up the view parent hierarchy,
+  // adding up all the view positions, until there are no more views.
+  //
+  // A point in a view's coordinate space can be converted to the global
+  // coordinate space by simply adding the offsets returned by this method
+  // to the point itself.
+  //
+
+  if (!aPresContext || !aFrame || !offsetX || !offsetY)
+    return NS_ERROR_NULL_POINTER;
+
+  *offsetX = *offsetY = 0;
+
+  nsresult result;
+  nsIFrame *frame = aFrame;
+  nsIView  *view;
+
+  while (frame)
+  {
+    result = frame->GetParentWithView(aPresContext, &frame);
+
+    if (NS_FAILED(result))
+      return result;
+
+    if (frame) {
+      view   = 0;
+
+      result = frame->GetView(aPresContext, &view);
+
+      if (NS_FAILED(result))
+        return result;
+
+      if (view)
+      {
+        nscoord vX = 0, vY = 0;
+
+        result = view->GetPosition(&vX, &vY);
+
+        if (NS_FAILED(result))
+          return result;
+
+        *offsetX += vX;
+        *offsetY += vY;
+      }
+    }
+
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsRangeList::ConstrainFrameAndPointToAnchorSubtree(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint, nsIFrame **aRetFrame, nsPoint& aRetPoint)
+{
+  //
+  // The whole point of this method is to return a frame and point that
+  // that lie within the same valid subtree as the anchor node's frame,
+  // for use with the method GetContentAndOffsetsFromPoint().
+  //
+  // A valid subtree is defined to be one where all the content nodes in
+  // the tree have a valid parent-child relationship.
+  //
+  // If the anchor frame and aFrame are in the same subtree, aFrame will
+  // be returned in aRetFrame. If they are in different subtrees, we
+  // return the frame for the root of the subtree.
+  //
+
+  if (!aFrame || !aRetFrame)
+    return NS_ERROR_NULL_POINTER;
+
+  *aRetFrame = aFrame;
+  aRetPoint  = aPoint;
+
+  //
+  // Get the frame and content for the selection's anchor point!
+  //
+
+  nsresult result;
+  nsCOMPtr<nsIDOMNode> anchorNode;
+  PRInt32 anchorOffset = 0;
+
+  if (! mDomSelections[SELECTION_NORMAL])
+    return NS_ERROR_NULL_POINTER;
+
+  result = mDomSelections[SELECTION_NORMAL]->GetAnchorNode(getter_AddRefs(anchorNode));
+
+  if (NS_FAILED(result))
+    return result;
+
+  if (!anchorNode)
+    return NS_OK;
+
+  result = mDomSelections[SELECTION_NORMAL]->GetAnchorOffset(&anchorOffset);
+
+  if (NS_FAILED(result))
+    return result;
+
+  nsIFrame *anchorFrame = 0;
+  nsCOMPtr<nsIContent> anchorContent = do_QueryInterface(anchorNode);
+
+  if (!anchorContent)
+    return NS_ERROR_FAILURE;
+  
+  result = GetFrameForNodeOffset(anchorContent, anchorOffset, &anchorFrame);
+
+  //
+  // Now find the root of the subtree containing the anchor's content.
+  //
+
+  nsCOMPtr<nsIContent> anchorRoot;
+  result = GetRootForContentSubtree(anchorContent, getter_AddRefs(anchorRoot));
+
+  if (NS_FAILED(result))
+    return result;
+
+  //
+  // Now find the root of the subtree containing aFrame's content.
+  //
+
+  nsCOMPtr<nsIContent> content;
+
+  result = aFrame->GetContent(getter_AddRefs(content));
+
+  if (NS_FAILED(result))
+    return result;
+
+  if (content)
+  {
+    nsCOMPtr<nsIContent> contentRoot;
+
+    result = GetRootForContentSubtree(content, getter_AddRefs(contentRoot));
+
+    if (anchorRoot == contentRoot)
+    {
+      //
+      // The anchor and AFrame's root are the same. There
+      // is no need to constrain, simply return aFrame.
+      //
+      *aRetFrame = aFrame;
+      return NS_OK;
+    }
+  }
+
+  //
+  // aFrame's root does not match the anchor's root, or there is no
+  // content associated with aFrame. Just return the primary frame
+  // for the anchor's root. We'll let GetContentAndOffsetsFromPoint()
+  // find the closest frame aPoint.
+  //
+
+  result = mTracker->GetPrimaryFrameFor(anchorRoot, aRetFrame);
+
+  if (NS_FAILED(result))
+    return result;
+
+  if (! *aRetFrame)
+    return NS_ERROR_FAILURE;
+
+  //
+  // Now make sure that aRetPoint is converted to the same coordinate
+  // system used by aRetFrame.
+  //
+
+  nsPoint frameOffset;
+  nsPoint retFrameOffset;
+
+  result = GetGlobalViewOffsetsFromFrame(aPresContext, aFrame, &frameOffset.x, &frameOffset.y);
+
+  if (NS_FAILED(result))
+    return result;
+
+  result = GetGlobalViewOffsetsFromFrame(aPresContext, *aRetFrame, &retFrameOffset.x, &retFrameOffset.y);
+
+  if (NS_FAILED(result))
+    return result;
+
+  aRetPoint = aPoint + frameOffset - retFrameOffset;
+
+  return NS_OK;
+}
 
 #ifdef XP_MAC
 #pragma mark -
@@ -1050,7 +1303,20 @@ nsRangeList::HandleClick(nsIContent *aNewFocus, PRUint32 aContentOffset,
 NS_IMETHODIMP
 nsRangeList::HandleDrag(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint)
 {
+  if (!aPresContext || !aFrame)
+    return NS_ERROR_NULL_POINTER;
+
   nsresult result;
+  nsIFrame *newFrame = 0;
+  nsPoint   newPoint;
+
+  result = ConstrainFrameAndPointToAnchorSubtree(aPresContext, aFrame, aPoint, &newFrame, newPoint);
+
+  if (NS_FAILED(result))
+    return result;
+
+  if (!newFrame)
+    return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIPresShell> presShell;
 
@@ -1064,9 +1330,9 @@ nsRangeList::HandleDrag(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint&
   PRBool  beginOfContent;
   nsCOMPtr<nsIContent> newContent;
 
-  result = aFrame->GetContentAndOffsetsFromPoint(*aPresContext, aPoint,
-                                                 getter_AddRefs(newContent), 
-                                                 startPos, contentOffsetEnd,beginOfContent);
+  result = newFrame->GetContentAndOffsetsFromPoint(*aPresContext, newPoint,
+                                                   getter_AddRefs(newContent), 
+                                                   startPos, contentOffsetEnd,beginOfContent);
 
   if (NS_SUCCEEDED(result))
     result = HandleClick(newContent, startPos, contentOffsetEnd , PR_TRUE, PR_FALSE,beginOfContent);
