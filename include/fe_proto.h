@@ -1106,12 +1106,6 @@ void FE_FinishedRelayout(MWContext * pMWContext);
  * Currently used after every Autosave event so toolbar SAVE button can be grayed 
 */
 void FE_UpdateEnableStates(MWContext * pMWContext);
-
-/* Get how to paste the table data on the clipboard 
-   MOVE OUTSIDE #ifdef XP_WIN WHEN IMPLEMENTED ON OTHER PLATFORMS
-*/
-extern ED_PasteType FE_GetTablePasteType(MWContext *pMWContext, intn iRows, intn iCols, XP_Bool bInTable, XP_Bool bCellIsSelected);
-
 #endif /* XP_WIN */
 
 #if defined(XP_WIN) || defined(XP_UNIX)
