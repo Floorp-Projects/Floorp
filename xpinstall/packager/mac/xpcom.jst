@@ -1,3 +1,24 @@
+function upgradeCleanup()
+{
+  var fComponentReg;
+  var fXpti;
+
+  fComponentReg = getFolder("Program", "Component Registry");
+  logComment("Component Registry file: " + fComponentReg);
+  if(File.exists(fComponentReg))
+    fileDelete(fComponentReg);
+
+  fXpti = getFolder("Components", "xpti.dat");
+  logComment("xpti.dat file: " + fXpti);
+  if(File.exists(fXpti))
+    fileDelete(fXpti);
+
+  fXpti = getFolder("Components", "xptitemp.dat");
+  logComment("xptitemp.dat file: " + fXpti);
+  if(File.exists(fXpti))
+    fileDelete(fXpti);
+}
+
 var srDest = $SpaceRequired$;
 
 var err = initInstall("Mozilla Seamonkey", "Browser", "$Version$"); 
@@ -21,6 +42,7 @@ if (verifyDiskSpace(fProgram, srDest))
 
     if (err==SUCCESS)
     {
+      upgradeCleanup();
 	    err = performInstall(); 
     	logComment("performInstall() returned: " + err);
     }
