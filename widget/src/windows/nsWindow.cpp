@@ -108,7 +108,7 @@ OleRegisterMgr::OleRegisterMgr()
     //printf("***** OLE has been initialized!\n");
   }
 }
-
+ 
 OleRegisterMgr::~OleRegisterMgr()
 {
   //printf("***** OLE has been Uninitialized!\n");
