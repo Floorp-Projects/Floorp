@@ -345,7 +345,7 @@ function MsgSearchMessages() {
 }
 
 function MsgFilters() {
-    window.openDialog("chrome://messenger/content/FilterListDialog.xul", "FilterDialog", "chrome");
+    window.openDialog("chrome://messenger/content/FilterListDialog.xul", "FilterDialog", "chrome,resizable");
 }
 
 function MsgViewAllHeaders() 
