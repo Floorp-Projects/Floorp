@@ -401,6 +401,9 @@ public:
 
     void InitEvent(nsGUIEvent& event, PRUint32 aEventType, nsPoint* aPoint = nsnull);
 
+    void                    SuppressBlurEvents(PRBool aSuppress);
+    PRBool                  BlurEventsSuppressed();
+
 protected:
     // special callback hook methods for pop ups
     static LRESULT CALLBACK MozSpecialMsgFilter(int code, WPARAM wParam, LPARAM lParam);
@@ -525,6 +528,7 @@ protected:
     PRPackedBool  mUnicodeWidget;
 
     char        mLeadByte;
+    PRUint32    mBlurEventSuppressionLevel;
 
     // XXX Temporary, should not be caching the font
     nsFont *    mFont;
