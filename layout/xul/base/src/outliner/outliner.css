@@ -1,7 +1,6 @@
 outlinerbody {
-  background: url(file:///c|/shot43b.jpg) fixed center center no-repeat;
-  background-color: navy;
-  color: white;
+  background-color: white;
+  color: black;
 }
 
 :-moz-outliner-row
@@ -16,5 +15,5 @@ outlinerbody {
 
 :-moz-outliner-cell-text
 {
-  color: inherit !important;
+  color: inherit;
 }

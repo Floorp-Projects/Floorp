@@ -22,7 +22,7 @@
  * Contributor(s): 
  */
 
-#include "nsIOutlinerRangeList.idl"
+#include "nsISupports.idl"
 
 interface nsIOutlinerView;
 
