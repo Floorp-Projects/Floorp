@@ -3182,15 +3182,18 @@ nsComputedDOMStyle::GetBorderColorsFor(PRUint8 aSide, nsIFrame *aFrame,
 
           return NS_ERROR_OUT_OF_MEMORY;
         }
-        nsDOMCSSRGBColor *rgb = nsnull;
-        rgb = GetDOMCSSRGBColor(borderColors->mColor);
-        if (rgb) {
-          primitive->SetColor(rgb);
+        if (borderColors->mTransparent) {
+          primitive->SetIdent(NS_LITERAL_STRING("transparent"));
         } else {
-          delete valueList;
-          delete primitive;
+          nsDOMCSSRGBColor *rgb = GetDOMCSSRGBColor(borderColors->mColor);
+          if (rgb) {
+            primitive->SetColor(rgb);
+          } else {
+            delete valueList;
+            delete primitive;
 
-          return NS_ERROR_OUT_OF_MEMORY;
+            return NS_ERROR_OUT_OF_MEMORY;
+          }
         }
 
         nsresult rv = valueList->AppendCSSValue(primitive);
@@ -3357,8 +3360,7 @@ nsComputedDOMStyle::GetBorderColorFor(PRUint8 aSide, nsIFrame *aFrame,
         color = colorStruct->mColor;
       }
 
-      nsDOMCSSRGBColor *rgb = nsnull;
-      rgb = GetDOMCSSRGBColor(color);
+      nsDOMCSSRGBColor *rgb = GetDOMCSSRGBColor(color);
       if (!rgb) {
         delete val;
 
