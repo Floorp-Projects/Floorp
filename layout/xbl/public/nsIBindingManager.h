@@ -51,6 +51,10 @@ public:
   NS_IMETHOD SetBinding(nsIContent* aContent, nsIXBLBinding* aBinding) = 0;
 
   NS_IMETHOD ResolveTag(nsIContent* aContent, nsIAtom** aResult) = 0;
+
+  NS_IMETHOD GetInsertionPoint(nsIContent* aParent, nsIContent* aChild, nsIContent** aResult) = 0;
+  NS_IMETHOD GetSingleInsertionPoint(nsIContent* aParent, nsIContent** aResult, 
+                                     PRBool* aMultipleInsertionPoints) = 0;
 };
 
 #endif // nsIBinding_Manager_h__

@@ -57,8 +57,6 @@ public:
   NS_IMETHOD GetBindingElement(nsIContent** aResult) = 0;
   NS_IMETHOD SetBindingElement(nsIContent* aElement) = 0;
 
-  NS_IMETHOD GetInsertionPoint(nsIContent** aResult) = 0;
-  
   NS_IMETHOD GenerateAnonymousContent(nsIContent* aBoundElement) = 0;
   NS_IMETHOD InstallEventHandlers(nsIContent* aBoundElement) = 0;
   NS_IMETHOD InstallProperties(nsIContent* aBoundElement) = 0;
@@ -71,6 +69,9 @@ public:
   NS_IMETHOD ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocument) = 0;
 
   NS_IMETHOD GetBindingURI(nsString& aResult) = 0;
+
+  NS_IMETHOD GetInsertionPoint(nsIContent* aChild, nsIContent** aResult) = 0;
+  NS_IMETHOD GetSingleInsertionPoint(nsIContent** aResult, PRBool* aMultipleInsertionPoints) = 0;
 };
 
 extern nsresult

@@ -127,7 +127,8 @@ class nsXBLService: public nsIXBLService
 
   // For a given element, returns a flat list of all the anonymous children that need
   // frames built.
-  NS_IMETHOD GetContentList(nsIContent* aContent, nsISupportsArray** aResult, nsIContent** aChildElement);
+  NS_IMETHOD GetContentList(nsIContent* aContent, nsISupportsArray** aResult, nsIContent** aChildElement, 
+                            PRBool* aMultipleInsertionPoints);
 
   // Gets the object's base class type.  
   NS_IMETHOD ResolveTag(nsIContent* aContent, nsIAtom** aResult);
@@ -290,12 +291,14 @@ nsXBLService::LoadBindings(nsIContent* aContent, const nsString& aURL)
 // For a given element, returns a flat list of all the anonymous children that need
 // frames built.
 NS_IMETHODIMP
-nsXBLService::GetContentList(nsIContent* aContent, nsISupportsArray** aResult, nsIContent** aParent)
+nsXBLService::GetContentList(nsIContent* aContent, nsISupportsArray** aResult, nsIContent** aParent, 
+                             PRBool* aMultipleInsertionPoints)
 { 
   // Iterate over all of the bindings one by one and build up an array
   // of anonymous items.
   *aResult = nsnull;
   *aParent = nsnull;
+  *aMultipleInsertionPoints = PR_FALSE;
 
   nsCOMPtr<nsIDocument> document;
   aContent->GetDocument(*getter_AddRefs(document));
@@ -323,7 +326,7 @@ nsXBLService::GetContentList(nsIContent* aContent, nsISupportsArray** aResult, n
         (*aResult)->AppendElement(anonymousChild);
       }
 
-      binding->GetInsertionPoint(aParent);
+      binding->GetSingleInsertionPoint(aParent, aMultipleInsertionPoints);
       return NS_OK;
     }
 

@@ -65,6 +65,10 @@ public:
 
   NS_IMETHOD ResolveTag(nsIContent* aContent, nsIAtom** aResult);
 
+  NS_IMETHOD GetInsertionPoint(nsIContent* aParent, nsIContent* aChild, nsIContent** aResult);
+  NS_IMETHOD GetSingleInsertionPoint(nsIContent* aParent, nsIContent** aResult, 
+                                     PRBool* aMultipleInsertionPoints);
+
 // MEMBER VARIABLES
 protected: 
   nsSupportsHashtable* mBindingTable; 
@@ -142,6 +146,31 @@ nsBindingManager::ResolveTag(nsIContent* aContent, nsIAtom** aResult)
   }
 
   return aContent->GetTag(*aResult);
+}
+
+NS_IMETHODIMP
+nsBindingManager::GetInsertionPoint(nsIContent* aParent, nsIContent* aChild, nsIContent** aResult)
+{
+  nsCOMPtr<nsIXBLBinding> binding;
+  GetBinding(aParent, getter_AddRefs(binding));
+  
+  if (binding)
+    return binding->GetInsertionPoint(aChild, aResult);
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBindingManager::GetSingleInsertionPoint(nsIContent* aParent, nsIContent** aResult,
+                                          PRBool* aMultipleInsertionPoints)
+{
+  nsCOMPtr<nsIXBLBinding> binding;
+  GetBinding(aParent, getter_AddRefs(binding));
+  
+  if (binding)
+    return binding->GetSingleInsertionPoint( aResult, aMultipleInsertionPoints);
+  
+  return NS_OK;
 }
 
 // Creation Routine ///////////////////////////////////////////////////////////////////////
