@@ -67,7 +67,7 @@ radio[focused="true"] {
   
 /* ..... disabled state ..... */
 
-radio[disabled] > .radio-label-box > .radio-label {
+radio[disabled="true"] > .radio-label-box > .radio-label {
   color: #8C99AB !important;
 }
 
