@@ -349,10 +349,8 @@ nsresult nsNntpService::PostMessage(nsFilePath &pathToFile, const char *subject,
 				}
 			}
 
-			if (NS_SUCCEEDED(rv)) {
-				PRInt32 status = 0;
-				rv = nntpProtocol->LoadUrl(nntpUrl, /* aConsumer */ nsnull, &status);
-			}
+			if (NS_SUCCEEDED(rv))
+				rv = nntpProtocol->LoadUrl(nntpUrl, /* aConsumer */ nsnull);
 		
 			if (_retval)
 				*_retval = nntpUrl; // transfer ref count
@@ -392,9 +390,8 @@ nsNntpService::RunNewsUrl(nsString& urlString, nsISupports * aConsumer, nsIUrlLi
 			rv = newsgroup->Initialize(nsnull /* line */, nsnull /* set */, PR_FALSE /* subscribed */);
             newsgroup->SetName((char *)((const char *)nsAutoCString(newsgroupName)));
         }
-        else {
-			return rv;
-        }            
+        else
+			return rv;         
 			
         nntpUrl->SetNewsgroup(newsgroup);         
 	
@@ -409,10 +406,9 @@ nsNntpService::RunNewsUrl(nsString& urlString, nsISupports * aConsumer, nsIUrlLi
 		// almost there...now create a nntp protocol instance to run the url in...
 		nntpProtocol = new nsNNTPProtocol();
 		if (nntpProtocol) {
-			PRInt32 status = 0;
             rv = nntpProtocol->Initialize(nntpUrl);
             if (NS_FAILED(rv)) return rv;
-			rv = nntpProtocol->LoadUrl(nntpUrl, aConsumer, &status);
+			rv = nntpProtocol->LoadUrl(nntpUrl, aConsumer);
             if (NS_FAILED(rv)) return rv;
          }
 

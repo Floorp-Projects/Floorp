@@ -452,7 +452,7 @@ nsresult nsNNTPProtocol::Initialize(nsIURL * aURL)
 	return NS_OK;
 }
 
-nsresult nsNNTPProtocol::LoadUrl(nsIURL * aURL, nsISupports * aConsumer, PRInt32 *status)
+nsresult nsNNTPProtocol::LoadUrl(nsIURL * aURL, nsISupports * aConsumer)
 {
   PRBool bVal = FALSE;
   char * hostAndPort = 0;
@@ -462,9 +462,7 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURL * aURL, nsISupports * aConsumer, PRInt32
   PRBool cancel = FALSE;
   nsCOMPtr <nsINNTPNewsgroupPost> message;
   //char *message_id = 0;
-
-  *status = 0;
-  
+ 
   nsresult rv = NS_OK;
 
   m_articleNumber = -1;
@@ -472,7 +470,7 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURL * aURL, nsISupports * aConsumer, PRInt32
   // Query the url for its nsINntpUrl interface...assert and fail to load if they passed us a non news url...
 
   if (aConsumer) // did the caller pass in a display stream?
-	  aConsumer->QueryInterface(kIWebShell, getter_AddRefs(m_displayConsumer));
+	  rv = aConsumer->QueryInterface(kIWebShell, getter_AddRefs(m_displayConsumer));
 
   if (aURL)
   {
@@ -491,13 +489,10 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURL * aURL, nsISupports * aConsumer, PRInt32
 
   if (NS_FAILED(rv))
   {
-	  *status = -1;
 	  goto FAIL;
   }
 
-  *status = ParseURL(aURL, &hostAndPort, &bVal, &group, &messageID, &commandSpecificData);
-  if (*status < 0)
-	goto FAIL;
+  rv = ParseURL(aURL, &hostAndPort, &bVal, &group, &messageID, &commandSpecificData);
 
   // if we don't have a news host already, go get one...
   if (!m_newsHost)
@@ -515,10 +510,9 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURL * aURL, nsISupports * aConsumer, PRInt32
                                             nsINNTPHost::GetIID(),
                                             getter_AddRefs(m_newsHost));
                           
-      if (NS_FAILED(rv) || (!m_newsHost)) {
-          *status = -1;
+      if (NS_FAILED(rv) || (!m_newsHost)) 
           goto FAIL;
-      }
+
       // at this point, hostAndPort is really just the hostname
       // because we put a '\0' in for the colon, if there was one
       m_newsHost->Initialize(hostAndPort /* really just hostname */, port ? port : NEWS_PORT);
@@ -531,18 +525,12 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURL * aURL, nsISupports * aConsumer, PRInt32
 	  rv = m_newsHost->LoadNewsrc(newshosturi);
       PR_FREEIF(newshosturi);
 
-	  if (NS_FAILED(rv)) {
-			*status = -1;
+	  if (NS_FAILED(rv))
 			goto FAIL;
-	  }
   }
 
-  PR_ASSERT(NS_SUCCEEDED(rv));
-  if (!NS_SUCCEEDED(rv)) 
-  {
-	*status = -1;
+  if (NS_FAILED(rv)) 
 	goto FAIL;
-  }
 
   if (messageID && commandSpecificData && !PL_strcmp (commandSpecificData, "?cancel"))
 	cancel = TRUE;
@@ -751,29 +739,30 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURL * aURL, nsISupports * aConsumer, PRInt32
   PR_FREEIF (messageID);
   PR_FREEIF (commandSpecificData);
 
-  if (*status < 0)
+  if (NS_FAILED(rv))
   {
 #ifdef UNREADY_CODE
 	  ce->URL_s->error_msg = NET_ExplainErrorDetails(*status);
 #endif
-      return NS_ERROR_FAILURE;
+      return rv;
   }
   else 
   {
 	  // our first state is a process state so drive the state machine...
 	  PRBool transportOpen = PR_FALSE;
-	  m_transport->IsTransportOpen(&transportOpen);
+	  rv = m_transport->IsTransportOpen(&transportOpen);
 	  m_runningURL->SetUrlState(PR_TRUE, NS_OK); // set the url as a url currently being run...
-	  if (transportOpen == PR_FALSE)
+	  if (!transportOpen)
 	  {
 		  m_nextStateAfterResponse = m_nextState;
 		  m_nextState = NNTP_RESPONSE; 
-		  m_transport->Open(m_runningURL);  // opening the url will cause to get notified when the connection is established
+		  rv = m_transport->Open(m_runningURL);  // opening the url will cause to get notified when the connection is established
 	  }
 	  else  // the connection is already open so we should begin processing our new url...
-		 *status = ProcessProtocolState(m_runningURL, nsnull, 0); 
-	  return NS_OK;
+		 return ProcessProtocolState(m_runningURL, nsnull, 0); 
   }
+
+  return rv;
 
 }
 
@@ -829,7 +818,7 @@ NS_IMETHODIMP nsNNTPProtocol::OnStopBinding(nsIURL* aURL, nsresult aStatus, cons
 		So, we'll make sure we quote / in message IDs as %2F.
 
  */
-PRInt32 nsNNTPProtocol::ParseURL(nsIURL * aURL, char ** aHostAndPort, PRBool * bValP, char ** aGroup, char ** aMessageID,
+nsresult nsNNTPProtocol::ParseURL(nsIURL * aURL, char ** aHostAndPort, PRBool * bValP, char ** aGroup, char ** aMessageID,
 								  char ** aCommandSpecificData)
 {
 	char * hostAndPort = NULL;
@@ -989,8 +978,13 @@ PRInt32 nsNNTPProtocol::ParseURL(nsIURL * aURL, char ** aHostAndPort, PRBool * b
 	  PR_FREEIF (message_id);
 	  PR_FREEIF (command_specific_data);
   }
-  return status;
 
+  // mscott - this function might need to be re-written to use nsresults
+  // so we don't lose the nature of the error in this return code I'm adding.
+  if (status < 0)
+	  return NS_ERROR_FAILURE;
+  else
+	  return NS_OK;
 }
 /*
  * Writes the data contained in dataBuffer into the current output stream. It also informs

@@ -158,7 +158,7 @@ public:
 	NS_IMETHOD Initialize(nsIURL * aURL);
 
 	// aConsumer is typically a display stream you may want the results to be displayed into...
-	virtual nsresult LoadUrl(nsIURL * aURL, nsISupports * aConsumer /* consumer of the url */, PRInt32 * status);
+	virtual nsresult LoadUrl(nsIURL * aURL, nsISupports * aConsumer = nsnull);
 
 	// stop binding is a "notification" informing us that the stream associated with aURL is going away. 
 	NS_IMETHOD OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg);
@@ -362,7 +362,7 @@ private:
 	// End of Protocol Methods
 	////////////////////////////////////////////////////////////////////////////////////////
 
-	PRInt32 ParseURL(nsIURL * aURL, char ** aHostAndPort, PRBool * bValP, char ** aGroup, char ** aMessageID, char ** aCommandSpecificData);
+	nsresult ParseURL(nsIURL * aURL, char ** aHostAndPort, PRBool * bValP, char ** aGroup, char ** aMessageID, char ** aCommandSpecificData);
 };
 
 NS_BEGIN_EXTERN_C
