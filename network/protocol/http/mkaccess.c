@@ -763,7 +763,7 @@ NET_AskForAuthString(MWContext *context,
 	 */
 	if(!password || re_authorize)
 	  {
-		XP_Bool remember_password;
+		XP_Bool remember_password = FALSE;
         char *loginString=XP_GetString(XP_ACCESS_ENTER_USERNAME);
 	   	host = NET_ParseURL(address, GET_HOST_PART);
 
