@@ -1504,6 +1504,11 @@ nsHTTPChannel::FinishedResponseHeaders(void)
             return rv;
     }
 
+
+    // Notify the consumer that headers are available...
+    OnHeadersAvailable();
+    mFiredOnHeadersAvailable = PR_TRUE;
+
     //
     // Check the status code to see if any special processing is necessary.
     //
@@ -1511,10 +1516,6 @@ nsHTTPChannel::FinishedResponseHeaders(void)
     // released and a new request is issued...
     //
     rv = ProcessStatusCode();
-
-    // Notify the consumer that headers are available...
-    OnHeadersAvailable();
-    mFiredOnHeadersAvailable = PR_TRUE;
 
     return rv;
 }
