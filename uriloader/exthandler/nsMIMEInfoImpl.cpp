@@ -298,7 +298,14 @@ NS_IMETHODIMP nsMIMEInfoImpl::SetPreferredApplicationHandler(nsIFile * aPreferre
 
 NS_IMETHODIMP nsMIMEInfoImpl::GetHasDefaultHandler(PRBool * _retval)
 {
+#ifdef XP_WIN
+  // On Windows, we ShellExecute any kind of file
+  // (defaultApplication is always null on windows, too)
+  // Most useful is probably presence/lack of default description
+  *_retval = !mDefaultAppDescription.IsEmpty();
+#else
   *_retval = mDefaultApplication != nsnull;
+#endif
   return NS_OK;
 }
 
