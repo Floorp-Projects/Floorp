@@ -316,7 +316,7 @@ nsresult nsFileSpec::Copy(const nsFileSpec& inParentDirectory) const
         nsCRT::free(leafname);
         
         // CopyFile returns non-zero if succeeds
-        int copyOK = CopyFile(GetCString(), destPath, true);
+        int copyOK = CopyFile(GetCString(), destPath, PR_TRUE);
         if (copyOK)
             return NS_OK;
     }
