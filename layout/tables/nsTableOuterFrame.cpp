@@ -1059,7 +1059,7 @@ void nsTableOuterFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext,
   }
 
   // Disconnect the next-in-flow from the flow list
-  nextInFlow->BreakFromPrevFlow();
+  nsSplittableFrame::BreakFromPrevFlow(nextInFlow);
 
   // Take the next-in-flow out of the parent's child list
   if (parent->mFrames.FirstChild() == nextInFlow) {
