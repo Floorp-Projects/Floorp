@@ -959,6 +959,10 @@ NS_IMETHODIMP nsImapProtocol::Run()
     }
         
     me->m_runningUrl = nsnull;
+    if (m_inputStream)
+      m_inputStream->Close();
+    if (m_outputStream)
+      m_outputStream->Close();
     if (m_transport)
     {
         // make sure the transport closes (even if someone is still indirectly
@@ -1039,7 +1043,7 @@ NS_IMETHODIMP
 nsImapProtocol::TellThreadToDie(PRBool isSaveToClose)
 {
     // **** jt - This routine should only be called by imap service.
-  nsAutoCMonitor(this);
+  nsAutoCMonitor mon(this);
 
   m_urlInProgress = PR_TRUE;  // let's say it's busy so no one tries to use
                               // this about to die connection.
@@ -1075,10 +1079,6 @@ nsImapProtocol::TellThreadToDie(PRBool isSaveToClose)
 
   Log("TellThreadToDie", nsnull, "close socket connection");
 
-  // kill the socket connection
-  if (m_transport)
-    m_transport->Close(NS_ERROR_ABORT);
-
   PR_EnterMonitor(m_threadDeathMonitor);
   m_threadShouldDie = PR_TRUE;
   PR_ExitMonitor(m_threadDeathMonitor);
@@ -1102,7 +1102,7 @@ nsImapProtocol::TellThreadToDie(PRBool isSaveToClose)
 NS_IMETHODIMP
 nsImapProtocol::GetLastActiveTimeStamp(PRTime* aTimeStamp)
 {
-  nsAutoCMonitor(this);
+  nsAutoCMonitor mon(this);
   if (aTimeStamp)
       *aTimeStamp = m_lastActiveTime;
   return NS_OK;
@@ -1115,7 +1115,7 @@ nsImapProtocol::PseudoInterruptMsgLoad(nsIMsgFolder *aImapFolder, nsIMsgWindow *
 
   *interrupted = PR_FALSE;
 
-  nsAutoCMonitor(this);
+  nsAutoCMonitor mon(this);
 
   if (m_runningUrl && !TestFlag(IMAP_CLEAN_UP_URL_STATE))
   {
