@@ -85,8 +85,11 @@ public:
 
   PRBool PlaceBelowCurrentLineFloaters(nsFloaterCacheList& aFloaters);
 
+  // called when clearing a line with a break type caused by a BR past
+  // floats, and also used internally by ClearPastFloaters
   void ClearFloaters(nscoord aY, PRUint8 aBreakType);
 
+  // called when clearing a block past floats
   PRBool ClearPastFloaters(PRUint8 aBreakType);
 
   PRBool IsAdjacentWithTop() const {
