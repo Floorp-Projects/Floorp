@@ -127,6 +127,7 @@ nsCookieService::OnStateChange(nsIWebProgress* aWebProgress,
 {
     if (progressStateFlags & STATE_IS_DOCUMENT)
         if (progressStateFlags & STATE_STOP)
+            COOKIE_Write(); // will remove this once bug 158216 is fixed
             COOKIE_Notify();
     return NS_OK;
 }
