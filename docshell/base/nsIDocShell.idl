@@ -24,6 +24,7 @@
 #include "nsISupports.idl"
 #include "domstubs.idl"
 #include "nsIPref.idl"
+#include "nsIURIContentListener.idl"
 
 %{ C++
 #include "nsIPresContext.h"
@@ -102,9 +103,21 @@ interface nsIDocShell : nsISupports
 	readonly attribute nsIPresContext presContext;
 
 	/*
-	Parent DocShell
+	Parent DocShell..  Note Implementers of this interface should NOT effect
+	the lifetime of the parent DocShell by holding this reference as it creates
+	a cycle.  Parents when releasing this interface should set the parent to 
+	nsnull.  Implementers of this interface are guaranteed that when parent is
+	set that the pointer is valid without having to addref.
+
+	Further note however when others try to Get the interface you should add
+	ref it before handing it to them.
 	*/
 	attribute nsIDocShell parent;
+
+	/*
+	URI content listener parent
+	*/
+	attribute nsIURIContentListener parentURIContentListener;
 
 	/*
 	Returns true if the given docshell can handle the requested content type.
