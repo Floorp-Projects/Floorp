@@ -176,7 +176,8 @@ nsPermissionEnumerator::Prefetch()
 ////////////////////////////////////////////////////////////////////////////////
 // nsPermissionManager Implementation
 
-static const char kPermissionsFileName[] = "cookperm.txt";
+static const char kPermissionsFileName[] = "hostperm.1";
+static const char kOldPermissionsFileName[] = "cookperm.txt";
 static const char kPermissionChangeNotification[] = PERM_CHANGE_NOTIFICATION;
 
 NS_IMPL_ISUPPORTS3(nsPermissionManager, nsIPermissionManager, nsIObserver, nsISupportsWeakReference)
@@ -570,37 +571,54 @@ static const char kFalse = 'F';
 static const char kFirstLetter = 'a';
 static const char kTypeSign = '%';
 
+static const char kMatchTypeHost[] = "host";
+
 nsresult
 nsPermissionManager::Read()
 {
   nsresult rv;
   
-  if (!mPermissionsFile) {
-    // For backwards compatibility, add those types when not yet set.
-    mTypeArray[0] = PL_strdup("cookie");
-    mTypeArray[1] = PL_strdup("image");
-    mTypeArray[2] = PL_strdup("popup");
-
-    return NS_ERROR_FAILURE;
-  }
+  PRBool readingOldFile = PR_FALSE;
 
   nsCOMPtr<nsIInputStream> fileInputStream;
   rv = NS_NewLocalFileInputStream(getter_AddRefs(fileInputStream), mPermissionsFile);
-  if (NS_FAILED(rv)) return rv;
+  if (rv == NS_ERROR_FILE_NOT_FOUND) {
+    // Try finding the old-style file
+
+    nsCOMPtr<nsIFile> oldPermissionsFile;
+    rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(oldPermissionsFile));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = oldPermissionsFile->AppendNative(NS_LITERAL_CSTRING(kOldPermissionsFileName));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = NS_NewLocalFileInputStream(getter_AddRefs(fileInputStream), oldPermissionsFile);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    readingOldFile = PR_TRUE;
+
+    /* old format is:
+     * host \t number permission \t number permission ... \n
+     * if this format isn't respected we move onto the next line in the file.
+     * permission is T or F for accept or deny, otherwise a lowercase letter,
+     * with a=0, b=1 etc
+     */
+  }
 
   nsCOMPtr<nsILineInputStream> lineInputStream = do_QueryInterface(fileInputStream, &rv);
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   /* format is:
-   * host \t number permission \t number permission ... \n
-   * if this format isn't respected we move onto the next line in the file.
-   * permission is T or F for accept or deny, otherwise a lowercase letter,
-   * with a=0, b=1 etc
+   * matchtype \t type \t permission \t host
+   * Only "host" is supported for matchtype
+   * type is a string that identifies the type of permission (e.g. "cookie")
+   * permission is an integer between 1 and 15
    */
+
+  mHasUnknownTypes = PR_FALSE;
 
   nsAutoString bufferUnicode;
   nsCAutoString buffer;
-  nsASingleFragmentCString::char_iterator iter;
   PRBool isMore = PR_TRUE;
   while (isMore && NS_SUCCEEDED(lineInputStream->ReadLine(bufferUnicode, &isMore))) {
     CopyUCS2toASCII(bufferUnicode, buffer);
@@ -608,105 +626,133 @@ nsPermissionManager::Read()
       continue;
     }
 
-    if (buffer.First() == kTypeSign) {
-      // A permission string line
-
-      PRInt32 stringIndex;
+    if (!readingOldFile) {
+      nsCStringArray lineArray;
       
-      if ((stringIndex = buffer.FindChar(kTab) + 1) == 0) {
+      // Split the line at tabs
+      lineArray.ParseString(buffer.get(), "\t");
+      
+      if (lineArray[0]->Equals(NS_LITERAL_CSTRING(kMatchTypeHost)) &&
+          lineArray.Count() == 4) {
+        
+        PRInt32 error;
+        PRUint32 permission = lineArray[2]->ToInteger(&error);
+        if (error)
+          continue;
+        PRUint32 type = GetTypeIndex(lineArray[1]->get(), PR_TRUE);
+        if (type < 0)
+          continue;
+
+        rv = AddInternal(*lineArray[3], type, permission, PR_FALSE);
+        NS_ENSURE_SUCCESS(rv, rv);
+      } else {
+        mHasUnknownTypes = PR_TRUE;
+      }
+
+    } else {
+      // Begin backwards compatibility code
+      nsASingleFragmentCString::char_iterator iter;
+      if (buffer.First() == kTypeSign) {
+        // A permission string line
+
+        PRInt32 stringIndex;
+
+        if ((stringIndex = buffer.FindChar(kTab) + 1) == 0) {
+          continue;      
+        }
+
+        PRUint32 type;
+        if (!PR_sscanf(buffer.get() + 1, "%u", &type) || type >= NUMBER_OF_TYPES) {
+          continue;
+        }
+
+        // Older versions of mozilla can't parse the permission string lines.
+        // They will put them back like '%0 0F' instead of '%0 cookie'
+        // Ignore those lines, and revert to the defaults later.
+        // XXX This means that when the user has additional types besides the
+        // default, those will be lost after using an old version with the
+        // new profile, and then going back to a new version.
+        if (!strcmp(buffer.get() + stringIndex, "0F"))
+          continue;
+
+        NS_ASSERTION(GetTypeIndex(buffer.get() + stringIndex, PR_FALSE) == -1, "Corrupt cookperm.txt file");
+        mTypeArray[type] = PL_strdup(buffer.get() + stringIndex);
+
+        continue;
+      }
+
+      PRInt32 hostIndex, permissionIndex;
+      PRUint32 nextPermissionIndex = 0;
+      hostIndex = 0;
+
+      if ((permissionIndex = buffer.FindChar('\t', hostIndex) + 1) == 0)
         continue;      
+
+      // ignore leading periods in host name
+      while (hostIndex < permissionIndex && (buffer.CharAt(hostIndex) == '.'))
+        ++hostIndex;
+
+      // nullstomp the trailing tab, to get a flat string
+      buffer.BeginWriting(iter);
+      *(iter += permissionIndex - 1) = char(0);
+      nsDependentCString host(buffer.get() + hostIndex, iter);
+
+      for (;;) {
+        if (nextPermissionIndex == buffer.Length()+1)
+          break;
+
+        if ((nextPermissionIndex = buffer.FindChar(kTab, permissionIndex) + 1) == 0)
+          nextPermissionIndex = buffer.Length()+1;
+
+        const nsASingleFragmentCString &permissionString = Substring(buffer, permissionIndex, nextPermissionIndex - permissionIndex - 1);
+        permissionIndex = nextPermissionIndex;
+
+        PRInt32 type = 0;
+        PRUint32 index = 0;
+
+        if (permissionString.IsEmpty())
+          continue; // empty permission entry -- should never happen
+
+        // Parse "2T"
+        char c = permissionString.CharAt(index);
+        while (index < permissionString.Length() && c >= '0' && c <= '9') {
+          type = 10*type + (c-'0');
+          c = permissionString.CharAt(++index);
+        }
+        if (index >= permissionString.Length())
+          continue; // bad format for this permission entry
+
+        PRUint32 permission;
+        if (permissionString.CharAt(index) == kTrue)
+          permission = nsIPermissionManager::ALLOW_ACTION;
+        else if (permissionString.CharAt(index) == kFalse)
+          permission = nsIPermissionManager::DENY_ACTION;
+        else
+          permission = permissionString.CharAt(index) - kFirstLetter;
+
+        // |permission| is unsigned, so no need to check for < 0
+        if (permission >= NUMBER_OF_PERMISSIONS)
+          continue;
+
+        // Ignore @@@ as host. Old style checkbox status
+        if (!permissionString.IsEmpty() && !host.Equals(NS_LITERAL_CSTRING("@@@@"))) {
+          rv = AddInternal(host, type, permission, PR_FALSE);
+          if (NS_FAILED(rv)) return rv;
+        }
+
       }
+      // Old files, without the part that defines the types, assume 0 is cookie
+      // etc. So add those types, but make sure not to overwrite types from new
+      // style files.
+      GetTypeIndex("cookie", PR_TRUE);
+      GetTypeIndex("image", PR_TRUE);
+      GetTypeIndex("popup", PR_TRUE);
 
-      PRUint32 type;
-      if (!PR_sscanf(buffer.get() + 1, "%u", &type) || type >= NUMBER_OF_TYPES) {
-        continue;
-      }
-
-      // Older versions of mozilla can't parse the permission string lines.
-      // They will put them back like '%0 0F' instead of '%0 cookie'
-      // Ignore those lines, and revert to the defaults later.
-      // XXX This means that when the user has additional types besides the
-      // default, those will be lost after using an old version with the
-      // new profile, and then going back to a new version.
-      if (!PL_strcmp(buffer.get() + stringIndex, "0F"))
-        continue;
-
-      NS_ASSERTION(GetTypeIndex(buffer.get() + stringIndex, PR_FALSE) == -1, "Corrupt cookperm.txt file");
-      mTypeArray[type] = PL_strdup(buffer.get() + stringIndex);
-
-      continue;
+      // End backwards compatibility code
     }
 
-    PRInt32 hostIndex, permissionIndex;
-    PRUint32 nextPermissionIndex = 0;
-    hostIndex = 0;
-
-    if ((permissionIndex = buffer.FindChar('\t', hostIndex) + 1) == 0) {
-      continue;      
-    }
-
-    // ignore leading periods in host name
-    while (hostIndex < permissionIndex && (buffer.CharAt(hostIndex) == '.')) {
-      ++hostIndex;
-    }
-
-    // nullstomp the trailing tab, to get a flat string
-    buffer.BeginWriting(iter);
-    *(iter += permissionIndex - 1) = char(0);
-    nsDependentCString host(buffer.get() + hostIndex, iter);
-
-    for (;;) {
-      if (nextPermissionIndex == buffer.Length()+1) {
-        break;
-      }
-      if ((nextPermissionIndex = buffer.FindChar(kTab, permissionIndex) + 1) == 0) {
-        nextPermissionIndex = buffer.Length()+1;
-      }
-      const nsASingleFragmentCString &permissionString = Substring(buffer, permissionIndex, nextPermissionIndex - permissionIndex - 1);
-      permissionIndex = nextPermissionIndex;
-
-      PRInt32 type = 0;
-      PRUint32 index = 0;
-
-      if (permissionString.IsEmpty()) {
-        continue; // empty permission entry -- should never happen
-      }
-      // Parse "2T"
-      char c = permissionString.CharAt(index);
-      while (index < permissionString.Length() && c >= '0' && c <= '9') {
-        type = 10*type + (c-'0');
-        c = permissionString.CharAt(++index);
-      }
-      if (index >= permissionString.Length()) {
-        continue; // bad format for this permission entry
-      }
-      PRUint32 permission;
-      if (permissionString.CharAt(index) == kTrue)
-        permission = nsIPermissionManager::ALLOW_ACTION;
-      else if (permissionString.CharAt(index) == kFalse)
-        permission = nsIPermissionManager::DENY_ACTION;
-      else
-        permission = permissionString.CharAt(index) - kFirstLetter;
-
-      // |permission| is unsigned, so no need to check for < 0
-      if (permission >= NUMBER_OF_PERMISSIONS)
-        continue;
-    
-      // Ignore @@@ as host. Old style checkbox status
-      if (!permissionString.IsEmpty() && !host.Equals(NS_LITERAL_CSTRING("@@@@"))) {
-        rv = AddInternal(host, type, permission, PR_FALSE);
-        if (NS_FAILED(rv)) return rv;
-      }
-
-    }
   }
 
-  // Old files, without the part that defines the types, assume 0 is cookie
-  // etc. So add those types, but make sure not to overwrite types from new
-  // style files.
-  GetTypeIndex("cookie", PR_TRUE);
-  GetTypeIndex("image", PR_TRUE);
-  GetTypeIndex("popup", PR_TRUE);
 
   mChangedList = PR_FALSE;
 
@@ -744,51 +790,65 @@ nsPermissionManager::Write()
     return NS_ERROR_FAILURE;
   }
 
+  // Start with reading the old file, and remember any data that
+  // wasn't parsed, to put it right back into the new file.
+  // But only do that if we know there is unknown stuff
+  nsCStringArray rememberList;
+  if (mHasUnknownTypes) {
+    nsCOMPtr<nsIInputStream> fileInputStream;
+    rv = NS_NewLocalFileInputStream(getter_AddRefs(fileInputStream), mPermissionsFile);
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsILineInputStream> lineInputStream = do_QueryInterface(fileInputStream, &rv);
+      if (NS_SUCCEEDED(rv)) {
+        nsAutoString bufferUnicode;
+        nsCAutoString buffer;
+        PRBool isMore = PR_TRUE;
+        while (isMore && NS_SUCCEEDED(lineInputStream->ReadLine(bufferUnicode, &isMore))) {
+          LossyCopyUTF16toASCII(bufferUnicode, buffer);
+          if (buffer.IsEmpty() || buffer.First() == '#' ||
+              StringBeginsWith(buffer, NS_LITERAL_CSTRING(kMatchTypeHost)))
+            continue;
+
+          rememberList.AppendCString(buffer);
+        }
+      }
+    }
+  }
+
   nsCOMPtr<nsIOutputStream> fileOutputStream;
   rv = NS_NewLocalFileOutputStream(getter_AddRefs(fileOutputStream), mPermissionsFile);
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // get a buffered output stream 4096 bytes big, to optimize writes
   nsCOMPtr<nsIOutputStream> bufferedOutputStream;
   rv = NS_NewBufferedOutputStream(getter_AddRefs(bufferedOutputStream), fileOutputStream, 4096);
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   static const char kHeader[] = 
-    "# HTTP Permission File\n"
-    "# http://www.netscape.com/newsref/std/cookie_spec.html\n"
-    "# This is a generated file!  Do not edit.\n\n";
+    "# Permission File\n"
+    "# This is a generated file! Do not edit.\n\n";
 
   bufferedOutputStream->Write(kHeader, sizeof(kHeader) - 1, &rv);
 
-  // Write the type strings.
-  // Format: % index \t typestring \n
-  // (% sign is to distinguish type string lines from permission lines)
+  /* format is:
+   * matchtype \t type \t permission \t host \t
+   */
 
+  // Write out the list of strings we remembered from the old file
   PRUint32 i;
-  for (i = 0; i < NUMBER_OF_TYPES; ++i) {
-    if (mTypeArray[i]) {
-      bufferedOutputStream->Write(&kTypeSign, 1, &rv);
-
-      char typeNumber[3];
-      PRUint32 len = PR_snprintf(typeNumber, sizeof(typeNumber), "%u", i);
-      bufferedOutputStream->Write(typeNumber, len, &rv);
-
-      bufferedOutputStream->Write(&kTab, 1, &rv);
-      bufferedOutputStream->Write(mTypeArray[i], strlen(mTypeArray[i]), &rv);
+  if (mHasUnknownTypes) {
+    for (i = 0 ; i < rememberList.Count() ; ++i) {
+      bufferedOutputStream->Write(rememberList[i]->get(), 
+                                  rememberList[i]->Length(), &rv);
       bufferedOutputStream->Write(&kNew, 1, &rv);
     }
   }
-  bufferedOutputStream->Write(&kNew, 1, &rv);
-
-  /* format shall be:
-   * host \t permission \t permission ... \n
-   */
 
   // create a new host list
   nsHostEntry* *hostList = new nsHostEntry*[mHostCount];
   if (!hostList) return NS_ERROR_OUT_OF_MEMORY;
 
-  // Make a copy of the pointer, so we can increase it without loosing
+  // Make a copy of the pointer, so we can increase it without losing
   // the original pointer
   nsHostEntry** hostListCopy = hostList;
   mHostTable.EnumerateEntries(AddEntryToList, &hostListCopy);
@@ -797,30 +857,32 @@ nsPermissionManager::Write()
     nsHostEntry *entry = NS_STATIC_CAST(nsHostEntry*, hostList[i]);
     NS_ASSERTION(entry, "corrupt permission list");
 
-    bufferedOutputStream->Write(entry->GetHost().get(), entry->GetHost().Length(), &rv);
-
     for (PRInt32 type = 0; type < NUMBER_OF_TYPES; ++type) {
     
       PRUint32 permission = entry->GetPermission(type);
-      if (permission) {
+      if (permission && mTypeArray[type]) {
+        // Write matchtype
+        // only "host" is possible at the moment.
+        bufferedOutputStream->Write(kMatchTypeHost, sizeof(kMatchTypeHost) - 1, &rv);
+
+        // Write type
         bufferedOutputStream->Write(&kTab, 1, &rv);
+        bufferedOutputStream->Write(mTypeArray[type], strlen(mTypeArray[type]), &rv);
 
-        char typeString[5];
-        PRUint32 len = PR_snprintf(typeString, sizeof(typeString), "%d", type);
-        bufferedOutputStream->Write(typeString, len, &rv);
+        // Write permission
+        bufferedOutputStream->Write(&kTab, 1, &rv);
+        char permissionString[5];
+        PRUint32 len = PR_snprintf(permissionString, sizeof(permissionString) - 1, "%u", permission);
+        bufferedOutputStream->Write(permissionString, len, &rv);
 
-        if (permission == nsIPermissionManager::ALLOW_ACTION) {
-          bufferedOutputStream->Write(&kTrue, 1, &rv);
-        } else if (permission == nsIPermissionManager::DENY_ACTION) {
-          bufferedOutputStream->Write(&kFalse, 1, &rv);
-        } else {
-          char permString[2];
-          PR_snprintf(permString, sizeof(permString), "%c", kFirstLetter + permission);
-          bufferedOutputStream->Write(permString, 1, &rv);
-        }
+        // Write host
+        bufferedOutputStream->Write(&kTab, 1, &rv);
+        bufferedOutputStream->Write(entry->GetHost().get(), entry->GetHost().Length(), &rv);
+        
+        // Write newline
+        bufferedOutputStream->Write(&kNew, 1, &rv);
       }
     }
-    bufferedOutputStream->Write(&kNew, 1, &rv);
   }
 
   delete[] hostList;
