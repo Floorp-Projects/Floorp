@@ -1172,7 +1172,7 @@ nsprPath::operator const char*()
 	modifiedNSPRPath = PL_strdup( mFilePath );
 	char* resultPath = modifiedNSPRPath;
 	
-	/* strip the leading seperator */
+	/* strip the leading separator */
 	if(resultPath[0] == '/')
 		resultPath = resultPath + 1;
     
@@ -1180,7 +1180,7 @@ nsprPath::operator const char*()
     if(resultPath[1] == '|')
 		 resultPath[1] = ':';
 	
-	/* Remove the ending seperator only if it is not the last seperator*/
+	/* Remove the ending separator only if it is not the last separator*/
     int len = PL_strlen(resultPath);
     if(resultPath[len - 1 ] == '/')
         if(resultPath[len - 2 ] != ':')
