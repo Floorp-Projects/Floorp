@@ -24,6 +24,7 @@
 #include <algorithm>
 
 #include "CPersonalToolbarTable.h"
+#include "CBrowserWindow.h"
 #include "uapp.h"
 #include "LTableMultiGeometry.h"
 #include "CURLDragHelper.h"
@@ -583,7 +584,31 @@ CPersonalToolbarTable :: ClickCell(const STableCell &inCell, const SMouseDownEve
 		// code for context menu here, if appropriate....
 		
 		if ( data.IsFolder() ) {
-			SysBeep(1);
+			// TEMP CODE (pinkerton)
+			// Ignores HT's placement hints....just used for testing
+			
+			// convert local to port coords for this cell
+			Rect bounds;
+			GetLocalCellRect ( inCell, bounds );
+			Rect portRect = LocalToPortRect ( this, bounds );			
+			
+			// find the Browser window and tell it to show a popdown with
+			// the give HT_Resource for this cell
+			LView* top=GetSuperView();
+			while ( top->GetSuperView() )
+				top = top->GetSuperView();
+
+			// popdown the tree			
+			CBrowserWindow* browser = dynamic_cast<CBrowserWindow*>(top);
+			Assert_(browser != NULL);
+			if ( browser ) {
+				if ( inMouseDown.macEvent.modifiers & shiftKey )
+					browser->OpenDockedTreeView ( data.GetHTResource() );
+				else if ( inMouseDown.macEvent.modifiers & optionKey )
+					LCommander::GetTopCommander()->ProcessCommand(cmd_NCOpenNewWindow, data.GetHTResource() );
+				else
+					browser->PopDownTreeView ( portRect.left, portRect.bottom + 5, data.GetHTResource() );
+			}
 		}
 		else {
 			if ( !URDFUtilities::LaunchNode(data.GetHTResource()) )
@@ -809,8 +834,32 @@ CPersonalToolbarTable :: InsideDropArea ( DragReference inDragRef )
 		mDropOn = newDropOn;
 		
 		// hilight new one
-		if ( newDropOn )
+		if ( newDropOn ) {
 			RedrawCellWithHilite ( STableCell(1, newDropCol), true );
+			
+			const CUserButtonInfo & info = GetInfoForPPColumn(newDropCol);
+
+			// TEMP CODE (pinkerton)
+			// Ignores HT's placement hints....just used for testing
+			
+			// convert local to port coords for this cell
+			Rect bounds;
+			GetLocalCellRect ( STableCell(1, newDropCol), bounds );
+			Rect portRect = LocalToPortRect ( this, bounds );			
+			
+			// find the Browser window and tell it to show a popdown with
+			// the give HT_Resource for this cell
+			LView* top=GetSuperView();
+			while ( top->GetSuperView() )
+				top = top->GetSuperView();
+
+			// popdown the tree			
+			CBrowserWindow* browser = dynamic_cast<CBrowserWindow*>(top);
+			Assert_(browser != NULL);
+			if ( browser )
+				browser->PopDownTreeView ( portRect.left, portRect.bottom + 5, info.GetHTResource() );
+			
+		}
 		else
 			DrawDividingLine ( newDropCol );
 		
