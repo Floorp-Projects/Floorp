@@ -23,8 +23,6 @@
 
 #include "nsIAtom.h"
 #include "nsINodeInfo.h"
-#include "nsIBindingManager.h"
-#include "nsIXBLBinding.h"
 #include "nsIDocument.h"
 #include "nsIDOMAttr.h"
 #include "nsIDOMNamedNodeMap.h"
@@ -50,6 +48,12 @@
 #include "nsLayoutAtoms.h"
 #include "prprf.h"
 #include "prmem.h"
+
+#include "nsIDOMCSSStyleDeclaration.h"
+#include "nsIDOMViewCSS.h"
+#include "nsIXBLService.h"
+#include "nsIBindingManager.h"
+#include "nsIXBLBinding.h"
 
 class nsIWebShell;
 
@@ -124,6 +128,43 @@ nsGenericXMLElement::GetScriptObject(nsIScriptContext* aContext,
       aContext->AddNamedReference((void *)&slots->mScriptObject,
                                   slots->mScriptObject,
                                   "nsGenericXMLElement::mScriptObject");
+
+      // See if we have a frame.  
+      nsCOMPtr<nsIPresShell> shell = getter_AddRefs(mDocument->GetShellAt(0));
+      if (shell) {
+        nsIFrame* frame;
+        shell->GetPrimaryFrameFor(mContent, &frame);
+        if (!frame) {
+          // We must ensure that the XBL Binding is installed before we hand
+          // back this object.
+          nsCOMPtr<nsIBindingManager> bindingManager;
+          mDocument->GetBindingManager(getter_AddRefs(bindingManager));
+          nsCOMPtr<nsIXBLBinding> binding;
+          bindingManager->GetBinding(mContent, getter_AddRefs(binding));
+          if (!binding) {
+            nsCOMPtr<nsIScriptGlobalObject> global;
+            mDocument->GetScriptGlobalObject(getter_AddRefs(global));
+            nsCOMPtr<nsIDOMViewCSS> viewCSS(do_QueryInterface(global));
+            if (viewCSS) {
+              nsCOMPtr<nsIDOMCSSStyleDeclaration> cssDecl;
+              nsAutoString empty;
+              nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(mContent));
+              viewCSS->GetComputedStyle(elt, empty, getter_AddRefs(cssDecl));
+              if (cssDecl) {
+                nsAutoString behavior; behavior.AssignWithConversion("behavior");
+                nsAutoString value;
+                cssDecl->GetPropertyValue(behavior, value);
+                if (!value.IsEmpty()) {
+                  // We have a binding that must be installed.
+                  nsresult rv;
+                  NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
+                  xblService->LoadBindings(mContent, value, PR_FALSE);
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 
