@@ -47,6 +47,8 @@ OBJS =                                  \
 LINCS= \
         -I$(PUBLIC)\raptor \
         -I$(PUBLIC)\xpcom \
+        -I$(PUBLIC)\dom \
+        -I$(PUBLIC)\js \
 !if defined(NGLAYOUT_DDRAW)
 !if "$(MOZ_VCVER)" == "50"
 		-I$(NGLAYOUT_DDRAW)\include \
@@ -65,6 +67,7 @@ LLIBS=				\
  $(DIST)\lib\xpcom32.lib	\
  $(DIST)\lib\raptorbase.lib	\
  $(DIST)\lib\img32$(VERSION_NUMBER).lib        \
+ $(DIST)\lib\js32$(VERSION_NUMBER).lib        \
  $(DIST)\lib\util.lib           \
  $(DIST)\lib\libplc21.lib       \
  $(DIST)\lib\netlib.lib       \

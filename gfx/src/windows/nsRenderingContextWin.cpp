@@ -25,10 +25,16 @@
 #include <math.h>
 #include "libimg.h"
 #include "nsDeviceContextWin.h"
+#include "nsIScriptGlobalObject.h"
+#include "prprf.h"
 
 #ifdef NGLAYOUT_DDRAW
 #include "ddraw.h"
 #endif
+
+static NS_DEFINE_IID(kIDOMRenderingContextIID, NS_IDOMRENDERINGCONTEXT_IID);
+static NS_DEFINE_IID(kIRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
+static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 
 #define FLAG_CLIP_VALID       0x0001
 #define FLAG_CLIP_CHANGED     0x0002
@@ -446,7 +452,41 @@ nsRenderingContextWin :: ~nsRenderingContextWin()
 
 }
 
-NS_IMPL_QUERY_INTERFACE(nsRenderingContextWin, kRenderingContextIID)
+nsresult
+nsRenderingContextWin::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+  if (nsnull == aInstancePtr) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (aIID.Equals(kIRenderingContextIID)) {
+    nsIRenderingContext* tmp = this;
+    *aInstancePtr = (void*) tmp;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(kIScriptObjectOwnerIID)) {
+    nsIScriptObjectOwner* tmp = this;
+    *aInstancePtr = (void*) tmp;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(kIDOMRenderingContextIID)) {
+    nsIDOMRenderingContext* tmp = this;
+    *aInstancePtr = (void*) tmp;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+  if (aIID.Equals(kISupportsIID)) {
+    nsIRenderingContext* tmp = this;
+    nsISupports* tmp2 = tmp;
+    *aInstancePtr = (void*) tmp2;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  return NS_NOINTERFACE;
+}
+
 NS_IMPL_ADDREF(nsRenderingContextWin)
 NS_IMPL_RELEASE(nsRenderingContextWin)
 
@@ -1691,3 +1731,62 @@ nsresult nsRenderingContextWin :: CreateDDraw()
 }
 
 #endif
+
+NS_IMETHODIMP
+nsRenderingContextWin::GetScriptObject(nsIScriptContext* aContext,
+                                       void** aScriptObject)
+{
+  nsresult res = NS_OK;
+  nsIScriptGlobalObject *global = aContext->GetGlobalObject();
+
+  if (nsnull == mScriptObject) {
+    res = NS_NewScriptRenderingContext(aContext,
+                          (nsISupports *)(nsIRenderingContext*)this,
+                                       global, (void**)&mScriptObject);
+  }
+  *aScriptObject = mScriptObject;
+  NS_RELEASE(global);
+  return res;
+}
+
+NS_IMETHODIMP
+nsRenderingContextWin::SetScriptObject(void* aScriptObject)
+{
+  mScriptObject = aScriptObject;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsRenderingContextWin::GetColor(nsString& aColor)
+{
+  char cbuf[40];
+  PR_snprintf(cbuf, sizeof(cbuf), "#%02x%02x%02x",
+              NS_GET_R(mCurrentColor),
+              NS_GET_G(mCurrentColor),
+              NS_GET_B(mCurrentColor));
+  aColor = cbuf;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsRenderingContextWin::SetColor(const nsString& aColor)
+{
+  nscolor rgb;
+  char cbuf[40];
+  aColor.ToCString(cbuf, sizeof(cbuf));
+  if (NS_ColorNameToRGB(cbuf, &rgb)) {
+    SetColor(rgb);
+  }
+  else if (NS_HexToRGB(cbuf, &rgb)) {
+    SetColor(rgb);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsRenderingContextWin::DrawLine2(PRInt32 aX0, PRInt32 aY0,
+                                 PRInt32 aX1, PRInt32 aY1)
+{
+  DrawLine(aX0, aY0, aX1, aY1);
+  return NS_OK;
+}

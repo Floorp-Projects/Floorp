@@ -33,6 +33,8 @@
 #include "nsImageWin.h"
 #include "nsIDeviceContext.h"
 #include "nsVoidArray.h"
+#include "nsIScriptObjectOwner.h"
+#include "nsIDOMRenderingContext.h"
 
 class GraphicsState;
 class nsDrawingSurfaceWin;
@@ -41,7 +43,9 @@ class nsDrawingSurfaceWin;
 #include "ddraw.h"
 #endif
 
-class nsRenderingContextWin : public nsIRenderingContext
+class nsRenderingContextWin : public nsIRenderingContext,
+                              nsIDOMRenderingContext,
+                              nsIScriptObjectOwner
 {
 public:
   nsRenderingContextWin();
@@ -143,6 +147,13 @@ public:
 
   NS_IMETHOD CopyOffScreenBits(nsRect &aBounds);
 
+  // nsIScriptObjectOwner
+  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
+  NS_IMETHOD SetScriptObject(void* aScriptObject);
+
+  // nsIDOMRenderingContext
+  NS_DECL_IDOMRENDERINGCONTEXT
+
 private:
   nsresult CommonInit(void);
   nsresult SetupDC(HDC aOldDC, HDC aNewDC);
@@ -200,6 +211,8 @@ protected:
   static IDirectDraw2 *mDDraw2;
   static nsresult     mDDrawResult;
 #endif
+
+  void* mScriptObject;
 
 
 };

@@ -19,6 +19,8 @@
 #include "nsDOMEvent.h"
 #include "nsIDOMNode.h"
 #include "nsIEventStateManager.h"
+#include "nsIRenderingContext.h"
+#include "nsIDOMRenderingContext.h"
 
 static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kIDOMEventIID, NS_IDOMEVENT_IID);
@@ -341,6 +343,24 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     break;
   }
   return nsnull;
+}
+
+static NS_DEFINE_IID(kIDOMRenderingContextIID, NS_IDOMRENDERINGCONTEXT_IID);
+
+NS_IMETHODIMP
+nsDOMEvent::GetRc(nsIDOMRenderingContext** aRc)
+{
+  *aRc = nsnull;
+  if (NS_PAINT_EVENT == mEvent->eventStructType) {
+    nsPaintEvent* pe = (nsPaintEvent*) mEvent;
+    if (nsnull != pe->renderingContext) {
+      nsIDOMRenderingContext* domrc;
+      if (NS_OK == pe->renderingContext->QueryInterface(kIDOMRenderingContextIID, (void**) &domrc)) {
+        *aRc = domrc;
+      }
+    }
+  }
+  return NS_OK;
 }
 
 nsresult NS_NewDOMEvent(nsIDOMEvent** aInstancePtrResult, nsIPresContext& aPresContext, nsEvent *aEvent) 

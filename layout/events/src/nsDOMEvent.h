@@ -29,6 +29,8 @@
 #include "nsGUIEvent.h"
 class nsIContent;
 
+class nsIDOMRenderingContext;
+
 class nsDOMEvent : public nsIDOMEvent, public nsIDOMNSEvent, public nsIPrivateDOMEvent {
 
 #define DOM_EVENT_INIT      0x0001
@@ -113,6 +115,8 @@ public:
 
   NS_IMETHOD    GetLayerY(PRInt32* aLayerY);
   NS_IMETHOD    SetLayerY(PRInt32 aLayerY);
+
+  NS_IMETHOD    GetRc(nsIDOMRenderingContext** aRc);
 
   // nsIPrivateDOMEvent interface
   NS_IMETHOD    DuplicatePrivateData();
