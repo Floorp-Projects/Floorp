@@ -182,6 +182,7 @@ STDMETHODIMP nsDataObj::GetData(LPFORMATETC pFE, LPSTGMEDIUM pSTM)
 
   static CLIPFORMAT fileDescriptorFlavor = ::RegisterClipboardFormat( CFSTR_FILEDESCRIPTOR ); 
   static CLIPFORMAT fileFlavor = ::RegisterClipboardFormat( CFSTR_FILECONTENTS ); 
+  static CLIPFORMAT UniformResourceLocator = ::RegisterClipboardFormat( CFSTR_SHELLURL ); 
 
   ULONG count;
   FORMATETC fe;
@@ -189,46 +190,42 @@ STDMETHODIMP nsDataObj::GetData(LPFORMATETC pFE, LPSTGMEDIUM pSTM)
   while (NOERROR == m_enumFE->Next(1, &fe, &count)) {
     nsCAutoString * df = NS_REINTERPRET_CAST(nsCAutoString*, mDataFlavors->SafeElementAt(dfInx));
     if ( df ) {
-		  if (FormatsMatch(fe, *pFE)) {
-			  pSTM->pUnkForRelease = NULL;        // caller is responsible for deleting this data
-			  CLIPFORMAT format = pFE->cfFormat;
-			  switch(format) {
-			    
-			    // Someone is asking for plain or unicode text
-				  case CF_TEXT:
-				  case CF_UNICODETEXT:
-					  return GetText(*df, *pFE, *pSTM);
-					  break;
-					  
-			    // Someone is asking for an image
-				  case CF_DIB:
-				  	return GetDib(*df, *pFE, *pSTM);
-					  				  			  
-				  // ... not yet implemented ...
-				  //case CF_BITMAP:
-				  //	return GetBitmap(*pFE, *pSTM);
-				  //case CF_METAFILEPICT:
-				  //	return GetMetafilePict(*pFE, *pSTM);
+      if (FormatsMatch(fe, *pFE)) {
+        pSTM->pUnkForRelease = NULL;        // caller is responsible for deleting this data
+        CLIPFORMAT format = pFE->cfFormat;
+        switch(format) {
+
+        // Someone is asking for plain or unicode text
+        case CF_TEXT:
+        case CF_UNICODETEXT:
+        return GetText(*df, *pFE, *pSTM);
+                  
+        // Someone is asking for an image
+        case CF_DIB:
+          return GetDib(*df, *pFE, *pSTM);
+                                              
+        // ... not yet implemented ...
+        //case CF_BITMAP:
+        //  return GetBitmap(*pFE, *pSTM);
+        //case CF_METAFILEPICT:
+        //  return GetMetafilePict(*pFE, *pSTM);
             
-				  default:
-
-            if ( format == fileDescriptorFlavor )
-              return GetFileDescriptor ( *pFE, *pSTM );
-            else if ( format == fileFlavor )
-              return GetFileContents ( *pFE, *pSTM );
-            else {
-              PRNTDEBUG2("***** nsDataObj::GetData - Unknown format %x\n", format);
-					    return GetText(*df, *pFE, *pSTM);
-            }
-            break;
-
+        default:
+          if ( format == fileDescriptorFlavor )
+            return GetFileDescriptor ( *pFE, *pSTM );
+          if ( format == fileFlavor )
+            return GetFileContents ( *pFE, *pSTM );
+          if ( format == UniformResourceLocator )
+            return GetUniformResourceLocator( *pFE, *pSTM );
+          PRNTDEBUG2("***** nsDataObj::GetData - Unknown format %u\n", format);
+          return GetText(*df, *pFE, *pSTM);
         } //switch
       } // if
     }
     dfInx++;
   } // while
 
-	return ResultFromScode(DATA_E_FORMATETC);
+  return ResultFromScode(DATA_E_FORMATETC);
 }
 
 
@@ -942,4 +939,47 @@ nsDataObj :: BuildPlatformHTML ( const char* inOurHTML, char** outPlatformHTML )
   *outPlatformHTML = buf;
 
   return NS_OK;
+}
+
+HRESULT 
+nsDataObj :: GetUniformResourceLocator( FORMATETC& aFE, STGMEDIUM& aSTG )
+{
+  HRESULT res = S_OK;
+  if ( IsInternetShortcut() )  
+  {
+    res = ExtractUniformResourceLocator( aFE, aSTG );
+  }
+  else
+    NS_WARNING ("Not yet implemented\n");
+  return res;
+}
+
+HRESULT
+nsDataObj::ExtractUniformResourceLocator(FORMATETC& aFE, STGMEDIUM& aSTG)
+{
+  HRESULT result = S_OK;
+  
+  nsAutoString url;
+  if (NS_FAILED(ExtractShortcutURL(url)))
+    return E_OUTOFMEMORY;
+  NS_LossyConvertUCS2toASCII urlC(url);
+
+  // setup format structure
+  static CLIPFORMAT UniformResourceLocator = ::RegisterClipboardFormat( CFSTR_SHELLURL );
+  FORMATETC fmetc = { UniformResourceLocator, NULL, DVASPECT_CONTENT, 0,TYMED_HGLOBAL };
+
+  // create a global memory area and build up the file contents w/in it
+  const int totalLen = urlC.Length()+1;
+
+  HGLOBAL hGlobalMemory = ::GlobalAlloc(GMEM_ZEROINIT|GMEM_SHARE, totalLen);
+
+  // Copy text to Global Memory Area
+  if ( hGlobalMemory ) {
+    char* contents = NS_REINTERPRET_CAST(char*, ::GlobalLock(hGlobalMemory));
+    memcpy(contents, urlC.get(), totalLen);
+    ::GlobalUnlock(hGlobalMemory);
+    aSTG.hGlobal = hGlobalMemory;
+    aSTG.tymed = TYMED_HGLOBAL;
+  }
+  return result;
 }

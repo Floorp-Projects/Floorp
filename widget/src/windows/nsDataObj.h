@@ -141,6 +141,8 @@ class nsDataObj : public IDataObject
 		virtual HRESULT GetDib ( const nsACString& inFlavor, FORMATETC &, STGMEDIUM & aSTG );
 		virtual HRESULT GetMetafilePict(FORMATETC&  FE, STGMEDIUM&  STM);
 
+    virtual HRESULT GetUniformResourceLocator ( FORMATETC& aFE, STGMEDIUM& aSTG ) ;
+    virtual HRESULT ExtractUniformResourceLocator ( FORMATETC& aFE, STGMEDIUM& aSTG ) ;
     virtual HRESULT GetFileDescriptor ( FORMATETC& aFE, STGMEDIUM& aSTG ) ;
     virtual HRESULT GetFileContents ( FORMATETC& aFE, STGMEDIUM& aSTG ) ;
    
