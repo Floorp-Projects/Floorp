@@ -69,16 +69,16 @@ public:
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsIStyleContext* aContext,
-                  nsIFrame*        aPrevInFlow);
-  
+                  nsIFrame*        aPrevInFlow); 
 
   NS_IMETHOD  ReResolveStyleContext ( nsIPresContext* aPresContext, 
                                       nsIStyleContext* aParentContext,
                                       PRInt32 aParentChange,
                                       nsStyleChangeList* aChangeList,
                                       PRInt32* aLocalChange) ;
-
-  NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, // Overridden to capture events
+ 
+    // Overridden to capture events
+  NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint,
                               nsIFrame**     aFrame);
 
 protected:
@@ -86,19 +86,15 @@ protected:
   enum { kNoGrippyHilighted = -1 } ;
 
   struct TabInfo {
-    TabInfo ( ) : mCollapsed(PR_TRUE) { };
-  
-    void SetProperties ( const nsRect & inBounds, const nsCOMPtr<nsIContent> & inContent, 
-                            PRBool inCollapsed )
-    {
-      mToolbar = inContent;
-      mBoundingRect = inBounds;
-      mCollapsed = inCollapsed;
-    }
-    
-    nsCOMPtr<nsIContent>  mToolbar;       // content object associated w/ toolbar frame
-    nsRect                mBoundingRect;
-    PRBool                mCollapsed;
+    TabInfo( nsIContent * inContent, PRBool inCollapsed, 
+               const nsRect &inBounds = nsRect(0,0,0,0)) 
+       : mToolbar(inContent), mCollapsed(inCollapsed), mBoundingRect(inBounds) { } 
+
+    void SetBounds(const nsRect &inBounds) { mBoundingRect = inBounds; }
+
+    nsIContent*    mToolbar;       // content object associated w/ toolbar frame. We don't own it.
+    nsRect         mBoundingRect;
+    PRBool         mCollapsed;
   };
   
   nsToolboxFrame();
@@ -116,12 +112,18 @@ protected:
   void DrawGrippy ( nsIPresContext& aPresContext, nsIRenderingContext & aContext, 
                       const nsRect & aBoundingRect, PRBool aDrawHilighted ) const ;
   void CollapseToolbar ( TabInfo & inTab ) ; 
+
   void ExpandToolbar ( TabInfo & inTab ) ; 
+
 
   void ConvertToLocalPoint ( nsPoint & ioPoint ) ;
   void OnMouseMove ( nsPoint & aMouseLoc ) ;
   void OnMouseExit ( ) ;
   void OnMouseLeftClick ( nsPoint & aMouseLoc ) ;
+
+    // utility routines
+  TabInfo* FindGrippyForToolbar ( const nsIContent* inContent ) const ;
+  void ClearGrippyList ( nsVoidArray & inList ) ;
 
     // style context for the normal state and rollover state of grippies
   nsCOMPtr<nsIStyleContext>    mGrippyNormalStyle;
@@ -131,7 +133,7 @@ protected:
   virtual void GetInset(nsMargin& margin);
 
   unsigned long mSumOfToolbarHeights;
-  TabInfo  mGrippies[10];          //*** make this a list or something!!!!!!
+  nsVoidArray  mGrippies;          // list of all active grippies
   unsigned short mNumToolbars;
   short mGrippyHilighted;          // used to indicate which grippy the mouse is inside
 
