@@ -498,7 +498,7 @@ NS_IMETHODIMP nsIMAPHostSessionList::SetNamespacesOverridableForHost(const char 
 
 NS_IMETHODIMP nsIMAPHostSessionList::GetNumberOfNamespacesForHost(const char *hostName, const char *userName, PRUint32 &result)
 {
-	PRInt32 intResult;
+	PRInt32 intResult = 0;
 
 	PR_EnterMonitor(gCachedHostInfoMonitor);
 	nsIMAPHostInfo *host = FindHost(hostName, userName);
@@ -507,7 +507,7 @@ NS_IMETHODIMP nsIMAPHostSessionList::GetNumberOfNamespacesForHost(const char *ho
 		intResult = host->fNamespaceList->GetNumberOfNamespaces();
 	}
 	PR_ExitMonitor(gCachedHostInfoMonitor);
-	NS_ASSERTION(intResult > 0, "negative number of namespaces");
+	NS_ASSERTION(intResult >= 0, "negative number of namespaces");
 	result = (PRUint32) intResult;
 	return (host == NULL) ? NS_ERROR_ILLEGAL_VALUE : NS_OK;
 }
