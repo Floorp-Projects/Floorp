@@ -767,88 +767,20 @@ nsWebShell::DestroyChildren()
 NS_IMPL_ADDREF(nsWebShell)
 NS_IMPL_RELEASE(nsWebShell)
 
-nsresult
-nsWebShell::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  nsresult rv = NS_NOINTERFACE;
-
-  NS_ENSURE_ARG_POINTER(aInstancePtr);
-
-  if (aIID.Equals(kIWebShellServicesIID)) {
-    *aInstancePtr = (void*)(nsIWebShellServices*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIWebShellIID)) {
-    *aInstancePtr = (void*)(nsIWebShell*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIContentViewerContainerIID)) {
-    *aInstancePtr = (void*)(nsIContentViewerContainer*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIScriptContextOwnerIID)) {
-    *aInstancePtr = (void*)(nsIScriptContextOwner*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIDocumentLoaderObserverIID)) {
-    *aInstancePtr = (void*)(nsIDocumentLoaderObserver*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIProgressEventSinkIID)) {
-    *aInstancePtr = (void*)(nsIProgressEventSink*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIWebShellContainerIID)) {
-    *aInstancePtr = (void*)(nsIWebShellContainer*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kILinkHandlerIID)) {
-    //I added this for plugin support of jumping
-    //through links. maybe there is a better way... MMP
-    *aInstancePtr = (void*)(nsILinkHandler*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIPrompt))) {
-    *aInstancePtr = (void*) ((nsIPrompt*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kRefreshURIIID)) {
-    *aInstancePtr = (void*) ((nsIRefreshURI*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIClipboardCommandsIID)) {
-    *aInstancePtr = (void*) ((nsIClipboardCommands*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtr = (void*)(nsISupports*)(nsIWebShell*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
-#if defined(NS_DEBUG)
-  /*
-   * Check for the debug-only interface indicating thread-safety
-   */
-  static NS_DEFINE_IID(kIsThreadsafeIID, NS_ISTHREADSAFE_IID);
-  if (aIID.Equals(kIsThreadsafeIID)) {
-    return NS_OK;
-  }
-#endif /* NS_DEBUG */
-
-  return rv;
-}
+NS_IMPL_QUERY_HEAD(nsWebShell)
+   NS_IMPL_QUERY_BODY(nsIWebShell)
+   NS_IMPL_QUERY_BODY(nsIWebShellServices)
+   NS_IMPL_QUERY_BODY(nsIContentViewerContainer)
+   NS_IMPL_QUERY_BODY(nsIScriptContextOwner)
+   NS_IMPL_QUERY_BODY(nsIDocumentLoaderObserver)
+   NS_IMPL_QUERY_BODY(nsIProgressEventSink)
+   NS_IMPL_QUERY_BODY(nsIWebShellContainer)
+   NS_IMPL_QUERY_BODY(nsILinkHandler)
+   NS_IMPL_QUERY_BODY(nsIPrompt)
+   NS_IMPL_QUERY_BODY(nsIRefreshURI)
+   NS_IMPL_QUERY_BODY(nsIClipboardCommands)
+   NS_IMPL_QUERY_BODY(nsIInterfaceRequestor)
+NS_IMPL_QUERY_TAIL(nsIWebShell)
 
 NS_IMETHODIMP
 nsWebShell::GetInterface(const nsIID &aIID, void** aInstancePtr)
