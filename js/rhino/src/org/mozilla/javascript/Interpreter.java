@@ -525,8 +525,7 @@ public class Interpreter
                     iCodeTop = addByte(type == Token.NEW ? 1 : 0, iCodeTop);
                     iCodeTop = addShort(itsLineNumber, iCodeTop);
                 } else {
-                    iCodeTop = addToken(type, iCodeTop);
-                    iCodeTop = addString(functionName, iCodeTop);
+                    iCodeTop = addString(type, functionName, iCodeTop);
                 }
                 // adjust stack
                 if (type == Token.NEW) {
@@ -767,8 +766,7 @@ public class Interpreter
                 iCodeTop = generateICode(child, iCodeTop);
                 child = child.getNext();
                 iCodeTop = generateICode(child, iCodeTop);
-                iCodeTop = addToken(Token.SETNAME, iCodeTop);
-                iCodeTop = addString(firstChild.getString(), iCodeTop);
+                iCodeTop = addString(Token.SETNAME, firstChild.getString(), iCodeTop);
                 itsStackDepth--;
                 break;
 
@@ -781,8 +779,7 @@ public class Interpreter
                 if (itsInFunctionFlag && !itsData.itsNeedsActivation)
                     index = scriptOrFn.getParamOrVarIndex(name);
                 if (index == -1) {
-                    iCodeTop = addIcode(Icode_TYPEOFNAME, iCodeTop);
-                    iCodeTop = addString(name, iCodeTop);
+                    iCodeTop = addString(Icode_TYPEOFNAME, name, iCodeTop);
                 } else {
                     iCodeTop = addToken(Token.GETVAR, iCodeTop);
                     iCodeTop = addByte(index, iCodeTop);
@@ -799,8 +796,7 @@ public class Interpreter
             case Token.NAME :
             case Token.STRING :
                 stackDelta = 1;
-                iCodeTop = addToken(type, iCodeTop);
-                iCodeTop = addString(node.getString(), iCodeTop);
+                iCodeTop = addString(type, node.getString(), iCodeTop);
                 itsStackDepth++;
                 if (itsStackDepth > itsData.itsMaxStack)
                     itsData.itsMaxStack = itsStackDepth;
@@ -815,8 +811,7 @@ public class Interpreter
                         String name = child.getString();
                         if (itsData.itsNeedsActivation) {
                             iCodeTop = addIcode(Icode_SCOPE, iCodeTop);
-                            iCodeTop = addToken(Token.STRING, iCodeTop);
-                            iCodeTop = addString(name, iCodeTop);
+                            iCodeTop = addString(Token.STRING, name, iCodeTop);
                             itsStackDepth += 2;
                             if (itsStackDepth > itsData.itsMaxStack)
                                 itsData.itsMaxStack = itsStackDepth;
@@ -857,11 +852,10 @@ public class Interpreter
                         break;
                     }
                     default : {
-                        iCodeTop = addIcode(type == Token.INC
-                                            ? Icode_NAMEINC
-                                            : Icode_NAMEDEC,
-                                            iCodeTop);
-                        iCodeTop = addString(child.getString(), iCodeTop);
+                        iCodeTop = addString(type == Token.INC
+                                             ? Icode_NAMEINC
+                                             : Icode_NAMEDEC,
+											 child.getString(), iCodeTop);
                         itsStackDepth++;
                         if (itsStackDepth > itsData.itsMaxStack)
                             itsData.itsMaxStack = itsStackDepth;
@@ -921,8 +915,7 @@ public class Interpreter
             case Token.CATCH_SCOPE :
                 stackDelta = 1;
                 iCodeTop = generateICode(child, iCodeTop);
-                iCodeTop = addToken(Token.CATCH_SCOPE, iCodeTop);
-                iCodeTop = addString(node.getString(), iCodeTop);
+                iCodeTop = addString(Token.CATCH_SCOPE, node.getString(), iCodeTop);
                 break;
 
             case Token.LEAVEWITH :
@@ -1019,8 +1012,7 @@ public class Interpreter
                     // bogus children. Instead we use a special op to
                     // push the current scope.
                     iCodeTop = addIcode(Icode_SCOPE, iCodeTop);
-                    iCodeTop = addToken(Token.STRING, iCodeTop);
-                    iCodeTop = addString(name, iCodeTop);
+                    iCodeTop = addString(Token.STRING, name, iCodeTop);
                     itsStackDepth += 2;
                     if (itsStackDepth > itsData.itsMaxStack)
                         itsData.itsMaxStack = itsStackDepth;
@@ -1118,8 +1110,7 @@ public class Interpreter
         int type = left.getType();
         if (type == Token.NAME) {
             String name = left.getString();
-            iCodeTop = addIcode(Icode_NAME_AND_THIS, iCodeTop);
-            iCodeTop = addString(name, iCodeTop);
+            iCodeTop = addString(Icode_NAME_AND_THIS, name, iCodeTop);
             itsStackDepth += 2;
             if (itsStackDepth > itsData.itsMaxStack)
                 itsData.itsMaxStack = itsStackDepth;
@@ -1357,8 +1348,13 @@ public class Interpreter
         return iCodeTop;
     }
 
-    private int addString(String str, int iCodeTop)
+    private int addString(int op, String str, int iCodeTop)
     {
+        if (op > BASE_ICODE) {
+            iCodeTop = addIcode(op, iCodeTop);
+        } else {
+            iCodeTop = addToken(op, iCodeTop);
+        }
         int index = itsStrings.get(str, -1);
         if (index == -1) {
             index = itsStrings.size();
