@@ -269,7 +269,7 @@ function BrowserPrintPreview()
 
 function BrowserPrintSetup()
 {
-
+  var didOK = false;
   try {
     var ifreq = _content.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
     var webBrowserPrint = ifreq.getInterface(Components.interfaces.nsIWebBrowserPrint);     
@@ -277,7 +277,8 @@ function BrowserPrintSetup()
       gPrintSettings = GetPrintSettings(webBrowserPrint);
     }
 
-    if (goPageSetup(window, gPrintSettings)) {  // from utilityOverlay.js
+    didOK = goPageSetup(window, gPrintSettings);  // from utilityOverlay.js
+    if (didOK) {  // from utilityOverlay.js
 
       if (webBrowserPrint) {
         if (gPrintSettingsAreGlobal && gSavePrintSettings) {
@@ -291,6 +292,7 @@ function BrowserPrintSetup()
   } catch (e) {
     dump("BrowserPrintSetup "+e);
   }
+  return didOK;
 }
 
 function BrowserPrint()
