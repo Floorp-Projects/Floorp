@@ -149,6 +149,7 @@ nsDOMStyleDeclaration::GetContentStyle(nsICSSDeclaration **aDecl,
           result = mContent->SetAttribute(nsHTMLAtoms::style, 
                                           nsHTMLValue(cssRule), 
                                           PR_FALSE);
+          NS_RELEASE(cssRule);
         }
         else {
           NS_RELEASE(*aDecl);
@@ -269,7 +270,9 @@ nsDOMStyleDeclaration::SetProperty(const nsString& aPropertyName,
           NS_RELEASE(doc);
         }
       }
+      NS_RELEASE(css);
     }
+    NS_RELEASE(decl);
   }
 
   return result;
