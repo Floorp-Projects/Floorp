@@ -79,7 +79,9 @@ HRESULT STDMETHODCALLTYPE CControlEventSink:: Invoke(
 		szEvent = _T("PropertyChange");
 		break;
 	case 0xfa:
-		szEvent = _T("BeforeNavigate2");
+		{
+			szEvent = _T("BeforeNavigate2");
+		}
 		break;
 	case 0xfb:
 		{

@@ -95,6 +95,7 @@ protected:
 	afx_msg void OnUpdateViewGotoBack(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateViewGotoForward(CCmdUI* pCmdUI);
 	afx_msg void OnEditSelectAll();
+	afx_msg void OnViewRefresh();
 	//}}AFX_MSG
 	afx_msg void OnEditBold();
 	afx_msg void OnEditItalic();

@@ -55,7 +55,8 @@ protected:
 	DECLARE_MESSAGE_MAP()
 
 	void RegisterMozillaControl(BOOL bRegister);
-
+	BOOL SetSystemPath(const CString &szNewPath);
+	CString GetSystemPath();
 };
 
 //{{AFX_INSERT_LOCATION}}

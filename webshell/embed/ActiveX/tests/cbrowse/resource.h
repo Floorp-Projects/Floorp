@@ -61,13 +61,14 @@
 #define ID_VIEW_STOP                    32788
 #define ID_VIEW_GOTO_HOME               32789
 #define ID_EDIT_SELECTALL               32790
+#define ID_VIEW_REFRESH                 32791
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        142
-#define _APS_NEXT_COMMAND_VALUE         32791
+#define _APS_NEXT_COMMAND_VALUE         32792
 #define _APS_NEXT_CONTROL_VALUE         1027
 #define _APS_NEXT_SYMED_VALUE           107
 #endif

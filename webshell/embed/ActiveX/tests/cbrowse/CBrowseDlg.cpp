@@ -93,6 +93,7 @@ BEGIN_MESSAGE_MAP(CBrowseDlg, CDialog)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_GOTO_BACK, OnUpdateViewGotoBack)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_GOTO_FORWARD, OnUpdateViewGotoForward)
 	ON_COMMAND(ID_EDIT_SELECTALL, OnEditSelectAll)
+	ON_COMMAND(ID_VIEW_REFRESH, OnViewRefresh)
 	//}}AFX_MSG_MAP
 	ON_COMMAND(IDB_BOLD, OnEditBold)
 	ON_COMMAND(IDB_ITALIC, OnEditItalic)
@@ -778,6 +779,17 @@ void CBrowseDlg::OnFileExit()
 	OnClose();
 }
 
+void CBrowseDlg::OnViewRefresh() 
+{
+	IWebBrowser *pIWebBrowser = NULL;
+	if (SUCCEEDED(GetWebBrowser(&pIWebBrowser)))
+	{
+		CComVariant vValue(REFRESH_COMPLETELY);
+		pIWebBrowser->Refresh2(&vValue);
+		pIWebBrowser->Release();
+	}
+}
+
 void CBrowseDlg::OnViewGotoBack() 
 {
 	OnBackward();
@@ -832,4 +844,3 @@ void CBrowseDlg::OnHelpAbout()
 {
 	AfxMessageBox(_T("CBrowse - Browser Control Test Harness"));
 }
-
