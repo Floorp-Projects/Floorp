@@ -52,18 +52,13 @@ static NS_DEFINE_IID(kIStyleContextIID, NS_ISTYLECONTEXT_IID);
 //
 nsStyleFont::nsStyleFont(const nsFont& aFont)
   : mFont(aFont)
-{
-}
+{ }
 
-nsStyleFont::~nsStyleFont(void)
-{
-}
+nsStyleFont::~nsStyleFont(void) { }
 
 struct StyleFontImpl : public nsStyleFont {
   StyleFontImpl(const nsFont& aFont)
     : nsStyleFont(aFont)
-  {}
-  ~StyleFontImpl()  
   {}
 
   virtual const nsID& GetID(void)
@@ -99,9 +94,6 @@ struct StyleColorImpl: public nsStyleColor {
     mCursor = NS_STYLE_CURSOR_INHERIT;
   }
 
-  ~StyleColorImpl(void)
-  {}
-
   virtual const nsID& GetID(void)
   { return kStyleColorSID;  }
 
@@ -115,8 +107,6 @@ private:  // These are not allowed
 void StyleColorImpl::InheritFrom(const nsStyleColor& aCopy)
 {
   mColor = aCopy.mColor;
-  mCursor = NS_STYLE_CURSOR_INHERIT;/* XXX right? */
-  mBackgroundFlags = NS_STYLE_BG_COLOR_TRANSPARENT;
 }
 
 
@@ -130,16 +120,9 @@ nsStyleSpacing::nsStyleSpacing(void)
 {
 }
 
-nsStyleSpacing::~nsStyleSpacing(void)
-{
-}
-
 struct StyleSpacingImpl: public nsStyleSpacing {
   StyleSpacingImpl(void)
     : nsStyleSpacing()
-  {}
-
-  ~StyleSpacingImpl(void)
   {}
 
   virtual const nsID& GetID(void)
@@ -165,16 +148,9 @@ nsStyleBorder::nsStyleBorder(void)
   mColor[0] = mColor[1] = mColor[2] = mColor[3] = NS_RGB(0, 0, 0);
 }
 
-nsStyleBorder::~nsStyleBorder(void)
-{
-}
-
 struct StyleBorderImpl: public nsStyleBorder {
   StyleBorderImpl(void)
     : nsStyleBorder()
-  {}
-
-  ~StyleBorderImpl(void)
   {}
 
   virtual const nsID& GetID(void)
@@ -201,10 +177,6 @@ struct StyleListImpl: public nsStyleList {
     mListStylePosition = NS_STYLE_LIST_STYLE_POSITION_OUTSIDE;
   }
 
-  ~StyleListImpl(void)
-  {
-  }
-
   virtual const nsID& GetID(void)
   { return kStyleListSID; }
 
@@ -222,7 +194,6 @@ void StyleListImpl::InheritFrom(const nsStyleList& aCopy)
 // nsStylePosition
 //
 nsStylePosition::nsStylePosition() { }
-nsStylePosition::~nsStylePosition() { }
 
 struct StylePositionImpl: public nsStylePosition {
   StylePositionImpl(void)
@@ -241,9 +212,6 @@ struct StylePositionImpl: public nsStylePosition {
     mClipFlags = NS_STYLE_CLIP_AUTO;
     mClip.SizeTo(0,0,0,0);
   }
-
-  ~StylePositionImpl(void)
-  {}
 
   virtual const nsID& GetID(void)
   { return kStylePositionSID;  }
@@ -265,17 +233,19 @@ void StylePositionImpl::InheritFrom(const nsStylePosition& aCopy)
 //
 
 nsStyleText::nsStyleText() { }
-nsStyleText::~nsStyleText() { }
 
 struct StyleTextImpl: public nsStyleText {
   StyleTextImpl() {
     mTextAlign = NS_STYLE_TEXT_ALIGN_LEFT;
     mTextDecoration = NS_STYLE_TEXT_DECORATION_NONE;
     mTextTransform = NS_STYLE_TEXT_TRANSFORM_NONE;
-    mVerticalAlign.Set(NS_STYLE_VERTICAL_ALIGN_BASELINE, eStyleUnit_Enumerated);
     mWhiteSpace = NS_STYLE_WHITESPACE_NORMAL;
-  }
-  ~StyleTextImpl() {
+
+    mLetterSpacing.SetNormal();
+    mLineHeight.SetNormal();
+    mTextIndent.Set(0);
+    mWordSpacing.SetNormal();
+    mVerticalAlign.Set(NS_STYLE_VERTICAL_ALIGN_BASELINE, eStyleUnit_Enumerated);
   }
 
   virtual const nsID& GetID() {
@@ -304,7 +274,6 @@ void StyleTextImpl::InheritFrom(const nsStyleText& aCopy)
 //
 
 nsStyleDisplay::nsStyleDisplay() { }
-nsStyleDisplay::~nsStyleDisplay() { }
 
 struct StyleDisplayImpl: public nsStyleDisplay {
   StyleDisplayImpl() {
@@ -314,8 +283,6 @@ struct StyleDisplayImpl: public nsStyleDisplay {
     mBreakType = NS_STYLE_CLEAR_NONE;
     mBreakBefore = PR_FALSE;
     mBreakAfter = PR_FALSE;
-  }
-  ~StyleDisplayImpl() {
   }
 
   virtual const nsID& GetID() {
