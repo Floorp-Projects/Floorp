@@ -90,6 +90,7 @@ public:
   // Get the intrinsic (natural) size for the image. Returns 0,0 if
   // the dimensions are not known
   void GetIntrinsicSize(nsSize& aSize);
+  void GetNaturalImageSize(PRUint32* naturalWidth, PRUint32* naturalHeight);
 
 #ifdef DEBUG
   void SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;

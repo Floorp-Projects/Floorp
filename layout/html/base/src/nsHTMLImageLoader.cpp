@@ -79,6 +79,12 @@ nsHTMLImageLoader::GetImage()
 }
 
 void
+nsHTMLImageLoader::GetNaturalImageSize(PRUint32* naturalWidth, PRUint32* naturalHeight)
+{ 
+//
+}
+
+void
 nsHTMLImageLoader::SetURL(const nsString& aNewSpec)
 {
   mURLSpec = aNewSpec;

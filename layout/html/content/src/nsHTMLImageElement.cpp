@@ -1021,18 +1021,15 @@ nsHTMLImageElement::GetNaturalHeight(PRInt32* aNaturalHeight)
   
   *aNaturalHeight = 0;
   
-  if (!mLoader)
-    return NS_ERROR_FAILURE;
-  
   nsImageFrame* imageFrame;
   nsresult rv = GetImageFrame(&imageFrame);
   if (NS_FAILED(rv) || !imageFrame) return NS_OK;      // don't throw JS exceptions in this case
 
-  nsSize    naturalSize(0, 0);
-  //rv = imageFrame->GetNaturalSize(naturalSize);
+  PRUint32 width, height;
+  rv = imageFrame->GetNaturalImageSize(&width, &height);
   if (NS_FAILED(rv)) return NS_OK;
   
-  *aNaturalHeight = naturalSize.height;
+  *aNaturalHeight = (PRInt32)height;
   return NS_OK;  
 }
 
@@ -1042,19 +1039,16 @@ nsHTMLImageElement::GetNaturalWidth(PRInt32* aNaturalWidth)
   NS_ENSURE_ARG_POINTER(aNaturalWidth);
   
   *aNaturalWidth = 0;
-  
-  if (!mLoader)
-    return NS_ERROR_FAILURE;
-  
+    
   nsImageFrame* imageFrame;
   nsresult rv = GetImageFrame(&imageFrame);
   if (NS_FAILED(rv) || !imageFrame) return NS_OK;      // don't throw JS exceptions in this case
 
-  nsSize    naturalSize(0, 0);
-  //rv = imageFrame->GetNaturalSize(naturalSize);
+  PRUint32 width, height;
+  rv = imageFrame->GetNaturalImageSize(&width, &height);
   if (NS_FAILED(rv)) return NS_OK;
   
-  *aNaturalWidth = naturalSize.width;
+  *aNaturalWidth = (PRInt32)width;
   return NS_OK;  
 }
 
