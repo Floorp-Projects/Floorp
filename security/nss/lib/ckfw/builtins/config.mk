@@ -34,7 +34,7 @@
 # the terms of any one of the MPL, the GPL or the LGPL.
 #
 # ***** END LICENSE BLOCK *****
-CONFIG_CVS_ID = "@(#) $RCSfile: config.mk,v $ $Revision: 1.9 $ $Date: 2004/05/25 00:13:07 $ $Name:  $"
+CONFIG_CVS_ID = "@(#) $RCSfile: config.mk,v $ $Revision: 1.10 $ $Date: 2004/08/31 17:28:50 $ $Name:  $"
 
 #
 #  Override TARGETS variable so that only shared libraries
@@ -46,8 +46,10 @@ LIBRARY        =
 IMPORT_LIBRARY =
 PROGRAM        =
 
-ifeq (,$(filter-out OS2 WIN%,$(OS_TARGET)))
+ifeq (,$(filter-out WIN%,$(OS_TARGET)))
     SHARED_LIBRARY = $(OBJDIR)/$(DLL_PREFIX)$(LIBRARY_NAME)$(LIBRARY_VERSION).$(DLL_SUFFIX)
+    RES = $(OBJDIR)/$(LIBRARY_NAME).res
+    RESNAME = $(LIBRARY_NAME).rc
 endif
 
 ifdef BUILD_IDG

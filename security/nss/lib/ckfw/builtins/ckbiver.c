@@ -15,7 +15,7 @@
  *
  * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1994-2000
+ * Portions created by the Initial Developer are Copyright (C) 2004
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -34,35 +34,25 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef NSSCKBI_H
-#define NSSCKBI_H
+/* Library identity and versioning */
+
+#include "nssckbi.h"
+
+#if defined(DEBUG)
+#define _DEBUG_STRING " (debug)"
+#else
+#define _DEBUG_STRING ""
+#endif
 
 /*
- * NSS BUILTINS Version numbers.
+ * Version information for the 'ident' and 'what commands
  *
- * These are the version numbers for the builtins module packaged with
- * this release on NSS. To determine the version numbers of the builtin
- * module you are using, use the appropriate PKCS #11 calls.
- *
- * These version number details changes to the PKCS #11 interface. They map
- * to the PKCS #11 spec versions.
+ * NOTE: the first component of the concatenated rcsid string
+ * must not end in a '$' to prevent rcs keyword substitution.
  */
-#define NSS_BUILTINS_CRYPTOKI_VERSION_MAJOR 2
-#define NSS_BUILTINS_CRYPTOKI_VERSION_MINOR 1
-
-/* These are the  correct verion numbers that details the changes 
- * to the list of trusted certificates.  */
-#define NSS_BUILTINS_LIBRARY_VERSION "1.50"
-#define NSS_BUILTINS_LIBRARY_VERSION_MAJOR 1
-#define NSS_BUILTINS_LIBRARY_VERSION_MINOR 50
-
-/* These verion numbers that details the semantic changes to the ckfw engine. */
-#define NSS_BUILTINS_HARDWARE_VERSION_MAJOR 1
-#define NSS_BUILTINS_HARDWARE_VERSION_MINOR 0
-
-/* These verion numbers that details the semantic changes to ckbi itself 
- * (new PKCS #11 objects), etc. */
-#define NSS_BUILTINS_FIRMWARE_VERSION_MAJOR 1
-#define NSS_BUILTINS_FIRMWARE_VERSION_MINOR 0
-
-#endif /* NSSCKBI_H */
+const char __nss_builtins_rcsid[] = "$Header: NSS Builtin Trusted Root CAs "
+        NSS_BUILTINS_LIBRARY_VERSION _DEBUG_STRING
+        "  " __DATE__ " " __TIME__ " $";
+const char __nss_builtins_sccsid[] = "@(#)NSS Builtin Trusted Root CAs "
+        NSS_BUILTINS_LIBRARY_VERSION _DEBUG_STRING
+        "  " __DATE__ " " __TIME__;
