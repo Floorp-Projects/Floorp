@@ -41,13 +41,16 @@ public:
                    nsIInputStream *aInputStream,
                    nsIOutputStream *aOutputStream)
     { 
+        MOZ_COUNT_CTOR(nsConnectionCacheObj);
         mSocketTransport = aChannel;
         mInputStream = aInputStream;
         mOutputStream = aOutputStream;
         mServerType = 0;
         mList = PR_FALSE;
-    };
-    ~nsConnectionCacheObj() {;};
+    }
+    ~nsConnectionCacheObj() {
+        MOZ_COUNT_DTOR(nsConnectionCacheObj);
+    }
 
     nsCOMPtr<nsIChannel>       mSocketTransport;      // the connection
     nsCOMPtr<nsIInputStream>   mInputStream;          // to read from server
