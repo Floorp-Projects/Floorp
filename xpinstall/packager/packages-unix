@@ -1,3 +1,5 @@
+; Package file for Unix
+
 [core]
 bin/mozilla-apprunner.sh
 bin/run-mozilla.sh
@@ -24,8 +26,6 @@ bin/libxpcom.so
 
 bin/components/initpref.js
 bin/components/all.js
-bin/components/mailnews.js
-bin/components/editor.js
 bin/components/config.js
 bin/components/unix.js
 bin/components/xpinstall.js
@@ -133,14 +133,6 @@ bin/components/walleteditor.xpt
 bin/components/signonviewer.xpt
 bin/components/cookieviewer.xpt
 bin/components/walletpreview.xpt
-bin/components/mailnews.xpt
-bin/components/msgbase.xpt
-bin/components/msgdb.xpt
-bin/components/msgnews.xpt
-bin/components/msgsearch.xpt
-bin/components/msglocal.xpt
-bin/components/msgcompose.xpt
-bin/components/msgimap.xpt
 bin/components/addrbook.xpt
 
 bin/chrome/bookmarks/*
@@ -155,11 +147,17 @@ bin/defaults/*
 bin/res/profile/*
 bin/res/toolbar/*
 bin/res/*
+-/bin/res/strres-test.dtd
+-/bin/res/strres-test.html
+-/bin/res/strres-test.js
+-/bin/res/strres-test.xul
+-/bin/res/viewer.properties
+-/bin/res/test.properties
 bin/help/browserhelp/*
 bin/help/troubleshoot/*
 
 ;[mail]
-
+bin/components/mailnews.js
 bin/components/libaddrbook.so
 bin/components/libmork.so
 bin/components/libmsgdb.so
@@ -181,6 +179,9 @@ bin/components/msgdb.xpt
 bin/components/msglocal.xpt
 bin/components/msgnews.xpt
 bin/components/msgsearch.xpt
+bin/components/mailnews.xpt
+bin/components/msgcompose.xpt
+bin/components/msgimap.xpt
 bin/chrome/addressbook/*
 bin/chrome/messenger/*
 bin/chrome/messengercompose/*
