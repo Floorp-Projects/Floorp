@@ -1238,12 +1238,13 @@ nsBrowserAppCore::Exit()
 }
 
 void
-nsBrowserAppCore::InitializeSearch( nsIFindComponent *finder ) {
+nsBrowserAppCore::InitializeSearch( nsIFindComponent *finder )
+{
     nsresult rv = NS_OK;
 
     if ( finder && !mSearchContext ) {
         // Create the search context for this browser window.
-        rv = finder->CreateContext( mContentAreaWebShell, &mSearchContext );
+        rv = finder->CreateContext( mContentAreaWebShell, nsnull, &mSearchContext);
         if ( NS_FAILED( rv ) ) {
             #ifdef NS_DEBUG
             printf( "%s %d CreateContext failed, rv=0x%X\n",
@@ -1254,9 +1255,11 @@ nsBrowserAppCore::InitializeSearch( nsIFindComponent *finder ) {
 }
 
 NS_IMETHODIMP    
-nsBrowserAppCore::Find() {
+nsBrowserAppCore::Find()
+{
     nsresult rv = NS_OK;
-
+    PRBool   found = PR_FALSE;
+    
     // Get find component.
     nsIFindComponent *finder;
     rv = nsServiceManager::GetService( NS_IFINDCOMPONENT_PROGID,
@@ -1268,7 +1271,7 @@ nsBrowserAppCore::Find() {
 
         // Perform find via find component.
         if ( finder && mSearchContext ) {
-            rv = finder->Find( mSearchContext );
+            rv = finder->Find( mSearchContext, &found );
         }
 
         // Release the service.
@@ -1284,8 +1287,10 @@ nsBrowserAppCore::Find() {
 }
 
 NS_IMETHODIMP    
-nsBrowserAppCore::FindNext() {
+nsBrowserAppCore::FindNext()
+{
     nsresult rv = NS_OK;
+    PRBool   found = PR_FALSE;
 
     // Get find component.
     nsIFindComponent *finder;
@@ -1298,7 +1303,7 @@ nsBrowserAppCore::FindNext() {
 
         // Perform find via find component.
         if ( finder && mSearchContext ) {
-            rv = finder->FindNext( mSearchContext );
+            rv = finder->FindNext( mSearchContext, &found );
         }
 
         // Release the service.
