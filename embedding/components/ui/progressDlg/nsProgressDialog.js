@@ -225,7 +225,7 @@ nsProgressDialog.prototype = {
         if ( aMaxTotalProgress != "-1" ) {
             status = this.replaceInsert( status, 2, parseInt( aMaxTotalProgress/1024 + .5 ) );
         } else {
-            status = replaceInsert( status, 2, "??" );
+            status = this.replaceInsert( status, 2, "??" );
         }
     
         // Insert 3 is the download rate.
