@@ -377,7 +377,7 @@ BASIC_LIBS	+= \
 		  $(DIST)/lib/libjbn.a \
 		  $(NULL)
 
-ifndef NO_SECURITY
+ifdef MOZ_SECURITY
 BASIC_LIBS	+= $(DIST)/lib/libjsl.a
 endif
 
@@ -434,7 +434,7 @@ endif
 # Post-Java libs
 BASIC_LIBS	+= $(DIST)/lib/libstyle.a
 
-ifndef NO_SECURITY
+ifdef MOZ_SECURITY
 BASIC_LIBS	+= $(DIST)/lib/libjar.a
 else
 EXPORT_LIB	= $(DIST)/lib/libhtmldlgs.a $(DIST)/lib/libsecfree.a
@@ -581,6 +581,7 @@ endif
 # Linux
 ifeq ($(OS_ARCH),Linux)
 
+ifndef USE_AUTOCONF
 ifeq ($(USE_PTHREADS),1)
 OS_LIBS                 = -lpthread -lm -ldl -lc
 OTHER_LIBS	= $(GNOME_LIBS) -ltiff -lgif /usr/lib/libjpeg.so \
@@ -590,8 +591,7 @@ OS_LIBS                 = -lm -ldl
 OTHER_LIBS	= $(GNOME_LIBS) -ltiff -lgif /usr/lib/libjpeg.so \
                   -lpng -lz
 endif
-
-
+endif #!USE_AUTOCONF
 
 US_LDFLAGS	+= -lc
 EXPORT_LDFLAGS	+= -lc
@@ -775,6 +775,9 @@ EXPORT_LDFLAGS	+= -lresolv -lsocket -lc /usr/ucblib/libucb.a
 FRANCE_LDFLAGS	+= -lresolv -lsocket -lc /usr/ucblib/libucb.a
 
 endif
+
+# Override with autoconf values
+OTHER_LIBS	= $(GNOME_LIBS) $(OS_LIBS)
 
 #######################################################################
 

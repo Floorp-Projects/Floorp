@@ -224,7 +224,7 @@ endif
 endif
 
 ifdef USE_AUTOCONF
-OPTIMIZER	= $(ACCFLAGS)
+OPTIMIZER	= 
 DEFINES		= -UDEBUG -DNDEBUG -DTRIMMED
 XBCFLAGS	=
 else
@@ -280,7 +280,7 @@ endif # !USE_AUTOCONF
 
 ifdef MOZ_DEBUG
 ifdef USE_AUTOCONF
-OPTIMIZER	= $(ACCFLAGS)
+OPTIMIZER	= 
 else
 OPTIMIZER	= -g
 endif
@@ -355,11 +355,12 @@ MOZILLA_DETECT_NAME	= detect_$(MOZILLA_DETECT_UNIQ_IDENT)_gen.mk
 MOZILLA_DETECT_GEN	= $(MOZILLA_DETECT_DIR)/$(MOZILLA_DETECT_NAME)
 endif
 
+ifndef USE_AUTOCONF
 #
 # Now include the platform-specific stuff.
 #
 include $(topsrcdir)/config/$(OS_ARCH).mk
-
+endif # !USE_AUTOCONF
 #
 # Some platforms (Solaris) might require builds using either
 # (or both) compiler(s).
@@ -741,8 +742,13 @@ else
 JAVA_DEFINES	+= -DAWT_102
 endif
 
+# I don't believe this is still true -cls
+ifndef USE_AUTOCONF
+
 # From nsprpub/config/config.mk, mozilla/jpeg needs to know
 # about USE_PTHREADS.  This fixes platforms like SparcLinux. -mcafee
 ifeq ($(USE_PTHREADS), 1)
 OS_CFLAGS += -D_PR_PTHREADS -UHAVE_CVAR_BUILT_ON_SEM
 endif
+endif #!USE_AUTOCONF
+

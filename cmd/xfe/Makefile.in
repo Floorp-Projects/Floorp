@@ -896,11 +896,13 @@ endif
 # Linux
 ifeq ($(OS_ARCH),Linux)
 
+ifndef USE_AUTOCONF
 # Override the definition of OS_LIBS in config/Linux.mk.
 ifeq ($(USE_PTHREADS),1)
 OS_LIBS			= -lpthread -lm -ldl -lc
 else
 OS_LIBS			= -lm -ldl
+endif
 endif
 
 XFE_MOTIF_LDFLAGS	= \
@@ -1097,8 +1099,8 @@ OTHER_LIBS	= $(MOTIFLIB) $(OS_LIBS)
 endif
 
 # Override all of the above with the autoconf variables
-OTHER_LIBS		= $(FE_X_LIBS) $(ACLFLAGS) $(ACLIBS)
-OTHER_DYN_MOTIF_LIBS	= $(FE_X_LIBS) $(ACLFLAGS) $(ACLIBS)
+OTHER_LIBS		= $(FE_X_LIBS) $(XLDFLAGS) $(XLIBS) $(OS_LIBS)
+OTHER_DYN_MOTIF_LIBS	= $(FE_X_LIBS) $(XLDFLAGS) $(XLIBS) $(OS_LIBS)
 
 #######################################################################
 

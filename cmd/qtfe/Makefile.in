@@ -435,7 +435,7 @@ BASIC_LIBS	+= \
 		  $(DIST)/lib/libjbn.a \
 		  $(NULL)
 
-ifndef NO_SECURITY
+ifdef MOZ_SECURITY
 BASIC_LIBS	+= $(DIST)/lib/libjsl.a
 endif
 
@@ -499,7 +499,7 @@ endif
 # Post-Java libs
 BASIC_LIBS	+= $(DIST)/lib/libstyle.a
 
-ifndef NO_SECURITY
+ifdef MOZ_SECURITY
 BASIC_LIBS	+= $(DIST)/lib/libjar.a
 else
 EXPORT_LIB	= $(DIST)/lib/libhtmldlgs.a $(DIST)/lib/libsecfree.a
@@ -856,10 +856,8 @@ EXPORT_LDFLAGS	+= -lresolv -lsocket -lc /usr/ucblib/libucb.a
 
 endif
 
-ifdef USE_AUTOCONF
-OTHER_LIBS		= $(FE_QT_LIBS) $(ACLFLAGS) $(ACLIBS)
-OTHER_DYN_MOTIF_LIBS	= $(FE_QT_LIBS) $(ACLFLAGS) $(ACLIBS)
-endif
+OTHER_LIBS		= $(FE_QT_LIBS) $(OS_LIBS)
+OTHER_DYN_MOTIF_LIBS	= $(FE_QT_LIBS) $(OS_LIBS)
 
 #######################################################################
 
@@ -1043,7 +1041,7 @@ symbols:
 
 # the embed program
 $(OBJDIR)/embed: tools/embed.cpp
-	$(CCC) -I$(QTDIR)/include -o $@ $< $(QTLIB) $(ACLFLAGS) -lX11
+	$(CCC) -I$(QTDIR)/include -o $@ $< $(QTLIB) $(XLDFLAGS) -lX11
 
 # make sure icon-pixmaps.inc gets built
 $(OBJDIR)/icons.o: $(OBJDIR)/icon-pixmaps.inc
