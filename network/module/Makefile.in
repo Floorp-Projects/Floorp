@@ -33,6 +33,7 @@ CPPSRCS			= \
 			  nsHttpUrl.cpp       \
 			  nsStubContext.cpp   \
 			  nsNetStubs.cpp      \
+			  nsNetFile.cpp		\
 			  nsNetIDs.cpp        \
 			  nsLoadAttribs.cpp   \
 			  nsNetFactory.cpp    \

@@ -3,8 +3,16 @@
 #include "nsString.h"
 #include "plstr.h"
 #include "prerror.h"
-#include "direct.h"
+
+#ifndef XP_UNIX
+#include "direct.h" */
+#endif
+
 #include <time.h>
+
+#ifndef _MAX_PATH
+#define _MAX_PATH 1024
+#endif
 
 char USER_DIR[_MAX_PATH];
 char CACHE_DIR[_MAX_PATH];
