@@ -204,7 +204,27 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext& aPresContext,
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
   aRenderingContext.PopState(clipState);
   
-  return NS_OK;
+  return nsFrame::Paint(aPresContext,
+                        aRenderingContext,
+                        aDirtyRect,
+                        aWhichLayer);
+}
+
+//null range means the whole thing
+NS_IMETHODIMP
+nsTableCellFrame::SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread)
+{
+  //traverse through children unselect tables
+  if ((aSpread == eSpreadDown) && aSelected){
+    nsIFrame* kid;
+    nsresult rv = FirstChild(nsnull, &kid);
+    while (nsnull != kid) {
+      kid->SetSelected(nsnull,PR_FALSE,eSpreadDown);
+
+      kid->GetNextSibling(&kid);
+    }
+  }
+  return nsFrame::SetSelected(aRange,aSelected,eSpreadNone);
 }
 
 PRIntn
@@ -218,6 +238,16 @@ nsTableCellFrame::GetSkipSides() const
     skip |= 1 << NS_SIDE_BOTTOM;
   }
   return skip;
+}
+
+PRBool nsTableCellFrame::ParentDisablesSelection() const //override default behavior
+{
+  PRBool returnval;
+  if (NS_FAILED(GetSelected(&returnval)))
+    return PR_FALSE;
+  if (returnval)
+    return PR_TRUE;
+  return nsFrame::ParentDisablesSelection();
 }
 
 void nsTableCellFrame::SetBorderEdge(PRUint8       aSide, 
