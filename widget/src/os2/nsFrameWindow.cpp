@@ -44,6 +44,7 @@ extern PRBool              gRollupConsumeRollupEvent;
 extern PRBool gJustGotDeactivate;
 extern HWND   gHwndBeingDestroyed;
 
+BOOL nsFrameWindow::fHiddenWindowCreated = FALSE;
 
 nsFrameWindow::nsFrameWindow() : nsWindow()
 {
@@ -109,6 +110,13 @@ void nsFrameWindow::RealDoCreate( HWND hwndP, nsWindow *aParent,
    // Set flags only if not first hidden window created by nsAppShellService
 
      fcd.flCreateFlags = GetFCFlags();
+
+   if (!fHiddenWindowCreated) {
+      if ((aRect.x == 0) && (aRect.y == 0) && (aRect.height == 100) && (aRect.width == 100)) {
+         fcd.flCreateFlags &= ~FCF_TASKLIST;
+         fHiddenWindowCreated = TRUE;
+      }
+   }
 
    // Assume frames are toplevel.  Breaks if anyone tries to do MDI, which
    // is an extra bonus feature :-)
