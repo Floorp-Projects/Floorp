@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: dev3hack.c,v $ $Revision: 1.12 $ $Date: 2002/04/18 17:29:59 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: dev3hack.c,v $ $Revision: 1.13 $ $Date: 2002/04/19 16:14:13 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSS_3_4_CODE
@@ -255,6 +255,9 @@ nssSlot_IsLoggedIn
   NSSSlot *slot
 )
 {
+    if (!slot->pk11slot->needLogin) {
+	return PR_TRUE;
+    }
     return PK11_IsLoggedIn(slot->pk11slot, NULL);
 }
 

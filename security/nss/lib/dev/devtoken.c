@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.14 $ $Date: 2002/04/18 17:54:30 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.15 $ $Date: 2002/04/19 16:14:06 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSCKEPV_H
@@ -488,19 +488,22 @@ find_objects_by_template
     if (token->cache && 
         nssTokenObjectCache_HaveObjectClass(token->cache, objclass)) 
     {
+	PRStatus status;
 	objects = nssTokenObjectCache_FindObjectsByTemplate(token->cache,
 	                                                    objclass,
 	                                                    obj_template,
 	                                                    otsize,
-	                                                    maximumOpt);
-	if (statusOpt) *statusOpt = PR_SUCCESS;
+	                                                    maximumOpt,
+	                                                    &status);
+	if (status == PR_SUCCESS) {
+	    if (statusOpt) *statusOpt = status;
+	    return objects;
+	}
     }
     /* Either they are not cached, or cache failed; look on token. */
-    if (!objects) {
-	objects = find_objects(token, sessionOpt, 
-	                       obj_template, otsize, 
-	                       maximumOpt, statusOpt);
-    }
+    objects = find_objects(token, sessionOpt, 
+                           obj_template, otsize, 
+                           maximumOpt, statusOpt);
     return objects;
 }
 
@@ -670,6 +673,12 @@ nssToken_FindCertificatesByNickname
     return objects;
 }
 
+/* XXX
+ * This function *does not* use the token object cache, because not even
+ * the softoken will return a value for CKA_NETSCAPE_EMAIL from a call
+ * to GetAttributes.  The softoken does allow searches with that attribute,
+ * it just won't return a value for it.
+ */
 NSS_IMPLEMENT nssCryptokiObject **
 nssToken_FindCertificatesByEmail
 (
@@ -696,9 +705,9 @@ nssToken_FindCertificatesByEmail
     NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_CLASS, &g_ck_class_cert);
     NSS_CK_TEMPLATE_FINISH(email_template, attr, etsize);
     /* now locate the token certs matching this template */
-    objects = find_objects_by_template(token, sessionOpt,
-                                       email_template, etsize,
-                                       maximumOpt, statusOpt);
+    objects = find_objects(token, sessionOpt,
+                           email_template, etsize,
+                           maximumOpt, statusOpt);
     if (!objects) {
 	/* This is to workaround the fact that PKCS#11 doesn't specify
 	 * whether the '\0' should be included.  XXX Is that still true?
@@ -707,9 +716,9 @@ nssToken_FindCertificatesByEmail
 	 * well, its needed by the builtin token...
 	 */
 	email_template[0].ulValueLen++;
-	objects = find_objects_by_template(token, sessionOpt,
-	                                   email_template, etsize,
-	                                   maximumOpt, statusOpt);
+	objects = find_objects(token, sessionOpt,
+	                       email_template, etsize,
+	                       maximumOpt, statusOpt);
     }
     return objects;
 }
