@@ -318,7 +318,7 @@ NS_IMETHODIMP nsMsgHdr::GetNumReferences(PRUint16 *result)
 	if (!(m_initedValues & CACHED_VALUES_INITED))
 		InitCachedValues();
 
-    *result = m_numReferences;
+  *result = m_numReferences;
 	return NS_OK;
 }
 
@@ -332,7 +332,7 @@ nsresult nsMsgHdr::ParseReferences(const char *references)
 		startNextRef = GetNextReference(startNextRef, resultReference);
 		m_references.AppendCString(resultReference);
 	}
-        m_numReferences = m_references.Count();
+  m_numReferences = m_references.Count();
 	return NS_OK;
 }
 
@@ -395,7 +395,6 @@ NS_IMETHODIMP nsMsgHdr::SetReferences(const char *references)
   }
   else {
     ParseReferences(references);
-    m_numReferences = m_references.Count();
   }
 	
   SetUInt32Column(m_numReferences, m_mdb->m_numReferencesColumnToken);
@@ -744,7 +743,7 @@ const char *nsMsgHdr::GetNextReference(const char *startNextRef, nsCString &refe
 	const char *ptr = startNextRef;
 
 	reference.Truncate(0);
-	while ((*ptr == '<' || *ptr == ' ') && *ptr)
+	while ((*ptr == '<' || *ptr == ' ' || *ptr == nsCRT::CR || *ptr == nsCRT::LF) && *ptr)
 		ptr++;
 
 	for (int i = 0; *ptr && *ptr != '>'; i++)
