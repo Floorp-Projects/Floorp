@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.15 $ $Date: 2001/12/18 19:54:44 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.16 $ $Date: 2001/12/20 16:20:16 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -481,9 +481,26 @@ fill_CERTCertificateFields(NSSCertificate *c, CERTCertificate *cc)
     /* fill other fields needed by NSS3 functions using CERTCertificate */
     if (!cc->nickname && c->nickname) {
 	PRStatus nssrv;
-	int len = nssUTF8_Size(c->nickname, &nssrv);
+	int nicklen, tokenlen, len;
+	NSSUTF8 *tokenName = NULL;
+	char *nick;
+	nicklen = nssUTF8_Size(c->nickname, &nssrv);
+	if (instance && !PK11_IsInternal(instance->token->pk11slot)) {
+	    tokenName = nssToken_GetName(instance->token);
+	    tokenlen = nssUTF8_Size(tokenName, &nssrv);
+	} else {
+	    /* don't use token name for internal slot; 3.3 didn't */
+	    tokenlen = 0;
+	}
+	len = tokenlen + nicklen;
 	cc->nickname = PORT_ArenaAlloc(cc->arena, len);
-	memcpy(cc->nickname, c->nickname, len-1);
+	nick = cc->nickname;
+	if (tokenName) {
+	    memcpy(nick, tokenName, tokenlen-1);
+	    nick += tokenlen-1;
+	    *nick++ = ':';
+	}
+	memcpy(nick, c->nickname, nicklen-1);
 	cc->nickname[len-1] = '\0';
     }
     if (context) {
