@@ -126,6 +126,12 @@ static FactoryData g_FactoryData[] =
     "Unicode"
   },
   {
+    &kUnicodeToHZCID,
+    nsUnicodeToHZ::CreateInstance,
+    "Unicode",
+    "HZ-GB-2312"
+  },
+  {
     &kUnicodeToGB2312GLCID,
     nsUnicodeToGB2312GL::CreateInstance,
     "Unicode",
