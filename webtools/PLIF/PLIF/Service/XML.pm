@@ -43,7 +43,7 @@ sub provides {
 sub parse {
     my $self = shift;
     my($string) = @_;
-    return XML::Parser->new(Style => 'Tree', ErrorContext => 2)->parse($string);
+    return XML::Parser->new(Style => 'Tree', ErrorContext => 1)->parse($string);
 }
 
 sub parseNS {
