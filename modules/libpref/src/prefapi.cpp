@@ -283,7 +283,11 @@ PRBool PREF_Init(const char *filename)
         return PR_FALSE;
 
     if (!gMochaTaskState)
+    {
         gMochaTaskState = PREF_GetJSRuntime();
+        if (!gMochaTaskState)
+            return PR_FALSE;
+    }
 
     if (!gMochaContext)
     {
