@@ -173,7 +173,24 @@ DocumentViewerImpl::~DocumentViewerImpl()
     NS_IF_RELEASE(mViewManager);
     NS_IF_RELEASE(mWindow);
 
-    NS_IF_RELEASE(mDocument);
+    if (nsnull != mDocument) {
+      //XXX I don't think we'll need to do this eventually but for
+      //now we need it to drop JS objects - joki
+      nsIScriptContextOwner *mOwner = mDocument->GetScriptContextOwner();
+      if (nsnull != mOwner) {
+        nsIScriptContext *mContext;
+        mOwner->GetScriptContext(&mContext);
+        if (nsnull != mContext) {
+          mContext->RunGC();
+          NS_RELEASE(mContext);
+        }
+        NS_RELEASE(mOwner);
+      }
+      //Need to break documents circular reference on
+      //the webshell created in the DocViewer Init
+      mDocument->SetScriptContextOwner(nsnull);
+      NS_RELEASE(mDocument);
+    }
     
     // Note: release context then shell
     NS_IF_RELEASE(mPresContext);
@@ -301,22 +318,17 @@ DocumentViewerImpl::Init(nsNativeWidget aNativeParent,
         mContainer->QueryCapability(kIScriptContextOwnerIID, (void**)&owner);
         if (nsnull != owner) {
             aDocument->SetScriptContextOwner(owner);
-            nsIScriptContext* scriptcx = nsnull;
-            owner->GetScriptContext(&scriptcx);
-            if (nsnull != scriptcx) {
-                nsIScriptGlobalObject* global;
-                global = scriptcx->GetGlobalObject();
-                if (nsnull != global) {
-                    nsIDOMDocument *domdoc = nsnull;
-                    aDocument->QueryInterface(kIDOMDocumentIID,
-                                              (void**) &domdoc);
-                    if (nsnull != domdoc) {
-                        global->SetNewDocument(domdoc);
-                        NS_RELEASE(domdoc);
-                    }
-                    NS_RELEASE(global);
+            nsIScriptGlobalObject* global;
+            owner->GetScriptGlobalObject(&global);
+            if (nsnull != global) {
+                nsIDOMDocument *domdoc = nsnull;
+                aDocument->QueryInterface(kIDOMDocumentIID,
+                                          (void**) &domdoc);
+                if (nsnull != domdoc) {
+                    global->SetNewDocument(domdoc);
+                    NS_RELEASE(domdoc);
                 }
-                NS_RELEASE(scriptcx);
+                NS_RELEASE(global);
             }
             NS_RELEASE(owner);
         }
