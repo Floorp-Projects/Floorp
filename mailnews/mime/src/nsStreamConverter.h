@@ -29,7 +29,7 @@
 #include "nsCOMPtr.h"
 
 #define NS_STREAM_CONVERTER_SEGMENT_SIZE   (4*1024)
-#define NS_STREAM_CONVERTER_BUFFER_SIZE    (1024*1024)//(32*1024)
+#define NS_STREAM_CONVERTER_BUFFER_SIZE    (32*1024)
 
 class nsStreamConverter : public nsIStreamConverter, public nsIMimeStreamConverter { 
 public: 
