@@ -1199,6 +1199,148 @@ MRESULT EXPENTRY DlgProcSelectComponents(HWND hDlg, ULONG msg, MPARAM mp1, MPARA
   return(WinDefDlgProc(hDlg, msg, mp1, mp2));
 }
 
+MRESULT EXPENTRY DlgProcSelectAdditionalComponents(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
+{
+  BOOL                bReturn = FALSE;
+  siC                 *siCTemp;
+  DWORD               dwIndex;
+  DWORD               dwItems = MAX_BUF;
+  HWND                hwndLBComponents;
+  SWP                 swpDlg;
+  CHAR                tchBuffer[MAX_BUF];
+  POWNERITEM          pOwnerItem;
+  ULONG               ulDSBuf;
+  char                szBuf[MAX_BUF];
+
+  hwndLBComponents  = WinWindowFromID(hDlg, IDC_LIST_COMPONENTS);
+
+  switch(msg)
+  {
+    case WM_INITDLG:
+      AdjustDialogSize(hDlg);
+      WinSetPresParam(hDlg, PP_FONTNAMESIZE,
+                      strlen(sgInstallGui.szDefinedFont)+1, sgInstallGui.szDefinedFont);
+      WinSetWindowText(hDlg, diSelectAdditionalComponents.szTitle);
+      WinSetDlgItemText(hDlg, IDC_MESSAGE0, diSelectAdditionalComponents.szMessage0);
+
+      siCTemp = siComponents;
+      if(siCTemp != NULL)
+      {
+        if((!(siCTemp->dwAttributes & SIC_INVISIBLE)) && (siCTemp->dwAttributes & SIC_ADDITIONAL))
+          WinSendMsg(hwndLBComponents, LM_INSERTITEM, LIT_END, (MPARAM)siCTemp->szDescriptionShort);
+
+        siCTemp = siCTemp->Next;
+        while((siCTemp != siComponents) && (siCTemp != NULL))
+        {
+          if((!(siCTemp->dwAttributes & SIC_INVISIBLE)) && (siCTemp->dwAttributes & SIC_ADDITIONAL))
+            WinSendMsg(hwndLBComponents, LM_INSERTITEM, LIT_END, (MPARAM)siCTemp->szDescriptionShort);
+
+          siCTemp = siCTemp->Next;
+        }
+        WinSetFocus(HWND_DESKTOP, hwndLBComponents);
+        WinSendMsg(hwndLBComponents, LM_SELECTITEM, 0, 0);
+        WinSetDlgItemText(hDlg, IDC_STATIC_DESCRIPTION, SiCNodeGetDescriptionLong(0, FALSE, AC_ADDITIONAL_COMPONENTS));
+      }
+
+      WinQueryWindowPos(hDlg, &swpDlg);
+      WinSetWindowPos(hDlg,
+                      HWND_TOP,
+                      (gSystemInfo.lScreenX/2)-(swpDlg.cx/2),
+                      (gSystemInfo.lScreenY/2)-(swpDlg.cy/2),
+                      0,
+                      0,
+                      SWP_MOVE);
+
+      /* update the disk space available info in the dialog.  GetDiskSpaceAvailable()
+         returns value in kbytes */
+      ulDSBuf = GetDiskSpaceAvailable(sgProduct.szPath);
+      _itoa(ulDSBuf, tchBuffer, 10);
+      ParsePath(sgProduct.szPath, szBuf, sizeof(szBuf), FALSE, PP_ROOT_ONLY);
+      RemoveBackSlash(szBuf);
+      strcat(szBuf, "   ");
+      strcat(szBuf, tchBuffer);
+      strcat(szBuf, " KB");
+      WinSetDlgItemText(hDlg, IDC_SPACE_AVAILABLE, szBuf);
+
+      WinSetDlgItemText(hDlg, IDC_STATIC1, sgInstallGui.szAdditionalComponents_);
+      WinSetDlgItemText(hDlg, IDC_STATIC2, sgInstallGui.szDescription);
+      WinSetDlgItemText(hDlg, IDC_STATIC3, sgInstallGui.szTotalDownloadSize);
+      WinSetDlgItemText(hDlg, IDC_STATIC4, sgInstallGui.szSpaceAvailable);
+      WinSetDlgItemText(hDlg, IDWIZBACK, sgInstallGui.szBack_);
+      WinSetDlgItemText(hDlg, IDWIZNEXT, sgInstallGui.szNext_);
+      WinSetDlgItemText(hDlg, IDCANCEL, sgInstallGui.szCancel_);
+
+      gdwACFlag = AC_ADDITIONAL_COMPONENTS;
+      OldListBoxWndProc = WinSubclassWindow(hwndLBComponents, (PFNWP)NewListBoxWndProc);
+      break;
+
+    case WM_MEASUREITEM:
+      return MRFROM2SHORT(CX_CHECKBOX+4+4, 0);
+
+    case WM_DRAWITEM:
+      pOwnerItem = (POWNERITEM)mp2;
+
+      // If there are no list box items, skip this message.
+      if(pOwnerItem->idItem == -1)
+        break;
+
+      DrawLBText(pOwnerItem, AC_ADDITIONAL_COMPONENTS);
+      DrawCheck(pOwnerItem, AC_ADDITIONAL_COMPONENTS);
+
+      /* update the disk space required info in the dialog.  It is already
+         in Kilobytes */
+      ulDSBuf = GetDiskSpaceRequired(DSR_DOWNLOAD_SIZE);
+      _itoa(ulDSBuf, tchBuffer, 10);
+      strcpy(szBuf, tchBuffer);
+      strcat(szBuf, " KB");
+      
+      WinSetDlgItemText(hDlg, IDC_DOWNLOAD_SIZE, szBuf);
+      return (MRESULT)TRUE;
+      break;
+
+    case WM_CONTROL:
+      switch ( SHORT1FROMMP( mp1 ) )
+      {
+        case IDC_LIST_COMPONENTS:
+          /* to update the long description for each component the user selected */
+          if((dwIndex = WinSendMsg(hwndLBComponents, LM_QUERYSELECTION, 0, 0)) != LIT_NONE)
+            WinSetDlgItemText(hDlg, IDC_STATIC_DESCRIPTION, SiCNodeGetDescriptionLong(dwIndex, FALSE, AC_ADDITIONAL_COMPONENTS));
+          break;
+      }
+      break;
+
+    case WM_CLOSE:
+      AskCancelDlg(hDlg);
+      return (MRESULT)TRUE;
+      break;
+
+    case WM_COMMAND:
+      switch ( SHORT1FROMMP( mp1 ) )
+      {
+        case IDWIZNEXT:
+          WinDestroyWindow(hDlg);
+          DlgSequence(NEXT_DLG);
+          break;
+
+        case IDWIZBACK:
+          WinDestroyWindow(hDlg);
+          DlgSequence(PREV_DLG);
+          break;
+
+        case IDCANCEL:
+          AskCancelDlg(hDlg);
+          return (MRESULT)TRUE;
+          break;
+
+        default:
+          break;
+      }
+      break;
+  }
+
+  return(WinDefDlgProc(hDlg, msg, mp1, mp2));
+}
+
 MRESULT APIENTRY DlgProcOS2Integration(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
 {
   char szBuf[MAX_BUF];
@@ -2213,6 +2355,9 @@ void DlgSequence(int iDirection)
           ulWizardState = DLG_SELECT_COMPONENTS;
           break;
         case DLG_SELECT_COMPONENTS:
+          ulWizardState = DLG_SELECT_ADDITIONAL_COMPONENTS;
+          break;
+        case DLG_SELECT_ADDITIONAL_COMPONENTS:
           ulWizardState = DLG_OS2_INTEGRATION;
           break;
         case DLG_OS2_INTEGRATION:
@@ -2246,8 +2391,11 @@ void DlgSequence(int iDirection)
         case DLG_SELECT_COMPONENTS:
           ulWizardState = DLG_SETUP_TYPE;
           break;
-        case DLG_OS2_INTEGRATION:
+        case DLG_SELECT_ADDITIONAL_COMPONENTS:
           ulWizardState = DLG_SELECT_COMPONENTS;
+          break;
+        case DLG_OS2_INTEGRATION:
+          ulWizardState = DLG_SELECT_ADDITIONAL_COMPONENTS;
           break;
         case DLG_ADDITIONAL_OPTIONS:
           ulWizardState = DLG_OS2_INTEGRATION;
@@ -2313,6 +2461,14 @@ void DlgSequence(int iDirection)
         if((diSelectComponents.bShowDialog) && (sgProduct.ulCustomType == ulSetupType))
         {
           hDlgCurrent = InstantiateDialog(hWndMain, ulWizardState, diSelectComponents.szTitle, DlgProcSelectComponents);
+          bDone = TRUE;
+        }
+        break;
+
+      case DLG_SELECT_ADDITIONAL_COMPONENTS:
+        if((diSelectAdditionalComponents.bShowDialog) && (sgProduct.ulCustomType == ulSetupType))
+        {
+          hDlgCurrent = InstantiateDialog(hWndMain, ulWizardState, diSelectAdditionalComponents.szTitle, DlgProcSelectAdditionalComponents);
           bDone = TRUE;
         }
         break;
