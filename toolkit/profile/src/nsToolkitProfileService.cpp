@@ -769,7 +769,7 @@ NS_NewToolkitProfileService(nsIToolkitProfileService* *aResult)
 }
 
 nsresult
-NS_GetFileFromPath(const char *aPath, nsILocalFile* *aResult)
+XRE_GetFileFromPath(const char *aPath, nsILocalFile* *aResult)
 {
 #if defined(XP_MACOSX)
     PRInt32 pathLen = strlen(aPath);

@@ -213,13 +213,6 @@ ifdef ACCESSIBILITY
 tier_9_dirs    += accessible
 endif
 
-ifdef MOZ_ENABLE_LIBXUL
-tier_9_dirs += \
-		toolkit/library \
-		xpcom/stub \
-		$(NULL)
-endif
-
 # 
 # tier 50 - xpfe & toolkit
 #
@@ -236,10 +229,6 @@ endif
 
 tier_50_dirs += profile
 
-ifdef MOZ_PSM
-tier_50_dirs	+= security/manager
-endif
-
 # This must preceed xpfe
 ifdef MOZ_JPROF
 tier_50_dirs        += tools/jprof
@@ -252,15 +241,10 @@ endif
 tier_50_dirs	+= \
 	db \
 	xpfe \
-	themes \
 	$(NULL)
 
-ifdef MOZ_LEAKY
-tier_50_dirs        += tools/leaky
-endif
-
-ifdef MOZ_MAPINFO
-tier_50_dirs	+= tools/codesighs
+ifndef MOZ_XUL_APP
+tier_50_dirs += themes
 endif
 
 ifdef MOZ_XUL_APP
@@ -273,13 +257,23 @@ ifdef MOZ_PHOENIX
 tier_50_dirs    += browser/components/bookmarks/public browser/components/shell/public
 endif
 
-# toolkit/xre/ depends on xpinstall, so it must be in tier 50
 ifdef MOZ_XPINSTALL
 tier_50_dirs     +=  xpinstall
 endif
 
 ifdef NS_TRACE_MALLOC
 tier_50_dirs += tools/trace-malloc
+endif
+
+ifdef MOZ_ENABLE_LIBXUL
+tier_50_dirs += \
+		toolkit/library \
+		xpcom/stub \
+		$(NULL)
+endif
+
+ifdef MOZ_PSM
+tier_50_dirs	+= security/manager
 endif
 
 ifdef MOZ_STORAGE
@@ -294,6 +288,14 @@ ifdef MOZ_XUL_APP
 ifdef MOZ_ENABLE_GTK2
 tier_50_dirs    += toolkit/components/gnome
 endif
+endif
+
+ifdef MOZ_LEAKY
+tier_50_dirs        += tools/leaky
+endif
+
+ifdef MOZ_MAPINFO
+tier_50_dirs	+= tools/codesighs
 endif
 
 #

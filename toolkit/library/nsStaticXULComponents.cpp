@@ -178,6 +178,13 @@
     MODULE(appshell)                         \
     MODULE(nsTransactionManagerModule)       \
     MODULE(nsComposerModule)                 \
+    MODULE(nsChromeModule)                   \
+    MODULE(nsMorkModule)                     \
+    MODULE(nsFindComponent)                  \
+    MODULE(application)                      \
+    MODULE(CommandLineModule)                \
+    MODULE(nsToolkitCompsModule)             \
+    MODULE(nsSoftwareUpdate)                 \
     /* end of list */
 
 #define MODULE(_name)                                           \

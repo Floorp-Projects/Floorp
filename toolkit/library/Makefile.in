@@ -53,6 +53,7 @@ REQUIRES = \
 	string \
 	xpcom_obsolete \
 	$(ZLIB_REQUIRES) \
+	xulapp \
 	$(NULL)
 
 CPPSRCS = \
@@ -67,6 +68,7 @@ CPPSRCS += \
 	dlldeps-obs.cpp \
 	nsGFXDeps.cpp \
 	nsDllMain.cpp \
+	dlldeps-xul.cpp \
 	$(NULL)
 
 ifndef MOZ_NATIVE_ZLIB
@@ -89,6 +91,7 @@ STATIC_LIBS = \
 	ucvutil_s \
 	gkgfx \
 	gfxshared_s \
+	xulapp_s \
 	$(NULL)
 
 # component libraries
@@ -113,6 +116,13 @@ COMPONENT_LIBS += \
 	nsappshell \
 	txmgr \
 	composer \
+	chrome \
+	mork \
+	mozfind \
+	appcomps \
+	commandlines \
+	toolkitcomps \
+	xpinstall \
 	$(NULL)
 
 ifeq ($(OS_ARCH),WINNT)
@@ -262,6 +272,7 @@ DEFINES += \
 	-D_IMPL_NS_COM_OBSOLETE \
 	-D_IMPL_NS_GFX \
 	-D_IMPL_NS_WIDGET \
+	-DIMPL_XULAPI \
 	$(NULL)
 
 EXTRA_DSO_LDOPTS += $(NSPR_LIBS)

@@ -65,6 +65,10 @@ REQUIRES = \
 
 CPPSRCS = nsXULRunnerApp.cpp
 
+ifdef MOZ_ENABLE_LIBXUL
+CPPSRCS += nsINIParser.cpp
+endif
+
 LOCAL_INCLUDES += \
         -I$(topsrcdir)/toolkit/xre \
         -I$(topsrcdir)/toolkit/profile/src \
@@ -81,12 +85,15 @@ endif
 LIBS = \
 	$(STATIC_COMPONENTS_LINKER_PATH) \
 	$(EXTRA_DSO_LIBS) \
-	$(DIST)/lib/$(LIB_PREFIX)xulapp_s.$(LIB_SUFFIX) \
 	$(MOZ_JS_LIBS) \
 	$(XPCOM_LIBS) \
 	$(NSPR_LIBS) \
 	$(TK_LIBS) \
 	$(NULL)
+
+ifndef MOZ_ENABLE_LIBXUL
+LIBS += $(DIST)/lib/$(LIB_PREFIX)xulapp_s.$(LIB_SUFFIX)
+endif
 
 # Add explicit X11 dependency when building against X11 toolkits
 ifneq (,$(filter gtk gtk2 xlib,$(MOZ_WIDGET_TOOLKIT)))
@@ -203,8 +210,6 @@ LDFLAGS += /HEAP:0x40000
 endif
 endif
 
-$(PROGRAM): $(DIST)/lib/$(LIB_PREFIX)xulapp_s.$(LIB_SUFFIX)
-
 ifeq ($(OS_ARCH),OS2)
 ifdef BUILD_STATIC_LIBS
 $(EXE_DEF_FILE):
@@ -316,6 +321,11 @@ clean clobber::
 endif
 
 README_FILE = $(topsrcdir)/README.txt
+
+ifdef MOZ_ENABLE_LIBXUL
+export::
+	$(INSTALL) $(topsrcdir)/toolkit/profile/src/nsINIParser.cpp .
+endif
 
 libs::
 	$(INSTALL) $(README_FILE) $(DIST)/bin

@@ -109,7 +109,7 @@ static const nsXREAppData* LoadAppData(const char* appDataFile)
       vendor, name, version, buildID, {0,0,0,{0,0,0,0,0,0,0,0}}, copyright, 0 };
   
   nsCOMPtr<nsILocalFile> lf;
-  NS_GetFileFromPath(appDataFile, getter_AddRefs(lf));
+  XRE_GetFileFromPath(appDataFile, getter_AddRefs(lf));
   if (!lf)
     return nsnull;
 
@@ -180,7 +180,6 @@ static const nsXREAppData* LoadAppData(const char* appDataFile)
     const char* key;
     PRUint32 flag;
   } boolean_fields[] = {
-    { "UseStartupPrefs",        NS_XRE_USE_STARTUP_PREFS        },
     { "EnableProfileMigrator",  NS_XRE_ENABLE_PROFILE_MIGRATOR  },
     { "EnableExtensionManager", NS_XRE_ENABLE_EXTENSION_MANAGER }
   };
@@ -283,14 +282,14 @@ int main(int argc, char* argv[])
     argc++;
   }
 
-  int rv = xre_main(argc, argv, appData);
+  int rv = XRE_main(argc, argv, appData);
 
   if (argv2)
     free(argv2);
 
   return rv;
 }
-                                                                                                                                                
+
 #if defined( XP_WIN ) && defined( WIN32 ) && !defined(__GNUC__)
 // We need WinMain in order to not be a console app.  This function is
 // unused if we are a console application.

@@ -47,7 +47,11 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpinstall
-DIRS		= public src stub cleanup
+DIRS		= public src cleanup
+
+ifndef MOZ_ENABLE_LIBXUL
+DIRS		+= stub
+endif
 
 ifndef MOZ_XUL_APP
 DIRS		+= res

@@ -44,6 +44,12 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= appcomps
 LIBRARY_NAME	= search_s
+FORCE_STATIC_LIB = 1
+
+# XXXbsmedberg: this really shouldn't be part of toolkit, but part of
+# tier_99 app-specific code. Fix me!
+LIBXUL_LIBRARY = 1
+
 REQUIRES	= xpcom \
 		  string \
 		  rdf \
@@ -62,10 +68,6 @@ CPPSRCS		= \
 		nsInternetSearchService.cpp \
 		nsLocalSearchService.cpp \
 		$(NULL)
-
-# we don't want the shared lib, but we want to force the creation of a
-# static lib.
-FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
 
