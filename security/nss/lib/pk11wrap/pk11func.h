@@ -138,6 +138,8 @@ SECStatus PK11_TokenRefresh(PK11SlotInfo *slot);
  ******************************************************************/
 PK11SlotInfo *PK11_FindSlotByName(char *name);
 PK11SlotInfo *PK11_FindSlotBySerial(char *serial);
+PK11SlotList *PK11_FindSlotsByAliases(const char *dllName,
+        const char* slotName, const char* tokenName, PRBool presentOnly);
 PRBool PK11_IsReadOnly(PK11SlotInfo *slot);
 PRBool PK11_IsInternal(PK11SlotInfo *slot);
 char * PK11_GetTokenName(PK11SlotInfo *slot);
