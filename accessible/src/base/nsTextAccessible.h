@@ -85,10 +85,14 @@ protected:
   friend class nsAccessibleHyperText;
 };
 
-class nsAccessibleEditableText : public nsAccessibleText
+class nsAccessibleEditableText : public nsAccessibleText, 
+                                 public nsIAccessibleEditableText,
+                                 public nsIEditActionListener
 {
 public:
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIACCESSIBLEEDITABLETEXT
+  NS_DECL_NSIEDITACTIONLISTENER
 
   nsAccessibleEditableText();
   virtual ~nsAccessibleEditableText();

@@ -52,7 +52,7 @@ nsBlockAccessible(aDomNode, aShell)
 
 #else
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsHTMLTableCellAccessible, nsBlockAccessible, nsIAccessibleText)
+NS_IMPL_ISUPPORTS_INHERITED2(nsHTMLTableCellAccessible, nsBlockAccessible, nsIAccessibleHyperText, nsIAccessibleText)
 
 nsHTMLTableCellAccessible::nsHTMLTableCellAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell):
 nsBlockAccessible(aDomNode, aShell), nsAccessibleHyperText(aDomNode, aShell)

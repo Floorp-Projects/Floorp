@@ -75,7 +75,7 @@ NS_IMETHODIMP nsHTMLHRAccessible::GetAccState(PRUint32 *aState)
 
 #ifdef MOZ_ACCESSIBILITY_ATK
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsHTMLBlockAccessible, nsBlockAccessible, nsIAccessibleText)
+NS_IMPL_ISUPPORTS_INHERITED2(nsHTMLBlockAccessible, nsBlockAccessible, nsIAccessibleHyperText, nsIAccessibleText)
 
 nsHTMLBlockAccessible::nsHTMLBlockAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell):
 nsBlockAccessible(aDomNode, aShell), nsAccessibleHyperText(aDomNode, aShell)
@@ -84,7 +84,10 @@ nsBlockAccessible(aDomNode, aShell), nsAccessibleHyperText(aDomNode, aShell)
 
 NS_IMETHODIMP nsHTMLBlockAccessible::GetAccName(nsAString& aName)
 {
-  return nsAccessible::GetAccName(aName);
+  nsAutoString name(NS_LITERAL_STRING("Paragraph "));
+  name.AppendInt(GetIndex());
+  aName = name;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsHTMLBlockAccessible::GetAccRole(PRUint32 *aRole)

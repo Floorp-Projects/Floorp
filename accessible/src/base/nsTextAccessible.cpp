@@ -897,7 +897,7 @@ NS_IMETHODIMP nsAccessibleText::RemoveSelection(PRInt32 aSelectionNum)
   * nsAccessibleEditableText implements the nsIAccessibleText interface for editable text, such as HTML 
   *   <input>, <textarea> and XUL <editor>
   */
-NS_IMPL_ISUPPORTS1(nsAccessibleEditableText, nsIAccessibleText)
+NS_IMPL_ISUPPORTS3(nsAccessibleEditableText, nsIAccessibleText, nsIAccessibleEditableText, nsIEditActionListener)
 
 nsAccessibleEditableText::nsAccessibleEditableText()
 {
@@ -905,6 +905,8 @@ nsAccessibleEditableText::nsAccessibleEditableText()
 
 nsAccessibleEditableText::~nsAccessibleEditableText()
 {
+  if (mEditor)
+    mEditor->RemoveEditActionListener(this);
 }
 
 /**
@@ -914,6 +916,8 @@ nsAccessibleEditableText::~nsAccessibleEditableText()
 void nsAccessibleEditableText::SetEditor(nsIEditor* aEditor)
 {
   mEditor = aEditor;
+  if (mEditor)
+    mEditor->AddEditActionListener(this);
 }
 
 PRBool nsAccessibleEditableText::IsSingleLineTextControl(nsIDOMNode *aDomNode)
@@ -1068,6 +1072,201 @@ NS_IMETHODIMP nsAccessibleEditableText::GetTextAfterOffset(PRInt32 aOffset, nsAc
                                                    PRInt32 *aStartOffset, PRInt32 *aEndOffset, nsAString & aText)
 {
   return GetTextHelper(eGetAfter, aBoundaryType, aOffset, aStartOffset, aEndOffset, mEditor, aText);
+}
+
+/**
+  * nsIAccessibleEditableText impl.
+  */
+NS_IMETHODIMP nsAccessibleEditableText::SetAttributes(PRInt32 aStartPos, PRInt32 aEndPos, nsISupports *aAttributes)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsAccessibleEditableText::SetTextContents(const nsAString &aText)
+{
+  nsCOMPtr<nsIDOMHTMLTextAreaElement> textArea(do_QueryInterface(mTextNode));
+  if (textArea)
+    return textArea->SetValue(aText);
+
+  nsCOMPtr<nsIDOMHTMLInputElement> inputElement(do_QueryInterface(mTextNode));
+  if (inputElement)
+    return inputElement->SetValue(aText);
+
+  //XXX, editor doesn't support this method yet
+
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsAccessibleEditableText::InsertText(const nsAString &aText, PRInt32 aPosition)
+{
+  if (NS_SUCCEEDED(SetSelectionRange(aPosition, aPosition))) {
+    nsCOMPtr<nsIPlaintextEditor> peditor(do_QueryInterface(mEditor));
+    return peditor->InsertText(aText);
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsAccessibleEditableText::CopyText(PRInt32 aStartPos, PRInt32 aEndPos)
+{
+  if (NS_SUCCEEDED(SetSelectionRange(aStartPos, aEndPos)))
+    return mEditor->Copy();
+
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsAccessibleEditableText::CutText(PRInt32 aStartPos, PRInt32 aEndPos)
+{
+  if (NS_SUCCEEDED(SetSelectionRange(aStartPos, aEndPos)))
+    return mEditor->Cut();
+
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsAccessibleEditableText::DeleteText(PRInt32 aStartPos, PRInt32 aEndPos)
+{
+  if (NS_SUCCEEDED(SetSelectionRange(aStartPos, aEndPos)))
+    return mEditor->DeleteSelection(nsIEditor::eNone);
+
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsAccessibleEditableText::PasteText(PRInt32 aPosition)
+{
+  if (NS_SUCCEEDED(SetSelectionRange(aPosition, aPosition)))
+    return mEditor->Paste(nsIClipboard::kGlobalClipboard);
+
+  return NS_ERROR_FAILURE;
+}
+
+/**
+  * nsIEditActionListener impl.
+  */
+NS_IMETHODIMP nsAccessibleEditableText::WillCreateNode(const nsAString & aTag, nsIDOMNode *aParent, PRInt32 aPosition)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsAccessibleEditableText::DidCreateNode(const nsAString & aTag, nsIDOMNode *aNode, nsIDOMNode *aParent, PRInt32 aPosition, nsresult aResult)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsAccessibleEditableText::WillInsertNode(nsIDOMNode *aNode, nsIDOMNode *aParent, PRInt32 aPosition)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsAccessibleEditableText::DidInsertNode(nsIDOMNode *aNode, nsIDOMNode *aParent, PRInt32 aPosition, nsresult aResult)
+{
+  AtkTextChange textData;
+
+  nsCOMPtr<nsITextContent> textContent(do_QueryInterface(aNode));
+  if (textContent) {
+    textData.add = PR_TRUE;
+    textContent->GetTextLength((int *)&textData.length);
+    DOMPointToOffset(mEditor, aNode, 0, &textData.start);
+    FireTextChangeEvent(&textData);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsAccessibleEditableText::WillDeleteNode(nsIDOMNode *aChild)
+{
+  AtkTextChange textData;
+
+  textData.add = PR_FALSE;
+  nsCOMPtr<nsITextContent> textContent(do_QueryInterface(aChild));
+  if (textContent) {
+    textContent->GetTextLength((int *)&textData.length);
+  }
+  else {
+    //XXX, don't fire event for the last br
+    nsCOMPtr<nsIDOMHTMLBRElement> br(do_QueryInterface(aChild));
+    if (br)
+      textData.length = 1;
+    else
+      return NS_OK;
+  }
+
+  DOMPointToOffset(mEditor, aChild, 0, &textData.start);
+  return FireTextChangeEvent(&textData);
+}
+
+NS_IMETHODIMP nsAccessibleEditableText::DidDeleteNode(nsIDOMNode *aChild, nsresult aResult)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsAccessibleEditableText::WillSplitNode(nsIDOMNode *aExistingRightNode, PRInt32 aOffset)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsAccessibleEditableText::DidSplitNode(nsIDOMNode *aExistingRightNode, PRInt32 aOffset, nsIDOMNode *aNewLeftNode, nsresult aResult)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsAccessibleEditableText::WillJoinNodes(nsIDOMNode *aLeftNode, nsIDOMNode *aRightNode, nsIDOMNode *aParent)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsAccessibleEditableText::DidJoinNodes(nsIDOMNode *aLeftNode, nsIDOMNode *aRightNode, nsIDOMNode *aParent, nsresult aResult)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsAccessibleEditableText::WillInsertText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, const nsAString & aString)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsAccessibleEditableText::DidInsertText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, const nsAString & aString, nsresult aResult)
+{
+  AtkTextChange textData;
+
+  textData.add = PR_TRUE;
+  textData.length = aString.Length();
+  DOMPointToOffset(mEditor, aTextNode, aOffset, &textData.start);
+  return FireTextChangeEvent(&textData);
+}
+
+NS_IMETHODIMP nsAccessibleEditableText::WillDeleteText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, PRInt32 aLength)
+{
+  AtkTextChange textData;
+
+  textData.add = PR_FALSE;
+  textData.length = aLength;
+  DOMPointToOffset(mEditor, aTextNode, aOffset, &textData.start);
+  return FireTextChangeEvent(&textData);
+}
+
+NS_IMETHODIMP nsAccessibleEditableText::DidDeleteText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, PRInt32 aLength, nsresult aResult)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsAccessibleEditableText::WillDeleteSelection(nsISelection *aSelection)
+// <input> & <textarea> fires this event while deleting text
+// <editor> fires WillDeleteText/WillDeleteNode instead
+{
+  PRInt32 selectionStart, selectionEnd;
+  nsresult rv = GetSelectionRange(&selectionStart, &selectionEnd);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  AtkTextChange textData;
+
+  textData.add = PR_FALSE;
+  textData.start = PR_MIN(selectionStart, selectionEnd);
+  textData.length = PR_ABS(selectionEnd - selectionStart);
+  return FireTextChangeEvent(&textData);
+}
+
+NS_IMETHODIMP nsAccessibleEditableText::DidDeleteSelection(nsISelection *aSelection)
+{
+  return NS_OK;
 }
 
 #endif //MOZ_ACCESSIBILITY_ATK

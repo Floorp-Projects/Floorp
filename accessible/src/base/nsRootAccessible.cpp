@@ -564,7 +564,6 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     }
 #else
     AtkStateChange stateData;
-    AtkTextChange textData;
     if (eventType.EqualsIgnoreCase("focus") || eventType.EqualsIgnoreCase("DOMMenuItemActive")) {
       if (treeItemAccessible) // use focused treeitem
         HandleEvent(nsIAccessibleEventListener::EVENT_FOCUS, treeItemAccessible, nsnull);
@@ -582,25 +581,10 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
       else
         FireAccessibleFocusEvent(accessible, targetNode);
     }
-    else if (eventType.EqualsIgnoreCase("change")) {
-      if (selectElement) // it's a HTML <select>
-        HandleEvent(nsIAccessibleEventListener::EVENT_ATK_SELECTION_CHANGE, accessible, nsnull);
-    }
     else if (eventType.EqualsIgnoreCase("select")) {
-      if (selectControl) // it's a XUL <listbox>
-        HandleEvent(nsIAccessibleEventListener::EVENT_ATK_SELECTION_CHANGE, accessible, nsnull);
-      else if (treeBox && treeIndex >= 0) // it's a XUL <tree>
+      if (treeBox && treeIndex >= 0) // it's a XUL <tree>
         // use EVENT_FOCUS instead of EVENT_ATK_SELECTION_CHANGE
         HandleEvent(nsIAccessibleEventListener::EVENT_FOCUS, treeItemAccessible, nsnull);
-    }
-    else if (eventType.EqualsIgnoreCase("input")) {
-      // XXX kyle.yuan@sun.com future work, put correct values for text change data
-      textData.start = 0;
-      textData.length = 0;
-      textData.add = PR_TRUE;
-      nsAutoString accName;
-      accessible->GetAccValue(accName);
-      HandleEvent(nsIAccessibleEventListener::EVENT_ATK_TEXT_CHANGE, accessible, &textData);
     }
     else if (eventType.EqualsIgnoreCase("ListitemStateChange")) // it's a XUL <listbox>
       HandleEvent(nsIAccessibleEventListener::EVENT_FOCUS, accessible, nsnull);
@@ -676,11 +660,7 @@ NS_IMETHODIMP nsRootAccessible::Change(nsIDOMEvent* aEvent)
   // this may be the event that we have the individual Accessible objects
   //  handle themselves -- have list/combos figure out the change in selection
   //  have textareas and inputs fire a change of state etc...
-#ifdef MOZ_ACCESSIBILITY_ATK
-  return HandleEvent(aEvent);
-#else
   return NS_OK;   // Ignore form change events in MSAA
-#endif
 }
 
 // gets Select events when text is selected in a textarea or input
@@ -692,11 +672,7 @@ NS_IMETHODIMP nsRootAccessible::Select(nsIDOMEvent* aEvent)
 // gets Input events when text is entered or deleted in a textarea or input
 NS_IMETHODIMP nsRootAccessible::Input(nsIDOMEvent* aEvent) 
 { 
-#ifndef MOZ_ACCESSIBILITY_ATK
   return NS_OK; 
-#else
-  return HandleEvent(aEvent);
-#endif
 }
 
 // ------- nsIDOMXULListener Methods (8) ---------------
