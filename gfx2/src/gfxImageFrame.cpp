@@ -233,8 +233,11 @@ NS_IMETHODIMP gfxImageFrame::SetImageData(const PRUint8 *aData, PRUint32 aLength
   mImage->UnlockImagePixels(PR_FALSE);
 
   PRInt32 row = (aOffset / row_stride);
-  mImage->SetDecodedRect(0, 0, mSize.width, row + 1);
 
+  PRInt32 decY2 = mImage->GetDecodedY2();
+  if (decY2 != mSize.height) {
+    mImage->SetDecodedRect(0, 0, mSize.width, row + 1);
+  }
   PRInt32 numnewrows = (aLength / row_stride);
   nsRect r(0, row, mSize.width, numnewrows);
   mImage->ImageUpdated(nsnull, nsImageUpdateFlags_kBitsChanged, &r);
