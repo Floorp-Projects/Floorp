@@ -496,6 +496,7 @@ TextFrame::CreateContinuingFrame(nsIPresContext&  aCX,
   }
   cf->Init(aCX, mContent, aParent, aStyleContext);
   cf->AppendToFlow(this);
+  cf->mState |= NS_FRAME_REPLACED_ELEMENT;/* XXX kipp: hack for inline reflow */
   aContinuingFrame = cf;
   return NS_OK;
 }
