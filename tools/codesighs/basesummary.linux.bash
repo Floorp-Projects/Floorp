@@ -92,12 +92,18 @@ COPYSORTTSV="$1"
 OLDTSVFILE="$2"
 SUMMARYFILE="$3"
 
+OSTYPE=`uname -s`
 
 #
 #   Create our temporary directory.
 #
+if [ $OSTYPE == "Darwin" ]; then
+MYTMPDIR=`mktemp ./codesighs.tmp.XXXXXXXX`
+rm $MYTMPDIR
+mkdir $MYTMPDIR
+else
 MYTMPDIR=`mktemp -d ./codesighs.tmp.XXXXXXXX`
-
+fi
 
 #
 #   Find all relevant files.
@@ -112,7 +118,11 @@ grep -v '[\;\[]' < $MANIFEST | grep -v '^$' | sed 's/^/\.\/mozilla\/dist\/bin\//
 #   nm --format=bsd --size-sort --print-file-name --demangle
 #
 NMRESULTS="$MYTMPDIR/nm.txt"
+if [ $OSTYPE == "Darwin" ]; then
+xargs -n 1 nm -o < $ALLFILES > $NMRESULTS 2> /dev/null
+else
 xargs -n 1 nm --format=bsd --size-sort --print-file-name --demangle < $ALLFILES > $NMRESULTS 2> /dev/null
+fi
 
 
 #
