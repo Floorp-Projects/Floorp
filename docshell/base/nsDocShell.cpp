@@ -111,6 +111,7 @@
 #include "nsIPrincipal.h"
 #include "nsIHistoryEntry.h"
 #include "nsISHistoryListener.h"
+#include "nsIWindowWatcher.h"
 
 // Pull in various NS_ERROR_* definitions
 #include "nsIDNSService.h"
@@ -391,15 +392,24 @@ NS_IMETHODIMP nsDocShell::GetInterface(const nsIID & aIID, void **aSink)
         mContentViewer->GetDOMDocument((nsIDOMDocument **) aSink);
         return *aSink ? NS_OK : NS_NOINTERFACE;
     }
-    else if (aIID.Equals(NS_GET_IID(nsIPrompt))) {
-        nsCOMPtr<nsIPrompt> prompter(do_GetInterface(mTreeOwner));
-        if (prompter) {
-            *aSink = prompter;
-            NS_ADDREF((nsISupports *) * aSink);
-            return NS_OK;
-        }
-        else
-            return NS_NOINTERFACE;
+    else if (aIID.Equals(NS_GET_IID(nsIPrompt)) &&
+             NS_SUCCEEDED(EnsureScriptEnvironment())) {
+        nsresult rv;
+        nsCOMPtr<nsIWindowWatcher> wwatch =
+            do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        nsCOMPtr<nsIDOMWindow> window(do_QueryInterface(mScriptGlobal));
+
+        // Get the an auth prompter for our window so that the parenting
+        // of the dialogs works as it should when using tabs.
+
+        nsIPrompt *prompt;
+        rv = wwatch->GetNewPrompter(window, &prompt);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        *aSink = prompt;
+        return NS_OK;
     }
     else if (aIID.Equals(NS_GET_IID(nsIAuthPrompt))) {
         return NS_SUCCEEDED(
@@ -684,10 +694,13 @@ nsDocShell::LoadURI(nsIURI * aURI,
                     // it is possible that a parent's onLoadHandler or even self's onLoadHandler is loading 
                     // a new page in this child. Check parent's and self's busy flag  and if it is set,
                     // we don't want this onLoadHandler load to get in to session history.
-                    PRUint32 parentBusy=BUSY_FLAGS_NONE, selfBusy = BUSY_FLAGS_NONE;
+                    PRUint32 parentBusy = BUSY_FLAGS_NONE;
+                    PRUint32 selfBusy = BUSY_FLAGS_NONE;
                     parentDS->GetBusyFlags(&parentBusy);                    
                     GetBusyFlags(&selfBusy);
-                    if (((parentBusy & BUSY_FLAGS_BUSY) || (selfBusy & BUSY_FLAGS_BUSY)) && shEntry) {
+                    if (((parentBusy & BUSY_FLAGS_BUSY) ||
+                         (selfBusy & BUSY_FLAGS_BUSY)) &&
+                        shEntry) {
                         loadType = LOAD_NORMAL_REPLACE;
                         shEntry = nsnull; 
                     }
@@ -7369,11 +7382,18 @@ nsDocShell::GetAuthPrompt(PRUint32 aPromptReason, nsIAuthPrompt **aResult)
         return NS_ERROR_NOT_AVAILABLE;
 
     // we're either allowing auth, or it's a proxy request
-    nsCOMPtr<nsIAuthPrompt> authPrompter(do_GetInterface(mTreeOwner));
-    if (!authPrompter)
-        return NS_ERROR_NOT_AVAILABLE;
+    nsresult rv;
+    nsCOMPtr<nsIWindowWatcher> wwatch =
+      do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    *aResult = authPrompter;
-    NS_ADDREF(*aResult);
-    return NS_OK;
+    rv = EnsureScriptEnvironment();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIDOMWindow> window(do_QueryInterface(mScriptGlobal));
+
+    // Get the an auth prompter for our window so that the parenting
+    // of the dialogs works as it should when using tabs.
+
+    return wwatch->GetNewAuthPrompter(window, aResult);
 }

@@ -622,7 +622,7 @@ nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
         (!isAboutBlank || (isContentWindow && !isSameOrigin));
 
     }
-    
+
     if (aRemoveEventListeners && mListenerManager) {
       mListenerManager->RemoveAllListeners(PR_FALSE);
       mListenerManager = nsnull;
@@ -2390,13 +2390,6 @@ nsGlobalWindow::Alert(const nsAString& aString)
   // the whole time a modal dialog is open.
   nsAutoPopupStatePusher popupStatePusher(openAbused, PR_TRUE);
 
-  if (!DispatchCustomEvent("DOMWillOpenModalDialog")) {
-    // Someone chose to prevent the default action for this event,
-    // if so, don't show the dialog after all...
-
-    return NS_OK;
-  }
-
   // Special handling for alert(null) in JS for backwards
   // compatibility.
 
@@ -2420,11 +2413,7 @@ nsGlobalWindow::Alert(const nsAString& aString)
   // pending reflows.
   EnsureReflowFlushAndPaint();
 
-  nsresult rv = prompter->Alert(title, PromiseFlatString(*str).get());
-
-  DispatchCustomEvent("DOMModalDialogClosed");
-
-  return rv;
+  return prompter->Alert(title, PromiseFlatString(*str).get());
 }
 
 NS_IMETHODIMP
@@ -2437,13 +2426,6 @@ nsGlobalWindow::Confirm(const nsAString& aString, PRBool* aReturn)
   // about the dialog, to prevent the current state from being active
   // the whole time a modal dialog is open.
   nsAutoPopupStatePusher popupStatePusher(openAbused, PR_TRUE);
-
-  if (!DispatchCustomEvent("DOMWillOpenModalDialog")) {
-    // Someone chose to prevent the default action for this event,
-    // if so, don't show the dialog after all...
-
-    return NS_OK;
-  }
 
   *aReturn = PR_FALSE;
 
@@ -2463,12 +2445,7 @@ nsGlobalWindow::Confirm(const nsAString& aString, PRBool* aReturn)
   // pending reflows.
   EnsureReflowFlushAndPaint();
 
-  nsresult rv = prompter->Confirm(title, PromiseFlatString(aString).get(),
-                                  aReturn);
-
-  DispatchCustomEvent("DOMModalDialogClosed");
-
-  return rv;
+  return prompter->Confirm(title, PromiseFlatString(aString).get(), aReturn);
 }
 
 NS_IMETHODIMP
@@ -2485,13 +2462,6 @@ nsGlobalWindow::Prompt(const nsAString& aMessage, const nsAString& aInitial,
   // about the dialog, to prevent the current state from being active
   // the whole time a modal dialog is open.
   nsAutoPopupStatePusher popupStatePusher(openAbused, PR_TRUE);
-
-  if (!DispatchCustomEvent("DOMWillOpenModalDialog")) {
-    // Someone chose to prevent the default action for this event,
-    // if so, don't show the dialog after all...
-
-    return NS_OK;
-  }
 
   PRBool b;
   nsXPIDLString uniResult;
@@ -2515,9 +2485,6 @@ nsGlobalWindow::Prompt(const nsAString& aMessage, const nsAString& aInitial,
                                  aSavePassword,
                                  PromiseFlatString(aInitial).get(),
                                  getter_Copies(uniResult), &b);
-
-  DispatchCustomEvent("DOMModalDialogClosed");
-
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (uniResult && b) {

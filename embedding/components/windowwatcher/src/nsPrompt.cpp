@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -40,6 +40,11 @@
 #include "nsPrompt.h"
 #include "nsReadableUtils.h"
 #include "nsDependentString.h"
+#include "nsIDOMDocument.h"
+#include "nsIDOMDocumentEvent.h"
+#include "nsIDOMEventTarget.h"
+#include "nsIDOMEvent.h"
+#include "nsIPrivateDOMEvent.h"
 
 
 nsresult
@@ -84,7 +89,8 @@ NS_NewAuthPrompter(nsIAuthPrompt **result, nsIDOMWindow *aParent)
   *result = prompter;
   // wrap the base prompt in an nsIAuthPromptWrapper, if available
   // the impl used here persists prompt data and pre-fills the dialogs
-  nsCOMPtr<nsIAuthPromptWrapper> siPrompt = do_CreateInstance("@mozilla.org/wallet/single-sign-on-prompt;1");
+  nsCOMPtr<nsIAuthPromptWrapper> siPrompt =
+    do_CreateInstance("@mozilla.org/wallet/single-sign-on-prompt;1");
   if (siPrompt) {
     // then single sign-on is installed
     rv = siPrompt->SetPromptDialogs(prompter);
@@ -113,12 +119,89 @@ nsPrompt::Init()
 
 //*****************************************************************************
 // nsPrompt::nsIPrompt
-//*****************************************************************************   
+//*****************************************************************************
+
+class nsAutoDOMEventDispatcher
+{
+public:
+  nsAutoDOMEventDispatcher(nsIDOMWindow *aWindow);
+  ~nsAutoDOMEventDispatcher();
+
+  PRBool DefaultPrevented()
+  {
+    return mDefaultPrevented;
+  }
+
+protected:
+  PRBool DispatchCustomEvent(const char *aEventName);
+
+  nsIDOMWindow *mWindow;
+  PRBool mDefaultPrevented;
+};
+
+nsAutoDOMEventDispatcher::nsAutoDOMEventDispatcher(nsIDOMWindow *aWindow)
+  : mWindow(aWindow),
+    mDefaultPrevented(DispatchCustomEvent("DOMWillOpenModalDialog"))
+{
+}
+
+nsAutoDOMEventDispatcher::~nsAutoDOMEventDispatcher()
+{
+  if (!mDefaultPrevented) {
+    DispatchCustomEvent("DOMModalDialogClosed");
+  }
+}
+
+PRBool
+nsAutoDOMEventDispatcher::DispatchCustomEvent(const char *aEventName)
+{
+  if (!mWindow) {
+    return PR_FALSE;
+  }
+
+  nsCOMPtr<nsIDOMDocument> domdoc;
+  mWindow->GetDocument(getter_AddRefs(domdoc));
+
+  nsCOMPtr<nsIDOMDocumentEvent> docevent(do_QueryInterface(domdoc));
+  nsCOMPtr<nsIDOMEvent> event;
+
+  // Doesn't this seem backwards? Seems like
+  // nsEventStateManager::DispatchNewEvent() screws up on the
+  // logic for its prevent default argument...
+  PRBool preventDefault = PR_FALSE;
+
+  if (docevent) {
+    docevent->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
+
+    nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(event));
+    if (privateEvent) {
+      event->InitEvent(NS_ConvertASCIItoUTF16(aEventName), PR_TRUE, PR_TRUE);
+
+      privateEvent->SetTrusted(PR_TRUE);
+
+      nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(mWindow));
+
+      target->DispatchEvent(event, &preventDefault);
+
+      // DispatchEvent() is buggy, it returns the wrong boolean value.
+      preventDefault = !preventDefault;
+    }
+  }
+
+  return preventDefault;
+}
+
 
 NS_IMETHODIMP
 nsPrompt::Alert(const PRUnichar* dialogTitle, 
                 const PRUnichar* text)
 {
+  nsAutoDOMEventDispatcher autoDOMEventDispatcher(mParent);
+
+  if (autoDOMEventDispatcher.DefaultPrevented()) {
+    return NS_OK;
+  }
+
   return mPromptService->Alert(mParent, dialogTitle, text);
 }
 
@@ -128,7 +211,14 @@ nsPrompt::AlertCheck(const PRUnichar* dialogTitle,
                      const PRUnichar* checkMsg,
                      PRBool *checkValue)
 {
-  return mPromptService->AlertCheck(mParent, dialogTitle, text, checkMsg, checkValue);
+  nsAutoDOMEventDispatcher autoDOMEventDispatcher(mParent);
+
+  if (autoDOMEventDispatcher.DefaultPrevented()) {
+    return NS_OK;
+  }
+
+  return mPromptService->AlertCheck(mParent, dialogTitle, text, checkMsg,
+                                    checkValue);
 }
 
 NS_IMETHODIMP
@@ -136,6 +226,12 @@ nsPrompt::Confirm(const PRUnichar* dialogTitle,
                   const PRUnichar* text,
                   PRBool *_retval)
 {
+  nsAutoDOMEventDispatcher autoDOMEventDispatcher(mParent);
+
+  if (autoDOMEventDispatcher.DefaultPrevented()) {
+    return NS_OK;
+  }
+
   return mPromptService->Confirm(mParent, dialogTitle, text, _retval);
 }
 
@@ -146,7 +242,14 @@ nsPrompt::ConfirmCheck(const PRUnichar* dialogTitle,
                        PRBool *checkValue,
                        PRBool *_retval)
 {
-  return mPromptService->ConfirmCheck(mParent, dialogTitle, text, checkMsg, checkValue, _retval);
+  nsAutoDOMEventDispatcher autoDOMEventDispatcher(mParent);
+
+  if (autoDOMEventDispatcher.DefaultPrevented()) {
+    return NS_OK;
+  }
+
+  return mPromptService->ConfirmCheck(mParent, dialogTitle, text, checkMsg,
+                                      checkValue, _retval);
 }
 
 NS_IMETHODIMP
@@ -160,8 +263,14 @@ nsPrompt::ConfirmEx(const PRUnichar *dialogTitle,
                     PRBool *checkValue,
                     PRInt32 *buttonPressed)
 {
-  return mPromptService->ConfirmEx(mParent, dialogTitle, text,
-                                   buttonFlags, button0Title, button1Title, button2Title,
+  nsAutoDOMEventDispatcher autoDOMEventDispatcher(mParent);
+
+  if (autoDOMEventDispatcher.DefaultPrevented()) {
+    return NS_OK;
+  }
+
+  return mPromptService->ConfirmEx(mParent, dialogTitle, text, buttonFlags,
+                                   button0Title, button1Title, button2Title,
                                    checkMsg, checkValue, buttonPressed);
 }
 
@@ -173,8 +282,14 @@ nsPrompt::Prompt(const PRUnichar *dialogTitle,
                  PRBool *checkValue,
                  PRBool *_retval)
 {
-  return mPromptService->Prompt(mParent, dialogTitle, text, answer,
-                                checkMsg, checkValue, _retval);
+  nsAutoDOMEventDispatcher autoDOMEventDispatcher(mParent);
+
+  if (autoDOMEventDispatcher.DefaultPrevented()) {
+    return NS_OK;
+  }
+
+  return mPromptService->Prompt(mParent, dialogTitle, text, answer, checkMsg,
+                                checkValue, _retval);
 }
 
 NS_IMETHODIMP
@@ -186,8 +301,16 @@ nsPrompt::PromptUsernameAndPassword(const PRUnichar *dialogTitle,
                                     PRBool *checkValue,
                                     PRBool *_retval)
 {
-  return mPromptService->PromptUsernameAndPassword(mParent, dialogTitle, text, username, password,
-                                                   checkMsg, checkValue, _retval);
+  nsAutoDOMEventDispatcher autoDOMEventDispatcher(mParent);
+
+  if (autoDOMEventDispatcher.DefaultPrevented()) {
+    return NS_OK;
+  }
+
+  return mPromptService->PromptUsernameAndPassword(mParent, dialogTitle, text,
+                                                   username, password,
+                                                   checkMsg, checkValue,
+                                                   _retval);
 }
 
 NS_IMETHODIMP
@@ -198,6 +321,12 @@ nsPrompt::PromptPassword(const PRUnichar *dialogTitle,
                          PRBool *checkValue,
                          PRBool *_retval)
 {
+  nsAutoDOMEventDispatcher autoDOMEventDispatcher(mParent);
+
+  if (autoDOMEventDispatcher.DefaultPrevented()) {
+    return NS_OK;
+  }
+
   return mPromptService->PromptPassword(mParent, dialogTitle, text, password,
                                         checkMsg, checkValue, _retval);
 }
@@ -210,8 +339,14 @@ nsPrompt::Select(const PRUnichar *dialogTitle,
                  PRInt32 *outSelection,
                  PRBool *_retval)
 {
-  return mPromptService->Select(mParent, dialogTitle, inMsg,
-                                inCount, inList, outSelection, _retval);
+  nsAutoDOMEventDispatcher autoDOMEventDispatcher(mParent);
+
+  if (autoDOMEventDispatcher.DefaultPrevented()) {
+    return NS_OK;
+  }
+
+  return mPromptService->Select(mParent, dialogTitle, inMsg, inCount, inList,
+                                outSelection, _retval);
 }
 
 //*****************************************************************************
@@ -229,11 +364,23 @@ nsPrompt::Prompt(const PRUnichar* dialogTitle,
                  PRUnichar* *result,
                  PRBool *_retval)
 {
+  nsAutoDOMEventDispatcher autoDOMEventDispatcher(mParent);
+
+  if (autoDOMEventDispatcher.DefaultPrevented()) {
+    return NS_OK;
+  }
+
   // Ignore passwordRealm and savePassword
-  if (defaultText)
+  if (defaultText) {
     *result = ToNewUnicode(nsDependentString(defaultText));
-  return mPromptService->Prompt(mParent, dialogTitle, text,
-                                result, nsnull, nsnull, _retval);
+
+    if (!*result) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+
+  return mPromptService->Prompt(mParent, dialogTitle, text, result, nsnull,
+                                nsnull, _retval);
 }
 
 NS_IMETHODIMP
@@ -245,9 +392,16 @@ nsPrompt::PromptUsernameAndPassword(const PRUnichar* dialogTitle,
                                     PRUnichar* *pwd,
                                     PRBool *_retval)
 {
+  nsAutoDOMEventDispatcher autoDOMEventDispatcher(mParent);
+
+  if (autoDOMEventDispatcher.DefaultPrevented()) {
+    return NS_OK;
+  }
+
   // Ignore passwordRealm and savePassword
   return mPromptService->PromptUsernameAndPassword(mParent, dialogTitle, text,
-                                                   user, pwd, nsnull, nsnull, _retval);
+                                                   user, pwd, nsnull, nsnull,
+                                                   _retval);
 }
 
 NS_IMETHODIMP
@@ -258,7 +412,13 @@ nsPrompt::PromptPassword(const PRUnichar* dialogTitle,
                          PRUnichar* *pwd,
                          PRBool *_retval)
 {
+  nsAutoDOMEventDispatcher autoDOMEventDispatcher(mParent);
+
+  if (autoDOMEventDispatcher.DefaultPrevented()) {
+    return NS_OK;
+  }
+
   // Ignore passwordRealm and savePassword
-  return mPromptService->PromptPassword(mParent, dialogTitle, text,
-                                        pwd, nsnull, nsnull, _retval);
+  return mPromptService->PromptPassword(mParent, dialogTitle, text, pwd,
+                                        nsnull, nsnull, _retval);
 }
