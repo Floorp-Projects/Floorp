@@ -490,15 +490,26 @@ HandlePluginEvent(nsGUIEvent *aEvent)
   if (aEvent == nsnull || aEvent->widget == nsnull)   //null pointer check
     return nsEventStatus_eIgnore;
 
+#ifdef XP_WIN
+  // on Windows, the mouse click is converted to an NS_PLUGIN_ACTIVATE
   if( aEvent->message == NS_PLUGIN_ACTIVATE)  
     (nsIWidget*)(aEvent->widget)->SetFocus();  // send focus to child window
-
-#ifdef XP_MAC   // on Mac, we store a pointer to this class as native data in the widget
-  PluginViewerImpl * pluginViewer;
-  (nsIWidget*)(aEvent->widget)->GetClientData((PluginViewerImpl *)pluginViewer);
-  if (pluginViewer != nsnull && pluginViewer->mOwner != nsnull)
-    return pluginViewer->mOwner->ProcessEvent(*aEvent);
-#endif
+#else
+  // the Mac, and presumably others, send NS_MOUSE_ACTIVATE
+  if (aEvent->message == NS_MOUSE_ACTIVATE) {
+    (nsIWidget*)(aEvent->widget)->SetFocus();  // send focus to child window
+#ifdef XP_MAC
+  // furthermore on the Mac nsMacEventHandler sends the NS_PLUGIN_ACTIVATE
+  // followed by the mouse down event, so we need to handle this
+  } else {
+    // on Mac, we store a pointer to this class as native data in the widget
+    PluginViewerImpl * pluginViewer;
+    (nsIWidget*)(aEvent->widget)->GetClientData((PluginViewerImpl *)pluginViewer);
+    if (pluginViewer != nsnull && pluginViewer->mOwner != nsnull)
+      return pluginViewer->mOwner->ProcessEvent(*aEvent);
+#endif // XP_MAC
+  }
+#endif // else XP_WIN
   return nsEventStatus_eIgnore;
 }
 
