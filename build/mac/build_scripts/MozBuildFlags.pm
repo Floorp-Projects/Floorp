@@ -344,6 +344,7 @@ sub SetupBuildParams($$$$$$$)
   ReadBuildProgress(\@build_flags);
   
   PropagateAllFlags(\@build_flags);
+  PropagateAllFlags(\@pull_flags);
   
   SetPullFlags($pull);
   SetBuildFlags($build);

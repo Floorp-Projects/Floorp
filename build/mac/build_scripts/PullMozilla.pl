@@ -26,9 +26,7 @@
 #
 
 use Cwd;
-
-use Moz;
-use MozillaBuildList;
+use MozillaBuildCore;
 
 #-----------------------------------------------
 # hashes to hold build options
@@ -48,4 +46,4 @@ $MOZ_SRC = cwd();
 my($do_checkout)    = 1;
 my($do_build)       = 0;
 
-RunBuild($do_checkout, $do_build, "MozillaBuildFlags.txt", "Pull prefs");
+RunBuild($do_checkout, $do_build, "MozillaBuildFlags.txt", "Mozilla Pull prefs");

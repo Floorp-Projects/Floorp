@@ -47,7 +47,7 @@ mailextras      1
 xptlink         0
 
 filepath_flags
-idepath             ":Build IDE Path.txt"
-sessionpath         ":Build session path.txt"
+idepath             ":CodeWarrior IDE Path.txt"
+sessionpath         ":Mozilla session path.txt"
 buildlogfilepath    ":Build Logs:Mozilla build log.txt"
 scriptlogfilepath   ":Build Logs:Mozilla script log.txt"

@@ -21,7 +21,9 @@ use Moz;
 use vars qw(@ISA @EXPORT);
 
 @ISA      = qw(Exporter);
-@EXPORT   = qw(GetBinDirectory
+@EXPORT   = qw(StartBuildModule
+               EndBuildModule
+               GetBinDirectory
                BuildOneProject
                BuildIDLProject
                BuildFolderResourceAliases
@@ -30,8 +32,30 @@ use vars qw(@ISA @EXPORT);
                EmptyTree
                SetupBuildLog
                SetBuildNumber
-               SetTimeBomb);
+               SetTimeBomb
+               CheckOutModule);
 
+
+#//--------------------------------------------------------------------------------------------------
+#// StartBuildModule
+#//--------------------------------------------------------------------------------------------------
+sub StartBuildModule($)
+{
+    my($module) = @_;
+
+    print("---- Start of $module ----\n");
+}
+
+
+#//--------------------------------------------------------------------------------------------------
+#// EndBuildModule
+#//--------------------------------------------------------------------------------------------------
+sub EndBuildModule($)
+{
+    my($module) = @_;
+    WriteBuildProgress($module);
+    print("---- End of $module ----\n");
+}
 
 #--------------------------------------------------------------------------------------------------
 # GetBinDirectory
@@ -194,7 +218,7 @@ sub DelayFor($)
   
   my($end_time) = time() + $delay_secs;
     
-  my($last_time);
+  my($last_time) = 0;
   my($cur_time) = time();
   
   while ($cur_time < $end_time)
@@ -315,7 +339,6 @@ sub SetupBuildLog($$)
         $logdir = $1;
         $logfile = $2;
         
-        print "got log file settings '$logdir' '$logfile'\n";
         mkpath($logdir);
     }
     
@@ -369,6 +392,27 @@ sub SetTimeBomb($$)
   system("perl :mozilla:config:mac-set-timebomb.pl $warn_days $bomb_days");
 }
 
+
+
+#//--------------------------------------------------------------------------------------------------
+#// CheckOutModule. Takes variable number of args; first two are required
+#//--------------------------------------------------------------------------------------------------
+sub CheckOutModule
+{
+	my($session, $module, $revision, $date) = @_;
+
+    my($result) = $session->checkout($module, $revision, $date);
+    
+    # result of 1 is success
+    if ($result) { return; }
+    
+    my($checkout_err) = $session->getLastError();
+    if ($checkout_err == 708) {
+        die "Checkout was cancelled";
+    } elsif ($checkout_err == 711) {
+        print "Checkout of '$module' failed\n";
+    }
+}
 
 1;
 

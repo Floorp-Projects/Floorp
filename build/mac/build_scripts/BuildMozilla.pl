@@ -26,9 +26,7 @@
 #
 
 use Cwd;
-
-use Moz;
-use MozillaBuildList;
+use MozillaBuildCore;
 
 #-------------------------------------------------------------
 # Where have the build options gone?
@@ -78,6 +76,8 @@ $CLOBBER_LIBS           = 1;    # turn on to clobber existing libs and .xSYM fil
 $CLOBBER_DIST_ALL       = 1;    # turn on to clobber all aliases/files inside dist (headers/xsym/libs)
 $CLOBBER_DIST_LIBS      = 0;    # turn on to clobber only aliases/files for libraries/sym files in dist
 $CLOBBER_IDL_PROJECTS   = 0;    # turn on to clobber all IDL projects.
+
+$UNIVERSAL_INTERFACES_VERSION = 0x0320;
 
 #-------------------------------------------------------------
 # configuration variables that are preferences for the build,
