@@ -63,7 +63,7 @@ acronym {
 }
 
 address {
-  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  min-height: 44px; margin-left: 2px; margin-top: 2px;
   padding-left: 17px; 
   background-image: url(chrome://editor/content/images/tag-adr.gif);
   background-repeat: no-repeat; 
@@ -119,7 +119,7 @@ big {
 }
 
 blockquote {
-  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  min-height: 44px; margin-left: 2px; margin-top: 2px;
   padding-left: 17px; 
   background-image: url(chrome://editor/content/images/tag-blq.gif);
   background-repeat: no-repeat; 
@@ -127,7 +127,7 @@ blockquote {
 }
 
 body {
-  min-height: 35px; margin-left: 2px;
+  min-height: 36px; margin-left: 2px;
   padding-left: 17px; 
   background-image: url(chrome://editor/content/images/tag-body.gif);
   background-repeat: no-repeat; 
@@ -159,7 +159,7 @@ caption {
 }
 
 center {
-  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  min-height: 44px; margin-left: 2px; margin-top: 2px;
   padding-left: 17px; 
   background-image: url(chrome://editor/content/images/tag-ctr.gif);
   background-repeat: no-repeat; 
@@ -231,7 +231,7 @@ dir {
 }
 
 div {
-  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  min-height: 24px; margin-left: 2px; margin-top: 2px;
   /* TEMPORARY TO COMPENSATE FOR BUG */
   padding-left: 17px; 
   background-image: url(chrome://editor/content/images/tag-div.gif);
@@ -240,7 +240,7 @@ div {
 }
 
 dl {
-  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  min-height: 20px; margin-left: 2px; margin-top: 2px;
   padding-left: 17px; 
   background-image: url(chrome://editor/content/images/tag-dl.gif);
   background-repeat: no-repeat; 
@@ -264,7 +264,7 @@ em {
 }
 
 fieldset {
-  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  min-height: 44px; margin-left: 2px; margin-top: 2px;
   padding-left: 17px; 
   background-image: url(chrome://editor/content/images/tag-fld.gif);
   background-repeat: no-repeat; 
@@ -280,7 +280,7 @@ font {
 }
 
 form {
-  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  min-height: 36px; margin-left: 2px; margin-top: 2px;
   padding-left: 17px; 
   background-image: url(chrome://editor/content/images/tag-for.gif);
   background-repeat: no-repeat; 
@@ -288,7 +288,7 @@ form {
 }
 
 frame {
-  min-height: 35px; margin-left: 2px;
+  min-height: 40px; margin-left: 2px;
   padding-left: 17px; 
   background-image: url(chrome://editor/content/images/tag-frm.gif);
   background-repeat: no-repeat; 
@@ -296,7 +296,7 @@ frame {
 }
 
 frameset {
-  min-height: 35px; margin-left: 2px;
+  min-height: 44px; margin-left: 2px;
   padding-left: 17px; 
   background-image: url(chrome://editor/content/images/tag-fst.gif);
   background-repeat: no-repeat; 
@@ -304,7 +304,7 @@ frameset {
 }
 
 h1 {
-  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  min-height: 20px; margin-left: 2px; margin-top: 2px;
   padding-left: 17px; 
   background-image: url(chrome://editor/content/images/tag-h1.gif);
   background-repeat: no-repeat; 
@@ -312,7 +312,7 @@ h1 {
 }
 
 h2 {
-  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  min-height: 20px; margin-left: 2px; margin-top: 2px;
   padding-left: 17px; 
   background-image: url(chrome://editor/content/images/tag-h2.gif);
   background-repeat: no-repeat; 
@@ -320,7 +320,7 @@ h2 {
 }
 
 h3 {
-  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  min-height: 20px; margin-left: 2px; margin-top: 2px;
   padding-left: 17px; 
   background-image: url(chrome://editor/content/images/tag-h3.gif);
   background-repeat: no-repeat; 
@@ -328,7 +328,7 @@ h3 {
 }
 
 h4 {
-  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  min-height: 20px; margin-left: 2px; margin-top: 2px;
   padding-left: 17px; 
   background-image: url(chrome://editor/content/images/tag-h4.gif);
   background-repeat: no-repeat; 
@@ -336,7 +336,7 @@ h4 {
 }
 
 h5 {
-  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  min-height: 20px; margin-left: 2px; margin-top: 2px;
   padding-left: 17px; 
   background-image: url(chrome://editor/content/images/tag-h5.gif);
   background-repeat: no-repeat; 
@@ -344,7 +344,7 @@ h5 {
 }
 
 h6 {
-  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  min-height: 20px; margin-left: 2px; margin-top: 2px;
   padding-left: 17px; 
   background-image: url(chrome://editor/content/images/tag-h6.gif);
   background-repeat: no-repeat; 
@@ -352,7 +352,7 @@ h6 {
 }
 
 hr {
-  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  min-height: 20px; margin-left: 2px; margin-top: 2px;
   padding-left: 17px; 
   background-image: url(chrome://editor/content/images/tag-hr.gif);
   background-repeat: no-repeat; 
@@ -400,7 +400,7 @@ ins {
 }
 
 isindex {
-  min-height: 35px; margin-left: 2px;
+  min-height: 40px; margin-left: 2px;
   padding-left: 17px; 
   background-image: url(chrome://editor/content/images/tag-isx.gif);
   background-repeat: no-repeat; 
@@ -464,7 +464,7 @@ menu {
 }
 
 noframes {
-  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  min-height: 44px; margin-left: 2px; margin-top: 2px;
   padding-left: 17px; 
   background-image: url(chrome://editor/content/images/tag-nfr.gif);
   background-repeat: no-repeat; 
@@ -472,7 +472,7 @@ noframes {
 }
 
 noscript {
-  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  min-height: 44px; margin-left: 2px; margin-top: 2px;
   padding-left: 17px; 
   background-image: url(chrome://editor/content/images/tag-nsc.gif);
   background-repeat: no-repeat; 
@@ -488,7 +488,7 @@ object {
 }
 
 ol {
-  min-height: 35px; margin-left: 2px;
+  min-height: 38px; margin-left: 2px;
   padding-left: 17px; 
   background-image: url(chrome://editor/content/images/tag-ol.gif);
   background-repeat: no-repeat; 
@@ -512,7 +512,7 @@ option {
 }
 
 p {
-  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  min-height: 38px; margin-left: 2px; margin-top: 2px;
   padding-left: 17px; 
   background-image: url(chrome://editor/content/images/tag-p.gif);
   background-repeat: no-repeat; 
@@ -536,7 +536,7 @@ plaintext {
 }
 
 pre {
-  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  min-height: 24px; margin-left: 2px; margin-top: 2px;
   padding-left: 17px; 
   background-image: url(chrome://editor/content/images/tag-pre.gif);
   background-repeat: no-repeat; 
@@ -637,7 +637,7 @@ sup {
 */
 
 table {
-  min-height: 35px; margin-left: 2px;
+  min-height: 40px; margin-left: 2px;
   padding-left: 17px; 
   background-image: url(chrome://editor/content/images/tag-tbl.gif);
   background-repeat: no-repeat; 
@@ -694,8 +694,8 @@ thead {
 }
 
 tr {
-  min-height: 35px; margin-left: 2px;
-  padding-left: 23px; 
+  min-height: 22px; margin-left: 2px;
+  padding-left: 17px; 
   background-image: url(chrome://editor/content/images/tag-tr.gif);
   background-repeat: no-repeat; 
   background-position: top left;
@@ -718,7 +718,7 @@ u {
 }
 
 ul {
-  min-height: 35px; margin-left: 2px;
+  min-height: 20px; margin-left: 2px;
   padding-left: 17px; 
   background-image: url(chrome://editor/content/images/tag-ul.gif);
   background-repeat: no-repeat; 
@@ -747,7 +747,7 @@ xmp {
    for some other purpose than the "All Tags" editor mode
 
 html {
-  min-height: 35px; margin-left: 2px;
+  min-height: 36px; margin-left: 2px;
   padding-left: 17px; 
   background-image: url(chrome://editor/content/images/tag-html.gif);
   background-repeat: no-repeat; 
@@ -755,7 +755,7 @@ html {
 }
 
 head {
-  min-height: 35px; margin-left: 2px;
+  min-height: 36px; margin-left: 2px;
   padding-left: 17px; 
   background-image: url(chrome://editor/content/images/tag-hed.gif);
   background-repeat: no-repeat; 
@@ -765,7 +765,7 @@ head {
 These are tags that are ONLY allowed as children of HEAD:
 
 title {
-  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  min-height: 40px; margin-left: 2px; margin-top: 2px;
   padding-left: 17px; 
   background-image: url(chrome://editor/content/images/tag-ttl.gif);
   background-repeat: no-repeat; 
@@ -773,7 +773,7 @@ title {
 }
 
 base {
-  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  min-height: 36px; margin-left: 2px; margin-top: 2px;
   padding-left: 17px; 
   background-image: url(chrome://editor/content/images/tag-bas.gif);
   background-repeat: no-repeat; 
@@ -781,7 +781,7 @@ base {
 }
 
 style {
-  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  min-height: 40px; margin-left: 2px; margin-top: 2px;
   padding-left: 17px; 
   background-image: url(chrome://editor/content/images/tag-stl.gif);
   background-repeat: no-repeat; 
@@ -789,7 +789,7 @@ style {
 }
 
 meta {
-  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  min-height: 36px; margin-left: 2px; margin-top: 2px;
   padding-left: 17px; 
   background-image: url(chrome://editor/content/images/tag-met.gif);
   background-repeat: no-repeat; 
@@ -797,7 +797,7 @@ meta {
 }
 
 link {
-  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  min-height: 30px; margin-left: 2px; margin-top: 2px;
   padding-left: 17px; 
   background-image: url(chrome://editor/content/images/tag-lnk.gif);
   background-repeat: no-repeat; 
