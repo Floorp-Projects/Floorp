@@ -54,12 +54,7 @@
       <caption label="&publishSites.label;"/>
       <!-- XXX: If tree isn't wrapped in vbox, it appears BELOW next vbox -->
       <vbox flex="1">
-        <tree rows="4" class="list" id="SiteList" flex="1"  onselect="SelectSiteList();">
-          <treecolgroup>
-            <treecol/>
-            <treecol flex="1"/>
-          </treecolgroup>
-        </tree>
+        <listbox rows="4" id="SiteList" flex="1"  onselect="SelectSiteList();"/>
       </vbox>
       <hbox pack="center">
         <vbox>

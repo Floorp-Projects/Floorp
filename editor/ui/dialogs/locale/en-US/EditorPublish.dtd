@@ -32,7 +32,7 @@
 <!ENTITY siteList.label           "Site Name:">
 <!ENTITY newSiteButton.label      "New Site">
 <!ENTITY siteDirList.label        "Select or type a directory name in your publishing site:">
-<!ENTITY docDirList.label         "Directory for HTML page:">
+<!ENTITY docDirList.label         "Directory for web page:">
 <!ENTITY otherDirList.label       "Save images and other files to this directory:">
 <!ENTITY chooseDirButton.label    "Choose...">
 <!ENTITY pageTitle.label          "Page Title:">

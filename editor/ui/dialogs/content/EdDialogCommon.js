@@ -332,6 +332,16 @@ function ClearMenulist(menulist)
   }
 }
 
+function ClearListbox(listbox)
+{
+  if (listbox)
+  {
+    listbox.clearSelection();
+    while (listbox.firstChild)
+      listbox.removeChild(listbox.firstChild);
+  }
+}
+
 /* These help using a <tree> for simple lists
   Assumes this simple structure:
   <tree>

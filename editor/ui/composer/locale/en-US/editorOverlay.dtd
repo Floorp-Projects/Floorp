@@ -47,11 +47,13 @@
 <!ENTITY filesave.keybinding "s">
 <!ENTITY saveAsCmd.label "Save As...">
 <!ENTITY filesaveas.accesskey "A">
-<!ENTITY publish.label "Publish">
+
+<!ENTITY publishCmd.label "Publish">
+<!ENTITY publishcmd.accesskey "u">
+<!ENTITY publishMenu.label "Publish to">
 <!ENTITY publishmenu.accesskey "b">
-<!ENTITY publishcmd.accesskey "P">
 <!ENTITY publishAsCmd.label "Publish As...">
-<!ENTITY publishas.accesskey "i">
+<!ENTITY publishas.accesskey "P">
 <!ENTITY exportToTextCmd.label "Export to Text...">
 <!ENTITY fileexporttotext.accesskey "T">
 <!ENTITY saveAsCharsetCmd.label "Save As Charset...">
@@ -595,7 +597,8 @@
 <!ENTITY newToolbarCmd.tooltip "Create a new Composer page">
 <!ENTITY openToolbarCmd.label "Open">
 <!ENTITY openToolbarCmd.tooltip "Open a local file">
-<!ENTITY saveToolbarCmd.tooltip "Save file locally">
+<!ENTITY saveToolbarCmd.tooltip "Save file to a local location">
+<!ENTITY publishToolbarCmd.tooltip "Upload file to a remote location">
 <!ENTITY previewToolbarCmd.label "Browse">
 <!ENTITY previewToolbarCmd.tooltip "Load this page into Navigator">
 <!ENTITY printToolbarCmd.label "Print">
