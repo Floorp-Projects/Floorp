@@ -2576,10 +2576,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
     mCopyState->m_fromLineSeen = PR_FALSE;
     // flush the copied message.
     if (mCopyState->m_fileStream)
-    {
-      rv = mCopyState->m_fileStream->flush();
-      NS_ENSURE_SUCCESS(rv,rv);
-    }
+       mCopyState->m_fileStream->seek(PR_SEEK_CUR, 0); // seeking causes a flush, w/o syncing
   }
   //Copy the header to the new database
   if(copySucceeded && mCopyState->m_message)
