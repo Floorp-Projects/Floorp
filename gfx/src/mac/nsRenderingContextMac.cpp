@@ -35,6 +35,7 @@ DrawString();  DrawText for cstrings
 #include <QDOffscreen.h>
 #include "nsRegionMac.h"
 #include "nsGfxCIID.h"
+#include <Fonts.h>
 
 //#define NO_CLIP
 
@@ -91,7 +92,7 @@ nsRenderingContextMac :: nsRenderingContextMac()
 {
   NS_INIT_REFCNT();
 
-  //mFontCache = nsnull ;
+  mFontCache = nsnull ;
   mFontMetrics = nsnull ;
   mContext = nsnull ;
   mRenderingSurface = nsnull ;        
@@ -431,10 +432,10 @@ RgnHandle		mregion;
   
   
   mregion = pRegion->GetRegion();
-  mrect = (**mClipRegion).rgnBBox;
+  mrect = (**mregion).rgnBBox;
   
   rect.x = mrect.left;
-  rect.y = mrect.right;
+  rect.y = mrect.top;
   rect.width = mrect.right-mrect.left;
   rect.height = mrect.bottom-mrect.top;
 
@@ -513,6 +514,20 @@ void nsRenderingContextMac :: SetFont(const nsFont& aFont)
 //	             mRenderingSurface->gc);
   }
 */
+	//NS_IF_RELEASE(mFontMetrics);
+	//mFontCache->GetMetricsFor(aFont, mFontMetrics);
+
+	//if (mFontMetrics)
+	{
+		nsString nstr(aFont.name);
+		nstr.Truncate(254);
+		Str255 aStr;
+		aStr[0] = nstr.Length();
+		nstr.ToCString((char*)&aStr[1], 254);
+		short fnum;
+		::GetFNum(aStr, &fnum);
+		::TextFont(fnum);
+	}
 }
 
 //------------------------------------------------------------------------
@@ -590,6 +605,9 @@ GWorldPtr	theoff;
 	
   if (mRenderingSurface == (GrafPtr)theoff)
     mRenderingSurface = nsnull;
+
+  DisposeRgn(mMainRegion);
+  mMainRegion = nsnull;
 }
 
 //------------------------------------------------------------------------
@@ -661,7 +679,7 @@ Rect		therect;
 
 	::SetPort(mRenderingSurface);
 	::SetClip(mMainRegion);
-	::SetRect(&therect,aX,aY,aX+aWidth,aY+aHeight);
+	::SetRect(&therect,x,y,x+w,y+h);
 	::PaintRect(&therect);
   
 }
