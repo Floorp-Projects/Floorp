@@ -2830,6 +2830,8 @@ nsEditor::JoinNodesImpl(nsIDOMNode * aNodeToKeep,
         // and adjust the selection if needed
         // HACK: this is overly simplified - multi-range selections need more work than this
         PRBool bNeedToAdjust = PR_FALSE;
+        
+        // check to see if we joined nodes where selection starts
         if (selStartNode.get() == aNodeToJoin)
         {
           bNeedToAdjust = PR_TRUE;
@@ -2844,12 +2846,8 @@ nsEditor::JoinNodesImpl(nsIDOMNode * aNodeToKeep,
           bNeedToAdjust = PR_TRUE;
           selStartOffset += firstNodeLength;
         }
-        
-        if (bNeedToAdjust)
-          selection->Collapse(selStartNode,selStartOffset);
-
-        bNeedToAdjust = PR_FALSE;
-        
+                
+        // check to see if we joined nodes where selection ends
         if (selEndNode.get() == aNodeToJoin)
         {
           bNeedToAdjust = PR_TRUE;
@@ -2865,8 +2863,12 @@ nsEditor::JoinNodesImpl(nsIDOMNode * aNodeToKeep,
           selEndOffset += firstNodeLength;
         }
         
+        // adjust selection if needed
         if (bNeedToAdjust)
-          selection->Extend(selEndNode,selEndOffset);
+        {
+          selection->Collapse(selStartNode,selStartOffset);
+          selection->Extend(selEndNode,selEndOffset);          
+        }
       }
     }
   }
