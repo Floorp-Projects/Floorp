@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -37,36 +37,22 @@
 
 #ifndef __nsLookAndFeel
 #define __nsLookAndFeel
-#include "nsILookAndFeel.h"
+#include "nsXPLookAndFeel.h"
 #include "nsCOMPtr.h"
 #include <gtk/gtk.h>
 
-class nsLookAndFeel: public nsILookAndFeel {
-  NS_DECL_ISUPPORTS
-
+class nsLookAndFeel: public nsXPLookAndFeel {
 public:
   nsLookAndFeel();
   virtual ~nsLookAndFeel();
-
-  NS_IMETHOD GetColor(const nsColorID aID, nscolor &aColor);
+  
+  nsresult NativeGetColor(const nsColorID aID, nscolor &aColor);
   NS_IMETHOD GetMetric(const nsMetricID aID, PRInt32 & aMetric);
   NS_IMETHOD GetMetric(const nsMetricFloatID aID, float & aMetric);
-
-#ifdef NS_DEBUG
-  // This method returns the actual (or nearest estimate) 
-  // of the Navigator size for a given form control for a given font
-  // and font size. This is used in NavQuirks mode to see how closely
-  // we match its size
-  NS_IMETHOD GetNavSize(const nsMetricNavWidgetID aWidgetID,
-                        const nsMetricNavFontID   aFontID, 
-                        const PRInt32             aFontSize, 
-                        nsSize &aSize);
-#endif
 
 protected:
   GtkStyle *mStyle;
   GtkWidget *mWidget;
-  nsCOMPtr<nsILookAndFeel> mXPLookAndFeel;
 
   // Cached colors, we have to create a dummy widget to actually
   // get the style

@@ -40,34 +40,19 @@
 #include "nsFont.h"
 #include "nsPhWidgetLog.h"
 
-#include "nsXPLookAndFeel.h"
-
-NS_IMPL_ISUPPORTS1(nsLookAndFeel, nsILookAndFeel)
-
 #define PH_TO_NS_RGB(ns) (ns & 0xff) << 16 | (ns & 0xff00) | ((ns >> 16) & 0xff) 
 
-nsLookAndFeel::nsLookAndFeel() : nsILookAndFeel()
+nsLookAndFeel::nsLookAndFeel() : nsXPLookAndFeel()
 {
-  NS_INIT_REFCNT();
-
-  (void)NS_NewXPLookAndFeel(getter_AddRefs(mXPLookAndFeel));
 }
 
 nsLookAndFeel::~nsLookAndFeel()
 {
 }
 
-NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
+nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
 {
   nsresult res = NS_OK;
-
-  if (mXPLookAndFeel)
-  {
-    res = mXPLookAndFeel->GetColor(aID, aColor);
-    if (NS_SUCCEEDED(res))
-      return res;
-    res = NS_OK;
-  }
 
   /*
    * There used to be an entirely separate list of these colors in
@@ -237,15 +222,10 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
   
 NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
 {
-  nsresult res = NS_OK;
-
-  if (mXPLookAndFeel)
-  {
-    res = mXPLookAndFeel->GetMetric(aID, aMetric);
-    if (NS_SUCCEEDED(res))
+  nsresult res = nsXPLookAndFeel::GetMetric(aID, aMetric);
+  if (NS_SUCCEEDED(res))
       return res;
-    res = NS_OK;
-  }
+  res = NS_OK;
 
   /*
    * There used to be an entirely separate list of these metrics in
@@ -334,15 +314,10 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
 
 NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricFloatID aID, float & aMetric)
 {
-  nsresult res = NS_OK;
-
-  if (mXPLookAndFeel)
-  {
-    res = mXPLookAndFeel->GetMetric(aID, aMetric);
-    if (NS_SUCCEEDED(res))
+  nsresult res = nsXPLookAndFeel::GetMetric(aID, aMetric);
+  if (NS_SUCCEEDED(res))
       return res;
-    res = NS_OK;
-  }
+  res = NS_OK;
 
   switch (aID) {
   case eMetricFloat_TextFieldVerticalInsidePadding:
@@ -376,24 +351,3 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricFloatID aID, float & aMetri
  
   return res;
 }
-
-#ifdef NS_DEBUG
-#include "nsSize.h"
-
-NS_IMETHODIMP nsLookAndFeel::GetNavSize(const nsMetricNavWidgetID aWidgetID,
-                                        const nsMetricNavFontID   aFontID, 
-                                        const PRInt32             aFontSize, 
-                                        nsSize &aSize)
-{
-  if (mXPLookAndFeel)
-  {
-    nsresult rv = mXPLookAndFeel->GetNavSize(aWidgetID, aFontID, aFontSize, aSize);
-    if (NS_SUCCEEDED(rv))
-      return rv;
-  }
-
-  aSize.width  = 0;
-  aSize.height = 0;
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-#endif
