@@ -5241,7 +5241,14 @@ nsTextFrame::Reflow(nsIPresContext*          aPresContext,
   
   // Measure the text
   // MeasureText may set TEXT_TRIMMED_WS flag, so don't clear after the call
-  aStatus = MeasureText(aPresContext, aReflowState, tx, lb, ts, textData);
+  if (ts.mFont->mSize)
+    aStatus = MeasureText(aPresContext, aReflowState, tx, lb, ts, textData);
+  else {
+    textData.mX = 0;
+    textData.mAscent = 0;
+    textData.mDescent = 0;
+    aStatus = NS_FRAME_COMPLETE;
+  }
   if (textData.mTrailingSpaceTrimmed)
     mState |= TEXT_TRIMMED_WS;
   else
