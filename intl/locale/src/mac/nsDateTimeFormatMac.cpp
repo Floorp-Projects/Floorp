@@ -302,11 +302,10 @@ nsresult nsDateTimeFormatMac::Initialize(nsILocale* locale)
 
     nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &res);
     if (NS_SUCCEEDED(res)) {
-      PRUnichar* mappedCharset = NULL;
-      res = platformCharset->GetDefaultCharsetForLocale(mLocale.get(), &mappedCharset);
-      if (NS_SUCCEEDED(res) && mappedCharset) {
-        mCharset.AssignWithConversion(mappedCharset);
-        nsMemory::Free(mappedCharset);
+      nsCAutoString  mappedCharset;
+      res = platformCharset->GetDefaultCharsetForLocale(mLocale.get(), mappedCharset);
+      if (NS_SUCCEEDED(res)) {
+        mCharset = mappedCharset;
       }
       
       // get a system charset (used when getting date/time strings as default)

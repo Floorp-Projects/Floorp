@@ -124,6 +124,7 @@ nsPlatformCharset::ConvertLocaleToCharsetUsingDeprecatedConfig(nsAutoString& loc
    }
    NS_ASSERTION(0, "unable to convert locale to charset using deprecated config");
    mCharset.Assign(NS_LITERAL_CSTRING("ISO-8859-1"));
+   oResult.Assign(NS_LITERAL_STRING("ISO-8859-1"));
    return NS_SUCCESS_USING_FALLBACK_LOCALE;
 }
 
@@ -152,7 +153,7 @@ nsPlatformCharset::GetCharset(nsPlatformCharsetSel selector, nsACString& oResult
 }
 
 NS_IMETHODIMP 
-nsPlatformCharset::GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUnichar** _retValue)
+nsPlatformCharset::GetDefaultCharsetForLocale(const PRUnichar* localeName, nsACString &oResult)
 {
   nsAutoString localeNameAsString(localeName);
 
@@ -163,7 +164,7 @@ nsPlatformCharset::GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUni
   if (mLocale.Equals(localeNameAsString) ||
     // support the 4.x behavior
     (mLocale.EqualsIgnoreCase("en_US") && localeNameAsString.EqualsIgnoreCase("C"))) {
-    *_retValue = ToNewUnicode(mCharset);
+    oResult = mCharset;
     return NS_OK;
   }
 
@@ -176,8 +177,12 @@ nsPlatformCharset::GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUni
   //     http://oss.software.ibm.com/icu/
   // 
   NS_ASSERTION(0, "GetDefaultCharsetForLocale: need to add multi locale support");
+#ifdef DEBUG_jungshik
+  printf("localeName=%s mCharset=%s\n", NS_ConvertUCS2toUTF8(localeName).get(),
+         mCharset.get());
+#endif
   // until we add multi locale support: use the the charset of the user's locale
-  *_retValue = ToNewUnicode(mCharset);
+  oResult = mCharset;
   return NS_SUCCESS_USING_FALLBACK_LOCALE;
 #endif
 
@@ -186,16 +191,15 @@ nsPlatformCharset::GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUni
   // using the deprecated locale to charset mapping 
   //
   nsAutoString localeStr(localeName);
-  nsString charset;
+  nsAutoString charset;
   nsresult res = ConvertLocaleToCharsetUsingDeprecatedConfig(localeStr, charset);
   if (NS_SUCCEEDED(res)) {
-    *_retValue = ToNewUnicode(charset);
+    LossyCopyUTF16toASCII(charset, oResult); // charset name is always ASCII.
     return res; // succeeded
   }
 
   NS_ASSERTION(0, "unable to convert locale to charset using deprecated config");
-  charset.Assign(NS_LITERAL_STRING("ISO-8859-1"));
-  *_retValue = ToNewUnicode(charset);
+  oResult.Assign(NS_LITERAL_CSTRING("ISO-8859-1"));
   return NS_SUCCESS_USING_FALLBACK_LOCALE;
 }
 

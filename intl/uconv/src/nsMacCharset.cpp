@@ -153,25 +153,25 @@ nsPlatformCharset::GetCharset(nsPlatformCharsetSel selector, nsACString& oResult
 }
 
 NS_IMETHODIMP 
-nsPlatformCharset::GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUnichar** _retValue)
+nsPlatformCharset::GetDefaultCharsetForLocale(const PRUnichar* localeName, nsACString &oResult)
 {
-  nsCOMPtr<nsIMacLocale>	pMacLocale;
-  nsAutoString localeAsString(localeName);
-  nsCAutoString charset(NS_LITERAL_CSTRING("x-mac-roman"));
-  short script, language, region;
-	
   nsresult rv;
+  nsCOMPtr<nsIMacLocale> pMacLocale;
   pMacLocale = do_CreateInstance(NS_MACLOCALE_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv)) {
+    nsAutoString localeAsString(localeName);
+    short script, language, region;
     rv = pMacLocale->GetPlatformLocale(&localeAsString, &script, &language, &region);
     if (NS_SUCCEEDED(rv)) {
-      rv = MapToCharset(script, region, charset);
+      if (NS_SUCCEEDED(MapToCharset(script, region, oResult))) {
+        return NS_OK;
+      }
     }
   }
-  *_retValue = ToNewUnicode(charset);
-  NS_ENSURE_TRUE(*_retValue, NS_ERROR_OUT_OF_MEMORY);
-  
-  return rv;
+
+  // fallback 
+  oResult.Assign(NS_LITERAL_CSTRING("x-mac-roman"));
+  retrun NS_SUCCESS_USING_FALLBACK_LOCALE;
 }
 
 NS_IMETHODIMP 

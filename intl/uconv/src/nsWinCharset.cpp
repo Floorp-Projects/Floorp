@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -132,34 +132,32 @@ nsPlatformCharset::GetCharset(nsPlatformCharsetSel selector,
 }
 
 NS_IMETHODIMP
-nsPlatformCharset::GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUnichar** _retValue)
+nsPlatformCharset::GetDefaultCharsetForLocale(const PRUnichar* localeName, nsACString& oResult)
 {
   nsCOMPtr<nsIWin32Locale>	winLocale;
   LCID						localeAsLCID;
   char						acp_name[6];
-  nsCAutoString    charset;
   nsAutoString    localeAsNSString(localeName);
 
   //
   // convert locale name to a code page (through the LCID)
   //
-  nsresult result;
-  winLocale = do_CreateInstance(NS_WIN32LOCALE_CONTRACTID, &result);
-  result = winLocale->GetPlatformLocale(&localeAsNSString,&localeAsLCID);
+  nsresult rv;
+  oResult.Truncate();
 
-  if (NS_FAILED(result)) { *_retValue = ToNewUnicode(charset); return result; }
+  winLocale = do_CreateInstance(NS_WIN32LOCALE_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) { return rv; }
 
-  if (GetLocaleInfo(localeAsLCID,LOCALE_IDEFAULTANSICODEPAGE,acp_name,sizeof(acp_name))==0) { 
-    *_retValue = ToNewUnicode(charset); 
+  rv = winLocale->GetPlatformLocale(&localeAsNSString, &localeAsLCID);
+  if (NS_FAILED(rv)) { return rv; }
+
+  if (GetLocaleInfo(localeAsLCID, LOCALE_IDEFAULTANSICODEPAGE, acp_name, sizeof(acp_name))==0) { 
     return NS_ERROR_FAILURE; 
   }
   nsAutoString acp_key; acp_key.Assign(NS_LITERAL_STRING("acp."));
   acp_key.AppendWithConversion(acp_name);
 
-  result = MapToCharset(acp_key,charset);
-
-  *_retValue = ToNewUnicode(charset);
-  return result;
+  return MapToCharset(acp_key, oResult);
 }
 
 NS_IMETHODIMP 

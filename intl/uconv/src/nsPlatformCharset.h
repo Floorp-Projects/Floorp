@@ -51,7 +51,7 @@ public:
 
   NS_IMETHOD Init();
   NS_IMETHOD GetCharset(nsPlatformCharsetSel selector, nsACString& oResult);
-  NS_IMETHOD GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUnichar** _retValue);
+  NS_IMETHOD GetDefaultCharsetForLocale(const PRUnichar* localeName, nsACString& oResult);
 
 private:
   nsCString mCharset;
