@@ -34,7 +34,7 @@
 /*
  * cmsutil -- A command to work with CMS data
  *
- * $Id: cmsutil.c,v 1.23 2001/01/07 07:44:39 nelsonb%netscape.com Exp $
+ * $Id: cmsutil.c,v 1.24 2001/01/12 18:37:41 mcgreer%netscape.com Exp $
  */
 
 #include "nspr.h"
@@ -62,6 +62,20 @@
 
 extern void SEC_Init(void);		/* XXX */
 char *progName = NULL;
+
+/* XXX stolen from cmsarray.c
+ * nss_CMSArray_Count - count number of elements in array
+ */
+int
+nss_CMSArray_Count(void **array)
+{
+    int n = 0;
+    if (array == NULL)
+	return 0;
+    while (*array++ != NULL)
+	n++;
+    return n;
+}
 
 static SECStatus
 DigestFile(PLArenaPool *poolp, SECItem ***digests, SECItem *input,
@@ -529,7 +543,7 @@ enveloped_data(struct envelopeOptionsStr envelopeOptions)
     int cnt;
     dbhandle = envelopeOptions.options->certHandle;
     /* count the recipients */
-    if ((cnt = NSS_CMSArray_Count(envelopeOptions.recipients)) == 0) {
+    if ((cnt = nss_CMSArray_Count(envelopeOptions.recipients)) == 0) {
 	fprintf(stderr, "ERROR: please name at least one recipient.\n");
 	goto loser;
     }
@@ -779,7 +793,7 @@ signed_data_certsonly(struct certsonlyOptionsStr certsonlyOptions)
     PLArenaPool *tmppoolp = NULL;
     int i, cnt;
     dbhandle = certsonlyOptions.options->certHandle;
-    if ((cnt = NSS_CMSArray_Count(certsonlyOptions.recipients)) == 0) {
+    if ((cnt = nss_CMSArray_Count(certsonlyOptions.recipients)) == 0) {
 	fprintf(stderr, 
         "ERROR: please indicate the nickname of a certificate to sign with.\n");
 	goto loser;
