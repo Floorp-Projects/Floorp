@@ -529,11 +529,14 @@ nsJSContext::DOMBranchCallback(JSContext *cx, JSScript *script)
       NS_L("computer may become unresponsive.\n\nDo you ")
       NS_L("want to abort the script?"));
 
-  JSBool ret = JS_TRUE;
-
   // Open the dialog.
-  nsresult rv = prompt->Confirm(title.get(), msg.get(), &ret);
-  if (NS_FAILED(rv) || !ret) {
+  PRInt32 buttonPressed = 0;
+  nsresult rv = prompt->ConfirmEx(title.get(), msg.get(),
+                                  (nsIPrompt::BUTTON_TITLE_YES * nsIPrompt::BUTTON_POS_0) +
+                                  (nsIPrompt::BUTTON_TITLE_NO * nsIPrompt::BUTTON_POS_1),
+                                  nsnull, nsnull, nsnull, nsnull, nsnull, &buttonPressed);
+
+  if (NS_FAILED(rv) || (buttonPressed == 1)) {
 
     // Allow the script to run this long again
     ctx->mBranchCallbackTime = PR_Now();
