@@ -2823,7 +2823,8 @@ nsRuleNode::ComputeDisplayData(nsStyleStruct* aStartStruct, const nsCSSStruct& a
   if (nsnull != displayData.mClip) {
     if (eCSSUnit_Inherit == displayData.mClip->mTop.GetUnit()) { // if one is inherit, they all are
       inherited = PR_TRUE;
-      display->mClipFlags = NS_STYLE_CLIP_INHERIT;
+      display->mClipFlags = parentDisplay->mClipFlags;
+      display->mClip = parentDisplay->mClip;
     }
     else {
       PRBool  fullAuto = PR_TRUE;

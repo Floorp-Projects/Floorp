@@ -412,8 +412,7 @@
 
 // See nsStylePosition.mClip
 #define NS_STYLE_CLIP_AUTO                      0x00
-#define NS_STYLE_CLIP_INHERIT                   0x01
-#define NS_STYLE_CLIP_RECT                      0x02
+#define NS_STYLE_CLIP_RECT                      0x01
 #define NS_STYLE_CLIP_TYPE_MASK                 0x0F
 #define NS_STYLE_CLIP_LEFT_AUTO                 0x10
 #define NS_STYLE_CLIP_TOP_AUTO                  0x20
