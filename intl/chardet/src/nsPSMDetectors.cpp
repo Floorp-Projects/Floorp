@@ -226,6 +226,29 @@ PRBool nsPSMDetector::HandleData(const char* aBuf, PRUint32 aLen)
          }
          mDone = PR_TRUE;
          return mDone;
+     } else {
+        // If the only charset left is UCS2LE/UCS2BE and another, report the other
+        PRInt32 nonUCS2Num=0;
+        PRInt32 nonUCS2Idx=0;
+        for(j = 0; j < mItems; j++) {
+             if(((&nsUCS2BEVerifier) != mVerifier[mItemIdx[j]]) &&
+                ((&nsUCS2LEVerifier) != mVerifier[mItemIdx[j]])) {
+                  nonUCS2Num++;
+                  nonUCS2Idx = j;
+             }
+        }
+        if(1 == nonUCS2Num) {
+#ifdef DETECTOR_DEBUG
+             printf("It's %s- byte %d (%x) Test %d. The only left except UCS2LE/BE\n", 
+                       mVerifier[mItemIdx[nonUCS2Idx]]->charset,
+                       i+mDbgLen,
+                       i+mDbgLen,
+                       mDbgTest);
+#endif
+            Report( mVerifier[mItemIdx[nonUCS2Idx]]->charset);
+            mDone = PR_TRUE;
+            return mDone;
+        }
      }
   }
 #ifdef DETECTOR_DEBUG
