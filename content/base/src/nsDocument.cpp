@@ -2624,7 +2624,14 @@ nsDocument::GetAnonymousNodes(nsIDOMElement* aElement,
 NS_IMETHODIMP
 nsDocument::CreateRange(nsIDOMRange** aReturn)
 {
-  return NS_NewRange(aReturn);
+  nsresult rv = NS_NewRange(aReturn);
+
+  if (NS_SUCCEEDED(rv)) {
+    (*aReturn)->SetStart(this, 0);
+    (*aReturn)->SetEnd(this, 0);
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP
