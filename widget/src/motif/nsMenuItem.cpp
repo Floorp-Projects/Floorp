@@ -233,6 +233,15 @@ NS_METHOD nsMenuItem::SetLabel(nsString &aText)
   return NS_OK;
 }
 
+NS_METHOD SetShortcutChar(const nsString &aText)
+{
+  return NS_OK;
+}
+
+NS_METHOD GetShortcutChar(nsString &aText)
+{
+  return NS_OK;
+}
 
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuItem::GetCommand(PRUint32 & aCommand)
@@ -372,4 +381,14 @@ NS_METHOD nsMenuItem::SetWebShell(nsIWebShell * aWebShell)
 {
 //FIXME: This needs to be implemented.  --ZuperDee
   return nsEventStatus_eIgnore;
+}
+
+NS_METHOD SetModifiers(PRUint8 aModifiers)
+{
+  return NS_OK;
+}
+
+NS_METHOD GetModifiers(PRUint8 * aModifiers)
+{
+  return NS_OK;
 }
