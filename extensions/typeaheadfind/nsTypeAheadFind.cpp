@@ -670,7 +670,7 @@ nsresult nsTypeAheadFind::FindItNow(PRBool aIsLinksOnly, PRBool aIsFirstVisibleP
   }
 
   // ------------ Get ranges ready ----------------
-  nsCOMPtr<nsIDOMRange> searchRange, startPointRange, endPointRange, rootRange, returnRange;
+  nsCOMPtr<nsIDOMRange> searchRange, startPointRange, endPointRange, returnRange;
   if (NS_FAILED(GetSearchContainers(currentContainer, aIsFirstVisiblePreferred,
                                     getter_AddRefs(presShell), getter_AddRefs(presContext), 
                                     getter_AddRefs(searchRange), getter_AddRefs(startPointRange), 
@@ -693,10 +693,7 @@ nsresult nsTypeAheadFind::FindItNow(PRBool aIsLinksOnly, PRBool aIsFirstVisibleP
     findBuffer = PromiseFlatString(mTypeAheadBuffer);
 
   while (PR_TRUE) {    // ----- Outer while loop: go through all docs -----
-    rootRange = searchRange;
-
-    // =============== Inner while loop: go through a single document ==================
-    while (PR_TRUE) {     
+    while (PR_TRUE) {         // Inner while loop: go through a single document -------
       mFind->Find(findBuffer.get(), searchRange, 
                   startPointRange, endPointRange, getter_AddRefs(returnRange));
       if (!returnRange)
@@ -768,9 +765,6 @@ nsresult nsTypeAheadFind::FindItNow(PRBool aIsLinksOnly, PRBool aIsFirstVisibleP
     // If aFirstVisiblePreferred == PR_TRUE, we may need to go through all docshells twice
     // Once to look for visible matches, the second time for any match
     if (!hasWrapped || aIsFirstVisiblePreferred) {
-      rootRange->CloneRange(getter_AddRefs(searchRange));
-      rootRange->CloneRange(getter_AddRefs(startPointRange));
-      startPointRange->Collapse(PR_TRUE); // Collapse to beginning
       aIsFirstVisiblePreferred = PR_FALSE;
       hasWrapped = PR_TRUE;
       continue;  // Go through all docs again
@@ -857,8 +851,8 @@ nsresult nsTypeAheadFind::GetSearchContainers(nsISupports *aContainer, PRBool aI
     }
     if (!startNode) 
       startNode = rootNode;
-    startPointRange->SetStart(startNode, startOffset);
-    startPointRange->SetEnd(startNode, startOffset);
+    startPointRange->SelectNode(startNode);
+    startPointRange->Collapse(PR_TRUE); // collapse to start
   }
 
   NS_ADDREF(*aSearchRange = searchRange);
