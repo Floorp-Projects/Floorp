@@ -46,7 +46,6 @@ public:
 
   NS_IMETHOD Destroy(nsIPresContext& aPresContext);
 
-  void Select(nsIPresContext& presContext, PRBool isSelected, PRBool notifyForReflow = PR_TRUE);
   void Hover(nsIPresContext& presContext, PRBool isHover, PRBool notifyForReflow = PR_TRUE);
 
   nsTableFrame* GetTreeFrame();

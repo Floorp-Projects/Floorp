@@ -276,39 +276,9 @@ nsTreeCellFrame::HandleDoubleClickEvent(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
-
-void nsTreeCellFrame::Select(nsIPresContext& aPresContext, PRBool isSelected, PRBool notifyForReflow)
-{
-	nsCOMPtr<nsIAtom> kSelectedCellAtom(dont_AddRef(NS_NewAtom("selectedcell")));
-  nsCOMPtr<nsIAtom> kSelectedRowAtom(dont_AddRef(NS_NewAtom("selectedrow")));
-  nsCOMPtr<nsIAtom> kSelectedAtom(dont_AddRef(NS_NewAtom("selected")));
-
-  nsCOMPtr<nsIContent> rowContent;
-  nsCOMPtr<nsIContent> itemContent;
-  mContent->GetParent(*getter_AddRefs(rowContent));
-  rowContent->GetParent(*getter_AddRefs(itemContent));
-
-  if (isSelected)
-	{
-		// We're selecting the node.
-		mContent->SetAttribute(kNameSpaceID_None, kSelectedCellAtom, "true", notifyForReflow);
-    rowContent->SetAttribute(kNameSpaceID_None, kSelectedRowAtom, "true", notifyForReflow);
-    itemContent->SetAttribute(kNameSpaceID_None, kSelectedAtom, "true", notifyForReflow);
-	}
-	else
-	{
-		// We're deselecting the node.
-    mContent->UnsetAttribute(kNameSpaceID_None, kSelectedCellAtom, notifyForReflow);
-    rowContent->UnsetAttribute(kNameSpaceID_None, kSelectedRowAtom, notifyForReflow);
-    itemContent->UnsetAttribute(kNameSpaceID_None, kSelectedAtom, notifyForReflow);
-	}
-}
-
 void nsTreeCellFrame::Hover(nsIPresContext& aPresContext, PRBool isHover, PRBool notifyForReflow)
 {
-	nsCOMPtr<nsIAtom> kHoverCellAtom(dont_AddRef(NS_NewAtom("Hovercell")));
-  nsCOMPtr<nsIAtom> kHoverRowAtom(dont_AddRef(NS_NewAtom("Hoverrow")));
-  nsCOMPtr<nsIAtom> kHoverAtom(dont_AddRef(NS_NewAtom("Hover")));
+	nsCOMPtr<nsIAtom> kHoverAtom(dont_AddRef(NS_NewAtom("hover")));
 
   nsCOMPtr<nsIContent> rowContent;
   nsCOMPtr<nsIContent> itemContent;
@@ -318,15 +288,15 @@ void nsTreeCellFrame::Hover(nsIPresContext& aPresContext, PRBool isHover, PRBool
   if (isHover)
 	{
 		// We're selecting the node.
-		mContent->SetAttribute(kNameSpaceID_None, kHoverCellAtom, "true", notifyForReflow);
-    rowContent->SetAttribute(kNameSpaceID_None, kHoverRowAtom, "true", notifyForReflow);
+		mContent->SetAttribute(kNameSpaceID_None, kHoverAtom, "true", notifyForReflow);
+    rowContent->SetAttribute(kNameSpaceID_None, kHoverAtom, "true", notifyForReflow);
     itemContent->SetAttribute(kNameSpaceID_None, kHoverAtom, "true", notifyForReflow);
 	}
 	else
 	{
 		// We're deselecting the node.
-    mContent->UnsetAttribute(kNameSpaceID_None, kHoverCellAtom, notifyForReflow);
-    rowContent->UnsetAttribute(kNameSpaceID_None, kHoverRowAtom, notifyForReflow);
+    mContent->UnsetAttribute(kNameSpaceID_None, kHoverAtom, notifyForReflow);
+    rowContent->UnsetAttribute(kNameSpaceID_None, kHoverAtom, notifyForReflow);
     itemContent->UnsetAttribute(kNameSpaceID_None, kHoverAtom, notifyForReflow);
 	}
 }
@@ -334,6 +304,5 @@ void nsTreeCellFrame::Hover(nsIPresContext& aPresContext, PRBool isHover, PRBool
 NS_IMETHODIMP
 nsTreeCellFrame::Destroy(nsIPresContext& aPresContext)
 {
-  mTreeFrame->RemoveFromSelection(aPresContext, this);
   return nsTableCellFrame::Destroy(aPresContext);
 }

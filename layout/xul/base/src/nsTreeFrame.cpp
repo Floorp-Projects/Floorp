@@ -17,12 +17,14 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
+#include "nsCOMPtr.h"
 #include "nsTreeFrame.h"
 #include "nsIStyleContext.h"
 #include "nsIContent.h"
 #include "nsCSSRendering.h"
 #include "nsTreeCellFrame.h"
 #include "nsCellMap.h"
+#include "nsIDOMXULTreeElement.h"
 
 //
 // NS_NewTreeFrame
@@ -57,127 +59,49 @@ nsTreeFrame::~nsTreeFrame()
 
 void nsTreeFrame::SetSelection(nsIPresContext& aPresContext, nsTreeCellFrame* aFrame)
 {
-  PRInt32 count = mSelectedItems.Count();
-  if (count == 1) {
-    // See if we're already selected.
-    nsTreeCellFrame* frame = (nsTreeCellFrame*)mSelectedItems[0];
-    if (frame == aFrame)
-      return;
-  }
-			
-	ClearSelection(aPresContext);
-	mSelectedItems.AppendElement(aFrame);
-	aFrame->Select(aPresContext, PR_TRUE);
+  nsCOMPtr<nsIContent> cellContent;
+  aFrame->GetContent(getter_AddRefs(cellContent));
+
+  nsCOMPtr<nsIContent> rowContent;
+  cellContent->GetParent(*getter_AddRefs(rowContent));
+
+  nsCOMPtr<nsIContent> itemContent;
+  rowContent->GetParent(*getter_AddRefs(itemContent));
+
+  nsCOMPtr<nsIDOMXULTreeElement> treeElement = do_QueryInterface(mContent);
+  nsCOMPtr<nsIDOMXULElement> cellElement = do_QueryInterface(cellContent);
+  nsCOMPtr<nsIDOMXULElement> itemElement = do_QueryInterface(itemContent);
+  treeElement->SelectItem(itemElement);
+  treeElement->SelectCell(cellElement);
 
   FireChangeHandler(aPresContext);
 }
 
-void nsTreeFrame::ToggleSelection(nsIPresContext& aPresContext, nsTreeCellFrame* pFrame)
+void nsTreeFrame::ToggleSelection(nsIPresContext& aPresContext, nsTreeCellFrame* aFrame)
 {
-	PRInt32 inArray = mSelectedItems.IndexOf((void*)pFrame);
-	if (inArray == -1)
-	{
-		// Add this row to our array of items.
-		PRInt32 count = mSelectedItems.Count();
-		if (count > 0)
-		{
-			// Some column is already selected.  This means we want to select the
-			// cell in our row that is found in this column.
-			nsTreeCellFrame* pOtherFrame = (nsTreeCellFrame*)mSelectedItems[0];
-			
-			PRInt32 colIndex;
-      pOtherFrame->GetColIndex(colIndex);
-			PRInt32 rowIndex;
-      pFrame->GetRowIndex(rowIndex);
+	nsCOMPtr<nsIContent> cellContent;
+  aFrame->GetContent(getter_AddRefs(cellContent));
 
-			// We now need to find the cell at this particular row and column.
-			// This is the cell we should really select.
-			nsTableCellFrame *cellFrame = mCellMap->GetCellInfoAt(rowIndex, colIndex);
+  nsCOMPtr<nsIContent> rowContent;
+  cellContent->GetParent(*getter_AddRefs(rowContent));
 
-			// Select this cell frame.
-			mSelectedItems.AppendElement(cellFrame);
-			((nsTreeCellFrame*)cellFrame)->Select(aPresContext, PR_TRUE);
-		}
-		else
-		{
-			mSelectedItems.AppendElement(pFrame);
-			pFrame->Select(aPresContext, PR_TRUE);
-		}
-	}
-	else
-	{
-		// Remove this from our array of items.
-		mSelectedItems.RemoveElementAt(inArray);
-		pFrame->Select(aPresContext, PR_FALSE);
-	}
+  nsCOMPtr<nsIContent> itemContent;
+  rowContent->GetParent(*getter_AddRefs(itemContent));
+
+  nsCOMPtr<nsIDOMXULTreeElement> treeElement = do_QueryInterface(mContent);
+  nsCOMPtr<nsIDOMXULElement> cellElement = do_QueryInterface(cellContent);
+  nsCOMPtr<nsIDOMXULElement> itemElement = do_QueryInterface(itemContent);
+
+  treeElement->ToggleItemSelection(itemElement);
+  treeElement->ToggleCellSelection(cellElement);
 
   FireChangeHandler(aPresContext);
 }
 
 void nsTreeFrame::RangedSelection(nsIPresContext& aPresContext, nsTreeCellFrame* pEndFrame)
 {
-	nsTreeCellFrame* pStartFrame = nsnull;
-	PRInt32 count = mSelectedItems.Count();
-	if (count == 0)
-		pStartFrame = pEndFrame;
-	else
-		pStartFrame = (nsTreeCellFrame*)mSelectedItems[0];
-
-	ClearSelection(aPresContext);
-
-	// Select all cells between the two frames, but only in the start frame's column.
-	PRInt32 colIndex;
-  pStartFrame->GetColIndex(colIndex); // The column index of the selection.
-	PRInt32 startRow;
-  pStartFrame->GetRowIndex(startRow); // The starting row for the selection.
-	PRInt32 endRow;
-  pEndFrame->GetRowIndex(endRow);	   // The ending row for the selection.
-
-	PRInt32 start = startRow > endRow ? endRow : startRow;
-	PRInt32 end = startRow > endRow ? startRow : endRow;
-
-	for (PRInt32 i = start; i <= end; i++)
-	{
-		// Select the cell at the appropriate index
-		nsTableCellFrame *cellFrame = mCellMap->GetCellInfoAt(i, colIndex);
-
-		// We now have the cell that should be selected. 
-		nsTreeCellFrame* pTreeCell = NS_STATIC_CAST(nsTreeCellFrame*, cellFrame);
-		mSelectedItems.AppendElement(pTreeCell);
-		pTreeCell->Select(aPresContext, PR_TRUE);
-	}
-
-  FireChangeHandler(aPresContext);
-}
-
-void nsTreeFrame::ClearSelection(nsIPresContext& aPresContext)
-{
-	PRInt32 count = mSelectedItems.Count();
-	for (PRInt32 i = 0; i < count; i++)
-	{
-		// Tell the tree cell to clear its selection.
-		nsTreeCellFrame* pFrame = (nsTreeCellFrame*)mSelectedItems[i];
-		pFrame->Select(aPresContext, PR_FALSE);
-	}
-
-	mSelectedItems.Clear();
-}
-
-void
-nsTreeFrame::RemoveFromSelection(nsIPresContext& aPresContext, nsTreeCellFrame* frame)
-{
-  PRInt32 count = mSelectedItems.Count();
-  for (PRInt32 i = 0; i < count; i++)
-	{
-		// Remove the tree cell from the selection.
-		nsTreeCellFrame* theFrame = (nsTreeCellFrame*)mSelectedItems[i];
-    if (theFrame == frame) {
-      mSelectedItems.RemoveElementAt(i);
-	  FireChangeHandler(aPresContext);
-      return;
-    }
-	}
-
+ // XXX Re-implement!
+ // FireChangeHandler(aPresContext);
 }
 
 void nsTreeFrame::MoveUp(nsIPresContext& aPresContext, nsTreeCellFrame* pFrame)
@@ -261,7 +185,6 @@ void nsTreeFrame::FireChangeHandler(nsIPresContext& aPresContext)
 NS_IMETHODIMP 
 nsTreeFrame::Destroy(nsIPresContext& aPresContext)
 {
-  ClearSelection(aPresContext);
   return nsTableFrame::Destroy(aPresContext);
 }
 

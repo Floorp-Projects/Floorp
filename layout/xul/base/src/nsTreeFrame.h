@@ -28,11 +28,9 @@ public:
   friend nsresult NS_NewTreeFrame(nsIFrame** aNewFrame);
 
   void SetSelection(nsIPresContext& presContext, nsTreeCellFrame* pFrame);
-  void ClearSelection(nsIPresContext& presContext);
   void ToggleSelection(nsIPresContext& presContext, nsTreeCellFrame* pFrame);
   void RangedSelection(nsIPresContext& aPresContext, nsTreeCellFrame* pEndFrame);
-  void RemoveFromSelection(nsIPresContext& aPresContext, nsTreeCellFrame* frame);
-
+  
   void MoveUp(nsIPresContext& aPresContext, nsTreeCellFrame* pFrame);
   void MoveDown(nsIPresContext& aPresContext, nsTreeCellFrame* pFrame);
   void MoveLeft(nsIPresContext& aPresContext, nsTreeCellFrame* pFrame);
@@ -59,8 +57,6 @@ protected:
   virtual ~nsTreeFrame();
 
 protected: // Data Members
-	nsVoidArray mSelectedItems; // The selected cell frames. 
-  
   PRBool mSlatedForReflow; // If set, don't waste time scheduling excess reflows.
 
 }; // class nsTreeFrame
