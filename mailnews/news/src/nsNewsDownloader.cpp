@@ -33,6 +33,7 @@
 #include "nsRDFCID.h"
 #include "nsIMsgAccountManager.h"
 #include "nsMsgFolderFlags.h"
+#include "nsIRequestObserver.h"
 // This file contains the news article download state machine.
 
 static NS_DEFINE_CID(kNntpServiceCID,	NS_NNTPSERVICE_CID);
@@ -70,6 +71,9 @@ nsNewsDownloader::nsNewsDownloader(nsIMsgWindow *window, nsIMsgDatabase *msgDB, 
 	m_abort = PR_FALSE;
   m_listener = listener;
   m_window = window;
+  // not the perfect place for this, but I think it will work.
+  if (m_window)
+    m_window->SetStopped(PR_FALSE);
   NS_INIT_REFCNT();
 }
 
@@ -91,7 +95,13 @@ NS_IMETHODIMP nsNewsDownloader::OnStartRunningUrl(nsIURI* url)
 
 NS_IMETHODIMP nsNewsDownloader::OnStopRunningUrl(nsIURI* url, nsresult exitCode)
 {
-  nsresult rv = exitCode;
+  PRBool stopped = PR_FALSE;
+  if (m_window)
+    m_window->GetStopped(&stopped);
+  if (stopped)
+    exitCode = NS_BINDING_ABORTED;
+
+ nsresult rv = exitCode;
   if (NS_SUCCEEDED(exitCode) || exitCode == NS_MSG_NEWS_ARTICLE_NOT_FOUND)
     rv = DownloadNext(PR_FALSE);
 
