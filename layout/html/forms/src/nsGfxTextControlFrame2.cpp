@@ -1507,7 +1507,7 @@ nsGfxTextControlFrame2::CreateFrameFor(nsIPresContext*   aPresContext,
   return NS_ERROR_FAILURE;
 }
 
-#define DIV_STRING "user-focus: none; overflow:auto; border: 0px !important; padding: 0px; margin:0px"
+#define DIV_STRING "user-focus: none; border: 0px !important; padding: 0px; margin:0px; "
 #define DIV_STRING_SINGLELINE "user-focus: none; white-space : nowrap; overflow:auto; border: 0px !important; padding: 0px; margin:0px"
 
 NS_IMETHODIMP
@@ -1580,8 +1580,17 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
 
   if (IsSingleLineTextControl())
     rv = divContent->SetAttribute(kNameSpaceID_None,nsHTMLAtoms::style, NS_ConvertToString(DIV_STRING_SINGLELINE), PR_FALSE);
-  else
-    rv = divContent->SetAttribute(kNameSpaceID_None,nsHTMLAtoms::style, NS_ConvertToString(DIV_STRING), PR_FALSE);
+  else {
+    nsAutoString divStr = NS_LITERAL_STRING(DIV_STRING);
+    const nsStyleDisplay* disp = (const nsStyleDisplay*)
+    mStyleContext->GetStyleData(eStyleStruct_Display);
+    if (disp->mOverflow == NS_STYLE_OVERFLOW_SCROLL)
+      divStr += NS_LITERAL_STRING("overflow:scroll;");
+    else if (disp->mOverflow == NS_STYLE_OVERFLOW_HIDDEN)
+      divStr += NS_LITERAL_STRING("overflow:hidden;");
+    else divStr += NS_LITERAL_STRING("overflow:auto;");
+    rv = divContent->SetAttribute(kNameSpaceID_None,nsHTMLAtoms::style, divStr, PR_FALSE);
+  }
 
   if (NS_FAILED(rv))
     return rv;
