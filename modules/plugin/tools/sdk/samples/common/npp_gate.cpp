@@ -76,7 +76,17 @@ NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16 mode, int16 argc, ch
 
   // create a new plugin instance object
   // initialization will be done when the associated window is ready
-  nsPluginInstanceBase * plugin = NS_NewPluginInstance(instance);
+  nsPluginCreateData ds;
+  
+  ds.instance = instance;
+  ds.type     = pluginType; 
+  ds.mode     = mode; 
+  ds.argc     = argc; 
+  ds.argn     = argn; 
+  ds.argv     = argv; 
+  ds.saved    = saved;
+
+  nsPluginInstanceBase * plugin = NS_NewPluginInstance(&ds);
   if(plugin == NULL)
     return NPERR_OUT_OF_MEMORY_ERROR;
 
