@@ -941,8 +941,6 @@ static nsIHTMLStyleSheet* GetAttrStyleSheet(nsIDocument* aDocument)
     container->GetAttributeStyleSheet(&sheet);
   }
 
-  NS_ASSERTION(nsnull != sheet, "can't get attribute style sheet");
-
   return sheet;
 }
 
@@ -1334,18 +1332,15 @@ nsGenericHTMLElement::SetAttribute(PRInt32 aNameSpaceID,
     PRBool  impact = NS_STYLE_HINT_NONE;
     GetMappedAttributeImpact(aAttribute, impact);
 
-    if (nsnull != mDocument) {  // set attr via style sheet
-      nsIHTMLStyleSheet*  sheet = GetAttrStyleSheet(mDocument);
-      if (nsnull != sheet) {
-        result = sheet->SetAttributeFor(aAttribute, aValue,
-                                        (NS_STYLE_HINT_CONTENT < impact),
-                                        this, mAttributes);
-        NS_RELEASE(sheet);
-      }
+    nsCOMPtr<nsIHTMLStyleSheet> sheet(dont_AddRef(GetAttrStyleSheet(mDocument)));
+    if (sheet) { // set attr via style sheet
+      result = sheet->SetAttributeFor(aAttribute, aValue,
+                                      (NS_STYLE_HINT_CONTENT < impact),
+                                      this, mAttributes);
     }
     else {  // manage this ourselves and re-sync when we connect to doc
       result = EnsureWritableAttributes(this, mAttributes, PR_TRUE);
-      if (nsnull != mAttributes) {
+      if (mAttributes) {
         PRInt32   count;
         result = mAttributes->SetAttributeFor(aAttribute, aValue,
                                               (NS_STYLE_HINT_CONTENT < impact),
@@ -1451,7 +1446,8 @@ nsGenericHTMLElement::SetHTMLAttribute(nsIAtom* aAttribute,
 
   PRBool  impact = NS_STYLE_HINT_NONE;
   GetMappedAttributeImpact(aAttribute, impact);
-  if (nsnull != mDocument) {  // set attr via style sheet
+  nsCOMPtr<nsIHTMLStyleSheet> sheet;
+  if (mDocument) {
     if (aNotify) {
       mDocument->BeginUpdate();
       if (nsHTMLAtoms::style == aAttribute) {
@@ -1466,12 +1462,11 @@ nsGenericHTMLElement::SetHTMLAttribute(nsIAtom* aAttribute,
         }
       }
     }
-    nsIHTMLStyleSheet*  sheet = GetAttrStyleSheet(mDocument);
-    if (nsnull != sheet) {
+    sheet = dont_AddRef(GetAttrStyleSheet(mDocument));
+    if (sheet) { // set attr via style sheet
         result = sheet->SetAttributeFor(aAttribute, aValue,
                                         (NS_STYLE_HINT_CONTENT < impact),
                                         this, mAttributes);
-        NS_RELEASE(sheet);
     }
 
     nsCOMPtr<nsIBindingManager> bindingManager;
@@ -1514,9 +1509,9 @@ nsGenericHTMLElement::SetHTMLAttribute(nsIAtom* aAttribute,
       mDocument->EndUpdate();
     }
   }
-  else {  // manage this ourselves and re-sync when we connect to doc
+  if (!sheet) {  // manage this ourselves and re-sync when we connect to doc
     result = EnsureWritableAttributes(this, mAttributes, PR_TRUE);
-    if (nsnull != mAttributes) {
+    if (mAttributes) {
       PRInt32   count;
       result = mAttributes->SetAttributeFor(aAttribute, aValue,
                                             (NS_STYLE_HINT_CONTENT < impact),
@@ -1546,7 +1541,8 @@ nsGenericHTMLElement::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute, 
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
-  if (nsnull != mDocument) {  // set attr via style sheet
+  nsCOMPtr<nsIHTMLStyleSheet> sheet;
+  if (mDocument) {
     PRInt32 impact = NS_STYLE_HINT_UNKNOWN;
     if (aNotify) {
       mDocument->BeginUpdate();
@@ -1590,10 +1586,9 @@ nsGenericHTMLElement::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute, 
                      NS_EVENT_FLAG_INIT, &status);
     }
 
-    nsIHTMLStyleSheet*  sheet = GetAttrStyleSheet(mDocument);
-    if (nsnull != sheet) {
+    sheet = dont_AddRef(GetAttrStyleSheet(mDocument));
+    if (sheet) { // set attr via style sheet
       result = sheet->UnsetAttributeFor(aAttribute, this, mAttributes);
-      NS_RELEASE(sheet);
     }
 
     nsCOMPtr<nsIBindingManager> bindingManager;
@@ -1608,9 +1603,9 @@ nsGenericHTMLElement::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute, 
       mDocument->EndUpdate();
     }
   }
-  else {  // manage this ourselves and re-sync when we connect to doc
+  if (!sheet) {  // manage this ourselves and re-sync when we connect to doc
     result = EnsureWritableAttributes(this, mAttributes, PR_FALSE);
-    if (nsnull != mAttributes) {
+    if (mAttributes) {
       PRInt32 count;
       result = mAttributes->UnsetAttributeFor(aAttribute, this, nsnull, count);
       if (0 == count) {
