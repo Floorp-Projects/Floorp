@@ -368,8 +368,8 @@ int main(void)
   char              szBuf[MAX_BUF];
   char              szAppName[MAX_BUF];
   char              szAppPath[MAX_BUF];
-  char              *listArchive[] = {"test1.xpi",
-                                      "test2.xpi",
+  char              *listArchive[] = {"e:\\cmonkey\\mozilla\\dist\\win32_d.obj\\bin\\test1.xpi",
+                                      "e:\\cmonkey\\mozilla\\dist\\win32_d.obj\\bin\\test2.xpi",
                                       "\0"};
 
   if(GetModuleFileName(NULL, szBuf, sizeof(szBuf)) == 0L)

@@ -40,6 +40,10 @@
 
 #include "VerReg.h"
 
+#include "nsIContentHandler.h"
+#include "nsIChannel.h"
+#include "nsIURI.h"
+
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
@@ -47,9 +51,8 @@ static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIInstallTrigger_IID, NS_IDOMINSTALLTRIGGERGLOBAL_IID);
 static NS_DEFINE_IID(kIInstallTrigger_CID, NS_SoftwareUpdateInstallTrigger_CID);
 
-
-
-
+static NS_DEFINE_IID(kPrefsIID, NS_IPREF_IID);
+static NS_DEFINE_IID(kPrefsCID,  NS_PREF_CID);
 
 nsInstallTrigger::nsInstallTrigger()
 {
@@ -61,42 +64,11 @@ nsInstallTrigger::~nsInstallTrigger()
 {
 }
 
-NS_IMETHODIMP 
-nsInstallTrigger::QueryInterface(REFNSIID aIID,void** aInstancePtr)
-{
-    if (aInstancePtr == NULL)
-    {
-        return NS_ERROR_NULL_POINTER;
-    }
 
-    // Always NULL result, in case of failure
-    *aInstancePtr = NULL;
-
-    if ( aIID.Equals(kIScriptObjectOwnerIID))
-    {
-        *aInstancePtr = (void*) ((nsIScriptObjectOwner*)this);
-        AddRef();
-        return NS_OK;
-    }
-    else if ( aIID.Equals(kIInstallTrigger_IID) )
-    {
-        *aInstancePtr = (void*) ((nsIDOMInstallTriggerGlobal*)this);
-        AddRef();
-        return NS_OK;
-    }
-    else if ( aIID.Equals(kISupportsIID) )
-    {
-        *aInstancePtr = (void*)(nsISupports*)(nsIScriptObjectOwner*)this;
-        AddRef();
-        return NS_OK;
-    }
-
-     return NS_NOINTERFACE;
-}
-
-NS_IMPL_ADDREF(nsInstallTrigger)
-NS_IMPL_RELEASE(nsInstallTrigger)
-
+NS_IMPL_THREADSAFE_ISUPPORTS3 (nsInstallTrigger,
+                              nsIScriptObjectOwner,
+                              nsIDOMInstallTriggerGlobal,
+                              nsIContentHandler);
 
 
 NS_IMETHODIMP 
@@ -129,8 +101,42 @@ nsInstallTrigger::SetScriptObject(void *aScriptObject)
   return NS_OK;
 }
 
-static NS_DEFINE_IID(kPrefsIID, NS_IPREF_IID);
-static NS_DEFINE_IID(kPrefsCID,  NS_PREF_CID);
+
+
+
+NS_IMETHODIMP 
+nsInstallTrigger::HandleContent(const char * aContentType, 
+                             const char * aCommand, 
+                             const char * aWindowTarget, 
+                             nsISupports* aWindowContext, 
+                             nsIChannel * aChannel)
+{
+    nsresult rv = NS_OK;
+    if (!aChannel) return NS_ERROR_NULL_POINTER;
+
+    if (nsCRT::strcasecmp(aContentType, "application/x-xpinstall") == 0) {
+        nsCOMPtr<nsIURI> uri;
+        rv = aChannel->GetURI(getter_AddRefs(uri));
+        if (NS_FAILED(rv)) return rv;
+
+        if (uri) {    
+            char* spec;
+            uri->GetSpec(&spec);
+            if (!spec)
+                return NS_ERROR_NULL_POINTER;
+
+            PRBool value;
+            rv = StartSoftwareUpdate(NS_ConvertASCIItoUCS2(spec), 0, &value);
+            
+                nsAllocator::Free(spec);
+
+            if (NS_SUCCEEDED(rv) && value) 
+                return NS_OK;
+        }
+    }
+
+    return NS_ERROR_FAILURE;
+}
 
 NS_IMETHODIMP    
 nsInstallTrigger::UpdateEnabled(PRBool* aReturn)
@@ -478,51 +484,4 @@ nsInstallTrigger::GetVersion(const nsString& component, nsString& version)
 
     return NS_OK;
 }
-
-
-#if 0
-// this will take a nsIURI, and create a temporary file.  If it is local, we just us it.
- 
-void
-nsInstallTrigger::CreateTempFileFromURL(const nsString& aURL, nsString& tempFileString)
-{
-    // Checking to see if the url is local
-
-    if ( aURL.EqualsIgnoreCase("file:/", 6) )
-    {       
-        tempFileString.AssignWithConversion( NS_STATIC_CAST(const char*, nsNSPRPath(nsFileURL(aURL))) );
-    }
-    else
-    {
-        nsSpecialSystemDirectory tempFile(nsSpecialSystemDirectory::OS_TemporaryDirectory);
-    
-        PRInt32 result = aURL.RFindChar('/');
-        if (result != -1)
-        {    
-            nsString jarName;
-                       
-            aURL.Right(jarName, (aURL.Length() - result) );
-            
-            PRInt32 argOffset = jarName.RFindChar('?');
-
-            if (argOffset != -1)
-            {
-                // we need to remove ? and everything after it
-                jarName.Truncate(argOffset);
-            }
-            
-            
-            tempFile += jarName;
-        }
-        else
-        {   
-            tempFile += "xpinstall.jar";
-        }
-
-        tempFile.MakeUnique();
-
-        tempFileString.AssignWithConversion( NS_STATIC_CAST(const char*, nsNSPRPath( nsFilePath(tempFile) )) );
-    }
-}
-#endif
 

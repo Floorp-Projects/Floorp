@@ -35,7 +35,7 @@
 
 class nsIDOMInstallTriggerGlobal : public nsISupports {
 public:
-  static const nsIID& IID() { static nsIID iid = NS_IDOMINSTALLTRIGGERGLOBAL_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_IDOMINSTALLTRIGGERGLOBAL_IID; return iid; }
   enum {
     MAJOR_DIFF = 4,
     MINOR_DIFF = 3,

@@ -68,6 +68,8 @@
 #include "nsProxiedService.h"
 #include "nsIChromeRegistry.h"
 
+#include "nsCURILoader.h"
+
 extern "C" void RunChromeInstallOnThread(void *data);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -183,45 +185,11 @@ nsSoftwareUpdate::~nsSoftwareUpdate()
 //------------------------------------------------------------------------
 //  nsISupports implementation
 //------------------------------------------------------------------------
-NS_IMPL_THREADSAFE_ADDREF( nsSoftwareUpdate );
-NS_IMPL_THREADSAFE_RELEASE( nsSoftwareUpdate );
 
-
-NS_IMETHODIMP
-nsSoftwareUpdate::QueryInterface( REFNSIID anIID, void **anInstancePtr )
-{
-    nsresult rv = NS_OK;
-    /* Check for place to return result. */
-    
-    if ( !anInstancePtr )
-    {
-        rv = NS_ERROR_NULL_POINTER;
-    }
-    else
-    {
-        /* Check for IIDs we support and cast this appropriately. */
-        if ( anIID.Equals( NS_GET_IID(nsISoftwareUpdate) ) ) 
-            *anInstancePtr = (void*) ( (nsISoftwareUpdate*)this );
-        else if ( anIID.Equals( NS_GET_IID(nsIAppShellComponent) ) ) 
-            *anInstancePtr = (void*) ( (nsIAppShellComponent*)this );
-        else if (anIID.Equals( NS_GET_IID(nsPIXPIStubHook) ) )
-            *anInstancePtr = (void*) ( (nsPIXPIStubHook*)this );
-        else if ( anIID.Equals( kISupportsIID ) )
-            *anInstancePtr = (void*) ( (nsISupports*) (nsISoftwareUpdate*) this );
-        else
-        {
-            /* Not an interface we support. */
-            *anInstancePtr = 0;
-            rv = NS_NOINTERFACE;
-        }
-    }
-
-    if (NS_SUCCEEDED(rv))
-        NS_ADDREF_THIS();
-
-    return rv;
-}
-
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsSoftwareUpdate,
+                              nsISoftwareUpdate,
+                              nsIAppShellComponent,
+                              nsPIXPIStubHook);
 
 NS_IMETHODIMP
 nsSoftwareUpdate::Initialize( nsIAppShellService *anAppShell, nsICmdLineService  *aCmdLineService ) 
@@ -705,6 +673,12 @@ static nsModuleComponentInfo components[] =
        NS_SoftwareUpdateInstallVersion_CID,
        NS_INSTALLVERSIONCOMPONENT_PROGID,
        nsInstallVersionConstructor 
+    },
+
+    { "XPInstall Content Handler",
+      NS_SoftwareUpdateInstallTrigger_CID,
+      NS_CONTENT_HANDLER_PROGID_PREFIX"application/x-xpinstall",
+      nsInstallTriggerConstructor 
     },
 
 #if NOTIFICATION_ENABLED 
