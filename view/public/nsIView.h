@@ -278,9 +278,13 @@ public:
   PRBool IsTransparent() const { return (mVFlags & NS_VIEW_FLAG_TRANSPARENT) != 0; }
 
   /**
-   * Indicate that this view is always painted onto a uniform field of pixels. Thus,
-   * even if the view is transparent, it may still be bitblit scrollable because
-   * the background that shines through does not vary with position.
+   * Indicate that this view is always painted onto a uniform field of
+   * pixels. Thus, even if the view is transparent, it may still be
+   * bitblit scrollable because the background that shines through
+   * does not vary with position.  Caller must ensure that the pixel
+   * field belongs to the same element as this view or some ancestor
+   * element, so that if the pixel field is in some opacity group, then
+   * this view is also in the opacity group (or some subgroup).
    */
   void SetHasUniformBackground(PRBool aUniform) {
     if (aUniform) {

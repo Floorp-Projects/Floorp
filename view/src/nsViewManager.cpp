@@ -3653,7 +3653,17 @@ void nsViewManager::OptimizeDisplayList(const nsVoidArray* aDisplayList, const n
 
         // a view is opaque if it is neither transparent nor transluscent
         if (!(element->mFlags & (VIEW_TRANSPARENT | VIEW_TRANSLUCENT))
-            || (element->mView->HasUniformBackground() && aTreatUniformAsOpaque)) {
+            // also, treat it as opaque if it's drawn onto a uniform background
+            // and we're doing scrolling analysis; if the background is uniform,
+            // we don't care what's under it. But the background might be translucent
+            // because of some enclosing opacity group, in which case we do care
+            // what's under it. Unfortunately we don't know exactly where the
+            // background comes from ... it may not even have a view ... but
+            // the side condition on SetHasUniformBackground ensures that
+            // if the background is translucent, then this view is also marked
+            // translucent.
+            || (element->mView->HasUniformBackground() && aTreatUniformAsOpaque
+                && !(element->mFlags & VIEW_TRANSLUCENT))) {
           aOpaqueRegion.Or(aOpaqueRegion, element->mBounds);
         }
       }
