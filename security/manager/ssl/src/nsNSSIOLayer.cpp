@@ -1533,6 +1533,7 @@ nsSSLIOLayerAddToSocket(const char* host,
   infoObject->SetProxyPort(proxyPort);
   infoObject->SetForTLSStepUp(forTLSStepUp);
 
+  char* peerId;
   PRFileDesc* sslSock = SSL_ImportFD(nsnull, fd);
   if (!sslSock) {
     NS_ASSERTION(PR_FALSE, "NSS: Error importing socket");
@@ -1564,31 +1565,43 @@ nsSSLIOLayerAddToSocket(const char* host,
     goto loser;
   }
 
+  /* This is rather confusing, but now, "layer" points to the SSL socket,
+     and that's what we should use for manipulating it. */
+
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("[%p] Socket set up\n", (void*)sslSock));
   infoObject->QueryInterface(NS_GET_IID(nsISupports), (void**) (info));
   if ((forTLSStepUp || proxyHost) &&
-      SECSuccess != SSL_OptionSet(sslSock, SSL_SECURITY, PR_FALSE))
+      SECSuccess != SSL_OptionSet(layer, SSL_SECURITY, PR_FALSE))
     goto loser;
 
   if (forTLSStepUp) {
-    if (SECSuccess != SSL_OptionSet(sslSock, SSL_ENABLE_SSL2, PR_FALSE)) {
+    if (SECSuccess != SSL_OptionSet(layer, SSL_ENABLE_SSL2, PR_FALSE)) {
       goto loser;
     }
-    if (SECSuccess != SSL_OptionSet(sslSock, SSL_V2_COMPATIBLE_HELLO, PR_FALSE)) {
+    if (SECSuccess != SSL_OptionSet(layer, SSL_V2_COMPATIBLE_HELLO, PR_FALSE)) {
       goto loser;
     }
   }    
 
-  if (SECSuccess != SSL_OptionSet(sslSock, SSL_HANDSHAKE_AS_CLIENT, PR_TRUE)) {
+  if (SECSuccess != SSL_OptionSet(layer, SSL_HANDSHAKE_AS_CLIENT, PR_TRUE)) {
     goto loser;
   }
-  if (SECSuccess != SSL_OptionSet(sslSock, SSL_ENABLE_FDX, PR_TRUE)) {
+  if (SECSuccess != SSL_OptionSet(layer, SSL_ENABLE_FDX, PR_TRUE)) {
     goto loser;
   }
-  if (SECSuccess != SSL_BadCertHook(sslSock, (SSLBadCertHandler) nsNSSBadCertHandler,
+  if (SECSuccess != SSL_BadCertHook(layer, (SSLBadCertHandler) nsNSSBadCertHandler,
                                     infoObject)) {
     goto loser;
   }
+  
+  // Set the Peer ID so that SSL proxy connections work properly.
+  peerId = PR_smprintf("%s:%d", host, port);
+  if (SECSuccess != SSL_SetSockPeerID(layer, peerId)) {
+    PR_smprintf_free(peerId);
+    goto loser;
+  }
+
+  PR_smprintf_free(peerId);
   return NS_OK;
  loser:
   NS_IF_RELEASE(infoObject);

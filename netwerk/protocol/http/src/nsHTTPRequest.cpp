@@ -423,7 +423,12 @@ nsHTTPRequest::formBuffer(nsCString * requestBuffer, PRUint32 capabilities)
             do_QueryInterface(trans, &rv);
         if (NS_SUCCEEDED(rv))
             sockTrans->GetReuseCount(&reuse);
-        if (reuse > 0) {
+        // If the socket has not yet been reused, then we must need to send the
+        // SSL proxy CONNECT request.  Note: when the handler creates socket
+        // transports, it calls SetReuseConnection(PR_TRUE), which ups the 
+        // socket reuse count by 1.  So, a socket transport with a reuse count
+        // of 1 can, at this point, be considered unconnected.
+        if (reuse > 1) {
             mSSLConnected = PR_TRUE;
             mDoingProxySSLConnect = PR_FALSE;
         }
