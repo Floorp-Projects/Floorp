@@ -1,5 +1,5 @@
 var insertNew = true;
-var tagName = "anchor"
+var tagName = "anchor";
 var anchorElement = null;
 var nameInput;
 
@@ -9,9 +9,9 @@ function Startup()
   if (!InitEditorShell())
     return;
   dump("EditorShell found for NamedAnchor Properties dialog\n");
-  dump(document+"\n");
   nameInput = document.getElementById("nameInput");
-  dump(nameInput+"\n");
+
+  dump("tagName = "+tagName+"\n");
 
   // Get a single selected element of the desired type
   anchorElement = editorShell.GetSelectedElement(tagName);
@@ -33,7 +33,11 @@ function Startup()
     name = TruncateStringAtWordEnd(name, 40, false);
     // Replace whitespace with "_"
     name = ReplaceWhitespace(name, "_");
-    dump("Selection text for name: "+name+"\n");
+
+    //Be sure the name is unique to the document
+    if (AnchorNameExists(name))
+      name += "_"
+
     nameInput.value = name;
   }
 
@@ -46,16 +50,36 @@ function Startup()
   nameInput.focus();
 }
 
+function AnchorNameExists(name)
+{
+  anchorList = editorShell.editorDocument.anchors; // getElementsByTagName("A");
+  if (anchorList) {
+    dump("We have an anchor list\n");
+    for (i=0; i < anchorList.length; i++) {
+      dump("Anchor name: "+anchorList[i].name+"\n");
+      if (anchorList[i].name == name)
+        return true;
+    }
+  }
+  return false;
+}
+
 function onOK()
 {
   name = nameInput.value;
   name = TrimString(name);
   if (name.length == 0) {
-    dump("EMPTY ANCHOR STRING\n");
-    //TODO: POPUP ERROR DIALOG HERE
+      ShowInputErrorMessage("You must enter a name for this anchor.");
+      nameInput.focus();
+      return;
   } else {
     // Replace spaces with "_" else it causes trouble in URL parsing
     name = ReplaceWhitespace(name, "_");
+    if (AnchorNameExists(name)) {
+      ShowInputErrorMessage("\""+name+"\" already exists in this page.\nPlease enter a different name.");            
+      nameInput.focus();
+      return;
+    }
     anchorElement.setAttribute("name",name);
     if (insertNew) {
       // Don't delete selected text when inserting

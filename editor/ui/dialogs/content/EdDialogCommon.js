@@ -81,7 +81,9 @@ function AppendStringToList(list, string)
 // "value" may be a number or string type
 function ValidateNumberString(value, minValue, maxValue)
 {
-  // Get the number version
+  // Get the number version (strip out non-numbers)
+  var pat = /\D/g;
+  value = value.replace(pat, "");
   number = value - 0;
   if ((value+"") != "") {
     if (number && number >= minValue && number <= maxValue ){
@@ -90,20 +92,18 @@ function ValidateNumberString(value, minValue, maxValue)
     }
   }
   message = "The number you entered ("+number+") is outside of allowed range.\nPlease enter a number between "+minValue+" and "+maxValue;
-
-  // Initialize where we place result from generic EdMessage dialog
-  window.msgResult = 0;
-  // This is NOT MODAL!
+  ShowInputErrorMessage(message);
   window.openDialog("chrome://editordlgs/content/EdMessage.xul", "MsgDlg", "chrome", "", message, "Input Error", "OK");
-  // We could do something like this if we could call
-  //  a method that pumps the message system
-  //while (window.msgResult == 0);
 
-  dump("Message button pressed: "+window.msgResult+"\n");
   // Return an empty string to indicate error
   return "";
 }
 
+function ShowInputErrorMessage(message)
+{
+  // This is NOT MODAL as of 7/16/99!
+  window.openDialog("chrome://editordlgs/content/EdMessage.xul", "MsgDlg", "chrome", "", message, "Input Error", "OK");
+}
 
 function TrimStringLeft(string)
 {
