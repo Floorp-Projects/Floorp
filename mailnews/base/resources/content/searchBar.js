@@ -31,7 +31,6 @@ var gNumOfSearchHits = 0;
 var gSearchBundle;
 var gStatusBar = null;
 var gSearchInProgress = false;
-var gSearchCriteria = null;
 var gSearchInput = null;
 var gClearButton = null;
 
@@ -80,7 +79,6 @@ function getDocumentElements()
 {
   gSearchBundle = document.getElementById("bundle_search");  
   gStatusBar = document.getElementById('statusbar-icon');
-  gSearchCriteria =document.getElementById('searchCriteria');
   gClearButton = document.getElementById('clearButton');
   GetSearchInput();
 }
@@ -183,18 +181,20 @@ function createSearchTerms()
   var searchTerms = gSearchSession.searchTerms;
   var searchTermsArray = searchTerms.QueryInterface(Components.interfaces.nsISupportsArray);
   searchTermsArray.Clear();
-  gSearchSession.addScopeTerm(nsMsgSearchScope.offlineMail, GetThreadPaneFolder());
+
+  var selectedFolder = GetThreadPaneFolder();
+  gSearchSession.addScopeTerm(nsMsgSearchScope.offlineMail, selectedFolder);
   var term = gSearchSession.createTerm();
   var value = term.value;
+
   if (value)
     value.str = gSearchInput.value;
   gSearchSession.addSearchTerm(nsMsgSearchAttrib.Subject, nsMsgSearchOp.Contains, value, false, null);
-  var isSender = new String;
-  isSender = gSearchCriteria.getAttribute("value");
-  if (isSender.search("Sender") != -1)
-    gSearchSession.addSearchTerm(nsMsgSearchAttrib.Sender, nsMsgSearchOp.Contains, value, false, null);
-  else
+
+  if (IsSpecialFolder(selectedFolder, MSG_FOLDER_FLAG_SENTMAIL | MSG_FOLDER_FLAG_DRAFTS | MSG_FOLDER_FLAG_QUEUE))
     gSearchSession.addSearchTerm(nsMsgSearchAttrib.ToOrCC, nsMsgSearchOp.Contains, value, false, null); 
+  else
+    gSearchSession.addSearchTerm(nsMsgSearchAttrib.Sender, nsMsgSearchOp.Contains, value, false, null);
 }
 
 function onAdvancedSearch()
