@@ -4029,9 +4029,9 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 			// if no branding icon, use some default icons
 			nsAutoString	iconChromeDefault;
 
-			if (browserResultTypeStr=="category")
+			if (browserResultTypeStr.Equals("category"))
 				iconChromeDefault = "chrome://search/skin/category.gif";
-			else if ((browserResultTypeStr=="result") && (!engineIconNode))
+			else if ((browserResultTypeStr.Equals("result")) && (!engineIconNode))
 				iconChromeDefault = "chrome://search/skin/result.gif";
 
 			if (iconChromeDefault.Length() > 0)
