@@ -34,7 +34,7 @@
 /*
  * PKCS7 creation.
  *
- * $Id: p7create.c,v 1.3 2001/09/20 21:37:16 relyea%netscape.com Exp $
+ * $Id: p7create.c,v 1.4 2003/09/19 04:16:19 jpierre%netscape.com Exp $
  */
 
 #include "p7local.h"
@@ -617,7 +617,7 @@ SEC_PKCS7AddSigningTime (SEC_PKCS7ContentInfo *cinfo)
     if (signerinfos == NULL || signerinfos[0] == NULL)
 	return SECFailure;
 
-    rv = DER_TimeToUTCTime (&stime, PR_Now());
+    rv = CERT_EncodeTimeChoice(NULL, &stime, PR_Now());
     if (rv != SECSuccess)
 	return rv;
 
