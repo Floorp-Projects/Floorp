@@ -1409,12 +1409,12 @@ sub DiffStrings {
     # that were removed; @new contains ones that got added.
 
     foreach my $oldv (@old) {
-      foreach my $newv (@new) {
-        next if ($newv eq '');
-        if ($oldv eq $newv) {
-          $newv = $oldv = '';
+        foreach my $newv (@new) {
+            next if ($newv eq '');
+            if ($oldv eq $newv) {
+                $newv = $oldv = '';
+            }
         }
-      }
     }
     my $removed = join (", ", grep { $_ ne '' } @old);
     my $added = join (", ", grep { $_ ne '' } @new);
