@@ -940,7 +940,7 @@ NS_IMETHODIMP StyleSetImpl::EnableQuirkStyleSheet(PRBool aEnable)
     mQuirkStyleSheet->GetApplicable(applicableNow);
     NS_ASSERTION(count == 0 || aEnable == applicableNow,
                  "enabling/disabling quirk stylesheet too late or incomplete quirk stylesheet");
-    if (count != 0 && aEnable == enabledNow)
+    if (count != 0 && aEnable == applicableNow)
       printf("WARNING: We set the quirks mode too many times.\n"); // we do!
 #endif
     mQuirkStyleSheet->SetEnabled(aEnable);
