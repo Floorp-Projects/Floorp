@@ -819,6 +819,8 @@ function cycleView (amount)
     
     var vk = Number(tb.getAttribute("viewKey"));
     var destKey = (vk + amount) % len; /* wrap around */
+    if (destKey < 0)
+        destKey += len;
     
     setCurrentObject (client.viewsArray[destKey].source);
 }
