@@ -92,7 +92,7 @@ int ssl3CipherSuites[] = {
 };
 
 unsigned long __cmp_umuls;
-PRBool verbose = PR_TRUE;
+PRBool verbose;
 
 static char *progName;
 
@@ -139,14 +139,16 @@ extern long ssl3_hch_sid_cache_not_ok;
     result = SSL_SecurityStatus(fd, &op, &cp, &kp0, &kp1, &ip, &sp);
     if (result != SECSuccess)
     	return;
-    PRINTF("bulk cipher %s, %d secret key bits, %d key bits, status: %d\n"
+    fprintf(stderr,
+           "bulk cipher %s, %d secret key bits, %d key bits, status: %d\n"
            "subject DN: %s\n"
 	   "issuer  DN: %s\n", cp, kp1, kp0, op, sp, ip);
     PR_Free(cp);
     PR_Free(ip);
     PR_Free(sp);
 
-    PRINTF("%ld cache hits; %ld cache misses, %ld cache not reusable\n",
+    fprintf(stderr,
+    	"%ld cache hits; %ld cache misses, %ld cache not reusable\n",
     	ssl3_hch_sid_cache_hits, ssl3_hch_sid_cache_misses,
 	ssl3_hch_sid_cache_not_ok);
 
@@ -161,7 +163,7 @@ handshakeCallback(PRFileDesc *fd, void *client_data)
 static void Usage(const char *progName)
 {
     printf(
-"Usage:  %s -h host [-p port] [-d certdir] [-n nickname] [-23ox] \n"
+"Usage:  %s -h host [-p port] [-d certdir] [-n nickname] [-23Tovx] \n"
 "                   [-c ciphers] [-w passwd]\n", progName);
     printf("%-20s Hostname to connect with\n", "-h host");
     printf("%-20s Port number for SSL server\n", "-p port");
@@ -172,6 +174,7 @@ static void Usage(const char *progName)
     printf("%-20s Disable SSL v3.\n", "-3");
     printf("%-20s Disable TLS (SSL v3.1).\n", "-T");
     printf("%-20s Override bad server cert. Make it OK.\n", "-o");
+    printf("%-20s Verbose progress reporting.\n", "-v");
     printf("%-20s Use export policy.\n", "-x");
     printf("%-20s Letter(s) chosen from the following list\n", "-c ciphers");
     printf(
@@ -279,7 +282,7 @@ int main(int argc, char **argv)
 	progName = strrchr(argv[0], '\\');
     progName = progName ? progName+1 : argv[0];
 
-    optstate = PL_CreateOptState(argc, argv, "23Tfc:h:p:d:m:n:ow:x");
+    optstate = PL_CreateOptState(argc, argv, "23Tfc:h:p:d:m:n:ovw:x");
     while ((optstatus = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
 	switch (optstate->option) {
 	  case '?':
@@ -316,6 +319,8 @@ int main(int argc, char **argv)
 	  case 'o': override = 1; 			break;
 
 	  case 'p': port = strdup(optstate->value);	break;
+
+	  case 'v': verbose++;	 			break;
 
 	  case 'w':
 		password = optstate->value;
@@ -382,7 +387,7 @@ int main(int argc, char **argv)
     }
 
     ip = PR_ntohl(addr.inet.ip);
-    printf("%s: connecting to %s:%d (address=%d.%d.%d.%d)\n",
+    PRINTF("%s: connecting to %s:%d (address=%d.%d.%d.%d)\n",
 	   progName, host, PR_ntohs(addr.inet.port),
 	   (ip >> 24) & 0xff,
 	   (ip >> 16) & 0xff,
@@ -484,22 +489,23 @@ int main(int argc, char **argv)
     status = PR_Connect(s, &addr, PR_INTERVAL_NO_TIMEOUT);
     if (status != PR_SUCCESS) {
 	if (PR_GetError() == PR_IN_PROGRESS_ERROR) {
-	    SECU_PrintError(progName, "connect");
+	    if (verbose)
+		SECU_PrintError(progName, "connect");
 	    milliPause(50 * multiplier);
 	    pollset[0].fd = s;
 	    pollset[0].in_flags = PR_POLL_WRITE | PR_POLL_EXCEPT;
 	    pollset[0].out_flags = 0;
 	    while(1) {
-		printf("%s: about to call PR_Poll for connect completion!\n", progName);
+		PRINTF("%s: about to call PR_Poll for connect completion!\n", progName);
 		filesReady = PR_Poll(pollset, 1, PR_INTERVAL_NO_TIMEOUT);
 		if (filesReady < 0) {
 		    SECU_PrintError(progName, "unable to connect (poll)");
 		    return -1;
 		}
-		printf("%s: PR_Poll returned 0x%02x for socket out_flags.\n",
+		PRINTF("%s: PR_Poll returned 0x%02x for socket out_flags.\n",
 			progName, pollset[0].out_flags);
 		if (filesReady == 0) {	/* shouldn't happen! */
-		    printf("%s: PR_Poll returned zero!\n", progName);
+		    PRINTF("%s: PR_Poll returned zero!\n", progName);
 		    return -1;
 		}
 		/* Must milliPause between PR_Poll and PR_GetConnectStatus,
@@ -541,7 +547,7 @@ int main(int argc, char **argv)
     ** Select on stdin and on the socket. Write data from stdin to
     ** socket, read data from socket and write to stdout.
     */
-    printf("%s: ready...\n", progName);
+    PRINTF("%s: ready...\n", progName);
 
     while (pollset[0].in_flags || pollset[1].in_flags) {
 	char buf[4000];	/* buffer for stdin */
@@ -552,7 +558,7 @@ int main(int argc, char **argv)
 	    pollset[1].out_flags = 0;
 	}
 
-	printf("%s: about to call PR_Poll !\n", progName);
+	PRINTF("%s: about to call PR_Poll !\n", progName);
         if (pollset[1].in_flags && file_read) {
 		filesReady = PR_Poll(pollset, npds, PR_INTERVAL_NO_WAIT);
 		filesReady++;
@@ -565,12 +571,12 @@ int main(int argc, char **argv)
 	   goto done;
 	}
 	if (filesReady == 0) {	/* shouldn't happen! */
-	    printf("%s: PR_Poll returned zero!\n", progName);
+	    PRINTF("%s: PR_Poll returned zero!\n", progName);
 	    return -1;
 	}
-	printf("%s: PR_Poll returned!\n", progName);
+	PRINTF("%s: PR_Poll returned!\n", progName);
 	if (pollset[1].in_flags) {
-	        printf("%s: PR_Poll returned 0x%02x for stdin out_flags.\n",
+	        PRINTF("%s: PR_Poll returned 0x%02x for stdin out_flags.\n",
 		    progName, pollset[1].out_flags);
 #ifndef _WINDOWS 
 	}
@@ -578,7 +584,7 @@ int main(int argc, char **argv)
 #endif
 	    /* Read from stdin and write to socket */
 	    nb = PR_Read(pollset[1].fd, buf, sizeof(buf));
-	    printf("%s: stdin read %d bytes\n", progName, nb);
+	    PRINTF("%s: stdin read %d bytes\n", progName, nb);
 	    if (nb < 0) {
 		if (PR_GetError() != PR_WOULD_BLOCK_ERROR) {
 		    SECU_PrintError(progName, "read from stdin failed");
@@ -589,7 +595,7 @@ int main(int argc, char **argv)
 		pollset[1].in_flags = 0;
 	    } else {
 		char * bufp = buf;
-		printf("%s: Writing %d bytes to server\n", progName, nb);
+		PRINTF("%s: Writing %d bytes to server\n", progName, nb);
 		do {
 		    PRInt32 cc = PR_Write(s, bufp, nb);
 		    if (cc < 0) {
@@ -608,16 +614,16 @@ int main(int argc, char **argv)
 		    	break;
 		    pollset[0].in_flags = PR_POLL_WRITE | PR_POLL_EXCEPT;
 		    pollset[0].out_flags = 0;
-		    printf("%s: about to call PR_Poll on writable socket !\n", progName);
+		    PRINTF("%s: about to call PR_Poll on writable socket !\n", progName);
 		    cc = PR_Poll(pollset, 1, PR_INTERVAL_NO_TIMEOUT);
-		    printf("%s: PR_Poll returned with writable socket !\n", progName);
+		    PRINTF("%s: PR_Poll returned with writable socket !\n", progName);
 		} while (1);
 		pollset[0].in_flags  = PR_POLL_READ;
 	    }
 	}
 
 	if (pollset[0].in_flags) {
-	    printf("%s: PR_Poll returned 0x%02x for socket out_flags.\n",
+	    PRINTF("%s: PR_Poll returned 0x%02x for socket out_flags.\n",
 		   progName, pollset[0].out_flags);
 	}
 	if (   (pollset[0].out_flags & PR_POLL_READ) 
@@ -628,7 +634,7 @@ int main(int argc, char **argv)
 	    ) {
 	    /* Read from socket and write to stdout */
 	    nb = PR_Read(pollset[0].fd, buf, sizeof(buf));
-	    printf("%s: Read from server %d bytes\n", progName, nb);
+	    PRINTF("%s: Read from server %d bytes\n", progName, nb);
 	    if (nb < 0) {
 		if (PR_GetError() != PR_WOULD_BLOCK_ERROR) {
 		    SECU_PrintError(progName, "read from socket failed");
