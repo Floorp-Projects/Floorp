@@ -45,7 +45,7 @@
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?> 
 <?xml-stylesheet href="chrome://calendar/skin/calendar.css" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/communicator.css" type="text/css"?>
-<?xml-stylesheet href="chrome://calendar/content/unifinder/unifinderxul.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://calendar/skin/unifinder.css" type="text/css"?>
 
 
 <!-- Overlays -->
@@ -53,7 +53,6 @@
 <?xul-overlay href="chrome://calendar/content/calendarMenuOverlay.xul"?>
 <?xul-overlay href="chrome://calendar/content/datepicker/datepicker-overlay.xul"?>
 
-<?xul-overlay href="chrome://calendar/content/unifinder/unifinderOverlay.xul"?>
 <?xul-overlay href="chrome://calendar/content/calendarDayView.xul"?>
 <?xul-overlay href="chrome://calendar/content/calendarWeekView.xul"?>
 <?xul-overlay href="chrome://calendar/content/calendarMonthView.xul"?>
@@ -109,7 +108,7 @@
 <!-- NEEDED FOR DATE UTILS -->
 <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
 <script type="application/x-javascript" src="chrome://calendar/content/dateUtils.js"/>
-<script type="application/x-javascript" src="chrome://calendar/content/unifinder/unifinder.js"/>
+<script type="application/x-javascript" src="chrome://calendar/content/unifinder.js"/>
 
 <script type="application/x-javascript" src="chrome://calendar/content/calendar.js"/>
 <script type="application/x-javascript" src="chrome://calendar/content/calendarEvent.js"/>
@@ -174,17 +173,43 @@
     
    	<hbox id="calendar-content-box" flex="1">
 
-      
-   		<!-- UNIFINDER OVERLAY  -->
-    
-   		<unifinder id="calendar-unifinder-overlay" menu-popup="unifinder-options-menu" flex="1"/>
+         <vbox flex="1">
+            <toolbox>
+               <toolbar class="unifinder-toolbar chromeclass-toolbar" flex="1">
+                  <button orient="vertical" observes="delete_command" class="unifinder-remove-button plain" tooltiptext="&calendar.tools.delete.tooltip;" label="&calendar.delete.label;" oncommand="unifinderRemoveCommand()"/>
+                  <button orient="vertical" observes="modify_command" class="unifinder-modify-button plain" tooltiptext="&calendar.tools.modify.tooltip;" label="&calendar.modify.label;" oncommand="unifinderModifyCommand()"/>
+               </toolbar>
+            </toolbox>
+            <box flex="1">
+               <tabbox class="unifinder-tab-box" orient="vertical" flex="1" persist="selectedTab">
+                   <tabs>
+                      <tab label="&calendar.main.tab.label;" />
+                      <tab label="&calendar.search.tab.label;" />
+                   </tabs>
+                   
+                   <tabpanels flex="1">
+                      <tabpanel id="unifinder-categories-box" flex="1">
+                         <listbox id="unifinder-categories-tree" seltype="multiple" onselect="unifinderClickEvent( this )" class="unifinder-tree-class" flex="1"/>
+                      </tabpanel>
+               
+                      <tabpanel orient="vertical" flex="1">
+                         <box align="center">
+                            <label control="unifinder-search-field" value="&calendar.search.options.searchfor;"/>
+                            <textbox id="unifinder-search-field" onkeypress="unifinderSearchKeyPress( this, event )" flex="1"/>
+                         </box>
+                         <listbox id="unifinder-search-results-tree" seltype="multiple" onselect="unifinderClickEvent( this )" class="unifinder-tree-class" flex="1"/>
+                      </tabpanel>
+                   </tabpanels>
+               </tabbox>
+            </box>
+         </vbox>
        
-   		<splitter id="unifinder-splitter" collapse="before" persist="state hidden collapsed"
-              class="chromeclass-extrachrome sidebar-splitter"
-              orient="horizontal">
-          <grippy class="sidebar-splitter-grippy"/>
+   		<splitter collapse="before" persist="state hidden collapsed"
+              class="chromeclass-extrachrome sidebar-splitter" orient="horizontal">
+            <grippy class="sidebar-splitter-grippy"/>
          </splitter>
-   		<!-- Begin Day/Month/Week Deck -->
+   		
+         <!-- Begin Day/Month/Week Deck -->
          <deck id="calendar-deck" selectedIndex="0" flex="1">
    				 
    			 <!-- Calendar Month View -->

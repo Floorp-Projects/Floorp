@@ -52,11 +52,6 @@
     <popup  id="oe-date-picker-popup"  oncommand="yourCommandFunction( this )" >
     </popup>
 * 
-* Attach the date picker to an item using the popup attribute, an image for example:
-* 
-      <image class="four-state-image-button" popup="oe-date-picker-popup" onmousedown="yourPrepareDatePickerFunction()"  />
- 
-* 
 * In your .js, initialize the picker with the inital date when the user clicks, set to now in this example:
 * 
       function yourPrepareDatePickerFunction( )

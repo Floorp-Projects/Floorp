@@ -136,7 +136,7 @@
                         </hbox>
                         <hbox  id="start-date-box" align="center">
                             <textbox class="date-text-class" id="start-date-text" readonly="true"                 onmousedown="prepareDatePicker('start-date-text')" popup="oe-date-picker-popup" position="after_start"/>
-                            <image class="four-state-image-button event-date-button-class" id="start-date-button" onmousedown="prepareDatePicker('start-date-text')" popup="oe-date-picker-popup" position="after_start" />
+                            <image class="event-date-button-class" id="start-date-button" onmousedown="prepareDatePicker('start-date-text')" popup="oe-date-picker-popup" position="after_start" />
                         </hbox>
                     </row>
                     
@@ -147,7 +147,7 @@
                         </hbox>
                         <hbox  id="end-date-box" align="center">
                             <textbox class="date-text-class" id="end-date-text" readonly="true"                 onmousedown="prepareDatePicker('end-date-text')" popup="oe-date-picker-popup" position="after_start"/>
-                            <image class="four-state-image-button event-date-button-class" id="end-date-button" onmousedown="prepareDatePicker('end-date-text')" popup="oe-date-picker-popup" position="after_start" />
+                            <image class="event-date-button-class" id="end-date-button" onmousedown="prepareDatePicker('end-date-text')" popup="oe-date-picker-popup" position="after_start" />
                         </hbox>
                     </row>
                     
@@ -165,7 +165,7 @@
                         </hbox>
                         <hbox id="start-event-time-box" align="center">
                             <textbox id="start-time-text" readonly="true" value=""      onmousedown="prepareTimePicker('start-time-text')" popup="oe-time-picker-popup" position="after_start"/>
-                            <image class="four-state-image-button" id="start-time-button" onmousedown="prepareTimePicker('start-time-text')" popup="oe-time-picker-popup" position="after_start"/>
+                            <image id="start-time-button" onmousedown="prepareTimePicker('start-time-text')" popup="oe-time-picker-popup" position="after_start"/>
                         </hbox>
                     </row>
                     
@@ -177,7 +177,7 @@
                         </hbox>
                         <hbox id="end-event-time-box" align="center">
                             <textbox id="end-time-text" readonly="true" value=""      onmousedown="prepareTimePicker('end-time-text')" popup="oe-time-picker-popup" position="after_start"/>
-                            <image class="four-state-image-button" id="end-time-button" onmousedown="prepareTimePicker('end-time-text')" popup="oe-time-picker-popup" position="after_start"/>
+                            <image id="end-time-button" onmousedown="prepareTimePicker('end-time-text')" popup="oe-time-picker-popup" position="after_start"/>
                         </hbox>
                     </row>
                     
@@ -288,7 +288,7 @@
                                   <radio group="repeat-until-group" id="repeat-until-radio" disable-controller="repeat" selected="true" label="&newevent.until.label;"   oncommand="commandUntil()"/>
                                   <spacer id="until-spacer"/>
                                   <textbox id="repeat-end-date-text" readonly="true" value="" onmousedown="prepareDatePicker('repeat-end-date-text')" popup="oe-date-picker-popup"  position="before_start"/>
-                                  <image class="four-state-image-button" id="repeat-end-date-button" onmousedown="prepareDatePicker('repeat-end-date-text')" popup="oe-date-picker-popup"  position="before_start"/>
+                                  <image id="repeat-end-date-button" onmousedown="prepareDatePicker('repeat-end-date-text')" popup="oe-date-picker-popup"  position="before_start"/>
                               </hbox>
                               
                               

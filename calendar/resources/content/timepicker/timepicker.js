@@ -52,11 +52,6 @@
     <popup  id="oe-time-picker-popup"  oncommand="yourCommandFunction( this )" >
     </popup>
 * 
-* Attach the time picker to an item using the popup attribute, an image for example:
-* 
-      <image class="four-state-image-button" popup="oe-time-picker-popup" onmousedown="yourPrepareTimePickerFunction()"  />
- 
-* 
 * In your .js, initialize the picker with the inital time when the user clicks, set to now in this example:
 * 
       function yourPrepareTimePickerFunction( )

@@ -21,6 +21,7 @@
  * Contributor(s): Garth Smedley <garths@oeone.com>
  *                 Mike Potter <mikep@oeone.com>
  *                 Chris Charabaruk <coldacid@meldstar.com>
+ *						 Colin Phillips <colinp@oeone.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -93,24 +94,6 @@ function unifinderInit( CalendarWindow )
 }
 
 
-function unifinderSelectTab( tabid )
-{
-    var unifinderList = document.getElementsByTagName("unifinder");
-    
-    if( unifinderList.length > 0 )
-    {
-        var unifinder = unifinderList[0];
-        
-        var newTab = document.getElementById( tabid );
-        
-        if( newTab )
-        {
-            unifinder.selectedTab = newTab;
-        }
-    }
-}
-
-
 var gSearchEventTable = new Array();
 
 var gDateFormater = new DateFormater();
@@ -174,16 +157,6 @@ function prepareCalendarUnifinder( eventSource )
    // set up our calendar event observer
    
    gICalLib.addObserver( unifinderEventDataSourceObserver );
-}
-
-
-/**
-*   Called when the calendar is unloaded
-*/
-
-function finishCalendarUnifinder( eventSource )
-{
-//   eventSource.removeObserver( unifinderEventDataSourceObserver  );
 }
 
 

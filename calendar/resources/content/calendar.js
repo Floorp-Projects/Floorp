@@ -180,8 +180,6 @@ function update_date( Refresh )
 
 function calendarFinish()
 {
-   finishCalendarUnifinder( gEventSource );
-   
    gCalendarWindow.close( );
 }
 
