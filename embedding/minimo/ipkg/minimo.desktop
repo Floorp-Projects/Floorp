@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Minimo
+Comment=Minimo web browser
+Exec=minimo http://www.mozilla.org/projects/minimo/home.html
+Terminal=0
+Type=Application
+Icon=minimo.png
+Categories=Application;PIM
+StartupNotify=True

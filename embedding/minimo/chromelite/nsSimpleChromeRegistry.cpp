@@ -94,12 +94,18 @@ nsSimpleChromeRegistry::LoadStyleSheet(nsICSSStyleSheet** aSheet, const nsACStri
     NS_ENSURE_SUCCESS(rv, rv);
   }
   
-  if (mCSSLoader) {
+  if (mCSSLoader)
     rv = mCSSLoader->LoadAgentSheet(uri, aSheet);
-    NS_ENSURE_SUCCESS(rv, rv);
+    
+#ifdef DEBUG
+  if (NS_FAILED(rv)) {
+    nsXPIDLCString spec;
+    uri->GetSpec(spec);
+    printf("chrome: failed to load: %s\n", spec.get());   
   }
-  
-  return NS_OK;
+#endif
+
+  return rv;
 }
 
 NS_IMETHODIMP 

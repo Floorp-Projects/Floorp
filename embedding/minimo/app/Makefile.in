@@ -47,12 +47,16 @@ LIBS		+= \
 
 include $(topsrcdir)/config/config.mk
 
+ifdef BUILD_STATIC_LIBS
+
 FINAL_LINK_COMPS=$(topsrcdir)/embedding/minimo/app/minimo-link-comps
 
 include $(topsrcdir)/config/static-config.mk
 
 EXTRA_DEPS	+= $(STATIC_EXTRA_DEPS)
 EXTRA_DSO_LIBS	+= $(STATIC_EXTRA_DSO_LIBS)
+
+endif
 
 EXTRA_LIBS	+= -L$(DEPTH)/dist/lib/components \
                    $(EXTRA_DSO_LIBS)              \
