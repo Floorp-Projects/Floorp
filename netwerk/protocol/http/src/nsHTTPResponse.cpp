@@ -460,12 +460,12 @@ nsHTTPResponse::SetHeaderInternal(const char* i_Header, const char* i_Value)
     else if (i_Header)
     {
         nsIAtom* header = NS_NewAtom(i_Header);
-        if (!atom)
+        if (!header)
             return NS_ERROR_OUT_OF_MEMORY;
 
         PRInt32 cnt = m_pArray->Count();
         for (PRInt32 i = 0; i < cnt; i++) {
-            nsHeaderPair* element = NS_STATIC_CAST(nsHeaderPair*, m_pArray[i]);
+            nsHeaderPair* element = NS_STATIC_CAST(nsHeaderPair*, m_pArray->ElementAt(i));
             if (header == element->atom) {
                 m_pArray->RemoveElementAt(i);
                 cnt = m_pArray->Count();
@@ -491,7 +491,7 @@ nsHTTPResponse::GetHeader(const char* i_Header, const char* *o_Value) const
 
     for (PRInt32 i = m_pArray->Count() - 1; i >= 0; --i) 
     {
-        nsHeaderPair* element = NS_STATIC_CAST(nsHeaderPair*, m_pArray[i]);
+        nsHeaderPair* element = NS_STATIC_CAST(nsHeaderPair*, m_pArray->ElementAt(i));
         if ((header == element->atom))
         {
             *o_Value = (element->value) ? element->value->ToNewCString() : nsnull;
