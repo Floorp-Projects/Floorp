@@ -32,6 +32,6 @@
 		<tabpanel />
 	</tabcontrol> 
 
-	<html:iframe src="about:blank" height="200" width="100%" style="height: 200; width: 100%;" id="content" />
+	<html:iframe src="about:blank" height="150" width="100%" style="height: 150; width: 100%;" id="content" />
 	<html:iframe src="about:blank" height="100%" width="100%" style="height: 100%; width: 100%;" flex="100%" id="results" />
 </window>
