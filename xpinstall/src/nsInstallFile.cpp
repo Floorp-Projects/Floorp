@@ -169,7 +169,7 @@ PRInt32 nsInstallFile::CompleteFileMove()
         return -1;
     }
    	
-    if ( mExtracedFile->Equals(*mFinalFile) ) 
+    if ( *mExtracedFile == *mFinalFile ) 
     {
         /* No need to rename, they are the same */
         result = 0;

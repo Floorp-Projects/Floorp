@@ -68,7 +68,7 @@ PRInt32 nsInstallExecute::Complete()
     if (mExecutableFile == nsnull)
         return nsInstall::INVALID_ARGUMENTS;
 
-    nsFileSpec appPath( *mExecutableFile, false);
+    nsFileSpec appPath( *mExecutableFile);
     
     if (!appPath.Exists())
 	{
