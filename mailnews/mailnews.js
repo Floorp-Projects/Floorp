@@ -286,6 +286,8 @@ pref("mail.send_struct", false);   // ditto
 
 pref("mail.forward_message_mode", 0); // 0=default as attachment 2=forward as inline with attachments, (obsolete)1=forward as quoted
 
+pref("mail.startup.enabledMailCheckOnce", false);
+
 pref("mailnews.max_header_display_length",3); // number of addresses to show
 
 pref("messenger.throbber.url","chrome://messenger/locale/messenger.properties");
