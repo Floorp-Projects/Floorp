@@ -179,7 +179,9 @@
 			</array>
 		</dict>
 	</array>
-	<key>mozProfileDirName</key>
+  <key>mozNewProfileDirName</key>
+  <string>Camino</string>
+	<key>mozOldProfileDirName</key>
 	<string>Chimera</string>
 </dict>
 </plist>
