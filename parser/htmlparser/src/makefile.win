@@ -51,6 +51,7 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\COtherDTD.obj		\
 	.\$(OBJDIR)\CRtfDTD.obj			\
 	.\$(OBJDIR)\nsDTDDebug.obj		\
+	.\$(OBJDIR)\nsHTMLEntities.obj		\
 	.\$(OBJDIR)\nsHTMLNullSink.obj		\
 	.\$(OBJDIR)\nsHTMLTags.obj		\
 	.\$(OBJDIR)\nsHTMLTokens.obj		\
@@ -75,6 +76,7 @@ EXPORTS=					\
 	nsIHTMLContentSink.h			\
 	nsILoggingSink.h			\
 	nsHTMLContentSinkStream.h		\
+	nsHTMLEntities.h			\
 	nsHTMLTokens.h				\
 	nsIParserNode.h				\
 	nsIParser.h				\
@@ -131,12 +133,17 @@ clobber::
 	rm -f $(DIST)\bin\$(DLLNAME).dll
 	rm -f $(DIST)\lib\$(DLLNAME).lib
 
-generate: nsHTMLTags.h
+generate: nsHTMLTags.h nsHTMLEntities.cpp
 
 .\$(OBJDIR)\nsHTMLTags.obj: nsHTMLTags.h
 
 GENTAGS = $(DEPTH)\htmlparser\tools\gentags.pl
+GENENTITIES = $(DEPTH)\htmlparser\tools\genentities.pl
 
 nsHTMLTags.h: $(GENTAGS)
 	rm -f nsHTMLTags.h
 	$(PERL) $(GENTAGS) nsHTMLTags
+
+nsHTMLEntities.cpp: $(GENENTITIES)
+	rm -f nsHTMLEntities.cpp
+	$(PERL) $(GENENTITIES) nsHTMLEntities
