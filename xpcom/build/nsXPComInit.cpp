@@ -384,7 +384,6 @@ nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result,
     return NS_InitXPCOM2(result, binDirectory, nsnull);
 }
 
-
 nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
                               nsIFile* binDirectory,
                               nsIDirectoryServiceProvider* appFileLocationProvider)
@@ -772,82 +771,8 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
 
 
 
-/* 
-   Some symbol loaders use the address of the function defined in the 
-   application, not the "real" function defined by xpcom.  We need to return
-   the address of something in *this* library.  Here, we create some stubs
-   and return them in NS_GetFrozenFunctions.
-*/
-
-PR_STATIC_CALLBACK(nsresult)
-internal_InitXPCOM2(nsIServiceManager* *result,
-                    nsIFile* binDirectory,
-                    nsIDirectoryServiceProvider* appFileLocationProvider)
-{
-    return NS_InitXPCOM2(result, binDirectory, appFileLocationProvider);
-}
-
-PR_STATIC_CALLBACK(nsresult) 
-internal_ShutdownXPCOM(nsIServiceManager* servMgr)
-{
-    return NS_ShutdownXPCOM(servMgr);
-}
-
-PR_STATIC_CALLBACK(nsresult) 
-internal_GetServiceManager(nsIServiceManager* *result)
-{
-    return NS_GetServiceManager(result);
-}
-
-PR_STATIC_CALLBACK(nsresult) 
-internal_GetComponentManager(nsIComponentManager* *result)
-{
-    return NS_GetComponentManager(result);
-}
-
-PR_STATIC_CALLBACK(nsresult)
-internal_GetComponentRegistrar(nsIComponentRegistrar* *result)
-{
-    return NS_GetComponentRegistrar(result);
-}
-
-PR_STATIC_CALLBACK(nsresult) 
-internal_GetMemoryManager(nsIMemory* *result)
-{
-    return NS_GetMemoryManager(result);
-}
-PR_STATIC_CALLBACK(nsresult) 
-internal_NewLocalFile(const nsAString &path, 
-                      PRBool followLinks, 
-                      nsILocalFile* *result)
-{
-    return NS_NewLocalFile(path, followLinks, result);
-} 
-
-PR_STATIC_CALLBACK(nsresult)
-internal_NewNativeLocalFile(const nsACString &path, 
-                            PRBool followLinks, 
-                            nsILocalFile* *result)
-{
-    return NS_NewNativeLocalFile(path, followLinks, result);
-}
-
-
-PR_STATIC_CALLBACK(nsresult)
-internal_RegisterXPCOMExitRoutine(XPCOMExitRoutine exitRoutine, 
-                                  PRUint32 priority)
-{
-    return NS_RegisterXPCOMExitRoutine(exitRoutine, priority);
-}
-
-PR_STATIC_CALLBACK(nsresult)
-internal_UnregisterXPCOMExitRoutine(XPCOMExitRoutine exitRoutine)
-{
-    return NS_UnregisterXPCOMExitRoutine(exitRoutine);
-}
-
 nsresult NS_COM PR_CALLBACK
-NS_GetFrozenFunctions(XPCOMFunctions *functions)
+NS_GetFrozenFunctions(XPCOMFunctions *functions, const char* libraryPath)
 {
     if (!functions)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -855,17 +780,65 @@ NS_GetFrozenFunctions(XPCOMFunctions *functions)
     if (functions->version != XPCOM_GLUE_VERSION)
         return NS_ERROR_FAILURE;
 
-    functions->init = &internal_InitXPCOM2;
-    functions->shutdown = &internal_ShutdownXPCOM;
-    functions->getServiceManager = &internal_GetServiceManager;
-    functions->getComponentManager = &internal_GetComponentManager;
-    functions->getComponentRegistrar = &internal_GetComponentRegistrar;
-    functions->getMemoryManager = &internal_GetMemoryManager;
-    functions->newLocalFile = &internal_NewLocalFile;
-    functions->newNativeLocalFile = &internal_NewNativeLocalFile;
+    PRLibrary *xpcomLib = nsnull;
+    xpcomLib = PR_LoadLibrary(libraryPath);
+    if (!xpcomLib)
+        return NS_ERROR_FAILURE;
 
-    functions->registerExitRoutine = &internal_RegisterXPCOMExitRoutine;
-    functions->unregisterExitRoutine = &internal_UnregisterXPCOMExitRoutine;
+    functions->init = (InitFunc) PR_FindSymbol(xpcomLib, "NS_InitXPCOM2");
+    if (! functions->init) {
+        PR_UnloadLibrary(xpcomLib);
+        return NS_ERROR_FAILURE;
+    }
+    functions->shutdown = (ShutdownFunc) PR_FindSymbol(xpcomLib, "NS_ShutdownXPCOM");
+    if (! functions->shutdown) {
+        PR_UnloadLibrary(xpcomLib);
+        return NS_ERROR_FAILURE;
+    }
+    functions->getServiceManager = (GetServiceManagerFunc) PR_FindSymbol(xpcomLib, "NS_GetServiceManager");
+    if (! functions->getServiceManager) {
+        PR_UnloadLibrary(xpcomLib);
+        return NS_ERROR_FAILURE;
+    }
+    functions->getComponentManager = (GetComponentManagerFunc) PR_FindSymbol(xpcomLib, "NS_GetComponentManager");
+    if (! functions->getComponentManager) {
+        PR_UnloadLibrary(xpcomLib);
+        return NS_ERROR_FAILURE;
+    }
+    functions->getComponentRegistrar = (GetComponentRegistrarFunc) PR_FindSymbol(xpcomLib, "NS_GetComponentRegistrar");
+    if (! functions->getComponentRegistrar) {
+        PR_UnloadLibrary(xpcomLib);
+        return NS_ERROR_FAILURE;
+    }
+    functions->getMemoryManager = (GetMemoryManagerFunc) PR_FindSymbol(xpcomLib, "NS_GetMemoryManager");
+    if (! functions->getMemoryManager) {
+        PR_UnloadLibrary(xpcomLib);
+        return NS_ERROR_FAILURE;
+    }
+    functions->newLocalFile = (NewLocalFileFunc) PR_FindSymbol(xpcomLib, "NS_NewLocalFile");
+    if (! functions->newLocalFile) {
+        PR_UnloadLibrary(xpcomLib);
+        return NS_ERROR_FAILURE;
+    }
+    functions->newNativeLocalFile = (NewNativeLocalFileFunc)PR_FindSymbol(xpcomLib, "NS_NewNativeLocalFile");
+    if (! functions->newNativeLocalFile) {
+        PR_UnloadLibrary(xpcomLib);
+        return NS_ERROR_FAILURE;
+    }
+    functions->registerExitRoutine = (RegisterXPCOMExitRoutineFunc) PR_FindSymbol(xpcomLib, "NS_RegisterXPCOMExitRoutine");
+    if (! functions->registerExitRoutine) {
+        PR_UnloadLibrary(xpcomLib);
+        return NS_ERROR_FAILURE;
+    }
+    functions->unregisterExitRoutine = (UnregisterXPCOMExitRoutineFunc) PR_FindSymbol(xpcomLib, "NS_UnregisterXPCOMExitRoutine");
+    if (! functions->unregisterExitRoutine) {
+        PR_UnloadLibrary(xpcomLib);
+        return NS_ERROR_FAILURE;
+    }
+    
+
+    PR_UnloadLibrary(xpcomLib); // the library is refcnt'ed above by the caller.
+    xpcomLib = nsnull;
 
     return NS_OK;
 }

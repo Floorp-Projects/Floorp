@@ -101,7 +101,7 @@ nsresult NS_COM XPCOMGlueStartup(const char* xpcomFile)
     xpcomFunctions->version = XPCOM_GLUE_VERSION;
     xpcomFunctions->size    = sizeof(XPCOMFunctions);
 
-    rv = (*function)(xpcomFunctions);
+    rv = (*function)(xpcomFunctions, libFile);
     if (NS_FAILED(rv)) {
         free(xpcomFunctions);
         xpcomFunctions = nsnull;  

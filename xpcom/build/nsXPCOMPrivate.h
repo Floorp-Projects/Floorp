@@ -100,9 +100,9 @@ typedef struct XPCOMFunctions{
     UnregisterXPCOMExitRoutineFunc unregisterExitRoutine;
 } XPCOMFunctions;
 
-typedef nsresult (PR_CALLBACK *GetFrozenFunctionsFunc)(XPCOMFunctions *entryPoints);
+typedef nsresult (PR_CALLBACK *GetFrozenFunctionsFunc)(XPCOMFunctions *entryPoints, const char* libraryPath);
 extern "C" NS_COM nsresult
-NS_GetFrozenFunctions(XPCOMFunctions *entryPoints);
+NS_GetFrozenFunctions(XPCOMFunctions *entryPoints, const char* libraryPath);
 
 // think hard before changing this
 #define XPCOM_GLUE_VERSION 1
