@@ -70,6 +70,9 @@ var folderListener = {
 		if (event.GetUnicode() == "DeleteOrMoveMsgCompleted") {
 			HandleDeleteOrMoveMsgCompleted(folder);
 		}     
+                else if (event.GetUnicode() == "DeleteOrMoveMsgFailed") {
+                        HandleDeleteOrMoveMsgFailed(folder);
+                }
     }
 }
 
@@ -90,6 +93,19 @@ function HandleDeleteOrMoveMsgCompleted(folder)
 		setTimeout("window.close();",0);
 
 	}
+}
+
+function HandleDeleteOrMoveMsgFailed(folder)
+{
+        var folderResource = folder.QueryInterface(Components.interfaces.nsIRDFResource);
+        if(!folderResource)
+                return;
+
+        var folderUri = folderResource.Value;
+        if((folderUri == gCurrentFolderUri) && gCurrentMessageIsDeleted)
+        {
+                gCurrentMessageIsDeleted = false;
+        }	
 }
 
 function OnLoadMessageWindow()
