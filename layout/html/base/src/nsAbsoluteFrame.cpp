@@ -397,17 +397,28 @@ nsAbsoluteFrame::LastChild(nsIFrame*& aLastChild) const
   return NS_OK;
 }
 
+NS_METHOD nsAbsoluteFrame::ListTag(FILE* out) const
+{
+  fputs("*absolute", out);
+  PRInt32 contentIndex;
+  GetContentIndex(contentIndex);
+  fprintf(out, "(%d)@%p", contentIndex, this);
+  return NS_OK;
+}
+
 NS_METHOD nsAbsoluteFrame::List(FILE* out, PRInt32 aIndent) const
 {
   // Indent
   for (PRInt32 i = aIndent; --i >= 0; ) fputs("  ", out);
 
   // Output the tag
-  fputs("*absolute", out);
-
-  PRInt32 contentIndex;
-  GetContentIndex(contentIndex);
-  fprintf(out, "(%d)@%p ", contentIndex, this);
+  ListTag(out);
+  nsIView* view;
+  GetView(view);
+  if (nsnull != view) {
+    fprintf(out, " [view=%p]", view);
+    NS_RELEASE(view);
+  }
 
   // Output the rect
   out << mRect;

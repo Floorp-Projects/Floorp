@@ -47,6 +47,7 @@ public:
                      const nsReflowState& aReflowState,
                      nsReflowStatus&      aStatus);
   NS_IMETHOD  List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+  NS_IMETHOD  ListTag(FILE* out = stdout) const;
 
 protected:
   nsIFrame* mFrame;  // the actual absolutely positioned frame
