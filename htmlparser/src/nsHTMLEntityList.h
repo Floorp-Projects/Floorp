@@ -296,7 +296,8 @@ HTML_ENTITY(lsaquo, 8249)
 HTML_ENTITY(rsaquo, 8250)
 HTML_ENTITY(euro, 8364)
 
-// Navigator entity extensions
+// Navigator entity extensions; apos is from XML
+HTML_ENTITY(apos, 39) 
 HTML_ENTITY(AMP, 38)
 HTML_ENTITY(COPY, 169)
 HTML_ENTITY(GT, 62)
