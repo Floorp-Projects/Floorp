@@ -31,8 +31,8 @@ void nsNativeFileSpec::operator = (const nsFilePath& inPath)
 //----------------------------------------------------------------------------------------
 {
 	// Convert '/' to '\'
-	std::string& str = (std::string&)inPath;
-	for (std::string::size_type i = 0; i < str.length(); i++)
+	string& str = (string&)inPath;
+	for (string::size_type i = 0; i < str.length(); i++)
 	{
 		char c = str[i];
 		if (c == '/')
@@ -46,8 +46,8 @@ nsFilePath::nsFilePath(const nsNativeFileSpec& inSpec)
 //----------------------------------------------------------------------------------------
 {
 	// Convert '\' to '/'
-	std::string& str = (std::string&)inSpec;
-	for (std::string::size_type i = 0; i < str.length(); i++)
+	string& str = (string&)inSpec;
+	for (string::size_type i = 0; i < str.length(); i++)
 	{
 		char c = str[i];
 		if (c == '\\')
@@ -57,14 +57,14 @@ nsFilePath::nsFilePath(const nsNativeFileSpec& inSpec)
 } // nsFilePath::nsFilePath
 
 //----------------------------------------------------------------------------------------
-void nsNativeFileSpec::SetLeafName(const std::string& inLeafName)
+void nsNativeFileSpec::SetLeafName(const string& inLeafName)
 //----------------------------------------------------------------------------------------
 {
 	nsFileSpecHelpers::LeafReplace(mPath, '\\', inLeafName);
 } // nsNativeFileSpec::SetLeafName
 
 //----------------------------------------------------------------------------------------
-std::string nsNativeFileSpec::GetLeafName() const
+string nsNativeFileSpec::GetLeafName() const
 //----------------------------------------------------------------------------------------
 {
 	return nsFileSpecHelpers::GetLeaf(mPath, '\\');

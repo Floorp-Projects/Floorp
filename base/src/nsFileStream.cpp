@@ -26,8 +26,6 @@
 #include <Errors.h>
 #endif
 
-using std::ios_base;
-
 //----------------------------------------------------------------------------------------
 PRFileDesc* nsFileStreamHelpers::open(
 	const nsFilePath& inFile,
