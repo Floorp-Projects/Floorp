@@ -229,6 +229,20 @@ LDFLAGS		+= /SUBSYSTEM:WINDOWS
 endif
 endif
 
+ifeq ($(OS_ARCH),WINNT)
+#
+# Control the default heap size.
+# This is the heap returned by GetProcessHeap().
+# As we use the CRT heap, the default size is too large and wastes VM.
+#
+# The default heap size is 1MB on Win32.
+# The heap will grow if need be.
+#
+# Set it to 256k.  See bug 127069.
+#
+LDFLAGS += /HEAP:0x40000
+endif
+
 CXXFLAGS	+= $(MOZ_TOOLKIT_REGISTRY_CFLAGS)
 
 LOCAL_INCLUDES	= -I$(srcdir)
