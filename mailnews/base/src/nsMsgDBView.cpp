@@ -3155,14 +3155,17 @@ PRInt32 nsMsgDBView::FindLevelInThread(nsIMsgDBHdr *msgHdr, nsMsgViewIndex start
 
 nsresult nsMsgDBView::ListIdsInThreadOrder(nsIMsgThread *threadHdr, nsMsgKey parentKey, PRInt32 level, nsMsgViewIndex *viewIndex, PRUint32 *pNumListed)
 {
+  nsresult rv = NS_OK;
   nsCOMPtr <nsISimpleEnumerator> msgEnumerator;
   threadHdr->EnumerateMessages(parentKey, getter_AddRefs(msgEnumerator));
+  PRUint32 numChildren;
+  (void) threadHdr->GetNumChildren(&numChildren);
+
   // skip the first one.
   PRBool hasMore;
   nsCOMPtr <nsISupports> supports;
   nsCOMPtr <nsIMsgDBHdr> msgHdr;
-  nsresult rv;
-  while (NS_SUCCEEDED(rv = msgEnumerator->HasMoreElements(&hasMore)) && (hasMore == PR_TRUE))
+  while (NS_SUCCEEDED(rv) && NS_SUCCEEDED(rv = msgEnumerator->HasMoreElements(&hasMore)) && hasMore)
   {
     rv = msgEnumerator->GetNext(getter_AddRefs(supports));
     if (NS_SUCCEEDED(rv) && supports)
@@ -3185,10 +3188,21 @@ nsresult nsMsgDBView::ListIdsInThreadOrder(nsIMsgThread *threadHdr, nsMsgKey par
       msgHdr->AndFlags(~(MSG_VIEW_FLAG_ISTHREAD | MSG_FLAG_ELIDED), &newFlags);
       (*pNumListed)++;
       (*viewIndex)++;
-      ListIdsInThreadOrder(threadHdr, msgKey, level + 1, viewIndex, pNumListed);
+      if (*pNumListed > numChildren)
+      {
+        NS_ASSERTION(PR_FALSE, "thread corrupt in db");
+        // if we've listed more messages than are in the thread, then the db
+        // is corrupt, and we should invalidate it.
+        // we'll use this rv to indicate there's something wrong with the db
+        // though for now it probably won't get paid attention to.
+        m_db->SetSummaryValid(PR_FALSE);
+        rv = NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE;
+        break;
+      }
+      rv = ListIdsInThreadOrder(threadHdr, msgKey, level + 1, viewIndex, pNumListed);
     }
   }
-  return NS_OK; // we don't want to return the rv from the enumerator when it reaches the end, do we?
+  return rv; // we don't want to return the rv from the enumerator when it reaches the end, do we?
 }
 
 nsresult	nsMsgDBView::ListIdsInThread(nsIMsgThread *threadHdr, nsMsgViewIndex startOfThreadViewIndex, PRUint32 *pNumListed)
