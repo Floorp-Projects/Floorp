@@ -642,7 +642,7 @@ sub print_javascript {
           t = t.parentNode;
         }
         closepopup()
-        var l = document.createElement("iframe");
+        l = document.createElement("iframe");
         l.setAttribute("src", t.href);
         l.setAttribute("id", "popup");
         l.className = "who";
@@ -677,7 +677,7 @@ sub print_javascript {
           t = t.parentNode;
         }
         closepopup()
-        var l = document.createElement("div");
+        l = document.createElement("div");
         nodewrite(l,notes[noteid]);
         l.setAttribute("id", "popup");
         l.style.position = "absolute";
@@ -731,8 +731,8 @@ sub print_javascript {
       return false;
     }
 
-    notes = new Array();
-    builds = new Array();
+    var notes = new Array();
+    var builds = new Array();
 
 __ENDJS
   print $script;
@@ -755,7 +755,7 @@ __ENDJS
       print "builds[$ii]='$bn';\n";
     }
   }
-  print "buildtree = '$::tree';\n";
+  print "var buildtree = '$::tree';\n";
 
   # Use JavaScript to refresh the page every 15 minutes
   print "setTimeout('location.reload()',900000);\n" if $nowdate eq $maxdate;
