@@ -44,19 +44,6 @@ void FlipSlashes(char *name)
     }
 }
 
-void GetPathName(char *file, char *new_path)
-{
-    int i;
-
-    i = strlen(file);
-    for( i=strlen(file); i && file[i] != '\\'; i--);
-    strncpy(new_path, file, i);
-    if( new_path[i] != '\\' ) {
-        new_path[i++] = '\\';
-    }
-    new_path[i] = '\0';
-}
-
 int MakeDir( char *path )
 {
     char *cp, *pstr;
@@ -80,7 +67,7 @@ int MakeDir( char *path )
     }
 }
 
-int CopyIfNecessary(char *oldFile, char *newFile, char *path)
+int CopyIfNecessary(char *oldFile, char *newFile)
 {
     BY_HANDLE_FILE_INFORMATION hNewInfo;
     BY_HANDLE_FILE_INFORMATION hOldInfo;
@@ -119,40 +106,62 @@ int CopyIfNecessary(char *oldFile, char *newFile, char *path)
     }
 
 copy_file:
-    printf("+++ makecopy: Installing %s into directory %s\n", oldFile, path);
     if( ! CopyFile(oldFile, newFile, FALSE) ) {
         return 1;
     }
     return 0;
 }
 
-
-static char new_file[4096];
-static char new_path[4096];
-
 int main( int argc, char *argv[] ) 
 {
-    char fname[_MAX_FNAME];
-    char ext[_MAX_EXT];
+    char old_path[4096];
+    char new_path[4096];
+    char *oldFileName; /* points to where file name starts in old_path */
+    char *newFileName; /* points to where file name starts in new_path */
+    WIN32_FIND_DATA findFileData;
+    HANDLE hFindFile;
+    int rv;
 
     if( argc != 3 ) {
         Usage();
         return 2;
     }
 
-    _splitpath(argv[1], NULL, NULL, fname, ext);
-
-    sprintf(new_file, "%s\\%s%s", argv[2], fname, ext);
-    FlipSlashes(new_file);
+    strcpy(old_path, argv[1]);
+    FlipSlashes(old_path);
+    oldFileName = strrchr(old_path, '\\');
+    if (oldFileName) {
+        oldFileName++;
+    } else {
+        oldFileName = old_path;
+    }
 
     sprintf(new_path, "%s\\", argv[2]);
     FlipSlashes(new_path);
-
+    newFileName = new_path + strlen(new_path);
 
     if( MakeDir(new_path) < 0 ) {
         fprintf(stderr, "\n+++ makecopy: unable to create directory %s\n", new_path);
         return 1;
     }
 
-    return CopyIfNecessary(argv[1], new_file, new_path);
+    hFindFile = FindFirstFile(old_path, &findFileData);
+    if (hFindFile == INVALID_HANDLE_VALUE) {
+        fprintf(stderr, "\n+++ makecopy: no such file: %s\n", argv[1]);
+        return 1;
+    }
+
+    printf("+++ makecopy: Installing %s into directory %s\n", argv[1], argv[2]);
+
+    do {
+        strcpy(oldFileName, findFileData.cFileName);
+        strcpy(newFileName, findFileData.cFileName);
+        rv = CopyIfNecessary(old_path, new_path);
+        if (rv != 0) {
+            break;
+        }
+    } while (FindNextFile(hFindFile, &findFileData) != 0);
+
+    FindClose(hFindFile);
+    return rv;
 }
