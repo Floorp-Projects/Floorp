@@ -26,3 +26,4 @@ nsIDOMMimeType.h
 nsIDOMMimeTypeArray.h
 nsIDOMPlugin.h
 nsIDOMPluginArray.h
+nsIDOMBarProp.h

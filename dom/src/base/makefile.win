@@ -23,6 +23,8 @@ LIBRARY_NAME=jsdombase_s
 DEFINES=-D_IMPL_NS_DOM -DWIN32_LEAN_AND_MEAN
 
 CPPSRCS =			 \
+	nsBarProps.cpp           \
+	nsJSBarProp.cpp          \
 	nsJSEnvironment.cpp	 \
 	nsJSWindow.cpp           \
 	nsJSNavigator.cpp        \
@@ -52,6 +54,8 @@ MODULE=raptor
 REQUIRES=xpcom raptor js netlib
 
 CPP_OBJS= \
+	.\$(OBJDIR)\nsBarProps.obj		\
+	.\$(OBJDIR)\nsJSBarProp.obj		\
 	.\$(OBJDIR)\nsJSEnvironment.obj		\
 	.\$(OBJDIR)\nsJSWindow.obj		\
 	.\$(OBJDIR)\nsGlobalWindow.obj		\
