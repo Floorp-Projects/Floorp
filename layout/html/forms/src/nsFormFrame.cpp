@@ -573,12 +573,12 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
     GetAction(&href);
 
     // Resolve url to an absolute url
-    nsIURI* docURL = nsnull;
-    nsIDocument* doc = nsnull;
-    mContent->GetDocument(doc);
+    nsCOMPtr<nsIURI> docURL;
+    nsCOMPtr<nsIDocument> doc;
+    mContent->GetDocument(*getter_AddRefs(doc));
     NS_ASSERTION(doc, "No document found in Form Submit!\n");
 
-    doc->GetBaseURL(docURL);
+    doc->GetBaseURL(*getter_AddRefs(docURL));
     NS_ASSERTION(docURL, "No Base URL found in Form Submit!\n");
 
       // If an action is not specified and we are inside 
@@ -609,7 +609,6 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
         result = NS_ERROR_OUT_OF_MEMORY;
       }
     }
-    NS_IF_RELEASE(doc);
 
     nsAutoString target;
     GetTarget(&target);
@@ -627,7 +626,6 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
     }
     nsAutoString absURLSpec;
     result = NS_MakeAbsoluteURI(href, docURL, absURLSpec);
-    NS_IF_RELEASE(docURL);
     if (NS_FAILED(result)) return result;
 
     // Now pass on absolute url to the click handler
