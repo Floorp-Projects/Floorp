@@ -1623,7 +1623,7 @@ nsEditorShell::GetWrapColumn(PRInt32* aWrapColumn)
         nsCOMPtr<nsITextEditor>  textEditor = do_QueryInterface(mEditor);
         if (textEditor)
         {
-          PRUint32 wc;
+          PRInt32 wc;
           err = textEditor->GetBodyWrapWidth(&wc);
           if (NS_SUCCEEDED(err))
             *aWrapColumn = (PRInt32)wc;
