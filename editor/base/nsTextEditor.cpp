@@ -1666,6 +1666,9 @@ NS_IMETHODIMP nsTextEditor::OutputTextToStream(nsIOutputStream* aOutputStream, n
       return rv;
   }
 
+  // Try to turn on pretty printing, but don't panic if it doesn't work:
+  (void)encoder->PrettyPrint(PR_TRUE);
+
   return encoder->EncodeToStream(aOutputStream);
 }
 
