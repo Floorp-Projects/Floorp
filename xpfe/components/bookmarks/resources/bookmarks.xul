@@ -1,4 +1,4 @@
-<?xml version="1.0"?> <!-- -*- Mode: SGML; indent-tabs-mode: nil; -*- -->
+<?xml version="1.0"?> <!-- -*- Mode: HTML; indent-tabs-mode: nil; -*- -->
 <!--
 
   The contents of this file are subject to the Netscape Public
@@ -24,6 +24,8 @@
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/bookmarks/bookmarks.css" type="text/css"?>
+<?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
+<?xul-overlay href="chrome://global/content/tasksOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/bookmarks/bookmarks.dtd">
 
@@ -43,22 +45,45 @@
   <html:script src="chrome://global/content/strres.js"/>
   <html:script src="chrome://global/content/globalOverlay.js"/>
 
-  <menubar>
-    <menu value="&menu.file.label;">
-	  <menupopup>
+<broadcasterset id="broadcasterset">
+	<!-- File Menu -->
+	<broadcaster id="cmd_newNavigator"/>
+	<broadcaster id="cmd_newMessage"/>
+	<broadcaster id="cmd_newEditor"/>
+	<broadcaster id="cmd_close"/>
+</broadcasterset>
+<keyset id="keyset">
+	<!-- File Menu -->
+	<key id="key_newNavigator"/>
+	<key id="key_newMessage"/>
+	<key id="key_close"/>
+</keyset>
+
+<menubar>
+  <menu id="menu_File">
+    <menupopup id="menu_FilePopup">
       <menuitem value="&menuitem.newBookmark.label;" oncommand="return doContextCmd('http://home.netscape.com/NC-rdf#command?cmd=newbookmark');" />
-      <menuitem value="&menuitem.newFolder.label;" oncommand="return doContextCmd('http://home.netscape.com/NC-rdf#command?cmd=newfolder');"/>
-      <menuitem value="&menuitem.newSeparator.label;" oncommand="return doContextCmd('http://home.netscape.com/NC-rdf#command?cmd=newseparator');"/>
+      <menu id="menu_New">
+        <menupopup id="menu_NewPopup">
+          <menuitem value="&menuitem.newFolder.label;" oncommand="return doContextCmd('http://home.netscape.com/NC-rdf#command?cmd=newfolder');"/>
+          <menuitem value="&menuitem.newSeparator.label;" oncommand="return doContextCmd('http://home.netscape.com/NC-rdf#command?cmd=newseparator');"/>
+          <menuseparator/>
+          <menuitem id="menu_newNavigator"/>
+          <menuitem id="menu_newMessage"/>
+          <menuitem id="cmd_newCard"/>
+          <menuitem id="menu_newEditor"/>
+        </menupopup>
+      </menu>
       <menuseparator/>
       <menuitem value="&menuitem.import.label;" oncommand="return doContextCmd('http://home.netscape.com/NC-rdf#command?cmd=import');" />
       <menuitem value="&menuitem.export.label;" oncommand="return doContextCmd('http://home.netscape.com/NC-rdf#command?cmd=export');" />
       <menuseparator/>
-      <menuitem value="&menuitem.close.label;" oncommand="window.close()" />
-	  </menupopup>
-    </menu>
+      <menuitem id="menu_close"/>
+    </menupopup>
+  </menu>
 
-    <menu value="&menu.edit.label;">
-	  <menupopup>
+  <menu id="menu_Edit">
+    <menupopup>
       <menuitem value="&menuitem.undo.label;" disabled="true" />
       <menuseparator/>
       <menuitem value="&menuitem.cut.label;" oncommand="return doCut()" />
@@ -70,18 +95,17 @@
       <menuitem value="&menuitem.find.label;" oncommand="return OpenBookmarksFind();"/>
       <menuseparator/>
       <menuitem value="&menuitem.properties.label;" oncommand="return BookmarkProperties();"/>
-	  </menupopup>
-    </menu>
+    </menupopup>
+  </menu>
 
-    <menu value="&menu.view.label;">
-	  <menupopup>
+  <menu id="menu_View">
+    <menupopup>
       <menuitem value="&menuitem.newbookmarkfolder.label;" oncommand="return doContextCmd('http://home.netscape.com/NC-rdf#command?cmd=setnewbookmarkfolder');" />
       <menuitem value="&menuitem.newinternetsearchfolder.label;" oncommand="return doContextCmd('http://home.netscape.com/NC-rdf#command?cmd=setnewsearchfolder');" />
       <menuitem value="&menuitem.personaltoolbarfolder.label;" oncommand="return doContextCmd('http://home.netscape.com/NC-rdf#command?cmd=setpersonaltoolbarfolder');" />
-	  </menupopup>
-    </menu>
-
-  </menubar>
+    </menupopup>
+  </menu>
+</menubar>
 
 <popupset>
 <popup id="contextual" oncreate="return fillContextMenu('contextual');" >
@@ -107,13 +131,20 @@
          rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
          loading="rdf:http://home.netscape.com/NC-rdf#loading">
          <treerow>
-           <treecell><treeindentation/><separator class="groove" flex="1" align="center"/></treecell>
-           <treecell><separator flex="100%" align="center" class="groove" /></treecell>
-           <treecell><separator flex="100%" align="center" class="groove" /></treecell>
-           <treecell><separator flex="100%" align="center" class="groove" /></treecell>
-           <treecell><separator flex="100%" align="center" class="groove" /></treecell>
-           <treecell><separator flex="100%" align="center" class="groove" /></treecell>
-           <treecell><separator flex="100%" align="center" class="groove" /></treecell>
+           <treecell><treeindentation/>
+             <separator class="groove" flex="1" align="center"/></treecell>
+           <treecell>
+             <separator class="groove" flex="1" align="center"/></treecell>
+           <treecell>
+             <separator class="groove" flex="1" align="center"/></treecell>
+           <treecell>
+             <separator class="groove" flex="1" align="center"/></treecell>
+           <treecell>
+             <separator class="groove" flex="1" align="center"/></treecell>
+           <treecell>
+             <separator class="groove" flex="1" align="center"/></treecell>
+           <treecell>
+             <separator class="groove" flex="1" align="center"/></treecell>
          </treerow>
        </treeitem>  		
       </treechildren>

@@ -21,16 +21,12 @@
 
 <!-- extracted from ./bookmarks.xul -->
 
-<!ENTITY menu.file.label                "File">
-<!ENTITY menuitem.newWindow.label       "New Window">
 <!ENTITY menuitem.newBookmark.label     "New Bookmark">
 <!ENTITY menuitem.newFolder.label       "New Folder">
 <!ENTITY menuitem.newSeparator.label    "New Separator">
 <!ENTITY menuitem.import.label          "Import...">
 <!ENTITY menuitem.export.label          "Export...">
-<!ENTITY menuitem.close.label           "Close">
 
-<!ENTITY menu.edit.label                "Edit">
 <!ENTITY menuitem.undo.label            "Undo">
 <!ENTITY menuitem.redo.label            "Redo">
 <!ENTITY menuitem.cut.label             "Cut">
@@ -41,7 +37,6 @@
 <!ENTITY menuitem.find.label            "Find...">
 <!ENTITY menuitem.properties.label      "Properties...">
 
-<!ENTITY menu.view.label                "View">
 <!ENTITY menuitem.newbookmarkfolder.label         "Set as New Bookmark Folder">
 <!ENTITY menuitem.newinternetsearchfolder.label   "Set as New Internet Search Folder">
 <!ENTITY menuitem.personaltoolbarfolder.label     "Set as Personal Toolbar Folder">
