@@ -28,6 +28,8 @@
 #include "nsIFile.h"
 #include "nsCOMPtr.h"
 
+class nsExternalAppHandler;
+
 class nsExternalHelperAppService : public nsIExternalHelperAppService
 {
 public:
@@ -36,6 +38,8 @@ public:
 
   nsExternalHelperAppService();
   virtual ~nsExternalHelperAppService();
+
+  virtual nsExternalAppHandler * CreateNewExternalHandler();
 
 protected:
 
