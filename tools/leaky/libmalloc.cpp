@@ -291,6 +291,9 @@ SetMallocFlags(u_long aFlags)
     close(gLogFD);
     gLogFD = -1;
   }
+  if (LIBMALLOC_CHECK & gFlags) {
+    mallopt(M_CHECK_ACTION, 1);
+  }
 
   // Try to guarantee that the address map is always dumped
   atexit(DumpAddressMap);
