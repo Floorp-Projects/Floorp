@@ -41,6 +41,10 @@ struct priv_data {
 #define NEXT_METH(state)  (((struct priv_data *)state->priv)->next_method)
 #define NEXT_CONST(state) (((struct priv_data *)state->priv)->next_const)
 
+#ifdef DEBUG_shaver
+#define DEBUG_shaver_sort
+#endif
+    
 /*
  * If p is an ident for an interface, and we don't have an entry in the
  * interface map yet, add one.
@@ -59,13 +63,13 @@ add_interface_maybe(IDL_tree_func_data *tfd, gpointer user_data)
                 iid = strdup(iid ? iid : "");
                 g_hash_table_insert(IFACE_MAP(state), iface, iid);
                 IFACES(state)++;
-#ifdef DEBUG_shaver
+#ifdef DEBUG_shaver_ifaces
                 fprintf(stderr, "adding interface #%d: %s/%s\n", IFACES(state),
                         iface, iid[0] ? iid : "<unresolved>");
 #endif
             }
         } else {
-#ifdef DEBUG_shaver
+#ifdef DEBUG_shaver_ifaces
             fprintf(stderr, "ident %s isn't an interface (%s)\n",
                     IDL_IDENT(tfd->tree).str, IDL_NODE_TYPE_NAME(up));
 #endif
@@ -143,7 +147,11 @@ fill_iid(struct nsID *id, char *str)
     PRInt32 n1, n2, n3[8];
     PRInt32 n0, i;
 
-#ifdef DEBUG_shaver
+    if (!str[0]) {
+        memset(id, 0, sizeof(*id));
+        return TRUE;
+    }
+#ifdef DEBUG_shaver_iid
     fprintf(stderr, "parsing iid   %s\n", str);
 #endif
 
@@ -159,7 +167,7 @@ fill_iid(struct nsID *id, char *str)
       id->m3[i] = (PRInt8) n3[i];
     }
 
-#ifdef DEBUG_shaver
+#ifdef DEBUG_shaver_iid
     if (count == 11) {
         fprintf(stderr, "IID parsed to ");
         print_IID(id, stderr);
@@ -175,39 +183,45 @@ fill_ide_table(gpointer key, gpointer value, gpointer user_data)
 {
     TreeState *state = user_data;
     char *interface = key, *iid = value;
-#if 1
-    struct nsID id = {
-        0x00112233,
-        0x4455,
-        0x6677,
-        {0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff}
-    };
-#else
     struct nsID id;
-#endif
     XPTInterfaceDirectoryEntry *ide;
 
     PR_ASSERT(iid);
-#ifdef DEBUG_shaver
+#ifdef DEBUG_shaver_ifaces
     fprintf(stderr, "filling %s\n", interface);
 #endif
-#if 1
-    if (iid[0] && !fill_iid(&id, iid)) {
+    if (!fill_iid(&id, iid)) {
         IDL_tree_error(state->tree, "cannot parse IID %s\n", iid);
         return FALSE;
     }
-#endif
 
     ide = &(HEADER(state)->interface_directory[IFACES(state)]);
     if (!XPT_FillInterfaceDirectoryEntry(ide, &id, interface, NULL, NULL)) {
         IDL_tree_error(state->tree, "INTERNAL: XPT_FillIDE failed for %s\n",
                        interface);
-        return FALSE;;
+        return FALSE;
     }
 
     IFACES(state)++;
     free(iid);
     return TRUE;
+}
+
+static int
+compare_iids(const void *ap, const void *bp)
+{
+    const nsID *a = ap, *b = bp;
+    int i;
+#define COMPARE(field) if (a->field > b->field) return 1; \
+                       if (b->field > a->field) return -1;
+    COMPARE(m0);
+    COMPARE(m1);
+    COMPARE(m2);
+    for (i = 0; i < 8; i++) {
+        COMPARE(m3[i]);
+    }
+    return 0;
+#undef COMPARE
 }
 
 /* sort the IDE block as per the typelib spec: IID order, unresolved first */
@@ -217,7 +231,26 @@ sort_ide_block(TreeState *state)
     XPTInterfaceDirectoryEntry *ide; 
     int i;
 
-    /* XXX we should sort, but for now just enumerate */
+    /* boy, I sure hope qsort works correctly everywhere */
+#ifdef DEBUG_shaver_sort
+    fputs("before sort:\n", stderr);
+    for (i = 0; i < IFACES(state); i++) {
+        fputs("  ", stderr);
+        print_IID(&HEADER(state)->interface_directory[i].iid, stderr);
+        fputc('\n', stderr);
+    }
+#endif
+    qsort(HEADER(state)->interface_directory, IFACES(state),
+          sizeof(*ide), compare_iids);
+#ifdef DEBUG_shaver_sort
+    fputs("after sort:\n", stderr);
+    for (i = 0; i < IFACES(state); i++) {
+        fputs("  ", stderr);
+        print_IID(&HEADER(state)->interface_directory[i].iid, stderr);
+        fputc('\n', stderr);
+    }
+#endif
+
     for (i = 0; i < IFACES(state); i++) {
         ide = HEADER(state)->interface_directory + i;
         g_hash_table_insert(IFACE_MAP(state), ide->name, (void *)(i + 1));
@@ -255,11 +288,11 @@ pass_1(TreeState *state)
         }
 
         /* find all interfaces, top-level and referenced by others */
-#ifdef DEBUG_shaver
+#ifdef DEBUG_shaver_ifaces
         fprintf(stderr, "finding interfaces\n");
 #endif
         IDL_tree_walk_in_order(state->tree, find_interfaces, state);
-#ifdef DEBUG_shaver
+#ifdef DEBUG_shaver_faces
         fprintf(stderr, "found %d interfaces\n", IFACES(state));
 #endif
         HEADER(state) = XPT_NewHeader(IFACES(state));
@@ -270,7 +303,7 @@ pass_1(TreeState *state)
 
         /* fill IDEs from hash table */
         IFACES(state) = 0;
-#ifdef DEBUG_shaver
+#ifdef DEBUG_shaver_ifaces
         fprintf(stderr, "filling IDE table\n");
 #endif
         g_hash_table_foreach_remove(IFACE_MAP(state), fill_ide_table, state);
@@ -285,7 +318,7 @@ pass_1(TreeState *state)
         uint32 len, header_sz;
         XPTState *xstate = XPT_NewXDRState(XPT_ENCODE, NULL, 0);
         XPTCursor curs, *cursor = &curs;
-#ifdef DEBUG_shaver
+#ifdef DEBUG_shaver_misc
         fprintf(stderr, "writing the typelib\n");
 #endif
 
@@ -375,7 +408,7 @@ typelib_interface(TreeState *state)
         return FALSE;
     
     CURRENT(state) = ide->interface_descriptor = id;
-#ifdef DEBUG_shaver
+#ifdef DEBUG_shaver_ifaces
     fprintf(stderr, "DBG: starting interface %s @ %p\n", name, id);
 #endif
     NEXT_METH(state) = 0;
@@ -384,7 +417,7 @@ typelib_interface(TreeState *state)
     state->tree = IDL_INTERFACE(iface).body;
     if (state->tree && !xpidl_process_node(state))
         return FALSE;
-#ifdef DEBUG_shaver
+#ifdef DEBUG_shaver_ifaces
     fprintf(stderr, "DBG: ending interface %s\n", name);
 #endif
     return TRUE;
@@ -480,7 +513,7 @@ fill_td_from_type(TreeState *state, XPTTypeDescriptor *td, IDL_tree type)
                         return FALSE;
                     }
                     td->type.interface = ide - ides + 1;
-#ifdef DEBUG_shaver
+#ifdef DEBUG_shaver_index
                     fprintf(stderr, "DBG: index %d for %s\n",
                             td->type.interface, className);
 #endif
@@ -491,6 +524,16 @@ fill_td_from_type(TreeState *state, XPTTypeDescriptor *td, IDL_tree type)
                 td->prefix.flags = TD_VOID | XPT_TDP_POINTER;
                 break;
               default:
+                if (IDL_NODE_TYPE(IDL_NODE_UP(up)) == IDLN_TYPE_DCL) {
+                    /* restart with the underlying type */
+                    IDL_tree new_type;
+                    new_type = IDL_TYPE_DCL(IDL_NODE_UP(up)).type_spec;
+#ifdef DEBUG_shaver_misc
+                    fprintf(stderr, "following %s typedef to %s\n",
+                            IDL_IDENT(type).str, IDL_NODE_TYPE_NAME(new_type));
+#endif
+                    return fill_td_from_type(state, td, new_type);
+                }
                 IDL_tree_error(type, "can't handle %s ident in param list\n",
 #ifdef DEBUG_shaver
                         IDL_NODE_TYPE_NAME(IDL_NODE_UP(type))
@@ -498,6 +541,9 @@ fill_td_from_type(TreeState *state, XPTTypeDescriptor *td, IDL_tree type)
                         "that type of"
 #endif
                         );
+#ifdef DEBUG_shaver
+                PR_ASSERT(0);
+#endif
                 return FALSE;
             }
             break;
@@ -576,7 +622,7 @@ static gboolean
 typelib_attr_accessor(TreeState *state, XPTMethodDescriptor *meth,
                       gboolean getter)
 {
-#ifdef DEBUG_shaver
+#ifdef DEBUG_shaver_attr
     fprintf(stdout, "DBG: adding %cetter for %s\n",
             getter ? 'g' : 's', ATTR_IDENT(state->tree).str);
 #endif
@@ -617,7 +663,8 @@ typelib_op_dcl(TreeState *state)
     IDL_tree iter;
     uint16 num_args = 0;
     uint8 op_flags = 0;
-
+    gboolean op_notxpcom = !!IDL_tree_property_get(op->ident, "notxpcom");
+    
     if (!XPT_InterfaceDescriptorAddMethods(id, 1))
         return FALSE;
 
@@ -625,15 +672,15 @@ typelib_op_dcl(TreeState *state)
 
     for (iter = op->parameter_dcls; iter; iter = IDL_LIST(iter).next)
         num_args++;             /* count params */
-    if (op->op_type_spec)
+    if (op->op_type_spec && !op_notxpcom)
         num_args++;             /* fake param for _retval */
-    if (op->f_noscript)
+    if (op->f_noscript || op_notxpcom)
         op_flags |= XPT_MD_HIDDEN;
     if (op->f_varargs)
         op_flags |= XPT_MD_VARARGS;
     /* XXXshaver constructor? */
 
-#ifdef DEBUG_shaver
+#ifdef DEBUG_shaver_method
     fprintf(stdout, "DBG: adding method %s (nargs %d)\n",
             IDL_IDENT(op->ident).str, num_args);
 #endif
@@ -649,16 +696,24 @@ typelib_op_dcl(TreeState *state)
     }
 
     /* XXX unless [nonxpcom] */
-    if (op->op_type_spec) {
-        if (!fill_pd_from_type(state, &meth->params[num_args],
-                               XPT_PD_RETVAL | XPT_PD_OUT,
+    if (!op_notxpcom) {
+        if (op->op_type_spec) {
+            if (!fill_pd_from_type(state, &meth->params[num_args],
+                                   XPT_PD_RETVAL | XPT_PD_OUT,
+                                   op->op_type_spec))
+                return FALSE;
+        }
+        
+        if (!fill_pd_as_nsresult(meth->result))
+            return FALSE;
+    } else {
+#ifdef DEBUG_shaver
+        fprintf(stderr, "%s is notxpcom\n", IDL_IDENT(op->ident).str);
+#endif
+        if (!fill_pd_from_type(state, meth->result, XPT_PD_RETVAL,
                                op->op_type_spec))
-        return FALSE;
+            return FALSE;
     }
-    
-    if (!fill_pd_as_nsresult(meth->result))
-        return FALSE;
-
     NEXT_METH(state)++;
     return TRUE;
 }
@@ -684,7 +739,7 @@ typelib_const_dcl(TreeState *state)
     cd = &id->const_descriptors[NEXT_CONST(state)];
     
     cd->name = IDL_IDENT(dcl->ident).str;
-#ifdef DEBUG_shaver
+#ifdef DEBUG_shaver_const
     fprintf(stderr, "DBG: adding const %s\n", cd->name);
 #endif
 
