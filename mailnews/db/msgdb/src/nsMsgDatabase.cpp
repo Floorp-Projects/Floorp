@@ -1432,7 +1432,7 @@ NS_IMETHODIMP nsMsgDatabase::MarkAllRead(nsMsgKeyArray *thoseMarked)
 	}
 
 	if (numChanged > 0)	// commit every once in a while
-		Commit(nsMsgDBCommitType::kSmallCommit);
+		Commit(nsMsgDBCommitType::kLargeCommit);
 	// force num new to 0.
 	PRInt32 numNewMessages;
 
@@ -2849,17 +2849,6 @@ nsresult	nsMsgDatabase::DumpThread(nsMsgKey threadId)
 				if (NS_FAILED(rv)) 
 					break;
 
-#ifdef DEBUG_bienvenu                    
-				if (pMessage)
-				{
-					nsMsgKey key;
-					nsString subject;
-					(void)pMessage->GetMessageKey(&key);
-					pMessage->GetSubject(&subject);
-
-					printf("message in thread %u %s\n", key, (const char *) nsAutoCString(subject));
-				}
-#endif /* DEBUG_bienvenu */
 		//		NS_RELEASE(pMessage);
 				pMessage = nsnull;
 			}

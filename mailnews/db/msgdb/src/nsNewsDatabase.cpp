@@ -218,17 +218,6 @@ NS_IMETHODIMP nsNewsDatabase::MarkHdrRead(nsIMsgDBHdr *msgHdr, PRBool bRead,
 	rv = nsMsgDatabase::MarkHdrRead(msgHdr, bRead, instigator);
 	if (NS_FAILED(rv)) return rv;
 
-	// sspitzer:
-    // yes, it is expensive to commit every time here.
-	//
-	// if we crash (the horror!) before we commit, the user will
-	// lose all there mark as read changes.
-	// 
-	// since committing every time is expensive if we mark a
-	// whole bunch of headers as read, we should commit after we are
-	// done marking.
-    Commit(nsMsgDBCommitType::kSessionCommit);
-	
 	return rv;
 }
 
