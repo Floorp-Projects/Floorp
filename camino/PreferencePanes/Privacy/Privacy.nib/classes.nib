@@ -4,7 +4,12 @@
         {
             CLASS = NSPreferencePane; 
             LANGUAGE = ObjC; 
-            OUTLETS = {_firstKeyView = id; _initialKeyView = id; _lastKeyView = id; _window = id; }; 
+            OUTLETS = {
+                "_firstKeyView" = id; 
+                "_initialKeyView" = id; 
+                "_lastKeyView" = id; 
+                "_window" = id; 
+            }; 
             SUPERCLASS = NSObject; 
         }, 
         {
