@@ -22,7 +22,6 @@
   -->
 
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
-<?xul-overlay href="chrome://editor/content/EditorCommandsOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/editorOverlay.dtd">
 
@@ -35,36 +34,38 @@
 <popupset id="editorContentContextSet">
  <popup id="editorContentContext"   
    oncreate="return fillContentContextMenu(this);" 
-	 ondestroy="contextMenu.onDestroy(); contextMenu = null;">
-		<menuitem id="menu_undo" value="&undoCmd.label;" observes="cmd_undo"/>
-		<menuitem id="menu_redo" value="&redoCmd.label;"/>
-		<menuseparator/>
-		<menuitem id="menu_cut" value="&cutCmd.label;"/>
-		<menuitem id="menu_copy" value="&copyCmd.label;"/>
-		<menuitem id="menu_paste" value="&pasteCmd.label;"/>
-		<menuitem id="menu_delete" value="&clearCmd.label;"/>
+	 ondestroy="cleanupContextMenu(this); contextMenu.onDestroy(); contextMenu = null;">
+		<menuitem id="menu_undo_cm" observes="cmd_undo"/>
+		<menuitem id="menu_redo_cm" observes="cmd_redo"/>
+		<menuseparator id="undoredo-separator"/>
+		<menuitem id="menu_cut_cm" observes="cmd_cut"/>
+		<menuitem id="menu_copy_cm" observes="cmd_copy"/>
+		<menuitem id="menu_paste_cm" observes="cmd_paste"/>
+		<menuitem id="menu_delete_cm" observes="cmd_delete"/>
 		<menuseparator id="menu_edit-separator"/>
-    <menuitem id="menu_selectAll" value="&selectAllCmd.label;"/>
+    <menuitem id="menu_selectAll_cm" observes="cmd_selectAll"/>
 		<menuseparator id="menu_selectAll-separator"/>
     
-    <menuitem id="removeLinksMenuitem" value="&removeLinksCmd.label;"/>
-    <menuitem id="menu_preview" value="&previewCmd.label;"/>
- <!--  
-    <menuitem id="menu_openURL" value="open url in Composer"/>
-    <menuitem id="menu_addBookmark" value="add bookmark"/>
-    <menuitem id="menu_copyURL" value="copy link location"/>
+    <menuitem id="menu_preview_cm" observes="cmd_preview" value="&previewCmd.label;"/>
+    <menuitem id="removeLinksMenuitem_cm" value="&removeLinksCmd.label;" 
+              accesskey="&formatremovelinks.accesskey;" oncommand="EditorRemoveLinks()"/>
 		<menuseparator id="menu_link-separator"/>
+ <!--  
+    <menuitem id="menu_openURL_cm" value="open url in Composer"/>
+    <menuitem id="menu_addBookmark_cm" value="add bookmark"/>
+    <menuitem id="menu_copyURL_cm" value="copy link location"/>
 		
-		<menuitem id="menu_saveImageAs" value="save image as"/>
-		<menuitem id="menu_createLinkOnImage" value="create link using image"/>
+		<menuitem id="menu_saveImageAs_cm" value="save image as"/>
+		<menuitem id="menu_createLinkOnImage_cm" value="create link using image"/>
 		<menuseparator id="menu_image-separator"/>
  -->
 		
-		<menuitem id="tableMenu" value="&tableMenu.label;"/>
-		<menuitem id="menu_tableProperties" value="&tableProperties.label;"/>
+		<menu id="tableMenu_cm" value="&tableMenu.label;"/>
+		<menuitem id="tableProperties_cm" value="&tableProperties.label;"/>
 		<menuseparator id="tableMenu-separator"/>
 		
-		<menuitem id="objectProperties" value="&properties.label;"/>
+		<menuitem id="objectProperties_cm" value="&properties.label;" 
+		          oncommand="EditorObjectProperties()"/>
  </popup>
 </popupset>
 
