@@ -4972,7 +4972,7 @@ DocumentViewerImpl::PrintDocContent(PrintObject* aPO, nsresult& aStatus)
 
 
   if (!aPO->mHasBeenPrinted && aPO->IsPrintable()) {
-    PRBool donePrinting;
+    PRBool donePrinting = PR_TRUE;
     // donePrinting is only valid when when doing synchronous printing
     aStatus = DoPrint(aPO, PR_FALSE, donePrinting);
     if (donePrinting) {
