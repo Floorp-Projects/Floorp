@@ -171,11 +171,8 @@ function makeOccurrence(item, start, end)
 // calStorageCalendar
 //
 
-function calStorageCalendar(cal_id) {
+function calStorageCalendar() {
     this.wrappedJSObject = this;
-
-    if (cal_id)
-        this.mCalId = cal_id;
 }
 
 calStorageCalendar.prototype = {
@@ -213,18 +210,35 @@ calStorageCalendar.prototype = {
         if (this.mURI)
             throw Components.results.NS_ERROR_FAILURE;
 
-        // we can only load storage bits from a file
-        var fileURL = aURI.QueryInterface(Components.interfaces.nsIFileURL);
-        if (!fileURL)
-            throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+        var id = 0;
 
-        // open the database
-        var dbService = Components.classes[kStorageServiceContractID].getService(kStorageServiceIID);
-        this.mDB = dbService.openDatabase (fileURL.file);
-        this.mDBTwo = dbService.openDatabase (fileURL.file);
+        // check if there's a ?id=
+        var path = aURI.path;
+        var pos = path.indexOf("?id=");
+
+        if (pos != -1) {
+            id = parseInt(path.substr(pos+4));
+            path = path.substr(0, pos);
+        }
+
+        if (aURI.scheme == "file") {
+            var fileURL = aURI.QueryInterface(Components.interfaces.nsIFileURL);
+            if (!fileURL)
+                throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+
+            // open the database
+            var dbService = Components.classes[kStorageServiceContractID].getService(kStorageServiceIID);
+            this.mDB = dbService.openDatabase (fileURL.file);
+            this.mDBTwo = dbService.openDatabase (fileURL.file);
+        } else if (aURI.scheme == "moz-profile-calendar") {
+            var dbService = Components.classes[kStorageServiceContractID].getService(kStorageServiceIID);
+            this.mDB = dbService.getProfileStorage("profile");
+            this.mDBTwo = dbService.getProfileStorage("profile");
+        }
 
         this.initDB();
 
+        this.mCalId = id;
         this.mURI = aURI;
     },
 
