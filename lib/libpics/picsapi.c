@@ -1590,7 +1590,7 @@ TrustLabel *TL_Construct()
 		ALabel->szTrustAuthority = NULL;	
 		ALabel->isGeneric = FALSE;	
 		ALabel->isSigned = FALSE;
-		#ifdef XP_MAC
+		#if defined(XP_MAC) || defined(PRINT64_IS_STRUCT)
 		ALabel->ExpDate.hi = ALabel->ExpDate.lo = 0;
 		#else	
 		ALabel->ExpDate = 0;	
