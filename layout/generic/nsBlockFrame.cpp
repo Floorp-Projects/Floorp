@@ -721,7 +721,7 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
 
   nsresult rv = NS_OK;
   PRBool isStyleChange = PR_FALSE;
-  state.SetFlag(BRS_ISINLINEINCRREFLOW, PR_FALSE);
+
   nsIFrame* target;
   switch (aReflowState.reason) {
   case eReflowReason_Initial:
@@ -772,49 +772,6 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
       printf("\n");
 #endif
 
-      // this code does a correct job of propogating incremental reflows (bug 25510)
-      // and has the potential to be very efficient.  we should be able to 
-      // terminate reflow after the incremental reflow if we can detect that
-      // nothing significant has changed.  
-      PRBool isFloater; 
-      nsLineBox* prevLine; 
-      nsLineBox* line = FindLineFor(state.mNextRCFrame, &prevLine, &isFloater); 
-      if (line && (PR_FALSE==line->IsBlock())) 
-      { 
-        if (!isFloater) // punt if isFloater!  
-        {
-          // reflow the line containing the target of the incr. reflow
-          // first mark the line dirty and set up the state object
-          rv = PrepareChildIncrementalReflow(state);
-          state.SetFlag(BRS_ISINLINEINCRREFLOW, PR_TRUE);
-          state.mPrevLine = prevLine;
-          state.mCurrentLine = line;
-          state.mNextRCFrame = state.mNextRCFrame;
-          // let ReflowDirtyLines do all the work
-          rv = ReflowDirtyLines(state);
-          if (NS_FAILED(rv)) {
-            NS_ASSERTION(0, "Reflow failed\n");
-            return rv;
-          }
-          // compute the final size
-          ComputeFinalSize(aReflowState, state, aMetrics);
-
-          // finally, mark this block frame as having a dirty child and return
-          // XXX: we should be able to optimize this so we only call ReflowDirtyChild
-          //      if it's absolutely necessary:  something on the line changed size.
-          if (!IsIncrementalDamageConstrained(state))
-          {
-            nsCOMPtr<nsIPresShell> shell;
-            aPresContext->GetShell(getter_AddRefs(shell));
-            rv = ReflowDirtyChild(shell, state.mNextRCFrame); 
-            //XXX: it's possible we need to do some work regarding incremental painting
-            //     here, see code below "ReflowDirtyLines() after this switch statement.
-            //     It might be right to factor the tail end of this method into a new method
-            //     and call that here before calling ReflowDirtyChild().
-          }
-          return rv;
-        } 
-      }
       rv = PrepareChildIncrementalReflow(state);
     }
     break;
@@ -834,34 +791,45 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
     break;
   }
 
-  if (NS_FAILED(rv)) {
-    NS_ASSERTION(0, "setting up reflow failed.\n");
-    return rv;
-  }
+  NS_ASSERTION(NS_SUCCEEDED(rv), "setting up reflow failed");
+  if (NS_FAILED(rv)) return rv;
 
   // Now reflow...
   rv = ReflowDirtyLines(state);
-  if (NS_FAILED(rv)) {
-    NS_ASSERTION(0, "reflow dirty lines failed.\n");
-    return rv;
-  }
-  aStatus = state.mReflowStatus;
-  if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
-    if (NS_STYLE_OVERFLOW_HIDDEN == aReflowState.mStyleDisplay->mOverflow) {
-      aStatus = NS_FRAME_COMPLETE;
-    }
-    else {
-#ifdef DEBUG_kipp
-      ListTag(stdout); printf(": block is not complete\n");
-#endif
-    }
-  }
+  NS_ASSERTION(NS_SUCCEEDED(rv), "reflow dirty lines failed");
+  if (NS_FAILED(rv)) return rv;
 
-  // XXX_pref get rid of this!
-  BuildFloaterList();
+  if (!state.GetFlag(BRS_ISINLINEINCRREFLOW)) {
+    // XXXwaterson are we sure we don't need to do this work if BRS_ISINLINEINCRREFLOW?
+    aStatus = state.mReflowStatus;
+    if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
+      if (NS_STYLE_OVERFLOW_HIDDEN == aReflowState.mStyleDisplay->mOverflow) {
+        aStatus = NS_FRAME_COMPLETE;
+      }
+      else {
+#ifdef DEBUG_kipp
+        ListTag(stdout); printf(": block is not complete\n");
+#endif
+      }
+    }
+
+    // XXX_pref get rid of this!
+    BuildFloaterList();
+  }
   
   // Compute our final size
   ComputeFinalSize(aReflowState, state, aMetrics);
+
+  if (state.GetFlag(BRS_ISINLINEINCRREFLOW)) {
+    // Mark this block frame as having a dirty child
+    // XXX: we should be able to optimize this so we only call ReflowDirtyChild
+    //      if it's absolutely necessary:  something on the line changed size.
+    if (!IsIncrementalDamageConstrained(state)) {
+      nsCOMPtr<nsIPresShell> shell;
+      aPresContext->GetShell(getter_AddRefs(shell));
+      ReflowDirtyChild(shell, state.mNextRCFrame); 
+    }
+  }
 
   // see if verifyReflow is enabled, and if so store off the space manager pointer
 #ifdef DEBUG
@@ -905,8 +873,11 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
   
   // If this is an incremental reflow and we changed size, then make sure our
   // border is repainted if necessary
-  if (eReflowReason_Incremental == aReflowState.reason ||
-      eReflowReason_Dirty == aReflowState.reason) {
+  //
+  // XXXwaterson are we sure we can skip this if BRS_ISINLINEINCRREFLOW?
+  if (!state.GetFlag(BRS_ISINLINEINCRREFLOW) &&
+      (eReflowReason_Incremental == aReflowState.reason ||
+       eReflowReason_Dirty == aReflowState.reason)) {
     if (isStyleChange) {
       // Lots of things could have changed so damage our entire
       // bounds
@@ -914,8 +885,8 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
       printf("%p invalidate 1 (%d, %d, %d, %d)\n",
              this, 0, 0, mRect.width, mRect.height);
 #endif
-      Invalidate(aPresContext, nsRect(0, 0, mRect.width, mRect.height));
 
+      Invalidate(aPresContext, nsRect(0, 0, mRect.width, mRect.height));
     } else {
       nsMargin  border = aReflowState.mComputedBorderPadding -
                          aReflowState.mComputedPadding;
@@ -979,7 +950,10 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
   // Let the absolutely positioned container reflow any absolutely positioned
   // child frames that need to be reflowed, e.g., elements with a percentage
   // based width/height
-  if (NS_SUCCEEDED(rv) && mAbsoluteContainer.HasAbsoluteFrames()) {
+  //
+  // XXXwaterson are we sure we can skip this if BRS_ISINLINEINCRREFLOW?
+  if (NS_SUCCEEDED(rv) && mAbsoluteContainer.HasAbsoluteFrames()
+      && !state.GetFlag(BRS_ISINLINEINCRREFLOW)) {
     nscoord containingBlockWidth;
     nscoord containingBlockHeight;
     nsRect  childBounds;
@@ -1524,7 +1498,7 @@ nsBlockFrame::PrepareChildIncrementalReflow(nsBlockReflowState& aState)
   PRBool isFloater;
   nsLineBox* prevLine;
   nsLineBox* line = FindLineFor(aState.mNextRCFrame, &prevLine, &isFloater);
-  if (nsnull == line) {
+  if (! line) {
     // This can't happen, but just in case it does...
     return PrepareResizeReflow(aState);
   }
@@ -1532,6 +1506,13 @@ nsBlockFrame::PrepareChildIncrementalReflow(nsBlockReflowState& aState)
   // XXX: temporary: If the child frame is a floater then punt
   if (isFloater) {
     return PrepareResizeReflow(aState);
+  }
+
+  if (line->IsInline()) {
+    aState.SetFlag(BRS_ISINLINEINCRREFLOW, PR_TRUE);
+
+    // Don't mark the prevLine as dirty if BRS_ISINLINEINCRREFLOW
+    prevLine = nsnull;
   }
 
   // Figure out which line to mark dirty.
@@ -1672,7 +1653,7 @@ nsBlockFrame::PrepareResizeReflow(nsBlockReflowState& aState)
   aState.GetAvailableSpace();
 
   // See if this is this a constrained resize reflow that is not impacted by floaters
-  if ((PR_FALSE==aState.IsImpactedByFloater()) &&
+  if ((! aState.IsImpactedByFloater()) &&
       (aState.mReflowState.reason == eReflowReason_Resize) &&
       (NS_UNCONSTRAINEDSIZE != aState.mReflowState.availableWidth)) {
 
@@ -1859,12 +1840,12 @@ nsBlockFrame::RecoverStateFrom(nsBlockReflowState& aState,
 }
 
 /**
- * Propogate reflow "damage" from the just reflowed line (aLine) to
+ * Propagate reflow "damage" from the just reflowed line (aLine) to
  * any subsequent lines that were affected. The only thing that causes
  * damage is a change to the impact that floaters make.
  */
 void
-nsBlockFrame::PropogateReflowDamage(nsBlockReflowState& aState,
+nsBlockFrame::PropagateReflowDamage(nsBlockReflowState& aState,
                                     nsLineBox* aLine,
                                     const nsRect& aOldCombinedArea,
                                     nscoord aDeltaY)
@@ -1921,7 +1902,7 @@ nsBlockFrame::PropogateReflowDamage(nsBlockReflowState& aState,
         PRBool wasImpactedByFloater = next->IsImpactedByFloater();
         PRBool isImpactedByFloater = aState.IsImpactedByFloater() ? PR_TRUE : PR_FALSE;
 #ifdef REALLY_NOISY_REFLOW
-        printf("nsBlockFrame::PropogateReflowDamage %p was = %d, is=%d\n", 
+        printf("nsBlockFrame::PropagateReflowDamage %p was = %d, is=%d\n", 
            this, wasImpactedByFloater, isImpactedByFloater);
 #endif
         if (wasImpactedByFloater != isImpactedByFloater) {
@@ -2032,30 +2013,8 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
   // Reflow the lines that are already ours
   aState.mPrevLine = nsnull;
   nsLineBox* line = mLines;
-  if (aState.GetFlag(BRS_ISINLINEINCRREFLOW) && aState.mNextRCFrame)
-  {
-    const nsLineBox* incrTargetLine = aState.mCurrentLine;
-    aState.mCurrentLine = line;
-    aState.mPrevLine = nsnull;
-    while (line && (line != incrTargetLine))
-    {
-      nsRect  damageRect;
-      RecoverStateFrom(aState, line, incrementalReflow ?
-                       &damageRect : 0);
-      if (incrementalReflow && !damageRect.IsEmpty()) {
-#ifdef NOISY_BLOCK_INVALIDATE
-        printf("%p invalidate 4 (%d, %d, %d, %d)\n",
-               this, damageRect.x, damageRect.y, damageRect.width, damageRect.height);
-#endif
-        Invalidate(aState.mPresContext, damageRect);
-      }
-      aState.mPrevLine = line;
-      line = line->mNext;
-      aState.AdvanceToNextLine();
-    }
-  }
   
-  while (nsnull != line) {
+  while (line) {
 #ifdef DEBUG
     if (gNoisyReflow) {
       nsRect lca;
@@ -2106,8 +2065,8 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       // current line contains floaters that intrude upon the
       // subsequent lines.
       nsLineBox* next = line->mNext;
-      if ((nsnull != next) && !next->IsDirty()) {
-        PropogateReflowDamage(aState, line, oldCombinedArea, deltaY);
+      if (next && !next->IsDirty()) {
+        PropagateReflowDamage(aState, line, oldCombinedArea, deltaY);
       }
     }
     else {
