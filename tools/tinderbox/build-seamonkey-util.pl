@@ -18,7 +18,7 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
-$::UtilsVersion = '$Revision: 1.30 $ ';
+$::UtilsVersion = '$Revision: 1.31 $ ';
 
 package TinderUtils;
 
@@ -411,6 +411,13 @@ sub SetupPath {
         }
     }
     $Settings::ConfigureArgs .= '--cache-file=/dev/null';
+
+	# Pass $ObjDir along to the build system.
+	if($Settings::ObjDir) {
+	  my $_objdir .= "MOZ_OBJDIR=$Settings::ObjDir";
+	  $Settings::MakeOverrides .= $_objdir;
+	}
+
     #print "Path after: $ENV{PATH}\n";
 }
 
@@ -581,12 +588,6 @@ sub BuildIt {
             run_shell_command "$Settings::CVS $cvsco $TreeSpecific::name/client.mk";
         }
         
-		# Pass $ObjDir along to the build system.
-		if($Settings::ObjDir) {
-		  my $_objdir = "MOZ_OBJDIR=$Settings::ObjDir";
-		  $Settings::MakeOverrides .= $_objdir;
-		}
-
 		# Create toplevel source directory.
         chdir $Settings::Topsrcdir or die "chdir $Settings::Topsrcdir: $!\n";
 
@@ -620,7 +621,7 @@ sub BuildIt {
 			if (($Settings::EmbedTest or $Settings::BuildEmbed) and $build_status eq 'success') {
 			  print_log "$binary_basename binary exists, building $embed_binary_basename now.\n";
 			  
-			  my $tmpEmbedConfigDir = "$build_dir/$Settings::Topsrcdir/embedding/config";
+			  my $tmpEmbedConfigDir = "$build_dir/$Settings::Topsrcdir/${Settings::ObjDir}/embedding/config";
 			  chdir $tmpEmbedConfigDir or die "chdir $Settings::Topsrcdir: $!\n";
 			  
 			  my $make = "$Settings::Make";
