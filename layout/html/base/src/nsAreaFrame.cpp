@@ -92,6 +92,9 @@ nsAreaFrame::Init(nsIPresContext&  aPresContext,
   // Create a space manager if requested
   if (0 == (mFlags & NS_AREA_NO_SPACE_MGR)) {
     mSpaceManager = new nsSpaceManager(this);
+    if (!mSpaceManager) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
     NS_ADDREF(mSpaceManager);
   }
 
