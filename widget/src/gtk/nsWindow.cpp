@@ -413,6 +413,8 @@ void *nsWindow::GetNativeData(PRUint32 aDataType)
       case NS_NATIVE_DISPLAY:
 	return (void *)GDK_DISPLAY();
       case NS_NATIVE_WIDGET:
+      case NS_NATIVE_PLUGIN_PORT:
+
 #ifdef NS_GTK_REF
 	gtk_widget_ref(mWidget);
 #endif
