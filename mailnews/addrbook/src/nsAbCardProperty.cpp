@@ -1168,12 +1168,14 @@ nsAbCardProperty::GetName(PRUnichar * *aName)
 			{
 				if (lastNameFirst == 1)
 				{
-					name = lastName + ", ";
+					name = lastName;
+					name.Append(", ");
 					name += firstName;
 				}
 				else
 				{
-					name = firstName + " ";
+					name = firstName;
+					name.Append(" ");
 					name += lastName;
 				}
 			}
