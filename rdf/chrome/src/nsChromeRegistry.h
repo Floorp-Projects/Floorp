@@ -81,7 +81,7 @@ public:
                             nsIRDFNode *aTarget, PRBool aRemove);
 
 protected:
-  NS_IMETHOD GetDynamicDataSource(nsIURI *aChromeURL, PRBool aIsOverlay, PRBool aUseProfile, nsIRDFDataSource **aResult);
+  NS_IMETHOD GetDynamicDataSource(nsIURI *aChromeURL, PRBool aIsOverlay, PRBool aUseProfile, PRBool aCreateDS, nsIRDFDataSource **aResult);
   NS_IMETHOD GetDynamicInfo(nsIURI *aChromeURL, PRBool aIsOverlay, nsISimpleEnumerator **aResult);
 
   nsresult GetResource(const nsCString& aChromeType, nsIRDFResource** aResult);
@@ -214,6 +214,8 @@ protected:
   nsCOMPtr<nsIRDFResource> mImage;
   nsCOMPtr<nsIRDFResource> mLocType;
   nsCOMPtr<nsIRDFResource> mAllowScripts;
+  nsCOMPtr<nsIRDFResource> mHasOverlays;
+  nsCOMPtr<nsIRDFResource> mHasStylesheets;
   nsCOMPtr<nsIRDFResource> mSkinVersion;
   nsCOMPtr<nsIRDFResource> mLocaleVersion;
   nsCOMPtr<nsIRDFResource> mPackageVersion;
