@@ -45,10 +45,7 @@
 
 #include "nsAEDefs.h"
 
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+class nsIXULWindow;
 
 long CountWindowsOfKind(TWindowKind windowKind);
 
@@ -61,6 +58,7 @@ void GetWindowUrlString(WindowPtr wind, char** outUrlStringPtr);
 void GetWindowGlobalBounds(WindowPtr wind, Rect* outRect);
 
 void LoadURLInWindow(WindowPtr wind, const char* urlString);
+void LoadURLInXULWindow(nsIXULWindow* inWindow, const char* urlString);
 
 Boolean WindowIsResizeable(WindowPtr wind);
 Boolean WindowIsZoomable(WindowPtr wind);
@@ -70,11 +68,6 @@ Boolean WindowIsModal(WindowPtr wind);
 Boolean WindowIsCloseable(WindowPtr wind);
 Boolean WindowIsFloating(WindowPtr wind);
 Boolean WindowIsModified(WindowPtr wind);
-
-
-#ifdef __cplusplus
-}
-#endif
 
 
 #endif // nsWindowUtils_h_

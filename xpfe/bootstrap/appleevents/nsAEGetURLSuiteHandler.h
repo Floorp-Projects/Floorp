@@ -42,6 +42,7 @@
 #define nsAEGetURLSuiteHandler_h_
 
 #include "nsAEUtils.h"
+#include "prtypes.h"
 
 
 class AEGetURLSuiteHandler
@@ -63,7 +64,11 @@ public:
 protected:
 
 	void				HandleGetURLEvent(const AppleEvent *appleEvent, AppleEvent *reply);
+
+	static int ReuseWindowPrefCallback ( const char* inPref, void* inClosure ) ;
 	
+  static PRBool sReuseWindowPrefInited;
+  static PRBool sReuseWindow;
 };
 
 
