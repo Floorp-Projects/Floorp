@@ -178,7 +178,7 @@ nsSVGEllipseElement::Init()
 // nsIDOMNode methods
 
 
-NS_IMPL_SVG_DOM_CLONENODE(Ellipse)
+NS_IMPL_DOM_CLONENODE_WITH_INIT(nsSVGEllipseElement)
 
 
 //----------------------------------------------------------------------

@@ -132,7 +132,7 @@ nsHTMLMapElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
 }
 
 
-NS_IMPL_HTML_DOM_CLONENODE(Map)
+NS_IMPL_DOM_CLONENODE(nsHTMLMapElement)
 
 
 NS_IMETHODIMP

@@ -697,51 +697,6 @@ nsSVGElement::SetAttrAndNotify(PRInt32 aNamespaceID, nsIAtom* aAttribute,
   return NS_OK;
 }
 
-nsresult
-nsSVGElement::CopyNode(nsSVGElement* aDest, PRBool aDeep)
-{
-  nsresult rv;
-
-  // copy attributes:
-  PRUint32 i, count = mAttrsAndChildren.AttrCount();
-  for (i = 0; i < count; ++i) {
-    const nsAttrName* name = mAttrsAndChildren.GetSafeAttrNameAt(i);
-    const nsAttrValue* value = mAttrsAndChildren.AttrAt(i);
-    nsAutoString valStr;
-    value->ToString(valStr);
-    rv = aDest->SetAttr(name->NamespaceID(), name->LocalName(),
-                        name->GetPrefix(), valStr, PR_FALSE);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  if (aDeep) {
-    // copy children:
-    PRInt32 count = mAttrsAndChildren.ChildCount();
-    for (PRInt32 i = 0; i < count; ++i) {
-      nsIContent* child = mAttrsAndChildren.ChildAt(i);
-      
-      nsCOMPtr<nsIDOMNode> domchild = do_QueryInterface(child);
-      NS_ASSERTION(domchild != nsnull, "child is not a DOM node");
-      if (! domchild)
-        return NS_ERROR_UNEXPECTED;
-      
-      nsCOMPtr<nsIDOMNode> newdomchild;
-      rv = domchild->CloneNode(PR_TRUE, getter_AddRefs(newdomchild));
-      if (NS_FAILED(rv)) return rv;
-      
-      nsCOMPtr<nsIContent> newchild = do_QueryInterface(newdomchild);
-      NS_ASSERTION(newchild != nsnull, "newdomchild is not an nsIContent");
-      if (!newchild)
-        return NS_ERROR_UNEXPECTED;
-      
-      rv = aDest->AppendChildTo(newchild, PR_FALSE, PR_FALSE);
-      if (NS_FAILED(rv)) return rv;
-    }
-  }
-  
-  return rv;
-}
-
 void
 nsSVGElement::UpdateContentStyleRule()
 {

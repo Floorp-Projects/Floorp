@@ -896,4 +896,54 @@ public:
   }                                                                           \
   NS_IMETHOD CloneNode(PRBool aDeep, nsIDOMNode** aReturn);
 
+/**
+ * Macros to implement CloneNode().
+ */
+#define NS_IMPL_DOM_CLONENODE(_elementName)                                 \
+NS_IMPL_DOM_CLONENODE_AMBIGUOUS(_elementName, nsIDOMNode)
+
+#define NS_IMPL_DOM_CLONENODE_AMBIGUOUS(_elementName, _implClass)           \
+NS_IMETHODIMP                                                               \
+_elementName::CloneNode(PRBool aDeep, nsIDOMNode **aResult)                 \
+{                                                                           \
+  *aResult = nsnull;                                                        \
+                                                                            \
+  _elementName *it = new _elementName(mNodeInfo);                           \
+  if (!it) {                                                                \
+    return NS_ERROR_OUT_OF_MEMORY;                                          \
+  }                                                                         \
+                                                                            \
+  nsCOMPtr<nsIDOMNode> kungFuDeathGrip = NS_STATIC_CAST(_implClass*, it);   \
+                                                                            \
+  nsresult rv = CopyInnerTo(it, aDeep);                                     \
+  if (NS_SUCCEEDED(rv)) {                                                   \
+    kungFuDeathGrip.swap(*aResult);                                         \
+  }                                                                         \
+                                                                            \
+  return rv;                                                                \
+}
+
+#define NS_IMPL_DOM_CLONENODE_WITH_INIT(_elementName)                       \
+NS_IMETHODIMP                                                               \
+_elementName::CloneNode(PRBool aDeep, nsIDOMNode **aResult)                 \
+{                                                                           \
+  *aResult = nsnull;                                                        \
+                                                                            \
+  _elementName *it = new _elementName(mNodeInfo);                           \
+  if (!it) {                                                                \
+    return NS_ERROR_OUT_OF_MEMORY;                                          \
+  }                                                                         \
+                                                                            \
+  nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);                                 \
+                                                                            \
+  nsresult rv = it->Init();                                                 \
+                                                                            \
+  rv |= CopyInnerTo(it, aDeep);                                             \
+  if (NS_SUCCEEDED(rv)) {                                                   \
+    kungFuDeathGrip.swap(*aResult);                                         \
+  }                                                                         \
+                                                                            \
+  return rv;                                                                \
+}
+
 #endif /* nsGenericElement_h___ */

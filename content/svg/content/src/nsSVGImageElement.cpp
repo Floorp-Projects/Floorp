@@ -200,7 +200,7 @@ nsSVGImageElement::Init()
 // nsIDOMNode methods
 
 
-NS_IMPL_SVG_DOM_CLONENODE(Image)
+NS_IMPL_DOM_CLONENODE_WITH_INIT(nsSVGImageElement)
 
 
 //----------------------------------------------------------------------

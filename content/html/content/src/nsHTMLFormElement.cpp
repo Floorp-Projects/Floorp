@@ -494,27 +494,7 @@ NS_HTML_CONTENT_INTERFACE_MAP_END
 
 // nsIDOMHTMLFormElement
 
-nsresult
-nsHTMLFormElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
-{
-  *aReturn = nsnull;
-
-  nsHTMLFormElement* it = new nsHTMLFormElement(mNodeInfo);
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
-
-  nsresult rv = it->Init();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  CopyInnerTo(it, aDeep);
-
-  kungFuDeathGrip.swap(*aReturn);
-
-  return NS_OK;
-}
+NS_IMPL_DOM_CLONENODE_WITH_INIT(nsHTMLFormElement)
 
 NS_IMETHODIMP
 nsHTMLFormElement::GetElements(nsIDOMHTMLCollection** aElements)

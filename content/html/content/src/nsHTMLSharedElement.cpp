@@ -171,25 +171,8 @@ NS_HTML_CONTENT_INTERFACE_MAP_AMBIGOUS_BEGIN(nsHTMLSharedElement,
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
 
-nsresult
-nsHTMLSharedElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
-{
-  *aReturn = nsnull;
+NS_IMPL_DOM_CLONENODE_AMBIGUOUS(nsHTMLSharedElement, nsIDOMHTMLEmbedElement)
 
-  nsHTMLSharedElement *it = new nsHTMLSharedElement(mNodeInfo);
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  nsCOMPtr<nsIDOMNode> kungFuDeathGrip =
-    NS_STATIC_CAST(nsIDOMHTMLEmbedElement *, it);
-
-  CopyInnerTo(it, aDeep);
-
-  kungFuDeathGrip.swap(*aReturn);
-
-  return NS_OK;
-}
 
 /////////////////////////////////////////////
 // Implement nsIDOMHTMLEmbedElement interface
