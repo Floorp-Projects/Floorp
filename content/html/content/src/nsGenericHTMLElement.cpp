@@ -3124,7 +3124,7 @@ nsGenericHTMLElement::AttrToURI(nsIAtom* aAttrName, nsAString& aAbsoluteURI)
   nsAutoString attrValue;
   nsresult rv = GetAttr(kNameSpaceID_None, aAttrName, attrValue);
   if (rv != NS_CONTENT_ATTR_HAS_VALUE) {
-    SetDOMStringToNull(aAbsoluteURI);
+    aAbsoluteURI.Truncate();
     return NS_OK;
   }
 
