@@ -1409,7 +1409,13 @@ nsFontMetricsXft::EnumerateXftGlyphs(const FcChar32 *aString, PRUint32 aLen,
     for ( ; i < aLen; i ++) {
         nsFontXft *currFont = FindFont(aString[i]);
 
-        if (currFont != prevFont) {
+        // Don't try to handle more than 512 characters at once, since
+        // Xft text measurement can't deal with anything with a width of
+        // more than 2^15 (32768) pixels.  This is a hack, and it could
+        // break things like combining characters, but that's not nearly
+        // as bad as not displaying anything, and it's also very rare to
+        // draw strings this long without any breaks.
+        if (currFont != prevFont || i - start > 512) {
             if (i > start) {
                 rv = (this->*aCallback)(&aString[start], i - start, prevFont,
                                         aCallbackData);
