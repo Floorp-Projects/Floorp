@@ -82,6 +82,7 @@ housecleaning
   thread-crossing operations (side benefit: also exposes more LDAPy
   goodness to JS) 
 
+
 misc
 ----
 * i18n / l10n (any text strings)
@@ -94,10 +95,15 @@ misc
 
 * HTMLize nsLDAPChannel output for linkification
 
-* RDF datasource
-  * expose directory entries & attrs via interfaces (cachable?) 
-  * nsILDAPURI (see nsIIOService.idl: extractScheme())
+
+rdf datasource
+--------------
   * non-anonymous binding
+
+  * expose directory entries & attrs via interfaces (cachable?) 
+
+  * nsILDAPURI (see nsIIOService.idl: extractScheme())
+
 
 perf
 ----
