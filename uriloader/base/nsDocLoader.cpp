@@ -1137,7 +1137,7 @@ void nsDocLoaderImpl::FireOnProgressChange(nsDocLoaderImpl *aLoadInitiator,
   while (--count >= 0) {
     nsListenerInfo *info;
 
-    info = NS_STATIC_CAST(nsListenerInfo*,mListenerInfoList.ElementAt(count));
+    info = NS_STATIC_CAST(nsListenerInfo*,mListenerInfoList.SafeElementAt(count));
     if (!info || !(info->mNotifyMask & nsIWebProgress::NOTIFY_PROGRESS)) {
       continue;
     }
@@ -1208,7 +1208,7 @@ void nsDocLoaderImpl::FireOnStateChange(nsIWebProgress *aProgress,
   while (--count >= 0) {
     nsListenerInfo *info;
 
-    info = NS_STATIC_CAST(nsListenerInfo*,mListenerInfoList.ElementAt(count));
+    info = NS_STATIC_CAST(nsListenerInfo*,mListenerInfoList.SafeElementAt(count));
     if (!info || !(info->mNotifyMask & (aStateFlags >>16))) {
       continue;
     }
@@ -1251,7 +1251,7 @@ nsDocLoaderImpl::FireOnLocationChange(nsIWebProgress* aWebProgress,
   while (--count >= 0) {
     nsListenerInfo *info;
 
-    info = NS_STATIC_CAST(nsListenerInfo*,mListenerInfoList.ElementAt(count));
+    info = NS_STATIC_CAST(nsListenerInfo*,mListenerInfoList.SafeElementAt(count));
     if (!info || !(info->mNotifyMask & nsIWebProgress::NOTIFY_LOCATION)) {
       continue;
     }
@@ -1295,7 +1295,7 @@ nsDocLoaderImpl::FireOnStatusChange(nsIWebProgress* aWebProgress,
   while (--count >= 0) {
     nsListenerInfo *info;
 
-    info = NS_STATIC_CAST(nsListenerInfo*,mListenerInfoList.ElementAt(count));
+    info = NS_STATIC_CAST(nsListenerInfo*,mListenerInfoList.SafeElementAt(count));
     if (!info || !(info->mNotifyMask & nsIWebProgress::NOTIFY_STATUS)) {
       continue;
     }
@@ -1328,7 +1328,7 @@ nsDocLoaderImpl::GetListenerInfo(nsIWeakReference *aListener)
 
   count = mListenerInfoList.Count();
   for (i=0; i<count; i++) {
-    info = NS_STATIC_CAST(nsListenerInfo* ,mListenerInfoList.ElementAt(i));
+    info = NS_STATIC_CAST(nsListenerInfo* ,mListenerInfoList.SafeElementAt(i));
 
     NS_ASSERTION(info, "There should NEVER be a null listener in the list");
     if (info && (aListener == info->mWeakListener)) {
@@ -1483,7 +1483,7 @@ NS_IMETHODIMP nsDocLoaderImpl::OnSecurityChange(nsISupports * aContext,
   while (--count >= 0) {
     nsListenerInfo *info;
 
-    info = NS_STATIC_CAST(nsListenerInfo*,mListenerInfoList.ElementAt(count));
+    info = NS_STATIC_CAST(nsListenerInfo*,mListenerInfoList.SafeElementAt(count));
     if (!info || !(info->mNotifyMask & nsIWebProgress::NOTIFY_SECURITY)) {
       continue;
     }
