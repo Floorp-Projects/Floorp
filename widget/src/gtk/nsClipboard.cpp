@@ -511,7 +511,9 @@ nsClipboard::SelectionReceiver (GtkWidget *aWidget,
     return;
   }
 
-  nsCAutoString type(gdk_atom_name(aSD->type));
+  char *str = gdk_atom_name(aSD->type);
+  nsCAutoString type(str);
+  g_free(str);
 
 #ifdef DEBUG_CLIPBOARD
   g_print("        Type is %s\n", type.mBuffer);
@@ -747,6 +749,7 @@ nsClipboard::HasDataMatchingFlavors(nsISupportsArray* aFlavorList,
         str = gdk_atom_name(*(GdkAtom*)(data+position));
         position += sizeof(GdkAtom);
         nsCAutoString atomName(str);
+        g_free(str);
         
         if (flavorStr.Equals(kUnicodeMime)) {
           if (atomName.Equals("COMPOUND_TEXT") ||
@@ -827,8 +830,10 @@ void nsClipboard::SelectionGetCB(GtkWidget        *widget,
   g_print("  aSD->type == %s\n  aSD->target == %s\n", gdk_atom_name(aSelectionData->type),
           gdk_atom_name(aSelectionData->target));
 #endif
-  char* dataFlavor = nsnull;
-  nsCAutoString type(gdk_atom_name(aInfo));
+  char *dataFlavor = nsnull;
+  char *tstr = gdk_atom_name(aInfo);
+  nsCAutoString type(tstr);
+  g_free(tstr);
 
   if (type.Equals("STRING") ||
       type.Equals("UTF8_STRING") ||
@@ -1173,7 +1178,6 @@ PRBool nsClipboard::GetTargets(GdkAtom aSelectionAtom)
   return PR_TRUE;
 }
 
-
 void nsClipboard::SendClipPing()
 {
 #ifdef DEBUG_CLIPBOARD
@@ -1190,14 +1194,39 @@ void nsClipboard::SendClipPing()
   XSync(GDK_DISPLAY(), False);
 }
 
-
-static PRBool addEventBack(void* aElement, void *aData)
+static Bool
+find_clipboard_event (Display  *display,
+                      XEvent   *xevent,
+                      XPointer  arg)
 {
-  if (aElement)
-    XPutBackEvent(GDK_DISPLAY(), (XEvent*)aElement);
 
-  return PR_TRUE;
+  GtkWidget *widget = (GtkWidget*) arg;
+
+  g_return_val_if_fail (widget != NULL, False);
+
+  if (xevent->xany.window == GDK_WINDOW_XWINDOW(widget->window) &&
+      (xevent->xany.type == SelectionNotify ||
+       xevent->xany.type == ClientMessage))
+    return True;
+  else
+    return False;
 }
+
+void send_selection_notify_to_widget(XEvent *xevent, GtkWidget *widget)
+{
+  GdkEvent event;
+  event.selection.type = GDK_SELECTION_NOTIFY;
+  event.any.window = gdk_window_lookup(xevent->xany.window);
+  event.any.send_event = xevent->xany.send_event ? TRUE : FALSE;
+  event.selection.window = event.any.window;
+  event.selection.selection = xevent->xselection.selection;
+  event.selection.target = xevent->xselection.target;
+  event.selection.property = xevent->xselection.property;
+  event.selection.time = xevent->xselection.time;
+  
+  gtk_widget_event(widget, &event);
+}
+
 
 PRBool nsClipboard::FindSelectionNotifyEvent()
 {
@@ -1205,52 +1234,38 @@ PRBool nsClipboard::FindSelectionNotifyEvent()
 
   SendClipPing(); // send out the first message (convert should have already been called)
 
-  nsVoidArray a;
+  XEvent xevent;
 
   for (i = 0; i < 5; ++i) {
-    XEvent xevent;
-    //    XWindowEvent(GDK_DISPLAY(), GDK_WINDOW_XWINDOW(sWidget->window), 0, &xevent);
-    XNextEvent(GDK_DISPLAY(), &xevent);
+    XIfEvent(GDK_DISPLAY(), &xevent, find_clipboard_event, (XPointer)sWidget);
 
-    if (xevent.xany.window == GDK_WINDOW_XWINDOW(sWidget->window)) {
-      if (xevent.type == SelectionNotify) {
-        GdkEvent event;
-        event.selection.type = GDK_SELECTION_NOTIFY;
-        event.any.window = gdk_window_lookup(xevent.xany.window);
-        event.any.send_event = xevent.xany.send_event ? TRUE : FALSE;
-        event.selection.window = event.any.window;
-        event.selection.selection = xevent.xselection.selection;
-        event.selection.target = xevent.xselection.target;
-        event.selection.property = xevent.xselection.property;
-        event.selection.time = xevent.xselection.time;
-  
-        gtk_widget_event(sWidget, &event);
-
-        if (a.Count() != 0) {
-          a.EnumerateBackwards(addEventBack, nsnull);
-        }
-
-        return PR_TRUE;
-
-      } else if (xevent.type == ClientMessage) {
+    if (xevent.type == SelectionNotify) {
+      send_selection_notify_to_widget(&xevent, sWidget);
+      return PR_TRUE;
+    } else if (xevent.type == ClientMessage) {
 #ifdef DEBUG_CLIPBOARD
-        printf("got client message %i\n", i);
+      printf("got client message %i\n", i);
 #endif
-
-        SendClipPing(); // send out the message again
-
-      } else {
-        printf("got strange event for clipboard window\n");
-      }
-    } else {
-      a.AppendElement(&xevent);
-      --i;  // (i only counts for our window)
+      SendClipPing(); // send out the message again
     }
   }
 
-  if (a.Count() != 0) {
-    a.EnumerateBackwards(addEventBack, nsnull);
+  // lets try one last time, since the queue could have gotten really long and if its there,
+  // we don't want to miss it
+  if (XCheckTypedWindowEvent(GDK_DISPLAY(),
+                             GDK_WINDOW_XWINDOW(sWidget->window),
+                             SelectionNotify,
+                             &xevent)) {
+#ifdef DEBUG_CLIPBOARD
+    printf("call to XCheckTypedWindowEvent returned me a SelectionNotify event!\n");
+#endif
+    send_selection_notify_to_widget(&xevent, sWidget);
+    return PR_TRUE;
   }
+
+#ifdef DEBUG_CLIPBOARD
+  printf("can't find a SelectionNotify event, giving up\n");
+#endif
 
   return PR_FALSE;
 }
