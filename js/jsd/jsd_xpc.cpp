@@ -932,7 +932,7 @@ jsdScript::CreatePPLineMap()
     }
         
     PRUint32 scriptExtent = JS_GetScriptLineExtent (cx, script);
-    PRUint32 firstPC = (PRUint32) JS_LineNumberToPC (cx, script, 0);
+    jsbytecode* firstPC = JS_LineNumberToPC (cx, script, 0);
     /* allocate worst case size of map (number of lines in script + 1
      * for our 0 record), we'll shrink it with a realloc later. */
     mPPLineMap = 
@@ -941,12 +941,10 @@ jsdScript::CreatePPLineMap()
     if (mPPLineMap) {             
         mPCMapSize = 0;
         for (PRUint32 line = baseLine; line < scriptExtent + baseLine; ++line) {
-            PRUint32 pc = (PRUint32) JS_LineNumberToPC (cx, script,
-                                                        line);
-            if (line == JS_PCToLineNumber (cx, script, (jsbytecode *)pc)) {
-                pc -= firstPC;
+            jsbytecode* pc = JS_LineNumberToPC (cx, script, line);
+            if (line == JS_PCToLineNumber (cx, script, pc)) {
                 mPPLineMap[mPCMapSize].line = line;
-                mPPLineMap[mPCMapSize].pc = pc;
+                mPPLineMap[mPCMapSize].pc = pc - firstPC;
                 ++mPCMapSize;
             }
         }
