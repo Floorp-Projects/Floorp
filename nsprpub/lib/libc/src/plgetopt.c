@@ -141,7 +141,7 @@ PR_IMPLEMENT(PLOptStatus) PL_GetNextOpt(PLOptState *opt)
                 */
                 if (':' == internal->options[cop + 1])
                 {
-					PR_ASSERT(0 == *internal->xargv);
+                    if (0 != *internal->xargv) return PL_OPT_BAD;
                     opt->value = internal->argv[++(internal->xargc)];
                     internal->xargv = &static_Nul;
                     internal->minus = PR_FALSE;
@@ -156,7 +156,7 @@ PR_IMPLEMENT(PLOptStatus) PL_GetNextOpt(PLOptState *opt)
     /*
     ** No '-', so it must be a standalone value. The option is nul.
     */
-    opt->value = internal->argv[(internal->xargc)++];
+    opt->value = internal->argv[internal->xargc];
     internal->xargv = &static_Nul;
     opt->option = 0;
     return PL_OPT_OK;
