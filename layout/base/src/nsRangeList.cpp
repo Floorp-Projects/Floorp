@@ -1373,7 +1373,8 @@ nsRangeList::AddSelectionListener(nsIDOMSelectionListener* inNewListener)
     return NS_ERROR_FAILURE;
   if (!inNewListener)
     return NS_ERROR_NULL_POINTER;
-  mSelectionListeners->AppendElement(inNewListener);		// addrefs
+  nsCOMPtr<nsISupports> isupports = do_QueryInterface(inNewListener);
+  mSelectionListeners->AppendElement(isupports);		// addrefs
   return NS_OK;
 }
 
@@ -1386,8 +1387,8 @@ nsRangeList::RemoveSelectionListener(nsIDOMSelectionListener* inListenerToRemove
     return NS_ERROR_FAILURE;
   if (!inListenerToRemove )
     return NS_ERROR_NULL_POINTER;
-    
-  return mSelectionListeners->RemoveElement(inListenerToRemove);		// releases
+  nsCOMPtr<nsISupports> isupports = do_QueryInterface(inListenerToRemove);
+  return mSelectionListeners->RemoveElement(isupports);		// releases
 }
 
 
