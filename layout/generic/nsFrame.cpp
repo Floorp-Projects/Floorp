@@ -587,7 +587,15 @@ nsFrame::DisplaySelection(nsIPresContext& aPresContext, PRBool isOkToTurnOn)
       }
     }
   }
-
+  if (result)
+  {
+    // Prepare the block reflow engine
+    const nsStyleUserInterface* userinterface;
+    GetStyleData(eStyleStruct_UserInterface,
+                      (const nsStyleStruct*&) userinterface);
+    if (userinterface)
+      result = userinterface->mUserSelect;
+  }
   return result;
 }
 
