@@ -572,11 +572,7 @@ nsButtonFrameRenderer::AddFocusBordersAndPadding(nsIPresContext& aPresContext,
                                   nsHTMLReflowMetrics& aMetrics,
                                   nsMargin& aBorderPadding)
 {
-
-  nsHTMLReflowState::ComputeBorderPaddingFor(mFrame,
-                                             aReflowState.parentReflowState,
-                                             aBorderPadding);
-  
+  aBorderPadding = aReflowState.mComputedBorderPadding;
 
   aBorderPadding += GetButtonOuterFocusBorderAndPadding();
   aBorderPadding += GetButtonInnerFocusMargin();
