@@ -37,20 +37,20 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsAccessNodeWrap.h"
-#include "nsIAccessible.h"
-#include "nsIFrame.h"
-#include "nsIDocument.h"
-#include "nsIPresShell.h"
-#include "nsIDOMNodeList.h"
-#include "nsIScriptGlobalObject.h"
-#include "nsIDOMCSSStyleDeclaration.h"
-#include "nsIDOMViewCSS.h"
-#include "nsIAccessibilityService.h"
-#include "nsIServiceManager.h"
-#include "nsINameSpaceManager.h"
-#include "nsAccessibleWrap.h"
 #include "ISimpleDOMNode_i.c"
+#include "nsIAccessibilityService.h"
+#include "nsIAccessible.h"
+#include "nsIDocument.h"
+#include "nsIDOMCSSStyleDeclaration.h"
+#include "nsIDOMNodeList.h"
+#include "nsIDOMNSHTMLElement.h"
+#include "nsIDOMViewCSS.h"
+#include "nsIFrame.h"
+#include "nsINameSpaceManager.h"
 #include "nsIPref.h"
+#include "nsIPresShell.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIServiceManager.h"
 #include "nsIServiceManager.h"
 
 /// the accessible library and cached methods
@@ -479,6 +479,53 @@ STDMETHODIMP nsAccessNodeWrap::get_nextSibling(ISimpleDOMNode __RPC_FAR *__RPC_F
   return S_OK;
 }
 
+STDMETHODIMP 
+nsAccessNodeWrap::get_childAt(unsigned aChildIndex,
+                              ISimpleDOMNode __RPC_FAR *__RPC_FAR *aNode)
+{
+  *aNode = nsnull;
+
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  if (!content)
+    return E_FAIL;  // Node already shut down
+
+  nsCOMPtr<nsIContent> childContent;
+  content->ChildAt(aChildIndex, *getter_AddRefs(childContent));
+  nsCOMPtr<nsIDOMNode> node(do_QueryInterface(childContent));
+
+  if (!node)
+    return E_FAIL; // No such child
+
+  *aNode = MakeAccessNode(node);
+
+  return S_OK;
+}
+
+STDMETHODIMP 
+nsAccessNodeWrap::get_innerHTML(BSTR __RPC_FAR *aInnerHTML)
+{
+  *aInnerHTML = nsnull;
+
+  nsCOMPtr<nsIDOMNSHTMLElement> domNSElement(do_QueryInterface(mDOMNode));
+  if (!domNSElement)
+    return E_FAIL; // Node already shut down
+
+  nsAutoString innerHTML;
+  domNSElement->GetInnerHTML(innerHTML);
+  *aInnerHTML = ::SysAllocString(innerHTML.get());
+
+  return S_OK;
+}
+
+STDMETHODIMP 
+nsAccessNodeWrap::get_localInterface( 
+    /* [out] */ void __RPC_FAR *__RPC_FAR *localInterface)
+{
+  *localInterface = NS_STATIC_CAST(nsIAccessNode*, this);
+  NS_ADDREF_THIS();
+  return S_OK;
+}
+ 
 void nsAccessNodeWrap::InitAccessibility()
 {
   if (gIsAccessibilityActive) {

@@ -111,7 +111,15 @@ class nsAccessNodeWrap :  public nsAccessNode, public ISimpleDOMNode
     virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_lastChild(ISimpleDOMNode __RPC_FAR *__RPC_FAR *node);
     virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_previousSibling(ISimpleDOMNode __RPC_FAR *__RPC_FAR *node);
     virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_nextSibling(ISimpleDOMNode __RPC_FAR *__RPC_FAR *node);
+    virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_childAt(unsigned childIndex,
+                                                                  ISimpleDOMNode __RPC_FAR *__RPC_FAR *node);
 
+    virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_innerHTML(
+        /* [out][retval] */ BSTR __RPC_FAR *innerHTML);
+
+    virtual /* [local][propget] */ HRESULT STDMETHODCALLTYPE get_localInterface( 
+        /* [retval][out] */ void __RPC_FAR *__RPC_FAR *localInterface);
+        
     static void InitAccessibility();
     static void ShutdownAccessibility();
 
