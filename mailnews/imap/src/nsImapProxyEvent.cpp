@@ -1098,6 +1098,35 @@ nsImapMiscellaneousProxy::GetShouldDownloadArbitraryHeaders(
 }
 
 NS_IMETHODIMP
+nsImapMiscellaneousProxy::GetShowAttachmentsInline(
+    nsIImapProtocol* aProtocol, PRBool* aBool)
+{
+    nsresult res = NS_OK;
+    NS_PRECONDITION (aBool, "Oops... null aBool");
+    if(!aBool)
+        return NS_ERROR_NULL_POINTER;
+    NS_ASSERTION (m_protocol == aProtocol, "Ooh ooh, wrong protocol");
+
+    if (PR_GetCurrentThread() == m_thread)
+    {
+        GetShowAttachmentsInlineProxyEvent *ev =
+            new GetShowAttachmentsInlineProxyEvent(this, aBool);
+        if(nsnull == ev)
+            res = NS_ERROR_OUT_OF_MEMORY;
+        else
+            ev->PostEvent(m_eventQueue);
+    }
+    else
+    {
+        res =
+            m_realImapMiscellaneous->GetShowAttachmentsInline(aProtocol,
+                                                              aBool);
+        aProtocol->NotifyFEEventCompletion();
+    }
+    return res;
+}
+
+NS_IMETHODIMP
 nsImapMiscellaneousProxy::HeaderFetchCompleted(nsIImapProtocol* aProtocol)
 {
     nsresult res = NS_OK;
@@ -2170,31 +2199,18 @@ GetMessageSizeFromDBProxyEvent::GetMessageSizeFromDBProxyEvent(
     nsImapMessageProxyEvent(aImapMessageProxy)
 {
     NS_ASSERTION (sizeInfo, "Oops... a null message size info");
-    if (sizeInfo)
-    {
-        m_sizeInfo = *sizeInfo;
-        m_sizeInfo.id = PL_strdup(sizeInfo->id);
-        m_sizeInfo.folderName = PL_strdup(sizeInfo->folderName);
-    }
-    else
-    {
-        memset(&m_sizeInfo, 0, sizeof(MessageSizeInfo));
-    }
+    m_sizeInfo = sizeInfo;
 }
 
 GetMessageSizeFromDBProxyEvent::~GetMessageSizeFromDBProxyEvent()
 {
-    if (m_sizeInfo.id)
-        PL_strfree(m_sizeInfo.id);
-    if (m_sizeInfo.folderName)
-        PL_strfree(m_sizeInfo.folderName);
 }
 
 NS_IMETHODIMP
 GetMessageSizeFromDBProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->GetMessageSizeFromDB(m_proxy->m_protocol,
-                                                &m_sizeInfo); 
+                                                 m_sizeInfo); 
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
@@ -2563,6 +2579,27 @@ GetShouldDownloadArbitraryHeadersProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->GetShouldDownloadArbitraryHeaders(m_proxy->m_protocol,
                                                 m_info);
+    m_proxy->m_protocol->NotifyFEEventCompletion();
+    return res;
+}
+
+GetShowAttachmentsInlineProxyEvent::GetShowAttachmentsInlineProxyEvent(
+    nsImapMiscellaneousProxy* aProxy, PRBool* aBool) :
+    nsImapMiscellaneousProxyEvent(aProxy)
+{
+    NS_ASSERTION (aBool, "Oops... a null bool pointer");
+    m_bool = aBool;
+}
+
+GetShowAttachmentsInlineProxyEvent::~GetShowAttachmentsInlineProxyEvent()
+{
+}
+
+NS_IMETHODIMP
+GetShowAttachmentsInlineProxyEvent::HandleEvent()
+{
+    nsresult res = m_proxy->GetShowAttachmentsInline(m_proxy->m_protocol,
+                                                m_bool);
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }

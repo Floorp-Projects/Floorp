@@ -190,6 +190,8 @@ public:
                                    GenericInfo* aInfo);
     NS_IMETHOD GetShouldDownloadArbitraryHeaders(nsIImapProtocol* aProtocol,
                                                  GenericInfo* aInfo);
+    NS_IMETHOD GetShowAttachmentsInline(nsIImapProtocol* aProtocol,
+                                        PRBool* aBool);
     NS_IMETHOD HeaderFetchCompleted(nsIImapProtocol* aProtocol);
     NS_IMETHOD UpdateSecurityStatus(nsIImapProtocol* aProtocol);
     // ****
@@ -441,7 +443,7 @@ struct GetMessageSizeFromDBProxyEvent : nsImapMessageProxyEvent
                                    MessageSizeInfo* sizeInfo);
     virtual ~GetMessageSizeFromDBProxyEvent();
     NS_IMETHOD HandleEvent();
-    MessageSizeInfo m_sizeInfo;
+    MessageSizeInfo *m_sizeInfo; // pass in handle we don't own it
 };
 
 struct nsImapExtensionProxyEvent : nsImapEvent
@@ -556,6 +558,16 @@ struct GetShouldDownloadArbitraryHeadersProxyEvent :
     virtual ~GetShouldDownloadArbitraryHeadersProxyEvent();
     NS_IMETHOD HandleEvent();
     GenericInfo *m_info;        // pass in handle we don't own it
+};
+
+struct GetShowAttachmentsInlineProxyEvent : 
+    public nsImapMiscellaneousProxyEvent
+{
+    GetShowAttachmentsInlineProxyEvent(
+        nsImapMiscellaneousProxy* aProxy, PRBool* aBool);
+    virtual ~GetShowAttachmentsInlineProxyEvent();
+    NS_IMETHOD HandleEvent();
+    PRBool *m_bool;        // pass in handle we don't own it
 };
 
 struct HeaderFetchCompletedProxyEvent : public nsImapMiscellaneousProxyEvent
