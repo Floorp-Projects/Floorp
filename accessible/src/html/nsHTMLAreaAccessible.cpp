@@ -46,6 +46,9 @@
 #include "nsIServiceManager.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMHTMLAreaElement.h"
+#include "nsIFrame.h"
+#include "nsIImageFrame.h"
+#include "nsIImageMap.h"
 
 
 // --- area -----
@@ -62,6 +65,8 @@ NS_IMETHODIMP nsHTMLAreaAccessible::GetAccName(nsAString & _retval)
   if (elt) {
     nsAutoString hrefString;
     elt->GetAttribute(NS_LITERAL_STRING("title"), _retval);
+    if (_retval.IsEmpty())
+      GetAccValue(_retval);
   }
   return NS_OK;
 }
@@ -70,15 +75,6 @@ NS_IMETHODIMP nsHTMLAreaAccessible::GetAccName(nsAString & _retval)
 NS_IMETHODIMP nsHTMLAreaAccessible::GetAccRole(PRUint32 *_retval)
 {
   *_retval = ROLE_LINK;
-  return NS_OK;
-}
-
-/* wstring getAccValue (); */
-NS_IMETHODIMP nsHTMLAreaAccessible::GetAccValue(nsAString& _retval)
-{
-  nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(mDOMNode));
-  if (elt) 
-    elt->GetAttribute(NS_LITERAL_STRING("href"), _retval);
   return NS_OK;
 }
 
@@ -159,11 +155,51 @@ NS_IMETHODIMP nsHTMLAreaAccessible::GetAccPreviousSibling(nsIAccessible * *aAccP
 /* void accGetBounds (out long x, out long y, out long width, out long height); */
 NS_IMETHODIMP nsHTMLAreaAccessible::AccGetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PRInt32 *height)
 {
-  //nsIFrame *frame;
-  // Do a better job on this later - need to use GetRect on mAreas of nsImageMap from nsImageFrame
-  //return mAccParent->nsAccessible::AccGetBounds(x,y,width,height);
+  // Essentially this uses GetRect on mAreas of nsImageMap from nsImageFrame
 
   *x = *y = *width = *height = 0;
-  return NS_ERROR_NOT_IMPLEMENTED;
+
+  nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mPresShell));
+  NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIPresContext> presContext;
+  presShell->GetPresContext(getter_AddRefs(presContext));
+  NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIContent> ourContent(do_QueryInterface(mDOMNode));
+  NS_ENSURE_TRUE(ourContent, NS_ERROR_FAILURE);
+
+  nsIFrame *frame = nsnull;
+  presShell->GetPrimaryFrameFor(ourContent, &frame);
+  nsIImageFrame *imageFrame;
+  nsresult rv = frame->QueryInterface(NS_GET_IID(nsIImageFrame), (void**)&imageFrame);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIImageMap> map;
+  imageFrame->GetImageMap(presContext, getter_AddRefs(map));
+  NS_ENSURE_TRUE(map, NS_ERROR_FAILURE);
+
+  nsRect rect, orgRectPixels, pageRectPixels;
+  rv = map->GetBoundsForAreaContent(ourContent, presContext, rect);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Convert from twips to pixels
+  float t2p;
+  presContext->GetTwipsToPixels(&t2p);   // Get pixels conversion factor
+  *x      = NSTwipsToIntPixels(rect.x, t2p); 
+  *y      = NSTwipsToIntPixels(rect.y, t2p); 
+
+  // XXX aaronl not sure why we have to subtract the x,y from the width, height
+  //     -- but it works perfectly!
+  *width  = NSTwipsToIntPixels(rect.width, t2p) - *x;
+  *height = NSTwipsToIntPixels(rect.height, t2p) - *y;
+
+  // Put coords in absolute screen coords
+  GetScreenOrigin(presContext, frame, &orgRectPixels);
+  GetScrollOffset(&pageRectPixels);
+  *x += orgRectPixels.x - pageRectPixels.x;
+  *y += orgRectPixels.y - pageRectPixels.y;
+
+  return NS_OK;
 }
 

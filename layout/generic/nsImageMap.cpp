@@ -62,6 +62,7 @@
 #include "nsIFrameManager.h"
 #include "nsIViewManager.h"
 #include "nsCoord.h"
+#include "nsIImageMap.h"
 
 class Area {
 public:
@@ -786,12 +787,32 @@ nsImageMap::QueryInterface(REFNSIID iid, void** result)
            iid.Equals(NS_GET_IID(nsIDOMEventListener))) {
     *result = NS_STATIC_CAST(nsIDOMFocusListener*, this);
   }
+  else if (iid.Equals(NS_GET_IID(nsIImageMap))) {
+    *result = NS_STATIC_CAST(nsIImageMap*, this);
+  }
   else {
     return NS_NOINTERFACE;
   }
 
   NS_ADDREF_THIS();
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImageMap::GetBoundsForAreaContent(nsIContent *aContent, 
+                                   nsIPresContext* aPresContext, 
+                                   nsRect& aBounds)
+{
+  // Find the Area struct associated with this content node, and return bounds
+  PRInt32 i, n = mAreas.Count();
+  for (i = 0; i < n; i++) {
+    Area* area = (Area*) mAreas.ElementAt(i);
+    if (area->mArea == aContent) {
+      area->GetRect(aPresContext, aBounds);
+      return NS_OK;
+    }
+  }
+  return NS_ERROR_FAILURE;
 }
 
 void

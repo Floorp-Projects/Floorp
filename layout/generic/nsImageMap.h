@@ -43,6 +43,7 @@
 #include "nsIDocumentObserver.h"
 #include "nsIDOMFocusListener.h"
 #include "nsIFrame.h"
+#include "nsIImageMap.h"
 
 class nsIContent;
 class nsIDOMHTMLAreaElement;
@@ -53,7 +54,8 @@ class nsIURI;
 class nsString;
 class nsIDOMEvent;
 
-class nsImageMap : public nsIDocumentObserver, public nsIDOMFocusListener
+class nsImageMap : public nsIDocumentObserver, public nsIDOMFocusListener,
+                   public nsIImageMap
 {
 public:
   nsImageMap();
@@ -155,6 +157,11 @@ public:
   NS_IMETHOD Focus(nsIDOMEvent* aEvent);
   NS_IMETHOD Blur(nsIDOMEvent* aEvent);
   NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
+
+  //nsIImageMap
+  NS_IMETHOD GetBoundsForAreaContent(nsIContent *aContent, 
+                                     nsIPresContext* aPresContext, 
+                                     nsRect& aBounds);
 
 protected:
   virtual ~nsImageMap();

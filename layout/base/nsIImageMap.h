@@ -20,11 +20,9 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- * Author: Aaron Leventhal (aaronl@netscape.com)
- *
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * either the GNU General Public License Version 2 or later (the "GPL"), or 
  * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
@@ -36,35 +34,24 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+#ifndef nsIImageMap_h___
+#define nsIImageMap_h___
 
-#ifndef _nsHTMLAreaAccessible_H_
-#define _nsHTMLAreaAccessible_H_
+#include "nsISupports.h"
+class nsIContent;
+struct nsRect;
 
-#include "nsBaseWidgetAccessible.h"
-#include "nsAccessible.h"
+#define NS_IIMAGEMAP_IID \
+{ 0x36a48085, 0xc213, 0x4464, { 0xab, 0x60, 0x41, 0x2e, 0xc8, 0xe8, 0xb1, 0xfe } }
 
-/* Accessible for image map areas - must be child of image
- */
 
-class nsHTMLAreaAccessible : public nsLinkableAccessible
-{
-
+class nsIImageMap : public nsISupports {
 public:
-  nsHTMLAreaAccessible(nsIDOMNode *domNode, nsIAccessible *accParent, nsIWeakReference* aShell);
-  NS_IMETHOD GetAccName(nsAString & _retval); 
-  NS_IMETHOD GetAccRole(PRUint32 *_retval); 
-  NS_IMETHOD GetAccFirstChild(nsIAccessible **_retval);
-  NS_IMETHOD GetAccLastChild(nsIAccessible **_retval);
-  NS_IMETHOD GetAccChildCount(PRInt32 *_retval);
-  NS_IMETHOD GetAccParent(nsIAccessible * *aAccParent);
-  NS_IMETHOD GetAccNextSibling(nsIAccessible * *aAccNextSibling);
-  NS_IMETHOD GetAccPreviousSibling(nsIAccessible * *aAccPreviousSibling);
-  NS_IMETHOD GetAccDescription(nsAString& _retval);
-  NS_IMETHOD AccGetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PRInt32 *height);
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IIMAGEMAP_IID)
 
-protected:
-  nsIAccessible *CreateAreaAccessible(nsIDOMNode *aDOMNode);
-  nsCOMPtr<nsIAccessible> mAccParent;
+  NS_IMETHOD GetBoundsForAreaContent(nsIContent *aContent, 
+                                     nsIPresContext* aPresContext, 
+                                     nsRect& aBounds) = 0;
 };
 
-#endif  
+#endif /* nsIImageMap_h___ */

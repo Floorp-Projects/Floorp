@@ -119,6 +119,7 @@ class nsRootAccessible : public nsAccessible,
     NS_IMETHOD Select(nsIDOMEvent* aEvent);
     NS_IMETHOD Input(nsIDOMEvent* aEvent);
 
+    // ----- nsIDOMXULListener ---------------------------
     NS_IMETHOD PopupShowing(nsIDOMEvent* aEvent);
     NS_IMETHOD PopupShown(nsIDOMEvent* aEvent);
     NS_IMETHOD PopupHiding(nsIDOMEvent* aEvent);
