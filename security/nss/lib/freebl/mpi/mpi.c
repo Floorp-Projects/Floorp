@@ -22,6 +22,7 @@
  * All Rights Reserved.
  *
  * Contributor(s):
+ *	Netscape Communications Corporation 
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -34,7 +35,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- *  $Id: mpi.c,v 1.1 2000/07/14 00:44:21 nelsonb%netscape.com Exp $
+ *  $Id: mpi.c,v 1.2 2000/07/17 22:31:17 nelsonb%netscape.com Exp $
  */
 
 #include "mpi.h"
@@ -105,8 +106,8 @@ static unsigned int s_mp_defprec = MP_DEFPREC;
   ourselves with the low-order 2 mp_digits)
  */
 
-#define  CARRYOUT(W)  (((W)>>DIGIT_BIT)&DIGIT_MAX)
-#define  ACCUM(W)     ((W)&DIGIT_MAX)
+#define  CARRYOUT(W)  (mp_digit)(((W)>>DIGIT_BIT)&DIGIT_MAX)
+#define  ACCUM(W)     (mp_digit)((W)&DIGIT_MAX)
 
 /* }}} */
 
@@ -2741,12 +2742,12 @@ mp_err   s_mp_add_d(mp_int *mp, mp_digit d)    /* unsigned digit addition */
   mp_word   w, k = 0;
   mp_size   ix = 1;
 
-  w = DIGIT(mp, 0) + d;
+  w = (mp_word)DIGIT(mp, 0) + d;
   DIGIT(mp, 0) = ACCUM(w);
   k = CARRYOUT(w);
 
   while(ix < USED(mp) && k) {
-    w = DIGIT(mp, ix) + k;
+    w = (mp_word)DIGIT(mp, ix) + k;
     DIGIT(mp, ix) = ACCUM(w);
     k = CARRYOUT(w);
     ++ix;
@@ -2776,13 +2777,13 @@ mp_err   s_mp_sub_d(mp_int *mp, mp_digit d)    /* unsigned digit subtract */
   mp_size   ix = 1;
 
   /* Compute initial subtraction    */
-  w = (RADIX + DIGIT(mp, 0)) - d;
+  w = (RADIX + (mp_word)DIGIT(mp, 0)) - d;
   b = CARRYOUT(w) ? 0 : 1;
   DIGIT(mp, 0) = ACCUM(w);
 
   /* Propagate borrows leftward     */
   while(b && ix < USED(mp)) {
-    w = (RADIX + DIGIT(mp, ix)) - b;
+    w = (RADIX + (mp_word)DIGIT(mp, ix)) - b;
     b = CARRYOUT(w) ? 0 : 1;
     DIGIT(mp, ix) = ACCUM(w);
     ++ix;
@@ -2819,14 +2820,14 @@ mp_err   s_mp_mul_d(mp_int *a, mp_digit d)
     unless absolutely necessary.
    */
   max = USED(a);
-  w = DIGIT(a, max - 1) * d;
+  w = (mp_word)DIGIT(a, max - 1) * d;
   if(CARRYOUT(w) != 0) {
     if((res = s_mp_pad(a, max + 1)) != MP_OKAY)
       return res;
   }
 
   for(ix = 0; ix < max; ix++) {
-    w = (DIGIT(a, ix) * d) + k;
+    w = ((mp_word)DIGIT(a, ix) * d) + k;
     DIGIT(a, ix) = ACCUM(w);
     k = CARRYOUT(w);
   }
@@ -2950,7 +2951,7 @@ mp_err   s_mp_add(mp_int *a, mp_int *b)        /* magnitude addition      */
     propagated upward among the higher-order digits of the sum.
    */
   for(ix = 0; ix < USED(b); ix++) {
-    w = DIGIT(a, ix) + DIGIT(b, ix) + k;
+    w = (mp_word)DIGIT(a, ix) + DIGIT(b, ix) + k;
     DIGIT(a, ix) = ACCUM(w);
     k = CARRYOUT(w);
   }
@@ -2959,7 +2960,7 @@ mp_err   s_mp_add(mp_int *a, mp_int *b)        /* magnitude addition      */
      sure the carries get propagated upward...  
    */
   while(k && ix < USED(a)) {
-    w = DIGIT(a, ix) + k;
+    w = (mp_word)DIGIT(a, ix) + k;
     DIGIT(a, ix) = ACCUM(w);
     k = CARRYOUT(w);
     ++ix;
@@ -2997,12 +2998,12 @@ mp_err   s_mp_sub(mp_int *a, mp_int *b)        /* magnitude subtract      */
     the precision of a just to make the loops work right...
    */
   for(ix = 0; ix < USED(b); ix++) {
-    w = (RADIX + DIGIT(a, ix)) - k - DIGIT(b, ix);
+    w = (RADIX + (mp_word)DIGIT(a, ix)) - k - DIGIT(b, ix);
     DIGIT(a, ix) = ACCUM(w);
     k = CARRYOUT(w) ? 0 : 1;
   }
   while(ix < USED(a)) {
-    w = (RADIX + DIGIT(a, ix)) - k;
+    w = (RADIX + (mp_word)DIGIT(a, ix)) - k;
     DIGIT(a, ix) = ACCUM(w);
     k = CARRYOUT(w) ? 0 : 1;
     ++ix;
@@ -3049,7 +3050,7 @@ mp_err   s_mp_mul(mp_int *a, mp_int *b)
 
     /* Inner product:  Digits of a */
     for(jx = 0; jx < USED(a); jx++) {
-      w = (DIGIT(b, ix) * DIGIT(a, jx)) + k + DIGIT(&tmp, ix+jx);
+      w = ((mp_word)DIGIT(b, ix) * DIGIT(a, jx)) + k + DIGIT(&tmp, ix+jx);
       DIGIT(&tmp, ix+jx) = ACCUM(w);
       k = CARRYOUT(w);
     }
@@ -3096,7 +3097,7 @@ mp_err   s_mp_sqr(mp_int *a)
     if(DIGIT(a, ix) == 0)
       continue;
 
-    w = DIGIT(&tmp, ix + ix) + (DIGIT(a, ix) * DIGIT(a, ix));
+    w = DIGIT(&tmp, ix + ix) + (DIGIT(a, ix) * (mp_word)DIGIT(a, ix));
 
     DIGIT(&tmp, ix + ix) = ACCUM(w);
     k = CARRYOUT(w);
@@ -3115,7 +3116,7 @@ mp_err   s_mp_sqr(mp_int *a)
       mp_word  u = 0, v;
 
       /* Compute the multiplicative step */
-      w = DIGIT(a, ix) * DIGIT(a, jx);
+      w = (mp_word)DIGIT(a, ix) * DIGIT(a, jx);
 
       /* If w is more than half MP_WORD_MAX, the doubling will
 	 overflow, and we need to record a carry out into the next
@@ -3128,7 +3129,7 @@ mp_err   s_mp_sqr(mp_int *a)
       w *= 2;
 
       /* Compute the additive step */
-      v = DIGIT(&tmp, ix + jx) + k;
+      v = (mp_word)DIGIT(&tmp, ix + jx) + k;
 
       /* If we do not already have an overflow carry, check to see
 	 if the addition will cause one, and set the carry out if so 
@@ -3159,7 +3160,7 @@ mp_err   s_mp_sqr(mp_int *a)
      */
     kx = 1;
     while(k) {
-      k = DIGIT(&tmp, ix + jx + kx) + 1;
+      k = (mp_word)DIGIT(&tmp, ix + jx + kx) + 1;
       DIGIT(&tmp, ix + jx + kx) = ACCUM(k);
       k = CARRYOUT(k);
       ++kx;
@@ -3192,6 +3193,7 @@ mp_err   s_mp_div(mp_int *a, mp_int *b)
   mp_word  q;
   mp_err   res;
   mp_digit d;
+  mp_digit b_msd;
   int      ix;
 
   if(mp_cmp_z(b) == 0)
@@ -3244,10 +3246,10 @@ mp_err   s_mp_div(mp_int *a, mp_int *b)
 
     /* Compute a guess for the next quotient digit       */
     q = DIGIT(&rem, USED(&rem) - 1);
-    if(USED(&rem) > 1)
+    b_msd = DIGIT(b, USED(b) - 1);
+    if (q < b_msd && USED(&rem) > 1)
       q = (q << DIGIT_BIT) | DIGIT(&rem, USED(&rem) - 2);
-
-    q /= DIGIT(b, USED(b) - 1);
+    q /= b_msd;
 
     if(q == RADIX)
       --q;
