@@ -412,10 +412,8 @@ NS_IMETHODIMP nsOutlinerBodyFrame::SetView(nsIOutlinerView * aView)
   if (mView) {
     mView->SetOutliner(nsnull);
     mView = nsnull;
-  }
 
-  // Only reset the top row index and delete the columns if we had an old non-null view.
-  if (mView) {
+    // Only reset the top row index and delete the columns if we had an old non-null view.
     mTopRowIndex = 0;
     delete mColumns;
     mColumns = nsnull;
