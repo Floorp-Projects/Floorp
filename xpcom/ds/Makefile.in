@@ -45,7 +45,6 @@ CPPSRCS		= \
 		nsByteBuffer.cpp \
 		nsCheapSets.cpp \
 		nsCRT.cpp \
-		nsConjoiningEnumerator.cpp \
 		nsDeque.cpp \
 		nsEmptyEnumerator.cpp \
 		nsEnumeratorUtils.cpp \
