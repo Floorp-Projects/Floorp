@@ -718,7 +718,7 @@ PRBool nsMessageViewDataSource::IsThreadsFirstMessage(nsIMsgThread *thread, nsIM
 	nsCOMPtr<nsIMsgDBHdr> firstHdr;
 	nsresult rv;
 
-	rv = thread->GetChildHdrAt(0, getter_AddRefs(firstHdr));
+	rv = thread->GetRootHdr(nsnull, getter_AddRefs(firstHdr));
 	if(NS_FAILED(rv))
 		return PR_FALSE;
 
