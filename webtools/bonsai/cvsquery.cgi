@@ -234,7 +234,7 @@ if (defined $::FORM{'generateBackoutCVSCommands'}) {
 # backout the changes selected by your query.
 
 ";
-    foreach my $ci (@{$result}) {
+    foreach my $ci (reverse @{$result}) {
         if ($ci->[$::CI_REV] eq "") {
             print "echo 'Changes made to $ci->[$::CI_DIR]/$ci->[$::CI_FILE] need to be backed out by hand'\n";
             next;
