@@ -132,7 +132,7 @@ MyGetFileAttributesEx(const char* file, WIN32_FILE_ATTRIBUTE_DATA* data)
 		if(! (data->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
 		{
 			HANDLE hFile = CreateFile(file,
-									  GENERIC_READ, 
+									  0, 
 									  FILE_SHARE_READ, 
 									  NULL, 
 									  OPEN_EXISTING, 
