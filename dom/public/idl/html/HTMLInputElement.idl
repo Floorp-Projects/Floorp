@@ -26,3 +26,11 @@
    void                      select();
    void                      click();
  };
+
+
+ interface NSHTMLInputElement {
+ /* IID: { 0x993d2efc, 0xa768, 0x11d3, \
+  { 0xbc, 0xcd, 0x00, 0x60, 0xb0, 0xfc, 0x76, 0xbd } } */
+
+	readonly attribute  xpidl nsIControllers  controllers;
+ };

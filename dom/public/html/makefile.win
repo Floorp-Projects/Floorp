@@ -52,6 +52,7 @@ EXPORTS=    \
 	nsIDOMHTMLHtmlElement.h \
 	nsIDOMHTMLImageElement.h \
 	nsIDOMHTMLInputElement.h \
+	nsIDOMNSHTMLInputElement.h \
 	nsIDOMHTMLIsIndexElement.h \
 	nsIDOMHTMLLIElement.h \
 	$(NULL)
