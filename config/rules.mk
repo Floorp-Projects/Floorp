@@ -911,7 +911,7 @@ $(XPIDL_GEN_DIR):
 
 $(XPIDL_GEN_DIR)/%.h: %.idl $(IDL_COMPILE) $(XPIDL_GEN_DIR)
 	$(XPIDL_COMPILE) -m header -w -I $(XPDIST)/idl -o $(XPIDL_GEN_DIR)/$* $<
-	@if test -e $(srcdir)/$*.h; \
+	@if test -n "$(findstring $*.h, $(EXPORTS))"; \
 	  then echo "*** WARNING: file $*.h generated from $*.idl overrides $(srcdir)/$*.h"; fi
 
 export:: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.h, $(XPIDLSRCS)) $(XPDIST)/include
