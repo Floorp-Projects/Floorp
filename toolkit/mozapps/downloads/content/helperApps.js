@@ -212,6 +212,7 @@ HelperApps.prototype = {
     if (this._isRootTypeResource(aSource)) {
       var typeInfo = this.getMIMEInfo(aSource);
       if (typeInfo) {
+        var bundle = document.getElementById("strings");
         if (aProperty.EqualsNode(this._handleAutoArc)) {
           var handler = this.GetTarget(aSource, this._handlerPropArc, true);
           if (handler) {
@@ -221,9 +222,9 @@ HelperApps.prototype = {
         }
         else if (aProperty.EqualsNode(this._fileTypeArc)) {
           if (typeInfo.Description == "") {
-            // XXXben LOCALIZE!
             try {
-              return gRDF.GetLiteral(typeInfo.primaryExtension.toUpperCase() + " file");
+              var literal = bundle.getFormattedString("fileEnding", [typeInfo.primaryExtension.toUpperCase()]);
+              return gRDF.GetLiteral(literal);
             }
             catch (e) { 
               // Wow, this sucks, just show the MIME type as a last ditch effort to display
@@ -238,22 +239,21 @@ HelperApps.prototype = {
           if (handler) {
             handler = handler.QueryInterface(Components.interfaces.nsIRDFResource);
             if (this.getLiteralValue(handler.Value, "saveToDisk") == "true") {
-              // XXXben LOCALIZE!
-              return gRDF.GetLiteral("Save to Disk");
+              var saveToDisk = bundle.getString("saveToDisk");
+              return gRDF.GetLiteral(saveToDisk);
             }
             else if (this.getLiteralValue(handler.Value, "useSystemDefault") == "false") {
               var extApp = this.GetTarget(handler, this._externalAppArc, true);
               if (extApp) {
                 extApp = extApp.QueryInterface(Components.interfaces.nsIRDFResource);
-                // XXXben LOCALIZE!
-                var name = "Open with " + this.getLiteralValue(extApp.Value, "prettyName");
-                return gRDF.GetLiteral(name);
+                var openWith = bundle.getFormattedString("openWith", [this.getLiteralValue(extApp.Value, "prettyName")]);
+                return gRDF.GetLiteral(openWith);
               }
             }
           }     
           
-          // XXXben LOCALIZE!
-          return gRDF.GetLiteral("Open with " + typeInfo.defaultDescription);
+          var openWith2 = bundle.getFormattedString("openWith", [typeInfo.defaultDescription]);
+          return gRDF.GetLiteral(openWith2);
         }
         else if (aProperty.EqualsNode(this._fileIconArc)) {
           try {

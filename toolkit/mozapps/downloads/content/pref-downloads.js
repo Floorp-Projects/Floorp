@@ -57,8 +57,10 @@ function selectFolder()
                       .createInstance(nsIFilePicker);
   var pref = Components.classes["@mozilla.org/preferences-service;1"]
                       .getService(Components.interfaces.nsIPrefBranch);
-  // XXXBlake Localize!
-  fp.init(window, "Select Download Folder", nsIFilePicker.modeGetFolder);
+
+  var bundle = document.getElementById("strings");
+  var description = bundle.getString("selectDownloadDir");
+  fp.init(window, description, nsIFilePicker.modeGetFolder);
   try 
   {
     var initialDir = pref.getComplexValue(downloadDirPref, nsILocalFile);
