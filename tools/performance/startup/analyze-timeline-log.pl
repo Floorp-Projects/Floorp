@@ -3,6 +3,13 @@
 #
 # Usage: perl getlines.pl < timline.log > file.log
 
+# Configuration options
+#
+# Set this option to take all timings only upto the main window being visible
+# All activity beyond main window being visible is ignored.
+# default is 0. We take timings upto main1 finish
+$stopWithVisibleWindow = 0;
+
 # dlls loaded
 my @dlls = ();
 # Files of a particular extensions
@@ -50,11 +57,15 @@ while (<>)
 
     # Find main1's cost to compute percentages
     if (/\.\.\.main1/) {
-        $main1 = getTimelineStamp($_);;
+        $main1 = getTimelineStamp($_);
     }
     # find when we showed the window
     if (/Navigator Window visible now/) {
-        $window = getTimelineStamp($_);;
+        $window = getTimelineStamp($_);
+        if ($stopWithVisibleWindow) {
+            $main1 = $window;
+            last;
+        }
     }
 
     # Find all files loaded
@@ -146,11 +157,11 @@ foreach $e (@breakdownsorted)
     next if ($e =~ /nsNativeComponentLoader::GetFactory/);
     my $p = main1Percent($breakdown{$e});
     #next if ($p == 0);
-    printf "%6.2f %s\n", $p, $e;
+    printf "%6.2f%% %s\n", $p, $e;
     $totalAccounted += $p;
 }
 print "----------------------\n";
-printf "%6.2f Total Accounted\n", $totalAccounted;
+printf "%6.2f%% Total Accounted\n", $totalAccounted;
 
 print "\n";
 printf "[%d] List of dlls loaded:\n", $#dlls+1;
