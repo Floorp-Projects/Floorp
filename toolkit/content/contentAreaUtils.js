@@ -419,13 +419,13 @@ function getTargetFile(aData, aSniffer, aContentType, aIsDocument, aSkipPrompt, 
     while (file.exists()) {
       var parts = /.+-(\d+)(\..*)?$/.exec(file.leafName);
       if (parts) {
-        file.leafName = file.leafName.replace(/((\d+)\.)/, 
-                                              function (str, p1, part, s) { 
-                                                return (parseInt(part) + 1) + "."; 
+        file.leafName = file.leafName.replace(/((\d+)\.)|((\d+)$)/,
+                                              function (str, dot, dotNum, noDot, noDotNum, pos, s) {
+                                                return (parseInt(str) + 1) + (dot ? "." : "");
                                               });
       }
       else {
-        file.leafName = file.leafName.replace(/\./, "-1$&");
+        file.leafName = file.leafName.replace(/\.|$/, "-1$&");
       }
     }
     
