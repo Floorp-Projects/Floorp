@@ -375,8 +375,8 @@ NS_METHOD nsFrame::MoveTo(nscoord aX, nscoord aY)
   }
 
   // Let the view know
-  if (nsnull != mView) {
-    // Position view relative to it's parent, not relative to our
+  if ((nsnull != mView) && (0 == (mState & NS_FRAME_IN_REFLOW))) {
+    // Position view relative to its parent, not relative to our
     // parent frame (our parent frame may not have a view).
     nsIView* parentWithView;
     nsPoint origin;
@@ -394,7 +394,7 @@ NS_METHOD nsFrame::SizeTo(nscoord aWidth, nscoord aHeight)
   mRect.height = aHeight;
 
   // Let the view know
-  if (nsnull != mView) {
+  if ((nsnull != mView) && (0 == (mState & NS_FRAME_IN_REFLOW))) {
     mView->SetDimensions(aWidth, aHeight);
   }
   return NS_OK;
@@ -998,8 +998,18 @@ nsFrame::DidReflow(nsIPresContext& aPresContext,
 {
   NS_FRAME_TRACE_MSG(("nsFrame::DidReflow: aStatus=%d", aStatus));
   if (NS_FRAME_REFLOW_FINISHED == aStatus) {
-//    MoveTo(mRect.x, mRect.y); //added and killed per kipp's instructions... MMP
     mState &= ~NS_FRAME_IN_REFLOW;
+
+    if (nsnull != mView) {
+      // Position and size view relative to its parent, not relative to our
+      // parent frame (our parent frame may not have a view).
+      nsIView* parentWithView;
+      nsPoint origin;
+      GetOffsetFromView(origin, parentWithView);
+      nsRect  bounds(origin.x, origin.y, mRect.width, mRect.height);
+      mView->SetBounds(bounds);
+      NS_IF_RELEASE(parentWithView);
+    }
   }
   return NS_OK;
 }

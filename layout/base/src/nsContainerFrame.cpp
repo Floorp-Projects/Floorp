@@ -101,7 +101,6 @@ nsContainerFrame::DidReflow(nsIPresContext& aPresContext,
   NS_FRAME_TRACE_MSG(("enter nsContainerFrame::DidReflow: status=%d",
                       aStatus));
   if (NS_FRAME_REFLOW_FINISHED == aStatus) {
-    mState &= ~NS_FRAME_IN_REFLOW;
     nsFrameState state;
     nsIFrame* kid = mFirstChild;
     while (nsnull != kid) {
@@ -112,8 +111,12 @@ nsContainerFrame::DidReflow(nsIPresContext& aPresContext,
       kid->GetNextSibling(kid);
     }
   }
+
   NS_FRAME_TRACE_OUT("nsContainerFrame::DidReflow");
-  return NS_OK;
+
+  // Let nsFrame position and size our view (if we have one), and clear
+  // the NS_FRAME_IN_REFLOW bit
+  return nsFrame::DidReflow(aPresContext, aStatus);
 }
 
 /////////////////////////////////////////////////////////////////////////////
