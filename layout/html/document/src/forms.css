@@ -325,7 +325,7 @@ input[type="radio"] {
   width: 13px;
   height: 13px;
   margin: 3px 3px 0px 5px;
-  padding: 0;
+  padding: 0 !important;
   cursor: default;
   -moz-binding: none;
 
@@ -338,7 +338,7 @@ input[type="checkbox"] {
   width: 13px;
   height: 13px;
   margin: 3px 3px 3px 4px;
-  padding: 0;
+  padding: 0 !important;
   vertical-align: text-bottom;
   cursor: default;
   -moz-binding: none;
