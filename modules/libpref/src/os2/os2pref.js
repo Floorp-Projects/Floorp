@@ -210,3 +210,5 @@ pref("print.print_extra_margin", 90); // twips (90 twips is an eigth of an inch)
 pref("applications.telnet", "telnetpm.exe");
 pref("applications.telnet.host", "%host%");
 pref("applications.telnet.port", "-p %port%");
+
+pref("mail.compose.max_recycled_windows", 0);
