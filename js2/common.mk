@@ -1,7 +1,4 @@
 
-BOEHM_DIR = $(top_srcdir)/../gc/boehm/
-LIBBOEHM = $(BOEHM_DIR)/gc.a
-
 JS2_DIR = $(top_srcdir)/src/
 LIBJS2 = $(JS2_DIR)/libjs2.a
 

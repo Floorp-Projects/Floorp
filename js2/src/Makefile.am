@@ -2,11 +2,11 @@ include $(top_srcdir)/common.mk
 
 noinst_LIBRARIES = libjs2.a
 
-libjs2_a_DEPENDENCIES = $(LIBFDLIBM)
+bin_PROGRAMS = epimetheus
 
-libjs2_a_SOURCES = \
+epimetheus_DEPENDENCIES = $(LIBFDLIBM)
+epimetheus_SOURCES =  \
 	bytecodecontainer.cpp \
-	epimetheus.cpp \
 	exception.cpp \
 	formatter.cpp \
 	hash.cpp \
