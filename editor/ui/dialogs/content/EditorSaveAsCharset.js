@@ -88,7 +88,7 @@ function onOK()
       SetMetaElementContent(contenttypeElement, "text/html; charset=" + charset, insertNewContentType);     
       editorShell.SetDocumentCharacterSet(charset);
    }
-//   goDoCommand('cmd_saveAs');
+   window.opener.ok = true;
    return true;
  }
  return false; 
@@ -149,7 +149,7 @@ function LoadAvailableCharSets()
       {
         try {  //let's beef up our error handling for charsets without label / title
 
-dump("add " + charsetDict[i][0] + charsetDict[i][1] + "\n");
+//dump("add " + charsetDict[i][0] + charsetDict[i][1] + "\n");
           var item = AppendStringToTreelist(dialog.charsetTree, charsetDict[i][0]);
           if(item) {
              var row= item.firstChild;
@@ -162,7 +162,7 @@ dump("add " + charsetDict[i][0] + charsetDict[i][1] + "\n");
              if(charset == charsetDict[i][1] ) 
              {
                selItem = item;
-dump("hit default " + charset + "\n");
+//dump("hit default " + charset + "\n");
              }
           }
         } //try
@@ -185,17 +185,15 @@ dump("hit default " + charset + "\n");
 function SelectCharset()
 {
   if(initDone) {
-    dump("HHHH\n");
     try {
       charset = GetSelectedTreelistAttribute(dialog.charsetTree, "data");
-      dump("charset = " + charset + "\n");
+      //dump("charset = " + charset + "\n");
       if(charset != "") {
          charsetWasChanged = true;
       }
     } catch(ex) {
       dump("failed to get selected data" + ex + "\n");
     }
-    dump(">HHHH\n");
   }
 }
 function ValidateData()

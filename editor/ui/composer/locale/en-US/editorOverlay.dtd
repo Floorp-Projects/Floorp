@@ -44,6 +44,8 @@
 <!ENTITY filesave.keybinding "s">
 <!ENTITY saveAsCmd.label "Save As...">
 <!ENTITY filesaveas.accesskey "a">
+<!ENTITY saveAsCharsetCmd.label "Save As Charset...">
+<!ENTITY filesaveascharset.accesskey "h">
 <!ENTITY previewCmd.label "Preview in Browser">
 <!ENTITY filepreview.accesskey "b">
 <!ENTITY printSetupCmd.label "Print Setup...">

@@ -105,6 +105,24 @@ var nsOpenCommand =
 };
 
 //-----------------------------------------------------------------------------------
+var nsSaveAsCharsetCommand =
+{
+  isCommandEnabled: function(aCommand, dummy)
+  {
+    return (window.editorShell && window.editorShell.documentEditable);
+  },
+  doCommand: function(aCommand)
+  {
+    window.ok = false;
+    if(window.openDialog("chrome://editor/content/EditorSaveAsCharset.xul","_blank", "chrome,close,titlebar,modal"))
+    {
+       if( window.ok ) 
+         return editorShell.saveDocument(true, false);
+    }
+    return false;
+  }
+};
+//-----------------------------------------------------------------------------------
 var nsRevertCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
@@ -644,6 +662,7 @@ function SetupControllerCommands()
   gComposerCommandManager.registerCommand("cmd_newEditor",  nsNewEditorCommand);
 
   gComposerCommandManager.registerCommand("cmd_open",       nsOpenCommand);
+  gComposerCommandManager.registerCommand("cmd_saveAsCharset",       nsSaveAsCharsetCommand);
   gComposerCommandManager.registerCommand("cmd_revert",     nsRevertCommand);
   gComposerCommandManager.registerCommand("cmd_openRemote", nsOpenRemoteCommand);
   gComposerCommandManager.registerCommand("cmd_preview",    nsPreviewCommand);

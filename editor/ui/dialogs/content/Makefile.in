@@ -71,6 +71,8 @@ CHROME_CONTENT = \
 		EdImageMapPage.html \
 		EditConflict.xul \
 		EditConflict.js \
+		EditorSaveAsCharset.xul \
+		EditorSaveAsCharset.js \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

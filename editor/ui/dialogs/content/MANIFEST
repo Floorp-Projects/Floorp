@@ -63,3 +63,5 @@ EdImageMapShapes.js
 EdImageMapPage.html
 EditConflict.xul
 EditConflict.js
+EditorSaveAsCharset.xul
+EditorSaveAsCharset.js
