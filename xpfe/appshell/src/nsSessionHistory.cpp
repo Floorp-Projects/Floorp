@@ -28,7 +28,9 @@
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeNode.h"
-#include "nsIWebNavigation.h"
+#include "nsIWebNavigation.h"   
+#include "nsILayoutHistoryState.h"
+#include "nsIPresShell.h"
 #include "prmem.h"
 #include "nsString.h"
 #include "nsIFactory.h"
@@ -1134,10 +1136,24 @@ nsSessionHistory::Goto(PRInt32 aGotoIndex, nsIWebShell * prev, PRBool aIsReload)
    int indix = 0;
    GetCurrentIndex(&indix);
    if (indix >= 0) {
-     nsCOMPtr<nsISupports>  historyState;
-     nsresult rv = prev->CaptureHistoryState(getter_AddRefs(historyState));
-	 if (NS_SUCCEEDED(rv) && historyState)
-		 SetHistoryObjectForIndex(indix, historyState);
+     nsCOMPtr<nsILayoutHistoryState>  historyState;
+     /* XXX For now the History object doesn't include frames */
+     nsCOMPtr<nsIDocShellTreeNode> docShellAsNode(do_QueryInterface(prev));
+     PRInt32 childCount = 0;
+     docShellAsNode->GetChildCount(&childCount);
+     if(!childCount)
+      {
+      nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(prev));
+      nsCOMPtr<nsIPresShell> presShell;
+
+      docShell->GetPresShell(getter_AddRefs(presShell));
+      if(presShell)
+         presShell->CaptureHistoryState(getter_AddRefs(historyState));
+
+      if(historyState)
+		  SetHistoryObjectForIndex(indix, historyState);
+
+      }
    }
 
    // Set the new current index
