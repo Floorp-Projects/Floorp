@@ -65,6 +65,7 @@ typedef enum JSJType {
     JSJTYPE_JAVACLASS,           /* JavaClass */
     JSJTYPE_JAVAOBJECT,          /* JavaObject */
     JSJTYPE_JAVAARRAY,		 /* JavaArray */
+    JSJTYPE_JSARRAY,             /* JS Array */
     JSJTYPE_OBJECT,              /* Any other JS Object, including functions */
     JSJTYPE_LIMIT
 } JSJType;
@@ -939,6 +940,8 @@ compute_jsj_type(JSContext *cx, jsval v)
             return JSJTYPE_JAVAARRAY;
         if (JS_InstanceOf(cx, js_obj, &JavaClass_class, 0))
             return JSJTYPE_JAVACLASS;
+        if (JS_IsArrayObject(cx, js_obj))
+            return JSJTYPE_JSARRAY;
         return JSJTYPE_OBJECT;
     } else if (JSVAL_IS_NUMBER(v)) {
 	return JSJTYPE_NUMBER;
@@ -978,7 +981,8 @@ static int rank_table[JSJTYPE_LIMIT][JAVA_SIGNATURE_LIMIT] = {
     {99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99,  1, 99,  2,  3,  4}, /* JavaClass */
     {99,  7,  8,  6,  5,  4,  3,  2,  0,  0,  0,  0,  0,  0,  0,  1}, /* JavaObject */
     {99, 99, 99, 99, 99, 99, 99, 99,  0,  0, 99, 99, 99, 99,  0,  1}, /* JavaArray */
-    {99,  9, 10,  8,  7,  6,  5,  4, 99, 99, 99, 99, 99,  1,  2,  3}, /* other JS object */
+    {99, 99, 99, 99, 99, 99, 99, 99,  2, 99, 99, 99, 99,  1,  3,  4}, /* JS Array */
+    {99,  9, 10,  8,  7,  6,  5,  4, 99, 99, 99, 99, 99,  1,  2,  3}  /* other JS object */
 };
 
 /*

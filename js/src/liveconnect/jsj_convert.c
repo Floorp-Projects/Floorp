@@ -76,6 +76,54 @@ convert_js_obj_to_JSObject_wrapper(JSContext *cx, JNIEnv *jEnv, JSObject *js_obj
     return (*java_value != NULL);   
 }
 
+/* Copy an array from JS to Java;  Create a new Java array and populate its
+   elements, one by one, with the result of converting each JS array element
+   to the type of the array component. */
+static JSBool
+convert_js_array_to_java_array(JSContext *cx, JNIEnv *jEnv, JSObject *js_array,
+                               JavaSignature *signature,
+                               jobject *java_valuep)
+{
+    jsuint i;
+    jsval js_val;
+    jsuint length;
+    jclass component_class;
+    jarray java_array;
+    JavaSignature *array_component_signature;
+
+    if (!JS_GetArrayLength(cx, js_array, &length))
+        return JS_FALSE;
+
+    /* Get the Java class of each element of the array */
+    array_component_signature = signature->array_component_signature;
+    component_class = array_component_signature->java_class;
+
+    /* Create a new empty Java array with the same length as the JS array */
+    java_array = (*jEnv)->CallStaticObjectMethod(jEnv, jlrArray, jlrArray_newInstance,
+                                                 component_class, length);
+    if (!java_array) {
+        jsj_ReportJavaError(cx, jEnv, "Error while constructing empty array of %s",
+                            jsj_GetJavaClassName(cx, jEnv, component_class));
+        return JS_FALSE;
+    }
+
+    /* Convert each element of the JS array to an element of the Java array.
+       If an error occurs, there is no need to worry about releasing the
+       individual elements of the Java array - they will eventually be GC'ed
+       by the JVM. */
+    for (i = 0; i < length; i++) {
+        if (!JS_LookupElement(cx, js_array, i, &js_val))
+            return JS_FALSE;
+
+        if (!jsj_SetJavaArrayElement(cx, jEnv, java_array, i, array_component_signature, js_val))
+            return JS_FALSE;
+    }
+
+    /* Return the result array */
+    *java_valuep = java_array;
+    return JS_TRUE;
+}
+
 jstring
 jsj_ConvertJSStringToJavaString(JSContext *cx, JNIEnv *jEnv, JSString *js_str)
 {
@@ -169,6 +217,15 @@ jsj_ConvertJSValueToJavaObject(JSContext *cx, JNIEnv *jEnv, jsval v, JavaSignatu
             return jsj_ConvertJSValueToJavaObject(cx, jEnv, v, signature, cost,
                                                   java_value, is_local_refp);
 
+        /* JS Arrays are converted, element by element, to Java arrays */
+        } else if (JS_IsArrayObject(cx, js_obj) && (signature->type == JAVA_SIGNATURE_ARRAY)) {
+            if (convert_js_array_to_java_array(cx, jEnv, js_obj, signature, java_value)) {
+                if (java_value && *java_value)
+                    *is_local_refp = JS_TRUE;
+                return JS_TRUE;
+            }
+            return JS_FALSE;
+
         } else {
             /* Otherwise, see if the target type is the  netscape.javascript.JSObject
                wrapper class or one of its subclasses, in which case a
@@ -227,7 +284,9 @@ jsj_ConvertJSValueToJavaObject(JSContext *cx, JNIEnv *jEnv, jsval v, JavaSignatu
         /* Fall through, to attempt conversion to a java.lang.String ... */
     }
     
-    /* If no other conversion is possible, see if the target type is java.lang.String */
+    /* If the source JS type is either a string or undefined, or if no conversion
+       is possible from a number, boolean or JS object, see if the target type is
+       java.lang.String */
     if ((*jEnv)->IsAssignableFrom(jEnv, jlString, target_java_class)) {
         
         /* Convert to JS string, if necessary, and then to a Java Unicode string */
@@ -503,6 +562,7 @@ conversion_error:
 
     if (java_value) {
         const char *jsval_string;
+        const char *class_name;
         JSString *jsstr;
 
         jsval_string = NULL;
@@ -512,8 +572,11 @@ conversion_error:
         if (!jsval_string)
             jsval_string = "";
         
+        class_name = jsj_ConvertJavaSignatureToHRString(cx, signature);
         JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
-                             JSJMSG_CANT_CONVERT_JS, jsval_string, signature->name);
+                             JSJMSG_CANT_CONVERT_JS, jsval_string,
+                             class_name);
+
         return JS_FALSE;
     }
     return success;

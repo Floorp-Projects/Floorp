@@ -838,7 +838,7 @@ Java_netscape_javascript_JSObject_getMember(JNIEnv *jEnv,
     property_name_ucs2 = NULL;
     if (!property_name_jstr) {
         JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL,
-                                                JSJMSG_NULL_MEMBER_NAME);
+                             JSJMSG_NULL_MEMBER_NAME);
         member = NULL;
         goto done;
     }

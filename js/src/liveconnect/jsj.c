@@ -74,6 +74,7 @@ report_java_initialization_error(JNIEnv *jEnv, const char *js_error_msg)
 jclass jlObject;                        /* java.lang.Object */
 jclass jlrMethod;                       /* java.lang.reflect.Method */
 jclass jlrField;                        /* java.lang.reflect.Field */
+jclass jlrArray;                        /* java.lang.reflect.Array */
 jclass jlVoid;                          /* java.lang.Void */
 jclass jlrConstructor;                  /* java.lang.reflect.Constructor */
 jclass jlThrowable;                     /* java.lang.Throwable */
@@ -105,6 +106,8 @@ jmethodID jlrConstructor_getModifiers;  /* java.lang.reflect.Constructor.getModi
 jmethodID jlrField_getName;             /* java.lang.reflect.Field.getName() */
 jmethodID jlrField_getType;             /* java.lang.reflect.Field.getType() */
 jmethodID jlrField_getModifiers;        /* java.lang.reflect.Field.getModifiers() */
+
+jmethodID jlrArray_newInstance;         /* java.lang.reflect.Array.newInstance() */
 
 jmethodID jlBoolean_Boolean;            /* java.lang.Boolean constructor */
 jmethodID jlBoolean_booleanValue;       /* java.lang.Boolean.booleanValue() */
@@ -229,6 +232,7 @@ init_java_VM_reflection(JSJavaVM *jsjava_vm, JNIEnv *jEnv)
     LOAD_CLASS(java/lang/reflect/Method,        jlrMethod);
     LOAD_CLASS(java/lang/reflect/Constructor,   jlrConstructor);
     LOAD_CLASS(java/lang/reflect/Field,         jlrField);
+    LOAD_CLASS(java/lang/reflect/Array,         jlrArray);
     LOAD_CLASS(java/lang/Throwable,             jlThrowable);
     LOAD_CLASS(java/lang/System,                jlSystem);
     LOAD_CLASS(java/lang/Boolean,               jlBoolean);
@@ -255,6 +259,9 @@ init_java_VM_reflection(JSJavaVM *jsjava_vm, JNIEnv *jEnv)
     LOAD_METHOD(java.lang.reflect.Field,    getName,            "()Ljava/lang/String;",         jlrField);
     LOAD_METHOD(java.lang.reflect.Field,    getType,            "()Ljava/lang/Class;",          jlrField);
     LOAD_METHOD(java.lang.reflect.Field,    getModifiers,       "()I",                          jlrField);
+
+    LOAD_STATIC_METHOD(java.lang.reflect.Array,
+                                            newInstance,        "(Ljava/lang/Class;I)Ljava/lang/Object;",jlrArray);
 
     LOAD_METHOD(java.lang.Throwable,        toString,           "()Ljava/lang/String;",         jlThrowable);
     LOAD_METHOD(java.lang.Throwable,        getMessage,         "()Ljava/lang/String;",         jlThrowable);
@@ -555,6 +562,7 @@ JSJ_DisconnectFromJavaVM(JSJavaVM *jsjava_vm)
         UNLOAD_CLASS(java/lang/reflect/Method,        jlrMethod);
         UNLOAD_CLASS(java/lang/reflect/Constructor,   jlrConstructor);
         UNLOAD_CLASS(java/lang/reflect/Field,         jlrField);
+        UNLOAD_CLASS(java/lang/reflect/Array,         jlrArray);
         UNLOAD_CLASS(java/lang/Throwable,             jlThrowable);
         UNLOAD_CLASS(java/lang/System,                jlSystem);
         UNLOAD_CLASS(java/lang/Boolean,               jlBoolean);
