@@ -167,15 +167,6 @@ FINAL_LINK_COMP_NAMES = $(DEPTH)/config/final-link-comp-names
 # NSS libs needed for final link in static build
 # 
 
-ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
-NSS_LIBS	= \
-	$(DIST)/lib/$(LIB_PREFIX)crmf.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)smime3.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)ssl3.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)nss3.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)softokn3.$(LIB_SUFFIX) \
-	$(NULL)
-else
 NSS_LIBS	= \
 	$(LIBS_DIR) \
 	$(DIST)/lib/$(LIB_PREFIX)crmf.$(LIB_SUFFIX) \
@@ -184,6 +175,17 @@ NSS_LIBS	= \
 	-lnss3 \
 	-lsoftokn3 \
 	$(NULL)
+
+ifneq (,$(filter OS2 WINNT, $(OS_ARCH)))
+ifndef GNU_CC
+NSS_LIBS	= \
+	$(DIST)/lib/$(LIB_PREFIX)crmf.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)smime3.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)ssl3.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)nss3.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)softokn3.$(LIB_SUFFIX) \
+	$(NULL)
+endif
 endif
 
 NSS_DEP_LIBS	= \
@@ -279,7 +281,7 @@ OS_CXXFLAGS += $(_DEBUG_CFLAGS)
 OS_LDFLAGS += $(_DEBUG_LDFLAGS)
 
 # MOZ_PROFILE & MOZ_COVERAGE equivs for win32
-ifeq ($(OS_ARCH),WINNT)
+ifeq ($(OS_ARCH)_$(GNU_CC),WINNT_)
 ifdef MOZ_DEBUG
 ifneq (,$(MOZ_BROWSE_INFO)$(MOZ_BSCFILE))
 OS_CFLAGS += /FR
@@ -317,7 +319,7 @@ endif
 # NS_TRACE_MALLOC
 
 endif # MOZ_DEBUG
-endif # WINNT
+endif # WINNT && !GNU_CC
 
 
 #
@@ -554,7 +556,7 @@ endif
 endif
 
 
-ifeq ($(OS_ARCH),WINNT)
+ifeq ($(OS_ARCH)_$(GNU_CC),WINNT_)
 #// Currently, unless USE_STATIC_LIBS is defined, the multithreaded
 #// DLL version of the RTL is used...
 #//
@@ -583,7 +585,7 @@ endif
 endif # MOZ_DEBUG || NS_TRACE_MALLOC
 endif # USE_NON_MT_LIBS
 endif # USE_STATIC_LIBS
-endif # WINNT
+endif # WINNT && !GNU_CC
 
 
 COMPILE_CFLAGS	= $(DEFINES) $(INCLUDES) $(XCFLAGS) $(PROFILER_CFLAGS) $(DSO_CFLAGS) $(DSO_PIC_CFLAGS) $(CFLAGS) $(RTL_FLAGS) $(OS_COMPILE_CFLAGS)
@@ -597,8 +599,11 @@ COMPILE_CXXFLAGS = $(DEFINES) $(INCLUDES) $(XCFLAGS) $(PROFILER_CFLAGS) $(DSO_CF
 # We need to know where to find the libraries we
 # put on the link line for binaries, and should
 # we link statically or dynamic?  Assuming dynamic for now.
-ifneq (,$(filter-out WINNT OS2, $(OS_ARCH)))
+
+ifneq (,$(filter-out OS2, $(OS_ARCH)))
+ifneq (WINNT_,$(OS_ARCH)_$(GNU_CC))
 LIBS_DIR	= -L$(DIST)/bin -L$(DIST)/lib
+endif
 endif
 
 # Default location of include files

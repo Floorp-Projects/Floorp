@@ -81,24 +81,16 @@ else
   ELOG :=
 endif
 
-#
-# Library rules
-#
-# If BUILD_SHARED_LIBS or FORCE_SHARED_LIB is set and 
-#    FORCE_STATIC_LIB is not set, 
-#	the shared library will be built.
-# If BUILD_STATIC_LIBS or FORCE_STATIC_LIB is set, 
-#	the static library will  be built.
-#
-
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
-_EXTRA_DSO_RELATIVE_PATHS=1
+_LIBNAME_RELATIVE_PATHS=1
 else
-ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
+ifeq ($(OS_ARCH),WINNT)
 ifndef SRCS_IN_OBJDIR
 _NO_AUTO_VARS=1
 endif
-_EXTRA_DSO_RELATIVE_PATHS=1
+ifndef GNU_CC
+_LIBNAME_RELATIVE_PATHS=1
+endif
 endif
 endif
 
@@ -112,14 +104,27 @@ else
 _VPATH_SRCS = $<
 endif
 
-ifdef _EXTRA_DSO_RELATIVE_PATHS
-EXTRA_DSO_LIBS		:= $(addsuffix .$(LIB_SUFFIX),$(addprefix $(DIST)/lib/$(LIB_PREFIX),$(EXTRA_DSO_LIBS)))
-EXTRA_DSO_LIBS		:= $(filter-out %/bin %/lib,$(EXTRA_DSO_LIBS))
-EXTRA_DSO_LDOPTS    := $(patsubst -l%,$(DIST)/lib/%.$(LIB_SUFFIX),$(EXTRA_DSO_LDOPTS))
-LIBS                := $(patsubst -l%,$(DIST)/lib/$(LIB_PREFIX)%.$(LIB_SUFFIX),$(LIBS))
+ifdef _LIBNAME_RELATIVE_PATHS
+EXPAND_LIBNAME = $(addsuffix .$(LIB_SUFFIX),$(1))
+EXPAND_MOZLIBNAME = $(addsuffix .$(LIB_SUFFIX),$(addprefix $(DIST)/lib/$(LIB_PREFIX),$(1)))
 else
-EXTRA_DSO_LIBS		:= $(addprefix -l,$(EXTRA_DSO_LIBS))
+EXPAND_LIBNAME = $(addprefix -l,$(1))
+EXPAND_MOZLIBNAME = $(addprefix -l,$(1))
 endif
+
+ifdef EXTRA_DSO_LIBS
+EXTRA_DSO_LIBS	:= $(call EXPAND_MOZLIBNAME,$(EXTRA_DSO_LIBS))
+endif
+
+#
+# Library rules
+#
+# If BUILD_SHARED_LIBS or FORCE_SHARED_LIB is set and 
+#    FORCE_STATIC_LIB is not set, 
+#	the shared library will be built.
+# If BUILD_STATIC_LIBS or FORCE_STATIC_LIB is set, 
+#	the static library will  be built.
+#
 
 ifndef LIBRARY
 ifdef LIBRARY_NAME
@@ -160,7 +165,7 @@ DEF_FILE		:= $(SHARED_LIBRARY:.dll=.def)
 endif
 
 ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
-IMPORT_LIBRARY		:= $(SHARED_LIBRARY:.dll=.lib)
+IMPORT_LIBRARY		:= $(SHARED_LIBRARY:.dll=.$(LIB_SUFFIX))
 endif
 
 endif # MKSHLIB
@@ -192,6 +197,7 @@ endif
 endif
 
 ifeq ($(OS_ARCH),WINNT)
+ifndef GNU_CC
 
 ifdef LIBRARY_NAME
 PDBFILE=$(LIBRARY_NAME).pdb
@@ -203,7 +209,7 @@ PDBFILE=$(basename $(@F)).pdb
 ifdef MOZ_DEBUG
 CODFILE=$(basename $(@F)).cod
 endif
-endif
+endif # LIBRARY_NAME
 
 ifdef MOZ_MAPINFO
 ifdef LIBRARY_NAME
@@ -230,6 +236,7 @@ endif
 #CFLAGS += -Fa$(CODFILE) -FAsc
 #endif
 
+endif # !GNU_CC
 endif # WINNT
 
 ifndef TARGETS
@@ -775,7 +782,7 @@ ifeq ($(MOZ_OS2_TOOLS),VACPP)
 	$(LD) -OUT:$@ $(LDFLAGS) $(PROGOBJS) $(LIBS) $(EXTRA_LIBS) $(OS_LIBS) $(EXE_DEF_FILE) /ST:0x100000
 else
 ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
-	$(LD) /NOLOGO /OUT:$@ /PDB:$(PDBFILE) $(PROGOBJS) $(RESFILE) $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(LIBS) $(EXTRA_LIBS) $(OS_LIBS)
+	$(LD) /NOLOGO /OUT:$@ /PDB:$(PDBFILE) $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(PROGOBJS) $(RESFILE) $(LIBS) $(EXTRA_LIBS) $(OS_LIBS)
 else
 ifeq ($(CPP_PROG_LINK),1)
 	$(CCC) -o $@ $(CXXFLAGS) $(WRAP_MALLOC_CFLAGS) $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(BIN_FLAGS) $(WRAP_MALLOC_LIB) $(PROFILER_LIBS)
@@ -1123,20 +1130,45 @@ $(OBJ_PREFIX)%.$(OBJ_SUFFIX): %.mm Makefile Makefile.in
 	@$(MAKE_DEPS_AUTO)
 	$(ELOG) $(CCC) -o $@ -c $(COMPILE_CXXFLAGS) $<
 
+%.s: %.cpp
+ifdef _NO_AUTO_VARS
+	$(CCC) -S $(COMPILE_CXXFLAGS) $(srcdir)/$*.cpp
+else
+	$(CCC) -S $(COMPILE_CXXFLAGS) $<
+endif
+
+%.s: %.c
+ifdef _NO_AUTO_VARS
+	$(CC) -S $(COMPILE_CFLAGS) $(srcdir)/$*.c
+else
+	$(CC) -S $(COMPILE_CFLAGS) $<
+endif
+
 %.i: %.cpp
+ifdef _NO_AUTO_VARS
+	$(CCC) -C -E $(COMPILE_CXXFLAGS) $(srcdir)/$*.cpp > $*.i
+else
 	$(CCC) -C -E $(COMPILE_CXXFLAGS) $< > $*.i
+endif
 
 %.i: %.c
+ifdef _NO_AUTO_VARS
+	$(CC) -C -E $(COMPILE_CFLAGS) $(srcdir)/$*.c > $*.i
+else
 	$(CC) -C -E $(COMPILE_CFLAGS) $< > $*.i
+endif
 
 %.res: %.rc
 	@echo Creating Resource file: $@
 ifeq ($(OS_ARCH),OS2)
 	$(RC) $(RCFLAGS) -i $(subst /,\,$(srcdir)) -r $< $@
 else
+ifdef GNU_CC
+	$(RC) $(RCFLAGS) $(filter-out -U%,$(DEFINES)) $(INCLUDES:-I%=--include-dir %) $(OUTOPTION)$@ $<
+else
 	$(RC) $(RCFLAGS) -r $(DEFINES) $(INCLUDES) $(OUTOPTION)$@ $<
 endif
-
+endif
 
 # need 3 separate lines for OS/2
 %: %.pl
