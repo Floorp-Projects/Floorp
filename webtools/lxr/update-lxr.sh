@@ -85,10 +85,7 @@ case "$1" in
 'gnome')
     CVSROOT=/cvs/gnome
     export CVSROOT
-    cd $src_dir
-    time cvs -Q -d $CVSROOT checkout -P glib
-    time cvs -Q -d $CVSROOT checkout -P gtk+
-    cd ..
+    time cvs -Q -d $CVSROOT checkout -P gnome
     ;;
 esac
 
