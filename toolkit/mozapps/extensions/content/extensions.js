@@ -608,7 +608,7 @@ var gExtensionsViewController = {
   doCommand: function (aCommand)
   {
     if (this.isCommandEnabled(aCommand))
-      this.commands[aCommand]();
+      this.commands[aCommand](gExtensionsView.selected);
   },  
   
   onCommandUpdate: function ()
@@ -624,18 +624,18 @@ var gExtensionsViewController = {
   },
   
   commands: { 
-    cmd_close: function ()
+    cmd_close: function (aSelectedItem)
     {
       closeWindow(true);
     },  
   
-    cmd_useTheme: function ()
+    cmd_useTheme: function (aSelectedItem)
     {
       var cr = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
                          .getService(Components.interfaces.nsIXULChromeRegistry);
       var pref = Components.classes["@mozilla.org/preferences-service;1"]
                            .getService(Components.interfaces.nsIPrefBranch);
-      gCurrentTheme = gExtensionsView.selected.getAttribute("internalName");
+      gCurrentTheme = aSelectedItem.getAttribute("internalName");
       var inUse = cr.isSkinSelected(gCurrentTheme , true);
       if (inUse == Components.interfaces.nsIChromeRegistry.FULL)
         return;
@@ -652,54 +652,56 @@ var gExtensionsViewController = {
       gExtensionsViewController.onCommandUpdate();
     },
       
-    cmd_options: function ()
+    cmd_options: function (aSelectedItem)
     {
-      if (!gExtensionsView.selected) return;
-      var optionsURL = gExtensionsView.selected.getAttribute("optionsURL");
+      if (!aSelectedItem) return;
+      var optionsURL = aSelectedItem.getAttribute("optionsURL");
       if (optionsURL != "")
         openDialog(optionsURL, "", "chrome,modal");
     },
     
-    cmd_homepage: function ()
+    cmd_homepage: function (aSelectedItem)
     {
-      var homepageURL = gExtensionsView.selected.getAttribute("homepageURL");
+      if (!aSelectedItem) return;
+      var homepageURL = aSelectedItem.getAttribute("homepageURL");
       if (homepageURL != "")
         openURL(homepageURL);
     },
     
-    cmd_about: function ()
+    cmd_about: function (aSelectedItem)
     {
-      var aboutURL = gExtensionsView.selected.getAttribute("aboutURL");
+      if (!aSelectedItem) return;
+      var aboutURL = aSelectedItem.getAttribute("aboutURL");
       if (aboutURL != "")
         openDialog(aboutURL, "", "chrome,modal");
       else
-        openDialog("chrome://mozapps/content/extensions/about.xul", "", "chrome,modal", gExtensionsView.selected.id, gExtensionsView.database);
+        openDialog("chrome://mozapps/content/extensions/about.xul", "", "chrome,modal", aSelectedItem.id, gExtensionsView.database);
     },  
     
-    cmd_movetop: function ()
+    cmd_movetop: function (aSelectedItem)
     {
-      var movingID = gExtensionsView.selected.id;
+      var movingID = aSelectedItem.id;
       gExtensionManager.moveTop(stripPrefix(movingID));
       gExtensionsView.selected = document.getElementById(movingID);
     },
     
-    cmd_moveup: function ()
+    cmd_moveup: function (aSelectedItem)
     {
-      var movingID = gExtensionsView.selected.id;
+      var movingID = aSelectedItem.id;
       gExtensionManager.moveUp(stripPrefix(movingID));
       gExtensionsView.selected = document.getElementById(movingID);
     },
     
-    cmd_movedn: function ()
+    cmd_movedn: function (aSelectedItem)
     {
-      var movingID = gExtensionsView.selected.id;
+      var movingID = aSelectedItem.id;
       gExtensionManager.moveDown(stripPrefix(movingID));
       gExtensionsView.selected = document.getElementById(movingID);
     },
     
-    cmd_update: function ()
+    cmd_update: function (aSelectedItem)
     { 
-      var id = gExtensionsView.selected ? stripPrefix(gExtensionsView.selected.id) : null;
+      var id = aSelectedItem ? stripPrefix(aSelectedItem.id) : null;
       var itemType = gWindowState == "extensions" ? nsIUpdateItem.TYPE_EXTENSION : nsIUpdateItem.TYPE_THEME;
       var items = gExtensionManager.getItemList(id, itemType, { });
       var updates = Components.classes["@mozilla.org/updates/update-service;1"]
@@ -709,13 +711,13 @@ var gExtensionsViewController = {
                               window);
     },
 
-    cmd_uninstall: function ()
+    cmd_uninstall: function (aSelectedItem)
     {
       // Confirm the uninstall
       var extensionsStrings = document.getElementById("extensionsStrings");
       var brandStrings = document.getElementById("brandStrings");
 
-      var name = gExtensionsView.selected.getAttribute("name");
+      var name = aSelectedItem.getAttribute("name");
       var title = extensionsStrings.getFormattedString("queryUninstallTitle", [name]);
       if (gWindowState == "extensions")
         message = extensionsStrings.getFormattedString("queryUninstallExtensionMessage", [name, name]);
@@ -728,7 +730,7 @@ var gExtensionsViewController = {
       if (!promptSvc.confirm(window, title, message))
         return;
 
-      var selectedID = gExtensionsView.selected.id;
+      var selectedID = aSelectedItem.id;
       var selectedElement = document.getElementById(selectedID);
       var nextElement = selectedElement.nextSibling;
       if (!nextElement)
@@ -743,17 +745,17 @@ var gExtensionsViewController = {
       gExtensionsView.selected = document.getElementById(nextElement);
     },
     
-    cmd_disable: function ()
+    cmd_disable: function (aSelectedItem)
     {
-      gExtensionManager.disableExtension(stripPrefix(gExtensionsView.selected.id));
+      gExtensionManager.disableExtension(stripPrefix(aSelectedItem.id));
     },
     
-    cmd_enable: function ()
+    cmd_enable: function (aSelectedItem)
     {
-      gExtensionManager.enableExtension(stripPrefix(gExtensionsView.selected.id));
+      gExtensionManager.enableExtension(stripPrefix(aSelectedItem.id));
     },
 #ifdef MOZ_THUNDERBIRD
-    cmd_install: function()
+    cmd_install: function(aSelectedItem)
     {
       if (gWindowState == "extensions") 
         installExtension();
