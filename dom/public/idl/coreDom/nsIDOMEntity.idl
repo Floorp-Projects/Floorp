@@ -24,9 +24,7 @@
 [scriptable, uuid(a6cf9079-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMEntity : nsIDOMNode
 {
-
    readonly attribute  DOMString            publicId;
    readonly attribute  DOMString            systemId;
    readonly attribute  DOMString            notationName;
 };
-

@@ -24,18 +24,16 @@
 [scriptable, uuid(a6cf9074-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMDOMImplementation : nsISupports
 {
+  boolean                   hasFeature(in DOMString feature, 
+                                       in DOMString version);
 
-      boolean                   hasFeature(in DOMString feature, 
-                                           in DOMString version);
+  nsIDOMDocumentType        createDocumentType(in DOMString qualifiedName,
+                                               in DOMString publicId,
+                                               in DOMString systemId)
+                                  raises(DOMException);
 
-      nsIDOMDocumentType              createDocumentType(in DOMString qualifiedName,
-                                                   in DOMString publicId,
-                                                   in DOMString systemId)
-                                                   raises(DOMException);
-
-      nsIDOMDocument                  createDocument(in DOMString namespaceURI,
-                                               in DOMString qualifiedName,
-                                               in nsIDOMDocumentType doctype)
-                                                   raises(DOMException);
+  nsIDOMDocument            createDocument(in DOMString namespaceURI,
+                                           in DOMString qualifiedName,
+                                           in nsIDOMDocumentType doctype)
+                                  raises(DOMException);
 };
-

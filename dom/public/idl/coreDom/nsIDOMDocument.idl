@@ -24,42 +24,40 @@
 [scriptable, uuid(a6cf9075-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMDocument : nsIDOMNode
 {
+  readonly attribute nsIDOMDocumentType         doctype;
+  readonly attribute nsIDOMDOMImplementation    implementation;
+  readonly attribute nsIDOMElement              documentElement;
+  nsIDOMElement                 createElement(in DOMString tagName)
+                                  raises(DOMException);
+  nsIDOMDocumentFragment        createDocumentFragment();
+  nsIDOMText                    createTextNode(in DOMString data);
+  nsIDOMComment                 createComment(in DOMString data);
+  nsIDOMCDATASection            createCDATASection(in DOMString data)
+                                  raises(DOMException);
+  nsIDOMProcessingInstruction   createProcessingInstruction(in DOMString target, 
+                                                            in DOMString data)
+                                  raises(DOMException);
+  nsIDOMAttr                    createAttribute(in DOMString name)
+                                  raises(DOMException);
+  nsIDOMEntityReference         createEntityReference(in DOMString name)
+                                  raises(DOMException);
+  nsIDOMNodeList                getElementsByTagName(in DOMString tagname);
 
-     readonly attribute  nsIDOMDocumentType         doctype;
-     readonly attribute  nsIDOMDOMImplementation    implementation;
-     readonly attribute  nsIDOMElement              documentElement;
-     nsIDOMElement                   createElement(in DOMString tagName)
-                                             raises(DOMException);
-     nsIDOMDocumentFragment          createDocumentFragment();
-     nsIDOMText                      createTextNode(in DOMString data);
-     nsIDOMComment                   createComment(in DOMString data);
-     nsIDOMCDATASection              createCDATASection(in DOMString data)
-                                                  raises(DOMException);
-     nsIDOMProcessingInstruction     createProcessingInstruction(in DOMString target, 
-                                                           in DOMString data)
-                                                           raises(DOMException);
-     nsIDOMAttr                      createAttribute(in DOMString name)
-                                                 raises(DOMException);
-     nsIDOMEntityReference           createEntityReference(in DOMString name)
-                                                     raises(DOMException);
-     nsIDOMNodeList                  getElementsByTagName(in DOMString tagname);
-
-     // Introduced in DOM Level 2:
-     nsIDOMNode                      importNode(in nsIDOMNode importedNode,
-                                          in boolean deep)
-                                            raises(DOMException);
-     // Introduced in DOM Level 2:
-     nsIDOMElement                   createElementNS(in DOMString namespaceURI,
-                                               in DOMString qualifiedName)
-                                                 raises(DOMException);
-     // Introduced in DOM Level 2:
-     nsIDOMAttr                      createAttributeNS(in DOMString namespaceURI,
-                                                 in DOMString qualifiedName)
-                                                   raises(DOMException);
-     // Introduced in DOM Level 2:
-     nsIDOMNodeList                  getElementsByTagNameNS(in DOMString namespaceURI,
-                                                      in DOMString localName);
-     // Introduced in DOM Level 2:
-     nsIDOMElement                   getElementById(in DOMString elementId);
+  // Introduced in DOM Level 2:
+  nsIDOMNode                    importNode(in nsIDOMNode importedNode,
+                                           in boolean deep)
+                                  raises(DOMException);
+  // Introduced in DOM Level 2:
+  nsIDOMElement                 createElementNS(in DOMString namespaceURI,
+                                                in DOMString qualifiedName)
+                                  raises(DOMException);
+  // Introduced in DOM Level 2:
+  nsIDOMAttr                    createAttributeNS(in DOMString namespaceURI,
+                                                  in DOMString qualifiedName)
+                                  raises(DOMException);
+  // Introduced in DOM Level 2:
+  nsIDOMNodeList                getElementsByTagNameNS(in DOMString namespaceURI,
+                                                       in DOMString localName);
+  // Introduced in DOM Level 2:
+  nsIDOMElement                 getElementById(in DOMString elementId);
 };
-
