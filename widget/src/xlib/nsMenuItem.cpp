@@ -70,19 +70,20 @@ nsIWidget * nsMenuItem::GetMenuBarParent(nsISupports * aParent)
   return nsnull;
 }
 
-NS_METHOD nsMenuItem::Create(nsIMenu        *aParent, 
-                             const nsString &aLabel, 
-                             PRBool         isSeparator)
+NS_METHOD nsMenuItem::Create(nsISupports    *aParent,
+                             const nsString &aLabel,
+                             PRBool          aIsSeparator)
 {
   return NS_OK;
 }
-    
+
 NS_METHOD nsMenuItem::Create(nsIPopUpMenu   *aParent, 
-                             const nsString &aLabel,  
+                             const nsString &aLabel, 
                              PRUint32        aCommand)
 {
   return NS_OK;
 }
+
 NS_METHOD nsMenuItem::Create(nsIMenu * aParent)
 {
   return NS_OK;
@@ -92,6 +93,7 @@ NS_METHOD nsMenuItem::Create(nsIPopUpMenu * aParent)
 {
   return NS_OK;
 }
+
 
 NS_METHOD nsMenuItem::GetLabel(nsString &aText)
 {
