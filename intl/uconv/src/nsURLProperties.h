@@ -32,6 +32,7 @@ public:
   nsURLProperties(nsString& aUrl);
   virtual ~nsURLProperties();
 
+  NS_IMETHOD DidLoad(PRBool&);
   NS_IMETHOD Get( const nsString& aKey, nsString& value);
 
 private:
