@@ -21,6 +21,7 @@ include <$(DEPTH)\config\rules.mak>
 
 install:: $(DLL)
   $(MAKE_INSTALL) Editor.css              $(DIST)\bin\chrome\editor\skin\default
+  $(MAKE_INSTALL) images\ED_Align.gif	    $(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\ED_Bold.gif			$(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\ED_Bullets.gif		$(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\ED_Left.gif			$(DIST)\bin\chrome\editor\skin\default\images
@@ -29,7 +30,6 @@ install:: $(DLL)
   $(MAKE_INSTALL) images\ED_Justify.gif   $(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\ED_Copy.gif			$(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\ED_Cut.gif			  $(DIST)\bin\chrome\editor\skin\default\images
-  $(MAKE_INSTALL) images\ED_Outdent.gif		$(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\ED_Find.gif			$(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\ED_HLine.gif			$(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\ED_Image.gif			$(DIST)\bin\chrome\editor\skin\default\images
@@ -37,6 +37,8 @@ install:: $(DLL)
   $(MAKE_INSTALL) images\ED_Italic.gif		$(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\ED_Link.gif			$(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\ED_Numbers.gif		$(DIST)\bin\chrome\editor\skin\default\images
+  $(MAKE_INSTALL) images\ED_ObjectPopup.gif	$(DIST)\bin\chrome\editor\skin\default\images
+  $(MAKE_INSTALL) images\ED_Outdent.gif		$(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\ED_Paste.gif			$(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\ED_Redo.gif			$(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\ED_Spell.gif			$(DIST)\bin\chrome\editor\skin\default\images
@@ -46,8 +48,6 @@ install:: $(DLL)
   $(MAKE_INSTALL) images\ED_Undo.gif			$(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\ED_TextColor.gif $(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\ED_BackColor.gif	$(DIST)\bin\chrome\editor\skin\default\images
-  $(MAKE_INSTALL) images\ED_Align.gif	    $(DIST)\bin\chrome\editor\skin\default\images
-  $(MAKE_INSTALL) images\ED_ObjectPopup.gif	$(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\ED_NewFile.gif   $(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\ED_OpenFile.gif  $(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\ED_SaveFile.gif  $(DIST)\bin\chrome\editor\skin\default\images
@@ -56,11 +56,17 @@ install:: $(DLL)
   $(MAKE_INSTALL) images\ED_Preview.gif   $(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\ED_Print.gif     $(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\ED_Find.gif      $(DIST)\bin\chrome\editor\skin\default\images
+  $(MAKE_INSTALL) images\ED_imgalignbottom.gif $(DIST)\bin\chrome\editor\skin\default\images
+  $(MAKE_INSTALL) images\ED_imgalignleft.gif   $(DIST)\bin\chrome\editor\skin\default\images
+  $(MAKE_INSTALL) images\ED_imgalignmiddle.gif $(DIST)\bin\chrome\editor\skin\default\images
+  $(MAKE_INSTALL) images\ED_imgalignright.gif  $(DIST)\bin\chrome\editor\skin\default\images
+  $(MAKE_INSTALL) images\ED_imgaligntop.gif    $(DIST)\bin\chrome\editor\skin\default\images
 
 
 
 clobber::
   rm -f $(DIST)\bin\chrome\editor\skin\default\Editor.css
+  rm -f $(DIST)\bin\chrome\editor\skin\default\images\ED_Align.gif			
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\ED_Bold.gif			
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\ED_Bullets.gif			
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\ED_Left.gif			
@@ -86,7 +92,6 @@ clobber::
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\ED_Undo.gif			
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\ED_TextColor.gif			
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\ED_BackColor.gif			
-  rm -f $(DIST)\bin\chrome\editor\skin\default\images\ED_Align.gif			
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\ED_ObjectPopup.gif			
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\ED_NewFile.gif 
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\ED_OpenFile.gif
@@ -96,3 +101,8 @@ clobber::
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\ED_Preview.gif 
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\ED_Print.gif   
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\ED_Find.gif    
+  rm -f $(DIST)\bin\chrome\editor\skin\default\images\ED_imgalignbottom.gif    
+  rm -f $(DIST)\bin\chrome\editor\skin\default\images\ED_imgalignleft.gif    
+  rm -f $(DIST)\bin\chrome\editor\skin\default\images\ED_imgalignmiddle.gif    
+  rm -f $(DIST)\bin\chrome\editor\skin\default\images\ED_imgalignright.gif    
+  rm -f $(DIST)\bin\chrome\editor\skin\default\images\ED_imgaligntop.gif    

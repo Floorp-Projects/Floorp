@@ -64,6 +64,11 @@ EXPORT_RESOURCE_TOOLBAR = \
 	$(srcdir)/images/ED_Preview.gif \
 	$(srcdir)/images/ED_Print.gif \
 	$(srcdir)/images/ED_Find.gif \
+	$(srcdir)/images/ED_imgalignbottom.gif \
+	$(srcdir)/images/ED_imgalignleft.gif \
+	$(srcdir)/images/ED_imgalignmiddle.gif \
+	$(srcdir)/images/ED_imgalignright.gif \
+	$(srcdir)/images/ED_imgaligntop.gif \
 	$(NULL)
 
 install:: 
