@@ -9,5 +9,15 @@
 */
 #define NS_BUILD_ID 0000000000
 
+/* GRE_BUILD_ID - GRE build version identifier
+ *
+ * If creating a release build (eg, MOZILLA_OFFICIAL is set), then 
+ * GRE_BUILD_ID will be updated to contain <milestone>_<build id>.  
+ * If building a milestone build (eg, MOZ_MILESTONE_RELEASE is set), then 
+ * GRE_BUILD_ID will just contain <milestone>. 
+ *
+ */
+#define GRE_BUILD_ID 00000000000
+
 #endif /* _NSBUILDID_H_ */
 
