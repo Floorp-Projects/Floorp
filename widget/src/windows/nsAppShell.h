@@ -38,10 +38,10 @@ class nsAppShell : public nsIAppShell
 
     // nsIAppShellInterface
   
-    virtual void            Create(int* argc, char ** argv);
-    virtual nsresult        Run(); 
-    virtual void            SetDispatchListener(nsDispatchListener* aDispatchListener);
-    virtual void            Exit();
+    NS_IMETHOD            Create(int* argc, char ** argv);
+    virtual nsresult      Run(); 
+    NS_IMETHOD            SetDispatchListener(nsDispatchListener* aDispatchListener);
+    NS_IMETHOD            Exit();
     virtual void* GetNativeData(PRUint32 aDataType);
 
   private:

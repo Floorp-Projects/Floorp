@@ -124,11 +124,12 @@ void nsFileWidget::GetFilterListArray(nsString& aFilterList)
 //
 //-------------------------------------------------------------------------
 
-void nsFileWidget::SetFilterList(PRUint32 aNumberOfFilters,const nsString aTitles[],const nsString aFilters[])
+NS_METHOD nsFileWidget::SetFilterList(PRUint32 aNumberOfFilters,const nsString aTitles[],const nsString aFilters[])
 {
   mNumberOfFilters  = aNumberOfFilters;
   mTitles           = aTitles;
   mFilters          = aFilters;
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -137,10 +138,11 @@ void nsFileWidget::SetFilterList(PRUint32 aNumberOfFilters,const nsString aTitle
 //
 //-------------------------------------------------------------------------
 
-void  nsFileWidget::GetFile(nsString& aFile)
+NS_METHOD  nsFileWidget::GetFile(nsString& aFile)
 {
   aFile.SetLength(0);
   aFile.Append(mFile);
+  return NS_OK;
 }
 
 
@@ -149,16 +151,17 @@ void  nsFileWidget::GetFile(nsString& aFile)
 // Get the file + path
 //
 //-------------------------------------------------------------------------
-
-void  nsFileWidget::SetDefaultString(nsString& aString)
+NS_METHOD  nsFileWidget::SetDefaultString(nsString& aString)
 {
   mDefault = aString;
+  return NS_OK;
 }
 
 
  
 
-void nsFileWidget::Create(nsIWidget *aParent,
+//-------------------------------------------------------------------------
+NS_METHOD nsFileWidget::Create(nsIWidget *aParent,
                            nsString& aTitle,
                            nsMode aMode,
                            nsIDeviceContext *aContext,
@@ -170,6 +173,7 @@ void nsFileWidget::Create(nsIWidget *aParent,
   mTitle.SetLength(0);
   mTitle.Append(aTitle);
   mMode = aMode;
+  return NS_OK;
 }
 
 

@@ -155,8 +155,8 @@ DWORD nsTabWidget::WindowExStyle()
 //
 //-------------------------------------------------------------------------
 
-void nsTabWidget::GetBounds(nsRect &aRect)
+NS_METHOD nsTabWidget::GetBounds(nsRect &aRect)
 {
-    nsWindow::GetBounds(aRect);
+  return nsWindow::GetBounds(aRect);
 }
 

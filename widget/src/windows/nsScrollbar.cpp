@@ -484,9 +484,9 @@ DWORD nsScrollbar::WindowExStyle()
 //
 //-------------------------------------------------------------------------
 
-void nsScrollbar::GetBounds(nsRect &aRect)
+NS_METHOD nsScrollbar::GetBounds(nsRect &aRect)
 {
-    nsWindow::GetBounds(aRect);
+  return nsWindow::GetBounds(aRect);
 }
 
 

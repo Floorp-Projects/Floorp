@@ -152,9 +152,9 @@ PRBool nsTooltipWidget::AutoErase()
 //
 //-------------------------------------------------------------------------
 
-void nsTooltipWidget::GetBounds(nsRect &aRect)
+NS_METHOD nsTooltipWidget::GetBounds(nsRect &aRect)
 {
-    nsWindow::GetBounds(aRect);
+  return nsWindow::GetBounds(aRect);
 }
 
 

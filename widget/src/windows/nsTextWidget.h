@@ -45,7 +45,7 @@ public:
     virtual PRBool  OnPaint();
     virtual PRBool  OnMove(PRInt32 aX, PRInt32 aY);
     virtual PRBool  OnResize(nsRect &aWindowRect);
-    virtual void    GetBounds(nsRect &aRect);
+    NS_IMETHOD      GetBounds(nsRect &aRect);
 
     virtual void SubclassWindow(BOOL bState);
 

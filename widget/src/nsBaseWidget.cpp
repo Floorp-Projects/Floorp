@@ -34,8 +34,9 @@ NS_IMPL_ISUPPORTS(nsBaseWidget::Enumerator, NS_IENUMERATOR_IID)
 //
 //-------------------------------------------------------------------------
 
-void nsBaseWidget::SetTooltips(PRUint32 aNumberOfTips,nsRect* aTooltipAreas[])
+NS_METHOD nsBaseWidget::SetTooltips(PRUint32 aNumberOfTips,nsRect* aTooltipAreas[])
 {
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 //-------------------------------------------------------------------------
@@ -44,8 +45,9 @@ void nsBaseWidget::SetTooltips(PRUint32 aNumberOfTips,nsRect* aTooltipAreas[])
 //
 //-------------------------------------------------------------------------
 
-void nsBaseWidget::UpdateTooltips(nsRect* aNewTips[])
+NS_METHOD nsBaseWidget::UpdateTooltips(nsRect* aNewTips[])
 {
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 //-------------------------------------------------------------------------
@@ -54,8 +56,9 @@ void nsBaseWidget::UpdateTooltips(nsRect* aNewTips[])
 //
 //-------------------------------------------------------------------------
 
-void nsBaseWidget::RemoveTooltips()
+NS_METHOD nsBaseWidget::RemoveTooltips()
 {
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 //-------------------------------------------------------------------------
@@ -186,7 +189,7 @@ NS_IMETHODIMP nsBaseWidget::SetClientData(void* aClientData)
 // Close this nsBaseWidget
 //
 //-------------------------------------------------------------------------
-void nsBaseWidget::Destroy()
+NS_METHOD nsBaseWidget::Destroy()
 {
   // disconnect from the parent
   nsIWidget *parent = GetParent();
@@ -194,6 +197,7 @@ void nsBaseWidget::Destroy()
     parent->RemoveChild(this);
     NS_RELEASE(parent);
   }
+  return NS_OK;
 }
 
 
@@ -280,9 +284,10 @@ nscolor nsBaseWidget::GetForegroundColor(void)
 // Set the foreground color
 //
 //-------------------------------------------------------------------------
-void nsBaseWidget::SetForegroundColor(const nscolor &aColor)
+NS_METHOD nsBaseWidget::SetForegroundColor(const nscolor &aColor)
 {
     mForeground = aColor;
+    return NS_OK;
 }
 
     
@@ -301,9 +306,10 @@ nscolor nsBaseWidget::GetBackgroundColor(void)
 // Set the background color
 //
 //-------------------------------------------------------------------------
-void nsBaseWidget::SetBackgroundColor(const nscolor &aColor)
+NS_METHOD nsBaseWidget::SetBackgroundColor(const nscolor &aColor)
 {
     mBackground = aColor;
+    return NS_OK;
 }
      
 //-------------------------------------------------------------------------
@@ -316,9 +322,10 @@ nsCursor nsBaseWidget::GetCursor()
    return mCursor;
 }
 
-void nsBaseWidget::SetCursor(nsCursor aCursor)
+NS_METHOD nsBaseWidget::SetCursor(nsCursor aCursor)
 {
   mCursor = aCursor; 
+  return NS_OK;
 }
     
 //-------------------------------------------------------------------------
@@ -483,33 +490,37 @@ void nsBaseWidget::Enumerator::Remove(nsIWidget* aWidget)
   }
 }
 
-void nsBaseWidget::SetBorderStyle(nsBorderStyle aBorderStyle) 
+NS_METHOD nsBaseWidget::SetBorderStyle(nsBorderStyle aBorderStyle) 
 {
   mBorderStyle = aBorderStyle; 
+  return NS_OK;
 } 
 
-void nsBaseWidget::SetTitle(const nsString& aTitle) 
+NS_METHOD nsBaseWidget::SetTitle(const nsString& aTitle) 
 {
+  return NS_OK;
 } 
 
 /**
  * Processes a mouse pressed event
  *
  **/
-void nsBaseWidget::AddMouseListener(nsIMouseListener * aListener)
+NS_METHOD nsBaseWidget::AddMouseListener(nsIMouseListener * aListener)
 {
   NS_PRECONDITION(mMouseListener == nsnull, "Null mouse listener");
   mMouseListener = aListener;
+  return NS_OK;
 }
 
 /**
  * Processes a mouse pressed event
  *
  **/
-void nsBaseWidget::AddEventListener(nsIEventListener * aListener)
+NS_METHOD nsBaseWidget::AddEventListener(nsIEventListener * aListener)
 {
   NS_PRECONDITION(mEventListener == nsnull, "Null mouse listener");
   mEventListener = aListener;
+  return NS_OK;
 }
 
 

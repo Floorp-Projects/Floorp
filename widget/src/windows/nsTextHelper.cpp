@@ -25,12 +25,13 @@
 #include <windows.h>
 
 
-void nsTextHelper::PreCreateWidget(nsWidgetInitData *aInitData)
+NS_METHOD nsTextHelper::PreCreateWidget(nsWidgetInitData *aInitData)
 {
   if (nsnull != aInitData) {
     nsTextWidgetInitData* data = (nsTextWidgetInitData *) aInitData;
     mIsPassword = data->mIsPassword;
   }
+  return NS_OK;
 }
 
 NS_METHOD nsTextHelper::SetMaxTextLength(PRUint32 aChars)

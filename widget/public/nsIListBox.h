@@ -55,7 +55,7 @@ public:
      *                    0 is at the top of the list
      *                    -1 is at the end of the list
      */
-    virtual void AddItemAt(nsString &aItem, PRInt32 aPosition) = 0;
+    NS_IMETHOD AddItemAt(nsString &aItem, PRInt32 aPosition) = 0;
 
     /**
      * Finds the first occurrence of the specified item
@@ -102,7 +102,7 @@ public:
      * @param   aItem  on return contains the string of the selected item
      *
      */
-     virtual void GetSelectedItem(nsString &aItem) = 0;
+     NS_IMETHOD GetSelectedItem(nsString &aItem) = 0;
 
     /**
      * Returns with the index of the selected item
@@ -120,13 +120,13 @@ public:
      *                   -1 is at the end of the list
      *
      */
-    virtual void SelectItem(PRInt32 aPosition)  = 0;
+    NS_IMETHOD SelectItem(PRInt32 aPosition)  = 0;
 
     /**
      * Deselects all the items in the list
      *
      */
-    virtual void Deselect()  = 0;
+    NS_IMETHOD Deselect()  = 0;
 
 
     /**
@@ -137,7 +137,7 @@ public:
      *
      */
 
-    virtual void  SetMultipleSelection(PRBool aMultipleSelections) = 0;
+    NS_IMETHOD  SetMultipleSelection(PRBool aMultipleSelections) = 0;
 
     /**
      * Return the number of selected items. For single selection list box this
@@ -154,7 +154,7 @@ public:
      * @param aSize Size of the aIndices array
      *
      */
-    virtual void  GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize) = 0;
+    NS_IMETHOD  GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize) = 0;
 
     /**
      * Sets the indices of the selected items.
@@ -163,7 +163,7 @@ public:
      * @param aSize Size of the aIndices array
      *
      */
-    virtual void  SetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize) = 0;
+    NS_IMETHOD  SetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize) = 0;
 
 };
 

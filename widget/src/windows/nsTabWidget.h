@@ -49,7 +49,7 @@ public:
   // nsIWidget overrides
   virtual PRBool OnPaint();
   virtual PRBool OnResize(nsRect &aWindowRect);
-  virtual void GetBounds(nsRect &aRect);
+  NS_IMETHOD     GetBounds(nsRect &aRect);
 
 protected:
   virtual LPCTSTR WindowClass();

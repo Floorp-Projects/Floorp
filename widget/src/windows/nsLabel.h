@@ -50,8 +50,12 @@ public:
   virtual PRBool OnMove(PRInt32 aX, PRInt32 aY);
   virtual PRBool OnPaint();
   virtual PRBool OnResize(nsRect &aWindowRect);
-  virtual void   GetBounds(nsRect &aRect);
-  virtual void   PreCreateWidget(nsWidgetInitData *aInitData);
+
+  NS_IMETHOD   GetBounds(nsRect &aRect);
+  NS_IMETHOD   PreCreateWidget(nsWidgetInitData *aInitData);
+
+  NS_IMETHOD GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight);
+  NS_IMETHOD SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight);
 
 protected:
   nsLabelAlignment mAlignment;

@@ -44,11 +44,12 @@ nsComboBox::nsComboBox() : nsWindow(), nsIListWidget(), nsIComboBox()
 //  destructor
 //
 //-------------------------------------------------------------------------
-void nsComboBox::AddItemAt(nsString &aItem, PRInt32 aPosition)
+NS_METHOD nsComboBox::AddItemAt(nsString &aItem, PRInt32 aPosition)
 {
   NS_ALLOC_STR_BUF(val, aItem, 256);
   ::SendMessage(mWnd, CB_ADDSTRING, (int)aPosition, (LPARAM)(LPCTSTR)val); 
   NS_FREE_STR_BUF(val);
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -113,11 +114,12 @@ PRBool nsComboBox::GetItemAt(nsString& anItem, PRInt32 aPosition)
 //  Gets the selected of selected item
 //
 //-------------------------------------------------------------------------
-void nsComboBox::GetSelectedItem(nsString& aItem)
+NS_METHOD nsComboBox::GetSelectedItem(nsString& aItem)
 {
   
   int index = ::SendMessage(mWnd, CB_GETCURSEL, (int)0, (LPARAM)0); 
   GetItemAt(aItem, index); 
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -135,9 +137,10 @@ PRInt32 nsComboBox::GetSelectedIndex()
 //  SelectItem
 //
 //-------------------------------------------------------------------------
-void nsComboBox::SelectItem(PRInt32 aPosition)
+NS_METHOD nsComboBox::SelectItem(PRInt32 aPosition)
 {
   ::SendMessage(mWnd, CB_SETCURSEL, (int)aPosition, (LPARAM)0); 
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -145,9 +148,10 @@ void nsComboBox::SelectItem(PRInt32 aPosition)
 //  Deselect
 //
 //-------------------------------------------------------------------------
-void nsComboBox::Deselect()
+NS_METHOD nsComboBox::Deselect()
 {
   ::SendMessage(mWnd, CB_SETCURSEL, (WPARAM)-1, (LPARAM)0); 
+  return NS_OK;
 }
 
 
@@ -241,10 +245,11 @@ DWORD nsComboBox::WindowExStyle()
 //
 //-------------------------------------------------------------------------
 
-void nsComboBox::PreCreateWidget(nsWidgetInitData *aInitData)
+NS_METHOD nsComboBox::PreCreateWidget(nsWidgetInitData *aInitData)
 {
   nsComboBoxInitData* comboData = (nsComboBoxInitData*)aInitData;
   mDropDownHeight = comboData->mDropDownHeight;
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -268,9 +273,10 @@ PRInt32 nsComboBox::GetHeight(PRInt32 aProposedHeight)
 //
 //-------------------------------------------------------------------------
 
-void nsComboBox::GetBounds(nsRect &aRect)
+NS_METHOD nsComboBox::GetBounds(nsRect &aRect)
 {
-    nsWindow::GetNonClientBounds(aRect);
+  nsWindow::GetNonClientBounds(aRect);
+  return NS_OK;
 }
 
 

@@ -38,7 +38,7 @@ class nsToolkit : public nsIToolkit
             NS_DECL_ISUPPORTS
 
                             nsToolkit();
-            virtual void    Init(PRThread *aThread);
+            NS_IMETHOD      Init(PRThread *aThread);
             void            CallMethod(MethodInfo *info);
             // Return whether the current thread is the application's Gui thread.  
             PRBool          IsGuiThread(void)      { return (PRBool)(mGuiThread == PR_GetCurrentThread());}

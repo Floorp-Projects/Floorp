@@ -43,14 +43,13 @@ public:
   NS_IMETHOD_(nsrefcnt) Release(void);                                      
   
   // nsIButton part
-  NS_IMETHOD     SetLabel(const nsString& aText);
-  NS_IMETHOD     GetLabel(nsString& aBuffer);
+  NS_IMETHOD SetLabel(const nsString& aText);
+  NS_IMETHOD GetLabel(nsString& aBuffer);
   
   
   virtual PRBool OnMove(PRInt32 aX, PRInt32 aY);
   virtual PRBool OnPaint();
   virtual PRBool OnResize(nsRect &aWindowRect);
-  virtual void GetBounds(nsRect &aRect);
 
 protected:
   virtual LPCTSTR WindowClass();

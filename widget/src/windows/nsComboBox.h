@@ -46,20 +46,22 @@ public:
     virtual PRBool OnMove(PRInt32 aX, PRInt32 aY);
     virtual PRBool OnPaint();
     virtual PRBool OnResize(nsRect &aWindowRect);
-    virtual void   GetBounds(nsRect &aRect);
+
+    // nsIWidget
+    NS_IMETHOD     GetBounds(nsRect &aRect);
 
     // nsIComboBox interface
-    virtual void    AddItemAt(nsString &aItem, PRInt32 aPosition);
+    NS_IMETHOD      AddItemAt(nsString &aItem, PRInt32 aPosition);
     virtual PRInt32 FindItem(nsString &aItem, PRInt32 aStartPos);
     virtual PRInt32 GetItemCount();
     virtual PRBool  RemoveItemAt(PRInt32 aPosition);
     virtual PRBool  GetItemAt(nsString& anItem, PRInt32 aPosition);
-    virtual void    GetSelectedItem(nsString& aItem);
+    NS_IMETHOD      GetSelectedItem(nsString& aItem);
     virtual PRInt32 GetSelectedIndex();
-    virtual void    SelectItem(PRInt32 aPosition);
-    virtual void    Deselect() ;
+    NS_IMETHOD      SelectItem(PRInt32 aPosition);
+    NS_IMETHOD      Deselect() ;
 
-    virtual void    PreCreateWidget(nsWidgetInitData *aInitData);
+    NS_IMETHOD      PreCreateWidget(nsWidgetInitData *aInitData);
 
 protected:
 

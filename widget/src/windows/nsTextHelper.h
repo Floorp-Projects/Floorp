@@ -49,7 +49,7 @@ public:
     NS_IMETHOD        SetCaretPosition(PRUint32 aPosition);
     NS_IMETHOD        GetCaretPosition(PRUint32& aPosition);
     
-    virtual void      PreCreateWidget(nsWidgetInitData *aInitData);
+    NS_IMETHOD        PreCreateWidget(nsWidgetInitData *aInitData);
 
     virtual LPCTSTR   WindowClass();
     virtual DWORD     WindowStyle();

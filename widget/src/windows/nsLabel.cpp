@@ -23,6 +23,9 @@
 #include "nsGUIEvent.h"
 #include "nsString.h"
 #include "nsStringUtil.h"
+#include "nsIFontCache.h"
+#include "nsIFontMetrics.h"
+#include "nsIDeviceContext.h"
 #include <windows.h>
 
 NS_IMPL_ADDREF(nsLabel)
@@ -43,12 +46,13 @@ nsLabel::nsLabel() : nsWindow(), nsILabel()
 //
 //
 //-------------------------------------------------------------------------
-void nsLabel::PreCreateWidget(nsWidgetInitData *aInitData)
+NS_METHOD nsLabel::PreCreateWidget(nsWidgetInitData *aInitData)
 {
   if (nsnull != aInitData) {
     nsLabelInitData* data = (nsLabelInitData *) aInitData;
     mAlignment = data->mAlignment;
   }
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -185,8 +189,51 @@ DWORD nsLabel::WindowExStyle()
 //
 //-------------------------------------------------------------------------
 
-void nsLabel::GetBounds(nsRect &aRect)
+NS_METHOD nsLabel::GetBounds(nsRect &aRect)
 {
-    nsWindow::GetBounds(aRect);
+  return nsWindow::GetBounds(aRect);
+}
+
+//-------------------------------------------------------------------------
+NS_METHOD nsLabel::GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight)
+{
+  //nsIFontMetrics * fm = GetFont();;
+ // mDeviceContext->GetMetricsFor(mFont, &fm);
+  nsIFontCache* fontCache;
+  mContext->GetFontCache(fontCache);
+  nsIFontMetrics* metrics;
+  fontCache->GetMetricsFor(*mFont, metrics);
+  NS_RELEASE(fontCache);
+  
+
+  nsString text;
+  GetLabel(text);
+
+  nscoord string_height, string_width;
+  metrics->GetHeight(string_height);
+  metrics->GetWidth(text, string_width);
+  NS_RELEASE(metrics);
+
+  if (mPreferredWidth != 0) {
+    aWidth = mPreferredWidth;
+  } else {
+    aWidth = string_width+8;
+  }
+
+  if (mPreferredHeight != 0) {
+    aHeight = mPreferredHeight;
+  } else {
+    aHeight = string_height+8;
+  }
+
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+NS_METHOD nsLabel::SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight)
+{
+  mPreferredWidth  = aWidth;
+  mPreferredHeight = aHeight;
+  return NS_OK;
 }
 

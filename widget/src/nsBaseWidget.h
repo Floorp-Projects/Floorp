@@ -48,12 +48,12 @@ public:
 
     NS_DECL_ISUPPORTS
 
-    virtual void            PreCreateWidget(nsWidgetInitData *aWidgetInitData) {}
+    NS_IMETHOD              PreCreateWidget(nsWidgetInitData *aWidgetInitData) { return NS_OK;}
 
       // nsIWidget interface
     NS_IMETHOD              GetClientData(void*& aClientData);
     NS_IMETHOD              SetClientData(void* aClientData);
-    virtual void            Destroy();
+    NS_IMETHOD              Destroy();
     virtual nsIWidget*      GetParent(void);
     virtual nsIEnumerator*  GetChildren();
     virtual void            AddChild(nsIWidget* aChild);
@@ -61,22 +61,22 @@ public:
 
 
     virtual nscolor         GetForegroundColor(void);
-    virtual void            SetForegroundColor(const nscolor &aColor);
+    NS_IMETHOD              SetForegroundColor(const nscolor &aColor);
     virtual nscolor         GetBackgroundColor(void);
-    virtual void            SetBackgroundColor(const nscolor &aColor);
+    NS_IMETHOD              SetBackgroundColor(const nscolor &aColor);
     virtual nsCursor        GetCursor();
-    virtual void            SetCursor(nsCursor aCursor);
+    NS_IMETHOD              SetCursor(nsCursor aCursor);
     virtual nsIRenderingContext* GetRenderingContext();
     virtual nsIDeviceContext* GetDeviceContext();
     virtual nsIAppShell *   GetAppShell();
     virtual nsIToolkit*     GetToolkit();  
-    virtual void            SetBorderStyle(nsBorderStyle aBorderStyle); 
-    virtual void            SetTitle(const nsString& aTitle); 
-    virtual void            SetTooltips(PRUint32 aNumberOfTips,nsRect* aTooltipAreas[]);   
-    virtual void            RemoveTooltips();
-    virtual void            UpdateTooltips(nsRect* aNewTips[]);
-    virtual void            AddMouseListener(nsIMouseListener * aListener);
-    virtual void            AddEventListener(nsIEventListener * aListener);
+    NS_IMETHOD              SetBorderStyle(nsBorderStyle aBorderStyle); 
+    NS_IMETHOD              SetTitle(const nsString& aTitle); 
+    NS_IMETHOD              SetTooltips(PRUint32 aNumberOfTips,nsRect* aTooltipAreas[]);   
+    NS_IMETHOD              RemoveTooltips();
+    NS_IMETHOD              UpdateTooltips(nsRect* aNewTips[]);
+    NS_IMETHOD              AddMouseListener(nsIMouseListener * aListener);
+    NS_IMETHOD              AddEventListener(nsIEventListener * aListener);
     virtual void            ConvertToDeviceCoordinates(nscoord	&aX,nscoord	&aY) {}
 protected:
 

@@ -56,7 +56,7 @@ public:
   * Creates an application shell
   */ 
 
-  virtual void Create(int* argc, char ** argv) = 0;
+  NS_IMETHOD Create(int* argc, char ** argv) = 0;
 
  /**
   * Enter an event loop.
@@ -69,13 +69,13 @@ public:
   * After event dispatch execute app specific code
   */
   
-  virtual void SetDispatchListener(nsDispatchListener* aDispatchListener) = 0;
+  NS_IMETHOD SetDispatchListener(nsDispatchListener* aDispatchListener) = 0;
 
   /**
    * Exit the handle event loop
    */
 
-  virtual void Exit() = 0;
+  NS_IMETHOD Exit() = 0;
 
   /**
    * Returns Native Data

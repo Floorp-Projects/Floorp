@@ -37,7 +37,7 @@ class   nsIEnumerator;
 class   nsIDeviceContext;
 struct  nsRect;
 struct  nsFont;
-
+class   nsIMenuBar;
 /**
  * Callback function that processes events.
  * The argument is actually a subtype (subclass) of nsEvent which carries
@@ -155,7 +155,7 @@ class nsIWidget : public nsISupports {
      * @param     aInitData data that is used for widget initialization
      *
      */
-    virtual void Create(nsIWidget        *aParent,
+    NS_IMETHOD Create(nsIWidget        *aParent,
                         const nsRect     &aRect,
                         EVENT_CALLBACK   aHandleEventFunction,
                         nsIDeviceContext *aContext,
@@ -182,7 +182,7 @@ class nsIWidget : public nsISupports {
      * @param     aRect     the widget dimension
      * @param     aHandleEventFunction the event handler callback function
      */
-    virtual void Create(nsNativeWidget aParent,
+    NS_IMETHOD Create(nsNativeWidget aParent,
                         const nsRect     &aRect,
                         EVENT_CALLBACK   aHandleEventFunction,
                         nsIDeviceContext *aContext,
@@ -205,7 +205,7 @@ class nsIWidget : public nsISupports {
      * This method does not delete the widget.
      */
 
-    virtual void Destroy(void) = 0;
+    NS_IMETHOD Destroy(void) = 0;
 
     /**
      * Return the parent Widget of this Widget or nsnull if this is a 
@@ -231,7 +231,13 @@ class nsIWidget : public nsISupports {
      * @param aState PR_TRUE to show the Widget, PR_FALSE to hide it
      *
      */
-    virtual void Show(PRBool aState) = 0;
+    NS_IMETHOD Show(PRBool aState) = 0;
+
+    /**
+     * Returns whether the window is visible
+     *
+     */
+    NS_IMETHOD IsVisible(PRBool & aState) = 0;
 
     /**
      * Move this widget.
@@ -240,7 +246,7 @@ class nsIWidget : public nsISupports {
      * @param aY the new y position expressed in the parent's coordinate system
      *
      **/
-    virtual void Move(PRUint32 aX, PRUint32 aY) = 0;
+    NS_IMETHOD Move(PRUint32 aX, PRUint32 aY) = 0;
 
     /**
      * Resize this widget. 
@@ -250,7 +256,7 @@ class nsIWidget : public nsISupports {
      * @param aRepaint whether the widget should be repainted
      *
      */
-    virtual void Resize(PRUint32 aWidth,
+    NS_IMETHOD Resize(PRUint32 aWidth,
                         PRUint32 aHeight,
                         PRBool   aRepaint) = 0;
 
@@ -264,7 +270,7 @@ class nsIWidget : public nsISupports {
      * @param aRepaint whether the widget should be repainted if the size changes
      *
      */
-    virtual void Resize(PRUint32 aX,
+    NS_IMETHOD Resize(PRUint32 aX,
                         PRUint32 aY,
                         PRUint32 aWidth,
                         PRUint32 aHeight,
@@ -276,12 +282,12 @@ class nsIWidget : public nsISupports {
      * @param aState PR_TRUE to enable the Widget, PR_FALSE to disable it.
      *
      */
-    virtual void Enable(PRBool aState) = 0;
+    NS_IMETHOD Enable(PRBool aState) = 0;
 
     /**
      * Give focus to this widget.
      */
-    virtual void SetFocus(void) = 0;
+    NS_IMETHOD SetFocus(void) = 0;
 
     /**
      * Get this widget's dimension
@@ -289,7 +295,7 @@ class nsIWidget : public nsISupports {
      * @param aRect on return it holds the  x. y, width and height of this widget
      *
      */
-    virtual void GetBounds(nsRect &aRect) = 0;
+    NS_IMETHOD GetBounds(nsRect &aRect) = 0;
 
     /**
      * Get the foreground color for this widget
@@ -306,7 +312,7 @@ class nsIWidget : public nsISupports {
      *
      */
 
-    virtual void SetForegroundColor(const nscolor &aColor) = 0;
+    NS_IMETHOD SetForegroundColor(const nscolor &aColor) = 0;
 
     /**
      * Get the background color for this widget
@@ -324,7 +330,7 @@ class nsIWidget : public nsISupports {
      *
      */
 
-    virtual void SetBackgroundColor(const nscolor &aColor) = 0;
+    NS_IMETHOD SetBackgroundColor(const nscolor &aColor) = 0;
 
     /**
      * Get the font for this widget
@@ -340,7 +346,7 @@ class nsIWidget : public nsISupports {
      * @param aFont font to display. See nsFont for allowable fonts
      */
 
-    virtual void SetFont(const nsFont &aFont) = 0;
+    NS_IMETHOD SetFont(const nsFont &aFont) = 0;
 
     /**
      * Get the cursor for this widget.
@@ -356,7 +362,7 @@ class nsIWidget : public nsISupports {
      * @param aCursor the new cursor for this widget
      */
 
-    virtual void SetCursor(nsCursor aCursor) = 0;
+    NS_IMETHOD SetCursor(nsCursor aCursor) = 0;
 
     /**
      * Invalidate the widget and repaint it.
@@ -365,7 +371,7 @@ class nsIWidget : public nsISupports {
      *
      */
 
-    virtual void Invalidate(PRBool aIsSynchronous) = 0;
+    NS_IMETHOD Invalidate(PRBool aIsSynchronous) = 0;
 
   
     /**
@@ -375,7 +381,7 @@ class nsIWidget : public nsISupports {
      * @param aListener mouse listener to add to this widget.
      */
 
-    virtual void AddMouseListener(nsIMouseListener * aListener) = 0;
+    NS_IMETHOD AddMouseListener(nsIMouseListener * aListener) = 0;
 
     /**
      * Return the widget's toolkit
@@ -392,7 +398,7 @@ class nsIWidget : public nsISupports {
      *
      */
 
-    virtual void SetColorMap(nsColorMap *aColorMap) = 0;
+    NS_IMETHOD SetColorMap(nsColorMap *aColorMap) = 0;
 
     /**
      * Scroll this widget.
@@ -403,7 +409,7 @@ class nsIWidget : public nsISupports {
      *
      */
 
-    virtual void Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect) = 0;
+    NS_IMETHOD Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect) = 0;
 
     /** 
      * Internal methods
@@ -424,7 +430,7 @@ class nsIWidget : public nsISupports {
      * @param aBorderStyle @see nsBorderStyle
      */
 
-    virtual void SetBorderStyle(nsBorderStyle aBorderStyle) = 0;
+    NS_IMETHOD SetBorderStyle(nsBorderStyle aBorderStyle) = 0;
 
     /**
      * Set the widget's title.
@@ -433,7 +439,16 @@ class nsIWidget : public nsISupports {
      * @param aTitle string displayed as the title of the widget
      */
 
-    virtual void SetTitle(const nsString& aTitle) = 0;
+    NS_IMETHOD SetTitle(const nsString& aTitle) = 0;
+
+    /**
+     * Set the widget's MenuBar.
+     * Must be called after Create.
+     *
+     * @param aTitle string displayed as the title of the widget
+     */
+
+    NS_IMETHOD SetMenuBar(nsIMenuBar * aMenuBar) = 0;
 
     /**
      * Set the collection of tooltip rectangles.
@@ -446,7 +461,7 @@ class nsIWidget : public nsISupports {
      *
      */
 
-    virtual void SetTooltips(PRUint32 aNumberOfTips,nsRect* aTooltipAreas[]) = 0;
+    NS_IMETHOD SetTooltips(PRUint32 aNumberOfTips,nsRect* aTooltipAreas[]) = 0;
 
     /**
      * Update the collection of tooltip rectangles. The number of tooltips must
@@ -457,13 +472,13 @@ class nsIWidget : public nsISupports {
      *
      */
 
-    virtual void UpdateTooltips(nsRect* aNewTips[]) = 0;
+    NS_IMETHOD UpdateTooltips(nsRect* aNewTips[]) = 0;
 
     /**
      * Remove the collection of tooltip rectangles.
      */
 
-    virtual void RemoveTooltips() = 0;
+    NS_IMETHOD RemoveTooltips() = 0;
 
 
      /**
@@ -473,7 +488,7 @@ class nsIWidget : public nsISupports {
      * @param  aNewRect  screen coordinates stored in the x,y members
      */
 
-    virtual void WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect) = 0;
+    NS_IMETHOD WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect) = 0;
 
     /**
      * Convert from screen coordinates to this widget's coordinates.
@@ -482,7 +497,7 @@ class nsIWidget : public nsISupports {
      * @param  aNewRect  widget's coordinates stored in the x,y members
      */
 
-    virtual void ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect) = 0;
+    NS_IMETHOD ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect) = 0;
 
     /**
      * When adjustments are to made to a whole set of child widgets, call this
@@ -492,7 +507,7 @@ class nsIWidget : public nsISupports {
      *
      */
 
-    virtual void BeginResizingChildren(void) = 0;
+    NS_IMETHOD BeginResizingChildren(void) = 0;
 
     /**
      * Call this when finished adjusting child windows. Must be preceded by
@@ -500,8 +515,21 @@ class nsIWidget : public nsISupports {
      *
      */
 
-    virtual void EndResizingChildren(void) = 0;
-    
+    NS_IMETHOD EndResizingChildren(void) = 0;
+
+    /**
+     * Returns the preferred width and height for the widget
+     *
+     */
+    NS_IMETHOD GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight) = 0;
+
+    /**
+     * Set the preferred width and height for the widget
+     *
+     */
+    NS_IMETHOD SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight) = 0;
+
+   
     virtual void  ConvertToDeviceCoordinates(nscoord	&aX,nscoord	&aY) = 0;
 };
 

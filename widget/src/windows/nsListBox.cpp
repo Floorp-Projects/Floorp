@@ -34,17 +34,19 @@ NS_IMPL_RELEASE(nsListBox)
 //
 //-------------------------------------------------------------------------
 
-void nsListBox::SetMultipleSelection(PRBool aMultipleSelections)
+NS_METHOD nsListBox::SetMultipleSelection(PRBool aMultipleSelections) 
 {
   mMultiSelect = aMultipleSelections;
+  return NS_OK;
 }
 
-void nsListBox::PreCreateWidget(nsWidgetInitData *aInitData)
+NS_METHOD nsListBox::PreCreateWidget(nsWidgetInitData *aInitData)
 {
   if (nsnull != aInitData) {
     nsListBoxInitData* data = (nsListBoxInitData *) aInitData;
     mMultiSelect = data->mMultiSelect;
   }
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -53,11 +55,12 @@ void nsListBox::PreCreateWidget(nsWidgetInitData *aInitData)
 //
 //-------------------------------------------------------------------------
 
-void nsListBox::AddItemAt(nsString &aItem, PRInt32 aPosition)
+NS_METHOD nsListBox::AddItemAt(nsString &aItem, PRInt32 aPosition)
 {
   NS_ALLOC_STR_BUF(val, aItem, 256);
   SendMessage(mWnd, LB_INSERTSTRING, (int)aPosition, (LPARAM)(LPCTSTR)val); 
   NS_FREE_STR_BUF(val);
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -122,7 +125,7 @@ PRBool nsListBox::GetItemAt(nsString& anItem, PRInt32 aPosition)
 //  Gets the selected of selected item
 //
 //-------------------------------------------------------------------------
-void nsListBox::GetSelectedItem(nsString& aItem)
+NS_METHOD nsListBox::GetSelectedItem(nsString& aItem)
 {
   if (!mMultiSelect) { 
     int index = ::SendMessage(mWnd, LB_GETCURSEL, (int)0, (LPARAM)0); 
@@ -130,6 +133,7 @@ void nsListBox::GetSelectedItem(nsString& aItem)
   } else {
     NS_ASSERTION(0, "Multi selection list box does not support GetSelectedItem()");
   }
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -152,13 +156,14 @@ PRInt32 nsListBox::GetSelectedIndex()
 //  SelectItem
 //
 //-------------------------------------------------------------------------
-void nsListBox::SelectItem(PRInt32 aPosition)
+NS_METHOD nsListBox::SelectItem(PRInt32 aPosition)
 {
   if (!mMultiSelect) { 
     ::SendMessage(mWnd, LB_SETCURSEL, (int)aPosition, (LPARAM)0); 
   } else {
     ::SendMessage(mWnd, LB_SETSEL, (WPARAM) (BOOL)PR_TRUE, (LPARAM)(UINT)aPosition); 
   }
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -181,9 +186,10 @@ PRInt32 nsListBox::GetSelectedCount()
 //  GetSelectedIndices
 //
 //-------------------------------------------------------------------------
-void nsListBox::GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize)
+NS_METHOD nsListBox::GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize)
 {
   ::SendMessage(mWnd, LB_GETSELITEMS, (int)aSize, (LPARAM)aIndices);
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -191,11 +197,12 @@ void nsListBox::GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize)
 //  SetSelectedIndices 
 //
 //-------------------------------------------------------------------------
-void nsListBox::SetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize)
+NS_METHOD nsListBox::SetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize)
 {
   for (int i=0;i<aSize;i++) {
     SelectItem(aIndices[i]);
   }
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -203,14 +210,14 @@ void nsListBox::SetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize)
 //  Deselect
 //
 //-------------------------------------------------------------------------
-void nsListBox::Deselect()
+NS_METHOD nsListBox::Deselect()
 {
-    if (!mMultiSelect) { 
+  if (!mMultiSelect) { 
     ::SendMessage(mWnd, LB_SETCURSEL, (WPARAM)-1, (LPARAM)0); 
   } else {
     ::SendMessage(mWnd, LB_SETSEL, (WPARAM) (BOOL)PR_FALSE, (LPARAM)(UINT)-1); 
   }
-
+  return NS_OK;
 }
 
 
@@ -335,9 +342,10 @@ PRBool nsListBox::AutoErase()
 //
 //-------------------------------------------------------------------------
 
-void nsListBox::GetBounds(nsRect &aRect)
+NS_METHOD nsListBox::GetBounds(nsRect &aRect)
 {
-    nsWindow::GetNonClientBounds(aRect);
+  nsWindow::GetNonClientBounds(aRect);
+  return NS_OK;
 }
 
 

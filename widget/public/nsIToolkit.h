@@ -47,7 +47,7 @@ class nsIToolkit : public nsISupports {
      *  and a message pump will run in that thread
      *
      */
-    virtual void Init(PRThread *aThread) = 0;
+    NS_IMETHOD Init(PRThread *aThread) = 0;
 
 };
 
