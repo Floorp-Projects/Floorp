@@ -554,7 +554,7 @@ static void InitTraceLog(void)
       fprintf(stdout, "### XPCOM_MEM_LOG_CLASSES defined -- only logging these classes: ");
       const char* cp = classes;
       for (;;) {
-        char* cm = strchr(cp, ',');
+        char* cm = (char*) strchr(cp, ',');
         if (cm) {
           *cm = '\0';
         }
@@ -592,7 +592,7 @@ static void InitTraceLog(void)
       fprintf(stdout, "### XPCOM_MEM_LOG_OBJECTS defined -- only logging these objects: ");
       const char* cp = objects;
       for (;;) {
-        char* cm = strchr(cp, ',');
+        char* cm = (char*) strchr(cp, ',');
         if (cm) {
           *cm = '\0';
         }
