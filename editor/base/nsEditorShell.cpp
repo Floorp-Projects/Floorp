@@ -1146,6 +1146,8 @@ nsEditorShell::SetTextProperty(const PRUnichar *prop, const PRUnichar *attr, con
 {
   nsresult  err = NS_NOINTERFACE;
 
+  if (!mEditor) return NS_ERROR_NOT_INITIALIZED;
+
   nsCOMPtr<nsIAtom> styleAtom = getter_AddRefs(NS_NewAtom(prop));      /// XXX Hack alert! Look in nsIEditProperty.h for this
   if (! styleAtom) return NS_ERROR_OUT_OF_MEMORY;
  
@@ -1170,6 +1172,8 @@ nsEditorShell::RemoveOneProperty(const nsString& aProp, const nsString &aAttr)
 {
   nsresult  err = NS_NOINTERFACE;
 
+  if (!mEditor) return NS_ERROR_NOT_INITIALIZED;
+
   nsCOMPtr<nsIAtom> styleAtom = getter_AddRefs(NS_NewAtom(aProp));      /// XXX Hack alert! Look in nsIEditProperty.h for this
   if (! styleAtom) return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1193,6 +1197,8 @@ nsEditorShell::RemoveOneProperty(const nsString& aProp, const nsString &aAttr)
 NS_IMETHODIMP    
 nsEditorShell::RemoveTextProperty(const PRUnichar *prop, const PRUnichar *attr)
 {
+  if (!mEditor) return NS_ERROR_NOT_INITIALIZED;
+
   // OK, I'm really hacking now. This is just so that we can accept 'all' as input.  
   nsAutoString  allStr(prop);
   nsAutoString  aAttr(attr);
@@ -1218,6 +1224,8 @@ nsEditorShell::RemoveTextProperty(const PRUnichar *prop, const PRUnichar *attr)
 NS_IMETHODIMP
 nsEditorShell::GetTextProperty(const PRUnichar *prop, const PRUnichar *attr, const PRUnichar *value, PRBool *firstHas, PRBool *anyHas, PRBool *allHas)
 {
+  if (!mEditor) return NS_ERROR_NOT_INITIALIZED;
+
   nsIAtom    *styleAtom = nsnull;
   nsresult  err = NS_NOINTERFACE;
 
@@ -1265,8 +1273,9 @@ nsEditorShell::SetBackgroundColor(const PRUnichar *color)
 {
   nsresult result = NS_NOINTERFACE;
   
-  nsAutoString aColor(color);
+  if (!mEditor) return NS_ERROR_NOT_INITIALIZED;
   
+  nsAutoString aColor(color);
   result = mEditor->SetBackgroundColor(aColor);
 
   return result;
@@ -1566,6 +1575,8 @@ nsEditorShell::SetBodyAttribute(const PRUnichar *attr, const PRUnichar *value)
 {
   nsresult result = NS_NOINTERFACE;
   
+  if (!mEditor) return NS_ERROR_NOT_INITIALIZED;
+
   nsAutoString  aAttr(attr);
   nsAutoString  aValue(value);
   
@@ -1777,6 +1788,7 @@ nsEditorShell::SaveDocument(PRBool aSaveAs, PRBool aSaveCopy, const PRUnichar* a
   *_retval = PR_FALSE;
 
   NS_ENSURE_ARG_POINTER((aMimeType));
+  if (!mEditor) return NS_ERROR_NOT_INITIALIZED;
 
   nsCAutoString mimeTypeCStr; mimeTypeCStr.AssignWithConversion(aMimeType);
   PRBool saveAsText = IsSupportedTextType(mimeTypeCStr);
@@ -2356,6 +2368,8 @@ NS_IMETHODIMP
 nsEditorShell::NodeIsBlock(nsIDOMNode *node, PRBool *_retval)
 {
   if (!node || !_retval) { return NS_ERROR_NULL_POINTER; }
+  if (!mEditor) return NS_ERROR_NOT_INITIALIZED;
+
   nsresult  rv = NS_NOINTERFACE;
   
   switch (mEditorType)
@@ -3219,6 +3233,8 @@ nsEditorShell::SetParagraphFormat(const PRUnichar * paragraphFormat)
 {
   nsresult  err = NS_NOINTERFACE;
   
+  if (!mEditor) return NS_ERROR_NOT_INITIALIZED;
+
   nsAutoString aParagraphFormat(paragraphFormat);
   
   switch (mEditorType)
@@ -3349,6 +3365,8 @@ nsEditorShell::MakeOrChangeList(const PRUnichar *listType, PRBool entireList)
 {
   nsresult err = NS_NOINTERFACE;
 
+  if (!mEditor) return NS_ERROR_NOT_INITIALIZED;
+
   nsAutoString aListType(listType);
   
   switch (mEditorType)
@@ -3381,6 +3399,7 @@ nsEditorShell::RemoveList(const PRUnichar *listType)
 {
   nsresult err = NS_NOINTERFACE;
 
+  if (!mEditor) return NS_ERROR_NOT_INITIALIZED;
   
   switch (mEditorType)
   {
@@ -3404,6 +3423,8 @@ nsEditorShell::Indent(const PRUnichar *indent)
 {
   nsresult err = NS_NOINTERFACE;
 
+  if (!mEditor) return NS_ERROR_NOT_INITIALIZED;
+
   nsAutoString aIndent(indent);
   
   switch (mEditorType)
@@ -3424,6 +3445,8 @@ NS_IMETHODIMP
 nsEditorShell::Align(const PRUnichar *align)
 {
   nsresult err = NS_NOINTERFACE;
+
+  if (!mEditor) return NS_ERROR_NOT_INITIALIZED;
 
   nsAutoString aAlignType(align);
   
@@ -3447,6 +3470,8 @@ nsEditorShell::GetSelectedElement(const PRUnichar *aInTagName, nsIDOMElement **a
   if (!aInTagName || !aOutElement)
     return NS_ERROR_NULL_POINTER;
 
+  if (!mEditor) return NS_ERROR_NOT_INITIALIZED;
+  
   nsresult  result = NS_NOINTERFACE;
   nsAutoString tagName(aInTagName);
   
@@ -3564,6 +3589,8 @@ nsEditorShell::GetElementOrParentByTagName(const PRUnichar *aInTagName, nsIDOMNo
   if (!aInTagName || !aOutElement)
     return NS_ERROR_NULL_POINTER;
 
+  if (!mEditor) return NS_ERROR_NOT_INITIALIZED;
+
   nsresult  result = NS_NOINTERFACE;
   nsAutoString tagName(aInTagName);
   
@@ -3589,6 +3616,8 @@ nsEditorShell::CreateElementWithDefaults(const PRUnichar *aInTagName, nsIDOMElem
 {
   if (!aOutElement)
     return NS_ERROR_NULL_POINTER;
+
+  if (!mEditor) return NS_ERROR_NOT_INITIALIZED;
 
   nsresult  result = NS_NOINTERFACE;
   nsAutoString tagName(aInTagName);
@@ -3656,6 +3685,8 @@ nsEditorShell::InsertElementAtSelection(nsIDOMElement *element, PRBool deleteSel
   if (!element)
     return NS_ERROR_NULL_POINTER;
 
+  if (!mEditor) return NS_ERROR_NOT_INITIALIZED;
+
   nsresult  result = NS_NOINTERFACE;
   switch (mEditorType)
   {
@@ -3675,6 +3706,9 @@ NS_IMETHODIMP
 nsEditorShell::InsertLinkAroundSelection(nsIDOMElement* aAnchorElement)
 {
   nsresult  result = NS_NOINTERFACE;
+
+  if (!mEditor) return NS_ERROR_NOT_INITIALIZED;
+
   switch (mEditorType)
   {
     case eHTMLTextEditorType:
@@ -3693,6 +3727,8 @@ nsEditorShell::SelectElement(nsIDOMElement* aElement)
 {
   if (!aElement)
     return NS_ERROR_NULL_POINTER;
+
+  if (!mEditor) return NS_ERROR_NOT_INITIALIZED;
 
   nsresult  result = NS_NOINTERFACE;
   switch (mEditorType)
@@ -3714,6 +3750,8 @@ nsEditorShell::SetSelectionAfterElement(nsIDOMElement* aElement)
 {
   if (!aElement)
     return NS_ERROR_NULL_POINTER;
+
+  if (!mEditor) return NS_ERROR_NOT_INITIALIZED;
 
   nsresult  result = NS_NOINTERFACE;
   switch (mEditorType)
@@ -4996,23 +5034,13 @@ nsEditorShell::OnProgressChange(nsIWebProgress *aProgress,
     mParserObserver->GetBadTagFound(&cancelEdit);
     if (cancelEdit)
     {
-      /*
-      nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(mWebShell);
-      if (docShell)
-        docShell->StopLoad();
-      */
       mParserObserver->End();
       NS_RELEASE(mParserObserver);
 
-      if (mDocShell) 
-      {
-        // where do we pop up a dialog telling the user they can't edit this doc?
-        // this next call will close the window, but do we want to do that?  or tell the .js UI to do it?
         mCloseWindowWhenLoaded = PR_TRUE;
         mCantEditReason = eCantEditFramesets;
       }
     }
-  }
   return NS_OK;
 }
 
@@ -5161,6 +5189,16 @@ nsresult nsEditorShell::EndPageLoad(nsIDOMWindow *aDOMWindow,
   // Make sure the ParserObserver is active through any frameset loads?
   if (mParserObserver)
   {
+    // if we didn't already get the bad tag flag from the parser observer (i.e.
+    // we never got an OnProgress), then look again here.
+    PRBool cancelEdit;
+    mParserObserver->GetBadTagFound(&cancelEdit);
+    if (cancelEdit && !mCloseWindowWhenLoaded)
+    {
+        mCloseWindowWhenLoaded = PR_TRUE;
+        mCantEditReason = eCantEditFramesets;
+    }
+    
     mParserObserver->End();
     NS_RELEASE(mParserObserver);
   }
@@ -5238,7 +5276,11 @@ nsresult nsEditorShell::EndPageLoad(nsIDOMWindow *aDOMWindow,
     nsCOMPtr<nsIURI>  url;
     aChannel->GetURI(getter_AddRefs(url));
 
-    (void) PrepareDocumentForEditing(aDOMWindow, url);
+    nsresult rv = PrepareDocumentForEditing(aDOMWindow, url);
+
+    // if we return this error, it will never get reported, so we should
+    // report it here.
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to setup document for editing");
   }
   
   return NS_OK;
