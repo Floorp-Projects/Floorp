@@ -525,16 +525,10 @@ nsresult CNavDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsIToke
 nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParser* aParser,nsIContentSink* aSink){
   nsresult result= NS_OK;
 
-  /*
   if((NS_OK==anErrorCode) && (!mHadBodyOrFrameset)) {
     CStartToken theToken(eHTMLTag_body);  //open the body container...
     result=HandleStartToken(&theToken);
-
-    if(NS_SUCCEEDED(result)) {
-      result=BuildModel(aParser,mTokenizer,0,aSink);
-    }
   }
-*/
 
   if(aParser){
     mSink=(nsIHTMLContentSink*)aSink;
