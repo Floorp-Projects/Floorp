@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 3; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -30,8 +30,18 @@
 #include "nsHTMLReflowState.h"
 
 // Interfaces needed to be included
+#include "nsIContextMenuListener.h"
+#include "nsIDOMNode.h"
+#include "nsIDOMNodeList.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMDocumentType.h"
 #include "nsIDOMElement.h"
+#include "nsIDOMEvent.h"
+#include "nsIDOMEventReceiver.h"
+#include "nsIDOMMouseEvent.h"
+#include "nsIDOMEventReceiver.h"
+#include "nsIDOMNamedNodeMap.h"
+#include "nsIDOMHTMLElement.h"
 #include "nsIPresShell.h"
 
 // CIDs
@@ -40,7 +50,8 @@
 //***    nsDocShellTreeOwner: Object Management
 //*****************************************************************************
 
-nsDocShellTreeOwner::nsDocShellTreeOwner() : mWebBrowser(nsnull), 
+nsDocShellTreeOwner::nsDocShellTreeOwner() :
+   mWebBrowser(nsnull), 
    mTreeOwner(nsnull),
    mPrimaryContentShell(nsnull),
    mWebBrowserChrome(nsnull),
@@ -63,11 +74,14 @@ NS_IMPL_ADDREF(nsDocShellTreeOwner)
 NS_IMPL_RELEASE(nsDocShellTreeOwner)
 
 NS_INTERFACE_MAP_BEGIN(nsDocShellTreeOwner)
-   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDocShellTreeOwner)
-   NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeOwner)
-   NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
-   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
-   NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDocShellTreeOwner)
+    NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeOwner)
+    NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
+    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
+    NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
+    NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
+    NS_INTERFACE_MAP_ENTRY(nsIDOMMouseListener)
+    NS_INTERFACE_MAP_ENTRY(nsICDocShellTreeOwner)
 NS_INTERFACE_MAP_END
 
 //*****************************************************************************
@@ -138,9 +152,9 @@ NS_IMETHODIMP nsDocShellTreeOwner::GetPrimaryContentShell(nsIDocShellTreeItem** 
 {
    NS_ENSURE_ARG_POINTER(aShell);
 
-   if (mTreeOwner)
+   if(mTreeOwner)
        return mTreeOwner->GetPrimaryContentShell(aShell);
-       
+
    *aShell = (mPrimaryContentShell ? mPrimaryContentShell : mWebBrowser->mDocShellAsItem.get());  
    NS_IF_ADDREF(*aShell);
 
@@ -426,15 +440,20 @@ nsDocShellTreeOwner::OnProgressChange(nsIWebProgress* aProgress,
                                       PRInt32 aCurTotalProgress,
                                       PRInt32 aMaxTotalProgress)
 {
-   if(!mOwnerProgressListener)
-      return NS_OK;
+    // In the absence of DOM document creation event, this method is the
+    // most convenient place to install the mouse listener on the
+    // DOM document.
+    AddMouseListener();
+
+    if(!mOwnerProgressListener)
+        return NS_OK;
       
-   return mOwnerProgressListener->OnProgressChange(aProgress,
-                                                   aRequest,
-                                                   aCurSelfProgress,
-                                                   aMaxSelfProgress,
-                                                   aCurTotalProgress,
-                                                   aMaxTotalProgress);
+    return mOwnerProgressListener->OnProgressChange(aProgress,
+                                                    aRequest,
+                                                    aCurSelfProgress,
+                                                    aMaxSelfProgress,
+                                                    aCurTotalProgress,
+                                                    aMaxTotalProgress);
 }
 
 NS_IMETHODIMP
@@ -484,7 +503,7 @@ nsDocShellTreeOwner::OnStatusChange(nsIWebProgress* aWebProgress,
 
 void nsDocShellTreeOwner::WebBrowser(nsWebBrowser* aWebBrowser)
 {
-   mWebBrowser = aWebBrowser;
+    mWebBrowser = aWebBrowser;
 }
 
 nsWebBrowser* nsDocShellTreeOwner::WebBrowser()
@@ -535,4 +554,199 @@ NS_IMETHODIMP nsDocShellTreeOwner::SetWebBrowserChrome(nsIWebBrowserChrome* aWeb
       mOwnerRequestor = requestor;
       }
    return NS_OK;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+NS_IMETHODIMP nsDocShellTreeOwner::AddMouseListener()
+{
+    // Clear out the old listener
+    RemoveMouseListener();
+
+    NS_ENSURE_TRUE(mWebBrowser, NS_ERROR_FAILURE);
+
+    // Get the DOM document
+    nsCOMPtr<nsIDOMDocument> domDocument;
+    mWebBrowser->GetDocument(getter_AddRefs(domDocument));
+	if (domDocument == nsnull)
+	{
+        return NS_ERROR_FAILURE;
+    }
+
+    // Subscribe to mouse events
+    nsCOMPtr<nsIDOMEventReceiver> eventReceiver;
+    domDocument->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), getter_AddRefs(eventReceiver));
+    if (eventReceiver)
+	{
+        nsIDOMMouseListener *pListener = NS_STATIC_CAST(nsIDOMMouseListener *, this);
+        eventReceiver->AddEventListenerByIID(pListener, NS_GET_IID(nsIDOMMouseListener));
+    }
+    mLastDOMDocument = domDocument;
+
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP nsDocShellTreeOwner::RemoveMouseListener()
+{
+    // Unsubscribe from mouse events
+    if (mLastDOMDocument)
+    {
+    	nsCOMPtr<nsIDOMEventReceiver> eventReceiver;
+		mLastDOMDocument->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), getter_AddRefs(eventReceiver));
+		if (eventReceiver)
+		{
+			nsIDOMMouseListener *pListener = NS_STATIC_CAST(nsIDOMMouseListener *, this);
+			eventReceiver->RemoveEventListenerByIID(pListener, NS_GET_IID(nsIDOMMouseListener));
+		}
+        mLastDOMDocument = nsnull;
+    }
+
+    return NS_OK;
+}
+
+
+nsresult nsDocShellTreeOwner::HandleEvent(nsIDOMEvent* aEvent)
+{
+	return NS_OK; 
+}
+
+
+nsresult nsDocShellTreeOwner::MouseDown(nsIDOMEvent* aMouseEvent)
+{
+    // Don't bother going any further if no one is interested in context menu events
+    nsCOMPtr<nsIContextMenuListener> menuListener(do_QueryInterface(mTreeOwner));
+    if (!menuListener)
+    {
+        return NS_OK;
+    }
+
+    nsCOMPtr<nsIDOMMouseEvent> mouseEvent (do_QueryInterface(aMouseEvent));
+    if (!mouseEvent)
+    {
+        return NS_OK;
+    }
+ 
+    // Test for right mouse button click
+    PRUint16 buttonNumber;
+    nsresult res = mouseEvent->GetButton(&buttonNumber);
+    if (NS_FAILED(res))
+    {
+        return res;
+    }
+    if (buttonNumber != 3) // 3 is the magic number
+    {
+        return NS_OK;
+    }
+
+    nsCOMPtr<nsIDOMEventTarget> targetNode;
+    res = aMouseEvent->GetTarget(getter_AddRefs(targetNode));
+    if (NS_FAILED(res))
+    {
+        return res;
+    }
+    if (!targetNode)
+    {
+        return NS_ERROR_NULL_POINTER;
+    }
+
+    nsCOMPtr<nsIDOMNode> node = do_QueryInterface(targetNode);
+    if (!node)
+    {
+        return NS_OK;
+    }
+
+    // Find the first node to be an element starting with this node and
+    // working up through its parents.
+
+    PRUint32 flags = nsIContextMenuListener::CONTEXT_NONE;
+    nsCOMPtr<nsIDOMHTMLElement> element;
+    do {
+        PRUint16 type;
+        node->GetNodeType(&type);
+
+        // XXX test for selected text
+
+        element = do_QueryInterface(node);
+        if (element)
+        {
+            nsAutoString tag;
+            element->GetTagName(tag);
+
+            // Test what kind of element we're dealing with here
+            if (tag.EqualsWithConversion("input", PR_TRUE))
+            {
+                // INPUT element - button, combo, checkbox, text etc.
+                flags |= nsIContextMenuListener::CONTEXT_INPUT;
+            }
+            else if (tag.EqualsWithConversion("img", PR_TRUE))
+            {
+                // IMG element
+                flags |= nsIContextMenuListener::CONTEXT_IMAGE;
+            }
+            else
+            {
+                // Something else
+                flags |= nsIContextMenuListener::CONTEXT_OTHER;
+            }
+
+            // Test if the element has an associated link
+            nsCOMPtr<nsIDOMNamedNodeMap> attributes;
+            node->GetAttributes(getter_AddRefs(attributes));
+            if (attributes)
+            {
+                nsCOMPtr<nsIDOMNode> hrefNode;
+                nsAutoString href; href.AssignWithConversion("href");
+                attributes->GetNamedItem(href, getter_AddRefs(hrefNode));
+                if (hrefNode)
+                {
+                    flags |= nsIContextMenuListener::CONTEXT_LINK;
+                    break;
+                }
+            }
+        }
+        nsCOMPtr<nsIDOMNode> parentNode;
+        node->GetParentNode(getter_AddRefs(parentNode));
+
+        // Test if we're at the top of the document
+        if (!parentNode)
+        {
+            node = nsnull;
+            flags |= nsIContextMenuListener::CONTEXT_DOCUMENT;
+            break;
+        }
+        node = parentNode;
+    } while (node);
+
+    // Tell the listener all about the event
+    menuListener->OnShowContextMenu(flags, aMouseEvent, node);
+
+    return NS_OK;
+}
+
+nsresult nsDocShellTreeOwner::MouseUp(nsIDOMEvent* aMouseEvent)
+{
+	return NS_OK; 
+}
+
+nsresult nsDocShellTreeOwner::MouseClick(nsIDOMEvent* aMouseEvent)
+{
+	return NS_OK; 
+}
+
+
+nsresult nsDocShellTreeOwner::MouseDblClick(nsIDOMEvent* aMouseEvent)
+{
+	return NS_OK; 
+}
+
+nsresult nsDocShellTreeOwner::MouseOver(nsIDOMEvent* aMouseEvent)
+{
+	return NS_OK; 
+}
+
+
+nsresult nsDocShellTreeOwner::MouseOut(nsIDOMEvent* aMouseEvent)
+{
+	return NS_OK; 
 }
