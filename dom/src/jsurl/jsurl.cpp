@@ -71,7 +71,7 @@ free_con_data(JSConData * con_data)
 }
 
 /* The following two routines were stolen from netlib */
-void
+PRIVATE void
 plus_to_space(char *str)
 {
     for (; *str != '\0'; str++)
@@ -88,7 +88,7 @@ plus_to_space(char *str)
      ((C >= 'A' && C <= 'F') ? C - 'A' + 10 : \
      ((C >= 'a' && C <= 'f') ? C - 'a' + 10 : 0)))
 
-int
+PRIVATE int
 unescape (char * str)
 {
     register char *src = str;
@@ -212,6 +212,8 @@ PRIVATE int32 net_ProcessMocha(ActiveEntry * ae);
 /*
  * Handle both 'mocha:<stuff>' urls and the mocha type-in widget
  */
+MODULE_PRIVATE int32
+net_MochaLoad(ActiveEntry *ae);
 MODULE_PRIVATE int32
 net_MochaLoad(ActiveEntry *ae)
 {
