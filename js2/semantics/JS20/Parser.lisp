@@ -9,6 +9,87 @@
 (defparameter *jw-source* 
   '((line-grammar code-grammar :lr-1 :program)
     
+    (deftype value (oneof
+                    undefined
+                    null
+                    (boolean boolean)
+                    (double double)
+                    (string string)
+                    (namespace namespace)
+                    (class class)
+                    (object object)))
+    
+    (define (value-type (v value)) class
+      (case v
+        (undefined undefined-class)
+        (null null-class)
+        (boolean boolean-class)
+        (double number-class)
+        (string string-class)
+        (namespace namespace-class)
+        (class class-class)
+        ((object o object) (& type o))))
+    
+    
+    (deftype namespace (tuple
+                         (id id)))
+    (deftype ns (oneof no-ns (ns namespace)))
+    
+    (define public-namespace namespace (tuple namespace unique))
+    
+    
+    (deftype class (tuple
+                     (id id)
+                     (superclass class-opt)
+                     (globals (address (vector property)))
+                     (prototype (address value))))
+    (deftype class-opt (oneof no-cls (cls class)))
+    
+    (define object-class class (tuple class unique (oneof no-cls) (new (vector-of property)) (new (oneof null))))
+    (define undefined-class class (tuple class unique (oneof cls object-class) (new (vector-of property)) (new (oneof null))))
+    (define null-class class (tuple class unique (oneof cls object-class) (new (vector-of property)) (new (oneof null))))
+    (define boolean-class class (tuple class unique (oneof cls object-class) (new (vector-of property)) (new (oneof null))))
+    (define number-class class (tuple class unique (oneof cls object-class) (new (vector-of property)) (new (oneof null))))
+    (define string-class class (tuple class unique (oneof cls object-class) (new (vector-of property)) (new (oneof null))))
+    (define namespace-class class (tuple class unique (oneof cls object-class) (new (vector-of property)) (new (oneof null))))
+    (define class-class class (tuple class unique (oneof cls object-class) (new (vector-of property)) (new (oneof null))))
+    
+    (define (same-class (c class) (d class)) boolean
+      (id= (& id c) (& id d)))
+    
+    (%text :semantics "Return " (:global true) " if " (:local c) " is " (:local d) " or a subclass of " (:local d) ".")
+    (define (is-subclass (c class) (d class)) boolean
+      (if (id= (& id c) (& id d))
+        true
+        (case (& superclass c)
+          (no-cls false)
+          ((cls c-super class) (is-subclass c-super d)))))
+    
+    (deftype object (tuple
+                      (id id)
+                      (type class)
+                      (properties (address (vector property)))))
+    
+    (deftype property (tuple
+                        (name property-name)
+                        (value value)))
+    (deftype property-opt (oneof no-prop (prop property)))
+    
+    (deftype property-name (tuple (namespace namespace) (name string)))
+    
+    (define (same-property-name (m property-name) (n property-name)) boolean
+      (and (id= (& id (& namespace m)) (& id (& namespace n)))
+           (string-equal (& name m) (& name n))))
+    
+    (define (find-property (n property-name) (properties (vector property))) property-opt
+      (if (empty properties)
+        (oneof no-prop)
+        (let ((p property (nth properties 0)))
+          (if (same-property-name n (& name p))
+            (oneof prop p)
+            (find-property n (subseq properties 1))))))
+    
+    
     (%section "Expressions")
     (grammar-argument :beta allow-in no-in)
     
@@ -139,7 +220,7 @@
     (production :member-operator (:dot-operator) member-operator-dot-operator)
     (production :member-operator (\. class) member-operator-class)
     (production :member-operator (\. :parenthesized-expression) member-operator-indirect)
-
+    
     (production :dot-operator (\. :qualified-identifier) dot-operator-qualified-identifier)
     (production :dot-operator (:brackets) dot-operator-brackets)
     
@@ -521,7 +602,7 @@
     (production :language-id (:identifier) language-id-identifier)
     (production :language-id ($number) language-id-number)
     
-
+    
     (%section "Definitions")
     (production (:definition :omega_2) (:attributes (:annotated-definition :omega_2)) definition-attributes-and-annotated-definition)
     (production (:definition :omega_2) (:package-definition) definition-package-definition)
@@ -675,17 +756,17 @@
       
       (%subsection "Interface Definition")
       (production (:interface-definition :omega_2) (interface :identifier :extends-list :block) interface-definition-definition)
-      (production (:interface-definition :omega_2) (interface :identifier (:semicolon :omega_2)) interface-definition-declaration))
+      (production (:interface-definition :omega_2) (interface :identifier (:semicolon :omega_2)) interface-definition-declaration)
+      
+      (production :extends-list () extends-list-none)
+      (production :extends-list (extends :type-expression-list) extends-list-one)
+      
+      (production :type-expression-list ((:type-expression allow-in)) type-expression-list-one)
+      (production :type-expression-list (:type-expression-list \, (:type-expression allow-in)) type-expression-list-more))
     
     
     (%subsection "Namespace Definition")
-    (production :namespace-definition (namespace :identifier :extends-list) namespace-definition-normal)
-    
-    (production :extends-list () extends-list-none)
-    (production :extends-list (extends :type-expression-list) extends-list-one)
-    
-    (production :type-expression-list ((:type-expression allow-in)) type-expression-list-one)
-    (production :type-expression-list (:type-expression-list \, (:type-expression allow-in)) type-expression-list-more)
+    (production :namespace-definition (namespace :identifier) namespace-definition-normal)
     
     
     (%section "Package Definition")
@@ -697,7 +778,9 @@
     
     
     (%section "Programs")
-    (production :program (:directives) program-directives)))
+    (rule :program ((eval integer))
+      (production :program (:directives) program-directives
+        (eval 1)))))
 
 
 (defparameter *jw* (generate-world "J" *jw-source* '((js2 . :js2) (es4 . :es4))))
@@ -823,15 +906,26 @@
   #'(lambda (markup-stream)
       (depict-js-terminals markup-stream *jg*)
       (depict-world-commands markup-stream *jw* :visible-semantics nil)))
+ (depict-rtf-to-local-file
+  "JS20/ParserSemanticsJS2.rtf"
+  "JavaScript 2.0 Parser Semantics"
+  #'(lambda (markup-stream)
+      (depict-js-terminals markup-stream *jg*)
+      (depict-world-commands markup-stream *jw*)))
  (compute-ecma-subset)
  (depict-rtf-to-local-file
   "JS20/ParserGrammarES4.rtf"
   "ECMAScript Edition 4 Parser Grammar"
   #'(lambda (markup-stream)
       (depict-js-terminals markup-stream *eg*)
-      (depict-world-commands markup-stream *ew* :visible-semantics nil))))
-
-(values
+      (depict-world-commands markup-stream *ew* :visible-semantics nil)))
+ (depict-rtf-to-local-file
+  "JS20/ParserSemanticsES4.rtf"
+  "ECMAScript Edition 4 Parser Semantics"
+  #'(lambda (markup-stream)
+      (depict-js-terminals markup-stream *eg*)
+      (depict-world-commands markup-stream *ew*)))
+ 
  (length (grammar-states *jg*))
  (depict-html-to-local-file
   "JS20/ParserGrammarJS2.html"
@@ -839,7 +933,16 @@
   t
   #'(lambda (markup-stream)
       (depict-js-terminals markup-stream *jg*)
-      (depict-world-commands markup-stream *jw* :visible-semantics nil)))
+      (depict-world-commands markup-stream *jw* :visible-semantics nil))
+  :external-link-base "notation.html")
+ (depict-html-to-local-file
+  "JS20/ParserSemanticsJS2.html"
+  "JavaScript 2.0 Parser Semantics"
+  t
+  #'(lambda (markup-stream)
+      (depict-js-terminals markup-stream *jg*)
+      (depict-world-commands markup-stream *jw*))
+  :external-link-base "notation.html")
  (compute-ecma-subset)
  (depict-html-to-local-file
   "JS20/ParserGrammarES4.html"
@@ -847,7 +950,27 @@
   t
   #'(lambda (markup-stream)
       (depict-js-terminals markup-stream *eg*)
-      (depict-world-commands markup-stream *ew* :visible-semantics nil))))
+      (depict-world-commands markup-stream *ew* :visible-semantics nil))
+  :external-link-base "notation.html")
+ (depict-html-to-local-file
+  "JS20/ParserSemanticsES4.html"
+  "ECMAScript Edition 4 Parser Semantics"
+  t
+  #'(lambda (markup-stream)
+      (depict-js-terminals markup-stream *eg*)
+      (depict-world-commands markup-stream *ew*))
+  :external-link-base "notation.html"))
+
+
+(depict-html-to-local-file
+ "JS20/ParserSemanticsJS2.html"
+ "JavaScript 2.0 Parser Semantics"
+ t
+ #'(lambda (markup-stream)
+     (depict-js-terminals markup-stream *jg*)
+     (depict-world-commands markup-stream *jw*))
+ :external-link-base "notation.html")
+
 
 (with-local-output (s "JS20/ParserGrammarJS2 states") (print-grammar *jg* s))
 (compute-ecma-subset)
