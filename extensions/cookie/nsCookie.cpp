@@ -195,14 +195,18 @@ cookie_Localize(char* genericString) {
   /* create a bundle for the localization */
   NS_WITH_SERVICE(nsIStringBundleService, pStringService, kStringBundleServiceCID, &ret);
   if (NS_FAILED(ret)) {
+#ifdef DEBUG
     printf("cannot get string service\n");
+#endif
     return v.ToNewUnicode();
   }
   nsCOMPtr<nsILocale> locale;
   nsCOMPtr<nsIStringBundle> bundle;
   ret = pStringService->CreateBundle(cookie_localization, locale, getter_AddRefs(bundle));
   if (NS_FAILED(ret)) {
+#ifdef DEBUG
     printf("cannot create instance\n");
+#endif
     return v.ToNewUnicode();
   }
 
@@ -213,7 +217,9 @@ cookie_Localize(char* genericString) {
   ret = bundle->GetStringFromName(ptrtmp, getter_Copies(ptrv));
   v = ptrv;
   if (NS_FAILED(ret)) {
+#ifdef DEBUG
     printf("cannot get string from name\n");
+#endif
     return v.ToNewUnicode();
   }
   return v.ToNewUnicode();
