@@ -1363,6 +1363,11 @@ protected:
 
 private:
 
+  PRBool InZombieDocument(nsIContent *aContent);
+  nsresult RetargetEventToParent(nsIView *aView, nsGUIEvent* aEvent, 
+                                 nsEventStatus*  aEventStatus, PRBool aForceHandle,
+                                 PRBool& aHandled, nsIContent *aZombieFocusedContent);
+
   void FreeDynamicStack();
 
   //helper funcs for disabing autoscrolling
@@ -5803,6 +5808,86 @@ PresShell::PopCurrentEventInfo()
   }
 }
 
+PRBool PresShell::InZombieDocument(nsIContent *aContent)
+{
+  // If a content node points to a null document, it is possibly in a
+  // zombie document, about to be replaced by a newly loading document.
+  // Such documents cannot handle DOM events.
+  // It might actually be in a node not attached to any document,
+  // in which case there is not parent presshell to retarget it to.
+  nsCOMPtr<nsIDocument> doc;
+  mCurrentEventContent->GetDocument(*getter_AddRefs(doc));
+  return !doc;
+}
+
+nsresult PresShell::RetargetEventToParent(nsIView         *aView,
+                                          nsGUIEvent*     aEvent,
+                                          nsEventStatus*  aEventStatus,
+                                          PRBool          aForceHandle,
+                                          PRBool&         aHandled,
+                                          nsIContent*     aZombieFocusedContent)
+{
+  // Send this events straight up to the parent pres shell.
+  // We do this for non-mouse events in zombie documents.
+  // That way at least the UI key bindings can work.
+
+  // First, eliminate the focus ring in the current docshell, which 
+  // is  now a zombie. If we key navigate, it won't be within this
+  // docshell, until the newly loading document is displayed.
+
+  nsCOMPtr<nsIPresShell> kungFuDeathGrip(this);
+  nsCOMPtr<nsIEventStateManager> esm;
+  mPresContext->GetEventStateManager(getter_AddRefs(esm));
+  if (esm) {
+    esm->SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
+    esm->SetFocusedContent(nsnull);
+    ContentStatesChanged(mDocument, aZombieFocusedContent, nsnull, NS_EVENT_STATE_FOCUS);
+  }
+
+  // Next, update the display so the old focus ring is no longer visible
+
+  nsCOMPtr<nsISupports> container;
+  mPresContext->GetContainer(getter_AddRefs(container));
+
+  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
+  NS_ASSERTION(docShell, "No docshell for container.");
+  nsCOMPtr<nsIContentViewer> contentViewer;
+  docShell->GetContentViewer(getter_AddRefs(contentViewer));
+  if (contentViewer) {
+    nsCOMPtr<nsIContentViewer> zombieViewer;
+    contentViewer->GetPreviousViewer(getter_AddRefs(zombieViewer));
+    if (zombieViewer) {
+      zombieViewer->Show();
+    }
+  }
+
+  // Now, find the parent pres shell and send the event there
+  nsCOMPtr<nsIDocShellTreeItem> treeItem = 
+    do_QueryInterface(container);
+  NS_ASSERTION(treeItem, "No tree item for container.");
+  nsCOMPtr<nsIDocShellTreeItem> parentTreeItem;
+  treeItem->GetParent(getter_AddRefs(parentTreeItem));
+  nsCOMPtr<nsIDocShell> parentDocShell = 
+    do_QueryInterface(parentTreeItem);
+  if (!parentDocShell || treeItem == parentTreeItem) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIPresShell> parentPresShell;
+  parentDocShell->GetPresShell(getter_AddRefs(parentPresShell));
+  nsCOMPtr<nsIViewObserver> parentViewObserver = 
+    do_QueryInterface(parentPresShell);
+  if (!parentViewObserver) {
+    return NS_ERROR_FAILURE;
+  }
+
+  PopCurrentEventInfo();
+  return parentViewObserver->HandleEvent(aView, aEvent, 
+                                         aEventStatus,
+                                         aForceHandle, 
+                                         aHandled);
+}
+
 NS_IMETHODIMP
 PresShell::HandleEvent(nsIView         *aView,
                        nsGUIEvent*     aEvent,
@@ -5934,6 +6019,10 @@ PresShell::HandleEvent(nsIView         *aView,
           mDocument->GetRootContent(&mCurrentEventContent);
 #endif /* defined(MOZ_X11) */
           mCurrentEventFrame = nsnull;
+        }
+        if (mCurrentEventContent && InZombieDocument(mCurrentEventContent)) {
+          return RetargetEventToParent(aView, aEvent, aEventStatus, 
+                                       aForceHandle, aHandled, mCurrentEventContent);
         }
       }
       else if (!InClipRect(frame, aEvent->point)) {
