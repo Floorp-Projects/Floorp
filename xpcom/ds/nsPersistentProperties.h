@@ -83,10 +83,18 @@ protected:
 class nsPropertyElement : public nsIPropertyElement 
 {
 public:
-  nsPropertyElement() {};
-  nsPropertyElement(const PRUnichar *aKey,
-                    const PRUnichar *aValue): mKey(aKey), mValue(aValue) {}
-  virtual ~nsPropertyElement() {};
+  nsPropertyElement()
+  {
+    NS_INIT_ISUPPORTS();
+  }
+
+  nsPropertyElement(const PRUnichar *aKey, const PRUnichar *aValue)
+    : mKey(aKey), mValue(aValue)
+  {
+    NS_INIT_ISUPPORTS();
+  }
+
+  virtual ~nsPropertyElement() {}
 
   NS_DECL_ISUPPORTS
 
