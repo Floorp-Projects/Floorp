@@ -39,6 +39,7 @@ CPPSRCS=				\
 	MozillaNode.cpp			\
 	MozillaNodeList.cpp		\
 	MozillaNotation.cpp		\
+  MozillaObjectWrapper.cpp	\
 	MozillaProcInstruction.cpp	\
 	MozillaText.cpp			\
 	$(NULL)
@@ -59,6 +60,7 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\MozillaNode.obj		\
 	.\$(OBJDIR)\MozillaNodeList.obj		\
 	.\$(OBJDIR)\MozillaNotation.obj		\
+  .\$(OBJDIR)\MozillaObjectWrapper.obj	\
 	.\$(OBJDIR)\MozillaProcInstruction.obj	\
 	.\$(OBJDIR)\MozillaText.obj		\
 	$(NULL)

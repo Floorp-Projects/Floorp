@@ -17,114 +17,141 @@
  *
  * Please see release.txt distributed with this file for more information.
  *
+ * Contributor(s): Tom Kneeland
+ *                 Peter Van der Beken <peter.vanderbeken@pandora.be>
+ *
  */
-// Tom Kneeland (02/01/2000)
-//
-//  Implementation of the wrapper class to convert the nsIDOMCharacterData into
-//  a TransforMIIX CharacterData interface.
-//
-// Modification History:
-// Who  When      What
 
-//
+/* Implementation of the wrapper class to convert the Mozilla
+   nsIDOMCharacterData interface into a TransforMIIX CharacterData interface.
+*/
 
 #include "mozilladom.h"
 
-//
-//Protected constructor.  Just pass parameters onto Node.
-//
-CharacterData::CharacterData(nsIDOMCharacterData* charData, Document* owner) : 
-  Node(charData, owner)
+/**
+ * Construct a wrapper with the specified Mozilla object and document owner.
+ *
+ * @param aCharData the nsIDOMCharacterData you want to wrap
+ * @param aOwner the document that owns this object
+ */
+CharacterData::CharacterData(nsIDOMCharacterData* aCharData, Document* aOwner) :
+        Node(aCharData, aOwner)
 {
-  nsCharacterData = charData;
+    nsCharacterData = aCharData;
 }
 
-//
-//Destructor.  Just do nothing
-//
+/**
+ * Destructor
+ */
 CharacterData::~CharacterData()
 {
 }
 
-//
-//Store a new nsIDOMCharacterData object for wrapping
-//
-void CharacterData::setNSObj(nsIDOMCharacterData* charData)
+/**
+ * Wrap a different Mozilla object with this wrapper.
+ *
+ * @param aCharData the nsIDOMCharacterData you want to wrap
+ */
+void CharacterData::setNSObj(nsIDOMCharacterData* aCharData)
 {
-  Node::setNSObj(charData);
-  nsCharacterData = charData;
+    Node::setNSObj(aCharData);
+    nsCharacterData = aCharData;
 }
 
-//
-//Retrieve the data from the Mozilla object, and wrap it appropriately
-//
-const String& CharacterData::getData() const
+/**
+ * Call nsIDOMCharacterData::GetData to retrieve the character data.
+ *
+ * @return the character data
+ */
+const String& CharacterData::getData()
 {
-  nsString* data = new nsString();
-
-  if (nsCharacterData->GetData(*data) == NS_OK)
-    return *(ownerDocument->createDOMString(data));
-  else
-    {
-      //name won't be used, so delete it.
-      delete data;
-      return NULL_STRING;
-    }
+    nodeValue.clear();
+    nsCharacterData->GetData(nodeValue.getNSString());
+    return nodeValue;
 }
 
-//
-//Set the data stored by this object to the string represented by "source".
-//
-void CharacterData::setData(const String& source)
+/**
+ * Call nsIDOMCharacterData::SetData to set the character data.
+ *
+ * @param aData the character data
+ */
+void CharacterData::setData(const String& aData)
 {
-  nsCharacterData->SetData(source.getConstNSString());
+    nsCharacterData->SetData(aData.getConstNSString());
 }
 
-//
-//Retrieve the length from the Mozilla object and return it to the caller
-//
+/**
+ * Call nsIDOMCharacterData::GetLength length of the character data.
+ *
+ * @return the length of the character data
+ */
 Int32 CharacterData::getLength() const
 {
-  UInt32 length = 0;
+    UInt32 length = 0;
 
-  nsCharacterData->GetLength(&length);
-
-  return length;
+    nsCharacterData->GetLength(&length);
+    return length;
 }
 
-//
-//Refer to the Mozilla Object for its substring, and return the result in 
-//the provided Mozilla String wrapper.
-//    NOTE:  An empty string will be returned in the event of an error.
-//
-String& CharacterData::substringData(Int32 offset, Int32 count, 
-                    String& dest)
+/**
+ * Call nsIDOMCharacterData::SubstringData to get a substring of the character
+ * data.
+ *
+ * @param aOffset the offset of the substring
+ * @param aCount the length of the substring
+ * @param aDest the string in which you want the substring
+ *
+ * @return the length of the character data
+ */
+String& CharacterData::substringData(Int32 aOffset, Int32 aCount,
+                    String& aDest)
 {
-  if (nsCharacterData->SubstringData(offset, count, dest.getNSString()) == NS_OK)
-    return dest;
-  else
-    {
-    dest.clear();
-    return dest;
-    }
+    aDest.clear();
+    nsCharacterData->SubstringData(aOffset, aCount, aDest.getNSString());
+    return aDest;
 }
 
-void CharacterData::appendData(const String& arg)
+/**
+ * Call nsIDOMCharacterData::AppendData to append data to the character data.
+ *
+ * @param aSource the string that you want to append to the character data
+ */
+void CharacterData::appendData(const String& aSource)
 {
-  nsCharacterData->AppendData(arg.getConstNSString());
+    nsCharacterData->AppendData(aSource.getConstNSString());
 }
 
-void CharacterData::insertData(Int32 offset, const String& arg)
+/**
+ * Call nsIDOMCharacterData::InsertData to insert data into the character data.
+ *
+ * @param aOffset the offset at which you want to insert the string
+ * @param aSource the string that you want to insert into the character data
+ */
+void CharacterData::insertData(Int32 aOffset, const String& aSource)
 {
-  nsCharacterData->InsertData(offset, arg.getConstNSString());
+    nsCharacterData->InsertData(aOffset, aSource.getConstNSString());
 }
 
-void CharacterData::deleteData(Int32 offset, Int32 count)
+/**
+ * Call nsIDOMCharacterData::DeleteData to delete data from the character data.
+ *
+ * @param aOffset the offset at which you want to delete data
+ * @param aCount the number of chars you want to delete
+ */
+void CharacterData::deleteData(Int32 aOffset, Int32 aCount)
 {
-  nsCharacterData->DeleteData(offset, count);
+    nsCharacterData->DeleteData(aOffset, aCount);
 }
 
-void CharacterData::replaceData(Int32 offset, Int32 count, const String& arg)
+/**
+ * Call nsIDOMCharacterData::ReplaceData to append data to the character data.
+ *
+ * @param aOffset the offset at which you want to replace the data
+ * @param aCount the number of chars you want to replace
+ * @param aSource the data that you want to replace it with
+ */
+void CharacterData::replaceData(Int32 aOffset, Int32 aCount,
+        const String& aSource)
 {
-  nsCharacterData->ReplaceData(offset, count, arg.getConstNSString());
+    nsCharacterData->ReplaceData(aOffset, aCount, aSource.getConstNSString());
 }

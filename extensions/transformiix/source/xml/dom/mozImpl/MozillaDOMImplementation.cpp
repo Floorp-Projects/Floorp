@@ -17,40 +17,63 @@
  *
  * Please see release.txt distributed with this file for more information.
  *
+ * Contributor(s): Tom Kneeland
+ *                 Peter Van der Beken <peter.vanderbeken@pandora.be>
+ *
  */
-// Tom Kneeland (02/02/2000)
-//
-//  Implementation of the wrapper class to convert a Mozilla 
-//  nsIDOMDOMImplementation into a TransforMIIX DOMImplementation interface.
-//
-// Modification History:
-// Who  When      What
-//
+
+/* Implementation of the wrapper class to convert the Mozilla
+   nsIDOMDOMImplementation interface into a TransforMIIX DOMImplementation
+   interface.
+*/
 
 #include "mozilladom.h"
 
-DOMImplementation::DOMImplementation(nsIDOMDOMImplementation* domImpl,
-                     Document* owner)
+/**
+ * Construct a wrapper with the specified Mozilla object and document owner.
+ *
+ * @param aDomImpl the nsIDOMDOMImplementation you want to wrap
+ * @param aOwner the document that owns this object
+ */
+DOMImplementation::DOMImplementation(nsIDOMDOMImplementation* aDomImpl,
+            Document* aOwner) :
+        MozillaObjectWrapper(aDomImpl, aOwner)
 {
-  nsDOMImpl = domImpl;
-  ownerDocument = owner;
+    nsDOMImpl = aDomImpl;
 }
 
+/**
+ * Destructor
+ */
 DOMImplementation::~DOMImplementation()
 {
 }
 
-//
-//Query the mozilla object for the requested feature, and return the 
-//result to the caller.
-//
-MBool DOMImplementation::hasFeature(const String& feature,
-                                    const String& version) const
+/**
+ * Wrap a different Mozilla object with this wrapper.
+ *
+ * @param aDomImpl the nsIDOMDOMImplementation you want to wrap
+ */
+void DOMImplementation::setNSObj(nsIDOMDOMImplementation* aDomImpl)
 {
-  MBool bHasFeature = MB_FALSE;
+    MozillaObjectWrapper::setNSObj(aDomImpl);
+    nsDOMImpl = aDomImpl;
+}
 
-  nsDOMImpl->HasFeature(feature.getConstNSString(), version.getConstNSString(),
+/**
+ * Query the mozilla object for the requested feature, and return the
+ * result to the caller.
+ *
+ * @param aFeature the feature you want to query
+ * @param aVersion the version of the feature
+ */
+MBool DOMImplementation::hasFeature(const String& aFeature,
+       const String& aVersion) const
+{
+    MBool bHasFeature = MB_FALSE;
+
+    nsDOMImpl->HasFeature(aFeature.getConstNSString(), aVersion.getConstNSString(),
             &bHasFeature);
 
-  return bHasFeature;
+    return bHasFeature;
 }

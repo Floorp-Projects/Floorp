@@ -17,39 +17,44 @@
  *
  * Please see release.txt distributed with this file for more information.
  *
+ * Contributor(s): Tom Kneeland
+ *                 Peter Van der Beken <peter.vanderbeken@pandora.be>
+ *
  */
-// Tom Kneeland (02/01/2000)
-//
-//  Implementation for the wrapper class to convert the Mozilla 
-//  nsIDOMEntityReference interface into a TransforMIIX EntityReference
-//
-// Modification History:
-// Who  When        What
-//
+
+/* Implementation of the wrapper class to convert the Mozilla
+   nsIDOMEntityReference interface into a TransforMIIX EntityReference
+   interface.
+*/
 
 #include "mozilladom.h"
 
-//
-//Construct a text object with the specified document owner and data
-//
-EntityReference::EntityReference(nsIDOMEntityReference* entityReference,
-                 Document* owner) : Node(entityReference, owner)
+/**
+ * Construct a wrapper with the specified Mozilla object and document owner.
+ *
+ * @param aEntityReference the nsIDOMEntityReference you want to wrap
+ * @param aOwner the document that owns this object
+ */
+EntityReference::EntityReference(nsIDOMEntityReference* aEntityReference,
+        Document* aOwner) : Node(aEntityReference, aOwner)
 {
-  nsEntityReference = entityReference;
+    nsEntityReference = aEntityReference;
 }
 
-//
-//Destructor.  Do Nothing
-//
+/**
+ * Destructor
+ */
 EntityReference::~EntityReference()
 {
 }
 
-//
-//Use this object to wrap a different Mozilla object
-//
-void EntityReference::setNSObj(nsIDOMEntityReference* entityReference)
+/**
+ * Wrap a different Mozilla object with this wrapper.
+ *
+ * @param aEntityReference the nsIDOMEntityReference you want to wrap
+ */
+void EntityReference::setNSObj(nsIDOMEntityReference* aEntityReference)
 {
-  Node::setNSObj(entityReference);
-  nsEntityReference = entityReference;
+    Node::setNSObj(aEntityReference);
+    nsEntityReference = aEntityReference;
 }

@@ -17,103 +17,130 @@
  *
  * Please see release.txt distributed with this file for more information.
  *
+ * Contributor(s): Tom Kneeland
+ *                 Peter Van der Beken <peter.vanderbeken@pandora.be>
+ *
  */
-// Tom Kneeland (1/31/2000)
-//
-//  Wrapper class to convert a Mozilla nsIDOMNamedNodeMap into a TransforMIIX
-//  NamedNodeMap object.
-//
-// Modification History:
-// Who  When      What
-//
+
+/* Implementation of the wrapper class to convert the Mozilla
+   nsIDOMNamedNodeMap interface into a TransforMIIX NamedNodeMap interface.
+*/
 
 #include "mozilladom.h"
 
-//
-//Construct the wrapper object
-//
-NamedNodeMap::NamedNodeMap(nsIDOMNamedNodeMap* namedNodeMap, Document* owner)
+/**
+ * Construct a wrapper with the specified Mozilla object and document owner.
+ *
+ * @param aNamedNodeMap the nsIDOMNamedNodeMap you want to wrap
+ * @param aOwner the document that owns this object
+ */
+NamedNodeMap::NamedNodeMap(nsIDOMNamedNodeMap* aNamedNodeMap,
+            Document* aOwner) :
+        MozillaObjectWrapper(aNamedNodeMap, aOwner)
 {
-  nsNamedNodeMap = namedNodeMap;
-  ownerDocument = owner;
+    nsNamedNodeMap = aNamedNodeMap;
 }
 
-//
-//Destroy the wrapper object leaving the nsIDOMNamedNodeMap object intact.
-//
+/**
+ * Destructor
+ */
 NamedNodeMap::~NamedNodeMap()
 {
 }
 
-//
-// Search for the Node using the specified name.  If found, refer to the owning
-// document for a wrapper for the returned nsIDOMNode obejct
-// (nsIDOMNamedNodeMap::GetNamedItem)
-//
-Node* NamedNodeMap::getNamedItem(const String& name)
+/**
+ * Wrap a different Mozilla object with this wrapper.
+ *
+ * @param aNamedNodeMap the nsIDOMNodeList you want to wrap
+ */
+void NamedNodeMap::setNSObj(nsIDOMNamedNodeMap* aNamedNodeMap)
 {
-  nsIDOMNode* node = NULL;
-
-  if (nsNamedNodeMap->GetNamedItem(name.getConstNSString(), &node) == NS_OK)
-    return ownerDocument->createWrapper(node);
-  else
-    return NULL;
+    MozillaObjectWrapper::setNSObj(aNamedNodeMap);
+    nsNamedNodeMap = aNamedNodeMap;
 }
 
-//
-// Store the nsIDOMNode object wrapped by arg in the nsIDOMNamedNodeMap.  If
-// successful refer to the owning document for a wrapper for the resultant
-// nsIDOMNode.  (In theory this should produce exactly the same wrapper class
-// as arg).  
-// (nsIDOMNamedNodeMap::SetNamedItem)
-//
-Node* NamedNodeMap::setNamedItem(Node* arg)
+/**
+ * Call nsIDOMNamedNodeMap::GetNamedItem to get the node with the specified
+ * name.
+ *
+ * @param aName the name to look for
+ *
+ * @return the node with the specified name
+ */
+Node* NamedNodeMap::getNamedItem(const String& aName)
 {
-  nsIDOMNode* node = NULL;
+    nsCOMPtr<nsIDOMNode> node;
 
-  if (nsNamedNodeMap->SetNamedItem(arg->getNSObj(), &node) == NS_OK)
-    return ownerDocument->createWrapper(node);
-  else
-    return NULL;
+    if (NS_SUCCEEDED(nsNamedNodeMap->GetNamedItem(aName.getConstNSString(),
+                getter_AddRefs(node))))
+        return ownerDocument->createWrapper(node);
+    else
+        return NULL;
 }
 
-//
-// Remove the named item from the nsIDOMNamedNodeMap.  If successful, refer to
-// the owner documetn for a wrapper object for the result.
-// (nsIDOMNamedNodeMap::removeNamedItem)
-//
-Node* NamedNodeMap::removeNamedItem(const String& name)
+/**
+ * Call nsIDOMNamedNodeMap::SetNamedItem to add a node to the NamedNodeMap.
+ *
+ * @param aNode the node to add to the NamedNodeMap
+ *
+ * @return the node that was added
+ */
+Node* NamedNodeMap::setNamedItem(Node* aNode)
 {
-  nsIDOMNode* node = NULL;
+    nsCOMPtr<nsIDOMNode> node;
 
-  if (nsNamedNodeMap->RemoveNamedItem(name.getConstNSString(), &node) == NS_OK)
-    return ownerDocument->createWrapper(node);
-  else
-    return NULL;
+    if (NS_SUCCEEDED(nsNamedNodeMap->SetNamedItem(aNode->getNSObj(),
+                getter_AddRefs(node))))
+        return ownerDocument->createWrapper(node);
+    else
+        return NULL;
 }
 
-//
-// Retrieve the Node specified by index, then ask the owning document to provide
-// a wrapper object for it. ( nsIDOMNamedNodeMap::Item )
-//
-Node* NamedNodeMap::item(UInt32 index)
+/**
+ * Call nsIDOMNamedNodeMap::RemoveNamedItem to remove a node from the
+ * NamedNodeMap.
+ *
+ * @param aName the name of the node that you want to remove
+ *
+ * @return the node that was removed
+ */
+Node* NamedNodeMap::removeNamedItem(const String& aName)
 {
-  nsIDOMNode* node = NULL;
+    nsCOMPtr<nsIDOMNode> node;
 
-  if (nsNamedNodeMap->Item(index, &node) == NS_OK)
-    return ownerDocument->createWrapper(node);
-  else
-    return NULL;
+    if (NS_SUCCEEDED(nsNamedNodeMap->RemoveNamedItem(aName.getConstNSString(),
+                getter_AddRefs(node))))
+        return ownerDocument->createWrapper(node);
+    else
+        return NULL;
 }
 
-//
-// Get the number of Nodes stored in this list (nsIDOMNamedNodeMap::GetLength())
-//
+/**
+ * Call nsIDOMNamedNodeMap::Item to retrieve the node at the given index.
+ *
+ * @param aIndex the index of the node you want to retrieve
+ *
+ * @return the node at the given index
+ */
+Node* NamedNodeMap::item(UInt32 aIndex)
+{
+    nsCOMPtr<nsIDOMNode> node;
+
+    if (NS_SUCCEEDED(nsNamedNodeMap->Item(aIndex, getter_AddRefs(node))))
+        return ownerDocument->createWrapper(node);
+    else
+        return NULL;
+}
+
+/**
+ * Get the number of nodes stored in this NamedNodeMap.
+ *
+ * @return the number of nodes stored in this NamedNodeMap
+ */
 UInt32 NamedNodeMap::getLength()
 {
-  UInt32 length = 0;
+    UInt32 length = 0;
 
-  nsNamedNodeMap->GetLength(&length);
-
-  return length;
-} 
+    nsNamedNodeMap->GetLength(&length);
+    return length;
+}

@@ -17,396 +17,387 @@
  *
  * Please see release.txt distributed with this file for more information.
  *
+ * Contributor(s): Tom Kneeland
+ *                 Peter Van der Beken <peter.vanderbeken@pandora.be>
+ *
  */
-// Tom Kneeland (3/29/99)
-//
-//  Wrapper class to convert Mozilla's Node Interface to TransforMIIX's Node
-//  Interface.
-//
-//  NOTE:  The objects being wrapped are not deleted.  It is assumed that they
-//         will be deleted when the actual ("real") Mozilla Document is
-//         destroyed
-//
-//         Also note that this object's parent Document provides the necessary
-//         factory functions for creating wrapper classes; such as:
-//            
-//
 
-// Modification History:
-// Who  When        What
-//
+/* Implementation of the wrapper class to convert the Mozilla nsIDOMNode
+   interface into a TransforMIIX Node interface.
+*/
 
 #include "mozilladom.h"
-#include "nsCOMPtr.h"
-#include "nsIXMLContent.h"
 
-Node::Node()
+/**
+ * Construct a wrapper with the specified Mozilla object and document owner.
+ *
+ * @param aNode the nsIDOMNode you want to wrap
+ * @param aOwner the document that owns this object
+ */
+Node::Node(nsIDOMNode* aNode, Document* aOwner) :
+            MozillaObjectWrapper(aNode, aOwner)
 {
-  ownerDocument = NULL;
+    nsNode = aNode;
 }
 
-Node::Node(nsIDOMNode* node, Document* owner)
-{
-  ownerDocument = owner;
-  nsNode = node;
-}
-
+/**
+ * Destructor
+ */
 Node::~Node()
 {
 }
 
-void Node::setNSObj(nsIDOMNode* node)
+/**
+ * Wrap a different Mozilla object with this wrapper.
+ *
+ * @param aNode the nsIDOMNode you want to wrap
+ */
+void Node::setNSObj(nsIDOMNode* aNode)
 {
-  //First we must remove this wrapper from the document hash table since we 
-  //don't want to be associated with the existing nsIDOM* object anymore
-  ownerDocument->removeWrapper((Int32)nsNode);
+    // First we must remove this wrapper from the document hash table since we 
+    // don't want to be associated with the existing nsIDOM* object anymore
+    if (ownerDocument && nsNode)
+        ownerDocument->removeWrapper(getKey());
 
-  //Now assume control of the new node
-  nsNode = node;
+    // Now assume control of the new node
+    MozillaObjectWrapper::setNSObj(aNode);
+    nsNode = aNode;
 
-  //Finally, place our selves back in the hash table, using the new object
-  //as the hash value
-  ownerDocument->addWrapper(this, (Int32)node);
+    // Finally, place our selves back in the hash table
+    if (ownerDocument && aNode)
+        ownerDocument->addWrapper(this, getKey());
 }
 
-void Node::setNSObj(nsIDOMNode* node, Document* owner)
+/**
+ * Wrap a different Mozilla object with this wrapper and set document owner.
+ *
+ * @param aNode the nsIDOMNode you want to wrap
+ */
+void Node::setNSObj(nsIDOMNode* aNode, Document* aOwner)
 {
-  ownerDocument = owner;
-  nsNode = node;
+    MozillaObjectWrapper::setNSObj(aNode, aOwner);
+    nsNode = aNode;
 }
 
+/**
+ * Get the Mozilla object wrapped with this wrapper.
+ *
+ * @return the Mozilla object wrapped with this wrapper
+ */
 nsIDOMNode* Node::getNSObj()
 {
-  return nsNode;
+    return nsNode;
 }
 
-//
-//Call nsIDOMNode::GetNodeName, store the results in the nodeName String,
-//and return it to the caller.
-//
+/**
+ * Call nsIDOMNode::GetNodeName to get the node's name.
+ *
+ * @return the node's name
+ */
 const String& Node::getNodeName()
 {
-  nsresult result;
-  nsCOMPtr<nsIXMLContent> nsXMLContent = do_QueryInterface(nsNode);
-  nsCOMPtr<nsIAtom> theNamespaceAtom;
-
-  if (nsNode == NULL)
-    return NULL_STRING;
-
-  nodeName.clear();
-  nsNode->GetNodeName(nodeName.getNSString());
-  
-  /* XXX HACK (pvdb)
-     This can be removed once we have DOM Level 2 support
-     in Mozilla
-  */
-  if (nsXMLContent) {
-    result = nsXMLContent->GetNameSpacePrefix(*getter_AddRefs(theNamespaceAtom));
-    if (theNamespaceAtom && NS_SUCCEEDED(result)) {
-      String theNamespacePrefix;
-
-      theNamespaceAtom->ToString(theNamespacePrefix.getNSString());
-      nodeName.insert(0, ":");
-      nodeName.insert(0, theNamespacePrefix);
-    }
-  }
-
-  return nodeName;
+    nodeName.clear();
+    nsNode->GetNodeName(nodeName.getNSString());
+    return nodeName;
 }
 
-//
-//Call nsIDOMNode::GetNodeValue, store the results in nodeValue, and
-//return it to the caller.
-//
+/**
+ * Call nsIDOMNode::GetNodeValue to get the node's value.
+ *
+ * @return the node's name
+ */
 const String& Node::getNodeValue()
 {
-  if (nsNode == NULL)
-    return NULL_STRING;
-
-  nsNode->GetNodeValue(nodeValue.getNSString());
-
-  return nodeValue;
+    nodeValue.clear();
+    nsNode->GetNodeValue(nodeValue.getNSString());
+    return nodeValue;
 }
 
-//
-//Call nsIDOMNode::GetNodeType passing it a temporary unsigned short.  Then
-//pass the value stored in that variable to the caller.
-//
+/**
+ * Call nsIDOMNode::GetNodeType to get the node's type.
+ *
+ * @return the node's type
+ */
 unsigned short Node::getNodeType() const
 {
-  unsigned short nodeType;
+    unsigned short nodeType;
 
-  if (nsNode == NULL)
-    return 0;
+    if (nsNode == NULL)
+        return 0;
 
-  nsNode->GetNodeType(&nodeType);
-
-  return nodeType;
+    nsNode->GetNodeType(&nodeType);
+    return nodeType;
 }
 
-//
-//Call nsIDOMNode::GetParentNode(nsIDOMNode**) passing it a handle to a
-//nsIDOMNode.  Store the returned nsIDOMNode in the parentNode wrapper object
-//and return its address to the caller.
-//
+/**
+ * Call nsIDOMNode::GetParentNode to get the node's parent.
+ *
+ * @return the node's parent
+ */
 Node* Node::getParentNode()
 {
-  nsIDOMNode* tmpParent = NULL;
+    nsCOMPtr<nsIDOMNode> tmpParent;
 
-  if (nsNode == NULL)
-    return NULL;
+    if (nsNode == NULL)
+        return NULL;
 
-  if (nsNode->GetParentNode(&tmpParent) == NS_OK)
-    return ownerDocument->createWrapper(tmpParent);
-  else
-    return NULL;
+    if (NS_SUCCEEDED(nsNode->GetParentNode(getter_AddRefs(tmpParent))))
+        return ownerDocument->createWrapper(tmpParent);
+    else
+        return NULL;
 }
 
-//
-//Call nsIDOMNode::GetChildNodes(nsIDOMNodeList**) passing it a handle to a
-//nsIDOMNodeList.  Defer to the owner document to produce a wrapper for this
-//object.
-//
+/**
+ * Call nsIDOMNode::GetChildNodes to get the node's childnodes.
+ *
+ * @return the node's children
+ */
 NodeList* Node::getChildNodes()
 {
-  nsIDOMNodeList* tmpNodeList = NULL;
+    nsCOMPtr<nsIDOMNodeList> tmpNodeList;
 
-  if (nsNode == NULL)
-    return NULL;
+    if (nsNode == NULL)
+        return NULL;
 
-  if (nsNode->GetChildNodes(&tmpNodeList) == NS_OK)
-    return ownerDocument->createNodeList(tmpNodeList);
-  else
-    return NULL;
+    if (NS_SUCCEEDED(nsNode->GetChildNodes(getter_AddRefs(tmpNodeList))))
+        return (NodeList*)ownerDocument->createNodeList(tmpNodeList);
+    else
+        return NULL;
 }
 
-//
-//Call nsIDOMNode::GetFirstChild(nsIDOMNode**) passing it a handle to a
-//nsIDOMNode.  Defer to the owner document to produce a wrapper for this object.
-//
+/**
+ * Call nsIDOMNode::GetFirstChild to get the node's first child.
+ *
+ * @return the node's first child
+ */
 Node* Node::getFirstChild()
 {
-  nsIDOMNode* tmpFirstChild = NULL;
+    nsCOMPtr<nsIDOMNode> tmpFirstChild;
 
-  if (nsNode == NULL)
-    return NULL;
+    if (nsNode == NULL)
+        return NULL;
 
-  if (nsNode->GetFirstChild(&tmpFirstChild) == NS_OK)
-    return ownerDocument->createWrapper(tmpFirstChild);
-  else
-    return NULL;
+    if (NS_SUCCEEDED(nsNode->GetFirstChild(getter_AddRefs(tmpFirstChild))))
+        return ownerDocument->createWrapper(tmpFirstChild);
+    else
+        return NULL;
 }
 
-//
-//Call nsIDOMNode::GetLastChild(nsIDOMNode**) passing it a handle to a
-//nsIDOMNode.  Defer to the owner document to produce a wrapper for this object.
-//
+/**
+ * Call nsIDOMNode::GetLastChild to get the node's last child.
+ *
+ * @return the node's first child
+ */
 Node* Node::getLastChild() 
 {
-  nsIDOMNode* tmpLastChild = NULL;
+  nsCOMPtr<nsIDOMNode> tmpLastChild;
 
   if (nsNode == NULL)
     return NULL;
 
-  if (nsNode->GetLastChild(&tmpLastChild) == NS_OK)
+  if (NS_SUCCEEDED(nsNode->GetLastChild(getter_AddRefs(tmpLastChild))))
     return ownerDocument->createWrapper(tmpLastChild);
   else
     return NULL;
 }
 
-//
-//Call nsIDOMNode::GetPreviousSibling(nsIDOMNode**) passing it a handle to a
-//nsIDOMNode.  Defer to the owner document to produce a wrapper for this object.
-//
+/**
+ * Call nsIDOMNode::GetPreviousSibling to get the node's previous sibling.
+ *
+ * @return the node's previous sibling
+ */
 Node* Node::getPreviousSibling()
 {
-  nsIDOMNode* tmpPrevSib = NULL;
+    nsCOMPtr<nsIDOMNode> tmpPrevSib;
 
-  if (nsNode == NULL)
-    return NULL;
+    if (nsNode == NULL)
+        return NULL;
 
-  if (nsNode->GetPreviousSibling(&tmpPrevSib) == NS_OK)
-    return ownerDocument->createWrapper(tmpPrevSib);
-  else
-    return NULL;
+    if (NS_SUCCEEDED(nsNode->GetPreviousSibling(getter_AddRefs(tmpPrevSib))))
+        return ownerDocument->createWrapper(tmpPrevSib);
+    else
+        return NULL;
 }
 
-//
-//Call nsIDOMNode::GetNextSibling(nsIDOMNode**) passing it a handle to a
-//nsIDOMNode.  Defer to the owner document to produce a wrapper for this object.
-//
+/**
+ * Call nsIDOMNode::GetNextSibling to get the node's next sibling.
+ *
+ * @return the node's next sibling
+ */
 Node* Node::getNextSibling()
 {
-  nsIDOMNode* tmpNextSib = NULL;
+    nsCOMPtr<nsIDOMNode> tmpNextSib;
 
-  if (nsNode == NULL)
-    return NULL;
+    if (nsNode == NULL)
+        return NULL;
 
-  if (nsNode->GetNextSibling(&tmpNextSib) == NS_OK)
-      return ownerDocument->createWrapper(tmpNextSib);
-  else
-    return NULL;
+    if (NS_SUCCEEDED(nsNode->GetNextSibling(getter_AddRefs(tmpNextSib))))
+        return ownerDocument->createWrapper(tmpNextSib);
+    else
+        return NULL;
 }
 
-//
-//Call nsIDOMNode::GetAttributes(nsIDOMNamedNodeMap**) passing it a handle to a
-//nsIDOMNamedNodeMap.  Defer to the owner document to produce a wrapper for this
-//object.
-//
+/**
+ * Call nsIDOMNode::GetAttributes to get the node's attributes.
+ *
+ * @return the node's attributes
+ */
 NamedNodeMap* Node::getAttributes()
 {
-  nsIDOMNamedNodeMap* tmpAttributes = NULL;
+    nsCOMPtr<nsIDOMNamedNodeMap> tmpAttributes;
 
-  if (nsNode == NULL)
-    return NULL;
+    if (nsNode == NULL)
+        return NULL;
 
-  if (nsNode->GetAttributes(&tmpAttributes) == NS_OK)
-    return ownerDocument->createNamedNodeMap(tmpAttributes);
-  else
-    return NULL;
+    if (NS_SUCCEEDED(nsNode->GetAttributes(getter_AddRefs(tmpAttributes))))
+        return (NamedNodeMap*)ownerDocument->createNamedNodeMap(tmpAttributes);
+    else
+        return NULL;
 }
 
-//
-//Call nsIDOMNode::GetOwnerDocument(nsIDOMDocument**) passing it a handle to a
-//nsIDOMDocument.  ????
-//
+/**
+ * Get this wrapper's owning document.
+ *
+ * @return the wrapper's owning document
+ */
 Document* Node::getOwnerDocument()
 {
-  /*nsIDOMDocument* tmpOwnerDoc = NULL;
-
-  if (nsNode == NULL)
-    return NULL;
-
-  nsNode->GetOwnerDocument(&tmpOwnerDoc);
-  ownerDocument->setNSObj(tmpOwnerDoc); */
-
-  return ownerDocument;
+    return ownerDocument;
 }
 
-//
-//Call nsIDOMNode::SetNodeValue(nsString*) passing it the nsString wrapped by
-//the provided String.
-//
-void Node::setNodeValue(const String& newNodeValue)
+/**
+ * Call nsIDOMNode::SetNodeValue to set this node's value.
+ *
+ * @param aNewNodeValue the new value for the node
+ */
+void Node::setNodeValue(const String& aNewNodeValue)
 {
-  if (nsNode != NULL)
-    nsNode->SetNodeValue(newNodeValue.getConstNSString());
+    if (nsNode != NULL)
+        nsNode->SetNodeValue(aNewNodeValue.getConstNSString());
 }
 
-//
-//Retreive the nsIDOMNode objects wrapped by newChild and refChild and pass
-//them to nsIDOMNode::InsertBefore(...).  If the return value from InsertBefore
-//is valid, retrieve or create a wrapper class for it from the owner document.
-//This ensures there newChild is properly hashed (it should have been when it
-//was created.)
-//
-Node* Node::insertBefore(Node* newChild,
-                         Node* refChild)
+/**
+ * Call nsIDOMNode::insertBefore to insert a new child before an existing child.
+ *
+ * @param aNewChild the new child to insert
+ * @param aRefChild the child before which the new child is inserted
+ *
+ * @return the inserted child
+ */
+Node* Node::insertBefore(Node* aNewChild, Node* aRefChild)
 {
-  nsIDOMNode* returnValue = NULL;
+    nsCOMPtr<nsIDOMNode> returnValue;
 
-  if (nsNode == NULL)
-    return NULL;
+    if (nsNode == NULL)
+        return NULL;
 
-  if (nsNode->InsertBefore(newChild->getNSObj(), refChild->getNSObj(),
-               &returnValue) == NS_OK)
-    return ownerDocument->createWrapper(returnValue);
-  else
-    return NULL;
+    if (NS_SUCCEEDED(nsNode->InsertBefore(aNewChild->getNSObj(),
+            aRefChild->getNSObj(), getter_AddRefs(returnValue))))
+        return ownerDocument->createWrapper(returnValue);
+    else
+        return NULL;
 }
 
-//
-//Retreive the nsIDOMNode objects wrapped by newChild and oldChild and pass
-//them to nsIDOMNode::ReplaceChild(...).  If the replace call success, then
-//we want to remove the old child's wrapper object from the hash and return
-//it to the caller.  This ensures that when the caller deletes the memory,
-//no hash conflicts occure when the address is reused.
-//
-Node* Node::replaceChild(Node* newChild,
-                         Node* oldChild)
+/**
+ * Call nsIDOMNode::ReplaceChild to replace an existing child with a new child.
+ *
+ * @param aNewChild the new child to insert
+ * @param aOldChild the child that has to be replaced
+ *
+ * @return the replaced child
+ */
+Node* Node::replaceChild(Node* aNewChild, Node* aOldChild)
 {
-  nsIDOMNode* returnValue = NULL;
+    nsCOMPtr<nsIDOMNode> returnValue;
 
-  if (nsNode == NULL)
-    return NULL;
+    if (nsNode == NULL)
+        return NULL;
 
-  if (nsNode->ReplaceChild(newChild->getNSObj(), oldChild->getNSObj(),
-               &returnValue) == NS_OK)
+    if (NS_SUCCEEDED(nsNode->ReplaceChild(aNewChild->getNSObj(),
+               aOldChild->getNSObj(), getter_AddRefs(returnValue))))
+        return (Node*)ownerDocument->removeWrapper(returnValue.get());
+    else
+        return NULL;
+}
+
+/**
+ * Call nsIDOMNode::RemoveChild to remove a child.
+ *
+ * @param aOldChild the child to remove
+ *
+ * @return the removed child
+ */
+Node* Node::removeChild(Node* aOldChild)
+{
+    nsCOMPtr<nsIDOMNode> returnValue;
+
+    if (nsNode == NULL)
+        return NULL;
+
+    if (NS_SUCCEEDED(nsNode->RemoveChild(aOldChild->getNSObj(),
+            getter_AddRefs(returnValue))))
+        return (Node*)ownerDocument->removeWrapper(returnValue.get());
+    else
+        return NULL;
+}
+
+/**
+ * Call nsIDOMNode::AppendChild to append a child to the current node.
+ *
+ * @param aNewChild the child to append
+ *
+ * @return the new child
+ */
+Node* Node::appendChild(Node* aNewChild)
+{
+    nsCOMPtr<nsIDOMNode> returnValue;
+
+    if (nsNode == NULL)
+        return NULL;
+
+    if (NS_SUCCEEDED(nsNode->AppendChild(aNewChild->getNSObj(),
+            getter_AddRefs(returnValue))))
+        return ownerDocument->createWrapper(returnValue);
+    else
+        return NULL;
+}
+
+/**
+ * Call nsIDOMNode::CloneNode to clone this node.
+ *
+ * @param aDeep recursive cloning?
+ * @param aDest the Node to put the cloned nsIDOMNode into
+ *
+ * @return the new (cloned) node
+ */
+Node* Node::cloneNode(MBool aDeep, Node* aDest)
+{
+    nsCOMPtr<nsIDOMNode> returnValue;
+
+    if (nsNode == NULL)
+        return NULL;
+
+    if (NS_SUCCEEDED(nsNode->CloneNode(aDeep, getter_AddRefs(returnValue))))
     {
-      //We want to remove the wrapper class from the hash table, and return
-      //it to the caller.
-      return (Node*)ownerDocument->removeWrapper((Int32)returnValue);
+        aDest->setNSObj(returnValue);  
+        return aDest;
     }
-  else
-    return NULL;
+    else
+        return NULL;
 }
 
-//
-//Retreive the nsIDOMNode object wrapped by oldChild and pass it to
-//nsIDOMNode::RemoveChild(...).  If the return value from RemoveChild
-//is valid, then we want to remove the wrapper class from from the hash.
-//
-Node* Node::removeChild(Node* oldChild)
-{
-  nsIDOMNode* returnValue = NULL;
-
-  if (nsNode == NULL)
-    return NULL;
-
-  if (nsNode->RemoveChild(oldChild->getNSObj(), &returnValue) == NS_OK)
-    return (Node*)ownerDocument->removeWrapper((Int32)returnValue);
-  else
-    return NULL;
-}
-
-//
-//Retreive the nsIDOMNode object wrapped by newChild and pass it to
-//nsIDOMNode::AppendChild(...).  If the return value from AppendChild
-//is valid, then goto the owner document for a wrapper object for the return
-//value.
-//
-Node* Node::appendChild(Node* newChild)
-{
-  nsIDOMNode* returnValue = NULL;
-
-  if (nsNode == NULL)
-    return NULL;
-
-  if (nsNode->AppendChild(newChild->getNSObj(), &returnValue) == NS_OK)
-    return ownerDocument->createWrapper(returnValue);
-  else
-    return NULL;
-}
-
-//
-//Call nsIDOMNode::Clone to clone the node wrapped by this object.  Simply
-//take the returned node, and wrap it in dest.
-//
-Node* Node::cloneNode(MBool deep, Node* dest)
-{
-  nsIDOMNode* returnValue = NULL;
-
-  if (nsNode == NULL)
-    return NULL;
-
-  if (nsNode->CloneNode(deep,  &returnValue) == NS_OK)
-    {
-      dest->setNSObj(returnValue);   
-      return dest;
-    }
-  else
-    return NULL;
-}
-
+/**
+ * Call nsIDOMNode::HasChildNodes to return if this node has children.
+ *
+ * @return boolean value that says if this node has children
+ */
 MBool Node::hasChildNodes() const
 {
-  PRBool returnValue;
+    PRBool returnValue;
 
-  if (nsNode == NULL)
-    return MB_FALSE;
+    if (nsNode == NULL)
+        return MB_FALSE;
 
-  nsNode->HasChildNodes(&returnValue);
-
-  return returnValue;
+    nsNode->HasChildNodes(&returnValue);
+    return returnValue;
 }
-

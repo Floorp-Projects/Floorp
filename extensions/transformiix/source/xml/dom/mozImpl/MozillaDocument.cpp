@@ -1,867 +1,792 @@
-/* 
- * (C) Copyright The MITRE Corporation 1999  All rights reserved. 
- * 
- * The contents of this file are subject to the Mozilla Public License 
- * Version 1.0 (the "License"); you may not use this file except in 
- * compliance with the License. You may obtain a copy of the License at 
- * http://www.mozilla.org/MPL/ 
- * 
- * The program provided "as is" without any warranty express or 
- * implied, including the warranty of non-infringement and the implied 
- * warranties of merchantibility and fitness for a particular purpose. 
- * The Copyright owner will not be liable for any damages suffered by 
- * you as a result of using the Program. In no event will the Copyright 
- * owner be liable for any special, indirect or consequential damages or 
- * lost profits even if the Copyright owner has been advised of the 
- * possibility of their occurrence. 
- * 
- * Please see release.txt distributed with this file for more information. 
- * 
- */ 
-// Tom Kneeland (01/18/2000) 
-// 
-//  Implementation of the Mozilla Wrapper class for the Document Object. 
-// 
-// Modification History: 
-// Who  When        What 
-// TK   02/11/2000  Added default constructor.  If no NS object is provided 
-//                  simply create an nsXMLDocument to use. 
-// TK   02/15/2000  Fixed bug in Create Wrapper.  We must check to see if the 
-//                  the nsIDOM* object is NULL.  If it is, then we don't need 
-//                  a wrapper. 
-//                  Also fixed the same problem with the other factory methods 
-//                  that create wrappers for Mozilla objects. 
-// 
- 
-#include "mozilladom.h" 
-#include "iostream.h" 
-#include "nsIContent.h"
-#include "XMLUtils.h"
-#include "nsCOMPtr.h"
+/*
+ * (C) Copyright The MITRE Corporation 1999  All rights reserved.
+ *
+ * The contents of this file are subject to the Mozilla Public License
+ * Version 1.0 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * The program provided "as is" without any warranty express or
+ * implied, including the warranty of non-infringement and the implied
+ * warranties of merchantibility and fitness for a particular purpose.
+ * The Copyright owner will not be liable for any damages suffered by
+ * you as a result of using the Program. In no event will the Copyright
+ * owner be liable for any special, indirect or consequential damages or
+ * lost profits even if the Copyright owner has been advised of the
+ * possibility of their occurrence.
+ *
+ * Please see release.txt distributed with this file for more information.
+ *
+ * Contributor(s): Tom Kneeland
+ *                 Peter Van der Beken <peter.vanderbeken@pandora.be>
+ *
+ */
 
-// 
-//Construct a Document Wrapper object without specificy a nsIDOMDocument 
-//object.  We will create an ns 
-// 
-Document::Document() 
-{ 
-    /* XXX (Pvdb)
-       Do we really need this? It causes a link dependency on layout, so i
-       commented it out 'till we figure out what to do.
+/* Implementation of the wrapper class to convert the Mozilla nsIDOMDocument
+   interface into a TransforMIIX Document interface.
+*/
 
-    nsCOMPtr<nsIDocument> document;
-    nsresult res = NS_NewXMLDocument(getter_AddRefs(document));
-    if (NS_SUCCEEDED(res) && document) {
-        document->QueryInterface(NS_GET_IID(nsIDOMDocument), (void**) &nsDocument);
-    }
-    Node::setNSObj(nsDocument, this);*/
-}
- 
-// 
-//Construct a Document Wrapper object with a nsIDOMDocument object 
-// 
-Document::Document(nsIDOMDocument* document) : Node(document, this) 
+#include "mozilladom.h"
+#include "nsLayoutCID.h"
+
+static NS_DEFINE_CID(kIDOMDOMImplementationCID, NS_DOM_IMPLEMENTATION_CID);
+
+/**
+ * Construct a new Mozilla document and wrap it. The caller is responsible for
+ * deleting the wrapper object!
+ */
+Document::Document() : Node(NULL, NULL)
 {
+    nsresult res;
+    nsCOMPtr<nsIDOMDocument> document;
+
+    nsCOMPtr<nsIDOMDOMImplementation> implementation =
+                do_CreateInstance(kIDOMDOMImplementationCID, &res);
+    //if (NS_FAILED(res)) return NULL;
+
+    // Create an empty document from it
+    nsAutoString emptyStr;
+    res = implementation->CreateDocument(emptyStr, emptyStr, nsnull,
+                getter_AddRefs(document));
+    //if (NS_FAILED(res)) return NULL;
     nsDocument = document;
-} 
- 
-// 
-//Clean up the private data members 
-// 
-Document::~Document() 
-{ 
-} 
- 
-// 
-//Provide an nsIDOMDocument object for wrapping 
-// 
-void Document::setNSObj(nsIDOMDocument* document) 
-{ 
-    Node::setNSObj(document); 
-    nsDocument = document; 
-} 
- 
-// 
-//Call nsIDOMDocument::GetDocumentElement to retreive the element for this 
-//document.  Then call the createElement factory method to retreive an element 
-//wrapper for this object. 
-// 
-Element* Document::getDocumentElement() 
-{ 
-    nsIDOMElement* theElement = NULL; 
-    Element* elemWrapper = NULL; 
-    nsresult retval = 5; 
- 
-    if (nsDocument == NULL) 
-      return NULL; 
- 
-    //retval = nsDocument->GetDocumentElement(&theElement); 
-    //if (retval == NS_OK) 
-    if ((retval = nsDocument->GetDocumentElement(&theElement)) == NS_OK) 
-    { 
-        cout << "Document::getDocumentElement - Mozilla Call ok" << endl; 
-        return createElement(theElement); 
-    } 
-    else 
-    { 
-        cout << "Document::getDocumentElement - Mozilla Call not ok(" << hex <<retval << ")" << endl; 
-        return NULL; 
-    } 
-} 
- 
-// 
-//Retrieve the DocumentType from nsIDOMDocument::GetDocType.  Return it wrapped 
-//in the docType data member. 
-// 
-DocumentType* Document::getDoctype() 
-{ 
-    nsIDOMDocumentType* theDocType = NULL; 
- 
-    if (nsDocument == NULL) 
-        return NULL; 
- 
-    if (nsDocument->GetDoctype(&theDocType) == NS_OK) 
-        return createDocumentType(theDocType); 
-    else 
-        return NULL; 
-} 
- 
-// 
-//Return a constant reference to the DOM's Implementation 
-// 
-DOMImplementation* Document::getImplementation() 
-{ 
-    nsIDOMDOMImplementation* theImpl = NULL; 
- 
-    if (nsDocument == NULL) 
-        return NULL; 
- 
-    if (nsDocument->GetImplementation(&theImpl) == NS_OK) 
-        return createDOMImplementation(theImpl); 
-    else 
-        return NULL; 
-} 
- 
-// 
-//Ensure that no Element node is inserted if the document already has an 
-//associated Element child. 
-// 
-Node* Document::insertBefore(Node* newChild, Node* refChild) 
-{ 
-    /* XXX HACK (Pvdb)
-       Work around Bugzilla bug #25123, we can't do insertBefore for the
-       first node. So we fiddle with SetRootContent. If the bug gets
-       resolved, defer to node implementation.
-    */
-    nsIDOMNode* returnValue = NULL;
+    bInHashTableDeletion = PR_FALSE;
+    addWrapper(this, getKey());
+}
 
-    if (nsDocument == NULL)
-        return NULL;
-
-    nsCOMPtr<nsIDocument> nsTempDocument = do_QueryInterface(nsDocument);
-
-    if (nsTempDocument->GetRootContent() && (newChild->getNodeType() != Node::ELEMENT_NODE)) {
-        if (nsDocument->InsertBefore(newChild->getNSObj(), refChild->getNSObj(),
-              &returnValue) == NS_OK)
-            return ownerDocument->createWrapper(returnValue);
-        else
-            return NULL;
-    }
-    else
-    {
-        nsCOMPtr<nsIContent> nsRootContent = do_QueryInterface(newChild->getNSObj());
-        nsIDOMElement* theElement = NULL; 
-
-        nsTempDocument->SetRootContent(nsRootContent);
-        nsDocument->GetDocumentElement(&theElement); 
-        return ownerDocument->createWrapper(theElement);
-    }
-} 
- 
-// 
-//  DEFFER this functionality to the NODE implementation 
-//Ensure that if the newChild is an Element and the Document already has an 
-//element, then oldChild should be specifying the existing element.  If not 
-//then the replacement can not take place. 
-// 
-/* 
-Node* Document::replaceChild(Node* newChild, Node* oldChild) 
-{ 
-    Node* replacedChild = NULL; 
- 
-    if (newChild->getNodeType() != Node::ELEMENT_NODE) 
-    { 
-        //The new child is not an Element, so perform replacement 
-        replacedChild = NodeDefinition::replaceChild(newChild, oldChild); 
- 
-        //If old node was an Element, then the document's element has been 
-        //replaced with a non-element node.  Therefore clear the documentElement 
-        //pointer 
-        if (replacedChild && (oldChild->getNodeType() == Node::ELEMENT_NODE)) 
-            documentElement = NULL; 
- 
-        return replacedChild; 
-    } 
-    else 
-    { 
-        //A node is being replaced with an Element.  If the document does not 
-        //have an elemet yet, then just allow the replacemetn to take place. 
-        if (!documentElement) 
-            replacedChild = NodeDefinition::replaceChild(newChild, oldChild); 
-        else if (oldChild->getNodeType() == Node::ELEMENT_NODE) 
-            replacedChild = NodeDefinition::replaceChild(newChild, oldChild); 
- 
-        if (replacedChild) 
-            documentElement = (Element*)newChild; 
- 
-        return replacedChild; 
-    } 
-} 
-*/ 
- 
-// 
-//  DEFFER this functionality to the NODE Implementation 
-//Update the documentElement pointer if the associated Element node is being 
-//removed. 
-// 
-/* 
-Node* Document::removeChild(Node* oldChild) 
-{ 
-    Node* removedChild = NULL; 
- 
-    removedChild = NodeDefinition::removeChild(oldChild); 
- 
-    if (removedChild && (removedChild->getNodeType() == Node::ELEMENT_NODE)) 
-        documentElement = NULL; 
- 
-    return removedChild; 
-} 
-*/ 
- 
-Node* Document::appendChild(Node* newChild)
+/**
+ * Construct a wrapper with the specified Mozilla object. The caller is
+ * responsible for deleting the wrapper object!
+ *
+ * @param aDocument the nsIDOMDocument you want to wrap
+ */
+Document::Document(nsIDOMDocument* aDocument) : Node(aDocument, this)
 {
-    /* XXX HACK (Pvdb)
-       Work around Bugzilla bug #25123, we can't do appendChild for the
-       first node. So we fiddle with SetRootContent. If the bug gets
-       resolved, defer to node implementation.
-    */
-    nsIDOMNode* returnValue = NULL;
+    nsDocument = aDocument;
+    bInHashTableDeletion = PR_FALSE;
+    addWrapper(this, getKey());
+}
+
+/**
+ * Destructor
+ */
+Document::~Document()
+{
+    removeWrapper(getKey());
+    bInHashTableDeletion = PR_TRUE;
+}
+
+/**
+ * Wrap a different Mozilla object with this wrapper.
+ *
+ * @param aDocument the nsIDOMDocument you want to wrap
+ */
+void Document::setNSObj(nsIDOMDocument* aDocument)
+{
+    Node::setNSObj(aDocument);
+    nsDocument = aDocument;
+}
+
+/**
+ * Flags wether the document is deleting the wrapper hash table and the objects
+ * that it contains.
+ *
+ * @return flags wether the document is deleting the wrapper hash table
+ */
+PRBool Document::inHashTableDeletion()
+{
+    return bInHashTableDeletion;
+}
+
+/**
+ * Call nsIDOMDocument::GetDocumentElement to get the document's
+ * DocumentElement.
+ *
+ * @return the document element
+ */
+Element* Document::getDocumentElement()
+{
+    nsCOMPtr<nsIDOMElement> theElement;
+    Element* elemWrapper = NULL;
+
+    if (nsDocument == NULL)
+      return NULL;
+
+    if (NS_SUCCEEDED(nsDocument->GetDocumentElement(
+                getter_AddRefs(theElement))))
+        return (Element*)createWrapper(theElement);
+    else
+        return NULL;
+}
+
+/**
+ * Call nsIDOMDocument::GetDocumentElement to get the document's DocumentType.
+ *
+ * @return the DocumentType
+ */
+DocumentType* Document::getDoctype()
+{
+    nsCOMPtr<nsIDOMDocumentType> theDocType;
 
     if (nsDocument == NULL)
         return NULL;
 
-    nsCOMPtr<nsIDocument> nsTempDocument = do_QueryInterface(nsDocument);
-
-    if (nsTempDocument->GetRootContent() && (newChild->getNodeType() != Node::ELEMENT_NODE)) {
-        if (nsDocument->AppendChild(newChild->getNSObj(), &returnValue) == NS_OK)
-            return ownerDocument->createWrapper(returnValue);
-        else
-            return NULL;
-    }
+    if (NS_SUCCEEDED(nsDocument->GetDoctype(getter_AddRefs(theDocType))))
+        return (DocumentType*)createWrapper(theDocType);
     else
-    {
-        nsCOMPtr<nsIContent> nsRootContent = do_QueryInterface(newChild->getNSObj());
-        nsIDOMElement* theElement = NULL; 
+        return NULL;
+}
 
-        nsTempDocument->SetRootContent(nsRootContent);
-        nsRootContent->SetDocument(nsTempDocument, PR_TRUE, PR_TRUE);
-        nsRootContent->QueryInterface(NS_GET_IID(nsIDOMElement), (void**)&theElement);
-        return ownerDocument->createWrapper(theElement);
+/**
+ * Call nsIDOMDocument::GetImplementation to get the document's
+ * DOMImplementation.
+ *
+ * @return the DOMImplementation
+ */
+DOMImplementation* Document::getImplementation()
+{
+    nsCOMPtr<nsIDOMDOMImplementation> theImpl;
+
+    if (nsDocument == NULL)
+        return NULL;
+
+    if (NS_SUCCEEDED(nsDocument->GetImplementation(getter_AddRefs(theImpl))))
+        return createDOMImplementation(theImpl);
+    else
+        return NULL;
+}
+
+/**
+ * Call nsIDOMDocument::CreateDocumentFragment to create a DocumentFragment.
+ *
+ * @return the DocumentFragment
+ */
+DocumentFragment* Document::createDocumentFragment()
+{
+    nsCOMPtr<nsIDOMDocumentFragment> fragment;
+
+    if (nsDocument == NULL)
+        return NULL;
+
+    if (NS_SUCCEEDED(nsDocument->CreateDocumentFragment(
+                getter_AddRefs(fragment))))
+        return createDocumentFragment(fragment);
+    else
+        return NULL;
+}
+
+/**
+ * Create a wrapper for a nsIDOMDocumentFragment, reuses an existing wrapper if
+ * possible.
+ *
+ * @param aFragment the nsIDOMDocumentFragment you want to wrap
+ *
+ * @return the DocumentFragment
+ */
+DocumentFragment* Document::createDocumentFragment(
+            nsIDOMDocumentFragment* aFragment)
+{
+    DocumentFragment* docFragWrapper = NULL;
+
+    if (aFragment)
+    {
+        docFragWrapper =
+            (DocumentFragment*)wrapperHashTable.retrieve(aFragment);
+
+        if (!docFragWrapper)
+            docFragWrapper = new DocumentFragment(aFragment, this);
+    }
+
+    return docFragWrapper;
+}
+
+/**
+ * Call nsIDOMDocument::CreateElement to create an Element.
+ *
+ * @param aTagName the name of the element you want to create
+ *
+ * @return the Element
+ */
+Element* Document::createElement(const String& aTagName)
+{
+    nsCOMPtr<nsIDOMElement> element;
+
+    if (NS_SUCCEEDED(nsDocument->CreateElement(aTagName.getConstNSString(),
+                getter_AddRefs(element))))
+        return createElement(element);
+    else
+        return NULL;
+}
+
+/**
+ * Create a wrapper for a nsIDOMElement, reuses an existing wrapper if possible.
+ *
+ * @param aElement the nsIDOMElement you want to wrap
+ *
+ * @return the Element
+ */
+Element* Document::createElement(nsIDOMElement* aElement)
+{
+    Element* elemWrapper = NULL;
+
+    if (aElement)
+    {
+        elemWrapper = (Element*)wrapperHashTable.retrieve(aElement);
+
+        if (!elemWrapper)
+            elemWrapper = new Element(aElement, this);
+    }
+
+    return elemWrapper;
+}
+
+/**
+ * Call nsIDOMDocument::CreateElementNS to create an Element.
+ *
+ * @param aNamespaceURI the URI of the namespace for the element
+ * @param aTagName the name of the element you want to create
+ *
+ * @return the Element
+ */
+Element* Document::createElementNS(const String& aNamespaceURI,
+            const String& aTagName)
+{
+    nsCOMPtr<nsIDOMElement> element;
+
+    if (NS_SUCCEEDED(nsDocument->CreateElementNS(
+                aNamespaceURI.getConstNSString(), aTagName.getConstNSString(),
+                getter_AddRefs(element))))
+        return createElement(element);
+    else
+        return NULL;
+}
+
+/**
+ * Call nsIDOMDocument::CreateAttribute to create an Attribute.
+ *
+ * @param aName the name of the attribute you want to create
+ *
+ * @return the Attribute
+ */
+Attr* Document::createAttribute(const String& aName)
+{
+    nsCOMPtr<nsIDOMAttr> attr;
+
+    if (nsDocument == NULL)
+        return NULL;
+
+    if (nsDocument->CreateAttribute(aName.getConstNSString(),
+                getter_AddRefs(attr)) == NS_OK)
+        return createAttribute(attr);
+    else
+        return NULL;
+}
+
+/**
+ * Create a wrapper for a nsIDOMAttr, reuses an existing wrapper if possible.
+ *
+ * @param aAttr the nsIDOMAttr you want to wrap
+ *
+ * @return the Attribute
+ */
+Attr* Document::createAttribute(nsIDOMAttr* aAttr)
+{
+    Attr* attrWrapper = NULL;
+
+    if (aAttr)
+    {
+        attrWrapper = (Attr*)wrapperHashTable.retrieve(aAttr);
+
+        if (!attrWrapper)
+            attrWrapper = new Attr(aAttr, this);
+    }
+
+    return attrWrapper;
+}
+
+/**
+ * Call nsIDOMDocument::CreateTextNode to create a Text node.
+ *
+ * @param aData the data of the text node you want to create
+ *
+ * @return the Text node
+ */
+Text* Document::createTextNode(const String& aData)
+{
+    nsCOMPtr<nsIDOMText> text;
+
+    if (nsDocument == NULL)
+        return NULL;
+
+    if (nsDocument->CreateTextNode(aData.getConstNSString(),
+                getter_AddRefs(text)) == NS_OK)
+        return createTextNode(text);
+    else
+        return NULL;
+}
+
+/**
+ * Create a wrapper for a nsIDOMText, reuses an existing wrapper if possible.
+ *
+ * @param aText the nsIDOMText you want to wrap
+ *
+ * @return the Text node
+ */
+Text* Document::createTextNode(nsIDOMText* aText)
+{
+    Text* textWrapper = NULL;
+
+    if (aText)
+    {
+        textWrapper = (Text*)wrapperHashTable.retrieve(aText);
+
+        if (!textWrapper)
+            textWrapper = new Text(aText, this);
+    }
+
+    return textWrapper;
+}
+
+/**
+ * Call nsIDOMDocument::CreateComment to create a Comment node.
+ *
+ * @param aData the data of the comment node you want to create
+ *
+ * @return the Comment node
+ */
+Comment* Document::createComment(const String& aData)
+{
+    nsCOMPtr<nsIDOMComment> comment;
+
+    if (nsDocument == NULL)
+        return NULL;
+
+    if (NS_SUCCEEDED(nsDocument->CreateComment(aData.getConstNSString(),
+                getter_AddRefs(comment))))
+        return createComment(comment);
+    else
+        return NULL;
+}
+
+/**
+ * Create a wrapper for a nsIDOMComment, reuses an existing wrapper if possible.
+ *
+ * @param aComment the nsIDOMComment you want to wrap
+ *
+ * @return the Comment node
+ */
+Comment* Document::createComment(nsIDOMComment* aComment)
+{
+    Comment* commentWrapper = NULL;
+
+    if (aComment)
+    {
+        commentWrapper = (Comment*)wrapperHashTable.retrieve(aComment);
+
+        if (!commentWrapper)
+            commentWrapper = new Comment(aComment, this);
+    }
+
+    return commentWrapper;
+}
+
+/**
+ * Call nsIDOMDocument::CreateCDATASection to create a CDataSection.
+ *
+ * @param aData the data of the CDataSection you want to create
+ *
+ * @return the CDataSection node
+ */
+CDATASection* Document::createCDATASection(const String& aData)
+{
+    nsCOMPtr<nsIDOMCDATASection> cdata;
+
+    if (nsDocument == NULL)
+        return NULL;
+
+    if (NS_SUCCEEDED(nsDocument->CreateCDATASection(aData.getConstNSString(),
+                getter_AddRefs(cdata))))
+        return createCDATASection(cdata);
+    else
+        return NULL;
+}
+
+/**
+ * Create a wrapper for a nsIDOMCDATASection, reuses an existing wrapper if
+ * possible.
+ *
+ * @param aCdata the nsIDOMCDATASection you want to wrap
+ *
+ * @return the CDATASection node
+ */
+CDATASection* Document::createCDATASection(nsIDOMCDATASection* aCdata)
+{
+    CDATASection* cdataWrapper = NULL;
+
+    if (cdataWrapper)
+    {
+        cdataWrapper = (CDATASection*)wrapperHashTable.retrieve(aCdata);
+
+        if (!cdataWrapper)
+            cdataWrapper = new CDATASection(aCdata, this);
+    }
+
+    return cdataWrapper;
+}
+
+/**
+ * Call nsIDOMDocument::CreateProcessingInstruction to create a
+ * ProcessingInstruction.
+ *
+ * @param aTarget the target of the ProcessingInstruction you want to create
+ * @param aData the data of the ProcessingInstruction you want to create
+ *
+ * @return the ProcessingInstruction node
+ */
+ProcessingInstruction* Document::createProcessingInstruction(
+            const String& aTarget, const String& aData)
+{
+    nsCOMPtr<nsIDOMProcessingInstruction> pi;
+
+    if (nsDocument == NULL)
+        return NULL;
+
+    if (NS_SUCCEEDED(nsDocument->CreateProcessingInstruction(
+                aTarget.getConstNSString(), aData.getConstNSString(),
+                getter_AddRefs(pi))))
+        return createProcessingInstruction(pi);
+    else
+        return NULL;
+}
+
+/**
+ * Create a wrapper for a nsIDOMProcessingInstruction, reuses an existing
+ * wrapper if possible.
+ *
+ * @param aPi the nsIDOMProcessingInstruction you want to wrap
+ *
+ * @return the ProcessingInstruction node
+ */
+ProcessingInstruction* Document::createProcessingInstruction(
+            nsIDOMProcessingInstruction* aPi)
+{
+    ProcessingInstruction* piWrapper;
+
+    if (aPi)
+    {
+        piWrapper = (ProcessingInstruction*)wrapperHashTable.retrieve(aPi);
+
+        if (!piWrapper)
+            piWrapper = new ProcessingInstruction(aPi, this);
+    }
+
+    return piWrapper;
+}
+
+/**
+ * Call nsIDOMDocument::CreateEntityReference to create a EntityReference.
+ *
+ * @param aName the name of the EntityReference you want to create
+ *
+ * @return the EntityReference
+ */
+EntityReference* Document::createEntityReference(const String& aName)
+{
+    nsCOMPtr<nsIDOMEntityReference> entityRef;
+
+    if (nsDocument == NULL)
+        return NULL;
+
+    if (NS_SUCCEEDED(nsDocument->CreateEntityReference(aName.getConstNSString(),
+                getter_AddRefs(entityRef))))
+        return createEntityReference(entityRef);
+    else
+        return NULL;
+}
+
+/**
+ * Create a wrapper for a nsIDOMEntityReference, reuses an existing
+ * wrapper if possible.
+ *
+ * @param aEntityRef the nsIDOMEntityReference you want to wrap
+ *
+ * @return the EntityReference
+ */
+EntityReference* Document::createEntityReference(
+            nsIDOMEntityReference* aEntityRef)
+{
+    EntityReference* entityWrapper = NULL;
+
+    if (aEntityRef)
+    {
+        entityWrapper = (EntityReference*) wrapperHashTable.retrieve(
+                    aEntityRef);
+
+        if (!entityWrapper)
+            entityWrapper = new EntityReference(aEntityRef, this);
+    }
+
+    return entityWrapper;
+}
+
+/**
+ * Create a wrapper for a nsIDOMEntity, reuses an existing wrapper if possible.
+ *
+ * @param aEntity the nsIDOMEntity you want to wrap
+ *
+ * @return the Entity
+ */
+Entity* Document::createEntity(nsIDOMEntity* aEntity)
+{
+    Entity* entityWrapper = NULL;
+
+    if (aEntity)
+    {
+        entityWrapper = (Entity*)wrapperHashTable.retrieve(aEntity);
+
+        if (!entityWrapper)
+            entityWrapper = new Entity(aEntity, this);
+    }
+
+    return entityWrapper;
+}
+
+/**
+ * Create a wrapper for a nsIDOMNode, reuses an existing wrapper if possible.
+ *
+ * @param aNode the nsIDOMNode you want to wrap
+ *
+ * @return the Node
+ */
+Node* Document::createNode(nsIDOMNode* aNode)
+{
+    Node* nodeWrapper = NULL;
+
+    if (aNode)
+    {
+        nodeWrapper = (Node*)wrapperHashTable.retrieve(aNode);
+
+        if (!nodeWrapper)
+            nodeWrapper = new Node(aNode, this);
+    }
+
+    return nodeWrapper;
+}
+
+/**
+ * Create a wrapper for a nsIDOMNotation, reuses an existing wrapper if
+ * possible.
+ *
+ * @param aNotation the nsIDOMNotation you want to wrap
+ *
+ * @return the Notation
+ */
+Notation* Document::createNotation(nsIDOMNotation* aNotation)
+{
+    Notation* notationWrapper = NULL;
+
+    if (aNotation)
+    {
+        notationWrapper = (Notation*)wrapperHashTable.retrieve(aNotation);
+
+        if (!notationWrapper)
+            notationWrapper = new Notation(aNotation, this);
+    }
+
+    return notationWrapper;
+}
+
+/**
+ * Create a wrapper for a nsIDOMDOMImplementation, reuses an existing wrapper if
+ * possible.
+ *
+ * @param aImpl the nsIDOMDOMImplementation you want to wrap
+ *
+ * @return the DOMImplementation
+ */
+DOMImplementation* Document::createDOMImplementation(
+            nsIDOMDOMImplementation* aImpl)
+{
+    DOMImplementation* implWrapper = NULL;
+
+    if (aImpl)
+    {
+        implWrapper = (DOMImplementation*)wrapperHashTable.retrieve(aImpl);
+
+        if (!implWrapper)
+            implWrapper = new DOMImplementation(aImpl, this);
+    }
+
+    return implWrapper;
+}
+
+/**
+ * Create a wrapper for a nsIDOMDocumentType, reuses an existing wrapper if
+ * possible.
+ *
+ * @param aDoctype the nsIDOMDocumentType you want to wrap
+ *
+ * @return the DocumentType
+ */
+DocumentType* Document::createDocumentType(nsIDOMDocumentType* aDoctype)
+{
+    DocumentType* doctypeWrapper = NULL;
+
+    if (aDoctype)
+    {
+        doctypeWrapper = (DocumentType*)wrapperHashTable.retrieve(aDoctype);
+
+        if (!doctypeWrapper)
+            doctypeWrapper = new DocumentType(aDoctype, this);
+    }
+
+    return doctypeWrapper;
+}
+
+/**
+ * Create a wrapper for a nsIDOMNodeList, reuses an existing wrapper if
+ * possible.
+ *
+ * @param aList the nsIDOMNodeList you want to wrap
+ *
+ * @return the NodeList
+ */
+NodeList* Document::createNodeList(nsIDOMNodeList* aList)
+{
+    NodeList* listWrapper = NULL;
+
+    if (aList)
+    {
+        listWrapper = (NodeList*)wrapperHashTable.retrieve(aList);
+
+        if (!listWrapper)
+            listWrapper = new NodeList(aList, this);
+    }
+
+    return listWrapper;
+}
+
+/**
+ * Create a wrapper for a nsIDOMNamedNodeMap, reuses an existing wrapper if
+ * possible.
+ *
+ * @param aMap the nsIDOMNamedNodeMap you want to wrap
+ *
+ * @return the NamedNodeMap
+ */
+NamedNodeMap* Document::createNamedNodeMap(nsIDOMNamedNodeMap* aMap)
+{
+    NamedNodeMap* mapWrapper = NULL;
+
+    if (aMap)
+    {
+        mapWrapper = (NamedNodeMap*)wrapperHashTable.retrieve(aMap);
+
+        if (!mapWrapper)
+            mapWrapper = new NamedNodeMap(aMap, this);
+    }
+
+    return mapWrapper;
+}
+
+/**
+ * Create a wrapper for a nsIDOMNode, reuses an existing wrapper if possible.
+ * This function creates the right kind of wrapper depending on the type of
+ * the node.
+ *
+ * @param aNode the nsIDOMNode you want to wrap
+ *
+ * @return the Node
+ */
+Node* Document::createWrapper(nsIDOMNode* aNode)
+{
+    unsigned short nodeType = 0;
+
+    if (!aNode)
+      return NULL;
+
+    aNode->GetNodeType(&nodeType);
+
+    switch (nodeType)
+    {
+        case nsIDOMNode::ELEMENT_NODE:
+            return createElement((nsIDOMElement*)aNode);
+            break;
+
+        case nsIDOMNode::ATTRIBUTE_NODE:
+            return createAttribute((nsIDOMAttr*)aNode);
+            break;
+
+        case nsIDOMNode::TEXT_NODE:
+            return createTextNode((nsIDOMText*)aNode);
+            break;
+
+        case nsIDOMNode::CDATA_SECTION_NODE:
+            return createCDATASection((nsIDOMCDATASection*)aNode);
+           break;
+
+        case nsIDOMNode::ENTITY_REFERENCE_NODE:
+            return createEntityReference((nsIDOMEntityReference*)aNode);
+            break;
+
+        case nsIDOMNode::ENTITY_NODE:
+            return createEntity((nsIDOMEntity*)aNode);
+            break;
+
+        case nsIDOMNode::PROCESSING_INSTRUCTION_NODE:
+            return createProcessingInstruction(
+                        (nsIDOMProcessingInstruction*)aNode);
+            break;
+
+        case nsIDOMNode::COMMENT_NODE:
+            return createComment((nsIDOMComment*)aNode);
+            break;
+
+        case nsIDOMNode::DOCUMENT_NODE:
+            if (aNode == getKey())
+                return this;
+            else {
+                // XXX (pvdb) We need a createDocument here!
+                return createNode(aNode);
+            }
+            break;
+
+        case nsIDOMNode::DOCUMENT_TYPE_NODE:
+            return createDocumentType((nsIDOMDocumentType*)aNode);
+            break;
+
+        case nsIDOMNode::DOCUMENT_FRAGMENT_NODE:
+            return createDocumentFragment((nsIDOMDocumentFragment*)aNode);
+            break;
+
+        case nsIDOMNode::NOTATION_NODE:
+            return createNotation((nsIDOMNotation*)aNode);
+            break;
+
+        default:
+            return createNode(aNode);
     }
 }
 
-// 
-//Call the nsIDOMDocument::CreateDocumentFragment function, then create or 
-//retrieve a wrapper class for it. 
-// 
-DocumentFragment* Document::createDocumentFragment() 
-{ 
-    nsIDOMDocumentFragment* fragment = NULL; 
- 
-    if (nsDocument == NULL) 
-        return NULL; 
- 
-    if (nsDocument->CreateDocumentFragment(&fragment) == NS_OK) 
-        return createDocumentFragment(fragment); 
-    else 
-        return NULL; 
-} 
- 
-// 
-//Check the wrapperHashTable for a preexisting wrapper object.  If it does not 
-// exists, create one and store it in the hash table.  If it does exist, simply 
-// return it to the caller. 
-// 
-DocumentFragment*  
-Document::createDocumentFragment(nsIDOMDocumentFragment* fragment) 
-{ 
-    DocumentFragment* docFragWrapper = NULL; 
- 
-    if (fragment) 
-    { 
-        docFragWrapper =  
-            (DocumentFragment*)wrapperHashTable.retrieve((Int32)fragment); 
-         
-        if (!docFragWrapper) 
-        { 
-            docFragWrapper = new DocumentFragment(fragment, this); 
-            wrapperHashTable.add(docFragWrapper, (Int32)fragment); 
-        } 
-    } 
- 
-    return docFragWrapper; 
-} 
- 
-// 
-//Call the nsIDOMDocument::CreateElement function, and retrieve or create 
-//a wrapper object for it. 
-// 
-Element* Document::createElement(const String& tagName) 
-{ 
-    nsIDOMElement* element = NULL; 
+/**
+ * Add a wrapper to the document's hash table using the specified hash value.
+ *
+ * @param aObj the MITREObject you want to add
+ * @param aHashValue the key for the object in the hash table
+ */
+void Document::addWrapper(MITREObject* aObj, void* aHashValue)
+{
+    wrapperHashTable.add(aObj, aHashValue);
+}
 
-    if (nsDocument->CreateElement(tagName.getConstNSString(), &element) == NS_OK) 
-        return createElement(element); 
-    else 
-        return NULL; 
-} 
- 
-// 
-//Check the wrapperHashTable for a precreated wrapper object.  If one exists,  
-//return it to the caller.  If it doens't exist, create one, store it in the  
-//hash, and return it to the caller. 
-// 
-Element* Document::createElement(nsIDOMElement* element) 
-{ 
-    Element* elemWrapper = NULL; 
- 
-    if (element) 
-    { 
-        elemWrapper = (Element*)wrapperHashTable.retrieve((Int32)element); 
-         
-        if (!elemWrapper) 
-        { 
-            elemWrapper = new Element(element, this); 
-            wrapperHashTable.add(elemWrapper, (Int32)element); 
-        } 
-    } 
- 
-    return elemWrapper; 
-} 
- 
-// 
-//Call the nsIDOMDocument::CreateElementNS function, and retrieve or create 
-//a wrapper object for it. 
-// 
-Element* Document::createElementNS(const String& namespaceURI, const String& tagName) 
-{ 
-    nsIDOMElement* element = NULL; 
-
-    if (nsDocument->CreateElementNS(namespaceURI.getConstNSString(), tagName.getConstNSString(), &element) == NS_OK) 
-        return createElement(element); 
-    else 
-        return NULL; 
-} 
- 
-// 
-//Call the nsIDOMDocument::CreateAttribute function, then create or retrieve a 
-//wrapper object for it. 
-// 
-Attr* Document::createAttribute(const String& name) 
-{ 
-    nsIDOMAttr* attr = NULL; 
- 
-    if (nsDocument == NULL) 
-        return NULL; 
- 
-    if (nsDocument->CreateAttribute(name.getConstNSString(), &attr) == NS_OK) 
-        return createAttribute(attr); 
-    else 
-        return NULL; 
-} 
- 
-// 
-//Check the wrapperHashTable for a precreated object.  If one exists, return it, 
-//else, create one, store it in the table, and return it. 
-// 
-Attr* Document::createAttribute(nsIDOMAttr* attr) 
-{ 
-    Attr* attrWrapper = NULL; 
- 
-    if (attr) 
-    { 
-        attrWrapper = (Attr*)wrapperHashTable.retrieve((Int32)attr); 
- 
-        if (!attrWrapper) 
-        { 
-            attrWrapper = new Attr(attr, this); 
-            wrapperHashTable.add(attrWrapper, (Int32)attr); 
-        } 
-    } 
- 
-    return attrWrapper; 
-} 
- 
-// 
-//Call the nsIDOMDocument::CreateTextNode function, then create, or retrieve a  
-//wrapper object for it. 
-// 
-Text* Document::createTextNode(const String& theData) 
-{ 
-    nsIDOMText* text = NULL; 
- 
-    if (nsDocument == NULL) 
-        return NULL; 
- 
-    if (nsDocument->CreateTextNode(theData.getConstNSString(), &text) == NS_OK) 
-        return createTextNode(text); 
-    else 
-        return NULL; 
-} 
- 
-// 
-//Check the wrapperHashTable to see if a precreated object exists.  If it does  
-//then return it.  Else, create a new one, insert it into the hash table, and  
-//then return it. 
-// 
-Text* Document::createTextNode(nsIDOMText* text) 
-{ 
-    Text* textWrapper = NULL; 
- 
-    if (text) 
-    { 
-        textWrapper = (Text*)wrapperHashTable.retrieve((Int32)text); 
- 
-        if (!textWrapper) 
-        { 
-            textWrapper = new Text(text, this); 
-            wrapperHashTable.add(textWrapper, (Int32)text); 
-        } 
-    } 
- 
-    return textWrapper; 
-} 
- 
-// 
-//Call the nsIDOMDocument::CreateComment function, then create or retrieve a 
-//wrapper object to return to the caller. 
-// 
-Comment* Document::createComment(const String& theData) 
-{ 
-    nsIDOMComment* comment = NULL; 
- 
-    if (nsDocument == NULL) 
-        return NULL; 
- 
-    if (nsDocument->CreateComment(theData.getConstNSString(), &comment) == NS_OK) 
-        return createComment(comment); 
-    else 
-        return NULL; 
-} 
- 
-// 
-//Check the wrapperHashTable for a precreated object to return to the caller. 
-//If one does not exist, create it, store it in the hash, and return it to the 
-//caller. 
-Comment* Document::createComment(nsIDOMComment* comment) 
-{ 
-    Comment* commentWrapper = NULL; 
- 
-    if (comment) 
-    { 
-        commentWrapper = (Comment*)wrapperHashTable.retrieve((Int32)comment); 
- 
-        if (!commentWrapper) 
-        { 
-            commentWrapper = new Comment(comment, this); 
-            wrapperHashTable.add(commentWrapper, (Int32)comment); 
-        } 
-    } 
- 
-    return commentWrapper; 
-} 
- 
-// 
-//Call the nsIDOMDocument::CreateCDATASection function, then create or retrieve 
-//a wrapper object to return to the caller. 
-// 
-CDATASection* Document::createCDATASection(const String& theData) 
-{ 
-    nsIDOMCDATASection* cdata = NULL; 
- 
-    if (nsDocument == NULL) 
-        return NULL; 
- 
-    if (nsDocument->CreateCDATASection(theData.getConstNSString(), &cdata) ==  
-          NS_OK) 
-        return createCDATASection(cdata); 
-    else 
-        return NULL; 
-} 
- 
-// 
-//Check to see if a precreated object exists in the wrapperHashTable.  If so 
-//simply return it to the caller.  If not, creat one, store it in the hash, and 
-//return it to the caller. 
-// 
-CDATASection* Document::createCDATASection(nsIDOMCDATASection* cdata) 
-{ 
-    CDATASection* cdataWrapper = NULL; 
- 
-    if (cdata) 
-    { 
-        cdataWrapper = (CDATASection*)wrapperHashTable.retrieve((Int32)cdata); 
- 
-        if (!cdataWrapper) 
-        { 
-            cdataWrapper = new CDATASection(cdata, this); 
-            wrapperHashTable.add(cdataWrapper, (Int32)cdata); 
-        } 
-    } 
- 
-    return cdataWrapper; 
-} 
- 
-// 
-//Call the nsIDOMDocument::CreateProcessingInstruction function, then find or 
-//create a wrapper class to return to the caller. 
-// 
-ProcessingInstruction* 
-    Document::createProcessingInstruction(const String& target, 
-                                          const String& data) 
-{ 
-    nsIDOMProcessingInstruction* pi = NULL; 
- 
-    if (nsDocument == NULL) 
-        return NULL; 
- 
-    if (nsDocument->CreateProcessingInstruction(target.getConstNSString(), 
-          data.getConstNSString(), &pi) == NS_OK) 
-        return createProcessingInstruction(pi); 
-    else 
-        return NULL; 
-} 
- 
-// 
-//Check the wrapperHashTable for a precreated object.  If one exists, return 
-//it to the caller.  If not, create one, store it in the hash table, and then 
-//return it to the caller. 
-// 
-ProcessingInstruction*  
-Document::createProcessingInstruction(nsIDOMProcessingInstruction* pi) 
-{ 
-    ProcessingInstruction* piWrapper = NULL; 
- 
-    if (pi) 
-    { 
-        piWrapper = (ProcessingInstruction*)wrapperHashTable.retrieve((Int32)pi); 
- 
-        if (!piWrapper) 
-        { 
-            piWrapper = new ProcessingInstruction(pi, this); 
-            wrapperHashTable.add(piWrapper, (Int32)pi); 
-        } 
-    } 
- 
-    return piWrapper; 
-} 
- 
-// 
-//Call the nsIDOMDocument::CreateEntityReference function, then obtain a wrapper 
-//class to return to the user. 
-// 
-EntityReference* Document::createEntityReference(const String& name) 
-{ 
-    nsIDOMEntityReference* entityRef = NULL; 
- 
-    if (nsDocument == NULL) 
-        return NULL; 
- 
-    if (nsDocument->CreateEntityReference(name.getConstNSString(),  
-          &entityRef) == NS_OK) 
-        return createEntityReference(entityRef); 
-    else 
-        return NULL; 
-} 
- 
-// 
-//Check the wrapperHashTable for a wrapper class.  If one exists, simply return 
-//it to the caller.  Else, create one, place it in the hash, and return it to  
-//the caller. 
-// 
-EntityReference*  
-Document::createEntityReference(nsIDOMEntityReference* entityRef) 
-{ 
-    EntityReference* entityWrapper = NULL; 
- 
-    if (entityRef) 
-    { 
-        entityWrapper =  
-          (EntityReference*) wrapperHashTable.retrieve((Int32)entityRef); 
- 
-        if (!entityWrapper) 
-        { 
-            entityWrapper = new EntityReference(entityRef, this); 
-            wrapperHashTable.add(entityWrapper, (Int32)entityRef); 
-        } 
-    } 
- 
-    return entityWrapper; 
-} 
- 
-// 
-//Check the wrapperHashTable for a wrapper class.  If one exists, simply return 
-//it to the caller.  Else create one, place it in the hash table, and then return 
-//it to the caller. 
-Entity* Document::createEntity(nsIDOMEntity* entity) 
-{ 
-    Entity* entityWrapper = NULL; 
- 
-    if (entity) 
-    { 
-        entityWrapper = (Entity*)wrapperHashTable.retrieve((Int32) entity); 
- 
-        if (!entity) 
-        { 
-            entityWrapper = new Entity(entity, this); 
-            wrapperHashTable.add(entityWrapper, (Int32)entity); 
-        } 
-    } 
- 
-    return entityWrapper; 
-} 
- 
-// 
-//Factory function for creating and hashing generic Node wrapper classes. 
-//Check the wrapperHashTable to see if a wrapper object already exists.  If it 
-//does then return it.  If one does not exist, then creat one, hash it, and  
-//return it to the caller. 
-// 
-Node* Document::createNode(nsIDOMNode* node) 
-{ 
-    Node* nodeWrapper = NULL; 
- 
-    if (node) 
-    { 
-        nodeWrapper = (Node*)wrapperHashTable.retrieve((Int32)node); 
- 
-        if (!nodeWrapper) 
-        { 
-            nodeWrapper = new Node(node, this); 
-            wrapperHashTable.add(nodeWrapper, (Int32)node); 
-        } 
-    } 
- 
-    return nodeWrapper; 
-} 
- 
-// 
-//Factory function for creating and hashing a String object.  Note that it 
-//is specifically for wrapping nsString objects with String objects. 
-//Once the object is created it is stored in the hash table. 
-// 
-String* Document::createDOMString(nsString* str) 
-{ 
-    String* strWrapper = NULL; 
- 
-    if (str) 
-    { 
-        strWrapper = (String*)wrapperHashTable.retrieve((Int32)str); 
- 
-        if (!strWrapper) 
-        { 
-            strWrapper = new String(str); 
-            wrapperHashTable.add(strWrapper, (Int32)str); 
-        } 
-    } 
- 
-    return strWrapper; 
-} 
- 
-// 
-//Factory function for creating and hashing a Notation object. 
-// 
-Notation* Document::createNotation(nsIDOMNotation* notation) 
-{ 
-    Notation* notationWrapper = NULL; 
- 
-    if (notation) 
-    { 
-        notationWrapper = (Notation*)wrapperHashTable.retrieve((Int32) notation); 
- 
-        if (!notationWrapper) 
-        { 
-            notationWrapper = new Notation(notation, this); 
-            wrapperHashTable.add(notationWrapper, (Int32)notation); 
-        } 
-    } 
- 
-    return notationWrapper; 
-} 
- 
-// 
-//Factory function for creating and hashing DOM Implementation objects 
-// 
-DOMImplementation*  
-Document::createDOMImplementation(nsIDOMDOMImplementation* impl) 
-{ 
-    DOMImplementation* implWrapper = NULL; 
- 
-    if (impl) 
-    { 
-        implWrapper = (DOMImplementation*)wrapperHashTable.retrieve((Int32)impl); 
- 
-        if (!implWrapper) 
-        { 
-            implWrapper = new DOMImplementation(impl, this); 
-            wrapperHashTable.add(implWrapper, (Int32)impl); 
-        } 
-    } 
- 
-    return implWrapper; 
-} 
- 
-// 
-//Factory function for creating and hashing DOM DocumentType objects. 
-// 
-DocumentType* Document::createDocumentType(nsIDOMDocumentType* doctype) 
-{ 
-    DocumentType* doctypeWrapper = NULL; 
- 
-    if (doctype) 
-    { 
-        doctypeWrapper = (DocumentType*)wrapperHashTable.retrieve((Int32)doctype); 
- 
-        if (!doctypeWrapper) 
-        { 
-            doctypeWrapper = new DocumentType(doctype, this); 
-            wrapperHashTable.add(doctypeWrapper, (Int32)doctype); 
-        } 
-    } 
- 
-    return doctypeWrapper; 
-} 
- 
-// 
-//Factory function for creating and hashing NodeList objects 
-// 
-NodeList* Document::createNodeList(nsIDOMNodeList* list) 
-{ 
-    NodeList* listWrapper = NULL; 
- 
-    if (list) 
-    { 
-        listWrapper = (NodeList*)wrapperHashTable.retrieve((Int32)list); 
- 
-        if (!listWrapper) 
-        { 
-            listWrapper = new NodeList(list, this); 
-            wrapperHashTable.add(listWrapper, (Int32)list); 
-        } 
-    } 
- 
-    return listWrapper; 
-} 
- 
-// 
-//Factory function for creating and hashing NamedNodeMap objects 
-// 
-NamedNodeMap* Document::createNamedNodeMap(nsIDOMNamedNodeMap* map) 
-{ 
-    NamedNodeMap* mapWrapper = NULL; 
- 
-    if (map) 
-    { 
-        mapWrapper = (NamedNodeMap*)wrapperHashTable.retrieve((Int32)map); 
- 
-        if (!mapWrapper) 
-        { 
-            mapWrapper = new NamedNodeMap(map, this); 
-            wrapperHashTable.add(mapWrapper, (Int32)map); 
-        } 
-    } 
- 
-    return mapWrapper; 
-} 
- 
-// 
-//Remove the specified hashed object from wrapperHashTable and return it to the 
-//caller. 
-// 
-MITREObject* Document::removeWrapper(Int32 hashValue) 
-{ 
-    return wrapperHashTable.remove(hashValue); 
-} 
- 
-// 
-//Add the specified wrapper to the hash table using the specified hash value 
-// 
-void Document::addWrapper(MITREObject* obj, Int32 hashValue) 
-{ 
-    wrapperHashTable.add(obj, hashValue); 
-} 
- 
-// 
-//Determine what kind of node this is, and create the appropriate wrapper for it 
-// 
-Node* Document::createWrapper(nsIDOMNode* node) 
-{ 
-    unsigned short nodeType = 0; 
- 
-    // 
-    //TK 02/15/2000 - Must make sure node is not null. 
-    if (!node) 
-      return NULL; 
- 
-    node->GetNodeType(&nodeType); 
- 
-    switch (nodeType) 
-    { 
-        case nsIDOMNode::ELEMENT_NODE: 
-            return createElement((nsIDOMElement*)node); 
-            break; 
- 
-        case nsIDOMNode::ATTRIBUTE_NODE: 
-            return createAttribute((nsIDOMAttr*)node); 
-            break; 
- 
-        case nsIDOMNode::TEXT_NODE: 
-            return createTextNode((nsIDOMText*)node); 
-            break; 
- 
-        case nsIDOMNode::CDATA_SECTION_NODE: 
-            return createCDATASection((nsIDOMCDATASection*)node); 
-           break; 
- 
-        case nsIDOMNode::COMMENT_NODE: 
-            return createComment((nsIDOMComment*)node); 
-            break; 
- 
-        case nsIDOMNode::ENTITY_REFERENCE_NODE: 
-            return createEntityReference((nsIDOMEntityReference*)node); 
-            break; 
- 
-        case nsIDOMNode::ENTITY_NODE: 
-            return createEntity((nsIDOMEntity*)node); 
-            break; 
- 
-        case nsIDOMNode::PROCESSING_INSTRUCTION_NODE: 
-            return createProcessingInstruction((nsIDOMProcessingInstruction*)node); 
-            break; 
- 
-        case nsIDOMNode::DOCUMENT_TYPE_NODE: 
-            return createDocumentType((nsIDOMDocumentType*)node); 
-            break; 
- 
-        case nsIDOMNode::DOCUMENT_FRAGMENT_NODE: 
-            return createDocumentFragment((nsIDOMDocumentFragment*)node); 
-            break; 
-         
-        case nsIDOMNode::NOTATION_NODE: 
-            return createNotation((nsIDOMNotation*)node); 
-            break; 
- 
-        default: 
-            return createNode(node); 
-    } 
-} 
+/**
+ * Remove a wrapper from the document's hash table and return it to the caller.
+ *
+ * @param aHashValue the key for the object you want to remove
+ *
+ * @return the wrapper as a MITREObject
+ */
+MITREObject* Document::removeWrapper(void* aHashValue)
+{
+    return wrapperHashTable.remove(aHashValue);
+}

@@ -17,83 +17,83 @@
  *
  * Please see release.txt distributed with this file for more information.
  *
+ * Contributor(s): Tom Kneeland
+ *                 Peter Van der Beken <peter.vanderbeken@pandora.be>
+ *
  */
-// Tom Kneeland (02/02/2000)
-//
-// Implementation of the wrapper class to convert a 
-// Mozilla nsIDOMProcessingInstruction into a TransforMIIX ProcessingInstruction
-// interface.
-//
-// Modification History:
-// Who  When      What
-//
+
+/* Implementation of the wrapper class to convert the Mozilla
+   nsIDOMProcessingInstruction interface into a TransforMIIX
+   ProcessingInstruction interface.
+*/
 
 #include "mozilladom.h"
 
-//
-//Construct a wrapper class for the given object and document
-//
+/**
+ * Construct a wrapper with the specified Mozilla object and document owner.
+ *
+ * @param aProcInstr the nsIDOMProcessingInstruction you want to wrap
+ * @param aOwner the document that owns this object
+ */
 ProcessingInstruction::ProcessingInstruction(
-                       nsIDOMProcessingInstruction* procInstr,
-                       Document* owner) : 
-                       Node (procInstr, owner)
+            nsIDOMProcessingInstruction* aProcInstr,
+            Document* aOwner) :
+        Node (aProcInstr, aOwner)
 {
-  nsProcessingInstruction = procInstr;
+    nsProcessingInstruction = aProcInstr;
 }
 
-//
-//Destructor.  Do nothing
-//
+/**
+ * Destructor
+ */
 ProcessingInstruction::~ProcessingInstruction()
 {
 }
 
-//
-//Wrap the new object in this wrapper
-//
-void ProcessingInstruction::setNSObj(nsIDOMProcessingInstruction* procInstr)
+/**
+ * Wrap a different Mozilla object with this wrapper.
+ *
+ * @param aProcInstr the nsIDOMProcessingInstruction you want to wrap
+ */
+void ProcessingInstruction::setNSObj(nsIDOMProcessingInstruction* aProcInstr)
 {
-  Node::setNSObj(procInstr);
-  nsProcessingInstruction = procInstr;
+    Node::setNSObj(aProcInstr);
+    nsProcessingInstruction = aProcInstr;
 }
 
-//
-//Retrieve the Target from the Mozilla object, then wrap appropriately in
-//a String wrapper.
-//
-const String& ProcessingInstruction::getTarget() const
+/**
+ * Call nsIDOMProcessingInstruction::GetTarget to retrieve the target of the
+ * processing instruction.
+ *
+ * @return the target of the processing instruction
+ */
+const String& ProcessingInstruction::getTarget()
 {
-  nsString* target = new nsString();
-
-  if (nsProcessingInstruction->GetTarget(*target) == NS_OK)
-    return *(ownerDocument->createDOMString(target));
-  else
-    {
-      delete target;
-      return NULL_STRING;
-    }
+    target.clear();
+    nsProcessingInstruction->GetTarget(target.getNSString());
+    return target;
 }
 
-//
-//Retrieve the data from the Mozilla object, then wrap appropriately in a 
-//String wrapper.
-//
-const String& ProcessingInstruction::getData() const
+/**
+ * Call nsIDOMProcessingInstruction::GetData to retrieve the data of the
+ * processing instruction.
+ *
+ * @return the data of the processing instruction
+ */
+const String& ProcessingInstruction::getData()
 {
-  nsString* data = new nsString();
-  
-  if (nsProcessingInstruction->GetData(*data) == NS_OK)
-    return *(ownerDocument->createDOMString(data));
-  else
-    {
-      delete data;
-      return NULL_STRING;
-    }
+    data.clear();
+    nsProcessingInstruction->GetData(data.getNSString());
+    return data;
 }
 
-//
-//Pass the nsString wapped by theData to the Mozilla object.
-void ProcessingInstruction::setData(const String& theData)
+/**
+ * Call nsIDOMProcessingInstruction::SetData to set the data of the
+ * processing instruction.
+ *
+ * @param aData the value to which you want to set the data of the PI
+ */
+void ProcessingInstruction::setData(const String& aData)
 {
-  nsProcessingInstruction->SetData(theData.getConstNSString());
+    nsProcessingInstruction->SetData(aData.getConstNSString());
 }

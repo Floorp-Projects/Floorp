@@ -41,6 +41,7 @@ CPPSRCS = MozillaAttr.cpp \
         MozillaNode.cpp \
         MozillaNodeList.cpp \
         MozillaNotation.cpp \
+        MozillaObjectWrapper.cpp	\
         MozillaProcInstruction.cpp \
         MozillaText.cpp \
 

@@ -17,88 +17,79 @@
  *
  * Please see release.txt distributed with this file for more information.
  *
+ * Contributor(s): Tom Kneeland
+ *                 Peter Van der Beken <peter.vanderbeken@pandora.be>
+ *
  */
-// Tom Kneeland (02/02/2000)
-//
-// Implementation of the wrapper class to convert a Mozilla nsIDOMEntity into
-// a TransforMIIX Entity interface.
-//
-// Modification History:
-// Who  When         What
-//
+
+/* Implementation of the wrapper class to convert the Mozilla nsIDOMEntity
+   interface into a TransforMIIX Entity interface.
+*/
 
 #include "mozilladom.h"
 
-//
-//Construct an entity wrapper
-//
-Entity::Entity(nsIDOMEntity* entity, Document* owner) : Node (entity, owner)
+/**
+ * Construct a wrapper with the specified Mozilla object and document owner.
+ *
+ * @param aEntity the nsIDOMElement you want to wrap
+ * @param aOwner the document that owns this object
+ */
+Entity::Entity(nsIDOMEntity* aEntity, Document* aOwner) : Node (aEntity, aOwner)
 {
-  nsEntity = entity;
+    nsEntity = aEntity;
 }
 
-//
-//Destructor.  Do nothing
-//
+/**
+ * Destructor
+ */
 Entity::~Entity()
 {
 }
 
-//
-//Wrap a different mozilla object
-//
-void Entity::setNSObj(nsIDOMEntity* entity)
+/**
+ * Wrap a different Mozilla object with this wrapper.
+ *
+ * @param aEntity the nsIDOMEntity you want to wrap
+ */
+void Entity::setNSObj(nsIDOMEntity* aEntity)
 {
-  Node::setNSObj(entity);
-  nsEntity = entity;
+    Node::setNSObj(aEntity);
+    nsEntity = aEntity;
 }
 
-//
-//Retrieve the public id from the mozilla object, and then retrieve the 
-//appropriate wrapper from the document.
-//
-const String& Entity::getPublicId() const
+/**
+ * Call nsIDOMElement::GetPublicId to retrieve the public id for this entity.
+ *
+ * @return the entity's public id
+ */
+const String& Entity::getPublicId()
 {
-  nsString* publicId = new nsString();
-
-  if (nsEntity->GetPublicId(*publicId) == NS_OK)
-    return *(ownerDocument->createDOMString(publicId));
-  else
-    {
-      delete publicId;
-      return NULL_STRING;
-    }
+  publicId.clear();
+  nsEntity->GetPublicId(publicId.getNSString());
+  return publicId;
 }
 
-//
-//Retrieve the system id from the Mozilla object, and then wrap it appropriately
-//
-const String& Entity::getSystemId() const
+/**
+ * Call nsIDOMElement::GetSystemId to retrieve the system id for this entity.
+ *
+ * @return the entity's system id
+ */
+const String& Entity::getSystemId()
 {
-  nsString* systemId = new nsString();
-
-  if (nsEntity->GetSystemId(*systemId) == NS_OK)
-    return *(ownerDocument->createDOMString(systemId));
-  else
-    {
-      delete systemId;
-      return NULL_STRING;
-    }
+  systemId.clear();
+  nsEntity->GetSystemId(systemId.getNSString());
+  return systemId;
 }
 
-//
-//Retrieve the notation name from the Mozilla object, and then wrap it
-//appropriately
-//
-const String& Entity::getNotationName() const
+/**
+ * Call nsIDOMElement::GetNotationName to retrieve the notation name for this
+ * entity.
+ *
+ * @return the entity's system id
+ */
+const String& Entity::getNotationName()
 {
-  nsString* notationName = new nsString();
-
-  if (nsEntity->GetNotationName(*notationName) == NS_OK)
-    return *(ownerDocument->createDOMString(notationName));
-  else
-    {
-      delete notationName;
-      return NULL_STRING;
-    }
+  notationName.clear();
+  nsEntity->GetNotationName(notationName.getNSString());
+  return notationName;
 }

@@ -17,39 +17,43 @@
  *
  * Please see release.txt distributed with this file for more information.
  *
+ * Contributor(s): Tom Kneeland
+ *                 Peter Van der Beken <peter.vanderbeken@pandora.be>
+ *
  */
-// Tom Kneeland (02/01/2000)
-//
-// Implementation of the wrapper class to convert the Mozilla nsIDOMComment
-// interface into a TransforMIIX Comment interface.
-//
-// Modification History:
-// Who  When      What
-//
+
+/* Implementation of the wrapper class to convert the Mozilla nsIDOMComment
+   interface into a TransforMIIX Comment interface.
+*/
 
 #include "mozilladom.h"
 
-//
-//Construct a text object with the specified document owner and data
-//
-Comment::Comment(nsIDOMComment* comment, Document* owner) : 
-  CharacterData(comment, owner)
+/**
+ * Construct a wrapper with the specified Mozilla object and document owner.
+ *
+ * @param aComment the nsIDOMComment you want to wrap
+ * @param aOwner the document that owns this object
+ */
+Comment::Comment(nsIDOMComment* aComment, Document* aOwner) :
+    CharacterData(aComment, aOwner)
 {
-  nsComment = comment;
+    nsComment = aComment;
 }
 
-//
-//Destructor. Do Nothing
-//
+/**
+ * Destructor
+ */
 Comment::~Comment()
 {
 }
 
-//
-//Wrap a differnt Mozilla object with this object
-//
-void Comment::setNSObj(nsIDOMComment* comment)
+/**
+ * Wrap a different Mozilla object with this wrapper.
+ *
+ * @param aComment the nsIDOMComment you want to wrap
+ */
+void Comment::setNSObj(nsIDOMComment* aComment)
 {
-  CharacterData::setNSObj(comment);
-  nsComment = comment;
+    CharacterData::setNSObj(aComment);
+    nsComment = aComment;
 }
