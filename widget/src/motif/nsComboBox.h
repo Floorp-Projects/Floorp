@@ -50,8 +50,6 @@ public:
     virtual void    SelectItem(PRInt32 aPosition);
     virtual void    Deselect() ;
 
-    virtual void    PreCreateWidget(nsWidgetInitData *aInitData);
-
     void Create(nsIWidget *aParent,
                 const nsRect &aRect,
                 EVENT_CALLBACK aHandleEventFunction,

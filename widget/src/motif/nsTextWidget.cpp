@@ -117,11 +117,27 @@ void nsTextWidget::Create(nsIWidget *aParent,
     data->mPassword = "";
     XtVaSetValues(mWidget, XmNuserData, data, NULL);
   }
-  
-  
-
-
 }
+
+//-------------------------------------------------------------------------
+//
+// Query interface implementation
+//
+//-------------------------------------------------------------------------
+nsresult nsTextWidget::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+{
+    nsresult result = nsWindow::QueryInterface(aIID, aInstancePtr);
+
+    static NS_DEFINE_IID(kInsTextWidgetIID, NS_ITEXTWIDGET_IID);
+    if (result == NS_NOINTERFACE && aIID.Equals(kInsTextWidgetIID)) {
+        *aInstancePtr = (void*) ((nsITextWidget*)this);
+        AddRef();
+        result = NS_OK;
+    }
+
+    return result;
+}
+
 
 //-------------------------------------------------------------------------
 void nsTextWidget::Create(nsNativeWidget aParent,
