@@ -270,8 +270,9 @@ nsMathMLmfracFrame::Place(nsIPresContext*      aPresContext,
   nsCOMPtr<nsIFontMetrics> fm;
   aRenderingContext.GetFontMetrics(*getter_AddRefs(fm));
 
-  nscoord defaultRuleThickness;
+  nscoord defaultRuleThickness, axisHeight;
   GetRuleThickness(aRenderingContext, fm, defaultRuleThickness);
+  GetAxisHeight(aRenderingContext, fm, axisHeight);
 
   // by default, leave at least one-pixel padding at either end, or use
   // lspace & rspace from <mo> if we are an embellished container
@@ -314,7 +315,6 @@ nsMathMLmfracFrame::Place(nsIPresContext*      aPresContext,
 
   nscoord minClearance = 0;
   nscoord actualClearance = 0;
-  nscoord axisHeight = 0;
 
   nscoord actualRuleThickness =  mLineRect.height;
 
@@ -335,11 +335,10 @@ nsMathMLmfracFrame::Place(nsIPresContext*      aPresContext,
   }
   else {
     // Rule 15d, App. G, TeXbook
-    GetAxisHeight(aRenderingContext, fm, axisHeight);
 
     // min clearance between numerator or denominator and middle of bar
 
-    // TeX has a different interpretation of the thickeness.
+    // TeX has a different interpretation of the thickness.
     // Try $a \above10pt b$ to see. Here is what TeX does:
 //     minClearance = (NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags)) ?
 //      3 * actualRuleThickness : actualRuleThickness;
