@@ -606,8 +606,11 @@ void nsTableRowGroupFrame::ShrinkWrapChildren(nsIPresContext* aPresContext,
         cellFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)childDisplay));
         if (NS_STYLE_DISPLAY_TABLE_CELL == childDisplay->mDisplay)
         {
-          PRInt32 rowSpan = ((nsTableFrame*)mGeometricParent)->
-                                GetEffectiveRowSpan(rowIndex,(nsTableCellFrame*)cellFrame);
+          nsTableFrame *tableFrame=nsnull;
+          nsresult rv = nsTableFrame::GetTableFrame(this, tableFrame);
+          if (NS_FAILED(rv) || nsnull==tableFrame)
+            return;
+          PRInt32 rowSpan = tableFrame->GetEffectiveRowSpan(rowIndex,(nsTableCellFrame*)cellFrame);
           if (rowSpan > 1)
           { // found a cell with rowspan > 1, determine its height
             nscoord heightOfRowsSpanned = 0;

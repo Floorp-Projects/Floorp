@@ -1575,7 +1575,7 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
     if (PR_FALSE==IsFirstPassValid())
     {
       if (PR_TRUE==gsDebug || PR_TRUE==gsDebugIR) printf("TIF Reflow: first pass is invalid\n");
-      rv = ResizeReflowPass1(aPresContext, aDesiredSize, aReflowState, aStatus);
+      rv = ResizeReflowPass1(aPresContext, aDesiredSize, aReflowState, aStatus, nsnull, aReflowState.reason);
       if (NS_FAILED(rv))
         return rv;
       needsRecalc=PR_TRUE;
@@ -1641,10 +1641,12 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
   * NOTE: should never get called on a continuing frame!  All cached pass1 state
   *       is stored in the inner table first-in-flow.
   */
-NS_METHOD nsTableFrame::ResizeReflowPass1(nsIPresContext& aPresContext,
-                                               nsHTMLReflowMetrics& aDesiredSize,
-                                               const nsHTMLReflowState& aReflowState,
-                                               nsReflowStatus& aStatus)
+NS_METHOD nsTableFrame::ResizeReflowPass1(nsIPresContext&          aPresContext,
+                                          nsHTMLReflowMetrics&     aDesiredSize,
+                                          const nsHTMLReflowState& aReflowState,
+                                          nsReflowStatus&          aStatus,
+                                          nsTableRowGroupFrame *   aStartingFrame,
+                                          nsReflowReason           aReason)
 {
   NS_PRECONDITION(aReflowState.frame == this, "bad reflow state");
   NS_PRECONDITION(aReflowState.parentReflowState->frame == mGeometricParent,
@@ -1680,13 +1682,15 @@ NS_METHOD nsTableFrame::ResizeReflowPass1(nsIPresContext& aPresContext,
   nscoord rightInset = borderPadding.right;
   nscoord bottomInset = borderPadding.bottom;
   nscoord leftInset = borderPadding.left;
-  nsReflowReason  reflowReason = aReflowState.reason;
 
   nsStyleTable* tableStyle;
   GetStyleData(eStyleStruct_Table, (nsStyleStruct *&)tableStyle);
   if (NS_STYLE_TABLE_LAYOUT_FIXED!=tableStyle->mLayoutStrategy)
   {
-    for (nsIFrame* kidFrame = mFirstChild; nsnull != kidFrame; kidFrame->GetNextSibling(kidFrame)) 
+    nsIFrame* kidFrame = aStartingFrame;
+    if (nsnull==kidFrame)
+      kidFrame=mFirstChild;
+    for ( ; nsnull != kidFrame; kidFrame->GetNextSibling(kidFrame)) 
     {
       const nsStyleDisplay *childDisplay;
       kidFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)childDisplay));
@@ -1699,8 +1703,7 @@ NS_METHOD nsTableFrame::ResizeReflowPass1(nsIPresContext& aPresContext,
       }
       nsSize maxKidElementSize(0,0);
       nsHTMLReflowState kidReflowState(aPresContext, kidFrame, aReflowState,
-                                       availSize);
-
+                                       availSize, aReason);
       PRInt32 yCoord = y;
       if (NS_UNCONSTRAINEDSIZE!=yCoord)
         yCoord+= topInset;
@@ -2166,7 +2169,8 @@ NS_METHOD nsTableFrame::IR_RowGroupInserted(nsIPresContext&        aPresContext,
                                             nsTableRowGroupFrame * aInsertedFrame,
                                             PRBool                 aReplace)
 {
-  nsresult rv;
+  nsresult rv = IR_UnknownFrameInserted(aPresContext, aDesiredSize, aReflowState,
+                                        aStatus, (nsIFrame*)aInsertedFrame, aReplace);
   // inserting the rowgroup only effects reflow if the rowgroup includes at least one row
   return rv;
 }
@@ -2179,26 +2183,22 @@ NS_METHOD nsTableFrame::IR_RowGroupAppended(nsIPresContext&        aPresContext,
                                             nsTableRowGroupFrame * aAppendedFrame)
 {
   // hook aAppendedFrame into the child list
-  nsIFrame *lastChild = mFirstChild;
-  nsIFrame *nextChild = lastChild;
-  while (nsnull!=nextChild)
-  {
-    lastChild = nextChild;
-    nextChild->GetNextSibling(nextChild);
-  }
-  if (nsnull==lastChild)
-    mFirstChild = aAppendedFrame;
-  else
-    lastChild->SetNextSibling(aAppendedFrame);
+  nsresult rv = IR_UnknownFrameInserted(aPresContext, aDesiredSize, aReflowState,
+                                        aStatus, (nsIFrame*)aAppendedFrame, PR_FALSE);
+  if (NS_FAILED(rv))
+    return rv;
 
   // account for the cells in the rows that are children of aAppendedFrame
-  nsresult rv = DidAppendRowGroup((nsTableRowGroupFrame*)aAppendedFrame);
+  rv = DidAppendRowGroup((nsTableRowGroupFrame*)aAppendedFrame);
 
   // do a pass-1 layout of all the cells in all the rows of the rowgroup
-  InvalidateFirstPassCache();
+  rv = ResizeReflowPass1(aPresContext, aDesiredSize, aReflowState.reflowState, aStatus, 
+                         aAppendedFrame, eReflowReason_Initial);
+  if (NS_FAILED(rv))
+    return rv;
 
-  // if any column widths have to change due to this, re-init the layout strategy
-  // mTableLayoutStrategy->Initialize(aDesiredSize.aMaxElementSize);  //XXX for now, we're just doing the whole enchelada
+  // if any column widths have to change due to this, rebalance column widths
+  mTableLayoutStrategy->Initialize(aDesiredSize.maxElementSize);  
 
   return rv;
 }
