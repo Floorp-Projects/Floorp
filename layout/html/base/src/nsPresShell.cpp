@@ -3306,10 +3306,15 @@ PresShell::GetGeneratedContentIterator(nsIContent*          aContent,
                                                getter_AddRefs(pseudoStyleContext));
       if (pseudoStyleContext) {
         nsIFrame* lastChildFrame = GetLastChildFrame(mPresContext, primaryFrame, aContent);
-        NS_ASSERTION(lastChildFrame && IsGeneratedContentFrame(lastChildFrame),
-                     "can't find generated content frame");
-        // Create an iterator
-        rv = NS_NewGeneratedContentIterator(mPresContext, lastChildFrame, aIterator);
+        if (lastChildFrame)
+        { // it is now legal for GetLastChildFrame to return null.  see bug 52307 (a regression from bug 18754)
+          // in the case of a null child frame, we treat the frame as having no "after" style
+          // the "before" handler above already does this check
+          NS_ASSERTION(IsGeneratedContentFrame(lastChildFrame),
+                       "can't find generated content frame");
+          // Create an iterator
+          rv = NS_NewGeneratedContentIterator(mPresContext, lastChildFrame, aIterator);
+        }
       }
     }
   }
