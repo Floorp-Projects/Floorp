@@ -521,7 +521,7 @@ js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts, uintN flags,
 			    const uintN errorNumber, ...)
 {
     va_list ap;
-    jschar *limit, lastc;
+    jschar *limit;
     JSErrorReporter onError;
     JSErrorReport report;
     jschar *tokenptr;
@@ -542,14 +542,12 @@ js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts, uintN flags,
 
     JS_ASSERT(ts->linebuf.limit < ts->linebuf.base + JS_LINE_LIMIT);
     limit = ts->linebuf.limit;
-    lastc = limit[-1];
-    if (lastc == '\n')
-	limit[-1] = 0;
     onError = cx->errorReporter;
     if (onError) {
 	report.filename = ts->filename;
 	report.lineno = ts->lineno;
-	linestr = js_NewStringCopyZ(cx, ts->linebuf.base, 0);
+	linestr = js_NewStringCopyN(cx, ts->linebuf.base, 
+                                        limit - ts->linebuf.base, 0);
 	report.linebuf  = linestr
 			  ? JS_GetStringBytes(linestr)
 			  : NULL;
@@ -617,8 +615,6 @@ js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts, uintN flags,
 #endif
 #endif
     }
-    if (lastc == '\n')
-	limit[-1] = lastc;
     if (message)
         JS_free(cx, message);
     if (report.messageArgs) {
