@@ -1,5 +1,5 @@
 #!/usr/bonsaitools/bin/perl
-# $Id: find,v 1.6 1999/11/09 01:38:00 endico%mozilla.org Exp $
+# $Id: find,v 1.7 2001/03/26 22:10:36 terry%mozilla.org Exp $
 
 # find   --	Find files
 #
@@ -49,8 +49,9 @@ sub find {
 
 
     if ($searchtext ne "") {
-	unless (open(FILELLISTING,$Conf->dbdir."/.glimpse_filenames")) {
-	    &warning("Could not open .glimpse_filenames.");
+	my $filename = $Conf->dbdir."/.glimpse_filenames";
+	unless (open(FILELLISTING,$filename)) {
+	    &warning("Could not open $filename");
 	    return;
 	}
 	print("<P><hr>\n");
