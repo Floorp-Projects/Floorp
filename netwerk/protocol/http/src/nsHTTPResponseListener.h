@@ -173,6 +173,12 @@ public:
     NS_DECL_NSISTREAMLISTENER
 
     void FireNotifications ();
+    void Shutdown ();
+
+    nsIStreamListener* GetListener ()
+    {
+        return mListener;
+    }
 
 private:
     nsHTTPChannel*              mChannel;
@@ -181,6 +187,9 @@ private:
 
     PRBool  mOnStartFired;
     PRBool  mOnStopFired;
+    PRBool  mShutdown;
+    PRBool  mBusy;
+    PRBool  mOnStopPending;
 };
 
 

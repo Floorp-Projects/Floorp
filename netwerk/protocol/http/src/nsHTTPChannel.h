@@ -47,7 +47,7 @@ class nsHTTPRequest;
 class nsHTTPResponse;
 class nsICachedNetData;
 
-#define LOOPING_REDIRECT_ERROR_URI  "resource:/res/errors/redirect.html"
+#define LOOPING_REDIRECT_ERROR_URI  "chrome://necko/content/redirect_loop.xul"
 
 // Utility functions- TODO share from nsURLHelpers...
 nsresult           
@@ -184,7 +184,6 @@ protected:
     PRBool                              mPipeliningAllowed;
     nsHTTPPipelinedRequest*             mPipelinedRequest;
     nsCOMPtr<nsISupports>               mSecurityInfo;
-    nsHTTPFinalListener*                mFinalListener;
 };
 
 #endif /* _nsHTTPChannel_h_ */

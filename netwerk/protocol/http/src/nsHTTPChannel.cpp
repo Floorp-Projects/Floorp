@@ -99,8 +99,7 @@ nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL, nsHTTPHandler* i_Handler):
     mBufferMaxSize(0),
     mStatus(NS_OK),
     mPipeliningAllowed (PR_TRUE),
-    mPipelinedRequest (nsnull),
-    mFinalListener (nsnull)
+    mPipelinedRequest (nsnull)
 {
     NS_INIT_REFCNT();
 
@@ -178,9 +177,12 @@ nsHTTPChannel::Cancel(nsresult status)
   mStatus = status;
   rv = mRequest->Cancel(status);
 
-// XXX/ruslan: uncomment me when the webshell learns to handle notifications as agreed
-//  if (mResponseDataListener)
-//      mFinalListener -> FireNotifications ();
+  if (mResponseDataListener)
+  {
+    nsIStreamListener   *sl = mResponseDataListener;
+    nsHTTPFinalListener *fl = NS_STATIC_CAST (nsHTTPFinalListener*, sl);
+    fl -> FireNotifications ();
+  }
 
   if (mOpenObserver && !mFiredOpenOnStopRequest)
   {
@@ -245,10 +247,9 @@ nsHTTPChannel::OpenInputStream(nsIInputStream **o_Stream)
 
     rv = NS_NewSyncStreamListener(o_Stream,
                                   getter_AddRefs(mBufOutputStream),
-                                  getter_AddRefs(mResponseDataListener));
+                                  getter_AddRefs(listener));
 
-    // mFinalListener = new nsHTTPFinalListener (this, listener, nsnull);
-    // mResponseDataListener = mFinalListener;
+    mResponseDataListener = new nsHTTPFinalListener (this, listener, nsnull);
 
     if (NS_FAILED(rv)) return rv;
 
@@ -303,11 +304,7 @@ nsHTTPChannel::AsyncRead(nsIStreamListener *listener, nsISupports *aContext)
     }
 
     if (listener)
-    {
-//        mFinalListener = new nsHTTPFinalListener (this, listener, aContext);
-//        mResponseDataListener = mFinalListener;
-        mResponseDataListener = listener;
-    }
+        mResponseDataListener = new nsHTTPFinalListener (this, listener, aContext);
     else
         mResponseDataListener = listener;
 
@@ -1514,7 +1511,12 @@ nsresult nsHTTPChannel::Redirect(const char *aNewLocation,
   }
 
   // Start the redirect...
-  rv = channel->AsyncRead(mResponseDataListener, mResponseContext);
+  nsIStreamListener   *sl = mResponseDataListener;
+  nsHTTPFinalListener *fl = NS_STATIC_CAST (nsHTTPFinalListener*, sl);
+
+  rv = channel->AsyncRead(fl -> GetListener (), mResponseContext);
+
+  fl -> Shutdown ();
 
   //
   // Fire the OnRedirect(...) notification.
@@ -1812,7 +1814,9 @@ nsHTTPChannel::Authenticate(const char *iChallenge, PRBool iProxyAuth)
     httpChannel->SetAuthTriedWithPrehost(PR_TRUE);
 
     // Fire the new request...
-    rv = channel->AsyncRead(mResponseDataListener, mResponseContext);
+    nsIStreamListener   *sl = mResponseDataListener;
+    nsHTTPFinalListener *fl = NS_STATIC_CAST (nsHTTPFinalListener*, sl);
+    rv = channel->AsyncRead(fl -> GetListener (), mResponseContext);
 
     // Abort the current response...  This will disconnect the consumer from
     // the response listener...  Thus allowing the entity that follows to
