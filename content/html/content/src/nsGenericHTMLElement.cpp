@@ -3328,7 +3328,7 @@ nsGenericHTMLFormElement::SetParent(nsIContent* aParent)
 {
   if (!aParent && mForm) {
     SetForm(nsnull);
-  } else if (IsInDoc() && aParent && (GetParent() || !mForm)) {
+  } else if (aParent && (GetParent() || !mForm)) {
     // If we have a new parent and either we had an old parent or we
     // don't have a form, search for a containing form.  If we didn't
     // have an old parent, but we do have a form, we shouldn't do the
