@@ -34,42 +34,44 @@ class nsFileWidget : public nsWindow, public nsIFileWidget
                             nsFileWidget(); 
     virtual                 ~nsFileWidget();
 	
-		NS_DECL_ISUPPORTS
+	// nsISupports
+	NS_IMETHOD_(nsrefcnt) AddRef();
+	NS_IMETHOD_(nsrefcnt) Release();
+	NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
-
-    NS_IMETHOD Create(nsIWidget *aParent,
-                const nsRect &aRect,
-                EVENT_CALLBACK aHandleEventFunction,
-                nsIDeviceContext *aContext = nsnull,
-                nsIAppShell *aAppShell = nsnull,
-                nsIToolkit *aToolkit = nsnull,
-                nsWidgetInitData *aInitData = nsnull);
-
-    NS_IMETHOD Create(nsNativeWidget aParent,
-                const nsRect &aRect,
-                EVENT_CALLBACK aHandleEventFunction,
-                nsIDeviceContext *aContext = nsnull,
-                nsIAppShell *aAppShell = nsnull,
-                nsIToolkit *aToolkit = nsnull,
-                nsWidgetInitData *aInitData = nsnull);
 
     // nsIWidget interface
-  
-    NS_IMETHOD            Create( nsIWidget *aParent,
-                                    nsString& aTitle,
-                                    nsMode aMode,
-                                    nsIDeviceContext *aContext = nsnull,
-                                    nsIAppShell *aAppShell = nsnull,
-                                    nsIToolkit *aToolkit = nsnull,
-                                    void *aInitData = nsnull);
+    NS_IMETHOD              Create(nsIWidget *aParent,
+                                   const nsRect &aRect,
+                                   EVENT_CALLBACK aHandleEventFunction,
+                                   nsIDeviceContext *aContext,
+                                   nsIAppShell *aAppShell = nsnull,
+                                   nsIToolkit *aToolkit = nsnull,
+                                   nsWidgetInitData *aInitData = nsnull);
+    NS_IMETHOD              Create(nsNativeWidget aNativeParent,
+                                   const nsRect &aRect,
+                                   EVENT_CALLBACK aHandleEventFunction,
+                                   nsIDeviceContext *aContext,
+                                   nsIAppShell *aAppShell = nsnull,
+                                   nsIToolkit *aToolkit = nsnull,
+                                   nsWidgetInitData *aInitData = nsnull);
 
-    // nsIFileWidget part
+    // nsIFileWidget interface
+		NS_IMETHOD					   Create(nsIWidget *aParent,
+							                      nsString& aTitle,
+							                      nsMode aMode,
+							                      nsIDeviceContext *aContext = nsnull,
+							                      nsIAppShell *aAppShell = nsnull,
+							                      nsIToolkit *aToolkit = nsnull,
+							                      void *aInitData = nsnull);
+
     virtual PRBool      	Show();
     NS_IMETHOD            GetFile(nsString& aFile);
     NS_IMETHOD            SetDefaultString(nsString& aString);
     NS_IMETHOD           	SetFilterList(PRUint32 aNumberOfFilters,
                                           const nsString aTitles[],
                                           const nsString aFilters[]);
+  protected:
     NS_IMETHOD            OnOk();
     NS_IMETHOD            OnCancel();
 
