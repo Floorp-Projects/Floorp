@@ -1785,8 +1785,9 @@ nsHTMLEditRules::IsEmptyNode(nsIDOMNode *aNode, PRBool *outIsEmptyNode)
   // then we dont call it empty (it's an <hr>, or <br>, etc).
   // Also, if it's an anchor then dont treat it as empty - even though
   // anchors are containers, named anchors are "empty" but we don't
-  // want to treat them as such.
-  if (!mEditor->IsContainer(aNode) || IsAnchor(aNode)) 
+  // want to treat them as such.  Also, don't call ListItems empty:
+  // empty list items still render and might be wanted.
+  if (!mEditor->IsContainer(aNode) || IsAnchor(aNode) || IsListItem(aNode)) 
   {
     *outIsEmptyNode = PR_FALSE;
     return NS_OK;
