@@ -109,7 +109,8 @@ public:
     NS_IMETHOD          	DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus);
     virtual PRBool          DispatchMouseEvent(nsMouseEvent &aEvent);
 
-    virtual void         	PrepareToDraw();
+    virtual void         	StartDraw(nsIRenderingContext* aRenderingContext = nsnull);
+    virtual void         	EndDraw();
     virtual PRBool          OnPaint(nsPaintEvent &event);
 	NS_IMETHOD				Update();
     
@@ -159,13 +160,14 @@ protected:
 
   nsIFontMetrics*		mFontMetrics;
   nsIMenuBar* 			mMenuBar;
-
+  nsIRenderingContext*  mTempRenderingContext;
 
 // MAC SPECIFIC MEMBERS
 protected:
 	RgnHandle			mWindowRegion;				// the region defining this window
 	WindowPtr			mWindowPtr;
 	PRBool				mPainting;
+	PRBool				mDestroyCalled;
 };
 
 // =============================================================================
