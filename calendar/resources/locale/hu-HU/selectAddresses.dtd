@@ -50,7 +50,7 @@
 <!ENTITY ab-selectAddressesDialogPrefixTo.label "Címzett: ">
 <!ENTITY ab-selectAddressesDialogPrefixCc.label "Másolat: ">
 <!ENTITY ab-selectAddressesDialogPrefixBcc.label "Rejtett másolat: ">
-<!ENTITY ab-selectAddressesDialogNoEmailMessage.label "Nincs E-mail cím">
+<!ENTITY ab-selectAddressesDialogNoEmailMessage.label "Nincs e-mail cím">
 <!ENTITY ab-selectAddressesDialogInvite.label "Meghívó">
 <!ENTITY ab-selectAddressesDialogUninvite.label "Eltávolítás">
 <!ENTITY ab-selectAddressesDialogInviteList.label "Meghívó lista:">

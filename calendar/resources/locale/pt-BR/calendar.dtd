@@ -23,7 +23,7 @@
    -                 Chris Charabaruk <coldacid@meldstar.com>
    -                 ArentJan Banck <ajbanck@planet.nl>
    -                 Eric Belhaire <belhaire@ief.u-psud.fr>
-   -				 Erico Mendonca <erico@techisa.srv.br>
+   -                 Erico Mendonca <erico@techisa.srv.br>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -161,7 +161,7 @@
 <!ENTITY event.title.alarm         "Alarme" >
 <!ENTITY event.title.new         "Novo Evento" >
 <!ENTITY event.title.edit        "Editar Evento" >
-<!ENTITY event.title.heading        "Calendar Alarm" >
+<!ENTITY event.title.heading        "Alarme do Calend&#xE1;rio" >
 
 <!ENTITY onthe-text            "No ">
 <!ENTITY last-text             "&#xDA;ltimo ">
@@ -422,24 +422,24 @@
 <!-- Calendar Import Outlook CSV Dialog -->
 <!-- TRANSLATORS: all outlook*.label -fields should be translated word to word (or if possible
                   copied from outlook csv file headers -->
-<!ENTITY calendar.importoutlook.dialog.title "Outlook CSV Import" >
-<!ENTITY calendar.importoutlook.mapconcepts.label "Please map the following calendar concepts to their Outlook CSV equivalents:" >
-<!ENTITY calendar.importoutlook.outlooksubject.label "Subject" >
-<!ENTITY calendar.importoutlook.outlookstartdate.label "Start date" >
-<!ENTITY calendar.importoutlook.outlookstarttime.label "Start time" >
-<!ENTITY calendar.importoutlook.outlookenddate.label "End date" >
-<!ENTITY calendar.importoutlook.outlookendtime.label "End time" >
-<!ENTITY calendar.importoutlook.outlooklocation.label "Location" >
-<!ENTITY calendar.importoutlook.outlookdescription.label "Description" >
-<!ENTITY calendar.importoutlook.outlookallday.label "All-day event" >
-<!ENTITY calendar.importoutlook.outlookprivate.label "Private" >
-<!ENTITY calendar.importoutlook.outlookalarm.label "Alarm on/off" >
-<!ENTITY calendar.importoutlook.outlookalarmdate.label "Alarm date" >
-<!ENTITY calendar.importoutlook.outlookalarmtime.label "Alarm time" >
-<!ENTITY calendar.importoutlook.outlookcategories.label "Categories" >
-<!ENTITY calendar.importoutlook.selectmeaning.label "Select the meaning of the following word: " >
-<!ENTITY calendar.importoutlook.true.label "True" >
-<!ENTITY calendar.importoutlook.false.label "False" >
+<!ENTITY calendar.importoutlook.dialog.title "Importa&#xE7;&#xE3;o de CSV do Outlook" >
+<!ENTITY calendar.importoutlook.mapconcepts.label "Por favor mapeie os seguintes conceitos do calend&#xE1;rio para seus equivalentes no CSV do Outlook:" >
+<!ENTITY calendar.importoutlook.outlooksubject.label "Assunto" >
+<!ENTITY calendar.importoutlook.outlookstartdate.label "Data de in&#xED;cio" >
+<!ENTITY calendar.importoutlook.outlookstarttime.label "Hora de in&#xED;cio" >
+<!ENTITY calendar.importoutlook.outlookenddate.label "Data de t&#xE9;rmino" >
+<!ENTITY calendar.importoutlook.outlookendtime.label "Hora de t&#xE9;rmino" >
+<!ENTITY calendar.importoutlook.outlooklocation.label "Localiza&#xE7;&#xE3;o" >
+<!ENTITY calendar.importoutlook.outlookdescription.label "Descri&#xE7;&#xE3;o" >
+<!ENTITY calendar.importoutlook.outlookallday.label "Evento de Dia Inteiro" >
+<!ENTITY calendar.importoutlook.outlookprivate.label "Privativo" >
+<!ENTITY calendar.importoutlook.outlookalarm.label "Alarme ligado/desligado" >
+<!ENTITY calendar.importoutlook.outlookalarmdate.label "Data do alarme" >
+<!ENTITY calendar.importoutlook.outlookalarmtime.label "Hora do alarme" >
+<!ENTITY calendar.importoutlook.outlookcategories.label "Categorias" >
+<!ENTITY calendar.importoutlook.selectmeaning.label "Selecione o significado da seguinte palavra: " >
+<!ENTITY calendar.importoutlook.true.label "Verdadeiro" >
+<!ENTITY calendar.importoutlook.false.label "Falso" >
 
 <!-- Calendar Printing -->
 <!ENTITY calendar.print.window.title "Imprimir um Calend&#xE1;rio">
