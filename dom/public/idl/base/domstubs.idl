@@ -1,0 +1,108 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ */
+
+#include "nsISupports.idl"
+
+%{ C++
+#include "nsAWritableString.h"
+%}
+
+
+typedef unsigned long long DOMTimeStamp;
+
+// Core
+interface nsIDOMAttr;
+interface nsIDOMCDATASection;
+interface nsIDOMCharacterData;
+interface nsIDOMComment;
+interface nsIDOMDOMImplementation;
+interface nsIDOMDocument;
+interface nsIDOMDocumentFragment;
+interface nsIDOMDocumentType;
+interface nsIDOMElement;
+interface nsIDOMEntity;
+interface nsIDOMEntityReference;
+interface nsIDOMNSDocument;
+interface nsIDOMNamedNodeMap;
+interface nsIDOMNode;
+interface nsIDOMNodeList;
+interface nsIDOMNotation;
+interface nsIDOMProcessingInstruction;
+interface nsIDOMText;
+interface DOMException;
+
+// Style Sheets
+interface nsIDOMStyleSheetList;
+interface nsIDOMLinkStyle;
+interface nsIDOMStyleSheet;
+interface nsIDOMMediaList;
+
+// Views
+interface nsIDOMAbstractView;
+interface nsIDOMDocumentView;
+
+// Base
+interface nsIDOMWindow;
+interface nsIDOMWindowInternal;
+interface nsIDOMWindowCollection;
+interface nsIDOMPlugin;
+interface nsIDOMPluginArray;
+interface nsIDOMMimeType;
+interface nsIDOMMimeTypeArray;
+interface nsIDOMBarProp;
+interface nsIDOMNavigator;
+interface nsIDOMScreen;
+interface nsIDOMHistory;
+
+// Events
+interface nsIDOMEvent;
+interface nsIDOMEventTarget;
+interface nsIDOMEventListener;
+
+// HTML
+interface nsIDOMHTMLElement;
+interface nsIDOMHTMLFormElement;
+interface nsIDOMHTMLCollection;
+
+// CSS
+interface nsIDOMCSSValue;
+interface nsIDOMCSSPrimitiveValue;
+interface nsIDOMCSSRule;
+interface nsIDOMCSSRuleList;
+interface nsIDOMCSSStyleSheet;
+interface nsIDOMCSSStyleDeclaration;
+interface nsIDOMCounter;
+interface nsIDOMRect;
+interface nsIDOMRGBColor;
+interface nsIDOMCSSStyleRule;
+interface nsIDOMCSSStyleRuleCollection;
+interface nsIDOMHTMLTableCaptionElement;
+interface nsIDOMHTMLTableSectionElement;
+
+// Range
+interface nsIDOMRange;
+
+// Crypto
+interface nsIDOMCRMFObject;
+interface nsIDOMCrypto;
+interface nsIDOMPkcs11;
+
