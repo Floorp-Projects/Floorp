@@ -251,6 +251,7 @@ nsXFormsUtils::EvaluateNodeset(nsIDOMElement *aElement, PRUint16 aResultType)
 /* static */ already_AddRefed<nsIDOMXPathResult>
 nsXFormsUtils::EvaluateNodeBinding(nsIDOMElement  *aElement,
                                    PRUint32        aElementFlags,
+                                   const nsString &aDefaultRef,
                                    PRUint16        aResultType,
                                    nsIDOMNode    **aModel,
                                    nsIDOMElement **aBind)
@@ -275,7 +276,11 @@ nsXFormsUtils::EvaluateNodeBinding(nsIDOMElement  *aElement,
   aElement->GetAttribute(NS_LITERAL_STRING("ref"), expr);
 
   if (expr.IsEmpty())
-    return nsnull;
+  {
+    if (aDefaultRef.IsEmpty())
+      return nsnull;
+    expr.Assign(aDefaultRef);
+  } 
 
   // Get the instance data and evaluate the xpath expression.
   // XXXfixme when xpath extensions are implemented (instance())

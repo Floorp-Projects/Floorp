@@ -349,6 +349,7 @@ nsXFormsInputElement::Blur(nsIDOMEvent *aEvent)
   nsCOMPtr<nsIDOMXPathResult> result =
     nsXFormsUtils::EvaluateNodeBinding(mElement,
                                        nsXFormsUtils::ELEMENT_WITH_MODEL_ATTR,
+                                       EmptyString(),
                                        nsIDOMXPathResult::FIRST_ORDERED_NODE_TYPE,
                                        getter_AddRefs(modelNode),
                                        getter_AddRefs(bindElement));
@@ -406,6 +407,7 @@ nsXFormsInputElement::Refresh()
   nsCOMPtr<nsIDOMXPathResult> result =
     nsXFormsUtils::EvaluateNodeBinding(mElement,
                                        nsXFormsUtils::ELEMENT_WITH_MODEL_ATTR,
+                                       EmptyString(),
                                        nsIDOMXPathResult::FIRST_ORDERED_NODE_TYPE,
                                        getter_AddRefs(modelNode),
                                        getter_AddRefs(bindElement));

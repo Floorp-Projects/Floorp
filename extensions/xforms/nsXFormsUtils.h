@@ -51,9 +51,12 @@
 class nsIDOMNode;
 class nsIDOMElement;
 class nsIXFormsModelElement;
+class nsString;
 
-#define NS_NAMESPACE_XFORMS  "http://www.w3.org/2002/xforms"
-#define NS_NAMESPACE_XHTML   "http://www.w3.org/1999/xhtml"
+#define NS_NAMESPACE_XFORMS              "http://www.w3.org/2002/xforms"
+#define NS_NAMESPACE_XHTML               "http://www.w3.org/1999/xhtml"
+#define NS_NAMESPACE_XML_SCHEMA          "http://www.w3.org/2001/XMLSchema"
+#define NS_NAMESPACE_XML_SCHEMA_INSTANCE "http://www.w3.org/2001/XMLSchema-instance"
 
 class nsXFormsUtils
 {
@@ -99,9 +102,10 @@ public:
   static NS_HIDDEN_(already_AddRefed<nsIDOMXPathResult>)
     EvaluateNodeBinding(nsIDOMElement  *aElement,
                         PRUint32        aElementFlags,
+                        const nsString &aDefaultRef,
                         PRUint16        aResultType,
-                        nsIDOMNode     **aModel,
-                        nsIDOMElement  **aBind);
+                        nsIDOMNode    **aModel,
+                        nsIDOMElement **aBind);
 
 
   /**

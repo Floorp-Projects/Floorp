@@ -85,12 +85,6 @@
 #include "nsNetUtil.h"
 #include "nsXFormsUtils.h"
 
-// namespace literals
-#define NAMESPACE_XML_SCHEMA \
-        NS_LITERAL_STRING("http://www.w3.org/2001/XMLSchema")
-#define NAMESPACE_XML_SCHEMA_INSTANCE \
-        NS_LITERAL_STRING("http://www.w3.org/2001/XMLSchema-instance")
-
 static const nsIID sScriptingIIDs[] = {
   NS_IDOMELEMENT_IID,
   NS_IDOMEVENTTARGET_IID,
@@ -587,7 +581,7 @@ nsXFormsSubmissionElement::Submit()
 nsresult
 nsXFormsSubmissionElement::SubmitEnd(PRBool succeeded)
 {
-  LOG(("xforms submission complete [succeeded=%d]\n", succeeded));
+  LOG(("xforms submission complete [%s]\n", succeeded ? "success" : "failure"));
 
   nsCOMPtr<nsIModelElementPrivate> model = GetModel();
   model->SetSubmissionActive(PR_FALSE);
@@ -627,10 +621,10 @@ nsXFormsSubmissionElement::GetSelectedInstanceData(nsIDOMNode **result)
   nsCOMPtr<nsIDOMElement> bind;
   nsCOMPtr<nsIDOMXPathResult> xpRes =
     nsXFormsUtils::EvaluateNodeBinding(mElement, 0,
+                                       NS_LITERAL_STRING("/"),
                                        nsIDOMXPathResult::FIRST_ORDERED_NODE_TYPE,
                                        getter_AddRefs(model),
                                        getter_AddRefs(bind));
-
   if (!xpRes)
     return NS_ERROR_UNEXPECTED;
 
@@ -758,6 +752,9 @@ nsXFormsSubmissionElement::SerializeDataXML(nsIDOMNode *data,
 
   nsCOMPtr<nsIDOMDocument> doc;
   data->GetOwnerDocument(getter_AddRefs(doc));
+  // owner doc is null when the data node is the document (e.g., ref="/")
+  if (!doc)
+    doc = do_QueryInterface(data);
   NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
 
   // clone and possibly modify the document for submission
@@ -1312,7 +1309,7 @@ nsXFormsSubmissionElement::GetElementEncodingType(nsIDOMNode *node, PRUint32 *en
   NS_ENSURE_TRUE(element, NS_ERROR_UNEXPECTED);
 
   nsAutoString type;
-  element->GetAttributeNS(NAMESPACE_XML_SCHEMA_INSTANCE,
+  element->GetAttributeNS(NS_LITERAL_STRING(NS_NAMESPACE_XML_SCHEMA_INSTANCE),
                           NS_LITERAL_STRING("type"), type);
   if (!type.IsEmpty())
   {
@@ -1325,7 +1322,7 @@ nsXFormsSubmissionElement::GetElementEncodingType(nsIDOMNode *node, PRUint32 *en
     NS_ENSURE_TRUE(dom3Node, NS_ERROR_UNEXPECTED);
 
     nsAutoString prefix;
-    dom3Node->LookupPrefix(NAMESPACE_XML_SCHEMA, prefix);
+    dom3Node->LookupPrefix(NS_LITERAL_STRING(NS_NAMESPACE_XML_SCHEMA), prefix);
 
     if (prefix.IsEmpty())
     {
@@ -1386,15 +1383,21 @@ nsXFormsSubmissionElement::SendData(PRUint32 format,
 {
   LOG(("+++ sending to uri=%s [stream=%p]\n", uriSpec.get(), (void*) stream));
 
-  nsresult rv;
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  mElement->GetOwnerDocument(getter_AddRefs(domDoc));
+
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+  NS_ENSURE_STATE(doc);
 
   nsCOMPtr<nsIIOService> ios = do_GetIOService();
   NS_ENSURE_STATE(ios);
 
   // uriSpec is already ASCII-encoded and absolutely specified
   nsCOMPtr<nsIURI> uri;
-  ios->NewURI(uriSpec, nsnull, nsnull, getter_AddRefs(uri));
+  ios->NewURI(uriSpec, nsnull, doc->GetDocumentURI(), getter_AddRefs(uri));
   NS_ENSURE_STATE(uri);
+
+  nsresult rv;
 
   nsAutoString replace;
   mElement->GetAttribute(NS_LITERAL_STRING("replace"), replace);
@@ -1450,12 +1453,6 @@ nsXFormsSubmissionElement::SendData(PRUint32 format,
   }
 
   // set loadGroup and notificationCallbacks
-
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  mElement->GetOwnerDocument(getter_AddRefs(domDoc));
-
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
-  NS_ENSURE_STATE(doc);
 
   nsCOMPtr<nsILoadGroup> loadGroup = doc->GetDocumentLoadGroup();
   channel->SetLoadGroup(loadGroup);
