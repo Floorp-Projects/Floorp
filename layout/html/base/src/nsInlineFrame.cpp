@@ -612,25 +612,34 @@ nsInlineFrame::ReflowFrames(nsIPresContext* aPresContext,
       aMetrics.width += aReflowState.mComputedBorderPadding.right;
     }
 
+    nsCOMPtr<nsIFontMetrics> fm;
     const nsStyleFont* font;
     GetStyleData(eStyleStruct_Font, (const nsStyleStruct*&)font);
-    aReflowState.rendContext->SetFont(font->mFont);
-    nsCOMPtr<nsIFontMetrics> fm;
-    aReflowState.rendContext->GetFontMetrics(*getter_AddRefs(fm));
+    if (font) {
+      aReflowState.rendContext->SetFont(font->mFont);
+      aReflowState.rendContext->GetFontMetrics(*getter_AddRefs(fm));
+    } else {
+      NS_WARNING("No font retrieved from style context - sorry but font metrics are not available");
+    }
 
-    // Compute final height of the frame.
-    //
-    // Do things the standard css2 way -- though it's hard to find it
-    // in the css2 spec! It's actually found in the css1 spec section
-    // 4.4 (you will have to read between the lines to really see
-    // it).
-    //
-    // The height of our box is the sum of our font size plus the top
-    // and bottom border and padding. The height of children do not
-    // affect our height.
-    fm->GetMaxAscent(aMetrics.ascent);
-    fm->GetMaxDescent(aMetrics.descent);
-    fm->GetHeight(aMetrics.height);
+    if (fm) {
+      // Compute final height of the frame.
+      //
+      // Do things the standard css2 way -- though it's hard to find it
+      // in the css2 spec! It's actually found in the css1 spec section
+      // 4.4 (you will have to read between the lines to really see
+      // it).
+      //
+      // The height of our box is the sum of our font size plus the top
+      // and bottom border and padding. The height of children do not
+      // affect our height.
+      fm->GetMaxAscent(aMetrics.ascent);
+      fm->GetMaxDescent(aMetrics.descent);
+      fm->GetHeight(aMetrics.height);
+    } else {
+      NS_WARNING("Cannot get font metrics - defaulting sizes to 0");
+      aMetrics.ascent = aMetrics.descent = aMetrics.height = 0;
+    }
     aMetrics.ascent += aReflowState.mComputedBorderPadding.top;
     aMetrics.descent += aReflowState.mComputedBorderPadding.bottom;
     aMetrics.height += aReflowState.mComputedBorderPadding.top +
