@@ -123,7 +123,9 @@ GetPrimaryPresShell(nsIFrame* aFrame)
   if (!aFrame)
     return nsnull;
 
-  nsPresContext *context = aFrame->GetPresContext();
+  // this is a workaround for the egcs 1.1.2 not inliningg
+  // aFrame->GetPresContext(), which causes an undefined symbol
+  nsPresContext *context = aFrame->GetStyleContext()->GetRuleNode()->GetPresContext();
   return context ? context->GetPresShell() : nsnull;
 }
 
