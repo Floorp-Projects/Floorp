@@ -233,7 +233,7 @@ nsGopherChannel::Open(nsIInputStream **_retval)
     if (NS_FAILED(rv))
         return rv;
  
-    rv = NS_CheckPortSafety(port);
+    rv = NS_CheckPortSafety(port, "gopher");
     if (NS_FAILED(rv))
         return rv;
 
@@ -272,7 +272,7 @@ nsGopherChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
     if (NS_FAILED(rv))
         return rv;
  
-    rv = NS_CheckPortSafety(port);
+    rv = NS_CheckPortSafety(port, "gopher");
     if (NS_FAILED(rv))
         return rv;
     

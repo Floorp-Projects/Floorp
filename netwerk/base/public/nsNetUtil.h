@@ -649,7 +649,7 @@ NS_AsyncReadToStream(nsIRequest **aRequest,
 }
 
 inline nsresult
-NS_CheckPortSafety(PRInt32 port, const char* scheme = nsnull, nsIIOService* ioService = nsnull)
+NS_CheckPortSafety(PRInt32 port, const char* scheme, nsIIOService* ioService = nsnull)
 {
     nsresult rv;
 
