@@ -221,7 +221,7 @@ nsresult nsCharsetConverterManager::GatherConvertersInfo()
   nsString * str;
   PRInt32 i;
 
-  for (i=0;i<mEncSize;i++) {
+  for (i=0;i<mEncSize;) {
     info = GetICharsetConverterInfo(mEncArray, i, &mEncSize);
     if (info == NULL) continue;
 
@@ -230,11 +230,11 @@ nsresult nsCharsetConverterManager::GatherConvertersInfo()
     str = new nsString(charset);
     GetCharsetName(str,&mEncArray[i].mCharset);
     delete str;
-
+	i++;
     NS_RELEASE(info);
   }
 
-  for (i=0;i<mDecSize;i++) {
+  for (i=0;i<mDecSize;) {
     info = GetICharsetConverterInfo(mDecArray, i, &mDecSize);
     if (info == NULL) continue;
 
@@ -243,7 +243,7 @@ nsresult nsCharsetConverterManager::GatherConvertersInfo()
     str = new nsString(charset);
     GetCharsetName(str,&mDecArray[i].mCharset);
     delete str;
-
+	i++;
     NS_RELEASE(info);
   }
 
