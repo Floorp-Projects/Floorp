@@ -229,11 +229,10 @@ NS_IMETHODIMP nsXPCException::GetLineNumber(PRUint32 *aLineNumber)
 /* readonly attribute PRUint32 columnNumber; */
 NS_IMETHODIMP nsXPCException::GetColumnNumber(PRUint32 *aColumnNumber)
 {
-    if(!aColumnNumber)
-        return NS_ERROR_NULL_POINTER;
+    NS_ENSURE_ARG_POINTER(aColumnNumber);
     if(!mInitialized)
         return NS_ERROR_NOT_INITIALIZED;
-    *aColumnNumber = -1;
+    *aColumnNumber = 0;
     return NS_OK;
 }
 
