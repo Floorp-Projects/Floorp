@@ -1028,8 +1028,6 @@ $table{bugs} =
     lastdiffed datetime not null,
     everconfirmed tinyint not null,
     reporter_accessible tinyint not null default 1,
-    assignee_accessible tinyint not null default 1,
-    qacontact_accessible tinyint not null default 1,
     cclist_accessible tinyint not null default 1,
 
     index (assigned_to),
@@ -2627,9 +2625,10 @@ ChangeFieldType("profiles", "disabledtext", "mediumtext not null");
 # Add fields to the bugs table that record whether or not the reporter,
 # assignee, QA contact, and users on the cc: list can see bugs even when
 # they are not members of groups to which the bugs are restricted.
+# 2002-02-06 bbaetz@student.usyd.edu.au - assignee/qa can always see the bug
 AddField("bugs", "reporter_accessible", "tinyint not null default 1");
-AddField("bugs", "assignee_accessible", "tinyint not null default 1");
-AddField("bugs", "qacontact_accessible", "tinyint not null default 1");
+#AddField("bugs", "assignee_accessible", "tinyint not null default 1");
+#AddField("bugs", "qacontact_accessible", "tinyint not null default 1");
 AddField("bugs", "cclist_accessible", "tinyint not null default 1");
 
 # 2001-08-21 myk@mozilla.org bug84338:
@@ -2658,6 +2657,16 @@ if (GetFieldDef("logincookies", "cryptpassword")) {
     }
 
     DropField("logincookies", "cryptpassword");
+}
+
+# 2002-02-13 bbaetz@student.usyd.edu.au - bug 97471
+# qacontact/assignee should always be able to see bugs,
+# so remove their restriction column
+if (GetFieldDef("bugs","qacontact_accessible")) {
+    print "Removing restrictions on bugs for assignee and qacontact...\n";
+
+    DropField("bugs", "qacontact_accessible");
+    DropField("bugs", "assignee_accessible");
 }
 
 # If you had to change the --TABLE-- definition in any way, then add your

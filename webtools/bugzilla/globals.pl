@@ -776,9 +776,8 @@ sub SelectVisible {
     # and is authorized to access the bug.
 
     # A user is also authorized to access a bug if she is the reporter, 
-    # assignee, QA contact, or member of the cc: list of the bug and the bug 
-    # allows users in those roles to see the bug.  The boolean fields 
-    # reporter_accessible, assignee_accessible, qacontact_accessible, and 
+    # or member of the cc: list of the bug and the bug allows users in those
+    # roles to see the bug.  The boolean fields reporter_accessible and 
     # cclist_accessible identify whether or not those roles can see the bug.
 
     # Bit arithmetic is performed by MySQL instead of Perl because bitset
@@ -803,8 +802,6 @@ sub SelectVisible {
         # test to the JOINed cc table. See http://lists.mysql.com/cgi-ez/ezmlm-cgi?9:mss:11417
         # Its needed, even though it shouldn't be
         $replace .= "OR (bugs.reporter_accessible = 1 AND bugs.reporter = $userid) 
-                   OR (bugs.assignee_accessible = 1 AND bugs.assigned_to = $userid) 
-                   OR (bugs.qacontact_accessible = 1 AND bugs.qa_contact = $userid) 
                    OR (bugs.cclist_accessible = 1 AND selectVisible_cc.who = $userid AND not isnull(selectVisible_cc.who))";
     }
 

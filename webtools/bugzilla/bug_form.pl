@@ -430,38 +430,38 @@ if ($::usergroupset ne '0' || $bug{'groupset'} ne '0') {
     }
 
     # If the bug is restricted to a group, display checkboxes that allow
-    # the user to set whether or not the reporter, assignee, QA contact, 
+    # the user to set whether or not the reporter
     # and cc list can see the bug even if they are not members of all 
     # groups to which the bug is restricted.
     if ( $bug{'groupset'} != 0 ) {
         # Determine whether or not the bug is always accessible by the reporter,
         # QA contact, and/or users on the cc: list.
-        SendSQL("SELECT  reporter_accessible , assignee_accessible , 
-                         qacontact_accessible , cclist_accessible
+        SendSQL("SELECT  reporter_accessible, cclist_accessible
                  FROM    bugs
                  WHERE   bug_id = $id
                 ");
-        my ($reporter_accessible, $assignee_accessible, $qacontact_accessible, $cclist_accessible) = FetchSQLData();
+        my ($reporter_accessible, $cclist_accessible) = FetchSQLData();
 
         # Convert boolean data about which roles always have access to the bug
         # into "checked" attributes for the HTML checkboxes by which users
         # set and change these values.
         my $reporter_checked = $reporter_accessible ? " checked" : "";
-        my $assignee_checked = $assignee_accessible ? " checked" : "";
-        my $qacontact_checked = $qacontact_accessible ? " checked" : "";
         my $cclist_checked = $cclist_accessible ? " checked" : "";
 
         # Display interface for changing the values.
         print qq|
             <p>
             <b>But users in the roles selected below can always view this bug:</b><br>
-            <small>(Does not take effect unless the bug is restricted to at least one group.)</small>
+            <small>(The assignee
+        |;
+        if (Param('useqacontact')) {
+            print " and qa contact";
+        }
+        print qq| can always see a bug, and this does not take effect unless the bug is restricted to at least one group.)</small>
             </p>
 
             <p>
             <input type="checkbox" name="reporter_accessible" value="1" $reporter_checked>Reporter
-            <input type="checkbox" name="assignee_accessible" value="1" $assignee_checked>Assignee
-            <input type="checkbox" name="qacontact_accessible" value="1" $qacontact_checked>QA Contact
             <input type="checkbox" name="cclist_accessible" value="1" $cclist_checked>CC List
             </p>
         |;

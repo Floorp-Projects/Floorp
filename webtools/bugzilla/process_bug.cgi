@@ -596,7 +596,7 @@ if (defined $::FORM{'qa_contact'}) {
 
 # If the user is submitting changes from show_bug.cgi for a single bug,
 # and that bug is restricted to a group, process the checkboxes that
-# allowed the user to set whether or not the reporter, assignee, QA contact, 
+# allowed the user to set whether or not the reporter
 # and cc list can see the bug even if they are not members of all groups 
 # to which the bug is restricted.
 if ( $::FORM{'id'} ) {
@@ -606,14 +606,6 @@ if ( $::FORM{'id'} ) {
         DoComma();
         $::FORM{'reporter_accessible'} = $::FORM{'reporter_accessible'} ? '1' : '0';
         $::query .= "reporter_accessible = $::FORM{'reporter_accessible'}";
-
-        DoComma();
-        $::FORM{'assignee_accessible'} = $::FORM{'assignee_accessible'} ? '1' : '0';
-        $::query .= "assignee_accessible = $::FORM{'assignee_accessible'}";
-
-        DoComma();
-        $::FORM{'qacontact_accessible'} = $::FORM{'qacontact_accessible'} ? '1' : '0';
-        $::query .= "qacontact_accessible = $::FORM{'qacontact_accessible'}";
 
         DoComma();
         $::FORM{'cclist_accessible'} = $::FORM{'cclist_accessible'} ? '1' : '0';
