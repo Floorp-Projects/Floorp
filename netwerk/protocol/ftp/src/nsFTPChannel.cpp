@@ -271,11 +271,7 @@ nsFTPChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
 
     if (mEventSink) {
         nsAutoString statusMsg("Beginning FTP transaction.");
-#ifndef BUG_16273_FIXED //TODO
-        rv = mEventSink->OnStatus(this, ctxt, statusMsg.ToNewUnicode());
-#else
         rv = mEventSink->OnStatus(this, ctxt, statusMsg.GetUnicode());
-#endif
         if (NS_FAILED(rv)) return rv;
     }
 

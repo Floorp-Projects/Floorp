@@ -35,15 +35,6 @@
 
 #include "nsProxyEvent.h"
 
-
-#define NS_PROXYEVENT_FACTORY_IID                \
-{ 0xeea90d40, 									 \
-  0xb059, 										 \
-  0x11d2,						                 \
- {0x91, 0x5e, 0xc1, 0x2b, 0x69, 0x6c, 0x93, 0x33}\
-} 
-
-
 #define NS_IPROXYEVENT_MANAGER_IID               \
 { 0xeea90d43, 									 \
   0xb059, 										 \
