@@ -312,16 +312,25 @@ function Startup()
   if (!isPageCycling) {
     var uriToLoad;
 
-    if (!appCore.cmdLineURLUsed  && !turboMode) {
-      var cmdLineService = Components.classes["@mozilla.org/appshell/commandLineService;1"]
-                                     .getService(Components.interfaces.nsICmdLineService);
-      uriToLoad = cmdLineService.URLToLoad;
+    if (!turboMode) {
+      var cmdLineService =
+        Components.classes["@mozilla.org/appshell/commandLineService;1"]
+                  .getService(Components.interfaces.nsICmdLineService);
+      var cmdLineUrl = cmdLineService.URLToLoad;
+
+      // try the command line first
+      if (cmdLineUrl && !appCore.cmdLineURLUsed) {
+        uriToLoad = cmdLineUrl;
+        appCore.cmdLineURLUsed = true;
+      }
+
+      // ok, no command line, try the default args
       if (!uriToLoad) {
-        var cmdLineHandler = Components.classes["@mozilla.org/commandlinehandler/general-startup;1?type=browser"]
-                                       .getService(Components.interfaces.nsICmdLineHandler);
+        var cmdLineHandler =
+          Components.classes["@mozilla.org/commandlinehandler/general-startup;1?type=browser"]
+                    .getService(Components.interfaces.nsICmdLineHandler);
         uriToLoad = cmdLineHandler.defaultArgs;
       }
-      appCore.cmdLineURLUsed = true;
     }
 
     if (!uriToLoad) {
