@@ -34,6 +34,9 @@
 #include "nsISupportsArray.h"
 #include "nsINodeInfo.h"
 #include "nsIDOMHTMLTextAreaElement.h"
+class nsICSSStyleSheet;
+#include "nsICSSLoaderObserver.h"
+#include "nsIHTMLContent.h"
 
 class nsIDocument;
 class nsIScriptObjectOwner;
@@ -60,7 +63,8 @@ typedef enum {
 class nsXMLContentSink : public nsIXMLContentSink,
                          public nsIObserver,
                          public nsSupportsWeakReference,
-                         public nsIStreamLoaderObserver
+                         public nsIStreamLoaderObserver,
+                         public nsICSSLoaderObserver
 {
 public:
   nsXMLContentSink();
@@ -97,6 +101,9 @@ public:
   NS_IMETHOD AddNotation(const nsIParserNode& aNode);
   NS_IMETHOD AddEntityReference(const nsIParserNode& aNode);
 
+  // nsICSSLoaderObserver
+  NS_IMETHOD StyleSheetLoaded(nsICSSStyleSheet*aSheet, PRBool aNotify);
+
   // nsIObserver
   NS_IMETHOD Observe(nsISupports *aSubject, 
                      const PRUnichar *aTopic, 
@@ -127,6 +134,7 @@ protected:
 
   nsresult ProcessEndSCRIPTTag(const nsIParserNode& aNode);
   nsresult ProcessStartSCRIPTTag(const nsIParserNode& aNode);
+  nsresult ProcessSTYLETag(const nsIParserNode& aNode);
 
   nsresult RefreshIfEnabled(nsIViewManager* vm);
   
@@ -181,6 +189,7 @@ protected:
   PRPackedBool mInScript;
   PRPackedBool mInTitle;
   nsString mScriptText;
+  nsString mStyleText;
   PRUint32 mScriptLineNo;
 
   nsString  mPreferredStyle;
@@ -193,6 +202,7 @@ protected:
   nsString mTitleText; 
   nsString mTextareaText; 
   nsCOMPtr<nsIDOMHTMLTextAreaElement> mTextAreaElement;
+  nsCOMPtr<nsIHTMLContent> mStyleElement;
 };
 
 #endif // nsXMLContentSink_h__
