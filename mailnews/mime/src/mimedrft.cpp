@@ -200,11 +200,12 @@ mime_dump_attachments ( nsMsgAttachmentData *attachData )
 #endif
 
 nsresult
-CreateTheComposeWindow(nsIMsgCompFields     *compFields,
-                       nsMsgAttachmentData  *attachmentList,
-                       MSG_ComposeType    composeType,
+CreateTheComposeWindow(nsIMsgCompFields *   compFields,
+                       nsMsgAttachmentData *attachmentList,
+                       MSG_ComposeType      composeType,
                        MSG_ComposeFormat    composeFormat,
-                       nsIMsgIdentity *       identity
+                       nsIMsgIdentity *     identity,
+                       char *               originalMsgURI
                        )
 {
 nsresult            rv;
@@ -272,7 +273,14 @@ mime_dump_attachments ( attachmentList );
     pMsgComposeParams->SetType(composeType);
     pMsgComposeParams->SetFormat(format);
     pMsgComposeParams->SetIdentity(identity);
-    pMsgComposeParams->SetComposeFields(compFields);    
+    pMsgComposeParams->SetComposeFields(compFields);
+    
+    //Lets cleanup the URI
+    nsCAutoString msgURI(originalMsgURI);
+    PRInt32 i = msgURI.FindChar('?');
+    if (i != kNotFound)
+      msgURI.Truncate(i);
+    pMsgComposeParams->SetOriginalMsgURI(msgURI.get());
     
     rv = msgComposeService->OpenComposeWindowWithParams(nsnull /* default chrome */, pMsgComposeParams);
   }
@@ -1537,7 +1545,7 @@ mime_parse_stream_complete (nsMIMESession *stream)
 #ifdef NS_DEBUG
         printf("RICHIE: Time to create the EDITOR with this template - HAS a body!!!!\n");
 #endif
-        CreateTheComposeWindow(fields, newAttachData, nsIMsgCompType::Template, composeFormat, mdd->identity);
+        CreateTheComposeWindow(fields, newAttachData, nsIMsgCompType::Template, composeFormat, mdd->identity, mdd->url_name);
       }
       else
       {
@@ -1545,11 +1553,11 @@ mime_parse_stream_complete (nsMIMESession *stream)
         printf("Time to create the composition window WITH a body!!!!\n");
 #endif
         if (mdd->forwardInline)
-          CreateTheComposeWindow(fields, newAttachData, nsIMsgCompType::ForwardInline, composeFormat, mdd->identity);
+          CreateTheComposeWindow(fields, newAttachData, nsIMsgCompType::ForwardInline, composeFormat, mdd->identity, mdd->url_name);
         else
         {
           fields->SetDraftId(mdd->url_name);
-          CreateTheComposeWindow(fields, newAttachData, nsIMsgCompType::Draft, composeFormat, mdd->identity);
+          CreateTheComposeWindow(fields, newAttachData, nsIMsgCompType::Draft, composeFormat, mdd->identity, mdd->url_name);
         }
       }
     }
@@ -1564,7 +1572,7 @@ mime_parse_stream_complete (nsMIMESession *stream)
 #ifdef NS_DEBUG
         printf("RICHIE: Time to create the EDITOR with this template - NO body!!!!\n");
 #endif
-        CreateTheComposeWindow(fields, newAttachData, nsIMsgCompType::Template, nsIMsgCompFormat::Default, mdd->identity);
+        CreateTheComposeWindow(fields, newAttachData, nsIMsgCompType::Template, nsIMsgCompFormat::Default, mdd->identity, mdd->url_name);
       }
       else
       {
@@ -1572,11 +1580,11 @@ mime_parse_stream_complete (nsMIMESession *stream)
         printf("Time to create the composition window WITHOUT a body!!!!\n");
 #endif
         if (mdd->forwardInline)
-          CreateTheComposeWindow(fields, newAttachData, nsIMsgCompType::ForwardInline, nsIMsgCompFormat::Default, mdd->identity);
+          CreateTheComposeWindow(fields, newAttachData, nsIMsgCompType::ForwardInline, nsIMsgCompFormat::Default, mdd->identity, mdd->url_name);
         else
         {
           fields->SetDraftId(mdd->url_name);
-          CreateTheComposeWindow(fields, newAttachData, nsIMsgCompType::Draft, nsIMsgCompFormat::Default, mdd->identity);
+          CreateTheComposeWindow(fields, newAttachData, nsIMsgCompType::Draft, nsIMsgCompFormat::Default, mdd->identity, mdd->url_name);
         }
       }
     }    
@@ -1590,7 +1598,7 @@ mime_parse_stream_complete (nsMIMESession *stream)
       mdd->mailcharset,
       getter_AddRefs(fields));
     if (fields)
-      CreateTheComposeWindow(fields, newAttachData, nsIMsgCompType::New, nsIMsgCompFormat::Default, mdd->identity);
+      CreateTheComposeWindow(fields, newAttachData, nsIMsgCompType::New, nsIMsgCompFormat::Default, mdd->identity, mdd->url_name);
   }
   
   if ( mdd->headers )
