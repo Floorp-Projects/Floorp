@@ -355,6 +355,7 @@ BookmarksToolbar.prototype = {
       case "cmd_bm_open":
       case "cmd_bm_openfolder":
       case "cmd_bm_openinnewwindow":
+      case "cmd_bm_openinnewtab":
       case "cmd_bm_newbookmark":
       case "cmd_bm_newfolder":
       case "cmd_bm_newseparator":
@@ -396,6 +397,8 @@ BookmarksToolbar.prototype = {
         return document.popupNode != null && seln[0].getAttributeNS(RDF_NS, "type") == NC_NS + "Folder";
       case "cmd_bm_openinnewwindow":
         return true;
+      case "cmd_bm_openinnewtab":
+        return ("getBrowser" in window && getBrowser().localName == "tabbrowser");
       case "cmd_bm_find":
       case "cmd_bm_newbookmark":
       case "cmd_bm_newfolder":
@@ -447,6 +450,7 @@ BookmarksToolbar.prototype = {
       case "cmd_bm_open":
       case "cmd_bm_openfolder":
       case "cmd_bm_openinnewwindow":
+      case "cmd_bm_openinnewtab":
       case "cmd_bm_setnewbookmarkfolder":
       case "cmd_bm_setpersonaltoolbarfolder":
       case "cmd_bm_setnewsearchfolder":
