@@ -50,7 +50,6 @@ class nsLDAPMessage : public nsILDAPMessage
 {
     friend class nsLDAPOperation;
     friend class nsLDAPConnection;
-    friend class nsLDAPConnectionLoop;
 
   public:       
 
