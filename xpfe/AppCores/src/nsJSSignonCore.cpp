@@ -320,6 +320,142 @@ SignonCoreCancelSignon(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
 }
 
 
+//
+// Native method GetSignonList
+//
+PR_STATIC_CALLBACK(JSBool)
+SignonCoreGetSignonList(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMSignonCore *nativeThis = (nsIDOMSignonCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsAutoString nativeRet;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->GetSignonList(nativeRet)) {
+      return JS_FALSE;
+    }
+
+    nsJSUtils::nsConvertStringToJSVal(nativeRet, cx, rval);
+  }
+  else {
+    JS_ReportError(cx, "Function GetSignonList requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method GetRejectList
+//
+PR_STATIC_CALLBACK(JSBool)
+SignonCoreGetRejectList(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMSignonCore *nativeThis = (nsIDOMSignonCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsAutoString nativeRet;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->GetRejectList(nativeRet)) {
+      return JS_FALSE;
+    }
+
+    nsJSUtils::nsConvertStringToJSVal(nativeRet, cx, rval);
+  }
+  else {
+    JS_ReportError(cx, "Function GetRejectList requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method GetNopreviewList
+//
+PR_STATIC_CALLBACK(JSBool)
+SignonCoreGetNopreviewList(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMSignonCore *nativeThis = (nsIDOMSignonCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsAutoString nativeRet;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->GetNopreviewList(nativeRet)) {
+      return JS_FALSE;
+    }
+
+    nsJSUtils::nsConvertStringToJSVal(nativeRet, cx, rval);
+  }
+  else {
+    JS_ReportError(cx, "Function GetNopreviewList requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method GetNocaptureList
+//
+PR_STATIC_CALLBACK(JSBool)
+SignonCoreGetNocaptureList(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMSignonCore *nativeThis = (nsIDOMSignonCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsAutoString nativeRet;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->GetNocaptureList(nativeRet)) {
+      return JS_FALSE;
+    }
+
+    nsJSUtils::nsConvertStringToJSVal(nativeRet, cx, rval);
+  }
+  else {
+    JS_ReportError(cx, "Function GetNocaptureList requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
 /***********************************************************************/
 //
 // class for SignonCore
@@ -357,6 +493,10 @@ static JSFunctionSpec SignonCoreMethods[] =
   {"PanelLoaded",          SignonCorePanelLoaded,     1},
   {"SaveSignon",          SignonCoreSaveSignon,     1},
   {"CancelSignon",          SignonCoreCancelSignon,     0},
+  {"GetSignonList",          SignonCoreGetSignonList,     0},
+  {"GetRejectList",          SignonCoreGetRejectList,     0},
+  {"GetNopreviewList",          SignonCoreGetNopreviewList,     0},
+  {"GetNocaptureList",          SignonCoreGetNocaptureList,     0},
   {0}
 };
 

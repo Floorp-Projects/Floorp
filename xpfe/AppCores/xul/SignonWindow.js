@@ -29,6 +29,26 @@ function StartUp(windowName)
 	}
 }
 
+function DoGetSignonList()
+{
+	return signonCore.GetSignonList();
+}
+
+function DoGetRejectList()
+{
+	return signonCore.GetRejectList();
+}
+
+function DoGetNopreviewList()
+{
+	return signonCore.GetNopreviewList();
+}
+
+function DoGetNocaptureList()
+{
+	return signonCore.GetNocaptureList();
+}
+
 function DoSave(results)
 {
 	signonCore.SaveSignon(results);
