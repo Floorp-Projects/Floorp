@@ -1752,8 +1752,10 @@ NET_ShutdownNetLib(void)
 		}
 
      	/* XP_OS2_FIX IBM-MAS: limit length of output to keep from blowing trace buffer! */
-    	TRACEMSG(("End of transfer, entry (soc=%d, con=%d) being removed from list with %d status: %-.1900s",
-               tmpEntry->socket, tmpEntry->con_sock, tmpEntry->status, tmpEntry->URL_s->address));
+        /* TRACEMSG does sprintf upto the length of the buffer, thus passing %s is ok */
+    	TRACEMSG(("End of transfer, entry (soc=%d, con=%d) being removed from list with %d status: %s",
+                  tmpEntry->socket, tmpEntry->con_sock, tmpEntry->status, 
+                  (tmpEntry->URL_s->address ? tmpEntry->URL_s->address : "none")));
 
 	 	/* call exit routine since we know we are done */
 	 	net_CallExitRoutineProxy(tmpEntry->exit_routine,
