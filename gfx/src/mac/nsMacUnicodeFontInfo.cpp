@@ -509,16 +509,15 @@ GetEncoding(const nsString& aFontName, nsString& aValue)
   // see if we should init the property
   if (! gFontEncodingProperties) {
     // but bail out for common fonts used at startup...
-    nsCAutoString fontName;
-    fontName.AssignWithConversion(aFontName);
-    // this is "MS P Gothic" in Japanese
-    static const char* mspgothic =
-      "\x82\x6c\x82\x72 \x82\x6f\x83\x53\x83\x56\x83\x62\x83\x4e";
-    if ( (!strcmp(fontName.get(), "Tahoma" )) ||
-         (!strcmp(fontName.get(), "Arial" )) ||
-         (!strcmp(fontName.get(), "Times New Roman" )) ||
-         (!strcmp(fontName.get(), "Courier New" )) ||
-         (!strcmp(fontName.get(), mspgothic )) )
+    if (aFontName.Equals(NS_LITERAL_STRING("Lucida Grande")) ||
+        aFontName.Equals(NS_LITERAL_STRING("Charcoal")) ||
+        aFontName.Equals(NS_LITERAL_STRING("Chicago")) ||
+        aFontName.Equals(NS_LITERAL_STRING("Capitals")) ||
+        aFontName.Equals(NS_LITERAL_STRING("Gadget")) ||
+        aFontName.Equals(NS_LITERAL_STRING("Sand")) ||
+        aFontName.Equals(NS_LITERAL_STRING("Techno")) ||
+        aFontName.Equals(NS_LITERAL_STRING("Textile")) ||
+        aFontName.Equals(NS_LITERAL_STRING("Geneva")) )
       return NS_ERROR_NOT_AVAILABLE; // error mean do not get a special encoding
 
     // init the property now

@@ -218,10 +218,17 @@ PRBool nsUnicodeFontMappingMac::FontEnumCallback(const nsString& aFamily, PRBool
 			if(nsnull != fontName) {
 			    short fontNum;
 				nsDeviceContextMac::GetMacFontNumber(*fontName, fontNum);
-					
-				if((0 != fontNum) && (BAD_FONT_NUM == data->mFontMapping->mScriptFallbackFontIDs[ script ])) 
-					data->mFontMapping->mScriptFallbackFontIDs[ script ] = fontNum;
-				// since this is a generic font name, it won't impact the order of script we used
+
+        if(0 != fontNum)
+        {
+            nsUnicodeFontMappingEntry* entry = new nsUnicodeFontMappingEntry(nsnull, nsnull, fontNum, script);
+            if (entry)
+                data->mFontMapping->mFontList.AppendElement(entry);
+
+            if (BAD_FONT_NUM == data->mFontMapping->mScriptFallbackFontIDs[ script ])
+              data->mFontMapping->mScriptFallbackFontIDs[ script ] = fontNum;
+            // since this is a generic font name, it won't impact the order of script we used
+        }
 			}
 		}
 	}
