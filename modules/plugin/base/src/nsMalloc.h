@@ -27,7 +27,7 @@
 #include "prmem.h"
 #include "nsAgg.h"
 
-class nsMalloc : nsIMalloc {
+class nsMalloc : public nsIMalloc {
 public:
 
     /**
