@@ -43,9 +43,15 @@ sub main {
   # Pending a config file, stuff things here.
   my $post_status = 'success';  # Success until we report a failure.
   my $status = 0;  # 0 = success
+
   # No tests for now, since Chimera can't open a URL passed on the command line.
   my $chimera_alive_test = 1;
   my $chimera_test8_test = 0;
+
+  # Build flags
+  my $chimera_build_static = 0;
+  my $chimera_build_opt    = 1;
+
   my $chimera_dir = "$mozilla_build_dir/mozilla/chimera";
   my $embedding_dir = "$mozilla_build_dir/mozilla/embedding/config";
   my $chimera_binary = "Navigator";
@@ -78,19 +84,31 @@ sub main {
       if ($status == 0) {
         TinderUtils::print_log "Deleting binary...\n";
         TinderUtils::DeleteBinary("$chimera_dir/build/Navigator.app/Contents/MacOS/$chimera_binary");
-        
+          
         # Always do a clean build; gecko dependencies don't work correctly
         # for Chimera.
-        
+          
         TinderUtils::print_log "Clobbering chimera...\n";
         TinderUtils::run_shell_command("pbxbuild -buildstyle \"Deployment\" clean");
-        
+          
         my $foo = Cwd::getcwd();
         TinderUtils::print_log "cwd = $foo\n";
-        
+          
+        my $build_cmd = "pbxbuild -buildstyle ";
+
         # opt = Deployment, debug = Development.
+        if($chimera_build_opt) {
+          $build_cmd .=  "\"Deployment\"";  
+        } else {
+          $build_cmd .=  "\"Development\"";
+        }
+
         # Add   -target NavigatorStatic   for static build.
-        $status = TinderUtils::run_shell_command("pbxbuild -buildstyle \"Deployment\"");
+        if($chimera_build_static) {
+          $build_cmd .=  " -target NavigatorStatic";
+        }
+
+        $status = TinderUtils::run_shell_command($build_cmd);
         TinderUtils::print_log "Status from pbxbuild: $status\n";
       }
     
