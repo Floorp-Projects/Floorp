@@ -30,7 +30,6 @@ MODULE		= layout
 
 EXPORTS		= \
 nslayout.h \
-nsDocumentImpl.h          \
 nsHTMLReflowState.h \
 nsIAutoCopy.h \
 nsICaret.h \
