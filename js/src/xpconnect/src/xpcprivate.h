@@ -3079,8 +3079,46 @@ private:
     JSContext*        mCX;
     JSErrorReporter   mOldErrorReporter;
     JSExceptionState* mOldExceptionState;
- };
+};
 
+/******************************************************************************
+ * Handles pre/post script processing and the setting/resetting the error
+ * reporter
+ */
+class AutoScriptEvaluate
+{
+public:
+    /**
+     * Saves the JSContext as well as initializing our state
+     * @param cx The JSContext, this can be null, we don't do anything then
+     */
+    AutoScriptEvaluate(JSContext * cx)
+         : mJSContext(cx), mState(0), mEvaluated(PR_FALSE), 
+           mContextHasThread(0) {}
+
+    /**
+     * Does the pre script evaluation and sets the error reporter if given
+     * This function should only be called once, and will assert if called
+     * more than once
+     * @param errorReporter the error reporter callback function to set
+     */
+
+    void StartEvaluating(JSErrorReporter errorReporter = nsnull);
+    /**
+     * Does the post script evaluation and resets the error reporter
+     */
+    ~AutoScriptEvaluate();
+private:
+    JSContext* mJSContext;
+    JSExceptionState* mState;
+    JSErrorReporter mOldErrorReporter;
+    PRBool mEvaluated;
+    jsword mContextHasThread;
+
+    // No copying or assignment allowed
+    AutoScriptEvaluate(const AutoScriptEvaluate &);
+    AutoScriptEvaluate & operator =(const AutoScriptEvaluate &);
+};
 
 /***************************************************************************/
 class AutoResolveName
@@ -3263,8 +3301,6 @@ protected:
 /***************************************************************************/
 // Utilities
 
-JSExceptionState* xpc_DoPreScriptEvaluated(JSContext* cx);
-void xpc_DoPostScriptEvaluated(JSContext* cx, JSExceptionState* state);
 JSBool xpc_IsReportableErrorCode(nsresult code);
 
 /***************************************************************************/
