@@ -35,9 +35,13 @@ class nsCacheEntry;
 
 class nsCacheDevice {
 public:
-    virtual const char *  GetDeviceID(void) = 0;
+    virtual ~nsCacheDevice() {}
 
-    virtual nsresult ActivateEntryIfFound( nsCacheEntry * entry ) = 0;
+    virtual nsresult Init() = 0;
+
+    virtual const char *   GetDeviceID(void) = 0;
+    virtual nsCacheEntry * FindEntry( nsCString * key ) = 0;
+
     virtual nsresult DeactivateEntry( nsCacheEntry * entry ) = 0;
     virtual nsresult BindEntry( nsCacheEntry * entry ) = 0;
 
