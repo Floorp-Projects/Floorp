@@ -386,8 +386,9 @@ pref("intl.charsetmenu.browser.cache",      "");
 pref("intl.charsetmenu.mailview.cache",     "");
 pref("intl.charsetmenu.composer.cache",     "");
 pref("intl.charsetmenu.browser.cache.size", 5);
-pref("intl.charset.detector",                "chrome://navigator/locale/navigator.properties");
+pref("intl.charset.detector",               "chrome://navigator/locale/navigator.properties");
 pref("intl.charset.default",                "chrome://navigator/locale/navigator.properties");
+pref("font.language.group",                 "chrome://navigator/locale/navigator.properties");
 
 // -- folders (Mac: these are binary aliases.)
 localDefPref("mail.signature_file",             "");
