@@ -1,49 +1,52 @@
-<!--This file created 12/3/98 3:24 PM by Claris Home Page version 2.0-->
 <HTML>
 <HEAD>
    <TITLE>MRJ Plugin Build Instructions</TITLE>
-   <META NAME=GENERATOR CONTENT="Claris Home Page 2.0">
-   <X-SAS-WINDOW TOP=42 BOTTOM=826 LEFT=4 RIGHT=696>
-<!doctype html public "-//w3c//dtd html 4.0 transitional//en"> <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en"><meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 </HEAD>
 <BODY BGCOLOR="#C0C0C0" LINK="#333333" VLINK="#FF0000">
-
 <H2><CENTER>MRJ Plugin Build Instructions</CENTER></H2>
 
-<P><CENTER>
-<HR>
-</CENTER></P>
+<CENTER><I>(as of 3/22/99)</I>
 
-<H3><CENTER>In 4 Easy Steps</CENTER></H3>
+<P>
+
+<HR>
+
+</P></CENTER>
+
+<H3><CENTER>In 5 Easy Steps</CENTER></H3>
 
 <OL>
-   <LI>Download the latest
-   <A HREF="http://devloper.apple.com/java/text/prerelease.html#PreMRJSDK">MRJSDK</A>
-   (MRJSDK 2.1 EA3 or later). Run the installer, which will create a
-   folder at the root of your system volume, called "MRJ SDK 2.1."
-   Copy the CIncludes and Libraries folders to the "MRJSDK" folder in
-   mozilla/plugin/oji/MRJ.
+   <LI>Download the latest <A HREF="ftp://ftp.apple.com/developer/Development_Kits/MRJ_SDK_2.1.sit.hqx">MRJ
+   SDK</A> (MRJSDK 2.1 or later). Run the installer, which will
+   create a folder at the root of your system volume, called "MRJ SDK
+   2.1." Copy the CIncludes and Libraries folders to the "MRJSDK"
+   folder in mozilla/plugin/oji/MRJ.</LI>
    
-   <LI>Build the project mozilla/plugin/oji/MRJ/plugin/MRJInABox.mcp.
+   <LI>Open the project mozilla/plugin/oji/MRJ/plugin/MRJInABox.mcp.
+   To build the plugin for 4.X browsers, build the "MRJInABox (4.X)"
+   target. To build for 5.X, build the "MRJInABox" target.</LI>
    
    <LI>Build the project mozilla/js/macbuild/LiveConnectClasses.mcp,
    and make an alias to the file liveconnect.jar in
-   mozilla/plugin/oji/MRJ/plugin.
+   mozilla/plugin/oji/MRJ/plugin.</LI>
    
    <LI>Build the project
-   mozilla/plugin/oji/MRJ/plugin/MRJConsole.mcp. Build the project,
-   then close it.
+   mozilla/plugin/oji/MRJ/testing/ConsoleApplet.mcp.</LI>
+   
+   <LI>Finally, build the "MRJPlugin.jar" target in
+   MRJInABox.mcp.</LI>
 </OL>
 
-<P><CENTER>Well that's it. You should now have a working build of the
-MRJ plugin.</CENTER></P>
+<CENTER>Well that's it. You should now have a working build of the
+MRJ plugin.
 
-<P><CENTER>
+<P>
+
 <HR>
-</CENTER></P>
 
-<P><CENTER>If you have comments or suggestions, email me at
-<I><A HREF="mailto:beard@netscape.com">beard@netscape.com</A></I>
-</CENTER></P>
+</P>
+
+<P>If you have comments or suggestions, email me at <A HREF="mailto:beard@netscape.com"><I>beard@netscape.com</I></A></P></CENTER>
 </BODY>
 </HTML>
