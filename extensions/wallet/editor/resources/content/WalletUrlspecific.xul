@@ -41,8 +41,8 @@
     for (var schema in parent.schemaToValue) {
       colonIndex = schema.indexOf(":");
       if (colonIndex != -1) {
-        var rows = document.getElementById("rows");
-        var row = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "row");
+        var list = document.getElementById("list");
+        var item = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "listitem");
         var text1 = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "textbox");
         var text2 = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "textbox");
         var menuList = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "menulist");
@@ -51,10 +51,10 @@
 
         menuPopup.appendChild(menuItem);
         menuList.appendChild(menuPopup);
-        row.appendChild(text1);
-        row.appendChild(text2);
-        row.appendChild(menuList);
-        rows.appendChild(row);
+        item.appendChild(text1);
+        item.appendChild(text2);
+        item.appendChild(menuList);
+        list.appendChild(item);
 
         menuItem.setAttribute("label", "");
         menuItem.setAttribute("len","0");
@@ -76,35 +76,21 @@
 
   </script>
 
-  <groupbox>
+  <groupbox flex="1">
     <caption label="&urlspecific.title;"/>
 
-    <grid class="indent">
-      <columns>
-        <column width="115"/>
-        <column width="75"/>
-        <column width="115"/>
-      </columns>
-      <rows>
-        <row>
-          <label value="&urlspecificUrl.label;"/>
-          <label value="&urlspecificField.label;"/>
-          <label value="&urlspecificValue.label;"/>
-        </row>
-      </rows>
-    </grid>
-
-    <hbox style="overflow: auto; height: 335px; width: 350px;">
-      <grid class="indent">
-        <columns>
-          <column width="115"/>
-          <column width="75"/>
-          <column width="115"/>
-        </columns>
-        <rows id="rows">
-        </rows>
-      </grid>
-    </hbox>
+    <listbox id="list" disabled="true" flex="1">
+      <listcols>
+        <listcol flex="3"/>
+        <listcol flex="2"/>
+        <listcol flex="3"/>
+      </listcols>
+      <listhead>
+        <listheader label="&urlspecificUrl.label;"/>
+        <listheader label="&urlspecificField.label;"/>
+        <listheader label="&urlspecificValue.label;"/>
+      </listhead>
+    </listbox>
 
   </groupbox>
 </page>
