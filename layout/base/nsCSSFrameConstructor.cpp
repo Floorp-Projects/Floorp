@@ -4548,28 +4548,22 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIPresContext* aPresContext,
 {
   nsresult rv = NS_OK;
 
-  // First, remove the frames associated with the content object on which the
-  // attribute change occurred.
-
-  // XXX Right now, ContentRemoved() does not do anything with its aContainer
-  // and aIndexInContainer in parameters, so I am passing in null and 0, respectively
-  rv = ContentRemoved(aPresContext, nsnull, aContent, 0);
-
-  if (NS_OK == rv) {
-    // Now, recreate the frames associated with this content object.
-    nsIContent *container;
-    rv = aContent->GetParent(container);
-  
+  nsIContent *container;
+  rv = aContent->GetParent(container);
+  if (container) {
+    PRInt32 indexInContainer;
+    rv = container->IndexOf(aContent, indexInContainer);
     if (NS_OK == rv) {
-      PRInt32 indexInContainer;
-      rv = container->IndexOf(aContent, indexInContainer);
-
+      // First, remove the frames associated with the content object on which the
+      // attribute change occurred.
+      rv = ContentRemoved(aPresContext, container, aContent, indexInContainer);
+  
       if (NS_OK == rv) {
+        // Now, recreate the frames associated with this content object.
         rv = ContentInserted(aPresContext, container, aContent, indexInContainer);
       }
-
-      NS_RELEASE(container);    
-    }    
+    }
+    NS_RELEASE(container);    
   }
 
   return rv;
