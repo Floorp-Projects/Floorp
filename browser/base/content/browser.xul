@@ -430,8 +430,8 @@ Contributor(s):
   </popup>
 
   <!-- Total hack. Used by the Go menu to build up items. -->
-  <tree id="hiddenHistoryTree" hidden="true" collapsed="true"
-                  datasources="rdf:history" flags="dont-build-content"
+  <tree id="hiddenHistoryTree" hidden="true" collapsed="true" datasources="rdf:null"
+                  flags="dont-build-content"
                   hidecolumnpicker="true">
     <template>
       <rule>
