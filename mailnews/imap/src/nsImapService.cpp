@@ -103,7 +103,7 @@ nsImapService::GetFolderName(nsIMsgFolder* aImapFolder,
     rv = aFolder->GetURI(&uri);
     if (NS_FAILED(rv)) return rv;
     char * hostname = nsnull;
-    rv = aImapFolder->GetHostName(&hostname);
+    rv = aImapFolder->GetHostname(&hostname);
     if (NS_FAILED(rv)) return rv;
     nsString name;
     rv = nsImapURI2FullName(kImapRootURI, hostname, uri, name);
@@ -335,9 +335,9 @@ nsImapService::CreateStartOfImapUrl(nsIImapUrl * &imapUrl,
     char *hostname = nsnull;
     char *username = nsnull;
     
-    rv = aImapMailFolder->GetHostName(&hostname);
+    rv = aImapMailFolder->GetHostname(&hostname);
     if (NS_FAILED(rv)) return rv;
-    rv = aImapMailFolder->GetUsersName(&username);
+    rv = aImapMailFolder->GetUsername(&username);
     if (NS_FAILED(rv))
     {
         PR_FREEIF(hostname);
@@ -359,7 +359,7 @@ nsImapService::CreateStartOfImapUrl(nsIImapUrl * &imapUrl,
 #if 0
         urlSpec.Append(username);
         urlSpec.Append('@');
-#endif 
+#endif
         urlSpec.Append(hostname);
         // *** jefft - force to parse the urlSpec in order to search for
         // the correct incoming server
@@ -990,22 +990,22 @@ nsImapService::OnlineMessageCopy(nsIEventQueue* aClientEventQueue,
     nsresult rv = NS_ERROR_FAILURE;
     char *srcHostname = nsnull, *srcUsername = nsnull;
     char *dstHostname = nsnull, *dstUsername = nsnull;
-    rv = aSrcFolder->GetHostName(&srcHostname);
+    rv = aSrcFolder->GetHostname(&srcHostname);
     if (NS_FAILED(rv)) return rv;
-    rv = aDstFolder->GetHostName(&dstHostname);
+    rv = aDstFolder->GetHostname(&dstHostname);
     if (NS_FAILED(rv))
     {
         PR_FREEIF(srcHostname);
         return rv;
     }
-    rv = aSrcFolder->GetUsersName(&srcUsername);
+    rv = aSrcFolder->GetUsername(&srcUsername);
     if (NS_FAILED(rv))
     {
         PR_FREEIF(srcHostname);
         PR_FREEIF(dstHostname);
         return rv;
     }
-    rv = aDstFolder->GetUsersName(&dstUsername);
+    rv = aDstFolder->GetUsername(&dstUsername);
     if (NS_FAILED(rv))
     {
         PR_FREEIF(srcHostname);

@@ -36,6 +36,7 @@
 
 #include "prmem.h"
 #include "plstr.h"
+#include "nsXPIDLString.h"
 
 static NS_DEFINE_CID(kCImapHostSessionList, NS_IIMAPHOSTSESSIONLIST_CID);
 static NS_DEFINE_CID(kImapProtocolCID, NS_IMAPPROTOCOL_CID);
@@ -129,18 +130,17 @@ NS_IMETHODIMP nsImapIncomingServer::SetKey(char * aKey)  // override nsMsgIncomi
 NS_IMETHODIMP nsImapIncomingServer::GetServerURI(char ** aServerURI)
 {
 	nsresult rv = NS_OK;
-	nsString2 serverUri("imap://", eOneByte);
-	char * hostName = nsnull;
-	rv = GetHostName(&hostName);
-	if (NS_FAILED(rv))
-		return rv;
 
-	serverUri += hostName;
-	if (aServerURI)
-		*aServerURI = PL_strdup(serverUri.GetBuffer());
+    nsXPIDLCString hostname;
+    rv = GetHostName(getter_Copies(hostname));
 
+    nsXPIDLCString username;
+    rv = GetUsername(getter_Copies(username));
+    
+    if (NS_FAILED(rv)) return rv;
 
-	PR_FREEIF(hostName);
+    *aServerURI = PR_smprintf("imap://%s@%s", (const char*)username,
+                              (const char*)hostname);
 
 	return rv;
 }

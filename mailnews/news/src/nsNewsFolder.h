@@ -78,8 +78,8 @@ public:
 
 	NS_IMETHOD GetSizeOnDisk(PRUint32 *size);
 
-	NS_IMETHOD GetUsersName(char** userName);
-	NS_IMETHOD GetHostName(char** hostName);
+	NS_IMETHOD GetUsername(char** userName);
+	NS_IMETHOD GetHostname(char** hostName);
 	NS_IMETHOD UserNeedsToAuthenticateForFolder(PRBool displayOnly, PRBool *authenticate);
 	NS_IMETHOD RememberPassword(const char *password);
 	NS_IMETHOD GetRememberedPassword(char ** password);
@@ -116,7 +116,9 @@ protected:
 #ifdef USE_NEWSRC_MAP_FILE
   nsresult MapHostToNewsrcFile(char *newshostname, nsFileSpec &fatFile, nsFileSpec &newsrcFile);
 #endif
-  virtual const nsIID& GetIncomingServerType() {return nsINntpIncomingServer::GetIID();}
+
+  virtual const char *GetIncomingServerType() {return "nntp";}
+  
   nsByteArray		m_inputStream;
 
 protected:

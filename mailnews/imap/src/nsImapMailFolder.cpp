@@ -585,7 +585,7 @@ NS_IMETHODIMP nsImapMailFolder::GetName(char ** name)
         if (mDepth == 0) 
         {
             char *hostName = nsnull;
-            GetHostName(&hostName);
+            GetHostname(&hostName);
             SetName(hostName);
             PR_FREEIF(hostName);
             m_haveReadNameFromDB = PR_TRUE;
@@ -626,7 +626,7 @@ NS_IMETHODIMP nsImapMailFolder::GetPrettyName(char ** prettyName)
 {
     if (mDepth == 1) {
         char *hostName = nsnull;
-        GetHostName(&hostName);
+        GetHostname(&hostName);
         *prettyName = PL_strdup(hostName);
         PR_FREEIF(hostName);
     }
@@ -726,36 +726,31 @@ NS_IMETHODIMP nsImapMailFolder::GetSizeOnDisk(PRUint32 * size)
     return rv;
 }
     
-NS_IMETHODIMP nsImapMailFolder::GetUsersName(char** userName)
+NS_IMETHODIMP nsImapMailFolder::GetUsername(char** userName)
 {
     nsresult rv = NS_ERROR_NULL_POINTER;
     NS_PRECONDITION (userName, "Oops ... null userName pointer");
     if (!userName)
         return rv;
-    else
-        *userName = nsnull;
-#if 1 // for now
-	nsCOMPtr<nsIMsgIncomingServer> server;
-	rv = GetServer(getter_AddRefs(server));
- 
-    if (NS_SUCCEEDED(rv)) 
-          rv = server->GetUsername(userName);
-#else  // **** for the future
-    nsCOMPtr<nsIFolder> aFolder = do_QueryInterface(this, &rv);
-    if (NS_FAILED(rv)) return rv;
+
+    *userName = nsnull;
+    
     char *uri = nsnull;
-    rv = aFolder->GetURI(&uri);
+    rv = GetURI(&uri);
     if (NS_FAILED(rv)) return rv;
+    
     nsAutoString aName = uri;
     PR_FREEIF(uri);
     if (aName.Find(kImapRootURI) != 0)
         return NS_ERROR_FAILURE;
+    
     aName.Cut(0, PL_strlen(kImapRootURI));
     while (aName[0] == '/')
         aName.Cut(0, 1);
     PRInt32 userEnd = aName.Find('@');
     if (userEnd < 1)
         return NS_ERROR_NULL_POINTER;
+
     aName.SetLength(userEnd);
     char *tmpCString = aName.ToNewCString();
     if (tmpCString && *tmpCString)
@@ -765,12 +760,9 @@ NS_IMETHODIMP nsImapMailFolder::GetUsersName(char** userName)
         delete []tmpCString;
     }
     return rv;
-#endif 
-
-    return rv;
 }
 
-NS_IMETHODIMP nsImapMailFolder::GetHostName(char** hostName)
+NS_IMETHODIMP nsImapMailFolder::GetHostname(char** hostName)
 {
     nsresult rv = NS_ERROR_NULL_POINTER;
 
@@ -871,7 +863,7 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
     nsString2 uri("", eOneByte);
     char* hostName = nsnull;
 
-    rv = GetHostName(&hostName);
+    rv = GetHostname(&hostName);
     if (NS_FAILED(rv)) return rv;
 
     uri.Append(kImapRootURI);
@@ -1031,7 +1023,11 @@ NS_IMETHODIMP nsImapMailFolder::PossibleImapMailbox(
     nsAutoString uri ((const char *)"", eOneByte);
     uri.Append(kImapRootURI);
     uri.Append('/');
-    
+
+    char *username;
+    GetUsername(&username);
+    uri.Append(username);
+    uri.Append('@');
     uri.Append(aSpec->hostName);
 
 #if 0    
@@ -2148,8 +2144,8 @@ PRBool nsImapMailFolder::ShowDeletedMessages()
 	{
         char *hostName = nsnull;
 		char *userName = nsnull;
-        GetHostName(&hostName);
-		GetUsersName(&userName);
+        GetHostname(&hostName);
+		GetUsername(&userName);
         err = hostSession->GetShowDeletedMessagesForHost(hostName, userName, rv);
         PR_FREEIF(hostName);
 		PR_FREEIF(userName);
@@ -2170,9 +2166,9 @@ PRBool nsImapMailFolder::DeleteIsMoveToTrash()
 	{
         char *hostName = nsnull;
 		char *userName = nsnull;
-        GetHostName(&hostName);
-		GetUsersName(&userName);
-        nsresult err = hostSession->GetDeleteIsMoveToTrashForHost(hostName, userName, rv);
+        GetHostname(&hostName);
+		GetUsername(&userName);
+        err = hostSession->GetDeleteIsMoveToTrashForHost(hostName, userName, rv);
         PR_FREEIF(hostName);
 		PR_FREEIF(userName);
 	}
@@ -2184,7 +2180,6 @@ nsresult nsImapMailFolder::GetTrashFolder(nsIMsgFolder **pTrashFolder)
 	if (!pTrashFolder)
 		return NS_ERROR_NULL_POINTER;
 
-	nsIMsgFolder *foundTrash = NULL;
 	nsCOMPtr<nsIMsgFolder> rootFolder;
 	nsresult rv = GetRootFolder(getter_AddRefs(rootFolder));
 	if(NS_SUCCEEDED(rv))

@@ -897,15 +897,12 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetSizeOnDisk(PRUint32* size)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgLocalMailFolder::GetUsersName(char** userName)
+NS_IMETHODIMP nsMsgLocalMailFolder::GetUsername(char** userName)
 {
-#ifdef HAVE_PORT
-  return NET_GetPopUsername();
-#endif
-  return NS_OK;
+  return nsGetMailboxUserName(kMailboxRootURI, mURI, userName);
 }
 
-NS_IMETHODIMP nsMsgLocalMailFolder::GetHostName(char** hostName)
+NS_IMETHODIMP nsMsgLocalMailFolder::GetHostname(char** hostName)
 {
 	nsresult rv;
 	char *host;

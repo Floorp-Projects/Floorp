@@ -28,6 +28,7 @@
 #include "prmem.h"
 #include "plstr.h"
 #include "prprf.h"
+#include "nsXPIDLString.h"
 
 static NS_DEFINE_CID(kCPop3ServiceCID, NS_POP3SERVICE_CID);
 
@@ -97,14 +98,18 @@ nsresult
 nsPop3IncomingServer::GetServerURI(char **uri)
 {
     nsresult rv;
-    char *hostname;
-    
-    rv = GetHostName(&hostname);
+
+    nsXPIDLCString username;
+    rv = GetUsername(getter_Copies(username));
     if (NS_FAILED(rv)) return rv;
 
-    *uri = PR_smprintf("mailbox://%s", hostname);
+    nsXPIDLCString hostname;
+    rv = GetHostName(getter_Copies(hostname));
+    if (NS_FAILED(rv)) return rv;
 
-    PR_Free(hostname);
+    *uri = PR_smprintf("mailbox://%s@%s",
+                       (const char *)username,
+                       (const char *)hostname);
     return rv;
 }
 

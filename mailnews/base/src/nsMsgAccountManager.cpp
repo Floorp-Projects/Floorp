@@ -55,8 +55,9 @@ typedef struct _findAccountEntry {
 // put them in "servers"
 typedef struct _findServerEntry {
   const char *hostname;
-  const nsIID *iid;
-  nsISupportsArray *servers;
+  const char *username;
+  const char *type;
+  nsIMsgIncomingServer *server;
 } findServerEntry;
 
 
@@ -112,9 +113,10 @@ public:
 
   NS_IMETHOD LoadAccounts();
 
-  NS_IMETHOD FindServersByHostname(const char* hostname,
-                                   const nsIID& iid,
-                                   nsISupportsArray* *serverArray);
+  NS_IMETHOD FindServer(const char* username,
+                        const char* hostname,
+                        const char *type,
+                        nsIMsgIncomingServer* *aResult);
 
   NS_IMETHOD GetIdentitiesForServer(nsIMsgIncomingServer *server,
                                     nsISupportsArray **_retval);
@@ -763,9 +765,10 @@ nsMsgAccountManager::upgradePrefs()
 }
 
 NS_IMETHODIMP
-nsMsgAccountManager::FindServersByHostname(const char* hostname,
-                                           const nsIID& iid,
-                                           nsISupportsArray* *matchingServers)
+nsMsgAccountManager::FindServer(const char* username,
+                                const char* hostname,
+                                const char* type,
+                                nsIMsgIncomingServer** aResult)
 {
   nsresult rv;
   nsCOMPtr<nsISupportsArray> servers;
@@ -773,17 +776,18 @@ nsMsgAccountManager::FindServersByHostname(const char* hostname,
   rv = GetAllServers(getter_AddRefs(servers));
   if (NS_FAILED(rv)) return rv;
 
-  rv = NS_NewISupportsArray(matchingServers);
-  if (NS_FAILED(rv)) return rv;
-  
   findServerEntry serverInfo;
   serverInfo.hostname = hostname;
-  serverInfo.iid = &iid;
-  serverInfo.servers = *matchingServers;
+  // username might be blank, pass "" instead
+  serverInfo.username = username ? username : ""; 
+  serverInfo.type = type;
+  serverInfo.server = *aResult = nsnull;
   
   servers->EnumerateForwards(findServerByName, (void *)&serverInfo);
 
-  // as long as we have an nsISupportsArray, we are successful
+  if (!serverInfo.server) return NS_ERROR_UNEXPECTED;
+  *aResult = serverInfo.server;
+  
   return NS_OK;
 
 }
@@ -798,16 +802,27 @@ nsMsgAccountManager::findServerByName(nsISupports *aElement, void *data)
 
   findServerEntry *entry = (findServerEntry*) data;
 
+  nsresult rv;
+  
   nsXPIDLCString thisHostname;
-  nsresult rv = server->GetHostName(getter_Copies(thisHostname));
+  rv = server->GetHostName(getter_Copies(thisHostname));
   if (NS_FAILED(rv)) return PR_TRUE;
 
-  // do a QI to see if we support this interface, but be sure to release it!
-  nsISupports* dummy;
+  char *username=nsnull;
+  rv = server->GetUsername(&username);
+  if (NS_FAILED(rv)) return PR_TRUE;
+  if (!username) username=PL_strdup("");
+  
+  nsXPIDLCString thisType;
+  rv = server->GetType(getter_Copies(thisType));
+  if (NS_FAILED(rv)) return PR_TRUE;
+  
   if (PL_strcasecmp(entry->hostname, thisHostname)==0 &&
-      NS_SUCCEEDED(server->QueryInterface(*(entry->iid), (void **)&dummy))) {
-    NS_RELEASE(dummy);
-    entry->servers->AppendElement(aElement);
+      PL_strcmp(entry->username, username)==0 &&
+      PL_strcmp(entry->type, thisType)==0) {
+    entry->server = server;
+    NS_ADDREF(entry->server);
+    return PR_FALSE;            // stop on first find
   }
 
   return PR_TRUE;

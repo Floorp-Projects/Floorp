@@ -306,21 +306,24 @@ NS_IMETHODIMP nsMsgFolder::GetServer(nsIMsgIncomingServer ** aServer)
 		rv = session->GetAccountManager(getter_AddRefs(accountManager));
 		if(NS_FAILED(rv)) return rv;
 
-		char * hostname = nsnull;
-		rv = GetHostName(&hostname);
+    char * hostname = nsnull;
+		rv = GetHostname(&hostname);
 		if(NS_FAILED(rv)) return rv;
 
-		nsCOMPtr<nsISupportsArray> servers;
-		rv = accountManager->FindServersByHostname(hostname,
-                                               GetIncomingServerType(),
-                                               getter_AddRefs(servers));
+    char * username = nsnull;
+    rv = GetUsername(&username);
+    if (NS_FAILED(rv)) return rv;
+    
+    nsIMsgIncomingServer *server;
+		rv = accountManager->FindServer(username,
+                                    hostname,
+                                    GetIncomingServerType(),
+                                    &server);
+    PR_FREEIF(username);
 		PR_FREEIF(hostname);
 		if (NS_FAILED(rv)) return rv;
-
-		// mscott: this is pretty bogus....we should be required by FindServers
-		// to pass in enough information to uniquely identify ONE
-		// server. we need at least the user name and host name.
-		m_server = do_QueryInterface(servers->ElementAt(0));
+    
+		m_server = server;
 	}
 
 	if (aServer)
@@ -1249,7 +1252,8 @@ NS_IMETHODIMP nsMsgFolder::UserNeedsToAuthenticateForFolder(PRBool displayOnly, 
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgFolder::GetUsersName(char **userName)
+#if 0
+NS_IMETHODIMP nsMsgFolder::GetUsername(char **userName)
 {
 	if(!userName)
 		return NS_ERROR_NULL_POINTER;
@@ -1258,7 +1262,7 @@ NS_IMETHODIMP nsMsgFolder::GetUsersName(char **userName)
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgFolder::GetHostName(char **hostName)
+NS_IMETHODIMP nsMsgFolder::GetHostname(char **hostName)
 {
 	if(!hostName)
 		return NS_ERROR_NULL_POINTER;
@@ -1266,6 +1270,7 @@ NS_IMETHODIMP nsMsgFolder::GetHostName(char **hostName)
 	*hostName = "";
 	return NS_OK;
 }
+#endif
 
 NS_IMETHODIMP nsMsgFolder::GetNewMessages()
 {

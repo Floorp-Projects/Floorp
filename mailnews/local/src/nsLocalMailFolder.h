@@ -87,8 +87,8 @@ public:
 
 	NS_IMETHOD GetSizeOnDisk(PRUint32* size);
 
-	NS_IMETHOD GetUsersName(char** userName);
-	NS_IMETHOD GetHostName(char** hostName);
+	NS_IMETHOD GetUsername(char** userName);
+	NS_IMETHOD GetHostname(char** hostName);
 	NS_IMETHOD UserNeedsToAuthenticateForFolder(PRBool displayOnly, PRBool *authenticate);
 	NS_IMETHOD RememberPassword(const char *password);
 	NS_IMETHOD GetRememberedPassword(char ** password);
@@ -129,7 +129,7 @@ protected:
 	nsresult DeleteMessage(nsIMessage *message, nsITransactionManager *txnMgr, PRBool deleteStorage);
 	nsresult MoveMessageToTrash(nsIMessage *message, nsIMsgFolder *trashFolder);
 
-	virtual const nsIID& GetIncomingServerType() {return nsIPop3IncomingServer::GetIID();}
+	virtual const char* GetIncomingServerType() {return "pop3";}
 
 protected:
 	nsNativeFileSpec *mPath;

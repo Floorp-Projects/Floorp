@@ -102,8 +102,8 @@ interface nsIMsgFolder : nsIFolder {
 	void RememberPassword(in string password);
 	string GetRememberedPassword();
 	boolean UserNeedsToAuthenticateForFolder(in boolean displayOnly);
-	string GetUsersName();
-	string GetHostName();
+	string GetUsername();
+	string GetHostname();
 
   
 	void SetFlag(in unsigned long flag);

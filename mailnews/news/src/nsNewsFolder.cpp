@@ -303,7 +303,7 @@ nsMsgNewsFolder::CreateSubFolders(nsFileSpec &path)
   nsresult rv = NS_OK;
 
   char *hostname;
-  rv = GetHostName(&hostname);
+  rv = GetHostname(&hostname);
   if (NS_FAILED(rv)) return rv;
       
   if (isNewsHost()) {  
@@ -971,13 +971,13 @@ NS_IMETHODIMP nsMsgNewsFolder::GetSizeOnDisk(PRUint32 *size)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsMsgNewsFolder::GetUsersName(char** userName)
+NS_IMETHODIMP nsMsgNewsFolder::GetUsername(char** userName)
 {
-  PR_ASSERT(0);
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *userName = PL_strdup("");
+  return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgNewsFolder::GetHostName(char** hostName)
+NS_IMETHODIMP nsMsgNewsFolder::GetHostname(char** hostName)
 {
   nsresult rv = NS_OK;
   
@@ -1052,7 +1052,7 @@ NS_IMETHODIMP nsMsgNewsFolder::DeleteMessages(nsISupportsArray *messages,
   
   if (NS_SUCCEEDED(rv) && nntpService) {
     char *hostname;
-    rv = GetHostName(&hostname);
+    rv = GetHostname(&hostname);
     if (NS_FAILED(rv)) return rv;
     char *newsgroupname;
     rv = GetName(&newsgroupname);

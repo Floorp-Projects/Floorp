@@ -511,7 +511,15 @@ nsresult nsImapUrl::ParseURL(const nsString& aSpec, const nsIURL* aURL)
 
 	// Host name follows protocol for http style urls
 	const char* cp0 = cp;
-	cp = PL_strpbrk(cp, "/:");
+    cp = PL_strchr(cp0, '@');
+    
+    if (cp) {
+        // we have a username between cp0 and cp
+        m_userName = PL_strndup(cp0, (cp - cp0));
+        cp0 = cp+1;
+    }
+    
+	cp = PL_strpbrk(cp0, "/:");
 	if (nsnull == cp) 
 	{
 		// There is only a host name
@@ -519,8 +527,7 @@ nsresult nsImapUrl::ParseURL(const nsString& aSpec, const nsIURL* aURL)
         m_host = (char*) PR_Malloc(hlen + 1);
         PL_strcpy(m_host, cp0);
 	}
-    else 
-	{
+    else {
 		PRInt32 hlen = cp - cp0;
         m_host = (char*) PR_Malloc(hlen + 1);
         PL_strncpy(m_host, cp0, hlen);        
@@ -561,15 +568,14 @@ nsresult nsImapUrl::ParseURL(const nsString& aSpec, const nsIURL* aURL)
         rv = session->GetAccountManager(getter_AddRefs(accountManager));
         if(NS_FAILED(rv)) return rv;
         
-        nsCOMPtr<nsISupportsArray> servers;
-        rv = accountManager->FindServersByHostname(m_host,
-                              nsIImapIncomingServer::GetIID(),
-                                       getter_AddRefs(servers));
+        nsCOMPtr<nsIMsgIncomingServer> server;
+        rv = accountManager->FindServer(m_userName,
+                                        m_host,
+                                        "imap",
+                                        getter_AddRefs(server));
         if (NS_FAILED(rv)) return rv;
-        nsCOMPtr<nsISupports> aSupport =
-            getter_AddRefs(servers->ElementAt(0));
-        nsCOMPtr<nsIMsgIncomingServer> server (do_QueryInterface(aSupport));
-        if (NS_FAILED(rv)) return rv;
+        // can't do an addref because it's private to nsIURL, so use
+        // do_QueryInterface instead
 		m_server = do_QueryInterface(server);
     }
 

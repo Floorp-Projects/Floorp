@@ -37,8 +37,8 @@ static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 // - cache the last hostname->path match
 // - if no such server exists, behave like an old-style mailbox URL
 // (i.e. return the mail.directory preference or something)
-nsresult
-nsGetMailboxRoot(const char *hostname, nsFileSpec &result)
+static nsresult
+nsGetMailboxServer(const char *username, const char *hostname, nsIMsgIncomingServer** aResult)
 {
   nsresult rv = NS_OK;
 
@@ -50,73 +50,62 @@ nsGetMailboxRoot(const char *hostname, nsFileSpec &result)
   if (NS_FAILED(rv)) return rv;
 
   // find all pop hosts matching the given hostname
-  nsCOMPtr<nsISupportsArray> hosts;
-  rv = accountManager->FindServersByHostname(hostname,
-                                             nsIPop3IncomingServer::GetIID(),
-                                             getter_AddRefs(hosts));
-  
+  nsCOMPtr<nsIMsgIncomingServer> server;
+  rv = accountManager->FindServer(username,
+                                  hostname,
+                                  "pop3",
+                                  getter_AddRefs(server));
+
   if (NS_FAILED(rv)) return rv;
 
-  // use enumeration function to find the first Pop server
-  nsCOMPtr<nsISupports> serverSupports = getter_AddRefs(hosts->ElementAt(0));
-
-#ifdef DEBUG_alecf
-  if (!serverSupports)
-    printf("Huh, serverSupports returned nsnull\n");
-#endif
-
-  // if there are no pop servers, how did we get here?
-  if (! serverSupports)
-  	return NS_ERROR_UNEXPECTED;
-
-  nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(serverSupports);
-
-  // this had better be a nsIMsgIncomingServer, otherwise
-  // FindServersByHostname is broken or we got some weird object back
-  PR_ASSERT(server);
+  *aResult = server;
+  NS_ADDREF(*aResult);
   
-  // now ask the server what it's root is
-  char *localPath;
-  rv = server->GetLocalPath(&localPath);
-  if (NS_SUCCEEDED(rv)) 
-    result = localPath;
-
-  if (localPath) PL_strfree(localPath);
   
   return rv;
 }
 
-// given rootURI and rootURI##folder, return on-disk path of folder
-nsresult
-nsLocalURI2Path(const char* rootURI, const char* uriStr,
-                nsFileSpec& pathResult)
+static nsresult
+nsLocalURI2Server(const char* uriStr,
+                  nsIMsgIncomingServer ** aResult)
 {
+
   nsresult rv;
-  nsAutoString sbdSep;
-  rv = nsGetMailFolderSeparator(sbdSep);
-  if (NS_FAILED(rv)) return rv;
-
-  nsAutoString uri = uriStr;
-  if (uri.Find(rootURI) != 0)     // if doesn't start with rootURI
-    return NS_ERROR_FAILURE;
-
-  // verify that rootURI starts with "mailbox:/" or "mailbox_message:/"
-  if ((PL_strcmp(rootURI, kMailboxRootURI) != 0) && 
-      (PL_strcmp(rootURI, kMailboxMessageRootURI) != 0)) {
-    pathResult = nsnull;
-    return NS_ERROR_FAILURE;
-  }
 
   // start parsing the uriStr
   const char* curPos = uriStr;
   
-  // skip past schema 
+  // skip past schema xxx://
   while (*curPos != ':') curPos++;
   curPos++;
   while (*curPos == '/') curPos++;
 
-  char *slashPos = PL_strchr(curPos, '/');
+  // extract userid from userid@hostname...
+  // this is so amazingly ugly, please forgive me....
+  // I'll fix this post-M7 -alecf@netscape.com
+  char *atPos = PL_strchr(curPos, '@');
+  NS_ASSERTION(atPos!=nsnull, "URI with no userid!");
+  
   int length;
+  if (atPos)
+    length = (atPos - curPos) + 1;
+  else {
+    length = 1;
+  }
+
+  char *username = new char[length];
+  if (!username) return NS_ERROR_OUT_OF_MEMORY;
+
+  if (atPos) {
+    PL_strncpyz(username, curPos, length);
+    curPos = atPos;
+    curPos++;
+  }    
+  else
+    username[0] = '\0';
+
+  // extract hostname
+  char *slashPos = PL_strchr(curPos, '/');
 
   // if there are no more /'s then we just copy the rest of the string
   if (slashPos)
@@ -130,17 +119,64 @@ nsLocalURI2Path(const char* rootURI, const char* uriStr,
 
   PL_strncpyz(hostname, curPos, length);
 
-  // begin pathResult with the mailbox root
-  rv = nsGetMailboxRoot(hostname, pathResult);
+  nsCOMPtr<nsIMsgIncomingServer> server;
+  rv = nsGetMailboxServer(username, hostname, getter_AddRefs(server));
+  delete[] username;
   delete[] hostname;
+
+  *aResult = server;
+  NS_ADDREF(*aResult);
+
+  return rv;
+}
+
+// given rootURI and rootURI##folder, return on-disk path of folder
+nsresult
+nsLocalURI2Path(const char* rootURI, const char* uriStr,
+                nsFileSpec& pathResult)
+{
+  nsresult rv;
+  
+  // verify that rootURI starts with "mailbox:/" or "mailbox_message:/"
+  if ((PL_strcmp(rootURI, kMailboxRootURI) != 0) && 
+      (PL_strcmp(rootURI, kMailboxMessageRootURI) != 0)) {
+    pathResult = nsnull;
+    return NS_ERROR_FAILURE;
+  }
+
+  // verify that uristr starts with rooturi
+  nsAutoString uri = uriStr;
+  if (uri.Find(rootURI) != 0)
+    return NS_ERROR_FAILURE;
+
+
+  nsCOMPtr<nsIMsgIncomingServer> server;
+  rv = nsLocalURI2Server(uriStr, getter_AddRefs(server));
+  
   if (NS_FAILED(rv))
   	return rv;
+  
+  // now ask the server what it's root is
+  // and begin pathResult with the mailbox root
+  char *localPath;
+  rv = server->GetLocalPath(&localPath);
+  if (NS_SUCCEEDED(rv)) 
+    pathResult = localPath;
 
-  if (slashPos) {
+  if (localPath) PL_strfree(localPath);
+
+  const char *curPos = uriStr + PL_strlen(rootURI);
+  if (curPos) {
+    
     // advance past hostname
-    curPos=slashPos;
-    curPos++;
+    while ((*curPos)=='/') curPos++;
+    while (*curPos && (*curPos)!='/') curPos++;
+    while ((*curPos)=='/') curPos++;
 
+    // get the seperator
+    nsAutoString sbdSep;
+    rv = nsGetMailFolderSeparator(sbdSep);
+    
     // for each token in between the /'s, put a .sbd on the end and
     // append to the path
     char *newStr=nsnull;
@@ -239,38 +275,62 @@ nsresult nsBuildLocalMessageURI(const char *baseURI, PRUint32 key, char** uri)
 	return NS_OK;
 }
 
-nsresult nsGetMailboxHostName(const char *rootURI, const char *uriStr, char **hostName)
+nsresult
+nsGetMailboxHostName(const char *rootURI, const char *uriStr, char **hostName)
 {
 
   if(!hostName)
 	  return NS_ERROR_NULL_POINTER;
 
+  nsresult rv;
+  
+  // verify that rootURI starts with "mailbox:/" or "mailbox_message:/"
+  if ((PL_strcmp(rootURI, kMailboxRootURI) != 0) && 
+      (PL_strcmp(rootURI, kMailboxMessageRootURI) != 0)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // verify that uristr starts with rooturi
   nsAutoString uri = uriStr;
-  if (uri.Find(rootURI) != 0)     // if doesn't start with rootURI
+  if (uri.Find(rootURI) != 0)
     return NS_ERROR_FAILURE;
 
-  // start parsing the uriStr
-  const char* curPos = uriStr;
+  nsCOMPtr<nsIMsgIncomingServer> server;
+  rv = nsLocalURI2Server(uriStr, getter_AddRefs(server));
   
-  // skip past schema 
-  while (*curPos != ':') curPos++;
-  curPos++;
-  while (*curPos == '/') curPos++;
+  if (NS_FAILED(rv))
+  	return rv;
+  
+  return server->GetHostName(hostName);
+}
 
-  char *slashPos = PL_strchr(curPos, '/');
-  int length;
 
-  // if there are no more /'s then we just copy the rest of the string
-  if (slashPos)
-    length = (slashPos - curPos) + 1;
-  else
-    length = PL_strlen(curPos) + 1;
+nsresult nsGetMailboxUserName(const char *rootURI, const char* uriStr,
+                              char **userName)
+{
+  
 
-  *hostName = new char[length];
-  if(!*hostName)
-	  return NS_ERROR_OUT_OF_MEMORY;
+  if(!userName)
+	  return NS_ERROR_NULL_POINTER;
 
-  PL_strncpyz(*hostName, curPos, length);
+  nsresult rv;
+  
+  // verify that rootURI starts with "mailbox:/" or "mailbox_message:/"
+  if ((PL_strcmp(rootURI, kMailboxRootURI) != 0) && 
+      (PL_strcmp(rootURI, kMailboxMessageRootURI) != 0)) {
+    return NS_ERROR_FAILURE;
+  }
 
-  return NS_OK;
+  // verify that uristr starts with rooturi
+  nsAutoString uri = uriStr;
+  if (uri.Find(rootURI) != 0)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIMsgIncomingServer> server;
+  rv = nsLocalURI2Server(uriStr, getter_AddRefs(server));
+  
+  if (NS_FAILED(rv))
+  	return rv;
+  
+  return server->GetUsername(userName);
 }

@@ -254,9 +254,11 @@ public:
   NS_IMETHOD RememberPassword(const char *password);
   NS_IMETHOD GetRememberedPassword(char ** password);
   NS_IMETHOD UserNeedsToAuthenticateForFolder(PRBool displayOnly, PRBool *needsAuthenticate);
-  NS_IMETHOD GetUsersName(char **userName);
-  NS_IMETHOD GetHostName(char **hostName);
-
+#if 0
+  NS_IMETHOD GetUsername(char **userName);
+  NS_IMETHOD GetHostname(char **hostName);
+#endif
+  
 	virtual nsresult GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDatabase **db) = 0;
 	NS_IMETHOD DeleteMessages(nsISupportsArray *messages, 
                             nsITransactionManager *txnMgr, PRBool deleteStorage) = 0;
@@ -287,7 +289,7 @@ protected:
 	// we use it to get the IID of the incoming server for the derived folder.
 	// w/out a function like this we would have to implement GetServer in each
 	// derived folder class.
-	virtual const nsIID& GetIncomingServerType() = 0;
+	virtual const char* GetIncomingServerType() = 0;
 
 protected:
   nsString mName;

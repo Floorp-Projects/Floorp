@@ -51,9 +51,6 @@ static const char kNewsMessageRootURI[] = "news_message:/";
 #endif /* ! XP_UNIX */
 
 extern nsresult
-nsGetNewsRoot(const char* hostname, nsFileSpec &result);
-
-extern nsresult
 nsGetNewsHostName(const char *rootURI, const char *uriStr, char **hostName);
 
 extern nsresult

@@ -33,40 +33,29 @@
 static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 
 nsresult
-nsGetImapRoot(const char* hostname, nsFileSpec &result)
+nsGetImapServer(const char* username, const char* hostname,
+                nsIMsgIncomingServer ** aResult)
 {
     nsresult rv = NS_OK; 
 
 	NS_WITH_SERVICE(nsIMsgMailSession, session, kMsgMailSessionCID, &rv); 
     if (NS_FAILED(rv)) return rv;
 
+    
 	nsCOMPtr<nsIMsgAccountManager> accountManager;
 	rv = session->GetAccountManager(getter_AddRefs(accountManager));
     if(NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsISupportsArray> servers;
-    rv = accountManager->FindServersByHostname(hostname,
-                                               nsIImapIncomingServer::GetIID(),
-                                               getter_AddRefs(servers));
+    nsCOMPtr<nsIMsgIncomingServer> server;
+    rv = accountManager->FindServer(username,
+                                    hostname,
+                                    "imap",
+                                    getter_AddRefs(server));
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsISupports> aSupport = getter_AddRefs(servers->ElementAt(0));
-    nsCOMPtr<nsIMsgIncomingServer> server(do_QueryInterface(aSupport));
+    *aResult = server;
+    NS_ADDREF(*aResult);
 
-    char *localPath = nsnull;
-
-    if (server) {
-      rv = server->GetLocalPath(&localPath);
-      
-      if (NS_SUCCEEDED(rv)) {
-        nsFilePath dirPath(localPath, PR_TRUE);
-        nsFileSpec dirSpec(dirPath); // recursive create the parent directory
-        
-        result = localPath;
-        result.CreateDirectory();
-        PL_strfree(localPath);
-      }
-    }
     return rv;
 }
 
@@ -104,27 +93,55 @@ nsImapURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
 	// skip past all //
 	while (uri[hostStart]=='/') hostStart++;
 
-	// cut imap://hostname/folder -> hostname/folder
+	// cut imap://[userid@]hostname/folder -> [userid@]hostname/folder
 	nsAutoString hostname;
 	uri.Right(hostname, uri.Length() - hostStart);
 
-	PRInt32 hostEnd = hostname.Find('/');
+  nsAutoString username("");
 
+  PRInt32 atPos = hostname.Find('@');
+  if (atPos != -1) {
+    hostname.Left(username, atPos);
+    hostname.Cut(0, atPos+1);
+  }
+  
 	nsAutoString folder;
 	// folder comes after the hostname, after the '/'
 
+
 	// cut off first '/' and everything following it
 	// hostname/folder -> hostname
+	PRInt32 hostEnd = hostname.Find('/');
 	if (hostEnd > 0) 
 	{
 		hostname.Right(folder, hostname.Length() - hostEnd - 1);
 		hostname.Truncate(hostEnd);
 	}
-	char *hostchar = hostname.ToNewCString();
 
-	rv = nsGetImapRoot(hostchar, pathResult);
-
-	delete[] hostchar;
+  char *userchar = username.ToNewCString();
+  char *hostchar = hostname.ToNewCString();
+  nsCOMPtr<nsIMsgIncomingServer> server;
+	rv = nsGetImapServer(userchar,
+                       hostchar,
+                       getter_AddRefs(server));
+  delete[] userchar;
+  delete[] hostchar;
+  
+  if (NS_FAILED(rv)) return rv;
+  
+  char *localPath = nsnull;
+  if (server) {
+    rv = server->GetLocalPath(&localPath);
+    
+    if (NS_SUCCEEDED(rv)) {
+      nsFilePath dirPath(localPath, PR_TRUE);
+      nsFileSpec dirSpec(dirPath); // recursive create the parent directory
+      
+      pathResult = localPath;
+      pathResult.CreateDirectory();
+      PL_strfree(localPath);
+    }
+  }
 
 	if (NS_FAILED(rv)) 
 	{
