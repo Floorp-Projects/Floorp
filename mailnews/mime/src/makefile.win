@@ -71,6 +71,10 @@ OBJS=							\
 			.\$(OBJDIR)\nsRFC822toHTMLStreamConverter.obj	\
 			.\$(OBJDIR)\nsMimeObjectClassAccess.obj		\
 			.\$(OBJDIR)\nsMimeHeaderConverter.obj		\
+#
+# Code for stream converter interface to netlib...
+#
+			.\$(OBJDIR)\plugin_inst.obj	\
 # MIME parsing code
 			.\$(OBJDIR)\mimecont.obj	\
 			.\$(OBJDIR)\mimeebod.obj	\
@@ -171,7 +175,9 @@ LINCS=$(LINCS)  -I.                         		\
 			   -I$(PUBLIC)\raptor		\
 			   -I$(PUBLIC)\mime		\
 			   -I$(PUBLIC)\mailnews         \
-			   -I$(PUBLIC)\uconv\
+			   -I$(PUBLIC)\uconv		\
+			   -I$(PUBLIC)\netcnvts		\
+			   -I$(PUBLIC)\plugin		\
 			   $(NULL)
 
 #//------------------------------------------------------------------------

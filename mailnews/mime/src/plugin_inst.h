@@ -29,12 +29,12 @@
     { 0xb21edb21, 0xd10c, 0x11d2,         \
     { 0xb3, 0x73, 0x52, 0x54, 0x0, 0xe2, 0xd6, 0x3a } };
 
-class SimplePluginInstance : public nsINetPluginInstance, public nsINetOStream {
+class MimePluginInstance : public nsINetPluginInstance, public nsINetOStream {
 public:
 //static const nsIID& IID() { static nsIID iid = NS_INETPLUGININSTANCE_IID; return iid; }
  
-    SimplePluginInstance(void);
-    virtual ~SimplePluginInstance(void);
+    MimePluginInstance(void);
+    virtual ~MimePluginInstance(void);
 
     NS_DECL_ISUPPORTS
 
@@ -60,13 +60,13 @@ public:
     NS_IMETHOD    Close(void);
 
     ////////////////////////////////////////////////////////////////////////////
-    // SimplePluginInstance specific methods:
+    // MimePluginInstance specific methods:
 protected:
     nsINetOStream *OutStream;
     PRBool         first_write;
 };
 
 /* this function will be used by the factory to generate an class access object....*/
-extern nsresult NS_NewSimplePluginInstance(SimplePluginInstance **aInstancePtrResult);
+extern nsresult NS_NewMimePluginInstance(MimePluginInstance **aInstancePtrResult);
 
 #endif /* plugin_inst_h_ */

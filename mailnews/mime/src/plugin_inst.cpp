@@ -19,20 +19,20 @@
 #include <string.h>
 #include "plugin_inst.h"
 
-////////////////////////////////////////////////////////////////////////////////
-// SimplePluginInstance Methods
-////////////////////////////////////////////////////////////////////////////////
+static NS_DEFINE_IID(kINetPluginInstanceIID,  NS_INETPLUGININSTANCE_IID);
+static NS_DEFINE_IID(kINetOStreamIID,         NS_INETOSTREAM_IID);
+static NS_DEFINE_IID(kISupportsIID,           NS_ISUPPORTS_IID);
 
 nsresult 
-NS_NewSimplePluginInstance(SimplePluginInstance **aInstancePtrResult)
+NS_NewMimePluginInstance(MimePluginInstance **aInstancePtrResult)
 {
-	/* note this new macro for assertions...they can take 
-     a string describing the assertion */
+	/* Note this new macro for assertions...they can take 
+   * a string describing the assertion */
   nsresult res = NS_OK;
 	NS_PRECONDITION(nsnull != aInstancePtrResult, "nsnull ptr");
 	if (nsnull != aInstancePtrResult)
 	{
-    SimplePluginInstance* inst = new SimplePluginInstance();
+    MimePluginInstance* inst = new MimePluginInstance();
     if (inst == NULL)
       return NS_ERROR_OUT_OF_MEMORY;
 
@@ -49,23 +49,8 @@ NS_NewSimplePluginInstance(SimplePluginInstance **aInstancePtrResult)
 		return NS_ERROR_NULL_POINTER; /* aInstancePtrResult was NULL....*/
 }
 
-SimplePluginInstance::SimplePluginInstance(void)
-{
-    OutStream = NULL;
-    first_write = PR_FALSE;
-    NS_INIT_REFCNT();
-}
-
-SimplePluginInstance::~SimplePluginInstance(void)
-{
-}
-
-static NS_DEFINE_IID(kINetPluginInstanceIID, NS_INETPLUGININSTANCE_IID);
-static NS_DEFINE_IID(kINetOStreamIID, NS_INETOSTREAM_IID);
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-
 NS_METHOD
-SimplePluginInstance::QueryInterface(const nsIID& aIID, void** aInstancePtr) 
+MimePluginInstance::QueryInterface(const nsIID& aIID, void** aInstancePtr) 
 {
   if (NULL == aInstancePtr)
     return NS_ERROR_NULL_POINTER; 
@@ -87,11 +72,26 @@ SimplePluginInstance::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   return NS_OK;   
 }
 
-NS_IMPL_ADDREF(SimplePluginInstance);
-NS_IMPL_RELEASE(SimplePluginInstance);
+NS_IMPL_ADDREF(MimePluginInstance);
+NS_IMPL_RELEASE(MimePluginInstance);
+
+////////////////////////////////////////////////////////////////////////////////
+// MimePluginInstance Methods
+////////////////////////////////////////////////////////////////////////////////
+
+MimePluginInstance::MimePluginInstance(void)
+{
+    OutStream = NULL;
+    first_write = PR_FALSE;
+    NS_INIT_REFCNT();
+}
+
+MimePluginInstance::~MimePluginInstance(void)
+{
+}
 
 NS_METHOD
-SimplePluginInstance::Initialize(nsINetOStream* stream)
+MimePluginInstance::Initialize(nsINetOStream* stream)
 {
     OutStream = stream;
 
@@ -99,7 +99,7 @@ SimplePluginInstance::Initialize(nsINetOStream* stream)
 }
 
 NS_METHOD
-SimplePluginInstance::GetMIMEOutput(const char* *result)
+MimePluginInstance::GetMIMEOutput(const char* *result)
 {
     *result = "text/html";
     return NS_OK;
@@ -107,24 +107,24 @@ SimplePluginInstance::GetMIMEOutput(const char* *result)
 
 
 NS_METHOD
-SimplePluginInstance::Start(void)
+MimePluginInstance::Start(void)
 {
     return NS_OK;
 }
 
 NS_METHOD
-SimplePluginInstance::Stop(void)
+MimePluginInstance::Stop(void)
 {
     return NS_OK;
 }
 
 NS_METHOD
-SimplePluginInstance::Destroy(void)
+MimePluginInstance::Destroy(void)
 {
     return NS_OK;
 }
 
-nsresult SimplePluginInstance :: Complete(void)
+nsresult MimePluginInstance :: Complete(void)
 {
 	nsINetOStream *stream = OutStream;
 
@@ -140,7 +140,7 @@ nsresult SimplePluginInstance :: Complete(void)
 	return NS_OK;
 }
 
-nsresult SimplePluginInstance :: Abort(PRInt32 status)
+nsresult MimePluginInstance :: Abort(PRInt32 status)
 {
 	nsINetOStream *stream = OutStream;
 
@@ -151,7 +151,7 @@ nsresult SimplePluginInstance :: Abort(PRInt32 status)
 	return NS_OK;
 }
 
-nsresult SimplePluginInstance :: WriteReady(PRUint32 *aReadyCount)
+nsresult MimePluginInstance :: WriteReady(PRUint32 *aReadyCount)
 {
 	nsINetOStream *stream = OutStream;
 
@@ -162,7 +162,7 @@ nsresult SimplePluginInstance :: WriteReady(PRUint32 *aReadyCount)
 	return NS_OK;
 }
 
-nsresult SimplePluginInstance :: Write(const char* aBuf, PRUint32 aOffset, PRUint32 aCount, PRUint32 *aWriteCount)
+nsresult MimePluginInstance :: Write(const char* aBuf, PRUint32 aOffset, PRUint32 aCount, PRUint32 *aWriteCount)
 {
 	nsINetOStream *stream = OutStream;
 
@@ -179,7 +179,7 @@ nsresult SimplePluginInstance :: Write(const char* aBuf, PRUint32 aOffset, PRUin
 	return NS_OK;
 }
 
-nsresult SimplePluginInstance::Close(void)
+nsresult MimePluginInstance::Close(void)
 {
 	nsINetOStream *stream = OutStream;
 

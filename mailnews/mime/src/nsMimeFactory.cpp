@@ -21,9 +21,14 @@
 #include "nsISupports.h"
 #include "nsRepository.h"
 
+#include "nsINetPlugin.h"
+#include "nsRepository.h"
+#include "plugin_inst.h"
+#include "net.h"
+
 /* 
  * Include all of the headers/defines for interfaces the libmime factory can 
- * generate components for 
+ * generate components for
  */
 #include "nsRFC822toHTMLStreamConverter.h"
 static   NS_DEFINE_CID(kCMimeRFC822HTMLConverterCID, NS_RFC822_HTML_STREAM_CONVERTER_CID);
@@ -34,29 +39,40 @@ static   NS_DEFINE_CID(kCMimeMimeObjectClassAccessCID, NS_MIME_OBJECT_CLASS_ACCE
 #include "nsMimeHeaderConverter.h"
 static   NS_DEFINE_CID(kCMimeHeaderConverterCID, NS_MIME_HEADER_CONVERTER_CID);
 
+// These are necessary for the new stream converter/plugin interface...
+static   NS_DEFINE_IID(kINetPluginIID,      NS_INET_PLUGIN_IID);
+static   NS_DEFINE_CID(kINetPluginCID,      NS_INET_PLUGIN_CID);
+static   NS_DEFINE_CID(kINetPluginMIMECID,  NS_INET_PLUGIN_MIME_CID);
+
 ////////////////////////////////////////////////////////////
 //
 ////////////////////////////////////////////////////////////
 static PRInt32 g_LockCount = 0;
 static PRInt32 g_InstanceCount = 0;
 
-class nsMimeFactory : public nsIFactory
+class nsMimeFactory : public nsINetPlugin
 {   
   public:
     // nsISupports methods
     NS_DECL_ISUPPORTS 
     
     nsMimeFactory(const nsCID &aClass); 
-  
+    
     // nsIFactory methods   
     NS_IMETHOD CreateInstance(nsISupports *aOuter, const nsIID &aIID, void **aResult);   
     NS_IMETHOD LockFactory(PRBool aLock);
   
+    ////////////////////////////////////////////////////////////////////////////
+    // from nsINetPlugin:
+    NS_IMETHOD Initialize(void);
+    NS_IMETHOD Shutdown(void);
+    NS_IMETHOD GetMIMEDescription(const char* *result);
+ 
   protected:
-    virtual   ~nsMimeFactory();   
+    virtual    ~nsMimeFactory();   
   
   private:  
-    nsCID     mClassID;
+    nsCID      mClassID;
 };   
 
 nsMimeFactory::nsMimeFactory(const nsCID &aClass)   
@@ -78,11 +94,13 @@ nsresult nsMimeFactory::QueryInterface(const nsIID &aIID, void **aResult)
   // Always NULL result, in case of failure   
   *aResult = NULL;   
 
-  // we support two interfaces....nsISupports and nsFactory.....
+  // we support three interfaces....nsISupports, nsFactory and nsINetPlugin.....
   if (aIID.Equals(::nsISupports::IID()))    
     *aResult = (void *)(nsISupports*)this;   
   else if (aIID.Equals(nsIFactory::IID()))   
-    *aResult = (void *)(nsIFactory*)this;   
+    *aResult = (void *)(nsIFactory*)this;
+  else if (aIID.Equals(nsINetPlugin::IID()))   
+    *aResult = (void *)(nsINetPlugin*)this; 
 
   if (*aResult == NULL)
     return NS_NOINTERFACE;
@@ -127,6 +145,12 @@ nsresult nsMimeFactory::CreateInstance(nsISupports *aOuter, const nsIID &aIID, v
     res = NS_NewMimeHeaderConverter((nsIMimeHeaderConverter **) &inst);
 		if (res != NS_OK)  // was there a problem creating the object ?
 		  return res;   
+  }
+  else if (mClassID.Equals(kINetPluginMIMECID))
+  {
+    res = NS_NewMimePluginInstance((MimePluginInstance **) &inst);
+		if (res != NS_OK)  // was there a problem creating the object ?
+		  return res;	  	  
   }
 
 	// End of checking the interface ID code....
@@ -182,14 +206,6 @@ extern "C" NS_EXPORT PRBool NSCanUnload(nsISupports* serviceMgr)
   return PRBool(g_InstanceCount == 0 && g_LockCount == 0);
 }
 
-// 
-// rhp - when the new interface is in place...this GOES AWAY!
-//       External includes necessary for test application
-//
-#include "net.h"
-extern NET_StreamClass *MIME_MessageConverter(int format_out, void *closure, 
-											  URL_Struct *url, MWContext *context);
-
 extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* serviceMgr, const char *path)
 {
   printf("*** Mime being registered\n");
@@ -199,6 +215,9 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* serviceMgr, const char
                                 PR_TRUE, PR_TRUE);
   nsRepository::RegisterComponent(kCMimeHeaderConverterCID, NULL, NULL, path, 
                                 PR_TRUE, PR_TRUE);
+                                
+  nsRepository::RegisterComponent(kINetPluginMIMECID, NULL, PROGRAM_ID, path, 
+                                  PR_TRUE, PR_TRUE);
   return NS_OK;
 }
 
@@ -208,6 +227,29 @@ extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* serviceMgr, const ch
   nsRepository::UnregisterComponent(kCMimeMimeObjectClassAccessCID, path);
   nsRepository::UnregisterComponent(kCMimeRFC822HTMLConverterCID, path);
   nsRepository::UnregisterComponent(kCMimeHeaderConverterCID, path);
+  
+	return nsRepository::UnregisterComponent(kINetPluginMIMECID, path);
   return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////
+// nsINetPlugin methods
+////////////////////////////////////////////////////////////////////////////
+NS_METHOD
+nsMimeFactory::Initialize(void)
+{
+    return NS_OK;
+}
+
+NS_METHOD
+nsMimeFactory::Shutdown(void)
+{
+    return NS_OK;
+}
+
+NS_METHOD
+nsMimeFactory::GetMIMEDescription(const char* *result)
+{
+    return NS_OK;
 }
 
