@@ -1216,7 +1216,7 @@ nsHTMLEditRules::GetFormatString(nsIDOMNode *aNode, nsAString &outFormat)
   }
   else
   {
-    format.Truncate(0);
+    format.Truncate();
   }
   
   outFormat = format;
@@ -3307,18 +3307,10 @@ nsHTMLEditRules::WillMakeBasicBlock(nsISelection *aSelection,
       nsCOMPtr<nsIDOMNode> curBlockPar;
       if (!curBlock) return NS_ERROR_NULL_POINTER;
       curBlock->GetParentNode(getter_AddRefs(curBlockPar));
-      nsAutoString curBlockTag;
-      nsEditor::GetTagString(curBlock, curBlockTag);
-      ToLowerCase(curBlockTag);
-      if ((curBlockTag.Equals(NS_LITERAL_STRING("pre"))) || 
-          (curBlockTag.Equals(NS_LITERAL_STRING("p")))   ||
-          (curBlockTag.Equals(NS_LITERAL_STRING("h1")))  ||
-          (curBlockTag.Equals(NS_LITERAL_STRING("h2")))  ||
-          (curBlockTag.Equals(NS_LITERAL_STRING("h3")))  ||
-          (curBlockTag.Equals(NS_LITERAL_STRING("h4")))  ||
-          (curBlockTag.Equals(NS_LITERAL_STRING("h5")))  ||
-          (curBlockTag.Equals(NS_LITERAL_STRING("h6")))  ||
-          (curBlockTag.Equals(NS_LITERAL_STRING("address"))))
+      if (nsHTMLEditUtils::IsPre(curBlock)         ||
+          nsHTMLEditUtils::IsParagraph(curBlock)   ||
+          nsHTMLEditUtils::IsHeader(curBlock)      ||
+          nsHTMLEditUtils::IsAddress(curBlock))
       {
         // if the first editable node after selection is a br, consume it.  Otherwise
         // it gets pushed into a following block after the split, which is visually bad.
@@ -6689,15 +6681,10 @@ nsHTMLEditRules::RemoveBlockStyle(nsCOMArray<nsIDOMNode>& arrayOfNodes)
     ToLowerCase(curNodeTag);
  
     // if curNode is a address, p, header, address, or pre, remove it 
-    if ((curNodeTag.Equals(NS_LITERAL_STRING("pre"))) || 
-        (curNodeTag.Equals(NS_LITERAL_STRING("p")))   ||
-        (curNodeTag.Equals(NS_LITERAL_STRING("h1")))  ||
-        (curNodeTag.Equals(NS_LITERAL_STRING("h2")))  ||
-        (curNodeTag.Equals(NS_LITERAL_STRING("h3")))  ||
-        (curNodeTag.Equals(NS_LITERAL_STRING("h4")))  ||
-        (curNodeTag.Equals(NS_LITERAL_STRING("h5")))  ||
-        (curNodeTag.Equals(NS_LITERAL_STRING("h6")))  ||
-        (curNodeTag.Equals(NS_LITERAL_STRING("address"))))
+    if (nsHTMLEditUtils::IsPre(curNode)        ||
+        nsHTMLEditUtils::IsParagraph(curNode)  ||
+        nsHTMLEditUtils::IsHeader(curNode)     ||
+        nsHTMLEditUtils::IsAddress(curNode))
     {
       // process any partial progress saved
       if (curBlock)
@@ -6710,16 +6697,14 @@ nsHTMLEditRules::RemoveBlockStyle(nsCOMArray<nsIDOMNode>& arrayOfNodes)
       res = mHTMLEditor->RemoveBlockContainer(curNode); 
       if (NS_FAILED(res)) return res;
     }
-    else if ((curNodeTag.Equals(NS_LITERAL_STRING("table")))      || 
+    else if (nsHTMLEditUtils::IsTable(curNode)                    || 
              (curNodeTag.Equals(NS_LITERAL_STRING("tbody")))      ||
              (curNodeTag.Equals(NS_LITERAL_STRING("tr")))         ||
              (curNodeTag.Equals(NS_LITERAL_STRING("td")))         ||
-             (curNodeTag.Equals(NS_LITERAL_STRING("ol")))         ||
-             (curNodeTag.Equals(NS_LITERAL_STRING("ul")))         ||
-             (curNodeTag.Equals(NS_LITERAL_STRING("dl")))         ||
+             nsHTMLEditUtils::IsList(curNode)                     ||
              (curNodeTag.Equals(NS_LITERAL_STRING("li")))         ||
-             (curNodeTag.Equals(NS_LITERAL_STRING("blockquote"))) ||
-             (curNodeTag.Equals(NS_LITERAL_STRING("div")))) 
+             nsHTMLEditUtils::IsBlockquote(curNode)               ||
+             nsHTMLEditUtils::IsDiv(curNode))
     {
       // process any partial progress saved
       if (curBlock)
@@ -6757,17 +6742,10 @@ nsHTMLEditRules::RemoveBlockStyle(nsCOMArray<nsIDOMNode>& arrayOfNodes)
         }
       }
       curBlock = mHTMLEditor->GetBlockNodeParent(curNode);
-      nsEditor::GetTagString(curBlock, curBlockTag);
-      ToLowerCase(curBlockTag);
-      if ((curBlockTag.Equals(NS_LITERAL_STRING("pre"))) || 
-          (curBlockTag.Equals(NS_LITERAL_STRING("p")))   ||
-          (curBlockTag.Equals(NS_LITERAL_STRING("h1")))  ||
-          (curBlockTag.Equals(NS_LITERAL_STRING("h2")))  ||
-          (curBlockTag.Equals(NS_LITERAL_STRING("h3")))  ||
-          (curBlockTag.Equals(NS_LITERAL_STRING("h4")))  ||
-          (curBlockTag.Equals(NS_LITERAL_STRING("h5")))  ||
-          (curBlockTag.Equals(NS_LITERAL_STRING("h6")))  ||
-          (curBlockTag.Equals(NS_LITERAL_STRING("address"))))
+      if (nsHTMLEditUtils::IsPre(curBlock)       ||
+          nsHTMLEditUtils::IsParagraph(curBlock) ||
+          nsHTMLEditUtils::IsHeader(curBlock)    ||
+          nsHTMLEditUtils::IsAddress(curBlock))
       {
         firstNode = curNode;  
         lastNode = curNode;
@@ -6851,30 +6829,23 @@ nsHTMLEditRules::ApplyBlockStyle(nsCOMArray<nsIDOMNode>& arrayOfNodes, const nsA
     // it with a new block of correct type.
     // xxx floppy moose: pre cant hold everything the others can
     if (nsHTMLEditUtils::IsMozDiv(curNode)     ||
-        (curNodeTag.Equals(NS_LITERAL_STRING("pre"))) || 
-        (curNodeTag.Equals(NS_LITERAL_STRING("p")))   ||
-        (curNodeTag.Equals(NS_LITERAL_STRING("h1")))  ||
-        (curNodeTag.Equals(NS_LITERAL_STRING("h2")))  ||
-        (curNodeTag.Equals(NS_LITERAL_STRING("h3")))  ||
-        (curNodeTag.Equals(NS_LITERAL_STRING("h4")))  ||
-        (curNodeTag.Equals(NS_LITERAL_STRING("h5")))  ||
-        (curNodeTag.Equals(NS_LITERAL_STRING("h6")))  ||
-        (curNodeTag.Equals(NS_LITERAL_STRING("address"))))
+        nsHTMLEditUtils::IsPre(curNode)        ||
+        nsHTMLEditUtils::IsParagraph(curNode)  ||
+        nsHTMLEditUtils::IsHeader(curNode)     ||
+        nsHTMLEditUtils::IsAddress(curNode))
     {
       curBlock = 0;  // forget any previous block used for previous inline nodes
       res = mHTMLEditor->ReplaceContainer(curNode, address_of(newBlock), *aBlockTag);
       if (NS_FAILED(res)) return res;
     }
-    else if ((curNodeTag.Equals(NS_LITERAL_STRING("table")))      || 
+    else if (nsHTMLEditUtils::IsTable(curNode)                    || 
              (curNodeTag.Equals(NS_LITERAL_STRING("tbody")))      ||
              (curNodeTag.Equals(NS_LITERAL_STRING("tr")))         ||
              (curNodeTag.Equals(NS_LITERAL_STRING("td")))         ||
-             (curNodeTag.Equals(NS_LITERAL_STRING("ol")))         ||
-             (curNodeTag.Equals(NS_LITERAL_STRING("ul")))         ||
-             (curNodeTag.Equals(NS_LITERAL_STRING("dl")))         ||
+             nsHTMLEditUtils::IsList(curNode)                     ||
              (curNodeTag.Equals(NS_LITERAL_STRING("li")))         ||
-             (curNodeTag.Equals(NS_LITERAL_STRING("blockquote"))) ||
-             (curNodeTag.Equals(NS_LITERAL_STRING("div")))) 
+             nsHTMLEditUtils::IsBlockquote(curNode)               ||
+             nsHTMLEditUtils::IsDiv(curNode))
     {
       curBlock = 0;  // forget any previous block used for previous inline nodes
       // recursion time
