@@ -81,7 +81,7 @@ public:
 
     if (behavior == 0)
       rv = dm->Open(nsnull, this);
-    else if (behavior == 1) {
+    else if (behavior == 1)
       rv = dm->OpenProgressDialogFor(mInner, nsnull, PR_TRUE);
     return rv;
   }
