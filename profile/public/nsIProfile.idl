@@ -40,7 +40,8 @@ interface nsIFileSpec;
 #define NS_PROFILE_PROGID	\
 	"component://netscape/profile/manager"
 
-#define PREG_PREF	"browser.registration.enable"
+#define NS_PROFILE_STARTUP_CATEGORY \
+        "profile-startup-category"
 %}
 
 [ptr] native nsFileSpec(nsFileSpec);
@@ -77,14 +78,6 @@ interface nsIProfile : nsISupports {
 
     void migrateProfile(in wstring profileName, in boolean showProgressAsModalWindow);
 
-    string getCookie();
-
-    void ProcessPRegCookie();
-
-    string isPregCookieSet(in wstring profileName);
-
-    void processPREGInfo(in string data);
-
     long get4xProfileCount();
 
     void migrateAllProfiles();
@@ -92,11 +85,15 @@ interface nsIProfile : nsISupports {
     void forgetCurrentProfile();
     void loadNewProfilePrefs();
     boolean isCurrentProfileAvailable();
-    void removeCookie(in string cookie);
 
     attribute boolean automigrate;
 
     readonly attribute nsIFileSpec defaultProfileParentDir;
+
+    void updateRegistry();
+    void setRegString(in wstring profileName, in wstring regString);
+    string isRegStringSet(in wstring profileName); 
+
 };
 
 #endif /* nsIProfile_h__ */
