@@ -32,17 +32,13 @@ treeitem[type="http://home.netscape.com/NC-rdf#Folder"][open="true"] > treerow >
  list-style-image: url("resource:/res/rdf/bookmark-folder-open.gif");
 }
 
-treeitem[type="http://home.netscape.com/NC-rdf#Folder"][id="NC:PersonalToolbarFolder"] > treerow > treecell > titledbutton
+treeitem > treerow > treecell > titledbutton
 {
- list-style-image: url("resource:/res/rdf/personal-folder-closed.gif");
-}
-
-treeitem[type="http://home.netscape.com/NC-rdf#Folder"][id="NC:PersonalToolbarFolder"][open="true"] > treerow > treecell > titledbutton
-{
- list-style-image: url("resource:/res/rdf/personal-folder-open.gif");
-}
-
-treeitem[type="http://home.netscape.com/NC-rdf#Bookmark"] > treerow > treecell > titledbutton
-{
- list-style-image: url("resource:/res/rdf/bookmark-item.gif");
+  height: 16px;
+  width: 16px;
+  color: inherit;
+  border: none;
+  padding: 0px;
+  margin: 0px;
+  font: inherit;
 }
