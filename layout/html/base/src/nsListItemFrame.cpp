@@ -49,9 +49,7 @@ static NS_DEFINE_IID(kStyleListSID, NS_STYLELIST_SID);
  */
 class BulletFrame : public nsContainerFrame {
 public:
-  BulletFrame(nsIContent* aContent,
-              PRInt32 aIndexInParent,
-              nsIFrame* aParentFrame);
+  BulletFrame(nsIContent* aContent, nsIFrame* aParentFrame);
   virtual ~BulletFrame();
 
   NS_IMETHOD Paint(nsIPresContext &aCX,
@@ -83,10 +81,8 @@ public:
   PRInt32 mOrdinal;
 };
 
-BulletFrame::BulletFrame(nsIContent* aContent,
-                         PRInt32 aIndexInParent,
-                         nsIFrame* aParentFrame)
-  : nsContainerFrame(aContent, aIndexInParent, aParentFrame)
+BulletFrame::BulletFrame(nsIContent* aContent, nsIFrame* aParentFrame)
+  : nsContainerFrame(aContent, aParentFrame)
 {
 }
 
@@ -411,14 +407,13 @@ void BulletFrame::GetBulletSize(nsIPresContext* aCX,
 
 nsresult nsListItemFrame::NewFrame(nsIFrame** aInstancePtrResult,
                                    nsIContent* aContent,
-                                   PRInt32     aIndexInParent,
                                    nsIFrame*   aParent)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsIFrame* it = new nsListItemFrame(aContent, aIndexInParent, aParent);
+  nsIFrame* it = new nsListItemFrame(aContent, aParent);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -426,10 +421,8 @@ nsresult nsListItemFrame::NewFrame(nsIFrame** aInstancePtrResult,
   return NS_OK;
 }
 
-nsListItemFrame::nsListItemFrame(nsIContent* aContent,
-                                 PRInt32     aIndexInParent,
-                                 nsIFrame*   aParent)
-  : nsBlockFrame(aContent, aIndexInParent, aParent)
+nsListItemFrame::nsListItemFrame(nsIContent* aContent, nsIFrame* aParent)
+  : nsBlockFrame(aContent, aParent)
 {
 }
 
@@ -441,7 +434,7 @@ nsIFrame* nsListItemFrame::CreateBullet(nsIPresContext *aCX)
 {
   // Create bullet.  The bullet shares the same style context as
   // ourselves.
-  nsIFrame* bullet = new BulletFrame(mContent, mIndexInParent, this);
+  nsIFrame* bullet = new BulletFrame(mContent, this);
   bullet->SetStyleContext(aCX,mStyleContext);
   return bullet;
 }
@@ -658,7 +651,7 @@ NS_METHOD nsListItemFrame::CreateContinuingFrame(nsIPresContext* aCX,
                                                  nsIFrame* aParent,
                                                  nsIFrame*& aContinuingFrame)
 {
-  nsListItemFrame* cf = new nsListItemFrame(mContent, mIndexInParent, aParent);
+  nsListItemFrame* cf = new nsListItemFrame(mContent, aParent);
   PrepareContinuingFrame(aCX, aParent, cf);
   aContinuingFrame = cf;
   return NS_OK;

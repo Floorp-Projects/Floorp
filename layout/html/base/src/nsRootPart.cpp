@@ -59,7 +59,7 @@ public:
 // Pseudo frame created by the root frame
 class RootContentFrame : public nsContainerFrame {
 public:
-  RootContentFrame(nsIContent* aContent, PRInt32 aIndexInParent, nsIFrame* aParent);
+  RootContentFrame(nsIContent* aContent, nsIFrame* aParent);
 
   NS_IMETHOD ResizeReflow(nsIPresContext*  aPresContext,
                           nsReflowMetrics& aDesiredSize,
@@ -84,7 +84,7 @@ protected:
 //----------------------------------------------------------------------
 
 RootFrame::RootFrame(nsIContent* aContent)
-  : nsContainerFrame(aContent, -1, nsnull)
+  : nsContainerFrame(aContent, nsnull)
 {
 }
 
@@ -102,7 +102,7 @@ NS_METHOD RootFrame::ResizeReflow(nsIPresContext* aPresContext,
   // Do we have any children?
   if (nsnull == mFirstChild) {
     // No. Create a pseudo frame
-    mFirstChild = new RootContentFrame(mContent, mIndexInParent, this);
+    mFirstChild = new RootContentFrame(mContent, this);
     mChildCount = 1;
     nsIStyleContext* style = aPresContext->ResolveStyleContextFor(mContent, this);
     mFirstChild->SetStyleContext(aPresContext,style);
@@ -208,10 +208,8 @@ NS_METHOD RootFrame::HandleEvent(nsIPresContext& aPresContext,
 
 //----------------------------------------------------------------------
 
-RootContentFrame::RootContentFrame(nsIContent* aContent,
-                                   PRInt32 aIndexInParent,
-                                   nsIFrame* aParent)
-  : nsContainerFrame(aContent, aIndexInParent, aParent)
+RootContentFrame::RootContentFrame(nsIContent* aContent, nsIFrame* aParent)
+  : nsContainerFrame(aContent, aParent)
 {
   // Create a view
   nsIFrame* parent;
@@ -256,7 +254,7 @@ void RootContentFrame::CreateFirstChild(nsIPresContext* aPresContext)
   // Are we paginated?
   if (aPresContext->IsPaginated()) {
     // Yes. Create the first page frame
-    mFirstChild = new PageFrame(mContent, mIndexInParent, this);
+    mFirstChild = new PageFrame(mContent, this);
     mChildCount = 1;
     mLastContentOffset = mFirstContentOffset;
 
@@ -269,7 +267,7 @@ void RootContentFrame::CreateFirstChild(nsIPresContext* aPresContext)
         // Create a frame
         nsIContentDelegate* cd = child->GetDelegate(aPresContext);
         if (nsnull != cd) {
-          mFirstChild = cd->CreateFrame(aPresContext, child, 0, this);
+          mFirstChild = cd->CreateFrame(aPresContext, child, this);
           if (nsnull != mFirstChild) {
             mChildCount = 1;
             mLastContentOffset = mFirstContentOffset;
@@ -451,7 +449,6 @@ public:
   NS_IMETHOD_(nsrefcnt) AddRef();
   NS_IMETHOD_(nsrefcnt) Release();
   virtual nsIFrame* CreateFrame(nsIPresContext* aPresContext,
-                                PRInt32 aIndexInParent,
                                 nsIFrame* aParentFrame);
 
 protected:
@@ -484,7 +481,6 @@ nsrefcnt RootPart::Release(void)
 }
 
 nsIFrame* RootPart::CreateFrame(nsIPresContext* aPresContext,
-                                PRInt32 aIndexInParent,
                                 nsIFrame* aParentFrame)
 {
   nsIFrame* rv = new RootFrame(this);

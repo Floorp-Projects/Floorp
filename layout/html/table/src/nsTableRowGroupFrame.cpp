@@ -88,10 +88,8 @@ struct RowGroupReflowState {
 
 /* ----------- nsTableRowGroupFrame ---------- */
 
-nsTableRowGroupFrame::nsTableRowGroupFrame(nsIContent* aContent,
-                                           PRInt32     aIndexInParent,
-                                           nsIFrame*   aParentFrame)
-  : nsContainerFrame(aContent, aIndexInParent, aParentFrame)
+nsTableRowGroupFrame::nsTableRowGroupFrame(nsIContent* aContent, nsIFrame* aParentFrame)
+  : nsContainerFrame(aContent, aParentFrame)
 {
   mType = aContent->GetTag();       // mType: REFCNT++
 }
@@ -411,7 +409,7 @@ PRBool nsTableRowGroupFrame::ReflowMappedChildren( nsIPresContext*      aPresCon
   PRInt32   lastIndexInParent;
 
   LastChild(lastChild);
-  lastChild->GetIndexInParent(lastIndexInParent);
+  lastChild->GetContentIndex(lastIndexInParent);
 	NS_POSTCONDITION(lastIndexInParent == mLastContentOffset, "bad last content offset");
 #endif
 
@@ -741,7 +739,7 @@ nsTableRowGroupFrame::ReflowUnmappedChildren(nsIPresContext*      aPresContext,
     if (nsnull == kidPrevInFlow) {
       nsIContentDelegate* kidDel = nsnull;
       kidDel = kid->GetDelegate(aPresContext);
-      kidFrame = kidDel->CreateFrame(aPresContext, kid, kidIndex, this);
+      kidFrame = kidDel->CreateFrame(aPresContext, kid, this);
       NS_RELEASE(kidDel);
       kidFrame->SetStyleContext(aPresContext,kidSC);
     } else {
@@ -928,7 +926,7 @@ NS_METHOD nsTableRowGroupFrame::CreateContinuingFrame(nsIPresContext* aPresConte
                                                       nsIFrame*       aParent,
                                                       nsIFrame*&      aContinuingFrame)
 {
-  nsTableRowGroupFrame* cf = new nsTableRowGroupFrame(mContent, mIndexInParent, aParent);
+  nsTableRowGroupFrame* cf = new nsTableRowGroupFrame(mContent, aParent);
   PrepareContinuingFrame(aPresContext, aParent, cf);
   if (PR_TRUE==gsDebug1) printf("nsTableRowGroupFrame::CCF parent = %p, this=%p, cf=%p\n", aParent, this, cf);
   aContinuingFrame = cf;
@@ -939,14 +937,13 @@ NS_METHOD nsTableRowGroupFrame::CreateContinuingFrame(nsIPresContext* aPresConte
 
 nsresult nsTableRowGroupFrame::NewFrame(nsIFrame** aInstancePtrResult,
                                         nsIContent* aContent,
-                                        PRInt32     aIndexInParent,
                                         nsIFrame*   aParent)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsIFrame* it = new nsTableRowGroupFrame(aContent, aIndexInParent, aParent);
+  nsIFrame* it = new nsTableRowGroupFrame(aContent, aParent);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

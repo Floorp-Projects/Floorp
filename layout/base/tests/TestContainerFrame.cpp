@@ -90,7 +90,7 @@ NS_IMPL_ISUPPORTS(SimpleContent, kIContentIID);
 class SimpleContainer : public nsContainerFrame
 {
 public:
-  SimpleContainer(nsIContent* aContent, PRInt32 aIndexInParent);
+  SimpleContainer(nsIContent* aContent);
 
   ReflowStatus IncrementalReflow(nsIPresContext*  aPresContext,
                                  nsReflowMetrics& aDesiredSize,
@@ -108,8 +108,8 @@ public:
   PRInt32 ChildCount() {return mChildCount;}
 };
 
-SimpleContainer::SimpleContainer(nsIContent* aContent, PRInt32 aIndexInParent)
-  : nsContainerFrame(aContent, aIndexInParent, nsnull)
+SimpleContainer::SimpleContainer(nsIContent* aContent)
+  : nsContainerFrame(aContent, nsnull)
 {
 }
 
@@ -147,15 +147,12 @@ PRBool SimpleContainer::DeleteChildsNextInFlow(nsIFrame* aChild)
 
 class SimpleSplittableFrame : public nsSplittableFrame {
 public:
-  SimpleSplittableFrame(nsIContent* aContent,
-                        PRInt32     aIndexInParent,
-                        nsIFrame*   aParent);
+  SimpleSplittableFrame(nsIContent* aContent, nsIFrame* aParent);
 };
 
 SimpleSplittableFrame::SimpleSplittableFrame(nsIContent* aContent,
-                                             PRInt32     aIndexInParent,
                                              nsIFrame*   aParent)
-  : nsSplittableFrame(aContent, aIndexInParent, aParent)
+  : nsSplittableFrame(aContent, aParent)
 {
 }
 
@@ -167,7 +164,7 @@ static PRBool
 TestChildEnumeration()
 {
   // Create a simple test container
-  SimpleContainer* f = new SimpleContainer(new SimpleContent(), 0);
+  SimpleContainer* f = new SimpleContainer(new SimpleContent());
 
   // Add three child frames
   SimpleContent* childContent = new SimpleContent();
@@ -175,9 +172,9 @@ TestChildEnumeration()
   nsFrame*       c2;
   nsFrame*       c3;
 
-  nsFrame::NewFrame((nsIFrame**)&c1, childContent, 0, f);
-  nsFrame::NewFrame((nsIFrame**)&c2, childContent, 1, f);
-  nsFrame::NewFrame((nsIFrame**)&c3, childContent, 2, f);
+  nsFrame::NewFrame((nsIFrame**)&c1, childContent, f);
+  nsFrame::NewFrame((nsIFrame**)&c2, childContent, f);
+  nsFrame::NewFrame((nsIFrame**)&c3, childContent, f);
 
   c1->SetNextSibling(c2);
   c2->SetNextSibling(c3);
@@ -256,7 +253,7 @@ static PRBool
 TestPushChildren()
 {
   // Create a simple test container
-  SimpleContainer* f = new SimpleContainer(new SimpleContent(), 0);
+  SimpleContainer* f = new SimpleContainer(new SimpleContent());
 
   // Add five child frames
   SimpleContent* childContent = new SimpleContent();
@@ -317,7 +314,7 @@ TestPushChildren()
   f->SetOverflowList(nsnull);
 
   // Create a continuing frame
-  SimpleContainer* f1 = new SimpleContainer(f->GetContent(), 0);
+  SimpleContainer* f1 = new SimpleContainer(f->GetContent());
 
   // Link it into the flow
   f->SetNextInFlow(f1);
@@ -416,7 +413,7 @@ static PRBool
 TestDeleteChildsNext()
 {
   // Create two simple test containers
-  SimpleContainer* f = new SimpleContainer(new SimpleContent(), 0);
+  SimpleContainer* f = new SimpleContainer(new SimpleContent());
 
   // Create two child frames
   SimpleContent* childContent = new SimpleContent();
@@ -462,7 +459,7 @@ TestDeleteChildsNext()
   // #2a
 
   // Create a second container frame
-  SimpleContainer* f1 = new SimpleContainer(new SimpleContent(), 0);
+  SimpleContainer* f1 = new SimpleContainer(new SimpleContent());
 
   // Re-create the continuing child frame
   c11 = new SimpleSplittableFrame(childContent, 0, f1);

@@ -33,7 +33,6 @@ class nsTableCaptionFrame : public nsContainerFrame
 public:
   static nsresult NewFrame(nsIFrame**  aInstancePtrResult,
                            nsIContent* aContent,
-                           PRInt32     aIndexInParent,
                            nsIFrame*   aParent);
 
   NS_IMETHOD Paint(nsIPresContext&      aPresContext,
@@ -79,9 +78,7 @@ protected:
   /** protected constructor.
     * @see NewFrame
     */
-  nsTableCaptionFrame( nsIContent* aContent,
-                       PRInt32 aIndexInParent,
-					             nsIFrame* aParentFrame);
+  nsTableCaptionFrame( nsIContent* aContent, nsIFrame* aParentFrame);
 
   /** Create a psuedo-frame for this caption.  Handles continuing frames as needed.
     */

@@ -67,16 +67,15 @@ NS_LAYOUT PRBool nsIFrame::GetShowFrameBorders()
 static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
 
 nsresult
-nsFrame::NewFrame(nsIFrame** aInstancePtrResult,
+nsFrame::NewFrame(nsIFrame**  aInstancePtrResult,
                   nsIContent* aContent,
-                  PRInt32     aIndexInParent,
                   nsIFrame*   aParent)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsIFrame* it = new nsFrame(aContent, aIndexInParent, aParent);
+  nsIFrame* it = new nsFrame(aContent, aParent);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -92,11 +91,8 @@ void* nsFrame::operator new(size_t size)
   return result;
 }
 
-nsFrame::nsFrame(nsIContent* aContent,
-                 PRInt32     aIndexInParent,
-                 nsIFrame*   aParent)
-  : mContent(aContent), mIndexInParent(aIndexInParent), mContentParent(aParent),
-    mGeometricParent(aParent)
+nsFrame::nsFrame(nsIContent* aContent, nsIFrame*   aParent)
+  : mContent(aContent), mContentParent(aParent), mGeometricParent(aParent)
 {
   NS_ADDREF(mContent);
 }
@@ -178,15 +174,12 @@ NS_METHOD nsFrame::GetContent(nsIContent*& aContent) const
   return NS_OK;
 }
 
-NS_METHOD nsFrame::GetIndexInParent(PRInt32& aIndexInParent) const
+NS_METHOD nsFrame::GetContentIndex(PRInt32& aIndexInParent) const
 {
-  aIndexInParent = mIndexInParent;
-  return NS_OK;
-}
-
-NS_METHOD nsFrame::SetIndexInParent(PRInt32 aIndexInParent)
-{
-  mIndexInParent = aIndexInParent;
+  nsIContent* parent = mContent->GetParent();
+  
+  aIndexInParent = parent->IndexOf(mContent);
+  NS_RELEASE(parent);
   return NS_OK;
 }
 
@@ -923,7 +916,10 @@ NS_METHOD nsFrame::ListTag(FILE* out) const
     fputs(buf, out);
     NS_RELEASE(tag);
   }
-  fprintf(out, "(%d)@%p", mIndexInParent, this);
+  PRInt32 contentIndex;
+
+  GetContentIndex(contentIndex);
+  fprintf(out, "(%d)@%p", contentIndex, this);
   return NS_OK;
 }
 

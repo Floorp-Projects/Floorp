@@ -241,12 +241,10 @@ PRBool nsTableRow::RemoveChildAt (int aIndex)
 
 // nsTableRowFrame checks args
 nsIFrame* nsTableRow::CreateFrame(nsIPresContext* aPresContext,
-                                  PRInt32 aIndexInParent,
                                   nsIFrame* aParentFrame)
 {
   nsIFrame* rv;
-  nsresult status = nsTableRowFrame::NewFrame(&rv, this, aIndexInParent,
-                                              aParentFrame);
+  nsresult status = nsTableRowFrame::NewFrame(&rv, this, aParentFrame);
   return rv;
 }
 

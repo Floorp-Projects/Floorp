@@ -144,7 +144,6 @@ public:
    */
   static nsresult NewFrame(nsIFrame**  aInstancePtrResult,
                            nsIContent* aContent,
-                           PRInt32     aIndexInParent,
                            nsIFrame*   aParent);
 
   // nsISupports
@@ -224,9 +223,7 @@ public:
                                                   nsIFrame* aFrame);
 
 protected:
-  nsBlockFrame(nsIContent* aContent,
-               PRInt32     aIndexInParent,
-               nsIFrame*   aParent);
+  nsBlockFrame(nsIContent* aContent, nsIFrame* aParent);
 
   virtual ~nsBlockFrame();
 

@@ -36,14 +36,13 @@ NS_DEF_PTR(nsIStyleContext);
 nsresult
 AbsoluteFrame::NewFrame(nsIFrame**  aInstancePtrResult,
                         nsIContent* aContent,
-                        PRInt32     aIndexInParent,
                         nsIFrame*   aParent)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsIFrame* it = new AbsoluteFrame(aContent, aIndexInParent, aParent);
+  nsIFrame* it = new AbsoluteFrame(aContent, aParent);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -51,25 +50,14 @@ AbsoluteFrame::NewFrame(nsIFrame**  aInstancePtrResult,
   return NS_OK;
 }
 
-AbsoluteFrame::AbsoluteFrame(nsIContent* aContent,
-                             PRInt32     aIndexInParent,
-                             nsIFrame*   aParent)
-  : nsFrame(aContent, aIndexInParent, aParent)
+AbsoluteFrame::AbsoluteFrame(nsIContent* aContent, nsIFrame* aParent)
+  : nsFrame(aContent, aParent)
 {
   mFrame = nsnull;
 }
 
 AbsoluteFrame::~AbsoluteFrame()
 {
-}
-
-NS_METHOD AbsoluteFrame::SetIndexInParent(PRInt32 aIndexInParent)
-{
-  if (nsnull != mFrame) {
-    mFrame->SetIndexInParent(aIndexInParent);
-  }
-  
-  return nsFrame::SetIndexInParent(aIndexInParent);
 }
 
 nsIView* AbsoluteFrame::CreateView(nsIView*         aContainingView,
@@ -246,7 +234,7 @@ NS_METHOD AbsoluteFrame::ResizeReflow(nsIPresContext*  aPresContext,
   if (nsnull == mFrame) {
     // If the content object is a container then wrap it in a body pseudo-frame
     if (mContent->CanContainChildren()) {
-      nsBodyFrame::NewFrame(&mFrame, mContent, mIndexInParent, this);
+      nsBodyFrame::NewFrame(&mFrame, mContent, this);
 
       // Resolve style for the pseudo-frame. We can't use our style context
       nsIStyleContextPtr styleContext = aPresContext->ResolveStyleContextFor(mContent, this);
@@ -257,7 +245,7 @@ NS_METHOD AbsoluteFrame::ResizeReflow(nsIPresContext*  aPresContext,
       // also create a view
       nsIContentDelegate* delegate = mContent->GetDelegate(aPresContext);
   
-      mFrame= delegate->CreateFrame(aPresContext, mContent, mIndexInParent, this);
+      mFrame= delegate->CreateFrame(aPresContext, mContent, this);
       NS_RELEASE(delegate);
   
       // Set the style context for the frame
@@ -328,7 +316,10 @@ NS_METHOD AbsoluteFrame::List(FILE* out, PRInt32 aIndent) const
 
   // Output the tag
   fputs("*absolute", out);
-  fprintf(out, "(%d)@%p ", mIndexInParent, this);
+
+  PRInt32 contentIndex;
+  GetContentIndex(contentIndex);
+  fprintf(out, "(%d)@%p ", contentIndex, this);
 
   // Output the rect
   out << mRect;

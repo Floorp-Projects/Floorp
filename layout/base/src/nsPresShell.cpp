@@ -341,7 +341,7 @@ void PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
       if (nsnull != root) {
         nsIContentDelegate* cd = root->GetDelegate(mPresContext);
         if (nsnull != cd) {
-          mRootFrame = cd->CreateFrame(mPresContext, root, -1, nsnull);
+          mRootFrame = cd->CreateFrame(mPresContext, root, nsnull);
           NS_RELEASE(cd);
 
           // set root frame's style context

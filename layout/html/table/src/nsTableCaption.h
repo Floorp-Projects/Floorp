@@ -59,9 +59,7 @@ public:
   virtual int GetType();
 
   /** @see nsIHTMLContent::CreateFrame */
-  virtual nsIFrame* CreateFrame(nsIPresContext* aPresContext,
-                                PRInt32 aIndexInParent,
-                                nsIFrame* aParentFrame);
+  virtual nsIFrame* CreateFrame(nsIPresContext* aPresContext, nsIFrame* aParentFrame);
 
 };
 

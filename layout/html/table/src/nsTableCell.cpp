@@ -144,13 +144,11 @@ void nsTableCell::SetColIndex (int aColIndex)
 }
 
 nsIFrame* nsTableCell::CreateFrame(nsIPresContext* aPresContext,
-                                   PRInt32 aIndexInParent,
                                    nsIFrame* aParentFrame)
 {
   NS_PRECONDITION(nsnull!=aPresContext, "bad arg");
   nsIFrame* rv;
-  nsresult status = nsTableCellFrame::NewFrame(&rv, this, aIndexInParent,
-                                               aParentFrame);
+  nsresult status = nsTableCellFrame::NewFrame(&rv, this, aParentFrame);
   NS_ASSERTION(nsnull!=rv, "bad arg");
   return rv;
 }

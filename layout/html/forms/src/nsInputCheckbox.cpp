@@ -33,9 +33,7 @@
 
 class nsInputCheckboxFrame : public nsInputFrame {
 public:
-  nsInputCheckboxFrame(nsIContent* aContent,
-                   PRInt32 aIndexInParent,
-                   nsIFrame* aParentFrame);
+  nsInputCheckboxFrame(nsIContent* aContent, nsIFrame* aParentFrame);
 
   virtual void PostCreateWidget(nsIPresContext* aPresContext, nsIView *aView);
 
@@ -56,10 +54,8 @@ protected:
                               nsSize& aDesiredWidgetSize);
 };
 
-nsInputCheckboxFrame::nsInputCheckboxFrame(nsIContent* aContent,
-                                   PRInt32 aIndexInParent,
-                                   nsIFrame* aParentFrame)
-  : nsInputFrame(aContent, aIndexInParent, aParentFrame)
+nsInputCheckboxFrame::nsInputCheckboxFrame(nsIContent* aContent, nsIFrame* aParentFrame)
+  : nsInputFrame(aContent, aParentFrame)
 {
 }
 
@@ -200,11 +196,9 @@ nsInputCheckbox::Reset()
 }  
 
 nsIFrame* 
-nsInputCheckbox::CreateFrame(nsIPresContext* aPresContext,
-                         PRInt32 aIndexInParent,
-                         nsIFrame* aParentFrame)
+nsInputCheckbox::CreateFrame(nsIPresContext* aPresContext, nsIFrame* aParentFrame)
 {
-  nsIFrame* rv = new nsInputCheckboxFrame(this, aIndexInParent, aParentFrame);
+  nsIFrame* rv = new nsInputCheckboxFrame(this, aParentFrame);
   return rv;
 }
 

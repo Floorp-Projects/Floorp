@@ -23,10 +23,8 @@ static NS_DEFINE_IID(kStyleSpacingSID, NS_STYLESPACING_SID);
 static NS_DEFINE_IID(kStyleBorderSID, NS_STYLEBORDER_SID);
 static NS_DEFINE_IID(kStyleColorSID, NS_STYLECOLOR_SID);
 
-nsLeafFrame::nsLeafFrame(nsIContent* aContent,
-                         PRInt32 aIndexInParent,
-                         nsIFrame* aParentFrame)
-  : nsFrame(aContent, aIndexInParent, aParentFrame)
+nsLeafFrame::nsLeafFrame(nsIContent* aContent, nsIFrame* aParentFrame)
+  : nsFrame(aContent, aParentFrame)
 {
 }
 

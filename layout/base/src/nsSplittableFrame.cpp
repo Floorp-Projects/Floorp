@@ -22,9 +22,8 @@
 #include "nsIStyleContext.h"
 
 nsSplittableFrame::nsSplittableFrame(nsIContent* aContent,
-                                     PRInt32     aIndexInParent,
                                      nsIFrame*   aParent)
-  : nsFrame(aContent, aIndexInParent, aParent)
+  : nsFrame(aContent, aParent)
 {
 }
 
@@ -55,8 +54,7 @@ NS_METHOD nsSplittableFrame::CreateContinuingFrame(nsIPresContext* aPresContext,
 {
   nsIContentDelegate* contentDelegate = mContent->GetDelegate(aPresContext);
 
-  aContinuingFrame = contentDelegate->CreateFrame(aPresContext, mContent,
-                                                  mIndexInParent, aParent);
+  aContinuingFrame = contentDelegate->CreateFrame(aPresContext, mContent, aParent);
   NS_RELEASE(contentDelegate);
 
   // Append the continuing frame to the flow

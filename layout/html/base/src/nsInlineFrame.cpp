@@ -123,14 +123,13 @@ private:
 
 nsresult nsInlineFrame::NewFrame(nsIFrame**  aInstancePtrResult,
                                  nsIContent* aContent,
-                                 PRInt32     aIndexInParent,
                                  nsIFrame*   aParent)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsIFrame* it = new nsInlineFrame(aContent, aIndexInParent, aParent);
+  nsIFrame* it = new nsInlineFrame(aContent, aParent);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -138,10 +137,8 @@ nsresult nsInlineFrame::NewFrame(nsIFrame**  aInstancePtrResult,
   return NS_OK;
 }
 
-nsInlineFrame::nsInlineFrame(nsIContent* aContent,
-                             PRInt32     aIndexInParent,
-                             nsIFrame*   aParent)
-  : nsHTMLContainerFrame(aContent, aIndexInParent, aParent)
+nsInlineFrame::nsInlineFrame(nsIContent* aContent, nsIFrame* aParent)
+  : nsHTMLContainerFrame(aContent, aParent)
 {
   NS_PRECONDITION(!IsPseudoFrame(), "can not be a pseudo frame");
 }
@@ -304,7 +301,7 @@ PRBool nsInlineFrame::ReflowMappedChildren(nsIPresContext* aPresContext,
   PRInt32   lastIndexInParent;
 
   LastChild(lastChild);
-  lastChild->GetIndexInParent(lastIndexInParent);
+  lastChild->GetContentIndex(lastIndexInParent);
   NS_POSTCONDITION(lastIndexInParent == mLastContentOffset, "bad last content offset");
   VerifyLastIsComplete();
 #endif
@@ -572,10 +569,10 @@ nsInlineFrame::ReflowUnmappedChildren(nsIPresContext* aPresContext,
 
     // Check whether it wants to floated or absolutely positioned
     if (NS_STYLE_POSITION_ABSOLUTE == kidPosition->mPosition) {
-      AbsoluteFrame::NewFrame(&kidFrame, kid, kidIndex, this);
+      AbsoluteFrame::NewFrame(&kidFrame, kid, this);
       kidFrame->SetStyleContext(aPresContext,kidStyleContext);
     } else if (kidDisplay->mFloats != NS_STYLE_FLOAT_NONE) {
-      PlaceholderFrame::NewFrame(&kidFrame, kid, kidIndex, this);
+      PlaceholderFrame::NewFrame(&kidFrame, kid, this);
       kidFrame->SetStyleContext(aPresContext,kidStyleContext);
     } else if (nsnull == kidPrevInFlow) {
       nsIContentDelegate* kidDel;
@@ -593,13 +590,13 @@ nsInlineFrame::ReflowUnmappedChildren(nsIPresContext* aPresContext,
 
       case NS_STYLE_DISPLAY_INLINE:
         kidDel = kid->GetDelegate(aPresContext);
-        kidFrame = kidDel->CreateFrame(aPresContext, kid, kidIndex, this);
+        kidFrame = kidDel->CreateFrame(aPresContext, kid, this);
         NS_RELEASE(kidDel);
         break;
 
       default:
         NS_ASSERTION(nsnull == kidPrevInFlow, "bad prev in flow");
-        nsFrame::NewFrame(&kidFrame, kid, kidIndex, this);
+        nsFrame::NewFrame(&kidFrame, kid, this);
         break;
       }
       kidFrame->SetStyleContext(aPresContext,kidStyleContext);

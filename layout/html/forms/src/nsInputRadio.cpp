@@ -35,9 +35,7 @@
 
 class nsInputRadioFrame : public nsInputFrame {
 public:
-  nsInputRadioFrame(nsIContent* aContent,
-                   PRInt32 aIndexInParent,
-                   nsIFrame* aParentFrame);
+  nsInputRadioFrame(nsIContent* aContent, nsIFrame* aParentFrame);
 
   virtual void PostCreateWidget(nsIPresContext* aPresContext, nsIView *aView);
 
@@ -59,10 +57,8 @@ protected:
                               nsSize& aDesiredWidgetSize);
 };
 
-nsInputRadioFrame::nsInputRadioFrame(nsIContent* aContent,
-                                   PRInt32 aIndexInParent,
-                                   nsIFrame* aParentFrame)
-  : nsInputFrame(aContent, aIndexInParent, aParentFrame)
+nsInputRadioFrame::nsInputRadioFrame(nsIContent* aContent, nsIFrame* aParentFrame)
+  : nsInputFrame(aContent, aParentFrame)
 {
 }
 
@@ -192,10 +188,9 @@ nsInputRadio::SetChecked(PRBool aValue, PRBool aSetInitialValue)
  
 nsIFrame* 
 nsInputRadio::CreateFrame(nsIPresContext* aPresContext,
-                         PRInt32 aIndexInParent,
                          nsIFrame* aParentFrame)
 {
-  nsIFrame* rv = new nsInputRadioFrame(this, aIndexInParent, aParentFrame);
+  nsIFrame* rv = new nsInputRadioFrame(this, aParentFrame);
   return rv;
 }
 

@@ -145,7 +145,6 @@ public:
   virtual PRBool RemoveChildAt(PRInt32 aIndex);
 
   virtual nsIFrame* CreateFrame(nsIPresContext* aPresContext,
-                                PRInt32 aIndexInParent,
                                 nsIFrame* aParentFrame);
 
   /** called when the input stream knows that the input has been completely consumed.

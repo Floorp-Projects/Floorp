@@ -165,7 +165,6 @@ nsrefcnt nsInput::Release()
 
 nsIFrame*
 nsInput::CreateFrame(nsIPresContext *aPresContext,
-                               PRInt32 aIndexInParent,
                                nsIFrame *aParentFrame)
 {
   NS_ASSERTION(0, "frames must be created by subclasses of Input");

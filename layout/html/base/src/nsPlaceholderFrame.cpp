@@ -25,14 +25,13 @@ static NS_DEFINE_IID(kIFloaterContainerIID, NS_IFLOATERCONTAINER_IID);
 nsresult
 PlaceholderFrame::NewFrame(nsIFrame**  aInstancePtrResult,
                            nsIContent* aContent,
-                           PRInt32     aIndexInParent,
                            nsIFrame*   aParent)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsIFrame* it = new PlaceholderFrame(aContent, aIndexInParent, aParent);
+  nsIFrame* it = new PlaceholderFrame(aContent, aParent);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -40,25 +39,14 @@ PlaceholderFrame::NewFrame(nsIFrame**  aInstancePtrResult,
   return NS_OK;
 }
 
-PlaceholderFrame::PlaceholderFrame(nsIContent* aContent,
-                                   PRInt32     aIndexInParent,
-                                   nsIFrame*   aParent)
-  : nsFrame(aContent, aIndexInParent, aParent)
+PlaceholderFrame::PlaceholderFrame(nsIContent* aContent, nsIFrame* aParent)
+  : nsFrame(aContent, aParent)
 {
   mAnchoredItem = nsnull;
 }
 
 PlaceholderFrame::~PlaceholderFrame()
 {
-}
-
-NS_METHOD PlaceholderFrame::SetIndexInParent(PRInt32 aIndexInParent)
-{
-  if (nsnull != mAnchoredItem) {
-    mAnchoredItem->SetIndexInParent(aIndexInParent);
-  }
-  
-  return nsFrame::SetIndexInParent(aIndexInParent);
 }
 
 NS_METHOD PlaceholderFrame::ResizeReflow(nsIPresContext*  aPresContext,
@@ -82,8 +70,7 @@ NS_METHOD PlaceholderFrame::ResizeReflow(nsIPresContext*  aPresContext,
     // Create the anchored item
     nsIContentDelegate* delegate = mContent->GetDelegate(aPresContext);
 
-    mAnchoredItem = delegate->CreateFrame(aPresContext, mContent, mIndexInParent,
-                                          mGeometricParent);
+    mAnchoredItem = delegate->CreateFrame(aPresContext, mContent, mGeometricParent);
     NS_RELEASE(delegate);
 
     // Set the style context for the frame
@@ -106,6 +93,8 @@ NS_METHOD PlaceholderFrame::ResizeReflow(nsIPresContext*  aPresContext,
 NS_METHOD PlaceholderFrame::ListTag(FILE* out) const
 {
   fputs("*placeholder", out);
-  fprintf(out, "(%d)@%p", mIndexInParent, this);
+  PRInt32 contentIndex;
+  GetContentIndex(contentIndex);
+  fprintf(out, "(%d)@%p", contentIndex, this);
   return NS_OK;
 }

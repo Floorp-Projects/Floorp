@@ -39,7 +39,6 @@ public:
   nsInputText (nsIAtom* aTag, nsIFormManager* aManager, nsInputTextType aType);
 
   virtual nsIFrame* CreateFrame(nsIPresContext* aPresContext,
-                                PRInt32 aIndexInParent,
                                 nsIFrame* aParentFrame);
 
   virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);

@@ -30,9 +30,7 @@
 
 class nsInputFileFrame : public nsInputFrame {
 public:
-  nsInputFileFrame(nsIContent* aContent,
-                   PRInt32 aIndexInParent,
-                   nsIFrame* aParentFrame);
+  nsInputFileFrame(nsIContent* aContent, nsIFrame* aParentFrame);
 
   virtual void PostCreateWidget(nsIPresContext* aPresContext, nsIView *aView);
 
@@ -40,10 +38,8 @@ protected:
   virtual ~nsInputFileFrame();
 };
 
-nsInputFileFrame::nsInputFileFrame(nsIContent* aContent,
-                                   PRInt32 aIndexInParent,
-                                   nsIFrame* aParentFrame)
-  : nsInputFrame(aContent, aIndexInParent, aParentFrame)
+nsInputFileFrame::nsInputFileFrame(nsIContent* aContent, nsIFrame* aParentFrame)
+  : nsInputFrame(aContent, aParentFrame)
 {
 }
 
@@ -74,10 +70,9 @@ nsInputFile::~nsInputFile()
 
 nsIFrame* 
 nsInputFile::CreateFrame(nsIPresContext* aPresContext,
-                         PRInt32 aIndexInParent,
                          nsIFrame* aParentFrame)
 {
-  nsIFrame* rv = new nsInputFileFrame(this, aIndexInParent, aParentFrame);
+  nsIFrame* rv = new nsInputFileFrame(this, aParentFrame);
   return rv;
 }
 

@@ -25,7 +25,6 @@ public:
   WBRPart(nsIAtom* aTag);
 
   virtual nsIFrame* CreateFrame(nsIPresContext* aPresContext,
-                                PRInt32 aIndexInParent,
                                 nsIFrame* aParentFrame);
 
 protected:
@@ -41,12 +40,10 @@ WBRPart::~WBRPart()
 {
 }
 
-nsIFrame* WBRPart::CreateFrame(nsIPresContext* aPresContext,
-                               PRInt32 aIndexInParent,
-                               nsIFrame* aParentFrame)
+nsIFrame* WBRPart::CreateFrame(nsIPresContext* aPresContext, nsIFrame* aParentFrame)
 {
   nsIFrame* frame;
-  nsresult rv = nsFrame::NewFrame(&frame, this, aIndexInParent, aParentFrame);
+  nsresult rv = nsFrame::NewFrame(&frame, this, aParentFrame);
   if (NS_OK == rv) {
     return frame;
   }

@@ -65,7 +65,6 @@ void MyDocument::LoadURL(nsIURL* aURL)
 class FixedSizeFrame : public nsSplittableFrame {
 public:
   FixedSizeFrame(nsIContent* aContent,
-                 PRInt32 aIndexInParent,
                  nsIFrame* aParentFrame);
 
   ReflowStatus ResizeReflow(nsIPresContext* aPresContext,
@@ -83,7 +82,6 @@ public:
                    PRBool  aIsSplittable = PR_FALSE);
 
   nsIFrame* CreateFrame(nsIPresContext* aPresContext,
-                        PRInt32 aIndexInParent,
                         nsIFrame* aParentFrame);
 
   // Accessors
@@ -105,9 +103,8 @@ private:
 //
 
 FixedSizeFrame::FixedSizeFrame(nsIContent* aContent,
-                               PRInt32 aIndexInParent,
                                nsIFrame* aParentFrame)
-  : nsSplittableFrame(aContent, aIndexInParent, aParentFrame)
+  : nsSplittableFrame(aContent, aParentFrame)
 {
 }
 
@@ -164,10 +161,9 @@ FixedSizeContent::FixedSizeContent(nscoord aWidth,
 }
 
 nsIFrame* FixedSizeContent::CreateFrame(nsIPresContext* aPresContext,
-                                        PRInt32 aIndexInParent,
                                         nsIFrame* aParentFrame)
 {
-  return new FixedSizeFrame(this, aIndexInParent, aParentFrame);
+  return new FixedSizeFrame(this, aParentFrame);
 }
 
 // Change the width of the content triggering an incremental reflow
@@ -193,7 +189,6 @@ class InlineFrame : public nsInlineFrame
 {
 public:
   InlineFrame(nsIContent* aContent,
-              PRInt32 aIndexInParent,
               nsIFrame* aParent);
 
   // Accessors to return protected state
@@ -207,9 +202,8 @@ public:
 };
 
 InlineFrame::InlineFrame(nsIContent* aContent,
-                         PRInt32     aIndexInParent,
                          nsIFrame*   aParent)
-  : nsInlineFrame(aContent, aIndexInParent, aParent)
+  : nsInlineFrame(aContent, aParent)
 {
 }
 

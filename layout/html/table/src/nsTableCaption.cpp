@@ -77,13 +77,11 @@ int nsTableCaption::GetType()
 }
 
 nsIFrame* nsTableCaption::CreateFrame(nsIPresContext* aPresContext,
-                                      PRInt32 aIndexInParent,
                                       nsIFrame* aParentFrame)
 {
   NS_PRECONDITION(nsnull!=aPresContext, "bad arg");
   nsIFrame* rv;
-  nsresult status = nsTableCaptionFrame::NewFrame(&rv, this, aIndexInParent,
-                                                  aParentFrame);
+  nsresult status = nsTableCaptionFrame::NewFrame(&rv, this, aParentFrame);
   NS_ASSERTION(nsnull!=rv, "bad arg");
   return rv;
 }

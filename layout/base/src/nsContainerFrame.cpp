@@ -39,10 +39,8 @@ static NS_DEFINE_IID(kIStyleSpacingSID, NS_STYLESPACING_SID);
 static NS_DEFINE_IID(kIRunaroundIID, NS_IRUNAROUND_IID);
 static NS_DEFINE_IID(kStyleDisplaySID, NS_STYLEDISPLAY_SID);
 
-nsContainerFrame::nsContainerFrame(nsIContent* aContent,
-                                   PRInt32     aIndexInParent,
-                                   nsIFrame*   aParent)
-  : nsSplittableFrame(aContent, aIndexInParent, aParent),
+nsContainerFrame::nsContainerFrame(nsIContent* aContent, nsIFrame* aParent)
+  : nsSplittableFrame(aContent, aParent),
     mLastContentIsComplete(PR_TRUE)
 {
 }
@@ -90,8 +88,7 @@ NS_METHOD nsContainerFrame::CreateContinuingFrame(nsIPresContext* aPresContext,
 {
   nsIContentDelegate* contentDelegate = mContent->GetDelegate(aPresContext);
 
-  aContinuingFrame = contentDelegate->CreateFrame(aPresContext, mContent,
-                                                  mIndexInParent, aParent);
+  aContinuingFrame = contentDelegate->CreateFrame(aPresContext, mContent, aParent);
   NS_RELEASE(contentDelegate);
 
   PrepareContinuingFrame(aPresContext, aParent, (nsContainerFrame*)aContinuingFrame);
@@ -322,7 +319,8 @@ void nsContainerFrame::SetFirstContentOffset(const nsIFrame* aFirstChild)
     nsContainerFrame* pseudoFrame = (nsContainerFrame*)aFirstChild;
     mFirstContentOffset = pseudoFrame->mFirstContentOffset;
   } else {
-    aFirstChild->GetIndexInParent(mFirstContentOffset);
+    // XXX TROY Change API to pass in content index if possible...
+    aFirstChild->GetContentIndex(mFirstContentOffset);
   }
 }
 
@@ -344,7 +342,8 @@ void nsContainerFrame::SetLastContentOffset(const nsIFrame* aLastChild)
 #endif
     mLastContentIsComplete = pseudoFrame->mLastContentIsComplete;
   } else {
-    aLastChild->GetIndexInParent(mLastContentOffset);
+    // XXX TROY Change API to pass in content index if possible...
+    aLastChild->GetContentIndex(mLastContentOffset);
   }
 #ifdef NS_DEBUG
   if (mLastContentOffset < mFirstContentOffset) {
@@ -1146,7 +1145,7 @@ NS_METHOD nsContainerFrame::VerifyTree() const
     } else {
       PRInt32 indexInParent;
 
-      child->GetIndexInParent(indexInParent);
+      child->GetContentIndex(indexInParent);
       VERIFY_ASSERT(offset == indexInParent, "bad child offset");
 
       nsIFrame* nextInFlow;
@@ -1275,7 +1274,7 @@ void nsContainerFrame::CheckContentOffsets()
   } else {
     PRInt32 indexInParent;
 
-    mFirstChild->GetIndexInParent(indexInParent);
+    mFirstChild->GetContentIndex(indexInParent);
     if (indexInParent != mFirstContentOffset) {
       DumpTree();
     }
@@ -1296,7 +1295,7 @@ void nsContainerFrame::CheckContentOffsets()
   } else {
     PRInt32 indexInParent;
 
-    lastChild->GetIndexInParent(indexInParent);
+    lastChild->GetContentIndex(indexInParent);
     NS_ASSERTION(indexInParent == mLastContentOffset, "bad last content offset");
   }
 }

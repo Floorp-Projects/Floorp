@@ -60,10 +60,8 @@ struct nsInputCallbackData
   }
 };
 
-nsInputFrame::nsInputFrame(nsIContent* aContent,
-                           PRInt32 aIndexInParent,
-                           nsIFrame* aParentFrame)
-  : nsLeafFrame(aContent, aIndexInParent, aParentFrame)
+nsInputFrame::nsInputFrame(nsIContent* aContent, nsIFrame* aParentFrame)
+  : nsLeafFrame(aContent, aParentFrame)
 {
   mCacheBounds.width  = 0;
   mCacheBounds.height = 0;

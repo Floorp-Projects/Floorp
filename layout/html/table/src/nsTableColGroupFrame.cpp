@@ -25,9 +25,8 @@ static PRBool gsDebug = PR_FALSE;
 
 
 nsTableColGroupFrame::nsTableColGroupFrame(nsIContent* aContent,
-                     PRInt32     aIndexInParent,
                      nsIFrame*   aParentFrame)
-  : nsContainerFrame(aContent, aIndexInParent, aParentFrame)
+  : nsContainerFrame(aContent, aParentFrame)
 {
 }
 
@@ -79,14 +78,13 @@ nsTableColGroupFrame::IncrementalReflow(nsIPresContext*  aPresContext,
 
 nsresult nsTableColGroupFrame::NewFrame(nsIFrame** aInstancePtrResult,
                                         nsIContent* aContent,
-                                        PRInt32     aIndexInParent,
                                         nsIFrame*   aParent)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsIFrame* it = new nsTableColGroupFrame(aContent, aIndexInParent, aParent);
+  nsIFrame* it = new nsTableColGroupFrame(aContent, aParent);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

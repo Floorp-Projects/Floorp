@@ -49,9 +49,7 @@ public:
                                    nsIFrame*&      aContinuingFrame);
 
 protected:
-  nsLeafFrame(nsIContent* aContent,
-              PRInt32 aIndexInParent,
-              nsIFrame* aParentFrame);
+  nsLeafFrame(nsIContent* aContent, nsIFrame* aParentFrame);
   virtual ~nsLeafFrame();
 
   /**

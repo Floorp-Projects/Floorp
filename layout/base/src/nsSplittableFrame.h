@@ -24,8 +24,6 @@
 class nsSplittableFrame : public nsFrame
 {
 public:
-  // Flow member functions.
-
   // CreateContinuingFrame() does the default behavior of using the
   // content delegate to create a new frame
   NS_IMETHOD  IsSplittable(SplittableType& aIsSplittable) const;
@@ -33,6 +31,7 @@ public:
                                     nsIFrame*       aParent,
                                     nsIFrame*&      aContinuingFrame);
 
+  // Flow member functions.
   NS_IMETHOD  GetPrevInFlow(nsIFrame*& aPrevInFlow) const;
   NS_IMETHOD  SetPrevInFlow(nsIFrame*);
   NS_IMETHOD  GetNextInFlow(nsIFrame*& aNextInFlow) const;
@@ -57,9 +56,7 @@ public:
 protected:
   // Constructor. Takes as arguments the content object, the index in parent,
   // and the Frame for the content parent
-  nsSplittableFrame(nsIContent* aContent,
-                    PRInt32     aIndexInParent,
-                    nsIFrame*   aParent);
+  nsSplittableFrame(nsIContent* aContent, nsIFrame* aParent);
 
   virtual ~nsSplittableFrame();
 

@@ -142,10 +142,8 @@ struct InnerTableReflowState {
 /* ----------- nsTableFrame ---------- */
 
 
-nsTableFrame::nsTableFrame(nsIContent* aContent,
-                           PRInt32 aIndexInParent,
-                           nsIFrame* aParentFrame)
-  : nsContainerFrame(aContent, aIndexInParent, aParentFrame),
+nsTableFrame::nsTableFrame(nsIContent* aContent, nsIFrame* aParentFrame)
+  : nsContainerFrame(aContent, aParentFrame),
     mColumnLayoutData(nsnull),
     mColumnWidths(nsnull),
     mTableLayoutStrategy(nsnull),
@@ -639,7 +637,7 @@ nsIFrame::ReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresCont
       {
         nsIContentDelegate* kidDel;
         kidDel = kid->GetDelegate(aPresContext);
-        kidFrame = kidDel->CreateFrame(aPresContext, kid, contentOffset, this);
+        kidFrame = kidDel->CreateFrame(aPresContext, kid, this);
         NS_RELEASE(kidDel);
         kidFrame->SetStyleContext(aPresContext,kidStyleContext);
       }
@@ -1105,7 +1103,7 @@ PRBool nsTableFrame::ReflowMappedChildren( nsIPresContext*      aPresContext,
   PRInt32   lastIndexInParent;
 
   LastChild(lastChild);
-  lastChild->GetIndexInParent(lastIndexInParent);
+  lastChild->GetContentIndex(lastIndexInParent);
   NS_POSTCONDITION(lastIndexInParent == mLastContentOffset, "bad last content offset");
 #endif
 
@@ -1414,7 +1412,7 @@ nsTableFrame::ReflowUnmappedChildren(nsIPresContext*      aPresContext,
     if (nsnull == kidPrevInFlow) {
       nsIContentDelegate* kidDel = nsnull;
       kidDel = kid->GetDelegate(aPresContext);
-      kidFrame = kidDel->CreateFrame(aPresContext, kid, kidIndex, this);
+      kidFrame = kidDel->CreateFrame(aPresContext, kid, this);
       NS_RELEASE(kidDel);
       kidFrame->SetStyleContext(aPresContext, kidStyleContext);
     } else {
@@ -2045,7 +2043,7 @@ NS_METHOD nsTableFrame::CreateContinuingFrame(nsIPresContext* aPresContext,
                                               nsIFrame*       aParent,
                                               nsIFrame*&      aContinuingFrame)
 {
-  nsTableFrame* cf = new nsTableFrame(mContent, mIndexInParent, aParent);
+  nsTableFrame* cf = new nsTableFrame(mContent, aParent);
   PrepareContinuingFrame(aPresContext, aParent, cf);
   if (PR_TRUE==gsDebug) printf("nsTableFrame::CCF parent = %p, this=%p, cf=%p\n", aParent, this, cf);
   // set my width, because all frames in a table flow are the same width
@@ -2076,7 +2074,7 @@ NS_METHOD nsTableFrame::CreateContinuingFrame(nsIPresContext* aPresContext,
         aPresContext->ResolveStyleContextFor(content, cf);               // kidStyleContext: REFCNT++
       nsIContentDelegate* kidDel = nsnull;
       kidDel = content->GetDelegate(aPresContext);                       // kidDel: REFCNT++
-      nsIFrame * duplicateFrame = kidDel->CreateFrame(aPresContext, content, index, cf);
+      nsIFrame * duplicateFrame = kidDel->CreateFrame(aPresContext, content, cf);
       NS_RELEASE(kidDel);                                                // kidDel: REFCNT--
       duplicateFrame->SetStyleContext(aPresContext,kidStyleContext);
       NS_RELEASE(kidStyleContext);                                       // kidStyleContenxt: REFCNT--
@@ -2161,14 +2159,13 @@ NS_METHOD nsTableFrame::DidSetStyleContext(nsIPresContext* aPresContext)
 
 nsresult nsTableFrame::NewFrame(nsIFrame** aInstancePtrResult,
                                 nsIContent* aContent,
-                                PRInt32     aIndexInParent,
                                 nsIFrame*   aParent)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsIFrame* it = new nsTableFrame(aContent, aIndexInParent, aParent);
+  nsIFrame* it = new nsTableFrame(aContent, aParent);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

@@ -190,9 +190,7 @@ public:
 protected:
   // Constructor. Takes as arguments the content object, the index in parent,
   // and the Frame for the content parent
-  nsContainerFrame(nsIContent* aContent,
-                   PRInt32     aIndexInParent,
-                   nsIFrame*   aParent);
+  nsContainerFrame(nsIContent* aContent, nsIFrame* aParent);
 
   virtual ~nsContainerFrame();
 
@@ -201,8 +199,8 @@ protected:
    * flow, sets its content offsets, mLastContentIsComplete, and style context.
    * Subclasses should invoke this method after construction of a continuing frame.
    */
-  void PrepareContinuingFrame(nsIPresContext* aPresContext,
-                              nsIFrame* aParent,
+  void PrepareContinuingFrame(nsIPresContext*   aPresContext,
+                              nsIFrame*         aParent,
                               nsContainerFrame* aContFrame);
 
 

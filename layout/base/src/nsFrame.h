@@ -30,9 +30,8 @@ public:
    * Create a new "empty" frame that maps a given piece of content into a
    * 0,0 area.
    */
-  static nsresult NewFrame(nsIFrame** aInstancePtrResult,
+  static nsresult NewFrame(nsIFrame**  aInstancePtrResult,
                            nsIContent* aContent,
-                           PRInt32     aIndexInParent,
                            nsIFrame*   aParent);
 
   NS_IMETHOD  QueryInterface(const nsIID& aIID, void** aInstancePtr);
@@ -43,8 +42,7 @@ public:
   NS_IMETHOD  DeleteFrame();
 
   NS_IMETHOD  GetContent(nsIContent*& aContent) const;
-  NS_IMETHOD  GetIndexInParent(PRInt32& aIndexInParent) const;
-  NS_IMETHOD  SetIndexInParent(PRInt32 aIndexInParent);
+  NS_IMETHOD  GetContentIndex(PRInt32& aIndexInParent) const;
 
   NS_IMETHOD  GetStyleContext(nsIPresContext* aContext, nsIStyleContext*& aStyleContext);
   NS_IMETHOD  SetStyleContext(nsIPresContext* aPresContext, nsIStyleContext* aContext);
@@ -204,16 +202,13 @@ protected:
 
   // Constructor. Takes as arguments the content object, the index in parent,
   // and the Frame for the content parent
-  nsFrame(nsIContent* aContent,
-          PRInt32     aIndexInParent,
-          nsIFrame*   aParent);
+  nsFrame(nsIContent* aContent, nsIFrame* aParent);
 
   virtual ~nsFrame();
 
   nsRect           mRect;
   nsIContent*      mContent;
   nsIStyleContext* mStyleContext;
-  PRInt32          mIndexInParent;
   nsIFrame*        mContentParent;
   nsIFrame*        mGeometricParent;
   nsIFrame*        mNextSibling;  // singly linked list of frames

@@ -31,7 +31,6 @@ public:
   nsInputFile (nsIAtom* aTag, nsIFormManager* aManager);
 
   virtual nsIFrame* CreateFrame(nsIPresContext* aPresContext,
-                                PRInt32 aIndexInParent,
                                 nsIFrame* aParentFrame);
 
 protected:

@@ -36,14 +36,13 @@ static NS_DEFINE_IID(kStyleSpacingSID, NS_STYLESPACING_SID);
 
 nsresult nsBodyFrame::NewFrame(nsIFrame** aInstancePtrResult,
                                nsIContent* aContent,
-                               PRInt32     aIndexInParent,
                                nsIFrame*   aParent)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsIFrame* it = new nsBodyFrame(aContent, aIndexInParent, aParent);
+  nsIFrame* it = new nsBodyFrame(aContent, aParent);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -51,10 +50,8 @@ nsresult nsBodyFrame::NewFrame(nsIFrame** aInstancePtrResult,
   return NS_OK;
 }
 
-nsBodyFrame::nsBodyFrame(nsIContent* aContent,
-                         PRInt32     aIndexInParent,
-                         nsIFrame*   aParentFrame)
-  : nsHTMLContainerFrame(aContent, aIndexInParent, aParentFrame)
+nsBodyFrame::nsBodyFrame(nsIContent* aContent, nsIFrame* aParentFrame)
+  : nsHTMLContainerFrame(aContent, aParentFrame)
 {
   mSpaceManager = new SpaceManager(this);
   NS_ADDREF(mSpaceManager);
@@ -84,7 +81,7 @@ void nsBodyFrame::CreateColumnFrame(nsIPresContext* aPresContext)
   // Do we have a prev-in-flow?
   if (nsnull == mPrevInFlow) {
     // No, create a column pseudo frame
-    nsBlockFrame::NewFrame(&mFirstChild, mContent, mIndexInParent, this);
+    nsBlockFrame::NewFrame(&mFirstChild, mContent, this);
     mChildCount = 1;
 
     // Resolve style and set the style context
@@ -371,7 +368,7 @@ NS_METHOD nsBodyFrame::CreateContinuingFrame(nsIPresContext* aPresContext,
                                              nsIFrame*       aParent,
                                              nsIFrame*&      aContinuingFrame)
 {
-  nsBodyFrame* cf = new nsBodyFrame(mContent, mIndexInParent, aParent);
+  nsBodyFrame* cf = new nsBodyFrame(mContent, aParent);
   PrepareContinuingFrame(aPresContext, aParent, cf);
   aContinuingFrame = cf;
   return NS_OK;

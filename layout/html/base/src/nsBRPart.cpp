@@ -36,9 +36,7 @@ static NS_DEFINE_IID(kStyleColorSID, NS_STYLECOLOR_SID);
 class BRFrame : public nsFrame
 {
 public:
-  BRFrame(nsIContent* aContent,
-          PRInt32 aIndexInParent,
-          nsIFrame* aParentFrame);
+  BRFrame(nsIContent* aContent, nsIFrame* aParentFrame);
 
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
@@ -56,9 +54,8 @@ protected:
 };
 
 BRFrame::BRFrame(nsIContent* aContent,
-                       PRInt32 aIndexInParent,
-                       nsIFrame* aParentFrame)
-  : nsFrame(aContent, aIndexInParent, aParentFrame)
+                 nsIFrame* aParentFrame)
+  : nsFrame(aContent, aParentFrame)
 {
 }
 
@@ -138,7 +135,6 @@ public:
   virtual void UnsetAttribute(nsIAtom* aAttribute);
 
   virtual nsIFrame* CreateFrame(nsIPresContext* aPresContext,
-                                PRInt32 aIndexInParent,
                                 nsIFrame* aParentFrame);
 
   PRInt32 GetClear() {
@@ -168,10 +164,9 @@ BRPart::~BRPart()
 }
 
 nsIFrame* BRPart::CreateFrame(nsIPresContext* aPresContext,
-                              PRInt32 aIndexInParent,
                               nsIFrame* aParentFrame)
 {
-  nsIFrame* rv = new BRFrame(this, aIndexInParent, aParentFrame);
+  nsIFrame* rv = new BRFrame(this, aParentFrame);
   return rv;
 }
 

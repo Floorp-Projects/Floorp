@@ -116,7 +116,7 @@ nsLineData::Verify(PRBool aFinalCheck) const
     }
     while ((nsnull != child) && (child != nextLinesFirstChild)) {
       PRInt32 indexInParent;
-      child->GetIndexInParent(indexInParent);
+      child->GetContentIndex(indexInParent);
       NS_ASSERTION(indexInParent == offset, "bad line offsets");
       len++;
       if (len != mChildCount) {
@@ -585,7 +585,7 @@ nsLineLayout::SplitLine(PRInt32 aChildReflowStatus, PRInt32 aRemainingKids)
     }
 
     PRInt32 kidIndexInParent;
-    mKidFrame->GetIndexInParent(kidIndexInParent);
+    mKidFrame->GetContentIndex(kidIndexInParent);
     to->mFirstChild = mKidFrame;
     to->mChildCount += aRemainingKids;
     to->mFirstContentOffset = kidIndexInParent;
@@ -757,7 +757,7 @@ nsLineLayout::PullUpChildren()
         // new first content offset.
         mKidFrame->GetNextSibling(line->mFirstChild);
         PRInt32 indexInParent;
-        line->mFirstChild->GetIndexInParent(indexInParent);
+        line->mFirstChild->GetContentIndex(indexInParent);
         line->mFirstContentOffset = indexInParent;
 #ifdef NS_DEBUG
         line->Verify();
@@ -843,10 +843,10 @@ nsLineLayout::CreateFrameFor(nsIContent* aKid)
   PRBool isBlock = PR_FALSE;
   nsIFrame* kidFrame;
   if (NS_STYLE_POSITION_ABSOLUTE == kidPosition->mPosition) {
-    AbsoluteFrame::NewFrame(&kidFrame, aKid, mKidIndex, mBlock);
+    AbsoluteFrame::NewFrame(&kidFrame, aKid, mBlock);
     kidFrame->SetStyleContext(mPresContext, kidSC);
   } else if (kidDisplay->mFloats != NS_STYLE_FLOAT_NONE) {
-    PlaceholderFrame::NewFrame(&kidFrame, aKid, mKidIndex, mBlock);
+    PlaceholderFrame::NewFrame(&kidFrame, aKid, mBlock);
     kidFrame->SetStyleContext(mPresContext, kidSC);
   } else if (nsnull == mKidPrevInFlow) {
     // Create initial frame for the child
@@ -872,7 +872,7 @@ nsLineLayout::CreateFrameFor(nsIContent* aKid)
       }
 #endif
       kidDel = aKid->GetDelegate(mPresContext);
-      kidFrame = kidDel->CreateFrame(mPresContext, aKid, mKidIndex, mBlock);
+      kidFrame = kidDel->CreateFrame(mPresContext, aKid, mBlock);
       NS_RELEASE(kidDel);
       isBlock = PR_TRUE;
       break;
@@ -881,12 +881,12 @@ nsLineLayout::CreateFrameFor(nsIContent* aKid)
       // XXX pass in kidSC to speed things up *alot*!
       // XXX fix CreateFrame API to return an nsresult!
       kidDel = aKid->GetDelegate(mPresContext);
-      kidFrame = kidDel->CreateFrame(mPresContext, aKid, mKidIndex, mBlock);
+      kidFrame = kidDel->CreateFrame(mPresContext, aKid, mBlock);
       NS_RELEASE(kidDel);
       break;
 
     default:/* XXX bzzt! */
-      nsFrame::NewFrame(&kidFrame, aKid, mKidIndex, mBlock);
+      nsFrame::NewFrame(&kidFrame, aKid, mBlock);
       break;
     }
     kidFrame->SetStyleContext(mPresContext, kidSC);

@@ -78,7 +78,6 @@ public:
   
   /** @see nsIHTMLContent::CreateFrame */
   virtual nsIFrame* CreateFrame(nsIPresContext* aPresContext,
-                                PRInt32 aIndexInParent,
                                 nsIFrame* aParentFrame);
 
   /** returns nsITableContent::kTableColGroupType */
