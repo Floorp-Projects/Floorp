@@ -88,3 +88,35 @@ XP_GetBuiltinString(int16 i)
 	return buf;
 }
 
+
+
+/* Unix to start, I'm guessing Win32 and Mac should also stub
+   this out here until these get re-implemented.  Put the stubs
+   here in xp-land so we can stop cut-and-pasting stubs in the
+   rest of the tree. */
+#ifdef XP_UNIX
+
+#include "xp_mcom.h"
+
+int XP_ReBuffer (const char *net_buffer, int32 net_buffer_size,
+                        uint32 desired_buffer_size,
+                        char **bufferP, uint32 *buffer_sizeP,
+                        uint32 *buffer_fpP,
+                        int32 (*per_buffer_fn) (char *buffer,
+                                                uint32 buffer_size,
+                                                void *closure),
+                        void *closure) 
+{ 
+
+  printf("XP_ReBuffer not implemented, stubbed in lib/xp/xp_stubs.c\n"); 
+  return(0); 
+}
+
+
+void XP_Trace( const char *message, ... ) 
+{ 
+  printf("XP_Trace not implemented, stubbed in lib/xp/xp_stubs.c\n"); 
+}
+
+#endif
+

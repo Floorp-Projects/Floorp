@@ -57,7 +57,6 @@ CSRCS +=          \
 	xp_list.c \
 	xp_hash.c \
 	allxpstr.c \
-	xp_stubs.c \
 	$(NULL)
 
 EXPORTS=xp_linebuf.h
