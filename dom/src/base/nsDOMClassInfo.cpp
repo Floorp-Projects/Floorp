@@ -5391,9 +5391,21 @@ nsHTMLDocumentSH::DocumentOpen(JSContext *cx, JSObject *obj, uintN argc,
   nsCOMPtr<nsIDOMNSHTMLDocument> doc(do_QueryInterface(native));
   NS_ENSURE_TRUE(doc, JS_FALSE);
 
-  nsCOMPtr<nsIDOMDocument> retval;
+  PRBool replace = PR_FALSE;
+  if (argc > 1) {
+    JSString* jsstr = JS_ValueToString(cx, argv[1]);
+    if (!jsstr) {
+      nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_OUT_OF_MEMORY);
+      return JS_FALSE;
+    }
 
-  rv = doc->Open(getter_AddRefs(retval));
+    replace = NS_LITERAL_STRING("replace").
+      Equals(NS_REINTERPRET_CAST(const PRUnichar*,
+                                 ::JS_GetStringChars(jsstr)));
+  }
+
+  nsCOMPtr<nsIDOMDocument> retval;
+  rv = doc->Open(replace, getter_AddRefs(retval));
   if (NS_FAILED(rv)) {
     nsDOMClassInfo::ThrowJSException(cx, rv);
 
