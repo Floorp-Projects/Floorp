@@ -57,6 +57,16 @@ NS_METHOD nsScrollbar::CreateNative(GtkWidget *parentWindow)
     mWidget = gtk_vscrollbar_new(GTK_ADJUSTMENT(mAdjustment));
   }
   gtk_widget_set_name(mWidget, "nsScrollbar");
+  gtk_object_set_user_data(GTK_OBJECT(mAdjustment), mWidget);
+
+  gtk_signal_connect(GTK_OBJECT (mAdjustment),
+                     "changed",
+                     GTK_SIGNAL_FUNC(nsGtkWidget_Scrollbar_Callback),
+                     this);
+  gtk_signal_connect(GTK_OBJECT (mAdjustment),
+                     "value_changed",
+                     GTK_SIGNAL_FUNC(nsGtkWidget_Scrollbar_Callback),
+                     this);
   return NS_OK;
 }
 
@@ -209,7 +219,7 @@ NS_METHOD nsScrollbar::SetParameters(PRUint32 aMaxRange, PRUint32 aThumbSize,
   int thumbSize = (((int)aThumbSize) > 0?aThumbSize:1);
   int maxRange  = (((int)aMaxRange) > 0?aMaxRange:10);
   int mLineIncrement = (((int)aLineIncrement) > 0?aLineIncrement:1);
-  
+
   int maxPos = maxRange - thumbSize;
   int pos    = ((int)aPosition) > maxPos ? maxPos-1 : ((int)aPosition);
 
@@ -219,7 +229,7 @@ NS_METHOD nsScrollbar::SetParameters(PRUint32 aMaxRange, PRUint32 aThumbSize,
   GTK_ADJUSTMENT(mAdjustment)->page_increment = thumbSize;
   GTK_ADJUSTMENT(mAdjustment)->step_increment = mLineIncrement;
   // this will emit the changed signal for us
-  gtk_adjustment_set_value(GTK_ADJUSTMENT(mAdjustment), pos);  
+  gtk_adjustment_set_value(GTK_ADJUSTMENT(mAdjustment), pos);
   return NS_OK;
 }
 
@@ -264,17 +274,19 @@ int nsScrollbar::AdjustScrollBarPosition(int aPosition)
 //-------------------------------------------------------------------------
 PRBool nsScrollbar::OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos)
 {
-#if 0
     PRBool result = PR_TRUE;
-    int newPosition;
+    float newPosition;
 
+    g_print("nsScrollbar::OnScroll\n");
+#if 0
     switch (aEvent.message) {
 
         // scroll one line right or down
         case NS_SCROLLBAR_LINE_NEXT:
         {
-            XtVaGetValues(mWidget, XmNvalue, &newPosition, nsnull);
-            newPosition += mLineIncrement;
+            newPosition = GTK_ADJUSTMENT(mAdjustment)->value;
+            //            newPosition += mLineIncrement;
+            newPosition += 10;
             PRUint32 thumbSize;
             PRUint32 maxRange;
             GetThumbSize(thumbSize);
@@ -290,9 +302,8 @@ PRBool nsScrollbar::OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos)
                 result = ConvertStatus((*mEventCallback)(&aEvent));
                 newPosition = aEvent.position;
             }
-
-            XtVaSetValues(mWidget, XmNvalue,
-                          AdjustScrollBarPosition(newPosition), nsnull);
+            GTK_ADJUSTMENT(mAdjustment)->value = newPosition;
+            gtk_signal_emit_by_name(GTK_OBJECT(mAdjustment), "changed");
             break;
         }
 
@@ -300,9 +311,10 @@ PRBool nsScrollbar::OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos)
         // scroll one line left or up
         case NS_SCROLLBAR_LINE_PREV:
         {
-            XtVaGetValues(mWidget, XmNvalue, &newPosition, nsnull);
+            newPosition = GTK_ADJUSTMENT(mAdjustment)->value;
 
-            newPosition -= mLineIncrement;
+            //            newPosition -= mLineIncrement;
+            newPosition -= 10;
             if (newPosition < 0)
                 newPosition = 0;
 
@@ -310,20 +322,19 @@ PRBool nsScrollbar::OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos)
             // to change the decrement
             if (mEventCallback) {
                 aEvent.position = newPosition;
-
+                aEvent.widget = (nsWidget*)this;
                 result = ConvertStatus((*mEventCallback)(&aEvent));
                 newPosition = aEvent.position;
             }
-
-            XtVaSetValues(mWidget, XmNvalue, newPosition, nsnull);
-
+            GTK_ADJUSTMENT(mAdjustment)->value = newPosition;
+            gtk_signal_emit_by_name(GTK_OBJECT(mAdjustment), "changed");
             break;
         }
 
         // Scrolls one page right or down
         case NS_SCROLLBAR_PAGE_NEXT:
         {
-            XtVaGetValues(mWidget, XmNvalue, &newPosition, nsnull);
+            newPosition = GTK_ADJUSTMENT(mAdjustment)->value;
             PRUint32 thumbSize;
             GetThumbSize(thumbSize);
             PRUint32 maxRange;
@@ -340,15 +351,15 @@ PRBool nsScrollbar::OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos)
                 result = ConvertStatus((*mEventCallback)(&aEvent));
                 newPosition = aEvent.position;
             }
-            XtVaSetValues(mWidget, XmNvalue,
-                          AdjustScrollBarPosition(newPosition+10), nsnull);
+            GTK_ADJUSTMENT(mAdjustment)->value = newPosition;
+            gtk_signal_emit_by_name(GTK_OBJECT(mAdjustment), "changed");
             break;
         }
 
         // Scrolls one page left or up.
         case NS_SCROLLBAR_PAGE_PREV:
         {
-            XtVaGetValues(mWidget, XmNvalue, &newPosition, nsnull);
+            newPosition = GTK_ADJUSTMENT(mAdjustment)->value;
             if (newPosition < 0)
                 newPosition = 0;
 
@@ -360,7 +371,8 @@ PRBool nsScrollbar::OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos)
                 newPosition = aEvent.position;
             }
 
-            XtVaSetValues(mWidget, XmNvalue, newPosition-10, nsnull);
+            GTK_ADJUSTMENT(mAdjustment)->value = newPosition;
+            gtk_signal_emit_by_name(GTK_OBJECT(mAdjustment), "changed");
             break;
         }
 
@@ -379,12 +391,17 @@ PRBool nsScrollbar::OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos)
                 newPosition = aEvent.position;
             }
 
-            XtVaSetValues(mWidget, XmNvalue,
-                          AdjustScrollBarPosition(newPosition), nsnull);
+            GTK_ADJUSTMENT(mAdjustment)->value = newPosition;
+            gtk_signal_emit_by_name(GTK_OBJECT(mAdjustment), "changed");
 
             break;
         }
     }
-    return result;
 #endif
+    if (mEventCallback) {
+        aEvent.position = cPos;
+        result = ConvertStatus((*mEventCallback)(&aEvent));
+        newPosition = aEvent.position;
+    }
+    return result;
 }
