@@ -227,6 +227,8 @@ void nsSimpleCharString::ReallocData(PRUint32 inLength)
     PRUint32 allocLength = inLength;
     if (allocLength < kMinStringSize)
         allocLength = kMinStringSize;
+	if (allocLength < Length())	// make sure we're not truncating the result.
+		allocLength = Length();
     Data* newData = (Data*)PR_Malloc(allocLength + sizeof(Data));
     // If data was already allocated when we get to here, then we are cloning the data
     // from a shared pointer.
@@ -289,18 +291,23 @@ void nsSimpleCharString::LeafReplace(char inSeparator, const char* inLeafName)
     PRBool trailingSeparator = (lastSeparator + 1 == chars + oldLength);
     if (trailingSeparator)
     {
+		char savedCh = *lastSeparator;
+		char *savedLastSeparator = lastSeparator;
         *lastSeparator = '\0';
         lastSeparator = strrchr(chars, inSeparator);
+		*savedLastSeparator = savedCh;
     }
     if (lastSeparator)
         lastSeparator++; // point at the trailing string
     else
         lastSeparator = chars; // the full monty
-    *lastSeparator = '\0'; // strip the current leaf name
 
-    int newLength = (lastSeparator - chars) + strlen(inLeafName) + int(trailingSeparator);
+	PRUint32 savedLastSeparatorOffset = (lastSeparator - chars);
+    int newLength = (lastSeparator - chars) + strlen(inLeafName) + (trailingSeparator != 0);
     ReallocData(newLength);
+
     chars = mData->mString; // it might have moved.
+    chars[savedLastSeparatorOffset] = '\0'; // strip the current leaf name
 
     strcat(chars, inLeafName);
     if (trailingSeparator)
