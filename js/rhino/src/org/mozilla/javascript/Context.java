@@ -847,7 +847,7 @@ public class Context {
         boolean errorseen = false;
         try {
             IRFactory irf = new IRFactory(ts, null);
-            Parser p = new Parser(irf);
+            Parser p = createParser(irf);
             p.parse(ts);
         } catch (IOException ioe) {
             errorseen = true;
@@ -2000,7 +2000,7 @@ public class Context {
 
         errorCount = 0;
         IRFactory irf = compiler.createIRFactory(this, ts, scope);
-        Parser p = new Parser(irf);
+        Parser p = createParser(irf);
         Node tree = (Node) p.parse(ts);
         if (tree == null)
             return null;
@@ -2056,6 +2056,14 @@ public class Context {
             // fall through
         }
         return new Interpreter();
+    }
+
+    private Parser createParser(IRFactory irf) {
+        Parser parser = new Parser(irf);
+        parser.setLanguageVersion(getLanguageVersion());
+        parser.setAllowMemberExprAsFunctionName(
+            hasFeature(Context.FEATURE_MEMBER_EXPR_AS_FUNCTION_NAME));
+        return parser;
     }
 
     static String getSourcePositionFromStack(int[] linep) {

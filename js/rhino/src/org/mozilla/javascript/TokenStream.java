@@ -667,10 +667,6 @@ public class TokenStream {
         return false;
     }
 
-    public void clearPushback() {
-        this.pushbackToken = EOF;
-    }
-
     public void ungetToken(int tt) {
         // Can not unread more then one token
         if (this.pushbackToken != EOF && tt != ERROR) Context.codeBug();
@@ -687,13 +683,15 @@ public class TokenStream {
     }
 
     public int peekTokenSameLine() throws IOException {
-        int result;
-
         flags |= TSF_NEWLINES;          // SCAN_NEWLINES from jsscan.h
-        result = peekToken();
-        flags &= ~TSF_NEWLINES;         // HIDE_NEWLINES from jsscan.h
-        if (this.pushbackToken == EOL)
+        int result = getToken();
+        if (result == EOL) {
             this.pushbackToken = EOF;
+        } else {
+            this.pushbackToken = result;
+        }
+        tokenno--;
+        flags &= ~TSF_NEWLINES;         // HIDE_NEWLINES from jsscan.h
         return result;
     }
 
@@ -718,7 +716,7 @@ public class TokenStream {
                 } else if (c == '\n') {
                     flags &= ~TSF_DIRTYLINE;
                     if ((flags & TSF_NEWLINES) != 0) {
-                        break;
+                        return EOL;
                     }
                 } else if (!isJSSpace(c)) {
                     if (c != '-') {
@@ -1024,7 +1022,6 @@ public class TokenStream {
             }
 
             switch (c) {
-            case '\n': return EOL;
             case ';': return SEMI;
             case '[': return LB;
             case ']': return RB;
@@ -1331,12 +1328,14 @@ public class TokenStream {
     }
 
     private void addToString(int c) {
-        if (stringBufferTop == stringBuffer.length) {
+        int N = stringBufferTop;
+        if (N == stringBuffer.length) {
             char[] tmp = new char[stringBuffer.length * 2];
-            System.arraycopy(stringBuffer, 0, tmp, 0, stringBufferTop);
+            System.arraycopy(stringBuffer, 0, tmp, 0, N);
             stringBuffer = tmp;
         }
-        stringBuffer[stringBufferTop++] = (char)c;
+        stringBuffer[N] = (char)c;
+        stringBufferTop = N + 1;
     }
 
     public void reportSyntaxError(String messageProperty, Object[] args) {
