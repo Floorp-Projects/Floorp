@@ -47,14 +47,15 @@ MIME_GetContentType(void)
 }
 
 PUBLIC MimeObjectClass *
-MIME_CreateContentTypeHandlerClass(const char *content_type, PRBool *forceInline)
+MIME_CreateContentTypeHandlerClass(const char *content_type, 
+                                   contentTypeHandlerInitStruct *initStruct)
 {
   MimeObjectClass *class = (MimeObjectClass *)&mimeInlineTextCalendarClass;
   /*
    * Must set the superclass by hand.
    */
   class->superclass = (MimeObjectClass *)MIME_GetmimeInlineTextClass();
-  *forceInline = PR_FALSE;
+  initStruct->force_inline_display = PR_FALSE;
   return class;
 }
 
