@@ -1408,7 +1408,7 @@ PresShell::HandleEvent(nsIView         *aView,
   if (nsnull != frame) {
     if (mSelection && mFocusEventFrame && aEvent->eventStructType == NS_KEY_EVENT)
     {
-      mSelection->HandleKeyEvent(aEvent, mFocusEventFrame);
+      mSelection->HandleKeyEvent((nsIFocusTracker *)this, aEvent, mFocusEventFrame);
     }
     frame->GetFrameForPoint(aEvent->point, &mCurrentEventFrame);
     if (nsnull != mCurrentEventFrame) {

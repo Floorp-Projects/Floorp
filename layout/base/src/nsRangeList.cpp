@@ -34,6 +34,9 @@
 #include "nsCOMPtr.h"
 #include "nsRange.h"
 #include "nsISupportsArray.h"
+#include "nsIDOMEvent.h"
+
+
 static NS_DEFINE_IID(kIEnumeratorIID, NS_IENUMERATOR_IID);
 static NS_DEFINE_IID(kICollectionIID, NS_ICOLLECTION_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -50,6 +53,8 @@ static nsIFrame * getNextFrame(nsIFrame *aStart);
 static PRBool getRangeFromFrame(nsIFrame *aFrame, nsIDOMRange *aRange,  PRInt32 aContentOffset, PRInt32 aContentLength);
 static void printRange(nsIDOMRange *aDomRange);
 static nsIFrame *findFrameFromContent(nsIFrame *aParent, nsIContent *aContent, PRBool aTurnOff);
+
+enum {FORWARD  =1, BACKWARD = 0};
 
 #if 0
 #define DEBUG_OUT_RANGE(x)  printRange(x)
@@ -78,7 +83,7 @@ see the nsICollection for more details*/
 /*END nsICollection interfaces*/
 
 /*BEGIN nsISelection interfaces*/
-  NS_IMETHOD HandleKeyEvent(nsGUIEvent *aGuiEvent, nsIFrame *aFrame);
+  NS_IMETHOD HandleKeyEvent(nsIFocusTracker *aTracker, nsGUIEvent *aGuiEvent, nsIFrame *aFrame);
   NS_IMETHOD TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRInt32 aOffset, PRInt32 aContentOffset, PRBool aContinueSelection);
   NS_IMETHOD ResetSelection(nsIFocusTracker *aTracker, nsIFrame *aStartFrame);
 /*END nsISelection interfacse*/
@@ -137,12 +142,12 @@ see the nsIEnumerator for more details*/
 
   virtual nsresult CurrentItem(nsISupports **aRange);
 
-  virtual nsresult CurrentItem(nsIDOMRange **aRange);
-
   virtual nsresult IsDone();
 
 /*END nsIEnumerator interfaces*/
-
+/*BEGIN Helper Methods*/
+  virtual nsresult CurrentItem(nsIDOMRange **aRange);
+/*END Helper Methods*/
 private:
   friend class nsRangeList;
   nsRangeListIterator(nsRangeList *);
@@ -253,6 +258,8 @@ nsRangeListIterator::CurrentItem(nsISupports **aItem)
   }
   return NS_ERROR_FAILURE;
 }
+
+
 
 nsresult 
 nsRangeListIterator::CurrentItem(nsIDOMRange **aItem)
@@ -490,6 +497,58 @@ void printRange(nsIDOMRange *aDomRange)
          (nsIDOMNode *)endNode, (long)endOffset);
 }
 
+
+/** This raises a question, if this method is called and the aFrame does not reflect the current
+ *  focus  DomNode, it is invalid?  The answer now is yes.
+ */
+NS_IMETHODIMP
+nsRangeList::HandleKeyEvent(nsIFocusTracker *aTracker, nsGUIEvent *aGuiEvent, nsIFrame *aFrame)
+{
+  if (!aGuiEvent || !aFrame)
+    return NS_ERROR_NULL_POINTER;
+  if (NS_KEY_DOWN == aGuiEvent->message) {
+    nsCOMPtr<nsIContent> content;
+    if (NS_FAILED(aFrame->GetContent(*getter_AddRefs(content))) || !content)
+      return NS_ERROR_NULL_POINTER;
+    nsCOMPtr<nsIDOMNode> domnode(content);
+    if (!domnode)
+      return NS_ERROR_FAILURE;
+
+    //DUMMY CHECKING. CAN BE REMOVED.  MAYBE IT WILL FOR SPEED PURPOSES
+    PRBool selected;
+    PRInt32 beginoffset;
+    PRInt32 endoffset;
+    PRInt32 contentoffset;
+    //check to make sure the frame REALLY has the focus point.
+    if (NS_SUCCEEDED(aFrame->GetSelected(&selected,&beginoffset,&endoffset, &contentoffset))){
+      if (domnode != mFocusNode  || (contentoffset + beginoffset) != mFocusOffset) //not really the insertion frame
+        return NS_ERROR_FAILURE;
+    }
+
+    nsKeyEvent *keyEvent = (nsKeyEvent *)aGuiEvent; //this is ok. It really is a keyevent
+    nsIFrame *resultFrame;
+    PRInt32   frameOffset;
+    PRInt32   contentOffset;
+    switch (keyEvent->keyCode){
+      case nsIDOMEvent::VK_LEFT  : 
+        //we need to look for the previous PAINTED location to move the cursor to.
+        printf("debug vk left\n");
+        if (NS_SUCCEEDED(aFrame->PeekOffset(eCharacter, ePrevious, &resultFrame, &frameOffset, &contentOffset)) && resultFrame){
+          return TakeFocus(aTracker, resultFrame, frameOffset, contentOffset, PR_FALSE);
+        }
+        break;
+      case nsIDOMEvent::VK_RIGHT : 
+        //we need to look for the next PAINTED location to move the cursor to.
+        printf("debug vk right\n");
+        if (NS_SUCCEEDED(aFrame->PeekOffset(eCharacter, eNext, &resultFrame, &frameOffset, &contentOffset)) && resultFrame){
+          return TakeFocus(aTracker, resultFrame, frameOffset, contentOffset, PR_FALSE);
+        }
+    default :break;
+    }
+  }
+  return NS_OK;
+}
+
 #ifdef DEBUG
 void nsRangeList::printSelection()
 {
@@ -521,14 +580,6 @@ void nsRangeList::printSelection()
   printf(" ... end of selection\n");
 }
 #endif /* DEBUG */
-
-
-NS_IMETHODIMP
-nsRangeList::HandleKeyEvent(nsGUIEvent *aGuiEvent, nsIFrame *aFrame)
-{
-  nsKeyEvent *keyEvent = (nsKeyEvent *)aGuiEvent;
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
 
 
 //recursive-oid method to get next frame
@@ -642,7 +693,7 @@ nsRangeList::TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRInt32 aOff
     Clear(); //change this later 
     nsIFrame *frame;
     nsIFrame *anchor;
-    PRBool direction(PR_TRUE);//true == left to right
+    PRBool direction(BACKWARD);//true == left to right
     if (domNode && NS_SUCCEEDED(aTracker->GetFocus(&frame, &anchor))){
       //traverse through document and unselect crap here
       if (!aContinueSelection){ //single click? setting cursor down
@@ -658,11 +709,11 @@ nsRangeList::TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRInt32 aOff
         else if (frame && frame != aFrame){
           frame->SetSelected(PR_FALSE, 0, -1, PR_FALSE);//just turn off selection if the previous frame
         }
-        setAnchor(domNode, aOffset + aContentOffset);
+        direction = FORWARD; //slecting "english" right
         direction = PR_TRUE; //slecting "english" right
         aFrame->SetSelected(PR_TRUE,aOffset,aOffset,PR_FALSE);
         aTracker->SetFocus(aFrame,aFrame);
-        nsCOMPtr<nsIDOMRange> range;
+        setAnchor(domNode,aContentOffset);
       }
       else {
         if (aFrame == frame){ //drag to same frame
@@ -672,10 +723,10 @@ nsRangeList::TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRInt32 aOff
           PRBool selected;
           if (NS_SUCCEEDED(aFrame->GetSelected(&selected,&beginoffset,&endoffset, &begincontentoffset))){
             aFrame->SetSelected(PR_TRUE, beginoffset, aOffset,PR_FALSE);
-
             //PR_ASSERT(beginoffset == GetAnchorOffset());
             aTracker->SetFocus(aFrame,anchor);
-            direction = (PRBool)(beginoffset<=aOffset); //slecting "english" right if true
+            if (beginoffset <= aOffset)
+              direction = FORWARD; //selecting "english" right if true
           }
           else return NS_ERROR_FAILURE;
         }
@@ -765,7 +816,8 @@ nsRangeList::TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRInt32 aOff
                     //continue selection from 2 to 1
                     selectFrames(aFrame, aOffset, frame,PR_MAX(focusFrameOffsetEnd,focusFrameOffsetBegin), PR_TRUE, PR_FALSE);
                   }
-                  direction = (PRBool) (result3 <= 0);
+                  if (result3 <= 0)
+                    direction = FORWARD;
                 }
                 aTracker->SetFocus(aFrame,anchor);
               }
@@ -800,7 +852,7 @@ a  2  1 deselect from 2 to 1
       if (NS_SUCCEEDED(nsRepository::CreateInstance(kRangeCID, nsnull, kIDOMRangeIID, getter_AddRefs(range)))){ //create an irange
         if (domNode){
           setFocus(domNode, aOffset + aContentOffset);
-          if (direction){
+          if (direction == FORWARD){
             range->SetStart(GetAnchorNode(),GetAnchorOffset());
             range->SetEnd(GetFocusNode(),GetFocusOffset());
           }

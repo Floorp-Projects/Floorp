@@ -124,6 +124,17 @@ enum nsFramePaintLayer {
   eFramePaintLayer_Overlay = 2
 };
 
+enum nsSelectionAmount {
+  eCharacter = 0,
+  eWord      = 1,
+  eLine      = 2,  //previous drawn line in flow.
+};
+
+enum nsDirection {
+  eNext    = 0,
+  ePrevious= 1,
+};
+
 //----------------------------------------------------------------------
 
 /**
@@ -509,6 +520,16 @@ public:
 
   NS_IMETHOD  VerifyTree() const = 0;
 
+  /** Selection related calls
+   */
+  /** 
+   *  Called to set the selection of the frame based on frame offsets.  you can FORCE the frame
+   *  to redraw event if aSelected == the frame selection with the last parameter.
+   *  @param aSelected  selected or not.
+   *  @param aBeginOffset is the offset from the start of the frame, to make the selection
+   *  @param aEndOffset is the end of the offset of the selection.
+   *  @param aForceRedraw force the frame to redraw irrespective of the old state.
+   */
   NS_IMETHOD  SetSelected(PRBool aSelected, PRInt32 aBeginOffset, PRInt32 aEndOffset, PRBool aForceRedraw) = 0;
 
   /** 
@@ -529,6 +550,19 @@ public:
                                         nsIFrame **aActualSelected)=0;
 
   NS_IMETHOD  GetSelected(PRBool *aSelected, PRInt32 *aBeginOffset, PRInt32 *aEndOffset, PRInt32 *aBeginContentOffset) = 0;
+
+  /**
+   *  called to find the previous/next character, word, or line  returns the actual 
+   *  nsIFrame and the frame offset.  THIS DOES NOT CHANGE SELECTION STATE
+   *  uses frame's begin selection state to start. if no selection on this frame will 
+   *  return NS_ERROR_FAILURE
+   *  @param aAmount eWord, eCharacter, eLine
+   *  @param aDirection enum defined in this file to be eForward or eBackward
+   *  @param aResultFrame frame that actually is the next/previous
+   *  @param aFrameOffset offset from frame of the frame results
+   *  @param aContentOffset offset from content of the frame results
+   */
+  NS_IMETHOD  PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection,  nsIFrame **aResultFrame, PRInt32 *aFrameOffset, PRInt32 *aContentOffset) = 0;
 
   /**
    * See if tree verification is enabled. To enable tree verification add
