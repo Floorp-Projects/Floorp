@@ -77,8 +77,52 @@ nss_build_all: build_coreconf build_nspr build_dbm all
 build_coreconf:
 	cd $(CORE_DEPTH)/coreconf ;  $(MAKE)
 
+#
+# NSPR has two build systems: autoconf and classic.
+# The build_nspr rule needs to work with both.
+#
+
+ifdef NSPR_AUTOCONF
+
+NSPR_CONFIG_STATUS = $(CORE_DEPTH)/../nsprpub/$(OBJDIR_NAME)/config.status
+NSPR_CONFIGURE = $(CORE_DEPTH)/../nsprpub/configure
+
+#
+# Translate coreconf build options to NSPR configure options.
+#
+
+ifdef BUILD_OPT
+NSPR_CONFIGURE_OPTS += --disable-debug --enable-optimize
+endif
+ifdef USE_64
+NSPR_CONFIGURE_OPTS += --enable-64bit
+endif
+ifeq ($(OS_TARGET),WIN95)
+NSPR_CONFIGURE_OPTS += --enable-win32-target=WIN95
+endif
+ifdef USE_DEBUG_RTL
+NSPR_CONFIGURE_OPTS += --enable-debug-rtl
+endif
+
+NSPR_PREFIX = $$(topsrcdir)/../dist/$(OBJDIR_NAME)
+
+$(NSPR_CONFIG_STATUS): $(NSPR_CONFIGURE)
+	$(NSINSTALL) -D $(CORE_DEPTH)/../nsprpub/$(OBJDIR_NAME)
+	cd $(CORE_DEPTH)/../nsprpub/$(OBJDIR_NAME) ; \
+	sh ../configure \
+	$(NSPR_CONFIGURE_OPTS) \
+	--with-dist-prefix='$(NSPR_PREFIX)' \
+	--with-dist-includedir='$(NSPR_PREFIX)/include'
+
+build_nspr: $(NSPR_CONFIG_STATUS)
+	cd $(CORE_DEPTH)/../nsprpub/$(OBJDIR_NAME) ; $(MAKE)
+
+else  # NSPR classic build system
+
 build_nspr:
 	cd $(CORE_DEPTH)/../nsprpub ; $(MAKE) OBJDIR_NAME=${OBJDIR_NAME} 
+
+endif  # NSPR_AUTOCONF
 
 build_dbm:
 	cd $(CORE_DEPTH)/dbm ; $(MAKE) export libs
