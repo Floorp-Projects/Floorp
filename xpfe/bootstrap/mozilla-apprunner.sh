@@ -28,18 +28,18 @@
 ## the apprunner work.
 ##
 
-tools=""
+dist_bin=""
 
 # Running from dist/bin
 if [ -d components -a -d res ]
 then
-	tools="../../build"
+	dist_bin="./"
 else
 	# Running from source dir
 	if [ -f Makefile.in ]
 	then
-		tools=`grep -w DEPTH Makefile.in  | grep -e "\.\." | awk -F"=" '{ print $2; }'`/build
+		dist_bin=`grep -w DEPTH Makefile.in  | grep -e "\.\." | awk -F"=" '{ print $2; }'`/dist/bin
 	fi
 fi
 
-$tools/run-mozilla.sh apprunner ${1+"$@"}
+$dist_bin/run-mozilla.sh apprunner ${1+"$@"}
