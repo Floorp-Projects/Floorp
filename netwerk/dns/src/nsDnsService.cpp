@@ -31,6 +31,9 @@
 #include "nsIIOService.h"
 #include "nsIServiceManager.h"
 #include "netCore.h"
+#ifdef DNS_TIMING
+#include "prinrval.h"
+#endif
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
@@ -109,7 +112,11 @@ protected:
 #if defined(XP_PC)
     friend static LRESULT CALLBACK nsDNSEventProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     HANDLE                      mLookupHandle;
-	PRUint32                      mMsgID;
+    PRUint32                    mMsgID;
+#endif
+
+#ifdef DNS_TIMING
+    PRIntervalTime              mStartTime;
 #endif
 };
 
@@ -140,7 +147,6 @@ static char *BufAlloc(PRIntn amount, char **bufp, PRIntn *buflenp, PRIntn align)
 	*buflenp = buflen - amount;
 	return buf;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsDNSLookup methods:
@@ -251,7 +257,18 @@ nsDNSLookup::CallOnFound(void)
     mListener = 0;
     mContext = 0;
 
-	
+#ifdef DNS_TIMING
+    if (gService->mOut) {
+        PRIntervalTime stopTime = PR_IntervalNow();
+        double duration = PR_IntervalToMicroseconds(stopTime - mStartTime);
+        gService->mCount++;
+        gService->mTimes += duration;
+        gService->mSquaredTimes += duration * duration;
+        fprintf(gService->mOut, "DNS time #%d: %u us for %s\n", 
+                (PRInt32)gService->mCount,
+                (PRInt32)duration, HostName());
+    }
+#endif
     return result;
 }
 
@@ -401,6 +418,13 @@ nsDNSEventProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 ////////////////////////////////////////////////////////////////////////////////
 
 nsDNSService::nsDNSService()
+    : 
+#ifdef DNS_TIMING
+      mCount(0),
+      mTimes(0),
+      mSquaredTimes(0),
+      mOut(nsnull)
+#endif
 {
     NS_INIT_REFCNT();
     
@@ -426,6 +450,12 @@ nsDNSService::nsDNSService()
 	int i;
 	for (i=0; i<4; i++)
 		mMsgIDBitVector[i] = 0;
+#endif
+
+#ifdef DNS_TIMING
+    if (getenv("DNS_TIMING")) {
+        mOut = fopen("dns-timing.txt", "w");
+    }
 #endif
 }
 
@@ -500,6 +530,18 @@ nsDNSService::~nsDNSService()
     NS_ASSERTION(gService==this,"multiple nsDNSServices allocated.");
     gService = nsnull;
     Shutdown();
+
+#ifdef DNS_TIMING
+    if (mOut) {
+        double mean;
+        double stddev;
+        NS_MeanAndStdDev(mCount, mTimes, mSquaredTimes, &mean, &stddev);
+        fprintf(mOut, "DNS lookup time: %.2f +/- %.2f us (%d lookups)\n",
+                mean, stddev, (PRInt32)mCount);
+        fclose(mOut);
+        mOut = nsnull;
+    }
+#endif
 }
 
 
