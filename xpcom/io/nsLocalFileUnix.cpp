@@ -794,9 +794,11 @@ nsLocalFile::SetLastModificationDate(PRInt64 aLastModificationDate)
         VALIDATE_STAT_CACHE();
         struct utimbuf ut;
         ut.actime = mCachedStat.st_atime;
-        PRInt32 hi, lo;
-        mLL_L2II(aLastModificationDate, hi, lo);
-        ut.modtime = (time_t)lo;
+
+        // convert PRTime microsecs to unix seconds since the epoch
+        double dTime;
+        LL_L2D(dTime, aLastModificationDate);
+        ut.modtime = (time_t)( (PRUint32)(dTime * 1e-6 + 0.5) );
         result = utime(mPath, &ut);
     } else {
         result = utime(mPath, NULL);
