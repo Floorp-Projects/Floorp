@@ -1768,6 +1768,13 @@ public final class Context {
                 open = close = colon = -1;
             }
         }
+
+        // Not found; so we should try the interpreter data.
+        Context cx = getCurrentContext();
+        if (cx.interpreterLine > 0 && cx.interpreterSourceFile != null) {
+            linep[0] = cx.interpreterLine;
+            return cx.interpreterSourceFile;
+        }
         return null;
     }
 
@@ -1891,5 +1898,9 @@ public final class Context {
     private int enterCount;
     private ListenerCollection listeners;
     private Hashtable hashtable;
+
+    // For the interpreter to indicate line/source for error reports.
+    int interpreterLine;
+    String interpreterSourceFile;
 }
 
