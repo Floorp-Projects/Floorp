@@ -87,6 +87,7 @@ private:
         PRBool mHandleBMP;
         PRBool mHandleICO;
         PRBool mHandleXML;
+        PRBool mHandleXHTML;
         PRBool mHandleXUL;
     };
     struct {

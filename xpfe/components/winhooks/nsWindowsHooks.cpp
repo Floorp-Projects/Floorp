@@ -69,25 +69,27 @@ static ProtocolRegistryEntry
     ftp( "ftp" ),
     chrome( "chrome" ),
     gopher( "gopher" );
-const char *jpgExts[] = { ".jpg", ".jpeg", 0 };
-const char *gifExts[] = { ".gif", 0 };
-const char *pngExts[] = { ".png", 0 };
-const char *mngExts[] = { ".mng", 0 };
-const char *bmpExts[] = { ".bmp", 0 };
-const char *icoExts[] = { ".ico", 0 };
-const char *xmlExts[] = { ".xml", 0 };
-const char *xulExts[] = { ".xul", 0 };
-const char *htmExts[] = { ".htm", ".html", ".shtml", 0 };
+const char *jpgExts[]  = { ".jpg", ".jpeg", 0 };
+const char *gifExts[]  = { ".gif", 0 };
+const char *pngExts[]  = { ".png", 0 };
+const char *mngExts[]  = { ".mng", 0 };
+const char *bmpExts[]  = { ".bmp", 0 };
+const char *icoExts[]  = { ".ico", 0 };
+const char *xmlExts[]  = { ".xml", 0 };
+const char *xhtmExts[] = { ".xht", ".xhtml", 0 };
+const char *xulExts[]  = { ".xul", 0 };
+const char *htmExts[]  = { ".htm", ".html", ".shtml", 0 };
 
 static FileTypeRegistryEntry
-    jpg( jpgExts, "MozillaJPEG", "Mozilla Joint Photographic Experts Group Image File" ),
-    gif( gifExts, "MozillaGIF",  "Mozilla Graphics Interchange Format Image File" ),
-    png( pngExts, "MozillaPNG",  "Mozilla Portable Network Graphic Image File" ),
-    mng( mngExts, "MozillaMNG",  "Mozilla Multiple-Image Network Graphic Image File" ),
-    bmp( bmpExts, "MozillaBMP",  "Mozilla Bitmap Image File" ),
-    ico( icoExts, "MozillaICO",  "Mozilla Icon File" ),
-    xml( xmlExts, "MozillaXML",  "Mozilla XML File Document" ),
-    xul( xulExts, "MozillaXUL",  "Mozilla XUL File Document" );
+    jpg(   jpgExts,  "MozillaJPEG",  "Mozilla Joint Photographic Experts Group Image File" ),
+    gif(   gifExts,  "MozillaGIF",   "Mozilla Graphics Interchange Format Image File" ),
+    png(   pngExts,  "MozillaPNG",   "Mozilla Portable Network Graphic Image File" ),
+    mng(   mngExts,  "MozillaMNG",   "Mozilla Multiple-Image Network Graphic Image File" ),
+    bmp(   bmpExts,  "MozillaBMP",   "Mozilla Bitmap Image File" ),
+    ico(   icoExts,  "MozillaICO",   "Mozilla Icon File" ),
+    xml(   xmlExts,  "MozillaXML",   "Mozilla XML File Document" ),
+    xhtml( xhtmExts, "MozillaXHTML", "Mozilla XHTML File Document" ),
+    xul(   xulExts,  "MozillaXUL",   "Mozilla XUL File Document" );
 
 static EditableFileTypeRegistryEntry
     mozillaMarkup( htmExts, "MozillaHTML", "Mozilla HyperText Markup Language Document" );
@@ -140,6 +142,7 @@ DEFINE_GETTER_AND_SETTER( IsHandlingMNG,    mHandleMNG    )
 DEFINE_GETTER_AND_SETTER( IsHandlingBMP,    mHandleBMP    )
 DEFINE_GETTER_AND_SETTER( IsHandlingICO,    mHandleICO    )
 DEFINE_GETTER_AND_SETTER( IsHandlingXML,    mHandleXML    )
+DEFINE_GETTER_AND_SETTER( IsHandlingXHTML,  mHandleXHTML  )
 DEFINE_GETTER_AND_SETTER( IsHandlingXUL,    mHandleXUL    )
 DEFINE_GETTER_AND_SETTER( IsHandlingHTTP,   mHandleHTTP   )
 DEFINE_GETTER_AND_SETTER( IsHandlingHTTPS,  mHandleHTTPS  )
@@ -190,6 +193,7 @@ nsWindowsHooks::GetSettings( nsWindowsHooksSettings **result ) {
     prefs->mHandleBMP    = (void*)( BoolRegistryEntry( "isHandlingBMP"    ) ) ? PR_TRUE : PR_FALSE;
     prefs->mHandleICO    = (void*)( BoolRegistryEntry( "isHandlingICO"    ) ) ? PR_TRUE : PR_FALSE;
     prefs->mHandleXML    = (void*)( BoolRegistryEntry( "isHandlingXML"    ) ) ? PR_TRUE : PR_FALSE;
+    prefs->mHandleXHTML  = (void*)( BoolRegistryEntry( "isHandlingXHTML"  ) ) ? PR_TRUE : PR_FALSE;
     prefs->mHandleXUL    = (void*)( BoolRegistryEntry( "isHandlingXUL"    ) ) ? PR_TRUE : PR_FALSE;
     prefs->mShowDialog   = (void*)( BoolRegistryEntry( "showDialog"       ) ) ? PR_TRUE : PR_FALSE;
     prefs->mHaveBeenSet  = (void*)( BoolRegistryEntry( "haveBeenSet"      ) ) ? PR_TRUE : PR_FALSE;
@@ -311,6 +315,7 @@ nsWindowsHooks::CheckSettings( nsIDOMWindowInternal *aParent,
             settings->mHandleBMP    = PR_TRUE;
             settings->mHandleICO    = PR_TRUE;
             settings->mHandleXML    = PR_TRUE;
+            settings->mHandleXHTML  = PR_TRUE;
             settings->mHandleXUL    = PR_TRUE;
 
             settings->mShowDialog       = PR_TRUE;
@@ -361,7 +366,9 @@ nsWindowsHooks::CheckSettings( nsIDOMWindowInternal *aParent,
                  ||
                  misMatch( settings->mHandleXML,    xml )
                  ||
-                 misMatch( settings->mHandleXUL,    xul ) ) {
+                 misMatch( settings->mHandleXHTML,  xhtml )
+                 ||
+                 misMatch( settings->mHandleXUL,    xul )) {
                 // Need to prompt user.
                 // First:
                 //   o We need the common dialog service to show the dialog.
@@ -521,6 +528,7 @@ nsWindowsHooks::SetSettings(nsIWindowsHooksSettings *prefs) {
     putPRBoolIntoRegistry( "isHandlingBMP",    prefs, &nsIWindowsHooksSettings::GetIsHandlingBMP );
     putPRBoolIntoRegistry( "isHandlingICO",    prefs, &nsIWindowsHooksSettings::GetIsHandlingICO );
     putPRBoolIntoRegistry( "isHandlingXML",    prefs, &nsIWindowsHooksSettings::GetIsHandlingXML );
+    putPRBoolIntoRegistry( "isHandlingXHTML",  prefs, &nsIWindowsHooksSettings::GetIsHandlingXHTML );
     putPRBoolIntoRegistry( "isHandlingXUL",    prefs, &nsIWindowsHooksSettings::GetIsHandlingXUL );
     putPRBoolIntoRegistry( "showDialog",       prefs, &nsIWindowsHooksSettings::GetShowDialog );
 
@@ -582,6 +590,11 @@ nsWindowsHooks::SetRegistry() {
         (void) xml.set();
     } else {
         (void) xml.reset();
+    }
+    if ( prefs->mHandleXHTML ) {
+        (void) xhtml.set();
+    } else {
+        (void) xhtml.reset();
     }
     if ( prefs->mHandleXUL ) {
         (void) xul.set();
