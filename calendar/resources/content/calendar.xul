@@ -141,12 +141,9 @@
              <toolbarbutton class="toolbarbutton-1" id="calendar-week-view-button"      label="&calendar.weekview.button.label;"        tooltip="aTooltip" tooltiptext="&calendar.weekview.button.tooltip;"     oncommand="gCalendarWindow.switchToWeekView()"/>
              <toolbarbutton class="toolbarbutton-1" id="calendar-month-view-button"     label="&calendar.monthview.button.label;"       tooltip="aTooltip" tooltiptext="&calendar.monthview.button.tooltip;"    oncommand="gCalendarWindow.switchToMonthView()"/>
              <spacer flex="1"/>
-             <hbox id="throbber-box" autostretch="never">
-              <button id="navigator-throbber" oncommand='//goClickThrobber("calendar.throbber.url")' tooltip="aTooltip" tooltiptext="&throbber.tooltip;">
-                 <!--
-                 <observes element="broadcaster_throbber" attribute="busy"/>
-                 -->
-              </button>
+             <hbox id="throbber-box" align="center">
+                <button id="navigator-throbber" oncommand="goClickThrobber('browser.throbber.url')"
+                    tooltiptext="&throbber.tooltip;"/>
              </hbox>
       </toolbar>
    </toolbox>
