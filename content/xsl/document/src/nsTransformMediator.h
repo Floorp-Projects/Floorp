@@ -50,7 +50,7 @@ public:
   nsTransformMediator();
   virtual ~nsTransformMediator();
 
-  nsresult Init(const nsString& aMimeType);
+  nsresult Init(const nsACString& aMimeType);
 
   // nsISupports
   NS_DECL_ISUPPORTS
