@@ -24,13 +24,13 @@ MODULE=raptor
 
 REQUIRES=xpcom raptor dom js netlib
 
-INCLUDES += -I$(PUBLIC)/raptor -I$(PUBLIC)/xpcom -I$(PUBLIC)/dom -I$(PUBLIC)/js -I(PUBLIC)/netlib
+INCLUDES += -I../public -I$(PUBLIC)/raptor -I$(PUBLIC)/xpcom -I$(PUBLIC)/dom -I$(PUBLIC)/js -I(PUBLIC)/netlib
 
 DEFINES = -D_IMPL_NS_WEB
 
 CPPSRCS=				\
  nsWebWidget.cpp			\
- nsLinkHandler.cpp			\
+# nsLinkHandler.cpp			\
  $(NULL)
 
 CPP_OBJS=				\
