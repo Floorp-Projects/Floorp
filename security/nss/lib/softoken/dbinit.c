@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: dbinit.c,v 1.17 2002/10/10 20:11:09 relyea%netscape.com Exp $
+ # $Id: dbinit.c,v 1.18 2002/11/04 19:31:57 relyea%netscape.com Exp $
  */
 
 #include <ctype.h>
@@ -56,6 +56,9 @@ pk11_certdb_name_cb(void *arg, int dbVersion)
     char *dbname = NULL;
 
     switch (dbVersion) {
+      case 8:
+	dbver = "8";
+	break;
       case 7:
 	dbver = "7";
 	break;

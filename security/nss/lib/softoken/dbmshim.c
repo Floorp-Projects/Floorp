@@ -34,7 +34,7 @@
 /*
  * Berkeley DB 1.85 Shim code to handle blobs.
  *
- * $Id: dbmshim.c,v 1.4 2002/09/06 20:17:42 wtc%netscape.com Exp $
+ * $Id: dbmshim.c,v 1.5 2002/11/04 19:31:58 relyea%netscape.com Exp $
  */
 #include "mcom_db.h"
 #include "secitem.h"
@@ -53,7 +53,7 @@
 
 #include "pkcs11i.h"
 
-#define DBS_MAX_ENTRY_SIZE (64*1024) /* 64 k */
+#define DBS_MAX_ENTRY_SIZE (30*1024) /* 32 k */
 #define ROUNDDIV(x,y) (x+(y-1))/y
 #define BLOB_NAME_HEAD_LEN 4
 #define BLOB_NAME_LENGTH_START BLOB_NAME_HEAD_LEN
@@ -551,6 +551,17 @@ dbs_mkBlobDirName(const char *dbname)
     return blobDir;
 }
 
+#define DBM_DEFAULT 0
+static const HASHINFO dbs_hashInfo = {
+	DBS_MAX_ENTRY_SIZE,	/* bucket size, must be greater than = to
+				 * or maximum entry size we allow before					 * blobing */
+	DBM_DEFAULT,
+	DBM_DEFAULT,
+	DBM_DEFAULT,
+	DBM_DEFAULT,
+	DBM_DEFAULT,
+};
+
 /*
  * the open function. NOTE: this is the only exposed function in this file.
  * everything else is called through the function table pointer.
@@ -562,6 +573,8 @@ dbsopen(const char *dbname, int flags, int mode, DBTYPE type,
     DB *db = NULL,*dbs = NULL;
     DBS *dbsp = NULL;
 
+    /* NOTE: we are overriding userData with dbs_hashInfo. since all known
+     * callers pass 0, this is ok, otherwise we should merge the two */
 
     dbsp = (DBS *)PORT_ZAlloc(sizeof(DBS));
     if (!dbsp) {
@@ -577,7 +590,7 @@ dbsopen(const char *dbname, int flags, int mode, DBTYPE type,
     dbsp->readOnly = (PRBool)(flags == NO_RDONLY);
 
     /* the real dbm call */
-    db = dbopen(dbname, flags, mode, type, userData);
+    db = dbopen(dbname, flags, mode, type, &dbs_hashInfo);
     if (db == NULL) {
 	goto loser;
     }

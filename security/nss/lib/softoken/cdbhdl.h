@@ -34,7 +34,7 @@
  * cdbhdl.h - certificate database handle
  *   private to the certdb module
  *
- * $Id: cdbhdl.h,v 1.6 2002/08/28 21:51:07 relyea%netscape.com Exp $
+ * $Id: cdbhdl.h,v 1.7 2002/11/04 19:31:57 relyea%netscape.com Exp $
  */
 #ifndef _CDBHDL_H_
 #define _CDBHDL_H_
@@ -49,6 +49,7 @@
 struct NSSLOWCERTCertDBHandleStr {
     DB *permCertDB;
     PZMonitor *dbMon;
+    PRBool dbVerify;
 };
 
 #ifdef DBM_USING_NSPR

@@ -210,6 +210,12 @@ nsslowcert_ChangeCertTrust(NSSLOWCERTCertDBHandle *handle,
 	  	NSSLOWCERTCertificate *cert, NSSLOWCERTCertTrust *trust);
 
 PRBool
+nsslowcert_needDBVerify(NSSLOWCERTCertDBHandle *handle);
+
+void
+nsslowcert_setDBVerify(NSSLOWCERTCertDBHandle *handle, PRBool value);
+
+PRBool
 nsslowcert_hasTrust(NSSLOWCERTCertTrust *trust);
 
 void

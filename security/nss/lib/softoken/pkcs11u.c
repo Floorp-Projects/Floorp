@@ -632,6 +632,7 @@ pk11_FindSecretKeyAttribute(PK11TokenObject *object, CK_ATTRIBUTE_TYPE type)
     NSSLOWKEYPrivateKey *key;
     char *label;
     PK11Attribute *att;
+    CK_ULONG keyLen;
 
     switch (type) {
     case CKA_PRIVATE:
@@ -659,6 +660,7 @@ pk11_FindSecretKeyAttribute(PK11TokenObject *object, CK_ATTRIBUTE_TYPE type)
 	PORT_Free(label);
 	return att;
     case CKA_KEY_TYPE:
+    case CKA_VALUE_LEN:
     case CKA_VALUE:
 	break;
     default:
@@ -676,6 +678,9 @@ pk11_FindSecretKeyAttribute(PK11TokenObject *object, CK_ATTRIBUTE_TYPE type)
     case CKA_VALUE:
 	return pk11_NewTokenAttribute(type,key->u.rsa.privateExponent.data,
 				key->u.rsa.privateExponent.len, PR_FALSE);
+    case CKA_VALUE_LEN:
+	keyLen=key->u.rsa.privateExponent.len;
+	return pk11_NewTokenAttribute(type, &keyLen, sizeof(CK_ULONG), PR_TRUE);
     }
 
     return NULL;

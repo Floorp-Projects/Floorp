@@ -2222,6 +2222,35 @@ PK11Slot * pk11_NewSlotFromID(CK_SLOT_ID slotID, int moduleIndex)
     return slot;
 }
 
+static SECStatus
+pk11_set_user(NSSLOWCERTCertificate *cert, SECItem *dummy, void *arg)
+{
+    NSSLOWKEYDBHandle *keydb = (NSSLOWKEYDBHandle *)arg;
+
+    if (nsslowkey_KeyForCertExists(keydb,cert)) {
+	cert->trust->sslFlags |= CERTDB_USER;
+	cert->trust->emailFlags |= CERTDB_USER;
+	cert->trust->objectSigningFlags |= CERTDB_USER;
+    } else {
+	cert->trust->sslFlags &= ~CERTDB_USER;
+	cert->trust->emailFlags &= ~CERTDB_USER;
+	cert->trust->objectSigningFlags &= ~CERTDB_USER;
+    }
+
+    /* should check for email address and make sure we have an s/mime profile */
+}
+
+static  void
+pk11_DBVerify(PK11Slot *slot)
+{
+    /* walk through all the certs and check to see if there are any 
+     * user certs, and make sure there are s/mime profiles for all certs with
+     * email addresses */
+    nsslowcert_TraversePermCerts(slot->certDB,pk11_set_user,slot->keyDB);
+
+    return;
+}
+
 /*
  * initialize one of the slot structures. figure out which by the ID
  */
@@ -2324,6 +2353,10 @@ PK11_SlotInit(char *configdir,pk11_token_parameters *params, int moduleIndex)
 	if (crv != CKR_OK) {
 	    /* shoutdown slot? */
 	    return crv;
+	}
+
+	if (nsslowcert_needDBVerify(slot->certDB)) {
+	    pk11_DBVerify(slot);
 	}
     }
     if (needLogin) {

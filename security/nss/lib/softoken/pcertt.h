@@ -33,7 +33,7 @@
 /*
  * certt.h - public data structures for the certificate library
  *
- * $Id: pcertt.h,v 1.9 2002/08/28 21:51:10 relyea%netscape.com Exp $
+ * $Id: pcertt.h,v 1.10 2002/11/04 19:31:59 relyea%netscape.com Exp $
  */
 #ifndef _PCERTT_H_
 #define _PCERTT_H_
@@ -184,12 +184,9 @@ typedef char * (*NSSLOWCERTDBNameFunc)(void *arg, int dbVersion);
  */
 
 /* version number of certificate database */
-#define CERT_DB_FILE_VERSION		7
-#ifdef USE_NS_ROOTS
-#define CERT_DB_CONTENT_VERSION		28
-#else
+#define CERT_DB_FILE_VERSION		8
+#define CERT_DB_V7_FILE_VERSION		7
 #define CERT_DB_CONTENT_VERSION		2
-#endif
 
 #define SEC_DB_ENTRY_HEADER_LEN		3
 #define SEC_DB_KEY_HEADER_LEN		1
