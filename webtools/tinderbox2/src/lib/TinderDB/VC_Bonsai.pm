@@ -40,8 +40,8 @@
 # Contributor(s): 
 
 
-# $Revision: 1.66 $ 
-# $Date: 2003/04/20 20:33:16 $ 
+# $Revision: 1.67 $ 
+# $Date: 2003/05/26 13:44:18 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/VC_Bonsai.pm,v $ 
 # $Name:  $ 
@@ -96,18 +96,18 @@ use Time::Local;
 
 use lib '#tinder_libdir#';
 
+use BTData;
+use TreeData;
 use TinderHeader;
 use BonsaiData;
-use BTData;
 use TinderDB::BasicTxtDB;
+use TinderDB::Notice;
 use Utils;
 use HTMLPopUp;
-use TreeData;
 use VCDisplay;
-use TinderDB::Notice;
 
 
-$VERSION = ( qw $Revision: 1.66 $ )[1];
+$VERSION = ( qw $Revision: 1.67 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -123,7 +123,7 @@ $VC_BUGNUM_REGEXP = $TinderConfig::VC_BUGNUM_REGEXP ||
 $NOTICE= TinderDB::Notice->new();
 $DEBUG = 1;
 
-# Print out the Database in a visually useful form.
+# return a string of the whole Database in a visually useful form.
 
 sub get_all_bonsai_data {
   my ($self, $tree) = (@_);
@@ -398,7 +398,7 @@ sub apply_db_updates {
   # VCDisplay depend on anything in the VC_* code.  So all the VC
   # implementations must store their data into a file with the same
   # name. It is highly unlikely that one user will run VC_CVS.pm and
-  # BC_Bonsai.pm module together.
+  # VC_Bonsai.pm module together.
 
   my $all_vc_data = $self->get_all_bonsai_data($tree);
   my ($outfile) = (FileStructure::get_filename($tree, 'tree_HTML').
@@ -491,17 +491,21 @@ sub cell_data {
         # appear together.  The previous data structure allowed us to find
         # out what data was in each cell.
         
-        my $recs = $DATABASE{$tree}{$time}{'author'};
-        foreach $author (keys %{ $recs }) {
-            foreach $file (keys %{ $recs->{$author} }) {
-                my ($log) = $recs->{$author}{$file};
-                $authors{$author}{$time}{$file} = $log;
+        if (defined( $DATABASE{$tree}{$time}{'author'} )) {
+            my $recs = $DATABASE{$tree}{$time}{'author'};
+            foreach $author (keys %{ $recs }) {
+                foreach $file (keys %{ $recs->{$author} }) {
+                    my ($log) = $recs->{$author}{$file};
+                    $authors{$author}{$time}{$file} = $log;
+                }
             }
         }
-
-        $recs = $DATABASE{$tree}{$time}{'bugs'};
-        foreach $bug (keys %{ $recs }) {
-            $bugs{$bug} =1;
+        
+        if (defined( $DATABASE{$tree}{$time}{'bugs'} )) {
+            $recs = $DATABASE{$tree}{$time}{'bugs'};
+            foreach $bug (keys %{ $recs }) {
+                $bugs{$bug} =1;
+            }
         }
 
     } # while (1)
@@ -558,9 +562,6 @@ sub render_authors {
         # define a table, to show what was checked in for each author
         
         foreach $author (sort keys %authors) {
-            my ($table) = '';
-            my ($num_rows) = 0;
-            my ($max_length) = 0;
             
             # This is a Netscape.com/Mozilla.org specific CVS/Bonsai
             # issue. Most users do not have '%' in their CVS names. Do
@@ -574,19 +575,6 @@ sub render_authors {
             my $mailto_author=$author;
             $mailto_author = TreeData::VCName2MailAddress($author);
             
-            $table .= (
-                       "Checkins by <b>$author</b> <br> for $vc_info \n".
-                       "<table border cellspacing=2>\n".
-                       "");
-            
-            # add table headers
-            $table .= (
-                       "\t<tr>".
-                       "<th>Time</th>".
-                       "<th>File</th>".
-                       "<th>Log</th>".
-                       "</tr>\n".
-                       "");
 
             my (@times) = sort {$b <=> $a} keys %{ $authors{$author} };   
             my $checkin_page_reference = $times[0];
@@ -594,25 +582,12 @@ sub render_authors {
             # sort numerically descending
             foreach $time (@times) {
                 foreach $file (keys %{ $authors{$author}{$time}}) {
-                    $num_rows++;
                     my ($log) = $authors{$author}{$time}{$file};
                     if ($log =~ m/$VC_BUGNUM_REGEXP/) {
                         push @bug_numbers, $1;
                     }
-                    $max_length = main::max(
-                                            $max_length , 
-                                            (length($file) + length($log)),
-                                            );
-                    $table .= (
-                               "\t<tr>".
-                               "<td>".HTMLPopUp::timeHTML($time)."</td>".
-                               "<td>".$file."</td>".
-                               "<td>".$log."</td>".
-                               "</tr>\n".
-                               "");
                 }
             }
-            $table .= "</table>";
             @bug_numbers = main::uniq(@bug_numbers);
 
             # The Link Choices inside the popup.
@@ -695,10 +670,6 @@ sub render_authors {
                                                   "$time_interval_str "),
                                 );
             
-            # If you have a VCDisplay implementation you should make the
-            # link point to its query method otherwise you want a 'mailto:'
-            # link
-            
             my ($query_link) = "";
             
             $query_link .= 
@@ -712,7 +683,7 @@ sub render_authors {
                                    %popup_args,
                                    );
 
-            my $bug_links;
+            my $bug_links = '';
             foreach $bug_number (@bug_numbers) {
                 my $href = BTData::bug_id2bug_url($bug_number);
                 $bug_links .= 
@@ -772,7 +743,10 @@ sub render_authors {
 
 
 # Create one cell (possibly taking up many rows) which will show
-# that no authors have checked in during this time.
+# that:
+#       No authors have checked in during this time.
+#       The tree state has not changed during this time.
+#       There were no notices posted during this time.
 
 sub render_empty_cell {
     my ($last_treestate, $till_time, $rowspan, $tree) = @_;
@@ -791,20 +765,9 @@ sub render_empty_cell {
           HTMLPopUp::text_browser_color_string($cell_color, $char) ;
     }
 
-    my $notice = $NOTICE->Notice_Link(
-                                      $till_time,
-                                      $tree,
-                                      $VC_NAME,
-                                      );
-    
-
     my $cell_contents;
     if ($text_browser_color_string) {
         $cell_contents .= $text_browser_color_string;
-    }
-
-    if ($notice) {
-        $cell_contents .= "\n\t\t".$notice."\n";
     }
 
     if (!($cell_contents)) {
@@ -890,17 +853,24 @@ sub status_table_row {
   }
 
   
-  # find all the authors who changed code at any point in this cell
-  # find the tree state for this cell.
+  # Find all the authors who changed code at any point in this cell
+  # Find the tree state for this cell.
 
   my ($db_index, $last_treestate, $authors, $bugs,) =
       cell_data($tree, $NEXT_DB{$tree}, $row_times->[$row_index]);
-  
-  $LAST_TREESTATE{$tree} = $last_treestate || $LAST_TREESTATE{$tree};
-  $last_treestate = $LAST_TREESTATE{$tree};
-  
-#  $last_treestate ||
-#      die ("no last tree state");
+
+  # Track the treestate between calls with a global variable.
+
+  # This initalization may not be correct.  If we are creating a page
+  # for a few days ago, when we start making the page, we do not know
+  # the treestate. It is not so easy to find out the right tree state
+  # for the first few rows, so fake it with the current state.
+
+  $LAST_TREESTATE{$tree} = ( 
+                             $last_treestate || 
+                             $LAST_TREESTATE{$tree} || 
+                             TinderHeader::gettree_header('TreeState', $tree) 
+                             );
 
   if (scalar(%{$authors})) {
 
@@ -940,8 +910,10 @@ sub status_table_row {
 
          (
           !defined($next_treestate) ||
-          ($last_treestate eq $next_treestate)
+          ( $LAST_TREESTATE{$tree} eq $next_treestate)
           )
+
+
          ) {
       
       $db_index = $next_db_index;
