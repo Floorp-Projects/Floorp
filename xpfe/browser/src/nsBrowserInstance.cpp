@@ -1845,7 +1845,7 @@ nsBrowserAppCore::Print()
 {  
   if (mContentAreaWebShell) {
     nsCOMPtr<nsIContentViewer> viewer;    
-    mWebShell->GetContentViewer(getter_AddRefs(viewer));    
+    mContentAreaWebShell->GetContentViewer(getter_AddRefs(viewer));    
     if (nsnull != viewer) {
       nsCOMPtr<nsIContentViewerFile> viewerFile = do_QueryInterface(viewer);
       if (viewerFile) {
