@@ -42,9 +42,11 @@
 #include "nsIPref.h"
 #include "nsIProfile.h"
 #include "nsILocalFile.h"
+#include "nsFileSpec.h"
 
 #include "nsDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
+#include "nsAppDirectoryServiceDefs.h"
 #include "rsrcids.h"
 
 #include "nsPSMMutex.h"
@@ -561,52 +563,45 @@ nsPSMComponent::GetControlConnection( CMT_CONTROL * *_retval )
         if (!mControl || InitPSMUICallbacks(mControl) != PR_SUCCESS)
             goto failure;
 
-        nsFileSpec profileSpec;
-        PRUnichar*      profileName;
+        nsXPIDLString      profileName;
+        nsCOMPtr<nsIFile>  profileSpec;
+        nsXPIDLCString     profilePath;
         
         NS_WITH_SERVICE(nsIProfile, profile, kProfileCID, &rv);
         if (NS_FAILED(rv)) goto failure;
         
-        rv = profile->GetCurrentProfileDir(&profileSpec);
-        if (NS_FAILED(rv)) goto failure;;
+        rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(profileSpec));
+        if (NS_FAILED(rv)) goto failure;
         
 #ifdef XP_MAC
-        profileSpec += "Security";
+        profileSpec->Append("Security");
         // make sure the dir exists
-        profileSpec.CreateDirectory();
+        profileSpec->Create(nsIFile::DIRECTORY_TYPE, 0);
 #endif
         
-        rv = profile->GetCurrentProfile(&profileName);
+        rv = profile->GetCurrentProfile(getter_Copies(profileName));
         if (NS_FAILED(rv)) goto failure;
           
         CMTStatus psmStatus;
         nsCAutoString profilenameC;
         profilenameC.AssignWithConversion(profileName);
 
+        rv = profileSpec->GetPath(getter_Copies(profilePath));
+        if (NS_FAILED(rv)) goto failure;
+        
         psmStatus = CMT_Hello( mControl, 
                                PROTOCOL_VERSION, 
                                profilenameC, 
-                               (char*)profileSpec.GetNativePathCString());        
-        
+                               NS_CONST_CAST(char*,(const char*)profilePath));        
         if (psmStatus == CMTFailure)
-        {  
-            PR_FREEIF(profileName);       
             goto failure;
-        }
         
         if (InitPSMEventLoop(mControl) != PR_SUCCESS)
-        {
-            PR_FREEIF(profileName);       
             goto failure;
-        }
             
         if (NS_FAILED(PassPrefs()))
-        {  
-            PR_FREEIF(profileName);       
             goto failure;
-        }
 
-        PR_FREEIF(profileName);
         
         nsCOMPtr<nsIProtocolProxyService> proxySvc = do_GetService(kProtocolProxyServiceCID, &rv);
         if (NS_FAILED(rv)) return rv;
