@@ -47,11 +47,8 @@
 #include "nsStyleContext.h"
 #include "nsLeafFrame.h"
 #include "nsCSSRendering.h"
-#include "nsIViewManager.h"
 #include "nsISupports.h"
 #include "nsHTMLAtoms.h"
-#include "nsIView.h"
-#include "nsViewsCID.h"
 #include "nsIDeviceContext.h"
 #include "nsIFontMetrics.h"
 #include "nsIImage.h"
@@ -65,17 +62,6 @@
 #include "nsIAccessibilityService.h"
 #endif
 
-//Enumeration of possible mouse states used to detect mouse clicks
-/*enum nsMouseState {
-  eMouseNone,
-  eMouseEnter,
-  eMouseExit,
-  eMouseDown,
-  eMouseUp
-};
-*/
-static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
-
 #define nsImageControlFrameSuper nsImageFrame
 class nsImageControlFrame : public nsImageControlFrameSuper,
                             public nsIFormControlFrame,
@@ -87,12 +73,6 @@ public:
 
   NS_IMETHOD Destroy(nsIPresContext *aPresContext);
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
-
-  NS_IMETHOD Init(nsIPresContext*  aPresContext,
-                  nsIContent*      aContent,
-                  nsIFrame*        aParent,
-                  nsStyleContext*  aContext,
-                  nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
@@ -153,26 +133,16 @@ public:
   NS_IMETHOD GetClickedY(PRInt32* aY);
 
 protected:
-  void GetTranslatedRect(nsIPresContext* aPresContext, nsRect& aRect); // XXX this implementation is a copy of nsHTMLButtonControlFrame
   NS_IMETHOD_(nsrefcnt) AddRef(void);
   NS_IMETHOD_(nsrefcnt) Release(void);
 
-  nsMouseState mLastMouseState;
   nsPoint mLastClickPoint; 
-  nsCursor mPreviousCursor;
-  nsRect mTranslatedRect;
-  PRBool mGotFocus;
-
 };
 
 
 nsImageControlFrame::nsImageControlFrame()
 {
-  mLastMouseState = eMouseNone;
   mLastClickPoint = nsPoint(0,0);
-  mPreviousCursor = eCursor_standard;
-  mTranslatedRect = nsRect(0,0,0,0);
-  mGotFocus       = PR_FALSE;
 }
 
 nsImageControlFrame::~nsImageControlFrame()
@@ -253,42 +223,6 @@ nsImageControlFrame::GetType() const
   return nsLayoutAtoms::imageControlFrame; 
 }
 
-NS_IMETHODIMP
-nsImageControlFrame::Init(nsIPresContext*  aPresContext,
-                          nsIContent*      aContent,
-                          nsIFrame*        aParent,
-                          nsStyleContext*  aContext,
-                          nsIFrame*        aPrevInFlow)
-{
-  // call our base class
-  nsresult  rv = nsImageControlFrameSuper::Init(aPresContext, aContent, aParent,
-                                                aContext, aPrevInFlow);
-  
-  // create our view, we need a view to grab the mouse 
-  if (!HasView()) {
-    nsIView* view;
-    nsresult result = CallCreateInstance(kViewCID, &view);
-    nsIViewManager* viewMan = aPresContext->GetViewManager();
-
-    nsIFrame* parWithView = GetAncestorWithView();
-    nsIView *parView = parWithView->GetView();
-    // the view's size is not know yet, but its size will be kept in synch with our frame.
-    nsRect boundBox(0, 0, 0, 0); 
-    result = view->Init(viewMan, boundBox, parView);
-
-    nsContainerFrame::SyncFrameViewProperties(aPresContext, this, aContext, view);
-
-    // this gets reset during reflow anyway
-    // viewMan->SetViewContentTransparency(view, PR_TRUE);
-
-    // XXX put the view last in document order until we know how to do better
-    viewMan->InsertChild(parView, view, nsnull, PR_TRUE);
-    SetView(view);
-  }
-
-  return rv;
-}
-
 NS_METHOD
 nsImageControlFrame::Reflow(nsIPresContext*         aPresContext,
                            nsHTMLReflowMetrics&     aDesiredSize,
@@ -336,7 +270,6 @@ nsImageControlFrame::HandleEvent(nsIPresContext* aPresContext,
       mLastClickPoint.x = NSTwipsToIntPixels(aEvent->point.x, t2p);
       mLastClickPoint.y = NSTwipsToIntPixels(aEvent->point.y, t2p);
 
-      mGotFocus = PR_TRUE;
       break;
     }
   }
@@ -347,7 +280,6 @@ nsImageControlFrame::HandleEvent(nsIPresContext* aPresContext,
 void 
 nsImageControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
 {
-  mGotFocus = aOn;
   /*if (aRepaint) {
     nsRect rect(0, 0, mRect.width, mRect.height);
     Invalidate(rect, PR_TRUE);
@@ -364,19 +296,6 @@ nsImageControlFrame::ScrollIntoView(nsIPresContext* aPresContext)
                    NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE,NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE);
     }
   }
-}
-
-void
-nsImageControlFrame::GetTranslatedRect(nsIPresContext* aPresContext, nsRect& aRect)
-{
-  nsIView* view;
-  nsPoint viewOffset(0,0);
-  GetOffsetFromView(aPresContext, viewOffset, &view);
-  while (view) {
-    viewOffset += view->GetPosition();
-    view = view->GetParent();
-  }
-  aRect = nsRect(viewOffset.x, viewOffset.y, mRect.width, mRect.height);
 }
 
 NS_IMETHODIMP_(PRInt32)

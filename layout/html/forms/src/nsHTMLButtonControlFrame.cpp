@@ -58,10 +58,6 @@
 #include "nsIHTMLContent.h"
 #include "nsIWidget.h"
 #include "nsIComponentManager.h"
-#include "nsIView.h"
-#include "nsIViewManager.h"
-#include "nsViewsCID.h"
-#include "nsColor.h"
 #include "nsIDocument.h"
 #include "nsButtonFrameRenderer.h"
 #include "nsFormControlFrame.h"
@@ -74,11 +70,6 @@
 #include "nsStyleSet.h"
 #ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"
-#endif
-
-#if 0
-// see nsHTMLButtonControlFrame::Reflow()
-static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
 #endif
 
 nsresult
@@ -100,9 +91,6 @@ nsHTMLButtonControlFrame::nsHTMLButtonControlFrame()
   : nsHTMLContainerFrame()
 {
   mInline = PR_TRUE;
-  mPreviousCursor = eCursor_standard;
-  mTranslatedRect = nsRect(0,0,0,0);
-  mDidInit = PR_FALSE;
 
   mCacheSize.width             = -1;
   mCacheSize.height            = -1;
@@ -280,21 +268,6 @@ nsHTMLButtonControlFrame::ScrollIntoView(nsIPresContext* aPresContext)
   }
 }
 
-void
-nsHTMLButtonControlFrame::GetTranslatedRect(nsIPresContext* aPresContext, nsRect& aRect)
-{
-  nsIView* view;
-  nsPoint viewOffset(0,0);
-  GetOffsetFromView(aPresContext, viewOffset, &view);
-  while (view) {
-    viewOffset += view->GetPosition();
-    view = view->GetParent();
-  }
-  aRect = nsRect(viewOffset.x, viewOffset.y, mRect.width, mRect.height);
-}
-
-            
-
 NS_IMETHODIMP
 nsHTMLButtonControlFrame::HandleEvent(nsIPresContext* aPresContext, 
                                       nsGUIEvent*     aEvent,
@@ -415,37 +388,6 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext* aPresContext,
                                                          aDesiredSize, aReflowState, aStatus);
   if (NS_SUCCEEDED(skiprv)) {
     return skiprv;
-  }
-#endif
-
-  // commenting this out for now. We need a view to do mouse grabbing but
-  // it doesn't really seem to work correctly. When you press the only event
-  // you can get after that is a release. You need mouse enter and exit.
-  // the view also breaks the outline code. For some reason you can not reset 
-  // the clip rect to draw outside you bounds if you have a view. And you need to
-  // because the outline must be drawn outside of our bounds according to CSS. -EDV
-
-  // XXX If you do decide you need a view, then create it in the Init() function
-  // and not here...
-#if 0
-  if (!mDidInit) {
-    // create our view, we need a view to grab the mouse 
-    nsIView* view = GetView();
-    if (!view) {
-      nsresult result = nsComponentManager::CreateInstance(kViewCID, nsnull, NS_GET_IID(nsIView), (void **)&view);
-      nsIViewManager* viewMan = aPresContext->GetViewManager();
-      nsIFrame* parWithView = GetAncestorWithView();
-      nsIView* parView = parWithView->GetView();
-      // the view's size is not know yet, but its size will be kept in synch with our frame.
-      nsRect boundBox(0, 0, 500, 500); 
-      result = view->Init(viewMan, boundBox, parView, nsnull);
-      viewMan->InsertChild(parView, view, 0);
-      SetView(view);
-
-      // set the opacity
-      viewMan->SetViewOpacity(view, GetStyleDisplay()->mOpacity);
-    }
-    mDidInit = PR_TRUE;
   }
 #endif
 
