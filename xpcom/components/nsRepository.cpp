@@ -159,6 +159,16 @@ nsComponentManager::UnregisterComponent(const nsCID &aClass,
 }
 
 nsresult
+nsComponentManager::UnregisterComponentSpec(const nsCID &aClass,
+                                            nsIFileSpec *aLibrarySpec)
+{
+    nsIComponentManager* cm;
+    nsresult rv = NS_GetGlobalComponentManager(&cm);
+    if (NS_FAILED(rv)) return rv;
+    return cm->UnregisterComponentSpec(aClass, aLibrarySpec);
+}
+
+nsresult
 nsComponentManager::FreeLibraries(void)
 {
     nsIComponentManager* cm;

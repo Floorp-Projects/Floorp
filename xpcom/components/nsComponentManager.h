@@ -116,6 +116,10 @@ public:
     NS_IMETHOD UnregisterComponent(const nsCID &aClass,
                                    const char *aLibrary);
 
+    // Manually unregister a dynamically loaded component
+    NS_IMETHOD UnregisterComponentSpec(const nsCID &aClass,
+                                       nsIFileSpec *aLibrary);
+
     // Unload dynamically loaded factories that are not in use
     NS_IMETHOD FreeLibraries(void);
 

@@ -18,17 +18,28 @@
 
 #include "nsISupports.idl"
 #include "nsIFactory.idl"
+#include "nsIFileSpec.idl"
+
+%{C++
+#include "nsIComponentManager.h"
+%}
+
+// Once we idl component manager, this can be removed
+[ptr] native nsIComponentManager(nsIComponentManager);
 
 [uuid(00000000-0000-0000-0000-000000000005)]
 interface nsIModule : nsISupports
 {
-    // Object Instance Creation
-    void GetFactory(in nsISupports aServMgr, in nsCIDRef aClass,
-                    out nsIFactory return_Factory);
+    // Object Instance Creation.
+    // Factory can be queried off the Class Object. Factory will be used to
+    //		create new objects.
+    // Services can be queried off the Class Object.
+    void GetClassObject(in nsIComponentManager aCompMgr, in nsCIDRef aClass,
+                        out nsISupports return_ClassObject);
 
     // Component registration
-    void RegisterSelf(in nsISupports aServMgr, in nsISupports location);
-    void UnregisterSelf(in nsISupports aServMgr, in nsISupports location);
+    void RegisterSelf(in nsIComponentManager aCompMgr, in nsIFileSpec location);
+    void UnregisterSelf(in nsIComponentManager aCompMgr, in nsIFileSpec location);
 
     // Module load management
     // okToUnload: indicates to the caller if the module can be unloaded.
@@ -37,14 +48,7 @@ interface nsIModule : nsISupports
     //		unloaded.
     //		Returning PR_FALSE guaratees that the module wont be unloaded.
     //
-    // outstandingObjectCount: indicates to the caller the number of unreleased
-    //		objects of the module NOT including the current object implementing
-    //		nsIModule.
-    //		This will be used to free any objects of this module in the caller's
-    //		cache to facilitate unloading.
-    //
-    void CanUnload(in nsISupports aServMgr, out boolean okToUnload,
-                   out nsrefcnt outstandingObjectCount);
+    void CanUnload(in nsIComponentManager aCompMgr, out boolean okToUnload);
 };
 
 %{C++
@@ -52,12 +56,12 @@ interface nsIModule : nsISupports
 // Exported Function from module dll to Create the nsIModule
 #define NS_GET_MODULE_SYMBOL "NSGetModule"
 
-extern "C" NS_EXPORT nsresult NSGetModule(nsISupports *servMgr,
-                                          nsISupports* location,
+extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *aCompMgr,
+                                          nsIFileSpec* location,
                                           nsIModule** return_cobj);
 
-typedef nsresult (*nsGetModuleProc)(nsISupports *servMgr,
-                                    nsISupports* location,
+typedef nsresult (*nsGetModuleProc)(nsIComponentManager *aCompMgr,
+                                    nsIFileSpec* location,
                                     nsIModule** return_cobj);
 %}
 

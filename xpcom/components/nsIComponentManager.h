@@ -28,9 +28,12 @@
 #include "nsIFileSpec.h"
 #include "nsIEnumerator.h"
 
+#ifndef OBSOLETE_MODULE_LOADING
 /*
  * Prototypes for dynamic library export functions. Your DLL/DSO needs to export
  * these methods to play in the component world.
+ *
+ * THIS IS OBSOLETE. Look at nsIModule.idl
  */
 
 extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* aServMgr,
@@ -50,6 +53,7 @@ typedef nsresult (*nsFactoryProc)(nsISupports* aServMgr,
 typedef PRBool   (*nsCanUnloadProc)(nsISupports* aServMgr);
 typedef nsresult (*nsRegisterProc)(nsISupports* aServMgr, const char *path);
 typedef nsresult (*nsUnregisterProc)(nsISupports* aServMgr, const char *path);
+#endif /* OBSOLETE_MODULE_LOADING */
 
 #define NS_ICOMPONENTMANAGER_IID                     \
 { /* 8458a740-d5dc-11d2-92fb-00e09805570f */         \
@@ -113,6 +117,7 @@ public:
   // self register function from ComponentManager. The format of this string
   // is the same as nsIFileSpec::GetPersistentDescriptorString()
   //
+  // WARNING: OBSOLETE
   // This function will go away in favour of RegisterComponentSpec. In fact,
   // it internally turns around and calls RegisterComponentSpec.
   NS_IMETHOD RegisterComponent(const nsCID &aClass,
@@ -146,8 +151,15 @@ public:
                                nsIFactory *aFactory) = 0;
 
   // Manually unregister a dynamically loaded component
+  //
+  // WARNING: OBSOLETE
+  // This function will go away in favour of UnregisterComponentSpec.
   NS_IMETHOD UnregisterComponent(const nsCID &aClass,
                                  const char *aLibrary) = 0;
+
+  // Manually unregister a dynamically loaded component
+  NS_IMETHOD UnregisterComponentSpec(const nsCID &aClass,
+                                     nsIFileSpec *aLibrarySpec) = 0;
 
   // Unload dynamically loaded factories that are not in use
   NS_IMETHOD FreeLibraries(void) = 0;
@@ -276,6 +288,10 @@ public:
   // Manually unregister a dynamically loaded component
   static nsresult UnregisterComponent(const nsCID &aClass,
                                       const char *aLibrary);
+
+  // Manually unregister a dynamically loaded component
+  static nsresult UnregisterComponentSpec(const nsCID &aClass,
+                                          nsIFileSpec *aLibrarySpec);
 
   // Unload dynamically loaded factories that are not in use
   static nsresult FreeLibraries(void);
