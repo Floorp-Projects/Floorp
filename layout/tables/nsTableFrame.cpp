@@ -1856,8 +1856,7 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext*          aPresContext,
 #if defined DEBUG_TABLE_REFLOW_TIMING
   nsTableFrame::DebugReflow(this, (nsHTMLReflowState&)aReflowState);
 #endif
-  PRBool isPaginated;
-  aPresContext->IsPaginated(&isPaginated);
+  PRBool isPaginated = aPresContext->IsPaginated();
 
   // If this is a special height reflow, set our desired size to what is was previously and return
   // if we will be getting another special height reflow. In paginated mode, SetNeedSpecialReflow(PR_TRUE) 
@@ -2117,9 +2116,6 @@ nsTableFrame::ReflowTable(nsIPresContext*          aPresContext,
   aDoCollapse = PR_FALSE;
   aDidBalance = PR_FALSE;
   aLastChildReflowed = nsnull;
-
-  PRBool isPaginated;
-  aPresContext->IsPaginated(&isPaginated);
 
   PRBool haveReflowedColGroups = PR_TRUE;
   if (!mPrevInFlow) {
@@ -3156,8 +3152,7 @@ nsTableFrame::ReflowChildren(nsIPresContext*     aPresContext,
   nsresult  rv = NS_OK;
   nscoord   cellSpacingY = GetCellSpacingY();
 
-  PRBool isPaginated;
-  aPresContext->IsPaginated(&isPaginated);
+  PRBool isPaginated = aPresContext->IsPaginated();
 
   aOverflowArea = nsRect (0, 0, 0, 0);
   

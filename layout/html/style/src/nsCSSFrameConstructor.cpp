@@ -821,9 +821,7 @@ AdjustAbsoluteContainingBlock(nsIPresContext* aPresContext,
                               nsIFrame*       aContainingBlockIn)
 {
   nsIFrame* containingBlock = aContainingBlockIn;
-  PRBool paginated;
-  aPresContext->IsPaginated(&paginated);
-  if (!paginated) {
+  if (!aPresContext->IsPaginated()) {
     if (nsLayoutAtoms::positionedInlineFrame == containingBlock->GetType()) {
       containingBlock = ((nsPositionedInlineFrame*)containingBlock)->GetFirstInFlow();
     }
@@ -3059,10 +3057,8 @@ nsCSSFrameConstructor::TableProcessChild(nsIPresShell*            aPresShell,
   case NS_STYLE_DISPLAY_TABLE:
     {
       PRBool pageBreakAfter = PR_FALSE;
-      PRBool paginated;
-      aPresContext->IsPaginated(&paginated);
 
-      if (paginated) {
+      if (aPresContext->IsPaginated()) {
         // See if there is a page break before, if so construct one. Also see if there is one after
         pageBreakAfter = PageBreakBefore(aPresShell, aPresContext, aState, aChildContent, 
                                        aParentFrame, childStyleContext, aChildItems);
@@ -3309,14 +3305,12 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
   // --------- IF SCROLLABLE WRAP IN SCROLLFRAME --------
 
   PRBool isScrollable = IsScrollable(aPresContext, display);
-  PRBool isPaginated = PR_FALSE;
-  aPresContext->IsPaginated(&isPaginated);
   nsCOMPtr<nsIPrintPreviewContext> printPreviewContext(do_QueryInterface(aPresContext));
 
   nsIFrame* scrollFrame = nsnull;
 
   // build a scrollframe
-  if ((!isPaginated || (isPaginated && printPreviewContext)) && isScrollable) {
+  if ((!aPresContext->IsPaginated() || printPreviewContext) && isScrollable) {
     nsIFrame* newScrollFrame = nsnull;
     nsRefPtr<nsStyleContext> newContext;
 
@@ -3566,8 +3560,7 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
     // - renders the document element's background. This ensures the background covers
     //   the entire canvas as specified by the CSS2 spec
 
-    PRBool isPaginated = PR_FALSE;
-    aPresContext->IsPaginated(&isPaginated);
+    PRBool isPaginated = aPresContext->IsPaginated();
     nsCOMPtr<nsIPrintPreviewContext> printPreviewContext(do_QueryInterface(aPresContext));
 
     nsIFrame* rootFrame = nsnull;
@@ -3649,7 +3642,7 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
 
   if (isPaginated) {
     if (printPreviewContext) { // print preview
-      aPresContext->GetPaginatedScrolling(&isScrollable);
+      isScrollable = aPresContext->HasPaginatedScrolling();
     } else {
       isScrollable = PR_FALSE; // we are printing
     }
@@ -3808,7 +3801,7 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
   rootFrame->Init(aPresContext, aDocElement, parentFrame,
                   rootPseudoStyle, nsnull);
   
-  if (!isPaginated || (isPaginated && printPreviewContext)) {
+  if (!isPaginated || printPreviewContext) {
     if (isScrollable) {
       FinishBuildingScrollFrame(aPresContext, 
                                 state,
@@ -6943,10 +6936,8 @@ nsCSSFrameConstructor::ConstructFrame(nsIPresShell*            aPresShell,
   aContent->GetNameSpaceID(&nameSpaceID);
 
   PRBool pageBreakAfter = PR_FALSE;
-  PRBool paginated;
-  aPresContext->IsPaginated(&paginated);
 
-  if (paginated) {
+  if (aPresContext->IsPaginated()) {
     // See if there is a page break before, if so construct one. Also see if there is one after
     pageBreakAfter = PageBreakBefore(aPresShell, aPresContext, aState, aContent, 
                                      aParentFrame, styleContext, aFrameItems);

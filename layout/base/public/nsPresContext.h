@@ -296,19 +296,19 @@ public:
    * Return true if this presentation context is a paginated
    * context.
    */
-  NS_IMETHOD IsPaginated(PRBool* aResult) = 0;
+  PRBool IsPaginated() const { return mPaginated; }
 
   /**
    * Sets whether the presentation context can scroll for a paginated
    * context.
    */
-  NS_IMETHOD SetPaginatedScrolling(PRBool aResult) = 0;
+  virtual void SetPaginatedScrolling(PRBool aResult) = 0;
 
   /**
    * Return true if this presentation context can scroll for paginated
    * context.
    */
-  NS_IMETHOD GetPaginatedScrolling(PRBool* aResult) = 0;
+  PRBool HasPaginatedScrolling() const { return mCanPaginatedScroll; }
 
   /**
    * Gets the rect for the page dimensions,
@@ -555,6 +555,8 @@ protected:
   unsigned              mNeverAnimate : 1;
   unsigned              mIsRenderingOnlySelection : 1;
   unsigned              mNoTheme : 1;
+  unsigned              mPaginated : 1;
+  unsigned              mCanPaginatedScroll : 1;
 #ifdef IBMBIDI
   unsigned              mIsVisual : 1;
   unsigned              mIsBidiSystem : 1;

@@ -2862,9 +2862,7 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
   }
 
   // For printing, we just immediately unsuppress.
-  PRBool isPaginated = PR_FALSE;
-  mPresContext->IsPaginated(&isPaginated);
-  if (!isPaginated) {
+  if (!mPresContext->IsPaginated()) {
     // Kick off a one-shot timer based off our pref value.  When this timer
     // fires, if painting is still locked down, then we will go ahead and
     // trigger a full invalidate and allow painting to proceed normally.
@@ -6944,9 +6942,7 @@ PresShell::VerifyIncrementalReflow()
 
   // Create a presentation context to view the new frame tree
   nsresult rv;
-  PRBool isPaginated = PR_FALSE;
-  mPresContext->IsPaginated(&isPaginated);
-  if (isPaginated) {
+  if (mPresContext->IsPaginated()) {
     nsCOMPtr<nsIPrintPreviewContext> ppx = do_CreateInstance(kPrintPreviewContextCID, &rv);
     if (NS_SUCCEEDED(rv)) {
       ppx->QueryInterface(NS_GET_IID(nsIPresContext),(void**)&cx);

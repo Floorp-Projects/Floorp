@@ -2011,11 +2011,11 @@ nsresult nsTextFrame::GetTextInfoForPainting(nsIPresContext*          aPresConte
   if (NS_FAILED(rv) || !(*aSelectionController))
     return NS_ERROR_FAILURE;
 
-  aPresContext->IsPaginated(&aIsPaginated);
+  aIsPaginated = aPresContext->IsPaginated();
 
   (*aSelectionController)->GetDisplaySelection(&aSelectionValue);
 
-  if(aIsPaginated){
+  if (aIsPaginated) {
     aDisplayingSelection = aPresContext->IsRenderingOnlySelection();
   } else {
     //if greater than hidden then we display some kind of selection
@@ -2156,9 +2156,7 @@ nsTextFrame::IsVisibleForPainting(nsIPresContext *     aPresContext,
   // Start by assuming we are visible and need to be painted
   PRBool isVisible = PR_TRUE;
 
-  PRBool isPaginated;
-  aPresContext->IsPaginated(&isPaginated);
-  if (isPaginated) {
+  if (aPresContext->IsPaginated()) {
     if (aPresContext->IsRenderingOnlySelection()) {
       // Check the quick way first
       PRBool isSelected = (mState & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT;

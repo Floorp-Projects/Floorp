@@ -345,8 +345,7 @@ nsTableRowGroupFrame::ReflowChildren(nsIPresContext*        aPresContext,
 
   nscoord cellSpacingY = tableFrame->GetCellSpacingY();
 
-  PRBool isPaginated;
-  aPresContext->IsPaginated(&isPaginated);
+  PRBool isPaginated = aPresContext->IsPaginated();
 
   if (aFirstRowReflowed) {
     *aFirstRowReflowed = nsnull;
@@ -564,8 +563,7 @@ nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext*          aPresContext,
   nsTableFrame::GetTableFrame(this, tableFrame);
   if (!aPresContext || !tableFrame) return;
 
-  PRBool isPaginated;
-  aPresContext->IsPaginated(&isPaginated);
+  PRBool isPaginated = aPresContext->IsPaginated();
 
   // all table cells have the same top and bottom margins, namely cellSpacingY
   nscoord cellSpacingY = tableFrame->GetCellSpacingY();
@@ -1244,8 +1242,7 @@ nsTableRowGroupFrame::Reflow(nsIPresContext*          aPresContext,
   nsresult rv = NS_OK;
   aStatus     = NS_FRAME_COMPLETE;
         
-  PRBool isPaginated;
-  aPresContext->IsPaginated(&isPaginated);
+  PRBool isPaginated = aPresContext->IsPaginated();
 
   nsTableFrame* tableFrame = nsnull;
   rv = nsTableFrame::GetTableFrame(this, tableFrame);

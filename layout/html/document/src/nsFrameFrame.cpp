@@ -402,9 +402,7 @@ nsSubDocumentFrame::Reflow(nsIPresContext*          aPresContext,
     }
   }
 
-  PRBool isPaginated;
-  aPresContext->IsPaginated(&isPaginated);
-  if (!isPaginated) {
+  if (!aPresContext->IsPaginated()) {
     nsCOMPtr<nsIDocShell> docShell;
     GetDocShell(getter_AddRefs(docShell));
 

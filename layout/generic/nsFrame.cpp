@@ -2776,12 +2776,11 @@ nsresult
 nsFrame::GetSelectionForVisCheck(nsIPresContext * aPresContext, nsISelection** aSelection)
 {
   *aSelection = nsnull;
+  nsresult rv = NS_OK;
 
   // start by checking to see if we are paginated which probably means
   // we are in print preview or printing
-  PRBool isPaginated;
-  nsresult rv = aPresContext->IsPaginated(&isPaginated);
-  if (NS_SUCCEEDED(rv) && isPaginated) {
+  if (aPresContext->IsPaginated()) {
     // now see if we are rendering selection only
     if (aPresContext->IsRenderingOnlySelection()) {
       // Check the quick way first (typically only leaf nodes)

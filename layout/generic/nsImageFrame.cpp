@@ -880,8 +880,6 @@ nsImageFrame::Reflow(nsIPresContext*          aPresContext,
 
   // we have to split images if we are:
   //  in Paginated mode, we need to have a constrained height, and have a height larger than our available height
-  PRBool isPaginated;
-  aPresContext->IsPaginated(&isPaginated);
   PRUint32 loadStatus = imgIRequest::STATUS_NONE;
   nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mContent);
   NS_ASSERTION(imageLoader, "No content node??");
@@ -893,7 +891,7 @@ nsImageFrame::Reflow(nsIPresContext*          aPresContext,
       currentRequest->GetImageStatus(&loadStatus);
     }
   }
-  if (isPaginated &&
+  if (aPresContext->IsPaginated() &&
       ((loadStatus & imgIRequest::STATUS_SIZE_AVAILABLE) || (mState & IMAGE_SIZECONSTRAINED)) &&
       NS_UNCONSTRAINEDSIZE != aReflowState.availableHeight && 
       aMetrics.height > aReflowState.availableHeight) { 

@@ -387,9 +387,7 @@ nsGfxButtonControlFrame::HandleEvent(nsIPresContext* aPresContext,
                                       nsEventStatus*  aEventStatus)
 {
   // temp fix until Bug 124990 gets fixed
-  PRBool isPaginated = PR_FALSE;
-  aPresContext->IsPaginated(&isPaginated);
-  if (isPaginated && NS_IS_MOUSE_EVENT(aEvent)) {
+  if (aPresContext->IsPaginated() && NS_IS_MOUSE_EVENT(aEvent)) {
     return NS_OK;
   }
   // Override the HandleEvent to prevent the nsFrame::HandleEvent

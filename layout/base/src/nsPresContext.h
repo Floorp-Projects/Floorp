@@ -86,9 +86,6 @@ public:
   virtual void StopImagesFor(nsIFrame* aTargetFrame);
   virtual void SetContainer(nsISupports* aContainer);
   virtual already_AddRefed<nsISupports>  GetContainer();
-  NS_IMETHOD IsPaginated(PRBool* aResult) = 0;
-  NS_IMETHOD SetPaginatedScrolling(PRBool aResult) = 0;
-  NS_IMETHOD GetPaginatedScrolling(PRBool* aResult) = 0;
   virtual void GetPageDim(nsRect* aActualRect, nsRect* aAdjRect) = 0;
   virtual void SetPageDim(nsRect* aRect) = 0;
   NS_IMETHOD GetTwipsToPixelsForFonts(float* aResult) const;
