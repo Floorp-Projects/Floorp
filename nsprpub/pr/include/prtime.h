@@ -261,7 +261,7 @@ PR_EXTERN(PRStatus) PR_ParseTimeString (
 #ifndef NO_NSPR_10_SUPPORT
 
 /* Format a time value into a buffer. Same semantics as strftime() */
-PR_EXTERN(PRUint32) PR_FormatTime(char *buf, int buflen, char *fmt, 
+PR_EXTERN(PRUint32) PR_FormatTime(char *buf, int buflen, const char *fmt, 
                                            const PRExplodedTime *tm);
 
 /* Format a time value into a buffer. Time is always in US English format, regardless
