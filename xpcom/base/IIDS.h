@@ -1145,49 +1145,49 @@ nsIDOMDOMException = { /* a6cf910a-15b3-11d2-932e-00805f8add32 */
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf910b-15b3-11d2-932e-00805f8add32 */
+nsParser_CID = { /* a6cf910b-15b3-11d2-932e-00805f8add32 */
     0xa6cf910b,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf910c-15b3-11d2-932e-00805f8add32 */
+nsParserNode_CID = { /* a6cf910c-15b3-11d2-932e-00805f8add32 */
     0xa6cf910c,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf910d-15b3-11d2-932e-00805f8add32 */
+nsLoggingSink_CID = { /* a6cf910d-15b3-11d2-932e-00805f8add32 */
     0xa6cf910d,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf910e-15b3-11d2-932e-00805f8add32 */
+nsXIFDTD_CID = { /* a6cf910e-15b3-11d2-932e-00805f8add32 */
     0xa6cf910e,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf910f-15b3-11d2-932e-00805f8add32 */
+nsHTMLContentSinkStream_CID = { /* a6cf910f-15b3-11d2-932e-00805f8add32 */
     0xa6cf910f,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf9110-15b3-11d2-932e-00805f8add32 */
+nsHTMLToTXTSinkStream_CID = { /* a6cf9110-15b3-11d2-932e-00805f8add32 */
     0xa6cf9110,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf9111-15b3-11d2-932e-00805f8add32 */
+nsIParserService = { /* a6cf9111-15b3-11d2-932e-00805f8add32 */
     0xa6cf9111,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf9112-15b3-11d2-932e-00805f8add32 */
+nsParserService_CID = { /* a6cf9112-15b3-11d2-932e-00805f8add32 */
     0xa6cf9112,
     0x15b3,
     0x11d2,
