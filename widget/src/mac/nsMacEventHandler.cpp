@@ -1133,8 +1133,9 @@ PRBool nsMacEventHandler::HandleMouseDownEvent(
 					nsMouseEvent mouseActivateEvent;
 			        ConvertOSEventToMouseEvent(aOSEvent, mouseActivateEvent, NS_MOUSE_ACTIVATE);
 					widgetHit->DispatchMouseEvent(mouseActivateEvent);
-					if( mouseActivateEvent.acceptActivation )
-						gEventDispatchHandler.SetFocus(widgetHit);
+					//if( mouseActivateEvent.acceptActivation ) 
+						//gEventDispatchHandler.SetFocus(widgetHit);
+						//gEventDispatchHandler.Special(widgetHit);
 				}
 
 				// dispatch the event
