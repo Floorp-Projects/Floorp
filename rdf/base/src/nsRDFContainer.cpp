@@ -53,6 +53,7 @@ public:
     NS_IMETHOD AppendElement(nsIRDFNode *aElement);
     NS_IMETHOD RemoveElement(nsIRDFNode *aElement, PRBool aRenumber);
     NS_IMETHOD InsertElementAt(nsIRDFNode *aElement, PRInt32 aIndex, PRBool aRenumber);
+    NS_IMETHOD RemoveElementAt(PRInt32 aIndex, PRBool aRenumber, nsIRDFNode** _retval);
     NS_IMETHOD IndexOf(nsIRDFNode *aElement, PRInt32 *_retval);
 
 private:
@@ -281,6 +282,53 @@ RDFContainerImpl::InsertElementAt(nsIRDFNode *aElement, PRInt32 aIndex, PRBool a
     return NS_OK;
 }
 
+NS_IMETHODIMP
+RDFContainerImpl::RemoveElementAt(PRInt32 aIndex, PRBool aRenumber, nsIRDFNode** _retval)
+{
+    NS_PRECONDITION(_retval != nsnull, "null ptr");
+    if (! _retval)
+        return NS_ERROR_NULL_POINTER;
+
+    *_retval = nsnull;
+
+    if (aIndex< 1)
+        return NS_ERROR_ILLEGAL_VALUE;
+
+    nsresult rv;
+
+    PRInt32 count;
+    rv = GetCount(&count);
+    if (NS_FAILED(rv)) return rv;
+
+    if (aIndex > count)
+        return NS_ERROR_ILLEGAL_VALUE;
+
+    nsCOMPtr<nsIRDFResource> ordinal;
+    rv = gRDFContainerUtils->IndexToOrdinalResource(aIndex, getter_AddRefs(ordinal));
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIRDFNode> old;
+    rv = mDataSource->GetTarget(mContainer, ordinal, PR_TRUE, getter_AddRefs(old));
+    if (NS_FAILED(rv)) return rv;
+
+    if (rv == NS_OK) {
+        rv = mDataSource->Unassert(mContainer, ordinal, old);
+        if (NS_FAILED(rv)) return rv;
+
+        if (aRenumber) {
+            // Now slide the rest of the collection backwards to fill in
+            // the gap. This will have the side effect of completely
+            // renumber the container from index to the end.
+            rv = Renumber(aIndex);
+            if (NS_FAILED(rv)) return rv;
+        }
+    }
+
+    *_retval = old;
+    NS_ADDREF(*_retval);
+
+    return NS_OK;
+}
 
 NS_IMETHODIMP
 RDFContainerImpl::IndexOf(nsIRDFNode *aElement, PRInt32 *aIndex)
