@@ -889,6 +889,7 @@ nsresult nsPop3Protocol::LoadUrl(nsIURI* aURL, nsISupports * /* aConsumer */)
   m_pop3ConData->next_state_after_response = POP3_FINISH_CONNECT;
   if (NS_SUCCEEDED(rv))
   {
+    SetResponseTimer();
     m_pop3Server->SetRunningProtocol(this);
     return nsMsgProtocol::LoadUrl(aURL);
   }
@@ -3854,8 +3855,11 @@ void nsPop3Protocol::SetResponseTimer()
 
   // Setup new response timer
   PRUint32 timeInMSUint32 = m_responseTimeout * 1000;
+  if (m_pop3ConData->next_state == POP3_START_CONNECT)
+    timeInMSUint32 += 60000; // add 60 seconds if we're starting the connection
   m_responseTimer = do_CreateInstance("@mozilla.org/timer;1");
-  m_responseTimer->InitWithFuncCallback(OnResponseTimeout, (void*)this, 
+  if (m_responseTimer)
+    m_responseTimer->InitWithFuncCallback(OnResponseTimeout, (void*)this, 
       timeInMSUint32, nsITimer::TYPE_ONE_SHOT);
 }
 
