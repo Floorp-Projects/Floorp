@@ -29,6 +29,13 @@ class nsIFactory;
 [scriptable, uuid(c01ad082-4915-11d3-b7a0-85cf55c3523c)]
 interface nsICommonDialogs : nsISupports
 {
+%{C++
+  enum {  eMsg =0, eCheckboxMsg =1, eIconURL =2 , eTitleMessage =3, eEditfield1Msg =4, eEditfield2Msg =5, eEditfield1Value = 6, eEditfield2Value = 7,
+		eButton0Text = 8, eButton1Text = 9 };
+enum { eButtonPressed = 0, eCheckboxState = 1, eNumberButtons = 2, eNumberEditfields =3, eEditField1Password =4 };
+%}
+
+			
     /**
      * Puts up an alert dialog with an OK button.
      */

@@ -27,11 +27,13 @@ class nsIFactory;
 [scriptable, uuid(f76c0901-437a-11d3-b7a0-e35db351b4bc)]
 interface nsIDialogParamBlock:  nsISupports
 {
+	void SetNumberStrings( in PRInt32 inNumStrings );
 	PRInt32 GetInt( in PRInt32 inIndex );
 	void SetInt( in PRInt32 inIndex, in PRInt32 inInt );
 	
 	wstring GetString( in PRInt32 inIndex );
 	void SetString( in PRInt32 inIndex, in wstring inString);
+	
 	
 	
 };

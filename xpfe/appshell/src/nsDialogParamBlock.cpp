@@ -22,10 +22,12 @@
 
 class nsDialogParamBlock: public nsISupports
 {
- 	enum {kNumInts = 8, kNumStrings = 8 };
+ 	enum {kNumInts = 8, kNumStrings =12 };
 public: 	
 		nsDialogParamBlock();
-	 ~nsDialogParamBlock(){};
+	 	~nsDialogParamBlock();
+	 
+	NS_IMETHOD SetNumberStrings( PRInt32 inNumStrings ); 
  	NS_IMETHOD GetInt(PRInt32 inIndex, PRInt32 *_retval);
 	NS_IMETHOD SetInt(PRInt32 inIndex, PRInt32 inInt);
 
@@ -44,16 +46,35 @@ private:
 	}
 	
 	PRInt32 mInt[ kNumInts ];
-	nsString mString[ kNumStrings ];  	
+	PRInt32 mNumStrings;
+	nsString* mString;  	
 };
 
-nsDialogParamBlock::nsDialogParamBlock()
+nsDialogParamBlock::nsDialogParamBlock(): mNumStrings( 0 ), mString(NULL )
 {
 	NS_INIT_REFCNT();
 
 	for( PRInt32 i =0; i< kNumInts; i++ )
 		mInt[ i ] = 0;
 }
+
+nsDialogParamBlock::~nsDialogParamBlock()
+{
+	delete [] mString;
+}
+
+NS_IMETHODIMP nsDialogParamBlock::SetNumberStrings( PRInt32 inNumStrings )
+{
+	if ( mString != NULL )
+	{
+		return NS_ERROR_ALREADY_INITIALIZED;
+	}
+	 mString = new nsString[ inNumStrings ];
+	 if ( !mString )
+	 	return NS_ERROR_OUT_OF_MEMORY;
+	 mNumStrings = inNumStrings;
+}
+
 
 NS_IMETHODIMP nsDialogParamBlock::GetInt(PRInt32 inIndex, PRInt32 *_retval)
 {
@@ -74,7 +95,9 @@ NS_IMETHODIMP nsDialogParamBlock::SetInt(PRInt32 inIndex, PRInt32 inInt)
   
 NS_IMETHODIMP nsDialogParamBlock::GetString(PRInt32 inIndex, PRUnichar **_retval)
 {
-	nsresult rv = InBounds( inIndex, kNumStrings );
+  	if ( mNumStrings == 0 )
+  		SetNumberStrings( kNumStrings );
+	nsresult rv = InBounds( inIndex, mNumStrings );
 	if ( rv == NS_OK )
 		*_retval = mString[ inIndex ].ToNewUnicode();
 	return rv;
@@ -82,7 +105,9 @@ NS_IMETHODIMP nsDialogParamBlock::GetString(PRInt32 inIndex, PRUnichar **_retval
 
 NS_IMETHODIMP nsDialogParamBlock::SetString(PRInt32 inIndex, const PRUnichar *inString)
 {
-	nsresult rv = InBounds( inIndex, kNumStrings );
+	if ( mNumStrings == 0 )
+		SetNumberStrings( kNumStrings );
+	nsresult rv = InBounds( inIndex, mNumStrings );
 	if ( rv == NS_OK )
 		mString[ inIndex ]= inString;
 	return rv;
