@@ -46,7 +46,8 @@ nsXPConnect::GetXPConnect()
         if(mSelf && (!mSelf->mContextMap ||
                      !mSelf->mAllocator ||
                      !mSelf->mArbitraryScriptable ||
-                     !mSelf->mInterfaceInfoManager))
+                     !mSelf->mInterfaceInfoManager ||
+                     !mSelf->mThrower))
             NS_RELEASE(mSelf);
     }
     if(mSelf)
@@ -105,11 +106,27 @@ nsXPConnect::GetContext(JSContext* cx, nsXPConnect* xpc /*= NULL*/)
     return xpcc;
 }
 
+// static 
+XPCJSThrower* 
+nsXPConnect::GetJSThrower(nsXPConnect* xpc /*= NULL */)
+{
+    XPCJSThrower* thrower;
+    nsXPConnect* xpcl = xpc;
+
+    if(!xpcl && !(xpcl = GetXPConnect()))
+        return NULL;
+    thrower = xpcl->mThrower;
+    if(!xpc)
+        NS_RELEASE(xpcl);
+    return thrower;
+}        
+
 nsXPConnect::nsXPConnect()
     :   mContextMap(NULL),
         mAllocator(NULL),
         mArbitraryScriptable(NULL),
-        mInterfaceInfoManager(NULL)
+        mInterfaceInfoManager(NULL),
+        mThrower(NULL)
 {
     NS_INIT_REFCNT();
     NS_ADDREF_THIS();
@@ -124,6 +141,7 @@ nsXPConnect::nsXPConnect()
 
     // XXX later this will be a service
     mInterfaceInfoManager = XPT_GetInterfaceInfoManager();
+    mThrower = new XPCJSThrower(JS_TRUE);
 }
 
 nsXPConnect::~nsXPConnect()
@@ -137,7 +155,8 @@ nsXPConnect::~nsXPConnect()
     // XXX later this will be a service
     if(mInterfaceInfoManager)
         NS_RELEASE(mInterfaceInfoManager);
-
+    if(mThrower)
+        delete mThrower;
     mSelf = NULL;
 }
 

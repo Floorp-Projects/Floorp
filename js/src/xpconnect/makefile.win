@@ -43,6 +43,7 @@ OBJS=					\
 	.\$(OBJDIR)\xpcconvert.obj	\
 	.\$(OBJDIR)\xpcmaps.obj	\
 	.\$(OBJDIR)\xpcnsid.obj	\
+	.\$(OBJDIR)\xpcthrower.obj	\
 	.\$(OBJDIR)\xpcwrappedjs.obj	\
 	.\$(OBJDIR)\xpcwrappedjsclass.obj	\
 	.\$(OBJDIR)\xpcwrappednative.obj	\

@@ -211,7 +211,11 @@ XPTParamDescriptor nsIEcho_MethodWithNativeParams[2] = {
     {XPT_PD_IN, {XPT_TDP_POINTER|TD_VOID,0}}
 };
 
-XPTMethodDescriptor nsIEchoMethods[9] = {
+XPTParamDescriptor nsIEcho_ReturnCodeParams[1] = {
+    {XPT_PD_IN, {TD_INT32,0}}
+};
+
+XPTMethodDescriptor nsIEchoMethods[10] = {
  {0, "SetReciever",         1, nsIEcho_SetRecieverParams,        ResultParam},
  {0, "SendOneString",       1, nsIEcho_SendOneStringParams,      ResultParam},
  {0, "In2OutOneInt",        2, nsIEcho_In2OutOneIntParams,       ResultParam},
@@ -220,11 +224,12 @@ XPTMethodDescriptor nsIEchoMethods[9] = {
  {0, "SimpleCallNoEcho",    0, NULL,                             ResultParam},
  {0, "SendManyTypes",      16, nsIEcho_SendManyTypesParams,      ResultParam},
  {0, "SendInOutManyTypes", 16, nsIEcho_SendInOutManyTypesParams, ResultParam},
- {0, "MethodWithNative",    2, nsIEcho_MethodWithNativeParams,   ResultParam}
+ {0, "MethodWithNative",    2, nsIEcho_MethodWithNativeParams,   ResultParam},
+ {0, "ReturnCode",          1, nsIEcho_ReturnCodeParams,         ResultParam}
 };
 
 XPTInterfaceDescriptor nsIEchoInterfaceDescriptor =
-    {NULL, 9, nsIEchoMethods, 0, NULL};
+    {NULL, 10, nsIEchoMethods, 0, NULL};
 
 /***************/
 

@@ -33,6 +33,7 @@
 #include "nsIXPCScriptable.h"
 #include "jsapi.h"
 #include "jshash.h"
+#include "jsprf.h"
 #include "xpt_cpp.h"
 #include "xpcforwards.h"
 #include "xpcvariant.h"
@@ -77,6 +78,7 @@ public:
     static nsIAllocator* GetAllocator(nsXPConnect* xpc = NULL);
     static nsIInterfaceInfoManager* GetInterfaceInfoManager(nsXPConnect* xpc = NULL);
     static XPCContext*  GetContext(JSContext* cx, nsXPConnect* xpc = NULL);
+    static XPCJSThrower* GetJSThrower(nsXPConnect* xpc = NULL);
 
     JSContext2XPCContextMap* GetContextMap() {return mContextMap;}
     nsIXPCScriptable* GetArbitraryScriptable() {return mArbitraryScriptable;}
@@ -93,6 +95,7 @@ private:
     nsIAllocator* mAllocator;
     nsIXPCScriptable* mArbitraryScriptable;
     nsIInterfaceInfoManager* mInterfaceInfoManager;
+    XPCJSThrower* mThrower;
 };
 
 /***************************************************************************/
@@ -139,6 +142,60 @@ private:
     Native2WrappedNativeMap* mWrappedNativeMap;
     IID2WrappedJSClassMap* mWrappedJSClassMap;
     IID2WrappedNativeClassMap* mWrappedNativeClassMap;
+};
+
+/***************************************************************************/
+// code for throwing exceptions into JS
+
+struct XPCJSErrorFormatString
+{
+    const char *format;
+/*    uintN argCount; */
+};
+
+struct XPCJSError
+{
+    enum {
+#define MSG_DEF(name, number, count, exception, format) \
+        name = number,
+#include "xpc.msg"
+#undef MSG_DEF
+        LIMIT
+    };
+};
+
+class XPCJSThrower
+{
+public:
+    void ThrowBadResultException(JSContext* cx, 
+                                 nsXPCWrappedNativeClass* clazz,
+                                 const XPCNativeMemberDescriptor* desc,
+                                 nsresult result);
+
+    void ThrowBadParamException(uintN errNum,
+                                JSContext* cx, 
+                                nsXPCWrappedNativeClass* clazz,
+                                const XPCNativeMemberDescriptor* desc,
+                                uintN paramNum);
+
+    void ThrowException(uintN errNum,
+                        JSContext* cx, 
+                        nsXPCWrappedNativeClass* clazz,
+                        const XPCNativeMemberDescriptor* desc);
+
+    XPCJSThrower(JSBool Verbose = JS_FALSE);
+    ~XPCJSThrower();
+
+private:
+
+    void Verbosify(nsXPCWrappedNativeClass* clazz,
+                   const XPCNativeMemberDescriptor* desc,
+                   char** psz, PRBool own);
+
+private:
+    static XPCJSErrorFormatString default_formats[XPCJSError::LIMIT+1];
+    XPCJSErrorFormatString* mFormats;
+    JSBool mVerbose;
 };
 
 /***************************************************************************/
@@ -330,6 +387,7 @@ public:
 
     REFNSIID GetIID() const {return mIID;}
     const char* GetInterfaceName();
+    const char* GetMemberName(const XPCNativeMemberDescriptor* desc) const;
     nsIInterfaceInfo* GetInterfaceInfo() const {return mInfo;}
     XPCContext*  GetXPCContext() const {return mXPCContext;}
     JSContext* GetJSContext() const {return mXPCContext->GetJSContext();}
@@ -357,23 +415,26 @@ public:
                               const XPCNativeMemberDescriptor* desc,
                               jsval* vp);
 
-    JSBool CallWrappedMethod(nsXPCWrappedNative* wrapper,
+    JSBool CallWrappedMethod(JSContext* cx,
+                             nsXPCWrappedNative* wrapper,
                              const XPCNativeMemberDescriptor* desc,
                              JSBool isAttributeSet,
                              uintN argc, jsval *argv, jsval *vp);
 
-    JSBool GetAttributeAsJSVal(nsXPCWrappedNative* wrapper,
+    JSBool GetAttributeAsJSVal(JSContext* cx,
+                               nsXPCWrappedNative* wrapper,
                                const XPCNativeMemberDescriptor* desc,
                                jsval* vp)
     {
-        return CallWrappedMethod(wrapper, desc, JS_FALSE, 0, NULL, vp);
+        return CallWrappedMethod(cx, wrapper, desc, JS_FALSE, 0, NULL, vp);
     }
 
-    JSBool SetAttributeFromJSVal(nsXPCWrappedNative* wrapper,
+    JSBool SetAttributeFromJSVal(JSContext* cx,
+                                 nsXPCWrappedNative* wrapper,
                                  const XPCNativeMemberDescriptor* desc,
                                  jsval* vp)
     {
-        return CallWrappedMethod(wrapper, desc, JS_TRUE, 1, vp, NULL);
+        return CallWrappedMethod(cx, wrapper, desc, JS_TRUE, 1, vp, NULL);
     }
 
     JSObject* GetInvokeFunObj(const XPCNativeMemberDescriptor* desc);
@@ -394,9 +455,27 @@ private:
     nsXPCWrappedNativeClass(XPCContext* xpcc, REFNSIID aIID,
                            nsIInterfaceInfo* aInfo);
 
-    const char* GetMemberName(const XPCNativeMemberDescriptor* desc) const;
-
     void ReportError(const XPCNativeMemberDescriptor* desc, const char* msg);
+
+    void ThrowBadResultException(JSContext* cx, 
+                                 const XPCNativeMemberDescriptor* desc,
+                                 nsresult result)
+        {nsXPConnect::GetJSThrower()->
+                ThrowBadResultException(cx, this, desc, result);}
+
+    void ThrowBadParamException(uintN errNum,
+                                JSContext* cx, 
+                                const XPCNativeMemberDescriptor* desc,
+                                uintN paramNum)
+        {nsXPConnect::GetJSThrower()->
+                ThrowBadParamException(errNum, cx, this, desc, paramNum);}
+
+    void ThrowException(uintN errNum,
+                        JSContext* cx, 
+                        const XPCNativeMemberDescriptor* desc)
+        {nsXPConnect::GetJSThrower()->
+                ThrowException(errNum, cx, this, desc);}
+
     JSBool BuildMemberDescriptors();
     void  DestroyMemberDescriptors();
 
