@@ -63,6 +63,14 @@ public:
                             const nsStylePosition* aPosition,
                             nsIFrame*&             aPlaceholderFrame);
 
+  /* helper methods for incremental reflow */
+  /** */
+  NS_IMETHOD AddFrame(const nsHTMLReflowState& aReflowState,
+                      nsIFrame *               aAddedFrame);
+  /** */
+  NS_IMETHOD RemoveFrame(nsIFrame * aRemovedFrame);
+
+
   // Helper method to create next-in-flows if necessary
   static nsresult CreateNextInFlow(nsIPresContext& aPresContext,
                                    nsIFrame* aOuterFrame,
