@@ -384,7 +384,7 @@ void nsWindow::InitCallbacks(char * aName)
 
   XtAddEventHandler(mWidget, 
 		    ExposureMask, 
-		    PR_FALSE, 
+		    PR_TRUE, 
 		    nsXtWidget_ExposureMask_EventHandler,
 		    this);
 
@@ -829,19 +829,29 @@ void nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
             aClipRect->x, aClipRect->y, 
             aClipRect->XMost(),  aClipRect->YMost(), aDx, aDy);
 
-  if (DBG)printf("Clipping %d %d %d %d\n", aClipRect->x, aClipRect->y,aClipRect->XMost(),  aClipRect->YMost());
-  if (DBG)printf("Forcing repaint %d %d %d %d\n", mBounds.x, mBounds.y, mBounds.width, mBounds.height);
-#if 0
+#if 1
   XEvent evt;
   evt.xgraphicsexpose.type       = GraphicsExpose;
   evt.xgraphicsexpose.send_event = False;
   evt.xgraphicsexpose.display    = display;
   evt.xgraphicsexpose.drawable   = win;
-  evt.xgraphicsexpose.x          = mBounds.x;
-  evt.xgraphicsexpose.y          = mBounds.y;
-  evt.xgraphicsexpose.width      = mBounds.width;
-  evt.xgraphicsexpose.height     = mBounds.height;
+  if (aDy < 0) {
+    evt.xgraphicsexpose.x          = 0;
+    evt.xgraphicsexpose.y          = mBounds.height+aDy;
+    evt.xgraphicsexpose.width      = mBounds.width;
+    evt.xgraphicsexpose.height     = -aDy;
+  } else {
+    evt.xgraphicsexpose.x          = 0;
+    evt.xgraphicsexpose.y          = 0;
+    evt.xgraphicsexpose.width      = mBounds.width;
+    evt.xgraphicsexpose.height     = aDy;
+  }
   evt.xgraphicsexpose.count      = 0;
+  if (DBG) printf("Forcing repaint %d %d %d %d\n", evt.xgraphicsexpose.x, 
+                                          evt.xgraphicsexpose.y, 
+                                          evt.xgraphicsexpose.width, 
+                                          evt.xgraphicsexpose.height);
+
   XSendEvent(display, win, False, ExposureMask, &evt);
   XFlush(display);
 #endif

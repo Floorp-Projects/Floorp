@@ -145,9 +145,37 @@ void nsXtWidget_ExposureMask_EventHandler(Widget w, XtPointer p, XEvent * event,
   pevent.rect = (nsRect *)&rect;
   XEvent xev;
 
+  rect.x      = event->xexpose.x;
+  rect.y      = event->xexpose.y;
+  rect.width  = event->xexpose.width;
+  rect.height = event->xexpose.height;
+
+  //printf("Expose (%d %d %d %d)\n", event->xexpose.x, event->xexpose.y, 
+                                   //event->xexpose.width, event->xexpose.height);
+
   if (widgetWindow->GetResized())
    return;
 
+  if (event->type == NoExpose) {
+    return;
+  }
+
+    Display* display = XtDisplay(w);
+    Window   window = XtWindow(w);
+
+    XSync(display, FALSE);
+
+    while (XCheckTypedWindowEvent(display, window, Expose, &xev) == TRUE) {
+      rect.x      = xev.xexpose.x;
+      rect.y      = xev.xexpose.y;
+      rect.width  = xev.xexpose.width;
+      rect.height = xev.xexpose.height;
+      //printf("rect %d %d %d %d\n", rect.x, rect.y, rect.width, rect.height);
+      //fe_expose_eh(drawing_area, (XtPointer)context, &xev);
+    }
+
+
+#if 0
   int count = 0;
   while (XPeekEvent(XtDisplay(w), &xev))
   {
@@ -156,11 +184,13 @@ void nsXtWidget_ExposureMask_EventHandler(Widget w, XtPointer p, XEvent * event,
        XNextEvent(XtDisplay(w), &xev);
        count++;
      } else {
-       if (DBG) printf("Ate %d events\n", count);
+      // if (DBG) 
+       printf("Ate %d events\n", count);
        break;
      }
   }
-
+#endif
+  if (DBG) printf("Calling OnPaint (%d %d %d %d)\n", rect.x, rect.y, rect.width, rect.height);
   widgetWindow->OnPaint(pevent);
 
 #if 0
