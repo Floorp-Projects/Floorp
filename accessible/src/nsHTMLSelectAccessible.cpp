@@ -33,7 +33,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsLayoutAtoms.h"
-#include "nsIDOMMenuListener.h"
+#include "nsIDOMXULListener.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsReadableUtils.h"
 #include "nsIDOMHTMLCollection.h"
@@ -69,8 +69,7 @@ public:
  * button and the window accessibles can change there name and role
  * depending on whether the drop down list is dropped down on not
  */
-class nsMenuListenerAccessible  : public nsAccessible,
-                                  public nsIDOMMenuListener
+class nsMenuListenerAccessible  : public nsAccessible, public nsIDOMXULListener
 {
 public:
   
@@ -80,10 +79,13 @@ public:
   virtual ~nsMenuListenerAccessible();
 
   // popup listener
-  NS_IMETHOD Create(nsIDOMEvent* aEvent);
+  NS_IMETHOD PopupShowing(nsIDOMEvent* aEvent);
+  NS_IMETHOD PopupShown(nsIDOMEvent* aEvent) { return NS_OK; }
+  NS_IMETHOD PopupHiding(nsIDOMEvent* aEvent);
+  NS_IMETHOD PopupHidden(nsIDOMEvent* aEvent) { return NS_OK; }
+  
   NS_IMETHOD Close(nsIDOMEvent* aEvent);
-  NS_IMETHOD Destroy(nsIDOMEvent* aEvent);
-  NS_IMETHOD Action(nsIDOMEvent* aEvent) { return NS_OK; }
+  NS_IMETHOD Command(nsIDOMEvent* aEvent) { return NS_OK; }
   NS_IMETHOD Broadcast(nsIDOMEvent* aEvent) { return NS_OK; }
   NS_IMETHOD CommandUpdate(nsIDOMEvent* aEvent) { return NS_OK; }
   NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; }
@@ -94,7 +96,7 @@ public:
   PRBool mOpen;
 };
 
-NS_IMPL_ISUPPORTS_INHERITED(nsMenuListenerAccessible, nsAccessible, nsIDOMMenuListener)
+NS_IMPL_ISUPPORTS_INHERITED(nsMenuListenerAccessible, nsAccessible, nsIDOMXULListener)
 
 /**
  * A class that represents the button inside the Select to the right of the text field
@@ -348,7 +350,7 @@ nsMenuListenerAccessible::~nsMenuListenerAccessible()
   }
 }
 
-NS_IMETHODIMP nsMenuListenerAccessible::Create(nsIDOMEvent* aEvent)
+NS_IMETHODIMP nsMenuListenerAccessible::PopupShowing(nsIDOMEvent* aEvent)
 { 
   mOpen = PR_TRUE;
 
@@ -357,7 +359,7 @@ NS_IMETHODIMP nsMenuListenerAccessible::Create(nsIDOMEvent* aEvent)
   return NS_OK; 
 }
 
-NS_IMETHODIMP nsMenuListenerAccessible::Destroy(nsIDOMEvent* aEvent)
+NS_IMETHODIMP nsMenuListenerAccessible::PopupHiding(nsIDOMEvent* aEvent)
 { 
   mOpen = PR_FALSE;
 

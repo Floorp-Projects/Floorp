@@ -59,8 +59,8 @@ nsHTMLComboboxAccessible::~nsHTMLComboboxAccessible()
   }
 }
 
-/** Inherit the ISupports impl from nsAccessible -- handle nsIDOMMenuListener ourself */
-NS_IMPL_ISUPPORTS_INHERITED(nsHTMLComboboxAccessible, nsAccessible, nsIDOMMenuListener)
+/** Inherit the ISupports impl from nsAccessible -- handle nsIDOMXULListener ourself */
+NS_IMPL_ISUPPORTS_INHERITED(nsHTMLComboboxAccessible, nsAccessible, nsIDOMXULListener)
 
 /** 
   * Tell our caller we are a combobox 
@@ -157,7 +157,7 @@ NS_IMETHODIMP nsHTMLComboboxAccessible::GetAccState(PRUint32 *_retval)
   * Set our state to open and (TBD) fire an event to MSAA saying our state
   *     has changed.
   */
-NS_IMETHODIMP nsHTMLComboboxAccessible::Create(nsIDOMEvent* aEvent)
+NS_IMETHODIMP nsHTMLComboboxAccessible::PopupShowing(nsIDOMEvent* aEvent)
 { 
   mOpen = PR_TRUE;
 
@@ -170,7 +170,7 @@ NS_IMETHODIMP nsHTMLComboboxAccessible::Create(nsIDOMEvent* aEvent)
   * Set our state to not open and (TDB) fire an event to MSAA saying
   *     our state has changed.
   */
-NS_IMETHODIMP nsHTMLComboboxAccessible::Destroy(nsIDOMEvent* aEvent)
+NS_IMETHODIMP nsHTMLComboboxAccessible::PopupHiding(nsIDOMEvent* aEvent)
 { 
   mOpen = PR_FALSE;
 
