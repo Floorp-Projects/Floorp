@@ -275,6 +275,8 @@ virtual nsresult AdjustExpungedBytesOnDelete(nsIMsgDBHdr *msgHdr);
   static void PR_CALLBACK ClearEntry(PLDHashTable* aTable, PLDHashEntryHdr* aEntry);
   static PLDHashOperator PR_CALLBACK HeaderEnumerator (PLDHashTable *table, PLDHashEntryHdr *hdr,
                                PRUint32 number, void *arg);
+  static PLDHashOperator PR_CALLBACK ClearHeaderEnumerator (PLDHashTable *table, PLDHashEntryHdr *hdr,
+                               PRUint32 number, void *arg);
   static PLDHashTableOps gMsgDBHashTableOps;
   struct MsgHdrHashElement {
     PLDHashEntryHdr mHeader;

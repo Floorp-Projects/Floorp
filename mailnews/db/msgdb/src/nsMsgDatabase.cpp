@@ -169,6 +169,22 @@ nsresult nsMsgDatabase::AddHdrToCache(nsIMsgDBHdr *hdr, nsMsgKey key) // do we w
   return PL_DHASH_NEXT;
 }
 
+/* static */PLDHashOperator PR_CALLBACK nsMsgDatabase::ClearHeaderEnumerator (PLDHashTable *table, PLDHashEntryHdr *hdr,
+                               PRUint32 number, void *arg)
+{
+
+  MsgHdrHashElement* element = NS_REINTERPRET_CAST(MsgHdrHashElement*, hdr);
+  if (element && element->mHdr)
+  {
+    nsMsgHdr* msgHdr = NS_STATIC_CAST(nsMsgHdr*, element->mHdr);  // closed system, so this is ok
+    // clear out m_mdbRow member variable - the db is going away, which means that this member
+    // variable might very well point to a mork db that is gone.
+    msgHdr->m_mdbRow = nsnull;
+  }
+  return PL_DHASH_NEXT;
+}
+
+
 NS_IMETHODIMP nsMsgDatabase::SetMsgHdrCacheSize(PRUint32 aSize)
 {
   m_cacheSize = aSize;
@@ -185,6 +201,13 @@ NS_IMETHODIMP nsMsgDatabase::GetMsgHdrCacheSize(PRUint32 *aSize)
 NS_IMETHODIMP nsMsgDatabase::ClearCachedHdrs()
 {
   ClearCachedObjects();
+#ifdef DEBUG_bienvenu
+  if (mRefCnt > 1)
+  {
+    NS_ASSERTION(PR_FALSE, "");
+    printf("someone's holding onto db - refs = %ld\n", mRefCnt);
+  }
+#endif
   return NS_OK;
 }
 
@@ -366,12 +389,15 @@ nsresult nsMsgDatabase::AddHdrToUseCache(nsIMsgDBHdr *hdr, nsMsgKey key)
 
 nsresult nsMsgDatabase::ClearUseHdrCache()
 {
-	if (m_headersInUse)
-	{
+  if (m_headersInUse)
+  {
+    // clear mdb row pointers of any headers still in use, because the
+    // underlying db is going away.
+    PL_DHashTableEnumerate(m_headersInUse, ClearHeaderEnumerator, nsnull);
     PL_DHashTableDestroy(m_headersInUse);
     m_headersInUse = nsnull;
-	}
-	return NS_OK;
+  }
+  return NS_OK;
 }
 
 nsresult nsMsgDatabase::RemoveHdrFromUseCache(nsIMsgDBHdr *hdr, nsMsgKey key)
@@ -1772,14 +1798,14 @@ nsMsgDatabase::MarkThreadWatched(nsIMsgThread *thread, nsMsgKey threadKey, PRBoo
   PRUint32 threadFlags;
   thread->GetFlags(&threadFlags);
   PRUint32 oldThreadFlags = threadFlags; // not quite right, since we probably want msg hdr flags.
-	if (bWatched)
-	{
-		threadFlags |= MSG_FLAG_WATCHED;
-		threadFlags &= ~MSG_FLAG_IGNORED;	// watch is implicit un-ignore
-	}
-	else
-		threadFlags &= ~MSG_FLAG_WATCHED;
-	NotifyKeyChangeAll(threadKey, oldThreadFlags, threadFlags, instigator);
+  if (bWatched)
+  {
+    threadFlags |= MSG_FLAG_WATCHED;
+    threadFlags &= ~MSG_FLAG_IGNORED;	// watch is implicit un-ignore
+  }
+  else
+    threadFlags &= ~MSG_FLAG_WATCHED;
+  NotifyKeyChangeAll(threadKey, oldThreadFlags, threadFlags, instigator);
   thread->SetFlags(threadFlags);
   return NS_OK;
 }
