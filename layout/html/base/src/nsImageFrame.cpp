@@ -283,13 +283,6 @@ nsImageFrame::UpdateImage(nsIPresContext* aPresContext, PRUint32 aStatus, void* 
   // or both failed to load, then notify the PresShell
   if (imageFailedToLoad) {    
     if (presShell) {
-      // Also send error event
-      nsEventStatus status = nsEventStatus_eIgnore;
-      nsEvent event;
-      event.eventStructType = NS_EVENT;
-      event.message = NS_IMAGE_ERROR;
-      presShell->HandleEventWithTarget(&event,this,mContent,NS_EVENT_FLAG_INIT,&status);
-
       nsAutoString usemap;
       mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::usemap, usemap);    
       // We failed to load the image. Notify the pres shell if we aren't an image map
@@ -315,18 +308,27 @@ nsImageFrame::UpdateImage(nsIPresContext* aPresContext, PRUint32 aStatus, void* 
     }
   }
 
-  if (mCanSendLoadEvent &&
-      !imageFailedToLoad && 
-      (NS_IMAGE_LOAD_STATUS_IMAGE_READY & aStatus) &&
-      presShell) {
-    // Send load event
-    mCanSendLoadEvent = PR_FALSE;
+  //After these DOM events are fired its possible that this frame may be deleted.  As a result
+  //the code should not attempt to access any of the frames internal data after this point.
+  if (presShell) {
+    if (imageFailedToLoad) {
+      // Send error event
+      nsEventStatus status = nsEventStatus_eIgnore;
+      nsEvent event;
+      event.eventStructType = NS_EVENT;
+      event.message = NS_IMAGE_ERROR;
+      presShell->HandleEventWithTarget(&event,this,mContent,NS_EVENT_FLAG_INIT,&status);
+    }
+    else if (mCanSendLoadEvent && NS_IMAGE_LOAD_STATUS_IMAGE_READY & aStatus) {
+      // Send load event
+      mCanSendLoadEvent = PR_FALSE;
 
-    nsEventStatus status = nsEventStatus_eIgnore;
-    nsEvent event;
-    event.eventStructType = NS_EVENT;
-    event.message = NS_IMAGE_LOAD;
-    presShell->HandleEventWithTarget(&event,this,mContent,NS_EVENT_FLAG_INIT | NS_EVENT_FLAG_CANT_BUBBLE,&status);
+      nsEventStatus status = nsEventStatus_eIgnore;
+      nsEvent event;
+      event.eventStructType = NS_EVENT;
+      event.message = NS_IMAGE_LOAD;
+      presShell->HandleEventWithTarget(&event,this,mContent,NS_EVENT_FLAG_INIT | NS_EVENT_FLAG_CANT_BUBBLE,&status);
+    }
   }
 
 #if 0 // ifdef'ing out the deleting of the lowsrc image
