@@ -742,10 +742,10 @@ extern "C" void RunChromeInstallOnThread(void *data)
                     rv = reg->InstallSkin(spec.get(), PR_TRUE, PR_FALSE);
                 
 #ifndef MOZ_XUL_APP
-                if (NS_SUCCEEDED(rv) && selected)
+                if (NS_SUCCEEDED(rv) && selected && cr)
                 {
                     NS_ConvertUCS2toUTF8 utf8Args(info->GetArguments());
-                    rv = reg->SelectSkin(utf8Args, PR_TRUE);
+                    rv = cr->SelectSkin(utf8Args, PR_TRUE);
                 }
 #endif
             }
@@ -755,7 +755,7 @@ extern "C" void RunChromeInstallOnThread(void *data)
                 rv = reg->InstallLocale(spec.get(), PR_TRUE);
 
 #ifndef MOZ_XUL_APP
-                if (NS_SUCCEEDED(rv) && selected)
+                if (NS_SUCCEEDED(rv) && selected && cr)
                 {
                     NS_ConvertUCS2toUTF8 utf8Args(info->GetArguments());
                     rv = cr->SelectLocale(utf8Args, PR_TRUE);
