@@ -722,8 +722,9 @@ NS_IMETHODIMP nsImapIncomingServer::OnlineFolderRename(const char *oldName, cons
         rv = GetRootFolder(getter_AddRefs(rootFolder));
         if (NS_SUCCEEDED(rv))
         {
-			PRUnichar hierarchyDelimiter;
-			parent->GetHierarchyDelimiter(&hierarchyDelimiter);
+			PRUnichar hierarchyDelimiter = '/';
+            if (parent)
+                parent->GetHierarchyDelimiter(&hierarchyDelimiter);
 
             nsCOMPtr<nsIMsgImapMailFolder> imapRootFolder =
                 do_QueryInterface(rootFolder, &rv);
