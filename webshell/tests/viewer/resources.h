@@ -51,6 +51,13 @@
 #define VIEWER_DEMO16           40027
 #define VIEWER_DEMO17           40028
 
+#define VIEWER_PRINT            40030
+#define VIEWER_PRINT_SETUP      40031
+#define VIEWER_ONE_COLUMN       40035
+#define VIEWER_TWO_COLUMN       40036
+#define VIEWER_THREE_COLUMN     40037
+
+
 #define VIEWER_VISUAL_DEBUGGING     40050
 #define VIEWER_VISUAL_EVENT_DEBUGGING 40051
 #define VIEWER_REFLOW_TEST          40052
@@ -124,13 +131,7 @@
 #define VIEWER_ZOOM_030             40603
 #define VIEWER_ZOOM_020             40602
 
-// Note: must be in ascending sequential order
-#define VIEWER_ONE_COLUMN       40051
-#define VIEWER_TWO_COLUMN       40052
-#define VIEWER_THREE_COLUMN     40053
 
-#define VIEWER_PRINT            40080
-#define VIEWER_PRINT_SETUP      40081
 
 #define JS_CONSOLE              40100
 #define EDITOR_MODE             40120
