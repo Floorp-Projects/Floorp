@@ -16,21 +16,10 @@
  * Reserved.
  */
 
-#include "nscore.h"
-#include "nsIRDFCursor.h"
-#include "nsIRDFDataSource.h"
-#include "nsIRDFNode.h"
-#include "nsIRDFService.h"
-#include "nsIServiceManager.h"
-#include "nsRDFCID.h"
-#include "nsString.h"
-#include "prlog.h"
-#include "rdf.h"
-#include "rdfutil.h"
-
 /*
 
-  A simple cursor that enumerates the elements of a container.
+  A simple cursor that enumerates the elements of an RDF container
+  (RDF:Bag, RDF:Seq, or RDF:Alt).
 
   Caveats
   -------
@@ -49,6 +38,18 @@
   databases. It needs to be upgraded in a big way.
 
  */
+
+#include "nscore.h"
+#include "nsIRDFCursor.h"
+#include "nsIRDFDataSource.h"
+#include "nsIRDFNode.h"
+#include "nsIRDFService.h"
+#include "nsIServiceManager.h"
+#include "nsRDFCID.h"
+#include "nsString.h"
+#include "prlog.h"
+#include "rdf.h"
+#include "rdfutil.h"
 
 ////////////////////////////////////////////////////////////////////////
 
