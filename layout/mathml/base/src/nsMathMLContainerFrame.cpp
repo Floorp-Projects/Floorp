@@ -830,8 +830,8 @@ nsMathMLContainerFrame::InsertScriptLevelStyleContext(nsIPresContext* aPresConte
 
             if (isSmaller) {
               // look ahead for the next smallest font size that will be in the subtree
-              smallestFontIndex = nsStyleUtil::FindNextSmallerFontSize(smallestFontSize, (PRInt32)defaultFont.size, scaleFactor);
-              smallestFontSize = nsStyleUtil::CalcFontPointSize(smallestFontIndex, (PRInt32)defaultFont.size, scaleFactor);
+              smallestFontIndex = nsStyleUtil::FindNextSmallerFontSize(smallestFontSize, (PRInt32)defaultFont.size, scaleFactor, aPresContext);
+              smallestFontSize = nsStyleUtil::CalcFontPointSize(smallestFontIndex, (PRInt32)defaultFont.size, scaleFactor, aPresContext);
 //printf("About to move to fontsize:%dpt(%dtwips)\n", 
 //NSTwipsToFloorIntPoints(smallestFontSize), smallestFontSize);
               if (smallestFontSize < scriptminsize) {
