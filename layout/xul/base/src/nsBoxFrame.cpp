@@ -184,7 +184,7 @@ nsBoxFrame::GetRedefinedMinPrefMax(nsIFrame* aFrame, nsCalculatedBoxInfo& aSize)
     aFrame->GetContent(getter_AddRefs(content));
 
     PRInt32 error;
-    nsString value;
+    nsAutoString value;
 
     if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsXULAtoms::flex, value))
     {
@@ -510,8 +510,8 @@ nsBoxFrame::FlowChildren(nsIPresContext&   aPresContext,
   nscoord passes = 0;
   nscoord changedIndex = -1;
   nscoord count = 0;
-  nsString reason="initial";
-  nsString nextReason = "initial";
+  nsAutoString reason("initial");
+  nsAutoString nextReason("initial");
   PRBool resized[100];
 
   for (int i=0; i < mSpringCount; i++)

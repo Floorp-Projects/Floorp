@@ -101,7 +101,10 @@ NS_IMETHODIMP nsMenuFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 // nsMenuFrame cntr
 //
 nsMenuFrame::nsMenuFrame()
-:mMenuOpen(PR_FALSE), mIsMenu(PR_FALSE), mMenuParent(nsnull), mPresContext(nsnull)
+  : mIsMenu(PR_FALSE),
+    mMenuOpen(PR_FALSE),
+    mMenuParent(nsnull),
+    mPresContext(nsnull)
 {
 
 } // cntr
@@ -348,7 +351,7 @@ void nsMenuFrame::MarkAsGenerated()
   // a menu forevermore.
   if (child) {
     nsCOMPtr<nsIAtom> generated = dont_AddRef(NS_NewAtom("menugenerated"));
-    nsString genVal;
+    nsAutoString genVal;
     child->GetAttribute(kNameSpaceID_None, generated, genVal);
     if (genVal == "")
       child->SetAttribute(kNameSpaceID_None, generated, "true", PR_TRUE);
@@ -657,7 +660,7 @@ nsMenuFrame::Notify(nsITimer* aTimer)
 PRBool 
 nsMenuFrame::IsDisabled()
 {
-  nsString disabled = "";
+  nsAutoString disabled;
   mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::disabled, disabled);
   if (disabled == "true")
     return PR_TRUE;
@@ -697,8 +700,8 @@ nsMenuFrame::CreateAnonymousContent(nsISupportsArray& aAnonymousChildren)
   nsCOMPtr<nsIDOMNSDocument> nsDocument(do_QueryInterface(idocument));
   nsCOMPtr<nsIDOMDocument> document(do_QueryInterface(idocument));
 
-  nsString xulNamespace = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-  nsString htmlNamespace = "http://www.w3.org/TR/REC-html40";  
+  nsAutoString xulNamespace("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+  nsAutoString htmlNamespace("http://www.w3.org/TR/REC-html40");
   nsCOMPtr<nsIAtom> classAtom = dont_AddRef(NS_NewAtom("class"));
 
   nsCOMPtr<nsIDOMElement> node;
@@ -723,9 +726,9 @@ nsMenuFrame::CreateAnonymousContent(nsISupportsArray& aAnonymousChildren)
   content = do_QueryInterface(node);
   aAnonymousChildren.AppendElement(content);
   
-  nsString beforeString;
-  nsString accessString;
-  nsString afterString;
+  nsAutoString beforeString;
+  nsAutoString accessString;
+  nsAutoString afterString;
   SplitOnShortcut(beforeString, accessString, afterString);
   
   // Create the before text node.
@@ -768,7 +771,7 @@ nsMenuFrame::CreateAnonymousContent(nsISupportsArray& aAnonymousChildren)
     aAnonymousChildren.AppendElement(content);
   
     // Build the accelerator out of the corresponding key node.
-    nsString accelString;
+    nsAutoString accelString;
     BuildAcceleratorText(accelString);
     if (accelString != "") {
       // Create the accelerator (it's a div)
@@ -829,15 +832,15 @@ nsMenuFrame::SplitOnShortcut(nsString& aBeforeString, nsString& aAccessString, n
     return;
 
   // Find the index of the first occurrence of the accessKey
-  PRInt32 index = value.Find(accessKey, PR_TRUE);
+  PRInt32 indx = value.Find(accessKey, PR_TRUE);
 
-  if (index == -1) // Wasn't in there. Just return.
+  if (indx == -1) // Wasn't in there. Just return.
     return;
 
-  // It was in the value string. Split based on the index.
-  value.Left(aBeforeString, index);
-  value.Mid(aAccessString, index, 1);
-  value.Right(aAfterString, value.Length()-index-1);
+  // It was in the value string. Split based on the indx.
+  value.Left(aBeforeString, indx);
+  value.Mid(aAccessString, indx, 1);
+  value.Right(aAfterString, value.Length()-indx-1);
 }
 
 void 
