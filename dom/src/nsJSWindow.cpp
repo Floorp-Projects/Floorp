@@ -119,6 +119,7 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(void)
 FinalizeWindow(JSContext *cx, JSObject *obj)
 {
+  /*
   nsIWebWidget *window = (nsIWebWidget*)JS_GetPrivate(cx, obj);
 
   if (nsnull != window) {
@@ -129,6 +130,7 @@ FinalizeWindow(JSContext *cx, JSObject *obj)
       NS_RELEASE(owner);
     }
   }
+  */
 }
 
 /***********************************************************************/
