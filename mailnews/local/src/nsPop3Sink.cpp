@@ -291,12 +291,11 @@ nsresult
 nsPop3Sink::IncorporateComplete(void* closure)
 {
 	WriteLineToMailbox(MSG_LINEBREAK);
-//    if (m_outFileStream)
-//        *m_outFileStream << MSG_LINEBREAK;
 
-#ifdef DEBUG
-    printf("Incorporate message complete.\n");
-#endif 
+	// do not take out this printf as it is used by QA 
+    // as part of the smoketest process!. They depend on seeing
+	// this string printed out to the screen.
+	printf("Incorporate message complete.\n");
     return NS_OK;
 }
 
@@ -326,8 +325,10 @@ nsPop3Sink::SetBiffStateAndUpdateFE(PRUint32 aBiffState)
 #ifdef DEBUG
     printf("Set biff state: %d\n", aBiffState);
 #endif 
+
+	// do not take out these printfs!!! They are used by QA 
+	// as part of the smoketest process.
     m_biffState = aBiffState;
-#ifdef DEBUG
     switch (aBiffState)
     {
     case 0:
@@ -341,6 +342,5 @@ nsPop3Sink::SetBiffStateAndUpdateFE(PRUint32 aBiffState)
         printf("You have no mail.\n");
         break;
     }
-#endif 
     return NS_OK;
 }
