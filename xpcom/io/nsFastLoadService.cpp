@@ -232,6 +232,30 @@ nsFastLoadService::GetDirection(PRInt32 *aResult)
 }
 
 NS_IMETHODIMP
+nsFastLoadService::HasMuxedDocument(const char* aURISpec, PRBool *aResult)
+{
+    nsresult rv = NS_ERROR_NOT_AVAILABLE;
+    nsCOMPtr<nsIFastLoadFileControl> control;
+
+    *aResult = PR_FALSE;
+    nsAutoLock lock(mLock);
+
+    if (mInputStream) {
+        control = do_QueryInterface(mInputStream);
+        if (control)
+            rv = control->HasMuxedDocument(aURISpec, aResult);
+    }
+
+    if (! *aResult && mOutputStream) {
+        control = do_QueryInterface(mOutputStream);
+        if (control)
+            rv = control->HasMuxedDocument(aURISpec, aResult);
+    }
+
+    return rv;
+}
+
+NS_IMETHODIMP
 nsFastLoadService::StartMuxedDocument(nsISupports* aURI, const char* aURISpec,
                                       PRInt32 aDirectionFlags)
 {
