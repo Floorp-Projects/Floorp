@@ -42,16 +42,30 @@
 #include "prmem.h"
 #include "nsIInputStream.h"
 
-/* To properly use the helper function in here (ReadLine) the caller
+/**
+ * @file
+ * Functions to read complete lines from an input stream.
+ *
+ * To properly use the helper function in here (NS_ReadLine) the caller
  * needs to declare a pointer to an nsLineBuffer, call
- * NS_InitLineBuffer on it, and pass it to ReadLine every time it
+ * NS_InitLineBuffer on it, and pass it to NS_ReadLine every time it
  * wants a line out.
  *
- * When done, the pointer should be freed using PR_FREEIF.
+ * When done, the pointer should be freed using PR_Free.
  */
 
+/**
+ * @internal
+ * Buffer size. This many bytes will be buffered. If a line is longer than this,
+ * the partial line will be appended to the out parameter of NS_ReadLine and the
+ * buffer will be emptied.
+ */
 #define kLineBufferSize 1024
 
+/**
+ * @internal
+ * Line buffer structure, buffers data from an input stream.
+ */
 struct nsLineBuffer {
   char buf[kLineBufferSize+1];
   char* start;
@@ -60,15 +74,61 @@ struct nsLineBuffer {
   PRBool empty;
 };
 
+/**
+ * Initialize a line buffer for use with NS_ReadLine.
+ *
+ * @param aBufferPtr
+ *        Pointer to pointer to a line buffer. Upon successful return,
+ *        *aBufferPtr will contain a valid pointer to a line buffer, for use
+ *        with NS_ReadLine. Use PR_Free when the buffer is no longer needed.
+ *
+ * @retval NS_OK Success.
+ * @retval NS_ERROR_OUT_OF_MEMORY Not enough memory to allocate the line buffer.
+ *
+ * @par Example:
+ * @code
+ *    nsLineBuffer* lb;
+ *    rv = NS_InitLineBuffer(&lb);
+ *    if (NS_SUCCEEDED(rv)) {
+ *      // do stuff...
+ *      PR_Free(lb);
+ *    }
+ * @endcode
+ */
 static nsresult
 NS_InitLineBuffer (nsLineBuffer ** aBufferPtr) {
   *aBufferPtr = PR_NEW(nsLineBuffer);
-  if (!(*aBufferPtr)) return NS_ERROR_OUT_OF_MEMORY;
+  if (!(*aBufferPtr))
+    return NS_ERROR_OUT_OF_MEMORY;
+
   (*aBufferPtr)->start = (*aBufferPtr)->current = (*aBufferPtr)->end = (*aBufferPtr)->buf;
   (*aBufferPtr)->empty = PR_TRUE;
   return NS_OK;
 }
 
+/**
+ * Read a line from an input stream. Lines are separated by '\r' (0x0D) or '\n'
+ * (0x0A), or "\r\n" or "\n\r".
+ *
+ * @param aStream
+ *        The stream to read from
+ * @param aBuffer
+ *        The line buffer to use. Must have been inited with
+ *        NS_InitLineBuffer before. A single line buffer must not be used with
+ *        different input streams.
+ * @param aLine [out]
+ *        The string where the line will be stored.
+ * @param more [out]
+ *        Whether more data is available in the buffer. If true, NS_ReadLine may
+ *        be called again to read further lines. Otherwise, further calls to
+ *        NS_ReadLine will return an error.
+ *
+ * @retval NS_OK
+ *         Read successful
+ * @retval error
+ *         Input stream returned an error upon read. See
+ *         nsIInputStream::read.
+ */
 static nsresult
 NS_ReadLine (nsIInputStream* aStream, nsLineBuffer * aBuffer,
              nsACString & aLine, PRBool *more) {
