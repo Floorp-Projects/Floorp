@@ -86,8 +86,10 @@ SECStatus
 SEC_DeletePermCertificate(CERTCertificate *cert)
 {
     PRStatus nssrv;
+    NSSTrustDomain *td = STAN_GetDefaultTrustDomain();
     NSSCertificate *c = STAN_GetNSSCertificate(cert);
     nssrv = NSSCertificate_DeleteStoredObject(c, NULL);
+    nssTrustDomain_RemoveCertFromCache(td, c);
     return (nssrv == PR_SUCCESS) ? SECSuccess : SECFailure;
 }
 
