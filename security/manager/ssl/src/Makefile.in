@@ -63,6 +63,7 @@ CPPSRCS = 				\
 	nsNSSASN1Object.cpp		\
 	nsCertOutliner.cpp              \
 	nsKeygenHandler.cpp		\
+	nsCrypto.cpp			\
         nsPKCS11Slot.cpp                \
 	$(NULL)
 
@@ -77,9 +78,11 @@ INCLUDES	+=	\
 
 EXTRA_DSO_LDOPTS += \
 		$(MOZ_COMPONENT_LIBS) \
+		$(MOZ_JS_LIBS) \
 		$(NULL)
 
 EXTRA_LIBS	+= \
+	$(DIST)/lib/libcrmf.$(LIB_SUFFIX) \
         $(DIST)/lib/libssl.$(LIB_SUFFIX) \
         $(DIST)/lib/libnss.$(LIB_SUFFIX) \
         $(DIST)/lib/libssl.$(LIB_SUFFIX) \
@@ -92,7 +95,6 @@ EXTRA_LIBS	+= \
         $(DIST)/lib/libpk11wrap.$(LIB_SUFFIX) \
         $(DIST)/lib/libsoftoken.$(LIB_SUFFIX) \
         $(DIST)/lib/libcertdb.$(LIB_SUFFIX) \
-        $(DIST)/lib/libswfci.$(LIB_SUFFIX) \
         $(DIST)/lib/libfreebl.$(LIB_SUFFIX) \
         $(DIST)/lib/libsecutil.$(LIB_SUFFIX) \
         $(DIST)/lib/libdbm.$(LIB_SUFFIX) \

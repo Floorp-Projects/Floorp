@@ -200,6 +200,14 @@ nsKeygenFormProcessor::Init()
 nsresult
 nsKeygenFormProcessor::GetSlot(PRUint32 aMechanism, PK11SlotInfo** aSlot)
 {
+  return GetSlotWithMechanism(aMechanism,m_ctx,aSlot);
+}
+
+nsresult
+GetSlotWithMechanism(PRUint32 aMechanism, 
+                     nsIInterfaceRequestor *m_ctx,
+                     PK11SlotInfo** aSlot)
+{
     PK11SlotList * slotList = nsnull;
     PRUnichar** tokenNameList = nsnull;
     nsITokenDialogs * dialogs;
@@ -366,8 +374,8 @@ found_match:
       switch (keyGenMechanism) {
         case CKM_RSA_PKCS_KEY_PAIR_GEN:
             rsaParams.keySizeInBits = keysize;
-            rsaParams.pe = 65537L;
-            algTag = SEC_OID_PKCS1_MD5_WITH_RSA_ENCRYPTION;
+            rsaParams.pe = DEFAULT_RSA_KEYGEN_PE;
+            algTag = DEFAULT_RSA_KEYGEN_ALG;
             params = &rsaParams;
             break;
         case CKM_DSA_KEY_PAIR_GEN:

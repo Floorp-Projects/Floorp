@@ -156,11 +156,24 @@ interface nsIClientAuthDialogs : nsISupports
 [scriptable, uuid(bb4bae9c-39c5-11d5-ba26-00108303b117)]
 interface nsITokenDialogs : nsISupports
 {
-	void ChooseToken(in nsIInterfaceRequestor ctx,
-                  [array, size_is(count)] in wstring tokenNameList,
-                  in PRUint32 count,
-                  out wstring tokenName,
-                  out boolean canceled);
+  void ChooseToken(in nsIInterfaceRequestor ctx,
+                   [array, size_is(count)] in wstring tokenNameList,
+                   in PRUint32 count,
+                   out wstring tokenName,
+                   out boolean canceled);
+};
+
+[scriptable, uuid(1f8fe77e-1dd2-11b2-8dd2-e55f8d3465b8)]
+interface nsIDOMCryptoDialogs : nsISupports
+{
+  /**
+   * This method is used to warn the user the web site is
+   * trying to escrow the generated private key.  This 
+   * method should return true if the user wants to proceed
+   * and false if the user cancels the action.
+   */
+  boolean ConfirmKeyEscrow(in nsIX509Cert escrowAuthority);
+
 };
 
 /**

@@ -95,4 +95,10 @@ private:
 
 };
 
+// Use this function to generate a default nickname for a user
+// certificate that is to be imported onto a token.
+char *
+default_nickname(CERTCertificate *cert, nsIInterfaceRequestor* ctx);
+
+
 #endif /* _NS_NSSCERTIFICATE_H_ */
