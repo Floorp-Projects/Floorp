@@ -243,13 +243,14 @@ nsresult nsMsgComposeService::OpenWindow(const char *chrome, nsIMsgComposeParams
       {
         if (mCachedWindows[i].window && (mCachedWindows[i].htmlCompose == composeHTML) && mCachedWindows[i].listener)
         {
+          /* We need to save the window pointer as OnReopen will call nsMsgComposeService::InitCompose which will
+             clear the cache entry if everything goes well
+          */
+          nsCOMPtr<nsIDOMWindowInternal> domWindow(mCachedWindows[i].window);
           mCachedWindows[i].listener->OnReopen(params);
-          rv = ShowCachedComposeWindow(mCachedWindows[i].window, PR_TRUE);
+          rv = ShowCachedComposeWindow(domWindow, PR_TRUE);
           if (NS_SUCCEEDED(rv))
-          {
-            mCachedWindows[i].Clear();
             return NS_OK;
-          }
         }
       }
     }
@@ -577,6 +578,16 @@ NS_IMETHODIMP nsMsgComposeService::InitCompose(nsIDOMWindowInternal *aWindow,
 {
   nsresult rv;
   
+  /* we need to remove the window from the cache
+  */
+  PRInt32 i;
+  for (i = 0; i < mMaxRecycledWindows; i ++)
+    if (mCachedWindows[i].window == aWindow)
+    {
+      mCachedWindows[i].Clear();
+      break;
+    }
+
   nsCOMPtr <nsIMsgCompose> msgCompose = do_CreateInstance(NS_MSGCOMPOSE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv,rv);
 	
@@ -675,7 +686,11 @@ nsMsgComposeService::CacheWindow(nsIDOMWindowInternal *aWindow, PRBool aComposeH
   nsresult rv;
 
   PRInt32 i;
+  PRInt32 sameTypeId = -1;
+  PRInt32 oppositeTypeId = -1;
+  
   for (i = 0; i < mMaxRecycledWindows; i ++)
+  {
     if (!mCachedWindows[i].window)
     {
       rv = ShowCachedComposeWindow(aWindow, PR_FALSE);
@@ -684,6 +699,34 @@ nsMsgComposeService::CacheWindow(nsIDOMWindowInternal *aWindow, PRBool aComposeH
       
       return rv;
     }
+    else
+      if (mCachedWindows[i].htmlCompose == aComposeHTML)
+      {
+        if (sameTypeId == -1)
+          sameTypeId = i;
+      }
+      else
+      {
+        if (oppositeTypeId == -1)
+          oppositeTypeId = i;
+      }
+  }
+  
+  /* Looks like the cache is full. In the case we try to cache a type (html or plain text) of compose window which is not
+     already cached, we should replace an opposite one with this new one. That would allow users to be able to take advantage
+     of the cached compose window when they switch from one type to another one
+  */
+  if (sameTypeId == -1 && oppositeTypeId != -1)
+  {
+    CloseWindow(mCachedWindows[oppositeTypeId].window);
+    mCachedWindows[oppositeTypeId].Clear();
+    
+    rv = ShowCachedComposeWindow(aWindow, PR_FALSE);
+    if (NS_SUCCEEDED(rv))
+      mCachedWindows[oppositeTypeId].Initialize(aWindow, aListener, aComposeHTML);
+    
+    return rv;
+  }
   
   return NS_ERROR_NOT_AVAILABLE;
 }
