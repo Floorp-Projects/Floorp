@@ -221,6 +221,10 @@ morkStore::morkStore(morkEnv* ev, const morkUsage& inUsage,
 , mStore_RowSpaces(ev, morkUsage::kMember, (nsIMdbHeap*) 0, ioPortHeap)
 , mStore_AtomSpaces(ev, morkUsage::kMember, (nsIMdbHeap*) 0, ioPortHeap)
 , mStore_Pool(ev, morkUsage::kMember, (nsIMdbHeap*) 0, ioPortHeap)
+
+// disable auto-assignment of atom IDs until someone knows it is okay:
+, mStore_CanAutoAssignAtomIdentity( morkBool_kFalse )
+
 {
   if ( ev->Good() )
   {
@@ -373,7 +377,7 @@ morkAtomSpace* morkStore::LazyGetGroundAtomSpace(morkEnv* ev)
 {
   if ( !mStore_GroundAtomSpace )
   {
-    mork_scope atomScope = morkStore_kGroundAtomSpace;
+    mork_scope atomScope = morkStore_kValueSpaceScope;
     nsIMdbHeap* heap = mPort_Heap;
     morkAtomSpace* space = new(*heap, ev) 
       morkAtomSpace(ev, morkUsage::kHeap, atomScope, this, heap, heap);
@@ -502,7 +506,7 @@ morkStore::LazyGetAtomSpace(morkEnv* ev, mdb_scope inAtomScope)
   morkAtomSpace* outSpace = mStore_AtomSpaces.GetAtomSpace(ev, inAtomScope);
   if ( !outSpace && ev->Good() ) // try to make new space?
   {
-    if ( inAtomScope == morkStore_kGroundAtomSpace )
+    if ( inAtomScope == morkStore_kValueSpaceScope )
       outSpace = this->LazyGetGroundAtomSpace(ev);
       
     else if ( inAtomScope == morkStore_kGroundColumnSpace )
@@ -534,6 +538,12 @@ morkStore::NonStoreTypeError(morkEnv* ev)
 morkStore::NilStoreFileError(morkEnv* ev)
 {
   ev->NewError("nil mStore_File");
+}
+
+/*static*/ void
+morkStore::CannotAutoAssignAtomIdentityError(morkEnv* ev)
+{
+  ev->NewError("false mStore_CanAutoAssignAtomIdentity");
 }
 
 
