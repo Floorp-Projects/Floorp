@@ -176,12 +176,21 @@ nsRDFContentUtils::FindChildByTagAndResource(nsIContent* aElement,
 }
 
 
-static nsresult
-ConvertAttributeValueToResource(nsIContent* aElement, nsString& aValue, nsIRDFResource** aResult)
+nsresult
+nsRDFContentUtils::GetElementResource(nsIContent* aElement, nsIRDFResource** aResult)
 {
-    // Convert an attribute value (aValue) to an RDF resource,
-    // mangling a relative URL into an absolute one, if necessary.
+    // Perform a reverse mapping from an element in the content model
+    // to an RDF resource.
     nsresult rv;
+    nsAutoString id;
+
+    nsCOMPtr<nsIAtom> kIdAtom( dont_AddRef(NS_NewAtom("id")) );
+    rv = aElement->GetAttribute(kNameSpaceID_None, kIdAtom, id);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "severe error retrieving attribute");
+    if (NS_FAILED(rv)) return rv;
+
+    if (rv != NS_CONTENT_ATTR_HAS_VALUE)
+        return NS_ERROR_FAILURE;
 
     // Since the element will store its ID attribute as a document-relative value,
     // we may need to qualify it first...
@@ -194,7 +203,7 @@ ConvertAttributeValueToResource(nsIContent* aElement, nsString& aValue, nsIRDFRe
         return NS_ERROR_FAILURE;
 
     nsAutoString uri;
-    rv = nsRDFContentUtils::MakeElementURI(doc, aValue, uri);
+    rv = nsRDFContentUtils::MakeElementURI(doc, id, uri);
     if (NS_FAILED(rv)) return rv;
 
     NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
@@ -202,29 +211,6 @@ ConvertAttributeValueToResource(nsIContent* aElement, nsString& aValue, nsIRDFRe
 
     rv = rdf->GetUnicodeResource(uri.GetUnicode(), aResult);
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create resource");
-    if (NS_FAILED(rv)) return rv;
-
-    return NS_OK;
-}
-
-
-nsresult
-nsRDFContentUtils::GetElementResource(nsIContent* aElement, nsIRDFResource** aResult)
-{
-    // Perform a reverse mapping from an element in the content model
-    // to an RDF resource.
-    nsresult rv;
-    nsAutoString uri;
-
-    nsCOMPtr<nsIAtom> kIdAtom( dont_AddRef(NS_NewAtom("id")) );
-    rv = aElement->GetAttribute(kNameSpaceID_None, kIdAtom, uri);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "severe error retrieving attribute");
-    if (NS_FAILED(rv)) return rv;
-
-    if (rv != NS_CONTENT_ATTR_HAS_VALUE)
-        return NS_ERROR_FAILURE;
-
-    rv = ConvertAttributeValueToResource(aElement, uri, aResult);
     if (NS_FAILED(rv)) return rv;
 
     return NS_OK;
@@ -246,7 +232,23 @@ nsRDFContentUtils::GetElementRefResource(nsIContent* aElement, nsIRDFResource** 
     if (NS_FAILED(rv)) return rv;
 
     if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-        rv = ConvertAttributeValueToResource(aElement, uri, aResult);
+        // We'll use rdf_MakeAbsolute() to translate this to a URL.
+        nsCOMPtr<nsIDocument> doc;
+        rv = aElement->GetDocument(*getter_AddRefs(doc));
+        if (NS_FAILED(rv)) return rv;
+
+        nsCOMPtr<nsIURL> url = dont_AddRef( doc->GetDocumentURL() );
+        NS_ASSERTION(url != nsnull, "element has no document");
+        if (! url)
+            return NS_ERROR_UNEXPECTED;
+
+        rv = rdf_MakeAbsoluteURI(url, uri);
+        if (NS_FAILED(rv)) return rv;
+
+        NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+        if (NS_FAILED(rv)) return rv;
+
+        rv = rdf->GetUnicodeResource(uri.GetUnicode(), aResult);
     }
     else {
         rv = GetElementResource(aElement, aResult);
