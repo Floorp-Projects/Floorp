@@ -67,10 +67,10 @@ sub UpdateGeneratedChromeFiles()
     open (IN, "${file}.in") || die("${file}.in: $!\n");
     open (OUT, ">$file") || die ("$file: $!\n");
     while ($tmp=<IN>) {
-	$tmp =~ s/@target@/Mac CFM/;
-	$tmp =~ s/@CC@/CodeWarrior/;
-	$tmp =~ s/@CXX@/CodeWarrior/;
-	$tmp =~ s/@\S+@//;
+	$tmp =~ s/\@target\@/Mac CFM/;
+	$tmp =~ s/\@CC\@/CodeWarrior/;
+	$tmp =~ s/\@CXX\@/CodeWarrior/;
+	$tmp =~ s/\@\S+\@//;
 	print OUT "$tmp";
     }
     close(OUT);
