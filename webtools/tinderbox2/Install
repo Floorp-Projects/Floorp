@@ -7,16 +7,16 @@ code and documentation.
 
 To install:
 
-*) The src/default_config directory contains perl libraries which are
+*) The src/default_conf directory contains perl libraries which are
 specific to an individual users site configuration.  No two users of
 Tinderbox will have the identical sets of files.
 
-The files found in default_config are sample files which are used at
+The files found in default_conf are sample files which are used at
 Mozilla.org.  Other users are expected to customize these libries and
-install the modified libraries in local_config.  Files found in
-local_config will be used before any file found in default_config.
+install the modified libraries in local_conf.  Files found in
+local_conf will be used before any file found in default_conf.
 The distribution of Tinderbox will never place any files in the
-local_config directory as this is assumed to be under local control.
+local_conf directory as this is assumed to be under local control.
 
 A quick overview of the files:
 
@@ -58,7 +58,7 @@ can copy the *.cgi files to another directory if this is not the case.
 
 *) set up a cron job to run $prefix/bin/tinder.cgi --daemon-mode 
 	every five minutes.
-   set up a cron job to run $prefix/bin/tinder.cgi/rmlogs once a day.
+   set up a cron job to run $prefix/bin/rmlogs at least once a day.
      six am is a good time to run this as the machine load is usually light
       and will avoids any day light savings problems.
 
