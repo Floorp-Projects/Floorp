@@ -338,6 +338,10 @@
   list-style-image: url("chrome://communicator/skin/icons/lock-broken.gif");
 }
 
+#popupIcon {
+  list-style-image: url("chrome://navigator/skin/icons/popup-blocked.png");
+}
+
 /* ::::: personal toolbar ::::: */
 
 #home-button {
@@ -351,4 +355,3 @@
 #home-button:hover:active {
   list-style-image: url("chrome://communicator/skin/bookmarks/home-active.gif");
 }
-

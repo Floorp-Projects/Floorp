@@ -353,7 +353,6 @@ Permission_AddHost(const nsAFlatCString & host, PRBool permission, PRInt32 type,
     typeStruct = NS_STATIC_CAST
       (permission_TypeStruct*, hostStruct->permissionList->ElementAt(typeIndex));
     if (typeStruct->type == type) {
-
       /* type found.  Modify the corresponding permission */
       typeStruct->permission = permission;
       typeFound = PR_TRUE;
@@ -459,7 +458,6 @@ Permission_Save(PRBool notify) {
    * host \t permission \t permission ... \n
    */
 
-  
   PRInt32 hostCount = permission_list->Count();
   for (PRInt32 i = 0; i < hostCount; ++i) {
     hostStruct = NS_STATIC_CAST(permission_HostStruct*, permission_list->ElementAt(i));
@@ -630,6 +628,29 @@ PERMISSION_HostCount() {
     return 0;
   }
   return permission_list->Count();
+}
+
+PUBLIC PRInt32
+PERMISSION_HostCountForType(PRInt32 type) {
+  if (!permission_list) {
+    return 0;
+  }
+  
+  permission_HostStruct * hostStruct;
+  permission_TypeStruct * typeStruct;
+  PRInt32 hostCount = permission_list->Count();
+  PRInt32 hostCountForType = 0;
+  for (PRInt32 i = 0; i < hostCount; ++i) {
+    hostStruct = NS_STATIC_CAST(permission_HostStruct*, permission_list->ElementAt(i));
+    PRInt32 typeCount = hostStruct->permissionList->Count();
+    for (PRInt32 j = 0; j < typeCount; ++j) {
+      typeStruct = NS_STATIC_CAST(permission_TypeStruct *, hostStruct->permissionList->ElementAt(j));
+      if (typeStruct && typeStruct->type == type)
+        hostCountForType++;
+    }
+  }
+
+  return hostCountForType;
 }
 
 PUBLIC PRInt32

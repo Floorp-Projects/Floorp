@@ -66,6 +66,7 @@ extern void PERMISSION_RemoveAll();
 extern void PERMISSION_DeletePersistentUserData(void);
 
 extern PRInt32 PERMISSION_HostCount();
+extern PRInt32 PERMISSION_HostCountForType(PRInt32 type);
 extern PRInt32 PERMISSION_TypeCount(PRInt32 host);
 extern nsresult PERMISSION_Enumerate
   (PRInt32 hostNumber, PRInt32 typeNumber, char **host, PRInt32 *type, PRBool *capability);

@@ -40,14 +40,12 @@
                       label="&images.label;"/> 
       </treerow>
     </treeitem>
-<!--
     <treeitem position="3">
       <treerow>
         <treecell url="chrome://cookie/content/pref-popups.xul"
                       label="&popups.label;"/> 
       </treerow>
     </treeitem>
--->
   </treechildren>
     
 </overlay>

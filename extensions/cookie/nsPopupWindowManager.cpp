@@ -40,6 +40,7 @@
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
 #include "nsPermissions.h"
+#include "nsPermission.h"
 
 #include "nsIObserverService.h"
 #include "nsIPrefBranch.h"
@@ -57,6 +58,58 @@ static const char sPopupDisablePref[] = POPUP_PREF;
 static const char sPermissionChangeNotification[] = PPM_CHANGE_NOTIFICATION;
 static const char sXPCOMShutdownTopic[] = NS_XPCOM_SHUTDOWN_OBSERVER_ID;
 static const char sPrefChangedTopic[] = NS_PREFBRANCH_PREFCHANGE_TOPIC_ID;
+
+class nsPopupEnumerator : public nsISimpleEnumerator
+{
+    public:
+
+        NS_DECL_ISUPPORTS
+
+        nsPopupEnumerator() : mHostCurrent(0), mTypeCurrent(0)
+        {
+          mHostCount = PERMISSION_HostCountForType(WINDOWPERMISSION);
+        }
+
+        NS_IMETHOD HasMoreElements(PRBool *result) 
+        {
+          *result = mHostCount > mHostCurrent;
+          return NS_OK;
+        }
+
+        NS_IMETHOD GetNext(nsISupports **result) 
+        {
+          char *host;
+          PRBool capability;
+          PRInt32 type;
+        
+          *result = nsnull;
+          
+          while (NS_SUCCEEDED(PERMISSION_Enumerate(mHostCurrent, mTypeCurrent++, &host, &type, &capability))) {
+            if ((mTypeCurrent == PERMISSION_TypeCount(mHostCurrent)) || (type == WINDOWPERMISSION)) {
+              mTypeCurrent = 0;
+              mHostCurrent++;
+            }
+            if (type == WINDOWPERMISSION) {
+              nsIPermission *permission = new nsPermission(host, type, capability);
+              *result = permission;
+              NS_ADDREF(*result);
+              break;
+            }
+          }
+          return NS_OK;
+        }
+
+        virtual ~nsPopupEnumerator() 
+        {
+        }
+
+    protected:
+        PRInt32 mHostCurrent;
+        PRInt32 mTypeCurrent;
+        PRInt32 mHostCount;
+};
+
+NS_IMPL_ISUPPORTS1(nsPopupEnumerator, nsISimpleEnumerator);
 
 //*****************************************************************************
 //*** nsPopupWindowManager object management and nsISupports
@@ -123,14 +176,15 @@ nsPopupWindowManager::Add(nsIURI *aURI, PRBool aPermit)
     // if we couldn't initialize the permission manager Permission_AddHost()
     // will create a new list that could stomp an existing cookperm.txt
     return NS_ERROR_FAILURE;
-
+  
   nsCAutoString uri;
   aURI->GetHostPort(uri);
   if (uri.IsEmpty())
     return NS_ERROR_FAILURE;
-
+  
   if (NS_SUCCEEDED(Permission_AddHost(uri, aPermit, WINDOWPERMISSION, PR_TRUE)))
     return NotifyObservers(aURI);
+  
   return NS_ERROR_FAILURE;
 }
 
@@ -205,10 +259,15 @@ nsPopupWindowManager::TestPermission(nsIURI *aURI, PRUint32 *_retval)
 NS_IMETHODIMP
 nsPopupWindowManager::GetEnumerator(nsISimpleEnumerator **_retval)
 {
-  NS_ENSURE_ARG_POINTER(_retval);
-  *_retval = 0;
+  *_retval = nsnull;
 
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsPopupEnumerator* popupEnum = new nsPopupEnumerator();
+  if (popupEnum == nsnull)
+    return NS_ERROR_OUT_OF_MEMORY;
+  
+  NS_ADDREF(popupEnum);
+  *_retval = popupEnum;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
