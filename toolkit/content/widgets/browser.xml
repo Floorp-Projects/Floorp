@@ -450,7 +450,6 @@
       <field name="_startY">null</field>
       <field name="_clientX">null</field>
       <field name="_clientY">null</field>
-      <field name="_f">false</field>
 
       <method name="stopScroll">
         <body>
@@ -599,19 +598,13 @@
         <![CDATA[
           if (!this._snapOn)
             this.stopScroll();
-          else {
-            if (this._f) {
-              this._f = false;
-              return;
-            }
-            
-            if (event.button == 1)
-              this.showAutoscrollMarker(event);
-          }
         ]]>        
       </handler>
       <handler event="mousedown">
         <![CDATA[
+          if (this.isLink(event.originalTarget))
+            return;
+
           if (!this._isScrolling) {
             if (event.button == 1) {
               this._startX = event.clientX;
@@ -619,15 +612,12 @@
               this._clientFrameDoc = event.originalTarget.ownerDocument;
               this._clientFrameBody = (this._clientFrameDoc.getElementsByTagName('body')[0]) ? this._clientFrameDoc.getElementsByTagName('body')[0] : this._clientFrameDoc.getElementsByTagName('*')[0];
               this._isScrolling = true;
-              if (!this.isLink(event.originalTarget))
-                this._snapOn = true;
-
+              this._snapOn = true; 
+              this.showAutoscrollMarker(event);
               window.setTimeout(function foo(a) { a.autoScrollLoop() }, 5, this);
             }
           }
           else {
-            if (event.originalTarget == this._autoScrollMarkerImage)
-              this._f = true;
             stopScroll();
           }
         ]]>
@@ -641,11 +631,8 @@
             var x = this._clientX - this._startX;
             var y = this._clientY - this._startY;
         
-            if ((x > this._AUTOSCROLL_SNAP || x < -this._AUTOSCROLL_SNAP) || (y > this._AUTOSCROLL_SNAP || y < -this._AUTOSCROLL_SNAP)) {
-              this._snapOn = false;
-              if (!this._autoScrollMarkerImage)
-                this.showAutoscrollMarker(event);
-            }
+            if ((x > this._AUTOSCROLL_SNAP || x < -this._AUTOSCROLL_SNAP) || (y > this._AUTOSCROLL_SNAP || y < -this._AUTOSCROLL_SNAP))
+              this._snapOn = false;            
           }
         ]]>
       </handler>
