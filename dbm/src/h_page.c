@@ -112,9 +112,9 @@ static int	 ugly_split
  */
 long new_lseek(int fd, long offset, int origin)
 {
- 	long cur_pos;
+ 	long cur_pos=0;
 	long end_pos=0;
-	long seek_pos;
+	long seek_pos=0;
 
 	if(origin == SEEK_CUR)
       {	
