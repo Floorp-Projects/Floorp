@@ -1504,8 +1504,6 @@ nsProfile::MigrateProfile(const PRUnichar* profileName, PRBool showProgressAsMod
 
     nsCOMPtr<nsIFile> oldProfDir;    
     nsCOMPtr<nsIFile> newProfDir;
-
-    PRBool exists;
  
     rv = GetProfileDir(profileName, getter_AddRefs(oldProfDir));
     if (NS_FAILED(rv)) return rv;
@@ -1514,20 +1512,15 @@ nsProfile::MigrateProfile(const PRUnichar* profileName, PRBool showProgressAsMod
     if (NS_FAILED(rv)) return rv;
     rv = newProfDir->AppendUnicode(profileName);
     if (NS_FAILED(rv)) return rv;
+    
+    // This is unfortunate: There is no CreateUniqueUnicode
     nsXPIDLCString suggestedName;
     rv = newProfDir->GetLeafName(getter_Copies(suggestedName));
     if (NS_FAILED(rv)) return rv;
-    rv = newProfDir->Exists(&exists);
+    rv = newProfDir->CreateUnique(suggestedName, nsIFile::DIRECTORY_TYPE, 0775);
     if (NS_FAILED(rv)) return rv;
-    if (exists) {
     
-#ifdef DEBUG_profile
-        printf("directory already exists\n");
-#endif
-        return NS_ERROR_FAILURE;
-    }
     
-
     // Call migration service to do the work.
     nsCOMPtr <nsIPrefMigration> pPrefMigrator;
 
@@ -1547,9 +1540,6 @@ nsProfile::MigrateProfile(const PRUnichar* profileName, PRBool showProgressAsMod
     nsXPIDLCString oldProfDirStr;
     nsXPIDLCString newProfDirStr;
 
-    rv = newProfDir->Create(nsIFile::DIRECTORY_TYPE, 0775);
-    if (NS_FAILED(rv)) return rv;   
-    
     rv = oldProfDirLocal->GetPersistentDescriptor(getter_Copies(oldProfDirStr));
     if (NS_FAILED(rv)) return rv;
     rv = newProfDirLocal->GetPersistentDescriptor(getter_Copies(newProfDirStr));
