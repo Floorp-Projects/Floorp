@@ -116,14 +116,14 @@ XFE_RDFChromeTreeView::createControlToolbar()
 										   NULL);
 #endif
 
-#ifdef NOT_YET
+    /*
 	closeRdfViewCBStruct *  cb_str = new closeRdfViewCBStruct;
 	
 	cb_str->rdfview = this;
 	cb_str->ncview = (XFE_NavCenterView *)parent_view;
-	
-	XtAddCallback(closeRDFChromeTreeView, XmNactivateCallback, (XtCallbackProc)closeRdfView_cb , (void *)cb_str);
-#endif    /* NOT_YET */
+	*/
+	XtAddCallback(_closeControl, XmNactivateCallback, (XtCallbackProc)closeRdfView_cb , (void *)this);
+
 	
 }
 //////////////////////////////////////////////////////////////////////////
@@ -202,18 +202,22 @@ void
 XFE_RDFChromeTreeView::closeRdfView_cb(Widget /* w */, XtPointer clientData, XtPointer /* callData */)
 {
 
-  closeRdfViewCBStruct * obj = (closeRdfViewCBStruct *) clientData;
+
+  XFE_RDFChromeTreeView * obj = (XFE_RDFChromeTreeView *) clientData;
+
+  Widget parent = XtParent(obj->getBaseWidget());
+  XtUnmanageChild(parent);
+
+
+
+#ifdef MOZ_SELECTOR_BAR
+  closeRdfViewCBStruct * obj = (closeRdfViewCBStruct *) clientData; 
   XFE_NavCenterView * ncview = obj->ncview;
-
 //  Widget nc_base_widget = ncview->getBaseWidget();
-  Widget parent = XtParent(obj->rdfview->_controlToolBar);
-
-
+  Widget  selector  = (Widget )ncview->getSelector();
 /*   XtVaSetValues(nc_base_widget, XmNresizable, True, NULL); */
   XtUnmanageChild(parent);
 
-#ifdef MOZ_SELECTOR_BAR
-  Widget  selector  = (Widget )ncview->getSelector();
   XtUnmanageChild(selector);  
   XtVaSetValues(selector, XmNrightAttachment, XmATTACH_FORM, 
                           XmNleftAttachment, XmATTACH_FORM,
