@@ -230,8 +230,16 @@ checkbox {
   behavior: url(resource:/chrome/xulBindings.xml#checkbox);
 }
 
+checkbox.iconic {
+  behavior: url(resource:/chrome/xulBindings.xml#checkbox-iconic);
+}
+
 radio {
   behavior: url(resource:/chrome/xulBindings.xml#radio);
+}
+
+radio.iconic {
+  behavior: url(resource:/chrome/xulBindings.xml#radio-iconic);
 }
 
 radiogroup {
@@ -242,16 +250,8 @@ button, button.left {
   behavior: url(resource:/chrome/xulBindings.xml#buttonleft);
 }
 
-button.top {
-  behavior: url(resource:/chrome/xulBindings.xml#buttontop);
-}
-
 button.right {
   behavior: url(resource:/chrome/xulBindings.xml#buttonright);
-}
-
-button.bottom {
-  behavior: url(resource:/chrome/xulBindings.xml#buttonbottom);
 }
 
 separator {

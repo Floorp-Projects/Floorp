@@ -1,95 +1,184 @@
-/* NEW WIDGET LANDING: <button> */
-button {
-  border: 1px solid #CCCCCC;
-  -moz-border-radius: 3px 2px 2px 3px;
-  margin: 3px 5px 3px 5px;
-  min-width: 5em;
-}
+/* NEW WIDGET ANDING: <button> */
 
-button.small > .internal-box {
-  vertical-align: middle;
-  border: 1px outset #CCCCCC;
-  padding: 2px; 
-}
+/** Default Button Styles (apply to usage of <button> without 
+ *  any applied class).
+ **/
 
-button > .internal-box {
-  vertical-align: middle;
-  border: 1px outset #CCCCCC;
-  padding: 2px 10px 2px 10px; 
-}
+/* outer frame */
+  button 
+    {
+      border              : 1px solid #CCCCCC;
+      -moz-border-radius  : 3px 2px 2px 3px;
+      margin              : 1px 5px 2px 5px;
+    }
 
-button:active {
-  border: 1px solid #000000;
-}
+  button:hover 
+    {
+      border              : 1px solid #000000;
+    }
 
-/* button:active rules */
-button.small:active > .internal-box {
-  border: 1px inset #CCCCCC;
-  padding: 3px 1px 1px 3px; 
-}
+  button:hover:active
+    {
+      border              : 1px solid #000000;
+    }
+  
+  button[disabled="true"],
+  button[disabled="true"]:hover,
+  button[disabled="true"]:active 
+    {
+      border              : 1px solid #CCCCCC;
+    }
+    
+/* internal frame */
+  button > .internal-box 
+    {
+      vertical-align      : center;
+      text-align          : center;
+      border              : 1px outset #CCCCCC;
+      padding             : 2px;
+    }
 
-button:active > .internal-box {
-  border: 1px inset #CCCCCC;
-  padding: 3px 9px 1px 11px; 
-}
+  button:active > .internal-box 
+    {
+      border              : 1px inset #CCCCCC;
+      padding             : 3px 1px 1px 3px;  
+    }
+  
+  button[disabled="true"] > .internal-box,
+  button[disabled="true"]:hover > .internal-box,
+  button[disabled="true"]:active > .internal-box 
+    {
+      border              : 1px solid gray;
+      color               : gray;
+      padding             : 2px;
+    }
 
-button:hover {
-  border: 1px solid #000000;
-}
+/* text wrapping frame (hack because <text> does not support alignment) */
+  button > .internal-box > .text-container
+    {
+      text-align          : center;
+      vertical-align      : middle;
+    }
 
-/* disabled rules */
-button[disabled]:hover, 
-button[disabled]:active {
-  border: 1px solid #CCCCCC;
-}
+/* text frame */
+  button > .internal-box > .text-container > text 
+    {
+      padding             : 0px 2px 0px 2px;
+    }
+  
+  button[orient="vertical"] > .internal-box > .text-container > text
+    {
+      padding             : 2px 2px 0px 2px;
+    }
 
-button[disabled] > .internal-box,
-button[disabled]:hover > .internal-box,
-button[disabled]:active > .internal-box {
-  border: 1px solid #999999;
-  color: #999999;
-  padding: 2px 10px 2px 10px; 
-}
+/** Styles for "DEFAULT" buttons (usually 'OK' or equivalent in dialogs. 
+ *  To activate, set 'default' attribute on button.
+ **/
+ 
+/* outer frame */  
+  button[default] 
+    {
+      /* XXX this is a HACK until 'orient' is supported in CSS! XXX */
+      /* strictly speaking not necessary because default for buttonright is 
+       * to lay image out horizontally, but leaving here as a reminder to
+       * implement this feature */
+      behavior            : url(resource:/chrome/xulBindings.xml#buttonright);
+      font-weight         : bold;
+	    list-style-image    : url("chrome://global/skin/return.gif");
+    }
+    
+/** Styles for 'dialog' buttons (usually any command button in a dialog)
+ *  This class gives buttons 10px of padding on each side to increase the
+ *  strike area and make buttons with small amounts of text (e.g. 'OK') 
+ *  look less silly.
+ **/
 
-/* align text in standard buttons to center in the available space */
-button > .internal-box > .text-container,
-button.right > .internal-box > .text-container,
-button.left > .internal-box > .text-container {
-  text-align: center;
-}
+/* internal frame */
+  button.dialog > .internal-box
+    {
+      padding             : 2px 10px 2px 10px;
+    }
+  
+  button.dialog:hover:active > .internal-box 
+    {
+      padding             : 3px 9px 1px 11px;
+    }
 
-button.top > .internal-box > .text-container,
-button.bottom > .internal-box > .text-container {
-  vertical-align: middle;
-}
+/** Styles for grey toolbar buttons. These buttons are used in places like
+ *  editor's formatting toolbar or toolbars wanting a button similar to a command
+ *  button but without an initial outset frame.
+ **/ 
+  button.borderless > .internal-box 
+    {
+      border              : 1px solid #CCCCCC;
+    }
+  
+  button.borderless:hover > .internal-box 
+    {
+      border              : 1px outset #CCCCCC;
+    }
+  
+  button.borderless:active > .internal-box 
+    {
+      border              : 1px inset #CCCCCC;
+    }
 
-/* special classes for buttons where the text is aligned to one side */
-button.text-left {
-  text-align: left;
-}
+/** Styles for the largest type of toolbar buttons. In the Seamonkey implementation, 
+ *  these are only used in the navigation toolbar in the navigator package.
+ **/
+ 
+  /* outer frame */
+  button.large-toolbar 
+    {
+      background-repeat   : no-repeat;
+      background-position : 50% 0px;
+      background-color    : transparent;
+      background-image    : url("chrome://global/skin/button32-bg.gif");
+      color               : #CCFFFF;
+      min-width           : 36px;
+      min-height          : 36px;
+      margin              : 6px 6px 1px 1px;
+      font-size           : smaller;
+      border              : none;
+    }
+    
+  button.large-toolbar:hover 
+    {
+      background-image    : url("chrome://global/skin/button32-bg-hover.gif");
+      border              : none;
+    } 
 
-button.text-right {
-  text-align: right;
-}
+  button.large-toolbar:active
+    {
+      margin              : 7px 5px 0px 2px;
+      border              : none;
+    }
 
-/* button text formatting rules */
-button > .internal-box > .text-container > text,
-button.left > .internal-box > .text-container > text,
-button.right > .internal-box > .text-container > text {
-  padding: 0px 0px 0px 0px;
-}
-
-button.top > .internal-box > .text-container > text,
-button.bottom > .internal-box > .text-container > text {
-  padding: 2px 0px 2px 0px;
-}
-
-button[default] {
-  behavior: url(resource:/chrome/xulBindings.xml#buttonright);
-  font-weight: bold;
-	list-style-image: url("chrome://global/skin/return.gif");
-}
-
-button[default] > .internal-box > image {
-  margin-left: 3px;
-}
+  button.large-toolbar[disabled="true"],
+  button.large-toolbar[disabled="true"]:hover,
+  button.large-toolbar[disabled="true"]:active
+    {
+      background-image    : url("chrome://global/skin/button32-bg-disabled.gif");
+      margin              : 6px 6px 1px 1px;
+      border              : none;
+    }
+    
+/* internal frame */
+  button.large-toolbar[disabled="true"] > .internal-box,
+  button.large-toolbar[disabled="true"]:hover > .internal-box,
+  button.large-toolbar[disabled="true"]:active > .internal-box
+    {
+      border              : none;
+    }
+      
+  button.large-toolbar > .internal-box,
+  button.large-toolbar:hover > .internal-box,
+  button.large-toolbar:active > .internal-box
+    {
+      border              : none;
+    }
+    
+  button.large-toolbar > .internal-box > .text-container 
+    {
+      display             : none;
+    }
