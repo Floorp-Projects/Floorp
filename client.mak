@@ -157,6 +157,12 @@ clobber_layout:
 	set LAYOUT_DIRS=1
 	nmake -f makefile.win clobber_all
 
+browse_info::
+	cd $(MOZ_SRC)\$(MOZ_TOP)
+	-dir /s /b *.sbr > sbrlist.tmp
+	-bscmake /n /o nglayout.bsc @sbrlist.tmp
+	-rm sbrlist.tmp
+
 #//------------------------------------------------------------------------
 #// Utility stuff...
 #//------------------------------------------------------------------------
