@@ -236,12 +236,16 @@ function ensureExtensionsFiles(aIsProfile)
                                 [DIR_DEFAULTS_EXTENSIONS, FILE_EXTENSIONS]);
       defaultFile.copyTo(extensionsFile.parent, extensionsFile.leafName);
 
-      try {      
-        (getFile(getDirKey(aIsProfile), [DIR_CR_CHROME, FILE_CR_CHROMEDS])).remove(false);
-        (getDir(getDirKey(aIsProfile), [DIR_CR_CHROME, DIR_CR_OVERLAYINFO])).remove(true);
-      }
-      catch (e) { 
-        dump("Extension System Warning: failed to remove chrome.rdf/overlay info because: " + e + "\n"); 
+      // XXXben - do this only for profile until we have a better protection 
+      // mechanism for global items.
+      if (aIsProfile) {
+        try {      
+          (getFile(getDirKey(aIsProfile), [DIR_CR_CHROME, FILE_CR_CHROMEDS])).remove(false);
+          (getDir(getDirKey(aIsProfile), [DIR_CR_CHROME, DIR_CR_OVERLAYINFO])).remove(true);
+        }
+        catch (e) { 
+          dump("Extension System Warning: failed to remove chrome.rdf/overlay info because: " + e + "\n"); 
+        }
       }
     }
   }
