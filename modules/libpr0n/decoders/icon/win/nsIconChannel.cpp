@@ -288,39 +288,44 @@ NS_IMETHODIMP nsIconChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports
     if (result > 0)
     {
       nsCString iconBuffer;
-      // we have the bit map we need to get info about the bitmap
-      BITMAPINFO pBitMapInfo;
-      BITMAPINFOHEADER pBitMapInfoHeader;
-      pBitMapInfo.bmiHeader.biBitCount = 0;
-      pBitMapInfo.bmiHeader.biSize = sizeof(pBitMapInfoHeader);
 
-      HDC pDC = CreateCompatibleDC(NULL); // get a device context for the screen.
-      LONG result = GetDIBits(pDC, pIconInfo.hbmColor, 0, 0, NULL, &pBitMapInfo, DIB_RGB_COLORS);
-      if (result > 0 && pBitMapInfo.bmiHeader.biSizeImage > 0)
-      {
+     HANDLE h_bmp_info = GlobalAlloc (GHND, sizeof (BITMAPINFO) + (sizeof (RGBQUAD) * 256));
+     BITMAPINFO* pBitMapInfo = (BITMAPINFO *) GlobalLock (h_bmp_info);
+     memset (pBitMapInfo, NULL, sizeof (BITMAPINFO) + (sizeof (RGBQUAD) * 255));
+     pBitMapInfo->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+     pBitMapInfo->bmiHeader.biPlanes = 1;
+     pBitMapInfo->bmiHeader.biBitCount = 0;
+     pBitMapInfo->bmiHeader.biCompression = BI_RGB;
+
+     HDC pDC = CreateCompatibleDC(NULL); // get a device context for the screen.
+     LONG result = GetDIBits(pDC, pIconInfo.hbmColor, 0, 0, NULL, pBitMapInfo, DIB_RGB_COLORS);
+     if (result > 0 && pBitMapInfo->bmiHeader.biSizeImage > 0)
+     {
         // allocate a buffer to hold the bit map....this should be a buffer that's biSizeImage...
-        unsigned char * buffer = (PRUint8 *) nsMemory::Alloc(pBitMapInfo.bmiHeader.biSizeImage);
-        result = GetDIBits(pDC, pIconInfo.hbmColor, 0, pBitMapInfo.bmiHeader.biHeight, (void *) buffer, &pBitMapInfo, DIB_RGB_COLORS);
+        unsigned char * buffer = (PRUint8 *) nsMemory::Alloc(pBitMapInfo->bmiHeader.biSizeImage);
+        result = GetDIBits(pDC, pIconInfo.hbmColor, 0, pBitMapInfo->bmiHeader.biHeight, (void *) buffer, pBitMapInfo, DIB_RGB_COLORS);
         if (result > 0)
         { 
           // The first 2 bytes into our output buffer needs to be the width and the height (in pixels) of the icon
           // as specified by our data format.
-          iconBuffer.Assign((char) pBitMapInfo.bmiHeader.biWidth);
-          iconBuffer.Append((char) pBitMapInfo.bmiHeader.biHeight);
+          iconBuffer.Assign((char) pBitMapInfo->bmiHeader.biWidth);
+          iconBuffer.Append((char) pBitMapInfo->bmiHeader.biHeight);
 
-          ConvertColorBitMap(buffer, &pBitMapInfo, iconBuffer);
+          ConvertColorBitMap(buffer, pBitMapInfo, iconBuffer);
           
           // now we need to tack on the alpha data...which is hbmMask
-          pBitMapInfo.bmiHeader.biBitCount = 0;
-          pBitMapInfo.bmiHeader.biSize = sizeof(pBitMapInfoHeader);
-          result = GetDIBits(pDC, pIconInfo.hbmMask, 0, 0, NULL, &pBitMapInfo, DIB_RGB_COLORS);
-          if (result > 0 && pBitMapInfo.bmiHeader.biSizeImage > 0)
+          memset (pBitMapInfo, NULL, sizeof (BITMAPINFO) + (sizeof (RGBQUAD) * 255));
+          pBitMapInfo->bmiHeader.biBitCount = 0;
+          pBitMapInfo->bmiHeader.biPlanes = 1;
+          pBitMapInfo->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+          result = GetDIBits(pDC, pIconInfo.hbmMask, 0, 0, NULL, pBitMapInfo, DIB_RGB_COLORS);
+          if (result > 0 && pBitMapInfo->bmiHeader.biSizeImage > 0)
           {
             // allocate a buffer to hold the bit map....this should be a buffer that's biSizeImage...
-            unsigned char * maskBuffer = (PRUint8 *) nsMemory::Alloc(pBitMapInfo.bmiHeader.biSizeImage);
-            result = GetDIBits(pDC, pIconInfo.hbmMask, 0, pBitMapInfo.bmiHeader.biHeight, (void *) maskBuffer, &pBitMapInfo, DIB_RGB_COLORS);
+            unsigned char * maskBuffer = (PRUint8 *) nsMemory::Alloc(pBitMapInfo->bmiHeader.biSizeImage);
+            result = GetDIBits(pDC, pIconInfo.hbmMask, 0, pBitMapInfo->bmiHeader.biHeight, (void *) maskBuffer, pBitMapInfo, DIB_RGB_COLORS);
             if (result > 0)          
-               ConvertMaskBitMap(maskBuffer, &pBitMapInfo.bmiHeader, iconBuffer);           
+               ConvertMaskBitMap(maskBuffer, &(pBitMapInfo->bmiHeader), iconBuffer);           
             nsMemory::Free(maskBuffer);
 
             // turn our nsString into a stream looking object...
@@ -338,6 +343,8 @@ NS_IMETHODIMP nsIconChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports
         nsMemory::Free(buffer);
       } // if we got color info
 
+      GlobalUnlock(h_bmp_info);
+      GlobalFree(h_bmp_info);
       DeleteDC(pDC);
     } // if we got icon info
   } // if we got sfi
