@@ -353,7 +353,7 @@ nsHTTPConn::Response(HTTPGetCB aCallback, char *aDestFile, int aResumePos)
 
     int rv = OK;
     char resp[kRespBufSize];
-    int bufSize, fwriteLen, fwrote, bytesWritten = 0, expectedSize = 0;
+    int bufSize, total, fwriteLen, fwrote, bytesWritten = 0, expectedSize = 0;
     FILE *destFd;
     char *fwritePos;
     int bFirstIter = TRUE;
@@ -385,13 +385,14 @@ nsHTTPConn::Response(HTTPGetCB aCallback, char *aDestFile, int aResumePos)
     do
     {
         memset(resp, 0, kRespBufSize);
-        bufSize = kRespBufSize;
+        bufSize = kRespBufSize;       
         
         rv = mSocket->Recv((unsigned char *) resp, &bufSize);
         DUMP(("nsSocket::Recv returned: %d\t and recd: %d\n", rv, bufSize));
 
-        if(rv == nsSocket::E_EOF_FOUND)
+        if(rv == nsSocket::E_EOF_FOUND || (rv != nsSocket::E_READ_MORE && rv != nsSocket::OK) ) {
             break;
+        }
 
         if (bFirstIter)
         {
@@ -409,6 +410,7 @@ nsHTTPConn::Response(HTTPGetCB aCallback, char *aDestFile, int aResumePos)
                 // move past hdr-body delimiter
                 fwritePos += strlen(kHdrBodyDelim);
                 fwriteLen = bufSize - (fwritePos - resp);
+                total = expectedSize + aResumePos;
             }
 
             bFirstIter = FALSE;
@@ -425,14 +427,18 @@ nsHTTPConn::Response(HTTPGetCB aCallback, char *aDestFile, int aResumePos)
         if (fwriteLen > 0)
             bytesWritten += fwriteLen;
         if (aCallback && 
-           (aCallback(bytesWritten, expectedSize) == E_USER_CANCEL))
+           (aCallback(bytesWritten, total) == E_USER_CANCEL))
               rv = E_USER_CANCEL; // we want to ignore all errors returned
                                   // from aCallback() except E_USER_CANCEL 
 
         if ( mEventPumpCB )
             mEventPumpCB();
-    } while (rv == nsSocket::E_READ_MORE || rv == nsSocket::OK);
 
+    } while (bytesWritten < expectedSize && (rv == nsSocket::E_READ_MORE || rv == nsSocket::OK));
+
+    if ( bytesWritten == expectedSize )
+        rv = nsSocket::E_EOF_FOUND;
+        
     if (rv == nsSocket::E_EOF_FOUND)
     {
         DUMP(("EOF detected\n"));

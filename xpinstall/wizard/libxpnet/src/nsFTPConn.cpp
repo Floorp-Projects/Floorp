@@ -267,7 +267,9 @@ BAIL:
     /* close locl file if open */
     if (loclfd)
         fclose(loclfd);
-
+    if ( err == E_USER_CANCEL ) {
+        return err;
+    }
     /* kill data connection if it exists */
     if (mDataSock)
     {
@@ -293,7 +295,7 @@ nsFTPConn::Close()
     if (mCntlSock)
     {
         /* issue QUIT command on control connection */
-        sprintf(cmd, "QUIT\r\n");
+        sprintf(cmd, "ABORT\r\n");
         IssueCmd(cmd, resp, kRespBufSize, mCntlSock);
     }
     if (mDataSock)

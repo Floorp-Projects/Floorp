@@ -267,6 +267,7 @@ RunAllXPIs(short xpiVRefNum, long xpiDirID, short vRefNum, long dirID)
 	// loop through 0 to kMaxComponents
 	for(i=0; i<kMaxComponents; i++)
 	{
+	    BreathFunc();
 		// general test: if component in setup type
 		if ( (gControls->cfg->st[instChoice].comp[i] == kInSetupType) &&
 			 (compsDone < gControls->cfg->st[instChoice].numComps) )
@@ -302,6 +303,7 @@ RunAllXPIs(short xpiVRefNum, long xpiDirID, short vRefNum, long dirID)
 						}
 						
 						err = RunXPI(xpiSpec, &xpi_installProc);
+						BreathFunc();
 						if (err != NS_OK)
 						    break;
 						
