@@ -1,3 +1,4 @@
+#! gmake
 # 
 # The contents of this file are subject to the Mozilla Public
 # License Version 1.1 (the "License"); you may not use this file
@@ -31,73 +32,46 @@
 # GPL.
 # 
 
-#
-# Configuration information unique to the "sectools" component
-#
-
 #######################################################################
-# [1.0] Local "sectools" component library names                      #
+# (1) Include initial platform-independent assignments (MANDATORY).   #
 #######################################################################
 
-include $(CORE_DEPTH)/$(MODULE)/config/libnames.mk
+include manifest.mn
+
+LIBRARY_NAME = jss21
 
 #######################################################################
-# [2.0] Local "sectools" component library link options               #
+# (2) Include "global" configuration information. (OPTIONAL)          #
 #######################################################################
 
-include $(CORE_DEPTH)/$(MODULE)/config/linkage.mk
+include $(CORE_DEPTH)/coreconf/config.mk
 
 #######################################################################
-# [3.0] Local "sectools" component STATIC system library names        #
+# (3) Include "component" configuration information. (OPTIONAL)       #
 #######################################################################
 
-include $(CORE_DEPTH)/$(MODULE)/config/static.mk
+include $(CORE_DEPTH)/$(MODULE)/config/config.mk
 
 #######################################################################
-# [4.0] Local "sectools" component DYNAMIC system library names       #
+# (4) Include "local" platform-dependent assignments (OPTIONAL).      #
 #######################################################################
 
-include $(CORE_DEPTH)/$(MODULE)/config/dynamic.mk
+include config.mk
 
-# Stricter semantic checking for SunOS compiler. This catches calling
-# undeclared functions, a major headache during debugging.
-ifeq ($(OS_ARCH), SunOS)
-    OS_CFLAGS += -v
-endif
+#######################################################################
+# (5) Execute "global" rules. (OPTIONAL)                              #
+#######################################################################
 
-# Unfortunately, since the DBM and SECURITY libraries were compiled with
-# the "-taso" switch (in ns/coreconf/OSF1.mk), we must ALSO compile the
-# JSS dynamic libraries with the "-taso" switch (unless USE_64 is specified)
-ifeq ($(OS_ARCH), OSF1)
-	ifneq ($(USE_64), 1)
-		LD_LIBS += -taso 
-	endif
-endif
+include $(CORE_DEPTH)/coreconf/rules.mk
 
-# Add symbolic binding values to MKSHLIB and LINK_DLL to
-# encompass special link options for dynamic libraries
+#######################################################################
+# (6) Execute "component" rules. (OPTIONAL)                           #
+#######################################################################
 
-ifeq ($(OS_ARCH), AIX)
-MKSHLIB += -bsymbolic
-endif
-ifeq ($(OS_ARCH), HP-UX)
-MKSHLIB += -B symbolic
-endif
-ifeq ($(OS_ARCH), IRIX)
-MKSHLIB += -B symbolic
-endif
-ifeq ($(OS_ARCH), Linux)
-MKSHLIB += -Wl,-Bsymbolic
-endif
-ifeq ($(OS_ARCH), OSF1)
-MKSHLIB += -B symbolic
-endif
-ifeq ($(OS_ARCH), SunOS)
-MKSHLIB += -B symbolic
-endif
-ifeq ($(OS_ARCH), WINNT)
-LINK_DLL += -LIBPATH:$(SOURCE_LIB_DIR)
-LINK_DLL += -LIBPATH:$(JAVA_HOME)/$(JAVA_LIBDIR)
-LINK_DLL += $(foreach file,$(LD_LIBS),-DEFAULTLIB:"$(notdir $(file))")
-endif
+include $(CORE_DEPTH)/$(MODULE)/config/rules.mk
 
+#######################################################################
+# (7) Execute "local" rules. (OPTIONAL).                              #
+#######################################################################
+
+include rules.mk
