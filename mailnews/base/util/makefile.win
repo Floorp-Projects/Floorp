@@ -15,16 +15,18 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
+IGNORE_MANIFEST=1
+
 DEPTH=..\..\..
 MODULE= msgbaseutil
 
-IGNORE_MANIFEST=1
-MAKE_OBJ_TYPE=DLL
-DLLNAME= msgcoreutil
+LIBNAME = .\$(OBJDIR)\msgbaseutil
+DLL = $(LIBNAME).dll
 
 include <$(DEPTH)\config\config.mak>
 
-DEFINES=-D_IMPL_NS_MSG_BASE
+################################################################################
+## exports
 
 EXPORTS=                \
 	nsMsgLineBuffer.h	\
@@ -42,12 +44,17 @@ EXPORTS=                \
 	nsMsgProtocol.h \
 	$(NULL)
 
-LLIBS=								\
-	$(DIST)\lib\xpcom.lib			\
-	$(DIST)\lib\plc3.lib			\
-	$(DIST)\lib\rdfutil_s.lib		\
-	$(LIBNSPR)						\
-	$(NULL)
+################################################################################
+## library
+
+LIBRARY_NAME=msgbase_s
+
+DEFINES=-D_IMPL_NS_MSG_BASE
+
+LCFLAGS =		   \
+        $(LCFLAGS) \
+        $(DEFINES) \
+        $(NULL)
 
 CPP_OBJS=                               \
 	.\$(OBJDIR)\nsMsgGroupRecord.obj    \
@@ -65,20 +72,17 @@ CPP_OBJS=                               \
 	.\$(OBJDIR)\nsMsgProtocol.obj		\
 	$(NULL)
 
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
+LLIBS=								\
+	$(DIST)\lib\xpcom.lib			\
+	$(DIST)\lib\plc3.lib			\
+	$(DIST)\lib\rdfutil_s.lib		\
+	$(LIBNSPR)						\
+	$(NULL)
 
+MISCDEP=$(LLIBS)
 
-LCFLAGS = \
-        $(LCFLAGS) \
-        $(DEFINES) \
-        $(NULL)
-
-include <$(DEPTH)\config\rules.mak>
+include <$(DEPTH)/config/rules.mak>
 
 libs:: $(DLL)
-       $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
-	   $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
-
-clobber::
-	rm -f $(DIST)\lib\$(DLLNAME).lib
-	rm -f $(DIST)\bin\$(DLLNAME).dll
+	$(MAKE_INSTALL)  $(LIBNAME).$(DLL_SUFFIX) $(DIST)\bin
+	$(MAKE_INSTALL)  $(LIBNAME).$(LIB_SUFFIX) $(DIST)\lib
