@@ -16,6 +16,7 @@
  * Reserved.
  */
 
+#include "nsWindow.h"
 #include "nsLabel.h"
 #include "nsILabel.h"
 #include "nsToolkit.h"
@@ -24,7 +25,7 @@
 #include "nsString.h"
 #include "nsStringUtil.h"
 
-#include "nsXtEventHandler.h"
+#include "nsGtkEventHandler.h"
 
 #include <gtk/gtk.h>
 
@@ -52,12 +53,12 @@ NS_METHOD nsLabel::Create(nsIWidget *aParent,
                       nsWidgetInitData *aInitData) 
 {
   aParent->AddChild(this);
-  GtkWidget parentWidget = nsnull;
+  GtkWidget *parentWidget = nsnull;
 
   if (aParent) {
-    parentWidget = (Widget) aParent->GetNativeData(NS_NATIVE_WIDGET);
+    parentWidget = (GtkWidget*) aParent->GetNativeData(NS_NATIVE_WIDGET);
   } else if (aAppShell) {
-    parentWidget = (Widget) aAppShell->GetNativeData(NS_NATIVE_SHELL);
+    parentWidget = (GtkWidget*) aAppShell->GetNativeData(NS_NATIVE_SHELL);
   }
 
   InitToolkit(aToolkit, aParent);
