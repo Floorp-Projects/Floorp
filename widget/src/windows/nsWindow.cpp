@@ -5501,13 +5501,13 @@ NS_METHOD nsWindow::SetIcon(const nsAString& anIconSpec)
                                        IMAGE_ICON,
                                        ::GetSystemMetrics(SM_CXICON),
                                        ::GetSystemMetrics(SM_CYICON),
-                                       LR_LOADFROMFILE | LR_SHARED );
+                                       LR_LOADFROMFILE );
   HICON smallIcon = (HICON)::LoadImageW( NULL,
                                          (LPCWSTR)iconPath.get(),
                                          IMAGE_ICON,
                                          ::GetSystemMetrics(SM_CXSMICON),
                                          ::GetSystemMetrics(SM_CYSMICON),
-                                         LR_LOADFROMFILE | LR_SHARED );
+                                         LR_LOADFROMFILE );
 
   // See if unicode API not implemented and if not, try ascii version
   if ( ::GetLastError() == ERROR_CALL_NOT_IMPLEMENTED ) {
