@@ -130,7 +130,11 @@ public class ScriptOrFnNode extends Node {
     }
 
     public final String[] getParamAndVarNames() {
-        String[] array = new String[itsVariables.size()];
+        int N = itsVariables.size();
+        if (N == 0) {
+            return ScriptRuntime.emptyStrings;
+        }
+        String[] array = new String[N];
         itsVariables.toArray(array);
         return array;
     }
