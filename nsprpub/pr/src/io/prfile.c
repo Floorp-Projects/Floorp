@@ -551,6 +551,8 @@ PR_IMPLEMENT(PRStatus) PR_CreatePipe(
     (*readPipe)->secret->md.sync_file_io = PR_TRUE;
     (*writePipe)->secret->md.sync_file_io = PR_TRUE;
 #endif
+    (*readPipe)->secret->inheritable = PR_TRUE;
+    (*writePipe)->secret->inheritable = PR_TRUE;
     return PR_SUCCESS;
 #elif defined(XP_UNIX)
     int pipefd[2];
