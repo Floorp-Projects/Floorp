@@ -1126,6 +1126,30 @@ nsGenericHTMLElement::ValueOrPercentToString(const nsHTMLValue& aValue,
 }
 
 PRBool
+nsGenericHTMLElement::ValueOrPercentOrProportionalToString(const nsHTMLValue& aValue,
+                                                           nsString& aResult)
+{
+  aResult.Truncate(0);
+  switch (aValue.GetUnit()) {
+  case eHTMLUnit_Integer:
+    aResult.Append(aValue.GetIntValue(), 10);
+    return PR_TRUE;
+  case eHTMLUnit_Pixel:
+    aResult.Append(aValue.GetPixelValue(), 10);
+    return PR_TRUE;
+  case eHTMLUnit_Percent:
+    aResult.Append(PRInt32(aValue.GetPercentValue() * 100.0f), 10);
+    aResult.Append('%');
+    return PR_TRUE;
+  case eHTMLUnit_Proportional:
+    aResult.Append(aValue.GetIntValue(), 10);
+    aResult.Append('*');
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
+PRBool
 nsGenericHTMLElement::ParseValue(const nsString& aString, PRInt32 aMin,
                                  nsHTMLValue& aResult, nsHTMLUnit aValueUnit)
 {

@@ -129,6 +129,9 @@ public:
   static PRBool ValueOrPercentToString(const nsHTMLValue& aValue,
                                        nsString& aResult);
 
+  static PRBool ValueOrPercentOrProportionalToString(const nsHTMLValue& aValue,
+                                                     nsString& aResult);
+
   static PRBool ParseValue(const nsString& aString, PRInt32 aMin,
                            nsHTMLValue& aResult, nsHTMLUnit aValueUnit);
 
