@@ -128,12 +128,12 @@ nsPrimitiveHelpers :: CreateDataFromPrimitive ( const char* aFlavor, nsISupports
 // string, not the # of bytes in the buffer. The |outPlainTextData| is null terminated, 
 // but its length parameter, |outPlainTextLen|, does not reflect that.
 //
-void
+nsresult
 nsPrimitiveHelpers :: ConvertUnicodeToPlatformPlainText ( PRUnichar* inUnicode, PRInt32 inUnicodeLen, 
                                                             char** outPlainTextData, PRInt32* outPlainTextLen )
 {
   if ( !outPlainTextData || !outPlainTextLen )
-    return;
+    return NS_ERROR_INVALID_ARG;
 
   // Get the appropriate unicode encoder. We're guaranteed that this won't change
   // through the life of the app so we can cache it.
@@ -147,22 +147,36 @@ nsPrimitiveHelpers :: ConvertUnicodeToPlatformPlainText ( PRUnichar* inUnicode, 
     rv = platformCharsetService->GetCharset(kPlatformCharsetSel_PlainTextInClipboard, platformCharset);
   if (NS_FAILED(rv))
     platformCharset.Assign(NS_LITERAL_STRING("ISO-8859-1"));
+  else {
+    // also get a keyboard charset and use it as a fallback
+    nsAutoString keyboardCharset;
+    rv = platformCharsetService->GetCharset(kPlatformCharsetSel_KeyboardInput, keyboardCharset);
+    if (NS_SUCCEEDED(rv) &&
+        !keyboardCharset.Equals(platformCharset)) {
+      platformCharset.Append((PRUnichar)',');
+      platformCharset.Append(keyboardCharset);
+    }
+  }
+  
 
   // use transliterate to convert things like smart quotes to normal quotes for plain text
   nsCAutoString cPlatformCharset;
   cPlatformCharset.AssignWithConversion(platformCharset);
 
   nsCOMPtr<nsISaveAsCharset> converter = do_CreateInstance("@mozilla.org/intl/saveascharset;1");
-  converter->Init(cPlatformCharset.get(),
+  rv = converter->Init(cPlatformCharset.get(),
                   nsISaveAsCharset::attr_EntityAfterCharsetConv +
-                  nsISaveAsCharset::attr_FallbackQuestionMark,
+                  nsISaveAsCharset::attr_FallbackQuestionMark +
+                  nsISaveAsCharset::attr_CharsetFallback,
                   nsIEntityConverter::transliterate);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  converter->Convert(inUnicode, outPlainTextData);
+  rv = converter->Convert(inUnicode, outPlainTextData);
   *outPlainTextLen = *outPlainTextData ? strlen(*outPlainTextData) : 0;
 
   NS_ASSERTION ( NS_SUCCEEDED(rv), "Error converting unicode to plain text" );
   
+  return rv;
 } // ConvertUnicodeToPlatformPlainText
 
 
@@ -174,12 +188,12 @@ nsPrimitiveHelpers :: ConvertUnicodeToPlatformPlainText ( PRUnichar* inUnicode, 
 // but its length parameter, |outUnicodeLen|, does not reflect that. |outUnicodeLen| is
 // the length of the string in characters, not bytes.
 //
-void
+nsresult
 nsPrimitiveHelpers :: ConvertPlatformPlainTextToUnicode ( const char* inText, PRInt32 inTextLen, 
                                                             PRUnichar** outUnicode, PRInt32* outUnicodeLen )
 {
   if ( !outUnicode || !outUnicodeLen )
-    return;
+    return NS_ERROR_INVALID_ARG;
 
   // Get the appropriate unicode decoder. We're guaranteed that this won't change
   // through the life of the app so we can cache it.
@@ -216,6 +230,7 @@ nsPrimitiveHelpers :: ConvertPlatformPlainTextToUnicode ( const char* inText, PR
 
   NS_ASSERTION ( NS_SUCCEEDED(rv), "Error converting plain text to unicode" );
 
+  return rv;
 } // ConvertPlatformPlainTextToUnicode
 
 
