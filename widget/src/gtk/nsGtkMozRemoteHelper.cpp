@@ -249,9 +249,10 @@ nsGtkMozRemoteHelper::ParseCommand(const char *aCommand, char **aResponse)
   origString.Truncate(end_command);
   
   // get the action type
-  actionString = Substring(origString, 0, begin_command);
+  actionString = Substring(origString, (PRUint32)0, (PRUint32)begin_command);
 
-  commandString = Substring(origString, begin_command + 1, origString.Length() - begin_command - 1);
+  commandString = Substring(origString, (PRUint32)(begin_command + 1), 
+			    (PRUint32)(origString.Length() - begin_command - 1));
 
   // convert the action to lower case and remove whitespace
   actionString.Trim(" ", PR_TRUE, PR_TRUE);
