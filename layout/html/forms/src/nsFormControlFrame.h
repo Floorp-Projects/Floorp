@@ -210,12 +210,6 @@ public:
   NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsString& aValue);
   NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue); 
 
-  // box sizing utility methods
-  static void AddBoxSizingToCoord(PRUint8 aBoxStyle, 
-                                  nscoord& aSize, 
-                                  nscoord aBorder, 
-                                  nscoord aPadding);
-
 protected:
 
   virtual ~nsFormControlFrame();
@@ -246,9 +240,6 @@ protected:
                               nsSize& aDesiredWidgetSize);
 
   NS_IMETHOD SetSuggestedSize(nscoord aWidth, nscoord aHeight);
-
-  // box sizing utility methods
-  void AddBoxSizing(nsSize& aSize, PRBool aAddToWidth, const nsMargin& aBorder, const nsMargin& aPadding);
 
 //
 //-------------------------------------------------------------------------------------
