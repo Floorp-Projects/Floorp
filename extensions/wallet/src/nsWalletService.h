@@ -60,6 +60,17 @@ public:
 
   NS_IMETHOD SI_RemoveUser(const char *URLName, const PRUnichar *userName);
 
+  NS_IMETHOD PromptUsernameAndPasswordURLNostrip
+    (const PRUnichar *text, PRUnichar **user, PRUnichar **pwd,
+     const char *urlname, nsIPrompt* dialog, PRBool *_retval);
+  NS_IMETHOD PromptPasswordURLNostrip
+    (const PRUnichar *text, PRUnichar **pwd, const char *urlname, nsIPrompt* dialog, PRBool *_retval);
+  NS_IMETHOD PromptURLNostrip
+    (const PRUnichar *text, const PRUnichar *defaultText, PRUnichar **result,
+     const char *urlname, nsIPrompt* dialog, PRBool *_retval);
+
+  NS_IMETHOD SI_RemoveUserNostrip(const char *URLName, const PRUnichar *userName);
+
 
   NS_IMETHOD WALLET_GetNopreviewListForViewer(nsAutoString& aNopreviewList);
   NS_IMETHOD WALLET_GetNocaptureListForViewer(nsAutoString& aNocaptureList);

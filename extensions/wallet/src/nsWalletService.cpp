@@ -130,6 +130,30 @@ NS_IMETHODIMP nsWalletlibService::SI_RemoveUser(const char *URLName, const PRUni
   return NS_OK;
 }
 
+NS_IMETHODIMP nsWalletlibService::PromptUsernameAndPasswordURLNostrip
+    (const PRUnichar *text, PRUnichar **user, PRUnichar **pwd,
+     const char *urlname, nsIPrompt* dialog, PRBool *returnValue) {
+  return ::SINGSIGN_PromptUsernameAndPassword
+    (text, user, pwd, urlname, dialog, returnValue, PR_FALSE);
+}
+
+NS_IMETHODIMP nsWalletlibService::PromptPasswordURLNostrip
+    (const PRUnichar *text, PRUnichar **pwd, const char *urlname,
+    nsIPrompt* dialog, PRBool *returnValue) {
+  return ::SINGSIGN_PromptPassword(text, pwd, urlname, dialog, returnValue, PR_FALSE);
+}
+
+NS_IMETHODIMP nsWalletlibService::PromptURLNostrip
+    (const PRUnichar *text, const PRUnichar *defaultText, PRUnichar **resultText,
+     const char *urlname, nsIPrompt* dialog, PRBool *returnValue) {
+  return ::SINGSIGN_Prompt
+    (text, defaultText, resultText, urlname, dialog, returnValue, PR_FALSE);
+}
+
+NS_IMETHODIMP nsWalletlibService::SI_RemoveUserNostrip(const char *URLName, const PRUnichar *userName) {
+  ::SINGSIGN_RemoveUser(URLName, userName, PR_FALSE);
+  return NS_OK;
+}
 
 NS_IMETHODIMP nsWalletlibService::WALLET_GetNopreviewListForViewer(nsAutoString& aNopreviewList){
   ::WLLT_GetNopreviewListForViewer(aNopreviewList);

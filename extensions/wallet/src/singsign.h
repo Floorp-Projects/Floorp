@@ -49,19 +49,21 @@ SINGSIGN_RestoreSignonData(char* URLName, PRUnichar* name, PRUnichar** value, PR
 extern nsresult
 SINGSIGN_PromptUsernameAndPassword
     (const PRUnichar *text, PRUnichar **user, PRUnichar **pwd,
-     const char *urlname,nsIPrompt* dialog, PRBool *returnValue);
+     const char *urlname,nsIPrompt* dialog, PRBool *returnValue, PRBool strip = PR_TRUE);
 
 extern nsresult
 SINGSIGN_PromptPassword
-    (const PRUnichar *text, PRUnichar **pwd, const char *urlname,nsIPrompt* dialog, PRBool *returnValue);
+    (const PRUnichar *text, PRUnichar **pwd, const char *urlname,
+    nsIPrompt* dialog, PRBool *returnValue, PRBool strip = PR_TRUE);
 
 extern nsresult
 SINGSIGN_Prompt
     (const PRUnichar *text, const PRUnichar *defaultText, PRUnichar **resultText,
-     const char *urlname,nsIPrompt* dialog, PRBool *returnValue);
+     const char *urlname,nsIPrompt* dialog, PRBool *returnValue, PRBool strip = PR_TRUE);
 
 extern PRBool
-SINGSIGN_RemoveUser(const char *URLName, const PRUnichar *userName);
+SINGSIGN_RemoveUser
+    (const char *URLName, const PRUnichar *userName, PRBool strip = PR_TRUE);
 
 XP_END_PROTOS
 

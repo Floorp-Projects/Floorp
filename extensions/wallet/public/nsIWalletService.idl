@@ -56,10 +56,14 @@ interface nsIWalletService : nsISupports {
   void WALLET_FetchFromNetCenter();
 
   boolean PromptUsernameAndPasswordURL(in wstring text, out wstring user, out wstring pwd, in string urlname, in nsIPrompt dialog);
-
   boolean PromptPasswordURL(in wstring text, out wstring pwd, in string urlname, in nsIPrompt dialog);
   boolean PromptURL(in wstring text, in wstring defaultText, out wstring result, in string urlname, in nsIPrompt dialog);
   void SI_RemoveUser(in string URLName, in wstring userName);
+
+  boolean PromptUsernameAndPasswordURLNostrip(in wstring text, out wstring user, out wstring pwd, in string urlname, in nsIPrompt dialog);
+  boolean PromptPasswordURLNostrip(in wstring text, out wstring pwd, in string urlname, in nsIPrompt dialog);
+  boolean PromptURLNostrip(in wstring text, in wstring defaultText, out wstring result, in string urlname, in nsIPrompt dialog);
+  void SI_RemoveUserNostrip(in string URLName, in wstring userName);
 
   [noscript] void WALLET_GetNopreviewListForViewer(in nsAutoStringRef aNopreviewList);
   [noscript] void WALLET_GetNocaptureListForViewer(in nsAutoStringRef aNocaptureList);

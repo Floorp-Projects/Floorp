@@ -245,8 +245,7 @@ si_CheckGetUsernamePassword
  * Key Management *
  ******************/
 
-extern void Wallet_RestartKey();
-extern PRUnichar Wallet_GetKey();
+extern PRUnichar Wallet_GetKey(PRInt64 saveCount, PRInt64 writeCount);
 extern PRBool Wallet_KeySet();
 extern void Wallet_KeyResetTime();
 extern PRBool Wallet_KeyTimedOut();
@@ -254,16 +253,12 @@ extern PRBool Wallet_SetKey(PRBool newkey);
 extern PRInt32 Wallet_KeySize();
 extern PRBool Wallet_CancelKey();
 
-char* signonFileName = nsnull;
-
-PRIVATE void
-si_RestartKey() {
-  Wallet_RestartKey();
-}
+char* signonFileNameP = nsnull;
+char* signonFileNameU = nsnull;
 
 PRIVATE PRUnichar
-si_GetKey() {
-  return Wallet_GetKey();
+si_GetKey(PRInt64 saveCount, PRInt64 writeCount) {
+  return Wallet_GetKey(saveCount, writeCount);
 }
 
 PRIVATE PRBool
@@ -404,7 +399,10 @@ static const char *pref_rememberSignons = "signon.rememberSignons";
 #ifdef DefaultIsOff
 static const char *pref_Notified = "signon.Notified";
 #endif
-static const char *pref_SignonFileName = "signon.SignonFileName";
+static const char *pref_SignonFileName = "signon.SignonFileName"; /* for old format only */
+static const char *pref_SignonFileNameP = "signon.SignonPasswordFileName";
+static const char *pref_SignonFileNameU = "signon.SignonURLFileName";
+static PRBool si_oldFormat = PR_FALSE;
 
 PRIVATE PRBool si_RememberSignons = PR_FALSE;
 #ifdef DefaultIsOff
@@ -510,10 +508,41 @@ extern char* Wallet_RandomName(char* suffix);
 
 PUBLIC void
 SI_InitSignonFileName() {
-  SI_GetCharPref(pref_SignonFileName, &signonFileName);
-  if (!signonFileName) {
-    signonFileName = Wallet_RandomName("psw");
-    SI_SetCharPref(pref_SignonFileName, signonFileName);
+  /*
+   * All files created by wallet and single signon will have a format designation number
+   * in the first line of the file.  However the original files did not do that.  So we
+   * go to great pains to maintain backwards compatibility with these old files.  We
+   * accomplish this by changing the names of the old files.
+   *
+   * The original and new names of the files are:
+   *
+   *                   old names       new names
+   *    key file:      xxxxxxxx.key    xxxxxxxx.k
+   *    wallet data:   xxxxxxxx.wlt    xxxxxxxx.w
+   *    ss passwords:  xxxxxxxx.psw    xxxxxxxx.p
+   *    ss urls:       signon.tab      xxxxxxxx.u
+   *
+   * Furtherore, the names of the first three files were stored in prefs.js for the old
+   * files but all four are stored there for the new ones.
+   */
+  SI_GetCharPref(pref_SignonFileNameP, &signonFileNameP);
+
+  if (!signonFileNameP) {
+    SI_GetCharPref(pref_SignonFileName, &signonFileNameP);
+    if (!signonFileNameP) {
+      signonFileNameP = Wallet_RandomName("p");
+      SI_SetCharPref(pref_SignonFileNameP, signonFileNameP);
+    } else {
+      si_oldFormat = PR_TRUE;
+    }
+  }
+
+  if (!si_oldFormat) {
+    SI_GetCharPref(pref_SignonFileNameU, &signonFileNameU);
+    if (!signonFileNameU) {
+      signonFileNameU = Wallet_RandomName("u");
+      SI_SetCharPref(pref_SignonFileNameU, signonFileNameU);
+    }
   }
 }
 
@@ -720,7 +749,7 @@ si_GetURL(char * URLName) {
 
 /* Remove a user node from a given URL node */
 PRIVATE PRBool
-si_RemoveUser(char *URLName, nsAutoString userName, PRBool save) {
+si_RemoveUser(char *URLName, nsAutoString userName, PRBool save, PRBool strip = PR_TRUE) {
   nsresult res;
   si_SignonURLStruct * url;
   si_SignonUserStruct * user;
@@ -733,36 +762,40 @@ si_RemoveUser(char *URLName, nsAutoString userName, PRBool save) {
 
   /* convert URLName to a uri so we can parse out the username and hostname */
   char* host = nsnull;
-  if (URLName) {
-    nsCOMPtr<nsIURL> uri;
-    nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, NS_GET_IID(nsIURL), (void **) getter_AddRefs(uri));
-    uri->SetSpec((char *)URLName);
+  if (strip) {
+    if (URLName) {
+      nsCOMPtr<nsIURL> uri;
+      nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, NS_GET_IID(nsIURL), (void **) getter_AddRefs(uri));
+      uri->SetSpec((char *)URLName);
 
-    /* uri is of the form <scheme>://<username>:<password>@<host>:<portnumber>/<pathname>) */
+      /* uri is of the form <scheme>://<username>:<password>@<host>:<portnumber>/<pathname>) */
 
-    /* get host part of the uri */
-    res = uri->GetHost(&host);
-    if (NS_FAILED(res)) {
-      return PR_FALSE;
-    }
-
-    /* if no username given, extract it from uri -- note: prehost is <username>:<password> */
-    if (userName.Length() == 0) {
-      char * userName2 = nsnull;
-      res = uri->GetPreHost(&userName2);
+      /* get host part of the uri */
+      res = uri->GetHost(&host);
       if (NS_FAILED(res)) {
-        PR_FREEIF(host);
         return PR_FALSE;
       }
-      if (userName2) {
-        userName = nsAutoString(userName2);
-        PR_FREEIF(userName2);
-        PRInt32 colon = userName.FindChar(':');
-        if (colon != -1) {
-          userName.Truncate(colon);
+
+      /* if no username given, extract it from uri -- note: prehost is <username>:<password> */
+      if (userName.Length() == 0) {
+        char * userName2 = nsnull;
+        res = uri->GetPreHost(&userName2);
+        if (NS_FAILED(res)) {
+          PR_FREEIF(host);
+          return PR_FALSE;
+        }
+        if (userName2) {
+          userName = nsAutoString(userName2);
+          PR_FREEIF(userName2);
+          PRInt32 colon = userName.FindChar(':');
+          if (colon != -1) {
+            userName.Truncate(colon);
+          }
         }
       }
     }
+  } else {
+    host = (nsAutoString(":") + URLName).ToNewCString();
   }
 
   si_lock_signon_list();
@@ -826,8 +859,8 @@ si_RemoveUser(char *URLName, nsAutoString userName, PRBool save) {
 }
 
 PUBLIC PRBool
-SINGSIGN_RemoveUser(const char *URLName, const PRUnichar *userName) {
-  return si_RemoveUser((char *)URLName, userName, PR_TRUE);
+SINGSIGN_RemoveUser(const char *URLName, const PRUnichar *userName, PRBool strip) {
+  return si_RemoveUser((char *)URLName, userName, PR_TRUE, strip);
 }
 
 /* Determine if a specified url/user exists */
@@ -1161,6 +1194,9 @@ si_GetURLAndUserForChangeForm(nsAutoString password)
   return user;
 }
 
+PRIVATE void
+si_FreeReject(si_Reject * reject);
+
 /*
  * Remove all the signons and free everything
  */
@@ -1174,8 +1210,17 @@ si_RemoveAllSignonData() {
   }
   si_PartiallyLoaded = PR_FALSE;
   si_FullyLoaded = PR_FALSE;
-}
 
+ si_Reject * reject;
+ PRInt32 rejectCount = LIST_COUNT(si_reject_list);
+  while (LIST_COUNT(si_reject_list)>0) {
+    reject = NS_STATIC_CAST(si_Reject*, si_reject_list->ElementAt(0));
+    if (reject) {
+      si_FreeReject(reject);
+      si_signon_list_changed = PR_TRUE;
+    }
+  }
+}
 
 /****************************
  * Managing the Reject List *
@@ -1540,6 +1585,8 @@ si_PutData(char * URLName, nsVoidArray * signonData, PRBool save) {
  * Managing the Signon Files *
  *****************************/
 
+#define HEADER_VERSION_1 "#1"
+
 extern void
 Wallet_UTF8Put(nsOutputFileStream strm, PRUnichar c);
 
@@ -1555,22 +1602,34 @@ Wallet_UTF8Get(nsInputFileStream strm);
  */
 PRIVATE PRInt32
 si_ReadLine
-  (nsInputFileStream strm, nsInputFileStream strmx, nsAutoString& lineBuffer, PRBool obscure) {
+  (nsInputFileStream strmu, nsInputFileStream strmp, nsAutoString& lineBuffer,PRBool obscure,
+    PRInt64 saveCount = 0, PRInt64 * readCount = 0, PRBool inHeader = PR_FALSE) {
 
   lineBuffer = nsAutoString("");
 
   /* read the line */
-  PRUnichar c;
+  PRUnichar c, c2;
   for (;;) {
-    if (obscure) {
-      c = Wallet_UTF8Get(strm); /* get past the asterisk */
-      c = Wallet_UTF8Get(strmx)^si_GetKey(); /* get the real character */
+    if (inHeader) {
+      c = Wallet_UTF8Get(strmu);
+      if (obscure) {
+        c2 = Wallet_UTF8Get(strmp);
+        if (c != c2) {
+          return -1;
+        }
+      }
+    } else if (obscure) {
+      c = Wallet_UTF8Get(strmu); /* get past the asterisk */
+      if ((c != '*') && (c != '\n') && (c != '\r')) {
+        return -1;
+      }
+      c = Wallet_UTF8Get(strmp)^si_GetKey(saveCount, (*readCount)++); /* get the real character */
     } else {
-      c = Wallet_UTF8Get(strm);
+      c = Wallet_UTF8Get(strmu);
     }
 
     /* note that eof is not set until we read past the end of the file */
-    if (strm.eof()) {
+    if (strmu.eof()) {
       return -1;
     }
 
@@ -1603,7 +1662,10 @@ SI_LoadSignonData(PRBool fullLoad) {
    */
   char * URLName;
   nsAutoString buffer;
-  PRBool badInput;
+  PRBool badInput = PR_FALSE;
+
+  PRInt64 readCount = 0;
+  PRInt64 saveCount = 0;
 
   if (si_FullyLoaded && fullLoad) {
     return 0;
@@ -1622,15 +1684,20 @@ SI_LoadSignonData(PRBool fullLoad) {
   if (NS_FAILED(rv)) {
     return -1;
   }
-  nsInputFileStream strm(dirSpec + "signon.tbl");
-  if (!strm.is_open()) {
+
+  SI_InitSignonFileName();
+  nsInputFileStream strmu(dirSpec+"signon.tbl");
+  if (!si_oldFormat) {
+    strmu = nsInputFileStream(dirSpec+signonFileNameU);
+  }
+
+  if (!strmu.is_open()) {
     return -1;
   }
 
   si_RemoveAllSignonData();
 
   if (fullLoad) {
-    si_RestartKey();
     PRUnichar * message = Wallet_Localize("IncorrectKey_TryAgain?");
     if (si_KeyTimedOut()) {
       si_RemoveAllSignonData();
@@ -1645,31 +1712,91 @@ SI_LoadSignonData(PRBool fullLoad) {
     si_KeyResetTime();
   }
 
-  nsInputFileStream strmx(fullLoad ? (dirSpec+signonFileName) : dirSpec); // not used if !fullLoad
-  if (fullLoad && !strmx.is_open()) {
+  nsInputFileStream strmp(fullLoad ? (dirSpec+signonFileNameP) : dirSpec); // not used if !fullLoad
+  if (fullLoad && !strmp.is_open()) {
     return -1;
+  }
+
+  /* read the header information */
+  nsAutoString format;
+  PRInt64 temp;
+  PRInt32 error;
+
+  if (!si_oldFormat) {
+
+    /* format */
+
+    if (NS_FAILED(si_ReadLine(strmu, strmp, format, fullLoad, 0, 0, PR_TRUE))) {
+      return -1;
+    }
+    if (format != HEADER_VERSION_1) {
+      /* something's wrong */
+      return -1;
+    }
+
+    /* saveCount */
+
+    if (NS_FAILED(si_ReadLine(strmu, strmp, buffer, fullLoad, 0, 0, PR_TRUE))) {
+      return -1;
+    }
+    temp = (PRInt64)(buffer.ToInteger(&error));
+    if (error) {
+      return -1;
+    }
+    saveCount = temp<<32;
+
+    if (NS_FAILED(si_ReadLine(strmu, strmp, buffer, fullLoad, 0, 0, PR_TRUE))) {
+      return -1;
+    }
+    temp = (PRInt64)(buffer.ToInteger(&error));
+    if (error) {
+      return -1;
+    }
+    saveCount += temp;
+
+    /* readCount */
+
+    if (NS_FAILED(si_ReadLine(strmu, strmp, buffer, fullLoad, 0, 0, PR_TRUE))) {
+      return -1;
+    }
+    temp = (PRInt64)(buffer.ToInteger(&error));
+    if (error) {
+      return -1;
+    }
+    readCount = temp<<32;
+
+    if (NS_FAILED(si_ReadLine(strmu, strmp, buffer, fullLoad, 0, 0, PR_TRUE))) {
+      return -1;
+    }
+    temp = (PRInt64)(buffer.ToInteger(&error));
+    if (error) {
+      return -1;
+    }
+    readCount += temp;
   }
 
   /* read the reject list */
   si_lock_signon_list();
-  while(!NS_FAILED(si_ReadLine(strm, strmx, buffer, PR_FALSE))) {
+  while (!NS_FAILED(si_ReadLine(strmu, strmp, buffer, PR_FALSE))) {
     if (buffer.CharAt(0) == '.') {
       break; /* end of reject list */
     }
     si_StripLF(buffer);
     URLName = buffer.ToNewCString();
-    if (NS_FAILED(si_ReadLine(strm, strmx, buffer, PR_FALSE))) {
-      /* error in input file so give up */
-      badInput = PR_TRUE;
-      break;
+    if (si_oldFormat) {
+      if (NS_FAILED(si_ReadLine(strmu, strmp, buffer, PR_FALSE))) {
+        /* error in input file so give up */
+        badInput = PR_TRUE;
+        break;
+      }
+      si_StripLF(buffer);
     }
-    si_StripLF(buffer);
-    si_PutReject(URLName, buffer, PR_FALSE);
+    si_PutReject(URLName, buffer, PR_FALSE); /* middle parameter is obsolete */
     Recycle (URLName);
   }
 
   /* read the URL line */
-  while(!NS_FAILED(si_ReadLine(strm, strmx, buffer, PR_FALSE))) {
+  while(!NS_FAILED(si_ReadLine(strmu, strmp, buffer, PR_FALSE))) {
     si_StripLF(buffer);
     URLName = buffer.ToNewCString();
 
@@ -1678,7 +1805,7 @@ SI_LoadSignonData(PRBool fullLoad) {
 
     nsVoidArray * signonData = new nsVoidArray();
     si_SignonDataStruct * data;
-    while(!NS_FAILED(si_ReadLine(strm, strmx, buffer, PR_FALSE))) {
+    while(!NS_FAILED(si_ReadLine(strmu, strmp, buffer, PR_FALSE))) {
 
       /* line starting with . terminates the pairs for this URL entry */
       if (buffer.CharAt(0) == '.') {
@@ -1697,11 +1824,15 @@ SI_LoadSignonData(PRBool fullLoad) {
         isPassword = PR_TRUE;
         nsAutoString temp;
         buffer.Mid(name, 1, buffer.Length()-1);
-        ret = si_ReadLine(strm, strmx, buffer, fullLoad);
+        ret = si_ReadLine(strmu, strmp, buffer, fullLoad, saveCount, &readCount);
       } else {
         isPassword = PR_FALSE;
         name = buffer;
-        ret = si_ReadLine(strm, strmx, buffer, PR_FALSE);
+        if (si_oldFormat) {
+          ret = si_ReadLine(strmu, strmp, buffer, PR_FALSE);
+        } else {
+          ret = si_ReadLine(strmu, strmp, buffer, fullLoad, saveCount, &readCount);
+        }
       }
 
       /* read in and save the value part */
@@ -1764,20 +1895,30 @@ si_WriteChar(nsOutputFileStream strm, PRUnichar c) {
 }
 
 PRIVATE void
-si_WriteLine(nsOutputFileStream strm, nsOutputFileStream strmx, nsAutoString lineBuffer, PRBool obscure, PRBool fullSave) {
+si_WriteLine(nsOutputFileStream strmu, nsOutputFileStream strmp, 
+    nsAutoString lineBuffer, PRBool obscure, PRBool fullSave, 
+    PRInt64 saveCount = 0, PRInt64 *writeCount = 0, PRBool inHeader = PR_FALSE) {
+
   for (int i=0; i<lineBuffer.Length(); i++) {
-    if (obscure) {
-      Wallet_UTF8Put(strm, '*');
+    if (inHeader) {
+      Wallet_UTF8Put(strmu, lineBuffer.CharAt(i));
       if (fullSave) {
-        Wallet_UTF8Put(strmx, lineBuffer.CharAt(i)^si_GetKey());
+        Wallet_UTF8Put(strmp, lineBuffer.CharAt(i));
+      }
+    } else if (obscure) {
+      Wallet_UTF8Put(strmu, '*');
+      if (fullSave) {
+        Wallet_UTF8Put(strmp, lineBuffer.CharAt(i)^si_GetKey(saveCount, (*writeCount)++));
       }
     } else {
-      Wallet_UTF8Put(strm, lineBuffer.CharAt(i));
+      Wallet_UTF8Put(strmu, lineBuffer.CharAt(i));
     }
   }
-  Wallet_UTF8Put(strm, '\n');
-  if (obscure && fullSave) {
-    Wallet_UTF8Put(strmx, '\n'^si_GetKey());
+  Wallet_UTF8Put(strmu, '\n');
+  if (inHeader && fullSave) {
+    Wallet_UTF8Put(strmp, '\n');
+  } else if (obscure && fullSave) {
+    Wallet_UTF8Put(strmp, '\n'^si_GetKey(saveCount, (*writeCount)++));
   }
 }
 
@@ -1787,14 +1928,16 @@ si_SaveSignonDataLocked(PRBool fullSave) {
   si_SignonUserStruct * user;
   si_SignonDataStruct * data;
   si_Reject * reject;
+  PRInt64 saveCount = 0;
+  PRInt64 writeCount = 0;
+  PRBool fullSave2 = fullSave || si_oldFormat;
 
   /* do nothing if signon list has not changed */
   if(!si_signon_list_changed) {
     return(-1);
   }
 
-  if (fullSave) {
-    si_RestartKey();
+  if (fullSave2) {
     PRUnichar * message = Wallet_Localize("IncorrectKey_TryAgain?");
     if (si_KeyTimedOut()) {
       si_RemoveAllSignonData();
@@ -1826,19 +1969,64 @@ si_SaveSignonDataLocked(PRBool fullSave) {
   if (NS_FAILED(rv)) {
     return 0;
   }
-  nsOutputFileStream strm(dirSpec + "signon.tbl");
-  if (!strm.is_open()) {
-    return 0;
-  }
-  nsOutputFileStream strmx(dirSpec + signonFileName);
-  if (fullSave) {
-    if (!strmx.is_open()) {
-      return 0;
-    }
-    si_RestartKey();
+
+  if (si_oldFormat) {
+
+    /* change name of signonFileNameP from "xxxxxxxx.psw" to "xxxxxxxx.p" */    
+    signonFileNameP[10] = '\0';
+    SI_SetCharPref(pref_SignonFileNameP, signonFileNameP);
+
+    /* create signonFileNameU and set it to "xxxxxxxx.u" */
+    signonFileNameU = PL_strdup(signonFileNameP); /* set it to "xxxxxxxx.p" */
+    signonFileNameU[9] = 'u'; /* change .p to .u */
+    SI_SetCharPref(pref_SignonFileNameU, signonFileNameU);
+
+    si_oldFormat = PR_FALSE;
   }
 
+  nsOutputFileStream strmu(dirSpec + signonFileNameU);
+  if (!strmu.is_open()) {
+    return 0;
+  }
+  nsOutputFileStream strmp
+    (fullSave2 ? (dirSpec+signonFileNameP) : dirSpec); // not used if !fullSave
+  if (fullSave2 && !strmp.is_open()) {
+    return 0;
+  }
+
+
   /* format for head of file shall be:
+   * format revision number
+   * saveCount
+   * writeCount
+   */
+
+  /* write out the header info */
+
+  /* format revision number */
+
+  si_WriteLine(strmu, strmp, nsAutoString(HEADER_VERSION_1), PR_FALSE, fullSave2, 0, 0, PR_TRUE);
+
+  /* saveCount */
+
+  nsAutoString buffer;
+  buffer = "";
+  buffer.Append(PRInt32(saveCount>>32),10);
+  si_WriteLine(strmu, strmp, buffer, PR_FALSE, fullSave2, 0, 0, PR_TRUE);
+  buffer = "";
+  buffer.Append(PRInt32((saveCount<<32)>>32),10);
+  si_WriteLine(strmu, strmp, buffer, PR_FALSE, fullSave2, 0, 0, PR_TRUE);
+
+  /* writeCount */
+
+  buffer = "";
+  buffer.Append(PRInt32(writeCount>>32),10);
+  si_WriteLine(strmu, strmp, buffer, PR_FALSE, fullSave2, 0, 0, PR_TRUE);
+  buffer = "";
+  buffer.Append(PRInt32((writeCount<<32)>>32),10);
+  si_WriteLine(strmu, strmp, buffer, PR_FALSE, fullSave2, 0, 0, PR_TRUE);
+
+  /* format for next part of file shall be:
    * URLName -- first url/username on reject list
    * userName
    * URLName -- second url/username on reject list
@@ -1852,11 +2040,10 @@ si_SaveSignonDataLocked(PRBool fullSave) {
     PRInt32 rejectCount = LIST_COUNT(si_reject_list);
     for (PRInt32 i=0; i<rejectCount; i++) {
       reject = NS_STATIC_CAST(si_Reject*, si_reject_list->ElementAt(i));
-      si_WriteLine(strm, strmx, nsAutoString(reject->URLName), PR_FALSE, fullSave);
-      si_WriteLine(strm, strmx, nsAutoString(reject->userName), PR_FALSE, fullSave);
+      si_WriteLine(strmu, strmp, nsAutoString(reject->URLName), PR_FALSE, fullSave2);
     }
   }
-  si_WriteLine(strm, strmx, nsAutoString("."), PR_FALSE, fullSave);
+  si_WriteLine(strmu, strmp, nsAutoString("."), PR_FALSE, fullSave2);
 
   /* format for cached logins shall be:
    * url LINEBREAK {name LINEBREAK value LINEBREAK}*  . LINEBREAK
@@ -1873,31 +2060,30 @@ si_SaveSignonDataLocked(PRBool fullSave) {
       PRInt32 userCount = LIST_COUNT(url->signonUser_list);
       for (PRInt32 i3=0; i3<userCount; i3++) {
         user = NS_STATIC_CAST(si_SignonUserStruct*, url->signonUser_list->ElementAt(i3));
-        si_WriteLine(strm, strmx, nsAutoString(url->URLName), PR_FALSE, fullSave);
+        si_WriteLine
+          (strmu, strmp, nsAutoString(url->URLName), PR_FALSE, fullSave2);
 
         /* write out each data node of the user node */
         PRInt32 dataCount = LIST_COUNT(user->signonData_list);
         for (PRInt32 i4=0; i4<dataCount; i4++) {
           data = NS_STATIC_CAST(si_SignonDataStruct*, user->signonData_list->ElementAt(i4));
           if (data->isPassword) {
-            si_WriteChar(strm, '*');
-            si_WriteLine(strm, strmx, nsAutoString(data->name), PR_FALSE, fullSave);
-            si_WriteLine(strm, strmx, nsAutoString(data->value), PR_TRUE, fullSave);
-          } else {
-            si_WriteLine(strm, strmx, nsAutoString(data->name), PR_FALSE, fullSave);
-            si_WriteLine(strm, strmx, nsAutoString(data->value), PR_FALSE, fullSave);
+            si_WriteChar(strmu, '*');
           }
+          si_WriteLine(strmu, strmp, nsAutoString(data->name), PR_FALSE, fullSave2);
+          si_WriteLine(strmu, strmp, nsAutoString(data->value), PR_TRUE,
+            fullSave2, saveCount, &writeCount);
         }
-        si_WriteLine(strm, strmx, nsAutoString("."), PR_FALSE, fullSave);
+        si_WriteLine(strmu, strmp, nsAutoString("."), PR_FALSE, fullSave2);
       }
     }
   }
   si_signon_list_changed = PR_FALSE;
-  strm.flush();
-  strm.close();
-  if (fullSave) {
-    strmx.flush();
-    strmx.close();
+  strmu.flush();
+  strmu.close();
+  if (fullSave2) {
+    strmp.flush();
+    strmp.close();
   }
   return 0;
 }
@@ -2255,7 +2441,7 @@ si_RestoreOldSignonDataFromBrowser
 PUBLIC nsresult
 SINGSIGN_PromptUsernameAndPassword
     (const PRUnichar *text, PRUnichar **user, PRUnichar **pwd,
-     const char *urlname, nsIPrompt* dialog, PRBool *returnValue) {
+     const char *urlname, nsIPrompt* dialog, PRBool *returnValue, PRBool strip) {
 
   nsresult res;
 
@@ -2273,9 +2459,13 @@ SINGSIGN_PromptUsernameAndPassword
 
   /* get host part of the uri */
   char* host = nsnull;
-  res = uri->GetHost(&host);
-  if (NS_FAILED(res)) {
-    return res;
+  if (strip) {
+    res = uri->GetHost(&host);
+    if (NS_FAILED(res)) {
+      return res;
+    }
+  } else {
+    host = (nsAutoString(":") + urlname).ToNewCString();
   }
 
   /* prefill with previous username/password if any */
@@ -2305,7 +2495,8 @@ SINGSIGN_PromptUsernameAndPassword
 
 PUBLIC nsresult
 SINGSIGN_PromptPassword
-    (const PRUnichar *text, PRUnichar **pwd, const char *urlname, nsIPrompt* dialog, PRBool *returnValue) {
+    (const PRUnichar *text, PRUnichar **pwd, const char *urlname,
+    nsIPrompt* dialog, PRBool *returnValue, PRBool strip) {
 
   nsresult res;
   nsAutoString password, username;
@@ -2324,9 +2515,13 @@ SINGSIGN_PromptPassword
 
   /* get host part of the uri */
   char* host;
-  res = uri->GetHost(&host);
-  if (NS_FAILED(res)) {
-    return res;
+  if (strip) {
+    res = uri->GetHost(&host);
+    if (NS_FAILED(res)) {
+      return res;
+    }
+  } else {
+    host = (nsAutoString(":") + urlname).ToNewCString();
   }
 
   /* extract username from uri -- note: prehost is <username>:<password> */
@@ -2378,8 +2573,8 @@ SINGSIGN_PromptPassword
 
 PUBLIC nsresult
 SINGSIGN_Prompt
-    (const PRUnichar *text, const PRUnichar *defaultText,
-     PRUnichar **resultText, const char *urlname,nsIPrompt* dialog, PRBool *returnValue) {
+    (const PRUnichar *text, const PRUnichar *defaultText, PRUnichar **resultText,
+    const char *urlname, nsIPrompt* dialog, PRBool *returnValue, PRBool strip) {
   return NS_OK;
 }
 
@@ -2497,6 +2692,10 @@ SINGSIGN_SignonViewerReturn (nsAutoString results) {
 PUBLIC void
 SINGSIGN_GetSignonListForViewer(nsAutoString& aSignonList)
 {
+  /* force loading of the signons file */
+  si_RegisterSignonPrefCallbacks();
+
+  /* unlock the database */
   if (SI_LoadSignonData(PR_TRUE) != 0) {
     /* don't display saved signons if user couldn't unlock the database */
     return;
@@ -2506,9 +2705,6 @@ SINGSIGN_GetSignonListForViewer(nsAutoString& aSignonList)
   si_SignonURLStruct *url;
   si_SignonUserStruct * user;
   si_SignonDataStruct* data = nsnull;
-
-  /* force loading of the signons file */
-  si_RegisterSignonPrefCallbacks();
 
   PRInt32 urlCount = LIST_COUNT(si_signon_list);
   for (PRInt32 i=0; i<urlCount; i++) {
