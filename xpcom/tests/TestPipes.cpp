@@ -287,7 +287,7 @@ TestPipeObserver()
     if (obs == nsnull) return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(obs);
 
-    printf("TestPipeObserver: OnWrite, OnFull and OnEmpty should be called once each.\n");
+    printf("TestPipeObserver: OnWrite and OnFull should be called once, OnEmpty should be called twice.\n");
     nsIBufferInputStream* in;
     nsIBufferOutputStream* out;
     rv = NS_NewPipe(&in, &out, obs, 20, 20);
@@ -391,16 +391,7 @@ protected:
     PRUint32                            mCount;
 };
 
-NS_IMPL_ADDREF(nsPump);
-NS_IMPL_RELEASE(nsPump);
-
-NS_IMETHODIMP
-nsPump::QueryInterface(REFNSIID aIID,
-                       void** aInstancePtr)
-{
-    // not used in this test
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
+NS_IMPL_ISUPPORTS2(nsPump, nsIPipeObserver, nsIRunnable)
 
 nsresult
 TestChainedPipes()
