@@ -61,7 +61,7 @@ class nsIDOMNode;
 #define NS_IDOCUMENTENCODERNODEFIXUP_IID                     \
 { 0xbc1fac0, 0xb710, 0x11d4, { 0x95, 0x9f, 0x0, 0x20, 0x18, 0x3b, 0xf1, 0x81 } }
   
-#define NS_HTMLCOPY_ENCODER_CONTRACTID "@mozilla.org/layout/htmlCopyEncoder"
+#define NS_HTMLCOPY_ENCODER_CONTRACTID "@mozilla.org/layout/htmlCopyEncoder;1"
 
 class nsIDocumentEncoderNodeFixup : public nsISupports
 {
