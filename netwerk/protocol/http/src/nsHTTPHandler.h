@@ -44,6 +44,7 @@
 //Forward decl.
 class nsHashtable;
 class nsIChannel;
+class nsHTTPChannel;
 
 class nsHTTPHandler : public nsIHTTPProtocolHandler
 		//, public nsIProxy 
@@ -114,26 +115,29 @@ public:
     static nsHTTPHandler* GetInstance(void)
     {
         static nsHTTPHandler* pHandler = new nsHTTPHandler();
+        NS_ADDREF(pHandler);
         return pHandler;
     };
 
     // Functions from nsIHTTPProtocolHandler
-    /* 
-        Pull out an existing transport from the hashtable, or if none exists
-        create one. 
-    */
-    NS_IMETHOD       GetTransport(const char* i_Host, PRUint32 i_Port, nsIChannel* *o_pTrans);
-    /*
-        Remove this transport from the hashtable.
-    */
-    NS_IMETHOD       ReleaseTransport(const char* i_Host, PRUint32 i_Port, nsIChannel* i_pTrans);
-
     NS_IMETHOD NewEncodeStream(nsIInputStream *rawStream, PRUint32 encodeFlags,
                                nsIInputStream **_retval);
     NS_IMETHOD NewDecodeStream(nsIInputStream *encodedStream, PRUint32 decodeFlags,
                                nsIInputStream **_retval);
     NS_IMETHOD NewPostDataStream(PRBool isFile, const char *data, PRUint32 encodeFlags,
                                  nsIInputStream **_retval);
+
+    /* 
+        Pull out an existing transport from the list, or if none exists
+        create one. 
+    */
+    nsresult RequestTransport(nsIURI *i_Uri, 
+                              nsHTTPChannel* i_Channel, 
+                              nsIChannel** o_pTrans);
+    /*
+        Remove this transport from the list.
+    */
+    nsresult ReleaseTransport(nsIChannel* i_pTrans);
 
 protected:
     // None
@@ -144,7 +148,8 @@ private:
 	// This is the array of connections that the handler thread maintains to 
     // verify unique requests. 
 	nsCOMPtr<nsISupportsArray> m_pConnections;
-    nsHashtable* m_pTransportTable;
+    nsCOMPtr<nsISupportsArray> mPendingChannelList;
+    nsCOMPtr<nsISupportsArray> mTransportList;
 };
 
 #endif /* _nsHTTPHandler_h_ */

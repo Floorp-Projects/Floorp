@@ -90,6 +90,7 @@ public:
     // nsHTTPChannel methods:
     nsresult            Init();
     nsresult            Open();
+    nsresult            ResponseCompleted(nsIChannel* aTransport);
     nsresult            SetResponse(nsHTTPResponse* i_pResp);
     nsresult            GetResponseContext(nsISupports** aContext);
     

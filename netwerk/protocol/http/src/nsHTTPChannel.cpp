@@ -16,6 +16,7 @@
  * Reserved.
  */
 
+#include "nspr.h"
 #include "nsHTTPChannel.h"
 #include "netCore.h"
 #include "nsIHttpEventSink.h"
@@ -26,6 +27,7 @@
 #include "nsIInputStream.h"
 #include "nsIStreamListener.h"
 #include "nsIIOService.h"
+#include "nsXPIDLString.h"
 
 #include "nsIHttpNotify.h"
 #include "nsINetModRegEntry.h"
@@ -34,6 +36,11 @@
 #include "nsINetModuleMgr.h"
 #include "nsIEventQueueService.h"
 #include "nsIMIMEService.h"
+
+
+#if defined(PR_LOGGING)
+extern PRLogModuleInfo* gHTTPLog;
+#endif /* PR_LOGGING */
 
 static NS_DEFINE_CID(kMIMEServiceCID, NS_MIMESERVICE_CID);
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
@@ -53,10 +60,18 @@ nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL,
     mResponseContext(nsnull)
 {
     NS_INIT_REFCNT();
+
+    PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+           ("Creating nsHTTPChannel [this=%x].\n", this));
+
+
 }
 
 nsHTTPChannel::~nsHTTPChannel()
 {
+    PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+           ("Deleting nsHTTPChannel [this=%x].\n", this));
+
     //TODO if we keep our copy of m_URI, then delete it too.
     NS_IF_RELEASE(m_pRequest);
     NS_IF_RELEASE(m_pResponse);
@@ -395,28 +410,18 @@ nsHTTPChannel::Init()
 nsresult
 nsHTTPChannel::Open(void)
 {
-    if (m_bConnected || (m_State > HS_IDLE))
+    if (m_bConnected || (m_State > HS_WAITING_FOR_OPEN))
         return NS_ERROR_ALREADY_CONNECTED;
 
-    // Set up a new request observer and a response listener and pass to teh transport
+    // Set up a new request observer and a response listener and pass to the transport
     nsresult rv = NS_OK;
-
-    char* host;
-    PRInt32 port;
     nsCOMPtr<nsIChannel> channel;
 
-    rv = m_URI->GetHost(&host);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = m_URI->GetPort(&port);
-    if (NS_FAILED(rv)) return rv;
-    if (port == -1)
-    {
-        m_pHandler->GetDefaultPort(&port);
+    rv = m_pHandler->RequestTransport(m_URI, this, getter_AddRefs(channel));
+    if (NS_ERROR_BUSY == rv) {
+        m_State = HS_WAITING_FOR_OPEN;
+        return NS_OK;
     }
-
-    NS_ASSERTION(port>0, "Bad port setting!");
-    PRUint32 unsignedPort = port;
 
     // Check for any modules that want to set headers before we
     // send out a request.
@@ -499,10 +504,7 @@ nsHTTPChannel::Open(void)
     NS_RELEASE(pModules);
     NS_IF_RELEASE(proxyObjectManager);
 
-    rv = m_pHandler->GetTransport(host, unsignedPort, getter_AddRefs(channel));
-    nsCRT::free(host);
-    if (NS_SUCCEEDED(rv) && channel)
-    {
+    if (channel) {
         nsCOMPtr<nsIInputStream> stream;
 
         m_pRequest->SetTransport(channel);
@@ -528,6 +530,11 @@ nsHTTPChannel::Open(void)
         NS_ERROR("Failed to create/get a transport!");
 
     return rv;
+}
+
+nsresult nsHTTPChannel::ResponseCompleted(nsIChannel* aTransport)
+{
+    return m_pHandler->ReleaseTransport(aTransport);
 }
 
 nsresult

@@ -4,7 +4,7 @@
  * Version 1.0 (the "NPL"); you may not use this file except in
  * compliance with the NPL.  You may obtain a copy of the NPL at
  * http://www.mozilla.org/NPL/
- *
+ *                          `
  * Software distributed under the NPL is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
  * for the specific language governing rights and limitations under the
@@ -22,8 +22,8 @@
 //#include "nsITimer.h" 
 #include "nsIProxy.h"
 #include "plstr.h" // For PL_strcasecmp maybe DEBUG only... TODO check
+#include "nsXPIDLString.h"
 #include "nsIURL.h"
-#include "nsSocketKey.h"
 #include "nsIChannel.h"
 #include "nsISocketTransportService.h"
 #include "nsIServiceManager.h"
@@ -49,6 +49,9 @@ PRLogModuleInfo* gHTTPLog = nsnull;
 
 #endif /* PR_LOGGING */
 
+
+#define MAX_NUMBER_OF_OPEN_TRANSPORTS 4
+
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 
@@ -72,19 +75,28 @@ NS_METHOD NS_CreateOrGetHTTPHandler(nsIHTTPProtocolHandler* *o_HTTPHandler)
     return NS_ERROR_NULL_POINTER;
 }
 
-nsHTTPHandler::nsHTTPHandler():
-    m_pTransportTable(new nsHashtable())
+nsHTTPHandler::nsHTTPHandler()
 {
+    nsresult rv;
     NS_INIT_REFCNT();
 
     PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
            ("Creating nsHTTPHandler [this=%x].\n", this));
 
-    if (NS_FAILED(NS_NewISupportsArray(getter_AddRefs(m_pConnections)))) {
+    rv = NS_NewISupportsArray(getter_AddRefs(m_pConnections));
+    if (NS_FAILED(rv)) {
         NS_ERROR("unable to create new ISupportsArray");
     }
-    if (!m_pTransportTable)
-        NS_ERROR("Failed to create a new transport table");
+
+    rv = NS_NewISupportsArray(getter_AddRefs(mPendingChannelList));
+    if (NS_FAILED(rv)) {
+        NS_ERROR("Failed to create the pending channel list");
+    }
+
+    rv = NS_NewISupportsArray(getter_AddRefs(mTransportList));
+    if (NS_FAILED(rv)) {
+        NS_ERROR("Failed to create the transport list");
+    }
 }
 
 nsHTTPHandler::~nsHTTPHandler()
@@ -92,11 +104,8 @@ nsHTTPHandler::~nsHTTPHandler()
     PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
            ("Deleting nsHTTPHandler [this=%x].\n", this));
 
-    if (m_pTransportTable)
-    {
-        delete m_pTransportTable;
-        m_pTransportTable = 0;
-    }
+    mPendingChannelList->Clear();
+    mTransportList->Clear();
 }
 
 NS_IMPL_ADDREF(nsHTTPHandler);
@@ -250,60 +259,6 @@ nsHTTPHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
 }
 
 NS_METHOD
-nsHTTPHandler::GetTransport(const char* i_Host, 
-                            PRUint32 i_Port, 
-                            nsIChannel** o_pTrans)
-{
-#if 0
-    // Check in the table...
-    nsSocketKey key(i_Host, i_Port);
-    nsIChannel* trans = (nsIChannel*) m_pTransportTable->Get(&key);
-    if (trans)
-    {
-        *o_pTrans = trans;
-        return NS_OK;
-    }
-#endif /* 0 */
-
-    // Create a new one...
-    nsresult rv;
-    nsIChannel* trans;
-
-    NS_WITH_SERVICE(nsISocketTransportService, sts, kSocketTransportServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = sts->CreateTransport(i_Host, i_Port, &trans);
-    if (NS_FAILED(rv)) return rv;
-
-#if 0
-    // Put it in the table...
-    void* oldValue = m_pTransportTable->Put(&key, trans);
-    NS_ASSERTION(oldValue == nsnull, "Race condition in transport table!");
-    NS_ADDREF(trans);
-#endif /* 0 */
-
-    *o_pTrans = trans;
-
-    return rv;
-}
-
-NS_METHOD
-nsHTTPHandler::ReleaseTransport(const char* i_Host, 
-                                PRUint32 i_Port, 
-                                nsIChannel* i_pTrans)
-{
-#if 0
-    nsSocketKey key(i_Host, i_Port);
-    nsIChannel* value = (nsIChannel*) m_pTransportTable->Remove(&key);
-    if (value == nsnull)
-        return NS_ERROR_FAILURE;
-    NS_ASSERTION(i_pTrans == value, "m_pTransportTable is out of sync");
-#endif /* 0 */
-
-    return NS_OK;
-}
-
-NS_METHOD
 nsHTTPHandler::FollowRedirects(PRBool bFollow)
 {
     //m_bFollowRedirects = bFollow;
@@ -353,5 +308,105 @@ nsHTTPHandler::NewPostDataStream(PRBool isFile, const char *data, PRUint32 encod
         NS_RELEASE(in);
         return rv;
     }
+}
+
+
+nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri, 
+                                         nsHTTPChannel* i_Channel,
+                                         nsIChannel** o_pTrans)
+{
+    nsresult rv;
+    PRInt32 port;
+    PRUint32 count;
+    nsXPIDLCString host;
+
+    *o_pTrans = nsnull;
+
+    count = 0;
+    mTransportList->Count(&count);
+    if (count >= MAX_NUMBER_OF_OPEN_TRANSPORTS) {
+        mPendingChannelList->AppendElement(i_Channel);
+
+        PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+               ("nsHTTPHandler::RequestTransport."
+                "\tAll socket transports are busy."
+                "\tAdding nsHTTPChannel [%x] to pending list.\n",
+                i_Channel));
+
+        return NS_ERROR_BUSY;
+    }
+
+    // Get the host and port of the URI to create a new socket transport...
+    rv = i_Uri->GetHost(getter_Copies(host));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = i_Uri->GetPort(&port);
+    if (NS_FAILED(rv)) return rv;
+
+    if (port == -1) {
+        GetDefaultPort(&port);
+    }
+
+
+#if 0
+    // Check in the table...
+    nsIChannel* trans = (nsIChannel*) mTransportList->Get(&key);
+    if (trans) {
+        *o_pTrans = trans;
+        return NS_OK;
+    }
+#endif /* 0 */
+
+    // Create a new one...
+    nsIChannel* trans;
+
+    NS_WITH_SERVICE(nsISocketTransportService, sts, kSocketTransportServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = sts->CreateTransport(host, port, &trans);
+    if (NS_FAILED(rv)) return rv;
+
+    // Put it in the table...
+    mTransportList->AppendElement(trans);
+
+    *o_pTrans = trans;
+    
+    PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+           ("nsHTTPHandler::RequestTransport."
+            "\tGot a socket transport for nsHTTPChannel [%x].\n",
+            i_Channel));
+
+    return rv;
+}
+
+nsresult nsHTTPHandler::ReleaseTransport(nsIChannel* i_pTrans)
+{
+    nsresult rv;
+    PRUint32 count;
+
+    rv = mTransportList->RemoveElement(i_pTrans);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Transport not in table...");
+
+    count = 0;
+    mPendingChannelList->Count(&count);
+    if (count) {
+        nsCOMPtr<nsISupports> item;
+        nsHTTPChannel* channel;
+
+        rv = mPendingChannelList->GetElementAt(0, getter_AddRefs(item));
+        if (NS_FAILED(rv)) return rv;
+
+        mPendingChannelList->RemoveElement(item);
+        channel = (nsHTTPChannel*)(nsISupports*)item;
+
+        PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+               ("nsHTTPHandler::ReleaseTransport."
+                "\tRestarting nsHTTPChannel [%x]\n",
+                channel));
+
+        channel->Open();
+    }
+
+    return rv;
 }
 
