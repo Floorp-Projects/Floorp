@@ -106,10 +106,18 @@ net_GetFileFromURLSpec(const nsACString &aURL, nsIFile **result)
         NS_ERROR("Only nsILocalFile supported right now");
         return rv;
     }
+
+    const nsACString *specPtr;
+
+    nsCAutoString buf;
+    if (net_NormalizeFileURL(aURL, buf))
+        specPtr = &buf;
+    else
+        specPtr = &aURL;
     
     nsCAutoString directory, fileBaseName, fileExtension;
     
-    rv = net_ParseFileURL(aURL, directory, fileBaseName, fileExtension);
+    rv = net_ParseFileURL(*specPtr, directory, fileBaseName, fileExtension);
     if (NS_FAILED(rv)) return rv;
 
     nsCAutoString path;

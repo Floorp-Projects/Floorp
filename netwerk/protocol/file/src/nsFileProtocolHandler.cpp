@@ -165,8 +165,19 @@ nsFileProtocolHandler::NewURI(const nsACString &spec,
     if (!url)
         return NS_ERROR_OUT_OF_MEMORY;
 
+    const nsACString *specPtr = &spec;
+
+#if defined(XP_WIN) || defined(XP_OS2)
+    nsCAutoString buf;
+    if (net_NormalizeFileURL(spec, buf))
+        specPtr = &buf;
+#endif
+
+    // XXX perhaps we should convert |charset| to whatever the system charset
+    // is so that nsStandardURL will normalize our URL string properly?
+
     nsresult rv = url->Init(nsIStandardURL::URLTYPE_NO_AUTHORITY, -1,
-                            spec, charset, baseURI);
+                            *specPtr, charset, baseURI);
     if (NS_FAILED(rv)) return rv;
 
     return CallQueryInterface(url, result);
