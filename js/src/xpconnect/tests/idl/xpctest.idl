@@ -209,5 +209,9 @@ interface nsIXPCTestArray : nsISupports {
                              [size_is(count)] in string str);
     void DoubleString(inout PRUint32 count, 
                       [size_is(count)] inout string str);
+
+    void GetStrings(out PRUint32 count,
+                    [retval, array, size_is(count)] out string str);
+
 };
 
