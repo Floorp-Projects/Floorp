@@ -16,7 +16,7 @@
  * Reserved.
  */
 /*
-   stubedit.c --- stub functions for fe
+   stubmisc.c --- stub functions for fe
                   generic stuff.
 */
 
