@@ -1360,6 +1360,109 @@ GlobalWindowImpl::Blur()
 }
 
 NS_IMETHODIMP
+GlobalWindowImpl::Activate()
+{
+  nsIBrowserWindow *browser;
+  if (NS_OK == GetBrowserWindowInterface(browser)) {
+    browser->Show();
+    NS_RELEASE( browser);
+  }
+
+  nsresult result = NS_OK;
+
+  nsIContentViewer *viewer = nsnull;
+  mWebShell->GetContentViewer(&viewer);
+  if (viewer) {
+    nsIDocumentViewer* docv = nsnull;
+    viewer->QueryInterface(kIDocumentViewerIID, (void**) &docv);
+    if (nsnull != docv) {
+      nsIPresContext* cx = nsnull;
+      docv->GetPresContext(cx);
+      if (nsnull != cx) {
+        nsIPresShell  *shell = nsnull;
+        cx->GetShell(&shell);
+        if (nsnull != shell) {
+          nsIViewManager  *vm = nsnull;
+          shell->GetViewManager(&vm);
+          if (nsnull != vm) {
+            nsIView *rootview = nsnull;
+            vm->GetRootView(rootview);
+            if (rootview) {
+              nsIWidget* widget;
+              rootview->GetWidget(widget);
+              if (widget) {
+                result = widget->SetFocus();
+                NS_RELEASE(widget);
+              }
+            }
+            NS_RELEASE(vm);
+          }
+          NS_RELEASE(shell);
+        }
+        NS_RELEASE(cx);
+      }
+      NS_RELEASE(docv);
+    }
+    NS_RELEASE(viewer);
+  }
+
+  return result;
+}
+
+NS_IMETHODIMP
+GlobalWindowImpl::Deactivate()
+{
+  nsresult result = NS_OK;
+
+  nsIContentViewer *viewer = nsnull;
+  mWebShell->GetContentViewer(&viewer);
+  if (viewer) {
+    nsIDocumentViewer* docv = nsnull;
+    viewer->QueryInterface(kIDocumentViewerIID, (void**) &docv);
+    if (nsnull != docv) {
+      nsIPresContext* cx = nsnull;
+      docv->GetPresContext(cx);
+      if (nsnull != cx) {
+        nsIPresShell  *shell = nsnull;
+        cx->GetShell(&shell);
+        if (nsnull != shell) {
+          nsIViewManager  *vm = nsnull;
+          shell->GetViewManager(&vm);
+          if (nsnull != vm) {
+            nsIView *rootview = nsnull;
+            vm->GetRootView(rootview);
+            if (rootview) {
+              nsIWidget* widget;
+              rootview->GetWidget(widget);
+              if (widget) {
+                nsEventStatus status;
+          	    nsGUIEvent	guiEvent;
+	            guiEvent.eventStructType = NS_GUI_EVENT;
+	            guiEvent.point.x = 0;
+	            guiEvent.point.y = 0;
+	            guiEvent.time = PR_IntervalNow();
+	            guiEvent.nativeMsg = nsnull;
+	            guiEvent.message = NS_DEACTIVATE;
+	            guiEvent.widget = widget;
+
+                vm->DispatchEvent(&guiEvent, &status);
+                NS_RELEASE(widget);
+              }
+            }
+            NS_RELEASE(vm);
+          }
+          NS_RELEASE(shell);
+        }
+        NS_RELEASE(cx);
+      }
+      NS_RELEASE(docv);
+    }
+    NS_RELEASE(viewer);
+  }
+  return result;
+}
+
+NS_IMETHODIMP
 GlobalWindowImpl::Close()
 {
   // Note: the basic security check, rejecting windows not opened through JS,

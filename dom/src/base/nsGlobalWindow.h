@@ -239,6 +239,8 @@ public:
 
   // nsPIDOMWindowInterface
   NS_IMETHOD        GetPrivateParent(nsPIDOMWindow** aResult);
+  NS_IMETHOD        Activate();
+  NS_IMETHOD        Deactivate();
 
   friend void nsGlobalWindow_RunTimeout(nsITimer *aTimer, void *aClosure);
 
