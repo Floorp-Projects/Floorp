@@ -993,49 +993,6 @@ splitter {
   border: 1px solid transparent; 
 }
 
-#searchBox {
-	padding: 2px 0px;
-        margin: 0px;
-}
-
-#searchInput[searchCriteria="true"]  {
-  color: grey;
-}
-
-#quick-search-button {
-  min-width: 22px;
-  margin: 0px 3px 0px 5px; 
-}
-
-.quick-search-button-image {
-  padding: 0px;
-  list-style-image: url("chrome://messenger/skin/icons/Search-bar.png");
-}
-
-
-.quick-search-button-dropmarker {
-  padding: 6px 0px 5px 17px;
-  list-style-image: url("chrome://global/skin/arrow/arrow-dn.png");
-}
-
-
-#searchInput {
-  background: url("chrome://messenger/skin/icons/search-bar-background.png") no-repeat;
-  margin: 4px 3px 4px 3px;
-	-moz-appearance: none;
-  font: icon;
-  height: 22px !important;
-  width: 100px !important;
-  border: none !important;
-}
-
-#searchInput > .textbox-input-box {
-	border: none;
-  padding-right: 10px; padding-top: 3px;
-  height: 21px !important;
-  margin: 0px;
-}
-
 /* ..... message pane adjustments ..... */
 
 #messagepanebox {
