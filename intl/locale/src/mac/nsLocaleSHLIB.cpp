@@ -102,7 +102,9 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* serviceMgr,
 			*aFactory = NULL;
 			delete factory;
 		}
+#ifdef DEBUG
 			printf("returning nsLocaleFactory\n");
+#endif
 			return res;
 	}
 
