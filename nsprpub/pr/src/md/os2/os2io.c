@@ -61,6 +61,7 @@
 #include "primpl.h"
 #include "prio.h"
 #include <ctype.h>
+#include <string.h>
 #ifdef XP_OS2_VACPP
 #include <direct.h>
 #else
@@ -147,8 +148,6 @@ _PR_MD_OPEN(const char *name, PRIntn osflags, int mode)
     APIRET rc = 0;
     PRUword actionTaken;
 
-    ULONG CurMaxFH = 0;
-    LONG ReqCount = 1;
     ULONG fattr;
 
     if (osflags & PR_SYNC) access |= OPEN_FLAGS_WRITE_THROUGH;
@@ -767,25 +766,43 @@ _PR_MD_UNLOCKFILE(PRInt32 f)
 PRStatus
 _PR_MD_SET_FD_INHERITABLE(PRFileDesc *fd, PRBool inheritable)
 {
-    int rv = 0;
+    APIRET rc = 0;
     ULONG flags;
+    switch (fd->methods->file_type)
+    {
+        case PR_DESC_PIPE:
+        case PR_DESC_FILE:
+            rc = DosQueryFHState((HFILE)fd->secret->md.osfd, &flags);
+            if (rc != NO_ERROR) {
+                PR_SetError(PR_UNKNOWN_ERROR, _MD_ERRNO());
+                return PR_FAILURE;
+            }
 
-    rv = DosQueryFHState((HFILE)fd->secret->md.osfd, &flags);
-    if (rv != 0) {
-        PR_SetError(PR_UNKNOWN_ERROR, _MD_ERRNO());
-        return PR_FAILURE;
+            if (inheritable)
+              flags &= ~OPEN_FLAGS_NOINHERIT;
+            else
+              flags |= OPEN_FLAGS_NOINHERIT;
+
+            /* Mask off flags DosSetFHState don't want. */
+            flags &= (OPEN_FLAGS_WRITE_THROUGH | OPEN_FLAGS_FAIL_ON_ERROR | OPEN_FLAGS_NO_CACHE | OPEN_FLAGS_NOINHERIT);
+            rc = DosSetFHState((HFILE)fd->secret->md.osfd, flags);
+            if (rc != NO_ERROR) {
+                PR_SetError(PR_UNKNOWN_ERROR, _MD_ERRNO());
+                return PR_FAILURE;
+            }
+            break;
+
+        case PR_DESC_LAYERED:
+            /* what to do here? */
+            PR_SetError(PR_UNKNOWN_ERROR, 87 /*ERROR_INVALID_PARAMETER*/);
+            return PR_FAILURE;
+
+        case PR_DESC_SOCKET_TCP:
+        case PR_DESC_SOCKET_UDP:
+            /* These are global on OS/2. */
+            break;
     }
 
-    if (inheritable)
-      flags &= ~OPEN_FLAGS_NOINHERIT;
-    else
-      flags |= OPEN_FLAGS_NOINHERIT;
-
-    rv = DosSetFHState((HFILE)fd->secret->md.osfd, flags);
-    if (rv != 0) {
-        PR_SetError(PR_UNKNOWN_ERROR, _MD_ERRNO());
-        return PR_FAILURE;
-    }
     return PR_SUCCESS;
 }
 
