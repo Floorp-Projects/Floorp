@@ -194,7 +194,6 @@ protected:
 static InlineBackgroundData gInlineBGData;
 
 static void GetPath(nsFloatPoint aPoints[],nsPoint aPolyPath[],PRInt32 *aCurIndex,ePathTypes  aPathType,PRInt32 &aC1Index,float aFrac=0);
-static void GetFrameForBackgroundUpdate(nsIPresContext *aPresContext,nsIFrame *aFrame, nsIFrame **aBGFrame);
 
 // FillRect or InvertRect depending on the renderingaInvert parameter
 static void FillOrInvertRect(nsIRenderingContext& aRC,nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight, PRBool aInvert);
@@ -1585,47 +1584,6 @@ PRBool GetBGColorForHTMLElement( nsIPresContext *aPresContext,
   return result;
 }
 
-// nethod GetFrameForBackgroundUpdate
-//
-// If the frame (aFrame) is the HTML or BODY frame then find the canvas frame and set the
-// aBGFrame param to that. This is used when we need a frame to invalidate after an asynch
-// image load for the background.
-// 
-// The check is a bit expensive, however until the canvas frame is somehow cached on the 
-// body frame, or the root element, we need to walk the frames up until we find the canvas
-//
-void
-GetFrameForBackgroundUpdate(nsIPresContext *aPresContext,nsIFrame *aFrame,
-                            nsIFrame **aBGFrame)
-{
-  if (!aFrame || !aBGFrame) {
-    NS_ERROR("illegal null parameter");
-
-    return;
-  }
-
-  *aBGFrame = aFrame; // default to the frame passed in
-
-  nsIContent* pContent = aFrame->GetContent();
-  if (pContent) {
-    // make sure that this is the HTML or BODY element
-    nsIAtom *tag = pContent->Tag();
-
-    if (tag == nsHTMLAtoms::html ||
-        tag == nsHTMLAtoms::body) {
-      // the frame is the body frame, so we provide the canvas frame
-      nsIFrame *pCanvasFrame = aFrame->GetParent();
-      while (pCanvasFrame) {
-        if (pCanvasFrame->GetType() == nsLayoutAtoms::canvasFrame) {
-          *aBGFrame = pCanvasFrame;
-          break;
-        }
-        pCanvasFrame = pCanvasFrame->GetParent();
-      }
-    }// if tag == html or body
-  }
-}
-
 // helper macro to determine if the borderstyle 'a' is a MOZ-BG-XXX style
 #define MOZ_BG_BORDER(a)\
 ((a==NS_STYLE_BORDER_STYLE_BG_INSET) || (a==NS_STYLE_BORDER_STYLE_BG_OUTSET)\
@@ -2908,16 +2866,9 @@ nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
 
   // We have a background image
 
-  // get the frame for the background image load to complete in
-  // - this may be different than the frame we are rendering
-  //   (as in the case of the canvas frame) 
-  nsIFrame *pBGFrame = nsnull;
-  GetFrameForBackgroundUpdate(aPresContext, aForFrame, &pBGFrame);
-  NS_ASSERTION(pBGFrame, "Background Frame must be set by GetFrameForBackgroundUpdate");
-
   // Lookup the image
   nsCOMPtr<imgIRequest> req;
-  nsresult rv = aPresContext->LoadImage(aColor.mBackgroundImage, pBGFrame, getter_AddRefs(req));
+  nsresult rv = aPresContext->LoadImage(aColor.mBackgroundImage, aForFrame, getter_AddRefs(req));
 
   PRUint32 status = imgIRequest::STATUS_ERROR;
   if (req)
