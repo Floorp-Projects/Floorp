@@ -643,7 +643,11 @@ nsresult CTextToken::ConsumeUntil(PRUnichar aChar,PRBool aIgnoreComments,nsScann
           tempOffset.advance(1);
         }
         else {
-          break;
+          // Ran out of data and haven't found the terminal string yet.
+          // Note: If a bogus terminal string is found it would have 
+          // been stored in theAltTermStrPos;   Bug: 64576
+          theTermStrPos=endPos; 
+          break; // we have reached the end of the document
         }
       }
 
@@ -667,9 +671,7 @@ nsresult CTextToken::ConsumeUntil(PRUnichar aChar,PRBool aIgnoreComments,nsScann
               
               // Even though it is bogus, the position of the terminal string
               // could be helpful in case we hit the rock bottom.
-              if (theAltTermStrPos != endPos) {
-                theAltTermStrPos = theTermStrPos;
-              }
+              theAltTermStrPos = theTermStrPos;
               
               // We did not find '-->' so keep searching for terminal string.
               theCurrOffset = theTermStrPos;
