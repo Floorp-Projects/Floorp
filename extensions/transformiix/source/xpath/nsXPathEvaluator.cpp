@@ -89,16 +89,19 @@ nsXPathEvaluator::CreateExpression(const nsAString & aExpression,
 
     nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocument);
     ParseContextImpl pContext(aResolver, !doc || doc->IsCaseSensitive());
-    Expr* expression;
+    nsAutoPtr<Expr> expression;
     rv = txExprParser::createExpr(PromiseFlatString(aExpression), &pContext,
-                                  &expression);
+                                  getter_Transfers(expression));
     if (NS_FAILED(rv)) {
+        if (rv == NS_ERROR_DOM_NAMESPACE_ERR) {
+            return NS_ERROR_DOM_NAMESPACE_ERR;
+        }
+
         return NS_ERROR_DOM_INVALID_EXPRESSION_ERR;
     }
 
     *aResult = new nsXPathExpression(expression, mRecycler);
     if (!*aResult) {
-        delete expression;
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
@@ -167,9 +170,13 @@ nsresult nsXPathEvaluator::ParseContextImpl::resolveNamespacePrefix
         aPrefix->ToString(prefix);
     }
 
-    nsAutoString ns;
+    nsVoidableString ns;
     nsresult rv = mResolver->LookupNamespaceURI(prefix, ns);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    if (DOMStringIsNull(ns)) {
+        return NS_ERROR_DOM_NAMESPACE_ERR;
+    }
 
     if (ns.IsEmpty()) {
         aID = kNameSpaceID_None;
