@@ -10,8 +10,9 @@ nsPrincipalArray::nsPrincipalArray(void)
 
 nsPrincipalArray::nsPrincipalArray(PRUint32 count)
 {
-	nsVector * itsArray = new nsVector();
-	itsArray->SetSize(count, 1);
+	itsArray = new nsVector();
+	if(itsArray)
+		itsArray->SetSize(count, 1);
 }
 nsPrincipalArray::~nsPrincipalArray(void)
 {
