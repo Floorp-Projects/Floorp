@@ -56,6 +56,7 @@
 #include "imgIRequest.h"
 #include "imgIContainer.h"
 #include "nsCSSRendering.h"
+#include "nsIPrintContext.h"
 
 #define BORDER_FULL    0        //entire side
 #define BORDER_INSIDE  1        //inside half
@@ -2208,6 +2209,14 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
   float         percent;
   nsStyleCoord  bordStyleRadius[4];
   PRInt16       borderRadii[4],i;
+
+
+
+  // if we are printing, bail for now
+  nsCOMPtr<nsIPrintContext> thePrinterContext = do_QueryInterface(aPresContext);
+  if (thePrinterContext) {
+    return;
+  }
 
 
   // if there is no background image, try a color.
