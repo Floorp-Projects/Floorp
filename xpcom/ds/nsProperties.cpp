@@ -223,7 +223,7 @@ nsPersistentProperties::Load(nsIInputStream *aIn)
   PRInt32  c;
   nsresult ret;
 
-  nsString uesc("x-u-escaped");
+  nsAutoString uesc("x-u-escaped");
   ret = NS_NewConverterStream(&mIn, nsnull, aIn, 0, &uesc);
   if (ret != NS_OK) {
 #ifdef NS_DEBUG
