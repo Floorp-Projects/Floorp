@@ -250,27 +250,6 @@ protected:
 
 //----------------------------------------------------------------------
 
-  // A CantRenderReplacedElementEvent has a weak pointer to the frame
-  // manager, and the frame manager has a weak pointer to the event.
-  // The event queue owns the event and the FrameManager will delete
-  // the event if it's going to go away.
-struct CantRenderReplacedElementEvent : public PLEvent {
-  CantRenderReplacedElementEvent(nsFrameManager* aFrameManager, nsIFrame* aFrame, nsIPresShell* aPresShell) NS_HIDDEN;
-  ~CantRenderReplacedElementEvent() NS_HIDDEN;
-  // XXXldb Should the pres shell maintain a reference count on a single
-  // dummy layout request instead of doing creation of a separate one
-  // here (and per-event!)?
-  NS_HIDDEN_(nsresult) AddLoadGroupRequest(nsIPresShell* aPresShell);
-  NS_HIDDEN_(nsresult) RemoveLoadGroupRequest();
-
-  nsIFrame*  mFrame;                     // the frame that can't be rendered
-  CantRenderReplacedElementEvent* mNext; // next event in the list
-  nsCOMPtr<nsIRequest> mDummyLayoutRequest; // load group request
-  nsWeakPtr mPresShell;                     // for removing load group request later
-};
-
-//----------------------------------------------------------------------
-
 nsFrameManager::nsFrameManager()
 {
 }
