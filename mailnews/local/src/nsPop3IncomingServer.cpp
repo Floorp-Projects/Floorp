@@ -165,16 +165,16 @@ NS_IMETHODIMP nsPop3IncomingServer::PerformBiff()
         rv = inbox->GetMsgDatabase(msgWindow, getter_AddRefs(db));
         if (NS_SUCCEEDED(rv) && db)
           rv = db->GetSummaryValid(&valid);
-        // it's important to pass in null for the msg window if we are performing biff
-        // this makes sure that we don't show any kind of UI during biff.
         if (NS_SUCCEEDED(rv) && valid)
-          rv = pop3Service->GetNewMail(nsnull, urlListener, inbox, this, nsnull);
+          rv = pop3Service->GetNewMail(msgWindow, urlListener, inbox, this, nsnull);
         else
           rv = localInbox->SetCheckForNewMessagesAfterParsing(PR_TRUE);
       }
     }
     else
       rv = pop3Service->CheckForNewMail(nsnull, urlListener, inbox, this, nsnull);
+    // it's important to pass in null for the msg window if we are performing biff
+        // this makes sure that we don't show any kind of UI during biff.
   }
   return NS_OK;
 }

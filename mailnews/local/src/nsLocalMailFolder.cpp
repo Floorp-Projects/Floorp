@@ -3145,19 +3145,14 @@ nsMsgLocalMailFolder::OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode)
     
     if (mFlags & MSG_FOLDER_FLAG_INBOX)
     {
-      // if we are the inbox, 
-      nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(aUrl);
-      if (mailnewsUrl)
+      // if we are the inbox and running pop url 
+      nsCOMPtr<nsIPop3URL> popurl = do_QueryInterface(aUrl, &rv);
+      if (NS_SUCCEEDED(rv))
       {
-        nsCOMPtr<nsIMsgWindow> msgWindow;
-        mailnewsUrl->GetMsgWindow(getter_AddRefs(msgWindow));
-        if (!msgWindow) // if we don't have a message window, we are probably performing biff
-        {
-          nsCOMPtr<nsIMsgIncomingServer> server;
-          GetServer(getter_AddRefs(server));
-          if (server)
-           server->SetPerformingBiff(PR_FALSE);
-        }     
+        nsCOMPtr<nsIMsgIncomingServer> server;
+        GetServer(getter_AddRefs(server));
+        if (server)
+          server->SetPerformingBiff(PR_FALSE);  //biff is over
       }
       if (mDatabase)
       {

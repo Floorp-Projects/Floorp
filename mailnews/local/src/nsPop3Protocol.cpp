@@ -853,8 +853,7 @@ nsPop3Protocol::Error(PRInt32 err_code)
     {
         nsCOMPtr<nsIMsgWindow> msgWindow;
         nsCOMPtr<nsIPrompt> dialog;
-        rv = mailnewsUrl->GetMsgWindow(getter_AddRefs(msgWindow));
-	    NS_ASSERTION(NS_SUCCEEDED(rv) && msgWindow, "no msg window");
+        rv = mailnewsUrl->GetMsgWindow(getter_AddRefs(msgWindow)); //it is ok to have null msgWindow, for example when biffing
         if (NS_SUCCEEDED(rv) && msgWindow)
         {
             rv = msgWindow->GetPromptDialog(getter_AddRefs(dialog));
