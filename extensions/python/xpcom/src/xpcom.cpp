@@ -503,8 +503,8 @@ PRBool PyXPCOM_Globals_Ensure()
 			if (end > landmark) *end = '\0';
 
 			nsCOMPtr<nsILocalFile> ns_bin_dir;
-            nsCAutoString ns_landmark(landmark);
-			NS_NewLocalFile(ns_landmark, PR_FALSE, getter_AddRefs(ns_bin_dir));
+            NS_ConvertASCIItoUCS2 strLandmark(landmark);
+			NS_NewLocalFile(strLandmark, PR_FALSE, getter_AddRefs(ns_bin_dir));
 			nsresult rv = NS_InitXPCOM2(nsnull, ns_bin_dir, nsnull);
 #else
 			// Elsewhere, Mozilla can find it itself (we hope!)
