@@ -21,7 +21,7 @@
 # 
 
 #
-# $Id: genstats.cgi,v 1.5 1999/09/09 04:49:01 dmose%mozilla.org Exp $ 
+# $Id: genstats.cgi,v 1.6 1999/09/09 16:04:46 dmose%mozilla.org Exp $ 
 #
 # generate statistics related to non-Netscape participation in mozilla.org
 #
@@ -275,7 +275,7 @@ for ( ; $curYear <= $lastYear ; $curYear++ ) {
 print p();
 print h4("\nThese statistics were generated using the assumption that " .
 		" contributions from mozilla.org should " .
-	        b( $mozillaOrgAsNscp eq "yes" ? "" : "not ") .  
+	        b( $F::mozillaOrgAsNscp eq "yes" ? "" : "not ") .  
 	        "be considered Netscape contributions.");
 
 # generate the row of headers listing the months
