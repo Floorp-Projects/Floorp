@@ -4,6 +4,21 @@
 
 <!ENTITY quitApplicationCmd.label			"Exit"> 
 
+<!ENTITY undoCmd.label						"Undo">  
+<!ENTITY undoCmd.key						"Z">  
+<!ENTITY redoCmd.label						"Redo">  
+<!ENTITY redoCmd.key						"Z">  
+<!ENTITY cutCmd.label						"Cut">  
+<!ENTITY cutCmd.key							"X">  
+<!ENTITY copyCmd.label						"Copy">  
+<!ENTITY copyCmd.key						"C">  
+<!ENTITY pasteCmd.label						"Paste">  
+<!ENTITY pasteCmd.key						"V">  
+<!ENTITY deleteCmd.label					"Delete">  
+<!ENTITY deleteCmd.key						"D">  
+<!ENTITY selectAllCmd.label					"Select All">  
+<!ENTITY selectAllCmd.key					"A">  
+
 <!ENTITY helpMenu.label					"Help"> 
 <!ENTITY helpContentCmd.label				".Help Contents">  
 <!ENTITY referenceLibraryCmd.label			".Reference Library">  
