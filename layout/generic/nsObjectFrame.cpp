@@ -171,7 +171,7 @@ private:
   char              *mDocumentBase;
   nsIWidget         *mWidget;
   nsIPresContext    *mContext;
-  nsITimer		    *mPluginTimer;
+  nsCOMPtr<nsITimer> mPluginTimer;
   nsIPluginHost     *mPluginHost;
 };
 
@@ -1314,7 +1314,6 @@ nsPluginInstanceOwner::nsPluginInstanceOwner()
   mParamNames = nsnull;
   mParamVals = nsnull;
   mDocumentBase = nsnull;
-  mPluginTimer = nsnull;
   mPluginHost = nsnull;
 }
 
@@ -1325,7 +1324,6 @@ nsPluginInstanceOwner::~nsPluginInstanceOwner()
   // shut off the timer.
   if (mPluginTimer != nsnull) {
     mPluginTimer->Cancel();
-    NS_RELEASE(mPluginTimer);
   }
 
   if (nsnull != mInstance)
@@ -2256,8 +2254,9 @@ NS_IMETHODIMP_(void) nsPluginInstanceOwner::Notify(nsITimer* /* timer */)
 #ifndef REPEATING_TIMERS
   // reprime the timer? currently have to create a new timer for each call, which is
   // kind of wasteful. need to get periodic timers working on all platforms.
-  NS_IF_RELEASE(mPluginTimer);
-  if (NS_NewTimer(&mPluginTimer) == NS_OK)
+  nsresult rv;
+  mPluginTimer = do_CreateInstance("component://netscape/timer", &rv);
+  if (NS_SUCCEEDED(rv))
     mPluginTimer->Init(this, 1000 / 60);
 #endif
 }
@@ -2266,7 +2265,6 @@ void nsPluginInstanceOwner::CancelTimer()
 {
 	if (mPluginTimer != NULL) {
 	    mPluginTimer->Cancel();
-    	NS_RELEASE(mPluginTimer);
     }
 }
 
@@ -2348,7 +2346,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
 
 #if defined(XP_MAC)
           // start a periodic timer to provide null events to the plugin instance.
-          rv = NS_NewTimer(&mPluginTimer);
+          mPluginTimer = do_CreateInstance("component://netscape/timer", &rv);
           if (rv == NS_OK)
 	        rv = mPluginTimer->Init(this, 1000 / 60, NS_PRIORITY_NORMAL, NS_TYPE_REPEATING_SLACK);
 #endif

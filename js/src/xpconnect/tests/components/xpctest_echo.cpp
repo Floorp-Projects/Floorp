@@ -415,8 +415,10 @@ xpctestEcho::CallReceiverSometimeLater(void)
     // as it is built today. This is only test code and we can stand to 
     // have it only work on Win32 for now.
 #ifdef WIN32
-    nsITimer *timer;
-    if(NS_FAILED(NS_NewTimer(&timer)))
+    nsCOMPtr<nsITimer> timer;
+    nsresult rv;
+    timer = do_CreateInstance("component://netscape/timer", &rv);
+    if(NS_FAILED(rv))
         return NS_ERROR_FAILURE;
     timer->Init(NS_STATIC_CAST(nsITimerCallback*,this), 2000);
     return NS_OK;

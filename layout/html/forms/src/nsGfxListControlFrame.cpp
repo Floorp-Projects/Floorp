@@ -3892,7 +3892,7 @@ public:
   NS_DECL_ISUPPORTS
 
   nsSelectAutoScrollTimer()
-      : mTimer(0), mFrame(0), mPresContext(0), mPoint(0,0), mDelay(30)
+      : mFrame(0), mPresContext(0), mPoint(0,0), mDelay(30)
   {
     NS_INIT_ISUPPORTS();
   }
@@ -3902,7 +3902,6 @@ public:
     if (mTimer)
     {
       mTimer->Cancel();
-      NS_RELEASE(mTimer);
     }
   }
 
@@ -3914,7 +3913,8 @@ public:
 
     if (!mTimer)
     {
-      nsresult result = NS_NewTimer(&mTimer);
+      nsresult result;
+      mTimer = do_CreateInstance("component://netscape/timer", &result);
 
       if (NS_FAILED(result))
         return result;
@@ -3930,7 +3930,6 @@ public:
     if (mTimer)
     {
       mTimer->Cancel();
-      NS_RELEASE(mTimer);
       mTimer = 0;
     }
 
@@ -3959,7 +3958,7 @@ public:
 
 private:
   nsGfxListControlFrame *mListControl;
-  nsITimer       *mTimer;
+  nsCOMPtr<nsITimer> mTimer;
   nsIFrame       *mFrame;
   nsIPresContext *mPresContext;
   nsPoint         mPoint;

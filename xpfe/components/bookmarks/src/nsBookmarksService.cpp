@@ -1951,8 +1951,7 @@ nsBookmarksService::Init()
 	if (!mTimer)
 	{
 		busySchedule = PR_FALSE;
-
-		rv = NS_NewTimer(getter_AddRefs(mTimer));
+		mTimer = do_CreateInstance("component://netscape/timer", &rv);
 		if (NS_FAILED(rv)) return rv;
 		mTimer->Init(nsBookmarksService::FireTimer, this, BOOKMARK_TIMEOUT, NS_PRIORITY_LOWEST, NS_TYPE_REPEATING_SLACK);
 		// Note: don't addref "this" as we'll cancel the timer in the nsBookmarkService destructor
@@ -2270,7 +2269,7 @@ else
 		mTimer->Cancel();
 		mTimer = nsnull;
 	}
-	nsresult rv = NS_NewTimer(getter_AddRefs(mTimer));
+	mTimer = do_CreateInstance("component://netscape/timer", &rv);
 	if (NS_FAILED(rv) || (!mTimer)) return;
 	mTimer->Init(nsBookmarksService::FireTimer, bmks, BOOKMARK_TIMEOUT, NS_PRIORITY_LOWEST, NS_TYPE_REPEATING_SLACK);
 	// Note: don't addref "this" as we'll cancel the timer in the nsBookmarkService destructor

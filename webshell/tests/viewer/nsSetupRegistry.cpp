@@ -211,7 +211,7 @@ NS_SetupRegistry()
                                            NS_FILESPECWITHUI_PROGID, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCFilePickerCID, "FilePicker", "component://mozilla/filepicker", WIDGET_DLL, PR_FALSE, PR_FALSE);
 #ifdef XP_PC
-  nsComponentManager::RegisterComponentLib(kCTimerCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kCTimerCID, "Timer", "component://netscape/timer", WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCTimerManagerCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
 #endif
 

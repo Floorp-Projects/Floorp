@@ -30,7 +30,6 @@ PROGRAM		= rdfcat$(BIN_SUFFIX)
 CPPSRCS		= rdfcat.cpp
 
 LIBS		= \
-		$(MOZ_TIMER_LIBS) \
 		$(MOZ_JS_LIBS) \
 		$(XPCOM_LIBS) \
 		$(NSPR_LIBS) \

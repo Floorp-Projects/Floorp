@@ -2004,8 +2004,7 @@ NS_IMETHODIMP nsDocShell::RefreshURI(nsIURI *aURI, PRInt32 aDelay, PRBool aRepea
    refreshTimer->mDelay = aDelay;
    refreshTimer->mRepeat = aRepeat;
 
-   nsITimer* timer = nsnull;
-   NS_NewTimer(&timer);
+   nsCOMPtr<nsITimer> timer = do_CreateInstance("component://netscape/timer");
    NS_ENSURE_TRUE(timer, NS_ERROR_FAILURE);
 
    mRefreshURIList.AppendElement(timer);

@@ -55,7 +55,6 @@ static NS_DEFINE_IID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
 
 nsCaret::nsCaret()
 :	mPresShell(nsnull)
-,	mBlinkTimer(nsnull)
 ,	mBlinkRate(500)
 , mCaretWidth(20)
 ,	mVisible(PR_FALSE)
@@ -344,7 +343,6 @@ void nsCaret::KillTimer()
 	if (mBlinkTimer)
 	{
 		mBlinkTimer->Cancel();
-		NS_RELEASE(mBlinkTimer);
 	}
 }
 
@@ -357,7 +355,8 @@ nsresult nsCaret::PrimeTimer()
 	// set up the blink timer
 	if (!mReadOnly && mBlinkRate > 0)
 	{
-		nsresult	err = NS_NewTimer(&mBlinkTimer);
+		nsresult	err;
+    mBlinkTimer = do_CreateInstance("component://netscape/timer", &err);
 		
 		if (NS_FAILED(err))
 			return err;

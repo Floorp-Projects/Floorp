@@ -185,7 +185,7 @@ protected:
       : mPresContext(aPresContext), mFrame(aFrame) {}
   };
 
-  nsITimer*       mTimer;
+  nsCOMPtr<nsITimer> mTimer;
   nsVoidArray     mFrames;
   nsIPresContext* mPresContext;
 
@@ -206,7 +206,6 @@ static PRTime gLastTick;
 nsBlinkTimer::nsBlinkTimer()
 {
   NS_INIT_REFCNT();
-  mTimer = nsnull;
 }
 
 nsBlinkTimer::~nsBlinkTimer()
@@ -217,7 +216,8 @@ nsBlinkTimer::~nsBlinkTimer()
 
 void nsBlinkTimer::Start()
 {
-  nsresult rv = NS_NewTimer(&mTimer);
+  nsresult rv;
+  mTimer = do_CreateInstance("component://netscape/timer", &rv);
   if (NS_OK == rv) {
     mTimer->Init(this, 750, NS_PRIORITY_NORMAL, NS_TYPE_REPEATING_PRECISE);
   }
@@ -227,7 +227,6 @@ void nsBlinkTimer::Stop()
 {
   if (nsnull != mTimer) {
     mTimer->Cancel();
-    NS_RELEASE(mTimer);
   }
 }
 

@@ -313,9 +313,9 @@ nsThrobber::Tick()
   }
 
 #ifndef REPEATING_TIMERS
-  NS_RELEASE(mTimer);
 
-  nsresult rv = NS_NewTimer(&mTimer);
+  nsresult rv;
+  mTimer = do_CreateInstance("component://netscape/timer", &rv);
   if (NS_OK == rv) {
     mTimer->Init(ThrobTimerCallback, this, 33);
   }
@@ -341,7 +341,7 @@ nsThrobber::LoadThrobberImages(const nsString& aFileNameMask, PRInt32 aNumImages
   mImageGroup->Init(deviceCtx, nsnull);
   NS_RELEASE(deviceCtx);
 
-  rv = NS_NewTimer(&mTimer);
+  mTimer = do_CreateInstance("component://netscape/timer", &rv);
   if (NS_OK != rv) {
     return rv;
   }
@@ -373,7 +373,6 @@ nsThrobber::DestroyThrobberImages()
 {
   if (mTimer) {
     mTimer->Cancel();
-    NS_RELEASE(mTimer);
   }
 
   if (mImageGroup) {

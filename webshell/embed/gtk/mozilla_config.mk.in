@@ -19,5 +19,4 @@
 # Contributor(s): 
 #
 
-MOZ_TIMER_LIBS=@MOZ_TIMER_LIBS@
 

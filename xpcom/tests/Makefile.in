@@ -69,7 +69,6 @@ CPPSRCS		+= \
 endif
 
 LIBS		+= \
-		$(MOZ_TIMER_LIBS) \
 		$(MOZ_JS_LIBS) \
 		$(XPCOM_LIBS) \
 		$(TK_LIBS) \

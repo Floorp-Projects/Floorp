@@ -145,7 +145,7 @@ protected:
   nsCOMPtr<nsIDocumentLoader> mDocLoader;
   nsBrowserWindow* mBrowser;
   nsViewerApp* mViewer;
-  nsITimer* mTimer;
+  nsCOMPtr<nsITimer> mTimer;
   FILE* mRecord;
   nsCOMPtr<nsIAtom> mLinkTag;
   nsCOMPtr<nsIAtom> mFrameTag;

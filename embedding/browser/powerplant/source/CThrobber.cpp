@@ -53,7 +53,7 @@ const PRUint32 kThrobFrequency = 66;   // animation frequency in milliseconds
 CThrobber::CThrobber() :
    mImages(nsnull),
    mNumImages(0), mCompletedImages(0), mIndex(0), mRunning(false),
-   mImageGroup(nsnull), mTimer(nsnull)
+   mImageGroup(nsnull)
 {
    NS_INIT_REFCNT(); // caller must add ref as normal
    
@@ -65,7 +65,7 @@ CThrobber::CThrobber(LStream*	inStream) :
    LView(inStream),
    mImages(nsnull),
    mNumImages(0), mCompletedImages(0), mIndex(0), mRunning(false),
-   mImageGroup(nsnull), mTimer(nsnull)
+   mImageGroup(nsnull)
 {
    mRefCnt = 1; // PowerPlant is making us, and it sure isn't going to do an AddRef.
   
@@ -279,7 +279,7 @@ NS_METHOD CThrobber::LoadImages(const nsString& aFileNameMask, PRInt32 aNumImage
   mImageGroup->Init(deviceCtx, nsnull);
   NS_RELEASE(deviceCtx);
 
-  rv = NS_NewTimer(&mTimer);
+  mTimer = do_CreateInstance("component://netscape/timer", &rv);
   if (NS_OK != rv) {
     return rv;
   }
@@ -310,7 +310,6 @@ void CThrobber::DestroyImages()
   if (mTimer)
   {
     mTimer->Cancel();
-    NS_RELEASE(mTimer);
   }
 
   if (mImageGroup)
@@ -346,9 +345,8 @@ void CThrobber::Tick()
   }
 
 #ifndef REPEATING_TIMERS
-  NS_RELEASE(mTimer);
-
-  nsresult rv = NS_NewTimer(&mTimer);
+  nsresult rv;
+  mTimer = do_CreateInstance("component://netscape/timer", &rv);
   if (NS_OK == rv) {
     mTimer->Init(ThrobTimerCallback, this, kThrobFrequency);
   }

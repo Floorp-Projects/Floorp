@@ -135,7 +135,7 @@ protected:
   PRBool mInterrupted;
   ImageNetContextImpl *mContext;
   nsIInputStream *mStream;
-  nsITimer *mTimer;
+  nsCOMPtr<nsITimer> mTimer;
   PRBool mFirstRead;
   char *mBuffer;
   PRInt32 mStatus;
@@ -154,7 +154,6 @@ ImageConsumer::ImageConsumer(ilIURL *aURL, ImageNetContextImpl *aContext)
   mInterrupted = PR_FALSE;
   mFirstRead = PR_TRUE;
   mStream = nsnull;
-  mTimer = nsnull;
   mBuffer = nsnull;
   mStatus = 0;
   mChannel = nsnull;
@@ -485,7 +484,6 @@ NS_IMETHODIMP
 ImageConsumer::OnStopRequest(nsIChannel* channel, nsISupports* aContext, nsresult status, const PRUnichar* aMsg)
 {
   if (mTimer != nsnull) {
-    NS_RELEASE(mTimer);
   }
 
   if (NS_BINDING_SUCCEEDED != status) {
@@ -507,7 +505,9 @@ ImageConsumer::OnStopRequest(nsIChannel* channel, nsISupports* aContext, nsresul
         if (mStream) {
           SetKeepPumpingData(channel, aContext);
 
-          if ((NS_OK != NS_NewTimer(&mTimer)) ||
+          nsresult rv;
+          mTimer = do_CreateInstance("component://netscape/timer", &rv);
+          if (NS_FAILED(rv) ||
               (NS_OK != mTimer->Init(ImageConsumer::KeepPumpingStream, this, 0))) {
             mStatus = MK_IMAGE_LOSSAGE;
             NS_RELEASE(mStream);
@@ -556,7 +556,6 @@ ImageConsumer::~ImageConsumer()
   NS_IF_RELEASE(mURL);
   NS_IF_RELEASE(mContext);
   NS_IF_RELEASE(mStream);
-  NS_IF_RELEASE(mTimer);
   if (mBuffer != nsnull) {
     PR_DELETE(mBuffer);
   }

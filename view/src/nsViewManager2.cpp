@@ -154,7 +154,6 @@ nsViewManager2::~nsViewManager2()
 #ifdef NS_VIEWMANAGER_NEEDS_TIMER
 	if (nsnull != mTimer) {
 		mTimer->Cancel();     //XXX this should not be necessary. MMP
-		NS_RELEASE(mTimer);
 	}
 #endif
 
@@ -300,9 +299,6 @@ NS_IMETHODIMP nsViewManager2::Init(nsIDeviceContext* aContext, nscoord aX, nscoo
 	mContext->GetAppUnitsToDevUnits(mTwipsToPixels);
 	mContext->GetDevUnitsToAppUnits(mPixelsToTwips);
 
-#ifdef NS_VIEWMANAGER_NEEDS_TIMER
-	mTimer = nsnull;
-#endif
 	mFrameRate = 0;
 	mTrueFrameRate = 0;
 	mTransCnt = 0;
@@ -389,7 +385,6 @@ NS_IMETHODIMP nsViewManager2::SetFrameRate(PRUint32 aFrameRate)
 			if (nsnull != mTimer)
 			{
 					mTimer->Cancel();     //XXX this should not be necessary. MMP
-					NS_RELEASE(mTimer);
 			}
 #endif
 
@@ -399,10 +394,10 @@ NS_IMETHODIMP nsViewManager2::SetFrameRate(PRUint32 aFrameRate)
 			if (mFrameRate != 0)
 			{
 #ifdef NS_VIEWMANAGER_NEEDS_TIMER
-					rv = NS_NewTimer(&mTimer);
+				mTimer = do_CreateInstance("component://netscape/timer", &rv);
 
-					if (NS_OK == rv)
-						mTimer->Init(vm_timer_callback, this, 1000 / mFrameRate);
+				if (NS_OK == rv)
+					mTimer->Init(vm_timer_callback, this, 1000 / mFrameRate);
 #endif
 			}
 			

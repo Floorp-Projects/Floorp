@@ -42,7 +42,6 @@ CPPSRCS		= \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
-		$(MOZ_TIMER_LIBS) \
 		-L$(DIST)/bin \
 		$(EXTRA_DSO_LIBS) \
 		$(MOZ_JS_LIBS) \

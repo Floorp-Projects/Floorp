@@ -310,7 +310,7 @@ public:
   {
     nsresult rv=NS_OK;
     if (mTimeoutValue > 0){
-      rv=NS_NewTimer(getter_AddRefs(mShutdownTimer));
+      mShutdownTimer = do_CreateInstance("component://netscape/timer", &rv);
       NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create timer for PageCycler...");
       if (NS_SUCCEEDED(rv) && mShutdownTimer){
         mShutdownTimer->Init(TimesUp, (void *)this, mTimeoutValue*1000);

@@ -892,7 +892,7 @@ NS_IMETHODIMP nsMenuPopupFrame::SetCurrentMenuItem(nsIMenuFrame* aMenuItem)
       }
 
       // Kick off the timer.
-      NS_NewTimer(getter_AddRefs(mCloseTimer));
+      mCloseTimer = do_CreateInstance("component://netscape/timer");
       mCloseTimer->Init(this, menuDelay, NS_PRIORITY_HIGHEST); 
       mTimerMenu = mCurrentMenu;
     }

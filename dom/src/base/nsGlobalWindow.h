@@ -244,7 +244,7 @@ struct nsTimeoutImpl {
   GlobalWindowImpl    *window;        /* window for which this timeout fires */
   JSString            *expr;          /* the JS expression to evaluate */
   JSObject            *funobj;        /* or function to call, if !expr */
-  nsITimer            *timer;         /* The actual timer object */
+  nsCOMPtr<nsITimer>  timer;         /* The actual timer object */
   jsval               *argv;          /* function actual arguments */
   PRUint16            argc;           /* and argument count */
   PRUint16            spare;          /* alignment padding */
