@@ -3516,7 +3516,7 @@ nsWindowSH::GlobalScopePolluterNewResolve(JSContext *cx, JSObject *obj,
 {
   if (flags & (JSRESOLVE_ASSIGNING | JSRESOLVE_DECLARING |
                JSRESOLVE_CLASSNAME | JSRESOLVE_QUALIFIED) ||
-      JSVAL_IS_INT(id)) {
+      !JSVAL_IS_STRING(id)) {
     // Nothing to do here if we're either assigning or declaring,
     // resolving a class name, doing a qualified resolve, or
     // resolving a number.
