@@ -160,7 +160,7 @@ foreach my $k (keys(%seen)) {
         push(@params, "shape=box");
     }
 
-    if ($stat =~ /^(NEW|ASSIGNED|REOPENED)$/) {
+    if (IsOpenedState($stat)) {
         push(@params, "color=green");
     }
 
