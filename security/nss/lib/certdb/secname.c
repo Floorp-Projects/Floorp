@@ -329,17 +329,27 @@ SECStatus
 CERT_CopyRDN(PRArenaPool *arena, CERTRDN *to, CERTRDN *from)
 {
     CERTAVA **avas, *fava, *tava;
-    SECStatus rv;
+    SECStatus rv = SECSuccess;
 
     /* Copy each ava from from */
     avas = from->avas;
-    while ((fava = *avas++) != 0) {
-	tava = CERT_CopyAVA(arena, fava);
-	if (!tava) return SECFailure;
-	rv = CERT_AddAVA(arena, to, tava);
-	if (rv) return rv;
+    if (avas) {
+	if (avas[0] == NULL) {
+	    rv = CERT_AddAVA(arena, to, NULL);
+	    return rv;
+	}
+	while ((fava = *avas++) != 0) {
+	    tava = CERT_CopyAVA(arena, fava);
+	    if (!tava) {
+	    	rv = SECFailure;
+		break;
+	    }
+	    rv = CERT_AddAVA(arena, to, tava);
+	    if (rv != SECSuccess) 
+	    	break;
+	}
     }
-    return SECSuccess;
+    return rv;
 }
 
 /************************************************************************/
