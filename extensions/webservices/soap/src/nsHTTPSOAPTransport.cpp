@@ -280,6 +280,9 @@ NS_IMETHODIMP nsHTTPSOAPTransport::SyncCall(nsISOAPCall * aCall, nsISOAPResponse
   if (NS_FAILED(rv))
     return rv;
 
+  rv = request->OverrideMimeType("text/xml");
+  if (NS_FAILED(rv))
+    return rv;
   rv = request->OpenRequest("POST", NS_ConvertUCS2toUTF8(uri).get(),
                             PR_FALSE, nsnull, nsnull);
   if (NS_FAILED(rv))
@@ -476,6 +479,9 @@ NS_IMETHODIMP
     return SOAP_EXCEPTION(NS_ERROR_NOT_INITIALIZED,"SOAP_TRANSPORT_URI", "No transport URI was specified.");
 
   DEBUG_DUMP_DOCUMENT("Asynchronous Request", messageDocument)
+  rv = request->OverrideMimeType("text/xml");
+  if (NS_FAILED(rv))
+    return rv;
   rv = request->OpenRequest("POST", NS_ConvertUCS2toUTF8(uri).get(),
                             PR_TRUE, nsnull, nsnull);
   if (NS_FAILED(rv))
