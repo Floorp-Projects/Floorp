@@ -4785,7 +4785,7 @@ private:
                nsCellMap*       aCellMap = nsnull);
 
   PRBool SetNewRow(nsTableRowFrame* row = nsnull);
-  PRBool SetNewRowGroup();
+  PRBool SetNewRowGroup(PRBool aFindFirstDamagedRow);
 
   nsTableFrame&         mTableFrame;
   nsTableCellMap*       mTableCellMap;
@@ -4920,6 +4920,7 @@ BCMapCellIterator::SetInfo(nsTableRowFrame* aRow,
 PRBool
 BCMapCellIterator::SetNewRow(nsTableRowFrame* aRow)
 {
+  mAtEnd   = PR_TRUE;
   mPrevRow = mRow;
   if (aRow) {
     mRow = aRow;
@@ -4944,56 +4945,71 @@ BCMapCellIterator::SetNewRow(nsTableRowFrame* aRow)
       }
     }
     mIsNewRow = PR_TRUE;
+    mAtEnd    = PR_FALSE;
   }
-  else {
-    NS_ASSERTION(PR_FALSE, "program error");
-    mAtEnd = PR_TRUE;
-  }
+  else ABORT1(PR_FALSE);
+
   return !mAtEnd;
 }
 
 PRBool
-BCMapCellIterator::SetNewRowGroup()
+BCMapCellIterator::SetNewRowGroup(PRBool aFindFirstDamagedRow)
 {
+  mAtEnd = PR_TRUE;
   mRowGroupIndex++;
   PRInt32 numRowGroups = mRowGroups.Count();
-  for (PRInt32 rgX = mRowGroupIndex; (rgX < numRowGroups) && !mAtEnd; rgX++) {
+  for (PRInt32 rgX = mRowGroupIndex; rgX < numRowGroups; rgX++) {
     nsIFrame* frame = (nsTableRowGroupFrame*)mRowGroups.ElementAt(mRowGroupIndex); if (!frame) ABORT1(PR_FALSE);
     mRowGroup = mTableFrame.GetRowGroupFrame(frame); if (!mRowGroup) ABORT1(PR_FALSE);
     mRowGroupStart = mRowGroup->GetStartRowIndex();
     mRowGroupEnd   = mRowGroupStart + mRowGroup->GetRowCount() - 1;
     if (mRowGroupEnd >= 0) {
-       mCellMap  = mTableCellMap->GetMapFor(*mRowGroup);
-      if (SetNewRow(mRowGroup->GetFirstRow())) {
-        return PR_TRUE;
+      mCellMap  = mTableCellMap->GetMapFor(*mRowGroup);
+      nsTableRowFrame* firstRow = mRowGroup->GetFirstRow();
+      if (aFindFirstDamagedRow) {
+        if ((mAreaStart.y >= mRowGroupStart) && (mAreaStart.y <= mRowGroupEnd)) {
+          // the damage area starts in the row group 
+          if (aFindFirstDamagedRow) {
+            // find the correct first damaged row
+            PRInt32 numRows = mAreaStart.y - mRowGroupStart;
+            for (PRInt32 i = 0; i < numRows; i++) {
+              firstRow = firstRow->GetNextRow(); if (!frame) ABORT1(PR_FALSE);
+            }
+          }
+        }
+        else {
+          mRowGroupIndex++;
+          continue;
+        }
       }
-      else mAtEnd = PR_TRUE;
+      if (SetNewRow(firstRow)) { // sets mAtEnd
+        break;
+      }
     }
   }
-  mAtEnd = PR_TRUE;
+    
   return !mAtEnd;
 }
 
 void 
 BCMapCellIterator::First(BCMapCellInfo& aMapInfo)
 {
-  mAtEnd = PR_FALSE;
   aMapInfo.Reset();
 
-  SetNewRowGroup(); // could set mAtEnd
+  SetNewRowGroup(PR_TRUE); // sets mAtEnd
   while (!mAtEnd) {
     if ((mAreaStart.y >= mRowGroupStart) && (mAreaStart.y <= mRowGroupEnd)) {
       CellData* cellData = mCellMap->GetDataAt(*mTableCellMap, mAreaStart.y - mRowGroupStart, mAreaStart.x, PR_FALSE);
       if (cellData && cellData->IsOrig()) {
         SetInfo(mRow, mAreaStart.x, cellData, aMapInfo);
-        break;
       }
       else {
         NS_ASSERTION(PR_FALSE, "damage area expanded incorrectly");
         mAtEnd = PR_TRUE;
       }
+      break;
     }
-    SetNewRowGroup(); // could set mAtEnd
+    SetNewRowGroup(PR_TRUE); // sets mAtEnd
   } 
 }
 
@@ -5019,7 +5035,7 @@ BCMapCellIterator::Next(BCMapCellInfo& aMapInfo)
       }
     }
     if (mRowIndex >= mRowGroupEnd) {
-      SetNewRowGroup(); // could set mAtEnd
+      SetNewRowGroup(PR_FALSE); // could set mAtEnd
     }
     else {
       SetNewRow(); // could set mAtEnd
@@ -5481,7 +5497,7 @@ struct BCCorners
   
   BCCornerInfo& operator [](PRInt32 i) const
   { NS_ASSERTION((i >= startIndex) && (i <= endIndex), "program error");
-    return corners[i - startIndex]; }
+    return corners[PR_MAX(PR_MIN(i, endIndex), startIndex) - startIndex]; }
 
   PRInt32       startIndex;
   PRInt32       endIndex;
@@ -5526,7 +5542,7 @@ struct BCCellBorders
   
   BCCellBorder& operator [](PRInt32 i) const
   { NS_ASSERTION((i >= startIndex) && (i <= endIndex), "program error");
-    return borders[i - startIndex]; }
+    return borders[PR_MAX(PR_MIN(i, endIndex), startIndex) - startIndex]; }
 
   PRInt32       startIndex;
   PRInt32       endIndex;
@@ -5734,8 +5750,8 @@ LimitBorderWidth(PRUint16 aWidth)
  */
 
 #define TOP_DAMAGED(aRowIndex)    ((aRowIndex) >= propData->mDamageArea.y) 
-#define RIGHT_DAMAGED(aColIndex)  ((aColIndex) <= propData->mDamageArea.XMost()) 
-#define BOTTOM_DAMAGED(aRowIndex) ((aRowIndex) <= propData->mDamageArea.YMost()) 
+#define RIGHT_DAMAGED(aColIndex)  ((aColIndex) <  propData->mDamageArea.XMost()) 
+#define BOTTOM_DAMAGED(aRowIndex) ((aRowIndex) <  propData->mDamageArea.YMost()) 
 #define LEFT_DAMAGED(aColIndex)   ((aColIndex) >= propData->mDamageArea.x) 
 
 // Calc the dominate border at every cell edge and corner within the current damage area
