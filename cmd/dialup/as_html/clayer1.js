@@ -75,22 +75,22 @@ function checkEditMode()
 
 
 
-pages=new Array();
+pages = new Array();
 
-pages[0]=new Array();
-pages[0][0]=new page("main.htm",null,null);
-pages[0][1]=new method("ipreview/inpvw1.htm","parent.content.go('Internet Preview')",true);
-pages[0][2]=new method("preview/duepvw1.htm","parent.content.go('Preview')",true);
-pages[0][3]=new method("intro/intro1.htm","parent.controls.checkShowIntroFlag('')",true);
+pages[ 0 ] = new Array();
+pages[ 0 ][ 0 ] = new page( "main.htm",null,null);
+pages[ 0 ][ 1 ] = new method( "ipreview/inpvw1.htm", "parent.content.go( 'Internet Preview' )", true );
+pages[ 0 ][ 2 ] = new method( "preview/duepvw1.htm", "parent.content.go( 'Preview' )", true );
+pages[ 0 ][ 3 ] = new method( "intro/intro1.htm", "parent.controls.checkShowIntroFlag( '' )", true );
 //pages[0][4]=new condition("intro/intro1.htm","Mode Selection","Show_Intro_Screens","yes");
 //pages[0][5]=new condition("needs1.htm","Mode Selection","ForceNew","yes");
 //pages[0][6]=new condition("useAcct.htm","Mode Selection","ForceExisting","yes");
 //pages[0][7]=new action("accounts.htm");
 
-pages[1]=new Array();
-pages[1][0]=new page("accounts.htm",null,null);
-pages[1][1]=new method("needs1.htm","parent.content.go('New Path')",true);
-pages[1][2]=new method("useAcct.htm","parent.content.go('Existing Path')",true);
+pages[ 1 ] = new Array();
+pages[ 1 ][ 0 ] = new page( "accounts.htm", null, null);
+pages[ 1 ][ 1 ] = new method( "needs1.htm", "parent.content.go( 'New Path' )", true );
+pages[ 1 ][ 2 ] = new method( "useAcct.htm", "parent.content.go( 'Existing Path' )", true );
 
 // New Account Path
 
@@ -102,25 +102,25 @@ pages[ 2 ][ 2 ] = new method( "newAcct.htm", "parent.content.go('')", true );
 pages[ 3 ] = new Array();
 pages[ 3 ][ 0 ] = new page( "newAcct.htm", "New Acct Mode", "AskPersonalInfo" );
 pages[ 3 ][ 1 ] = new condition( "billing.htm", "New Acct Mode", "AskPersonalInfo", "no" );
-pages[ 3 ][ 2 ] = new method( "billing.htm", "parent.content.go('')", true );
+pages[ 3 ][ 2 ] = new method( "billing.htm", "parent.content.go( '' )", true );
 
 pages[ 4 ] = new Array();
 pages[ 4 ][ 0 ] = new page( "billing.htm", "New Acct Mode", "AskBillingInfo" );
 pages[ 4 ][ 1 ] = new condition( "modem1.htm", "New Acct Mode", "AskBillingInfo", "no" );
-pages[ 4 ][ 2 ] = new method( "modem1.htm", "parent.content.go('')", true );
+pages[ 4 ][ 2 ] = new method( "modem1.htm", "parent.content.go( '' )", true );
 
 pages[ 5 ] = new Array();
 pages[ 5 ][ 0 ] = new page( "modem1.htm", null, null );
-pages[ 5 ][ 1 ] = new method( "dialinf1.htm", "parent.content.go('')", true );
+pages[ 5 ][ 1 ] = new method( "dialinf1.htm", "parent.content.go( '' )", true );
 
 pages[ 6 ] = new Array();
 pages[ 6 ][ 0 ] = new page( "dialinf1.htm", null, null );
-pages[ 6 ][ 1 ] = new method( "dialinf2.htm", "parent.content.go('')", true );
+pages[ 6 ][ 1 ] = new method( "dialinf2.htm", "parent.content.go( '' )", true );
 
 pages[ 7 ] = new Array();
 pages[ 7 ][ 0 ] = new page( "dialinf2.htm", null, null );
-pages[ 7 ][ 1 ] = new method( "download.htm", "parent.content.go('New Path')", true );
-pages[ 7 ][ 2 ] = new method( "connect2.htm", "parent.content.go('Existing Path')", true );
+pages[ 7 ][ 1 ] = new method( "download.htm", "parent.content.go( 'New Path' )", true );
+pages[ 7 ][ 2 ] = new method( "connect2.htm", "parent.content.go( 'Existing Path' )", true );
 
 pages[ 53 ] = new Array();
 pages[ 53 ][ 0 ] = new page( "download.htm", null, null );
@@ -203,21 +203,24 @@ pages[19][2]=new method("error.htm","parent.content.go('error.htm')",true);
 
 // Final Screens
 
-pages[20]=new Array();
-pages[20][0]=new page("ok.htm",null,null);
+pages[ 20 ] = new Array();
+pages[ 20 ][ 0 ] = new page( "ok.htm", null, null );
 
-pages[21]=new Array();
-pages[21][0]=new page("okreboot.htm",null,null);
+pages[ 21 ] = new Array();
+pages[ 21 ][ 0 ] = new page( "okreboot.htm", null, null );
 
 pages[ 22 ] = new Array();
 pages[ 22 ][ 0 ] = new page( "error.htm", null, null );
-pages[ 22 ][ 1 ] = new method( "1step.htm", "parent.content.go( 'firstDial' )", true );
-pages[ 22 ][ 2 ] = new method( "register.htm", "parent.content.go( 'New Path' )", true );
-pages[ 22 ][ 3 ] = new method( "connect2.htm", "parent.content.go( 'Existing Path' )", true );
+pages[ 22 ][ 1 ] = new method( "register.htm", "parent.content.go( 'New Path' )", true );
+pages[ 22 ][ 2 ] = new method( "connect2.htm", "parent.content.go( 'Existing Path' )", true );
 
-pages[23]=new Array();
-pages[23][0]=new page("later.htm",null,null);
-pages[23][1]=new method("later.htm","parent.content.go('Done')",true);
+pages[ 23 ] = new Array();
+pages[ 23 ][ 0 ] = new page( "later.htm", null, null );
+pages[ 23 ][ 1 ] = new method( "later.htm", "parent.content.go( 'Done' )", true );
+
+pages[ 59 ] = new Array();
+pages[ 59 ][ 0 ] = new page( "error2.htm", null, null );
+pages[ 59 ][ 1 ] = new method( "1step.htm", "parent.content.go( '' )", true );
 
 // Settings
 
@@ -663,7 +666,8 @@ function go( msg )
 					{
 						pageName = pageHistory.substring( x + 1, pageHistory.length );
 						globals.document.vars.pageHistory.value = pageHistory.substring( 0, x + 1 );
-						if ( ( pageName == "register.htm" ) || ( pageName == "error.htm" ) )
+						if ( ( pageName == "register.htm" ) || ( pageName == "error.htm" ) 
+							( pageName == "error2.htm" ) )
 							historyCleanup = true;
 					}
 					else
@@ -766,13 +770,15 @@ function go( msg )
 			longMsgFlag = false;
 		else if ( formName.indexOf( "aboutbox.htm" ) >= 0 )
 			longMsgFlag = false;
-		else if (formName.indexOf( "error.htm" ) >= 0 )
+		else if ( formName.indexOf( "error.htm" ) >= 0 )
 			longMsgFlag = false;
-		else if (formName.indexOf( "intro/" ) >= 0 )
+		else if ( formName.indexOf( "error2.htm" ) >= 0 )
 			longMsgFlag = false;
-		else if (formName.indexOf( "ipreview/" ) >= 0 )
+		else if ( formName.indexOf( "intro/" ) >= 0 )
 			longMsgFlag = false;
-		else if (formName.indexOf( "preview/" ) >= 0 )
+		else if ( formName.indexOf( "ipreview/" ) >= 0 )
+			longMsgFlag = false;
+		else if ( formName.indexOf( "preview/" ) >= 0 )
 			longMsgFlag = false;
 
 		if ( longMsgFlag == true )
