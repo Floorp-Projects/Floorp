@@ -61,6 +61,7 @@
 #include "nsProtocolProxyService.h"
 #include "nsSOCKSSocketProvider.h"
 #include "nsSOCKS4SocketProvider.h"
+#include "nsCacheService.h"
 
 #include "nsNetCID.h"
 
@@ -898,8 +899,13 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
        NS_SOCKS4SOCKETPROVIDER_CID,
        NS_ISOCKS4SOCKETPROVIDER_CONTRACTID,
        nsSOCKS4SocketProvider::Create
-    }
+    },
 
+    {  NS_CACHESERVICE_CLASSNAME,
+       NS_CACHESERVICE_CID,
+       NS_CACHESERVICE_CONTRACTID,
+       nsCacheService::Create
+    },
 
 };
 

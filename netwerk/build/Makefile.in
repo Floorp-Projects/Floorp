@@ -62,6 +62,7 @@ SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/$(LIB_PREFIX)nkres_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)nkabout_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)nkkwd_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)nkcache_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 LOCAL_INCLUDES	= \
@@ -71,6 +72,7 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/../streamconv/src \
 		-I$(srcdir)/../streamconv/converters \
 		-I$(srcdir)/../mime/src \
+		-I$(srcdir)/../cache/src \
 		-I$(srcdir)/../protocol/http/src \
 		-I$(srcdir)/../protocol/file/src \
 		-I$(srcdir)/../protocol/data/src \

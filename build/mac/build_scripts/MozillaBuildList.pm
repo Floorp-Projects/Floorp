@@ -1788,8 +1788,6 @@ sub BuildNeckoProjects()
     BuildOneProjectWithOutput(":mozilla:netwerk:macbuild:netwerk.xml", "Necko$C$D.$S", "Necko$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:netwerk:macbuild:netwerk2.xml",          "Necko2$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
 
-    BuildOneProject(":mozilla:netwerk:macbuild:cache.xml",         "Cache$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
-
     BuildOneProject(":mozilla:dom:src:jsurl:macbuild:JSUrl.xml",       "JSUrl$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
           
     InstallFromManifest(":mozilla:netwerk:base:src:MANIFEST_COMPONENTS", "${dist_dir}Components:");

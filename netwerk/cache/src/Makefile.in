@@ -27,9 +27,9 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= nkcache
-LIBRARY_NAME	= nkcache
+LIBRARY_NAME	= nkcache_s
 EXPORT_LIBRARY = 1
-IS_COMPONENT	= 1
+FORCE_STATIC_LIB = 1
 MODULE_NAME	= cacheservice
 REQUIRES	= xpcom \
 		  string \
@@ -46,7 +46,6 @@ CPPSRCS		= \
 	nsCacheEntry.cpp \
 	nsCacheEntryDescriptor.cpp \
 	nsCacheMetaData.cpp \
-	nsCacheModule.cpp \
 	nsCacheService.cpp \
 	nsCacheSession.cpp \
 	nsDiskCacheBinding.cpp \
@@ -60,14 +59,6 @@ CPPSRCS		= \
 
 include $(topsrcdir)/config/config.mk
 
-EXTRA_DSO_LDOPTS = $(MOZ_COMPONENT_LIBS)
-
-#EXTRA_LIBS	= $(NSPR_LIBS)
-
-
-# we don't want the shared lib, but we want to force the creation of a
-# static lib.
-#FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
 
