@@ -42,7 +42,7 @@
 #include "nsIThreadManager.h"
 #include "nsIJVMManager.h"
 #include "nsIScriptSecurityManager.h"
-#include "nsICodebasePrincipal.h"
+#include "nsIPrincipal.h"
 
 #include "MRJMonitor.h"
 #include "NativeMonitor.h"
@@ -244,7 +244,7 @@ static jobject CreateJNIRunnable(JNIEnv* env, JavaMessage* msg)
     return env->NewObject(netscape_oji_JNIRunnable, netscape_oji_JNIRunnable_constructorID, msg);
 }
 
-static jclass GetLiveConnectProxy(JNIEnv* env, nsICodebasePrincipal* codebasePrincipal)
+static jclass GetLiveConnectProxy(JNIEnv* env, nsIPrincipal* codebasePrincipal)
 {
     jclass liveConnectProxy = NULL;
     jclass netscape_oji_ProxyClassLoaderFactory = env->FindClass("netscape/oji/ProxyClassLoaderFactory");
@@ -422,15 +422,10 @@ void CSecureEnv::sendMessageToJava(JavaMessage* msg)
                 }
             }
             if (!mLiveConnectProxy && scriptPrincipal) {
-                nsICodebasePrincipal* codebasePrincipal;
-                rv = scriptPrincipal->QueryInterface(NS_GET_IID(nsICodebasePrincipal), (void**)&codebasePrincipal);
-                if (NS_SUCCEEDED(rv)) {
-                    jclass liveConnectProxy = GetLiveConnectProxy(env, codebasePrincipal);
-                    NS_RELEASE(codebasePrincipal);
-                    if (liveConnectProxy) {
-                        mLiveConnectProxy = (jclass) env->NewGlobalRef(liveConnectProxy);
-                        env->DeleteLocalRef(liveConnectProxy);
-                    }
+                jclass liveConnectProxy = GetLiveConnectProxy(env, scriptPrincipal);
+                if (liveConnectProxy) {
+                    mLiveConnectProxy = (jclass) env->NewGlobalRef(liveConnectProxy);
+                    env->DeleteLocalRef(liveConnectProxy);
                 }
             }
         }
