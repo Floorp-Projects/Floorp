@@ -23,7 +23,6 @@
 #include "nsIURL.h"
 #include "nsIDOMElement.h"
 
-#include "nsCSSPropIDs.h"
 #include "nsCSSProps.h"
 #include "nsICSSStyleSheet.h"
 #include "nsICSSStyleRule.h"
