@@ -44,12 +44,12 @@
   <menuitem id="menu_newCard" label="&newCardCmd.label;" accesskey="&newCardCmd.accesskey;" command="cmd_newCard"/>
   <menuitem id="menu_newMessage" label="&newMessageCmd.label;" accesskey="&newMessageCmd.accesskey;" key="key_newMessage" command="cmd_newMessage"/>
   <keyset id="tasksKeys">
-     #ifdef XP_MACOSX
-       <key id="key_newMessage" key="&newMessageCmd.key;" command="cmd_newMessage" modifiers="accel,shift"/>
-       <key id="key_newMessage2" key="&newMessageCmd2.key;" command="cmd_newMessage" modifiers="accel,shift"/>
-     #else
-       <key id="key_newMessage"  key="&newMessageCmd.key;" command="cmd_newMessage" modifiers="accel"/>
-       <key id="key_newMessage2" key="&newMessageCmd2.key;" command="cmd_newMessage" modifiers="accel"/>
-     #endif
+#ifdef XP_MACOSX
+  <key id="key_newMessage" key="&newMessageCmd.key;" command="cmd_newMessage" modifiers="accel,shift"/>
+  <key id="key_newMessage2" key="&newMessageCmd2.key;" command="cmd_newMessage" modifiers="accel,shift"/>
+#else
+  <key id="key_newMessage"  key="&newMessageCmd.key;" command="cmd_newMessage" modifiers="accel"/>
+  <key id="key_newMessage2" key="&newMessageCmd2.key;" command="cmd_newMessage" modifiers="accel"/>
+#endif
   </keyset>
 </overlay>
