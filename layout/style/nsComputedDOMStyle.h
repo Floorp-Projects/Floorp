@@ -242,6 +242,7 @@ private:
   nsresult GetListStyleImage(nsIFrame *aFrame, nsIDOMCSSValue** aValue);
   nsresult GetListStylePosition(nsIFrame *aFrame, nsIDOMCSSValue** aValue);
   nsresult GetListStyleType(nsIFrame *aFrame, nsIDOMCSSValue** aValue);
+  nsresult GetImageRegion(nsIFrame *aFrame, nsIDOMCSSValue** aValue);
 
   /* Text Properties */
   nsresult GetLineHeight(nsIFrame *aFrame, nsIDOMCSSValue** aValue);
