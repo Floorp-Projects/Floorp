@@ -319,7 +319,6 @@ sub setupInstall {
     my $helper = $self->helper($app);
     $self->dump(9, 'about to configure user data source...');
     if (not $helper->tableExists($app, $self->database($app), 'user')) {
-        $self->debug('going to create \'user\' table');
         $app->output->setupProgress('dataSource.user.user');
         $self->database($app)->execute('
             CREATE TABLE user (
@@ -337,7 +336,7 @@ sub setupInstall {
         # +-------------------+
         # | userID         K1 | auto_increment
         # | password          |
-        # | mode              | 0 = active, 1 = logging out, 2 = account disabled
+        # | mode              | 0 = active, 1 = account disabled
         # | adminMessage      | string displayed when user (tries to) log in
         # | newFieldID        | \
         # | newFieldValue     |  > used when user tries to change his e-mail
@@ -347,7 +346,6 @@ sub setupInstall {
         # check its schema is up to date
     }
     if (not $helper->tableExists($app, $self->database($app), 'userData')) {
-        $self->debug('going to create \'userData\' table');
         $app->output->setupProgress('dataSource.user.userData');
         $self->database($app)->execute('
             CREATE TABLE userData (
@@ -368,7 +366,6 @@ sub setupInstall {
         # check its schema is up to date
     }
     if (not $helper->tableExists($app, $self->database($app), 'userDataTypes')) {
-        $self->debug('going to create \'userDataTypes\' table');
         $app->output->setupProgress('dataSource.user.userDataTypes');
         $self->database($app)->execute('
             CREATE TABLE userDataTypes (
@@ -397,7 +394,6 @@ sub setupInstall {
         # check its schema is up to date
     }
     if (not $helper->tableExists($app, $self->database($app), 'userGroupsMapping')) {
-        $self->debug('going to create \'userGroupsMapping\' table');
         $app->output->setupProgress('dataSource.user.userGroupsMapping');
         $self->database($app)->execute('
             CREATE TABLE userGroupsMapping (
@@ -422,7 +418,6 @@ sub setupInstall {
         }
     }
     if (not $helper->tableExists($app, $self->database($app), 'groups')) {
-        $self->debug('going to create \'groups\' table');
         $app->output->setupProgress('dataSource.user.groups');
         $self->database($app)->execute('
             CREATE TABLE groups (
@@ -441,7 +436,6 @@ sub setupInstall {
         # check its schema is up to date
     }
     if (not $helper->tableExists($app, $self->database($app), 'groupRightsMapping')) {
-        $self->debug('going to create \'groupRightsMapping\' table');
         $app->output->setupProgress('dataSource.user.groupRightsMapping');
         $self->database($app)->execute('
             CREATE TABLE groupRightsMapping (
@@ -460,7 +454,6 @@ sub setupInstall {
         # check its schema is up to date
     }
     if (not $helper->tableExists($app, $self->database($app), 'rights')) {
-        $self->debug('going to create \'rights\' table');
         $app->output->setupProgress('dataSource.user.rights');
         $self->database($app)->execute('
             CREATE TABLE rights (
