@@ -68,13 +68,12 @@ nsPresState::GetStateProperty(const nsAReadableString& aName,
   if (mPropertyTable)
     str = dont_AddRef(NS_STATIC_CAST(nsISupportsWString*, mPropertyTable->Get(&key)));
    
+  aResult.SetLength(0);
   if (str) {
-    PRUnichar* data;
+    PRUnichar* data = nsnull;
     str->GetData(&data);
     aResult.Append(data);
     nsMemory::Free(data);
-  } else {
-    aResult.SetLength(0);
   }
   return NS_OK;
 }
