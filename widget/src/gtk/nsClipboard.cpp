@@ -574,22 +574,24 @@ nsClipboard::SelectionReceiver (GtkWidget *aWidget,
 
     PRInt32 numberOfBytes = 0;
 
-    if (status == Success) {
-      data = tmpData[0];
+    if (status == XNoMemory || status == XLocaleNotSupported ||
+        status == XConverterNotFound) {
+#ifdef DEBUG_CLIPBOARD
+      g_print("\n         XmbTextListToTextProperty failed.  returned %d\n", status);
+      g_print("          text is \"%s\"\n", tmpData[0]);
+#endif
       numberOfBytes = nsCRT::strlen(NS_REINTERPRET_CAST(const char *, data));
-
+    } else {
+      if (foo > 0 && tmpData[0] != 0 && (*tmpData[0]) != 0) {
+        data = tmpData[0];
+      }
+      numberOfBytes = nsCRT::strlen(NS_REINTERPRET_CAST(const char *, data));
 #ifdef DEBUG_CLIPBOARD
       g_print("\n        XmbTextListToTextProperty succeeded\n");
       g_print("          text is \"%s\"\n", data);
       g_print("          numberOfBytes is %d\n", numberOfBytes);
 #endif
-    } else {
-      g_print("\n         XmbTextListToTextProperty failed.  returned %d\n", status);
-      g_print("          text is \"%s\"\n", tmpData[0]);
-      numberOfBytes = nsCRT::strlen(NS_REINTERPRET_CAST(const char *, data));
     }
-
-
 
     nsresult rv;
     PRInt32 outUnicodeLen;
