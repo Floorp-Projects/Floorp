@@ -244,6 +244,8 @@ protected:
   void ProcessPendingUpdates(nsView *aView);
 
 private:
+  void ReparentChildWidgets(nsIView* aView, nsIWidget *aNewWidget);
+  void ReparentWidgets(nsIView* aView, nsIView *aParent);
   nsIRenderingContext *CreateRenderingContext(nsView &aView);
   void AddRectToDirtyRegion(nsView* aView, const nsRect &aRect) const;
   void UpdateTransCnt(nsView *oldview, nsView *newview);

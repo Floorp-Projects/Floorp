@@ -295,6 +295,7 @@ public:
                             nsNativeWidget aNativeParent = nsnull);
 
     NS_IMETHOD              Destroy();
+    NS_IMETHOD              SetParent(nsIWidget *aNewParent);
     virtual nsIWidget*      GetParent(void);
     NS_IMETHOD              Show(PRBool bState);
     NS_IMETHOD              IsVisible(PRBool & aState);

@@ -1622,6 +1622,18 @@ NS_METHOD nsWindow::Destroy()
   return NS_OK;
 }
 
+NS_IMETHODIMP nsWindow::SetParent(nsIWidget *aNewParent)
+{
+  if (aNewParent) {
+    HWND newParent = (HWND)aNewParent->GetNativeData(NS_NATIVE_WINDOW);
+    NS_ASSERTION(newParent, "Parent widget has a null native window handle");
+    ::SetParent(mWnd, newParent);
+    return NS_OK;
+  }
+  NS_WARNING("Null aNewParent passed to SetParent");
+  return NS_ERROR_FAILURE;
+}
+
 
 //-------------------------------------------------------------------------
 //
