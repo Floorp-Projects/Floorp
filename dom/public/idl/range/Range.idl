@@ -69,4 +69,5 @@ interface NSRange {
     const unsigned short NODE_BEFORE_AND_AFTER = 2;
     const unsigned short NODE_INSIDE = 3;
     unsigned short compareNode(in Node n);
+    void nSDetach();
  };
