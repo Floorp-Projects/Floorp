@@ -118,6 +118,21 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
                        Object[] args)
         throws JavaScriptException
     {
+        // If it looks like a "cast" of an object to this class type,
+        // walk the prototype chain to see if there's a wrapper of a 
+        // object that's an instanceof this class.
+        if (args.length == 1 && args[0] instanceof Scriptable) {
+            Class c = getClassObject();
+            Scriptable p = (Scriptable) args[0];
+            do {
+                if (p instanceof Wrapper) {
+                    Object o = ((Wrapper) p).unwrap();
+                    if (c.isInstance(o))
+                        return p;
+                }
+                p = p.getPrototype();
+            } while (p != null);
+        }
         return construct(cx, scope, args);
     }
 
