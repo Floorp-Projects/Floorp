@@ -23,9 +23,8 @@ function Startup()
 
 function chooseApp()
 {
-  var filePicker = Components.classes["component://mozilla/filepicker"].createInstance();
-  if (filePicker)
-    filePicker = filePicker.QueryInterface(Components.interfaces.nsIFilePicker);
+  const nsIFilePicker = Components.interfaces.nsIFilePicker;
+  var filePicker = Components.classes["component://mozilla/filepicker"].createInstance(nsIFilePicker);
   if (filePicker) {
     const FP = Components.interfaces.nsIFilePicker
     var windowTitle = gBundle.GetStringFromName("chooseHandler");
