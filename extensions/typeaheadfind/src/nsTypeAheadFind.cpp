@@ -247,6 +247,20 @@ nsTypeAheadFind::ReleaseInstance()
 }
 
 
+void 
+nsTypeAheadFind::Shutdown()
+{
+  // Application shutdown 
+  mTimer = nsnull;
+
+  nsCOMPtr<nsIWindowWatcher> windowWatcher =
+    do_GetService(NS_WINDOWWATCHER_CONTRACTID);
+  if (windowWatcher) {
+    windowWatcher->UnregisterNotification(this);
+  }
+}
+
+
 // ------- Pref Callbacks (2) ---------------
 
 int PR_CALLBACK
@@ -291,7 +305,10 @@ nsTypeAheadFind::PrefsReset(const char* aPrefName, void* instance_data)
       nsCOMPtr<nsIObserverService> observerService = 
         do_GetService("@mozilla.org/observer-service;1", &rv);
       NS_ENSURE_SUCCESS(rv, rv);
-      observerService->AddObserver(typeAheadFind, "nsWebBrowserFind_FindAgain", PR_TRUE);
+      observerService->AddObserver(typeAheadFind, "nsWebBrowserFind_FindAgain", 
+                                   PR_TRUE);
+      observerService->AddObserver(typeAheadFind, NS_XPCOM_SHUTDOWN_OBSERVER_ID, 
+                                   PR_TRUE);
     }
   }
 
@@ -332,6 +349,9 @@ nsTypeAheadFind::Observe(nsISupports *aSubject, const char *aTopic,
   }
   else if (!nsCRT::strcmp(aTopic,"domwindowclosed")) {
     isOpening = PR_FALSE;
+  }
+  else if (!nsCRT::strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
+    Shutdown();
   }
   else if (!nsCRT::strcmp(aTopic,"nsWebBrowserFind_FindAgain")) {
     // A find next command wants to be executed.
@@ -1862,10 +1882,12 @@ nsTypeAheadFind::StartTimeout()
   if (mTimeoutLength) {
     if (!mTimer) {
       mTimer = do_CreateInstance("@mozilla.org/timer;1");
+      if (mTimer) {
+        mTimer->InitWithCallback(this, mTimeoutLength, nsITimer::TYPE_ONE_SHOT);
+      }
     }
-
-    if (mTimer) {
-      mTimer->InitWithCallback(this, mTimeoutLength, nsITimer::TYPE_ONE_SHOT);
+    else {
+      mTimer->SetDelay(mTimeoutLength);
     }
   }
 }
