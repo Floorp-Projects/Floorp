@@ -183,7 +183,7 @@ const TestStruct kStrings[] = {
 static 
 void VerifyIsEqual()
 {
-  static size = sizeof(kStrings)/sizeof(kStrings[0]);
+  static PRUint32 size = sizeof(kStrings)/sizeof(kStrings[0]);
   PRUint32 i;
   for (i = 0; i < size; ++i) {
     if (IsEqual(NS_ConvertUTF8toUCS2(kStrings[i].lhs), 
@@ -544,7 +544,7 @@ nsWebScriptsAccess::CheckAccess(AccessInfoEntry* aEntry,
     
     const nsAString& type = 
       access_info->mType ? 
-        nsDependentString(access_info->mType) : nsDependentString(kAny);
+        nsDependentString(access_info->mType) : nsDependentString(kAny.get());
     if (type.Equals(kAny) || type.Equals(aRequestType)) {
       if (!access_info->mFrom) {
         // If "from" is not specified, then all scripts will be  allowed 
