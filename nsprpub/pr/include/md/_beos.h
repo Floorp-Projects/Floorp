@@ -91,8 +91,9 @@
 /* Define threading functions and objects as native BeOS */
 struct _MDThread {
     thread_id	tid;	/* BeOS thread handle */
-    bool	is_joinable;	/* TRUE if PR_JOINABLE */
-    bool	is_joining;	/* TRUE if we were woken up to join */
+	sem_id		joinSem;	/* sems used to synchronzie joining */
+	PRBool	is_joining;	/* TRUE if someone is currently waiting to
+						   join this thread */
 };
 
 struct _MDThreadStack {
