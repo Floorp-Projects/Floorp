@@ -420,7 +420,7 @@ nsHttpResponseHead::ParseContentType(char *type)
             // null out the ';' char
             *p = 0;
             // is there a charset field?
-            if ((p = PL_strstr(p, "charset=")) != nsnull)
+            if ((p = PL_strcasestr(p, "charset=")) != nsnull)
                 mContentCharset = p + 8;
         }
         mContentType = type;
@@ -464,7 +464,7 @@ nsresult nsHttpResponseHead::GetMaxAgeValue(PRUint32 *result)
     if (!val)
         return NS_ERROR_NOT_AVAILABLE;
 
-    const char *p = PL_strstr(val, "max-age=");
+    const char *p = PL_strcasestr(val, "max-age=");
     if (!p)
         return NS_ERROR_NOT_AVAILABLE;
 

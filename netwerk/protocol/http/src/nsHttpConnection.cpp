@@ -185,13 +185,13 @@ nsHttpConnection::OnHeadersAvailable(nsHttpTransaction *trans, PRBool *reset)
 
             LOG(("val = [%s]\n", val));
 
-            const char *cp = PL_strstr(val, "max=");
+            const char *cp = PL_strcasestr(val, "max=");
             if (cp)
                 mMaxReuseCount = (PRUint32) atoi(cp + 4);
             else
                 mMaxReuseCount = 100;
 
-            cp = PL_strstr(val, "timeout=");
+            cp = PL_strcasestr(val, "timeout=");
             if (cp)
                 mIdleTimeout = (PRUint32) atoi(cp + 8);
             else
