@@ -123,11 +123,15 @@ ifdef ENABLE_TESTS
 DIRS		+= xpcom/tests
 endif
 
-include $(topsrcdir)/config/rules.mk
+DIST_GARBAGE	:= dist config.cache config.log config.status config-defs.h \
+		dependencies.beos config/autoconf.mk \
+		$(shell cd $(topsrcdir); . ./allmakefiles.sh; \
+			echo $${MAKEFILES})
 
-GARBAGE += $(DIST) config-defs.h config.cache config.log config.status
+include $(topsrcdir)/config/rules.mk
 
 ifndef MOZ_MAIL_NEWS
 export::
 	$(MAKE) -C mailnews export
 endif
+

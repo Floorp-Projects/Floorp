@@ -479,11 +479,10 @@ clean clobber realclean clobber_all:: $(SUBMAKEFILES)
 	+$(LOOP_OVER_DIRS)
 
 distclean:: $(SUBMAKEFILES)
+	+$(LOOP_OVER_DIRS)
 	rm -rf $(ALL_TRASH) \
 	$(wildcard *.map) \
-	$(basename $(wildcard Makefile.in)) \
-	.HSancillary
-	+$(LOOP_OVER_DIRS)
+	Makefile .HSancillary $(DIST_GARBAGE)
 
 alltags:
 	rm -f TAGS

@@ -26,9 +26,6 @@ MOZILLA_CLIENT	= 1
 NO_MDUPDATE	= 1
 
 DIST		= $(DEPTH)/dist
-BUILD_TOOLS	= $(topsrcdir)/build/unix
-CONFIG_TOOLS	= $(topsrcdir)/config
-AUTOCONF_TOOLS	= $(topsrcdir)/build/autoconf
 
 MOZ_WIDGET_TOOLKIT	= @MOZ_WIDGET_TOOLKIT@
 MOZ_GFX_TOOLKIT	= $(MOZ_WIDGET_TOOLKIT)

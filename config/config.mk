@@ -47,6 +47,10 @@ ifndef INCLUDED_COMMON_MK
 include $(topsrcdir)/config/common.mk
 endif
 
+BUILD_TOOLS	= $(topsrcdir)/build/unix
+CONFIG_TOOLS	= $(DEPTH)/config
+AUTOCONF_TOOLS	= $(topsrcdir)/build/autoconf
+
 #
 # Tweak the default OS_ARCH and OS_RELEASE macros as needed.
 #
