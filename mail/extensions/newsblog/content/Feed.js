@@ -1,3 +1,4 @@
+// -*- Mode: javascript; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 var rdfcontainer =
   Components
     .classes["@mozilla.org/rdf/container-utils;1"]
