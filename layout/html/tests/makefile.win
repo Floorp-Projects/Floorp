@@ -57,6 +57,7 @@ LLIBS=				\
  $(DIST)\lib\raptorlayout_s.lib	\
  $(DIST)\lib\gkgfxwin.lib	\
  $(DIST)\lib\raptorevents_s.lib	\
+ $(DIST)\lib\raptorxulcontent_s.lib \
  $(DIST)\lib\img32$(VERSION_NUMBER).lib	\
  $(DIST)\lib\util.lib		\
  $(DIST)\lib\xpcom.lib	\
