@@ -488,8 +488,8 @@ public:
                                 PRBool          aDoAppend,
                                 nsIFrame*       aPrevCol = nsnull);
 
-  void CreateAnonymousColFrames(nsPresContext&       aPresContext,
-                                nsTableColGroupFrame& aColGroupFrame,
+  void CreateAnonymousColFrames(nsPresContext&        aPresContext,
+                                nsTableColGroupFrame* aColGroupFrame,
                                 PRInt32               aNumColsToAdd,
                                 nsTableColType        aColType,
                                 PRBool                aAddToColGroupAndTable,

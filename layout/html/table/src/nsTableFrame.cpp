@@ -880,27 +880,28 @@ nsTableFrame::CreateAnonymousColFrames(nsPresContext& aPresContext,
   nsIFrame* prevCol = (aDoAppend) ? colGroupFrame->GetChildList().LastChild() : aPrevColIn;
 
   nsIFrame* firstNewFrame;
-  CreateAnonymousColFrames(aPresContext, *colGroupFrame, aNumColsToAdd, 
+  CreateAnonymousColFrames(aPresContext, colGroupFrame, aNumColsToAdd, 
                            aColType, PR_TRUE, prevCol, &firstNewFrame);
 }
 
 // XXX this needs to be moved to nsCSSFrameConstructor
 // Right now it only creates the col frames at the end 
 void
-nsTableFrame::CreateAnonymousColFrames(nsPresContext&       aPresContext,
-                                       nsTableColGroupFrame& aColGroupFrame,
+nsTableFrame::CreateAnonymousColFrames(nsPresContext&        aPresContext,
+                                       nsTableColGroupFrame* aColGroupFrame,
                                        PRInt32               aNumColsToAdd,
                                        nsTableColType        aColType,
                                        PRBool                aAddToColGroupAndTable,         
                                        nsIFrame*             aPrevFrameIn,
                                        nsIFrame**            aFirstNewFrame)
 {
+  NS_PRECONDITION(aColGroupFrame, "null frame");
   *aFirstNewFrame = nsnull;
   nsIFrame* lastColFrame = nsnull;
   nsIPresShell *shell = aPresContext.PresShell();
 
   // Get the last col frame
-  nsIFrame* childFrame = aColGroupFrame.GetFirstChild(nsnull);
+  nsIFrame* childFrame = aColGroupFrame->GetFirstChild(nsnull);
   while (childFrame) {
     if (nsLayoutAtoms::tableColFrame == childFrame->GetType()) {
       lastColFrame = (nsTableColGroupFrame *)childFrame;
@@ -924,8 +925,8 @@ nsTableFrame::CreateAnonymousColFrames(nsPresContext&       aPresContext,
     }
     else {
       // all other anonymous cols use a pseudo style context of the col group
-      iContent = aColGroupFrame.GetContent();
-      parentStyleContext = aColGroupFrame.GetStyleContext();
+      iContent = aColGroupFrame->GetContent();
+      parentStyleContext = aColGroupFrame->GetStyleContext();
       styleContext = shell->StyleSet()->ResolvePseudoStyleFor(iContent,
                                                               nsCSSAnonBoxes::tableCol,
                                                               parentStyleContext);
@@ -937,7 +938,7 @@ nsTableFrame::CreateAnonymousColFrames(nsPresContext&       aPresContext,
     nsIFrame* colFrame;
     NS_NewTableColFrame(shell, &colFrame);
     ((nsTableColFrame *) colFrame)->SetColType(aColType);
-    colFrame->Init(&aPresContext, iContent, &aColGroupFrame,
+    colFrame->Init(&aPresContext, iContent, aColGroupFrame,
                    styleContext, nsnull);
     colFrame->SetInitialChildList(&aPresContext, nsnull, nsnull);
 
@@ -951,22 +952,22 @@ nsTableFrame::CreateAnonymousColFrames(nsPresContext&       aPresContext,
     }
   }
   if (aAddToColGroupAndTable) {
-    nsFrameList& cols = aColGroupFrame.GetChildList();
+    nsFrameList& cols = aColGroupFrame->GetChildList();
     // the chain already exists, now add it to the col group child list
     if (!aPrevFrameIn) {
-      cols.AppendFrames(&aColGroupFrame, *aFirstNewFrame);
+      cols.AppendFrames(aColGroupFrame, *aFirstNewFrame);
     }
     // get the starting col index in the cache
-    PRInt32 startColIndex = aColGroupFrame.GetStartColumnIndex();
+    PRInt32 startColIndex = aColGroupFrame->GetStartColumnIndex();
     if (aPrevFrameIn) {
       nsTableColFrame* colFrame = 
-        (nsTableColFrame*)nsTableFrame::GetFrameAtOrBefore((nsIFrame*)&aColGroupFrame, aPrevFrameIn, 
+        (nsTableColFrame*)nsTableFrame::GetFrameAtOrBefore((nsIFrame*) aColGroupFrame, aPrevFrameIn, 
                                                            nsLayoutAtoms::tableColFrame);
       if (colFrame) {
         startColIndex = colFrame->GetColIndex() + 1;
       }
     }
-    aColGroupFrame.AddColsToTable(aPresContext, startColIndex, PR_TRUE, 
+    aColGroupFrame->AddColsToTable(aPresContext, startColIndex, PR_TRUE, 
                                   *aFirstNewFrame, lastColFrame);
   }
 }
