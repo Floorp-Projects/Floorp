@@ -110,15 +110,15 @@ NS_IMPL_ISUPPORTS1(nsImageOS2, nsIImage)
 //------------------------------------------------------------
 nsImageOS2::nsImageOS2()
 : mInfo(0)
+, mDeviceDepth(0)
 , mRowBytes(0)
 , mImageBits(0)
-, mARowBytes(0)
+, mIsOptimized(PR_FALSE)
+, mColorMap(0)
+, mDecodedRect()
 , mAlphaBits(0)
 , mAlphaDepth(0)
-, mColorMap(0)
-, mDeviceDepth(0)
-, mIsOptimized(PR_FALSE)
-, mDecodedRect()
+, mARowBytes(0)
 {
    if (gBlenderReady != PR_TRUE)
      BuildBlenderLookup ();
@@ -447,11 +447,11 @@ nsImageOS2 :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
                // Now combine image with target
                GFX (::GpiDrawBits (MemPS, mImageBits, mInfo, 4, aptlNew, ROP_SRCPAINT, BBO_IGNORE), GPI_ERROR);
    
-                   // Transfer bitmap from memory bitmap back to device
-               POINTL aptlMemToDev [4] = { dest.xLeft, dest.yBottom,   // TLL - device (Dx1, Dy2)
-                                           dest.xRight, dest.yTop,     // TUR - device (Dx2, Dy1)
-                                           0, 0,                       // SLL - mem bitmap (0, 0)
-                                           bihMem.cx, bihMem.cy};      // SUR - mem bitmap (cx, cy)
+               // Transfer bitmap from memory bitmap back to device
+               POINTL aptlMemToDev [4] = { {dest.xLeft, dest.yBottom},   // TLL - device (Dx1, Dy2)
+                                           {dest.xRight, dest.yTop},     // TUR - device (Dx2, Dy1)
+                                           {0, 0},                       // SLL - mem bitmap (0, 0)
+                                           {bihMem.cx, bihMem.cy} };      // SUR - mem bitmap (cx, cy)
    
                GFX (::GpiBitBlt (surf->GetPS (), MemPS, 4, aptlMemToDev, ROP_SRCCOPY, BBO_IGNORE), GPI_ERROR);
                
@@ -517,10 +517,10 @@ nsImageOS2 :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
           {
             GFX (::GpiSetBitmap (MemPS, hMemBmp), HBM_ERROR);
 
-            POINTL aptlDevToMem [4] = { 0, 0,                       // TLL - mem bitmap (0, 0)
-                                        bihMem.cx, bihMem.cy,       // TUR - mem bitmap (cx, cy)
-                                        dest.xLeft, dest.yBottom,   // SLL - device (Dx1, Dy2)
-                                        dest.xRight, dest.yTop };   // SUR - device (Dx2, Dy1)
+            POINTL aptlDevToMem [4] = { {0, 0},                       // TLL - mem bitmap (0, 0)
+                                        {bihMem.cx, bihMem.cy},       // TUR - mem bitmap (cx, cy)
+                                        {dest.xLeft, dest.yBottom},   // SLL - device (Dx1, Dy2)
+                                        {dest.xRight, dest.yTop} };   // SUR - device (Dx2, Dy1)
 
             GFX (::GpiBitBlt (MemPS, surf->GetPS (), 4, aptlDevToMem, ROP_SRCCOPY, BBO_IGNORE), GPI_ERROR);
 
@@ -594,10 +594,10 @@ nsImageOS2 :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
                 GFX (::GpiSetBitmapBits (MemPS, 0, bihMem.cy, (PBYTE)pRawBitData, (PBITMAPINFO2)&bihDirect), GPI_ALTERROR);
               
                 // Transfer bitmap from memory bitmap back to device
-                POINTL aptlMemToDev [4] = { dest.xLeft, dest.yBottom,   // TLL - device (Dx1, Dy2)
-                                            dest.xRight, dest.yTop,     // TUR - device (Dx2, Dy1)
-                                            0, 0,                       // SLL - mem bitmap (0, 0)
-                                            bihMem.cx, bihMem.cy};      // SUR - mem bitmap (cx, cy)
+                POINTL aptlMemToDev [4] = { {dest.xLeft, dest.yBottom},   // TLL - device (Dx1, Dy2)
+                                            {dest.xRight, dest.yTop},     // TUR - device (Dx2, Dy1)
+                                            {0, 0},                       // SLL - mem bitmap (0, 0)
+                                            {bihMem.cx, bihMem.cy} };      // SUR - mem bitmap (cx, cy)
 
                 GFX (::GpiBitBlt (surf->GetPS (), MemPS, 4, aptlMemToDev, ROP_SRCCOPY, BBO_IGNORE), GPI_ERROR);
             
@@ -664,10 +664,10 @@ nsImageOS2::BuildTile (HPS hpsTile, PRUint8* pImageBits, PBITMAPINFO2 pBitmapInf
    }
 
    // Set up blit coord array
-   POINTL aptl [4] = { mDecodedRect.x, mDecodedRect.y,                         // TLL - in
-                       mDecodedRect.XMost () - 1, mDecodedRect.YMost () - 1,   // TUR - in
-                       mDecodedRect.x, mDecodedRect.y,                         // SLL - in
-                       mDecodedRect.XMost (), mDecodedRect.YMost () };         // SUR - ex
+   POINTL aptl [4] = { {mDecodedRect.x, mDecodedRect.y},                         // TLL - in
+                       {mDecodedRect.XMost () - 1, mDecodedRect.YMost () - 1},   // TUR - in
+                       {mDecodedRect.x, mDecodedRect.y},                         // SLL - in
+                       {mDecodedRect.XMost (), mDecodedRect.YMost ()} };         // SUR - ex
 
    // Scale up
    aptl[0].x *= scale;
@@ -684,9 +684,9 @@ nsImageOS2::BuildTile (HPS hpsTile, PRUint8* pImageBits, PBITMAPINFO2 pBitmapInf
    // Copy bitmap horizontally, doubling each time
    while (DestWidth < aTileWidth)
    {
-      POINTL aptlCopy [3] = { DestWidth, 0,                     // TLL - in
-                              2 * DestWidth, DestHeight,        // TUR - ex
-                              0, 0 };                           // SLL - in
+      POINTL aptlCopy [3] = { {DestWidth, 0},                     // TLL - in
+                              {2 * DestWidth, DestHeight},        // TUR - ex
+                              {0, 0} };                           // SLL - in
 
       GFX (::GpiBitBlt (hpsTile, hpsTile, 3, aptlCopy, ROP_SRCCOPY, 0L), GPI_ERROR);
       DestWidth *= 2;
@@ -695,9 +695,9 @@ nsImageOS2::BuildTile (HPS hpsTile, PRUint8* pImageBits, PBITMAPINFO2 pBitmapInf
    // Copy bitmap vertically, doubling each time
    while (DestHeight < aTileHeight)
    {
-      POINTL aptlCopy [4] = { 0, DestHeight,                    // TLL - in
-                              DestWidth, 2 * DestHeight,        // TUR - ex
-                              0, 0 };                           // SLL - in
+      POINTL aptlCopy [4] = { {0, DestHeight},                    // TLL - in
+                              {DestWidth, 2 * DestHeight},        // TUR - ex
+                              {0, 0} };                           // SLL - in
 
       GFX (::GpiBitBlt (hpsTile, hpsTile, 3, aptlCopy, ROP_SRCCOPY, 0L), GPI_ERROR);
       DestHeight *= 2;
@@ -788,9 +788,9 @@ NS_IMETHODIMP nsImageOS2::DrawTile(nsIRenderingContext &aContext,
             RECTL  rcl;
             surf->NS2PM_INEX (aTileRect, rcl);
 
-            POINTL aptlTile [3] = { rcl.xLeft, rcl.yBottom,                                 // TLL - in
-                                    rcl.xRight, rcl.yTop,                                   // TUR - ex
-                                    aSXOffset, endHeight - aTileRect.height - aSYOffset };  // SLL - in
+            POINTL aptlTile [3] = { {rcl.xLeft, rcl.yBottom},                                 // TLL - in
+                                    {rcl.xRight, rcl.yTop},                                   // TUR - ex
+                                    {aSXOffset, endHeight - aTileRect.height - aSYOffset} };  // SLL - in
             // For some reason offset does not work well with scaled output
             if (scale > 1.0)
             {
@@ -874,6 +874,7 @@ NS_IMETHODIMP nsImageOS2::DrawTile(nsIRenderingContext &aContext,
         }
       }
    }
+   return NS_OK;
 }
 
 
@@ -948,10 +949,10 @@ NS_IMETHODIMP nsImageOS2::DrawToImage(nsIImage* aDstImage,
   destImg->NS2PM_ININ (trect, rcl);
 
   // Set up blit coord array
-  POINTL aptl [4] = { rcl.xLeft, rcl.yBottom,              // TLL - in
-                      rcl.xRight, rcl.yTop,                // TUR - in
-                      0, 0,                                // SLL - in
-                      mInfo->cx, mInfo->cy };              // SUR - ex
+  POINTL aptl [4] = { {rcl.xLeft, rcl.yBottom},              // TLL - in
+                      {rcl.xRight, rcl.yTop},                // TUR - in
+                      {0, 0},                                // SLL - in
+                      {mInfo->cx, mInfo->cy} };              // SUR - ex
 
   if( 1==mAlphaDepth && mAlphaBits)
   {

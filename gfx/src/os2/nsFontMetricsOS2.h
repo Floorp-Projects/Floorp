@@ -62,6 +62,7 @@
 #include "nsDeviceContextOS2.h"
 #include "nsCOMPtr.h"
 #include "nsVoidArray.h"
+#include "nsICharRepresentable.h"
 #include "nsUnicharUtils.h"
 #include "nsDrawingSurfaceOS2.h"
 #include "nsTHashtable.h"
@@ -89,6 +90,13 @@
 //#define DEBUG_FONT_SELECTION
 //#define DEBUG_FONT_STRUCT_ALLOCS
 
+#define USE_FREETYPE
+
+#ifdef USE_FREETYPE
+  #define PERF_HASGLYPH_CHAR_MAP
+  #define USE_EXPANDED_FREETYPE_FUNCS
+#endif
+
 struct nsMiniMetrics
 {
   char            szFacename[FACESIZE];
@@ -114,6 +122,12 @@ public:
         delete metrics;
       metrics = nextMetrics;
     }
+#ifdef PERF_HASGLYPH_CHAR_MAP
+    if (mHaveCheckedCharMap) {
+      nsMemory::Free(mHaveCheckedCharMap);
+      nsMemory::Free(mRepresentableCharMap);
+    }
+#endif
   }
 
   // Override, since we want to compare font names as case insensitive
@@ -130,6 +144,11 @@ public:
 
   USHORT          mCodePage;
   nsMiniMetrics*  mMetrics;
+
+#ifdef PERF_HASGLYPH_CHAR_MAP
+  PRUint32* mHaveCheckedCharMap;
+  PRUint32* mRepresentableCharMap;
+#endif
 };
 
 // An nsFontHandle is actually a pointer to one of these.
@@ -143,6 +162,7 @@ public:
   virtual ~nsFontOS2(void);
 
   inline void SelectIntoPS(HPS hps, long lcid);
+  virtual PRBool HasGlyph(HPS aPS, PRUint32 aChar) { return PR_TRUE; };
   virtual PRInt32 GetWidth(HPS aPS, const char* aString, PRUint32 aLength);
   virtual PRInt32 GetWidth(HPS aPS, const PRUnichar* aString, PRUint32 aLength);
   virtual void DrawString(HPS aPS, nsDrawingSurfaceOS2* aSurface,
@@ -161,6 +181,11 @@ public:
 #ifdef DEBUG_FONT_STRUCT_ALLOCS
   static unsigned long mRefCount;
 #endif
+
+#ifdef PERF_HASGLYPH_CHAR_MAP
+  PRUint32* mHaveCheckedCharMap;
+  PRUint32* mRepresentableCharMap;
+#endif
 };
 
 /**
@@ -176,7 +201,7 @@ public:
  */
 
 struct nsFontSwitch {
-  // Simple wrapper on top of nsFontWin for the moment
+  // Simple wrapper on top of nsFontOS2 for the moment
   // Could hold other attributes of the font
   nsFontOS2* mFont;
 };
@@ -190,24 +215,23 @@ typedef PRBool (*PR_CALLBACK nsFontSwitchCallback)
 
 class nsFontMetricsOS2 : public nsIFontMetrics
 {
- public:
+public:
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
   NS_DECL_ISUPPORTS
 
   nsFontMetricsOS2();
   virtual ~nsFontMetricsOS2();
 
-  NS_IMETHOD Init( const nsFont& aFont, nsIAtom* aLangGroup, nsIDeviceContext *aContext);
+  NS_IMETHOD Init(const nsFont& aFont, nsIAtom* aLangGroup,
+                  nsIDeviceContext* aContext);
   NS_IMETHOD Destroy();
 
-  // Metrics
-  NS_IMETHOD  GetXHeight( nscoord &aResult);
-  NS_IMETHOD  GetSuperscriptOffset( nscoord &aResult);
-  NS_IMETHOD  GetSubscriptOffset( nscoord &aResult);
-  NS_IMETHOD  GetStrikeout( nscoord &aOffset, nscoord &aSize);
-  NS_IMETHOD  GetUnderline( nscoord &aOffset, nscoord &aSize);
-
-  NS_IMETHOD  GetHeight( nscoord &aHeight);
+  NS_IMETHOD  GetXHeight(nscoord& aResult);
+  NS_IMETHOD  GetSuperscriptOffset(nscoord& aResult);
+  NS_IMETHOD  GetSubscriptOffset(nscoord& aResult);
+  NS_IMETHOD  GetStrikeout(nscoord& aOffset, nscoord& aSize);
+  NS_IMETHOD  GetUnderline(nscoord& aOffset, nscoord& aSize);
+  NS_IMETHOD  GetHeight(nscoord& aHeight);
 #ifdef FONT_LEADING_APIS_V2
   NS_IMETHOD  GetInternalLeading(nscoord &aLeading);
   NS_IMETHOD  GetExternalLeading(nscoord &aLeading);
@@ -219,12 +243,12 @@ class nsFontMetricsOS2 : public nsIFontMetrics
   NS_IMETHOD  GetEmAscent(nscoord &aAscent);
   NS_IMETHOD  GetEmDescent(nscoord &aDescent);
   NS_IMETHOD  GetMaxHeight(nscoord &aHeight);
-  NS_IMETHOD  GetMaxAscent( nscoord &aAscent);
-  NS_IMETHOD  GetMaxDescent( nscoord &aDescent);
-  NS_IMETHOD  GetMaxAdvance( nscoord &aAdvance);
-  NS_IMETHOD  GetFont( const nsFont *&aFont);
+  NS_IMETHOD  GetMaxAscent(nscoord &aAscent);
+  NS_IMETHOD  GetMaxDescent(nscoord &aDescent);
+  NS_IMETHOD  GetMaxAdvance(nscoord &aAdvance);
+  NS_IMETHOD  GetFont(const nsFont *&aFont);
   NS_IMETHOD  GetLangGroup(nsIAtom** aLangGroup);
-  NS_IMETHOD  GetFontHandle( nsFontHandle &aHandle);
+  NS_IMETHOD  GetFontHandle(nsFontHandle &aHandle);
   NS_IMETHOD  GetAveCharWidth(nscoord &aAveCharWidth);
   NS_IMETHOD  GetSpaceWidth(nscoord &aSpaceWidth);
 
@@ -242,21 +266,28 @@ class nsFontMetricsOS2 : public nsIFontMetrics
                    nsFontSwitchCallback aFunc, 
                    void*                aData);
 
-  nsFontOS2*          FindFont( HPS aPS );
-  nsFontOS2*          FindUserDefinedFont( HPS aPS );
-  nsFontOS2*          FindLocalFont( HPS aPS );
-  nsFontOS2*          FindGenericFont( HPS aPS );
-  nsFontOS2*          FindPrefFont( HPS aPS );
-  nsFontOS2*          FindGlobalFont( HPS aPS );
+  nsFontOS2*         FindFont(HPS aPS, PRUint32 aChar);
+  nsFontOS2*         FindUserDefinedFont(HPS aPS, PRUint32 aChar);
+  nsFontOS2*         FindLocalFont(HPS aPS, PRUint32 aChar);
+  nsFontOS2*         FindGenericFont(HPS aPS, PRUint32 aChar);
+  virtual nsFontOS2* FindPrefFont(HPS aPS, PRUint32 aChar);
+  virtual nsFontOS2* FindGlobalFont(HPS aPS, PRUint32 aChar);
+#ifdef USE_FREETYPE
+  virtual nsFontOS2* FindSubstituteFont(HPS aPS, PRUint32 aChar)
+      { return nsnull; };
+#endif
 
-  nsFontOS2*          LoadFont(HPS aPS, const nsString& aName);
-  nsFontOS2*          LoadGenericFont(HPS aPS, const nsString& aName);
-  nsFontOS2*          LoadUnicodeFont(HPS aPS, const nsString& aName);
+  nsFontOS2*          LoadFont(HPS aPS, const nsAString& aName);
+  nsFontOS2*          LoadGenericFont(HPS aPS, PRUint32 aChar, const nsAString& aName);
+  nsFontOS2*          LoadUnicodeFont(HPS aPS, const nsAString& aName);
   static nsresult     InitializeGlobalFonts();
 
   static nsTHashtable<GlobalFontEntry>* gGlobalFonts;
   static PLHashTable*  gFamilyNames;
   static PRBool        gSubstituteVectorFonts;
+#ifdef USE_FREETYPE
+  static PRBool        gUseFTFunctions;
+#endif
 
   nsCOMPtr<nsIAtom>   mLangGroup;
   nsStringArray       mFonts;
@@ -267,8 +298,7 @@ class nsFontMetricsOS2 : public nsIFontMetrics
 
   PRUint16            mGenericIndex;
   nsString            mGeneric;
-
-  nsAutoString        mUserDefined;
+  nsString            mUserDefined;
 
   PRBool              mTriedAllGenerics;
   PRBool              mTriedAllPref;
@@ -276,13 +306,14 @@ class nsFontMetricsOS2 : public nsIFontMetrics
 
   int                 mConvertCodePage;
 
- protected:
+protected:
   nsresult      RealizeFont(void);
-  PRBool        GetVectorSubstitute(HPS aPS, const char* aFacename, char* alias);
-  PRBool        GetVectorSubstitute(HPS aPS, const nsString& aFacename, char* alias);
+  PRBool        GetVectorSubstitute(HPS aPS, const nsAString& aFacename, 
+                                    nsAString& aAlias);
   void          FindUnicodeFont(HPS aPS);
   void          FindWesternFont();
-  void          SetFontHandle(HPS aPS, nsFontOS2* aFont);
+  nsFontOS2*    SetFontHandle(HPS aPS, GlobalFontEntry* aEntry,
+                              nsMiniMetrics* aMetrics, PRBool aDoFakeEffects);
   PLHashTable*  InitializeFamilyNames(void);
 
 
@@ -323,5 +354,109 @@ public:
 
 protected:
 };
+
+#ifdef USE_FREETYPE
+typedef BOOL (APIENTRY * Ft2EnableFontEngine) (BOOL fEnable);
+
+class nsFontMetricsOS2FT : public nsFontMetricsOS2
+{
+public:
+  virtual ~nsFontMetricsOS2FT();
+
+  virtual nsresult
+  ResolveForwards(HPS                  aPS,
+                  const PRUnichar*     aString,
+                  PRUint32             aLength,
+                  nsFontSwitchCallback aFunc, 
+                  void*                aData);
+
+  virtual nsresult
+  ResolveBackwards(HPS                  aPS,
+                   const PRUnichar*     aString,
+                   PRUint32             aLength,
+                   nsFontSwitchCallback aFunc, 
+                   void*                aData);
+
+  virtual nsFontOS2* FindPrefFont(HPS aPS, PRUint32 aChar);
+  virtual nsFontOS2* FindGlobalFont(HPS aPS, PRUint32 aChar);
+  virtual nsFontOS2* FindSubstituteFont(HPS aPS, PRUint32 aChar);
+
+  static Ft2EnableFontEngine pfnFt2EnableFontEngine;
+
+  nsFontOS2* mSubstituteFont;
+
+protected:
+  nsFontOS2* LocateFont(HPS aPS, PRUint32 aChar, PRInt32 & aCount);
+};
+
+typedef BOOL (APIENTRY * Ft2FontSupportsUnicodeChar1) (PSTR8 pName,
+                                                       PFATTRS pfatAttrs,
+                                                       BOOL isUnicode,
+                                                       UniChar ch);
+#ifdef USE_EXPANDED_FREETYPE_FUNCS
+typedef USHORT       *LPWSTR;
+typedef BOOL (APIENTRY * Ft2QueryTextBoxW) (HPS hps, LONG lCount1, 
+                                            LPWSTR pchString,LONG lCount2, 
+                                            PPOINTL aptlPoints);
+typedef LONG (APIENTRY * Ft2CharStringPosAtW) (HPS hps, PPOINTL pptlStart, 
+                                               PRECTL prclRect, ULONG flOptions,
+                                               LONG lCount, LPWSTR pchString,
+                                               PLONG alAdx, ULONG fuWin32Options);
+#endif /* use_expanded_freetype_funcs */
+
+
+class nsFontOS2FT : public nsFontOS2
+{
+public:
+  nsFontOS2FT(void);
+  virtual ~nsFontOS2FT(void);
+
+  virtual PRBool HasGlyph(HPS aPS, PRUint32 aChar);
+
+  using nsFontOS2::GetWidth;
+  using nsFontOS2::DrawString;
+  virtual PRInt32 GetWidth(HPS aPS, const PRUnichar* aString, PRUint32 aLength);
+  virtual void DrawString(HPS aPS, nsDrawingSurfaceOS2* aSurface,
+                         PRInt32 aX, PRInt32 aY,
+                         const PRUnichar* aString, PRUint32 aLength);
+
+  PRBool IsSymbolFont() { return mFattrs.usCodePage == 65400; };
+
+  static Ft2FontSupportsUnicodeChar1 pfnFt2FontSupportsUnicodeChar1;
+#ifdef USE_EXPANDED_FREETYPE_FUNCS
+  static Ft2QueryTextBoxW pfnFt2QueryTextBoxW;
+  static Ft2CharStringPosAtW pfnFt2CharStringPosAtW;
+#endif /* use_expanded_freetype_funcs */
+#ifdef DEBUG_FONT_STRUCT_ALLOCS
+  static unsigned long mRefCount;
+#endif
+};
+
+// A "substitute font" to deal with missing glyphs -- see bug 6585
+// We now use transliteration+fallback to the REPLACEMENT CHAR + 
+// HEX representation to handle this issue.
+class nsFontOS2Substitute : public nsFontOS2
+{
+public:
+  nsFontOS2Substitute(nsFontOS2* aFont);
+  virtual ~nsFontOS2Substitute(void);
+
+  virtual PRBool HasGlyph(HPS aPS, PRUint32 ch)
+    { return !IS_IN_BMP(ch) || IS_REPRESENTABLE(mRepresentableCharMap, ch); };
+  virtual void SetRepresentable(PRUint32 ch)
+    { if (IS_IN_BMP(ch)) SET_REPRESENTABLE(mRepresentableCharMap, ch); };
+
+  using nsFontOS2::GetWidth;
+  using nsFontOS2::DrawString;
+  virtual PRInt32 GetWidth(HPS aPS, const PRUnichar* aString, PRUint32 aLength);
+  virtual void DrawString(HPS aPS, nsDrawingSurfaceOS2* aSurface,
+                          PRInt32 aX, PRInt32 aY,
+                          const PRUnichar* aString, PRUint32 aLength);
+
+private:
+  //We need to have a easily operatable charmap for substitute font
+  PRUint32 mRepresentableCharMap[UCS2_MAP_LEN];
+};
+#endif /* use_freetype */
 
 #endif

@@ -55,13 +55,16 @@
 #include "nsFontList.h"
 #include "nsPrintSession.h"
 #include "gfxImageFrame.h"
-
+#include "nsIServiceManager.h"
+#include "prenv.h"
 #include "nsOS2Uni.h"
 #include "nsPaletteOS2.h"
 
 // objects that just require generic constructors
 
+#if !defined(USE_FREETYPE)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontMetricsOS2)
+#endif
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextOS2)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsRenderingContextOS2)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsImageOS2)
@@ -77,9 +80,127 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrinterEnumeratorOS2)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSession, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(gfxImageFrame)
 
-// our custom constructors
+#ifdef USE_FREETYPE
+// Can't include os2win.h, since it screws things up.  So definitions go here.
+typedef ULONG   HKEY;
+#define HKEY_CURRENT_USER       0xFFFFFFEEL
+#define READ_CONTROL            0x00020000
+#define KEY_QUERY_VALUE         0x0001
+#define KEY_ENUMERATE_SUB_KEYS  0x0008
+#define KEY_NOTIFY              0x0010
+#define KEY_READ                READ_CONTROL | KEY_QUERY_VALUE | \
+                                KEY_ENUMERATE_SUB_KEYS | KEY_NOTIFY
+#define ERROR_SUCCESS           0L
 
-static NS_IMETHODIMP nsScriptableRegionConstructor(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+LONG _System RegOpenKeyEx(HKEY, const char*, ULONG, ULONG, HKEY* );
+LONG _System RegQueryValueEx(HKEY, const char*, ULONG*, ULONG*, UCHAR*,
+                             ULONG*);
+
+static PRBool
+UseFTFunctions()
+{
+  static PRBool init = PR_FALSE;
+  if (!init) {
+    init = PR_TRUE;
+
+    // For now, since this is somewhat experimental, we'll check for an
+    // environment variable, rather than making this the default for anyone
+    // that uses the FT2LIB.
+    char* useFT = PR_GetEnv("MOZILLA_USE_EXTENDED_FT2LIB");
+    if (useFT == nsnull || *useFT == '\0' || stricmp(useFT, "t") != 0) {
+      return PR_FALSE;
+    }
+
+    // Is FT2LIB enabled?
+    HKEY key;
+    LONG result = ::RegOpenKeyEx(HKEY_CURRENT_USER,
+                                 "Software\\Innotek\\InnoTek Font Engine", 0,
+                                 KEY_READ, &key);
+    if (result != ERROR_SUCCESS) {
+      return PR_FALSE;
+    }
+
+    ULONG value;
+    ULONG length = sizeof(value);
+    result = ::RegQueryValueEx(key, "Enabled", NULL, NULL, (UCHAR*)&value,
+                               &length);
+    if (result != ERROR_SUCCESS || value == 0) {
+      // check if "Innotek Font Engine" is disabled (value == 0)
+      return PR_FALSE;
+    }
+
+    // Is FT2LIB enabled for this app?
+    PPIB ppib;
+    PTIB ptib;
+    char buffer[CCHMAXPATH], name[_MAX_FNAME], ext[_MAX_EXT], keystr[256];
+    DosGetInfoBlocks(&ptib, &ppib);
+    DosQueryModuleName(ppib->pib_hmte, CCHMAXPATH, buffer);
+    _splitpath(buffer, NULL, NULL, name, ext);
+    strcpy(keystr, "Software\\Innotek\\InnoTek Font Engine\\Applications\\");
+    strcat(keystr, name);
+    strcat(keystr, ext);
+    result = ::RegOpenKeyEx(HKEY_CURRENT_USER, keystr, 0, KEY_READ, &key);
+    if (result != ERROR_SUCCESS) {
+      return PR_FALSE;
+    }
+    result = ::RegQueryValueEx(key, "Enabled", NULL, NULL, (UCHAR*)&value,
+                               &length);
+    if (result != ERROR_SUCCESS || value == 0) {
+      // check if FT2LIB is disabled for our application (value == 0)
+      return PR_FALSE;
+    }
+
+    // Load lib and functions
+    HMODULE hmod = 0;
+    int rc = DosLoadModule(NULL, 0, "FT2LIB", &hmod);
+    if (rc == NO_ERROR) {
+      rc = DosQueryProcAddr(hmod, 0, "Ft2EnableFontEngine",
+                            (PFN*)&nsFontMetricsOS2FT::pfnFt2EnableFontEngine);
+      if (rc == NO_ERROR) {
+        DosQueryProcAddr(hmod, 0, "Ft2FontSupportsUnicodeChar1",
+                         (PFN*)&nsFontOS2FT::pfnFt2FontSupportsUnicodeChar1);
+#ifdef USE_EXPANDED_FREETYPE_FUNCS
+        DosQueryProcAddr(hmod, 0, "Ft2QueryTextBoxW",
+                         (PFN*)&nsFontOS2FT::pfnFt2QueryTextBoxW);
+        DosQueryProcAddr(hmod, 0, "Ft2CharStringPosAtW",
+                         (PFN*)&nsFontOS2FT::pfnFt2CharStringPosAtW);
+#endif /* use_expanded_freetype_funcs */
+        NS_WARNING("*** Now using Freetype functions ***");
+        nsFontMetricsOS2::gUseFTFunctions = PR_TRUE;
+      }
+      DosFreeModule(hmod);
+    }
+  }
+  return nsFontMetricsOS2::gUseFTFunctions;
+}
+
+static NS_IMETHODIMP
+nsFontMetricsOS2Constructor(nsISupports* aOuter, REFNSIID aIID, void** aResult)
+{
+  *aResult = nsnull;
+
+  if (aOuter)
+    return NS_ERROR_NO_AGGREGATION;
+
+  nsFontMetricsOS2* result;
+  if (UseFTFunctions())
+    result = new nsFontMetricsOS2FT();
+  else
+    result = new nsFontMetricsOS2();
+
+  if (! result)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  nsresult rv;
+  NS_ADDREF(result);
+  rv = result->QueryInterface(aIID, aResult);
+  NS_RELEASE(result);
+  return rv;
+}
+#endif /* use_freetype */
+
+static NS_IMETHODIMP
+nsScriptableRegionConstructor(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
   nsresult rv;
 

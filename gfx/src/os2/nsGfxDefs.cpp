@@ -56,47 +56,49 @@
 
 BOOL GetTextExtentPoint32(HPS aPS, const char* aString, int aLength, PSIZEL aSizeL)
 {
+  BOOL rc = TRUE;
   POINTL ptls[5];
 
   aSizeL->cx = 0;
 
-  while(aLength)
-  {
+  while(aLength > 0 && rc == TRUE) {
     ULONG thislen = min(aLength, 512);
-    GFX (::GpiQueryTextBox (aPS, thislen, (PCH)aString, 5, ptls), FALSE);
+    rc = GFX (::GpiQueryTextBox(aPS, thislen, (PCH)aString, 5, ptls), FALSE);
     aSizeL->cx += ptls[TXTBOX_CONCAT].x;
     aLength -= thislen;
     aString += thislen;
   }
+
   aSizeL->cy = ptls[TXTBOX_TOPLEFT].y - ptls[TXTBOX_BOTTOMLEFT].y;
-  return TRUE;
+  return rc;
 }
 
 BOOL ExtTextOut(HPS aPS, int X, int Y, UINT fuOptions, const RECTL* lprc,
                 const char* aString, unsigned int aLength, const int* pSpacing)
 {
+  long rc = GPI_OK;
   POINTL ptl = {X, Y};
 
-  GFX (::GpiMove (aPS, &ptl), FALSE);
+  GFX (::GpiMove(aPS, &ptl), FALSE);
 
   // GpiCharString has a max length of 512 chars at a time...
-  while( aLength)
-  {
+  while (aLength > 0 && rc == GPI_OK) {
     ULONG ulChunkLen = min(aLength, 512);
-    if (pSpacing)
-    {
-      GFX (::GpiCharStringPos (aPS, nsnull, CHS_VECTOR, ulChunkLen,
-                               (PCH)aString, (PLONG)pSpacing), GPI_ERROR);
-        pSpacing += ulChunkLen;
-    }
-    else
-    {
-      GFX (::GpiCharString (aPS, ulChunkLen, (PCH)aString), GPI_ERROR);
+    if (pSpacing) {
+      rc = GFX (::GpiCharStringPos(aPS, nsnull, CHS_VECTOR, ulChunkLen,
+                                   (PCH)aString, (PLONG)pSpacing), GPI_ERROR);
+      pSpacing += ulChunkLen;
+    } else {
+      rc = GFX (::GpiCharString(aPS, ulChunkLen, (PCH)aString), GPI_ERROR);
     }
     aLength -= ulChunkLen;
     aString += ulChunkLen;
   }
-  return TRUE;
+
+  if (rc == GPI_OK)
+    return TRUE;
+  else
+    return FALSE;
 }
 
 static BOOL bIsDBCS;
@@ -139,7 +141,8 @@ BOOL IsDBCS()
 
 // Module-level data ---------------------------------------------------------
 #ifdef DEBUG
-void GFX_LogErr (unsigned ReturnCode, const char* ErrorExpression, const char* FileName, const char* FunctionName, long LineNum)
+void DEBUG_LogErr(long ReturnCode, const char* ErrorExpression,
+                  const char* FileName, const char* FunctionName, long LineNum)
 {
    char TempBuf [300];
 
@@ -160,12 +163,10 @@ void GFX_LogErr (unsigned ReturnCode, const char* ErrorExpression, const char* F
    }
 
 
-   USHORT ErrorCode = ERRORIDERROR (::WinGetLastError (0));
+   USHORT ErrorCode = ERRORIDERROR (::WinGetLastError(0));
 
-   if (FunctionName)      // Compiler knows function name from where we were called
-      DPRINTF ("GFX_Err: %s = 0x%X, 0x%X (%s - %s,  line %d)\n", APIName, ReturnCode, ErrorCode, FileName, FunctionName, LineNum);
-   else
-      DPRINTF ("GFX_Err: %s = 0x%X, 0x%X (%s,  line %d)\n", APIName, ReturnCode, ErrorCode, FileName, LineNum);
+   printf("GFX_Err: %s = 0x%X, 0x%X (%s - %s,  line %ld)\n", APIName, ReturnCode,
+          ErrorCode, FileName, FunctionName, LineNum);
 }
 #endif
 

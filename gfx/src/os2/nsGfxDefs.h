@@ -63,25 +63,42 @@ void PMERROR(const char *str);
 //    return GFX (::GpiDestroyPS (mPrintPS), FALSE);
 
 #ifdef DEBUG
-  extern void GFX_LogErr (unsigned ReturnCode, const char* ErrorExpression, const char* FileName, const char* FunctionName, long LineNum);
+  extern void DEBUG_LogErr(long ReturnCode, const char* ErrorExpression,
+                           const char* FileName, const char* FunctionName,
+                           long LineNum);
 
-  inline long GFX_Check (long ReturnCode, long ErrorCode, const char* ErrorExpression, const char* FileName, const char* FunctionName, long LineNum) 
-  { 
-    if (ReturnCode == ErrorCode)
-      GFX_LogErr (ErrorCode, ErrorExpression, FileName, FunctionName, LineNum);
-
-    return ReturnCode ; 
+  inline long CheckSuccess(long ReturnCode, long SuccessCode,
+                           const char* ErrorExpression, const char* FileName,
+                           const char* FunctionName, long LineNum)
+  {
+    if (ReturnCode != SuccessCode) {
+      DEBUG_LogErr(ReturnCode, ErrorExpression, FileName, FunctionName, LineNum);
+    }
+    return ReturnCode;
   }
 
-  #ifdef XP_OS2_VACPP
-    #define GFX(ReturnCode, ErrorCode)\
-            GFX_Check (ReturnCode, ErrorCode, #ReturnCode, __FILE__, __FUNCTION__, __LINE__)
-  #else
-    #define GFX(ReturnCode, ErrorCode)\
-            GFX_Check (ReturnCode, ErrorCode, #ReturnCode, __FILE__, NULL, __LINE__)
-  #endif
+  #define CHK_SUCCESS(ReturnCode, SuccessCode)                          \
+          CheckSuccess(ReturnCode, SuccessCode, #ReturnCode, __FILE__,  \
+                       __FUNCTION__, __LINE__)
+
+  inline long CheckFailure(long ReturnCode, long ErrorCode,
+                           const char* ErrorExpression, const char* FileName,
+                           const char* FunctionName, long LineNum)
+  {
+    if (ReturnCode == ErrorCode) {
+      DEBUG_LogErr(ReturnCode, ErrorExpression, FileName, FunctionName, LineNum);
+    }
+    return ReturnCode;
+  }
+
+/*  #define CHK_FAIL(ReturnCode, ErrorCode)                             \ */
+  #define GFX(ReturnCode, ErrorCode)                                  \
+          CheckFailure(ReturnCode, ErrorCode, #ReturnCode, __FILE__,  \
+                       __FUNCTION__, __LINE__)
 
 #else	// Retail build
+  #define CHK_SUCCESS(ReturnCode, SuccessCode) ReturnCode
+/*  #define CHK_FAIL(ReturnCode, ErrorCode) ReturnCode */
   #define GFX(ReturnCode, ErrorCode) ReturnCode
 #endif
 
