@@ -199,6 +199,7 @@ interface nsMsgViewCommandType
 
   const nsMsgViewCommandTypeValue junk = 27;
   const nsMsgViewCommandTypeValue unjunk = 28;
+  const nsMsgViewCommandTypeValue undeleteMsg = 29;
 };
 
 [scriptable, uuid(65903eb2-1dd2-11b2-ac45-c5b69c1618d7)]
