@@ -36,6 +36,9 @@
 #include "nsIScriptObjectOwner.h"
 #include "nsIDOMRenderingContext.h"
 #include "nsDrawingSurfaceXlib.h"
+#include "nsRegionXlib.h"
+
+class GraphicsState;
 
 class nsRenderingContextXlib : public nsIRenderingContext,
                                nsIDOMRenderingContext,
@@ -160,13 +163,20 @@ class nsRenderingContextXlib : public nsIRenderingContext,
   nsresult CommonInit(void);
 
 private:
+  nsDrawingSurfaceXlib    *mOffscreenSurface;
   nsDrawingSurfaceXlib    *mRenderingSurface;
-  nsTransform2D           *mTMatrix;
-  nsIFontMetrics          *mFontMetrics;
   nsIDeviceContext        *mContext;
-  void                    *mScriptObject;
-  XFontStruct             *mCurrentFont;
+  nsIFontMetrics          *mFontMetrics;
+  nsRegionXlib            *mClipRegion;
+  nsTransform2D           *mTMatrix;
   float                    mP2T;
+  void                    *mScriptObject;
+  nscolor                  mCurrentColor;
+
+  // graphics state stuff
+  nsVoidArray             *mStateCache;
+  XFontStruct             *mCurrentFont;
+  nsLineStyle              mCurrentLineStyle;
 };
 
 #endif
