@@ -156,7 +156,7 @@ static PRBool gNoisyInlineConstruction = PR_FALSE;
 //#define XULTREE
 #ifdef XULTREE
 #include "nsXULTreeFrame.h"
-#include "nsXULTreeGroupFrame.h"
+#include "nsXULTreeOuterGroupFrame.h"
 #include "nsXULTreeSliceFrame.h"
 #include "nsXULTreeCellFrame.h"
 #endif
@@ -263,6 +263,9 @@ NS_NewObeliskLayout ( nsIPresShell* aPresShell, nsCOMPtr<nsIBoxLayout>& aNewLayo
 
 nsresult
 NS_NewTempleLayout ( nsIPresShell* aPresShell, nsCOMPtr<nsIBoxLayout>& aNewLayout );
+
+nsresult
+NS_NewTreeLayout ( nsIPresShell* aPresShell, nsCOMPtr<nsIBoxLayout>& aNewLayout );
 
 // end grid
 
@@ -5692,16 +5695,32 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
         || (aTag == nsXULAtoms::treecolgroup) || (aTag == nsXULAtoms::treecols) 
 #endif
         ;
-
       nsCOMPtr<nsIBoxLayout> layout;
-      NS_NewTempleLayout(aPresShell, layout);
-
+      
 #ifdef XULTREE
-      if (aTag == nsXULAtoms::treechildren || aTag == nsXULAtoms::treerows || aTag == nsXULAtoms::treeitem)
-        rv = NS_NewXULTreeGroupFrame(aPresShell, &newFrame, PR_FALSE, layout,  PR_FALSE);
+      if (aTag == nsXULAtoms::treechildren || aTag == nsXULAtoms::treeitem) {
+        NS_NewTreeLayout(aPresShell, layout);
+        nsCOMPtr<nsIContent> parentContent;
+        aParentFrame->GetContent(getter_AddRefs(parentContent));
+        nsCOMPtr<nsIAtom> parentTag;
+        parentContent->GetTag(*getter_AddRefs(parentTag));
+        if (parentTag.get() == nsXULAtoms::tree) {
+          rv = NS_NewXULTreeOuterGroupFrame(aPresShell, &newFrame, PR_FALSE, layout,  PR_FALSE);
+          ((nsXULTreeGroupFrame*)newFrame)->InitGroup(this, aPresContext, (nsXULTreeOuterGroupFrame*) newFrame);
+        }
+        else {
+          rv = NS_NewXULTreeGroupFrame(aPresShell, &newFrame, PR_FALSE, layout,  PR_FALSE);
+          ((nsXULTreeGroupFrame*)newFrame)->InitGroup(this, aPresContext, ((nsXULTreeGroupFrame*)aParentFrame)->GetOuterFrame());
+        }
+
+        processChildren = PR_FALSE;
+      }
       else
 #endif
+      {
+        NS_NewTempleLayout(aPresShell, layout);
         rv = NS_NewBoxFrame(aPresShell, &newFrame, PR_FALSE, layout,  isHorizontal);
+      }
 
       const nsStyleDisplay* display = (const nsStyleDisplay*)
            aStyleContext->GetStyleData(eStyleStruct_Display);
@@ -7958,7 +7977,6 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
   nsCOMPtr<nsIPresShell> shell;
   aPresContext->GetShell(getter_AddRefs(shell));
 
-#ifndef XULTREE
 #ifdef INCLUDE_XUL
   if (aContainer) {
     nsCOMPtr<nsIAtom> tag;
@@ -7983,12 +8001,24 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
         nsIFrame* outerFrame = GetFrameFor(shell, aPresContext, child);
 
         // Convert to a tree row group frame.
+#ifdef XULTREE
+        nsXULTreeOuterGroupFrame* treeRowGroup = (nsXULTreeOuterGroupFrame*)outerFrame;
+#else
         nsTreeRowGroupFrame* treeRowGroup = (nsTreeRowGroupFrame*)outerFrame;
+#endif
         if (treeRowGroup) {
 
           // Get the primary frame for the parent of the child that's being added.
           nsIFrame* innerFrame = GetFrameFor(shell, aPresContext, aContainer);
   
+#ifdef XULTREE
+          nsXULTreeGroupFrame* innerGroup = (nsXULTreeGroupFrame*) innerFrame;
+          if (innerGroup) {
+            nsBoxLayoutState state(aPresContext);
+            innerGroup->MarkDirtyChildren(state);
+          }
+          treeRowGroup->ClearRowGroupInfo();
+#else
           // See if there's a previous sibling.
           nsIFrame* prevSibling = FindPreviousSibling(shell,
                                                       aContainer,
@@ -8013,6 +8043,7 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
             treeRowGroup->ClearRowGroupInfo();
             treeRowGroup->ReflowScrollbar(aPresContext);
           }
+#endif
 
           return NS_OK;
         }
@@ -8020,7 +8051,6 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
     }
   }
 #endif // INCLUDE_XUL
-#endif
 
   // Get the frame associated with the content
   nsIFrame* parentFrame = GetFrameFor(shell, aPresContext, aContainer);
@@ -8272,7 +8302,6 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
   }
 #endif
 
-#ifndef XULTREE
 #ifdef INCLUDE_XUL
   if (aContainer) {
     nsCOMPtr<nsIAtom> tag;
@@ -8299,17 +8328,29 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
         nsIFrame*     outerFrame = GetFrameFor(shell, aPresContext, child);
 
         // Convert to a tree row group frame.
+#ifdef XULTREE
+        nsXULTreeOuterGroupFrame* treeRowGroup = (nsXULTreeOuterGroupFrame*)outerFrame;
+#else
         nsTreeRowGroupFrame* treeRowGroup = (nsTreeRowGroupFrame*)outerFrame;
+#endif
         if (treeRowGroup) {
 
           // Get the primary frame for the parent of the child that's being added.
           nsIFrame* innerFrame = GetFrameFor(shell, aPresContext, aContainer);
   
+          
+#ifdef XULTREE
+          nsXULTreeGroupFrame* innerGroup = (nsXULTreeGroupFrame*) innerFrame;
+          treeRowGroup->ClearRowGroupInfo();
+          nsIFrame* prevSibling = nsnull;
+#else
+          nsTreeRowGroupFrame* innerGroup = (nsTreeRowGroupFrame*) innerFrame;
+          
           // See if there's a previous sibling.
           nsIFrame* prevSibling = FindPreviousSibling(shell,
                                                        aContainer,
                                                        aIndexInContainer);
-
+#endif
           if (prevSibling || innerFrame) {
             // We're onscreen, but because of the fact that we can be called to
             // "kill" a displayed frame (e.g., when you close a tree node), we
@@ -8339,20 +8380,24 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
             
             // Good call.  Make sure a full reflow happens.
             nsIFrame* nextSibling = FindNextSibling(shell, aContainer, aIndexInContainer);
+#ifdef XULTREE
+            if (nextSibling) {
+#else
             if(!nextSibling)
               treeRowGroup->OnContentAdded(aPresContext);
             else {
-              nsIFrame*     frame = GetFrameFor(shell, aPresContext, aContainer);
-              nsTreeRowGroupFrame* frameTreeRowGroup = (nsTreeRowGroupFrame*)frame;
-              if(frameTreeRowGroup)
-                frameTreeRowGroup->OnContentInserted(aPresContext, nextSibling, aIndexInContainer);
+#endif
+              if(innerGroup)
+                innerGroup->OnContentInserted(aPresContext, nextSibling, aIndexInContainer);
             }
           }
+#ifndef XULTREE
           else {
             // We're going to be offscreen.
             treeRowGroup->ClearRowGroupInfo();
             treeRowGroup->ReflowScrollbar(aPresContext);
           }
+#endif
 
           return NS_OK;
         }
@@ -8360,7 +8405,6 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
     }
   }
 #endif // INCLUDE_XUL
-#endif
   
   nsCOMPtr<nsIPresShell> shell;
   aPresContext->GetShell(getter_AddRefs(shell));
@@ -8944,7 +8988,6 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
     } 
   }
 
-#ifndef XULTREE
 #ifdef INCLUDE_XUL
   if (aContainer) {
     nsCOMPtr<nsIAtom> tag;
@@ -8955,13 +8998,23 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
         // Convert to a tree row group frame.
         nsIFrame* parentFrame;
         childFrame->GetParent(&parentFrame);
+#ifdef XULTREE
+        nsXULTreeGroupFrame* treeRowGroup = (nsXULTreeGroupFrame*)parentFrame;
+        if (treeRowGroup) {
+          treeRowGroup->OnContentRemoved(aPresContext, childFrame, aIndexInContainer);
+        }
+#else
         nsTreeRowGroupFrame* treeRowGroup = (nsTreeRowGroupFrame*)parentFrame;
         if (treeRowGroup) {
           treeRowGroup->OnContentRemoved(aPresContext, childFrame, aIndexInContainer);
           return NS_OK;
         }
+#endif
       }
-      else {
+#ifndef XULTREE
+      else 
+#endif
+      {
         // Ensure that we notify the outermost row group that the item
         // has been removed (so that we can update the scrollbar state).
         // Walk up to the outermost tree row group frame and tell it that
@@ -8982,17 +9035,26 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
           nsIFrame*     parentFrame = GetFrameFor(shell, aPresContext, child);
 
           // Convert to a tree row group frame.
+#ifdef XULTREE
+          nsXULTreeOuterGroupFrame* treeRowGroup = (nsXULTreeOuterGroupFrame*)parentFrame;
+          if (treeRowGroup) {
+            nsBoxLayoutState state(aPresContext);
+            treeRowGroup->MarkDirtyChildren(state);
+            treeRowGroup->ClearRowGroupInfo();
+            return NS_OK;
+          }
+#else
           nsTreeRowGroupFrame* treeRowGroup = (nsTreeRowGroupFrame*)parentFrame;
           if (treeRowGroup) {
             treeRowGroup->ReflowScrollbar(aPresContext);
             return NS_OK;
           }
+#endif
         }
       }
     }
   }
 #endif // INCLUDE_XUL
-#endif
 
   if (childFrame) {
     // Get the childFrame's parent frame
@@ -9686,19 +9748,6 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
    
   shell->GetPrimaryFrameFor(aContent, &primaryFrame);
 
-#ifdef INCLUDE_XUL
-  // The following tree widget trap prevents offscreen tree widget
-  // content from being removed and re-inserted (which is what would
-  // happen otherwise).
-  if (!primaryFrame) {
-    nsCOMPtr<nsIAtom> tag;
-    aContent->GetTag(*getter_AddRefs(tag));
-    if (tag && (tag.get() == nsXULAtoms::treechildren ||
-                tag.get() == nsXULAtoms::treeitem))
-      return NS_OK;
-  }
-#endif // INCLUDE_XUL
-
   PRBool  reconstruct = PR_FALSE;
   PRBool  restyle = PR_FALSE;
   PRBool  reframe = PR_FALSE;
@@ -9737,6 +9786,19 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
     case NS_STYLE_HINT_NONE:
       break;
   }
+
+#ifdef INCLUDE_XUL
+  // The following tree widget trap prevents offscreen tree widget
+  // content from being removed and re-inserted (which is what would
+  // happen otherwise).
+  if (!primaryFrame) {
+    nsCOMPtr<nsIAtom> tag;
+    aContent->GetTag(*getter_AddRefs(tag));
+    if (reframe == PR_FALSE && tag && (tag.get() == nsXULAtoms::treechildren ||
+                tag.get() == nsXULAtoms::treeitem))
+      return NS_OK;
+  }
+#endif // INCLUDE_XUL
 
   // apply changes
   if (PR_TRUE == reconstruct) {
@@ -11965,13 +12027,19 @@ nsCSSFrameConstructor::CreateTreeWidgetContent(nsIPresContext* aPresContext,
 
     if (NS_SUCCEEDED(rv) && (nsnull != newFrame)) {
       // Notify the parent frame
+#ifdef XULTREE
+      if (aIsAppend)
+        rv = ((nsXULTreeGroupFrame*)aParentFrame)->TreeAppendFrames(newFrame);
+      else
+        rv = ((nsXULTreeGroupFrame*)aParentFrame)->TreeInsertFrames(aPrevFrame, newFrame);
+#else
       if (aIsScrollbar)
         ((nsTreeRowGroupFrame*)aParentFrame)->SetScrollbarFrame(aPresContext, newFrame);
       else if (aIsAppend)
         rv = ((nsTreeRowGroupFrame*)aParentFrame)->TreeAppendFrames(newFrame);
       else
         rv = ((nsTreeRowGroupFrame*)aParentFrame)->TreeInsertFrames(aPrevFrame, newFrame);
-        
+#endif        
       // If there are new absolutely positioned child frames, then notify
       // the parent
       // XXX We can't just assume these frames are being appended, we need to
