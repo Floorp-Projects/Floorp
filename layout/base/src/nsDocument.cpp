@@ -43,7 +43,6 @@
 #include "nsICSSStyleSheet.h"
 #include "nsICSSStyleRule.h"
 #include "nsICSSDeclaration.h"
-#include "nsIHTMLCSSStyleSheet.h"
 
 #include "nsITextContent.h"
 #include "nsXIFConverter.h"
