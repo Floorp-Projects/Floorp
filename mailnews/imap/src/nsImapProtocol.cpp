@@ -5465,10 +5465,13 @@ void nsImapProtocol::OnStatusForFolder(const char *mailboxName)
   if (NS_SUCCEEDED(rv))
       ParseIMAPandCheckForNewMail();
 
-  nsImapMailboxSpec *new_spec = GetServerStateParser().CreateCurrentMailboxSpec(mailboxName);
-  if (new_spec && m_imapMailFolderSink)
-    m_imapMailFolderSink->UpdateImapMailboxStatus(this, new_spec);
-  NS_IF_RELEASE(new_spec);
+  if (GetServerStateParser().LastCommandSuccessful())
+  {
+    nsImapMailboxSpec *new_spec = GetServerStateParser().CreateCurrentMailboxSpec(mailboxName);
+    if (new_spec && m_imapMailFolderSink)
+      m_imapMailFolderSink->UpdateImapMailboxStatus(this, new_spec);
+    NS_IF_RELEASE(new_spec);
+  }
 }
 
 
