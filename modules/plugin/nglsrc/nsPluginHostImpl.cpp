@@ -52,7 +52,7 @@
 #include "nsNetUtil.h"
 #include "nsIProgressEventSink.h"
 #include "nsIDocument.h"
-
+#include "nsIScriptablePlugin.h"
 
 #if MOZ_NEW_CACHE
 #include "nsICachingChannel.h"
@@ -313,6 +313,7 @@ nsActivePlugin::nsActivePlugin(nsCOMPtr<nsIPlugin> aPlugin,
     aInstance->GetPeer(&mPeer);
     NS_ADDREF(aInstance);
   }
+  mXPConnected = PR_FALSE;
   mDefaultPlugin = aDefaultPlugin;
   mStopped = PR_FALSE;
   mllStopTime = LL_ZERO;
@@ -1728,13 +1729,14 @@ nsPluginHostImpl::~nsPluginHostImpl()
   Destroy();
 }
 
-NS_IMPL_ISUPPORTS6(nsPluginHostImpl,
+NS_IMPL_ISUPPORTS7(nsPluginHostImpl,
                    nsIPluginManager,
                    nsIPluginManager2,
                    nsIPluginHost,
                    nsIFileUtilities,
                    nsICookieStorage,
-                   nsIObserver);
+                   nsIObserver,
+                   nsPIPluginHost);
 
 NS_METHOD
 nsPluginHostImpl::Create(nsISupports* aOuter, REFNSIID aIID, void** aResult)
@@ -4142,13 +4144,19 @@ nsPluginHostImpl::StopPluginInstance(nsIPluginInstance* aInstance)
     if (!doCache || oldSchool)
     {
       PRBool lastInstance = PR_FALSE;
+      PRBool xpConnected = plugin->mXPConnected;
+
       mActivePluginList.remove(plugin, &lastInstance);
 
-      // and if this is the last instance we should unload the library 
+      // and if this was the last instance we should unload the library 
       // and clear mEntryPoint and mLibrary member of the pluginTag
       if(lastInstance)
       {
         pluginTag->mEntryPoint = nsnull;
+
+        if(xpConnected)
+          pluginTag->mCanUnloadLibrary = PR_FALSE;
+
         if ((nsnull != pluginTag->mLibrary) && pluginTag->mCanUnloadLibrary)
         {
           PR_UnloadLibrary(pluginTag->mLibrary);
@@ -4352,6 +4360,18 @@ NS_IMETHODIMP nsPluginHostImpl::Observe(nsISupports *aSubject,
   {
     Destroy();
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsPluginHostImpl::SetIsScriptableInstance(nsCOMPtr<nsIPluginInstance> aPluginInstance, 
+                                        PRBool aScriptable)
+{
+  nsActivePlugin * p = mActivePluginList.find(aPluginInstance.get());
+  if(p == nsnull)
+    return NS_ERROR_FAILURE;
+
+  p->mXPConnected = aScriptable;
   return NS_OK;
 }
 

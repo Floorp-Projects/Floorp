@@ -28,6 +28,7 @@
 #include "nsIPluginManager2.h"
 #include "nsIPluginHost.h"
 #include "nsIObserver.h"
+#include "nsPIPluginHost.h"
 #include "nsCRT.h"
 #include "nsCOMPtr.h"
 #include "prlink.h"
@@ -87,6 +88,7 @@ struct nsActivePlugin
   PRBool                 mStopped;
   PRTime                 mllStopTime;
   PRBool                 mDefaultPlugin;
+  PRBool                 mXPConnected;
 
   nsActivePlugin(nsCOMPtr<nsIPlugin> aPlugin,
                  nsIPluginInstance* aInstance, 
@@ -144,7 +146,8 @@ class nsPluginHostImpl : public nsIPluginManager2,
                          public nsIPluginHost,
                          public nsIFileUtilities,
                          public nsICookieStorage,
-                         public nsIObserver
+                         public nsIObserver,
+                         public nsPIPluginHost
 {
 public:
   nsPluginHostImpl();
@@ -326,6 +329,10 @@ public:
   // Methods from nsIObserver
   NS_IMETHOD
   Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData);
+
+  // Methods from nsPIPluginHost
+  NS_IMETHOD
+  SetIsScriptableInstance(nsCOMPtr<nsIPluginInstance> aPluginInstance, PRBool aScriptable);
 
   /* Called by GetURL and PostURL */
 

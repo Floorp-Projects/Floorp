@@ -418,7 +418,7 @@ ns4xPluginInstance :: IsStarted(void)
 
 ////////////////////////////////////////////////////////////////////////
 
-NS_IMPL_ISUPPORTS1(ns4xPluginInstance, nsIPluginInstance)
+NS_IMPL_ISUPPORTS2(ns4xPluginInstance, nsIPluginInstance, nsIScriptablePlugin)
 
 static NS_DEFINE_IID(kIPluginInstanceIID, NS_IPLUGININSTANCE_IID); 
 static NS_DEFINE_IID(kIPluginTagInfoIID, NS_IPLUGINTAGINFO_IID); 
@@ -728,7 +728,10 @@ NS_IMETHODIMP ns4xPluginInstance::HandleEvent(nsPluginEvent* event, PRBool* hand
 NS_IMETHODIMP ns4xPluginInstance :: GetValue(nsPluginInstanceVariable variable,
                                              void *value)
 {
-  nsresult  rv = NS_OK;
+  if(!mStarted)
+    return NS_OK;
+
+  nsresult  res = NS_OK;
 
   switch (variable)
   {
@@ -741,30 +744,38 @@ NS_IMETHODIMP ns4xPluginInstance :: GetValue(nsPluginInstanceVariable variable,
       break;
 
     default:
-      rv = NS_ERROR_FAILURE;    //XXX this is bad
+      if(fCallbacks->getvalue)
+      {
+        NS_TRY_SAFE_CALL_RETURN(res, 
+                                CallNPP_GetValueProc(fCallbacks->getvalue, 
+                                                     &fNPP, 
+                                                     (NPPVariable)variable, 
+                                                     value), 
+                                fLibrary);
+      }
   }
 
-  return rv;
+  return res;
 }
 
 nsresult ns4xPluginInstance::GetNPP(NPP* aNPP) 
 {
-	if(aNPP != nsnull)
-		*aNPP = &fNPP;
-	else
-		return NS_ERROR_NULL_POINTER;
+  if(aNPP != nsnull)
+    *aNPP = &fNPP;
+  else
+    return NS_ERROR_NULL_POINTER;
 
-    return NS_OK;
+  return NS_OK;
 }
 
 nsresult ns4xPluginInstance::GetCallbacks(const NPPluginFuncs ** aCallbacks)
 {
-	if(aCallbacks != nsnull)
-		*aCallbacks = fCallbacks;
-	else
-		return NS_ERROR_NULL_POINTER;
+  if(aCallbacks != nsnull)
+    *aCallbacks = fCallbacks;
+  else
+    return NS_ERROR_NULL_POINTER;
 
-	return NS_OK;
+  return NS_OK;
 }
 
 nsresult ns4xPluginInstance :: SetWindowless(PRBool aWindowless)
@@ -779,5 +790,22 @@ nsresult ns4xPluginInstance :: SetTransparent(PRBool aTransparent)
   return NS_OK;
 }
 
+/* readonly attribute nsQIResult scriptablePeer; */
+NS_IMETHODIMP ns4xPluginInstance :: GetScriptablePeer(void * *aScriptablePeer)
+{
+  if (!aScriptablePeer)
+    return NS_ERROR_NULL_POINTER;
 
+  *aScriptablePeer = nsnull;
+  return GetValue(nsPluginInstanceVariable_ScriptableInstance, aScriptablePeer);
+}
 
+/* readonly attribute nsIIDPtr scriptableInterface; */
+NS_IMETHODIMP ns4xPluginInstance :: GetScriptableInterface(nsIID * *aScriptableInterface)
+{
+  if (!aScriptableInterface)
+    return NS_ERROR_NULL_POINTER;
+
+  *aScriptableInterface = nsnull;
+  return GetValue(nsPluginInstanceVariable_ScriptableIID, (void*)aScriptableInterface);
+}
