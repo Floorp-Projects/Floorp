@@ -37,11 +37,10 @@
 #include "nsRDFCID.h"
 
 #include "nsIMsgStatusFeedback.h"
+#include "nsIPref.h"
+#include "nsIProfile.h"
 
-// we need this because of an egcs 1.0 (and possibly gcc) compiler bug
-// that doesn't allow you to call ::nsISupports::GetIID() inside of a class
-// that multiply inherits from nsISupports
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
@@ -53,7 +52,11 @@ static const char *uidString = "UID";
 
 NS_IMPL_THREADSAFE_ADDREF(nsImapService);
 NS_IMPL_THREADSAFE_RELEASE(nsImapService);
-
+NS_IMPL_QUERY_INTERFACE4(nsImapService,
+                         nsIImapService,
+                         nsIMsgMessageService,
+                         nsIProtocolHandler,
+                         nsIMsgProtocolInfo)
 
 nsImapService::nsImapService()
 {
@@ -62,42 +65,6 @@ nsImapService::nsImapService()
 
 nsImapService::~nsImapService()
 {
-}
-
-nsresult nsImapService::QueryInterface(const nsIID &aIID, void** aInstancePtr)
-{
-    if (nsnull == aInstancePtr)
-        return NS_ERROR_NULL_POINTER;
- 
-    if (aIID.Equals(nsIImapService::GetIID()) || aIID.Equals(kISupportsIID)) 
-	{
-        *aInstancePtr = (void*) ((nsIImapService*)this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-    if (aIID.Equals(nsIMsgMessageService::GetIID())) 
-	{
-        *aInstancePtr = (void*) ((nsIMsgMessageService*)this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-	if (aIID.Equals(nsIProtocolHandler::GetIID()))
-	{
-        *aInstancePtr = (void*) ((nsIProtocolHandler*)this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-	}
-
-#if defined(NS_DEBUG)
-    /*
-     * Check for the debug-only interface indicating thread-safety
-     */
-    static NS_DEFINE_IID(kIsThreadsafeIID, NS_ISTHREADSAFE_IID);
-    if (aIID.Equals(kIsThreadsafeIID))
-        return NS_OK;
-#endif
- 
-    return NS_NOINTERFACE;
 }
 
 nsresult
@@ -2202,3 +2169,28 @@ NS_IMETHODIMP nsImapService::NewChannel(const char *verb, nsIURI *aURI, nsILoadG
 
     return rv;
 }
+
+NS_IMETHODIMP
+nsImapService::GetDefaultLocalPath(nsIFileSpec ** aResult)
+{
+    nsresult rv;
+    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = prefs->GetFilePref("mail.root.imap", aResult);
+    if (NS_SUCCEEDED(rv)) return rv;
+
+    NS_WITH_SERVICE(nsIProfile, profile, NS_PROFILE_PROGID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    nsFileSpec dir;
+    rv = profile->GetCurrentProfileDir(&dir);
+    if (NS_FAILED(rv)) return rv;
+    
+    dir += "ImapMail";
+
+    rv = NS_NewFileSpecWithSpec(dir, aResult);
+
+    return rv;
+}
+    

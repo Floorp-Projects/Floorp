@@ -25,6 +25,7 @@
 #include "nsCOMPtr.h"
 #include "nsIFileSpec.h"
 #include "nsIProtocolHandler.h"
+#include "nsIMsgProtocolInfo.h"
 
 class nsIImapHostSessionList; 
 class nsCString;
@@ -32,7 +33,10 @@ class nsIImapUrl;
 class nsIMsgFolder;
 class nsIMsgStatusFeedback;
 
-class nsImapService : public nsIImapService, public nsIMsgMessageService, public nsIProtocolHandler
+class nsImapService : public nsIImapService,
+                      public nsIMsgMessageService,
+                      public nsIProtocolHandler,
+                      public nsIMsgProtocolInfo
 {
 public:
 
@@ -40,6 +44,7 @@ public:
 	virtual ~nsImapService();
 	
 	NS_DECL_ISUPPORTS
+    NS_DECL_NSIMSGPROTOCOLINFO
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	// we suppport the nsIImapService interface 
