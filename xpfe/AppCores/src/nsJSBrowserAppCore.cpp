@@ -243,6 +243,60 @@ BrowserAppCoreForward(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 
 
 //
+// Native method Reload
+//
+PR_STATIC_CALLBACK(JSBool)
+BrowserAppCoreReload(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)nsJSUtils::nsGetNativeThis(cx, obj);
+  JSBool rBool = JS_FALSE;
+  PRInt32 b0;
+
+  *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.reload", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 1) {
+
+    if (!JS_ValueToInt32(cx, argv[0], (int32 *)&b0)) {
+      JS_ReportError(cx, "Parameter must be a number");
+      return JS_FALSE;
+    }
+
+    if (NS_OK != nativeThis->Reload(b0)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function reload requires 1 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method Stop
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -1416,6 +1470,7 @@ static JSFunctionSpec BrowserAppCoreMethods[] =
 {
   {"back",          BrowserAppCoreBack,     0},
   {"forward",          BrowserAppCoreForward,     0},
+  {"reload",          BrowserAppCoreReload,     1},
   {"stop",          BrowserAppCoreStop,     0},
   {"loadUrl",          BrowserAppCoreLoadUrl,     1},
   {"loadInitialPage",          BrowserAppCoreLoadInitialPage,     0},
