@@ -16,16 +16,25 @@
  * Reserved.
  */
 
+#include "msgCore.h" // for pre-compiled headers...
+
 #include "nsIFactory.h"
 #include "nsISupports.h"
-#include "msgCore.h"
 #include "nsMsgLocalCID.h"
 #include "pratom.h"
-#include "nsRepository.h"
 #include "nsIRDFMSGFolderDataSource.h"
 
+// include files for components this factory creates...
+#include "nsIMailboxUrl.h"
+#include "nsMailboxUrl.h"
+
+#include "nsIMailboxService.h"
+#include "nsMailboxService.h"
 
 static NS_DEFINE_CID(kCMsgLocalFactory, NS_MSGLOCALDATASOURCE_CID);
+static NS_DEFINE_CID(kCMailboxUrl, NS_MAILBOXURL_CID);
+static NS_DEFINE_CID(kCMailboxService, NS_MAILBOXSERVICE_CID);
+
 
 ////////////////////////////////////////////////////////////
 //
@@ -105,22 +114,32 @@ nsresult nsMsgLocalFactory::CreateInstance(nsISupports *aOuter, const nsIID &aII
 	if (mClassID.Equals(kCMsgLocalFactory))
 	{
 		res = NS_NewRDFMSGFolderDataSource((nsIRDFDataSource **) &inst);
-		if (NS_FAILED(res))  // was there a problem creating the object ?
-		  return res;   
+	}
+
+	if (mClassID.Equals(kCMailboxUrl))
+	{
+		nsMailboxUrl * mailboxUrl = new nsMailboxUrl(nsnull, nsnull);
+		if (mailboxUrl) // turn it into any ol' interface so we pick up a ref count on inst...
+			res = mailboxUrl->QueryInterface(nsIMailboxUrl::IID(), (void **) &inst);
+	}
+
+	if (mClassID.Equals(kCMailboxService))
+	{
+		nsMailboxService * mailboxService = new nsMailboxService();
+		if (mailboxService)
+			res = mailboxService->QueryInterface(nsIMailboxService::IID(), (void **) &inst);
 	}
 
 	// End of checking the interface ID code....
-	if (inst)
+	if (NS_SUCCEEDED(res) && inst)
 	{
 		// so we now have the class that supports the desired interface...we need to turn around and
 		// query for our desired interface.....
 		res = inst->QueryInterface(aIID, aResult);
-		NS_RELEASE(inst);
-		if (res != NS_OK)  // if the query interface failed for some reason, then the object did not get ref counted...delete it.
+		NS_RELEASE(inst);  // release our extra ref count....
+		if (NS_FAILED(res))  // if the query interface failed for some reason, then the object did not get ref counted...delete it.
 			delete inst; 
 	}
-	else
-		res = NS_ERROR_OUT_OF_MEMORY;
 
   return res;  
 }  
@@ -164,11 +183,9 @@ NSRegisterSelf(const char* path)
 {
   nsresult ret;
 
-  ret = nsRepository::RegisterFactory(kCMsgLocalFactory, path, PR_TRUE,
-    PR_TRUE);
-  if (NS_FAILED(ret)) {
-    return ret;
-  }
+  ret = nsRepository::RegisterFactory(kCMsgLocalFactory, path, PR_TRUE, PR_TRUE);
+  ret = nsRepository::RegisterFactory(kCMailboxUrl, path, PR_TRUE, PR_TRUE);
+  ret = nsRepository::RegisterFactory(kCMailboxService, path, PR_TRUE, PR_TRUE);
 
   return ret;
 }
@@ -179,9 +196,8 @@ NSUnregisterSelf(const char* path)
   nsresult ret;
 
   ret = nsRepository::UnregisterFactory(kCMsgLocalFactory, path);
-  if (NS_FAILED(ret)) {
-    return ret;
-  }
+  ret = nsRepository::UnregisterFactory(kCMailboxUrl, path);
+  ret = nsRepository::UnregisterFactory(kCMailboxService, path);
 
   return ret;
 }
